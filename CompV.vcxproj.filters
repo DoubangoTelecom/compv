@@ -25,6 +25,12 @@
     <Filter Include="Assembler Files\x86">
       <UniqueIdentifier>{c06abd78-3252-4141-ae65-30c4adf3289a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\parallel">
+      <UniqueIdentifier>{b85d3c85-2733-44f5-9c67-7c08574e5937}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\parallel">
+      <UniqueIdentifier>{fd706a34-5d8f-46f7-a5fd-09323e5abf33}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
@@ -42,27 +48,30 @@
     <ClInclude Include="include\compv\compv_debug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\compv_thread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\compv_cpu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\compv_mem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\parallel\compv_thread.h">
+      <Filter>Header Files\parallel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="compv_thread.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="compv_cpu.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="compv_mem.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="parallel\compv_thread.cxx">
+      <Filter>Source Files\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_common.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

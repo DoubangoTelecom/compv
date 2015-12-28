@@ -98,9 +98,9 @@ COMPV_ERROR_CODE;
 #define COMPV_ERROR_CODE_IS_FATAL(code_) ((code_) >= kErrorCodeFatalStart)
 
 // In COMPV_CHECK_HR(x) When (x) is a function it will be executed twice when used in "COMPV_DEBUG_ERROR(x)" and "If(x)"
-COMPV_GEXTERN const char* COMPVGetErrorString(COMPV_ERROR_CODE code);
-#define COMPV_CHECK_CODE_BAIL(x) { COMPV_ERROR_CODE __code__ = (x); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", COMPVGetErrorString(__code__)); goto bail; } }
-#define COMPV_CHECK_CODE_RETURN(x) { COMPV_ERROR_CODE __code__ = (x); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", COMPVGetErrorString(__code__)); return __code__; } }
+COMPV_GEXTERN const char* CompVGetErrorString(COMPV_ERROR_CODE code);
+#define COMPV_CHECK_CODE_BAIL(x) { COMPV_ERROR_CODE __code__ = (x); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", CompVGetErrorString(__code__)); goto bail; } }
+#define COMPV_CHECK_CODE_RETURN(x) { COMPV_ERROR_CODE __code__ = (x); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", CompVGetErrorString(__code__)); return __code__; } }
 
 
 COMPV_NAMESPACE_END()

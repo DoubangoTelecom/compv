@@ -25,6 +25,19 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+class CompVMem
+{
+public:
+	static void* malloc(size_t size);
+	static void* realloc(void * ptr, size_t size);
+	static void free(void** ptr);
+	static void* calloc(size_t num, size_t size);
+
+	static void* mallocAligned(size_t size, size_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
+	static void* reallocAligned(void * ptr, size_t size, size_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
+	static void freeAligned(void** ptr);
+	static void* callocAligned(size_t num, size_t size, size_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
+};
 
 COMPV_NAMESPACE_END()
 

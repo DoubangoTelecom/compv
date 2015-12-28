@@ -23,6 +23,7 @@
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
 #include "compv/compv_obj.h"
-#include "compv/compv_thread.h"
+
+#include "compv/parallel/compv_thread.h"
 
 #endif /* _COMPV_API_H_ */
