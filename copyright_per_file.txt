@@ -1,0 +1,7 @@
+** compv_asm_x86_common.asm (Partial copyright)
+	--> Copyright (c) 2010 The WebM project authors. All Rights Reserved.
+	--> Copyright (c) 2016 Doubango Telecom. All Rights Reserved.
+
+** compv_cpu.cxx
+	--> Copyright 2011 The LibYuv Project Authors. All rights reserved.
+	--> Copyright (C) 2016 Doubango Telecom. All Rights Reserved.

@@ -1,0 +1,11 @@
+*.user
+*.suo
+*.opensdf
+*.sdf
+/ipch
+/x64
+/My Amplifier XE Results - CompV
+*.idb
+/Debug
+/tests/math/Debug
+/tests/math/x64
