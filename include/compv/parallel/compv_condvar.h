@@ -21,6 +21,7 @@
 #define _COMPV_PRALLEL_CONDVAR_H_
 
 #include "compv/compv_config.h"
+#include "compv/parallel/compv_mutex.h"
 #include "compv/compv_obj.h"
 #include "compv/compv_common.h"
 
@@ -29,14 +30,23 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_API CompVCondvar : public CompVObj
 {
 protected:
-	/*CompVCondvar();
+	CompVCondvar();
 public:
 	virtual ~CompVCondvar();
 	virtual COMPV_INLINE const char* getObjectId() { return "CompVCondvar"; };
 
 	COMPV_ERROR_CODE wait(uint64_t millis = 0);
 	COMPV_ERROR_CODE signal();
-	COMPV_ERROR_CODE broadcast();*/
+	COMPV_ERROR_CODE broadcast();
+
+	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVCondvar*>* condvar);
+
+private:
+	COMPV_ERROR_CODE waitWithoutTimeout();
+	COMPV_ERROR_CODE waitWithTimeout(uint64_t millis);
+
+private:
+	void* m_pHandle;
 };
 
 COMPV_NAMESPACE_END()

@@ -102,8 +102,8 @@ COMPV_GEXTERN const char* CompVGetErrorString(COMPV_ERROR_CODE code);
 #define COMPV_CHECK_CODE_BAIL(errcode) { COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", CompVGetErrorString(__code__)); goto bail; } }
 #define COMPV_CHECK_CODE_RETURN(errcode) { COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", CompVGetErrorString(__code__)); return __code__; } }
 #define COMPV_CHECK_CODE_ASSERT(errcode) { COMPV_ERROR_CODE __code__ = (errcode); COMPV_ASSERT(COMPV_ERROR_CODE_IS_OK(__code__)); }
-#define COMPV_CHECK_EXP_RETURN(exp, errcode) { if (!(exp)) COMPV_CHECK_CODE_RETURN(errcode); }
-#define COMPV_CHECK_EXP_BAIL(exp, errcode) { if (!(exp)) COMPV_CHECK_CODE_BAIL(errcode); }
+#define COMPV_CHECK_EXP_RETURN(exp, errcode) { if ((exp)) COMPV_CHECK_CODE_RETURN(errcode); }
+#define COMPV_CHECK_EXP_BAIL(exp, errcode) { if ((exp)) COMPV_CHECK_CODE_BAIL(errcode); }
 
 COMPV_NAMESPACE_END()
 
