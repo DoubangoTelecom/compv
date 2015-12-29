@@ -17,17 +17,32 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_API_H_)
-#define _COMPV_API_H_
+#if !defined(_COMPV_PRALLEL_SEMAPHORE_H_)
+#define _COMPV_PRALLEL_SEMAPHORE_H_
 
-#include "compv/compv_cpu.h"
-#include "compv/compv_debug.h"
+#include "compv/compv_config.h"
 #include "compv/compv_obj.h"
+#include "compv/compv_common.h"
 
-#include "compv/parallel/compv_semaphore.h"
-#include "compv/parallel/compv_thread.h"
+COMPV_NAMESPACE_BEGIN()
 
-#include "compv/time/compv_time.h"
-#include "compv/time/compv_timer.h"
+class COMPV_API CompVSemaphore : public CompVObj
+{
+protected:
+	CompVSemaphore(int initialVal = 0);
+public:
+	virtual ~CompVSemaphore();
+	virtual COMPV_INLINE const char* getObjectId() { return "CompVSemaphore"; };
 
-#endif /* _COMPV_API_H_ */
+	COMPV_ERROR_CODE increment();
+	COMPV_ERROR_CODE decrement();
+
+	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVSemaphore*>* sem, int initialVal = 0);
+
+private:
+	void* m_pHandle;
+};
+
+COMPV_NAMESPACE_END()
+
+#endif /* _COMPV_PRALLEL_SEMAPHORE_H_ */

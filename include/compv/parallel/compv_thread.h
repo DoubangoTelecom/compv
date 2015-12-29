@@ -17,8 +17,8 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_THREAD_H_)
-#define _COMPV_THREAD_H_
+#if !defined(_COMPV_PRALLEL_THREAD_H_)
+#define _COMPV_PRALLEL_THREAD_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_obj.h"
@@ -62,8 +62,7 @@ public:
 	static compv_thread_id_t getIdCurrent();
 	static bool isEquals(compv_thread_id_t id1, compv_thread_id_t id2);
 	static vcomp_core_id_t getCoreId();
-	static COMPV_ERROR_CODE newObj(void *(COMPV_STDCALL *start) (void *), void *arg, CompVObjWrapper<CompVThread*>* thread);
-	static COMPV_ERROR_CODE newObj(void *(COMPV_STDCALL *start) (void *), CompVObjWrapper<CompVThread*>* thread);
+	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVThread*>* thread, void *(COMPV_STDCALL *start) (void *), void *arg = NULL);
 	
 private:
 	comp_thread_handle_t* m_pHandle;
@@ -72,4 +71,4 @@ private:
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_THREAD_H_ */
+#endif /* _COMPV_PRALLEL_THREAD_H_ */

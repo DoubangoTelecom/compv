@@ -38,6 +38,8 @@ COMPV_NAMESPACE_BEGIN()
 using namespace ThreadEmulation;
 #endif
 
+extern COMPV_ERROR_CODE CompVInit();
+
 CompVThread::CompVThread(void *(COMPV_STDCALL *start) (void *), void *arg_ /*= NULL*/)
 	: m_pHandle(NULL)
 	, m_Id(0)
@@ -252,19 +254,14 @@ vcomp_core_id_t CompVThread::getCoreId()
 }
 
 
-COMPV_ERROR_CODE CompVThread::newObj(void *(COMPV_STDCALL *start) (void *), void *arg, CompVObjWrapper<CompVThread*>* thread)
+COMPV_ERROR_CODE CompVThread::newObj(CompVObjWrapper<CompVThread*>* thread, void *(COMPV_STDCALL *start) (void *), void *arg /*= NULL*/)
 {
+	COMPV_CHECK_CODE_RETURN(CompVInit());
+	COMPV_CHECK_EXP_RETURN(thread != NULL && start != NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVObjWrapper<CompVThread*> thread_ = new CompVThread(start, arg);
-	if (!thread_) {
-		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	}
+	COMPV_CHECK_EXP_RETURN(*thread_ != NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	*thread = thread_;
 	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVThread::newObj(void *(COMPV_STDCALL *start) (void *), CompVObjWrapper<CompVThread*>* thread)
-{
-	return CompVThread::newObj(start, NULL, thread);
 }
 
 COMPV_NAMESPACE_END()

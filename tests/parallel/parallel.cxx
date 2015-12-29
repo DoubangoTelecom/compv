@@ -20,7 +20,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		CompVObjWrapper<CompVThread*> thread[sizeof(thread_names) / sizeof(thread_names[0])];
 		for (size_t i = 0; i < sizeof(thread_names) / sizeof(thread_names[0]); ++i) {
-			CompVThread::newObj(thread_start, (void*)thread_names[i], &thread[i]);
+			CompVThread::newObj(&thread[i], thread_start, (void*)thread_names[i]);
 		}
 		getchar();
 	}

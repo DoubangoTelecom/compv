@@ -31,6 +31,27 @@
     <Filter Include="Source Files\parallel">
       <UniqueIdentifier>{fd706a34-5d8f-46f7-a5fd-09323e5abf33}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\time">
+      <UniqueIdentifier>{1c7e381f-61d7-4e6f-bb7a-592680af7e57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\time">
+      <UniqueIdentifier>{b43a9df9-d1b2-44c7-ba51-b2f52d710c41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\intrinsics\arm">
+      <UniqueIdentifier>{5deac732-5114-486b-8cda-3a579b7847c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\intrinsics\x86">
+      <UniqueIdentifier>{6028cf66-54c2-40a4-97af-6d1bb79cc867}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\intrinsics">
+      <UniqueIdentifier>{2a3035a5-00d1-4325-a5f9-3571d7c2b430}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\intrinsics\arm">
+      <UniqueIdentifier>{cadc46b2-937f-4c87-b4da-e1cc79118cfe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\intrinsics\x86">
+      <UniqueIdentifier>{a72f5bc0-23d0-44e5-bb79-72b806549c46}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
@@ -57,6 +78,18 @@
     <ClInclude Include="include\compv\parallel\compv_thread.h">
       <Filter>Header Files\parallel</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\parallel\compv_semaphore.h">
+      <Filter>Header Files\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\time\compv_time.h">
+      <Filter>Header Files\time</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\time\compv_timer.h">
+      <Filter>Header Files\time</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\compv_errno.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -73,6 +106,15 @@
     </ClCompile>
     <ClCompile Include="compv_common.cxx">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="parallel\compv_semaphore.cxx">
+      <Filter>Source Files\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="time\compv_time.cxx">
+      <Filter>Source Files\time</Filter>
+    </ClCompile>
+    <ClCompile Include="time\compv_timer.cxx">
+      <Filter>Source Files\time</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

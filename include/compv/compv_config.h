@@ -26,7 +26,7 @@
 #if defined(WIN32)|| defined(_WIN32) || defined(_WIN32_WCE) || defined(_WIN16) || defined(_WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
 #	define COMPV_OS_WINDOWS	1
 #	if defined(_WIN32_WCE) || defined(UNDER_CE)
-#		define COMPV_OS_WINDOWS_CE	1
+#		define COMPV_OS_WINDOWS_CE		1
 #		define COMPV_STDCALL			__cdecl
 #	else
 #		define COMPV_STDCALL __stdcall
@@ -91,6 +91,10 @@
 // OS: Solaris
 #if defined(sun) || defined(__sun) 
 #	define COMPV_OS_SOLARIS				1
+#endif
+// OS: Symbian32
+#if defined(__SYMBIAN32__)
+#	define COMPV_OS_SYMBIAN32			1
 #endif
 // OS: Unix
 #if defined(__unix__) || defined(__unix)
@@ -299,13 +303,22 @@
 #define COMPV_DEFAULT_ARG(arg_, val_) arg_
 
 
+#if !defined (HAVE_GETTIMEOFDAY)
+#if COMPV_OS_WINDOWS
+#	define HAVE_GETTIMEOFDAY				0
+#else
+#	define HAVE_GETTIMEOFDAY				1
+#endif
+#endif /* HAVE_GETTIMEOFDAY */
+
+#if ANDROID
+#	define HAVE_CLOCK_GETTIME				1
+#endif
+
 #if COMPV_OS_WINDOWS
 #	define _WINSOCKAPI_
 #	include <windows.h>
-#elif COMPV_OS_LINUX
-#elif COMPV_OS_OSX
 #endif
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -315,6 +328,7 @@
 #include <assert.h>
 #include <math.h>
 
+// Must be at the bottom to make sure we can redifine all macros
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
