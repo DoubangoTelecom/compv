@@ -90,6 +90,12 @@
     <ClInclude Include="include\compv\compv_errno.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\parallel\compv_condvar.h">
+      <Filter>Header Files\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\parallel\compv_mutex.h">
+      <Filter>Header Files\parallel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -115,6 +121,12 @@
     </ClCompile>
     <ClCompile Include="time\compv_timer.cxx">
       <Filter>Source Files\time</Filter>
+    </ClCompile>
+    <ClCompile Include="parallel\compv_condvar.cxx">
+      <Filter>Source Files\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="parallel\compv_mutex.cxx">
+      <Filter>Source Files\parallel</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

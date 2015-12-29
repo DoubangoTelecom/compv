@@ -17,19 +17,33 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_API_H_)
-#define _COMPV_API_H_
+#if !defined(_COMPV_PRALLEL_MUTEX_H_)
+#define _COMPV_PRALLEL_MUTEX_H_
 
-#include "compv/compv_cpu.h"
-#include "compv/compv_debug.h"
+#include "compv/compv_config.h"
 #include "compv/compv_obj.h"
+#include "compv/compv_common.h"
 
-#include "compv/parallel/compv_condvar.h"
-#include "compv/parallel/compv_mutex.h"
-#include "compv/parallel/compv_semaphore.h"
-#include "compv/parallel/compv_thread.h"
+COMPV_NAMESPACE_BEGIN()
 
-#include "compv/time/compv_time.h"
-#include "compv/time/compv_timer.h"
+class COMPV_API CompVMutex : public CompVObj
+{
+protected:
+	CompVMutex(bool recursive = true);
+public:
+	virtual ~CompVMutex();
+	virtual COMPV_INLINE const char* getObjectId() { return "CompVMutex"; };
+	
+	COMPV_ERROR_CODE lock();
+	COMPV_ERROR_CODE unlock();
 
-#endif /* _COMPV_API_H_ */
+	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVMutex*>* mutex, bool recursive = true);
+
+private:
+	void* m_pHandle;
+};
+
+COMPV_NAMESPACE_END()
+
+#endif /* _COMPV_PRALLEL_MUTEX_H_ */
+
