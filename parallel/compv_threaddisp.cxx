@@ -75,6 +75,15 @@ bail:
 	return err;
 }
 
+COMPV_ERROR_CODE CompVThreadDispatcher::wait(compv_asynctoken_id_t tokenId, uint32_t threadId, uint64_t u_timeout /*= 86400000*//* 1 day */)
+{	
+	COMPV_CHECK_EXP_RETURN((int32_t)threadId >= m_nTasksCount, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVObjWrapper<CompVAsyncTask *> asyncTask = m_pTasks[threadId];
+	COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_CODE_RETURN(asyncTask->wait(tokenId, u_timeout));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVObjWrapper<CompVThreadDispatcher*>* disp, int32_t numThreads /*= -1*/)
 {
 	COMPV_CHECK_CODE_RETURN(CompVInit());
