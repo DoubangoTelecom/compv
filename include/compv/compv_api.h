@@ -30,6 +30,7 @@
 #include "compv/parallel/compv_mutex.h"
 #include "compv/parallel/compv_semaphore.h"
 #include "compv/parallel/compv_thread.h"
+#include "compv/parallel/compv_threaddisp.h"
 
 #include "compv/time/compv_time.h"
 #include "compv/time/compv_timer.h"

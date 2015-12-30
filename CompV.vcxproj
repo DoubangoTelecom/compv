@@ -32,6 +32,7 @@
     <ClInclude Include="include\compv\parallel\compv_mutex.h" />
     <ClInclude Include="include\compv\parallel\compv_semaphore.h" />
     <ClInclude Include="include\compv\parallel\compv_thread.h" />
+    <ClInclude Include="include\compv\parallel\compv_threaddisp.h" />
     <ClInclude Include="include\compv\time\compv_time.h" />
     <ClInclude Include="include\compv\time\compv_timer.h" />
   </ItemGroup>
@@ -45,6 +46,7 @@
     <ClCompile Include="parallel\compv_mutex.cxx" />
     <ClCompile Include="parallel\compv_semaphore.cxx" />
     <ClCompile Include="parallel\compv_thread.cxx" />
+    <ClCompile Include="parallel\compv_threaddisp.cxx" />
     <ClCompile Include="time\compv_time.cxx" />
     <ClCompile Include="time\compv_timer.cxx" />
   </ItemGroup>

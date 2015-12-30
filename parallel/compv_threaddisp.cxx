@@ -1,0 +1,104 @@
+/* Copyright (C) 2016 Doubango Telecom <https://www.doubango.org>
+*
+* This file is part of Open Source ComputerVision (a.k.a CompV) project.
+* Source code hosted at https://github.com/DoubangoTelecom/compv
+* Website hosted at http://compv.org
+*
+* CompV is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* CompV is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with CompV.
+*/
+#include "compv/parallel/compv_threaddisp.h"
+#include "compv/compv_cpu.h"
+#include "compv/compv_mem.h"
+#include "compv/compv_debug.h"
+
+COMPV_NAMESPACE_BEGIN()
+
+extern COMPV_ERROR_CODE CompVInit();
+
+CompVThreadDispatcher::CompVThreadDispatcher(int32_t numThreads)
+: m_pTasks(NULL)
+, m_nTasksCount(numThreads)
+, m_bValid(false)
+{
+	COMPV_ASSERT(m_nTasksCount > 1); // never happen, we already checked it in newObj()
+	m_pTasks = (CompVObjWrapper<CompVAsyncTask *>*)CompVMem::calloc(numThreads, sizeof(CompVObjWrapper<CompVAsyncTask *>));
+	if (!m_pTasks) {
+		COMPV_DEBUG_ERROR("Failed to allocate the asynctasks");
+		return;
+	}
+	vcomp_core_id_t coreId = CompVCpu::getValidCoreId(rand());
+	for (int32_t i = 0; i < m_nTasksCount; ++i) {
+		if (COMPV_ERROR_CODE_IS_NOK(CompVAsyncTask::newObj(&m_pTasks[i]))) {
+			COMPV_DEBUG_ERROR("Failed to allocate the asynctask at index %d", i);
+			return;
+		}
+		m_pTasks[i]->setAffinity(CompVCpu::getValidCoreId(coreId++));
+		if (COMPV_ERROR_CODE_IS_NOK(m_pTasks[i]->start())) {
+			COMPV_DEBUG_ERROR("Failed to start the asynctask at index %d", i);
+			return;
+		}
+	}
+	m_bValid = true;
+}
+
+CompVThreadDispatcher::~CompVThreadDispatcher()
+{
+	if (m_pTasks) {
+		for (int32_t i = 0; i < m_nTasksCount; ++i) {
+			m_pTasks[i] = NULL;
+		}
+	}
+}
+
+COMPV_ERROR_CODE CompVThreadDispatcher::execute(compv_asynctoken_id_t tokenId, uint32_t threadId, compv_asynctoken_f f_func, ...)
+{
+	CompVObjWrapper<CompVAsyncTask *> asyncTask = m_pTasks[threadId % m_nTasksCount];
+	COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	va_list ap;
+	va_start(ap, f_func);
+	COMPV_CHECK_CODE_BAIL(err = asyncTask->execute2(tokenId, f_func, &ap)); // must not exit the function: goto bail and call va_end(ap)
+bail:
+	va_end(ap);
+	return err;
+}
+
+COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVObjWrapper<CompVThreadDispatcher*>* disp, int32_t numThreads /*= -1*/)
+{
+	COMPV_CHECK_CODE_RETURN(CompVInit());
+	COMPV_CHECK_EXP_RETURN(disp == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	int32_t numCores = CompVCpu::getCoresCount();
+	if (numThreads <= 0) {
+		numThreads = CompVCpu::getCoresCount() - 1;
+	}
+	if (numThreads < 2) {
+		COMPV_DEBUG_ERROR("Multi-threading requires at least #2 threads but you're requesting #%d", numThreads);
+		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+	}
+	if (numThreads >= numCores) {
+		COMPV_DEBUG_WARN("You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, (numCores - 1));
+	}
+	CompVObjWrapper<CompVThreadDispatcher*>_disp = new CompVThreadDispatcher(numThreads);
+	if (!_disp || !_disp->m_bValid) {
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	*disp = _disp;
+	
+	COMPV_DEBUG_INFO("Thread dispatcher created with #%d threads/#%d cores", numThreads, numCores);
+	
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_NAMESPACE_END()

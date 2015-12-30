@@ -99,6 +99,9 @@
     <ClInclude Include="include\compv\parallel\compv_asynctask.h">
       <Filter>Header Files\parallel</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\parallel\compv_threaddisp.h">
+      <Filter>Header Files\parallel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -132,6 +135,9 @@
       <Filter>Source Files\parallel</Filter>
     </ClCompile>
     <ClCompile Include="parallel\compv_asynctask.cxx">
+      <Filter>Source Files\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="parallel\compv_threaddisp.cxx">
       <Filter>Source Files\parallel</Filter>
     </ClCompile>
   </ItemGroup>

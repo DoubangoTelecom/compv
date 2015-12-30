@@ -46,6 +46,7 @@ COMPV_ERROR_CODE CompVInit()
 
 	COMPV_CHECK_CODE_BAIL(err_ = CompVCpu::init());
 	COMPV_DEBUG_INFO("CPU features: %s", CompVCpu::getFlagsAsString(CompVCpu::getFlags()));
+	COMPV_DEBUG_INFO("CPU cores: #%d", CompVCpu::getCoresCount());
 
 	COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
 

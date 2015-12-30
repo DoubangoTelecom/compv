@@ -87,7 +87,9 @@ public:
 	COMPV_ERROR_CODE tokenRelease(compv_asynctoken_id_t* pi_token);
 	COMPV_ERROR_CODE tokenSetParam(compv_asynctoken_id_t token_id, int32_t param_index, const void* param_ptr, size_t param_size);
 	COMPV_ERROR_CODE tokenSetParams(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, ...);
+	COMPV_ERROR_CODE tokenSetParams2(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, va_list* ap);
 	COMPV_ERROR_CODE execute(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, ...);
+	COMPV_ERROR_CODE execute2(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, va_list* ap);
 	COMPV_ERROR_CODE wait(compv_asynctoken_id_t token_id, uint64_t u_timeout = 86400000/* 1 day */);
 	COMPV_ERROR_CODE stop();
 	COMPV_INLINE uint64_t getTockensCount() { return m_iTokensCount; }

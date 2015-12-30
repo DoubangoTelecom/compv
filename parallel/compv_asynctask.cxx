@@ -28,7 +28,7 @@ COMPV_NAMESPACE_BEGIN()
 extern COMPV_ERROR_CODE CompVInit();
 
 CompVAsyncTask::CompVAsyncTask()
-: m_iCoreId(0)
+: m_iCoreId(-1)
 , m_iTokensCount(0)
 , m_bStarted(false)
 {
@@ -59,15 +59,17 @@ COMPV_ERROR_CODE CompVAsyncTask::start()
 		m_bStarted = false;
 		COMPV_CHECK_CODE_RETURN(err_);
 	}
-	
+	if (m_iCoreId >= 0) {
+		err_ = m_Thread->setAffinity(m_iCoreId);
+		if (COMPV_ERROR_CODE_IS_NOK(err_)) {
+			COMPV_DEBUG_ERROR("Failed to set thread affinity value to %d with error code = %d", m_iCoreId, err_);
+			err_ = COMPV_ERROR_CODE_S_OK; // not fatal error, once the user is alerted continue
+		}
+	}
+
 	err_ = m_Thread->setPriority(COMPV_THREAD_PRIORITY_TIME_CRITICAL);
 	if (COMPV_ERROR_CODE_IS_NOK(err_)) {
 		COMPV_DEBUG_ERROR("Failed to set thread priority value to %d with error code = %d", COMPV_THREAD_PRIORITY_TIME_CRITICAL, err_);
-		err_ = COMPV_ERROR_CODE_S_OK; // not fatal error, once the user is alerted continue
-	}
-	err_ = m_Thread->setAffinity(m_iCoreId);
-	if (COMPV_ERROR_CODE_IS_NOK(err_)) {
-		COMPV_DEBUG_ERROR("Failed to set thread affinity value to %d with error code = %d", m_iCoreId, err_);
 		err_ = COMPV_ERROR_CODE_S_OK; // not fatal error, once the user is alerted continue
 	}
 
@@ -131,6 +133,21 @@ COMPV_ERROR_CODE CompVAsyncTask::tokenSetParam(compv_asynctoken_id_t token_id, i
 COMPV_ERROR_CODE CompVAsyncTask::tokenSetParams(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, ...)
 {
 	COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(token_id) || !f_func, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	va_list ap;
+	va_start(ap, f_func);
+	COMPV_CHECK_CODE_BAIL(err = tokenSetParams2(token_id, f_func, &ap)); // must not exit the function: goto bail and call va_end(ap)
+
+bail:
+	va_end(ap);
+	return err;
+}
+
+COMPV_ERROR_CODE CompVAsyncTask::tokenSetParams2(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, va_list* ap)
+{
+	COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(token_id) || !f_func || !ap, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
 	compv_asynctoken_xt* pToken = &tokens[token_id];
 	if (pToken->bExecuting) {
 		COMPV_DEBUG_ERROR("Token wit id = %d already executing", token_id);
@@ -140,19 +157,14 @@ COMPV_ERROR_CODE CompVAsyncTask::tokenSetParams(compv_asynctoken_id_t token_id, 
 	pToken->iParamsCount = 0;
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	va_list ap;
 	const void* pc_param_ptr;
-	va_start(ap, f_func);
-	while ((pc_param_ptr = va_arg(ap, const void*)) != COMPV_ASYNCTASK_PARAM_PTR_INVALID) {
+	while ((pc_param_ptr = va_arg(*ap, const void*)) != COMPV_ASYNCTASK_PARAM_PTR_INVALID) {
 		if (pToken->iParamsCount >= COMPV_ASYNCTASK_MAX_TOKEN_PARAMS_COUNT) {
 			COMPV_DEBUG_ERROR("Too many params");
-			COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_OUT_OF_BOUND); // must not exit the function: goto bail and call va_end(ap)
+			COMPV_CHECK_CODE_RETURN(err = COMPV_ERROR_CODE_E_OUT_OF_BOUND);
 		}
 		pToken->params[pToken->iParamsCount++].pcParamPtr = pc_param_ptr;
 	}
-
-bail:
-	va_end(ap);
 	return err;
 }
 
@@ -161,6 +173,20 @@ COMPV_ERROR_CODE CompVAsyncTask::execute(compv_asynctoken_id_t i_token, compv_as
 	COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
 	COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(i_token) || !f_func, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	va_list ap;
+	va_start(ap, f_func);
+	COMPV_CHECK_CODE_BAIL(err = execute2(i_token, f_func, &ap)); // must not exit the function: goto bail and call va_end(ap)
+bail:
+	va_end(ap);
+	return err;
+}
+
+COMPV_ERROR_CODE CompVAsyncTask::execute2(compv_asynctoken_id_t i_token, compv_asynctoken_f f_func, va_list* ap)
+{
+	COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
+	COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(i_token) || !f_func || !ap, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
 	compv_asynctoken_xt* pToken = &tokens[i_token];
 	if (pToken->bExecuting || pToken->bExecute) {
 		COMPV_DEBUG_ERROR("Token with id = %d already executing or scheduled", i_token);
@@ -176,12 +202,10 @@ COMPV_ERROR_CODE CompVAsyncTask::execute(compv_asynctoken_id_t i_token, compv_as
 
 	const void* pc_param_ptr;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	va_list ap;
-	va_start(ap, f_func);
-	while ((pc_param_ptr = va_arg(ap, const void*)) != COMPV_ASYNCTASK_PARAM_PTR_INVALID) {
+	while ((pc_param_ptr = va_arg(*ap, const void*)) != COMPV_ASYNCTASK_PARAM_PTR_INVALID) {
 		if (pToken->iParamsCount >= COMPV_ASYNCTASK_MAX_TOKEN_PARAMS_COUNT) {
 			COMPV_DEBUG_ERROR("Too many params");
-			COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_OUT_OF_BOUND); // must not exit the function: goto bail and call va_end(ap)
+			COMPV_CHECK_CODE_RETURN(err = COMPV_ERROR_CODE_E_OUT_OF_BOUND); // must not exit the function: goto bail and call va_end(ap)
 		}
 		pToken->params[pToken->iParamsCount++].pcParamPtr = pc_param_ptr;
 	}
@@ -190,11 +214,9 @@ COMPV_ERROR_CODE CompVAsyncTask::execute(compv_asynctoken_id_t i_token, compv_as
 	err = m_SemRun->increment();
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
 		pToken->bExecute = false;
-		COMPV_CHECK_CODE_BAIL(err); // must not exit the function: goto bail and call va_end(ap)
+		COMPV_CHECK_CODE_RETURN(err); // must not exit the function: goto bail and call va_end(ap)
 	}
-
-bail:
-	va_end(ap);
+	
 	return err;
 }
 
@@ -208,9 +230,11 @@ COMPV_ERROR_CODE CompVAsyncTask::wait(compv_asynctoken_id_t token_id, uint64_t u
 	if (pToken->bExecuting || pToken->bExecute) { // "b_execute" means not started yet
 		u_end = (CompVTime::getNowMills() + u_timeout);
 		while ((pToken->bExecuting || pToken->bExecute) && u_end > CompVTime::getNowMills()) {
-			// hl_thread_sleep(100000);
-			// __asm PAUSE; // FIXME
+#if 0
+			__asm PAUSE;
+#else
 			m_SemExec->decrement();
+#endif
 		}
 		if ((pToken->bExecuting || pToken->bExecute)) {
 			COMPV_DEBUG_WARN("Async token with id = %d timedout", token_id);
@@ -261,6 +285,11 @@ void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
 	compv_asynctoken_xt* pToken_;
 	COMPV_ERROR_CODE err_;
 	size_t size_;
+	
+	// Make sure the affinity is defined. This function is called in start() but after thread creation which means we could miss it if this function is called very fast
+	if (Self_->m_iCoreId >= 0) {
+		COMPV_CHECK_CODE_BAIL(err_ = Self_->m_Thread->setAffinity(Self_->m_iCoreId));
+	}
 
 	COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=%d, threadId:%d) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), CompVThread::getIdCurrent());
 
