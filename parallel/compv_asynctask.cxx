@@ -143,7 +143,7 @@ COMPV_ERROR_CODE CompVAsyncTask::tokenSetParams(compv_asynctoken_id_t token_id, 
 	va_list ap;
 	const void* pc_param_ptr;
 	va_start(ap, f_func);
-	while ((pc_param_ptr = va_arg(ap, const void*))) {
+	while ((pc_param_ptr = va_arg(ap, const void*)) != COMPV_ASYNCTASK_PARAM_PTR_INVALID) {
 		if (pToken->iParamsCount >= COMPV_ASYNCTASK_MAX_TOKEN_PARAMS_COUNT) {
 			COMPV_DEBUG_ERROR("Too many params");
 			COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_OUT_OF_BOUND); // must not exit the function: goto bail and call va_end(ap)
@@ -178,7 +178,7 @@ COMPV_ERROR_CODE CompVAsyncTask::execute(compv_asynctoken_id_t i_token, compv_as
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	va_list ap;
 	va_start(ap, f_func);
-	while ((pc_param_ptr = va_arg(ap, const void*))) {
+	while ((pc_param_ptr = va_arg(ap, const void*)) != COMPV_ASYNCTASK_PARAM_PTR_INVALID) {
 		if (pToken->iParamsCount >= COMPV_ASYNCTASK_MAX_TOKEN_PARAMS_COUNT) {
 			COMPV_DEBUG_ERROR("Too many params");
 			COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_OUT_OF_BOUND); // must not exit the function: goto bail and call va_end(ap)
@@ -262,7 +262,7 @@ void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
 	COMPV_ERROR_CODE err_;
 	size_t size_;
 
-	COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId : requested=%d,set=%d, threadId:%d) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), CompVThread::getIdCurrent());
+	COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=%d, threadId:%d) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), CompVThread::getIdCurrent());
 
 	while (Self_->m_bStarted) {
 		COMPV_CHECK_CODE_BAIL(err_ = Self_->m_SemRun->decrement());

@@ -25,7 +25,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVMem
+class COMPV_API CompVMem
 {
 public:
 	static void* malloc(size_t size);

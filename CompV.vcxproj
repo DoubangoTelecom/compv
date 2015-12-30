@@ -175,6 +175,7 @@
       <SDLCheck>true</SDLCheck>
       <OpenMPSupport>false</OpenMPSupport>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalIncludeDirectories>include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

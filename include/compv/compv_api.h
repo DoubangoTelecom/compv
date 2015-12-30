@@ -22,6 +22,7 @@
 
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
+#include "compv/compv_mem.h"
 #include "compv/compv_obj.h"
 
 #include "compv/parallel/compv_asynctask.h"

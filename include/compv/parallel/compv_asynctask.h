@@ -39,11 +39,11 @@ compv_asynctoken_param_xt;
 typedef COMPV_ERROR_CODE(*compv_asynctoken_f)(const struct compv_asynctoken_param_xs* pc_params);
 
 #if !defined(COMPV_ASYNCTOKEN_ID_INVALID)
-#	define COMPV_ASYNCTOKEN_ID_INVALID				0
+#	define COMPV_ASYNCTOKEN_ID_INVALID				-1
 #endif /* COMPV_ASYNCTOKEN_ID_INVALID */
 
 #if !defined(COMPV_ASYNCTASK_MAX_TOKEN_COUNT)
-#define COMPV_ASYNCTASK_MAX_TOKEN_COUNT				64
+#define COMPV_ASYNCTASK_MAX_TOKEN_COUNT				16
 #endif /* HL_ASYNCTASK_MAX_TOKEN_COUNT */
 
 #if !defined(COMPV_ASYNCTASK_MAX_TOKEN_PARAMS_COUNT)
@@ -63,14 +63,15 @@ typedef struct compv_asynctoken_xs {
 }
 compv_asynctoken_xt;
 
-
+#define COMPV_ASYNCTASK_PARAM_PTR_INVALID									((const void*)-1)
 #define COMPV_ASYNCTASK_GET_PARAM(param_ptr, type)							*((type*)(param_ptr))
 #define COMPV_ASYNCTASK_GET_PARAM_PTR(param_ptr, type)						*(&((type)(param_ptr)))
+#define COMPV_ASYNCTASK_GET_PARAM_SCALAR(param_scalar, type)				((type)(param_scalar))
 #define COMPV_ASYNCTASK_GET_PARAM_STATIC_ARRAY(param_ptr, type, w, h)		*((type (**)[w][h])(param_ptr))
-#define COMPV_ASYNCTASK_SET_PARAM(param_ptr)								(const void*)(&(param_ptr))
 
-#define COMPV_ASYNCTASK_SET_PARAM_VAL(param)								(const void*)(&(param))
-#define COMPV_ASYNCTASK_SET_PARAM_NULL()									NULL
+#define COMPV_ASYNCTASK_SET_PARAM(param_ptr)								(const void*)(&(param_ptr))
+#define COMPV_ASYNCTASK_SET_PARAM_SCALAR(param_scalar)						(const void*)((param_scalar)) // Must not be more than a pointer size, we recommend using int32_t. If you set a param using this macro then you *must* use COMPV_ASYNCTASK_GET_PARAM_SCALAR() to get it
+#define COMPV_ASYNCTASK_SET_PARAM_NULL()									COMPV_ASYNCTASK_PARAM_PTR_INVALID
 
 class COMPV_API CompVAsyncTask : public CompVObj
 {
@@ -89,6 +90,7 @@ public:
 	COMPV_ERROR_CODE execute(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, ...);
 	COMPV_ERROR_CODE wait(compv_asynctoken_id_t token_id, uint64_t u_timeout = 86400000/* 1 day */);
 	COMPV_ERROR_CODE stop();
+	COMPV_INLINE uint64_t getTockensCount() { return m_iTokensCount; }
 
 	static compv_asynctoken_id_t getUniqueTokenId();
 	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVAsyncTask*>* asyncTask);
