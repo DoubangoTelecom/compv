@@ -27,6 +27,7 @@
     <ClInclude Include="include\compv\compv_errno.h" />
     <ClInclude Include="include\compv\compv_mem.h" />
     <ClInclude Include="include\compv\compv_obj.h" />
+    <ClInclude Include="include\compv\parallel\compv_asynctask.h" />
     <ClInclude Include="include\compv\parallel\compv_condvar.h" />
     <ClInclude Include="include\compv\parallel\compv_mutex.h" />
     <ClInclude Include="include\compv\parallel\compv_semaphore.h" />
@@ -39,6 +40,7 @@
     <ClCompile Include="compv_cpu.cxx" />
     <ClCompile Include="compv_debug.cxx" />
     <ClCompile Include="compv_mem.cxx" />
+    <ClCompile Include="parallel\compv_asynctask.cxx" />
     <ClCompile Include="parallel\compv_condvar.cxx" />
     <ClCompile Include="parallel\compv_mutex.cxx" />
     <ClCompile Include="parallel\compv_semaphore.cxx" />

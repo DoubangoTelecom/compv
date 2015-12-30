@@ -18,6 +18,7 @@
 * along with CompV.
 */
 #include "compv/compv_common.h"
+#include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -41,7 +42,10 @@ COMPV_ERROR_CODE CompVInit()
 	}
 #endif
 
-	// COMPV_CHECK_CODE_BAIL(err_ = P360ImageDecoder::init());
+	/* CPU features initialization */
+
+	COMPV_CHECK_CODE_BAIL(err_ = CompVCpu::init());
+	COMPV_DEBUG_INFO("CPU features: %s", CompVCpu::getFlagsAsString(CompVCpu::getFlags()));
 
 	COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
 

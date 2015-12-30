@@ -18,5 +18,11 @@
     <ClCompile Include="parallel.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="threads.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="asynctasks.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

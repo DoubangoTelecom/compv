@@ -24,6 +24,7 @@
 #include "compv/compv_debug.h"
 #include "compv/compv_obj.h"
 
+#include "compv/parallel/compv_asynctask.h"
 #include "compv/parallel/compv_condvar.h"
 #include "compv/parallel/compv_mutex.h"
 #include "compv/parallel/compv_semaphore.h"

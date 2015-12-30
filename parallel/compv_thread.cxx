@@ -178,6 +178,8 @@ COMPV_ERROR_CODE CompVThread::join()
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
+	COMPV_DEBUG_INFO("Thread with id=%ld will join", m_Id); // debug message to track deadlocks
+
 #if COMPV_OS_WINDOWS
 #	if COMPV_OS_WINDOWS_RT
 	if (WaitForSingleObjectEx((HANDLE)m_pHandle, INFINITE, TRUE) == WAIT_FAILED) {

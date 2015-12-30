@@ -180,7 +180,7 @@ CompVCpu::~CompVCpu()
 	
 }
 
-void CompVCpu::init()
+COMPV_ERROR_CODE CompVCpu::init()
 {
 #if !defined(__CLR_VER) && defined(COMPV_ARCH_X86)
 	CompVCpu::s_uFlags = kCpuFlagX86;
@@ -265,9 +265,11 @@ void CompVCpu::init()
 #else
 	CompVCpu::s_uFlags = 0;
 #endif	
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 
-const char* CompVCpu::getFlagsAsString()
+const char* CompVCpu::getFlagsAsString(uint64_t uFlags)
 {
 	static std::string _flags;
 	struct {
@@ -323,7 +325,7 @@ const char* CompVCpu::getFlagsAsString()
 
 	_flags = "";
 	for (size_t i = 0; i < sizeof(flags) / sizeof(flags[0]); ++i) {
-		if ((flags[i].f & s_uFlags) == flags[i].f) {
+		if ((flags[i].f & uFlags) == flags[i].f) {
 			_flags += std::string(flags[i].name) + ";";
 		}
 	}
@@ -355,6 +357,12 @@ int32_t CompVCpu::getCoresCount()
 #endif
 	}
 	return g_cores;
+}
+
+vcomp_core_id_t CompVCpu::getValidCoreId(vcomp_core_id_t coreId)
+{
+	if (coreId < 0) return 0;
+	else return coreId % CompVCpu::getCoresCount();
 }
 
 uint64_t CompVCpu::getCyclesCountGlobal()

@@ -81,13 +81,14 @@ protected:
 	CompVCpu();
 public:
 	virtual ~CompVCpu();
-	static void init();
+	static COMPV_ERROR_CODE init();
 	static int32_t getCoresCount();
+	static vcomp_core_id_t getValidCoreId(vcomp_core_id_t coreId);
 	static uint64_t getCyclesCountGlobal();
 	static int32_t getCacheLineSize();
 	static uint64_t getTimeProcess();
 	static uint64_t getFlags() { return s_uFlags; }
-	static const char* getFlagsAsString();
+	static const char* getFlagsAsString(uint64_t uFlags);
 	static bool isSupported(uint64_t flag){ return (s_uFlags & flag) == flag; }
 	
 
