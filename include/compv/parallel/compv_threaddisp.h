@@ -36,8 +36,8 @@ public:
 	virtual COMPV_INLINE const char* getObjectId() { return "CompVThreadDispatcher"; };
 	COMPV_INLINE int32_t getThreadsCount() { return m_nTasksCount; }
 
-	COMPV_ERROR_CODE execute(compv_asynctoken_id_t tokenId, uint32_t threadId, compv_asynctoken_f f_func, ...);
-	COMPV_ERROR_CODE wait(compv_asynctoken_id_t tokenId, uint32_t threadId, uint64_t u_timeout = 86400000/* 1 day */);
+	COMPV_ERROR_CODE execute(uint32_t threadId, compv_asynctoken_id_t tokenId, compv_asynctoken_f f_func, ...);
+	COMPV_ERROR_CODE wait(uint32_t threadId, compv_asynctoken_id_t tokenId, uint64_t u_timeout = 86400000/* 1 day */);
 
 	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVThreadDispatcher*>* disp, int32_t numThreads = -1);
 

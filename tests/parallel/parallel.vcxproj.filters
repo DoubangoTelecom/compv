@@ -24,5 +24,8 @@
     <ClCompile Include="asynctasks.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="threaddisp.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

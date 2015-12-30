@@ -20,6 +20,7 @@
 #include "compv/compv_common.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
+#include "compv/time/compv_time.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -34,6 +35,10 @@ COMPV_ERROR_CODE CompVInit()
 	}
 
 	COMPV_DEBUG_INFO("Initializing engine (v %s)...", COMPV_VERSION_STRING);
+
+	// rand()
+	srand((unsigned int) CompVTime::getNowMills());
+
 #if defined(HAVE_GL_GLEW_H)
 	GLenum glewErr = glewInit();
 	if (GLEW_OK != glewErr) {

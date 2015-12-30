@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClCompile Include="asynctasks.cxx" />
     <ClCompile Include="parallel.cxx" />
+    <ClCompile Include="threaddisp.cxx" />
     <ClCompile Include="threads.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

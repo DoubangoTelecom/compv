@@ -37,7 +37,7 @@ CompVThreadDispatcher::CompVThreadDispatcher(int32_t numThreads)
 		COMPV_DEBUG_ERROR("Failed to allocate the asynctasks");
 		return;
 	}
-	vcomp_core_id_t coreId = CompVCpu::getValidCoreId(rand());
+	vcomp_core_id_t coreId = CompVCpu::getValidCoreId(1);
 	for (int32_t i = 0; i < m_nTasksCount; ++i) {
 		if (COMPV_ERROR_CODE_IS_NOK(CompVAsyncTask::newObj(&m_pTasks[i]))) {
 			COMPV_DEBUG_ERROR("Failed to allocate the asynctask at index %d", i);
@@ -61,7 +61,7 @@ CompVThreadDispatcher::~CompVThreadDispatcher()
 	}
 }
 
-COMPV_ERROR_CODE CompVThreadDispatcher::execute(compv_asynctoken_id_t tokenId, uint32_t threadId, compv_asynctoken_f f_func, ...)
+COMPV_ERROR_CODE CompVThreadDispatcher::execute(uint32_t threadId, compv_asynctoken_id_t tokenId, compv_asynctoken_f f_func, ...)
 {
 	CompVObjWrapper<CompVAsyncTask *> asyncTask = m_pTasks[threadId % m_nTasksCount];
 	COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -75,10 +75,9 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVThreadDispatcher::wait(compv_asynctoken_id_t tokenId, uint32_t threadId, uint64_t u_timeout /*= 86400000*//* 1 day */)
+COMPV_ERROR_CODE CompVThreadDispatcher::wait(uint32_t threadId, compv_asynctoken_id_t tokenId, uint64_t u_timeout /*= 86400000*//* 1 day */)
 {	
-	COMPV_CHECK_EXP_RETURN((int32_t)threadId >= m_nTasksCount, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVObjWrapper<CompVAsyncTask *> asyncTask = m_pTasks[threadId];
+	CompVObjWrapper<CompVAsyncTask *> asyncTask = m_pTasks[threadId % m_nTasksCount];
 	COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_CODE_RETURN(asyncTask->wait(tokenId, u_timeout));
 	return COMPV_ERROR_CODE_S_OK;
