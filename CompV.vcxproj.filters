@@ -52,6 +52,12 @@
     <Filter Include="Header Files\intrinsics\x86">
       <UniqueIdentifier>{a72f5bc0-23d0-44e5-bb79-72b806549c46}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\image">
+      <UniqueIdentifier>{3e63c346-9fcc-45fe-9501-25b6f3fa6cfe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\image">
+      <UniqueIdentifier>{bf995f6a-d127-4807-936f-d60786635d2c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
@@ -102,6 +108,18 @@
     <ClInclude Include="include\compv\parallel\compv_threaddisp.h">
       <Filter>Header Files\parallel</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\image\compv_image.h">
+      <Filter>Header Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\image\compv_imageconv.h">
+      <Filter>Header Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\compv_buffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\compv_fileutils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -139,6 +157,21 @@
     </ClCompile>
     <ClCompile Include="parallel\compv_threaddisp.cxx">
       <Filter>Source Files\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="image\compv_image.cxx">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="image\compv_imageconv.cxx">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_buffer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_fileutils.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="image\compv_image_libjpeg.cxx">
+      <Filter>Source Files\image</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

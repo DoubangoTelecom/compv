@@ -107,6 +107,51 @@ COMPV_GEXTERN const char* CompVGetErrorString(COMPV_ERROR_CODE code);
 #define COMPV_CHECK_EXP_RETURN(exp, errcode) { if ((exp)) COMPV_CHECK_CODE_RETURN(errcode); }
 #define COMPV_CHECK_EXP_BAIL(exp, errcode) { if ((exp)) COMPV_CHECK_CODE_BAIL(errcode); }
 
+typedef enum _COMPV_PIXEL_FORMAT {
+	COMPV_PIXEL_FORMAT_NONE,
+	COMPV_PIXEL_FORMAT_R8G8B8, // RGB24
+	COMPV_PIXEL_FORMAT_B8G8R8, // BGR8
+	COMPV_PIXEL_FORMAT_R8G8B8A8, // RGB32
+	COMPV_PIXEL_FORMAT_B8G8R8A8, // BGRA32
+	COMPV_PIXEL_FORMAT_A8B8G8R8, // ABGR32
+	COMPV_PIXEL_FORMAT_A8R8G8B8, // ARGB32
+}
+COMPV_PIXEL_FORMAT;
+
+typedef enum _COMPV_IMAGE_FORMAT {
+	COMPV_IMAGE_FORMAT_NONE,
+	COMPV_IMAGE_FORMAT_RAW,
+	COMPV_IMAGE_FORMAT_JPEG,
+	COMPV_IMAGE_FORMAT_JPG = COMPV_IMAGE_FORMAT_JPEG,
+	COMPV_IMAGE_FORMAT_BMP,
+	COMPV_IMAGE_FORMAT_BITMAP = COMPV_IMAGE_FORMAT_BMP,
+	COMPV_IMAGE_FORMAT_PNG
+}
+COMPV_IMAGE_FORMAT;
+
+typedef struct _CompVImageInfo {
+	COMPV_IMAGE_FORMAT format;
+	COMPV_PIXEL_FORMAT pixelFormat;
+	size_t width;
+	size_t height;
+}
+CompVImageInfo;
+
+#define COMPV_PIXEL_COMP_MAX	4 // RGBA or YUV
+typedef union _CompVPixelData
+{
+	uint8_t comp8[COMPV_PIXEL_COMP_MAX]; // 8bits for each component
+	uint16_t comp16[COMPV_PIXEL_COMP_MAX]; // 16bits for each component
+	uint32_t comp32[COMPV_PIXEL_COMP_MAX]; // 32bits for each component
+}
+CompVPixelData;
+
+typedef struct _CompVPixel {
+	COMPV_PIXEL_FORMAT format;
+	CompVPixelData data;
+}
+CompVPixel;
+
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_COMMON_H_ */

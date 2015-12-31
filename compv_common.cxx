@@ -21,6 +21,7 @@
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
 #include "compv/time/compv_time.h"
+#include "compv/image/compv_image.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -57,8 +58,10 @@ COMPV_ERROR_CODE CompVInit()
 	}
 #endif
 
-	/* CPU features initialization */
+	/* Image handlers initialization */
+	COMPV_CHECK_CODE_BAIL(err_ = CompVImageDecoder::init());
 
+	/* CPU features initialization */
 	COMPV_CHECK_CODE_BAIL(err_ = CompVCpu::init());
 	COMPV_DEBUG_INFO("CPU features: %s", CompVCpu::getFlagsAsString(CompVCpu::getFlags()));
 	COMPV_DEBUG_INFO("CPU cores: #%d", CompVCpu::getCoresCount());
