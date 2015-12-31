@@ -25,6 +25,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 static bool s_bInitialized = false;
+static bool s_bBigEndian = false;
 
 COMPV_ERROR_CODE CompVInit()
 {
@@ -35,6 +36,15 @@ COMPV_ERROR_CODE CompVInit()
 	}
 
 	COMPV_DEBUG_INFO("Initializing engine (v %s)...", COMPV_VERSION_STRING);
+
+	// endianness
+	static const short kWord = 0x4321;
+	s_bBigEndian = ((*(int8_t *)&kWord) != 0x21);
+#if COMPV_OS_WINDOWS
+	if (s_bBigEndian) {
+		COMPV_DEBUG_WARN("Big endian on Windows machine. Is it right?");
+	}
+#endif
 
 	// rand()
 	srand((unsigned int) CompVTime::getNowMills());
