@@ -17,25 +17,25 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_API_H_)
-#define _COMPV_API_H_
+#if !defined(_COMPV_IMAGE_IMAGECONV_TO_I420_H_)
+#define _COMPV_IMAGE_IMAGECONV_TO_I420_H_
 
-#include "compv/compv_cpu.h"
-#include "compv/compv_debug.h"
-#include "compv/compv_mem.h"
-#include "compv/compv_obj.h"
-
+#include "compv/compv_config.h"
+#include "compv/compv_common.h"
 #include "compv/image/compv_image.h"
-#include "compv/image/compv_imageconv.h"
 
-#include "compv/parallel/compv_asynctask.h"
-#include "compv/parallel/compv_condvar.h"
-#include "compv/parallel/compv_mutex.h"
-#include "compv/parallel/compv_semaphore.h"
-#include "compv/parallel/compv_thread.h"
-#include "compv/parallel/compv_threaddisp.h"
+#if defined(_COMPV_API_H_)
+#error("This is a private file and must not be part of the API")
+#endif
 
-#include "compv/time/compv_time.h"
-#include "compv/time/compv_timer.h"
+COMPV_NAMESPACE_BEGIN()
 
-#endif /* _COMPV_API_H_ */
+class CompVImageConvToI420
+{
+public:
+	static void fromRGBA(const uint8_t* rgbaPtr, size_t width, size_t height, size_t stride, uint8_t* outYPtr, uint8_t* outUPtr, uint8_t* outVPtr);
+};
+
+COMPV_NAMESPACE_END()
+
+#endif /* _COMPV_IMAGE_IMAGECONV_TO_I420_H_ */

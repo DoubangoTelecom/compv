@@ -259,7 +259,7 @@ vcomp_core_id_t CompVThread::getCoreId()
 COMPV_ERROR_CODE CompVThread::newObj(CompVObjWrapper<CompVThread*>* thread, void *(COMPV_STDCALL *start) (void *), void *arg /*= NULL*/)
 {
 	COMPV_CHECK_CODE_RETURN(CompVInit());
-	COMPV_CHECK_EXP_RETURN(thread == NULL && start != NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(thread == NULL || start == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVObjWrapper<CompVThread*> thread_ = new CompVThread(start, arg);
 	COMPV_CHECK_EXP_RETURN(*thread_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	*thread = thread_;

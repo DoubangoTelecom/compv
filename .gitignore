@@ -11,3 +11,4 @@
 /tests/math/x64
 /tests/parallel/x64
 /tests/image/x64
+/tests/image/i420.yuv

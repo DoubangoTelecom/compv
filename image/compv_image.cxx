@@ -24,6 +24,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+extern COMPV_ERROR_CODE CompVInit();
+
 //
 //	CompVImage
 //
@@ -32,6 +34,7 @@ CompVImage::CompVImage(COMPV_IMAGE_FORMAT eImageFormat, COMPV_PIXEL_FORMAT ePixe
 	:CompVObj()
 	, m_nWidth(0)
 	, m_nHeight(0)
+	, m_nStride(0)
 	, m_ePixelFormat(ePixelFormat)
 	, m_eImageFormat(eImageFormat)
 {
@@ -43,7 +46,7 @@ CompVImage::~CompVImage()
 
 }
 
-COMPV_ERROR_CODE CompVImage::setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, size_t width, size_t height)
+COMPV_ERROR_CODE CompVImage::setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, size_t width, size_t height, size_t stride /*= 0*/)
 {
 	if (!buffer || !width || !height) {
 		COMPV_DEBUG_ERROR("Invalid parameter");
@@ -52,6 +55,7 @@ COMPV_ERROR_CODE CompVImage::setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, s
 	m_oData = buffer;
 	m_nWidth = width;
 	m_nHeight = height;
+	m_nStride = (stride == 0 ? width : stride);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -75,7 +79,18 @@ COMPV_ERROR_CODE CompVImage::getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelForm
 		COMPV_DEBUG_ERROR("Invalid bitsCount=%d", bitsCount);
 		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
 	}
-	*size = (width * height) * (bitsCount >> 3);
+	if (bitsCount & 7) {
+		if (bitsCount == 12) { // 12/8 = 1.5 = 3/2
+			*size = (((width * height) * 3) >> 1);
+		}
+		else {
+			float f = ((float)bitsCount) / 8.f;
+			*size = (size_t)round((width * height) * f);
+		}
+	}
+	else {
+		*size = (width * height) * (bitsCount >> 3);
+	}
 	return err_;
 }
 
@@ -97,6 +112,12 @@ COMPV_ERROR_CODE CompVImage::getBitsCountForPixelFormat(COMPV_PIXEL_FORMAT ePixe
 	case COMPV_PIXEL_FORMAT_A8R8G8B8:
 		*bitsCount = 4 << 3;
 		return COMPV_ERROR_CODE_S_OK;
+	case COMPV_PIXEL_FORMAT_I420:
+		*bitsCount = 12;
+		return COMPV_ERROR_CODE_S_OK;
+	case COMPV_PIXEL_FORMAT_GRAYSCALE:
+		*bitsCount = 8;
+		return COMPV_ERROR_CODE_S_OK;
 	default:
 		COMPV_DEBUG_ERROR("Invalid pixel format");
 		return COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT;
@@ -105,10 +126,8 @@ COMPV_ERROR_CODE CompVImage::getBitsCountForPixelFormat(COMPV_PIXEL_FORMAT ePixe
 
 COMPV_ERROR_CODE CompVImage::newObj(COMPV_IMAGE_FORMAT eImageFormat, COMPV_PIXEL_FORMAT ePixelFormat, CompVObjWrapper<CompVImage*>* image)
 {
-	if (!image) {
-		COMPV_DEBUG_ERROR("Invalid parameter");
-		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
+	COMPV_CHECK_CODE_RETURN(CompVInit());
+	COMPV_CHECK_EXP_RETURN(image == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	*image = new CompVImage(eImageFormat, ePixelFormat);
 	if (!*image) {
 		COMPV_DEBUG_ERROR("Failed to alloc new 'CompVImage' object");
@@ -121,6 +140,11 @@ COMPV_ERROR_CODE CompVImage::newObj(COMPV_IMAGE_FORMAT eImageFormat, COMPV_PIXEL
 //	CompVImageDecoder
 //
 
+#if defined(HAVE_LIBJPEG)
+extern COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVObjWrapper<CompVImage*>* image);
+extern COMPV_ERROR_CODE libjpegDecodeInfo(const char* filePath, CompVImageInfo& info);
+#endif
+
 CompVDecodeFileFuncPtr CompVImageDecoder::s_funcptrDecodeFileJpeg = NULL;
 CompVDecodeInfoFuncPtr CompVImageDecoder::s_funcptrDecodeInfoJpeg = NULL;
 
@@ -129,19 +153,22 @@ CompVDecodeInfoFuncPtr CompVImageDecoder::s_funcptrDecodeInfoJpeg = NULL;
 COMPV_ERROR_CODE CompVImageDecoder::init()
 {
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+	static bool s_Initialized = false;
 
-	COMPV_DEBUG_INFO_EX(kModuleNameImageDecoder, "Initializing image decoder...");
+	if (!s_Initialized) {
+		COMPV_DEBUG_INFO_EX(kModuleNameImageDecoder, "Initializing image decoder...");
 
 #if defined(HAVE_LIBJPEG)
-	extern COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVObjWrapper<CompVImage*>* image);
-	extern COMPV_ERROR_CODE libjpegDecodeInfo(const char* filePath, CompVImageInfo& info);
-	CompVImageDecoder::s_funcptrDecodeFileJpeg = libjpegDecodeFile;
-	CompVImageDecoder::s_funcptrDecodeInfoJpeg = libjpegDecodeInfo;
+		CompVImageDecoder::s_funcptrDecodeFileJpeg = libjpegDecodeFile;
+		CompVImageDecoder::s_funcptrDecodeInfoJpeg = libjpegDecodeInfo;
 #else
-	COMPV_DEBUG_WARN_EX(kModuleNameImageDecoder, "No jpeg decoder found");
+		COMPV_DEBUG_WARN_EX(kModuleNameImageDecoder, "No jpeg decoder found");
 #endif /* HAVE_LIBJPEG */
 
-	COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
+		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
+
+		s_Initialized = true;
+	}
 
 bail:
 	return err_;
@@ -149,6 +176,7 @@ bail:
 
 COMPV_ERROR_CODE CompVImageDecoder::decodeFile(const char* filePath, CompVObjWrapper<CompVImage*>* image)
 {
+	COMPV_CHECK_CODE_RETURN(CompVInit());
 	if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
 		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER;
@@ -180,6 +208,7 @@ bail:
 
 COMPV_ERROR_CODE  CompVImageDecoder::decodeInfo(const char* filePath, CompVImageInfo& info)
 {
+	COMPV_CHECK_CODE_RETURN(CompVInit());
 	if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
 		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER;

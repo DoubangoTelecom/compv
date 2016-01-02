@@ -197,23 +197,26 @@
 #endif
 
 // ASM / INTRINSIC enable/disable
-#if defined(COMPV_ARCH_X86)
-#	define COMPV_ARCH_X86_ASM				1
-#	define COMPV_ARCH_X86_INTRINSIC			1
-#endif
-#if defined(COMPV_ARCH_ARM)
-#	define COMPV_ARCH_ARM_ASM				1
-#	define COMPV_ARCH_ARM_INTRINSIC			1
-#endif
+#define COMPV_ASM				1
+#define COMPV_INTRINSIC			1
+
 
 // SIMD Alignment
 #define COMPV_SIMD_ALIGNV_MMX		8
 #define COMPV_SIMD_ALIGNV_SSE		16
 #define COMPV_SIMD_ALIGNV_AVX		32
 #define COMPV_SIMD_ALIGNV_AVX2		32
-#define COMPV_SIMD_ALIGNV_ARM		16
+#define COMPV_SIMD_ALIGNV_NEON		16 // ARM NEON
 #define COMPV_SIMD_ALIGNV_ARM64		32
 #define COMPV_SIMD_ALIGNV_DEFAULT	32 // This is max to make sure all requirements will work
+
+#define COMPV_IS_ALIGNED(p, a) (!((uintptr_t)(p) & ((a) - 1)))
+#define COMPV_IS_ALIGNED_MMX(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_MMX)
+#define COMPV_IS_ALIGNED_SSE(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_SSE)
+#define COMPV_IS_ALIGNED_AVX(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_AVX)
+#define COMPV_IS_ALIGNED_AVX2(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_AVX2)
+#define COMPV_IS_ALIGNED_NEON(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_NEON)
+#define COMPV_IS_ALIGNED_ARM64(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_ARM64)
 
 // Disable some well-known warnings
 #if defined(_MSC_VER)
@@ -298,10 +301,9 @@
 #endif
 #define COMV_ALIGNED(x)
 #define COMV_ALIGNED_DEFAULT(x)
-#define COMV_ALIGN_DEFAULT() COMPV_ALIGN(COMPV_SIMD_ALIGV_DEFAULT)
+#define COMV_ALIGN_DEFAULT() COMPV_ALIGN(COMPV_SIMD_ALIGNV_DEFAULT)
 
 #define COMPV_DEFAULT_ARG(arg_, val_) arg_
-
 
 #if !defined (HAVE_GETTIMEOFDAY)
 #if COMPV_OS_WINDOWS
@@ -331,6 +333,20 @@
 // Must be at the bottom to make sure we can redifine all macros
 #if HAVE_CONFIG_H
 #include <config.h>
+#endif
+
+// Next code must be after 'config.h' to make sure we have final values
+// Before 'config.h' we only defined the default values
+
+#if defined(COMPV_INTRINSIC)
+#	define COMPV_SET_IFDEF_INTRINSIC(DST, SRC) (DST) = (SRC)
+#else
+#	define COMPV_SET_IFDEF_INTRINSIC(DST, SRC) 	
+#endif
+#if defined(COMPV_ASM)
+#	define COMPV_SET_IFDEF_ASM(DST, SRC) (DST) = (SRC)
+#else
+#	define COMPV_SET_IFDEF_ASM(DST, SRC) 	
 #endif
 
 #endif /* _COMPV_CONFIG_H_ */

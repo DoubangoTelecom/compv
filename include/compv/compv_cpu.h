@@ -75,6 +75,8 @@ static const uint64_t kCpuFlagMIPS = COMPV_CPU_FLAG_BIT(50);
 static const uint64_t kCpuFlagMIPS_DSP = COMPV_CPU_FLAG_BIT(51);
 static const uint64_t kCpuFlagMIPS_DSPR2 = COMPV_CPU_FLAG_BIT(52);
 
+static const uint64_t kCpuFlagAll = ~((uint64_t)0);
+
 class COMPV_API CompVCpu : public CompVObj
 {
 protected:
@@ -88,12 +90,15 @@ public:
 	static int32_t getCacheLineSize();
 	static uint64_t getTimeProcess();
 	static uint64_t getFlags() { return s_uFlags; }
+	static uint64_t getFlagsDisabled() { return s_uFlagsDisabled; }
 	static const char* getFlagsAsString(uint64_t uFlags);
 	static bool isSupported(uint64_t flag){ return (s_uFlags & flag) == flag; }
-	
+	static COMPV_ERROR_CODE flagsDisable(uint64_t flags);
+	static COMPV_ERROR_CODE flagsEnable(uint64_t flags);
 
 private:
 	static uint64_t s_uFlags;
+	static uint64_t s_uFlagsDisabled;
 };
 
 COMPV_NAMESPACE_END()

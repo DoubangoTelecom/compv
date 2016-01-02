@@ -22,6 +22,10 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if !defined(COMPV_MEMALIGN_ALWAYS)
+#	define COMPV_MEMALIGN_ALWAYS 1
+#endif
+
 /**
 * Allocates a block of size bytes of memory, returning a pointer to the beginning of the block.
 * The content of the newly allocated block of memory is not initialized, remaining with indeterminate values.
@@ -31,11 +35,15 @@ COMPV_NAMESPACE_BEGIN()
 */
 void* CompVMem::malloc(size_t size)
 {
+#if COMPV_MEMALIGN_ALWAYS
+	return mallocAligned(size);
+#else
 	void *pMem = ::malloc(size);
 	if (!pMem) {
 		COMPV_DEBUG_ERROR("Memory allocation failed");
 	}
 	return pMem;
+#endif
 }
 
 /**
@@ -55,6 +63,9 @@ void* CompVMem::malloc(size_t size)
 */
 void* CompVMem::realloc(void * ptr, size_t size)
 {
+#if COMPV_MEMALIGN_ALWAYS
+	return reallocAligned(ptr, size);
+#else
 	void *pMem = NULL;
 
 	if (size) {
@@ -74,6 +85,7 @@ void* CompVMem::realloc(void * ptr, size_t size)
 	}
 
 	return pMem;
+#endif
 }
 
 /**
@@ -83,10 +95,14 @@ void* CompVMem::realloc(void * ptr, size_t size)
 */
 void CompVMem::free(void** ptr)
 {
+#if COMPV_MEMALIGN_ALWAYS
+	freeAligned(ptr);
+#else
 	if (ptr && *ptr) {
 		::free(*ptr);
 		*ptr = NULL;
 	}
+#endif
 }
 
 /**
@@ -100,6 +116,9 @@ void CompVMem::free(void** ptr)
 */
 void* CompVMem::calloc(size_t num, size_t size)
 {
+#if COMPV_MEMALIGN_ALWAYS
+	return callocAligned(num, size);
+#else
 	void* pMem = NULL;
 	if (num && size) {
 		pMem = ::calloc(num, size);
@@ -108,6 +127,7 @@ void* CompVMem::calloc(size_t num, size_t size)
 		}
 	}
 	return pMem;
+#endif
 }
 
 void* CompVMem::mallocAligned(size_t size, size_t alignment/*= COMPV_SIMD_ALIGNV_DEFAULT*/)

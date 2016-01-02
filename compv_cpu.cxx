@@ -169,6 +169,7 @@ static uint64_t CompVMipsCaps(const char* search_string)
 
 
 uint64_t CompVCpu::s_uFlags = 0;
+uint64_t CompVCpu::s_uFlagsDisabled = 0;
 
 CompVCpu::CompVCpu()
 {
@@ -264,7 +265,10 @@ COMPV_ERROR_CODE CompVCpu::init()
 #	endif // __mips_dspr2
 #else
 	CompVCpu::s_uFlags = 0;
-#endif	
+#endif
+
+	// Remove disabled flags
+	CompVCpu::s_uFlags &= ~CompVCpu::s_uFlagsDisabled;
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -441,6 +445,20 @@ int32_t CompVCpu::getCacheLineSize()
 #endif
 	}
 	return __cache_line_size;
+}
+
+COMPV_ERROR_CODE CompVCpu::flagsDisable(uint64_t flags)
+{
+	COMPV_DEBUG_INFO("Disabling CPU flags: %s", getFlagsAsString(flags));
+	s_uFlagsDisabled = flags;
+	return CompVCpu::init();
+}
+
+COMPV_ERROR_CODE CompVCpu::flagsEnable(uint64_t flags)
+{
+	COMPV_DEBUG_INFO("Enabling CPU flags: %s", getFlagsAsString(flags));
+	s_uFlagsDisabled &= ~flags;
+	return CompVCpu::init();
 }
 
 COMPV_NAMESPACE_END()

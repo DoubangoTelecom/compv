@@ -34,13 +34,14 @@ protected:
 public:
 	virtual ~CompVImage();
 	virtual COMPV_INLINE const char* getObjectId() { return "CompVImage"; };
-	COMPV_ERROR_CODE setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, size_t width, size_t height);
+	COMPV_ERROR_CODE setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, size_t width, size_t height, size_t stride = 0);
 
 	COMPV_INLINE const CompVObjWrapper<CompVBuffer*>& getData() { return m_oData; }
 	COMPV_INLINE size_t getDataSize() { return m_oData ? m_oData->getSize() : 0; }
 	COMPV_INLINE const void* getDataPtr() { return m_oData ? m_oData->getPtr() : NULL; }
 	COMPV_INLINE size_t getWidth() { return m_nWidth; }
 	COMPV_INLINE size_t getHeight() { return m_nHeight; }
+	COMPV_INLINE size_t getStride() { return m_nStride; }
 	COMPV_INLINE COMPV_PIXEL_FORMAT getPixelFormat() { return m_ePixelFormat; }
 	COMPV_INLINE COMPV_IMAGE_FORMAT getImageFormat() { return m_eImageFormat; }
 
@@ -51,9 +52,10 @@ public:
 
 protected:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-		CompVObjWrapper<CompVBuffer*> m_oData;
+	CompVObjWrapper<CompVBuffer*> m_oData;
 	size_t m_nWidth;
 	size_t m_nHeight;
+	size_t m_nStride;
 	COMPV_PIXEL_FORMAT m_ePixelFormat;
 	COMPV_IMAGE_FORMAT m_eImageFormat;
 	COMPV_DISABLE_WARNINGS_END()

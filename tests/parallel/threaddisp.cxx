@@ -8,7 +8,7 @@ static void long_task(int32_t start, int32_t end, uint8_t* ptr)
 	COMPV_ASSERT(start <= end);
 	for (int32_t i = start; i < end; ++i) {
 		double d = (uint8_t)sqrt(sqrt((double)(ptr[i] * ptr[i]))) + 1;
-		for (int32_t j = 0; j <= 100; ++j) {
+		for (int32_t j = 0; j <= 10; ++j) {
 			d += (uint8_t)tan((double)ptr[i]) * rand() * cos((double)ptr[i]) * sin((double)ptr[i]);
 		}
 		ptr[i] = (uint8_t)d;
@@ -42,7 +42,7 @@ bool TestThreadDisp()
 
 	// Start the tasks (each one has a single tocken with id = 0)
 	timeStart = CompVTime::getNowMills();
-#if 1 // Using async tasks
+#if 0 // Using async tasks
 	int32_t interval = SIZE / THREADS_COUNT;
 	int32_t start = 0, end = interval;
 	for (int32_t treadId = 0; treadId < disp_->getThreadsCount(); ++treadId) {
