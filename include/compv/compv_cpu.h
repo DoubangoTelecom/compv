@@ -75,7 +75,8 @@ static const uint64_t kCpuFlagMIPS = COMPV_CPU_FLAG_BIT(50);
 static const uint64_t kCpuFlagMIPS_DSP = COMPV_CPU_FLAG_BIT(51);
 static const uint64_t kCpuFlagMIPS_DSPR2 = COMPV_CPU_FLAG_BIT(52);
 
-static const uint64_t kCpuFlagAll = ~((uint64_t)0);
+static const uint64_t kCpuFlagNone = ((uint64_t)0);
+static const uint64_t kCpuFlagAll = ~kCpuFlagNone;
 
 class COMPV_API CompVCpu : public CompVObj
 {

@@ -12,3 +12,5 @@
 /tests/parallel/x64
 /tests/image/x64
 /tests/image/i420.yuv
+Release
+/tests/image/Debug

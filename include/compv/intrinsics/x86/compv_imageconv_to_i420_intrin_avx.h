@@ -17,31 +17,25 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_MEM_H_)
-#define _COMPV_MEM_H_
+#if !defined(_COMPV_IMAGE_IMAGECONV_TO_I420_INTRIN_AVX_H_)
+#define _COMPV_IMAGE_IMAGECONV_TO_I420_INTRIN_AVX_H_
 
 #include "compv/compv_config.h"
-#include "compv/compv_debug.h"
+
+#if defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC)
+#include "compv/compv_common.h"
+#include "compv/image/compv_image.h"
+
+#if defined(_COMPV_API_H_)
+#error("This is a private file and must not be part of the API")
+#endif
 
 COMPV_NAMESPACE_BEGIN()
 
-class COMPV_API CompVMem
-{
-public:
-	static void* malloc(size_t size);
-	static void* realloc(void * ptr, size_t size);
-	static void free(void** ptr);
-	static void* calloc(size_t num, size_t size);
-
-	static void* mallocAligned(size_t size, size_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
-	static void* reallocAligned(void * ptr, size_t size, size_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
-	static void freeAligned(void** ptr);
-	static void* callocAligned(size_t num, size_t size, size_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
-	static void* alignBackward(void* ptr, int32_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
-	static void* alignForward(void* ptr, int32_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
-};
+void rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride);
 
 COMPV_NAMESPACE_END()
 
+#endif /* COMPV_ARCH_X86 */
 
-#endif /* _COMPV_MEM_H_ */
+#endif /* _COMPV_IMAGE_IMAGECONV_TO_I420_INTRIN_AVX_H_ */

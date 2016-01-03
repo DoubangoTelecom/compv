@@ -20,19 +20,24 @@
 #include "compv/image/compv_imageconv_to_i420.h"
 #include "compv/image/compv_imageconv_common.h"
 #include "compv/compv_cpu.h"
+#include "compv/compv_mem.h"
 
 #include "compv/intrinsics/x86/compv_imageconv_to_i420_intrin_sse.h"
+#include "compv/intrinsics/x86/compv_imageconv_to_i420_intrin_avx.h"
+
+#if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
+extern "C" void rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride);
+#endif
 
 COMPV_NAMESPACE_BEGIN()
 
-static void rgbaToI420Kernel11_CompY_C(const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t stride, size_t rows, size_t cols)
+static void rgbaToI420Kernel11_CompY_C(const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride)
 {
-	// colStep=1, rowStep=1
-	size_t padRGBA = ((stride - cols) << 2); // (stride - cols) * 4 * colStep
-	size_t padY = (stride - cols); // (stride - cols) * 1 * colStep
+	size_t padRGBA = (stride - width) << 2;
+	size_t padY = (stride - width);
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
-	for (size_t j = 0; j < rows; ++j) {
-		for (size_t i = 0; i < cols; ++i) {
+	for (size_t j = 0; j < height; ++j) {
+		for (size_t i = 0; i < width; ++i) {
 			*outYPtr++ = (((33 * rgbaPtr[0]) + (65 * rgbaPtr[1]) + (13 * rgbaPtr[2])) >> 7) + 16;
 			rgbaPtr += 4;
 		}
@@ -41,15 +46,14 @@ static void rgbaToI420Kernel11_CompY_C(const uint8_t* rgbaPtr, uint8_t* outYPtr,
 	}
 }
 
-static void rgbaToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t stride, size_t rows, size_t cols)
+static void rgbaToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride)
 {
-	// colStep=1, rowStep=1
-	size_t padRGBA = ((stride - cols) << 2) + (stride << 2); // ((stride - cols) * 4 * colStep) + (stride * 4)
-	size_t padUV = (stride - cols) << 2; // (stride - cols) * 1 * colStep
+	size_t padRGBA = ((stride - width) << 2) + (stride << 2); // "+ (stride << 2)" -> because one line out of two
+	size_t padUV = (stride - width) >> 1;
 	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
-	for (size_t j = 0; j < rows; j += 2) {
-		for (size_t i = 0; i < cols; i += 2) {
+	for (size_t j = 0; j < height; j += 2) {
+		for (size_t i = 0; i < width; i += 2) {
 			*outUPtr++ = (((-38 * rgbaPtr[0]) + (-74 * rgbaPtr[1]) + (112 * rgbaPtr[2])) >> 8) + 128;
 			*outVPtr++ = ((((112 * rgbaPtr[0]) + (-94 * rgbaPtr[1]) + (-18 * rgbaPtr[2]))) >> 8) + 128;
 			rgbaPtr += 8; // 2 * 4
@@ -60,61 +64,61 @@ static void rgbaToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr
 	}
 }
 
-void CompVImageConvToI420::fromRGBA(const uint8_t* rgbaPtr, size_t width, size_t height, size_t stride, uint8_t* outYPtr, uint8_t* outUPtr, uint8_t* outVPtr)
+#if 0
+static bool computeColsAndMissedBytes(size_t widthInBytes, size_t strideInBytes, size_t alignementInBytes, size_t &cols, int32_t &colMissedBytes, int32_t &colIgnoredBytes)
 {
-	void(*rgbaToI420Kernel_CompY)(const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t stride, size_t rows, size_t cols) = rgbaToI420Kernel11_CompY_C;
-	void(*rgbaToI420Kernel_CompUV)(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t stride, size_t rows, size_t cols) = rgbaToI420Kernel11_CompUV_C;
-	const uint8_t* _rgbaPtr = rgbaPtr;
-	size_t colMissedSamples = 0;
-	size_t cols = width, rows = height, rowStep = 1, colStep = 1;
+	if (widthInBytes < alignementInBytes) {
+		return false;
+	}
+	cols = (widthInBytes / alignementInBytes);
+	colMissedBytes = (int32_t)(widthInBytes - (cols * alignementInBytes)); // less than "alignementInBytes" which means we should look for a single new col at max
+	if (colMissedBytes > 0 && (strideInBytes - widthInBytes) >= alignementInBytes) {
+		cols += 1;
+		colMissedBytes = 0;
+	}
+	colIgnoredBytes = (int32_t)(strideInBytes - (cols * alignementInBytes));
+	return true;
+}
 
-
-
-#if COMPV_ARCH_X86
-	if (CompVCpu::isSupported(kCpuFlagSSSE3) && width >= COMPV_SIMD_ALIGNV_SSE) {
-		colStep = 4;
-		COMPV_SET_IFDEF_INTRINSIC(rgbaToI420Kernel_CompY, rgbaToI420Kernel11_CompY_Intrin_Unaligned_SSSE3);
-		if (COMPV_IS_ALIGNED_SSE(rgbaPtr)) {
-			COMPV_SET_IFDEF_INTRINSIC(rgbaToI420Kernel_CompY, rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3);
-			if (COMPV_IS_ALIGNED_SSE(outYPtr)) {
-
-			}
-			else {
-
-			}
-			if (COMPV_IS_ALIGNED_SSE(outUPtr) && COMPV_IS_ALIGNED_SSE(outVPtr)) {
-
-			}
-			else {
-
-			}
-		}
-	} // end-of-SSSE3
+static bool computeRowsAndMissedRows(size_t rowsTotal, size_t rowsPerKernel, size_t &rows, int32_t &rowsMissed)
+{
+	if (rowsTotal < rowsPerKernel) {
+		return false;
+	}
+	rows = (rowsTotal / rowsPerKernel);
+	rowsMissed = (int32_t)(rowsTotal - (rows * rowsPerKernel));
+	return true;
+}
 #endif
 
-	// Compute "cols", "rows" and the "colMissedSamples"
-	cols = width / colStep;
-	rows = height / rowStep;
-	if (!COMPV_IS_ALIGNED(width, colStep) && stride > width) {
-		cols += ((stride - width) + (width - (cols * colStep))) / colStep;
-		colMissedSamples = (width - (cols * colStep));
+void CompVImageConvToI420::fromRGBA(const uint8_t* rgbaPtr, size_t width, size_t height, size_t stride, uint8_t* outYPtr, uint8_t* outUPtr, uint8_t* outVPtr)
+{
+	void(*rgbaToI420Kernel_CompY)(const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride) = rgbaToI420Kernel11_CompY_C;
+	void(*rgbaToI420Kernel_CompUV)(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride) = rgbaToI420Kernel11_CompUV_C;
+
+#if defined(COMPV_ARCH_X86)
+	if (width > COMPV_SIMD_ALIGNV_SSE && COMPV_IS_ALIGNED_SSE(stride)) {
+		if (CompVCpu::isSupported(kCpuFlagSSSE3)) {
+			COMPV_EXEC_IFDEF_INTRINSIC(rgbaToI420Kernel_CompY = rgbaToI420Kernel11_CompY_Intrin_Unaligned_SSSE3);
+			if (COMPV_IS_ALIGNED_SSE(rgbaPtr)) {
+				COMPV_EXEC_IFDEF_INTRINSIC(rgbaToI420Kernel_CompY = rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3);
+				COMPV_EXEC_IFDEF_INTRINSIC(rgbaToI420Kernel_CompUV = rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3);
+				COMPV_EXEC_IFDEF_ASM(rgbaToI420Kernel_CompY = rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3);
+			}
+		} // end-of-SSSE3
+	} // end-of-SSE
+	if (width > COMPV_SIMD_ALIGNV_AVX2 && COMPV_IS_ALIGNED_AVX2(stride)) {
+		if (CompVCpu::isSupported(kCpuFlagAVX2)) {
+			if (COMPV_IS_ALIGNED_AVX2(rgbaPtr)) {
+				COMPV_EXEC_IFDEF_INTRINSIC(rgbaToI420Kernel_CompY = rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2);
+			}
+		}
 	}
+#endif
 
 	// Process Y and UV lines
-	rgbaToI420Kernel_CompY(rgbaPtr, outYPtr, stride, rows, cols);
-	//rgbaToI420Kernel_CompUV(rgbaPtr, outUPtr, outVPtr, stride, rows, cols);
-
-	// Now process mised samples
-	if (colMissedSamples != 0) {
-		size_t colCatchedSamples = (width - colMissedSamples);
-		const uint8_t* rgbaPtr_ = rgbaPtr + (4 * colCatchedSamples);
-		uint8_t* outYPtr_ = outYPtr + colCatchedSamples;
-		uint8_t* outUPtr_ = outUPtr + (colCatchedSamples >> 1);
-		uint8_t* outVPtr_ = outVPtr + (colCatchedSamples >> 1);
-
-		rgbaToI420Kernel11_CompY_C(rgbaPtr_, outYPtr_, stride, rows, colMissedSamples);
-		rgbaToI420Kernel11_CompUV_C(rgbaPtr_, outUPtr_, outVPtr_, stride, rows, colMissedSamples);
-	}
+	rgbaToI420Kernel_CompY(rgbaPtr, outYPtr, height, width, stride);
+	//--rgbaToI420Kernel_CompUV(rgbaPtr, outUPtr, outVPtr, height, width, stride);
 }
 
 COMPV_NAMESPACE_END()

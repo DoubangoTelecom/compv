@@ -45,6 +45,8 @@ COMPV_NAMESPACE_BEGIN()
 	assert(__b_ret); \
 }
 
+#define COMPV_IS_POW2(x) (((x) != 0) && !((x) & ((x) - 1))) 
+
 typedef int32_t vcomp_core_id_t;
 
 typedef enum _COMPV_DEBUG_LEVEL {
@@ -154,6 +156,14 @@ typedef struct _CompVPixel {
 	CompVPixelData data;
 }
 CompVPixel;
+
+typedef struct _CompVRect {
+	int32_t left;
+	int32_t top;
+	int32_t right;
+	int32_t bottom;
+}
+CompVRect;
 
 COMPV_NAMESPACE_END()
 

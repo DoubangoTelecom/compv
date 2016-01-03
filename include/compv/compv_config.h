@@ -230,6 +230,15 @@
 #	define COMPV_DISABLE_WARNINGS_END()
 #endif /* _MSC_VER */
 
+// Guards against C++ name mangling
+#ifdef __cplusplus
+#	define COMPV_EXTERNC_BEGIN() extern "C" {
+#	define COMPV_EXTERNC_END()	}
+#else
+#	define COMPV_EXTERNC_BEGIN()
+#	define COMPV_EXTERNC_END()
+#endif
+
 
 #if COMPV_OS_WINDOWS && defined(COMPV_EXPORTS)
 # 	define COMPV_API		__declspec(dllexport)
@@ -283,6 +292,10 @@
 #	define COMPV_NAKED			__declspec(naked)
 #	define COMPV_INLINE	_inline
 #	pragma warning( disable : 4996 )
+#	if _MSC_VER >= 1700
+	// Warning	3	warning C4752: found Intel(R) Advanced Vector Extensions; consider using /arch:AVX
+#	pragma warning(disable: 4752)
+#	endif
 #	include <intrin.h>
 #elif defined(__GNUC__)
 #	define COMPV_ALWAYS_INLINE	__inline __attribute__ ((__always_inline__))
@@ -339,14 +352,14 @@
 // Before 'config.h' we only defined the default values
 
 #if defined(COMPV_INTRINSIC)
-#	define COMPV_SET_IFDEF_INTRINSIC(DST, SRC) (DST) = (SRC)
+#	define COMPV_EXEC_IFDEF_INTRINSIC(EXPR) (EXPR)
 #else
-#	define COMPV_SET_IFDEF_INTRINSIC(DST, SRC) 	
+#	define COMPV_EXEC_IFDEF_INTRINSIC(EXPR) 	
 #endif
 #if defined(COMPV_ASM)
-#	define COMPV_SET_IFDEF_ASM(DST, SRC) (DST) = (SRC)
+#	define COMPV_EXEC_IFDEF_ASM(EXPR) (EXPR)
 #else
-#	define COMPV_SET_IFDEF_ASM(DST, SRC) 	
+#	define COMPV_EXEC_IFDEF_ASM(EXPR) 	
 #endif
 
 #endif /* _COMPV_CONFIG_H_ */

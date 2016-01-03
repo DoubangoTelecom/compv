@@ -26,10 +26,13 @@
 #error("This is a private file and must not be part of the API")
 #endif
 
+COMPV_EXTERNC_BEGIN()
+
 // Read "documentation/yuv_rgb_cov.txt" for more info on how we computed these coeffs
 COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kRGBAToYUV_YCoeffs8[];
 COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kRGBAToYUV_UCoeffs8[];
 COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kRGBAToYUV_VCoeffs8[];
 
+COMPV_EXTERNC_END()
 
 #endif /* _COMPV_IMAGE_IMAGECONV_COMMON_H_ */

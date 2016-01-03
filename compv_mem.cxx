@@ -177,4 +177,17 @@ void* CompVMem::callocAligned(size_t num, size_t size, size_t alignment/*= COMPV
 	return pMem;
 }
 
+// alignment must be power of two
+void* CompVMem::alignBackward(void* ptr, int32_t alignment /*= COMPV_SIMD_ALIGNV_DEFAULT*/)
+{
+	COMPV_ASSERT(COMPV_IS_POW2(alignment));
+	return (void*)(((uintptr_t)ptr) & (-alignment));
+}
+
+void* CompVMem::alignForward(void* ptr, int32_t alignment /*= COMPV_SIMD_ALIGNV_DEFAULT*/)
+{
+	COMPV_ASSERT(COMPV_IS_POW2(alignment));
+	return ((uint8_t*)ptr) + (((uintptr_t)ptr) & (alignment - 1));
+}
+
 COMPV_NAMESPACE_END()

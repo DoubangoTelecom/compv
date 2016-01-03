@@ -5,13 +5,14 @@
 
 using namespace compv;
 
-static void rgbToRGBA(const CompVObjWrapper<CompVImage *>& jpegImage, void** rgbaPtr)
+static void rgbToRGBA(const CompVObjWrapper<CompVImage *>& jpegImage, void** rgbaPtr, size_t &width, size_t &height, size_t &stride)
 {
-	size_t width = jpegImage->getWidth();
-	size_t height = jpegImage->getHeight();
-	size_t stride = jpegImage->getStride();
+	size_t jpegImageStride = jpegImage->getStride();
+	width = jpegImage->getWidth();
+	height = jpegImage->getHeight();
+	stride = jpegImageStride + (jpegImageStride & (COMPV_SIMD_ALIGNV_DEFAULT - 1));
 
-	*rgbaPtr = CompVMem::malloc((jpegImage->getStride() * jpegImage->getHeight()) * 4);
+	*rgbaPtr = CompVMem::malloc((stride * jpegImage->getHeight()) * 4);
 	COMPV_ASSERT(*rgbaPtr != NULL);
 	const uint8_t *rgbPtr_ = (const uint8_t *)jpegImage->getDataPtr();
 	uint8_t* rgbaPtr_ = (uint8_t*)*rgbaPtr;
@@ -26,7 +27,7 @@ static void rgbToRGBA(const CompVObjWrapper<CompVImage *>& jpegImage, void** rgb
 			rgbPtr_ += 3;
 		}
 		rgbaPtr_ += (stride - width) * 4;
-		rgbPtr_ += (stride - width) * 3;
+		rgbPtr_ += (jpegImageStride - width) * 3;
 	}
 }
 
@@ -35,11 +36,14 @@ int _tmain(int argc, _TCHAR* argv[])
 	CompVObjWrapper<CompVImage *> jpegImage;
 	CompVObjWrapper<CompVImage *> i420Image;
 	void* rgbaPtr = NULL;
+	size_t width, height, stride;
 	FILE* file = NULL;
+
+	COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagAVX2));
 	COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_EQUIRECTANGULAR_FILE, &jpegImage));
 	COMPV_ASSERT(jpegImage->getPixelFormat() == COMPV_PIXEL_FORMAT_R8G8B8);
-	rgbToRGBA(jpegImage, &rgbaPtr);
-	COMPV_CHECK_CODE_ASSERT(CompVImageConv::rgbaToI420((const uint8_t*)rgbaPtr, jpegImage->getWidth(), jpegImage->getHeight(), jpegImage->getStride(), &i420Image));
+	rgbToRGBA(jpegImage, &rgbaPtr, width, height, stride);
+	COMPV_CHECK_CODE_ASSERT(CompVImageConv::rgbaToI420((const uint8_t*)rgbaPtr, width, height, stride, &i420Image));
 
 	file = fopen("./i420.yuv", "wb+");
 	COMPV_ASSERT(file != NULL);

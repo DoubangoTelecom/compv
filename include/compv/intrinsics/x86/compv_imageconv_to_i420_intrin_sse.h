@@ -32,8 +32,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t stride, size_t rows, size_t cols);
-void rgbaToI420Kernel11_CompY_Intrin_Unaligned_SSSE3(const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t stride, size_t rows, size_t cols);
+void rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride);
+void rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride);
+void rgbaToI420Kernel11_CompY_Intrin_Unaligned_SSSE3(const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride);
 
 COMPV_NAMESPACE_END()
 

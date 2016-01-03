@@ -28,8 +28,11 @@
 #error("This is a private file and must not be part of the API")
 #endif
 
+COMPV_EXTERNC_BEGIN()
+
 COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t k16_i8[];
 COMPV_GEXTERN COMV_ALIGN_DEFAULT() int16_t k16_i16[];
 
+COMPV_EXTERNC_END()
 
 #endif /* _COMPV_SIMD_GLOBALS_H_ */

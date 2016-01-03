@@ -136,6 +136,13 @@
   %endif
 %endif
 
+; Enable relative addressing on x64 (added by dmi)
+%if COMPV_YASM_ABI_IS_32BIT
+%define COMPV_YASM_DEFAULT_REL 
+%else
+%define COMPV_YASM_DEFAULT_REL default rel
+%endif
+
 ; COMPV_YASM_REG_SZ_BYTES, COMPV_YASM_REG_SZ_BITS
 ; Size of a register
 %if COMPV_YASM_ABI_IS_32BIT
