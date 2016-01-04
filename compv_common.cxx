@@ -65,6 +65,14 @@ COMPV_ERROR_CODE CompVInit()
 	COMPV_CHECK_CODE_BAIL(err_ = CompVCpu::init());
 	COMPV_DEBUG_INFO("CPU features: %s", CompVCpu::getFlagsAsString(CompVCpu::getFlags()));
 	COMPV_DEBUG_INFO("CPU cores: #%d", CompVCpu::getCoresCount());
+#if defined(COMPV_ARCH_X86)
+	// even if we are on X64 CPU it's possible that we're running a 32-bit binary
+#	if defined(COMPV_ARCH_X64)
+		COMPV_DEBUG_INFO("Binary type: X86_64");
+#	else
+	COMPV_DEBUG_INFO("Binary type: X86_32");
+#	endif
+#endif
 
 	COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
 

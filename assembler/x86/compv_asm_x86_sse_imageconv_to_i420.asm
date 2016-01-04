@@ -22,20 +22,22 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3)
+;global sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned_SSSE3)
 
 section .data
 	extern sym(k16_i16)
+	extern sym(k128_i16)
 	extern sym(kRGBAToYUV_YCoeffs8)
+	extern sym(kRGBAToYUV_U2V2Coeffs8)
 
 section .text
 
-;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; void rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride)
 sym(rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
-	;COMPV_YASM_SAVE_XMM 6
 	push rsi
 	push rdi
 	push rbx
@@ -53,9 +55,9 @@ sym(rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3):
 	movdqa xmm0, [sym(kRGBAToYUV_YCoeffs8)]
 	movdqa xmm1, [sym(k16_i16)]
 
-	LoopHeight:
+	LoopHeight0:
 		mov rdi, arg(3) ; width
-		LoopWidth:
+		LoopWidth0:
 			movdqa xmm2, [rax] ; 4 RGBA samples
 			pmaddubsw xmm2, xmm0
 			phaddw xmm2, xmm2
@@ -66,25 +68,105 @@ sym(rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3):
 			add rbx, 4
 			add rax, 16
 
-			; end-of-LoopWidth
+			; end-of-LoopWidth0
 			sub rdi, 4
 			cmp rdi, 0
-			jg LoopWidth	
+			jg LoopWidth0	
 	add rbx, rdx
 	add rax, rcx
-	; end-of-LoopHeight
+	; end-of-LoopHeight0
 	sub rsi, 1
 	cmp rsi, 0
-	jg LoopHeight
+	jg LoopHeight0
 
 	; begin epilog
 	pop rbx
 	pop rdi
 	pop rsi
-    ;COMPV_YASM_RESTORE_XMM
     COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
 	ret
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; void rgbaToI420Kernel11_CompUV_Asm_X86_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride)
+;;; TODO(not correct, lack of registers, only rax is free, not really optimized, not used)
+;sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned_SSSE3):
+;	push rbp
+;	mov rbp, rsp
+;	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+;	push rsi
+;	push rdi
+;	push rbx
+;	sub rsp, 8+8+8; (&outUPtr[0], &outVPtr[8], &TempInt64[16])
+;	; end prolog
+;	
+;	mov rcx, arg(5) ; rcx = stride
+;	mov rax, arg(4) ; rax = width
+;	sub rcx, rax ; rcx = (stride - width)
+;	mov rdx, rcx ; rdx = (stride - width)
+;	shr rdx, 1 ; rdx = padUV = (stride - width) >> 1
+;	shl rcx, 2 ; rcx = (stride - width) << 2
+;	mov rax, arg(5) ; rax = stride
+;	shl rax, 2 ; rax = (stride << 2)
+;	add rcx, rax; rcx = padRGBA = ((stride - width) << 2) + (stride << 2)
+;
+;	mov rbx, arg(0) ; rgbaPtr
+;	mov rsi, arg(3) ; height
+;
+;	mov rax, arg(1)
+;	mov [rsp], rax ; [rsp] = &outUPtr
+;	mov rax, arg(2)
+;	mov [rsp + 8], rax ; [rsp+8] = &outVPtr
+;
+;	movdqa xmm0, [sym(kRGBAToYUV_U2V2Coeffs8)] ; UV coeffs interleaved: each appear #2 times
+;	movdqa xmm1, [sym(k128_i16)]
+;
+;	LoopHeight1:
+;		LoopWidth1:
+;			movdqa xmm2, [rbx] ; 4 RGBA samples = 16bytes (2 are useless, we want 1 out of 2): axbx
+;			punpckldq xmm2, xmm2 ; aaxx
+;			punpckhdq xmm2, xmm2 ; bbxx
+;			punpckldq xmm2, xmm2 ; abab
+;			pmaddubsw xmm2, xmm0 ; Ua Ub Va Vb
+;			phaddw xmm2, xmm2
+;			psraw xmm2, 8 ; >> 8
+;			paddw xmm2, xmm1 ; + 128 -> UUVV----
+;			packuswb xmm2, xmm2 ; Saturate(I16 -> U8)
+;			movd rdi, xmm2
+;			mov rax, arg(1) ;outUPtr
+;			mov [rax], dword rdi
+;			add rax, 2
+;			mov arg(1), rax		
+;			
+;			add rbx, 16 ; rgbaPtr += 16
+;
+;			; end-of-LoopWidth
+;			mov rax, arg(4) ; width
+;			sub rax, 4
+;			mov arg(4), rax
+;			cmp rax, 0
+;			jg LoopWidth1
+;	add rbx, rcx ; rgbaPtr += padRGBA
+;	mov rax, [rsp]
+;	add rax, rdx
+;	mov [rsp], rax
+;	mov rax, [rsp + 8]
+;	add rax, rdx
+;	mov [rsp + 8], rax
+;	; end-of-LoopHeight1
+;	sub rsi, 2
+;	cmp rsi, 0
+;	;jg LoopHeight1
+;
+;	; begin epilog
+;	add rsp, 8+8+8
+;	pop rbx
+;	pop rdi
+;	pop rsi
+;    COMPV_YASM_UNSHADOW_ARGS
+;	mov rsp, rbp
+;	pop rbp
+;	ret
 
+	

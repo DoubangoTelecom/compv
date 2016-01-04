@@ -27,6 +27,8 @@
 
 #if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
 extern "C" void rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride);
+extern "C" void rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride);
+extern "C" void rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride);
 #endif
 
 COMPV_NAMESPACE_BEGIN()
@@ -95,22 +97,35 @@ void CompVImageConvToI420::fromRGBA(const uint8_t* rgbaPtr, size_t width, size_t
 {
 	void(*rgbaToI420Kernel_CompY)(const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride) = rgbaToI420Kernel11_CompY_C;
 	void(*rgbaToI420Kernel_CompUV)(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride) = rgbaToI420Kernel11_CompUV_C;
+	size_t strideRgbaBytes = (stride << 2);
+	size_t widthRgbaBytes = (width << 2);
 
 #if defined(COMPV_ARCH_X86)
-	if (width > COMPV_SIMD_ALIGNV_SSE && COMPV_IS_ALIGNED_SSE(stride)) {
+	if (widthRgbaBytes > COMPV_SIMD_ALIGNV_SSE && COMPV_IS_ALIGNED_SSE(strideRgbaBytes)) {
 		if (CompVCpu::isSupported(kCpuFlagSSSE3)) {
 			COMPV_EXEC_IFDEF_INTRINSIC(rgbaToI420Kernel_CompY = rgbaToI420Kernel11_CompY_Intrin_Unaligned_SSSE3);
+			// TODO(dmi): add unaligned versions
 			if (COMPV_IS_ALIGNED_SSE(rgbaPtr)) {
 				COMPV_EXEC_IFDEF_INTRINSIC(rgbaToI420Kernel_CompY = rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3);
 				COMPV_EXEC_IFDEF_INTRINSIC(rgbaToI420Kernel_CompUV = rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3);
 				COMPV_EXEC_IFDEF_ASM(rgbaToI420Kernel_CompY = rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3);
+				if (COMPV_IS_ALIGNED(strideRgbaBytes, 4 * COMPV_SIMD_ALIGNV_SSE)) {
+					int kaka = 0;
+				}
 			}
 		} // end-of-SSSE3
 	} // end-of-SSE
-	if (width > COMPV_SIMD_ALIGNV_AVX2 && COMPV_IS_ALIGNED_AVX2(stride)) {
+	if (widthRgbaBytes > COMPV_SIMD_ALIGNV_AVX2 && COMPV_IS_ALIGNED_AVX2(strideRgbaBytes)) {
 		if (CompVCpu::isSupported(kCpuFlagAVX2)) {
+			// TODO(dmi): add unaligned versions
 			if (COMPV_IS_ALIGNED_AVX2(rgbaPtr)) {
 				COMPV_EXEC_IFDEF_INTRINSIC(rgbaToI420Kernel_CompY = rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2);
+				COMPV_EXEC_IFDEF_INTRINSIC(rgbaToI420Kernel_CompUV = rgbaToI420Kernel11_CompUV_Intrin_Aligned_AVX2);
+				COMPV_EXEC_IFDEF_ASM(rgbaToI420Kernel_CompY = rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2);
+				COMPV_EXEC_IFDEF_ASM(rgbaToI420Kernel_CompUV = rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2);
+				if (COMPV_IS_ALIGNED(strideRgbaBytes, 4 * COMPV_SIMD_ALIGNV_AVX2)) {
+					int kaka = 0;
+				}
 			}
 		}
 	}
@@ -118,7 +133,7 @@ void CompVImageConvToI420::fromRGBA(const uint8_t* rgbaPtr, size_t width, size_t
 
 	// Process Y and UV lines
 	rgbaToI420Kernel_CompY(rgbaPtr, outYPtr, height, width, stride);
-	//--rgbaToI420Kernel_CompUV(rgbaPtr, outUPtr, outVPtr, height, width, stride);
+	rgbaToI420Kernel_CompUV(rgbaPtr, outUPtr, outVPtr, height, width, stride);
 }
 
 COMPV_NAMESPACE_END()

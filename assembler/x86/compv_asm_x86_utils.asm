@@ -35,3 +35,25 @@ sym(compv_utils_thread_get_core_id_x86_asm):
     shr ebx, 24
     mov eax, ebx
     ret
+
+;;;
+;;; void testPrologEpilog(int a, int b, int c)
+sym(rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 3
+	COMPV_YASM_SAVE_XMM 15 ;XMM[6-15]
+	push rsi
+	push rdi
+	push rbx
+	; end prolog
+
+	; begin epilog
+	pop rbx
+	pop rdi
+	pop rsi
+    COMPV_YASM_RESTORE_XMM
+    COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
