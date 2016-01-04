@@ -36,6 +36,7 @@ void rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (size_t j = 0; j < height; ++j) {
 		for (size_t i = 0; i < width; i += 8) {
+			_mm256_zeroupper();
 			_mm256_store_si256(&ymmRgba, _mm256_load_si256((__m256i*)rgbaPtr)); // 8 RGBA samples
 			_mm256_store_si256(&ymmRgba, _mm256_maddubs_epi16(ymmRgba, ymmYCoeffs)); // 
 			_mm256_store_si256(&ymmRgba, _mm256_hadd_epi16(ymmRgba, ymmRgba)); // aaaabbbbaaaabbbb
@@ -43,6 +44,7 @@ void rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t
 			_mm256_store_si256(&ymmRgba, _mm256_srai_epi16(ymmRgba, 7)); // >> 7
 			_mm256_store_si256(&ymmRgba, _mm256_add_epi16(ymmRgba, ymm16)); // + 16
 			_mm256_store_si256(&ymmRgba, _mm256_packus_epi16(ymmRgba, ymmRgba)); // Saturate(I16 -> U8)
+			_mm256_zeroupper();
 #if defined(COMPV_ARCH_X64)
 			*((uint64_t*)outYPtr) = _mm_cvtsi128_si64(_mm256_castsi256_si128(ymmRgba));
 #else
@@ -71,6 +73,7 @@ void rgbaToI420Kernel11_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
 	for (size_t j = 0; j < height; j += 2) {
 		for (size_t i = 0; i < width; i += 8) {
+			_mm256_zeroupper();
 			_mm256_store_si256(&ymmRgba, _mm256_load_si256((__m256i*)rgbaPtr)); // 8 RGBA samples = 32bytes (4 are useless, we want 1 out of 2): axbxcxdx
 			//_mm256_store_si256(&ymmRgba, _mm256_permutevar8x32_epi32(ymmRgba, mask02460246)); // abcdabcd
 			_mm256_store_si256(&ymmRgba, _mm256_maddubs_epi16(ymmRgba, ymmUV4Coeffs)); // Ua Ub Uc Ud Va Vb Vc Vd
@@ -79,6 +82,7 @@ void rgbaToI420Kernel11_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_
 			_mm256_store_si256(&ymmRgba, _mm256_srai_epi16(ymmRgba, 8)); // >> 8
 			_mm256_store_si256(&ymmRgba, _mm256_add_epi16(ymmRgba, ymm128)); // + 128 -> UUVV----
 			_mm256_store_si256(&ymmRgba, _mm256_packus_epi16(ymmRgba, ymmRgba)); // Saturate(I16 -> U8)
+			_mm256_zeroupper();
 			_mm_store_si128(&xmmUV, _mm256_castsi256_si128(ymmRgba)); // UV
 #if 1
 			*((uint32_t*)outUPtr) = _mm_cvtsi128_si32(xmmUV);

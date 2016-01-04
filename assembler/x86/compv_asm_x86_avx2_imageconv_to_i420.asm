@@ -54,12 +54,12 @@ sym(rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2):
 	mov rsi, arg(2) ; height
 	mov rbx, arg(1) ; outYPtr
 
-	vmovdqa ymm0, [sym(kRGBAToYUV_YCoeffs8)]
-	vmovdqa ymm1, [sym(k16_i16)]
-
 	LoopHeight:
 		mov rdi, arg(3) ; width
 		LoopWidth:
+			vzeroupper
+			vmovdqa ymm0, [sym(kRGBAToYUV_YCoeffs8)]
+			vmovdqa ymm1, [sym(k16_i16)]
 			vmovdqa ymm2, [rax] ; 8 RGBA samples
 			vpmaddubsw ymm2, ymm0
 			vphaddw ymm2, ymm2 ; aaaabbbbaaaabbbb
@@ -68,6 +68,7 @@ sym(rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2):
 			vpaddw ymm2, ymm1
 			vpackuswb ymm2, ymm2
 			vextracti128 xmm2, ymm2, 0
+			vzeroupper
 			movq [rbx], xmm2
 			add rbx, 8
 			add rax, 32
@@ -119,14 +120,14 @@ sym(rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2)
 	mov rax, arg(4)
 	mov [rsp], rax ; [rsp+0] = width
 
-	vmovdqa ymm0, [sym(k_0_2_4_6_0_2_4_6_i32)] ; mask02460246
-	vmovdqa ymm1, [sym(k128_i16)] ; 128's
-	vmovdqa ymm3, [sym(kRGBAToYUV_U4V4Coeffs8)] ; ymmUV4Coeffs
-
 	LoopHeight1:
 		mov rax, [rsp]
 		mov arg(4), rax ; restore arg(4)=width (decremented in th inner loop)
 		LoopWidth1:
+			vzeroupper
+			vmovdqa ymm0, [sym(k_0_2_4_6_0_2_4_6_i32)] ; mask02460246
+			vmovdqa ymm1, [sym(k128_i16)] ; 128's
+			vmovdqa ymm3, [sym(kRGBAToYUV_U4V4Coeffs8)] ; ymmUV4Coeffs
 			vmovdqa ymm2, [rbx] ; 8 RGBA samples = 32bytes (4 are useless, we want 1 out of 2): axbxcxdx
 			;vpermd ymm2, ymm2, ymm0 ; abcdabcd
 			vpmaddubsw ymm2, ymm3 ; Ua Ub Uc Ud Va Vb Vc Vd
@@ -135,6 +136,7 @@ sym(rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2)
 			vpsraw ymm2, 8 ; >> 8
 			vpaddw ymm2, ymm1 ; + 128 -> UUVV----
 			vpackuswb ymm2, ymm2; Saturate(I16 -> U8)
+			vzeroupper
 			movd rax, xmm2
 			mov rdi, arg(1)
 			mov [rdi], eax
