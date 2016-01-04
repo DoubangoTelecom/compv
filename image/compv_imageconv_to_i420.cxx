@@ -23,7 +23,7 @@
 #include "compv/compv_mem.h"
 
 #include "compv/intrinsics/x86/compv_imageconv_to_i420_intrin_sse.h"
-#include "compv/intrinsics/x86/compv_imageconv_to_i420_intrin_avx.h"
+#include "compv/intrinsics/x86/compv_imageconv_to_i420_intrin_avx2.h"
 
 #if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
 extern "C" void rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride);

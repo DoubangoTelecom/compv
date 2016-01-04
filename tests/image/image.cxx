@@ -39,7 +39,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	size_t width, height, stride;
 	FILE* file = NULL;
 
-	COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagAVX2));
+	COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagSSSE3));
 	COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_EQUIRECTANGULAR_FILE, &jpegImage));
 	COMPV_ASSERT(jpegImage->getPixelFormat() == COMPV_PIXEL_FORMAT_R8G8B8);
 	rgbToRGBA(jpegImage, &rgbaPtr, width, height, stride);

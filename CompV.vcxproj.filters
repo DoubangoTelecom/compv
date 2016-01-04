@@ -135,7 +135,7 @@
     <ClInclude Include="include\compv\compv_simd_globals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_to_i420_intrin_avx.h">
+    <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_to_i420_intrin_avx2.h">
       <Filter>Header Files\intrinsics\x86</Filter>
     </ClInclude>
   </ItemGroup>
@@ -206,7 +206,7 @@
     <ClCompile Include="compv_simd_globals.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="intrinsics\x86\compv_imageconv_to_i420_intrin_avx.cxx">
+    <ClCompile Include="intrinsics\x86\compv_imageconv_to_i420_intrin_avx2.cxx">
       <Filter>Source Files\intrinsics\x86</Filter>
     </ClCompile>
   </ItemGroup>
@@ -220,7 +220,7 @@
     <YASM Include="assembler\x86\compv_asm_x86_sse_imageconv_to_i420.asm">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
-    <YASM Include="assembler\x86\compv_asm_x86_avx_imageconv_to_i420.asm">
+    <YASM Include="assembler\x86\compv_asm_x86_avx2_imageconv_to_i420.asm">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
   </ItemGroup>

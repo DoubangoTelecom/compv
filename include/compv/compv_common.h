@@ -47,6 +47,18 @@ COMPV_NAMESPACE_BEGIN()
 
 #define COMPV_IS_POW2(x) (((x) != 0) && !((x) & ((x) - 1))) 
 
+/*******************************************************/
+/* MACRO for shuffle parameter for _mm_shuffle_ps().   */
+/* Argument fp3 is a digit[0123] that represents the fp*/
+/* from argument "b" of mm_shuffle_ps that will be     */
+/* placed in fp3 of result. fp2 is the same for fp2 in */
+/* result. fp1 is a digit[0123] that represents the fp */
+/* from argument "a" of mm_shuffle_ps that will be     */
+/* places in fp1 of result. fp0 is the same for fp0 of */
+/* result                                              */
+/*******************************************************/
+#define COMPV_MM_SHUFFLE(fp3,fp2,fp1,fp0) (((fp3) << 6) | ((fp2) << 4) | ((fp1) << 2) | ((fp0)))
+
 typedef int32_t vcomp_core_id_t;
 
 typedef enum _COMPV_DEBUG_LEVEL {

@@ -17,7 +17,7 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#include "compv/intrinsics/x86/compv_imageconv_to_i420_intrin_avx.h"
+#include "compv/intrinsics/x86/compv_imageconv_to_i420_intrin_avx2.h"
 
 #if defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC)
 #include "compv/image/compv_imageconv_common.h"
@@ -38,7 +38,8 @@ void rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t
 		for (size_t i = 0; i < width; i += 8) {
 			_mm256_store_si256(&ymmRgba, _mm256_load_si256((__m256i*)rgbaPtr)); // 8 RGBA samples
 			_mm256_store_si256(&ymmRgba, _mm256_maddubs_epi16(ymmRgba, ymmYCoeffs)); // 
-			_mm256_store_si256(&ymmRgba, _mm256_hadd_epi16(ymmRgba, ymmRgba));
+			_mm256_store_si256(&ymmRgba, _mm256_hadd_epi16(ymmRgba, ymmRgba)); // aaaabbbbaaaabbbb
+			_mm256_store_si256(&ymmRgba, _mm256_permute4x64_epi64(ymmRgba, COMPV_MM_SHUFFLE(0, 0, 2, 0))); // aaaaaaaa-------
 			_mm256_store_si256(&ymmRgba, _mm256_srai_epi16(ymmRgba, 7)); // >> 7
 			_mm256_store_si256(&ymmRgba, _mm256_add_epi16(ymmRgba, y16)); // + 16
 			_mm256_store_si256(&ymmRgba, _mm256_packus_epi16(ymmRgba, ymmRgba)); // Saturate(I16 -> U8)
