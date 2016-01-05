@@ -45,17 +45,12 @@ sym(rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2):
 	push rbx
 	; end prolog
 
-	mov rcx, arg(4) ; rcx = stride
-	mov rax, arg(3) ; rax = width
-	sub rcx, rax ; rcx = (stride - width)
-	mov rdx, rcx ; rdx = padY = (stride - width);
-	shl rcx, 2 ; rcx = padRGBA = (stride - width) << 2
 	mov rax, arg(0) ; rgbaPtr
 	mov rsi, arg(2) ; height
 	mov rbx, arg(1) ; outYPtr
 
 	LoopHeight:
-		mov rdi, arg(3) ; width
+		xor rdi, rdi
 		LoopWidth:
 			vzeroupper
 			vmovdqa ymm0, [sym(kRGBAToYUV_YCoeffs8)]
@@ -74,10 +69,13 @@ sym(rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2):
 			add rax, 32
 
 			; end-of-LoopWidth
-			sub rdi, 8
-			cmp rdi, 0
-			jg LoopWidth	
-	add rbx, rdx
+			add rdi, 8
+			cmp rdi, arg(3)
+			jl LoopWidth
+	mov rcx, arg(4) ; stride
+	sub rcx, rdi ; (stride - i)	
+	add rbx, rcx
+	shl rcx, 2 ; (stride - i) << 2
 	add rax, rcx
 	; end-of-LoopHeight
 	sub rsi, 1
@@ -104,25 +102,18 @@ sym(rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2)
 	push rbx
 	sub rsp, 8
 	; end prolog
-
-	mov rcx, arg(5) ; rcx = stride
-	mov rax, arg(4) ; rax = width
-	sub rcx, rax ; rcx = (stride - width)
-	mov rdx, rcx ; rdx = (stride - width)
-	shr rdx, 1 ; rdx = padUV = (stride - width) >> 1
-	shl rcx, 2 ; rcx = (stride - width) << 2
-	mov rax, arg(5) ; rax = stride
-	shl rax, 2 ; rax = (stride << 2)
-	add rcx, rax; rcx = padRGBA = ((stride - width) << 2) + (stride << 2)
-
+	
 	mov rbx, arg(0) ; rgbaPtr
+	mov rcx, arg(1); outUPtr
+	mov rdx, arg(2); outVPtr
 	mov rsi, arg(3) ; height
-	mov rax, arg(4)
-	mov [rsp], rax ; [rsp+0] = width
+	
+	mov rax, arg(5)
+	shl rax, 2 ; strideTimes4 = (stride << 2) -> used to skip even lines
+	mov [rsp], rax ; [rsp+0] = strideTimes4
 
 	LoopHeight1:
-		mov rax, [rsp]
-		mov arg(4), rax ; restore arg(4)=width (decremented in th inner loop)
+		xor rdi, rdi
 		LoopWidth1:
 			vzeroupper
 			vmovdqa ymm0, [sym(k_0_2_4_6_0_2_4_6_i32)] ; mask02460246
@@ -138,32 +129,27 @@ sym(rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2)
 			vpackuswb ymm2, ymm2; Saturate(I16 -> U8)
 			vzeroupper
 			movd rax, xmm2
-			mov rdi, arg(1)
-			mov [rdi], eax
-			add rdi, 4
-			mov arg(1), rdi
-			psrldq xmm2, 4 ; V0
+			mov [rcx], eax
+			psrldq xmm2, 4 ; xmm2 >> 4
 			movd rax, xmm2
-			mov rdi, arg(2)
-			mov [rdi], eax
-			add rdi, 4
-			mov arg(2), rdi
+			mov [rdx], eax
 						
 			add rbx, 32 ; rgbaPtr += 32
+			add rcx, 4 ; outUPtr += 4
+			add rdx, 4 ; outVPtr += 4
 
 			; end-of-LoopWidth
-			mov rax, arg(4) ; width
-			sub rax, 8
-			mov arg(4), rax
-			cmp rax, 0
-			jg LoopWidth1
-	add rbx, rcx ; rgbaPtr += padRGBA
-	mov rdi, arg(1)
-	add rdi, rdx 
-	mov arg(1), rdi ; outUPtr += padUV
-	mov rdi, arg(2)
-	add rdi, rdx 
-	mov arg(2), rdi ; outVPtr += padUV
+			add rdi, 8
+			cmp rdi, arg(4)
+			jl LoopWidth1
+	mov rax, arg(5); stride
+	sub rax, rdi ; (stride - i)
+	shr rax, 1 ; rax = (stride - i) >> 1
+	add rcx, rax ; outUPtr += (stride - i) >> 1;
+	add rdx, rax ; outVPtr += (stride - i) >> 1;
+	shl rax, 3 ; rax = (stride - i) << 2
+	add rbx, rax ; rgbaPtr += (stride - i) << 2
+	add rbx, [rsp+0] ; rgbaPtr += strideTimes4 -> skip even lines
 	
 	; end-of-LoopHeight1
 	sub rsi, 2

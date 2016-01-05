@@ -42,7 +42,7 @@ bool TestThreadDisp()
 
 	// Start the tasks (each one has a single tocken with id = 0)
 	timeStart = CompVTime::getNowMills();
-#if 0 // Using async tasks
+#if 1 // Using async tasks
 	int32_t interval = SIZE / THREADS_COUNT;
 	int32_t start = 0, end = interval;
 	for (int32_t treadId = 0; treadId < disp_->getThreadsCount(); ++treadId) {

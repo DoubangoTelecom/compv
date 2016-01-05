@@ -37,8 +37,8 @@ public:
 	static void* reallocAligned(void * ptr, size_t size, size_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
 	static void freeAligned(void** ptr);
 	static void* callocAligned(size_t num, size_t size, size_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
-	static void* alignBackward(void* ptr, int32_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
-	static void* alignForward(void* ptr, int32_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
+	static uintptr_t alignBackward(uintptr_t ptr, int32_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
+	static uintptr_t alignForward(uintptr_t ptr, int32_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
 };
 
 COMPV_NAMESPACE_END()

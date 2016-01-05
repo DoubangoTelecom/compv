@@ -73,6 +73,18 @@ COMPV_ERROR_CODE CompVInit()
 	COMPV_DEBUG_INFO("Binary type: X86_32");
 #	endif
 #endif
+#if defined(COMPV_INTRINSIC)
+	COMPV_DEBUG_INFO("Intrinsic enabled");
+#endif
+#if defined(COMPV_ASM)
+	COMPV_DEBUG_INFO("Assembler enabled");
+#endif
+	// https://msdn.microsoft.com/en-us/library/jj620901.aspx
+#if defined(__AVX2__)
+	COMPV_DEBUG_INFO("Code built with option /arch:AVX2");
+#elif defined(__AVX__)
+	COMPV_DEBUG_INFO("Code built with option /arch:AVX");
+#endif
 
 	COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
 

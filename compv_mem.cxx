@@ -178,16 +178,16 @@ void* CompVMem::callocAligned(size_t num, size_t size, size_t alignment/*= COMPV
 }
 
 // alignment must be power of two
-void* CompVMem::alignBackward(void* ptr, int32_t alignment /*= COMPV_SIMD_ALIGNV_DEFAULT*/)
+uintptr_t CompVMem::alignBackward(uintptr_t ptr, int32_t alignment /*= COMPV_SIMD_ALIGNV_DEFAULT*/)
 {
 	COMPV_ASSERT(COMPV_IS_POW2(alignment));
-	return (void*)(((uintptr_t)ptr) & (-alignment));
+	return (ptr & -alignment);
 }
 
-void* CompVMem::alignForward(void* ptr, int32_t alignment /*= COMPV_SIMD_ALIGNV_DEFAULT*/)
+uintptr_t CompVMem::alignForward(uintptr_t ptr, int32_t alignment /*= COMPV_SIMD_ALIGNV_DEFAULT*/)
 {
 	COMPV_ASSERT(COMPV_IS_POW2(alignment));
-	return ((uint8_t*)ptr) + (((uintptr_t)ptr) & (alignment - 1));
+	return (ptr + (alignment - 1)) & -alignment;
 }
 
 COMPV_NAMESPACE_END()

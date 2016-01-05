@@ -22,6 +22,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3)
+global sym(rgbaToI420Kernel41_CompY_ASM_Aligned_SSSE3)
 ;global sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned_SSSE3)
 
 section .data
@@ -42,12 +43,62 @@ sym(rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3):
 	push rdi
 	push rbx
 	; end prolog
+	
+	mov rax, arg(0) ; rgbaPtr
+	mov rsi, arg(2) ; height
+	mov rbx, arg(1) ; outYPtr
 
-	mov rcx, arg(4) ; rcx = stride
-	mov rax, arg(3) ; rax = width
-	sub rcx, rax ; rcx = (stride - width)
-	mov rdx, rcx ; rdx = padY = (stride - width);
-	shl rcx, 2 ; rcx = padRGBA = (stride - width) << 2
+	movdqa xmm0, [sym(kRGBAToYUV_YCoeffs8)]
+	movdqa xmm1, [sym(k16_i16)]
+
+	LoopHeight1:
+		xor rdi, rdi
+		LoopWidth1:
+			movdqa xmm2, [rax] ; 4 RGBA samples
+			pmaddubsw xmm2, xmm0
+			phaddw xmm2, xmm2
+			psraw xmm2, 7
+			paddw xmm2, xmm1
+			packuswb xmm2, xmm2
+			movd [rbx], xmm2
+
+			add rbx, 4
+			add rax, 16
+
+			; end-of-LoopWidth1
+			add rdi, 4
+			cmp rdi, arg(3)
+			jl LoopWidth1
+	mov rcx, arg(4) ; stride
+	sub rcx, rdi ; (stride - i)
+	add rbx, rcx
+	shl rcx, 2 ; ((stride - i) << 2)
+	add rax, rcx
+	; end-of-LoopHeight1
+	sub rsi, 1
+	cmp rsi, 0
+	jg LoopHeight1
+
+	; begin epilog
+	pop rbx
+	pop rdi
+	pop rsi
+    COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; void rgbaToI420Kernel41_CompY_ASM_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride)
+sym(rgbaToI420Kernel41_CompY_ASM_Aligned_SSSE3):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
+	push rsi
+	push rdi
+	push rbx
+	; end prolog
+	
 	mov rax, arg(0) ; rgbaPtr
 	mov rsi, arg(2) ; height
 	mov rbx, arg(1) ; outYPtr
@@ -56,23 +107,41 @@ sym(rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3):
 	movdqa xmm1, [sym(k16_i16)]
 
 	LoopHeight0:
-		mov rdi, arg(3) ; width
+		xor rdi, rdi
 		LoopWidth0:
 			movdqa xmm2, [rax] ; 4 RGBA samples
+			movdqa xmm3, [rax + 16] ; 4 RGBA samples
+			movdqa xmm4, [rax + 32] ; 4 RGBA samples
+			movdqa xmm5, [rax + 48] ; 4 RGBA samples
+
 			pmaddubsw xmm2, xmm0
-			phaddw xmm2, xmm2
+			pmaddubsw xmm3, xmm0
+			pmaddubsw xmm4, xmm0
+			pmaddubsw xmm5, xmm0
+
+			phaddw xmm2, xmm3
+			phaddw xmm4, xmm5
+			
 			psraw xmm2, 7
+			psraw xmm4, 7
+			
 			paddw xmm2, xmm1
-			packuswb xmm2, xmm2
-			movd [rbx], xmm2
-			add rbx, 4
-			add rax, 16
+			paddw xmm4, xmm1
+						
+			packuswb xmm2, xmm4
+			movdqu [rbx], xmm2
+
+			add rbx, 16
+			add rax, 64
 
 			; end-of-LoopWidth0
-			sub rdi, 4
-			cmp rdi, 0
-			jg LoopWidth0	
-	add rbx, rdx
+			add rdi, 16
+			cmp rdi, arg(3)
+			jl LoopWidth0
+	mov rcx, arg(4) ; stride
+	sub rcx, rdi ; (stride - i)
+	add rbx, rcx
+	shl rcx, 2 ; (stride - i) << 2
 	add rax, rcx
 	; end-of-LoopHeight0
 	sub rsi, 1
