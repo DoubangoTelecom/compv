@@ -27,6 +27,7 @@ COMPV_NAMESPACE_BEGIN()
 
 void rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride)
 {
+	_mm256_zeroupper();
 	__m256i ymmRgba;
 	__m256i ymmYCoeffs = _mm256_load_si256((__m256i*)kRGBAToYUV_YCoeffs8);
 	__m256i ymm16 = _mm256_load_si256((__m256i*)k16_i16);
@@ -55,10 +56,12 @@ void rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t
 		outYPtr += padY;
 		rgbaPtr += padRGBA;
 	}
+	_mm256_zeroupper();
 }
 
 void rgbaToI420Kernel41_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride)
 {
+	_mm256_zeroupper();
 	__m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3;
 	__m256i ymmYCoeffs = _mm256_load_si256((__m256i*)kRGBAToYUV_YCoeffs8);
 	__m256i ymm16 = _mm256_load_si256((__m256i*)k16_i16);
@@ -100,10 +103,12 @@ void rgbaToI420Kernel41_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t
 		outYPtr += padY;
 		rgbaPtr += padRGBA;
 	}
+	_mm256_zeroupper();
 }
 
 void rgbaToI420Kernel11_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride)
 {
+	_mm256_zeroupper();
 	__m256i ymmRgba;
 #if 0
 	__m128i xmmUV;
@@ -144,10 +149,12 @@ void rgbaToI420Kernel11_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_
 		outUPtr += padUV;
 		outVPtr += padUV;
 	}
+	_mm256_zeroupper();
 }
 
 void rgbaToI420Kernel41_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride)
 {
+	_mm256_zeroupper();
 	__m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3, ymm0, ymm1;
 	__m256i ymmUCoeffs = _mm256_load_si256((__m256i*)kRGBAToYUV_UCoeffs8);
 	__m256i ymmVCoeffs = _mm256_load_si256((__m256i*)kRGBAToYUV_VCoeffs8);
@@ -231,6 +238,7 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_
 		outUPtr += padUV;
 		outVPtr += padUV;
 	}
+	_mm256_zeroupper();
 }
 
 COMPV_NAMESPACE_END()
