@@ -31,7 +31,7 @@ COMPV_NAMESPACE_BEGIN()
 typedef uint64_t compv_asynctoken_id_t;
 
 typedef struct compv_asynctoken_param_xs {
-	const void* pcParamPtr;
+	uintptr_t pcParamPtr;
 	size_t uParamSize;
 }
 compv_asynctoken_param_xt;
@@ -63,15 +63,15 @@ typedef struct compv_asynctoken_xs {
 }
 compv_asynctoken_xt;
 
-#define COMPV_ASYNCTASK_PARAM_PTR_INVALID									((const void*)-1)
+#define COMPV_ASYNCTASK_PARAM_PTR_INVALID									((uintptr_t)-1)
 #define COMPV_ASYNCTASK_GET_PARAM(param_ptr, type)							*((type*)(param_ptr))
-#define COMPV_ASYNCTASK_GET_PARAM_PTR(param_ptr, type)						((type)(param_ptr))
-#define COMPV_ASYNCTASK_GET_PARAM_SCALAR(param_scalar, type)				((type)(param_scalar))
+#define COMPV_ASYNCTASK_GET_PARAM_ASIS(param_asis, type)					((type)((uintptr_t)((param_asis))))
 #define COMPV_ASYNCTASK_GET_PARAM_STATIC_ARRAY(param_ptr, type, w, h)		*((type (**)[w][h])(param_ptr))
 
-#define COMPV_ASYNCTASK_SET_PARAM(param_ptr)								(const void*)(&(param_ptr))
-#define COMPV_ASYNCTASK_SET_PARAM_PTR(param_ptr)							(const void*)((param_ptr))
-#define COMPV_ASYNCTASK_SET_PARAM_SCALAR(param_scalar)						(const void*)((param_scalar)) // Must not be more than a pointer size, we recommend using int32_t. If you set a param using this macro then you *must* use COMPV_ASYNCTASK_GET_PARAM_SCALAR() to get it
+#define COMPV_ASYNCTASK_SET_PARAM(param_ptr)								(uintptr_t)(&(param_ptr))
+#define COMPV_ASYNCTASK_SET_PARAM_ASIS(param_asis)							((uintptr_t)((param_asis))) // Must not be more than a pointer size, we recommend using uintptr_t. If you set a param using this macro then you *must* use COMPV_ASYNCTASK_GET_PARAM_ASIS() to get it
+#define COMPV_ASYNCTASK_SET_PARAM_ASISS(...)								__VA_ARGS__
+
 #define COMPV_ASYNCTASK_SET_PARAM_NULL()									COMPV_ASYNCTASK_PARAM_PTR_INVALID
 
 class COMPV_API CompVAsyncTask : public CompVObj
@@ -86,7 +86,7 @@ public:
 	COMPV_ERROR_CODE setAffinity(vcomp_core_id_t core_id);
 	COMPV_ERROR_CODE tokenTake(compv_asynctoken_id_t* pi_token);
 	COMPV_ERROR_CODE tokenRelease(compv_asynctoken_id_t* pi_token);
-	COMPV_ERROR_CODE tokenSetParam(compv_asynctoken_id_t token_id, int32_t param_index, const void* param_ptr, size_t param_size);
+	COMPV_ERROR_CODE tokenSetParam(compv_asynctoken_id_t token_id, int32_t param_index, uintptr_t param_ptr, size_t param_size);
 	COMPV_ERROR_CODE tokenSetParams(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, ...);
 	COMPV_ERROR_CODE tokenSetParams2(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, va_list* ap);
 	COMPV_ERROR_CODE execute(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, ...);

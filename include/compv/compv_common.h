@@ -45,6 +45,9 @@ COMPV_NAMESPACE_BEGIN()
 	assert(__b_ret); \
 }
 
+#define COMPV_NUM_THREADS_SINGLE	1
+#define COMPV_NUM_THREADS_BEST		-1
+
 #define COMPV_IS_POW2(x) (((x) != 0) && !((x) & ((x) - 1))) 
 
 /*******************************************************/

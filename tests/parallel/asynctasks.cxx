@@ -25,17 +25,17 @@ public:
 
 static COMPV_ERROR_CODE task0_f(const struct compv_asynctoken_param_xs* pc_params)
 {
-	compv_asynctoken_id_t token_ = COMPV_ASYNCTASK_GET_PARAM(pc_params[0].pcParamPtr, compv_asynctoken_id_t);
+	compv_asynctoken_id_t token_ = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, compv_asynctoken_id_t);
 	if (token_ == token0_) {
-		int32_t argInt32 = COMPV_ASYNCTASK_GET_PARAM(pc_params[1].pcParamPtr, int32_t);
-		int64_t argInt64 = COMPV_ASYNCTASK_GET_PARAM(pc_params[2].pcParamPtr, int64_t);
-		const char* argCharPtr = COMPV_ASYNCTASK_GET_PARAM(pc_params[3].pcParamPtr, const char*);
-		CompVObjWrapper<CompVAsyncTask *>* argTask = COMPV_ASYNCTASK_GET_PARAM(pc_params[4].pcParamPtr, CompVObjWrapper<CompVAsyncTask *>*);
+		int32_t argInt32 = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, int32_t);
+		int64_t argInt64 = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, int64_t);
+		const char* argCharPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, const char*);
+		CompVObjWrapper<CompVAsyncTask *>* argTask = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, CompVObjWrapper<CompVAsyncTask *>*);
 		return func0(argInt32, argInt64, argCharPtr, *argTask);
 	}
 	else if (token_ == token1_) {
 		myClass& class_ = COMPV_ASYNCTASK_GET_PARAM(pc_params[1].pcParamPtr, myClass);
-		const char* argCharPtr = COMPV_ASYNCTASK_GET_PARAM(pc_params[2].pcParamPtr, const char*);
+		const char* argCharPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const char*);
 		return class_.func1(argCharPtr);
 	}
 	
@@ -61,19 +61,19 @@ bool TestAsyncTasks0()
 	const char* argCharPtr0 = "Test asyncTask (token0)";
 	CompVObjWrapper<CompVAsyncTask *>* argTask = &task_;
 	COMPV_CHECK_CODE_ASSERT(task_->execute(token0_, task0_f,
-		COMPV_ASYNCTASK_SET_PARAM(token0_),
-		COMPV_ASYNCTASK_SET_PARAM(argInt32),
-		COMPV_ASYNCTASK_SET_PARAM(argInt64),
-		COMPV_ASYNCTASK_SET_PARAM(argCharPtr0),
-		COMPV_ASYNCTASK_SET_PARAM(argTask),
+		COMPV_ASYNCTASK_SET_PARAM_ASIS(token0_),
+		COMPV_ASYNCTASK_SET_PARAM_ASIS(argInt32),
+		COMPV_ASYNCTASK_SET_PARAM_ASIS(argInt64),
+		COMPV_ASYNCTASK_SET_PARAM_ASIS(argCharPtr0),
+		COMPV_ASYNCTASK_SET_PARAM_ASIS(argTask),
 		COMPV_ASYNCTASK_SET_PARAM_NULL()));
 
 	// execute task1
 	const char* argCharPtr1 = "Test asyncTask (token1)";
 	COMPV_CHECK_CODE_ASSERT(task_->execute(token1_, task0_f,
-		COMPV_ASYNCTASK_SET_PARAM(token1_),
+		COMPV_ASYNCTASK_SET_PARAM_ASIS(token1_),
 		COMPV_ASYNCTASK_SET_PARAM(obj_),
-		COMPV_ASYNCTASK_SET_PARAM(argCharPtr1),
+		COMPV_ASYNCTASK_SET_PARAM_ASIS(argCharPtr1),
 		COMPV_ASYNCTASK_SET_PARAM_NULL()));
 
 	COMPV_CHECK_CODE_ASSERT(task_->wait(token0_));
@@ -104,9 +104,9 @@ static void long_task(int32_t start, int32_t end, uint8_t* ptr)
 
 static COMPV_ERROR_CODE task1_f(const struct compv_asynctoken_param_xs* pc_params)
 {
-	int32_t start = COMPV_ASYNCTASK_GET_PARAM_SCALAR(pc_params[0].pcParamPtr, int32_t);
-	int32_t end = COMPV_ASYNCTASK_GET_PARAM_SCALAR(pc_params[1].pcParamPtr, int32_t);
-	uint8_t* data = COMPV_ASYNCTASK_GET_PARAM(pc_params[2].pcParamPtr, uint8_t*);
+	int32_t start = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, int32_t);
+	int32_t end = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, int32_t);
+	uint8_t* data = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, uint8_t*);
 	long_task(start, end, data);
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -137,9 +137,9 @@ bool TestAsyncTasks1()
 	int32_t start = 0, end = interval;
 	for (size_t i = 0; i < sizeof(tasks_) / sizeof(tasks_[0]); ++i) {
 		COMPV_CHECK_CODE_ASSERT(tasks_[i]->execute(TOKEN0, task1_f,
-			COMPV_ASYNCTASK_SET_PARAM_SCALAR(start),
-			COMPV_ASYNCTASK_SET_PARAM_SCALAR(end),
-			COMPV_ASYNCTASK_SET_PARAM(data),
+			COMPV_ASYNCTASK_SET_PARAM_ASIS(start),
+			COMPV_ASYNCTASK_SET_PARAM_ASIS(end),
+			COMPV_ASYNCTASK_SET_PARAM_ASIS(data),
 			COMPV_ASYNCTASK_SET_PARAM_NULL()));
 		start += interval;
 		end += interval;

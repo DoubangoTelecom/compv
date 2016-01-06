@@ -19,6 +19,7 @@
 */
 #include "compv/parallel/compv_mutex.h"
 #include "compv/compv_mem.h"
+#include "compv/compv_engine.h"
 #include "compv/compv_errno.h"
 #include "compv/compv_debug.h"
 
@@ -43,8 +44,6 @@ typedef MUTEX_S* MUTEX_T;
 
 
 COMPV_NAMESPACE_BEGIN()
-
-extern COMPV_ERROR_CODE CompVInit();
 
 CompVMutex::CompVMutex(bool recursive /*= true*/)
 : m_pHandle(NULL)
@@ -152,7 +151,7 @@ COMPV_ERROR_CODE CompVMutex::unlock()
 
 COMPV_ERROR_CODE CompVMutex::newObj(CompVObjWrapper<CompVMutex*>* mutex, bool recursive /*= true*/)
 {
-	COMPV_CHECK_CODE_RETURN(CompVInit());
+	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
 	COMPV_CHECK_EXP_RETURN(mutex == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVObjWrapper<CompVMutex*> mutex_ = new CompVMutex(recursive);
 	COMPV_CHECK_EXP_RETURN(*mutex_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

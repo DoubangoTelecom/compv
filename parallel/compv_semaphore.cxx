@@ -20,6 +20,7 @@
 #include "compv/parallel/compv_semaphore.h"
 #include "compv/time/compv_time.h"
 #include "compv/compv_cpu.h"
+#include "compv/compv_engine.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_errno.h"
 #include "compv/compv_debug.h"
@@ -72,8 +73,6 @@ typedef sem_t* SEMAPHORE_T;
 #endif
 
 COMPV_NAMESPACE_BEGIN()
-
-extern COMPV_ERROR_CODE CompVInit();
 
 CompVSemaphore::CompVSemaphore(int initialVal /*= 0*/)
 : m_pHandle(NULL)
@@ -181,7 +180,7 @@ COMPV_ERROR_CODE CompVSemaphore::decrement()
 
 COMPV_ERROR_CODE CompVSemaphore::newObj(CompVObjWrapper<CompVSemaphore*>* sem, int initialVal /*= 0*/)
 {
-	COMPV_CHECK_CODE_RETURN(CompVInit());
+	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
 	COMPV_CHECK_EXP_RETURN(sem == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVObjWrapper<CompVSemaphore*> sem_ = new CompVSemaphore(initialVal);
 	COMPV_CHECK_EXP_RETURN(*sem_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

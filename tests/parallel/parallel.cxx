@@ -18,7 +18,7 @@ int _tmain(int argc, _TCHAR* argv[])
 #endif
 
 #if TEST_ASYNCTASKS
-	//COMPV_ASSERT(TestAsyncTasks0());
+	COMPV_ASSERT(TestAsyncTasks0());
 	COMPV_ASSERT(TestAsyncTasks1());
 #endif
 

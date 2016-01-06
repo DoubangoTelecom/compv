@@ -18,94 +18,12 @@
 * along with CompV.
 */
 #include "compv/compv_common.h"
-#include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
-#include "compv/parallel/compv_threaddisp.h"
-#include "compv/time/compv_time.h"
-#include "compv/image/compv_image.h"
 
 COMPV_NAMESPACE_BEGIN()
 
 static bool s_bInitialized = false;
 static bool s_bBigEndian = false;
-
-COMPV_ERROR_CODE CompVInit()
-{
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	//CompVObjWrapper<CompVThreadDispatcher *> sThreadDisp = NULL;
-
-	if (s_bInitialized) {
-		return COMPV_ERROR_CODE_S_OK;
-	}
-
-	COMPV_DEBUG_INFO("Initializing engine (v %s)...", COMPV_VERSION_STRING);
-
-	// endianness
-	static const short kWord = 0x4321;
-	s_bBigEndian = ((*(int8_t *)&kWord) != 0x21);
-#if COMPV_OS_WINDOWS
-	if (s_bBigEndian) {
-		COMPV_DEBUG_WARN("Big endian on Windows machine. Is it right?");
-	}
-#endif
-
-	// rand()
-	srand((unsigned int) CompVTime::getNowMills());
-
-#if defined(HAVE_GL_GLEW_H)
-	GLenum glewErr = glewInit();
-	if (GLEW_OK != glewErr) {
-		COMPV_DEBUG_ERROR("Initializing GLEW failed (%d): %s", glewErr, glewGetErrorString(glewErr));
-		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_GLEW);
-	}
-#endif
-
-	// ThreadDispatcher
-	//if (CompVCpu::getCoresCount() > 1) {
-	//	COMPV_CHECK_CODE_BAIL(err_ = CompVThreadDispatcher::newObj(&sThreadDisp));
-	//}
-
-	/* Image handlers initialization */
-	COMPV_CHECK_CODE_BAIL(err_ = CompVImageDecoder::init());
-
-	/* CPU features initialization */
-	COMPV_CHECK_CODE_BAIL(err_ = CompVCpu::init());
-	COMPV_DEBUG_INFO("CPU features: %s", CompVCpu::getFlagsAsString(CompVCpu::getFlags()));
-	COMPV_DEBUG_INFO("CPU cores: #%d", CompVCpu::getCoresCount());
-#if defined(COMPV_ARCH_X86)
-	// even if we are on X64 CPU it's possible that we're running a 32-bit binary
-#	if defined(COMPV_ARCH_X64)
-		COMPV_DEBUG_INFO("Binary type: X86_64");
-#	else
-	COMPV_DEBUG_INFO("Binary type: X86_32");
-#	endif
-#endif
-#if defined(COMPV_INTRINSIC)
-	COMPV_DEBUG_INFO("Intrinsic enabled");
-#endif
-#if defined(COMPV_ASM)
-	COMPV_DEBUG_INFO("Assembler enabled");
-#endif
-	// https://msdn.microsoft.com/en-us/library/jj620901.aspx
-#if defined(__AVX2__)
-	COMPV_DEBUG_INFO("Code built with option /arch:AVX2");
-#elif defined(__AVX__)
-	COMPV_DEBUG_INFO("Code built with option /arch:AVX");
-#endif
-
-	COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
-
-	COMPV_DEBUG_INFO("Engine initialized");
-
-bail:
-	s_bInitialized = COMPV_ERROR_CODE_IS_OK(err_);
-	return err_;
-}
-
-bool CompVIsInitialized()
-{
-	return s_bInitialized;
-}
 
 // Private function used as extern
 COMPV_API const char* CompVGetErrorString(COMPV_ERROR_CODE code)

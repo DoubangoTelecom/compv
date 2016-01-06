@@ -24,10 +24,6 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-extern COMPV_ERROR_CODE CompVInit();
-
-CompVObjWrapper<CompVThreadDispatcher* > CompVImageConv::s_ThreadDisp = NULL;
-
 CompVImageConv::CompVImageConv()
 {
 
@@ -36,31 +32,6 @@ CompVImageConv::CompVImageConv()
 CompVImageConv::~CompVImageConv()
 {
 
-}
-
-COMPV_ERROR_CODE CompVImageConv::multiThreadingEnable(CompVObjWrapper<CompVThreadDispatcher* > dispatcher)
-{
-	COMPV_CHECK_CODE_RETURN(CompVInit());
-	COMPV_CHECK_EXP_RETURN(!dispatcher, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-
-	s_ThreadDisp = dispatcher;
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVImageConv::multiThreadingDisable()
-{
-	s_ThreadDisp = NULL;
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-bool CompVImageConv::isMultiThreadingEnabled()
-{
-	return !!s_ThreadDisp;
-}
-
-CompVObjWrapper<CompVThreadDispatcher* >& CompVImageConv::getThreadDispatcher()
-{
-	return s_ThreadDisp;
 }
 
 COMPV_ERROR_CODE CompVImageConv::getBestStride(size_t stride, size_t *bestStride)

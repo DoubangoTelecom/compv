@@ -1,7 +1,8 @@
 #include <compv/compv_api.h>
 #include <tchar.h>
 
-#define JPEG_EQUIRECTANGULAR_FILE	"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // FIXME: voiture
+#define JPEG_EQUIRECTANGULAR_FILE	"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
+//#define JPEG_EQUIRECTANGULAR_FILE	"C:/Projects/GitHub/pan360/tests/sphere_mapping/3867257549_6ca855e08d_o.jpg" //paris (BIIIIG)
 
 using namespace compv;
 
@@ -38,17 +39,16 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	CompVObjWrapper<CompVImage *> jpegImage;
 	CompVObjWrapper<CompVImage *> i420Image;
-	CompVObjWrapper<CompVThreadDispatcher *> threadDisp;
 	void* rgbaPtr = NULL;
 	size_t width, height, stride;
 	FILE* file = NULL;
-	const size_t loopCount = 1;
 	uint64_t timeStart, timeEnd;
+#define loopCount  1
+#define numThreads COMPV_NUM_THREADS_SINGLE
 
 	CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
+	COMPV_CHECK_CODE_ASSERT(CompVEngine::init(numThreads));
 	COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagNone));
-	COMPV_CHECK_CODE_ASSERT(CompVThreadDispatcher::newObj(&threadDisp));
-	COMPV_CHECK_CODE_ASSERT(CompVImageConv::multiThreadingEnable(threadDisp)); // enable multithreading for image convertion
 	COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_EQUIRECTANGULAR_FILE, &jpegImage));
 	COMPV_ASSERT(jpegImage->getPixelFormat() == COMPV_PIXEL_FORMAT_R8G8B8);
 	rgbToRGBA(jpegImage, &rgbaPtr, width, height, stride);

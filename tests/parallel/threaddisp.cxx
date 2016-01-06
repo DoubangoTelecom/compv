@@ -18,9 +18,9 @@ static void long_task(int32_t start, int32_t end, uint8_t* ptr)
 
 static COMPV_ERROR_CODE task1_f(const struct compv_asynctoken_param_xs* pc_params)
 {
-	int32_t start = COMPV_ASYNCTASK_GET_PARAM_SCALAR(pc_params[0].pcParamPtr, int32_t);
-	int32_t end = COMPV_ASYNCTASK_GET_PARAM_SCALAR(pc_params[1].pcParamPtr, int32_t);
-	uint8_t* data = COMPV_ASYNCTASK_GET_PARAM(pc_params[2].pcParamPtr, uint8_t*);
+	int32_t start = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, int32_t);
+	int32_t end = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, int32_t);
+	uint8_t* data = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, uint8_t*);
 	long_task(start, end, data);
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -47,9 +47,9 @@ bool TestThreadDisp()
 	int32_t start = 0, end = interval;
 	for (int32_t treadId = 0; treadId < disp_->getThreadsCount(); ++treadId) {
 		COMPV_CHECK_CODE_ASSERT(disp_->execute(treadId, treadId, task1_f,
-			COMPV_ASYNCTASK_SET_PARAM_SCALAR(start),
-			COMPV_ASYNCTASK_SET_PARAM_SCALAR(end),
-			COMPV_ASYNCTASK_SET_PARAM(data),
+			COMPV_ASYNCTASK_SET_PARAM_ASIS(start),
+			COMPV_ASYNCTASK_SET_PARAM_ASIS(end),
+			COMPV_ASYNCTASK_SET_PARAM_ASIS(data),
 			COMPV_ASYNCTASK_SET_PARAM_NULL()));
 		start += interval;
 		end += interval;

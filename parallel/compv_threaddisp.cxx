@@ -20,11 +20,10 @@
 #include "compv/parallel/compv_threaddisp.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_mem.h"
+#include "compv/compv_engine.h"
 #include "compv/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
-
-extern COMPV_ERROR_CODE CompVInit();
 
 CompVThreadDispatcher::CompVThreadDispatcher(int32_t numThreads)
 : m_pTasks(NULL)
@@ -85,7 +84,7 @@ COMPV_ERROR_CODE CompVThreadDispatcher::wait(uint32_t threadId, compv_asynctoken
 
 COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVObjWrapper<CompVThreadDispatcher*>* disp, int32_t numThreads /*= -1*/)
 {
-	COMPV_CHECK_CODE_RETURN(CompVInit());
+	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
 	COMPV_CHECK_EXP_RETURN(disp == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	int32_t numCores = CompVCpu::getCoresCount();
 	if (numThreads <= 0) {

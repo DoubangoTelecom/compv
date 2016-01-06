@@ -19,6 +19,7 @@
 */
 #include "compv/parallel/compv_thread.h"
 #include "compv/compv_cpu.h"
+#include "compv/compv_engine.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_debug.h"
 
@@ -37,8 +38,6 @@ COMPV_NAMESPACE_BEGIN()
 #	include "../winrt/ThreadEmulation.h"
 using namespace ThreadEmulation;
 #endif
-
-extern COMPV_ERROR_CODE CompVInit();
 
 CompVThread::CompVThread(void *(COMPV_STDCALL *start) (void *), void *arg_ /*= NULL*/)
 	: m_pHandle(NULL)
@@ -258,7 +257,7 @@ vcomp_core_id_t CompVThread::getCoreId()
 
 COMPV_ERROR_CODE CompVThread::newObj(CompVObjWrapper<CompVThread*>* thread, void *(COMPV_STDCALL *start) (void *), void *arg /*= NULL*/)
 {
-	COMPV_CHECK_CODE_RETURN(CompVInit());
+	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
 	COMPV_CHECK_EXP_RETURN(thread == NULL || start == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVObjWrapper<CompVThread*> thread_ = new CompVThread(start, arg);
 	COMPV_CHECK_EXP_RETURN(*thread_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

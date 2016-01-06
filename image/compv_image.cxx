@@ -19,12 +19,11 @@
 */
 #include "compv/image/compv_image.h"
 #include "compv/compv_mem.h"
+#include "compv/compv_engine.h"
 #include "compv/compv_fileutils.h"
 #include "compv/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
-
-extern COMPV_ERROR_CODE CompVInit();
 
 //
 //	CompVImage
@@ -126,7 +125,7 @@ COMPV_ERROR_CODE CompVImage::getBitsCountForPixelFormat(COMPV_PIXEL_FORMAT ePixe
 
 COMPV_ERROR_CODE CompVImage::newObj(COMPV_IMAGE_FORMAT eImageFormat, COMPV_PIXEL_FORMAT ePixelFormat, CompVObjWrapper<CompVImage*>* image)
 {
-	COMPV_CHECK_CODE_RETURN(CompVInit());
+	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
 	COMPV_CHECK_EXP_RETURN(image == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	*image = new CompVImage(eImageFormat, ePixelFormat);
 	if (!*image) {
@@ -176,7 +175,7 @@ bail:
 
 COMPV_ERROR_CODE CompVImageDecoder::decodeFile(const char* filePath, CompVObjWrapper<CompVImage*>* image)
 {
-	COMPV_CHECK_CODE_RETURN(CompVInit());
+	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
 	if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
 		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER;
@@ -208,7 +207,7 @@ bail:
 
 COMPV_ERROR_CODE  CompVImageDecoder::decodeInfo(const char* filePath, CompVImageInfo& info)
 {
-	COMPV_CHECK_CODE_RETURN(CompVInit());
+	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
 	if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
 		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER;

@@ -19,13 +19,12 @@
 */
 #include "compv/parallel/compv_asynctask.h"
 #include "compv/time/compv_time.h"
+#include "compv/compv_engine.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
-
-extern COMPV_ERROR_CODE CompVInit();
 
 CompVAsyncTask::CompVAsyncTask()
 : m_iCoreId(-1)
@@ -119,7 +118,7 @@ COMPV_ERROR_CODE CompVAsyncTask::tokenRelease(compv_asynctoken_id_t* piToken)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::tokenSetParam(compv_asynctoken_id_t token_id, int32_t param_index, const void* param_ptr, size_t param_size)
+COMPV_ERROR_CODE CompVAsyncTask::tokenSetParam(compv_asynctoken_id_t token_id, int32_t param_index, uintptr_t param_ptr, size_t param_size)
 {
 	COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(token_id) || !COMPV_ASYNCTASK_PARAM_INDEX_IS_VALID(param_index), COMPV_ERROR_CODE_E_INVALID_PARAMETER)
 
@@ -157,8 +156,8 @@ COMPV_ERROR_CODE CompVAsyncTask::tokenSetParams2(compv_asynctoken_id_t token_id,
 	pToken->iParamsCount = 0;
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	const void* pc_param_ptr;
-	while ((pc_param_ptr = va_arg(*ap, const void*)) != COMPV_ASYNCTASK_PARAM_PTR_INVALID) {
+	uintptr_t pc_param_ptr;
+	while ((pc_param_ptr = va_arg(*ap, uintptr_t)) != COMPV_ASYNCTASK_PARAM_PTR_INVALID) {
 		if (pToken->iParamsCount >= COMPV_ASYNCTASK_MAX_TOKEN_PARAMS_COUNT) {
 			COMPV_DEBUG_ERROR("Too many params");
 			COMPV_CHECK_CODE_RETURN(err = COMPV_ERROR_CODE_E_OUT_OF_BOUND);
@@ -200,9 +199,9 @@ COMPV_ERROR_CODE CompVAsyncTask::execute2(compv_asynctoken_id_t i_token, compv_a
 	pToken->fFunc = f_func;
 	pToken->iParamsCount = 0;
 
-	const void* pc_param_ptr;
+	uintptr_t pc_param_ptr;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	while ((pc_param_ptr = va_arg(*ap, const void*)) != COMPV_ASYNCTASK_PARAM_PTR_INVALID) {
+	while ((pc_param_ptr = va_arg(*ap, uintptr_t)) != COMPV_ASYNCTASK_PARAM_PTR_INVALID) {
 		if (pToken->iParamsCount >= COMPV_ASYNCTASK_MAX_TOKEN_PARAMS_COUNT) {
 			COMPV_DEBUG_ERROR("Too many params");
 			COMPV_CHECK_CODE_RETURN(err = COMPV_ERROR_CODE_E_OUT_OF_BOUND); // must not exit the function: goto bail and call va_end(ap)
@@ -266,7 +265,7 @@ compv_asynctoken_id_t CompVAsyncTask::getUniqueTokenId()
 
 COMPV_ERROR_CODE CompVAsyncTask::newObj(CompVObjWrapper<CompVAsyncTask*>* asyncTask)
 {
-	COMPV_CHECK_CODE_RETURN(CompVInit());
+	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
 	COMPV_CHECK_EXP_RETURN(asyncTask == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVObjWrapper<CompVAsyncTask*> asyncTask_ = new CompVAsyncTask();
 	COMPV_CHECK_EXP_RETURN(*asyncTask_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

@@ -17,35 +17,40 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_IMAGE_IMAGECONV_H_)
-#define _COMPV_IMAGE_IMAGECONV_H_
+#if !defined(_COMPV_ENGINE_H_)
+#define _COMPV_ENGINE_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_obj.h"
-#include "compv/compv_buffer.h"
 #include "compv/compv_common.h"
-#include "compv/image/compv_image.h"
-#include "compv/parallel/compv_threaddisp.h"
 
+#include "compv/parallel/compv_threaddisp.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-class COMPV_API CompVImageConv
+class COMPV_API CompVEngine : public CompVObj
 {
 protected:
-	CompVImageConv();
+	CompVEngine();
 public:
-	virtual ~CompVImageConv();
-
-	static COMPV_ERROR_CODE getBestStride(size_t stride, size_t *bestStride);
-
-	static COMPV_ERROR_CODE rgbaToI420(const uint8_t* rgbaPtr, size_t width, size_t height, size_t stride, CompVObjWrapper<CompVImage* >* i420);
+	virtual ~CompVEngine();
+	static COMPV_ERROR_CODE init(int32_t numThreads = -1);
+	static CompVObjWrapper<CompVThreadDispatcher* >& getThreadDispatcher();
+	static COMPV_ERROR_CODE multiThreadingEnable(CompVObjWrapper<CompVThreadDispatcher* > dispatcher);
+	static COMPV_ERROR_CODE multiThreadingDisable();
+	static COMPV_ERROR_CODE multiThreadingSetMaxThreads(size_t maxThreads);
+	static bool isMultiThreadingEnabled();
+	static bool isInitialized();
+	static bool isBigEndian();
 
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	static CompVObjWrapper<CompVThreadDispatcher *> s_ThreadDisp;
+	static bool s_bInitialized;
+	static bool s_bBigEndian;
 	COMPV_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_IMAGE_IMAGECONV_H_ */
+#endif /* _COMPV_ENGINE_H_ */

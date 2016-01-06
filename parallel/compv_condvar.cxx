@@ -19,6 +19,7 @@
 */
 #include "compv/parallel/compv_condvar.h"
 #include "compv/time/compv_time.h"
+#include "compv/compv_engine.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_errno.h"
 #include "compv/compv_debug.h"
@@ -39,8 +40,6 @@ typedef CONDWAIT_S* CONDWAIT_T;
 #endif
 
 COMPV_NAMESPACE_BEGIN()
-
-extern COMPV_ERROR_CODE CompVInit();
 
 typedef struct condvar_s
 {
@@ -262,7 +261,7 @@ COMPV_ERROR_CODE CompVCondvar::waitWithTimeout(uint64_t millis)
 
 COMPV_ERROR_CODE CompVCondvar::newObj(CompVObjWrapper<CompVCondvar*>* condvar)
 {
-	COMPV_CHECK_CODE_RETURN(CompVInit());
+	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
 	COMPV_CHECK_EXP_RETURN(condvar == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVObjWrapper<CompVCondvar*> condvar_ = new CompVCondvar();
 	COMPV_CHECK_EXP_RETURN(*condvar_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
