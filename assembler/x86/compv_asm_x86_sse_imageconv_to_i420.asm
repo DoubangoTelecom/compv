@@ -43,6 +43,14 @@ sym(rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3):
 	push rdi
 	push rbx
 	; end prolog
+
+	mov rax, arg(3)
+	add rax, 3
+	and rax, -4
+	mov rcx, arg(4)
+	sub rcx, rax
+	mov rdx, rcx ; rdx = padY
+	shl rcx, 2 ; rcx =  padRGBA
 	
 	mov rax, arg(0) ; rgbaPtr
 	mov rsi, arg(2) ; height
@@ -69,10 +77,7 @@ sym(rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3):
 			add rdi, 4
 			cmp rdi, arg(3)
 			jl LoopWidth1
-	mov rcx, arg(4) ; stride
-	sub rcx, rdi ; (stride - i)
-	add rbx, rcx
-	shl rcx, 2 ; ((stride - i) << 2)
+	add rbx, rdx
 	add rax, rcx
 	; end-of-LoopHeight1
 	sub rsi, 1
@@ -98,7 +103,15 @@ sym(rgbaToI420Kernel41_CompY_ASM_Aligned_SSSE3):
 	push rdi
 	push rbx
 	; end prolog
-	
+
+	mov rdx, arg(3)
+	add rdx, 15
+	and rdx, -16
+	mov rcx, arg(4)
+	sub rcx, rdx ; rcx = padY
+	mov rdx, rcx 
+	shl rdx, 2 ; rdx = padRGBA
+		
 	mov rax, arg(0) ; rgbaPtr
 	mov rsi, arg(2) ; height
 	mov rbx, arg(1) ; outYPtr
@@ -138,11 +151,8 @@ sym(rgbaToI420Kernel41_CompY_ASM_Aligned_SSSE3):
 			add rdi, 16
 			cmp rdi, arg(3)
 			jl LoopWidth0
-	mov rcx, arg(4) ; stride
-	sub rcx, rdi ; (stride - i)
 	add rbx, rcx
-	shl rcx, 2 ; (stride - i) << 2
-	add rax, rcx
+	add rax, rdx
 	; end-of-LoopHeight0
 	sub rsi, 1
 	cmp rsi, 0

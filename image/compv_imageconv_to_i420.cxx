@@ -29,7 +29,9 @@
 extern "C" void rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride);
 extern "C" void rgbaToI420Kernel41_CompY_ASM_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride);
 extern "C" void rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride);
+extern "C" void rgbaToI420Kernel41_CompY_Asm_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride);
 extern "C" void rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride);
+extern "C" void rgbaToI420Kernel41_CompUV_Asm_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride);
 #endif
 
 COMPV_NAMESPACE_BEGIN()
@@ -113,11 +115,11 @@ void CompVImageConvToI420::fromRGBA(const uint8_t* rgbaPtr, size_t width, size_t
 			if (COMPV_IS_ALIGNED_SSE(rgbaPtr)) {
 				COMPV_EXEC_IFDEF_INTRINSIC(CompY = rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3);
 				COMPV_EXEC_IFDEF_INTRINSIC(CompUV = rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3);
-				//COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3);
+				COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3);
 				if (COMPV_IS_ALIGNED(stride, 4 * COMPV_SIMD_ALIGNV_SSE)) {
 					COMPV_EXEC_IFDEF_INTRINSIC(CompY = rgbaToI420Kernel41_CompY_Intrin_Aligned_SSSE3);
 					COMPV_EXEC_IFDEF_INTRINSIC(CompUV = rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3);
-					//COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel41_CompY_ASM_Aligned_SSSE3);
+					COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel41_CompY_ASM_Aligned_SSSE3);
 				}
 			}
 		} // end-of-SSSE3
@@ -128,11 +130,13 @@ void CompVImageConvToI420::fromRGBA(const uint8_t* rgbaPtr, size_t width, size_t
 			if (COMPV_IS_ALIGNED_AVX2(rgbaPtr)) {
 				COMPV_EXEC_IFDEF_INTRINSIC(CompY = rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2);
 				COMPV_EXEC_IFDEF_INTRINSIC(CompUV = rgbaToI420Kernel11_CompUV_Intrin_Aligned_AVX2);
-				//COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2);
-				//COMPV_EXEC_IFDEF_ASM(CompUV = rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2);
+				COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2);
+				COMPV_EXEC_IFDEF_ASM(CompUV = rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2);
 				if (COMPV_IS_ALIGNED(stride, 4 * COMPV_SIMD_ALIGNV_AVX2)) {
 					COMPV_EXEC_IFDEF_INTRINSIC(CompY = rgbaToI420Kernel41_CompY_Intrin_Aligned_AVX2);
 					COMPV_EXEC_IFDEF_INTRINSIC(CompUV = rgbaToI420Kernel41_CompUV_Intrin_Aligned_AVX2);
+					COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel41_CompY_Asm_Aligned_AVX2);
+					COMPV_EXEC_IFDEF_ASM(CompUV = rgbaToI420Kernel41_CompUV_Asm_Aligned_AVX2);
 				}
 			}
 		}
