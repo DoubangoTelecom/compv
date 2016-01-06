@@ -20,6 +20,7 @@
 #include "compv/compv_common.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
+#include "compv/parallel/compv_threaddisp.h"
 #include "compv/time/compv_time.h"
 #include "compv/image/compv_image.h"
 
@@ -31,6 +32,7 @@ static bool s_bBigEndian = false;
 COMPV_ERROR_CODE CompVInit()
 {
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+	//CompVObjWrapper<CompVThreadDispatcher *> sThreadDisp = NULL;
 
 	if (s_bInitialized) {
 		return COMPV_ERROR_CODE_S_OK;
@@ -57,6 +59,11 @@ COMPV_ERROR_CODE CompVInit()
 		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_GLEW);
 	}
 #endif
+
+	// ThreadDispatcher
+	//if (CompVCpu::getCoresCount() > 1) {
+	//	COMPV_CHECK_CODE_BAIL(err_ = CompVThreadDispatcher::newObj(&sThreadDisp));
+	//}
 
 	/* Image handlers initialization */
 	COMPV_CHECK_CODE_BAIL(err_ = CompVImageDecoder::init());

@@ -39,6 +39,9 @@ public:
 
 	static COMPV_ERROR_CODE multiThreadingEnable(CompVObjWrapper<CompVThreadDispatcher* > dispatcher);
 	static COMPV_ERROR_CODE multiThreadingDisable();
+	static bool isMultiThreadingEnabled();
+	static CompVObjWrapper<CompVThreadDispatcher* >& getThreadDispatcher();
+
 	static COMPV_ERROR_CODE getBestStride(size_t stride, size_t *bestStride);
 
 	static COMPV_ERROR_CODE rgbaToI420(const uint8_t* rgbaPtr, size_t width, size_t height, size_t stride, CompVObjWrapper<CompVImage* >* i420);

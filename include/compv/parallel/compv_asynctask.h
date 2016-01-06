@@ -43,7 +43,7 @@ typedef COMPV_ERROR_CODE(*compv_asynctoken_f)(const struct compv_asynctoken_para
 #endif /* COMPV_ASYNCTOKEN_ID_INVALID */
 
 #if !defined(COMPV_ASYNCTASK_MAX_TOKEN_COUNT)
-#define COMPV_ASYNCTASK_MAX_TOKEN_COUNT				16
+#define COMPV_ASYNCTASK_MAX_TOKEN_COUNT				(COMPV_TOKENIDX_MAX < 8 ? 8 : COMPV_TOKENIDX_MAX) // 8 is the minimum we want for anonymous IDs or for testing
 #endif /* HL_ASYNCTASK_MAX_TOKEN_COUNT */
 
 #if !defined(COMPV_ASYNCTASK_MAX_TOKEN_PARAMS_COUNT)
@@ -65,11 +65,12 @@ compv_asynctoken_xt;
 
 #define COMPV_ASYNCTASK_PARAM_PTR_INVALID									((const void*)-1)
 #define COMPV_ASYNCTASK_GET_PARAM(param_ptr, type)							*((type*)(param_ptr))
-#define COMPV_ASYNCTASK_GET_PARAM_PTR(param_ptr, type)						*(&((type)(param_ptr)))
+#define COMPV_ASYNCTASK_GET_PARAM_PTR(param_ptr, type)						((type)(param_ptr))
 #define COMPV_ASYNCTASK_GET_PARAM_SCALAR(param_scalar, type)				((type)(param_scalar))
 #define COMPV_ASYNCTASK_GET_PARAM_STATIC_ARRAY(param_ptr, type, w, h)		*((type (**)[w][h])(param_ptr))
 
 #define COMPV_ASYNCTASK_SET_PARAM(param_ptr)								(const void*)(&(param_ptr))
+#define COMPV_ASYNCTASK_SET_PARAM_PTR(param_ptr)							(const void*)((param_ptr))
 #define COMPV_ASYNCTASK_SET_PARAM_SCALAR(param_scalar)						(const void*)((param_scalar)) // Must not be more than a pointer size, we recommend using int32_t. If you set a param using this macro then you *must* use COMPV_ASYNCTASK_GET_PARAM_SCALAR() to get it
 #define COMPV_ASYNCTASK_SET_PARAM_NULL()									COMPV_ASYNCTASK_PARAM_PTR_INVALID
 

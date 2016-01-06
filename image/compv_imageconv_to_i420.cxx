@@ -18,6 +18,7 @@
 * along with CompV.
 */
 #include "compv/image/compv_imageconv_to_i420.h"
+#include "compv/image/compv_imageconv.h"
 #include "compv/image/compv_imageconv_common.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_mem.h"
@@ -35,6 +36,43 @@ extern "C" void rgbaToI420Kernel41_CompUV_Asm_Aligned_AVX2(COMV_ALIGNED(16) cons
 #endif
 
 COMPV_NAMESPACE_BEGIN()
+
+typedef void(*rgbaToI420Kernel_CompY)(const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride);
+typedef void(*rgbaToI420Kernel_CompUV)(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride);
+
+static COMPV_ERROR_CODE toI420Kernelxx_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
+{
+	const int32_t threadId = COMPV_ASYNCTASK_GET_PARAM_SCALAR(pc_params[0].pcParamPtr, int32_t);
+	switch (threadId) {
+	case COMPV_THREADID_RGBAToI420_Y:
+		{
+			rgbaToI420Kernel_CompY CompY = COMPV_ASYNCTASK_GET_PARAM_PTR(pc_params[1].pcParamPtr, rgbaToI420Kernel_CompY);
+			const uint8_t* rgbaPtr = COMPV_ASYNCTASK_GET_PARAM_PTR(pc_params[2].pcParamPtr, const uint8_t*);
+			uint8_t* outYPtr = COMPV_ASYNCTASK_GET_PARAM_PTR(pc_params[3].pcParamPtr, uint8_t*);
+			size_t height = COMPV_ASYNCTASK_GET_PARAM_SCALAR(pc_params[4].pcParamPtr, size_t);
+			size_t width = COMPV_ASYNCTASK_GET_PARAM_SCALAR(pc_params[5].pcParamPtr, size_t);
+			size_t stride = COMPV_ASYNCTASK_GET_PARAM_SCALAR(pc_params[6].pcParamPtr, size_t);
+			CompY(rgbaPtr, outYPtr, height, width, stride);
+			break;
+		}
+	case COMPV_THREADID_RGBAToI420_UV:
+		{
+			rgbaToI420Kernel_CompUV CompUV = COMPV_ASYNCTASK_GET_PARAM_PTR(pc_params[1].pcParamPtr, rgbaToI420Kernel_CompUV);
+			const uint8_t* rgbaPtr = COMPV_ASYNCTASK_GET_PARAM_PTR(pc_params[2].pcParamPtr, const uint8_t*);
+			uint8_t* outUPtr = COMPV_ASYNCTASK_GET_PARAM_PTR(pc_params[3].pcParamPtr, uint8_t*);
+			uint8_t* outVPtr = COMPV_ASYNCTASK_GET_PARAM_PTR(pc_params[4].pcParamPtr, uint8_t*);
+			size_t height = COMPV_ASYNCTASK_GET_PARAM_SCALAR(pc_params[5].pcParamPtr, size_t);
+			size_t width = COMPV_ASYNCTASK_GET_PARAM_SCALAR(pc_params[6].pcParamPtr, size_t);
+			size_t stride = COMPV_ASYNCTASK_GET_PARAM_SCALAR(pc_params[7].pcParamPtr, size_t);
+			CompUV(rgbaPtr, outUPtr, outVPtr, height, width, stride);
+			break;
+		}
+	default:
+		COMPV_DEBUG_ERROR("%d is an invalid thread ID", threadId);
+		return COMPV_ERROR_CODE_E_INVALID_CALL;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
 
 static void rgbaToI420Kernel11_CompY_C(const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride)
 {
@@ -71,41 +109,23 @@ static void rgbaToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr
 	}
 }
 
-typedef void(*rgbaToI420Kernel_CompY)(const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride);
-typedef void(*rgbaToI420Kernel_CompUV)(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride);
-
-#if 0
-static bool computeColsAndMissedBytes(size_t widthInBytes, size_t strideInBytes, size_t alignementInBytes, size_t &cols, int32_t &colMissedBytes, int32_t &colIgnoredBytes)
+static void threadDivideAcrossY(size_t xcount, size_t ycount, size_t xyCountMin, size_t maxThreads, size_t& divCount)
 {
-	if (widthInBytes < alignementInBytes) {
-		return false;
+	divCount = 1;
+	for (size_t div = 2; div <= maxThreads; ++div) {
+		divCount = div;
+		if ((xcount * (ycount / divCount)) <= xyCountMin) { // we started with the smallest div, which mean largest number of pixs and break the loop when we're below the threshold 
+			break;
+		}
 	}
-	cols = (widthInBytes / alignementInBytes);
-	colMissedBytes = (int32_t)(widthInBytes - (cols * alignementInBytes)); // less than "alignementInBytes" which means we should look for a single new col at max
-	if (colMissedBytes > 0 && (strideInBytes - widthInBytes) >= alignementInBytes) {
-		cols += 1;
-		colMissedBytes = 0;
-	}
-	colIgnoredBytes = (int32_t)(strideInBytes - (cols * alignementInBytes));
-	return true;
 }
-
-static bool computeRowsAndMissedRows(size_t rowsTotal, size_t rowsPerKernel, size_t &rows, int32_t &rowsMissed)
-{
-	if (rowsTotal < rowsPerKernel) {
-		return false;
-	}
-	rows = (rowsTotal / rowsPerKernel);
-	rowsMissed = (int32_t)(rowsTotal - (rows * rowsPerKernel));
-	return true;
-}
-#endif
 
 void CompVImageConvToI420::fromRGBA(const uint8_t* rgbaPtr, size_t width, size_t height, size_t stride, uint8_t* outYPtr, uint8_t* outUPtr, uint8_t* outVPtr)
 {
 	rgbaToI420Kernel_CompY CompY = rgbaToI420Kernel11_CompY_C;
 	rgbaToI420Kernel_CompUV CompUV = rgbaToI420Kernel11_CompUV_C;
 	size_t widthRgbaBytes = (width << 2);
+	CompVObjWrapper<CompVThreadDispatcher* >&threadDip = CompVImageConv::getThreadDispatcher();
 
 #if defined(COMPV_ARCH_X86)
 	if (widthRgbaBytes > COMPV_SIMD_ALIGNV_SSE && COMPV_IS_ALIGNED_SSE(stride)) {
@@ -116,10 +136,12 @@ void CompVImageConvToI420::fromRGBA(const uint8_t* rgbaPtr, size_t width, size_t
 				COMPV_EXEC_IFDEF_INTRINSIC(CompY = rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3);
 				COMPV_EXEC_IFDEF_INTRINSIC(CompUV = rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3);
 				COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel11_CompY_Asm_X86_Aligned_SSSE3);
+				// TODO(dmi): add ASM version for UV
 				if (COMPV_IS_ALIGNED(stride, 4 * COMPV_SIMD_ALIGNV_SSE)) {
 					COMPV_EXEC_IFDEF_INTRINSIC(CompY = rgbaToI420Kernel41_CompY_Intrin_Aligned_SSSE3);
 					COMPV_EXEC_IFDEF_INTRINSIC(CompUV = rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3);
 					COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel41_CompY_ASM_Aligned_SSSE3);
+					// TODO(dmi): add ASM version for UV
 				}
 			}
 		} // end-of-SSSE3
@@ -142,10 +164,48 @@ void CompVImageConvToI420::fromRGBA(const uint8_t* rgbaPtr, size_t width, size_t
 		}
 	}
 #endif
-
+	
 	// Process Y and UV lines
-	CompY(rgbaPtr, outYPtr, height, width, stride);
-	CompUV(rgbaPtr, outUPtr, outVPtr, height, width, stride);
+	if (threadDip && threadDip->getThreadsCount() > 1) {
+#define MIN_SAMPLES_PER_THREAD (100 * 100)
+		size_t divCount, rgbaIdx = 0, YIdx = 0, UVIdx = 0, threadHeight, totalHeight = 0;
+		threadDivideAcrossY(stride, height, MIN_SAMPLES_PER_THREAD, threadDip->getThreadsCount(), divCount);
+		uint32_t threadIDStart = rand();
+		for (size_t i = 0; i < divCount; ++i) {
+			threadHeight = ((height - totalHeight) / (divCount - i)) & -2; // the & -2 is to make sure we'll deal with even heights
+			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIDStart + i), COMPV_TOKENIDX_IMAGE_CONVERT0, toI420Kernelxx_AsynExec,
+				COMPV_ASYNCTASK_SET_PARAM_SCALAR(COMPV_THREADID_RGBAToI420_Y),
+				COMPV_ASYNCTASK_SET_PARAM_PTR(CompY),
+				COMPV_ASYNCTASK_SET_PARAM_PTR(rgbaPtr + rgbaIdx),
+				COMPV_ASYNCTASK_SET_PARAM_PTR(outYPtr + YIdx),
+				COMPV_ASYNCTASK_SET_PARAM_SCALAR(threadHeight),
+				COMPV_ASYNCTASK_SET_PARAM_SCALAR(width),
+				COMPV_ASYNCTASK_SET_PARAM_SCALAR(stride),
+				COMPV_ASYNCTASK_SET_PARAM_NULL()));
+			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIDStart + i), COMPV_TOKENIDX_IMAGE_CONVERT1, toI420Kernelxx_AsynExec,
+				COMPV_ASYNCTASK_SET_PARAM_SCALAR(COMPV_THREADID_RGBAToI420_UV),
+				COMPV_ASYNCTASK_SET_PARAM_PTR(CompUV),
+				COMPV_ASYNCTASK_SET_PARAM_PTR(rgbaPtr + rgbaIdx),
+				COMPV_ASYNCTASK_SET_PARAM_PTR(outUPtr + UVIdx),
+				COMPV_ASYNCTASK_SET_PARAM_PTR(outVPtr + UVIdx),
+				COMPV_ASYNCTASK_SET_PARAM_SCALAR(threadHeight),
+				COMPV_ASYNCTASK_SET_PARAM_SCALAR(width),
+				COMPV_ASYNCTASK_SET_PARAM_SCALAR(stride),
+				COMPV_ASYNCTASK_SET_PARAM_NULL()));
+			rgbaIdx += (threadHeight * stride) << 2;
+			YIdx += (threadHeight * stride);
+			UVIdx += ((threadHeight * stride) >> 2);
+			totalHeight += threadHeight;
+		}
+		for (size_t i = 0; i < divCount; ++i) {
+			COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIDStart + i), COMPV_TOKENIDX_IMAGE_CONVERT0));
+			COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIDStart + i), COMPV_TOKENIDX_IMAGE_CONVERT1));
+		}
+	}
+	else {
+		CompY(rgbaPtr, outYPtr, height, width, stride);
+		CompUV(rgbaPtr, outUPtr, outVPtr, height, width, stride);
+	}
 }
 
 COMPV_NAMESPACE_END()

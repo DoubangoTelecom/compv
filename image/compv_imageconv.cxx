@@ -53,6 +53,16 @@ COMPV_ERROR_CODE CompVImageConv::multiThreadingDisable()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+bool CompVImageConv::isMultiThreadingEnabled()
+{
+	return !!s_ThreadDisp;
+}
+
+CompVObjWrapper<CompVThreadDispatcher* >& CompVImageConv::getThreadDispatcher()
+{
+	return s_ThreadDisp;
+}
+
 COMPV_ERROR_CODE CompVImageConv::getBestStride(size_t stride, size_t *bestStride)
 {
 	COMPV_CHECK_EXP_RETURN(bestStride == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

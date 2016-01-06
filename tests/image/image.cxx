@@ -38,6 +38,7 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	CompVObjWrapper<CompVImage *> jpegImage;
 	CompVObjWrapper<CompVImage *> i420Image;
+	CompVObjWrapper<CompVThreadDispatcher *> threadDisp;
 	void* rgbaPtr = NULL;
 	size_t width, height, stride;
 	FILE* file = NULL;
@@ -46,6 +47,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
 	COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagNone));
+	COMPV_CHECK_CODE_ASSERT(CompVThreadDispatcher::newObj(&threadDisp));
+	COMPV_CHECK_CODE_ASSERT(CompVImageConv::multiThreadingEnable(threadDisp)); // enable multithreading for image convertion
 	COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_EQUIRECTANGULAR_FILE, &jpegImage));
 	COMPV_ASSERT(jpegImage->getPixelFormat() == COMPV_PIXEL_FORMAT_R8G8B8);
 	rgbToRGBA(jpegImage, &rgbaPtr, width, height, stride);
