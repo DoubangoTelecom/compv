@@ -44,7 +44,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	FILE* file = NULL;
 	uint64_t timeStart, timeEnd;
 #define loopCount  1
-#define numThreads COMPV_NUM_THREADS_SINGLE
+#define numThreads COMPV_NUM_THREADS_BEST
 
 	CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
 	COMPV_CHECK_CODE_ASSERT(CompVEngine::init(numThreads));

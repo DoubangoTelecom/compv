@@ -120,7 +120,7 @@ COMPV_ERROR_CODE CompVAsyncTask::tokenRelease(compv_asynctoken_id_t* piToken)
 
 COMPV_ERROR_CODE CompVAsyncTask::tokenSetParam(compv_asynctoken_id_t token_id, int32_t param_index, uintptr_t param_ptr, size_t param_size)
 {
-	COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(token_id) || !COMPV_ASYNCTASK_PARAM_INDEX_IS_VALID(param_index), COMPV_ERROR_CODE_E_INVALID_PARAMETER)
+	COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(token_id) || !COMPV_ASYNCTASK_PARAM_INDEX_IS_VALID(param_index), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	compv_asynctoken_xt* pToken = &tokens[token_id];
 	pToken->params[param_index].pcParamPtr = param_ptr;

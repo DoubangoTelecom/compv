@@ -22,10 +22,18 @@
 COMPV_YASM_DEFAULT_REL
 
 
-global sym(rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2)
-global sym(rgbaToI420Kernel41_CompY_Asm_Aligned_AVX2)
-global sym(rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2)
-global sym(rgbaToI420Kernel41_CompUV_Asm_Aligned_AVX2)
+global sym(rgbaToI420Kernel11_CompY_Asm_Aligned0_AVX2)
+global sym(rgbaToI420Kernel11_CompY_Asm_Aligned1_AVX2)
+global sym(rgbaToI420Kernel41_CompY_Asm_Aligned00_AVX2)
+global sym(rgbaToI420Kernel41_CompY_Asm_Aligned01_AVX2)
+global sym(rgbaToI420Kernel41_CompY_Asm_Aligned10_AVX2)
+global sym(rgbaToI420Kernel41_CompY_Asm_Aligned11_AVX2)
+global sym(rgbaToI420Kernel11_CompUV_Asm_Aligned0xx_AVX2)
+global sym(rgbaToI420Kernel11_CompUV_Asm_Aligned1xx_AVX2)
+global sym(rgbaToI420Kernel41_CompUV_Asm_Aligned000_AVX2)
+global sym(rgbaToI420Kernel41_CompUV_Asm_Aligned100_AVX2)
+global sym(rgbaToI420Kernel41_CompUV_Asm_Aligned110_AVX2)
+global sym(rgbaToI420Kernel41_CompUV_Asm_Aligned111_AVX2)
 
 section .data
 	extern sym(k16_i16)
@@ -42,8 +50,13 @@ section .data
 section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; void rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride)
-sym(rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2):
+; arg(0) -> const uint8_t* rgbaPtr
+; arg(1) -> uint8_t* outYPtr
+; arg(2) -> size_t height
+; arg(3) -> size_t width
+; arg(4) -> size_t stride
+; %1 -> 1: rgbaPtr is aligned, 0: rgbaPtr isn't aligned
+%macro rgbaToI420Kernel11_CompY_Asm_AVX2 1
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
@@ -70,10 +83,14 @@ sym(rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2):
 	vmovdqa ymm1, [sym(k16_i16)] ; ymm16
 	vmovdqa ymm3, [sym(kMaskstore_0_i64)] ; ymmMaskToExtractFirst64Bits
 
-	LoopHeight:
+	.LoopHeight:
 		xor rdi, rdi
-		LoopWidth:
-			vmovdqa ymm2, [rax] ; 8 RGBA samples	
+		.LoopWidth:
+			%if %1 == 1
+			vmovdqa ymm2, [rax] ; 8 RGBA samples
+			%else
+			vmovdqu ymm2, [rax] ; 8 RGBA samples
+			%endif
 			vpmaddubsw ymm2, ymm0
 			vphaddw ymm2, ymm2 ; aaaabbbbaaaabbbb
 			vpermq ymm2, ymm2, 0xD8 ; aaaaaaaabbbbbbbb
@@ -88,13 +105,13 @@ sym(rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2):
 			; end-of-LoopWidth
 			add rdi, 8
 			cmp rdi, arg(3)
-			jl LoopWidth
+			jl .LoopWidth
 	add rbx, rcx
 	add rax, rdx
 	; end-of-LoopHeight
 	sub rsi, 1
 	cmp rsi, 0
-	jg LoopHeight
+	jg .LoopHeight
 
 	vzeroupper
 
@@ -102,14 +119,41 @@ sym(rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2):
 	pop rbx
 	pop rdi
 	pop rsi
-    COMPV_YASM_UNSHADOW_ARGS
+	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
 	ret
+%endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; void rgbaToI420Kernel41_CompY_Asm_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride)
-sym(rgbaToI420Kernel41_CompY_Asm_Aligned_AVX2)
+; arg(0) -> const uint8_t* rgbaPtr
+; arg(1) -> uint8_t* outYPtr
+; arg(2) -> size_t height
+; arg(3) -> size_t width
+; arg(4) -> size_t stride
+;;; void rgbaToI420Kernel11_CompY_Asm_Aligned0_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride)
+sym(rgbaToI420Kernel11_CompY_Asm_Aligned0_AVX2):
+	rgbaToI420Kernel11_CompY_Asm_AVX2 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMV_ALIGNED(16) const uint8_t* rgbaPtr
+; arg(1) -> uint8_t* outYPtr
+; arg(2) -> size_t height
+; arg(3) -> size_t width
+; arg(4) -> size_t stride
+;;; void rgbaToI420Kernel11_CompY_Asm_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride)
+sym(rgbaToI420Kernel11_CompY_Asm_Aligned1_AVX2):
+	rgbaToI420Kernel11_CompY_Asm_AVX2 1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const uint8_t* rgbaPtr
+; arg(1) -> uint8_t* outYPtr
+; arg(2) -> size_t height
+; arg(3) -> size_t width
+; arg(4) -> size_t stride
+; %1 -> 1: rgbaPtr aligned, 0: rgbaPtr isn't aligned
+; %2 -> 1: outYPtr aligned, 0: outYPtr isn't aligned
+%macro rgbaToI420Kernel41_CompY_Asm_AVX2 2
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
@@ -135,13 +179,20 @@ sym(rgbaToI420Kernel41_CompY_Asm_Aligned_AVX2)
 	vmovdqa ymm0, [sym(kRGBAToYUV_YCoeffs8)] ; ymmYCoeffs
 	vmovdqa ymm1, [sym(k16_i16)] ; ymm16
 
-	LoopHeight2:
+	.LoopHeight:
 		xor rdi, rdi
-		LoopWidth2:
+		.LoopWidth:
+			%if %1 == 1
 			vmovdqa ymm2, [rax] ; 8 RGBA samples
 			vmovdqa ymm3, [rax + 32] ; 8 RGBA samples	
 			vmovdqa ymm4, [rax + 64] ; 8 RGBA samples	
 			vmovdqa ymm5, [rax + 96] ; 8 RGBA samples
+			%else
+			vmovdqu ymm2, [rax] ; 8 RGBA samples
+			vmovdqu ymm3, [rax + 32] ; 8 RGBA samples	
+			vmovdqu ymm4, [rax + 64] ; 8 RGBA samples	
+			vmovdqu ymm5, [rax + 96] ; 8 RGBA samples
+			%endif
 
 			vpmaddubsw ymm2, ymm0
 			vpmaddubsw ymm3, ymm0
@@ -164,21 +215,25 @@ sym(rgbaToI420Kernel41_CompY_Asm_Aligned_AVX2)
 
 			vpermq ymm2, ymm2, 0xD8 ; 000000022222.....
 
+			%if %2 == 1
+			vmovdqa [rbx], ymm2
+			%else
 			vmovdqu [rbx], ymm2
+			%endif
 			
 			add rbx, 32
 			add rax, 128
 
-			; end-of-LoopWidth2
+			; end-of-LoopWidth
 			add rdi, 32
 			cmp rdi, arg(3)
-			jl LoopWidth2
+			jl .LoopWidth
 	add rbx, rcx
 	add rax, rdx
-	; end-of-LoopHeight2
+	; end-of-LoopHeight
 	sub rsi, 1
 	cmp rsi, 0
-	jg LoopHeight2
+	jg .LoopHeight
 
 	vzeroupper
 	
@@ -190,10 +245,57 @@ sym(rgbaToI420Kernel41_CompY_Asm_Aligned_AVX2)
 	mov rsp, rbp
 	pop rbp
 	ret
+%endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; void rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride)
-sym(rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2)
+; arg(0) -> const uint8_t* rgbaPtr
+; arg(1) -> uint8_t* outYPtr
+; arg(2) -> size_t height
+; arg(3) -> size_t width
+; arg(4) -> size_t stride
+;;; void rgbaToI420Kernel41_CompY_Asm_Aligned_AVX2(const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride)
+sym(rgbaToI420Kernel41_CompY_Asm_Aligned00_AVX2):
+	rgbaToI420Kernel41_CompY_Asm_AVX2 0, 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMV_ALIGNED(16) const uint8_t* rgbaPtr
+; arg(1) -> uint8_t* outYPtr
+; arg(2) -> size_t height
+; arg(3) -> size_t width
+; arg(4) -> size_t stride
+;;; void rgbaToI420Kernel41_CompY_Asm_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride)
+sym(rgbaToI420Kernel41_CompY_Asm_Aligned10_AVX2):
+	rgbaToI420Kernel41_CompY_Asm_AVX2 1, 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const uint8_t* rgbaPtr
+; arg(1) -> COMV_ALIGNED(16) uint8_t* outYPtr
+; arg(2) -> size_t height
+; arg(3) -> size_t width
+; arg(4) -> size_t stride
+;;; void rgbaToI420Kernel41_CompY_Asm_Aligned_AVX2(const uint8_t* rgbaPtr, COMV_ALIGNED(16) uint8_t* outYPtr, size_t height, size_t width, size_t stride)
+sym(rgbaToI420Kernel41_CompY_Asm_Aligned01_AVX2)
+	rgbaToI420Kernel41_CompY_Asm_AVX2 0, 1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMV_ALIGNED(16) const uint8_t* rgbaPtr
+; arg(1) -> COMV_ALIGNED(16) uint8_t* outYPtr
+; arg(2) -> size_t height
+; arg(3) -> size_t width
+; arg(4) -> size_t stride
+;;; void rgbaToI420Kernel41_CompY_Asm_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, COMV_ALIGNED(16) uint8_t* outYPtr, size_t height, size_t width, size_t stride)
+sym(rgbaToI420Kernel41_CompY_Asm_Aligned11_AVX2):
+	rgbaToI420Kernel41_CompY_Asm_AVX2 1, 1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const uint8_t* rgbaPtr
+; arg(1) -> uint8_t* outUPtr
+; arg(2) -> uint8_t* outVPtr
+; arg(3) -> size_t height
+; arg(4) -> size_t width
+; arg(5) -> size_t stride
+; %1 -> 1: rgbaPtr is aligned, 0: rgbaPtr isn't aligned
+%macro rgbaToI420Kernel11_CompUV_Asm_AVX2 1
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -227,10 +329,14 @@ sym(rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2)
 	vmovdqa ymm1, [sym(k128_i16)] ; ymm128
 	vmovdqa ymm3, [sym(kRGBAToYUV_U4V4Coeffs8)] ; ymmUV4Coeffs	
 
-	LoopHeight1:
+	.LoopHeight:
 		xor rdi, rdi
-		LoopWidth1:
+		.LoopWidth:
+			%if %1 == 1
 			vmovdqa ymm2, [rbx] ; 8 RGBA samples = 32bytes (4 are useless, we want 1 out of 2): axbxcxdx
+			%else
+			vmovdqu ymm2, [rbx] ; 8 RGBA samples = 32bytes (4 are useless, we want 1 out of 2): axbxcxdx
+			%endif
 			vpmaddubsw ymm2, ymm3 ; Ua Ub Uc Ud Va Vb Vc Vd
 			vphaddw ymm2, ymm2
 			vpermq ymm2, ymm2, 0xD8
@@ -248,15 +354,15 @@ sym(rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2)
 			; end-of-LoopWidth
 			add rdi, 8
 			cmp rdi, arg(4)
-			jl LoopWidth1
+			jl .LoopWidth
 	add rbx, [rsp + 8]
 	add rcx, [rsp + 0]
 	add rdx, [rsp + 0]
 	
-	; end-of-LoopHeight1
+	; end-of-LoopHeight
 	sub rsi, 2
 	cmp rsi, 0
-	jg LoopHeight1
+	jg .LoopHeight
 
 	vzeroupper
 
@@ -265,14 +371,45 @@ sym(rgbaToI420Kernel11_CompUV_Asm_Aligned_AVX2)
 	pop rbx
 	pop rdi
 	pop rsi
-    COMPV_YASM_UNSHADOW_ARGS
+	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
 	ret
+%endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; void rgbaToI420Kernel41_CompUV_Asm_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride)
-sym(rgbaToI420Kernel41_CompUV_Asm_Aligned_AVX2)
+; arg(0) -> const uint8_t* rgbaPtr
+; arg(1) -> uint8_t* outUPtr
+; arg(2) -> uint8_t* outVPtr
+; arg(3) -> size_t height
+; arg(4) -> size_t width
+; arg(5) -> size_t stride
+;;; void rgbaToI420Kernel11_CompUV_Asm_Aligned0xx_AVX2(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride)
+sym(rgbaToI420Kernel11_CompUV_Asm_Aligned0xx_AVX2):
+	rgbaToI420Kernel11_CompUV_Asm_AVX2 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMV_ALIGNED(16) const uint8_t* rgbaPtr
+; arg(1) -> uint8_t* outUPtr
+; arg(2) -> uint8_t* outVPtr
+; arg(3) -> size_t height
+; arg(4) -> size_t width
+; arg(5) -> size_t stride
+;;; void rgbaToI420Kernel11_CompUV_Asm_Aligned1xx_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride)
+sym(rgbaToI420Kernel11_CompUV_Asm_Aligned1xx_AVX2):
+	rgbaToI420Kernel11_CompUV_Asm_AVX2 1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const uint8_t* rgbaPtr
+; arg(1) -> uint8_t* outUPtr
+; arg(2) -> uint8_t* outVPtr
+; arg(3) -> size_t height
+; arg(4) -> size_t width
+; arg(5) -> size_t stride
+; %1 -> 1: rgbaPtr is aligned, 0: rgbaPtr isn't aligned
+; %2 -> 1: outUPtr is aligned, 0: outUPtr isn't aligned
+; %3 -> 1: outVPtr is aligned, 0: outVPtr isn't aligned
+%macro rgbaToI420Kernel41_CompUV_Asm_AVX2 3
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -303,37 +440,42 @@ sym(rgbaToI420Kernel41_CompUV_Asm_Aligned_AVX2)
 	vzeroupper
 
 	vmovdqa ymm0, [sym(kMaskstore_0_1_i64)] ; ymmMaskToExtract128bits
-	vmovdqa ymm1, [sym(kRGBAToYUV_UCoeffs8)] ; ymmUCoeffs
-	vmovdqa ymm2, [sym(kRGBAToYUV_VCoeffs8)] ; ymmVCoeffs
-	vmovdqa ymm3, [sym(k128_i16)] ; ymm128
+	vmovdqa ymm1, [sym(k128_i16)] ; ymm128
 
-	LoopHeight3:
+	.LoopHeight:
 		xor rdi, rdi
-		LoopWidth3:
+		.LoopWidth:
+			%if %1 == 1
 			vmovdqa ymm4, [rbx] ; 8 RGBA samples = 32bytes (4 are useless, we want 1 out of 2): axbxcxdx
 			vmovdqa ymm5, [rbx + 32] ; 8 RGBA samples = 32bytes (4 are useless, we want 1 out of 2): exfxgxhx
 			vmovdqa ymm6, [rbx + 64] ; 8 RGBA samples = 32bytes (4 are useless, we want 1 out of 2): ixjxkxlx
 			vmovdqa ymm7, [rbx + 96] ; 8 RGBA samples = 32bytes (4 are useless, we want 1 out of 2): mxnxoxpx
+			%else
+			vmovdqa ymm4, [rbx] ; 8 RGBA samples = 32bytes (4 are useless, we want 1 out of 2): axbxcxdx
+			vmovdqa ymm5, [rbx + 32] ; 8 RGBA samples = 32bytes (4 are useless, we want 1 out of 2): exfxgxhx
+			vmovdqa ymm6, [rbx + 64] ; 8 RGBA samples = 32bytes (4 are useless, we want 1 out of 2): ixjxkxlx
+			vmovdqa ymm7, [rbx + 96] ; 8 RGBA samples = 32bytes (4 are useless, we want 1 out of 2): mxnxoxpx
+			%endif
 
-			vpunpckldq ymm8, ymm4, ymm5 ; aexxcgxx
-			vpunpckhdq ymm9, ymm4, ymm5 ; bfxxdhxx
-			vpunpckldq ymm4, ymm8, ymm9 ; abefcdgh
+			vpunpckldq ymm2, ymm4, ymm5 ; aexxcgxx
+			vpunpckhdq ymm3, ymm4, ymm5 ; bfxxdhxx
+			vpunpckldq ymm4, ymm2, ymm3 ; abefcdgh
 			vpermq ymm5, ymm4, 0xD8 ; abcdefgh
 			vmovdqa ymm4, ymm5
 
-			vpunpckldq ymm8, ymm6, ymm7 ; imxxkoxx
-			vpunpckhdq ymm9, ymm6, ymm7 ; jnxxlpxx
-			vpunpckldq ymm6, ymm8, ymm9 ; ijmnklop
+			vpunpckldq ymm2, ymm6, ymm7 ; imxxkoxx
+			vpunpckhdq ymm3, ymm6, ymm7 ; jnxxlpxx
+			vpunpckldq ymm6, ymm2, ymm3 ; ijmnklop
 			vpermq ymm7, ymm6, 0xD8 ; ijklmnop
 			vmovdqa ymm6, ymm7
 
 			; U = (ymm4, ymm6)
 			; V = (ymm5, ymm7)
 
-			vpmaddubsw ymm4, ymm1
-			vpmaddubsw ymm6, ymm1
-			vpmaddubsw ymm5, ymm2
-			vpmaddubsw ymm7, ymm2
+			vpmaddubsw ymm4, [sym(kRGBAToYUV_UCoeffs8)]
+			vpmaddubsw ymm6, [sym(kRGBAToYUV_UCoeffs8)]
+			vpmaddubsw ymm5, [sym(kRGBAToYUV_VCoeffs8)]
+			vpmaddubsw ymm7, [sym(kRGBAToYUV_VCoeffs8)]
 
 			; U = ymm4
 			; V = ymm5
@@ -346,34 +488,42 @@ sym(rgbaToI420Kernel41_CompUV_Asm_Aligned_AVX2)
 			vpsraw ymm4, 8 ; >> 8
 			vpsraw ymm5, 8 ; >> 8
 
-			vpaddw ymm4, ymm3 ; +128
-			vpaddw ymm5, ymm3 ; +128
+			vpaddw ymm4, ymm1 ; +128
+			vpaddw ymm5, ymm1 ; +128
 
 			; UV = ymm4
 
 			vpackuswb ymm4, ymm5 ; Packs + Saturate(I16 -> U8)
 			vpermq ymm4, ymm4, 0xD8
 
+			%if %2 == 1
+			vextractf128 [rcx], ymm4, 0
+			%else
 			vpmaskmovq [rcx], ymm0, ymm4
+			%endif
+			%if %3 == 1
+			vextractf128 [rdx], ymm4, 1
+			%else
 			vpermq ymm4, ymm4, 0xE
 			vpmaskmovq [rdx], ymm0, ymm4
-						
+			%endif
+			
 			add rbx, 128 ; rgbaPtr += 128
 			add rcx, 16 ; outUPtr += 16
 			add rdx, 16 ; outVPtr += 16
 
-			; end-of-LoopWidth3
+			; end-of-LoopWidth
 			add rdi, 32
 			cmp rdi, arg(4)
-			jl LoopWidth3
+			jl .LoopWidth
 	add rbx, [rsp + 8]
 	add rcx, [rsp + 0]
 	add rdx, [rsp + 0]
 	
-	; end-of-LoopHeight3
+	; end-of-LoopHeight
 	sub rsi, 2
 	cmp rsi, 0
-	jg LoopHeight3
+	jg .LoopHeight
 
 	vzeroupper
 
@@ -382,7 +532,52 @@ sym(rgbaToI420Kernel41_CompUV_Asm_Aligned_AVX2)
 	pop rbx
 	pop rdi
 	pop rsi
-    COMPV_YASM_UNSHADOW_ARGS
+	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
 	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const uint8_t* rgbaPtr
+; arg(1) -> uint8_t* outUPtr
+; arg(2) -> uint8_t* outVPtr
+; arg(3) -> size_t height
+; arg(4) -> size_t width
+; arg(5) -> size_t stride
+;;; void rgbaToI420Kernel41_CompUV_Asm_Aligned000_AVX2(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride)
+sym(rgbaToI420Kernel41_CompUV_Asm_Aligned000_AVX2):
+	rgbaToI420Kernel41_CompUV_Asm_AVX2 0, 0, 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMV_ALIGNED(16) const uint8_t* rgbaPtr
+; arg(1) -> uint8_t* outUPtr
+; arg(2) -> uint8_t* outVPtr
+; arg(3) -> size_t height
+; arg(4) -> size_t width
+; arg(5) -> size_t stride
+;;; void rgbaToI420Kernel41_CompUV_Asm_Aligned100_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride)
+sym(rgbaToI420Kernel41_CompUV_Asm_Aligned100_AVX2):
+	rgbaToI420Kernel41_CompUV_Asm_AVX2 1, 0, 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMV_ALIGNED(16) const uint8_t* rgbaPtr
+; arg(1) -> COMV_ALIGNED(16) uint8_t* outUPtr
+; arg(2) -> uint8_t* outVPtr
+; arg(3) -> size_t height
+; arg(4) -> size_t width
+; arg(5) -> size_t stride
+;;; void rgbaToI420Kernel41_CompUV_Asm_Aligned110_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, COMV_ALIGNED(16) uint8_t* outUPtr, uint8_t* outVPtr, size_t height, size_t width, size_t stride)
+sym(rgbaToI420Kernel41_CompUV_Asm_Aligned110_AVX2):
+	rgbaToI420Kernel41_CompUV_Asm_AVX2 1, 1, 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMV_ALIGNED(16) const uint8_t* rgbaPtr
+; arg(1) -> COMV_ALIGNED(16) uint8_t* outUPtr
+; arg(2) -> COMV_ALIGNED(16) uint8_t* outVPtr
+; arg(3) -> size_t height
+; arg(4) -> size_t width
+; arg(5) -> size_t stride
+;;; void rgbaToI420Kernel41_CompUV_Asm_Aligned000_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, COMV_ALIGNED(16) uint8_t* outUPtr, COMV_ALIGNED(16) uint8_t* outVPtr, size_t height, size_t width, size_t stride)
+sym(rgbaToI420Kernel41_CompUV_Asm_Aligned111_AVX2):
+	rgbaToI420Kernel41_CompUV_Asm_AVX2 1, 1, 1

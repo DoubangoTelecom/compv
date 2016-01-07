@@ -333,7 +333,7 @@ const char* CompVCpu::getFlagsAsString(uint64_t uFlags)
 			_flags += std::string(flags[i].name) + ";";
 		}
 	}
-	return _flags.c_str();
+	return _flags.empty() ? "none" : _flags.c_str();
 }
 
 int32_t CompVCpu::getCoresCount()

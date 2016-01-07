@@ -40,10 +40,7 @@ COMPV_NAMESPACE_BEGIN()
 #	define COMPV_SAFE_DELETE_CPP(cpp_obj) if(cpp_obj) delete (cpp_obj), (cpp_obj) = NULL;
 #endif /* COMPV_SAFE_DELETE_CPP */
 
-#define COMPV_ASSERT(x) { \
-	bool __b_ret = (x); \
-	assert(__b_ret); \
-}
+#define COMPV_ASSERT(x) do { bool __b_ret = (x); assert(__b_ret); } while(0)
 
 #define COMPV_NUM_THREADS_SINGLE	1
 #define COMPV_NUM_THREADS_BEST		-1
@@ -117,12 +114,12 @@ COMPV_ERROR_CODE;
 #define COMPV_ERROR_CODE_IS_FATAL(code_) ((code_) >= kErrorCodeFatalStart)
 
 // In COMPV_CHECK_HR(errcode) When (errcode) is a function it will be executed twice when used in "COMPV_DEBUG_ERROR(errcode)" and "If(errcode)"
-COMPV_GEXTERN const char* CompVGetErrorString(COMPV_ERROR_CODE code);
-#define COMPV_CHECK_CODE_BAIL(errcode) { COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", CompVGetErrorString(__code__)); goto bail; } }
-#define COMPV_CHECK_CODE_RETURN(errcode) { COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", CompVGetErrorString(__code__)); return __code__; } }
-#define COMPV_CHECK_CODE_ASSERT(errcode) { COMPV_ERROR_CODE __code__ = (errcode); COMPV_ASSERT(COMPV_ERROR_CODE_IS_OK(__code__)); }
-#define COMPV_CHECK_EXP_RETURN(exp, errcode) { if ((exp)) COMPV_CHECK_CODE_RETURN(errcode); }
-#define COMPV_CHECK_EXP_BAIL(exp, errcode) { if ((exp)) COMPV_CHECK_CODE_BAIL(errcode); }
+COMPV_GEXTERN const char* CompVGetErrorString(COMPV_NAMESPACE::COMPV_ERROR_CODE code);
+#define COMPV_CHECK_CODE_BAIL(errcode) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", CompVGetErrorString(__code__)); goto bail; } } while(0)
+#define COMPV_CHECK_CODE_RETURN(errcode) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", CompVGetErrorString(__code__)); return __code__; } } while(0)
+#define COMPV_CHECK_CODE_ASSERT(errcode) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); COMPV_ASSERT(COMPV_ERROR_CODE_IS_OK(__code__)); } while(0)
+#define COMPV_CHECK_EXP_RETURN(exp, errcode) do { if ((exp)) COMPV_CHECK_CODE_RETURN(errcode); } while(0)
+#define COMPV_CHECK_EXP_BAIL(exp, errcode) do { if ((exp)) COMPV_CHECK_CODE_BAIL(errcode); } while(0)
 
 typedef enum _COMPV_PIXEL_FORMAT {
 	COMPV_PIXEL_FORMAT_NONE,
@@ -156,6 +153,13 @@ enum {
 	COMPV_TOKENIDX_IMAGE_CONVERT3,
 
 	COMPV_TOKENIDX_MAX
+};
+
+enum {
+	COMPV_FUNCID_RGBAToI420_Y,
+	COMPV_FUNCID_RGBAToI420_UV,
+
+	// no limitation
 };
 
 typedef struct _CompVImageInfo {

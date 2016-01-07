@@ -102,6 +102,8 @@ private:
 #define COMPV_DEBUG_ERROR_EX(MODULE, FMT, ...) COMPV_DEBUG_ERROR("[" MODULE "] " FMT, ##__VA_ARGS__)
 #define COMPV_DEBUG_FATAL_EX(MODULE, FMT, ...) COMPV_DEBUG_FATAL("[" MODULE "] " FMT, ##__VA_ARGS__)
 
+#define COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED() do { static bool printed = false; if (!printed) { printed = true; COMPV_DEBUG_INFO("/!\\ Optimization issue: Code block in file '%s' in function '%s' starting at line #%u not optimized", __FILE__, __FUNCTION__, __LINE__); } } while(0)
+
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_DEBUG_H_ */

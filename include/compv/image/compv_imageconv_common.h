@@ -40,13 +40,6 @@ COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kRGBAToYUV_U4V4Coeffs8[];
 #define COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD (150 * 150) // minimum number of samples to consider per thread when multi-threading
 #endif
 
-enum {
-	COMPV_THREADID_RGBAToI420_Y,
-	COMPV_THREADID_RGBAToI420_UV,
-
-	// no limitation
-};
-
 COMPV_EXTERNC_END()
 
 #endif /* _COMPV_IMAGE_IMAGECONV_COMMON_H_ */

@@ -133,7 +133,7 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(16) const uint8
 	__m128i xmmRgba0, xmmRgba1, xmmRgba2, xmmRgba3, xmm0, xmm1;
 	__m128i xmmUCoeffs = _mm_load_si128((__m128i*)kRGBAToYUV_UCoeffs8);
 	__m128i xmmVCoeffs = _mm_load_si128((__m128i*)kRGBAToYUV_VCoeffs8);
-	__m128i y128 = _mm_load_si128((__m128i*)k128_i16);
+	__m128i xmm128 = _mm_load_si128((__m128i*)k128_i16);
 	size_t i, j, maxI = ((width + 15) & -16), padUV = (stride - maxI) >> 1, padRGBA = ((stride - maxI) + stride) << 2; // +stride to skip even lines
 
 	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
@@ -171,15 +171,20 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(16) const uint8
 			_mm_store_si128(&xmmRgba0, _mm_srai_epi16(xmmRgba0, 8)); // >> 8
 			_mm_store_si128(&xmmRgba1, _mm_srai_epi16(xmmRgba1, 8)); // >> 8
 
-			_mm_store_si128(&xmmRgba0, _mm_add_epi16(xmmRgba0, y128)); // + 128 -> UUVV----
-			_mm_store_si128(&xmmRgba1, _mm_add_epi16(xmmRgba1, y128)); // + 128 -> UUVV----
+			_mm_store_si128(&xmmRgba0, _mm_add_epi16(xmmRgba0, xmm128)); // + 128 -> UUVV----
+			_mm_store_si128(&xmmRgba1, _mm_add_epi16(xmmRgba1, xmm128)); // + 128 -> UUVV----
 
 			// UV = xmmRgba0
 			_mm_store_si128(&xmmRgba0, _mm_packus_epi16(xmmRgba0, xmmRgba1)); // Saturate(I16 -> U8)
 
+#if defined(COMPV_ARCH_X64)
 			*((uint64_t*)outUPtr) = _mm_cvtsi128_si64(xmmRgba0);
 			_mm_store_si128(&xmmRgba0, _mm_srli_si128(xmmRgba0, 8)); // >> 8
 			*((uint64_t*)outVPtr) = _mm_cvtsi128_si64(xmmRgba0);
+#else
+			*((uint64_t*)outUPtr) = ((uint64_t*)&xmmRgba0)[0];
+			*((uint64_t*)outVPtr) = ((uint64_t*)&xmmRgba0)[1];
+#endif
 
 			outUPtr += 8;
 			outVPtr += 8;
@@ -190,33 +195,6 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(16) const uint8
 		outVPtr += padUV;
 	}
 }
-
-void rgbaToI420Kernel11_CompY_Intrin_Unaligned_SSSE3(const uint8_t* rgbaPtr, uint8_t* outYPtr, size_t height, size_t width, size_t stride)
-{
-	__m128i xmmRgba;
-	__m128i xmmYCoeffs = _mm_load_si128((__m128i*)kRGBAToYUV_YCoeffs8);
-	__m128i y16 = _mm_load_si128((__m128i*)k16_i16);
-	size_t i, j, maxI = ((width + 3) & -4), padY = (stride - maxI), padRGBA = padY << 2;
-	
-	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
-	for (j = 0; j < height; ++j) {
-		for (i = 0; i < width; i += 4) {
-			_mm_store_si128(&xmmRgba, _mm_loadu_si128((__m128i*)rgbaPtr)); // 4 RGBA samples
-			_mm_store_si128(&xmmRgba, _mm_maddubs_epi16(xmmRgba, xmmYCoeffs)); // 
-			_mm_store_si128(&xmmRgba, _mm_hadd_epi16(xmmRgba, xmmRgba));
-			_mm_store_si128(&xmmRgba, _mm_srai_epi16(xmmRgba, 7)); // >> 7
-			_mm_store_si128(&xmmRgba, _mm_add_epi16(xmmRgba, y16)); // + 16
-			_mm_store_si128(&xmmRgba, _mm_packus_epi16(xmmRgba, xmmRgba)); // Saturate(I16 -> U8)
-			*((int32_t*)outYPtr) = _mm_cvtsi128_si32(xmmRgba);
-
-			outYPtr += 4;
-			rgbaPtr += 16;
-		}
-		outYPtr += padY;
-		rgbaPtr += padRGBA;
-	}
-}
-
 
 COMPV_NAMESPACE_END()
 

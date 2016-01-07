@@ -13,6 +13,7 @@ extern bool TestThreadDisp();
 int _tmain(int argc, _TCHAR* argv[])
 {
 	compv::CompVDebugMgr::setLevel(compv::COMPV_DEBUG_LEVEL_INFO);
+	COMPV_CHECK_CODE_ASSERT(compv::CompVEngine::init());
 #if TEST_THREADS
 	COMPV_ASSERT(TestThreads());
 #endif
