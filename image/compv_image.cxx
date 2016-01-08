@@ -58,6 +58,13 @@ COMPV_ERROR_CODE CompVImage::setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, s
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVImage::getBestStride(size_t stride, size_t *bestStride)
+{
+	COMPV_CHECK_EXP_RETURN(bestStride == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	*bestStride = CompVMem::alignForward(stride, COMPV_SIMD_ALIGNV_DEFAULT * 4); // most of the time we'll read the data per pack of 4 vecs
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 CompVObjWrapper<CompVImage*> CompVImage::loadImage(const char* filePath)
 {
 	COMPV_DEBUG_ERROR("Not implemented");

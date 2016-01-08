@@ -45,6 +45,7 @@ public:
 	COMPV_INLINE COMPV_PIXEL_FORMAT getPixelFormat() { return m_ePixelFormat; }
 	COMPV_INLINE COMPV_IMAGE_FORMAT getImageFormat() { return m_eImageFormat; }
 
+	static COMPV_ERROR_CODE getBestStride(size_t stride, size_t *bestStride);
 	static CompVObjWrapper<CompVImage*> loadImage(const char* filePath);
 	static COMPV_ERROR_CODE getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, size_t width, size_t height, size_t *size);
 	static COMPV_ERROR_CODE getBitsCountForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, size_t* bitsCount);

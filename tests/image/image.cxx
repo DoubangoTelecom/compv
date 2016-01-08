@@ -9,12 +9,11 @@ using namespace compv;
 static void rgbToRGBA(const CompVObjWrapper<CompVImage *>& jpegImage, void** rgbaPtr, size_t &width, size_t &height, size_t &stride)
 {
 #define WIDTH_OFFSET -1 // amount of pixels to remove to width to make it wired (not standard)
-#define HEIGHT_OFFSET 0 // amount of pixels to remove to height to make it wired (not standard)
-	int32_t strideBestAlignment = (COMPV_SIMD_ALIGNV_DEFAULT << 2); // Most of the time we will process the pixels per pack of #4 this is why the stride need to be aligned to AVX*4
+#define HEIGHT_OFFSET 0 // amount of pixels to remove to height to make it wired (not standard)	
 	size_t jpegImageStride = jpegImage->getStride();
 	width = jpegImage->getWidth() + WIDTH_OFFSET;
 	height = jpegImage->getHeight() + HEIGHT_OFFSET;
-	stride = CompVMem::alignForward(jpegImageStride, strideBestAlignment);
+	COMPV_CHECK_CODE_ASSERT(CompVImage::getBestStride(jpegImageStride, &stride));
 
 	*rgbaPtr = CompVMem::malloc((stride * jpegImage->getHeight()) * 4);
 	COMPV_ASSERT(*rgbaPtr != NULL);
@@ -44,7 +43,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	FILE* file = NULL;
 	uint64_t timeStart, timeEnd;
 #define loopCount  1
-#define numThreads COMPV_NUM_THREADS_BEST
+#define numThreads COMPV_NUM_THREADS_SINGLE
 
 	CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
 	COMPV_CHECK_CODE_ASSERT(CompVEngine::init(numThreads));

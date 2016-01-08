@@ -18,7 +18,7 @@
 * along with CompV.
 */
 #include "compv/image/compv_imageconv.h"
-#include "compv/image/compv_imageconv_to_i420.h"
+#include "compv/image/compv_imageconv_rgba_i420.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_debug.h"
 
@@ -32,13 +32,6 @@ CompVImageConv::CompVImageConv()
 CompVImageConv::~CompVImageConv()
 {
 
-}
-
-COMPV_ERROR_CODE CompVImageConv::getBestStride(size_t stride, size_t *bestStride)
-{
-	COMPV_CHECK_EXP_RETURN(bestStride == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	*bestStride = (stride + (stride & (COMPV_SIMD_ALIGNV_DEFAULT - 1)));
-	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVImageConv::rgbaToI420(const uint8_t* rgbaPtr, size_t width, size_t height, size_t stride, CompVObjWrapper<CompVImage* >* i420)

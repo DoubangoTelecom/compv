@@ -34,8 +34,7 @@
     <ClInclude Include="include\compv\image\compv_image.h" />
     <ClInclude Include="include\compv\image\compv_imageconv.h" />
     <ClInclude Include="include\compv\image\compv_imageconv_common.h" />
-    <ClInclude Include="include\compv\image\compv_imageconv_from_i420.h" />
-    <ClInclude Include="include\compv\image\compv_imageconv_to_i420.h" />
+    <ClInclude Include="include\compv\image\compv_imageconv_rgba_i420.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_to_i420_intrin_avx2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_to_i420_intrin_sse.h" />
     <ClInclude Include="include\compv\parallel\compv_asynctask.h" />
@@ -59,8 +58,7 @@
     <ClCompile Include="image\compv_image.cxx" />
     <ClCompile Include="image\compv_imageconv.cxx" />
     <ClCompile Include="image\compv_imageconv_common.cxx" />
-    <ClCompile Include="image\compv_imageconv_from_i420.cxx" />
-    <ClCompile Include="image\compv_imageconv_to_i420.cxx" />
+    <ClCompile Include="image\compv_imageconv_rgba_i420.cxx" />
     <ClCompile Include="image\compv_image_libjpeg.cxx" />
     <ClCompile Include="intrinsics\x86\compv_imageconv_to_i420_intrin_avx2.cxx" />
     <ClCompile Include="intrinsics\x86\compv_imageconv_to_i420_intrin_sse.cxx" />
@@ -74,10 +72,20 @@
     <ClCompile Include="time\compv_timer.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <YASM Include="assembler\x86\compv_asm_x86_avx2_imageconv_to_i420.asm" />
-    <YASM Include="assembler\x86\compv_asm_x86_common.asm" />
-    <YASM Include="assembler\x86\compv_asm_x86_sse_imageconv_to_i420.asm" />
-    <YASM Include="assembler\x86\compv_asm_x86_utils.asm" />
+    <YASM Include="assembler\x86\compv_common_x86.S">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <YASM Include="assembler\x86\compv_imageconv_rgba_i420_x86_avx2.S">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\compv_imageconv_rgba_i420_x86_sse.S">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\compv_utils_x86.S">
+      <FileType>Document</FileType>
+    </YASM>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AAC1E1B3-CE47-4003-BE1A-00A20C409129}</ProjectGuid>

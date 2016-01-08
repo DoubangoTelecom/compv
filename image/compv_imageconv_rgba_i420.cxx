@@ -17,7 +17,7 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#include "compv/image/compv_imageconv_to_i420.h"
+#include "compv/image/compv_imageconv_rgba_i420.h"
 #include "compv/image/compv_imageconv.h"
 #include "compv/image/compv_imageconv_common.h"
 #include "compv/compv_engine.h"

@@ -17,7 +17,7 @@
 ; You should have received a copy of the GNU General Public License
 ; along with CompV.
 ;
-%include "compv_asm_x86_common.asm"
+%include "compv_common_x86.S"
 
 global sym(compv_utils_thread_get_core_id_x86_asm)
 global sym(compv_utils_rdtsc_x86_asm)

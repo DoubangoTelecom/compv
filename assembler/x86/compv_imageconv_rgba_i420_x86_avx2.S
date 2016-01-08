@@ -17,10 +17,9 @@
 ; You should have received a copy of the GNU General Public License
 ; along with CompV.
 ;
-%include "compv_asm_x86_common.asm"
+%include "compv_common_x86.S"
 
 COMPV_YASM_DEFAULT_REL
-
 
 global sym(rgbaToI420Kernel11_CompY_Asm_Aligned0_AVX2)
 global sym(rgbaToI420Kernel11_CompY_Asm_Aligned1_AVX2)
