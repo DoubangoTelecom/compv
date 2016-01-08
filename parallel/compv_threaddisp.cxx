@@ -60,9 +60,9 @@ CompVThreadDispatcher::~CompVThreadDispatcher()
 	}
 }
 
-COMPV_ERROR_CODE CompVThreadDispatcher::execute(uint32_t threadId, compv_asynctoken_id_t tokenId, compv_asynctoken_f f_func, ...)
+COMPV_ERROR_CODE CompVThreadDispatcher::execute(uint32_t threadIdx, compv_asynctoken_id_t tokenId, compv_asynctoken_f f_func, ...)
 {
-	CompVObjWrapper<CompVAsyncTask *> asyncTask = m_pTasks[threadId % m_nTasksCount];
+	CompVObjWrapper<CompVAsyncTask *> asyncTask = m_pTasks[threadIdx % m_nTasksCount];
 	COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -74,12 +74,54 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVThreadDispatcher::wait(uint32_t threadId, compv_asynctoken_id_t tokenId, uint64_t u_timeout /*= 86400000*//* 1 day */)
+COMPV_ERROR_CODE CompVThreadDispatcher::wait(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t u_timeout /*= 86400000*//* 1 day */)
 {	
-	CompVObjWrapper<CompVAsyncTask *> asyncTask = m_pTasks[threadId % m_nTasksCount];
+	CompVObjWrapper<CompVAsyncTask *> asyncTask = m_pTasks[threadIdx % m_nTasksCount];
 	COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_CODE_RETURN(asyncTask->wait(tokenId, u_timeout));
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+uint32_t CompVThreadDispatcher::getThreadIdxByCoreId(vcomp_core_id_t coreId)
+{
+	for (int32_t i = 0; i < m_nTasksCount; ++i) {
+		if (m_pTasks[i]->getCoreId() == coreId) {
+			return (uint32_t)i;
+		}
+	}
+	return 0;
+}
+
+uint32_t CompVThreadDispatcher::getThreadIdxForCurrentCore()
+{
+	return getThreadIdxByCoreId(CompVThread::getCoreId());
+}
+
+uint32_t CompVThreadDispatcher::getThreadIdxForNextToCurrentCore()
+{
+	return getThreadIdxByCoreId(CompVThread::getCoreId() + 1);
+}
+
+uint32_t CompVThreadDispatcher::getThreadIdxCurrent()
+{
+	compv_thread_id_t currentThreadId = CompVThread::getIdCurrent();
+	for (int32_t i = 0; i < m_nTasksCount; ++i) {
+		if (m_pTasks[i]->getThread()->getId() == currentThreadId) {
+			return (uint32_t)i;
+		}
+	}
+	return 0;
+}
+
+bool CompVThreadDispatcher::isMotherOfTheCurrentThread()
+{
+	compv_thread_id_t currentThreadId = CompVThread::getIdCurrent();
+	for (int32_t i = 0; i < m_nTasksCount; ++i) {
+		if (m_pTasks[i]->getThread()->getId() == currentThreadId) {
+			return true;
+		}
+	}
+	return false;
 }
 
 COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVObjWrapper<CompVThreadDispatcher*>* disp, int32_t numThreads /*= -1*/)

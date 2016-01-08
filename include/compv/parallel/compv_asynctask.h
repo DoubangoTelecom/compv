@@ -94,6 +94,8 @@ public:
 	COMPV_ERROR_CODE wait(compv_asynctoken_id_t token_id, uint64_t u_timeout = 86400000/* 1 day */);
 	COMPV_ERROR_CODE stop();
 	COMPV_INLINE uint64_t getTockensCount() { return m_iTokensCount; }
+	COMPV_INLINE CompVObjWrapper<CompVThread* > getThread() { return m_Thread; }
+	COMPV_INLINE vcomp_core_id_t getCoreId() { return m_iCoreId; }
 
 	static compv_asynctoken_id_t getUniqueTokenId();
 	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVAsyncTask*>* asyncTask);

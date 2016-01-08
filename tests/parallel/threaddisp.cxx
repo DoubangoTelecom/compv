@@ -45,8 +45,8 @@ bool TestThreadDisp()
 #if 1 // Using async tasks
 	int32_t interval = SIZE / THREADS_COUNT;
 	int32_t start = 0, end = interval;
-	for (int32_t treadId = 0; treadId < disp_->getThreadsCount(); ++treadId) {
-		COMPV_CHECK_CODE_ASSERT(disp_->execute(treadId, treadId, task1_f,
+	for (int32_t treadIdx = 0; treadIdx < disp_->getThreadsCount(); ++treadIdx) {
+		COMPV_CHECK_CODE_ASSERT(disp_->execute(treadIdx, treadIdx, task1_f,
 			COMPV_ASYNCTASK_SET_PARAM_ASIS(start),
 			COMPV_ASYNCTASK_SET_PARAM_ASIS(end),
 			COMPV_ASYNCTASK_SET_PARAM_ASIS(data),

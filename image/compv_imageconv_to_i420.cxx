@@ -152,6 +152,8 @@ void CompVImageConvToI420::fromRGBA(const uint8_t* rgbaPtr, size_t width, size_t
 	size_t widthRgbaBytes = (width << 2);
 	CompVObjWrapper<CompVThreadDispatcher* >&threadDip = CompVEngine::getThreadDispatcher();
 
+	// IS_ALIGNED(strideRgbaBytes, ALIGNV * 4) = IS_ALIGNED(stride * 4, ALIGNV * 4) = IS_ALIGNED(stride, ALIGNV)
+
 #if defined(COMPV_ARCH_X86)
 	if (widthRgbaBytes > COMPV_SIMD_ALIGNV_SSE && COMPV_IS_ALIGNED_SSE(strideRgbaBytes)) {
 		if (CompVCpu::isSupported(kCpuFlagSSSE3)) {
@@ -181,6 +183,7 @@ void CompVImageConvToI420::fromRGBA(const uint8_t* rgbaPtr, size_t width, size_t
 			}
 		} // end-of-SSSE3
 	} // end-of-SSE
+	
 	if (widthRgbaBytes > COMPV_SIMD_ALIGNV_AVX2 && COMPV_IS_ALIGNED_AVX2(strideRgbaBytes)) {
 		if (CompVCpu::isSupported(kCpuFlagAVX2)) {
 			COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel11_CompY_Asm_Aligned0_AVX2);
@@ -215,16 +218,16 @@ void CompVImageConvToI420::fromRGBA(const uint8_t* rgbaPtr, size_t width, size_t
 #endif
 	
 	// Process Y and UV lines
-	if (threadDip && threadDip->getThreadsCount() > 1) {
+	if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
 		size_t divCount, rgbaIdx = 0, YIdx = 0, UVIdx = 0, threadHeight, totalHeight = 0;
 		divCount = threadDivideAcrossY(stride, height, COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD, threadDip->getThreadsCount());
-		uint32_t threadIDStart = rand();
+		uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
 		for (size_t i = 0; i < divCount; ++i) {
 			threadHeight = ((height - totalHeight) / (divCount - i)) & -2; // the & -2 is to make sure we'll deal with even heights
-			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIDStart + i), COMPV_TOKENIDX_IMAGE_CONVERT0, toI420Kernelxx_AsynExec,
+			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0, toI420Kernelxx_AsynExec,
 				COMPV_ASYNCTASK_SET_PARAM_ASISS(COMPV_FUNCID_RGBAToI420_Y, CompY, (rgbaPtr + rgbaIdx), (outYPtr + YIdx), threadHeight, width, stride),
 				COMPV_ASYNCTASK_SET_PARAM_NULL()));
-			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIDStart + i), COMPV_TOKENIDX_IMAGE_CONVERT1, toI420Kernelxx_AsynExec,
+			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT1, toI420Kernelxx_AsynExec,
 				COMPV_ASYNCTASK_SET_PARAM_ASISS(COMPV_FUNCID_RGBAToI420_UV, CompUV, (rgbaPtr + rgbaIdx), (outUPtr + UVIdx), (outVPtr + UVIdx), threadHeight, width, stride),
 				COMPV_ASYNCTASK_SET_PARAM_NULL()));
 			rgbaIdx += (threadHeight * stride) << 2;
@@ -233,8 +236,8 @@ void CompVImageConvToI420::fromRGBA(const uint8_t* rgbaPtr, size_t width, size_t
 			totalHeight += threadHeight;
 		}
 		for (size_t i = 0; i < divCount; ++i) {
-			COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIDStart + i), COMPV_TOKENIDX_IMAGE_CONVERT0));
-			COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIDStart + i), COMPV_TOKENIDX_IMAGE_CONVERT1));
+			COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0));
+			COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT1));
 		}
 	}
 	else {

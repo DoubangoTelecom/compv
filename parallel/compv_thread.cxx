@@ -120,8 +120,8 @@ compv_thread_id_t CompVThread::getId()
 	return GetThreadId((HANDLE)m_pHandle);
 #else
 	pthread_id_np_t tid;
-	pthread_t self = pthread_self();
-	pthread_getunique_np(*((pthread_t*)m_pHandle), &tid);
+	pthread_t* self = ((pthread_t*)m_pHandle);
+	pthread_getunique_np(*self, &tid);
 	return tid;
 #endif
 }
@@ -249,8 +249,12 @@ vcomp_core_id_t CompVThread::getCoreId()
 #elif defined(COMPV_ARCH_X86_ASM)
 	return compv_utils_thread_get_core_id_x86_asm();
 #else
-	COMPV_DEBUG_ERROR_EX(kModuleNameThread, "Not Implemented yet");
-	return 0;
+	int cpuId = sched_getcpu();
+	if (cpuId < 0) {
+		COMPV_DEBUG_ERROR_EX(kModuleNameThread, "sched_getcpu returned %d", cpuId);
+		return 0;
+	}
+	return (vcomp_core_id_t)cpuId;
 #endif
 }
 
