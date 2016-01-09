@@ -36,8 +36,8 @@
     <ClInclude Include="include\compv\image\compv_imageconv.h" />
     <ClInclude Include="include\compv\image\compv_imageconv_common.h" />
     <ClInclude Include="include\compv\image\compv_imageconv_rgba_i420.h" />
-    <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_to_i420_intrin_avx2.h" />
-    <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_to_i420_intrin_sse.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_rgba_i420_intrin_avx2.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_rgba_i420_intrin_sse.h" />
     <ClInclude Include="include\compv\parallel\compv_asynctask.h" />
     <ClInclude Include="include\compv\parallel\compv_condvar.h" />
     <ClInclude Include="include\compv\parallel\compv_mutex.h" />
@@ -62,8 +62,8 @@
     <ClCompile Include="image\compv_imageconv_common.cxx" />
     <ClCompile Include="image\compv_imageconv_rgba_i420.cxx" />
     <ClCompile Include="image\compv_image_libjpeg.cxx" />
-    <ClCompile Include="intrinsics\x86\compv_imageconv_to_i420_intrin_avx2.cxx" />
-    <ClCompile Include="intrinsics\x86\compv_imageconv_to_i420_intrin_sse.cxx" />
+    <ClCompile Include="intrinsics\x86\compv_imageconv_rgba_i420_intrin_avx2.cxx" />
+    <ClCompile Include="intrinsics\x86\compv_imageconv_rgba_i420_intrin_sse.cxx" />
     <ClCompile Include="parallel\compv_asynctask.cxx" />
     <ClCompile Include="parallel\compv_condvar.cxx" />
     <ClCompile Include="parallel\compv_mutex.cxx" />

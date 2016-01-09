@@ -17,8 +17,8 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_IMAGE_IMAGECONV_TO_I420_INTRIN_SSE_H_)
-#define _COMPV_IMAGE_IMAGECONV_TO_I420_INTRIN_SSE_H_
+#if !defined(_COMPV_IMAGE_IMAGECONV_RGBA_I420_INTRIN_SSE_H_)
+#define _COMPV_IMAGE_IMAGECONV_RGBA_I420_INTRIN_SSE_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -41,4 +41,4 @@ COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 */
 
-#endif /* _COMPV_IMAGE_IMAGECONV_TO_I420_INTRIN_SSE_H_ */
+#endif /* _COMPV_IMAGE_IMAGECONV_RGBA_I420_INTRIN_SSE_H_ */
