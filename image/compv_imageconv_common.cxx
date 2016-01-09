@@ -63,3 +63,43 @@ COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kRGBAToYUV_U4V4Coeffs8[] = { // AVX-on
 	-38, -74, 112, 0, -38, -74, 112, 0, -38, -74, 112, 0, -38, -74, 112, 0,
 	112, -94, -18, 0, 112, -94, -18, 0, 112, -94, -18, 0, 112, -94, -18, 0,
 };
+
+
+/* YUV to RGB conversion : http ://www.fourcc.org/fccyvrgb.php 
+R = 1.164(Y - 16) + 1.596(V - 128)
+G = 1.164(Y - 16) - 0.813(V - 128) - 0.391(U - 128)
+B = 1.164(Y - 16) + 2.018(U - 128)
+and we know that :
+R = (R * 64) / 64
+G = (G * 64) / 64
+B = (B * 64) / 64
+= >
+R * 64 = 74(Y - 16) + 102(V - 128)
+G * 64 = 74(Y - 16) - 52(V - 128) - 25(U - 128)
+B * 64 = 74(Y - 16) + 129(U - 128)
+= >
+R * 64 = 74Y' + 0U' + 102V'
+G * 64 = 74Y' - 25U' - 52V'
+B * 64 = 74Y' + 129U' + 0V'
+where Y'=(Y - 16), U' = (U - 128), V'=(V - 128)
+= >
+R * 32 = 37Y' + 0U' + 51V'
+G * 32 = 37Y' - 13U' - 26V'
+B * 32 = 37Y' + 65U' + 0V'
+= >
+R = (37Y' + 0U' + 51V') >> 5
+G = (37Y' - 13U' - 26V') >> 5
+B = (37Y' + 65U' + 0V') >> 5
+*/
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kYUVToRGBA_RCoeffs8[] = {
+	37, 0, 51, 0, 37, 0, 51, 0, 37, 0, 51, 0, 37, 0, 51, 0, // 128bits SSE register
+	37, 0, 51, 0, 37, 0, 51, 0, 37, 0, 51, 0, 37, 0, 51, 0, // 256bits AVX register
+};
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kYUVToRGBA_GCoeffs8[] = {
+	37, -13, -26, 0, 37, -13, -26, 0, 37, -13, -26, 0, 37, -13, -26, 0, // 128bits SSE register
+	37, -13, -26, 0, 37, -13, -26, 0, 37, -13, -26, 0, 37, -13, -26, 0, // 256bits AVX register
+};
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kYUVToRGBA_BCoeffs8[] = {
+	37, 65, 0, 0, 37, 65, 0, 0, 37, 65, 0, 0, 37, 65, 0, 0, // 128bits SSE register
+	37, 65, 0, 0, 37, 65, 0, 0, 37, 65, 0, 0, 37, 65, 0, 0, // 256bits AVX register
+};

@@ -34,13 +34,13 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, size_t *width, size_t *height, COMPV_PIXEL_FORMAT* pixelFormat);
+static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, int32_t *width, int32_t *height, COMPV_PIXEL_FORMAT* pixelFormat);
 
 COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVObjWrapper<CompVImage*>* image)
 {
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	uint8_t* rawdata_ = NULL;
-	size_t width_ = 0, height_ = 0, size_ = 0;
+	int32_t width_ = 0, height_ = 0, size_ = 0;
 	COMPV_PIXEL_FORMAT pixelFormat_ = COMPV_PIXEL_FORMAT_NONE;
 	CompVObjWrapper<CompVImage*> image_;
 	CompVObjWrapper<CompVBuffer*> buffer_;
@@ -99,7 +99,7 @@ static void my_error_exit(j_common_ptr cinfo)
 	longjmp(myerr->setjmp_buffer, 1);
 }
 
-static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, size_t *width, size_t *height, COMPV_PIXEL_FORMAT* pixelFormat)
+static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, int32_t *width, int32_t *height, COMPV_PIXEL_FORMAT* pixelFormat)
 {
 	struct jpeg_decompress_struct cinfo = { 0 };
 	bool cinfo_created = false;

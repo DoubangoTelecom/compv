@@ -34,29 +34,29 @@ protected:
 public:
 	virtual ~CompVImage();
 	virtual COMPV_INLINE const char* getObjectId() { return "CompVImage"; };
-	COMPV_ERROR_CODE setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, size_t width, size_t height, size_t stride = 0);
+	COMPV_ERROR_CODE setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, int32_t width, int32_t height, int32_t stride = 0);
 
 	COMPV_INLINE const CompVObjWrapper<CompVBuffer*>& getData() { return m_oData; }
 	COMPV_INLINE size_t getDataSize() { return m_oData ? m_oData->getSize() : 0; }
 	COMPV_INLINE const void* getDataPtr() { return m_oData ? m_oData->getPtr() : NULL; }
-	COMPV_INLINE size_t getWidth() { return m_nWidth; }
-	COMPV_INLINE size_t getHeight() { return m_nHeight; }
-	COMPV_INLINE size_t getStride() { return m_nStride; }
+	COMPV_INLINE int32_t getWidth() { return m_nWidth; }
+	COMPV_INLINE int32_t getHeight() { return m_nHeight; }
+	COMPV_INLINE int32_t getStride() { return m_nStride; }
 	COMPV_INLINE COMPV_PIXEL_FORMAT getPixelFormat() { return m_ePixelFormat; }
 	COMPV_INLINE COMPV_IMAGE_FORMAT getImageFormat() { return m_eImageFormat; }
 
-	static COMPV_ERROR_CODE getBestStride(size_t stride, size_t *bestStride);
+	static COMPV_ERROR_CODE getBestStride(int32_t stride, int32_t *bestStride);
 	static CompVObjWrapper<CompVImage*> loadImage(const char* filePath);
-	static COMPV_ERROR_CODE getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, size_t width, size_t height, size_t *size);
-	static COMPV_ERROR_CODE getBitsCountForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, size_t* bitsCount);
+	static COMPV_ERROR_CODE getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, int32_t width, int32_t height, int32_t *size);
+	static COMPV_ERROR_CODE getBitsCountForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, int32_t* bitsCount);
 	static COMPV_ERROR_CODE newObj(COMPV_IMAGE_FORMAT eImageFormat, COMPV_PIXEL_FORMAT ePixelFormat, CompVObjWrapper<CompVImage*>* image);
 
 protected:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
 	CompVObjWrapper<CompVBuffer*> m_oData;
-	size_t m_nWidth;
-	size_t m_nHeight;
-	size_t m_nStride;
+	int32_t m_nWidth;
+	int32_t m_nHeight;
+	int32_t m_nStride;
 	COMPV_PIXEL_FORMAT m_ePixelFormat;
 	COMPV_IMAGE_FORMAT m_eImageFormat;
 	COMPV_DISABLE_WARNINGS_END()

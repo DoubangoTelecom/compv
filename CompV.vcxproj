@@ -28,6 +28,7 @@
     <ClInclude Include="include\compv\compv_engine.h" />
     <ClInclude Include="include\compv\compv_errno.h" />
     <ClInclude Include="include\compv\compv_fileutils.h" />
+    <ClInclude Include="include\compv\compv_mathutils.h" />
     <ClInclude Include="include\compv\compv_mem.h" />
     <ClInclude Include="include\compv\compv_obj.h" />
     <ClInclude Include="include\compv\compv_simd_globals.h" />
@@ -53,6 +54,7 @@
     <ClCompile Include="compv_debug.cxx" />
     <ClCompile Include="compv_engine.cxx" />
     <ClCompile Include="compv_fileutils.cxx" />
+    <ClCompile Include="compv_mathutils.cxx" />
     <ClCompile Include="compv_mem.cxx" />
     <ClCompile Include="compv_simd_globals.cxx" />
     <ClCompile Include="image\compv_image.cxx" />

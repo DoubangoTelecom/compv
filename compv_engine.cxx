@@ -54,13 +54,29 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
 
 	COMPV_DEBUG_INFO("Initializing engine (v %s)...", COMPV_VERSION_STRING);
 
+	// Make sure sizeof(vcomp_scalar_t) is correct
+#if defined(COMPV_ASM) || defined(COMPV_INTRINSIC)
+	if (sizeof(vcomp_scalar_t) != sizeof(void*)) {
+		COMPV_DEBUG_ERROR("sizeof(vcomp_scalar_t)= %d not equal to sizeof(void*)=%d", sizeof(vcomp_scalar_t), sizeof(void*));
+		return COMPV_ERROR_CODE_E_SYSTEM;
+	}
+#endif
+	COMPV_DEBUG_INFO("sizeof(vcomp_scalar_t)=%d", sizeof(vcomp_scalar_t));
+
 	// endianness
+	// https://developer.apple.com/library/mac/documentation/Darwin/Conceptual/64bitPorting/MakingCode64-BitClean/MakingCode64-BitClean.html
+#if TARGET_RT_LITTLE_ENDIAN
+	s_bBigEndian = false;
+#elif TARGET_RT_BIG_ENDIAN
+	s_bBigEndian = true;
+#else
 	static const short kWord = 0x4321;
 	s_bBigEndian = ((*(int8_t *)&kWord) != 0x21);
-#if defined(COMPV_OS_WINDOWS)
+#	if defined(COMPV_OS_WINDOWS)
 	if (s_bBigEndian) {
 		COMPV_DEBUG_WARN("Big endian on Windows machine. Is it right?");
 	}
+#	endif
 #endif
 
 	// rand()

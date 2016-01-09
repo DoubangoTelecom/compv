@@ -128,7 +128,7 @@ COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVObjWrapper<CompVB
 		COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Invalid parameter");
 		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
 	}
-	size_t size_ = CompVFileUtils::getSize(pcPath);
+	int32_t size_ = (int32_t)CompVFileUtils::getSize(pcPath);
 	if (size_ > 0) {
 		FILE* file_ = NULL;
 		void* mem_ = NULL;

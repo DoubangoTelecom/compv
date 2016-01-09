@@ -52,13 +52,13 @@ public:
 	virtual COMPV_INLINE const char* getObjectId() { return "CompVThread"; };
 
 	static void sleep(uint64_t ms);
-	COMPV_ERROR_CODE setPriority(int32_t priority);
+	COMPV_ERROR_CODE setPriority(int priority);
 	compv_thread_id_t getId();
 	COMPV_ERROR_CODE setAffinity(vcomp_core_id_t coreId);
 	
 	COMPV_ERROR_CODE join();
 	
-	static COMPV_ERROR_CODE setPriorityCurrent(int32_t priority);
+	static COMPV_ERROR_CODE setPriorityCurrent(int priority);
 	static compv_thread_id_t getIdCurrent();
 	static bool isEquals(compv_thread_id_t id1, compv_thread_id_t id2);
 	static vcomp_core_id_t getCoreId();

@@ -138,6 +138,9 @@
     <ClInclude Include="include\compv\image\compv_imageconv_rgba_i420.h">
       <Filter>Header Files\image</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\compv_mathutils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -208,6 +211,9 @@
     </ClCompile>
     <ClCompile Include="image\compv_imageconv_rgba_i420.cxx">
       <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_mathutils.cxx">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -37,7 +37,8 @@ protected:
 public:
 	virtual ~CompVImageConv();
 
-	static COMPV_ERROR_CODE rgbaToI420(const uint8_t* rgbaPtr, size_t width, size_t height, size_t stride, CompVObjWrapper<CompVImage* >* i420);
+	static COMPV_ERROR_CODE rgbaToI420(const uint8_t* rgbaPtr, int32_t height, int32_t width, int32_t stride, CompVObjWrapper<CompVImage* >* i420);
+	static COMPV_ERROR_CODE i420ToRGBA(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, int32_t height, int32_t width, int32_t stride, CompVObjWrapper<CompVImage* >* rgba);
 
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)

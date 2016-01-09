@@ -60,6 +60,7 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_MM_SHUFFLE(fp3,fp2,fp1,fp0) (((fp3) << 6) | ((fp2) << 4) | ((fp1) << 2) | ((fp0)))
 
 typedef int32_t vcomp_core_id_t;
+typedef intptr_t vcomp_scalar_t;  /* This type *must* have the width of a general-purpose register on the target CPU. 64bits or 32bits. */
 
 typedef enum _COMPV_DEBUG_LEVEL {
 	COMPV_DEBUG_LEVEL_INFO = 4,
@@ -165,8 +166,8 @@ enum {
 typedef struct _CompVImageInfo {
 	COMPV_IMAGE_FORMAT format;
 	COMPV_PIXEL_FORMAT pixelFormat;
-	size_t width;
-	size_t height;
+	int32_t width;
+	int32_t height;
 }
 CompVImageInfo;
 

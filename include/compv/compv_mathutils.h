@@ -17,26 +17,23 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_IMAGE_IMAGECONV_RGBA_I420_H_)
-#define _COMPV_IMAGE_IMAGECONV_RGBA_I420_H_
+#if !defined(_COMPV_MATHUTILS_H_)
+#define _COMPV_MATHUTILS_H_
 
 #include "compv/compv_config.h"
-#include "compv/compv_common.h"
-#include "compv/image/compv_image.h"
-
-#if defined(_COMPV_API_H_)
-#error("This is a private file and must not be part of the API")
-#endif
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVImageConvArgbI420
-{
+class CompVMathUtils {
 public:
-	static void fromRGBA(const uint8_t* rgbaPtr, int32_t height, int32_t width, int32_t stride, uint8_t* outYPtr, uint8_t* outUPtr, uint8_t* outVPtr);
-	static void fromI420(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, int32_t height, int32_t width, int32_t stride);
+	static COMPV_INLINE int32_t clamp(int32_t min, int32_t val, int32_t max) { // do not use macro, otherwise 'val' which coulbe a function will be evaluated several times
+		return val < min ? min : (val > max ? max : val);
+	}
+	static COMPV_INLINE uint8_t clampPixel8(int16_t val) {
+		return val < 0 ? 0 : (val > 255 ? 255 : val);
+	}
 };
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_IMAGE_IMAGECONV_RGBA_I420_H_ */
+#endif /* _COMPV_MATHUTILS_H_ */

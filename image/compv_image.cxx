@@ -45,7 +45,7 @@ CompVImage::~CompVImage()
 
 }
 
-COMPV_ERROR_CODE CompVImage::setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, size_t width, size_t height, size_t stride /*= 0*/)
+COMPV_ERROR_CODE CompVImage::setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, int32_t width, int32_t height, int32_t stride /*= 0*/)
 {
 	if (!buffer || !width || !height) {
 		COMPV_DEBUG_ERROR("Invalid parameter");
@@ -58,10 +58,10 @@ COMPV_ERROR_CODE CompVImage::setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, s
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImage::getBestStride(size_t stride, size_t *bestStride)
+COMPV_ERROR_CODE CompVImage::getBestStride(int32_t stride, int32_t *bestStride)
 {
 	COMPV_CHECK_EXP_RETURN(bestStride == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	*bestStride = CompVMem::alignForward(stride, COMPV_SIMD_ALIGNV_DEFAULT * 4); // most of the time we'll read the data per pack of 4 vecs
+	*bestStride = (int32_t)CompVMem::alignForward(stride, COMPV_SIMD_ALIGNV_DEFAULT * 4); // most of the time we'll read the data per pack of 4 vecs
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -72,10 +72,10 @@ CompVObjWrapper<CompVImage*> CompVImage::loadImage(const char* filePath)
 	return NULL;
 }
 
-COMPV_ERROR_CODE CompVImage::getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, size_t width, size_t height, size_t *size)
+COMPV_ERROR_CODE CompVImage::getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, int32_t width, int32_t height, int32_t *size)
 {
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	size_t bitsCount;
+	int32_t bitsCount;
 	if (!size) {
 		COMPV_DEBUG_ERROR("Invalid parameter");
 		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
@@ -91,7 +91,7 @@ COMPV_ERROR_CODE CompVImage::getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelForm
 		}
 		else {
 			float f = ((float)bitsCount) / 8.f;
-			*size = (size_t)round((width * height) * f);
+			*size = (int32_t)round((width * height) * f);
 		}
 	}
 	else {
@@ -100,7 +100,7 @@ COMPV_ERROR_CODE CompVImage::getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelForm
 	return err_;
 }
 
-COMPV_ERROR_CODE CompVImage::getBitsCountForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, size_t* bitsCount)
+COMPV_ERROR_CODE CompVImage::getBitsCountForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, int32_t* bitsCount)
 {
 	if (!bitsCount) {
 		COMPV_DEBUG_ERROR("Invalid parameter");

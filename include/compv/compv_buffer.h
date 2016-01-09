@@ -29,24 +29,24 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_API CompVBuffer : public CompVObj
 {
 protected:
-	CompVBuffer(const void* pcPtr = NULL, size_t size = 0);
+	CompVBuffer(const void* pcPtr = NULL, int32_t size = 0);
 public:
 	virtual ~CompVBuffer();
 	virtual COMPV_INLINE const char* getObjectId() { return "CompVBuffer"; };
 
-	COMPV_ERROR_CODE copyData(const void* pcPtr, size_t size);
-	COMPV_ERROR_CODE takeData(void** ppPtr, size_t size);
+	COMPV_ERROR_CODE copyData(const void* pcPtr, int32_t size);
+	COMPV_ERROR_CODE takeData(void** ppPtr, int32_t size);
 	COMPV_INLINE const void* getPtr() { return m_pPtr; }
-	COMPV_INLINE size_t getSize(){ return m_nSize; }
+	COMPV_INLINE int32_t getSize(){ return m_nSize; }
 	COMPV_INLINE bool isEmpty() { return !(getSize() && getPtr()); }
-	static COMPV_ERROR_CODE newObj(const void* pcPtr, size_t size, CompVObjWrapper<CompVBuffer*>* buffer);
+	static COMPV_ERROR_CODE newObj(const void* pcPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer);
 	static COMPV_ERROR_CODE newObjAndNullData(CompVObjWrapper<CompVBuffer*>* buffer);
-	static COMPV_ERROR_CODE newObjAndTakeData(void** ppPtr, size_t size, CompVObjWrapper<CompVBuffer*>* buffer);
-	static COMPV_ERROR_CODE newObjAndCopyData(const void* pcPtr, size_t size, CompVObjWrapper<CompVBuffer*>* buffer);
+	static COMPV_ERROR_CODE newObjAndTakeData(void** ppPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer);
+	static COMPV_ERROR_CODE newObjAndCopyData(const void* pcPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer);
 
 private:
 	void* m_pPtr;
-	size_t m_nSize;
+	int32_t m_nSize;
 };
 
 COMPV_NAMESPACE_END()

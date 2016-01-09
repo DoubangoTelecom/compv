@@ -23,7 +23,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVBuffer::CompVBuffer(const void* pcPtr /*= NULL*/, size_t size /*= 0*/)
+CompVBuffer::CompVBuffer(const void* pcPtr /*= NULL*/, int32_t size /*= 0*/)
 : CompVObj()
 , m_pPtr(NULL)
 , m_nSize(0)
@@ -33,7 +33,7 @@ CompVBuffer::CompVBuffer(const void* pcPtr /*= NULL*/, size_t size /*= 0*/)
 	}
 }
 
-COMPV_ERROR_CODE CompVBuffer::copyData(const void* pcPtr, size_t size)
+COMPV_ERROR_CODE CompVBuffer::copyData(const void* pcPtr, int32_t size)
 {
 	if (!pcPtr || !size) {
 		COMPV_DEBUG_ERROR("Invalid parameter");
@@ -51,7 +51,7 @@ COMPV_ERROR_CODE CompVBuffer::copyData(const void* pcPtr, size_t size)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVBuffer::takeData(void** ppPtr, size_t size)
+COMPV_ERROR_CODE CompVBuffer::takeData(void** ppPtr, int32_t size)
 {
 	if (!ppPtr || !*ppPtr || !size) {
 		COMPV_DEBUG_ERROR("Invalid parameter");
@@ -68,7 +68,7 @@ CompVBuffer::~CompVBuffer()
 	CompVMem::free(&m_pPtr);
 }
 
-COMPV_ERROR_CODE CompVBuffer::newObj(const void* pcPtr, size_t size, CompVObjWrapper<CompVBuffer*>* buffer)
+COMPV_ERROR_CODE CompVBuffer::newObj(const void* pcPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer)
 {
 	if (!buffer) {
 		COMPV_DEBUG_ERROR("Invalid parameter");
@@ -87,7 +87,7 @@ COMPV_ERROR_CODE CompVBuffer::newObjAndNullData(CompVObjWrapper<CompVBuffer*>* b
 	return CompVBuffer::newObj(NULL, 0, buffer);
 }
 
-COMPV_ERROR_CODE CompVBuffer::newObjAndTakeData(void** ppPtr, size_t size, CompVObjWrapper<CompVBuffer*>* buffer)
+COMPV_ERROR_CODE CompVBuffer::newObjAndTakeData(void** ppPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer)
 {
 	CompVObjWrapper<CompVBuffer*> buffer_;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -105,7 +105,7 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVBuffer::newObjAndCopyData(const void* pcPtr, size_t size, CompVObjWrapper<CompVBuffer*>* buffer)
+COMPV_ERROR_CODE CompVBuffer::newObjAndCopyData(const void* pcPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer)
 {
 	CompVObjWrapper<CompVBuffer*> buffer_;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;

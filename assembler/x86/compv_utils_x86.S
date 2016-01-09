@@ -28,7 +28,7 @@ sym(compv_utils_rdtsc_x86_asm):
 	rdtsc
 	ret
 
-;;; int32_t compv_utils_thread_get_core_id_x86_asm();
+;;; int compv_utils_thread_get_core_id_x86_asm();
 sym(compv_utils_thread_get_core_id_x86_asm):
 	mov eax, 1
     cpuid
