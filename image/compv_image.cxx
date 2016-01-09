@@ -54,7 +54,7 @@ COMPV_ERROR_CODE CompVImage::setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, i
 	m_oData = buffer;
 	m_nWidth = width;
 	m_nHeight = height;
-	m_nStride = (stride == 0 ? width : stride);
+	m_nStride = (stride < width ? width : stride);
 	return COMPV_ERROR_CODE_S_OK;
 }
 

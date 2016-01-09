@@ -23,22 +23,45 @@
 #include "compv/compv_config.h"
 #include "compv/compv_debug.h"
 
+#include <map>
+
 COMPV_NAMESPACE_BEGIN()
+
+typedef struct compv_special_mem_s {
+	uintptr_t addr;
+	size_t size;
+	size_t alignment;
+public:
+	compv_special_mem_s(uintptr_t _addr, size_t _size, size_t _alignment) {
+		addr = _addr;
+		size = _size;
+		alignment = _alignment;
+	}
+}
+compv_special_mem_t;
 
 class COMPV_API CompVMem
 {
 public:
 	static void* malloc(size_t size);
 	static void* realloc(void * ptr, size_t size);
-	static void free(void** ptr);
 	static void* calloc(size_t num, size_t size);
+	static void free(void** ptr);
 
 	static void* mallocAligned(size_t size, size_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
 	static void* reallocAligned(void * ptr, size_t size, size_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
-	static void freeAligned(void** ptr);
 	static void* callocAligned(size_t num, size_t size, size_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
+	static void freeAligned(void** ptr);
+	
 	static uintptr_t alignBackward(uintptr_t ptr, int32_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
 	static uintptr_t alignForward(uintptr_t ptr, int32_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
+
+	static bool isSpecial(void* ptr);
+
+private:
+	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	static std::map<uintptr_t, compv_special_mem_t > s_Specials;
+	COMPV_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

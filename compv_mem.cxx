@@ -26,6 +26,8 @@ COMPV_NAMESPACE_BEGIN()
 #	define COMPV_MEMALIGN_ALWAYS 1
 #endif
 
+std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;
+
 /**
 * Allocates a block of size bytes of memory, returning a pointer to the beginning of the block.
 * The content of the newly allocated block of memory is not initialized, remaining with indeterminate values.
@@ -61,8 +63,11 @@ void* CompVMem::malloc(size_t size)
 * If the function failed to allocate the requested block of memory, a NULL pointer is returned.
 * It is up to you to free the returned pointer.
 */
-void* CompVMem::realloc(void * ptr, size_t size)
+void* CompVMem::realloc(void* ptr, size_t size)
 {
+	if (isSpecial(ptr)) {
+		return reallocAligned(ptr, size);
+	}
 #if COMPV_MEMALIGN_ALWAYS
 	return reallocAligned(ptr, size);
 #else
@@ -85,23 +90,6 @@ void* CompVMem::realloc(void * ptr, size_t size)
 	}
 
 	return pMem;
-#endif
-}
-
-/**
-* Deallocate space in memory.
-* @param ptr Pointer to a memory block previously allocated with @a tsk_malloc, @a tsk_calloc or @a tsk_realloc to be deallocated.
-* If a null pointer is passed as argument, no action occurs.
-*/
-void CompVMem::free(void** ptr)
-{
-#if COMPV_MEMALIGN_ALWAYS
-	freeAligned(ptr);
-#else
-	if (ptr && *ptr) {
-		::free(*ptr);
-		*ptr = NULL;
-	}
 #endif
 }
 
@@ -130,42 +118,70 @@ void* CompVMem::calloc(size_t num, size_t size)
 #endif
 }
 
+/**
+* Deallocate space in memory.
+* @param ptr Pointer to a memory block previously allocated with @a tsk_malloc, @a tsk_calloc or @a tsk_realloc to be deallocated.
+* If a null pointer is passed as argument, no action occurs.
+*/
+void CompVMem::free(void** ptr)
+{
+	if (ptr && *ptr) {
+		if (isSpecial(*ptr)) {
+			freeAligned(ptr);
+		}
+		else {
+#if COMPV_MEMALIGN_ALWAYS
+			freeAligned(ptr);
+#else
+			::free(*ptr);
+#endif
+		}
+		*ptr = NULL;
+		}
+	}
+
 void* CompVMem::mallocAligned(size_t size, size_t alignment/*= COMPV_SIMD_ALIGNV_DEFAULT*/)
 {
+	void* pMem;
 #if COMPV_OS_WINDOWS && !COMPV_UNDER_OS_CE && !COMPV_OS_WINDOWS_RT
-	return _aligned_malloc(size, alignment);
+	pMem = _aligned_malloc(size, alignment);
 #else
-	void* ret = ::malloc(size + alignment);
+	pMem = ::malloc(size + alignment);
 	if (ret) {
 		long pad = ((~(long)ret) % alignment) + 1;
-		ret = ((uint8_t*)ret) + pad; // pad
-		((uint8_t*)ret)[-1] = (uint8_t)pad; // store the pad for later use
+		pMem = ((uint8_t*)pMem) + pad; // pad
+		((uint8_t*)pMem)[-1] = (uint8_t)pad; // store the pad for later use
 	}
-	return ret;
 #endif
+	if (pMem) {
+		CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>((uintptr_t)pMem, compv_special_mem_t((uintptr_t)pMem, size, alignment)));
+	}
+	return pMem;
 }
 
 void* CompVMem::reallocAligned(void* ptr, size_t size, size_t alignment/*= COMPV_SIMD_ALIGNV_DEFAULT*/)
 {
-#if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
-	return _aligned_realloc(ptr, size, alignment);
-#else
-	CompVMem::freeAligned(&ptr);
-	return CompVMem::mallocAligned(size);
-#endif
-}
-
-void CompVMem::freeAligned(void** ptr)
-{
-	if (ptr && *ptr) {
-		void* ptr_ = *ptr;
-#if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
-		_aligned_free(ptr_);
-#else
-		::free((((uint8_t*)ptr_) - ((uint8_t*)ptr_)[-1]));
-#endif
-		*ptr = NULL;
+	if (ptr && !isSpecial(ptr)) {
+		COMPV_DEBUG_FATAL("Using reallocAligned on no-special address: %x", (uintptr_t)ptr);
+		return NULL;
 	}
+	void* pMem;
+#if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
+	pMem = _aligned_realloc(ptr, size, alignment);
+#else
+	pMem = CompVMem::mallocAligned(size);
+	if (pMem && ptr) {
+		std::map<uintptr_t, compv_special_mem_t >::iterator it = CompVMem::s_Specials.find((uintptr_t)ptr);
+		COMPV_ASSERT(it != CompVMem::s_Specials.end());
+		memcpy(pMem, ptr, min(it->second.size, size));
+	}
+	CompVMem::freeAligned(&ptr);
+#endif
+	
+	if (pMem) {
+		CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>((uintptr_t)pMem, compv_special_mem_t((uintptr_t)pMem, size, alignment)));
+	}
+	return pMem;
 }
 
 void* CompVMem::callocAligned(size_t num, size_t size, size_t alignment/*= COMPV_SIMD_ALIGNV_DEFAULT*/)
@@ -173,8 +189,26 @@ void* CompVMem::callocAligned(size_t num, size_t size, size_t alignment/*= COMPV
 	void* pMem = CompVMem::mallocAligned((size * num), alignment);
 	if (pMem) {
 		memset(pMem, 0, (size * num));
+		CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>((uintptr_t)pMem, compv_special_mem_t((uintptr_t)pMem, (size * num), alignment)));
 	}
 	return pMem;
+}
+
+void CompVMem::freeAligned(void** ptr)
+{
+	if (ptr && *ptr) {
+		void* ptr_ = *ptr;
+		if (!isSpecial(ptr_)) {
+			COMPV_DEBUG_FATAL("Using freeAligned on no-special address: %x", (uintptr_t)ptr_);
+		}
+#if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
+		_aligned_free(ptr_);
+#else
+		::free((((uint8_t*)ptr_) - ((uint8_t*)ptr_)[-1]));
+#endif
+		CompVMem::s_Specials.erase((uintptr_t)ptr_);
+		*ptr = NULL;
+	}
 }
 
 // alignment must be power of two
@@ -188,6 +222,12 @@ uintptr_t CompVMem::alignForward(uintptr_t ptr, int32_t alignment /*= COMPV_SIMD
 {
 	COMPV_ASSERT(COMPV_IS_POW2(alignment));
 	return (ptr + (alignment - 1)) & -alignment;
+}
+
+// Allocated using mallocAligned, callocAligned or reallocAligned
+bool CompVMem::isSpecial(void* ptr)
+{
+	return CompVMem::s_Specials.find((uintptr_t)ptr) != CompVMem::s_Specials.end();
 }
 
 COMPV_NAMESPACE_END()

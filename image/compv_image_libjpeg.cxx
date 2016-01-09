@@ -34,13 +34,13 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, int32_t *width, int32_t *height, COMPV_PIXEL_FORMAT* pixelFormat);
+static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, int32_t *width, int32_t *stride, int32_t *height, COMPV_PIXEL_FORMAT* pixelFormat);
 
 COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVObjWrapper<CompVImage*>* image)
 {
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	uint8_t* rawdata_ = NULL;
-	int32_t width_ = 0, height_ = 0, size_ = 0;
+	int32_t width_ = 0, stride_ = 0, height_ = 0, size_ = 0;
 	COMPV_PIXEL_FORMAT pixelFormat_ = COMPV_PIXEL_FORMAT_NONE;
 	CompVObjWrapper<CompVImage*> image_;
 	CompVObjWrapper<CompVBuffer*> buffer_;
@@ -50,11 +50,11 @@ COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVObjWrapper<CompVIm
 		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	}
 
-	COMPV_CHECK_CODE_BAIL(err_ = decode_jpeg(filePath, kReadDataTrue, &rawdata_, &width_, &height_, &pixelFormat_));
-	COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getSizeForPixelFormat(pixelFormat_, width_, height_, &size_));
+	COMPV_CHECK_CODE_BAIL(err_ = decode_jpeg(filePath, kReadDataTrue, &rawdata_, &width_, &stride_, &height_, &pixelFormat_));
+	COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getSizeForPixelFormat(pixelFormat_, stride_, height_, &size_));
 	COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj(COMPV_IMAGE_FORMAT_RAW, pixelFormat_, &image_));
 	COMPV_CHECK_CODE_BAIL(err_ = CompVBuffer::newObjAndTakeData((void**)&rawdata_, size_, &buffer_));
-	COMPV_CHECK_CODE_BAIL(err_ = image_->setBuffer(buffer_, width_, height_));
+	COMPV_CHECK_CODE_BAIL(err_ = image_->setBuffer(buffer_, width_, height_, stride_));
 
 	*image = image_;
 
@@ -71,7 +71,7 @@ COMPV_ERROR_CODE libjpegDecodeInfo(const char* filePath, CompVImageInfo& info)
 		COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "Invalid parameter");
 		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	}
-	COMPV_CHECK_CODE_BAIL(err_ = decode_jpeg(filePath, kReadDataFalse, NULL, &info.width, &info.height, &info.pixelFormat));
+	COMPV_CHECK_CODE_BAIL(err_ = decode_jpeg(filePath, kReadDataFalse, NULL, &info.width, &info.stride, &info.height, &info.pixelFormat));
 	info.format = COMPV_IMAGE_FORMAT_JPEG;
 
 bail:
@@ -99,7 +99,7 @@ static void my_error_exit(j_common_ptr cinfo)
 	longjmp(myerr->setjmp_buffer, 1);
 }
 
-static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, int32_t *width, int32_t *height, COMPV_PIXEL_FORMAT* pixelFormat)
+static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, int32_t *width, int32_t *stride, int32_t *height, COMPV_PIXEL_FORMAT* pixelFormat)
 {
 	struct jpeg_decompress_struct cinfo = { 0 };
 	bool cinfo_created = false;
@@ -111,7 +111,8 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
 	/* More stuff */
 	FILE * infile = nullptr;		/* source file */
 	JSAMPARRAY buffer = nullptr;		/* Output row buffer */
-	int row_stride;		/* physical row width in output buffer */
+	int row_width_bytes;		/* physical row width in output buffer */
+	int row_stride_bytes;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
 	/* In this example we want to open the input file before doing anything else,
@@ -196,6 +197,7 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
 
 	*width = cinfo.output_width;
 	*height = cinfo.output_height;
+	COMPV_CHECK_CODE_BAIL(err = CompVImage::getBestStride(cinfo.output_width, stride));
 
 	if (readData) {
 		/* We may need to do some setup of our own at this point before reading
@@ -205,14 +207,15 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
 		* In this example, we need to make an output work buffer of the right size.
 		*/
 		/* JSAMPLEs per row in output buffer */
-		row_stride = cinfo.output_width * cinfo.output_components;
+		row_width_bytes = cinfo.output_width * cinfo.output_components;
+		row_stride_bytes = (*stride) * cinfo.output_components;
 		/* Make a one-row-high sample array that will go away when done with image */
 		buffer = (*cinfo.mem->alloc_sarray)
-			((j_common_ptr)&cinfo, JPOOL_IMAGE, row_stride, 1);
+			((j_common_ptr)&cinfo, JPOOL_IMAGE, row_width_bytes, 1);
 
-		*rawdata = (uint8_t*)CompVMem::malloc(row_stride * cinfo.output_height);
+		*rawdata = (uint8_t*)CompVMem::malloc(row_stride_bytes * cinfo.output_height);
 		if (!*rawdata) {
-			COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "Failed to allocate %d bytes", row_stride * cinfo.output_height);
+			COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "Failed to allocate %d bytes", row_width_bytes * cinfo.output_height);
 			COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 		}
 
@@ -228,7 +231,7 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
 			* more than one scanline at a time if that's more convenient.
 			*/
 			(void)jpeg_read_scanlines(&cinfo, buffer, 1);
-			memcpy((*rawdata) + ((cinfo.output_scanline - 1) * row_stride), buffer[0], row_stride);
+			memcpy((*rawdata) + ((cinfo.output_scanline - 1) * row_stride_bytes), buffer[0], row_width_bytes);
 		}
 	}
 

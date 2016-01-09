@@ -167,6 +167,7 @@ typedef struct _CompVImageInfo {
 	COMPV_IMAGE_FORMAT format;
 	COMPV_PIXEL_FORMAT pixelFormat;
 	int32_t width;
+	int32_t stride;
 	int32_t height;
 }
 CompVImageInfo;
