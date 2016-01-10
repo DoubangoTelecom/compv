@@ -91,15 +91,15 @@ R = (37Y' + 0U' + 51V') >> 5
 G = (37Y' - 13U' - 26V') >> 5
 B = (37Y' + 65U' + 0V') >> 5
 */
-COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kYUVToRGBA_RCoeffs8[] = {
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kYUVToRGBA_RCoeffs8[] = { // Extended with a zero to have #4 coeffs: k0, k1, k2, 0
 	37, 0, 51, 0, 37, 0, 51, 0, 37, 0, 51, 0, 37, 0, 51, 0, // 128bits SSE register
 	37, 0, 51, 0, 37, 0, 51, 0, 37, 0, 51, 0, 37, 0, 51, 0, // 256bits AVX register
 };
-COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kYUVToRGBA_GCoeffs8[] = {
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kYUVToRGBA_GCoeffs8[] = { // Extended with a zero to have #4 coeffs: k0, k1, k2, 0
 	37, -13, -26, 0, 37, -13, -26, 0, 37, -13, -26, 0, 37, -13, -26, 0, // 128bits SSE register
 	37, -13, -26, 0, 37, -13, -26, 0, 37, -13, -26, 0, 37, -13, -26, 0, // 256bits AVX register
 };
-COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kYUVToRGBA_BCoeffs8[] = {
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kYUVToRGBA_BCoeffs8[] = { // Extended with a zero to have #4 coeffs: k0, k1, k2, 0
 	37, 65, 0, 0, 37, 65, 0, 0, 37, 65, 0, 0, 37, 65, 0, 0, // 128bits SSE register
 	37, 65, 0, 0, 37, 65, 0, 0, 37, 65, 0, 0, 37, 65, 0, 0, // 256bits AVX register
 };

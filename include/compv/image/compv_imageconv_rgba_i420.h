@@ -30,11 +30,11 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVImageConvArgbI420
+class CompVImageConvRgbaI420
 {
 public:
-	static void fromRGBA(const uint8_t* rgbaPtr, int32_t height, int32_t width, int32_t stride, uint8_t* outYPtr, uint8_t* outUPtr, uint8_t* outVPtr);
-	static void fromI420(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, int32_t height, int32_t width, int32_t stride);
+	static void rgbaToI420(const uint8_t* rgbaPtr, int32_t height, int32_t width, int32_t stride, uint8_t* outYPtr, uint8_t* outUPtr, uint8_t* outVPtr);
+	static void i420ToRgba(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, int32_t height, int32_t width, int32_t stride);
 };
 
 COMPV_NAMESPACE_END()

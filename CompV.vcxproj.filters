@@ -220,16 +220,14 @@
     <YASM Include="assembler\x86\compv_common_x86.S">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assembler\x86\compv_imageconv_rgba_i420_x86_avx2.S">
+    <YASM Include="assembler\x86\compv_imageconv_rgba_i420_x86_avx2.S">
       <Filter>Assembler Files\x86</Filter>
-    </None>
-    <None Include="assembler\x86\compv_imageconv_rgba_i420_x86_sse.S">
+    </YASM>
+    <YASM Include="assembler\x86\compv_imageconv_rgba_i420_x86_sse.S">
       <Filter>Assembler Files\x86</Filter>
-    </None>
-    <None Include="assembler\x86\compv_utils_x86.S">
+    </YASM>
+    <YASM Include="assembler\x86\compv_utils_x86.S">
       <Filter>Assembler Files\x86</Filter>
-    </None>
+    </YASM>
   </ItemGroup>
 </Project>

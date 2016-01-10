@@ -25,7 +25,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 {
 	_mm256_zeroupper();
 	__m256i ymmRgba;
@@ -59,7 +59,7 @@ void rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t
 	_mm256_zeroupper();
 }
 
-void rgbaToI420Kernel41_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel41_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 {
 	_mm256_zeroupper();
 	__m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3;
@@ -106,7 +106,7 @@ void rgbaToI420Kernel41_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t
 	_mm256_zeroupper();
 }
 
-void rgbaToI420Kernel11_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel11_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 {
 	_mm256_zeroupper();
 	__m256i ymmRgba;
@@ -152,7 +152,7 @@ void rgbaToI420Kernel11_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_
 	_mm256_zeroupper();
 }
 
-void rgbaToI420Kernel41_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel41_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 {
 	_mm256_zeroupper();
 	__m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3, ymm0, ymm1;
@@ -238,6 +238,208 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(16) const uint8_
 		outUPtr += padUV;
 		outVPtr += padUV;
 	}
+	_mm256_zeroupper();
+}
+
+void i420ToRGBAKernel11_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(AVX2) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	_mm256_zeroupper();
+
+	vcomp_scalar_t i, j, maxI = ((width + 31) & -32), rollbackUV = -((maxI + 1) >> 1), padY = (stride - maxI), padUV = ((padY + 1) >> 1), padRGBA = (padY << 2); // +stride to skip even lines
+	__m256i ymm0, ymm1, ymm2, ymm3, ymm4, ymm5, ymmY, ymmU, ymmV, ymm16, ymmRCoeffs, ymmGCoeffs, ymmBCoeffs, ymmZeroCoeffs, ymmAlpha, ymmMaskToExtract128bits;
+
+	_mm256_store_si256(&ymmRCoeffs, _mm256_load_si256((__m256i*)kYUVToRGBA_RCoeffs8));
+	_mm256_store_si256(&ymmGCoeffs, _mm256_load_si256((__m256i*)kYUVToRGBA_GCoeffs8));
+	_mm256_store_si256(&ymmBCoeffs, _mm256_load_si256((__m256i*)kYUVToRGBA_BCoeffs8));
+	_mm256_store_si256(&ymmZeroCoeffs, _mm256_setzero_si256());
+	_mm256_store_si256(&ymm5, _mm256_load_si256((__m256i*)k5_i8));
+	_mm256_store_si256(&ymm16, _mm256_load_si256((__m256i*)k16_i8));
+	_mm256_store_si256(&ymmAlpha, _mm256_load_si256((__m256i*)k255_i16));
+	_mm256_store_si256(&ymmMaskToExtract128bits, _mm256_load_si256((__m256i*)kMaskstore_0_1_i64));
+
+	// R!u8 = (37Y' + 0U' + 51V') >> 5
+	// G!u8 = (37Y' - 13U' - 26V') >> 5
+	// B!u8 = (37Y' + 65U' + 0V') >> 5
+	// where Y'=(Y - 16), U' = (U - 128), V'=(V - 128)
+	// _mm_subs_epu8(U, 128) produce overflow -> use I16
+	// R!i16 = (37Y + 0U + 51V - 7120) >> 5
+	// G!i16 = (37Y - 13U - 26V + 4400) >> 5
+	// B!i16 = (37Y + 65U + 0V - 8912) >> 5
+	for (j = 0; j < height; ++j) {
+		for (i = 0; i < width; i += 32) {
+			_mm256_store_si256(&ymmY, _mm256_load_si256((__m256i*)yPtr)); // 32 Y samples
+			_mm256_store_si256(&ymmU, _mm256_maskload_epi64((int64_t const*)uPtr, ymmMaskToExtract128bits)); // 16 U samples, low mem
+			_mm256_store_si256(&ymmV, _mm256_maskload_epi64((int64_t const*)vPtr, ymmMaskToExtract128bits)); // 16 V samples, low mem
+
+			/*COMV_ALIGN_DEFAULT() int32_t mask0[8] = {
+				0x03020100, 0x07060504, 0x0b0a0908, 0x0f0e0d0c,
+				0x13121110, 0x17161514, 0x1b1a1918, 0x1f1e1d1c,
+			};*/
+#define COMPV_MM_SHUFFLE_EPI8(a, b, c, d) ((d << 24) | (c << 16) | (b << 8) | (a & 0xFF))
+			/*COMV_ALIGN_DEFAULT() int32_t mask_shuffle_epi8_permute4x64_0_2_1_3[] = { // AVX-only
+				COMPV_MM_SHUFFLE_EPI8(0, 1, 2, 3), COMPV_MM_SHUFFLE_EPI8(4, 5, 6, 7), COMPV_MM_SHUFFLE_EPI8(8, 9, 10, 11), COMPV_MM_SHUFFLE_EPI8(12, 13, 14, 15),
+				COMPV_MM_SHUFFLE_EPI8(16, 17, 18, 19), COMPV_MM_SHUFFLE_EPI8(20, 21, 22, 23), COMPV_MM_SHUFFLE_EPI8(24, 25, 26, 27), COMPV_MM_SHUFFLE_EPI8(28, 29, 30, 31),
+			};*/
+			static COMV_ALIGN_DEFAULT() const int32_t mask_shuffle_epi8_permute4x64_0_2_1_3[] = { // AVX-only
+				COMPV_MM_SHUFFLE_EPI8(0, 8, 1, 9), COMPV_MM_SHUFFLE_EPI8(2, 10, 3, 11), COMPV_MM_SHUFFLE_EPI8(4, 12, 5, 13), COMPV_MM_SHUFFLE_EPI8(6, 14, 7, 15), // 128bits-lane(can only mov 0-15)
+				COMPV_MM_SHUFFLE_EPI8(16, 24, 17, 25), COMPV_MM_SHUFFLE_EPI8(18, 26, 19, 27), COMPV_MM_SHUFFLE_EPI8(20, 28, 21, 29), COMPV_MM_SHUFFLE_EPI8(22, 30, 23, 31),  // 128-lane(can only mov 16-31)
+			};
+			/*ymmZeroCoeffs = _mm256_set_epi8(
+				32, 31, 30, 29, 28, 27, 26, 25,
+				24, 23, 22, 21, 20, 19, 18, 17, 
+				16, 15, 14, 13, 12, 11, 10, 9, 
+				8, 7, 6, 5, 4, 3, 2, 1);
+			ymmZeroCoeffs = _mm256_shuffle_epi8(ymmZeroCoeffs, _mm256_load_si256((__m256i*)mask_shuffle_epi8_permute4x64_0_2_1_3));
+			int a = 0;*/
+			//_mm256_shuffle_epi8(_mm256_unpacklo_epi64(_mm256_unpacklo_epi8(ymm0_, ymm1_), _mm256_unpackhi_epi8(ymm0_, ymm1_)), _mm256_load_si256((__m256i*)mask_shuffle_epi8_permute4x64_0_2_1_3)) //
+			
+#if 0
+#define avx2_unpacklo_epi8(ymm0_, ymm1_)  _mm256_unpacklo_epi8(_mm256_permute4x64_epi64(ymm0_, COMPV_MM_SHUFFLE(3, 1, 2, 0)), _mm256_permute4x64_epi64(ymm1_, COMPV_MM_SHUFFLE(3, 1, 2, 0)))
+#define avx2_unpackhi_epi8(ymm0_, ymm1_) _mm256_unpackhi_epi8(_mm256_permute4x64_epi64(ymm0_, COMPV_MM_SHUFFLE(3, 1, 2, 0)), _mm256_permute4x64_epi64(ymm1_, COMPV_MM_SHUFFLE(3, 1, 2, 0)))
+#define avx2_hadd_epi16(ymm0_, ymm1_) _mm256_permute4x64_epi64(_mm256_hadd_epi16(ymm0_, ymm1_), COMPV_MM_SHUFFLE(3, 1, 2, 0))
+#define avx2_packus_epi16(ymm0_, ymm1_) _mm256_permute4x64_epi64(_mm256_packus_epi16(ymm0_, ymm1_), COMPV_MM_SHUFFLE(3, 1, 2, 0))
+#define avx2_unpacklo_epi16(ymm0_, ymm1_) _mm256_unpacklo_epi16(_mm256_permute4x64_epi64(ymm0_, COMPV_MM_SHUFFLE(3, 1, 2, 0)), _mm256_permute4x64_epi64(ymm1_, COMPV_MM_SHUFFLE(3, 1, 2, 0)))
+#define avx2_unpackhi_epi16(ymm0_, ymm1_) _mm256_unpackhi_epi16(_mm256_permute4x64_epi64(ymm0_, COMPV_MM_SHUFFLE(3, 1, 2, 0)), _mm256_permute4x64_epi64(ymm1_, COMPV_MM_SHUFFLE(3, 1, 2, 0)))
+#else
+#define avx2_unpacklo_epi8(ymm0_, ymm1_) _mm256_unpacklo_epi8(ymm0_, ymm1_)
+#define avx2_unpackhi_epi8(ymm0_, ymm1_) _mm256_unpackhi_epi8(ymm0_, ymm1_)
+#define avx2_hadd_epi16(ymm0_, ymm1_) _mm256_hadd_epi16(ymm0_, ymm1_)
+#define avx2_packus_epi16(ymm0_, ymm1_) _mm256_packus_epi16(ymm0_, ymm1_)
+#define avx2_unpacklo_epi16(ymm0_, ymm1_) _mm256_unpacklo_epi16(ymm0_, ymm1_)
+#define avx2_unpackhi_epi16(ymm0_, ymm1_) _mm256_unpackhi_epi16(ymm0_, ymm1_)
+#endif
+
+			// AVX computations don't cross the 128bits line which means we can perform all the computations without permutations until the end of the function.
+			// Important: The imput values (ymmY, ymmU, ymmV) must lay in the same 128bit-lane before we begin the computation ("Computation start" label).
+
+#if 0
+			// U = ABXX (64bits), XX being high 128bits filled with zeros
+			_mm256_store_si256(&ymmU, avx2_unpacklo_epi8(ymmU, ymmU)); // inteleave(A,A)||inteleave(B,B) -> duplicate each sample -> 32 U samples
+			// V = ABXX (64bits), XX being high 128bits filled with garbage
+			_mm256_store_si256(&ymmV, avx2_unpacklo_epi8(ymmV, ymmV)); // inteleave(A,A)||inteleave(B,B) -> duplicate each sample -> 32 V samples
+#else
+			_mm256_store_si256(&ymm0, avx2_unpacklo_epi8(ymmU, ymmU));
+			_mm256_store_si256(&ymm1, avx2_unpackhi_epi8(ymmU, ymmU));
+			_mm256_store_si256(&ymmU, _mm256_permute2x128_si256(ymm0, ymm1, 0x0002));
+
+			_mm256_store_si256(&ymm0, avx2_unpacklo_epi8(ymmV, ymmV));
+			_mm256_store_si256(&ymm1, avx2_unpackhi_epi8(ymmV, ymmV));
+			_mm256_store_si256(&ymmV, _mm256_permute2x128_si256(ymm0, ymm1, 0x0002));
+#endif
+			// Label: "Computation start"
+
+			/////// 16Y - LOW ///////
+
+			// YUV0 = (ymm2 || ymm3)
+			_mm256_store_si256(&ymm0, avx2_unpacklo_epi8(ymmY, ymmV)); // YVYVYVYVYVYVYV....
+			_mm256_store_si256(&ymm1, avx2_unpacklo_epi8(ymmU, ymmZeroCoeffs)); //U0U0U0U0U0U0U0U0....
+			_mm256_store_si256(&ymm2, avx2_unpacklo_epi8(ymm0, ymm1)); // YUV0YUV0YUV0YUV0YUV0YUV0
+			_mm256_store_si256(&ymm3, avx2_unpackhi_epi8(ymm0, ymm1)); // YUV0YUV0YUV0YUV0YUV0YUV0
+
+			// ymm0 = R
+			_mm256_store_si256(&ymm0, _mm256_maddubs_epi16(ymm2, ymmRCoeffs));
+			_mm256_store_si256(&ymm1, _mm256_maddubs_epi16(ymm3, ymmRCoeffs));
+			_mm256_store_si256(&ymm0, avx2_hadd_epi16(ymm0, ymm1));
+			_mm256_store_si256(&ymm0, _mm256_sub_epi16(ymm0, _mm256_set1_epi16(7120)));
+			_mm256_store_si256(&ymm0, _mm256_srai_epi16(ymm0, 5)); // >> 5
+			// ymm1 = B
+			_mm256_store_si256(&ymm1, _mm256_maddubs_epi16(ymm2, ymmBCoeffs));
+			_mm256_store_si256(&ymm4, _mm256_maddubs_epi16(ymm3, ymmBCoeffs));
+			_mm256_store_si256(&ymm1, avx2_hadd_epi16(ymm1, ymm4));
+			_mm256_store_si256(&ymm1, _mm256_sub_epi16(ymm1, _mm256_set1_epi16(8912)));
+			_mm256_store_si256(&ymm1, _mm256_srai_epi16(ymm1, 5)); // >> 5
+			// ymm4 = RBRBRBRBRBRB
+			_mm256_store_si256(&ymm4, avx2_unpacklo_epi16(ymm0, ymm1)); // low16(RBRBRBRBRBRB)
+			_mm256_store_si256(&ymm5, avx2_unpackhi_epi16(ymm0, ymm1)); // high16(RBRBRBRBRBRB)
+			_mm256_store_si256(&ymm4, avx2_packus_epi16(ymm4, ymm5)); // u8(RBRBRBRBRBRB)
+
+			// ymm2 = G
+			_mm256_store_si256(&ymm2, _mm256_maddubs_epi16(ymm2, ymmGCoeffs));
+			_mm256_store_si256(&ymm3, _mm256_maddubs_epi16(ymm3, ymmGCoeffs));
+			_mm256_store_si256(&ymm2, avx2_hadd_epi16(ymm2, ymm3));
+			_mm256_store_si256(&ymm2, _mm256_add_epi16(ymm2, _mm256_set1_epi16(4400)));
+			_mm256_store_si256(&ymm2, _mm256_srai_epi16(ymm2, 5)); // >> 5
+			// ymm3 = GAGAGAGAGAGAGA
+			_mm256_store_si256(&ymm3, avx2_unpacklo_epi16(ymm2, ymmAlpha)); // low16(GAGAGAGAGAGAGA)
+			_mm256_store_si256(&ymm2, avx2_unpackhi_epi16(ymm2, ymmAlpha)); // high16(GAGAGAGAGAGAGA)
+			_mm256_store_si256(&ymm3, avx2_packus_epi16(ymm3, ymm2)); // u8(GAGAGAGAGAGAGA)
+
+			// outRgbaPtr[0-64] = RGBARGBARGBARGBA
+#if 0
+			_mm256_store_si256((__m256i*)(outRgbaPtr + 0), avx2_unpacklo_epi8(ymm4, ymm3)); // low8(RGBARGBARGBARGBA)
+			_mm256_store_si256((__m256i*)(outRgbaPtr + 32), avx2_unpackhi_epi8(ymm4, ymm3)); // high8(RGBARGBARGBARGBA)
+#else
+			_mm256_store_si256((__m256i*)(outRgbaPtr + 0), _mm256_permute4x64_epi64(avx2_unpacklo_epi8(ymm4, ymm3), COMPV_MM_SHUFFLE(3, 1, 2, 0)));
+			_mm256_store_si256((__m256i*)(outRgbaPtr + 32), _mm256_permute4x64_epi64(avx2_unpackhi_epi8(ymm4, ymm3), COMPV_MM_SHUFFLE(3, 1, 2, 0)));
+
+			/*_mm256_store_si256(&ymm0, avx2_unpacklo_epi8(ymm3, ymm3));
+			_mm256_store_si256(&ymm1, avx2_unpackhi_epi8(ymm3, ymm3));
+			_mm256_store_si256(&ymm0, _mm256_permute2x128_si256(ymm0, ymm1, 0x0002));
+			_mm256_store_si256((__m256i*)(outRgbaPtr + 32), ymm0);*/
+#endif
+
+
+			/////// 16Y - HIGH ///////
+
+			// YUV0 = (ymm2 || ymm3)
+			_mm256_store_si256(&ymm0, avx2_unpackhi_epi8(ymmY, ymmV)); // YVYVYVYVYVYVYV....
+			_mm256_store_si256(&ymm1, avx2_unpackhi_epi8(ymmU, ymmZeroCoeffs)); //U0U0U0U0U0U0U0U0....
+			_mm256_store_si256(&ymm2, avx2_unpacklo_epi8(ymm0, ymm1)); // YUV0YUV0YUV0YUV0YUV0YUV0
+			_mm256_store_si256(&ymm3, avx2_unpackhi_epi8(ymm0, ymm1)); // YUV0YUV0YUV0YUV0YUV0YUV0
+
+			// ymm0 = R
+			_mm256_store_si256(&ymm0, _mm256_maddubs_epi16(ymm2, ymmRCoeffs));
+			_mm256_store_si256(&ymm1, _mm256_maddubs_epi16(ymm3, ymmRCoeffs));
+			_mm256_store_si256(&ymm0, avx2_hadd_epi16(ymm0, ymm1));
+			_mm256_store_si256(&ymm0, _mm256_sub_epi16(ymm0, _mm256_set1_epi16(7120)));
+			_mm256_store_si256(&ymm0, _mm256_srai_epi16(ymm0, 5)); // >> 5
+			// ymm1 = B
+			_mm256_store_si256(&ymm1, _mm256_maddubs_epi16(ymm2, ymmBCoeffs));
+			_mm256_store_si256(&ymm4, _mm256_maddubs_epi16(ymm3, ymmBCoeffs));
+			_mm256_store_si256(&ymm1, avx2_hadd_epi16(ymm1, ymm4));
+			_mm256_store_si256(&ymm1, _mm256_sub_epi16(ymm1, _mm256_set1_epi16(8912)));
+			_mm256_store_si256(&ymm1, _mm256_srai_epi16(ymm1, 5)); // >> 5
+			// ymm4 = RBRBRBRBRBRB
+			_mm256_store_si256(&ymm4, avx2_unpacklo_epi16(ymm0, ymm1)); // low16(RBRBRBRBRBRB)
+			_mm256_store_si256(&ymm5, avx2_unpackhi_epi16(ymm0, ymm1)); // high16(RBRBRBRBRBRB)
+			_mm256_store_si256(&ymm4, avx2_packus_epi16(ymm4, ymm5)); // u8(RBRBRBRBRBRB)
+
+			// ymm2 = G
+			_mm256_store_si256(&ymm2, _mm256_maddubs_epi16(ymm2, ymmGCoeffs));
+			_mm256_store_si256(&ymm3, _mm256_maddubs_epi16(ymm3, ymmGCoeffs));
+			_mm256_store_si256(&ymm2, avx2_hadd_epi16(ymm2, ymm3));
+			_mm256_store_si256(&ymm2, _mm256_add_epi16(ymm2, _mm256_set1_epi16(4400)));
+			_mm256_store_si256(&ymm2, _mm256_srai_epi16(ymm2, 5)); // >> 5
+			// ymm3 = GAGAGAGAGAGAGA
+			_mm256_store_si256(&ymm3, avx2_unpacklo_epi16(ymm2, ymmAlpha)); // low16(GAGAGAGAGAGAGA)
+			_mm256_store_si256(&ymm2, avx2_unpackhi_epi16(ymm2, ymmAlpha)); // high16(GAGAGAGAGAGAGA)
+			_mm256_store_si256(&ymm3, avx2_packus_epi16(ymm3, ymm2)); // u8(GAGAGAGAGAGAGA)
+			
+			// outRgbaPtr[64-128] = RGBARGBARGBARGBA
+#if 0
+			_mm256_store_si256((__m256i*)(outRgbaPtr + 64), avx2_unpacklo_epi8(ymm4, ymm3)); // low8(RGBARGBARGBARGBA)
+			_mm256_store_si256((__m256i*)(outRgbaPtr + 96), avx2_unpackhi_epi8(ymm4, ymm3)); // high8(RGBARGBARGBARGBA)
+#else
+			_mm256_store_si256((__m256i*)(outRgbaPtr + 64), _mm256_permute4x64_epi64(avx2_unpacklo_epi8(ymm4, ymm3), COMPV_MM_SHUFFLE(3, 1, 2, 0)));
+			_mm256_store_si256((__m256i*)(outRgbaPtr + 96), _mm256_permute4x64_epi64(avx2_unpackhi_epi8(ymm4, ymm3), COMPV_MM_SHUFFLE(3, 1, 2, 0)));
+#endif
+
+			yPtr += 32;
+			uPtr += 16;
+			vPtr += 16;
+			outRgbaPtr += 128;
+		}
+		yPtr += padY;
+#if 1
+		uPtr += (j & 1) ? padUV : rollbackUV;
+		vPtr += (j & 1) ? padUV : rollbackUV;
+#else
+		uPtr += ((j & 1) * padUV) + (((j + 1) & 1) * rollbackUV);
+		vPtr += ((j & 1) * padUV) + (((j + 1) & 1) * rollbackUV);
+#endif
+		outRgbaPtr += padRGBA;
+	}
+
 	_mm256_zeroupper();
 }
 

@@ -34,17 +34,17 @@ CompVImageConv::~CompVImageConv()
 
 }
 
-COMPV_ERROR_CODE CompVImageConv::rgbaToI420(const uint8_t* rgbaPtr, int32_t height, int32_t width, int32_t stride, CompVObjWrapper<CompVImage* >* i420)
+COMPV_ERROR_CODE CompVImageConv::allocImage(COMPV_PIXEL_FORMAT ePixelFormat, int32_t height, int32_t width, int32_t stride, CompVObjWrapper<CompVImage* >* image)
 {
-	COMPV_CHECK_EXP_RETURN(rgbaPtr == NULL || !width || !height || !stride || width > stride || !i420, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!width || !height || !stride || width > stride || !image, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	// FIXME: use convenient functions
-	int32_t neededBuffSize = ((stride * height) * 3) >> 1;
-	uint8_t *outYPtr, *outUPtr, *outVPtr;
-	if (!(*i420) || (*i420)->getDataSize() != neededBuffSize || (*i420)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*i420)->getPixelFormat() != COMPV_PIXEL_FORMAT_I420) {
+	int32_t neededBuffSize;
+
+	COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getSizeForPixelFormat(ePixelFormat, stride, height, &neededBuffSize));
+	if (!(*image) || (*image)->getDataSize() != neededBuffSize || (*image)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*image)->getPixelFormat() != ePixelFormat) {
 		CompVObjWrapper<CompVBuffer* > buffer;
 		void* buffData = NULL;
-		COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj(COMPV_IMAGE_FORMAT_RAW, COMPV_PIXEL_FORMAT_I420, i420));
+		COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj(COMPV_IMAGE_FORMAT_RAW, ePixelFormat, image));
 		buffData = CompVMem::malloc(neededBuffSize);
 		if (!buffData) {
 			COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -54,44 +54,34 @@ COMPV_ERROR_CODE CompVImageConv::rgbaToI420(const uint8_t* rgbaPtr, int32_t heig
 			CompVMem::free(&buffData);
 			COMPV_CHECK_CODE_BAIL(err_);
 		}
-		COMPV_CHECK_CODE_BAIL(err_ = (*i420)->setBuffer(buffer, width, height, stride));
+		COMPV_CHECK_CODE_BAIL(err_ = (*image)->setBuffer(buffer, width, height, stride));
 	}
-
-	outYPtr = (uint8_t*)(*i420)->getDataPtr();
-	outUPtr = outYPtr + (height * stride);
-	outVPtr = outUPtr + ((height * stride) >> 2);
-	CompVImageConvArgbI420::fromRGBA(rgbaPtr, height, width, stride, outYPtr, outUPtr, outVPtr);
 
 bail:
 	return err_;
 }
 
+COMPV_ERROR_CODE CompVImageConv::rgbaToI420(const uint8_t* rgbaPtr, int32_t height, int32_t width, int32_t stride, CompVObjWrapper<CompVImage* >* i420)
+{
+	COMPV_CHECK_EXP_RETURN(rgbaPtr == NULL || !width || !height || !stride || width > stride || !i420, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_CODE_RETURN(CompVImageConv::allocImage(COMPV_PIXEL_FORMAT_I420, height, width, stride, i420));
+
+	uint8_t* outYPtr = (uint8_t*)(*i420)->getDataPtr();
+	uint8_t* outUPtr = outYPtr + (height * stride);
+	uint8_t* outVPtr = outUPtr + ((height * stride) >> 2);
+	CompVImageConvRgbaI420::rgbaToI420(rgbaPtr, height, width, stride, outYPtr, outUPtr, outVPtr);
+	
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVImageConv::i420ToRGBA(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, int32_t height, int32_t width, int32_t stride, CompVObjWrapper<CompVImage* >* rgba)
 {
 	COMPV_CHECK_EXP_RETURN(yPtr == NULL || uPtr == NULL || !vPtr || !width || !height || !stride || width > stride || !rgba, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	// FIXME: use convenient functions
-	int32_t neededBuffSize = (stride * height) << 2;
-	if (!(*rgba) || (*rgba)->getDataSize() != neededBuffSize || (*rgba)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*rgba)->getPixelFormat() != COMPV_PIXEL_FORMAT_R8G8B8A8) {
-		CompVObjWrapper<CompVBuffer* > buffer;
-		void* buffData = NULL;
-		COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj(COMPV_IMAGE_FORMAT_RAW, COMPV_PIXEL_FORMAT_R8G8B8A8, rgba));
-		buffData = CompVMem::malloc(neededBuffSize);
-		if (!buffData) {
-			COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-		}
-		err_ = CompVBuffer::newObjAndTakeData(&buffData, neededBuffSize, &buffer);
-		if (COMPV_ERROR_CODE_IS_NOK(err_)) {
-			CompVMem::free(&buffData);
-			COMPV_CHECK_CODE_BAIL(err_);
-		}
-		COMPV_CHECK_CODE_BAIL(err_ = (*rgba)->setBuffer(buffer, width, height, stride));
-	}
+	COMPV_CHECK_CODE_RETURN(CompVImageConv::allocImage(COMPV_PIXEL_FORMAT_R8G8B8A8, height, width, stride, rgba));
+	
+	CompVImageConvRgbaI420::i420ToRgba(yPtr, uPtr, vPtr, (uint8_t*)(*rgba)->getDataPtr(), height, width, stride);
 
-	CompVImageConvArgbI420::fromI420(yPtr, uPtr, vPtr, (uint8_t*)(*rgba)->getDataPtr(), height, width, stride);
-
-bail:
-	return err_;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

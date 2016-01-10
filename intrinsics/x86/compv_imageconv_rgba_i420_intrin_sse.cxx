@@ -25,7 +25,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 {
 	__m128i xmmRgba;
 	__m128i xmmYCoeffs = _mm_load_si128((__m128i*)kRGBAToYUV_YCoeffs8);
@@ -51,7 +51,7 @@ void rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_
 	}
 }
 
-void rgbaToI420Kernel41_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel41_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 {
 	__m128i xmmRgba0, xmmRgba1, xmmRgba2, xmmRgba3;
 	__m128i xmmYCoeffs = _mm_load_si128((__m128i*)kRGBAToYUV_YCoeffs8);
@@ -93,7 +93,7 @@ void rgbaToI420Kernel41_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_
 	}
 }
 
-void rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 {
 	__m128i xmmRgba, xmm0, xmm1;
 	__m128i xmmUV2Coeffs = _mm_load_si128((__m128i*)kRGBAToYUV_U2V2Coeffs8); // UV coeffs interleaved: each appear #2 times
@@ -128,7 +128,7 @@ void rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(16) const uint8
 	}
 }
 
-void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(16) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 {
 	__m128i xmmRgba0, xmmRgba1, xmmRgba2, xmmRgba3, xmm0, xmm1;
 	__m128i xmmUCoeffs = _mm_load_si128((__m128i*)kRGBAToYUV_UCoeffs8);
@@ -193,6 +193,134 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(16) const uint8
 		rgbaPtr += padRGBA;
 		outUPtr += padUV;
 		outVPtr += padUV;
+	}
+}
+
+void i420ToRGBAKernel11_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(SSE) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	vcomp_scalar_t i, j, maxI = ((width + 15) & -16), rollbackUV = -((maxI + 1) >> 1), padY = (stride - maxI), padUV = ((padY + 1) >> 1), padRGBA = (padY << 2); // +stride to skip even lines
+	__m128i xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmmY, xmmU, xmmV, xmm16, xmmRCoeffs, xmmGCoeffs, xmmBCoeffs, xmmZeroCoeffs, xmmAlpha;
+
+	_mm_store_si128(&xmmRCoeffs, _mm_load_si128((__m128i*)kYUVToRGBA_RCoeffs8));
+	_mm_store_si128(&xmmGCoeffs, _mm_load_si128((__m128i*)kYUVToRGBA_GCoeffs8));
+	_mm_store_si128(&xmmBCoeffs, _mm_load_si128((__m128i*)kYUVToRGBA_BCoeffs8));
+	_mm_store_si128(&xmmZeroCoeffs, _mm_setzero_si128());
+	_mm_store_si128(&xmm5, _mm_load_si128((__m128i*)k5_i8));
+	_mm_store_si128(&xmm16, _mm_load_si128((__m128i*)k16_i8));
+	_mm_store_si128(&xmmAlpha, _mm_load_si128((__m128i*)k255_i16));
+
+	// R!u8 = (37Y' + 0U' + 51V') >> 5
+	// G!u8 = (37Y' - 13U' - 26V') >> 5
+	// B!u8 = (37Y' + 65U' + 0V') >> 5
+	// where Y'=(Y - 16), U' = (U - 128), V'=(V - 128)
+	// _mm_subs_epu8(U, 128) produce overflow -> use I16
+	// R!i16 = (37Y + 0U + 51V - 7120) >> 5
+	// G!i16 = (37Y - 13U - 26V + 4400) >> 5
+	// B!i16 = (37Y + 65U + 0V - 8912) >> 5
+
+	for (j = 0; j < height; ++j) {
+		for (i = 0; i < width; i += 16) {
+			_mm_store_si128(&xmmY, _mm_load_si128((__m128i*)yPtr)); // 16 Y samples = 16bytes
+			_mm_store_si128(&xmmU, _mm_loadl_epi64((__m128i const*)uPtr)); // 8 U samples, low mem
+			_mm_store_si128(&xmmV, _mm_loadl_epi64((__m128i const*)vPtr)); // 8 V samples, low mem
+
+			_mm_store_si128(&xmmU, _mm_unpacklo_epi8(xmmU, xmmU)); // duplicate -> 16 U samples
+			_mm_store_si128(&xmmV, _mm_unpacklo_epi8(xmmV, xmmV)); // duplicate -> 16 V samples
+
+			/////// 8Y - LOW ///////
+			
+			// YUV0 = (xmm2 || xmm3)
+			_mm_store_si128(&xmm0, _mm_unpacklo_epi8(xmmY, xmmV)); // YVYVYVYVYVYVYV....
+			_mm_store_si128(&xmm1, _mm_unpacklo_epi8(xmmU, xmmZeroCoeffs)); //U0U0U0U0U0U0U0U0....
+			_mm_store_si128(&xmm2, _mm_unpacklo_epi8(xmm0, xmm1)); // YUV0YUV0YUV0YUV0YUV0YUV0
+			_mm_store_si128(&xmm3, _mm_unpackhi_epi8(xmm0, xmm1)); // YUV0YUV0YUV0YUV0YUV0YUV0
+
+			// xmm0 = R
+			_mm_store_si128(&xmm0, _mm_maddubs_epi16(xmm2, xmmRCoeffs));
+			_mm_store_si128(&xmm1, _mm_maddubs_epi16(xmm3, xmmRCoeffs));
+			_mm_store_si128(&xmm0, _mm_hadd_epi16(xmm0, xmm1));
+			_mm_store_si128(&xmm0, _mm_sub_epi16(xmm0, _mm_set1_epi16(7120)));
+			_mm_store_si128(&xmm0, _mm_srai_epi16(xmm0, 5)); // >> 5
+			// xmm1 = B
+			_mm_store_si128(&xmm1, _mm_maddubs_epi16(xmm2, xmmBCoeffs));
+			_mm_store_si128(&xmm4, _mm_maddubs_epi16(xmm3, xmmBCoeffs));
+			_mm_store_si128(&xmm1, _mm_hadd_epi16(xmm1, xmm4));
+			_mm_store_si128(&xmm1, _mm_sub_epi16(xmm1, _mm_set1_epi16(8912)));
+			_mm_store_si128(&xmm1, _mm_srai_epi16(xmm1, 5)); // >> 5
+			// xmm4 = RBRBRBRBRBRB
+			_mm_store_si128(&xmm4, _mm_unpacklo_epi16(xmm0, xmm1)); // low16(RBRBRBRBRBRB)
+			_mm_store_si128(&xmm5, _mm_unpackhi_epi16(xmm0, xmm1)); // high16(RBRBRBRBRBRB)
+			_mm_store_si128(&xmm4, _mm_packus_epi16(xmm4, xmm5)); // u8(RBRBRBRBRBRB)
+			
+			// xmm2 = G
+			_mm_store_si128(&xmm2, _mm_maddubs_epi16(xmm2, xmmGCoeffs));
+			_mm_store_si128(&xmm3, _mm_maddubs_epi16(xmm3, xmmGCoeffs));
+			_mm_store_si128(&xmm2, _mm_hadd_epi16(xmm2, xmm3));
+			_mm_store_si128(&xmm2, _mm_add_epi16(xmm2, _mm_set1_epi16(4400)));
+			_mm_store_si128(&xmm2, _mm_srai_epi16(xmm2, 5)); // >> 5
+			// xmm3 = GAGAGAGAGAGAGA
+			_mm_store_si128(&xmm3, _mm_unpacklo_epi16(xmm2, xmmAlpha)); // low16(GAGAGAGAGAGAGA)
+			_mm_store_si128(&xmm2, _mm_unpackhi_epi16(xmm2, xmmAlpha)); // high16(GAGAGAGAGAGAGA)
+			_mm_store_si128(&xmm3, _mm_packus_epi16(xmm3, xmm2)); // u8(GAGAGAGAGAGAGA)
+			
+			// outRgbaPtr[0-32] = RGBARGBARGBARGBA
+			_mm_store_si128((__m128i*)(outRgbaPtr + 0), _mm_unpacklo_epi8(xmm4, xmm3)); // low8(RGBARGBARGBARGBA)
+			_mm_store_si128((__m128i*)(outRgbaPtr + 16), _mm_unpackhi_epi8(xmm4, xmm3)); // high8(RGBARGBARGBARGBA)
+			
+			/////// 8Y - HIGH ///////
+
+			// YUV0 = (xmm2 || xmm3)
+			_mm_store_si128(&xmm0, _mm_unpackhi_epi8(xmmY, xmmV)); // YVYVYVYVYVYVYV....
+			_mm_store_si128(&xmm1, _mm_unpackhi_epi8(xmmU, xmmZeroCoeffs)); //U0U0U0U0U0U0U0U0....
+			_mm_store_si128(&xmm2, _mm_unpacklo_epi8(xmm0, xmm1)); // YUV0YUV0YUV0YUV0YUV0YUV0
+			_mm_store_si128(&xmm3, _mm_unpackhi_epi8(xmm0, xmm1)); // YUV0YUV0YUV0YUV0YUV0YUV0
+
+			// xmm0 = R
+			_mm_store_si128(&xmm0, _mm_maddubs_epi16(xmm2, xmmRCoeffs));
+			_mm_store_si128(&xmm1, _mm_maddubs_epi16(xmm3, xmmRCoeffs));
+			_mm_store_si128(&xmm0, _mm_hadd_epi16(xmm0, xmm1));
+			_mm_store_si128(&xmm0, _mm_sub_epi16(xmm0, _mm_set1_epi16(7120)));
+			_mm_store_si128(&xmm0, _mm_srai_epi16(xmm0, 5)); // >> 5
+			// xmm1 = B
+			_mm_store_si128(&xmm1, _mm_maddubs_epi16(xmm2, xmmBCoeffs));
+			_mm_store_si128(&xmm4, _mm_maddubs_epi16(xmm3, xmmBCoeffs));
+			_mm_store_si128(&xmm1, _mm_hadd_epi16(xmm1, xmm4));
+			_mm_store_si128(&xmm1, _mm_sub_epi16(xmm1, _mm_set1_epi16(8912)));
+			_mm_store_si128(&xmm1, _mm_srai_epi16(xmm1, 5)); // >> 5
+			// xmm4 = RBRBRBRBRBRB
+			_mm_store_si128(&xmm4, _mm_unpacklo_epi16(xmm0, xmm1)); // low16(RBRBRBRBRBRB)
+			_mm_store_si128(&xmm5, _mm_unpackhi_epi16(xmm0, xmm1)); // high16(RBRBRBRBRBRB)
+			_mm_store_si128(&xmm4, _mm_packus_epi16(xmm4, xmm5)); // u8(RBRBRBRBRBRB)
+
+			// xmm2 = G
+			_mm_store_si128(&xmm2, _mm_maddubs_epi16(xmm2, xmmGCoeffs));
+			_mm_store_si128(&xmm3, _mm_maddubs_epi16(xmm3, xmmGCoeffs));
+			_mm_store_si128(&xmm2, _mm_hadd_epi16(xmm2, xmm3));
+			_mm_store_si128(&xmm2, _mm_add_epi16(xmm2, _mm_set1_epi16(4400)));
+			_mm_store_si128(&xmm2, _mm_srai_epi16(xmm2, 5)); // >> 5
+			// xmm3 = GAGAGAGAGAGAGA
+			_mm_store_si128(&xmm3, _mm_unpacklo_epi16(xmm2, xmmAlpha)); // low16(GAGAGAGAGAGAGA)
+			_mm_store_si128(&xmm2, _mm_unpackhi_epi16(xmm2, xmmAlpha)); // high16(GAGAGAGAGAGAGA)
+			_mm_store_si128(&xmm3, _mm_packus_epi16(xmm3, xmm2)); // u8(GAGAGAGAGAGAGA)
+
+			// outRgbaPtr[32-64] = RGBARGBARGBARGBA
+			_mm_store_si128((__m128i*)(outRgbaPtr + 32), _mm_unpacklo_epi8(xmm4, xmm3)); // low8(RGBARGBARGBARGBA)
+			_mm_store_si128((__m128i*)(outRgbaPtr + 48), _mm_unpackhi_epi8(xmm4, xmm3)); // high8(RGBARGBARGBARGBA)
+
+			yPtr += 16;
+			uPtr += 8;
+			vPtr += 8;
+			outRgbaPtr += 64;
+		}
+		yPtr += padY;
+#if 1
+		uPtr += (j & 1) ? padUV : rollbackUV;
+		vPtr += (j & 1) ? padUV : rollbackUV;
+#else
+		uPtr += ((j & 1) * padUV) + (((j + 1) & 1) * rollbackUV);
+		vPtr += ((j & 1) * padUV) + (((j + 1) & 1) * rollbackUV);
+#endif
+		outRgbaPtr += padRGBA;
 	}
 }
 

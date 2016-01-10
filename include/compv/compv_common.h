@@ -59,6 +59,12 @@ COMPV_NAMESPACE_BEGIN()
 /*******************************************************/
 #define COMPV_MM_SHUFFLE(fp3,fp2,fp1,fp0) (((fp3) << 6) | ((fp2) << 4) | ((fp1) << 2) | ((fp0)))
 
+/*
+Macro to build arg32 values for _mm(256/128)_shuffle_epi8().
+a,b,c,d mus be <= 16 for _mm128_shuffle_epi8() and <32 for _mm256_shuffle_epi8()
+*/
+#define COMPV_MM_SHUFFLE_EPI8(a, b, c, d) ((d << 24) | (c << 16) | (b << 8) | (a & 0xFF))
+
 typedef int32_t vcomp_core_id_t;
 typedef intptr_t vcomp_scalar_t;  /* This type *must* have the width of a general-purpose register on the target CPU. 64bits or 32bits. */
 

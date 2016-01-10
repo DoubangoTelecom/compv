@@ -81,10 +81,6 @@ COMPV_ERROR_CODE CompVImage::getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelForm
 		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
 	}
 	COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getBitsCountForPixelFormat(ePixelFormat, &bitsCount));
-	if (bitsCount & 0x7) {
-		COMPV_DEBUG_ERROR("Invalid bitsCount=%d", bitsCount);
-		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
-	}
 	if (bitsCount & 7) {
 		if (bitsCount == 12) { // 12/8 = 1.5 = 3/2
 			*size = (((width * height) * 3) >> 1);

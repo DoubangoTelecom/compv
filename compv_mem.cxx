@@ -28,6 +28,13 @@ COMPV_NAMESPACE_BEGIN()
 
 std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;
 
+COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void*srcPtr, size_t size)
+{
+	COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	memcpy(dstPtr, srcPtr, size);
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 /**
 * Allocates a block of size bytes of memory, returning a pointer to the beginning of the block.
 * The content of the newly allocated block of memory is not initialized, remaining with indeterminate values.

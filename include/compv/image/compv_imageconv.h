@@ -41,6 +41,9 @@ public:
 	static COMPV_ERROR_CODE i420ToRGBA(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, int32_t height, int32_t width, int32_t stride, CompVObjWrapper<CompVImage* >* rgba);
 
 private:
+	static COMPV_ERROR_CODE allocImage(COMPV_PIXEL_FORMAT ePixelFormat, int32_t height, int32_t width, int32_t stride, CompVObjWrapper<CompVImage* >* image);
+
+private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
 	COMPV_DISABLE_WARNINGS_END()
 };

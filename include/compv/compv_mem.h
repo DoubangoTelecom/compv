@@ -43,6 +43,8 @@ compv_special_mem_t;
 class COMPV_API CompVMem
 {
 public:
+	static COMPV_ERROR_CODE copy(void* dstPtr, const void*srcPtr, size_t size);
+
 	static void* malloc(size_t size);
 	static void* realloc(void * ptr, size_t size);
 	static void* calloc(size_t num, size_t size);
