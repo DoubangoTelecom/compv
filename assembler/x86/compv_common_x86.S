@@ -31,12 +31,16 @@
 ; Guess the ABI
 %ifidn __OUTPUT_FORMAT__,elf32
 %define COMPV_YASM_ABI_IS_32BIT		1
+%define COMPV_YASM_ABI_IS_64BIT		0
 %elifidn __OUTPUT_FORMAT__,macho32
 %define COMPV_YASM_ABI_IS_32BIT		1
+%define COMPV_YASM_ABI_IS_64BIT		0
 %elifidn __OUTPUT_FORMAT__,win32
 %define COMPV_YASM_ABI_IS_32BIT		1
+%define COMPV_YASM_ABI_IS_64BIT		0
 %elifidn __OUTPUT_FORMAT__,aout
 %define COMPV_YASM_ABI_IS_32BIT		1
+%define COMPV_YASM_ABI_IS_64BIT		0
 %else
 %define COMPV_YASM_ABI_IS_32BIT		0
 %define COMPV_YASM_ABI_IS_64BIT		1

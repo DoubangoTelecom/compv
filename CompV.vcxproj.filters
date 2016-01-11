@@ -58,6 +58,9 @@
     <Filter Include="Source Files\image">
       <UniqueIdentifier>{bf995f6a-d127-4807-936f-d60786635d2c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Assembler Files\x64">
+      <UniqueIdentifier>{15769f8a-2f7e-474c-90ed-308df429680c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
@@ -232,5 +235,10 @@
     <YASM Include="assembler\x86\compv_utils_x86.S">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assembler\x64\compv_imageconv_rgba_i420_x64_avx2.S">
+      <Filter>Assembler Files\x64</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -49,25 +49,46 @@ extern "C" void i420ToRGBAKernel11_Asm_X86_Aligned01_SSSE3(const uint8_t* yPtr, 
 extern "C" void i420ToRGBAKernel11_Asm_X86_Aligned10_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
 extern "C" void i420ToRGBAKernel11_Asm_X86_Aligned11_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(SSE) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
 
-// AVX2
-extern "C" void rgbaToI420Kernel11_CompY_Asm_Aligned0_AVX2(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbaToI420Kernel11_CompY_Asm_Aligned1_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbaToI420Kernel41_CompY_Asm_Aligned00_AVX2(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbaToI420Kernel41_CompY_Asm_Aligned01_AVX2(const uint8_t* rgbaPtr, COMV_ALIGNED(AVX2) uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbaToI420Kernel41_CompY_Asm_Aligned10_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbaToI420Kernel41_CompY_Asm_Aligned11_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, COMV_ALIGNED(AVX2) uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+// AVX2-X86
+extern "C" void rgbaToI420Kernel11_CompY_Asm_X86_Aligned0_AVX2(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel11_CompY_Asm_X86_Aligned1_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompY_Asm_X86_Aligned00_AVX2(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompY_Asm_X86_Aligned01_AVX2(const uint8_t* rgbaPtr, COMV_ALIGNED(AVX2) uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompY_Asm_X86_Aligned10_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompY_Asm_X86_Aligned11_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, COMV_ALIGNED(AVX2) uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
 
-extern "C" void rgbaToI420Kernel11_CompUV_Asm_Aligned0xx_AVX2(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbaToI420Kernel11_CompUV_Asm_Aligned1xx_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbaToI420Kernel41_CompUV_Asm_Aligned000_AVX2(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbaToI420Kernel41_CompUV_Asm_Aligned100_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbaToI420Kernel41_CompUV_Asm_Aligned110_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, COMV_ALIGNED(AVX2) uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbaToI420Kernel41_CompUV_Asm_Aligned111_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, COMV_ALIGNED(AVX2) uint8_t* outUPtr, COMV_ALIGNED(AVX2) uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel11_CompUV_Asm_X86_Aligned0xx_AVX2(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel11_CompUV_Asm_X86_Aligned1xx_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompUV_Asm_X86_Aligned000_AVX2(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompUV_Asm_X86_Aligned100_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompUV_Asm_X86_Aligned110_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, COMV_ALIGNED(AVX2) uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompUV_Asm_X86_Aligned111_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, COMV_ALIGNED(AVX2) uint8_t* outUPtr, COMV_ALIGNED(AVX2) uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
 
-extern "C" void i420ToRGBAKernel11_Asm_Aligned00_AVX2(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void i420ToRGBAKernel11_Asm_Aligned01_AVX2(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(AVX2) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void i420ToRGBAKernel11_Asm_Aligned10_AVX2(COMV_ALIGNED(AVX2) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void i420ToRGBAKernel11_Asm_Aligned11_AVX2(COMV_ALIGNED(AVX2) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(AVX2) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void i420ToRGBAKernel11_Asm_X86_Aligned00_AVX2(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void i420ToRGBAKernel11_Asm_X86_Aligned01_AVX2(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(AVX2) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void i420ToRGBAKernel11_Asm_X86_Aligned10_AVX2(COMV_ALIGNED(AVX2) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void i420ToRGBAKernel11_Asm_X86_Aligned11_AVX2(COMV_ALIGNED(AVX2) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(AVX2) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+
+// AVX2-X64
+extern "C" void rgbaToI420Kernel11_CompY_Asm_X64_Aligned0_AVX2(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel11_CompY_Asm_X64_Aligned1_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompY_Asm_X64_Aligned00_AVX2(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompY_Asm_X64_Aligned01_AVX2(const uint8_t* rgbaPtr, COMV_ALIGNED(AVX2) uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompY_Asm_X64_Aligned10_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompY_Asm_X64_Aligned11_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, COMV_ALIGNED(AVX2) uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+
+extern "C" void rgbaToI420Kernel11_CompUV_Asm_X64_Aligned0xx_AVX2(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel11_CompUV_Asm_X64_Aligned1xx_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompUV_Asm_X64_Aligned000_AVX2(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompUV_Asm_X64_Aligned100_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompUV_Asm_X64_Aligned110_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, COMV_ALIGNED(AVX2) uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbaToI420Kernel41_CompUV_Asm_X64_Aligned111_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, COMV_ALIGNED(AVX2) uint8_t* outUPtr, COMV_ALIGNED(AVX2) uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+
+extern "C" void i420ToRGBAKernel11_Asm_X64_Aligned00_AVX2(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void i420ToRGBAKernel11_Asm_X64_Aligned01_AVX2(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(AVX2) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void i420ToRGBAKernel11_Asm_X64_Aligned10_AVX2(COMV_ALIGNED(AVX2) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void i420ToRGBAKernel11_Asm_X64_Aligned11_AVX2(COMV_ALIGNED(AVX2) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(AVX2) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+
 
 #endif
 
@@ -199,29 +220,39 @@ void CompVImageConvRgbaI420::rgbaToI420(const uint8_t* rgbaPtr, int height, int 
 	
 	if (COMPV_IS_ALIGNED_AVX2(strideRgbaBytes)) {
 		if (CompVCpu::isSupported(kCpuFlagAVX2)) {
-			COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel11_CompY_Asm_Aligned0_AVX2);
-			COMPV_EXEC_IFDEF_ASM(CompUV = rgbaToI420Kernel11_CompUV_Asm_Aligned0xx_AVX2);
+			COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel11_CompY_Asm_X86_Aligned0_AVX2);
+			COMPV_EXEC_IFDEF_ASM(CompUV = rgbaToI420Kernel11_CompUV_Asm_X86_Aligned0xx_AVX2);
+			COMPV_EXEC_IFDEF_ASM_X64(CompY = rgbaToI420Kernel11_CompY_Asm_X64_Aligned0_AVX2);
+			COMPV_EXEC_IFDEF_ASM_X64(CompUV = rgbaToI420Kernel11_CompUV_Asm_X64_Aligned0xx_AVX2);
 			if (COMPV_IS_ALIGNED_AVX2(rgbaPtr)) {
 				COMPV_EXEC_IFDEF_INTRINSIC(CompY = rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2);
 				COMPV_EXEC_IFDEF_INTRINSIC(CompUV = rgbaToI420Kernel11_CompUV_Intrin_Aligned_AVX2);
-				COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel11_CompY_Asm_Aligned1_AVX2);
-				COMPV_EXEC_IFDEF_ASM(CompUV = rgbaToI420Kernel11_CompUV_Asm_Aligned1xx_AVX2);
+				COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel11_CompY_Asm_X86_Aligned1_AVX2);
+				COMPV_EXEC_IFDEF_ASM(CompUV = rgbaToI420Kernel11_CompUV_Asm_X86_Aligned1xx_AVX2);
+				COMPV_EXEC_IFDEF_ASM_X64(CompY = rgbaToI420Kernel11_CompY_Asm_X64_Aligned1_AVX2);
+				COMPV_EXEC_IFDEF_ASM_X64(CompUV = rgbaToI420Kernel11_CompUV_Asm_X64_Aligned1xx_AVX2);
 			}
 			if (COMPV_IS_ALIGNED(strideRgbaBytes, 4 * COMPV_SIMD_ALIGNV_AVX2)) {
-				COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel41_CompY_Asm_Aligned00_AVX2);
-				COMPV_EXEC_IFDEF_ASM(CompUV = rgbaToI420Kernel41_CompUV_Asm_Aligned000_AVX2);
+				COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel41_CompY_Asm_X86_Aligned00_AVX2);
+				COMPV_EXEC_IFDEF_ASM(CompUV = rgbaToI420Kernel41_CompUV_Asm_X86_Aligned000_AVX2);
+				COMPV_EXEC_IFDEF_ASM_X64(CompY = rgbaToI420Kernel41_CompY_Asm_X64_Aligned00_AVX2);
+				COMPV_EXEC_IFDEF_ASM_X64(CompUV = rgbaToI420Kernel41_CompUV_Asm_X64_Aligned000_AVX2);
 				if (COMPV_IS_ALIGNED_AVX2(rgbaPtr)) {
 					COMPV_EXEC_IFDEF_INTRINSIC(CompY = rgbaToI420Kernel41_CompY_Intrin_Aligned_AVX2);
 					COMPV_EXEC_IFDEF_INTRINSIC(CompUV = rgbaToI420Kernel41_CompUV_Intrin_Aligned_AVX2);
-					COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel41_CompY_Asm_Aligned10_AVX2);
-					COMPV_EXEC_IFDEF_ASM(CompUV = rgbaToI420Kernel41_CompUV_Asm_Aligned100_AVX2);
+					COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel41_CompY_Asm_X86_Aligned10_AVX2);
+					COMPV_EXEC_IFDEF_ASM(CompUV = rgbaToI420Kernel41_CompUV_Asm_X86_Aligned100_AVX2);
+					COMPV_EXEC_IFDEF_ASM_X64(CompY = rgbaToI420Kernel41_CompY_Asm_X64_Aligned10_AVX2);
+					COMPV_EXEC_IFDEF_ASM_X64(CompUV = rgbaToI420Kernel41_CompUV_Asm_X64_Aligned100_AVX2);
 					if (COMPV_IS_ALIGNED_AVX2(outYPtr)) {
-						COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel41_CompY_Asm_Aligned11_AVX2);
+						COMPV_EXEC_IFDEF_ASM(CompY = rgbaToI420Kernel41_CompY_Asm_X86_Aligned11_AVX2);
+						COMPV_EXEC_IFDEF_ASM_X64(CompY = rgbaToI420Kernel41_CompY_Asm_X64_Aligned11_AVX2);
 					}
 					if (COMPV_IS_ALIGNED_SSE(outUPtr)) {  // vextractf128 -> SSE align
-						COMPV_EXEC_IFDEF_ASM(CompUV = rgbaToI420Kernel41_CompUV_Asm_Aligned110_AVX2);
+						COMPV_EXEC_IFDEF_ASM(CompUV = rgbaToI420Kernel41_CompUV_Asm_X86_Aligned110_AVX2);
+						COMPV_EXEC_IFDEF_ASM_X64(CompUV = rgbaToI420Kernel41_CompUV_Asm_X64_Aligned110_AVX2);
 						if (COMPV_IS_ALIGNED_SSE(outVPtr)) {  // vextractf128 -> SSE align
-							COMPV_EXEC_IFDEF_ASM(CompUV = rgbaToI420Kernel41_CompUV_Asm_Aligned111_AVX2);
+							COMPV_EXEC_IFDEF_ASM_X64(CompUV = rgbaToI420Kernel41_CompUV_Asm_X64_Aligned111_AVX2);
 						}
 					}
 				}
@@ -288,16 +319,20 @@ void CompVImageConvRgbaI420::i420ToRgba(const uint8_t* yPtr, const uint8_t* uPtr
 	}
 	if (COMPV_IS_ALIGNED_AVX2(stride)) {
 		if (CompVCpu::isSupported(kCpuFlagAVX2)) {
-			COMPV_EXEC_IFDEF_ASM(toRGBA = i420ToRGBAKernel11_Asm_Aligned00_AVX2);
+			COMPV_EXEC_IFDEF_ASM(toRGBA = i420ToRGBAKernel11_Asm_X86_Aligned00_AVX2);
+			COMPV_EXEC_IFDEF_ASM_X64(toRGBA = i420ToRGBAKernel11_Asm_X64_Aligned00_AVX2);
 			if (COMPV_IS_ALIGNED_AVX2(yPtr)) {
-				COMPV_EXEC_IFDEF_ASM(toRGBA = i420ToRGBAKernel11_Asm_Aligned10_AVX2);
+				COMPV_EXEC_IFDEF_ASM(toRGBA = i420ToRGBAKernel11_Asm_X86_Aligned10_AVX2);
+				COMPV_EXEC_IFDEF_ASM_X64(toRGBA = i420ToRGBAKernel11_Asm_X64_Aligned10_AVX2);
 				if (COMPV_IS_ALIGNED_AVX2(outRgbaPtr)) {
 					COMPV_EXEC_IFDEF_INTRINSIC(toRGBA = i420ToRGBAKernel11_Intrin_Aligned_AVX2);
-					COMPV_EXEC_IFDEF_ASM(toRGBA = i420ToRGBAKernel11_Asm_Aligned11_AVX2);
+					COMPV_EXEC_IFDEF_ASM(toRGBA = i420ToRGBAKernel11_Asm_X86_Aligned11_AVX2);
+					COMPV_EXEC_IFDEF_ASM_X64(toRGBA = i420ToRGBAKernel11_Asm_X64_Aligned11_AVX2);
 				}
 			}
 			else if (COMPV_IS_ALIGNED_AVX2(outRgbaPtr)) {
-				COMPV_EXEC_IFDEF_ASM(toRGBA = i420ToRGBAKernel11_Asm_Aligned01_AVX2);
+				COMPV_EXEC_IFDEF_ASM(toRGBA = i420ToRGBAKernel11_Asm_X86_Aligned01_AVX2);
+				COMPV_EXEC_IFDEF_ASM_X64(toRGBA = i420ToRGBAKernel11_Asm_X64_Aligned01_AVX2);
 			}
 		}
 	}

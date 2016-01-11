@@ -90,6 +90,11 @@
       <FileType>Document</FileType>
     </YASM>
   </ItemGroup>
+  <ItemGroup>
+    <YASM Include="assembler\x64\compv_imageconv_rgba_i420_x64_avx2.S">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AAC1E1B3-CE47-4003-BE1A-00A20C409129}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

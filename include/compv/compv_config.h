@@ -365,5 +365,10 @@
 #else
 #	define COMPV_EXEC_IFDEF_ASM(EXPR) 	
 #endif
+#if defined(COMPV_ASM) && defined(COMPV_ARCH_X64)
+#	define COMPV_EXEC_IFDEF_ASM_X64(EXPR) do { (EXPR); } while(0)
+#else
+#	define COMPV_EXEC_IFDEF_ASM_X64(EXPR) 	
+#endif
 
 #endif /* _COMPV_CONFIG_H_ */
