@@ -795,7 +795,7 @@ sym(rgbaToI420Kernel41_CompUV_Asm_X86_Aligned1xx_SSSE3):
 ; arg(4) -> vcomp_scalar_t height
 ; arg(5) -> vcomp_scalar_t width
 ; arg(6) -> vcomp_scalar_t stride
-; void i420ToRGBAKernel11_Asm_X86_Aligned00_SSSE3(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+;;; void i420ToRGBAKernel11_Asm_X86_Aligned00_SSSE3(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 sym(i420ToRGBAKernel11_Asm_X86_Aligned00_SSSE3):
 	i420ToRGBAKernel11_Asm_X86_SSSE3 0, 0
 

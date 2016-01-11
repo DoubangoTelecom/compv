@@ -34,14 +34,28 @@ global sym(rgbaToI420Kernel41_CompUV_Asm_Aligned100_AVX2)
 global sym(rgbaToI420Kernel41_CompUV_Asm_Aligned110_AVX2)
 global sym(rgbaToI420Kernel41_CompUV_Asm_Aligned111_AVX2)
 
+global sym(i420ToRGBAKernel11_Asm_Aligned00_AVX2)
+global sym(i420ToRGBAKernel11_Asm_Aligned01_AVX2)
+global sym(i420ToRGBAKernel11_Asm_Aligned10_AVX2)
+global sym(i420ToRGBAKernel11_Asm_Aligned11_AVX2)
+
 section .data
+extern sym(k5_i8)
 	extern sym(k16_i16)
+	extern sym(k16_i8)
 	extern sym(k128_i16)
+	extern sym(k255_i16)
+	extern sym(k7120_i16)
+	extern sym(k8912_i16)
+	extern sym(k4400_i16)
 	extern sym(kRGBAToYUV_YCoeffs8)
-	extern sym(kRGBAToYUV_U4V4Coeffs8)
 	extern sym(kRGBAToYUV_UCoeffs8)
 	extern sym(kRGBAToYUV_VCoeffs8)
-	extern sym(k_0_2_4_6_0_2_4_6_i32)
+	extern sym(kRGBAToYUV_U2V2Coeffs8)
+	extern sym(kRGBAToYUV_U4V4Coeffs8)
+	extern sym(kYUVToRGBA_RCoeffs8)
+	extern sym(kYUVToRGBA_GCoeffs8)
+	extern sym(kYUVToRGBA_BCoeffs8)
 	extern sym(kMaskstore_0_i64)
 	extern sym(kMaskstore_0_1_i64)
 	extern sym(kMaskstore_0_i32)
@@ -580,3 +594,289 @@ sym(rgbaToI420Kernel41_CompUV_Asm_Aligned110_AVX2):
 ;;; void rgbaToI420Kernel41_CompUV_Asm_Aligned000_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, COMV_ALIGNED(AVX2) uint8_t* outUPtr, COMV_ALIGNED(AVX2) uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 sym(rgbaToI420Kernel41_CompUV_Asm_Aligned111_AVX2):
 	rgbaToI420Kernel41_CompUV_Asm_AVX2 1, 1, 1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const uint8_t* yPtr
+; arg(1) -> const uint8_t* uPtr
+; arg(2) -> const uint8_t* vPtr
+; arg(3) -> uint8_t* outRgbaPtr
+; arg(4) -> vcomp_scalar_t height
+; arg(5) -> vcomp_scalar_t width
+; arg(6) -> vcomp_scalar_t stride
+; %1 -> 1: yPtr aligned, 0: yPtr not aligned
+; %2 -> 1: outRgbaPtr aligned, 0: outRgbaPtr not aligned
+%macro i420ToRGBAKernel11_Asm_AVX2 2
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
+	push rsi
+	push rdi
+	push rbx
+	; end prolog
+
+	; align stack and alloc memory
+	COMPV_YASM_ALIGN_STACK 32, rax
+	sub rsp, 32+32+32+8+8+8+8
+
+	; xmmY = [rsp + 32] ; xmmU = [rsp + 64] ; xmmV = [rsp + 96]
+	mov rax, arg(5)
+	add rax, 31
+	and rax, -32
+	mov rdx, rax
+	add rdx, 1
+	shr rdx, 1
+	neg rdx
+	mov [rsp + 0], rdx ; [rsp + 0] = rollbackUV
+	mov rdx, arg(6)
+	sub rdx, rax
+	mov [rsp + 8], rdx ; [rsp + 8] = padY
+	mov rcx, rdx
+	add rdx, 1
+	shr rdx, 1
+	mov [rsp + 16], rdx ; [rsp + 16] = padUV
+	shl rcx, 2
+	mov [rsp + 24], rcx ; [rsp + 24] = padRGBA
+
+	mov rcx, arg(0) ; yPtr
+	mov rdx, arg(1) ; uPtr
+	mov rbx, arg(2) ; vPtr
+	mov rax, arg(3) ; outRgbaPtr
+	mov rsi, arg(4) ; height
+
+	vzeroupper
+
+	.LoopHeight:
+		xor rdi, rdi
+		.LoopWidth:
+			vmovdqa ymm3, [kMaskstore_0_1_i64]
+			%if %1 == 1
+			vmovdqa ymm0, [rcx] ; 32 Y samples = 32bytes
+			%else
+			vmovdqu ymm0, [rcx] ; 32 Y samples = 32bytes
+			%endif
+			vpmaskmovq ymm1, ymm3, [rdx] ; 16 U samples, low mem
+			vpmaskmovq ymm2, ymm3, [rbx] ; 16 V samples, low mem
+			; Duplicate and interleave
+			vpermq ymm1, ymm1, 0xD8
+			vpunpcklbw ymm1, ymm1
+			vpermq ymm2, ymm2, 0xD8
+			vpunpcklbw ymm2, ymm2
+
+			;;;;;;;;;;;;;;;;;;;;;
+			;;;;;; 16Y-LOW ;;;;;;
+			;;;;;;;;;;;;;;;;;;;;;
+			
+			; YUV0 = (ymm6 || ymm3)
+			vpxor ymm5, ymm5
+			vpunpcklbw ymm3, ymm0, ymm2 ; YVYVYVYVYVYVYV....
+			vpunpcklbw ymm4, ymm1, ymm5 ; U0U0U0U0U0U0U0U0....
+			vpunpcklbw ymm6, ymm3, ymm4 ; YUV0YUV0YUV0YUV0YUV0YUV0
+			vpunpckhbw ymm3, ymm4
+
+			; save ymm0, ymm1 and ymm2
+			vmovdqa [rsp + 32], ymm0
+			vmovdqa [rsp + 64], ymm1
+			vmovdqa [rsp + 96], ymm2
+
+			; ymm0 = R
+			vmovdqa ymm7, [sym(kYUVToRGBA_RCoeffs8)]
+			vpmaddubsw ymm0, ymm6, ymm7
+			vpmaddubsw ymm1, ymm3, ymm7
+			vphaddw ymm0, ymm1
+			vpsubw ymm0, [sym(k7120_i16)]
+			vpsraw ymm0, 5
+			; ymm1 = B
+			vmovdqa ymm7, [sym(kYUVToRGBA_BCoeffs8)]
+			vpmaddubsw ymm1, ymm6, ymm7
+			vpmaddubsw ymm2, ymm3, ymm7
+			vphaddw ymm1, ymm2
+			vpsubw ymm1, [sym(k8912_i16)]
+			vpsraw ymm1, 5
+			; ymm4 = RBRBRBRBRBRB
+			vpunpcklwd ymm4, ymm0, ymm1
+			vpunpckhwd ymm5, ymm0, ymm1
+			vpackuswb ymm4, ymm5
+
+			; ymm6 = G
+			vmovdqa ymm7, [sym(kYUVToRGBA_GCoeffs8)]
+			vmovdqa ymm2, [sym(k255_i16)] ; alpha
+			vpmaddubsw ymm6, ymm7
+			vpmaddubsw ymm3, ymm7
+			vphaddw ymm6, ymm3
+			vpaddw ymm6, [sym(k4400_i16)]
+			vpsraw ymm6, 5
+			; ymm3 = GAGAGAGAGAGAGA
+			vpunpcklwd ymm3, ymm6, ymm2
+			vpunpckhwd ymm6, ymm2
+			vpackuswb ymm3, ymm6
+
+			; outRgbaPtr[x-y] = RGBARGBARGBARGBA
+			; re-order the samples for the final unpacklo, unpackhi
+			vpermq ymm4, ymm4, 0xD8
+			vpermq ymm3, ymm3, 0xD8
+			; because of AVX cross-lane issue final data = (0, 2, 1, 3)*32 = (0, 64, 32, 96)
+			vpunpcklbw ymm5, ymm4, ymm3
+			vpunpckhbw ymm4, ymm3
+			%if %2==1
+			vmovdqa [rax + 0], ymm5 ; high8(RGBARGBARGBARGBA)
+			vmovdqa [rax + 64], ymm4 ; low8(RGBARGBARGBARGBA)
+			%else
+			vmovdqu [rax + 0], ymm5 ; high8(RGBARGBARGBARGBA)
+			vmovdqu [rax + 64], ymm4 ; low8(RGBARGBARGBARGBA)
+			%endif
+
+			;;;;;;;;;;;;;;;;;;;;;
+			;;;;;; 8Y-HIGH  ;;;;;
+			;;;;;;;;;;;;;;;;;;;;;
+
+			; restore ymm0, ymm1 and ymm2
+			vmovdqa ymm0, [rsp + 32]
+			vmovdqa ymm1, [rsp + 64]
+			vmovdqa ymm2, [rsp + 96]
+
+			; YUV0 = (ymm6 || ymm3)
+			vpxor ymm5, ymm5
+			vpunpckhbw ymm3, ymm0, ymm2 ; YVYVYVYVYVYVYV....
+			vpunpckhbw ymm4, ymm1, ymm5 ; U0U0U0U0U0U0U0U0....
+			vpunpcklbw ymm6, ymm3, ymm4 ; YUV0YUV0YUV0YUV0YUV0YUV0
+			vpunpckhbw ymm3, ymm4
+
+			; ymm0 = R
+			vmovdqa ymm7, [sym(kYUVToRGBA_RCoeffs8)]
+			vpmaddubsw ymm0, ymm6, ymm7
+			vpmaddubsw ymm1, ymm3, ymm7
+			vphaddw ymm0, ymm1
+			vpsubw ymm0, [sym(k7120_i16)]
+			vpsraw ymm0, 5
+			; ymm1 = B
+			vmovdqa ymm7, [sym(kYUVToRGBA_BCoeffs8)]
+			vpmaddubsw ymm1, ymm6, ymm7
+			vpmaddubsw ymm2, ymm3, ymm7
+			vphaddw ymm1, ymm2
+			vpsubw ymm1, [sym(k8912_i16)]
+			vpsraw ymm1, 5
+			; ymm4 = RBRBRBRBRBRB
+			vpunpcklwd ymm4, ymm0, ymm1
+			vpunpckhwd ymm5, ymm0, ymm1
+			vpackuswb ymm4, ymm5
+
+			; ymm6 = G
+			vmovdqa ymm7, [sym(kYUVToRGBA_GCoeffs8)]
+			vmovdqa ymm2, [sym(k255_i16)] ; alpha
+			vpmaddubsw ymm6, ymm7
+			vpmaddubsw ymm3, ymm7
+			vphaddw ymm6, ymm3
+			vpaddw ymm6, [sym(k4400_i16)]
+			vpsraw ymm6, 5
+			; ymm3 = GAGAGAGAGAGAGA
+			vpunpcklwd ymm3, ymm6, ymm2
+			vpunpckhwd ymm6, ymm2
+			vpackuswb ymm3, ymm6
+
+			; outRgbaPtr[x-y] = RGBARGBARGBARGBA
+			; re-order the samples for the final unpacklo, unpackhi
+			vpermq ymm4, ymm4, 0xD8
+			vpermq ymm3, ymm3, 0xD8
+			; because of AVX cross-lane issue final data = (0, 2, 1, 3)*32 = (0, 64, 32, 96)
+			vpunpcklbw ymm5, ymm4, ymm3
+			vpunpckhbw ymm4, ymm3
+			%if %2==1
+			vmovdqa [rax + 32], ymm5 ; high8(RGBARGBARGBARGBA)
+			vmovdqa [rax + 96], ymm4 ; low8(RGBARGBARGBARGBA)
+			%else
+			vmovdqu [rax + 32], ymm5 ; high8(RGBARGBARGBARGBA)
+			vmovdqu [rax + 96], ymm4 ; low8(RGBARGBARGBARGBA)
+			%endif
+
+			; Move pointers
+			add rcx, 32 ; yPtr += 32
+			add rdx, 16 ; uPtr += 16
+			add rbx, 16 ; vPtr += 16
+			add rax, 128 ; outRgbaPtr += 128
+
+			; end-of-LoopWidth
+			add rdi, 32
+			cmp rdi, arg(5)
+			jl .LoopWidth
+	add rcx, [rsp + 8] ; yPtr += padY
+	add rax, [rsp + 24] ; outRgbaPtr += padRGBA
+	mov rdi, rsi
+	and rdi, 1
+	cmp rdi, 1
+	je .rdi_odd
+	.rdi_even:
+		add rdx, [rsp + 0] ; uPtr += rollbackUV
+		add rbx, [rsp + 0] ; vPtr += rollbackUV
+		jmp .rdi_done
+	.rdi_odd:
+		add rdx, [rsp + 16] ; uPtr += padUV
+		add rbx, [rsp + 16] ; vPtr += padUV
+	.rdi_done:
+	; end-of-LoopHeight
+	sub rsi, 1
+	cmp rsi, 0
+	jg .LoopHeight
+
+	vzeroupper
+
+	; unalign stack and alloc memory
+	add rsp, 32+32+32+8+8+8+8
+	COMPV_YASM_UNALIGN_STACK
+
+	; begin epilog
+	pop rbx
+	pop rdi
+	pop rsi
+    COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const uint8_t* yPtr
+; arg(1) -> const uint8_t* uPtr
+; arg(2) -> const uint8_t* vPtr
+; arg(3) -> uint8_t* outRgbaPtr
+; arg(4) -> vcomp_scalar_t height
+; arg(5) -> vcomp_scalar_t width
+; arg(6) -> vcomp_scalar_t stride
+;;; void i420ToRGBAKernel11_Asm_Aligned00_AVX2(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+sym(i420ToRGBAKernel11_Asm_Aligned00_AVX2):
+	i420ToRGBAKernel11_Asm_AVX2 0, 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMV_ALIGNED(AVX2) const uint8_t* yPtr
+; arg(1) -> const uint8_t* uPtr
+; arg(2) -> const uint8_t* vPtr
+; arg(3) -> uint8_t* outRgbaPtr
+; arg(4) -> vcomp_scalar_t height
+; arg(5) -> vcomp_scalar_t width
+; arg(6) -> vcomp_scalar_t stride
+;;; void i420ToRGBAKernel11_Asm_Aligned10_AVX2(COMV_ALIGNED(AVX2) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+sym(i420ToRGBAKernel11_Asm_Aligned10_AVX2):
+	i420ToRGBAKernel11_Asm_AVX2 1, 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const uint8_t* yPtr
+; arg(1) -> const uint8_t* uPtr
+; arg(2) -> const uint8_t* vPtr
+; arg(3) -> COMV_ALIGNED(AVX2) uint8_t* outRgbaPtr
+; arg(4) -> vcomp_scalar_t height
+; arg(5) -> vcomp_scalar_t width
+; arg(6) -> vcomp_scalar_t stride
+;;; void i420ToRGBAKernel11_Asm_Aligned01_AVX2(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(AVX2) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+sym(i420ToRGBAKernel11_Asm_Aligned01_AVX2):
+	i420ToRGBAKernel11_Asm_AVX2 0, 1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMV_ALIGNED(AVX2) const uint8_t* yPtr
+; arg(1) -> const uint8_t* uPtr
+; arg(2) -> const uint8_t* vPtr
+; arg(3) -> COMV_ALIGNED(AVX2) uint8_t* outRgbaPtr
+; arg(4) -> vcomp_scalar_t height
+; arg(5) -> vcomp_scalar_t width
+; arg(6) -> vcomp_scalar_t stride
+;;; void i420ToRGBAKernel11_Asm_Aligned11_AVX2(COMV_ALIGNED(AVX2) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(AVX2) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+sym(i420ToRGBAKernel11_Asm_Aligned11_AVX2):
+	i420ToRGBAKernel11_Asm_AVX2 1, 1
