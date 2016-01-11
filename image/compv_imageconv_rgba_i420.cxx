@@ -43,6 +43,12 @@ extern "C" void rgbaToI420Kernel11_CompUV_Asm_X86_Aligned1xx_SSSE3(COMV_ALIGNED(
 extern "C" void rgbaToI420Kernel41_CompUV_Asm_X86_Aligned1xx_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
 extern "C" void rgbaToI420Kernel41_CompUV_Asm_X86_Aligned0xx_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
 
+extern "C" void i420ToRGBAKernel11_Asm_X86_Aligned00_SSSE3(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void i420ToRGBAKernel11_Asm_X86_Aligned01_SSSE3(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(SSE) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void i420ToRGBAKernel11_Asm_X86_Aligned10_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void i420ToRGBAKernel11_Asm_X86_Aligned11_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(SSE) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+
+
 extern "C" void rgbaToI420Kernel11_CompY_Asm_Aligned0_AVX2(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
 extern "C" void rgbaToI420Kernel11_CompY_Asm_Aligned1_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
 extern "C" void rgbaToI420Kernel41_CompY_Asm_Aligned00_AVX2(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
@@ -260,10 +266,16 @@ void CompVImageConvRgbaI420::i420ToRgba(const uint8_t* yPtr, const uint8_t* uPtr
 
 	if (COMPV_IS_ALIGNED_SSE(stride)) {
 		if (CompVCpu::isSupported(kCpuFlagSSSE3)) {
+			COMPV_EXEC_IFDEF_ASM(toRGBA = i420ToRGBAKernel11_Asm_X86_Aligned00_SSSE3);
 			if (COMPV_IS_ALIGNED_SSE(yPtr)) {
+				COMPV_EXEC_IFDEF_ASM(toRGBA = i420ToRGBAKernel11_Asm_X86_Aligned10_SSSE3);
 				if (COMPV_IS_ALIGNED_SSE(outRgbaPtr)) {
 					COMPV_EXEC_IFDEF_INTRINSIC(toRGBA = i420ToRGBAKernel11_Intrin_Aligned_SSSE3);
+					COMPV_EXEC_IFDEF_ASM(toRGBA = i420ToRGBAKernel11_Asm_X86_Aligned11_SSSE3);
 				}
+			}
+			else if (COMPV_IS_ALIGNED_SSE(outRgbaPtr)) {
+				COMPV_EXEC_IFDEF_ASM(toRGBA = i420ToRGBAKernel11_Asm_X86_Aligned01_SSSE3);
 			}
 		}
 	}
@@ -299,6 +311,8 @@ void CompVImageConvRgbaI420::i420ToRgba(const uint8_t* yPtr, const uint8_t* uPtr
 	else {
 		toRGBA(yPtr, uPtr, vPtr, outRgbaPtr, height, width, stride);
 	}
+
+	
 }
 
 COMPV_NAMESPACE_END()

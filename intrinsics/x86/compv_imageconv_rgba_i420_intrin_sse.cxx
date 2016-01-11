@@ -198,7 +198,7 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint
 
 void i420ToRGBAKernel11_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(SSE) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 {
-	vcomp_scalar_t i, j, maxI = ((width + 15) & -16), rollbackUV = -((maxI + 1) >> 1), padY = (stride - maxI), padUV = ((padY + 1) >> 1), padRGBA = (padY << 2); // +stride to skip even lines
+	vcomp_scalar_t i, j, maxI = ((width + 15) & -16), rollbackUV = -((maxI + 1) >> 1), padY = (stride - maxI), padUV = ((padY + 1) >> 1), padRGBA = (padY << 2);
 	__m128i xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmmY, xmmU, xmmV, xmm16, xmmRCoeffs, xmmGCoeffs, xmmBCoeffs, xmmZeroCoeffs, xmmAlpha, xmm7120, xmm8912, xmm4400;
 
 	_mm_store_si128(&xmmRCoeffs, _mm_load_si128((__m128i*)kYUVToRGBA_RCoeffs8));

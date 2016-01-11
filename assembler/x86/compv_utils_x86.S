@@ -48,6 +48,14 @@ sym(rgbaToI420Kernel11_CompY_Asm_X86_Aligned1x_SSSE3):
 	push rbx
 	; end prolog
 
+	; align stack and alloc memory
+	; COMPV_YASM_ALIGN_STACK 32, rax
+	; sub rsp, xxx
+
+	; unalign stack and free memory
+	; add rsp, xxx
+	; COMPV_YASM_UNALIGN_STACK
+
 	; begin epilog
 	pop rbx
 	pop rdi

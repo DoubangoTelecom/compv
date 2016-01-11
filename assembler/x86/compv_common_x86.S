@@ -167,6 +167,13 @@
     push        %2
 %endmacro
 
+; COMPV_YASM_UNALIGN_STACK
+; Macro added by Doubango Telecom
+; Undo COMPV_YASM_ALIGN_STACK
+%macro COMPV_YASM_UNALIGN_STACK 0
+	pop rsp
+%endmacro
+
 
 ;
 ; The Microsoft assembler tries to impose a certain amount of type safety in
