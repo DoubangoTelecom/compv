@@ -92,34 +92,64 @@ extern "C" void i420ToRGBAKernel11_Asm_X64_Aligned11_AVX2(COMV_ALIGNED(AVX2) con
 
 #endif
 
-static void rgbaToI420Kernel11_CompY_C(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+static void __toI420_CompY_C(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, int compSize, int ridx, int gidx, int bidx)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	vcomp_scalar_t padSample = (stride - width);
-	vcomp_scalar_t padRGBA = padSample << 2;
+	vcomp_scalar_t padRGBA = padSample * compSize;
 	vcomp_scalar_t padY = padSample;
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (int j = 0; j < height; ++j) {
 		for (int i = 0; i < width; ++i) {
-			*outYPtr++ = (((33 * rgbaPtr[0]) + (65 * rgbaPtr[1]) + (13 * rgbaPtr[2])) >> 7) + 16;
-			rgbaPtr += 4;
+			*outYPtr++ = (((33 * rgbaPtr[ridx]) + (65 * rgbaPtr[gidx]) + (13 * rgbaPtr[bidx])) >> 7) + 16;
+			rgbaPtr += compSize;
 		}
 		rgbaPtr += padRGBA;
 		outYPtr += padY;
 	}
 }
 
-static void rgbaToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+static void rgbaToI420Kernel11_CompY_C(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	vcomp_scalar_t i, j, maxI = ((width + 1) & -1), padUV = (stride - maxI) >> 1, padRGBA = ((stride - maxI) + stride) << 2;
+	__toI420_CompY_C(rgbaPtr, outYPtr, height, width, stride, 4, 0, 1, 2);
+}
+static void argbToI420Kernel11_CompY_C(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__toI420_CompY_C(rgbaPtr, outYPtr, height, width, stride, 4, 1, 2, 3);
+}
+static void bgraToI420Kernel11_CompY_C(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__toI420_CompY_C(rgbaPtr, outYPtr, height, width, stride, 4, 2, 1, 0);
+}
+static void abgrToI420Kernel11_CompY_C(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__toI420_CompY_C(rgbaPtr, outYPtr, height, width, stride, 4, 3, 2, 1);
+}
+static void rgbToI420Kernel11_CompY_C(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__toI420_CompY_C(rgbaPtr, outYPtr, height, width, stride, 3, 0, 1, 2);
+}
+static void bgrToI420Kernel11_CompY_C(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__toI420_CompY_C(rgbaPtr, outYPtr, height, width, stride, 3, 2, 1, 0);
+}
+
+static void __toI420_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, int compSize, int ridx, int gidx, int bidx)
+{
+	vcomp_scalar_t i, j, maxI = ((width + 1) & -1), padUV = (stride - maxI) >> 1, padRGBA = ((stride - maxI) + stride) * compSize;
+	int compSizeTimes2 = (compSize << 1);
 	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
 	for (j = 0; j < height; j += 2) {
 		for (i = 0; i < width; i += 2) {
-			*outUPtr++ = (((-38 * rgbaPtr[0]) + (-74 * rgbaPtr[1]) + (112 * rgbaPtr[2])) >> 8) + 128;
-			*outVPtr++ = ((((112 * rgbaPtr[0]) + (-94 * rgbaPtr[1]) + (-18 * rgbaPtr[2]))) >> 8) + 128;
-			rgbaPtr += 8; // 2 * 4
+			*outUPtr++ = (((-38 * rgbaPtr[ridx]) + (-74 * rgbaPtr[gidx]) + (112 * rgbaPtr[bidx])) >> 8) + 128;
+			*outVPtr++ = ((((112 * rgbaPtr[ridx]) + (-94 * rgbaPtr[gidx]) + (-18 * rgbaPtr[bidx]))) >> 8) + 128;
+			rgbaPtr += compSizeTimes2;
 		}
 		rgbaPtr += padRGBA;
 		outUPtr += padUV;
@@ -127,11 +157,41 @@ static void rgbaToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr
 	}
 }
 
-static void i420ToRGBAKernel11_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+static void rgbaToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__toI420_CompUV_C(rgbaPtr, outUPtr, outVPtr, height, width, stride, 4, 0, 1, 2);
+}
+static void argbToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__toI420_CompUV_C(rgbaPtr, outUPtr, outVPtr, height, width, stride, 4, 1, 2, 3);
+}
+static void bgraToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__toI420_CompUV_C(rgbaPtr, outUPtr, outVPtr, height, width, stride, 4, 2, 1, 0);
+}
+static void abgrToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__toI420_CompUV_C(rgbaPtr, outUPtr, outVPtr, height, width, stride, 4, 3, 2, 1);
+}
+static void rgbToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__toI420_CompUV_C(rgbaPtr, outUPtr, outVPtr, height, width, stride, 3, 0, 1, 2);
+}
+static void bgrToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__toI420_CompUV_C(rgbaPtr, outUPtr, outVPtr, height, width, stride, 3, 2, 1, 0);
+}
+
+static void __fromI420_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, int compSize, int ridx, int gidx, int bidx, int aidx = INT_MAX)
+{
 	vcomp_scalar_t padSample = (stride - width);
-	vcomp_scalar_t padRGBA = padSample << 2;
+	vcomp_scalar_t padRGBA = padSample * compSize;
 	vcomp_scalar_t padY = padSample;
 	vcomp_scalar_t padUV = ((padY + 1) >> 1);
 	int16_t Yp, Up, Vp;
@@ -148,12 +208,12 @@ static void i420ToRGBAKernel11_C(const uint8_t* yPtr, const uint8_t* uPtr, const
 			Yp = (*yPtr - 16);
 			Up = (*uPtr - 127);
 			Vp = (*vPtr - 127);
-			outRgbaPtr[0] = CompVMathUtils::clampPixel8((37 * Yp + 51 * Vp) >> 5);
-			outRgbaPtr[1] = CompVMathUtils::clampPixel8((37 * Yp - 13 * Up - 26 * Vp) >> 5);
-			outRgbaPtr[2] = CompVMathUtils::clampPixel8((37 * Yp + 65 * Up) >> 5);
-			outRgbaPtr[3] = 0xFF;
+			outRgbaPtr[ridx] = CompVMathUtils::clampPixel8((37 * Yp + 51 * Vp) >> 5);
+			outRgbaPtr[gidx] = CompVMathUtils::clampPixel8((37 * Yp - 13 * Up - 26 * Vp) >> 5);
+			outRgbaPtr[bidx] = CompVMathUtils::clampPixel8((37 * Yp + 65 * Up) >> 5);
+			if (compSize == 4) outRgbaPtr[aidx] = 0xFF; // /!\not opt. but this C++ function should never be called
 
-			outRgbaPtr += 4;
+			outRgbaPtr += compSize;
 			yPtr += 1;
 			uPtr += i & 1;
 			vPtr += i & 1;
@@ -163,6 +223,37 @@ static void i420ToRGBAKernel11_C(const uint8_t* yPtr, const uint8_t* uPtr, const
 		uPtr += (j & 1) ? padUV : -(width >> 1);
 		vPtr += (j & 1) ? padUV : -(width >> 1);
 	}
+}
+
+static void i420ToRGBAKernel11_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__fromI420_C(yPtr, uPtr, vPtr, outRgbaPtr, height, width, stride, 4, 0, 1, 2, 3);
+}
+static void i420ToARGBKernel11_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__fromI420_C(yPtr, uPtr, vPtr, outRgbaPtr, height, width, stride, 4, 1, 2, 3, 0);
+}
+static void i420ToBGRAKernel11_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__fromI420_C(yPtr, uPtr, vPtr, outRgbaPtr, height, width, stride, 4, 2, 1, 0, 3);
+}
+static void i420ToABGRKernel11_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__fromI420_C(yPtr, uPtr, vPtr, outRgbaPtr, height, width, stride, 4, 3, 2, 1, 0);
+}
+static void i420ToRGBKernel11_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__fromI420_C(yPtr, uPtr, vPtr, outRgbaPtr, height, width, stride, 3, 0, 1, 2);
+}
+static void i420ToBGRKernel11_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	__fromI420_C(yPtr, uPtr, vPtr, outRgbaPtr, height, width, stride, 3, 2, 1, 0);
 }
 
 // FIXME(dmi): move to ThreadDisp class

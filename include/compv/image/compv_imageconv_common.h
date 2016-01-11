@@ -40,15 +40,15 @@ COMPV_NAMESPACE_BEGIN()
 enum {
 	COMPV_IMAGECONV_FUNCID_RGBAToI420_Y,
 	COMPV_IMAGECONV_FUNCID_RGBAToI420_UV,
-	COMPV_IMAGECONV_FUNCID_I420ToRGBA
+	COMPV_IMAGECONV_FUNCID_I420ToRGBA,
 
 	// no limitation
 };
 COMPV_ERROR_CODE ImageConvKernelxx_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 
-typedef void(*rgbaToI420Kernel_CompY)(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-typedef void(*rgbaToI420Kernel_CompUV)(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-typedef void(*i420ToRGBAKernel)(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+typedef void(*rgbaToI420Kernel_CompY)(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride); // rgba, argb, abgr, bgra, rgb, bgr....
+typedef void(*rgbaToI420Kernel_CompUV)(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride); // rgba, argb, abgr, bgra, rgb, bgr....
+typedef void(*i420ToRGBAKernel)(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride); // rgba, argb, abgr, bgra, rgb, bgr....
 
 COMPV_NAMESPACE_END()
 

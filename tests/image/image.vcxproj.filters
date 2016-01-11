@@ -18,5 +18,8 @@
     <ClCompile Include="image.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="image_rgba_i420.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
