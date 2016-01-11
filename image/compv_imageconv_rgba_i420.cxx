@@ -58,44 +58,6 @@ extern "C" void rgbaToI420Kernel41_CompUV_Asm_Aligned110_AVX2(COMV_ALIGNED(AVX2)
 extern "C" void rgbaToI420Kernel41_CompUV_Asm_Aligned111_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, COMV_ALIGNED(AVX2) uint8_t* outUPtr, COMV_ALIGNED(AVX2) uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
 #endif
 
-typedef void(*rgbaToI420Kernel_CompY)(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-typedef void(*rgbaToI420Kernel_CompUV)(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-typedef void(*i420ToRGBAKernel11)(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-
-static COMPV_ERROR_CODE toI420Kernelxx_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
-{
-	const int funcId = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, int);
-	switch (funcId) {
-	case COMPV_FUNCID_RGBAToI420_Y:
-		{
-			rgbaToI420Kernel_CompY CompY = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, rgbaToI420Kernel_CompY);
-			const uint8_t* rgbaPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const uint8_t*);
-			uint8_t* outYPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, uint8_t*);
-			int height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, int);
-			int width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int);
-			int stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int);
-			CompY(rgbaPtr, outYPtr, height, width, stride);
-			break;
-		}
-	case COMPV_FUNCID_RGBAToI420_UV:
-		{
-			rgbaToI420Kernel_CompUV CompUV = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, rgbaToI420Kernel_CompUV);
-			const uint8_t* rgbaPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const uint8_t*);
-			uint8_t* outUPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, uint8_t*);
-			uint8_t* outVPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, uint8_t*);
-			int height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int);
-			int width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int);
-			int stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[7].pcParamPtr, int);
-			CompUV(rgbaPtr, outUPtr, outVPtr, height, width, stride);
-			break;
-		}
-	default:
-		COMPV_DEBUG_ERROR("%d is an invalid funcId", funcId);
-		return COMPV_ERROR_CODE_E_INVALID_CALL;
-	}
-	return COMPV_ERROR_CODE_S_OK;
-}
-
 static void rgbaToI420Kernel11_CompY_C(const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
@@ -262,11 +224,11 @@ void CompVImageConvRgbaI420::rgbaToI420(const uint8_t* rgbaPtr, int height, int 
 		uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
 		for (int i = 0; i < divCount; ++i) {
 			threadHeight = ((height - totalHeight) / (divCount - i)) & -2; // the & -2 is to make sure we'll deal with even heights
-			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0, toI420Kernelxx_AsynExec,
-				COMPV_ASYNCTASK_SET_PARAM_ASISS(COMPV_FUNCID_RGBAToI420_Y, CompY, (rgbaPtr + rgbaIdx), (outYPtr + YIdx), threadHeight, width, stride),
+			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0, ImageConvKernelxx_AsynExec,
+				COMPV_ASYNCTASK_SET_PARAM_ASISS(COMPV_IMAGECONV_FUNCID_RGBAToI420_Y, CompY, (rgbaPtr + rgbaIdx), (outYPtr + YIdx), threadHeight, width, stride),
 				COMPV_ASYNCTASK_SET_PARAM_NULL()));
-			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT1, toI420Kernelxx_AsynExec,
-				COMPV_ASYNCTASK_SET_PARAM_ASISS(COMPV_FUNCID_RGBAToI420_UV, CompUV, (rgbaPtr + rgbaIdx), (outUPtr + UVIdx), (outVPtr + UVIdx), threadHeight, width, stride),
+			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT1, ImageConvKernelxx_AsynExec,
+				COMPV_ASYNCTASK_SET_PARAM_ASISS(COMPV_IMAGECONV_FUNCID_RGBAToI420_UV, CompUV, (rgbaPtr + rgbaIdx), (outUPtr + UVIdx), (outVPtr + UVIdx), threadHeight, width, stride),
 				COMPV_ASYNCTASK_SET_PARAM_NULL()));
 			rgbaIdx += (threadHeight * stride) << 2;
 			YIdx += (threadHeight * stride);
@@ -286,7 +248,7 @@ void CompVImageConvRgbaI420::rgbaToI420(const uint8_t* rgbaPtr, int height, int 
 
 void CompVImageConvRgbaI420::i420ToRgba(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, int height, int width, int stride)
 {
-	i420ToRGBAKernel11 toRGBA = i420ToRGBAKernel11_C;
+	i420ToRGBAKernel toRGBA = i420ToRGBAKernel11_C;
 	int strideRgbaBytes = (stride << 2);
 	int strideYBytes = stride;
 	int widthRgbaBytes = (width << 2);
@@ -316,7 +278,27 @@ void CompVImageConvRgbaI420::i420ToRgba(const uint8_t* yPtr, const uint8_t* uPtr
 	}
 #endif
 
-	toRGBA(yPtr, uPtr, vPtr, outRgbaPtr, height, width, stride);
+	if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
+		int divCount, rgbaIdx = 0, YIdx = 0, UVIdx = 0, threadHeight, totalHeight = 0;
+		divCount = threadDivideAcrossY(stride, height, COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD, threadDip->getThreadsCount());
+		uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+		for (int i = 0; i < divCount; ++i) {
+			threadHeight = ((height - totalHeight) / (divCount - i)) & -2; // the & -2 is to make sure we'll deal with even heights
+			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0, ImageConvKernelxx_AsynExec,
+				COMPV_ASYNCTASK_SET_PARAM_ASISS(COMPV_IMAGECONV_FUNCID_I420ToRGBA, toRGBA, (yPtr + YIdx), (uPtr + UVIdx), (vPtr + UVIdx), (outRgbaPtr + rgbaIdx), threadHeight, width, stride),
+				COMPV_ASYNCTASK_SET_PARAM_NULL()));
+			rgbaIdx += (threadHeight * stride) << 2;
+			YIdx += (threadHeight * stride);
+			UVIdx += ((threadHeight * stride) >> 2);
+			totalHeight += threadHeight;
+		}
+		for (int i = 0; i < divCount; ++i) {
+			COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0));
+		}
+	}
+	else {
+		toRGBA(yPtr, uPtr, vPtr, outRgbaPtr, height, width, stride);
+	}
 }
 
 COMPV_NAMESPACE_END()

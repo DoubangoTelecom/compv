@@ -18,6 +18,59 @@
 * along with CompV.
 */
 #include "compv/image/compv_imageconv_common.h"
+#include "compv/parallel/compv_asynctask.h"
+
+COMPV_NAMESPACE_BEGIN()
+
+COMPV_ERROR_CODE ImageConvKernelxx_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
+{
+	const int funcId = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, int);
+	switch (funcId) {
+	case COMPV_IMAGECONV_FUNCID_RGBAToI420_Y:
+	{
+		rgbaToI420Kernel_CompY CompY = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, rgbaToI420Kernel_CompY);
+		const uint8_t* rgbaPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const uint8_t*);
+		uint8_t* outYPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, uint8_t*);
+		vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, int);
+		vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int);
+		vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int);
+		CompY(rgbaPtr, outYPtr, height, width, stride);
+		break;
+	}
+	case COMPV_IMAGECONV_FUNCID_RGBAToI420_UV:
+	{
+		rgbaToI420Kernel_CompUV CompUV = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, rgbaToI420Kernel_CompUV);
+		const uint8_t* rgbaPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const uint8_t*);
+		uint8_t* outUPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, uint8_t*);
+		uint8_t* outVPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, uint8_t*);
+		vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int);
+		vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int);
+		vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[7].pcParamPtr, int);
+		CompUV(rgbaPtr, outUPtr, outVPtr, height, width, stride);
+		break;
+	}
+	case COMPV_IMAGECONV_FUNCID_I420ToRGBA:
+	{
+		i420ToRGBAKernel toRGBA = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, i420ToRGBAKernel);
+		const uint8_t* yPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const uint8_t*);
+		const uint8_t* uPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, const uint8_t*);
+		const uint8_t* vPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, const uint8_t*);
+		uint8_t* outRgbaPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, uint8_t*);
+		vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int);
+		vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[7].pcParamPtr, int);
+		vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[8].pcParamPtr, int);
+		toRGBA(yPtr, uPtr, vPtr, outRgbaPtr, height, width, stride);
+		break;
+	}
+	default:
+		COMPV_DEBUG_ERROR("%d is an invalid funcId", funcId);
+		return COMPV_ERROR_CODE_E_INVALID_CALL;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_NAMESPACE_END()
+
 
 /* RGB to YUV conversion : http ://www.fourcc.org/fccyvrgb.php 
 Y = (0.257 * R) + (0.504 * G) + (0.098 * B) + 16

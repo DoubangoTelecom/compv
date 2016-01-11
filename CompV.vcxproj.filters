@@ -141,6 +141,9 @@
     <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_rgba_i420_intrin_sse.h">
       <Filter>Header Files\intrinsics\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_avx.h">
+      <Filter>Header Files\intrinsics\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">

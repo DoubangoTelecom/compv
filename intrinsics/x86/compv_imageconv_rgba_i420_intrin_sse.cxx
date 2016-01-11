@@ -199,7 +199,7 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint
 void i420ToRGBAKernel11_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(SSE) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 {
 	vcomp_scalar_t i, j, maxI = ((width + 15) & -16), rollbackUV = -((maxI + 1) >> 1), padY = (stride - maxI), padUV = ((padY + 1) >> 1), padRGBA = (padY << 2); // +stride to skip even lines
-	__m128i xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmmY, xmmU, xmmV, xmm16, xmmRCoeffs, xmmGCoeffs, xmmBCoeffs, xmmZeroCoeffs, xmmAlpha;
+	__m128i xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmmY, xmmU, xmmV, xmm16, xmmRCoeffs, xmmGCoeffs, xmmBCoeffs, xmmZeroCoeffs, xmmAlpha, xmm7120, xmm8912, xmm4400;
 
 	_mm_store_si128(&xmmRCoeffs, _mm_load_si128((__m128i*)kYUVToRGBA_RCoeffs8));
 	_mm_store_si128(&xmmGCoeffs, _mm_load_si128((__m128i*)kYUVToRGBA_GCoeffs8));
@@ -208,6 +208,9 @@ void i420ToRGBAKernel11_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yP
 	_mm_store_si128(&xmm5, _mm_load_si128((__m128i*)k5_i8));
 	_mm_store_si128(&xmm16, _mm_load_si128((__m128i*)k16_i8));
 	_mm_store_si128(&xmmAlpha, _mm_load_si128((__m128i*)k255_i16));
+	_mm_store_si128(&xmm7120, _mm_load_si128((__m128i*)k7120_i16));
+	_mm_store_si128(&xmm8912, _mm_load_si128((__m128i*)k8912_i16));
+	_mm_store_si128(&xmm4400, _mm_load_si128((__m128i*)k4400_i16));
 
 	// R!u8 = (37Y' + 0U' + 51V') >> 5
 	// G!u8 = (37Y' - 13U' - 26V') >> 5
@@ -239,13 +242,13 @@ void i420ToRGBAKernel11_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yP
 			_mm_store_si128(&xmm0, _mm_maddubs_epi16(xmm2, xmmRCoeffs));
 			_mm_store_si128(&xmm1, _mm_maddubs_epi16(xmm3, xmmRCoeffs));
 			_mm_store_si128(&xmm0, _mm_hadd_epi16(xmm0, xmm1));
-			_mm_store_si128(&xmm0, _mm_sub_epi16(xmm0, _mm_set1_epi16(7120)));
+			_mm_store_si128(&xmm0, _mm_sub_epi16(xmm0, xmm7120));
 			_mm_store_si128(&xmm0, _mm_srai_epi16(xmm0, 5)); // >> 5
 			// xmm1 = B
 			_mm_store_si128(&xmm1, _mm_maddubs_epi16(xmm2, xmmBCoeffs));
 			_mm_store_si128(&xmm4, _mm_maddubs_epi16(xmm3, xmmBCoeffs));
 			_mm_store_si128(&xmm1, _mm_hadd_epi16(xmm1, xmm4));
-			_mm_store_si128(&xmm1, _mm_sub_epi16(xmm1, _mm_set1_epi16(8912)));
+			_mm_store_si128(&xmm1, _mm_sub_epi16(xmm1, xmm8912));
 			_mm_store_si128(&xmm1, _mm_srai_epi16(xmm1, 5)); // >> 5
 			// xmm4 = RBRBRBRBRBRB
 			_mm_store_si128(&xmm4, _mm_unpacklo_epi16(xmm0, xmm1)); // low16(RBRBRBRBRBRB)
@@ -256,7 +259,7 @@ void i420ToRGBAKernel11_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yP
 			_mm_store_si128(&xmm2, _mm_maddubs_epi16(xmm2, xmmGCoeffs));
 			_mm_store_si128(&xmm3, _mm_maddubs_epi16(xmm3, xmmGCoeffs));
 			_mm_store_si128(&xmm2, _mm_hadd_epi16(xmm2, xmm3));
-			_mm_store_si128(&xmm2, _mm_add_epi16(xmm2, _mm_set1_epi16(4400)));
+			_mm_store_si128(&xmm2, _mm_add_epi16(xmm2, xmm4400));
 			_mm_store_si128(&xmm2, _mm_srai_epi16(xmm2, 5)); // >> 5
 			// xmm3 = GAGAGAGAGAGAGA
 			_mm_store_si128(&xmm3, _mm_unpacklo_epi16(xmm2, xmmAlpha)); // low16(GAGAGAGAGAGAGA)
@@ -279,13 +282,13 @@ void i420ToRGBAKernel11_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yP
 			_mm_store_si128(&xmm0, _mm_maddubs_epi16(xmm2, xmmRCoeffs));
 			_mm_store_si128(&xmm1, _mm_maddubs_epi16(xmm3, xmmRCoeffs));
 			_mm_store_si128(&xmm0, _mm_hadd_epi16(xmm0, xmm1));
-			_mm_store_si128(&xmm0, _mm_sub_epi16(xmm0, _mm_set1_epi16(7120)));
+			_mm_store_si128(&xmm0, _mm_sub_epi16(xmm0, xmm7120));
 			_mm_store_si128(&xmm0, _mm_srai_epi16(xmm0, 5)); // >> 5
 			// xmm1 = B
 			_mm_store_si128(&xmm1, _mm_maddubs_epi16(xmm2, xmmBCoeffs));
 			_mm_store_si128(&xmm4, _mm_maddubs_epi16(xmm3, xmmBCoeffs));
 			_mm_store_si128(&xmm1, _mm_hadd_epi16(xmm1, xmm4));
-			_mm_store_si128(&xmm1, _mm_sub_epi16(xmm1, _mm_set1_epi16(8912)));
+			_mm_store_si128(&xmm1, _mm_sub_epi16(xmm1, xmm8912));
 			_mm_store_si128(&xmm1, _mm_srai_epi16(xmm1, 5)); // >> 5
 			// xmm4 = RBRBRBRBRBRB
 			_mm_store_si128(&xmm4, _mm_unpacklo_epi16(xmm0, xmm1)); // low16(RBRBRBRBRBRB)
@@ -296,7 +299,7 @@ void i420ToRGBAKernel11_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yP
 			_mm_store_si128(&xmm2, _mm_maddubs_epi16(xmm2, xmmGCoeffs));
 			_mm_store_si128(&xmm3, _mm_maddubs_epi16(xmm3, xmmGCoeffs));
 			_mm_store_si128(&xmm2, _mm_hadd_epi16(xmm2, xmm3));
-			_mm_store_si128(&xmm2, _mm_add_epi16(xmm2, _mm_set1_epi16(4400)));
+			_mm_store_si128(&xmm2, _mm_add_epi16(xmm2, xmm4400));
 			_mm_store_si128(&xmm2, _mm_srai_epi16(xmm2, 5)); // >> 5
 			// xmm3 = GAGAGAGAGAGAGA
 			_mm_store_si128(&xmm3, _mm_unpacklo_epi16(xmm2, xmmAlpha)); // low16(GAGAGAGAGAGAGA)

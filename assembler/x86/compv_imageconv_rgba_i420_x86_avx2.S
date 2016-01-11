@@ -201,9 +201,6 @@ sym(rgbaToI420Kernel11_CompY_Asm_Aligned1_AVX2):
 			vphaddw ymm2, ymm3 ; 0000111100001111
 			vphaddw ymm4, ymm5 ; 2222333322223333
 
-			vpermq ymm2, ymm2, 0xD8 ; 0000000011111111
-			vpermq ymm4, ymm4, 0xD8 ; 2222222233333333
-
 			vpsraw ymm2, 7 ; >> 7
 			vpsraw ymm4, 7 ; >> 7
 

@@ -162,13 +162,6 @@ enum {
 	COMPV_TOKENIDX_MAX
 };
 
-enum {
-	COMPV_FUNCID_RGBAToI420_Y,
-	COMPV_FUNCID_RGBAToI420_UV,
-
-	// no limitation
-};
-
 typedef struct _CompVImageInfo {
 	COMPV_IMAGE_FORMAT format;
 	COMPV_PIXEL_FORMAT pixelFormat;
