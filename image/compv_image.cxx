@@ -61,7 +61,7 @@ COMPV_ERROR_CODE CompVImage::setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, i
 COMPV_ERROR_CODE CompVImage::getBestStride(int32_t stride, int32_t *bestStride)
 {
 	COMPV_CHECK_EXP_RETURN(bestStride == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	*bestStride = (int32_t)CompVMem::alignForward(stride, COMPV_SIMD_ALIGNV_DEFAULT * 4); // most of the time we'll read the data per pack of 4 vecs
+	*bestStride = (int32_t)CompVMem::alignForward(stride, CompVMem::getBestAlignment());
 	return COMPV_ERROR_CODE_S_OK;
 }
 

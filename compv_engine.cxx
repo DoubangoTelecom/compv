@@ -18,6 +18,7 @@
 * along with CompV.
 */
 #include "compv/compv_engine.h"
+#include "compv/compv_mem.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
 #include "compv/time/compv_time.h"
@@ -57,11 +58,11 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
 	// Make sure sizeof(vcomp_scalar_t) is correct
 #if defined(COMPV_ASM) || defined(COMPV_INTRINSIC)
 	if (sizeof(vcomp_scalar_t) != sizeof(void*)) {
-		COMPV_DEBUG_ERROR("sizeof(vcomp_scalar_t)= %d not equal to sizeof(void*)=%d", sizeof(vcomp_scalar_t), sizeof(void*));
+		COMPV_DEBUG_ERROR("sizeof(vcomp_scalar_t)= #%d not equal to sizeof(void*)= #%d", sizeof(vcomp_scalar_t), sizeof(void*));
 		return COMPV_ERROR_CODE_E_SYSTEM;
 	}
 #endif
-	COMPV_DEBUG_INFO("sizeof(vcomp_scalar_t)=%d", sizeof(vcomp_scalar_t));
+	COMPV_DEBUG_INFO("sizeof(vcomp_scalar_t)= #%d", sizeof(vcomp_scalar_t));
 
 	// endianness
 	// https://developer.apple.com/library/mac/documentation/Darwin/Conceptual/64bitPorting/MakingCode64-BitClean/MakingCode64-BitClean.html
@@ -97,6 +98,7 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
 	COMPV_CHECK_CODE_BAIL(err_ = CompVCpu::init());
 	COMPV_DEBUG_INFO("CPU features: %s", CompVCpu::getFlagsAsString(CompVCpu::getFlags()));
 	COMPV_DEBUG_INFO("CPU cores: #%d", CompVCpu::getCoresCount());
+	COMPV_DEBUG_INFO("CPU cache line size: #%d", CompVCpu::getCacheLineSize());
 #if defined(COMPV_ARCH_X86)
 	// even if we are on X64 CPU it's possible that we're running a 32-bit binary
 #	if defined(COMPV_ARCH_X64)
@@ -117,6 +119,10 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
 #elif defined(__AVX__)
 	COMPV_DEBUG_INFO("Code built with option /arch:AVX");
 #endif
+
+	/* Memory alignment */
+	COMPV_DEBUG_INFO("Default alignment: #%d", COMPV_SIMD_ALIGNV_DEFAULT);
+	COMPV_DEBUG_INFO("Best alignment: #%d", CompVMem::getBestAlignment());
 
 	COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
 

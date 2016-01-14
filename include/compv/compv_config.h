@@ -352,23 +352,4 @@
 #include <config.h>
 #endif
 
-// Next code must be after 'config.h' to make sure we have final values
-// Before 'config.h' we only defined the default values
-
-#if defined(COMPV_INTRINSIC)
-#	define COMPV_EXEC_IFDEF_INTRINSIC(EXPR) do { (EXPR); } while(0)
-#else
-#	define COMPV_EXEC_IFDEF_INTRINSIC(EXPR) 	
-#endif
-#if defined(COMPV_ASM)
-#	define COMPV_EXEC_IFDEF_ASM(EXPR) do { (EXPR); } while(0)
-#else
-#	define COMPV_EXEC_IFDEF_ASM(EXPR) 	
-#endif
-#if defined(COMPV_ASM) && defined(COMPV_ARCH_X64)
-#	define COMPV_EXEC_IFDEF_ASM_X64(EXPR) do { (EXPR); } while(0)
-#else
-#	define COMPV_EXEC_IFDEF_ASM_X64(EXPR) 	
-#endif
-
 #endif /* _COMPV_CONFIG_H_ */

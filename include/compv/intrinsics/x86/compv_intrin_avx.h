@@ -43,6 +43,17 @@ The next macros change the behavior to consider the AVX registers as a single 25
 #define compv_avx2_unpacklo_epi16(ymm0_, ymm1_)		_mm256_unpacklo_epi16(_mm256_permute4x64_epi64(ymm0_, COMPV_MM_SHUFFLE(3, 1, 2, 0)), _mm256_permute4x64_epi64(ymm1_, COMPV_MM_SHUFFLE(3, 1, 2, 0)))
 #define compv_avx2_unpackhi_epi16(ymm0_, ymm1_)		_mm256_unpackhi_epi16(_mm256_permute4x64_epi64(ymm0_, COMPV_MM_SHUFFLE(3, 1, 2, 0)), _mm256_permute4x64_epi64(ymm1_, COMPV_MM_SHUFFLE(3, 1, 2, 0)))
 
+/*
+Index for the 64bit packed values
+*/
+#define COMPV_AVX_A64 0
+#define COMPV_AVX_B64 1
+#define COMPV_AVX_C64 2
+#define COMPV_AVX_D64 3
+#define COMPV_AVX_E64 4
+#define COMPV_AVX_F64 5
+#define COMPV_AVX_G64 6
+#define COMPV_AVX_H64 7
 
 COMPV_NAMESPACE_END()
 

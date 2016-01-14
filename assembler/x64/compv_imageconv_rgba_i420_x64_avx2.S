@@ -58,9 +58,10 @@ extern sym(k5_i8)
 	extern sym(kYUVToRGBA_RCoeffs8)
 	extern sym(kYUVToRGBA_GCoeffs8)
 	extern sym(kYUVToRGBA_BCoeffs8)
-	extern sym(kMaskstore_0_i64)
-	extern sym(kMaskstore_0_1_i64)
-	extern sym(kMaskstore_0_i32)
+	extern sym(kAVXMaskstore_0_i64)
+	extern sym(kAVXMaskstore_0_1_i64)
+	extern sym(kAVXMaskstore_0_i32)
+	extern sym(kAVXPermutevar8x32_AEBFCGDH_i32)
 
 section .text
 
@@ -93,7 +94,7 @@ section .text
 
 	vmovdqa ymm0, [sym(kRGBAToYUV_YCoeffs8)] ; ymmYCoeffs
 	vmovdqa ymm1, [sym(k16_i16)] ; ymm16
-	vmovdqa ymm3, [sym(kMaskstore_0_i64)] ; ymmMaskToExtractFirst64Bits
+	vmovdqa ymm3, [sym(kAVXMaskstore_0_i64)] ; ymmMaskToExtractFirst64Bits
 
 	.LoopHeight:
 		xor r9, r9
@@ -184,6 +185,7 @@ sym(rgbaToI420Kernel11_CompY_Asm_X64_Aligned1_AVX2):
 
 	vmovdqa ymm0, [sym(kRGBAToYUV_YCoeffs8)] ; ymmYCoeffs
 	vmovdqa ymm1, [sym(k16_i16)] ; ymm16
+	vmovdqa ymm6, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)] ; ymmAEBFCGDH
 
 	.LoopHeight:
 		xor r9, r9
@@ -205,11 +207,8 @@ sym(rgbaToI420Kernel11_CompY_Asm_X64_Aligned1_AVX2):
 			vpmaddubsw ymm4, ymm0
 			vpmaddubsw ymm5, ymm0
 
-			vphaddw ymm2, ymm3 ; 0000111100001111
-			vphaddw ymm4, ymm5 ; 2222333322223333
-
-			vpermq ymm2, ymm2, 0xD8 ; 0000000011111111
- 			vpermq ymm4, ymm4, 0xD8 ; 2222222233333333
+			vphaddw ymm2, ymm3 ; hadd(ABCD) -> ACBD
+			vphaddw ymm4, ymm5 ; hadd(EFGH) -> EGFH
 
 			vpsraw ymm2, 7 ; >> 7
 			vpsraw ymm4, 7 ; >> 7
@@ -217,9 +216,10 @@ sym(rgbaToI420Kernel11_CompY_Asm_X64_Aligned1_AVX2):
 			vpaddw ymm2, ymm1 ; + 16
 			vpaddw ymm4, ymm1 ; + 16
 
-			vpackuswb ymm2, ymm4 ; Saturate(I16 -> U8): 002200220022...
+			vpackuswb ymm2, ymm4 ; Saturate(I16 -> U8): packus(ACBD, EGFH) -> AEBFCGDH
 
-			vpermq ymm2, ymm2, 0xD8 ; 000000022222.....
+			; Final permute
+			vpermd ymm2, ymm6, ymm2
 
 			%if %2 == 1
 			vmovdqa [r10], ymm2
@@ -324,7 +324,7 @@ sym(rgbaToI420Kernel41_CompY_Asm_X64_Aligned11_AVX2):
 
 	vzeroupper
 
-	vmovdqa ymm0, [sym(kMaskstore_0_i32)] ; ymmMaskToExtractFirst32Bits
+	vmovdqa ymm0, [sym(kAVXMaskstore_0_i32)] ; ymmMaskToExtractFirst32Bits
 	vmovdqa ymm1, [sym(k128_i16)] ; ymm128
 	vmovdqa ymm3, [sym(kRGBAToYUV_U4V4Coeffs8)] ; ymmUV4Coeffs	
 
@@ -430,10 +430,11 @@ sym(rgbaToI420Kernel11_CompUV_Asm_X64_Aligned1xx_AVX2):
 
 	vzeroupper
 
-	vmovdqa ymm0, [sym(kMaskstore_0_1_i64)] ; ymmMaskToExtract128bits
+	vmovdqa ymm0, [sym(kAVXMaskstore_0_1_i64)] ; ymmMaskToExtract128bits
 	vmovdqa ymm1, [sym(k128_i16)] ; ymm128
 	vmovdqa ymm8, [sym(kRGBAToYUV_UCoeffs8)] ; ymmUCoeffs
 	vmovdqa ymm9, [sym(kRGBAToYUV_VCoeffs8)] ; ymmVCoeffs
+	vmovdqa ymm10, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)] ; ymmAEBFCGDH
 
 	.LoopHeight:
 		xor r9, r9
@@ -475,8 +476,6 @@ sym(rgbaToI420Kernel11_CompUV_Asm_X64_Aligned1xx_AVX2):
 
 			vphaddw ymm4, ymm6
 			vphaddw ymm5, ymm7
-			vpermq ymm4, ymm4, 0xD8
-			vpermq ymm5, ymm5, 0xD8
 
 			vpsraw ymm4, 8 ; >> 8
 			vpsraw ymm5, 8 ; >> 8
@@ -485,9 +484,11 @@ sym(rgbaToI420Kernel11_CompUV_Asm_X64_Aligned1xx_AVX2):
 			vpaddw ymm5, ymm1 ; +128
 
 			; UV = ymm4
-
+			
 			vpackuswb ymm4, ymm5 ; Packs + Saturate(I16 -> U8)
-			vpermq ymm4, ymm4, 0xD8
+
+			; Final Permute
+			vpermd ymm4, ymm10, ymm4
 
 			%if %2 == 1
 			vextractf128 [rcx], ymm4, 0
@@ -613,7 +614,7 @@ sym(rgbaToI420Kernel41_CompUV_Asm_X64_Aligned111_AVX2):
 
 	vzeroupper
 
-	vmovdqa ymm11, [sym(kMaskstore_0_1_i64)]
+	vmovdqa ymm11, [sym(kAVXMaskstore_0_1_i64)]
 	vmovdqa ymm12, [sym(kYUVToRGBA_RCoeffs8)]
 	vmovdqa ymm13, [sym(kYUVToRGBA_BCoeffs8)]
 	vmovdqa ymm14, [sym(kYUVToRGBA_GCoeffs8)]

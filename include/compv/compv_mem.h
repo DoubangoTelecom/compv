@@ -50,14 +50,16 @@ public:
 	static void* calloc(size_t num, size_t size);
 	static void free(void** ptr);
 
-	static void* mallocAligned(size_t size, size_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
-	static void* reallocAligned(void * ptr, size_t size, size_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
-	static void* callocAligned(size_t num, size_t size, size_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
+	static void* mallocAligned(size_t size, int alignment = CompVMem::getBestAlignment());
+	static void* reallocAligned(void * ptr, size_t size, int alignment = CompVMem::getBestAlignment());
+	static void* callocAligned(size_t num, size_t size, int alignment = CompVMem::getBestAlignment());
 	static void freeAligned(void** ptr);
 	
-	static uintptr_t alignBackward(uintptr_t ptr, int32_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
-	static uintptr_t alignForward(uintptr_t ptr, int32_t alignment = COMPV_SIMD_ALIGNV_DEFAULT);
+	static uintptr_t alignBackward(uintptr_t ptr, int alignment = CompVMem::getBestAlignment());
+	static uintptr_t alignForward(uintptr_t ptr, int alignment = CompVMem::getBestAlignment());
+	static size_t alignSizeOnCacheLineAndSIMD(size_t size);
 
+	static int getBestAlignment();
 	static bool isSpecial(void* ptr);
 
 private:

@@ -18,6 +18,7 @@
 * along with CompV.
 */
 #include "compv/compv_mem.h"
+#include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -147,7 +148,7 @@ void CompVMem::free(void** ptr)
 		}
 	}
 
-void* CompVMem::mallocAligned(size_t size, size_t alignment/*= COMPV_SIMD_ALIGNV_DEFAULT*/)
+void* CompVMem::mallocAligned(size_t size, int alignment/*= COMPV_SIMD_ALIGNV_DEFAULT*/)
 {
 	void* pMem;
 #if COMPV_OS_WINDOWS && !COMPV_UNDER_OS_CE && !COMPV_OS_WINDOWS_RT
@@ -166,7 +167,7 @@ void* CompVMem::mallocAligned(size_t size, size_t alignment/*= COMPV_SIMD_ALIGNV
 	return pMem;
 }
 
-void* CompVMem::reallocAligned(void* ptr, size_t size, size_t alignment/*= COMPV_SIMD_ALIGNV_DEFAULT*/)
+void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= COMPV_SIMD_ALIGNV_DEFAULT*/)
 {
 	if (ptr && !isSpecial(ptr)) {
 		COMPV_DEBUG_FATAL("Using reallocAligned on no-special address: %x", (uintptr_t)ptr);
@@ -191,7 +192,7 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, size_t alignment/*= COMPV
 	return pMem;
 }
 
-void* CompVMem::callocAligned(size_t num, size_t size, size_t alignment/*= COMPV_SIMD_ALIGNV_DEFAULT*/)
+void* CompVMem::callocAligned(size_t num, size_t size, int alignment/*= COMPV_SIMD_ALIGNV_DEFAULT*/)
 {
 	void* pMem = CompVMem::mallocAligned((size * num), alignment);
 	if (pMem) {
@@ -219,16 +220,36 @@ void CompVMem::freeAligned(void** ptr)
 }
 
 // alignment must be power of two
-uintptr_t CompVMem::alignBackward(uintptr_t ptr, int32_t alignment /*= COMPV_SIMD_ALIGNV_DEFAULT*/)
+uintptr_t CompVMem::alignBackward(uintptr_t ptr, int alignment /*= COMPV_SIMD_ALIGNV_DEFAULT*/)
 {
 	COMPV_ASSERT(COMPV_IS_POW2(alignment));
 	return (ptr & -alignment);
 }
 
-uintptr_t CompVMem::alignForward(uintptr_t ptr, int32_t alignment /*= COMPV_SIMD_ALIGNV_DEFAULT*/)
+uintptr_t CompVMem::alignForward(uintptr_t ptr, int alignment /*= COMPV_SIMD_ALIGNV_DEFAULT*/)
 {
 	COMPV_ASSERT(COMPV_IS_POW2(alignment));
 	return (ptr + (alignment - 1)) & -alignment;
+}
+
+int CompVMem::getBestAlignment()
+{
+	static int _bestAlignment = 0;
+	if (_bestAlignment == 0) {
+		_bestAlignment = COMPV_SIMD_ALIGNV_DEFAULT;
+		const int L1CacheSize = CompVCpu::getCacheLineSize(); // probably #64 or #128
+		if (L1CacheSize > _bestAlignment && L1CacheSize <= 128 && (L1CacheSize & (_bestAlignment - 1)) == 0) {
+			_bestAlignment = L1CacheSize;
+		}
+	}
+	return _bestAlignment;
+}
+
+// Align the size on cache line to avoid false sharing: https://software.intel.com/en-us/articles/avoiding-and-identifying-false-sharing-among-threads
+// This also make sure we'll have the right alignment required by the active SIMD implementation (e.g. AVX or NEON)
+size_t CompVMem::alignSizeOnCacheLineAndSIMD(size_t size)
+{
+	return CompVMem::alignForward((uintptr_t)size, CompVMem::getBestAlignment());
 }
 
 // Allocated using mallocAligned, callocAligned or reallocAligned

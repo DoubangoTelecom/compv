@@ -27,11 +27,12 @@ static COMPV_ERROR_CODE task1_f(const struct compv_asynctoken_param_xs* pc_param
 
 bool TestThreadDisp()
 {
-#define THREADS_COUNT	7 // should be the number of CPUs - 1
+#define THREADS_COUNT	-1 // should be the number of CPUs - 1
 #define WIDTH	1920
 #define HEIGHT	1080
 #define SIZE	(WIDTH * HEIGHT * 4)
 #define TOKEN0	0
+#define ALIGN_ON_CACHELINE 1
 	uint8_t* data = (uint8_t*)CompVMem::mallocAligned(SIZE);
 	COMPV_ASSERT(data != NULL);
 	vcomp_core_id_t coreId_ = 0;
@@ -43,10 +44,14 @@ bool TestThreadDisp()
 	// Start the tasks (each one has a single tocken with id = 0)
 	timeStart = CompVTime::getNowMills();
 #if 1 // Using async tasks
-	int32_t interval = SIZE / THREADS_COUNT;
+#if ALIGN_ON_CACHELINE
+	int32_t interval = (int32_t)CompVMem::alignSizeOnCacheLineAndSIMD((SIZE + (disp_->getThreadsCount() - 1)) / disp_->getThreadsCount());
+#else
+	int32_t interval = (SIZE + (disp_->getThreadsCount() - 1)) / disp_->getThreadsCount();
+#endif
 	int32_t start = 0, end = interval;
 	for (int32_t treadIdx = 0; treadIdx < disp_->getThreadsCount(); ++treadIdx) {
-		COMPV_CHECK_CODE_ASSERT(disp_->execute(treadIdx, treadIdx, task1_f,
+		COMPV_CHECK_CODE_ASSERT(disp_->execute(treadIdx, TOKEN0, task1_f,
 			COMPV_ASYNCTASK_SET_PARAM_ASIS(start),
 			COMPV_ASYNCTASK_SET_PARAM_ASIS(end),
 			COMPV_ASYNCTASK_SET_PARAM_ASIS(data),

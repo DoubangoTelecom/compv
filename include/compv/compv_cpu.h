@@ -96,10 +96,16 @@ public:
 	static bool isSupported(uint64_t flag){ return (s_uFlags & flag) == flag; }
 	static COMPV_ERROR_CODE flagsDisable(uint64_t flags);
 	static COMPV_ERROR_CODE flagsEnable(uint64_t flags);
+	static COMPV_ERROR_CODE setAsmEnabled(bool bEnabled);
+	static COMPV_ERROR_CODE setIntrinsicsEnabled(bool bEnabled);
+	static bool isAsmEnabled() { return CompVCpu::s_bAsmEnabled; }
+	static bool isIntrinsicsEnabled() { return CompVCpu::s_bIntrinsicsEnabled; }
 
 private:
 	static uint64_t s_uFlags;
 	static uint64_t s_uFlagsDisabled;
+	static bool s_bAsmEnabled;
+	static bool s_bIntrinsicsEnabled;
 };
 
 COMPV_NAMESPACE_END()

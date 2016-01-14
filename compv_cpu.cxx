@@ -17,15 +17,6 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-/*
-*  Copyright 2011 The LibYuv Project Authors. All rights reserved.
-*
-*  Use of this source code is governed by a BSD-style license
-*  that can be found in the LICENSE file in the root of the source
-*  tree. An additional intellectual property rights grant can be found
-*  in the file PATENTS. All contributing project authors may
-*  be found in the AUTHORS file in the root of the source tree.
-*/
 
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
@@ -170,6 +161,8 @@ static uint64_t CompVMipsCaps(const char* search_string)
 
 uint64_t CompVCpu::s_uFlags = 0;
 uint64_t CompVCpu::s_uFlagsDisabled = 0;
+bool CompVCpu::s_bAsmEnabled = true;
+bool CompVCpu::s_bIntrinsicsEnabled = true;
 
 CompVCpu::CompVCpu()
 {
@@ -459,6 +452,42 @@ COMPV_ERROR_CODE CompVCpu::flagsEnable(uint64_t flags)
 	COMPV_DEBUG_INFO("Enabling CPU flags: %s", getFlagsAsString(flags));
 	s_uFlagsDisabled &= ~flags;
 	return CompVCpu::init();
+}
+
+COMPV_ERROR_CODE CompVCpu::setAsmEnabled(bool bEnabled)
+{
+	if (bEnabled) {
+#if !defined(COMPV_ASM)
+		COMPV_DEBUG_ERROR("Code source was not build with ASM. You can't enable ASM at runtime");
+		return COMPV_ERROR_CODE_E_INVALID_CALL;
+#else
+		COMPV_DEBUG_INFO("Enabling asm code");
+		CompVCpu::s_bAsmEnabled = true;
+#endif
+	}
+	else {
+		COMPV_DEBUG_INFO("Disabling asm code");
+		CompVCpu::s_bAsmEnabled = false;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVCpu::setIntrinsicsEnabled(bool bEnabled)
+{
+	if (bEnabled) {
+#if !defined(COMPV_INTRINSIC)
+		COMPV_DEBUG_ERROR("Code source was not build with intrinsics. You can't enable intrinsics at runtime");
+		return COMPV_ERROR_CODE_E_INVALID_CALL;
+#else
+		COMPV_DEBUG_INFO("Enabling intrinsic code");
+		CompVCpu::s_bIntrinsicsEnabled = true;
+#endif
+	}
+	else {
+		COMPV_DEBUG_INFO("Disabling intrinsic code");
+		CompVCpu::s_bIntrinsicsEnabled = false;
+	}
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()
