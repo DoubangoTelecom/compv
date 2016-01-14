@@ -14,3 +14,4 @@
 /tests/image/i420.yuv
 Release
 /tests/image/Debug
+*.orig

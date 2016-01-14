@@ -24,103 +24,148 @@
 COMPV_NAMESPACE_BEGIN()
 
 CompVBuffer::CompVBuffer(const void* pcPtr /*= NULL*/, int32_t size /*= 0*/)
-: CompVObj()
-, m_pPtr(NULL)
-, m_nSize(0)
+    : CompVObj()
+    , m_pPtr(NULL)
+    , m_nSize(0)
+    , m_bOweMem(true)
 {
-	if (pcPtr && size) {
-		COMPV_ASSERT(COMPV_ERROR_CODE_IS_OK(copyData(pcPtr, size)));
-	}
-}
-
-COMPV_ERROR_CODE CompVBuffer::copyData(const void* pcPtr, int32_t size)
-{
-	if (!pcPtr || !size) {
-		COMPV_DEBUG_ERROR("Invalid parameter");
-		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
-	COMPV_ASSERT((m_pPtr = CompVMem::realloc(m_pPtr, size)) != NULL);
-	if (m_pPtr) {
-		m_nSize = size;
-		memcpy(m_pPtr, pcPtr, size);
-	}
-	else {
-		COMPV_DEBUG_FATAL("Failed to allocate buffer with size = %lu", size);
-		return COMPV_ERROR_CODE_E_OUT_OF_MEMORY;
-	}
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVBuffer::takeData(void** ppPtr, int32_t size)
-{
-	if (!ppPtr || !*ppPtr || !size) {
-		COMPV_DEBUG_ERROR("Invalid parameter");
-		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
-	CompVMem::free(&m_pPtr);
-	m_pPtr = *ppPtr, *ppPtr = NULL;
-	m_nSize = size;
-	return COMPV_ERROR_CODE_S_OK;
+    if (pcPtr && size) {
+        COMPV_ASSERT(COMPV_ERROR_CODE_IS_OK(copyData(pcPtr, size)));
+    }
 }
 
 CompVBuffer::~CompVBuffer()
 {
-	CompVMem::free(&m_pPtr);
+    if (m_bOweMem) {
+        CompVMem::free(&m_pPtr);
+    }
+}
+
+COMPV_ERROR_CODE CompVBuffer::copyData(const void* pcPtr, int32_t size)
+{
+    if (!pcPtr || !size) {
+        COMPV_DEBUG_ERROR("Invalid parameter");
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
+    if (m_bOweMem) {
+        COMPV_ASSERT((m_pPtr = CompVMem::realloc(m_pPtr, size)) != NULL);
+    }
+    else {
+        COMPV_ASSERT((m_pPtr = CompVMem::malloc(size)) != NULL);
+        m_bOweMem = true;
+    }
+    if (m_pPtr) {
+        m_nSize = size;
+        CompVMem::copy(m_pPtr, pcPtr, size);
+    }
+    else {
+        COMPV_DEBUG_FATAL("Failed to allocate buffer with size = %lu", size);
+        return COMPV_ERROR_CODE_E_OUT_OF_MEMORY;
+    }
+    return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVBuffer::refData(const void* pcPtr, int32_t size)
+{
+    if (!pcPtr || !size) {
+        COMPV_DEBUG_ERROR("Invalid parameter");
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
+    if (m_bOweMem) {
+        CompVMem::free(&m_pPtr);
+    }
+    m_pPtr = (void*)pcPtr;
+    m_nSize = size;
+    m_bOweMem = false;
+    return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVBuffer::takeData(void** ppPtr, int32_t size)
+{
+    if (!ppPtr || !*ppPtr || !size) {
+        COMPV_DEBUG_ERROR("Invalid parameter");
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
+    if (m_bOweMem) {
+        CompVMem::free(&m_pPtr);
+    }
+    m_pPtr = *ppPtr, *ppPtr = NULL;
+    m_nSize = size;
+    m_bOweMem = true;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVBuffer::newObj(const void* pcPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer)
 {
-	if (!buffer) {
-		COMPV_DEBUG_ERROR("Invalid parameter");
-		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
-	*buffer = new CompVBuffer(pcPtr, size);
-	if (!*buffer) {
-		COMPV_DEBUG_ERROR("Failed to alloc new 'CompVBuffer' object");
-		return COMPV_ERROR_CODE_E_OUT_OF_MEMORY;
-	}
-	return COMPV_ERROR_CODE_S_OK;
+    if (!buffer) {
+        COMPV_DEBUG_ERROR("Invalid parameter");
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
+    *buffer = new CompVBuffer(pcPtr, size);
+    if (!*buffer) {
+        COMPV_DEBUG_ERROR("Failed to alloc new 'CompVBuffer' object");
+        return COMPV_ERROR_CODE_E_OUT_OF_MEMORY;
+    }
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVBuffer::newObjAndNullData(CompVObjWrapper<CompVBuffer*>* buffer)
 {
-	return CompVBuffer::newObj(NULL, 0, buffer);
+    return CompVBuffer::newObj(NULL, 0, buffer);
 }
 
 COMPV_ERROR_CODE CompVBuffer::newObjAndTakeData(void** ppPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer)
 {
-	CompVObjWrapper<CompVBuffer*> buffer_;
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+    CompVObjWrapper<CompVBuffer*> buffer_;
+    COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
-	if (!buffer) {
-		COMPV_DEBUG_ERROR("Invalid parameter");
-		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
+    if (!buffer) {
+        COMPV_DEBUG_ERROR("Invalid parameter");
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
 
-	COMPV_CHECK_CODE_BAIL(err = CompVBuffer::newObjAndNullData(&buffer_));
-	COMPV_CHECK_CODE_BAIL(err = buffer_->takeData(ppPtr, size));
-	*buffer = buffer_;
+    COMPV_CHECK_CODE_BAIL(err = CompVBuffer::newObjAndNullData(&buffer_));
+    COMPV_CHECK_CODE_BAIL(err = buffer_->takeData(ppPtr, size));
+    *buffer = buffer_;
 
 bail:
-	return err;
+    return err;
 }
 
 COMPV_ERROR_CODE CompVBuffer::newObjAndCopyData(const void* pcPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer)
 {
-	CompVObjWrapper<CompVBuffer*> buffer_;
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+    CompVObjWrapper<CompVBuffer*> buffer_;
+    COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
-	if (!buffer) {
-		COMPV_DEBUG_ERROR("Invalid parameter");
-		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
+    if (!buffer) {
+        COMPV_DEBUG_ERROR("Invalid parameter");
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
 
-	COMPV_CHECK_CODE_BAIL(err = CompVBuffer::newObjAndNullData(&buffer_));
-	COMPV_CHECK_CODE_BAIL(err = buffer_->copyData(pcPtr, size));
-	*buffer = buffer_;
+    COMPV_CHECK_CODE_BAIL(err = CompVBuffer::newObjAndNullData(&buffer_));
+    COMPV_CHECK_CODE_BAIL(err = buffer_->copyData(pcPtr, size));
+    *buffer = buffer_;
 
 bail:
-	return err;
+    return err;
+}
+
+COMPV_ERROR_CODE CompVBuffer::newObjAndRefData(const void* pcPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer)
+{
+    CompVObjWrapper<CompVBuffer*> buffer_;
+    COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+
+    if (!buffer) {
+        COMPV_DEBUG_ERROR("Invalid parameter");
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
+
+    COMPV_CHECK_CODE_BAIL(err = CompVBuffer::newObjAndNullData(&buffer_));
+    COMPV_CHECK_CODE_BAIL(err = buffer_->refData(pcPtr, size));
+    *buffer = buffer_;
+
+bail:
+    return err;
 }
 
 COMPV_NAMESPACE_END()

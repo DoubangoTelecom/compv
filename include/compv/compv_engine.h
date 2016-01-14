@@ -35,6 +35,7 @@ protected:
 public:
 	virtual ~CompVEngine();
 	static COMPV_ERROR_CODE init(int32_t numThreads = -1);
+	static COMPV_ERROR_CODE deInit();
 	static CompVObjWrapper<CompVThreadDispatcher* >& getThreadDispatcher();
 	static COMPV_ERROR_CODE multiThreadingEnable(CompVObjWrapper<CompVThreadDispatcher* > dispatcher);
 	static COMPV_ERROR_CODE multiThreadingDisable();

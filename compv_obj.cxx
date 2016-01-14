@@ -17,26 +17,11 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#include "compv/compv_common.h"
-#include "compv/compv_debug.h"
+#include "compv/compv_obj.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-// Private function used as extern
-COMPV_API const char* CompVGetErrorString(COMPV_ERROR_CODE code)
-{
-    switch (code) {
-    case COMPV_ERROR_CODE_S_OK:
-        return "Success";
-    case COMPV_ERROR_CODE_E_NOT_INITIALIZED:
-        return "Not initialized";
-    case COMPV_ERROR_CODE_E_INVALID_PARAMETER:
-        return "Invalid parameter";
-    case COMPV_ERROR_CODE_E_INVALID_STATE:
-        return "Invalid state";
-    default:
-        return "Unknown code";
-    }
-}
+long CompVObj::s_nObjCount = 0;
 
 COMPV_NAMESPACE_END()
+

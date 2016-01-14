@@ -47,145 +47,153 @@ CompVEngine:: ~CompVEngine()
 
 COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
 {
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
-	if (s_bInitialized) {
-		return COMPV_ERROR_CODE_S_OK;
-	}
+    if (s_bInitialized) {
+        return COMPV_ERROR_CODE_S_OK;
+    }
 
-	COMPV_DEBUG_INFO("Initializing engine (v %s)...", COMPV_VERSION_STRING);
+    COMPV_DEBUG_INFO("Initializing engine (v %s)...", COMPV_VERSION_STRING);
 
-	// Make sure sizeof(vcomp_scalar_t) is correct
+    // Make sure sizeof(vcomp_scalar_t) is correct
 #if defined(COMPV_ASM) || defined(COMPV_INTRINSIC)
-	if (sizeof(vcomp_scalar_t) != sizeof(void*)) {
-		COMPV_DEBUG_ERROR("sizeof(vcomp_scalar_t)= #%d not equal to sizeof(void*)= #%d", sizeof(vcomp_scalar_t), sizeof(void*));
-		return COMPV_ERROR_CODE_E_SYSTEM;
-	}
+    if (sizeof(vcomp_scalar_t) != sizeof(void*)) {
+        COMPV_DEBUG_ERROR("sizeof(vcomp_scalar_t)= #%d not equal to sizeof(void*)= #%d", sizeof(vcomp_scalar_t), sizeof(void*));
+        return COMPV_ERROR_CODE_E_SYSTEM;
+    }
 #endif
-	COMPV_DEBUG_INFO("sizeof(vcomp_scalar_t)= #%d", sizeof(vcomp_scalar_t));
+    COMPV_DEBUG_INFO("sizeof(vcomp_scalar_t)= #%d", sizeof(vcomp_scalar_t));
 
-	// endianness
-	// https://developer.apple.com/library/mac/documentation/Darwin/Conceptual/64bitPorting/MakingCode64-BitClean/MakingCode64-BitClean.html
+    // endianness
+    // https://developer.apple.com/library/mac/documentation/Darwin/Conceptual/64bitPorting/MakingCode64-BitClean/MakingCode64-BitClean.html
 #if TARGET_RT_LITTLE_ENDIAN
-	s_bBigEndian = false;
+    s_bBigEndian = false;
 #elif TARGET_RT_BIG_ENDIAN
-	s_bBigEndian = true;
+    s_bBigEndian = true;
 #else
-	static const short kWord = 0x4321;
-	s_bBigEndian = ((*(int8_t *)&kWord) != 0x21);
+    static const short kWord = 0x4321;
+    s_bBigEndian = ((*(int8_t *)&kWord) != 0x21);
 #	if defined(COMPV_OS_WINDOWS)
-	if (s_bBigEndian) {
-		COMPV_DEBUG_WARN("Big endian on Windows machine. Is it right?");
-	}
+    if (s_bBigEndian) {
+        COMPV_DEBUG_WARN("Big endian on Windows machine. Is it right?");
+    }
 #	endif
 #endif
 
-	// rand()
-	srand((unsigned int)CompVTime::getNowMills());
+    // rand()
+    srand((unsigned int)CompVTime::getNowMills());
 
 #if defined(HAVE_GL_GLEW_H)
-	GLenum glewErr = glewInit();
-	if (GLEW_OK != glewErr) {
-		COMPV_DEBUG_ERROR("Initializing GLEW failed (%d): %s", glewErr, glewGetErrorString(glewErr));
-		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_GLEW);
-	}
+    GLenum glewErr = glewInit();
+    if (GLEW_OK != glewErr) {
+        COMPV_DEBUG_ERROR("Initializing GLEW failed (%d): %s", glewErr, glewGetErrorString(glewErr));
+        COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_GLEW);
+    }
 #endif
 
-	/* Image handlers initialization */
-	COMPV_CHECK_CODE_BAIL(err_ = CompVImageDecoder::init());
+    /* Image handlers initialization */
+    COMPV_CHECK_CODE_BAIL(err_ = CompVImageDecoder::init());
 
-	/* CPU features initialization */
-	COMPV_CHECK_CODE_BAIL(err_ = CompVCpu::init());
-	COMPV_DEBUG_INFO("CPU features: %s", CompVCpu::getFlagsAsString(CompVCpu::getFlags()));
-	COMPV_DEBUG_INFO("CPU cores: #%d", CompVCpu::getCoresCount());
-	COMPV_DEBUG_INFO("CPU cache line size: #%d", CompVCpu::getCacheLineSize());
+    /* CPU features initialization */
+    COMPV_CHECK_CODE_BAIL(err_ = CompVCpu::init());
+    COMPV_DEBUG_INFO("CPU features: %s", CompVCpu::getFlagsAsString(CompVCpu::getFlags()));
+    COMPV_DEBUG_INFO("CPU cores: #%d", CompVCpu::getCoresCount());
+    COMPV_DEBUG_INFO("CPU cache line size: #%d", CompVCpu::getCacheLineSize());
 #if defined(COMPV_ARCH_X86)
-	// even if we are on X64 CPU it's possible that we're running a 32-bit binary
+    // even if we are on X64 CPU it's possible that we're running a 32-bit binary
 #	if defined(COMPV_ARCH_X64)
-	COMPV_DEBUG_INFO("Binary type: X86_64");
+    COMPV_DEBUG_INFO("Binary type: X86_64");
 #	else
-	COMPV_DEBUG_INFO("Binary type: X86_32");
+    COMPV_DEBUG_INFO("Binary type: X86_32");
 #	endif
 #endif
 #if defined(COMPV_INTRINSIC)
-	COMPV_DEBUG_INFO("Intrinsic enabled");
+    COMPV_DEBUG_INFO("Intrinsic enabled");
 #endif
 #if defined(COMPV_ASM)
-	COMPV_DEBUG_INFO("Assembler enabled");
+    COMPV_DEBUG_INFO("Assembler enabled");
 #endif
-	// https://msdn.microsoft.com/en-us/library/jj620901.aspx
+    // https://msdn.microsoft.com/en-us/library/jj620901.aspx
 #if defined(__AVX2__)
-	COMPV_DEBUG_INFO("Code built with option /arch:AVX2");
+    COMPV_DEBUG_INFO("Code built with option /arch:AVX2");
 #elif defined(__AVX__)
-	COMPV_DEBUG_INFO("Code built with option /arch:AVX");
+    COMPV_DEBUG_INFO("Code built with option /arch:AVX");
 #endif
 
-	/* Memory alignment */
-	COMPV_DEBUG_INFO("Default alignment: #%d", COMPV_SIMD_ALIGNV_DEFAULT);
-	COMPV_DEBUG_INFO("Best alignment: #%d", CompVMem::getBestAlignment());
+    /* Memory alignment */
+    COMPV_DEBUG_INFO("Default alignment: #%d", COMPV_SIMD_ALIGNV_DEFAULT);
+    COMPV_DEBUG_INFO("Best alignment: #%d", CompVMem::getBestAlignment());
 
-	COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
+    COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
 
-	COMPV_DEBUG_INFO("Engine initialized");
+    COMPV_DEBUG_INFO("Engine initialized");
 
 bail:
-	s_bInitialized = COMPV_ERROR_CODE_IS_OK(err_);
-	// cleanup if initialization failed
-	if (!s_bInitialized) {
-		s_ThreadDisp = NULL;
-	}
-	else {
-		// The next functions are called here because they recursively call "CompVEngine::init()"
-		// We call them now because "s_bInitialized" is already set to "true" and this is the way to avoid endless loops
+    s_bInitialized = COMPV_ERROR_CODE_IS_OK(err_);
+    // cleanup if initialization failed
+    if (!s_bInitialized) {
+        s_ThreadDisp = NULL;
+    }
+    else {
+        // The next functions are called here because they recursively call "CompVEngine::init()"
+        // We call them now because "s_bInitialized" is already set to "true" and this is the way to avoid endless loops
 
-		// ThreadDispatcher
-		// maxThreads: <= 0 means choose the best one, ==1 means disable, > 1 means enable
-		if (numThreads > 1 || (numThreads <= 0 && CompVCpu::getCoresCount() > 1)) {
-			COMPV_CHECK_CODE_BAIL(err_ = CompVThreadDispatcher::newObj(&s_ThreadDisp, numThreads));
-		}
-	}
-	return err_;
+        // ThreadDispatcher
+        // maxThreads: <= 0 means choose the best one, ==1 means disable, > 1 means enable
+        if (numThreads > 1 || (numThreads <= 0 && CompVCpu::getCoresCount() > 1)) {
+            COMPV_CHECK_CODE_BAIL(err_ = CompVThreadDispatcher::newObj(&s_ThreadDisp, numThreads));
+        }
+    }
+    return err_;
+}
+
+COMPV_ERROR_CODE CompVEngine::deInit()
+{
+    s_bInitialized = false;
+    s_ThreadDisp = NULL;
+    // TODO(dmi): deInit other modules (not an issue because there is no memory allocation)
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 CompVObjWrapper<CompVThreadDispatcher* >& CompVEngine::getThreadDispatcher()
 {
-	return s_ThreadDisp;
+    return s_ThreadDisp;
 }
 
 COMPV_ERROR_CODE CompVEngine::multiThreadingEnable(CompVObjWrapper<CompVThreadDispatcher* > dispatcher)
 {
-	COMPV_CHECK_EXP_RETURN(!dispatcher, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	s_ThreadDisp = dispatcher;
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(!dispatcher, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    s_ThreadDisp = dispatcher;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVEngine::multiThreadingDisable()
 {
-	s_ThreadDisp = NULL;
-	return COMPV_ERROR_CODE_S_OK;
+    s_ThreadDisp = NULL;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVEngine::multiThreadingSetMaxThreads(size_t maxThreads)
 {
-	CompVObjWrapper<CompVThreadDispatcher *> newThreadDisp;
-	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::newObj(&newThreadDisp));
-	s_ThreadDisp = newThreadDisp;// TODO(dmi): function not optimal, we destroy all threads and create new ones
-	return COMPV_ERROR_CODE_S_OK;
+    CompVObjWrapper<CompVThreadDispatcher *> newThreadDisp;
+    COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::newObj(&newThreadDisp));
+    s_ThreadDisp = newThreadDisp;// TODO(dmi): function not optimal, we destroy all threads and create new ones
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 bool CompVEngine::isMultiThreadingEnabled()
 {
-	return !!s_ThreadDisp;
+    return !!s_ThreadDisp;
 }
 
 bool CompVEngine::isInitialized()
 {
-	return s_bInitialized;
+    return s_bInitialized;
 }
 
 bool CompVEngine::isBigEndian()
 {
-	return s_bBigEndian;
+    return s_bBigEndian;
 }
 
 COMPV_NAMESPACE_END()

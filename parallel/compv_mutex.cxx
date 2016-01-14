@@ -46,51 +46,51 @@ typedef MUTEX_S* MUTEX_T;
 COMPV_NAMESPACE_BEGIN()
 
 CompVMutex::CompVMutex(bool recursive /*= true*/)
-: m_pHandle(NULL)
+    : m_pHandle(NULL)
 {
 #if COMPV_OS_WINDOWS
 #	if COMPV_OS_WINDOWS_RT
-	m_pHandle = CreateMutexEx(NULL, NULL, 0x00000000, MUTEX_ALL_ACCESS);
+    m_pHandle = CreateMutexEx(NULL, NULL, 0x00000000, MUTEX_ALL_ACCESS);
 #	else
-	m_pHandle = CreateMutex(NULL, FALSE, NULL);
+    m_pHandle = CreateMutex(NULL, FALSE, NULL);
 #	endif
 #else
-	int ret;
-	pthread_mutexattr_t   mta;
+    int ret;
+    pthread_mutexattr_t   mta;
 
-	if ((ret = pthread_mutexattr_init(&mta))){
-		COMPV_DEBUG_ERROR("pthread_mutexattr_init failed with error code %d", ret);
-	}
-	if (recursive && (ret = pthread_mutexattr_settype(&mta, COMPV_RECURSIVE_MUTEXATTR))){
-		COMPV_DEBUG_ERROR("pthread_mutexattr_settype failed with error code %d", ret);
-		pthread_mutexattr_destroy(&mta);
-	}
+    if ((ret = pthread_mutexattr_init(&mta))) {
+        COMPV_DEBUG_ERROR("pthread_mutexattr_init failed with error code %d", ret);
+    }
+    if (recursive && (ret = pthread_mutexattr_settype(&mta, COMPV_RECURSIVE_MUTEXATTR))) {
+        COMPV_DEBUG_ERROR("pthread_mutexattr_settype failed with error code %d", ret);
+        pthread_mutexattr_destroy(&mta);
+    }
 
-	/* if we are here: all is ok */
-	m_pHandle = CompVMem::calloc(1, sizeof(MUTEX_S));
-	if (pthread_mutex_init((MUTEX_T)m_pHandle, &mta)) {
-		CompVMem::free((void**)m_pHandle);
-	}
-	pthread_mutexattr_destroy(&mta);
+    /* if we are here: all is ok */
+    m_pHandle = CompVMem::calloc(1, sizeof(MUTEX_S));
+    if (pthread_mutex_init((MUTEX_T)m_pHandle, &mta)) {
+        CompVMem::free((void**)m_pHandle);
+    }
+    pthread_mutexattr_destroy(&mta);
 #endif
 
-	if (!m_pHandle) {
-		COMPV_DEBUG_ERROR("Failed to create new mutex.");
-		COMPV_ASSERT(false);
-	}
+    if (!m_pHandle) {
+        COMPV_DEBUG_ERROR("Failed to create new mutex.");
+        COMPV_ASSERT(false);
+    }
 }
 
 CompVMutex::~CompVMutex()
 {
-	if (m_pHandle) {
+    if (m_pHandle) {
 #if COMPV_OS_WINDOWS
-		CloseHandle((MUTEX_T)m_pHandle);
-		m_pHandle = NULL;
+        CloseHandle((MUTEX_T)m_pHandle);
+        m_pHandle = NULL;
 #else
-		pthread_mutex_destroy((MUTEX_T)m_pHandle);
-		CompVMem::free((void**)m_pHandle);
+        pthread_mutex_destroy((MUTEX_T)m_pHandle);
+        CompVMem::free((void**)m_pHandle);
 #endif
-	}
+    }
 }
 
 /**
@@ -101,23 +101,23 @@ CompVMutex::~CompVMutex()
 */
 COMPV_ERROR_CODE CompVMutex::lock()
 {
-	int ret = EINVAL;
-	COMPV_CHECK_EXP_RETURN(m_pHandle == NULL, COMPV_ERROR_CODE_E_INVALID_STATE);
+    int ret = EINVAL;
+    COMPV_CHECK_EXP_RETURN(m_pHandle == NULL, COMPV_ERROR_CODE_E_INVALID_STATE);
 
 #if COMPV_OS_WINDOWS
 #	if COMPV_OS_WINDOWS_RT
-	if ((ret = WaitForSingleObjectEx((MUTEX_T)m_pHandle, INFINITE, TRUE)) == WAIT_FAILED)
+    if ((ret = WaitForSingleObjectEx((MUTEX_T)m_pHandle, INFINITE, TRUE)) == WAIT_FAILED)
 #	else
-	if ((ret = WaitForSingleObject((MUTEX_T)m_pHandle, INFINITE)) == WAIT_FAILED)
+    if ((ret = WaitForSingleObject((MUTEX_T)m_pHandle, INFINITE)) == WAIT_FAILED)
 #endif
 #else
-	if ((ret = pthread_mutex_lock((MUTEX_T)m_pHandle)))
+    if ((ret = pthread_mutex_lock((MUTEX_T)m_pHandle)))
 #endif
-	{
-		COMPV_DEBUG_ERROR("Failed to lock the mutex: %d", ret);
-		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_SYSTEM);
-	}
-	return COMPV_ERROR_CODE_S_OK;
+    {
+        COMPV_DEBUG_ERROR("Failed to lock the mutex: %d", ret);
+        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_SYSTEM);
+    }
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 
@@ -129,34 +129,34 @@ COMPV_ERROR_CODE CompVMutex::lock()
 */
 COMPV_ERROR_CODE CompVMutex::unlock()
 {
-	int ret = EINVAL;
-	COMPV_CHECK_EXP_RETURN(m_pHandle == NULL, COMPV_ERROR_CODE_E_INVALID_STATE);
-	
+    int ret = EINVAL;
+    COMPV_CHECK_EXP_RETURN(m_pHandle == NULL, COMPV_ERROR_CODE_E_INVALID_STATE);
+
 #if COMPV_OS_WINDOWS
-	if ((ret = ReleaseMutex((MUTEX_T)m_pHandle) ? 0 : -1)) {
-		ret = GetLastError();
+    if ((ret = ReleaseMutex((MUTEX_T)m_pHandle) ? 0 : -1)) {
+        ret = GetLastError();
 #else
-	if ((ret = pthread_mutex_unlock((MUTEX_T)m_pHandle))) {
+    if ((ret = pthread_mutex_unlock((MUTEX_T)m_pHandle))) {
 #endif
-		if (ret == COMPV_ERROR_NOT_OWNER) {
-			COMPV_DEBUG_WARN("The calling thread does not own the mutex: %d", ret);
-		}
-		else {
-			COMPV_DEBUG_ERROR("Failed to unlock the mutex: %d", ret);
-			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_SYSTEM);
-		}
-	}
-	return COMPV_ERROR_CODE_S_OK;
+        if (ret == COMPV_ERROR_NOT_OWNER) {
+            COMPV_DEBUG_WARN("The calling thread does not own the mutex: %d", ret);
+        }
+        else {
+            COMPV_DEBUG_ERROR("Failed to unlock the mutex: %d", ret);
+            COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_SYSTEM);
+        }
+    }
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVMutex::newObj(CompVObjWrapper<CompVMutex*>* mutex, bool recursive /*= true*/)
 {
-	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
-	COMPV_CHECK_EXP_RETURN(mutex == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVObjWrapper<CompVMutex*> mutex_ = new CompVMutex(recursive);
-	COMPV_CHECK_EXP_RETURN(*mutex_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	*mutex = mutex_;
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_CODE_RETURN(CompVEngine::init());
+    COMPV_CHECK_EXP_RETURN(mutex == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    CompVObjWrapper<CompVMutex*> mutex_ = new CompVMutex(recursive);
+    COMPV_CHECK_EXP_RETURN(*mutex_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    *mutex = mutex_;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

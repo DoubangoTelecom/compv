@@ -28,9 +28,9 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_API CompVObj
 {
 public:
-	CompVObj() :m_nRefCount(0) {}
-	CompVObj(const CompVObj &) :m_nRefCount(0) {}
-	virtual ~CompVObj() {}
+	CompVObj() :m_nRefCount(0) { compv_atomic_inc(&s_nObjCount); }
+	CompVObj(const CompVObj &) :m_nRefCount(0) { compv_atomic_inc(&s_nObjCount); }
+	virtual ~CompVObj() { compv_atomic_dec(&s_nObjCount); }
 
 public:
 	virtual COMPV_INLINE const char* getObjectId() = 0;
@@ -53,9 +53,12 @@ public:
 		}
 		return m_nRefCount;
 	}
+	static long getTotalObjCount() { return s_nObjCount; }
+	static bool isEmpty() { return getTotalObjCount() == 0; }
 
 private:
 	volatile long m_nRefCount;
+	static long s_nObjCount;
 };
 
 //

@@ -1,0 +1,1 @@
+./thirdparties/windows/tools/AStyle.exe --style=k/r --lineend=linux --mode=c --add-brackets --break-closing-brackets --recursive "*.cxx" "*.cc" "*.c"  "*.h"

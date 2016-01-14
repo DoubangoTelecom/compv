@@ -30,12 +30,12 @@ COMPV_NAMESPACE_BEGIN()
 //
 
 CompVImage::CompVImage(COMPV_IMAGE_FORMAT eImageFormat, COMPV_PIXEL_FORMAT ePixelFormat)
-	:CompVObj()
-	, m_nWidth(0)
-	, m_nHeight(0)
-	, m_nStride(0)
-	, m_ePixelFormat(ePixelFormat)
-	, m_eImageFormat(eImageFormat)
+    :CompVObj()
+    , m_nWidth(0)
+    , m_nHeight(0)
+    , m_nStride(0)
+    , m_ePixelFormat(ePixelFormat)
+    , m_eImageFormat(eImageFormat)
 {
 
 }
@@ -45,97 +45,248 @@ CompVImage::~CompVImage()
 
 }
 
+COMPV_ERROR_CODE CompVImage::convert(COMPV_PIXEL_FORMAT eDstPixelFormat, CompVObjWrapper<CompVImage*>* outImage)
+{
+	COMPV_CHECK_EXP_RETURN(outImage == NULL || eDstPixelFormat == m_eImageFormat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_EXP_RETURN(m_eImageFormat != COMPV_IMAGE_FORMAT_RAW, COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT); // We only support RAW -> RAW. If you have a JPEG image, decode it first then wrap it
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    switch (m_ePixelFormat) {
+    case COMPV_PIXEL_FORMAT_R8G8B8A8: {
+        if (eDstPixelFormat == COMPV_PIXEL_FORMAT_I420) {
+            // RGBA -> I420
+        }
+        else {
+            COMPV_CHECK_EXP_RETURN(m_eImageFormat == COMPV_IMAGE_FORMAT_RAW, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+        }
+        break;
+    }
+    case COMPV_PIXEL_FORMAT_I420: {
+        if (eDstPixelFormat == COMPV_PIXEL_FORMAT_R8G8B8A8) {
+            // I420 -> RGBA
+        }
+        else {
+            COMPV_CHECK_EXP_RETURN(m_eImageFormat == COMPV_IMAGE_FORMAT_RAW, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+        }
+        break;
+    }
+    default: {
+        COMPV_CHECK_EXP_RETURN(m_eImageFormat == COMPV_IMAGE_FORMAT_RAW, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+        break;
+    }
+    }
+	return err_;
+}
+
 COMPV_ERROR_CODE CompVImage::setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, int32_t width, int32_t height, int32_t stride /*= 0*/)
 {
-	if (!buffer || !width || !height) {
-		COMPV_DEBUG_ERROR("Invalid parameter");
-		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
-	m_oData = buffer;
-	m_nWidth = width;
-	m_nHeight = height;
-	m_nStride = (stride < width ? width : stride);
-	return COMPV_ERROR_CODE_S_OK;
+    if (!buffer || !width || !height) {
+        COMPV_DEBUG_ERROR("Invalid parameter");
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
+    m_oData = buffer;
+    m_nWidth = width;
+    m_nHeight = height;
+    m_nStride = (stride < width ? width : stride);
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVImage::getBestStride(int32_t stride, int32_t *bestStride)
 {
-	COMPV_CHECK_EXP_RETURN(bestStride == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	*bestStride = (int32_t)CompVMem::alignForward(stride, CompVMem::getBestAlignment());
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(bestStride == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    *bestStride = (int32_t)CompVMem::alignForward(stride, CompVMem::getBestAlignment());
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 CompVObjWrapper<CompVImage*> CompVImage::loadImage(const char* filePath)
 {
-	COMPV_DEBUG_ERROR("Not implemented");
+    COMPV_DEBUG_ERROR("Not implemented");
 
-	return NULL;
+    return NULL;
 }
 
 COMPV_ERROR_CODE CompVImage::getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, int32_t width, int32_t height, int32_t *size)
 {
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	int32_t bitsCount;
-	if (!size) {
-		COMPV_DEBUG_ERROR("Invalid parameter");
-		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
-	COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getBitsCountForPixelFormat(ePixelFormat, &bitsCount));
-	if (bitsCount & 7) {
-		if (bitsCount == 12) { // 12/8 = 1.5 = 3/2
-			*size = (((width * height) * 3) >> 1);
-		}
-		else {
-			float f = ((float)bitsCount) / 8.f;
-			*size = (int32_t)round((width * height) * f);
-		}
-	}
-	else {
-		*size = (width * height) * (bitsCount >> 3);
-	}
-	return err_;
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    int32_t bitsCount;
+    if (!size) {
+        COMPV_DEBUG_ERROR("Invalid parameter");
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
+    COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getBitsCountForPixelFormat(ePixelFormat, &bitsCount));
+    if (bitsCount & 7) {
+        if (bitsCount == 12) { // 12/8 = 1.5 = 3/2
+            *size = (((width * height) * 3) >> 1);
+        }
+        else {
+            float f = ((float)bitsCount) / 8.f;
+            *size = (int32_t)round((width * height) * f);
+        }
+    }
+    else {
+        *size = (width * height) * (bitsCount >> 3);
+    }
+    return err_;
+}
+
+COMPV_ERROR_CODE CompVImage::copy(COMPV_PIXEL_FORMAT ePixelFormat, const void* inPtr, int32_t inWidth, int32_t inHeight, int32_t inStride, void* outPtr, int32_t outWidth, int32_t outHeight, int32_t outStride)
+{
+    COMPV_CHECK_EXP_RETURN(inPtr == NULL || inWidth <= 0 || inHeight <= 0 || inStride <= 0 || inWidth > inStride || inStride == NULL || outWidth <= 0 || outHeight <= 0 || outWidth > outStride || outStride <= 0,
+                           COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    int32_t widthToCopySamples = min(inWidth, outWidth);
+    int32_t strideToCopySamples = min(inStride, outStride);
+    int32_t heightToCopySamples = min(inHeight, outHeight);
+
+    switch (ePixelFormat) {
+    case COMPV_PIXEL_FORMAT_R8G8B8:
+    case COMPV_PIXEL_FORMAT_B8G8R8:
+    case COMPV_PIXEL_FORMAT_R8G8B8A8:
+    case COMPV_PIXEL_FORMAT_B8G8R8A8:
+    case COMPV_PIXEL_FORMAT_A8B8G8R8:
+    case COMPV_PIXEL_FORMAT_A8R8G8B8:
+    case COMPV_PIXEL_FORMAT_GRAYSCALE: {
+        int32_t bitsCount = 0;
+        int32_t bytesToCopy, inStrideBytes, outStrideBytes;
+        const uint8_t* inPtr_ = (const uint8_t*)inPtr;
+        uint8_t* outPtr_ = (uint8_t*)outPtr;
+        COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getBitsCountForPixelFormat(ePixelFormat, &bitsCount));
+        int32_t bytesCount = bitsCount >> 3;
+        int32_t widthToCopyBytes = widthToCopySamples * bytesCount;
+        int32_t strideToCopyBytes = strideToCopySamples * bytesCount;
+        bytesToCopy = COMPV_IS_ALIGNED_DEFAULT(widthToCopyBytes) ? widthToCopyBytes : (COMPV_IS_ALIGNED_DEFAULT(strideToCopyBytes) ? strideToCopyBytes : widthToCopyBytes); // check best alignment for the copy
+        inStrideBytes = inStride * bytesCount;
+        outStrideBytes = outStride * bytesCount;
+        // TODO(dmi): divide across Y and multi-thread
+        for (int32_t j = 0; j < heightToCopySamples; ++j) {
+            CompVMem::copy(outPtr_, inPtr_, bytesToCopy);
+            outPtr_ += outStrideBytes;
+            inPtr_ += inStrideBytes;
+        }
+        break;
+    }
+    case COMPV_PIXEL_FORMAT_I420: {
+        uint8_t* outYPtr = (uint8_t*)outPtr;
+        uint8_t* outUPtr = outYPtr + (outHeight * outStride);
+        uint8_t* outVPtr = outUPtr + ((outHeight * outStride) >> 2);
+        const uint8_t* inYPtr = (uint8_t*)inPtr;
+        const uint8_t* inUPtr = inYPtr + (inHeight * inStride);
+        const uint8_t* inVPtr = inUPtr + ((inHeight * inStride) >> 2);
+        int32_t bytesToCopyY = COMPV_IS_ALIGNED_DEFAULT(widthToCopySamples) ? widthToCopySamples : (COMPV_IS_ALIGNED_DEFAULT(strideToCopySamples) ? strideToCopySamples : widthToCopySamples);
+        int32_t bytesToCopyYDiv2 = bytesToCopyY >> 1;
+        // TODO(dmi): divide across Y and multi-thread
+        for (int32_t j = 0; j < heightToCopySamples; ++j) {
+            CompVMem::copy(outYPtr, inYPtr, bytesToCopyY);
+            if (j & 1) {
+                CompVMem::copy(outUPtr, inUPtr, bytesToCopyYDiv2);
+                CompVMem::copy(outVPtr, inVPtr, bytesToCopyYDiv2);
+                outUPtr += bytesToCopyYDiv2;
+                outVPtr += bytesToCopyYDiv2;
+            }
+            outYPtr += outStride;
+            inYPtr += inStride;
+        }
+        break;
+    }
+    default:
+        COMPV_DEBUG_ERROR("Invalid pixel format");
+        return COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT;
+    }
+    return err_;
+}
+
+COMPV_ERROR_CODE CompVImage::wrap(COMPV_PIXEL_FORMAT ePixelFormat, const void* dataPtr, int32_t width, int32_t height, int32_t stride, CompVObjWrapper<CompVImage*>* image)
+{
+    COMPV_CHECK_EXP_RETURN(dataPtr == NULL || width <= 0 || height <= 0 || stride <= 0 || image == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    int32_t bestStride = stride, bestAlign = CompVMem::getBestAlignment();
+    bool bAllocNewImage, bAllocNewBuffer;
+    CompVObjWrapper<CompVBuffer* > buffer;
+
+    // Compute best stride
+    COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getBestStride(stride, &bestStride));
+
+    bAllocNewBuffer =
+        stride != bestStride ||
+        !COMPV_IS_ALIGNED(dataPtr, bestAlign);
+
+    bAllocNewImage = !(*image) ||
+                     (*image)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW ||
+                     (*image)->getPixelFormat() != ePixelFormat;
+
+    if (bAllocNewBuffer) {
+        void* buffData = NULL;
+        int neededBuffSize = 0;
+        COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getSizeForPixelFormat(ePixelFormat, bestStride, height, &neededBuffSize));
+        buffData = CompVMem::malloc(neededBuffSize); // we always alloc using bestAlign no need to use mallocAligned(ptr, bestAlign)
+        COMPV_ASSERT(COMPV_IS_ALIGNED(buffData, bestAlign));
+        if (!buffData) {
+            COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+        }
+        err_ = CompVBuffer::newObjAndTakeData(&buffData, neededBuffSize, &buffer);
+        if (COMPV_ERROR_CODE_IS_NOK(err_)) {
+            CompVMem::free(&buffData);
+            COMPV_CHECK_CODE_BAIL(err_);
+        }
+        COMPV_CHECK_CODE_BAIL(err_ = CompVImage::copy(ePixelFormat,
+                                     dataPtr, width, height, stride,
+                                     (void*)buffer->getPtr(), width, height, bestStride)); // copy data
+    }
+    else {
+        int32_t dataSize;
+        COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getSizeForPixelFormat(ePixelFormat, stride, height, &dataSize));
+        COMPV_CHECK_CODE_BAIL(err_ = CompVBuffer::newObjAndRefData(dataPtr, dataSize, &buffer)); // take a reference to the buffer, do not copy it
+    }
+
+    if (bAllocNewImage) {
+        COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj(COMPV_IMAGE_FORMAT_RAW, ePixelFormat, image));
+    }
+
+    COMPV_CHECK_CODE_BAIL(err_ = (*image)->setBuffer(buffer, width, height, bestStride));
+
+bail:
+    return err_;
 }
 
 COMPV_ERROR_CODE CompVImage::getBitsCountForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, int32_t* bitsCount)
 {
-	if (!bitsCount) {
-		COMPV_DEBUG_ERROR("Invalid parameter");
-		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
-	switch (ePixelFormat) {
-	case COMPV_PIXEL_FORMAT_R8G8B8:
-	case COMPV_PIXEL_FORMAT_B8G8R8:
-		*bitsCount = 3 << 3;
-		return COMPV_ERROR_CODE_S_OK;
+    if (!bitsCount) {
+        COMPV_DEBUG_ERROR("Invalid parameter");
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
+    switch (ePixelFormat) {
+    case COMPV_PIXEL_FORMAT_R8G8B8:
+    case COMPV_PIXEL_FORMAT_B8G8R8:
+        *bitsCount = 3 << 3;
+        return COMPV_ERROR_CODE_S_OK;
 
-	case COMPV_PIXEL_FORMAT_R8G8B8A8:
-	case COMPV_PIXEL_FORMAT_B8G8R8A8:
-	case COMPV_PIXEL_FORMAT_A8B8G8R8:
-	case COMPV_PIXEL_FORMAT_A8R8G8B8:
-		*bitsCount = 4 << 3;
-		return COMPV_ERROR_CODE_S_OK;
-	case COMPV_PIXEL_FORMAT_I420:
-		*bitsCount = 12;
-		return COMPV_ERROR_CODE_S_OK;
-	case COMPV_PIXEL_FORMAT_GRAYSCALE:
-		*bitsCount = 8;
-		return COMPV_ERROR_CODE_S_OK;
-	default:
-		COMPV_DEBUG_ERROR("Invalid pixel format");
-		return COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT;
-	}
+    case COMPV_PIXEL_FORMAT_R8G8B8A8:
+    case COMPV_PIXEL_FORMAT_B8G8R8A8:
+    case COMPV_PIXEL_FORMAT_A8B8G8R8:
+    case COMPV_PIXEL_FORMAT_A8R8G8B8:
+        *bitsCount = 4 << 3;
+        return COMPV_ERROR_CODE_S_OK;
+    case COMPV_PIXEL_FORMAT_I420:
+        *bitsCount = 12;
+        return COMPV_ERROR_CODE_S_OK;
+    case COMPV_PIXEL_FORMAT_GRAYSCALE:
+        *bitsCount = 8;
+        return COMPV_ERROR_CODE_S_OK;
+    default:
+        COMPV_DEBUG_ERROR("Invalid pixel format");
+        return COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT;
+    }
 }
 
 COMPV_ERROR_CODE CompVImage::newObj(COMPV_IMAGE_FORMAT eImageFormat, COMPV_PIXEL_FORMAT ePixelFormat, CompVObjWrapper<CompVImage*>* image)
 {
-	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
-	COMPV_CHECK_EXP_RETURN(image == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	*image = new CompVImage(eImageFormat, ePixelFormat);
-	if (!*image) {
-		COMPV_DEBUG_ERROR("Failed to alloc new 'CompVImage' object");
-		return COMPV_ERROR_CODE_E_OUT_OF_MEMORY;
-	}
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_CODE_RETURN(CompVEngine::init());
+    COMPV_CHECK_EXP_RETURN(image == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    *image = new CompVImage(eImageFormat, ePixelFormat);
+    if (!*image) {
+        COMPV_DEBUG_ERROR("Failed to alloc new 'CompVImage' object");
+        return COMPV_ERROR_CODE_E_OUT_OF_MEMORY;
+    }
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 //
@@ -154,90 +305,90 @@ CompVDecodeInfoFuncPtr CompVImageDecoder::s_funcptrDecodeInfoJpeg = NULL;
 
 COMPV_ERROR_CODE CompVImageDecoder::init()
 {
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	static bool s_Initialized = false;
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    static bool s_Initialized = false;
 
-	if (!s_Initialized) {
-		COMPV_DEBUG_INFO_EX(kModuleNameImageDecoder, "Initializing image decoder...");
+    if (!s_Initialized) {
+        COMPV_DEBUG_INFO_EX(kModuleNameImageDecoder, "Initializing image decoder...");
 
 #if defined(HAVE_LIBJPEG)
-		CompVImageDecoder::s_funcptrDecodeFileJpeg = libjpegDecodeFile;
-		CompVImageDecoder::s_funcptrDecodeInfoJpeg = libjpegDecodeInfo;
+        CompVImageDecoder::s_funcptrDecodeFileJpeg = libjpegDecodeFile;
+        CompVImageDecoder::s_funcptrDecodeInfoJpeg = libjpegDecodeInfo;
 #else
-		COMPV_DEBUG_WARN_EX(kModuleNameImageDecoder, "No jpeg decoder found");
+        COMPV_DEBUG_WARN_EX(kModuleNameImageDecoder, "No jpeg decoder found");
 #endif /* HAVE_LIBJPEG */
 
-		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
+        COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
 
-		s_Initialized = true;
-	}
+        s_Initialized = true;
+    }
 
 bail:
-	return err_;
+    return err_;
 }
 
 COMPV_ERROR_CODE CompVImageDecoder::decodeFile(const char* filePath, CompVObjWrapper<CompVImage*>* image)
 {
-	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
-	if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
-		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
-		COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
-	_COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	switch (format_) {
-	case COMPV_IMAGE_FORMAT_JPEG:
-		if (CompVImageDecoder::s_funcptrDecodeFileJpeg) {
-			return CompVImageDecoder::s_funcptrDecodeFileJpeg(filePath, image);
-		}
-		else {
-			COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find jpeg decoder for file: %s", filePath);
-			COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
-		}
-		break;
-	case COMPV_IMAGE_FORMAT_RAW:
-	case COMPV_IMAGE_FORMAT_BITMAP:
-	case COMPV_IMAGE_FORMAT_PNG:
-	default:
-		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find decoder for file: %s, format: %d", filePath, format_);
-		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
-		break;
-	}
+    COMPV_CHECK_CODE_RETURN(CompVEngine::init());
+    if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
+        COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
+        COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
+    _COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    switch (format_) {
+    case COMPV_IMAGE_FORMAT_JPEG:
+        if (CompVImageDecoder::s_funcptrDecodeFileJpeg) {
+            return CompVImageDecoder::s_funcptrDecodeFileJpeg(filePath, image);
+        }
+        else {
+            COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find jpeg decoder for file: %s", filePath);
+            COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
+        }
+        break;
+    case COMPV_IMAGE_FORMAT_RAW:
+    case COMPV_IMAGE_FORMAT_BITMAP:
+    case COMPV_IMAGE_FORMAT_PNG:
+    default:
+        COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find decoder for file: %s, format: %d", filePath, format_);
+        COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
+        break;
+    }
 
 bail:
-	return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+    return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 }
 
 COMPV_ERROR_CODE  CompVImageDecoder::decodeInfo(const char* filePath, CompVImageInfo& info)
 {
-	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
-	if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
-		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
-		COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
-	_COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	switch (format_) {
-	case COMPV_IMAGE_FORMAT_JPEG:
-		if (CompVImageDecoder::s_funcptrDecodeInfoJpeg) {
-			return CompVImageDecoder::s_funcptrDecodeInfoJpeg(filePath, info);
-		}
-		else {
-			COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find jpeg decoder for file: %s", filePath);
-			COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
-		}
-		break;
-	case COMPV_IMAGE_FORMAT_RAW:
-	case COMPV_IMAGE_FORMAT_BITMAP:
-	case COMPV_IMAGE_FORMAT_PNG:
-	default:
-		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find decoder for file: %s, format: %d", filePath, format_);
-		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
-		break;
-	}
+    COMPV_CHECK_CODE_RETURN(CompVEngine::init());
+    if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
+        COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
+        COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
+    _COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    switch (format_) {
+    case COMPV_IMAGE_FORMAT_JPEG:
+        if (CompVImageDecoder::s_funcptrDecodeInfoJpeg) {
+            return CompVImageDecoder::s_funcptrDecodeInfoJpeg(filePath, info);
+        }
+        else {
+            COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find jpeg decoder for file: %s", filePath);
+            COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
+        }
+        break;
+    case COMPV_IMAGE_FORMAT_RAW:
+    case COMPV_IMAGE_FORMAT_BITMAP:
+    case COMPV_IMAGE_FORMAT_PNG:
+    default:
+        COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find decoder for file: %s, format: %d", filePath, format_);
+        COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
+        break;
+    }
 
 bail:
-	return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+    return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 }
 
 COMPV_NAMESPACE_END()

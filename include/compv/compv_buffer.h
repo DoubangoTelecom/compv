@@ -35,6 +35,7 @@ public:
 	virtual COMPV_INLINE const char* getObjectId() { return "CompVBuffer"; };
 
 	COMPV_ERROR_CODE copyData(const void* pcPtr, int32_t size);
+	COMPV_ERROR_CODE refData(const void* pcPtr, int32_t size);
 	COMPV_ERROR_CODE takeData(void** ppPtr, int32_t size);
 	COMPV_INLINE const void* getPtr() { return m_pPtr; }
 	COMPV_INLINE int32_t getSize(){ return m_nSize; }
@@ -43,10 +44,12 @@ public:
 	static COMPV_ERROR_CODE newObjAndNullData(CompVObjWrapper<CompVBuffer*>* buffer);
 	static COMPV_ERROR_CODE newObjAndTakeData(void** ppPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer);
 	static COMPV_ERROR_CODE newObjAndCopyData(const void* pcPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer);
+	static COMPV_ERROR_CODE newObjAndRefData(const void* pcPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer);
 
 private:
 	void* m_pPtr;
 	int32_t m_nSize;
+	bool m_bOweMem;
 };
 
 COMPV_NAMESPACE_END()

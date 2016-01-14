@@ -9,12 +9,12 @@ int _tmain(int argc, _TCHAR* argv[])
 int main()
 #endif
 {
-	CompVCpu::init();
+    CompVCpu::init();
 
-	COMPV_DEBUG_INFO("CPU flags=%s", CompVCpu::getFlagsAsString());
-	COMPV_DEBUG_INFO("Cores count=%d", CompVCpu::getCoresCount());
+    COMPV_DEBUG_INFO("CPU flags=%s", CompVCpu::getFlagsAsString());
+    COMPV_DEBUG_INFO("Cores count=%d", CompVCpu::getCoresCount());
 
-	getchar();
-	return 0;
+    getchar();
+    return 0;
 }
 

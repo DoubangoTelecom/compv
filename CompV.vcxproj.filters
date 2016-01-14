@@ -221,6 +221,9 @@
     <ClCompile Include="intrinsics\x86\compv_imageconv_rgba_i420_intrin_sse.cxx">
       <Filter>Source Files\intrinsics\x86</Filter>
     </ClCompile>
+    <ClCompile Include="compv_obj.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="assembler\x86\compv_common_x86.S">
@@ -235,10 +238,8 @@
     <YASM Include="assembler\x86\compv_utils_x86.S">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assembler\x64\compv_imageconv_rgba_i420_x64_avx2.S">
+    <YASM Include="assembler\x64\compv_imageconv_rgba_i420_x64_avx2.S">
       <Filter>Assembler Files\x64</Filter>
-    </None>
+    </YASM>
   </ItemGroup>
 </Project>

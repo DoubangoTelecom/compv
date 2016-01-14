@@ -61,6 +61,9 @@ public:
 
 	static int getBestAlignment();
 	static bool isSpecial(void* ptr);
+	static size_t getSpecialTotalMemSize();
+	static size_t getSpecialsCount();
+	static bool isEmpty();
 
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)

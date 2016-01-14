@@ -57,6 +57,7 @@
     <ClCompile Include="compv_fileutils.cxx" />
     <ClCompile Include="compv_mathutils.cxx" />
     <ClCompile Include="compv_mem.cxx" />
+    <ClCompile Include="compv_obj.cxx" />
     <ClCompile Include="compv_simd_globals.cxx" />
     <ClCompile Include="image\compv_image.cxx" />
     <ClCompile Include="image\compv_imageconv.cxx" />

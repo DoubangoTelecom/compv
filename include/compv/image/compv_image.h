@@ -35,6 +35,7 @@ public:
 	virtual ~CompVImage();
 	virtual COMPV_INLINE const char* getObjectId() { return "CompVImage"; };
 	COMPV_ERROR_CODE setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, int32_t width, int32_t height, int32_t stride = 0);
+	COMPV_ERROR_CODE convert(COMPV_PIXEL_FORMAT eDstPixelFormat, CompVObjWrapper<CompVImage*>* outImage);
 
 	COMPV_INLINE const CompVObjWrapper<CompVBuffer*>& getData() { return m_oData; }
 	COMPV_INLINE size_t getDataSize() { return m_oData ? m_oData->getSize() : 0; }
@@ -49,6 +50,8 @@ public:
 	static CompVObjWrapper<CompVImage*> loadImage(const char* filePath);
 	static COMPV_ERROR_CODE getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, int32_t width, int32_t height, int32_t *size);
 	static COMPV_ERROR_CODE getBitsCountForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, int32_t* bitsCount);
+	static COMPV_ERROR_CODE copy(COMPV_PIXEL_FORMAT ePixelFormat, const void* inPtr, int32_t inWidth, int32_t inHeight, int32_t inStride, void* outPtr, int32_t outWidth, int32_t outHeight, int32_t outStride);
+	static COMPV_ERROR_CODE wrap(COMPV_PIXEL_FORMAT ePixelFormat, const void* dataPtr, int32_t width, int32_t height, int32_t stride, CompVObjWrapper<CompVImage*>* image);
 	static COMPV_ERROR_CODE newObj(COMPV_IMAGE_FORMAT eImageFormat, COMPV_PIXEL_FORMAT ePixelFormat, CompVObjWrapper<CompVImage*>* image);
 
 protected:
