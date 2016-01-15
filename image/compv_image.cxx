@@ -18,10 +18,12 @@
 * along with CompV.
 */
 #include "compv/image/compv_image.h"
+#include "compv/image/compv_imageconv_rgba_i420.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_engine.h"
 #include "compv/compv_fileutils.h"
 #include "compv/compv_debug.h"
+
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -47,34 +49,104 @@ CompVImage::~CompVImage()
 
 COMPV_ERROR_CODE CompVImage::convert(COMPV_PIXEL_FORMAT eDstPixelFormat, CompVObjWrapper<CompVImage*>* outImage)
 {
-	COMPV_CHECK_EXP_RETURN(outImage == NULL || eDstPixelFormat == m_eImageFormat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_EXP_RETURN(outImage == NULL || eDstPixelFormat == m_eImageFormat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_CHECK_EXP_RETURN(m_eImageFormat != COMPV_IMAGE_FORMAT_RAW, COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT); // We only support RAW -> RAW. If you have a JPEG image, decode it first then wrap it
+    if (eDstPixelFormat == m_eImageFormat) {
+        *outImage = this;
+        return COMPV_ERROR_CODE_S_OK;
+    }
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    int32_t neededBuffSize;
+    COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getSizeForPixelFormat(eDstPixelFormat, m_nStride, m_nHeight, &neededBuffSize));
+    bool bAllocOutImage = (!(*outImage) || (*outImage)->getDataSize() != neededBuffSize || (*outImage)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*outImage)->getPixelFormat() != eDstPixelFormat);
+    if (bAllocOutImage) {
+        COMPV_CHECK_CODE_RETURN(err_ = CompVImage::newObj(eDstPixelFormat, m_nWidth, m_nHeight, m_nStride, outImage));
+    }
+    else {
+        // even if allocation isn't required we could have different width, height or stride
+        // for example, 128x255 image requires same number of bytes than 255x128
+        CompVObjWrapper<CompVBuffer*> buffer = (*outImage)->m_oData; // increment refCount
+        COMPV_CHECK_CODE_RETURN(err_ = (*outImage)->setBuffer(buffer, m_nWidth, m_nHeight, m_nStride)); // changing the current buffer's layout
+    }
     switch (m_ePixelFormat) {
+        /**** XXX -> I420 *****/
     case COMPV_PIXEL_FORMAT_R8G8B8A8: {
         if (eDstPixelFormat == COMPV_PIXEL_FORMAT_I420) {
             // RGBA -> I420
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaI420::rgbaToI420(this, *outImage));
         }
         else {
-            COMPV_CHECK_EXP_RETURN(m_eImageFormat == COMPV_IMAGE_FORMAT_RAW, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+            COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
         }
         break;
     }
+    case COMPV_PIXEL_FORMAT_A8R8G8B8: {
+        if (eDstPixelFormat == COMPV_PIXEL_FORMAT_I420) {
+            // ARGB - > I420
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaI420::argbToI420(this, *outImage));
+        }
+        else {
+            COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+        }
+        break;
+    }
+    case COMPV_PIXEL_FORMAT_B8G8R8A8: {
+        if (eDstPixelFormat == COMPV_PIXEL_FORMAT_I420) {
+            // BGRA -> I420
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaI420::bgraToI420(this, *outImage));
+        }
+        else {
+            COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+        }
+        break;
+    }
+    case COMPV_PIXEL_FORMAT_A8B8G8R8: {
+        if (eDstPixelFormat == COMPV_PIXEL_FORMAT_I420) {
+            // ABGR -> I420
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaI420::abgrToI420(this, *outImage));
+        }
+        else {
+            COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+        }
+        break;
+    }
+    case COMPV_PIXEL_FORMAT_R8G8B8: {
+        if (eDstPixelFormat == COMPV_PIXEL_FORMAT_I420) {
+            // RGB -> I420
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaI420::rgbToI420(this, *outImage));
+        }
+        else {
+            COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+        }
+        break;
+    }
+    case COMPV_PIXEL_FORMAT_B8G8R8: {
+        if (eDstPixelFormat == COMPV_PIXEL_FORMAT_I420) {
+            // BGR -> I420
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaI420::bgrToI420(this, *outImage));
+        }
+        else {
+            COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+        }
+        break;
+    }
+    /***** I420 -> XXX *****/
     case COMPV_PIXEL_FORMAT_I420: {
         if (eDstPixelFormat == COMPV_PIXEL_FORMAT_R8G8B8A8) {
             // I420 -> RGBA
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaI420::i420ToRgba(this, *outImage));
         }
         else {
-            COMPV_CHECK_EXP_RETURN(m_eImageFormat == COMPV_IMAGE_FORMAT_RAW, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+            COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
         }
         break;
     }
     default: {
-        COMPV_CHECK_EXP_RETURN(m_eImageFormat == COMPV_IMAGE_FORMAT_RAW, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
         break;
     }
     }
-	return err_;
+    return err_;
 }
 
 COMPV_ERROR_CODE CompVImage::setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, int32_t width, int32_t height, int32_t stride /*= 0*/)
@@ -146,19 +218,17 @@ COMPV_ERROR_CODE CompVImage::copy(COMPV_PIXEL_FORMAT ePixelFormat, const void* i
     case COMPV_PIXEL_FORMAT_A8R8G8B8:
     case COMPV_PIXEL_FORMAT_GRAYSCALE: {
         int32_t bitsCount = 0;
-        int32_t bytesToCopy, inStrideBytes, outStrideBytes;
+        int32_t inStrideBytes, outStrideBytes;
         const uint8_t* inPtr_ = (const uint8_t*)inPtr;
         uint8_t* outPtr_ = (uint8_t*)outPtr;
         COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getBitsCountForPixelFormat(ePixelFormat, &bitsCount));
         int32_t bytesCount = bitsCount >> 3;
         int32_t widthToCopyBytes = widthToCopySamples * bytesCount;
-        int32_t strideToCopyBytes = strideToCopySamples * bytesCount;
-        bytesToCopy = COMPV_IS_ALIGNED_DEFAULT(widthToCopyBytes) ? widthToCopyBytes : (COMPV_IS_ALIGNED_DEFAULT(strideToCopyBytes) ? strideToCopyBytes : widthToCopyBytes); // check best alignment for the copy
         inStrideBytes = inStride * bytesCount;
         outStrideBytes = outStride * bytesCount;
         // TODO(dmi): divide across Y and multi-thread
         for (int32_t j = 0; j < heightToCopySamples; ++j) {
-            CompVMem::copy(outPtr_, inPtr_, bytesToCopy);
+            CompVMem::copy(outPtr_, inPtr_, widthToCopyBytes);
             outPtr_ += outStrideBytes;
             inPtr_ += inStrideBytes;
         }
@@ -171,16 +241,20 @@ COMPV_ERROR_CODE CompVImage::copy(COMPV_PIXEL_FORMAT ePixelFormat, const void* i
         const uint8_t* inYPtr = (uint8_t*)inPtr;
         const uint8_t* inUPtr = inYPtr + (inHeight * inStride);
         const uint8_t* inVPtr = inUPtr + ((inHeight * inStride) >> 2);
-        int32_t bytesToCopyY = COMPV_IS_ALIGNED_DEFAULT(widthToCopySamples) ? widthToCopySamples : (COMPV_IS_ALIGNED_DEFAULT(strideToCopySamples) ? strideToCopySamples : widthToCopySamples);
+        int32_t bytesToCopyY = widthToCopySamples * 1;
         int32_t bytesToCopyYDiv2 = bytesToCopyY >> 1;
+        int32_t outStrideYDiv2 = outStride >> 1;
+        int32_t inStrideYDiv2 = inStride >> 1;
         // TODO(dmi): divide across Y and multi-thread
         for (int32_t j = 0; j < heightToCopySamples; ++j) {
             CompVMem::copy(outYPtr, inYPtr, bytesToCopyY);
             if (j & 1) {
                 CompVMem::copy(outUPtr, inUPtr, bytesToCopyYDiv2);
                 CompVMem::copy(outVPtr, inVPtr, bytesToCopyYDiv2);
-                outUPtr += bytesToCopyYDiv2;
-                outVPtr += bytesToCopyYDiv2;
+                outUPtr += outStrideYDiv2;
+                outVPtr += outStrideYDiv2;
+                inUPtr += inStrideYDiv2;
+                inVPtr += inStrideYDiv2;
             }
             outYPtr += outStride;
             inYPtr += inStride;
@@ -205,6 +279,7 @@ COMPV_ERROR_CODE CompVImage::wrap(COMPV_PIXEL_FORMAT ePixelFormat, const void* d
     // Compute best stride
     COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getBestStride(stride, &bestStride));
 
+#if 1
     bAllocNewBuffer =
         stride != bestStride ||
         !COMPV_IS_ALIGNED(dataPtr, bestAlign);
@@ -212,13 +287,16 @@ COMPV_ERROR_CODE CompVImage::wrap(COMPV_PIXEL_FORMAT ePixelFormat, const void* d
     bAllocNewImage = !(*image) ||
                      (*image)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW ||
                      (*image)->getPixelFormat() != ePixelFormat;
+#else // to test copy and alloc
+    COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+    bAllocNewBuffer = bAllocNewImage = true;
+#endif
 
     if (bAllocNewBuffer) {
         void* buffData = NULL;
         int neededBuffSize = 0;
         COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getSizeForPixelFormat(ePixelFormat, bestStride, height, &neededBuffSize));
         buffData = CompVMem::malloc(neededBuffSize); // we always alloc using bestAlign no need to use mallocAligned(ptr, bestAlign)
-        COMPV_ASSERT(COMPV_IS_ALIGNED(buffData, bestAlign));
         if (!buffData) {
             COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
         }
@@ -287,6 +365,29 @@ COMPV_ERROR_CODE CompVImage::newObj(COMPV_IMAGE_FORMAT eImageFormat, COMPV_PIXEL
         return COMPV_ERROR_CODE_E_OUT_OF_MEMORY;
     }
     return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVImage::newObj(COMPV_PIXEL_FORMAT ePixelFormat, int32_t width, int32_t height, int32_t stride, CompVObjWrapper<CompVImage*>* image)
+{
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_CODE_RETURN(err_ = CompVImage::newObj(COMPV_IMAGE_FORMAT_RAW, ePixelFormat, image));
+    CompVObjWrapper<CompVBuffer* > buffer;
+    void* buffData = NULL;
+    int32_t neededBuffSize;
+    COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getSizeForPixelFormat(ePixelFormat, stride, height, &neededBuffSize));
+    COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj(COMPV_IMAGE_FORMAT_RAW, ePixelFormat, image));
+    buffData = CompVMem::malloc(neededBuffSize);
+    if (!buffData) {
+        COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    }
+    err_ = CompVBuffer::newObjAndTakeData(&buffData, neededBuffSize, &buffer);
+    if (COMPV_ERROR_CODE_IS_NOK(err_)) {
+        CompVMem::free(&buffData);
+        COMPV_CHECK_CODE_BAIL(err_);
+    }
+    COMPV_CHECK_CODE_BAIL(err_ = (*image)->setBuffer(buffer, width, height, stride));
+bail:
+    return  err_;
 }
 
 //

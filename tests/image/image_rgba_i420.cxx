@@ -5,14 +5,17 @@
 
 using namespace compv;
 
-#define MODE_RGBA	0
-#define MODE_ARGB	1
-#define MODE_BGRA	2
-#define MODE_ABGR	3
-#define MODE_RGB	4
-#define MODE_BGR	5
+// preprocessor cannot evaluate an enum
+// #if FORMAT == COMPV_PIXEL_FORMAT_R8G8B8A8 is always true
+#define FORMAT_RGBA	3 // COMPV_PIXEL_FORMAT_R8G8B8A8
+#define FORMAT_ARGB	6 // COMPV_PIXEL_FORMAT_A8R8G8B8
+#define FORMAT_BGRA	4 // COMPV_PIXEL_FORMAT_B8G8R8A8
+#define FORMAT_ABGR	5 // COMPV_PIXEL_FORMAT_A8B8G8R8
+#define FORMAT_RGB	1 // COMPV_PIXEL_FORMAT_R8G8B8
+#define FORMAT_BGR	2 // COMPV_PIXEL_FORMAT_B8G8R8
 
-#define MODE		MODE_RGBA
+#define FORMAT			FORMAT_BGR
+#define STRIDE_ALIGN	true // false to test CompVImage::wrap and CompVImage::copy
 
 static void rgbToRGBA(const CompVObjWrapper<CompVImage *>& jpegImage, void** rgbaPtr, int &height, int &width, int &stride)
 {
@@ -21,11 +24,16 @@ static void rgbToRGBA(const CompVObjWrapper<CompVImage *>& jpegImage, void** rgb
     int jpegImageStride = jpegImage->getStride();
     width = jpegImage->getWidth() + WIDTH_OFFSET;
     height = jpegImage->getHeight() + HEIGHT_OFFSET;
-    COMPV_CHECK_CODE_ASSERT(CompVImage::getBestStride(jpegImageStride, &stride));
+    if (STRIDE_ALIGN) {
+        COMPV_CHECK_CODE_ASSERT(CompVImage::getBestStride(jpegImageStride, &stride));
+    }
+    else {
+        stride = jpegImageStride + 2;
+    }
 
-#if MODE == MODE_RGBA || MODE == MODE_ARGB || MODE == MODE_BGRA || MODE == MODE_ABGR
+#if FORMAT == FORMAT_RGBA || FORMAT == FORMAT_ARGB || FORMAT == FORMAT_BGRA || FORMAT == FORMAT_ABGR
     int compSize = 4;
-#elif MODE == MODE_RGB || MODE == MODE_BGR
+#elif FORMAT == FORMAT_RGB || FORMAT == FORMAT_BGR
     int compSize = 3;
 #else
 #error "invalid mode"
@@ -37,31 +45,31 @@ static void rgbToRGBA(const CompVObjWrapper<CompVImage *>& jpegImage, void** rgb
     uint8_t* rgbaPtr_ = (uint8_t*)*rgbaPtr;
     for (int j = 0; j < height; ++j) {
         for (int i = 0; i < width; ++i) {
-#if MODE == MODE_RGBA
+#if FORMAT == FORMAT_RGBA
             rgbaPtr_[0] = rgbPtr_[0];
             rgbaPtr_[1] = rgbPtr_[1];
             rgbaPtr_[2] = rgbPtr_[2];
             rgbaPtr_[3] = 0xFF;
-#elif MODE == MODE_ARGB
+#elif FORMAT == FORMAT_ARGB
             rgbaPtr_[0] = 0xFF;
             rgbaPtr_[1] = rgbPtr_[0];
             rgbaPtr_[2] = rgbPtr_[1];
             rgbaPtr_[3] = rgbPtr_[2];
-#elif MODE == MODE_BGRA
+#elif FORMAT == FORMAT_BGRA
             rgbaPtr_[0] = rgbPtr_[2];
             rgbaPtr_[1] = rgbPtr_[1];
             rgbaPtr_[2] = rgbPtr_[0];
             rgbaPtr_[3] = 0xFF;
-#elif MODE == MODE_ABGR
+#elif FORMAT == FORMAT_ABGR
             rgbaPtr_[0] = 0xFF;
             rgbaPtr_[1] = rgbPtr_[2];
             rgbaPtr_[2] = rgbPtr_[1];
             rgbaPtr_[3] = rgbPtr_[0];
-#elif MODE == MODE_RGB
+#elif FORMAT == FORMAT_RGB
             rgbaPtr_[0] = rgbPtr_[0];
             rgbaPtr_[1] = rgbPtr_[1];
             rgbaPtr_[2] = rgbPtr_[2];
-#elif MODE == MODE_BGR
+#elif FORMAT == FORMAT_BGR
             rgbaPtr_[0] = rgbPtr_[2];
             rgbaPtr_[1] = rgbPtr_[1];
             rgbaPtr_[2] = rgbPtr_[0];
@@ -85,37 +93,28 @@ bool TestRgba()
     int width, height, stride;
     uint64_t timeStart, timeEnd;
 
+    COMPV_ASSERT(FORMAT_RGBA == COMPV_PIXEL_FORMAT_R8G8B8A8);
+    COMPV_ASSERT(FORMAT_ARGB == COMPV_PIXEL_FORMAT_A8R8G8B8);
+    COMPV_ASSERT(FORMAT_BGRA == COMPV_PIXEL_FORMAT_B8G8R8A8);
+    COMPV_ASSERT(FORMAT_ABGR == COMPV_PIXEL_FORMAT_A8B8G8R8);
+    COMPV_ASSERT(FORMAT_RGB == COMPV_PIXEL_FORMAT_R8G8B8);
+    COMPV_ASSERT(FORMAT_BGR == COMPV_PIXEL_FORMAT_B8G8R8);
+
     COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_EQUIRECTANGULAR_FILE, &jpegImage));
     COMPV_ASSERT(jpegImage->getPixelFormat() == COMPV_PIXEL_FORMAT_R8G8B8);
     rgbToRGBA(jpegImage, &rgbaPtr, height, width, stride);
-#if MODE == MODE_RGBA
-    COMPV_ERROR_CODE(*toRGBA)(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, int32_t height, int32_t width, int32_t stride, CompVObjWrapper<CompVImage* >* rgba) = CompVImageConv::i420ToRGBA;
-    COMPV_ERROR_CODE(*toI420)(const uint8_t* rgbaPtr, int32_t height, int32_t width, int32_t stride, CompVObjWrapper<CompVImage* >* i420) = CompVImageConv::rgbaToI420;
-#elif MODE == MODE_ARGB
-#error "invalid mode"
-#elif MODE == MODE_BGRA
-#error "invalid mode"
-#elif MODE == MODE_ABGR
-#error "invalid mode"
-#elif MODE == MODE_RGB
-#error "invalid mode"
-#elif MODE == MODE_BGR
-#error "invalid mode"
-#elif
-#error "invalid mode"
-#endif
 
 #define loopCount  1
     timeStart = CompVTime::getNowMills();
     for (size_t i = 0; i < loopCount; ++i) {
-        COMPV_CHECK_CODE_ASSERT(CompVImage::wrap(COMPV_PIXEL_FORMAT_R8G8B8A8, rgbaPtr, width, height, stride, &rgbaImage));
-        COMPV_CHECK_CODE_ASSERT(toI420((const uint8_t*)rgbaPtr, height, width, stride, &i420Image));
-#if 1 // I420 to RGBA then RGBA to I420
+        COMPV_CHECK_CODE_ASSERT(CompVImage::wrap((COMPV_PIXEL_FORMAT)FORMAT, rgbaPtr, width, height, stride, &rgbaImage));
+        COMPV_CHECK_CODE_ASSERT(rgbaImage->convert(COMPV_PIXEL_FORMAT_I420, &i420Image)); // RGBA -> I420
+#if FORMAT == FORMAT_RGBA // only I420 -> RGBA is supported
         const uint8_t* yPtr = (const uint8_t*)i420Image->getDataPtr();
         const uint8_t* uPtr = yPtr + (i420Image->getHeight() * i420Image->getStride());
         const uint8_t* vPtr = uPtr + ((i420Image->getHeight() * i420Image->getStride()) >> 2);
-        COMPV_CHECK_CODE_ASSERT(toRGBA(yPtr, uPtr, vPtr, i420Image->getHeight(), i420Image->getWidth(), i420Image->getStride(), &rgbaImage));
-        COMPV_CHECK_CODE_ASSERT(toI420((const uint8_t*)rgbaImage->getDataPtr(), rgbaImage->getHeight(), rgbaImage->getWidth(), rgbaImage->getStride(), &i420Image));
+        COMPV_CHECK_CODE_ASSERT(i420Image->convert((COMPV_PIXEL_FORMAT)FORMAT, &rgbaImage)); // // I420 -> RGBA
+        COMPV_CHECK_CODE_ASSERT(rgbaImage->convert(COMPV_PIXEL_FORMAT_I420, &i420Image)); // // RGBA -> I420
 #endif
     }
     timeEnd = CompVTime::getNowMills();

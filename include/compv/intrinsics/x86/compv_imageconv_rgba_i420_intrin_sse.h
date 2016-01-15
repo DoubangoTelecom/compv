@@ -32,10 +32,14 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-void rgbaToI420Kernel41_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-void rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+void rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_YCoeffs8);
+void rgbaToI420Kernel41_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_YCoeffs8);
+void rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_UCoeffs8, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_VCoeffs8);
+void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_UCoeffs8, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_VCoeffs8);
+
+void rgbToI420Kernel31_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_YCoeffs8);
+void rgbToI420Kernel31_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_UCoeffs8, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_VCoeffs8);
+
 void i420ToRGBAKernel11_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(SSE) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
 void i420ToRGBAKernel41_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(SSE) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
 

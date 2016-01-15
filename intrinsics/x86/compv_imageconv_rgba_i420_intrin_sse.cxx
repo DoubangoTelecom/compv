@@ -25,12 +25,13 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_YCoeffs8)
 {
-    __m128i xmmRgba;
-    __m128i xmmYCoeffs = _mm_load_si128((__m128i*)kRGBAToYUV_YCoeffs8);
-    __m128i y16 = _mm_load_si128((__m128i*)k16_i16);
+	__m128i xmmRgba, xmmYCoeffs, y16;
     vcomp_scalar_t i, j, maxI = ((width + 3) & -4), padY = (stride - maxI), padRGBA = padY << 2;
+
+	_mm_store_si128(&xmmYCoeffs, _mm_load_si128((__m128i*)kXXXXToYUV_YCoeffs8));
+	_mm_store_si128(&y16, _mm_load_si128((__m128i*)k16_i16));
 
     // Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
     for (j = 0; j < height; ++j) {
@@ -51,12 +52,13 @@ void rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8
     }
 }
 
-void rgbaToI420Kernel41_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel41_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE)const int8_t* kXXXXToYUV_YCoeffs8)
 {
-    __m128i xmmRgba0, xmmRgba1, xmmRgba2, xmmRgba3;
-    __m128i xmmYCoeffs = _mm_load_si128((__m128i*)kRGBAToYUV_YCoeffs8);
-    __m128i y16 = _mm_load_si128((__m128i*)k16_i16);
+	__m128i xmmRgba0, xmmRgba1, xmmRgba2, xmmRgba3, xmmYCoeffs, y16;
     vcomp_scalar_t i, j, maxI = ((width + 15) & -16), padY = (stride - maxI), padRGBA = padY << 2;
+
+	_mm_store_si128(&y16, _mm_load_si128((__m128i*)k16_i16));
+	_mm_store_si128(&xmmYCoeffs, _mm_load_si128((__m128i*)kXXXXToYUV_YCoeffs8));
 
     // Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
     for (j = 0; j < height; ++j) {
@@ -93,13 +95,16 @@ void rgbaToI420Kernel41_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8
     }
 }
 
-void rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE)const int8_t* kXXXXToYUV_UCoeffs8, COMV_ALIGNED(SSE)const int8_t* kXXXXToYUV_VCoeffs8)
 {
-    __m128i xmmRgba, xmm0, xmm1;
-    __m128i xmmUV2Coeffs = _mm_load_si128((__m128i*)kRGBAToYUV_U2V2Coeffs8); // UV coeffs interleaved: each appear #2 times
-    __m128i y128 = _mm_load_si128((__m128i*)k128_i16);
+	__m128i xmmRgba, xmm0, xmm1, xmmUV2Coeffs, xmm128;
     vcomp_scalar_t i, j, maxI = ((width + 3) & -4), padUV = (stride - maxI) >> 1, padRGBA = ((stride - maxI) + stride) << 2; // +stride to skip even lines
     int32_t UUVV;
+
+	// UV coeffs interleaved: each appear #2 times (kRGBAToYUV_U2V2Coeffs8)
+	_mm_store_si128(&xmmUV2Coeffs, _mm_unpacklo_epi64(_mm_load_si128((__m128i*)kXXXXToYUV_UCoeffs8), _mm_load_si128((__m128i*)kXXXXToYUV_VCoeffs8)));
+	// load 128's16
+	_mm_store_si128(&xmm128, _mm_load_si128((__m128i*)k128_i16));
 
     // U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
     // V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
@@ -112,7 +117,7 @@ void rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint
             _mm_store_si128(&xmmRgba, _mm_maddubs_epi16(xmmRgba, xmmUV2Coeffs)); // Ua Ub Va Vb
             _mm_store_si128(&xmmRgba, _mm_hadd_epi16(xmmRgba, xmmRgba));
             _mm_store_si128(&xmmRgba, _mm_srai_epi16(xmmRgba, 8)); // >> 8
-            _mm_store_si128(&xmmRgba, _mm_add_epi16(xmmRgba, y128)); // + 128 -> UUVV----
+			_mm_store_si128(&xmmRgba, _mm_add_epi16(xmmRgba, xmm128)); // + 128 -> UUVV----
             _mm_store_si128(&xmmRgba, _mm_packus_epi16(xmmRgba, xmmRgba)); // Saturate(I16 -> U8)
             UUVV = _mm_cvtsi128_si32(xmmRgba);
             *outUPtr++ = (UUVV & 0xFF);
@@ -128,13 +133,14 @@ void rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint
     }
 }
 
-void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE)const int8_t* kXXXXToYUV_UCoeffs8, COMV_ALIGNED(SSE)const int8_t* kXXXXToYUV_VCoeffs8)
 {
-    __m128i xmmRgba0, xmmRgba1, xmmRgba2, xmmRgba3, xmm0, xmm1;
-    __m128i xmmUCoeffs = _mm_load_si128((__m128i*)kRGBAToYUV_UCoeffs8);
-    __m128i xmmVCoeffs = _mm_load_si128((__m128i*)kRGBAToYUV_VCoeffs8);
-    __m128i xmm128 = _mm_load_si128((__m128i*)k128_i16);
+	__m128i xmmRgba0, xmmRgba1, xmmRgba2, xmmRgba3, xmm0, xmm1, xmmUCoeffs, xmmVCoeffs, xmm128;
     vcomp_scalar_t i, j, maxI = ((width + 15) & -16), padUV = (stride - maxI) >> 1, padRGBA = ((stride - maxI) + stride) << 2; // +stride to skip even lines
+
+	_mm_store_si128(&xmmUCoeffs, _mm_load_si128((__m128i*)kXXXXToYUV_UCoeffs8));
+	_mm_store_si128(&xmmVCoeffs, _mm_load_si128((__m128i*)kXXXXToYUV_VCoeffs8));
+	_mm_store_si128(&xmm128, _mm_load_si128((__m128i*)k128_i16));
 
     // U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
     // V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
@@ -194,6 +200,140 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint
         outUPtr += padUV;
         outVPtr += padUV;
     }
+}
+
+// RGB/BGR -> I420-Y
+void rgbToI420Kernel31_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_YCoeffs8)
+{
+	__m128i xmmRgba0, xmmRgba1, xmmRgba2, xmmRgba3, xmm0, xmm1, xmmYCoeffs, xmmMaskRgbToRgba, xmm16;
+	vcomp_scalar_t i, j, maxI = ((width + 15) & -16), padY = (stride - maxI), padRGBA = padY * 3;
+
+	_mm_store_si128(&xmmMaskRgbToRgba, _mm_load_si128((__m128i*)kShuffleEpi8_RgbToRgba_i32));
+	_mm_store_si128(&xmm16, _mm_load_si128((__m128i*)k16_i16));
+	_mm_store_si128(&xmmYCoeffs, _mm_load_si128((__m128i*)kXXXXToYUV_YCoeffs8)); // RGBA coeffs
+
+	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
+	for (j = 0; j < height; ++j) {
+		for (i = 0; i < width; i += 16) {
+			/**  convert from RGB to RGBA **/
+			// RGBA0 = Convert(RGB0) -> 4RGBAs which means we used 4RGBs = 12bytes and lost 4bytes from RGB0
+			// RGBA1 = Convert(ALIGN(RGB0, RGB1, 12)) -> we used 4bytes from RGB0 and 8bytes from RGB1 = 12bytes RGB = 16bytes RGBA -> lost 12bytes from RGB1
+			// RGBA2 = Convert(ALIGN(RGB1, RGB2, 8)) -> we used 8bytes from RGB1 and 4bytes from RGB2 = 12bytes RGB = 16bytes RGBA -> lost 12bytes from RGB2
+			// RGBA3 = Convert(ALIGN(RGB2, RGB2, 4)) -> used 12bytes from RGB2 = 12bytes RGB = 16bytes RGBA
+			_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)rgbPtr)); // load first 16 samples
+			_mm_store_si128(&xmm1, _mm_load_si128((__m128i*)(rgbPtr + 16))); // load next 16 samples
+			_mm_store_si128(&xmmRgba0, _mm_shuffle_epi8(xmm0, xmmMaskRgbToRgba));
+			_mm_store_si128(&xmmRgba1, _mm_shuffle_epi8(_mm_alignr_epi8(xmm1, xmm0, 12), xmmMaskRgbToRgba));
+			_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)(rgbPtr + 32))); // load next 16 samples
+			_mm_store_si128(&xmmRgba2, _mm_shuffle_epi8(_mm_alignr_epi8(xmm0, xmm1, 8), xmmMaskRgbToRgba));
+			_mm_store_si128(&xmmRgba3, _mm_shuffle_epi8(_mm_alignr_epi8(xmm0, xmm0, 4), xmmMaskRgbToRgba));
+
+			// starting here we're using the same code as rgba -> i420
+
+			_mm_store_si128(&xmmRgba0, _mm_maddubs_epi16(xmmRgba0, xmmYCoeffs));
+			_mm_store_si128(&xmmRgba1, _mm_maddubs_epi16(xmmRgba1, xmmYCoeffs));
+			_mm_store_si128(&xmmRgba2, _mm_maddubs_epi16(xmmRgba2, xmmYCoeffs));
+			_mm_store_si128(&xmmRgba3, _mm_maddubs_epi16(xmmRgba3, xmmYCoeffs));
+
+			_mm_store_si128(&xmmRgba0, _mm_hadd_epi16(xmmRgba0, xmmRgba1));
+			_mm_store_si128(&xmmRgba2, _mm_hadd_epi16(xmmRgba2, xmmRgba3));
+
+			_mm_store_si128(&xmmRgba0, _mm_srai_epi16(xmmRgba0, 7)); // >> 7
+			_mm_store_si128(&xmmRgba2, _mm_srai_epi16(xmmRgba2, 7)); // >> 7
+
+			_mm_store_si128(&xmmRgba0, _mm_add_epi16(xmmRgba0, xmm16)); // + 16
+			_mm_store_si128(&xmmRgba2, _mm_add_epi16(xmmRgba2, xmm16)); // + 16
+
+			_mm_store_si128(&xmmRgba0, _mm_packus_epi16(xmmRgba0, xmmRgba2)); // Saturate(I16 -> U8)
+
+			_mm_storeu_si128((__m128i*)outYPtr, xmmRgba0);
+
+			outYPtr += 16;
+			rgbPtr += 48;
+		}
+		outYPtr += padY;
+		rgbPtr += padRGBA;
+	}
+}
+
+// RGB/BGR -> I420-UV
+void rgbToI420Kernel31_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_UCoeffs8, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_VCoeffs8)
+{
+	__m128i xmmRgba0, xmmRgba1, xmmRgba2, xmmRgba3, xmm0, xmm1, xmmUCoeffs, xmmVCoeffs, xmm128, xmmMaskRgbToRgba;
+	vcomp_scalar_t i, j, maxI = ((width + 15) & -16), padUV = (stride - maxI) >> 1, padRGBA = ((stride - maxI) + stride) * 3; // +stride to skip even lines
+
+	_mm_store_si128(&xmmMaskRgbToRgba, _mm_load_si128((__m128i*)kShuffleEpi8_RgbToRgba_i32));
+	_mm_store_si128(&xmmUCoeffs, _mm_load_si128((__m128i*)kXXXXToYUV_UCoeffs8));
+	_mm_store_si128(&xmmVCoeffs, _mm_load_si128((__m128i*)kXXXXToYUV_VCoeffs8));
+	_mm_store_si128(&xmm128, _mm_load_si128((__m128i*)k128_i16));
+
+	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
+	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
+	for (j = 0; j < height; j += 2) {
+		for (i = 0; i < width; i += 16) {
+			/**  convert from RGB to RGBA **/
+			// RGBA0 = Convert(RGB0) -> 4RGBAs which means we used 4RGBs = 12bytes and lost 4bytes from RGB0
+			// RGBA1 = Convert(ALIGN(RGB0, RGB1, 12)) -> we used 4bytes from RGB0 and 8bytes from RGB1 = 12bytes RGB = 16bytes RGBA -> lost 12bytes from RGB1
+			// RGBA2 = Convert(ALIGN(RGB1, RGB2, 8)) -> we used 8bytes from RGB1 and 4bytes from RGB2 = 12bytes RGB = 16bytes RGBA -> lost 12bytes from RGB2
+			// RGBA3 = Convert(ALIGN(RGB2, RGB2, 4)) -> used 12bytes from RGB2 = 12bytes RGB = 16bytes RGBA
+			_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)rgbPtr)); // load first 16 samples
+			_mm_store_si128(&xmm1, _mm_load_si128((__m128i*)(rgbPtr + 16))); // load next 16 samples
+			_mm_store_si128(&xmmRgba0, _mm_shuffle_epi8(xmm0, xmmMaskRgbToRgba));
+			_mm_store_si128(&xmmRgba1, _mm_shuffle_epi8(_mm_alignr_epi8(xmm1, xmm0, 12), xmmMaskRgbToRgba));
+			_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)(rgbPtr + 32))); // load next 16 samples
+			_mm_store_si128(&xmmRgba2, _mm_shuffle_epi8(_mm_alignr_epi8(xmm0, xmm1, 8), xmmMaskRgbToRgba));
+			_mm_store_si128(&xmmRgba3, _mm_shuffle_epi8(_mm_alignr_epi8(xmm0, xmm0, 4), xmmMaskRgbToRgba));
+
+			// starting here we're using the same code as rgba -> i420
+
+			_mm_store_si128(&xmm0, _mm_unpacklo_epi32(xmmRgba0, xmmRgba1)); // 02xx
+			_mm_store_si128(&xmm1, _mm_unpackhi_epi32(xmmRgba0, xmmRgba1)); // 13xx
+			_mm_store_si128(&xmmRgba0, _mm_unpacklo_epi32(xmm0, xmm1)); // 0123
+			_mm_store_si128(&xmmRgba1, xmmRgba0);
+
+			_mm_store_si128(&xmm0, _mm_unpacklo_epi32(xmmRgba2, xmmRgba3)); // 46xx
+			_mm_store_si128(&xmm1, _mm_unpackhi_epi32(xmmRgba2, xmmRgba3)); // 57xx
+			_mm_store_si128(&xmmRgba2, _mm_unpacklo_epi32(xmm0, xmm1)); // 4567
+			_mm_store_si128(&xmmRgba3, xmmRgba2);
+
+			// U = (xmmRgba0, xmmRgba2)
+			// V = (xmmRgba1, xmmRgba3)
+			_mm_store_si128(&xmmRgba0, _mm_maddubs_epi16(xmmRgba0, xmmUCoeffs));
+			_mm_store_si128(&xmmRgba2, _mm_maddubs_epi16(xmmRgba2, xmmUCoeffs));
+			_mm_store_si128(&xmmRgba1, _mm_maddubs_epi16(xmmRgba1, xmmVCoeffs));
+			_mm_store_si128(&xmmRgba3, _mm_maddubs_epi16(xmmRgba3, xmmVCoeffs));
+
+			// U = xmmRgba0
+			// V = xmmRgba1
+			_mm_store_si128(&xmmRgba0, _mm_hadd_epi16(xmmRgba0, xmmRgba2));
+			_mm_store_si128(&xmmRgba1, _mm_hadd_epi16(xmmRgba1, xmmRgba3));
+
+			_mm_store_si128(&xmmRgba0, _mm_srai_epi16(xmmRgba0, 8)); // >> 8
+			_mm_store_si128(&xmmRgba1, _mm_srai_epi16(xmmRgba1, 8)); // >> 8
+
+			_mm_store_si128(&xmmRgba0, _mm_add_epi16(xmmRgba0, xmm128)); // + 128 -> UUVV----
+			_mm_store_si128(&xmmRgba1, _mm_add_epi16(xmmRgba1, xmm128)); // + 128 -> UUVV----
+
+			// UV = xmmRgba0
+			_mm_store_si128(&xmmRgba0, _mm_packus_epi16(xmmRgba0, xmmRgba1)); // Saturate(I16 -> U8)
+
+#if defined(COMPV_ARCH_X64)
+			*((uint64_t*)outUPtr) = _mm_cvtsi128_si64(xmmRgba0);
+			_mm_store_si128(&xmmRgba0, _mm_srli_si128(xmmRgba0, 8)); // >> 8
+			*((uint64_t*)outVPtr) = _mm_cvtsi128_si64(xmmRgba0);
+#else
+			*((uint64_t*)outUPtr) = ((uint64_t*)&xmmRgba0)[0];
+			*((uint64_t*)outVPtr) = ((uint64_t*)&xmmRgba0)[1];
+#endif
+
+			outUPtr += 8;
+			outVPtr += 8;
+			rgbPtr += 48;
+		}
+		rgbPtr += padRGBA;
+		outUPtr += padUV;
+		outVPtr += padUV;
+	}
 }
 
 void i420ToRGBAKernel11_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(SSE) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)

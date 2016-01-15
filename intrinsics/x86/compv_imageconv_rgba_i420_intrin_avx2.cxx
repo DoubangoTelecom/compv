@@ -25,14 +25,15 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(AVX2)const int8_t* kXXXXToYUV_YCoeffs8)
 {
     _mm256_zeroupper();
-    __m256i ymmRgba;
-    __m256i ymmYCoeffs = _mm256_load_si256((__m256i*)kRGBAToYUV_YCoeffs8);
-    __m256i ymm16 = _mm256_load_si256((__m256i*)k16_i16);
-    __m256i ymmMaskToExtractFirst64Bits = _mm256_load_si256((__m256i*)kAVXMaskstore_0_i64);
+	__m256i ymmRgba, ymmYCoeffs, ymm16, ymmMaskToExtractFirst64Bits;
     vcomp_scalar_t i, j, maxI = ((width + 7) & -8), padY = (stride - maxI), padRGBA = padY << 2;
+
+	_mm256_store_si256(&ymmYCoeffs, _mm256_load_si256((__m256i*)kXXXXToYUV_YCoeffs8));
+	_mm256_store_si256(&ymm16, _mm256_load_si256((__m256i*)k16_i16));
+	_mm256_store_si256(&ymmMaskToExtractFirst64Bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_i64));
 
     // Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
     for (j = 0; j < height; ++j) {
@@ -59,14 +60,15 @@ void rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8
     _mm256_zeroupper();
 }
 
-void rgbaToI420Kernel41_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel41_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(AVX2)const int8_t* kXXXXToYUV_YCoeffs8)
 {
     _mm256_zeroupper();
-    __m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3;
-    __m256i ymmYCoeffs = _mm256_load_si256((__m256i*)kRGBAToYUV_YCoeffs8);
-    __m256i ymm16 = _mm256_load_si256((__m256i*)k16_i16);
-    __m256i ymmAEBFCGDH = _mm256_load_si256((__m256i*)kAVXPermutevar8x32_AEBFCGDH_i32);
+	__m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3, ymmYCoeffs, ymm16, ymmAEBFCGDH;
     vcomp_scalar_t i, j, maxI = ((width + 31) & -32), padY = (stride - maxI), padRGBA = padY << 2;
+
+	_mm256_store_si256(&ymmYCoeffs, _mm256_load_si256((__m256i*)kXXXXToYUV_YCoeffs8));
+	_mm256_store_si256(&ymm16, _mm256_load_si256((__m256i*)k16_i16));
+	_mm256_store_si256(&ymmAEBFCGDH, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_AEBFCGDH_i32));
 
     // Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
     for (j = 0; j < height; ++j) {
@@ -107,17 +109,22 @@ void rgbaToI420Kernel41_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8
     _mm256_zeroupper();
 }
 
-void rgbaToI420Kernel11_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel11_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(AVX2)const int8_t* kXXXXToYUV_UCoeffs8, COMV_ALIGNED(AVX2)const int8_t* kXXXXToYUV_VCoeffs8)
 {
     _mm256_zeroupper();
-    __m256i ymmRgba;
+	__m256i ymmRgba, ymm128, ymmUV4Coeffs, ymmMaskToExtractFirst32Bits;
 #if 0
     __m128i xmmUV;
 #endif
-    __m256i ymmUV4Coeffs = _mm256_load_si256((__m256i*)kRGBAToYUV_U4V4Coeffs8); // UV coeffs interleaved: each appear #4 times
-    __m256i ymm128 = _mm256_load_si256((__m256i*)k128_i16);
-    __m256i ymmMaskToExtractFirst32Bits = _mm256_load_si256((__m256i*)kAVXMaskstore_0_i32);
     vcomp_scalar_t i, j, maxI = ((width + 7) & -8), padUV = (stride - maxI) >> 1, padRGBA = ((stride - maxI) + stride) << 2; // +stride to skip even lines
+
+	// load UV coeffs interleaved: each appear #4 times (kRGBAToYUV_U4V4Coeffs8) - #4times U(or V) = #4 times 32bits = 128bits
+	// ASM, use vinsertf128
+	_mm256_store_si256(&ymmUV4Coeffs, _mm256_insertf128_si256(_mm256_load_si256((__m256i*)kXXXXToYUV_UCoeffs8), _mm256_castsi256_si128(_mm256_load_si256((__m256i*)kXXXXToYUV_VCoeffs8)), 0x1));
+	// load 128's16
+	_mm256_store_si256(&ymm128, _mm256_load_si256((__m256i*)k128_i16));
+	// load mask used to extract first 32bits
+	_mm256_store_si256(&ymmMaskToExtractFirst32Bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_i32));
 
     // U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
     // V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
@@ -153,16 +160,17 @@ void rgbaToI420Kernel11_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint
     _mm256_zeroupper();
 }
 
-void rgbaToI420Kernel41_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbaToI420Kernel41_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(AVX2)const int8_t* kXXXXToYUV_UCoeffs8, COMV_ALIGNED(AVX2)const int8_t* kXXXXToYUV_VCoeffs8)
 {
     _mm256_zeroupper();
-    __m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3, ymm0, ymm1;
-    __m256i ymmUCoeffs = _mm256_load_si256((__m256i*)kRGBAToYUV_UCoeffs8);
-    __m256i ymmVCoeffs = _mm256_load_si256((__m256i*)kRGBAToYUV_VCoeffs8);
-    __m256i ymm128 = _mm256_load_si256((__m256i*)k128_i16);
-    __m256i ymmAEBFCGDH = _mm256_load_si256((__m256i*)kAVXPermutevar8x32_AEBFCGDH_i32);
-    __m256i ymmMaskToExtract128bits = _mm256_load_si256((__m256i*)kAVXMaskstore_0_1_i64);
+	__m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3, ymm0, ymm1, ymmUCoeffs, ymmVCoeffs, ymm128, ymmAEBFCGDH, ymmMaskToExtract128bits;
     vcomp_scalar_t i, j, maxI = ((width + 31) & -32), padUV = (stride - maxI) >> 1, padRGBA = ((stride - maxI) + stride) << 2; // +stride to skip even lines
+
+	_mm256_store_si256(&ymmUCoeffs, _mm256_load_si256((__m256i*)kXXXXToYUV_UCoeffs8));
+	_mm256_store_si256(&ymmVCoeffs, _mm256_load_si256((__m256i*)kXXXXToYUV_VCoeffs8));
+	_mm256_store_si256(&ymm128, _mm256_load_si256((__m256i*)k128_i16));
+	_mm256_store_si256(&ymmAEBFCGDH, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_AEBFCGDH_i32));
+	_mm256_store_si256(&ymmMaskToExtract128bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_1_i64));
 
     // U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
     // V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
@@ -241,6 +249,86 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint
         outVPtr += padUV;
     }
     _mm256_zeroupper();
+}
+
+void rgbToI420Kernel31_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(AVX2)const int8_t* kXXXXToYUV_YCoeffs8)
+{
+	_mm256_zeroupper();
+	__m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3, ymmYCoeffs, ymm16, ymm0, ymm1, ymmAEBFCGDH, ymmMaskRgbToRgba;
+	vcomp_scalar_t i, j, maxI = ((width + 31) & -32), padY = (stride - maxI), padRGBA = padY * 3;
+
+	COMV_ALIGN_DEFAULT() int32_t FIXME[] = {
+		COMPV_MM_SHUFFLE_EPI8(0, 2, 1, 0), COMPV_MM_SHUFFLE_EPI8(0, 5, 4, 3), COMPV_MM_SHUFFLE_EPI8(0, 8, 7, 6), COMPV_MM_SHUFFLE_EPI8(0, 11, 10, 9), // 128bits SSE register
+		COMPV_MM_SHUFFLE_EPI8(0, 2, 1, 0), COMPV_MM_SHUFFLE_EPI8(0, 5, 4, 3), COMPV_MM_SHUFFLE_EPI8(0, 8, 7, 6), COMPV_MM_SHUFFLE_EPI8(0, 11, 10, 9), // 128bits SSE register
+	};
+	COMV_ALIGN_DEFAULT() int32_t PERMUTE32[] = {
+		0, 1, 2, 3, 3, 4, 5, 6
+	};
+
+	_mm256_store_si256(&ymmMaskRgbToRgba, _mm256_load_si256((__m256i*)FIXME));
+	_mm256_store_si256(&ymmYCoeffs, _mm256_load_si256((__m256i*)kXXXXToYUV_YCoeffs8)); // RGBA coeffs
+	_mm256_store_si256(&ymm16, _mm256_load_si256((__m256i*)k16_i16));
+	_mm256_store_si256(&ymmAEBFCGDH, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_AEBFCGDH_i32));
+
+#define compv_avx2_alignr_epi8(ymm0_, ymm1_, imm_)		_mm256_alignr_epi8(_mm256_permute4x64_epi64(ymm0_, COMPV_MM_SHUFFLE(3, 1, 2, 0)), _mm256_permute4x64_epi64(ymm1_, COMPV_MM_SHUFFLE(3, 1, 2, 0)), imm_)
+
+	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
+	for (j = 0; j < height; ++j) {
+		for (i = 0; i < width; i += 32) {
+#if 0
+			_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)rgbPtr)); // load first 32 samples
+			_mm256_store_si256(&ymm1, _mm256_load_si256((__m256i*)(rgbPtr + 32))); // load next 32 samples
+			_mm256_store_si256(&ymmRgba0, _mm256_shuffle_epi8(ymm0, ymmMaskRgbToRgba));
+			_mm256_store_si256(&ymmRgba1, _mm256_shuffle_epi8(_mm256_alignr_epi8(ymm1, ymm0, 12), ymmMaskRgbToRgba));
+			_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)(rgbPtr + 64))); // load next 32 samples
+			_mm256_store_si256(&ymmRgba2, _mm256_shuffle_epi8(_mm256_alignr_epi8(ymm0, ymm1, 8), ymmMaskRgbToRgba));
+			_mm256_store_si256(&ymmRgba3, _mm256_shuffle_epi8(_mm256_alignr_epi8(ymm0, ymm0, 4), ymmMaskRgbToRgba));
+#else
+			_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)rgbPtr)); // load first 32 samples
+			ymm1 = _mm256_permutevar8x32_epi32(ymm0, _mm256_load_si256((__m256i*)PERMUTE32)); // move the last 4bytes in the first 128-lane to the second 128-lane
+			_mm256_store_si256(&ymmRgba0, _mm256_shuffle_epi8(ymm1, ymmMaskRgbToRgba)); // RGB -> RGBA
+
+			_mm256_store_si256(&ymm1, _mm256_load_si256((__m256i*)(rgbPtr + 32))); // load next 32 samples
+			ymm0 = compv_avx2_alignr_epi8(ymm1, ymm0, 8);
+			ymm0 = _mm256_permutevar8x32_epi32(ymm0, _mm256_load_si256((__m256i*)PERMUTE32));
+			_mm256_store_si256(&ymmRgba1, _mm256_shuffle_epi8(ymm0, ymmMaskRgbToRgba));
+#endif
+
+			//ymmRgba1 = _mm256_setzero_si256();
+			ymmRgba2 = _mm256_setzero_si256();
+			ymmRgba3 = _mm256_setzero_si256();
+
+			// starting here we're using the same code as rgba -> i420
+
+			_mm256_store_si256(&ymmRgba0, _mm256_maddubs_epi16(ymmRgba0, ymmYCoeffs));
+			_mm256_store_si256(&ymmRgba1, _mm256_maddubs_epi16(ymmRgba1, ymmYCoeffs));
+			_mm256_store_si256(&ymmRgba2, _mm256_maddubs_epi16(ymmRgba2, ymmYCoeffs));
+			_mm256_store_si256(&ymmRgba3, _mm256_maddubs_epi16(ymmRgba3, ymmYCoeffs));
+
+			_mm256_store_si256(&ymmRgba0, _mm256_hadd_epi16(ymmRgba0, ymmRgba1)); // hadd(ABCD) -> ACBD
+			_mm256_store_si256(&ymmRgba2, _mm256_hadd_epi16(ymmRgba2, ymmRgba3)); // hadd(EFGH) -> EGFH
+
+			_mm256_store_si256(&ymmRgba0, _mm256_srai_epi16(ymmRgba0, 7)); // >> 7
+			_mm256_store_si256(&ymmRgba2, _mm256_srai_epi16(ymmRgba2, 7)); // >> 7
+
+			_mm256_store_si256(&ymmRgba0, _mm256_add_epi16(ymmRgba0, ymm16)); // + 16
+			_mm256_store_si256(&ymmRgba2, _mm256_add_epi16(ymmRgba2, ymm16)); // + 16
+
+			// Saturate(I16 -> U8)
+			_mm256_store_si256(&ymmRgba0, _mm256_packus_epi16(ymmRgba0, ymmRgba2)); // packus(ACBD, EGFH) -> AEBFCGDH
+
+			// Final Permute
+			_mm256_store_si256(&ymmRgba0, _mm256_permutevar8x32_epi32(ymmRgba0, ymmAEBFCGDH));
+
+			_mm256_store_si256((__m256i*)outYPtr, ymmRgba0);
+
+			outYPtr += 32;
+			rgbPtr += 96;
+		}
+		outYPtr += padY;
+		rgbPtr += padRGBA;
+	}
+	_mm256_zeroupper();
 }
 
 void i420ToRGBAKernel11_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(AVX2) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)

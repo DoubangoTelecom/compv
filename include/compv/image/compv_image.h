@@ -53,6 +53,7 @@ public:
 	static COMPV_ERROR_CODE copy(COMPV_PIXEL_FORMAT ePixelFormat, const void* inPtr, int32_t inWidth, int32_t inHeight, int32_t inStride, void* outPtr, int32_t outWidth, int32_t outHeight, int32_t outStride);
 	static COMPV_ERROR_CODE wrap(COMPV_PIXEL_FORMAT ePixelFormat, const void* dataPtr, int32_t width, int32_t height, int32_t stride, CompVObjWrapper<CompVImage*>* image);
 	static COMPV_ERROR_CODE newObj(COMPV_IMAGE_FORMAT eImageFormat, COMPV_PIXEL_FORMAT ePixelFormat, CompVObjWrapper<CompVImage*>* image);
+	static COMPV_ERROR_CODE newObj(COMPV_PIXEL_FORMAT ePixelFormat, int32_t width, int32_t height, int32_t stride, CompVObjWrapper<CompVImage*>* image);
 
 protected:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)

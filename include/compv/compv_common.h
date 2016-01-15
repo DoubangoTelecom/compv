@@ -43,9 +43,14 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_ASSERT(x) do { bool __b_ret = (x); assert(__b_ret); } while(0)
 
 #if defined(COMPV_INTRINSIC)
-#	define COMPV_EXEC_IFDEF_INTRINSIC(EXPR) do { if (CompVCpu::isIntrinsicsEnabled()) { (EXPR); } } while(0)
+#	define COMPV_EXEC_IFDEF_INTRIN(EXPR) do { if (CompVCpu::isIntrinsicsEnabled()) { (EXPR); } } while(0)
 #else
-#	define COMPV_EXEC_IFDEF_INTRINSIC(EXPR) 	
+#	define COMPV_EXEC_IFDEF_INTRIN(EXPR) 
+#endif
+#if defined(COMPV_INTRINSIC) && defined(COMPV_ARCH_X86)
+#	define COMPV_EXEC_IFDEF_INTRIN_X86(EXPR) do { if (CompVCpu::isIntrinsicsEnabled()) { (EXPR); } } while(0)
+#else
+#	define COMPV_EXEC_IFDEF_INTRIN_X86(EXPR) 	
 #endif
 #if defined(COMPV_ASM)
 #	define COMPV_EXEC_IFDEF_ASM(EXPR) do { if (CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
@@ -57,9 +62,33 @@ COMPV_NAMESPACE_BEGIN()
 #else
 #	define COMPV_EXEC_IFDEF_ASM_X64(EXPR) 	
 #endif
+#if defined(COMPV_ASM) && defined(COMPV_ARCH_X86)
+#	define COMPV_EXEC_IFDEF_ASM_X86(EXPR) do { if (CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
+#else
+#	define COMPV_EXEC_IFDEF_ASM_X86(EXPR) 	
+#endif
 
 #define COMPV_NUM_THREADS_SINGLE	1
 #define COMPV_NUM_THREADS_BEST		-1
+
+#define COMPV_IS_ALIGNED(p, a) (!((uintptr_t)(p) & ((a) - 1)))
+#define COMPV_IS_ALIGNED_MMX(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_MMX)
+#define COMPV_IS_ALIGNED_SSE(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_SSE)
+#define COMPV_IS_ALIGNED_AVX(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_AVX)
+#define COMPV_IS_ALIGNED_AVX2(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_AVX2)
+#define COMPV_IS_ALIGNED_NEON(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_NEON)
+#define COMPV_IS_ALIGNED_ARM64(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_ARM64)
+#define COMPV_IS_ALIGNED_DEFAULT(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_DEFAULT)
+
+#define COMV_ALIGNED(x) 
+#define COMV_ALIGNED_DEFAULT(x) 
+#define COMV_ALIGN_DEFAULT() COMPV_ALIGN(COMPV_SIMD_ALIGNV_DEFAULT)
+#define COMV_ALIGN_AVX() COMPV_ALIGN(COMPV_SIMD_ALIGNV_AVX)
+#define COMV_ALIGN_AVX2() COMPV_ALIGN(COMPV_SIMD_ALIGNV_AVX2)
+#define COMV_ALIGN_SSE() COMPV_ALIGN(COMPV_SIMD_ALIGNV_SSE)
+#define COMV_ALIGN_MMX() COMPV_ALIGN(COMPV_SIMD_ALIGNV_MMX)
+
+#define COMPV_DEFAULT_ARG(arg_, val_) arg_
 
 #define COMPV_IS_POW2(x) (((x) != 0) && !((x) & ((x) - 1))) 
 
@@ -77,9 +106,9 @@ COMPV_NAMESPACE_BEGIN()
 
 /*
 Macro to build arg32 values for _mm(256/128)_shuffle_epi8().
-a,b,c,d mus be <= 16 for _mm128_shuffle_epi8() and <32 for _mm256_shuffle_epi8()
+a,b,c,d must be <= 16 for _mm128_shuffle_epi8() and <32 for _mm256_shuffle_epi8()
 */
-#define COMPV_MM_SHUFFLE_EPI8(a, b, c, d) ((d << 24) | (c << 16) | (b << 8) | (a & 0xFF))
+#define COMPV_MM_SHUFFLE_EPI8(fp3,fp2,fp1,fp0) ((fp3 << 24) | (fp2 << 16) | (fp1 << 8) | (fp0 & 0xFF))
 
 typedef int32_t vcomp_core_id_t;
 typedef intptr_t vcomp_scalar_t;  /* This type *must* have the width of a general-purpose register on the target CPU. 64bits or 32bits. */

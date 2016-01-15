@@ -26,17 +26,20 @@ COMPV_ERROR_CODE ImageConvKernelxx_AsynExec(const struct compv_asynctoken_param_
 {
     const int funcId = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, int);
     switch (funcId) {
-    case COMPV_IMAGECONV_FUNCID_RGBAToI420_Y: {
+    case COMPV_IMAGECONV_FUNCID_RGBAToI420_Y:
+    case COMPV_IMAGECONV_FUNCID_RGBToI420_Y: {
         rgbaToI420Kernel_CompY CompY = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, rgbaToI420Kernel_CompY);
         const uint8_t* rgbaPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const uint8_t*);
         uint8_t* outYPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, uint8_t*);
         vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, int);
         vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int);
         vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int);
-        CompY(rgbaPtr, outYPtr, height, width, stride);
+        COMV_ALIGNED(DEFAULT) const int8_t* kXXXToYUV_YCoeffs8 = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[7].pcParamPtr, const int8_t*);
+        CompY(rgbaPtr, outYPtr, height, width, stride, kXXXToYUV_YCoeffs8);
         break;
     }
-    case COMPV_IMAGECONV_FUNCID_RGBAToI420_UV: {
+    case COMPV_IMAGECONV_FUNCID_RGBAToI420_UV:
+    case COMPV_IMAGECONV_FUNCID_RGBToI420_UV : {
         rgbaToI420Kernel_CompUV CompUV = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, rgbaToI420Kernel_CompUV);
         const uint8_t* rgbaPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const uint8_t*);
         uint8_t* outUPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, uint8_t*);
@@ -44,7 +47,9 @@ COMPV_ERROR_CODE ImageConvKernelxx_AsynExec(const struct compv_asynctoken_param_
         vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int);
         vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int);
         vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[7].pcParamPtr, int);
-        CompUV(rgbaPtr, outUPtr, outVPtr, height, width, stride);
+        COMV_ALIGNED(DEFAULT)const int8_t* kXXXToYUV_UCoeffs8 = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[8].pcParamPtr, const int8_t*);
+        COMV_ALIGNED(DEFAULT)const int8_t* kXXXToYUV_VCoeffs8 = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[9].pcParamPtr, const int8_t*);
+        CompUV(rgbaPtr, outUPtr, outVPtr, height, width, stride, kXXXToYUV_UCoeffs8, kXXXToYUV_VCoeffs8);
         break;
     }
     case COMPV_IMAGECONV_FUNCID_I420ToRGBA: {
@@ -85,34 +90,149 @@ Numerical approx. = >
 Y = (((66 * R) + (129 * G) + (25 * B))) >> 8 + 16
 = (2 * ((33 * R) + (65 * G) + (13 * B))) >> 8 + 16
 = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
-V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
 U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
+V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
 */
+#define RY 33
+#define GY 65
+#define BY 13
+#define AY 0
+#define RU -38
+#define GU -74
+#define BU 112
+#define AU 0
+#define RV 112
+#define GV -94
+#define BV -18
+#define AV 0
+////// RGBA -> YUV //////
 COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kRGBAToYUV_YCoeffs8[] = {
-    33, 65, 13, 0, 33, 65, 13, 0, 33, 65, 13, 0, 33, 65, 13, 0, // 128bits SSE register
-    33, 65, 13, 0, 33, 65, 13, 0, 33, 65, 13, 0, 33, 65, 13, 0, // 256bits AVX register
+    RY, GY, BY, AY, RY, GY, BY, AY, RY, GY, BY, AY, RY, GY, BY, AY, // 128bits SSE register
+    RY, GY, BY, AY, RY, GY, BY, AY, RY, GY, BY, AY, RY, GY, BY, AY, // 256bits AVX register
 };
 COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kRGBAToYUV_UCoeffs8[] = {
-    -38, -74, 112, 0, -38, -74, 112, 0, -38, -74, 112, 0, -38, -74, 112, 0, // 128bits SSE register
-    -38, -74, 112, 0, -38, -74, 112, 0, -38, -74, 112, 0, -38, -74, 112, 0, // 256bits AVX register
+    RU, GU, BU, AU, RU, GU, BU, AU, RU, GU, BU, AU, RU, GU, BU, AU, // 128bits SSE register
+    RU, GU, BU, AU, RU, GU, BU, AU, RU, GU, BU, AU, RU, GU, BU, AU, // 256bits AVX register
 };
 COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kRGBAToYUV_VCoeffs8[] = {
-    112, -94, -18, 0, 112, -94, -18, 0, 112, -94, -18, 0, 112, -94, -18, 0, // 128bits SSE register
-    112, -94, -18, 0, 112, -94, -18, 0, 112, -94, -18, 0, 112, -94, -18, 0, // 256bits AVX register
+    RV, GV, BV, AV, RV, GV, BV, AV, RV, GV, BV, AV, RV, GV, BV, AV, // 128bits SSE register
+    RV, GV, BV, AV, RV, GV, BV, AV, RV, GV, BV, AV, RV, GV, BV, AV, // 256bits AVX register
 };
 COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kRGBAToYUV_UVCoeffs8[] = { // U and V interleaved: Each appear #1 time: UVUVUVUV....
-    -38, -74, 112, 0, 112, -94, -18, 0, -38, -74, 112, 0, 112, -94, -18, 0,
-    -38, -74, 112, 0, 112, -94, -18, 0, -38, -74, 112, 0, 112, -94, -18, 0,
+    RU, GU, BU, AU, RV, GV, BV, AV, RU, GU, BU, AU, RV, GV, BV, AV,
+    RU, GU, BU, AU, RV, GV, BV, AV, RU, GU, BU, AU, RV, GV, BV, AV,
 };
 COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kRGBAToYUV_U2V2Coeffs8[] = { // U and V interleaved: Each appear #2 times: UUVVUUVVUUVV....
-    -38, -74, 112, 0, -38, -74, 112, 0, 112, -94, -18, 0, 112, -94, -18, 0,
-    -38, -74, 112, 0, -38, -74, 112, 0, 112, -94, -18, 0, 112, -94, -18, 0,
+    RU, GU, BU, AU, RU, GU, BU, AU, RV, GV, BV, AV, RV, GV, BV, AV,
+    RU, GU, BU, AU, RU, GU, BU, AU, RV, GV, BV, AV, RV, GV, BV, AV,
 };
 
 COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kRGBAToYUV_U4V4Coeffs8[] = { // AVX-only: U and V interleaved: Each appear #4 times: UUUUVVVVUUUUVVVV.....
-    -38, -74, 112, 0, -38, -74, 112, 0, -38, -74, 112, 0, -38, -74, 112, 0,
-    112, -94, -18, 0, 112, -94, -18, 0, 112, -94, -18, 0, 112, -94, -18, 0,
+    RU, GU, BU, AU, RU, GU, BU, AU, RU, GU, BU, AU, RU, GU, BU, AU,
+    RV, GV, BV, AV, RV, GV, BV, AV, RV, GV, BV, AV, RV, GV, BV, AV,
 };
+////// ARGB -> YUV //////
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kARGBToYUV_YCoeffs8[] = {
+    AY, RY, GY, BY, AY, RY, GY, BY, AY, RY, GY, BY, AY, RY, GY, BY, // 128bits SSE register
+    AY, RY, GY, BY, AY, RY, GY, BY, AY, RY, GY, BY, AY, RY, GY, BY, // 256bits AVX register
+};
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kARGBToYUV_UCoeffs8[] = {
+    AU, RU, GU, BU, AU, RU, GU, BU, AU, RU, GU, BU, AU, RU, GU, BU, // 128bits SSE register
+    AU, RU, GU, BU, AU, RU, GU, BU, AU, RU, GU, BU, AU, RU, GU, BU, // 256bits AVX register
+};
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kARGBToYUV_VCoeffs8[] = {
+    AV, RV, GV, BV, AV, RV, GV, BV, AV, RV, GV, BV, AV, RV, GV, BV, // 128bits SSE register
+    AV, RV, GV, BV, AV, RV, GV, BV, AV, RV, GV, BV, AV, RV, GV, BV, // 256bits AVX register
+};
+////// BGRA -> YUV //////
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kBGRAToYUV_YCoeffs8[] = {
+    BY, GY, RY, AY, BY, GY, RY, AY, BY, GY, RY, AY, BY, GY, RY, AY, // 128bits SSE register
+    BY, GY, RY, AY, BY, GY, RY, AY, BY, GY, RY, AY, BY, GY, RY, AY, // 256bits AVX register
+};
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kBGRAToYUV_UCoeffs8[] = {
+    BU, GU, RU, AU, BU, GU, RU, AU, BU, GU, RU, AU, BU, GU, RU, AU, // 128bits SSE register
+    BU, GU, RU, AU, BU, GU, RU, AU, BU, GU, RU, AU, BU, GU, RU, AU, // 256bits AVX register
+};
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kBGRAToYUV_VCoeffs8[] = {
+    BV, GV, RV, AV, BV, GV, RV, AV, BV, GV, RV, AV, BV, GV, RV, AV, // 128bits SSE register
+    BV, GV, RV, AV, BV, GV, RV, AV, BV, GV, RV, AV, BV, GV, RV, AV, // 256bits AVX register
+};
+////// ABGR -> YUV //////
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kABGRToYUV_YCoeffs8[] = {
+    AY, BY, GY, RY, AY, BY, GY, RY, AY, BY, GY, RY, AY, BY, GY, RY, // 128bits SSE register
+    AY, BY, GY, RY, AY, BY, GY, RY, AY, BY, GY, RY, AY, BY, GY, RY, // 256bits AVX register
+};
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kABGRToYUV_UCoeffs8[] = {
+    AU, BU, GU, RU, AU, BU, GU, RU, AU, BU, GU, RU, AU, BU, GU, RU, // 128bits SSE register
+    AU, BU, GU, RU, AU, BU, GU, RU, AU, BU, GU, RU, AU, BU, GU, RU, // 256bits AVX register
+};
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kABGRToYUV_VCoeffs8[] = {
+    AV, BV, GV, RV, AV, BV, GV, RV, AV, BV, GV, RV, AV, BV, GV, RV, // 128bits SSE register
+    AV, BV, GV, RV, AV, BV, GV, RV, AV, BV, GV, RV, AV, BV, GV, RV, // 256bits AVX register
+};
+////// RGB -> YUV //////
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kRGBToYUV_YCoeffs8[] = {
+    RY, GY, BY, RY, GY, BY, RY, GY, BY, RY, GY, BY, RY, GY, BY, RY, // SSE+0, AVX+0
+    GY, BY, RY, GY, BY, RY, GY, BY, RY, GY, BY, RY, GY, BY, RY, GY, // SSE+16
+    BY, RY, GY, BY, RY, GY, BY, RY, GY, BY, RY, GY, BY, RY, GY, BY, // SSE+32, AVX+32
+    RY, GY, BY, RY, GY, BY, RY, GY, BY, RY, GY, BY, RY, GY, BY, RY,
+    GY, BY, RY, GY, BY, RY, GY, BY, RY, GY, BY, RY, GY, BY, RY, GY, // AVX+64
+    BY, RY, GY, BY, RY, GY, BY, RY, GY, BY, RY, GY, BY, RY, GY, BY,
+};
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kRGBToYUV_UCoeffs8[] = {
+    RU, GU, BU, RU, GU, BU, RU, GU, BU, RU, GU, BU, RU, GU, BU, RU, // SSE+0, AVX+0
+    GU, BU, RU, GU, BU, RU, GU, BU, RU, GU, BU, RU, GU, BU, RU, GU, // SSE+16
+    BU, RU, GU, BU, RU, GU, BU, RU, GU, BU, RU, GU, BU, RU, GU, BU, // SSE+32, AVX+32
+    RU, GU, BU, RU, GU, BU, RU, GU, BU, RU, GU, BU, RU, GU, BU, RU,
+    GU, BU, RU, GU, BU, RU, GU, BU, RU, GU, BU, RU, GU, BU, RU, GU, // AVX+64
+    BU, RU, GU, BU, RU, GU, BU, RU, GU, BU, RU, GU, BU, RU, GU, BU,
+};
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kRGBToYUV_VCoeffs8[] = {
+    RV, GV, BV, RV, GV, BV, RV, GV, BV, RV, GV, BV, RV, GV, BV, RV, // SSE+0, AVX+0
+    GV, BV, RV, GV, BV, RV, GV, BV, RV, GV, BV, RV, GV, BV, RV, GV, // SSE+16
+    BV, RV, GV, BV, RV, GV, BV, RV, GV, BV, RV, GV, BV, RV, GV, BV, // SSE+32, AVX+32
+    RV, GV, BV, RV, GV, BV, RV, GV, BV, RV, GV, BV, RV, GV, BV, RV,
+    GV, BV, RV, GV, BV, RV, GV, BV, RV, GV, BV, RV, GV, BV, RV, GV, // AVX+64
+    BV, RV, GV, BV, RV, GV, BV, RV, GV, BV, RV, GV, BV, RV, GV, BV,
+};
+////// BGR -> YUV //////
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kBGRToYUV_YCoeffs8[] = {
+    BY, GY, RY, BY, GY, RY, BY, GY, RY, BY, GY, RY, BY, GY, RY, BY, // SSE+0, AVX+0
+    GY, RY, BY, GY, RY, BY, GY, RY, BY, GY, RY, BY, GY, RY, BY, GY, // SSE+16
+    RY, BY, GY, RY, BY, GY, RY, BY, GY, RY, BY, GY, RY, BY, GY, RY, // SSE+32, AVX+32
+    BY, GY, RY, BY, GY, RY, BY, GY, RY, BY, GY, RY, BY, GY, RY, BY,
+    GY, RY, BY, GY, RY, BY, GY, RY, BY, GY, RY, BY, GY, RY, BY, GY, // AVX+64
+    RY, BY, GY, RY, BY, GY, RY, BY, GY, RY, BY, GY, RY, BY, GY, RY,
+};
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kBGRToYUV_UCoeffs8[] = {
+    BU, GU, RU, BU, GU, RU, BU, GU, RU, BU, GU, RU, BU, GU, RU, BU, // SSE+0, AVX+0
+    GU, RU, BU, GU, RU, BU, GU, RU, BU, GU, RU, BU, GU, RU, BU, GU, // SSE+16
+    RU, BU, GU, RU, BU, GU, RU, BU, GU, RU, BU, GU, RU, BU, GU, RU, // SSE+32, AVX+32
+    BU, GU, RU, BU, GU, RU, BU, GU, RU, BU, GU, RU, BU, GU, RU, BU,
+    GU, RU, BU, GU, RU, BU, GU, RU, BU, GU, RU, BU, GU, RU, BU, GU, // AVX+64
+    RU, BU, GU, RU, BU, GU, RU, BU, GU, RU, BU, GU, RU, BU, GU, RU,
+};
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kBGRToYUV_VCoeffs8[] = {
+    BV, GV, RV, BV, GV, RV, BV, GV, RV, BV, GV, RV, BV, GV, RV, BV, // SSE+0, AVX+0
+    GV, RV, BV, GV, RV, BV, GV, RV, BV, GV, RV, BV, GV, RV, BV, GV, // SSE+16
+    RV, BV, GV, RV, BV, GV, RV, BV, GV, RV, BV, GV, RV, BV, GV, RV, // SSE+32, AVX+32
+    BV, GV, RV, BV, GV, RV, BV, GV, RV, BV, GV, RV, BV, GV, RV, BV,
+    GV, RV, BV, GV, RV, BV, GV, RV, BV, GV, RV, BV, GV, RV, BV, GV, // AVX+64
+    RV, BV, GV, RV, BV, GV, RV, BV, GV, RV, BV, GV, RV, BV, GV, RV,
+};
+
+#undef RY
+#undef GY
+#undef BY
+#undef AY
+#undef RU
+#undef GU
+#undef BU
+#undef AU
+#undef RV
+#undef GV
+#undef BV
+#undef AV
 
 
 /* YUV to RGB conversion : http ://www.fourcc.org/fccyvrgb.php
@@ -152,4 +272,11 @@ COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kYUVToRGBA_GCoeffs8[] = { // Extended 
 COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kYUVToRGBA_BCoeffs8[] = { // Extended with a zero to have #4 coeffs: k0, k1, k2, 0
     37, 65, 0, 0, 37, 65, 0, 0, 37, 65, 0, 0, 37, 65, 0, 0, // 128bits SSE register
     37, 65, 0, 0, 37, 65, 0, 0, 37, 65, 0, 0, 37, 65, 0, 0, // 256bits AVX register
+};
+
+
+// Insert 8bytes every 24bytes
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() int32_t kShuffleEpi8_RgbToRgba_i32[] = {
+	COMPV_MM_SHUFFLE_EPI8(0, 2, 1, 0), COMPV_MM_SHUFFLE_EPI8(0, 5, 4, 3), COMPV_MM_SHUFFLE_EPI8(0, 8, 7, 6), COMPV_MM_SHUFFLE_EPI8(0, 11, 10, 9), // 128bits SSE register
+	COMPV_MM_SHUFFLE_EPI8(0, 2, 1, 0), COMPV_MM_SHUFFLE_EPI8(0, 5, 4, 3), COMPV_MM_SHUFFLE_EPI8(0, 8, 7, 6), COMPV_MM_SHUFFLE_EPI8(0, 11, 10, 9), // 256bits AVX register
 };
