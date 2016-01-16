@@ -29,11 +29,11 @@
     <ClInclude Include="include\compv\compv_errno.h" />
     <ClInclude Include="include\compv\compv_fileutils.h" />
     <ClInclude Include="include\compv\compv_mathutils.h" />
+    <ClInclude Include="include\compv\compv_md5.h" />
     <ClInclude Include="include\compv\compv_mem.h" />
     <ClInclude Include="include\compv\compv_obj.h" />
     <ClInclude Include="include\compv\compv_simd_globals.h" />
     <ClInclude Include="include\compv\image\compv_image.h" />
-    <ClInclude Include="include\compv\image\compv_imageconv.h" />
     <ClInclude Include="include\compv\image\compv_imageconv_common.h" />
     <ClInclude Include="include\compv\image\compv_imageconv_rgba_i420.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_rgba_i420_intrin_avx2.h" />
@@ -56,11 +56,11 @@
     <ClCompile Include="compv_engine.cxx" />
     <ClCompile Include="compv_fileutils.cxx" />
     <ClCompile Include="compv_mathutils.cxx" />
+    <ClCompile Include="compv_md5.cxx" />
     <ClCompile Include="compv_mem.cxx" />
     <ClCompile Include="compv_obj.cxx" />
     <ClCompile Include="compv_simd_globals.cxx" />
     <ClCompile Include="image\compv_image.cxx" />
-    <ClCompile Include="image\compv_imageconv.cxx" />
     <ClCompile Include="image\compv_imageconv_common.cxx" />
     <ClCompile Include="image\compv_imageconv_rgba_i420.cxx" />
     <ClCompile Include="image\compv_image_libjpeg.cxx" />

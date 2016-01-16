@@ -18,7 +18,6 @@
 * along with CompV.
 */
 #include "compv/image/compv_imageconv_rgba_i420.h"
-#include "compv/image/compv_imageconv.h"
 #include "compv/image/compv_imageconv_common.h"
 #include "compv/compv_engine.h"
 #include "compv/compv_cpu.h"
@@ -260,7 +259,7 @@ static COMPV_ERROR_CODE __xxxToI420(const CompVObjWrapper<CompVImage* >& rgb, Co
 		if (CompVCpu::isSupported(kCpuFlagAVX2)) {
 			if (COMPV_IS_ALIGNED_SSE(rgbPtr)) {
 				if (COMPV_IS_ALIGNED_SSE(outYPtr)) {
-					//COMPV_EXEC_IFDEF_INTRIN_X86(CompY = rgbToI420Kernel31_CompY_Intrin_Aligned_AVX2);
+					COMPV_EXEC_IFDEF_INTRIN_X86(CompY = rgbToI420Kernel31_CompY_Intrin_Aligned_AVX2);
 				}
 			}
 		} // end-of-AVX2

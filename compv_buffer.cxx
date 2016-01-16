@@ -152,13 +152,9 @@ bail:
 
 COMPV_ERROR_CODE CompVBuffer::newObjAndRefData(const void* pcPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer)
 {
+	COMPV_CHECK_EXP_RETURN(!buffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVObjWrapper<CompVBuffer*> buffer_;
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-
-    if (!buffer) {
-        COMPV_DEBUG_ERROR("Invalid parameter");
-        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-    }
 
     COMPV_CHECK_CODE_BAIL(err = CompVBuffer::newObjAndNullData(&buffer_));
     COMPV_CHECK_CODE_BAIL(err = buffer_->refData(pcPtr, size));

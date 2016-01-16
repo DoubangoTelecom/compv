@@ -254,7 +254,7 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint
 void rgbToI420Kernel31_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(AVX2)const int8_t* kXXXXToYUV_YCoeffs8)
 {
 	_mm256_zeroupper();
-	__m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3, ymmYCoeffs, ymm16, ymm0, ymm1, ymmAEBFCGDH, ymmMaskRgbToRgba;
+	__m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3, ymmYCoeffs, ymm16, ymm0, ymm1, ymmAEBFCGDH, ymmMaskRgbToRgba, ymmMaskToExtract64bits, lost;
 	vcomp_scalar_t i, j, maxI = ((width + 31) & -32), padY = (stride - maxI), padRGBA = padY * 3;
 
 	COMV_ALIGN_DEFAULT() int32_t FIXME[] = {
@@ -269,34 +269,36 @@ void rgbToI420Kernel31_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_
 	_mm256_store_si256(&ymmYCoeffs, _mm256_load_si256((__m256i*)kXXXXToYUV_YCoeffs8)); // RGBA coeffs
 	_mm256_store_si256(&ymm16, _mm256_load_si256((__m256i*)k16_i16));
 	_mm256_store_si256(&ymmAEBFCGDH, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_AEBFCGDH_i32));
-
-#define compv_avx2_alignr_epi8(ymm0_, ymm1_, imm_)		_mm256_alignr_epi8(_mm256_permute4x64_epi64(ymm0_, COMPV_MM_SHUFFLE(3, 1, 2, 0)), _mm256_permute4x64_epi64(ymm1_, COMPV_MM_SHUFFLE(3, 1, 2, 0)), imm_)
-
+	_mm256_store_si256(&ymmMaskToExtract64bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_i64));
+	
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 32) {
-#if 0
-			_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)rgbPtr)); // load first 32 samples
-			_mm256_store_si256(&ymm1, _mm256_load_si256((__m256i*)(rgbPtr + 32))); // load next 32 samples
-			_mm256_store_si256(&ymmRgba0, _mm256_shuffle_epi8(ymm0, ymmMaskRgbToRgba));
-			_mm256_store_si256(&ymmRgba1, _mm256_shuffle_epi8(_mm256_alignr_epi8(ymm1, ymm0, 12), ymmMaskRgbToRgba));
-			_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)(rgbPtr + 64))); // load next 32 samples
-			_mm256_store_si256(&ymmRgba2, _mm256_shuffle_epi8(_mm256_alignr_epi8(ymm0, ymm1, 8), ymmMaskRgbToRgba));
-			_mm256_store_si256(&ymmRgba3, _mm256_shuffle_epi8(_mm256_alignr_epi8(ymm0, ymm0, 4), ymmMaskRgbToRgba));
-#else
-			_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)rgbPtr)); // load first 32 samples
-			ymm1 = _mm256_permutevar8x32_epi32(ymm0, _mm256_load_si256((__m256i*)PERMUTE32)); // move the last 4bytes in the first 128-lane to the second 128-lane
+			///////////// Line-0 /////////////
+			_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)(rgbPtr + 0))); // load first 32 samples
+			_mm256_store_si256(&ymm1, _mm256_permutevar8x32_epi32(ymm0, _mm256_load_si256((__m256i*)PERMUTE32))); // move the last 4bytes in the first 128-lane to the second 128-lane
 			_mm256_store_si256(&ymmRgba0, _mm256_shuffle_epi8(ymm1, ymmMaskRgbToRgba)); // RGB -> RGBA
 
+			///////////// Line-1 /////////////
 			_mm256_store_si256(&ymm1, _mm256_load_si256((__m256i*)(rgbPtr + 32))); // load next 32 samples
-			ymm0 = compv_avx2_alignr_epi8(ymm1, ymm0, 8);
-			ymm0 = _mm256_permutevar8x32_epi32(ymm0, _mm256_load_si256((__m256i*)PERMUTE32));
-			_mm256_store_si256(&ymmRgba1, _mm256_shuffle_epi8(ymm0, ymmMaskRgbToRgba));
-#endif
+			_mm256_store_si256(&ymm0, _mm256_permute4x64_epi64(ymm0, COMPV_MM_SHUFFLE(3, 3, 3, 3))); // duplicate lost0
+			_mm256_store_si256(&lost, _mm256_permute4x64_epi64(ymm1, COMPV_MM_SHUFFLE(3, 2, 3, 2))); // high-128 = low-lost = lost0 || lost1
+			_mm256_store_si256(&ymm1, _mm256_permute4x64_epi64(ymm1, COMPV_MM_SHUFFLE(2, 1, 0, 3)));
+			_mm256_maskstore_epi64((int64_t*)&ymm1, ymmMaskToExtract64bits, ymm0);			
+			_mm256_store_si256(&ymm0, _mm256_permutevar8x32_epi32(ymm1, _mm256_load_si256((__m256i*)PERMUTE32)));
+			_mm256_store_si256(&ymmRgba1, _mm256_shuffle_epi8(ymm0, ymmMaskRgbToRgba)); // RGB -> RGBA
 
-			//ymmRgba1 = _mm256_setzero_si256();
-			ymmRgba2 = _mm256_setzero_si256();
-			ymmRgba3 = _mm256_setzero_si256();
+			///////////// Line-2 /////////////
+			_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)(rgbPtr + 64))); // load next 32 samples
+			_mm256_store_si256(&ymm1, _mm256_permute4x64_epi64(ymm0, COMPV_MM_SHUFFLE(0, 3, 2, 1))); // lost0 || lost1 || lost2 || garbage
+			_mm256_store_si256(&ymm0, _mm256_permute4x64_epi64(ymm0, COMPV_MM_SHUFFLE(1, 0, 0, 0))); // garbage || garbage || 0 || 1
+			_mm256_store_si256(&ymm0, _mm256_inserti128_si256(ymm0, _mm256_castsi256_si128(lost), 0)); // lost0 || lost1 || 0 || 1 
+			_mm256_store_si256(&ymm0, _mm256_permutevar8x32_epi32(ymm0, _mm256_load_si256((__m256i*)PERMUTE32)));
+			_mm256_store_si256(&ymmRgba2, _mm256_shuffle_epi8(ymm0, ymmMaskRgbToRgba)); // RGB -> RGBA
+
+			///////////// Line-3 /////////////
+			_mm256_store_si256(&ymm1, _mm256_permutevar8x32_epi32(ymm1, _mm256_load_si256((__m256i*)PERMUTE32)));
+			_mm256_store_si256(&ymmRgba3, _mm256_shuffle_epi8(ymm1, ymmMaskRgbToRgba));
 
 			// starting here we're using the same code as rgba -> i420
 

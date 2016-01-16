@@ -14,7 +14,8 @@ using namespace compv;
 #define FORMAT_RGB	1 // COMPV_PIXEL_FORMAT_R8G8B8
 #define FORMAT_BGR	2 // COMPV_PIXEL_FORMAT_B8G8R8
 
-#define FORMAT			FORMAT_BGR
+#define MD5_PRINT		1
+#define FORMAT			FORMAT_RGB
 #define STRIDE_ALIGN	true // false to test CompVImage::wrap and CompVImage::copy
 
 static void rgbToRGBA(const CompVObjWrapper<CompVImage *>& jpegImage, void** rgbaPtr, int &height, int &width, int &stride)
@@ -109,6 +110,9 @@ bool TestRgba()
     for (size_t i = 0; i < loopCount; ++i) {
         COMPV_CHECK_CODE_ASSERT(CompVImage::wrap((COMPV_PIXEL_FORMAT)FORMAT, rgbaPtr, width, height, stride, &rgbaImage));
         COMPV_CHECK_CODE_ASSERT(rgbaImage->convert(COMPV_PIXEL_FORMAT_I420, &i420Image)); // RGBA -> I420
+#if MD5_PRINT
+		COMPV_DEBUG_INFO("MD5(I420)=%s", CompVMd5::compute2(i420Image->getDataPtr(), i420Image->getDataSize()).c_str());
+#endif
 #if FORMAT == FORMAT_RGBA // only I420 -> RGBA is supported
         const uint8_t* yPtr = (const uint8_t*)i420Image->getDataPtr();
         const uint8_t* uPtr = yPtr + (i420Image->getHeight() * i420Image->getStride());
@@ -118,7 +122,7 @@ bool TestRgba()
 #endif
     }
     timeEnd = CompVTime::getNowMills();
-    COMPV_DEBUG_INFO("Elapsed time =%llu", (timeEnd - timeStart));
+    COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
     if (i420Image) {
         FILE* fileI420 = fopen("./out.yuv", "wb+");

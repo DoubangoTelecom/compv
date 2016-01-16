@@ -5,3 +5,6 @@
 ** compv_cpu.cxx
 	--> Copyright 2011 The LibYuv Project Authors. All rights reserved.
 	--> Copyright (C) 2016 Doubango Telecom. All Rights Reserved.
+
+** compv_md5.cxx
+	--> Colin Plumb
