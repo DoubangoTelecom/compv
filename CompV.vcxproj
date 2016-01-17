@@ -36,8 +36,11 @@
     <ClInclude Include="include\compv\image\compv_image.h" />
     <ClInclude Include="include\compv\image\compv_imageconv_common.h" />
     <ClInclude Include="include\compv\image\compv_imageconv_rgba_i420.h" />
+    <ClInclude Include="include\compv\image\compv_imageconv_rgba_rgb.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_rgba_i420_intrin_avx2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_rgba_i420_intrin_sse.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_rgba_rgb_intrin_avx2.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_rgba_rgb_intrin_sse.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_avx.h" />
     <ClInclude Include="include\compv\parallel\compv_asynctask.h" />
     <ClInclude Include="include\compv\parallel\compv_condvar.h" />
@@ -63,9 +66,12 @@
     <ClCompile Include="image\compv_image.cxx" />
     <ClCompile Include="image\compv_imageconv_common.cxx" />
     <ClCompile Include="image\compv_imageconv_rgba_i420.cxx" />
+    <ClCompile Include="image\compv_imageconv_rgba_rgb.cxx" />
     <ClCompile Include="image\compv_image_libjpeg.cxx" />
     <ClCompile Include="intrinsics\x86\compv_imageconv_rgba_i420_intrin_avx2.cxx" />
     <ClCompile Include="intrinsics\x86\compv_imageconv_rgba_i420_intrin_sse.cxx" />
+    <ClCompile Include="intrinsics\x86\compv_imageconv_rgba_rgb_intrin_avx2.cxx" />
+    <ClCompile Include="intrinsics\x86\compv_imageconv_rgba_rgb_intrin_sse.cxx" />
     <ClCompile Include="parallel\compv_asynctask.cxx" />
     <ClCompile Include="parallel\compv_condvar.cxx" />
     <ClCompile Include="parallel\compv_mutex.cxx" />
@@ -95,6 +101,10 @@
     <YASM Include="assembler\x64\compv_imageconv_rgba_i420_x64_avx2.S">
       <FileType>Document</FileType>
     </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assembler\x86\compv_imageconv_rgba_rgb_x86_avx2.S" />
+    <None Include="assembler\x86\compv_imageconv_rgba_rgb_x86_sse.S" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AAC1E1B3-CE47-4003-BE1A-00A20C409129}</ProjectGuid>

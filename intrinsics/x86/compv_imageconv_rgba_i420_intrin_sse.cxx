@@ -206,7 +206,7 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint
 void rgbToI420Kernel31_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_YCoeffs8)
 {
 	__m128i xmmRgba0, xmmRgba1, xmmRgba2, xmmRgba3, xmm0, xmm1, xmmYCoeffs, xmmMaskRgbToRgba, xmm16;
-	vcomp_scalar_t i, j, maxI = ((width + 15) & -16), padY = (stride - maxI), padRGBA = padY * 3;
+	vcomp_scalar_t i, j, maxI = ((width + 15) & -16), padY = (stride - maxI), padRGB = padY * 3;
 
 	_mm_store_si128(&xmmMaskRgbToRgba, _mm_load_si128((__m128i*)kShuffleEpi8_RgbToRgba_i32));
 	_mm_store_si128(&xmm16, _mm_load_si128((__m128i*)k16_i16));
@@ -252,7 +252,7 @@ void rgbToI420Kernel31_CompY_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_
 			rgbPtr += 48;
 		}
 		outYPtr += padY;
-		rgbPtr += padRGBA;
+		rgbPtr += padRGB;
 	}
 }
 

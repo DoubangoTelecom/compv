@@ -214,19 +214,6 @@ static void i420ToRGBAKernel11_C(const uint8_t* yPtr, const uint8_t* uPtr, const
 	}
 }
 
-// FIXME(dmi): move to ThreadDisp class
-static int threadDivideAcrossY(int xcount, int ycount, int minSamplesPerThread, int maxThreads)
-{
-	int divCount = 1;
-	for (int div = 2; div <= maxThreads; ++div) {
-		divCount = div;
-		if ((xcount * (ycount / divCount)) <= minSamplesPerThread) { // we started with the smallest div, which mean largest number of pixs and break the loop when we're below the threshold
-			break;
-		}
-	}
-	return divCount;
-}
-
 // RGB/BGR -> I420
 static COMPV_ERROR_CODE __xxxToI420(const CompVObjWrapper<CompVImage* >& rgb, CompVObjWrapper<CompVImage* >& i420, COMV_ALIGNED(DEFAULT) const int8_t* kXXXToYUV_YCoeffs8, COMV_ALIGNED(DEFAULT) const int8_t* kXXXToYUV_UCoeffs8, COMV_ALIGNED(DEFAULT) const int8_t* kXXXToYUV_VCoeffs8)
 {
@@ -234,9 +221,9 @@ static COMPV_ERROR_CODE __xxxToI420(const CompVObjWrapper<CompVImage* >& rgb, Co
 	rgbToI420Kernel_CompY CompY = rgbToI420Kernel11_CompY_C;
 	rgbToI420Kernel_CompUV CompUV = rgbToI420Kernel11_CompUV_C;
 	const uint8_t* rgbPtr = (const uint8_t*)rgb->getDataPtr();
-	int32_t height = rgb->getHeight();
-	int32_t width = rgb->getWidth();
-	int32_t stride = rgb->getStride();
+	int height = rgb->getHeight();
+	int width = rgb->getWidth();
+	int stride = rgb->getStride();
 	uint8_t* outYPtr = (uint8_t*)(*i420)->getDataPtr();
 	uint8_t* outUPtr = outYPtr + (height * stride);
 	uint8_t* outVPtr = outUPtr + ((height * stride) >> 2);
@@ -319,9 +306,9 @@ static COMPV_ERROR_CODE __xxxxToI420(const CompVObjWrapper<CompVImage* >& rgba, 
 	rgbaToI420Kernel_CompY CompY = rgbaToI420Kernel11_CompY_C;
 	rgbaToI420Kernel_CompUV CompUV = rgbaToI420Kernel11_CompUV_C;
 	const uint8_t* rgbaPtr = (const uint8_t*)rgba->getDataPtr();
-	int32_t height = rgba->getHeight();
-	int32_t width = rgba->getWidth();
-	int32_t stride = rgba->getStride();
+	int height = rgba->getHeight();
+	int width = rgba->getWidth();
+	int stride = rgba->getStride();
 	uint8_t* outYPtr = (uint8_t*)(*i420)->getDataPtr();
 	uint8_t* outUPtr = outYPtr + (height * stride);
 	uint8_t* outVPtr = outUPtr + ((height * stride) >> 2);

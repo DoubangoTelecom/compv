@@ -20,6 +20,11 @@
 #include "compv/compv_simd_globals.h"
 #include "compv/intrinsics/x86/compv_intrin_avx.h"
 
+COMPV_GEXTERN COMV_ALIGN_DEFAULT() uint8_t k_0_0_0_255_u8[] = {
+	0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255,
+	0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255,
+};
+
 COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t k5_i8[] = {
     5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
     5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
