@@ -65,7 +65,7 @@ section .text
 ; arg(5) -> COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_YCoeffs8
 ; %1 -> 1: rgbaPtr is aligned, 0: rgbaPtr not aligned
 %macro rgbaToI420Kernel11_CompY_Asm_X86_SSSE3 1
-push rbp
+	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
 	push rsi

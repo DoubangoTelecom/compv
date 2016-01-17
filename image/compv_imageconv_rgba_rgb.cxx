@@ -29,6 +29,21 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
+// SSSE3
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned00_SSSE3(const uint8_t* rgb, uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned01_SSSE3(const uint8_t* rgb, COMV_ALIGNED(SSE) uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned10_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgb, uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned11_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgb, COMV_ALIGNED(SSE) uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+
+// AVX2
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned00_AVX2(const uint8_t* rgb, uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned01_AVX2(const uint8_t* rgb, COMV_ALIGNED(SSE) uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned10_AVX2(COMV_ALIGNED(SSE) const uint8_t* rgb, uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned11_AVX2(COMV_ALIGNED(SSE) const uint8_t* rgb, COMV_ALIGNED(SSE) uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+
+#endif /* defined(COMPV_ARCH_X86) && defined(COMPV_ASM) */
+
 static void __rgbToRgbaKernel11_C(const uint8_t* rgb, uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
 {
 	vcomp_scalar_t padRGBA = (stride - width) << 2;
@@ -61,20 +76,32 @@ COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVObjWrapper<CompVIma
 
 	if (COMPV_IS_ALIGNED_SSE(stride)) {
 		if (CompVCpu::isSupported(kCpuFlagSSSE3)) {
+			COMPV_EXEC_IFDEF_ASM_X86(toRGBA = rgbToRgbaKernel31_Asm_X86_Aligned00_SSSE3);
 			if (COMPV_IS_ALIGNED_SSE(rgbPtr)) {
+				COMPV_EXEC_IFDEF_ASM_X86(toRGBA = rgbToRgbaKernel31_Asm_X86_Aligned10_SSSE3);
 				if (COMPV_IS_ALIGNED_SSE(rgbaPtr)) {
 					COMPV_EXEC_IFDEF_INTRIN_X86(toRGBA = rgbToRgbaKernel31_Intrin_Aligned_SSSE3);
+					COMPV_EXEC_IFDEF_ASM_X86(toRGBA = rgbToRgbaKernel31_Asm_X86_Aligned11_SSSE3);
 				}
+			}
+			else if (COMPV_IS_ALIGNED_SSE(rgbaPtr)) {
+				COMPV_EXEC_IFDEF_ASM_X86(toRGBA = rgbToRgbaKernel31_Asm_X86_Aligned01_SSSE3);
 			}
 		}
 	}
 
 	if (COMPV_IS_ALIGNED_AVX2(stride)) {
 		if (CompVCpu::isSupported(kCpuFlagAVX2)) {
+			COMPV_EXEC_IFDEF_ASM_X86(toRGBA = rgbToRgbaKernel31_Asm_X86_Aligned00_AVX2);
 			if (COMPV_IS_ALIGNED_AVX2(rgbPtr)) {
+				COMPV_EXEC_IFDEF_ASM_X86(toRGBA = rgbToRgbaKernel31_Asm_X86_Aligned10_AVX2);
 				if (COMPV_IS_ALIGNED_AVX2(rgbaPtr)) {
 					COMPV_EXEC_IFDEF_INTRIN_X86(toRGBA = rgbToRgbaKernel31_Intrin_Aligned_AVX2);
+					COMPV_EXEC_IFDEF_ASM_X86(toRGBA = rgbToRgbaKernel31_Asm_X86_Aligned11_AVX2);
 				}
+			}
+			else if (COMPV_IS_ALIGNED_AVX2(rgbaPtr)) {
+				COMPV_EXEC_IFDEF_ASM_X86(toRGBA = rgbToRgbaKernel31_Asm_X86_Aligned01_AVX2);
 			}
 		}
 	}

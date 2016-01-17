@@ -40,7 +40,7 @@ global sym(i420ToRGBAKernel11_Asm_X86_Aligned10_AVX2)
 global sym(i420ToRGBAKernel11_Asm_X86_Aligned11_AVX2)
 
 section .data
-extern sym(k5_i8)
+	extern sym(k5_i8)
 	extern sym(k16_i16)
 	extern sym(k16_i8)
 	extern sym(k128_i16)
