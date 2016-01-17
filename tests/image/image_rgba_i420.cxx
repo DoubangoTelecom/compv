@@ -14,6 +14,7 @@ using namespace compv;
 #define FORMAT_RGB	1 // COMPV_PIXEL_FORMAT_R8G8B8
 #define FORMAT_BGR	2 // COMPV_PIXEL_FORMAT_B8G8R8
 
+#define loopCount		1
 #define MD5_PRINT		1
 #define FORMAT			FORMAT_RGB
 #define STRIDE_ALIGN	true // false to test CompVImage::wrap and CompVImage::copy
@@ -104,8 +105,7 @@ bool TestRgba()
     COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_EQUIRECTANGULAR_FILE, &jpegImage));
     COMPV_ASSERT(jpegImage->getPixelFormat() == COMPV_PIXEL_FORMAT_R8G8B8);
     rgbToRGBA(jpegImage, &rgbaPtr, height, width, stride);
-
-#define loopCount  1
+	
     timeStart = CompVTime::getNowMills();
     for (size_t i = 0; i < loopCount; ++i) {
         COMPV_CHECK_CODE_ASSERT(CompVImage::wrap((COMPV_PIXEL_FORMAT)FORMAT, rgbaPtr, width, height, stride, &rgbaImage));

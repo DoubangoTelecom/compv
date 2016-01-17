@@ -257,10 +257,14 @@ static COMPV_ERROR_CODE __xxxToI420(const CompVObjWrapper<CompVImage* >& rgb, Co
 
 	if (COMPV_IS_ALIGNED_AVX(stride)) {
 		if (CompVCpu::isSupported(kCpuFlagAVX2)) {
-			if (COMPV_IS_ALIGNED_SSE(rgbPtr)) {
+			if (COMPV_IS_ALIGNED_AVX2(rgbPtr)) {
 				if (COMPV_IS_ALIGNED_SSE(outYPtr)) {
 					COMPV_EXEC_IFDEF_INTRIN_X86(CompY = rgbToI420Kernel31_CompY_Intrin_Aligned_AVX2);
-					COMPV_EXEC_IFDEF_INTRIN_X86(CompUV = rgbToI420Kernel31_CompUV_Intrin_Aligned_AVX2);
+				}
+				if (COMPV_IS_ALIGNED_SSE(outUPtr)) {  // vextractf128 -> SSE align
+					if (COMPV_IS_ALIGNED_SSE(outVPtr)) {  // vextractf128 -> SSE align
+						COMPV_EXEC_IFDEF_INTRIN_X86(CompUV = rgbToI420Kernel31_CompUV_Intrin_Aligned_AVX2);
+					}
 				}
 			}
 		} // end-of-AVX2

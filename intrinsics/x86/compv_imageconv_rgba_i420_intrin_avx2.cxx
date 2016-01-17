@@ -20,6 +20,7 @@
 #include "compv/intrinsics/x86/compv_imageconv_rgba_i420_intrin_avx2.h"
 
 #if defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC)
+#include "compv/intrinsics/x86/compv_intrin_avx.h"
 #include "compv/image/compv_imageconv_common.h"
 #include "compv/compv_simd_globals.h"
 
@@ -255,15 +256,16 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint
 void rgbToI420Kernel31_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(AVX2)const int8_t* kXXXXToYUV_YCoeffs8)
 {
 	_mm256_zeroupper();
-	__m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3, ymmYCoeffs, ymm16, ymm0, ymm1, ymmAEBFCGDH, ymmABCDDEFG, ymmMaskRgbToRgba, ymmMaskToExtract64bits, ymmLost;
+	__m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3, ymmYCoeffs, ymm16, ymm0, ymm1, ymmAEBFCGDH, ymmABCDDEFG, ymmCDEFFGHX, ymmMaskRgbToRgba, ymmXXABBCDE, ymmLost;
 	vcomp_scalar_t i, j, maxI = ((width + 31) & -32), padY = (stride - maxI), padRGB = padY * 3;
 
 	_mm256_store_si256(&ymmMaskRgbToRgba, _mm256_load_si256((__m256i*)kShuffleEpi8_RgbToRgba_i32));
 	_mm256_store_si256(&ymmYCoeffs, _mm256_load_si256((__m256i*)kXXXXToYUV_YCoeffs8)); // RGBA coeffs
 	_mm256_store_si256(&ymm16, _mm256_load_si256((__m256i*)k16_i16));
 	_mm256_store_si256(&ymmAEBFCGDH, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_AEBFCGDH_i32));
-	_mm256_store_si256(&ymmMaskToExtract64bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_i64));
 	_mm256_store_si256(&ymmABCDDEFG, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_ABCDDEFG_i32));
+	_mm256_store_si256(&ymmCDEFFGHX, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_CDEFFGHX_i32));
+	_mm256_store_si256(&ymmXXABBCDE, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_XXABBCDE_i32));
 	
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (j = 0; j < height; ++j) {
@@ -277,26 +279,19 @@ void rgbToI420Kernel31_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_
 			///////////// Line-1 /////////////
 			_mm256_store_si256(&ymm1, _mm256_load_si256((__m256i*)(rgbPtr + 32))); // load next 32 samples
 			_mm256_store_si256(&ymm0, _mm256_permute4x64_epi64(ymm0, COMPV_MM_SHUFFLE(3, 3, 3, 3))); // duplicate lost0
-			_mm256_store_si256(&ymmLost, _mm256_permute4x64_epi64(ymm1, COMPV_MM_SHUFFLE(3, 2, 3, 2))); // high-128 = low-lost = lost0 || lost1
-			_mm256_store_si256(&ymm1, _mm256_permute4x64_epi64(ymm1, COMPV_MM_SHUFFLE(2, 1, 0, 3)));
-			_mm256_maskstore_epi64((int64_t*)&ymm1, ymmMaskToExtract64bits, ymm0);			
-			_mm256_store_si256(&ymm0, _mm256_permutevar8x32_epi32(ymm1, ymmABCDDEFG));
-			_mm256_store_si256(&ymmRgba1, _mm256_shuffle_epi8(ymm0, ymmMaskRgbToRgba)); // RGB -> RGBA
+			_mm256_store_si256(&ymmLost, _mm256_broadcastsi128_si256(_mm256_extractf128_si256(ymm1, 1))); // high-128 = low-lost = lost0 || lost1
+			_mm256_store_si256(&ymm1, _mm256_permutevar8x32_epi32(ymm1, ymmXXABBCDE));
+			_mm256_store_si256(&ymm1, _mm256_blend_epi32(ymm1, ymm0, 0x03)); // ymm0(64bits)||ymm1(192bits)
+			_mm256_store_si256(&ymmRgba1, _mm256_shuffle_epi8(ymm1, ymmMaskRgbToRgba)); // RGB -> RGBA		
 
 			///////////// Line-2 /////////////
 			_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)(rgbPtr + 64))); // load next 32 samples
-			_mm256_store_si256(&ymm1, _mm256_permute4x64_epi64(ymm0, COMPV_MM_SHUFFLE(0, 3, 2, 1))); // lost0 || lost1 || lost2 || garbage
-
-			
-
-			_mm256_store_si256(&ymm0, _mm256_permute4x64_epi64(ymm0, COMPV_MM_SHUFFLE(1, 0, 0, 0))); // garbage || garbage || 0 || 1
-
-			_mm256_store_si256(&ymm0, _mm256_inserti128_si256(ymm0, _mm256_castsi256_si128(ymmLost), 0)); // lost0 || lost1 || 0 || 1 
-			_mm256_store_si256(&ymm0, _mm256_permutevar8x32_epi32(ymm0, ymmABCDDEFG));
+			_mm256_store_si256(&ymm1, _mm256_permutevar8x32_epi32(ymm0, ymmCDEFFGHX)); // lost0 || lost1 || lost2 || garbage
+			_mm256_store_si256(&ymmLost, _mm256_inserti128_si256(ymmLost, _mm256_extractf128_si256(ymm0, 0), 1)); // lost0 || lost1 || 0 || 1 
+			_mm256_store_si256(&ymm0, _mm256_permutevar8x32_epi32(ymmLost, ymmABCDDEFG));			
 			_mm256_store_si256(&ymmRgba2, _mm256_shuffle_epi8(ymm0, ymmMaskRgbToRgba)); // RGB -> RGBA
 
 			///////////// Line-3 /////////////
-			_mm256_store_si256(&ymm1, _mm256_permutevar8x32_epi32(ymm1, ymmABCDDEFG));
 			_mm256_store_si256(&ymmRgba3, _mm256_shuffle_epi8(ymm1, ymmMaskRgbToRgba));
 
 			// starting here we're using the same code as rgba -> i420 (Y)
@@ -336,17 +331,18 @@ void rgbToI420Kernel31_CompY_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_
 void rgbToI420Kernel31_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgbPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(AVX2)const int8_t* kXXXXToYUV_UCoeffs8, COMV_ALIGNED(AVX2)const int8_t* kXXXXToYUV_VCoeffs8)
 {
 	_mm256_zeroupper();
-	__m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3, ymm0, ymm1, ymmUCoeffs, ymmVCoeffs, ymm128, ymmAEBFCGDH, ymmMaskToExtract128bits, ymmABCDDEFG, ymmMaskRgbToRgba, ymmMaskToExtract64bits, ymmLost;
+	__m256i ymmRgba0, ymmRgba1, ymmRgba2, ymmRgba3, ymm0, ymm1, ymmUCoeffs, ymmVCoeffs, ymm128, ymmAEBFCGDH, ymmMaskToExtract128bits, ymmXXABBCDE, ymmABCDDEFG, ymmMaskRgbToRgba, ymmCDEFFGHX, ymmLost;
 	vcomp_scalar_t i, j, maxI = ((width + 31) & -32), padUV = (stride - maxI) >> 1, padRGB = ((stride - maxI) + stride) * 3; // +stride to skip even lines
 
 	_mm256_store_si256(&ymmUCoeffs, _mm256_load_si256((__m256i*)kXXXXToYUV_UCoeffs8));
 	_mm256_store_si256(&ymmVCoeffs, _mm256_load_si256((__m256i*)kXXXXToYUV_VCoeffs8));
 	_mm256_store_si256(&ymm128, _mm256_load_si256((__m256i*)k128_i16));
-	_mm256_store_si256(&ymmAEBFCGDH, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_AEBFCGDH_i32));
 	_mm256_store_si256(&ymmMaskToExtract128bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_1_i64));
-	_mm256_store_si256(&ymmABCDDEFG, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_ABCDDEFG_i32));
 	_mm256_store_si256(&ymmMaskRgbToRgba, _mm256_load_si256((__m256i*)kShuffleEpi8_RgbToRgba_i32));
-	_mm256_store_si256(&ymmMaskToExtract64bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_i64));
+	_mm256_store_si256(&ymmAEBFCGDH, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_AEBFCGDH_i32));
+	_mm256_store_si256(&ymmABCDDEFG, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_ABCDDEFG_i32));
+	_mm256_store_si256(&ymmCDEFFGHX, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_CDEFFGHX_i32));
+	_mm256_store_si256(&ymmXXABBCDE, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_XXABBCDE_i32));
 
 	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
@@ -361,22 +357,19 @@ void rgbToI420Kernel31_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8
 			///////////// Line-1 /////////////
 			_mm256_store_si256(&ymm1, _mm256_load_si256((__m256i*)(rgbPtr + 32))); // load next 32 samples
 			_mm256_store_si256(&ymm0, _mm256_permute4x64_epi64(ymm0, COMPV_MM_SHUFFLE(3, 3, 3, 3))); // duplicate lost0
-			_mm256_store_si256(&ymmLost, _mm256_permute4x64_epi64(ymm1, COMPV_MM_SHUFFLE(3, 2, 3, 2))); // high-128 = low-lost = lost0 || lost1
-			_mm256_store_si256(&ymm1, _mm256_permute4x64_epi64(ymm1, COMPV_MM_SHUFFLE(2, 1, 0, 3)));
-			_mm256_maskstore_epi64((int64_t*)&ymm1, ymmMaskToExtract64bits, ymm0);
-			_mm256_store_si256(&ymm0, _mm256_permutevar8x32_epi32(ymm1, ymmABCDDEFG));
-			_mm256_store_si256(&ymmRgba1, _mm256_shuffle_epi8(ymm0, ymmMaskRgbToRgba)); // RGB -> RGBA
+			_mm256_store_si256(&ymmLost, _mm256_broadcastsi128_si256(_mm256_extractf128_si256(ymm1, 1))); // high-128 = low-lost = lost0 || lost1
+			_mm256_store_si256(&ymm1, _mm256_permutevar8x32_epi32(ymm1, ymmXXABBCDE));
+			_mm256_store_si256(&ymm1, _mm256_blend_epi32(ymm1, ymm0, 0x03)); // ymm0(64bits)||ymm1(192bits)
+			_mm256_store_si256(&ymmRgba1, _mm256_shuffle_epi8(ymm1, ymmMaskRgbToRgba)); // RGB -> RGBA		
 
 			///////////// Line-2 /////////////
 			_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)(rgbPtr + 64))); // load next 32 samples
-			_mm256_store_si256(&ymm1, _mm256_permute4x64_epi64(ymm0, COMPV_MM_SHUFFLE(0, 3, 2, 1))); // lost0 || lost1 || lost2 || garbage
-			_mm256_store_si256(&ymm0, _mm256_permute4x64_epi64(ymm0, COMPV_MM_SHUFFLE(1, 0, 0, 0))); // garbage || garbage || 0 || 1
-			_mm256_store_si256(&ymm0, _mm256_inserti128_si256(ymm0, _mm256_castsi256_si128(ymmLost), 0)); // lost0 || lost1 || 0 || 1 
-			_mm256_store_si256(&ymm0, _mm256_permutevar8x32_epi32(ymm0, ymmABCDDEFG));
+			_mm256_store_si256(&ymm1, _mm256_permutevar8x32_epi32(ymm0, ymmCDEFFGHX)); // lost0 || lost1 || lost2 || garbage
+			_mm256_store_si256(&ymmLost, _mm256_inserti128_si256(ymmLost, _mm256_extractf128_si256(ymm0, 0), 1)); // lost0 || lost1 || 0 || 1 
+			_mm256_store_si256(&ymm0, _mm256_permutevar8x32_epi32(ymmLost, ymmABCDDEFG));
 			_mm256_store_si256(&ymmRgba2, _mm256_shuffle_epi8(ymm0, ymmMaskRgbToRgba)); // RGB -> RGBA
 
 			///////////// Line-3 /////////////
-			_mm256_store_si256(&ymm1, _mm256_permutevar8x32_epi32(ymm1, ymmABCDDEFG));
 			_mm256_store_si256(&ymmRgba3, _mm256_shuffle_epi8(ymm1, ymmMaskRgbToRgba));
 
 			// starting here we're using the same code as rgba -> i420 (UV)
@@ -429,7 +422,7 @@ void rgbToI420Kernel31_CompUV_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8
 #elif 0
 			// ASM code
 			vmovups xmm0, xmm2
-				vextractf128 xmm1, ymm2, 1
+			vextractf128 xmm1, ymm2, 1
 #elif 0
 			// SSE / AVX mix, no way to invoke _mm256_zeroupper()
 			_mm_storeu_si128((__m128i*)outUPtr, _mm256_castsi256_si128(ymmRgba0));
