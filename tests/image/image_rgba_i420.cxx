@@ -7,20 +7,22 @@ using namespace compv;
 
 // preprocessor cannot evaluate an enum
 // #if FORMAT_SRC == COMPV_PIXEL_FORMAT_R8G8B8A8 is always true
-#define FORMAT_RGBA		3 // COMPV_PIXEL_FORMAT_R8G8B8A8
-#define FORMAT_ARGB		6 // COMPV_PIXEL_FORMAT_A8R8G8B8
-#define FORMAT_BGRA		4 // COMPV_PIXEL_FORMAT_B8G8R8A8
-#define FORMAT_ABGR		5 // COMPV_PIXEL_FORMAT_A8B8G8R8
-#define FORMAT_RGB		1 // COMPV_PIXEL_FORMAT_R8G8B8
-#define FORMAT_BGR		2 // COMPV_PIXEL_FORMAT_B8G8R8
+#define FORMAT_RGBA			3 // COMPV_PIXEL_FORMAT_R8G8B8A8
+#define FORMAT_ARGB			6 // COMPV_PIXEL_FORMAT_A8R8G8B8
+#define FORMAT_BGRA			4 // COMPV_PIXEL_FORMAT_B8G8R8A8
+#define FORMAT_ABGR			5 // COMPV_PIXEL_FORMAT_A8B8G8R8
+#define FORMAT_RGB			1 // COMPV_PIXEL_FORMAT_R8G8B8
+#define FORMAT_BGR			2 // COMPV_PIXEL_FORMAT_B8G8R8
 
-#define FORMAT_I420		8 // COMPV_PIXEL_FORMAT_I420
+#define FORMAT_GRAYSCALE	7 // COMPV_PIXEL_FORMAT_GRAYSCALE
 
-#define loopCount		1
-#define MD5_PRINT		1
-#define FORMAT_SRC		FORMAT_BGR // must be rgb or rgba family
-#define FORMAT_DST		FORMAT_I420
-#define STRIDE_ALIGN	true // false to test CompVImage::wrap and CompVImage::copy
+#define FORMAT_I420			8 // COMPV_PIXEL_FORMAT_I420
+
+#define loopCount			1
+#define MD5_PRINT			1
+#define FORMAT_SRC			FORMAT_BGR // must be rgb or rgba family
+#define FORMAT_DST			FORMAT_GRAYSCALE // any format
+#define STRIDE_ALIGN		true // false to test CompVImage::wrap and CompVImage::copy
 
 static void rgbToSrc(const CompVObjWrapper<CompVImage *>& jpegImage, void** srcPtr, int &height, int &width, int &stride)
 {
@@ -91,30 +93,40 @@ static void rgbToSrc(const CompVObjWrapper<CompVImage *>& jpegImage, void** srcP
 
 static std::string formatExtension(COMPV_PIXEL_FORMAT pixelFormat)
 {
-	switch (pixelFormat) {
-	case COMPV_PIXEL_FORMAT_R8G8B8A8: return "rgba";
-	case COMPV_PIXEL_FORMAT_A8R8G8B8: return "argb";
-	case COMPV_PIXEL_FORMAT_B8G8R8A8: return "bgra";
-	case COMPV_PIXEL_FORMAT_A8B8G8R8: return "abgr";
-	case COMPV_PIXEL_FORMAT_R8G8B8: return "rgb";
-	case COMPV_PIXEL_FORMAT_B8G8R8: return "bgr";
-	case COMPV_PIXEL_FORMAT_I420: return "i420";
-	default: return "unknown";
-	}
+    switch (pixelFormat) {
+    case COMPV_PIXEL_FORMAT_R8G8B8A8:
+        return "rgba";
+    case COMPV_PIXEL_FORMAT_A8R8G8B8:
+        return "argb";
+    case COMPV_PIXEL_FORMAT_B8G8R8A8:
+        return "bgra";
+    case COMPV_PIXEL_FORMAT_A8B8G8R8:
+        return "abgr";
+    case COMPV_PIXEL_FORMAT_R8G8B8:
+        return "rgb";
+    case COMPV_PIXEL_FORMAT_B8G8R8:
+        return "bgr";
+    case COMPV_PIXEL_FORMAT_I420:
+        return "i420";
+    case COMPV_PIXEL_FORMAT_GRAYSCALE:
+        return "gray";
+    default:
+        return "unknown";
+    }
 }
 
 static void writeImgToFile(const CompVObjWrapper<CompVImage *>& img)
 {
-	if (img) {
-		std::string fileName = "./out." + formatExtension(img->getPixelFormat());
-		FILE* file = fopen(fileName.c_str(), "wb+");
-		COMPV_ASSERT(file != NULL);
-		if (file) {
-			COMPV_DEBUG_INFO("Writing %s file...", fileName.c_str());
-			fwrite(img->getDataPtr(), 1, img->getDataSize(), file);
-			fclose(file);
-		}
-	}
+    if (img) {
+        std::string fileName = "./out." + formatExtension(img->getPixelFormat());
+        FILE* file = fopen(fileName.c_str(), "wb+");
+        COMPV_ASSERT(file != NULL);
+        if (file) {
+            COMPV_DEBUG_INFO("Writing %s file...", fileName.c_str());
+            fwrite(img->getDataPtr(), 1, img->getDataSize(), file);
+            fclose(file);
+        }
+    }
 }
 
 bool TestRgba()
@@ -126,25 +138,25 @@ bool TestRgba()
     int width, height, stride;
     uint64_t timeStart, timeEnd;
 
-	// make sure the defs maps to the enums
+    // make sure the defs maps to the enums
     COMPV_ASSERT(FORMAT_RGBA == COMPV_PIXEL_FORMAT_R8G8B8A8);
     COMPV_ASSERT(FORMAT_ARGB == COMPV_PIXEL_FORMAT_A8R8G8B8);
     COMPV_ASSERT(FORMAT_BGRA == COMPV_PIXEL_FORMAT_B8G8R8A8);
     COMPV_ASSERT(FORMAT_ABGR == COMPV_PIXEL_FORMAT_A8B8G8R8);
     COMPV_ASSERT(FORMAT_RGB == COMPV_PIXEL_FORMAT_R8G8B8);
     COMPV_ASSERT(FORMAT_BGR == COMPV_PIXEL_FORMAT_B8G8R8);
-	COMPV_ASSERT(FORMAT_I420 == COMPV_PIXEL_FORMAT_I420);
+    COMPV_ASSERT(FORMAT_I420 == COMPV_PIXEL_FORMAT_I420);
 
     COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_EQUIRECTANGULAR_FILE, &jpegImage));
     COMPV_ASSERT(jpegImage->getPixelFormat() == COMPV_PIXEL_FORMAT_R8G8B8);
     rgbToSrc(jpegImage, &srcPtr, height, width, stride);
-	
-	COMPV_DEBUG_INFO("Converting from %s to %s", formatExtension((COMPV_PIXEL_FORMAT)FORMAT_SRC).c_str(), formatExtension((COMPV_PIXEL_FORMAT)FORMAT_DST).c_str());
+
+    COMPV_DEBUG_INFO("Converting from %s to %s", formatExtension((COMPV_PIXEL_FORMAT)FORMAT_SRC).c_str(), formatExtension((COMPV_PIXEL_FORMAT)FORMAT_DST).c_str());
 
     timeStart = CompVTime::getNowMills();
     for (size_t i = 0; i < loopCount; ++i) {
         COMPV_CHECK_CODE_ASSERT(CompVImage::wrap((COMPV_PIXEL_FORMAT)FORMAT_SRC, srcPtr, width, height, stride, &srcImage));
-		COMPV_CHECK_CODE_ASSERT(srcImage->convert((COMPV_PIXEL_FORMAT)FORMAT_DST, &dstImage)); // e.g. RGBA -> I420
+        COMPV_CHECK_CODE_ASSERT(srcImage->convert((COMPV_PIXEL_FORMAT)FORMAT_DST, &dstImage)); // e.g. RGBA -> I420
 #if FORMAT_SRC == FORMAT_RGBA && 0 // only I420 -> RGBA is supported
         const uint8_t* yPtr = (const uint8_t*)dstImage->getDataPtr();
         const uint8_t* uPtr = yPtr + (dstImage->getHeight() * dstImage->getStride());
@@ -157,13 +169,13 @@ bool TestRgba()
     COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
 #if MD5_PRINT
-	COMPV_DEBUG_INFO("MD5(I420)=%s", CompVMd5::compute2(dstImage->getDataPtr(), dstImage->getDataSize()).c_str());
+    COMPV_DEBUG_INFO("MD5(I420)=%s", CompVMd5::compute2(dstImage->getDataPtr(), dstImage->getDataSize()).c_str());
 #endif
 
-	// Open with imageMagick (MS-DOS): convert.exe -depth 8 -size 2048x1000 out.rgba out.png
+    // Open with imageMagick (MS-DOS): convert.exe -depth 8 -size 2048x1000 out.rgba out.png
 
-	writeImgToFile(srcImage);
-	writeImgToFile(dstImage);
+    writeImgToFile(srcImage);
+    writeImgToFile(dstImage);
 
     CompVMem::free(&srcPtr);
     return true;

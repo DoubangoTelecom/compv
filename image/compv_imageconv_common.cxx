@@ -24,14 +24,14 @@ COMPV_NAMESPACE_BEGIN()
 
 int threadDivideAcrossY(int xcount, int ycount, int minSamplesPerThread, int maxThreads)
 {
-	int divCount = 1;
-	for (int div = 2; div <= maxThreads; ++div) {
-		divCount = div;
-		if ((xcount * (ycount / divCount)) <= minSamplesPerThread) { // we started with the smallest div, which mean largest number of pixs and break the loop when we're below the threshold
-			break;
-		}
-	}
-	return divCount;
+    int divCount = 1;
+    for (int div = 2; div <= maxThreads; ++div) {
+        divCount = div;
+        if ((xcount * (ycount / divCount)) <= minSamplesPerThread) { // we started with the smallest div, which mean largest number of pixs and break the loop when we're below the threshold
+            break;
+        }
+    }
+    return divCount;
 }
 
 COMPV_ERROR_CODE ImageConvKernelxx_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
@@ -64,16 +64,16 @@ COMPV_ERROR_CODE ImageConvKernelxx_AsynExec(const struct compv_asynctoken_param_
         CompUV(rgbaPtr, outUPtr, outVPtr, height, width, stride, kXXXToYUV_UCoeffs8, kXXXToYUV_VCoeffs8);
         break;
     }
-	case COMPV_IMAGECONV_FUNCID_RGBToRGBA: {
-		rgbToRgbaKernel toRGBA = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, rgbToRgbaKernel);
-		const uint8_t* rgb = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const uint8_t*);
-		uint8_t* rgba = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, uint8_t*);
-		vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, int);
-		vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int);
-		vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int);
-		toRGBA(rgb, rgba, height, width, stride);
-		break;
-	}
+    case COMPV_IMAGECONV_FUNCID_RGBToRGBA: {
+        rgbToRgbaKernel toRGBA = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, rgbToRgbaKernel);
+        const uint8_t* rgb = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const uint8_t*);
+        uint8_t* rgba = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, uint8_t*);
+        vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, int);
+        vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int);
+        vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int);
+        toRGBA(rgb, rgba, height, width, stride);
+        break;
+    }
     case COMPV_IMAGECONV_FUNCID_I420ToRGBA: {
         i420ToRGBAKernel toRGBA = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, i420ToRGBAKernel);
         const uint8_t* yPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const uint8_t*);
@@ -300,6 +300,6 @@ COMPV_GEXTERN COMV_ALIGN_DEFAULT() int8_t kYUVToRGBA_BCoeffs8[] = { // Extended 
 // Insert 8bytes every 24bytes
 // The index-3 must be 0xff to produce zeros used later to generate the alpha channel
 COMPV_GEXTERN COMV_ALIGN_DEFAULT() int32_t kShuffleEpi8_RgbToRgba_i32[] = {
-	COMPV_MM_SHUFFLE_EPI8(0xff, 2, 1, 0), COMPV_MM_SHUFFLE_EPI8(0xff, 5, 4, 3), COMPV_MM_SHUFFLE_EPI8(0xff, 8, 7, 6), COMPV_MM_SHUFFLE_EPI8(0xff, 11, 10, 9), // 128bits SSE register
-	COMPV_MM_SHUFFLE_EPI8(0xff, 2, 1, 0), COMPV_MM_SHUFFLE_EPI8(0xff, 5, 4, 3), COMPV_MM_SHUFFLE_EPI8(0xff, 8, 7, 6), COMPV_MM_SHUFFLE_EPI8(0xff, 11, 10, 9), // 256bits SSE register
+    COMPV_MM_SHUFFLE_EPI8(0xff, 2, 1, 0), COMPV_MM_SHUFFLE_EPI8(0xff, 5, 4, 3), COMPV_MM_SHUFFLE_EPI8(0xff, 8, 7, 6), COMPV_MM_SHUFFLE_EPI8(0xff, 11, 10, 9), // 128bits SSE register
+    COMPV_MM_SHUFFLE_EPI8(0xff, 2, 1, 0), COMPV_MM_SHUFFLE_EPI8(0xff, 5, 4, 3), COMPV_MM_SHUFFLE_EPI8(0xff, 8, 7, 6), COMPV_MM_SHUFFLE_EPI8(0xff, 11, 10, 9), // 256bits SSE register
 };

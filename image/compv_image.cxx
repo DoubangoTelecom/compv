@@ -20,6 +20,7 @@
 #include "compv/image/compv_image.h"
 #include "compv/image/compv_imageconv_rgba_i420.h"
 #include "compv/image/compv_imageconv_rgba_rgb.h"
+#include "compv/image/compv_imageconv_grayscale.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_engine.h"
 #include "compv/compv_fileutils.h"
@@ -59,7 +60,7 @@ COMPV_ERROR_CODE CompVImage::convert(COMPV_PIXEL_FORMAT eDstPixelFormat, CompVOb
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     int32_t neededBuffSize;
     COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getSizeForPixelFormat(eDstPixelFormat, m_nStride, m_nHeight, &neededBuffSize));
-	bool bAllocOutImage = (!(*outImage) || *outImage == this || (*outImage)->getDataSize() != neededBuffSize || (*outImage)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*outImage)->getPixelFormat() != eDstPixelFormat);
+    bool bAllocOutImage = (!(*outImage) || *outImage == this || (*outImage)->getDataSize() != neededBuffSize || (*outImage)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*outImage)->getPixelFormat() != eDstPixelFormat);
     if (bAllocOutImage) {
         COMPV_CHECK_CODE_RETURN(err_ = CompVImage::newObj(eDstPixelFormat, m_nWidth, m_nHeight, m_nStride, outImage));
     }
@@ -70,75 +71,99 @@ COMPV_ERROR_CODE CompVImage::convert(COMPV_PIXEL_FORMAT eDstPixelFormat, CompVOb
         COMPV_CHECK_CODE_RETURN(err_ = (*outImage)->setBuffer(buffer, m_nWidth, m_nHeight, m_nStride)); // changing the current buffer's layout
     }
     switch (m_ePixelFormat) {
-	/***** RGBA -> XXX *****/
+        /***** RGBA -> XXX *****/
     case COMPV_PIXEL_FORMAT_R8G8B8A8: {
         if (eDstPixelFormat == COMPV_PIXEL_FORMAT_I420) {
             // RGBA -> I420
             COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaI420::rgbaToI420(this, *outImage));
         }
+        else if (eDstPixelFormat == COMPV_PIXEL_FORMAT_GRAYSCALE) {
+            // RGBA -> GRAYSCALE
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvGrayscale::rgbaToGrayscale(this, *outImage));
+        }
         else {
             COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
         }
         break;
     }
-	/***** ARGB -> XXX *****/
+    /***** ARGB -> XXX *****/
     case COMPV_PIXEL_FORMAT_A8R8G8B8: {
         if (eDstPixelFormat == COMPV_PIXEL_FORMAT_I420) {
             // ARGB - > I420
             COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaI420::argbToI420(this, *outImage));
         }
+        else if (eDstPixelFormat == COMPV_PIXEL_FORMAT_GRAYSCALE) {
+            // ARGB -> GRAYSCALE
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvGrayscale::argbToGrayscale(this, *outImage));
+        }
         else {
             COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
         }
         break;
     }
-	/***** BGRA -> XXX *****/
+    /***** BGRA -> XXX *****/
     case COMPV_PIXEL_FORMAT_B8G8R8A8: {
         if (eDstPixelFormat == COMPV_PIXEL_FORMAT_I420) {
             // BGRA -> I420
             COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaI420::bgraToI420(this, *outImage));
         }
+        else if (eDstPixelFormat == COMPV_PIXEL_FORMAT_GRAYSCALE) {
+            // BGRA -> GRAYSCALE
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvGrayscale::bgraToGrayscale(this, *outImage));
+        }
         else {
             COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
         }
         break;
     }
-	/***** ABGR -> XXX *****/
+    /***** ABGR -> XXX *****/
     case COMPV_PIXEL_FORMAT_A8B8G8R8: {
         if (eDstPixelFormat == COMPV_PIXEL_FORMAT_I420) {
             // ABGR -> I420
             COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaI420::abgrToI420(this, *outImage));
         }
+        else if (eDstPixelFormat == COMPV_PIXEL_FORMAT_GRAYSCALE) {
+            // ABGR -> GRAYSCALE
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvGrayscale::abgrToGrayscale(this, *outImage));
+        }
         else {
             COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
         }
         break;
     }
-	/***** RGB -> XXX *****/
+    /***** RGB -> XXX *****/
     case COMPV_PIXEL_FORMAT_R8G8B8: {
         if (eDstPixelFormat == COMPV_PIXEL_FORMAT_I420) {
             // RGB -> I420
             COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaI420::rgbToI420(this, *outImage));
         }
-		else if (eDstPixelFormat == COMPV_PIXEL_FORMAT_R8G8B8A8) {
-			// RGB -> RGBA
-			COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaRgb::rgbToRgba(this, *outImage));
-		}
+        else if (eDstPixelFormat == COMPV_PIXEL_FORMAT_R8G8B8A8) {
+            // RGB -> RGBA
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaRgb::rgbToRgba(this, *outImage));
+        }
+        else if (eDstPixelFormat == COMPV_PIXEL_FORMAT_GRAYSCALE) {
+            // RGB -> GRAYSCALE
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvGrayscale::rgbToGrayscale(this, *outImage));
+        }
         else {
             COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
         }
         break;
     }
-	/***** GBR -> XXX *****/
+    /***** BGR -> XXX *****/
     case COMPV_PIXEL_FORMAT_B8G8R8: {
         if (eDstPixelFormat == COMPV_PIXEL_FORMAT_I420) {
             // BGR -> I420
             COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaI420::bgrToI420(this, *outImage));
         }
-		else if (eDstPixelFormat == COMPV_PIXEL_FORMAT_B8G8R8A8) {
-			// BGR -> BGRA
-			COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaRgb::bgrToBgra(this, *outImage));
-		}
+        else if (eDstPixelFormat == COMPV_PIXEL_FORMAT_B8G8R8A8) {
+            // BGR -> BGRA
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaRgb::bgrToBgra(this, *outImage));
+        }
+        else if (eDstPixelFormat == COMPV_PIXEL_FORMAT_GRAYSCALE) {
+            // BGR -> GRAYSCALE
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvGrayscale::bgrToGrayscale(this, *outImage));
+        }
         else {
             COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
         }
@@ -149,6 +174,10 @@ COMPV_ERROR_CODE CompVImage::convert(COMPV_PIXEL_FORMAT eDstPixelFormat, CompVOb
         if (eDstPixelFormat == COMPV_PIXEL_FORMAT_R8G8B8A8) {
             // I420 -> RGBA
             COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvRgbaI420::i420ToRgba(this, *outImage));
+        }
+        else if (eDstPixelFormat == COMPV_PIXEL_FORMAT_GRAYSCALE) {
+            // I420 -> GRAYSCALE
+            COMPV_CHECK_CODE_RETURN(err_ = CompVImageConvGrayscale::i420ToGrayscale(this, *outImage));
         }
         else {
             COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);

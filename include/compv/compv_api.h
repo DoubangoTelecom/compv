@@ -18,7 +18,7 @@
 * along with CompV.
 */
 #if !defined(_COMPV_API_H_)
-#define _COMPV_API_H_
+#define _COMPV_API_H_ /* Must not change this name, used as guard in private header files */
 
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
