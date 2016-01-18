@@ -18,6 +18,7 @@
 ; along with CompV.
 ;
 %include "compv_common_x86.S"
+%include "compv_imageconv_macros_sse.S"
 
 COMPV_YASM_DEFAULT_REL
 
@@ -27,10 +28,19 @@ global sym(rgbaToI420Kernel41_CompY_Asm_X86_Aligned00_SSSE3)
 global sym(rgbaToI420Kernel41_CompY_Asm_X86_Aligned01_SSSE3)
 global sym(rgbaToI420Kernel41_CompY_Asm_X86_Aligned10_SSSE3)
 global sym(rgbaToI420Kernel41_CompY_Asm_X86_Aligned11_SSSE3)
+
 global sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned0xx_SSSE3)
 global sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned1xx_SSSE3)
 global sym(rgbaToI420Kernel41_CompUV_Asm_X86_Aligned0xx_SSSE3)
 global sym(rgbaToI420Kernel41_CompUV_Asm_X86_Aligned1xx_SSSE3)
+
+global sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned00_SSSE3)
+global sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned01_SSSE3)
+global sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned10_SSSE3)
+global sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned11_SSSE3)
+
+global sym(rgbToI420Kernel31_CompUV_Asm_X86_Aligned0xx_SSSE3)
+global sym(rgbToI420Kernel31_CompUV_Asm_X86_Aligned1xx_SSSE3)
 
 global sym(i420ToRGBAKernel11_Asm_X86_Aligned00_SSSE3)
 global sym(i420ToRGBAKernel11_Asm_X86_Aligned01_SSSE3)
@@ -53,6 +63,7 @@ section .data
 	extern sym(kYUVToRGBA_RCoeffs8)
 	extern sym(kYUVToRGBA_GCoeffs8)
 	extern sym(kYUVToRGBA_BCoeffs8)
+	extern sym(kShuffleEpi8_RgbToRgba_i32)
 
 section .text
 
@@ -380,6 +391,7 @@ sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned1xx_SSSE3):
 	push rbx
 	; end prolog
 
+	; alloc memory
 	sub rsp, 8+8
 
 	mov rax, arg(4)
@@ -422,14 +434,14 @@ sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned1xx_SSSE3):
 %endif
 
 			movdqa xmm6, xmm2
-			punpckldq xmm6, xmm3 ; 02xx
-			punpckhdq xmm2, xmm3 ; 13xx
+			punpckldq xmm2, xmm3 ; 02xx
+			punpckhdq xmm6, xmm3 ; 13xx
 			punpckldq xmm2, xmm6 ; 0123
 			movdqa xmm3, xmm2
 			
 			movdqa xmm6, xmm4
-			punpckldq xmm6, xmm5 ; 46xx
-			punpckhdq xmm4, xmm5 ; 57xx
+			punpckldq xmm4, xmm5 ; 46xx
+			punpckhdq xmm6, xmm5 ; 57xx
 			punpckldq xmm4, xmm6 ; 4567
 			movdqa xmm5, xmm4
 
@@ -477,6 +489,7 @@ sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned1xx_SSSE3):
 	cmp rsi, 0
 	jg .LoopHeight
 
+	; free memory
 	add rsp, 8+8
 
 	; begin epilog
@@ -499,6 +512,269 @@ sym(rgbaToI420Kernel41_CompUV_Asm_X86_Aligned0xx_SSSE3):
 ;;; void rgbaToI420Kernel41_CompUV_Asm_X86_Aligned1xx_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_UCoeffs8, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_VCoeffs8)
 sym(rgbaToI420Kernel41_CompUV_Asm_X86_Aligned1xx_SSSE3):
 	rgbaToI420Kernel41_CompUV_Asm_X86_SSSE3 1
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const uint8_t* rgbPtr
+; arg(1) -> uint8_t* outYPtr
+; arg(2) -> vcomp_scalar_t height
+; arg(3) -> vcomp_scalar_t width
+; arg(4) -> vcomp_scalar_t stride
+; arg(5) -> COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_YCoeffs8
+; %1 -> 1: rgbPtr is aligned, 0: not aligned
+; %2 -> 1: outYPtr is aligned, 0: not aligned
+%macro rgbToI420Kernel31_CompY_Asm_X86_SSSE3 2
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+	COMPV_YASM_SAVE_XMM 7
+	push rsi
+	push rdi
+	push rbx
+	; end prolog
+
+	; align stack and malloc memory
+	COMPV_YASM_ALIGN_STACK 16, rax
+	sub rsp, 16+16+16+16 ; rgba[4] = [rsp + 0], [rsp + 16], ...
+
+	mov rdx, arg(3)
+	add rdx, 15
+	and rdx, -16
+	mov rcx, arg(4)
+	sub rcx, rdx ; rcx = padY
+	mov rdx, rcx 
+	imul rdx, 3 ; rdx = padRGB
+
+	mov rax, arg(5)
+	movdqa xmm0, [rax]
+	movdqa xmm1, [sym(k16_i16)]
+		
+	mov rax, arg(0) ; rgbPtr
+	mov rsi, arg(2) ; height
+	mov rbx, arg(1) ; outYPtr
+	
+	.LoopHeight:
+		xor rdi, rdi
+		.LoopWidth:
+			; Convert RGB -> RGBA
+			; This macro modify [xmm4 - xmm7]
+			COMPV_3RGB_TO_4RGBA_SSSE3 rax, rsp, %1, 1 ; COMPV_3RGB_TO_4RGBA_SSSE3(rgbPtr, rgbaPtr, rgbPtrIsAligned, rgbaPtrIsAligned)
+
+			movdqa xmm2, [rsp] ; 4 RGBA samples
+			movdqa xmm3, [rsp + 16] ; 4 RGBA samples
+			movdqa xmm4, [rsp + 32] ; 4 RGBA samples
+			movdqa xmm5, [rsp + 48] ; 4 RGBA samples
+
+			pmaddubsw xmm2, xmm0
+			pmaddubsw xmm3, xmm0
+			pmaddubsw xmm4, xmm0
+			pmaddubsw xmm5, xmm0
+
+			phaddw xmm2, xmm3
+			phaddw xmm4, xmm5
+			
+			psraw xmm2, 7
+			psraw xmm4, 7
+			
+			paddw xmm2, xmm1
+			paddw xmm4, xmm1
+						
+			packuswb xmm2, xmm4
+			%if %2==1
+			movdqa [rbx], xmm2
+			%else
+			movdqu [rbx], xmm2
+			%endif
+
+			add rbx, 16
+			add rax, 48
+
+			; end-of-LoopWidth
+			add rdi, 16
+			cmp rdi, arg(3)
+			jl .LoopWidth
+	add rbx, rcx
+	add rax, rdx
+	; end-of-LoopHeight
+	sub rsi, 1
+	cmp rsi, 0
+	jg .LoopHeight
+
+	; unalign stack and alloc memory
+	add rsp, 16+16+16+16
+	COMPV_YASM_UNALIGN_STACK
+
+	; begin epilog
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_RESTORE_XMM
+    COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; void rgbToI420Kernel31_CompY_Asm_X86_Aligned00_SSSE3(const uint8_t* rgbPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, const int8_t* kXXXXToYUV_YCoeffs8)
+sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned00_SSSE3):
+	rgbToI420Kernel31_CompY_Asm_X86_SSSE3 0, 0
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; void rgbToI420Kernel31_CompY_Asm_X86_Aligned01_SSSE3(const uint8_t* rgbPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_YCoeffs8)
+sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned01_SSSE3):
+	rgbToI420Kernel31_CompY_Asm_X86_SSSE3 0, 1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; void rgbToI420Kernel31_CompY_Asm_X86_Aligned10_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, const int8_t* kXXXXToYUV_YCoeffs8)
+sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned10_SSSE3):
+	rgbToI420Kernel31_CompY_Asm_X86_SSSE3 1, 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; void rgbToI420Kernel31_CompY_Asm_X86_Aligned11_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbPtr, uint8_t* outYPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_YCoeffs8)
+sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned11_SSSE3):
+	rgbToI420Kernel31_CompY_Asm_X86_SSSE3 1, 1
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const uint8_t* rgbPtr
+; arg(1) -> uint8_t* outUPtr
+; arg(2) -> uint8_t* outVPtr
+; arg(3) -> vcomp_scalar_t height
+; arg(4) -> vcomp_scalar_t width
+; arg(5) -> vcomp_scalar_t stride
+; arg(6) -> COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_UCoeffs8
+; arg(7) -> COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_VCoeffs8
+; %1 -> 1: rgbPtr is aligned, 0: rgbPtr not aligned
+%macro rgbToI420Kernel31_CompUV_Asm_X86_SSSE3 1
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
+	COMPV_YASM_SAVE_XMM 7
+	push rsi
+	push rdi
+	push rbx
+	; end prolog
+
+	; align stack and alloc memory
+	COMPV_YASM_ALIGN_STACK 16, rax
+	sub rsp, 16+16+16+16+8+8 ; rgbaPtr[4] = [rsp + 16], [rsp + 32], ...
+
+	mov rax, arg(4)
+	add rax, 15
+	and rax, -16
+	mov rcx, arg(5)
+	sub rcx, rax
+	mov rdx, rcx
+	shr rdx, 1
+	mov [rsp + 0], rdx ; [rsp + 0] = padUV
+	add rcx, arg(5)
+	imul rcx, 3
+	mov [rsp + 8], rcx ; [rsp + 8] = padRGB
+
+	mov rax, arg(6)
+	mov rdx, arg(7)
+	movdqa xmm0, [rax] ; xmmUCoeffs
+	movdqa xmm1, [rdx] ; xmmVCoeffs
+
+	mov rax, arg(0) ; rgbPtr
+	mov rbx, arg(1) ; outUPtr
+	mov rcx, arg(2) ; outVPtr
+	mov rsi, arg(3) ; height
+	mov rdx, arg(4) ; width
+
+	.LoopHeight:
+		xor rdi, rdi
+		.LoopWidth:
+			; Convert RGB -> RGBA
+			; This macro modify [xmm4 - xmm7]
+			COMPV_3RGB_TO_4RGBA_SSSE3 rax, rsp+16, %1, 1 ; COMPV_3RGB_TO_4RGBA_SSSE3(rgbPtr, rgbaPtr, rgbPtrIsAligned, rgbaPtrIsAligned)
+
+			movdqa xmm2, [rsp + 16 + 0] ; 4 RGBA samples = 16bytes (2 are useless, we want 1 out of 2): 0x1x
+			movdqa xmm3, [rsp + 16 + 16] ; 4 RGBA samples = 16bytes :2x3x
+			movdqa xmm4, [rsp + 16 + 32] ; 4 RGBA samples = 16bytes : 4x5x
+			movdqa xmm5, [rsp + 16 + 48] ; 4 RGBA samples = 16bytes : 6x7x
+
+			movdqa xmm6, xmm2
+			punpckldq xmm2, xmm3 ; 02xx
+			punpckhdq xmm6, xmm3 ; 13xx
+			punpckldq xmm2, xmm6 ; 0123
+			movdqa xmm3, xmm2
+			
+			movdqa xmm6, xmm4
+			punpckldq xmm4, xmm5 ; 46xx
+			punpckhdq xmm6, xmm5 ; 57xx
+			punpckldq xmm4, xmm6 ; 4567
+			movdqa xmm5, xmm4
+
+			; U = (xmm2, xmm4)
+			; V = (xmm3, xmm5)
+
+			pmaddubsw xmm2, xmm0
+			pmaddubsw xmm4, xmm0
+			pmaddubsw xmm3, xmm1
+			pmaddubsw xmm5, xmm1
+
+			; U = xmm2
+			; V = xmm3
+
+			phaddw xmm2, xmm4
+			phaddw xmm3, xmm5
+
+			psraw xmm2, 8 ; >> 8
+			psraw xmm3, 8 ; >> 8
+
+			paddw xmm2, [sym(k128_i16)] ; + 128 -> UUVV----
+			paddw xmm3, [sym(k128_i16)] ; + 128 -> UUVV----
+
+			; UV = xmm2
+
+			packuswb xmm2, xmm3 ; Packs + Saturate(I16 -> U8)
+
+			movq [rbx], xmm2
+			psrldq xmm2, 8 ; >> 8
+			movq [rcx], xmm2
+			
+			add rbx, 8 ; outUPtr += 8
+			add rcx, 8 ; outVPtr += 8
+			add rax, 48 ; rgbPtr += 64
+
+			; end-of-LoopWidth
+			add rdi, 16
+			cmp rdi, rdx
+			jl .LoopWidth
+	add rax, [rsp + 8] ; rgbaPtr += padRGBA
+	add rbx, [rsp + 0] ; outUPtr += padUV
+	add rcx, [rsp + 0] ; outVPtr += padUV
+	; end-of-LoopHeight
+	sub rsi, 2
+	cmp rsi, 0
+	jg .LoopHeight
+
+	; unalign stack and alloc memory
+	add rsp, 16+16+16+16+8+8
+	COMPV_YASM_UNALIGN_STACK
+
+	; begin epilog
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; void rgbToI420Kernel31_CompUV_Asm_X86_Aligned0xx_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_UCoeffs8, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_VCoeffs8)
+sym(rgbToI420Kernel31_CompUV_Asm_X86_Aligned0xx_SSSE3):
+	rgbToI420Kernel31_CompUV_Asm_X86_SSSE3 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; void rgbToI420Kernel31_CompUV_Asm_X86_Aligned1xx_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgbPtr, uint8_t* outUPtr, uint8_t* outVPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_UCoeffs8, COMV_ALIGNED(SSE) const int8_t* kXXXXToYUV_VCoeffs8)
+sym(rgbToI420Kernel31_CompUV_Asm_X86_Aligned1xx_SSSE3):
+	rgbToI420Kernel31_CompUV_Asm_X86_SSSE3 1
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> const uint8_t* yPtr

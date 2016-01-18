@@ -18,8 +18,8 @@ using namespace compv;
 
 #define loopCount		1
 #define MD5_PRINT		1
-#define FORMAT_SRC		FORMAT_RGB // must be rgb or rgba family
-#define FORMAT_DST		FORMAT_RGBA
+#define FORMAT_SRC		FORMAT_BGR // must be rgb or rgba family
+#define FORMAT_DST		FORMAT_I420
 #define STRIDE_ALIGN	true // false to test CompVImage::wrap and CompVImage::copy
 
 static void rgbToSrc(const CompVObjWrapper<CompVImage *>& jpegImage, void** srcPtr, int &height, int &width, int &stride)
@@ -145,9 +145,6 @@ bool TestRgba()
     for (size_t i = 0; i < loopCount; ++i) {
         COMPV_CHECK_CODE_ASSERT(CompVImage::wrap((COMPV_PIXEL_FORMAT)FORMAT_SRC, srcPtr, width, height, stride, &srcImage));
 		COMPV_CHECK_CODE_ASSERT(srcImage->convert((COMPV_PIXEL_FORMAT)FORMAT_DST, &dstImage)); // e.g. RGBA -> I420
-#if MD5_PRINT
-		COMPV_DEBUG_INFO("MD5(I420)=%s", CompVMd5::compute2(dstImage->getDataPtr(), dstImage->getDataSize()).c_str());
-#endif
 #if FORMAT_SRC == FORMAT_RGBA && 0 // only I420 -> RGBA is supported
         const uint8_t* yPtr = (const uint8_t*)dstImage->getDataPtr();
         const uint8_t* uPtr = yPtr + (dstImage->getHeight() * dstImage->getStride());
@@ -158,6 +155,10 @@ bool TestRgba()
     }
     timeEnd = CompVTime::getNowMills();
     COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
+
+#if MD5_PRINT
+	COMPV_DEBUG_INFO("MD5(I420)=%s", CompVMd5::compute2(dstImage->getDataPtr(), dstImage->getDataSize()).c_str());
+#endif
 
 	// Open with imageMagick (MS-DOS): convert.exe -depth 8 -size 2048x1000 out.rgba out.png
 

@@ -42,6 +42,7 @@
     <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_rgba_rgb_intrin_avx2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_rgba_rgb_intrin_sse.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_avx.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_sse.h" />
     <ClInclude Include="include\compv\parallel\compv_asynctask.h" />
     <ClInclude Include="include\compv\parallel\compv_condvar.h" />
     <ClInclude Include="include\compv\parallel\compv_mutex.h" />
@@ -109,6 +110,10 @@
     <YASM Include="assembler\x86\compv_imageconv_rgba_rgb_x86_sse.S">
       <FileType>Document</FileType>
     </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assembler\x86\compv_imageconv_macros_avx.S" />
+    <None Include="assembler\x86\compv_imageconv_macros_sse.S" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AAC1E1B3-CE47-4003-BE1A-00A20C409129}</ProjectGuid>

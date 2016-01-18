@@ -21,3 +21,9 @@ Release
 /tests/image/My Amplifier XE Results - image/r001hs
 /tests/image/My Amplifier XE Results - image
 /tests/image/My Inspector XE Results - image
+/tests/image/*.bgr
+/tests/image/*.bgra
+/tests/image/out.rgb
+/tests/image/out.i420
+/tests/image/out.rgba
+/tests/image/out.png

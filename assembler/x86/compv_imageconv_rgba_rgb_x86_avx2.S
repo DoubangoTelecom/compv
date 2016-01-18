@@ -90,7 +90,7 @@ section .text
 			%endif
 			vpermd ymm1, ymm7, ymm0
 			vpshufb ymm1, ymm1, ymm6
-			vpaddb ymm1, ymm1, [k_0_0_0_255_u8]
+			vpaddb ymm1, ymm1, [sym(k_0_0_0_255_u8)]
 			%if %2==1
 			vmovdqa [rdx + 0], ymm1
 			%else
@@ -109,7 +109,7 @@ section .text
 			vpermd ymm1, ymm5, ymm1
 			vpblendd ymm1, ymm1, ymm0, 0x03 ; ymm0(64bits)||ymm1(192bits)
 			vpshufb ymm1, ymm1, ymm6
-			vpaddb ymm1, ymm1, [k_0_0_0_255_u8]
+			vpaddb ymm1, ymm1, [sym(k_0_0_0_255_u8)]
 			%if %2==1
 			vmovdqa [rdx + 32], ymm1
 			%else
@@ -127,7 +127,7 @@ section .text
 			vinserti128 ymm3, ymm3, [rsp + 0], 0x1
 			vpermd ymm0, ymm7, ymm3
 			vpshufb ymm0, ymm0, ymm6
-			vpaddb ymm0, ymm0, [k_0_0_0_255_u8]
+			vpaddb ymm0, ymm0, [sym(k_0_0_0_255_u8)]
 			%if %2==1
 			vmovdqa [rdx + 64], ymm0
 			%else
@@ -136,7 +136,7 @@ section .text
 
 			;;;;;;;;;; Line-3 ;;;;;;;;;;
 			vpshufb ymm1, ymm1, ymm6
-			vpaddb ymm1, ymm1, [k_0_0_0_255_u8]
+			vpaddb ymm1, ymm1, [sym(k_0_0_0_255_u8)]
 			%if %2==1
 			vmovdqa [rdx + 96], ymm1
 			%else
@@ -171,7 +171,6 @@ section .text
 	pop rbp
 	ret
 %endmacro
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; void rgbToRgbaKernel31_Asm_X86_Aligned00_AVX2(const uint8_t* rgb, uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
