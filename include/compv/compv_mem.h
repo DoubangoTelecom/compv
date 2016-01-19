@@ -32,6 +32,7 @@ typedef struct compv_special_mem_s {
 	size_t size;
 	size_t alignment;
 public:
+	compv_special_mem_s() : addr(NULL), size(0), alignment(0) { }
 	compv_special_mem_s(uintptr_t _addr, size_t _size, size_t _alignment) {
 		addr = _addr;
 		size = _size;
@@ -72,6 +73,5 @@ private:
 };
 
 COMPV_NAMESPACE_END()
-
 
 #endif /* _COMPV_MEM_H_ */

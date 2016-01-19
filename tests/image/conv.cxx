@@ -129,7 +129,7 @@ static void writeImgToFile(const CompVObjWrapper<CompVImage *>& img)
     }
 }
 
-bool TestRgba()
+bool TestConv()
 {
     CompVObjWrapper<CompVImage *> jpegImage;
     CompVObjWrapper<CompVImage *> dstImage;

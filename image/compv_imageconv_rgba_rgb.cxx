@@ -24,8 +24,8 @@
 #include "compv/compv_mem.h"
 #include "compv/compv_mathutils.h"
 
-#include "compv/intrinsics/x86/compv_imageconv_rgba_rgb_intrin_sse.h"
-#include "compv/intrinsics/x86/compv_imageconv_rgba_rgb_intrin_avx2.h"
+#include "compv/intrinsics/x86/image/compv_imageconv_rgba_rgb_intrin_sse.h"
+#include "compv/intrinsics/x86/image/compv_imageconv_rgba_rgb_intrin_avx2.h"
 
 COMPV_NAMESPACE_BEGIN()
 

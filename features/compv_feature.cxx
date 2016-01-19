@@ -17,28 +17,51 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_API_H_)
-#define _COMPV_API_H_ /* Must not change this name, used as guard in private header files */
-
-#include "compv/compv_cpu.h"
-#include "compv/compv_debug.h"
-#include "compv/compv_engine.h"
-#include "compv/compv_md5.h"
-#include "compv/compv_mem.h"
-#include "compv/compv_obj.h"
-
-#include "compv/image/compv_image.h"
-
 #include "compv/features/compv_feature.h"
 
-#include "compv/parallel/compv_asynctask.h"
-#include "compv/parallel/compv_condvar.h"
-#include "compv/parallel/compv_mutex.h"
-#include "compv/parallel/compv_semaphore.h"
-#include "compv/parallel/compv_thread.h"
-#include "compv/parallel/compv_threaddisp.h"
+COMPV_NAMESPACE_BEGIN()
 
-#include "compv/time/compv_time.h"
-#include "compv/time/compv_timer.h"
+//
+//	CompVFeature
+//
 
-#endif /* _COMPV_API_H_ */
+CompVFeature::CompVFeature()
+{
+
+}
+
+CompVFeature::~CompVFeature()
+{
+
+}
+
+
+//
+//	CompVFeatureDete
+//
+
+CompVFeatureDete::CompVFeatureDete()
+{
+
+}
+
+CompVFeatureDete::~CompVFeatureDete()
+{
+
+}
+
+//
+//	CompVFeatureDesc
+//
+
+CompVFeatureDesc::CompVFeatureDesc()
+{
+
+}
+
+CompVFeatureDesc::~CompVFeatureDesc()
+{
+
+}
+
+COMPV_NAMESPACE_END()

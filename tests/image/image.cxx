@@ -3,14 +3,14 @@
 
 using namespace compv;
 
-#define numThreads			COMPV_NUM_THREADS_BEST
+#define numThreads			COMPV_NUM_THREADS_SINGLE
 #define enableIntrinsics	true
 #define enableAsm			true
 
-#define TEST_RGBA 1
+#define TEST_CONV 1
 
-#if TEST_RGBA
-extern bool TestRgba();
+#if TEST_CONV
+extern bool TestConv();
 #endif
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -21,8 +21,8 @@ int _tmain(int argc, _TCHAR* argv[])
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagNone));
 
-#if TEST_RGBA
-    TestRgba();
+#if TEST_CONV
+	TestConv();
 #endif
 
     // deInit the engine

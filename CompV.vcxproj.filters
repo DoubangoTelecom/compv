@@ -61,6 +61,36 @@
     <Filter Include="Assembler Files\x64">
       <UniqueIdentifier>{15769f8a-2f7e-474c-90ed-308df429680c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\intrinsics\x86\image">
+      <UniqueIdentifier>{07df71d3-6c02-4a71-ab6a-e4d31cc51d37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assembler Files\x64\image">
+      <UniqueIdentifier>{582a4f83-eb7c-4d4a-91ae-c316abeb0057}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assembler Files\x86\image">
+      <UniqueIdentifier>{e251edfa-3515-4de3-8b81-bcad52d77846}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\intrinsics\x86\image">
+      <UniqueIdentifier>{6a53251c-d6b9-40cd-bce8-92d44c67b9b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features">
+      <UniqueIdentifier>{be2bce48-3398-4af6-b617-97d3fc761318}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\features">
+      <UniqueIdentifier>{2ffad0f8-fa2d-4ce7-b6e9-250e12315e4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\features\orb">
+      <UniqueIdentifier>{163de9bd-9049-4bcc-afeb-5a55074ca5d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\features\fast">
+      <UniqueIdentifier>{4a83aedf-6c94-40ec-8d01-262764eadcce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\orb">
+      <UniqueIdentifier>{e96375c0-88b6-4bae-9559-c7e03cb374bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\fast">
+      <UniqueIdentifier>{3b2c438a-6f79-423d-b216-96a67b60bc48}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
@@ -132,12 +162,6 @@
     <ClInclude Include="include\compv\compv_mathutils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_rgba_i420_intrin_avx2.h">
-      <Filter>Header Files\intrinsics\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_rgba_i420_intrin_sse.h">
-      <Filter>Header Files\intrinsics\x86</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_avx.h">
       <Filter>Header Files\intrinsics\x86</Filter>
     </ClInclude>
@@ -147,12 +171,6 @@
     <ClInclude Include="include\compv\image\compv_imageconv_rgba_rgb.h">
       <Filter>Header Files\image</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_rgba_rgb_intrin_sse.h">
-      <Filter>Header Files\intrinsics\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\intrinsics\x86\compv_imageconv_rgba_rgb_intrin_avx2.h">
-      <Filter>Header Files\intrinsics\x86</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_sse.h">
       <Filter>Header Files\intrinsics\x86</Filter>
     </ClInclude>
@@ -161,6 +179,33 @@
     </ClInclude>
     <ClInclude Include="include\compv\image\compv_imageconv_grayscale.h">
       <Filter>Header Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\image\compv_imageconv_rgba_i420_intrin_avx2.h">
+      <Filter>Header Files\intrinsics\x86\image</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\image\compv_imageconv_rgba_i420_intrin_sse.h">
+      <Filter>Header Files\intrinsics\x86\image</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\image\compv_imageconv_rgba_rgb_intrin_avx2.h">
+      <Filter>Header Files\intrinsics\x86\image</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\image\compv_imageconv_rgba_rgb_intrin_sse.h">
+      <Filter>Header Files\intrinsics\x86\image</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\features\compv_feature.h">
+      <Filter>Header Files\features</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\compv_settable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\features\orb\compv_feature_orb_desc.h">
+      <Filter>Header Files\features\orb</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\features\fast\compv_feature_fast_dete.h">
+      <Filter>Header Files\features\fast</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\features\orb\compv_feature_orb_dete.h">
+      <Filter>Header Files\features\orb</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -227,12 +272,6 @@
     <ClCompile Include="compv_mathutils.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="intrinsics\x86\compv_imageconv_rgba_i420_intrin_avx2.cxx">
-      <Filter>Source Files\intrinsics\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="intrinsics\x86\compv_imageconv_rgba_i420_intrin_sse.cxx">
-      <Filter>Source Files\intrinsics\x86</Filter>
-    </ClCompile>
     <ClCompile Include="compv_obj.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -242,45 +281,66 @@
     <ClCompile Include="image\compv_imageconv_rgba_rgb.cxx">
       <Filter>Source Files\image</Filter>
     </ClCompile>
-    <ClCompile Include="intrinsics\x86\compv_imageconv_rgba_rgb_intrin_sse.cxx">
-      <Filter>Source Files\intrinsics\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="intrinsics\x86\compv_imageconv_rgba_rgb_intrin_avx2.cxx">
-      <Filter>Source Files\intrinsics\x86</Filter>
-    </ClCompile>
     <ClCompile Include="image\compv_imageconv_grayscale.cxx">
       <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\image\compv_imageconv_rgba_i420_intrin_avx2.cxx">
+      <Filter>Source Files\intrinsics\x86\image</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\image\compv_imageconv_rgba_i420_intrin_sse.cxx">
+      <Filter>Source Files\intrinsics\x86\image</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\image\compv_imageconv_rgba_rgb_intrin_avx2.cxx">
+      <Filter>Source Files\intrinsics\x86\image</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\image\compv_imageconv_rgba_rgb_intrin_sse.cxx">
+      <Filter>Source Files\intrinsics\x86\image</Filter>
+    </ClCompile>
+    <ClCompile Include="features\compv_feature.cxx">
+      <Filter>Source Files\features</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_settable.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="features\orb\compv_feature_orb_desc.cxx">
+      <Filter>Source Files\features\orb</Filter>
+    </ClCompile>
+    <ClCompile Include="features\orb\compv_feature_orb_ext.cxx">
+      <Filter>Source Files\features\orb</Filter>
+    </ClCompile>
+    <ClCompile Include="features\fast\compv_feature_fast_ext.cxx">
+      <Filter>Source Files\features\fast</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="assembler\x86\compv_common_x86.S">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
-    <YASM Include="assembler\x86\compv_imageconv_rgba_i420_x86_avx2.S">
-      <Filter>Assembler Files\x86</Filter>
-    </YASM>
-    <YASM Include="assembler\x86\compv_imageconv_rgba_i420_x86_sse.S">
-      <Filter>Assembler Files\x86</Filter>
-    </YASM>
     <YASM Include="assembler\x86\compv_utils_x86.S">
-      <Filter>Assembler Files\x86</Filter>
-    </YASM>
-    <YASM Include="assembler\x64\compv_imageconv_rgba_i420_x64_avx2.S">
-      <Filter>Assembler Files\x64</Filter>
-    </YASM>
-    <YASM Include="assembler\x86\compv_imageconv_rgba_rgb_x86_sse.S">
-      <Filter>Assembler Files\x86</Filter>
-    </YASM>
-    <YASM Include="assembler\x86\compv_imageconv_rgba_rgb_x86_avx2.S">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
   </ItemGroup>
   <ItemGroup>
-    <None Include="assembler\x86\compv_imageconv_macros_avx.S">
-      <Filter>Assembler Files\x86</Filter>
+    <None Include="assembler\x64\image\compv_imageconv_rgba_i420_x64_avx2.S">
+      <Filter>Assembler Files\x64\image</Filter>
     </None>
-    <None Include="assembler\x86\compv_imageconv_macros_sse.S">
-      <Filter>Assembler Files\x86</Filter>
+    <None Include="assembler\x86\image\compv_imageconv_macros_avx.S">
+      <Filter>Assembler Files\x86\image</Filter>
+    </None>
+    <None Include="assembler\x86\image\compv_imageconv_macros_sse.S">
+      <Filter>Assembler Files\x86\image</Filter>
+    </None>
+    <None Include="assembler\x86\image\compv_imageconv_rgba_i420_x86_avx2.S">
+      <Filter>Assembler Files\x86\image</Filter>
+    </None>
+    <None Include="assembler\x86\image\compv_imageconv_rgba_i420_x86_sse.S">
+      <Filter>Assembler Files\x86\image</Filter>
+    </None>
+    <None Include="assembler\x86\image\compv_imageconv_rgba_rgb_x86_avx2.S">
+      <Filter>Assembler Files\x86\image</Filter>
+    </None>
+    <None Include="assembler\x86\image\compv_imageconv_rgba_rgb_x86_sse.S">
+      <Filter>Assembler Files\x86\image</Filter>
     </None>
   </ItemGroup>
 </Project>

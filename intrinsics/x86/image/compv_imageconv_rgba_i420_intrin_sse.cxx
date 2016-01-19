@@ -17,7 +17,7 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#include "compv/intrinsics/x86/compv_imageconv_rgba_i420_intrin_sse.h"
+#include "compv/intrinsics/x86/image/compv_imageconv_rgba_i420_intrin_sse.h"
 
 #if defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC)
 #include "compv/intrinsics/x86/compv_intrin_sse.h"
