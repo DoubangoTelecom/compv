@@ -23,6 +23,7 @@
 #include "compv/compv_debug.h"
 #include "compv/time/compv_time.h"
 #include "compv/image/compv_image.h"
+#include "compv/features/compv_feature.h"
 
 
 COMPV_NAMESPACE_BEGIN()
@@ -124,7 +125,9 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     COMPV_DEBUG_INFO("Default alignment: #%d", COMPV_SIMD_ALIGNV_DEFAULT);
     COMPV_DEBUG_INFO("Best alignment: #%d", CompVMem::getBestAlignment());
 
-    COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
+    /* Features */
+    COMPV_CHECK_CODE_BAIL(err_ = CompVFeature::init());
+
 
     COMPV_DEBUG_INFO("Engine initialized");
 

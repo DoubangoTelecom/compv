@@ -32,46 +32,14 @@ CompVSettable::~CompVSettable()
 
 }
 
-COMPV_ERROR_CODE CompVSettable::addFunction(int id, CompVSettableFunInt32 func)
+COMPV_ERROR_CODE CompVSettable::set(int id, const void* valuePtr, size_t valueSize)
 {
-	COMPV_CHECK_EXP_RETURN(!func, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	m_Functions[id] = compv_settable_func_t(id, COMPV_SETTABLE_DATA_TYPE_INT32, func);
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVSettable::addFunction(int id, CompVSettableFunObj func)
-{
-	COMPV_CHECK_EXP_RETURN(!func, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	m_Functions[id] = compv_settable_func_t(id, COMPV_SETTABLE_DATA_TYPE_OBJ, func);
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVSettable::setInt32(int id, int32_t value)
-{
-	std::map<int, compv_settable_func_t>::iterator it = m_Functions.find(id);
-	if (it == m_Functions.end()) {
-		COMPV_DEBUG_ERROR("This object doesn't support this method");
-		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
-	}
-	if (it->second.id != COMPV_SETTABLE_DATA_TYPE_INT32) {
-		COMPV_DEBUG_ERROR("Invalid data type: %d <> %d", it->second.id, COMPV_SETTABLE_DATA_TYPE_INT32);
-		return COMPV_ERROR_CODE_E_INVALID_CALL;
-	}
-	return ((CompVSettableFunInt32)it->second.fun)(value);
-}
-
-COMPV_ERROR_CODE CompVSettable::setObj(int id, CompVObj* value)
-{
-	std::map<int, compv_settable_func_t>::iterator it = m_Functions.find(id);
-	if (it == m_Functions.end()) {
-		COMPV_DEBUG_ERROR("This object doesn't support this method");
-		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
-	}
-	if (it->second.id != COMPV_SETTABLE_DATA_TYPE_OBJ) {
-		COMPV_DEBUG_ERROR("Invalid data type: %d <> %d", it->second.id, COMPV_SETTABLE_DATA_TYPE_OBJ);
-		return COMPV_ERROR_CODE_E_INVALID_CALL;
-	}
-	return ((CompVSettableFunObj)it->second.fun)(value);
+    switch (id) {
+    case -1:
+    default:
+        COMPV_DEBUG_ERROR("id=%d not supported", id);
+        return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+    }
 }
 
 COMPV_NAMESPACE_END()

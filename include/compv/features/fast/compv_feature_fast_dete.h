@@ -28,9 +28,34 @@
 #error("This is a private file and must not be part of the API")
 #endif
 
-
 COMPV_NAMESPACE_BEGIN()
 
+// Default threshold (pixel intensity: [0-255])
+#define COMPV_FEATURE_DETE_FAST_THRESHOLD_DEFAULT	10
+// Number of continuous pixel to have above or below the candidate point
+#define COMPV_FEATURE_DETE_FAST_N_DEFAULT			12
+#define COMPV_FEATURE_DETE_FAST_NON_MAXIMA_SUPP		true
+
+class CompVFeatureDeteFAST : public CompVFeatureDete
+{
+protected:
+	CompVFeatureDeteFAST();
+public:
+	virtual ~CompVFeatureDeteFAST();
+	virtual COMPV_INLINE const char* getObjectId() { return "CompVFeatureDeteFAST"; };
+	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* fast);
+
+private:
+	// override CompVSettable::set
+	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
+	// override CompVFeatureDete::set
+	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, std::vector<CompVInterestPoint >& interestPoints);
+
+private:
+	int32_t m_iThreshold;
+	int32_t m_iN;
+	bool m_bNonMaximaSupp;
+};
 
 COMPV_NAMESPACE_END()
 

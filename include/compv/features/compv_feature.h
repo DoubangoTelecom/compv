@@ -24,11 +24,25 @@
 #include "compv/compv_common.h"
 #include "compv/compv_obj.h"
 #include "compv/compv_settable.h"
+#include "compv/image/compv_image.h"
 
 #include <map>
+#include <vector>
 
 COMPV_NAMESPACE_BEGIN()
 
+class CompVFeatureDete;
+class CompVFeatureDesc;
+
+
+struct CompVFeatureFactory {
+	int id;
+	const char* name;
+	COMPV_ERROR_CODE(*newObjDete)(CompVObjWrapper<CompVFeatureDete* >* dete);
+	COMPV_ERROR_CODE(*newObjDesc)(CompVObjWrapper<CompVFeatureDesc* >* desc);
+};
+
+/* Feature detectors and descriptors IDs */
 enum {
 	/* Feature detectors */
 	COMPV_FEATURE_DETE_ID_FAST,
@@ -38,12 +52,30 @@ enum {
 	COMPV_FEATURE_DESC_ID_ORB,
 };
 
+/* Feature detectors and descriptors setters and getters */
+enum {
+	
+
+	/* FAST (Features from Accelerated Segment Test) */
+	COMPV_SET_INT32_FAST_THRESHOLD,
+	COMPV_SET_BOOL_FAST_NON_MAXIMA_SUPP,
+	COMPV_FAST_MOD9,
+};
+
 class COMPV_API CompVFeature : public CompVObj, public CompVSettable
 {
 protected:
 	CompVFeature();
 public:
 	virtual ~CompVFeature();
+	static COMPV_ERROR_CODE init();
+	static COMPV_ERROR_CODE addFactory(const CompVFeatureFactory* factory);
+	static const CompVFeatureFactory* findFactory(int deteId);
+
+private:
+	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	static std::map<int, const CompVFeatureFactory*> s_Factories;
+	COMPV_DISABLE_WARNINGS_END()
 };
 
 class COMPV_API CompVFeatureDete : public CompVObj, public CompVSettable
@@ -52,6 +84,7 @@ protected:
 	CompVFeatureDete();
 public:
 	virtual ~CompVFeatureDete();
+	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, std::vector<CompVInterestPoint >& interestPoints) = 0;
 	static COMPV_ERROR_CODE newObj(int deteId, CompVObjWrapper<CompVFeatureDete* >* dete);
 };
 

@@ -28,6 +28,7 @@
     <ClInclude Include="include\compv\compv_engine.h" />
     <ClInclude Include="include\compv\compv_errno.h" />
     <ClInclude Include="include\compv\compv_fileutils.h" />
+    <ClInclude Include="include\compv\compv_math.h" />
     <ClInclude Include="include\compv\compv_mathutils.h" />
     <ClInclude Include="include\compv\compv_md5.h" />
     <ClInclude Include="include\compv\compv_mem.h" />
@@ -72,9 +73,9 @@
     <ClCompile Include="compv_settable.cxx" />
     <ClCompile Include="compv_simd_globals.cxx" />
     <ClCompile Include="features\compv_feature.cxx" />
-    <ClCompile Include="features\fast\compv_feature_fast_ext.cxx" />
+    <ClCompile Include="features\fast\compv_feature_fast_dete.cxx" />
     <ClCompile Include="features\orb\compv_feature_orb_desc.cxx" />
-    <ClCompile Include="features\orb\compv_feature_orb_ext.cxx" />
+    <ClCompile Include="features\orb\compv_feature_orb_dete.cxx" />
     <ClCompile Include="image\compv_image.cxx" />
     <ClCompile Include="image\compv_imageconv_common.cxx" />
     <ClCompile Include="image\compv_imageconv_grayscale.cxx" />

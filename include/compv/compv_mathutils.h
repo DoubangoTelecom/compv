@@ -21,16 +21,17 @@
 #define _COMPV_MATHUTILS_H_
 
 #include "compv/compv_config.h"
+#include "compv/compv_math.h"
 
 COMPV_NAMESPACE_BEGIN()
 
 class CompVMathUtils {
 public:
 	static COMPV_INLINE int32_t clamp(int32_t min, int32_t val, int32_t max) { // do not use macro, otherwise 'val' which coulbe a function will be evaluated several times
-		return val < min ? min : (val > max ? max : val);
+		return COMPV_MATH_CLIP3(min, max, val);
 	}
 	static COMPV_INLINE uint8_t clampPixel8(int16_t val) {
-		return val < 0 ? 0 : (val > 255 ? 255 : val);
+		return (uint8_t)COMPV_MATH_CLIP3(0, 255, val);
 	}
 };
 

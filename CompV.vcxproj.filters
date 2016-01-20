@@ -207,6 +207,9 @@
     <ClInclude Include="include\compv\features\orb\compv_feature_orb_dete.h">
       <Filter>Header Files\features\orb</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\compv_math.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -305,11 +308,11 @@
     <ClCompile Include="features\orb\compv_feature_orb_desc.cxx">
       <Filter>Source Files\features\orb</Filter>
     </ClCompile>
-    <ClCompile Include="features\orb\compv_feature_orb_ext.cxx">
-      <Filter>Source Files\features\orb</Filter>
-    </ClCompile>
-    <ClCompile Include="features\fast\compv_feature_fast_ext.cxx">
+    <ClCompile Include="features\fast\compv_feature_fast_dete.cxx">
       <Filter>Source Files\features\fast</Filter>
+    </ClCompile>
+    <ClCompile Include="features\orb\compv_feature_orb_dete.cxx">
+      <Filter>Source Files\features\orb</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -319,28 +322,26 @@
     <YASM Include="assembler\x86\compv_utils_x86.S">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assembler\x64\image\compv_imageconv_rgba_i420_x64_avx2.S">
+    <YASM Include="assembler\x86\image\compv_imageconv_macros_avx.S">
+      <Filter>Assembler Files\x86\image</Filter>
+    </YASM>
+    <YASM Include="assembler\x86\image\compv_imageconv_macros_sse.S">
+      <Filter>Assembler Files\x86\image</Filter>
+    </YASM>
+    <YASM Include="assembler\x86\image\compv_imageconv_rgba_i420_x86_avx2.S">
+      <Filter>Assembler Files\x86\image</Filter>
+    </YASM>
+    <YASM Include="assembler\x86\image\compv_imageconv_rgba_i420_x86_sse.S">
+      <Filter>Assembler Files\x86\image</Filter>
+    </YASM>
+    <YASM Include="assembler\x86\image\compv_imageconv_rgba_rgb_x86_avx2.S">
+      <Filter>Assembler Files\x86\image</Filter>
+    </YASM>
+    <YASM Include="assembler\x86\image\compv_imageconv_rgba_rgb_x86_sse.S">
+      <Filter>Assembler Files\x86\image</Filter>
+    </YASM>
+    <YASM Include="assembler\x64\image\compv_imageconv_rgba_i420_x64_avx2.S">
       <Filter>Assembler Files\x64\image</Filter>
-    </None>
-    <None Include="assembler\x86\image\compv_imageconv_macros_avx.S">
-      <Filter>Assembler Files\x86\image</Filter>
-    </None>
-    <None Include="assembler\x86\image\compv_imageconv_macros_sse.S">
-      <Filter>Assembler Files\x86\image</Filter>
-    </None>
-    <None Include="assembler\x86\image\compv_imageconv_rgba_i420_x86_avx2.S">
-      <Filter>Assembler Files\x86\image</Filter>
-    </None>
-    <None Include="assembler\x86\image\compv_imageconv_rgba_i420_x86_sse.S">
-      <Filter>Assembler Files\x86\image</Filter>
-    </None>
-    <None Include="assembler\x86\image\compv_imageconv_rgba_rgb_x86_avx2.S">
-      <Filter>Assembler Files\x86\image</Filter>
-    </None>
-    <None Include="assembler\x86\image\compv_imageconv_rgba_rgb_x86_sse.S">
-      <Filter>Assembler Files\x86\image</Filter>
-    </None>
+    </YASM>
   </ItemGroup>
 </Project>

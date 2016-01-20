@@ -239,6 +239,19 @@ typedef struct _CompVRect {
 }
 CompVRect;
 
+typedef struct _CompVInterestPoint {
+	int32_t x;
+	int32_t y;
+public:
+	_CompVInterestPoint(): _CompVInterestPoint(0, 0){
+	}
+	_CompVInterestPoint(int32_t x_, int32_t y_) {
+		x = x_;
+		y = y_;
+	}
+}
+CompVInterestPoint;
+
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_COMMON_H_ */

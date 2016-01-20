@@ -28,43 +28,23 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-typedef COMPV_ERROR_CODE (*CompVSettableFunInt32)(int32_t value);
-typedef COMPV_ERROR_CODE(*CompVSettableFunObj)(CompVObj* value);
-
 enum {
 	COMPV_SETTABLE_DATA_TYPE_INT32,
 	COMPV_SETTABLE_DATA_TYPE_OBJ,
 };
 
-typedef struct compv_settable_fun_s {
-	int id;
-	int type;
-	void* fun;
-public:
-	compv_settable_fun_s() : id(-1), type(-1), fun(NULL) { }
-	compv_settable_fun_s(int id_, int type_, void* fun_) {
-		id = id_;
-		type = type_;
-		fun = fun_;
-	}
-}
-compv_settable_func_t;
 
 class COMPV_API CompVSettable
 {
 protected:
 	CompVSettable();
-	COMPV_ERROR_CODE addFunction(int id, CompVSettableFunInt32 func);
-	COMPV_ERROR_CODE addFunction(int id, CompVSettableFunObj func);
 
 public:
 	virtual ~CompVSettable();
-	COMPV_ERROR_CODE setInt32(int id, int32_t value);
-	COMPV_ERROR_CODE setObj(int id, CompVObj* value);
+	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
 
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-	std::map<int, compv_settable_func_t> m_Functions;
 	COMPV_DISABLE_WARNINGS_END()
 };
 

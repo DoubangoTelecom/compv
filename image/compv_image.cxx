@@ -53,14 +53,15 @@ COMPV_ERROR_CODE CompVImage::convert(COMPV_PIXEL_FORMAT eDstPixelFormat, CompVOb
 {
     COMPV_CHECK_EXP_RETURN(outImage == NULL || eDstPixelFormat == m_eImageFormat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_CHECK_EXP_RETURN(m_eImageFormat != COMPV_IMAGE_FORMAT_RAW, COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT); // We only support RAW -> RAW. If you have a JPEG image, decode it first then wrap it
-    if (eDstPixelFormat == m_eImageFormat) {
-        *outImage = this;
+	CompVObjWrapper<CompVImage*> This = this; // when outImage is equal to this and the caller doesn't hold a reference the object could be destroyed before the end of the call. This line increment the refCount.
+	if (eDstPixelFormat == m_eImageFormat) {
+		*outImage = This;
         return COMPV_ERROR_CODE_S_OK;
     }
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     int32_t neededBuffSize;
     COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getSizeForPixelFormat(eDstPixelFormat, m_nStride, m_nHeight, &neededBuffSize));
-    bool bAllocOutImage = (!(*outImage) || *outImage == this || (*outImage)->getDataSize() != neededBuffSize || (*outImage)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*outImage)->getPixelFormat() != eDstPixelFormat);
+	bool bAllocOutImage = (!(*outImage) || *outImage == This || (*outImage)->getDataSize() != neededBuffSize || (*outImage)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*outImage)->getPixelFormat() != eDstPixelFormat);
     if (bAllocOutImage) {
         COMPV_CHECK_CODE_RETURN(err_ = CompVImage::newObj(eDstPixelFormat, m_nWidth, m_nHeight, m_nStride, outImage));
     }

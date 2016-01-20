@@ -7,10 +7,14 @@ using namespace compv;
 #define enableIntrinsics	true
 #define enableAsm			true
 
-#define TEST_CONV 1
+#define TEST_CONV			0
+#define TEST_FAST			1
 
 #if TEST_CONV
 extern bool TestConv();
+#endif
+#if TEST_FAST
+extern bool TestFAST();
 #endif
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -22,7 +26,10 @@ int _tmain(int argc, _TCHAR* argv[])
     COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagNone));
 
 #if TEST_CONV
-	TestConv();
+    COMPV_ASSERT(TestConv());
+#endif
+#if TEST_FAST
+    COMPV_ASSERT(TestFAST());
 #endif
 
     // deInit the engine

@@ -21,5 +21,8 @@
     <ClCompile Include="conv.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="fast.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
