@@ -32,8 +32,8 @@ COMPV_NAMESPACE_BEGIN()
 
 // Default threshold (pixel intensity: [0-255])
 #define COMPV_FEATURE_DETE_FAST_THRESHOLD_DEFAULT	10
-// Number of continuous pixel to have above or below the candidate point
-#define COMPV_FEATURE_DETE_FAST_N_DEFAULT			12
+// Number of positive continuous pixel to have before declaring a candidate as an interest point
+#define COMPV_FEATURE_DETE_FAST_N_DEFAULT			9 // FIXME: make this configurable (opencv: c::TYPE_9_16)
 #define COMPV_FEATURE_DETE_FAST_NON_MAXIMA_SUPP		true
 
 class CompVFeatureDeteFAST : public CompVFeatureDete

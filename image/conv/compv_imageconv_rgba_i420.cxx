@@ -17,15 +17,15 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#include "compv/image/compv_imageconv_rgba_i420.h"
-#include "compv/image/compv_imageconv_common.h"
+#include "compv/image/conv/compv_imageconv_rgba_i420.h"
+#include "compv/image/conv/compv_imageconv_common.h"
 #include "compv/compv_engine.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_mathutils.h"
 
-#include "compv/intrinsics/x86/image/compv_imageconv_rgba_i420_intrin_sse.h"
-#include "compv/intrinsics/x86/image/compv_imageconv_rgba_i420_intrin_avx2.h"
+#include "compv/intrinsics/x86/image/conv/compv_imageconv_rgba_i420_intrin_sse.h"
+#include "compv/intrinsics/x86/image/conv/compv_imageconv_rgba_i420_intrin_avx2.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -105,7 +105,6 @@ extern "C" void i420ToRGBAKernel11_Asm_X64_Aligned00_AVX2(const uint8_t* yPtr, c
 extern "C" void i420ToRGBAKernel11_Asm_X64_Aligned01_AVX2(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(AVX2) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
 extern "C" void i420ToRGBAKernel11_Asm_X64_Aligned10_AVX2(COMV_ALIGNED(AVX2) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
 extern "C" void i420ToRGBAKernel11_Asm_X64_Aligned11_AVX2(COMV_ALIGNED(AVX2) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMV_ALIGNED(AVX2) uint8_t* outRgbaPtr, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-
 
 #endif
 
@@ -294,10 +293,10 @@ static COMPV_ERROR_CODE __xxxToI420(const CompVObjWrapper<CompVImage* >& rgb, Co
 
     // Process Y and UV lines
     if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-        int divCount, rgbIdx = 0, YIdx = 0, UVIdx = 0, threadHeight, totalHeight = 0;
-        divCount = threadDivideAcrossY(stride, height, COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD, threadDip->getThreadsCount());
+		int32_t divCount, rgbIdx = 0, YIdx = 0, UVIdx = 0, threadHeight, totalHeight = 0;
+		divCount = threadDip->guessNumThreadsDividingAcrossY(stride, height, COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD);
         uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
-        for (int i = 0; i < divCount; ++i) {
+		for (int32_t i = 0; i < divCount; ++i) {
             threadHeight = ((height - totalHeight) / (divCount - i)) & -2; // the & -2 is to make sure we'll deal with even heights
             // Y-rows
             COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0, ImageConvKernelxx_AsynExec,
@@ -314,7 +313,7 @@ static COMPV_ERROR_CODE __xxxToI420(const CompVObjWrapper<CompVImage* >& rgb, Co
             rgbIdx += (threadHeight * stride) * 3;
             totalHeight += threadHeight;
         }
-        for (int i = 0; i < divCount; ++i) {
+		for (int32_t i = 0; i < divCount; ++i) {
             COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0));
             if (outUPtr && outVPtr) {
                 COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT1));
@@ -435,10 +434,10 @@ static COMPV_ERROR_CODE __xxxxToI420(const CompVObjWrapper<CompVImage* >& rgba, 
 
     // Process Y and UV lines
     if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-        int divCount, rgbaIdx = 0, YIdx = 0, UVIdx = 0, threadHeight, totalHeight = 0;
-        divCount = threadDivideAcrossY(stride, height, COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD, threadDip->getThreadsCount());
+		int32_t divCount, rgbaIdx = 0, YIdx = 0, UVIdx = 0, threadHeight, totalHeight = 0;
+		divCount = threadDip->guessNumThreadsDividingAcrossY(stride, height, COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD);
         uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
-        for (int i = 0; i < divCount; ++i) {
+		for (int32_t i = 0; i < divCount; ++i) {
             threadHeight = ((height - totalHeight) / (divCount - i)) & -2; // the & -2 is to make sure we'll deal with even heights
             // Y-rows
             COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0, ImageConvKernelxx_AsynExec,
@@ -456,7 +455,7 @@ static COMPV_ERROR_CODE __xxxxToI420(const CompVObjWrapper<CompVImage* >& rgba, 
             rgbaIdx += (threadHeight * stride) << 2;
             totalHeight += threadHeight;
         }
-        for (int i = 0; i < divCount; ++i) {
+		for (int32_t i = 0; i < divCount; ++i) {
             COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0));
             if (outUPtr && outVPtr) {
                 COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT1));
@@ -548,10 +547,10 @@ COMPV_ERROR_CODE CompVImageConvRgbaI420::i420ToRgba(const CompVObjWrapper<CompVI
 #endif
 
     if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-        int divCount, rgbaIdx = 0, YIdx = 0, UVIdx = 0, threadHeight, totalHeight = 0;
-        divCount = threadDivideAcrossY(stride, height, COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD, threadDip->getThreadsCount());
+		int32_t divCount, rgbaIdx = 0, YIdx = 0, UVIdx = 0, threadHeight, totalHeight = 0;
+		divCount = threadDip->guessNumThreadsDividingAcrossY(stride, height, COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD);
         uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
-        for (int i = 0; i < divCount; ++i) {
+		for (int32_t i = 0; i < divCount; ++i) {
             threadHeight = ((height - totalHeight) / (divCount - i)) & -2; // the & -2 is to make sure we'll deal with even heights
             COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0, ImageConvKernelxx_AsynExec,
                                     COMPV_ASYNCTASK_SET_PARAM_ASISS(COMPV_IMAGECONV_FUNCID_I420ToRGBA, toRGBA, (yPtr + YIdx), (uPtr + UVIdx), (vPtr + UVIdx), (outRgbaPtr + rgbaIdx), threadHeight, width, stride),
@@ -561,7 +560,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaI420::i420ToRgba(const CompVObjWrapper<CompVI
             UVIdx += ((threadHeight * stride) >> 2);
             totalHeight += threadHeight;
         }
-        for (int i = 0; i < divCount; ++i) {
+		for (int32_t i = 0; i < divCount; ++i) {
             COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0));
         }
     }

@@ -125,6 +125,19 @@ bool CompVThreadDispatcher::isMotherOfTheCurrentThread()
     return false;
 }
 
+int32_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(int32_t xcount, int32_t ycount, int32_t minSamplesPerThread)
+{
+	int32_t divCount = 1;
+	int32_t maxThreads = getThreadsCount();
+	for (int32_t div = 2; div <= maxThreads; ++div) {
+		divCount = div;
+		if ((xcount * (ycount / divCount)) <= minSamplesPerThread) { // we started with the smallest div, which mean largest number of pixs and break the loop when we're below the threshold
+			break;
+		}
+	}
+	return divCount;
+}
+
 COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVObjWrapper<CompVThreadDispatcher*>* disp, int32_t numThreads /*= -1*/)
 {
     COMPV_CHECK_CODE_RETURN(CompVEngine::init());

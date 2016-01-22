@@ -17,8 +17,8 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_IMAGE_IMAGECONV_RGBA_RGB_H_)
-#define _COMPV_IMAGE_IMAGECONV_RGBA_RGB_H_
+#if !defined(_COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_H_)
+#define _COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -30,13 +30,11 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVImageConvRgbaRgb
-{
+class CompVImageScaleBilinear {
 public:
-	static COMPV_ERROR_CODE rgbToRgba(const CompVObjWrapper<CompVImage* >& rgb, CompVObjWrapper<CompVImage* >& rgba);
-	static COMPV_ERROR_CODE bgrToBgra(const CompVObjWrapper<CompVImage* >& bgr, CompVObjWrapper<CompVImage* >& bgra);
+	static COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage* >& inImage, CompVObjWrapper<CompVImage* >& outImage);
 };
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_IMAGE_IMAGECONV_RGBA_RGB_H_ */
+#endif /* _COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_H_ */

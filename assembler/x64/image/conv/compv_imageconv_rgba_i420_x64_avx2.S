@@ -17,7 +17,7 @@
 ; You should have received a copy of the GNU General Public License
 ; along with CompV.
 ;
-%include "../../x86/compv_common_x86.S"
+%include "../../../x86/compv_common_x86.S"
 
 %if COMPV_YASM_ABI_IS_64BIT
 

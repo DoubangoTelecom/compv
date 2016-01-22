@@ -17,8 +17,8 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_IMAGE_IMAGECONV_RGBA_RGB_INTRIN_SSE_H_)
-#define _COMPV_IMAGE_IMAGECONV_RGBA_RGB_INTRIN_SSE_H_
+#if !defined(_COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_INTRIN_SSE_H_)
+#define _COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_INTRIN_SSE_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -32,11 +32,10 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void rgbToRgbaKernel31_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgb, COMV_ALIGNED(SSE) uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-void bgrToBgraKernel31_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* bgr, COMV_ALIGNED(SSE) uint8_t* bgra, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+void scaleBilinearKernel11_Aligned_SSSE3(COMV_ALIGNED(SSE)const uint8_t* inPtr, COMV_ALIGNED(SSE) uint8_t* outPtr, vcomp_scalar_t inHeight, vcomp_scalar_t inWidth, vcomp_scalar_t inStride, vcomp_scalar_t outHeight, vcomp_scalar_t outWidth, vcomp_scalar_t outStride, vcomp_scalar_t sf_x, vcomp_scalar_t sf_y);
 
 COMPV_NAMESPACE_END()
 
-#endif /* defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC) */
+#endif /* COMPV_ARCH_X86 */
 
-#endif /* _COMPV_IMAGE_IMAGECONV_RGBA_RGB_INTRIN_SSE_H_ */
+#endif /* _COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_INTRIN_SSE_H_ */

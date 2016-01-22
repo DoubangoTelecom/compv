@@ -17,8 +17,8 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_IMAGE_IMAGECONV_GRAYSCALE_H_)
-#define _COMPV_IMAGE_IMAGECONV_GRAYSCALE_H_
+#if !defined(_COMPV_IMAGE_CONV_IMAGECONV_GRAYSCALE_H_)
+#define _COMPV_IMAGE_CONV_IMAGECONV_GRAYSCALE_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -46,4 +46,4 @@ public:
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_IMAGE_IMAGECONV_GRAYSCALE_H_ */
+#endif /* _COMPV_IMAGE_CONV_IMAGECONV_GRAYSCALE_H_ */

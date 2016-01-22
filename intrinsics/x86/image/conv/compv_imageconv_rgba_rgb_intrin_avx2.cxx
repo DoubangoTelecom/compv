@@ -17,10 +17,10 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#include "compv/intrinsics/x86/image/compv_imageconv_rgba_rgb_intrin_avx2.h"
+#include "compv/intrinsics/x86/image/conv/compv_imageconv_rgba_rgb_intrin_avx2.h"
 
 #if defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC)
-#include "compv/image/compv_imageconv_common.h"
+#include "compv/image/conv/compv_imageconv_common.h"
 #include "compv/compv_simd_globals.h"
 
 COMPV_NAMESPACE_BEGIN()

@@ -17,15 +17,15 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#include "compv/image/compv_imageconv_rgba_rgb.h"
-#include "compv/image/compv_imageconv_common.h"
+#include "compv/image/conv/compv_imageconv_rgba_rgb.h"
+#include "compv/image/conv/compv_imageconv_common.h"
 #include "compv/compv_engine.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_mathutils.h"
 
-#include "compv/intrinsics/x86/image/compv_imageconv_rgba_rgb_intrin_sse.h"
-#include "compv/intrinsics/x86/image/compv_imageconv_rgba_rgb_intrin_avx2.h"
+#include "compv/intrinsics/x86/image/conv/compv_imageconv_rgba_rgb_intrin_sse.h"
+#include "compv/intrinsics/x86/image/conv/compv_imageconv_rgba_rgb_intrin_avx2.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -108,12 +108,12 @@ COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVObjWrapper<CompVIma
 
     // Process
     if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-        int divCount, rgbIdx = 0, rgbaIdx = 0, threadHeight, totalHeight = 0;
+        int32_t divCount, rgbIdx = 0, rgbaIdx = 0, threadHeight, totalHeight = 0;
         // RGB<->RGBA is a memcpy operation and not CPU demanding -> use more samples per thread
         static const int minSamplesPerThread = COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD << 2;
-        divCount = threadDivideAcrossY(stride, height, minSamplesPerThread, threadDip->getThreadsCount());
+		divCount = threadDip->guessNumThreadsDividingAcrossY(stride, height, minSamplesPerThread);
         uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
-        for (int i = 0; i < divCount; ++i) {
+		for (int32_t i = 0; i < divCount; ++i) {
             threadHeight = ((height - totalHeight) / (divCount - i)) & -2; // the & -2 is to make sure we'll deal with even heights
             COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0, ImageConvKernelxx_AsynExec,
                                     COMPV_ASYNCTASK_SET_PARAM_ASISS(COMPV_IMAGECONV_FUNCID_RGBToRGBA, toRGBA, (rgbPtr + rgbIdx), (rgbaPtr + rgbaIdx), threadHeight, width, stride),
@@ -122,7 +122,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVObjWrapper<CompVIma
             rgbaIdx += (threadHeight * stride) << 2;
             totalHeight += threadHeight;
         }
-        for (int i = 0; i < divCount; ++i) {
+		for (int32_t i = 0; i < divCount; ++i) {
             COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0));
         }
     }

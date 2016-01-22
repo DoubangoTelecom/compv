@@ -17,22 +17,10 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#include "compv/image/compv_imageconv_common.h"
+#include "compv/image/conv/compv_imageconv_common.h"
 #include "compv/parallel/compv_asynctask.h"
 
 COMPV_NAMESPACE_BEGIN()
-
-int threadDivideAcrossY(int xcount, int ycount, int minSamplesPerThread, int maxThreads)
-{
-    int divCount = 1;
-    for (int div = 2; div <= maxThreads; ++div) {
-        divCount = div;
-        if ((xcount * (ycount / divCount)) <= minSamplesPerThread) { // we started with the smallest div, which mean largest number of pixs and break the loop when we're below the threshold
-            break;
-        }
-    }
-    return divCount;
-}
 
 COMPV_ERROR_CODE ImageConvKernelxx_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
 {
@@ -43,9 +31,9 @@ COMPV_ERROR_CODE ImageConvKernelxx_AsynExec(const struct compv_asynctoken_param_
         rgbaToI420Kernel_CompY CompY = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, rgbaToI420Kernel_CompY);
         const uint8_t* rgbaPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const uint8_t*);
         uint8_t* outYPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, uint8_t*);
-        vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, int);
-        vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int);
-        vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int);
+		vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, int32_t);
+		vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int32_t);
+		vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int32_t);
         COMV_ALIGNED(DEFAULT) const int8_t* kXXXToYUV_YCoeffs8 = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[7].pcParamPtr, const int8_t*);
         CompY(rgbaPtr, outYPtr, height, width, stride, kXXXToYUV_YCoeffs8);
         break;
@@ -56,9 +44,9 @@ COMPV_ERROR_CODE ImageConvKernelxx_AsynExec(const struct compv_asynctoken_param_
         const uint8_t* rgbaPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const uint8_t*);
         uint8_t* outUPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, uint8_t*);
         uint8_t* outVPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, uint8_t*);
-        vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int);
-        vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int);
-        vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[7].pcParamPtr, int);
+		vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int32_t);
+		vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int32_t);
+		vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[7].pcParamPtr, int32_t);
         COMV_ALIGNED(DEFAULT)const int8_t* kXXXToYUV_UCoeffs8 = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[8].pcParamPtr, const int8_t*);
         COMV_ALIGNED(DEFAULT)const int8_t* kXXXToYUV_VCoeffs8 = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[9].pcParamPtr, const int8_t*);
         CompUV(rgbaPtr, outUPtr, outVPtr, height, width, stride, kXXXToYUV_UCoeffs8, kXXXToYUV_VCoeffs8);
@@ -68,9 +56,9 @@ COMPV_ERROR_CODE ImageConvKernelxx_AsynExec(const struct compv_asynctoken_param_
         rgbToRgbaKernel toRGBA = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, rgbToRgbaKernel);
         const uint8_t* rgb = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const uint8_t*);
         uint8_t* rgba = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, uint8_t*);
-        vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, int);
-        vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int);
-        vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int);
+		vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, int32_t);
+		vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int32_t);
+		vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int32_t);
         toRGBA(rgb, rgba, height, width, stride);
         break;
     }
@@ -80,9 +68,9 @@ COMPV_ERROR_CODE ImageConvKernelxx_AsynExec(const struct compv_asynctoken_param_
         const uint8_t* uPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, const uint8_t*);
         const uint8_t* vPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, const uint8_t*);
         uint8_t* outRgbaPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, uint8_t*);
-        vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int);
-        vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[7].pcParamPtr, int);
-        vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[8].pcParamPtr, int);
+		vcomp_scalar_t height = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int32_t);
+		vcomp_scalar_t width = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[7].pcParamPtr, int32_t);
+		vcomp_scalar_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[8].pcParamPtr, int32_t);
         toRGBA(yPtr, uPtr, vPtr, outRgbaPtr, height, width, stride);
         break;
     }

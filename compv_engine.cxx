@@ -34,6 +34,7 @@ bool CompVEngine::s_bBigEndian = false;
 #else
 bool CompVEngine::s_bBigEndian = true;
 #endif
+bool CompVEngine::s_bTesting = false;
 CompVObjWrapper<CompVThreadDispatcher *> CompVEngine::s_ThreadDisp = NULL;
 
 CompVEngine::CompVEngine()
@@ -184,6 +185,13 @@ COMPV_ERROR_CODE CompVEngine::multiThreadingSetMaxThreads(size_t maxThreads)
     return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVEngine::setTestingModeEnabled(bool bTesting)
+{
+	COMPV_DEBUG_INFO("Engine testing mode = %s", bTesting ? "true" : "false");
+	s_bTesting = bTesting;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 bool CompVEngine::isMultiThreadingEnabled()
 {
     return !!s_ThreadDisp;
@@ -197,6 +205,11 @@ bool CompVEngine::isInitialized()
 bool CompVEngine::isBigEndian()
 {
     return s_bBigEndian;
+}
+
+bool CompVEngine::isTestingMode()
+{
+	return s_bTesting;
 }
 
 COMPV_NAMESPACE_END()

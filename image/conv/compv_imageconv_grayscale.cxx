@@ -17,9 +17,9 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#include "compv/image/compv_imageconv_grayscale.h"
-#include "compv/image/compv_imageconv_rgba_i420.h"
-#include "compv/image/compv_imageconv_common.h"
+#include "compv/image/conv/compv_imageconv_grayscale.h"
+#include "compv/image/conv/compv_imageconv_rgba_i420.h"
+#include "compv/image/conv/compv_imageconv_common.h"
 
 COMPV_NAMESPACE_BEGIN()
 

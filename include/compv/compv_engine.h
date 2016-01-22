@@ -40,15 +40,18 @@ public:
 	static COMPV_ERROR_CODE multiThreadingEnable(CompVObjWrapper<CompVThreadDispatcher* > dispatcher);
 	static COMPV_ERROR_CODE multiThreadingDisable();
 	static COMPV_ERROR_CODE multiThreadingSetMaxThreads(size_t maxThreads);
+	static COMPV_ERROR_CODE setTestingModeEnabled(bool bTesting);
 	static bool isMultiThreadingEnabled();
 	static bool isInitialized();
 	static bool isBigEndian();
+	static bool isTestingMode();
 
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static CompVObjWrapper<CompVThreadDispatcher *> s_ThreadDisp;
 	static bool s_bInitialized;
 	static bool s_bBigEndian;
+	static bool s_bTesting;
 	COMPV_DISABLE_WARNINGS_END()
 };
 

@@ -18,9 +18,10 @@
 * along with CompV.
 */
 #include "compv/image/compv_image.h"
-#include "compv/image/compv_imageconv_rgba_i420.h"
-#include "compv/image/compv_imageconv_rgba_rgb.h"
-#include "compv/image/compv_imageconv_grayscale.h"
+#include "compv/image/conv/compv_imageconv_rgba_i420.h"
+#include "compv/image/conv/compv_imageconv_rgba_rgb.h"
+#include "compv/image/conv/compv_imageconv_grayscale.h"
+#include "compv/image/scale/compv_imagescale_bilinear.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_engine.h"
 #include "compv/compv_fileutils.h"
@@ -51,17 +52,17 @@ CompVImage::~CompVImage()
 
 COMPV_ERROR_CODE CompVImage::convert(COMPV_PIXEL_FORMAT eDstPixelFormat, CompVObjWrapper<CompVImage*>* outImage)
 {
-    COMPV_CHECK_EXP_RETURN(outImage == NULL || eDstPixelFormat == m_eImageFormat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_EXP_RETURN(outImage == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_CHECK_EXP_RETURN(m_eImageFormat != COMPV_IMAGE_FORMAT_RAW, COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT); // We only support RAW -> RAW. If you have a JPEG image, decode it first then wrap it
-	CompVObjWrapper<CompVImage*> This = this; // when outImage is equal to this and the caller doesn't hold a reference the object could be destroyed before the end of the call. This line increment the refCount.
-	if (eDstPixelFormat == m_eImageFormat) {
-		*outImage = This;
+    CompVObjWrapper<CompVImage*> This = this; // when outImage is equal to this and the caller doesn't hold a reference the object could be destroyed before the end of the call. This line increment the refCount.
+    if (eDstPixelFormat == m_eImageFormat) {
+        *outImage = This;
         return COMPV_ERROR_CODE_S_OK;
     }
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     int32_t neededBuffSize;
     COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getSizeForPixelFormat(eDstPixelFormat, m_nStride, m_nHeight, &neededBuffSize));
-	bool bAllocOutImage = (!(*outImage) || *outImage == This || (*outImage)->getDataSize() != neededBuffSize || (*outImage)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*outImage)->getPixelFormat() != eDstPixelFormat);
+    bool bAllocOutImage = (!(*outImage) || (*outImage)->getDataSize() != neededBuffSize || (*outImage)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*outImage)->getPixelFormat() != eDstPixelFormat);
     if (bAllocOutImage) {
         COMPV_CHECK_CODE_RETURN(err_ = CompVImage::newObj(eDstPixelFormat, m_nWidth, m_nHeight, m_nStride, outImage));
     }
@@ -193,12 +194,52 @@ COMPV_ERROR_CODE CompVImage::convert(COMPV_PIXEL_FORMAT eDstPixelFormat, CompVOb
     return err_;
 }
 
+COMPV_ERROR_CODE CompVImage::scale(COMPV_SCALE_TYPE type, int32_t outWidth, int32_t outHeight, CompVObjWrapper<CompVImage*>* outImage)
+{
+    COMPV_CHECK_EXP_RETURN(outImage == NULL || !outWidth || !outHeight, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    int32_t neededBuffSize;
+    int32_t outStride = outWidth;
+    CompVObjWrapper<CompVImage*> This = this; // when outImage is equal to this and the caller doesn't hold a reference the object could be destroyed before the end of the call. This line increment the refCount.
+    COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getBestStride(outWidth, &outStride));
+    COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getSizeForPixelFormat(This->getPixelFormat(), outStride, outHeight, &neededBuffSize));
+	bool bSelfTransfer = This == (*outImage);
+	bool bScaleFactor1 = outWidth == This->getWidth() && outHeight == This->getHeight(); // *must* compute here before overriding This, otherwise always true
+	bool bAllocOutImage = (!(*outImage) || (*outImage)->getDataSize() != neededBuffSize || (*outImage)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*outImage)->getPixelFormat() != This->getPixelFormat());
+    if (bAllocOutImage) {
+        COMPV_CHECK_CODE_RETURN(err_ = CompVImage::newObj(This->getPixelFormat(), outWidth, outHeight, outStride, outImage));
+    }
+    else {
+        // even if allocation isn't required we could have different width, height or stride
+        // for example, 128x255 image requires same number of bytes than 255x128
+        CompVObjWrapper<CompVBuffer*> buffer = (*outImage)->m_oData; // increment refCount
+        COMPV_CHECK_CODE_RETURN(err_ = (*outImage)->setBuffer(buffer, outWidth, outHeight, outStride)); // changing the current buffer's layout
+    }
+	if (bScaleFactor1 & !CompVEngine::isTestingMode()) { // In testing mode we may want to encode the same image several times to check CPU, Memory, Latency...
+		COMPV_DEBUG_INFO("Image scaling factor is equal to 1.f");
+		if (bSelfTransfer && !bAllocOutImage) {
+			// *outImage = This is enought
+			return COMPV_ERROR_CODE_S_OK;
+		}
+		return CompVImage::copy(getPixelFormat(), getDataPtr(), getWidth(), getHeight(), getStride(), (void*)(*outImage)->getDataPtr(), (*outImage)->getWidth(), (*outImage)->getHeight(), (*outImage)->getStride());
+	}
+
+    switch (type) {
+    case COMPV_SCALE_TYPE_BILINEAR:
+        COMPV_CHECK_CODE_RETURN(err_ = CompVImageScaleBilinear::process(This, *outImage));
+        break;
+    default:
+        COMPV_DEBUG_ERROR("%d not supported as scaling type", type);
+        COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+        break;
+    }
+
+    return err_;
+}
+
 COMPV_ERROR_CODE CompVImage::setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, int32_t width, int32_t height, int32_t stride /*= 0*/)
 {
-    if (!buffer || !width || !height) {
-        COMPV_DEBUG_ERROR("Invalid parameter");
-        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-    }
+    COMPV_CHECK_EXP_RETURN(!buffer || !width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     m_oData = buffer;
     m_nWidth = width;
     m_nHeight = height;
@@ -211,13 +252,6 @@ COMPV_ERROR_CODE CompVImage::getBestStride(int32_t stride, int32_t *bestStride)
     COMPV_CHECK_EXP_RETURN(bestStride == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     *bestStride = (int32_t)CompVMem::alignForward(stride, CompVMem::getBestAlignment());
     return COMPV_ERROR_CODE_S_OK;
-}
-
-CompVObjWrapper<CompVImage*> CompVImage::loadImage(const char* filePath)
-{
-    COMPV_DEBUG_ERROR("Not implemented");
-
-    return NULL;
 }
 
 COMPV_ERROR_CODE CompVImage::getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, int32_t width, int32_t height, int32_t *size)

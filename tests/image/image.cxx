@@ -6,9 +6,11 @@ using namespace compv;
 #define numThreads			COMPV_NUM_THREADS_SINGLE
 #define enableIntrinsics	true
 #define enableAsm			true
+#define testingMode			true
 
 #define TEST_CONV			0
-#define TEST_FAST			1
+#define TEST_FAST			0
+#define TEST_SCALE			1
 
 #if TEST_CONV
 extern bool TestConv();
@@ -16,11 +18,15 @@ extern bool TestConv();
 #if TEST_FAST
 extern bool TestFAST();
 #endif
+#if TEST_SCALE
+extern bool TestScale();
+#endif
 
 int _tmain(int argc, _TCHAR* argv[])
 {
     CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
     COMPV_CHECK_CODE_ASSERT(CompVEngine::init(numThreads));
+	COMPV_CHECK_CODE_ASSERT(CompVEngine::setTestingModeEnabled(testingMode));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setAsmEnabled(enableAsm));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagNone));
@@ -30,6 +36,9 @@ int _tmain(int argc, _TCHAR* argv[])
 #endif
 #if TEST_FAST
     COMPV_ASSERT(TestFAST());
+#endif
+#if TEST_SCALE
+    COMPV_ASSERT(TestScale());
 #endif
 
     // deInit the engine

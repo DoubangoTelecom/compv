@@ -17,8 +17,8 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_IMAGE_IMAGECONV_RGBA_I420_H_)
-#define _COMPV_IMAGE_IMAGECONV_RGBA_I420_H_
+#if !defined(_COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_INTRIN_AVX2_H_)
+#define _COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_INTRIN_AVX2_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -28,22 +28,13 @@
 #error("This is a private file and must not be part of the API")
 #endif
 
+#if defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC)
+
 COMPV_NAMESPACE_BEGIN()
 
-class CompVImageConvRgbaI420
-{
-public:
-	static COMPV_ERROR_CODE rgbToI420(const CompVObjWrapper<CompVImage* >& rgb, CompVObjWrapper<CompVImage* >& i420);
-	static COMPV_ERROR_CODE bgrToI420(const CompVObjWrapper<CompVImage* >& bgr, CompVObjWrapper<CompVImage* >& i420);
-
-	static COMPV_ERROR_CODE rgbaToI420(const CompVObjWrapper<CompVImage* >& rgba, CompVObjWrapper<CompVImage* >& i420);
-	static COMPV_ERROR_CODE argbToI420(const CompVObjWrapper<CompVImage* >& argb, CompVObjWrapper<CompVImage* >& i420);
-	static COMPV_ERROR_CODE bgraToI420(const CompVObjWrapper<CompVImage* >& bgra, CompVObjWrapper<CompVImage* >& i420);
-	static COMPV_ERROR_CODE abgrToI420(const CompVObjWrapper<CompVImage* >& abgr, CompVObjWrapper<CompVImage* >& i420);
-
-	static COMPV_ERROR_CODE i420ToRgba(const CompVObjWrapper<CompVImage* >& i420, CompVObjWrapper<CompVImage* >& rgba);
-};
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_IMAGE_IMAGECONV_RGBA_I420_H_ */
+#endif /* COMPV_ARCH_X86 */
+
+#endif /* _COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_INTRIN_AVX2_H_ */

@@ -27,3 +27,4 @@ Release
 /tests/image/out.i420
 /tests/image/out.rgba
 /tests/image/out.png
+/tests/image/out.gray

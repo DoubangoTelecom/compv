@@ -43,6 +43,7 @@ public:
 	uint32_t getThreadIdxForNextToCurrentCore();
 	uint32_t getThreadIdxCurrent();
 	bool isMotherOfTheCurrentThread();
+	int32_t guessNumThreadsDividingAcrossY(int xcount, int ycount, int minSamplesPerThread);
 
 	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVThreadDispatcher*>* disp, int32_t numThreads = -1);
 

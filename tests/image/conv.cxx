@@ -115,7 +115,7 @@ static std::string formatExtension(COMPV_PIXEL_FORMAT pixelFormat)
     }
 }
 
-static void writeImgToFile(const CompVObjWrapper<CompVImage *>& img)
+void writeImgToFile(const CompVObjWrapper<CompVImage *>& img)
 {
     if (img) {
         std::string fileName = "./out." + formatExtension(img->getPixelFormat());

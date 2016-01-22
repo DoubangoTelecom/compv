@@ -198,6 +198,11 @@ typedef enum _COMPV_IMAGE_FORMAT {
 }
 COMPV_IMAGE_FORMAT;
 
+typedef enum _COMPV_SCALE_TYPE {
+	COMPV_SCALE_TYPE_BILINEAR
+}
+COMPV_SCALE_TYPE;
+
 enum {
 	COMPV_TOKENIDX_IMAGE_CONVERT0,
 	COMPV_TOKENIDX_IMAGE_CONVERT1,
@@ -205,6 +210,7 @@ enum {
 	COMPV_TOKENIDX_IMAGE_CONVERT3,
 
 	COMPV_TOKENIDX_MAX
+	// no limitation but alloc memory -> do not abuse
 };
 
 typedef struct _CompVImageInfo {
@@ -242,12 +248,20 @@ CompVRect;
 typedef struct _CompVInterestPoint {
 	int32_t x;
 	int32_t y;
+	float strength;
+	float orientation; // angle in degree
+	int32_t layer;
+	int32_t patchSize;
 public:
 	_CompVInterestPoint(): _CompVInterestPoint(0, 0){
 	}
-	_CompVInterestPoint(int32_t x_, int32_t y_) {
+	_CompVInterestPoint(int32_t x_, int32_t y_, float strength_ = -1.f, float orientation_ = -1.f, int32_t layer_ = 0, int32_t patchSize_ = 0) {
 		x = x_;
 		y = y_;
+		strength = strength_;
+		orientation = orientation_;
+		layer = layer_;
+		patchSize = patchSize_;
 	}
 }
 CompVInterestPoint;

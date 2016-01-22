@@ -96,7 +96,7 @@ CompVFeatureDete::~CompVFeatureDete()
 
 COMPV_ERROR_CODE CompVFeatureDete::newObj(int deteId, CompVObjWrapper<CompVFeatureDete* >* dete)
 {
-	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
+    COMPV_CHECK_CODE_RETURN(CompVEngine::init());
     COMPV_CHECK_EXP_RETURN(dete == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     const CompVFeatureFactory* factory_ = CompVFeature::findFactory(deteId);
     if (!factory_) {
@@ -126,18 +126,18 @@ CompVFeatureDesc::~CompVFeatureDesc()
 
 COMPV_ERROR_CODE CompVFeatureDesc::newObj(int descId, CompVObjWrapper<CompVFeatureDesc* >* desc)
 {
-	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
-	COMPV_CHECK_EXP_RETURN(desc == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	const CompVFeatureFactory* factory_ = CompVFeature::findFactory(descId);
-	if (!factory_) {
-		COMPV_DEBUG_ERROR("Failed to find feature factory with id = %d", descId);
-		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
-	if (!factory_->newObjDete) {
-		COMPV_DEBUG_ERROR("Factory with id = %d and name = '%s' doesn't have a constructor for descriptors", factory_->id, factory_->name);
-		return COMPV_ERROR_CODE_E_INVALID_CALL;
-	}
-	return factory_->newObjDesc(desc);
+    COMPV_CHECK_CODE_RETURN(CompVEngine::init());
+    COMPV_CHECK_EXP_RETURN(desc == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    const CompVFeatureFactory* factory_ = CompVFeature::findFactory(descId);
+    if (!factory_) {
+        COMPV_DEBUG_ERROR("Failed to find feature factory with id = %d", descId);
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
+    if (!factory_->newObjDete) {
+        COMPV_DEBUG_ERROR("Factory with id = %d and name = '%s' doesn't have a constructor for descriptors", factory_->id, factory_->name);
+        return COMPV_ERROR_CODE_E_INVALID_CALL;
+    }
+    return factory_->newObjDesc(desc);
 }
 
 COMPV_NAMESPACE_END()

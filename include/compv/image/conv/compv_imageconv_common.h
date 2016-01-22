@@ -17,8 +17,8 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_IMAGE_IMAGECONV_COMMON_H_)
-#define _COMPV_IMAGE_IMAGECONV_COMMON_H_
+#if !defined(_COMPV_IMAGE_CONV_IMAGECONV_COMMON_H_)
+#define _COMPV_IMAGE_CONV_IMAGECONV_COMMON_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -49,8 +49,6 @@ enum {
 
 	// no limitation
 };
-
-int threadDivideAcrossY(int xcount, int ycount, int minSamplesPerThread, int maxThreads);
 
 COMPV_ERROR_CODE ImageConvKernelxx_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 
@@ -103,4 +101,4 @@ COMPV_GEXTERN COMV_ALIGN_DEFAULT() int32_t kShuffleEpi8_RgbToRgba_i32[];
 
 COMPV_EXTERNC_END()
 
-#endif /* _COMPV_IMAGE_IMAGECONV_COMMON_H_ */
+#endif /* _COMPV_IMAGE_CONV_IMAGECONV_COMMON_H_ */
