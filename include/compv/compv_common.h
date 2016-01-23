@@ -249,17 +249,17 @@ typedef struct _CompVInterestPoint {
 	int32_t x;
 	int32_t y;
 	float strength;
-	float orientation; // angle in degree
+	float orient; // angle in degree
 	int32_t layer;
 	int32_t patchSize;
 public:
 	_CompVInterestPoint(): _CompVInterestPoint(0, 0){
 	}
-	_CompVInterestPoint(int32_t x_, int32_t y_, float strength_ = -1.f, float orientation_ = -1.f, int32_t layer_ = 0, int32_t patchSize_ = 0) {
+	_CompVInterestPoint(int32_t x_, int32_t y_, float strength_ = -1.f, float orient_ = -1.f, int32_t layer_ = 0, int32_t patchSize_ = 0) {
 		x = x_;
 		y = y_;
 		strength = strength_;
-		orientation = orientation_;
+		orient = orient_;
 		layer = layer_;
 		patchSize = patchSize_;
 	}

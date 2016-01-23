@@ -19,6 +19,7 @@
 */
 #include "compv/features/compv_feature.h"
 #include "compv/features/fast/compv_feature_fast_dete.h"
+#include "compv/features/orb/compv_feature_orb_dete.h"
 #include "compv/compv_engine.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -31,10 +32,16 @@ std::map<int, const CompVFeatureFactory*> CompVFeature::s_Factories;
 
 // Declare built-in factories
 static const CompVFeatureFactory fastFactory = {
-    COMPV_FEATURE_DETE_ID_FAST,
+	COMPV_FAST_ID,
     "FAST (Features from Accelerated Segment Test)",
     CompVFeatureDeteFAST::newObj,
     NULL,
+};
+static const CompVFeatureFactory orbFactory = {
+	COMPV_ORB_ID,
+	"ORB (Oriented FAST and Rotated BRIEF)",
+	CompVFeatureDeteORB::newObj,
+	NULL,
 };
 
 CompVFeature::CompVFeature()
@@ -55,6 +62,8 @@ COMPV_ERROR_CODE CompVFeature::init()
 
     // FAST (Features from Accelerated Segment Test)
     COMPV_CHECK_CODE_RETURN(addFactory(&fastFactory));
+	// ORB(ORiented BRIEF)
+	COMPV_CHECK_CODE_RETURN(addFactory(&orbFactory));
 
     return COMPV_ERROR_CODE_S_OK;
 }
@@ -84,7 +93,8 @@ const CompVFeatureFactory* CompVFeature::findFactory(int deteId)
 //	CompVFeatureDete
 //
 
-CompVFeatureDete::CompVFeatureDete()
+CompVFeatureDete::CompVFeatureDete(int id)
+	: m_nId(id)
 {
 
 }
@@ -114,7 +124,8 @@ COMPV_ERROR_CODE CompVFeatureDete::newObj(int deteId, CompVObjWrapper<CompVFeatu
 //	CompVFeatureDesc
 //
 
-CompVFeatureDesc::CompVFeatureDesc()
+CompVFeatureDesc::CompVFeatureDesc(int id)
+	: m_nId(id)
 {
 
 }

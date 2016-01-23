@@ -9,15 +9,19 @@ using namespace compv;
 #define testingMode			true
 
 #define TEST_CONV			0
-#define TEST_FAST			0
+#define TEST_FAST			1
+#define TEST_ORB			0
 #define TEST_SCALE			0
-#define TEST_PYRAMID		1
+#define TEST_PYRAMID		0
 
 #if TEST_CONV
 extern bool TestConv();
 #endif
 #if TEST_FAST
 extern bool TestFAST();
+#endif
+#if TEST_ORB
+extern bool TestORB();
 #endif
 #if TEST_SCALE
 extern bool TestScale();
@@ -40,6 +44,9 @@ int _tmain(int argc, _TCHAR* argv[])
 #endif
 #if TEST_FAST
     COMPV_ASSERT(TestFAST());
+#endif
+#if TEST_ORB
+	COMPV_ASSERT(TestORB());
 #endif
 #if TEST_SCALE
     COMPV_ASSERT(TestScale());

@@ -22,15 +22,34 @@
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
+#include "compv/image/scale/compv_imagescale_pyramid.h"
 #include "compv/features/compv_feature.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
 #endif
 
-
 COMPV_NAMESPACE_BEGIN()
 
+class CompVFeatureDeteORB : public CompVFeatureDete
+{
+protected:
+	CompVFeatureDeteORB();
+public:
+	virtual ~CompVFeatureDeteORB();
+	virtual COMPV_INLINE const char* getObjectId() { return "CompVFeatureDeteORB"; };
+	
+	// override CompVSettable::set
+	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
+	// override CompVFeatureDete::set
+	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, std::vector<CompVInterestPoint >& interestPoints);
+
+	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* orb);
+
+private:
+	CompVObjWrapper<CompVFeatureDete* > m_internalDetector;
+	CompVObjWrapper<CompVImageScalePyramid * > m_pyramid;
+};
 
 COMPV_NAMESPACE_END()
 

@@ -156,6 +156,7 @@
     <ClCompile Include="conv.cxx" />
     <ClCompile Include="fast.cxx" />
     <ClCompile Include="image.cxx" />
+    <ClCompile Include="orb.cxx" />
     <ClCompile Include="pyramid.cxx" />
     <ClCompile Include="scale.cxx" />
   </ItemGroup>

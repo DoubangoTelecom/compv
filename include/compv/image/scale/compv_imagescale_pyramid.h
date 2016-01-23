@@ -35,6 +35,7 @@ public:
 	virtual COMPV_INLINE const char* getObjectId() { return "CompVImageScalePyramid"; };
 	COMPV_INLINE int32_t getLevels() { return m_nLevels; }
 	COMPV_INLINE float getScaleFactor() { return m_fScaleFactor; }
+	COMPV_INLINE COMPV_SCALE_TYPE getScaleType() { return m_eScaleType; }
 	COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& inImage);
 	COMPV_ERROR_CODE getImage(int32_t level, CompVObjWrapper<CompVImage *>* image);
 

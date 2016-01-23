@@ -216,7 +216,6 @@ COMPV_ERROR_CODE CompVImage::scale(COMPV_SCALE_TYPE type, int32_t outWidth, int3
         COMPV_CHECK_CODE_RETURN(err_ = (*outImage)->setBuffer(buffer, outWidth, outHeight, outStride)); // changing the current buffer's layout
     }
 	if (bScaleFactor1 & !CompVEngine::isTestingMode()) { // In testing mode we may want to encode the same image several times to check CPU, Memory, Latency...
-		COMPV_DEBUG_INFO("Image scaling factor is equal to 1.f");
 		if (bSelfTransfer && !bAllocOutImage) {
 			// *outImage = This is enought
 			return COMPV_ERROR_CODE_S_OK;

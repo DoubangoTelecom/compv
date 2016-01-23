@@ -30,12 +30,6 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-// Default threshold (pixel intensity: [0-255])
-#define COMPV_FEATURE_DETE_FAST_THRESHOLD_DEFAULT	10
-// Number of positive continuous pixel to have before declaring a candidate as an interest point
-#define COMPV_FEATURE_DETE_FAST_N_DEFAULT			9 // FIXME: make this configurable (opencv: c::TYPE_9_16)
-#define COMPV_FEATURE_DETE_FAST_NON_MAXIMA_SUPP		true
-
 class CompVFeatureDeteFAST : public CompVFeatureDete
 {
 protected:
@@ -43,13 +37,13 @@ protected:
 public:
 	virtual ~CompVFeatureDeteFAST();
 	virtual COMPV_INLINE const char* getObjectId() { return "CompVFeatureDeteFAST"; };
-	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* fast);
-
-private:
+	
 	// override CompVSettable::set
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
 	// override CompVFeatureDete::set
 	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, std::vector<CompVInterestPoint >& interestPoints);
+
+	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* fast);
 
 private:
 	int32_t m_iThreshold;
