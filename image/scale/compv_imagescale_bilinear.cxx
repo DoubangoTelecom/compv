@@ -43,14 +43,14 @@ static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, vcomp
 	const uint8_t* inPtr_;
 	uint8_t* outPtr_;
 
-	for (vcomp_scalar_t j = 0; j < outHeight; ++j) {
-		y = j * sf_y;
+	y = 0;
+	for (vcomp_scalar_t j = 0, y = 0; j < outHeight; ++j) {
 		nearestY = (y >> 8); // nearest y-point
 		nearestY = COMPV_MATH_CLIP2(nearestY, inHeight - 2);
 		inPtr_ = (inPtr + (nearestY * inStride));
 		outPtr_ = (outPtr + (j * outStride));
-		for (vcomp_scalar_t i = 0; i < outWidth; ++i) {
-			x = i * sf_x;
+		x = 0;
+		for (vcomp_scalar_t i = 0, x = 0; i < outWidth; ++i) {
 			nearestX = (x >> 8); // nearest x-point
 			nearestX = COMPV_MATH_CLIP2(nearestX, inWidth - 2);
 			neighb0 = inPtr_[nearestX];
@@ -69,7 +69,10 @@ static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, vcomp
 			weight3 = x0 * y0;
 
 			outPtr_[i] = (uint8_t)((neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3) >> 16);
+
+			x += sf_x;
 		}
+		y += sf_y;
 	}
 }
 
@@ -134,6 +137,8 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVObjWrapper<CompVIma
 		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 		break;
 	}
+
+	// TODO(dmi): multi-threading
 
 	for (int k = 0; k < compSize; ++k) {
 		const float float_sx = (float)inWidths[k] / outWidths[k];

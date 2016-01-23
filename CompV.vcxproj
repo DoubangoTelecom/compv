@@ -46,6 +46,7 @@
     <ClInclude Include="include\compv\image\conv\compv_imageconv_rgba_rgb.h" />
     <ClInclude Include="include\compv\image\scale\compv_imagescale_bilinear.h" />
     <ClInclude Include="include\compv\image\scale\compv_imagescale_common.h" />
+    <ClInclude Include="include\compv\image\scale\compv_imagescale_pyramid.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_avx.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_sse.h" />
     <ClInclude Include="include\compv\intrinsics\x86\image\conv\compv_imageconv_rgba_i420_intrin_avx2.h" />
@@ -88,6 +89,7 @@
     <ClCompile Include="image\conv\compv_imageconv_rgba_rgb.cxx" />
     <ClCompile Include="image\scale\compv_imagescale_bilinear.cxx" />
     <ClCompile Include="image\scale\compv_imagescale_common.cxx" />
+    <ClCompile Include="image\scale\compv_imagescale_pyramid.cxx" />
     <ClCompile Include="intrinsics\x86\image\conv\compv_imageconv_rgba_i420_intrin_avx2.cxx" />
     <ClCompile Include="intrinsics\x86\image\conv\compv_imageconv_rgba_i420_intrin_sse.cxx" />
     <ClCompile Include="intrinsics\x86\image\conv\compv_imageconv_rgba_rgb_intrin_avx2.cxx" />

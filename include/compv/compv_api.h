@@ -29,6 +29,8 @@
 
 #include "compv/image/compv_image.h"
 
+#include "compv/image/scale/compv_imagescale_pyramid.h"
+
 #include "compv/features/compv_feature.h"
 
 #include "compv/parallel/compv_asynctask.h"

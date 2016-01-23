@@ -10,7 +10,8 @@ using namespace compv;
 
 #define TEST_CONV			0
 #define TEST_FAST			0
-#define TEST_SCALE			1
+#define TEST_SCALE			0
+#define TEST_PYRAMID		1
 
 #if TEST_CONV
 extern bool TestConv();
@@ -20,6 +21,9 @@ extern bool TestFAST();
 #endif
 #if TEST_SCALE
 extern bool TestScale();
+#endif
+#if TEST_PYRAMID
+extern bool TestPyramid();
 #endif
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -39,6 +43,9 @@ int _tmain(int argc, _TCHAR* argv[])
 #endif
 #if TEST_SCALE
     COMPV_ASSERT(TestScale());
+#endif
+#if TEST_PYRAMID
+	COMPV_ASSERT(TestPyramid());
 #endif
 
     // deInit the engine

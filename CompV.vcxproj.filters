@@ -258,6 +258,9 @@
     <ClInclude Include="include\compv\image\scale\compv_imagescale_common.h">
       <Filter>Header Files\image\scale</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\image\scale\compv_imagescale_pyramid.h">
+      <Filter>Header Files\image\scale</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -372,6 +375,9 @@
       <Filter>Source Files\intrinsics\x86\image\scale</Filter>
     </ClCompile>
     <ClCompile Include="image\scale\compv_imagescale_common.cxx">
+      <Filter>Source Files\image\scale</Filter>
+    </ClCompile>
+    <ClCompile Include="image\scale\compv_imagescale_pyramid.cxx">
       <Filter>Source Files\image\scale</Filter>
     </ClCompile>
   </ItemGroup>
