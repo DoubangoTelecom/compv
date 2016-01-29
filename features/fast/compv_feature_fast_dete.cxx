@@ -37,6 +37,9 @@ Some literature about FAST:
 #include "compv/compv_mem.h"
 #include "compv/compv_engine.h"
 #include "compv/compv_mathutils.h"
+#include "compv/compv_cpu.h"
+
+#include "compv/intrinsics/x86/features/fast/compv_feature_fast_dete_intrin_sse.h"
 
 #include <map>
 #include <vector>
@@ -45,6 +48,7 @@ Some literature about FAST:
 #include <iterator>
 #include <iostream>
 #include <string>
+
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -155,7 +159,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
 	// clear old points
 	interestPoints.clear();
 
-	const int32_t pixels16[16] = {
+	COMPV_ALIGN_DEFAULT() const int32_t pixels16[16] = {
 		-(stride * 3) + 0, // 1
 		-(stride * 3) + 1, // 2
 		-(stride * 2) + 2, // 3
@@ -282,7 +286,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::newObj(CompVObjWrapper<CompVFeatureDete* 
 }
 
 // FastXFlags = Fast9Flags or Fast16Flags
-static void FastStrengths_C(const compv_scalar_t* dbrighters, const compv_scalar_t* ddarkers, compv_scalar_t fbrighters, compv_scalar_t fdarkers, int N, const uint16_t* FastXFlags, int* strength)
+static void FastStrengths_C(const int16_t* dbrighters, const int16_t* ddarkers, compv_scalar_t fbrighters, compv_scalar_t fdarkers, int N, const uint16_t* FastXFlags, int* strength)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 
@@ -315,7 +319,7 @@ static void FastStrengths_C(const compv_scalar_t* dbrighters, const compv_scalar
 	}
 }
 
-static int FastData_C(const uint8_t* dataPtr, const int32_t* pixels16, compv_scalar_t N, uint8_t* temp16, compv_scalar_t darker, compv_scalar_t brighter, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, compv_scalar_t* ddarkers16, compv_scalar_t* dbrighters16)
+static int FastData_C(const uint8_t* dataPtr, const int32_t* pixels16, compv_scalar_t N, uint8_t* temp16, int16_t darker, int16_t brighter, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, int16_t* ddarkers16, int16_t* dbrighters16)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	int32_t sum;
@@ -331,6 +335,7 @@ static int FastData_C(const uint8_t* dataPtr, const int32_t* pixels16, compv_sca
 	sum = (dbrighters16[0] > 0 || ddarkers16[0] > 0) + (dbrighters16[8] > 0 || ddarkers16[8] > 0);
 
 	// compare I5 and I13
+	/*  Speed-Test-1 */
 	if (N != 12 || sum > 0) {
 		temp16[4] = dataPtr[pixels16[4]];
 		temp16[12] = dataPtr[pixels16[12]];
@@ -340,7 +345,7 @@ static int FastData_C(const uint8_t* dataPtr, const int32_t* pixels16, compv_sca
 		dbrighters16[12] = (temp16[12] - brighter); // I13-brightness
 
 		sum += (dbrighters16[4] > 0 || ddarkers16[4] > 0) + (dbrighters16[12] > 0 || ddarkers16[12] > 0);
-
+		/*  Speed-Test-2 */
 		if ((sum >= 2 && (N != 12 || sum >= 3))) {
 			temp16[1] = dataPtr[pixels16[1]];
 			temp16[2] = dataPtr[pixels16[2]];
@@ -394,6 +399,7 @@ static int FastData_C(const uint8_t* dataPtr, const int32_t* pixels16, compv_sca
 			dbrighters16[15] = (temp16[15] - brighter); *pfbrighters |= (dbrighters16[15] > 0 ? (1 << 15) : 0);
 
 			// FIXME(dmi): __popcnt16 not portable and check cpuid
+			// GCC: __builtin_popcount
 			return (__popcnt16((unsigned short)*pfdarkers) >= N || __popcnt16((unsigned short)*pfbrighters) >= N) ? 1 : 0;
 		}
 	}
@@ -403,21 +409,24 @@ static int FastData_C(const uint8_t* dataPtr, const int32_t* pixels16, compv_sca
 static void FastProcessRange(const uint8_t* dataPtr, int32_t rowStart, int32_t rowEnd, int32_t rowCount, int32_t width, int32_t stride, int32_t threshold, int32_t N, const int32_t* pixels16, const uint16_t* flags16, std::vector<CompVInterestPoint >* interestPoints)
 {
 	const uint8_t* IP;
-	compv_scalar_t brighter, darker;
+	uint8_t brighter, darker;
 	int32_t j, i, minj, maxj;
 	int32_t pad = (stride - width), padPlus6 = 3 + pad + 3;
-	COMV_ALIGN_DEFAULT() compv_scalar_t ddarkers[16];
-	COMV_ALIGN_DEFAULT() compv_scalar_t dbrighters[16];
-	COMV_ALIGN_DEFAULT() uint8_t cercle[16]; // tempdata
+	COMPV_ALIGN_DEFAULT() int16_t ddarkers[16];
+	COMPV_ALIGN_DEFAULT() int16_t dbrighters[16];
+	COMPV_ALIGN_DEFAULT() uint8_t cercle[16]; // tempdata
 	compv_scalar_t fdarkers, fbrighters;
 	int strength;
-	int (*FastData)(const uint8_t* dataPtr, const int32_t* pixels16, compv_scalar_t N, uint8_t* temp16, compv_scalar_t darker, compv_scalar_t brighter, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, compv_scalar_t* ddarkers16, compv_scalar_t* dbrighters16) = FastData_C;
-	void(*FastStrengths)(const compv_scalar_t* dbrighters, const compv_scalar_t* ddarkers, compv_scalar_t fbrighters, compv_scalar_t fdarkers, int N, const uint16_t* FastXFlags, int* strength)
+	int(*FastData)(const uint8_t* dataPtr, const int32_t* pixels16, compv_scalar_t N, uint8_t* temp16, int16_t darker, int16_t brighter, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, int16_t* ddarkers16, int16_t* dbrighters16) = FastData_C;
+	void(*FastStrengths)(const int16_t* dbrighters, const int16_t* ddarkers, compv_scalar_t fbrighters, compv_scalar_t fdarkers, int N, const uint16_t* FastXFlags, int* strength)
 		= N == 9 ? Fast9Strengths_C : Fast12Strengths_C;
 #if 1 // Do not use build-in fast functions
 	FastStrengths = FastStrengths_C;
 #endif
-	
+
+	if (CompVCpu::isSupported(kCpuFlagSSSE3)) { // FIXME: SSE2?
+		COMPV_EXEC_IFDEF_INTRIN_X86(FastData = FastData_Intrin_SSSE3);
+	}
 
 	minj = (rowStart == 0 ? 3 : 0);
 	maxj = (rowEnd - rowStart) - ((rowCount - rowEnd) <= 3 ? 3 - (rowCount - rowEnd) : 0);
@@ -425,11 +434,11 @@ static void FastProcessRange(const uint8_t* dataPtr, int32_t rowStart, int32_t r
 
 	for (j = minj; j < maxj; ++j) {
 		for (i = 3; i < width - 3; ++i) {
-			/*  Speed-Test */
-			// compute brighter and darker
-			// FIXME: why clip2() is slow
-			brighter = CompVMathUtils::clampPixel8(IP[0] + threshold); // CompVMathUtils::clip2(255, (IP[0] + m_iThreshold));
-			darker = CompVMathUtils::clampPixel8(IP[0] - threshold); // CompVMathUtils::clip2(255, (IP[0] - m_iThreshold));
+			// No need to clamp "brighter" and "darker".
+			// "brighter" is always > 0 and brightness equation is ((u8 - brighter) > 0) => (u8 > brighter) => no need to saturate brighter to 255 as u8 already saturated to 255
+			// "darker" is always <255 and darkness equatio is ((darker - u8) > 0) => (u8 < darker) => no need to saturate darker to 0 as u8 already satured to 0
+			brighter = (IP[0] + threshold);
+			darker = (IP[0] - threshold);
 						
 			if (FastData(IP, pixels16, N, cercle, darker, brighter, &fdarkers, &fbrighters, ddarkers, dbrighters)) {
 				FastStrengths(dbrighters, ddarkers, fbrighters, fdarkers, N, flags16, &strength);
