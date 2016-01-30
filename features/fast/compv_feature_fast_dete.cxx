@@ -80,8 +80,8 @@ static const uint16_t Fast9Flags[16] = { 0x1ff, 0x3fe, 0x7fc, 0xff8, 0x1ff0, 0x3
 static const uint16_t Fast12Flags[16] = { 0xfff, 0x1ffe, 0x3ffc, 0x7ff8, 0xfff0, 0xffe1, 0xffc3, 0xff87, 0xff0f, 0xfe1f, 0xfc3f, 0xf87f, 0xf0ff, 0xe1ff, 0xc3ff, 0x87ff };
 
 static COMPV_ERROR_CODE FastProcessRange_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
-static void FastProcessRange(const uint8_t* dataPtr, int32_t rowStart, int32_t rowEnd, int32_t rowCount, int32_t width, int32_t stride, int32_t threshold, int32_t N, const int32_t* pixels16, const uint16_t* flags16, std::vector<CompVInterestPoint >* interestPoints);
-static void FastData_C(const uint8_t* cercle16, compv_scalar_t darker, compv_scalar_t brighter, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, compv_scalar_t* ddarkers16, compv_scalar_t* dbrighters16);
+static void FastProcessRange(const uint8_t* dataPtr, int32_t rowStart, int32_t rowEnd, int32_t rowCount, int32_t width, int32_t stride, int32_t threshold, int32_t N, const compv_scalar_t(&pixels16)[16], const uint16_t(&flags16)[16], std::vector<CompVInterestPoint >* interestPoints);
+static int FastData_C(const uint8_t* dataPtr, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, uint8_t(&temp16)[16], int16_t darker, int16_t brighter, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, int16_t(&ddarkers16)[16], int16_t(&dbrighters16)[16]);
 static void FastStrengths_C(const compv_scalar_t* dbrighters, const compv_scalar_t* ddarkers, compv_scalar_t fbrighters, compv_scalar_t fdarkers, int N, const uint16_t* FastXFlags, int* strength);
 
 CompVFeatureDeteFAST::CompVFeatureDeteFAST()
@@ -141,7 +141,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
-	const uint16_t * FastXFlags = m_iType == COMPV_FAST_TYPE_9 ? Fast9Flags : Fast12Flags;
+	const uint16_t (&FastXFlags)[16] = m_iType == COMPV_FAST_TYPE_9 ? Fast9Flags : Fast12Flags;
 	const uint8_t* dataPtr = (const uint8_t*)image->getDataPtr();
 	int32_t width = image->getWidth();
 	int32_t height = image->getHeight();
@@ -159,7 +159,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
 	// clear old points
 	interestPoints.clear();
 
-	COMPV_ALIGN_DEFAULT() const int32_t pixels16[16] = {
+	COMPV_ALIGN_DEFAULT() const compv_scalar_t pixels16[16] = {
 		-(stride * 3) + 0, // 1
 		-(stride * 3) + 1, // 2
 		-(stride * 2) + 2, // 3
@@ -319,7 +319,8 @@ static void FastStrengths_C(const int16_t* dbrighters, const int16_t* ddarkers, 
 	}
 }
 
-static int FastData_C(const uint8_t* dataPtr, const int32_t* pixels16, compv_scalar_t N, uint8_t* temp16, int16_t darker, int16_t brighter, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, int16_t* ddarkers16, int16_t* dbrighters16)
+// FIXME: remove int16_t darker, int16_t brighter
+static int FastData_C(const uint8_t* dataPtr, const compv_scalar_t (&pixels16)[16], compv_scalar_t N, uint8_t (&temp16)[16], int16_t darker, int16_t brighter, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, int16_t (&ddarkers16)[16], int16_t (&dbrighters16)[16])
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	int32_t sum;
@@ -406,18 +407,37 @@ static int FastData_C(const uint8_t* dataPtr, const int32_t* pixels16, compv_sca
 	return 0;
 }
 
-static void FastProcessRange(const uint8_t* dataPtr, int32_t rowStart, int32_t rowEnd, int32_t rowCount, int32_t width, int32_t stride, int32_t threshold, int32_t N, const int32_t* pixels16, const uint16_t* flags16, std::vector<CompVInterestPoint >* interestPoints)
+static int FastData16_C(const uint8_t* dataPtr, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, uint8_t(&temp16x16)[16][16], compv_scalar_t(&pfdarkers16)[16], compv_scalar_t(&pfbrighters16)[16], int16_t(&ddarkers16x16)[16][16], int16_t(&dbrighters16x16)[16][16])
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+
+	int r = 0;
+	int16_t brighter, darker;
+	for (int i = 0; i < 16; ++i) {
+		brighter = (int16_t)(dataPtr[i] + threshold);
+		darker = (int16_t)(dataPtr[i] - threshold);
+		if (FastData_C(&dataPtr[i], pixels16, N, temp16x16[i], darker, brighter, &pfdarkers16[i], &pfbrighters16[i], ddarkers16x16[i], dbrighters16x16[i])) {
+			r |= (1 << i);
+		}
+	}
+	return r;
+}
+
+static void FastProcessRange(const uint8_t* dataPtr, int32_t rowStart, int32_t rowEnd, int32_t rowCount, int32_t width, int32_t stride, int32_t threshold, int32_t N, const compv_scalar_t (&pixels16)[16], const uint16_t (&flags16)[16], std::vector<CompVInterestPoint >* interestPoints)
 {
 	const uint8_t* IP;
-	uint8_t brighter, darker;
 	int32_t j, i, minj, maxj;
 	int32_t pad = (stride - width), padPlus6 = 3 + pad + 3;
-	COMPV_ALIGN_DEFAULT() int16_t ddarkers[16];
-	COMPV_ALIGN_DEFAULT() int16_t dbrighters[16];
-	COMPV_ALIGN_DEFAULT() uint8_t cercle[16]; // tempdata
-	compv_scalar_t fdarkers, fbrighters;
+	// FIXME: These arrays must be allocated on the thread pool
+	COMPV_ALIGN_DEFAULT() int16_t brighter[16];
+	COMPV_ALIGN_DEFAULT() int16_t darker[16];
+	COMPV_ALIGN_DEFAULT() int16_t ddarkers[16][16];
+	COMPV_ALIGN_DEFAULT() int16_t dbrighters[16][16];
+	COMPV_ALIGN_DEFAULT() uint8_t cercle[16][16]; // tempdata
+	COMPV_ALIGN_DEFAULT() compv_scalar_t fdarkers[16], fbrighters[16];
 	int strength;
-	int(*FastData)(const uint8_t* dataPtr, const int32_t* pixels16, compv_scalar_t N, uint8_t* temp16, int16_t darker, int16_t brighter, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, int16_t* ddarkers16, int16_t* dbrighters16) = FastData_C;
+	int(*FastData)(const uint8_t* dataPtr, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, uint8_t(&temp16)[16], int16_t darker, int16_t brighter, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, int16_t(&ddarkers16)[16], int16_t(&dbrighters16)[16]) = FastData_C;
+	int(*FastData16)(const uint8_t* dataPtr, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, uint8_t(&temp16x16)[16][16], compv_scalar_t(&pfdarkers16)[16], compv_scalar_t(&pfbrighters16)[16], int16_t(&ddarkers16x16)[16][16], int16_t(&dbrighters16x16)[16][16]) = FastData16_C;
 	void(*FastStrengths)(const int16_t* dbrighters, const int16_t* ddarkers, compv_scalar_t fbrighters, compv_scalar_t fdarkers, int N, const uint16_t* FastXFlags, int* strength)
 		= N == 9 ? Fast9Strengths_C : Fast12Strengths_C;
 #if 1 // Do not use build-in fast functions
@@ -426,6 +446,7 @@ static void FastProcessRange(const uint8_t* dataPtr, int32_t rowStart, int32_t r
 
 	if (CompVCpu::isSupported(kCpuFlagSSSE3)) { // FIXME: SSE2?
 		COMPV_EXEC_IFDEF_INTRIN_X86(FastData = FastData_Intrin_SSSE3);
+		COMPV_EXEC_IFDEF_INTRIN_X86(FastData16 = FastData16_Intrin_SSSE3);
 	}
 
 	minj = (rowStart == 0 ? 3 : 0);
@@ -437,17 +458,41 @@ static void FastProcessRange(const uint8_t* dataPtr, int32_t rowStart, int32_t r
 			// No need to clamp "brighter" and "darker".
 			// "brighter" is always > 0 and brightness equation is ((u8 - brighter) > 0) => (u8 > brighter) => no need to saturate brighter to 255 as u8 already saturated to 255
 			// "darker" is always <255 and darkness equatio is ((darker - u8) > 0) => (u8 < darker) => no need to saturate darker to 0 as u8 already satured to 0
-			brighter = (IP[0] + threshold);
-			darker = (IP[0] - threshold);
 						
-			if (FastData(IP, pixels16, N, cercle, darker, brighter, &fdarkers, &fbrighters, ddarkers, dbrighters)) {
-				FastStrengths(dbrighters, ddarkers, fbrighters, fdarkers, N, flags16, &strength);
-				if (strength > 0) {
-					// strength is defined as the maximum value of t that makes p a corner
-					interestPoints->push_back(CompVInterestPoint(i, j, (float)(strength + threshold - 1)));
+			if ((i < width - 3 - 16)) {
+				// FIXME
+				if (i == 1619 && j == 279) {
+					int kaka = 0;
 				}
+				int r = FastData16(IP, (compv_scalar_t(&)[16])pixels16, N, threshold, cercle, fdarkers, fbrighters, ddarkers, dbrighters);
+				if (r > 0) {
+					// FIXME: add support for FastStrengths16
+					for (int z = 0; z < 16; ++z) {
+						if (r & (1 << z)) {
+							FastStrengths(dbrighters[z], ddarkers[z], fbrighters[z], fdarkers[z], N, flags16, &strength);
+							if (strength > 0) {
+								// strength is defined as the maximum value of t that makes p a corner
+								interestPoints->push_back(CompVInterestPoint(i, j, (float)(strength + threshold - 1)));
+							}
+						}
+					}
+				}
+				IP += 16;
+				i += 15; // 15 because the loop will also increment i
 			}
-			IP += 1;
+			else {
+				// FIXME: move inside the function
+				brighter[0] = (IP[0] + threshold);
+				darker[0] = (IP[0] - threshold);
+				if (FastData(IP, pixels16, N, cercle[0], darker[0], brighter[0], &fdarkers[0], &fbrighters[0], ddarkers[0], dbrighters[0])) {
+					FastStrengths(dbrighters[0], ddarkers[0], fbrighters[0], fdarkers[0], N, flags16, &strength);
+					if (strength > 0) {
+						// strength is defined as the maximum value of t that makes p a corner
+						interestPoints->push_back(CompVInterestPoint(i, j, (float)(strength + threshold - 1)));
+					}
+				}
+				IP += 1;
+			}
 		}
 		IP += padPlus6;
 	}
@@ -463,8 +508,8 @@ static COMPV_ERROR_CODE FastProcessRange_AsynExec(const struct compv_asynctoken_
 	int32_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[5].pcParamPtr, int32_t);
 	int32_t threshold = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[6].pcParamPtr, int32_t);
 	int32_t N = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[7].pcParamPtr, int32_t);
-	const int32_t* pixels16 = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[8].pcParamPtr, const int32_t*);
-	const uint16_t* flags16 = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[9].pcParamPtr, const uint16_t*);
+	const compv_scalar_t(&pixels16)[16] = COMPV_ASYNCTASK_GET_PARAM_REFARRAY1(pc_params[8].pcParamPtr, const compv_scalar_t, 16);
+	const uint16_t(&flags16)[16] = COMPV_ASYNCTASK_GET_PARAM_REFARRAY1(pc_params[9].pcParamPtr, const uint16_t, 16);
 	std::vector<CompVInterestPoint >* interestPoints = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[10].pcParamPtr, std::vector<CompVInterestPoint >*);
 
 	FastProcessRange(dataPtr, rowStart, rowEnd, rowCount, width, stride, threshold, N, pixels16, flags16, interestPoints);
