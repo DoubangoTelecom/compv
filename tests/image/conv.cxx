@@ -20,8 +20,8 @@ using namespace compv;
 
 #define loopCount			1
 #define MD5_PRINT			1
-#define FORMAT_SRC			FORMAT_BGR // must be rgb or rgba family
-#define FORMAT_DST			FORMAT_GRAYSCALE // any format
+#define FORMAT_SRC			FORMAT_RGBA // must be rgb or rgba family
+#define FORMAT_DST			FORMAT_I420 // any format
 #define STRIDE_ALIGN		true // false to test CompVImage::wrap and CompVImage::copy
 
 static void rgbToSrc(const CompVObjWrapper<CompVImage *>& jpegImage, void** srcPtr, int &height, int &width, int &stride)

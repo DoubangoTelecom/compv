@@ -25,10 +25,10 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void rgbToRgbaKernel31_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgb, COMV_ALIGNED(SSE) uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void rgbToRgbaKernel31_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride)
 {
     __m128i xmm0, xmm1, xmmMaskRgbToRgba, xmmAlpha;
-    vcomp_scalar_t i, j, maxI = ((width + 15) & -16), pad = (stride - maxI), padRGB = pad * 3, padRGBA = pad << 2;
+    compv_scalar_t i, j, maxI = ((width + 15) & -16), pad = (stride - maxI), padRGB = pad * 3, padRGBA = pad << 2;
 
     _mm_store_si128(&xmmAlpha, _mm_load_si128((__m128i*)k_0_0_0_255_u8)); // alpha add to the 4th bytes - if rga is an intermediate format then do not care
     _mm_store_si128(&xmmMaskRgbToRgba, _mm_load_si128((__m128i*)kShuffleEpi8_RgbToRgba_i32));
@@ -56,7 +56,7 @@ void rgbToRgbaKernel31_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgb
     }
 }
 
-void bgrToBgraKernel31_Intrin_Aligned_SSSE3(COMV_ALIGNED(SSE) const uint8_t* bgr, COMV_ALIGNED(SSE) uint8_t* bgra, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+void bgrToBgraKernel31_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* bgr, COMPV_ALIGNED(SSE) uint8_t* bgra, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride)
 {
     // the alpha channel is at the same index as rgb->rgba which means we can use the same function
     rgbToRgbaKernel31_Intrin_Aligned_SSSE3(bgr, bgra, height, width, stride);

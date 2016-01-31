@@ -58,14 +58,8 @@
     <Filter Include="Source Files\image">
       <UniqueIdentifier>{bf995f6a-d127-4807-936f-d60786635d2c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Assembler Files\x64">
-      <UniqueIdentifier>{15769f8a-2f7e-474c-90ed-308df429680c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\intrinsics\x86\image">
       <UniqueIdentifier>{07df71d3-6c02-4a71-ab6a-e4d31cc51d37}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Assembler Files\x64\image">
-      <UniqueIdentifier>{582a4f83-eb7c-4d4a-91ae-c316abeb0057}</UniqueIdentifier>
     </Filter>
     <Filter Include="Assembler Files\x86\image">
       <UniqueIdentifier>{e251edfa-3515-4de3-8b81-bcad52d77846}</UniqueIdentifier>
@@ -91,14 +85,8 @@
     <Filter Include="Source Files\features\fast">
       <UniqueIdentifier>{3b2c438a-6f79-423d-b216-96a67b60bc48}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Assembler Files\x64\image\conv">
-      <UniqueIdentifier>{1361d03f-d124-4393-be3c-18bfdf324963}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Assembler Files\x86\image\conv">
       <UniqueIdentifier>{ff00e240-780a-474a-b56d-930f2baca336}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Assembler Files\x64\image\scale">
-      <UniqueIdentifier>{3087d92e-9bd5-4186-8abb-66b421e80675}</UniqueIdentifier>
     </Filter>
     <Filter Include="Assembler Files\x86\image\scale">
       <UniqueIdentifier>{f6839d73-a972-4715-a251-9a9b0dcfc819}</UniqueIdentifier>
@@ -126,6 +114,18 @@
     </Filter>
     <Filter Include="Header Files\intrinsics\x86\image\conv">
       <UniqueIdentifier>{9a722fea-270c-4c9c-94ac-60b1dd15286c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\intrinsics\x86\features">
+      <UniqueIdentifier>{f502135d-f35a-4566-8589-a0d4177e7b32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\intrinsics\x86\features">
+      <UniqueIdentifier>{f9695f1b-2d5c-4ec6-b7dc-68d2f631261e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\intrinsics\x86\features\fast">
+      <UniqueIdentifier>{49545676-9d7f-41dc-a835-06e598ee55be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\intrinsics\x86\features\fast">
+      <UniqueIdentifier>{fc22bb72-6430-4588-bd8b-e022e6bd094a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -261,6 +261,21 @@
     <ClInclude Include="include\compv\image\scale\compv_imagescale_pyramid.h">
       <Filter>Header Files\image\scale</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\image\compv_imageborder.h">
+      <Filter>Header Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\features\fast\compv_feature_fast9_dete.h">
+      <Filter>Header Files\features\fast</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\compv_ragel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\features\fast\compv_feature_fast12_dete.h">
+      <Filter>Header Files\features\fast</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse.h">
+      <Filter>Header Files\intrinsics\x86\features\fast</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -380,11 +395,14 @@
     <ClCompile Include="image\scale\compv_imagescale_pyramid.cxx">
       <Filter>Source Files\image\scale</Filter>
     </ClCompile>
+    <ClCompile Include="image\compv_imageborder.cxx">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse.cxx">
+      <Filter>Source Files\intrinsics\x86\features\fast</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <YASM Include="assembler\x86\compv_common_x86.S">
-      <Filter>Assembler Files\x86</Filter>
-    </YASM>
     <YASM Include="assembler\x86\compv_utils_x86.S">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
@@ -406,8 +424,11 @@
     <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_rgb_x86_sse.S">
       <Filter>Assembler Files\x86\image\conv</Filter>
     </YASM>
-    <YASM Include="assembler\x64\image\conv\compv_imageconv_rgba_i420_x64_avx2.S">
-      <Filter>Assembler Files\x64\image\conv</Filter>
+    <YASM Include="assembler\x86\compv_common_x86.S">
+      <Filter>Assembler Files\x86</Filter>
+    </YASM>
+    <YASM Include="assembler\x86\compv_mathutils_x86.S">
+      <Filter>Assembler Files\x86</Filter>
     </YASM>
   </ItemGroup>
 </Project>

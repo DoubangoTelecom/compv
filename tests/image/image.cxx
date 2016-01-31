@@ -3,7 +3,8 @@
 
 using namespace compv;
 
-#define numThreads			COMPV_NUM_THREADS_SINGLE
+#define numThreads			COMPV_NUM_THREADS_BEST
+
 #define enableIntrinsics	true
 #define enableAsm			true
 #define testingMode			true
@@ -14,45 +15,35 @@ using namespace compv;
 #define TEST_SCALE			0
 #define TEST_PYRAMID		0
 
-#if TEST_CONV
-extern bool TestConv();
-#endif
-#if TEST_FAST
-extern bool TestFAST();
-#endif
-#if TEST_ORB
-extern bool TestORB();
-#endif
-#if TEST_SCALE
-extern bool TestScale();
-#endif
-#if TEST_PYRAMID
-extern bool TestPyramid();
-#endif
 
 int _tmain(int argc, _TCHAR* argv[])
 {
     CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
     COMPV_CHECK_CODE_ASSERT(CompVEngine::init(numThreads));
-	COMPV_CHECK_CODE_ASSERT(CompVEngine::setTestingModeEnabled(testingMode));
+    COMPV_CHECK_CODE_ASSERT(CompVEngine::setTestingModeEnabled(testingMode));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setAsmEnabled(enableAsm));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagNone));
 
 #if TEST_CONV
+	extern bool TestConv();
     COMPV_ASSERT(TestConv());
 #endif
 #if TEST_FAST
+	extern bool TestFAST();
     COMPV_ASSERT(TestFAST());
 #endif
 #if TEST_ORB
-	COMPV_ASSERT(TestORB());
+	extern bool TestORB();
+    COMPV_ASSERT(TestORB());
 #endif
 #if TEST_SCALE
+	extern bool TestScale();
     COMPV_ASSERT(TestScale());
 #endif
 #if TEST_PYRAMID
-	COMPV_ASSERT(TestPyramid());
+	extern bool TestPyramid();
+    COMPV_ASSERT(TestPyramid());
 #endif
 
     // deInit the engine

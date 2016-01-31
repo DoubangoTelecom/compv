@@ -33,5 +33,8 @@
     <ClCompile Include="orb.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="border.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

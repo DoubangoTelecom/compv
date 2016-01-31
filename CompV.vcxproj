@@ -33,13 +33,17 @@
     <ClInclude Include="include\compv\compv_md5.h" />
     <ClInclude Include="include\compv\compv_mem.h" />
     <ClInclude Include="include\compv\compv_obj.h" />
+    <ClInclude Include="include\compv\compv_ragel.h" />
     <ClInclude Include="include\compv\compv_settable.h" />
     <ClInclude Include="include\compv\compv_simd_globals.h" />
     <ClInclude Include="include\compv\features\compv_feature.h" />
+    <ClInclude Include="include\compv\features\fast\compv_feature_fast12_dete.h" />
+    <ClInclude Include="include\compv\features\fast\compv_feature_fast9_dete.h" />
     <ClInclude Include="include\compv\features\fast\compv_feature_fast_dete.h" />
     <ClInclude Include="include\compv\features\orb\compv_feature_orb_desc.h" />
     <ClInclude Include="include\compv\features\orb\compv_feature_orb_dete.h" />
     <ClInclude Include="include\compv\image\compv_image.h" />
+    <ClInclude Include="include\compv\image\compv_imageborder.h" />
     <ClInclude Include="include\compv\image\conv\compv_imageconv_common.h" />
     <ClInclude Include="include\compv\image\conv\compv_imageconv_grayscale.h" />
     <ClInclude Include="include\compv\image\conv\compv_imageconv_rgba_i420.h" />
@@ -49,6 +53,7 @@
     <ClInclude Include="include\compv\image\scale\compv_imagescale_pyramid.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_avx.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_sse.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse.h" />
     <ClInclude Include="include\compv\intrinsics\x86\image\conv\compv_imageconv_rgba_i420_intrin_avx2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\image\conv\compv_imageconv_rgba_i420_intrin_sse.h" />
     <ClInclude Include="include\compv\intrinsics\x86\image\conv\compv_imageconv_rgba_rgb_intrin_avx2.h" />
@@ -82,6 +87,7 @@
     <ClCompile Include="features\orb\compv_feature_orb_desc.cxx" />
     <ClCompile Include="features\orb\compv_feature_orb_dete.cxx" />
     <ClCompile Include="image\compv_image.cxx" />
+    <ClCompile Include="image\compv_imageborder.cxx" />
     <ClCompile Include="image\compv_image_libjpeg.cxx" />
     <ClCompile Include="image\conv\compv_imageconv_common.cxx" />
     <ClCompile Include="image\conv\compv_imageconv_grayscale.cxx" />
@@ -90,6 +96,7 @@
     <ClCompile Include="image\scale\compv_imagescale_bilinear.cxx" />
     <ClCompile Include="image\scale\compv_imagescale_common.cxx" />
     <ClCompile Include="image\scale\compv_imagescale_pyramid.cxx" />
+    <ClCompile Include="intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse.cxx" />
     <ClCompile Include="intrinsics\x86\image\conv\compv_imageconv_rgba_i420_intrin_avx2.cxx" />
     <ClCompile Include="intrinsics\x86\image\conv\compv_imageconv_rgba_i420_intrin_sse.cxx" />
     <ClCompile Include="intrinsics\x86\image\conv\compv_imageconv_rgba_rgb_intrin_avx2.cxx" />
@@ -116,11 +123,6 @@
     </YASM>
   </ItemGroup>
   <ItemGroup>
-    <YASM Include="assembler\x64\image\conv\compv_imageconv_rgba_i420_x64_avx2.S">
-      <FileType>Document</FileType>
-    </YASM>
-  </ItemGroup>
-  <ItemGroup>
     <YASM Include="assembler\x86\image\conv\compv_imageconv_macros_avx.S">
       <FileType>Document</FileType>
     </YASM>
@@ -137,6 +139,11 @@
       <FileType>Document</FileType>
     </YASM>
     <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_rgb_x86_sse.S">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <YASM Include="assembler\x86\compv_mathutils_x86.S">
       <FileType>Document</FileType>
     </YASM>
   </ItemGroup>

@@ -61,8 +61,12 @@ protected:
 	int32_t m_nWidth;
 	int32_t m_nHeight;
 	int32_t m_nStride;
+	int32_t m_nBorderWidth;
+	int32_t m_nBorderHeight;
+	int32_t m_nBorderStride;
 	COMPV_PIXEL_FORMAT m_ePixelFormat;
 	COMPV_IMAGE_FORMAT m_eImageFormat;
+	COMPV_BORDER_TYPE m_eBorderType;
 	COMPV_DISABLE_WARNINGS_END()
 };
 

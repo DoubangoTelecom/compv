@@ -20,29 +20,60 @@
 #include "compv/features/compv_feature.h"
 #include "compv/features/fast/compv_feature_fast_dete.h"
 #include "compv/features/orb/compv_feature_orb_dete.h"
+#include "compv/features/orb/compv_feature_orb_desc.h"
 #include "compv/compv_engine.h"
 
 COMPV_NAMESPACE_BEGIN()
 
 std::map<int, const CompVFeatureFactory*> CompVFeature::s_Factories;
 
-//
-//	CompVFeature
-//
-
 // Declare built-in factories
 static const CompVFeatureFactory fastFactory = {
-	COMPV_FAST_ID,
+    COMPV_FAST_ID,
     "FAST (Features from Accelerated Segment Test)",
     CompVFeatureDeteFAST::newObj,
     NULL,
 };
 static const CompVFeatureFactory orbFactory = {
-	COMPV_ORB_ID,
-	"ORB (Oriented FAST and Rotated BRIEF)",
-	CompVFeatureDeteORB::newObj,
-	NULL,
+    COMPV_ORB_ID,
+    "ORB (Oriented FAST and Rotated BRIEF)",
+    CompVFeatureDeteORB::newObj,
+    CompVFeatureDescORB::newObj,
 };
+
+//
+//	CompVFeatureDescriptions
+//
+
+CompVFeatureDescriptions::CompVFeatureDescriptions(int nFeatures_, int nFeatureBits_)
+    : m_nFeatureBits(0)
+    , m_nFeaturesCount(0)
+{
+    if (COMPV_ERROR_CODE_IS_OK(CompVBuffer::newObjAndCopyData(NULL, nFeatures_ * ((nFeatureBits_ + 7) >> 3), &m_data))) {
+        m_nFeaturesCount = nFeatures_;
+        m_nFeatureBits = nFeatureBits_;
+    }
+}
+
+CompVFeatureDescriptions::~CompVFeatureDescriptions()
+{
+
+}
+
+COMPV_ERROR_CODE CompVFeatureDescriptions::newObj(int nFeaturesCount, int nFeatureBits, CompVObjWrapper<CompVFeatureDescriptions*>* descriptions)
+{
+    COMPV_CHECK_EXP_RETURN(!descriptions || nFeaturesCount <= 0 || nFeatureBits <= 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    CompVObjWrapper<CompVFeatureDescriptions*> descriptions_ = new CompVFeatureDescriptions(nFeaturesCount, nFeatureBits);
+    if (!descriptions_ || descriptions_->m_nFeatureBits != nFeatureBits || descriptions_->m_nFeaturesCount != nFeaturesCount || !descriptions_->m_data) {
+        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    }
+    *descriptions = descriptions_;
+    return COMPV_ERROR_CODE_S_OK;
+}
+
+//
+//	CompVFeature
+//
 
 CompVFeature::CompVFeature()
 {
@@ -62,8 +93,8 @@ COMPV_ERROR_CODE CompVFeature::init()
 
     // FAST (Features from Accelerated Segment Test)
     COMPV_CHECK_CODE_RETURN(addFactory(&fastFactory));
-	// ORB(ORiented BRIEF)
-	COMPV_CHECK_CODE_RETURN(addFactory(&orbFactory));
+    // ORB(ORiented BRIEF)
+    COMPV_CHECK_CODE_RETURN(addFactory(&orbFactory));
 
     return COMPV_ERROR_CODE_S_OK;
 }
@@ -94,7 +125,7 @@ const CompVFeatureFactory* CompVFeature::findFactory(int deteId)
 //
 
 CompVFeatureDete::CompVFeatureDete(int id)
-	: m_nId(id)
+    : m_nId(id)
 {
 
 }
@@ -125,7 +156,7 @@ COMPV_ERROR_CODE CompVFeatureDete::newObj(int deteId, CompVObjWrapper<CompVFeatu
 //
 
 CompVFeatureDesc::CompVFeatureDesc(int id)
-	: m_nId(id)
+    : m_nId(id)
 {
 
 }
@@ -144,7 +175,7 @@ COMPV_ERROR_CODE CompVFeatureDesc::newObj(int descId, CompVObjWrapper<CompVFeatu
         COMPV_DEBUG_ERROR("Failed to find feature factory with id = %d", descId);
         return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
     }
-    if (!factory_->newObjDete) {
+    if (!factory_->newObjDesc) {
         COMPV_DEBUG_ERROR("Factory with id = %d and name = '%s' doesn't have a constructor for descriptors", factory_->id, factory_->name);
         return COMPV_ERROR_CODE_E_INVALID_CALL;
     }

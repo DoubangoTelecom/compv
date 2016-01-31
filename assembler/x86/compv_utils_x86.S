@@ -38,7 +38,7 @@ sym(compv_utils_thread_get_core_id_x86_asm):
 
 ;;;
 ;;; void testPrologEpilog(int a, int b, int c)
-sym(rgbaToI420Kernel11_CompY_Asm_X86_Aligned1x_SSSE3):
+sym(testPrologEpilog):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 3

@@ -15,31 +15,31 @@ extern void writeImgToFile(const CompVObjWrapper<CompVImage *>& img);
 
 bool TestScale()
 {
-	CompVObjWrapper<CompVImage *> image;
-	uint64_t timeStart, timeEnd;
+    CompVObjWrapper<CompVImage *> image;
+    uint64_t timeStart, timeEnd;
 
-	// Decode the jpeg image
-	COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_IMG, &image));
-	int32_t outWidth = (int32_t)(image->getWidth() * IMAGE_SCALE_FACTOR);
-	int32_t outHeight = (int32_t)(image->getHeight() * IMAGE_SCALE_FACTOR);
-	// Convert image to GrayScale
-	COMPV_CHECK_CODE_ASSERT(image->convert(COMPV_PIXEL_FORMAT_GRAYSCALE, &image));
-	// Scale the image
-	timeStart = CompVTime::getNowMills();
-	for (int i = 0; i < IMAGE_SACLE_LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_ASSERT(image->scale(IMAGE_SCALE_TYPE, outWidth, outHeight, &image));
-	}
-	timeEnd = CompVTime::getNowMills();
-	COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
+    // Decode the jpeg image
+    COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_IMG, &image));
+    int32_t outWidth = (int32_t)(image->getWidth() * IMAGE_SCALE_FACTOR);
+    int32_t outHeight = (int32_t)(image->getHeight() * IMAGE_SCALE_FACTOR);
+    // Convert image to GrayScale
+    COMPV_CHECK_CODE_ASSERT(image->convert(COMPV_PIXEL_FORMAT_GRAYSCALE, &image));
+    // Scale the image
+    timeStart = CompVTime::getNowMills();
+    for (int i = 0; i < IMAGE_SACLE_LOOP_COUNT; ++i) {
+        COMPV_CHECK_CODE_ASSERT(image->scale(IMAGE_SCALE_TYPE, outWidth, outHeight, &image));
+    }
+    timeEnd = CompVTime::getNowMills();
+    COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-	COMPV_DEBUG_INFO("Image scaling: factor=%f, outWidth=%d, outStride=%d, outHeight=%d", IMAGE_SCALE_FACTOR, image->getWidth(), image->getStride(), image->getHeight());
+    COMPV_DEBUG_INFO("Image scaling: factor=%f, outWidth=%d, outStride=%d, outHeight=%d", IMAGE_SCALE_FACTOR, image->getWidth(), image->getStride(), image->getHeight());
 
 #if IMAGE_MD5
-	COMPV_DEBUG_INFO("MD5(SCALED)=%s", CompVMd5::compute2(image->getDataPtr(), image->getDataSize()).c_str());
+    COMPV_DEBUG_INFO("MD5(SCALED)=%s", CompVMd5::compute2(image->getDataPtr(), image->getDataSize()).c_str());
 #endif
 
-	// dump image to file
-	writeImgToFile(image);
+    // dump image to file
+    writeImgToFile(image);
 
     return true;
 }

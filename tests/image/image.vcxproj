@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="border.cxx" />
     <ClCompile Include="conv.cxx" />
     <ClCompile Include="fast.cxx" />
     <ClCompile Include="image.cxx" />

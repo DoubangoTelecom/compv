@@ -80,13 +80,13 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_IS_ALIGNED_ARM64(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_ARM64)
 #define COMPV_IS_ALIGNED_DEFAULT(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_DEFAULT)
 
-#define COMV_ALIGNED(x) 
-#define COMV_ALIGNED_DEFAULT(x) 
-#define COMV_ALIGN_DEFAULT() COMPV_ALIGN(COMPV_SIMD_ALIGNV_DEFAULT)
-#define COMV_ALIGN_AVX() COMPV_ALIGN(COMPV_SIMD_ALIGNV_AVX)
-#define COMV_ALIGN_AVX2() COMPV_ALIGN(COMPV_SIMD_ALIGNV_AVX2)
-#define COMV_ALIGN_SSE() COMPV_ALIGN(COMPV_SIMD_ALIGNV_SSE)
-#define COMV_ALIGN_MMX() COMPV_ALIGN(COMPV_SIMD_ALIGNV_MMX)
+#define COMPV_ALIGNED(x) 
+#define COMPV_ALIGNED_DEFAULT(x) 
+#define COMPV_ALIGN_DEFAULT() COMPV_ALIGN(COMPV_SIMD_ALIGNV_DEFAULT)
+#define COMPV_ALIGN_AVX() COMPV_ALIGN(COMPV_SIMD_ALIGNV_AVX)
+#define COMPV_ALIGN_AVX2() COMPV_ALIGN(COMPV_SIMD_ALIGNV_AVX2)
+#define COMPV_ALIGN_SSE() COMPV_ALIGN(COMPV_SIMD_ALIGNV_SSE)
+#define COMPV_ALIGN_MMX() COMPV_ALIGN(COMPV_SIMD_ALIGNV_MMX)
 
 #define COMPV_DEFAULT_ARG(arg_, val_) arg_
 
@@ -110,8 +110,8 @@ a,b,c,d must be <= 16 for _mm128_shuffle_epi8() and <32 for _mm256_shuffle_epi8(
 */
 #define COMPV_MM_SHUFFLE_EPI8(fp3,fp2,fp1,fp0) ((fp3 << 24) | (fp2 << 16) | (fp1 << 8) | (fp0 & 0xFF))
 
-typedef int32_t vcomp_core_id_t;
-typedef intptr_t vcomp_scalar_t;  /* This type *must* have the width of a general-purpose register on the target CPU. 64bits or 32bits. */
+typedef int32_t compv_core_id_t;
+typedef intptr_t compv_scalar_t;  /* This type *must* have the width of a general-purpose register on the target CPU. 64bits or 32bits. */
 
 typedef enum _COMPV_DEBUG_LEVEL {
 	COMPV_DEBUG_LEVEL_INFO = 4,
@@ -198,6 +198,15 @@ typedef enum _COMPV_IMAGE_FORMAT {
 }
 COMPV_IMAGE_FORMAT;
 
+typedef enum _COMPV_BORDER_TYPE {
+	COMPV_BORDER_TYPE_NONE,
+	COMPV_BORDER_TYPE_CONSTANT,
+	COMPV_BORDER_TYPE_REFLECT,
+	COMPV_BORDER_TYPE_REPLICATE,
+	COMPV_BORDER_TYPE_WRAP
+}
+COMPV_BORDER_TYPE;
+
 typedef enum _COMPV_SCALE_TYPE {
 	COMPV_SCALE_TYPE_BILINEAR
 }
@@ -208,6 +217,8 @@ enum {
 	COMPV_TOKENIDX_IMAGE_CONVERT1,
 	COMPV_TOKENIDX_IMAGE_CONVERT2,
 	COMPV_TOKENIDX_IMAGE_CONVERT3,
+
+	COMPV_TOKENIDX_FEATURE_FAST_DETE,
 
 	COMPV_TOKENIDX_MAX
 	// no limitation but alloc memory -> do not abuse
@@ -246,22 +257,38 @@ typedef struct _CompVRect {
 CompVRect;
 
 typedef struct _CompVInterestPoint {
-	int32_t x;
-	int32_t y;
-	float strength;
-	float orient; // angle in degree
-	int32_t layer;
-	int32_t patchSize;
+	int32_t x; /**< Point.x */
+	int32_t y; /**< Point.y */
+	float fex; /**< Error after rounding. */
+	float fey; /**< Error after rounding. */
+	float strength; /**< Corner/edge strength/response (e.g. FAST response or Harris response) */
+	float orient; /**< angle in degree ([0-360]) */
+	int32_t level; /**< pyramid level (when image is scaled, level0 is the first one) */
+	float size; /**< patch size (e.g. BRIEF patch size-circle diameter-) */
 public:
 	_CompVInterestPoint(): _CompVInterestPoint(0, 0){
 	}
-	_CompVInterestPoint(int32_t x_, int32_t y_, float strength_ = -1.f, float orient_ = -1.f, int32_t layer_ = 0, int32_t patchSize_ = 0) {
+	_CompVInterestPoint(int32_t x_, int32_t y_, float strength_ = -1.f, float orient_ = -1.f, int32_t level_ = 0, float size_ = 0.f, float fex_ = 0.f, float fey_ = 0.f) {
 		x = x_;
 		y = y_;
 		strength = strength_;
 		orient = orient_;
-		layer = layer_;
-		patchSize = patchSize_;
+		level = level_;
+		size = size_;
+		fex = fex_;
+		fey = fey_;
+	}
+	COMPV_INLINE void setXYf(float x_, float y_) {
+		x = (int32_t)round(x_), fex = (x_ - x);
+		y = (int32_t)round(y_), fey = (y_ - y);
+	}
+	/** Convert x to float without rounding */
+	COMPV_INLINE float xf()const {
+		return (x + fex);
+	}
+	/** Convert y to float without rounding */
+	COMPV_INLINE float yf()const {
+		return (y + fey);
 	}
 }
 CompVInterestPoint;

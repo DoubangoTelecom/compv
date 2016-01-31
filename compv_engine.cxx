@@ -24,6 +24,7 @@
 #include "compv/time/compv_time.h"
 #include "compv/image/compv_image.h"
 #include "compv/features/compv_feature.h"
+#include "compv/compv_mathutils.h"
 
 
 COMPV_NAMESPACE_BEGIN()
@@ -57,14 +58,14 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
 
     COMPV_DEBUG_INFO("Initializing engine (v %s)...", COMPV_VERSION_STRING);
 
-    // Make sure sizeof(vcomp_scalar_t) is correct
+    // Make sure sizeof(compv_scalar_t) is correct
 #if defined(COMPV_ASM) || defined(COMPV_INTRINSIC)
-    if (sizeof(vcomp_scalar_t) != sizeof(void*)) {
-        COMPV_DEBUG_ERROR("sizeof(vcomp_scalar_t)= #%d not equal to sizeof(void*)= #%d", sizeof(vcomp_scalar_t), sizeof(void*));
+    if (sizeof(compv_scalar_t) != sizeof(void*)) {
+        COMPV_DEBUG_ERROR("sizeof(compv_scalar_t)= #%d not equal to sizeof(void*)= #%d", sizeof(compv_scalar_t), sizeof(void*));
         return COMPV_ERROR_CODE_E_SYSTEM;
     }
 #endif
-    COMPV_DEBUG_INFO("sizeof(vcomp_scalar_t)= #%d", sizeof(vcomp_scalar_t));
+    COMPV_DEBUG_INFO("sizeof(compv_scalar_t)= #%d", sizeof(compv_scalar_t));
 
     // endianness
     // https://developer.apple.com/library/mac/documentation/Darwin/Conceptual/64bitPorting/MakingCode64-BitClean/MakingCode64-BitClean.html
@@ -121,6 +122,10 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
 #elif defined(__AVX__)
     COMPV_DEBUG_INFO("Code built with option /arch:AVX");
 #endif
+
+	/* Math functions: Must be after CPU initialization */
+	COMPV_CHECK_CODE_BAIL(err_ = CompVMathUtils::init());
+
 
     /* Memory alignment */
     COMPV_DEBUG_INFO("Default alignment: #%d", COMPV_SIMD_ALIGNV_DEFAULT);
@@ -187,9 +192,9 @@ COMPV_ERROR_CODE CompVEngine::multiThreadingSetMaxThreads(size_t maxThreads)
 
 COMPV_ERROR_CODE CompVEngine::setTestingModeEnabled(bool bTesting)
 {
-	COMPV_DEBUG_INFO("Engine testing mode = %s", bTesting ? "true" : "false");
-	s_bTesting = bTesting;
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_DEBUG_INFO("Engine testing mode = %s", bTesting ? "true" : "false");
+    s_bTesting = bTesting;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 bool CompVEngine::isMultiThreadingEnabled()
@@ -209,7 +214,7 @@ bool CompVEngine::isBigEndian()
 
 bool CompVEngine::isTestingMode()
 {
-	return s_bTesting;
+    return s_bTesting;
 }
 
 COMPV_NAMESPACE_END()

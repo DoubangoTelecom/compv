@@ -27,6 +27,8 @@
 #include "compv/compv_fileutils.h"
 #include "compv/compv_debug.h"
 
+#include <algorithm>
+
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -39,8 +41,12 @@ CompVImage::CompVImage(COMPV_IMAGE_FORMAT eImageFormat, COMPV_PIXEL_FORMAT ePixe
     , m_nWidth(0)
     , m_nHeight(0)
     , m_nStride(0)
+	, m_nBorderWidth(0)
+	, m_nBorderHeight(0)
+	, m_nBorderStride(0)
     , m_ePixelFormat(ePixelFormat)
     , m_eImageFormat(eImageFormat)
+	, m_eBorderType(COMPV_BORDER_TYPE_NONE)
 {
 
 }
@@ -203,9 +209,9 @@ COMPV_ERROR_CODE CompVImage::scale(COMPV_SCALE_TYPE type, int32_t outWidth, int3
     CompVObjWrapper<CompVImage*> This = this; // when outImage is equal to this and the caller doesn't hold a reference the object could be destroyed before the end of the call. This line increment the refCount.
     COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getBestStride(outWidth, &outStride));
     COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getSizeForPixelFormat(This->getPixelFormat(), outStride, outHeight, &neededBuffSize));
-	bool bSelfTransfer = This == (*outImage);
-	bool bScaleFactor1 = outWidth == This->getWidth() && outHeight == This->getHeight(); // *must* compute here before overriding This, otherwise always true
-	bool bAllocOutImage = (!(*outImage) || (*outImage)->getDataSize() != neededBuffSize || (*outImage)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*outImage)->getPixelFormat() != This->getPixelFormat());
+    bool bSelfTransfer = This == (*outImage);
+    bool bScaleFactor1 = outWidth == This->getWidth() && outHeight == This->getHeight(); // *must* compute here before overriding This, otherwise always true
+    bool bAllocOutImage = (!(*outImage) || (*outImage)->getDataSize() != neededBuffSize || (*outImage)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*outImage)->getPixelFormat() != This->getPixelFormat());
     if (bAllocOutImage) {
         COMPV_CHECK_CODE_RETURN(err_ = CompVImage::newObj(This->getPixelFormat(), outWidth, outHeight, outStride, outImage));
     }
@@ -215,13 +221,13 @@ COMPV_ERROR_CODE CompVImage::scale(COMPV_SCALE_TYPE type, int32_t outWidth, int3
         CompVObjWrapper<CompVBuffer*> buffer = (*outImage)->m_oData; // increment refCount
         COMPV_CHECK_CODE_RETURN(err_ = (*outImage)->setBuffer(buffer, outWidth, outHeight, outStride)); // changing the current buffer's layout
     }
-	if (bScaleFactor1 & !CompVEngine::isTestingMode()) { // In testing mode we may want to encode the same image several times to check CPU, Memory, Latency...
-		if (bSelfTransfer && !bAllocOutImage) {
-			// *outImage = This is enought
-			return COMPV_ERROR_CODE_S_OK;
-		}
-		return CompVImage::copy(getPixelFormat(), getDataPtr(), getWidth(), getHeight(), getStride(), (void*)(*outImage)->getDataPtr(), (*outImage)->getWidth(), (*outImage)->getHeight(), (*outImage)->getStride());
-	}
+    if (bScaleFactor1 & !CompVEngine::isTestingMode()) { // In testing mode we may want to encode the same image several times to check CPU, Memory, Latency...
+        if (bSelfTransfer && !bAllocOutImage) {
+            // *outImage = This is enought
+            return COMPV_ERROR_CODE_S_OK;
+        }
+        return CompVImage::copy(getPixelFormat(), getDataPtr(), getWidth(), getHeight(), getStride(), (void*)(*outImage)->getDataPtr(), (*outImage)->getWidth(), (*outImage)->getHeight(), (*outImage)->getStride());
+    }
 
     switch (type) {
     case COMPV_SCALE_TYPE_BILINEAR:
@@ -282,9 +288,9 @@ COMPV_ERROR_CODE CompVImage::copy(COMPV_PIXEL_FORMAT ePixelFormat, const void* i
     COMPV_CHECK_EXP_RETURN(inPtr == NULL || inWidth <= 0 || inHeight <= 0 || inStride <= 0 || inWidth > inStride || inStride == NULL || outWidth <= 0 || outHeight <= 0 || outWidth > outStride || outStride <= 0,
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-    int32_t widthToCopySamples = min(inWidth, outWidth);
-    int32_t strideToCopySamples = min(inStride, outStride);
-    int32_t heightToCopySamples = min(inHeight, outHeight);
+	int32_t widthToCopySamples = std::min(inWidth, outWidth);
+	int32_t strideToCopySamples = std::min(inStride, outStride);
+	int32_t heightToCopySamples = std::min(inHeight, outHeight);
 
     switch (ePixelFormat) {
     case COMPV_PIXEL_FORMAT_R8G8B8:

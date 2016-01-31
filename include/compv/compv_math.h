@@ -35,12 +35,15 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_MATH_MAX_3(x,y,z)						(COMPV_MATH_MAX(x,COMPV_MATH_MAX(y,z)))
 #define COMPV_MATH_MIN(x,y)							((x) > (y) ? (y) : (x))
 #define COMPV_MATH_MIN_3(x,y,z)						(COMPV_MATH_MIN(x,COMPV_MATH_MIN(y,z)))
+#define COMPV_MATH_MIN_INT(x, y)					((y) ^ (((x) ^ (y)) & -((x) < (y))))
+#define COMPV_MATH_MAX_INT(x, y)					((x) ^ (((x) ^ (y)) & -((x) < (y))))
 #define COMPV_MATH_MIN_POSITIVE(x, y)				(((x) >= 0 && (y)>=0) ? COMPV_MATH_MIN((x), (y)) : COMPV_MATH_MAX((x), (y)))	// (G-245)
 #define COMPV_MATH_ABS(x)							(abs((x)))
 #define COMPV_MATH_ABS_INT32(x)						COMPV_MATH_ABS((x))//FIXME:((x) ^ ((x) >> 31)) - ((x) >> 31)
 #define COMPV_MATH_MV_DIFF(mv1, mv2)				(COMPV_MATH_ABS((mv1)[0] - (mv2)[0]) + COMPV_MATH_ABS((mv1)[1] - (mv2)[1])) // mvDiff( mv1, mv2 ) = Abs( mv1[ 0 ] - mv2[ 0 ] ) + Abs( mv1[ 1 ] - mv2[ 1 ] ) (G-251)
 #define COMPV_MATH_CEIL(x)							(ceil((x)))
-#define COMPV_MATH_CLIP3(x,y,z)						((z)<(x) ? (x) : ((z)>(y) ? (y) : (z)))
+#define COMPV_MATH_CLIP3(x,y,z)						((z)<(x) ? (x) : ((z)>(y) ? (y) : (z))) //!\ Do not transform to max(x, min(z, y)) as each macro (max and min) would be expanded several times
+#define COMPV_MATH_CLIP3_INT(x,y,z)					MUST_NOT_USE_WOULD_BE_SLOOOOOW
 #define COMPV_MATH_CLIP1Y(_x,BitDepthY)				COMPV_MATH_CLIP3(0, (1 << (BitDepthY)) - 1, (_x))
 #define COMPV_MATH_CLIP1C(_x,BitDepthC)				COMPV_MATH_CLIP3(0, (1 << (BitDepthC)) - 1, (_x))
 #define COMPV_MATH_CLIP2(y,z)						COMPV_MATH_CLIP3(0,(y),(z))// // Clip2(max, val) = Clip3(0, max, val)
@@ -66,7 +69,7 @@ COMPV_NAMESPACE_BEGIN()
 #	define M_PI 3.14159265358979323846
 #endif
 #define COMPV_MATH_PI	(M_PI)
-#define COMPV_MATH_DEGREE_TO_RADIAN(deg_) (((deg_) * COMPV_MATH_PI) / (double)180.0)
+#define COMPV_MATH_DEGREE_TO_RADIAN(deg_) (((deg_) * COMPV_MATH_PI) / 180.0)
 #define COMPV_MATH_RADIAN_TO_DEGREE(rad_) (((rad_) * 180.0) / COMPV_MATH_PI)
 
 COMPV_NAMESPACE_END()

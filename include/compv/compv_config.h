@@ -53,7 +53,7 @@
 #	define COMPV_OS_IPHONE_SIMULATOR		1
 #endif
 // OS: Android
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(ANDROID)
 #	define COMPV_OS_ANDROID				1
 #endif
 // OS: BSD
@@ -312,12 +312,13 @@
 #endif
 #endif /* HAVE_GETTIMEOFDAY */
 
-#if ANDROID
+#if defined(COMPV_OS_ANDROID)
 #	define HAVE_CLOCK_GETTIME				1
 #endif
 
 #if COMPV_OS_WINDOWS
 #	define _WINSOCKAPI_
+#	define NOMINMAX
 #	include <windows.h>
 #endif
 #include <stdlib.h>

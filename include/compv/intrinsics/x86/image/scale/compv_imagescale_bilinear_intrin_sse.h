@@ -32,7 +32,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void scaleBilinearKernel11_Aligned_SSSE3(COMV_ALIGNED(SSE)const uint8_t* inPtr, COMV_ALIGNED(SSE) uint8_t* outPtr, vcomp_scalar_t inHeight, vcomp_scalar_t inWidth, vcomp_scalar_t inStride, vcomp_scalar_t outHeight, vcomp_scalar_t outWidth, vcomp_scalar_t outStride, vcomp_scalar_t sf_x, vcomp_scalar_t sf_y);
+void scaleBilinearKernel11_Aligned_SSSE3(COMPV_ALIGNED(SSE)const uint8_t* inPtr, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_scalar_t inHeight, compv_scalar_t inWidth, compv_scalar_t inStride, compv_scalar_t outHeight, compv_scalar_t outWidth, compv_scalar_t outStride, compv_scalar_t sf_x, compv_scalar_t sf_y);
 
 COMPV_NAMESPACE_END()
 

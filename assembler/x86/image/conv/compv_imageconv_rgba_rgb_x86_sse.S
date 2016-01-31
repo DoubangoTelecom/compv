@@ -35,9 +35,9 @@ section .text
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> const uint8_t* rgb, 
 ; arg(1) -> uint8_t* rgba
-; arg(2) -> vcomp_scalar_t height
-; arg(3) -> vcomp_scalar_t width
-; arg(4) -> vcomp_scalar_t stride
+; arg(2) -> compv_scalar_t height
+; arg(3) -> compv_scalar_t width
+; arg(4) -> compv_scalar_t stride
 ; %1 -> 1: rgb aligned, 0: rgb not aligned
 ; %2 -> 1: rgba aligned, 0: rgba not aligned
 %macro rgbToRgbaKernel31_Asm_X86_SSSE3 2
@@ -141,22 +141,22 @@ section .text
 %endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; void rgbToRgbaKernel31_Asm_X86_Aligned00_SSSE3(const uint8_t* rgb, uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+;; void rgbToRgbaKernel31_Asm_X86_Aligned00_SSSE3(const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride)
 sym(rgbToRgbaKernel31_Asm_X86_Aligned00_SSSE3):
 	rgbToRgbaKernel31_Asm_X86_SSSE3 0, 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; void rgbToRgbaKernel31_Asm_X86_Aligned01_SSSE3(const uint8_t* rgb, COMV_ALIGNED(SSE) uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+;; void rgbToRgbaKernel31_Asm_X86_Aligned01_SSSE3(const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride)
 sym(rgbToRgbaKernel31_Asm_X86_Aligned01_SSSE3):
 	rgbToRgbaKernel31_Asm_X86_SSSE3 0, 1
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; void rgbToRgbaKernel31_Asm_X86_Aligned10_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgb, uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+;; void rgbToRgbaKernel31_Asm_X86_Aligned10_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride)
 sym(rgbToRgbaKernel31_Asm_X86_Aligned10_SSSE3):
 	rgbToRgbaKernel31_Asm_X86_SSSE3 1, 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; void rgbToRgbaKernel31_Asm_X86_Aligned11_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgb, COMV_ALIGNED(SSE) uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+;; void rgbToRgbaKernel31_Asm_X86_Aligned11_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride)
 sym(rgbToRgbaKernel31_Asm_X86_Aligned11_SSSE3):
 	rgbToRgbaKernel31_Asm_X86_SSSE3 1, 1
 	

@@ -26,6 +26,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#define COMPV_PYRAMOD_LEVEL_FIRST 1
+
 class COMPV_API CompVImageScalePyramid : public CompVObj
 {
 protected:
@@ -34,8 +36,10 @@ public:
 	virtual ~CompVImageScalePyramid();
 	virtual COMPV_INLINE const char* getObjectId() { return "CompVImageScalePyramid"; };
 	COMPV_INLINE int32_t getLevels() { return m_nLevels; }
-	COMPV_INLINE float getScaleFactor() { return m_fScaleFactor; }
+	COMPV_INLINE float getScaleFactorsSum() { return m_fScaleFactorsSum; }
 	COMPV_INLINE COMPV_SCALE_TYPE getScaleType() { return m_eScaleType; }
+	COMPV_INLINE float getScaleFactorFirst() { return getScaleFactor(COMPV_PYRAMOD_LEVEL_FIRST); }
+	float getScaleFactor(int32_t level = COMPV_PYRAMOD_LEVEL_FIRST/*for level 0 it's always equal to 1.f*/);
 	COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& inImage);
 	COMPV_ERROR_CODE getImage(int32_t level, CompVObjWrapper<CompVImage *>* image);
 
@@ -43,9 +47,11 @@ public:
 
 private:
 	float m_fScaleFactor;
+	float m_fScaleFactorsSum; // Sum of all scale factors (all levels added)
 	int32_t m_nLevels;
 	COMPV_SCALE_TYPE m_eScaleType;
 	CompVObjWrapper<CompVImage *>* m_pImages;
+	float *m_pScaleFactors;
 	bool m_bValid;
 };
 

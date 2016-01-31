@@ -36,7 +36,7 @@ CompVThreadDispatcher::CompVThreadDispatcher(int32_t numThreads)
         COMPV_DEBUG_ERROR("Failed to allocate the asynctasks");
         return;
     }
-    vcomp_core_id_t coreId = CompVCpu::getValidCoreId(1);
+    compv_core_id_t coreId = CompVCpu::getValidCoreId(1);
     for (int32_t i = 0; i < m_nTasksCount; ++i) {
         if (COMPV_ERROR_CODE_IS_NOK(CompVAsyncTask::newObj(&m_pTasks[i]))) {
             COMPV_DEBUG_ERROR("Failed to allocate the asynctask at index %d", i);
@@ -83,7 +83,14 @@ COMPV_ERROR_CODE CompVThreadDispatcher::wait(uint32_t threadIdx, compv_asynctoke
     return COMPV_ERROR_CODE_S_OK;
 }
 
-uint32_t CompVThreadDispatcher::getThreadIdxByCoreId(vcomp_core_id_t coreId)
+COMPV_ERROR_CODE CompVThreadDispatcher::getIdleTime(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t* timeIdle)
+{
+    CompVObjWrapper<CompVAsyncTask *> asyncTask = m_pTasks[threadIdx % m_nTasksCount];
+    COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    return asyncTask->tokenGetIdleTime(tokenId, timeIdle);
+}
+
+uint32_t CompVThreadDispatcher::getThreadIdxByCoreId(compv_core_id_t coreId)
 {
     for (int32_t i = 0; i < m_nTasksCount; ++i) {
         if (m_pTasks[i]->getCoreId() == coreId) {
@@ -127,15 +134,15 @@ bool CompVThreadDispatcher::isMotherOfTheCurrentThread()
 
 int32_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(int32_t xcount, int32_t ycount, int32_t minSamplesPerThread)
 {
-	int32_t divCount = 1;
-	int32_t maxThreads = getThreadsCount();
-	for (int32_t div = 2; div <= maxThreads; ++div) {
-		divCount = div;
-		if ((xcount * (ycount / divCount)) <= minSamplesPerThread) { // we started with the smallest div, which mean largest number of pixs and break the loop when we're below the threshold
-			break;
-		}
-	}
-	return divCount;
+    int32_t divCount = 1;
+    int32_t maxThreads = getThreadsCount();
+    for (int32_t div = 2; div <= maxThreads; ++div) {
+        divCount = div;
+        if ((xcount * (ycount / divCount)) <= minSamplesPerThread) { // we started with the smallest div, which mean largest number of pixs and break the loop when we're below the threshold
+            break;
+        }
+    }
+    return divCount;
 }
 
 COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVObjWrapper<CompVThreadDispatcher*>* disp, int32_t numThreads /*= -1*/)

@@ -75,7 +75,7 @@ COMPV_ERROR_CODE CompVAsyncTask::start()
     return err_;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::setAffinity(vcomp_core_id_t coreId)
+COMPV_ERROR_CODE CompVAsyncTask::setAffinity(compv_core_id_t coreId)
 {
     if (m_Thread) {
         COMPV_CHECK_CODE_RETURN(m_Thread->setAffinity(coreId));
@@ -167,6 +167,16 @@ COMPV_ERROR_CODE CompVAsyncTask::tokenSetParams2(compv_asynctoken_id_t token_id,
     return err;
 }
 
+COMPV_ERROR_CODE CompVAsyncTask::tokenGetIdleTime(compv_asynctoken_id_t token_id, uint64_t* timeIdle)
+{
+    COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
+    COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(token_id) || !timeIdle, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+    compv_asynctoken_xt* pToken = &tokens[token_id];
+    *timeIdle = (pToken->uTimeSchedStop - pToken->uTimeSchedStart) - (pToken->uTimeFuncExecStop - pToken->uTimeFuncExecStart);
+    return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVAsyncTask::execute(compv_asynctoken_id_t i_token, compv_asynctoken_f f_func, ...)
 {
     COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
@@ -198,6 +208,7 @@ COMPV_ERROR_CODE CompVAsyncTask::execute2(compv_asynctoken_id_t i_token, compv_a
     }
     pToken->fFunc = f_func;
     pToken->iParamsCount = 0;
+    pToken->uTimeSchedStart = CompVTime::getNowMills();
 
     uintptr_t pc_param_ptr;
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -213,6 +224,7 @@ COMPV_ERROR_CODE CompVAsyncTask::execute2(compv_asynctoken_id_t i_token, compv_a
     err = m_SemRun->increment();
     if (COMPV_ERROR_CODE_IS_NOK(err)) {
         pToken->bExecute = false;
+        pToken->uTimeSchedStop = pToken->uTimeSchedStart;
         COMPV_CHECK_CODE_RETURN(err); // must not exit the function: goto bail and call va_end(ap)
     }
 
@@ -239,6 +251,10 @@ COMPV_ERROR_CODE CompVAsyncTask::wait(compv_asynctoken_id_t token_id, uint64_t u
             COMPV_DEBUG_WARN("Async token with id = %d timedout", token_id);
             return COMPV_ERROR_CODE_E_TIMEDOUT;
         }
+        // uTimeSchedExecStop was computed in Run() bu we update it here to have more accurate value.
+        // Also note that if the execute function in Run() is too fast then, we'll not reach this code because
+        // "bExecuting" or/and "bExecute" will be equal to false
+        pToken->uTimeSchedStop = CompVTime::getNowMills();
     }
     return COMPV_ERROR_CODE_S_OK;
 }
@@ -301,10 +317,13 @@ void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
             pToken_ = &Self_->tokens[size_];
             if (pToken_->bExecute) {
                 pToken_->bExecuting = true; // must be set first because "wait()" uses both "b_execute" and "b_executing"
+                pToken_->uTimeFuncExecStart = CompVTime::getNowMills();
                 pToken_->fFunc(pToken_->params);
+                pToken_->uTimeFuncExecStop = CompVTime::getNowMills();
                 pToken_->bExecute = false;
                 pToken_->bExecuting = false;
                 COMPV_CHECK_CODE_BAIL(err_ = Self_->m_SemExec->increment());
+                pToken_->uTimeSchedStop = CompVTime::getNowMills(); // updated in wait() which means we are sure to have the highest value
             }
         }
     }

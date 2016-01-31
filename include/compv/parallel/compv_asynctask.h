@@ -60,13 +60,24 @@ typedef struct compv_asynctoken_xs {
 	compv_asynctoken_f fFunc;
 	compv_asynctoken_param_xt params[COMPV_ASYNCTASK_MAX_TOKEN_PARAMS_COUNT];
 	int32_t iParamsCount; // number of active params
+	uint64_t uTimeSchedStart;
+	uint64_t uTimeSchedStop;
+	uint64_t uTimeFuncExecStart;
+	uint64_t uTimeFuncExecStop;
+public:
+	compv_asynctoken_xs() {
+		bTaken = bExecuting = bExecute = false;
+		iParamsCount = 0;
+		fFunc = NULL;
+	}
 }
 compv_asynctoken_xt;
 
 #define COMPV_ASYNCTASK_PARAM_PTR_INVALID									((uintptr_t)-1)
 #define COMPV_ASYNCTASK_GET_PARAM(param_ptr, type)							*((type*)(param_ptr))
 #define COMPV_ASYNCTASK_GET_PARAM_ASIS(param_asis, type)					((type)((uintptr_t)((param_asis))))
-#define COMPV_ASYNCTASK_GET_PARAM_STATIC_ARRAY(param_ptr, type, w, h)		*((type (**)[w][h])(param_ptr))
+#define COMPV_ASYNCTASK_GET_PARAM_REFARRAY2(param_ptr, type, w, h)			*((type (**)[w][h])(param_ptr))
+#define COMPV_ASYNCTASK_GET_PARAM_REFARRAY1(param_ptr, type, w)				*((type (*)[w])(param_ptr))
 
 #define COMPV_ASYNCTASK_SET_PARAM(param_ptr)								(uintptr_t)(&(param_ptr))
 #define COMPV_ASYNCTASK_SET_PARAM_ASIS(param_asis)							((uintptr_t)((param_asis))) // Must not be more than a pointer size, we recommend using uintptr_t. If you set a param using this macro then you *must* use COMPV_ASYNCTASK_GET_PARAM_ASIS() to get it
@@ -83,19 +94,20 @@ public:
 	virtual COMPV_INLINE const char* getObjectId() { return "CompVAsyncTask"; };
 
 	COMPV_ERROR_CODE start();
-	COMPV_ERROR_CODE setAffinity(vcomp_core_id_t core_id);
+	COMPV_ERROR_CODE setAffinity(compv_core_id_t core_id);
 	COMPV_ERROR_CODE tokenTake(compv_asynctoken_id_t* pi_token);
 	COMPV_ERROR_CODE tokenRelease(compv_asynctoken_id_t* pi_token);
 	COMPV_ERROR_CODE tokenSetParam(compv_asynctoken_id_t token_id, int32_t param_index, uintptr_t param_ptr, size_t param_size);
 	COMPV_ERROR_CODE tokenSetParams(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, ...);
 	COMPV_ERROR_CODE tokenSetParams2(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, va_list* ap);
+	COMPV_ERROR_CODE tokenGetIdleTime(compv_asynctoken_id_t token_id, uint64_t* timeIdle);
 	COMPV_ERROR_CODE execute(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, ...);
 	COMPV_ERROR_CODE execute2(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, va_list* ap);
 	COMPV_ERROR_CODE wait(compv_asynctoken_id_t token_id, uint64_t u_timeout = 86400000/* 1 day */);
 	COMPV_ERROR_CODE stop();
 	COMPV_INLINE uint64_t getTockensCount() { return m_iTokensCount; }
 	COMPV_INLINE CompVObjWrapper<CompVThread* > getThread() { return m_Thread; }
-	COMPV_INLINE vcomp_core_id_t getCoreId() { return m_iCoreId; }
+	COMPV_INLINE compv_core_id_t getCoreId() { return m_iCoreId; }
 
 	static compv_asynctoken_id_t getUniqueTokenId();
 	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVAsyncTask*>* asyncTask);
@@ -108,12 +120,12 @@ private:
 	CompVObjWrapper<CompVThread* >m_Thread;
 	CompVObjWrapper<CompVSemaphore* >m_SemRun;
 	CompVObjWrapper<CompVSemaphore* >m_SemExec;
+	struct compv_asynctoken_xs tokens[COMPV_ASYNCTASK_MAX_TOKEN_COUNT];
 	COMPV_DISABLE_WARNINGS_END()
 
 	bool m_bStarted;
-	vcomp_core_id_t m_iCoreId;
-
-	struct compv_asynctoken_xs tokens[COMPV_ASYNCTASK_MAX_TOKEN_COUNT];
+	compv_core_id_t m_iCoreId;
+	
 	uint64_t m_iTokensCount; // number of active tokens
 };
 

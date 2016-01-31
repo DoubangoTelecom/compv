@@ -31,25 +31,25 @@ COMPV_NAMESPACE_BEGIN()
 
 #if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
 // SSSE3
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned00_SSSE3(const uint8_t* rgb, uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned01_SSSE3(const uint8_t* rgb, COMV_ALIGNED(SSE) uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned10_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgb, uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned11_SSSE3(COMV_ALIGNED(SSE) const uint8_t* rgb, COMV_ALIGNED(SSE) uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned00_SSSE3(const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned01_SSSE3(const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned10_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned11_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
 
 // AVX2
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned00_AVX2(const uint8_t* rgb, uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned01_AVX2(const uint8_t* rgb, COMV_ALIGNED(SSE) uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned10_AVX2(COMV_ALIGNED(SSE) const uint8_t* rgb, uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned11_AVX2(COMV_ALIGNED(SSE) const uint8_t* rgb, COMV_ALIGNED(SSE) uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned00_AVX2(const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned01_AVX2(const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned10_AVX2(COMPV_ALIGNED(SSE) const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned11_AVX2(COMPV_ALIGNED(SSE) const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
 
 #endif /* defined(COMPV_ARCH_X86) && defined(COMPV_ASM) */
 
-static void __rgbToRgbaKernel11_C(const uint8_t* rgb, uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride)
+static void __rgbToRgbaKernel11_C(const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride)
 {
-    vcomp_scalar_t padRGBA = (stride - width) << 2;
-    vcomp_scalar_t padRGB = (stride - width) * 3;
-    for (vcomp_scalar_t j = 0; j < height; ++j) {
-        for (vcomp_scalar_t i = 0; i < width; ++i) {
+    compv_scalar_t padRGBA = (stride - width) << 2;
+    compv_scalar_t padRGB = (stride - width) * 3;
+    for (compv_scalar_t j = 0; j < height; ++j) {
+        for (compv_scalar_t i = 0; i < width; ++i) {
             rgba[0] = rgb[0];
             rgba[1] = rgb[1];
             rgba[2] = rgb[2];
@@ -72,6 +72,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVObjWrapper<CompVIma
     int height = rgb->getHeight();
     int width = rgb->getWidth();
     int stride = rgb->getStride();
+    int threadsCount = 1;
     CompVObjWrapper<CompVThreadDispatcher* >&threadDip = CompVEngine::getThreadDispatcher();
 
     if (COMPV_IS_ALIGNED_SSE(stride)) {
@@ -106,15 +107,19 @@ COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVObjWrapper<CompVIma
         }
     }
 
-    // Process
+    // Compute number of threads
     if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-        int32_t divCount, rgbIdx = 0, rgbaIdx = 0, threadHeight, totalHeight = 0;
         // RGB<->RGBA is a memcpy operation and not CPU demanding -> use more samples per thread
         static const int minSamplesPerThread = COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD << 2;
-		divCount = threadDip->guessNumThreadsDividingAcrossY(stride, height, minSamplesPerThread);
+        threadsCount = threadDip->guessNumThreadsDividingAcrossY(stride, height, minSamplesPerThread);
+    }
+
+    // Process
+    if (threadsCount > 1) {
+        int32_t rgbIdx = 0, rgbaIdx = 0, threadHeight, totalHeight = 0;
         uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
-		for (int32_t i = 0; i < divCount; ++i) {
-            threadHeight = ((height - totalHeight) / (divCount - i)) & -2; // the & -2 is to make sure we'll deal with even heights
+        for (int32_t i = 0; i < threadsCount; ++i) {
+            threadHeight = ((height - totalHeight) / (threadsCount - i)) & -2; // the & -2 is to make sure we'll deal with odd heights
             COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0, ImageConvKernelxx_AsynExec,
                                     COMPV_ASYNCTASK_SET_PARAM_ASISS(COMPV_IMAGECONV_FUNCID_RGBToRGBA, toRGBA, (rgbPtr + rgbIdx), (rgbaPtr + rgbaIdx), threadHeight, width, stride),
                                     COMPV_ASYNCTASK_SET_PARAM_NULL()));
@@ -122,7 +127,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVObjWrapper<CompVIma
             rgbaIdx += (threadHeight * stride) << 2;
             totalHeight += threadHeight;
         }
-		for (int32_t i = 0; i < divCount; ++i) {
+        for (int32_t i = 0; i < threadsCount; ++i) {
             COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX_IMAGE_CONVERT0));
         }
     }

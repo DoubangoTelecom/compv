@@ -58,17 +58,18 @@ static const uint64_t kCpuFlagERMS = COMPV_CPU_FLAG_BIT(25);
 static const uint64_t kCpuFlagXOP = COMPV_CPU_FLAG_BIT(26);
 static const uint64_t kCpuFlagLZCNT = COMPV_CPU_FLAG_BIT(27); /* Should be present on AMD only */
 static const uint64_t kCpuFlagPOPCNT = COMPV_CPU_FLAG_BIT(28);
-static const uint64_t kCpuFlagAES = COMPV_CPU_FLAG_BIT(29);
-static const uint64_t kCpuFlagRDRAND = COMPV_CPU_FLAG_BIT(30);
-static const uint64_t kCpuFlagAVX512_F = COMPV_CPU_FLAG_BIT(31);
-static const uint64_t kCpuFlagAVX512_CD = COMPV_CPU_FLAG_BIT(32);
-static const uint64_t kCpuFlagAVX512_PF = COMPV_CPU_FLAG_BIT(33);
-static const uint64_t kCpuFlagAVX512_ER = COMPV_CPU_FLAG_BIT(34);
-static const uint64_t kCpuFlagAVX512_VL = COMPV_CPU_FLAG_BIT(35);
-static const uint64_t kCpuFlagAVX512_BW = COMPV_CPU_FLAG_BIT(36);
-static const uint64_t kCpuFlagAVX512_DQ = COMPV_CPU_FLAG_BIT(37);
-static const uint64_t kCpuFlagAVX512_IFMA = COMPV_CPU_FLAG_BIT(38);
-static const uint64_t kCpuFlagAVX512_VBMI = COMPV_CPU_FLAG_BIT(39);
+static const uint64_t kCpuFlagCMOV = COMPV_CPU_FLAG_BIT(29); // Conditional move and FCMOV instructions
+static const uint64_t kCpuFlagAES = COMPV_CPU_FLAG_BIT(30);
+static const uint64_t kCpuFlagRDRAND = COMPV_CPU_FLAG_BIT(31);
+static const uint64_t kCpuFlagAVX512_F = COMPV_CPU_FLAG_BIT(32);
+static const uint64_t kCpuFlagAVX512_CD = COMPV_CPU_FLAG_BIT(33);
+static const uint64_t kCpuFlagAVX512_PF = COMPV_CPU_FLAG_BIT(34);
+static const uint64_t kCpuFlagAVX512_ER = COMPV_CPU_FLAG_BIT(35);
+static const uint64_t kCpuFlagAVX512_VL = COMPV_CPU_FLAG_BIT(36);
+static const uint64_t kCpuFlagAVX512_BW = COMPV_CPU_FLAG_BIT(37);
+static const uint64_t kCpuFlagAVX512_DQ = COMPV_CPU_FLAG_BIT(38);
+static const uint64_t kCpuFlagAVX512_IFMA = COMPV_CPU_FLAG_BIT(39);
+static const uint64_t kCpuFlagAVX512_VBMI = COMPV_CPU_FLAG_BIT(49);
 
 // These flags are only valid on MIPS processors.
 static const uint64_t kCpuFlagMIPS = COMPV_CPU_FLAG_BIT(50);
@@ -86,7 +87,7 @@ public:
 	virtual ~CompVCpu();
 	static COMPV_ERROR_CODE init();
 	static int32_t getCoresCount();
-	static vcomp_core_id_t getValidCoreId(vcomp_core_id_t coreId);
+	static compv_core_id_t getValidCoreId(compv_core_id_t coreId);
 	static uint64_t getCyclesCountGlobal();
 	static int32_t getCacheLineSize();
 	static uint64_t getTimeProcess();

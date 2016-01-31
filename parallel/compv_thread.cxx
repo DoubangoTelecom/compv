@@ -126,7 +126,7 @@ compv_thread_id_t CompVThread::getId()
 #endif
 }
 
-COMPV_ERROR_CODE CompVThread::setAffinity(vcomp_core_id_t coreId)
+COMPV_ERROR_CODE CompVThread::setAffinity(compv_core_id_t coreId)
 {
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
@@ -238,7 +238,7 @@ bool CompVThread::isEquals(compv_thread_id_t id1, compv_thread_id_t id2)
 #endif
 }
 
-vcomp_core_id_t CompVThread::getCoreId()
+compv_core_id_t CompVThread::getCoreId()
 {
 #if _WIN32_WINNT >= 0x0600
     return (int32_t)GetCurrentProcessorNumber();
@@ -254,7 +254,7 @@ vcomp_core_id_t CompVThread::getCoreId()
         COMPV_DEBUG_ERROR_EX(kModuleNameThread, "sched_getcpu returned %d", cpuId);
         return 0;
     }
-    return (vcomp_core_id_t)cpuId;
+    return (compv_core_id_t)cpuId;
 #endif
 }
 

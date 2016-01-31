@@ -40,14 +40,16 @@ public:
 	
 	// override CompVSettable::set
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
-	// override CompVFeatureDete::set
+	// override CompVFeatureDete::process
 	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, std::vector<CompVInterestPoint >& interestPoints);
 
 	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* fast);
 
 private:
 	int32_t m_iThreshold;
-	int32_t m_iN;
+	int32_t m_iType;
+	int32_t m_iNumContinuous;
+	int32_t m_iMaxFeatures;
 	bool m_bNonMaximaSupp;
 };
 

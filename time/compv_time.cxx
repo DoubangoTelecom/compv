@@ -180,11 +180,11 @@ uint64_t CompVTime::getNowMills()
         return timeGetTime();
 #	endif
     }
-#elif HAVE_CLOCK_GETTIME || _POSIX_TIMERS > 0
+#elif defined(HAVE_CLOCK_GETTIME) || _POSIX_TIMERS > 0 || COMPV_OS_ANDROID
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (((uint64_t)ts.tv_sec)*(uint64_t)1000) + (((uint64_t)ts.tv_nsec) / (uint64_t)1000000);
-#elif defined(COMPV_OS_APPLE)
+#elif COMPV_OS_APPLE
     static mach_timebase_info_data_t __apple_timebase_info = { 0, 0 };
     if (__apple_timebase_info.denom == 0) {
         (void)mach_timebase_info(&__apple_timebase_info);

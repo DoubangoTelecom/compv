@@ -41,7 +41,7 @@ public:
 	
 	// override CompVSettable::set
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
-	// override CompVFeatureDete::set
+	// override CompVFeatureDete::process
 	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, std::vector<CompVInterestPoint >& interestPoints);
 
 	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* orb);
@@ -49,6 +49,7 @@ public:
 private:
 	CompVObjWrapper<CompVFeatureDete* > m_internalDetector;
 	CompVObjWrapper<CompVImageScalePyramid * > m_pyramid;
+	int32_t m_nMaxFeatures;
 };
 
 COMPV_NAMESPACE_END()

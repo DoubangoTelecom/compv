@@ -18,5 +18,8 @@
     <ClCompile Include="math.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="clip.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

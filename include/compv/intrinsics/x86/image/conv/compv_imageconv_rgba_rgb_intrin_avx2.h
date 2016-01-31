@@ -32,8 +32,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void rgbToRgbaKernel31_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* rgb, COMV_ALIGNED(AVX2) uint8_t* rgba, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
-void bgrToBgraKernel31_Intrin_Aligned_AVX2(COMV_ALIGNED(AVX2) const uint8_t* bgr, COMV_ALIGNED(AVX2) uint8_t* bgra, vcomp_scalar_t height, vcomp_scalar_t width, vcomp_scalar_t stride);
+void rgbToRgbaKernel31_Intrin_Aligned_AVX2(COMPV_ALIGNED(AVX2) const uint8_t* rgb, COMPV_ALIGNED(AVX2) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+void bgrToBgraKernel31_Intrin_Aligned_AVX2(COMPV_ALIGNED(AVX2) const uint8_t* bgr, COMPV_ALIGNED(AVX2) uint8_t* bgra, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
 
 COMPV_NAMESPACE_END()
 
