@@ -20,39 +20,39 @@ int _tmain(int argc, _TCHAR* argv[])
 int main()
 #endif
 {
-	CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
-	COMPV_CHECK_CODE_ASSERT(CompVEngine::init(numThreads));
-	COMPV_CHECK_CODE_ASSERT(CompVEngine::setTestingModeEnabled(testingMode));
-	COMPV_CHECK_CODE_ASSERT(CompVCpu::setAsmEnabled(enableAsm));
-	COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
-	COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagNone));
+    CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
+    COMPV_CHECK_CODE_ASSERT(CompVEngine::init(numThreads));
+    COMPV_CHECK_CODE_ASSERT(CompVEngine::setTestingModeEnabled(testingMode));
+    COMPV_CHECK_CODE_ASSERT(CompVCpu::setAsmEnabled(enableAsm));
+    COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
+    COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagNone));
 
 #if TEST_MAX
-	extern bool TestMax();
-	COMPV_ASSERT(TestMax());
+    extern bool TestMax();
+    COMPV_ASSERT(TestMax());
 #endif
 #if TEST_MIN
-	extern bool TestMin();
-	COMPV_ASSERT(TestMin());
+    extern bool TestMin();
+    COMPV_ASSERT(TestMin());
 #endif
 #if TEST_CLIP3
-	extern bool TestClip3();
-	COMPV_ASSERT(TestClip3());
+    extern bool TestClip3();
+    COMPV_ASSERT(TestClip3());
 #endif
 #if TEST_CLIP2
-	extern bool TestClip2();
-	COMPV_ASSERT(TestClip2());
+    extern bool TestClip2();
+    COMPV_ASSERT(TestClip2());
 #endif
 
-	// deInit the engine
-	COMPV_CHECK_CODE_ASSERT(compv::CompVEngine::deInit());
+    // deInit the engine
+    COMPV_CHECK_CODE_ASSERT(compv::CompVEngine::deInit());
 
-	// Make sure we freed all allocated memory
-	COMPV_ASSERT(compv::CompVMem::isEmpty());
-	// Make sure we freed all allocated objects
-	COMPV_ASSERT(compv::CompVObj::isEmpty());
+    // Make sure we freed all allocated memory
+    COMPV_ASSERT(compv::CompVMem::isEmpty());
+    // Make sure we freed all allocated objects
+    COMPV_ASSERT(compv::CompVObj::isEmpty());
 
-	getchar();
-	return 0;
+    getchar();
+    return 0;
 }
 

@@ -123,8 +123,8 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     COMPV_DEBUG_INFO("Code built with option /arch:AVX");
 #endif
 
-	/* Math functions: Must be after CPU initialization */
-	COMPV_CHECK_CODE_BAIL(err_ = CompVMathUtils::init());
+    /* Math functions: Must be after CPU initialization */
+    COMPV_CHECK_CODE_BAIL(err_ = CompVMathUtils::init());
 
 
     /* Memory alignment */

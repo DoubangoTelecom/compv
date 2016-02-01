@@ -180,7 +180,7 @@ CompVCpu::~CompVCpu()
 COMPV_ERROR_CODE CompVCpu::init()
 {
 #if !defined(__CLR_VER) && defined(COMPV_ARCH_X86)
-	// https://en.wikipedia.org/wiki/CPUID
+    // https://en.wikipedia.org/wiki/CPUID
     CompVCpu::s_uFlags = kCpuFlagX86;
     char vname[13] = { '\0' };
     uint32_t cpu_info[4] = { 0, 0, 0, 0 };
@@ -205,55 +205,55 @@ COMPV_ERROR_CODE CompVCpu::init()
     if (info0 >= 0x00000001) {
         CompVX86CpuId(0x00000001, 0, cpu_info); // EAX = 1h
         CompVCpu::s_uFlags |=
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EDX], 23) ? kCpuFlagMMX : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_EDX], 23) ? kCpuFlagMMX : 0) |
 
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EDX], 25) ? kCpuFlagSSE : 0) |
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EDX], 26) ? kCpuFlagSSE2 : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_EDX], 25) ? kCpuFlagSSE : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_EDX], 26) ? kCpuFlagSSE2 : 0) |
 
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EDX], 15) ? kCpuFlagCMOV : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_EDX], 15) ? kCpuFlagCMOV : 0) |
 
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 0) ? kCpuFlagSSE3 : 0) |
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 9) ? kCpuFlagSSSE3 : 0) |
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 19) ? kCpuFlagSSE41 : 0) |
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 20) ? kCpuFlagSSE42 : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 0) ? kCpuFlagSSE3 : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 9) ? kCpuFlagSSSE3 : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 19) ? kCpuFlagSSE41 : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 20) ? kCpuFlagSSE42 : 0) |
 
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 23) ? kCpuFlagPOPCNT : 0) |		
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 23) ? kCpuFlagPOPCNT : 0) |
 
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 25) ? kCpuFlagAES : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 25) ? kCpuFlagAES : 0) |
 
-			((COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 28) && TestOsSaveYmm()) ? kCpuFlagAVX : 0) |
+            ((COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 28) && TestOsSaveYmm()) ? kCpuFlagAVX : 0) |
 
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 12) ? kCpuFlagFMA3 : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 12) ? kCpuFlagFMA3 : 0) |
 
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 30) ? kCpuFlagRDRAND : 0);
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 30) ? kCpuFlagRDRAND : 0);
     }
     if (info0 >= 0x00000007) {
         CompVX86CpuId(0x00000007, 0, cpu_info); // EAX = 7h
 
         CompVCpu::s_uFlags |=
             ((cpu_info[1] & 0x00000200) ? kCpuFlagERMS : 0) |
-			((COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 5) && TestOsSaveYmm()) ? kCpuFlagAVX2 : 0) |
+            ((COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 5) && TestOsSaveYmm()) ? kCpuFlagAVX2 : 0) |
 
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 16) ? kCpuFlagAVX512_F : 0) |
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 28) ? kCpuFlagAVX512_CD : 0) |
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 26) ? kCpuFlagAVX512_PF : 0) |
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 27) ? kCpuFlagAVX512_ER : 0) |
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 31) ? kCpuFlagAVX512_VL : 0) |
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 30) ? kCpuFlagAVX512_BW : 0) |
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 17) ? kCpuFlagAVX512_DQ : 0) |
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 21) ? kCpuFlagAVX512_IFMA : 0) |
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 1) ? kCpuFlagAVX512_VBMI : 0);
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 16) ? kCpuFlagAVX512_F : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 28) ? kCpuFlagAVX512_CD : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 26) ? kCpuFlagAVX512_PF : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 27) ? kCpuFlagAVX512_ER : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 31) ? kCpuFlagAVX512_VL : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 30) ? kCpuFlagAVX512_BW : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 17) ? kCpuFlagAVX512_DQ : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_EBX], 21) ? kCpuFlagAVX512_IFMA : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 1) ? kCpuFlagAVX512_VBMI : 0);
 
     }
     if (info0 >= 0x80000001) {
         CompVX86CpuId(0x80000001, 0, cpu_info); // EAX = 80000001h
 
         CompVCpu::s_uFlags |=
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_EDX], 29) ? kCpuFlagX64 : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_EDX], 29) ? kCpuFlagX64 : 0) |
 
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 6) ? kCpuFlagSSE4a : 0) |
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 16) ? kCpuFlagFMA4 : 0) |
-			(COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 11) ? kCpuFlagXOP : 0);
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 6) ? kCpuFlagSSE4a : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 16) ? kCpuFlagFMA4 : 0) |
+            (COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 11) ? kCpuFlagXOP : 0);
     }
 
 #elif defined(COMPV_ARCH_ARM) || defined(COMPV_ARCH_ARM64)
@@ -312,7 +312,7 @@ const char* CompVCpu::getFlagsAsString(uint64_t uFlags)
         { kCpuFlagXOP, "xop" },
         { kCpuFlagLZCNT, "lzcnt" },
         { kCpuFlagPOPCNT, "popcnt" },
-		{ kCpuFlagCMOV, "cmov" },
+        { kCpuFlagCMOV, "cmov" },
         { kCpuFlagAES, "aes" },
         { kCpuFlagRDRAND, "rdrand" },
         { kCpuFlagAVX512_F, "avx512_f" },

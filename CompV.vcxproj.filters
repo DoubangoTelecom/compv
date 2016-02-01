@@ -127,6 +127,12 @@
     <Filter Include="Header Files\intrinsics\x86\features\fast">
       <UniqueIdentifier>{fc22bb72-6430-4588-bd8b-e022e6bd094a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Assembler Files\x86\features">
+      <UniqueIdentifier>{5fe99887-7e80-4aea-8cec-cb3c1669c70b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assembler Files\x86\features\fast">
+      <UniqueIdentifier>{151be41c-4902-4617-aeff-5c76e166fc3b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
@@ -430,5 +436,10 @@
     <YASM Include="assembler\x86\compv_mathutils_x86.S">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assembler\x86\features\fast\compv_feature_fast_dete_x86_sse.S">
+      <Filter>Assembler Files\x86\features\fast</Filter>
+    </None>
   </ItemGroup>
 </Project>

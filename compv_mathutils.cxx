@@ -45,42 +45,42 @@ compv_scalar_t(*CompVMathUtils::clip2Func)(compv_scalar_t max, compv_scalar_t va
 
 COMPV_ERROR_CODE CompVMathUtils::init()
 {
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
-	if (!CompVMathUtils::s_Initialized) {
-		if (CompVCpu::isSupported(kCpuFlagCMOV)) {
-			COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtils::maxValFunc = compv_mathutils_maxval_asm_x86_cmov);
-			COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtils::minValFunc = compv_mathutils_minval_asm_x86_cmov);
-			COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtils::clip3Func = compv_mathutils_clip3_asm_x86_cmov);
-			COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtils::clip2Func = compv_mathutils_clip2_asm_x86_cmov);
-		}
-		CompVMathUtils::s_Initialized = true;
-	}
+    if (!CompVMathUtils::s_Initialized) {
+        if (CompVCpu::isSupported(kCpuFlagCMOV)) {
+            COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtils::maxValFunc = compv_mathutils_maxval_asm_x86_cmov);
+            COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtils::minValFunc = compv_mathutils_minval_asm_x86_cmov);
+            COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtils::clip3Func = compv_mathutils_clip3_asm_x86_cmov);
+            COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtils::clip2Func = compv_mathutils_clip2_asm_x86_cmov);
+        }
+        CompVMathUtils::s_Initialized = true;
+    }
 
-	return err_;
+    return err_;
 }
 
 static compv_scalar_t maxVal_C(compv_scalar_t x, compv_scalar_t y)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	return std::max(x, y);
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+    return std::max(x, y);
 }
 
 static compv_scalar_t minVal_C(compv_scalar_t x, compv_scalar_t y)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	return std::min(x, y);
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+    return std::min(x, y);
 }
 
 compv_scalar_t clip3_C(compv_scalar_t min, compv_scalar_t max, compv_scalar_t val)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	return CompVMathUtils::maxVal(min, CompVMathUtils::minVal(val, max));
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+    return CompVMathUtils::maxVal(min, CompVMathUtils::minVal(val, max));
 }
 
 compv_scalar_t clip2_C(compv_scalar_t max, compv_scalar_t val)
 {
-	return clip3_C(0, max, val);
+    return clip3_C(0, max, val);
 }
 
 COMPV_NAMESPACE_END()

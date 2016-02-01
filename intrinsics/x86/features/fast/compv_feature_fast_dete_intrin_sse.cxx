@@ -132,10 +132,10 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
     _mm_store_si128(&xmm1, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[8]]));
     _mm_store_si128(&xmmDdarkers16x16[0][0], _mm_subs_epu8(xmmDarker, xmm0));
     _mm_store_si128(&xmmDdarkers16x16[8][0], _mm_subs_epu8(xmmDarker, xmm1));
-    d0 = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[0][0], xmmZeros));
-    d1 = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[8][0], xmmZeros));
     _mm_store_si128(&xmmDbrighters16x16[0][0], _mm_subs_epu8(xmm0, xmmBrighter));
     _mm_store_si128(&xmmDbrighters16x16[8][0], _mm_subs_epu8(xmm1, xmmBrighter));
+	d0 = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[0][0], xmmZeros));
+	d1 = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[8][0], xmmZeros));
     b0 = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[0][0], xmmZeros));
     b1 = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[8][0], xmmZeros));
 
@@ -171,48 +171,55 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
         }
         /*  Speed-Test-2 */
         if ((sum >= 2 && (N != 12 || sum >= 3))) {
-            // 1 and 2
-            _mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[1]]));
-            _mm_store_si128(&xmm1, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[2]]));
+			__m128i xmm2, xmm3;
+			// load 1 and 2 in xmm0 and xmm1
+			_mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[1]]));
+			_mm_store_si128(&xmm1, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[2]]));
+			// load 3 and 5 in xmm2 and xmm3
+			_mm_store_si128(&xmm2, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[3]]));
+			_mm_store_si128(&xmm3, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[5]]));
+            /* 1 and 2 */
             _mm_store_si128(&xmmDdarkers16x16[1][0], _mm_subs_epu8(xmmDarker, xmm0));
             _mm_store_si128(&xmmDdarkers16x16[2][0], _mm_subs_epu8(xmmDarker, xmm1));
             _mm_store_si128(&xmmDbrighters16x16[1][0], _mm_subs_epu8(xmm0, xmmBrighter));
             _mm_store_si128(&xmmDbrighters16x16[2][0], _mm_subs_epu8(xmm1, xmmBrighter));
-            // 3 and 5
-            _mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[3]]));
-            _mm_store_si128(&xmm1, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[5]]));
-            _mm_store_si128(&xmmDdarkers16x16[3][0], _mm_subs_epu8(xmmDarker, xmm0));
-            _mm_store_si128(&xmmDdarkers16x16[5][0], _mm_subs_epu8(xmmDarker, xmm1));
-            _mm_store_si128(&xmmDbrighters16x16[3][0], _mm_subs_epu8(xmm0, xmmBrighter));
-            _mm_store_si128(&xmmDbrighters16x16[5][0], _mm_subs_epu8(xmm1, xmmBrighter));
-            // 6 and 7
-            _mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[6]]));
-            _mm_store_si128(&xmm1, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[7]]));
-            _mm_store_si128(&xmmDdarkers16x16[6][0], _mm_subs_epu8(xmmDarker, xmm0));
+			// load 6 and 7 in xmm0 and xmm1
+			_mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[6]]));
+			_mm_store_si128(&xmm1, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[7]]));
+            /* 3 and 5 */
+			_mm_store_si128(&xmmDdarkers16x16[3][0], _mm_subs_epu8(xmmDarker, xmm2));
+			_mm_store_si128(&xmmDdarkers16x16[5][0], _mm_subs_epu8(xmmDarker, xmm3));
+			_mm_store_si128(&xmmDbrighters16x16[3][0], _mm_subs_epu8(xmm2, xmmBrighter));
+			_mm_store_si128(&xmmDbrighters16x16[5][0], _mm_subs_epu8(xmm3, xmmBrighter));
+			// load 9 and 10 in xmm2 and xmm3
+			_mm_store_si128(&xmm2, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[9]]));
+			_mm_store_si128(&xmm3, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[10]]));
+            /* 6 and 7 */
+			_mm_store_si128(&xmmDdarkers16x16[6][0], _mm_subs_epu8(xmmDarker, xmm0));
             _mm_store_si128(&xmmDdarkers16x16[7][0], _mm_subs_epu8(xmmDarker, xmm1));
             _mm_store_si128(&xmmDbrighters16x16[6][0], _mm_subs_epu8(xmm0, xmmBrighter));
             _mm_store_si128(&xmmDbrighters16x16[7][0], _mm_subs_epu8(xmm1, xmmBrighter));
-            // 9 and 10
-            _mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[9]]));
-            _mm_store_si128(&xmm1, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[10]]));
-            _mm_store_si128(&xmmDdarkers16x16[9][0], _mm_subs_epu8(xmmDarker, xmm0));
-            _mm_store_si128(&xmmDdarkers16x16[10][0], _mm_subs_epu8(xmmDarker, xmm1));
-            _mm_store_si128(&xmmDbrighters16x16[9][0], _mm_subs_epu8(xmm0, xmmBrighter));
-            _mm_store_si128(&xmmDbrighters16x16[10][0], _mm_subs_epu8(xmm1, xmmBrighter));
-            //  11 and 13
-            _mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[11]]));
-            _mm_store_si128(&xmm1, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[13]]));
+			// load 11 and 13 in xmm0 and xmm1
+			_mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[11]]));
+			_mm_store_si128(&xmm1, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[13]]));
+            /* 9 and 10 */
+			_mm_store_si128(&xmmDdarkers16x16[9][0], _mm_subs_epu8(xmmDarker, xmm2));
+            _mm_store_si128(&xmmDdarkers16x16[10][0], _mm_subs_epu8(xmmDarker, xmm3));
+			_mm_store_si128(&xmmDbrighters16x16[9][0], _mm_subs_epu8(xmm2, xmmBrighter));
+			_mm_store_si128(&xmmDbrighters16x16[10][0], _mm_subs_epu8(xmm3, xmmBrighter));
+			// load 14 and 15 in xmm2 and xmm3
+			_mm_store_si128(&xmm2, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[14]]));
+			_mm_store_si128(&xmm3, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[15]]));
+            /*  11 and 13 */
             _mm_store_si128(&xmmDdarkers16x16[11][0], _mm_subs_epu8(xmmDarker, xmm0));
             _mm_store_si128(&xmmDdarkers16x16[13][0], _mm_subs_epu8(xmmDarker, xmm1));
             _mm_store_si128(&xmmDbrighters16x16[11][0], _mm_subs_epu8(xmm0, xmmBrighter));
             _mm_store_si128(&xmmDbrighters16x16[13][0], _mm_subs_epu8(xmm1, xmmBrighter));
-            // 14 and 15
-            _mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[14]]));
-            _mm_store_si128(&xmm1, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[15]]));
-            _mm_store_si128(&xmmDdarkers16x16[14][0], _mm_subs_epu8(xmmDarker, xmm0));
-            _mm_store_si128(&xmmDdarkers16x16[15][0], _mm_subs_epu8(xmmDarker, xmm1));
-            _mm_store_si128(&xmmDbrighters16x16[14][0], _mm_subs_epu8(xmm0, xmmBrighter));
-            _mm_store_si128(&xmmDbrighters16x16[15][0], _mm_subs_epu8(xmm1, xmmBrighter));
+            /* 14 and 15 */
+			_mm_store_si128(&xmmDdarkers16x16[14][0], _mm_subs_epu8(xmmDarker, xmm2));
+			_mm_store_si128(&xmmDdarkers16x16[15][0], _mm_subs_epu8(xmmDarker, xmm3));
+			_mm_store_si128(&xmmDbrighters16x16[14][0], _mm_subs_epu8(xmm2, xmmBrighter));
+			_mm_store_si128(&xmmDbrighters16x16[15][0], _mm_subs_epu8(xmm3, xmmBrighter));
 
             /* Transpose 16x16 ddarkers16x16 and dbrighters16x16 */
             COMPV_TRANSPOSE_I8_16X16_SSE2(
@@ -226,42 +233,75 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
                 xmmDbrighters16x16[4][0], xmmDbrighters16x16[5][0], xmmDbrighters16x16[6][0], xmmDbrighters16x16[7][0],
                 xmmDbrighters16x16[8][0], xmmDbrighters16x16[9][0], xmmDbrighters16x16[10][0], xmmDbrighters16x16[11][0],
                 xmmDbrighters16x16[12][0], xmmDbrighters16x16[13][0], xmmDbrighters16x16[14][0], xmmDbrighters16x16[15][0],
-                xmm0);
+                xmm1);
 
             /* Compute the flags */
-            pfdarkers16[0] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[0][0], xmmZeros));
-            pfdarkers16[1] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[1][0], xmmZeros));
-            pfdarkers16[2] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[2][0], xmmZeros));
-            pfdarkers16[3] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[3][0], xmmZeros));
-            pfdarkers16[4] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[4][0], xmmZeros));
-            pfdarkers16[5] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[5][0], xmmZeros));
-            pfdarkers16[6] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[6][0], xmmZeros));
-            pfdarkers16[7] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[7][0], xmmZeros));
-            pfdarkers16[8] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[8][0], xmmZeros));
-            pfdarkers16[9] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[9][0], xmmZeros));
-            pfdarkers16[10] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[10][0], xmmZeros));
-            pfdarkers16[11] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[11][0], xmmZeros));
-            pfdarkers16[12] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[12][0], xmmZeros));
-            pfdarkers16[13] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[13][0], xmmZeros));
-            pfdarkers16[14] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[14][0], xmmZeros));
-            pfdarkers16[15] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[15][0], xmmZeros));
+			_mm_store_si128(&xmm0, _mm_cmpeq_epi8(xmmDdarkers16x16[0][0], xmmZeros));
+			_mm_store_si128(&xmm1, _mm_cmpeq_epi8(xmmDdarkers16x16[1][0], xmmZeros));
+			_mm_store_si128(&xmm2, _mm_cmpeq_epi8(xmmDdarkers16x16[2][0], xmmZeros));
+			_mm_store_si128(&xmm3, _mm_cmpeq_epi8(xmmDdarkers16x16[3][0], xmmZeros));
+			pfdarkers16[0] = ~_mm_movemask_epi8(xmm0);
+			pfdarkers16[1] = ~_mm_movemask_epi8(xmm1);
+			pfdarkers16[2] = ~_mm_movemask_epi8(xmm2);
+			pfdarkers16[3] = ~_mm_movemask_epi8(xmm3);
+			_mm_store_si128(&xmm0, _mm_cmpeq_epi8(xmmDdarkers16x16[4][0], xmmZeros));
+			_mm_store_si128(&xmm1, _mm_cmpeq_epi8(xmmDdarkers16x16[5][0], xmmZeros));
+			_mm_store_si128(&xmm2, _mm_cmpeq_epi8(xmmDdarkers16x16[6][0], xmmZeros));
+			_mm_store_si128(&xmm3, _mm_cmpeq_epi8(xmmDdarkers16x16[7][0], xmmZeros));
+			pfdarkers16[4] = ~_mm_movemask_epi8(xmm0);
+			pfdarkers16[5] = ~_mm_movemask_epi8(xmm1);
+			pfdarkers16[6] = ~_mm_movemask_epi8(xmm2);
+			pfdarkers16[7] = ~_mm_movemask_epi8(xmm3);
+			_mm_store_si128(&xmm0, _mm_cmpeq_epi8(xmmDdarkers16x16[8][0], xmmZeros));
+			_mm_store_si128(&xmm1, _mm_cmpeq_epi8(xmmDdarkers16x16[9][0], xmmZeros));
+			_mm_store_si128(&xmm2, _mm_cmpeq_epi8(xmmDdarkers16x16[10][0], xmmZeros));
+			_mm_store_si128(&xmm3, _mm_cmpeq_epi8(xmmDdarkers16x16[11][0], xmmZeros));
+			pfdarkers16[8] = ~_mm_movemask_epi8(xmm0);
+			pfdarkers16[9] = ~_mm_movemask_epi8(xmm1);
+			pfdarkers16[10] = ~_mm_movemask_epi8(xmm2);
+			pfdarkers16[11] = ~_mm_movemask_epi8(xmm3);
+			_mm_store_si128(&xmm0, _mm_cmpeq_epi8(xmmDdarkers16x16[12][0], xmmZeros));
+			_mm_store_si128(&xmm1, _mm_cmpeq_epi8(xmmDdarkers16x16[13][0], xmmZeros));
+			_mm_store_si128(&xmm2, _mm_cmpeq_epi8(xmmDdarkers16x16[14][0], xmmZeros));
+			_mm_store_si128(&xmm3, _mm_cmpeq_epi8(xmmDdarkers16x16[15][0], xmmZeros));
+			pfdarkers16[12] = ~_mm_movemask_epi8(xmm0);
+			pfdarkers16[13] = ~_mm_movemask_epi8(xmm1);
+			pfdarkers16[14] = ~_mm_movemask_epi8(xmm2);
+			pfdarkers16[15] = ~_mm_movemask_epi8(xmm3);
 
-            pfbrighters16[0] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[0][0], xmmZeros));
-            pfbrighters16[1] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[1][0], xmmZeros));
-            pfbrighters16[2] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[2][0], xmmZeros));
-            pfbrighters16[3] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[3][0], xmmZeros));
-            pfbrighters16[4] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[4][0], xmmZeros));
-            pfbrighters16[5] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[5][0], xmmZeros));
-            pfbrighters16[6] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[6][0], xmmZeros));
-            pfbrighters16[7] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[7][0], xmmZeros));
-            pfbrighters16[8] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[8][0], xmmZeros));
-            pfbrighters16[9] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[9][0], xmmZeros));
-            pfbrighters16[10] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[10][0], xmmZeros));
-            pfbrighters16[11] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[11][0], xmmZeros));
-            pfbrighters16[12] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[12][0], xmmZeros));
-            pfbrighters16[13] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[13][0], xmmZeros));
-            pfbrighters16[14] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[14][0], xmmZeros));
-            pfbrighters16[15] = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[15][0], xmmZeros));
+
+			_mm_store_si128(&xmm0, _mm_cmpeq_epi8(xmmDbrighters16x16[0][0], xmmZeros));
+			_mm_store_si128(&xmm1, _mm_cmpeq_epi8(xmmDbrighters16x16[1][0], xmmZeros));
+			_mm_store_si128(&xmm2, _mm_cmpeq_epi8(xmmDbrighters16x16[2][0], xmmZeros));
+			_mm_store_si128(&xmm3, _mm_cmpeq_epi8(xmmDbrighters16x16[3][0], xmmZeros));
+			pfbrighters16[0] = ~_mm_movemask_epi8(xmm0);
+			pfbrighters16[1] = ~_mm_movemask_epi8(xmm1);
+			pfbrighters16[2] = ~_mm_movemask_epi8(xmm2);
+			pfbrighters16[3] = ~_mm_movemask_epi8(xmm3);
+			_mm_store_si128(&xmm0, _mm_cmpeq_epi8(xmmDbrighters16x16[4][0], xmmZeros));
+			_mm_store_si128(&xmm1, _mm_cmpeq_epi8(xmmDbrighters16x16[5][0], xmmZeros));
+			_mm_store_si128(&xmm2, _mm_cmpeq_epi8(xmmDbrighters16x16[6][0], xmmZeros));
+			_mm_store_si128(&xmm3, _mm_cmpeq_epi8(xmmDbrighters16x16[7][0], xmmZeros));
+			pfbrighters16[4] = ~_mm_movemask_epi8(xmm0);
+			pfbrighters16[5] = ~_mm_movemask_epi8(xmm1);
+			pfbrighters16[6] = ~_mm_movemask_epi8(xmm2);
+			pfbrighters16[7] = ~_mm_movemask_epi8(xmm3);
+			_mm_store_si128(&xmm0, _mm_cmpeq_epi8(xmmDbrighters16x16[8][0], xmmZeros));
+			_mm_store_si128(&xmm1, _mm_cmpeq_epi8(xmmDbrighters16x16[9][0], xmmZeros));
+			_mm_store_si128(&xmm2, _mm_cmpeq_epi8(xmmDbrighters16x16[10][0], xmmZeros));
+			_mm_store_si128(&xmm3, _mm_cmpeq_epi8(xmmDbrighters16x16[11][0], xmmZeros));
+			pfbrighters16[8] = ~_mm_movemask_epi8(xmm0);
+			pfbrighters16[9] = ~_mm_movemask_epi8(xmm1);
+			pfbrighters16[10] = ~_mm_movemask_epi8(xmm2);
+			pfbrighters16[11] = ~_mm_movemask_epi8(xmm3);
+			_mm_store_si128(&xmm0, _mm_cmpeq_epi8(xmmDbrighters16x16[12][0], xmmZeros));
+			_mm_store_si128(&xmm1, _mm_cmpeq_epi8(xmmDbrighters16x16[13][0], xmmZeros));
+			_mm_store_si128(&xmm2, _mm_cmpeq_epi8(xmmDbrighters16x16[14][0], xmmZeros));
+			_mm_store_si128(&xmm3, _mm_cmpeq_epi8(xmmDbrighters16x16[15][0], xmmZeros));
+			pfbrighters16[12] = ~_mm_movemask_epi8(xmm0);
+			pfbrighters16[13] = ~_mm_movemask_epi8(xmm1);
+			pfbrighters16[14] = ~_mm_movemask_epi8(xmm2);
+			pfbrighters16[15] = ~_mm_movemask_epi8(xmm3);
 
             /* Convert ddarkers16x16 and dbrighters16x16 from epi8 to epi16 */
 #define COMPV_DI16(i) \
@@ -300,6 +340,8 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 // TODO(dmi): add AVX
 compv_scalar_t FastStrengths_SSE2(COMPV_ALIGNED(SSE) const int16_t (&dbrighters)[16], COMPV_ALIGNED(SSE) const int16_t (&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t (&FastXFlags)[16])
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // FastStrengths_SSE41 is the best choice
+
     __m128i xmm0, xmm1, xmmFbrighters, xmmFdarkers, xmmZeros, xmmFastXFlagsLow, xmmFastXFlagsHigh;
     int r0 = 0, r1 = 0;
     unsigned i, j, k;
@@ -383,15 +425,9 @@ compv_scalar_t FastStrengths_SSE2(COMPV_ALIGNED(SSE) const int16_t (&dbrighters)
 // TODO(dmi): add AVX
 compv_scalar_t FastStrengths_SSE41(COMPV_ALIGNED(SSE) const int16_t(&dbrighters)[16], COMPV_ALIGNED(SSE) const int16_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16])
 {
-    __m128i xmm0, xmm1, xmmFbrighters, xmmFdarkers, xmmZeros, xmmFastXFlagsLow, xmmFastXFlagsHigh;
+    __m128i xmm0, xmm1, xmmFastXFlagsLow, xmmFastXFlagsHigh;
     int r0 = 0, r1 = 0;
     int strength, maxnbrighter = 0, maxndarker = 0;
-
-    _mm_store_si128(&xmmZeros, _mm_setzero_si128());
-
-    // brighters and darkers flags
-    _mm_store_si128(&xmmFbrighters, _mm_set1_epi16((short)fbrighters));
-    _mm_store_si128(&xmmFdarkers, _mm_set1_epi16((short)fdarkers));
 
     // FAST hard-coded flags
     _mm_store_si128(&xmmFastXFlagsLow, _mm_load_si128((__m128i*)(FastXFlags + 0)));
@@ -401,28 +437,37 @@ compv_scalar_t FastStrengths_SSE41(COMPV_ALIGNED(SSE) const int16_t(&dbrighters)
     // xmm1 is used as temp register and will be trashed
 #define COMPV_HORIZ_MIN(r, i, maxn) \
 	if (r & (1 << i)) { \
-		_mm_store_si128(&xmm1, _mm_shuffle_epi8(xmm0, _mm_load_si128((__m128i*)kFastArcs[i]))); \
+		_mm_store_si128(&xmm1, _mm_shuffle_epi8(xmm0, _mm_load_si128((__m128i*)kFastArcs[i]))); /* eliminate zeros and duplicate first matching non-zero */ \
 		lowMin = _mm_cvtsi128_si32(_mm_minpos_epu16(_mm_unpacklo_epi8(xmm1, xmmZeros))); \
 		highMin = _mm_cvtsi128_si32(_mm_minpos_epu16(_mm_unpackhi_epi8(xmm1, xmmZeros))); \
 		/* _mm_minpos_epu16 must set to zero the remaining bits but this doesn't look to happen or I missed something */ \
-		lowMin &= 0xFF; \
-		highMin &= 0xFF; \
+		lowMin &= 0xFFFF; \
+		highMin &= 0xFFFF; \
 		maxn = std::max(std::min(lowMin, highMin), (int)maxn); \
 	}
 
     // Brighters
     if (fbrighters) {
+		__m128i xmmFbrighters;
+
+		// brighters flags
+		_mm_store_si128(&xmmFbrighters, _mm_set1_epi16((short)fbrighters));
+
         _mm_store_si128(&xmm0, _mm_and_si128(xmmFbrighters, xmmFastXFlagsLow));
         _mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
         _mm_store_si128(&xmm1, _mm_and_si128(xmmFbrighters, xmmFastXFlagsHigh));
         _mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
-        // xmm0 and xmm1 contain zeros and 0xFF values, if packed and satured we'll end with all-zeros -> perform a ">> 1" which keeps highest bit
+        // clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
         _mm_store_si128(&xmm0, _mm_srli_epi16(xmm0, 1));
         _mm_store_si128(&xmm1, _mm_srli_epi16(xmm1, 1));
         r0 = _mm_movemask_epi8(_mm_packus_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
         if (r0) {
+			// most of the time we only have brighters or darkers not both, this is why the xmmZeros is duplicated
             int lowMin, highMin;
+			__m128i xmmZeros;
             const uint8_t(&kFastArcs)[16][16] = (N == 12 ? kFast12Arcs : kFast9Arcs);
+
+			_mm_store_si128(&xmmZeros, _mm_setzero_si128());
             // Load dbrighters and convert it from i16 to u8 and saturate
             _mm_store_si128(&xmm0, _mm_load_si128((__m128i*)(dbrighters + 0)));
             _mm_store_si128(&xmm1, _mm_load_si128((__m128i*)(dbrighters + 8)));
@@ -437,17 +482,25 @@ compv_scalar_t FastStrengths_SSE41(COMPV_ALIGNED(SSE) const int16_t(&dbrighters)
 
     // Darkers
     if (fdarkers) {
+		__m128i xmmFdarkers;
+
+		// darkers flags
+		_mm_store_si128(&xmmFdarkers, _mm_set1_epi16((short)fdarkers));
+
         _mm_store_si128(&xmm0, _mm_and_si128(xmmFdarkers, xmmFastXFlagsLow));
         _mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
         _mm_store_si128(&xmm1, _mm_and_si128(xmmFdarkers, xmmFastXFlagsHigh));
         _mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
-        // xmm0 and xmm1 contain zeros and 0xFF values, if packed and satured we'll end with all-zeros -> perform a ">> 1" which keeps highest bit
+		// clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
         _mm_store_si128(&xmm0, _mm_srli_epi16(xmm0, 1));
         _mm_store_si128(&xmm1, _mm_srli_epi16(xmm1, 1));
         r1 = _mm_movemask_epi8(_mm_packus_epi16(xmm0, xmm1)); // r1's popcnt is equal to N as FastXFlags contains values with popcnt==N
         if (r1) {
             int lowMin, highMin;
+			__m128i xmmZeros;
             const uint8_t(&kFastArcs)[16][16] = (N == 12 ? kFast12Arcs : kFast9Arcs);
+
+			_mm_store_si128(&xmmZeros, _mm_setzero_si128());
             // Load ddarkers and convert it from i16 to u8 and saturate
             _mm_store_si128(&xmm0, _mm_load_si128((__m128i*)(ddarkers + 0)));
             _mm_store_si128(&xmm1, _mm_load_si128((__m128i*)(ddarkers + 8)));

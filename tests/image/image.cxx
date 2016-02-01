@@ -3,7 +3,7 @@
 
 using namespace compv;
 
-#define numThreads			COMPV_NUM_THREADS_BEST
+#define numThreads			COMPV_NUM_THREADS_SINGLE
 
 #define enableIntrinsics	true
 #define enableAsm			true
@@ -26,23 +26,23 @@ int _tmain(int argc, _TCHAR* argv[])
     COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagNone));
 
 #if TEST_CONV
-	extern bool TestConv();
+    extern bool TestConv();
     COMPV_ASSERT(TestConv());
 #endif
 #if TEST_FAST
-	extern bool TestFAST();
+    extern bool TestFAST();
     COMPV_ASSERT(TestFAST());
 #endif
 #if TEST_ORB
-	extern bool TestORB();
+    extern bool TestORB();
     COMPV_ASSERT(TestORB());
 #endif
 #if TEST_SCALE
-	extern bool TestScale();
+    extern bool TestScale();
     COMPV_ASSERT(TestScale());
 #endif
 #if TEST_PYRAMID
-	extern bool TestPyramid();
+    extern bool TestPyramid();
     COMPV_ASSERT(TestPyramid());
 #endif
 

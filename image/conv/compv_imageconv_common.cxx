@@ -26,8 +26,8 @@ COMPV_ERROR_CODE ImageConvKernelxx_AsynExec(const struct compv_asynctoken_param_
 {
     const int funcId = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, int);
     switch (funcId) {
-    case COMPV_IMAGECONV_FUNCID_RGBAToI420_YUV: 
-	case COMPV_IMAGECONV_FUNCID_RGBToI420_YUV:{
+    case COMPV_IMAGECONV_FUNCID_RGBAToI420_YUV:
+    case COMPV_IMAGECONV_FUNCID_RGBToI420_YUV: {
         rgbaToI420Kernel_CompY CompY = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, rgbaToI420Kernel_CompY);
         rgbaToI420Kernel_CompUV CompUV = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, rgbaToI420Kernel_CompUV);
         const uint8_t* rgbaPtr = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, const uint8_t*);
