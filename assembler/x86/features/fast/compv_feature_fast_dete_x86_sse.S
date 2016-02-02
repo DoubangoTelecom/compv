@@ -18,6 +18,8 @@
 ; along with CompV.
 ;
 %include "../../compv_common_x86.S"
+%include "../../compv_bits_macros_x86.S"
+%include "../../compv_math_macros_x86.S"
 
 COMPV_YASM_DEFAULT_REL
 
@@ -511,13 +513,143 @@ sym(FastData16_Asm_X86_SSE2):
 	movdqa [rcx + 15*32+0*16], xmm3 ; xmmDbrighters16x16[15][0]
 
 	;;; Transpose 16x16 ddarkers16x16 and dbrighters16x16 ;;;
+	COMPV_TRANSPOSE_I8_16X16_REG_SSE2 rax+0*32+0*16, rax+1*32+0*16, rax+2*32+0*16, rax+3*32+0*16, rax+4*32+0*16, rax+5*32+0*16, rax+6*32+0*16, rax+7*32+0*16, rax+8*32+0*16, rax+9*32+0*16, rax+10*32+0*16, rax+11*32+0*16, rax+12*32+0*16, rax+13*32+0*16, rax+14*32+0*16, rax+15*32+0*16, xmm0, xmm1
+	COMPV_TRANSPOSE_I8_16X16_REG_SSE2 rcx+0*32+0*16, rcx+1*32+0*16, rcx+2*32+0*16, rcx+3*32+0*16, rcx+4*32+0*16, rcx+5*32+0*16, rcx+6*32+0*16, rcx+7*32+0*16, rcx+8*32+0*16, rcx+9*32+0*16, rcx+10*32+0*16, rcx+11*32+0*16, rcx+12*32+0*16, rcx+13*32+0*16, rcx+14*32+0*16, rcx+15*32+0*16, xmm0, xmm1
 
+	;;; Compute the flags ;;;
 
+	; pfdarkers16 ;
+	mov rsi, arg(4) ; compv_scalar_t(&pfdarkers16)[16]
+	mov rax, arg(6) ; xmmDdarkers16x16
+	; first 8 values for pfdarkers16
+	%assign i 0
+	%rep    8
+		pxor xmm %+ i, xmm %+ i
+		%assign i i+1
+	%endrep
+	%assign i 0
+	%rep    8
+		pcmpeqb xmm %+ i, [rax+i*32+0*16]
+		%assign i i+1
+	%endrep
+	%assign i 0
+	%rep    8
+		pmovmskb rcx, xmm %+ i
+		not rcx
+		and rcx, 0xFFFF
+		mov [rsi + i*COMPV_YASM_REG_SZ_BYTES], rcx
+		%assign i i+1
+	%endrep
 
+	; second 8 values for pfdarkers16
+	%assign i 0
+	%rep    8
+		pxor xmm %+ i, xmm %+ i
+		%assign i i+1
+	%endrep
+	%assign i 0
+	%rep    8
+		pcmpeqb xmm %+ i, [rax+(i+8)*32+0*16]
+		%assign i i+1
+	%endrep
+	%assign i 0
+	%rep    8
+		lea rdi, [rsi + (i+8)*COMPV_YASM_REG_SZ_BYTES]
+		pmovmskb rcx, xmm %+ i
+		not rcx
+		and rcx, 0xFFFF
+		mov [rdi], rcx
+		%assign i i+1
+	%endrep
 
-	; xmm0 was lost -> recompute
+	; pfbrighters16 ;
+	mov rsi, arg(5) ; compv_scalar_t(&pfbrighters16)[16]
+	mov rax, arg(7) ; xmmDbrighters16x16
+	; first 8 values for pfbrighters16
+	%assign i 0
+	%rep    8
+		pxor xmm %+ i, xmm %+ i
+		%assign i i+1
+	%endrep
+	%assign i 0
+	%rep    8
+		pcmpeqb xmm %+ i, [rax+i*32+0*16]
+		%assign i i+1
+	%endrep
+	%assign i 0
+	%rep    8
+		lea rdi, [rsi + i*COMPV_YASM_REG_SZ_BYTES]
+		pmovmskb rcx, xmm %+ i
+		not rcx
+		and rcx, 0xFFFF
+		mov [rdi], rcx
+		%assign i i+1
+	%endrep
+
+	; second 8 values for pfbrighters16
+	%assign i 0
+	%rep    8
+		pxor xmm %+ i, xmm %+ i
+		%assign i i+1
+	%endrep
+	%assign i 0
+	%rep    8
+		pcmpeqb xmm %+ i, [rax+(i+8)*32+0*16]
+		%assign i i+1
+	%endrep
+	%assign i 0
+	%rep    8
+		lea rdi, [rsi + (i+8)*COMPV_YASM_REG_SZ_BYTES]
+		pmovmskb rcx, xmm %+ i
+		not rcx
+		and rcx, 0xFFFF
+		mov [rdi], rcx
+		%assign i i+1
+	%endrep
+	
+	;;; Convert ddarkers16x16 and dbrighters16x16 from epi8 to epi16 ;;;
 	pxor xmm0, xmm0
+	mov rax, arg(6) ; xmmDdarkers16x16
+	mov rcx, arg(7) ; xmmDbrighters16x16
+	%assign i 0
+	%rep    16
+		movdqa xmm1, [rax + i*32+0*16]
+		movdqa xmm2, [rax + i*32+1*16]
+		movdqa xmm3, [rcx + i*32+0*16]
+		movdqa xmm4, [rcx + i*32+1*16]
+		punpcklbw xmm1, xmm0
+		punpckhbw xmm2, xmm0
+		punpcklbw xmm3, xmm0
+		punpckhbw xmm4, xmm0
+		movdqa [rax + i*32+0*16], xmm1
+		movdqa [rax + i*32+1*16], xmm2
+		movdqa [rcx + i*32+0*16], xmm3
+		movdqa [rcx + i*32+1*16], xmm4
+		%assign i i+1
+	%endrep
 
+
+	int 3
+	
+	;;; Build the return value ;;;;
+	xor rax, rax
+	mov rsi, arg(4) ; compv_scalar_t(&pfdarkers16)[16]
+	mov rdi, arg(5) ; compv_scalar_t(&pfbrighters16)[16]
+	mov rbx, arg(2) ; compv_scalar_t N
+	%assign i 0
+	%rep    16
+		popcnt rcx, [rsi + i*COMPV_YASM_REG_SZ_BYTES] ; FIXME: popcnt
+		popcnt rdx, [rdi + i*COMPV_YASM_REG_SZ_BYTES] ; FIXME: popcnt
+		cmp rcx, rbx
+		jl .SkipDarkers %+ i
+		or rax, 1<<i
+		.SkipDarkers %+ i
+		cmp rdx, rbx
+		jl .SkipBrighters %+ i
+		or rax, 1<<i
+		.SkipBrighters %+ i
+	%assign i i+1
+	%endrep
 
 	.EndOfTheFunction
 
