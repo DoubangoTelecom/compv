@@ -246,7 +246,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
     if (threadsCount > 1) {
         std::vector<std::vector<CompVInterestPoint>> points(threadsCount);
         int32_t rowStart = 0, threadHeight, totalHeight = 0;
-        uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+		uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
         for (int i = 0; i < threadsCount; ++i) {
             threadHeight = ((height - totalHeight) / (threadsCount - i)) & -2; // the & -2 is to make sure we'll deal with odd heights
             COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX_FEATURE_FAST_DETE, FastProcessRange_AsynExec,
@@ -278,10 +278,15 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
         FastProcessRange(dataPtr, 0, height, height, width, stride, m_iThreshold, m_iNumContinuous, pixels16, FastXFlags, &interestPoints);
     }
 
+	// FIXME: (x,y) not correct when multi-threding is enable: rowStart/rowEnd
     if (strengthsMap) {
-        // FIXME: compute strengths map
-        // candIdx = (j * stride) + col;
-        // strengthsMap[candIdx] = (float)strength;
+		int32_t candIdx;
+		const CompVInterestPoint* point;
+		for (size_t i = 0; i < interestPoints.size(); ++i) {
+			point = &interestPoints[i];
+			candIdx = point->x + (stride * point->y);
+			strengthsMap[candIdx] = (float)point->strength;
+		}
     }
 
     // Non Maximal Suppression for removing adjacent corners
@@ -557,11 +562,6 @@ static void FastProcessRange(const uint8_t* dataPtr, int32_t rowStart, int32_t r
             // "brighter" is always > 0 and brightness equation is ((u8 - brighter) > 0) => (u8 > brighter) => no need to saturate brighter to 255 as u8 already saturated to 255
             // "darker" is always <255 and darkness equatio is ((darker - u8) > 0) => (u8 < darker) => no need to saturate darker to 0 as u8 already satured to 0
 
-			// FIXME:
-			if (i == 1619 && j == 279) {
-				int kaka = 0;
-			}
-
             if ((i < width - 3 - 16)) {
                 // For testing with image "voiture", the first (i,j) to produce an interesting point is (1619, 279)
                 compv_scalar_t r = FastData16(IP, (compv_scalar_t(&)[16])pixels16, N, threshold, fdarkers, fbrighters, ddarkers, dbrighters);
@@ -573,7 +573,7 @@ static void FastProcessRange(const uint8_t* dataPtr, int32_t rowStart, int32_t r
                             strength = FastStrengths(dbrighters[z], ddarkers[z], fbrighters[z] & 0xFFFF, fdarkers[z] & 0xFFFF, N, flags16);
                             if (strength > 0) {
                                 // strength is defined as the maximum value of t that makes p a corner
-                                interestPoints->push_back(CompVInterestPoint(i, j, (float)(strength + threshold - 1)));
+                                interestPoints->push_back(CompVInterestPoint(i + z, j, (float)(strength + threshold - 1)));
                             }
                         }
                     }
