@@ -27,7 +27,11 @@ global sym(Fast9Strengths_Asm_CMOV_X86_SSE41)
 global sym(Fast9Strengths_Asm_X86_SSE41)
 global sym(Fast12Strengths_Asm_CMOV_X86_SSE41)
 global sym(Fast12Strengths_Asm_X86_SSE41)
-global sym(FastData16_Asm_X86_SSE2)
+
+global sym(Fast9Data16_Asm_POPCNT_X86_SSE2)
+global sym(Fast9Data16_Asm_X86_SSE2)
+global sym(Fast12Data16_Asm_POPCNT_X86_SSE2)
+global sym(Fast12Data16_Asm_X86_SSE2)
 
 section .data
 	extern sym(kFast9Arcs)
@@ -254,8 +258,10 @@ sym(Fast12Strengths_Asm_X86_SSE41):
 ; arg(5) -> COMPV_ALIGNED(SSE) compv_scalar_t(&pfbrighters16)[16]
 ; arg(6) -> COMPV_ALIGNED(SSE) int16_t(&ddarkers16x16)[16][16]
 ; arg(7) -> COMPV_ALIGNED(SSE) int16_t(&dbrighters16x16)[16][16]
+; %1 -> 1: POPCNT supported, 0: POPCNT not supported
+; %2 -> 9: FAST9, 12: FAST12 ...
 ;;; compv_scalar_t FastData16_Asm_X86_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(&pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(&pfbrighters16)[16], COMPV_ALIGNED(SSE) int16_t(&ddarkers16x16)[16][16], COMPV_ALIGNED(SSE) int16_t(&dbrighters16x16)[16][16])
-sym(FastData16_Asm_X86_SSE2):
+%macro FastData16_Asm_X86_SSE2 2
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
@@ -321,14 +327,13 @@ sym(FastData16_Asm_X86_SSE2):
 	and rax, 0xFFFF
 	and rcx, 0xFFFF
 	popcnt rax, rax ; FIXME: check support for popcnt
-	popcnt rcx, rcx
+	popcnt rcx, rcx ; FIXME: check support for popcnt
 	add rax, rcx
 	mov [rsp + 0], rax ; sum = rax
-	; %if %1 == 12 ; FIXME
-	;	test rax, rax
-	;	xor rax, rax
-	;	je .EndOfTheFunction
-	; %endif
+	%if %2 == 12
+		test rax, rax
+		je .EndOfTheFunction ; rax == 0
+	%endif
 	
 	; compare I5 and I13 aka 4 and 12
 	mov rsi, [rdx + 4*COMPV_YASM_REG_SZ_BYTES]
@@ -354,14 +359,18 @@ sym(FastData16_Asm_X86_SSE2):
 	pcmpeqb xmm4, xmm0 ; xmmDbrighters16x16[4][0] === xmmZeros
 	pcmpeqb xmm3, xmm0 ; xmmDbrighters16x16[12][0] === xmmZeros
 
-	; re-check sum only if we've chance not to reach 3 (for N=9) or 2 (for N=12)
+	; re-check sum only if we've chance not to reach 3 (for N=12) or 2 (for N=9)
 	mov rax, [rsp + 0]
-	cmp rax, 2
-	jge .SpeedTest2
-	; %if %1 == 12 ; FIXME
-	;	cmp rax, 3
-	;	jge .SpeedTest2
-	; %endif
+	%if %2 == 12
+		cmp rax, 3
+		jge .EndOfSpeedTest2
+	%elif %2 == 9
+		cmp rax, 2
+		jge .EndOfSpeedTest2
+	%else
+		%error "not valid"
+	%endif
+	
 	pmovmskb rsi, xmm1
 	not rsi ; d0
 	pmovmskb rdi, xmm2
@@ -376,20 +385,23 @@ sym(FastData16_Asm_X86_SSE2):
 	and rax, 0xFFFF
 	and rcx, 0xFFFF
 	popcnt rax, rax ; FIXME: check support for popcnt
-	popcnt rcx, rcx
+	popcnt rcx, rcx ; FIXME: check support for popcnt
 	add rax, rcx
 	add rax, [rsp + 0] ; rax = sum
 
-	; Speed-Test-2
-	.SpeedTest2
+	;;; Speed-Test-2 ;;;
 	mov rcx, rax
 	xor rax, rax ; set it to zero in case we've to jump to .EndOfTheFunction and return it
-	cmp rcx, 2
-	jl .EndOfTheFunction
-	; %if %1 == 12 ; FIXME
-	;	cmp rcx, 3
-	;	jl .EndOfTheFunction
-	; %endif
+	%if %2 == 12
+		cmp rcx, 3
+		jl .EndOfTheFunction
+	%elif %2 == 9
+		cmp rcx, 2
+		jl .EndOfTheFunction
+	%else
+		%error "not valid"
+	%endif
+	.EndOfSpeedTest2
 
 	; load 1 and 2 in xmm0 and xmm1
 	mov rsi, [rdx + 1*COMPV_YASM_REG_SZ_BYTES]
@@ -511,9 +523,9 @@ sym(FastData16_Asm_X86_SSE2):
 	psubusb xmm3, xmm6
 	movdqa [rcx + 14*32+0*16], xmm2 ; xmmDbrighters16x16[14][0]
 	movdqa [rcx + 15*32+0*16], xmm3 ; xmmDbrighters16x16[15][0]
-
+	
 	;;; Transpose 16x16 ddarkers16x16 and dbrighters16x16 ;;;
-	COMPV_TRANSPOSE_I8_16X16_REG_SSE2 rax+0*32+0*16, rax+1*32+0*16, rax+2*32+0*16, rax+3*32+0*16, rax+4*32+0*16, rax+5*32+0*16, rax+6*32+0*16, rax+7*32+0*16, rax+8*32+0*16, rax+9*32+0*16, rax+10*32+0*16, rax+11*32+0*16, rax+12*32+0*16, rax+13*32+0*16, rax+14*32+0*16, rax+15*32+0*16, xmm0, xmm1
+	COMPV_TRANSPOSE_I8_16X16_REG_SSE2 rax+0*32+0*16, rax+1*32+0*16, rax+2*32+0*16, rax+3*32+0*16, rax+4*32+0*16, rax+5*32+0*16, rax+6*32+0*16, rax+7*32+0*16, rax+8*32+0*16, rax+9*32+0*16, rax+10*32+0*16, rax+11*32+0*16, rax+12*32+0*16, rax+13*32+0*16, rax+14*32+0*16, rax+15*32+0*16, xmm0, xmm1	
 	COMPV_TRANSPOSE_I8_16X16_REG_SSE2 rcx+0*32+0*16, rcx+1*32+0*16, rcx+2*32+0*16, rcx+3*32+0*16, rcx+4*32+0*16, rcx+5*32+0*16, rcx+6*32+0*16, rcx+7*32+0*16, rcx+8*32+0*16, rcx+9*32+0*16, rcx+10*32+0*16, rcx+11*32+0*16, rcx+12*32+0*16, rcx+13*32+0*16, rcx+14*32+0*16, rcx+15*32+0*16, xmm0, xmm1
 
 	;;; Compute the flags ;;;
@@ -614,9 +626,9 @@ sym(FastData16_Asm_X86_SSE2):
 	%assign i 0
 	%rep    16
 		movdqa xmm1, [rax + i*32+0*16]
-		movdqa xmm2, [rax + i*32+1*16]
 		movdqa xmm3, [rcx + i*32+0*16]
-		movdqa xmm4, [rcx + i*32+1*16]
+		movdqa xmm2, xmm1
+		movdqa xmm4, xmm3
 		punpcklbw xmm1, xmm0
 		punpckhbw xmm2, xmm0
 		punpcklbw xmm3, xmm0
@@ -627,9 +639,6 @@ sym(FastData16_Asm_X86_SSE2):
 		movdqa [rcx + i*32+1*16], xmm4
 		%assign i i+1
 	%endrep
-
-
-	int 3
 	
 	;;; Build the return value ;;;;
 	xor rax, rax
@@ -661,6 +670,83 @@ sym(FastData16_Asm_X86_SSE2):
 	pop rdi
 	pop rsi
     COMPV_YASM_RESTORE_XMM
+    COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; compv_scalar_t Fast9Data16_Asm_POPCNT_X86_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(&pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(&pfbrighters16)[16], COMPV_ALIGNED(SSE) int16_t(&ddarkers16x16)[16][16], COMPV_ALIGNED(SSE) int16_t(&dbrighters16x16)[16][16])
+sym(Fast9Data16_Asm_POPCNT_X86_SSE2):
+	FastData16_Asm_X86_SSE2 1, 9
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; compv_scalar_t Fast9Data16_Asm_X86_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(&pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(&pfbrighters16)[16], COMPV_ALIGNED(SSE) int16_t(&ddarkers16x16)[16][16], COMPV_ALIGNED(SSE) int16_t(&dbrighters16x16)[16][16])
+sym(Fast9Data16_Asm_X86_SSE2):
+	FastData16_Asm_X86_SSE2 0, 9
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; compv_scalar_t Fast12Data16_Asm_POPCNT_X86_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(&pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(&pfbrighters16)[16], COMPV_ALIGNED(SSE) int16_t(&ddarkers16x16)[16][16], COMPV_ALIGNED(SSE) int16_t(&dbrighters16x16)[16][16])
+sym(Fast12Data16_Asm_POPCNT_X86_SSE2):
+	FastData16_Asm_X86_SSE2 1, 12
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; compv_scalar_t Fast12Data16_Asm_X86_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(&pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(&pfbrighters16)[16], COMPV_ALIGNED(SSE) int16_t(&ddarkers16x16)[16][16], COMPV_ALIGNED(SSE) int16_t(&dbrighters16x16)[16][16])
+sym(Fast12Data16_Asm_X86_SSE2):
+	FastData16_Asm_X86_SSE2 0, 9
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const uint8_t* dataPtr
+; arg(1) -> COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16]
+; arg(2) -> compv_scalar_t N
+; arg(3) -> compv_scalar_t threshold
+; arg(4) -> compv_scalar_t *pfdarkers
+; arg(5) -> compv_scalar_t* pfbrighters
+; arg(6) -> COMPV_ALIGNED(SSE) int16_t(&ddarkers16)[16]
+; arg(7) -> COMPV_ALIGNED(SSE) int16_t(&dbrighters16)[16]
+; compv_scalar_t FastData_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, COMPV_ALIGNED(SSE) int16_t(&ddarkers16)[16], COMPV_ALIGNED(SSE) int16_t(&dbrighters16)[16])
+sym(FastData_Asm_x86_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
+	push rsi
+	push rdi
+	push rbx
+	; end prolog
+
+	; align stack and alloc memory
+	COMPV_YASM_ALIGN_STACK 16, rax
+	sub rsp, 16
+
+	mov rbx, arg(0) ; dataPtr
+	mov rdx, arg(1) ; pixels16
+
+	mov rax, arg(3) ; threshold
+	mov rsi, [rbx]
+	mov rdi, [rbx]
+	add rsi, rax ; brighter
+	sub rdi, rax ; darker
+
+	; compare I1 and I7
+	lea rax, [rdx + 0*COMPV_YASM_REG_SZ_BYTES]
+	mov rcx, [rbx + rax] ; dataPtr[pixels16[0]];
+	;mov BYTE [rsp + 0], rcx
+
+
+
+
+	mov BYTE [rbx], 2
+
+	; unalign stack and free memory
+	add rsp, 16
+	COMPV_YASM_UNALIGN_STACK
+
+	; begin epilog
+	pop rbx
+	pop rdi
+	pop rsi
     COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

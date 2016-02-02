@@ -38,6 +38,7 @@ Some literature about FAST:
 #include "compv/compv_engine.h"
 #include "compv/compv_mathutils.h"
 #include "compv/compv_cpu.h"
+#include "compv/compv_bits.h"
 
 #include "compv/intrinsics/x86/features/fast/compv_feature_fast_dete_intrin_sse.h"
 
@@ -105,7 +106,11 @@ extern "C" compv_scalar_t Fast9Strengths_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const 
 extern "C" compv_scalar_t Fast12Strengths_Asm_CMOV_X86_SSE41(COMPV_ALIGNED(SSE) const int16_t(&dbrighters)[16], COMPV_ALIGNED(SSE) const int16_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16]);
 extern "C" compv_scalar_t Fast12Strengths_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const int16_t(&dbrighters)[16], COMPV_ALIGNED(SSE) const int16_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16]);
 
-extern "C" compv_scalar_t FastData16_Asm_X86_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(&pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(&pfbrighters16)[16], COMPV_ALIGNED(SSE) int16_t(&ddarkers16x16)[16][16], COMPV_ALIGNED(SSE) int16_t(&dbrighters16x16)[16][16]);
+extern "C" compv_scalar_t Fast9Data16_Asm_POPCNT_X86_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(&pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(&pfbrighters16)[16], COMPV_ALIGNED(SSE) int16_t(&ddarkers16x16)[16][16], COMPV_ALIGNED(SSE) int16_t(&dbrighters16x16)[16][16]);
+extern "C" compv_scalar_t Fast9Data16_Asm_X86_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(&pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(&pfbrighters16)[16], COMPV_ALIGNED(SSE) int16_t(&ddarkers16x16)[16][16], COMPV_ALIGNED(SSE) int16_t(&dbrighters16x16)[16][16]);
+extern "C" compv_scalar_t Fast12Data16_Asm_POPCNT_X86_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(&pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(&pfbrighters16)[16], COMPV_ALIGNED(SSE) int16_t(&ddarkers16x16)[16][16], COMPV_ALIGNED(SSE) int16_t(&dbrighters16x16)[16][16]);
+extern "C" compv_scalar_t Fast12Data16_Asm_X86_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(&pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(&pfbrighters16)[16], COMPV_ALIGNED(SSE) int16_t(&ddarkers16x16)[16][16], COMPV_ALIGNED(SSE) int16_t(&dbrighters16x16)[16][16]);
+
 #endif
 
 static int32_t COMPV_INLINE __continuousCount(int32_t fasType)
@@ -390,6 +395,8 @@ static compv_scalar_t FastData_C(const uint8_t* dataPtr, const compv_scalar_t(&p
     int16_t brighter = (int16_t)(dataPtr[0] + threshold);
     int16_t darker = (int16_t)(dataPtr[0] - threshold);
 
+	bool popcntHard = CompVCpu::isSupported(kCpuFlagPOPCNT);
+
     // compare I1 and I7
     temp16[0] = dataPtr[pixels16[0]];
     temp16[8] = dataPtr[pixels16[8]];
@@ -488,9 +495,7 @@ static compv_scalar_t FastData_C(const uint8_t* dataPtr, const compv_scalar_t(&p
             dbrighters16[15] = (temp16[15] - brighter);
             *pfbrighters |= (dbrighters16[15] > 0 ? (1 << 15) : 0);
 
-            // FIXME(dmi): __popcnt16 not portable and check cpuid
-            // GCC: __builtin_popcount
-            return (__popcnt16((unsigned short)*pfdarkers) >= N || __popcnt16((unsigned short)*pfbrighters) >= N) ? 1 : 0;
+			return (compv_popcnt16(popcntHard, (unsigned short)*pfdarkers) >= N || compv_popcnt16(popcntHard, (unsigned short)*pfbrighters) >= N) ? 1 : 0;
         }
     }
     return compv_scalar_t(0);
@@ -531,13 +536,15 @@ static void FastProcessRange(const uint8_t* dataPtr, int32_t rowStart, int32_t r
         COMPV_EXEC_IFDEF_INTRIN_X86(FastData = FastData_Intrin_SSE2);
         COMPV_EXEC_IFDEF_INTRIN_X86(FastData16 = FastData16_Intrin_SSE2);
         COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = FastStrengths_SSE2);
-		COMPV_EXEC_IFDEF_ASM_X86(FastData16 = FastData16_Asm_X86_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X86(FastData16 = (N == 9)
+			? (CompVCpu::isSupported(kCpuFlagPOPCNT) ? Fast9Data16_Asm_POPCNT_X86_SSE2 : Fast9Data16_Asm_X86_SSE2)
+			: (CompVCpu::isSupported(kCpuFlagPOPCNT) ? Fast12Data16_Asm_POPCNT_X86_SSE2 : Fast12Data16_Asm_X86_SSE2));
     }
     if (CompVCpu::isSupported(kCpuFlagSSE41)) {
         COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = FastStrengths_SSE41);
-		COMPV_EXEC_IFDEF_ASM_X86(FastStrengths = (N == 9) 
-			? (CompVCpu::isSupported(kCpuFlagCMOV) ? Fast9Strengths_Asm_CMOV_X86_SSE41 : Fast9Strengths_Asm_X86_SSE41)
-			: (CompVCpu::isSupported(kCpuFlagCMOV) ? Fast12Strengths_Asm_CMOV_X86_SSE41 : Fast12Strengths_Asm_X86_SSE41));
+        COMPV_EXEC_IFDEF_ASM_X86(FastStrengths = (N == 9)
+                                 ? (CompVCpu::isSupported(kCpuFlagCMOV) ? Fast9Strengths_Asm_CMOV_X86_SSE41 : Fast9Strengths_Asm_X86_SSE41)
+                                     : (CompVCpu::isSupported(kCpuFlagCMOV) ? Fast12Strengths_Asm_CMOV_X86_SSE41 : Fast12Strengths_Asm_X86_SSE41));
     }
 
     minj = (rowStart == 0 ? 3 : 0);
@@ -550,13 +557,18 @@ static void FastProcessRange(const uint8_t* dataPtr, int32_t rowStart, int32_t r
             // "brighter" is always > 0 and brightness equation is ((u8 - brighter) > 0) => (u8 > brighter) => no need to saturate brighter to 255 as u8 already saturated to 255
             // "darker" is always <255 and darkness equatio is ((darker - u8) > 0) => (u8 < darker) => no need to saturate darker to 0 as u8 already satured to 0
 
-			if ((i < width - 3 - 16)) {
+			// FIXME:
+			if (i == 1619 && j == 279) {
+				int kaka = 0;
+			}
+
+            if ((i < width - 3 - 16)) {
                 // For testing with image "voiture", the first (i,j) to produce an interesting point is (1619, 279)
-                uint16_t r = (uint16_t)FastData16(IP, (compv_scalar_t(&)[16])pixels16, N, threshold, fdarkers, fbrighters, ddarkers, dbrighters);
+                compv_scalar_t r = FastData16(IP, (compv_scalar_t(&)[16])pixels16, N, threshold, fdarkers, fbrighters, ddarkers, dbrighters);
                 if (r > 0) {
                     // TODO(dmi): add support for FastStrengths16
                     for (unsigned z = 0; z < 16; ++z) {
-                        if (r & (1 << z)) {
+						if (r & ((compv_scalar_t)1 << z)) {
                             // The flags could contains garbage on the highest bits -> always use &0xFFFF
                             strength = FastStrengths(dbrighters[z], ddarkers[z], fbrighters[z] & 0xFFFF, fdarkers[z] & 0xFFFF, N, flags16);
                             if (strength > 0) {

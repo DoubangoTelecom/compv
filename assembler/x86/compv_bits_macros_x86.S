@@ -1,0 +1,98 @@
+; Copyright (C) 2016 Doubango Telecom <https://www.doubango.org>
+;
+; This file is part of Open Source ComputerVision (a.k.a CompV) project.
+; Source code hosted at https://github.com/DoubangoTelecom/compv
+; Website hosted at http://compv.org
+;
+; CompV is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; CompV is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with CompV.
+;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Compute population count (popcnt instruction). Hardward implementation. 
+; You must use CPUID instruction to check that your cpu supports this instruction.
+; %1 -> the destination register where to copy the result
+; %2 -> the register containing the value for which to compute the popcnt
+; The first (%1) and second (%2) parameters could be the same register
+; example: COMPV_POPCNT_HARD rax, rax
+%macro COMPV_POPCNT_HARD 2
+popcnt %1, %2
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Compute population count (popcnt instruction). Hardward implementation. 
+; You must provide a 16 byte register
+; example: COMPV_POPCNT16_HARD ax, ax
+%define COMPV_POPCNT16_HARD COMPV_POPCNT_HARD
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Compute population count (popcnt instruction).  Software implementation. 
+; %1 -> the destination register where to copy the result
+; %2 -> the register containing the value for which to compute the popcnt
+; %3 -> temp register
+; %4 -> temp register
+; %5 -> temp register
+; The first (%1) and second (%2) parameters could be the same register
+; example: COMPV_POPCNT8_SOFT rbx, rbx, rax, rcx, rdx
+%macro COMPV_POPCNT16_SOFT 5
+mov %3, %2
+and %3, 0xFF
+lea %4, [sym(kPopcnt256) + %3]
+mov %3, %2
+shr %3, 8
+and %3, 0xFF
+lea %5, [sym(kPopcnt256) + %3]
+mov %1, [%4]
+add %1, [%5]
+%endmacro
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Interleaves two 128bits vectors.
+; From:
+; 0 0 0 0 0 0 . . . .
+; 1 1 1 1 1 1 . . . .
+; To:
+; 0 1 0 1 0 1 . . . .
+; %1 -> first register
+; %2 -> second register
+; %3 -> tmp xmm register
+; example: COMPV_INTERLEAVE_I8_XMM_SSE2 xmm0, xmm1, xmm2
+%macro COMPV_INTERLEAVE_I8_XMM_SSE2 3
+	movdqa %3, %1
+	punpckhbw %3, %2
+	punpcklbw %1, %2
+	movdqa %2, %3
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Interleaves two 128bits vectors.
+; This macro use 4 movdqa while COMPV_INTERLEAVE_I8_XMM_SSE2 uses only 2 movs.
+; From:
+; 0 0 0 0 0 0 . . . .
+; 1 1 1 1 1 1 . . . .
+; To:
+; 0 1 0 1 0 1 . . . .
+; %1 -> first address
+; %2 -> second address
+; %3 -> tmp xmm register
+; %4 -> tmp xmm register
+; example: COMPV_INTERLEAVE_I8_REG_SSE2 rsp+0*16, rsp+1*16, xmm0, xmm1
+%macro COMPV_INTERLEAVE_I8_REG_SSE2 4
+	movdqa %3, [%1]
+	movdqa %4, [%1]
+	punpcklbw %3, [%2]
+	punpckhbw %4, [%2]
+	movdqa [%1], %3
+	movdqa [%2], %4
+%endmacro

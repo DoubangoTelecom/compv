@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_api.h" />
+    <ClInclude Include="include\compv\compv_bits.h" />
     <ClInclude Include="include\compv\compv_buffer.h" />
     <ClInclude Include="include\compv\compv_common.h" />
     <ClInclude Include="include\compv\compv_config.h" />
@@ -70,6 +71,7 @@
     <ClInclude Include="include\compv\time\compv_timer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="compv_bits.cxx" />
     <ClCompile Include="compv_buffer.cxx" />
     <ClCompile Include="compv_common.cxx" />
     <ClCompile Include="compv_cpu.cxx" />
@@ -123,12 +125,6 @@
     </YASM>
   </ItemGroup>
   <ItemGroup>
-    <YASM Include="assembler\x86\image\conv\compv_imageconv_macros_avx.S">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="assembler\x86\image\conv\compv_imageconv_macros_sse.S">
-      <FileType>Document</FileType>
-    </YASM>
     <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_i420_x86_avx2.S">
       <FileType>Document</FileType>
     </YASM>
@@ -149,6 +145,25 @@
   </ItemGroup>
   <ItemGroup>
     <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x86_sse.S">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <YASM Include="assembler\x86\image\conv\compv_imageconv_macros_x86_avx.S">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\image\conv\compv_imageconv_macros_x86_sse.S">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <YASM Include="assembler\x86\compv_bits_macros_x86.S">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\compv_bits_x86.S">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\compv_math_macros_x86.S">
       <FileType>Document</FileType>
     </YASM>
   </ItemGroup>
