@@ -5,7 +5,7 @@ using namespace compv;
 
 #define numThreads			COMPV_NUM_THREADS_SINGLE
 #define enableIntrinsics	true
-#define enableAsm			true
+#define enableAsm			false
 #define testingMode			true
 
 #define TEST_CONV			0

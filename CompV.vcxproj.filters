@@ -436,25 +436,23 @@
     <YASM Include="assembler\x86\compv_mathutils_x86.S">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assembler\x86\features\fast\compv_feature_fast_dete_x86_sse.S">
+    <YASM Include="assembler\x86\compv_math_macros_x86.S">
+      <Filter>Assembler Files\x86</Filter>
+    </YASM>
+    <YASM Include="assembler\x86\compv_bits_x86.S">
+      <Filter>Assembler Files\x86</Filter>
+    </YASM>
+    <YASM Include="assembler\x86\compv_bits_macros_x86.S">
+      <Filter>Assembler Files\x86</Filter>
+    </YASM>
+    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x86_sse.S">
       <Filter>Assembler Files\x86\features\fast</Filter>
-    </None>
-    <None Include="assembler\x86\image\conv\compv_imageconv_macros_x86_avx.S">
+    </YASM>
+    <YASM Include="assembler\x86\image\conv\compv_imageconv_macros_x86_avx.S">
       <Filter>Assembler Files\x86\image\conv</Filter>
-    </None>
-    <None Include="assembler\x86\image\conv\compv_imageconv_macros_x86_sse.S">
+    </YASM>
+    <YASM Include="assembler\x86\image\conv\compv_imageconv_macros_x86_sse.S">
       <Filter>Assembler Files\x86\image\conv</Filter>
-    </None>
-    <None Include="assembler\x86\compv_bits_macros_x86.S">
-      <Filter>Assembler Files\x86</Filter>
-    </None>
-    <None Include="assembler\x86\compv_bits_x86.S">
-      <Filter>Assembler Files\x86</Filter>
-    </None>
-    <None Include="assembler\x86\compv_math_macros_x86.S">
-      <Filter>Assembler Files\x86</Filter>
-    </None>
+    </YASM>
   </ItemGroup>
 </Project>

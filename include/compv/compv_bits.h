@@ -45,7 +45,7 @@ public:
 #if 0 //TODO(dmi): https://github.com/DoubangoTelecom/compv/issues/27
 #	define compv_popcnt16(hard, val)		(val ? compv_popcnt16_hard((val)) : compv_popcnt16_soft((val)))
 #else
-#	define compv_popcnt16(hard, val)		compv_popcnt16_soft((val))
+#	define compv_popcnt16(hard, val)		compv_popcnt16_hard(val)/* compv_popcnt16_soft((val)) */ // FIXME
 #endif
 
 COMPV_NAMESPACE_END()
