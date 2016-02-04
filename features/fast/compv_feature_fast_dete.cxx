@@ -524,6 +524,7 @@ static void FastProcessRange(const uint8_t* dataPtr, int32_t rowStart, int32_t r
 	const uint8_t* IP;
 	int32_t j, i, minj, maxj;
 	int32_t pad = (stride - width), padPlus6 = 3 + pad + 3;
+	int r, r0, r1;
 	//TODO(dmi): These arrays must be allocated on the thread pool
 	COMPV_ALIGN_DEFAULT() int16_t ddarkers[16][16];
 	COMPV_ALIGN_DEFAULT() int16_t dbrighters[16][16];
@@ -566,24 +567,28 @@ static void FastProcessRange(const uint8_t* dataPtr, int32_t rowStart, int32_t r
 			if (i == 1619 && j == 279) {
 				int kaka = 0;
 			}
-			if (i == 1627 && j == 212) {
+			if (i == 1587 && j == 195) {
 				int kaka = 0;
 			}
 
 			if ((i < width - 3 - 16)) {
 				// For testing with image "voiture", the first (i,j) to produce an interesting point is (1619, 279)
-				compv_scalar_t r = FastData16(IP, (compv_scalar_t(&)[16])pixels16, N, threshold, fdarkers, fbrighters, ddarkers, dbrighters);
-				if (r == 0x80000) {
-					IP += 8;
-					i += 7; // 7 because the loop will also increment i
+				// r bits: [0-15] contains the non-zero values to check, [18-19]: the number of bits to skip, [16]: whether to check darkers, [17]: whether to check brighters
+				r = (int)FastData16(IP, (compv_scalar_t(&)[16])pixels16, N, threshold, fdarkers, fbrighters, ddarkers, dbrighters);
+				
+				if (r >= (1 << 18)) { // This is a skip process
+					r0 = (r >> 18) & 0xFF; // bits [18-19]
+					IP += r0;
+					i += r0 - 1; // -1 because the loop will also increment i
 				}
 				else {
 					if (r > 0) {
-						// TODO(dmi): add support for FastStrengths16
+						r0 = (r & (1 << 16)) ? 0xFFFF : 0x0000; // whether to check darkers
+						r1 = (r & (1 << 17)) ? 0xFFFF : 0x0000; // whether to check brighters
 						for (unsigned z = 0; z < 16; ++z) {
-							if (r & ((compv_scalar_t)1 << z)) {
+							if (r & (1 << z)) {
 								// The flags could contains garbage on the highest bits -> always use &0xFFFF
-								strength = FastStrengths(dbrighters[z], ddarkers[z], fbrighters[z] & 0xFFFF, fdarkers[z] & 0xFFFF, N, flags16);
+								strength = FastStrengths(dbrighters[z], ddarkers[z], fbrighters[z] & r1, fdarkers[z] & r0, N, flags16);
 								if (strength > 0) {
 									// strength is defined as the maximum value of t that makes p a corner
 									interestPoints->push_back(CompVInterestPoint(i + z, j, (float)(strength + threshold - 1)));

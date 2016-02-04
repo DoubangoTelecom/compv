@@ -114,11 +114,12 @@ compv_scalar_t FastData_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) c
 // TODO(dmi): Fast9 and Fast12 for asm
 // TODO(dmi): ASM version
 // TODO(dmi): add AVX
+// TODO(dmi): ASM version no longer need POPCNT
 compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(&pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(&pfbrighters16)[16], COMPV_ALIGNED(SSE) int16_t(&ddarkers16x16)[16][16], COMPV_ALIGNED(SSE) int16_t(&dbrighters16x16)[16][16])
 {
     compv_scalar_t r = 0, sum, summ, sumb, sumd, d0, d1, b0, b1;
-    __m128i xmm0, xmm1, xmmBrighter, xmmDarker, xmmThreshold, xmmZeros;
-	bool popcntHard = CompVCpu::isSupported(kCpuFlagPOPCNT);
+	__m128i xmm0, xmm1, xmmBrighter, xmmDarker, xmmThreshold, xmmZeros, xmmFF, xmmDarkersFlags[16], xmmBrightersFlags[16];
+	//bool popcntHard = CompVCpu::isSupported(kCpuFlagPOPCNT);
 	
     // ddarkers16x16 and ddarkers16x16 are int16 arrays but we want to use there memory to store uint8[] temp variables until the end of the process then we convert them
     // These arrays are int16 to make sure the CPP code won't need to sature all operations
@@ -126,11 +127,16 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
     __m128i (&xmmDbrighters16x16)[16][2] = (__m128i (&)[16][2])dbrighters16x16;
 
     _mm_store_si128(&xmmZeros, _mm_setzero_si128());
+	
+	(xmmDarkersFlags);
+	(xmmBrightersFlags);
 
     _mm_store_si128(&xmmThreshold, _mm_set1_epi8((uint8_t)threshold));
     _mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)dataPtr));
     _mm_store_si128(&xmmBrighter, _mm_adds_epu8(xmm0, xmmThreshold));
     _mm_store_si128(&xmmDarker, _mm_subs_epu8(xmm0, xmmThreshold));
+	_mm_store_si128(&xmmFF, _mm_cmpeq_epi8(xmmZeros, xmmZeros));
+	
 
     // compare I1 and I9 aka 0 and 8
     _mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[0]]));
@@ -139,11 +145,16 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
     _mm_store_si128(&xmmDdarkers16x16[8][0], _mm_subs_epu8(xmmDarker, xmm1));
     _mm_store_si128(&xmmDbrighters16x16[0][0], _mm_subs_epu8(xmm0, xmmBrighter));
     _mm_store_si128(&xmmDbrighters16x16[8][0], _mm_subs_epu8(xmm1, xmmBrighter));
+	_mm_store_si128(&xmmDarkersFlags[0], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[0][0], xmmZeros), xmmFF));
+	_mm_store_si128(&xmmDarkersFlags[8], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[8][0], xmmZeros), xmmFF));
+	_mm_store_si128(&xmmBrightersFlags[0], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[0][0], xmmZeros), xmmFF));
+	_mm_store_si128(&xmmBrightersFlags[8], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[8][0], xmmZeros), xmmFF));
+
     /*  Speed-Test-1 */
-	d0 = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[0][0], xmmZeros)) & 0xFFFF;
-	b0 = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[0][0], xmmZeros)) & 0xFFFF;
-	d1 = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[8][0], xmmZeros)) & 0xFFFF;
-	b1 = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[8][0], xmmZeros)) & 0xFFFF;
+	d0 = _mm_movemask_epi8(xmmDarkersFlags[0]);
+	b0 = _mm_movemask_epi8(xmmBrightersFlags[0]);
+	d1 = _mm_movemask_epi8(xmmDarkersFlags[8]);
+	b1 = _mm_movemask_epi8(xmmBrightersFlags[8]);
 	sumb = (b0 || b1);
 	sumd = (d0 || d1);
 	sum = ((d0 || b0) + (d1 || b1));
@@ -155,11 +166,15 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 	_mm_store_si128(&xmmDdarkers16x16[12][0], _mm_subs_epu8(xmmDarker, xmm1));
 	_mm_store_si128(&xmmDbrighters16x16[4][0], _mm_subs_epu8(xmm0, xmmBrighter));
 	_mm_store_si128(&xmmDbrighters16x16[12][0], _mm_subs_epu8(xmm1, xmmBrighter));
+	_mm_store_si128(&xmmDarkersFlags[4], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[4][0], xmmZeros), xmmFF));
+	_mm_store_si128(&xmmDarkersFlags[12], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[12][0], xmmZeros), xmmFF));
+	_mm_store_si128(&xmmBrightersFlags[4], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[4][0], xmmZeros), xmmFF));
+	_mm_store_si128(&xmmBrightersFlags[12], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[12][0], xmmZeros), xmmFF));
 	/*if (N == 12 ? sum < 3 : sum < 2)*/ {
-		d0 = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[4][0], xmmZeros)) & 0xFFFF;
-		b0 = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[4][0], xmmZeros)) & 0xFFFF;
-		d1 = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDdarkers16x16[12][0], xmmZeros)) & 0xFFFF;
-		b1 = ~_mm_movemask_epi8(_mm_cmpeq_epi8(xmmDbrighters16x16[12][0], xmmZeros)) & 0xFFFF;
+		d0 = _mm_movemask_epi8(xmmDarkersFlags[4]);
+		b0 = _mm_movemask_epi8(xmmBrightersFlags[4]);
+		d1 = _mm_movemask_epi8(xmmDarkersFlags[12]);
+		b1 = _mm_movemask_epi8(xmmBrightersFlags[12]);
 		sumb += (b0 || b1);
 		sumd += (d0 || d1);
 		sum += (d0 || b0) + (d1 || b1);
@@ -170,15 +185,26 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 
         /*  Speed-Test-2 */
 		if (N == 12 ? sum >= 3 : sum >= 2) {
+			__m128i xmmOnes, xmmNMinusOne, xmm254;
+			int colDarkersFlags = 0, colBrightersFlags = 0; // Flags defining which column has more than N non-zero bits
 			static int kaka = 0;//FIXME
 			bool loadB = (N == 12 ? sumb >= 3 : sumb >= 2);
 			bool loadD = (N == 12 ? sumd >= 3 : sumd >= 2);
 
 			if ((summ & 0xFF) == 0) { // first 8 pixels not corners -> request next 8 pixels
+				// FIXME: count trailling zeros
 				//printf("kiki %d ", ++kaka);
-				return 0x80000; // FIXME: uncomment
+				// return 0x80000; // FIXME: uncomment
+				// set bits 18 and 19
+				unsigned long bsf = 0;
+				_BitScanForward(&bsf, (long)(summ & 0xFFFF)); // FIXME: not portable  - ctz - X86 asm = bsf
+				//printf("kaka %d %d ", ++kaka, bsf);
+				return (bsf << 18);
 			}
 
+			_mm_store_si128(&xmmOnes, _mm_load_si128((__m128i*)k1_i8));
+			_mm_store_si128(&xmmNMinusOne, _mm_set1_epi8((uint8_t)N - 1));
+			_mm_store_si128(&xmm254, _mm_load_si128((__m128i*)k254_u8)); // not(254) = 00000001 -> used to select the lowest bit in each u8
 			
 			if (!loadB || !loadD) {
 				//printf("kaka %d ", ++kaka);
@@ -199,6 +225,7 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 			_mm_store_si128(&xmmDataPtr[15], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[15]]));
 
 			if (loadD) {
+				// Compute xmmDdarkers
 				_mm_store_si128(&xmmDdarkers16x16[1][0], _mm_subs_epu8(xmmDarker, xmmDataPtr[1]));
 				_mm_store_si128(&xmmDdarkers16x16[2][0], _mm_subs_epu8(xmmDarker, xmmDataPtr[2]));
 				_mm_store_si128(&xmmDdarkers16x16[3][0], _mm_subs_epu8(xmmDarker, xmmDataPtr[3]));
@@ -211,6 +238,136 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 				_mm_store_si128(&xmmDdarkers16x16[13][0], _mm_subs_epu8(xmmDarker, xmmDataPtr[13]));
 				_mm_store_si128(&xmmDdarkers16x16[14][0], _mm_subs_epu8(xmmDarker, xmmDataPtr[14]));
 				_mm_store_si128(&xmmDdarkers16x16[15][0], _mm_subs_epu8(xmmDarker, xmmDataPtr[15]));
+				// Compute flags
+				_mm_store_si128(&xmmDarkersFlags[1], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[1][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmDarkersFlags[2], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[2][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmDarkersFlags[3], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[3][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmDarkersFlags[5], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[5][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmDarkersFlags[6], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[6][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmDarkersFlags[7], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[7][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmDarkersFlags[9], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[9][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmDarkersFlags[10], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[10][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmDarkersFlags[11], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[11][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmDarkersFlags[13], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[13][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmDarkersFlags[14], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[14][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmDarkersFlags[15], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[15][0], xmmZeros), xmmFF));
+#if 0
+
+#else
+				// Convert flags from 0xFF to 0x01
+				_mm_store_si128(&xmmDarkersFlags[0], _mm_andnot_si128(xmm254, xmmDarkersFlags[0]));
+				_mm_store_si128(&xmmDarkersFlags[1], _mm_andnot_si128(xmm254, xmmDarkersFlags[1]));
+				_mm_store_si128(&xmmDarkersFlags[2], _mm_andnot_si128(xmm254, xmmDarkersFlags[2]));
+				_mm_store_si128(&xmmDarkersFlags[3], _mm_andnot_si128(xmm254, xmmDarkersFlags[3]));
+				_mm_store_si128(&xmmDarkersFlags[4], _mm_andnot_si128(xmm254, xmmDarkersFlags[4]));
+				_mm_store_si128(&xmmDarkersFlags[5], _mm_andnot_si128(xmm254, xmmDarkersFlags[5]));
+				_mm_store_si128(&xmmDarkersFlags[6], _mm_andnot_si128(xmm254, xmmDarkersFlags[6]));
+				_mm_store_si128(&xmmDarkersFlags[7], _mm_andnot_si128(xmm254, xmmDarkersFlags[7]));
+				_mm_store_si128(&xmmDarkersFlags[8], _mm_andnot_si128(xmm254, xmmDarkersFlags[8]));
+				_mm_store_si128(&xmmDarkersFlags[9], _mm_andnot_si128(xmm254, xmmDarkersFlags[9]));
+				_mm_store_si128(&xmmDarkersFlags[10], _mm_andnot_si128(xmm254, xmmDarkersFlags[10]));
+				_mm_store_si128(&xmmDarkersFlags[11], _mm_andnot_si128(xmm254, xmmDarkersFlags[11]));
+				_mm_store_si128(&xmmDarkersFlags[12], _mm_andnot_si128(xmm254, xmmDarkersFlags[12]));
+				_mm_store_si128(&xmmDarkersFlags[13], _mm_andnot_si128(xmm254, xmmDarkersFlags[13]));
+				_mm_store_si128(&xmmDarkersFlags[14], _mm_andnot_si128(xmm254, xmmDarkersFlags[14]));
+				_mm_store_si128(&xmmDarkersFlags[15], _mm_andnot_si128(xmm254, xmmDarkersFlags[15]));
+				// add all flags
+				_mm_store_si128(&xmmDarkersFlags[0], _mm_adds_epu8(xmmDarkersFlags[0], xmmDarkersFlags[1]));
+				_mm_store_si128(&xmmDarkersFlags[2], _mm_adds_epu8(xmmDarkersFlags[2], xmmDarkersFlags[3]));
+				_mm_store_si128(&xmmDarkersFlags[4], _mm_adds_epu8(xmmDarkersFlags[4], xmmDarkersFlags[5]));
+				_mm_store_si128(&xmmDarkersFlags[6], _mm_adds_epu8(xmmDarkersFlags[6], xmmDarkersFlags[7]));
+				_mm_store_si128(&xmmDarkersFlags[8], _mm_adds_epu8(xmmDarkersFlags[8], xmmDarkersFlags[9]));
+				_mm_store_si128(&xmmDarkersFlags[10], _mm_adds_epu8(xmmDarkersFlags[10], xmmDarkersFlags[11]));
+				_mm_store_si128(&xmmDarkersFlags[12], _mm_adds_epu8(xmmDarkersFlags[12], xmmDarkersFlags[13]));
+				_mm_store_si128(&xmmDarkersFlags[14], _mm_adds_epu8(xmmDarkersFlags[14], xmmDarkersFlags[15]));
+				_mm_store_si128(&xmmDarkersFlags[0], _mm_adds_epu8(xmmDarkersFlags[0], xmmDarkersFlags[2]));
+				_mm_store_si128(&xmmDarkersFlags[4], _mm_adds_epu8(xmmDarkersFlags[4], xmmDarkersFlags[6]));
+				_mm_store_si128(&xmmDarkersFlags[8], _mm_adds_epu8(xmmDarkersFlags[8], xmmDarkersFlags[10]));
+				_mm_store_si128(&xmmDarkersFlags[12], _mm_adds_epu8(xmmDarkersFlags[12], xmmDarkersFlags[14]));
+				_mm_store_si128(&xmmDarkersFlags[0], _mm_adds_epu8(xmmDarkersFlags[0], xmmDarkersFlags[4]));
+				_mm_store_si128(&xmmDarkersFlags[8], _mm_adds_epu8(xmmDarkersFlags[8], xmmDarkersFlags[12]));
+				_mm_store_si128(&xmmDarkersFlags[0], _mm_adds_epu8(xmmDarkersFlags[0], xmmDarkersFlags[8])); // sum is in xmmDarkersFlags[0]
+				// Check the columns with at least N non-zero bits
+				_mm_store_si128(&xmmDarkersFlags[0], _mm_cmpgt_epi8(xmmDarkersFlags[0], xmmNMinusOne));
+				colDarkersFlags = _mm_movemask_epi8(xmmDarkersFlags[0]);
+				if (!colDarkersFlags) {
+					loadD = false; // do not continue processing Darkers
+				}
+#endif
+			}
+
+			if (loadB) {
+				// Compute Dbrighters
+				_mm_store_si128(&xmmDbrighters16x16[1][0], _mm_subs_epu8(xmmDataPtr[1], xmmBrighter));
+				_mm_store_si128(&xmmDbrighters16x16[2][0], _mm_subs_epu8(xmmDataPtr[2], xmmBrighter));
+				_mm_store_si128(&xmmDbrighters16x16[3][0], _mm_subs_epu8(xmmDataPtr[3], xmmBrighter));
+				_mm_store_si128(&xmmDbrighters16x16[5][0], _mm_subs_epu8(xmmDataPtr[5], xmmBrighter));
+				_mm_store_si128(&xmmDbrighters16x16[6][0], _mm_subs_epu8(xmmDataPtr[6], xmmBrighter));
+				_mm_store_si128(&xmmDbrighters16x16[7][0], _mm_subs_epu8(xmmDataPtr[7], xmmBrighter));
+				_mm_store_si128(&xmmDbrighters16x16[9][0], _mm_subs_epu8(xmmDataPtr[9], xmmBrighter));
+				_mm_store_si128(&xmmDbrighters16x16[10][0], _mm_subs_epu8(xmmDataPtr[10], xmmBrighter));
+				_mm_store_si128(&xmmDbrighters16x16[11][0], _mm_subs_epu8(xmmDataPtr[11], xmmBrighter));
+				_mm_store_si128(&xmmDbrighters16x16[13][0], _mm_subs_epu8(xmmDataPtr[13], xmmBrighter));
+				_mm_store_si128(&xmmDbrighters16x16[14][0], _mm_subs_epu8(xmmDataPtr[14], xmmBrighter));
+				_mm_store_si128(&xmmDbrighters16x16[15][0], _mm_subs_epu8(xmmDataPtr[15], xmmBrighter));
+				
+				// Compute flags
+				_mm_store_si128(&xmmBrightersFlags[1], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[1][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmBrightersFlags[2], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[2][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmBrightersFlags[3], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[3][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmBrightersFlags[5], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[5][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmBrightersFlags[6], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[6][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmBrightersFlags[7], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[7][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmBrightersFlags[9], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[9][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmBrightersFlags[10], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[10][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmBrightersFlags[11], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[11][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmBrightersFlags[13], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[13][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmBrightersFlags[14], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[14][0], xmmZeros), xmmFF));
+				_mm_store_si128(&xmmBrightersFlags[15], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[15][0], xmmZeros), xmmFF));
+				// Convert flags from 0xFF to 0x01
+				_mm_store_si128(&xmmBrightersFlags[0], _mm_andnot_si128(xmm254, xmmBrightersFlags[0]));
+				_mm_store_si128(&xmmBrightersFlags[1], _mm_andnot_si128(xmm254, xmmBrightersFlags[1]));
+				_mm_store_si128(&xmmBrightersFlags[2], _mm_andnot_si128(xmm254, xmmBrightersFlags[2]));
+				_mm_store_si128(&xmmBrightersFlags[3], _mm_andnot_si128(xmm254, xmmBrightersFlags[3]));
+				_mm_store_si128(&xmmBrightersFlags[4], _mm_andnot_si128(xmm254, xmmBrightersFlags[4]));
+				_mm_store_si128(&xmmBrightersFlags[5], _mm_andnot_si128(xmm254, xmmBrightersFlags[5]));
+				_mm_store_si128(&xmmBrightersFlags[6], _mm_andnot_si128(xmm254, xmmBrightersFlags[6]));
+				_mm_store_si128(&xmmBrightersFlags[7], _mm_andnot_si128(xmm254, xmmBrightersFlags[7]));
+				_mm_store_si128(&xmmBrightersFlags[8], _mm_andnot_si128(xmm254, xmmBrightersFlags[8]));
+				_mm_store_si128(&xmmBrightersFlags[9], _mm_andnot_si128(xmm254, xmmBrightersFlags[9]));
+				_mm_store_si128(&xmmBrightersFlags[10], _mm_andnot_si128(xmm254, xmmBrightersFlags[10]));
+				_mm_store_si128(&xmmBrightersFlags[11], _mm_andnot_si128(xmm254, xmmBrightersFlags[11]));
+				_mm_store_si128(&xmmBrightersFlags[12], _mm_andnot_si128(xmm254, xmmBrightersFlags[12]));
+				_mm_store_si128(&xmmBrightersFlags[13], _mm_andnot_si128(xmm254, xmmBrightersFlags[13]));
+				_mm_store_si128(&xmmBrightersFlags[14], _mm_andnot_si128(xmm254, xmmBrightersFlags[14]));
+				_mm_store_si128(&xmmBrightersFlags[15], _mm_andnot_si128(xmm254, xmmBrightersFlags[15]));
+				// add all flags
+				_mm_store_si128(&xmmBrightersFlags[0], _mm_adds_epu8(xmmBrightersFlags[0], xmmBrightersFlags[1]));
+				_mm_store_si128(&xmmBrightersFlags[2], _mm_adds_epu8(xmmBrightersFlags[2], xmmBrightersFlags[3]));
+				_mm_store_si128(&xmmBrightersFlags[4], _mm_adds_epu8(xmmBrightersFlags[4], xmmBrightersFlags[5]));
+				_mm_store_si128(&xmmBrightersFlags[6], _mm_adds_epu8(xmmBrightersFlags[6], xmmBrightersFlags[7]));
+				_mm_store_si128(&xmmBrightersFlags[8], _mm_adds_epu8(xmmBrightersFlags[8], xmmBrightersFlags[9]));
+				_mm_store_si128(&xmmBrightersFlags[10], _mm_adds_epu8(xmmBrightersFlags[10], xmmBrightersFlags[11]));
+				_mm_store_si128(&xmmBrightersFlags[12], _mm_adds_epu8(xmmBrightersFlags[12], xmmBrightersFlags[13]));
+				_mm_store_si128(&xmmBrightersFlags[14], _mm_adds_epu8(xmmBrightersFlags[14], xmmBrightersFlags[15]));
+				_mm_store_si128(&xmmBrightersFlags[0], _mm_adds_epu8(xmmBrightersFlags[0], xmmBrightersFlags[2]));
+				_mm_store_si128(&xmmBrightersFlags[4], _mm_adds_epu8(xmmBrightersFlags[4], xmmBrightersFlags[6]));
+				_mm_store_si128(&xmmBrightersFlags[8], _mm_adds_epu8(xmmBrightersFlags[8], xmmBrightersFlags[10]));
+				_mm_store_si128(&xmmBrightersFlags[12], _mm_adds_epu8(xmmBrightersFlags[12], xmmBrightersFlags[14]));
+				_mm_store_si128(&xmmBrightersFlags[0], _mm_adds_epu8(xmmBrightersFlags[0], xmmBrightersFlags[4]));
+				_mm_store_si128(&xmmBrightersFlags[8], _mm_adds_epu8(xmmBrightersFlags[8], xmmBrightersFlags[12]));
+				_mm_store_si128(&xmmBrightersFlags[0], _mm_adds_epu8(xmmBrightersFlags[0], xmmBrightersFlags[8])); // sum is in xmmDarkersFlags[0]
+				// Check the columns with at least N non-zero bits
+				_mm_store_si128(&xmmBrightersFlags[0], _mm_cmpgt_epi8(xmmBrightersFlags[0], xmmNMinusOne));
+				colBrightersFlags = _mm_movemask_epi8(xmmBrightersFlags[0]);
+				if (!colBrightersFlags) {
+					loadB = false; // do not continue processing Darkers
+				}
+			}
+
+			if (loadD) {
+				r |= (1 << 16); // set bit 16 to say we have darkers
+				r |= colDarkersFlags; // set the low 16 bits each defining a column with more than N darkers
 				// Transpose
 				COMPV_TRANSPOSE_I8_16X16_SSE2(
 					xmmDdarkers16x16[0][0], xmmDdarkers16x16[1][0], xmmDdarkers16x16[2][0], xmmDdarkers16x16[3][0],
@@ -241,25 +398,12 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 		_mm_store_si128(&xmmDdarkers16x16[i][0], _mm_unpacklo_epi8(xmmDdarkers16x16[i][0], xmmZeros));
 
 				COMPV_DI16(0) COMPV_DI16(1) COMPV_DI16(2) COMPV_DI16(3) COMPV_DI16(4) COMPV_DI16(5) COMPV_DI16(6) COMPV_DI16(7)
-				COMPV_DI16(8) COMPV_DI16(9) COMPV_DI16(10) COMPV_DI16(11) COMPV_DI16(12) COMPV_DI16(13) COMPV_DI16(14) COMPV_DI16(15)
-			}
-			else {
-				memset(pfdarkers16, 0, sizeof(pfdarkers16[0]) * 16);
+					COMPV_DI16(8) COMPV_DI16(9) COMPV_DI16(10) COMPV_DI16(11) COMPV_DI16(12) COMPV_DI16(13) COMPV_DI16(14) COMPV_DI16(15)
 			}
 
 			if (loadB) {
-				_mm_store_si128(&xmmDbrighters16x16[1][0], _mm_subs_epu8(xmmDataPtr[1], xmmBrighter));
-				_mm_store_si128(&xmmDbrighters16x16[2][0], _mm_subs_epu8(xmmDataPtr[2], xmmBrighter));
-				_mm_store_si128(&xmmDbrighters16x16[3][0], _mm_subs_epu8(xmmDataPtr[3], xmmBrighter));
-				_mm_store_si128(&xmmDbrighters16x16[5][0], _mm_subs_epu8(xmmDataPtr[5], xmmBrighter));
-				_mm_store_si128(&xmmDbrighters16x16[6][0], _mm_subs_epu8(xmmDataPtr[6], xmmBrighter));
-				_mm_store_si128(&xmmDbrighters16x16[7][0], _mm_subs_epu8(xmmDataPtr[7], xmmBrighter));
-				_mm_store_si128(&xmmDbrighters16x16[9][0], _mm_subs_epu8(xmmDataPtr[9], xmmBrighter));
-				_mm_store_si128(&xmmDbrighters16x16[10][0], _mm_subs_epu8(xmmDataPtr[10], xmmBrighter));
-				_mm_store_si128(&xmmDbrighters16x16[11][0], _mm_subs_epu8(xmmDataPtr[11], xmmBrighter));
-				_mm_store_si128(&xmmDbrighters16x16[13][0], _mm_subs_epu8(xmmDataPtr[13], xmmBrighter));
-				_mm_store_si128(&xmmDbrighters16x16[14][0], _mm_subs_epu8(xmmDataPtr[14], xmmBrighter));
-				_mm_store_si128(&xmmDbrighters16x16[15][0], _mm_subs_epu8(xmmDataPtr[15], xmmBrighter));
+				r |= (1 << 17);  // set bit 17 to say we have brighters
+				r |= colBrightersFlags; // set the low 16 bits each defining a column with more than N brighters
 				// Transpose
 				COMPV_TRANSPOSE_I8_16X16_SSE2(
 					xmmDbrighters16x16[0][0], xmmDbrighters16x16[1][0], xmmDbrighters16x16[2][0], xmmDbrighters16x16[3][0],
@@ -289,19 +433,16 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 		_mm_store_si128(&xmmDbrighters16x16[i][1], _mm_unpackhi_epi8(xmmDbrighters16x16[i][0], xmmZeros)); \
 		_mm_store_si128(&xmmDbrighters16x16[i][0], _mm_unpacklo_epi8(xmmDbrighters16x16[i][0], xmmZeros));
 				COMPV_BI16(0) COMPV_BI16(1) COMPV_BI16(2) COMPV_BI16(3) COMPV_BI16(4) COMPV_BI16(5) COMPV_BI16(6) COMPV_BI16(7)
-				COMPV_BI16(8) COMPV_BI16(9) COMPV_BI16(10) COMPV_BI16(11) COMPV_BI16(12) COMPV_BI16(13) COMPV_BI16(14) COMPV_BI16(15)
-			}
-			else {
-				memset(pfbrighters16, 0, sizeof(pfbrighters16[0]) * 16);
+					COMPV_BI16(8) COMPV_BI16(9) COMPV_BI16(10) COMPV_BI16(11) COMPV_BI16(12) COMPV_BI16(13) COMPV_BI16(14) COMPV_BI16(15)
 			}
 
+			
             /* Build the return value */
-#define COMPV_BUILD_R(i) \
-			d0 = compv_popcnt16(popcntHard, (unsigned short)pfdarkers16[i]);  b0 = compv_popcnt16(popcntHard, (unsigned short)pfbrighters16[i]);  \
-			if (d0 >= N || b0 >= N) r |= ((compv_scalar_t)1 << i);
-
-            COMPV_BUILD_R(0) COMPV_BUILD_R(1) COMPV_BUILD_R(2) COMPV_BUILD_R(3) COMPV_BUILD_R(4) COMPV_BUILD_R(5) COMPV_BUILD_R(6) COMPV_BUILD_R(7)
-            COMPV_BUILD_R(8) COMPV_BUILD_R(9) COMPV_BUILD_R(10) COMPV_BUILD_R(11) COMPV_BUILD_R(12) COMPV_BUILD_R(13) COMPV_BUILD_R(14) COMPV_BUILD_R(15)
+			//if (loadB || loadB) {
+				//#define COMPV_BUILD_R(i) \
+				//			d0 = compv_popcnt16(popcntHard, (unsigned short)pfdarkers16[i]);  b0 = compv_popcnt16(popcntHard, (unsigned short)pfbrighters16[i]);  \
+				//			if (d0 >= N || b0 >= N) r |= ((compv_scalar_t)1 << i);
+			//}
 
 #undef COMPV_DI16
 #undef COMPV_BI16

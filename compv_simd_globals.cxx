@@ -25,6 +25,11 @@ COMPV_GEXTERN COMPV_ALIGN_DEFAULT() uint8_t k_0_0_0_255_u8[] = {
     0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255,
 };
 
+COMPV_GEXTERN COMPV_ALIGN_DEFAULT() int8_t k1_i8[] = {
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+};
+
 COMPV_GEXTERN COMPV_ALIGN_DEFAULT() int8_t k5_i8[] = {
     5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
     5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
@@ -43,6 +48,11 @@ COMPV_GEXTERN COMPV_ALIGN_DEFAULT() int8_t k127_i8[] = {
 COMPV_GEXTERN COMPV_ALIGN_DEFAULT() uint8_t k128_u8[] = {
     128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128,
     128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128,
+};
+
+COMPV_GEXTERN COMPV_ALIGN_DEFAULT() uint8_t k254_u8[] = { // 254 = FE = 11111110, not(254) = 00000001 -> useful to select first or last bit, there is no shift_epi8(7) in SSE
+	254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254,
+	254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254,
 };
 
 COMPV_GEXTERN COMPV_ALIGN_DEFAULT() uint8_t k255_u8[] = {
