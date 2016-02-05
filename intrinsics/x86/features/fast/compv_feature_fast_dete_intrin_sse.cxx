@@ -37,10 +37,12 @@ COMPV_NAMESPACE_BEGIN()
 
 // TODO(dmi): ASM version
 // TODO(dmi): add AVX
+// TODO(dmi): C++ doesn't return the right value
 compv_scalar_t FastData_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, COMPV_ALIGNED(SSE) uint8_t(&ddarkers16)[16], COMPV_ALIGNED(SSE) uint8_t(&dbrighters16)[16])
 {
     int32_t sum;
     COMPV_ALIGN_SSE() uint8_t temp16[16];
+	int r = 0;
 
 	uint8_t brighter = CompVMathUtils::clampPixel8(dataPtr[0] + (int16_t)threshold);
 	uint8_t darker = CompVMathUtils::clampPixel8(dataPtr[0] - (int16_t)threshold);
@@ -105,38 +107,16 @@ compv_scalar_t FastData_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) c
             // The flags contain int values with the highest bits always set -> we must use popcnt16 or at least popcnt32(flag&0xFFFF)
 			compv_scalar_t popcnt0 = compv_popcnt16(popcntHard, (unsigned short)*pfdarkers); // FIXME: popcnt
 			compv_scalar_t popcnt1 = compv_popcnt16(popcntHard, (unsigned short)*pfbrighters); // FIXME: popcnt
-            if (popcnt0 >= N || popcnt1 >= N) {
-                return 1;
+			if (popcnt0 >= N) {
+				r |= (1 << 0);
             }
+			if (popcnt1 >= N) {
+				r |= (1 << 16);
+			}
         }
     }
-    return 0;
+	return compv_scalar_t(r);
 }
-// FIXME: remove
-static const __m128i mask4 = _mm_set1_epi8(0x0F);
-static const __m128i Ones = _mm_set1_epi8(0x01);
-static const __m128i lookup = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
-static __m128i low, high;
-static COMPV_ALWAYS_INLINE void __popcnt_epi8_ssse3(__m128i* ret, const __m128i& xmm)
-{
-	low = _mm_and_si128(mask4, xmm);
-	high = _mm_and_si128(mask4, _mm_srli_epi16(xmm, 4));
-	_mm_store_si128(ret, _mm_add_epi8(_mm_shuffle_epi8(lookup, low), _mm_shuffle_epi8(lookup, high)));
-}
-static COMPV_ALWAYS_INLINE void __popcnt_epi16_ssse3(__m128i* ret, const __m128i& xmm)
-{
-	__popcnt_epi8_ssse3(ret, xmm);
-	_mm_store_si128(ret, _mm_maddubs_epi16(_mm_load_si128(ret), Ones)); // FIXME: high latency
-}
-
-// FIXME: I'va better versions (#3 instructions for lt and gt)
-// From https://github.com/aklomp/sse-intrinsics-tests
-// License: Public domain
-#define _mm_cmple_epu8(x, y) _mm_cmpeq_epi8(_mm_min_epu8((x), (y)), (x)) // #2 instructions
-#define _mm_cmpge_epu8(x, y) _mm_cmple_epu8((y), (x)) // #2 instructions
-#define _mm_cmpgt_epu8(x, y) _mm_andnot_si128(_mm_cmpeq_epi8((x), (y)),_mm_cmpeq_epi8(_mm_max_epu8((x), (y)), (x))) //!\ #4 instructions
-#define _mm_cmplt_epu8(x, y) _mm_cmpgt_epu8((y), (x)) //!\ #4 instructions
-
 
 // TODO(dmi): Fast9 and Fast12 for asm
 // TODO(dmi): ASM version
@@ -182,6 +162,8 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 	_mm_store_si128(&xmmBrightersFlags[4], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[4], xmmZeros), xmmFF));
 	_mm_store_si128(&xmmBrightersFlags[12], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[12], xmmZeros), xmmFF));
 
+#if 1 // Faster and doesn't use popcnt
+#if 1 // eliminates less but faster
 	xmm0 = _mm_or_si128(xmmDarkersFlags[0], xmmBrightersFlags[0]);
 	xmm1 = _mm_or_si128(xmmDarkersFlags[8], xmmBrightersFlags[8]);
 	xmm2 = _mm_or_si128(xmmDarkersFlags[4], xmmBrightersFlags[4]);
@@ -190,26 +172,69 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 	sum += _mm_movemask_epi8(xmm1) ? 1 : 0;
 	sum += _mm_movemask_epi8(xmm2) ? 1 : 0;
 	sum += _mm_movemask_epi8(xmm3) ? 1 : 0;
+#else // eliminates more but slower
+	xmm0 = _mm_or_si128(xmmDarkersFlags[0], xmmBrightersFlags[0]);
+	xmm1 = _mm_or_si128(xmmDarkersFlags[8], xmmBrightersFlags[8]);
+	xmm2 = _mm_or_si128(xmmDarkersFlags[4], xmmBrightersFlags[4]);
+	xmm3 = _mm_or_si128(xmmDarkersFlags[12], xmmBrightersFlags[12]);
+	// convert from 0xff to 0x01
+	xmm0 = _mm_andnot_si128(xmm254, xmm0);
+	xmm1 = _mm_andnot_si128(xmm254, xmm1);
+	xmm2 = _mm_andnot_si128(xmm254, xmm2);
+	xmm3 = _mm_andnot_si128(xmm254, xmm3);
+	// add them all
+	xmm0 = _mm_adds_epu8(xmm0, xmm1);
+	xmm2 = _mm_adds_epu8(xmm2, xmm3);
+	xmm0 = _mm_adds_epu8(xmm0, xmm2);
+	// Check that the sum of one column is more that the min required pixels
+	xmm1 = _mm_cmpgt_epi8(xmm0, N == 9 ? _mm_load_si128((__m128i*)k1_i8) : _mm_load_si128((__m128i*)k2_i8));
+	sum = _mm_movemask_epi8(xmm1) ? 0xff : 0x00; // TODO(dmi): change sum to load
+#endif
+#else // uses popcnt and slooow
+	xmm0 = _mm_or_si128(xmmDarkersFlags[0], xmmBrightersFlags[0]);
+	xmm1 = _mm_or_si128(xmmDarkersFlags[8], xmmBrightersFlags[8]);
+	xmm2 = _mm_unpacklo_epi8(xmm0, xmm1);
+	xmm3 = _mm_unpackhi_epi8(xmm0, xmm1);
+	xmm0 = _mm_or_si128(xmm2, xmm3);
+	xmm2 = _mm_or_si128(xmmDarkersFlags[4], xmmBrightersFlags[4]);
+	xmm3 = _mm_or_si128(xmmDarkersFlags[12], xmmBrightersFlags[12]);
+	xmm1 = _mm_unpacklo_epi8(xmm2, xmm3);
+	xmm2 = _mm_unpackhi_epi8(xmm2, xmm3);
+	xmm1 = _mm_or_si128(xmm1, xmm2);
+	xmm0 = _mm_or_si128(xmm0, xmm1);
+	sum = __popcnt(_mm_movemask_epi8(xmm0));
+#endif
 
 
     /*  Speed-Test-2 */
 	if (N == 12 ? sum >= 3 : sum >= 2) {
 		__m128i xmmOnes, xmmNMinusOne;
-		int colDarkersFlags = 0, colBrightersFlags = 0, sumb, sumd; // Flags defining which column has more than N non-zero bits
+		int colDarkersFlags = 0, colBrightersFlags = 0; // Flags defining which column has more than N non-zero bits
+		bool loadB = false, loadD = false;
 		static int kaka = 0;//FIXME
+		xmm3 = N == 9 ? _mm_load_si128((__m128i*)k1_i8) : _mm_load_si128((__m128i*)k2_i8);
 			
 		// Check wheter to load Brighters
 		xmm0 = _mm_or_si128(xmmBrightersFlags[0], xmmBrightersFlags[8]);
 		xmm1 = _mm_or_si128(xmmBrightersFlags[4], xmmBrightersFlags[12]);
-		sumb = _mm_movemask_epi8(xmm0) ? 1 : 0;
-		sumb += _mm_movemask_epi8(xmm1) ? 1 : 0;
-		bool loadB = (N == 12 ? sumb >= 3 : sumb >= 2);
+#if 1 // faster
+		sum = _mm_movemask_epi8(xmm0) ? 1 : 0;
+		sum += _mm_movemask_epi8(xmm1) ? 1 : 0;
+		loadB = (sum > 1); // sum cannot be > 2 -> dot not check it against 3 for N = 12
+#else
+		xmm0 = _mm_andnot_si128(xmm254, xmm0);
+		xmm1 = _mm_andnot_si128(xmm254, xmm1);
+		xmm0 = _mm_adds_epu8(xmm0, xmm1);
+		xmm1 = _mm_cmpgt_epi8(xmm0, xmm3);
+		loadB = _mm_movemask_epi8(xmm1) ? true : false;
+#endif
+
 		// Check wheter to load Darkers
 		xmm0 = _mm_or_si128(xmmDarkersFlags[0], xmmDarkersFlags[8]);
 		xmm1 = _mm_or_si128(xmmDarkersFlags[4], xmmDarkersFlags[12]);
-		sumd = _mm_movemask_epi8(xmm0) ? 1 : 0;
-		sumd += _mm_movemask_epi8(xmm1) ? 1 : 0;
-		bool loadD = (N == 12 ? sumd >= 3 : sumd >= 2);
+		sum = _mm_movemask_epi8(xmm0) ? 1 : 0;
+		sum += _mm_movemask_epi8(xmm1) ? 1 : 0;
+		loadD = (sum > 1); // sum cannot be > 2 -> dot not check it against 3 for N = 12
 
 		//if ((summ & 0xFF) == 0) { // first 8 pixels not corners -> request next 8 pixels
 			// set bits 18 and 19
@@ -573,7 +598,7 @@ compv_scalar_t FastStrengths_SSE41(COMPV_ALIGNED(SSE) const uint8_t(&dbrighters)
             COMPV_HORIZ_MIN(r0, 8, maxnbrighter) COMPV_HORIZ_MIN(r0, 9, maxnbrighter) COMPV_HORIZ_MIN(r0, 10, maxnbrighter) COMPV_HORIZ_MIN(r0, 11, maxnbrighter)
             COMPV_HORIZ_MIN(r0, 12, maxnbrighter) COMPV_HORIZ_MIN(r0, 13, maxnbrighter) COMPV_HORIZ_MIN(r0, 14, maxnbrighter) COMPV_HORIZ_MIN(r0, 15, maxnbrighter)
         }
-		// FIXME: update ASM code to include this else
+		// TODO(dmi): update ASM code to include this else
 		else if (!fdarkers) {
 			return compv_scalar_t(0);
 		}
