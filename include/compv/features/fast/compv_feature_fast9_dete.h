@@ -35,7 +35,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-static compv_scalar_t Fast9Strengths_C(const int16_t(&dbrighters)[16], const int16_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, const uint16_t(&FastXFlags)[16])
+static compv_scalar_t Fast9Strengths_C(const uint8_t(&dbrighters)[16], const uint8_t (&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, const uint16_t(&FastXFlags)[16])
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 

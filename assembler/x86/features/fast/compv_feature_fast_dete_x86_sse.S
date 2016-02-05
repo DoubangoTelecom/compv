@@ -41,8 +41,8 @@ section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; compv_scalar_t FastStrengths_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const int16_t(&dbrighters)[16], COMPV_ALIGNED(SSE) const int16_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16])
-; arg(0) -> COMPV_ALIGNED(SSE) const int16_t(&dbrighters)[16]
-; arg(1) -> COMPV_ALIGNED(SSE) const int16_t(&ddarkers)[16]
+; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t(&dbrighters)[16]
+; arg(1) -> COMPV_ALIGNED(SSE) const uint8_t(&ddarkers)[16]
 ; arg(2) -> compv_scalar_t fbrighters
 ; arg(3) -> compv_scalar_t fdarkers
 ; arg(4) -> compv_scalar_t N
@@ -87,11 +87,9 @@ section .text
 	test rax, rax ; rax = r0
 	je .Darkers
 	pxor xmm3, xmm3 ; xmm3 = Zeros
-	; Load dbrighters and convert it from i16 to u8 and saturate
+	; Load dbrighters
 	mov rbx, arg(0)
 	movdqa xmm2, [rbx]
-	movdqa xmm1, [rbx + 8*2]
-	packuswb xmm2, xmm1
 	; Compute minimum hz
 	%assign i 0
 	%rep    16
@@ -157,11 +155,9 @@ section .text
 	test rax, rax ; rax = r0
 	je .EndOfProcess
 	pxor xmm3, xmm3 ; xmm3 = Zeros
-	; Load dbrighters and convert it from i16 to u8 and saturate
+	; Load dbrighters
 	mov rbx, arg(1)
 	movdqa xmm2, [rbx]
-	movdqa xmm1, [rbx + 8*2]
-	packuswb xmm2, xmm1
 	; Compute minimum hz
 	%assign i 0
 	%rep    16
@@ -273,6 +269,20 @@ sym(Fast12Strengths_Asm_X86_SSE41):
 
 	; alloc memory
 	sub rsp, 8 ; sum = [rsp + 0]
+
+	;
+	;
+	;
+	;
+	;
+	;
+	;	FIXME: ddarkers and dbrighters are now uint8_t instead of int16
+	;
+	;
+	;
+	;
+	;
+	;
 
 	mov rbx, arg(0) ; rbx = dataPtr
 	mov rdx, arg(1) ; rdx = pixels16

@@ -30,6 +30,16 @@ COMPV_GEXTERN COMPV_ALIGN_DEFAULT() int8_t k1_i8[] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };
 
+COMPV_GEXTERN COMPV_ALIGN_DEFAULT() int8_t k2_i8[] = {
+	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+};
+
+COMPV_GEXTERN COMPV_ALIGN_DEFAULT() int8_t k3_i8[] = {
+	3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+};
+
 COMPV_GEXTERN COMPV_ALIGN_DEFAULT() int8_t k5_i8[] = {
     5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
     5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,

@@ -41,19 +41,18 @@ popcnt %1, %2
 ; %2 -> the register containing the value for which to compute the popcnt
 ; %3 -> temp register
 ; %4 -> temp register
-; %5 -> temp register
 ; The first (%1) and second (%2) parameters could be the same register
-; example: COMPV_POPCNT8_SOFT rbx, rbx, rax, rcx, rdx
-%macro COMPV_POPCNT16_SOFT 5
-mov %3, %2
-and %3, 0xFF
-lea %4, [sym(kPopcnt256) + %3]
-mov %3, %2
-shr %3, 8
-and %3, 0xFF
-lea %5, [sym(kPopcnt256) + %3]
-mov %1, [%4]
-add %1, [%5]
+; example: COMPV_POPCNT8_SOFT rbx, rbx, rax, rcx
+%macro COMPV_POPCNT16_SOFT 4
+	mov %3, %2
+	and %3, 0xFF
+	lea %4, [sym(kPopcnt256) + %3]
+	mov %3, %2
+	mov %1, [%4] ; %1 and %2 could be represented by the same register -> update %1 after saving %2 in %3
+	shr %3, 8
+	and %3, 0xFF
+	lea %4, [sym(kPopcnt256) + %3]
+	add %1, [%4]
 %endmacro
 
 
