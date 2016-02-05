@@ -125,7 +125,7 @@ compv_scalar_t FastData_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) c
 compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(&pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(&pfbrighters16)[16], COMPV_ALIGNED(SSE) uint8_t(&ddarkers16x16)[16][16], COMPV_ALIGNED(SSE) uint8_t(&dbrighters16x16)[16][16])
 {
 	compv_scalar_t r = 0, sum;
-	__m128i xmm0, xmm1, xmm2, xmm3, xmm254, xmmBrighter, xmmDarker, xmmThreshold, xmmZeros, xmmFF, xmmDarkersFlags[16], xmmBrightersFlags[16];
+	__m128i xmm0, xmm1, xmm2, xmm3, xmmBrighter, xmmDarker, xmmThreshold, xmmZeros, xmmFF, xmmDarkersFlags[16], xmmBrightersFlags[16];
 
     __m128i (&xmmDdarkers16x16)[16] = (__m128i (&)[16])ddarkers16x16;
     __m128i (&xmmDbrighters16x16)[16] = (__m128i (&)[16])dbrighters16x16;
@@ -137,7 +137,7 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
     _mm_store_si128(&xmmBrighter, _mm_adds_epu8(xmm0, xmmThreshold));
     _mm_store_si128(&xmmDarker, _mm_subs_epu8(xmm0, xmmThreshold));
 	_mm_store_si128(&xmmFF, _mm_cmpeq_epi8(xmmZeros, xmmZeros)); // 0xFF=255
-	_mm_store_si128(&xmm254, _mm_load_si128((__m128i*)k254_u8)); // not(254) = 00000001 -> used to select the lowest bit in each u8
+	
 
     // compare I1 and I9 aka 0 and 8
     _mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[0]]));
@@ -164,10 +164,10 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 
 #if 1 // Faster and doesn't use popcnt
 #if 1 // eliminates less but faster
-	xmm0 = _mm_or_si128(xmmDarkersFlags[0], xmmBrightersFlags[0]);
-	xmm1 = _mm_or_si128(xmmDarkersFlags[8], xmmBrightersFlags[8]);
-	xmm2 = _mm_or_si128(xmmDarkersFlags[4], xmmBrightersFlags[4]);
-	xmm3 = _mm_or_si128(xmmDarkersFlags[12], xmmBrightersFlags[12]);
+	_mm_store_si128(&xmm0, _mm_or_si128(xmmDarkersFlags[0], xmmBrightersFlags[0]));
+	_mm_store_si128(&xmm1, _mm_or_si128(xmmDarkersFlags[8], xmmBrightersFlags[8]));
+	_mm_store_si128(&xmm2, _mm_or_si128(xmmDarkersFlags[4], xmmBrightersFlags[4]));
+	_mm_store_si128(&xmm3, _mm_or_si128(xmmDarkersFlags[12], xmmBrightersFlags[12]));
 	sum = _mm_movemask_epi8(xmm0) ? 1 : 0;
 	sum += _mm_movemask_epi8(xmm1) ? 1 : 0;
 	sum += _mm_movemask_epi8(xmm2) ? 1 : 0;
@@ -208,20 +208,19 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 
     /*  Speed-Test-2 */
 	if (N == 12 ? sum >= 3 : sum >= 2) {
-		__m128i xmmOnes, xmmNMinusOne;
+		__m128i xmmOnes, xmmNMinusOne, xmm254;
 		int colDarkersFlags = 0, colBrightersFlags = 0; // Flags defining which column has more than N non-zero bits
-		bool loadB = false, loadD = false;
-		static int kaka = 0;//FIXME
-		xmm3 = N == 9 ? _mm_load_si128((__m128i*)k1_i8) : _mm_load_si128((__m128i*)k2_i8);
+		bool loadB = false, loadD = false;		
 			
 		// Check wheter to load Brighters
-		xmm0 = _mm_or_si128(xmmBrightersFlags[0], xmmBrightersFlags[8]);
-		xmm1 = _mm_or_si128(xmmBrightersFlags[4], xmmBrightersFlags[12]);
-#if 1 // faster
+		_mm_store_si128(&xmm0, _mm_or_si128(xmmBrightersFlags[0], xmmBrightersFlags[8]));
+		_mm_store_si128(&xmm1, _mm_or_si128(xmmBrightersFlags[4], xmmBrightersFlags[12]));
+#if 1 // faster but not fully checked
 		sum = _mm_movemask_epi8(xmm0) ? 1 : 0;
 		sum += _mm_movemask_epi8(xmm1) ? 1 : 0;
 		loadB = (sum > 1); // sum cannot be > 2 -> dot not check it against 3 for N = 12
-#else
+#else // fully checked
+		_mm_store_si128(&xmm3, N == 9 ? _mm_load_si128((__m128i*)k1_i8) : _mm_load_si128((__m128i*)k2_i8));
 		xmm0 = _mm_andnot_si128(xmm254, xmm0);
 		xmm1 = _mm_andnot_si128(xmm254, xmm1);
 		xmm0 = _mm_adds_epu8(xmm0, xmm1);
@@ -230,11 +229,15 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 #endif
 
 		// Check wheter to load Darkers
-		xmm0 = _mm_or_si128(xmmDarkersFlags[0], xmmDarkersFlags[8]);
-		xmm1 = _mm_or_si128(xmmDarkersFlags[4], xmmDarkersFlags[12]);
+		_mm_store_si128(&xmm0, _mm_or_si128(xmmDarkersFlags[0], xmmDarkersFlags[8]));
+		_mm_store_si128(&xmm1, _mm_or_si128(xmmDarkersFlags[4], xmmDarkersFlags[12]));
 		sum = _mm_movemask_epi8(xmm0) ? 1 : 0;
 		sum += _mm_movemask_epi8(xmm1) ? 1 : 0;
 		loadD = (sum > 1); // sum cannot be > 2 -> dot not check it against 3 for N = 12
+
+		if (!loadB && !loadD) {
+			return compv_scalar_t(0);
+		}
 
 		//if ((summ & 0xFF) == 0) { // first 8 pixels not corners -> request next 8 pixels
 			// set bits 18 and 19
@@ -245,6 +248,7 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 
 		_mm_store_si128(&xmmOnes, _mm_load_si128((__m128i*)k1_i8));
 		_mm_store_si128(&xmmNMinusOne, _mm_set1_epi8((uint8_t)N - 1));
+		_mm_store_si128(&xmm254, _mm_load_si128((__m128i*)k254_u8)); // not(254) = 00000001 -> used to select the lowest bit in each u8
 
 		__m128i xmmDataPtr[16];
 		_mm_store_si128(&xmmDataPtr[1], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[1]]));
