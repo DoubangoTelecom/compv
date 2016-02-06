@@ -124,20 +124,21 @@ compv_scalar_t FastData_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) c
 // TODO(dmi): remove popcnt in ASM names
 compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(&pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(&pfbrighters16)[16], COMPV_ALIGNED(SSE) uint8_t(&ddarkers16x16)[16][16], COMPV_ALIGNED(SSE) uint8_t(&dbrighters16x16)[16][16])
 {
-	compv_scalar_t r = 0, sum;
-	__m128i xmm0, xmm1, xmm2, xmm3, xmmBrighter, xmmDarker, xmmThreshold, xmmZeros, xmmFF, xmmDarkersFlags[16], xmmBrightersFlags[16];
-
+	compv_scalar_t r = 0, sum, s;
+	__m128i xmm0, xmm1, xmm2, xmm3, xmmBrighter, xmmDarker, xmmZeros, xmmFF, xmmDarkersFlags[16], xmmBrightersFlags[16];
+	
     __m128i (&xmmDdarkers16x16)[16] = (__m128i (&)[16])ddarkers16x16;
     __m128i (&xmmDbrighters16x16)[16] = (__m128i (&)[16])dbrighters16x16;
 
     _mm_store_si128(&xmmZeros, _mm_setzero_si128());
 
-    _mm_store_si128(&xmmThreshold, _mm_set1_epi8((uint8_t)threshold));
+	_mm_store_si128(&xmm1, _mm_set1_epi8((uint8_t)threshold));
     _mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)dataPtr));
-    _mm_store_si128(&xmmBrighter, _mm_adds_epu8(xmm0, xmmThreshold));
-    _mm_store_si128(&xmmDarker, _mm_subs_epu8(xmm0, xmmThreshold));
+	_mm_store_si128(&xmmBrighter, _mm_adds_epu8(xmm0, xmm1));
+	_mm_store_si128(&xmmDarker, _mm_subs_epu8(xmm0, xmm1));
 	_mm_store_si128(&xmmFF, _mm_cmpeq_epi8(xmmZeros, xmmZeros)); // 0xFF=255
-	
+
+	/*  Speed-Test-1 */
 
     // compare I1 and I9 aka 0 and 8
     _mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[0]]));
@@ -150,6 +151,13 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 	_mm_store_si128(&xmmDarkersFlags[8], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[8], xmmZeros), xmmFF));
 	_mm_store_si128(&xmmBrightersFlags[0], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[0], xmmZeros), xmmFF));
 	_mm_store_si128(&xmmBrightersFlags[8], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[8], xmmZeros), xmmFF));
+	_mm_store_si128(&xmm0, _mm_or_si128(xmmDarkersFlags[0], xmmBrightersFlags[0]));
+	_mm_store_si128(&xmm1, _mm_or_si128(xmmDarkersFlags[8], xmmBrightersFlags[8]));
+	sum = (_mm_movemask_epi8(xmm0) ? 1 : 0) + (_mm_movemask_epi8(xmm1) ? 1 : 0);
+	if (!sum) {
+		return 0;
+	}
+
 	// compare I5 and I13 aka 4 and 12
 	_mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[4]]));
 	_mm_store_si128(&xmm1, _mm_loadu_si128((__m128i*)&dataPtr[pixels16[12]]));
@@ -160,51 +168,14 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 	_mm_store_si128(&xmmDarkersFlags[4], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[4], xmmZeros), xmmFF));
 	_mm_store_si128(&xmmDarkersFlags[12], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16x16[12], xmmZeros), xmmFF));
 	_mm_store_si128(&xmmBrightersFlags[4], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[4], xmmZeros), xmmFF));
-	_mm_store_si128(&xmmBrightersFlags[12], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[12], xmmZeros), xmmFF));
-
-#if 1 // Faster and doesn't use popcnt
-#if 1 // eliminates less but faster
-	_mm_store_si128(&xmm0, _mm_or_si128(xmmDarkersFlags[0], xmmBrightersFlags[0]));
-	_mm_store_si128(&xmm1, _mm_or_si128(xmmDarkersFlags[8], xmmBrightersFlags[8]));
+	_mm_store_si128(&xmmBrightersFlags[12], _mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[12], xmmZeros), xmmFF));	
 	_mm_store_si128(&xmm2, _mm_or_si128(xmmDarkersFlags[4], xmmBrightersFlags[4]));
 	_mm_store_si128(&xmm3, _mm_or_si128(xmmDarkersFlags[12], xmmBrightersFlags[12]));
-	sum = _mm_movemask_epi8(xmm0) ? 1 : 0;
-	sum += _mm_movemask_epi8(xmm1) ? 1 : 0;
-	sum += _mm_movemask_epi8(xmm2) ? 1 : 0;
-	sum += _mm_movemask_epi8(xmm3) ? 1 : 0;
-#else // eliminates more but slower
-	xmm0 = _mm_or_si128(xmmDarkersFlags[0], xmmBrightersFlags[0]);
-	xmm1 = _mm_or_si128(xmmDarkersFlags[8], xmmBrightersFlags[8]);
-	xmm2 = _mm_or_si128(xmmDarkersFlags[4], xmmBrightersFlags[4]);
-	xmm3 = _mm_or_si128(xmmDarkersFlags[12], xmmBrightersFlags[12]);
-	// convert from 0xff to 0x01
-	xmm0 = _mm_andnot_si128(xmm254, xmm0);
-	xmm1 = _mm_andnot_si128(xmm254, xmm1);
-	xmm2 = _mm_andnot_si128(xmm254, xmm2);
-	xmm3 = _mm_andnot_si128(xmm254, xmm3);
-	// add them all
-	xmm0 = _mm_adds_epu8(xmm0, xmm1);
-	xmm2 = _mm_adds_epu8(xmm2, xmm3);
-	xmm0 = _mm_adds_epu8(xmm0, xmm2);
-	// Check that the sum of one column is more that the min required pixels
-	xmm1 = _mm_cmpgt_epi8(xmm0, N == 9 ? _mm_load_si128((__m128i*)k1_i8) : _mm_load_si128((__m128i*)k2_i8));
-	sum = _mm_movemask_epi8(xmm1) ? 0xff : 0x00; // TODO(dmi): change sum to load
-#endif
-#else // uses popcnt and slooow
-	xmm0 = _mm_or_si128(xmmDarkersFlags[0], xmmBrightersFlags[0]);
-	xmm1 = _mm_or_si128(xmmDarkersFlags[8], xmmBrightersFlags[8]);
-	xmm2 = _mm_unpacklo_epi8(xmm0, xmm1);
-	xmm3 = _mm_unpackhi_epi8(xmm0, xmm1);
-	xmm0 = _mm_or_si128(xmm2, xmm3);
-	xmm2 = _mm_or_si128(xmmDarkersFlags[4], xmmBrightersFlags[4]);
-	xmm3 = _mm_or_si128(xmmDarkersFlags[12], xmmBrightersFlags[12]);
-	xmm1 = _mm_unpacklo_epi8(xmm2, xmm3);
-	xmm2 = _mm_unpackhi_epi8(xmm2, xmm3);
-	xmm1 = _mm_or_si128(xmm1, xmm2);
-	xmm0 = _mm_or_si128(xmm0, xmm1);
-	sum = __popcnt(_mm_movemask_epi8(xmm0));
-#endif
-
+	s = (_mm_movemask_epi8(xmm2) ? 1 : 0) + (_mm_movemask_epi8(xmm3) ? 1 : 0);
+	if (!s) {
+		return 0;
+	}
+	sum += s;
 
     /*  Speed-Test-2 */
 	if (N == 12 ? sum >= 3 : sum >= 2) {
@@ -550,6 +521,7 @@ compv_scalar_t FastStrengths_SSE2(COMPV_ALIGNED(SSE) const uint8_t(&dbrighters)[
 }
 
 // TODO(dmi): add AVX
+
 compv_scalar_t FastStrengths_SSE41(COMPV_ALIGNED(SSE) const uint8_t(&dbrighters)[16], COMPV_ALIGNED(SSE) const uint8_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16])
 {
     __m128i xmm0, xmm1, xmmFastXFlagsLow, xmmFastXFlagsHigh;
