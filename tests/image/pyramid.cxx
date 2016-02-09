@@ -9,10 +9,11 @@ using namespace compv;
 #define IMAGE_PYRAMID_FACTOR		.83f
 #define IMAGE_PYRAMID_LEVELS		8
 #define IMAGE_PYRAMID_SCALE_TYPE	COMPV_SCALE_TYPE_BILINEAR
-#define IMAGE_PYRAMID_LOOP_COUNT	1
+#define IMAGE_PYRAMID_LOOP_COUNT	1000
 #define IMAGE_MD5					1
 
-extern void writeImgToFile(const CompVObjWrapper<CompVImage *>& img);
+extern void writeImgToFile(const CompVObjWrapper<CompVImage *>& img, COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL);
+extern std::string imageMD5(const CompVObjWrapper<CompVImage *>& img, COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL);
 
 bool TestPyramid()
 {
@@ -37,7 +38,7 @@ bool TestPyramid()
 #if IMAGE_MD5
     for (int i = 0; i < pyramid->getLevels(); ++i) {
         COMPV_CHECK_CODE_ASSERT(pyramid->getImage(i, &image));
-        COMPV_DEBUG_INFO("MD5(level %d, s=%d,w=%d,h=%d)=%s", i, image->getStride(), image->getWidth(), image->getHeight(), CompVMd5::compute2(image->getDataPtr(), image->getDataSize()).c_str());
+		COMPV_DEBUG_INFO("MD5(level %d, s=%d,w=%d,h=%d)=%s", i, image->getStride(), image->getWidth(), image->getHeight(), imageMD5(image).c_str());
     }
 #endif
 

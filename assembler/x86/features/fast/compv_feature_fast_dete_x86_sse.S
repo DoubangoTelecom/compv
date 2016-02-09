@@ -28,7 +28,7 @@ global sym(Fast9Strengths_Asm_X86_SSE41)
 global sym(Fast12Strengths_Asm_CMOV_X86_SSE41)
 global sym(Fast12Strengths_Asm_X86_SSE41)
 
-global sym(FastData_Asm_x86_SSE2)
+global sym(FastData_Asm_CMOV_POPCNT_x86_SSE2)
 
 global sym(Fast9Data16_Asm_POPCNT_X86_SSE2)
 global sym(Fast9Data16_Asm_X86_SSE2)
@@ -61,11 +61,11 @@ section .text
 	push rbx
 	; end prolog
 
+	mov rax, arg(5)
 	xor rcx, rcx ; rcx = maxnbrighter
 	xor rdx, rdx ; rdx = maxndarker
 
 	; FAST hard-coded flags
-	mov rax, arg(5)
 	movdqa xmm7, [rax] ; xmm7 = xmmFastXFlagsLow
 	movdqa xmm6, [rax + 8*2]; xmm6 = xmmFastXFlagsHigh
 
@@ -710,6 +710,7 @@ sym(Fast12Data16_Asm_X86_SSE2):
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; FUNCTION NOT USED
 ; arg(0) -> const uint8_t* dataPtr
 ; arg(1) -> COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16]
 ; arg(2) -> compv_scalar_t N
@@ -718,8 +719,8 @@ sym(Fast12Data16_Asm_X86_SSE2):
 ; arg(5) -> compv_scalar_t* pfbrighters
 ; arg(6) -> COMPV_ALIGNED(SSE) uint8_t(&ddarkers16)[16]
 ; arg(7) -> COMPV_ALIGNED(SSE) uint8_t(&dbrighters16)[16]
-; compv_scalar_t FastData_Asm_x86_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, COMPV_ALIGNED(SSE) int16_t(&ddarkers16)[16], COMPV_ALIGNED(SSE) int16_t(&dbrighters16)[16])
-sym(FastData_Asm_x86_SSE2):
+; compv_scalar_t FastData_Asm_CMOV_POPCNT_x86_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, COMPV_ALIGNED(SSE) int16_t(&ddarkers16)[16], COMPV_ALIGNED(SSE) int16_t(&dbrighters16)[16])
+sym(FastData_Asm_CMOV_POPCNT_x86_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
@@ -736,46 +737,44 @@ sym(FastData_Asm_x86_SSE2):
 	mov rdx, arg(1) ; pixels16
 
 	; Initialize temp16
-	;%assign i 0
-	;%rep    16
-	;	mov rax, [rdx + i*COMPV_YASM_REG_SZ_BYTES] ; rax = pixels16[i]
-	;	movzx rcx, byte ptr [rbx + rax]
-	;	mov byte ptr [rsp + i], cl  
-	;	%assign i i+1
-	;%endrep
-
 	%assign i 0
-	%rep    8
+	%rep    16
 		mov rax, [rdx + i*COMPV_YASM_REG_SZ_BYTES] ; rax = pixels16[i]
-		mov rsi, [rdx + (i+1)*COMPV_YASM_REG_SZ_BYTES] ; rax = pixels16[i+1]
-
 		movzx rcx, byte ptr [rbx + rax]
-		movzx rdi, byte ptr [rbx + rsi]
-
 		mov byte ptr [rsp + i], cl  
-		mov byte ptr [rsp + i + 1], dil  
-		%assign i i+2
+
+		%if i == 0
+			mov rax, arg(3) ; threshold
+			movzx rsi, byte ptr [rbx]
+			movzx rdi, byte ptr [rbx]
+			pxor xmm0, xmm0 ; xmm0 = xmmZeros
+			pcmpeqb xmm4, xmm4 ; xmmFF
+			add rsi, rax ; brighter
+			sub rdi, rax ; darker
+			; TODO(dmi): clip brighter and darker (function not used -> ignore the TODO)
+		%endif
+		
+		%if i == 4
+			movd xmm2, rdi
+			movd xmm3, rsi
+		%endif
+		%if i == 7
+			punpcklbw xmm2, xmm2
+			punpcklbw xmm3, xmm3
+		%endif
+		%if i == 10
+			punpcklwd xmm2, xmm2
+			punpcklwd xmm3, xmm3
+		%endif
+		%if i == 13
+			pshufd xmm2, xmm2, 0  ; xmm2 = _mm_set1_epi8((uint8_t)darker)) = xmmDarker
+			pshufd xmm3, xmm3, 0  ; xmm3 = _mm_set1_epi8((uint8_t)brighter)) = xmmBrighter
+		%endif
+
+		%assign i i+1
 	%endrep
 
-	mov rax, arg(3) ; threshold
-	movzx rsi, byte ptr [rbx]
-	movzx rdi, byte ptr [rbx]
-	pxor xmm0, xmm0 ; xmm0 = xmmZeros
-	pcmpeqb xmm4, xmm4 ; xmmFF
-	add rsi, rax ; brighter
-	sub rdi, rax ; darker
-	; FIXME: clip brighter and darker
-
-
 	movdqa xmm1, [rsp + 0] ; xmm1 = xmmTemp16
-	movd xmm2, rdi
-	movd xmm3, rsi
-	punpcklbw xmm2, xmm2
-	punpcklbw xmm3, xmm3
-	punpcklwd xmm2, xmm2
-	punpcklwd xmm3, xmm3
-	pshufd xmm2, xmm2, 0  ; xmm2 = _mm_set1_epi8((uint8_t)darker)) = xmmDarker
-	pshufd xmm3, xmm3, 0  ; xmm3 = _mm_set1_epi8((uint8_t)brighter)) = xmmBrighter
 
 	psubusb xmm2, xmm1 ; xmm2 = xmmDdarkers16
 	psubusb xmm1, xmm3 ; xmm1 = xmmDbrighters16
@@ -793,28 +792,29 @@ sym(FastData_Asm_x86_SSE2):
 	pmovmskb rsi, xmm2
 	pmovmskb rdi, xmm1
 
-	xor rax, rax
-	mov rcx, arg(2) ; N
-
 	mov rbx, arg(4) ; pfdarkers
 	mov rdx, arg(5) ; pfbrighters
 
-	test rsi, rsi
-	je .SkipDarkets
-	mov [rbx], rsi
-	popcnt rsi, rsi ; FIXME: using popcnt
-	cmp rsi, rcx
-	jl .SkipDarkets
-	or rax, 1<<0
-	.SkipDarkets
+	xor rax, rax
+	mov rcx, arg(2) ; N
 
-	test rdi, rdi
-	je .SkipBrighters
-	mov [rdx], rdi
-	popcnt rdi, rdi ; FIXME: using popcnt
-	cmp rdi, rcx
+	cmp rsi, 511
+	jl .SkipDarkers
+	mov [rbx], rsi
+	mov rbx, 1<<0
+	popcnt rsi, rsi
+	cmp rsi, rcx
+	cmovge rax, rbx
+	.SkipDarkers
+	
+	cmp rdi, 511
 	jl .SkipBrighters
-	or rax, 1<<16
+	mov [rdx], rdi
+	mov rdx, 1<<16
+	add rdx, rax
+	popcnt rdi, rdi
+	cmp rdi, rcx
+	cmovge rax, rdx
 	.SkipBrighters
 
 	; unalign stack and free memory

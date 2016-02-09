@@ -20,14 +20,15 @@ using namespace compv;
 
 #define loopCount			1
 #define MD5_PRINT			1
-#define FORMAT_SRC			FORMAT_RGBA // must be rgb or rgba family
-#define FORMAT_DST			FORMAT_I420 // any format
+#define FORMAT_SRC			FORMAT_BGR // must be rgb or rgba family
+#define FORMAT_DST			FORMAT_GRAYSCALE // any format
 #define STRIDE_ALIGN		true // false to test CompVImage::wrap and CompVImage::copy
 
 static void rgbToSrc(const CompVObjWrapper<CompVImage *>& jpegImage, void** srcPtr, int &height, int &width, int &stride)
 {
-#define WIDTH_OFFSET -1 // amount of pixels to remove to width to make it wired (not standard)
-#define HEIGHT_OFFSET 0 // amount of pixels to remove to height to make it wired (not standard)	
+    // FIXME: Doesn't work WIDTH_OFFSET = -1, regression introduced when added border to images
+#define WIDTH_OFFSET	2 // amount of pixels to remove to width to make it wired (not standard)
+#define HEIGHT_OFFSET	0 // amount of pixels to remove to height to make it wired (not standard)	
     int jpegImageStride = jpegImage->getStride();
     width = jpegImage->getWidth() + WIDTH_OFFSET;
     height = jpegImage->getHeight() + HEIGHT_OFFSET;
@@ -115,7 +116,7 @@ static std::string formatExtension(COMPV_PIXEL_FORMAT pixelFormat)
     }
 }
 
-void writeImgToFile(const CompVObjWrapper<CompVImage *>& img)
+void writeImgToFile(const CompVObjWrapper<CompVImage *>& img, COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL)
 {
     if (img) {
         std::string fileName = "./out." + formatExtension(img->getPixelFormat());
@@ -123,10 +124,83 @@ void writeImgToFile(const CompVObjWrapper<CompVImage *>& img)
         COMPV_ASSERT(file != NULL);
         if (file) {
             COMPV_DEBUG_INFO("Writing %s file...", fileName.c_str());
-            fwrite(img->getDataPtr(), 1, img->getDataSize(), file);
+
+#if 0
+            fwrite(img->getDataPtr(COMPV_BORDER_POS_NONE), 1, img->getDataSize(COMPV_BORDER_POS_NONE), file);
+#else
+            int width = img->getWidth();
+            int stride = img->getStride();
+            int height = img->getHeight(bordersToExclude);
+			const uint8_t* ptr = (const uint8_t*)img->getDataPtr(bordersToExclude);
+
+			switch (img->getPixelFormat()) {
+			case COMPV_PIXEL_FORMAT_R8G8B8:
+			case COMPV_PIXEL_FORMAT_B8G8R8:
+			case COMPV_PIXEL_FORMAT_R8G8B8A8:
+			case COMPV_PIXEL_FORMAT_B8G8R8A8:
+			case COMPV_PIXEL_FORMAT_A8B8G8R8:
+			case COMPV_PIXEL_FORMAT_A8R8G8B8:
+			case COMPV_PIXEL_FORMAT_GRAYSCALE: {
+				CompVImage::getSizeForPixelFormat(img->getPixelFormat(), stride, 1, &stride);
+				CompVImage::getSizeForPixelFormat(img->getPixelFormat(), width, 1, &width);
+				for (int i = 0; i < height; ++i) {
+					fwrite(ptr, 1, width, file);
+					ptr += stride;
+				}
+				break;
+			}
+			case COMPV_PIXEL_FORMAT_I420: {
+				// Y
+				for (int i = 0; i < height; ++i) {
+					fwrite(ptr, 1, width, file);
+					ptr += stride;
+				}
+				height = (height + 1) >> 1;
+				width = (width + 1) >> 1;
+				stride = (stride + 1) >> 1;
+				// U
+				for (int i = 0; i < height; ++i) {
+					fwrite(ptr, 1, width, file);
+					ptr += stride;
+				}
+				// V
+				for (int i = 0; i < height; ++i) {
+					fwrite(ptr, 1, width, file);
+					ptr += stride;
+				}
+				break;
+			}
+			default: {
+				COMPV_DEBUG_ERROR("Not implemented");
+				COMPV_ASSERT(false);
+				break;
+			}
+			}
+#endif
+
             fclose(file);
         }
     }
+}
+
+std::string imageMD5(const CompVObjWrapper<CompVImage *>& img, COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL)
+{
+    if (img) {
+        CompVObjWrapper<CompVMd5*> md5;
+        COMPV_CHECK_CODE_ASSERT(CompVMd5::newObj(&md5));
+        int width = img->getWidth();
+        int stride = img->getStride();
+        int height = img->getHeight(bordersToExclude);
+        CompVImage::getSizeForPixelFormat(img->getPixelFormat(), stride, 1, &stride);
+        CompVImage::getSizeForPixelFormat(img->getPixelFormat(), width, 1, &width);
+        const uint8_t* ptr = (const uint8_t*)img->getDataPtr(bordersToExclude);
+        for (int i = 0; i < height; ++i) {
+            COMPV_CHECK_CODE_ASSERT(md5->update(ptr, width));
+            ptr += stride;
+        }
+        return md5->compute();
+    }
+    return "";
 }
 
 bool TestConv()
@@ -150,12 +224,12 @@ bool TestConv()
     COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_EQUIRECTANGULAR_FILE, &jpegImage));
     COMPV_ASSERT(jpegImage->getPixelFormat() == COMPV_PIXEL_FORMAT_R8G8B8);
     rgbToSrc(jpegImage, &srcPtr, height, width, stride);
+	COMPV_CHECK_CODE_ASSERT(CompVImage::wrap((COMPV_PIXEL_FORMAT)FORMAT_SRC, srcPtr, width, height, stride, &srcImage)); // FIXME: slooow
 
     COMPV_DEBUG_INFO("Converting from %s to %s", formatExtension((COMPV_PIXEL_FORMAT)FORMAT_SRC).c_str(), formatExtension((COMPV_PIXEL_FORMAT)FORMAT_DST).c_str());
 
     timeStart = CompVTime::getNowMills();
     for (size_t i = 0; i < loopCount; ++i) {
-        COMPV_CHECK_CODE_ASSERT(CompVImage::wrap((COMPV_PIXEL_FORMAT)FORMAT_SRC, srcPtr, width, height, stride, &srcImage));
         COMPV_CHECK_CODE_ASSERT(srcImage->convert((COMPV_PIXEL_FORMAT)FORMAT_DST, &dstImage)); // e.g. RGBA -> I420
 #if FORMAT_SRC == FORMAT_RGBA && 0 // only I420 -> RGBA is supported
         const uint8_t* yPtr = (const uint8_t*)dstImage->getDataPtr();
@@ -169,7 +243,10 @@ bool TestConv()
     COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
 #if MD5_PRINT
-    COMPV_DEBUG_INFO("MD5(I420)=%s", CompVMd5::compute2(dstImage->getDataPtr(), dstImage->getDataSize()).c_str());
+    COMPV_DEBUG_INFO("Conversion result:\nwithout borders->(md5=%s, w=%d, s=%d, h=%d)\nwith borders->(md5=%s, w=%d, s=%d, h=%d)",
+                     imageMD5(dstImage, COMPV_BORDER_POS_ALL).c_str(), dstImage->getWidth(), dstImage->getStride(), dstImage->getHeight(COMPV_BORDER_POS_ALL),
+                     imageMD5(dstImage, COMPV_BORDER_POS_NONE).c_str(), dstImage->getWidth(), dstImage->getStride(), dstImage->getHeight(COMPV_BORDER_POS_NONE)
+                    );
 #endif
 
     // Open with imageMagick (MS-DOS): convert.exe -depth 8 -size 2048x1000 out.rgba out.png

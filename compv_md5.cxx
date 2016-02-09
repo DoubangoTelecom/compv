@@ -261,14 +261,12 @@ COMPV_ERROR_CODE CompVMd5::transform(uint32_t buf[4], uint32_t const in[COMPV_MD
     return COMPV_ERROR_CODE_S_OK;
 }
 
-std::string CompVMd5::compute(const void* input, size_t size)
+std::string CompVMd5::compute(const void* input /*= NULL*/, size_t size /*= 0*/)
 {
-    if (!input || !size) {
-        COMPV_DEBUG_ERROR("Invalid parameter");
-        return "";
-    }
-    if (COMPV_ERROR_CODE_IS_NOK(update((const uint8_t*)(input), size))) {
-        return "";
+    if (input && size) {
+        if (COMPV_ERROR_CODE_IS_NOK(update((const uint8_t*)(input), size))) {
+            return "";
+        }
     }
     compv_md5digest_t digest;
     if (COMPV_ERROR_CODE_IS_NOK((final(digest)))) {

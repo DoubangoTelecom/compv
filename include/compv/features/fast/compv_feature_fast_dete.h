@@ -30,6 +30,26 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+struct RangeFAST {
+	const uint8_t* IP;
+	const uint8_t* IPprev;
+	int32_t rowStart;
+	int32_t rowEnd;
+	int32_t rowCount;
+	int32_t width;
+	int32_t stride;
+	int32_t threshold;
+	int32_t N;
+	const compv_scalar_t(*pixels16)[16];
+	compv_scalar_t(*pfdarkers16)[16];
+	compv_scalar_t(*pfbrighters16)[16];
+	uint8_t(*ddarkers16x16)[16][16];
+	uint8_t(*dbrighters16x16)[16][16];
+	compv_scalar_t* rs;
+	compv_scalar_t* mes;
+	std::vector<CompVInterestPoint >* interestPoints;
+};
+
 class CompVFeatureDeteFAST : public CompVFeatureDete
 {
 protected:
@@ -51,6 +71,17 @@ private:
 	int32_t m_iNumContinuous;
 	int32_t m_iMaxFeatures;
 	bool m_bNonMaximaSupp;
+	compv_scalar_t(*m_pFDarkers16)[16];
+	compv_scalar_t(*m_pFBrighters16)[16];
+	uint8_t(*m_pDDarkers16x16)[16][16];
+	uint8_t(*m_pDBrighters16x16)[16][16];
+	compv_scalar_t* m_pRs;
+	compv_scalar_t* m_pMEs;
+	int32_t m_nWidth;
+	int32_t m_nHeight;
+	int32_t m_nStride;
+	RangeFAST* m_pRanges;
+	int32_t m_nRanges;
 };
 
 COMPV_NAMESPACE_END()

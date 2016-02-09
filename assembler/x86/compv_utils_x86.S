@@ -60,8 +60,8 @@ sym(testPrologEpilog):
 	pop rbx
 	pop rdi
 	pop rsi
-    COMPV_YASM_RESTORE_XMM
-    COMPV_YASM_UNSHADOW_ARGS
+	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
 	ret

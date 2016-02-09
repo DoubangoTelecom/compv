@@ -11,7 +11,8 @@ using namespace compv;
 #define IMAGE_SACLE_LOOP_COUNT	1
 #define IMAGE_MD5				1
 
-extern void writeImgToFile(const CompVObjWrapper<CompVImage *>& img);
+extern void writeImgToFile(const CompVObjWrapper<CompVImage *>& img, COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL);
+extern std::string imageMD5(const CompVObjWrapper<CompVImage *>& img, COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL);
 
 bool TestScale()
 {
@@ -35,7 +36,7 @@ bool TestScale()
     COMPV_DEBUG_INFO("Image scaling: factor=%f, outWidth=%d, outStride=%d, outHeight=%d", IMAGE_SCALE_FACTOR, image->getWidth(), image->getStride(), image->getHeight());
 
 #if IMAGE_MD5
-    COMPV_DEBUG_INFO("MD5(SCALED)=%s", CompVMd5::compute2(image->getDataPtr(), image->getDataSize()).c_str());
+	COMPV_DEBUG_INFO("MD5(SCALED)=%s", imageMD5(image).c_str());
 #endif
 
     // dump image to file

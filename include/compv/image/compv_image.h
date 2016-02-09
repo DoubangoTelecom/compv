@@ -34,18 +34,23 @@ protected:
 public:
 	virtual ~CompVImage();
 	virtual COMPV_INLINE const char* getObjectId() { return "CompVImage"; };
-	COMPV_ERROR_CODE setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, int32_t width, int32_t height, int32_t stride = 0);
 	COMPV_ERROR_CODE convert(COMPV_PIXEL_FORMAT eDstPixelFormat, CompVObjWrapper<CompVImage*>* outImage);
 	COMPV_ERROR_CODE scale(COMPV_SCALE_TYPE type, int32_t outWidth, int32_t outHeight, CompVObjWrapper<CompVImage*>* outImage);
 
-	COMPV_INLINE const CompVObjWrapper<CompVBuffer*>& getData() { return m_oData; }
-	COMPV_INLINE size_t getDataSize() { return m_oData ? m_oData->getSize() : 0; }
-	COMPV_INLINE const void* getDataPtr() { return m_oData ? m_oData->getPtr() : NULL; }
-	COMPV_INLINE int32_t getWidth() { return m_nWidth; }
-	COMPV_INLINE int32_t getHeight() { return m_nHeight; }
-	COMPV_INLINE int32_t getStride() { return m_nStride; }
+	size_t getDataSize(COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL);
+	const void* getDataPtr(COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL);
+	int32_t getWidth();
+	int32_t getHeight(COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL);
+	int32_t getStride();
 	COMPV_INLINE COMPV_PIXEL_FORMAT getPixelFormat() { return m_ePixelFormat; }
 	COMPV_INLINE COMPV_IMAGE_FORMAT getImageFormat() { return m_eImageFormat; }
+	COMPV_INLINE COMPV_BORDER_TYPE getBorderType() { return m_eBorderType; }
+	COMPV_INLINE int32_t getBorderWidth() { return m_nBorderWidth; }
+	COMPV_INLINE int32_t getBorderWidthTimes2() { return getBorderWidth() << 1; }
+	COMPV_INLINE int32_t getBorderStride() { return m_nBorderStride; }
+	COMPV_INLINE int32_t getBorderStrideTimes2() { return getBorderStride() << 1; }
+	COMPV_INLINE int32_t getBorderHeight() { return m_nBorderHeight; }
+	COMPV_INLINE int32_t getBorderHeightTimes2() { return getBorderHeight() << 1; }
 
 	static COMPV_ERROR_CODE getBestStride(int32_t stride, int32_t *bestStride);
 	static COMPV_ERROR_CODE getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, int32_t width, int32_t height, int32_t *size);
@@ -53,7 +58,12 @@ public:
 	static COMPV_ERROR_CODE copy(COMPV_PIXEL_FORMAT ePixelFormat, const void* inPtr, int32_t inWidth, int32_t inHeight, int32_t inStride, void* outPtr, int32_t outWidth, int32_t outHeight, int32_t outStride);
 	static COMPV_ERROR_CODE wrap(COMPV_PIXEL_FORMAT ePixelFormat, const void* dataPtr, int32_t width, int32_t height, int32_t stride, CompVObjWrapper<CompVImage*>* image);
 	static COMPV_ERROR_CODE newObj(COMPV_IMAGE_FORMAT eImageFormat, COMPV_PIXEL_FORMAT ePixelFormat, CompVObjWrapper<CompVImage*>* image);
+#if 0
 	static COMPV_ERROR_CODE newObj(COMPV_PIXEL_FORMAT ePixelFormat, int32_t width, int32_t height, int32_t stride, CompVObjWrapper<CompVImage*>* image);
+#endif
+
+protected:
+	COMPV_ERROR_CODE setBuffer(CompVObjWrapper<CompVBuffer*> & buffer, int32_t width, int32_t height, int32_t stride = 0);
 
 protected:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
@@ -62,9 +72,10 @@ protected:
 	int32_t m_nHeight;
 	int32_t m_nStride;
 	int32_t m_nBorderWidth;
-	int32_t m_nBorderHeight;
 	int32_t m_nBorderStride;
+	int32_t m_nBorderHeight;
 	COMPV_PIXEL_FORMAT m_ePixelFormat;
+	COMPV_PIXEL_FORMAT m_ePixelFormatComp0;
 	COMPV_IMAGE_FORMAT m_eImageFormat;
 	COMPV_BORDER_TYPE m_eBorderType;
 	COMPV_DISABLE_WARNINGS_END()

@@ -40,10 +40,8 @@ COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVObjWrapper<CompVIm
 {
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     uint8_t* rawdata_ = NULL;
-    int32_t width_ = 0, stride_ = 0, height_ = 0, size_ = 0;
+    int32_t width_ = 0, stride_ = 0, height_ = 0;
     COMPV_PIXEL_FORMAT pixelFormat_ = COMPV_PIXEL_FORMAT_NONE;
-    CompVObjWrapper<CompVImage*> image_;
-    CompVObjWrapper<CompVBuffer*> buffer_;
 
     if (!filePath || !image) {
         COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "Invalid parameter");
@@ -51,12 +49,7 @@ COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVObjWrapper<CompVIm
     }
 
     COMPV_CHECK_CODE_BAIL(err_ = decode_jpeg(filePath, kReadDataTrue, &rawdata_, &width_, &stride_, &height_, &pixelFormat_));
-    COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getSizeForPixelFormat(pixelFormat_, stride_, height_, &size_));
-    COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj(COMPV_IMAGE_FORMAT_RAW, pixelFormat_, &image_));
-    COMPV_CHECK_CODE_BAIL(err_ = CompVBuffer::newObjAndTakeData((void**)&rawdata_, size_, &buffer_));
-    COMPV_CHECK_CODE_BAIL(err_ = image_->setBuffer(buffer_, width_, height_, stride_));
-
-    *image = image_;
+    COMPV_CHECK_CODE_BAIL(err_ = CompVImage::wrap(pixelFormat_, rawdata_, width_, height_, stride_, image));
 
 bail:
     CompVMem::free((void**)&rawdata_);
@@ -231,7 +224,7 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
             * more than one scanline at a time if that's more convenient.
             */
             (void)jpeg_read_scanlines(&cinfo, buffer, 1);
-            memcpy((*rawdata) + ((cinfo.output_scanline - 1) * row_stride_bytes), buffer[0], row_width_bytes);
+            CompVMem::copy((*rawdata) + ((cinfo.output_scanline - 1) * row_stride_bytes), buffer[0], row_width_bytes);
         }
     }
 

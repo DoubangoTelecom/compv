@@ -29,6 +29,11 @@
 
 #include <algorithm>
 
+// Default border size
+#if !defined(COMPV_IMAGE_BORDER_SIZE_DEFAULT)
+#	define COMPV_IMAGE_BORDER_SIZE_DEFAULT 7
+#endif
+
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -41,19 +46,115 @@ CompVImage::CompVImage(COMPV_IMAGE_FORMAT eImageFormat, COMPV_PIXEL_FORMAT ePixe
     , m_nWidth(0)
     , m_nHeight(0)
     , m_nStride(0)
-    , m_nBorderWidth(0)
-    , m_nBorderHeight(0)
-    , m_nBorderStride(0)
+    , m_nBorderWidth(COMPV_IMAGE_BORDER_SIZE_DEFAULT)
+    , m_nBorderStride(COMPV_IMAGE_BORDER_SIZE_DEFAULT)
+    , m_nBorderHeight(COMPV_IMAGE_BORDER_SIZE_DEFAULT)
     , m_ePixelFormat(ePixelFormat)
+    , m_ePixelFormatComp0(ePixelFormat)
     , m_eImageFormat(eImageFormat)
     , m_eBorderType(COMPV_BORDER_TYPE_NONE)
 {
+    CompVImage::getBestStride(m_nBorderStride, &m_nBorderStride);
 
+    // Compute pixel format for component at index 0
+    switch (m_ePixelFormat) {
+    case COMPV_PIXEL_FORMAT_I420:
+        m_ePixelFormatComp0 = COMPV_PIXEL_FORMAT_GRAYSCALE;
+        break;
+    case COMPV_PIXEL_FORMAT_R8G8B8:
+    case COMPV_PIXEL_FORMAT_B8G8R8:
+    case COMPV_PIXEL_FORMAT_R8G8B8A8:
+    case COMPV_PIXEL_FORMAT_B8G8R8A8:
+    case COMPV_PIXEL_FORMAT_A8B8G8R8:
+    case COMPV_PIXEL_FORMAT_A8R8G8B8:
+    case COMPV_PIXEL_FORMAT_GRAYSCALE:
+        break;
+    default:
+        COMPV_DEBUG_ERROR("Invalid pixel format: %d", ePixelFormat);
+        break;
+    }
 }
 
 CompVImage::~CompVImage()
 {
 
+}
+
+size_t CompVImage::getDataSize(COMPV_BORDER_POS bordersToExclude /*= COMPV_BORDER_POS_ALL*/)
+{
+    int size = 0;
+    if (m_oData) {
+		int topToExclude = 0;
+		int LeftToExclude = 0;
+		int BottomToExclude = 0;
+        // exlude the left border
+        if ((bordersToExclude & COMPV_BORDER_POS_LEFT)) {
+			CompVImage::getSizeForPixelFormat(m_ePixelFormat, m_nBorderStride, 1, &LeftToExclude);
+        }
+        // Do not exclude the right border, it'll be part of stride
+        // exlude the top and bottom borders
+        if ((bordersToExclude & COMPV_BORDER_POS_TOP)) {
+			CompVImage::getSizeForPixelFormat(m_ePixelFormat, getStride(), m_nBorderHeight, &topToExclude);
+        }
+        if ((bordersToExclude & COMPV_BORDER_POS_BOTTOM)) {
+			CompVImage::getSizeForPixelFormat(m_ePixelFormat, getStride(), m_nBorderHeight, &BottomToExclude);
+        }
+		size = m_oData->getSize() - LeftToExclude - topToExclude - BottomToExclude;
+    }
+    return size_t(size);
+}
+
+const void* CompVImage::getDataPtr(COMPV_BORDER_POS bordersToExclude /*= COMPV_BORDER_POS_ALL*/)
+{
+    const uint8_t* ptr = NULL;
+    if (m_oData) {
+        int topToExclude = 0;
+        int LeftToExclude = 0;
+
+        // exlude the left border
+        if ((bordersToExclude & COMPV_BORDER_POS_LEFT)) {
+            CompVImage::getSizeForPixelFormat(m_ePixelFormat, m_nBorderStride, 1, &LeftToExclude);
+        }
+        if ((bordersToExclude & COMPV_BORDER_POS_TOP)) {
+			CompVImage::getSizeForPixelFormat(m_ePixelFormat, getStride(), m_nBorderHeight, &topToExclude);
+        }
+
+        ptr = ((const uint8_t*)m_oData->getPtr()) + LeftToExclude + topToExclude;
+    }
+    return (const void*)(ptr);
+}
+
+int32_t CompVImage::getWidth()
+{
+    return m_nWidth;
+}
+
+int32_t CompVImage::getHeight(COMPV_BORDER_POS bordersToExclude /*= COMPV_BORDER_POS_ALL*/)
+{
+    int height = m_nHeight;
+    if ((bordersToExclude & COMPV_BORDER_POS_TOP)) {
+        height -= m_nBorderHeight;
+    }
+    if ((bordersToExclude & COMPV_BORDER_POS_BOTTOM)) {
+        height -= m_nBorderHeight;
+    }
+    return int32_t(height);
+}
+
+int32_t CompVImage::getStride()
+{
+#if 0
+    int stride = m_nStride;
+    if ((bordersToExclude & COMPV_BORDER_POS_LEFT)) {
+        stride -= m_nBorderStride;
+    }
+    if ((bordersToExclude & COMPV_BORDER_POS_RIGHT)) {
+        stride -= m_nBorderStride;
+    }
+    return int32_t(stride);
+#else
+    return m_nStride;
+#endif
 }
 
 COMPV_ERROR_CODE CompVImage::convert(COMPV_PIXEL_FORMAT eDstPixelFormat, CompVObjWrapper<CompVImage*>* outImage)
@@ -66,18 +167,11 @@ COMPV_ERROR_CODE CompVImage::convert(COMPV_PIXEL_FORMAT eDstPixelFormat, CompVOb
         return COMPV_ERROR_CODE_S_OK;
     }
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-    int32_t neededBuffSize;
-    COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getSizeForPixelFormat(eDstPixelFormat, m_nStride, m_nHeight, &neededBuffSize));
-    bool bAllocOutImage = (!(*outImage) || (*outImage)->getDataSize() != neededBuffSize || (*outImage)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*outImage)->getPixelFormat() != eDstPixelFormat);
-    if (bAllocOutImage) {
-        COMPV_CHECK_CODE_RETURN(err_ = CompVImage::newObj(eDstPixelFormat, m_nWidth, m_nHeight, m_nStride, outImage));
-    }
-    else {
-        // even if allocation isn't required we could have different width, height or stride
-        // for example, 128x255 image requires same number of bytes than 255x128
-        CompVObjWrapper<CompVBuffer*> buffer = (*outImage)->m_oData; // increment refCount
-        COMPV_CHECK_CODE_RETURN(err_ = (*outImage)->setBuffer(buffer, m_nWidth, m_nHeight, m_nStride)); // changing the current buffer's layout
-    }
+
+    // Wrap the image
+    // *Must* use getWidth(), getHeight()... instead of m_nWidth, m_nHeight to exclude the border
+    COMPV_CHECK_CODE_RETURN(err_ = CompVImage::wrap(eDstPixelFormat, NULL, getWidth(), getHeight(), getStride(), outImage));
+
     switch (m_ePixelFormat) {
         /***** RGBA -> XXX *****/
     case COMPV_PIXEL_FORMAT_R8G8B8A8: {
@@ -204,25 +298,18 @@ COMPV_ERROR_CODE CompVImage::scale(COMPV_SCALE_TYPE type, int32_t outWidth, int3
 {
     COMPV_CHECK_EXP_RETURN(outImage == NULL || !outWidth || !outHeight, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-    int32_t neededBuffSize;
     int32_t outStride = outWidth;
     CompVObjWrapper<CompVImage*> This = this; // when outImage is equal to this and the caller doesn't hold a reference the object could be destroyed before the end of the call. This line increment the refCount.
-    COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getBestStride(outWidth, &outStride));
-    COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getSizeForPixelFormat(This->getPixelFormat(), outStride, outHeight, &neededBuffSize));
+
     bool bSelfTransfer = This == (*outImage);
     bool bScaleFactor1 = outWidth == This->getWidth() && outHeight == This->getHeight(); // *must* compute here before overriding This, otherwise always true
-    bool bAllocOutImage = (!(*outImage) || (*outImage)->getDataSize() != neededBuffSize || (*outImage)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW || (*outImage)->getPixelFormat() != This->getPixelFormat());
-    if (bAllocOutImage) {
-        COMPV_CHECK_CODE_RETURN(err_ = CompVImage::newObj(This->getPixelFormat(), outWidth, outHeight, outStride, outImage));
-    }
-    else {
-        // even if allocation isn't required we could have different width, height or stride
-        // for example, 128x255 image requires same number of bytes than 255x128
-        CompVObjWrapper<CompVBuffer*> buffer = (*outImage)->m_oData; // increment refCount
-        COMPV_CHECK_CODE_RETURN(err_ = (*outImage)->setBuffer(buffer, outWidth, outHeight, outStride)); // changing the current buffer's layout
-    }
+
+    // Wrap the image
+    COMPV_CHECK_CODE_RETURN(err_ = CompVImage::getBestStride(outWidth, &outStride));
+    COMPV_CHECK_CODE_RETURN(err_ = CompVImage::wrap(getPixelFormat(), NULL, outWidth, outHeight, outStride, outImage));
+
     if (bScaleFactor1 & !CompVEngine::isTestingMode()) { // In testing mode we may want to encode the same image several times to check CPU, Memory, Latency...
-        if (bSelfTransfer && !bAllocOutImage) {
+        if (bSelfTransfer) {
             // *outImage = This is enought
             return COMPV_ERROR_CODE_S_OK;
         }
@@ -353,57 +440,58 @@ COMPV_ERROR_CODE CompVImage::copy(COMPV_PIXEL_FORMAT ePixelFormat, const void* i
 
 COMPV_ERROR_CODE CompVImage::wrap(COMPV_PIXEL_FORMAT ePixelFormat, const void* dataPtr, int32_t width, int32_t height, int32_t stride, CompVObjWrapper<CompVImage*>* image)
 {
-    COMPV_CHECK_EXP_RETURN(dataPtr == NULL || width <= 0 || height <= 0 || stride <= 0 || image == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_EXP_RETURN(width <= 0 || height <= 0 || stride <= 0 || image == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-    int32_t bestStride = stride, bestAlign = CompVMem::getBestAlignment();
-    bool bAllocNewImage, bAllocNewBuffer;
-    CompVObjWrapper<CompVBuffer* > buffer;
+    int32_t bestStride = width, bestAlign = CompVMem::getBestAlignment();
+    int32_t borderStride = COMPV_IMAGE_BORDER_SIZE_DEFAULT;
+
+    bool bAllocNewImage;
 
     // Compute best stride
-    COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getBestStride(stride, &bestStride));
+    COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getBestStride(bestStride, &bestStride));
+    COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getBestStride(borderStride, &borderStride));
+    bestStride += (borderStride << 1);
 
 #if 1
-    bAllocNewBuffer =
-        stride != bestStride ||
-        !COMPV_IS_ALIGNED(dataPtr, bestAlign);
-
     bAllocNewImage = !(*image) ||
                      (*image)->getImageFormat() != COMPV_IMAGE_FORMAT_RAW ||
-                     (*image)->getPixelFormat() != ePixelFormat;
+                     (*image)->getPixelFormat() != ePixelFormat ||
+                     (*image)->getWidth() != width ||
+                     (*image)->getHeight() != height ||
+                     (*image)->getStride() != bestStride;
 #else // to test copy and alloc
     COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-    bAllocNewBuffer = bAllocNewImage = true;
+    bAllocNewImage = true;
 #endif
 
-    if (bAllocNewBuffer) {
+    if (bAllocNewImage) {
+        CompVObjWrapper<CompVBuffer* > buffer;
         void* buffData = NULL;
         int neededBuffSize = 0;
-        COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getSizeForPixelFormat(ePixelFormat, bestStride, height, &neededBuffSize));
+        int neededHeight = height + (COMPV_IMAGE_BORDER_SIZE_DEFAULT << 1);
+
+        COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj(COMPV_IMAGE_FORMAT_RAW, ePixelFormat, image));
+
+        COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getSizeForPixelFormat(ePixelFormat, bestStride, neededHeight, &neededBuffSize));
         buffData = CompVMem::malloc(neededBuffSize); // we always alloc using bestAlign no need to use mallocAligned(ptr, bestAlign)
         if (!buffData) {
             COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
         }
+
         err_ = CompVBuffer::newObjAndTakeData(&buffData, neededBuffSize, &buffer);
         if (COMPV_ERROR_CODE_IS_NOK(err_)) {
             CompVMem::free(&buffData);
             COMPV_CHECK_CODE_BAIL(err_);
         }
+
+        COMPV_CHECK_CODE_BAIL(err_ = (*image)->setBuffer(buffer, width, neededHeight, bestStride));
+    }
+
+    if (dataPtr) {
         COMPV_CHECK_CODE_BAIL(err_ = CompVImage::copy(ePixelFormat,
                                      dataPtr, width, height, stride,
-                                     (void*)buffer->getPtr(), width, height, bestStride)); // copy data
+                                     (void*)(*image)->getDataPtr(), (*image)->getWidth(), (*image)->getHeight(), (*image)->getStride())); // copy data
     }
-    else {
-        int32_t dataSize;
-        COMPV_CHECK_CODE_BAIL(err_ = CompVImage::getSizeForPixelFormat(ePixelFormat, stride, height, &dataSize));
-        COMPV_CHECK_CODE_BAIL(err_ = CompVBuffer::newObjAndRefData(dataPtr, dataSize, &buffer)); // take a reference to the buffer, do not copy it
-    }
-
-    if (bAllocNewImage) {
-        COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj(COMPV_IMAGE_FORMAT_RAW, ePixelFormat, image));
-    }
-
-    COMPV_CHECK_CODE_BAIL(err_ = (*image)->setBuffer(buffer, width, height, bestStride));
-
 bail:
     return err_;
 }
@@ -450,6 +538,7 @@ COMPV_ERROR_CODE CompVImage::newObj(COMPV_IMAGE_FORMAT eImageFormat, COMPV_PIXEL
     return COMPV_ERROR_CODE_S_OK;
 }
 
+#if 0
 COMPV_ERROR_CODE CompVImage::newObj(COMPV_PIXEL_FORMAT ePixelFormat, int32_t width, int32_t height, int32_t stride, CompVObjWrapper<CompVImage*>* image)
 {
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
@@ -472,6 +561,7 @@ COMPV_ERROR_CODE CompVImage::newObj(COMPV_PIXEL_FORMAT ePixelFormat, int32_t wid
 bail:
     return  err_;
 }
+#endif
 
 //
 //	CompVImageDecoder
