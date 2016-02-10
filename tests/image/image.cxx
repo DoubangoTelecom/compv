@@ -7,6 +7,7 @@ using namespace compv;
 #define enableIntrinsics	true
 #define enableAsm			true
 #define testingMode			true
+#define cpuDisable				kCpuFlagAVX2
 
 #define TEST_CONV			0
 #define TEST_FAST			1
@@ -22,7 +23,7 @@ int _tmain(int argc, _TCHAR* argv[])
     COMPV_CHECK_CODE_ASSERT(CompVEngine::setTestingModeEnabled(testingMode));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setAsmEnabled(enableAsm));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
-    COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagNone));
+	COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));
 
 #if TEST_CONV
     extern bool TestConv();

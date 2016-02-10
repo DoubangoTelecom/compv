@@ -128,7 +128,7 @@ void FastData16Row_Intrin_AVX2(
             sum += _mm256_movemask_epi8(ymm1) ? 1 : 0;
             loadD = (sum > 1); // sum cannot be > 2 -> dot not check it against 3 for N = 12
 
-            if (!loadB && !loadD) {
+            if (!(loadB || loadD)) {
                 goto next;
             }
 
@@ -214,9 +214,7 @@ void FastData16Row_Intrin_AVX2(
                 // Check the columns with at least N non-zero bits
                 _mm256_store_si256(&ymmDarkersFlags[0], _mm256_cmpgt_epi8(ymmDarkersFlags[0], ymmNMinusOne));
                 colDarkersFlags = _mm256_movemask_epi8(ymmDarkersFlags[0]);
-                if (!colDarkersFlags) {
-                    loadD = false; // do not continue processing Darkers
-                }
+				loadD = (colDarkersFlags != 0);
             }
 
             if (loadB) {
@@ -284,9 +282,7 @@ void FastData16Row_Intrin_AVX2(
                 // Check the columns with at least N non-zero bits
                 _mm256_store_si256(&ymm0, _mm256_cmpgt_epi8(ymmBrightersFlags[0], ymmNMinusOne));
                 colBrightersFlags = _mm256_movemask_epi8(ymm0);
-                if (!colBrightersFlags) {
-                    loadB = false;
-                }
+				loadB = (colBrightersFlags != 0);
             }
 
             if (loadD) {
