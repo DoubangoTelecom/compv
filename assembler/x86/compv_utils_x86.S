@@ -46,7 +46,11 @@ sym(testPrologEpilog):
 	push rsi
 	push rdi
 	push rbx
-	; end prolog
+	;push r12
+	;push r13
+	;push r14
+	;push r15
+	;; end prolog ;;
 
 	; align stack and alloc memory
 	; COMPV_YASM_ALIGN_STACK 32, rax
@@ -56,7 +60,11 @@ sym(testPrologEpilog):
 	; add rsp, xxx
 	; COMPV_YASM_UNALIGN_STACK
 
-	; begin epilog
+	;; begin epilog ;;
+	;pop r15
+	;pop r14
+	;pop r13
+	;pop r12
 	pop rbx
 	pop rdi
 	pop rsi

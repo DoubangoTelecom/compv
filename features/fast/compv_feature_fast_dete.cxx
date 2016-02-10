@@ -106,6 +106,7 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_FEATURE_DETE_FAST_MAX_FEATURTES			-1 // maximum number of features to retain (<0 means all)
 #define COMPV_FEATURE_DETE_FAST_MIN_SAMPLES_PER_THREAD	250*250
 
+// X86
 #if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
 extern "C" compv_scalar_t Fast9Strengths_Asm_CMOV_X86_SSE41(COMPV_ALIGNED(SSE) const uint8_t(&dbrighters)[16], COMPV_ALIGNED(SSE) const uint8_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16]);
 extern "C" compv_scalar_t Fast9Strengths_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const uint8_t(&dbrighters)[16], COMPV_ALIGNED(SSE) const uint8_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16]);
@@ -115,7 +116,10 @@ extern "C" compv_scalar_t Fast12Strengths_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const
 extern "C" compv_scalar_t FastData_Asm_x86_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, COMPV_ALIGNED(SSE) uint8_t(&ddarkers16)[16], COMPV_ALIGNED(SSE) uint8_t(&dbrighters16)[16]);
 
 extern "C" void FastData16Row_Asm_X86_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(SSE) uint8_t* ddarkers16x16, COMPV_ALIGNED(SSE) uint8_t* dbrighters16x16, compv_scalar_t* rd, compv_scalar_t* rb, compv_scalar_t* me);
-
+#endif
+// X64
+#if defined(COMPV_ARCH_X64) && defined(COMPV_ASM)
+extern "C" void FastData16Row_Asm_X64_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(SSE) uint8_t* ddarkers16x16, COMPV_ALIGNED(SSE) uint8_t* dbrighters16x16, compv_scalar_t* rd, compv_scalar_t* rb, compv_scalar_t* me);
 #endif
 
 static int32_t COMPV_INLINE __continuousCount(int32_t fasType)
@@ -609,6 +613,7 @@ static void FastProcessRange(RangeFAST* range)
         COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = FastStrengths_SSE2);
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastData16Row = FastData16Row_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
 		COMPV_EXEC_IFDEF_ASM_X86((FastData16Row = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE)); // FIXME: INTRIN faster in X64
+		COMPV_EXEC_IFDEF_ASM_X64((FastData16Row = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE)); // FIXME: INTRIN faster in X64
     }
     if (CompVCpu::isSupported(kCpuFlagSSE41)) {
         COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = FastStrengths_SSE41);

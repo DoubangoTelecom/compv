@@ -169,6 +169,11 @@
       <FileType>Document</FileType>
     </YASM>
   </ItemGroup>
+  <ItemGroup>
+    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x64_sse.S">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AAC1E1B3-CE47-4003-BE1A-00A20C409129}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
