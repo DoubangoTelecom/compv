@@ -84,22 +84,22 @@ size_t CompVImage::getDataSize(COMPV_BORDER_POS bordersToExclude /*= COMPV_BORDE
 {
     int size = 0;
     if (m_oData) {
-		int topToExclude = 0;
-		int LeftToExclude = 0;
-		int BottomToExclude = 0;
+        int topToExclude = 0;
+        int LeftToExclude = 0;
+        int BottomToExclude = 0;
         // exlude the left border
         if ((bordersToExclude & COMPV_BORDER_POS_LEFT)) {
-			CompVImage::getSizeForPixelFormat(m_ePixelFormat, m_nBorderStride, 1, &LeftToExclude);
+            CompVImage::getSizeForPixelFormat(m_ePixelFormat, m_nBorderStride, 1, &LeftToExclude);
         }
         // Do not exclude the right border, it'll be part of stride
         // exlude the top and bottom borders
         if ((bordersToExclude & COMPV_BORDER_POS_TOP)) {
-			CompVImage::getSizeForPixelFormat(m_ePixelFormat, getStride(), m_nBorderHeight, &topToExclude);
+            CompVImage::getSizeForPixelFormat(m_ePixelFormat, getStride(), m_nBorderHeight, &topToExclude);
         }
         if ((bordersToExclude & COMPV_BORDER_POS_BOTTOM)) {
-			CompVImage::getSizeForPixelFormat(m_ePixelFormat, getStride(), m_nBorderHeight, &BottomToExclude);
+            CompVImage::getSizeForPixelFormat(m_ePixelFormat, getStride(), m_nBorderHeight, &BottomToExclude);
         }
-		size = m_oData->getSize() - LeftToExclude - topToExclude - BottomToExclude;
+        size = m_oData->getSize() - LeftToExclude - topToExclude - BottomToExclude;
     }
     return size_t(size);
 }
@@ -116,7 +116,7 @@ const void* CompVImage::getDataPtr(COMPV_BORDER_POS bordersToExclude /*= COMPV_B
             CompVImage::getSizeForPixelFormat(m_ePixelFormat, m_nBorderStride, 1, &LeftToExclude);
         }
         if ((bordersToExclude & COMPV_BORDER_POS_TOP)) {
-			CompVImage::getSizeForPixelFormat(m_ePixelFormat, getStride(), m_nBorderHeight, &topToExclude);
+            CompVImage::getSizeForPixelFormat(m_ePixelFormat, getStride(), m_nBorderHeight, &topToExclude);
         }
 
         ptr = ((const uint8_t*)m_oData->getPtr()) + LeftToExclude + topToExclude;

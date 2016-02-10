@@ -38,7 +38,7 @@ bool TestPyramid()
 #if IMAGE_MD5
     for (int i = 0; i < pyramid->getLevels(); ++i) {
         COMPV_CHECK_CODE_ASSERT(pyramid->getImage(i, &image));
-		COMPV_DEBUG_INFO("MD5(level %d, s=%d,w=%d,h=%d)=%s", i, image->getStride(), image->getWidth(), image->getHeight(), imageMD5(image).c_str());
+        COMPV_DEBUG_INFO("MD5(level %d, s=%d,w=%d,h=%d)=%s", i, image->getStride(), image->getWidth(), image->getHeight(), imageMD5(image).c_str());
     }
 #endif
 

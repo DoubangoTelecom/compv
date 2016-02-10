@@ -131,51 +131,51 @@ void writeImgToFile(const CompVObjWrapper<CompVImage *>& img, COMPV_BORDER_POS b
             int width = img->getWidth();
             int stride = img->getStride();
             int height = img->getHeight(bordersToExclude);
-			const uint8_t* ptr = (const uint8_t*)img->getDataPtr(bordersToExclude);
+            const uint8_t* ptr = (const uint8_t*)img->getDataPtr(bordersToExclude);
 
-			switch (img->getPixelFormat()) {
-			case COMPV_PIXEL_FORMAT_R8G8B8:
-			case COMPV_PIXEL_FORMAT_B8G8R8:
-			case COMPV_PIXEL_FORMAT_R8G8B8A8:
-			case COMPV_PIXEL_FORMAT_B8G8R8A8:
-			case COMPV_PIXEL_FORMAT_A8B8G8R8:
-			case COMPV_PIXEL_FORMAT_A8R8G8B8:
-			case COMPV_PIXEL_FORMAT_GRAYSCALE: {
-				CompVImage::getSizeForPixelFormat(img->getPixelFormat(), stride, 1, &stride);
-				CompVImage::getSizeForPixelFormat(img->getPixelFormat(), width, 1, &width);
-				for (int i = 0; i < height; ++i) {
-					fwrite(ptr, 1, width, file);
-					ptr += stride;
-				}
-				break;
-			}
-			case COMPV_PIXEL_FORMAT_I420: {
-				// Y
-				for (int i = 0; i < height; ++i) {
-					fwrite(ptr, 1, width, file);
-					ptr += stride;
-				}
-				height = (height + 1) >> 1;
-				width = (width + 1) >> 1;
-				stride = (stride + 1) >> 1;
-				// U
-				for (int i = 0; i < height; ++i) {
-					fwrite(ptr, 1, width, file);
-					ptr += stride;
-				}
-				// V
-				for (int i = 0; i < height; ++i) {
-					fwrite(ptr, 1, width, file);
-					ptr += stride;
-				}
-				break;
-			}
-			default: {
-				COMPV_DEBUG_ERROR("Not implemented");
-				COMPV_ASSERT(false);
-				break;
-			}
-			}
+            switch (img->getPixelFormat()) {
+            case COMPV_PIXEL_FORMAT_R8G8B8:
+            case COMPV_PIXEL_FORMAT_B8G8R8:
+            case COMPV_PIXEL_FORMAT_R8G8B8A8:
+            case COMPV_PIXEL_FORMAT_B8G8R8A8:
+            case COMPV_PIXEL_FORMAT_A8B8G8R8:
+            case COMPV_PIXEL_FORMAT_A8R8G8B8:
+            case COMPV_PIXEL_FORMAT_GRAYSCALE: {
+                CompVImage::getSizeForPixelFormat(img->getPixelFormat(), stride, 1, &stride);
+                CompVImage::getSizeForPixelFormat(img->getPixelFormat(), width, 1, &width);
+                for (int i = 0; i < height; ++i) {
+                    fwrite(ptr, 1, width, file);
+                    ptr += stride;
+                }
+                break;
+            }
+            case COMPV_PIXEL_FORMAT_I420: {
+                // Y
+                for (int i = 0; i < height; ++i) {
+                    fwrite(ptr, 1, width, file);
+                    ptr += stride;
+                }
+                height = (height + 1) >> 1;
+                width = (width + 1) >> 1;
+                stride = (stride + 1) >> 1;
+                // U
+                for (int i = 0; i < height; ++i) {
+                    fwrite(ptr, 1, width, file);
+                    ptr += stride;
+                }
+                // V
+                for (int i = 0; i < height; ++i) {
+                    fwrite(ptr, 1, width, file);
+                    ptr += stride;
+                }
+                break;
+            }
+            default: {
+                COMPV_DEBUG_ERROR("Not implemented");
+                COMPV_ASSERT(false);
+                break;
+            }
+            }
 #endif
 
             fclose(file);
@@ -224,7 +224,7 @@ bool TestConv()
     COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_EQUIRECTANGULAR_FILE, &jpegImage));
     COMPV_ASSERT(jpegImage->getPixelFormat() == COMPV_PIXEL_FORMAT_R8G8B8);
     rgbToSrc(jpegImage, &srcPtr, height, width, stride);
-	COMPV_CHECK_CODE_ASSERT(CompVImage::wrap((COMPV_PIXEL_FORMAT)FORMAT_SRC, srcPtr, width, height, stride, &srcImage)); // FIXME: slooow
+    COMPV_CHECK_CODE_ASSERT(CompVImage::wrap((COMPV_PIXEL_FORMAT)FORMAT_SRC, srcPtr, width, height, stride, &srcImage)); // FIXME: slooow
 
     COMPV_DEBUG_INFO("Converting from %s to %s", formatExtension((COMPV_PIXEL_FORMAT)FORMAT_SRC).c_str(), formatExtension((COMPV_PIXEL_FORMAT)FORMAT_DST).c_str());
 

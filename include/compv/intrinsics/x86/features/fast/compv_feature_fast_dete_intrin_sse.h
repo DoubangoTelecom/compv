@@ -38,15 +38,16 @@ void FastData16Row_Intrin_SSE2(
 	const uint8_t* IP,
 	const uint8_t* IPprev,
 	compv_scalar_t width,
-	COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16],
+	const compv_scalar_t(&pixels16)[16],
 	compv_scalar_t N,
 	compv_scalar_t threshold,
 	COMPV_ALIGNED(SSE) compv_scalar_t(*pfdarkers16)[16],
 	COMPV_ALIGNED(SSE) compv_scalar_t(*pfbrighters16)[16],
-	COMPV_ALIGNED(SSE) uint8_t(*ddarkers16x16)[16][16],
-	COMPV_ALIGNED(SSE) uint8_t(*dbrighters16x16)[16][16],
-	compv_scalar_t* rs,
-	compv_scalar_t* mes);
+	COMPV_ALIGNED(SSE) uint8_t* ddarkers16x16,
+	COMPV_ALIGNED(SSE) uint8_t* dbrighters16x16,
+	compv_scalar_t* rd,
+	compv_scalar_t* rb,
+	compv_scalar_t* me);
 
 compv_scalar_t FastStrengths_SSE2(COMPV_ALIGNED(SSE) const uint8_t(&dbrighters)[16], COMPV_ALIGNED(SSE) const uint8_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16]);
 compv_scalar_t FastStrengths_SSE41(COMPV_ALIGNED(SSE) const uint8_t(&dbrighters)[16], COMPV_ALIGNED(SSE) const uint8_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16]);

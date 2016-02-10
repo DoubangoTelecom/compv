@@ -36,7 +36,7 @@ bool TestScale()
     COMPV_DEBUG_INFO("Image scaling: factor=%f, outWidth=%d, outStride=%d, outHeight=%d", IMAGE_SCALE_FACTOR, image->getWidth(), image->getStride(), image->getHeight());
 
 #if IMAGE_MD5
-	COMPV_DEBUG_INFO("MD5(SCALED)=%s", imageMD5(image).c_str());
+    COMPV_DEBUG_INFO("MD5(SCALED)=%s", imageMD5(image).c_str());
 #endif
 
     // dump image to file

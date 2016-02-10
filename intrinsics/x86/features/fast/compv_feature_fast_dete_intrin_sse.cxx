@@ -201,18 +201,30 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
         _mm_store_si128(&xmm254, _mm_load_si128((__m128i*)k254_u8)); // not(254) = 00000001 -> used to select the lowest bit in each u8
 
         __m128i xmmDataPtr[16];
-        _mm_store_si128(&xmmDataPtr[1], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[1]]));
-        _mm_store_si128(&xmmDataPtr[2], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[2]]));
-        _mm_store_si128(&xmmDataPtr[3], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[3]]));
-        _mm_store_si128(&xmmDataPtr[5], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[5]]));
-        _mm_store_si128(&xmmDataPtr[6], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[6]]));
-        _mm_store_si128(&xmmDataPtr[7], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[7]]));
-        _mm_store_si128(&xmmDataPtr[9], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[9]]));
-        _mm_store_si128(&xmmDataPtr[10], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[10]]));
-        _mm_store_si128(&xmmDataPtr[11], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[11]]));
-        _mm_store_si128(&xmmDataPtr[13], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[13]]));
-        _mm_store_si128(&xmmDataPtr[14], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[14]]));
+
         _mm_store_si128(&xmmDataPtr[15], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[15]]));
+        _mm_store_si128(&xmmDataPtr[1], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[1]]));
+
+        _mm_store_si128(&xmmDataPtr[14], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[14]]));
+        _mm_store_si128(&xmmDataPtr[2], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[2]]));
+
+        _mm_store_si128(&xmmDataPtr[13], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[13]]));
+        _mm_store_si128(&xmmDataPtr[3], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[3]]));
+
+        _mm_store_si128(&xmmDataPtr[11], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[11]]));
+        _mm_store_si128(&xmmDataPtr[5], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[5]]));
+
+        _mm_store_si128(&xmmDataPtr[10], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[10]]));
+        _mm_store_si128(&xmmDataPtr[6], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[6]]));
+
+        _mm_store_si128(&xmmDataPtr[9], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[9]]));
+        _mm_store_si128(&xmmDataPtr[7], _mm_loadu_si128((__m128i*)&dataPtr[pixels16[7]]));
+
+
+
+
+
+
 
         // We could compute pixels at 1 and 9, check if at least one is darker or brighter than the candidate
         // Then, do the same for 2 and 10 etc etc ... but this is slower than whant we're doing below because
@@ -422,15 +434,16 @@ void FastData16Row_Intrin_SSE2(
     const uint8_t* IP,
     const uint8_t* IPprev,
     compv_scalar_t width,
-    COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16],
+    const compv_scalar_t(&pixels16)[16],
     compv_scalar_t N,
     compv_scalar_t threshold,
     COMPV_ALIGNED(SSE) compv_scalar_t(*pfdarkers16)[16],
     COMPV_ALIGNED(SSE) compv_scalar_t(*pfbrighters16)[16],
-    COMPV_ALIGNED(SSE) uint8_t(*ddarkers16x16)[16][16],
-    COMPV_ALIGNED(SSE) uint8_t(*dbrighters16x16)[16][16],
-    compv_scalar_t* rs,
-    compv_scalar_t* mes)
+    COMPV_ALIGNED(SSE) uint8_t *ddarkers16x16,
+    COMPV_ALIGNED(SSE) uint8_t *dbrighters16x16,
+    compv_scalar_t* rd,
+    compv_scalar_t* rb,
+    compv_scalar_t* me)
 {
     compv_scalar_t i, sum, s;
 
@@ -449,14 +462,15 @@ void FastData16Row_Intrin_SSE2(
     _mm_store_si128(&xmm254, _mm_load_si128((__m128i*)k254_u8)); // not(254) = 00000001 -> used to select the lowest bit in each u8
 
     for (i = 0; i < width; i += 16) {
-        (*rs) = 0;
+        (*rb) = 0;
+        (*rd) = 0;
         _mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)IP));
         _mm_store_si128(&xmmBrighter, _mm_adds_epu8(xmm0, xmmThreshold));
         _mm_store_si128(&xmmDarker, _mm_subs_epu8(xmm0, xmmThreshold));
 
         /* Motion estimation */
         if (IPprev) {
-            (*mes) = 0;
+            (*me) = 0;
         }
 
         /*  Speed-Test-1 */
@@ -679,7 +693,7 @@ void FastData16Row_Intrin_SSE2(
             }
 
             if (loadD) {
-                (*rs) |= colDarkersFlags;
+                (*rd) = colDarkersFlags;
                 // Transpose
                 COMPV_TRANSPOSE_I8_16X16_SSE2(
                     (*xmmDdarkers16x16)[0], (*xmmDdarkers16x16)[1], (*xmmDdarkers16x16)[2], (*xmmDdarkers16x16)[3],
@@ -707,7 +721,7 @@ void FastData16Row_Intrin_SSE2(
             }
 
             if (loadB) {
-                (*rs) |= (colBrightersFlags << 16); // set the low 16 bits each defining a column with more than N brighters
+                (*rb) = colBrightersFlags;
                 // Transpose
                 COMPV_TRANSPOSE_I8_16X16_SSE2(
                     (*xmmDbrighters16x16)[0], (*xmmDbrighters16x16)[1], (*xmmDbrighters16x16)[2], (*xmmDbrighters16x16)[3],
@@ -735,7 +749,8 @@ void FastData16Row_Intrin_SSE2(
             }
         }
 next:
-        rs += 1;
+        rd += 1;
+        rb += 1;
         IP += 16;
         if (IPprev) {
             IPprev += 16;
