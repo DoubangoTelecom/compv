@@ -155,6 +155,10 @@ sym(FastData16Row_Asm_X64_SSE2):
 	movdqa [rsp + 24 + 8*16], xmm3 ; xmmDarkersFlags[8]
 	movdqa [rsp + 280 + 0*16], xmm0 ; xmmBrightersFlags[0]
 	movdqa [rsp + 280 + 8*16], xmm1 ; xmmBrightersFlags[8]
+	movdqa xmm8, xmm0 ; save xmmBrightersFlags[0] in xmm8
+	movdqa xmm9, xmm1 ; save xmmBrightersFlags[8] in xmm9
+	movdqa xmm10, xmm2 ; save xmmDarkersFlags[0] in xmm10
+	movdqa xmm11, xmm3 ; save xmmDarkersFlags[8] in xmm11
 	por xmm0, xmm2
 	por xmm1, xmm3
 	pmovmskb rax, xmm0
@@ -196,6 +200,8 @@ sym(FastData16Row_Asm_X64_SSE2):
 	movdqa [rsp + 24 + 12*16], xmm3 ; xmmDarkersFlags[12]
 	movdqa [rsp + 280 + 4*16], xmm0 ; xmmBrightersFlags[4]
 	movdqa [rsp + 280 + 12*16], xmm1 ; xmmBrightersFlags[12]
+	movdqa xmm12, xmm0 ; save xmmBrightersFlags[4] in xmm8
+	movdqa xmm13, xmm1 ; save xmmBrightersFlags[12] in xmm9
 	por xmm0, xmm2
 	por xmm1, xmm3
 	pmovmskb rax, xmm0
@@ -233,33 +239,18 @@ sym(FastData16Row_Asm_X64_SSE2):
 	;
 	;	Processing
 	;
-
-	; Check whether to load Brighters
-	movdqa xmm0, [rsp + 280 + 0*16] ; xmmBrightersFlags[0]
-	movdqa xmm2, [rsp + 280 + 8*16] ; xmmBrightersFlags[8]
-	movdqa xmm1, [rsp + 280 + 4*16] ; xmmBrightersFlags[4]
-	movdqa xmm3, [rsp + 280 + 12*16] ; xmmBrightersFlags[12]
-	por xmm0, xmm2
-	por xmm1, xmm3
-	pmovmskb r9, xmm0
-	pmovmskb r10, xmm1
-	test r9, r9
-	setnz cl
-	test r10, r10
-	setnz al
-	add rcx, rax
-	cmp rcx, 1
-	setg dil ; rdi = (rcx > 1) ? 1 : 0
+	
+	; Data for Darkers (loadD) and Brighters (loadB)
+	por xmm10, xmm11
+	por xmm2, xmm3
+	por xmm8, xmm9
+	por xmm12, xmm13
+	pmovmskb r9, xmm10
+	pmovmskb r10, xmm2
+	pmovmskb r11, xmm8
+	pmovmskb r12, xmm12
 
 	; Check whether to load Darkers
-	movdqa xmm0, [rsp + 24 + 0*16] ; xmmDarkersFlags[0]
-	movdqa xmm1, [rsp + 24 + 4*16] ; xmmDarkersFlags[4]
-	movdqa xmm2, [rsp + 24 + 8*16] ; xmmDarkersFlags[8]
-	movdqa xmm3, [rsp + 24 + 12*16] ; xmmDarkersFlags[12]
-	por xmm0, xmm2
-	por xmm1, xmm3
-	pmovmskb r9, xmm0
-	pmovmskb r10, xmm1
 	test r9, r9
 	setnz cl
 	test r10, r10
@@ -267,6 +258,16 @@ sym(FastData16Row_Asm_X64_SSE2):
 	add rcx, rdx
 	cmp rcx, 1
 	setg dl ; rdx = (rcx > 1) ? 1 : 0
+
+	; Check whether to load Brighters
+	test r11, r11
+	setnz cl
+	test r12, r12
+	setnz al
+	add rcx, rax
+	cmp rcx, 1
+	setg dil ; rdi = (rcx > 1) ? 1 : 0
+	
 
 	; rdi = loadB, rdx = loadD
 	; skip process if (!(loadB || loadD))
