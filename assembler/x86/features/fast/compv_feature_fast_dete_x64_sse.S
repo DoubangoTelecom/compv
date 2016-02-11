@@ -72,7 +72,10 @@ sym(FastData16Row_Asm_X64_SSE2):
 	; [rsp + 280] = xmmBrightersFlags[16]
 	; [rsp + 536] = xmmDataPtr[16]
 
-	mov rsi, arg(2) ; rsi = width
+	mov rdx, arg(2) ; width
+	shr rdx, 4 ; div width with 16 and mov rsi by 1 -> because of argi(x,rsi)
+	xor rsi, rsi
+	mov arg(2), rdx 
 	mov rax, arg(5) ; threshold
 	mov rbx, arg(0) ; rbx = IP
 	movd xmm7, rax
@@ -97,17 +100,14 @@ sym(FastData16Row_Asm_X64_SSE2):
 	xor rcx, rcx
 	mov rax, arg(11) ; rb
 	mov rdx, arg(10) ; rd
-	mov [rax], rcx
-	mov [rdx], rcx
+	mov [rax + rsi*COMPV_YASM_REG_SZ_BYTES], rcx
+	mov [rdx + rsi*COMPV_YASM_REG_SZ_BYTES], rcx
 
 	movdqu xmm6, [rbx]
 
 	; Motion Estimation
 	; TODO(dmi): not supported
-	; TODO(dmi): inc IPprev at the end of the function if motion estimation is supported
-	xor rax, rax
-	mov rcx, arg(12) ; me
-	mov [rcx], rax
+	; TODO(dmi): use argi(x,i) to retrieve the argument
 
 	movdqa xmm5, xmm6
 	paddusb xmm6, xmm7 ; xmm6 = xmmBrighter
@@ -120,6 +120,13 @@ sym(FastData16Row_Asm_X64_SSE2):
 	pxor xmm15, xmm15 ; xmm15 = xmmZeros
 	pcmpeqb xmm14, xmm14 ; xmm14 = xmmFF
 
+	mov r10, rsi
+	mov r8, arg(8) ; ddarkers16x16
+	shl r10, 8 ; rsi * (16*16)
+	mov r9, arg(9) ; dbrighters16x16
+	lea r8, [r8 + r10] ; ddarkers16x16[rsi]
+	lea r9, [r9 + r10] ; dbrighters16x16[rsi]
+
 	; compare I1 and I9 aka 0 and 8
 	mov rdx, arg(3) ; pixels16
 	mov rax, [rdx + 0*COMPV_YASM_REG_SZ_BYTES] ; pixels16[0]
@@ -128,16 +135,14 @@ sym(FastData16Row_Asm_X64_SSE2):
 	movdqa xmm2, xmm5 ; xmmDarker
 	movdqu xmm1, [rbx + rdx]
 	movdqa xmm3, xmm5 ; xmmDarker
-	mov rdx, arg(8) ; ddarkers16x16
-	mov rax, arg(9) ; dbrighters16x16
 	psubusb xmm2, xmm0 ; ddarkers16x16[0]
 	psubusb xmm3, xmm1 ; ddarkers16x16[8]
 	psubusb xmm0, xmm6 ; dbrighters16x16[0]
 	psubusb xmm1, xmm6 ; dbrighters16x16[8]
-	movdqa [rdx + 0*16], xmm2
-	movdqa [rdx + 8*16], xmm3
-	movdqa [rax + 0*16], xmm0
-	movdqa [rax + 8*16], xmm1
+	movdqa [r8 + 0*16], xmm2
+	movdqa [r8 + 8*16], xmm3
+	movdqa [r9 + 0*16], xmm0
+	movdqa [r9 + 8*16], xmm1
 	pcmpeqb xmm2, xmm15
 	pcmpeqb xmm3, xmm15
 	pcmpeqb xmm0, xmm15
@@ -171,16 +176,14 @@ sym(FastData16Row_Asm_X64_SSE2):
 	movdqa xmm2, xmm5 ; xmmDarker
 	movdqu xmm1, [rbx + rdx]
 	movdqa xmm3, xmm5 ; xmmDarker
-	mov rdx, arg(8) ; ddarkers16x16
-	mov rax, arg(9) ; dbrighters16x16
 	psubusb xmm2, xmm0 ; ddarkers16x16[4]
 	psubusb xmm3, xmm1 ; ddarkers16x16[12]
 	psubusb xmm0, xmm6 ; dbrighters16x16[4]
 	psubusb xmm1, xmm6 ; dbrighters16x16[12]
-	movdqa [rdx + 4*16], xmm2
-	movdqa [rdx + 12*16], xmm3
-	movdqa [rax + 4*16], xmm0
-	movdqa [rax + 12*16], xmm1
+	movdqa [r8 + 4*16], xmm2
+	movdqa [r8 + 12*16], xmm3
+	movdqa [r9 + 4*16], xmm0
+	movdqa [r9 + 12*16], xmm1
 	pcmpeqb xmm2, xmm15
 	pcmpeqb xmm3, xmm15
 	pcmpeqb xmm0, xmm15
@@ -321,7 +324,10 @@ sym(FastData16Row_Asm_X64_SSE2):
 	test rdx, rdx ; rdx was loadD, now it's free
 	jz .EndOfDarkers
 	; compute ddarkers16x16 and flags
+	mov r9, rsi
+	shl r9, 8 ; rsi * (16*16)
 	mov rax, arg(8) ; ddarkers16x16
+	lea rax, [rax + r9]
 	pxor xmm4, xmm4
 	movdqa xmm0, xmm5
 	movdqa xmm1, xmm5
@@ -417,13 +423,19 @@ sym(FastData16Row_Asm_X64_SSE2):
 	jz .EndOfDarkers
 	; Continue loading darkers
 	mov rcx, arg(10) ; rd
-	mov [rcx], rdx ; (*rd) = colDarkersFlags
+	mov [rcx + rsi*COMPV_YASM_REG_SZ_BYTES], rdx ; (*rd) = colDarkersFlags
 	; Transpose
 	COMPV_TRANSPOSE_I8_16X16_REG_T9_X64_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4, xmm8, xmm9, xmm10, xmm11
 	; Flags
+	mov r8, rsi
+	mov r9, rsi
+	shl r8, COMPV_YASM_REG_SZ_BYTES_TIMES16_LOG2 ; rsi * (16*COMPV_YASM_REG_SZ_BYTES)
+	shl r9, 8 ; rsi * (16 * 16)
 	pcmpeqb xmm5, xmm5 ; xmmFF
 	mov rdx, arg(6) ; pfdarkers16
+	lea rdx, [rdx + r8]
 	mov rax, arg(8) ; ddarkers16x16
+	lea rax, [rax + r9]
 	pxor xmm0, xmm0
 	pxor xmm1, xmm1
 	pxor xmm2, xmm2
@@ -463,6 +475,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	pandn xmm13, xmm5
 	pandn xmm14, xmm5
 	pandn xmm15, xmm5
+	push rax
 	pmovmskb rax, xmm0
 	pmovmskb rcx, xmm1
 	pmovmskb r8, xmm2
@@ -489,7 +502,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	mov [rdx + 10*COMPV_YASM_REG_SZ_BYTES], r8
 	mov [rdx + 11*COMPV_YASM_REG_SZ_BYTES], r9
 	mov [rdx + 12*COMPV_YASM_REG_SZ_BYTES], r10
-	mov rax, arg(8) ; ddarkers16x16
+	pop rax ; mov rax, arg(8) -> ddarkers16x16
 	pxor xmm0, xmm0
 	pxor xmm1, xmm1
 	pxor xmm2, xmm2
@@ -515,9 +528,12 @@ sym(FastData16Row_Asm_X64_SSE2):
 	test rdi, rdi ; rdi was loadB, now it's free
 	jz .EndOfBrighters
 	; compute Dbrighters
+	mov r9, rsi
 	pxor xmm5, xmm5
+	shl r9, 8 ; rsi*(16*16)
 	movdqa xmm4, [sym(k1_i8)]
 	mov rax, arg(9) ; dbrighters16x16
+	lea rax, [rax + r9]
 	movdqa xmm0, [rsp + 536 + 1*16]
 	movdqa xmm1, [rsp + 536 + 2*16]
 	movdqa xmm2, [rsp + 536 + 3*16]
@@ -611,13 +627,15 @@ sym(FastData16Row_Asm_X64_SSE2):
 	jz .EndOfBrighters
 	; Continue loading brighters
 	mov rcx, arg(11) ; rb
-	mov rax, arg(9) ; dbrighters16x16
-	mov [rcx], rdx ; (*rb) = colBrightersFlags
+	mov [rcx + rsi*COMPV_YASM_REG_SZ_BYTES], rdx ; (*rb) = colBrightersFlags
 	; Transpose
 	COMPV_TRANSPOSE_I8_16X16_REG_T9_X64_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4, xmm8, xmm9, xmm10, xmm11
 	; Flags
+	mov r8, rsi
 	pcmpeqb xmm6, xmm6 ; xmmFF
+	shl r8, COMPV_YASM_REG_SZ_BYTES_TIMES16_LOG2 ; rsi * (16*COMPV_YASM_REG_SZ_BYTES)
 	mov rdx, arg(7) ; pfbrighters16
+	lea rdx, [rdx + r8]
 	pxor xmm0, xmm0
 	pxor xmm1, xmm1
 	pxor xmm2, xmm2
@@ -703,24 +721,13 @@ sym(FastData16Row_Asm_X64_SSE2):
 
 	
 	.LoopRowsNext
-	mov r12, COMPV_YASM_REG_SZ_BYTES
-	mov r13, 16*COMPV_YASM_REG_SZ_BYTES
-	mov r14, 16*16
-
 	lea rbx, [rbx + 16] ; IP += 16
-	add arg(11), r12 ; rb += 1
-	add arg(10), r12 ; rd += 1
-	add arg(6), r13 ; pfdarkers16 += 1
-	add arg(7), r13 ; pfbrighters16 += 1
-	add arg(8), r14 ; xmmDdarkers16x16 += 1
-	add arg(9), r14 ; xmmDbrighters16x16 += 1
-	; TODO(dmi): Motion estimation not supported -> do not inc IPprev
 	
 	;-------------------
 	;EndOfLooopRows
-	sub rsi, 16
-	test rsi, rsi
-	jnz .LoopRows
+	lea rsi, [rsi + 1]
+	cmp rsi, arg(2)
+	jl .LoopRows
 	;-------------------
 
 	; unalign stack and free memory

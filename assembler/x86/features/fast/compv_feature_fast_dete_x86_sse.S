@@ -621,6 +621,8 @@ sym(FastData16Row_Asm_X86_SSE2):
 
 	
 	.LoopRowsNext
+
+	; TODO(dmi): do the same as x64, increment these values only if needed
 	mov rax, arg(11) ; rb
 	mov rcx, arg(10) ; rd
 	lea rax, [rax + COMPV_YASM_REG_SZ_BYTES]
