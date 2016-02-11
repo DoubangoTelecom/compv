@@ -622,7 +622,7 @@ static void FastProcessRange(RangeFAST* range)
                                 : (CompVCpu::isSupported(kCpuFlagCMOV) ? Fast12Strengths_Asm_CMOV_X86_SSE41 : Fast12Strengths_Asm_X86_SSE41));
     }
 	if (CompVCpu::isSupported(kCpuFlagAVX2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86((FastData16Row = FastData16Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
+		COMPV_EXEC_IFDEF_INTRIN_X86((FastData16Row = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
 	}
 
     // Number of pixels to process (multiple of align)
@@ -683,7 +683,7 @@ static void FastProcessRange(RangeFAST* range)
 			if (/*m >= 1600*/m >= 1616 && j == 279) {
                 int kaka = 0;
             }
-            if (r0 || r1) {
+            if ((r0 || r1)) {
                 if (m == kalign - align) {
                     // last
                     r0 &= mask;

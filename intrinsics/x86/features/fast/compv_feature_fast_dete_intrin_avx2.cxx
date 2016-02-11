@@ -26,7 +26,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void FastData16Row_Intrin_AVX2(
+void FastData32Row_Intrin_AVX2(
     const uint8_t* IP,
     const uint8_t* IPprev,
     compv_scalar_t width,

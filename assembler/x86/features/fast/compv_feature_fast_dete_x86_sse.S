@@ -154,19 +154,16 @@ sym(FastData16Row_Asm_X86_SSE2):
 	movdqa [rsp + 280 + 8*16], xmm1 ; xmmBrightersFlags[8]
 	por xmm0, xmm2
 	por xmm1, xmm3
-	xor rcx, rcx
-	xor rdi, rdi
 	pmovmskb rax, xmm0
 	pmovmskb rdx, xmm1
 	test rax, rax
-	mov rax, 1
-	cmovnz rcx, rax ; FIXME: CMOV
+	setnz al
 	test rdx, rdx
-	cmovnz rdi, rax ; FIXME: CMOV
-	add rdi, rcx
-	test rdi, rdi
+	setnz dl
+	add rdx, rax
+	test rdx, rdx
 	jz .LoopRowsNext
-	mov [rsp + 0], rdi ; sum = ?
+	mov [rsp + 0], rdx ; sum = ?
 
 	; compare I5 and I13 aka 4 and 12
 	mov rdx, arg(3) ; pixels16
@@ -204,19 +201,16 @@ sym(FastData16Row_Asm_X86_SSE2):
 	movdqa [rsp + 280 + 12*16], xmm1 ; xmmBrightersFlags[12]
 	por xmm0, xmm2
 	por xmm1, xmm3
-	xor rcx, rcx
-	xor rdi, rdi
 	pmovmskb rax, xmm0
 	pmovmskb rdx, xmm1
 	test rax, rax
-	mov rax, 1
-	cmovnz rcx, rax ; FIXME: CMOV
+	setnz al
 	test rdx, rdx
-	cmovnz rdi, rax ; FIXME: CMOV
-	add rdi, rcx
-	test rdi, rdi
+	setnz dl
+	add rdx, rax
+	test rdx, rdx
 	jz .LoopRowsNext
-	add [rsp + 0], rdi ; sum = ?
+	add [rsp + 0], rdx ; sum += ?
 
 	;
 	;  Speed-Test-2
@@ -248,19 +242,16 @@ sym(FastData16Row_Asm_X86_SSE2):
 	movdqa xmm3, [rsp + 280 + 12*16] ; xmmBrightersFlags[12]
 	por xmm0, xmm2
 	por xmm1, xmm3
-	xor rcx, rcx
-	xor rdi, rdi
 	pmovmskb rax, xmm0
 	pmovmskb rdx, xmm1
 	test rax, rax
-	mov rax, 1
-	cmovnz rcx, rax ; FIXME: CMOV
+	setnz al
 	test rdx, rdx
-	cmovnz rdi, rax ; FIXME: CMOV
-	xor rax, rax
-	add rdi, rcx
-	cmp rdi, 1
-	cmovle rdi, rax ; if (rdi <= 1) rdi = 0 ; FIXME: CMOV
+	setnz dl
+	add rdx, rax
+	cmp rdx, 1
+	setg dl
+	mov rdi, rdx ; rdi = (rdx > 1) ? 1 : 0
 
 	; Check whether to load Darkers
 	movdqa xmm0, [rsp + 24 + 0*16] ; xmmDarkersFlags[0]
@@ -269,20 +260,15 @@ sym(FastData16Row_Asm_X86_SSE2):
 	movdqa xmm3, [rsp + 24 + 12*16] ; xmmDarkersFlags[12]
 	por xmm0, xmm2
 	por xmm1, xmm3
-	xor rcx, rcx
 	pmovmskb rax, xmm0
+	pmovmskb rdx, xmm1
 	test rax, rax
-	mov rax, 1
-	cmovnz rcx, rax ; FIXME: CMOV
-	xor rdx, rdx
-	pmovmskb rax, xmm1
-	test rax, rax
-	mov rax, 1
-	cmovnz rdx, rax ; FIXME: CMOV
-	xor rax, rax
-	add rdx, rcx
+	setnz al
+	test rdx, rdx
+	setnz dl
+	add rdx, rax
 	cmp rdx, 1
-	cmovle rdx, rax ; if (rdx <= 1) rdx = 0 ; FIXME: CMOV
+	setg dl ; rdx = (rdx > 1) ? 1 : 0
 
 	; rdi = loadB, rdx = loadD
 	; skip process if (!(loadB || loadD))

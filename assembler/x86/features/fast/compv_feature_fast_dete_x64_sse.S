@@ -18,6 +18,9 @@
 ; along with CompV.
 ;
 %include "../../compv_common_x86.S"
+
+%if COMPV_YASM_ABI_IS_64BIT
+
 %include "../../compv_bits_macros_x86.S"
 %include "../../compv_math_macros_x86.S"
 
@@ -63,7 +66,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	; align stack and alloc memory
 	COMPV_YASM_ALIGN_STACK 16, rax
 	sub rsp, 8 + 16 + 16*16 + 16*16 + 16*16
-	; [rsp + 0] = sum ; FIXME: sum r15
+	; [rsp + 0] = sum
 	; [rsp + 8] = xmmNMinusOne
 	; [rsp + 24] = xmmDarkersFlags[16]
 	; [rsp + 280] = xmmBrightersFlags[16]
@@ -122,8 +125,8 @@ sym(FastData16Row_Asm_X64_SSE2):
 	mov rax, [rdx + 0*COMPV_YASM_REG_SZ_BYTES] ; pixels16[0]
 	mov rdx, [rdx + 8*COMPV_YASM_REG_SZ_BYTES] ; pixels16[8]
 	movdqu xmm0, [rbx + rax]
-	movdqu xmm1, [rbx + rdx]
 	movdqa xmm2, xmm5 ; xmmDarker
+	movdqu xmm1, [rbx + rdx]
 	movdqa xmm3, xmm5 ; xmmDarker
 	mov rdx, arg(8) ; ddarkers16x16
 	mov rax, arg(9) ; dbrighters16x16
@@ -149,27 +152,24 @@ sym(FastData16Row_Asm_X64_SSE2):
 	movdqa [rsp + 280 + 8*16], xmm1 ; xmmBrightersFlags[8]
 	por xmm0, xmm2
 	por xmm1, xmm3
-	xor rcx, rcx
-	xor rdi, rdi
 	pmovmskb rax, xmm0
 	pmovmskb rdx, xmm1
-	mov r8, 1
 	test rax, rax
-	cmovnz rcx, r8 ; FIXME: CMOV
+	setnz al
 	test rdx, rdx
-	cmovnz rdi, r8 ; FIXME: CMOV
-	add rdi, rcx
-	test rdi, rdi
+	setnz dl
+	add rdx, rax
+	test rdx, rdx
 	jz .LoopRowsNext
-	mov [rsp + 0], rdi ; sum = ?
+	mov [rsp + 0], rdx ; sum = ?
 
 	; compare I5 and I13 aka 4 and 12
 	mov rdx, arg(3) ; pixels16
 	mov rax, [rdx + 4*COMPV_YASM_REG_SZ_BYTES] ; pixels16[4]
 	mov rdx, [rdx + 12*COMPV_YASM_REG_SZ_BYTES] ; pixels16[12]
 	movdqu xmm0, [rbx + rax]
-	movdqu xmm1, [rbx + rdx]
 	movdqa xmm2, xmm5 ; xmmDarker
+	movdqu xmm1, [rbx + rdx]
 	movdqa xmm3, xmm5 ; xmmDarker
 	mov rdx, arg(8) ; ddarkers16x16
 	mov rax, arg(9) ; dbrighters16x16
@@ -195,19 +195,18 @@ sym(FastData16Row_Asm_X64_SSE2):
 	movdqa [rsp + 280 + 12*16], xmm1 ; xmmBrightersFlags[12]
 	por xmm0, xmm2
 	por xmm1, xmm3
-	xor rcx, rcx
-	xor rdi, rdi
 	pmovmskb rax, xmm0
 	pmovmskb rdx, xmm1
-	mov r8, 1
 	test rax, rax
-	cmovnz rcx, r8 ; FIXME: CMOV
+	setnz al 
 	test rdx, rdx
-	cmovnz rdi, r8 ; FIXME: CMOV
-	add rdi, rcx
-	test rdi, rdi
+	setnz dl
+	add rdx, rax
+	test rdx, rdx
 	jz .LoopRowsNext
-	add [rsp + 0], rdi ; sum = ?
+	add [rsp + 0], rdx ; sum = ?
+
+	
 
 	;
 	;  Speed-Test-2
@@ -234,24 +233,20 @@ sym(FastData16Row_Asm_X64_SSE2):
 
 	; Check whether to load Brighters
 	movdqa xmm0, [rsp + 280 + 0*16] ; xmmBrightersFlags[0]
-	movdqa xmm1, [rsp + 280 + 4*16] ; xmmBrightersFlags[4]
 	movdqa xmm2, [rsp + 280 + 8*16] ; xmmBrightersFlags[8]
+	movdqa xmm1, [rsp + 280 + 4*16] ; xmmBrightersFlags[4]
 	movdqa xmm3, [rsp + 280 + 12*16] ; xmmBrightersFlags[12]
 	por xmm0, xmm2
 	por xmm1, xmm3
-	xor rcx, rcx
-	xor rdi, rdi
 	pmovmskb r9, xmm0
 	pmovmskb r10, xmm1
-	xor r11, r11
-	mov r8, 1
 	test r9, r9
-	cmovnz rcx, r8 ; FIXME: CMOV
+	setnz cl
 	test r10, r10
-	cmovnz rdi, r8 ; FIXME: CMOV
-	add rdi, rcx
-	cmp rdi, 1
-	cmovle rdi, r11 ; if (rdi <= 1) rdi = 0 ; FIXME: CMOV
+	setnz al
+	add rcx, rax
+	cmp rcx, 1
+	setg dil ; rdi = (rcx > 1) ? 1 : 0
 
 	; Check whether to load Darkers
 	movdqa xmm0, [rsp + 24 + 0*16] ; xmmDarkersFlags[0]
@@ -260,19 +255,15 @@ sym(FastData16Row_Asm_X64_SSE2):
 	movdqa xmm3, [rsp + 24 + 12*16] ; xmmDarkersFlags[12]
 	por xmm0, xmm2
 	por xmm1, xmm3
-	xor rcx, rcx
-	xor rdx, rdx
 	pmovmskb r9, xmm0
 	pmovmskb r10, xmm1
-	xor r11, r11
-	mov r8, 1
 	test r9, r9
-	cmovnz rcx, r8 ; FIXME: CMOV
+	setnz cl
 	test r10, r10
-	cmovnz rdx, r8 ; FIXME: CMOV
-	add rdx, rcx
-	cmp rdx, 1
-	cmovle rdx, r11 ; if (rdx <= 1) rdx = 0 ; FIXME: CMOV
+	setnz dl
+	add rcx, rdx
+	cmp rcx, 1
+	setg dl ; rdx = (rcx > 1) ? 1 : 0
 
 	; rdi = loadB, rdx = loadD
 	; skip process if (!(loadB || loadD))
@@ -428,7 +419,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	mov rcx, arg(10) ; rd
 	mov [rcx], rdx ; (*rd) = colDarkersFlags
 	; Transpose
-	COMPV_TRANSPOSE_I8_16X16_REG_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1
+	COMPV_TRANSPOSE_I8_16X16_REG_T9_X64_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4, xmm8, xmm9, xmm10, xmm11
 	; Flags
 	pcmpeqb xmm5, xmm5 ; xmmFF
 	mov rdx, arg(6) ; pfdarkers16
@@ -623,7 +614,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	mov rax, arg(9) ; dbrighters16x16
 	mov [rcx], rdx ; (*rb) = colBrightersFlags
 	; Transpose
-	COMPV_TRANSPOSE_I8_16X16_REG_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1
+	COMPV_TRANSPOSE_I8_16X16_REG_T9_X64_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4, xmm8, xmm9, xmm10, xmm11
 	; Flags
 	pcmpeqb xmm6, xmm6 ; xmmFF
 	mov rdx, arg(7) ; pfbrighters16
@@ -712,28 +703,19 @@ sym(FastData16Row_Asm_X64_SSE2):
 
 	
 	.LoopRowsNext
+	mov r12, COMPV_YASM_REG_SZ_BYTES
+	mov r13, 16*COMPV_YASM_REG_SZ_BYTES
+	mov r14, 16*16
+
 	lea rbx, [rbx + 16] ; IP += 16
-
-	mov rax, arg(11) ; rb
-	mov rcx, arg(10) ; rd
-	mov r8, arg(6) ; pfdarkers16
-	mov r9, arg(7) ; pfbrighters16
-	mov r10, arg(8) ;  ddarkers16x16
-	mov r11, arg(9) ;  dbrighters16x16
-	lea rax, [rax + COMPV_YASM_REG_SZ_BYTES]
-	lea rcx, [rcx + COMPV_YASM_REG_SZ_BYTES]
-	lea r8, [r8 + 16*COMPV_YASM_REG_SZ_BYTES]
-	lea r9, [r9 + 16*COMPV_YASM_REG_SZ_BYTES]
-	lea r10, [r10 + 16*16]
-	lea r11, [r11 + 16*16]
-	mov arg(11), rax ; rb += 1
-	mov arg(10), rcx ; rd += 1	
-	mov arg(6), r8 ; pfdarkers16 += 1
-	mov arg(7), r9 ; pfbrighters16 += 1	
-	mov arg(8), r10 ; xmmDdarkers16x16 += 1
-	mov arg(9), r11 ; xmmDbrighters16x16 += 1
+	add arg(11), r12 ; rb += 1
+	add arg(10), r12 ; rd += 1
+	add arg(6), r13 ; pfdarkers16 += 1
+	add arg(7), r13 ; pfbrighters16 += 1
+	add arg(8), r14 ; xmmDdarkers16x16 += 1
+	add arg(9), r14 ; xmmDbrighters16x16 += 1
 	; TODO(dmi): Motion estimation not supported -> do not inc IPprev
-
+	
 	;-------------------
 	;EndOfLooopRows
 	sub rsi, 16
@@ -760,3 +742,4 @@ sym(FastData16Row_Asm_X64_SSE2):
 	ret
 	
 
+%endif ; COMPV_YASM_ABI_IS_64BIT

@@ -126,6 +126,7 @@ void FastData16Row_Intrin_SSE2(
     for (i = 0; i < width; i += 16) {
         (*rb) = 0;
         (*rd) = 0;
+		
         _mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)IP));
         _mm_store_si128(&xmmBrighter, _mm_adds_epu8(xmm0, xmmThreshold));
         _mm_store_si128(&xmmDarker, _mm_subs_epu8(xmm0, xmmThreshold));
@@ -349,7 +350,7 @@ void FastData16Row_Intrin_SSE2(
                 colBrightersFlags = _mm_movemask_epi8(xmm0);
 				loadB = (colBrightersFlags != 0);
             }
-
+			
             if (loadD) {
                 (*rd) = colDarkersFlags;
                 // Transpose
@@ -404,6 +405,7 @@ void FastData16Row_Intrin_SSE2(
                 (*pfbrighters16)[13] = _mm_movemask_epi8(_mm_andnot_si128(_mm_cmpeq_epi8((*xmmDbrighters16x16)[13], xmmZeros), xmmFF));
                 (*pfbrighters16)[14] = _mm_movemask_epi8(_mm_andnot_si128(_mm_cmpeq_epi8((*xmmDbrighters16x16)[14], xmmZeros), xmmFF));
                 (*pfbrighters16)[15] = _mm_movemask_epi8(_mm_andnot_si128(_mm_cmpeq_epi8((*xmmDbrighters16x16)[15], xmmZeros), xmmFF));
+				
             }
         }
 next:

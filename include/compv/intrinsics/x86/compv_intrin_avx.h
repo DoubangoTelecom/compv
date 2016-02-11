@@ -147,16 +147,16 @@ To:
 	COMPV_TRANSPOSE_I8_4X32_AVX2(_x0, _x4, _x8, _x12, _tmp); \
 	/* 2 * 6 * a * e */ \
 	COMPV_TRANSPOSE_I8_4X32_AVX2(_x2, _x6, _x10, _x14, _tmp); \
-	/* 0 * 2 * 4 * 6 * 8 * a * c * e */ \
-	COMPV_INTERLEAVE_I8_AVX2(_x0, _x2, _tmp); \
-	COMPV_INTERLEAVE_I8_AVX2(_x4, _x6, _tmp); \
-	COMPV_INTERLEAVE_I8_AVX2(_x8, _x10, _tmp); \
-	COMPV_INTERLEAVE_I8_AVX2(_x12, _x14, _tmp); \
 	/* 1 * 3 * 5 * 7 * 9 * b * d * f */ \
 	COMPV_INTERLEAVE_I8_AVX2(_x1, _x3, _tmp); \
 	COMPV_INTERLEAVE_I8_AVX2(_x5, _x7, _tmp); \
 	COMPV_INTERLEAVE_I8_AVX2(_x9, _x11, _tmp); \
 	COMPV_INTERLEAVE_I8_AVX2(_x13, _x15, _tmp); \
+	/* 0 * 2 * 4 * 6 * 8 * a * c * e */ \
+	COMPV_INTERLEAVE_I8_AVX2(_x0, _x2, _tmp); \
+	COMPV_INTERLEAVE_I8_AVX2(_x4, _x6, _tmp); \
+	COMPV_INTERLEAVE_I8_AVX2(_x8, _x10, _tmp); \
+	COMPV_INTERLEAVE_I8_AVX2(_x12, _x14, _tmp); \
 	/* 0 * 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9 * a * b * c * d * e * f */ \
 	COMPV_INTERLEAVE_I8_AVX2(_x0, _x1, _tmp); \
 	COMPV_INTERLEAVE_I8_AVX2(_x2, _x3, _tmp); \
