@@ -105,10 +105,7 @@ sym(FastData16Row_Asm_X86_SSE2):
 
 	; Motion Estimation
 	; TODO(dmi): not supported
-	; TODO(dmi): inc IPprev at the end of the function if motion estimation is supported
-	xor rax, rax
-	mov rcx, arg(12) ; me
-	mov [rcx], rax
+	; TODO(dmi): inc IPprev here
 
 	movdqa xmm5, xmm6
 	paddusb xmm6, xmm7 ; xmm6 = xmmBrighter
@@ -623,30 +620,21 @@ sym(FastData16Row_Asm_X86_SSE2):
 	.LoopRowsNext
 
 	; TODO(dmi): do the same as x64, increment these values only if needed
-	mov rax, arg(11) ; rb
-	mov rcx, arg(10) ; rd
-	lea rax, [rax + COMPV_YASM_REG_SZ_BYTES]
-	lea rcx, [rcx + COMPV_YASM_REG_SZ_BYTES]
-	mov arg(11), rax ; rb += 1
-	mov arg(10), rcx ; rd += 1
 	lea rbx, [rbx + 16] ; IP += 16
-	mov rax, arg(6) ; pfdarkers16
-	mov rcx, arg(7) ; pfbrighters16
-	lea rax, [rax + 16*COMPV_YASM_REG_SZ_BYTES]
-	lea rcx, [rcx + 16*COMPV_YASM_REG_SZ_BYTES]
-	mov arg(6), rax ; pfdarkers16 += 1
-	mov arg(7), rcx ; pfbrighters16 += 1
-	mov rax, arg(8) ;  ddarkers16x16
-	mov rcx, arg(9) ;  dbrighters16x16
-	lea rax, [rax + 16*16]
-	lea rcx, [rcx + 16*16]
-	mov arg(8), rax ; xmmDdarkers16x16 += 1
-	mov arg(9), rcx ; xmmDbrighters16x16 += 1
+	mov rdx, COMPV_YASM_REG_SZ_BYTES
+	add arg(11), rdx ; rb += 1
+	add arg(10), rdx ; rd += 1
+	mov rdx, 16*COMPV_YASM_REG_SZ_BYTES
+	add arg(6), rdx ; pfdarkers16 += 1
+	add arg(7), rdx ; pfbrighters16 += 1
+	mov rdx, 16*16
+	add arg(8), rdx ; xmmDdarkers16x16 += 1
+	add arg(9), rdx ; xmmDbrighters16x16 += 1
 	; TODO(dmi): Motion estimation not supported -> do not inc IPprev
 
 	;-------------------
 	;EndOfLooopRows
-	sub rsi, 16
+	lea rsi, [rsi - 16]
 	test rsi, rsi
 	jnz .LoopRows
 	;-------------------

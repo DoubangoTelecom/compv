@@ -612,8 +612,8 @@ static void FastProcessRange(RangeFAST* range)
     if (CompVCpu::isSupported(kCpuFlagSSE2)) {
         COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = FastStrengths_SSE2);
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastData16Row = FastData16Row_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-		COMPV_EXEC_IFDEF_ASM_X86((FastData16Row = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE)); // FIXME: INTRIN faster in X64
-		COMPV_EXEC_IFDEF_ASM_X64((FastData16Row = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE)); // FIXME: INTRIN faster in X64
+		COMPV_EXEC_IFDEF_ASM_X86((FastData16Row = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE)); // asm code FASTER than intrin
+		COMPV_EXEC_IFDEF_ASM_X64((FastData16Row = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE)); // TODO(dmi): asm code not too much faster than intrin
     }
     if (CompVCpu::isSupported(kCpuFlagSSE41)) {
         COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = FastStrengths_SSE41);
