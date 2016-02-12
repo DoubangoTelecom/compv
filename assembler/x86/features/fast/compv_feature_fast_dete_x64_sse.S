@@ -269,7 +269,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 
 	; rdi = loadB, rdx = loadD
 	; skip process if (!(loadB || loadD))
-	mov rax, rdi
+	movzx ax, dil
 	or rax, rdx
 	test rax, rax
 	jz .LoopRowsNext	
@@ -339,7 +339,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	movdqa xmm12, xmm5
 	movdqa xmm13, xmm5
 	movdqa xmm14, xmm5
-	movdqa xmm15, xmm5
+	movdqa xmm15, xmm5	
 	psubusb xmm0, [rsp + 536 + 1*16]
 	psubusb xmm1, [rsp + 536 + 2*16]
 	psubusb xmm2, [rsp + 536 + 3*16]
