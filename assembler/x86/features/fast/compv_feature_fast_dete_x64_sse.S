@@ -76,7 +76,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	shr rdx, 4 ; div width with 16 and mov rsi by 1 -> because of argi(x,rsi)
 	xor rsi, rsi
 	mov arg(2), rdx 
-	mov rax, arg(5) ; threshold
+	movzx rax, byte arg(5) ; threshold
 	mov rbx, arg(0) ; rbx = IP
 	movd xmm7, rax
 	punpcklbw xmm7, xmm7  
@@ -120,6 +120,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	pxor xmm15, xmm15 ; xmm15 = xmmZeros
 	pcmpeqb xmm14, xmm14 ; xmm14 = xmmFF
 
+	mov r11, arg(3) ; pixels16
 	mov r10, rsi
 	mov r8, arg(8) ; ddarkers16x16
 	shl r10, 8 ; rsi * (16*16)
@@ -128,9 +129,8 @@ sym(FastData16Row_Asm_X64_SSE2):
 	lea r9, [r9 + r10] ; dbrighters16x16[rsi]
 
 	; compare I1 and I9 aka 0 and 8
-	mov rdx, arg(3) ; pixels16
-	mov rax, [rdx + 0*COMPV_YASM_REG_SZ_BYTES] ; pixels16[0]
-	mov rdx, [rdx + 8*COMPV_YASM_REG_SZ_BYTES] ; pixels16[8]
+	mov rax, [r11 + 0*COMPV_YASM_REG_SZ_BYTES] ; pixels16[0]
+	mov rdx, [r11 + 8*COMPV_YASM_REG_SZ_BYTES] ; pixels16[8]
 	movdqu xmm0, [rbx + rax]
 	movdqa xmm2, xmm5 ; xmmDarker
 	movdqu xmm1, [rbx + rdx]
@@ -173,9 +173,8 @@ sym(FastData16Row_Asm_X64_SSE2):
 	movdqa [rsp + 280 + 8*16], xmm1 ; xmmBrightersFlags[8]
 
 	; compare I5 and I13 aka 4 and 12
-	mov rdx, arg(3) ; pixels16
-	mov rax, [rdx + 4*COMPV_YASM_REG_SZ_BYTES] ; pixels16[4]
-	mov rdx, [rdx + 12*COMPV_YASM_REG_SZ_BYTES] ; pixels16[12]
+	mov rax, [r11 + 4*COMPV_YASM_REG_SZ_BYTES] ; pixels16[4]
+	mov rdx, [r11 + 12*COMPV_YASM_REG_SZ_BYTES] ; pixels16[12]
 	movdqu xmm0, [rbx + rax]
 	movdqa xmm2, xmm5 ; xmmDarker
 	movdqu xmm1, [rbx + rdx]
