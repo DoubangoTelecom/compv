@@ -69,8 +69,8 @@ popcnt %1, %2
 ; example: COMPV_INTERLEAVE_I8_XMM_SSE2 xmm0, xmm1, xmm2
 %macro COMPV_INTERLEAVE_I8_XMM_SSE2 3
 	movdqa %3, %1
-	punpckhbw %3, %2
 	punpcklbw %1, %2
+	punpckhbw %3, %2
 	movdqa %2, %3
 %endmacro
 

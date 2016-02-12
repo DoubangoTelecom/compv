@@ -68,6 +68,35 @@
 %endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Same as COMPV_TRANSPOSE_I8_4X16_REG_SSE2 but with 5
+; temp registers
+; This macro uses 4xCOMPV_INTERLEAVE_I8_REG_SSE2 but with
+; 10 movdqa instructions instead of 16
+%macro COMPV_TRANSPOSE_I8_4X16_REG_T5_SSE2 9
+	movdqa %5, [%1]
+	movdqa %6, [%1]
+	punpcklbw %5, [%3] ; %1
+	punpckhbw %6, [%3] ; %3
+	
+	movdqa %7, [%2]
+	movdqa %8, [%2]
+	punpcklbw %7, [%4] ; %2
+	punpckhbw %8, [%4] ; %4
+
+	movdqa %9, %5 ; %1
+	punpcklbw %9, %7 ; %1
+	punpckhbw %5, %7 ; %2
+	movdqa [%1], %9
+	movdqa [%2], %5
+
+	movdqa %9, %6 ; %3
+	punpcklbw %9, %8 ; %3
+	punpckhbw %6, %8 ; %4
+	movdqa [%3], %9
+	movdqa [%4], %6
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Transpose a 16x16 matrix containing u8/i8 values.
 ; From:
 ; 0 0 0 0 . .
@@ -159,109 +188,17 @@
 	COMPV_INTERLEAVE_I8_REG_SSE2 %15, %16, %17, %18
 %endmacro
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Same as COMPV_TRANSPOSE_I8_16X16_REG_SSE2 but uses 9
-; temp registers.
-; %1 to %16 -> memory addresses
-; %17 to %25 -> temp registers
-%macro COMPV_TRANSPOSE_I8_16X16_REG_T9_X64_SSE2 25
-	; LOAD ;
-	movdqa %17, [%2]
-	movdqa %18, [%6]
-	movdqa %19, [%10]
-	movdqa %20, [%14]
-	movdqa %21, [%4]
-	movdqa %22, [%8]
-	movdqa %23, [%12]
-	movdqa %24, [%16]
-	; 1 * 5 * 9 * d 
-	COMPV_TRANSPOSE_I8_4X16_XMM_SSE2 %17, %18, %19, %20, %25
-	; 3 * 7 * b * f
-	COMPV_TRANSPOSE_I8_4X16_XMM_SSE2 %21, %22, %23, %24, %25
-	; 1 * 3 * 5 * 7 * 9 * b * d * f 
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %17, %21, %25
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %18, %22, %25
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %19, %23, %25
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %20, %24, %25
-	; SAVE ;
-	movdqa [%2], %17
-	movdqa [%6], %18
-	movdqa [%10], %19
-	movdqa [%14], %20
-	movdqa [%4], %21
-	movdqa [%8], %22
-	movdqa [%12], %23
-	movdqa [%16], %24
-	; LOAD ;
-	movdqa %17, [%1]
-	movdqa %18, [%5]
-	movdqa %19, [%9]
-	movdqa %20, [%13]
-	movdqa %21, [%3]
-	movdqa %22, [%7]
-	movdqa %23, [%11]
-	movdqa %24, [%15]
-	; 0 * 4 * 8 * c	
-	COMPV_TRANSPOSE_I8_4X16_XMM_SSE2 %17, %18, %19, %20, %25
-	; 2 * 6 * a * e
-	COMPV_TRANSPOSE_I8_4X16_XMM_SSE2 %21, %22, %23, %24, %25
-	; 0 * 2 * 4 * 6 * 8 * a * c * e 
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %17, %21, %25
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %18, %22, %25
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %19, %23, %25
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %20, %24, %25
-	; SAVE ;
-	movdqa [%1], %17
-	movdqa [%5], %18
-	movdqa [%9], %19
-	movdqa [%13], %20
-	movdqa [%3], %21
-	movdqa [%7], %22 
-	movdqa [%11], %23
-	movdqa [%15], %24
-	; 0 * 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9 * a * b * c * d * e * f
-	; LOAD ;
-	movdqa %17, [%1]
-	movdqa %18, [%2]
-	movdqa %19, [%3]
-	movdqa %20, [%4]
-	movdqa %21, [%5]
-	movdqa %22, [%6]
-	movdqa %23, [%7]
-	movdqa %24, [%8]
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %17, %18, %25
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %19, %20, %25
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %21, %22, %25
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %23, %24, %25
-	; SAVE ;
-	movdqa [%1], %17 
-	movdqa [%2], %18 
-	movdqa [%3], %19
-	movdqa [%4], %20
-	movdqa [%5], %21
-	movdqa [%6], %22
-	movdqa [%7], %23
-	movdqa [%8], %24
-	; LOAD ;
-	movdqa %17, [%9]
-	movdqa %18, [%10]
-	movdqa %19, [%11]
-	movdqa %20, [%12]
-	movdqa %21, [%13]
-	movdqa %22, [%14]
-	movdqa %23, [%15]
-	movdqa %24, [%16]
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %17, %18, %25
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %19, %20, %25
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %21, %22, %25
-	COMPV_INTERLEAVE_I8_XMM_SSE2 %23, %24, %25
-	; SAVE ;
-	movdqa [%9], %17 
-	movdqa [%10], %18 
-	movdqa [%11], %19
-	movdqa [%12], %20
-	movdqa [%13], %21
-	movdqa [%14], %22
-	movdqa [%15], %23
-	movdqa [%16], %24
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Same as COMPV_TRANSPOSE_I8_16X16_REG_SSE2 but with 
+; 5 temp registers
+%macro COMPV_TRANSPOSE_I8_16X16_REG_T5_SSE2 21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_SSE2 %2, %6, %10, %14, %17, %18, %19, %20, %21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_SSE2 %4, %8, %12, %16, %17, %18, %19, %20, %21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_SSE2 %1, %5, %9, %13, %17, %18, %19, %20, %21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_SSE2 %3, %7, %11, %15, %17, %18, %19, %20, %21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_SSE2 %1, %2, %3, %4, %17, %18, %19, %20, %21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_SSE2 %5, %6, %7, %8, %17, %18, %19, %20, %21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_SSE2 %9, %10, %11, %12, %17, %18, %19, %20, %21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_SSE2 %13, %14, %15, %16, %17, %18, %19, %20, %21
 %endmacro

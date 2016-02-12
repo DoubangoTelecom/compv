@@ -443,7 +443,7 @@ sym(FastData16Row_Asm_X86_SSE2):
 	mov rcx, arg(10) ; rd
 	mov [rcx], rdx ; (*rd) = colDarkersFlags
 	; Transpose
-	COMPV_TRANSPOSE_I8_16X16_REG_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1
+	COMPV_TRANSPOSE_I8_16X16_REG_T5_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4
 	; Flags
 	pcmpeqb xmm5, xmm5 ; xmmFF
 	mov rdx, arg(6) ; pfdarkers16
@@ -588,7 +588,7 @@ sym(FastData16Row_Asm_X86_SSE2):
 	mov rax, arg(9) ; dbrighters16x16
 	mov [rcx], rdx ; (*rb) = colBrightersFlags
 	; Transpose
-	COMPV_TRANSPOSE_I8_16X16_REG_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1
+	COMPV_TRANSPOSE_I8_16X16_REG_T5_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4
 	; Flags
 	pcmpeqb xmm6, xmm6 ; xmmFF
 	mov rdx, arg(7) ; pfbrighters16

@@ -151,14 +151,8 @@ sym(FastData16Row_Asm_X64_SSE2):
 	pandn xmm3, xmm14
 	pandn xmm0, xmm14
 	pandn xmm1, xmm14
-	movdqa [rsp + 24 + 0*16], xmm2 ; xmmDarkersFlags[0]
-	movdqa [rsp + 24 + 8*16], xmm3 ; xmmDarkersFlags[8]
-	movdqa [rsp + 280 + 0*16], xmm0 ; xmmBrightersFlags[0]
-	movdqa [rsp + 280 + 8*16], xmm1 ; xmmBrightersFlags[8]
 	movdqa xmm8, xmm0 ; save xmmBrightersFlags[0] in xmm8
 	movdqa xmm9, xmm1 ; save xmmBrightersFlags[8] in xmm9
-	movdqa xmm10, xmm2 ; save xmmDarkersFlags[0] in xmm10
-	movdqa xmm11, xmm3 ; save xmmDarkersFlags[8] in xmm11
 	por xmm0, xmm2
 	por xmm1, xmm3
 	pmovmskb rax, xmm0
@@ -171,6 +165,12 @@ sym(FastData16Row_Asm_X64_SSE2):
 	test rdx, rdx
 	jz .LoopRowsNext
 	mov [rsp + 0], rdx ; sum = ?
+	movdqa xmm10, xmm2 ; save xmmDarkersFlags[0] in xmm10
+	movdqa xmm11, xmm3 ; save xmmDarkersFlags[8] in xmm11
+	movdqa [rsp + 24 + 0*16], xmm2 ; xmmDarkersFlags[0]
+	movdqa [rsp + 24 + 8*16], xmm3 ; xmmDarkersFlags[8]
+	movdqa [rsp + 280 + 0*16], xmm0 ; xmmBrightersFlags[0]
+	movdqa [rsp + 280 + 8*16], xmm1 ; xmmBrightersFlags[8]
 
 	; compare I5 and I13 aka 4 and 12
 	mov rdx, arg(3) ; pixels16
@@ -196,10 +196,6 @@ sym(FastData16Row_Asm_X64_SSE2):
 	pandn xmm3, xmm14
 	pandn xmm0, xmm14
 	pandn xmm1, xmm14
-	movdqa [rsp + 24 + 4*16], xmm2 ; xmmDarkersFlags[4]
-	movdqa [rsp + 24 + 12*16], xmm3 ; xmmDarkersFlags[12]
-	movdqa [rsp + 280 + 4*16], xmm0 ; xmmBrightersFlags[4]
-	movdqa [rsp + 280 + 12*16], xmm1 ; xmmBrightersFlags[12]
 	movdqa xmm12, xmm0 ; save xmmBrightersFlags[4] in xmm8
 	movdqa xmm13, xmm1 ; save xmmBrightersFlags[12] in xmm9
 	por xmm0, xmm2
@@ -214,8 +210,10 @@ sym(FastData16Row_Asm_X64_SSE2):
 	test rdx, rdx
 	jz .LoopRowsNext
 	add [rsp + 0], rdx ; sum = ?
-
-	
+	movdqa [rsp + 24 + 4*16], xmm2 ; xmmDarkersFlags[4]
+	movdqa [rsp + 24 + 12*16], xmm3 ; xmmDarkersFlags[12]
+	movdqa [rsp + 280 + 4*16], xmm12 ; xmmBrightersFlags[4]
+	movdqa [rsp + 280 + 12*16], xmm13 ; xmmBrightersFlags[12]
 
 	;
 	;  Speed-Test-2
@@ -426,7 +424,9 @@ sym(FastData16Row_Asm_X64_SSE2):
 	mov rcx, arg(10) ; rd
 	mov [rcx + rsi*COMPV_YASM_REG_SZ_BYTES], rdx ; (*rd) = colDarkersFlags
 	; Transpose
-	COMPV_TRANSPOSE_I8_16X16_REG_T9_X64_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4, xmm8, xmm9, xmm10, xmm11
+	COMPV_TRANSPOSE_I8_16X16_REG_T5_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4
+	
+	
 	; Flags
 	mov r8, rsi
 	mov r9, rsi
@@ -630,7 +630,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	mov rcx, arg(11) ; rb
 	mov [rcx + rsi*COMPV_YASM_REG_SZ_BYTES], rdx ; (*rb) = colBrightersFlags
 	; Transpose
-	COMPV_TRANSPOSE_I8_16X16_REG_T9_X64_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4, xmm8, xmm9, xmm10, xmm11
+	COMPV_TRANSPOSE_I8_16X16_REG_T5_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4
 	; Flags
 	mov r8, rsi
 	pcmpeqb xmm6, xmm6 ; xmmFF

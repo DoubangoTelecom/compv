@@ -140,6 +140,21 @@
   %endif
 %endif
 
+; argi()
+; Return the address specification of the given argument plus index (i).
+;
+%if COMPV_YASM_ABI_IS_32BIT
+  %define argi(x,i) [ebp+8+4*x+(i)]
+%else
+  ; 64 bit ABI passes arguments in registers. This is a workaround to get up
+  ; and running quickly. Relies on COMPV_YASM_SHADOW_ARGS_TO_STACK
+  %if COMPV_YASM_WIN64
+    %define argi(x,i) [rbp+16+8*x+(i)]
+  %else
+    %define argi(x,i) [rbp-8-8*x+(i)]
+  %endif
+%endif
+
 ; Enable relative addressing on x64 (added by dmi)
 %if COMPV_YASM_ABI_IS_32BIT
 %define COMPV_YASM_DEFAULT_REL 
@@ -150,11 +165,13 @@
 ; COMPV_YASM_REG_SZ_BYTES, COMPV_YASM_REG_SZ_BITS
 ; Size of a register
 %if COMPV_YASM_ABI_IS_32BIT
-%define COMPV_YASM_REG_SZ_BYTES 4
-%define COMPV_YASM_REG_SZ_BITS  32
+%define COMPV_YASM_REG_SZ_BYTES					4
+%define COMPV_YASM_REG_SZ_BYTES_TIMES16_LOG2	6
+%define COMPV_YASM_REG_SZ_BITS					32
 %else
-%define COMPV_YASM_REG_SZ_BYTES 8
-%define COMPV_YASM_REG_SZ_BITS  64
+%define COMPV_YASM_REG_SZ_BYTES					8
+%define COMPV_YASM_REG_SZ_BYTES_TIMES16_LOG2	7
+%define COMPV_YASM_REG_SZ_BITS					64
 %endif
 
 
