@@ -156,9 +156,9 @@ sym(FastData16Row_Asm_X64_SSE2):
 	por xmm1, xmm3
 	pmovmskb eax, xmm0
 	pmovmskb edx, xmm1
-	test eax, eax
+	test ax, ax
 	setnz al
-	test edx, edx
+	test dx, dx
 	setnz dl
 	add dl, al
 	test dl, dl
@@ -168,8 +168,8 @@ sym(FastData16Row_Asm_X64_SSE2):
 	movdqa xmm11, xmm3 ; save xmmDarkersFlags[8] in xmm11
 	movdqa [rsp + 24 + 0*16], xmm2 ; xmmDarkersFlags[0]
 	movdqa [rsp + 24 + 8*16], xmm3 ; xmmDarkersFlags[8]
-	movdqa [rsp + 280 + 0*16], xmm0 ; xmmBrightersFlags[0]
-	movdqa [rsp + 280 + 8*16], xmm1 ; xmmBrightersFlags[8]
+	movdqa [rsp + 280 + 0*16], xmm8 ; xmmBrightersFlags[0]
+	movdqa [rsp + 280 + 8*16], xmm9 ; xmmBrightersFlags[8]
 
 	; compare I5 and I13 aka 4 and 12
 	mov rax, [r11 + 4*COMPV_YASM_REG_SZ_BYTES] ; pixels16[4]
@@ -200,9 +200,9 @@ sym(FastData16Row_Asm_X64_SSE2):
 	por xmm1, xmm3
 	pmovmskb eax, xmm0
 	pmovmskb edx, xmm1
-	test eax, eax
+	test ax, ax
 	setnz al 
-	test edx, edx
+	test dx, dx
 	setnz dl
 	add dl, al
 	test dl, dl
@@ -247,18 +247,18 @@ sym(FastData16Row_Asm_X64_SSE2):
 	pmovmskb r12d, xmm12
 
 	; Check whether to load Brighters
-	test r11d, r11d
+	test r11w, r11w
 	setnz cl
-	test r12d, r12d
+	test r12w, r12w
 	setnz al
 	add cl, al
 	cmp cl, 1
 	setg dil ; rdi = (rcx > 1) ? 1 : 0
 	
 	; Check whether to load Darkers
-	test r9d, r9d
+	test r9w, r9w
 	setnz cl
-	test r10d, r10d
+	test r10w, r10w
 	setnz dl
 	add cl, dl
 	cmp cl, 1
@@ -415,11 +415,11 @@ sym(FastData16Row_Asm_X64_SSE2):
 	; Check the columns with at least N non-zero bits
 	pcmpgtb xmm0, xmm4
 	pmovmskb edx, xmm0
-	test edx, edx
+	test dx, dx
 	jz .EndOfDarkers
 	; Continue loading darkers
 	mov rcx, arg(10) ; rd
-	;mov [rcx + rsi*COMPV_YASM_REG_SZ_BYTES], edx ; (*rd) = colDarkersFlags
+	mov [rcx + rsi*COMPV_YASM_REG_SZ_BYTES], dx ; (*rd) = colDarkersFlags
 	; Transpose
 	COMPV_TRANSPOSE_I8_16X16_REG_T5_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4	
 	; Flags
@@ -482,22 +482,22 @@ sym(FastData16Row_Asm_X64_SSE2):
 	pmovmskb r13d, xmm10
 	pmovmskb r14d, xmm11
 	pmovmskb r15d, xmm12
-	mov [rdx + 0*COMPV_YASM_REG_SZ_BYTES], eax
-	mov [rdx + 1*COMPV_YASM_REG_SZ_BYTES], ecx
-	mov [rdx + 2*COMPV_YASM_REG_SZ_BYTES], r8d
-	mov [rdx + 3*COMPV_YASM_REG_SZ_BYTES], r9d
-	mov [rdx + 4*COMPV_YASM_REG_SZ_BYTES], r10d
-	mov [rdx + 5*COMPV_YASM_REG_SZ_BYTES], r11d
-	mov [rdx + 6*COMPV_YASM_REG_SZ_BYTES], r12d
-	mov [rdx + 7*COMPV_YASM_REG_SZ_BYTES], r13d
-	mov [rdx + 8*COMPV_YASM_REG_SZ_BYTES], r14d
-	mov [rdx + 9*COMPV_YASM_REG_SZ_BYTES], r15d
+	mov [rdx + 0*COMPV_YASM_REG_SZ_BYTES], ax
+	mov [rdx + 1*COMPV_YASM_REG_SZ_BYTES], cx
+	mov [rdx + 2*COMPV_YASM_REG_SZ_BYTES], r8w
+	mov [rdx + 3*COMPV_YASM_REG_SZ_BYTES], r9w
+	mov [rdx + 4*COMPV_YASM_REG_SZ_BYTES], r10w
+	mov [rdx + 5*COMPV_YASM_REG_SZ_BYTES], r11w
+	mov [rdx + 6*COMPV_YASM_REG_SZ_BYTES], r12w
+	mov [rdx + 7*COMPV_YASM_REG_SZ_BYTES], r13w
+	mov [rdx + 8*COMPV_YASM_REG_SZ_BYTES], r14w
+	mov [rdx + 9*COMPV_YASM_REG_SZ_BYTES], r15w
 	pmovmskb r8d, xmm13
 	pmovmskb r9d, xmm14
 	pmovmskb r10d, xmm15
-	mov [rdx + 10*COMPV_YASM_REG_SZ_BYTES], r8d
-	mov [rdx + 11*COMPV_YASM_REG_SZ_BYTES], r9d
-	mov [rdx + 12*COMPV_YASM_REG_SZ_BYTES], r10d
+	mov [rdx + 10*COMPV_YASM_REG_SZ_BYTES], r8w
+	mov [rdx + 11*COMPV_YASM_REG_SZ_BYTES], r9w
+	mov [rdx + 12*COMPV_YASM_REG_SZ_BYTES], r10w
 	pop rax ; mov rax, arg(8) -> ddarkers16x16
 	pxor xmm0, xmm0
 	pxor xmm1, xmm1
@@ -511,9 +511,9 @@ sym(FastData16Row_Asm_X64_SSE2):
 	pmovmskb r8d, xmm0
 	pmovmskb r9d, xmm1
 	pmovmskb r10d, xmm2
-	mov [rdx + 13*COMPV_YASM_REG_SZ_BYTES], r8d
-	mov [rdx + 14*COMPV_YASM_REG_SZ_BYTES], r9d
-	mov [rdx + 15*COMPV_YASM_REG_SZ_BYTES], r10d
+	mov [rdx + 13*COMPV_YASM_REG_SZ_BYTES], r8w
+	mov [rdx + 14*COMPV_YASM_REG_SZ_BYTES], r9w
+	mov [rdx + 15*COMPV_YASM_REG_SZ_BYTES], r10w
 		
 	.EndOfDarkers
 	
@@ -623,7 +623,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	jz .EndOfBrighters
 	; Continue loading brighters
 	mov rcx, arg(11) ; rb
-	mov [rcx + rsi*COMPV_YASM_REG_SZ_BYTES], edx ; (*rb) = colBrightersFlags
+	mov [rcx + rsi*COMPV_YASM_REG_SZ_BYTES], dx ; (*rb) = colBrightersFlags
 	; Transpose
 	COMPV_TRANSPOSE_I8_16X16_REG_T5_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4
 	; Flags
@@ -684,24 +684,24 @@ sym(FastData16Row_Asm_X64_SSE2):
 	pmovmskb r13d, xmm9
 	pmovmskb r14d, xmm10
 	pmovmskb r15d, xmm11
-	mov [rdx + 0*COMPV_YASM_REG_SZ_BYTES], edi
-	mov [rdx + 1*COMPV_YASM_REG_SZ_BYTES], ecx
-	mov [rdx + 2*COMPV_YASM_REG_SZ_BYTES], r8d
-	mov [rdx + 3*COMPV_YASM_REG_SZ_BYTES], r9d
-	mov [rdx + 4*COMPV_YASM_REG_SZ_BYTES], r10d
-	mov [rdx + 5*COMPV_YASM_REG_SZ_BYTES], r11d
-	mov [rdx + 6*COMPV_YASM_REG_SZ_BYTES], r12d
-	mov [rdx + 7*COMPV_YASM_REG_SZ_BYTES], r13d
-	mov [rdx + 8*COMPV_YASM_REG_SZ_BYTES], r14d
-	mov [rdx + 9*COMPV_YASM_REG_SZ_BYTES], r15d
+	mov [rdx + 0*COMPV_YASM_REG_SZ_BYTES], di
+	mov [rdx + 1*COMPV_YASM_REG_SZ_BYTES], cx
+	mov [rdx + 2*COMPV_YASM_REG_SZ_BYTES], r8w
+	mov [rdx + 3*COMPV_YASM_REG_SZ_BYTES], r9w
+	mov [rdx + 4*COMPV_YASM_REG_SZ_BYTES], r10w
+	mov [rdx + 5*COMPV_YASM_REG_SZ_BYTES], r11w
+	mov [rdx + 6*COMPV_YASM_REG_SZ_BYTES], r12w
+	mov [rdx + 7*COMPV_YASM_REG_SZ_BYTES], r13w
+	mov [rdx + 8*COMPV_YASM_REG_SZ_BYTES], r14w
+	mov [rdx + 9*COMPV_YASM_REG_SZ_BYTES], r15w
 	pmovmskb r8d, xmm12
 	pmovmskb r9d, xmm13
 	pmovmskb r10d, xmm14
 	pmovmskb r11d, xmm15
-	mov [rdx + 10*COMPV_YASM_REG_SZ_BYTES], r8d
-	mov [rdx + 11*COMPV_YASM_REG_SZ_BYTES], r9d
-	mov [rdx + 12*COMPV_YASM_REG_SZ_BYTES], r10d
-	mov [rdx + 13*COMPV_YASM_REG_SZ_BYTES], r11d
+	mov [rdx + 10*COMPV_YASM_REG_SZ_BYTES], r8w
+	mov [rdx + 11*COMPV_YASM_REG_SZ_BYTES], r9w
+	mov [rdx + 12*COMPV_YASM_REG_SZ_BYTES], r10w
+	mov [rdx + 13*COMPV_YASM_REG_SZ_BYTES], r11w
 	pxor xmm0, xmm0
 	pxor xmm1, xmm1
 	pcmpeqb xmm0, [rax+14*16]
@@ -710,8 +710,8 @@ sym(FastData16Row_Asm_X64_SSE2):
 	pandn xmm1, xmm6
 	pmovmskb edi, xmm0
 	pmovmskb ecx, xmm1
-	mov [rdx + 14*COMPV_YASM_REG_SZ_BYTES], edi
-	mov [rdx + 15*COMPV_YASM_REG_SZ_BYTES], ecx
+	mov [rdx + 14*COMPV_YASM_REG_SZ_BYTES], di
+	mov [rdx + 15*COMPV_YASM_REG_SZ_BYTES], cx
 
 	.EndOfBrighters
 

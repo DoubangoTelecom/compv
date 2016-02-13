@@ -151,9 +151,9 @@ sym(FastData16Row_Asm_X86_SSE2):
 	por xmm1, xmm3
 	pmovmskb eax, xmm0
 	pmovmskb edx, xmm1
-	test eax, eax
+	test ax, ax
 	setnz al
-	test edx, edx
+	test dx, dx
 	setnz dl
 	add dl, al
 	test dl, dl
@@ -196,9 +196,9 @@ sym(FastData16Row_Asm_X86_SSE2):
 	por xmm1, xmm3
 	pmovmskb eax, xmm0
 	pmovmskb edx, xmm1
-	test eax, eax
+	test ax, ax
 	setnz al
-	test edx, edx
+	test dx, dx
 	setnz dl
 	add dl, al
 	test dl, dl
@@ -235,9 +235,9 @@ sym(FastData16Row_Asm_X86_SSE2):
 	por xmm1, [rsp + 280 + 12*16] ; xmmBrightersFlags[4] | xmmBrightersFlags[12]
 	pmovmskb eax, xmm0
 	pmovmskb edx, xmm1
-	test eax, eax
+	test ax, ax
 	setnz al
-	test edx, edx
+	test dx, dx
 	setnz dl
 	add dl, al
 	cmp dl, 1
@@ -251,9 +251,9 @@ sym(FastData16Row_Asm_X86_SSE2):
 	por xmm1, [rsp + 24 + 12*16] ; xmmDarkersFlags[4] | xmmDarkersFlags[12]
 	pmovmskb eax, xmm0
 	pmovmskb edx, xmm1
-	test eax, eax
+	test ax, ax
 	setnz al
-	test edx, edx
+	test dx, dx
 	setnz dl
 	add dl, al
 	cmp dl, 1
@@ -414,11 +414,11 @@ sym(FastData16Row_Asm_X86_SSE2):
 	; Check the columns with at least N non-zero bits
 	pcmpgtb xmm0, xmm4
 	pmovmskb edx, xmm0
-	test edx, edx
+	test dx, dx
 	jz .EndOfDarkers
 	; Continue loading darkers
 	mov rcx, arg(10) ; rd
-	mov [rcx], edx ; (*rd) = colDarkersFlags
+	mov [rcx], dx ; (*rd) = colDarkersFlags
 	; Transpose
 	COMPV_TRANSPOSE_I8_16X16_REG_T5_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4
 	; Flags
@@ -441,12 +441,12 @@ sym(FastData16Row_Asm_X86_SSE2):
 		pandn xmm3, xmm5
 		pmovmskb eax, xmm0
 		pmovmskb ecx, xmm1
-		mov [rdx + (0+i)*COMPV_YASM_REG_SZ_BYTES], eax
-		mov [rdx + (1+i)*COMPV_YASM_REG_SZ_BYTES], ecx
+		mov [rdx + (0+i)*COMPV_YASM_REG_SZ_BYTES], ax
+		mov [rdx + (1+i)*COMPV_YASM_REG_SZ_BYTES], cx
 		pmovmskb eax, xmm2
 		pmovmskb ecx, xmm3
-		mov [rdx + (2+i)*COMPV_YASM_REG_SZ_BYTES], eax
-		mov [rdx + (3+i)*COMPV_YASM_REG_SZ_BYTES], ecx
+		mov [rdx + (2+i)*COMPV_YASM_REG_SZ_BYTES], ax
+		mov [rdx + (3+i)*COMPV_YASM_REG_SZ_BYTES], cx
 		%assign i i+4
 	%endrep
 	
@@ -558,12 +558,12 @@ sym(FastData16Row_Asm_X86_SSE2):
 	; Check the columns with at least N non-zero bits
 	pcmpgtb xmm0, xmm4
 	pmovmskb edx, xmm0
-	test edx, edx
+	test dx, dx
 	jz .EndOfBrighters
 	; Continue loading brighters
 	mov rcx, arg(11) ; rb
 	mov rax, arg(9) ; dbrighters16x16
-	mov [rcx], rdx ; (*rb) = colBrightersFlags
+	mov [rcx], dx ; (*rb) = colBrightersFlags
 	; Transpose
 	COMPV_TRANSPOSE_I8_16X16_REG_T5_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4
 	; Flags
@@ -585,12 +585,12 @@ sym(FastData16Row_Asm_X86_SSE2):
 		pandn xmm3, xmm6
 		pmovmskb edi, xmm0
 		pmovmskb ecx, xmm1
-		mov [rdx + (0+i)*COMPV_YASM_REG_SZ_BYTES], edi
-		mov [rdx + (1+i)*COMPV_YASM_REG_SZ_BYTES], ecx
+		mov [rdx + (0+i)*COMPV_YASM_REG_SZ_BYTES], di
+		mov [rdx + (1+i)*COMPV_YASM_REG_SZ_BYTES], cx
 		pmovmskb edi, xmm2
 		pmovmskb ecx, xmm3
-		mov [rdx + (2+i)*COMPV_YASM_REG_SZ_BYTES], edi
-		mov [rdx + (3+i)*COMPV_YASM_REG_SZ_BYTES], ecx
+		mov [rdx + (2+i)*COMPV_YASM_REG_SZ_BYTES], di
+		mov [rdx + (3+i)*COMPV_YASM_REG_SZ_BYTES], cx
 		%assign i i+4
 	%endrep
 
