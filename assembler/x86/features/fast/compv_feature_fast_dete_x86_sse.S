@@ -76,7 +76,7 @@ sym(FastData16Row_Asm_X86_SSE2):
 	mov rsi, arg(2) ; rsi = width
 	mov rax, arg(5) ; threshold
 	mov rbx, arg(0) ; rbx = IP
-	movd xmm7, rax
+	movd xmm7, eax
 	punpcklbw xmm7, xmm7  
 	punpcklwd xmm7, xmm7  
 	pshufd xmm7, xmm7, 0  ; xmm7 = _mm_set1_epi8((uint8_t)threshold)) = xmmThreshold
@@ -149,11 +149,11 @@ sym(FastData16Row_Asm_X86_SSE2):
 	movdqa [rsp + 280 + 8*16], xmm1 ; xmmBrightersFlags[8]
 	por xmm0, xmm2
 	por xmm1, xmm3
-	pmovmskb rax, xmm0
-	pmovmskb rdx, xmm1
-	test rax, rax
+	pmovmskb eax, xmm0
+	pmovmskb edx, xmm1
+	test eax, eax
 	setnz al
-	test rdx, rdx
+	test edx, edx
 	setnz dl
 	add dl, al
 	test dl, dl
@@ -194,11 +194,11 @@ sym(FastData16Row_Asm_X86_SSE2):
 	movdqa [rsp + 280 + 12*16], xmm1 ; xmmBrightersFlags[12]
 	por xmm0, xmm2
 	por xmm1, xmm3
-	pmovmskb rax, xmm0
-	pmovmskb rdx, xmm1
-	test rax, rax
+	pmovmskb eax, xmm0
+	pmovmskb edx, xmm1
+	test eax, eax
 	setnz al
-	test rdx, rdx
+	test edx, edx
 	setnz dl
 	add dl, al
 	test dl, dl
@@ -233,11 +233,11 @@ sym(FastData16Row_Asm_X86_SSE2):
 	movdqa xmm1, [rsp + 280 + 4*16] ; xmmBrightersFlags[4]
 	por xmm0, [rsp + 280 + 8*16] ; xmmBrightersFlags[0] | xmmBrightersFlags[8]
 	por xmm1, [rsp + 280 + 12*16] ; xmmBrightersFlags[4] | xmmBrightersFlags[12]
-	pmovmskb rax, xmm0
-	pmovmskb rdx, xmm1
-	test rax, rax
+	pmovmskb eax, xmm0
+	pmovmskb edx, xmm1
+	test eax, eax
 	setnz al
-	test rdx, rdx
+	test edx, edx
 	setnz dl
 	add dl, al
 	cmp dl, 1
@@ -249,11 +249,11 @@ sym(FastData16Row_Asm_X86_SSE2):
 	movdqa xmm1, [rsp + 24 + 4*16] ; xmmDarkersFlags[4]
 	por xmm0, [rsp + 24 + 8*16] ; xmmDarkersFlags[0] | xmmDarkersFlags[8]
 	por xmm1, [rsp + 24 + 12*16] ; xmmDarkersFlags[4] | xmmDarkersFlags[12]
-	pmovmskb rax, xmm0
-	pmovmskb rdx, xmm1
-	test rax, rax
+	pmovmskb eax, xmm0
+	pmovmskb edx, xmm1
+	test eax, eax
 	setnz al
-	test rdx, rdx
+	test edx, edx
 	setnz dl
 	add dl, al
 	cmp dl, 1
@@ -413,12 +413,12 @@ sym(FastData16Row_Asm_X86_SSE2):
 	paddusb xmm0, [rsp + 24 + 11*16] ; xmm0 += 11 + 13 + 14 + 15
 	; Check the columns with at least N non-zero bits
 	pcmpgtb xmm0, xmm4
-	pmovmskb rdx, xmm0
-	test rdx, rdx
+	pmovmskb edx, xmm0
+	test edx, edx
 	jz .EndOfDarkers
 	; Continue loading darkers
 	mov rcx, arg(10) ; rd
-	mov [rcx], rdx ; (*rd) = colDarkersFlags
+	mov [rcx], edx ; (*rd) = colDarkersFlags
 	; Transpose
 	COMPV_TRANSPOSE_I8_16X16_REG_T5_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4
 	; Flags
@@ -439,14 +439,14 @@ sym(FastData16Row_Asm_X86_SSE2):
 		pandn xmm1, xmm5
 		pandn xmm2, xmm5
 		pandn xmm3, xmm5
-		pmovmskb rax, xmm0
-		pmovmskb rcx, xmm1
-		mov [rdx + (0+i)*COMPV_YASM_REG_SZ_BYTES], rax
-		mov [rdx + (1+i)*COMPV_YASM_REG_SZ_BYTES], rcx
-		pmovmskb rax, xmm2
-		pmovmskb rcx, xmm3
-		mov [rdx + (2+i)*COMPV_YASM_REG_SZ_BYTES], rax
-		mov [rdx + (3+i)*COMPV_YASM_REG_SZ_BYTES], rcx
+		pmovmskb eax, xmm0
+		pmovmskb ecx, xmm1
+		mov [rdx + (0+i)*COMPV_YASM_REG_SZ_BYTES], eax
+		mov [rdx + (1+i)*COMPV_YASM_REG_SZ_BYTES], ecx
+		pmovmskb eax, xmm2
+		pmovmskb ecx, xmm3
+		mov [rdx + (2+i)*COMPV_YASM_REG_SZ_BYTES], eax
+		mov [rdx + (3+i)*COMPV_YASM_REG_SZ_BYTES], ecx
 		%assign i i+4
 	%endrep
 	
@@ -557,8 +557,8 @@ sym(FastData16Row_Asm_X86_SSE2):
 	paddusb xmm0, [rsp + 280 + 14*16] ; xmm0 += 14 + 15
 	; Check the columns with at least N non-zero bits
 	pcmpgtb xmm0, xmm4
-	pmovmskb rdx, xmm0
-	test rdx, rdx
+	pmovmskb edx, xmm0
+	test edx, edx
 	jz .EndOfBrighters
 	; Continue loading brighters
 	mov rcx, arg(11) ; rb
@@ -583,14 +583,14 @@ sym(FastData16Row_Asm_X86_SSE2):
 		pandn xmm1, xmm6
 		pandn xmm2, xmm6
 		pandn xmm3, xmm6
-		pmovmskb rdi, xmm0
-		pmovmskb rcx, xmm1
-		mov [rdx + (0+i)*COMPV_YASM_REG_SZ_BYTES], rdi
-		mov [rdx + (1+i)*COMPV_YASM_REG_SZ_BYTES], rcx
-		pmovmskb rdi, xmm2
-		pmovmskb rcx, xmm3
-		mov [rdx + (2+i)*COMPV_YASM_REG_SZ_BYTES], rdi
-		mov [rdx + (3+i)*COMPV_YASM_REG_SZ_BYTES], rcx
+		pmovmskb edi, xmm0
+		pmovmskb ecx, xmm1
+		mov [rdx + (0+i)*COMPV_YASM_REG_SZ_BYTES], edi
+		mov [rdx + (1+i)*COMPV_YASM_REG_SZ_BYTES], ecx
+		pmovmskb edi, xmm2
+		pmovmskb ecx, xmm3
+		mov [rdx + (2+i)*COMPV_YASM_REG_SZ_BYTES], edi
+		mov [rdx + (3+i)*COMPV_YASM_REG_SZ_BYTES], ecx
 		%assign i i+4
 	%endrep
 

@@ -86,7 +86,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	; Compute xmmNMinusOne
 	movzx rax, byte arg(4) ; N
 	sub al, 1
-	movd xmm0, rax
+	movd xmm0, eax
 	punpcklbw xmm0, xmm0  
 	punpcklwd xmm0, xmm0  
 	pshufd xmm0, xmm0, 0
@@ -107,7 +107,6 @@ sym(FastData16Row_Asm_X64_SSE2):
 
 	; Motion Estimation
 	; TODO(dmi): not supported
-	; TODO(dmi): use argi(x,i) to retrieve the argument
 
 	movdqa xmm5, xmm6
 	paddusb xmm6, xmm7 ; xmm6 = xmmBrighter
@@ -195,8 +194,8 @@ sym(FastData16Row_Asm_X64_SSE2):
 	pandn xmm3, xmm14
 	pandn xmm0, xmm14
 	pandn xmm1, xmm14
-	movdqa xmm12, xmm0 ; save xmmBrightersFlags[4] in xmm8
-	movdqa xmm13, xmm1 ; save xmmBrightersFlags[12] in xmm9
+	movdqa xmm12, xmm0 ; save xmmBrightersFlags[4] in xmm12
+	movdqa xmm13, xmm1 ; save xmmBrightersFlags[12] in xmm13
 	por xmm0, xmm2
 	por xmm1, xmm3
 	pmovmskb eax, xmm0
@@ -218,8 +217,8 @@ sym(FastData16Row_Asm_X64_SSE2):
 	;  Speed-Test-2
 	;
 	
-	movzx rcx, byte arg(4) ; N
-	movzx rax, byte [rsp + 0] ; sum
+	mov cl, byte arg(4) ; N
+	mov al, byte [rsp + 0] ; sum
 	cmp cl, 9
 	je .SpeedTest2For9
 	; otherwise ...N == 12
@@ -247,15 +246,6 @@ sym(FastData16Row_Asm_X64_SSE2):
 	pmovmskb r11d, xmm8
 	pmovmskb r12d, xmm12
 
-	; Check whether to load Darkers
-	test r9d, r9d
-	setnz cl
-	test r10d, r10d
-	setnz dl
-	add cl, dl
-	cmp cl, 1
-	setg dl ; rdx = (rcx > 1) ? 1 : 0
-
 	; Check whether to load Brighters
 	test r11d, r11d
 	setnz cl
@@ -265,13 +255,21 @@ sym(FastData16Row_Asm_X64_SSE2):
 	cmp cl, 1
 	setg dil ; rdi = (rcx > 1) ? 1 : 0
 	
+	; Check whether to load Darkers
+	test r9d, r9d
+	setnz cl
+	test r10d, r10d
+	setnz dl
+	add cl, dl
+	cmp cl, 1
+	setg dl ; rdx = (rcx > 1) ? 1 : 0
 
 	; rdi = loadB, rdx = loadD
 	; skip process if (!(loadB || loadD))
 	mov al, byte dil
 	or al, dl
 	test al, al
-	jz .LoopRowsNext	
+	jz .LoopRowsNext
 
 	; Load xmmDataPtr
 	mov rcx, arg(3) ; pixels16
@@ -421,7 +419,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	jz .EndOfDarkers
 	; Continue loading darkers
 	mov rcx, arg(10) ; rd
-	mov [rcx + rsi*COMPV_YASM_REG_SZ_BYTES], rdx ; (*rd) = colDarkersFlags
+	;mov [rcx + rsi*COMPV_YASM_REG_SZ_BYTES], edx ; (*rd) = colDarkersFlags
 	; Transpose
 	COMPV_TRANSPOSE_I8_16X16_REG_T5_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4	
 	; Flags
@@ -625,7 +623,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	jz .EndOfBrighters
 	; Continue loading brighters
 	mov rcx, arg(11) ; rb
-	mov [rcx + rsi*COMPV_YASM_REG_SZ_BYTES], rdx ; (*rb) = colBrightersFlags
+	mov [rcx + rsi*COMPV_YASM_REG_SZ_BYTES], edx ; (*rb) = colBrightersFlags
 	; Transpose
 	COMPV_TRANSPOSE_I8_16X16_REG_T5_SSE2 rax+0*16, rax+1*16, rax+2*16, rax+3*16, rax+4*16, rax+5*16, rax+6*16, rax+7*16, rax+8*16, rax+9*16, rax+10*16, rax+11*16, rax+12*16, rax+13*16, rax+14*16, rax+15*16, xmm0, xmm1, xmm2, xmm3, xmm4
 	; Flags
