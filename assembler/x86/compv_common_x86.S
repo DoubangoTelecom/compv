@@ -140,21 +140,6 @@
   %endif
 %endif
 
-; argi()
-; Return the address specification of the given argument plus index (i).
-;
-%if COMPV_YASM_ABI_IS_32BIT
-  %define argi(x,i) [ebp+8+4*x+(i)]
-%else
-  ; 64 bit ABI passes arguments in registers. This is a workaround to get up
-  ; and running quickly. Relies on COMPV_YASM_SHADOW_ARGS_TO_STACK
-  %if COMPV_YASM_WIN64
-    %define argi(x,i) [rbp+16+8*x+(i)]
-  %else
-    %define argi(x,i) [rbp-8-8*x+(i)]
-  %endif
-%endif
-
 ; Enable relative addressing on x64 (added by dmi)
 %if COMPV_YASM_ABI_IS_32BIT
 %define COMPV_YASM_DEFAULT_REL 

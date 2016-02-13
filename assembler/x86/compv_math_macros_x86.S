@@ -97,6 +97,28 @@
 %endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Same as COMPV_TRANSPOSE_I8_4X16_REG_SSE2 but for AVX2
+%macro COMPV_TRANSPOSE_I8_4X16_REG_T5_AVX2 9
+	vmovdqa %5, [%1]
+	vpunpckhbw %6, %5, [%3]
+	vpunpcklbw %5, %5, [%3]
+	
+	vmovdqa %7, [%2]
+	vpunpckhbw %8, %7, [%4]
+	vpunpcklbw %7, %7, [%4]
+	
+	vpunpcklbw %9, %5, %7
+	vpunpckhbw %5, %5, %7
+	vmovdqa [%1], %9
+	vmovdqa [%2], %5
+
+	vpunpcklbw %9, %6, %8
+	vpunpckhbw %6, %6, %8
+	vmovdqa [%3], %9
+	vmovdqa [%4], %6
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Transpose a 16x16 matrix containing u8/i8 values.
 ; From:
 ; 0 0 0 0 . .
@@ -202,3 +224,17 @@
 	COMPV_TRANSPOSE_I8_4X16_REG_T5_SSE2 %9, %10, %11, %12, %17, %18, %19, %20, %21
 	COMPV_TRANSPOSE_I8_4X16_REG_T5_SSE2 %13, %14, %15, %16, %17, %18, %19, %20, %21
 %endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Same as COMPV_TRANSPOSE_I8_16X16_REG_SSE2 but for AVX2 
+%macro COMPV_TRANSPOSE_I8_16X16_REG_T5_AVX2 21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_AVX2 %2, %6, %10, %14, %17, %18, %19, %20, %21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_AVX2 %4, %8, %12, %16, %17, %18, %19, %20, %21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_AVX2 %1, %5, %9, %13, %17, %18, %19, %20, %21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_AVX2 %3, %7, %11, %15, %17, %18, %19, %20, %21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_AVX2 %1, %2, %3, %4, %17, %18, %19, %20, %21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_AVX2 %5, %6, %7, %8, %17, %18, %19, %20, %21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_AVX2 %9, %10, %11, %12, %17, %18, %19, %20, %21
+	COMPV_TRANSPOSE_I8_4X16_REG_T5_AVX2 %13, %14, %15, %16, %17, %18, %19, %20, %21
+%endmacro
+ 

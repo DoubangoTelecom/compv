@@ -176,7 +176,7 @@ void FastData16Row_Intrin_SSE2(
         sum += s;
 
         /*  Speed-Test-2 */
-        if (N == 12 ? sum >= 3 : sum >= 2) {
+        if (N == 12 ? sum >= 3 : sum >= 2) { // FIXME
             colDarkersFlags = 0, colBrightersFlags = 0;
             loadB = false, loadD = false;
 
@@ -354,7 +354,7 @@ void FastData16Row_Intrin_SSE2(
             if (loadD) {
                 (*rd) = colDarkersFlags;
                 // Transpose
-                COMPV_TRANSPOSE_I8_16X16_SSE2(
+               COMPV_TRANSPOSE_I8_16X16_SSE2(
                     (*xmmDdarkers16x16)[0], (*xmmDdarkers16x16)[1], (*xmmDdarkers16x16)[2], (*xmmDdarkers16x16)[3],
                     (*xmmDdarkers16x16)[4], (*xmmDdarkers16x16)[5], (*xmmDdarkers16x16)[6], (*xmmDdarkers16x16)[7],
                     (*xmmDdarkers16x16)[8], (*xmmDdarkers16x16)[9], (*xmmDdarkers16x16)[10], (*xmmDdarkers16x16)[11],

@@ -619,7 +619,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	; Check the columns with at least N non-zero bits
 	pcmpgtb xmm0, xmm4
 	pmovmskb edx, xmm0
-	test edx, edx
+	test dx, dx
 	jz .EndOfBrighters
 	; Continue loading brighters
 	mov rcx, arg(11) ; rb

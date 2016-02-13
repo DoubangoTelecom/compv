@@ -116,10 +116,12 @@ extern "C" compv_scalar_t Fast12Strengths_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const
 extern "C" compv_scalar_t FastData_Asm_x86_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, COMPV_ALIGNED(SSE) uint8_t(&ddarkers16)[16], COMPV_ALIGNED(SSE) uint8_t(&dbrighters16)[16]);
 
 extern "C" void FastData16Row_Asm_X86_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(SSE) uint8_t* ddarkers16x16, COMPV_ALIGNED(SSE) uint8_t* dbrighters16x16, compv_scalar_t* rd, compv_scalar_t* rb, compv_scalar_t* me);
+extern "C" void FastData32Row_Asm_X86_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(AVX2) compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(AVX2) compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(AVX2) uint8_t* ddarkers16x32, COMPV_ALIGNED(AVX2) uint8_t* dbrighters16x32, compv_scalar_t* rd, compv_scalar_t* rb, compv_scalar_t* me);
 #endif
 // X64
 #if defined(COMPV_ARCH_X64) && defined(COMPV_ASM)
 extern "C" void FastData16Row_Asm_X64_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(SSE) compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(SSE) uint8_t* ddarkers16x16, COMPV_ALIGNED(SSE) uint8_t* dbrighters16x16, compv_scalar_t* rd, compv_scalar_t* rb, compv_scalar_t* me);
+extern "C" void FastData32Row_Asm_X64_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(AVX2) compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(AVX2) compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(AVX2) uint8_t* ddarkers16x32, COMPV_ALIGNED(AVX2) uint8_t* dbrighters16x32, compv_scalar_t* rd, compv_scalar_t* rb, compv_scalar_t* me);
 #endif
 
 static int32_t COMPV_INLINE __continuousCount(int32_t fasType)
@@ -608,12 +610,13 @@ static void FastProcessRange(RangeFAST* range)
 #endif
 
     // FIXME: remove all FastData16 (INTRIN, ASM, C++) and FastData -> Only FastData16Row
+	// FIXME: C++ version deosn't work
 
     if (CompVCpu::isSupported(kCpuFlagSSE2)) {
         COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = FastStrengths_SSE2);
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastData16Row = FastData16Row_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-		COMPV_EXEC_IFDEF_ASM_X86((FastData16Row = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE)); // asm code FASTER than intrin
-		COMPV_EXEC_IFDEF_ASM_X64((FastData16Row = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE)); // TODO(dmi): asm code not too much faster than intrin
+		COMPV_EXEC_IFDEF_ASM_X86((FastData16Row = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+		COMPV_EXEC_IFDEF_ASM_X64((FastData16Row = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
     }
     if (CompVCpu::isSupported(kCpuFlagSSE41)) {
         COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = FastStrengths_SSE41);
@@ -623,6 +626,8 @@ static void FastProcessRange(RangeFAST* range)
     }
 	if (CompVCpu::isSupported(kCpuFlagAVX2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastData16Row = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
+		COMPV_EXEC_IFDEF_ASM_X86((FastData16Row = FastData32Row_Asm_X86_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
+		COMPV_EXEC_IFDEF_ASM_X64((FastData16Row = FastData32Row_Asm_X64_AVX2, align = COMPV_SIMD_ALIGNV_AVX2)); // FIXME: intrin faster
 	}
 
     // Number of pixels to process (multiple of align)
@@ -645,6 +650,10 @@ static void FastProcessRange(RangeFAST* range)
     (r, r0, r1, strength);
 
     // For testing with image "voiture", the first (i,j) to produce an interesting point is (1620, 279)
+	// We should have 64586 non-zero results for SSE and 66958 for AVX2
+
+	// FIXME
+	//static uint64_t kaka = 0;
     
     for (j = minj; j < maxj; ++j) {
         pfdarkers16 = range->pfdarkers16;
@@ -677,25 +686,26 @@ static void FastProcessRange(RangeFAST* range)
 		//		STRENGTHS	//
 		//////////////////////
         for (m = 0; m < kalign; m += align) {
-            r0 = (uint32_t)*rd;
-            r1 = (uint32_t)*rb;
+			r0 = ((uint32_t)(*rd));
+			r1 = ((uint32_t)(*rb));
             // FIXME
 			if (/*m >= 1600*/m >= 1616 && j == 279) {
-                int kaka = 0;
+                //int kaka = 0;
             }
             if ((r0 || r1)) {
-                if (m == kalign - align) {
+                if ((m == kalign - align)) {
                     // last
                     r0 &= mask;
                     r1 &= mask;
-                    if (!r0 && !r1) {
+                    if ((!r0 && !r1)) {
                         goto next_row;
                     }
-                }				
+                }
 
 				// First 16th
 				for (rta = 0, rti = 0, r = 0; rti < 16 && r < align; ++r, ++rti, rta += align) {
 					if ((r0 & (1 << r)) || (r1 & (1 << r))) {
+						//++kaka;
 						strength = FastStrengths((const uint8_t(&)[16])dbrighters16xAlign[rta], (const uint8_t(&)[16])ddarkers16xAlign[rta], (r1 & (1 << r)) ? (*pfbrighters16)[r] : 0, (r0 & (1 << r)) ? (*pfdarkers16)[r] : 0, range->N, FastXFlags);
 						if (strength > 0) {
 							// strength is defined as the maximum value of t that makes p a corner
@@ -706,6 +716,7 @@ static void FastProcessRange(RangeFAST* range)
 				// Second 16th
 				for (r0 >>= 16, r1 >>= 16, rta = 16, r = 0; rti < align && r < 16; ++r, ++rti, rta += align) {
 					if ((r0 & (1 << r)) || (r1 & (1 << r))) {
+						//++kaka;
 						strength = FastStrengths((const uint8_t(&)[16])dbrighters16xAlign[rta], (const uint8_t(&)[16])ddarkers16xAlign[rta], (r1 & (1 << r)) ? ((*pfbrighters16)[r] >> 16) : 0, (r0 & (1 << r)) ? ((*pfdarkers16)[r] >> 16) : 0, range->N, FastXFlags);
 						if (strength > 0) {
 							// strength is defined as the maximum value of t that makes p a corner
@@ -726,6 +737,7 @@ next_row:
         IP += range->stride;
     } // for (j)
     
+	//COMPV_DEBUG_INFO("kaka = %llu", kaka);
 }
 
 static COMPV_ERROR_CODE FastProcessRange_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
