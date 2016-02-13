@@ -53,6 +53,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 13
+	COMPV_YASM_SAVE_XMM 15 ;XMM[6-n]
 	push rsi
 	push rdi
 	push rbx
@@ -129,12 +130,12 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vmovdqu ymm0, [rbx + rax]
 	vmovdqu ymm1, [rbx + rdx]
 	vpsubusb ymm2, ymm5, ymm0 ; ddarkers16x32[0]
-	vpsubusb ymm3, ymm5, ymm1 ; ddarkers16x32[8]
 	vpsubusb ymm0, ymm6 ; dbrighters16x32[0]
+	vpsubusb ymm3, ymm5, ymm1 ; ddarkers16x32[8]
 	vpsubusb ymm1, ymm6 ; dbrighters16x32[8]
 	vmovdqa [r8 + 0*32], ymm2
-	vmovdqa [r8 + 8*32], ymm3
 	vmovdqa [r9 + 0*32], ymm0
+	vmovdqa [r8 + 8*32], ymm3
 	vmovdqa [r9 + 8*32], ymm1
 	vpcmpeqb ymm2, ymm15
 	vpcmpeqb ymm3, ymm15
@@ -164,12 +165,12 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vmovdqu ymm0, [rbx + rax]
 	vmovdqu ymm1, [rbx + rdx]
 	vpsubusb ymm2, ymm5, ymm0 ; ddarkers16x32[4]
-	vpsubusb ymm3, ymm5, ymm1 ; ddarkers16x32[12]
 	vpsubusb ymm0, ymm6 ; dbrighters16x32[4]
+	vpsubusb ymm3, ymm5, ymm1 ; ddarkers16x32[12]
 	vpsubusb ymm1, ymm6 ; dbrighters16x32[12]
 	vmovdqa [r8 + 4*32], ymm2
-	vmovdqa [r8 + 12*32], ymm3
 	vmovdqa [r9 + 4*32], ymm0
+	vmovdqa [r8 + 12*32], ymm3
 	vmovdqa [r9 + 12*32], ymm1
 	vpcmpeqb ymm2, ymm15 
 	vpcmpeqb ymm3, ymm15 
@@ -681,6 +682,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_RESTORE_XMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

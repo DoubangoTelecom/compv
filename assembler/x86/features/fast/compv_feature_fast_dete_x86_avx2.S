@@ -50,6 +50,7 @@ sym(FastData32Row_Asm_X86_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 13
+	COMPV_YASM_SAVE_XMM 7 ;XMM[6-n]
 	push rsi
 	push rdi
 	push rbx
@@ -591,6 +592,7 @@ sym(FastData32Row_Asm_X86_AVX2):
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_RESTORE_XMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

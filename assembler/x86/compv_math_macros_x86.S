@@ -100,10 +100,11 @@
 ; Same as COMPV_TRANSPOSE_I8_4X16_REG_SSE2 but for AVX2
 %macro COMPV_TRANSPOSE_I8_4X16_REG_T5_AVX2 9
 	vmovdqa %5, [%1]
+	vmovdqa %7, [%2]
+
 	vpunpckhbw %6, %5, [%3]
 	vpunpcklbw %5, %5, [%3]
 	
-	vmovdqa %7, [%2]
 	vpunpckhbw %8, %7, [%4]
 	vpunpcklbw %7, %7, [%4]
 	
