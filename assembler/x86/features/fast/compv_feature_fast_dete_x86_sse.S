@@ -119,11 +119,9 @@ sym(FastData16Row_Asm_X86_SSE2):
 	mov rdx, arg(3) ; pixels16
 	mov rax, [rdx + 0*COMPV_YASM_REG_SZ_BYTES] ; pixels16[0]
 	mov rdx, [rdx + 8*COMPV_YASM_REG_SZ_BYTES] ; pixels16[8]
-	lea rax, [rbx + rax] ; IP[pixels16[0]]
-	lea rdx, [rbx + rdx] ; IP[pixels16[8]]
 	pxor xmm4, xmm4 ; xmm4 = xmmZeros
-	movdqu xmm0, [rax]
-	movdqu xmm1, [rdx]
+	movdqu xmm0, [rbx + rax] ; IP[pixels16[0]]
+	movdqu xmm1, [rbx + rdx] ; IP[pixels16[8]]
 	movdqa xmm2, xmm5 ; xmmDarker
 	movdqa xmm3, xmm5 ; xmmDarker
 	mov rdx, arg(8) ; ddarkers16x16
@@ -157,20 +155,18 @@ sym(FastData16Row_Asm_X86_SSE2):
 	setnz al
 	test rdx, rdx
 	setnz dl
-	add rdx, rax
-	test rdx, rdx
+	add dl, al
+	test dl, dl
 	jz .LoopRowsNext
-	mov [rsp + 0], rdx ; sum = ?
+	mov [rsp + 0], dl ; sum = ?
 
 	; compare I5 and I13 aka 4 and 12
 	mov rdx, arg(3) ; pixels16
 	mov rax, [rdx + 4*COMPV_YASM_REG_SZ_BYTES] ; pixels16[4]
 	mov rdx, [rdx + 12*COMPV_YASM_REG_SZ_BYTES] ; pixels16[12]
-	lea rax, [rbx + rax] ; IP[pixels16[4]]
-	lea rdx, [rbx + rdx] ; IP[pixels16[12]]
 	pxor xmm4, xmm4 ; xmm4 = xmmZeros
-	movdqu xmm0, [rax]
-	movdqu xmm1, [rdx]
+	movdqu xmm0, [rbx + rax] ; IP[pixels16[4]]
+	movdqu xmm1, [rbx + rdx] ; IP[pixels16[12]]
 	movdqa xmm2, xmm5 ; xmmDarker
 	movdqa xmm3, xmm5 ; xmmDarker
 	mov rdx, arg(8) ; ddarkers16x16
@@ -204,26 +200,26 @@ sym(FastData16Row_Asm_X86_SSE2):
 	setnz al
 	test rdx, rdx
 	setnz dl
-	add rdx, rax
-	test rdx, rdx
+	add dl, al
+	test dl, dl
 	jz .LoopRowsNext
-	add [rsp + 0], rdx ; sum += ?
+	add [rsp + 0], dl ; sum += ?
 
 	;
 	;  Speed-Test-2
 	;
 	
-	mov rcx, arg(4) ; N
-	mov rax, [rsp + 0] ; sum
-	cmp rcx, 9
+	mov cl, arg(4) ; N
+	mov al, [rsp + 0] ; sum
+	cmp cl, 9
 	je .SpeedTest2For9
 	; otherwise ...N == 12
-	cmp rax, 3
+	cmp al, 3
 	jl .LoopRowsNext
 	jmp .EndOfSpeedTest2
 
 	.SpeedTest2For9
-	cmp rax, 2
+	cmp al, 2
 	jl .LoopRowsNext
 	
 	.EndOfSpeedTest2
@@ -235,93 +231,77 @@ sym(FastData16Row_Asm_X86_SSE2):
 	; Check whether to load Brighters
 	movdqa xmm0, [rsp + 280 + 0*16] ; xmmBrightersFlags[0]
 	movdqa xmm1, [rsp + 280 + 4*16] ; xmmBrightersFlags[4]
-	movdqa xmm2, [rsp + 280 + 8*16] ; xmmBrightersFlags[8]
-	movdqa xmm3, [rsp + 280 + 12*16] ; xmmBrightersFlags[12]
-	por xmm0, xmm2
-	por xmm1, xmm3
+	por xmm0, [rsp + 280 + 8*16] ; xmmBrightersFlags[0] | xmmBrightersFlags[8]
+	por xmm1, [rsp + 280 + 12*16] ; xmmBrightersFlags[4] | xmmBrightersFlags[12]
 	pmovmskb rax, xmm0
 	pmovmskb rdx, xmm1
 	test rax, rax
 	setnz al
 	test rdx, rdx
 	setnz dl
-	add rdx, rax
-	cmp rdx, 1
+	add dl, al
+	cmp dl, 1
 	setg dl
-	mov rdi, rdx ; rdi = (rdx > 1) ? 1 : 0
+	movzx rdi, byte dl ; rdi = (rdx > 1) ? 1 : 0
 
 	; Check whether to load Darkers
 	movdqa xmm0, [rsp + 24 + 0*16] ; xmmDarkersFlags[0]
 	movdqa xmm1, [rsp + 24 + 4*16] ; xmmDarkersFlags[4]
-	movdqa xmm2, [rsp + 24 + 8*16] ; xmmDarkersFlags[8]
-	movdqa xmm3, [rsp + 24 + 12*16] ; xmmDarkersFlags[12]
-	por xmm0, xmm2
-	por xmm1, xmm3
+	por xmm0, [rsp + 24 + 8*16] ; xmmDarkersFlags[0] | xmmDarkersFlags[8]
+	por xmm1, [rsp + 24 + 12*16] ; xmmDarkersFlags[4] | xmmDarkersFlags[12]
 	pmovmskb rax, xmm0
 	pmovmskb rdx, xmm1
 	test rax, rax
 	setnz al
 	test rdx, rdx
 	setnz dl
-	add rdx, rax
-	cmp rdx, 1
+	add dl, al
+	cmp dl, 1
 	setg dl ; rdx = (rdx > 1) ? 1 : 0
 
 	; rdi = loadB, rdx = loadD
 	; skip process if (!(loadB || loadD))
 	mov rax, rdi
-	or rax, rdx
-	test rax, rax
-	jz .LoopRowsNext	
+	or al, dl
+	test al, al
+	jz .LoopRowsNext
 
 	; Load xmmDataPtr
 	mov rcx, arg(3) ; pixels16
 	mov rax, [rcx + 1*COMPV_YASM_REG_SZ_BYTES] ; pixels16[1]
-	lea rax, [rbx + rax] ; IP[pixels16[1]]
-	movdqu xmm0, [rax]
+	movdqu xmm0, [rbx + rax]
 	mov rax, [rcx + 2*COMPV_YASM_REG_SZ_BYTES] ; pixels16[2]
-	lea rax, [rbx + rax] ; IP[pixels16[2]]
-	movdqu xmm1, [rax]
+	movdqu xmm1, [rbx + rax]
 	mov rax, [rcx + 3*COMPV_YASM_REG_SZ_BYTES] ; pixels16[3]
-	lea rax, [rbx + rax] ; IP[pixels16[3]]
-	movdqu xmm2, [rax]
+	movdqu xmm2, [rbx + rax]
 	mov rax, [rcx + 5*COMPV_YASM_REG_SZ_BYTES] ; pixels16[5]
-	lea rax, [rbx + rax] ; IP[pixels16[5]]
-	movdqu xmm3, [rax]
+	movdqu xmm3, [rbx + rax]
 	mov rax, [rcx + 6*COMPV_YASM_REG_SZ_BYTES] ; pixels16[6]
-	lea rax, [rbx + rax] ; IP[pixels16[6]]
-	movdqu xmm4, [rax]
+	movdqu xmm4, [rbx + rax]
 	movdqa [rsp + 536 + 1*16], xmm0
 	movdqa [rsp + 536 + 2*16], xmm1
 	movdqa [rsp + 536 + 3*16], xmm2
 	movdqa [rsp + 536 + 5*16], xmm3
 	movdqa [rsp + 536 + 6*16], xmm4
 	mov rax, [rcx + 7*COMPV_YASM_REG_SZ_BYTES] ; pixels16[7]
-	lea rax, [rbx + rax] ; IP[pixels16[7]]
-	movdqu xmm0, [rax]
+	movdqu xmm0, [rbx + rax]
 	mov rax, [rcx + 9*COMPV_YASM_REG_SZ_BYTES] ; pixels16[9]
-	lea rax, [rbx + rax] ; IP[pixels16[9]]
-	movdqu xmm1, [rax]
+	movdqu xmm1, [rbx + rax]
 	mov rax, [rcx + 10*COMPV_YASM_REG_SZ_BYTES] ; pixels16[10]
-	lea rax, [rbx + rax] ; IP[pixels16[10]]
-	movdqu xmm2, [rax]
+	movdqu xmm2, [rbx + rax]
 	mov rax, [rcx + 11*COMPV_YASM_REG_SZ_BYTES] ; pixels16[11]
-	lea rax, [rbx + rax] ; IP[pixels16[11]]
-	movdqu xmm3, [rax]
+	movdqu xmm3, [rbx + rax]
 	mov rax, [rcx + 13*COMPV_YASM_REG_SZ_BYTES] ; pixels16[13]
-	lea rax, [rbx + rax] ; IP[pixels16[13]]
-	movdqu xmm4, [rax]
+	movdqu xmm4, [rbx + rax]
 	movdqa [rsp + 536 + 7*16], xmm0
 	movdqa [rsp + 536 + 9*16], xmm1
 	movdqa [rsp + 536 + 10*16], xmm2
 	movdqa [rsp + 536 + 11*16], xmm3
 	movdqa [rsp + 536 + 13*16], xmm4
 	mov rax, [rcx + 14*COMPV_YASM_REG_SZ_BYTES] ; pixels16[14]
-	lea rax, [rbx + rax] ; IP[pixels16[14]]
-	movdqu xmm0, [rax]
+	movdqu xmm0, [rbx + rax]
 	mov rax, [rcx + 15*COMPV_YASM_REG_SZ_BYTES] ; pixels16[15]
-	lea rax, [rbx + rax] ; IP[pixels16[15]]
-	movdqu xmm1, [rax]
+	movdqu xmm1, [rbx + rax]
 	movdqa [rsp + 536 + 14*16], xmm0
 	movdqa [rsp + 536 + 15*16], xmm1
 
@@ -332,7 +312,7 @@ sym(FastData16Row_Asm_X86_SSE2):
 	;
 	;	LoadDarkers
 	;
-	test rdx, rdx ; rdx was loadD, now it's free
+	test dl, dl ; rdx was loadD, now it's free
 	jz .EndOfDarkers
 	; compute ddarkers16x16 and flags
 	mov rax, arg(8) ; ddarkers16x16
@@ -615,7 +595,6 @@ sym(FastData16Row_Asm_X86_SSE2):
 	%endrep
 
 	.EndOfBrighters
-
 	
 	.LoopRowsNext
 
