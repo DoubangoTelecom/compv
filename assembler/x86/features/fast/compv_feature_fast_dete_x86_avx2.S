@@ -96,9 +96,11 @@ sym(FastData32Row_Asm_X86_AVX2):
 	; TODO(dmi): not supported
 	; TODO(dmi): inc IPprev here
 
-	vmovdqa ymm5, ymm6
-	vpaddusb ymm6, ymm7 ; ymm6 = ymmBrighter
-	vpsubusb ymm5, ymm7 ; ymm5 = ymmDarker
+	vpxor ymm15, ymm15 ; ymm15 = ymmZeros
+	vpcmpeqb ymm14, ymm14 ; ymm14 = ymmFF
+
+	vpsubusb ymm5, ymm6, ymm7 ; ymm5 = ymmDarker
+	vpaddusb ymm6, ymm6, ymm7 ; ymm6 = ymmBrighter
 
 	;
 	; Speed-Test-1
@@ -108,9 +110,9 @@ sym(FastData32Row_Asm_X86_AVX2):
 	mov rdx, arg(3) ; pixels16
 	mov rax, [rdx + 0*COMPV_YASM_REG_SZ_BYTES] ; pixels16[0]
 	mov rdx, [rdx + 8*COMPV_YASM_REG_SZ_BYTES] ; pixels16[8]
-	vpxor ymm4, ymm4 ; ymm4 = ymmZeros
 	vmovdqu ymm0, [rbx + rax] ; IP[pixels16[0]]
 	vmovdqu ymm1, [rbx + rdx] ; IP[pixels16[8]]
+	vpxor ymm4, ymm4 ; ymm4 = ymmZeros
 	mov rdx, arg(8) ; ddarkers16x32
 	mov rax, arg(9) ; dbrighters16x32
 	vpsubusb ymm2, ymm5, ymm0 ; ddarkers16x32[0]
@@ -151,9 +153,9 @@ sym(FastData32Row_Asm_X86_AVX2):
 	mov rdx, arg(3) ; pixels16
 	mov rax, [rdx + 4*COMPV_YASM_REG_SZ_BYTES] ; pixels16[4]
 	mov rdx, [rdx + 12*COMPV_YASM_REG_SZ_BYTES] ; pixels16[12]
-	vpxor ymm4, ymm4 ; ymm4 = ymmZeros
 	vmovdqu ymm0, [rbx + rax] ; IP[pixels16[4]]
 	vmovdqu ymm1, [rbx + rdx] ; IP[pixels16[12]]
+	vpxor ymm4, ymm4 ; ymm4 = ymmZeros
 	mov rdx, arg(8) ; ddarkers16x32
 	mov rax, arg(9) ; dbrighters16x32
 	vpsubusb ymm2, ymm5, ymm0 ; ddarkers16x32[4]

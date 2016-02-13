@@ -104,17 +104,16 @@ sym(FastData32Row_Asm_X64_AVX2):
 
 	; Motion Estimation
 	; TODO(dmi): not supported
+	
+	vpxor ymm15, ymm15 ; ymm15 = ymmZeros
+	vpcmpeqb ymm14, ymm14 ; ymm14 = ymmFF
 
-	vmovdqa ymm5, ymm6
-	vpaddusb ymm6, ymm7 ; ymm6 = ymmBrighter
-	vpsubusb ymm5, ymm7 ; ymm5 = ymmDarker
+	vpsubusb ymm5, ymm6, ymm7 ; ymm5 = ymmDarker
+	vpaddusb ymm6, ymm6, ymm7 ; ymm6 = ymmBrighter
 
 	;
 	; Speed-Test-1
 	;
-
-	vpxor ymm15, ymm15 ; ymm15 = ymmZeros
-	vpcmpeqb ymm14, ymm14 ; ymm14 = ymmFF
 
 	mov r11, arg(3) ; pixels16
 	mov r10, rsi
@@ -222,10 +221,10 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpor ymm12, ymm0, ymm1 ; ymmBrightersFlags[4] | ymmBrightersFlags[12] 
 	vpor ymm13, ymm2, ymm3 ; ymmDarkersFlags[4] | ymmDarkersFlags[12]
 	vpmovmskb r9d, ymm14
-	vpmovmskb r10d, ymm13
 	vpmovmskb r11d, ymm15
 	vpmovmskb r12d, ymm12
-
+	vpmovmskb r10d, ymm13
+	
 	; Check whether to load Brighters
 	test r11d, r11d
 	setnz cl
@@ -457,16 +456,14 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpmovmskb r8d, ymm13
 	vpmovmskb r9d, ymm14
 	vpmovmskb r10d, ymm15
+	vpxor ymm15, ymm15 ; ymmZeros
 	mov [rdx + 10*COMPV_YASM_REG_SZ_BYTES], r8d
 	mov [rdx + 11*COMPV_YASM_REG_SZ_BYTES], r9d
 	mov [rdx + 12*COMPV_YASM_REG_SZ_BYTES], r10d
 	pop rax ; restore rax, arg(8) -> ddarkers16x32
-	vpxor ymm0, ymm0
-	vpxor ymm1, ymm1
-	vpxor ymm2, ymm2
-	vpcmpeqb ymm0, [rax+13*32]
-	vpcmpeqb ymm1, [rax+14*32]
-	vpcmpeqb ymm2, [rax+15*32]
+	vpcmpeqb ymm0, ymm15, [rax+13*32]
+	vpcmpeqb ymm1, ymm15, [rax+14*32]
+	vpcmpeqb ymm2, ymm15, [rax+15*32]
 	vpandn ymm0, ymm5
 	vpandn ymm1, ymm5
 	vpandn ymm2, ymm5
