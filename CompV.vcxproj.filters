@@ -288,6 +288,15 @@
     <ClInclude Include="include\compv\intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_avx2.h">
       <Filter>Header Files\intrinsics\x86\features\fast</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\compv_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\compv_mem_intrin_avx.h">
+      <Filter>Header Files\intrinsics\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\compv_mem_intrin_sse.h">
+      <Filter>Header Files\intrinsics\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -419,6 +428,15 @@
     <ClCompile Include="intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_avx2.cxx">
       <Filter>Source Files\intrinsics\x86\features\fast</Filter>
     </ClCompile>
+    <ClCompile Include="compv_list.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\compv_mem_intrin_avx.cxx">
+      <Filter>Source Files\intrinsics\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\compv_mem_intrin_sse.cxx">
+      <Filter>Source Files\intrinsics\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="assembler\x86\compv_utils_x86.S">
@@ -463,11 +481,25 @@
     <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x64_sse.S">
       <Filter>Assembler Files\x86\features\fast</Filter>
     </YASM>
-    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x64_avx2.S">
-      <Filter>Assembler Files\x86\features\fast</Filter>
-    </YASM>
     <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x86_avx2.S">
       <Filter>Assembler Files\x86\features\fast</Filter>
     </YASM>
+    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x64_avx2.S">
+      <Filter>Assembler Files\x86\features\fast</Filter>
+    </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assembler\x86\compv_mem_x64_avx.S">
+      <Filter>Assembler Files\x86</Filter>
+    </None>
+    <None Include="assembler\x86\compv_mem_x64_sse.S">
+      <Filter>Assembler Files\x86</Filter>
+    </None>
+    <None Include="assembler\x86\compv_mem_x86_avx.S">
+      <Filter>Assembler Files\x86</Filter>
+    </None>
+    <None Include="assembler\x86\compv_mem_x86_sse.S">
+      <Filter>Assembler Files\x86</Filter>
+    </None>
   </ItemGroup>
 </Project>

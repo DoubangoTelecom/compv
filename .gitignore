@@ -28,3 +28,8 @@ Release
 /tests/image/out.rgba
 /tests/image/out.png
 /tests/image/out.gray
+/tests/memory/Debug
+/tests/memory/x64/Debug
+/tests/list/x64/Debug
+/tests/list/My Amplifier XE Results - list
+/tests/memory/My Amplifier XE Results - memory

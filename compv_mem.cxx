@@ -21,27 +21,66 @@
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
 
+#include "compv/intrinsics/x86/compv_mem_intrin_sse.h"
+#include "compv/intrinsics/x86/compv_mem_intrin_avx.h"
+
 COMPV_NAMESPACE_BEGIN()
 
 #if !defined(COMPV_MEMALIGN_ALWAYS)
 #	define COMPV_MEMALIGN_ALWAYS 1
 #endif
 
+#if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0)) && !defined(COMPV_MEM_CHECK)
+#	define COMPV_MEM_CHECK 1
+#endif
+
+// COMPV_MEM_SIZE_MIN_SIMD must be > 32 (default alignment)
+#define COMPV_MEM_SIZE_MIN_SIMD 32*16 // no real gain on small sizes
+
+// X86
+#if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
+extern "C" void MemCopy_Asm_Aligned11_X86_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
+#endif
+
 std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;
 
-typedef void (*CompVMemCopy)(void* dstPtr, const void*srcPtr, size_t size);
+typedef void(*CompVMemCopy)(void* dstPtr, const void*srcPtr, compv_uscalar_t size);
 
-static void CompVMemCopy_C(void* dstPtr, const void*srcPtr, size_t size)
+static void CompVMemCopy_C(void* dstPtr, const void*srcPtr, compv_uscalar_t size)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-    memcpy(dstPtr, srcPtr, size);
+    memcpy(dstPtr, srcPtr, (size_t)size);
 }
 
 COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void*srcPtr, size_t size)
 {
     COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	size_t align = 1;
     CompVMemCopy cpy = CompVMemCopy_C;
+#if 0 // TODO(dmi): ASM code not faster
+	if (size > COMPV_MEM_SIZE_MIN_SIMD) {
+		if (CompVCpu::isSupported(kCpuFlagSSE2)) {
+			if (COMPV_IS_ALIGNED_SSE(dstPtr) && COMPV_IS_ALIGNED_SSE(srcPtr)) {
+				COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopy_Intrin_Aligned_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+				COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopy_Asm_Aligned11_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+			}
+		}
+		if (CompVCpu::isSupported(kCpuFlagAVX)) {
+			if (COMPV_IS_ALIGNED_SSE(dstPtr) && COMPV_IS_ALIGNED_SSE(srcPtr)) {
+				COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopy_Intrin_Aligned_AVX, align = COMPV_SIMD_ALIGNV_AVX));
+			}
+		}
+	}
+#endif
     cpy(dstPtr, srcPtr, size);
+	size_t copied = (size / align) * align;
+	if (copied < size) {
+		uint8_t* dstPtr_ = ((uint8_t*)dstPtr) + copied;
+		const uint8_t* srcPtr_ = ((const uint8_t*)srcPtr) + copied;
+		for (size_t i = copied; i < size; ++i) {
+			*dstPtr_++ = *srcPtr_++;
+		}
+	}
     return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -82,22 +121,23 @@ void* CompVMem::malloc(size_t size)
 */
 void* CompVMem::realloc(void* ptr, size_t size)
 {
+#if COMPV_MEM_CHECK
     if (isSpecial(ptr)) {
         return reallocAligned(ptr, size);
     }
+#endif
 #if COMPV_MEMALIGN_ALWAYS
     return reallocAligned(ptr, size);
 #else
     void *pMem = NULL;
-
     if (size) {
         if (ptr) {
-            if (!(pMem = realloc(ptr, size))) {
+            if (!(pMem = ::realloc(ptr, size))) {
                 COMPV_DEBUG_ERROR("Memory reallocation failed");
             }
         }
         else {
-            if (!(pMem = calloc(size, 1))) {
+            if (!(pMem = ::calloc(size, 1))) {
                 COMPV_DEBUG_ERROR("Memory allocation (%u) failed", (unsigned)size);
             }
         }
@@ -143,10 +183,13 @@ void* CompVMem::calloc(size_t num, size_t size)
 void CompVMem::free(void** ptr)
 {
     if (ptr && *ptr) {
+#	if COMPV_MEM_CHECK
         if (isSpecial(*ptr)) {
             freeAligned(ptr);
         }
-        else {
+        else 
+#	endif
+		{
 #if COMPV_MEMALIGN_ALWAYS
             freeAligned(ptr);
 #else
@@ -157,7 +200,7 @@ void CompVMem::free(void** ptr)
     }
 }
 
-void* CompVMem::mallocAligned(size_t size, int alignment/*= COMPV_SIMD_ALIGNV_DEFAULT*/)
+void* CompVMem::mallocAligned(size_t size, int alignment/*= CompVMem::getBestAlignment()*/)
 {
     void* pMem;
 #if COMPV_OS_WINDOWS && !COMPV_UNDER_OS_CE && !COMPV_OS_WINDOWS_RT
@@ -170,45 +213,57 @@ void* CompVMem::mallocAligned(size_t size, int alignment/*= COMPV_SIMD_ALIGNV_DE
         ((uint8_t*)pMem)[-1] = (uint8_t)pad; // store the pad for later use
     }
 #endif
+#	if COMPV_MEM_CHECK
     if (pMem) {
         CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>((uintptr_t)pMem, compv_special_mem_t((uintptr_t)pMem, size, alignment)));
     }
+#	endif
     return pMem;
 }
 
-void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= COMPV_SIMD_ALIGNV_DEFAULT*/)
+void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem::getBestAlignment()*/)
 {
+#if COMPV_MEM_CHECK
     if (ptr && !isSpecial(ptr)) {
         COMPV_DEBUG_FATAL("Using reallocAligned on no-special address: %x", (uintptr_t)ptr);
         return NULL;
     }
+#endif
     void* pMem;
 #if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
     pMem = _aligned_realloc(ptr, size, alignment);
+#	if COMPV_MEM_CHECK
     if (pMem != ptr) {
         CompVMem::s_Specials.erase((uintptr_t)ptr);
         if (pMem) {
             CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>((uintptr_t)pMem, compv_special_mem_t((uintptr_t)pMem, size, alignment)));
         }
     }
+#	endif
 #else
     pMem = CompVMem::mallocAligned(size);
     if (pMem && ptr) {
+#	if COMPV_MEM_CHECK
         std::map<uintptr_t, compv_special_mem_t >::iterator it = CompVMem::s_Specials.find((uintptr_t)ptr);
         COMPV_ASSERT(it != CompVMem::s_Specials.end());
         memcpy(pMem, ptr, min(it->second.size, size));
+#	else
+		COMPV_DEBUG_ERROR("Data lost");
+#	endif
     }
     CompVMem::freeAligned(&ptr);
 #endif
     return pMem;
 }
 
-void* CompVMem::callocAligned(size_t num, size_t size, int alignment/*= COMPV_SIMD_ALIGNV_DEFAULT*/)
+void* CompVMem::callocAligned(size_t num, size_t size, int alignment/*= CompVMem::getBestAlignment()*/)
 {
     void* pMem = CompVMem::mallocAligned((size * num), alignment);
     if (pMem) {
         memset(pMem, 0, (size * num));
+#	if COMPV_MEM_CHECK
         CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>((uintptr_t)pMem, compv_special_mem_t((uintptr_t)pMem, (size * num), alignment)));
+#	endif
     }
     return pMem;
 }
@@ -217,27 +272,31 @@ void CompVMem::freeAligned(void** ptr)
 {
     if (ptr && *ptr) {
         void* ptr_ = *ptr;
+#if COMPV_MEM_CHECK
         if (!isSpecial(ptr_)) {
             COMPV_DEBUG_FATAL("Using freeAligned on no-special address: %x", (uintptr_t)ptr_);
         }
+#endif
 #if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
         _aligned_free(ptr_);
 #else
         ::free((((uint8_t*)ptr_) - ((uint8_t*)ptr_)[-1]));
 #endif
+#	if COMPV_MEM_CHECK
         CompVMem::s_Specials.erase((uintptr_t)ptr_);
+#endif
         *ptr = NULL;
     }
 }
 
 // alignment must be power of two
-uintptr_t CompVMem::alignBackward(uintptr_t ptr, int alignment /*= COMPV_SIMD_ALIGNV_DEFAULT*/)
+uintptr_t CompVMem::alignBackward(uintptr_t ptr, int alignment /*= CompVMem::getBestAlignment()*/)
 {
     COMPV_ASSERT(COMPV_IS_POW2(alignment));
     return (ptr & -alignment);
 }
 
-uintptr_t CompVMem::alignForward(uintptr_t ptr, int alignment /*= COMPV_SIMD_ALIGNV_DEFAULT*/)
+uintptr_t CompVMem::alignForward(uintptr_t ptr, int alignment /*= CompVMem::getBestAlignment()*/)
 {
     COMPV_ASSERT(COMPV_IS_POW2(alignment));
     return (ptr + (alignment - 1)) & -alignment;
@@ -266,27 +325,47 @@ size_t CompVMem::alignSizeOnCacheLineAndSIMD(size_t size)
 // Allocated using mallocAligned, callocAligned or reallocAligned
 bool CompVMem::isSpecial(void* ptr)
 {
+#	if COMPV_MEM_CHECK
     return CompVMem::s_Specials.find((uintptr_t)ptr) != CompVMem::s_Specials.end();
+#else
+	COMPV_DEBUG_INFO("Memory check disabled. Returning false for CompVMem::isSpecial() function");
+	return false;
+#endif
 }
 
 size_t CompVMem::getSpecialTotalMemSize()
 {
+#	if COMPV_MEM_CHECK
     size_t total = 0;
     std::map<uintptr_t, compv_special_mem_t >::iterator it = CompVMem::s_Specials.begin();
     for (; it != CompVMem::s_Specials.end(); ++it) {
         total += it->second.size;
     }
     return total;
+#else
+	COMPV_DEBUG_INFO("Memory check disabled. Returning 0 for CompVMem::getSpecialTotalMemSize() function");
+	return 0;
+#endif
 }
 
 size_t CompVMem::getSpecialsCount()
 {
+#	if COMPV_MEM_CHECK
     return CompVMem::s_Specials.size();
+#else
+	COMPV_DEBUG_INFO("Memory check disabled. Returning 0 for CompVMem::getSpecialsCount() function");
+	return 0;
+#endif
 }
 
 bool CompVMem::isEmpty()
 {
+#	if COMPV_MEM_CHECK
     return CompVMem::getSpecialsCount() == 0;
+#else
+	COMPV_DEBUG_INFO("Memory check disabled. Returning false for CompVMem::isEmpty() function");
+	return false;
+#endif
 }
 
 COMPV_NAMESPACE_END()

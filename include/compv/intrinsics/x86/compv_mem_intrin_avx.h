@@ -17,23 +17,24 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#include "compv/intrinsics/x86/image/scale/compv_imagescale_bilinear_intrin_sse.h"
+#if !defined(_COMPV_MEM_INTRIN_AVX_H_)
+#define _COMPV_MEM_INTRIN_AVX_H_
+
+#include "compv/compv_config.h"
+#include "compv/compv_common.h"
+
+#if defined(_COMPV_API_H_)
+#error("This is a private file and must not be part of the API")
+#endif
 
 #if defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC)
-#include "compv/compv_simd_globals.h"
-#include "compv/compv_math.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-// inPtr doesn't need to be aligned
-// outPtr must be aligned
-// outStride must be aligned
-// image width and height must be <= SHRT_MAX
-void scaleBilinearKernel11_Intrin_Aligned_SSSE3(const uint8_t* inPtr, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_scalar_t inHeight, compv_scalar_t inWidth, compv_scalar_t inStride, compv_scalar_t outHeight, compv_scalar_t outWidth, compv_scalar_t outStride, compv_scalar_t sf_x, compv_scalar_t sf_y)
-{
-    COMPV_ASSERT(false);
-}
+void MemCopy_Intrin_Aligned_AVX(COMPV_ALIGNED(AVX) void* dataDstPtr, COMPV_ALIGNED(AVX) const void* dataSrcPtr, compv_uscalar_t size);
 
 COMPV_NAMESPACE_END()
 
-#endif /* defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC) */
+#endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
+
+#endif /* _COMPV_MEM_INTRIN_AVX_H_ */

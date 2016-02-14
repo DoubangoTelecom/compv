@@ -112,6 +112,7 @@ a,b,c,d must be <= 16 for _mm128_shuffle_epi8() and <32 for _mm256_shuffle_epi8(
 
 typedef int32_t compv_core_id_t;
 typedef intptr_t compv_scalar_t;  /* This type *must* have the width of a general-purpose register on the target CPU. 64bits or 32bits. */
+typedef uintptr_t compv_uscalar_t;  /* This type *must* have the width of a general-purpose register on the target CPU. 64bits or 32bits. */
 
 typedef enum _COMPV_DEBUG_LEVEL {
 	COMPV_DEBUG_LEVEL_INFO = 4,

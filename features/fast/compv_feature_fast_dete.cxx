@@ -626,8 +626,8 @@ static void FastProcessRange(RangeFAST* range)
     }
 	if (CompVCpu::isSupported(kCpuFlagAVX2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastData16Row = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
-		COMPV_EXEC_IFDEF_ASM_X86((FastData16Row = FastData32Row_Asm_X86_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
-		COMPV_EXEC_IFDEF_ASM_X64((FastData16Row = FastData32Row_Asm_X64_AVX2, align = COMPV_SIMD_ALIGNV_AVX2)); // FIXME: intrin faster
+		COMPV_EXEC_IFDEF_ASM_X86((FastData16Row = FastData32Row_Asm_X86_AVX2, align = COMPV_SIMD_ALIGNV_AVX2)); // asm too much faster than intrin
+		COMPV_EXEC_IFDEF_ASM_X64((FastData16Row = FastData32Row_Asm_X64_AVX2, align = COMPV_SIMD_ALIGNV_AVX2)); // TODO(dmi): asm not so much fatsre than intrin
 	}
 
     // Number of pixels to process (multiple of align)
@@ -653,7 +653,7 @@ static void FastProcessRange(RangeFAST* range)
 	// We should have 64586 non-zero results for SSE and 66958 for AVX2
 
 	// FIXME
-	//static uint64_t kaka = 0;
+	static uint64_t kaka = 0;
     
     for (j = minj; j < maxj; ++j) {
         pfdarkers16 = range->pfdarkers16;
