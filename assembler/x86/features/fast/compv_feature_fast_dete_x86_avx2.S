@@ -97,9 +97,6 @@ sym(FastData32Row_Asm_X86_AVX2):
 	; TODO(dmi): not supported
 	; TODO(dmi): inc IPprev here
 
-	vpxor ymm15, ymm15 ; ymm15 = ymmZeros
-	vpcmpeqb ymm14, ymm14 ; ymm14 = ymmFF
-
 	vpsubusb ymm5, ymm6, ymm7 ; ymm5 = ymmDarker
 	vpaddusb ymm6, ymm6, ymm7 ; ymm6 = ymmBrighter
 
