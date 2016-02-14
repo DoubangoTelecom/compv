@@ -62,51 +62,65 @@ sym(MemCopy_Asm_Aligned11_X86_SSE2):
 	shr rax, 4
 	mov rdx, rax
 
+
 	; Begin Count16x16Loop
 	.Count16x16Loop
 	%define cache_size 64
 	;;prefetcht0 [rsi + 16*16]
-	prefetchnta [rsi + cache_size*0]
-	prefetchnta [rsi + cache_size*1]
-	prefetchnta [rsi + cache_size*2]
-	prefetchnta [rsi + cache_size*3]
+	;prefetchnta [rsi + cache_size*0]
+	;prefetchnta [rsi + cache_size*1]
+	;prefetchnta [rsi + cache_size*2]
+	;prefetchnta [rsi + cache_size*3]
 
+	;prefetchnta [rsi + 64*4]
+
+	;prefetchnta [rsi + 64*1]
 	movdqa xmm0, [rsi + 0]
 	movdqa xmm1, [rsi + 16]
 	movdqa xmm2, [rsi + 32]
 	movdqa xmm3, [rsi + 48]
-	movdqa xmm4, [rsi + 64]
-	movdqa xmm5, [rsi + 80]
-	movdqa xmm6, [rsi + 96]
-	movdqa xmm7, [rsi + 112]
-	movntdq [rdi + 0], xmm0
-	movntdq [rdi + 16], xmm1
-	movntdq [rdi + 32], xmm2
-	movntdq [rdi + 48], xmm3
-	movntdq [rdi + 64], xmm4
-	movntdq [rdi + 80], xmm5
-	movntdq [rdi + 96], xmm6
-	movntdq [rdi + 112], xmm7
+	movdqa [rdi + 0], xmm0	
+	movdqa [rdi + 16], xmm1
+	movdqa [rdi + 32], xmm2
+	movdqa [rdi + 48], xmm3		
+	add rsi, 64
+	add rdi, 64
 	
-	movdqa xmm0, [rsi + 128]
-	movdqa xmm1, [rsi + 144]
-	movdqa xmm2, [rsi + 160]
-	movdqa xmm3, [rsi + 176]
-	movdqa xmm4, [rsi + 192]
-	movdqa xmm5, [rsi + 208]
-	movdqa xmm6, [rsi + 224]
-	movdqa xmm7, [rsi + 240]
-	movntdq [rdi + 128], xmm0
-	movntdq [rdi + 144], xmm1
-	movntdq [rdi + 160], xmm2
-	movntdq [rdi + 176], xmm3
-	movntdq [rdi + 192], xmm4
-	movntdq [rdi + 208], xmm5
-	movntdq [rdi + 224], xmm6
-	movntdq [rdi + 240], xmm7
+	;prefetchnta [rsi + 64*1]
+	movdqa xmm0, [rsi + 0]
+	movdqa xmm1, [rsi + 16]
+	movdqa xmm2, [rsi + 32]
+	movdqa xmm3, [rsi + 48]
+	movdqa [rdi + 0], xmm0	
+	movdqa [rdi + 16], xmm1
+	movdqa [rdi + 32], xmm2
+	movdqa [rdi + 48], xmm3		
+	add rsi, 64
+	add rdi, 64
 
-	add rsi, 16*16
-	add rdi, 16*16
+	;prefetchnta [rsi + 64*1]
+	movdqa xmm0, [rsi + 0]
+	movdqa xmm1, [rsi + 16]
+	movdqa xmm2, [rsi + 32]
+	movdqa xmm3, [rsi + 48]
+	movdqa [rdi + 0], xmm0	
+	movdqa [rdi + 16], xmm1
+	movdqa [rdi + 32], xmm2
+	movdqa [rdi + 48], xmm3		
+	add rsi, 64
+	add rdi, 64
+
+	;prefetchnta [rsi + 64*1]
+	movdqa xmm0, [rsi + 0]
+	movdqa xmm1, [rsi + 16]
+	movdqa xmm2, [rsi + 32]
+	movdqa xmm3, [rsi + 48]
+	movdqa [rdi + 0], xmm0	
+	movdqa [rdi + 16], xmm1
+	movdqa [rdi + 32], xmm2
+	movdqa [rdi + 48], xmm3		
+	add rsi, 64
+	add rdi, 64
 
 	dec rcx
 	jnz .Count16x16Loop
