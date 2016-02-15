@@ -32,6 +32,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 void MemCopy_Intrin_Aligned_AVX(COMPV_ALIGNED(AVX) void* dataDstPtr, COMPV_ALIGNED(AVX) const void* dataSrcPtr, compv_uscalar_t size);
+void MemCopyNTA_Intrin_Aligned_AVX(COMPV_ALIGNED(AVX) void* dataDstPtr, COMPV_ALIGNED(AVX) const void* dataSrcPtr, compv_uscalar_t size);
 
 COMPV_NAMESPACE_END()
 

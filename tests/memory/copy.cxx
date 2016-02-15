@@ -4,10 +4,13 @@
 
 using namespace compv;
 
-#define loopCount	10000000
-//#define memSize	((1024 * 1024) + 32 /*AVX unmatched*/ + 16 /*SSE unmatched*/ + 7/*unaligned*/) // should also check on small sizes
-#define memSize	(4096)
-#define memAlign	64 // aligned on cache-line size. FIXME: Test with data not aligned on the cache
+#define loopCount	1 //1000000
+// MemCpy function use ASM or INTRIN only when we're sure that data caching is useless. 
+// Data caching is useless when the copied data size is more than the cache1 size (K). In this case
+// we're sure the first K bytes will be overriden by the next N bytes and the calling function will likely read the copied
+// data starting at index 0 which means within [0-K] and won't find them.
+#define memSize		((32 << 10) * 2) + 16/*SSE-extra-no16x16*/ + 32/*AVX-extra-no16x16*/ + 7 // Core i7 cache1 size = 32KB
+#define memAlign	64 // aligned on cache-line size
 
 bool TestCopy()
 {
@@ -24,7 +27,7 @@ bool TestCopy()
 
 	timeStart = CompVTime::getNowMills();
 	for (size_t i = 0; i < loopCount; ++i) {
-		CompVMem::copy(memDstPtr, memSrcPtr, memSize);
+		CompVMem::copyNTA(memDstPtr, memSrcPtr, memSize);
 	}
 	timeEnd = CompVTime::getNowMills();
 	COMPV_DEBUG_INFO("List Push elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
@@ -34,7 +37,6 @@ bool TestCopy()
 			COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E);
 		}
 	}
-	
 
 bail:
 	CompVMem::free((void**)&memSrcPtr);

@@ -39,7 +39,13 @@ COMPV_NAMESPACE_BEGIN()
 
 // X86
 #if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
-extern "C" void MemCopy_Asm_Aligned11_X86_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
+extern "C" void MemCopyNTA_Asm_Aligned11_X86_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
+extern "C" void MemCopyNTA_Asm_Aligned11_X86_AVX(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
+#endif
+// X64
+#if defined(COMPV_ARCH_X64) && defined(COMPV_ASM)
+extern "C" void MemCopyNTA_Asm_Aligned11_X64_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
+extern "C" void MemCopyNTA_Asm_Aligned11_X64_AVX(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
 #endif
 
 std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;
@@ -54,25 +60,36 @@ static void CompVMemCopy_C(void* dstPtr, const void*srcPtr, compv_uscalar_t size
 
 COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void*srcPtr, size_t size)
 {
-    COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMemCopy cpy = CompVMemCopy_C;
+	cpy(dstPtr, srcPtr, size);
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMem::copyNTA(void* dstPtr, const void*srcPtr, size_t size)
+{
+	COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	size_t align = 1;
-    CompVMemCopy cpy = CompVMemCopy_C;
-#if 0 // TODO(dmi): ASM code not faster
+	CompVMemCopy cpy = CompVMemCopy_C;
+
 	if (size > COMPV_MEM_SIZE_MIN_SIMD) {
 		if (CompVCpu::isSupported(kCpuFlagSSE2)) {
 			if (COMPV_IS_ALIGNED_SSE(dstPtr) && COMPV_IS_ALIGNED_SSE(srcPtr)) {
-				COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopy_Intrin_Aligned_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-				COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopy_Asm_Aligned11_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+				COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopyNTA_Intrin_Aligned_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+				COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopyNTA_Asm_Aligned11_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+				COMPV_EXEC_IFDEF_ASM_X64((cpy = MemCopyNTA_Asm_Aligned11_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
 			}
 		}
 		if (CompVCpu::isSupported(kCpuFlagAVX)) {
 			if (COMPV_IS_ALIGNED_SSE(dstPtr) && COMPV_IS_ALIGNED_SSE(srcPtr)) {
-				COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopy_Intrin_Aligned_AVX, align = COMPV_SIMD_ALIGNV_AVX));
+				COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopyNTA_Intrin_Aligned_AVX, align = COMPV_SIMD_ALIGNV_AVX));
+				COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopyNTA_Asm_Aligned11_X86_AVX, align = COMPV_SIMD_ALIGNV_AVX));
+				COMPV_EXEC_IFDEF_ASM_X64((cpy = MemCopyNTA_Asm_Aligned11_X64_AVX, align = COMPV_SIMD_ALIGNV_AVX));				
 			}
 		}
 	}
-#endif
-    cpy(dstPtr, srcPtr, size);
+
+	cpy(dstPtr, srcPtr, size);
 	size_t copied = (size / align) * align;
 	if (copied < size) {
 		uint8_t* dstPtr_ = ((uint8_t*)dstPtr) + copied;
@@ -81,7 +98,7 @@ COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void*srcPtr, size_t size)
 			*dstPtr_++ = *srcPtr_++;
 		}
 	}
-    return COMPV_ERROR_CODE_S_OK;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 /**
@@ -307,9 +324,9 @@ int CompVMem::getBestAlignment()
     static int _bestAlignment = 0;
     if (_bestAlignment == 0) {
         _bestAlignment = COMPV_SIMD_ALIGNV_DEFAULT;
-        const int L1CacheSize = CompVCpu::getCacheLineSize(); // probably #64 or #128
-        if (L1CacheSize > _bestAlignment && L1CacheSize <= 128 && (L1CacheSize & (_bestAlignment - 1)) == 0) {
-            _bestAlignment = L1CacheSize;
+        const int L1CacheLineSize = CompVCpu::getCache1LineSize(); // probably #64 or #128
+		if (L1CacheLineSize > _bestAlignment && L1CacheLineSize <= 128 && (L1CacheLineSize & (_bestAlignment - 1)) == 0) {
+			_bestAlignment = L1CacheLineSize;
         }
     }
     return _bestAlignment;

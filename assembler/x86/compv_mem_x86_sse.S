@@ -22,7 +22,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MemCopy_Asm_Aligned11_X86_SSE2)
+global sym(MemCopyNTA_Asm_Aligned11_X86_SSE2)
 
 section .data
 
@@ -34,8 +34,8 @@ section .text
 ; arg(0) -> COMPV_ALIGNED(SSE) void* dataDstPtr
 ; arg(1) ->COMPV_ALIGNED(SSE) const void* dataSrcPtr
 ; arg(2) ->compv_uscalar_t size
-; void MemCopy_Asm_Aligned11_X86_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_ALIGNED(SSE) const void* dataSrcPtr, compv_uscalar_t size)
-sym(MemCopy_Asm_Aligned11_X86_SSE2):
+; void MemCopyNTA_Asm_Aligned11_X86_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_ALIGNED(SSE) const void* dataSrcPtr, compv_uscalar_t size)
+sym(MemCopyNTA_Asm_Aligned11_X86_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 3
@@ -44,6 +44,8 @@ sym(MemCopy_Asm_Aligned11_X86_SSE2):
 	push rdi
 	push rbx
 	; end prolog
+
+	%define cache_line_size 64
 
 	mov rax, arg(2) ; size
 	mov rdi, arg(0) ; dataDstPtr
@@ -62,68 +64,34 @@ sym(MemCopy_Asm_Aligned11_X86_SSE2):
 	shr rax, 4
 	mov rdx, rax
 
-
 	; Begin Count16x16Loop
+	align 16
 	.Count16x16Loop
-	%define cache_size 64
-	;;prefetcht0 [rsi + 16*16]
-	;prefetchnta [rsi + cache_size*0]
-	;prefetchnta [rsi + cache_size*1]
-	;prefetchnta [rsi + cache_size*2]
-	;prefetchnta [rsi + cache_size*3]
+		prefetchnta [rsi + cache_line_size*5]
+		prefetchnta [rsi + cache_line_size*6]
+		prefetchnta [rsi + cache_line_size*7]
+		prefetchnta [rsi + cache_line_size*8]
 
-	;prefetchnta [rsi + 64*4]
+		%assign i 0
+		%rep 2
+			%assign j 0
+			%rep 8
+				movdqa xmm %+ j, [rsi + i + j*16]
+				%assign j j+1
+			%endrep
+			%assign j 0
+			%rep 8
+				movntdq [rdi + i + j*16], xmm %+ j
+				%assign j j+1
+			%endrep
+			%assign i i+8*16
+		%endrep
+			
+		add rsi, 16*16
+		add rdi, 16*16
 
-	;prefetchnta [rsi + 64*1]
-	movdqa xmm0, [rsi + 0]
-	movdqa xmm1, [rsi + 16]
-	movdqa xmm2, [rsi + 32]
-	movdqa xmm3, [rsi + 48]
-	movdqa [rdi + 0], xmm0	
-	movdqa [rdi + 16], xmm1
-	movdqa [rdi + 32], xmm2
-	movdqa [rdi + 48], xmm3		
-	add rsi, 64
-	add rdi, 64
-	
-	;prefetchnta [rsi + 64*1]
-	movdqa xmm0, [rsi + 0]
-	movdqa xmm1, [rsi + 16]
-	movdqa xmm2, [rsi + 32]
-	movdqa xmm3, [rsi + 48]
-	movdqa [rdi + 0], xmm0	
-	movdqa [rdi + 16], xmm1
-	movdqa [rdi + 32], xmm2
-	movdqa [rdi + 48], xmm3		
-	add rsi, 64
-	add rdi, 64
-
-	;prefetchnta [rsi + 64*1]
-	movdqa xmm0, [rsi + 0]
-	movdqa xmm1, [rsi + 16]
-	movdqa xmm2, [rsi + 32]
-	movdqa xmm3, [rsi + 48]
-	movdqa [rdi + 0], xmm0	
-	movdqa [rdi + 16], xmm1
-	movdqa [rdi + 32], xmm2
-	movdqa [rdi + 48], xmm3		
-	add rsi, 64
-	add rdi, 64
-
-	;prefetchnta [rsi + 64*1]
-	movdqa xmm0, [rsi + 0]
-	movdqa xmm1, [rsi + 16]
-	movdqa xmm2, [rsi + 32]
-	movdqa xmm3, [rsi + 48]
-	movdqa [rdi + 0], xmm0	
-	movdqa [rdi + 16], xmm1
-	movdqa [rdi + 32], xmm2
-	movdqa [rdi + 48], xmm3		
-	add rsi, 64
-	add rdi, 64
-
-	dec rcx
-	jnz .Count16x16Loop
+		dec rcx
+		jnz .Count16x16Loop
 	; End Count16x16Loop
 	.EndOfCount16x16Loop
 
@@ -132,16 +100,19 @@ sym(MemCopy_Asm_Aligned11_X86_SSE2):
 	jz .EndOfCount16x1Loop
 
 	; Begin Count16x1Loop
+	align 16
 	.Count16x1Loop
-	movdqa xmm0, [rsi]
-	add rsi, 16
-	movdqa [rdi], xmm0
-	add rdi, 16
+		movdqa xmm0, [rsi]
+		add rsi, 16
+		movntdq [rdi], xmm0
+		add rdi, 16
 	
-	dec rdx
-	jnz .Count16x1Loop
+		dec rdx
+		jnz .Count16x1Loop
 	; End Count16x1Loop
 	.EndOfCount16x1Loop
+
+	mfence ; flush latest WC (Write Combine) buffers to memory
 
 	; begin epilog
 	pop rbx

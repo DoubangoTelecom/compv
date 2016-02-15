@@ -45,6 +45,7 @@ class COMPV_API CompVMem
 {
 public:
 	static COMPV_ERROR_CODE copy(void* dstPtr, const void*srcPtr, size_t size);
+	static COMPV_ERROR_CODE copyNTA(void* dstPtr, const void*srcPtr, size_t size);
 
 	static void* malloc(size_t size);
 	static void* realloc(void * ptr, size_t size);

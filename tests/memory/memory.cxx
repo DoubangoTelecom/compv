@@ -7,9 +7,10 @@ using namespace compv;
 #define enableIntrinsics	true
 #define enableAsm			true
 #define testingMode			false
-#define cpuDisable			kCpuFlagAVX
+#define cpuDisable			kCpuFlagNone
 
-#define TEST_COPY			1
+#define TEST_COPY				1
+#define TEST_COPY_CACHELESS		1
 
 
 int _tmain(int argc, _TCHAR* argv[])

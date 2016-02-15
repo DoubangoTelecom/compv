@@ -4,9 +4,10 @@
 
 using namespace compv;
 
-#define loopCount	2 // 3500
+#define loopOutCount	5
+#define loopInCount		3500 // 3500
 #define STD_VECTOR	0
-#define PRINT_LIST	1
+#define PRINT_LIST	0
 
 bool TestPush()
 {
@@ -19,14 +20,21 @@ bool TestPush()
 	COMPV_CHECK_CODE_BAIL(err_ = CompVListInterestPoint::newObj(&interestPointsList));
 
 	timeStart = CompVTime::getNowMills();
-	for (int32_t y = 0; y < loopCount; ++y) {
-		for (int32_t x = 0; x < loopCount; ++x) {
+	for (unsigned k = 0; k < loopOutCount; ++k) {
+		for (unsigned y = 0; y < loopInCount; ++y) {
+			for (unsigned x = 0; x < loopInCount; ++x) {
 #if STD_VECTOR
-			interestPointsVect.push_back(CompVInterestPoint((y*loopCount)+x, 0));
+				interestPointsVect.push_back(CompVInterestPoint((y*loopInCount)+x, 0));
 #else
-			interestPointsList->push_back(CompVInterestPoint((y*loopCount)+x, 0));
+				interestPointsList->push_back(CompVInterestPoint((y*loopInCount) + x, 0));
 #endif
+			}
 		}
+#if STD_VECTOR
+		interestPointsVect.clear();
+#else
+		interestPointsList->reset();
+#endif
 	}
 	timeEnd = CompVTime::getNowMills();
 	COMPV_DEBUG_INFO("List Push elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));

@@ -120,7 +120,8 @@ COMPV_ERROR_CODE CompVList<T>::push(const T& elem, bool bBack /*= true*/)
 		
 		COMPV_CHECK_EXP_RETURN(!pNewMem, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 		if (m_pMem) {
-			CompVMem::copy(pNewMem, m_pMem, oldMemSize); // some systems don't support realloc_aligned(), so we're copying our data ourself
+			// some systems don't support realloc_aligned(), so we're copying our data ourself
+			CompVMem::copyNTA(pNewMem, m_pMem, oldMemSize);
 			CompVMem::free(&m_pMem);
 		}
 		m_pMem = pNewMem;
@@ -148,7 +149,7 @@ COMPV_ERROR_CODE CompVList<T>::push(const T& elem, bool bBack /*= true*/)
 	if (bBack && m_pTail) {
 		COMPVLIST_PITEM_SET_NEXT_INDEX(m_pTail, *pItemIndex);
 		m_pTail = pItem;
-		COMPVLIST_PITEM_SET_NEXT_INDEX(pItem, kCompVListIndexInvalid);
+		COMPVLIST_PITEM_SET_NEXT_INDEX(m_pTail, kCompVListIndexInvalid);
 	}
 	else {
 		if (m_pHead) {
@@ -193,7 +194,7 @@ template<class T>
 COMPV_ERROR_CODE CompVList<T>::reset()
 {
 	m_pTail = m_pHead = NULL;
-	m_nItems = m_nCapacity = 0;
+	m_nItems = 0;
 	return COMPV_ERROR_CODE_S_OK;
 }
 

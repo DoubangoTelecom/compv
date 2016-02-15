@@ -86,15 +86,17 @@ protected:
 public:
 	virtual ~CompVCpu();
 	static COMPV_ERROR_CODE init();
-	static int32_t getCoresCount();
+	static int32_t getCoresCount() { return s_iCores; }
 	static compv_core_id_t getValidCoreId(compv_core_id_t coreId);
 	static uint64_t getCyclesCountGlobal();
-	static int32_t getCacheLineSize();
+	static int32_t getCache1LineSize() { return s_iCache1LineSize; }
+	static int32_t getCache1Size() { return s_iCache1Size; }
 	static uint64_t getTimeProcess();
 	static uint64_t getFlags() { return s_uFlags; }
 	static uint64_t getFlagsDisabled() { return s_uFlagsDisabled; }
+	static uint64_t getFlagsEnabled() { return s_uFlagsEnabled; }
 	static const char* getFlagsAsString(uint64_t uFlags);
-	static bool isSupported(uint64_t flag){ return (s_uFlags & flag) == flag; }
+	static bool isSupported(uint64_t flag){ return (s_uFlagsEnabled & flag) == flag; }
 	static COMPV_ERROR_CODE flagsDisable(uint64_t flags);
 	static COMPV_ERROR_CODE flagsEnable(uint64_t flags);
 	static COMPV_ERROR_CODE setAsmEnabled(bool bEnabled);
@@ -105,8 +107,12 @@ public:
 private:
 	static uint64_t s_uFlags;
 	static uint64_t s_uFlagsDisabled;
+	static uint64_t s_uFlagsEnabled;
 	static bool s_bAsmEnabled;
 	static bool s_bIntrinsicsEnabled;
+	static int32_t s_iCores;
+	static int32_t s_iCache1LineSize;
+	static int32_t s_iCache1Size;
 };
 
 COMPV_NAMESPACE_END()
