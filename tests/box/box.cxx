@@ -9,7 +9,7 @@ using namespace compv;
 #define testingMode			true
 #define cpuDisable			kCpuFlagNone
 
-#define TEST_COPYNTA	1
+#define TEST_PUSH			1
 
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -21,9 +21,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
 	COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));
 
-#if TEST_COPYNTA
-	extern bool TestCopyNTA();
-	COMPV_ASSERT(TestCopyNTA());
+#if TEST_PUSH
+	extern bool TestPush();
+	COMPV_ASSERT(TestPush());
 #endif
 
 	// deInit the engine

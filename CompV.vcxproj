@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="include\compv\compv_api.h" />
     <ClInclude Include="include\compv\compv_bits.h" />
+    <ClInclude Include="include\compv\compv_box.h" />
     <ClInclude Include="include\compv\compv_buffer.h" />
     <ClInclude Include="include\compv\compv_common.h" />
     <ClInclude Include="include\compv\compv_config.h" />
@@ -76,6 +77,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_bits.cxx" />
+    <ClCompile Include="compv_box.cxx" />
     <ClCompile Include="compv_buffer.cxx" />
     <ClCompile Include="compv_common.cxx" />
     <ClCompile Include="compv_cpu.cxx" />

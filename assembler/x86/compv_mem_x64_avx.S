@@ -1,4 +1,5 @@
 ; Copyright (C) 2016 Doubango Telecom <https://www.doubango.org>
+; Copyright (C) 2016 Mamadou DIOP
 ;
 ; This file is part of Open Source ComputerVision (a.k.a CompV) project.
 ; Source code hosted at https://github.com/DoubangoTelecom/compv

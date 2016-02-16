@@ -297,6 +297,9 @@
     <ClInclude Include="include\compv\intrinsics\x86\compv_mem_intrin_sse.h">
       <Filter>Header Files\intrinsics\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\compv_box.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -436,6 +439,9 @@
     </ClCompile>
     <ClCompile Include="intrinsics\x86\compv_mem_intrin_sse.cxx">
       <Filter>Source Files\intrinsics\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_box.cxx">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

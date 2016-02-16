@@ -1,4 +1,5 @@
 /* Copyright (C) 2016 Doubango Telecom <https://www.doubango.org>
+*  Copyright (C) 2016 Mamadou DIOP.
 *
 * This file is part of Open Source ComputerVision (a.k.a CompV) project.
 * Source code hosted at https://github.com/DoubangoTelecom/compv
@@ -30,6 +31,7 @@ Some literature about FAST:
 // TODO(dmi):
 // Allow setting max number of features to retain
 // Add support for ragel fast9 and fast12.
+// CPP version doesn't work
 
 #include "compv/features/fast/compv_feature_fast_dete.h"
 #include "compv/features/fast/compv_feature_fast9_dete.h"
@@ -343,6 +345,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
     }
 
     // Non Maximal Suppression for removing adjacent corners
+	// FIXME: before using boxes, implement vector first and compute xf_sum and yf_sum for unittest
     if (strengthsMap) {
         int32_t currentIdx;
         for (size_t i = 0; i < interestPoints.size(); ++i) {
@@ -387,7 +390,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
     }
 
 
-    CompVMem::free((void**)&strengthsMap);
+    CompVMem::free((void**)&strengthsMap); // FIXME: alloc once
 
     return err_;
 }

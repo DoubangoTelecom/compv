@@ -48,7 +48,7 @@ struct RangeFAST {
 	compv_scalar_t* rd;
 	compv_scalar_t* rb;
 	compv_scalar_t* me;
-	std::vector<CompVInterestPoint >* interestPoints;
+	std::vector<CompVInterestPoint >* interestPoints; // FIXME: before using boxes, implement vector first and compute xf_sum and yf_sum for unittest
 };
 
 class CompVFeatureDeteFAST : public CompVFeatureDete
