@@ -239,6 +239,8 @@ enum {
 
 	COMPV_TOKENIDX_FEATURE_FAST_DETE,
 
+	COMPV_TOKENIDX_QUICKSORT,
+
 	COMPV_TOKENIDX_MAX
 	// no limitation but alloc memory -> do not abuse
 };

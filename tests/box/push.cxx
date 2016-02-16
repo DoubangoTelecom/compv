@@ -5,7 +5,7 @@
 
 using namespace compv;
 
-#define loopOutCount	1 // 10
+#define loopOutCount	100 // 10
 #define loopInCount		3500 // 3500
 #define STD_VECTOR		0
 #define PRINT_LIST		0

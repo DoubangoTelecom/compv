@@ -26,7 +26,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-static const size_t kCompVBoxMemGrowth = 1000 << 10; // 1MB
+static const size_t kCompVBoxMemGrowth = 1 << 20; // 1MB
 static const size_t kCompVBoxItemMaxSize = 128; // Box should be used for small object only
 #if !defined(COMPV_QUICKSORT_MACRO)
 #define COMPV_QUICKSORT_MACRO	0
@@ -55,9 +55,12 @@ COMPV_ERROR_CODE CompVBox<T>::alloc(size_t nCapacity)
 	COMPV_CHECK_EXP_RETURN(!nCapacity, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	size_t newMemSize = nCapacity * m_nItemSize;
+
+#if 0 // realloc (sloow)
+	m_pMem = (T*)CompVMem::realloc(m_pMem, newMemSize);
+#else
 	T* pNewMem = (T*)CompVMem::malloc(newMemSize); // some systems don't support realloc_aligned(), so we're copying our data ourself. Also, realloc() is slooow on some systems
 	COMPV_CHECK_EXP_RETURN(!pNewMem, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-
 	// copy items
 	if (m_nSize) {
 		m_nSize = COMPV_MATH_CLIP3(0, nCapacity, m_nSize);
@@ -66,6 +69,8 @@ COMPV_ERROR_CODE CompVBox<T>::alloc(size_t nCapacity)
 	}
 	CompVMem::free((void**)&m_pMem);
 	m_pMem = pNewMem;
+#endif
+
 	m_nCapacity = nCapacity;
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -202,8 +207,26 @@ static COMPV_ERROR_CODE __sort_bubble(CompVBox<T>* self, bool(*CompVBoxPredicate
 } while(0)
 #else
 template<class T>
-static COMPV_INLINE void __sort_quick(CompVBox<T>* self, bool(*CompVBoxPredicateCompare)(const T*, const T*), size_t left, size_t right)
+static void __sort_quick(CompVBox<T>* self, bool(*CompVBoxPredicateCompare)(const T*, const T*), size_t left, size_t right);
+template<class T>
+static COMPV_ERROR_CODE __sort_quick_asyn_exec(const struct compv_asynctoken_param_xs* pc_params)
 {
+	CompVBox<T>* self = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, CompVBox<T>*);
+	bool(*CompVBoxPredicateCompare)(const T*, const T*) = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, bool(*)(const T*, const T*));
+	size_t left = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, size_t);
+	size_t right = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, size_t);
+	__sort_quick(self, CompVBoxPredicateCompare, left, right);
+	return COMPV_ERROR_CODE_S_OK;
+}
+template<class T>
+static COMPV_INLINE void __sort_quick(CompVBox<T>* self, bool(*CompVBoxPredicateCompare)(const T*, const T*), intptr_t left, intptr_t right)
+{
+	// This is a private function, up to the caller to check input params
+#if 0
+	CompVObjWrapper<CompVThreadDispatcher* >&threadDip = CompVEngine::getThreadDispatcher();
+	int32_t threadsCount = threadDip ? threadDip->getThreadsCount() : 0;
+	uint32_t threadIdx0 = UINT_MAX, threadIdx1 = UINT_MAX;
+#endif
 	const T pivot = *self->at((left + right) >> 1);
 	T atk, *ati = self->at(left), *atj = self->at(right);
 	const T *ati_ = ati, *atj_ = atj;
@@ -217,20 +240,47 @@ static COMPV_INLINE void __sort_quick(CompVBox<T>* self, bool(*CompVBoxPredicate
 		++ati;
 		--atj;
 	}
-	size_t i = left + (ati - ati_);
-	size_t j = right + (atj - atj_);
+	intptr_t i = left + (ati - ati_);
+	intptr_t j = right + (atj - atj_);
 	if (left < j) {
-		__sort_quick(self, CompVBoxPredicateCompare, left, j);
+#if 0
+		if (threadsCount > 2 && (j - left) > COMPV_QUICKSORT_MIN_SAMPLES_PER_THREAD && !threadDip->isMotherOfTheCurrentThread()) {
+			threadIdx0 = threadDip->getThreadIdxForNextToCurrentCore();
+			COMPV_CHECK_CODE_ASSERT(threadDip->execute(threadIdx0, COMPV_TOKENIDX_QUICKSORT, __sort_quick_asyn_exec,
+				COMPV_ASYNCTASK_SET_PARAM_ASISS(self, CompVBoxPredicateCompare, left, j),
+				COMPV_ASYNCTASK_SET_PARAM_NULL()));
+		}
+		else 
+#endif
+		{
+			__sort_quick(self, CompVBoxPredicateCompare, left, j);
+		}
 	}
 	if (i < right) {
-		__sort_quick(self, CompVBoxPredicateCompare, i, right);
+#if 0
+		if (threadsCount > 2 && (right - i) > COMPV_QUICKSORT_MIN_SAMPLES_PER_THREAD && !threadDip->isMotherOfTheCurrentThread()) {
+			threadIdx1 = threadDip->getThreadIdxForNextToCurrentCore() + 1;
+			COMPV_CHECK_CODE_ASSERT(threadDip->execute(threadIdx1, COMPV_TOKENIDX_QUICKSORT, __sort_quick_asyn_exec,
+				COMPV_ASYNCTASK_SET_PARAM_ASISS(self, CompVBoxPredicateCompare, i, right),
+				COMPV_ASYNCTASK_SET_PARAM_NULL()));
+		}
+		else
+#endif
+		{
+			__sort_quick(self, CompVBoxPredicateCompare, i, right);
+		}
 	}
+#if 0
+	if (threadIdx0 != UINT_MAX) {
+		COMPV_CHECK_CODE_ASSERT(threadDip->wait(threadIdx0, COMPV_TOKENIDX_QUICKSORT));
+	}
+	if (threadIdx1 != UINT_MAX) {
+		COMPV_CHECK_CODE_ASSERT(threadDip->wait(threadIdx1, COMPV_TOKENIDX_QUICKSORT));
+	}
+#endif
 }
 
-static COMPV_ERROR_CODE __sort_quick_asyn_exec(const struct compv_asynctoken_param_xs* pc_params)
-{
 
-}
 #endif /* COMPV_QUICKSORT_MACRO */
 
 template<class T>
@@ -245,7 +295,7 @@ COMPV_ERROR_CODE CompVBox<T>::sort(bool(*CompVBoxPredicateCompare)(const T*, con
 			}
 			default:
 			{
-				size_t size_minus1 = size() - 1; // sort_quick is a macro -> don't pass a function
+				intptr_t size_minus1 = (intptr_t)size() - 1; // sort_quick is a macro -> don't pass a function
 				__sort_quick(this, CompVBoxPredicateCompare, 0, size_minus1);
 				return COMPV_ERROR_CODE_S_OK;
 			}
