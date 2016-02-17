@@ -231,8 +231,8 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
     COMPV_CHECK_EXP_RETURN(width < 4 || height < 4, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     if (m_bNonMaximaSupp) {
-        //strengthsMap = (float*)CompVMem::calloc(stride * height, sizeof(float)); // Must use calloc to fill the strengths with null values
-        //COMPV_CHECK_EXP_RETURN(!strengthsMap, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+        strengthsMap = (float*)CompVMem::calloc(stride * height, sizeof(float)); // Must use calloc to fill the strengths with null values
+        COMPV_CHECK_EXP_RETURN(!strengthsMap, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }
 
     // Free ranges memory if stride is increased
@@ -333,25 +333,20 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
 		FastProcessRange(pRange);
     }
 
-    // FIXME: (x,y) not correct when multi-threding is enable: rowStart/rowEnd
-    if (strengthsMap) {
-        int32_t candIdx;
-        const CompVInterestPoint* point;
-        for (size_t i = 0; i < interestPoints.size(); ++i) {
-            point = &interestPoints[i];
-            candIdx = point->x + (stride * point->y);
-            strengthsMap[candIdx] = (float)point->strength;
-        }
-    }
-
     // Non Maximal Suppression for removing adjacent corners
 	// FIXME: before using boxes, implement vector first and compute xf_sum and yf_sum for unittest
     if (strengthsMap) {
         int32_t currentIdx;
+		const CompVInterestPoint* point;
+		for (size_t i = 0; i < interestPoints.size(); ++i) {
+			point = &interestPoints[i];
+			currentIdx = point->x + (stride * point->y);
+			strengthsMap[currentIdx] = (float)point->strength;
+		}
         for (size_t i = 0; i < interestPoints.size(); ++i) {
             CompVInterestPoint* point = &interestPoints[i];
             currentIdx = (point->y * stride) + point->x;
-            // No need to chech index as the point always has coords in (+3, +3)
+            // No need to chech index as the point always has coords in (x+3, y+3)
             if (strengthsMap[currentIdx - 1] >= point->strength) { // left
                 point->x = -1;
             }
@@ -388,7 +383,6 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
         std::sort(interestPoints.begin(), interestPoints.end(), __compareStrengthDec);
         interestPoints.resize(m_iMaxFeatures);
     }
-
 
     CompVMem::free((void**)&strengthsMap); // FIXME: alloc once
 
@@ -613,7 +607,7 @@ static void FastProcessRange(RangeFAST* range)
 #endif
 
     // FIXME: remove all FastData16 (INTRIN, ASM, C++) and FastData -> Only FastData16Row
-	// FIXME: C++ version deosn't work
+	// FIXME: C++ version doesn't work
 
     if (CompVCpu::isSupported(kCpuFlagSSE2)) {
         COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = FastStrengths_SSE2);
@@ -691,10 +685,6 @@ static void FastProcessRange(RangeFAST* range)
         for (m = 0; m < kalign; m += align) {
 			r0 = ((uint32_t)(*rd));
 			r1 = ((uint32_t)(*rb));
-            // FIXME
-			if (/*m >= 1600*/m >= 1616 && j == 279) {
-                //int kaka = 0;
-            }
             if ((r0 || r1)) {
                 if ((m == kalign - align)) {
                     // last

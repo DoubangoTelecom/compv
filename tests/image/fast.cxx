@@ -24,6 +24,8 @@ using namespace compv;
 #	define FAST9_T10_NONMAX_SCORES		42470
 #	define FAST9_T10_XF					457331.000f
 #	define FAST9_T10_YF					643348.000f
+#	define FAST9_T10_NONMAX_XF			111052.000f
+#	define FAST9_T10_NONMAX_YF			151239.000f
 #	define FAST10_T10_CORNERS_COUNT		3885
 #	define FAST10_T10_CORNERS_SCORES	103004
 #	define FAST10_T10_NONMAX_COUNT		1101
@@ -34,6 +36,8 @@ using namespace compv;
 #	define FAST12_T10_NONMAX_SCORES		25035
 #	define FAST12_T10_XF				232877.000f
 #	define FAST12_T10_YF				329083.000f
+#	define FAST12_T10_NONMAX_XF			80539.0000f
+#	define FAST12_T10_NONMAX_YF			110791.000f
 #elif TEST_TYPE == TEST_TYPE_GRIOTS
 #	define JPEG_IMG						JPEG_IMG_GRIOTS
 #	define FAST9_T10_CORNERS_COUNT		22496
@@ -42,6 +46,8 @@ using namespace compv;
 #	define FAST9_T10_NONMAX_SCORES		155897
 #	define FAST9_T10_XF					6254713.00f
 #	define FAST9_T10_YF					6051599.00f
+#	define FAST9_T10_NONMAX_XF			1470054.00f
+#	define FAST9_T10_NONMAX_YF			1422441.00f
 #	define FAST10_T10_CORNERS_COUNT		16198
 #	define FAST10_T10_CORNERS_SCORES	390719
 #	define FAST10_T10_NONMAX_COUNT		4483
@@ -52,6 +58,8 @@ using namespace compv;
 #	define FAST12_T10_NONMAX_SCORES		79383
 #	define FAST12_T10_XF				2680181.00f
 #	define FAST12_T10_YF				2452336.00f
+#	define FAST12_T10_NONMAX_XF			903014.000f
+#	define FAST12_T10_NONMAX_YF			820502.000f
 #elif TEST_TYPE == TEST_TYPE_VOITURE
 #	define JPEG_IMG						JPEG_IMG_VOITURE
 #	define FAST9_T10_CORNERS_COUNT		27106
@@ -60,6 +68,8 @@ using namespace compv;
 #	define FAST9_T10_NONMAX_SCORES		153412
 #	define FAST9_T10_XF					26746936.0f
 #	define FAST9_T10_YF					14513604.0f
+#	define FAST9_T10_NONMAX_XF			7122647.00f
+#	define FAST9_T10_NONMAX_YF			3715590.00f
 #	define FAST10_T10_CORNERS_COUNT		18726
 #	define FAST10_T10_CORNERS_SCORES	385062
 #	define FAST10_T10_NONMAX_COUNT		5411
@@ -70,6 +80,8 @@ using namespace compv;
 #	define FAST12_T10_NONMAX_SCORES		74713
 #	define FAST12_T10_XF				11180928.0f
 #	define FAST12_T10_YF				5918576.0f
+#	define FAST12_T10_NONMAX_XF			3889938.00f
+#	define FAST12_T10_NONMAX_YF			2000219.00f
 #endif
 
 #define FAST_LOOP_COUNT	1
@@ -197,26 +209,22 @@ bool TestFAST()
     float sum_scores = 0.f;
     float xf = 0.f;
     float yf = 0.f;
+	for (size_t i = 0; i < interestPoints.size(); ++i) {
+		sum_scores += interestPoints[i].strength;
+		xf += interestPoints[i].xf();
+		yf += interestPoints[i].yf();
+	}
 #	if NONMAXIMA == 1
     COMPV_ASSERT(interestPoints.size() == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_COUNT : ((FASTTYPE == COMPV_FAST_TYPE_12) ? FAST12_T10_NONMAX_COUNT : FAST10_T10_NONMAX_COUNT)));
-    for (size_t i = 0; i < interestPoints.size(); ++i) {
-        sum_scores += interestPoints[i].strength;
-        xf += interestPoints[i].xf();
-        yf += interestPoints[i].yf();
-    }
     COMPV_ASSERT(sum_scores == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_SCORES : ((FASTTYPE == COMPV_FAST_TYPE_12) ? FAST12_T10_NONMAX_SCORES : FAST10_T10_NONMAX_SCORES)));
+	COMPV_ASSERT(xf == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_XF : FAST12_T10_NONMAX_XF));
+	COMPV_ASSERT(yf == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_YF : FAST12_T10_NONMAX_YF));
 #	else
     COMPV_ASSERT(interestPoints.size() == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_CORNERS_COUNT : ((FASTTYPE == COMPV_FAST_TYPE_12) ? FAST12_T10_CORNERS_COUNT : FAST10_T10_CORNERS_COUNT)));
-    for (size_t i = 0; i < interestPoints.size(); ++i) {
-        sum_scores += interestPoints[i].strength;
-        xf += interestPoints[i].xf();
-        yf += interestPoints[i].yf();
-    }
     COMPV_ASSERT(sum_scores == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_CORNERS_SCORES : ((FASTTYPE == COMPV_FAST_TYPE_12) ? FAST12_T10_CORNERS_SCORES : FAST10_T10_CORNERS_SCORES)));
+	COMPV_ASSERT(xf == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_XF : FAST12_T10_XF));
+	COMPV_ASSERT(yf == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_YF : FAST12_T10_YF));
 #	endif
-    COMPV_ASSERT(xf == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_XF : FAST12_T10_XF));
-    COMPV_ASSERT(yf == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_YF : FAST12_T10_YF));
 #endif
-
     return true;
 }
