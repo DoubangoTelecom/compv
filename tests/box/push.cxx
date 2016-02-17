@@ -6,8 +6,8 @@
 using namespace compv;
 
 #define loopOutCount	100 // 10
-#define loopInCount		3500 // 3500
-#define STD_VECTOR		0
+#define loopInCount		350 // 3500
+#define STD_VECTOR		1
 #define PRINT_LIST		0
 #define ERASE			0
 #define SORT			1
@@ -35,7 +35,7 @@ bool TestPush()
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
 	uint64_t timeStart, timeEnd;
-	CompVObjWrapper<CompVBoxInterestPoint* >box;
+	CompVObjWrapper<CompVBoxInterestPoint* >box; // "CompVBoxInterestPoint" has multi-threded sort which is not the case for "CompVBox<CompVInterestPoint>"
 	std::vector<CompVInterestPoint> interestPointsVect;
 
 	COMPV_CHECK_CODE_BAIL(err_ = CompVBoxInterestPoint::newObj(&box));
@@ -53,6 +53,24 @@ bool TestPush()
 #endif
 			}
 		}
+		// TEST sort
+#if	SORT
+#	if STD_VECTOR
+		std::sort(interestPointsVect.begin(), interestPointsVect.end(), __compareStrengthDecVect);
+#	else
+		box->sort(__compareStrengthDecBox);
+#	endif
+#endif
+		// Test erase
+#if ERASE
+#	if STD_VECTOR
+		interestPointsVect.erase(std::remove_if(interestPointsVect.begin(), interestPointsVect.end(), __isXMoreThan10Vect), interestPointsVect.end());
+#	else
+		box->erase(__isXMoreThan10Box);
+#	endif
+#endif
+
+		// CLEAR if not last loop
 #if STD_VECTOR
 		if (k + 1 != loopOutCount) { // clear item if not last loop
 			interestPointsVect.clear();
@@ -64,28 +82,10 @@ bool TestPush()
 #endif
 	}
 
-#if !STD_VECTOR
+#if !STD_VECTOR && !ERASE
 	if (box->size() != loopInCount * loopInCount) {
 		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 	}
-#endif
-
-	// TEST sort
-#if	SORT
-#	if STD_VECTOR
-	std::sort(interestPointsVect.begin(), interestPointsVect.end(), __compareStrengthDecVect);
-#	else
-	box->sort(__compareStrengthDecBox);
-#	endif
-#endif
-
-	// Test erase
-#if ERASE
-#	if STD_VECTOR
-	interestPointsVect.erase(std::remove_if(interestPointsVect.begin(), interestPointsVect.end(), __isXMoreThan10Vect), interestPointsVect.end());
-#	else
-	box->erase(__isXMoreThan10Box);
-#	endif
 #endif
 
 	timeEnd = CompVTime::getNowMills();

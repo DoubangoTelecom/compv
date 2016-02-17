@@ -25,6 +25,7 @@
 #include "compv/compv_obj.h"
 #include "compv/compv_settable.h"
 #include "compv/compv_buffer.h"
+#include "compv/compv_interestpoint.h"
 #include "compv/image/compv_image.h"
 
 #include <map>

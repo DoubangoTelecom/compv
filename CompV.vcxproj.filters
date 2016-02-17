@@ -300,6 +300,9 @@
     <ClInclude Include="include\compv\compv_box.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\compv_interestpoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -441,6 +444,9 @@
       <Filter>Source Files\intrinsics\x86</Filter>
     </ClCompile>
     <ClCompile Include="compv_box.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_interestpoint.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -70,9 +70,6 @@ private:
 	COMPV_DISABLE_WARNINGS_END()
 };
 
-template class CompVList<CompVInterestPoint >;
-typedef CompVList<CompVInterestPoint > CompVListInterestPoint;
-
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_LIST_H_ */

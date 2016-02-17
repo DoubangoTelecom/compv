@@ -24,6 +24,7 @@
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
 #include "compv/compv_engine.h"
+#include "compv/compv_interestpoint.h"
 #include "compv/compv_list.h"
 #include "compv/compv_mathutils.h"
 #include "compv/compv_md5.h"

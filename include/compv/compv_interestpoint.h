@@ -1,5 +1,5 @@
 /* Copyright (C) 2016 Doubango Telecom <https://www.doubango.org>
-* Copyright (C) 2016 Mamadou DIOP.
+* Copyright (C) 2016 Mamadou DIOP
 *
 * This file is part of Open Source ComputerVision (a.k.a CompV) project.
 * Source code hosted at https://github.com/DoubangoTelecom/compv
@@ -18,13 +18,23 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
+#if !defined(_COMPV_INTERESTPOINT_H_)
+#define _COMPV_INTERESTPOINT_H_
+
+#include "compv/compv_config.h"
 #include "compv/compv_box.h"
-#include "compv/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-
-
-
+class COMPV_API CompVBoxInterestPoint : public CompVBox<CompVInterestPoint > {
+protected:
+	CompVBoxInterestPoint(size_t nCapacity = 0, bool bLockable = false);
+public:
+	virtual ~CompVBoxInterestPoint();
+	COMPV_ERROR_CODE sort(bool(*CompVBoxPredicateCompare)(const CompVInterestPoint*, const CompVInterestPoint*)); // multithreaded sorting
+	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVBoxInterestPoint* >* box, size_t nCapacity = 0, bool bLockable = false);
+};
 
 COMPV_NAMESPACE_END()
+
+#endif /* _COMPV_INTERESTPOINT_H_ */

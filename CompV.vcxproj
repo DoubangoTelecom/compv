@@ -30,6 +30,7 @@
     <ClInclude Include="include\compv\compv_engine.h" />
     <ClInclude Include="include\compv\compv_errno.h" />
     <ClInclude Include="include\compv\compv_fileutils.h" />
+    <ClInclude Include="include\compv\compv_interestpoint.h" />
     <ClInclude Include="include\compv\compv_list.h" />
     <ClInclude Include="include\compv\compv_math.h" />
     <ClInclude Include="include\compv\compv_mathutils.h" />
@@ -84,6 +85,7 @@
     <ClCompile Include="compv_debug.cxx" />
     <ClCompile Include="compv_engine.cxx" />
     <ClCompile Include="compv_fileutils.cxx" />
+    <ClCompile Include="compv_interestpoint.cxx" />
     <ClCompile Include="compv_list.cxx" />
     <ClCompile Include="compv_mathutils.cxx" />
     <ClCompile Include="compv_md5.cxx" />
