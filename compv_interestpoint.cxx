@@ -89,7 +89,7 @@ static void sortByStrengthRange(CompVBoxInterestPoint* self, bool(*CompVBoxPredi
 	if (left < j) {
 		if (threadsCount > 2 && (j - left) > COMPV_QUICKSORT_MIN_SAMPLES_PER_THREAD && !threadDip->isMotherOfTheCurrentThread()) {
 			threadIdx0 = threadDip->getThreadIdxForNextToCurrentCore();
-			COMPV_CHECK_CODE_ASSERT(threadDip->execute(threadIdx0, COMPV_TOKENIDX_QUICKSORT, sortByStrengthRangeAsynExec,
+			COMPV_CHECK_CODE_ASSERT(threadDip->execute(threadIdx0, COMPV_TOKENIDX0, sortByStrengthRangeAsynExec,
 				COMPV_ASYNCTASK_SET_PARAM_ASISS(self, CompVBoxPredicateCompare, left, j),
 				COMPV_ASYNCTASK_SET_PARAM_NULL()));
 		}
@@ -100,7 +100,7 @@ static void sortByStrengthRange(CompVBoxInterestPoint* self, bool(*CompVBoxPredi
 	if (i < right) {
 		if (threadsCount > 2 && (right - i) > COMPV_QUICKSORT_MIN_SAMPLES_PER_THREAD && !threadDip->isMotherOfTheCurrentThread()) {
 			threadIdx1 = threadDip->getThreadIdxForNextToCurrentCore() + 1;
-			COMPV_CHECK_CODE_ASSERT(threadDip->execute(threadIdx1, COMPV_TOKENIDX_QUICKSORT, sortByStrengthRangeAsynExec,
+			COMPV_CHECK_CODE_ASSERT(threadDip->execute(threadIdx1, COMPV_TOKENIDX1, sortByStrengthRangeAsynExec,
 				COMPV_ASYNCTASK_SET_PARAM_ASISS(self, CompVBoxPredicateCompare, i, right),
 				COMPV_ASYNCTASK_SET_PARAM_NULL()));
 		}
@@ -109,10 +109,10 @@ static void sortByStrengthRange(CompVBoxInterestPoint* self, bool(*CompVBoxPredi
 		}
 	}
 	if (threadIdx0 != UINT_MAX) {
-		COMPV_CHECK_CODE_ASSERT(threadDip->wait(threadIdx0, COMPV_TOKENIDX_QUICKSORT));
+		COMPV_CHECK_CODE_ASSERT(threadDip->wait(threadIdx0, COMPV_TOKENIDX0));
 	}
 	if (threadIdx1 != UINT_MAX) {
-		COMPV_CHECK_CODE_ASSERT(threadDip->wait(threadIdx1, COMPV_TOKENIDX_QUICKSORT));
+		COMPV_CHECK_CODE_ASSERT(threadDip->wait(threadIdx1, COMPV_TOKENIDX1));
 	}
 }
 

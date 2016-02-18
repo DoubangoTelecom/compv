@@ -81,7 +81,7 @@ COMPV_ERROR_CODE CompVMem::copyNTA(void* dstPtr, const void*srcPtr, size_t size)
 			}
 		}
 		if (CompVCpu::isSupported(kCpuFlagAVX)) {
-			if (COMPV_IS_ALIGNED_SSE(dstPtr) && COMPV_IS_ALIGNED_SSE(srcPtr)) {
+			if (COMPV_IS_ALIGNED_AVX(dstPtr) && COMPV_IS_ALIGNED_AVX(srcPtr)) {
 				COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopyNTA_Intrin_Aligned_AVX, align = COMPV_SIMD_ALIGNV_AVX));
 				COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopyNTA_Asm_Aligned11_X86_AVX, align = COMPV_SIMD_ALIGNV_AVX));
 				COMPV_EXEC_IFDEF_ASM_X64((cpy = MemCopyNTA_Asm_Aligned11_X64_AVX, align = COMPV_SIMD_ALIGNV_AVX));				
@@ -96,6 +96,51 @@ COMPV_ERROR_CODE CompVMem::copyNTA(void* dstPtr, const void*srcPtr, size_t size)
 		const uint8_t* srcPtr_ = ((const uint8_t*)srcPtr) + copied;
 		for (size_t i = copied; i < size; ++i) {
 			*dstPtr_++ = *srcPtr_++;
+		}
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+typedef void(*CompVMemZero)(void* dstPtr, compv_uscalar_t size);
+
+static void CompVMemZero_C(void* dstPtr, compv_uscalar_t size)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	memset(dstPtr, 0, (size_t)size);
+}
+
+COMPV_ERROR_CODE CompVMem::zero(void* dstPtr, size_t size)
+{
+	COMPV_CHECK_EXP_RETURN(!dstPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMemZero setz = CompVMemZero_C;
+	setz(dstPtr, size);
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVMem::zeroNTA(void* dstPtr, size_t size)
+{
+	COMPV_CHECK_EXP_RETURN(!dstPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMemZero setz = CompVMemZero_C;
+	size_t align = 1;
+
+	if (size > COMPV_MEM_SIZE_MIN_SIMD) {
+		if (CompVCpu::isSupported(kCpuFlagSSE2)) {
+			if (COMPV_IS_ALIGNED_SSE(dstPtr)) {
+				COMPV_EXEC_IFDEF_INTRIN_X86((setz = MemZeroNTA_Intrin_Aligned_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+			}
+		}
+		if (CompVCpu::isSupported(kCpuFlagAVX)) {
+			if (COMPV_IS_ALIGNED_AVX(dstPtr)) {
+			}
+		}
+	}
+
+	setz(dstPtr, size);
+	size_t copied = (size / align) * align;
+	if (copied < size) {
+		uint8_t* dstPtr_ = ((uint8_t*)dstPtr) + copied;
+		for (size_t i = copied; i < size; ++i) {
+			*dstPtr_++ = 0;
 		}
 	}
 	return COMPV_ERROR_CODE_S_OK;

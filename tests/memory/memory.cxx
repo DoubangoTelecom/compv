@@ -9,7 +9,8 @@ using namespace compv;
 #define testingMode			true
 #define cpuDisable			kCpuFlagNone
 
-#define TEST_COPYNTA	1
+#define TEST_COPYNTA	0
+#define TEST_ZERONTA	1
 
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -24,6 +25,10 @@ int _tmain(int argc, _TCHAR* argv[])
 #if TEST_COPYNTA
 	extern bool TestCopyNTA();
 	COMPV_ASSERT(TestCopyNTA());
+#endif
+#if TEST_ZERONTA
+	extern bool TestZeroNTA();
+	COMPV_ASSERT(TestZeroNTA());
 #endif
 
 	// deInit the engine

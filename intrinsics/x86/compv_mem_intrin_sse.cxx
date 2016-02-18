@@ -109,6 +109,48 @@ void MemCopyNTA_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_A
 	_mm_mfence(); // flush latest WC (Write Combine) buffers to memory
 }
 
+void MemZeroNTA_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, compv_uscalar_t size)
+{
+	__m128i *xmmDst = (__m128i*)dstPtr, xmmZero;
+	compv_uscalar_t count16x16 = (size >> 8);
+	compv_uscalar_t count16x1 = (size >> 4);
+
+	_mm_store_si128(&xmmZero, _mm_setzero_si128());
+
+	if (count16x16 > 0) {
+		count16x1 = ((size - (count16x16 << 8))) >> 4;
+		for (compv_uscalar_t i = 0; i < count16x16; ++i) {
+			_mm_prefetch(((const char*)xmmDst) + 256 + (64 * 0), _MM_HINT_NTA);
+			_mm_prefetch(((const char*)xmmDst) + 256 + (64 * 1), _MM_HINT_NTA);
+			_mm_prefetch(((const char*)xmmDst) + 256 + (64 * 2), _MM_HINT_NTA);
+			_mm_prefetch(((const char*)xmmDst) + 256 + (64 * 3), _MM_HINT_NTA);
+			_mm_stream_si128(&xmmDst[0], xmmZero);
+			_mm_stream_si128(&xmmDst[1], xmmZero);
+			_mm_stream_si128(&xmmDst[2], xmmZero);
+			_mm_stream_si128(&xmmDst[3], xmmZero);
+			_mm_stream_si128(&xmmDst[4], xmmZero);
+			_mm_stream_si128(&xmmDst[5], xmmZero);
+			_mm_stream_si128(&xmmDst[6], xmmZero);
+			_mm_stream_si128(&xmmDst[7], xmmZero);
+			_mm_stream_si128(&xmmDst[8], xmmZero);
+			_mm_stream_si128(&xmmDst[9], xmmZero);
+			_mm_stream_si128(&xmmDst[10], xmmZero);
+			_mm_stream_si128(&xmmDst[11], xmmZero);
+			_mm_stream_si128(&xmmDst[12], xmmZero);
+			_mm_stream_si128(&xmmDst[13], xmmZero);
+			_mm_stream_si128(&xmmDst[14], xmmZero);
+			_mm_stream_si128(&xmmDst[15], xmmZero);
+			xmmDst += 16;
+		}
+	}
+
+	for (compv_uscalar_t i = 0; i < count16x1; ++i) {
+		_mm_stream_si128(xmmDst, xmmZero);
+		++xmmDst;
+	}
+	_mm_mfence(); // flush latest WC (Write Combine) buffers to memory
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC) */

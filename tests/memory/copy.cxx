@@ -1,7 +1,5 @@
 #include <compv/compv_api.h>
 
-#include <vector>
-
 using namespace compv;
 
 #define loopCount	100000 //1000000

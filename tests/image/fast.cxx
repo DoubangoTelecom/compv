@@ -3,7 +3,7 @@
 using namespace compv;
 
 #define THRESHOLD			10
-#define NONMAXIMA			0
+#define NONMAXIMA			1
 #define FASTTYPE			COMPV_FAST_TYPE_9
 
 #define JPEG_IMG_OPENGLBOOK	"C:/Projects/GitHub/pan360/images/opengl_programming_guide_8th_edition.jpg" // OpenGL book
@@ -172,7 +172,7 @@ bool TestFAST()
 {
     CompVObjWrapper<CompVFeatureDete* > fast;
     CompVObjWrapper<CompVImage *> image;
-    std::vector<CompVInterestPoint > interestPoints;
+	CompVObjWrapper<CompVBoxInterestPoint* > interestPoints;
     int32_t val32;
     bool valBool;
     uint64_t timeStart, timeEnd;
@@ -209,18 +209,18 @@ bool TestFAST()
     float sum_scores = 0.f;
     float xf = 0.f;
     float yf = 0.f;
-	for (size_t i = 0; i < interestPoints.size(); ++i) {
-		sum_scores += interestPoints[i].strength;
-		xf += interestPoints[i].xf();
-		yf += interestPoints[i].yf();
+	for (size_t i = 0; i < interestPoints->size(); ++i) {
+		sum_scores += interestPoints->at(i)->strength;
+		xf += interestPoints->at(i)->xf();
+		yf += interestPoints->at(i)->yf();
 	}
 #	if NONMAXIMA == 1
-    COMPV_ASSERT(interestPoints.size() == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_COUNT : ((FASTTYPE == COMPV_FAST_TYPE_12) ? FAST12_T10_NONMAX_COUNT : FAST10_T10_NONMAX_COUNT)));
+	COMPV_ASSERT(interestPoints->size() == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_COUNT : ((FASTTYPE == COMPV_FAST_TYPE_12) ? FAST12_T10_NONMAX_COUNT : FAST10_T10_NONMAX_COUNT)));
     COMPV_ASSERT(sum_scores == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_SCORES : ((FASTTYPE == COMPV_FAST_TYPE_12) ? FAST12_T10_NONMAX_SCORES : FAST10_T10_NONMAX_SCORES)));
 	COMPV_ASSERT(xf == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_XF : FAST12_T10_NONMAX_XF));
 	COMPV_ASSERT(yf == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_YF : FAST12_T10_NONMAX_YF));
 #	else
-    COMPV_ASSERT(interestPoints.size() == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_CORNERS_COUNT : ((FASTTYPE == COMPV_FAST_TYPE_12) ? FAST12_T10_CORNERS_COUNT : FAST10_T10_CORNERS_COUNT)));
+    COMPV_ASSERT(interestPoints->size() == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_CORNERS_COUNT : ((FASTTYPE == COMPV_FAST_TYPE_12) ? FAST12_T10_CORNERS_COUNT : FAST10_T10_CORNERS_COUNT)));
     COMPV_ASSERT(sum_scores == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_CORNERS_SCORES : ((FASTTYPE == COMPV_FAST_TYPE_12) ? FAST12_T10_CORNERS_SCORES : FAST10_T10_CORNERS_SCORES)));
 	COMPV_ASSERT(xf == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_XF : FAST12_T10_XF));
 	COMPV_ASSERT(yf == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_YF : FAST12_T10_YF));

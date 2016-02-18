@@ -21,5 +21,8 @@
     <ClCompile Include="copy.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="zero.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

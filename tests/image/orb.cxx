@@ -15,7 +15,7 @@ bool TestORB()
     CompVObjWrapper<CompVFeatureDete* > dete; // feature detector
     CompVObjWrapper<CompVFeatureDesc* > desc; // feature descriptor
     CompVObjWrapper<CompVImage *> image;
-    std::vector<CompVInterestPoint > interestPoints;
+	CompVObjWrapper<CompVBoxInterestPoint* > interestPoints;
     CompVObjWrapper<CompVFeatureDescriptions*> descriptions;
     int32_t val32;
     bool valBool;

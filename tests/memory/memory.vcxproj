@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClCompile Include="copy.cxx" />
     <ClCompile Include="memory.cxx" />
+    <ClCompile Include="zero.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

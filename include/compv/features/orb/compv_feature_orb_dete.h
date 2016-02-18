@@ -42,7 +42,7 @@ public:
 	// override CompVSettable::set
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
 	// override CompVFeatureDete::process
-	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, std::vector<CompVInterestPoint >& interestPoints);
+	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints);
 
 	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* orb);
 

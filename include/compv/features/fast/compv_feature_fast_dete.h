@@ -48,7 +48,7 @@ struct RangeFAST {
 	compv_scalar_t* rd;
 	compv_scalar_t* rb;
 	compv_scalar_t* me;
-	std::vector<CompVInterestPoint >* interestPoints; // FIXME: before using boxes, implement vector first and compute xf_sum and yf_sum for unittest
+	CompVObjWrapper<CompVBoxInterestPoint* >*points;
 };
 
 class CompVFeatureDeteFAST : public CompVFeatureDete
@@ -62,7 +62,7 @@ public:
 	// override CompVSettable::set
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
 	// override CompVFeatureDete::process
-	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, std::vector<CompVInterestPoint >& interestPoints);
+	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints);
 
 	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* fast);
 
@@ -77,6 +77,9 @@ private:
 	int32_t m_nStride;
 	RangeFAST* m_pRanges;
 	int32_t m_nRanges;
+	CompVObjWrapper<CompVBoxInterestPoint* >*m_pPoints;
+	int32_t m_nPoints;
+	uint8_t* m_pStrengthsMap;
 };
 
 COMPV_NAMESPACE_END()

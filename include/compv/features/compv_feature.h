@@ -28,9 +28,6 @@
 #include "compv/compv_interestpoint.h"
 #include "compv/image/compv_image.h"
 
-#include <map>
-#include <vector>
-
 COMPV_NAMESPACE_BEGIN()
 
 class CompVFeatureDete;
@@ -119,7 +116,7 @@ protected:
 public:
 	virtual ~CompVFeatureDete();
 	COMPV_INLINE int getId() { return m_nId; }
-	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, std::vector<CompVInterestPoint >& interestPoints) = 0;
+	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints) = 0;
 	static COMPV_ERROR_CODE newObj(int deteId, CompVObjWrapper<CompVFeatureDete* >* dete);
 
 private:
@@ -136,7 +133,7 @@ public:
 	COMPV_INLINE int getId() { return m_nId; }
 	virtual COMPV_ERROR_CODE attachDete(CompVObjWrapper<CompVFeatureDete* > dete) { m_AttachedDete = dete; return COMPV_ERROR_CODE_S_OK; }
 	virtual COMPV_ERROR_CODE dettachDete() { m_AttachedDete = NULL; return COMPV_ERROR_CODE_S_OK; }
-	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, const std::vector<CompVInterestPoint >& interestPoints, CompVObjWrapper<CompVFeatureDescriptions*>* descriptions) = 0;
+	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, const CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints, CompVObjWrapper<CompVFeatureDescriptions*>* descriptions) = 0;
 	static COMPV_ERROR_CODE newObj(int descId, CompVObjWrapper<CompVFeatureDesc* >* desc);
 
 protected:

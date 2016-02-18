@@ -106,7 +106,8 @@ COMPV_NAMESPACE_BEGIN()
 // Number of positive continuous pixel to have before declaring a candidate as an interest point
 #define COMPV_FEATURE_DETE_FAST_NON_MAXIMA_SUPP			true
 #define COMPV_FEATURE_DETE_FAST_MAX_FEATURTES			-1 // maximum number of features to retain (<0 means all)
-#define COMPV_FEATURE_DETE_FAST_MIN_SAMPLES_PER_THREAD	250*250
+#define COMPV_FEATURE_DETE_FAST_MIN_SAMPLES_PER_THREAD		(250*250) // number of pixels
+#define COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD	(80*80) // number of interestPoints
 
 // X86
 #if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
@@ -139,17 +140,19 @@ static int32_t COMPV_INLINE __continuousCount(int32_t fasType)
     }
 }
 
-static bool COMPV_INLINE __compareStrengthDec(const CompVInterestPoint& i, const  CompVInterestPoint& j)
+static bool COMPV_INLINE __compareStrengthDec(const CompVInterestPoint* i, const  CompVInterestPoint* j)
 {
-    return (i.strength > j.strength);
+    return (i->strength > j->strength);
 }
-static bool COMPV_INLINE __isNonMaximal(const CompVInterestPoint & point)
+static bool COMPV_INLINE __isNonMaximal(const CompVInterestPoint* point)
 {
-    return point.x < 0;
+    return point->x < 0;
 }
 
 static COMPV_ERROR_CODE FastProcessRange_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 static void FastProcessRange(RangeFAST* range);
+static COMPV_ERROR_CODE FastNMS_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
+static void FastNMS(int32_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end);
 static compv_scalar_t FastData_C(const uint8_t* dataPtr, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, int16_t(&ddarkers16)[16], int16_t(&dbrighters16)[16]);
 static compv_scalar_t FastData16_C(const uint8_t* dataPtr, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, compv_scalar_t(&pfdarkers16)[16], compv_scalar_t(&pfbrighters16)[16], int16_t(&ddarkers16x16)[16][16], int16_t(&dbrighters16x16)[16][16]);
 static compv_scalar_t FastStrengths_C(const uint8_t(&dbrighters)[16], const uint8_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, const uint16_t(&FastXFlags)[16]);
@@ -168,6 +171,9 @@ CompVFeatureDeteFAST::CompVFeatureDeteFAST()
     , m_nStride(0)
     , m_pRanges(NULL)
     , m_nRanges(0)
+	, m_pPoints(0)
+	, m_nPoints(0)
+	, m_pStrengthsMap(NULL)
 {
 
 }
@@ -175,6 +181,11 @@ CompVFeatureDeteFAST::CompVFeatureDeteFAST()
 CompVFeatureDeteFAST::~CompVFeatureDeteFAST()
 {
 	FastRangesFree(m_nRanges, &m_pRanges);
+	for (int i = 0; i < m_nPoints; ++i) {
+		m_pPoints[i] = NULL;
+	}
+	CompVMem::free((void**)&m_pPoints);
+	CompVMem::free((void**)&m_pStrengthsMap);
 }
 
 // overrides CompVSettable::set
@@ -212,7 +223,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::set(int id, const void* valuePtr, size_t 
 }
 
 // overrides CompVFeatureDete::process
-COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*>& image, std::vector<CompVInterestPoint >& interestPoints)
+COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*>& image, CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints)
 {
     COMPV_CHECK_EXP_RETURN(*image == NULL || image->getDataPtr() == NULL || image->getPixelFormat() != COMPV_PIXEL_FORMAT_GRAYSCALE,
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -224,29 +235,37 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
     int32_t height = image->getHeight();
     int32_t stride = image->getStride();
     CompVObjWrapper<CompVThreadDispatcher* >&threadDip = CompVEngine::getThreadDispatcher();
-    int32_t threadsCount = 1;
-    // TODO(dmi): make the allocations once
-    float* strengthsMap = NULL;
+	int32_t threadsCountRange = 1;
 
     COMPV_CHECK_EXP_RETURN(width < 4 || height < 4, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-    if (m_bNonMaximaSupp) {
-        strengthsMap = (float*)CompVMem::calloc(stride * height, sizeof(float)); // Must use calloc to fill the strengths with null values
-        COMPV_CHECK_EXP_RETURN(!strengthsMap, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
-
-    // Free ranges memory if stride is increased
+    // Free ranges and strengthsMap memory if stride is increased
     if (m_nStride < stride) {
 		FastRangesFree(m_nRanges, &m_pRanges);
+		m_nRanges = 0;
+		CompVMem::free((void**)&m_pStrengthsMap);
     }
+
+	if (m_bNonMaximaSupp) {
+		if (!m_pStrengthsMap) {
+			m_pStrengthsMap = (uint8_t*)CompVMem::malloc(stride * height * sizeof(uint8_t)); // Must use calloc to fill the strengths with null values
+			COMPV_CHECK_EXP_RETURN(!m_pStrengthsMap, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		}
+		CompVMem::zero((void*)m_pStrengthsMap, stride * height * sizeof(uint8_t)); //!\ required
+	}
 
     // Update width and height
     m_nWidth = width;
     m_nHeight = height;
     m_nStride = stride;
 
-    // clear old points
-    interestPoints.clear();
+	// create or reset points
+	if (!interestPoints) {
+		COMPV_CHECK_CODE_RETURN(CompVBoxInterestPoint::newObj(&interestPoints));
+	}
+	else {
+		interestPoints->reset();
+	}
 
     COMPV_ALIGN_DEFAULT() const compv_scalar_t pixels16[16] = {
         -(stride * 3) + 0, // 1
@@ -269,22 +288,40 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
 
     // Compute number of threads
     if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-        threadsCount = threadDip->guessNumThreadsDividingAcrossY(stride, height, COMPV_FEATURE_DETE_FAST_MIN_SAMPLES_PER_THREAD);
+		threadsCountRange = threadDip->guessNumThreadsDividingAcrossY(stride, height, COMPV_FEATURE_DETE_FAST_MIN_SAMPLES_PER_THREAD);
     }
 
-    if (threadsCount > 1) {
-        std::vector<std::vector<CompVInterestPoint>> points(threadsCount);
+	// Alloc ranges
+	if (m_nRanges < threadsCountRange) {
+		m_nRanges = 0;
+		COMPV_CHECK_CODE_RETURN(FastRangesAlloc(threadsCountRange, &m_pRanges, m_nStride));
+		m_nRanges = threadsCountRange;
+	}
+
+    if (threadsCountRange > 1) {
         int32_t rowStart = 0, threadHeight, totalHeight = 0;
         uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
 		RangeFAST* pRange;
-        // alloc ranges
-		if (m_nRanges < threadsCount) {
-			m_nRanges = 0;
-			COMPV_CHECK_CODE_RETURN(FastRangesAlloc(threadsCount, &m_pRanges, m_nStride));
-			m_nRanges = threadsCount;
+		// Alloc points
+		if (m_nPoints < threadsCountRange) {
+			for (int i = 0; i < m_nPoints; ++i) {
+				m_pPoints[i] = NULL;
+			}
+			CompVMem::free((void**)&m_pPoints);
+			m_nPoints = 0;
+			m_pPoints = (CompVObjWrapper<CompVBoxInterestPoint *>*)CompVMem::calloc(threadsCountRange, sizeof(CompVObjWrapper<CompVBoxInterestPoint *>));
+			COMPV_CHECK_EXP_RETURN(!m_pPoints, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+			for (int i = 0; i < threadsCountRange; ++i) {
+				COMPV_CHECK_CODE_RETURN(CompVBoxInterestPoint::newObj(&m_pPoints[i]));
+			}
+			m_nPoints = threadsCountRange;
 		}
-        for (int i = 0; i < threadsCount; ++i) {
-            threadHeight = ((height - totalHeight) / (threadsCount - i)) & -2; // the & -2 is to make sure we'll deal with odd heights
+		// Reset points
+		for (int i = 0; i < m_nPoints; ++i) {
+			m_pPoints[i]->reset();
+		}
+        for (int i = 0; i < threadsCountRange; ++i) {
+            threadHeight = ((height - totalHeight) / (threadsCountRange - i)) & -2; // the & -2 is to make sure we'll deal with odd heights
 			pRange = &m_pRanges[i];
 			pRange->IP = dataPtr;
 			pRange->IPprev = NULL;
@@ -296,28 +333,22 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
 			pRange->threshold = m_iThreshold;
 			pRange->N = m_iNumContinuous;
 			pRange->pixels16 = &pixels16;
-			pRange->interestPoints = &points[i];
-            COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX_FEATURE_FAST_DETE, FastProcessRange_AsynExec,
+			pRange->points = &m_pPoints[i];
+            COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, FastProcessRange_AsynExec,
 				COMPV_ASYNCTASK_SET_PARAM_ASISS(pRange),
                 COMPV_ASYNCTASK_SET_PARAM_NULL()));
             rowStart += threadHeight;
             totalHeight += threadHeight;
         }
-        for (int32_t i = 0; i < threadsCount; ++i) {
-            COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX_FEATURE_FAST_DETE));
+        for (int32_t i = 0; i < threadsCountRange; ++i) {
+            COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
         }
         // append the vectors
-        for (int i = 0; i < threadsCount; ++i) {
-            interestPoints.insert(interestPoints.end(), points[i].begin(), points[i].end());
+        for (int i = 0; i < threadsCountRange; ++i) {
+			interestPoints->append(m_pPoints[i]->begin(), m_pPoints[i]->end());
         }
     }
     else {
-        // alloc ranges
-		if (m_nRanges < 1) {
-			COMPV_CHECK_CODE_RETURN(FastRangesAlloc(1, &m_pRanges, m_nStride));
-			m_nRanges = 1;
-		}
-       
 		RangeFAST* pRange = &m_pRanges[0];
 		pRange->IP = dataPtr;
 		pRange->IPprev = NULL;
@@ -329,62 +360,65 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
 		pRange->threshold = m_iThreshold;
 		pRange->N = m_iNumContinuous;
 		pRange->pixels16 = &pixels16;
-		pRange->interestPoints = &interestPoints;
+		pRange->points = &interestPoints;
 		FastProcessRange(pRange);
     }
 
     // Non Maximal Suppression for removing adjacent corners
 	// FIXME: before using boxes, implement vector first and compute xf_sum and yf_sum for unittest
-    if (strengthsMap) {
-        int32_t currentIdx;
-		const CompVInterestPoint* point;
-		for (size_t i = 0; i < interestPoints.size(); ++i) {
-			point = &interestPoints[i];
-			currentIdx = point->x + (stride * point->y);
-			strengthsMap[currentIdx] = (float)point->strength;
+	if (m_bNonMaximaSupp && m_pStrengthsMap && interestPoints->size() > 0) {
+		int32_t currentIdx, threadsCountNMS = 1;
+		CompVInterestPoint *begin, *end = interestPoints->end();
+		// Build strengths map
+		for (begin = interestPoints->begin(); begin < end; ++begin) {
+			currentIdx = (begin->y * stride) + begin->x;
+			m_pStrengthsMap[currentIdx] = (uint8_t)begin->strength;
 		}
-        for (size_t i = 0; i < interestPoints.size(); ++i) {
-            CompVInterestPoint* point = &interestPoints[i];
-            currentIdx = (point->y * stride) + point->x;
-            // No need to chech index as the point always has coords in (x+3, y+3)
-            if (strengthsMap[currentIdx - 1] >= point->strength) { // left
-                point->x = -1;
-            }
-            else if (strengthsMap[currentIdx + 1] >= point->strength) { // right
-                point->x = -1;
-            }
-            else if (strengthsMap[currentIdx - stride - 1] >= point->strength) { // left-top
-                point->x = -1;
-            }
-            else if (strengthsMap[currentIdx - stride] >= point->strength) { // top
-                point->x = -1;
-            }
-            else if (strengthsMap[currentIdx - stride + 1] >= point->strength) { // right-top
-                point->x = -1;
-            }
-            else if (strengthsMap[currentIdx + stride - 1] >= point->strength) { // left-bottom
-                point->x = -1;
-            }
-            else if (strengthsMap[currentIdx + stride] >= point->strength) { // bottom
-                point->x = -1;
-            }
-            else if (strengthsMap[currentIdx + stride + 1] >= point->strength) { // right-bottom
-                point->x = -1;
-            }
-        }
+		// NMS
+		if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
+			threadsCountNMS = (int32_t)(interestPoints->size() / COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD);
+			threadsCountNMS = COMPV_MATH_CLIP3(0, threadDip->getThreadsCount() - 1, threadsCountNMS);
+		}
+		if (threadsCountNMS > 1) {
+			int32_t total = 0, count, size = (int32_t)interestPoints->size();
+			begin = interestPoints->begin();
+			uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+			for (int32_t i = 0; i < threadsCountNMS; ++i) {
+				count = ((size - total) / (threadsCountNMS - i)) & -2;
+				COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, FastNMS_AsynExec,
+					COMPV_ASYNCTASK_SET_PARAM_ASISS(
+					stride,
+					m_pStrengthsMap,
+					begin,
+					begin + count),
+					COMPV_ASYNCTASK_SET_PARAM_NULL()));
+				begin += count;
+				total += count;
+			}
+			for (int32_t i = 0; i < threadsCountNMS; ++i) {
+				COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
+			}
+		}
+		else {
+			FastNMS(stride, m_pStrengthsMap, interestPoints->begin(), interestPoints->end());
+		}
+		
+		// Cleanup strengths map
+		for (begin = interestPoints->begin(); begin < end; ++begin) {
+			currentIdx = (begin->y * stride) + begin->x;
+			m_pStrengthsMap[currentIdx] = 0;
+		}
 
         // Remove non maximal points
-        interestPoints.erase(std::remove_if(interestPoints.begin(), interestPoints.end(), __isNonMaximal), interestPoints.end());
+        interestPoints->erase(__isNonMaximal);
     }
 
     // Retain best "m_iMaxFeatures" features
     // TODO(dmi): use retainBest
-    if (m_iMaxFeatures > 0 && (int32_t)interestPoints.size() > m_iMaxFeatures) {
-        std::sort(interestPoints.begin(), interestPoints.end(), __compareStrengthDec);
-        interestPoints.resize(m_iMaxFeatures);
+    if (m_iMaxFeatures > 0 && (int32_t)interestPoints->size() > m_iMaxFeatures) {
+		interestPoints->sort(__compareStrengthDec); // TODO(dmi): use sortStrengh() which is faster
+        interestPoints->resize(m_iMaxFeatures);
     }
-
-    CompVMem::free((void**)&strengthsMap); // FIXME: alloc once
 
     return err_;
 }
@@ -584,6 +618,8 @@ static void FastProcessRange(RangeFAST* range)
     compv_scalar_t* rb;
     compv_scalar_t* me;
     compv_scalar_t strength;
+	CompVObjWrapper<CompVBoxInterestPoint* >&points = *(range->points);
+	int32_t stride = range->stride;
 	void(*FastData16Row)(
 		const uint8_t* IP,
 		const uint8_t* IPprev,
@@ -702,7 +738,7 @@ static void FastProcessRange(RangeFAST* range)
 						strength = FastStrengths((const uint8_t(&)[16])dbrighters16xAlign[rta], (const uint8_t(&)[16])ddarkers16xAlign[rta], (r1 & (1 << r)) ? (*pfbrighters16)[r] : 0, (r0 & (1 << r)) ? (*pfdarkers16)[r] : 0, range->N, FastXFlags);
 						if (strength > 0) {
 							// strength is defined as the maximum value of t that makes p a corner
-							range->interestPoints->push_back(CompVInterestPoint(3 + m + r, rowstart + j, (float)(strength + range->threshold - 1)));
+							points->push(CompVInterestPoint(3 + m + r, rowstart + j, (float)(strength + range->threshold - 1)));
 						}
 					}
 				}
@@ -713,7 +749,7 @@ static void FastProcessRange(RangeFAST* range)
 						strength = FastStrengths((const uint8_t(&)[16])dbrighters16xAlign[rta], (const uint8_t(&)[16])ddarkers16xAlign[rta], (r1 & (1 << r)) ? ((*pfbrighters16)[r] >> 16) : 0, (r0 & (1 << r)) ? ((*pfdarkers16)[r] >> 16) : 0, range->N, FastXFlags);
 						if (strength > 0) {
 							// strength is defined as the maximum value of t that makes p a corner
-							range->interestPoints->push_back(CompVInterestPoint(3 + m + r + 16, rowstart + j, (float)(strength + range->threshold - 1))); // FIXME: do not forget the + 16
+							points->push(CompVInterestPoint(3 + m + r + 16, rowstart + j, (float)(strength + range->threshold - 1)));
 						}
 					}
 				}
@@ -738,6 +774,51 @@ static COMPV_ERROR_CODE FastProcessRange_AsynExec(const struct compv_asynctoken_
     RangeFAST* range = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, RangeFAST*);
     FastProcessRange(range);
     return COMPV_ERROR_CODE_S_OK;
+}
+
+static COMPV_ERROR_CODE FastNMS_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
+{
+	int32_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, int32_t);
+	const uint8_t* pcStrengthsMap = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, const uint8_t*);
+	CompVInterestPoint* begin = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, CompVInterestPoint*);
+	CompVInterestPoint* end = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, CompVInterestPoint*);
+	FastNMS(stride, pcStrengthsMap, begin, end);
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+static void FastNMS(int32_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end)
+{
+	uint8_t strength;
+	int32_t currentIdx;
+	for (; begin < end; ++begin) {
+		strength = (uint8_t)begin->strength;
+		currentIdx = (begin->y * stride) + begin->x;
+		// No need to chech index as the point always has coords in (x+3, y+3)
+		if (pcStrengthsMap[currentIdx - 1] >= strength) { // left
+			begin->x = -1;
+		}
+		else if (pcStrengthsMap[currentIdx + 1] >= strength) { // right
+			begin->x = -1;
+		}
+		else if (pcStrengthsMap[currentIdx - stride - 1] >= strength) { // left-top
+			begin->x = -1;
+		}
+		else if (pcStrengthsMap[currentIdx - stride] >= strength) { // top
+			begin->x = -1;
+		}
+		else if (pcStrengthsMap[currentIdx - stride + 1] >= strength) { // right-top
+			begin->x = -1;
+		}
+		else if (pcStrengthsMap[currentIdx + stride - 1] >= strength) { // left-bottom
+			begin->x = -1;
+		}
+		else if (pcStrengthsMap[currentIdx + stride] >= strength) { // bottom
+			begin->x = -1;
+		}
+		else if (pcStrengthsMap[currentIdx + stride + 1] >= strength) { // right-bottom
+			begin->x = -1;
+		}
+	}
 }
 
 static COMPV_ERROR_CODE FastRangesAlloc(int32_t nRanges, RangeFAST** ppRanges, int32_t stride)
@@ -767,6 +848,7 @@ static COMPV_ERROR_CODE FastRangesAlloc(int32_t nRanges, RangeFAST** ppRanges, i
 		COMPV_CHECK_EXP_RETURN(!pRanges[i].rb, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 		pRanges[i].me = (compv_scalar_t*)CompVMem::malloc(stride * 1 * sizeof(compv_scalar_t));
 		COMPV_CHECK_EXP_RETURN(!pRanges[i].me, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		pRanges[i].points = NULL;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

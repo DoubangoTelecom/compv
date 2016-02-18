@@ -82,6 +82,19 @@ public:
 		++m_nSize;
 		return COMPV_ERROR_CODE_S_OK;
 	}
+	COMPV_ERROR_CODE append(const T* begin, const T* end) { // append up2end, "end" excluded
+		if (begin && begin > end) { // begin = null means empty array
+			COMPV_CHECK_EXP_RETURN(!begin || !end || (begin > end), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+			size_t newSize = size() + (end - begin);
+			if (capacity() < newSize) {
+				size_t newCapacity = newSize;
+				COMPV_CHECK_CODE_RETURN(alloc(newCapacity));
+			}
+			CompVMem::copyNTA((void*)(m_pMem + size()), (void*)begin, (end - begin)*m_nItemSize);
+			m_nSize = newSize;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
 	void free() {
 		CompVMem::free((void**)&m_pMem);
 		m_nSize = 0;
@@ -98,6 +111,7 @@ public:
 
 	COMPV_INLINE size_t size()const { return m_nSize; }
 	COMPV_INLINE size_t capacity()const { return m_nCapacity; }
+	COMPV_INLINE bool empty() { return (size() == 0); }
 
 	COMPV_INLINE T* begin()const { return m_pMem; }
 	COMPV_INLINE T* end()const { return (m_pMem + m_nSize); }
