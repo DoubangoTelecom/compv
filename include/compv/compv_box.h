@@ -83,7 +83,7 @@ public:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_ERROR_CODE append(const T* begin, const T* end) { // append up2end, "end" excluded
-		if (begin && begin > end) { // begin = null means empty array
+		if (begin && begin < end) { // begin = null means empty array
 			COMPV_CHECK_EXP_RETURN(!begin || !end || (begin > end), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 			size_t newSize = size() + (end - begin);
 			if (capacity() < newSize) {
@@ -103,7 +103,9 @@ public:
 	// Reset all items without freeing the allocated memory
 	// Usefull if you want to re-use the list
 	void resize(size_t nNewSize = 0) {
-		m_nSize = nNewSize;
+		if (nNewSize < m_nSize) {
+			m_nSize = nNewSize;
+		}
 	}
 	void reset() {
 		resize(0);
