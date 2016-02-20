@@ -44,27 +44,27 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_ASSERT(x) do { bool __b_ret = (x); assert(__b_ret); } while(0)
 
 #if defined(COMPV_INTRINSIC)
-#	define COMPV_EXEC_IFDEF_INTRIN(EXPR) do { if (CompVCpu::isIntrinsicsEnabled()) { (EXPR); } } while(0)
+#	define COMPV_EXEC_IFDEF_INTRIN(EXPR) do { if (compv::CompVCpu::isIntrinsicsEnabled()) { (EXPR); } } while(0)
 #else
 #	define COMPV_EXEC_IFDEF_INTRIN(EXPR) 
 #endif
 #if defined(COMPV_INTRINSIC) && defined(COMPV_ARCH_X86)
-#	define COMPV_EXEC_IFDEF_INTRIN_X86(EXPR) do { if (CompVCpu::isIntrinsicsEnabled()) { (EXPR); } } while(0)
+#	define COMPV_EXEC_IFDEF_INTRIN_X86(EXPR) do { if (compv::CompVCpu::isIntrinsicsEnabled()) { (EXPR); } } while(0)
 #else
 #	define COMPV_EXEC_IFDEF_INTRIN_X86(EXPR) 	
 #endif
 #if defined(COMPV_ASM)
-#	define COMPV_EXEC_IFDEF_ASM(EXPR) do { if (CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
+#	define COMPV_EXEC_IFDEF_ASM(EXPR) do { if (compv::CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
 #else
 #	define COMPV_EXEC_IFDEF_ASM(EXPR) 	
 #endif
 #if defined(COMPV_ASM) && defined(COMPV_ARCH_X64)
-#	define COMPV_EXEC_IFDEF_ASM_X64(EXPR) do { if (CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
+#	define COMPV_EXEC_IFDEF_ASM_X64(EXPR) do { if (compv::CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
 #else
 #	define COMPV_EXEC_IFDEF_ASM_X64(EXPR) 	
 #endif
 #if defined(COMPV_ASM) && defined(COMPV_ARCH_X86)
-#	define COMPV_EXEC_IFDEF_ASM_X86(EXPR) do { if (CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
+#	define COMPV_EXEC_IFDEF_ASM_X86(EXPR) do { if (compv::CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
 #else
 #	define COMPV_EXEC_IFDEF_ASM_X86(EXPR) 	
 #endif

@@ -33,6 +33,7 @@ COMPV_NAMESPACE_BEGIN()
 struct RangeFAST {
 	const uint8_t* IP;
 	const uint8_t* IPprev;
+	uint8_t* strengths;
 	int32_t rowStart;
 	int32_t rowEnd;
 	int32_t rowCount;
@@ -41,14 +42,6 @@ struct RangeFAST {
 	int32_t threshold;
 	int32_t N;
 	const compv_scalar_t(*pixels16)[16];
-	compv_scalar_t(*pfdarkers16)[16];
-	compv_scalar_t(*pfbrighters16)[16];
-	uint8_t(*ddarkers16x32)[16][32];
-	uint8_t(*dbrighters16x32)[16][32];
-	compv_scalar_t* rd;
-	compv_scalar_t* rb;
-	compv_scalar_t* me;
-	CompVObjWrapper<CompVBoxInterestPoint* >*points;
 };
 
 class CompVFeatureDeteFAST : public CompVFeatureDete
@@ -77,8 +70,6 @@ private:
 	int32_t m_nStride;
 	RangeFAST* m_pRanges;
 	int32_t m_nRanges;
-	CompVObjWrapper<CompVBoxInterestPoint* >*m_pPoints;
-	int32_t m_nPoints;
 	uint8_t* m_pStrengthsMap;
 };
 

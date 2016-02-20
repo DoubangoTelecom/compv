@@ -30,6 +30,8 @@ COMPV_NAMESPACE_BEGIN()
 #	define COMPV_MEMALIGN_ALWAYS 1
 #endif
 
+// Important: you may have issues if you enable memory checking with multi-threading option
+// because std::map isn't thread-safe
 #if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0)) && !defined(COMPV_MEM_CHECK)
 #	define COMPV_MEM_CHECK 1
 #endif
@@ -338,14 +340,14 @@ void CompVMem::freeAligned(void** ptr)
         if (!isSpecial(ptr_)) {
             COMPV_DEBUG_FATAL("Using freeAligned on no-special address: %x", (uintptr_t)ptr_);
         }
+		else {
+			CompVMem::s_Specials.erase((uintptr_t)ptr_);
+		}
 #endif
 #if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
         _aligned_free(ptr_);
 #else
         ::free((((uint8_t*)ptr_) - ((uint8_t*)ptr_)[-1]));
-#endif
-#	if COMPV_MEM_CHECK
-        CompVMem::s_Specials.erase((uintptr_t)ptr_);
 #endif
         *ptr = NULL;
     }
@@ -422,12 +424,7 @@ size_t CompVMem::getSpecialsCount()
 
 bool CompVMem::isEmpty()
 {
-#	if COMPV_MEM_CHECK
     return CompVMem::getSpecialsCount() == 0;
-#else
-	COMPV_DEBUG_INFO("Memory check disabled. Returning false for CompVMem::isEmpty() function");
-	return false;
-#endif
 }
 
 COMPV_NAMESPACE_END()
