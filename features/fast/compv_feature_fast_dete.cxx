@@ -366,15 +366,35 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
     }
 
 	// Build interest points
-	uint8_t* strengths = m_pStrengthsMap + (3 * stride);
-	uint8_t thresholdMinus1 = (uint8_t)m_iThreshold - 1;
+	// m_pStrengthsMap is cacheline=aligned which means its aligned on 32bytes
+	uint8_t *strengths = m_pStrengthsMap + (3 * stride), *begin1;
+	uint32_t *begin4, *end4;
+	int32_t width_div4 = width >> 2;
+	const uint8_t thresholdMinus1 = (uint8_t)m_iThreshold - 1;
 	for (int32_t j = 3; j < height - 3; ++j) {
-		for (int32_t i = 3; i < width - 3; ++i) {
-			if (strengths[i]) {
-				strengths[i] += thresholdMinus1;
-				interestPoints->push(CompVInterestPoint(i, j, (float)strengths[i]));
+		begin4 = (uint32_t*)(strengths + 0); // i can start at +3 but we prefer +0 because strengths[0] is cacheline-aligned 
+		end4 = (begin4 + width_div4);
+		do {
+			if (*begin4) {
+				begin1 = (uint8_t*)begin4;
+				if (*begin1) {
+					*begin1 += thresholdMinus1;
+					interestPoints->push(CompVInterestPoint((int32_t)(begin1 - strengths), j, (float)*begin1));
+				}
+				if (*++begin1) {
+					*begin1 += thresholdMinus1;
+					interestPoints->push(CompVInterestPoint((int32_t)(begin1 - strengths), j, (float)*begin1));
+				}
+				if (*++begin1) {
+					*begin1 += thresholdMinus1;
+					interestPoints->push(CompVInterestPoint((int32_t)(begin1 - strengths), j, (float)*begin1));
+				}
+				if (*++begin1) {
+					*begin1 += thresholdMinus1;
+					interestPoints->push(CompVInterestPoint((int32_t)(begin1 - strengths), j, (float)*begin1));
+				}
 			}
-		}
+		} while (begin4++ < end4);
 		strengths += stride;
 	}
 
@@ -413,13 +433,6 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
         // Remove non maximal points
         interestPoints->erase(__isNonMaximal);
     }
-
-	// cleanup strengths map
-	//CompVInterestPoint *begin, *end = interestPoints->end();
-	//for (begin = interestPoints->begin(); begin < end; ++begin) {
-	//	currentIdx = (begin->y * stride) + begin->x;
-	//	m_pStrengthsMap[currentIdx] = 0;
-	//}
 
     // Retain best "m_iMaxFeatures" features
     // TODO(dmi): use retainBest
