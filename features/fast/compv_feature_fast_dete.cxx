@@ -100,13 +100,26 @@ extern "C" COMPV_GEXTERN const COMPV_ALIGN_DEFAULT() uint16_t Fast12Flags[16] = 
 
 // X86
 #if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
-extern "C" void FastData16Row_Asm_X86_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv::compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(SSE) compv::compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(SSE) uint8_t* ddarkers16x16, COMPV_ALIGNED(SSE) uint8_t* dbrighters16x16, compv::compv_scalar_t* rd, compv::compv_scalar_t* rb, compv::compv_scalar_t* me);
 extern "C" void FastData32Row_Asm_X86_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, COMPV_ALIGNED(AVX2) compv::compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(AVX2) compv::compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(AVX2) uint8_t* ddarkers16x32, COMPV_ALIGNED(AVX2) uint8_t* dbrighters16x32, compv::compv_scalar_t* rd, compv::compv_scalar_t* rb, compv::compv_scalar_t* me);
+
+extern "C" void FastData16Row_Asm_X86_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv::compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(SSE) compv::compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(SSE) uint8_t* ddarkers16x16, COMPV_ALIGNED(SSE) uint8_t* dbrighters16x16, compv::compv_scalar_t* rd, compv::compv_scalar_t* rb, compv::compv_scalar_t* me);
+
+extern "C" void Fast9Strengths16_Asm_CMOV_X86_SSE41(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N);
+extern "C" void Fast9Strengths16_Asm_X86_SSE41(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N);
+extern "C" void Fast12Strengths16_Asm_CMOV_X86_SSE41(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N);
+extern "C" void Fast12Strengths16_Asm_X86_SSE41(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N);
 #endif
 // X64
 #if defined(COMPV_ARCH_X64) && defined(COMPV_ASM)
-extern "C" void FastData16Row_Asm_X64_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv::compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(SSE) compv::compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(SSE) uint8_t* ddarkers16x16, COMPV_ALIGNED(SSE) uint8_t* dbrighters16x16, compv::compv_scalar_t* rd, compv::compv_scalar_t* rb, compv::compv_scalar_t* me);
 extern "C" void FastData32Row_Asm_X64_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, COMPV_ALIGNED(AVX2) compv::compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(AVX2) compv::compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(AVX2) uint8_t* ddarkers16x32, COMPV_ALIGNED(AVX2) uint8_t* dbrighters16x32, compv::compv_scalar_t* rd, compv::compv_scalar_t* rb, compv::compv_scalar_t* me);
+
+extern "C" void FastData16Row_Asm_X64_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv::compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(SSE) compv::compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(SSE) uint8_t* ddarkers16x16, COMPV_ALIGNED(SSE) uint8_t* dbrighters16x16, compv::compv_scalar_t* rd, compv::compv_scalar_t* rb, compv::compv_scalar_t* me);
+
+extern "C" void Fast9Strengths16_Asm_CMOV_X64_SSE41(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N);
+extern "C" void Fast9Strengths16_Asm_X64_SSE41(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N);
+extern "C" void Fast12Strengths16_Asm_CMOV_X64_SSE41(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N);
+extern "C" void Fast12Strengths16_Asm_X64_SSE41(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N);
+
 #endif
 
 extern "C" COMPV_GEXTERN void FastStrengths16(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x16, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x16, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
@@ -118,6 +131,12 @@ extern "C" COMPV_GEXTERN void FastStrengths16(compv::compv_scalar_t rbrighters, 
 	}
 	if (compv::CompVCpu::isSupported(compv::kCpuFlagSSE41)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths16_Intrin_SSE41);
+		COMPV_EXEC_IFDEF_ASM_X86(FastStrengths = (N == 9)
+			? (compv::CompVCpu::isSupported(compv::kCpuFlagCMOV) ? Fast9Strengths16_Asm_CMOV_X86_SSE41 : Fast9Strengths16_Asm_X86_SSE41)
+			: (compv::CompVCpu::isSupported(compv::kCpuFlagCMOV) ? Fast12Strengths16_Asm_CMOV_X86_SSE41 : Fast12Strengths16_Asm_X86_SSE41));
+		COMPV_EXEC_IFDEF_ASM_X64(FastStrengths = (N == 9)
+			? (compv::CompVCpu::isSupported(compv::kCpuFlagCMOV) ? Fast9Strengths16_Asm_CMOV_X64_SSE41 : Fast9Strengths16_Asm_X64_SSE41)
+			: (compv::CompVCpu::isSupported(compv::kCpuFlagCMOV) ? Fast12Strengths16_Asm_CMOV_X64_SSE41 : Fast12Strengths16_Asm_X64_SSE41));
 	}
 	FastStrengths(rbrighters, rdarkers, dbrighters16x16, ddarkers16x16, fbrighters16, fdarkers16, strengths16, N);
 }
@@ -696,16 +715,29 @@ static void FastNMS(int32_t stride, const uint8_t* pcStrengthsMap, CompVInterest
 		strength = (uint8_t)begin->strength;
 		currentIdx = (begin->y * stride) + begin->x;
 		// No need to chech index as the point always has coords in (x+3, y+3)
-		if (
-			(pcStrengthsMap[currentIdx - 1] >= strength) // left
-			|| (pcStrengthsMap[currentIdx + 1] >= strength) // right
-			|| (pcStrengthsMap[currentIdx - stride - 1] >= strength) // left-top
-			|| (pcStrengthsMap[currentIdx - stride] >= strength) // top
-			|| (pcStrengthsMap[currentIdx - stride + 1] >= strength) // right-top
-			|| (pcStrengthsMap[currentIdx + stride - 1] >= strength) // left-bottom
-			|| (pcStrengthsMap[currentIdx + stride] >= strength) // bottom
-			|| (pcStrengthsMap[currentIdx + stride + 1] >= strength) // right-bottom
-			) { 
+		// If-Else faster than a single if(|||||||)
+		if (pcStrengthsMap[currentIdx - 1] >= strength) { // left
+			begin->x = -1;
+		}
+		else if (pcStrengthsMap[currentIdx + 1] >= strength) { // right
+			begin->x = -1;
+		}
+		else if (pcStrengthsMap[currentIdx - stride - 1] >= strength) { // left-top
+			begin->x = -1;
+		}
+		else if (pcStrengthsMap[currentIdx - stride] >= strength) { // top
+			begin->x = -1;
+		}
+		else if (pcStrengthsMap[currentIdx - stride + 1] >= strength) { // right-top
+			begin->x = -1;
+		}
+		else if (pcStrengthsMap[currentIdx + stride - 1] >= strength) { // left-bottom
+			begin->x = -1;
+		}
+		else if (pcStrengthsMap[currentIdx + stride] >= strength) { // bottom
+			begin->x = -1;
+		}
+		else if (pcStrengthsMap[currentIdx + stride + 1] >= strength) { // right-bottom
 			begin->x = -1;
 		}
 	}
