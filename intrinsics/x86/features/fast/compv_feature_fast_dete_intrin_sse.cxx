@@ -443,7 +443,7 @@ void FastStrengths16_Intrin_SSE2(compv_scalar_t rbrighters, compv_scalar_t rdark
 	for (unsigned p = 0; p < 16; ++p) {
 		maxnbrighter = 0, maxndarker = 0;
 		// Brighters
-		if ((rb & (1 << p)) && (*fbrighters16)[p]) {
+		if (rb & (1 << p)) {
 			// brighters flags
 			_mm_store_si128(&xmmFbrighters, _mm_set1_epi16((short)(*fbrighters16)[p]));
 
@@ -474,7 +474,7 @@ void FastStrengths16_Intrin_SSE2(compv_scalar_t rbrighters, compv_scalar_t rdark
 		}
 
 		// Darkers
-		if ((rd & (1 << p)) && (*fdarkers16)[p]) {
+		if (rd & (1 << p)) {
 			// darkers flags
 			_mm_store_si128(&xmmFdarkers, _mm_set1_epi16((short)(*fdarkers16)[p]));
 
@@ -521,7 +521,7 @@ void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdar
     int lowMin, highMin;
 	uint16_t rb = (uint16_t)rbrighters, rd = (uint16_t)rdarkers;
 	const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
-    const uint8_t(&kFastArcs)[16][16] = (N == 12 ? kFast12Arcs : kFast9Arcs);
+	const uint8_t(&kFastArcs)[16][16] = (N == 9 ? kFast9Arcs : kFast12Arcs);
 
     // FAST hard-coded flags
     _mm_store_si128(&xmmFastXFlagsLow, _mm_load_si128((__m128i*)(FastXFlags + 0)));
@@ -548,7 +548,7 @@ void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdar
 	for (unsigned p = 0; p < 16; ++p) {
 		maxnbrighter = 0, maxndarker = 0;
 		// Brighters
-		if ((rb & (1 << p)) && (*fbrighters16)[p]) {
+		if (rb & (1 << p)) {
 			// brighters flags
 			_mm_store_si128(&xmmFbrighters, _mm_set1_epi16((short)(*fbrighters16)[p]));
 
@@ -571,7 +571,7 @@ void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdar
 		}
 
 		// Darkers
-		if ((rd & (1 << p)) && (*fdarkers16)[p]) {
+		if (rd & (1 << p)) {
 			// darkers flags
 			_mm_store_si128(&xmmFdarkers, _mm_set1_epi16((short)(*fdarkers16)[p]));
 
