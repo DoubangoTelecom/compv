@@ -31,8 +31,6 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-compv_scalar_t FastData_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, COMPV_ALIGNED(SSE) uint8_t(&ddarkers16)[16], COMPV_ALIGNED(SSE) uint8_t(&dbrighters16)[16]);
-
 void FastData16Row_Intrin_SSE2(
 	const uint8_t* IP,
 	const uint8_t* IPprev,

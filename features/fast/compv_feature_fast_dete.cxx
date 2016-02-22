@@ -102,7 +102,7 @@ extern "C" COMPV_GEXTERN const COMPV_ALIGN_DEFAULT() uint16_t Fast12Flags[16] = 
 #if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
 extern "C" void FastData32Row_Asm_X86_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, COMPV_ALIGNED(AVX2) compv::compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(AVX2) compv::compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(AVX2) uint8_t* ddarkers16x32, COMPV_ALIGNED(AVX2) uint8_t* dbrighters16x32, compv::compv_scalar_t* rd, compv::compv_scalar_t* rb, compv::compv_scalar_t* me);
 
-extern "C" void FastData16Row_Asm_X86_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv::compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(SSE) compv::compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(SSE) uint8_t* ddarkers16x16, COMPV_ALIGNED(SSE) uint8_t* dbrighters16x16, compv::compv_scalar_t* rd, compv::compv_scalar_t* rb, compv::compv_scalar_t* me);
+extern "C" void FastData16Row_Asm_X86_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, uint8_t* strengths, compv::compv_scalar_t* me);
 
 extern "C" void Fast9Strengths16_Asm_CMOV_X86_SSE41(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N);
 extern "C" void Fast9Strengths16_Asm_X86_SSE41(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N);
@@ -113,7 +113,7 @@ extern "C" void Fast12Strengths16_Asm_X86_SSE41(compv::compv_scalar_t rbrighters
 #if defined(COMPV_ARCH_X64) && defined(COMPV_ASM)
 extern "C" void FastData32Row_Asm_X64_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, COMPV_ALIGNED(AVX2) compv::compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(AVX2) compv::compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(AVX2) uint8_t* ddarkers16x32, COMPV_ALIGNED(AVX2) uint8_t* dbrighters16x32, compv::compv_scalar_t* rd, compv::compv_scalar_t* rb, compv::compv_scalar_t* me);
 
-extern "C" void FastData16Row_Asm_X64_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, COMPV_ALIGNED(SSE) compv::compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(SSE) compv::compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(SSE) uint8_t* ddarkers16x16, COMPV_ALIGNED(SSE) uint8_t* dbrighters16x16, compv::compv_scalar_t* rd, compv::compv_scalar_t* rb, compv::compv_scalar_t* me);
+extern "C" void FastData16Row_Asm_X64_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, uint8_t* strengths, compv::compv_scalar_t* me);
 
 extern "C" void Fast9Strengths16_Asm_CMOV_X64_SSE41(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N);
 extern "C" void Fast9Strengths16_Asm_X64_SSE41(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N);
@@ -138,7 +138,25 @@ extern "C" COMPV_GEXTERN void FastStrengths16(compv::compv_scalar_t rbrighters, 
 			? (compv::CompVCpu::isSupported(compv::kCpuFlagCMOV) ? Fast9Strengths16_Asm_CMOV_X64_SSE41 : Fast9Strengths16_Asm_X64_SSE41)
 			: (compv::CompVCpu::isSupported(compv::kCpuFlagCMOV) ? Fast12Strengths16_Asm_CMOV_X64_SSE41 : Fast12Strengths16_Asm_X64_SSE41));
 	}
+	//if (rbrighters == 30) {
+	//	int kaka = 0; // FIXME
+	//}
+	//if (rdarkers == 2) {
+	//	int kaka = 0; // FIXME
+	//}
 	FastStrengths(rbrighters, rdarkers, dbrighters16x16, ddarkers16x16, fbrighters16, fdarkers16, strengths16, N);
+	// FIXME
+	//const uint8_t(*_strengths16)[16] = (const uint8_t(*)[16])strengths16;
+	//const uint8_t(*_ddarkers16x16)[16][16] = (const uint8_t(*)[16][16])ddarkers16x16;
+	//const uint8_t(*_dbrighters16x16)[16][16] = (const uint8_t(*)[16][16])dbrighters16x16;
+	//for (int i = 0; i < 16; ++i) {
+	//	if ((*_strengths16)[i]) {
+	//		int kaka = 0; // FIXME
+	//	}
+	//}
+	//if (rbrighters == 30) {
+	//	int kaka = 0; // FIXME
+	//}
 }
 
 COMPV_NAMESPACE_BEGIN()
@@ -436,6 +454,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
 
     // Retain best "m_iMaxFeatures" features
     // TODO(dmi): use retainBest
+	// FIXME: sort not tested yet
     if (m_iMaxFeatures > 0 && (int32_t)interestPoints->size() > m_iMaxFeatures) {
 		interestPoints->sort(__compareStrengthDec); // TODO(dmi): use sortStrengh() which is faster
         interestPoints->resize(m_iMaxFeatures);
@@ -646,10 +665,9 @@ static void FastProcessRange(RangeFAST* range)
 	// FIXME: C++ version doesn't work
 
     if (CompVCpu::isSupported(kCpuFlagSSE2)) {
-        //COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = FastStrengths16_Intrin_SSE2);
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastData16Row = FastData16Row_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-		//COMPV_EXEC_IFDEF_ASM_X86((FastData16Row = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-		//COMPV_EXEC_IFDEF_ASM_X64((FastData16Row = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+		COMPV_EXEC_IFDEF_ASM_X86((FastData16Row = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+		COMPV_EXEC_IFDEF_ASM_X64((FastData16Row = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
     }
    // if (CompVCpu::isSupported(kCpuFlagSSE41)) {
    //     COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = FastStrengths_SSE41);
@@ -689,6 +707,9 @@ static void FastProcessRange(RangeFAST* range)
 	static uint64_t kaka = 0;
     
     for (j = minj; j < maxj; ++j) {
+		//if (j == 195) {
+		//	int kaka = 0;//FIXME
+		//}
 		FastData16Row(IP, IPprev, kalign, (*range->pixels16), range->N, range->threshold, strengths, NULL);
 
 		// remove extra samples

@@ -1,4 +1,5 @@
 ; Copyright (C) 2016 Doubango Telecom <https://www.doubango.org>
+; Copyright (C) 2016 Mamadou DIOP
 ;
 ; This file is part of Open Source ComputerVision (a.k.a CompV) project.
 ; Source code hosted at https://github.com/DoubangoTelecom/compv
@@ -323,6 +324,113 @@
 %endif
   %define COMPV_YASM_UNSHADOW_ARGS mov rsp, rbp
 %endif
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Macros added by Doubango Telecom to support function calling in ASM code
+; Please note that System V requires the stack to be aligned on 16byte
+; before calling the function. We can unconditionally (Windows or SytemV) align the stack as it won't hurt.
+; All parameters must be pointers or scalars (same size as the registers)
+; https://en.wikipedia.org/wiki/X86_calling_conventions#List_of_x86_calling_conventions
+; https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/LowLevelABI/130-IA-32_Function_Calling_Conventions/IA32.html
+; https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/LowLevelABI/140-x86-64_Function_Calling_Conventions/x86_64.html#//apple_ref/doc/uid/TP40005035-SW1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+%if COMPV_YASM_ABI_IS_32BIT
+	; arg(0) -> temp register to use to align the stack on 16bytes. E.g. 'rax', this register isn't preserved
+	; arg(1) -> number of parameters to reserve
+	%macro COMPV_YASM_RESERVE_PARAMS 2
+		%ifdef reserved_params_count
+			%error 'You must unreserve params first.'
+		%endif
+		%define reserved_params_count %2
+		COMPV_YASM_ALIGN_STACK 16, %1
+		sub rsp, 4 * (reserved_params_count + 0) ; +1 for the function
+	%endm
+	; No argument
+	%macro COMPV_YASM_UNRESERVE_PARAMS 0
+		%ifndef reserved_params_count
+			%error 'COMPV_YASM_UNRESERVE_PARAMS must be tied to COMPV_YASM_RESERVE_PARAMS'
+		%endif
+		add rsp, 4 * (reserved_params_count + 0) ; +1 for the function
+		COMPV_YASM_UNALIGN_STACK
+		%undef reserved_params_count
+	%endm
+%else ; X64
+	%if COMPV_YASM_WIN64
+		; %1 -> temp register to use to align the stack on 16bytes. E.g. 'rax', this register isn't preserved
+		; %2 -> number of parameters to reserve
+		%macro COMPV_YASM_RESERVE_PARAMS 2
+			%ifdef reserved_params_count
+				%error 'You must unreserve params first.'
+			%endif
+			; Win64 requires a minimum of 32 bytes (#4 params) shadow space on stack even if we have less than #4 params
+			%if %2 < 4
+				%define reserved_params_count 4
+			%else
+				%define reserved_params_count %2
+			%endif
+			COMPV_YASM_ALIGN_STACK 16, %1
+			sub rsp, 8 * (reserved_params_count + 0) ; +1 for the function
+		%endm
+		; No argument
+		%macro COMPV_YASM_UNRESERVE_PARAMS 0
+			%ifndef reserved_params_count
+				%error 'COMPV_YASM_UNRESERVE_PARAMS must be tied to COMPV_YASM_RESERVE_PARAMS'
+			%endif
+			add rsp, 8 * (reserved_params_count + 0) ; +1 for the function
+			COMPV_YASM_UNALIGN_STACK
+			%undef reserved_params_count
+		%endm
+	%else ; SystemV
+		; do not forget to save/restore rdi and rsi
+		%error 'Not implemented'
+	%endif
+%endif
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; %1 -> parameter index. Zero-based [0-n].
+; %2 -> parameter value
+%macro set_param 2
+	%ifndef reserved_params_count
+			%error 'Parameters must be reserved first'
+	%endif
+	%if %1 >= reserved_params_count
+		%error 'OutofBound index parameter'
+	%endif
+	%if COMPV_YASM_ABI_IS_32BIT
+		mov [rsp+4*%1], %2 ; Arguments are passed RTL (RightToLeft). The "+4" is to skip the function address.
+	%else ; X64
+		%if COMPV_YASM_WIN64
+			%if %1 == 0
+				mov rcx, %2
+			%elif %1 == 1
+				mov rdx, %2
+			%elif %1 == 2
+				mov r8, %2
+			%elif %1 == 3
+				mov r9, %2
+			%else
+				mov [rsp+8*%1], %2
+			%endif
+		%else ; SystemV
+			%if %1 == 0
+				mov rdi, %2
+			%elif %1 == 1
+				mov rsi, %2
+			%elif %1 == 2
+				mov rdx, %2
+			%elif %1 == 3
+				mov rcx, %2
+			%elif %1 == 4
+				mov r8, %2
+			%elif %1 == 5
+				mov r9, %2
+			%else
+				mov [rsp+8*%1], %2
+			%endif
+		%endif
+	%endif
+%endm
+
 
 ; Win64 ABI requires that XMM6:XMM15 are callee saved
 ; COMPV_YASM_SAVE_XMM n, [u]

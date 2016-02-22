@@ -60,9 +60,9 @@ private:
 
 /* INFO */
 #define COMPV_DEBUG_INFO(FMT, ...)		\
-	if (CompVDebugMgr::getLevel() >= COMPV_DEBUG_LEVEL_INFO) { \
-		if (CompVDebugMgr::getInfoFuncPtr()) \
-			CompVDebugMgr::getInfoFuncPtr()(CompVDebugMgr::getArgData(), "*[COMPV INFO]: " FMT "\n", ##__VA_ARGS__); \
+	if (compv::CompVDebugMgr::getLevel() >= compv::COMPV_DEBUG_LEVEL_INFO) { \
+		if (compv::CompVDebugMgr::getInfoFuncPtr()) \
+			compv::CompVDebugMgr::getInfoFuncPtr()(compv::CompVDebugMgr::getArgData(), "*[COMPV INFO]: " FMT "\n", ##__VA_ARGS__); \
 				else \
 			fprintf(stderr, "*[COMPV INFO]: " FMT "\n", ##__VA_ARGS__); \
 			}
@@ -70,18 +70,18 @@ private:
 
 /* WARN */
 #define COMPV_DEBUG_WARN(FMT, ...)		\
-	if (CompVDebugMgr::getLevel() >= COMPV_DEBUG_LEVEL_WARN) { \
-		if (CompVDebugMgr::getWarnFuncPtr()) \
-			CompVDebugMgr::getWarnFuncPtr()(CompVDebugMgr::getArgData(), "**[COMPV WARN]: function: \"%s()\" \nfile: \"%s\" \nline: \"%u\" \nMSG: " FMT "\n", __FUNCTION__,  __FILE__, __LINE__, ##__VA_ARGS__); \
+	if (compv::CompVDebugMgr::getLevel() >= compv::COMPV_DEBUG_LEVEL_WARN) { \
+		if (compv::CompVDebugMgr::getWarnFuncPtr()) \
+			compv::CompVDebugMgr::getWarnFuncPtr()(compv::CompVDebugMgr::getArgData(), "**[COMPV WARN]: function: \"%s()\" \nfile: \"%s\" \nline: \"%u\" \nMSG: " FMT "\n", __FUNCTION__,  __FILE__, __LINE__, ##__VA_ARGS__); \
 				else \
 			fprintf(stderr, "**[COMPV WARN]: function: \"%s()\" \nfile: \"%s\" \nline: \"%u\" \nMSG: " FMT "\n", __FUNCTION__,  __FILE__, __LINE__, ##__VA_ARGS__); \
 		}
 
 /* ERROR */
 #define COMPV_DEBUG_ERROR(FMT, ...) 		\
-	if (CompVDebugMgr::getLevel() >= COMPV_DEBUG_LEVEL_ERROR) { \
-		if (CompVDebugMgr::getErrorFuncPtr()) \
-			CompVDebugMgr::getErrorFuncPtr()(CompVDebugMgr::getArgData(), "***[COMPV ERROR]: function: \"%s()\" \nfile: \"%s\" \nline: \"%u\" \nMSG: " FMT "\n", __FUNCTION__,  __FILE__, __LINE__, ##__VA_ARGS__); \
+	if (compv::CompVDebugMgr::getLevel() >= compv::COMPV_DEBUG_LEVEL_ERROR) { \
+		if (compv::CompVDebugMgr::getErrorFuncPtr()) \
+			compv::CompVDebugMgr::getErrorFuncPtr()(compv::CompVDebugMgr::getArgData(), "***[COMPV ERROR]: function: \"%s()\" \nfile: \"%s\" \nline: \"%u\" \nMSG: " FMT "\n", __FUNCTION__,  __FILE__, __LINE__, ##__VA_ARGS__); \
 				else \
 			fprintf(stderr, "***[COMPV ERROR]: function: \"%s()\" \nfile: \"%s\" \nline: \"%u\" \nMSG: " FMT "\n", __FUNCTION__,  __FILE__, __LINE__, ##__VA_ARGS__); \
 		}
@@ -89,9 +89,9 @@ private:
 
 /* FATAL */
 #define COMPV_DEBUG_FATAL(FMT, ...) 		\
-	if (CompVDebugMgr::getLevel() >= COMPV_DEBUG_LEVEL_FATAL) { \
-		if (CompVDebugMgr::getFatalFuncPtr()) \
-			CompVDebugMgr::getFatalFuncPtr()(CompVDebugMgr::getArgData(), "****[COMPV FATAL]: function: \"%s()\" \nfile: \"%s\" \nline: \"%u\" \nMSG: " FMT "\n", __FUNCTION__,  __FILE__, __LINE__, ##__VA_ARGS__); \
+	if (compv::CompVDebugMgr::getLevel() >= compv::COMPV_DEBUG_LEVEL_FATAL) { \
+		if (compv::CompVDebugMgr::getFatalFuncPtr()) \
+			compv::CompVDebugMgr::getFatalFuncPtr()(compv::CompVDebugMgr::getArgData(), "****[COMPV FATAL]: function: \"%s()\" \nfile: \"%s\" \nline: \"%u\" \nMSG: " FMT "\n", __FUNCTION__,  __FILE__, __LINE__, ##__VA_ARGS__); \
 				else \
 			fprintf(stderr, "****[COMPV FATAL]: function: \"%s()\" \nfile: \"%s\" \nline: \"%u\" \nMSG: " FMT "\n", __FUNCTION__,  __FILE__, __LINE__, ##__VA_ARGS__); \
 		}

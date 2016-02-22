@@ -37,63 +37,6 @@ extern "C" void FastStrengths16(compv::compv_scalar_t rbrighters, compv::compv_s
 
 COMPV_NAMESPACE_BEGIN()
 
-// FUNCTION NOT USED
-compv_scalar_t FastData_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, COMPV_ALIGNED(SSE) uint8_t(&ddarkers16)[16], COMPV_ALIGNED(SSE) uint8_t(&dbrighters16)[16])
-{
-    compv_scalar_t r = 0;
-
-    uint8_t brighter = CompVMathUtils::clampPixel8(dataPtr[0] + (int16_t)threshold);
-    uint8_t darker = CompVMathUtils::clampPixel8(dataPtr[0] - (int16_t)threshold);
-
-    bool popcntHard = CompVCpu::isSupported(kCpuFlagPOPCNT);
-
-    COMPV_ALIGN_SSE() uint8_t temp16[16] = {
-        dataPtr[pixels16[0]],
-        dataPtr[pixels16[1]],
-        dataPtr[pixels16[2]],
-        dataPtr[pixels16[3]],
-        dataPtr[pixels16[4]],
-        dataPtr[pixels16[5]],
-        dataPtr[pixels16[6]],
-        dataPtr[pixels16[7]],
-        dataPtr[pixels16[8]],
-        dataPtr[pixels16[9]],
-        dataPtr[pixels16[10]],
-        dataPtr[pixels16[11]],
-        dataPtr[pixels16[12]],
-        dataPtr[pixels16[13]],
-        dataPtr[pixels16[14]],
-        dataPtr[pixels16[15]],
-    };
-    __m128i xmmTemp16, xmmDarker, xmmBrighter, xmmZeros, xmmFF;
-    __m128i (&xmmDdarkers16) = (__m128i (&))ddarkers16;
-    __m128i (&xmmDbrighters16) = (__m128i (&))dbrighters16;
-
-    _mm_store_si128(&xmmZeros, _mm_setzero_si128());
-
-    _mm_store_si128(&xmmTemp16, _mm_load_si128((__m128i*)temp16));
-    _mm_store_si128(&xmmDarker, _mm_set1_epi8((int8_t)darker));
-    _mm_store_si128(&xmmBrighter, _mm_set1_epi8((int8_t)brighter));
-    _mm_store_si128(&xmmFF, _mm_cmpeq_epi8(xmmZeros, xmmZeros));
-
-    _mm_store_si128(&xmmDdarkers16, _mm_subs_epu8(xmmDarker, xmmTemp16));
-    _mm_store_si128(&xmmDbrighters16, _mm_subs_epu8(xmmTemp16, xmmBrighter));
-    // _mm_cmpgt_epi8 uses signed integers while we're using unsigned values and there is no _mm_cmpneq_epi8.
-    *pfdarkers = _mm_movemask_epi8(_mm_andnot_si128(_mm_cmpeq_epi8(xmmDdarkers16, xmmZeros), xmmFF));
-    *pfbrighters = _mm_movemask_epi8(_mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16, xmmZeros), xmmFF));
-
-    // The flags contain int values with the highest bits always set -> we must use popcnt16 or at least popcnt32(flag&0xFFFF)
-    compv_scalar_t popcnt0 = *pfdarkers ? compv_popcnt16(popcntHard, (unsigned short)*pfdarkers) : 0; // FIXME: popcnt
-    compv_scalar_t popcnt1 = *pfbrighters ? compv_popcnt16(popcntHard, (unsigned short)*pfbrighters) : 0; // FIXME: popcnt
-    if (popcnt0 >= N) {
-        r |= (1 << 0);
-    }
-    if (popcnt1 >= N) {
-        r |= (1 << 16);
-    }
-    return r;
-}
-
 void FastData16Row_Intrin_SSE2(
     const uint8_t* IP,
     const uint8_t* IPprev,
@@ -176,8 +119,7 @@ void FastData16Row_Intrin_SSE2(
         sum += s;
 
         /*  Speed-Test-2 */
-        if (N == 12 ? sum >= 3 : sum >= 2) { // FIXME
-            colDarkersFlags = 0, colBrightersFlags = 0;
+        if (N == 12 ? sum >= 3 : sum >= 2) {
             loadB = false, loadD = false;
 
             // Check whether to load Brighters
@@ -197,6 +139,8 @@ void FastData16Row_Intrin_SSE2(
             if (!(loadB || loadD)) {
                 goto next;
             }
+
+			colDarkersFlags = 0, colBrightersFlags = 0;
 
             _mm_store_si128(&xmmDataPtr[1], _mm_loadu_si128((__m128i*)&IP[pixels16[1]]));
             _mm_store_si128(&xmmDataPtr[2], _mm_loadu_si128((__m128i*)&IP[pixels16[2]]));
