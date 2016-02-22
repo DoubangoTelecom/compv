@@ -39,13 +39,9 @@ void FastData32Row_Intrin_AVX2(
 	const compv_scalar_t(&pixels16)[16],
 	compv_scalar_t N,
 	compv_scalar_t threshold,
-	COMPV_ALIGNED(AVX) compv_scalar_t(*pfdarkers16)[16],
-	COMPV_ALIGNED(AVX) compv_scalar_t(*pfbrighters16)[16],
-	COMPV_ALIGNED(AVX) uint8_t* ddarkers16x32,
-	COMPV_ALIGNED(AVX) uint8_t* dbrighters16x32,
-	compv_scalar_t* rd,
-	compv_scalar_t* rb,
+	uint8_t* strengths,
 	compv_scalar_t* me);
+void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(AVX) const uint8_t* dbrighters16x32, COMPV_ALIGNED(AVX) const uint8_t* ddarkers16x32, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv_scalar_t N);
 
 COMPV_NAMESPACE_END()
 

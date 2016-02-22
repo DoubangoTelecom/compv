@@ -33,7 +33,7 @@ extern "C" const COMPV_ALIGN_DEFAULT() uint8_t kFast12Arcs[16][16];
 extern "C" const COMPV_ALIGN_DEFAULT() uint16_t Fast9Flags[16];
 extern "C" const COMPV_ALIGN_DEFAULT() uint16_t Fast12Flags[16];
 
-extern "C" void FastStrengths16(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x16, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x16, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N);
+extern "C" void FastStrengths16(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x16, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x16, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N);
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -120,8 +120,6 @@ void FastData16Row_Intrin_SSE2(
 
         /*  Speed-Test-2 */
         if (N == 12 ? sum >= 3 : sum >= 2) {
-            loadB = false, loadD = false;
-
             // Check whether to load Brighters
             _mm_store_si128(&xmm0, _mm_or_si128(xmmBrightersFlags[0], xmmBrightersFlags[8]));
             _mm_store_si128(&xmm1, _mm_or_si128(xmmBrightersFlags[4], xmmBrightersFlags[12]));

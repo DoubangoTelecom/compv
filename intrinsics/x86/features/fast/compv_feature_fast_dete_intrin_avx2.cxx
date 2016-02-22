@@ -24,22 +24,26 @@
 #include "compv/image/conv/compv_imageconv_common.h"
 #include "compv/compv_simd_globals.h"
 
+#include <algorithm>
+
+extern "C" const COMPV_ALIGN_DEFAULT() uint8_t kFast9Arcs[16][16];
+extern "C" const COMPV_ALIGN_DEFAULT() uint8_t kFast12Arcs[16][16];
+extern "C" const COMPV_ALIGN_DEFAULT() uint16_t Fast9Flags[16];
+extern "C" const COMPV_ALIGN_DEFAULT() uint16_t Fast12Flags[16];
+
+extern "C" void FastStrengths32(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(AVX) const uint8_t* dbrighters16x32, COMPV_ALIGNED(AVX) const uint8_t* ddarkers16x32, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv::compv_scalar_t N);
+
 COMPV_NAMESPACE_BEGIN()
 
 void FastData32Row_Intrin_AVX2(
-    const uint8_t* IP,
-    const uint8_t* IPprev,
-    compv_scalar_t width,
-    const compv_scalar_t(&pixels16)[16],
-    compv_scalar_t N,
-    compv_scalar_t threshold,
-    COMPV_ALIGNED(AVX) compv_scalar_t(*pfdarkers16)[16],
-    COMPV_ALIGNED(AVX) compv_scalar_t(*pfbrighters16)[16],
-    COMPV_ALIGNED(AVX) uint8_t* ddarkers16x32,
-    COMPV_ALIGNED(AVX) uint8_t* dbrighters16x32,
-    compv_scalar_t* rd,
-    compv_scalar_t* rb,
-    compv_scalar_t* me)
+	const uint8_t* IP,
+	const uint8_t* IPprev,
+	compv_scalar_t width,
+	const compv_scalar_t(&pixels16)[16],
+	compv_scalar_t N,
+	compv_scalar_t threshold,
+	uint8_t* strengths,
+	compv_scalar_t* me)
 {
     _mm256_zeroupper();
     compv_scalar_t i, sum, s;
@@ -48,8 +52,11 @@ void FastData32Row_Intrin_AVX2(
     bool loadB, loadD;
     __m256i ymm0, ymm1, ymm2, ymm3, ymmThreshold, ymmBrighter, ymmDarker, ymmZeros, ymmFF, ymmDarkersFlags[16], ymmBrightersFlags[16], ymmDataPtr[16], ymmOnes, ymmNMinusOne, ymm254;
 
-    __m256i (*ymmDdarkers16x32)[16] = (__m256i (*)[16])ddarkers16x32;
-    __m256i (*ymmDbrighters16x32)[16] = (__m256i (*)[16])dbrighters16x32;
+	compv_scalar_t fdarkers16[16];
+	compv_scalar_t fbrighters16[16];
+	__m256i ymmDdarkers16x32[16];
+	__m256i ymmDbrighters16x32[16];
+	__m256i *ymmStrengths = (__m256i *)strengths;
 
     _mm256_store_si256(&ymmZeros, _mm256_setzero_si256());
     _mm256_store_si256(&ymmThreshold, _mm256_set1_epi8((uint8_t)threshold));
@@ -59,8 +66,7 @@ void FastData32Row_Intrin_AVX2(
     _mm256_store_si256(&ymm254, _mm256_load_si256((__m256i*)k254_u8)); // not(254) = 00000001 -> used to select the lowest bit in each u8
 
     for (i = 0; i < width; i += 32) {
-        (*rb) = 0;
-        (*rd) = 0;
+		_mm256_storeu_si256(ymmStrengths, ymmZeros); // cleanup strengths
         _mm256_store_si256(&ymm0, _mm256_loadu_si256((__m256i*)IP));
         _mm256_store_si256(&ymmBrighter, _mm256_adds_epu8(ymm0, ymmThreshold));
         _mm256_store_si256(&ymmDarker, _mm256_subs_epu8(ymm0, ymmThreshold));
@@ -75,14 +81,14 @@ void FastData32Row_Intrin_AVX2(
         // compare I1 and I9 aka 0 and 8
         _mm256_store_si256(&ymm0, _mm256_loadu_si256((__m256i*)&IP[pixels16[0]]));
         _mm256_store_si256(&ymm1, _mm256_loadu_si256((__m256i*)&IP[pixels16[8]]));
-        _mm256_store_si256(&(*ymmDdarkers16x32)[0], _mm256_subs_epu8(ymmDarker, ymm0));
-        _mm256_store_si256(&(*ymmDdarkers16x32)[8], _mm256_subs_epu8(ymmDarker, ymm1));
-        _mm256_store_si256(&(*ymmDbrighters16x32)[0], _mm256_subs_epu8(ymm0, ymmBrighter));
-        _mm256_store_si256(&(*ymmDbrighters16x32)[8], _mm256_subs_epu8(ymm1, ymmBrighter));
-        _mm256_store_si256(&ymmDarkersFlags[0], _mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[0], ymmZeros), ymmFF));
-        _mm256_store_si256(&ymmDarkersFlags[8], _mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[8], ymmZeros), ymmFF));
-        _mm256_store_si256(&ymmBrightersFlags[0], _mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[0], ymmZeros), ymmFF));
-        _mm256_store_si256(&ymmBrightersFlags[8], _mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[8], ymmZeros), ymmFF));
+        _mm256_store_si256(&ymmDdarkers16x32[0], _mm256_subs_epu8(ymmDarker, ymm0));
+        _mm256_store_si256(&ymmDdarkers16x32[8], _mm256_subs_epu8(ymmDarker, ymm1));
+        _mm256_store_si256(&ymmDbrighters16x32[0], _mm256_subs_epu8(ymm0, ymmBrighter));
+        _mm256_store_si256(&ymmDbrighters16x32[8], _mm256_subs_epu8(ymm1, ymmBrighter));
+        _mm256_store_si256(&ymmDarkersFlags[0], _mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[0], ymmZeros), ymmFF));
+        _mm256_store_si256(&ymmDarkersFlags[8], _mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[8], ymmZeros), ymmFF));
+        _mm256_store_si256(&ymmBrightersFlags[0], _mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[0], ymmZeros), ymmFF));
+        _mm256_store_si256(&ymmBrightersFlags[8], _mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[8], ymmZeros), ymmFF));
         _mm256_store_si256(&ymm0, _mm256_or_si256(ymmDarkersFlags[0], ymmBrightersFlags[0]));
         _mm256_store_si256(&ymm1, _mm256_or_si256(ymmDarkersFlags[8], ymmBrightersFlags[8]));
         sum = (_mm256_movemask_epi8(ymm0) ? 1 : 0) + (_mm256_movemask_epi8(ymm1) ? 1 : 0);
@@ -93,14 +99,14 @@ void FastData32Row_Intrin_AVX2(
         // compare I5 and I13 aka 4 and 12
         _mm256_store_si256(&ymm0, _mm256_loadu_si256((__m256i*)&IP[pixels16[4]]));
         _mm256_store_si256(&ymm1, _mm256_loadu_si256((__m256i*)&IP[pixels16[12]]));
-        _mm256_store_si256(&(*ymmDdarkers16x32)[4], _mm256_subs_epu8(ymmDarker, ymm0));
-        _mm256_store_si256(&(*ymmDdarkers16x32)[12], _mm256_subs_epu8(ymmDarker, ymm1));
-        _mm256_store_si256(&(*ymmDbrighters16x32)[4], _mm256_subs_epu8(ymm0, ymmBrighter));
-        _mm256_store_si256(&(*ymmDbrighters16x32)[12], _mm256_subs_epu8(ymm1, ymmBrighter));
-        _mm256_store_si256(&ymmDarkersFlags[4], _mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[4], ymmZeros), ymmFF));
-        _mm256_store_si256(&ymmDarkersFlags[12], _mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[12], ymmZeros), ymmFF));
-        _mm256_store_si256(&ymmBrightersFlags[4], _mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[4], ymmZeros), ymmFF));
-        _mm256_store_si256(&ymmBrightersFlags[12], _mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[12], ymmZeros), ymmFF));
+        _mm256_store_si256(&ymmDdarkers16x32[4], _mm256_subs_epu8(ymmDarker, ymm0));
+        _mm256_store_si256(&ymmDdarkers16x32[12], _mm256_subs_epu8(ymmDarker, ymm1));
+        _mm256_store_si256(&ymmDbrighters16x32[4], _mm256_subs_epu8(ymm0, ymmBrighter));
+        _mm256_store_si256(&ymmDbrighters16x32[12], _mm256_subs_epu8(ymm1, ymmBrighter));
+        _mm256_store_si256(&ymmDarkersFlags[4], _mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[4], ymmZeros), ymmFF));
+        _mm256_store_si256(&ymmDarkersFlags[12], _mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[12], ymmZeros), ymmFF));
+        _mm256_store_si256(&ymmBrightersFlags[4], _mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[4], ymmZeros), ymmFF));
+        _mm256_store_si256(&ymmBrightersFlags[12], _mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[12], ymmZeros), ymmFF));
         _mm256_store_si256(&ymm2, _mm256_or_si256(ymmDarkersFlags[4], ymmBrightersFlags[4]));
         _mm256_store_si256(&ymm3, _mm256_or_si256(ymmDarkersFlags[12], ymmBrightersFlags[12]));
         s = (_mm256_movemask_epi8(ymm2) ? 1 : 0) + (_mm256_movemask_epi8(ymm3) ? 1 : 0);
@@ -111,9 +117,6 @@ void FastData32Row_Intrin_AVX2(
 
         /*  Speed-Test-2 */
         if (N == 12 ? sum >= 3 : sum >= 2) {
-            colDarkersFlags = 0, colBrightersFlags = 0;
-            loadB = false, loadD = false;
-
             // Check wheter to load Brighters
             _mm256_store_si256(&ymm0, _mm256_or_si256(ymmBrightersFlags[0], ymmBrightersFlags[8]));
             _mm256_store_si256(&ymm1, _mm256_or_si256(ymmBrightersFlags[4], ymmBrightersFlags[12]));
@@ -131,6 +134,8 @@ void FastData32Row_Intrin_AVX2(
             if (!(loadB || loadD)) {
                 goto next;
             }
+
+			colDarkersFlags = 0, colBrightersFlags = 0;
 
             _mm256_store_si256(&ymmDataPtr[1], _mm256_loadu_si256((__m256i*)&IP[pixels16[1]]));
             _mm256_store_si256(&ymmDataPtr[2], _mm256_loadu_si256((__m256i*)&IP[pixels16[2]]));
@@ -151,31 +156,31 @@ void FastData32Row_Intrin_AVX2(
 
             if (loadD) {
                 // Compute ymmDdarkers
-                _mm256_store_si256(&(*ymmDdarkers16x32)[1], _mm256_subs_epu8(ymmDarker, ymmDataPtr[1]));
-                _mm256_store_si256(&(*ymmDdarkers16x32)[2], _mm256_subs_epu8(ymmDarker, ymmDataPtr[2]));
-                _mm256_store_si256(&(*ymmDdarkers16x32)[3], _mm256_subs_epu8(ymmDarker, ymmDataPtr[3]));
-                _mm256_store_si256(&(*ymmDdarkers16x32)[5], _mm256_subs_epu8(ymmDarker, ymmDataPtr[5]));
-                _mm256_store_si256(&(*ymmDdarkers16x32)[6], _mm256_subs_epu8(ymmDarker, ymmDataPtr[6]));
-                _mm256_store_si256(&(*ymmDdarkers16x32)[7], _mm256_subs_epu8(ymmDarker, ymmDataPtr[7]));
-                _mm256_store_si256(&(*ymmDdarkers16x32)[9], _mm256_subs_epu8(ymmDarker, ymmDataPtr[9]));
-                _mm256_store_si256(&(*ymmDdarkers16x32)[10], _mm256_subs_epu8(ymmDarker, ymmDataPtr[10]));
-                _mm256_store_si256(&(*ymmDdarkers16x32)[11], _mm256_subs_epu8(ymmDarker, ymmDataPtr[11]));
-                _mm256_store_si256(&(*ymmDdarkers16x32)[13], _mm256_subs_epu8(ymmDarker, ymmDataPtr[13]));
-                _mm256_store_si256(&(*ymmDdarkers16x32)[14], _mm256_subs_epu8(ymmDarker, ymmDataPtr[14]));
-                _mm256_store_si256(&(*ymmDdarkers16x32)[15], _mm256_subs_epu8(ymmDarker, ymmDataPtr[15]));
+                _mm256_store_si256(&ymmDdarkers16x32[1], _mm256_subs_epu8(ymmDarker, ymmDataPtr[1]));
+                _mm256_store_si256(&ymmDdarkers16x32[2], _mm256_subs_epu8(ymmDarker, ymmDataPtr[2]));
+                _mm256_store_si256(&ymmDdarkers16x32[3], _mm256_subs_epu8(ymmDarker, ymmDataPtr[3]));
+                _mm256_store_si256(&ymmDdarkers16x32[5], _mm256_subs_epu8(ymmDarker, ymmDataPtr[5]));
+                _mm256_store_si256(&ymmDdarkers16x32[6], _mm256_subs_epu8(ymmDarker, ymmDataPtr[6]));
+                _mm256_store_si256(&ymmDdarkers16x32[7], _mm256_subs_epu8(ymmDarker, ymmDataPtr[7]));
+                _mm256_store_si256(&ymmDdarkers16x32[9], _mm256_subs_epu8(ymmDarker, ymmDataPtr[9]));
+                _mm256_store_si256(&ymmDdarkers16x32[10], _mm256_subs_epu8(ymmDarker, ymmDataPtr[10]));
+                _mm256_store_si256(&ymmDdarkers16x32[11], _mm256_subs_epu8(ymmDarker, ymmDataPtr[11]));
+                _mm256_store_si256(&ymmDdarkers16x32[13], _mm256_subs_epu8(ymmDarker, ymmDataPtr[13]));
+                _mm256_store_si256(&ymmDdarkers16x32[14], _mm256_subs_epu8(ymmDarker, ymmDataPtr[14]));
+                _mm256_store_si256(&ymmDdarkers16x32[15], _mm256_subs_epu8(ymmDarker, ymmDataPtr[15]));
                 /* Compute flags (not really, we have the inverse: 0xFF when zero, the not will be applied later) */
-                _mm256_store_si256(&ymmDarkersFlags[1], _mm256_cmpeq_epi8((*ymmDdarkers16x32)[1], ymmZeros));
-                _mm256_store_si256(&ymmDarkersFlags[2], _mm256_cmpeq_epi8((*ymmDdarkers16x32)[2], ymmZeros));
-                _mm256_store_si256(&ymmDarkersFlags[3], _mm256_cmpeq_epi8((*ymmDdarkers16x32)[3], ymmZeros));
-                _mm256_store_si256(&ymmDarkersFlags[5], _mm256_cmpeq_epi8((*ymmDdarkers16x32)[5], ymmZeros));
-                _mm256_store_si256(&ymmDarkersFlags[6], _mm256_cmpeq_epi8((*ymmDdarkers16x32)[6], ymmZeros));
-                _mm256_store_si256(&ymmDarkersFlags[7], _mm256_cmpeq_epi8((*ymmDdarkers16x32)[7], ymmZeros));
-                _mm256_store_si256(&ymmDarkersFlags[9], _mm256_cmpeq_epi8((*ymmDdarkers16x32)[9], ymmZeros));
-                _mm256_store_si256(&ymmDarkersFlags[10], _mm256_cmpeq_epi8((*ymmDdarkers16x32)[10], ymmZeros));
-                _mm256_store_si256(&ymmDarkersFlags[11], _mm256_cmpeq_epi8((*ymmDdarkers16x32)[11], ymmZeros));
-                _mm256_store_si256(&ymmDarkersFlags[13], _mm256_cmpeq_epi8((*ymmDdarkers16x32)[13], ymmZeros));
-                _mm256_store_si256(&ymmDarkersFlags[14], _mm256_cmpeq_epi8((*ymmDdarkers16x32)[14], ymmZeros));
-                _mm256_store_si256(&ymmDarkersFlags[15], _mm256_cmpeq_epi8((*ymmDdarkers16x32)[15], ymmZeros));
+                _mm256_store_si256(&ymmDarkersFlags[1], _mm256_cmpeq_epi8(ymmDdarkers16x32[1], ymmZeros));
+                _mm256_store_si256(&ymmDarkersFlags[2], _mm256_cmpeq_epi8(ymmDdarkers16x32[2], ymmZeros));
+                _mm256_store_si256(&ymmDarkersFlags[3], _mm256_cmpeq_epi8(ymmDdarkers16x32[3], ymmZeros));
+                _mm256_store_si256(&ymmDarkersFlags[5], _mm256_cmpeq_epi8(ymmDdarkers16x32[5], ymmZeros));
+                _mm256_store_si256(&ymmDarkersFlags[6], _mm256_cmpeq_epi8(ymmDdarkers16x32[6], ymmZeros));
+                _mm256_store_si256(&ymmDarkersFlags[7], _mm256_cmpeq_epi8(ymmDdarkers16x32[7], ymmZeros));
+                _mm256_store_si256(&ymmDarkersFlags[9], _mm256_cmpeq_epi8(ymmDdarkers16x32[9], ymmZeros));
+                _mm256_store_si256(&ymmDarkersFlags[10], _mm256_cmpeq_epi8(ymmDdarkers16x32[10], ymmZeros));
+                _mm256_store_si256(&ymmDarkersFlags[11], _mm256_cmpeq_epi8(ymmDdarkers16x32[11], ymmZeros));
+                _mm256_store_si256(&ymmDarkersFlags[13], _mm256_cmpeq_epi8(ymmDdarkers16x32[13], ymmZeros));
+                _mm256_store_si256(&ymmDarkersFlags[14], _mm256_cmpeq_epi8(ymmDdarkers16x32[14], ymmZeros));
+                _mm256_store_si256(&ymmDarkersFlags[15], _mm256_cmpeq_epi8(ymmDdarkers16x32[15], ymmZeros));
                 // Convert flags from 0xFF to 0x01
                 // 0 4 8 12 already computed and contains the right values (not the inverse)
                 _mm256_store_si256(&ymmDarkersFlags[0], _mm256_andnot_si256(ymm254, ymmDarkersFlags[0]));
@@ -219,31 +224,31 @@ void FastData32Row_Intrin_AVX2(
 
             if (loadB) {
                 /* Compute Dbrighters */
-                _mm256_store_si256(&(*ymmDbrighters16x32)[1], _mm256_subs_epu8(ymmDataPtr[1], ymmBrighter));
-                _mm256_store_si256(&(*ymmDbrighters16x32)[2], _mm256_subs_epu8(ymmDataPtr[2], ymmBrighter));
-                _mm256_store_si256(&(*ymmDbrighters16x32)[3], _mm256_subs_epu8(ymmDataPtr[3], ymmBrighter));
-                _mm256_store_si256(&(*ymmDbrighters16x32)[5], _mm256_subs_epu8(ymmDataPtr[5], ymmBrighter));
-                _mm256_store_si256(&(*ymmDbrighters16x32)[6], _mm256_subs_epu8(ymmDataPtr[6], ymmBrighter));
-                _mm256_store_si256(&(*ymmDbrighters16x32)[7], _mm256_subs_epu8(ymmDataPtr[7], ymmBrighter));
-                _mm256_store_si256(&(*ymmDbrighters16x32)[9], _mm256_subs_epu8(ymmDataPtr[9], ymmBrighter));
-                _mm256_store_si256(&(*ymmDbrighters16x32)[10], _mm256_subs_epu8(ymmDataPtr[10], ymmBrighter));
-                _mm256_store_si256(&(*ymmDbrighters16x32)[11], _mm256_subs_epu8(ymmDataPtr[11], ymmBrighter));
-                _mm256_store_si256(&(*ymmDbrighters16x32)[13], _mm256_subs_epu8(ymmDataPtr[13], ymmBrighter));
-                _mm256_store_si256(&(*ymmDbrighters16x32)[14], _mm256_subs_epu8(ymmDataPtr[14], ymmBrighter));
-                _mm256_store_si256(&(*ymmDbrighters16x32)[15], _mm256_subs_epu8(ymmDataPtr[15], ymmBrighter));
+                _mm256_store_si256(&ymmDbrighters16x32[1], _mm256_subs_epu8(ymmDataPtr[1], ymmBrighter));
+                _mm256_store_si256(&ymmDbrighters16x32[2], _mm256_subs_epu8(ymmDataPtr[2], ymmBrighter));
+                _mm256_store_si256(&ymmDbrighters16x32[3], _mm256_subs_epu8(ymmDataPtr[3], ymmBrighter));
+                _mm256_store_si256(&ymmDbrighters16x32[5], _mm256_subs_epu8(ymmDataPtr[5], ymmBrighter));
+                _mm256_store_si256(&ymmDbrighters16x32[6], _mm256_subs_epu8(ymmDataPtr[6], ymmBrighter));
+                _mm256_store_si256(&ymmDbrighters16x32[7], _mm256_subs_epu8(ymmDataPtr[7], ymmBrighter));
+                _mm256_store_si256(&ymmDbrighters16x32[9], _mm256_subs_epu8(ymmDataPtr[9], ymmBrighter));
+                _mm256_store_si256(&ymmDbrighters16x32[10], _mm256_subs_epu8(ymmDataPtr[10], ymmBrighter));
+                _mm256_store_si256(&ymmDbrighters16x32[11], _mm256_subs_epu8(ymmDataPtr[11], ymmBrighter));
+                _mm256_store_si256(&ymmDbrighters16x32[13], _mm256_subs_epu8(ymmDataPtr[13], ymmBrighter));
+                _mm256_store_si256(&ymmDbrighters16x32[14], _mm256_subs_epu8(ymmDataPtr[14], ymmBrighter));
+                _mm256_store_si256(&ymmDbrighters16x32[15], _mm256_subs_epu8(ymmDataPtr[15], ymmBrighter));
                 /* Compute flags (not really, we have the inverse: 0xFF when zero, the not will be applied later) */
-                _mm256_store_si256(&ymmBrightersFlags[1], _mm256_cmpeq_epi8((*ymmDbrighters16x32)[1], ymmZeros));
-                _mm256_store_si256(&ymmBrightersFlags[2], _mm256_cmpeq_epi8((*ymmDbrighters16x32)[2], ymmZeros));
-                _mm256_store_si256(&ymmBrightersFlags[3], _mm256_cmpeq_epi8((*ymmDbrighters16x32)[3], ymmZeros));
-                _mm256_store_si256(&ymmBrightersFlags[5], _mm256_cmpeq_epi8((*ymmDbrighters16x32)[5], ymmZeros));
-                _mm256_store_si256(&ymmBrightersFlags[6], _mm256_cmpeq_epi8((*ymmDbrighters16x32)[6], ymmZeros));
-                _mm256_store_si256(&ymmBrightersFlags[7], _mm256_cmpeq_epi8((*ymmDbrighters16x32)[7], ymmZeros));
-                _mm256_store_si256(&ymmBrightersFlags[9], _mm256_cmpeq_epi8((*ymmDbrighters16x32)[9], ymmZeros));
-                _mm256_store_si256(&ymmBrightersFlags[10], _mm256_cmpeq_epi8((*ymmDbrighters16x32)[10], ymmZeros));
-                _mm256_store_si256(&ymmBrightersFlags[11], _mm256_cmpeq_epi8((*ymmDbrighters16x32)[11], ymmZeros));
-                _mm256_store_si256(&ymmBrightersFlags[13], _mm256_cmpeq_epi8((*ymmDbrighters16x32)[13], ymmZeros));
-                _mm256_store_si256(&ymmBrightersFlags[14], _mm256_cmpeq_epi8((*ymmDbrighters16x32)[14], ymmZeros));
-                _mm256_store_si256(&ymmBrightersFlags[15], _mm256_cmpeq_epi8((*ymmDbrighters16x32)[15], ymmZeros));
+                _mm256_store_si256(&ymmBrightersFlags[1], _mm256_cmpeq_epi8(ymmDbrighters16x32[1], ymmZeros));
+                _mm256_store_si256(&ymmBrightersFlags[2], _mm256_cmpeq_epi8(ymmDbrighters16x32[2], ymmZeros));
+                _mm256_store_si256(&ymmBrightersFlags[3], _mm256_cmpeq_epi8(ymmDbrighters16x32[3], ymmZeros));
+                _mm256_store_si256(&ymmBrightersFlags[5], _mm256_cmpeq_epi8(ymmDbrighters16x32[5], ymmZeros));
+                _mm256_store_si256(&ymmBrightersFlags[6], _mm256_cmpeq_epi8(ymmDbrighters16x32[6], ymmZeros));
+                _mm256_store_si256(&ymmBrightersFlags[7], _mm256_cmpeq_epi8(ymmDbrighters16x32[7], ymmZeros));
+                _mm256_store_si256(&ymmBrightersFlags[9], _mm256_cmpeq_epi8(ymmDbrighters16x32[9], ymmZeros));
+                _mm256_store_si256(&ymmBrightersFlags[10], _mm256_cmpeq_epi8(ymmDbrighters16x32[10], ymmZeros));
+                _mm256_store_si256(&ymmBrightersFlags[11], _mm256_cmpeq_epi8(ymmDbrighters16x32[11], ymmZeros));
+                _mm256_store_si256(&ymmBrightersFlags[13], _mm256_cmpeq_epi8(ymmDbrighters16x32[13], ymmZeros));
+                _mm256_store_si256(&ymmBrightersFlags[14], _mm256_cmpeq_epi8(ymmDbrighters16x32[14], ymmZeros));
+                _mm256_store_si256(&ymmBrightersFlags[15], _mm256_cmpeq_epi8(ymmDbrighters16x32[15], ymmZeros));
                 // Convert flags from 0xFF to 0x01
                 // 0 4 8 12 already computed and contains the right values (not the inverse)
                 _mm256_store_si256(&ymmBrightersFlags[0], _mm256_andnot_si256(ymm254, ymmBrightersFlags[0]));
@@ -286,75 +291,186 @@ void FastData32Row_Intrin_AVX2(
             }
 
             if (loadD) {
-                (*rd) = colDarkersFlags;
                 // Transpose
                 COMPV_TRANSPOSE_I8_16X32_AVX2(
-                    (*ymmDdarkers16x32)[0], (*ymmDdarkers16x32)[1], (*ymmDdarkers16x32)[2], (*ymmDdarkers16x32)[3],
-                    (*ymmDdarkers16x32)[4], (*ymmDdarkers16x32)[5], (*ymmDdarkers16x32)[6], (*ymmDdarkers16x32)[7],
-                    (*ymmDdarkers16x32)[8], (*ymmDdarkers16x32)[9], (*ymmDdarkers16x32)[10], (*ymmDdarkers16x32)[11],
-                    (*ymmDdarkers16x32)[12], (*ymmDdarkers16x32)[13], (*ymmDdarkers16x32)[14], (*ymmDdarkers16x32)[15],
+                    ymmDdarkers16x32[0], ymmDdarkers16x32[1], ymmDdarkers16x32[2], ymmDdarkers16x32[3],
+                    ymmDdarkers16x32[4], ymmDdarkers16x32[5], ymmDdarkers16x32[6], ymmDdarkers16x32[7],
+                    ymmDdarkers16x32[8], ymmDdarkers16x32[9], ymmDdarkers16x32[10], ymmDdarkers16x32[11],
+                    ymmDdarkers16x32[12], ymmDdarkers16x32[13], ymmDdarkers16x32[14], ymmDdarkers16x32[15],
                     ymm0);
                 // Flags
-                (*pfdarkers16)[0] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[0], ymmZeros), ymmFF));
-                (*pfdarkers16)[1] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[1], ymmZeros), ymmFF));
-                (*pfdarkers16)[2] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[2], ymmZeros), ymmFF));
-                (*pfdarkers16)[3] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[3], ymmZeros), ymmFF));
-                (*pfdarkers16)[4] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[4], ymmZeros), ymmFF));
-                (*pfdarkers16)[5] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[5], ymmZeros), ymmFF));
-                (*pfdarkers16)[6] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[6], ymmZeros), ymmFF));
-                (*pfdarkers16)[7] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[7], ymmZeros), ymmFF));
-                (*pfdarkers16)[8] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[8], ymmZeros), ymmFF));
-                (*pfdarkers16)[9] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[9], ymmZeros), ymmFF));
-                (*pfdarkers16)[10] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[10], ymmZeros), ymmFF));
-                (*pfdarkers16)[11] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[11], ymmZeros), ymmFF));
-                (*pfdarkers16)[12] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[12], ymmZeros), ymmFF));
-                (*pfdarkers16)[13] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[13], ymmZeros), ymmFF));
-                (*pfdarkers16)[14] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[14], ymmZeros), ymmFF));
-                (*pfdarkers16)[15] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDdarkers16x32)[15], ymmZeros), ymmFF));
+                fdarkers16[0] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[0], ymmZeros), ymmFF));
+                fdarkers16[1] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[1], ymmZeros), ymmFF));
+                fdarkers16[2] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[2], ymmZeros), ymmFF));
+                fdarkers16[3] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[3], ymmZeros), ymmFF));
+                fdarkers16[4] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[4], ymmZeros), ymmFF));
+                fdarkers16[5] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[5], ymmZeros), ymmFF));
+                fdarkers16[6] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[6], ymmZeros), ymmFF));
+                fdarkers16[7] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[7], ymmZeros), ymmFF));
+                fdarkers16[8] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[8], ymmZeros), ymmFF));
+                fdarkers16[9] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[9], ymmZeros), ymmFF));
+                fdarkers16[10] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[10], ymmZeros), ymmFF));
+                fdarkers16[11] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[11], ymmZeros), ymmFF));
+                fdarkers16[12] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[12], ymmZeros), ymmFF));
+                fdarkers16[13] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[13], ymmZeros), ymmFF));
+                fdarkers16[14] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[14], ymmZeros), ymmFF));
+                fdarkers16[15] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDdarkers16x32[15], ymmZeros), ymmFF));
             }
 
             if (loadB) {
-                (*rb) = colBrightersFlags;
                 // Transpose
                 COMPV_TRANSPOSE_I8_16X32_AVX2(
-                    (*ymmDbrighters16x32)[0], (*ymmDbrighters16x32)[1], (*ymmDbrighters16x32)[2], (*ymmDbrighters16x32)[3],
-                    (*ymmDbrighters16x32)[4], (*ymmDbrighters16x32)[5], (*ymmDbrighters16x32)[6], (*ymmDbrighters16x32)[7],
-                    (*ymmDbrighters16x32)[8], (*ymmDbrighters16x32)[9], (*ymmDbrighters16x32)[10], (*ymmDbrighters16x32)[11],
-                    (*ymmDbrighters16x32)[12], (*ymmDbrighters16x32)[13], (*ymmDbrighters16x32)[14], (*ymmDbrighters16x32)[15],
+                    ymmDbrighters16x32[0], ymmDbrighters16x32[1], ymmDbrighters16x32[2], ymmDbrighters16x32[3],
+                    ymmDbrighters16x32[4], ymmDbrighters16x32[5], ymmDbrighters16x32[6], ymmDbrighters16x32[7],
+                    ymmDbrighters16x32[8], ymmDbrighters16x32[9], ymmDbrighters16x32[10], ymmDbrighters16x32[11],
+                    ymmDbrighters16x32[12], ymmDbrighters16x32[13], ymmDbrighters16x32[14], ymmDbrighters16x32[15],
                     ymm1);
                 // Flags
-                (*pfbrighters16)[0] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[0], ymmZeros), ymmFF));
-                (*pfbrighters16)[1] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[1], ymmZeros), ymmFF));
-                (*pfbrighters16)[2] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[2], ymmZeros), ymmFF));
-                (*pfbrighters16)[3] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[3], ymmZeros), ymmFF));
-                (*pfbrighters16)[4] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[4], ymmZeros), ymmFF));
-                (*pfbrighters16)[5] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[5], ymmZeros), ymmFF));
-                (*pfbrighters16)[6] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[6], ymmZeros), ymmFF));
-                (*pfbrighters16)[7] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[7], ymmZeros), ymmFF));
-                (*pfbrighters16)[8] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[8], ymmZeros), ymmFF));
-                (*pfbrighters16)[9] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[9], ymmZeros), ymmFF));
-                (*pfbrighters16)[10] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[10], ymmZeros), ymmFF));
-                (*pfbrighters16)[11] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[11], ymmZeros), ymmFF));
-                (*pfbrighters16)[12] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[12], ymmZeros), ymmFF));
-                (*pfbrighters16)[13] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[13], ymmZeros), ymmFF));
-                (*pfbrighters16)[14] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[14], ymmZeros), ymmFF));
-                (*pfbrighters16)[15] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8((*ymmDbrighters16x32)[15], ymmZeros), ymmFF));
+                fbrighters16[0] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[0], ymmZeros), ymmFF));
+                fbrighters16[1] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[1], ymmZeros), ymmFF));
+                fbrighters16[2] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[2], ymmZeros), ymmFF));
+                fbrighters16[3] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[3], ymmZeros), ymmFF));
+                fbrighters16[4] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[4], ymmZeros), ymmFF));
+                fbrighters16[5] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[5], ymmZeros), ymmFF));
+                fbrighters16[6] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[6], ymmZeros), ymmFF));
+                fbrighters16[7] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[7], ymmZeros), ymmFF));
+                fbrighters16[8] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[8], ymmZeros), ymmFF));
+                fbrighters16[9] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[9], ymmZeros), ymmFF));
+                fbrighters16[10] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[10], ymmZeros), ymmFF));
+                fbrighters16[11] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[11], ymmZeros), ymmFF));
+                fbrighters16[12] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[12], ymmZeros), ymmFF));
+                fbrighters16[13] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[13], ymmZeros), ymmFF));
+                fbrighters16[14] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[14], ymmZeros), ymmFF));
+                fbrighters16[15] = _mm256_movemask_epi8(_mm256_andnot_si256(_mm256_cmpeq_epi8(ymmDbrighters16x32[15], ymmZeros), ymmFF));
             }
+			if (colBrightersFlags || colDarkersFlags) {
+				FastStrengths32(colBrightersFlags, colDarkersFlags, (const uint8_t*)ymmDbrighters16x32, (const uint8_t*)ymmDdarkers16x32, &fbrighters16, &fdarkers16, (uint8_t*)ymmStrengths, N);
+			}
         }
 next:
-        rd += 1;
-        rb += 1;
         IP += 32;
         if (IPprev) {
             IPprev += 32;
         }
-        pfdarkers16 += 1;
-        pfbrighters16 += 1;
-        ymmDdarkers16x32 += 1;
-        ymmDbrighters16x32 += 1;
+		ymmStrengths += 1;
     } // for i
 
     _mm256_zeroupper();
+}
+
+// Code Not used yet: AVX/SSE transition issue
+void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(AVX) const uint8_t* dbrighters16x32, COMPV_ALIGNED(AVX) const uint8_t* ddarkers16x32, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv_scalar_t N)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // AVX/SSE transition penalities issue. Must use ASM version
+
+	_mm256_zeroupper();
+
+	__m256i ymm0, ymm1, ymmFastXFlags, ymmFLow, ymmFHigh;
+	__m256i ymmZeros;
+	int r0, r1;
+	int maxnbrighterLow, maxndarkerLow, maxnbrighterHigh, maxndarkerHigh;
+	int lowMin, highMin;
+	uint32_t rb = (uint32_t)rbrighters, rd = (uint32_t)rdarkers;
+	const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
+	const uint8_t(&kFastArcs)[16][16] = (N == 9 ? kFast9Arcs : kFast12Arcs);
+
+	// FAST hard-coded flags
+	_mm256_store_si256(&ymmFastXFlags, _mm256_load_si256((__m256i*)(FastXFlags)));
+	// Zeros
+	_mm256_store_si256(&ymmZeros, _mm256_setzero_si256());
+	// Set strengths to zero
+	_mm256_storeu_si256((__m256i*)strengths32, ymmZeros);
+
+	// xmm0 contains the u8 values
+	// xmm1 is used as temp register and will be trashed
+#define COMPV_HORIZ_MIN(r, i, maxn) \
+	if (r & (1 << i)) { \
+		_mm_store_si128(&xmm1, _mm_shuffle_epi8(xmm0, _mm_load_si128((__m128i*)kFastArcs[i]))); /* eliminate zeros and duplicate first matching non-zero */ \
+		lowMin = _mm_cvtsi128_si32(_mm_minpos_epu16(_mm_unpacklo_epi8(xmm1, xmmZeros))); \
+		highMin = _mm_cvtsi128_si32(_mm_minpos_epu16(_mm_unpackhi_epi8(xmm1, xmmZeros))); \
+		/* _mm_minpos_epu16 must set to zero the remaining bits but this doesn't look to happen or I missed something */ \
+		lowMin &= 0xFFFF; \
+		highMin &= 0xFFFF; \
+		maxn = std::max(std::min(lowMin, highMin), (int)maxn); \
+		}
+
+	for (unsigned p = 0, g = 16; p < 16; ++p, ++g) {
+		maxnbrighterLow = 0, maxndarkerLow = maxnbrighterHigh = maxndarkerHigh = 0;
+		// Brighters
+		if (rb & (1 << p) || rb & (1 << g)) {
+			// brighters flags
+			_mm256_store_si256(&ymmFLow, _mm256_set1_epi16((short)(*fbrighters16)[p]));
+			_mm256_store_si256(&ymmFHigh, _mm256_set1_epi16((short)((*fbrighters16)[p] >> 16)));
+
+			_mm256_store_si256(&ymm0, _mm256_and_si256(ymmFLow, ymmFastXFlags));
+			_mm256_store_si256(&ymm0, _mm256_cmpeq_epi16(ymm0, ymmFastXFlags));
+			_mm256_store_si256(&ymm1, _mm256_and_si256(ymmFHigh, ymmFastXFlags));
+			_mm256_store_si256(&ymm1, _mm256_cmpeq_epi16(ymm1, ymmFastXFlags));
+			// clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
+			_mm256_store_si256(&ymm0, _mm256_srli_epi16(ymm0, 1));
+			_mm256_store_si256(&ymm1, _mm256_srli_epi16(ymm1, 1));
+			r0 = _mm256_movemask_epi8(compv_avx2_packus_epi16(ymm0, ymm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
+			if (r0) {
+				r1 = r0 >> 16;
+				_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)dbrighters16x32));
+				// Compute minimum hz
+				_mm256_zeroupper();
+				__m128i xmm0, xmm1, xmmZeros;
+				xmmZeros = _mm_setzero_si128();
+				xmm0 = _mm256_extractf128_si256(ymm0, 0);
+				COMPV_HORIZ_MIN(r0, 0, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 1, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 2, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 3, maxnbrighterLow)
+				COMPV_HORIZ_MIN(r0, 4, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 5, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 6, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 7, maxnbrighterLow)
+				COMPV_HORIZ_MIN(r0, 8, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 9, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 10, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 11, maxnbrighterLow)
+				COMPV_HORIZ_MIN(r0, 12, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 13, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 14, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 15, maxnbrighterLow)
+				xmm0 = _mm256_extractf128_si256(ymm0, 1);
+				COMPV_HORIZ_MIN(r1, 0, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 1, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 2, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 3, maxnbrighterHigh)
+				COMPV_HORIZ_MIN(r1, 4, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 5, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 6, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 7, maxnbrighterHigh)
+				COMPV_HORIZ_MIN(r1, 8, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 9, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 10, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 11, maxnbrighterHigh)
+				COMPV_HORIZ_MIN(r1, 12, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 13, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 14, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 15, maxnbrighterHigh)
+			}
+		}
+
+		// Darkers
+		if (rd & (1 << p) || rd & (1 << g)) {
+			// darkers flags
+			_mm256_store_si256(&ymmFLow, _mm256_set1_epi16((short)(*fdarkers16)[p]));
+			_mm256_store_si256(&ymmFHigh, _mm256_set1_epi16((short)((*fdarkers16)[p] >> 16)));
+
+			_mm256_store_si256(&ymm0, _mm256_and_si256(ymmFLow, ymmFastXFlags));
+			_mm256_store_si256(&ymm0, _mm256_cmpeq_epi16(ymm0, ymmFastXFlags));
+			_mm256_store_si256(&ymm1, _mm256_and_si256(ymmFHigh, ymmFastXFlags));
+			_mm256_store_si256(&ymm1, _mm256_cmpeq_epi16(ymm1, ymmFastXFlags));
+			// clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
+			_mm256_store_si256(&ymm0, _mm256_srli_epi16(ymm0, 1));
+			_mm256_store_si256(&ymm1, _mm256_srli_epi16(ymm1, 1));
+			r0 = _mm256_movemask_epi8(compv_avx2_packus_epi16(ymm0, ymm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
+			if (r0) {
+				r1 = r0 >> 16;
+				_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)ddarkers16x32));
+				// Compute minimum hz
+				__m128i xmm0, xmm1, xmmZeros;
+				xmmZeros = _mm_setzero_si128();
+				xmm0 = _mm256_extractf128_si256(ymm0, 0);
+				COMPV_HORIZ_MIN(r0, 0, maxndarkerLow) COMPV_HORIZ_MIN(r0, 1, maxndarkerLow) COMPV_HORIZ_MIN(r0, 2, maxndarkerLow) COMPV_HORIZ_MIN(r0, 3, maxndarkerLow)
+				COMPV_HORIZ_MIN(r0, 4, maxndarkerLow) COMPV_HORIZ_MIN(r0, 5, maxndarkerLow) COMPV_HORIZ_MIN(r0, 6, maxndarkerLow) COMPV_HORIZ_MIN(r0, 7, maxndarkerLow)
+				COMPV_HORIZ_MIN(r0, 8, maxndarkerLow) COMPV_HORIZ_MIN(r0, 9, maxndarkerLow) COMPV_HORIZ_MIN(r0, 10, maxndarkerLow) COMPV_HORIZ_MIN(r0, 11, maxndarkerLow)
+				COMPV_HORIZ_MIN(r0, 12, maxndarkerLow) COMPV_HORIZ_MIN(r0, 13, maxndarkerLow) COMPV_HORIZ_MIN(r0, 14, maxndarkerLow) COMPV_HORIZ_MIN(r0, 15, maxndarkerLow)
+				xmm0 = _mm256_extractf128_si256(ymm0, 1);
+				COMPV_HORIZ_MIN(r1, 0, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 1, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 2, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 3, maxndarkerHigh)
+				COMPV_HORIZ_MIN(r1, 4, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 5, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 6, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 7, maxndarkerHigh)
+				COMPV_HORIZ_MIN(r1, 8, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 9, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 10, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 11, maxndarkerHigh)
+				COMPV_HORIZ_MIN(r1, 12, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 13, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 14, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 15, maxndarkerHigh)
+			}
+		}
+
+		strengths32[p] = (uint8_t)std::max(maxndarkerLow, maxnbrighterLow);
+		strengths32[g] = (uint8_t)std::max(maxndarkerHigh, maxnbrighterHigh);
+
+		dbrighters16x32 += 32;
+		ddarkers16x32 += 32;
+	}
+
+	_mm256_zeroupper();
 }
 
 COMPV_NAMESPACE_END()

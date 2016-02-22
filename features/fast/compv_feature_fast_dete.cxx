@@ -125,7 +125,7 @@ extern "C" void Fast12Strengths16_Asm_X64_SSE41(compv::compv_scalar_t rbrighters
 extern "C" COMPV_GEXTERN void FastStrengths16(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x16, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x16, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
 {
 	void(*FastStrengths)(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
-		= NULL; // FIXME: CPP version
+		= NULL; // This function is called from FastData16Row(Intrin/Asm) which means we don't need C++ version
 	if (compv::CompVCpu::isSupported(compv::kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths16_Intrin_SSE2);
 	}
@@ -157,6 +157,17 @@ extern "C" COMPV_GEXTERN void FastStrengths16(compv::compv_scalar_t rbrighters, 
 	//if (rbrighters == 30) {
 	//	int kaka = 0; // FIXME
 	//}
+}
+
+// FIXME: create AVX version
+extern "C" COMPV_GEXTERN void FastStrengths32(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x32, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x32, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv::compv_scalar_t N)
+{
+	void(*FastStrengths)(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
+		= NULL;  // This function is called from FastData32Row(Intrin/Asm) which means we don't need C++ version
+	if (compv::CompVCpu::isSupported(compv::kCpuFlagAVX2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths32_Intrin_AVX2);
+	}
+	FastStrengths(rbrighters, rdarkers, dbrighters16x32, ddarkers16x32, fbrighters16, fdarkers16, strengths32, N);
 }
 
 COMPV_NAMESPACE_BEGIN()
@@ -651,7 +662,7 @@ static void FastProcessRange(RangeFAST* range)
     const uint16_t(&FastXFlags)[16] = range->N == 9 ? Fast9Flags : Fast12Flags; // FIXME: needed?
 	uint8_t *strengths, *extra;
 	int32_t stride = range->stride;
-	void(*FastData16Row)(
+	void(*FastDataRow)(
 		const uint8_t* IP,
 		const uint8_t* IPprev,
 		compv_scalar_t width,
@@ -665,21 +676,15 @@ static void FastProcessRange(RangeFAST* range)
 	// FIXME: C++ version doesn't work
 
     if (CompVCpu::isSupported(kCpuFlagSSE2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86((FastData16Row = FastData16Row_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-		COMPV_EXEC_IFDEF_ASM_X86((FastData16Row = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-		COMPV_EXEC_IFDEF_ASM_X64((FastData16Row = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData16Row_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+		COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
     }
-   // if (CompVCpu::isSupported(kCpuFlagSSE41)) {
-   //     COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = FastStrengths_SSE41);
-   //     COMPV_EXEC_IFDEF_ASM_X86(FastStrengths = (range->N == 9)
-   //                              ? (CompVCpu::isSupported(kCpuFlagCMOV) ? Fast9Strengths_Asm_CMOV_X86_SSE41 : Fast9Strengths_Asm_X86_SSE41)
-    //                            : (CompVCpu::isSupported(kCpuFlagCMOV) ? Fast12Strengths_Asm_CMOV_X86_SSE41 : Fast12Strengths_Asm_X86_SSE41));
-    //}
-	//if (CompVCpu::isSupported(kCpuFlagAVX2)) {
-	//	COMPV_EXEC_IFDEF_INTRIN_X86((FastData16Row = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
+	if (CompVCpu::isSupported(kCpuFlagAVX2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
 	//	COMPV_EXEC_IFDEF_ASM_X86((FastData16Row = FastData32Row_Asm_X86_AVX2, align = COMPV_SIMD_ALIGNV_AVX2)); // asm too much faster than intrin
 	//	COMPV_EXEC_IFDEF_ASM_X64((FastData16Row = FastData32Row_Asm_X64_AVX2, align = COMPV_SIMD_ALIGNV_AVX2)); // TODO(dmi): asm not so much fatsre than intrin
-	//}
+	}
 
     // Number of pixels to process (multiple of align)
     kalign = (int32_t)CompVMem::alignForward((-3 + range->width - 3), align);
@@ -707,10 +712,10 @@ static void FastProcessRange(RangeFAST* range)
 	static uint64_t kaka = 0;
     
     for (j = minj; j < maxj; ++j) {
-		//if (j == 195) {
-		//	int kaka = 0;//FIXME
-		//}
-		FastData16Row(IP, IPprev, kalign, (*range->pixels16), range->N, range->threshold, strengths, NULL);
+		if (j == 279) {
+			int kaka = 0;//FIXME
+		}
+		FastDataRow(IP, IPprev, kalign, (*range->pixels16), range->N, range->threshold, strengths, NULL);
 
 		// remove extra samples
 		extra = &strengths[kalign - 1];
