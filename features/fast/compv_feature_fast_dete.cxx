@@ -165,7 +165,9 @@ extern "C" COMPV_GEXTERN void FastStrengths32(compv::compv_scalar_t rbrighters, 
 	void(*FastStrengths)(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
 		= NULL;  // This function is called from FastData32Row(Intrin/Asm) which means we don't need C++ version
 	if (compv::CompVCpu::isSupported(compv::kCpuFlagAVX2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths32_Intrin_AVX2);
+		// AVX2 is slow because of  AVX/SSE transition issues
+		// COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths32_Intrin_AVX2);
+		COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths32_Intrin_SSE41);
 	}
 	FastStrengths(rbrighters, rdarkers, dbrighters16x32, ddarkers16x32, fbrighters16, fdarkers16, strengths32, N);
 }
@@ -177,7 +179,7 @@ COMPV_NAMESPACE_BEGIN()
 // Number of positive continuous pixel to have before declaring a candidate as an interest point
 #define COMPV_FEATURE_DETE_FAST_NON_MAXIMA_SUPP			true
 #define COMPV_FEATURE_DETE_FAST_MAX_FEATURTES			-1 // maximum number of features to retain (<0 means all)
-#define COMPV_FEATURE_DETE_FAST_MIN_SAMPLES_PER_THREAD		(250*250) // number of pixels
+#define COMPV_FEATURE_DETE_FAST_MIN_SAMPLES_PER_THREAD		(200*250) // number of pixels
 #define COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD	(80*80) // number of interestPoints
 
 static int32_t COMPV_INLINE __continuousCount(int32_t fasType)
@@ -682,8 +684,6 @@ static void FastProcessRange(RangeFAST* range)
     }
 	if (CompVCpu::isSupported(kCpuFlagAVX2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
-	//	COMPV_EXEC_IFDEF_ASM_X86((FastData16Row = FastData32Row_Asm_X86_AVX2, align = COMPV_SIMD_ALIGNV_AVX2)); // asm too much faster than intrin
-	//	COMPV_EXEC_IFDEF_ASM_X64((FastData16Row = FastData32Row_Asm_X64_AVX2, align = COMPV_SIMD_ALIGNV_AVX2)); // TODO(dmi): asm not so much fatsre than intrin
 	}
 
     // Number of pixels to process (multiple of align)

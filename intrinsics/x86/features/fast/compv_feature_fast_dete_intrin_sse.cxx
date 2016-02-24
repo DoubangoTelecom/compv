@@ -453,8 +453,7 @@ void FastStrengths16_Intrin_SSE2(compv_scalar_t rbrighters, compv_scalar_t rdark
 	}
 }
 
-// TODO(dmi): add AVX
-void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrightersx1616, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x16, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv_scalar_t N)
+void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x16, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x16, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv_scalar_t N)
 {
 	__m128i xmm0, xmm1, xmmFastXFlagsLow, xmmFastXFlagsHigh, xmmFdarkers, xmmFbrighters;
     __m128i xmmZeros;
@@ -472,7 +471,7 @@ void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdar
     _mm_store_si128(&xmmZeros, _mm_setzero_si128());
 
 	// Set strengths to zero
-	_mm_storeu_si128((__m128i*)strengths16, xmmZeros);
+	_mm_storeu_si128((__m128i*)strengths16, xmmZeros); // TODO(dmi): not needed
 
     // xmm0 contains the u8 values
     // xmm1 is used as temp register and will be trashed
@@ -503,7 +502,7 @@ void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdar
 			_mm_store_si128(&xmm1, _mm_srli_epi16(xmm1, 1));
 			r0 = _mm_movemask_epi8(_mm_packus_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
 			if (r0) {
-				_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)dbrightersx1616));
+				_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)dbrighters16x16));
 				// Compute minimum hz
 				COMPV_HORIZ_MIN(r0, 0, maxnbrighter) COMPV_HORIZ_MIN(r0, 1, maxnbrighter) COMPV_HORIZ_MIN(r0, 2, maxnbrighter) COMPV_HORIZ_MIN(r0, 3, maxnbrighter)
 					COMPV_HORIZ_MIN(r0, 4, maxnbrighter) COMPV_HORIZ_MIN(r0, 5, maxnbrighter) COMPV_HORIZ_MIN(r0, 6, maxnbrighter) COMPV_HORIZ_MIN(r0, 7, maxnbrighter)
@@ -538,8 +537,111 @@ void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdar
 
 		strengths16[p] = (uint8_t)std::max(maxndarker, maxnbrighter);
 
-		dbrightersx1616 += 16;
+		dbrighters16x16 += 16;
 		ddarkers16x16 += 16;
+	}
+}
+
+// TODO(dmi): add ASM version
+// TODO(dmi) this is a temp function to replace the AVX version until we found a non SSE/AVX mixing implementation
+void FastStrengths32_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x32, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x32, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv_scalar_t N)
+{
+	__m128i xmm0, xmm1, xmmFastXFlagsLow, xmmFastXFlagsHigh, xmmFdarkers, xmmFbrighters;
+	__m128i xmmZeros;
+	int r0 , r1, g = 0;
+	int maxnbrighter, maxndarker;
+	int lowMin, highMin;
+	uint32_t rb = (uint32_t)rbrighters, rd = (uint32_t)rdarkers;
+	const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
+	const uint8_t(&kFastArcs)[16][16] = (N == 9 ? kFast9Arcs : kFast12Arcs);
+	bool bHighPartDone = false;
+
+	// FAST hard-coded flags
+	_mm_store_si128(&xmmFastXFlagsLow, _mm_load_si128((__m128i*)(FastXFlags + 0)));
+	_mm_store_si128(&xmmFastXFlagsHigh, _mm_load_si128((__m128i*)(FastXFlags + 8)));
+
+	_mm_store_si128(&xmmZeros, _mm_setzero_si128());
+
+	// xmm0 contains the u8 values
+	// xmm1 is used as temp register and will be trashed
+#define COMPV_HORIZ_MIN(r, i, maxn) \
+	if (r & (1 << i)) { \
+		_mm_store_si128(&xmm1, _mm_shuffle_epi8(xmm0, _mm_load_si128((__m128i*)kFastArcs[i]))); /* eliminate zeros and duplicate first matching non-zero */ \
+		lowMin = _mm_cvtsi128_si32(_mm_minpos_epu16(_mm_unpacklo_epi8(xmm1, xmmZeros))); \
+		highMin = _mm_cvtsi128_si32(_mm_minpos_epu16(_mm_unpackhi_epi8(xmm1, xmmZeros))); \
+		/* _mm_minpos_epu16 must set to zero the remaining bits but this doesn't look to happen or I missed something */ \
+		lowMin &= 0xFFFF; \
+		highMin &= 0xFFFF; \
+		maxn = std::max(std::min(lowMin, highMin), (int)maxn); \
+		}
+
+process16:
+	for (unsigned p = 0, v = 0; p < 16; ++p, v += 32) {
+		maxnbrighter = 0, maxndarker = 0;
+		// Brighters
+		if (rb & (1 << p)) {
+			// brighters flags
+			_mm_store_si128(&xmmFbrighters, _mm_set1_epi16((short)((*fbrighters16)[p] >> g)));
+
+			_mm_store_si128(&xmm0, _mm_and_si128(xmmFbrighters, xmmFastXFlagsLow));
+			_mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
+			_mm_store_si128(&xmm1, _mm_and_si128(xmmFbrighters, xmmFastXFlagsHigh));
+			_mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
+			// clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
+			_mm_store_si128(&xmm0, _mm_srli_epi16(xmm0, 1));
+			_mm_store_si128(&xmm1, _mm_srli_epi16(xmm1, 1));
+			r0 = _mm_movemask_epi8(_mm_packus_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
+			if (r0) {
+				_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)&dbrighters16x32[v]));
+				// Compute minimum hz
+				COMPV_HORIZ_MIN(r0, 0, maxnbrighter) COMPV_HORIZ_MIN(r0, 1, maxnbrighter) COMPV_HORIZ_MIN(r0, 2, maxnbrighter) COMPV_HORIZ_MIN(r0, 3, maxnbrighter)
+				COMPV_HORIZ_MIN(r0, 4, maxnbrighter) COMPV_HORIZ_MIN(r0, 5, maxnbrighter) COMPV_HORIZ_MIN(r0, 6, maxnbrighter) COMPV_HORIZ_MIN(r0, 7, maxnbrighter)
+				COMPV_HORIZ_MIN(r0, 8, maxnbrighter) COMPV_HORIZ_MIN(r0, 9, maxnbrighter) COMPV_HORIZ_MIN(r0, 10, maxnbrighter) COMPV_HORIZ_MIN(r0, 11, maxnbrighter)
+				COMPV_HORIZ_MIN(r0, 12, maxnbrighter) COMPV_HORIZ_MIN(r0, 13, maxnbrighter) COMPV_HORIZ_MIN(r0, 14, maxnbrighter) COMPV_HORIZ_MIN(r0, 15, maxnbrighter)
+			}
+		}
+
+		// Darkers
+		if (rd & (1 << p)) {
+			// darkers flags
+			_mm_store_si128(&xmmFdarkers, _mm_set1_epi16((short)((*fdarkers16)[p] >> g)));
+
+			_mm_store_si128(&xmm0, _mm_and_si128(xmmFdarkers, xmmFastXFlagsLow));
+			_mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
+			_mm_store_si128(&xmm1, _mm_and_si128(xmmFdarkers, xmmFastXFlagsHigh));
+			_mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
+			// clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
+			_mm_store_si128(&xmm0, _mm_srli_epi16(xmm0, 1));
+			_mm_store_si128(&xmm1, _mm_srli_epi16(xmm1, 1));
+			r1 = _mm_movemask_epi8(_mm_packus_epi16(xmm0, xmm1)); // r1's popcnt is equal to N as FastXFlags contains values with popcnt==N
+			if (r1) {
+				_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)&ddarkers16x32[v]));
+
+				// Compute minimum hz
+				COMPV_HORIZ_MIN(r1, 0, maxndarker) COMPV_HORIZ_MIN(r1, 1, maxndarker) COMPV_HORIZ_MIN(r1, 2, maxndarker) COMPV_HORIZ_MIN(r1, 3, maxndarker)
+				COMPV_HORIZ_MIN(r1, 4, maxndarker) COMPV_HORIZ_MIN(r1, 5, maxndarker) COMPV_HORIZ_MIN(r1, 6, maxndarker) COMPV_HORIZ_MIN(r1, 7, maxndarker)
+				COMPV_HORIZ_MIN(r1, 8, maxndarker) COMPV_HORIZ_MIN(r1, 9, maxndarker) COMPV_HORIZ_MIN(r1, 10, maxndarker) COMPV_HORIZ_MIN(r1, 11, maxndarker)
+				COMPV_HORIZ_MIN(r1, 12, maxndarker) COMPV_HORIZ_MIN(r1, 13, maxndarker) COMPV_HORIZ_MIN(r1, 14, maxndarker) COMPV_HORIZ_MIN(r1, 15, maxndarker)
+			}
+		}
+
+		strengths32[p] = (uint8_t)std::max(maxndarker, maxnbrighter);
+	}
+
+	if (!bHighPartDone) {
+		rb = (rb >> 16) & 0xFFFF;
+		rd = (rd >> 16) & 0xFFFF;
+		if (rb || rd) {
+			g = 16;
+			bHighPartDone = true;
+			dbrighters16x32 += 16;
+			ddarkers16x32 += 16;
+			strengths32 += 16;
+			goto process16;
+		}
+		else {
+			_mm_storeu_si128((__m128i*)(strengths32 + 16), xmmZeros);
+		}
 	}
 }
 

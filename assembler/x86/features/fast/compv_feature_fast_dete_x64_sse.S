@@ -754,7 +754,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> compv_scalar_t rbrighters
 ; arg(1) -> compv_scalar_t rdarkers
-; arg(2) -> COMPV_ALIGNED(SSE) const uint8_t* dbrightersx1616
+; arg(2) -> COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x16
 ; arg(3) -> COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x16
 ; arg(4) -> const compv_scalar_t(*fbrighters16)[16]
 ; arg(5) -> const compv_scalar_t(*fdarkers16)[16]
@@ -831,8 +831,8 @@ sym(FastData16Row_Asm_X64_SSE2):
 		jz .EndOfBrighters
 		pxor xmm3, xmm3 ; xmm3 = Zeros
 		; Load dbrighters
-		mov rbx, arg(2) ; dbrightersx1616
-		movdqa xmm2, [rbx + r9] ; dbrightersx1616[p*16]
+		mov rbx, arg(2) ; dbrighters16x16
+		movdqa xmm2, [rbx + r9] ; dbrighters16x16[p*16]
 		; Compute minimum hz
 		%assign i 0
 		%rep    16

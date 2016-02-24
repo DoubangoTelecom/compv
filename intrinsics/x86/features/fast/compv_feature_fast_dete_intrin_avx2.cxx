@@ -359,6 +359,7 @@ next:
 }
 
 // Code Not used yet: AVX/SSE transition issue
+// Use VPHMINPOSUW in ASM (no intrinsic)
 void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(AVX) const uint8_t* dbrighters16x32, COMPV_ALIGNED(AVX) const uint8_t* ddarkers16x32, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv_scalar_t N)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // AVX/SSE transition penalities issue. Must use ASM version
