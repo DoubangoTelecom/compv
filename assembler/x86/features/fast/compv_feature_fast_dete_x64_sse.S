@@ -771,7 +771,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	push rdi
 	push rbx
 	; end prolog
-
+	
 	; r8 = p
 	; r9 = p*16
 	; r10 = 1<<p
@@ -795,16 +795,11 @@ sym(FastData16Row_Asm_X64_SSE2):
 		%error "not supported"
 	%endif	
 
-	; Set strengths to zero
-	mov rax, arg(6) ; strengths16
-	movdqu [rax], xmm0
-
 	;----------------------
 	; Loop Start
 	;----------------------
 	.LoopStart
-		mov rcx, r11 ; rcx = maxnbrighter
-		mov rdx, r11 ; rdx = maxndarker
+		mov rcx, r11 ; rcx = maxn
 
 		; ---------
 		; Brighters
@@ -947,21 +942,11 @@ sym(FastData16Row_Asm_X64_SSE2):
 			.EndOfDarkersMin %+ i
 			%assign i i+1
 		%endrep
-		.EndOfDarkers
+	.EndOfDarkers
 		
-		; rax = strength = std::max(maxnbrighter, maxndarker);
-		mov rax, rdx
-		cmp rcx, rdx
-		%if %1 == 1
-			cmovg rax, rcx
-		%else
-			jl .NotMax
-			mov rax, rcx
-			.NotMax
-		%endif
-
-	mov rcx, arg(6) ; &strengths16
-	mov [rcx + r8], byte al ; strengths16[p] = x
+	; compute strenghts[p]
+	mov rax, arg(6) ; &strengths16
+	mov [rax + r8], byte cl ; strengths16[p] = maxn
 
 	add r8, 1 ; r8 = p
 	add r9, 16 ; r9 = p*16

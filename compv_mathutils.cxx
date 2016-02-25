@@ -48,7 +48,7 @@ COMPV_ERROR_CODE CompVMathUtils::init()
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
     if (!CompVMathUtils::s_Initialized) {
-        if (CompVCpu::isSupported(kCpuFlagCMOV)) {
+        if (CompVCpu::isEnabled(kCpuFlagCMOV)) {
             COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtils::maxValFunc = compv_mathutils_maxval_asm_x86_cmov);
             COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtils::minValFunc = compv_mathutils_minval_asm_x86_cmov);
             COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtils::clip3Func = compv_mathutils_clip3_asm_x86_cmov);

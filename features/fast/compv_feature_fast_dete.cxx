@@ -126,17 +126,17 @@ extern "C" COMPV_GEXTERN void FastStrengths16(compv::compv_scalar_t rbrighters, 
 {
 	void(*FastStrengths)(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
 		= NULL; // This function is called from FastData16Row(Intrin/Asm) which means we don't need C++ version
-	if (compv::CompVCpu::isSupported(compv::kCpuFlagSSE2)) {
+	if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths16_Intrin_SSE2);
 	}
-	if (compv::CompVCpu::isSupported(compv::kCpuFlagSSE41)) {
+	if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths16_Intrin_SSE41);
 		COMPV_EXEC_IFDEF_ASM_X86(FastStrengths = (N == 9)
-			? (compv::CompVCpu::isSupported(compv::kCpuFlagCMOV) ? Fast9Strengths16_Asm_CMOV_X86_SSE41 : Fast9Strengths16_Asm_X86_SSE41)
-			: (compv::CompVCpu::isSupported(compv::kCpuFlagCMOV) ? Fast12Strengths16_Asm_CMOV_X86_SSE41 : Fast12Strengths16_Asm_X86_SSE41));
+			? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths16_Asm_CMOV_X86_SSE41 : Fast9Strengths16_Asm_X86_SSE41)
+			: (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths16_Asm_CMOV_X86_SSE41 : Fast12Strengths16_Asm_X86_SSE41));
 		COMPV_EXEC_IFDEF_ASM_X64(FastStrengths = (N == 9)
-			? (compv::CompVCpu::isSupported(compv::kCpuFlagCMOV) ? Fast9Strengths16_Asm_CMOV_X64_SSE41 : Fast9Strengths16_Asm_X64_SSE41)
-			: (compv::CompVCpu::isSupported(compv::kCpuFlagCMOV) ? Fast12Strengths16_Asm_CMOV_X64_SSE41 : Fast12Strengths16_Asm_X64_SSE41));
+			? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths16_Asm_CMOV_X64_SSE41 : Fast9Strengths16_Asm_X64_SSE41)
+			: (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths16_Asm_CMOV_X64_SSE41 : Fast12Strengths16_Asm_X64_SSE41));
 	}
 	//if (rbrighters == 30) {
 	//	int kaka = 0; // FIXME
@@ -164,7 +164,7 @@ extern "C" COMPV_GEXTERN void FastStrengths32(compv::compv_scalar_t rbrighters, 
 {
 	void(*FastStrengths)(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
 		= NULL;  // This function is called from FastData32Row(Intrin/Asm) which means we don't need C++ version
-	if (compv::CompVCpu::isSupported(compv::kCpuFlagAVX2)) {
+	if (compv::CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
 		// AVX2 is slow because of  AVX/SSE transition issues
 		// COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths32_Intrin_AVX2);
 		COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths32_Intrin_SSE41);
@@ -397,37 +397,43 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
     }
 
 	// Build interest points
-	// m_pStrengthsMap is cacheline=aligned which means its aligned on 32bytes
+#define COMPV_PUSH1() if (*begin1) { *begin1 += thresholdMinus1; interestPoints->push(CompVInterestPoint((int32_t)(begin1 - strengths), j, (float)*begin1)); } ++begin1;
+#define COMPV_PUSH4() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1()
+#define COMPV_PUSH8() COMPV_PUSH4() COMPV_PUSH4()
 	uint8_t *strengths = m_pStrengthsMap + (3 * stride), *begin1;
-	uint32_t *begin4, *end4;
-	int32_t width_div4 = width >> 2;
-	const uint8_t thresholdMinus1 = (uint8_t)m_iThreshold - 1;
-	for (int32_t j = 3; j < height - 3; ++j) {
-		begin4 = (uint32_t*)(strengths + 0); // i can start at +3 but we prefer +0 because strengths[0] is cacheline-aligned 
-		end4 = (begin4 + width_div4);
-		do {
-			if (*begin4) {
-				begin1 = (uint8_t*)begin4;
-				if (*begin1) {
-					*begin1 += thresholdMinus1;
-					interestPoints->push(CompVInterestPoint((int32_t)(begin1 - strengths), j, (float)*begin1));
+	if (COMPV_IS_ALIGNED(stride, 64) && COMPV_IS_ALIGNED(CompVCpu::getCache1LineSize(), 64)) {
+		uint64_t *begin8, *end8;
+		int32_t width_div8 = width >> 3;
+		const uint8_t thresholdMinus1 = (uint8_t)m_iThreshold - 1;
+		for (int32_t j = 3; j < height - 3; ++j) {
+			begin8 = (uint64_t*)(strengths + 0); // i can start at +3 but we prefer +0 because strengths[0] is cacheline-aligned 
+			end8 = (begin8 + width_div8);
+			do {
+				if (*begin8) {
+					begin1 = (uint8_t*)begin8;
+					COMPV_PUSH8();
 				}
-				if (*++begin1) {
-					*begin1 += thresholdMinus1;
-					interestPoints->push(CompVInterestPoint((int32_t)(begin1 - strengths), j, (float)*begin1));
-				}
-				if (*++begin1) {
-					*begin1 += thresholdMinus1;
-					interestPoints->push(CompVInterestPoint((int32_t)(begin1 - strengths), j, (float)*begin1));
-				}
-				if (*++begin1) {
-					*begin1 += thresholdMinus1;
-					interestPoints->push(CompVInterestPoint((int32_t)(begin1 - strengths), j, (float)*begin1));
-				}
-			}
-		} while (begin4++ < end4);
-		strengths += stride;
+			} while (begin8++ < end8);
+			strengths += stride;
+		}
 	}
+	else {
+		uint32_t *begin4, *end4;
+		int32_t width_div4 = width >> 2;
+		const uint8_t thresholdMinus1 = (uint8_t)m_iThreshold - 1;
+		for (int32_t j = 3; j < height - 3; ++j) {
+			begin4 = (uint32_t*)(strengths + 0); // i can start at +3 but we prefer +0 because strengths[0] is cacheline-aligned 
+			end4 = (begin4 + width_div4);
+			do {
+				if (*begin4) {
+					begin1 = (uint8_t*)begin4;
+					COMPV_PUSH4();
+				}
+			} while (begin4++ < end4);
+			strengths += stride;
+		}
+	}
+
 
     // Non Maximal Suppression for removing adjacent corners
 	if (m_bNonMaximaSupp && interestPoints->size() > 0) {
@@ -537,7 +543,7 @@ static compv_scalar_t FastData_C(const uint8_t* dataPtr, const compv_scalar_t(&p
     uint8_t brighter = CompVMathUtils::clampPixel8(dataPtr[0] + (int16_t)threshold);
     uint8_t darker = CompVMathUtils::clampPixel8(dataPtr[0] - (int16_t)threshold);
 
-    bool popcntHard = CompVCpu::isSupported(kCpuFlagPOPCNT);
+    bool popcntHard = CompVCpu::isEnabled(kCpuFlagPOPCNT);
 
     // compare I1 and I7
     temp16[0] = dataPtr[pixels16[0]];
@@ -677,12 +683,12 @@ static void FastProcessRange(RangeFAST* range)
     // FIXME: remove all FastData16 (INTRIN, ASM, C++) and FastData -> Only FastData16Row
 	// FIXME: C++ version doesn't work
 
-    if (CompVCpu::isSupported(kCpuFlagSSE2)) {
+    if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData16Row_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
 		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
 		COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
     }
-	if (CompVCpu::isSupported(kCpuFlagAVX2)) {
+	if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
 	}
 

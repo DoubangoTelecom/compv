@@ -231,7 +231,7 @@ static COMPV_ERROR_CODE __xxxToI420(const CompVObjWrapper<CompVImage* >& rgb, Co
     // IS_ALIGNED(strideRgbaBytes, ALIGNV * 3) = IS_ALIGNED(stride * 3, ALIGNV * 3) = IS_ALIGNED(stride, ALIGNV)
 
     if (COMPV_IS_ALIGNED_SSE(stride)) {
-        if (CompVCpu::isSupported(kCpuFlagSSSE3)) {
+        if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
             COMPV_EXEC_IFDEF_ASM_X86(CompY = rgbToI420Kernel31_CompY_Asm_X86_Aligned00_SSSE3);
             COMPV_EXEC_IFDEF_ASM_X86(CompUV = rgbToI420Kernel31_CompUV_Asm_X86_Aligned0xx_SSSE3);
             if (COMPV_IS_ALIGNED_SSE(rgbPtr)) {
@@ -250,7 +250,7 @@ static COMPV_ERROR_CODE __xxxToI420(const CompVObjWrapper<CompVImage* >& rgb, Co
     } // end-of-SSE
 
     if (COMPV_IS_ALIGNED_AVX(stride)) {
-        if (CompVCpu::isSupported(kCpuFlagAVX2)) {
+        if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
             COMPV_EXEC_IFDEF_ASM_X86(CompY = rgbToI420Kernel31_CompY_Asm_X86_Aligned00_AVX2);
             COMPV_EXEC_IFDEF_ASM_X86(CompUV = rgbToI420Kernel31_CompUV_Asm_X86_Aligned000_AVX2);
             if (COMPV_IS_ALIGNED_AVX2(rgbPtr)) {
@@ -350,7 +350,7 @@ static COMPV_ERROR_CODE __xxxxToI420(const CompVObjWrapper<CompVImage* >& rgba, 
     // IS_ALIGNED(strideRgbaBytes, ALIGNV * 4) = IS_ALIGNED(stride * 4, ALIGNV * 4) = IS_ALIGNED(stride, ALIGNV)
 
     if (COMPV_IS_ALIGNED_SSE(strideRgbaBytes)) {
-        if (CompVCpu::isSupported(kCpuFlagSSSE3)) {
+        if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
             COMPV_EXEC_IFDEF_ASM_X86(CompY = rgbaToI420Kernel11_CompY_Asm_X86_Aligned0x_SSSE3);
             COMPV_EXEC_IFDEF_ASM_X86(CompUV = rgbaToI420Kernel11_CompUV_Asm_X86_Aligned0xx_SSSE3);
             if (COMPV_IS_ALIGNED_SSE(rgbaPtr)) {
@@ -379,7 +379,7 @@ static COMPV_ERROR_CODE __xxxxToI420(const CompVObjWrapper<CompVImage* >& rgba, 
     } // end-of-SSE
 
     if (COMPV_IS_ALIGNED_AVX2(strideRgbaBytes)) {
-        if (CompVCpu::isSupported(kCpuFlagAVX2)) {
+        if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
             COMPV_EXEC_IFDEF_ASM_X86(CompY = rgbaToI420Kernel11_CompY_Asm_X86_Aligned0_AVX2);
             COMPV_EXEC_IFDEF_ASM_X86(CompUV = rgbaToI420Kernel11_CompUV_Asm_X86_Aligned0xx_AVX2);
             if (COMPV_IS_ALIGNED_AVX2(rgbaPtr)) {
@@ -498,7 +498,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaI420::i420ToRgba(const CompVObjWrapper<CompVI
 #if defined(COMPV_ARCH_X86)
 
     if (COMPV_IS_ALIGNED_SSE(stride)) {
-        if (CompVCpu::isSupported(kCpuFlagSSSE3)) {
+        if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
             COMPV_EXEC_IFDEF_ASM_X86(toRGBA = i420ToRGBAKernel11_Asm_X86_Aligned00_SSSE3);
             if (COMPV_IS_ALIGNED_SSE(yPtr)) {
                 COMPV_EXEC_IFDEF_ASM_X86(toRGBA = i420ToRGBAKernel11_Asm_X86_Aligned10_SSSE3);
@@ -513,7 +513,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaI420::i420ToRgba(const CompVObjWrapper<CompVI
         }
     }
     if (COMPV_IS_ALIGNED_AVX2(stride)) {
-        if (CompVCpu::isSupported(kCpuFlagAVX2)) {
+        if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
             COMPV_EXEC_IFDEF_ASM_X86(toRGBA = i420ToRGBAKernel11_Asm_X86_Aligned00_AVX2);
             if (COMPV_IS_ALIGNED_AVX2(yPtr)) {
                 COMPV_EXEC_IFDEF_ASM_X86(toRGBA = i420ToRGBAKernel11_Asm_X86_Aligned10_AVX2);

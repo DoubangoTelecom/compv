@@ -675,9 +675,8 @@ sym(FastData16Row_Asm_X86_SSE2):
 	; end prolog
 
 	; alloc memory
-	sub rsp, 8+8
+	sub rsp, 8
 	; [rsp + 0] = (1 << p)
-	; [rsp + 8] = (p)
 
 	pxor xmm0, xmm0
 
@@ -692,21 +691,15 @@ sym(FastData16Row_Asm_X86_SSE2):
 		%error "not supported"
 	%endif
 
-	xor rcx, rcx
+	xor rdx, rdx ; rdx = p = 0
 	mov rax, 1
 	mov [rsp + 0], rax ; (1<<p) = 1
-	mov [rsp + 8], rcx ; p = 0
-
-	; Set strengths to zero
-	mov rax, arg(6) ; strengths16
-	movdqu [rax], xmm0
 
 	;----------------------
 	; Loop Start
 	;----------------------
 	.LoopStart
-		xor rcx, rcx ; rcx = maxnbrighter
-		xor rdx, rdx ; rdx = maxndarker
+		xor rcx, rcx ; rcx = maxn
 
 		; ---------
 		; Brighters
@@ -714,9 +707,8 @@ sym(FastData16Row_Asm_X86_SSE2):
 		mov rsi, [rsp + 0] ; (1<<p)
 		test arg(0), rsi ; (rbrighters & (1 << p)) ?
 		jz .EndOfBrighters
-		mov rsi, [rsp + 8] ; p
 		mov rax, arg(4) ; &fbrighters16[p]
-		mov rdi, [rax + rsi*COMPV_YASM_REG_SZ_BYTES] ; fbrighters16[p]
+		mov rdi, [rax + rdx*COMPV_YASM_REG_SZ_BYTES] ; fbrighters16[p]
 
 		movd xmm5, rdi
 		punpcklwd xmm5, xmm5  
@@ -736,6 +728,7 @@ sym(FastData16Row_Asm_X86_SSE2):
 		pxor xmm3, xmm3 ; xmm3 = Zeros
 		; Load dbrighters
 		mov rbx, arg(2) ; dbrighters16x16
+		mov rsi, rdx ; rsi = p
 		shl rsi, 4 ; p*16 
 		movdqa xmm2, [rbx + rsi]
 		; Compute minimum hz
@@ -789,9 +782,8 @@ sym(FastData16Row_Asm_X86_SSE2):
 		mov rsi, [rsp + 0] ; (1<<p)
 		test arg(1), rsi ; (rdarkers & (1 << p)) ?
 		jz .EndOfDarkers
-		mov rsi, [rsp + 8] ; p
 		mov rax, arg(5) ; &fdarkers16[p]
-		mov rdi, [rax + rsi*COMPV_YASM_REG_SZ_BYTES] ; fdarkers16[p]
+		mov rdi, [rax + rdx*COMPV_YASM_REG_SZ_BYTES] ; fdarkers16[p]
 
 		movd xmm5, rdi
 		punpcklwd xmm5, xmm5  
@@ -811,6 +803,7 @@ sym(FastData16Row_Asm_X86_SSE2):
 		pxor xmm3, xmm3 ; xmm3 = Zeros
 		; Load ddarkers16x16
 		mov rbx, arg(3) ; ddarkers16x16
+		mov rsi, rdx ; rsi = p
 		shl rsi, 4 ; p*16 
 		movdqa xmm2, [rbx + rsi]
 		; Compute minimum hz
@@ -857,23 +850,11 @@ sym(FastData16Row_Asm_X86_SSE2):
 		%endrep
 		.EndOfDarkers
 		
-		; rax = strength = std::max(maxnbrighter, maxndarker);
-		mov rax, rdx
-		cmp rcx, rdx
-		%if %1 == 1
-			cmovg rax, rcx
-		%else
-			jl .NotMax
-			mov rax, rcx
-			.NotMax
-		%endif
-
-	mov rdx, [rsp + 8] ; p
-	mov rcx, arg(6) ; &strengths16
-	mov [rcx + rdx], byte al ; strengths16[p] = x
+	; compute strenghts[p]
+	mov rax, arg(6) ; &strengths16
+	mov [rax + rdx], byte cl ; strengths16[p] = maxn
 	
-	mov rcx, 1
-	add [rsp + 8], rcx ; p+= 1
+	inc rdx ; p+= 1
 
 	mov rax, [rsp + 0]
 	shl rax, 1
@@ -883,7 +864,7 @@ sym(FastData16Row_Asm_X86_SSE2):
 	;----------------
 
 	; free memory
-	add rsp, 8+8
+	add rsp, 8
 
 	; begin epilog
 	pop rbx

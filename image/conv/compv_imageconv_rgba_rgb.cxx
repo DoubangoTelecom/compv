@@ -76,7 +76,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVObjWrapper<CompVIma
     CompVObjWrapper<CompVThreadDispatcher* >&threadDip = CompVEngine::getThreadDispatcher();
 
     if (COMPV_IS_ALIGNED_SSE(stride)) {
-        if (CompVCpu::isSupported(kCpuFlagSSSE3)) {
+        if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
             COMPV_EXEC_IFDEF_ASM_X86(toRGBA = rgbToRgbaKernel31_Asm_X86_Aligned00_SSSE3);
             if (COMPV_IS_ALIGNED_SSE(rgbPtr)) {
                 COMPV_EXEC_IFDEF_ASM_X86(toRGBA = rgbToRgbaKernel31_Asm_X86_Aligned10_SSSE3);
@@ -92,7 +92,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVObjWrapper<CompVIma
     }
 
     if (COMPV_IS_ALIGNED_AVX2(stride)) {
-        if (CompVCpu::isSupported(kCpuFlagAVX2)) {
+        if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
             COMPV_EXEC_IFDEF_ASM_X86(toRGBA = rgbToRgbaKernel31_Asm_X86_Aligned00_AVX2);
             if (COMPV_IS_ALIGNED_AVX2(rgbPtr)) {
                 COMPV_EXEC_IFDEF_ASM_X86(toRGBA = rgbToRgbaKernel31_Asm_X86_Aligned10_AVX2);

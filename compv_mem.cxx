@@ -75,14 +75,14 @@ COMPV_ERROR_CODE CompVMem::copyNTA(void* dstPtr, const void*srcPtr, size_t size)
 	CompVMemCopy cpy = CompVMemCopy_C;
 
 	if (size > COMPV_MEM_SIZE_MIN_SIMD) {
-		if (CompVCpu::isSupported(kCpuFlagSSE2)) {
+		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 			if (COMPV_IS_ALIGNED_SSE(dstPtr) && COMPV_IS_ALIGNED_SSE(srcPtr)) {
 				COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopyNTA_Intrin_Aligned_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
 				COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopyNTA_Asm_Aligned11_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
 				COMPV_EXEC_IFDEF_ASM_X64((cpy = MemCopyNTA_Asm_Aligned11_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
 			}
 		}
-		if (CompVCpu::isSupported(kCpuFlagAVX)) {
+		if (CompVCpu::isEnabled(kCpuFlagAVX)) {
 			if (COMPV_IS_ALIGNED_AVX(dstPtr) && COMPV_IS_ALIGNED_AVX(srcPtr)) {
 				COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopyNTA_Intrin_Aligned_AVX, align = COMPV_SIMD_ALIGNV_AVX));
 				COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopyNTA_Asm_Aligned11_X86_AVX, align = COMPV_SIMD_ALIGNV_AVX));
@@ -126,12 +126,12 @@ COMPV_ERROR_CODE CompVMem::zeroNTA(void* dstPtr, size_t size)
 	size_t align = 1;
 
 	if (size > COMPV_MEM_SIZE_MIN_SIMD) {
-		if (CompVCpu::isSupported(kCpuFlagSSE2)) {
+		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 			if (COMPV_IS_ALIGNED_SSE(dstPtr)) {
 				COMPV_EXEC_IFDEF_INTRIN_X86((setz = MemZeroNTA_Intrin_Aligned_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
 			}
 		}
-		if (CompVCpu::isSupported(kCpuFlagAVX)) {
+		if (CompVCpu::isEnabled(kCpuFlagAVX)) {
 			if (COMPV_IS_ALIGNED_AVX(dstPtr)) {
 			}
 		}

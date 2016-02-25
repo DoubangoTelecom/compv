@@ -96,7 +96,8 @@ public:
 	static uint64_t getFlagsDisabled() { return s_uFlagsDisabled; }
 	static uint64_t getFlagsEnabled() { return s_uFlagsEnabled; }
 	static const char* getFlagsAsString(uint64_t uFlags);
-	static bool isSupported(uint64_t flag){ return (s_uFlagsEnabled & flag) == flag; }
+	static bool isEnabled(uint64_t flag) { return (s_uFlagsEnabled & flag) == flag; }
+	static bool isSupported(uint64_t flag) { return (s_uFlags & flag) == flag; }
 	static COMPV_ERROR_CODE flagsDisable(uint64_t flags);
 	static COMPV_ERROR_CODE flagsEnable(uint64_t flags);
 	static COMPV_ERROR_CODE setAsmEnabled(bool bEnabled);
