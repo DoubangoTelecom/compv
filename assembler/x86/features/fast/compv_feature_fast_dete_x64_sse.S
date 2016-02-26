@@ -33,6 +33,11 @@ global sym(Fast9Strengths16_Asm_X64_SSE41)
 global sym(Fast12Strengths16_Asm_CMOV_X64_SSE41)
 global sym(Fast12Strengths16_Asm_X64_SSE41)
 
+global sym(Fast9Strengths32_Asm_CMOV_X64_SSE41)
+global sym(Fast9Strengths32_Asm_X64_SSE41)
+global sym(Fast12Strengths32_Asm_CMOV_X64_SSE41)
+global sym(Fast12Strengths32_Asm_X64_SSE41)
+
 section .data
 	extern sym(kFast9Arcs)
 	extern sym(kFast12Arcs)
@@ -983,5 +988,282 @@ sym(Fast12Strengths16_Asm_CMOV_X64_SSE41):
 ;;; compv_scalar_t Fast12Strengths16_Asm_X64_SSE41(COMPV_ALIGNED(SSE) const int16_t(&dbrighters)[16], COMPV_ALIGNED(SSE) const int16_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16])
 sym(Fast12Strengths16_Asm_X64_SSE41):
 	FastStrengths16_Asm_X64_SSE41 0, 12
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> compv_scalar_t rbrighters
+; arg(1) -> compv_scalar_t rdarkers
+; arg(2) -> COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x32
+; arg(3) -> COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x32
+; arg(4) -> const compv_scalar_t(*fbrighters16)[16]
+; arg(5) -> const compv_scalar_t(*fdarkers16)[16]
+; arg(6) -> uint8_t* Strengths32
+; arg(7) -> compv_scalar_t N
+; %1 -> 1: CMOV is supported, 0 CMOV not supported
+; %2 -> 9: Use FAST9, 12: FAST12 ....
+%macro FastStrengths32_Asm_X64_SSE41 2
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
+	COMPV_YASM_SAVE_XMM 7 ;XMM[6-n]
+	push rsi
+	push rdi
+	push rbx
+	; end prolog
+	
+	; r8 = p
+	; r9 = p*32
+	; r10 = 1<<p
+	; r11 = 0
+
+	
+	xor r11, r11
+	pxor xmm0, xmm0
+	
+
+	; FAST hard-coded flags
+	%if %2 == 9
+		movdqa xmm7, [sym(Fast9Flags) + 0] ; xmmFastXFlagsLow
+		movdqa xmm6, [sym(Fast9Flags) + 16]; xmm6 = xmmFastXFlagsHigh
+	%elif %2 == 12
+		movdqa xmm7, [sym(Fast12Flags) + 0] ; xmmFastXFlagsLow
+		movdqa xmm6, [sym(Fast12Flags) + 16]; xmm6 = xmmFastXFlagsHigh
+	%else
+		%error "not supported"
+	%endif	
+
+	;----------------------
+	; process16
+	;----------------------
+	%assign j 0
+	%rep 2
+
+		mov rax, 1
+		xor r8, r8 ; r8 = p = 0
+		xor r9, r9 ; r9 = p*32 = 0
+		mov r10, rax ; (1<<p) = (1<<0) = 1
+
+		;----------------------
+		; Loop Start
+		;----------------------
+		.LoopStart %+ j
+			mov rcx, r11 ; rcx = maxn
+
+			; ---------
+			; Brighters
+			; ---------
+			test arg(0), r10 ;  (1 << p) ?
+			jz .EndOfBrighters %+ j
+			mov rax, arg(4) ; &fbrighters16
+			mov rdi, [rax + r8*COMPV_YASM_REG_SZ_BYTES] ; fbrighters16[p]
+			%if j == 1
+				shr rdi, 16
+			%endif
+
+			movd xmm5, rdi
+			punpcklwd xmm5, xmm5  
+			pshufd xmm5, xmm5, 0 ; xmm5 = _mm_set1_epi16(fbrighters)
+			movdqa xmm4, xmm5
+			pand xmm5, xmm7
+			pand xmm4, xmm6
+			pcmpeqw xmm5, xmm7
+			pcmpeqw xmm4, xmm6
+			; clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
+			psrlw xmm5, 1
+			psrlw xmm4, 1
+			packuswb xmm5, xmm4
+			pmovmskb eax, xmm5
+			test ax, ax ; rax = r0
+			jz .EndOfBrighters %+ j
+			pxor xmm3, xmm3 ; xmm3 = Zeros
+			; Load dbrighters
+			mov rbx, arg(2) ; dbrighters16x32
+			movdqa xmm2, [rbx + r9 + j*16] ; dbrighters16x32[p*16]
+			; Compute minimum hz
+			%assign i 0
+			%rep    16
+				test rax, 1<<i
+				jz .EndOfBrightersMin %+ j %+ i
+				movdqa xmm1, xmm2
+				%if %2 == 9
+					movdqa xmm0, [sym(kFast9Arcs) + i*16]
+				%elif %2 == 12
+					movdqa xmm0, [sym(kFast12Arcs) + i*16]
+				%else
+					%error "not supported"
+				%endif
+				pshufb xmm1, xmm0
+				movdqa xmm4, xmm1
+				punpcklbw xmm1, xmm3
+				punpckhbw xmm4, xmm3
+				phminposuw xmm1, xmm1
+				phminposuw xmm4, xmm4
+				movd rdi, xmm1
+				movd rsi, xmm4
+				and rdi, 0xFFFF
+				and rsi, 0xFFFF
+				cmp rsi, rdi
+				%if %1 == 1
+					cmovl rdi, rsi
+				%else
+					jg .BrightersNotMin %+ j %+ i
+					mov rdi, rsi
+					.BrightersNotMin %+ j %+ i
+				%endif
+				cmp rdi, rcx
+				%if %1 == 1
+					cmovg rcx, rdi
+				%else
+					jl .BrightersNotMax %+ j %+ i
+					mov rcx, rdi
+					.BrightersNotMax %+ j %+ i
+				%endif
+				.EndOfBrightersMin %+ j %+ i
+				%assign i i+1
+			%endrep
+			.EndOfBrighters %+ j
+
+			; ---------
+			; Darkers
+			; ---------
+		.Darkers %+ j
+			test arg(1), r10 ; (rdarkers & (1 << p)) ?
+			jz .EndOfDarkers %+ j
+			mov rax, arg(5) ; &fdarkers16
+			mov rdi, [rax + r8*COMPV_YASM_REG_SZ_BYTES] ; fdarkers16[p]
+			%if j == 1
+				shr rdi, 16
+			%endif
+
+			movd xmm5, rdi
+			punpcklwd xmm5, xmm5  
+			pshufd xmm5, xmm5, 0 ; xmm5 = _mm_set1_epi16(fdarkers)
+			movdqa xmm4, xmm5
+			pand xmm5, xmm7
+			pand xmm4, xmm6
+			pcmpeqw xmm5, xmm7
+			pcmpeqw xmm4, xmm6
+			; clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
+			psrlw xmm5, 1
+			psrlw xmm4, 1
+			packuswb xmm5, xmm4
+			pmovmskb eax, xmm5
+			test ax, ax ; rax = r0
+			jz .EndOfDarkers %+ j
+			pxor xmm3, xmm3 ; xmm3 = Zeros
+			; Load ddarkers16x32
+			mov rbx, arg(3) ; ddarkers16x32
+			movdqa xmm2, [rbx + r9 + j*16] ; ddarkers16x32[p*16]
+			; Compute minimum hz
+			%assign i 0
+			%rep    16
+				test rax, 1<<i
+				jz .EndOfDarkersMin %+ j %+ i
+				movdqa xmm1, xmm2
+				%if %2 == 9
+					movdqa xmm0, [sym(kFast9Arcs) + i*16]
+				%elif %2 == 12
+					movdqa xmm0, [sym(kFast12Arcs) + i*16]
+				%else
+					%error "not supported"
+				%endif
+				pshufb xmm1, xmm0
+				movdqa xmm4, xmm1
+				punpcklbw xmm1, xmm3
+				punpckhbw xmm4, xmm3
+				phminposuw xmm1, xmm1
+				phminposuw xmm4, xmm4
+				movd rdi, xmm1
+				movd rsi, xmm4
+				and rdi, 0xFFFF
+				and rsi, 0xFFFF
+				cmp rsi, rdi
+				%if %1 == 1
+						cmovl rdi, rsi
+					%else
+						jg .DarkersNotMin %+ j %+ i
+						mov rdi, rsi
+						.DarkersNotMin %+ j %+ i
+					%endif
+					cmp rdi, rcx
+					%if %1 == 1
+						cmovg rcx, rdi
+					%else
+						jl .DarkersNotMax %+ j %+ i
+						mov rcx, rdi
+						.DarkersNotMax %+ j %+ i
+					%endif
+				.EndOfDarkersMin %+ j %+ i
+				%assign i i+1
+			%endrep
+		.EndOfDarkers %+ j
+		
+		; compute strenghts[p]
+		mov rax, arg(6) ; &Strengths32
+		mov [rax + r8 + j*16], byte cl ; Strengths32[p] = maxn
+
+		add r8, 1 ; r8 = p
+		add r9, 32 ; r9 = p*32
+		shl r10, 1 ; r10 = 1<<p
+		cmp r8, 16
+		jl .LoopStart %+ j
+		;----------------
+
+	%if j == 0
+		mov rax, arg(0) ; rbrighters
+		mov rcx, arg(1) ; rdarkers
+		shr rax, 16
+		shr rcx, 16
+		mov rbx, rax
+		or rbx, rcx ; rbrighters || rdarkers
+		test bx, bx
+		jnz .process16_continue
+		; set remaining strengths to zeros
+		pxor xmm0, xmm0
+		mov rbx, arg(6) ; Strengths32
+		movdqu [rbx + 16], xmm0
+		jmp .process16_done
+		.process16_continue
+		mov arg(0), rax ; rbrighters >>= 16
+		mov arg(1), rcx ; rdarkers >>= 16
+	%endif
+
+	%assign j j+1
+
+	; EndOf .process16
+	%endrep
+
+	.process16_done
+
+	; begin epilog
+	pop rbx
+	pop rdi
+	pop rsi
+    COMPV_YASM_RESTORE_XMM
+    COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; compv_scalar_t Fast9Strengths32_Asm_CMOV_X64_SSE41(COMPV_ALIGNED(SSE) const int16_t(&dbrighters)[16], COMPV_ALIGNED(SSE) const int16_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16])
+sym(Fast9Strengths32_Asm_CMOV_X64_SSE41):
+	FastStrengths32_Asm_X64_SSE41 1, 9
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; compv_scalar_t Fast9Strengths32_Asm_X64_SSE41(COMPV_ALIGNED(SSE) const int16_t(&dbrighters)[16], COMPV_ALIGNED(SSE) const int16_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16])
+sym(Fast9Strengths32_Asm_X64_SSE41):
+	FastStrengths32_Asm_X64_SSE41 0, 9
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; compv_scalar_t Fast12Strengths32_Asm_CMOV_X64_SSE41(COMPV_ALIGNED(SSE) const int16_t(&dbrighters)[16], COMPV_ALIGNED(SSE) const int16_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16])
+sym(Fast12Strengths32_Asm_CMOV_X64_SSE41):
+	FastStrengths32_Asm_X64_SSE41 1, 12
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; compv_scalar_t Fast12Strengths32_Asm_X64_SSE41(COMPV_ALIGNED(SSE) const int16_t(&dbrighters)[16], COMPV_ALIGNED(SSE) const int16_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16])
+sym(Fast12Strengths32_Asm_X64_SSE41):
+	FastStrengths32_Asm_X64_SSE41 0, 12
 
 %endif ; COMPV_YASM_ABI_IS_64BIT
