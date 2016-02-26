@@ -316,6 +316,10 @@
 #	define HAVE_CLOCK_GETTIME				1
 #endif
 
+#if !defined (COMPV_THREAD_SET_AFFINITY)
+#	define COMPV_THREAD_SET_AFFINITY 0
+#endif
+
 #if COMPV_OS_WINDOWS
 #	define _WINSOCKAPI_
 #	define NOMINMAX

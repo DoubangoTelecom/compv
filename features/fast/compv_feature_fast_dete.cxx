@@ -354,7 +354,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
 
     if (threadsCountRange > 1) {
         int32_t rowStart = 0, threadHeight, totalHeight = 0;
-        uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+		uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
 		RangeFAST* pRange;
         for (int i = 0; i < threadsCountRange; ++i) {
             threadHeight = ((height - totalHeight) / (threadsCountRange - i)) & -2; // the & -2 is to make sure we'll deal with odd heights

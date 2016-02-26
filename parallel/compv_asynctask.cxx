@@ -59,11 +59,13 @@ COMPV_ERROR_CODE CompVAsyncTask::start()
         COMPV_CHECK_CODE_RETURN(err_);
     }
     if (m_iCoreId >= 0) {
+#if COMPV_THREAD_SET_AFFINITY
         err_ = m_Thread->setAffinity(m_iCoreId);
         if (COMPV_ERROR_CODE_IS_NOK(err_)) {
             COMPV_DEBUG_ERROR("Failed to set thread affinity value to %d with error code = %d", m_iCoreId, err_);
             err_ = COMPV_ERROR_CODE_S_OK; // not fatal error, once the user is alerted continue
         }
+#endif
     }
 
     err_ = m_Thread->setPriority(COMPV_THREAD_PRIORITY_TIME_CRITICAL);
@@ -78,7 +80,9 @@ COMPV_ERROR_CODE CompVAsyncTask::start()
 COMPV_ERROR_CODE CompVAsyncTask::setAffinity(compv_core_id_t coreId)
 {
     if (m_Thread) {
+#if COMPV_THREAD_SET_AFFINITY
         COMPV_CHECK_CODE_RETURN(m_Thread->setAffinity(coreId));
+#endif
     }
     m_iCoreId = coreId;
     return COMPV_ERROR_CODE_S_OK;
@@ -242,7 +246,8 @@ COMPV_ERROR_CODE CompVAsyncTask::wait(compv_asynctoken_id_t token_id, uint64_t u
         u_end = (CompVTime::getNowMills() + u_timeout);
         while ((pToken->bExecuting || pToken->bExecute) && u_end > CompVTime::getNowMills()) {
 #if 0
-            __asm PAUSE;
+             __asm PAUSE;
+			//m_Thread->sleep(0);
 #else
             m_SemExec->decrement();
 #endif
@@ -302,9 +307,11 @@ void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
     size_t size_;
 
     // Make sure the affinity is defined. This function is called in start() but after thread creation which means we could miss it if this function is called very fast
+#if COMPV_THREAD_SET_AFFINITY
     if (Self_->m_iCoreId >= 0) {
         COMPV_CHECK_CODE_BAIL(err_ = Self_->m_Thread->setAffinity(Self_->m_iCoreId));
     }
+#endif
 
     COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=%d, threadId:%d) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), CompVThread::getIdCurrent());
 
