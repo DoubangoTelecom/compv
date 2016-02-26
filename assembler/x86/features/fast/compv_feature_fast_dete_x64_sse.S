@@ -820,10 +820,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 		pand xmm4, xmm6
 		pcmpeqw xmm5, xmm7
 		pcmpeqw xmm4, xmm6
-		; clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
-		psrlw xmm5, 1
-		psrlw xmm4, 1
-		packuswb xmm5, xmm4
+		packsswb xmm5, xmm4
 		pmovmskb eax, xmm5
 		test ax, ax ; rax = r0
 		jz .EndOfBrighters
@@ -850,24 +847,22 @@ sym(FastData16Row_Asm_X64_SSE2):
 			punpckhbw xmm4, xmm3
 			phminposuw xmm1, xmm1
 			phminposuw xmm4, xmm4
-			movd rdi, xmm1
-			movd rsi, xmm4
-			and rdi, 0xFFFF
-			and rsi, 0xFFFF
-			cmp rsi, rdi
+			movd rdi, xmm1 ; bits [16:18] contains the index and must be ignored or cleared
+			movd rsi, xmm4 ; bits [16:18] contains the index and must be ignored or cleared
+			cmp si, di
 			%if %1 == 1
-				cmovl rdi, rsi
+				cmovl di, si
 			%else
 				jg .BrightersNotMin %+ i
-				mov rdi, rsi
+				mov di, si
 				.BrightersNotMin %+ i
 			%endif
-			cmp rdi, rcx
+			cmp di, cx
 			%if %1 == 1
-				cmovg rcx, rdi
+				cmovg cx, di
 			%else
 				jl .BrightersNotMax %+ i
-				mov rcx, rdi
+				mov cx, di
 				.BrightersNotMax %+ i
 			%endif
 			.EndOfBrightersMin %+ i
@@ -892,10 +887,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 		pand xmm4, xmm6
 		pcmpeqw xmm5, xmm7
 		pcmpeqw xmm4, xmm6
-		; clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
-		psrlw xmm5, 1
-		psrlw xmm4, 1
-		packuswb xmm5, xmm4
+		packsswb xmm5, xmm4
 		pmovmskb eax, xmm5
 		test ax, ax ; rax = r0
 		jz .EndOfDarkers
@@ -922,24 +914,22 @@ sym(FastData16Row_Asm_X64_SSE2):
 			punpckhbw xmm4, xmm3
 			phminposuw xmm1, xmm1
 			phminposuw xmm4, xmm4
-			movd rdi, xmm1
-			movd rsi, xmm4
-			and rdi, 0xFFFF
-			and rsi, 0xFFFF
-			cmp rsi, rdi
+			movd rdi, xmm1 ; bits [16:18] contains the index and must be ignored or cleared
+			movd rsi, xmm4 ; bits [16:18] contains the index and must be ignored or cleared
+			cmp si, di
 			%if %1 == 1
-					cmovl rdi, rsi
+					cmovl di, si
 				%else
 					jg .DarkersNotMin %+ i
-					mov rdi, rsi
+					mov di, si
 					.DarkersNotMin %+ i
 				%endif
-				cmp rdi, rcx
+				cmp di, cx
 				%if %1 == 1
-					cmovg rcx, rdi
+					cmovg cx, di
 				%else
 					jl .DarkersNotMax %+ i
-					mov rcx, rdi
+					mov cx, di
 					.DarkersNotMax %+ i
 				%endif
 			.EndOfDarkersMin %+ i
@@ -1009,25 +999,33 @@ sym(Fast12Strengths16_Asm_X64_SSE41):
 	push rsi
 	push rdi
 	push rbx
+	push r12
+	push r13
+	push r14
+	push r15
 	; end prolog
 	
 	; r8 = p
 	; r9 = p*32
-	; r10 = 1<<p
-	; r11 = 0
-
+	; r10 = 1<<p	
 	
-	xor r11, r11
+	mov rbx, arg(6) ; Strengths32
+	mov rdx, arg(0) ; rbrighters
+	mov r11, arg(1) ; rdarkers
+	mov r12, arg(4) ; fbrighters16
+	mov r13, arg(5) ; fdarkers16
+	mov r14, arg(2) ; dbrighters16x32
+	mov r15, arg(3) ; ddarkers16x32
 	pxor xmm0, xmm0
 	
 
 	; FAST hard-coded flags
 	%if %2 == 9
-		movdqa xmm7, [sym(Fast9Flags) + 0] ; xmmFastXFlagsLow
-		movdqa xmm6, [sym(Fast9Flags) + 16]; xmm6 = xmmFastXFlagsHigh
+		movdqa xmm3, [sym(Fast9Flags) + 0] ; xmm3 = xmmFastXFlagsLow
+		movdqa xmm4, [sym(Fast9Flags) + 16]; xmm4 = xmmFastXFlagsHigh
 	%elif %2 == 12
-		movdqa xmm7, [sym(Fast12Flags) + 0] ; xmmFastXFlagsLow
-		movdqa xmm6, [sym(Fast12Flags) + 16]; xmm6 = xmmFastXFlagsHigh
+		movdqa xmm3, [sym(Fast12Flags) + 0] ; xmm3 = xmmFastXFlagsLow
+		movdqa xmm4, [sym(Fast12Flags) + 16]; xmm4 = xmmFastXFlagsHigh
 	%else
 		%error "not supported"
 	%endif	
@@ -1038,6 +1036,17 @@ sym(Fast12Strengths16_Asm_X64_SSE41):
 	%assign j 0
 	%rep 2
 
+		; Check if the low 16bits are unset
+		%if j == 0
+			mov rax, rdx
+			or rax, r11 ; rdx || r11
+			test ax, ax
+			jnz .Low16bitsAreSet %+ j
+			movdqu [rbx], xmm0 ; set strengths to zeros
+			jmp .process16_next %+ j
+			.Low16bitsAreSet %+ j
+		%endif
+
 		mov rax, 1
 		xor r8, r8 ; r8 = p = 0
 		xor r9, r9 ; r9 = p*32 = 0
@@ -1047,15 +1056,14 @@ sym(Fast12Strengths16_Asm_X64_SSE41):
 		; Loop Start
 		;----------------------
 		.LoopStart %+ j
-			mov rcx, r11 ; rcx = maxn
+			xor rcx, rcx ; rcx = maxn
 
 			; ---------
 			; Brighters
 			; ---------
-			test arg(0), r10 ;  (1 << p) ?
+			test rdx, r10 ;  (1 << p) ?
 			jz .EndOfBrighters %+ j
-			mov rax, arg(4) ; &fbrighters16
-			mov rdi, [rax + r8*COMPV_YASM_REG_SZ_BYTES] ; fbrighters16[p]
+			mov rdi, [r12 + r8*COMPV_YASM_REG_SZ_BYTES] ; fbrighters16[p]
 			%if j == 1
 				shr rdi, 16
 			%endif
@@ -1063,22 +1071,17 @@ sym(Fast12Strengths16_Asm_X64_SSE41):
 			movd xmm5, rdi
 			punpcklwd xmm5, xmm5  
 			pshufd xmm5, xmm5, 0 ; xmm5 = _mm_set1_epi16(fbrighters)
-			movdqa xmm4, xmm5
-			pand xmm5, xmm7
-			pand xmm4, xmm6
-			pcmpeqw xmm5, xmm7
-			pcmpeqw xmm4, xmm6
-			; clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
-			psrlw xmm5, 1
-			psrlw xmm4, 1
-			packuswb xmm5, xmm4
+			movdqa xmm6, xmm5
+			pand xmm5, xmm3
+			pand xmm6, xmm4
+			pcmpeqw xmm5, xmm3
+			pcmpeqw xmm6, xmm4
+			packsswb xmm5, xmm6
 			pmovmskb eax, xmm5
 			test ax, ax ; rax = r0
 			jz .EndOfBrighters %+ j
-			pxor xmm3, xmm3 ; xmm3 = Zeros
 			; Load dbrighters
-			mov rbx, arg(2) ; dbrighters16x32
-			movdqa xmm2, [rbx + r9 + j*16] ; dbrighters16x32[p*16]
+			movdqa xmm2, [r14 + r9 + j*16] ; dbrighters16x32[p*16]
 			; Compute minimum hz
 			%assign i 0
 			%rep    16
@@ -1086,36 +1089,34 @@ sym(Fast12Strengths16_Asm_X64_SSE41):
 				jz .EndOfBrightersMin %+ j %+ i
 				movdqa xmm1, xmm2
 				%if %2 == 9
-					movdqa xmm0, [sym(kFast9Arcs) + i*16]
+					movdqa xmm7, [sym(kFast9Arcs) + i*16]
 				%elif %2 == 12
-					movdqa xmm0, [sym(kFast12Arcs) + i*16]
+					movdqa xmm7, [sym(kFast12Arcs) + i*16]
 				%else
 					%error "not supported"
 				%endif
-				pshufb xmm1, xmm0
-				movdqa xmm4, xmm1
-				punpcklbw xmm1, xmm3
-				punpckhbw xmm4, xmm3
+				pshufb xmm1, xmm7
+				movdqa xmm6, xmm1
+				punpcklbw xmm1, xmm0
+				punpckhbw xmm6, xmm0
 				phminposuw xmm1, xmm1
-				phminposuw xmm4, xmm4
-				movd rdi, xmm1
-				movd rsi, xmm4
-				and rdi, 0xFFFF
-				and rsi, 0xFFFF
-				cmp rsi, rdi
+				phminposuw xmm6, xmm6
+				movd rdi, xmm1 ; bits [16:18] contains the index and must be ignored or cleared
+				movd rsi, xmm6 ; bits [16:18] contains the index and must be ignored or cleared
+				cmp si, di
 				%if %1 == 1
-					cmovl rdi, rsi
+					cmovl di, si
 				%else
 					jg .BrightersNotMin %+ j %+ i
-					mov rdi, rsi
+					mov di, si
 					.BrightersNotMin %+ j %+ i
 				%endif
-				cmp rdi, rcx
+				cmp di, cx
 				%if %1 == 1
-					cmovg rcx, rdi
+					cmovg cx, di
 				%else
 					jl .BrightersNotMax %+ j %+ i
-					mov rcx, rdi
+					mov cx, di
 					.BrightersNotMax %+ j %+ i
 				%endif
 				.EndOfBrightersMin %+ j %+ i
@@ -1127,10 +1128,9 @@ sym(Fast12Strengths16_Asm_X64_SSE41):
 			; Darkers
 			; ---------
 		.Darkers %+ j
-			test arg(1), r10 ; (rdarkers & (1 << p)) ?
+			test r11, r10 ; (rdarkers & (1 << p)) ?
 			jz .EndOfDarkers %+ j
-			mov rax, arg(5) ; &fdarkers16
-			mov rdi, [rax + r8*COMPV_YASM_REG_SZ_BYTES] ; fdarkers16[p]
+			mov rdi, [r13 + r8*COMPV_YASM_REG_SZ_BYTES] ; fdarkers16[p]
 			%if j == 1
 				shr rdi, 16
 			%endif
@@ -1138,22 +1138,17 @@ sym(Fast12Strengths16_Asm_X64_SSE41):
 			movd xmm5, rdi
 			punpcklwd xmm5, xmm5  
 			pshufd xmm5, xmm5, 0 ; xmm5 = _mm_set1_epi16(fdarkers)
-			movdqa xmm4, xmm5
-			pand xmm5, xmm7
-			pand xmm4, xmm6
-			pcmpeqw xmm5, xmm7
-			pcmpeqw xmm4, xmm6
-			; clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
-			psrlw xmm5, 1
-			psrlw xmm4, 1
-			packuswb xmm5, xmm4
+			movdqa xmm6, xmm5
+			pand xmm5, xmm3
+			pand xmm6, xmm4
+			pcmpeqw xmm5, xmm3
+			pcmpeqw xmm6, xmm4
+			packsswb xmm5, xmm6
 			pmovmskb eax, xmm5
 			test ax, ax ; rax = r0
 			jz .EndOfDarkers %+ j
-			pxor xmm3, xmm3 ; xmm3 = Zeros
 			; Load ddarkers16x32
-			mov rbx, arg(3) ; ddarkers16x32
-			movdqa xmm2, [rbx + r9 + j*16] ; ddarkers16x32[p*16]
+			movdqa xmm2, [r15 + r9 + j*16] ; ddarkers16x32[p*16]
 			; Compute minimum hz
 			%assign i 0
 			%rep    16
@@ -1161,36 +1156,34 @@ sym(Fast12Strengths16_Asm_X64_SSE41):
 				jz .EndOfDarkersMin %+ j %+ i
 				movdqa xmm1, xmm2
 				%if %2 == 9
-					movdqa xmm0, [sym(kFast9Arcs) + i*16]
+					movdqa xmm7, [sym(kFast9Arcs) + i*16]
 				%elif %2 == 12
-					movdqa xmm0, [sym(kFast12Arcs) + i*16]
+					movdqa xmm7, [sym(kFast12Arcs) + i*16]
 				%else
 					%error "not supported"
 				%endif
-				pshufb xmm1, xmm0
-				movdqa xmm4, xmm1
-				punpcklbw xmm1, xmm3
-				punpckhbw xmm4, xmm3
+				pshufb xmm1, xmm7
+				movdqa xmm6, xmm1
+				punpcklbw xmm1, xmm0
+				punpckhbw xmm6, xmm0
 				phminposuw xmm1, xmm1
-				phminposuw xmm4, xmm4
-				movd rdi, xmm1
-				movd rsi, xmm4
-				and rdi, 0xFFFF
-				and rsi, 0xFFFF
-				cmp rsi, rdi
+				phminposuw xmm6, xmm6
+				movd rdi, xmm1 ; bits [16:18] contains the index and must be ignored or cleared
+				movd rsi, xmm6 ; bits [16:18] contains the index and must be ignored or cleared
+				cmp si, di
 				%if %1 == 1
-						cmovl rdi, rsi
+						cmovl di, si
 					%else
 						jg .DarkersNotMin %+ j %+ i
-						mov rdi, rsi
+						mov di, si
 						.DarkersNotMin %+ j %+ i
 					%endif
-					cmp rdi, rcx
+					cmp di, cx
 					%if %1 == 1
-						cmovg rcx, rdi
+						cmovg cx, di
 					%else
 						jl .DarkersNotMax %+ j %+ i
-						mov rcx, rdi
+						mov cx, di
 						.DarkersNotMax %+ j %+ i
 					%endif
 				.EndOfDarkersMin %+ j %+ i
@@ -1199,33 +1192,28 @@ sym(Fast12Strengths16_Asm_X64_SSE41):
 		.EndOfDarkers %+ j
 		
 		; compute strenghts[p]
-		mov rax, arg(6) ; &Strengths32
-		mov [rax + r8 + j*16], byte cl ; Strengths32[p] = maxn
+		mov [rbx + r8 + j*16], byte cl ; Strengths32[p] = maxn
 
-		add r8, 1 ; r8 = p
-		add r9, 32 ; r9 = p*32
+		lea r8, [r8 + 1]
+		lea r9, [r9 + 32] ; r9 = p*32
 		shl r10, 1 ; r10 = 1<<p
 		cmp r8, 16
 		jl .LoopStart %+ j
 		;----------------
 
+	.process16_next %+ j
+
 	%if j == 0
-		mov rax, arg(0) ; rbrighters
-		mov rcx, arg(1) ; rdarkers
-		shr rax, 16
-		shr rcx, 16
-		mov rbx, rax
-		or rbx, rcx ; rbrighters || rdarkers
-		test bx, bx
+		shr rdx, 16
+		shr r11, 16
+		mov r8, rdx
+		or r8, r11 ; rbrighters || rdarkers
+		test r8w, r8w
 		jnz .process16_continue
 		; set remaining strengths to zeros
-		pxor xmm0, xmm0
-		mov rbx, arg(6) ; Strengths32
 		movdqu [rbx + 16], xmm0
 		jmp .process16_done
 		.process16_continue
-		mov arg(0), rax ; rbrighters >>= 16
-		mov arg(1), rcx ; rdarkers >>= 16
 	%endif
 
 	%assign j j+1
@@ -1236,11 +1224,15 @@ sym(Fast12Strengths16_Asm_X64_SSE41):
 	.process16_done
 
 	; begin epilog
+	pop r15
+	pop r14
+	pop r13
+	pop r12
 	pop rbx
 	pop rdi
 	pop rsi
-    COMPV_YASM_RESTORE_XMM
-    COMPV_YASM_UNSHADOW_ARGS
+	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
 	ret

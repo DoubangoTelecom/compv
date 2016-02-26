@@ -389,10 +389,7 @@ void FastStrengths16_Intrin_SSE2(compv_scalar_t rbrighters, compv_scalar_t rdark
 			_mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
 			_mm_store_si128(&xmm1, _mm_and_si128(xmmFbrighters, xmmFastXFlagsHigh));
 			_mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
-			// xmm0 and xmm1 contain zeros and 0xFF values, if packed and satured we'll end with all-zeros -> perform a ">> 1" which keep sign bit
-			_mm_store_si128(&xmm0, _mm_srli_epi16(xmm0, 1));
-			_mm_store_si128(&xmm1, _mm_srli_epi16(xmm1, 1));
-			r0 = _mm_movemask_epi8(_mm_packus_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
+			r0 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
 			if (r0) {
 				uint8_t nbrighter;
 				for (i = 0; i < 16; ++i) {
@@ -420,10 +417,7 @@ void FastStrengths16_Intrin_SSE2(compv_scalar_t rbrighters, compv_scalar_t rdark
 			_mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
 			_mm_store_si128(&xmm1, _mm_and_si128(xmmFdarkers, xmmFastXFlagsHigh));
 			_mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
-			// xmm0 and xmm1 contain zeros and 0xFF values, if packed and satured we'll end with all-zeros -> perform a ">> 1" which keep sign bit
-			_mm_store_si128(&xmm0, _mm_srli_epi16(xmm0, 1));
-			_mm_store_si128(&xmm1, _mm_srli_epi16(xmm1, 1));
-			r1 = _mm_movemask_epi8(_mm_packus_epi16(xmm0, xmm1)); // r1's popcnt is equal to N as FastXFlags contains values with popcnt==N
+			r1 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r1's popcnt is equal to N as FastXFlags contains values with popcnt==N
 			if (r1) {
 				uint8_t ndarker;
 				for (i = 0; i < 16; ++i) {
@@ -472,7 +466,7 @@ void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdar
 		_mm_store_si128(&xmm1, _mm_shuffle_epi8(xmm0, _mm_load_si128((__m128i*)kFastArcs[i]))); /* eliminate zeros and duplicate first matching non-zero */ \
 		lowMin = _mm_cvtsi128_si32(_mm_minpos_epu16(_mm_unpacklo_epi8(xmm1, xmmZeros))); \
 		highMin = _mm_cvtsi128_si32(_mm_minpos_epu16(_mm_unpackhi_epi8(xmm1, xmmZeros))); \
-		/* _mm_minpos_epu16 must set to zero the remaining bits but this doesn't look to happen or I missed something */ \
+		/* clear the index bits [16:18] */ \
 		lowMin &= 0xFFFF; \
 		highMin &= 0xFFFF; \
 		maxn_ = std::max(std::min(lowMin, highMin), (int)maxn_); \
@@ -489,10 +483,7 @@ void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdar
 			_mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
 			_mm_store_si128(&xmm1, _mm_and_si128(xmmFbrighters, xmmFastXFlagsHigh));
 			_mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
-			// clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
-			_mm_store_si128(&xmm0, _mm_srli_epi16(xmm0, 1));
-			_mm_store_si128(&xmm1, _mm_srli_epi16(xmm1, 1));
-			r0 = _mm_movemask_epi8(_mm_packus_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
+			r0 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
 			if (r0) {
 				_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)dbrighters16x16));
 				// Compute minimum hz
@@ -512,10 +503,7 @@ void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdar
 			_mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
 			_mm_store_si128(&xmm1, _mm_and_si128(xmmFdarkers, xmmFastXFlagsHigh));
 			_mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
-			// clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
-			_mm_store_si128(&xmm0, _mm_srli_epi16(xmm0, 1));
-			_mm_store_si128(&xmm1, _mm_srli_epi16(xmm1, 1));
-			r1 = _mm_movemask_epi8(_mm_packus_epi16(xmm0, xmm1)); // r1's popcnt is equal to N as FastXFlags contains values with popcnt==N
+			r1 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r1's popcnt is equal to N as FastXFlags contains values with popcnt==N
 			if (r1) {
 				_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)ddarkers16x16));
 
@@ -562,7 +550,7 @@ void FastStrengths32_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdar
 		_mm_store_si128(&xmm1, _mm_shuffle_epi8(xmm0, _mm_load_si128((__m128i*)kFastArcs[i]))); /* eliminate zeros and duplicate first matching non-zero */ \
 		lowMin = _mm_cvtsi128_si32(_mm_minpos_epu16(_mm_unpacklo_epi8(xmm1, xmmZeros))); \
 		highMin = _mm_cvtsi128_si32(_mm_minpos_epu16(_mm_unpackhi_epi8(xmm1, xmmZeros))); \
-		/* _mm_minpos_epu16 must set to zero the remaining bits but this doesn't look to happen or I missed something */ \
+		/* clear the index (bits [16:18]) */ \
 		lowMin &= 0xFFFF; \
 		highMin &= 0xFFFF; \
 		maxn_ = (uint8_t)std::max(std::min(lowMin, highMin), (int)maxn_); \
@@ -580,10 +568,7 @@ process16:
 			_mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
 			_mm_store_si128(&xmm1, _mm_and_si128(xmmFX, xmmFastXFlagsHigh));
 			_mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
-			// clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
-			_mm_store_si128(&xmm0, _mm_srli_epi16(xmm0, 1));
-			_mm_store_si128(&xmm1, _mm_srli_epi16(xmm1, 1));
-			r0 = _mm_movemask_epi8(_mm_packus_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
+			r0 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
 			if (r0) {
 				_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)&dbrighters16x32[v]));
 				// Compute minimum hz
@@ -603,10 +588,7 @@ process16:
 			_mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
 			_mm_store_si128(&xmm1, _mm_and_si128(xmmFX, xmmFastXFlagsHigh));
 			_mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
-			// clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
-			_mm_store_si128(&xmm0, _mm_srli_epi16(xmm0, 1));
-			_mm_store_si128(&xmm1, _mm_srli_epi16(xmm1, 1));
-			r1 = _mm_movemask_epi8(_mm_packus_epi16(xmm0, xmm1)); // r1's popcnt is equal to N as FastXFlags contains values with popcnt==N
+			r1 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r1's popcnt is equal to N as FastXFlags contains values with popcnt==N
 			if (r1) {
 				_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)&ddarkers16x32[v]));
 

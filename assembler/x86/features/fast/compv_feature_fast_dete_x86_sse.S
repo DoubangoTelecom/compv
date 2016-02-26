@@ -723,10 +723,7 @@ sym(FastData16Row_Asm_X86_SSE2):
 		pand xmm4, xmm6
 		pcmpeqw xmm5, xmm7
 		pcmpeqw xmm4, xmm6
-		; clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
-		psrlw xmm5, 1
-		psrlw xmm4, 1
-		packuswb xmm5, xmm4
+		packsswb xmm5, xmm4
 		pmovmskb eax, xmm5
 		test ax, ax ; rax = r0
 		jz .EndOfBrighters
@@ -757,8 +754,8 @@ sym(FastData16Row_Asm_X86_SSE2):
 			phminposuw xmm4, xmm4
 			movd rdi, xmm1
 			movd rsi, xmm4
-			and rdi, 0xFFFF
-			and rsi, 0xFFFF
+			and rdi, 0xFFFF ; clear the index bits [16:18]. TODO(dmi): use(ax, dx, cx, bx)
+			and rsi, 0xFFFF ; clear the index bits [16:18]. TODO(dmi): use(ax, dx, cx, bx)
 			cmp rsi, rdi
 			%if %1 == 1
 				cmovl rdi, rsi
@@ -798,10 +795,7 @@ sym(FastData16Row_Asm_X86_SSE2):
 		pand xmm4, xmm6
 		pcmpeqw xmm5, xmm7
 		pcmpeqw xmm4, xmm6
-		; clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
-		psrlw xmm5, 1
-		psrlw xmm4, 1
-		packuswb xmm5, xmm4
+		packsswb xmm5, xmm4
 		pmovmskb eax, xmm5
 		test ax, ax ; rax = r0
 		jz .EndOfDarkers
@@ -830,10 +824,10 @@ sym(FastData16Row_Asm_X86_SSE2):
 			punpckhbw xmm4, xmm3
 			phminposuw xmm1, xmm1
 			phminposuw xmm4, xmm4
-			movd rdi, xmm1
-			movd rsi, xmm4
-			and rdi, 0xFFFF
-			and rsi, 0xFFFF
+			movd edi, xmm1
+			movd esi, xmm4
+			and rdi, 0xFFFF ; clear the index bits [16:18]. TODO(dmi): use(ax, dx, cx, bx)
+			and rsi, 0xFFFF ; clear the index bits [16:18]. TODO(dmi): use(ax, dx, cx, bx)
 			cmp rsi, rdi
 			%if %1 == 1
 					cmovl rdi, rsi
