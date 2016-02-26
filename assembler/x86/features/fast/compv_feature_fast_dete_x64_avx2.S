@@ -118,9 +118,6 @@ sym(FastData32Row_Asm_X64_AVX2):
 	mov rax, arg(6)
 	vmovdqu [rax], ymm7
 
-	vpsubusb ymm5, ymm6, [rsp + 2872] ; ymm5 = ymmDarker
-	vpaddusb ymm6, ymm6, [rsp + 2872] ; ymm6 = ymmBrighter
-
 	;
 	; Speed-Test-1
 	;
@@ -140,6 +137,10 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vmovdqu ymm12, [rbx + rcx]
 	vmovdqu ymm13, [rbx + r12]
 	
+	; compute ymmDarker and ymmBrighter
+	; done here to hide "vmovdqu ymm6, x" latency
+	vpsubusb ymm5, ymm6, [rsp + 2872] ; ymm5 = ymmDarker
+	vpaddusb ymm6, ymm6, [rsp + 2872] ; ymm6 = ymmBrighter
 	vpcmpeqb ymm14, ymm14 ; ymm14 = ymmFF
 
 	; compare I1 and I9 aka 0 and 8
@@ -663,14 +664,15 @@ sym(FastData32Row_Asm_X64_AVX2):
 	.NeitherDarkersNorBrighters
 	
 	.LoopRowsNext
-	mov rcx, 32
-	lea rbx, [rbx + 32] ; IP += 32
-	add arg(6), rcx ; strengths += 32
 	
 	;-------------------
 	;EndOfLooopRows
+	mov rcx, 32
+	lea rbx, [rbx + 32] ; IP += 32
 	lea rsi, [rsi + 1]
+	add arg(6), rcx ; strengths += 32
 	cmp rsi, arg(2)
+	
 	jl .LoopRows
 	;-------------------
 
