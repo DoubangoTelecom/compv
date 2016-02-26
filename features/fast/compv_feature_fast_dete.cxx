@@ -100,7 +100,7 @@ extern "C" COMPV_GEXTERN const COMPV_ALIGN_DEFAULT() uint16_t Fast12Flags[16] = 
 
 // X86
 #if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
-extern "C" void FastData32Row_Asm_X86_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, COMPV_ALIGNED(AVX2) compv::compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(AVX2) compv::compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(AVX2) uint8_t* ddarkers16x32, COMPV_ALIGNED(AVX2) uint8_t* dbrighters16x32, compv::compv_scalar_t* rd, compv::compv_scalar_t* rb, compv::compv_scalar_t* me);
+extern "C" void FastData32Row_Asm_X86_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, uint8_t* strengths, compv::compv_scalar_t* me);
 
 extern "C" void FastData16Row_Asm_X86_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, uint8_t* strengths, compv::compv_scalar_t* me);
 
@@ -690,6 +690,7 @@ static void FastProcessRange(RangeFAST* range)
     }
 	if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
+		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = FastData32Row_Asm_X86_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
 	}
 
     // Number of pixels to process (multiple of align)

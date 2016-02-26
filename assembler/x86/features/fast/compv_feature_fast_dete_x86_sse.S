@@ -54,7 +54,7 @@ section .text
 sym(FastData16Row_Asm_X86_SSE2):
 	push rbp
 	mov rbp, rsp
-	COMPV_YASM_SHADOW_ARGS_TO_STACK 13
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
 	COMPV_YASM_SAVE_XMM 7 ;XMM[6-n]
 	push rsi
 	push rdi

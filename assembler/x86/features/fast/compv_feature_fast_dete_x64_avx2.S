@@ -41,14 +41,9 @@ section .text
 ; arg(3) -> const compv_scalar_t(&pixels16)[16]
 ; arg(4) -> compv_scalar_t N
 ; arg(5) -> compv_scalar_t threshold
-; arg(6) -> COMPV_ALIGNED(AVX2) compv_scalar_t(*pfdarkers16)[16]
-; arg(7) -> COMPV_ALIGNED(AVX2) compv_scalar_t(*pfbrighters16)[16]
-; arg(8) -> COMPV_ALIGNED(AVX2) uint8_t* ddarkers16x32
-; arg(9) -> COMPV_ALIGNED(AVX2) uint8_t* dbrighters16x32
-; arg(10) -> compv_scalar_t* rd
-; arg(11) -> compv_scalar_t* rb
-; arg(12) -> compv_scalar_t* me
-; void FastData32Row_Asm_X64_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(AVX2) compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(AVX2) compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(AVX2) uint8_t* ddarkers16x32, COMPV_ALIGNED(AVX2) uint8_t* dbrighters16x32, compv_scalar_t* rd, compv_scalar_t* rb, compv_scalar_t* me);
+; arg(6) -> uint8_t* strengths
+; arg(7) -> compv_scalar_t* me
+; void FastData32Row_Asm_X64_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths, compv_scalar_t* me);
 sym(FastData32Row_Asm_X64_AVX2):
 	push rbp
 	mov rbp, rsp
@@ -65,12 +60,19 @@ sym(FastData32Row_Asm_X64_AVX2):
 
 	; align stack and alloc memory
 	COMPV_YASM_ALIGN_STACK 32, rax
-	sub rsp, 8 + 32 + 16*32 + 16*32 + 16*32
-	; [rsp + 0] = sum
-	; [rsp + 8] = ymmNMinusOne
-	; [rsp + 40] = ymmDarkersFlags[16]
-	; [rsp + 552] = ymmBrightersFlags[16]
-	; [rsp + 1064] = ymmDataPtr[16]
+	sub rsp, 8 + 8 + 8 + 16*8 + 16*8 + 32 + 16*32 + 16*32 + 16*32 + 16*32 + 16*32 + 32
+	; [rsp + 0] = compv_scalar_t sum
+	; [rsp + 8] = compv_scalar_t colDarkersFlags
+	; [rsp + 16] = compv_scalar_t colBrightersFlags
+	; [rsp + 24] = compv_scalar_t fdarkers16[16];
+	; [rsp + 152] = compv_scalar_t fbrighters16[16];
+	; [rsp + 280] = __m256i ymmNMinusOne
+	; [rsp + 312] = __m256i ymmDarkersFlags[16]
+	; [rsp + 824] = __m256i ymmBrightersFlags[16]
+	; [rsp + 1336] = __m256i ymmDataPtr[16]
+	; [rsp + 1848] = __m256i ymmDdarkers16x32[16];
+	; [rsp + 2360] = __m256i ymmDbrighters16x32[16];
+	; [rsp + 2872] = __m256i ymmThreshold (saved/restored after function call)
 
 	vzeroupper
 
@@ -88,7 +90,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	sub al, 1
 	movd xmm0, eax
 	vpbroadcastb ymm0, xmm0
-	vmovdqa [rsp + 8], ymm0
+	vmovdqa [rsp + 280], ymm0
 	
 	;-------------------
 	;StartOfLooopRows
@@ -257,14 +259,14 @@ sym(FastData32Row_Asm_X64_AVX2):
 	jz .LoopRowsNext
 
 	; Save data
-	vmovdqa [rsp + 40 + 0*32], ymm10 ; ymmDarkersFlags[0]
-	vmovdqa [rsp + 40 + 8*32], ymm11 ; ymmDarkersFlags[8]
-	vmovdqa [rsp + 40 + 4*32], ymm2 ; ymmDarkersFlags[4]
-	vmovdqa [rsp + 40 + 12*32], ymm3 ; ymmDarkersFlags[12]
-	vmovdqa [rsp + 552 + 0*32], ymm8 ; ymmBrightersFlags[0]
-	vmovdqa [rsp + 552 + 8*32], ymm9 ; ymmBrightersFlags[8]
-	vmovdqa [rsp + 552 + 4*32], ymm0 ; ymmBrightersFlags[4]
-	vmovdqa [rsp + 552 + 12*32], ymm1 ; ymmBrightersFlags[12]
+	vmovdqa [rsp + 312 + 0*32], ymm10 ; ymmDarkersFlags[0]
+	vmovdqa [rsp + 312 + 8*32], ymm11 ; ymmDarkersFlags[8]
+	vmovdqa [rsp + 312 + 4*32], ymm2 ; ymmDarkersFlags[4]
+	vmovdqa [rsp + 312 + 12*32], ymm3 ; ymmDarkersFlags[12]
+	vmovdqa [rsp + 824 + 0*32], ymm8 ; ymmBrightersFlags[0]
+	vmovdqa [rsp + 824 + 8*32], ymm9 ; ymmBrightersFlags[8]
+	vmovdqa [rsp + 824 + 4*32], ymm0 ; ymmBrightersFlags[4]
+	vmovdqa [rsp + 824 + 12*32], ymm1 ; ymmBrightersFlags[12]
 
 	; Load ymmDataPtr
 	mov rcx, arg(3) ; pixels16
@@ -292,18 +294,18 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vmovdqu ymm13, [rbx + r8]
 	vmovdqu ymm14, [rbx + r9]	
 	vmovdqu ymm15, [rbx + r10]
-	vmovdqa [rsp + 1064 + 1*32], ymm0
-	vmovdqa [rsp + 1064 + 2*32], ymm1
-	vmovdqa [rsp + 1064 + 3*32], ymm2
-	vmovdqa [rsp + 1064 + 5*32], ymm3
-	vmovdqa [rsp + 1064 + 6*32], ymm8
-	vmovdqa [rsp + 1064 + 7*32], ymm9
-	vmovdqa [rsp + 1064 + 9*32], ymm10
-	vmovdqa [rsp + 1064 + 10*32], ymm11
-	vmovdqa [rsp + 1064 + 11*32], ymm12
-	vmovdqa [rsp + 1064 + 13*32], ymm13
-	vmovdqa [rsp + 1064 + 14*32], ymm14
-	vmovdqa [rsp + 1064 + 15*32], ymm15
+	vmovdqa [rsp + 1336 + 1*32], ymm0
+	vmovdqa [rsp + 1336 + 2*32], ymm1
+	vmovdqa [rsp + 1336 + 3*32], ymm2
+	vmovdqa [rsp + 1336 + 5*32], ymm3
+	vmovdqa [rsp + 1336 + 6*32], ymm8
+	vmovdqa [rsp + 1336 + 7*32], ymm9
+	vmovdqa [rsp + 1336 + 9*32], ymm10
+	vmovdqa [rsp + 1336 + 10*32], ymm11
+	vmovdqa [rsp + 1336 + 11*32], ymm12
+	vmovdqa [rsp + 1336 + 13*32], ymm13
+	vmovdqa [rsp + 1336 + 14*32], ymm14
+	vmovdqa [rsp + 1336 + 15*32], ymm15
 
 	; We could compute pixels at 1 and 9, check if at least one is darker or brighter than the candidate
 	; Then, do the same for 2 and 10 etc etc ... but this is slower than whant we're doing below because
@@ -383,11 +385,11 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpaddusb ymm12, ymm0 ; ymm12 = 1 + 2 + 3 + 5 + 6 + 7 + 9 + 10 + 11 + 13 + 14 + 15
 	; Compute flags 0, 4, 8, 12
 	vmovdqa ymm6, [sym(k254_u8)]
-	vmovdqa ymm4, [rsp + 8] ; ymmNMinusOne
-	vpandn ymm0, ymm6, [rsp + 552 + 0*32]
-	vpandn ymm1, ymm6, [rsp + 552 + 4*32]
-	vpandn ymm2, ymm6, [rsp + 552 + 8*32]
-	vpandn ymm3, ymm6, [rsp + 552 + 12*32]
+	vmovdqa ymm4, [rsp + 280] ; ymmNMinusOne
+	vpandn ymm0, ymm6, [rsp + 824 + 0*32]
+	vpandn ymm1, ymm6, [rsp + 824 + 4*32]
+	vpandn ymm2, ymm6, [rsp + 824 + 8*32]
+	vpandn ymm3, ymm6, [rsp + 824 + 12*32]
 	vpaddusb ymm0, ymm1
 	vpaddusb ymm2, ymm3
 	vpaddusb ymm0, ymm2 ; ymm0 = 0 + 4 + 8 + 12
@@ -489,18 +491,18 @@ sym(FastData32Row_Asm_X64_AVX2):
 	mov rax, arg(8) ; ddarkers16x32
 	lea rax, [rax + r9]
 	vpxor ymm4, ymm4
-	vpsubusb ymm0, ymm5, [rsp + 1064 + 1*32]
-	vpsubusb ymm1, ymm5, [rsp + 1064 + 2*32]
-	vpsubusb ymm2, ymm5, [rsp + 1064 + 3*32]
-	vpsubusb ymm3, ymm5, [rsp + 1064 + 5*32]
-	vpsubusb ymm8, ymm5, [rsp + 1064 + 6*32]
-	vpsubusb ymm9, ymm5, [rsp + 1064 + 7*32]
-	vpsubusb ymm10, ymm5, [rsp + 1064 + 9*32]
-	vpsubusb ymm11, ymm5, [rsp + 1064 + 10*32]
-	vpsubusb ymm12, ymm5, [rsp + 1064 + 11*32]
-	vpsubusb ymm13, ymm5, [rsp + 1064 + 13*32]
-	vpsubusb ymm14, ymm5, [rsp + 1064 + 14*32]
-	vpsubusb ymm15, ymm5, [rsp + 1064 + 15*32]
+	vpsubusb ymm0, ymm5, [rsp + 1336 + 1*32]
+	vpsubusb ymm1, ymm5, [rsp + 1336 + 2*32]
+	vpsubusb ymm2, ymm5, [rsp + 1336 + 3*32]
+	vpsubusb ymm3, ymm5, [rsp + 1336 + 5*32]
+	vpsubusb ymm8, ymm5, [rsp + 1336 + 6*32]
+	vpsubusb ymm9, ymm5, [rsp + 1336 + 7*32]
+	vpsubusb ymm10, ymm5, [rsp + 1336 + 9*32]
+	vpsubusb ymm11, ymm5, [rsp + 1336 + 10*32]
+	vpsubusb ymm12, ymm5, [rsp + 1336 + 11*32]
+	vpsubusb ymm13, ymm5, [rsp + 1336 + 13*32]
+	vpsubusb ymm14, ymm5, [rsp + 1336 + 14*32]
+	vpsubusb ymm15, ymm5, [rsp + 1336 + 15*32]
 	vmovdqa [rax + 1*32], ymm0
 	vmovdqa [rax + 2*32], ymm1
 	vmovdqa [rax + 3*32], ymm2
@@ -551,11 +553,11 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpaddusb ymm12, ymm0 ; ymm12 = 1 + 2 + 3 + 5 + 6 + 7 + 9 + 10 + 11 + 13 + 14 + 15	
 	; Compute flags 0, 4, 8, 12
 	vmovdqa ymm5, [sym(k254_u8)]
-	vmovdqa ymm4, [rsp + 8] ; ymmNMinusOne
-	vpandn ymm0, ymm5, [rsp + 40 + 0*32]
-	vpandn ymm1, ymm5, [rsp + 40 + 4*32]
-	vpandn ymm2, ymm5, [rsp + 40 + 8*32]
-	vpandn ymm3, ymm5, [rsp + 40 + 12*32]
+	vmovdqa ymm4, [rsp + 280] ; ymmNMinusOne
+	vpandn ymm0, ymm5, [rsp + 312 + 0*32]
+	vpandn ymm1, ymm5, [rsp + 312 + 4*32]
+	vpandn ymm2, ymm5, [rsp + 312 + 8*32]
+	vpandn ymm3, ymm5, [rsp + 312 + 12*32]
 	vpaddusb ymm0, ymm1
 	vpaddusb ymm2, ymm3
 	vpaddusb ymm0, ymm2 ; ymm0 = 0 + 4 + 8 + 12
@@ -663,7 +665,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	;-------------------
 
 	; unalign stack and free memory
-	add rsp, 8 + 32 + 16*32 + 16*32 + 16*32
+	add rsp,  8 + 8 + 8 + 16*8 + 16*8 + 32 + 16*32 + 16*32 + 16*32 + 16*32 + 16*32 + 32
 	COMPV_YASM_UNALIGN_STACK
 
 	vzeroupper
