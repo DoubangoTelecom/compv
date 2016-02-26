@@ -111,7 +111,7 @@ extern "C" void Fast12Strengths16_Asm_X86_SSE41(compv::compv_scalar_t rbrighters
 #endif
 // X64
 #if defined(COMPV_ARCH_X64) && defined(COMPV_ASM)
-extern "C" void FastData32Row_Asm_X64_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, COMPV_ALIGNED(AVX2) compv::compv_scalar_t(*pfdarkers16)[16], COMPV_ALIGNED(AVX2) compv::compv_scalar_t(*pfbrighters16)[16], COMPV_ALIGNED(AVX2) uint8_t* ddarkers16x32, COMPV_ALIGNED(AVX2) uint8_t* dbrighters16x32, compv::compv_scalar_t* rd, compv::compv_scalar_t* rb, compv::compv_scalar_t* me);
+extern "C" void FastData32Row_Asm_X64_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, uint8_t* strengths, compv::compv_scalar_t* me);
 
 extern "C" void FastData16Row_Asm_X64_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, uint8_t* strengths, compv::compv_scalar_t* me);
 
@@ -138,25 +138,7 @@ extern "C" COMPV_GEXTERN void FastStrengths16(compv::compv_scalar_t rbrighters, 
 			? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths16_Asm_CMOV_X64_SSE41 : Fast9Strengths16_Asm_X64_SSE41)
 			: (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths16_Asm_CMOV_X64_SSE41 : Fast12Strengths16_Asm_X64_SSE41));
 	}
-	//if (rbrighters == 30) {
-	//	int kaka = 0; // FIXME
-	//}
-	//if (rdarkers == 2) {
-	//	int kaka = 0; // FIXME
-	//}
 	FastStrengths(rbrighters, rdarkers, dbrighters16x16, ddarkers16x16, fbrighters16, fdarkers16, strengths16, N);
-	// FIXME
-	//const uint8_t(*_strengths16)[16] = (const uint8_t(*)[16])strengths16;
-	//const uint8_t(*_ddarkers16x16)[16][16] = (const uint8_t(*)[16][16])ddarkers16x16;
-	//const uint8_t(*_dbrighters16x16)[16][16] = (const uint8_t(*)[16][16])dbrighters16x16;
-	//for (int i = 0; i < 16; ++i) {
-	//	if ((*_strengths16)[i]) {
-	//		int kaka = 0; // FIXME
-	//	}
-	//}
-	//if (rbrighters == 30) {
-	//	int kaka = 0; // FIXME
-	//}
 }
 
 // FIXME: create AVX version
@@ -691,6 +673,7 @@ static void FastProcessRange(RangeFAST* range)
 	if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
 		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = FastData32Row_Asm_X86_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
+		COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = FastData32Row_Asm_X64_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
 	}
 
     // Number of pixels to process (multiple of align)

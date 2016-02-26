@@ -32,6 +32,8 @@ section .data
 	extern sym(k1_i8)
 	extern sym(k254_u8)
 
+	extern sym(FastStrengths32) ; function
+
 section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -47,7 +49,7 @@ section .text
 sym(FastData32Row_Asm_X64_AVX2):
 	push rbp
 	mov rbp, rsp
-	COMPV_YASM_SHADOW_ARGS_TO_STACK 13
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
 	COMPV_YASM_SAVE_XMM 15 ;XMM[6-n]
 	push rsi
 	push rdi
@@ -74,54 +76,56 @@ sym(FastData32Row_Asm_X64_AVX2):
 	; [rsp + 2360] = __m256i ymmDbrighters16x32[16];
 	; [rsp + 2872] = __m256i ymmThreshold (saved/restored after function call)
 
-	vzeroupper
+	; Compute xmmThreshold and xmmNMinusOne here before zeroupper 
+	movzx rax, byte arg(4) ; N
+	movzx rcx, byte arg(5) ; threshold
+	sub al, 1
+	movd xmm0, eax	; xmm0 = xmmThreshold
+	vmovd xmm7, ecx ; xmm7 = xmmNMinusOne
 
+	mov rbx, arg(0) ; rbx = IP
 	mov rdx, arg(2) ; width
 	shr rdx, 5 ; div width with 32 and mov rsi by 1 -> because of argi(x,rsi)
 	xor rsi, rsi
-	mov arg(2), rdx 
-	movzx rax, byte arg(5) ; threshold
-	mov rbx, arg(0) ; rbx = IP
-	vmovd xmm7, eax
-	vpbroadcastb ymm7, xmm7 ;  ymm7 = ymmThreshold
+	mov arg(2), rdx
 
-	; Compute xmmNMinusOne
-	movzx rax, byte arg(4) ; N
-	sub al, 1
-	movd xmm0, eax
+	vzeroupper
+
+	; Compute ymmNMinusOne and save
 	vpbroadcastb ymm0, xmm0
 	vmovdqa [rsp + 280], ymm0
+
+	; Compute ymmThreshold and save
+	vpbroadcastb ymm7, xmm7
+	vmovdqa [rsp + 2872], ymm7
+
+	; ymm7 = ymmZero
+	; ymm7 must be saved/restored before/after calling FastStrengths32
+	vpxor ymm7, ymm7
 	
 	;-------------------
 	;StartOfLooopRows
 	;
 	.LoopRows
 	; -------------------
-	xor rcx, rcx
-	mov rax, arg(11) ; rb
-	mov rdx, arg(10) ; rd
-	mov [rax + rsi*COMPV_YASM_REG_SZ_BYTES], rcx
-	mov [rdx + rsi*COMPV_YASM_REG_SZ_BYTES], rcx
-
 	vmovdqu ymm6, [rbx]
 
 	; Motion Estimation
 	; TODO(dmi): not supported
 
-	vpsubusb ymm5, ymm6, ymm7 ; ymm5 = ymmDarker
-	vpaddusb ymm6, ymm6, ymm7 ; ymm6 = ymmBrighter
+	; cleanup strengths
+	
+	mov rax, arg(6)
+	vmovdqu [rax], ymm7
+
+	vpsubusb ymm5, ymm6, [rsp + 2872] ; ymm5 = ymmDarker
+	vpaddusb ymm6, ymm6, [rsp + 2872] ; ymm6 = ymmBrighter
 
 	;
 	; Speed-Test-1
 	;
 
 	mov r11, arg(3) ; pixels16
-	mov r10, rsi
-	mov r8, arg(8) ; ddarkers16x32
-	shl r10, 9 ; rsi * (16*32)
-	mov r9, arg(9) ; dbrighters16x32
-	lea r8, [r8 + r10] ; ddarkers16x32[rsi]
-	lea r9, [r9 + r10] ; dbrighters16x32[rsi]
 
 	; Load pixels 0 and 8 (ymm0 and ymm1)
 	mov rax, [r11 + 0*COMPV_YASM_REG_SZ_BYTES] ; pixels16[0]
@@ -135,8 +139,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	mov r12, [r11 + 12*COMPV_YASM_REG_SZ_BYTES] ; pixels16[12]
 	vmovdqu ymm12, [rbx + rcx]
 	vmovdqu ymm13, [rbx + r12]
-
-	vpxor ymm15, ymm15 ; ymm15 = ymmZeros
+	
 	vpcmpeqb ymm14, ymm14 ; ymm14 = ymmFF
 
 	; compare I1 and I9 aka 0 and 8
@@ -144,14 +147,14 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpsubusb ymm0, ymm6 ; dbrighters16x32[0]
 	vpsubusb ymm3, ymm5, ymm1 ; ddarkers16x32[8]
 	vpsubusb ymm1, ymm6 ; dbrighters16x32[8]
-	vmovdqa [r8 + 0*32], ymm2
-	vmovdqa [r9 + 0*32], ymm0
-	vmovdqa [r8 + 8*32], ymm3
-	vmovdqa [r9 + 8*32], ymm1
-	vpcmpeqb ymm2, ymm15
-	vpcmpeqb ymm3, ymm15
-	vpcmpeqb ymm0, ymm15
-	vpcmpeqb ymm1, ymm15
+	vmovdqa [rsp + 1848 + 0*32], ymm2
+	vmovdqa [rsp + 2360 + 0*32], ymm0
+	vmovdqa [rsp + 1848 + 8*32], ymm3
+	vmovdqa [rsp + 2360 + 8*32], ymm1
+	vpcmpeqb ymm2, ymm7
+	vpcmpeqb ymm3, ymm7
+	vpcmpeqb ymm0, ymm7
+	vpcmpeqb ymm1, ymm7
 	vpandn ymm10, ymm2, ymm14 ; ymmDarkersFlags[0]
 	vpandn ymm11, ymm3, ymm14 ; ymmDarkersFlags[8]
 	vpandn ymm8, ymm0, ymm14 ; ymmBrightersFlags[0]
@@ -175,14 +178,14 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpsubusb ymm0, ymm12, ymm6 ; dbrighters16x32[4]
 	vpsubusb ymm3, ymm5, ymm13 ; ddarkers16x32[12]
 	vpsubusb ymm1, ymm13, ymm6 ; dbrighters16x32[12]
-	vmovdqa [r8 + 4*32], ymm2
-	vmovdqa [r9 + 4*32], ymm0
-	vmovdqa [r8 + 12*32], ymm3
-	vmovdqa [r9 + 12*32], ymm1
-	vpcmpeqb ymm2, ymm15 
-	vpcmpeqb ymm3, ymm15 
-	vpcmpeqb ymm0, ymm15 
-	vpcmpeqb ymm1, ymm15 
+	vmovdqa [rsp + 1848 + 4*32], ymm2
+	vmovdqa [rsp + 2360 + 4*32], ymm0
+	vmovdqa [rsp + 1848 + 12*32], ymm3
+	vmovdqa [rsp + 2360 + 12*32], ymm1
+	vpcmpeqb ymm2, ymm7 
+	vpcmpeqb ymm3, ymm7 
+	vpcmpeqb ymm0, ymm7 
+	vpcmpeqb ymm1, ymm7 
 	vpandn ymm2, ymm14 ; ymmDarkersFlags[4]
 	vpandn ymm3, ymm14 ; ymmDarkersFlags[12]
 	vpandn ymm0, ymm14 ; ymmBrightersFlags[4]
@@ -258,6 +261,11 @@ sym(FastData32Row_Asm_X64_AVX2):
 	test al, al
 	jz .LoopRowsNext
 
+	; Set colDarkersFlags and colBrightersFlags to zero
+	xor rax, rax
+	mov [rsp + 8], rax ; colDarkersFlags
+	mov [rsp + 16], rax ; colBrightersFlags
+
 	; Save data
 	vmovdqa [rsp + 312 + 0*32], ymm10 ; ymmDarkersFlags[0]
 	vmovdqa [rsp + 312 + 8*32], ymm11 ; ymmDarkersFlags[8]
@@ -318,11 +326,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	test dil, dil ; rdi was loadB, now it's free
 	jz .EndOfBrighters
 	; compute Dbrighters
-	mov r9, rsi
-	shl r9, 9 ; rsi*(16*32)
 	vmovdqa ymm4, [sym(k1_i8)]
-	mov rax, arg(9) ; dbrighters16x32
-	lea rax, [rax + r9]
 	vpsubusb ymm0, ymm6
 	vpsubusb ymm1, ymm6
 	vpsubusb ymm2, ymm6
@@ -335,31 +339,30 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpsubusb ymm13, ymm6
 	vpsubusb ymm14, ymm6
 	vpsubusb ymm15, ymm6
-	vpxor ymm6, ymm6
-	vmovdqa [rax + 1*32], ymm0
-	vmovdqa [rax + 2*32], ymm1
-	vmovdqa [rax + 3*32], ymm2
-	vmovdqa [rax + 5*32], ymm3
-	vmovdqa [rax + 6*32], ymm8
-	vmovdqa [rax + 7*32], ymm9
-	vmovdqa [rax + 9*32], ymm10
-	vmovdqa [rax + 10*32], ymm11
-	vmovdqa [rax + 11*32], ymm12
-	vmovdqa [rax + 13*32], ymm13
-	vmovdqa [rax + 14*32], ymm14
-	vmovdqa [rax + 15*32], ymm15
-	vpcmpeqb ymm0, ymm6
-	vpcmpeqb ymm1, ymm6
-	vpcmpeqb ymm2, ymm6
-	vpcmpeqb ymm3, ymm6
-	vpcmpeqb ymm8, ymm6
-	vpcmpeqb ymm9, ymm6
-	vpcmpeqb ymm10, ymm6
-	vpcmpeqb ymm11, ymm6
-	vpcmpeqb ymm12, ymm6
-	vpcmpeqb ymm13, ymm6
-	vpcmpeqb ymm14, ymm6
-	vpcmpeqb ymm15, ymm6
+	vmovdqa [rsp + 2360 + 1*32], ymm0
+	vmovdqa [rsp + 2360 + 2*32], ymm1
+	vmovdqa [rsp + 2360 + 3*32], ymm2
+	vmovdqa [rsp + 2360 + 5*32], ymm3
+	vmovdqa [rsp + 2360 + 6*32], ymm8
+	vmovdqa [rsp + 2360 + 7*32], ymm9
+	vmovdqa [rsp + 2360 + 9*32], ymm10
+	vmovdqa [rsp + 2360 + 10*32], ymm11
+	vmovdqa [rsp + 2360 + 11*32], ymm12
+	vmovdqa [rsp + 2360 + 13*32], ymm13
+	vmovdqa [rsp + 2360 + 14*32], ymm14
+	vmovdqa [rsp + 2360 + 15*32], ymm15
+	vpcmpeqb ymm0, ymm7
+	vpcmpeqb ymm1, ymm7
+	vpcmpeqb ymm2, ymm7
+	vpcmpeqb ymm3, ymm7
+	vpcmpeqb ymm8, ymm7
+	vpcmpeqb ymm9, ymm7
+	vpcmpeqb ymm10, ymm7
+	vpcmpeqb ymm11, ymm7
+	vpcmpeqb ymm12, ymm7
+	vpcmpeqb ymm13, ymm7
+	vpcmpeqb ymm14, ymm7
+	vpcmpeqb ymm15, ymm7
 	vpandn ymm0, ymm4
 	vpandn ymm1, ymm4
 	vpandn ymm2, ymm4
@@ -400,30 +403,24 @@ sym(FastData32Row_Asm_X64_AVX2):
 	test edi, edi
 	jz .EndOfBrighters
 	; Continue loading brighters
-	mov rcx, arg(11) ; rb
-	mov [rcx + rsi*COMPV_YASM_REG_SZ_BYTES], edi ; (*rb) = colBrightersFlags
+	mov [rsp + 16], edi ; colBrightersFlags
 	; Transpose
-	COMPV_TRANSPOSE_I8_16X16_REG_T5_AVX2 rax+0*32, rax+1*32, rax+2*32, rax+3*32, rax+4*32, rax+5*32, rax+6*32, rax+7*32, rax+8*32, rax+9*32, rax+10*32, rax+11*32, rax+12*32, rax+13*32, rax+14*32, rax+15*32, ymm0, ymm1, ymm2, ymm3, ymm4
+	COMPV_TRANSPOSE_I8_16X16_REG_T5_AVX2 rsp+2360+0*32, rsp+2360+1*32, rsp+2360+2*32, rsp+2360+3*32, rsp+2360+4*32, rsp+2360+5*32, rsp+2360+6*32, rsp+2360+7*32, rsp+2360+8*32, rsp+2360+9*32, rsp+2360+10*32, rsp+2360+11*32, rsp+2360+12*32, rsp+2360+13*32, rsp+2360+14*32, rsp+2360+15*32, ymm0, ymm1, ymm2, ymm3, ymm4
 	; Flags
-	mov r8, rsi
-	vpxor ymm6, ymm6 ; ymmZero
-	shl r8, COMPV_YASM_REG_SZ_BYTES_TIMES16_LOG2 ; rsi * (16*COMPV_YASM_REG_SZ_BYTES)
-	mov r15, arg(7) ; pfbrighters16
-	lea r15, [r15 + r8]
-	vpcmpeqb ymm0, ymm6, [rax+0*32]
-	vpcmpeqb ymm1, ymm6, [rax+1*32]
-	vpcmpeqb ymm2, ymm6, [rax+2*32]
-	vpcmpeqb ymm3, ymm6, [rax+3*32]
-	vpcmpeqb ymm4, ymm6, [rax+4*32]
-	vpcmpeqb ymm8, ymm6, [rax+5*32]
-	vpcmpeqb ymm9, ymm6, [rax+6*32]
-	vpcmpeqb ymm10, ymm6, [rax+7*32]
-	vpcmpeqb ymm11, ymm6, [rax+8*32]
-	vpcmpeqb ymm12, ymm6, [rax+9*32]
-	vpcmpeqb ymm13, ymm6, [rax+10*32]
-	vpcmpeqb ymm14, ymm6, [rax+11*32]
-	vpcmpeqb ymm15, ymm6, [rax+12*32]
 	vpcmpeqb ymm6, ymm6 ; ymmFF
+	vpcmpeqb ymm0, ymm7, [rsp + 2360 +0*32]
+	vpcmpeqb ymm1, ymm7, [rsp + 2360 +1*32]
+	vpcmpeqb ymm2, ymm7, [rsp + 2360 +2*32]
+	vpcmpeqb ymm3, ymm7, [rsp + 2360 +3*32]
+	vpcmpeqb ymm4, ymm7, [rsp + 2360 +4*32]
+	vpcmpeqb ymm8, ymm7, [rsp + 2360 +5*32]
+	vpcmpeqb ymm9, ymm7, [rsp + 2360 +6*32]
+	vpcmpeqb ymm10, ymm7, [rsp + 2360 +7*32]
+	vpcmpeqb ymm11, ymm7, [rsp + 2360 +8*32]
+	vpcmpeqb ymm12, ymm7, [rsp + 2360 +9*32]
+	vpcmpeqb ymm13, ymm7, [rsp + 2360 +10*32]
+	vpcmpeqb ymm14, ymm7, [rsp + 2360 +11*32]
+	vpcmpeqb ymm15, ymm7, [rsp + 2360 +12*32]
 	vpandn ymm0, ymm6
 	vpandn ymm1, ymm6
 	vpandn ymm2, ymm6
@@ -446,36 +443,35 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpmovmskb r12d, ymm9
 	vpmovmskb r13d, ymm10
 	vpmovmskb r14d, ymm11
-	vpxor ymm3, ymm3 ; ymmZero
-	mov [r15 + 0*COMPV_YASM_REG_SZ_BYTES], edi
-	mov [r15 + 1*COMPV_YASM_REG_SZ_BYTES], ecx
-	mov [r15 + 2*COMPV_YASM_REG_SZ_BYTES], r8d
-	mov [r15 + 3*COMPV_YASM_REG_SZ_BYTES], r9d
-	mov [r15 + 4*COMPV_YASM_REG_SZ_BYTES], r10d
-	mov [r15 + 5*COMPV_YASM_REG_SZ_BYTES], r11d
-	mov [r15 + 6*COMPV_YASM_REG_SZ_BYTES], r12d
-	mov [r15 + 7*COMPV_YASM_REG_SZ_BYTES], r13d
-	mov [r15 + 8*COMPV_YASM_REG_SZ_BYTES], r14d
+	mov [rsp + 152 + 0*COMPV_YASM_REG_SZ_BYTES], edi
+	mov [rsp + 152 + 1*COMPV_YASM_REG_SZ_BYTES], ecx
+	mov [rsp + 152 + 2*COMPV_YASM_REG_SZ_BYTES], r8d
+	mov [rsp + 152 + 3*COMPV_YASM_REG_SZ_BYTES], r9d
+	mov [rsp + 152 + 4*COMPV_YASM_REG_SZ_BYTES], r10d
+	mov [rsp + 152 + 5*COMPV_YASM_REG_SZ_BYTES], r11d
+	mov [rsp + 152 + 6*COMPV_YASM_REG_SZ_BYTES], r12d
+	mov [rsp + 152 + 7*COMPV_YASM_REG_SZ_BYTES], r13d
+	mov [rsp + 152 + 8*COMPV_YASM_REG_SZ_BYTES], r14d
 	vpmovmskb r8d, ymm12
 	vpmovmskb r9d, ymm13
 	vpmovmskb r10d, ymm14
 	vpmovmskb r11d, ymm15
-	mov [r15 + 9*COMPV_YASM_REG_SZ_BYTES], r8d
-	mov [r15 + 10*COMPV_YASM_REG_SZ_BYTES], r9d
-	mov [r15 + 11*COMPV_YASM_REG_SZ_BYTES], r10d
-	mov [r15 + 12*COMPV_YASM_REG_SZ_BYTES], r11d
-	vpcmpeqb ymm0, ymm3, [rax+13*32]
-	vpcmpeqb ymm1, ymm3, [rax+14*32]
-	vpcmpeqb ymm2, ymm3, [rax+15*32]
+	mov [rsp + 152 + 9*COMPV_YASM_REG_SZ_BYTES], r8d
+	mov [rsp + 152 + 10*COMPV_YASM_REG_SZ_BYTES], r9d
+	mov [rsp + 152 + 11*COMPV_YASM_REG_SZ_BYTES], r10d
+	mov [rsp + 152 + 12*COMPV_YASM_REG_SZ_BYTES], r11d
+	vpcmpeqb ymm0, ymm7, [rsp + 2360 +13*32]
+	vpcmpeqb ymm1, ymm7, [rsp + 2360 +14*32]
+	vpcmpeqb ymm2, ymm7, [rsp + 2360 +15*32]
 	vpandn ymm0, ymm6
 	vpandn ymm1, ymm6
 	vpandn ymm2, ymm6
 	vpmovmskb edi, ymm0
 	vpmovmskb ecx, ymm1
 	vpmovmskb r8d, ymm2
-	mov [r15 + 13*COMPV_YASM_REG_SZ_BYTES], edi
-	mov [r15 + 14*COMPV_YASM_REG_SZ_BYTES], ecx
-	mov [r15 + 15*COMPV_YASM_REG_SZ_BYTES], r8d
+	mov [rsp + 152 + 13*COMPV_YASM_REG_SZ_BYTES], edi
+	mov [rsp + 152 + 14*COMPV_YASM_REG_SZ_BYTES], ecx
+	mov [rsp + 152 + 15*COMPV_YASM_REG_SZ_BYTES], r8d
 
 	.EndOfBrighters
 
@@ -486,11 +482,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	test dl, dl ; rdx was loadD, now it's free
 	jz .EndOfDarkers
 	; compute ddarkers16x32 and flags
-	mov r9, rsi
-	shl r9, 9 ; rsi * (16*32)
-	mov rax, arg(8) ; ddarkers16x32
-	lea rax, [rax + r9]
-	vpxor ymm4, ymm4
+	vmovdqa ymm4, [sym(k1_i8)]
 	vpsubusb ymm0, ymm5, [rsp + 1336 + 1*32]
 	vpsubusb ymm1, ymm5, [rsp + 1336 + 2*32]
 	vpsubusb ymm2, ymm5, [rsp + 1336 + 3*32]
@@ -503,31 +495,30 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpsubusb ymm13, ymm5, [rsp + 1336 + 13*32]
 	vpsubusb ymm14, ymm5, [rsp + 1336 + 14*32]
 	vpsubusb ymm15, ymm5, [rsp + 1336 + 15*32]
-	vmovdqa [rax + 1*32], ymm0
-	vmovdqa [rax + 2*32], ymm1
-	vmovdqa [rax + 3*32], ymm2
-	vmovdqa [rax + 5*32], ymm3
-	vmovdqa [rax + 6*32], ymm8
-	vmovdqa [rax + 7*32], ymm9
-	vmovdqa [rax + 9*32], ymm10
-	vmovdqa [rax + 10*32], ymm11
-	vmovdqa [rax + 11*32], ymm12
-	vmovdqa [rax + 13*32], ymm13
-	vmovdqa [rax + 14*32], ymm14
-	vmovdqa [rax + 15*32], ymm15
-	vpcmpeqb ymm0, ymm4
-	vpcmpeqb ymm1, ymm4
-	vpcmpeqb ymm2, ymm4
-	vpcmpeqb ymm3, ymm4
-	vpcmpeqb ymm8, ymm4
-	vpcmpeqb ymm9, ymm4
-	vpcmpeqb ymm10, ymm4
-	vpcmpeqb ymm11, ymm4
-	vpcmpeqb ymm12, ymm4
-	vpcmpeqb ymm13, ymm4
-	vpcmpeqb ymm14, ymm4
-	vpcmpeqb ymm15, ymm4
-	vmovdqa ymm4, [sym(k1_i8)]
+	vmovdqa [rsp + 1848 + 1*32], ymm0
+	vmovdqa [rsp + 1848 + 2*32], ymm1
+	vmovdqa [rsp + 1848 + 3*32], ymm2
+	vmovdqa [rsp + 1848 + 5*32], ymm3
+	vmovdqa [rsp + 1848 + 6*32], ymm8
+	vmovdqa [rsp + 1848 + 7*32], ymm9
+	vmovdqa [rsp + 1848 + 9*32], ymm10
+	vmovdqa [rsp + 1848 + 10*32], ymm11
+	vmovdqa [rsp + 1848 + 11*32], ymm12
+	vmovdqa [rsp + 1848 + 13*32], ymm13
+	vmovdqa [rsp + 1848 + 14*32], ymm14
+	vmovdqa [rsp + 1848 + 15*32], ymm15
+	vpcmpeqb ymm0, ymm7
+	vpcmpeqb ymm1, ymm7
+	vpcmpeqb ymm2, ymm7
+	vpcmpeqb ymm3, ymm7
+	vpcmpeqb ymm8, ymm7
+	vpcmpeqb ymm9, ymm7
+	vpcmpeqb ymm10, ymm7
+	vpcmpeqb ymm11, ymm7
+	vpcmpeqb ymm12, ymm7
+	vpcmpeqb ymm13, ymm7
+	vpcmpeqb ymm14, ymm7
+	vpcmpeqb ymm15, ymm7
 	vpandn ymm0, ymm4
 	vpandn ymm1, ymm4
 	vpandn ymm2, ymm4
@@ -568,34 +559,24 @@ sym(FastData32Row_Asm_X64_AVX2):
 	test edx, edx
 	jz .EndOfDarkers
 	; Continue loading darkers
-	mov rcx, arg(10) ; rd
-	mov [rcx + rsi*COMPV_YASM_REG_SZ_BYTES], edx ; (*rd) = colDarkersFlags
+	mov [rsp + 8], edx ;colDarkersFlags
 	; Transpose
-	COMPV_TRANSPOSE_I8_16X16_REG_T5_AVX2 rax+0*32, rax+1*32, rax+2*32, rax+3*32, rax+4*32, rax+5*32, rax+6*32, rax+7*32, rax+8*32, rax+9*32, rax+10*32, rax+11*32, rax+12*32, rax+13*32, rax+14*32, rax+15*32, ymm0, ymm1, ymm2, ymm3, ymm4	
+	COMPV_TRANSPOSE_I8_16X16_REG_T5_AVX2 rsp+1848+0*32, rsp+1848+1*32, rsp+1848+2*32, rsp+1848+3*32, rsp+1848+4*32, rsp+1848+5*32, rsp+1848+6*32, rsp+1848+7*32, rsp+1848+8*32, rsp+1848+9*32, rsp+1848+10*32, rsp+1848+11*32, rsp+1848+12*32, rsp+1848+13*32, rsp+1848+14*32, rsp+1848+15*32, ymm0, ymm1, ymm2, ymm3, ymm4	
 	; Flags
-	mov r8, rsi
-	mov r9, rsi
-	shl r8, COMPV_YASM_REG_SZ_BYTES_TIMES16_LOG2 ; rsi * (16*COMPV_YASM_REG_SZ_BYTES)
-	shl r9, 9 ; rsi * (16 * 32)
-	vpxor ymm5, ymm5 ; ymmZero
-	mov rdx, arg(6) ; pfdarkers16
-	lea rdx, [rdx + r8]
-	mov rax, arg(8) ; ddarkers16x32
-	lea rax, [rax + r9]
-	vpcmpeqb ymm0, ymm5, [rax+0*32]
-	vpcmpeqb ymm1, ymm5, [rax+1*32]
-	vpcmpeqb ymm2, ymm5, [rax+2*32]
-	vpcmpeqb ymm3, ymm5, [rax+3*32]
-	vpcmpeqb ymm4, ymm5, [rax+4*32]
-	vpcmpeqb ymm8, ymm5, [rax+5*32]
-	vpcmpeqb ymm9, ymm5, [rax+6*32]
-	vpcmpeqb ymm10, ymm5, [rax+7*32]
-	vpcmpeqb ymm11, ymm5, [rax+8*32]
-	vpcmpeqb ymm12, ymm5, [rax+9*32]
-	vpcmpeqb ymm13, ymm5, [rax+10*32]
-	vpcmpeqb ymm14, ymm5, [rax+11*32]
-	vpcmpeqb ymm15, ymm5, [rax+12*32]
 	vpcmpeqb ymm5, ymm5 ; ymmFF
+	vpcmpeqb ymm0, ymm7, [rsp + 1848 +0*32]
+	vpcmpeqb ymm1, ymm7, [rsp + 1848 +1*32]
+	vpcmpeqb ymm2, ymm7, [rsp + 1848 +2*32]
+	vpcmpeqb ymm3, ymm7, [rsp + 1848 +3*32]
+	vpcmpeqb ymm4, ymm7, [rsp + 1848 +4*32]
+	vpcmpeqb ymm8, ymm7, [rsp + 1848 +5*32]
+	vpcmpeqb ymm9, ymm7, [rsp + 1848 +6*32]
+	vpcmpeqb ymm10, ymm7, [rsp + 1848 +7*32]
+	vpcmpeqb ymm11, ymm7, [rsp + 1848 +8*32]
+	vpcmpeqb ymm12, ymm7, [rsp + 1848 +9*32]
+	vpcmpeqb ymm13, ymm7, [rsp + 1848 +10*32]
+	vpcmpeqb ymm14, ymm7, [rsp + 1848 +11*32]
+	vpcmpeqb ymm15, ymm7, [rsp + 1848 +12*32]
 	vpandn ymm0, ymm5
 	vpandn ymm1, ymm5
 	vpandn ymm2, ymm5
@@ -609,7 +590,6 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpandn ymm13, ymm5
 	vpandn ymm14, ymm5
 	vpandn ymm15, ymm5
-	push rax ; save rax 
 	vpmovmskb eax, ymm0
 	vpmovmskb ecx, ymm1
 	vpmovmskb r8d, ymm2
@@ -620,42 +600,72 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpmovmskb r13d, ymm10
 	vpmovmskb r14d, ymm11
 	vpmovmskb r15d, ymm12
-	mov [rdx + 0*COMPV_YASM_REG_SZ_BYTES], eax
-	mov [rdx + 1*COMPV_YASM_REG_SZ_BYTES], ecx
-	mov [rdx + 2*COMPV_YASM_REG_SZ_BYTES], r8d
-	mov [rdx + 3*COMPV_YASM_REG_SZ_BYTES], r9d
-	mov [rdx + 4*COMPV_YASM_REG_SZ_BYTES], r10d
-	mov [rdx + 5*COMPV_YASM_REG_SZ_BYTES], r11d
-	mov [rdx + 6*COMPV_YASM_REG_SZ_BYTES], r12d
-	mov [rdx + 7*COMPV_YASM_REG_SZ_BYTES], r13d
-	mov [rdx + 8*COMPV_YASM_REG_SZ_BYTES], r14d
-	mov [rdx + 9*COMPV_YASM_REG_SZ_BYTES], r15d
+	mov [rsp + 24 + 0*COMPV_YASM_REG_SZ_BYTES], eax
+	mov [rsp + 24 + 1*COMPV_YASM_REG_SZ_BYTES], ecx
+	mov [rsp + 24 + 2*COMPV_YASM_REG_SZ_BYTES], r8d
+	mov [rsp + 24 + 3*COMPV_YASM_REG_SZ_BYTES], r9d
+	mov [rsp + 24 + 4*COMPV_YASM_REG_SZ_BYTES], r10d
+	mov [rsp + 24 + 5*COMPV_YASM_REG_SZ_BYTES], r11d
+	mov [rsp + 24 + 6*COMPV_YASM_REG_SZ_BYTES], r12d
+	mov [rsp + 24 + 7*COMPV_YASM_REG_SZ_BYTES], r13d
+	mov [rsp + 24 + 8*COMPV_YASM_REG_SZ_BYTES], r14d
+	mov [rsp + 24 + 9*COMPV_YASM_REG_SZ_BYTES], r15d
 	vpmovmskb r8d, ymm13
 	vpmovmskb r9d, ymm14
 	vpmovmskb r10d, ymm15
-	vpxor ymm15, ymm15 ; ymmZeros
-	mov [rdx + 10*COMPV_YASM_REG_SZ_BYTES], r8d
-	mov [rdx + 11*COMPV_YASM_REG_SZ_BYTES], r9d
-	mov [rdx + 12*COMPV_YASM_REG_SZ_BYTES], r10d
-	pop rax ; restore rax, arg(8) -> ddarkers16x32
-	vpcmpeqb ymm0, ymm15, [rax+13*32]
-	vpcmpeqb ymm1, ymm15, [rax+14*32]
-	vpcmpeqb ymm2, ymm15, [rax+15*32]
+	mov [rsp + 24 + 10*COMPV_YASM_REG_SZ_BYTES], r8d
+	mov [rsp + 24 + 11*COMPV_YASM_REG_SZ_BYTES], r9d
+	mov [rsp + 24 + 12*COMPV_YASM_REG_SZ_BYTES], r10d
+	vpcmpeqb ymm0, ymm7, [rsp + 1848 +13*32]
+	vpcmpeqb ymm1, ymm7, [rsp + 1848 +14*32]
+	vpcmpeqb ymm2, ymm7, [rsp + 1848 +15*32]
 	vpandn ymm0, ymm5
 	vpandn ymm1, ymm5
 	vpandn ymm2, ymm5
 	vpmovmskb r8d, ymm0
 	vpmovmskb r9d, ymm1
 	vpmovmskb r10d, ymm2
-	mov [rdx + 13*COMPV_YASM_REG_SZ_BYTES], r8d
-	mov [rdx + 14*COMPV_YASM_REG_SZ_BYTES], r9d
-	mov [rdx + 15*COMPV_YASM_REG_SZ_BYTES], r10d
+	mov [rsp + 24 + 13*COMPV_YASM_REG_SZ_BYTES], r8d
+	mov [rsp + 24 + 14*COMPV_YASM_REG_SZ_BYTES], r9d
+	mov [rsp + 24 + 15*COMPV_YASM_REG_SZ_BYTES], r10d
 		
 	.EndOfDarkers
 
+	; Check if we have to compute strengths
+	mov rax, [rsp + 8] ; colDarkersFlags
+	or rax, [rsp + 16] ; | colBrighters
+	test eax, eax
+	jz .NeitherDarkersNorBrighters
+	; call FastStrengths32(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x32, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x32, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv_scalar_t N);
+	mov rax, rsp ; save rsp before reserving params, must not be one of the registers used to save the params (rcx, rdx, r8, r9, rdi, rsi)
+	push rbx ; because we cannot use [rcx, rdx, r8, r9, rdi, rsi]
+	COMPV_YASM_RESERVE_PARAMS rbx, 8
+	mov rbx, [rax + 16] ; colBrightersFlags
+	set_param 0, rbx
+	mov rbx, [rax + 8] ; colDarkersFlags
+	set_param 1, rbx
+	lea rbx, [rax + 2360] ; ymmDbrighters16x32
+	set_param 2, rbx
+	lea rbx, [rax + 1848] ; ymmDdarkers16x32
+	set_param 3, rbx
+	lea rbx, [rax + 152] ; fbrighters16
+	set_param 4, rbx
+	lea rbx, [rax + 24] ; fdarkers16
+	set_param 5, rbx
+	mov rbx, arg(6) ; strengths
+	set_param 6, rbx
+	mov rbx, arg(4) ; N
+	set_param 7, rbx
+	call sym(FastStrengths32)
+	COMPV_YASM_UNRESERVE_PARAMS
+	pop rbx
+	vpxor ymm7, ymm7 ; restore ymm7
+	.NeitherDarkersNorBrighters
 	
 	.LoopRowsNext
+	mov rcx, 32
 	lea rbx, [rbx + 32] ; IP += 32
+	add arg(6), rcx ; strengths += 32
 	
 	;-------------------
 	;EndOfLooopRows
