@@ -664,15 +664,14 @@ sym(FastData32Row_Asm_X64_AVX2):
 	.NeitherDarkersNorBrighters
 	
 	.LoopRowsNext
+	mov rcx, 32
+	lea rbx, [rbx + 32] ; IP += 32
+	add arg(6), rcx ; strengths += 32
 	
 	;-------------------
 	;EndOfLooopRows
-	mov rcx, 32
-	lea rbx, [rbx + 32] ; IP += 32
 	lea rsi, [rsi + 1]
-	add arg(6), rcx ; strengths += 32
 	cmp rsi, arg(2)
-	
 	jl .LoopRows
 	;-------------------
 
