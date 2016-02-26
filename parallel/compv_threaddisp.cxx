@@ -36,7 +36,7 @@ CompVThreadDispatcher::CompVThreadDispatcher(int32_t numThreads)
         COMPV_DEBUG_ERROR("Failed to allocate the asynctasks");
         return;
     }
-    compv_core_id_t coreId = CompVCpu::getValidCoreId(1);
+    compv_core_id_t coreId = CompVCpu::getValidCoreId(0);
     for (int32_t i = 0; i < m_nTasksCount; ++i) {
         if (COMPV_ERROR_CODE_IS_NOK(CompVAsyncTask::newObj(&m_pTasks[i]))) {
             COMPV_DEBUG_ERROR("Failed to allocate the asynctask at index %d", i);
