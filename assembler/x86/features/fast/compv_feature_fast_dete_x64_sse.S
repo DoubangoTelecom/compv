@@ -696,7 +696,6 @@ sym(FastData16Row_Asm_X64_SSE2):
 	; call FastStrengths16(colBrightersFlags, colDarkersFlags, (const uint8_t*)xmmDbrighters16x16, (const uint8_t*)xmmDdarkers16x16, &fbrighters16, &fdarkers16, (uint8_t*)xmmStrengths, N);
 	mov rax, rsp ; save rsp before reserving params, must not be one of the registers used to save the params (rcx, rdx, r8, r9, rdi, rsi)
 	movdqa [rsp + 1576], xmm7 ; save xmmThreshold
-	; FIXME save rsi
 	COMPV_YASM_RESERVE_PARAMS r10, 8
 	mov r10, [rax + 16] ; colBrightersFlags
 	set_param 0, r10
@@ -716,7 +715,6 @@ sym(FastData16Row_Asm_X64_SSE2):
 	set_param 7, r10
 	call sym(FastStrengths16)
 	COMPV_YASM_UNRESERVE_PARAMS
-	; FIXME restore rsi
 	movdqa xmm7, [rsp + 1576] ; restore xmmThreshold
 	.NeitherDarkersNorBrighters
 	

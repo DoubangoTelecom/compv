@@ -412,6 +412,7 @@
 				mov [rsp+8*%1], %2
 			%endif
 		%else ; SystemV
+			; FIXME: save rdi and rsi
 			%if %1 == 0
 				mov rdi, %2
 			%elif %1 == 1

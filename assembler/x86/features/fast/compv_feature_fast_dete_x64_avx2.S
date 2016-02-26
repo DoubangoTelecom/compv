@@ -84,6 +84,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vmovd xmm7, ecx ; xmm7 = xmmNMinusOne
 
 	mov rbx, arg(0) ; rbx = IP
+	mov rdi, arg(6) ; rdi = strengths
 	mov rdx, arg(2) ; width
 	shr rdx, 5 ; div width with 32 and mov rsi by 1 -> because of argi(x,rsi)
 	xor rsi, rsi
@@ -114,9 +115,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	; TODO(dmi): not supported
 
 	; cleanup strengths
-	
-	mov rax, arg(6)
-	vmovdqu [rax], ymm7
+	vmovdqu [rdi], ymm7
 
 	;
 	; Speed-Test-1
@@ -244,7 +243,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	setnz al
 	add cl, al
 	cmp cl, 1
-	setg dil ; rdi = (rcx > 1) ? 1 : 0
+	setg r15b ; r15 = (rcx > 1) ? 1 : 0
 	
 	; Check whether to load Darkers
 	test r9d, r9d
@@ -255,9 +254,9 @@ sym(FastData32Row_Asm_X64_AVX2):
 	cmp cl, 1
 	setg dl ; rdx = (rcx > 1) ? 1 : 0
 
-	; rdi = loadB, rdx = loadD
+	; r15 = loadB, rdx = loadD
 	; skip process if (!(loadB || loadD))
-	mov al, byte dil
+	mov al, byte r15b
 	or al, dl
 	test al, al
 	jz .LoopRowsNext
@@ -287,7 +286,6 @@ sym(FastData32Row_Asm_X64_AVX2):
 	mov r12, [rcx + 7*COMPV_YASM_REG_SZ_BYTES] ; pixels16[7]
 	mov r13, [rcx + 9*COMPV_YASM_REG_SZ_BYTES] ; pixels16[9]
 	mov r14, [rcx + 10*COMPV_YASM_REG_SZ_BYTES] ; pixels16[10]
-	mov r15, [rcx + 11*COMPV_YASM_REG_SZ_BYTES] ; pixels16[11]
 	vmovdqu ymm0, [rbx + rax]
 	vmovdqu ymm1, [rbx + r8]
 	vmovdqu ymm2, [rbx + r9]
@@ -296,13 +294,14 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vmovdqu ymm9, [rbx + r12]
 	vmovdqu ymm10, [rbx + r13]
 	vmovdqu ymm11, [rbx + r14]
-	vmovdqu ymm12, [rbx + r15]
-	mov r8, [rcx + 13*COMPV_YASM_REG_SZ_BYTES] ; pixels16[13]
-	mov r9, [rcx + 14*COMPV_YASM_REG_SZ_BYTES] ; pixels16[14]
-	mov r10, [rcx + 15*COMPV_YASM_REG_SZ_BYTES] ; pixels16[15]
-	vmovdqu ymm13, [rbx + r8]
-	vmovdqu ymm14, [rbx + r9]	
-	vmovdqu ymm15, [rbx + r10]
+	mov r8, [rcx + 11*COMPV_YASM_REG_SZ_BYTES] ; pixels16[11]
+	mov r9, [rcx + 13*COMPV_YASM_REG_SZ_BYTES] ; pixels16[13]
+	mov r10, [rcx + 14*COMPV_YASM_REG_SZ_BYTES] ; pixels16[14]
+	mov r11, [rcx + 15*COMPV_YASM_REG_SZ_BYTES] ; pixels16[15]
+	vmovdqu ymm12, [rbx + r8]
+	vmovdqu ymm13, [rbx + r9]
+	vmovdqu ymm14, [rbx + r10]	
+	vmovdqu ymm15, [rbx + r11]
 	vmovdqa [rsp + 1336 + 1*32], ymm0
 	vmovdqa [rsp + 1336 + 2*32], ymm1
 	vmovdqa [rsp + 1336 + 3*32], ymm2
@@ -324,7 +323,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	;
 	;	LoadBrighters
 	;
-	test dil, dil ; rdi was loadB, now it's free
+	test r15b, r15b ; r15 was loadB, now it's free
 	jz .EndOfBrighters
 	; compute Dbrighters
 	vmovdqa ymm4, [sym(k1_i8)]
@@ -400,11 +399,11 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpaddusb ymm0, ymm12 ; ymm0 += 1 + 2 + 3 + 5 + 6 + 7 + 9 + 10 + 11 + 13 + 14 + 15
 	; Check the columns with at least N non-zero bits
 	vpcmpgtb ymm0, ymm4
-	vpmovmskb edi, ymm0
-	test edi, edi
+	vpmovmskb eax, ymm0
+	test eax, eax
 	jz .EndOfBrighters
 	; Continue loading brighters
-	mov [rsp + 16], edi ; colBrightersFlags
+	mov [rsp + 16], eax ; colBrightersFlags
 	; Transpose
 	COMPV_TRANSPOSE_I8_16X16_REG_T5_AVX2 rsp+2360+0*32, rsp+2360+1*32, rsp+2360+2*32, rsp+2360+3*32, rsp+2360+4*32, rsp+2360+5*32, rsp+2360+6*32, rsp+2360+7*32, rsp+2360+8*32, rsp+2360+9*32, rsp+2360+10*32, rsp+2360+11*32, rsp+2360+12*32, rsp+2360+13*32, rsp+2360+14*32, rsp+2360+15*32, ymm0, ymm1, ymm2, ymm3, ymm4
 	; Flags
@@ -435,7 +434,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpandn ymm13, ymm6
 	vpandn ymm14, ymm6
 	vpandn ymm15, ymm6
-	vpmovmskb edi, ymm0
+	vpmovmskb eax, ymm0
 	vpmovmskb ecx, ymm1
 	vpmovmskb r8d, ymm2
 	vpmovmskb r9d, ymm3
@@ -444,7 +443,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpmovmskb r12d, ymm9
 	vpmovmskb r13d, ymm10
 	vpmovmskb r14d, ymm11
-	mov [rsp + 152 + 0*COMPV_YASM_REG_SZ_BYTES], edi
+	mov [rsp + 152 + 0*COMPV_YASM_REG_SZ_BYTES], eax
 	mov [rsp + 152 + 1*COMPV_YASM_REG_SZ_BYTES], ecx
 	mov [rsp + 152 + 2*COMPV_YASM_REG_SZ_BYTES], r8d
 	mov [rsp + 152 + 3*COMPV_YASM_REG_SZ_BYTES], r9d
@@ -467,10 +466,10 @@ sym(FastData32Row_Asm_X64_AVX2):
 	vpandn ymm0, ymm6
 	vpandn ymm1, ymm6
 	vpandn ymm2, ymm6
-	vpmovmskb edi, ymm0
+	vpmovmskb eax, ymm0
 	vpmovmskb ecx, ymm1
 	vpmovmskb r8d, ymm2
-	mov [rsp + 152 + 13*COMPV_YASM_REG_SZ_BYTES], edi
+	mov [rsp + 152 + 13*COMPV_YASM_REG_SZ_BYTES], eax
 	mov [rsp + 152 + 14*COMPV_YASM_REG_SZ_BYTES], ecx
 	mov [rsp + 152 + 15*COMPV_YASM_REG_SZ_BYTES], r8d
 
@@ -639,34 +638,34 @@ sym(FastData32Row_Asm_X64_AVX2):
 	jz .NeitherDarkersNorBrighters
 	; call FastStrengths32(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x32, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x32, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv_scalar_t N);
 	mov rax, rsp ; save rsp before reserving params, must not be one of the registers used to save the params (rcx, rdx, r8, r9, rdi, rsi)
-	push rbx ; because we cannot use [rcx, rdx, r8, r9, rdi, rsi]
-	COMPV_YASM_RESERVE_PARAMS rbx, 8
-	mov rbx, [rax + 16] ; colBrightersFlags
-	set_param 0, rbx
-	mov rbx, [rax + 8] ; colDarkersFlags
-	set_param 1, rbx
-	lea rbx, [rax + 2360] ; ymmDbrighters16x32
-	set_param 2, rbx
-	lea rbx, [rax + 1848] ; ymmDdarkers16x32
-	set_param 3, rbx
-	lea rbx, [rax + 152] ; fbrighters16
-	set_param 4, rbx
-	lea rbx, [rax + 24] ; fdarkers16
-	set_param 5, rbx
-	mov rbx, arg(6) ; strengths
-	set_param 6, rbx
-	mov rbx, arg(4) ; N
-	set_param 7, rbx
+	mov r11, rdi ; strengths
+	; starting this line [rcx, rdx, r8, r9, rdi, rsi] must not be used
+	COMPV_YASM_RESERVE_PARAMS r10, 8
+	mov r10, [rax + 16] ; colBrightersFlags
+	set_param 0, r10
+	mov r10, [rax + 8] ; colDarkersFlags
+	set_param 1, r10
+	lea r10, [rax + 2360] ; ymmDbrighters16x32
+	set_param 2, r10
+	lea r10, [rax + 1848] ; ymmDdarkers16x32
+	set_param 3, r10
+	lea r10, [rax + 152] ; fbrighters16
+	set_param 4, r10
+	lea r10, [rax + 24] ; fdarkers16
+	set_param 5, r10
+	mov r10, r11 ; strengths
+	set_param 6, r10
+	mov r10, arg(4) ; N
+	set_param 7, r10
 	call sym(FastStrengths32)
 	COMPV_YASM_UNRESERVE_PARAMS
-	pop rbx
+	
 	vpxor ymm7, ymm7 ; restore ymm7
 	.NeitherDarkersNorBrighters
 	
 	.LoopRowsNext
-	mov rcx, 32
 	lea rbx, [rbx + 32] ; IP += 32
-	add arg(6), rcx ; strengths += 32
+	lea rdi, [rdi + 32] ; strengths += 32
 	
 	;-------------------
 	;EndOfLooopRows
