@@ -773,19 +773,27 @@ sym(FastData16Row_Asm_X64_SSE2):
 	push rsi
 	push rdi
 	push rbx
+	push r12
+	push r13
+	push r14
+	push r15
 	; end prolog
 	
-	; r8 = p
 	; r9 = p*16
 	; r10 = 1<<p
-	; r11 = 0
 
 	mov rax, 1
-	xor r11, r11
-	xor r8, r8
+	xor r8, r8 ; r8 = p = 0
 	xor r9, r9
 	pxor xmm0, xmm0
+	mov rbx, arg(6) ; Strengths16
+	mov rdx, arg(0) ; rbrighters
 	mov r10, rax ; (1<<p) = (1<<0) = 1
+	mov r11, arg(1) ; rdarkers
+	mov r12, arg(4) ; fbrighters16
+	mov r13, arg(5) ; fdarkers16
+	mov r14, arg(2) ; dbrighters16x16
+	mov r15, arg(3) ; ddarkers16x16
 
 	; FAST hard-coded flags
 	%if %2 == 9
@@ -802,15 +810,14 @@ sym(FastData16Row_Asm_X64_SSE2):
 	; Loop Start
 	;----------------------
 	.LoopStart
-		mov rcx, r11 ; rcx = maxn
+		xor rcx, rcx ; rcx = maxn
 
 		; ---------
 		; Brighters
 		; ---------
-		test arg(0), r10 ;  (1 << p) ?
+		test rdx, r10 ;  (1 << p) ?
 		jz .EndOfBrighters
-		mov rax, arg(4) ; &fbrighters16
-		mov rdi, [rax + r8*COMPV_YASM_REG_SZ_BYTES] ; fbrighters16[p]
+		mov rdi, [r12 + r8*COMPV_YASM_REG_SZ_BYTES] ; fbrighters16[p]
 
 		movd xmm5, rdi
 		punpcklwd xmm5, xmm5  
@@ -824,10 +831,8 @@ sym(FastData16Row_Asm_X64_SSE2):
 		pmovmskb eax, xmm5
 		test ax, ax ; rax = r0
 		jz .EndOfBrighters
-		pxor xmm3, xmm3 ; xmm3 = Zeros
 		; Load dbrighters
-		mov rbx, arg(2) ; dbrighters16x16
-		movdqa xmm2, [rbx + r9] ; dbrighters16x16[p*16]
+		movdqa xmm2, [r14 + r9] ; dbrighters16x16[p*16]
 		; Compute minimum hz
 		%assign i 0
 		%rep    16
@@ -835,16 +840,16 @@ sym(FastData16Row_Asm_X64_SSE2):
 			jz .EndOfBrightersMin %+ i
 			movdqa xmm1, xmm2
 			%if %2 == 9
-				movdqa xmm0, [sym(kFast9Arcs) + i*16]
+				movdqa xmm3, [sym(kFast9Arcs) + i*16]
 			%elif %2 == 12
-				movdqa xmm0, [sym(kFast12Arcs) + i*16]
+				movdqa xmm3, [sym(kFast12Arcs) + i*16]
 			%else
 				%error "not supported"
 			%endif
-			pshufb xmm1, xmm0
+			pshufb xmm1, xmm3
 			movdqa xmm4, xmm1
-			punpcklbw xmm1, xmm3
-			punpckhbw xmm4, xmm3
+			punpcklbw xmm1, xmm0
+			punpckhbw xmm4, xmm0
 			phminposuw xmm1, xmm1
 			phminposuw xmm4, xmm4
 			movd rdi, xmm1 ; bits [16:18] contains the index and must be ignored or cleared
@@ -874,10 +879,9 @@ sym(FastData16Row_Asm_X64_SSE2):
 		; Darkers
 		; ---------
 	.Darkers
-		test arg(1), r10 ; (rdarkers & (1 << p)) ?
+		test r11, r10 ; (rdarkers & (1 << p)) ?
 		jz .EndOfDarkers
-		mov rax, arg(5) ; &fdarkers16
-		mov rdi, [rax + r8*COMPV_YASM_REG_SZ_BYTES] ; fdarkers16[p]
+		mov rdi, [r13 + r8*COMPV_YASM_REG_SZ_BYTES] ; fdarkers16[p]
 
 		movd xmm5, rdi
 		punpcklwd xmm5, xmm5  
@@ -891,10 +895,8 @@ sym(FastData16Row_Asm_X64_SSE2):
 		pmovmskb eax, xmm5
 		test ax, ax ; rax = r0
 		jz .EndOfDarkers
-		pxor xmm3, xmm3 ; xmm3 = Zeros
 		; Load ddarkers16x16
-		mov rbx, arg(3) ; ddarkers16x16
-		movdqa xmm2, [rbx + r9] ; ddarkers16x16[p*16]
+		movdqa xmm2, [r15 + r9] ; ddarkers16x16[p*16]
 		; Compute minimum hz
 		%assign i 0
 		%rep    16
@@ -902,16 +904,16 @@ sym(FastData16Row_Asm_X64_SSE2):
 			jz .EndOfDarkersMin %+ i
 			movdqa xmm1, xmm2
 			%if %2 == 9
-				movdqa xmm0, [sym(kFast9Arcs) + i*16]
+				movdqa xmm3, [sym(kFast9Arcs) + i*16]
 			%elif %2 == 12
-				movdqa xmm0, [sym(kFast12Arcs) + i*16]
+				movdqa xmm3, [sym(kFast12Arcs) + i*16]
 			%else
 				%error "not supported"
 			%endif
-			pshufb xmm1, xmm0
+			pshufb xmm1, xmm3
 			movdqa xmm4, xmm1
-			punpcklbw xmm1, xmm3
-			punpckhbw xmm4, xmm3
+			punpcklbw xmm1, xmm0
+			punpckhbw xmm4, xmm0
 			phminposuw xmm1, xmm1
 			phminposuw xmm4, xmm4
 			movd rdi, xmm1 ; bits [16:18] contains the index and must be ignored or cleared
@@ -938,8 +940,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 	.EndOfDarkers
 		
 	; compute strenghts[p]
-	mov rax, arg(6) ; &strengths16
-	mov [rax + r8], byte cl ; strengths16[p] = maxn
+	mov [rbx + r8], byte cl ; strengths16[p] = maxn
 
 	add r8, 1 ; r8 = p
 	add r9, 16 ; r9 = p*16
@@ -949,6 +950,10 @@ sym(FastData16Row_Asm_X64_SSE2):
 	;----------------
 
 	; begin epilog
+	pop r15
+	pop r14
+	pop r13
+	pop r12
 	pop rbx
 	pop rdi
 	pop rsi
