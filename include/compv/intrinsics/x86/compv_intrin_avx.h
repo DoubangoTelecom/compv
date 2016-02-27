@@ -70,7 +70,7 @@ Macro used to convert 3x32RGB to 4x32RGBA samples
 	/* 		movdqa xmmword ptr [rbp+9D0h],xmm0*/ \
 	/* 		lea rax,[rbp+9D0h]*/ \
 	/* 		vbroadcasti128 ymm0,oword ptr [rax]*/ \
-	/* DOUBANGO ASM (file: compv_imageconv_macros_avx.S):*/ \
+	/* DOUBANGO ASM (file: compv_imageconv_macros_avx.s):*/ \
 	/* 		vextractf128 [%3 + 0], ymm6, 0x1*/ \
 	/* 		vbroadcasti128 ymm5, [%3 + 0] */ \
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); \

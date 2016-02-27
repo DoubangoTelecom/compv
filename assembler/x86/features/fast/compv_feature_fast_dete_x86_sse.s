@@ -17,9 +17,10 @@
 ; You should have received a copy of the GNU General Public License
 ; along with CompV.
 ;
-%include "../../compv_common_x86.S"
-%include "../../compv_bits_macros_x86.S"
-%include "../../compv_math_macros_x86.S"
+%include "../../compv_common_x86.s"
+%include "../../compv_bits_macros_x86.s"
+%include "../../compv_math_macros_x86.s"
+%include "compv_feature_fast_dete_macros_x86.s"
 
 COMPV_YASM_DEFAULT_REL
 
@@ -727,54 +728,13 @@ sym(FastData16Row_Asm_X86_SSE2):
 		pmovmskb eax, xmm5
 		test ax, ax ; rax = r0
 		jz .EndOfBrighters
-		pxor xmm3, xmm3 ; xmm3 = Zeros
 		; Load dbrighters
 		mov rbx, arg(2) ; dbrighters16x16
 		mov rsi, rdx ; rsi = p
 		shl rsi, 4 ; p*16 
 		movdqa xmm2, [rbx + rsi]
 		; Compute minimum hz
-		%assign i 0
-		%rep    16
-			test rax, 1<<i
-			jz .EndOfBrightersMin %+ i
-			movdqa xmm1, xmm2
-			%if %2 == 9
-				movdqa xmm0, [sym(kFast9Arcs) + i*16]
-			%elif %2 == 12
-				movdqa xmm0, [sym(kFast12Arcs) + i*16]
-			%else
-				%error "not supported"
-			%endif
-			pshufb xmm1, xmm0
-			movdqa xmm4, xmm1
-			punpcklbw xmm1, xmm3
-			punpckhbw xmm4, xmm3
-			phminposuw xmm1, xmm1
-			phminposuw xmm4, xmm4
-			movd rdi, xmm1
-			movd rsi, xmm4
-			and rdi, 0xFFFF ; clear the index bits [16:18]. TODO(dmi): use(ax, dx, cx, bx)
-			and rsi, 0xFFFF ; clear the index bits [16:18]. TODO(dmi): use(ax, dx, cx, bx)
-			cmp rsi, rdi
-			%if %1 == 1
-				cmovl rdi, rsi
-			%else
-				jg .BrightersNotMin %+ i
-				mov rdi, rsi
-				.BrightersNotMin %+ i
-			%endif
-			cmp rdi, rcx
-			%if %1 == 1
-				cmovg rcx, rdi
-			%else
-				jl .BrightersNotMax %+ i
-				mov rcx, rdi
-				.BrightersNotMax %+ i
-			%endif
-			.EndOfBrightersMin %+ i
-			%assign i i+1
-		%endrep
+		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_SSE41 Brighters, %1, %2, xmm2, xmm0, xmm1, xmm3, xmm4 ; This macro overrides rax, rsi, rdi and set the result in rcx
 		.EndOfBrighters
 
 		; ---------
@@ -799,54 +759,13 @@ sym(FastData16Row_Asm_X86_SSE2):
 		pmovmskb eax, xmm5
 		test ax, ax ; rax = r0
 		jz .EndOfDarkers
-		pxor xmm3, xmm3 ; xmm3 = Zeros
 		; Load ddarkers16x16
 		mov rbx, arg(3) ; ddarkers16x16
 		mov rsi, rdx ; rsi = p
 		shl rsi, 4 ; p*16 
 		movdqa xmm2, [rbx + rsi]
 		; Compute minimum hz
-		%assign i 0
-		%rep    16
-			test rax, 1<<i
-			jz .EndOfDarkersMin %+ i
-			movdqa xmm1, xmm2
-			%if %2 == 9
-				movdqa xmm0, [sym(kFast9Arcs) + i*16]
-			%elif %2 == 12
-				movdqa xmm0, [sym(kFast12Arcs) + i*16]
-			%else
-				%error "not supported"
-			%endif
-			pshufb xmm1, xmm0
-			movdqa xmm4, xmm1
-			punpcklbw xmm1, xmm3
-			punpckhbw xmm4, xmm3
-			phminposuw xmm1, xmm1
-			phminposuw xmm4, xmm4
-			movd edi, xmm1
-			movd esi, xmm4
-			and rdi, 0xFFFF ; clear the index bits [16:18]. TODO(dmi): use(ax, dx, cx, bx)
-			and rsi, 0xFFFF ; clear the index bits [16:18]. TODO(dmi): use(ax, dx, cx, bx)
-			cmp rsi, rdi
-			%if %1 == 1
-					cmovl rdi, rsi
-				%else
-					jg .DarkersNotMin %+ i
-					mov rdi, rsi
-					.DarkersNotMin %+ i
-				%endif
-				cmp rdi, rcx
-				%if %1 == 1
-					cmovg rcx, rdi
-				%else
-					jl .DarkersNotMax %+ i
-					mov rcx, rdi
-					.DarkersNotMax %+ i
-				%endif
-			.EndOfDarkersMin %+ i
-			%assign i i+1
-		%endrep
+		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_SSE41 Darkers, %1, %2, xmm2, xmm0, xmm1, xmm3, xmm4 ; This macro overrides rax, rsi, rdi and set the result in rcx
 		.EndOfDarkers
 		
 	; compute strenghts[p]
@@ -980,54 +899,13 @@ sym(Fast12Strengths16_Asm_X86_SSE41):
 			pmovmskb eax, xmm5
 			test ax, ax ; rax = r0
 			jz .EndOfBrighters %+ j
-			pxor xmm3, xmm3 ; xmm3 = Zeros
 			; Load dbrighters
 			mov rbx, arg(2) ; dbrighters16x32
 			mov rsi, rdx ; rsi = p
 			shl rsi, 5 ; p*32 
 			movdqa xmm2, [rbx + rsi + j*16]
 			; Compute minimum hz
-			%assign i 0
-			%rep    16
-				test rax, 1<<i
-				jz .EndOfBrightersMin %+ j %+ i
-				movdqa xmm1, xmm2
-				%if %2 == 9
-					movdqa xmm0, [sym(kFast9Arcs) + i*16]
-				%elif %2 == 12
-					movdqa xmm0, [sym(kFast12Arcs) + i*16]
-				%else
-					%error "not supported"
-				%endif
-				pshufb xmm1, xmm0
-				movdqa xmm4, xmm1
-				punpcklbw xmm1, xmm3
-				punpckhbw xmm4, xmm3
-				phminposuw xmm1, xmm1
-				phminposuw xmm4, xmm4
-				movd rdi, xmm1
-				movd rsi, xmm4
-				and rdi, 0xFFFF
-				and rsi, 0xFFFF
-				cmp rsi, rdi
-				%if %1 == 1
-					cmovl rdi, rsi
-				%else
-					jg .BrightersNotMin %+ j %+ i
-					mov rdi, rsi
-					.BrightersNotMin %+ j %+ i
-				%endif
-				cmp rdi, rcx
-				%if %1 == 1
-					cmovg rcx, rdi
-				%else
-					jl .BrightersNotMax %+ j %+ i
-					mov rcx, rdi
-					.BrightersNotMax %+ j %+ i
-				%endif
-				.EndOfBrightersMin %+ j %+ i
-				%assign i i+1
-			%endrep
+			COMPV_FEATURE_FAST_DETE_HORIZ_MIN_SSE41 Brighters, %1, %2, xmm2, xmm0, xmm1, xmm3, xmm4 ; This macro overrides rax, rsi, rdi and set the result in rcx
 			.EndOfBrighters %+ j
 
 			; ---------
@@ -1058,54 +936,13 @@ sym(Fast12Strengths16_Asm_X86_SSE41):
 			pmovmskb eax, xmm5
 			test ax, ax ; rax = r0
 			jz .EndOfDarkers %+ j
-			pxor xmm3, xmm3 ; xmm3 = Zeros
 			; Load ddarkers16x16
 			mov rbx, arg(3) ; ddarkers16x32
 			mov rsi, rdx ; rsi = p
 			shl rsi, 5 ; p*32 
 			movdqa xmm2, [rbx + rsi + j*16]
 			; Compute minimum hz
-			%assign i 0
-			%rep    16
-				test rax, 1<<i
-				jz .EndOfDarkersMin %+ j %+ i
-				movdqa xmm1, xmm2
-				%if %2 == 9
-					movdqa xmm0, [sym(kFast9Arcs) + i*16]
-				%elif %2 == 12
-					movdqa xmm0, [sym(kFast12Arcs) + i*16]
-				%else
-					%error "not supported"
-				%endif
-				pshufb xmm1, xmm0
-				movdqa xmm4, xmm1
-				punpcklbw xmm1, xmm3
-				punpckhbw xmm4, xmm3
-				phminposuw xmm1, xmm1
-				phminposuw xmm4, xmm4
-				movd rdi, xmm1
-				movd rsi, xmm4
-				and rdi, 0xFFFF
-				and rsi, 0xFFFF
-				cmp rsi, rdi
-				%if %1 == 1
-						cmovl rdi, rsi
-					%else
-						jg .DarkersNotMin %+ j %+ i
-						mov rdi, rsi
-						.DarkersNotMin %+ j %+ i
-					%endif
-					cmp rdi, rcx
-					%if %1 == 1
-						cmovg rcx, rdi
-					%else
-						jl .DarkersNotMax %+ j %+ i
-						mov rcx, rdi
-						.DarkersNotMax %+ j %+ i
-					%endif
-				.EndOfDarkersMin %+ j %+ i
-				%assign i i+1
-			%endrep
+			COMPV_FEATURE_FAST_DETE_HORIZ_MIN_SSE41 Darkers, %1, %2, xmm2, xmm0, xmm1, xmm3, xmm4 ; This macro overrides rax, rsi, rdi and set the result in rcx
 			.EndOfDarkers %+ j
 		
 		; compute strenghts[p]

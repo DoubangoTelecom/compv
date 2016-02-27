@@ -17,12 +17,12 @@
 ; You should have received a copy of the GNU General Public License
 ; along with CompV.
 ;
-%include "../../compv_common_x86.S"
+%include "../../compv_common_x86.s"
 
 %if COMPV_YASM_ABI_IS_64BIT
 
-%include "../../compv_bits_macros_x86.S"
-%include "../../compv_math_macros_x86.S"
+%include "../../compv_bits_macros_x86.s"
+%include "../../compv_math_macros_x86.s"
 
 COMPV_YASM_DEFAULT_REL
 

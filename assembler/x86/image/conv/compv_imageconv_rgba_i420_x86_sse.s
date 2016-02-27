@@ -17,8 +17,8 @@
 ; You should have received a copy of the GNU General Public License
 ; along with CompV.
 ;
-%include "../../compv_common_x86.S"
-%include "compv_imageconv_macros_x86_sse.S"
+%include "../../compv_common_x86.s"
+%include "compv_imageconv_macros_x86_sse.s"
 
 COMPV_YASM_DEFAULT_REL
 

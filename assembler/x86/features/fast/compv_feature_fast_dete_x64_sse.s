@@ -17,12 +17,13 @@
 ; You should have received a copy of the GNU General Public License
 ; along with CompV.
 ;
-%include "../../compv_common_x86.S"
+%include "../../compv_common_x86.s"
 
 %if COMPV_YASM_ABI_IS_64BIT
 
-%include "../../compv_bits_macros_x86.S"
-%include "../../compv_math_macros_x86.S"
+%include "../../compv_bits_macros_x86.s"
+%include "../../compv_math_macros_x86.s"
+%include "compv_feature_fast_dete_macros_x86.s"
 
 COMPV_YASM_DEFAULT_REL
 
@@ -834,45 +835,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 		; Load dbrighters
 		movdqa xmm2, [r14 + r9] ; dbrighters16x16[p*16]
 		; Compute minimum hz
-		%assign i 0
-		%rep    16
-			test rax, 1<<i
-			jz .EndOfBrightersMin %+ i
-			movdqa xmm1, xmm2
-			%if %2 == 9
-				movdqa xmm3, [sym(kFast9Arcs) + i*16]
-			%elif %2 == 12
-				movdqa xmm3, [sym(kFast12Arcs) + i*16]
-			%else
-				%error "not supported"
-			%endif
-			pshufb xmm1, xmm3
-			movdqa xmm4, xmm1
-			punpcklbw xmm1, xmm0
-			punpckhbw xmm4, xmm0
-			phminposuw xmm1, xmm1
-			phminposuw xmm4, xmm4
-			movd rdi, xmm1 ; bits [16:18] contains the index and must be ignored or cleared
-			movd rsi, xmm4 ; bits [16:18] contains the index and must be ignored or cleared
-			cmp si, di
-			%if %1 == 1
-				cmovl di, si
-			%else
-				jg .BrightersNotMin %+ i
-				mov di, si
-				.BrightersNotMin %+ i
-			%endif
-			cmp di, cx
-			%if %1 == 1
-				cmovg cx, di
-			%else
-				jl .BrightersNotMax %+ i
-				mov cx, di
-				.BrightersNotMax %+ i
-			%endif
-			.EndOfBrightersMin %+ i
-			%assign i i+1
-		%endrep
+		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_SSE41 Brighters, %1, %2, xmm2, xmm0, xmm1, xmm3, xmm4 ; This macro overrides rax, rsi, rdi and set the result in rcx
 		.EndOfBrighters
 
 		; ---------
@@ -898,45 +861,7 @@ sym(FastData16Row_Asm_X64_SSE2):
 		; Load ddarkers16x16
 		movdqa xmm2, [r15 + r9] ; ddarkers16x16[p*16]
 		; Compute minimum hz
-		%assign i 0
-		%rep    16
-			test rax, 1<<i
-			jz .EndOfDarkersMin %+ i
-			movdqa xmm1, xmm2
-			%if %2 == 9
-				movdqa xmm3, [sym(kFast9Arcs) + i*16]
-			%elif %2 == 12
-				movdqa xmm3, [sym(kFast12Arcs) + i*16]
-			%else
-				%error "not supported"
-			%endif
-			pshufb xmm1, xmm3
-			movdqa xmm4, xmm1
-			punpcklbw xmm1, xmm0
-			punpckhbw xmm4, xmm0
-			phminposuw xmm1, xmm1
-			phminposuw xmm4, xmm4
-			movd rdi, xmm1 ; bits [16:18] contains the index and must be ignored or cleared
-			movd rsi, xmm4 ; bits [16:18] contains the index and must be ignored or cleared
-			cmp si, di
-			%if %1 == 1
-					cmovl di, si
-				%else
-					jg .DarkersNotMin %+ i
-					mov di, si
-					.DarkersNotMin %+ i
-				%endif
-				cmp di, cx
-				%if %1 == 1
-					cmovg cx, di
-				%else
-					jl .DarkersNotMax %+ i
-					mov cx, di
-					.DarkersNotMax %+ i
-				%endif
-			.EndOfDarkersMin %+ i
-			%assign i i+1
-		%endrep
+		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_SSE41 Brighters, %1, %2, xmm2, xmm0, xmm1, xmm3, xmm4 ; This macro overrides rax, rsi, rdi and set the result in rcx
 	.EndOfDarkers
 		
 	; compute strenghts[p]
@@ -1088,45 +1013,7 @@ sym(Fast12Strengths16_Asm_X64_SSE41):
 			; Load dbrighters
 			movdqa xmm2, [r14 + r9 + j*16] ; dbrighters16x32[p*16]
 			; Compute minimum hz
-			%assign i 0
-			%rep    16
-				test rax, 1<<i
-				jz .EndOfBrightersMin %+ j %+ i
-				movdqa xmm1, xmm2
-				%if %2 == 9
-					movdqa xmm7, [sym(kFast9Arcs) + i*16]
-				%elif %2 == 12
-					movdqa xmm7, [sym(kFast12Arcs) + i*16]
-				%else
-					%error "not supported"
-				%endif
-				pshufb xmm1, xmm7
-				movdqa xmm6, xmm1
-				punpcklbw xmm1, xmm0
-				punpckhbw xmm6, xmm0
-				phminposuw xmm1, xmm1
-				phminposuw xmm6, xmm6
-				movd rdi, xmm1 ; bits [16:18] contains the index and must be ignored or cleared
-				movd rsi, xmm6 ; bits [16:18] contains the index and must be ignored or cleared
-				cmp si, di
-				%if %1 == 1
-					cmovl di, si
-				%else
-					jg .BrightersNotMin %+ j %+ i
-					mov di, si
-					.BrightersNotMin %+ j %+ i
-				%endif
-				cmp di, cx
-				%if %1 == 1
-					cmovg cx, di
-				%else
-					jl .BrightersNotMax %+ j %+ i
-					mov cx, di
-					.BrightersNotMax %+ j %+ i
-				%endif
-				.EndOfBrightersMin %+ j %+ i
-				%assign i i+1
-			%endrep
+			COMPV_FEATURE_FAST_DETE_HORIZ_MIN_SSE41 Brighters, %1, %2, xmm2, xmm0, xmm1, xmm6, xmm7 ; This macro overrides rax, rsi, rdi and set the result in rcx
 			.EndOfBrighters %+ j
 
 			; ---------
@@ -1155,45 +1042,7 @@ sym(Fast12Strengths16_Asm_X64_SSE41):
 			; Load ddarkers16x32
 			movdqa xmm2, [r15 + r9 + j*16] ; ddarkers16x32[p*16]
 			; Compute minimum hz
-			%assign i 0
-			%rep    16
-				test rax, 1<<i
-				jz .EndOfDarkersMin %+ j %+ i
-				movdqa xmm1, xmm2
-				%if %2 == 9
-					movdqa xmm7, [sym(kFast9Arcs) + i*16]
-				%elif %2 == 12
-					movdqa xmm7, [sym(kFast12Arcs) + i*16]
-				%else
-					%error "not supported"
-				%endif
-				pshufb xmm1, xmm7
-				movdqa xmm6, xmm1
-				punpcklbw xmm1, xmm0
-				punpckhbw xmm6, xmm0
-				phminposuw xmm1, xmm1
-				phminposuw xmm6, xmm6
-				movd rdi, xmm1 ; bits [16:18] contains the index and must be ignored or cleared
-				movd rsi, xmm6 ; bits [16:18] contains the index and must be ignored or cleared
-				cmp si, di
-				%if %1 == 1
-						cmovl di, si
-					%else
-						jg .DarkersNotMin %+ j %+ i
-						mov di, si
-						.DarkersNotMin %+ j %+ i
-					%endif
-					cmp di, cx
-					%if %1 == 1
-						cmovg cx, di
-					%else
-						jl .DarkersNotMax %+ j %+ i
-						mov cx, di
-						.DarkersNotMax %+ j %+ i
-					%endif
-				.EndOfDarkersMin %+ j %+ i
-				%assign i i+1
-			%endrep
+			COMPV_FEATURE_FAST_DETE_HORIZ_MIN_SSE41 Darkers, %1, %2, xmm2, xmm0, xmm1, xmm6, xmm7 ; This macro overrides rax, rsi, rdi and set the result in rcx
 		.EndOfDarkers %+ j
 		
 		; compute strenghts[p]

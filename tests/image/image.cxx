@@ -7,7 +7,7 @@ using namespace compv;
 #define enableIntrinsics	true
 #define enableAsm			true
 #define testingMode			true
-#define cpuDisable			kCpuFlagNone
+#define cpuDisable			kCpuFlagAVX2
 
 #define TEST_CONV			0
 #define TEST_FAST			1
