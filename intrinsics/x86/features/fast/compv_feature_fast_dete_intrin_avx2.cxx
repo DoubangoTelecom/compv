@@ -375,7 +375,7 @@ void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdark
 	__m256i ymm0, ymm1, ymmFastXFlags, ymmFLow, ymmFHigh;
 	__m256i ymmZeros;
 	int r0, r1;
-	int maxnbrighterLow, maxndarkerLow, maxnbrighterHigh, maxndarkerHigh;
+	int maxnLow, maxnHigh;
 	int lowMin, highMin;
 	uint32_t rb = (uint32_t)rbrighters, rd = (uint32_t)rdarkers;
 	const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
@@ -402,7 +402,7 @@ void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdark
 		}
 
 	for (unsigned p = 0, g = 16; p < 16; ++p, ++g) {
-		maxnbrighterLow = 0, maxndarkerLow = maxnbrighterHigh = maxndarkerHigh = 0;
+		maxnLow = maxnHigh = 0;
 		// Brighters
 		if (rb & (1 << p) || rb & (1 << g)) {
 			// brighters flags
@@ -421,19 +421,18 @@ void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdark
 				r1 = r0 >> 16;
 				_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)dbrighters16x32));
 				// Compute minimum hz
-				_mm256_zeroupper();
 				__m128i xmm0, xmm1, xmmZeros;
 				xmmZeros = _mm_setzero_si128();
 				xmm0 = _mm256_extractf128_si256(ymm0, 0);
-				COMPV_HORIZ_MIN(r0, 0, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 1, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 2, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 3, maxnbrighterLow)
-				COMPV_HORIZ_MIN(r0, 4, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 5, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 6, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 7, maxnbrighterLow)
-				COMPV_HORIZ_MIN(r0, 8, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 9, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 10, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 11, maxnbrighterLow)
-				COMPV_HORIZ_MIN(r0, 12, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 13, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 14, maxnbrighterLow) COMPV_HORIZ_MIN(r0, 15, maxnbrighterLow)
+				COMPV_HORIZ_MIN(r0, 0, maxnLow) COMPV_HORIZ_MIN(r0, 1, maxnLow) COMPV_HORIZ_MIN(r0, 2, maxnLow) COMPV_HORIZ_MIN(r0, 3, maxnLow)
+				COMPV_HORIZ_MIN(r0, 4, maxnLow) COMPV_HORIZ_MIN(r0, 5, maxnLow) COMPV_HORIZ_MIN(r0, 6, maxnLow) COMPV_HORIZ_MIN(r0, 7, maxnLow)
+				COMPV_HORIZ_MIN(r0, 8, maxnLow) COMPV_HORIZ_MIN(r0, 9, maxnLow) COMPV_HORIZ_MIN(r0, 10, maxnLow) COMPV_HORIZ_MIN(r0, 11, maxnLow)
+				COMPV_HORIZ_MIN(r0, 12, maxnLow) COMPV_HORIZ_MIN(r0, 13, maxnLow) COMPV_HORIZ_MIN(r0, 14, maxnLow) COMPV_HORIZ_MIN(r0, 15, maxnLow)
 				xmm0 = _mm256_extractf128_si256(ymm0, 1);
-				COMPV_HORIZ_MIN(r1, 0, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 1, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 2, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 3, maxnbrighterHigh)
-				COMPV_HORIZ_MIN(r1, 4, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 5, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 6, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 7, maxnbrighterHigh)
-				COMPV_HORIZ_MIN(r1, 8, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 9, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 10, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 11, maxnbrighterHigh)
-				COMPV_HORIZ_MIN(r1, 12, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 13, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 14, maxnbrighterHigh) COMPV_HORIZ_MIN(r1, 15, maxnbrighterHigh)
+				COMPV_HORIZ_MIN(r1, 0, maxnHigh) COMPV_HORIZ_MIN(r1, 1, maxnHigh) COMPV_HORIZ_MIN(r1, 2, maxnHigh) COMPV_HORIZ_MIN(r1, 3, maxnHigh)
+				COMPV_HORIZ_MIN(r1, 4, maxnHigh) COMPV_HORIZ_MIN(r1, 5, maxnHigh) COMPV_HORIZ_MIN(r1, 6, maxnHigh) COMPV_HORIZ_MIN(r1, 7, maxnHigh)
+				COMPV_HORIZ_MIN(r1, 8, maxnHigh) COMPV_HORIZ_MIN(r1, 9, maxnHigh) COMPV_HORIZ_MIN(r1, 10, maxnHigh) COMPV_HORIZ_MIN(r1, 11, maxnHigh)
+				COMPV_HORIZ_MIN(r1, 12, maxnHigh) COMPV_HORIZ_MIN(r1, 13, maxnHigh) COMPV_HORIZ_MIN(r1, 14, maxnHigh) COMPV_HORIZ_MIN(r1, 15, maxnHigh)
 			}
 		}
 
@@ -458,20 +457,20 @@ void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdark
 				__m128i xmm0, xmm1, xmmZeros;
 				xmmZeros = _mm_setzero_si128();
 				xmm0 = _mm256_extractf128_si256(ymm0, 0);
-				COMPV_HORIZ_MIN(r0, 0, maxndarkerLow) COMPV_HORIZ_MIN(r0, 1, maxndarkerLow) COMPV_HORIZ_MIN(r0, 2, maxndarkerLow) COMPV_HORIZ_MIN(r0, 3, maxndarkerLow)
-				COMPV_HORIZ_MIN(r0, 4, maxndarkerLow) COMPV_HORIZ_MIN(r0, 5, maxndarkerLow) COMPV_HORIZ_MIN(r0, 6, maxndarkerLow) COMPV_HORIZ_MIN(r0, 7, maxndarkerLow)
-				COMPV_HORIZ_MIN(r0, 8, maxndarkerLow) COMPV_HORIZ_MIN(r0, 9, maxndarkerLow) COMPV_HORIZ_MIN(r0, 10, maxndarkerLow) COMPV_HORIZ_MIN(r0, 11, maxndarkerLow)
-				COMPV_HORIZ_MIN(r0, 12, maxndarkerLow) COMPV_HORIZ_MIN(r0, 13, maxndarkerLow) COMPV_HORIZ_MIN(r0, 14, maxndarkerLow) COMPV_HORIZ_MIN(r0, 15, maxndarkerLow)
+				COMPV_HORIZ_MIN(r0, 0, maxnLow) COMPV_HORIZ_MIN(r0, 1, maxnLow) COMPV_HORIZ_MIN(r0, 2, maxnLow) COMPV_HORIZ_MIN(r0, 3, maxnLow)
+				COMPV_HORIZ_MIN(r0, 4, maxnLow) COMPV_HORIZ_MIN(r0, 5, maxnLow) COMPV_HORIZ_MIN(r0, 6, maxnLow) COMPV_HORIZ_MIN(r0, 7, maxnLow)
+				COMPV_HORIZ_MIN(r0, 8, maxnLow) COMPV_HORIZ_MIN(r0, 9, maxnLow) COMPV_HORIZ_MIN(r0, 10, maxnLow) COMPV_HORIZ_MIN(r0, 11, maxnLow)
+				COMPV_HORIZ_MIN(r0, 12, maxnLow) COMPV_HORIZ_MIN(r0, 13, maxnLow) COMPV_HORIZ_MIN(r0, 14, maxnLow) COMPV_HORIZ_MIN(r0, 15, maxnLow)
 				xmm0 = _mm256_extractf128_si256(ymm0, 1);
-				COMPV_HORIZ_MIN(r1, 0, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 1, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 2, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 3, maxndarkerHigh)
-				COMPV_HORIZ_MIN(r1, 4, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 5, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 6, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 7, maxndarkerHigh)
-				COMPV_HORIZ_MIN(r1, 8, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 9, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 10, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 11, maxndarkerHigh)
-				COMPV_HORIZ_MIN(r1, 12, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 13, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 14, maxndarkerHigh) COMPV_HORIZ_MIN(r1, 15, maxndarkerHigh)
+				COMPV_HORIZ_MIN(r1, 0, maxnHigh) COMPV_HORIZ_MIN(r1, 1, maxnHigh) COMPV_HORIZ_MIN(r1, 2, maxnHigh) COMPV_HORIZ_MIN(r1, 3, maxnHigh)
+				COMPV_HORIZ_MIN(r1, 4, maxnHigh) COMPV_HORIZ_MIN(r1, 5, maxnHigh) COMPV_HORIZ_MIN(r1, 6, maxnHigh) COMPV_HORIZ_MIN(r1, 7, maxnHigh)
+				COMPV_HORIZ_MIN(r1, 8, maxnHigh) COMPV_HORIZ_MIN(r1, 9, maxnHigh) COMPV_HORIZ_MIN(r1, 10, maxnHigh) COMPV_HORIZ_MIN(r1, 11, maxnHigh)
+				COMPV_HORIZ_MIN(r1, 12, maxnHigh) COMPV_HORIZ_MIN(r1, 13, maxnHigh) COMPV_HORIZ_MIN(r1, 14, maxnHigh) COMPV_HORIZ_MIN(r1, 15, maxnHigh)
 			}
 		}
 
-		strengths32[p] = (uint8_t)std::max(maxndarkerLow, maxnbrighterLow);
-		strengths32[g] = (uint8_t)std::max(maxndarkerHigh, maxnbrighterHigh);
+		strengths32[p] = (uint8_t)maxnLow;
+		strengths32[g] = (uint8_t)maxnHigh;
 
 		dbrighters16x32 += 32;
 		ddarkers16x32 += 32;

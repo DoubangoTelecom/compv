@@ -159,7 +159,7 @@ extern "C" COMPV_GEXTERN void FastStrengths32(compv::compv_scalar_t rbrighters, 
 	void(*FastStrengths)(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
 		= NULL;  // This function is called from FastData32Row(Intrin/Asm) which means we don't need C++ version
 	if (compv::CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
-#if 0
+#if 1
 		// FastStrengths32_AVX2 is slow because of  AVX/SSE transition issues
 		 COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths32_Intrin_AVX2);
 #else
