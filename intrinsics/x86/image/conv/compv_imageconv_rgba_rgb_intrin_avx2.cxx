@@ -25,6 +25,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if defined __INTEL_COMPILER
+#	pragma intel optimization_parameter target_arch=avx
+#endif
 void rgbToRgbaKernel31_Intrin_Aligned_AVX2(COMPV_ALIGNED(AVX2) const uint8_t* rgb, COMPV_ALIGNED(AVX2) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride)
 {
     _mm256_zeroupper();
@@ -72,6 +75,9 @@ void rgbToRgbaKernel31_Intrin_Aligned_AVX2(COMPV_ALIGNED(AVX2) const uint8_t* rg
     _mm256_zeroupper();
 }
 
+#if defined __INTEL_COMPILER
+#	pragma intel optimization_parameter target_arch=avx
+#endif
 void bgrToBgraKernel31_Intrin_Aligned_AVX2(COMPV_ALIGNED(AVX2) const uint8_t* bgr, COMPV_ALIGNED(AVX2) uint8_t* bgra, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride)
 {
     // the alpha channel is at the same index as rgb->rgba which means we can use the same function
