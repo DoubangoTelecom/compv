@@ -42,6 +42,7 @@ CompVThreadDispatcher::CompVThreadDispatcher(int32_t numThreads)
             COMPV_DEBUG_ERROR("Failed to allocate the asynctask at index %d", i);
             return;
         }
+		// Calling setAffinity is required to identify the thread even if affinity setting is disabled
 		if (COMPV_ERROR_CODE_IS_NOK(m_pTasks[i]->setAffinity(CompVCpu::getValidCoreId(coreId++)))) {
 			COMPV_DEBUG_ERROR("Failed to set affinity %d", i);
 		}

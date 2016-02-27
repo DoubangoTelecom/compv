@@ -308,12 +308,16 @@ void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
 
     // Make sure the affinity is defined. This function is called in start() but after thread creation which means we could miss it if this function is called very fast
 #if COMPV_THREAD_SET_AFFINITY
+	static const bool kThreadSetAffinity = true;
     if (Self_->m_iCoreId >= 0) {
         COMPV_CHECK_CODE_BAIL(err_ = Self_->m_Thread->setAffinity(Self_->m_iCoreId));
     }
+#else
+	static const bool kThreadSetAffinity = false;
 #endif
+	
 
-    COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=%d, threadId:%d) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), CompVThread::getIdCurrent());
+	COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=%d, threadId:%d, kThreadSetAffinity:%s) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), CompVThread::getIdCurrent(), kThreadSetAffinity ? "true" : "false");
 
     while (Self_->m_bStarted) {
         COMPV_CHECK_CODE_BAIL(err_ = Self_->m_SemRun->decrement());
