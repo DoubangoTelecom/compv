@@ -628,7 +628,6 @@ sym(FastData32Row_Asm_X86_AVX2):
 	ret
 
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> compv_scalar_t rbrighters
 ; arg(1) -> compv_scalar_t rdarkers
@@ -650,12 +649,13 @@ sym(FastData32Row_Asm_X86_AVX2):
 	push rbx
 	; end prolog
 
+	%define ret_in_rcx 0
+	%define ret_in_rbx 1
+
 	; alloc memory
-	sub rsp, 8 + 8 + 8 + 8
+	sub rsp, 8 + 8
 	; [rsp + 0] = (1 << p)
 	; [rsp + 8] = (1 << g)
-	; [rsp + 16] = maxnLow
-	; [rsp + 24] = maxnHigh
 
 	vzeroall
 
@@ -681,9 +681,8 @@ sym(FastData32Row_Asm_X86_AVX2):
 	; Loop Start
 	;----------------------
 	.LoopStart
-		xor rcx, rcx
-		mov [rsp + 16], rcx ; maxnLow = 0
-		mov [rsp + 24], rcx ; maxnHigh = 0
+		xor rcx, rcx ; maxnLow = 0
+		xor rbx, rbx ; maxnHigh = 0
 
 		; ---------
 		; Brighters
@@ -712,19 +711,16 @@ sym(FastData32Row_Asm_X86_AVX2):
 		test eax, eax ; rax = r0
 		jz .EndOfBrighters
 		; Load dbrighters
-		mov rbx, arg(2) ; dbrighters16x32
+		mov rdi, arg(2) ; dbrighters16x32
 		mov rsi, rdx ; rsi = p
 		shl rsi, 5 ; p*32 
-		vmovdqa ymm2, [rbx + rsi]
+		vmovdqa ymm2, [rdi + rsi]
 		vextractf128 xmm5, ymm2, 0x1
 		; Compute minimum hz (low)
-		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, xmm2, xmm0, xmm1, xmm3, xmm4 ; This macro overrides rax, rsi, rdi and set the result in rcx
-		mov [rsp + 16], rcx ; maxnLow
+		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, ret_in_rcx, xmm2, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
 		; Compute minimum hz (high)
-		xor rcx, rcx
 		shr rax, 16 ; rax = r1 = r0 >> 16
-		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, xmm5, xmm0, xmm1, xmm3, xmm4 ; This macro overrides rax, rsi, rdi and set the result in rcx
-		mov [rsp + 24], rcx ; maxnHigh
+		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, ret_in_rbx, xmm5, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
 		.EndOfBrighters
 
 		; ---------
@@ -755,26 +751,22 @@ sym(FastData32Row_Asm_X86_AVX2):
 		test eax, eax ; rax = r0
 		jz .EndOfDarkers
 		; Load ddarkers
-		mov rbx, arg(3) ; ddarkers16x32
+		mov rdi, arg(3) ; ddarkers16x32
 		mov rsi, rdx ; rsi = p
 		shl rsi, 5 ; p*32 
-		vmovdqa ymm2, [rbx + rsi]
+		vmovdqa ymm2, [rdi + rsi]
 		vextractf128 xmm5, ymm2, 0x1
 		; Compute minimum hz (low)
-		mov rcx, [rsp + 16] ; load rcx with privious max
-		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Darkers, %1, %2, xmm2, xmm0, xmm1, xmm3, xmm4 ; This macro overrides rax, rsi, rdi and set the result in rcx
-		mov [rsp + 16], rcx ; maxnLow
+		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Darkers, %1, %2, ret_in_rcx, xmm2, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
 		; Compute minimum hz (high)
-		mov rcx, [rsp + 24] ; load rcx with privious max
 		shr rax, 16 ; rax = r1 = r0 >> 16
-		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, xmm5, xmm0, xmm1, xmm3, xmm4 ; This macro overrides rax, rsi, rdi and set the result in rcx
+		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, ret_in_rbx, xmm5, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
 		.EndOfDarkers
 		
 		; compute strenghts[p]
 		mov rax, arg(6) ; &strengths32
-		mov [rax + rdx + 16], byte cl ; strengths16[g] = maxnHigh
-		mov rcx, [rsp + 16] ; maxnLow
-		mov [rax + rdx + 0], byte cl ; trengths16[p] = maxnLow
+		mov [rax + rdx + 0], byte cl ; strengths16[g] = maxnLow
+		mov [rax + rdx + 16], byte bl ; trengths16[p] = maxnHigh
 	
 		inc rdx ; p+= 1
 
@@ -792,7 +784,10 @@ sym(FastData32Row_Asm_X86_AVX2):
 	vzeroall
 
 	; free memory
-	add rsp, 8 + 8 + 8 + 8
+	add rsp, 8 + 8
+
+	%undef ret_in_rcx
+	%undef ret_in_rbx
 
 
 	; begin epilog

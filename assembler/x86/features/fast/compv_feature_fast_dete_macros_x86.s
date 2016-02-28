@@ -82,21 +82,19 @@
 	%endrep
 %endm
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Compute horizontal minimum. 
 ; The input flags must be in rax.
 ; The result is copied in rcx. rcx must contain zero or the result from the previous call.
-; This macro overrides rax, rsi, rdi and set the result in rcx.
+; This macro overrides rax, rsi, rdi and set the result in rcx or rbx.
 ; %1 -> Name of the components (e.g. Darkers or Brighters)
 ; %2 -> Whether CMOV is supported. 1: supported, 0: not supported
 ; %3 -> FAST type. Must be equal to 9 or 12
-; %4 -> The XMM register containing the values for which to compute the hz min (e.g. xmm2)
-; %5 -> 1st temp XMM register containing zeros (e.g. xmm0)
-; %6 -> 2nd temp XMM register (e.g. xmm1)
-; %7 -> 3rd temp XMM register (e.g. xmm3)
-; %8 -> 4th temp XMM register (e.g. xmm4)
+; %4 -> 0: put the result in rcx, 1: put the result in rbx
+; %5 -> The XMM register containing the values for which to compute the hz min (e.g. xmm2)
+; %6 -> 1st temp XMM register containing zeros (e.g. xmm0)
+; %7 -> 2nd temp XMM register (e.g. xmm1)
+; %8 -> 3rd temp XMM register (e.g. xmm3)
 %macro COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 8
 	%ifndef _COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2_
 		%define _COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2_
@@ -109,18 +107,17 @@
 		test rax, 1<<m
 		jz .EndOf %+ %1 %+ Min %+ cffdhma %+ m
 		%if %3 == 9
-			vmovdqa %7, [sym(kFast9Arcs) + m*16]
+			vpshufb %7, %5, [sym(kFast9Arcs) + m*16]
 		%elif %3 == 12
-			vmovdqa %7, [sym(kFast12Arcs) + m*16]
+			vpshufb %7, %5, [sym(kFast12Arcs) + m*16]
 		%else
 			%error "not supported"
 		%endif
-		vpshufb %6, %4, %7
-		vpunpckhbw %8, %6, %5
-		vpunpcklbw %6, %6, %5
-		vphminposuw %6, %6
+		vpunpckhbw %8, %7, %6
+		vpunpcklbw %7, %7, %6
+		vphminposuw %7, %7
 		vphminposuw %8, %8
-		vmovd edi, %6 ; bits [16:18] contains the index and must be ignored or cleared
+		vmovd edi, %7 ; bits [16:18] contains the index and must be ignored or cleared
 		vmovd esi, %8 ; bits [16:18] contains the index and must be ignored or cleared
 		cmp si, di
 		%if %2 == 1
@@ -130,12 +127,24 @@
 			mov di, si
 			. %+ %1 %+ NotMin %+ cffdhma %+ m
 		%endif
-		cmp di, cx
+		%if %4 == 0
+			cmp di, cx
+		%else
+			cmp di, bx
+		%endif
 		%if %2 == 1
-			cmovg cx, di
+			%if %4 == 0
+				cmovg cx, di
+			%else
+				cmovg bx, di
+			%endif
 		%else
 			jl . %+ %1 %+ NotMax %+ cffdhma %+ m
-			mov cx, di
+			%if %4 == 0
+				mov cx, di
+			%else
+				mov bx, di
+			%endif
 			. %+ %1 %+ NotMax %+ cffdhma %+ m
 		%endif
 		.EndOf %+ %1 %+ Min %+ cffdhma %+ m

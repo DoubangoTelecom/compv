@@ -23,14 +23,24 @@
 
 %include "../../compv_bits_macros_x86.s"
 %include "../../compv_math_macros_x86.s"
+%include "compv_feature_fast_dete_macros_x86.s"
 
 COMPV_YASM_DEFAULT_REL
 
 global sym(FastData32Row_Asm_X64_AVX2)
 
+global sym(Fast9Strengths32_Asm_CMOV_X64_AVX2)
+global sym(Fast9Strengths32_Asm_X64_AVX2)
+global sym(Fast12Strengths32_Asm_CMOV_X64_AVX2)
+global sym(Fast12Strengths32_Asm_X64_AVX2)
+
 section .data
 	extern sym(k1_i8)
 	extern sym(k254_u8)
+	extern sym(kFast9Arcs)
+	extern sym(kFast12Arcs)
+	extern sym(Fast9Flags)
+	extern sym(Fast12Flags)
 
 	extern sym(FastStrengths32) ; function
 
@@ -694,5 +704,192 @@ sym(FastData32Row_Asm_X64_AVX2):
 	pop rbp
 	ret
 	
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> compv_scalar_t rbrighters
+; arg(1) -> compv_scalar_t rdarkers
+; arg(2) -> COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x32
+; arg(3) -> COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x32
+; arg(4) -> const compv_scalar_t(*fbrighters16)[16]
+; arg(5) -> const compv_scalar_t(*fdarkers16)[16]
+; arg(6) -> uint8_t* Strengths32
+; arg(7) -> compv_scalar_t N
+; %1 -> 1: CMOV is supported, 0 CMOV not supported
+; %2 -> 9: Use FAST9, 12: FAST12 ....
+%macro FastStrengths32_Asm_X64_AVX2 2
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
+	COMPV_YASM_SAVE_XMM 6 ;XMM[6-n]
+	push rsi
+	push rdi
+	push rbx
+	push r12
+	push r13
+	push r14
+	push r15
+	; end prolog
+
+	%define ret_in_rcx 0
+	%define ret_in_rbx 1
+
+	vzeroall
+
+	; vzeroall already set ymm0 to zeros
+	; vpxor ymm0, ymm0
+
+	; FAST hard-coded flags
+	%if %2 == 9
+		vmovdqa ymm4, [sym(Fast9Flags) + 0] ; xmmFastXFlags
+	%elif %2 == 12
+		vmovdqa ymm4, [sym(Fast12Flags) + 0] ; xmmFastXFlags
+	%else
+		%error "not supported"
+	%endif
+
+	xor rdx, rdx ; rdx = p = 0
+	mov r8, 1<<0 ; r8 = (1<<p)
+	mov r9, 1<<16 ; r9 = (1<<g)
+	mov r10, arg(0) ; r10 = rbrighters
+	mov r11, arg(1) ; r11 = rdarkers
+	mov r12, arg(2) ; r12 = dbrighters16x32
+	mov r13, arg(3) ; r13 = ddarkers16x32
+	mov r14, arg(6) ; r14 = &strengths32
+
+	;----------------------
+	; Loop Start
+	;----------------------
+	.LoopStart
+		xor rcx, rcx ; maxnLow = 0
+		xor rbx, rbx ; maxnHigh = 0
+
+		; ---------
+		; Brighters
+		; ---------
+		mov rsi, r8 ; (1<<p)
+		or rsi, r9 ; (1<<p) | (1<<g)
+		test r10, rsi ; (rb & (1 << p) || rb & (1 << g)) ?
+		jz .EndOfBrighters
+		mov rax, arg(4) ; &fbrighters16[p]
+		mov rdi, [rax + rdx*COMPV_YASM_REG_SZ_BYTES] ; fbrighters16[p]
+		; brighters flags
+		vmovd xmm5, edi
+		vpbroadcastw xmm5, xmm5
+		vinsertf128 ymm5, ymm5, xmm5, 1 ; ymm5 = ymmFLow
+		shr rdi, 16
+		vmovd xmm6, edi
+		vpbroadcastw xmm6, xmm6
+		vinsertf128 ymm6, ymm6, xmm6, 1 ; ymm6 = ymmFHigh
+
+		vpand ymm5, ymm5, ymm4
+		vpcmpeqw ymm5, ymm5, ymm4
+		vpand ymm6, ymm6, ymm4
+		vpcmpeqw ymm6, ymm6, ymm4
+		COMPV_PACKS_EPI16_AVX2 ymm5, ymm5, ymm6
+		vpmovmskb eax, ymm5
+		test eax, eax ; rax = r0
+		jz .EndOfBrighters
+		; Load dbrighters
+		vmovdqa ymm2, [r12]
+		vextractf128 xmm5, ymm2, 0x1
+		; Compute minimum hz (low)
+		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, ret_in_rcx, xmm2, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
+		; Compute minimum hz (high)
+		shr rax, 16 ; rax = r1 = r0 >> 16
+		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, ret_in_rbx, xmm5, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
+		.EndOfBrighters
+
+		; ---------
+		; Darkers
+		; ---------
+		.Darkers
+		mov rsi, r8 ; (1<<p)
+		or rsi, r9 ; (1<<p) | (1<<g)
+		test r11, rsi ; (rd & (1 << p) || rd & (1 << g)) ?
+		jz .EndOfDarkers
+		mov rax, arg(5) ; &fdarkers16[p]
+		mov rdi, [rax + rdx*COMPV_YASM_REG_SZ_BYTES] ; fdarkers16[p]
+		; darkers flags
+		vmovd xmm5, edi
+		vpbroadcastw xmm5, xmm5
+		vinsertf128 ymm5, ymm5, xmm5, 1 ; ymm5 = ymmFLow
+		shr rdi, 16
+		vmovd xmm6, edi
+		vpbroadcastw xmm6, xmm6
+		vinsertf128 ymm6, ymm6, xmm6, 1 ; ymm6 = ymmFHigh
+		
+		vpand ymm5, ymm5, ymm4
+		vpcmpeqw ymm5, ymm5, ymm4
+		vpand ymm6, ymm6, ymm4
+		vpcmpeqw ymm6, ymm6, ymm4
+		COMPV_PACKS_EPI16_AVX2 ymm5, ymm5, ymm6
+		vpmovmskb eax, ymm5
+		test eax, eax ; rax = r0
+		jz .EndOfDarkers
+		; Load ddarkers
+		vmovdqa ymm2, [r13]
+		vextractf128 xmm5, ymm2, 0x1
+		; Compute minimum hz (low)
+		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Darkers, %1, %2, ret_in_rcx, xmm2, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
+		; Compute minimum hz (high)
+		shr rax, 16 ; rax = r1 = r0 >> 16
+		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, ret_in_rbx, xmm5, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
+		.EndOfDarkers
+		
+		; compute strenghts[p]
+		mov [r14 + rdx + 0], byte cl ; strengths16[g] = maxnLow
+		mov [r14 + rdx + 16], byte bl ; trengths16[p] = maxnHigh
+	
+		inc rdx ; p+= 1
+		lea r12, [r12 + 32] ; dbrighters16x32 += 32
+		lea r13, [r13 + 32] ; ddarkers16x32 += 32
+		shl r8, 1 ; (1<< p)
+		shl r9, 1 ; (1 << g)
+		cmp rdx, 16
+	jl .LoopStart
+	;----------------
+
+	vzeroall
+
+	%undef ret_in_rcx
+	%undef ret_in_rbx
+
+
+	; begin epilog
+	pop r15
+	pop r14
+	pop r13
+	pop r12
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+%endmacro
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; compv_scalar_t Fast9Strengths32_Asm_CMOV_X64_AVX2(COMPV_ALIGNED(AVX) const int16_t(&dbrighters)[16], COMPV_ALIGNED(AVX) const int16_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16])
+sym(Fast9Strengths32_Asm_CMOV_X64_AVX2):
+	FastStrengths32_Asm_X64_AVX2 1, 9
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; compv_scalar_t Fast9Strengths32_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const int16_t(&dbrighters)[16], COMPV_ALIGNED(AVX) const int16_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16])
+sym(Fast9Strengths32_Asm_X64_AVX2):
+	FastStrengths32_Asm_X64_AVX2 0, 9
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; compv_scalar_t Fast12Strengths32_Asm_CMOV_X64_AVX2(COMPV_ALIGNED(AVX) const int16_t(&dbrighters)[16], COMPV_ALIGNED(AVX) const int16_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16])
+sym(Fast12Strengths32_Asm_CMOV_X64_AVX2):
+	FastStrengths32_Asm_X64_AVX2 1, 12
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; compv_scalar_t Fast12Strengths32_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const int16_t(&dbrighters)[16], COMPV_ALIGNED(AVX) const int16_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, COMPV_ALIGNED(SSE) const uint16_t(&FastXFlags)[16])
+sym(Fast12Strengths32_Asm_X64_AVX2):
+	FastStrengths32_Asm_X64_AVX2 0, 12
 
 %endif ; COMPV_YASM_ABI_IS_64BIT
