@@ -414,6 +414,7 @@ sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned1xx_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
+	COMPV_YASM_SAVE_YMM 7 ;XMM[6-n]
 	push rsi
 	push rdi
 	push rbx
@@ -540,6 +541,7 @@ sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned1xx_AVX2):
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_RESTORE_YMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
@@ -580,6 +582,7 @@ sym(rgbaToI420Kernel41_CompUV_Asm_X86_Aligned111_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+	COMPV_YASM_SAVE_YMM 6 ;XMM[6-n]
 	push rsi
 	push rdi
 	push rbx
@@ -669,6 +672,7 @@ sym(rgbaToI420Kernel41_CompUV_Asm_X86_Aligned111_AVX2):
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_RESTORE_YMM
     COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
@@ -712,6 +716,7 @@ sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned11_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
+	COMPV_YASM_SAVE_YMM 7 ;XMM[6-n]
 	push rsi
 	push rdi
 	push rbx
@@ -848,6 +853,7 @@ sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned11_AVX2):
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_RESTORE_YMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
@@ -888,6 +894,7 @@ sym(rgbToI420Kernel31_CompUV_Asm_X86_Aligned111_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
+	COMPV_YASM_SAVE_YMM 7 ;XMM[6-n]
 	push rsi
 	push rdi
 	push rbx
@@ -1106,6 +1113,7 @@ sym(rgbToI420Kernel31_CompUV_Asm_X86_Aligned111_AVX2):
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_RESTORE_YMM
     COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

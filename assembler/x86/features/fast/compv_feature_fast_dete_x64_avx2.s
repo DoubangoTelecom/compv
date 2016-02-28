@@ -749,13 +749,14 @@ sym(FastData32Row_Asm_X64_AVX2):
 	%endif
 
 	xor rdx, rdx ; rdx = p = 0
-	mov r8, 1<<0 ; r8 = (1<<p)
-	mov r9, 1<<16 ; r9 = (1<<g)
+	mov r8, arg(4) ; r8 = &fbrighters16[p]
+	mov r9, arg(5) ; r9 = &fdarkers16[p]
 	mov r10, arg(0) ; r10 = rbrighters
 	mov r11, arg(1) ; r11 = rdarkers
 	mov r12, arg(2) ; r12 = dbrighters16x32
 	mov r13, arg(3) ; r13 = ddarkers16x32
 	mov r14, arg(6) ; r14 = &strengths32
+	mov r15, (1<<0 | 1<<16)  ; r15 = (1<<p) | (1<<g)
 
 	;----------------------
 	; Loop Start
@@ -767,12 +768,9 @@ sym(FastData32Row_Asm_X64_AVX2):
 		; ---------
 		; Brighters
 		; ---------
-		mov rsi, r8 ; (1<<p)
-		or rsi, r9 ; (1<<p) | (1<<g)
-		test r10, rsi ; (rb & (1 << p) || rb & (1 << g)) ?
+		test r10, r15 ; (rb & (1 << p) || rb & (1 << g)) ?
 		jz .EndOfBrighters
-		mov rax, arg(4) ; &fbrighters16[p]
-		mov rdi, [rax + rdx*COMPV_YASM_REG_SZ_BYTES] ; fbrighters16[p]
+		mov rdi, [r8 + rdx*COMPV_YASM_REG_SZ_BYTES] ; fbrighters16[p]
 		; brighters flags
 		vmovd xmm5, edi
 		vpbroadcastw xmm5, xmm5
@@ -804,12 +802,9 @@ sym(FastData32Row_Asm_X64_AVX2):
 		; Darkers
 		; ---------
 		.Darkers
-		mov rsi, r8 ; (1<<p)
-		or rsi, r9 ; (1<<p) | (1<<g)
-		test r11, rsi ; (rd & (1 << p) || rd & (1 << g)) ?
+		test r11, r15 ; (rd & (1 << p) || rd & (1 << g)) ?
 		jz .EndOfDarkers
-		mov rax, arg(5) ; &fdarkers16[p]
-		mov rdi, [rax + rdx*COMPV_YASM_REG_SZ_BYTES] ; fdarkers16[p]
+		mov rdi, [r9 + rdx*COMPV_YASM_REG_SZ_BYTES] ; fdarkers16[p]
 		; darkers flags
 		vmovd xmm5, edi
 		vpbroadcastw xmm5, xmm5
@@ -842,10 +837,9 @@ sym(FastData32Row_Asm_X64_AVX2):
 		mov [r14 + rdx + 16], byte bl ; trengths16[p] = maxnHigh
 	
 		inc rdx ; p+= 1
+		shl r15, 1 ; ((1<<p) | (1<<g)) << 1
 		lea r12, [r12 + 32] ; dbrighters16x32 += 32
 		lea r13, [r13 + 32] ; ddarkers16x32 += 32
-		shl r8, 1 ; (1<< p)
-		shl r9, 1 ; (1 << g)
 		cmp rdx, 16
 	jl .LoopStart
 	;----------------

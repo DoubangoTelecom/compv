@@ -48,6 +48,7 @@ section .text
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
+	COMPV_YASM_SAVE_YMM 7 ;XMM[6-n]
 	push rsi
 	push rdi
 	push rbx
@@ -166,6 +167,7 @@ section .text
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_RESTORE_YMM
     COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

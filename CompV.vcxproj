@@ -261,7 +261,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;thirdparties/windows/include/libjpeg-turbo-1.3.1</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -279,7 +279,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;thirdparties/windows/include/libjpeg-turbo-1.3.1</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -299,7 +299,7 @@
       <SDLCheck>true</SDLCheck>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>include;thirdparties/windows/include/libjpeg-turbo-1.3.1</AdditionalIncludeDirectories>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -322,7 +322,7 @@
       <OpenMPSupport>false</OpenMPSupport>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>include;thirdparties/windows/include/libjpeg-turbo-1.3.1</AdditionalIncludeDirectories>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <Parallelization>
       </Parallelization>
     </ClCompile>
