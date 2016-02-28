@@ -127,87 +127,67 @@
     <ClCompile Include="time\compv_timer.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <YASM Include="assembler\x86\compv_common_x86.S">
+    <YASM Include="assembler\x86\compv_bits_macros_x86.s">
       <FileType>Document</FileType>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <YASM Include="assembler\x86\compv_utils_x86.S">
+    <YASM Include="assembler\x86\compv_bits_x86.s">
       <FileType>Document</FileType>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_i420_x86_avx2.S">
+    <YASM Include="assembler\x86\compv_common_x86.s">
       <FileType>Document</FileType>
     </YASM>
-    <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_i420_x86_sse.S">
+    <YASM Include="assembler\x86\compv_mathutils_x86.s">
       <FileType>Document</FileType>
     </YASM>
-    <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_rgb_x86_avx2.S">
+    <YASM Include="assembler\x86\compv_math_macros_x86.s">
       <FileType>Document</FileType>
     </YASM>
-    <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_rgb_x86_sse.S">
+    <YASM Include="assembler\x86\compv_mem_x64_avx.s">
       <FileType>Document</FileType>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <YASM Include="assembler\x86\compv_mathutils_x86.S">
+    <YASM Include="assembler\x86\compv_mem_x64_sse.s">
       <FileType>Document</FileType>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x86_sse.S">
+    <YASM Include="assembler\x86\compv_mem_x86_avx.s">
       <FileType>Document</FileType>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <YASM Include="assembler\x86\image\conv\compv_imageconv_macros_x86_avx.S">
+    <YASM Include="assembler\x86\compv_mem_x86_sse.s">
       <FileType>Document</FileType>
     </YASM>
-    <YASM Include="assembler\x86\image\conv\compv_imageconv_macros_x86_sse.S">
+    <YASM Include="assembler\x86\compv_utils_x86.s">
       <FileType>Document</FileType>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <YASM Include="assembler\x86\compv_bits_macros_x86.S">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="assembler\x86\compv_bits_x86.S">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="assembler\x86\compv_math_macros_x86.S">
-      <FileType>Document</FileType>
-    </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x64_sse.S">
-      <FileType>Document</FileType>
-    </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x64_avx2.S">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x86_avx2.S">
-      <FileType>Document</FileType>
-    </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <YASM Include="assembler\x86\compv_mem_x64_avx.S">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="assembler\x86\compv_mem_x64_sse.S">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="assembler\x86\compv_mem_x86_avx.S">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="assembler\x86\compv_mem_x86_sse.S">
-      <FileType>Document</FileType>
-    </YASM>
-  </ItemGroup>
-  <ItemGroup>
     <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_macros_x86.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x64_avx2.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x64_sse.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x86_avx2.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x86_sse.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\image\conv\compv_imageconv_macros_x86_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\image\conv\compv_imageconv_macros_x86_sse.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_i420_x86_avx2.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_i420_x86_sse.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_rgb_x86_avx2.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_rgb_x86_sse.s">
       <FileType>Document</FileType>
     </YASM>
   </ItemGroup>
@@ -281,6 +261,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;thirdparties/windows/include/libjpeg-turbo-1.3.1</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -298,7 +279,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;thirdparties/windows/include/libjpeg-turbo-1.3.1</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -318,6 +299,7 @@
       <SDLCheck>true</SDLCheck>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>include;thirdparties/windows/include/libjpeg-turbo-1.3.1</AdditionalIncludeDirectories>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -340,7 +322,7 @@
       <OpenMPSupport>false</OpenMPSupport>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>include;thirdparties/windows/include/libjpeg-turbo-1.3.1</AdditionalIncludeDirectories>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <Parallelization>
       </Parallelization>
     </ClCompile>

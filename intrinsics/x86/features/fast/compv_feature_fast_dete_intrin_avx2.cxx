@@ -368,7 +368,7 @@ next:
 #endif
 void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(AVX) const uint8_t* dbrighters16x32, COMPV_ALIGNED(AVX) const uint8_t* ddarkers16x32, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv_scalar_t N)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // AVX/SSE transition penalities issue. Must use ASM version
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // AVX/SSE transition penalties
 
 	_mm256_zeroupper();
 
@@ -386,7 +386,7 @@ void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdark
 	// Zeros
 	_mm256_store_si256(&ymmZeros, _mm256_setzero_si256());
 	// Set strengths to zero
-	_mm256_storeu_si256((__m256i*)strengths32, ymmZeros);
+	_mm256_storeu_si256((__m256i*)strengths32, ymmZeros); // TODO(dmi): not needed
 
 	// xmm0 contains the u8 values
 	// xmm1 is used as temp register and will be trashed
@@ -413,10 +413,7 @@ void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdark
 			_mm256_store_si256(&ymm0, _mm256_cmpeq_epi16(ymm0, ymmFastXFlags));
 			_mm256_store_si256(&ymm1, _mm256_and_si256(ymmFHigh, ymmFastXFlags));
 			_mm256_store_si256(&ymm1, _mm256_cmpeq_epi16(ymm1, ymmFastXFlags));
-			// clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
-			_mm256_store_si256(&ymm0, _mm256_srli_epi16(ymm0, 1));
-			_mm256_store_si256(&ymm1, _mm256_srli_epi16(ymm1, 1));
-			r0 = _mm256_movemask_epi8(compv_avx2_packus_epi16(ymm0, ymm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
+			r0 = _mm256_movemask_epi8(compv_avx2_packs_epi16(ymm0, ymm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
 			if (r0) {
 				r1 = r0 >> 16;
 				_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)dbrighters16x32));
@@ -446,10 +443,7 @@ void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdark
 			_mm256_store_si256(&ymm0, _mm256_cmpeq_epi16(ymm0, ymmFastXFlags));
 			_mm256_store_si256(&ymm1, _mm256_and_si256(ymmFHigh, ymmFastXFlags));
 			_mm256_store_si256(&ymm1, _mm256_cmpeq_epi16(ymm1, ymmFastXFlags));
-			// clear the high bit in the epi16, otherwise will be considered as the sign bit when saturated to u8
-			_mm256_store_si256(&ymm0, _mm256_srli_epi16(ymm0, 1));
-			_mm256_store_si256(&ymm1, _mm256_srli_epi16(ymm1, 1));
-			r0 = _mm256_movemask_epi8(compv_avx2_packus_epi16(ymm0, ymm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
+			r0 = _mm256_movemask_epi8(compv_avx2_packs_epi16(ymm0, ymm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
 			if (r0) {
 				r1 = r0 >> 16;
 				_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)ddarkers16x32));

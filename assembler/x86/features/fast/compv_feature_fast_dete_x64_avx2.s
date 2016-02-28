@@ -60,7 +60,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
-	COMPV_YASM_SAVE_XMM 15 ;XMM[6-n]
+	COMPV_YASM_SAVE_YMM 15 ;XMM[6-n]
 	push rsi
 	push rdi
 	push rbx
@@ -698,7 +698,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	pop rbx
 	pop rdi
 	pop rsi
-	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_RESTORE_YMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
@@ -721,7 +721,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
-	COMPV_YASM_SAVE_XMM 6 ;XMM[6-n]
+	; Do not save [XMMx] we only use XMM0-XMM5
 	push rsi
 	push rdi
 	push rbx
@@ -741,9 +741,9 @@ sym(FastData32Row_Asm_X64_AVX2):
 
 	; FAST hard-coded flags
 	%if %2 == 9
-		vmovdqa ymm4, [sym(Fast9Flags) + 0] ; xmmFastXFlags
+		%define ymmFastXFlags [sym(Fast9Flags) + 0] ; xmmFastXFlags
 	%elif %2 == 12
-		vmovdqa ymm4, [sym(Fast12Flags) + 0] ; xmmFastXFlags
+		%define ymmFastXFlags [sym(Fast12Flags) + 0] ; xmmFastXFlags
 	%else
 		%error "not supported"
 	%endif
@@ -778,15 +778,15 @@ sym(FastData32Row_Asm_X64_AVX2):
 		vpbroadcastw xmm5, xmm5
 		vinsertf128 ymm5, ymm5, xmm5, 1 ; ymm5 = ymmFLow
 		shr rdi, 16
-		vmovd xmm6, edi
-		vpbroadcastw xmm6, xmm6
-		vinsertf128 ymm6, ymm6, xmm6, 1 ; ymm6 = ymmFHigh
+		vmovd xmm4, edi
+		vpbroadcastw xmm4, xmm4
+		vinsertf128 ymm4, ymm4, xmm4, 1 ; ymm4 = ymmFHigh
 
-		vpand ymm5, ymm5, ymm4
-		vpcmpeqw ymm5, ymm5, ymm4
-		vpand ymm6, ymm6, ymm4
-		vpcmpeqw ymm6, ymm6, ymm4
-		COMPV_PACKS_EPI16_AVX2 ymm5, ymm5, ymm6
+		vpand ymm5, ymm5, ymmFastXFlags
+		vpcmpeqw ymm5, ymm5, ymmFastXFlags
+		vpand ymm4, ymm4, ymmFastXFlags
+		vpcmpeqw ymm4, ymm4, ymmFastXFlags
+		COMPV_PACKS_EPI16_AVX2 ymm5, ymm5, ymm4
 		vpmovmskb eax, ymm5
 		test eax, eax ; rax = r0
 		jz .EndOfBrighters
@@ -815,15 +815,15 @@ sym(FastData32Row_Asm_X64_AVX2):
 		vpbroadcastw xmm5, xmm5
 		vinsertf128 ymm5, ymm5, xmm5, 1 ; ymm5 = ymmFLow
 		shr rdi, 16
-		vmovd xmm6, edi
-		vpbroadcastw xmm6, xmm6
-		vinsertf128 ymm6, ymm6, xmm6, 1 ; ymm6 = ymmFHigh
+		vmovd xmm4, edi
+		vpbroadcastw xmm4, xmm4
+		vinsertf128 ymm4, ymm4, xmm4, 1 ; ymm4 = ymmFHigh
 		
-		vpand ymm5, ymm5, ymm4
-		vpcmpeqw ymm5, ymm5, ymm4
-		vpand ymm6, ymm6, ymm4
-		vpcmpeqw ymm6, ymm6, ymm4
-		COMPV_PACKS_EPI16_AVX2 ymm5, ymm5, ymm6
+		vpand ymm5, ymm5, ymmFastXFlags
+		vpcmpeqw ymm5, ymm5, ymmFastXFlags
+		vpand ymm4, ymm4, ymmFastXFlags
+		vpcmpeqw ymm4, ymm4, ymmFastXFlags
+		COMPV_PACKS_EPI16_AVX2 ymm5, ymm5, ymm4
 		vpmovmskb eax, ymm5
 		test eax, eax ; rax = r0
 		jz .EndOfDarkers
@@ -854,7 +854,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 
 	%undef ret_in_rcx
 	%undef ret_in_rbx
-
+	%undef ymmFastXFlags
 
 	; begin epilog
 	pop r15
@@ -864,7 +864,6 @@ sym(FastData32Row_Asm_X64_AVX2):
 	pop rbx
 	pop rdi
 	pop rsi
-	COMPV_YASM_RESTORE_XMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

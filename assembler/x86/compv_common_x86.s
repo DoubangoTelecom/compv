@@ -466,17 +466,60 @@
       %assign i i-1
     %endrep
     add rsp, xmm_stack_space
-    ; there are a couple functions which return from multiple places.
-    ; otherwise, we could uncomment these:
-    ; %undef last_xmm
-    ; %undef xmm_stack_space
-    ; %undef movxmm
+    %undef last_xmm
+    %undef xmm_stack_space
+    %undef movxmm
   %endif
 %endmacro
 %else
 %macro COMPV_YASM_SAVE_XMM 1-2
 %endmacro
 %macro COMPV_YASM_RESTORE_XMM 0
+%endmacro
+%endif
+
+; Win64 ABI requires that XMM6:XMM15 are callee saved
+; COMPV_YASM_SAVE_YMM n, [u]
+; store registers 6-n on the stack
+; if u is specified, use unaligned movs.
+; Win64 ABI requires 16 byte stack alignment, but then pushes an 8 byte return
+; value. Typically we follow this up with 'push rbp' - re-aligning the stack -
+; but in some cases this is not done and unaligned movs must be used.
+%if COMPV_YASM_WIN64
+%macro COMPV_YASM_SAVE_YMM 1-2 a
+  %if %1 < 6
+    %error Only ymm registers 6-15 must be preserved
+  %else
+    %assign last_ymm %1
+    %define movymm vmovdq %+ %2
+    %assign ymm_stack_space ((last_ymm - 5) * 16)
+    sub rsp, ymm_stack_space
+    %assign i 6
+    %rep (last_ymm - 5)
+      movymm [rsp + ((i - 6) * 16)], xmm %+ i
+      %assign i i+1
+    %endrep
+  %endif
+%endmacro
+%macro COMPV_YASM_RESTORE_YMM 0
+  %ifndef last_ymm
+    %error COMPV_YASM_RESTORE_YMM must be paired with COMPV_YASM_SAVE_YMM n
+  %else
+    %assign i last_ymm
+    %rep (last_ymm - 5)
+      movymm xmm %+ i, [rsp +((i - 6) * 16)]
+      %assign i i-1
+    %endrep
+    add rsp, ymm_stack_space
+    %undef last_ymm
+    %undef ymm_stack_space
+    %undef movymm
+  %endif
+%endmacro
+%else
+%macro COMPV_YASM_SAVE_YMM 1-2
+%endmacro
+%macro COMPV_YASM_RESTORE_YMM 0
 %endmacro
 %endif
 

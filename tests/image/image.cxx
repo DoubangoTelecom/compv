@@ -3,11 +3,11 @@
 
 using namespace compv;
 
-#define numThreads			COMPV_NUM_THREADS_SINGLE
+#define numThreads			COMPV_NUM_THREADS_BEST
 #define enableIntrinsics	true
 #define enableAsm			true
 #define testingMode			true
-#define cpuDisable			kCpuFlagAVX2
+#define cpuDisable			kCpuFlagNone
 
 #define TEST_CONV			0
 #define TEST_FAST			1

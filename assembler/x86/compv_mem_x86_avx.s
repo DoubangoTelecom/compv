@@ -39,7 +39,7 @@ sym(MemCopyNTA_Asm_Aligned11_X86_AVX):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 3
-	COMPV_YASM_SAVE_XMM 7 ;XMM[6-n]
+	COMPV_YASM_SAVE_YMM 7 ;XMM[6-n]
 	push rsi
 	push rdi
 	push rbx
@@ -112,7 +112,7 @@ sym(MemCopyNTA_Asm_Aligned11_X86_AVX):
 	pop rbx
 	pop rdi
 	pop rsi
-	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_RESTORE_YMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

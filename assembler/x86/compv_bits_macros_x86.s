@@ -95,3 +95,14 @@ popcnt %1, %2
 	movdqa [%1], %3
 	movdqa [%2], %4
 %endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; _mm256_packs_epi16 with 128-lane crossing.
+; %1 Destination register (e.g. YMM0). Could be equal to 1st or 2st YMM register
+; %2 1st YMM register (e.g. YMM1)
+; %3 2nd YMM register (e.g. YMM2)
+; example COMPV_PACKS_EPI16_AVX2 ymm0, ymm0, ymm1
+%macro COMPV_PACKS_EPI16_AVX2 3
+	vpacksswb %1, %2, %3
+	vpermq %1, %1, 0xD8 ; 0xD8 = COMPV_MM_SHUFFLE(3, 1, 2, 0)
+%endm
