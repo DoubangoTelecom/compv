@@ -22,8 +22,9 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Compute horizontal minimum. The result is copied in rcx. rcx must contain
-; zero or the result from the previous call.
+; Compute horizontal minimum. 
+; The input flags must be in rax.
+; The result is copied in rcx. rcx must contain zero or the result from the previous call.
 ; This macro overrides rax, rsi, rdi and set the result in rcx.
 ; %1 -> Name of the components (e.g. Darkers or Brighters)
 ; %2 -> Whether CMOV is supported. 1: supported, 0: not supported
@@ -77,6 +78,69 @@
 			. %+ %1 %+ NotMax %+ cffdhms %+ m
 		%endif
 		.EndOf %+ %1 %+ Min %+ cffdhms %+ m
+		%assign m m+1
+	%endrep
+%endm
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Compute horizontal minimum. 
+; The input flags must be in rax.
+; The result is copied in rcx. rcx must contain zero or the result from the previous call.
+; This macro overrides rax, rsi, rdi and set the result in rcx.
+; %1 -> Name of the components (e.g. Darkers or Brighters)
+; %2 -> Whether CMOV is supported. 1: supported, 0: not supported
+; %3 -> FAST type. Must be equal to 9 or 12
+; %4 -> The XMM register containing the values for which to compute the hz min (e.g. xmm2)
+; %5 -> 1st temp XMM register containing zeros (e.g. xmm0)
+; %6 -> 2nd temp XMM register (e.g. xmm1)
+; %7 -> 3rd temp XMM register (e.g. xmm3)
+; %8 -> 4th temp XMM register (e.g. xmm4)
+%macro COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 8
+	%ifndef _COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2_
+		%define _COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2_
+		%assign cffdhma 0 ; counter
+	%else
+		%assign cffdhma cffdhma+1
+	%endif
+	%assign m 0
+	%rep    16
+		test rax, 1<<m
+		jz .EndOf %+ %1 %+ Min %+ cffdhma %+ m
+		vmovdqa %6, %4
+		%if %3 == 9
+			vmovdqa %7, [sym(kFast9Arcs) + m*16]
+		%elif %3 == 12
+			vmovdqa %7, [sym(kFast12Arcs) + m*16]
+		%else
+			%error "not supported"
+		%endif
+		vpshufb %6, %7
+		vmovdqa %8, %6
+		vpunpcklbw %6, %5
+		vpunpckhbw %8, %5
+		vphminposuw %6, %6
+		vphminposuw %8, %8
+		vmovd edi, %6 ; bits [16:18] contains the index and must be ignored or cleared
+		vmovd esi, %8 ; bits [16:18] contains the index and must be ignored or cleared
+		cmp si, di
+		%if %2 == 1
+			cmovl di, si
+		%else
+			jg . %+ %1 %+ NotMin %+ cffdhma %+ m
+			mov di, si
+			. %+ %1 %+ NotMin %+ cffdhma %+ m
+		%endif
+		cmp di, cx
+		%if %2 == 1
+			cmovg cx, di
+		%else
+			jl . %+ %1 %+ NotMax %+ cffdhma %+ m
+			mov cx, di
+			. %+ %1 %+ NotMax %+ cffdhma %+ m
+		%endif
+		.EndOf %+ %1 %+ Min %+ cffdhma %+ m
 		%assign m m+1
 	%endrep
 %endm
