@@ -108,7 +108,6 @@
 	%rep    16
 		test rax, 1<<m
 		jz .EndOf %+ %1 %+ Min %+ cffdhma %+ m
-		vmovdqa %6, %4
 		%if %3 == 9
 			vmovdqa %7, [sym(kFast9Arcs) + m*16]
 		%elif %3 == 12
@@ -116,10 +115,9 @@
 		%else
 			%error "not supported"
 		%endif
-		vpshufb %6, %7
-		vmovdqa %8, %6
-		vpunpcklbw %6, %5
-		vpunpckhbw %8, %5
+		vpshufb %6, %4, %7
+		vpunpckhbw %8, %6, %5
+		vpunpcklbw %6, %6, %5
 		vphminposuw %6, %6
 		vphminposuw %8, %8
 		vmovd edi, %6 ; bits [16:18] contains the index and must be ignored or cleared

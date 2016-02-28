@@ -657,9 +657,10 @@ sym(FastData32Row_Asm_X86_AVX2):
 	; [rsp + 16] = maxnLow
 	; [rsp + 24] = maxnHigh
 
-	vzeroupper
+	vzeroall
 
-	vpxor ymm0, ymm0
+	; vzeroall already set ymm0 to zeros
+	; vpxor ymm0, ymm0
 
 	; FAST hard-coded flags
 	%if %2 == 9
@@ -788,7 +789,7 @@ sym(FastData32Row_Asm_X86_AVX2):
 	jl .LoopStart
 	;----------------
 
-	vzeroupper
+	vzeroall
 
 	; free memory
 	add rsp, 8 + 8 + 8 + 8
