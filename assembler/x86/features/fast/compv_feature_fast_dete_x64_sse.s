@@ -993,27 +993,27 @@ sym(Fast12Strengths16_Asm_X64_SSE41):
 			; ---------
 			test rdx, r10 ;  (1 << p) ?
 			jz .EndOfBrighters %+ j
-			mov rdi, [r12 + r8*COMPV_YASM_REG_SZ_BYTES] ; fbrighters16[p]
-			%if j == 1
-				shr rdi, 16
-			%endif
+				mov rdi, [r12 + r8*COMPV_YASM_REG_SZ_BYTES] ; fbrighters16[p]
+				%if j == 1
+					shr rdi, 16
+				%endif
 
-			movd xmm5, rdi
-			punpcklwd xmm5, xmm5  
-			pshufd xmm5, xmm5, 0 ; xmm5 = _mm_set1_epi16(fbrighters)
-			movdqa xmm6, xmm5
-			pand xmm5, xmm3
-			pand xmm6, xmm4
-			pcmpeqw xmm5, xmm3
-			pcmpeqw xmm6, xmm4
-			packsswb xmm5, xmm6
-			pmovmskb eax, xmm5
-			test ax, ax ; rax = r0
-			jz .EndOfBrighters %+ j
-			; Load dbrighters
-			movdqa xmm2, [r14 + r9 + j*16] ; dbrighters16x32[p*16]
-			; Compute minimum hz
-			COMPV_FEATURE_FAST_DETE_HORIZ_MIN_SSE41 Brighters, %1, %2, xmm2, xmm0, xmm1, xmm6, xmm7 ; This macro overrides rax, rsi, rdi and set the result in rcx
+				movd xmm5, rdi
+				punpcklwd xmm5, xmm5  
+				pshufd xmm5, xmm5, 0 ; xmm5 = _mm_set1_epi16(fbrighters)
+				movdqa xmm6, xmm5
+				pand xmm5, xmm3
+				pand xmm6, xmm4
+				pcmpeqw xmm5, xmm3
+				pcmpeqw xmm6, xmm4
+				packsswb xmm5, xmm6
+				pmovmskb eax, xmm5
+				test ax, ax ; rax = r0
+				jz .EndOfBrighters %+ j
+					; Load dbrighters
+					movdqa xmm2, [r14 + r9 + j*16] ; dbrighters16x32[p*16]
+					; Compute minimum hz
+					COMPV_FEATURE_FAST_DETE_HORIZ_MIN_SSE41 Brighters, %1, %2, xmm2, xmm0, xmm1, xmm6, xmm7 ; This macro overrides rax, rsi, rdi and set the result in rcx
 			.EndOfBrighters %+ j
 
 			; ---------
@@ -1022,27 +1022,27 @@ sym(Fast12Strengths16_Asm_X64_SSE41):
 		.Darkers %+ j
 			test r11, r10 ; (rdarkers & (1 << p)) ?
 			jz .EndOfDarkers %+ j
-			mov rdi, [r13 + r8*COMPV_YASM_REG_SZ_BYTES] ; fdarkers16[p]
-			%if j == 1
-				shr rdi, 16
-			%endif
+				mov rdi, [r13 + r8*COMPV_YASM_REG_SZ_BYTES] ; fdarkers16[p]
+				%if j == 1
+					shr rdi, 16
+				%endif
 
-			movd xmm5, rdi
-			punpcklwd xmm5, xmm5  
-			pshufd xmm5, xmm5, 0 ; xmm5 = _mm_set1_epi16(fdarkers)
-			movdqa xmm6, xmm5
-			pand xmm5, xmm3
-			pand xmm6, xmm4
-			pcmpeqw xmm5, xmm3
-			pcmpeqw xmm6, xmm4
-			packsswb xmm5, xmm6
-			pmovmskb eax, xmm5
-			test ax, ax ; rax = r0
-			jz .EndOfDarkers %+ j
-			; Load ddarkers16x32
-			movdqa xmm2, [r15 + r9 + j*16] ; ddarkers16x32[p*16]
-			; Compute minimum hz
-			COMPV_FEATURE_FAST_DETE_HORIZ_MIN_SSE41 Darkers, %1, %2, xmm2, xmm0, xmm1, xmm6, xmm7 ; This macro overrides rax, rsi, rdi and set the result in rcx
+				movd xmm5, rdi
+				punpcklwd xmm5, xmm5  
+				pshufd xmm5, xmm5, 0 ; xmm5 = _mm_set1_epi16(fdarkers)
+				movdqa xmm6, xmm5
+				pand xmm5, xmm3
+				pand xmm6, xmm4
+				pcmpeqw xmm5, xmm3
+				pcmpeqw xmm6, xmm4
+				packsswb xmm5, xmm6
+				pmovmskb eax, xmm5
+				test ax, ax ; rax = r0
+				jz .EndOfDarkers %+ j
+					; Load ddarkers16x32
+					movdqa xmm2, [r15 + r9 + j*16] ; ddarkers16x32[p*16]
+					; Compute minimum hz
+					COMPV_FEATURE_FAST_DETE_HORIZ_MIN_SSE41 Darkers, %1, %2, xmm2, xmm0, xmm1, xmm6, xmm7 ; This macro overrides rax, rsi, rdi and set the result in rcx
 		.EndOfDarkers %+ j
 		
 		; compute strenghts[p]

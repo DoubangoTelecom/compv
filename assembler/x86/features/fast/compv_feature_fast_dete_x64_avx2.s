@@ -770,32 +770,38 @@ sym(FastData32Row_Asm_X64_AVX2):
 		; ---------
 		test r10, r15 ; (rb & (1 << p) || rb & (1 << g)) ?
 		jz .EndOfBrighters
-		mov rdi, [r8 + rdx*COMPV_YASM_REG_SZ_BYTES] ; fbrighters16[p]
-		; brighters flags
-		vmovd xmm5, edi
-		vpbroadcastw xmm5, xmm5
-		vinsertf128 ymm5, ymm5, xmm5, 1 ; ymm5 = ymmFLow
-		shr rdi, 16
-		vmovd xmm4, edi
-		vpbroadcastw xmm4, xmm4
-		vinsertf128 ymm4, ymm4, xmm4, 1 ; ymm4 = ymmFHigh
+			mov rdi, [r8 + rdx*COMPV_YASM_REG_SZ_BYTES] ; fbrighters16[p]
+			; brighters flags
+			vmovd xmm5, edi
+			vpbroadcastw xmm5, xmm5
+			vinsertf128 ymm5, ymm5, xmm5, 1 ; ymm5 = ymmFLow
+			shr rdi, 16
+			vmovd xmm4, edi
+			vpbroadcastw xmm4, xmm4
+			vinsertf128 ymm4, ymm4, xmm4, 1 ; ymm4 = ymmFHigh
 
-		vpand ymm5, ymm5, ymmFastXFlags
-		vpcmpeqw ymm5, ymm5, ymmFastXFlags
-		vpand ymm4, ymm4, ymmFastXFlags
-		vpcmpeqw ymm4, ymm4, ymmFastXFlags
-		COMPV_PACKS_EPI16_AVX2 ymm5, ymm5, ymm4
-		vpmovmskb eax, ymm5
-		test eax, eax ; rax = r0
-		jz .EndOfBrighters
-		; Load dbrighters
-		vmovdqa ymm2, [r12]
-		vextractf128 xmm5, ymm2, 0x1
-		; Compute minimum hz (low)
-		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, ret_in_rcx, xmm2, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
-		; Compute minimum hz (high)
-		shr rax, 16 ; rax = r1 = r0 >> 16
-		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, ret_in_rbx, xmm5, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
+			vpand ymm5, ymm5, ymmFastXFlags
+			vpcmpeqw ymm5, ymm5, ymmFastXFlags
+			vpand ymm4, ymm4, ymmFastXFlags
+			vpcmpeqw ymm4, ymm4, ymmFastXFlags
+			COMPV_PACKS_EPI16_AVX2 ymm5, ymm5, ymm4
+			vpmovmskb eax, ymm5
+			test eax, eax ; rax = r0
+			jz .EndOfBrighters
+				; Load dbrighters
+				vmovdqa xmm2, [r12 + 0]
+				vmovdqa xmm5, [r12 + 16]
+				test rax, 0xFFFF
+				jz .EndOfBrightersHzMinLow
+					; Compute minimum hz (low)
+					COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, ret_in_rcx, xmm2, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
+				.EndOfBrightersHzMinLow
+				test rax, 0xFFFF0000
+				jz .EndOfBrightersHzMinHigh
+					; Compute minimum hz (high)
+					shr rax, 16 ; rax = r1 = r0 >> 16
+					COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, ret_in_rbx, xmm5, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
+				.EndOfBrightersHzMinHigh
 		.EndOfBrighters
 
 		; ---------
@@ -804,32 +810,38 @@ sym(FastData32Row_Asm_X64_AVX2):
 		.Darkers
 		test r11, r15 ; (rd & (1 << p) || rd & (1 << g)) ?
 		jz .EndOfDarkers
-		mov rdi, [r9 + rdx*COMPV_YASM_REG_SZ_BYTES] ; fdarkers16[p]
-		; darkers flags
-		vmovd xmm5, edi
-		vpbroadcastw xmm5, xmm5
-		vinsertf128 ymm5, ymm5, xmm5, 1 ; ymm5 = ymmFLow
-		shr rdi, 16
-		vmovd xmm4, edi
-		vpbroadcastw xmm4, xmm4
-		vinsertf128 ymm4, ymm4, xmm4, 1 ; ymm4 = ymmFHigh
+			mov rdi, [r9 + rdx*COMPV_YASM_REG_SZ_BYTES] ; fdarkers16[p]
+			; darkers flags
+			vmovd xmm5, edi
+			vpbroadcastw xmm5, xmm5
+			vinsertf128 ymm5, ymm5, xmm5, 1 ; ymm5 = ymmFLow
+			shr rdi, 16
+			vmovd xmm4, edi
+			vpbroadcastw xmm4, xmm4
+			vinsertf128 ymm4, ymm4, xmm4, 1 ; ymm4 = ymmFHigh
 		
-		vpand ymm5, ymm5, ymmFastXFlags
-		vpcmpeqw ymm5, ymm5, ymmFastXFlags
-		vpand ymm4, ymm4, ymmFastXFlags
-		vpcmpeqw ymm4, ymm4, ymmFastXFlags
-		COMPV_PACKS_EPI16_AVX2 ymm5, ymm5, ymm4
-		vpmovmskb eax, ymm5
-		test eax, eax ; rax = r0
-		jz .EndOfDarkers
-		; Load ddarkers
-		vmovdqa ymm2, [r13]
-		vextractf128 xmm5, ymm2, 0x1
-		; Compute minimum hz (low)
-		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Darkers, %1, %2, ret_in_rcx, xmm2, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
-		; Compute minimum hz (high)
-		shr rax, 16 ; rax = r1 = r0 >> 16
-		COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, ret_in_rbx, xmm5, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
+			vpand ymm5, ymm5, ymmFastXFlags
+			vpcmpeqw ymm5, ymm5, ymmFastXFlags
+			vpand ymm4, ymm4, ymmFastXFlags
+			vpcmpeqw ymm4, ymm4, ymmFastXFlags
+			COMPV_PACKS_EPI16_AVX2 ymm5, ymm5, ymm4
+			vpmovmskb eax, ymm5
+			test eax, eax ; rax = r0
+			jz .EndOfDarkers
+				; Load ddarkers
+				vmovdqa xmm2, [r13 + 0]
+				vmovdqa xmm5, [r13 + 16]
+				test rax, 0xFFFF
+				jz .EndOfDarkersHzMinLow
+					; Compute minimum hz (low)
+					COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Darkers, %1, %2, ret_in_rcx, xmm2, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
+				.EndOfDarkersHzMinLow
+				test rax, 0xFFFF0000
+				jz .EndOfDarkersHzMinHigh
+					; Compute minimum hz (high)
+					shr rax, 16 ; rax = r1 = r0 >> 16
+					COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, ret_in_rbx, xmm5, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
+				.EndOfDarkersHzMinHigh
 		.EndOfDarkers
 		
 		; compute strenghts[p]

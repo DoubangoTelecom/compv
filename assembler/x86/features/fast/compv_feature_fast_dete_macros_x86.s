@@ -25,7 +25,7 @@
 ; Compute horizontal minimum. 
 ; The input flags must be in rax.
 ; The result is copied in rcx. rcx must contain zero or the result from the previous call.
-; This macro overrides rax, rsi, rdi and set the result in rcx.
+; This macro overrides rsi, rdi and set the result in rcx.
 ; %1 -> Name of the components (e.g. Darkers or Brighters)
 ; %2 -> Whether CMOV is supported. 1: supported, 0: not supported
 ; %3 -> FAST type. Must be equal to 9 or 12
@@ -85,8 +85,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Compute horizontal minimum. 
 ; The input flags must be in rax.
-; The result is copied in rcx. rcx must contain zero or the result from the previous call.
-; This macro overrides rax, rsi, rdi and set the result in rcx or rbx.
+; The result is copied in rcx or rbx. rcx or rbx must contain zero or the result from the previous call.
+; This macro overrides rsi, rdi and set the result in rcx or rbx.
 ; %1 -> Name of the components (e.g. Darkers or Brighters)
 ; %2 -> Whether CMOV is supported. 1: supported, 0: not supported
 ; %3 -> FAST type. Must be equal to 9 or 12
