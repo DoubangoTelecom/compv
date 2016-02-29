@@ -373,20 +373,16 @@ void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdark
 	_mm256_zeroupper();
 
 	__m256i ymm0, ymm1, ymmFastXFlags, ymmFLow, ymmFHigh;
-	__m256i ymmZeros;
-	int r0, r1;
-	int maxnLow, maxnHigh;
-	int lowMin, highMin;
+	int r0, mask, maxnLow, maxnHigh, lowMin, highMin;
 	uint32_t rb = (uint32_t)rbrighters, rd = (uint32_t)rdarkers;
 	const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
 	const uint8_t(&kFastArcs)[16][16] = (N == 9 ? kFast9Arcs : kFast12Arcs);
+	__m128i xmm0, xmm1, xmmZeros;
 
 	// FAST hard-coded flags
 	_mm256_store_si256(&ymmFastXFlags, _mm256_load_si256((__m256i*)(FastXFlags)));
-	// Zeros
-	_mm256_store_si256(&ymmZeros, _mm256_setzero_si256());
-	// Set strengths to zero
-	_mm256_storeu_si256((__m256i*)strengths32, ymmZeros); // TODO(dmi): not needed
+
+	_mm_store_si128(&xmmZeros, _mm_setzero_si128());
 
 	// xmm0 contains the u8 values
 	// xmm1 is used as temp register and will be trashed
@@ -401,10 +397,12 @@ void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdark
 		maxn = std::max(std::min(lowMin, highMin), (int)maxn); \
 		}
 
+	mask = (1 << 0) | (1 << 16); // (1 << p) | (1 << g)
+
 	for (unsigned p = 0, g = 16; p < 16; ++p, ++g) {
 		maxnLow = maxnHigh = 0;
 		// Brighters
-		if (rb & (1 << p) || rb & (1 << g)) {
+		if (rb & mask) {
 			// brighters flags
 			_mm256_store_si256(&ymmFLow, _mm256_set1_epi16((short)(*fbrighters16)[p]));
 			_mm256_store_si256(&ymmFHigh, _mm256_set1_epi16((short)((*fbrighters16)[p] >> 16)));
@@ -415,26 +413,29 @@ void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdark
 			_mm256_store_si256(&ymm1, _mm256_cmpeq_epi16(ymm1, ymmFastXFlags));
 			r0 = _mm256_movemask_epi8(compv_avx2_packs_epi16(ymm0, ymm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
 			if (r0) {
-				r1 = r0 >> 16;
 				_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)dbrighters16x32));
-				// Compute minimum hz
-				__m128i xmm0, xmm1, xmmZeros;
-				xmmZeros = _mm_setzero_si128();
-				xmm0 = _mm256_extractf128_si256(ymm0, 0);
-				COMPV_HORIZ_MIN(r0, 0, maxnLow) COMPV_HORIZ_MIN(r0, 1, maxnLow) COMPV_HORIZ_MIN(r0, 2, maxnLow) COMPV_HORIZ_MIN(r0, 3, maxnLow)
-				COMPV_HORIZ_MIN(r0, 4, maxnLow) COMPV_HORIZ_MIN(r0, 5, maxnLow) COMPV_HORIZ_MIN(r0, 6, maxnLow) COMPV_HORIZ_MIN(r0, 7, maxnLow)
-				COMPV_HORIZ_MIN(r0, 8, maxnLow) COMPV_HORIZ_MIN(r0, 9, maxnLow) COMPV_HORIZ_MIN(r0, 10, maxnLow) COMPV_HORIZ_MIN(r0, 11, maxnLow)
-				COMPV_HORIZ_MIN(r0, 12, maxnLow) COMPV_HORIZ_MIN(r0, 13, maxnLow) COMPV_HORIZ_MIN(r0, 14, maxnLow) COMPV_HORIZ_MIN(r0, 15, maxnLow)
-				xmm0 = _mm256_extractf128_si256(ymm0, 1);
-				COMPV_HORIZ_MIN(r1, 0, maxnHigh) COMPV_HORIZ_MIN(r1, 1, maxnHigh) COMPV_HORIZ_MIN(r1, 2, maxnHigh) COMPV_HORIZ_MIN(r1, 3, maxnHigh)
-				COMPV_HORIZ_MIN(r1, 4, maxnHigh) COMPV_HORIZ_MIN(r1, 5, maxnHigh) COMPV_HORIZ_MIN(r1, 6, maxnHigh) COMPV_HORIZ_MIN(r1, 7, maxnHigh)
-				COMPV_HORIZ_MIN(r1, 8, maxnHigh) COMPV_HORIZ_MIN(r1, 9, maxnHigh) COMPV_HORIZ_MIN(r1, 10, maxnHigh) COMPV_HORIZ_MIN(r1, 11, maxnHigh)
-				COMPV_HORIZ_MIN(r1, 12, maxnHigh) COMPV_HORIZ_MIN(r1, 13, maxnHigh) COMPV_HORIZ_MIN(r1, 14, maxnHigh) COMPV_HORIZ_MIN(r1, 15, maxnHigh)
+				// Compute minimum hz (low)
+				if (r0 & 0xFFFF) {
+					_mm_store_si128(&xmm0, _mm256_extractf128_si256(ymm0, 0));
+					COMPV_HORIZ_MIN(r0, 0, maxnLow) COMPV_HORIZ_MIN(r0, 1, maxnLow) COMPV_HORIZ_MIN(r0, 2, maxnLow) COMPV_HORIZ_MIN(r0, 3, maxnLow)
+						COMPV_HORIZ_MIN(r0, 4, maxnLow) COMPV_HORIZ_MIN(r0, 5, maxnLow) COMPV_HORIZ_MIN(r0, 6, maxnLow) COMPV_HORIZ_MIN(r0, 7, maxnLow)
+						COMPV_HORIZ_MIN(r0, 8, maxnLow) COMPV_HORIZ_MIN(r0, 9, maxnLow) COMPV_HORIZ_MIN(r0, 10, maxnLow) COMPV_HORIZ_MIN(r0, 11, maxnLow)
+						COMPV_HORIZ_MIN(r0, 12, maxnLow) COMPV_HORIZ_MIN(r0, 13, maxnLow) COMPV_HORIZ_MIN(r0, 14, maxnLow) COMPV_HORIZ_MIN(r0, 15, maxnLow)
+				}
+				// Compute minimum hz (high)
+				if (r0 & 0xFFFF0000) {
+					r0 >>= 16;
+					_mm_store_si128(&xmm0, _mm256_extractf128_si256(ymm0, 1));
+					COMPV_HORIZ_MIN(r0, 0, maxnHigh) COMPV_HORIZ_MIN(r0, 1, maxnHigh) COMPV_HORIZ_MIN(r0, 2, maxnHigh) COMPV_HORIZ_MIN(r0, 3, maxnHigh)
+					COMPV_HORIZ_MIN(r0, 4, maxnHigh) COMPV_HORIZ_MIN(r0, 5, maxnHigh) COMPV_HORIZ_MIN(r0, 6, maxnHigh) COMPV_HORIZ_MIN(r0, 7, maxnHigh)
+					COMPV_HORIZ_MIN(r0, 8, maxnHigh) COMPV_HORIZ_MIN(r0, 9, maxnHigh) COMPV_HORIZ_MIN(r0, 10, maxnHigh) COMPV_HORIZ_MIN(r0, 11, maxnHigh)
+					COMPV_HORIZ_MIN(r0, 12, maxnHigh) COMPV_HORIZ_MIN(r0, 13, maxnHigh) COMPV_HORIZ_MIN(r0, 14, maxnHigh) COMPV_HORIZ_MIN(r0, 15, maxnHigh)
+				}
 			}
 		}
 
 		// Darkers
-		if (rd & (1 << p) || rd & (1 << g)) {
+		if (rd & mask) {
 			// darkers flags
 			_mm256_store_si256(&ymmFLow, _mm256_set1_epi16((short)(*fdarkers16)[p]));
 			_mm256_store_si256(&ymmFHigh, _mm256_set1_epi16((short)((*fdarkers16)[p] >> 16)));
@@ -445,21 +446,25 @@ void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdark
 			_mm256_store_si256(&ymm1, _mm256_cmpeq_epi16(ymm1, ymmFastXFlags));
 			r0 = _mm256_movemask_epi8(compv_avx2_packs_epi16(ymm0, ymm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
 			if (r0) {
-				r1 = r0 >> 16;
 				_mm256_store_si256(&ymm0, _mm256_load_si256((__m256i*)ddarkers16x32));
-				// Compute minimum hz
-				__m128i xmm0, xmm1, xmmZeros;
-				xmmZeros = _mm_setzero_si128();
-				xmm0 = _mm256_extractf128_si256(ymm0, 0);
-				COMPV_HORIZ_MIN(r0, 0, maxnLow) COMPV_HORIZ_MIN(r0, 1, maxnLow) COMPV_HORIZ_MIN(r0, 2, maxnLow) COMPV_HORIZ_MIN(r0, 3, maxnLow)
-				COMPV_HORIZ_MIN(r0, 4, maxnLow) COMPV_HORIZ_MIN(r0, 5, maxnLow) COMPV_HORIZ_MIN(r0, 6, maxnLow) COMPV_HORIZ_MIN(r0, 7, maxnLow)
-				COMPV_HORIZ_MIN(r0, 8, maxnLow) COMPV_HORIZ_MIN(r0, 9, maxnLow) COMPV_HORIZ_MIN(r0, 10, maxnLow) COMPV_HORIZ_MIN(r0, 11, maxnLow)
-				COMPV_HORIZ_MIN(r0, 12, maxnLow) COMPV_HORIZ_MIN(r0, 13, maxnLow) COMPV_HORIZ_MIN(r0, 14, maxnLow) COMPV_HORIZ_MIN(r0, 15, maxnLow)
-				xmm0 = _mm256_extractf128_si256(ymm0, 1);
-				COMPV_HORIZ_MIN(r1, 0, maxnHigh) COMPV_HORIZ_MIN(r1, 1, maxnHigh) COMPV_HORIZ_MIN(r1, 2, maxnHigh) COMPV_HORIZ_MIN(r1, 3, maxnHigh)
-				COMPV_HORIZ_MIN(r1, 4, maxnHigh) COMPV_HORIZ_MIN(r1, 5, maxnHigh) COMPV_HORIZ_MIN(r1, 6, maxnHigh) COMPV_HORIZ_MIN(r1, 7, maxnHigh)
-				COMPV_HORIZ_MIN(r1, 8, maxnHigh) COMPV_HORIZ_MIN(r1, 9, maxnHigh) COMPV_HORIZ_MIN(r1, 10, maxnHigh) COMPV_HORIZ_MIN(r1, 11, maxnHigh)
-				COMPV_HORIZ_MIN(r1, 12, maxnHigh) COMPV_HORIZ_MIN(r1, 13, maxnHigh) COMPV_HORIZ_MIN(r1, 14, maxnHigh) COMPV_HORIZ_MIN(r1, 15, maxnHigh)
+				// Compute minimum hz (low)
+				if (r0 & 0xFFFF) {
+					_mm_store_si128(&xmm0, _mm256_extractf128_si256(ymm0, 0));
+					COMPV_HORIZ_MIN(r0, 0, maxnLow) COMPV_HORIZ_MIN(r0, 1, maxnLow) COMPV_HORIZ_MIN(r0, 2, maxnLow) COMPV_HORIZ_MIN(r0, 3, maxnLow)
+					COMPV_HORIZ_MIN(r0, 4, maxnLow) COMPV_HORIZ_MIN(r0, 5, maxnLow) COMPV_HORIZ_MIN(r0, 6, maxnLow) COMPV_HORIZ_MIN(r0, 7, maxnLow)
+					COMPV_HORIZ_MIN(r0, 8, maxnLow) COMPV_HORIZ_MIN(r0, 9, maxnLow) COMPV_HORIZ_MIN(r0, 10, maxnLow) COMPV_HORIZ_MIN(r0, 11, maxnLow)
+					COMPV_HORIZ_MIN(r0, 12, maxnLow) COMPV_HORIZ_MIN(r0, 13, maxnLow) COMPV_HORIZ_MIN(r0, 14, maxnLow) COMPV_HORIZ_MIN(r0, 15, maxnLow)
+				}
+
+				// Compute minimum hz (high)
+				if (r0 & 0xFFFF0000) {
+					r0 >>= 16;
+					_mm_store_si128(&xmm0, _mm256_extractf128_si256(ymm0, 1));
+					COMPV_HORIZ_MIN(r0, 0, maxnHigh) COMPV_HORIZ_MIN(r0, 1, maxnHigh) COMPV_HORIZ_MIN(r0, 2, maxnHigh) COMPV_HORIZ_MIN(r0, 3, maxnHigh)
+					COMPV_HORIZ_MIN(r0, 4, maxnHigh) COMPV_HORIZ_MIN(r0, 5, maxnHigh) COMPV_HORIZ_MIN(r0, 6, maxnHigh) COMPV_HORIZ_MIN(r0, 7, maxnHigh)
+					COMPV_HORIZ_MIN(r0, 8, maxnHigh) COMPV_HORIZ_MIN(r0, 9, maxnHigh) COMPV_HORIZ_MIN(r0, 10, maxnHigh) COMPV_HORIZ_MIN(r0, 11, maxnHigh)
+					COMPV_HORIZ_MIN(r0, 12, maxnHigh) COMPV_HORIZ_MIN(r0, 13, maxnHigh) COMPV_HORIZ_MIN(r0, 14, maxnHigh) COMPV_HORIZ_MIN(r0, 15, maxnHigh)
+				}
 			}
 		}
 
@@ -468,6 +473,8 @@ void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdark
 
 		dbrighters16x32 += 32;
 		ddarkers16x32 += 32;
+
+		mask <<= 1;
 	}
 
 	_mm256_zeroupper();
