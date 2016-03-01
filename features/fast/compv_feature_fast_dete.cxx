@@ -225,9 +225,8 @@ static COMPV_ERROR_CODE FastProcessRange_AsynExec(const struct compv_asynctoken_
 static void FastProcessRange(RangeFAST* range);
 static COMPV_ERROR_CODE FastNMS_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 static void FastNMS(int32_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end);
-static compv_scalar_t FastData_C(const uint8_t* dataPtr, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, int16_t(&ddarkers16)[16], int16_t(&dbrighters16)[16]);
-static compv_scalar_t FastData16_C(const uint8_t* dataPtr, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, compv_scalar_t(&pfdarkers16)[16], compv_scalar_t(&pfbrighters16)[16], int16_t(&ddarkers16x16)[16][16], int16_t(&dbrighters16x16)[16][16]);
-static compv_scalar_t FastStrengths_C(const uint8_t(&dbrighters)[16], const uint8_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, const uint16_t(&FastXFlags)[16]);
+static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths1, compv_scalar_t* me);
+static void FastStrengths1_C(COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x1, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x1, const compv::compv_scalar_t fbrighters1, const compv::compv_scalar_t fdarkers1, uint8_t* strengths1, compv::compv_scalar_t N);
 static COMPV_ERROR_CODE FastRangesAlloc(int32_t nRanges, RangeFAST** ppRanges, int32_t stride);
 static COMPV_ERROR_CODE FastRangesFree(int32_t nRanges, RangeFAST** ppRanges);
 
@@ -511,179 +510,210 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::newObj(CompVObjWrapper<CompVFeatureDete* 
 }
 
 // FastXFlags = Fast9Flags or Fast16Flags
-static compv_scalar_t FastStrengths_C(const uint8_t(&dbrighters)[16], const uint8_t(&ddarkers)[16], compv_scalar_t fbrighters, compv_scalar_t fdarkers, compv_scalar_t N, const uint16_t(&FastXFlags)[16])
+static void FastStrengths1_C(COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x1, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x1, const compv::compv_scalar_t fbrighters1, const compv::compv_scalar_t fdarkers1, uint8_t* strengths1, compv::compv_scalar_t N)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 
-    int16_t ndarker, nbrighter;
+	uint8_t ndarker, nbrighter;
     unsigned i, j, k;
     int strength = 0;
+	const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
+	const uint8_t(&kFastArcs)[16][16] = (N == 9 ? kFast9Arcs : kFast12Arcs);
 
     for (i = 0; i < 16; ++i) {
         ndarker = 255;
         nbrighter = 255;
-        if ((fbrighters & FastXFlags[i]) == FastXFlags[i]) {
+        if ((fbrighters1 & FastXFlags[i]) == FastXFlags[i]) {
             // lowest diff
             k = unsigned(i + N);
             for (j = i; j < k; ++j) {
-                if (dbrighters[j & 15] < nbrighter) {
-                    nbrighter = dbrighters[j & 15];
+                if (dbrighters16x1[j & 15] < nbrighter) {
+                    nbrighter = dbrighters16x1[j & 15];
                 }
             }
         }
-        if ((fdarkers & FastXFlags[i]) == FastXFlags[i]) {
+        if ((fdarkers1 & FastXFlags[i]) == FastXFlags[i]) {
             // lowest diff
             k = unsigned(i + N);
             for (j = i; j < k; ++j) {
-                if (ddarkers[j & 15] < ndarker) {
-                    ndarker = ddarkers[j & 15];
+                if (ddarkers16x1[j & 15] < ndarker) {
+                    ndarker = ddarkers16x1[j & 15];
                 }
             }
         }
         else if (nbrighter == 255) {
+			// (nbrighter == 255 and ndarker == 255) -> nothing to do
             continue;
         }
 
         strength = (std::max(strength, std::min((int)ndarker, (int)nbrighter)));
     }
 
-    return compv_scalar_t(strength);
+	*strengths1 = (uint8_t)strength;
 }
 
-// FIXME: remove temp16 (SIMD doesn't need it)
-static compv_scalar_t FastData_C(const uint8_t* dataPtr, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, compv_scalar_t *pfdarkers, compv_scalar_t* pfbrighters, uint8_t(&ddarkers16)[16], uint8_t(&dbrighters16)[16])
+static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths1, compv_scalar_t* me)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-    int32_t sum;
-    uint8_t temp16[16];
+    int32_t sum, s;
+	uint8_t temp0, temp1, ddarkers16x1[16], dbrighters16x1[16];
+	compv_scalar_t fbrighters1, fdarkers1;
+	void(*FastStrengths1)(
+		COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x1,
+		COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x1,
+		const compv::compv_scalar_t fbrighters1,
+		const compv::compv_scalar_t fdarkers1,
+		uint8_t* strengths1,
+		compv::compv_scalar_t N) = FastStrengths1_C;
+#if 0
+	FastStrengths1 = (N == 9 ? Fast9Strengths1_C : Fast12Strengths1_C);
+#endif
 
-    uint8_t brighter = CompVMathUtils::clampPixel8(dataPtr[0] + (int16_t)threshold);
-    uint8_t darker = CompVMathUtils::clampPixel8(dataPtr[0] - (int16_t)threshold);
+	for (compv_scalar_t i = 0; i < width; ++i, ++IP, ++strengths1) {
+		uint8_t brighter = CompVMathUtils::clampPixel8(IP[0] + (int16_t)threshold);
+		uint8_t darker = CompVMathUtils::clampPixel8(IP[0] - (int16_t)threshold);
 
-    bool popcntHard = CompVCpu::isEnabled(kCpuFlagPOPCNT);
+		// reset strength to zero
+		*strengths1 = 0;
 
-    // compare I1 and I7
-    temp16[0] = dataPtr[pixels16[0]];
-    temp16[8] = dataPtr[pixels16[8]];
-    ddarkers16[0] = CompVMathUtils::clampPixel8(darker - temp16[0]);
-    ddarkers16[8] = CompVMathUtils::clampPixel8(darker - temp16[8]);
-    dbrighters16[0] = CompVMathUtils::clampPixel8(temp16[0] - brighter);
-    dbrighters16[8] = CompVMathUtils::clampPixel8(temp16[8] - brighter);
+		// compare I1 and I9 aka 0 and 8
+		temp0 = IP[pixels16[0]];
+		temp1 = IP[pixels16[8]];
+		ddarkers16x1[0] = CompVMathUtils::clampPixel8(darker - temp0);
+		ddarkers16x1[8] = CompVMathUtils::clampPixel8(darker - temp1);
+		dbrighters16x1[0] = CompVMathUtils::clampPixel8(temp0 - brighter);
+		dbrighters16x1[8] = CompVMathUtils::clampPixel8(temp1 - brighter);
+		sum = ((dbrighters16x1[0] || ddarkers16x1[0]) ? 1 : 0) + ((dbrighters16x1[8] || ddarkers16x1[8]) ? 1 : 0);
+		if (!sum) {
+			continue;
+		}
 
-    sum = (dbrighters16[0] > 0 || ddarkers16[0] > 0) + (dbrighters16[8] > 0 || ddarkers16[8] > 0);
+		// compare I5 and I13 aka 4 and 12
+		temp0 = IP[pixels16[4]];
+		temp1 = IP[pixels16[12]];
+		ddarkers16x1[4] = CompVMathUtils::clampPixel8(darker - temp0); // I5-darkness
+		ddarkers16x1[12] = CompVMathUtils::clampPixel8(darker - temp1); // I13-darkness
+		dbrighters16x1[4] = CompVMathUtils::clampPixel8(temp0 - brighter); // I5-brightness
+		dbrighters16x1[12] = CompVMathUtils::clampPixel8(temp1 - brighter); // I13-brightness
+		s = ((dbrighters16x1[4] || ddarkers16x1[4]) ? 1 : 0) + ((dbrighters16x1[12] || ddarkers16x1[12]) ? 1 : 0);
+		if (!s) {
+			continue;
+		}
+		sum += s;
+		
+		/*  Speed-Test-2 */
+		if (N == 12 ? sum >= 3 : sum >= 2) {
+			fdarkers1 = fbrighters1 = 0;			
 
-    // compare I5 and I13
-    /*  Speed-Test-1 */
-    if (N != 12 || sum > 0) {
-        temp16[4] = dataPtr[pixels16[4]];
-        temp16[12] = dataPtr[pixels16[12]];
-        ddarkers16[4] = CompVMathUtils::clampPixel8(darker - temp16[4]); // I5-darkness
-        ddarkers16[12] = CompVMathUtils::clampPixel8(darker - temp16[12]); // I13-darkness
-        dbrighters16[4] = CompVMathUtils::clampPixel8(temp16[4] - brighter); // I5-brightness
-        dbrighters16[12] = CompVMathUtils::clampPixel8(temp16[12] - brighter); // I13-brightness
+			// I2 and I10 aka 1 and 9
+			temp0 = IP[pixels16[1]];
+			temp1 = IP[pixels16[9]];
+			ddarkers16x1[1] = CompVMathUtils::clampPixel8(darker - temp0);
+			dbrighters16x1[1] = CompVMathUtils::clampPixel8(temp0 - brighter);
+			ddarkers16x1[9] = CompVMathUtils::clampPixel8(darker - temp1);
+			dbrighters16x1[9] = CompVMathUtils::clampPixel8(temp1 - brighter);
+			if (!(dbrighters16x1[1] || ddarkers16x1[1] || dbrighters16x1[9] || ddarkers16x1[9])) {
+				continue;
+			}
 
-        sum += (dbrighters16[4] > 0 || ddarkers16[4] > 0) + (dbrighters16[12] > 0 || ddarkers16[12] > 0);
-        /*  Speed-Test-2 */
-        if ((sum >= 2 && (N != 12 || sum >= 3))) {
-            temp16[1] = dataPtr[pixels16[1]];
-            temp16[2] = dataPtr[pixels16[2]];
-            temp16[3] = dataPtr[pixels16[3]];
-            temp16[5] = dataPtr[pixels16[5]];
-            temp16[6] = dataPtr[pixels16[6]];
-            temp16[7] = dataPtr[pixels16[7]];
-            temp16[9] = dataPtr[pixels16[9]];
-            temp16[10] = dataPtr[pixels16[10]];
-            temp16[11] = dataPtr[pixels16[11]];
-            temp16[13] = dataPtr[pixels16[13]];
-            temp16[14] = dataPtr[pixels16[14]];
-            temp16[15] = dataPtr[pixels16[15]];
+			// I3 and I11 aka 2 and 10
+			temp0 = IP[pixels16[2]];
+			temp1 = IP[pixels16[10]];
+			ddarkers16x1[2] = CompVMathUtils::clampPixel8(darker - temp0);
+			dbrighters16x1[2] = CompVMathUtils::clampPixel8(temp0 - brighter);
+			ddarkers16x1[10] = CompVMathUtils::clampPixel8(darker - temp1);
+			dbrighters16x1[10] = CompVMathUtils::clampPixel8(temp1 - brighter);
+			if (!(dbrighters16x1[2] || ddarkers16x1[2] || dbrighters16x1[10] || ddarkers16x1[10])) {
+				continue;
+			}
 
-            // 0, 8, 4 and 12 already filled by the calling function
-            *pfdarkers = (ddarkers16[0] > 0 ? (1 << 0) : 0);
-            *pfdarkers |= (ddarkers16[8] > 0 ? (1 << 8) : 0);
-            *pfdarkers |= (ddarkers16[4] > 0 ? (1 << 4) : 0);
-            *pfdarkers |= (ddarkers16[12] > 0 ? (1 << 12) : 0);
+			// I4 and I12 aka 3 and 11
+			temp0 = IP[pixels16[3]];
+			temp1 = IP[pixels16[11]];
+			ddarkers16x1[3] = CompVMathUtils::clampPixel8(darker - temp0);
+			dbrighters16x1[3] = CompVMathUtils::clampPixel8(temp0 - brighter);
+			ddarkers16x1[11] = CompVMathUtils::clampPixel8(darker - temp1);
+			dbrighters16x1[11] = CompVMathUtils::clampPixel8(temp1 - brighter);
+			if (!(dbrighters16x1[3] || ddarkers16x1[3] || dbrighters16x1[11] || ddarkers16x1[11])) {
+				continue;
+			}
 
-            ddarkers16[1] = CompVMathUtils::clampPixel8(darker - temp16[1]);
-            *pfdarkers |= (ddarkers16[1] > 0 ? (1 << 1) : 0);
-            ddarkers16[2] = CompVMathUtils::clampPixel8(darker - temp16[2]);
-            *pfdarkers |= (ddarkers16[2] > 0 ? (1 << 2) : 0);
-            ddarkers16[3] = CompVMathUtils::clampPixel8(darker - temp16[3]);
-            *pfdarkers |= (ddarkers16[3] > 0 ? (1 << 3) : 0);
-            ddarkers16[5] = CompVMathUtils::clampPixel8(darker - temp16[5]);
-            *pfdarkers |= (ddarkers16[5] > 0 ? (1 << 5) : 0);
-            ddarkers16[6] = CompVMathUtils::clampPixel8(darker - temp16[6]);
-            *pfdarkers |= (ddarkers16[6] > 0 ? (1 << 6) : 0);
-            ddarkers16[7] = CompVMathUtils::clampPixel8(darker - temp16[7]);
-            *pfdarkers |= (ddarkers16[7] > 0 ? (1 << 7) : 0);
-            ddarkers16[9] = CompVMathUtils::clampPixel8(darker - temp16[9]);
-            *pfdarkers |= (ddarkers16[9] > 0 ? (1 << 9) : 0);
-            ddarkers16[10] = CompVMathUtils::clampPixel8(darker - temp16[10]);
-            *pfdarkers |= (ddarkers16[10] > 0 ? (1 << 10) : 0);
-            ddarkers16[11] = CompVMathUtils::clampPixel8(darker - temp16[11]);
-            *pfdarkers |= (ddarkers16[11] > 0 ? (1 << 11) : 0);
-            ddarkers16[13] = CompVMathUtils::clampPixel8(darker - temp16[13]);
-            *pfdarkers |= (ddarkers16[13] > 0 ? (1 << 13) : 0);
-            ddarkers16[14] = CompVMathUtils::clampPixel8(darker - temp16[14]);
-            *pfdarkers |= (ddarkers16[14] > 0 ? (1 << 14) : 0);
-            ddarkers16[15] = CompVMathUtils::clampPixel8(darker - temp16[15]);
-            *pfdarkers |= (ddarkers16[15] > 0 ? (1 << 15) : 0);
+			// I6 and I14 aka 5 and 13
+			temp0 = IP[pixels16[5]];
+			temp1 = IP[pixels16[13]];
+			ddarkers16x1[5] = CompVMathUtils::clampPixel8(darker - temp0);
+			dbrighters16x1[5] = CompVMathUtils::clampPixel8(temp0 - brighter);
+			ddarkers16x1[13] = CompVMathUtils::clampPixel8(darker - temp1);
+			dbrighters16x1[13] = CompVMathUtils::clampPixel8(temp1 - brighter);
+			if (!(dbrighters16x1[5] || ddarkers16x1[5] || dbrighters16x1[13] || ddarkers16x1[13])) {
+				continue;
+			}
 
-            // 0, 8, 4 and 12 already filled by the calling function
-            *pfbrighters = (dbrighters16[0] > 0 ? (1 << 0) : 0);
-            *pfbrighters |= (dbrighters16[8] > 0 ? (1 << 8) : 0);
-            *pfbrighters |= (dbrighters16[4] > 0 ? (1 << 4) : 0);
-            *pfbrighters |= (dbrighters16[12] > 0 ? (1 << 12) : 0);
+			// I7 and I15 aka 6 and 14
+			temp0 = IP[pixels16[6]];
+			temp1 = IP[pixels16[14]];
+			ddarkers16x1[6] = CompVMathUtils::clampPixel8(darker - temp0);
+			dbrighters16x1[6] = CompVMathUtils::clampPixel8(temp0- brighter);
+			ddarkers16x1[14] = CompVMathUtils::clampPixel8(darker - temp1);
+			dbrighters16x1[14] = CompVMathUtils::clampPixel8(temp1- brighter);
+			if (!(dbrighters16x1[6] || ddarkers16x1[6] || dbrighters16x1[14] || ddarkers16x1[14])) {
+				continue;
+			}
 
-            dbrighters16[1] = CompVMathUtils::clampPixel8(temp16[1] - brighter);
-            *pfbrighters |= (dbrighters16[1] > 0 ? (1 << 1) : 0);
-            dbrighters16[2] = CompVMathUtils::clampPixel8(temp16[2] - brighter);
-            *pfbrighters |= (dbrighters16[2] > 0 ? (1 << 2) : 0);
-            dbrighters16[3] = CompVMathUtils::clampPixel8(temp16[3] - brighter);
-            *pfbrighters |= (dbrighters16[3] > 0 ? (1 << 3) : 0);
-            dbrighters16[5] = CompVMathUtils::clampPixel8(temp16[5] - brighter);
-            *pfbrighters |= (dbrighters16[5] > 0 ? (1 << 5) : 0);
-            dbrighters16[6] = CompVMathUtils::clampPixel8(temp16[6] - brighter);
-            *pfbrighters |= (dbrighters16[6] > 0 ? (1 << 6) : 0);
-            dbrighters16[7] = CompVMathUtils::clampPixel8(temp16[7] - brighter);
-            *pfbrighters |= (dbrighters16[7] > 0 ? (1 << 7) : 0);
-            dbrighters16[9] = CompVMathUtils::clampPixel8(temp16[9] - brighter);
-            *pfbrighters |= (dbrighters16[9] > 0 ? (1 << 9) : 0);
-            dbrighters16[10] = CompVMathUtils::clampPixel8(temp16[10] - brighter);
-            *pfbrighters |= (dbrighters16[10] > 0 ? (1 << 10) : 0);
-            dbrighters16[11] = CompVMathUtils::clampPixel8(temp16[11] - brighter);
-            *pfbrighters |= (dbrighters16[11] > 0 ? (1 << 11) : 0);
-            dbrighters16[13] = CompVMathUtils::clampPixel8(temp16[13] - brighter);
-            *pfbrighters |= (dbrighters16[13] > 0 ? (1 << 13) : 0);
-            dbrighters16[14] = CompVMathUtils::clampPixel8(temp16[14] - brighter);
-            *pfbrighters |= (dbrighters16[14] > 0 ? (1 << 14) : 0);
-            dbrighters16[15] = CompVMathUtils::clampPixel8(temp16[15] - brighter);
-            *pfbrighters |= (dbrighters16[15] > 0 ? (1 << 15) : 0);
+			// I8 and I16 aka 7 and 15
+			temp0 = IP[pixels16[7]];
+			temp1 = IP[pixels16[15]];
+			ddarkers16x1[7] = CompVMathUtils::clampPixel8(darker - temp0);
+			dbrighters16x1[7] = CompVMathUtils::clampPixel8(temp0 - brighter);
+			ddarkers16x1[15] = CompVMathUtils::clampPixel8(darker - temp1);
+			dbrighters16x1[15] = CompVMathUtils::clampPixel8(temp1 - brighter);
+			if (!(dbrighters16x1[7] || ddarkers16x1[7] || dbrighters16x1[15] || ddarkers16x1[15])) {
+				continue;
+			}
 
-            // FIXME: not correct
-            return (compv_popcnt16(popcntHard, (unsigned short)*pfdarkers) >= N || compv_popcnt16(popcntHard, (unsigned short)*pfbrighters) >= N) ? 1 : 0;
-        }
-    }
-    return compv_scalar_t(0);
-}
+			fdarkers1 = (ddarkers16x1[0] ? (1 << 0) : 0);
+			fdarkers1 |= (ddarkers16x1[1] ? (1 << 1) : 0);
+			fdarkers1 |= (ddarkers16x1[2] ? (1 << 2) : 0);
+			fdarkers1 |= (ddarkers16x1[3] ? (1 << 3) : 0);
+			fdarkers1 |= (ddarkers16x1[4] ? (1 << 4) : 0);
+			fdarkers1 |= (ddarkers16x1[5] ? (1 << 5) : 0);
+			fdarkers1 |= (ddarkers16x1[6] ? (1 << 6) : 0);
+			fdarkers1 |= (ddarkers16x1[7] ? (1 << 7) : 0);
+			fdarkers1 |= (ddarkers16x1[8] ? (1 << 8) : 0);
+			fdarkers1 |= (ddarkers16x1[9] ? (1 << 9) : 0);
+			fdarkers1 |= (ddarkers16x1[10] ? (1 << 10) : 0);
+			fdarkers1 |= (ddarkers16x1[11] ? (1 << 11) : 0);
+			fdarkers1 |= (ddarkers16x1[12] ? (1 << 12) : 0);
+			fdarkers1 |= (ddarkers16x1[13] ? (1 << 13) : 0);
+			fdarkers1 |= (ddarkers16x1[14] ? (1 << 14) : 0);
+			fdarkers1 |= (ddarkers16x1[15] ? (1 << 15) : 0);
 
-static compv_scalar_t FastData16_C(const uint8_t* dataPtr, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, compv_scalar_t(&pfdarkers16)[16], compv_scalar_t(&pfbrighters16)[16], uint8_t(&ddarkers16x16)[16][16], uint8_t(&dbrighters16x16)[16][16])
-{
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-
-    int r = 0;
-    for (int i = 0; i < 16; ++i) {
-        if (FastData_C(&dataPtr[i], pixels16, N, threshold, &pfdarkers16[i], &pfbrighters16[i], ddarkers16x16[i], dbrighters16x16[i])) {
-            r |= (1 << i);
-        }
-    }
-    return compv_scalar_t(r);
+			fbrighters1 = (dbrighters16x1[0] ? (1 << 0) : 0);
+			fbrighters1 |= (dbrighters16x1[1]? (1 << 1) : 0);
+			fbrighters1 |= (dbrighters16x1[2] ? (1 << 2) : 0);
+			fbrighters1 |= (dbrighters16x1[3] ? (1 << 3) : 0);
+			fbrighters1 |= (dbrighters16x1[4] ? (1 << 4) : 0);
+			fbrighters1 |= (dbrighters16x1[5] ? (1 << 5) : 0);
+			fbrighters1 |= (dbrighters16x1[6] ? (1 << 6) : 0);
+			fbrighters1 |= (dbrighters16x1[7] ? (1 << 7) : 0);
+			fbrighters1 |= (dbrighters16x1[8] ? (1 << 8) : 0);
+			fbrighters1 |= (dbrighters16x1[9] ? (1 << 9) : 0);
+			fbrighters1 |= (dbrighters16x1[10] ? (1 << 10) : 0);
+			fbrighters1 |= (dbrighters16x1[11] ? (1 << 11) : 0);
+			fbrighters1 |= (dbrighters16x1[12] ? (1 << 12) : 0);
+			fbrighters1 |= (dbrighters16x1[13] ? (1 << 13) : 0);
+			fbrighters1 |= (dbrighters16x1[14] ? (1 << 14) : 0);
+			fbrighters1 |= (dbrighters16x1[15] ? (1 << 15) : 0);
+				
+			FastStrengths1(dbrighters16x1, ddarkers16x1, fbrighters1, fdarkers1, strengths1, N);
+		}
+	} // for (i ....width)
 }
 
 static void FastProcessRange(RangeFAST* range)
 {
     const uint8_t* IP, *IPprev;
-	int32_t j, kalign, kextra, align = 1, alignTimes16, minj, maxj, rowstart, k;
+	int32_t j, kalign, kextra, align = 1, minj, maxj, rowstart, k;
     const uint16_t(&FastXFlags)[16] = range->N == 9 ? Fast9Flags : Fast12Flags; // FIXME: needed?
 	uint8_t *strengths, *extra;
 	int32_t stride = range->stride;
@@ -695,10 +725,7 @@ static void FastProcessRange(RangeFAST* range)
 		compv_scalar_t N,
 		compv_scalar_t threshold,
 		uint8_t* strengths,
-		compv_scalar_t* me) = NULL; // FIXME: C++ version
-
-    // FIXME: remove all FastData16 (INTRIN, ASM, C++) and FastData -> Only FastData16Row
-	// FIXME: C++ version doesn't work
+		compv_scalar_t* me) = FastDataRow1_C;
 
     if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData16Row_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
@@ -718,7 +745,6 @@ static void FastProcessRange(RangeFAST* range)
         COMPV_ASSERT(false);
         return;
     }
-	alignTimes16 = align << 4;
 	// Number of pixels to ignore
 	kextra = kalign - (-3 + range->width - 3);
 
@@ -732,14 +758,8 @@ static void FastProcessRange(RangeFAST* range)
 
     // For testing with image "voiture", the first (i,j) to produce an interesting point is (1620, 279)
 	// We should have 64586 non-zero results for SSE and 66958 for AVX2
-
-	// FIXME
-	static uint64_t kaka = 0;
     
     for (j = minj; j < maxj; ++j) {
-		if (j == 279) {
-			int kaka = 0;//FIXME
-		}
 		FastDataRow(IP, IPprev, kalign, (*range->pixels16), range->N, range->threshold, strengths, NULL);
 
 		// remove extra samples
@@ -750,8 +770,6 @@ static void FastProcessRange(RangeFAST* range)
         IP += range->stride;
 		strengths += range->stride;
     } // for (j)
-    
-	//COMPV_DEBUG_INFO("kaka = %llu", kaka);
 }
 
 static COMPV_ERROR_CODE FastProcessRange_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
