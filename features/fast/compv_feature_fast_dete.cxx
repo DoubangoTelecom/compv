@@ -556,7 +556,8 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
     int32_t sum, s;
-	uint8_t temp0, temp1, ddarkers16x1[16], dbrighters16x1[16];
+	int16_t temp0, temp1, ddarkers16x1[16], dbrighters16x1[16]; // using int16_t to avoid clipping
+	uint8_t ddarkers16[16], dbrighters16[16];
 	compv_scalar_t fbrighters1, fdarkers1;
 	void(*FastStrengths1)(
 		COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x1,
@@ -579,11 +580,11 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 		// compare I1 and I9 aka 0 and 8
 		temp0 = IP[pixels16[0]];
 		temp1 = IP[pixels16[8]];
-		ddarkers16x1[0] = CompVMathUtils::clampPixel8(darker - temp0);
-		ddarkers16x1[8] = CompVMathUtils::clampPixel8(darker - temp1);
-		dbrighters16x1[0] = CompVMathUtils::clampPixel8(temp0 - brighter);
-		dbrighters16x1[8] = CompVMathUtils::clampPixel8(temp1 - brighter);
-		sum = ((dbrighters16x1[0] || ddarkers16x1[0]) ? 1 : 0) + ((dbrighters16x1[8] || ddarkers16x1[8]) ? 1 : 0);
+		ddarkers16x1[0] = (darker - temp0);
+		ddarkers16x1[8] = (darker - temp1);
+		dbrighters16x1[0] = (temp0 - brighter);
+		dbrighters16x1[8] = (temp1 - brighter);
+		sum = ((dbrighters16x1[0] > 0 || ddarkers16x1[0] > 0) ? 1 : 0) + ((dbrighters16x1[8] > 0 || ddarkers16x1[8] > 0) ? 1 : 0);
 		if (!sum) {
 			continue;
 		}
@@ -591,122 +592,123 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 		// compare I5 and I13 aka 4 and 12
 		temp0 = IP[pixels16[4]];
 		temp1 = IP[pixels16[12]];
-		ddarkers16x1[4] = CompVMathUtils::clampPixel8(darker - temp0); // I5-darkness
-		ddarkers16x1[12] = CompVMathUtils::clampPixel8(darker - temp1); // I13-darkness
-		dbrighters16x1[4] = CompVMathUtils::clampPixel8(temp0 - brighter); // I5-brightness
-		dbrighters16x1[12] = CompVMathUtils::clampPixel8(temp1 - brighter); // I13-brightness
-		s = ((dbrighters16x1[4] || ddarkers16x1[4]) ? 1 : 0) + ((dbrighters16x1[12] || ddarkers16x1[12]) ? 1 : 0);
+		ddarkers16x1[4] = (darker - temp0); // I5-darkness
+		ddarkers16x1[12] = (darker - temp1); // I13-darkness
+		dbrighters16x1[4] = (temp0 - brighter); // I5-brightness
+		dbrighters16x1[12] = (temp1 - brighter); // I13-brightness
+		s = ((dbrighters16x1[4] > 0 || ddarkers16x1[4] > 0) ? 1 : 0) + ((dbrighters16x1[12] > 0 || ddarkers16x1[12] > 0) ? 1 : 0);
 		if (!s) {
 			continue;
 		}
 		sum += s;
-		
-		/*  Speed-Test-2 */
-		if (N == 12 ? sum >= 3 : sum >= 2) {
-			fdarkers1 = fbrighters1 = 0;			
-
-			// I2 and I10 aka 1 and 9
-			temp0 = IP[pixels16[1]];
-			temp1 = IP[pixels16[9]];
-			ddarkers16x1[1] = CompVMathUtils::clampPixel8(darker - temp0);
-			dbrighters16x1[1] = CompVMathUtils::clampPixel8(temp0 - brighter);
-			ddarkers16x1[9] = CompVMathUtils::clampPixel8(darker - temp1);
-			dbrighters16x1[9] = CompVMathUtils::clampPixel8(temp1 - brighter);
-			if (!(dbrighters16x1[1] || ddarkers16x1[1] || dbrighters16x1[9] || ddarkers16x1[9])) {
-				continue;
-			}
-
-			// I3 and I11 aka 2 and 10
-			temp0 = IP[pixels16[2]];
-			temp1 = IP[pixels16[10]];
-			ddarkers16x1[2] = CompVMathUtils::clampPixel8(darker - temp0);
-			dbrighters16x1[2] = CompVMathUtils::clampPixel8(temp0 - brighter);
-			ddarkers16x1[10] = CompVMathUtils::clampPixel8(darker - temp1);
-			dbrighters16x1[10] = CompVMathUtils::clampPixel8(temp1 - brighter);
-			if (!(dbrighters16x1[2] || ddarkers16x1[2] || dbrighters16x1[10] || ddarkers16x1[10])) {
-				continue;
-			}
-
-			// I4 and I12 aka 3 and 11
-			temp0 = IP[pixels16[3]];
-			temp1 = IP[pixels16[11]];
-			ddarkers16x1[3] = CompVMathUtils::clampPixel8(darker - temp0);
-			dbrighters16x1[3] = CompVMathUtils::clampPixel8(temp0 - brighter);
-			ddarkers16x1[11] = CompVMathUtils::clampPixel8(darker - temp1);
-			dbrighters16x1[11] = CompVMathUtils::clampPixel8(temp1 - brighter);
-			if (!(dbrighters16x1[3] || ddarkers16x1[3] || dbrighters16x1[11] || ddarkers16x1[11])) {
-				continue;
-			}
-
-			// I6 and I14 aka 5 and 13
-			temp0 = IP[pixels16[5]];
-			temp1 = IP[pixels16[13]];
-			ddarkers16x1[5] = CompVMathUtils::clampPixel8(darker - temp0);
-			dbrighters16x1[5] = CompVMathUtils::clampPixel8(temp0 - brighter);
-			ddarkers16x1[13] = CompVMathUtils::clampPixel8(darker - temp1);
-			dbrighters16x1[13] = CompVMathUtils::clampPixel8(temp1 - brighter);
-			if (!(dbrighters16x1[5] || ddarkers16x1[5] || dbrighters16x1[13] || ddarkers16x1[13])) {
-				continue;
-			}
-
-			// I7 and I15 aka 6 and 14
-			temp0 = IP[pixels16[6]];
-			temp1 = IP[pixels16[14]];
-			ddarkers16x1[6] = CompVMathUtils::clampPixel8(darker - temp0);
-			dbrighters16x1[6] = CompVMathUtils::clampPixel8(temp0- brighter);
-			ddarkers16x1[14] = CompVMathUtils::clampPixel8(darker - temp1);
-			dbrighters16x1[14] = CompVMathUtils::clampPixel8(temp1- brighter);
-			if (!(dbrighters16x1[6] || ddarkers16x1[6] || dbrighters16x1[14] || ddarkers16x1[14])) {
-				continue;
-			}
-
-			// I8 and I16 aka 7 and 15
-			temp0 = IP[pixels16[7]];
-			temp1 = IP[pixels16[15]];
-			ddarkers16x1[7] = CompVMathUtils::clampPixel8(darker - temp0);
-			dbrighters16x1[7] = CompVMathUtils::clampPixel8(temp0 - brighter);
-			ddarkers16x1[15] = CompVMathUtils::clampPixel8(darker - temp1);
-			dbrighters16x1[15] = CompVMathUtils::clampPixel8(temp1 - brighter);
-			if (!(dbrighters16x1[7] || ddarkers16x1[7] || dbrighters16x1[15] || ddarkers16x1[15])) {
-				continue;
-			}
-
-			fdarkers1 = (ddarkers16x1[0] ? (1 << 0) : 0);
-			fdarkers1 |= (ddarkers16x1[1] ? (1 << 1) : 0);
-			fdarkers1 |= (ddarkers16x1[2] ? (1 << 2) : 0);
-			fdarkers1 |= (ddarkers16x1[3] ? (1 << 3) : 0);
-			fdarkers1 |= (ddarkers16x1[4] ? (1 << 4) : 0);
-			fdarkers1 |= (ddarkers16x1[5] ? (1 << 5) : 0);
-			fdarkers1 |= (ddarkers16x1[6] ? (1 << 6) : 0);
-			fdarkers1 |= (ddarkers16x1[7] ? (1 << 7) : 0);
-			fdarkers1 |= (ddarkers16x1[8] ? (1 << 8) : 0);
-			fdarkers1 |= (ddarkers16x1[9] ? (1 << 9) : 0);
-			fdarkers1 |= (ddarkers16x1[10] ? (1 << 10) : 0);
-			fdarkers1 |= (ddarkers16x1[11] ? (1 << 11) : 0);
-			fdarkers1 |= (ddarkers16x1[12] ? (1 << 12) : 0);
-			fdarkers1 |= (ddarkers16x1[13] ? (1 << 13) : 0);
-			fdarkers1 |= (ddarkers16x1[14] ? (1 << 14) : 0);
-			fdarkers1 |= (ddarkers16x1[15] ? (1 << 15) : 0);
-
-			fbrighters1 = (dbrighters16x1[0] ? (1 << 0) : 0);
-			fbrighters1 |= (dbrighters16x1[1]? (1 << 1) : 0);
-			fbrighters1 |= (dbrighters16x1[2] ? (1 << 2) : 0);
-			fbrighters1 |= (dbrighters16x1[3] ? (1 << 3) : 0);
-			fbrighters1 |= (dbrighters16x1[4] ? (1 << 4) : 0);
-			fbrighters1 |= (dbrighters16x1[5] ? (1 << 5) : 0);
-			fbrighters1 |= (dbrighters16x1[6] ? (1 << 6) : 0);
-			fbrighters1 |= (dbrighters16x1[7] ? (1 << 7) : 0);
-			fbrighters1 |= (dbrighters16x1[8] ? (1 << 8) : 0);
-			fbrighters1 |= (dbrighters16x1[9] ? (1 << 9) : 0);
-			fbrighters1 |= (dbrighters16x1[10] ? (1 << 10) : 0);
-			fbrighters1 |= (dbrighters16x1[11] ? (1 << 11) : 0);
-			fbrighters1 |= (dbrighters16x1[12] ? (1 << 12) : 0);
-			fbrighters1 |= (dbrighters16x1[13] ? (1 << 13) : 0);
-			fbrighters1 |= (dbrighters16x1[14] ? (1 << 14) : 0);
-			fbrighters1 |= (dbrighters16x1[15] ? (1 << 15) : 0);
-				
-			FastStrengths1(dbrighters16x1, ddarkers16x1, fbrighters1, fdarkers1, strengths1, N);
+		if (N == 12 ? sum < 3 : sum < 2) {
+			continue;
 		}
+			
+		// I2 and I10 aka 1 and 9
+		temp0 = IP[pixels16[1]];
+		temp1 = IP[pixels16[9]];
+		ddarkers16x1[1] = (darker - temp0);
+		dbrighters16x1[1] = (temp0 - brighter);
+		ddarkers16x1[9] = (darker - temp1);
+		dbrighters16x1[9] = (temp1 - brighter);
+		sum = ((dbrighters16x1[1] > 0 || ddarkers16x1[1] > 0) ? 1 : 0) + ((dbrighters16x1[9] > 0 || ddarkers16x1[9] > 0) ? 1 : 0);
+		if (!sum) {
+			continue;
+		}
+
+		// I3 and I11 aka 2 and 10
+		temp0 = IP[pixels16[2]];
+		temp1 = IP[pixels16[10]];
+		ddarkers16x1[2] = (darker - temp0);
+		dbrighters16x1[2] = (temp0 - brighter);
+		ddarkers16x1[10] = (darker - temp1);
+		dbrighters16x1[10] = (temp1 - brighter);
+		s = ((dbrighters16x1[2] > 0 || ddarkers16x1[2] > 0) ? 1 : 0) + ((dbrighters16x1[10] > 0 || ddarkers16x1[10] > 0) ? 1 : 0);
+		if (!s) {
+			continue;
+		}
+		sum += s;
+		if (N == 12 ? sum < 3 : sum < 2) {
+			continue;
+		}
+
+		// I4 and I12 aka 3 and 11
+		temp0 = IP[pixels16[3]];
+		temp1 = IP[pixels16[11]];
+		ddarkers16x1[3] = (darker - temp0);
+		dbrighters16x1[3] = (temp0 - brighter);
+		ddarkers16x1[11] = (darker - temp1);
+		dbrighters16x1[11] = (temp1 - brighter);
+		s = ((dbrighters16x1[3] > 0 || ddarkers16x1[3] > 0) ? 1 : 0) + ((dbrighters16x1[11] > 0 || ddarkers16x1[11] > 0) ? 1 : 0);
+		if (!s) {
+			continue;
+		}
+		sum += s;
+		if (N == 12 ? sum < 3 : sum < 2) {
+			continue;
+		}
+
+		// I6 and I14 aka 5 and 13
+		temp0 = IP[pixels16[5]];
+		temp1 = IP[pixels16[13]];
+		ddarkers16x1[5] = (darker - temp0);
+		dbrighters16x1[5] = (temp0 - brighter);
+		ddarkers16x1[13] = (darker - temp1);
+		dbrighters16x1[13] = (temp1 - brighter);
+		s = ((dbrighters16x1[5] > 0 || ddarkers16x1[5] > 0) ? 1 : 0) + ((dbrighters16x1[13] > 0 || ddarkers16x1[13] > 0) ? 1 : 0);
+		if (!s) {
+			continue;
+		}
+		sum += s;
+		if (N == 12 ? sum < 3 : sum < 2) {
+			continue;
+		}
+
+		// I7 and I15 aka 6 and 14
+		temp0 = IP[pixels16[6]];
+		temp1 = IP[pixels16[14]];
+		ddarkers16x1[6] = (darker - temp0);
+		dbrighters16x1[6] = (temp0- brighter);
+		ddarkers16x1[14] = (darker - temp1);
+		dbrighters16x1[14] = (temp1- brighter);
+		sum = ((dbrighters16x1[6] > 0 || ddarkers16x1[6] > 0) ? 1 : 0) + ((dbrighters16x1[14] > 0 || ddarkers16x1[14] > 0) ? 1 : 0);
+		if (!sum) {
+			continue;
+		}
+
+		// I8 and I16 aka 7 and 15
+		temp0 = IP[pixels16[7]];
+		temp1 = IP[pixels16[15]];
+		ddarkers16x1[7] = (darker - temp0);
+		dbrighters16x1[7] = (temp0 - brighter);
+		ddarkers16x1[15] = (darker - temp1);
+		dbrighters16x1[15] = (temp1 - brighter);
+		s = ((dbrighters16x1[7] > 0 || ddarkers16x1[7] > 0) ? 1 : 0) + ((dbrighters16x1[15] > 0 || ddarkers16x1[15] > 0) ? 1 : 0);
+		if (!s) {
+			continue;
+		}
+		sum += s;
+		if (N == 12 ? sum < 3 : sum < 2) {
+			continue;
+		}
+
+#define DARKERS_SET_AND_CLIP(k) if (ddarkers16x1[k] > 0) fdarkers1 |= (1 << k), ddarkers16[k] = (uint8_t)ddarkers16x1[k]; else ddarkers16[k] = 0;
+		fdarkers1 = 0;
+		DARKERS_SET_AND_CLIP(0); DARKERS_SET_AND_CLIP(1); DARKERS_SET_AND_CLIP(2); DARKERS_SET_AND_CLIP(3);
+		DARKERS_SET_AND_CLIP(4); DARKERS_SET_AND_CLIP(5); DARKERS_SET_AND_CLIP(6); DARKERS_SET_AND_CLIP(7);
+		DARKERS_SET_AND_CLIP(8); DARKERS_SET_AND_CLIP(9); DARKERS_SET_AND_CLIP(10); DARKERS_SET_AND_CLIP(11);
+		DARKERS_SET_AND_CLIP(12); DARKERS_SET_AND_CLIP(13); DARKERS_SET_AND_CLIP(14); DARKERS_SET_AND_CLIP(15);
+
+#define BRIGHTERS_SET_AND_CLIP(k) if (dbrighters16x1[k] > 0) fbrighters1 |= (1 << k), dbrighters16[k] = (uint8_t)dbrighters16x1[k]; else dbrighters16[k] = 0;
+		fbrighters1 = 0;
+		BRIGHTERS_SET_AND_CLIP(0); BRIGHTERS_SET_AND_CLIP(1); BRIGHTERS_SET_AND_CLIP(2); BRIGHTERS_SET_AND_CLIP(3);
+		BRIGHTERS_SET_AND_CLIP(4); BRIGHTERS_SET_AND_CLIP(5); BRIGHTERS_SET_AND_CLIP(6); BRIGHTERS_SET_AND_CLIP(7);
+		BRIGHTERS_SET_AND_CLIP(8); BRIGHTERS_SET_AND_CLIP(9); BRIGHTERS_SET_AND_CLIP(10); BRIGHTERS_SET_AND_CLIP(11);
+		BRIGHTERS_SET_AND_CLIP(12); BRIGHTERS_SET_AND_CLIP(13); BRIGHTERS_SET_AND_CLIP(14); BRIGHTERS_SET_AND_CLIP(15);
+				
+		FastStrengths1(dbrighters16, ddarkers16, fbrighters1, fdarkers1, strengths1, N);
+		
 	} // for (i ....width)
 }
 
