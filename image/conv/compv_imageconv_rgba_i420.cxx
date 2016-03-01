@@ -133,7 +133,7 @@ static void rgbToI420Kernel11_CompY_C(const uint8_t* rgbaPtr, uint8_t* outYPtr, 
 static void rgbaToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXXToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXXToYUV_VCoeffs8)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-    compv_scalar_t i, j, maxI = ((width + 1) & -1), padUV = (stride - maxI) >> 1, padRGBA = ((stride - maxI) + stride) << 2;
+    compv_scalar_t i, j, maxI = ((width + 0) & -1), padUV = (stride - maxI) >> 1, padRGBA = ((stride - maxI) + stride) << 2;
     const int16_t c0u = kXXXXToYUV_UCoeffs8[0], c0v = kXXXXToYUV_VCoeffs8[0];
     const int16_t c1u = kXXXXToYUV_UCoeffs8[1], c1v = kXXXXToYUV_VCoeffs8[1];
     const int16_t c2u = kXXXXToYUV_UCoeffs8[2], c2v = kXXXXToYUV_VCoeffs8[2];
@@ -155,7 +155,7 @@ static void rgbaToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr
 static void rgbToI420Kernel11_CompUV_C(const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXToYUV_VCoeffs8)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-    compv_scalar_t i, j, maxI = ((width + 1) & -1), padUV = (stride - maxI) >> 1, padRGBA = ((stride - maxI) + stride) * 3;
+    compv_scalar_t i, j, maxI = ((width + 0) & -1), padUV = (stride - maxI) >> 1, padRGBA = ((stride - maxI) + stride) * 3;
     const int16_t c0u = kXXXToYUV_UCoeffs8[0], c0v = kXXXToYUV_VCoeffs8[0];
     const int16_t c1u = kXXXToYUV_UCoeffs8[1], c1v = kXXXToYUV_VCoeffs8[1];
     const int16_t c2u = kXXXToYUV_UCoeffs8[2], c2v = kXXXToYUV_VCoeffs8[2];
@@ -223,8 +223,8 @@ static COMPV_ERROR_CODE __xxxToI420(const CompVObjWrapper<CompVImage* >& rgb, Co
     int width = rgb->getWidth();
     int stride = rgb->getStride();
     uint8_t* outYPtr = (uint8_t*)(*i420)->getDataPtr();
-    uint8_t* outUPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? 0 : outYPtr + (height * stride);
-    uint8_t* outVPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? 0 : outUPtr + ((height * stride) >> 2);
+    uint8_t* outUPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? NULL : outYPtr + (height * stride);
+	uint8_t* outVPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? NULL : outUPtr + ((height * stride) >> 2);
     CompVObjWrapper<CompVThreadDispatcher* >&threadDip = CompVEngine::getThreadDispatcher();
     int threadsCount = 1;
 
@@ -340,8 +340,8 @@ static COMPV_ERROR_CODE __xxxxToI420(const CompVObjWrapper<CompVImage* >& rgba, 
     int width = rgba->getWidth();
     int stride = rgba->getStride();
     uint8_t* outYPtr = (uint8_t*)(*i420)->getDataPtr();
-    uint8_t* outUPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? 0 : outYPtr + (height * stride);
-    uint8_t* outVPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? 0 : outUPtr + ((height * stride) >> 2);
+	uint8_t* outUPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? NULL : outYPtr + (height * stride);
+	uint8_t* outVPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? NULL : outUPtr + ((height * stride) >> 2);
     int strideRgbaBytes = (stride << 2); // #20 not SSE aligned but (20*4)=#80 is aligned
     int widthRgbaBytes = (width << 2);
     CompVObjWrapper<CompVThreadDispatcher* >&threadDip = CompVEngine::getThreadDispatcher();

@@ -21,13 +21,13 @@ using namespace compv;
 #define loopCount			1
 #define MD5_PRINT			1
 #define FORMAT_SRC			FORMAT_BGR // must be rgb or rgba family
-#define FORMAT_DST			FORMAT_GRAYSCALE // any format
+#define FORMAT_DST			FORMAT_I420 // any format
 #define STRIDE_ALIGN		true // false to test CompVImage::wrap and CompVImage::copy
 
 static void rgbToSrc(const CompVObjWrapper<CompVImage *>& jpegImage, void** srcPtr, int &height, int &width, int &stride)
 {
-    // FIXME: Doesn't work WIDTH_OFFSET = -1, regression introduced when added border to images
-#define WIDTH_OFFSET	2 // amount of pixels to remove to width to make it wired (not standard)
+    // TODO(dmi): WIDTH_OFFSET -1 doesn't work or YUV player is buggy -> https://github.com/DoubangoTelecom/compv/issues/49
+#define WIDTH_OFFSET	-2 // amount of pixels to remove to width to make it wired (not standard)
 #define HEIGHT_OFFSET	0 // amount of pixels to remove to height to make it wired (not standard)	
     int jpegImageStride = jpegImage->getStride();
     width = jpegImage->getWidth() + WIDTH_OFFSET;
