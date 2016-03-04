@@ -840,7 +840,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 				jz .EndOfDarkersHzMinHigh
 					; Compute minimum hz (high)
 					shr rax, 16 ; rax = r1 = r0 >> 16
-					COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Brighters, %1, %2, ret_in_rbx, xmm5, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
+					COMPV_FEATURE_FAST_DETE_HORIZ_MIN_AVX2 Darkers, %1, %2, ret_in_rbx, xmm5, xmm0, xmm1, xmm3 ; This macro overrides rax, rsi, rdi and set the result in rcx or rbx
 				.EndOfDarkersHzMinHigh
 		.EndOfDarkers
 		
