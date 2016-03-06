@@ -25,8 +25,14 @@
 
 #include <string>
 
-#if defined(COMPV_ARCH_X86_ASM)
+#if COMPV_ARCH_X86 && COMPV_ASM
 extern "C" long long compv_utils_rdtsc_x86_asm();
+#endif
+
+#if COMPV_OS_APPLE || COMPV_OS_BSD || defined(HAVE_SYS_SYSCTL_H)
+#   include <sys/sysctl.h>
+#elif COMPV_OS_LINUX || defined(HAVE_LINUX_SYSCTL_H)
+#   include <linux/sysctl.h>
 #endif
 
 #if defined(_OPENMP) || defined(_OPENMP) || defined(HAVE_OMP_H)
@@ -308,8 +314,8 @@ COMPV_ERROR_CODE CompVCpu::init()
 	s_iCores = SystemInfo.dwNumberOfProcessors;
 #elif defined(_OPENMP) || defined(_OPENMP) || defined(HAVE_OMP_H)
 	s_iCores = omp_get_num_procs();
-#elif defined(__APPLE__)
-	size_t len = sizeof(g_cores);
+#elif COMPV_OS_APPLE
+	size_t len = sizeof(s_iCores);
 	int mib[2] = { CTL_HW, HW_NCPU };
 	sysctl(mib, 2, &s_iCores, &len, NULL, 0);
 #elif defined(__GNUC__)

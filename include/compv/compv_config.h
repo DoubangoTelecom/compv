@@ -188,11 +188,11 @@
 
 
 // ARCH: All X86
-#if defined(COMPV_ARCH_X64_AMD64) || defined(COMPV_ARCH_X64_INTEL_IA64) || defined(COMPV_ARCH_X86_INTEL)
+#if defined(COMPV_ARCH_X64_AMD64) || defined(COMPV_ARCH_X64_INTEL_IA64) || defined(COMPV_ARCH_X86_INTEL) || defined(__i386__)
 #	define COMPV_ARCH_X86					1
 #endif
 // ARCH: All X64
-#if defined(COMPV_ARCH_X64_AMD64) || defined(COMPV_ARCH_X64_INTEL_IA64)
+#if defined(COMPV_ARCH_X64_AMD64) || defined(COMPV_ARCH_X64_INTEL_IA64) || defined (__X86_64__)
 #	define COMPV_ARCH_X64					1
 #endif
 
@@ -224,14 +224,12 @@
 
 #if COMPV_OS_WINDOWS && defined(COMPV_EXPORTS)
 # 	define COMPV_API		__declspec(dllexport)
-# 	define COMPV_GEXTERN	__declspec(dllexport)
 #elif COMPV_OS_WINDOWS /*&& defined(COMPV_IMPORTS)*/
 # 	define COMPV_API		__declspec(dllimport)
-# 	define COMPV_GEXTERN	__declspec(dllimport)
 #else
 #	define COMPV_API
-#	define COMPV_GEXTERN	extern
 #endif
+
 
 #ifdef __GNUC__
 #	define compv_atomic_inc(_ptr_) __sync_fetch_and_add((_ptr_), 1)
@@ -266,6 +264,7 @@
 #	define COMPV_NAMESPACE_END() }
 #endif
 
+
 #if defined(_MSC_VER)
 #	define _CRT_SECURE_NO_WARNINGS
 #	define COMPV_SHOULD_INLINE	__inline
@@ -284,15 +283,15 @@
 #	define COMPV_SHOULD_INLINE	inline
 #	define COMPV_ALIGN(x)		__attribute__((aligned(x)))
 #	define COMPV_NAKED			__attribute__((naked))
-#	define COMPV_INLINE			_inline
-#	if COMPV_CPU_TYPE_X86
+#	define COMPV_INLINE			inline
+#	if COMPV_ARCH_X86
 #		include <x86intrin.h>
 #	endif /* HL_CPU_TYPE_X86 */
 #else
 #	define COMPV_ALWAYS_INLINE	inline
 #	define COMPV_SHOULD_INLINE	inline
 #	define COMPV_INLINE			inline
-#	define COMPV_ALIGN(x)
+#	define COMPV_ALIGN(x)		__attribute__((aligned(x)))
 #endif
 
 // SIMD Alignment
@@ -333,6 +332,10 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
+
+#include <string>
+#include <map>
+#include <cmath>
 
 // Must be at the bottom to make sure we can redifine all macros
 #if HAVE_CONFIG_H

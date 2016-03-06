@@ -24,8 +24,6 @@
 #include "compv/compv_common.h"
 #include "compv/compv_obj.h"
 
-#include <string>
-
 #define COMPV_MD5_DIGEST_SIZE		16
 #define COMPV_MD5_BLOCK_SIZE		64
 #define COMPV_MD5_STRING_SIZE		(COMPV_MD5_DIGEST_SIZE << 1)

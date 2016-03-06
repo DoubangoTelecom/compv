@@ -482,4 +482,4 @@ void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdark
 
 COMPV_NAMESPACE_END()
 
-#endif defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC)
+#endif /* defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC) */

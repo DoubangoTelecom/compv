@@ -61,11 +61,11 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     // Make sure sizeof(compv_scalar_t) is correct
 #if defined(COMPV_ASM) || defined(COMPV_INTRINSIC)
     if (sizeof(compv_scalar_t) != sizeof(void*)) {
-        COMPV_DEBUG_ERROR("sizeof(compv_scalar_t)= #%d not equal to sizeof(void*)= #%d", sizeof(compv_scalar_t), sizeof(void*));
+        COMPV_DEBUG_ERROR("sizeof(compv_scalar_t)= #%lu not equal to sizeof(void*)= #%lu", sizeof(compv_scalar_t), sizeof(void*));
         return COMPV_ERROR_CODE_E_SYSTEM;
     }
 #endif
-    COMPV_DEBUG_INFO("sizeof(compv_scalar_t)= #%d", sizeof(compv_scalar_t));
+    COMPV_DEBUG_INFO("sizeof(compv_scalar_t)= #%lu", sizeof(compv_scalar_t));
 
     // endianness
     // https://developer.apple.com/library/mac/documentation/Darwin/Conceptual/64bitPorting/MakingCode64-BitClean/MakingCode64-BitClean.html

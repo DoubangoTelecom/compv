@@ -50,7 +50,7 @@ COMPV_ERROR_CODE CompVBoxInterestPoint::sort(bool(*CompVBoxPredicateCompare)(con
 COMPV_ERROR_CODE CompVBoxInterestPoint::newObj(CompVObjWrapper<CompVBoxInterestPoint* >* box, size_t nCapacity /*= 0*/, bool bLockable /*= false*/)
 {
 	if (sizeof(CompVBoxInterestPoint) > kCompVBoxItemMaxSize) {
-		COMPV_DEBUG_ERROR("Boxing is only allowed on object with size < %u, you're boxing an object with size = ", (unsigned)kCompVBoxItemMaxSize, sizeof(CompVBoxInterestPoint));
+		COMPV_DEBUG_ERROR("Boxing is only allowed on object with size < %u, you're boxing an object with size = %lu", (unsigned)kCompVBoxItemMaxSize, sizeof(CompVBoxInterestPoint));
 		return COMPV_ERROR_CODE_E_INVALID_CALL;
 	}
 	COMPV_CHECK_EXP_RETURN(!box, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

@@ -126,6 +126,9 @@ static const float atan2_p7 = -0.04432655554792128f*(float)(180 / COMPV_MATH_PI)
 
 float fastAtan2(float y, float x)
 {
+#if !defined(DBL_EPSILON)
+    #define DBL_EPSILON 2.2204460492503131E-16
+#endif
     float ax = std::abs(x), ay = std::abs(y);
     float a, c, c2;
     if (ax >= ay) {

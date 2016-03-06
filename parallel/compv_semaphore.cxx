@@ -85,9 +85,9 @@ CompVSemaphore::CompVSemaphore(int initialVal /*= 0*/)
 #else
     m_pHandle = CompVMem::calloc(1, sizeof(SEMAPHORE_S));
 #if COMPV_USE_NAMED_SEM
-    named_sem_t * nsem = (named_sem_t*)handle;
+    named_sem_t * nsem = (named_sem_t*)m_pHandle;
     snprintf(nsem->name, (sizeof(nsem->name) / sizeof(nsem->name[0])) - 1, "/sem/%llu/%d.", CompVTime::getEpochMillis(), rand() ^ rand());
-    if ((nsem->sem = sem_open(nsem->name, O_CREAT /*| O_EXCL*/, S_IRUSR | S_IWUSR, initial_val)) == SEM_FAILED) {
+    if ((nsem->sem = sem_open(nsem->name, O_CREAT /*| O_EXCL*/, S_IRUSR | S_IWUSR, initialVal)) == SEM_FAILED) {
 #else
     if (sem_init((SEMAPHORE_T)m_pHandle, 0, initialVal)) {
 #endif

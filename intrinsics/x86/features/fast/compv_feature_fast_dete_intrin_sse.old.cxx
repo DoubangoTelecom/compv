@@ -43,8 +43,6 @@ compv_scalar_t FastData_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE) c
     int16_t brighter = (int16_t)(dataPtr[0] + threshold);
     int16_t darker = (int16_t)(dataPtr[0] - threshold);
 
-    bool popcntHard = CompVCpu::isSupported(kCpuFlagPOPCNT);
-
     // compare I1 and I7
     temp16[0] = dataPtr[pixels16[0]];
     temp16[8] = dataPtr[pixels16[8]];
@@ -118,7 +116,6 @@ compv_scalar_t FastData16_Intrin_SSE2(const uint8_t* dataPtr, COMPV_ALIGNED(SSE)
 {
     compv_scalar_t r = 0, sum, sumd, sumb, d0, d1, b0, b1;
     __m128i xmm0, xmm1, xmmBrighter, xmmDarker, xmmThreshold, xmmZeros;
-    bool popcntHard = CompVCpu::isSupported(kCpuFlagPOPCNT);
 
     // ddarkers16x16 and ddarkers16x16 are int16 arrays but we want to use there memory to store uint8[] temp variables until the end of the process then we convert them
     // These arrays are int16 to make sure the CPP code won't need to sature all operations

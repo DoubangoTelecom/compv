@@ -25,8 +25,6 @@
 #include "compv/compv_buffer.h"
 #include "compv/compv_common.h"
 
-#include <string>
-
 COMPV_NAMESPACE_BEGIN()
 
 class COMPV_API CompVFileUtils

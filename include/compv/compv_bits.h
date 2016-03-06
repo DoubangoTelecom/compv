@@ -25,7 +25,7 @@
 
 COMPV_EXTERNC_BEGIN()
 
-COMPV_GEXTERN compv::compv_scalar_t kPopcnt256[];
+extern COMPV_API compv::compv_scalar_t kPopcnt256[];
 
 COMPV_EXTERNC_END()
 

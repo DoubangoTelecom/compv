@@ -59,7 +59,7 @@ COMPV_ERROR_CODE CompVBuffer::copyData(const void* pcPtr, int32_t size)
         }
     }
     else {
-        COMPV_DEBUG_FATAL("Failed to allocate buffer with size = %lu", size);
+        COMPV_DEBUG_FATAL("Failed to allocate buffer with size = %u", (unsigned)size);
         return COMPV_ERROR_CODE_E_OUT_OF_MEMORY;
     }
     return COMPV_ERROR_CODE_S_OK;

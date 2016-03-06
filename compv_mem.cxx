@@ -20,6 +20,7 @@
 #include "compv/compv_mem.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
+#include "compv/compv_mathutils.h"
 
 #include "compv/intrinsics/x86/compv_mem_intrin_sse.h"
 #include "compv/intrinsics/x86/compv_mem_intrin_avx.h"
@@ -271,8 +272,8 @@ void* CompVMem::mallocAligned(size_t size, int alignment/*= CompVMem::getBestAli
     pMem = _aligned_malloc(size, alignment);
 #else
     pMem = ::malloc(size + alignment);
-    if (ret) {
-        long pad = ((~(long)ret) % alignment) + 1;
+    if (pMem) {
+        long pad = ((~(long)pMem) % alignment) + 1;
         pMem = ((uint8_t*)pMem) + pad; // pad
         ((uint8_t*)pMem)[-1] = (uint8_t)pad; // store the pad for later use
     }
@@ -289,7 +290,7 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem
 {
 #if COMPV_MEM_CHECK
     if (ptr && !isSpecial(ptr)) {
-        COMPV_DEBUG_FATAL("Using reallocAligned on no-special address: %x", (uintptr_t)ptr);
+        COMPV_DEBUG_FATAL("Using reallocAligned on no-special address: %lx", (uintptr_t)ptr);
         return NULL;
     }
 #endif
@@ -310,7 +311,7 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem
 #	if COMPV_MEM_CHECK
         std::map<uintptr_t, compv_special_mem_t >::iterator it = CompVMem::s_Specials.find((uintptr_t)ptr);
         COMPV_ASSERT(it != CompVMem::s_Specials.end());
-        memcpy(pMem, ptr, min(it->second.size, size));
+        memcpy(pMem, ptr, COMPV_MATH_MIN(it->second.size, size));
 #	else
 		COMPV_DEBUG_ERROR("Data lost");
 #	endif
@@ -338,7 +339,7 @@ void CompVMem::freeAligned(void** ptr)
         void* ptr_ = *ptr;
 #if COMPV_MEM_CHECK
         if (!isSpecial(ptr_)) {
-            COMPV_DEBUG_FATAL("Using freeAligned on no-special address: %x", (uintptr_t)ptr_);
+            COMPV_DEBUG_FATAL("Using freeAligned on no-special address: %lx", (uintptr_t)ptr_);
         }
 		else {
 			CompVMem::s_Specials.erase((uintptr_t)ptr_);

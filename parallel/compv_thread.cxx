@@ -23,7 +23,7 @@
 #include "compv/compv_mem.h"
 #include "compv/compv_debug.h"
 
-#if defined(COMPV_ARCH_X86)
+#if COMPV_ARCH_X86 && COMPV_ASM
 extern "C" int32_t compv_utils_thread_get_core_id_x86_asm();
 #endif
 
@@ -51,13 +51,21 @@ CompVThread::CompVThread(void *(COMPV_STDCALL *start) (void *), void *arg_ /*= N
     COMPV_ASSERT(pthread_create((pthread_t*)m_pHandle, 0, start, arg) == 0);
 #endif
     COMPV_ASSERT(m_pHandle != NULL);
-    m_Id = getId();
+    
+    if (m_pHandle) {
+#if COMPV_OS_WINDOWS
+        m_Id = GetThreadId((HANDLE)m_pHandle);
+#else
+        pthread_t* self = ((pthread_t*)m_pHandle);
+        m_Id = *self;
+#endif
+    }
 }
 
 CompVThread::~CompVThread()
 {
     join();
-    COMPV_DEBUG_INFO("***Thread with id=%ld destroyed***", m_Id);
+    COMPV_DEBUG_INFO("***Thread with id=%ld destroyed***", (long)m_Id);
 }
 
 void CompVThread::sleep(uint64_t ms)
@@ -112,18 +120,7 @@ bail:
 
 compv_thread_id_t CompVThread::getId()
 {
-    if (!m_pHandle) {
-        COMPV_DEBUG_ERROR("Invalid handle");
-        return 0;
-    }
-#if COMPV_OS_WINDOWS
-    return GetThreadId((HANDLE)m_pHandle);
-#else
-    pthread_id_np_t tid;
-    pthread_t* self = ((pthread_t*)m_pHandle);
-    pthread_getunique_np(*self, &tid);
-    return tid;
-#endif
+    return m_Id;
 }
 
 COMPV_ERROR_CODE CompVThread::setAffinity(compv_core_id_t coreId)
@@ -177,7 +174,7 @@ COMPV_ERROR_CODE CompVThread::join()
         return COMPV_ERROR_CODE_S_OK;
     }
 
-    COMPV_DEBUG_INFO("Thread with id=%ld will join", m_Id); // debug message to track deadlocks
+    COMPV_DEBUG_INFO("Thread with id=%ld will join", (long)m_Id); // debug message to track deadlocks
 
 #if COMPV_OS_WINDOWS
 #	if COMPV_OS_WINDOWS_RT
@@ -199,21 +196,14 @@ COMPV_ERROR_CODE CompVThread::join()
 #endif
 
 bail:
-    COMPV_DEBUG_INFO("Thread with id=%ld joined", m_Id);
+    COMPV_DEBUG_INFO("Thread with id=%ld joined", (long)m_Id);
     return err;
 }
 
 COMPV_ERROR_CODE CompVThread::setPriorityCurrent(int32_t priority)
 {
-#if COMPV_OS_WINDOWS
     COMPV_DEBUG_ERROR("Not implemented");
     COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
-#else
-    pthread_t thread = pthread_self();
-    if (hl_thread_set_priority(&thread, priority) != 0) {
-        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_SYSTEM);
-    }
-#endif
     return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -222,10 +212,7 @@ compv_thread_id_t CompVThread::getIdCurrent()
 #if COMPV_OS_WINDOWS
     return GetCurrentThreadId();
 #else
-    pthread_id_np_t tid;
-    pthread_t self = pthread_self();
-    pthread_getunique_np(&self, &tid);
-    return tid;
+    return pthread_self();
 #endif
 }
 
@@ -246,7 +233,7 @@ compv_core_id_t CompVThread::getCoreId()
     PROCESSOR_NUMBER ProcNumber;
     GetCurrentProcessorNumberEx(&ProcNumber);
     return  ProcNumber.Number;
-#elif defined(COMPV_ARCH_X86_ASM)
+#elif COMPV_ARCH_X86 && COMPV_ASM
     return compv_utils_thread_get_core_id_x86_asm();
 #else
     int cpuId = sched_getcpu();

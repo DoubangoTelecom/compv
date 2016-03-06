@@ -141,7 +141,7 @@ public:
 		}
 	}
 	
-	virtual COMPV_ERROR_CODE CompVBox<T>::sort(bool(*CompVBoxPredicateCompare)(const T*, const T*))
+	virtual COMPV_ERROR_CODE sort(bool(*CompVBoxPredicateCompare)(const T*, const T*))
 	{
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Should be multithreaded. See "CompVBoxInterestPoint::sort" as reference
 		COMPV_CHECK_EXP_RETURN(!CompVBoxPredicateCompare, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -165,7 +165,7 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVBox<T >* >* box, size_t nCapacity = 0, bool bLockable = false)
 	{
 		if (sizeof(T) > kCompVBoxItemMaxSize) {
-			COMPV_DEBUG_ERROR("Boxing is only allowed on object with size < %u, you're boxing an object with size = ", (unsigned)kCompVBoxItemMaxSize, sizeof(T));
+			COMPV_DEBUG_ERROR("Boxing is only allowed on object with size < %u, you're boxing an object with size = %u", (unsigned)kCompVBoxItemMaxSize, (unsigned)sizeof(T));
 			return COMPV_ERROR_CODE_E_INVALID_CALL;
 		}
 		COMPV_CHECK_EXP_RETURN(!box, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -209,7 +209,6 @@ private:
 	}
 
 	// https://en.wikipedia.org/wiki/Bubble_sort
-	template<class T>
 	static COMPV_ERROR_CODE sort_bubble(CompVBox<T>* self, bool(*CompVBoxPredicateCompare)(const T*, const T*))
 	{
 		// This is a private function, up to the caller to check imput parameters and m_nSize
@@ -220,7 +219,7 @@ private:
 			COMPV_DEBUG_ERROR("Invalid compare function");
 			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		}
-		size_t i = 0, j, size_minus1 = self->size() - 1;
+		size_t j, size_minus1 = self->size() - 1;
 		T *a, *b, c;
 		bool swapped;
 
@@ -238,7 +237,6 @@ private:
 	}
 
 	// https://en.wikipedia.org/wiki/Quicksort
-	template<class T>
 	static COMPV_INLINE void sort_quick(CompVBox<T>* self, bool(*CompVBoxPredicateCompare)(const T*, const T*), intptr_t left, intptr_t right)
 	{
 		// This is a private function, up to the caller to check input params

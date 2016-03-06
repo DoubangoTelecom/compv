@@ -24,8 +24,6 @@
 #include "compv/compv_common.h"
 #include "compv/compv_obj.h"
 
-#include <map>
-
 COMPV_NAMESPACE_BEGIN()
 
 enum {

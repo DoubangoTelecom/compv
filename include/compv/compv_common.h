@@ -91,7 +91,20 @@ COMPV_NAMESPACE_BEGIN()
 
 #define COMPV_DEFAULT_ARG(arg_, val_) arg_
 
-#define COMPV_IS_POW2(x) (((x) != 0) && !((x) & ((x) - 1))) 
+#define COMPV_IS_POW2(x) (((x) != 0) && !((x) & ((x) - 1)))
+
+#if defined(_MSC_VER)
+#	define snprintf		_snprintf
+#	define vsnprintf	_vsnprintf
+#	define strdup		_strdup
+#	define stricmp		_stricmp
+#	define strnicmp		_strnicmp
+#else
+#	if !HAVE_STRNICMP && !HAVE_STRICMP
+#	define stricmp		strcasecmp
+#	define strnicmp		strncasecmp
+#	endif
+#endif
 
 /*******************************************************/
 /* MACRO for shuffle parameter for _mm_shuffle_ps().   */
@@ -170,7 +183,7 @@ COMPV_ERROR_CODE;
 #define COMPV_ERROR_CODE_IS_FATAL(code_) ((code_) >= kErrorCodeFatalStart)
 
 // In COMPV_CHECK_HR(errcode) When (errcode) is a function it will be executed twice when used in "COMPV_DEBUG_ERROR(errcode)" and "If(errcode)"
-COMPV_GEXTERN const char* CompVGetErrorString(COMPV_NAMESPACE::COMPV_ERROR_CODE code);
+extern COMPV_API const char* CompVGetErrorString(COMPV_NAMESPACE::COMPV_ERROR_CODE code);
 #define COMPV_CHECK_CODE_BAIL(errcode) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", CompVGetErrorString(__code__)); goto bail; } } while(0)
 #define COMPV_CHECK_CODE_RETURN(errcode) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", CompVGetErrorString(__code__)); return __code__; } } while(0)
 #define COMPV_CHECK_CODE_ASSERT(errcode) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); COMPV_ASSERT(COMPV_ERROR_CODE_IS_OK(__code__)); } while(0)
@@ -284,18 +297,24 @@ typedef struct _CompVInterestPoint {
 	float orient; /**< angle in degree ([0-360]) */
 	int32_t level; /**< pyramid level (when image is scaled, level0 is the first one) */
 	float size; /**< patch size (e.g. BRIEF patch size-circle diameter-) */
+
+protected:
+    COMPV_INLINE void init(int32_t x_, int32_t y_, float strength_ = -1.f, float orient_ = -1.f, int32_t level_ = 0, float size_ = 0.f, float fex_ = 0.f, float fey_ = 0.f) {
+        x = x_;
+        y = y_;
+        strength = strength_;
+        orient = orient_;
+        level = level_;
+        size = size_;
+        fex = fex_;
+        fey = fey_;
+    }
 public:
-	_CompVInterestPoint(): _CompVInterestPoint(0, 0){
+	_CompVInterestPoint(){
+        init(0,0);
 	}
 	_CompVInterestPoint(int32_t x_, int32_t y_, float strength_ = -1.f, float orient_ = -1.f, int32_t level_ = 0, float size_ = 0.f, float fex_ = 0.f, float fey_ = 0.f) {
-		x = x_;
-		y = y_;
-		strength = strength_;
-		orient = orient_;
-		level = level_;
-		size = size_;
-		fex = fex_;
-		fey = fey_;
+        init(x_, y_, strength_, orient_, level_, size_, fex_, fey_);
 	}
 	COMPV_INLINE void setXYf(float x_, float y_) {
 		x = (int32_t)round(x_), fex = (x_ - x);

@@ -104,7 +104,6 @@ std::string CompVFileUtils::getExt(const char* pcPath)
 
 _COMPV_IMAGE_FORMAT CompVFileUtils::getImageFormat(const char* pcPath)
 {
-    _COMPV_IMAGE_FORMAT format_ = COMPV_IMAGE_FORMAT_NONE;
     std::string ext_ = CompVFileUtils::getExt(pcPath); // UpperCase
     if (ext_ == "JPEG" || ext_ == "JPG" || ext_ == "JPE" || ext_ == "JFIF" || ext_ == "JIF") {
         return COMPV_IMAGE_FORMAT_JPEG;
@@ -138,13 +137,13 @@ COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVObjWrapper<CompVB
         }
         mem_ = CompVMem::malloc(size_);
         if (!mem_) {
-            COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Failed to alloc mem with size = %lu", size_);
+            COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Failed to alloc mem with size = %u", (unsigned)size_);
             fclose(file_);
             return COMPV_ERROR_CODE_E_OUT_OF_MEMORY;
         }
         size_t read_;
         if (size_ != (read_ = fread(mem_, 1, size_, file_))) {
-            COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "fread(%s) returned %lu instead of %lu", pcPath, read_, size_);
+            COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "fread(%s) returned %lu instead of %u", pcPath, read_, (unsigned)size_);
             fclose(file_);
             CompVMem::free(&mem_);
             return COMPV_ERROR_CODE_E_FAILED_TO_READ_FILE;

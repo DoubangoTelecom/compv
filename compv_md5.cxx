@@ -159,7 +159,7 @@ COMPV_ERROR_CODE CompVMd5::final(compv_md5digest_t digest)
     return COMPV_ERROR_CODE_S_OK;
 }
 
-/* The four core functions - F1 is optimized somewhat * /
+/* The four core functions - F1 is optimized somewhat */
 
 /* #define F1(x, y, z) (x & y | ~x & z) */
 #define F1(x, y, z) (z ^ (x & (y ^ z)))

@@ -36,7 +36,7 @@ typedef unsigned long compv_thread_id_t;
 #else
 #	include <pthread.h>
 #	include <sched.h>
-typedef pthread_id_np_t compv_thread_id_t;
+typedef pthread_t compv_thread_id_t;
 #	define COMPV_THREAD_PRIORITY_LOW					sched_get_priority_min(SCHED_OTHER)
 #	define COMPV_THREAD_PRIORITY_TIME_CRITICAL			sched_get_priority_max(SCHED_OTHER)
 #	define COMPV_THREAD_PRIORITY_MEDIUM					((COMPV_THREAD_PRIORITY_TIME_CRITICAL - COMPV_THREAD_PRIORITY_LOW) >> 1)

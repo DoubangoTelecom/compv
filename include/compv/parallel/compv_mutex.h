@@ -36,6 +36,8 @@ public:
 	
 	COMPV_ERROR_CODE lock();
 	COMPV_ERROR_CODE unlock();
+    
+    COMPV_INLINE const void* handle() { return m_pHandle; } // "'pthread_mutex_t*' on Linux and 'HANDLE' on Windows"
 
 	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVMutex*>* mutex, bool recursive = true);
 

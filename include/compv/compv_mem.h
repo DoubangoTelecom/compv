@@ -23,8 +23,6 @@
 #include "compv/compv_config.h"
 #include "compv/compv_debug.h"
 
-#include <map>
-
 COMPV_NAMESPACE_BEGIN()
 
 typedef struct compv_special_mem_s {

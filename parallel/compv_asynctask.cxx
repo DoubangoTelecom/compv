@@ -153,7 +153,7 @@ COMPV_ERROR_CODE CompVAsyncTask::tokenSetParams2(compv_asynctoken_id_t token_id,
 
     compv_asynctoken_xt* pToken = &tokens[token_id];
     if (pToken->bExecuting) {
-        COMPV_DEBUG_ERROR("Token wit id = %d already executing", token_id);
+        COMPV_DEBUG_ERROR("Token wit id = %llu already executing", token_id);
         return COMPV_ERROR_CODE_E_INVALID_STATE;
     }
     pToken->fFunc = f_func;
@@ -202,7 +202,7 @@ COMPV_ERROR_CODE CompVAsyncTask::execute2(compv_asynctoken_id_t i_token, compv_a
 
     compv_asynctoken_xt* pToken = &tokens[i_token];
     if (pToken->bExecuting || pToken->bExecute) {
-        COMPV_DEBUG_ERROR("Token with id = %d already executing or scheduled", i_token);
+        COMPV_DEBUG_ERROR("Token with id = %llu already executing or scheduled", i_token);
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     }
     if (!pToken->bTaken) {
@@ -253,7 +253,7 @@ COMPV_ERROR_CODE CompVAsyncTask::wait(compv_asynctoken_id_t token_id, uint64_t u
 #endif
         }
         if ((pToken->bExecuting || pToken->bExecute)) {
-            COMPV_DEBUG_WARN("Async token with id = %d timedout", token_id);
+            COMPV_DEBUG_WARN("Async token with id = %llu timedout", token_id);
             return COMPV_ERROR_CODE_E_TIMEDOUT;
         }
         // uTimeSchedExecStop was computed in Run() bu we update it here to have more accurate value.
@@ -317,7 +317,7 @@ void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
 #endif
 	
 
-	COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=%d, threadId:%d, kThreadSetAffinity:%s) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), CompVThread::getIdCurrent(), kThreadSetAffinity ? "true" : "false");
+	COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=%d, threadId:%ld, kThreadSetAffinity:%s) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), (long)CompVThread::getIdCurrent(), kThreadSetAffinity ? "true" : "false");
 
     while (Self_->m_bStarted) {
         COMPV_CHECK_CODE_BAIL(err_ = Self_->m_SemRun->decrement());
@@ -340,7 +340,7 @@ void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
     }
 
 bail:
-    COMPV_DEBUG_INFO("CompVAsyncTask::run(threadId:%d) - EXIT", CompVThread::getIdCurrent());
+    COMPV_DEBUG_INFO("CompVAsyncTask::run(threadId:%ld) - EXIT", (long)CompVThread::getIdCurrent());
     return NULL;
 }
 

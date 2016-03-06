@@ -34,7 +34,6 @@ COMPV_NAMESPACE_BEGIN()
 static const size_t kCompVListIndexInvalid = (size_t)-1;
 static const size_t kCompVListIndexSize = sizeof(size_t);
 static const size_t kCompVListHeaderSize = /*index*/kCompVListIndexSize + /*next_index*/kCompVListIndexSize;
-static const size_t kCompVListPtrSize = sizeof(uintptr_t);
 static const size_t kCompVListMemGrowth = 1000 << 10; // 1MB
 
 #define COMPVLIST_PITEM(iIndex)							(void*)(((uint8_t*)(m_pMem)) + iIndex)

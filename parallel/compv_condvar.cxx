@@ -1,4 +1,5 @@
 /* Copyright (C) 2016 Doubango Telecom <https://www.doubango.org>
+* Copyright (C) 2016 mamadou DIOP
 *
 * This file is part of Open Source ComputerVision (a.k.a CompV) project.
 * Source code hosted at https://github.com/DoubangoTelecom/compv
@@ -42,7 +43,7 @@ typedef CONDWAIT_S* CONDWAIT_T;
 COMPV_NAMESPACE_BEGIN()
 
 typedef struct condvar_s {
-    void* pcond; /**< Pthread handle pointing to the internal condwait object. */
+    CONDWAIT_T pcond; /**< Pthread handle pointing to the internal condwait object. */
 #if !defined(COMPV_OS_WINDOWS)
     CompVObjWrapper<CompVMutex*> mutex;  /**< Locker. */
 #endif
@@ -194,7 +195,7 @@ COMPV_ERROR_CODE CompVCondvar::waitWithoutTimeout()
 #else
     if (condwait && condwait->mutex) {
         condwait->mutex->lock();
-        if ((ret = pthread_cond_wait(condwait->pcond, (pthread_mutex_t*)condwait->mutex))) {
+        if ((ret = pthread_cond_wait(condwait->pcond, (pthread_mutex_t*)condwait->mutex->handle()))) {
             COMPV_DEBUG_ERROR("pthread_cond_wait function failed: %d", ret);
         }
         condwait->mutex->unlock();
@@ -232,7 +233,7 @@ COMPV_ERROR_CODE CompVCondvar::waitWithTimeout(uint64_t millis)
     if (condwait && condwait->mutex) {
         struct timespec   ts = { 0, 0 };
         struct timeval    tv = { 0, 0 };
-        /*int rc =*/  tsk_gettimeofday(&tv, 0);
+        /*int rc =*/  CompVTime::getTimeOfDay(&tv, 0);
 
         ts.tv_sec = (tv.tv_sec + ((long)millis / 1000));
         ts.tv_nsec += ((tv.tv_usec * 1000) + ((long)millis % 1000 * 1000000));
@@ -241,7 +242,7 @@ COMPV_ERROR_CODE CompVCondvar::waitWithTimeout(uint64_t millis)
         }
 
         condwait->mutex->lock();
-        if ((ret = pthread_cond_timedwait(condwait->pcond, (pthread_mutex_t*)condwait->mutex, &ts))) {
+        if ((ret = pthread_cond_timedwait(condwait->pcond, (pthread_mutex_t*)condwait->mutex->handle(), &ts))) {
             if (ret == TIMED_OUT) {
                 /* COMPV_DEBUG_INFO("pthread_cond_timedwait function timedout: %d", ret); */
             }
