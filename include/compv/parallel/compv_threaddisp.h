@@ -39,8 +39,6 @@ public:
 	COMPV_ERROR_CODE execute(uint32_t threadIdx, compv_asynctoken_id_t tokenId, compv_asynctoken_f f_func, ...);
 	COMPV_ERROR_CODE wait(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t u_timeout = 86400000/* 1 day */);
 	COMPV_ERROR_CODE getIdleTime(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t* timeIdle);
-	uint32_t getThreadIdxByCoreId(compv_core_id_t coreId);
-	uint32_t getThreadIdxForCurrentCore();
 	uint32_t getThreadIdxForNextToCurrentCore();
 	uint32_t getThreadIdxCurrent();
 	bool isMotherOfTheCurrentThread();

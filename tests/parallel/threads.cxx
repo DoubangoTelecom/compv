@@ -21,7 +21,7 @@ static void safe_func(const struct thread* thread_)
 {
     g_mutex->lock();
     COMPV_ASSERT(!safe_func_exec);
-    COMPV_DEBUG_INFO("Begin safe func thread '%s' core=%ld", thread_->name, CompVThread::getCoreId());
+    COMPV_DEBUG_INFO("Begin safe func thread '%s' core=%d", thread_->name, CompVThread::getCoreId());
     safe_func_exec = true;
     thread_->thread_->sleep(500);
     safe_func_exec = false;
@@ -68,7 +68,10 @@ bool TestThreads()
 
     // destroy all threads and semaphores
     for (size_t i = 0; i < sizeof(threads) / sizeof(threads[0]); ++i) {
-        threads[i] = { NULL, NULL, NULL, NULL };
+        threads[i].name = NULL;
+        threads[i].thread_ = NULL;
+        threads[i].sema_ = NULL;
+        threads[i].condvar_ = NULL;
     }
     g_mutex = NULL;
 

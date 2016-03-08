@@ -213,12 +213,18 @@
 #endif /* _MSC_VER */
 
 // Guards against C++ name mangling
-#ifdef __cplusplus
+#if defined(__cplusplus)
 #	define COMPV_EXTERNC_BEGIN() extern "C" {
 #	define COMPV_EXTERNC_END()	}
 #else
 #	define COMPV_EXTERNC_BEGIN()
 #	define COMPV_EXTERNC_END()
+#endif
+
+#if defined(__cplusplus)
+#   define COMPV_EXTERNC extern "C"
+#else
+#   define COMPV_EXTERNC
 #endif
 
 

@@ -315,9 +315,9 @@ COMPV_ERROR_CODE CompVCpu::init()
 #elif defined(_OPENMP) || defined(_OPENMP) || defined(HAVE_OMP_H)
 	s_iCores = omp_get_num_procs();
 #elif COMPV_OS_APPLE
-	size_t len = sizeof(s_iCores);
-	int mib[2] = { CTL_HW, HW_NCPU };
-	sysctl(mib, 2, &s_iCores, &len, NULL, 0);
+    size_t len = sizeof(s_iCores);
+    int mib0[2] = { CTL_HW, HW_NCPU };
+    sysctl(mib0, 2, &s_iCores, &len, NULL, 0);
 #elif defined(__GNUC__)
 	s_iCores = (int32_t)sysconf(_SC_NPROCESSORS_ONLN);
 #else
@@ -354,8 +354,11 @@ COMPV_ERROR_CODE CompVCpu::init()
 #elif COMPV_OS_APPLE
 	size_t sizeof_cls = sizeof(s_iCache1LineSize);
 	size_t sizeof_cs = sizeof(s_iCache1Size);
-	sysctlbyname("hw.cachelinesize", &s_iCache1LineSize, &sizeof_cls, 0, 0);
-	sysctlbyname("hw.cachesize", &s_iCache1Size, &sizeof_cs, 0, 0);
+    int mib1[2] = { CTL_HW, HW_CACHELINE };
+    int mib2[2] = { CTL_HW, HW_L1ICACHESIZE };
+    
+	sysctl(mib1, 2, &s_iCache1LineSize, &sizeof_cls, NULL, 0);
+	sysctl(mib2, 2, &s_iCache1Size, &sizeof_cs, NULL, 0);
 #else
 	s_iCache1LineSize = (int32_t)sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
 	s_iCache1Size = (int32_t)sysconf(_SC_LEVEL1_DCACHE_SIZE);

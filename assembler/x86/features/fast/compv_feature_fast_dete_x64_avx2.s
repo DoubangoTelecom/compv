@@ -310,7 +310,7 @@ sym(FastData32Row_Asm_X64_AVX2):
 	mov r11, [rcx + 15*COMPV_YASM_REG_SZ_BYTES] ; pixels16[15]
 	vmovdqu ymm12, [rbx + r8]
 	vmovdqu ymm13, [rbx + r9]
-	vmovdqu ymm14, [rbx + r10]	
+	vmovdqu ymm14, [rbx + r10]
 	vmovdqu ymm15, [rbx + r11]
 	vmovdqa [rsp + 1336 + 1*32], ymm0
 	vmovdqa [rsp + 1336 + 2*32], ymm1

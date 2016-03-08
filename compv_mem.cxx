@@ -37,6 +37,10 @@ COMPV_NAMESPACE_BEGIN()
 #	define COMPV_MEM_CHECK 1
 #endif
 
+#if !defined(COMPV_OS_WINDOWS) && !defined(HAVE_POSIX_MEMALIGN)
+#   define HAVE_POSIX_MEMALIGN 1
+#endif
+
 // COMPV_MEM_SIZE_MIN_SIMD must be > 32 (default alignment)
 #define COMPV_MEM_SIZE_MIN_SIMD 32*16 // no real gain on small sizes
 
@@ -270,6 +274,9 @@ void* CompVMem::mallocAligned(size_t size, int alignment/*= CompVMem::getBestAli
     void* pMem;
 #if COMPV_OS_WINDOWS && !COMPV_UNDER_OS_CE && !COMPV_OS_WINDOWS_RT
     pMem = _aligned_malloc(size, alignment);
+#elif HAVE_POSIX_MEMALIGN
+    pMem = NULL;
+    posix_memalign(&pMem, (size_t)alignment, size);
 #else
     pMem = ::malloc(size + alignment);
     if (pMem) {
@@ -325,7 +332,7 @@ void* CompVMem::callocAligned(size_t num, size_t size, int alignment/*= CompVMem
 {
     void* pMem = CompVMem::mallocAligned((size * num), alignment);
     if (pMem) {
-        memset(pMem, 0, (size * num));
+        CompVMem::zero(pMem, (size * num));
 #	if COMPV_MEM_CHECK
         CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>((uintptr_t)pMem, compv_special_mem_t((uintptr_t)pMem, (size * num), alignment)));
 #	endif
@@ -347,6 +354,8 @@ void CompVMem::freeAligned(void** ptr)
 #endif
 #if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
         _aligned_free(ptr_);
+#elif HAVE_POSIX_MEMALIGN
+        ::free(ptr_);
 #else
         ::free((((uint8_t*)ptr_) - ((uint8_t*)ptr_)[-1]));
 #endif

@@ -45,6 +45,7 @@ sym(MemCopyNTA_Asm_Aligned11_X64_AVX):
 	push rsi
 	push rdi
 	push rbx
+    mamadou
 	; end prolog
 
 	%define cache_line_size 64

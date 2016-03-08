@@ -93,24 +93,9 @@ COMPV_ERROR_CODE CompVThreadDispatcher::getIdleTime(uint32_t threadIdx, compv_as
     return asyncTask->tokenGetIdleTime(tokenId, timeIdle);
 }
 
-uint32_t CompVThreadDispatcher::getThreadIdxByCoreId(compv_core_id_t coreId)
-{
-    for (int32_t i = 0; i < m_nTasksCount; ++i) {
-        if (m_pTasks[i]->getCoreId() == coreId) {
-            return (uint32_t)i;
-        }
-    }
-    return 0;
-}
-
-uint32_t CompVThreadDispatcher::getThreadIdxForCurrentCore()
-{
-    return getThreadIdxByCoreId(CompVThread::getCoreId());
-}
-
 uint32_t CompVThreadDispatcher::getThreadIdxForNextToCurrentCore()
 {
-    return getThreadIdxByCoreId(CompVThread::getCoreId() + 1);
+    return (getThreadIdxCurrent() + 1) % m_nTasksCount;
 }
 
 uint32_t CompVThreadDispatcher::getThreadIdxCurrent()
@@ -154,14 +139,14 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVObjWrapper<CompVThreadDispat
     COMPV_CHECK_EXP_RETURN(disp == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     int32_t numCores = CompVCpu::getCoresCount();
     if (numThreads <= 0) {
-        numThreads = CompVCpu::getCoresCount() - 1;
+        numThreads = CompVCpu::getCoresCount();
     }
     if (numThreads < 2) {
         COMPV_DEBUG_ERROR("Multi-threading requires at least #2 threads but you're requesting #%d", numThreads);
         return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
     }
-    if (numThreads >= numCores) {
-        COMPV_DEBUG_WARN("You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, (numCores - 1));
+    if (numThreads > numCores) {
+        COMPV_DEBUG_WARN("You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, (numCores - 0));
     }
     CompVObjWrapper<CompVThreadDispatcher*>_disp = new CompVThreadDispatcher(numThreads);
     if (!_disp || !_disp->m_bValid) {

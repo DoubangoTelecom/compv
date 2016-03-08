@@ -30,12 +30,11 @@ bool TestThreadDisp()
 #define THREADS_COUNT	-1 // should be the number of CPUs - 1
 #define WIDTH	1920
 #define HEIGHT	1080
-#define SIZE	(WIDTH * HEIGHT * 4)
+#define SIZE	(WIDTH * HEIGHT * 4) * 10
 #define TOKEN0	0
-#define ALIGN_ON_CACHELINE 1
+#define ALIGN_ON_CACHELINE 0
     uint8_t* data = (uint8_t*)CompVMem::mallocAligned(SIZE);
     COMPV_ASSERT(data != NULL);
-    vcomp_core_id_t coreId_ = 0;
     CompVObjWrapper<CompVThreadDispatcher *> disp_;
     uint64_t timeStart, timeEnd;
 
@@ -44,11 +43,11 @@ bool TestThreadDisp()
     // Start the tasks (each one has a single tocken with id = 0)
     timeStart = CompVTime::getNowMills();
 #if 1 // Using async tasks
-#if ALIGN_ON_CACHELINE
+#   if ALIGN_ON_CACHELINE
     int32_t interval = (int32_t)CompVMem::alignSizeOnCacheLineAndSIMD((SIZE + (disp_->getThreadsCount() - 1)) / disp_->getThreadsCount());
-#else
+#   else
     int32_t interval = (SIZE + (disp_->getThreadsCount() - 1)) / disp_->getThreadsCount();
-#endif
+#   endif /* ALIGN_ON_CACHELINE */
     int32_t start = 0, end = interval;
     for (int32_t treadIdx = 0; treadIdx < disp_->getThreadsCount(); ++treadIdx) {
         COMPV_CHECK_CODE_ASSERT(disp_->execute(treadIdx, TOKEN0, task1_f,

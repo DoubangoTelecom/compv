@@ -37,7 +37,7 @@ void rgbaToI420Kernel11_CompY_Intrin_Aligned_AVX2(COMPV_ALIGNED(AVX2) const uint
 
     _mm256_store_si256(&ymmYCoeffs, _mm256_load_si256((__m256i*)kXXXXToYUV_YCoeffs8));
     _mm256_store_si256(&ymm16, _mm256_load_si256((__m256i*)k16_i16));
-    _mm256_store_si256(&ymmMaskToExtractFirst64Bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_i64));
+    _mm256_store_si256(&ymmMaskToExtractFirst64Bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_u64));
 
     // Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
     for (j = 0; j < height; ++j) {
@@ -134,7 +134,7 @@ void rgbaToI420Kernel11_CompUV_Intrin_Aligned_AVX2(COMPV_ALIGNED(AVX2) const uin
     // load 128's16
     _mm256_store_si256(&ymm128, _mm256_load_si256((__m256i*)k128_i16));
     // load mask used to extract first 32bits
-    _mm256_store_si256(&ymmMaskToExtractFirst32Bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_i32));
+    _mm256_store_si256(&ymmMaskToExtractFirst32Bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_u32));
 
     // U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
     // V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
@@ -180,7 +180,7 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_AVX2(COMPV_ALIGNED(AVX2) const uin
     _mm256_store_si256(&ymmVCoeffs, _mm256_load_si256((__m256i*)kXXXXToYUV_VCoeffs8));
     _mm256_store_si256(&ymm128, _mm256_load_si256((__m256i*)k128_i16));
     _mm256_store_si256(&ymmAEBFCGDH, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_AEBFCGDH_i32));
-    _mm256_store_si256(&ymmMaskToExtract128bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_1_i64));
+    _mm256_store_si256(&ymmMaskToExtract128bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_1_u64));
 
     // U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
     // V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
@@ -331,7 +331,7 @@ void rgbToI420Kernel31_CompUV_Intrin_Aligned_AVX2(COMPV_ALIGNED(AVX2) const uint
     _mm256_store_si256(&ymmUCoeffs, _mm256_load_si256((__m256i*)kXXXXToYUV_UCoeffs8));
     _mm256_store_si256(&ymmVCoeffs, _mm256_load_si256((__m256i*)kXXXXToYUV_VCoeffs8));
     _mm256_store_si256(&ymm128, _mm256_load_si256((__m256i*)k128_i16));
-    _mm256_store_si256(&ymmMaskToExtract128bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_1_i64));
+    _mm256_store_si256(&ymmMaskToExtract128bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_1_u64));
     _mm256_store_si256(&ymmMaskRgbToRgba, _mm256_load_si256((__m256i*)kShuffleEpi8_RgbToRgba_i32));
     _mm256_store_si256(&ymmAEBFCGDH, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_AEBFCGDH_i32));
     _mm256_store_si256(&ymmABCDDEFG, _mm256_load_si256((__m256i*)kAVXPermutevar8x32_ABCDDEFG_i32));
@@ -436,7 +436,7 @@ void i420ToRGBAKernel11_Intrin_Aligned_AVX2(COMPV_ALIGNED(AVX2) const uint8_t* y
     _mm256_store_si256(&ymm7120, _mm256_load_si256((__m256i*)k7120_i16));
     _mm256_store_si256(&ymm8912, _mm256_load_si256((__m256i*)k8912_i16));
     _mm256_store_si256(&ymm4400, _mm256_load_si256((__m256i*)k4400_i16));
-    _mm256_store_si256(&ymmMaskToExtract128bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_1_i64));
+    _mm256_store_si256(&ymmMaskToExtract128bits, _mm256_load_si256((__m256i*)kAVXMaskstore_0_1_u64));
 
     // R!u8 = (37Y' + 0U' + 51V') >> 5
     // G!u8 = (37Y' - 13U' - 26V') >> 5

@@ -46,7 +46,7 @@ static COMPV_ERROR_CODE task0_f(const struct compv_asynctoken_param_xs* pc_param
 bool TestAsyncTasks0()
 {
     myClass obj_;
-    const vcomp_core_id_t coreId_ = CompVCpu::getValidCoreId((vcomp_core_id_t)rand());
+    const compv_core_id_t coreId_ = CompVCpu::getValidCoreId((compv_core_id_t)rand());
     token0_ = CompVAsyncTask::getUniqueTokenId();
     token1_ = CompVAsyncTask::getUniqueTokenId();
     CompVObjWrapper<CompVAsyncTask *> task_;
@@ -120,7 +120,7 @@ bool TestAsyncTasks1()
 #define TOKEN0	0
     uint8_t* data = (uint8_t*)CompVMem::mallocAligned(SIZE);
     COMPV_ASSERT(data != NULL);
-    vcomp_core_id_t coreId_ = 0;
+    compv_core_id_t coreId_ = 0;
     CompVObjWrapper<CompVAsyncTask *> tasks_[TASKS_COUNT];
     uint64_t timeStart, timeEnd;
 

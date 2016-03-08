@@ -235,6 +235,9 @@ compv_core_id_t CompVThread::getCoreId()
     return  ProcNumber.Number;
 #elif COMPV_ARCH_X86 && COMPV_ASM
     return compv_utils_thread_get_core_id_x86_asm();
+#elif COMPV_OS_APPLE
+    COMPV_DEBUG_ERROR_EX(kModuleNameThread, "sched_getcpu not supported always returning zero");
+    return 0;
 #else
     int cpuId = sched_getcpu();
     if (cpuId < 0) {

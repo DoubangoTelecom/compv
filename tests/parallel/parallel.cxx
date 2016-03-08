@@ -1,5 +1,7 @@
 #include <compv/compv_api.h>
+#if COMPV_OS_WINDOWS
 #include <tchar.h>
+#endif
 
 extern bool TestThreads();
 extern bool TestAsyncTasks0();
@@ -10,7 +12,11 @@ extern bool TestThreadDisp();
 #define TEST_ASYNCTASKS		0
 #define TEST_THREADDISP		1
 
+#if COMPV_OS_WINDOWS
 int _tmain(int argc, _TCHAR* argv[])
+#else
+int main(int argc, char** argv)
+#endif
 {
     compv::CompVDebugMgr::setLevel(compv::COMPV_DEBUG_LEVEL_INFO);
     COMPV_CHECK_CODE_ASSERT(compv::CompVEngine::init());

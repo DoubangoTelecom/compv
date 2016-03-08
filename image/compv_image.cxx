@@ -162,7 +162,7 @@ COMPV_ERROR_CODE CompVImage::convert(COMPV_PIXEL_FORMAT eDstPixelFormat, CompVOb
     COMPV_CHECK_EXP_RETURN(outImage == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_CHECK_EXP_RETURN(m_eImageFormat != COMPV_IMAGE_FORMAT_RAW, COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT); // We only support RAW -> RAW. If you have a JPEG image, decode it first then wrap it
     CompVObjWrapper<CompVImage*> This = this; // when outImage is equal to this and the caller doesn't hold a reference the object could be destroyed before the end of the call. This line increment the refCount.
-    if (eDstPixelFormat == m_eImageFormat) {
+    if (eDstPixelFormat == m_ePixelFormat) {
         *outImage = This;
         return COMPV_ERROR_CODE_S_OK;
     }
@@ -372,11 +372,10 @@ COMPV_ERROR_CODE CompVImage::getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelForm
 
 COMPV_ERROR_CODE CompVImage::copy(COMPV_PIXEL_FORMAT ePixelFormat, const void* inPtr, int32_t inWidth, int32_t inHeight, int32_t inStride, void* outPtr, int32_t outWidth, int32_t outHeight, int32_t outStride)
 {
-    COMPV_CHECK_EXP_RETURN(inPtr == NULL || inWidth <= 0 || inHeight <= 0 || inStride <= 0 || inWidth > inStride || inStride == NULL || outWidth <= 0 || outHeight <= 0 || outWidth > outStride || outStride <= 0,
+    COMPV_CHECK_EXP_RETURN(inPtr == NULL || inWidth <= 0 || inHeight <= 0 || inStride <= 0 || inWidth > inStride || inStride <= 0 || outWidth <= 0 || outHeight <= 0 || outWidth > outStride || outStride <= 0,
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     int32_t widthToCopySamples = std::min(inWidth, outWidth);
-    int32_t strideToCopySamples = std::min(inStride, outStride);
     int32_t heightToCopySamples = std::min(inHeight, outHeight);
 
     switch (ePixelFormat) {
@@ -442,7 +441,7 @@ COMPV_ERROR_CODE CompVImage::wrap(COMPV_PIXEL_FORMAT ePixelFormat, const void* d
 {
     COMPV_CHECK_EXP_RETURN(width <= 0 || height <= 0 || stride <= 0 || image == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-    int32_t bestStride = width, bestAlign = CompVMem::getBestAlignment();
+    int32_t bestStride = width;
     int32_t borderStride = COMPV_IMAGE_BORDER_SIZE_DEFAULT;
 
     bool bAllocNewImage;
@@ -606,7 +605,7 @@ COMPV_ERROR_CODE CompVImageDecoder::decodeFile(const char* filePath, CompVObjWra
     COMPV_CHECK_CODE_RETURN(CompVEngine::init());
     if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
         COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
-        COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
     }
     _COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
@@ -638,7 +637,7 @@ COMPV_ERROR_CODE  CompVImageDecoder::decodeInfo(const char* filePath, CompVImage
     COMPV_CHECK_CODE_RETURN(CompVEngine::init());
     if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
         COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
-        COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
     }
     _COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;

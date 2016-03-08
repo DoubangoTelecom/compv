@@ -343,7 +343,6 @@ static COMPV_ERROR_CODE __xxxxToI420(const CompVObjWrapper<CompVImage* >& rgba, 
 	uint8_t* outUPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? NULL : outYPtr + (height * stride);
 	uint8_t* outVPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? NULL : outUPtr + ((height * stride) >> 2);
     int strideRgbaBytes = (stride << 2); // #20 not SSE aligned but (20*4)=#80 is aligned
-    int widthRgbaBytes = (width << 2);
     CompVObjWrapper<CompVThreadDispatcher* >&threadDip = CompVEngine::getThreadDispatcher();
     int threadsCount = 1;
 
@@ -486,16 +485,13 @@ COMPV_ERROR_CODE CompVImageConvRgbaI420::i420ToRgba(const CompVObjWrapper<CompVI
     const uint8_t* vPtr = uPtr + ((height * stride) >> 2);
     uint8_t* outRgbaPtr = (uint8_t*)rgba->getDataPtr();
 
-    int strideRgbaBytes = (stride << 2);
-    int strideYBytes = stride;
-    int widthRgbaBytes = (width << 2);
     CompVObjWrapper<CompVThreadDispatcher* >&threadDip = CompVEngine::getThreadDispatcher();
 
     int threadsCount = 1;
 
     // IS_ALIGNED(strideRgbaBytes, ALIGNV * 4) = IS_ALIGNED(stride * 4, ALIGNV * 4) = IS_ALIGNED(stride, ALIGNV)
 
-#if defined(COMPV_ARCH_X86)
+#if COMPV_ARCH_X86
 
     if (COMPV_IS_ALIGNED_SSE(stride)) {
         if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {

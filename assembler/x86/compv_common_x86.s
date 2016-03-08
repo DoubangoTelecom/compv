@@ -383,7 +383,31 @@
 		%endm
 	%else ; SystemV
 		; do not forget to save/restore rdi and rsi
-		%error 'Not implemented'
+		; FIXME: not correct at all, this is a copy from WIN64
+        ; %1 -> temp register to use to align the stack on 16bytes. E.g. 'rax', this register isn't preserved
+		; %2 -> number of parameters to reserve
+		%macro COMPV_YASM_RESERVE_PARAMS 2
+			%ifdef reserved_params_count
+				%error 'You must unreserve params first.'
+			%endif
+			; Win64 requires a minimum of 32 bytes (#4 params) shadow space on stack even if we have less than #4 params
+			%if %2 < 4
+				%define reserved_params_count 4
+			%else
+				%define reserved_params_count %2
+			%endif
+			COMPV_YASM_ALIGN_STACK 16, %1
+			sub rsp, 8 * (reserved_params_count + 0) ; +1 for the function
+		%endm
+		; No argument
+		%macro COMPV_YASM_UNRESERVE_PARAMS 0
+			%ifndef reserved_params_count
+				%error 'COMPV_YASM_UNRESERVE_PARAMS must be tied to COMPV_YASM_RESERVE_PARAMS'
+			%endif
+			add rsp, 8 * (reserved_params_count + 0) ; +1 for the function
+			COMPV_YASM_UNALIGN_STACK
+			%undef reserved_params_count
+		%endm
 	%endif
 %endif
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
