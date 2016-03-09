@@ -2,6 +2,7 @@
 *.suo
 *.opensdf
 *.sdf
+*.xcuserdatad
 /ipch
 /x64
 /My Amplifier XE Results - CompV
@@ -37,3 +38,4 @@ Release
 /tests/box/My Amplifier XE Results - box
 /tests/box/x64/Debug
 /tests/image/out.argb
+
