@@ -69,9 +69,9 @@ section .data
 	extern sym(kYUVToRGBA_RCoeffs8)
 	extern sym(kYUVToRGBA_GCoeffs8)
 	extern sym(kYUVToRGBA_BCoeffs8)
-	extern sym(kAVXMaskstore_0_i64)
-	extern sym(kAVXMaskstore_0_1_i64)
-	extern sym(kAVXMaskstore_0_i32)
+	extern sym(kAVXMaskstore_0_u64)
+	extern sym(kAVXMaskstore_0_1_u64)
+	extern sym(kAVXMaskstore_0_u32)
 	extern sym(kAVXPermutevar8x32_AEBFCGDH_i32)
 	extern sym(kAVXPermutevar8x32_ABCDDEFG_i32)
 	extern sym(kAVXPermutevar8x32_CDEFFGHX_i32)
@@ -110,7 +110,7 @@ section .text
 	mov rax, arg(5)
 	vmovdqa ymm0, [rax] ; ymmYCoeffs
 	vmovdqa ymm1, [sym(k16_i16)] ; ymm16
-	vmovdqa ymm3, [sym(kAVXMaskstore_0_i64)] ; ymmMaskToExtractFirst64Bits
+	vmovdqa ymm3, [sym(kAVXMaskstore_0_u64)] ; ymmMaskToExtractFirst64Bits
 
 	mov rax, arg(0) ; rgbaPtr
 	mov rsi, arg(2) ; height
@@ -332,7 +332,7 @@ sym(rgbaToI420Kernel41_CompY_Asm_X86_Aligned11_AVX2):
 	vmovdqa ymm0, [rdx]
 	vmovdqa ymm1, [rax]
 	vinsertf128 ymm3, ymm1, xmm0, 0x1 ; ymmUV4Coeffs
-	vmovdqa ymm0, [sym(kAVXMaskstore_0_i32)] ; ymmMaskToExtractFirst32Bits
+	vmovdqa ymm0, [sym(kAVXMaskstore_0_u32)] ; ymmMaskToExtractFirst32Bits
 	vmovdqa ymm1, [sym(k128_i16)] ; ymm128
 	
 	mov rbx, arg(0) ; rgbaPtr
@@ -475,8 +475,8 @@ sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned1xx_AVX2):
 
 			; save kAVXPermutevar8x32_AEBFCGDH_i32 into ymm2
 			vmovdqa ymm2, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)]
-			; save kAVXMaskstore_0_1_i64 into ymm3
-			vmovdqa ymm3, [sym(kAVXMaskstore_0_1_i64)] ; ymmMaskToExtract128bits
+			; save kAVXMaskstore_0_1_u64 into ymm3
+			vmovdqa ymm3, [sym(kAVXMaskstore_0_1_u64)] ; ymmMaskToExtract128bits
 
 			; U = (ymm4, ymm6)
 			; V = (ymm5, ymm7)
@@ -784,8 +784,8 @@ sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned11_AVX2):
 
 			; save kAVXPermutevar8x32_AEBFCGDH_i32 into ymm2
 			vmovdqa ymm2, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)]
-			; save kAVXMaskstore_0_1_i64 into ymm3
-			vmovdqa ymm3, [sym(kAVXMaskstore_0_1_i64)] ; ymmMaskToExtract128bits
+			; save kAVXMaskstore_0_1_u64 into ymm3
+			vmovdqa ymm3, [sym(kAVXMaskstore_0_1_u64)] ; ymmMaskToExtract128bits
 
 			; U = (ymm4, ymm6)
 			; V = (ymm5, ymm7)
@@ -934,7 +934,7 @@ sym(rgbToI420Kernel31_CompUV_Asm_X86_Aligned111_AVX2):
 	.LoopHeight:
 		xor rdi, rdi
 		.LoopWidth:
-			vmovdqa ymm3, [sym(kAVXMaskstore_0_1_i64)]
+			vmovdqa ymm3, [sym(kAVXMaskstore_0_1_u64)]
 			%if %1 == 1
 			vmovdqa ymm0, [rcx] ; 32 Y samples = 32bytes
 			%else

@@ -146,7 +146,7 @@
 			outputFiles = (
 				"${OBJECT_FILE_DIR_normal}/${CURRENT_ARCH}/${INPUT_FILE_BASE}.o",
 			);
-			script = "#!/bin/bash\nexport YASM_ARCH=macho64\nif [ \"${CURRENT_ARCH}\" = \"i386\" ]; then\n    export YASM_ARCH=macho32\nfi\nyasm -f ${YASM_ARCH} -o ${OBJECT_FILE_DIR_normal}/${CURRENT_ARCH}/${INPUT_FILE_BASE}.o ${INPUT_FILE_DIR}/${INPUT_FILE}";
+			script = "#!/bin/bash\nexport YASM_ARCH=macho64\nif [ \"${CURRENT_ARCH}\" = \"i386\" ]; then\nexport YASM_ARCH=macho32\nfi\nyasm -f ${YASM_ARCH} -o ${OBJECT_FILE_DIR_normal}/${CURRENT_ARCH}/${INPUT_FILE_BASE}.o ${INPUT_FILE_DIR}/${INPUT_FILE_NAME}";
 		};
 /* End PBXBuildRule section */
 
