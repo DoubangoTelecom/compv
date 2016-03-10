@@ -139,14 +139,14 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVObjWrapper<CompVThreadDispat
     COMPV_CHECK_EXP_RETURN(disp == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     int32_t numCores = CompVCpu::getCoresCount();
     if (numThreads <= 0) {
-        numThreads = CompVCpu::getCoresCount();
+        numThreads = CompVCpu::getCoresCount() - 1;
     }
     if (numThreads < 2) {
         COMPV_DEBUG_ERROR("Multi-threading requires at least #2 threads but you're requesting #%d", numThreads);
         return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
     }
     if (numThreads > numCores) {
-        COMPV_DEBUG_WARN("You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, (numCores - 0));
+        COMPV_DEBUG_WARN("You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, (numCores - 1));
     }
     CompVObjWrapper<CompVThreadDispatcher*>_disp = new CompVThreadDispatcher(numThreads);
     if (!_disp || !_disp->m_bValid) {
