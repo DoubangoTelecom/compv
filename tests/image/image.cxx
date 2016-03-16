@@ -1,5 +1,7 @@
 #include <compv/compv_api.h>
+#if COMPV_OS_WINDOWS
 #include <tchar.h>
+#endif
 
 using namespace compv;
 
@@ -16,7 +18,11 @@ using namespace compv;
 #define TEST_PYRAMID		0
 
 
+#if COMPV_OS_WINDOWS
 int _tmain(int argc, _TCHAR* argv[])
+#else
+int main(int argc, char** argv)
+#endif
 {
     CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
     COMPV_CHECK_CODE_ASSERT(CompVEngine::init(numThreads));

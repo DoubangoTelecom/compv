@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		15E9C32F1C8DDC8500B8AF8E /* asynctasks.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15E9C32B1C8DDC8500B8AF8E /* asynctasks.cxx */; settings = {ASSET_TAGS = (); }; };
-		15E9C3301C8DDC8500B8AF8E /* parallel.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15E9C32C1C8DDC8500B8AF8E /* parallel.cxx */; settings = {ASSET_TAGS = (); }; };
-		15E9C3311C8DDC8500B8AF8E /* threaddisp.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15E9C32D1C8DDC8500B8AF8E /* threaddisp.cxx */; settings = {ASSET_TAGS = (); }; };
-		15E9C3321C8DDC8500B8AF8E /* threads.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15E9C32E1C8DDC8500B8AF8E /* threads.cxx */; settings = {ASSET_TAGS = (); }; };
-		15E9C4661C8DE3FC00B8AF8E /* libcompv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15E9C4631C8DE34F00B8AF8E /* libcompv.a */; };
+		15E9C32F1C8DDC8500B8AF8E /* asynctasks.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15E9C32B1C8DDC8500B8AF8E /* asynctasks.cxx */; };
+		15E9C3301C8DDC8500B8AF8E /* parallel.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15E9C32C1C8DDC8500B8AF8E /* parallel.cxx */; };
+		15E9C3311C8DDC8500B8AF8E /* threaddisp.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15E9C32D1C8DDC8500B8AF8E /* threaddisp.cxx */; };
+		15E9C3321C8DDC8500B8AF8E /* threads.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15E9C32E1C8DDC8500B8AF8E /* threads.cxx */; };
+		15E9C4661C8DE3FC00B8AF8E /* libcompv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 15E9C4631C8DE34F00B8AF8E /* libcompv.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,7 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				15E9C4661C8DE3FC00B8AF8E /* libcompv.a in Frameworks */,
+				15E9C4661C8DE3FC00B8AF8E /* libcompv.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -95,7 +95,7 @@
 		15E9C45F1C8DE34F00B8AF8E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				15E9C4631C8DE34F00B8AF8E /* libcompv.a */,
+				15E9C4631C8DE34F00B8AF8E /* libcompv.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -159,10 +159,10 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		15E9C4631C8DE34F00B8AF8E /* libcompv.a */ = {
+		15E9C4631C8DE34F00B8AF8E /* libcompv.dylib */ = {
 			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libcompv.a;
+			fileType = "compiled.mach-o.dylib";
+			path = libcompv.dylib;
 			remoteRef = 15E9C4621C8DE34F00B8AF8E /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};

@@ -1,6 +1,7 @@
 #include <compv/compv_api.h>
 
-#define JPEG_EQUIRECTANGULAR_FILE	"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
+
+#define JPEG_EQUIRECTANGULAR_FILE "/Users/mamadou/Documents/compv/tests/7019363969_a80a5d6acc_o.jpg"	//"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
 //#define JPEG_EQUIRECTANGULAR_FILE	"C:/Projects/GitHub/pan360/tests/sphere_mapping/3867257549_6ca855e08d_o.jpg" //paris (BIIIIG)
 
 using namespace compv;

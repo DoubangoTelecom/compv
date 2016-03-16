@@ -103,8 +103,8 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
     */
     struct my_error_mgr jerr = { 0 };
     /* More stuff */
-    FILE * infile = nullptr;		/* source file */
-    JSAMPARRAY buffer = nullptr;		/* Output row buffer */
+    FILE * infile = NULL;		/* source file */
+    JSAMPARRAY buffer = NULL;		/* Output row buffer */
     int row_width_bytes;		/* physical row width in output buffer */
     int row_stride_bytes;
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;

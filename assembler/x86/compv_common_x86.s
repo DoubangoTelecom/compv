@@ -361,7 +361,7 @@
 		; %2 -> number of parameters to reserve
 		%macro COMPV_YASM_RESERVE_PARAMS 2
 			%ifdef reserved_params_count
-				%error 'You must unreserve params first.'
+				%error 'You must unreserve params first'
 			%endif
 			; Win64 requires a minimum of 32 bytes (#4 params) shadow space on stack even if we have less than #4 params
 			%if %2 < 4
@@ -382,31 +382,30 @@
 			%undef reserved_params_count
 		%endm
 	%else ; SystemV
-		; do not forget to save/restore rdi and rsi
-		; FIXME: not correct at all, this is a copy from WIN64
         ; %1 -> temp register to use to align the stack on 16bytes. E.g. 'rax', this register isn't preserved
 		; %2 -> number of parameters to reserve
 		%macro COMPV_YASM_RESERVE_PARAMS 2
 			%ifdef reserved_params_count
-				%error 'You must unreserve params first.'
+				%error 'You must unreserve params first'
 			%endif
-			; Win64 requires a minimum of 32 bytes (#4 params) shadow space on stack even if we have less than #4 params
-			%if %2 < 4
-				%define reserved_params_count 4
-			%else
-				%define reserved_params_count %2
-			%endif
+            %define reserved_params_count %2
+            %define redzone (128 + 8*(reserved_params_count & 1)) ; stack must be aligned on 16-bytes after parameters allocation
 			COMPV_YASM_ALIGN_STACK 16, %1
-			sub rsp, 8 * (reserved_params_count + 0) ; +1 for the function
+			sub rsp, (8 * (reserved_params_count + 2)) + redzone ; +2 to save rsi and rdi, +128 for the redzone
+            mov [rsp + 8 * (reserved_params_count + 0)], rdi ; save rdi
+            mov [rsp + 8 * (reserved_params_count + 1)], rsi ; save rsi
 		%endm
 		; No argument
 		%macro COMPV_YASM_UNRESERVE_PARAMS 0
 			%ifndef reserved_params_count
 				%error 'COMPV_YASM_UNRESERVE_PARAMS must be tied to COMPV_YASM_RESERVE_PARAMS'
 			%endif
-			add rsp, 8 * (reserved_params_count + 0) ; +1 for the function
+            mov rdi, [rsp + 8 * (reserved_params_count + 0)] ; restore rdi
+            mov rsi, [rsp + 8 * (reserved_params_count + 1)] ; restore rsi
+			add rsp, (8 * (reserved_params_count + 2)) + redzone
 			COMPV_YASM_UNALIGN_STACK
 			%undef reserved_params_count
+            %undef redzone
 		%endm
 	%endif
 %endif
@@ -421,7 +420,7 @@
 		%error 'OutofBound index parameter'
 	%endif
 	%if COMPV_YASM_ABI_IS_32BIT
-		mov [rsp+4*%1], %2 ; Arguments are passed RTL (RightToLeft). The "+4" is to skip the function address.
+		mov [rsp+4*%1], %2 ; Arguments are passed RTL (RightToLeft).
 	%else ; X64
 		%if COMPV_YASM_WIN64
 			%if %1 == 0
@@ -433,10 +432,9 @@
 			%elif %1 == 3
 				mov r9, %2
 			%else
-				mov [rsp+8*%1], %2
+				mov [rsp+8*%1], %2 ; Do not skip the #4 registers, Win64 requires 32bytes shadow space
 			%endif
 		%else ; SystemV
-			; FIXME: save rdi and rsi
 			%if %1 == 0
 				mov rdi, %2
 			%elif %1 == 1
@@ -450,7 +448,7 @@
 			%elif %1 == 5
 				mov r9, %2
 			%else
-				mov [rsp+8*%1], %2
+				mov [rsp+8*(%1-6)], %2 ; -6 to skip the #6 registers (rdi, rsi, ...), no shadow space for SystemV
 			%endif
 		%endif
 	%endif

@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:image/image.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:math/math.xcodeproj">
    </FileRef>
    <FileRef

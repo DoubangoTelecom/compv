@@ -469,7 +469,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
     _descriptionsPtr = (uint8_t*)_descriptions->getDataPtr();
 
     // Compute the pyramid
-    if (0) {
+    if (/* DISABLES CODE */ (0)) {
         // FIXME: if deteter attached then use the pyramid from it
         _pyramid = NULL;
     }

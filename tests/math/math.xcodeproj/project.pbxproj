@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		159049031C8F57E200A9D123 /* clip.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159049011C8F57E200A9D123 /* clip.cxx */; settings = {ASSET_TAGS = (); }; };
-		159049041C8F57E200A9D123 /* math.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159049021C8F57E200A9D123 /* math.cxx */; settings = {ASSET_TAGS = (); }; };
+		159049031C8F57E200A9D123 /* clip.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159049011C8F57E200A9D123 /* clip.cxx */; };
+		159049041C8F57E200A9D123 /* math.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159049021C8F57E200A9D123 /* math.cxx */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -133,8 +133,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -174,8 +172,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;

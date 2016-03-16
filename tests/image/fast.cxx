@@ -8,7 +8,7 @@ using namespace compv;
 
 #define JPEG_IMG_OPENGLBOOK	"C:/Projects/GitHub/pan360/images/opengl_programming_guide_8th_edition.jpg" // OpenGL book
 #define JPEG_IMG_GRIOTS		"C:/Projects/GitHub/pan360/images/mandekalou.JPG" // Mande Griots
-#define JPEG_IMG_VOITURE	"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
+#define JPEG_IMG_VOITURE	"/Users/mamadou/Documents/compv/tests/7019363969_a80a5d6acc_o.jpg" // "C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
 
 #define TEST_TYPE_OPENGLBOOK			0
 #define TEST_TYPE_GRIOTS				1
@@ -86,6 +86,7 @@ using namespace compv;
 
 #define FAST_LOOP_COUNT	1
 
+#if 0
 static const uint16_t Fast9Flags[16] = { 0x1ff, 0x3fe, 0x7fc, 0xff8, 0x1ff0, 0x3fe0, 0x7fc0, 0xff80, 0xff01, 0xfe03, 0xfc07, 0xf80f, 0xf01f, 0xe03f, 0xc07f, 0x80ff };
 static const uint16_t Fast12Flags[16] = { 0xfff, 0x1ffe, 0x3ffc, 0x7ff8, 0xfff0, 0xffe1, 0xffc3, 0xff87, 0xff0f, 0xfe1f, 0xfc3f, 0xf87f, 0xf0ff, 0xe1ff, 0xc3ff, 0x87ff };
 
@@ -119,6 +120,7 @@ static void FastBuildCode(int N)
         fclose(file);
     }
 }
+
 
 static void FastFlagsArc(int N)
 {
@@ -166,6 +168,7 @@ static void FastShufflesArc(int N)
     }
     printf("};");
 }
+#endif
 
 bool TestFAST()
 {
@@ -175,9 +178,6 @@ bool TestFAST()
     int32_t val32;
     bool valBool;
     uint64_t timeStart, timeEnd;
-
-    //FastBuildCode(12);
-    //FastShufflesArc(12);
 
     // Decode the jpeg image
     COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_IMG, &image));
