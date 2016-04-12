@@ -346,8 +346,13 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVObjWrapper<CompVImage*>
     CompVObjWrapper<CompVImage*> imageAtLevelN;
     float sf, sfs, patchSize;
 
-    // Clear old interest points
-    interestPoints->reset();
+	// create or reset points
+	if (!interestPoints) {
+		COMPV_CHECK_CODE_RETURN(CompVBoxInterestPoint::newObj(&interestPoints));
+	}
+	else {
+		interestPoints->reset();
+	}
 
     // Scale the image
     COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image));
@@ -359,7 +364,9 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVObjWrapper<CompVImage*>
         sf = m_pyramid->getScaleFactor(level);
         patchSize = PATCH_DIAMETER / sf; // TODO(dmi): in OpenCV the patch size increase (instead of decreasing) with the level. Doesn't look correct.
         // clear previous points for level N-1
-        interestPointsAtLevelN->reset();
+		if (interestPointsAtLevelN) {
+			interestPointsAtLevelN->reset();
+		}
         // get image at level N
         COMPV_CHECK_CODE_RETURN(m_pyramid->getImage(level, &imageAtLevelN));
 

@@ -8,7 +8,7 @@ using namespace compv;
 
 #define JPEG_IMG_OPENGLBOOK	"C:/Projects/GitHub/pan360/images/opengl_programming_guide_8th_edition.jpg" // OpenGL book
 #define JPEG_IMG_GRIOTS		"C:/Projects/GitHub/pan360/images/mandekalou.JPG" // Mande Griots
-#define JPEG_IMG_VOITURE	"/Users/mamadou/Documents/compv/tests/7019363969_a80a5d6acc_o.jpg" //"C:/Projects/compv/tests/7019363969_a80a5d6acc_o.jpg" // "C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
+#define JPEG_IMG_VOITURE	"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // "C:/Projects/compv/tests/7019363969_a80a5d6acc_o.jpg" // "/Users/mamadou/Documents/compv/tests/7019363969_a80a5d6acc_o.jpg" //  // voiture
 
 #define TEST_TYPE_OPENGLBOOK			0
 #define TEST_TYPE_GRIOTS				1
