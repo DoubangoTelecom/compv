@@ -48,6 +48,7 @@
     <ClInclude Include="include\compv\features\orb\compv_feature_orb_dete.h" />
     <ClInclude Include="include\compv\image\compv_image.h" />
     <ClInclude Include="include\compv\image\compv_imageborder.h" />
+    <ClInclude Include="include\compv\image\compv_image_moments.h" />
     <ClInclude Include="include\compv\image\conv\compv_imageconv_common.h" />
     <ClInclude Include="include\compv\image\conv\compv_imageconv_grayscale.h" />
     <ClInclude Include="include\compv\image\conv\compv_imageconv_rgba_i420.h" />
@@ -100,6 +101,7 @@
     <ClCompile Include="image\compv_image.cxx" />
     <ClCompile Include="image\compv_imageborder.cxx" />
     <ClCompile Include="image\compv_image_libjpeg.cxx" />
+    <ClCompile Include="image\compv_image_moments.cxx" />
     <ClCompile Include="image\conv\compv_imageconv_common.cxx" />
     <ClCompile Include="image\conv\compv_imageconv_grayscale.cxx" />
     <ClCompile Include="image\conv\compv_imageconv_rgba_i420.cxx" />

@@ -80,12 +80,13 @@ public:
 	virtual COMPV_INLINE int getFeaturesCount() { return m_nFeaturesCount; };
 	virtual COMPV_INLINE int getFeatureBits() { return m_nFeatureBits; };
 	virtual COMPV_INLINE const void* getDataPtr() { if (m_data) return m_data->getPtr(); return NULL; }
+	virtual COMPV_INLINE const size_t getDataSize() { if (m_data) return m_data->getSize(); return 0; }
 
 	static COMPV_ERROR_CODE newObj(int nFeaturesCount, int nFeatureBits, CompVObjWrapper<CompVFeatureDescriptions*>* descriptions);
 
 private:
 	int m_nFeaturesCount; // number of features
-	int m_nFeatureBits; // number of bits each feature take
+	int m_nFeatureBits; // number of bits each feature takes
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
 	CompVObjWrapper<CompVBuffer *> m_data; // data holding the features
 	COMPV_DISABLE_WARNINGS_END()

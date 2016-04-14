@@ -285,8 +285,34 @@ typedef struct _CompVRect {
 	int32_t top;
 	int32_t right;
 	int32_t bottom;
+
+protected:
+	COMPV_INLINE void init(int32_t left_ = 0, int32_t top_ = 0, int32_t right_ = 0, int32_t bottom_ = 0) {
+		left = left_;
+		top = top_;
+		right = right_;
+		bottom = bottom_;
+	}
+public:
+	_CompVRect() {
+		init();
+	}
+	_CompVRect(int32_t left_, int32_t top_, int32_t right_, int32_t bottom_) {
+		init(left_, top_, right_, bottom_);
+	}
 }
 CompVRect;
+
+typedef struct _CompVSize {
+	int32_t width;
+	int32_t height;
+public:
+	_CompVSize(int32_t width_ = 0, int32_t height_ = 0) {
+		width = width_;
+		height = height_;
+	}
+}
+CompVSize;
 
 typedef struct _CompVInterestPoint {
 	int32_t x; /**< Point.x */
