@@ -330,10 +330,11 @@ static int32_t bit_pattern_31_[256 * 4] = {
 };
 
 // Helpful site to generate gaussian values: http://dev.theomader.com/gaussian-kernel-calculator/
-// filter notmalize?
+// filter normalize?
 // Fixel-arithmetic: *0xffff
 // Separable matrix
 static const double gfilterSigma2[7][7] = {
+#if 0 // FIXME(remove): From http://dev.theomader.com/gaussian-kernel-calculator/
     { 0.005084, 0.009377, 0.013539, 0.015302, 0.013539, 0.009377, 0.005084 },
     { 0.009377, 0.017296, 0.024972, 0.028224, 0.024972, 0.017296, 0.009377 },
     { 0.013539, 0.024972, 0.036054, 0.040749, 0.036054, 0.024972, 0.013539 },
@@ -341,6 +342,15 @@ static const double gfilterSigma2[7][7] = {
     { 0.013539, 0.024972, 0.036054, 0.040749, 0.036054, 0.024972, 0.013539 },
     { 0.009377, 0.017296, 0.024972, 0.028224, 0.024972, 0.017296, 0.009377 },
     { 0.005084, 0.009377, 0.013539, 0.015302, 0.013539, 0.009377, 0.005084 },
+#else // Generated using Doubango code
+	{ 0.00492233, 0.00919613, 0.01338028, 0.01516185, 0.01338028, 0.00919613, 0.00492233 },
+	{ 0.00919613, 0.01718062, 0.02499766, 0.02832606, 0.02499766, 0.01718062, 0.00919613 },
+	{ 0.01338028, 0.02499766, 0.03637138, 0.04121417, 0.03637138, 0.02499766, 0.01338028 },
+	{ 0.01516185, 0.02832606, 0.04121417, 0.04670178, 0.04121417, 0.02832606, 0.01516185 },
+	{ 0.01338028, 0.02499766, 0.03637138, 0.04121417, 0.03637138, 0.02499766, 0.01338028 },
+	{ 0.00919613, 0.01718062, 0.02499766, 0.02832606, 0.02499766, 0.01718062, 0.00919613 },
+	{ 0.00492233, 0.00919613, 0.01338028, 0.01516185, 0.01338028, 0.00919613, 0.00492233 }
+#endif
 };
 // FIXME: Gaussian filter is a separable matrix -> performance boost -> http://www.songho.ca/dsp/convolution/convolution.html
 // FIXME: Cache issue: translate the matrix
@@ -371,12 +381,12 @@ static void brief256(const uint8_t* img, int imgs, int imgw, int imgh, int kpx, 
     int x, y, i, j;
 
     uint64_t* _desc = (uint64_t*)desc;
-    const uint8_t* center = img + (int32_t)(((int)kpy * imgs) + (int)kpx); // Translate the image to kave the keypoint at the center. This is required before applying the rotated patch.
+    const uint8_t* center = img + (int32_t)(((int)kpy * imgs) + (int)kpx); // Translate the image to have the keypoint at the center. This is required before applying the rotated patch.
 
     // FIXME: To generate the locations (Xi, Yi):
     // See brief document: Isotropic Gaussian distribution
     static int Xi[256][2/*x,y*/] = { };
-    static int Yi[256][2/*x,y*/] = {};
+    static int Yi[256][2/*x,y*/] = { };
     static bool gen = false;
     static const int patch_div2 = 15;
     static const uint64_t u64_1 = 1;
@@ -408,16 +418,19 @@ static void brief256(const uint8_t* img, int imgs, int imgw, int imgh, int kpx, 
         return;
     }
 
+	// Applying rotation matrix to each (x, y) point in the patch gives us:
+	// xr = x*cosT - y*sinT and yr = x*sinT + y*cosT
+
 #if 0 // FIXME: my code
     for (i = 0, j = 0; i < 256; ++i, j = i & 63) {
-        x = (int)round(Xi[i][0] * cosT - Xi[i][1] * sinT);
-        y = (int)round(Xi[i][0] * sinT + Xi[i][1] * cosT);
+        x = (int)round(Xi[i][0] * cosT - Yi[i][0] * sinT);
+        y = (int)round(Xi[i][0] * sinT + Yi[i][0] * cosT);
         //if (x < 0 || x >= imgw) continue; // FIXME: remove keypoints too close to the border
         //if (y < 0 || y >= imgh) continue; // FIXME: remove keypoints too close to the border
         xi = center[(y * imgs) + x];
 
-        x = (int)round(Yi[i][0] * cosT - Yi[i][1] * sinT);
-        y = (int)round(Yi[i][0] * sinT + Yi[i][1] * cosT);
+        x = (int)round(Xi[i][1] * cosT - Yi[i][1] * sinT);
+        y = (int)round(Xi[i][1] * sinT + Yi[i][1] * cosT);
         //if (x < 0 || x >= imgw) continue; // FIXME: remove keypoints too close to the border
         //if (y < 0 || y >= imgh) continue; // FIXME: remove keypoints too close to the border
         yi = center[(y * imgs) + x];
@@ -470,11 +483,10 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
 
     // Compute the pyramid
     if (/* DISABLES CODE */ (0)) {
-        // FIXME: if deteter attached then use the pyramid from it
+        // FIXME: if detecter attached then use the pyramid from it
         _pyramid = NULL;
     }
     else {
-        //gaussianblur((uint8_t*)image->getDataPtr(), image->getWidth(), image->getStride(), image->getHeight());
         COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image));
         _pyramid = m_pyramid;
     }
@@ -502,15 +514,8 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
         float cosT = cos(angleRad);
         float sinT = sin(angleRad);
         // ipx/ipy are defined in cartesien coords x€(-w/2,w/2), y€(-h/2,h/2)
-#if 0 // Patch moments which changes not the x,y
-        int32_t ikpx = (int32_t)round(fkpx * cosT - fkpy * sinT); // FIXME
-        int32_t ikpy = (int32_t)round(fkpx * sinT + fkpy * cosT); // FIXME
-
-
-#else
         int32_t ikpx = (int32_t)round(fkpx);
         int32_t ikpy = (int32_t)round(fkpy);
-#endif
 
         //FIXME: make sure we're really using PatchSize 31
         brief256((const uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getStride(), imageAtLevelN->getWidth(), imageAtLevelN->getHeight(), ikpx, ikpy, cosT, sinT, (void*)_descriptionsPtr);

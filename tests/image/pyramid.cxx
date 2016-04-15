@@ -1,5 +1,7 @@
 #include <compv/compv_api.h>
 
+#include "../common.h"
+
 #define JPEG_IMG  "C:/Projects/GitHub/pan360/images/opengl_programming_guide_8th_edition.jpg" // OpenGL livre
 //#define JPEG_IMG  "C:/Projects/GitHub/pan360/images/mandekalou.JPG" // Mande Griots
 //#define JPEG_IMG	"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
@@ -11,9 +13,6 @@ using namespace compv;
 #define IMAGE_PYRAMID_SCALE_TYPE	COMPV_SCALE_TYPE_BILINEAR
 #define IMAGE_PYRAMID_LOOP_COUNT	1000
 #define IMAGE_MD5					1
-
-extern void writeImgToFile(const CompVObjWrapper<CompVImage *>& img, COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL);
-extern std::string imageMD5(const CompVObjWrapper<CompVImage *>& img, COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL);
 
 bool TestPyramid()
 {

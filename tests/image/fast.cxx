@@ -1,5 +1,7 @@
 #include <compv/compv_api.h>
 
+#include "../common.h"
+
 using namespace compv;
 
 #define THRESHOLD			10

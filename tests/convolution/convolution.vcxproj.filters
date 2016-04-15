@@ -15,31 +15,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="conv.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="fast.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="scale.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="pyramid.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="orb.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="border.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <ClCompile Include="convo.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gauss.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

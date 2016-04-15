@@ -1,5 +1,7 @@
 #include <compv/compv_api.h>
 
+#include "../common.h"
+
 using namespace compv;
 
 #define FAST_THRESHOLD				10
@@ -8,7 +10,7 @@ using namespace compv;
 #define ORB_PYRAMID_SCALEFACTOR		0.83f
 #define ORB_PYRAMID_SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
 #define ORB_LOOOP_COUNT				1
-#define ORB_DESC_MD5				"030cb5a315322e8e03d03d7d2654bcd0"
+#define ORB_DESC_MD5				"915179a09981e47453688d07c8d46975"
 #define JPEG_IMG  "C:/Projects/GitHub/pan360/images/opengl_programming_guide_8th_edition.jpg"
 
 bool TestORB()
