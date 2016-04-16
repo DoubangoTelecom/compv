@@ -330,19 +330,7 @@ static int32_t bit_pattern_31_[256 * 4] = {
 };
 
 // Helpful site to generate gaussian values: http://dev.theomader.com/gaussian-kernel-calculator/
-// filter normalize?
-// Fixel-arithmetic: *0xffff
-// Separable matrix
-static const double gfilterSigma2[7][7] = {
-#if 0 // FIXME(remove): From http://dev.theomader.com/gaussian-kernel-calculator/
-    { 0.005084, 0.009377, 0.013539, 0.015302, 0.013539, 0.009377, 0.005084 },
-    { 0.009377, 0.017296, 0.024972, 0.028224, 0.024972, 0.017296, 0.009377 },
-    { 0.013539, 0.024972, 0.036054, 0.040749, 0.036054, 0.024972, 0.013539 },
-    { 0.015302, 0.028224, 0.040749, 0.046056, 0.040749, 0.028224, 0.015302 },
-    { 0.013539, 0.024972, 0.036054, 0.040749, 0.036054, 0.024972, 0.013539 },
-    { 0.009377, 0.017296, 0.024972, 0.028224, 0.024972, 0.017296, 0.009377 },
-    { 0.005084, 0.009377, 0.013539, 0.015302, 0.013539, 0.009377, 0.005084 },
-#else // Generated using Doubango code
+static const double gfilterGaussianBlur2[7][7] = {
 	{ 0.00492233, 0.00919613, 0.01338028, 0.01516185, 0.01338028, 0.00919613, 0.00492233 },
 	{ 0.00919613, 0.01718062, 0.02499766, 0.02832606, 0.02499766, 0.01718062, 0.00919613 },
 	{ 0.01338028, 0.02499766, 0.03637138, 0.04121417, 0.03637138, 0.02499766, 0.01338028 },
@@ -350,28 +338,90 @@ static const double gfilterSigma2[7][7] = {
 	{ 0.01338028, 0.02499766, 0.03637138, 0.04121417, 0.03637138, 0.02499766, 0.01338028 },
 	{ 0.00919613, 0.01718062, 0.02499766, 0.02832606, 0.02499766, 0.01718062, 0.00919613 },
 	{ 0.00492233, 0.00919613, 0.01338028, 0.01516185, 0.01338028, 0.00919613, 0.00492233 }
-#endif
 };
-// FIXME: Gaussian filter is a separable matrix -> performance boost -> http://www.songho.ca/dsp/convolution/convolution.html
-// FIXME: Cache issue: translate the matrix
-static void gaussianblur(uint8_t* img, int imgw, int imgs, int imgh)
+static const double gfilterGaussianBlur1[7] = { 0.07015933, 0.13107488, 0.19071282, 0.21610594, 0.19071282, 0.13107488, 0.07015933 };
+static COMPV_ERROR_CODE convlt2(uint8_t* img, int imgw, int imgs, int imgh, const double* ker, int ker_size)
 {
-    uint8_t* outImg = (uint8_t*)CompVMem::malloc(imgh * imgs);
-    for (int j = 3; j < imgh - 3; ++j) {
-        uint8_t* center = img + (j * imgs) + 3 /* +3 because i starts at 3*/;
-        for (int i = 3; i < imgw - 3; ++i) {
-            double sum = 0;
-            for (int row = 0; row < 7; ++row) {
-                for (int col = 0; col < 7; ++col) {
-                    sum += center[((3 - row)*imgs) + (3 - col)] * gfilterSigma2[row][col];
-                }
-            }
-            outImg[(j * imgs) + i] = (uint8_t)sum;
-            ++center;
-        }
-    }
-    CompVMem::copy(img, outImg, imgh * imgs);
-    CompVMem::free((void**)&outImg);
+	COMPV_CHECK_EXP_RETURN(!(ker_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER); // Kernel size must be odd number
+
+	uint8_t* outImg = (uint8_t*)CompVMem::malloc(imgh * imgs);
+	const uint8_t *topleft, *img_ptr;
+	double sum;
+	const double *ker_ptr;
+	int imgpad, i, j, row, col;
+	int ker_size_div2 = ker_size >> 1;
+	img_ptr = img;
+	imgpad = (imgs - imgw) + ker_size_div2 + ker_size_div2;
+
+	for (j = ker_size_div2; j < imgh - ker_size_div2; ++j) {
+		for (i = ker_size_div2; i < imgw - ker_size_div2; ++i) {
+			sum = 0;
+			topleft = img_ptr;
+			ker_ptr = ker;
+			for (row = 0; row < ker_size; ++row) {
+				for (col = 0; col < ker_size; ++col) {
+					sum += topleft[col] * ker_ptr[col];
+				}
+				ker_ptr += ker_size;
+				topleft += imgs;
+			}
+			outImg[(j * imgs) + i] = (uint8_t)sum;
+			++img_ptr;
+		}
+		img_ptr += imgpad;
+	}
+	CompVMem::copy(img, outImg, imgh * imgs); // FIXME: garbage
+	CompVMem::free((void**)&outImg);
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+static COMPV_ERROR_CODE convlt1(uint8_t* img, int imgw, int imgs, int imgh, const double* ker, int ker_size)
+{
+	COMPV_CHECK_EXP_RETURN(!(ker_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER); // Kernel size must be odd number
+
+	uint8_t* outImg = (uint8_t*)CompVMem::malloc(imgh * imgs);
+	const uint8_t *topleft, *img_ptr;
+	double sum;
+	int imgpad, i, j, row, col;
+	int ker_size_div2 = ker_size >> 1;
+
+	imgpad = (imgs - imgw) + ker_size_div2 + ker_size_div2;
+
+	// Horizontal
+	img_ptr = img;
+	for (j = ker_size_div2; j < imgh - ker_size_div2; ++j) {
+		for (i = ker_size_div2; i < imgw - ker_size_div2; ++i) {
+			sum = 0;
+			for (col = 0; col < ker_size; ++col) {
+				sum += img_ptr[col] * ker[col];
+			}
+			outImg[(j * imgs) + i] = (uint8_t)sum;
+			++img_ptr;
+		}
+		img_ptr += imgpad;
+	}
+	CompVMem::copy(img, outImg, imgh * imgs); // FIXME: garbage
+
+	// Vertical
+	img_ptr = img;
+	for (j = ker_size_div2; j < imgh - ker_size_div2; ++j) {
+		for (i = ker_size_div2; i < imgw - ker_size_div2; ++i) {
+			sum = 0;
+			topleft = img_ptr;
+			for (row = 0; row < ker_size; ++row) {
+				sum += topleft[0] * ker[row];
+				topleft += imgs;
+			}
+			outImg[(j * imgs) + i] = (uint8_t)sum;
+			++img_ptr;
+		}
+		img_ptr += imgpad;
+	}
+	CompVMem::copy(img, outImg, imgh * imgs); // FIXME: garbage
+
+	CompVMem::free((void**)&outImg);
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 // FIXME: adds support for BRIEF 128, 256 or 512 -> uint16, uint32, uint64
@@ -491,10 +541,11 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
         _pyramid = m_pyramid;
     }
 
-    // FIXME: apply gaussianblur filter on the pyramid
+    // apply gaussianblur filter on the pyramid
     for (int level = 0; level < _pyramid->getLevels(); ++level) {
         COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(level, &imageAtLevelN));
-        gaussianblur((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight());
+		convlt2((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur2, 7); // Gaussing blur
+		//convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur1, 7);
     }
 
     // FIXME: no test
