@@ -379,47 +379,49 @@ static COMPV_ERROR_CODE convlt1(uint8_t* img, int imgw, int imgs, int imgh, cons
 {
 	COMPV_CHECK_EXP_RETURN(!(ker_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER); // Kernel size must be odd number
 
-	uint8_t* outImg = (uint8_t*)CompVMem::malloc(imgh * imgs);
+	uint8_t *imgTmp;
 	const uint8_t *topleft, *img_ptr;
 	double sum;
 	int imgpad, i, j, row, col;
 	int ker_size_div2 = ker_size >> 1;
 
-	imgpad = (imgs - imgw) + ker_size_div2 + ker_size_div2;
+	imgTmp = (uint8_t*)CompVMem::malloc(imgh * imgs);
+	COMPV_CHECK_EXP_RETURN(!imgTmp, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
 	// Horizontal
-	img_ptr = img;
-	for (j = ker_size_div2; j < imgh - ker_size_div2; ++j) {
+	img_ptr = img + ker_size_div2;
+	imgpad = (imgs - imgw) + ker_size_div2 + ker_size_div2;
+	for (j = 0; j < imgh; ++j) {
 		for (i = ker_size_div2; i < imgw - ker_size_div2; ++i) {
 			sum = 0;
+			topleft = img_ptr - ker_size_div2;
 			for (col = 0; col < ker_size; ++col) {
-				sum += img_ptr[col] * ker[col];
+				sum += topleft[col] * ker[col];
 			}
-			outImg[(j * imgs) + i] = (uint8_t)sum;
+			imgTmp[(j * imgs) + i] = (uint8_t)sum;
 			++img_ptr;
 		}
 		img_ptr += imgpad;
 	}
-	CompVMem::copy(img, outImg, imgh * imgs); // FIXME: garbage
 
 	// Vertical
-	img_ptr = img;
+	img_ptr = imgTmp + (ker_size_div2 * imgs); // output from hz filtering is now used as input
+	imgpad = (imgs - imgw);
 	for (j = ker_size_div2; j < imgh - ker_size_div2; ++j) {
-		for (i = ker_size_div2; i < imgw - ker_size_div2; ++i) {
+		for (i = 0; i < imgw; ++i) {
 			sum = 0;
-			topleft = img_ptr;
+			topleft = img_ptr - (ker_size_div2 * imgs);
 			for (row = 0; row < ker_size; ++row) {
 				sum += topleft[0] * ker[row];
 				topleft += imgs;
 			}
-			outImg[(j * imgs) + i] = (uint8_t)sum;
+			img[(j * imgs) + i] = (uint8_t)sum;
 			++img_ptr;
 		}
 		img_ptr += imgpad;
 	}
-	CompVMem::copy(img, outImg, imgh * imgs); // FIXME: garbage
 
-	CompVMem::free((void**)&outImg);
+	CompVMem::free((void**)&imgTmp);
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -544,8 +546,8 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
     // apply gaussianblur filter on the pyramid
     for (int level = 0; level < _pyramid->getLevels(); ++level) {
         COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(level, &imageAtLevelN));
-		convlt2((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur2, 7); // Gaussing blur
-		//convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur1, 7);
+		//convlt2((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur2, 7); // Gaussing blur
+		convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur1, 7);
     }
 
     // FIXME: no test
