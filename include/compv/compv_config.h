@@ -89,7 +89,7 @@
 #	define COMPV_OS_OS2					1
 #endif
 // OS: Solaris
-#if defined(sun) || defined(__sun) 
+#if defined(sun) || defined(__sun)
 #	define COMPV_OS_SOLARIS				1
 #endif
 // OS: Symbian32
@@ -280,7 +280,7 @@
 #	define COMPV_INLINE	_inline
 #	pragma warning( disable : 4996 )
 #	if _MSC_VER >= 1700
-	// Warning	3	warning C4752: found Intel(R) Advanced Vector Extensions; consider using /arch:AVX
+// Warning	3	warning C4752: found Intel(R) Advanced Vector Extensions; consider using /arch:AVX
 #	pragma warning(disable: 4752)
 #	endif
 #	include <intrin.h>

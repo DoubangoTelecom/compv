@@ -191,9 +191,9 @@ CompVCpu::~CompVCpu()
 
 COMPV_ERROR_CODE CompVCpu::init()
 {
-	//
-	// CPUID
-	//
+    //
+    // CPUID
+    //
 #if !defined(__CLR_VER) && defined(COMPV_ARCH_X86)
     // https://en.wikipedia.org/wiki/CPUID
     CompVCpu::s_uFlags = kCpuFlagX86;
@@ -270,19 +270,19 @@ COMPV_ERROR_CODE CompVCpu::init()
             (COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 16) ? kCpuFlagFMA4 : 0) |
             (COMPV_CPU_FLAG_IS_SET(cpu_info[I_ECX], 11) ? kCpuFlagXOP : 0);
     }
-	if (info0 >= 0x80000005) {
-		// CompVX86CpuId(0x80000005, 0, cpu_info); // EAX=80000005h: L1 Cache and TLB Identifiers
-		// http://www.intel.fr/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf
-		// Section 7.7.3 Deterministic Cache Parameters
-		// (# of Ways) * (Partitions) * (Line_size) * (Sets) = (EBX[31:22] + 1) * (EBX[21:12] + 1) * (EBX[11:0] + 1) * (ECX+1)
-		//#define kMaskNofWays	0
-		//#define kMaskLineSize	0x7FF
+    if (info0 >= 0x80000005) {
+        // CompVX86CpuId(0x80000005, 0, cpu_info); // EAX=80000005h: L1 Cache and TLB Identifiers
+        // http://www.intel.fr/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf
+        // Section 7.7.3 Deterministic Cache Parameters
+        // (# of Ways) * (Partitions) * (Line_size) * (Sets) = (EBX[31:22] + 1) * (EBX[21:12] + 1) * (EBX[11:0] + 1) * (ECX+1)
+        //#define kMaskNofWays	0
+        //#define kMaskLineSize	0x7FF
 
-		//uint32_t lineSize = (cpu_info[I_EBX] & kMaskLineSize) + 1;
-		//if (lineSize) {
-		//	printf("Line size: %u", lineSize);
-		//}
-	}
+        //uint32_t lineSize = (cpu_info[I_EBX] & kMaskLineSize) + 1;
+        //if (lineSize) {
+        //	printf("Line size: %u", lineSize);
+        //}
+    }
 
 #elif defined(COMPV_ARCH_ARM) || defined(COMPV_ARCH_ARM64)
     CompVCpu::s_uFlags = kCpuFlagARM;
@@ -299,69 +299,69 @@ COMPV_ERROR_CODE CompVCpu::init()
 #endif
 
     // Remove disabled flags
-	CompVCpu::s_uFlagsEnabled = (CompVCpu::s_uFlags & ~CompVCpu::s_uFlagsDisabled);
+    CompVCpu::s_uFlagsEnabled = (CompVCpu::s_uFlags & ~CompVCpu::s_uFlagsDisabled);
 
-	//
-	//	Cores
-	//
+    //
+    //	Cores
+    //
 #if COMPV_OS_WINDOWS
-	SYSTEM_INFO SystemInfo;
+    SYSTEM_INFO SystemInfo;
 #	if COMPV_OS_WINDOWS_RT
-	GetNativeSystemInfo(&SystemInfo);
+    GetNativeSystemInfo(&SystemInfo);
 #	else
-	GetSystemInfo(&SystemInfo);
+    GetSystemInfo(&SystemInfo);
 #	endif
-	s_iCores = SystemInfo.dwNumberOfProcessors;
+    s_iCores = SystemInfo.dwNumberOfProcessors;
 #elif defined(_OPENMP) || defined(_OPENMP) || defined(HAVE_OMP_H)
-	s_iCores = omp_get_num_procs();
+    s_iCores = omp_get_num_procs();
 #elif COMPV_OS_APPLE
     size_t len = sizeof(s_iCores);
     int mib0[2] = { CTL_HW, HW_NCPU };
     sysctl(mib0, 2, &s_iCores, &len, NULL, 0);
 #elif defined(__GNUC__)
-	s_iCores = (int32_t)sysconf(_SC_NPROCESSORS_ONLN);
+    s_iCores = (int32_t)sysconf(_SC_NPROCESSORS_ONLN);
 #else
-	COMPV_DEBUG_ERROR("getCoresCount function not implemented ...using 1 as default value");
-	s_iCores = 1;
+    COMPV_DEBUG_ERROR("getCoresCount function not implemented ...using 1 as default value");
+    s_iCores = 1;
 #endif
 
-	//
-	// Cache size
-	//
+    //
+    // Cache size
+    //
 #if COMPV_OS_WINDOWS
-	DWORD bs = 0;
-	if (!GetLogicalProcessorInformation(0, &bs)) {
-		SYSTEM_LOGICAL_PROCESSOR_INFORMATION *buff = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)malloc(bs);
-		DWORD i;
-		GetLogicalProcessorInformation(buff, &bs);
-		for (i = 0; i != bs / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
-			if (buff[i].Relationship == RelationCache && buff[i].Cache.Level == 1) {
-				s_iCache1LineSize = buff[i].Cache.LineSize;
-				s_iCache1Size = buff[i].Cache.Size;
-				break;
-			}
-		}
-		if (buff) {
-			free(buff);
-		}
-	}
-	else {
-		COMPV_DEBUG_ERROR("GetLogicalProcessorInformation() failed with error code = %08x", GetLastError());
-		s_iCache1LineSize = 64;
-		s_iCache1Size = 4096;
-	}
+    DWORD bs = 0;
+    if (!GetLogicalProcessorInformation(0, &bs)) {
+        SYSTEM_LOGICAL_PROCESSOR_INFORMATION *buff = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)malloc(bs);
+        DWORD i;
+        GetLogicalProcessorInformation(buff, &bs);
+        for (i = 0; i != bs / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
+            if (buff[i].Relationship == RelationCache && buff[i].Cache.Level == 1) {
+                s_iCache1LineSize = buff[i].Cache.LineSize;
+                s_iCache1Size = buff[i].Cache.Size;
+                break;
+            }
+        }
+        if (buff) {
+            free(buff);
+        }
+    }
+    else {
+        COMPV_DEBUG_ERROR("GetLogicalProcessorInformation() failed with error code = %08x", GetLastError());
+        s_iCache1LineSize = 64;
+        s_iCache1Size = 4096;
+    }
 
 #elif COMPV_OS_APPLE
-	size_t sizeof_cls = sizeof(s_iCache1LineSize);
-	size_t sizeof_cs = sizeof(s_iCache1Size);
+    size_t sizeof_cls = sizeof(s_iCache1LineSize);
+    size_t sizeof_cs = sizeof(s_iCache1Size);
     int mib1[2] = { CTL_HW, HW_CACHELINE };
     int mib2[2] = { CTL_HW, HW_L1ICACHESIZE };
-    
-	sysctl(mib1, 2, &s_iCache1LineSize, &sizeof_cls, NULL, 0);
-	sysctl(mib2, 2, &s_iCache1Size, &sizeof_cs, NULL, 0);
+
+    sysctl(mib1, 2, &s_iCache1LineSize, &sizeof_cls, NULL, 0);
+    sysctl(mib2, 2, &s_iCache1Size, &sizeof_cs, NULL, 0);
 #else
-	s_iCache1LineSize = (int32_t)sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
-	s_iCache1Size = (int32_t)sysconf(_SC_LEVEL1_DCACHE_SIZE);
+    s_iCache1LineSize = (int32_t)sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+    s_iCache1Size = (int32_t)sysconf(_SC_LEVEL1_DCACHE_SIZE);
 #endif
 
     return COMPV_ERROR_CODE_S_OK;
@@ -487,19 +487,19 @@ uint64_t CompVCpu::getTimeProcess()
 COMPV_ERROR_CODE CompVCpu::flagsDisable(uint64_t flags)
 {
     COMPV_DEBUG_INFO("Disabled CPU flags: %s", getFlagsAsString(flags));
-	CompVCpu::s_uFlagsDisabled = flags;
-	CompVCpu::s_uFlagsEnabled = (CompVCpu::s_uFlags & ~CompVCpu::s_uFlagsDisabled);
-	COMPV_DEBUG_INFO("Enabled CPU flags: %s", getFlagsAsString(CompVCpu::s_uFlagsEnabled));
-	return COMPV_ERROR_CODE_S_OK;
+    CompVCpu::s_uFlagsDisabled = flags;
+    CompVCpu::s_uFlagsEnabled = (CompVCpu::s_uFlags & ~CompVCpu::s_uFlagsDisabled);
+    COMPV_DEBUG_INFO("Enabled CPU flags: %s", getFlagsAsString(CompVCpu::s_uFlagsEnabled));
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVCpu::flagsEnable(uint64_t flags)
 {
     COMPV_DEBUG_INFO("Enabled CPU flags: %s", getFlagsAsString(flags));
     s_uFlagsDisabled &= ~flags;
-	CompVCpu::s_uFlagsEnabled = (CompVCpu::s_uFlags & ~CompVCpu::s_uFlagsDisabled);
-	COMPV_DEBUG_INFO("Enabled CPU flags: %s", getFlagsAsString(CompVCpu::s_uFlagsEnabled));
-	return COMPV_ERROR_CODE_S_OK;
+    CompVCpu::s_uFlagsEnabled = (CompVCpu::s_uFlags & ~CompVCpu::s_uFlagsDisabled);
+    COMPV_DEBUG_INFO("Enabled CPU flags: %s", getFlagsAsString(CompVCpu::s_uFlagsEnabled));
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVCpu::setAsmEnabled(bool bEnabled)

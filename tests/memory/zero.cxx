@@ -8,29 +8,29 @@ using namespace compv;
 
 bool TestZeroNTA()
 {
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	uint64_t timeStart, timeEnd;
-	uint8_t* memDstPtr = (uint8_t*)CompVMem::mallocAligned(memSize, memAlign);
-	COMPV_CHECK_EXP_BAIL(!memDstPtr, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    uint64_t timeStart, timeEnd;
+    uint8_t* memDstPtr = (uint8_t*)CompVMem::mallocAligned(memSize, memAlign);
+    COMPV_CHECK_EXP_BAIL(!memDstPtr, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
-	for (size_t i = 0; i < memSize; ++i) {
-		memDstPtr[i] = rand() & 0xFF;
-	}
+    for (size_t i = 0; i < memSize; ++i) {
+        memDstPtr[i] = rand() & 0xFF;
+    }
 
-	timeStart = CompVTime::getNowMills();
-	for (size_t i = 0; i < loopCount; ++i) {
-		CompVMem::zeroNTA(memDstPtr, memSize);
-	}
-	timeEnd = CompVTime::getNowMills();
-	COMPV_DEBUG_INFO("MemoryZeroNTA elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
+    timeStart = CompVTime::getNowMills();
+    for (size_t i = 0; i < loopCount; ++i) {
+        CompVMem::zeroNTA(memDstPtr, memSize);
+    }
+    timeEnd = CompVTime::getNowMills();
+    COMPV_DEBUG_INFO("MemoryZeroNTA elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-	for (size_t i = 0; i < memSize; ++i) {
-		if (memDstPtr[i] != 0) {
-			COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E);
-		}
-	}
+    for (size_t i = 0; i < memSize; ++i) {
+        if (memDstPtr[i] != 0) {
+            COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E);
+        }
+    }
 
 bail:
-	CompVMem::free((void**)&memDstPtr);
-	return COMPV_ERROR_CODE_IS_OK(err_);
+    CompVMem::free((void**)&memDstPtr);
+    return COMPV_ERROR_CODE_IS_OK(err_);
 }

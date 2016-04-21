@@ -29,20 +29,24 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_API CompVMutex : public CompVObj
 {
 protected:
-	CompVMutex(bool recursive = true);
+    CompVMutex(bool recursive = true);
 public:
-	virtual ~CompVMutex();
-	virtual COMPV_INLINE const char* getObjectId() { return "CompVMutex"; };
-	
-	COMPV_ERROR_CODE lock();
-	COMPV_ERROR_CODE unlock();
-    
-    COMPV_INLINE const void* handle() { return m_pHandle; } // "'pthread_mutex_t*' on Linux and 'HANDLE' on Windows"
+    virtual ~CompVMutex();
+    virtual COMPV_INLINE const char* getObjectId() {
+        return "CompVMutex";
+    };
 
-	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVMutex*>* mutex, bool recursive = true);
+    COMPV_ERROR_CODE lock();
+    COMPV_ERROR_CODE unlock();
+
+    COMPV_INLINE const void* handle() {
+        return m_pHandle;    // "'pthread_mutex_t*' on Linux and 'HANDLE' on Windows"
+    }
+
+    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVMutex*>* mutex, bool recursive = true);
 
 private:
-	void* m_pHandle;
+    void* m_pHandle;
 };
 
 COMPV_NAMESPACE_END()

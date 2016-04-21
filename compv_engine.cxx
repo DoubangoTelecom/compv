@@ -101,7 +101,7 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     COMPV_CHECK_CODE_BAIL(err_ = CompVCpu::init());
     COMPV_DEBUG_INFO("CPU features: %s", CompVCpu::getFlagsAsString(CompVCpu::getFlags()));
     COMPV_DEBUG_INFO("CPU cores: #%d", CompVCpu::getCoresCount());
-	COMPV_DEBUG_INFO("CPU cache1: line size: #%dB, size :#%dKB", CompVCpu::getCache1LineSize(), CompVCpu::getCache1Size()>>10);
+    COMPV_DEBUG_INFO("CPU cache1: line size: #%dB, size :#%dKB", CompVCpu::getCache1LineSize(), CompVCpu::getCache1Size()>>10);
 #if defined(COMPV_ARCH_X86)
     // even if we are on X64 CPU it's possible that we're running a 32-bit binary
 #	if defined(COMPV_ARCH_X64)
@@ -117,7 +117,7 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     COMPV_DEBUG_INFO("Assembler enabled");
 #endif
 #if defined __INTEL_COMPILER
-	COMPV_DEBUG_INFO("Using Intel compiler");
+    COMPV_DEBUG_INFO("Using Intel compiler");
 #endif
     // https://msdn.microsoft.com/en-us/library/jj620901.aspx
 #if defined(__AVX2__)

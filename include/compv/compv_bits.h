@@ -42,7 +42,7 @@ public:
 #	define compv_popcnt16_hard(val)	__builtin_popcount((val)&0xFFFF)
 #endif
 #define compv_popcnt16_soft(val)		(kPopcnt256[val & 0xFF] + kPopcnt256[(val >> 8) & 0xFF])
- //TODO(dmi): https://github.com/DoubangoTelecom/compv/issues/27
+//TODO(dmi): https://github.com/DoubangoTelecom/compv/issues/27
 #define compv_popcnt16(hard, val)		(val ? compv_popcnt16_hard((val)) : compv_popcnt16_soft((val)))
 
 COMPV_NAMESPACE_END()

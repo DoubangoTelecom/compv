@@ -26,13 +26,14 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class COMPV_API CompVBoxInterestPoint : public CompVBox<CompVInterestPoint > {
+class COMPV_API CompVBoxInterestPoint : public CompVBox<CompVInterestPoint >
+{
 protected:
-	CompVBoxInterestPoint(size_t nCapacity = 0, bool bLockable = false);
+    CompVBoxInterestPoint(size_t nCapacity = 0, bool bLockable = false);
 public:
-	virtual ~CompVBoxInterestPoint();
-	COMPV_ERROR_CODE sort(bool(*CompVBoxPredicateCompare)(const CompVInterestPoint*, const CompVInterestPoint*)); // multithreaded sorting
-	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVBoxInterestPoint* >* box, size_t nCapacity = 0, bool bLockable = false);
+    virtual ~CompVBoxInterestPoint();
+    COMPV_ERROR_CODE sort(bool(*CompVBoxPredicateCompare)(const CompVInterestPoint*, const CompVInterestPoint*)); // multithreaded sorting
+    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVBoxInterestPoint* >* box, size_t nCapacity = 0, bool bLockable = false);
 };
 
 COMPV_NAMESPACE_END()

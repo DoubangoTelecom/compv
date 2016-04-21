@@ -32,14 +32,14 @@
 COMPV_NAMESPACE_BEGIN()
 
 void FastData16Row_Intrin_SSE2(
-	const uint8_t* IP,
-	const uint8_t* IPprev,
-	compv_scalar_t width,
-	const compv_scalar_t(&pixels16)[16],
-	compv_scalar_t N,
-	compv_scalar_t threshold,
-	uint8_t* strengths,
-	compv_scalar_t* me);
+    const uint8_t* IP,
+    const uint8_t* IPprev,
+    compv_scalar_t width,
+    const compv_scalar_t(&pixels16)[16],
+    compv_scalar_t N,
+    compv_scalar_t threshold,
+    uint8_t* strengths,
+    compv_scalar_t* me);
 
 void FastStrengths16_Intrin_SSE2(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x16, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x16, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv_scalar_t N);
 void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x16, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x16, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv_scalar_t N);

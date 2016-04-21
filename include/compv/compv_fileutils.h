@@ -30,15 +30,15 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_API CompVFileUtils
 {
 private:
-	CompVFileUtils();
+    CompVFileUtils();
 public:
-	virtual ~CompVFileUtils();
-	static bool exists(const char* pcPath);
-	static bool empty(const char* pcPath);
-	static size_t getSize(const char* pcPath);
-	static std::string getExt(const char* pcPath);
-	static COMPV_IMAGE_FORMAT getImageFormat(const char* pcPath);
-	static COMPV_ERROR_CODE read(const char* pcPath, CompVObjWrapper<CompVBuffer*> *buffer);
+    virtual ~CompVFileUtils();
+    static bool exists(const char* pcPath);
+    static bool empty(const char* pcPath);
+    static size_t getSize(const char* pcPath);
+    static std::string getExt(const char* pcPath);
+    static COMPV_IMAGE_FORMAT getImageFormat(const char* pcPath);
+    static COMPV_ERROR_CODE read(const char* pcPath, CompVObjWrapper<CompVBuffer*> *buffer);
 };
 
 COMPV_NAMESPACE_END()

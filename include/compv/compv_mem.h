@@ -26,52 +26,52 @@
 COMPV_NAMESPACE_BEGIN()
 
 typedef struct compv_special_mem_s {
-	uintptr_t addr;
-	size_t size;
-	size_t alignment;
+    uintptr_t addr;
+    size_t size;
+    size_t alignment;
 public:
-	compv_special_mem_s() : addr(NULL), size(0), alignment(0) { }
-	compv_special_mem_s(uintptr_t _addr, size_t _size, size_t _alignment) {
-		addr = _addr;
-		size = _size;
-		alignment = _alignment;
-	}
+    compv_special_mem_s() : addr(NULL), size(0), alignment(0) { }
+    compv_special_mem_s(uintptr_t _addr, size_t _size, size_t _alignment) {
+        addr = _addr;
+        size = _size;
+        alignment = _alignment;
+    }
 }
 compv_special_mem_t;
 
 class COMPV_API CompVMem
 {
 public:
-	static COMPV_ERROR_CODE copy(void* dstPtr, const void*srcPtr, size_t size);
-	static COMPV_ERROR_CODE copyNTA(void* dstPtr, const void*srcPtr, size_t size);
+    static COMPV_ERROR_CODE copy(void* dstPtr, const void*srcPtr, size_t size);
+    static COMPV_ERROR_CODE copyNTA(void* dstPtr, const void*srcPtr, size_t size);
 
-	static COMPV_ERROR_CODE zero(void* dstPtr, size_t size);
-	static COMPV_ERROR_CODE zeroNTA(void* dstPtr, size_t size);
+    static COMPV_ERROR_CODE zero(void* dstPtr, size_t size);
+    static COMPV_ERROR_CODE zeroNTA(void* dstPtr, size_t size);
 
-	static void* malloc(size_t size);
-	static void* realloc(void * ptr, size_t size);
-	static void* calloc(size_t num, size_t size);
-	static void free(void** ptr);
+    static void* malloc(size_t size);
+    static void* realloc(void * ptr, size_t size);
+    static void* calloc(size_t num, size_t size);
+    static void free(void** ptr);
 
-	static void* mallocAligned(size_t size, int alignment = CompVMem::getBestAlignment());
-	static void* reallocAligned(void * ptr, size_t size, int alignment = CompVMem::getBestAlignment());
-	static void* callocAligned(size_t num, size_t size, int alignment = CompVMem::getBestAlignment());
-	static void freeAligned(void** ptr);
-	
-	static uintptr_t alignBackward(uintptr_t ptr, int alignment = CompVMem::getBestAlignment());
-	static uintptr_t alignForward(uintptr_t ptr, int alignment = CompVMem::getBestAlignment());
-	static size_t alignSizeOnCacheLineAndSIMD(size_t size);
+    static void* mallocAligned(size_t size, int alignment = CompVMem::getBestAlignment());
+    static void* reallocAligned(void * ptr, size_t size, int alignment = CompVMem::getBestAlignment());
+    static void* callocAligned(size_t num, size_t size, int alignment = CompVMem::getBestAlignment());
+    static void freeAligned(void** ptr);
 
-	static int getBestAlignment();
-	static bool isSpecial(void* ptr);
-	static size_t getSpecialTotalMemSize();
-	static size_t getSpecialsCount();
-	static bool isEmpty();
+    static uintptr_t alignBackward(uintptr_t ptr, int alignment = CompVMem::getBestAlignment());
+    static uintptr_t alignForward(uintptr_t ptr, int alignment = CompVMem::getBestAlignment());
+    static size_t alignSizeOnCacheLineAndSIMD(size_t size);
+
+    static int getBestAlignment();
+    static bool isSpecial(void* ptr);
+    static size_t getSpecialTotalMemSize();
+    static size_t getSpecialsCount();
+    static bool isEmpty();
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-	static std::map<uintptr_t, compv_special_mem_t > s_Specials;
-	COMPV_DISABLE_WARNINGS_END()
+    COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+    static std::map<uintptr_t, compv_special_mem_t > s_Specials;
+    COMPV_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

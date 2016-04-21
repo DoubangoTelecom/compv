@@ -29,7 +29,7 @@
  */
 
 #ifdef __cplusplus
-    extern "C" {
+extern "C" {
 #endif
 
 /*
@@ -263,7 +263,7 @@ FGAPI void    FGAPIENTRY glutAppStatusFunc(void (* callback)(int));
 #define  GLUT_SRGB                          0x1000
 
 #ifdef __cplusplus
-    }
+}
 #endif
 
 /*** END OF FILE ***/

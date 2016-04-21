@@ -42,4 +42,14 @@ COMPV_ERROR_CODE CompVSettable::set(int id, const void* valuePtr, size_t valueSi
     }
 }
 
+COMPV_ERROR_CODE CompVSettable::get(int id, const void*& valuePtr, size_t valueSize)
+{
+    switch (id) {
+    case -1:
+    default:
+        COMPV_DEBUG_ERROR("id=%d not supported", id);
+        return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+    }
+}
+
 COMPV_NAMESPACE_END()

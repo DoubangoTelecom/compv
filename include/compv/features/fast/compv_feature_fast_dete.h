@@ -31,46 +31,48 @@
 COMPV_NAMESPACE_BEGIN()
 
 struct RangeFAST {
-	const uint8_t* IP;
-	const uint8_t* IPprev;
-	uint8_t* strengths;
-	int32_t rowStart;
-	int32_t rowEnd;
-	int32_t rowCount;
-	int32_t width;
-	int32_t stride;
-	int32_t threshold;
-	int32_t N;
-	const compv_scalar_t(*pixels16)[16];
+    const uint8_t* IP;
+    const uint8_t* IPprev;
+    uint8_t* strengths;
+    int32_t rowStart;
+    int32_t rowEnd;
+    int32_t rowCount;
+    int32_t width;
+    int32_t stride;
+    int32_t threshold;
+    int32_t N;
+    const compv_scalar_t(*pixels16)[16];
 };
 
 class CompVFeatureDeteFAST : public CompVFeatureDete
 {
 protected:
-	CompVFeatureDeteFAST();
+    CompVFeatureDeteFAST();
 public:
-	virtual ~CompVFeatureDeteFAST();
-	virtual COMPV_INLINE const char* getObjectId() { return "CompVFeatureDeteFAST"; };
-	
-	// override CompVSettable::set
-	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
-	// override CompVFeatureDete::process
-	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints);
+    virtual ~CompVFeatureDeteFAST();
+    virtual COMPV_INLINE const char* getObjectId() {
+        return "CompVFeatureDeteFAST";
+    };
 
-	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* fast);
+    // override CompVSettable::set
+    virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
+    // override CompVFeatureDete::process
+    virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints);
+
+    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* fast);
 
 private:
-	int32_t m_iThreshold;
-	int32_t m_iType;
-	int32_t m_iNumContinuous;
-	int32_t m_iMaxFeatures;
-	bool m_bNonMaximaSupp;
-	int32_t m_nWidth;
-	int32_t m_nHeight;
-	int32_t m_nStride;
-	RangeFAST* m_pRanges;
-	int32_t m_nRanges;
-	uint8_t* m_pStrengthsMap;
+    int32_t m_iThreshold;
+    int32_t m_iType;
+    int32_t m_iNumContinuous;
+    int32_t m_iMaxFeatures;
+    bool m_bNonMaximaSupp;
+    int32_t m_nWidth;
+    int32_t m_nHeight;
+    int32_t m_nStride;
+    RangeFAST* m_pRanges;
+    int32_t m_nRanges;
+    uint8_t* m_pStrengthsMap;
 };
 
 COMPV_NAMESPACE_END()

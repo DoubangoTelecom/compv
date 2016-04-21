@@ -30,26 +30,30 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_API CompVThreadDispatcher : public CompVObj
 {
 protected:
-	CompVThreadDispatcher(int32_t numThreads);
+    CompVThreadDispatcher(int32_t numThreads);
 public:
-	virtual ~CompVThreadDispatcher();
-	virtual COMPV_INLINE const char* getObjectId() { return "CompVThreadDispatcher"; };
-	COMPV_INLINE int32_t getThreadsCount() { return m_nTasksCount; }
+    virtual ~CompVThreadDispatcher();
+    virtual COMPV_INLINE const char* getObjectId() {
+        return "CompVThreadDispatcher";
+    };
+    COMPV_INLINE int32_t getThreadsCount() {
+        return m_nTasksCount;
+    }
 
-	COMPV_ERROR_CODE execute(uint32_t threadIdx, compv_asynctoken_id_t tokenId, compv_asynctoken_f f_func, ...);
-	COMPV_ERROR_CODE wait(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t u_timeout = 86400000/* 1 day */);
-	COMPV_ERROR_CODE getIdleTime(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t* timeIdle);
-	uint32_t getThreadIdxForNextToCurrentCore();
-	uint32_t getThreadIdxCurrent();
-	bool isMotherOfTheCurrentThread();
-	int32_t guessNumThreadsDividingAcrossY(int xcount, int ycount, int minSamplesPerThread);
+    COMPV_ERROR_CODE execute(uint32_t threadIdx, compv_asynctoken_id_t tokenId, compv_asynctoken_f f_func, ...);
+    COMPV_ERROR_CODE wait(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t u_timeout = 86400000/* 1 day */);
+    COMPV_ERROR_CODE getIdleTime(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t* timeIdle);
+    uint32_t getThreadIdxForNextToCurrentCore();
+    uint32_t getThreadIdxCurrent();
+    bool isMotherOfTheCurrentThread();
+    int32_t guessNumThreadsDividingAcrossY(int xcount, int ycount, int minSamplesPerThread);
 
-	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVThreadDispatcher*>* disp, int32_t numThreads = -1);
+    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVThreadDispatcher*>* disp, int32_t numThreads = -1);
 
 private:
-	CompVObjWrapper<CompVAsyncTask *>* m_pTasks;
-	int32_t m_nTasksCount;
-	bool m_bValid;
+    CompVObjWrapper<CompVAsyncTask *>* m_pTasks;
+    int32_t m_nTasksCount;
+    bool m_bValid;
 };
 
 COMPV_NAMESPACE_END()

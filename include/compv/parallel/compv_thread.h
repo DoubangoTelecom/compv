@@ -46,27 +46,29 @@ typedef pthread_t compv_thread_id_t;
 class COMPV_API CompVThread : public CompVObj
 {
 protected:
-	CompVThread(void *(COMPV_STDCALL *start) (void *), void *arg = NULL);
+    CompVThread(void *(COMPV_STDCALL *start) (void *), void *arg = NULL);
 public:
-	virtual ~CompVThread();
-	virtual COMPV_INLINE const char* getObjectId() { return "CompVThread"; };
+    virtual ~CompVThread();
+    virtual COMPV_INLINE const char* getObjectId() {
+        return "CompVThread";
+    };
 
-	static void sleep(uint64_t ms);
-	COMPV_ERROR_CODE setPriority(int priority);
-	compv_thread_id_t getId();
-	COMPV_ERROR_CODE setAffinity(compv_core_id_t coreId);
-	
-	COMPV_ERROR_CODE join();
-	
-	static COMPV_ERROR_CODE setPriorityCurrent(int priority);
-	static compv_thread_id_t getIdCurrent();
-	static bool isEquals(compv_thread_id_t id1, compv_thread_id_t id2);
-	static compv_core_id_t getCoreId();
-	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVThread*>* thread, void *(COMPV_STDCALL *start) (void *), void *arg = NULL);
-	
+    static void sleep(uint64_t ms);
+    COMPV_ERROR_CODE setPriority(int priority);
+    compv_thread_id_t getId();
+    COMPV_ERROR_CODE setAffinity(compv_core_id_t coreId);
+
+    COMPV_ERROR_CODE join();
+
+    static COMPV_ERROR_CODE setPriorityCurrent(int priority);
+    static compv_thread_id_t getIdCurrent();
+    static bool isEquals(compv_thread_id_t id1, compv_thread_id_t id2);
+    static compv_core_id_t getCoreId();
+    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVThread*>* thread, void *(COMPV_STDCALL *start) (void *), void *arg = NULL);
+
 private:
-	comp_thread_handle_t* m_pHandle;
-	compv_thread_id_t m_Id;
+    comp_thread_handle_t* m_pHandle;
+    compv_thread_id_t m_Id;
 };
 
 COMPV_NAMESPACE_END()

@@ -246,8 +246,8 @@ COMPV_ERROR_CODE CompVAsyncTask::wait(compv_asynctoken_id_t token_id, uint64_t u
         u_end = (CompVTime::getNowMills() + u_timeout);
         while ((pToken->bExecuting || pToken->bExecute) && u_end > CompVTime::getNowMills()) {
 #if 0
-             __asm PAUSE;
-			//m_Thread->sleep(0);
+            __asm PAUSE;
+            //m_Thread->sleep(0);
 #else
             m_SemExec->decrement();
 #endif
@@ -313,11 +313,11 @@ void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
     }
     COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=%d, threadId:%ld, kThreadSetAffinity:true) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), (long)CompVThread::getIdCurrent());
 #else
-	COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=useless, threadId:%ld, kThreadSetAffinity:false) - ENTER", Self_->m_iCoreId, (long)CompVThread::getIdCurrent());
+    COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=useless, threadId:%ld, kThreadSetAffinity:false) - ENTER", Self_->m_iCoreId, (long)CompVThread::getIdCurrent());
 #endif
-	
 
-	
+
+
 
     while (Self_->m_bStarted) {
         COMPV_CHECK_CODE_BAIL(err_ = Self_->m_SemRun->decrement());

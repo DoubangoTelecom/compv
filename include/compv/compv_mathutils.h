@@ -26,36 +26,37 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class COMPV_API CompVMathUtils {
+class COMPV_API CompVMathUtils
+{
 public:
-	static COMPV_ERROR_CODE init();
-	static COMPV_INLINE int32_t clamp(int32_t min, int32_t val, int32_t max) { // do not use macro, otherwise 'val' which coulbe a function will be evaluated several times
-		// Important: Do not use CLIP3_INT here: very slow on Windows (tested on Win8 core i7 using VS2013)
-		return COMPV_MATH_CLIP3(min, max, val);
-	}
-	static COMPV_INLINE uint8_t clampPixel8(int16_t val) {
-		// Important: Do not use CLIP3_INT here: very slow on Windows (tested on Win8 core i7 using VS2013)
-		// Also, asm_cmov_clip2() is sloow -> To be checked
-		return (uint8_t)COMPV_MATH_CLIP3(0, 255, val);
-	}
-	static COMPV_INLINE compv_scalar_t maxVal(compv_scalar_t x, compv_scalar_t y) {
-		return maxValFunc(x, y);
-	}
-	static COMPV_INLINE compv_scalar_t minVal(compv_scalar_t x, compv_scalar_t y) {
-		return minValFunc(x, y);
-	}
-	static COMPV_INLINE compv_scalar_t clip3(compv_scalar_t min, compv_scalar_t max, compv_scalar_t val) {
-		return clip3Func(min, max, val);
-	}
-	static COMPV_INLINE compv_scalar_t clip2(compv_scalar_t max, compv_scalar_t val) {
-		return clip2Func(max, val);
-	}
+    static COMPV_ERROR_CODE init();
+    static COMPV_INLINE int32_t clamp(int32_t min, int32_t val, int32_t max) { // do not use macro, otherwise 'val' which coulbe a function will be evaluated several times
+        // Important: Do not use CLIP3_INT here: very slow on Windows (tested on Win8 core i7 using VS2013)
+        return COMPV_MATH_CLIP3(min, max, val);
+    }
+    static COMPV_INLINE uint8_t clampPixel8(int16_t val) {
+        // Important: Do not use CLIP3_INT here: very slow on Windows (tested on Win8 core i7 using VS2013)
+        // Also, asm_cmov_clip2() is sloow -> To be checked
+        return (uint8_t)COMPV_MATH_CLIP3(0, 255, val);
+    }
+    static COMPV_INLINE compv_scalar_t maxVal(compv_scalar_t x, compv_scalar_t y) {
+        return maxValFunc(x, y);
+    }
+    static COMPV_INLINE compv_scalar_t minVal(compv_scalar_t x, compv_scalar_t y) {
+        return minValFunc(x, y);
+    }
+    static COMPV_INLINE compv_scalar_t clip3(compv_scalar_t min, compv_scalar_t max, compv_scalar_t val) {
+        return clip3Func(min, max, val);
+    }
+    static COMPV_INLINE compv_scalar_t clip2(compv_scalar_t max, compv_scalar_t val) {
+        return clip2Func(max, val);
+    }
 private:
-	static bool s_Initialized;
-	static compv_scalar_t(*maxValFunc)(compv_scalar_t a, compv_scalar_t b);
-	static compv_scalar_t(*minValFunc)(compv_scalar_t a, compv_scalar_t b);
-	static compv_scalar_t(*clip3Func)(compv_scalar_t min, compv_scalar_t max, compv_scalar_t val);
-	static compv_scalar_t(*clip2Func)(compv_scalar_t max, compv_scalar_t val);
+    static bool s_Initialized;
+    static compv_scalar_t(*maxValFunc)(compv_scalar_t a, compv_scalar_t b);
+    static compv_scalar_t(*minValFunc)(compv_scalar_t a, compv_scalar_t b);
+    static compv_scalar_t(*clip3Func)(compv_scalar_t min, compv_scalar_t max, compv_scalar_t val);
+    static compv_scalar_t(*clip2Func)(compv_scalar_t max, compv_scalar_t val);
 };
 
 COMPV_NAMESPACE_END()

@@ -33,14 +33,14 @@ bool TestScale()
 
     COMPV_DEBUG_INFO("Image scaling: factor=%f, outWidth=%d, outStride=%d, outHeight=%d", IMAGE_SCALE_FACTOR, image->getWidth(), image->getStride(), image->getHeight());
 
-	const std::string expectedMD5 = (IMAGE_SCALE_FACTOR == 0.83f) ? IMAGE_BILINEAR_FACTOR83_MD5_STRING : ((IMAGE_SCALE_FACTOR == 0.5f ? IMAGE_BILINEAR_FACTOR50_MD5_STRING : ""));
-	if (!expectedMD5.empty()) {
-		if (imageMD5(image) != expectedMD5) {
-			COMPV_DEBUG_ERROR("MD5 mismatch");
-			COMPV_ASSERT(false);
-			return false;
-		}
-	}
+    const std::string expectedMD5 = (IMAGE_SCALE_FACTOR == 0.83f) ? IMAGE_BILINEAR_FACTOR83_MD5_STRING : ((IMAGE_SCALE_FACTOR == 0.5f ? IMAGE_BILINEAR_FACTOR50_MD5_STRING : ""));
+    if (!expectedMD5.empty()) {
+        if (imageMD5(image) != expectedMD5) {
+            COMPV_DEBUG_ERROR("MD5 mismatch");
+            COMPV_ASSERT(false);
+            return false;
+        }
+    }
 
     // dump image to file
     writeImgToFile(image);

@@ -34,22 +34,26 @@ COMPV_NAMESPACE_BEGIN()
 class CompVFeatureDeteORB : public CompVFeatureDete
 {
 protected:
-	CompVFeatureDeteORB();
+    CompVFeatureDeteORB();
 public:
-	virtual ~CompVFeatureDeteORB();
-	virtual COMPV_INLINE const char* getObjectId() { return "CompVFeatureDeteORB"; };
-	
-	// override CompVSettable::set
-	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
-	// override CompVFeatureDete::process
-	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints);
+    virtual ~CompVFeatureDeteORB();
+    virtual COMPV_INLINE const char* getObjectId() {
+        return "CompVFeatureDeteORB";
+    };
 
-	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* orb);
+    // override CompVSettable::set
+    virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
+    // override CompVSettable::get
+    virtual COMPV_ERROR_CODE get(int id, const void*& valuePtr, size_t valueSize);
+    // override CompVFeatureDete::process
+    virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints);
+
+    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* orb);
 
 private:
-	CompVObjWrapper<CompVFeatureDete* > m_internalDetector;
-	CompVObjWrapper<CompVImageScalePyramid * > m_pyramid;
-	int32_t m_nMaxFeatures;
+    CompVObjWrapper<CompVFeatureDete* > m_internalDetector;
+    CompVObjWrapper<CompVImageScalePyramid * > m_pyramid;
+    int32_t m_nMaxFeatures;
 };
 
 COMPV_NAMESPACE_END()

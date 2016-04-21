@@ -28,8 +28,8 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_API CompVGaussKern
 {
 public:
-	static COMPV_ERROR_CODE buildKern2(CompVObjWrapper<CompVArray<double>* >* kern, int size, double sigma);
-	static COMPV_ERROR_CODE buildKern1(CompVObjWrapper<CompVArray<double>* >* kern, int size, double sigma);
+    static COMPV_ERROR_CODE buildKern2(CompVObjWrapper<CompVArray<double>* >* kern, int size, double sigma);
+    static COMPV_ERROR_CODE buildKern1(CompVObjWrapper<CompVArray<double>* >* kern, int size, double sigma);
 };
 
 COMPV_NAMESPACE_END()

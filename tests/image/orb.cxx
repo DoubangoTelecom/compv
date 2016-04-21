@@ -10,7 +10,7 @@ using namespace compv;
 #define ORB_PYRAMID_SCALEFACTOR		0.83f
 #define ORB_PYRAMID_SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
 #define ORB_LOOOP_COUNT				1
-#define ORB_DESC_MD5				"915179a09981e47453688d07c8d46975"
+#define ORB_DESC_MD5				"000519ce114a339f1fac09e8156da2ca"
 #define JPEG_IMG  "C:/Projects/GitHub/pan360/images/opengl_programming_guide_8th_edition.jpg"
 
 bool TestORB()
@@ -18,7 +18,7 @@ bool TestORB()
     CompVObjWrapper<CompVFeatureDete* > dete; // feature detector
     CompVObjWrapper<CompVFeatureDesc* > desc; // feature descriptor
     CompVObjWrapper<CompVImage *> image;
-	CompVObjWrapper<CompVBoxInterestPoint* > interestPoints;
+    CompVObjWrapper<CompVBoxInterestPoint* > interestPoints;
     CompVObjWrapper<CompVFeatureDescriptions*> descriptions;
     int32_t val32;
     bool valBool;
@@ -34,6 +34,7 @@ bool TestORB()
     COMPV_CHECK_CODE_ASSERT(CompVFeatureDete::newObj(COMPV_ORB_ID, &dete));
     // Create the ORB feature descriptor
     COMPV_CHECK_CODE_ASSERT(CompVFeatureDesc::newObj(COMPV_ORB_ID, &desc));
+	COMPV_CHECK_CODE_ASSERT(desc->attachDete(dete)); // attach detector to make sure we'll share context
 
     // Set the default values for the detector
     val32 = FAST_THRESHOLD;
@@ -58,13 +59,13 @@ bool TestORB()
     timeEnd = CompVTime::getNowMills();
     COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-	// Compute Descriptions MD5
-	const std::string md5 = CompVMd5::compute2(descriptions->getDataPtr(), descriptions->getDataSize());
-	if (md5 != ORB_DESC_MD5) {
-		COMPV_DEBUG_ERROR("MD5 mismatch");
-		COMPV_ASSERT(false);
-		return false;
-	}
+    // Compute Descriptions MD5
+    const std::string md5 = CompVMd5::compute2(descriptions->getDataPtr(), descriptions->getDataSize());
+    if (md5 != ORB_DESC_MD5) {
+        COMPV_DEBUG_ERROR("MD5 mismatch");
+        COMPV_ASSERT(false);
+        return false;
+    }
 
 
     return true;

@@ -29,7 +29,7 @@ int main(int argc, char** argv)
     COMPV_CHECK_CODE_ASSERT(CompVEngine::setTestingModeEnabled(testingMode));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setAsmEnabled(enableAsm));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
-	COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));
+    COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));
 
 #if TEST_CONV
     extern bool TestConv();

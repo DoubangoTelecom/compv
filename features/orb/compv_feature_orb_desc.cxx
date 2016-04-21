@@ -30,6 +30,8 @@
 #include "compv/features/orb/compv_feature_orb_dete.h"
 #include "compv/compv_mathutils.h"
 #include "compv/compv_mem.h"
+#include "compv/compv_gauss.h"
+#include "compv/compv_debug.h"
 
 #include <algorithm>
 
@@ -42,6 +44,9 @@ extern bool COMPV_FEATURE_DETE_ORB_FAST_NON_MAXIMA_SUPP;
 extern int COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS;
 extern float COMPV_FEATURE_DETE_ORB_PYRAMID_SF;
 extern COMPV_SCALE_TYPE COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE;
+
+int COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE = 7;
+double COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 2.0;
 
 // FIXME: GaussianBlure
 // FIXME: BorderExtend
@@ -331,99 +336,99 @@ static int32_t bit_pattern_31_[256 * 4] = {
 
 // Helpful site to generate gaussian values: http://dev.theomader.com/gaussian-kernel-calculator/
 static const double gfilterGaussianBlur2[7][7] = {
-	{ 0.00492233, 0.00919613, 0.01338028, 0.01516185, 0.01338028, 0.00919613, 0.00492233 },
-	{ 0.00919613, 0.01718062, 0.02499766, 0.02832606, 0.02499766, 0.01718062, 0.00919613 },
-	{ 0.01338028, 0.02499766, 0.03637138, 0.04121417, 0.03637138, 0.02499766, 0.01338028 },
-	{ 0.01516185, 0.02832606, 0.04121417, 0.04670178, 0.04121417, 0.02832606, 0.01516185 },
-	{ 0.01338028, 0.02499766, 0.03637138, 0.04121417, 0.03637138, 0.02499766, 0.01338028 },
-	{ 0.00919613, 0.01718062, 0.02499766, 0.02832606, 0.02499766, 0.01718062, 0.00919613 },
-	{ 0.00492233, 0.00919613, 0.01338028, 0.01516185, 0.01338028, 0.00919613, 0.00492233 }
+    { 0.00492233, 0.00919613, 0.01338028, 0.01516185, 0.01338028, 0.00919613, 0.00492233 },
+    { 0.00919613, 0.01718062, 0.02499766, 0.02832606, 0.02499766, 0.01718062, 0.00919613 },
+    { 0.01338028, 0.02499766, 0.03637138, 0.04121417, 0.03637138, 0.02499766, 0.01338028 },
+    { 0.01516185, 0.02832606, 0.04121417, 0.04670178, 0.04121417, 0.02832606, 0.01516185 },
+    { 0.01338028, 0.02499766, 0.03637138, 0.04121417, 0.03637138, 0.02499766, 0.01338028 },
+    { 0.00919613, 0.01718062, 0.02499766, 0.02832606, 0.02499766, 0.01718062, 0.00919613 },
+    { 0.00492233, 0.00919613, 0.01338028, 0.01516185, 0.01338028, 0.00919613, 0.00492233 }
 };
 static const double gfilterGaussianBlur1[7] = { 0.07015933, 0.13107488, 0.19071282, 0.21610594, 0.19071282, 0.13107488, 0.07015933 };
 static COMPV_ERROR_CODE convlt2(uint8_t* img, int imgw, int imgs, int imgh, const double* ker, int ker_size)
 {
-	COMPV_CHECK_EXP_RETURN(!(ker_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER); // Kernel size must be odd number
+    COMPV_CHECK_EXP_RETURN(!(ker_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER); // Kernel size must be odd number
 
-	uint8_t* outImg = (uint8_t*)CompVMem::malloc(imgh * imgs);
-	const uint8_t *topleft, *img_ptr;
-	double sum;
-	const double *ker_ptr;
-	int imgpad, i, j, row, col;
-	int ker_size_div2 = ker_size >> 1;
-	img_ptr = img;
-	imgpad = (imgs - imgw) + ker_size_div2 + ker_size_div2;
+    uint8_t* outImg = (uint8_t*)CompVMem::malloc(imgh * imgs);
+    const uint8_t *topleft, *img_ptr;
+    double sum;
+    const double *ker_ptr;
+    int imgpad, i, j, row, col;
+    int ker_size_div2 = ker_size >> 1;
+    img_ptr = img;
+    imgpad = (imgs - imgw) + ker_size_div2 + ker_size_div2;
 
-	for (j = ker_size_div2; j < imgh - ker_size_div2; ++j) {
-		for (i = ker_size_div2; i < imgw - ker_size_div2; ++i) {
-			sum = 0;
-			topleft = img_ptr;
-			ker_ptr = ker;
-			for (row = 0; row < ker_size; ++row) {
-				for (col = 0; col < ker_size; ++col) {
-					sum += topleft[col] * ker_ptr[col];
-				}
-				ker_ptr += ker_size;
-				topleft += imgs;
-			}
-			outImg[(j * imgs) + i] = (uint8_t)sum;
-			++img_ptr;
-		}
-		img_ptr += imgpad;
-	}
-	CompVMem::copy(img, outImg, imgh * imgs); // FIXME: garbage
-	CompVMem::free((void**)&outImg);
+    for (j = ker_size_div2; j < imgh - ker_size_div2; ++j) {
+        for (i = ker_size_div2; i < imgw - ker_size_div2; ++i) {
+            sum = 0;
+            topleft = img_ptr;
+            ker_ptr = ker;
+            for (row = 0; row < ker_size; ++row) {
+                for (col = 0; col < ker_size; ++col) {
+                    sum += topleft[col] * ker_ptr[col];
+                }
+                ker_ptr += ker_size;
+                topleft += imgs;
+            }
+            outImg[(j * imgs) + i] = (uint8_t)sum;
+            ++img_ptr;
+        }
+        img_ptr += imgpad;
+    }
+    CompVMem::copy(img, outImg, imgh * imgs); // FIXME: garbage
+    CompVMem::free((void**)&outImg);
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }
 static COMPV_ERROR_CODE convlt1(uint8_t* img, int imgw, int imgs, int imgh, const double* ker, int ker_size)
 {
-	COMPV_CHECK_EXP_RETURN(!(ker_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER); // Kernel size must be odd number
+    COMPV_CHECK_EXP_RETURN(!(ker_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER); // Kernel size must be odd number
 
-	uint8_t *imgTmp;
-	const uint8_t *topleft, *img_ptr;
-	double sum;
-	int imgpad, i, j, row, col;
-	int ker_size_div2 = ker_size >> 1;
+    uint8_t *imgTmp;
+    const uint8_t *topleft, *img_ptr;
+    double sum;
+    int imgpad, i, j, row, col;
+    int ker_size_div2 = ker_size >> 1;
 
-	imgTmp = (uint8_t*)CompVMem::malloc(imgh * imgs);
-	COMPV_CHECK_EXP_RETURN(!imgTmp, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    imgTmp = (uint8_t*)CompVMem::malloc(imgh * imgs);
+    COMPV_CHECK_EXP_RETURN(!imgTmp, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
-	// Horizontal
-	img_ptr = img + ker_size_div2;
-	imgpad = (imgs - imgw) + ker_size_div2 + ker_size_div2;
-	for (j = 0; j < imgh; ++j) {
-		for (i = ker_size_div2; i < imgw - ker_size_div2; ++i) {
-			sum = 0;
-			topleft = img_ptr - ker_size_div2;
-			for (col = 0; col < ker_size; ++col) {
-				sum += topleft[col] * ker[col];
-			}
-			imgTmp[(j * imgs) + i] = (uint8_t)sum;
-			++img_ptr;
-		}
-		img_ptr += imgpad;
-	}
+    // Horizontal
+    img_ptr = img + ker_size_div2;
+    imgpad = (imgs - imgw) + ker_size_div2 + ker_size_div2;
+    for (j = 0; j < imgh; ++j) {
+        for (i = ker_size_div2; i < imgw - ker_size_div2; ++i) {
+            sum = 0;
+            topleft = img_ptr - ker_size_div2;
+            for (col = 0; col < ker_size; ++col) {
+                sum += topleft[col] * ker[col];
+            }
+            imgTmp[(j * imgs) + i] = (uint8_t)sum;
+            ++img_ptr;
+        }
+        img_ptr += imgpad;
+    }
 
-	// Vertical
-	img_ptr = imgTmp + (ker_size_div2 * imgs); // output from hz filtering is now used as input
-	imgpad = (imgs - imgw);
-	for (j = ker_size_div2; j < imgh - ker_size_div2; ++j) {
-		for (i = 0; i < imgw; ++i) {
-			sum = 0;
-			topleft = img_ptr - (ker_size_div2 * imgs);
-			for (row = 0; row < ker_size; ++row) {
-				sum += topleft[0] * ker[row];
-				topleft += imgs;
-			}
-			img[(j * imgs) + i] = (uint8_t)sum;
-			++img_ptr;
-		}
-		img_ptr += imgpad;
-	}
+    // Vertical
+    img_ptr = imgTmp + (ker_size_div2 * imgs); // output from hz filtering is now used as input
+    imgpad = (imgs - imgw);
+    for (j = ker_size_div2; j < imgh - ker_size_div2; ++j) {
+        for (i = 0; i < imgw; ++i) {
+            sum = 0;
+            topleft = img_ptr - (ker_size_div2 * imgs);
+            for (row = 0; row < ker_size; ++row) {
+                sum += topleft[0] * ker[row];
+                topleft += imgs;
+            }
+            img[(j * imgs) + i] = (uint8_t)sum;
+            ++img_ptr;
+        }
+        img_ptr += imgpad;
+    }
 
-	CompVMem::free((void**)&imgTmp);
+    CompVMem::free((void**)&imgTmp);
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 // FIXME: adds support for BRIEF 128, 256 or 512 -> uint16, uint32, uint64
@@ -470,8 +475,8 @@ static void brief256(const uint8_t* img, int imgs, int imgw, int imgh, int kpx, 
         return;
     }
 
-	// Applying rotation matrix to each (x, y) point in the patch gives us:
-	// xr = x*cosT - y*sinT and yr = x*sinT + y*cosT
+    // Applying rotation matrix to each (x, y) point in the patch gives us:
+    // xr = x*cosT - y*sinT and yr = x*sinT + y*cosT
 
 #if 0 // FIXME: my code
     for (i = 0, j = 0; i < 256; ++i, j = i & 63) {
@@ -518,13 +523,14 @@ static void brief256(const uint8_t* img, int imgs, int imgw, int imgh, int kpx, 
 // override CompVFeatureDesc::process
 COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>& image, const CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints, CompVObjWrapper<CompVFeatureDescriptions*>* descriptions)
 {
-	COMPV_CHECK_EXP_RETURN(*image == NULL || image->getDataPtr() == NULL || image->getPixelFormat() != COMPV_PIXEL_FORMAT_GRAYSCALE || !descriptions || !interestPoints || interestPoints->empty(),
+    COMPV_CHECK_EXP_RETURN(*image == NULL || image->getDataPtr() == NULL || image->getPixelFormat() != COMPV_PIXEL_FORMAT_GRAYSCALE || !descriptions || !interestPoints || interestPoints->empty(),
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     CompVObjWrapper<CompVFeatureDescriptions*> _descriptions;
     CompVObjWrapper<CompVImageScalePyramid * > _pyramid;
     CompVObjWrapper<CompVImage*> imageAtLevelN;
+	CompVObjWrapper<CompVFeatureDete*> attachedDete = getAttachedDete();
     uint8_t* _descriptionsPtr = NULL;
 
     int nFeatures = (int)interestPoints->size();
@@ -533,12 +539,22 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
     COMPV_CHECK_CODE_RETURN(err_ = CompVFeatureDescriptions::newObj(nFeatures, nFeaturesBits, &_descriptions));
     _descriptionsPtr = (uint8_t*)_descriptions->getDataPtr();
 
-    // Compute the pyramid
-    if (/* DISABLES CODE */ (0)) {
-        // FIXME: if detecter attached then use the pyramid from it
-        _pyramid = NULL;
-    }
-    else {
+    // Get the pyramid from the detector or use or own pyramid
+	if ((attachedDete = getAttachedDete())) {
+		switch (attachedDete->getId()) {
+		case COMPV_ORB_ID:
+			{
+				const void* valuePtr = NULL;
+				COMPV_CHECK_CODE_RETURN(err_ = attachedDete->get(COMPV_FEATURE_GET_PTR_PYRAMID, valuePtr, sizeof(CompVImageScalePyramid)));
+				_pyramid = (CompVImageScalePyramid*)(valuePtr);
+				break;
+			}
+		}
+	}
+	if (!_pyramid) {
+		// This code is called when we fail to get a pyramid from the attached detector or when none is attached.
+		// The pyramid should come from the detector. Attach a detector to this descriptor to give it access to the pyramid.
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
         COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image));
         _pyramid = m_pyramid;
     }
@@ -546,8 +562,8 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
     // apply gaussianblur filter on the pyramid
     for (int level = 0; level < _pyramid->getLevels(); ++level) {
         COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(level, &imageAtLevelN));
-		//convlt2((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur2, 7); // Gaussing blur
-		convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur1, 7);
+        //convlt2((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur2, 7); // Gaussing blur
+        convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur1, 7);
     }
 
     // FIXME: no test
@@ -555,7 +571,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
     // TODO(dmi): multi-threading
     for (size_t i = 0; i < interestPoints->size(); ++i) {
         const CompVInterestPoint* point = interestPoints->at(i);
-        COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->getImage(point->level, &imageAtLevelN));
+		COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(point->level, &imageAtLevelN));
         // When the points were computed by the detector they have been rescaled to be in the imput image coords (level=0) -> now rescale the coords to the coresponding level
         float fkpx = (point->xf() * _pyramid->getScaleFactor(point->level));
         float fkpy = (point->yf() * _pyramid->getScaleFactor(point->level));
@@ -584,6 +600,12 @@ COMPV_ERROR_CODE CompVFeatureDescORB::newObj(CompVObjWrapper<CompVFeatureDesc* >
 {
     COMPV_CHECK_EXP_RETURN(orb == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVObjWrapper<CompVImageScalePyramid * > pyramid_;
+	CompVObjWrapper<CompVArray<double>* > kern_;
+	CompVObjWrapper<CompVConvlt* > convlt_;
+	// Create Gauss kernel values
+	COMPV_CHECK_CODE_RETURN(CompVGaussKern::buildKern1(&kern_, COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA));
+	// Create convolution context
+	COMPV_CHECK_CODE_RETURN(CompVConvlt::newObj(&convlt_));
     // Create the pyramid
     COMPV_CHECK_CODE_RETURN(CompVImageScalePyramid::newObj(COMPV_FEATURE_DETE_ORB_PYRAMID_SF, COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS, COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE, &pyramid_));
 
@@ -592,6 +614,8 @@ COMPV_ERROR_CODE CompVFeatureDescORB::newObj(CompVObjWrapper<CompVFeatureDesc* >
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }
     _orb->m_pyramid = pyramid_;
+	_orb->m_kern = kern_;
+	_orb->m_convlt = convlt_;
 
     *orb = *_orb;
     return COMPV_ERROR_CODE_S_OK;

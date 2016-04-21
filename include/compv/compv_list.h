@@ -32,42 +32,44 @@ template<class T>
 class COMPV_API CompVList : public CompVObj
 {
 protected:
-	CompVList();
+    CompVList();
 public:
-	virtual ~CompVList();
-	virtual COMPV_INLINE const char* getObjectId() { return "CompVList"; };
+    virtual ~CompVList();
+    virtual COMPV_INLINE const char* getObjectId() {
+        return "CompVList";
+    };
 
-	COMPV_ERROR_CODE lock();
-	COMPV_ERROR_CODE unlock();
+    COMPV_ERROR_CODE lock();
+    COMPV_ERROR_CODE unlock();
 
-	COMPV_ERROR_CODE push(const T& elem, bool bBack = true);
-	COMPV_ERROR_CODE push_back(const T& elem);
-	COMPV_ERROR_CODE push_front(const T& elem);
-	COMPV_ERROR_CODE free();
-	COMPV_ERROR_CODE reset();
-	 
+    COMPV_ERROR_CODE push(const T& elem, bool bBack = true);
+    COMPV_ERROR_CODE push_back(const T& elem);
+    COMPV_ERROR_CODE push_front(const T& elem);
+    COMPV_ERROR_CODE free();
+    COMPV_ERROR_CODE reset();
 
-	const T* front();
-	const T* next(const T* curr);
-	const T* back();
 
-	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVList<T >* >* list, bool bLockable = false);
+    const T* front();
+    const T* next(const T* curr);
+    const T* back();
+
+    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVList<T >* >* list, bool bLockable = false);
 
 protected:
-	void* nextFreeMemBlock(size_t** index, size_t** next_index, T** data);
+    void* nextFreeMemBlock(size_t** index, size_t** next_index, T** data);
 
 private:
-	void* m_pMem;
-	const void* m_pHead;
-	const void* m_pTail;
-	size_t m_nDataSize;
-	size_t m_nDataStride;
-	size_t m_nItemSize;
-	size_t m_nItems;
-	size_t m_nCapacity;
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-	CompVObjWrapper<CompVMutex*> m_Mutex;
-	COMPV_DISABLE_WARNINGS_END()
+    void* m_pMem;
+    const void* m_pHead;
+    const void* m_pTail;
+    size_t m_nDataSize;
+    size_t m_nDataStride;
+    size_t m_nItemSize;
+    size_t m_nItems;
+    size_t m_nCapacity;
+    COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+    CompVObjWrapper<CompVMutex*> m_Mutex;
+    COMPV_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

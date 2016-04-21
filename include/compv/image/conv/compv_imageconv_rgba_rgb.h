@@ -33,8 +33,8 @@ COMPV_NAMESPACE_BEGIN()
 class CompVImageConvRgbaRgb
 {
 public:
-	static COMPV_ERROR_CODE rgbToRgba(const CompVObjWrapper<CompVImage* >& rgb, CompVObjWrapper<CompVImage* >& rgba);
-	static COMPV_ERROR_CODE bgrToBgra(const CompVObjWrapper<CompVImage* >& bgr, CompVObjWrapper<CompVImage* >& bgra);
+    static COMPV_ERROR_CODE rgbToRgba(const CompVObjWrapper<CompVImage* >& rgb, CompVObjWrapper<CompVImage* >& rgba);
+    static COMPV_ERROR_CODE bgrToBgra(const CompVObjWrapper<CompVImage* >& bgr, CompVObjWrapper<CompVImage* >& bgra);
 };
 
 COMPV_NAMESPACE_END()

@@ -44,7 +44,7 @@ Macro used to convert 3x16RGB to 4x16RGBA samples
 	_mm_store_si128(&xmm0_, _mm_load_si128((__m128i*)(rgbPtr_ + 32))); /* load next 16 samples */ \
 	_mm_store_si128(&((__m128i*)rgbaPtr_)[2], _mm_shuffle_epi8(_mm_alignr_epi8(xmm0_, xmm1_, 8), xmmMaskRgbToRgba_)); \
 	_mm_store_si128(&((__m128i*)rgbaPtr_)[3], _mm_shuffle_epi8(_mm_alignr_epi8(xmm0_, xmm0_, 4), xmmMaskRgbToRgba_)); \
-
+ 
 /*
 Interleaves two 128bits vectors.
 From:

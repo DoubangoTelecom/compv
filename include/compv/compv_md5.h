@@ -38,26 +38,28 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_API CompVMd5 : public CompVObj
 {
 protected:
-	CompVMd5();
+    CompVMd5();
 public:
-	virtual ~CompVMd5();
-	virtual COMPV_INLINE const char* getObjectId() { return "CompVMd5"; };
+    virtual ~CompVMd5();
+    virtual COMPV_INLINE const char* getObjectId() {
+        return "CompVMd5";
+    };
 
-	COMPV_ERROR_CODE update(uint8_t const *buf, size_t len);
-	COMPV_ERROR_CODE final(compv_md5digest_t digest);
-	COMPV_ERROR_CODE transform(uint32_t buf[4], uint32_t const in[COMPV_MD5_DIGEST_SIZE]);
-	std::string compute(const void* input = NULL, size_t size = 0);
+    COMPV_ERROR_CODE update(uint8_t const *buf, size_t len);
+    COMPV_ERROR_CODE final(compv_md5digest_t digest);
+    COMPV_ERROR_CODE transform(uint32_t buf[4], uint32_t const in[COMPV_MD5_DIGEST_SIZE]);
+    std::string compute(const void* input = NULL, size_t size = 0);
 
-	static std::string compute2(const void* input, size_t size);
-	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVMd5*>* md5);
+    static std::string compute2(const void* input, size_t size);
+    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVMd5*>* md5);
 
 private:
-	void init();
+    void init();
 
 private:
-	uint32_t m_buf[4];
-	uint32_t m_bytes[2];
-	uint32_t m_in[16];
+    uint32_t m_buf[4];
+    uint32_t m_bytes[2];
+    uint32_t m_in[16];
 };
 
 COMPV_NAMESPACE_END()

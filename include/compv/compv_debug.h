@@ -31,31 +31,31 @@ typedef int(*CompVDebugFuncPtr)(const void* arg, const char* fmt, ...);
 class COMPV_API CompVDebugMgr
 {
 private:
-	CompVDebugMgr();
+    CompVDebugMgr();
 public:
-	virtual ~CompVDebugMgr();
+    virtual ~CompVDebugMgr();
 
 public:
-	static void setArgData(const void*);
-	static const void* getArgData();
-	static void setInfoFuncPtr(CompVDebugFuncPtr);
-	static CompVDebugFuncPtr getInfoFuncPtr();
-	static void setWarnFuncPtr(CompVDebugFuncPtr);
-	static CompVDebugFuncPtr getWarnFuncPtr();
-	static void setErrorFuncPtr(CompVDebugFuncPtr);
-	static CompVDebugFuncPtr getErrorFuncPtr();
-	static void setFatalFuncPtr(CompVDebugFuncPtr);
-	static CompVDebugFuncPtr getFatalFuncPtr();
-	static COMPV_DEBUG_LEVEL getLevel();
-	static void setLevel(COMPV_DEBUG_LEVEL);
+    static void setArgData(const void*);
+    static const void* getArgData();
+    static void setInfoFuncPtr(CompVDebugFuncPtr);
+    static CompVDebugFuncPtr getInfoFuncPtr();
+    static void setWarnFuncPtr(CompVDebugFuncPtr);
+    static CompVDebugFuncPtr getWarnFuncPtr();
+    static void setErrorFuncPtr(CompVDebugFuncPtr);
+    static CompVDebugFuncPtr getErrorFuncPtr();
+    static void setFatalFuncPtr(CompVDebugFuncPtr);
+    static CompVDebugFuncPtr getFatalFuncPtr();
+    static COMPV_DEBUG_LEVEL getLevel();
+    static void setLevel(COMPV_DEBUG_LEVEL);
 
 private:
-	static const void* s_pcArgData;
-	static CompVDebugFuncPtr s_pfInfo;
-	static CompVDebugFuncPtr s_pfWarn;
-	static CompVDebugFuncPtr s_pfError;
-	static CompVDebugFuncPtr s_pfFatal;
-	static COMPV_DEBUG_LEVEL s_eLevel;
+    static const void* s_pcArgData;
+    static CompVDebugFuncPtr s_pfInfo;
+    static CompVDebugFuncPtr s_pfWarn;
+    static CompVDebugFuncPtr s_pfError;
+    static CompVDebugFuncPtr s_pfFatal;
+    static COMPV_DEBUG_LEVEL s_eLevel;
 };
 
 /* INFO */

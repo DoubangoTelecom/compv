@@ -31,8 +31,8 @@ COMPV_NAMESPACE_BEGIN()
 typedef uint64_t compv_asynctoken_id_t;
 
 typedef struct compv_asynctoken_param_xs {
-	uintptr_t pcParamPtr;
-	size_t uParamSize;
+    uintptr_t pcParamPtr;
+    size_t uParamSize;
 }
 compv_asynctoken_param_xt;
 
@@ -54,22 +54,22 @@ typedef COMPV_ERROR_CODE(*compv_asynctoken_f)(const struct compv_asynctoken_para
 #define COMPV_ASYNCTASK_PARAM_INDEX_IS_VALID(_id_) ((_id_) >=0 && (_id_) < COMPV_ASYNCTASK_MAX_TOKEN_PARAMS_COUNT)
 
 typedef struct compv_asynctoken_xs {
-	bool bTaken;
-	bool bExecuting;
-	bool bExecute;
-	compv_asynctoken_f fFunc;
-	compv_asynctoken_param_xt params[COMPV_ASYNCTASK_MAX_TOKEN_PARAMS_COUNT];
-	int32_t iParamsCount; // number of active params
-	uint64_t uTimeSchedStart;
-	uint64_t uTimeSchedStop;
-	uint64_t uTimeFuncExecStart;
-	uint64_t uTimeFuncExecStop;
+    bool bTaken;
+    bool bExecuting;
+    bool bExecute;
+    compv_asynctoken_f fFunc;
+    compv_asynctoken_param_xt params[COMPV_ASYNCTASK_MAX_TOKEN_PARAMS_COUNT];
+    int32_t iParamsCount; // number of active params
+    uint64_t uTimeSchedStart;
+    uint64_t uTimeSchedStop;
+    uint64_t uTimeFuncExecStart;
+    uint64_t uTimeFuncExecStop;
 public:
-	compv_asynctoken_xs() {
-		bTaken = bExecuting = bExecute = false;
-		iParamsCount = 0;
-		fFunc = NULL;
-	}
+    compv_asynctoken_xs() {
+        bTaken = bExecuting = bExecute = false;
+        iParamsCount = 0;
+        fFunc = NULL;
+    }
 }
 compv_asynctoken_xt;
 
@@ -88,45 +88,53 @@ compv_asynctoken_xt;
 class COMPV_API CompVAsyncTask : public CompVObj
 {
 protected:
-	CompVAsyncTask();
+    CompVAsyncTask();
 public:
-	virtual ~CompVAsyncTask();
-	virtual COMPV_INLINE const char* getObjectId() { return "CompVAsyncTask"; };
+    virtual ~CompVAsyncTask();
+    virtual COMPV_INLINE const char* getObjectId() {
+        return "CompVAsyncTask";
+    };
 
-	COMPV_ERROR_CODE start();
-	COMPV_ERROR_CODE setAffinity(compv_core_id_t core_id);
-	COMPV_ERROR_CODE tokenTake(compv_asynctoken_id_t* pi_token);
-	COMPV_ERROR_CODE tokenRelease(compv_asynctoken_id_t* pi_token);
-	COMPV_ERROR_CODE tokenSetParam(compv_asynctoken_id_t token_id, int32_t param_index, uintptr_t param_ptr, size_t param_size);
-	COMPV_ERROR_CODE tokenSetParams(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, ...);
-	COMPV_ERROR_CODE tokenSetParams2(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, va_list* ap);
-	COMPV_ERROR_CODE tokenGetIdleTime(compv_asynctoken_id_t token_id, uint64_t* timeIdle);
-	COMPV_ERROR_CODE execute(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, ...);
-	COMPV_ERROR_CODE execute2(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, va_list* ap);
-	COMPV_ERROR_CODE wait(compv_asynctoken_id_t token_id, uint64_t u_timeout = 86400000/* 1 day */);
-	COMPV_ERROR_CODE stop();
-	COMPV_INLINE uint64_t getTockensCount() { return m_iTokensCount; }
-	COMPV_INLINE CompVObjWrapper<CompVThread* > getThread() { return m_Thread; }
-	COMPV_INLINE compv_core_id_t getCoreId() { return m_iCoreId; }
+    COMPV_ERROR_CODE start();
+    COMPV_ERROR_CODE setAffinity(compv_core_id_t core_id);
+    COMPV_ERROR_CODE tokenTake(compv_asynctoken_id_t* pi_token);
+    COMPV_ERROR_CODE tokenRelease(compv_asynctoken_id_t* pi_token);
+    COMPV_ERROR_CODE tokenSetParam(compv_asynctoken_id_t token_id, int32_t param_index, uintptr_t param_ptr, size_t param_size);
+    COMPV_ERROR_CODE tokenSetParams(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, ...);
+    COMPV_ERROR_CODE tokenSetParams2(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, va_list* ap);
+    COMPV_ERROR_CODE tokenGetIdleTime(compv_asynctoken_id_t token_id, uint64_t* timeIdle);
+    COMPV_ERROR_CODE execute(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, ...);
+    COMPV_ERROR_CODE execute2(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, va_list* ap);
+    COMPV_ERROR_CODE wait(compv_asynctoken_id_t token_id, uint64_t u_timeout = 86400000/* 1 day */);
+    COMPV_ERROR_CODE stop();
+    COMPV_INLINE uint64_t getTockensCount() {
+        return m_iTokensCount;
+    }
+    COMPV_INLINE CompVObjWrapper<CompVThread* > getThread() {
+        return m_Thread;
+    }
+    COMPV_INLINE compv_core_id_t getCoreId() {
+        return m_iCoreId;
+    }
 
-	static compv_asynctoken_id_t getUniqueTokenId();
-	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVAsyncTask*>* asyncTask);
+    static compv_asynctoken_id_t getUniqueTokenId();
+    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVAsyncTask*>* asyncTask);
 
 private:
-	static void* COMPV_STDCALL run(void *pcArg);
+    static void* COMPV_STDCALL run(void *pcArg);
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-	CompVObjWrapper<CompVThread* >m_Thread;
-	CompVObjWrapper<CompVSemaphore* >m_SemRun;
-	CompVObjWrapper<CompVSemaphore* >m_SemExec;
-	struct compv_asynctoken_xs tokens[COMPV_ASYNCTASK_MAX_TOKEN_COUNT];
-	COMPV_DISABLE_WARNINGS_END()
+    COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+    CompVObjWrapper<CompVThread* >m_Thread;
+    CompVObjWrapper<CompVSemaphore* >m_SemRun;
+    CompVObjWrapper<CompVSemaphore* >m_SemExec;
+    struct compv_asynctoken_xs tokens[COMPV_ASYNCTASK_MAX_TOKEN_COUNT];
+    COMPV_DISABLE_WARNINGS_END()
 
-	bool m_bStarted;
-	compv_core_id_t m_iCoreId;
-	
-	uint64_t m_iTokensCount; // number of active tokens
+    bool m_bStarted;
+    compv_core_id_t m_iCoreId;
+
+    uint64_t m_iTokensCount; // number of active tokens
 };
 
 COMPV_NAMESPACE_END()

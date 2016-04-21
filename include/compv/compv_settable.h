@@ -27,23 +27,24 @@
 COMPV_NAMESPACE_BEGIN()
 
 enum {
-	COMPV_SETTABLE_DATA_TYPE_INT32,
-	COMPV_SETTABLE_DATA_TYPE_OBJ,
+    COMPV_SETTABLE_DATA_TYPE_INT32,
+    COMPV_SETTABLE_DATA_TYPE_OBJ,
 };
 
 
 class COMPV_API CompVSettable
 {
 protected:
-	CompVSettable();
+    CompVSettable();
 
 public:
-	virtual ~CompVSettable();
-	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
+    virtual ~CompVSettable();
+    virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
+    virtual COMPV_ERROR_CODE get(int id, const void*& valuePtr, size_t valueSize);
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-	COMPV_DISABLE_WARNINGS_END()
+    COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+    COMPV_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

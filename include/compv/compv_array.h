@@ -36,24 +36,28 @@ template<class T>
 class COMPV_API CompVArray : public CompVObj
 {
 protected:
-	CompVArray();
+    CompVArray();
 public:
-	virtual ~CompVArray();
-	virtual COMPV_INLINE const char* getObjectId() { return "CompVArray"; };
-	virtual COMPV_INLINE size_t getDimCount() { return m_nDimCount; }
-	const T* getDataPtr() const;
-	const T* getDataPtr1(size_t nIdx0) const;
-	const T* getDataPtr2(size_t nIdx0, size_t nIdx1) const;
-	size_t getDataSizeInBytes() const;
-	size_t getDataSizeInBytes1(size_t nDimIdx) const;
-	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVArray<T>* >* array, size_t nDimCount, COMPV_ARRAY_DIM_SIZES);
+    virtual ~CompVArray();
+    virtual COMPV_INLINE const char* getObjectId() {
+        return "CompVArray";
+    };
+    virtual COMPV_INLINE size_t getDimCount() {
+        return m_nDimCount;
+    }
+    const T* getDataPtr() const;
+    const T* getDataPtr1(size_t nIdx0) const;
+    const T* getDataPtr2(size_t nIdx0, size_t nIdx1) const;
+    size_t getDataSizeInBytes() const;
+    size_t getDataSizeInBytes1(size_t nDimIdx) const;
+    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVArray<T>* >* array, size_t nDimCount, COMPV_ARRAY_DIM_SIZES);
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-	CompVObjWrapper<CompVBuffer*> m_pBuffer;
-	size_t* m_pnDimSizes;
-	size_t m_nDimCount;
-	COMPV_DISABLE_WARNINGS_END()
+    COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+    CompVObjWrapper<CompVBuffer*> m_pBuffer;
+    size_t* m_pnDimSizes;
+    size_t m_nDimCount;
+    COMPV_DISABLE_WARNINGS_END()
 };
 
 // See source file for instanciation

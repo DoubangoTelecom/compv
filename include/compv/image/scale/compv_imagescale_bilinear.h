@@ -30,9 +30,10 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVImageScaleBilinear {
+class CompVImageScaleBilinear
+{
 public:
-	static COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage* >& inImage, CompVObjWrapper<CompVImage* >& outImage);
+    static COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage* >& inImage, CompVObjWrapper<CompVImage* >& outImage);
 };
 
 COMPV_NAMESPACE_END()

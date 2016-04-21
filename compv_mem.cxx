@@ -67,90 +67,90 @@ static void CompVMemCopy_C(void* dstPtr, const void*srcPtr, compv_uscalar_t size
 
 COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void*srcPtr, size_t size)
 {
-	COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVMemCopy cpy = CompVMemCopy_C;
-	cpy(dstPtr, srcPtr, size);
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    CompVMemCopy cpy = CompVMemCopy_C;
+    cpy(dstPtr, srcPtr, size);
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVMem::copyNTA(void* dstPtr, const void*srcPtr, size_t size)
 {
-	COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	size_t align = 1;
-	CompVMemCopy cpy = CompVMemCopy_C;
+    COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    size_t align = 1;
+    CompVMemCopy cpy = CompVMemCopy_C;
 
-	if (size > COMPV_MEM_SIZE_MIN_SIMD) {
-		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
-			if (COMPV_IS_ALIGNED_SSE(dstPtr) && COMPV_IS_ALIGNED_SSE(srcPtr)) {
-				COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopyNTA_Intrin_Aligned_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-				COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopyNTA_Asm_Aligned11_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-				COMPV_EXEC_IFDEF_ASM_X64((cpy = MemCopyNTA_Asm_Aligned11_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-			}
-		}
-		if (CompVCpu::isEnabled(kCpuFlagAVX)) {
-			if (COMPV_IS_ALIGNED_AVX(dstPtr) && COMPV_IS_ALIGNED_AVX(srcPtr)) {
-				COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopyNTA_Intrin_Aligned_AVX, align = COMPV_SIMD_ALIGNV_AVX));
-				COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopyNTA_Asm_Aligned11_X86_AVX, align = COMPV_SIMD_ALIGNV_AVX));
-				COMPV_EXEC_IFDEF_ASM_X64((cpy = MemCopyNTA_Asm_Aligned11_X64_AVX, align = COMPV_SIMD_ALIGNV_AVX));				
-			}
-		}
-	}
+    if (size > COMPV_MEM_SIZE_MIN_SIMD) {
+        if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+            if (COMPV_IS_ALIGNED_SSE(dstPtr) && COMPV_IS_ALIGNED_SSE(srcPtr)) {
+                COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopyNTA_Intrin_Aligned_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+                COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopyNTA_Asm_Aligned11_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+                COMPV_EXEC_IFDEF_ASM_X64((cpy = MemCopyNTA_Asm_Aligned11_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+            }
+        }
+        if (CompVCpu::isEnabled(kCpuFlagAVX)) {
+            if (COMPV_IS_ALIGNED_AVX(dstPtr) && COMPV_IS_ALIGNED_AVX(srcPtr)) {
+                COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopyNTA_Intrin_Aligned_AVX, align = COMPV_SIMD_ALIGNV_AVX));
+                COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopyNTA_Asm_Aligned11_X86_AVX, align = COMPV_SIMD_ALIGNV_AVX));
+                COMPV_EXEC_IFDEF_ASM_X64((cpy = MemCopyNTA_Asm_Aligned11_X64_AVX, align = COMPV_SIMD_ALIGNV_AVX));
+            }
+        }
+    }
 
-	cpy(dstPtr, srcPtr, size);
-	size_t copied = (size / align) * align;
-	if (copied < size) {
-		uint8_t* dstPtr_ = ((uint8_t*)dstPtr) + copied;
-		const uint8_t* srcPtr_ = ((const uint8_t*)srcPtr) + copied;
-		for (size_t i = copied; i < size; ++i) {
-			*dstPtr_++ = *srcPtr_++;
-		}
-	}
-	return COMPV_ERROR_CODE_S_OK;
+    cpy(dstPtr, srcPtr, size);
+    size_t copied = (size / align) * align;
+    if (copied < size) {
+        uint8_t* dstPtr_ = ((uint8_t*)dstPtr) + copied;
+        const uint8_t* srcPtr_ = ((const uint8_t*)srcPtr) + copied;
+        for (size_t i = copied; i < size; ++i) {
+            *dstPtr_++ = *srcPtr_++;
+        }
+    }
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 typedef void(*CompVMemZero)(void* dstPtr, compv_uscalar_t size);
 
 static void CompVMemZero_C(void* dstPtr, compv_uscalar_t size)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	memset(dstPtr, 0, (size_t)size);
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+    memset(dstPtr, 0, (size_t)size);
 }
 
 COMPV_ERROR_CODE CompVMem::zero(void* dstPtr, size_t size)
 {
-	COMPV_CHECK_EXP_RETURN(!dstPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVMemZero setz = CompVMemZero_C;
-	setz(dstPtr, size);
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(!dstPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    CompVMemZero setz = CompVMemZero_C;
+    setz(dstPtr, size);
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVMem::zeroNTA(void* dstPtr, size_t size)
 {
-	COMPV_CHECK_EXP_RETURN(!dstPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVMemZero setz = CompVMemZero_C;
-	size_t align = 1;
+    COMPV_CHECK_EXP_RETURN(!dstPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    CompVMemZero setz = CompVMemZero_C;
+    size_t align = 1;
 
-	if (size > COMPV_MEM_SIZE_MIN_SIMD) {
-		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
-			if (COMPV_IS_ALIGNED_SSE(dstPtr)) {
-				COMPV_EXEC_IFDEF_INTRIN_X86((setz = MemZeroNTA_Intrin_Aligned_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-			}
-		}
-		if (CompVCpu::isEnabled(kCpuFlagAVX)) {
-			if (COMPV_IS_ALIGNED_AVX(dstPtr)) {
-			}
-		}
-	}
+    if (size > COMPV_MEM_SIZE_MIN_SIMD) {
+        if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+            if (COMPV_IS_ALIGNED_SSE(dstPtr)) {
+                COMPV_EXEC_IFDEF_INTRIN_X86((setz = MemZeroNTA_Intrin_Aligned_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+            }
+        }
+        if (CompVCpu::isEnabled(kCpuFlagAVX)) {
+            if (COMPV_IS_ALIGNED_AVX(dstPtr)) {
+            }
+        }
+    }
 
-	setz(dstPtr, size);
-	size_t copied = (size / align) * align;
-	if (copied < size) {
-		uint8_t* dstPtr_ = ((uint8_t*)dstPtr) + copied;
-		for (size_t i = copied; i < size; ++i) {
-			*dstPtr_++ = 0;
-		}
-	}
-	return COMPV_ERROR_CODE_S_OK;
+    setz(dstPtr, size);
+    size_t copied = (size / align) * align;
+    if (copied < size) {
+        uint8_t* dstPtr_ = ((uint8_t*)dstPtr) + copied;
+        for (size_t i = copied; i < size; ++i) {
+            *dstPtr_++ = 0;
+        }
+    }
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 /**
@@ -256,9 +256,9 @@ void CompVMem::free(void** ptr)
         if (isSpecial(*ptr)) {
             freeAligned(ptr);
         }
-        else 
+        else
 #	endif
-		{
+        {
 #if COMPV_MEMALIGN_ALWAYS
             freeAligned(ptr);
 #else
@@ -320,7 +320,7 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem
         COMPV_ASSERT(it != CompVMem::s_Specials.end());
         memcpy(pMem, ptr, COMPV_MATH_MIN(it->second.size, size));
 #	else
-		COMPV_DEBUG_ERROR("Data lost");
+        COMPV_DEBUG_ERROR("Data lost");
 #	endif
     }
     CompVMem::freeAligned(&ptr);
@@ -348,9 +348,9 @@ void CompVMem::freeAligned(void** ptr)
         if (!isSpecial(ptr_)) {
             COMPV_DEBUG_FATAL("Using freeAligned on no-special address: %lx", (uintptr_t)ptr_);
         }
-		else {
-			CompVMem::s_Specials.erase((uintptr_t)ptr_);
-		}
+        else {
+            CompVMem::s_Specials.erase((uintptr_t)ptr_);
+        }
 #endif
 #if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
         _aligned_free(ptr_);
@@ -382,8 +382,8 @@ int CompVMem::getBestAlignment()
     if (_bestAlignment == 0) {
         _bestAlignment = COMPV_SIMD_ALIGNV_DEFAULT;
         const int L1CacheLineSize = CompVCpu::getCache1LineSize(); // probably #64 or #128
-		if (L1CacheLineSize > _bestAlignment && L1CacheLineSize <= 128 && (L1CacheLineSize & (_bestAlignment - 1)) == 0) {
-			_bestAlignment = L1CacheLineSize;
+        if (L1CacheLineSize > _bestAlignment && L1CacheLineSize <= 128 && (L1CacheLineSize & (_bestAlignment - 1)) == 0) {
+            _bestAlignment = L1CacheLineSize;
         }
     }
     return _bestAlignment;
@@ -402,8 +402,8 @@ bool CompVMem::isSpecial(void* ptr)
 #	if COMPV_MEM_CHECK
     return CompVMem::s_Specials.find((uintptr_t)ptr) != CompVMem::s_Specials.end();
 #else
-	COMPV_DEBUG_INFO("Memory check disabled. Returning false for CompVMem::isSpecial() function");
-	return false;
+    COMPV_DEBUG_INFO("Memory check disabled. Returning false for CompVMem::isSpecial() function");
+    return false;
 #endif
 }
 
@@ -417,8 +417,8 @@ size_t CompVMem::getSpecialTotalMemSize()
     }
     return total;
 #else
-	COMPV_DEBUG_INFO("Memory check disabled. Returning 0 for CompVMem::getSpecialTotalMemSize() function");
-	return 0;
+    COMPV_DEBUG_INFO("Memory check disabled. Returning 0 for CompVMem::getSpecialTotalMemSize() function");
+    return 0;
 #endif
 }
 
@@ -427,8 +427,8 @@ size_t CompVMem::getSpecialsCount()
 #	if COMPV_MEM_CHECK
     return CompVMem::s_Specials.size();
 #else
-	COMPV_DEBUG_INFO("Memory check disabled. Returning 0 for CompVMem::getSpecialsCount() function");
-	return 0;
+    COMPV_DEBUG_INFO("Memory check disabled. Returning 0 for CompVMem::getSpecialsCount() function");
+    return 0;
 #endif
 }
 

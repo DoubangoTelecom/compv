@@ -28,37 +28,47 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_API CompVObj
 {
 public:
-	CompVObj() :m_nRefCount(0) { compv_atomic_inc(&s_nObjCount); }
-	CompVObj(const CompVObj &) :m_nRefCount(0) { compv_atomic_inc(&s_nObjCount); }
-	virtual ~CompVObj() { compv_atomic_dec(&s_nObjCount); }
+    CompVObj() :m_nRefCount(0) {
+        compv_atomic_inc(&s_nObjCount);
+    }
+    CompVObj(const CompVObj &) :m_nRefCount(0) {
+        compv_atomic_inc(&s_nObjCount);
+    }
+    virtual ~CompVObj() {
+        compv_atomic_dec(&s_nObjCount);
+    }
 
 public:
-	virtual COMPV_INLINE const char* getObjectId() = 0;
+    virtual COMPV_INLINE const char* getObjectId() = 0;
 #if !defined(SWIG)
-	COMPV_INLINE long getRefCount() const {
-		return m_nRefCount;
-	}
-	void operator=(const CompVObj &) {}
+    COMPV_INLINE long getRefCount() const {
+        return m_nRefCount;
+    }
+    void operator=(const CompVObj &) {}
 #endif
 
 
 public:
-	COMPV_INLINE long takeRef() { /*const*/
-		compv_atomic_inc(&m_nRefCount);
-		return m_nRefCount;
-	}
-	COMPV_INLINE long releaseRef() { /*const*/
-		if (m_nRefCount) { // must never be equal to zero
-			compv_atomic_dec(&m_nRefCount);
-		}
-		return m_nRefCount;
-	}
-	static long getTotalObjCount() { return s_nObjCount; }
-	static bool isEmpty() { return getTotalObjCount() == 0; }
+    COMPV_INLINE long takeRef() { /*const*/
+        compv_atomic_inc(&m_nRefCount);
+        return m_nRefCount;
+    }
+    COMPV_INLINE long releaseRef() { /*const*/
+        if (m_nRefCount) { // must never be equal to zero
+            compv_atomic_dec(&m_nRefCount);
+        }
+        return m_nRefCount;
+    }
+    static long getTotalObjCount() {
+        return s_nObjCount;
+    }
+    static bool isEmpty() {
+        return getTotalObjCount() == 0;
+    }
 
 private:
-	volatile long m_nRefCount;
-	static long s_nObjCount;
+    volatile long m_nRefCount;
+    static long s_nObjCount;
 };
 
 //
@@ -69,37 +79,39 @@ class CompVObjWrapper
 {
 
 public:
-	COMPV_INLINE CompVObjWrapper(CompVObjType obj
+    COMPV_INLINE CompVObjWrapper(CompVObjType obj
 #if !defined(SWIG)
-		= NULL
+                                 = NULL
 #endif
-		);
-	COMPV_INLINE CompVObjWrapper(const CompVObjWrapper<CompVObjType> &obj);
-	virtual ~CompVObjWrapper();
+                                );
+    COMPV_INLINE CompVObjWrapper(const CompVObjWrapper<CompVObjType> &obj);
+    virtual ~CompVObjWrapper();
 
 public:
 #if defined(SWIG)
-	CompVObjType unWrap() { return getWrappedObject(); }
+    CompVObjType unWrap() {
+        return getWrappedObject();
+    }
 #else
-	COMPV_INLINE CompVObjWrapper<CompVObjType>& operator=(const CompVObjType other);
-	COMPV_INLINE CompVObjWrapper<CompVObjType>& operator=(const CompVObjWrapper<CompVObjType> &other);
-	COMPV_INLINE bool operator ==(const CompVObjWrapper<CompVObjType> other) const;
-	COMPV_INLINE bool operator!=(const CompVObjWrapper<CompVObjType> &other) const;
-	COMPV_INLINE bool operator <(const CompVObjWrapper<CompVObjType> other) const;
-	COMPV_INLINE CompVObjType operator->() const;
-	COMPV_INLINE CompVObjType operator*() const;
-	COMPV_INLINE operator bool() const;
+    COMPV_INLINE CompVObjWrapper<CompVObjType>& operator=(const CompVObjType other);
+    COMPV_INLINE CompVObjWrapper<CompVObjType>& operator=(const CompVObjWrapper<CompVObjType> &other);
+    COMPV_INLINE bool operator ==(const CompVObjWrapper<CompVObjType> other) const;
+    COMPV_INLINE bool operator!=(const CompVObjWrapper<CompVObjType> &other) const;
+    COMPV_INLINE bool operator <(const CompVObjWrapper<CompVObjType> other) const;
+    COMPV_INLINE CompVObjType operator->() const;
+    COMPV_INLINE CompVObjType operator*() const;
+    COMPV_INLINE operator bool() const;
 #endif
 
 protected:
-	long takeRef();
-	long releaseRef();
+    long takeRef();
+    long releaseRef();
 
-	CompVObjType getWrappedObject() const;
-	void wrapObject(CompVObjType obj);
+    CompVObjType getWrappedObject() const;
+    void wrapObject(CompVObjType obj);
 
 private:
-	CompVObjType m_WrappedObject;
+    CompVObjType m_WrappedObject;
 };
 
 //
@@ -108,116 +120,116 @@ private:
 template<class CompVObjType>
 CompVObjWrapper<CompVObjType>::CompVObjWrapper(CompVObjType obj)
 {
-	wrapObject(obj), takeRef();
+    wrapObject(obj), takeRef();
 }
 
 template<class CompVObjType>
 CompVObjWrapper<CompVObjType>::CompVObjWrapper(const CompVObjWrapper<CompVObjType> &obj)
 {
-	wrapObject(obj.getWrappedObject()),
-		takeRef();
+    wrapObject(obj.getWrappedObject()),
+               takeRef();
 }
 
 template<class CompVObjType>
 CompVObjWrapper<CompVObjType>::~CompVObjWrapper()
 {
-	releaseRef(),
-		wrapObject(NULL);
+    releaseRef(),
+               wrapObject(NULL);
 }
 
 
 template<class CompVObjType>
 long CompVObjWrapper<CompVObjType>::takeRef()
 {
-	if (m_WrappedObject /*&& m_WrappedObject->getRefCount() At startup*/) {
-		return m_WrappedObject->takeRef();
-	}
-	return 0;
+    if (m_WrappedObject /*&& m_WrappedObject->getRefCount() At startup*/) {
+        return m_WrappedObject->takeRef();
+    }
+    return 0;
 }
 
 template<class CompVObjType>
 long CompVObjWrapper<CompVObjType>::releaseRef()
 {
-	if (m_WrappedObject && m_WrappedObject->getRefCount()) {
-		if (m_WrappedObject->releaseRef() == 0) {
-			delete m_WrappedObject, m_WrappedObject = NULL;
-		}
-		else {
-			return m_WrappedObject->getRefCount();
-		}
-	}
-	return 0;
+    if (m_WrappedObject && m_WrappedObject->getRefCount()) {
+        if (m_WrappedObject->releaseRef() == 0) {
+            delete m_WrappedObject, m_WrappedObject = NULL;
+        }
+        else {
+            return m_WrappedObject->getRefCount();
+        }
+    }
+    return 0;
 }
 
 template<class CompVObjType>
 CompVObjType CompVObjWrapper<CompVObjType>::getWrappedObject() const
 {
-	return m_WrappedObject;
+    return m_WrappedObject;
 }
 
 template<class CompVObjType>
 void CompVObjWrapper<CompVObjType>::wrapObject(const CompVObjType obj)
 {
-	if (obj) {
-		if (!(m_WrappedObject = dynamic_cast<CompVObjType>(obj))) {
-			COMPV_DEBUG_ERROR("Trying to wrap an object with an invalid type");
-		}
-	}
-	else {
-		m_WrappedObject = NULL;
-	}
+    if (obj) {
+        if (!(m_WrappedObject = dynamic_cast<CompVObjType>(obj))) {
+            COMPV_DEBUG_ERROR("Trying to wrap an object with an invalid type");
+        }
+    }
+    else {
+        m_WrappedObject = NULL;
+    }
 }
 
 template<class CompVObjType>
 CompVObjWrapper<CompVObjType>& CompVObjWrapper<CompVObjType>::operator=(const CompVObjType obj)
 {
-	releaseRef();
-	wrapObject(obj), takeRef();
-	return *this;
+    releaseRef();
+    wrapObject(obj), takeRef();
+    return *this;
 }
 
 template<class CompVObjType>
 CompVObjWrapper<CompVObjType>& CompVObjWrapper<CompVObjType>::operator=(const CompVObjWrapper<CompVObjType> &obj)
 {
-	releaseRef();
-	wrapObject(obj.getWrappedObject()), takeRef();
-	return *this;
+    releaseRef();
+    wrapObject(obj.getWrappedObject()), takeRef();
+    return *this;
 }
 
 template<class CompVObjType>
 bool CompVObjWrapper<CompVObjType>::operator ==(const CompVObjWrapper<CompVObjType> other) const
 {
-	return getWrappedObject() == other.getWrappedObject();
+    return getWrappedObject() == other.getWrappedObject();
 }
 
 template<class CompVObjType>
 bool CompVObjWrapper<CompVObjType>::operator!=(const CompVObjWrapper<CompVObjType> &other) const
 {
-	return getWrappedObject() != other.getWrappedObject();
+    return getWrappedObject() != other.getWrappedObject();
 }
 
 template<class CompVObjType>
 bool CompVObjWrapper<CompVObjType>::operator <(const CompVObjWrapper<CompVObjType> other) const
 {
-	return getWrappedObject() < other.getWrappedObject();
+    return getWrappedObject() < other.getWrappedObject();
 }
 
 template<class CompVObjType>
 CompVObjWrapper<CompVObjType>::operator bool() const
 {
-	return (getWrappedObject() != NULL);
+    return (getWrappedObject() != NULL);
 }
 
 template<class CompVObjType>
 CompVObjType CompVObjWrapper<CompVObjType>::operator->() const
 {
-	return getWrappedObject();
+    return getWrappedObject();
 }
 
 template<class CompVObjType>
 CompVObjType CompVObjWrapper<CompVObjType>::operator*() const
 {
-	return getWrappedObject();
+    return getWrappedObject();
 }
 
 COMPV_NAMESPACE_END()

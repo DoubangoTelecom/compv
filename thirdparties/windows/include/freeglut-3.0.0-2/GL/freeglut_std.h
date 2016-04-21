@@ -29,7 +29,7 @@
  */
 
 #ifdef __cplusplus
-    extern "C" {
+extern "C" {
 #endif
 
 /*
@@ -76,7 +76,7 @@
 #       else
 #           define FGAPI __declspec(dllimport)
 
-            /* Link with Win32 shared freeglut lib */
+/* Link with Win32 shared freeglut lib */
 #           if FREEGLUT_LIB_PRAGMAS
 #             pragma comment (lib, "freeglut.lib")
 #           endif
@@ -210,22 +210,22 @@
 #   define  GLUT_BITMAP_HELVETICA_12        ((void *)0x0007)
 #   define  GLUT_BITMAP_HELVETICA_18        ((void *)0x0008)
 #else
-    /*
-     * I don't really know if it's a good idea... But here it goes:
-     */
-    extern void* glutStrokeRoman;
-    extern void* glutStrokeMonoRoman;
-    extern void* glutBitmap9By15;
-    extern void* glutBitmap8By13;
-    extern void* glutBitmapTimesRoman10;
-    extern void* glutBitmapTimesRoman24;
-    extern void* glutBitmapHelvetica10;
-    extern void* glutBitmapHelvetica12;
-    extern void* glutBitmapHelvetica18;
+/*
+ * I don't really know if it's a good idea... But here it goes:
+ */
+extern void* glutStrokeRoman;
+extern void* glutStrokeMonoRoman;
+extern void* glutBitmap9By15;
+extern void* glutBitmap8By13;
+extern void* glutBitmapTimesRoman10;
+extern void* glutBitmapTimesRoman24;
+extern void* glutBitmapHelvetica10;
+extern void* glutBitmapHelvetica12;
+extern void* glutBitmapHelvetica18;
 
-    /*
-     * Those pointers will be used by following definitions:
-     */
+/*
+ * Those pointers will be used by following definitions:
+ */
 #   define  GLUT_STROKE_ROMAN               ((void *) &glutStrokeRoman)
 #   define  GLUT_STROKE_MONO_ROMAN          ((void *) &glutStrokeMonoRoman)
 #   define  GLUT_BITMAP_9_BY_15             ((void *) &glutBitmap9By15)
@@ -620,17 +620,26 @@ FGAPI int FGAPIENTRY __glutCreateMenuWithExit(void (* func)(int), void (__cdecl 
 #else
 #define FGUNUSED
 #endif
-static void FGAPIENTRY FGUNUSED glutInit_ATEXIT_HACK(int *argcp, char **argv) { __glutInitWithExit(argcp, argv, exit); }
+static void FGAPIENTRY FGUNUSED glutInit_ATEXIT_HACK(int *argcp, char **argv)
+{
+    __glutInitWithExit(argcp, argv, exit);
+}
 #define glutInit glutInit_ATEXIT_HACK
-static int FGAPIENTRY FGUNUSED glutCreateWindow_ATEXIT_HACK(const char *title) { return __glutCreateWindowWithExit(title, exit); }
+static int FGAPIENTRY FGUNUSED glutCreateWindow_ATEXIT_HACK(const char *title)
+{
+    return __glutCreateWindowWithExit(title, exit);
+}
 #define glutCreateWindow glutCreateWindow_ATEXIT_HACK
-static int FGAPIENTRY FGUNUSED glutCreateMenu_ATEXIT_HACK(void (* func)(int)) { return __glutCreateMenuWithExit(func, exit); }
+static int FGAPIENTRY FGUNUSED glutCreateMenu_ATEXIT_HACK(void (* func)(int))
+{
+    return __glutCreateMenuWithExit(func, exit);
+}
 #define glutCreateMenu glutCreateMenu_ATEXIT_HACK
 #endif
 #endif
 
 #ifdef __cplusplus
-    }
+}
 #endif
 
 /*** END OF FILE ***/

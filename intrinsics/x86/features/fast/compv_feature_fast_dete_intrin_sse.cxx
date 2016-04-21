@@ -44,20 +44,20 @@ void FastData16Row_Intrin_SSE2(
     const compv_scalar_t(&pixels16)[16],
     compv_scalar_t N,
     compv_scalar_t threshold,
-	uint8_t* strengths,
+    uint8_t* strengths,
     compv_scalar_t* me)
 {
     compv_scalar_t i, sum, s;
 
     int colDarkersFlags, colBrightersFlags; // Flags defining which column has more than N non-zero bits
     bool loadB, loadD;
-	__m128i xmm0, xmm1, xmm2, xmm3, xmmThreshold, xmmBrighter, xmmDarker, xmmZeros, xmmFF, xmmDarkersFlags[16], xmmBrightersFlags[16], xmmDataPtr[16], xmmOnes, xmmNMinusOne, xmm254;
+    __m128i xmm0, xmm1, xmm2, xmm3, xmmThreshold, xmmBrighter, xmmDarker, xmmZeros, xmmFF, xmmDarkersFlags[16], xmmBrightersFlags[16], xmmDataPtr[16], xmmOnes, xmmNMinusOne, xmm254;
 
-	compv_scalar_t fdarkers16[16];
-	compv_scalar_t fbrighters16[16];
-	__m128i xmmDdarkers16x16[16];
-	__m128i xmmDbrighters16x16[16];
-	__m128i *xmmStrengths = (__m128i *)strengths;
+    compv_scalar_t fdarkers16[16];
+    compv_scalar_t fbrighters16[16];
+    __m128i xmmDdarkers16x16[16];
+    __m128i xmmDbrighters16x16[16];
+    __m128i *xmmStrengths = (__m128i *)strengths;
 
     _mm_store_si128(&xmmZeros, _mm_setzero_si128());
     _mm_store_si128(&xmmThreshold, _mm_set1_epi8((uint8_t)threshold));
@@ -66,10 +66,10 @@ void FastData16Row_Intrin_SSE2(
     _mm_store_si128(&xmmNMinusOne, _mm_set1_epi8((uint8_t)N - 1));
     _mm_store_si128(&xmm254, _mm_load_si128((__m128i*)k254_u8)); // not(254) = 00000001 -> used to select the lowest bit in each u8
 
-    for (i = 0; i < width; i += 16) {		
-		_mm_storeu_si128(xmmStrengths, xmmZeros); // cleanup strengths
+    for (i = 0; i < width; i += 16) {
+        _mm_storeu_si128(xmmStrengths, xmmZeros); // cleanup strengths
 
-		// build brighter and darker
+        // build brighter and darker
         _mm_store_si128(&xmm0, _mm_loadu_si128((__m128i*)IP)); // load samples
         _mm_store_si128(&xmmBrighter, _mm_adds_epu8(xmm0, xmmThreshold));
         _mm_store_si128(&xmmDarker, _mm_subs_epu8(xmm0, xmmThreshold));
@@ -138,7 +138,7 @@ void FastData16Row_Intrin_SSE2(
                 goto next;
             }
 
-			colDarkersFlags = 0, colBrightersFlags = 0;
+            colDarkersFlags = 0, colBrightersFlags = 0;
 
             _mm_store_si128(&xmmDataPtr[1], _mm_loadu_si128((__m128i*)&IP[pixels16[1]]));
             _mm_store_si128(&xmmDataPtr[2], _mm_loadu_si128((__m128i*)&IP[pixels16[2]]));
@@ -222,7 +222,7 @@ void FastData16Row_Intrin_SSE2(
                 // Check the columns with at least N non-zero bits
                 _mm_store_si128(&xmmDarkersFlags[0], _mm_cmpgt_epi8(xmmDarkersFlags[0], xmmNMinusOne));
                 colDarkersFlags = _mm_movemask_epi8(xmmDarkersFlags[0]);
-				loadD = (colDarkersFlags != 0);
+                loadD = (colDarkersFlags != 0);
             }
 
             if (loadB) {
@@ -290,12 +290,12 @@ void FastData16Row_Intrin_SSE2(
                 // Check the columns with at least N non-zero bits
                 _mm_store_si128(&xmm0, _mm_cmpgt_epi8(xmmBrightersFlags[0], xmmNMinusOne));
                 colBrightersFlags = _mm_movemask_epi8(xmm0);
-				loadB = (colBrightersFlags != 0);
+                loadB = (colBrightersFlags != 0);
             }
-			
+
             if (loadD) {
                 // Transpose
-               COMPV_TRANSPOSE_I8_16X16_SSE2(
+                COMPV_TRANSPOSE_I8_16X16_SSE2(
                     xmmDdarkers16x16[0], xmmDdarkers16x16[1], xmmDdarkers16x16[2], xmmDdarkers16x16[3],
                     xmmDdarkers16x16[4], xmmDdarkers16x16[5], xmmDdarkers16x16[6], xmmDdarkers16x16[7],
                     xmmDdarkers16x16[8], xmmDdarkers16x16[9], xmmDdarkers16x16[10], xmmDdarkers16x16[11],
@@ -345,18 +345,18 @@ void FastData16Row_Intrin_SSE2(
                 fbrighters16[13] = _mm_movemask_epi8(_mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[13], xmmZeros), xmmFF));
                 fbrighters16[14] = _mm_movemask_epi8(_mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[14], xmmZeros), xmmFF));
                 fbrighters16[15] = _mm_movemask_epi8(_mm_andnot_si128(_mm_cmpeq_epi8(xmmDbrighters16x16[15], xmmZeros), xmmFF));
-				
+
             }
-			if (colBrightersFlags || colDarkersFlags) {
-				FastStrengths16(colBrightersFlags, colDarkersFlags, (const uint8_t*)xmmDbrighters16x16, (const uint8_t*)xmmDdarkers16x16, &fbrighters16, &fdarkers16, (uint8_t*)xmmStrengths, N);
-			}
+            if (colBrightersFlags || colDarkersFlags) {
+                FastStrengths16(colBrightersFlags, colDarkersFlags, (const uint8_t*)xmmDbrighters16x16, (const uint8_t*)xmmDdarkers16x16, &fbrighters16, &fdarkers16, (uint8_t*)xmmStrengths, N);
+            }
         }
 next:
         IP += 16;
         if (IPprev) {
             IPprev += 16;
         }
-		xmmStrengths += 1;
+        xmmStrengths += 1;
     } // for i
 }
 
@@ -369,8 +369,8 @@ void FastStrengths16_Intrin_SSE2(compv_scalar_t rbrighters, compv_scalar_t rdark
     __m128i xmm0, xmm1, xmmFbrighters, xmmFdarkers, xmmZeros, xmmFastXFlagsLow, xmmFastXFlagsHigh;
     int r0 = 0, r1 = 0, maxn;
     unsigned i, j, k;
-	const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
-	uint16_t rb = (uint16_t)rbrighters, rd = (uint16_t)rdarkers;
+    const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
+    uint16_t rb = (uint16_t)rbrighters, rd = (uint16_t)rdarkers;
 
     _mm_store_si128(&xmmZeros, _mm_setzero_si128());
 
@@ -378,80 +378,80 @@ void FastStrengths16_Intrin_SSE2(compv_scalar_t rbrighters, compv_scalar_t rdark
     _mm_store_si128(&xmmFastXFlagsLow, _mm_load_si128((__m128i*)(FastXFlags + 0)));
     _mm_store_si128(&xmmFastXFlagsHigh, _mm_load_si128((__m128i*)(FastXFlags + 8)));
 
-	for (unsigned p = 0; p < 16; ++p) {
-		maxn = 0;
-		// Brighters
-		if (rb & (1 << p)) {
-			// brighters flags
-			_mm_store_si128(&xmmFbrighters, _mm_set1_epi16((short)(*fbrighters16)[p]));
+    for (unsigned p = 0; p < 16; ++p) {
+        maxn = 0;
+        // Brighters
+        if (rb & (1 << p)) {
+            // brighters flags
+            _mm_store_si128(&xmmFbrighters, _mm_set1_epi16((short)(*fbrighters16)[p]));
 
-			_mm_store_si128(&xmm0, _mm_and_si128(xmmFbrighters, xmmFastXFlagsLow));
-			_mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
-			_mm_store_si128(&xmm1, _mm_and_si128(xmmFbrighters, xmmFastXFlagsHigh));
-			_mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
-			r0 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
-			if (r0) {
-				uint8_t nbrighter;
-				for (i = 0; i < 16; ++i) {
-					if (r0 & (1 << i)) {
-						// Compute Horizontal minimum (TODO: Find SSE2 method)
-						nbrighter = 255;
-						k = unsigned(i + N);
-						for (j = i; j < k; ++j) {
-							if (dbrighters16x16[j & 15] < nbrighter) {
-								nbrighter = dbrighters16x16[j & 15];
-							}
-						}
-						maxn = (uint8_t)std::max((int)nbrighter, maxn);
-					}
-				}
-			}
-		}
+            _mm_store_si128(&xmm0, _mm_and_si128(xmmFbrighters, xmmFastXFlagsLow));
+            _mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
+            _mm_store_si128(&xmm1, _mm_and_si128(xmmFbrighters, xmmFastXFlagsHigh));
+            _mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
+            r0 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
+            if (r0) {
+                uint8_t nbrighter;
+                for (i = 0; i < 16; ++i) {
+                    if (r0 & (1 << i)) {
+                        // Compute Horizontal minimum (TODO: Find SSE2 method)
+                        nbrighter = 255;
+                        k = unsigned(i + N);
+                        for (j = i; j < k; ++j) {
+                            if (dbrighters16x16[j & 15] < nbrighter) {
+                                nbrighter = dbrighters16x16[j & 15];
+                            }
+                        }
+                        maxn = (uint8_t)std::max((int)nbrighter, maxn);
+                    }
+                }
+            }
+        }
 
-		// Darkers
-		if (rd & (1 << p)) {
-			// darkers flags
-			_mm_store_si128(&xmmFdarkers, _mm_set1_epi16((short)(*fdarkers16)[p]));
+        // Darkers
+        if (rd & (1 << p)) {
+            // darkers flags
+            _mm_store_si128(&xmmFdarkers, _mm_set1_epi16((short)(*fdarkers16)[p]));
 
-			_mm_store_si128(&xmm0, _mm_and_si128(xmmFdarkers, xmmFastXFlagsLow));
-			_mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
-			_mm_store_si128(&xmm1, _mm_and_si128(xmmFdarkers, xmmFastXFlagsHigh));
-			_mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
-			r1 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r1's popcnt is equal to N as FastXFlags contains values with popcnt==N
-			if (r1) {
-				uint8_t ndarker;
-				for (i = 0; i < 16; ++i) {
-					if (r1 & (1 << i)) {
-						// Compute Horizontal minimum
-						ndarker = 255;
-						k = unsigned(i + N);
-						for (j = i; j < k; ++j) {
-							if (ddarkers16x16[j & 15] < ndarker) {
-								ndarker = ddarkers16x16[j & 15];
-							}
-						}
-						maxn = (uint8_t)std::max((int)ndarker, maxn);
-					}
-				}
-			}
-		}
+            _mm_store_si128(&xmm0, _mm_and_si128(xmmFdarkers, xmmFastXFlagsLow));
+            _mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
+            _mm_store_si128(&xmm1, _mm_and_si128(xmmFdarkers, xmmFastXFlagsHigh));
+            _mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
+            r1 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r1's popcnt is equal to N as FastXFlags contains values with popcnt==N
+            if (r1) {
+                uint8_t ndarker;
+                for (i = 0; i < 16; ++i) {
+                    if (r1 & (1 << i)) {
+                        // Compute Horizontal minimum
+                        ndarker = 255;
+                        k = unsigned(i + N);
+                        for (j = i; j < k; ++j) {
+                            if (ddarkers16x16[j & 15] < ndarker) {
+                                ndarker = ddarkers16x16[j & 15];
+                            }
+                        }
+                        maxn = (uint8_t)std::max((int)ndarker, maxn);
+                    }
+                }
+            }
+        }
 
-		strengths16[p] = (uint8_t)maxn;
+        strengths16[p] = (uint8_t)maxn;
 
-		ddarkers16x16 += 16;
-		dbrighters16x16 += 16;
-	}
+        ddarkers16x16 += 16;
+        dbrighters16x16 += 16;
+    }
 }
 
 void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x16, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x16, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv_scalar_t N)
 {
-	__m128i xmm0, xmm1, xmmFastXFlagsLow, xmmFastXFlagsHigh, xmmFdarkers, xmmFbrighters;
+    __m128i xmm0, xmm1, xmmFastXFlagsLow, xmmFastXFlagsHigh, xmmFdarkers, xmmFbrighters;
     __m128i xmmZeros;
     int r0 = 0, r1 = 0, maxn;
     int lowMin, highMin;
-	uint16_t rb = (uint16_t)rbrighters, rd = (uint16_t)rdarkers;
-	const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
-	const uint8_t(&kFastArcs)[16][16] = (N == 9 ? kFast9Arcs : kFast12Arcs);
+    uint16_t rb = (uint16_t)rbrighters, rd = (uint16_t)rdarkers;
+    const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
+    const uint8_t(&kFastArcs)[16][16] = (N == 9 ? kFast9Arcs : kFast12Arcs);
 
     // FAST hard-coded flags
     _mm_store_si128(&xmmFastXFlagsLow, _mm_load_si128((__m128i*)(FastXFlags + 0)));
@@ -472,54 +472,54 @@ void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdar
 		maxn_ = std::max(std::min(lowMin, highMin), (int)maxn_); \
 	}
 
-	for (unsigned p = 0; p < 16; ++p) {
-		maxn = 0;
-		// Brighters
-		if (rb & (1 << p)) {
-			// brighters flags
-			_mm_store_si128(&xmmFbrighters, _mm_set1_epi16((short)(*fbrighters16)[p]));
+    for (unsigned p = 0; p < 16; ++p) {
+        maxn = 0;
+        // Brighters
+        if (rb & (1 << p)) {
+            // brighters flags
+            _mm_store_si128(&xmmFbrighters, _mm_set1_epi16((short)(*fbrighters16)[p]));
 
-			_mm_store_si128(&xmm0, _mm_and_si128(xmmFbrighters, xmmFastXFlagsLow));
-			_mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
-			_mm_store_si128(&xmm1, _mm_and_si128(xmmFbrighters, xmmFastXFlagsHigh));
-			_mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
-			r0 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
-			if (r0) {
-				_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)dbrighters16x16));
-				// Compute minimum hz
-				COMPV_HORIZ_MIN(r0, 0, maxn) COMPV_HORIZ_MIN(r0, 1, maxn) COMPV_HORIZ_MIN(r0, 2, maxn) COMPV_HORIZ_MIN(r0, 3, maxn)
-				COMPV_HORIZ_MIN(r0, 4, maxn) COMPV_HORIZ_MIN(r0, 5, maxn) COMPV_HORIZ_MIN(r0, 6, maxn) COMPV_HORIZ_MIN(r0, 7, maxn)
-				COMPV_HORIZ_MIN(r0, 8, maxn) COMPV_HORIZ_MIN(r0, 9, maxn) COMPV_HORIZ_MIN(r0, 10, maxn) COMPV_HORIZ_MIN(r0, 11, maxn)
-				COMPV_HORIZ_MIN(r0, 12, maxn) COMPV_HORIZ_MIN(r0, 13, maxn) COMPV_HORIZ_MIN(r0, 14, maxn) COMPV_HORIZ_MIN(r0, 15, maxn)
-			}
-		}
+            _mm_store_si128(&xmm0, _mm_and_si128(xmmFbrighters, xmmFastXFlagsLow));
+            _mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
+            _mm_store_si128(&xmm1, _mm_and_si128(xmmFbrighters, xmmFastXFlagsHigh));
+            _mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
+            r0 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
+            if (r0) {
+                _mm_store_si128(&xmm0, _mm_load_si128((__m128i*)dbrighters16x16));
+                // Compute minimum hz
+                COMPV_HORIZ_MIN(r0, 0, maxn) COMPV_HORIZ_MIN(r0, 1, maxn) COMPV_HORIZ_MIN(r0, 2, maxn) COMPV_HORIZ_MIN(r0, 3, maxn)
+                COMPV_HORIZ_MIN(r0, 4, maxn) COMPV_HORIZ_MIN(r0, 5, maxn) COMPV_HORIZ_MIN(r0, 6, maxn) COMPV_HORIZ_MIN(r0, 7, maxn)
+                COMPV_HORIZ_MIN(r0, 8, maxn) COMPV_HORIZ_MIN(r0, 9, maxn) COMPV_HORIZ_MIN(r0, 10, maxn) COMPV_HORIZ_MIN(r0, 11, maxn)
+                COMPV_HORIZ_MIN(r0, 12, maxn) COMPV_HORIZ_MIN(r0, 13, maxn) COMPV_HORIZ_MIN(r0, 14, maxn) COMPV_HORIZ_MIN(r0, 15, maxn)
+            }
+        }
 
-		// Darkers
-		if (rd & (1 << p)) {
-			// darkers flags
-			_mm_store_si128(&xmmFdarkers, _mm_set1_epi16((short)(*fdarkers16)[p]));
+        // Darkers
+        if (rd & (1 << p)) {
+            // darkers flags
+            _mm_store_si128(&xmmFdarkers, _mm_set1_epi16((short)(*fdarkers16)[p]));
 
-			_mm_store_si128(&xmm0, _mm_and_si128(xmmFdarkers, xmmFastXFlagsLow));
-			_mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
-			_mm_store_si128(&xmm1, _mm_and_si128(xmmFdarkers, xmmFastXFlagsHigh));
-			_mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
-			r1 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r1's popcnt is equal to N as FastXFlags contains values with popcnt==N
-			if (r1) {
-				_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)ddarkers16x16));
+            _mm_store_si128(&xmm0, _mm_and_si128(xmmFdarkers, xmmFastXFlagsLow));
+            _mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
+            _mm_store_si128(&xmm1, _mm_and_si128(xmmFdarkers, xmmFastXFlagsHigh));
+            _mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
+            r1 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r1's popcnt is equal to N as FastXFlags contains values with popcnt==N
+            if (r1) {
+                _mm_store_si128(&xmm0, _mm_load_si128((__m128i*)ddarkers16x16));
 
-				// Compute minimum hz
-				COMPV_HORIZ_MIN(r1, 0, maxn) COMPV_HORIZ_MIN(r1, 1, maxn) COMPV_HORIZ_MIN(r1, 2, maxn) COMPV_HORIZ_MIN(r1, 3, maxn)
-				COMPV_HORIZ_MIN(r1, 4, maxn) COMPV_HORIZ_MIN(r1, 5, maxn) COMPV_HORIZ_MIN(r1, 6, maxn) COMPV_HORIZ_MIN(r1, 7, maxn)
-				COMPV_HORIZ_MIN(r1, 8, maxn) COMPV_HORIZ_MIN(r1, 9, maxn) COMPV_HORIZ_MIN(r1, 10, maxn) COMPV_HORIZ_MIN(r1, 11, maxn)
-				COMPV_HORIZ_MIN(r1, 12, maxn) COMPV_HORIZ_MIN(r1, 13, maxn) COMPV_HORIZ_MIN(r1, 14, maxn) COMPV_HORIZ_MIN(r1, 15, maxn)
-			}
-		}
+                // Compute minimum hz
+                COMPV_HORIZ_MIN(r1, 0, maxn) COMPV_HORIZ_MIN(r1, 1, maxn) COMPV_HORIZ_MIN(r1, 2, maxn) COMPV_HORIZ_MIN(r1, 3, maxn)
+                COMPV_HORIZ_MIN(r1, 4, maxn) COMPV_HORIZ_MIN(r1, 5, maxn) COMPV_HORIZ_MIN(r1, 6, maxn) COMPV_HORIZ_MIN(r1, 7, maxn)
+                COMPV_HORIZ_MIN(r1, 8, maxn) COMPV_HORIZ_MIN(r1, 9, maxn) COMPV_HORIZ_MIN(r1, 10, maxn) COMPV_HORIZ_MIN(r1, 11, maxn)
+                COMPV_HORIZ_MIN(r1, 12, maxn) COMPV_HORIZ_MIN(r1, 13, maxn) COMPV_HORIZ_MIN(r1, 14, maxn) COMPV_HORIZ_MIN(r1, 15, maxn)
+            }
+        }
 
-		strengths16[p] = (uint8_t)maxn;
+        strengths16[p] = (uint8_t)maxn;
 
-		dbrighters16x16 += 16;
-		ddarkers16x16 += 16;
-	}
+        dbrighters16x16 += 16;
+        ddarkers16x16 += 16;
+    }
 
 #undef COMPV_HORIZ_MIN
 }
@@ -528,23 +528,23 @@ void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdar
 // TODO(dmi) this is a temp function to replace the AVX version until we found a non SSE/AVX mixing implementation
 void FastStrengths32_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x32, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x32, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv_scalar_t N)
 {
-	__m128i xmm0, xmm1, xmmFastXFlagsLow, xmmFastXFlagsHigh, xmmFX;
-	__m128i xmmZeros;
-	int r0 , r1, g = 0, maxn;
-	int lowMin, highMin;
-	uint32_t rb = (uint32_t)rbrighters, rd = (uint32_t)rdarkers;
-	const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
-	const uint8_t(&kFastArcs)[16][16] = (N == 9 ? kFast9Arcs : kFast12Arcs);
-	bool bHighPartDone = false;
+    __m128i xmm0, xmm1, xmmFastXFlagsLow, xmmFastXFlagsHigh, xmmFX;
+    __m128i xmmZeros;
+    int r0 , r1, g = 0, maxn;
+    int lowMin, highMin;
+    uint32_t rb = (uint32_t)rbrighters, rd = (uint32_t)rdarkers;
+    const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
+    const uint8_t(&kFastArcs)[16][16] = (N == 9 ? kFast9Arcs : kFast12Arcs);
+    bool bHighPartDone = false;
 
-	// FAST hard-coded flags
-	_mm_store_si128(&xmmFastXFlagsLow, _mm_load_si128((__m128i*)(FastXFlags + 0)));
-	_mm_store_si128(&xmmFastXFlagsHigh, _mm_load_si128((__m128i*)(FastXFlags + 8)));
+    // FAST hard-coded flags
+    _mm_store_si128(&xmmFastXFlagsLow, _mm_load_si128((__m128i*)(FastXFlags + 0)));
+    _mm_store_si128(&xmmFastXFlagsHigh, _mm_load_si128((__m128i*)(FastXFlags + 8)));
 
-	_mm_store_si128(&xmmZeros, _mm_setzero_si128());
+    _mm_store_si128(&xmmZeros, _mm_setzero_si128());
 
-	// xmm0 contains the u8 values
-	// xmm1 is used as temp register and will be trashed
+    // xmm0 contains the u8 values
+    // xmm1 is used as temp register and will be trashed
 #define COMPV_HORIZ_MIN(r, i, maxn_) \
 	if (r & (1 << i)) { \
 		_mm_store_si128(&xmm1, _mm_shuffle_epi8(xmm0, _mm_load_si128((__m128i*)kFastArcs[i]))); /* eliminate zeros and duplicate first matching non-zero */ \
@@ -557,67 +557,67 @@ void FastStrengths32_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdar
 		}
 
 process16:
-	for (unsigned p = 0, v = 0; p < 16; ++p, v += 32) {
-		maxn = 0;
-		// Brighters
-		if (rb & (1 << p)) {
-			// brighters flags
-			_mm_store_si128(&xmmFX, _mm_set1_epi16((short)((*fbrighters16)[p] >> g)));
+    for (unsigned p = 0, v = 0; p < 16; ++p, v += 32) {
+        maxn = 0;
+        // Brighters
+        if (rb & (1 << p)) {
+            // brighters flags
+            _mm_store_si128(&xmmFX, _mm_set1_epi16((short)((*fbrighters16)[p] >> g)));
 
-			_mm_store_si128(&xmm0, _mm_and_si128(xmmFX, xmmFastXFlagsLow));
-			_mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
-			_mm_store_si128(&xmm1, _mm_and_si128(xmmFX, xmmFastXFlagsHigh));
-			_mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
-			r0 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
-			if (r0) {
-				_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)&dbrighters16x32[v]));
-				// Compute minimum hz
-				COMPV_HORIZ_MIN(r0, 0, maxn) COMPV_HORIZ_MIN(r0, 1, maxn) COMPV_HORIZ_MIN(r0, 2, maxn) COMPV_HORIZ_MIN(r0, 3, maxn)
-				COMPV_HORIZ_MIN(r0, 4, maxn) COMPV_HORIZ_MIN(r0, 5, maxn) COMPV_HORIZ_MIN(r0, 6, maxn) COMPV_HORIZ_MIN(r0, 7, maxn)
-				COMPV_HORIZ_MIN(r0, 8, maxn) COMPV_HORIZ_MIN(r0, 9, maxn) COMPV_HORIZ_MIN(r0, 10, maxn) COMPV_HORIZ_MIN(r0, 11, maxn)
-				COMPV_HORIZ_MIN(r0, 12, maxn) COMPV_HORIZ_MIN(r0, 13, maxn) COMPV_HORIZ_MIN(r0, 14, maxn) COMPV_HORIZ_MIN(r0, 15, maxn)
-			}
-		}
+            _mm_store_si128(&xmm0, _mm_and_si128(xmmFX, xmmFastXFlagsLow));
+            _mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
+            _mm_store_si128(&xmm1, _mm_and_si128(xmmFX, xmmFastXFlagsHigh));
+            _mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
+            r0 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r0's popcnt is equal to N as FastXFlags contains values with popcnt==N
+            if (r0) {
+                _mm_store_si128(&xmm0, _mm_load_si128((__m128i*)&dbrighters16x32[v]));
+                // Compute minimum hz
+                COMPV_HORIZ_MIN(r0, 0, maxn) COMPV_HORIZ_MIN(r0, 1, maxn) COMPV_HORIZ_MIN(r0, 2, maxn) COMPV_HORIZ_MIN(r0, 3, maxn)
+                COMPV_HORIZ_MIN(r0, 4, maxn) COMPV_HORIZ_MIN(r0, 5, maxn) COMPV_HORIZ_MIN(r0, 6, maxn) COMPV_HORIZ_MIN(r0, 7, maxn)
+                COMPV_HORIZ_MIN(r0, 8, maxn) COMPV_HORIZ_MIN(r0, 9, maxn) COMPV_HORIZ_MIN(r0, 10, maxn) COMPV_HORIZ_MIN(r0, 11, maxn)
+                COMPV_HORIZ_MIN(r0, 12, maxn) COMPV_HORIZ_MIN(r0, 13, maxn) COMPV_HORIZ_MIN(r0, 14, maxn) COMPV_HORIZ_MIN(r0, 15, maxn)
+            }
+        }
 
-		// Darkers
-		if (rd & (1 << p)) {
-			// darkers flags
-			_mm_store_si128(&xmmFX, _mm_set1_epi16((short)((*fdarkers16)[p] >> g)));
+        // Darkers
+        if (rd & (1 << p)) {
+            // darkers flags
+            _mm_store_si128(&xmmFX, _mm_set1_epi16((short)((*fdarkers16)[p] >> g)));
 
-			_mm_store_si128(&xmm0, _mm_and_si128(xmmFX, xmmFastXFlagsLow));
-			_mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
-			_mm_store_si128(&xmm1, _mm_and_si128(xmmFX, xmmFastXFlagsHigh));
-			_mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
-			r1 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r1's popcnt is equal to N as FastXFlags contains values with popcnt==N
-			if (r1) {
-				_mm_store_si128(&xmm0, _mm_load_si128((__m128i*)&ddarkers16x32[v]));
+            _mm_store_si128(&xmm0, _mm_and_si128(xmmFX, xmmFastXFlagsLow));
+            _mm_store_si128(&xmm0, _mm_cmpeq_epi16(xmm0, xmmFastXFlagsLow));
+            _mm_store_si128(&xmm1, _mm_and_si128(xmmFX, xmmFastXFlagsHigh));
+            _mm_store_si128(&xmm1, _mm_cmpeq_epi16(xmm1, xmmFastXFlagsHigh));
+            r1 = _mm_movemask_epi8(_mm_packs_epi16(xmm0, xmm1)); // r1's popcnt is equal to N as FastXFlags contains values with popcnt==N
+            if (r1) {
+                _mm_store_si128(&xmm0, _mm_load_si128((__m128i*)&ddarkers16x32[v]));
 
-				// Compute minimum hz
-				COMPV_HORIZ_MIN(r1, 0, maxn) COMPV_HORIZ_MIN(r1, 1, maxn) COMPV_HORIZ_MIN(r1, 2, maxn) COMPV_HORIZ_MIN(r1, 3, maxn)
-				COMPV_HORIZ_MIN(r1, 4, maxn) COMPV_HORIZ_MIN(r1, 5, maxn) COMPV_HORIZ_MIN(r1, 6, maxn) COMPV_HORIZ_MIN(r1, 7, maxn)
-				COMPV_HORIZ_MIN(r1, 8, maxn) COMPV_HORIZ_MIN(r1, 9, maxn) COMPV_HORIZ_MIN(r1, 10, maxn) COMPV_HORIZ_MIN(r1, 11, maxn)
-				COMPV_HORIZ_MIN(r1, 12, maxn) COMPV_HORIZ_MIN(r1, 13, maxn) COMPV_HORIZ_MIN(r1, 14, maxn) COMPV_HORIZ_MIN(r1, 15, maxn)
-			}
-		}
+                // Compute minimum hz
+                COMPV_HORIZ_MIN(r1, 0, maxn) COMPV_HORIZ_MIN(r1, 1, maxn) COMPV_HORIZ_MIN(r1, 2, maxn) COMPV_HORIZ_MIN(r1, 3, maxn)
+                COMPV_HORIZ_MIN(r1, 4, maxn) COMPV_HORIZ_MIN(r1, 5, maxn) COMPV_HORIZ_MIN(r1, 6, maxn) COMPV_HORIZ_MIN(r1, 7, maxn)
+                COMPV_HORIZ_MIN(r1, 8, maxn) COMPV_HORIZ_MIN(r1, 9, maxn) COMPV_HORIZ_MIN(r1, 10, maxn) COMPV_HORIZ_MIN(r1, 11, maxn)
+                COMPV_HORIZ_MIN(r1, 12, maxn) COMPV_HORIZ_MIN(r1, 13, maxn) COMPV_HORIZ_MIN(r1, 14, maxn) COMPV_HORIZ_MIN(r1, 15, maxn)
+            }
+        }
 
-		strengths32[p] = maxn;
-	}
+        strengths32[p] = maxn;
+    }
 
-	if (!bHighPartDone) {
-		rb = (rb >> 16) & 0xFFFF;
-		rd = (rd >> 16) & 0xFFFF;
-		if (rb || rd) {
-			g = 16;
-			bHighPartDone = true;
-			dbrighters16x32 += 16;
-			ddarkers16x32 += 16;
-			strengths32 += 16;
-			goto process16;
-		}
-		else {
-			_mm_storeu_si128((__m128i*)(strengths32 + 16), xmmZeros);
-		}
-	}
+    if (!bHighPartDone) {
+        rb = (rb >> 16) & 0xFFFF;
+        rd = (rd >> 16) & 0xFFFF;
+        if (rb || rd) {
+            g = 16;
+            bHighPartDone = true;
+            dbrighters16x32 += 16;
+            ddarkers16x32 += 16;
+            strengths32 += 16;
+            goto process16;
+        }
+        else {
+            _mm_storeu_si128((__m128i*)(strengths32 + 16), xmmZeros);
+        }
+    }
 #undef COMPV_HORIZ_MIN
 }
 

@@ -94,7 +94,7 @@ Macro used to convert 3x32RGB to 4x32RGBA samples
 	_mm256_store_si256(&((__m256i*)rgbaPtr_)[2], _mm256_shuffle_epi8(ymm0_, ymmMaskRgbToRgba_)); /* RGB -> RGBA */ \
 	/************ Line-3 ***********/ \
 	_mm256_store_si256(&((__m256i*)rgbaPtr_)[3], _mm256_shuffle_epi8(ymm1_, ymmMaskRgbToRgba_)); \
-
+ 
 
 /*
 Interleaves two 256bits vectors without crossing the 128-lane.

@@ -22,6 +22,8 @@
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
+#include "compv/compv_convlt.h"
+#include "compv/compv_array.h"
 #include "compv/image/scale/compv_imagescale_pyramid.h"
 #include "compv/features/compv_feature.h"
 
@@ -35,21 +37,25 @@ COMPV_NAMESPACE_BEGIN()
 class CompVFeatureDescORB : public CompVFeatureDesc
 {
 protected:
-	CompVFeatureDescORB();
+    CompVFeatureDescORB();
 public:
-	virtual ~CompVFeatureDescORB();
-	virtual COMPV_INLINE const char* getObjectId() { return "CompVFeatureDescORB"; };
+    virtual ~CompVFeatureDescORB();
+    virtual COMPV_INLINE const char* getObjectId() {
+        return "CompVFeatureDescORB";
+    };
 
-	// override CompVSettable::set
-	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
-	// override CompVFeatureDesc::process
-	virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, const CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints, CompVObjWrapper<CompVFeatureDescriptions*>* descriptions);
+    // override CompVSettable::set
+    virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
+    // override CompVFeatureDesc::process
+    virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, const CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints, CompVObjWrapper<CompVFeatureDescriptions*>* descriptions);
 
-	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDesc* >* orb);
+    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDesc* >* orb);
 
 private:
-	// TODO: use internal detector: BRIEF (just like what is done for the detector and FAST internal dete)
-	CompVObjWrapper<CompVImageScalePyramid * > m_pyramid;
+    // TODO(dmi): use internal detector: BRIEF (just like what is done for the detector and FAST internal dete)
+    CompVObjWrapper<CompVImageScalePyramid* > m_pyramid;
+	CompVObjWrapper<CompVConvlt* > m_convlt;
+	CompVObjWrapper<CompVArray<double>* > m_kern;
 };
 
 COMPV_NAMESPACE_END()

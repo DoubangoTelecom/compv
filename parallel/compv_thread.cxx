@@ -51,7 +51,7 @@ CompVThread::CompVThread(void *(COMPV_STDCALL *start) (void *), void *arg_ /*= N
     COMPV_ASSERT(pthread_create((pthread_t*)m_pHandle, 0, start, arg) == 0);
 #endif
     COMPV_ASSERT(m_pHandle != NULL);
-    
+
     if (m_pHandle) {
 #if COMPV_OS_WINDOWS
         m_Id = GetThreadId((HANDLE)m_pHandle);

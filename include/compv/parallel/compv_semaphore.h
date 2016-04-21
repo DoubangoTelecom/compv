@@ -29,18 +29,20 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_API CompVSemaphore : public CompVObj
 {
 protected:
-	CompVSemaphore(int initialVal = 0);
+    CompVSemaphore(int initialVal = 0);
 public:
-	virtual ~CompVSemaphore();
-	virtual COMPV_INLINE const char* getObjectId() { return "CompVSemaphore"; };
+    virtual ~CompVSemaphore();
+    virtual COMPV_INLINE const char* getObjectId() {
+        return "CompVSemaphore";
+    };
 
-	COMPV_ERROR_CODE increment();
-	COMPV_ERROR_CODE decrement();
+    COMPV_ERROR_CODE increment();
+    COMPV_ERROR_CODE decrement();
 
-	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVSemaphore*>* sem, int initialVal = 0);
+    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVSemaphore*>* sem, int initialVal = 0);
 
 private:
-	void* m_pHandle;
+    void* m_pHandle;
 };
 
 COMPV_NAMESPACE_END()

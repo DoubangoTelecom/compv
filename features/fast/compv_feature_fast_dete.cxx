@@ -146,46 +146,46 @@ COMPV_EXTERNC void Fast12Strengths32_Asm_X64_AVX2(compv::compv_scalar_t rbrighte
 
 COMPV_EXTERNC COMPV_API void FastStrengths16(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x16, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x16, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
 {
-	void(*FastStrengths)(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
-		= NULL; // This function is called from FastData16Row(Intrin/Asm) which means we don't need C++ version
-	if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths16_Intrin_SSE2);
-	}
-	if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths16_Intrin_SSE41);
-		COMPV_EXEC_IFDEF_ASM_X86(FastStrengths = (N == 9)
-			? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths16_Asm_CMOV_X86_SSE41 : Fast9Strengths16_Asm_X86_SSE41)
-			: (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths16_Asm_CMOV_X86_SSE41 : Fast12Strengths16_Asm_X86_SSE41));
-		COMPV_EXEC_IFDEF_ASM_X64(FastStrengths = (N == 9)
-			? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths16_Asm_CMOV_X64_SSE41 : Fast9Strengths16_Asm_X64_SSE41)
-			: (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths16_Asm_CMOV_X64_SSE41 : Fast12Strengths16_Asm_X64_SSE41));
-	}
-	FastStrengths(rbrighters, rdarkers, dbrighters16x16, ddarkers16x16, fbrighters16, fdarkers16, strengths16, N);
+    void(*FastStrengths)(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
+        = NULL; // This function is called from FastData16Row(Intrin/Asm) which means we don't need C++ version
+    if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+        COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths16_Intrin_SSE2);
+    }
+    if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
+        COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths16_Intrin_SSE41);
+        COMPV_EXEC_IFDEF_ASM_X86(FastStrengths = (N == 9)
+                                 ? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths16_Asm_CMOV_X86_SSE41 : Fast9Strengths16_Asm_X86_SSE41)
+                                     : (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths16_Asm_CMOV_X86_SSE41 : Fast12Strengths16_Asm_X86_SSE41));
+        COMPV_EXEC_IFDEF_ASM_X64(FastStrengths = (N == 9)
+                                 ? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths16_Asm_CMOV_X64_SSE41 : Fast9Strengths16_Asm_X64_SSE41)
+                                     : (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths16_Asm_CMOV_X64_SSE41 : Fast12Strengths16_Asm_X64_SSE41));
+    }
+    FastStrengths(rbrighters, rdarkers, dbrighters16x16, ddarkers16x16, fbrighters16, fdarkers16, strengths16, N);
 }
 
 COMPV_EXTERNC COMPV_API void FastStrengths32(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x32, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x32, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv::compv_scalar_t N)
 {
-	void(*FastStrengths)(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
-		= NULL;  // This function is called from FastData32Row(Intrin/Asm) which means we don't need C++ version
-	if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths32_Intrin_SSE41);
-		COMPV_EXEC_IFDEF_ASM_X86(FastStrengths = (N == 9)
-			? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths32_Asm_CMOV_X86_SSE41 : Fast9Strengths32_Asm_X86_SSE41)
-			: (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths32_Asm_CMOV_X86_SSE41 : Fast12Strengths32_Asm_X86_SSE41));
-		COMPV_EXEC_IFDEF_ASM_X64(FastStrengths = (N == 9)
-			? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths32_Asm_CMOV_X64_SSE41 : Fast9Strengths32_Asm_X64_SSE41)
-			: (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths32_Asm_CMOV_X64_SSE41 : Fast12Strengths32_Asm_X64_SSE41));
-	}
-	if (compv::CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
-		 COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths32_Intrin_AVX2);
-		 COMPV_EXEC_IFDEF_ASM_X86(FastStrengths = (N == 9)
-			 ? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths32_Asm_CMOV_X86_AVX2 : Fast9Strengths32_Asm_X86_AVX2)
-			 : (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths32_Asm_CMOV_X86_AVX2 : Fast12Strengths32_Asm_X86_AVX2));
-		 COMPV_EXEC_IFDEF_ASM_X64(FastStrengths = (N == 9)
-			 ? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths32_Asm_CMOV_X64_AVX2 : Fast9Strengths32_Asm_X64_AVX2)
-			 : (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths32_Asm_CMOV_X64_AVX2 : Fast12Strengths32_Asm_X64_AVX2));
-	}
-	FastStrengths(rbrighters, rdarkers, dbrighters16x32, ddarkers16x32, fbrighters16, fdarkers16, strengths32, N);
+    void(*FastStrengths)(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
+        = NULL;  // This function is called from FastData32Row(Intrin/Asm) which means we don't need C++ version
+    if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
+        COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths32_Intrin_SSE41);
+        COMPV_EXEC_IFDEF_ASM_X86(FastStrengths = (N == 9)
+                                 ? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths32_Asm_CMOV_X86_SSE41 : Fast9Strengths32_Asm_X86_SSE41)
+                                     : (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths32_Asm_CMOV_X86_SSE41 : Fast12Strengths32_Asm_X86_SSE41));
+        COMPV_EXEC_IFDEF_ASM_X64(FastStrengths = (N == 9)
+                                 ? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths32_Asm_CMOV_X64_SSE41 : Fast9Strengths32_Asm_X64_SSE41)
+                                     : (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths32_Asm_CMOV_X64_SSE41 : Fast12Strengths32_Asm_X64_SSE41));
+    }
+    if (compv::CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+        COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths32_Intrin_AVX2);
+        COMPV_EXEC_IFDEF_ASM_X86(FastStrengths = (N == 9)
+                                 ? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths32_Asm_CMOV_X86_AVX2 : Fast9Strengths32_Asm_X86_AVX2)
+                                     : (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths32_Asm_CMOV_X86_AVX2 : Fast12Strengths32_Asm_X86_AVX2));
+        COMPV_EXEC_IFDEF_ASM_X64(FastStrengths = (N == 9)
+                                 ? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths32_Asm_CMOV_X64_AVX2 : Fast9Strengths32_Asm_X64_AVX2)
+                                     : (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths32_Asm_CMOV_X64_AVX2 : Fast12Strengths32_Asm_X64_AVX2));
+    }
+    FastStrengths(rbrighters, rdarkers, dbrighters16x32, ddarkers16x32, fbrighters16, fdarkers16, strengths32, N);
 }
 
 COMPV_NAMESPACE_BEGIN()
@@ -242,15 +242,15 @@ CompVFeatureDeteFAST::CompVFeatureDeteFAST()
     , m_pRanges(NULL)
     , m_nRanges(0)
 
-	, m_pStrengthsMap(NULL)
+    , m_pStrengthsMap(NULL)
 {
 
 }
 
 CompVFeatureDeteFAST::~CompVFeatureDeteFAST()
 {
-	FastRangesFree(m_nRanges, &m_pRanges);
-	CompVMem::free((void**)&m_pStrengthsMap);
+    FastRangesFree(m_nRanges, &m_pRanges);
+    CompVMem::free((void**)&m_pStrengthsMap);
 }
 
 // overrides CompVSettable::set
@@ -299,41 +299,41 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
     int32_t height = image->getHeight();
     int32_t stride = image->getStride();
     CompVObjWrapper<CompVThreadDispatcher* >&threadDip = CompVEngine::getThreadDispatcher();
-	int32_t threadsCountRange = 1;
+    int32_t threadsCountRange = 1;
 
     COMPV_CHECK_EXP_RETURN(width < 4 || height < 4, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     // Free ranges memory if stride increase
     if (m_nStride < stride) {
-		FastRangesFree(m_nRanges, &m_pRanges);
-		m_nRanges = 0;
+        FastRangesFree(m_nRanges, &m_pRanges);
+        m_nRanges = 0;
     }
 
-	// Even if newStride < oldStride, free the strenghtMap to cleanup old values.
-	// FastData() function will cleanup only new matching positions.
-	if (m_nStride != stride) {
-		CompVMem::free((void**)&m_pStrengthsMap);
-	}
+    // Even if newStride < oldStride, free the strenghtMap to cleanup old values.
+    // FastData() function will cleanup only new matching positions.
+    if (m_nStride != stride) {
+        CompVMem::free((void**)&m_pStrengthsMap);
+    }
 
-	// Always alloc
-	if (!m_pStrengthsMap) {
-		size_t nStrengthMapSize = CompVMem::alignForward((3 + stride + 3) * (3 + height + 3)); // +3 for the borders, alignForward() for the SIMD functions
-		m_pStrengthsMap = (uint8_t*)CompVMem::calloc(nStrengthMapSize, sizeof(uint8_t)); // Must use calloc to fill the strengths with null values
-		COMPV_CHECK_EXP_RETURN(!m_pStrengthsMap, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	}
+    // Always alloc
+    if (!m_pStrengthsMap) {
+        size_t nStrengthMapSize = CompVMem::alignForward((3 + stride + 3) * (3 + height + 3)); // +3 for the borders, alignForward() for the SIMD functions
+        m_pStrengthsMap = (uint8_t*)CompVMem::calloc(nStrengthMapSize, sizeof(uint8_t)); // Must use calloc to fill the strengths with null values
+        COMPV_CHECK_EXP_RETURN(!m_pStrengthsMap, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    }
 
     // Update width and height
     m_nWidth = width;
     m_nHeight = height;
     m_nStride = stride;
 
-	// create or reset points
-	if (!interestPoints) {
-		COMPV_CHECK_CODE_RETURN(CompVBoxInterestPoint::newObj(&interestPoints));
-	}
-	else {
-		interestPoints->reset();
-	}
+    // create or reset points
+    if (!interestPoints) {
+        COMPV_CHECK_CODE_RETURN(CompVBoxInterestPoint::newObj(&interestPoints));
+    }
+    else {
+        interestPoints->reset();
+    }
 
     COMPV_ALIGN_DEFAULT() const compv_scalar_t pixels16[16] = {
         -(stride * 3) + 0, // 1
@@ -356,37 +356,37 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
 
     // Compute number of threads
     if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-		threadsCountRange = threadDip->guessNumThreadsDividingAcrossY(stride, height, COMPV_FEATURE_DETE_FAST_MIN_SAMPLES_PER_THREAD);
+        threadsCountRange = threadDip->guessNumThreadsDividingAcrossY(stride, height, COMPV_FEATURE_DETE_FAST_MIN_SAMPLES_PER_THREAD);
     }
 
-	// Alloc ranges
-	if (m_nRanges < threadsCountRange) {
-		m_nRanges = 0;
-		COMPV_CHECK_CODE_RETURN(FastRangesAlloc(threadsCountRange, &m_pRanges, m_nStride));
-		m_nRanges = threadsCountRange;
-	}
+    // Alloc ranges
+    if (m_nRanges < threadsCountRange) {
+        m_nRanges = 0;
+        COMPV_CHECK_CODE_RETURN(FastRangesAlloc(threadsCountRange, &m_pRanges, m_nStride));
+        m_nRanges = threadsCountRange;
+    }
 
     if (threadsCountRange > 1) {
         int32_t rowStart = 0, threadHeight, totalHeight = 0;
-		uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
-		RangeFAST* pRange;
+        uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+        RangeFAST* pRange;
         for (int i = 0; i < threadsCountRange; ++i) {
             threadHeight = ((height - totalHeight) / (threadsCountRange - i)) & -2; // the & -2 is to make sure we'll deal with odd heights
-			pRange = &m_pRanges[i];
-			pRange->IP = dataPtr;
-			pRange->IPprev = NULL;
-			pRange->rowStart = rowStart;
-			pRange->rowEnd = (rowStart + threadHeight);
-			pRange->rowCount = height;
-			pRange->width = width;
-			pRange->stride = stride;
-			pRange->threshold = m_iThreshold;
-			pRange->N = m_iNumContinuous;
-			pRange->pixels16 = &pixels16;
-			pRange->strengths = m_pStrengthsMap;
+            pRange = &m_pRanges[i];
+            pRange->IP = dataPtr;
+            pRange->IPprev = NULL;
+            pRange->rowStart = rowStart;
+            pRange->rowEnd = (rowStart + threadHeight);
+            pRange->rowCount = height;
+            pRange->width = width;
+            pRange->stride = stride;
+            pRange->threshold = m_iThreshold;
+            pRange->N = m_iNumContinuous;
+            pRange->pixels16 = &pixels16;
+            pRange->strengths = m_pStrengthsMap;
             COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, FastProcessRange_AsynExec,
-				COMPV_ASYNCTASK_SET_PARAM_ASISS(pRange),
-                COMPV_ASYNCTASK_SET_PARAM_NULL()));
+                                    COMPV_ASYNCTASK_SET_PARAM_ASISS(pRange),
+                                    COMPV_ASYNCTASK_SET_PARAM_NULL()));
             rowStart += threadHeight;
             totalHeight += threadHeight;
         }
@@ -395,91 +395,93 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
         }
     }
     else {
-		RangeFAST* pRange = &m_pRanges[0];
-		pRange->IP = dataPtr;
-		pRange->IPprev = NULL;
-		pRange->rowStart = 0;
-		pRange->rowEnd = height;
-		pRange->rowCount = height;
-		pRange->width = width;
-		pRange->stride = stride;
-		pRange->threshold = m_iThreshold;
-		pRange->N = m_iNumContinuous;
-		pRange->pixels16 = &pixels16;
-		pRange->strengths = m_pStrengthsMap;
-		FastProcessRange(pRange);
+        RangeFAST* pRange = &m_pRanges[0];
+        pRange->IP = dataPtr;
+        pRange->IPprev = NULL;
+        pRange->rowStart = 0;
+        pRange->rowEnd = height;
+        pRange->rowCount = height;
+        pRange->width = width;
+        pRange->stride = stride;
+        pRange->threshold = m_iThreshold;
+        pRange->N = m_iNumContinuous;
+        pRange->pixels16 = &pixels16;
+        pRange->strengths = m_pStrengthsMap;
+        FastProcessRange(pRange);
     }
 
-	// Build interest points
+    // Build interest points
 #define COMPV_PUSH1() if (*begin1) { *begin1 += thresholdMinus1; interestPoints->push(CompVInterestPoint((int32_t)(begin1 - strengths), j, (float)*begin1)); } ++begin1;
 #define COMPV_PUSH4() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1()
 #define COMPV_PUSH8() COMPV_PUSH4() COMPV_PUSH4()
-	uint8_t *strengths = m_pStrengthsMap + (3 * stride), *begin1;
-	if (COMPV_IS_ALIGNED(stride, 64) && COMPV_IS_ALIGNED(CompVCpu::getCache1LineSize(), 64)) {
-		uint64_t *begin8, *end8;
-		int32_t width_div8 = width >> 3;
-		const uint8_t thresholdMinus1 = (uint8_t)m_iThreshold - 1;
-		for (int32_t j = 3; j < height - 3; ++j) {
-			begin8 = (uint64_t*)(strengths + 0); // i can start at +3 but we prefer +0 because strengths[0] is cacheline-aligned 
-			end8 = (begin8 + width_div8);
-			do {
-				if (*begin8) {
-					begin1 = (uint8_t*)begin8;
-					COMPV_PUSH8();
-				}
-			} while (begin8++ < end8);
-			strengths += stride;
-		}
-	}
-	else {
-		uint32_t *begin4, *end4;
-		int32_t width_div4 = width >> 2;
-		const uint8_t thresholdMinus1 = (uint8_t)m_iThreshold - 1;
-		for (int32_t j = 3; j < height - 3; ++j) {
-			begin4 = (uint32_t*)(strengths + 0); // i can start at +3 but we prefer +0 because strengths[0] is cacheline-aligned 
-			end4 = (begin4 + width_div4);
-			do {
-				if (*begin4) {
-					begin1 = (uint8_t*)begin4;
-					COMPV_PUSH4();
-				}
-			} while (begin4++ < end4);
-			strengths += stride;
-		}
-	}
+    uint8_t *strengths = m_pStrengthsMap + (3 * stride), *begin1;
+    if (COMPV_IS_ALIGNED(stride, 64) && COMPV_IS_ALIGNED(CompVCpu::getCache1LineSize(), 64)) {
+        uint64_t *begin8, *end8;
+        int32_t width_div8 = width >> 3;
+        const uint8_t thresholdMinus1 = (uint8_t)m_iThreshold - 1;
+        for (int32_t j = 3; j < height - 3; ++j) {
+            begin8 = (uint64_t*)(strengths + 0); // i can start at +3 but we prefer +0 because strengths[0] is cacheline-aligned
+            end8 = (begin8 + width_div8);
+            do {
+                if (*begin8) {
+                    begin1 = (uint8_t*)begin8;
+                    COMPV_PUSH8();
+                }
+            }
+            while (begin8++ < end8);
+            strengths += stride;
+        }
+    }
+    else {
+        uint32_t *begin4, *end4;
+        int32_t width_div4 = width >> 2;
+        const uint8_t thresholdMinus1 = (uint8_t)m_iThreshold - 1;
+        for (int32_t j = 3; j < height - 3; ++j) {
+            begin4 = (uint32_t*)(strengths + 0); // i can start at +3 but we prefer +0 because strengths[0] is cacheline-aligned
+            end4 = (begin4 + width_div4);
+            do {
+                if (*begin4) {
+                    begin1 = (uint8_t*)begin4;
+                    COMPV_PUSH4();
+                }
+            }
+            while (begin4++ < end4);
+            strengths += stride;
+        }
+    }
 
 
     // Non Maximal Suppression for removing adjacent corners
-	if (m_bNonMaximaSupp && interestPoints->size() > 0) {
-		int32_t threadsCountNMS = 1;
-		// NMS
-		if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-			threadsCountNMS = (int32_t)(interestPoints->size() / COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD);
-			threadsCountNMS = COMPV_MATH_CLIP3(0, threadDip->getThreadsCount() - 1, threadsCountNMS);
-		}
-		if (threadsCountNMS > 1) {
-			int32_t total = 0, count, size = (int32_t)interestPoints->size();
-			CompVInterestPoint * begin = interestPoints->begin();
-			uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
-			for (int32_t i = 0; i < threadsCountNMS; ++i) {
-				count = ((size - total) / (threadsCountNMS - i)) & -2;
-				COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, FastNMS_AsynExec,
-					COMPV_ASYNCTASK_SET_PARAM_ASISS(
-					stride,
-					m_pStrengthsMap,
-					begin,
-					begin + count),
-					COMPV_ASYNCTASK_SET_PARAM_NULL()));
-				begin += count;
-				total += count;
-			}
-			for (int32_t i = 0; i < threadsCountNMS; ++i) {
-				COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
-			}
-		}
-		else {
-			FastNMS(stride, m_pStrengthsMap, interestPoints->begin(), interestPoints->end());
-		}
+    if (m_bNonMaximaSupp && interestPoints->size() > 0) {
+        int32_t threadsCountNMS = 1;
+        // NMS
+        if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
+            threadsCountNMS = (int32_t)(interestPoints->size() / COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD);
+            threadsCountNMS = COMPV_MATH_CLIP3(0, threadDip->getThreadsCount() - 1, threadsCountNMS);
+        }
+        if (threadsCountNMS > 1) {
+            int32_t total = 0, count, size = (int32_t)interestPoints->size();
+            CompVInterestPoint * begin = interestPoints->begin();
+            uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+            for (int32_t i = 0; i < threadsCountNMS; ++i) {
+                count = ((size - total) / (threadsCountNMS - i)) & -2;
+                COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, FastNMS_AsynExec,
+                                        COMPV_ASYNCTASK_SET_PARAM_ASISS(
+                                            stride,
+                                            m_pStrengthsMap,
+                                            begin,
+                                            begin + count),
+                                        COMPV_ASYNCTASK_SET_PARAM_NULL()));
+                begin += count;
+                total += count;
+            }
+            for (int32_t i = 0; i < threadsCountNMS; ++i) {
+                COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
+            }
+        }
+        else {
+            FastNMS(stride, m_pStrengthsMap, interestPoints->begin(), interestPoints->end());
+        }
 
         // Remove non maximal points
         interestPoints->erase(__isNonMaximal);
@@ -487,9 +489,9 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
 
     // Retain best "m_iMaxFeatures" features
     // TODO(dmi): use retainBest
-	// FIXME: sort not tested yet
+    // FIXME: sort not tested yet
     if (m_iMaxFeatures > 0 && (int32_t)interestPoints->size() > m_iMaxFeatures) {
-		interestPoints->sort(__compareStrengthDec); // TODO(dmi): use sortStrengh() which is faster
+        interestPoints->sort(__compareStrengthDec); // TODO(dmi): use sortStrengh() which is faster
         interestPoints->resize(m_iMaxFeatures);
     }
 
@@ -512,10 +514,10 @@ static void FastStrengths1_C(COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 
-	uint8_t ndarker, nbrighter;
+    uint8_t ndarker, nbrighter;
     unsigned i, j, k;
     int strength = 0;
-	const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
+    const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
 
     for (i = 0; i < 16; ++i) {
         ndarker = 255;
@@ -539,201 +541,225 @@ static void FastStrengths1_C(COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x
             }
         }
         else if (nbrighter == 255) {
-			// (nbrighter == 255 and ndarker == 255) -> nothing to do
+            // (nbrighter == 255 and ndarker == 255) -> nothing to do
             continue;
         }
 
         strength = (std::max(strength, std::min((int)ndarker, (int)nbrighter)));
     }
 
-	*strengths1 = (uint8_t)strength;
+    *strengths1 = (uint8_t)strength;
 }
 
 static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths1, compv_scalar_t* me)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
     int32_t sum, s;
-	int16_t temp0, temp1, ddarkers16x1[16], dbrighters16x1[16]; // using int16_t to avoid clipping
-	uint8_t ddarkers16[16], dbrighters16[16];
-	compv_scalar_t fbrighters1, fdarkers1;
-	void(*FastStrengths1)(
-		COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x1,
-		COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x1,
-		const compv::compv_scalar_t fbrighters1,
-		const compv::compv_scalar_t fdarkers1,
-		uint8_t* strengths1,
-		compv::compv_scalar_t N) = FastStrengths1_C;
+    int16_t temp0, temp1, ddarkers16x1[16], dbrighters16x1[16]; // using int16_t to avoid clipping
+    uint8_t ddarkers16[16], dbrighters16[16];
+    compv_scalar_t fbrighters1, fdarkers1;
+    void(*FastStrengths1)(
+        COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x1,
+        COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x1,
+        const compv::compv_scalar_t fbrighters1,
+        const compv::compv_scalar_t fdarkers1,
+        uint8_t* strengths1,
+        compv::compv_scalar_t N) = FastStrengths1_C;
 #if 0
-	FastStrengths1 = (N == 9 ? Fast9Strengths1_C : Fast12Strengths1_C);
+    FastStrengths1 = (N == 9 ? Fast9Strengths1_C : Fast12Strengths1_C);
 #endif
 
-	for (compv_scalar_t i = 0; i < width; ++i, ++IP, ++strengths1) {
-		uint8_t brighter = CompVMathUtils::clampPixel8(IP[0] + (int16_t)threshold);
-		uint8_t darker = CompVMathUtils::clampPixel8(IP[0] - (int16_t)threshold);
+    for (compv_scalar_t i = 0; i < width; ++i, ++IP, ++strengths1) {
+        uint8_t brighter = CompVMathUtils::clampPixel8(IP[0] + (int16_t)threshold);
+        uint8_t darker = CompVMathUtils::clampPixel8(IP[0] - (int16_t)threshold);
 
-		// reset strength to zero
-		*strengths1 = 0;
+        // reset strength to zero
+        *strengths1 = 0;
 
-		// compare I1 and I9 aka 0 and 8
-		temp0 = IP[pixels16[0]];
-		temp1 = IP[pixels16[8]];
-		ddarkers16x1[0] = (darker - temp0);
-		ddarkers16x1[8] = (darker - temp1);
-		dbrighters16x1[0] = (temp0 - brighter);
-		dbrighters16x1[8] = (temp1 - brighter);
-		sum = ((dbrighters16x1[0] > 0 || ddarkers16x1[0] > 0) ? 1 : 0) + ((dbrighters16x1[8] > 0 || ddarkers16x1[8] > 0) ? 1 : 0);
-		if (!sum) {
-			continue;
-		}
+        // compare I1 and I9 aka 0 and 8
+        temp0 = IP[pixels16[0]];
+        temp1 = IP[pixels16[8]];
+        ddarkers16x1[0] = (darker - temp0);
+        ddarkers16x1[8] = (darker - temp1);
+        dbrighters16x1[0] = (temp0 - brighter);
+        dbrighters16x1[8] = (temp1 - brighter);
+        sum = ((dbrighters16x1[0] > 0 || ddarkers16x1[0] > 0) ? 1 : 0) + ((dbrighters16x1[8] > 0 || ddarkers16x1[8] > 0) ? 1 : 0);
+        if (!sum) {
+            continue;
+        }
 
-		// compare I5 and I13 aka 4 and 12
-		temp0 = IP[pixels16[4]];
-		temp1 = IP[pixels16[12]];
-		ddarkers16x1[4] = (darker - temp0); // I5-darkness
-		ddarkers16x1[12] = (darker - temp1); // I13-darkness
-		dbrighters16x1[4] = (temp0 - brighter); // I5-brightness
-		dbrighters16x1[12] = (temp1 - brighter); // I13-brightness
-		s = ((dbrighters16x1[4] > 0 || ddarkers16x1[4] > 0) ? 1 : 0) + ((dbrighters16x1[12] > 0 || ddarkers16x1[12] > 0) ? 1 : 0);
-		if (!s) {
-			continue;
-		}
-		sum += s;
-		if (N == 12 ? sum < 3 : sum < 2) {
-			continue;
-		}
-			
-		// I2 and I10 aka 1 and 9
-		temp0 = IP[pixels16[1]];
-		temp1 = IP[pixels16[9]];
-		ddarkers16x1[1] = (darker - temp0);
-		dbrighters16x1[1] = (temp0 - brighter);
-		ddarkers16x1[9] = (darker - temp1);
-		dbrighters16x1[9] = (temp1 - brighter);
-		sum = ((dbrighters16x1[1] > 0 || ddarkers16x1[1] > 0) ? 1 : 0) + ((dbrighters16x1[9] > 0 || ddarkers16x1[9] > 0) ? 1 : 0);
-		if (!sum) {
-			continue;
-		}
+        // compare I5 and I13 aka 4 and 12
+        temp0 = IP[pixels16[4]];
+        temp1 = IP[pixels16[12]];
+        ddarkers16x1[4] = (darker - temp0); // I5-darkness
+        ddarkers16x1[12] = (darker - temp1); // I13-darkness
+        dbrighters16x1[4] = (temp0 - brighter); // I5-brightness
+        dbrighters16x1[12] = (temp1 - brighter); // I13-brightness
+        s = ((dbrighters16x1[4] > 0 || ddarkers16x1[4] > 0) ? 1 : 0) + ((dbrighters16x1[12] > 0 || ddarkers16x1[12] > 0) ? 1 : 0);
+        if (!s) {
+            continue;
+        }
+        sum += s;
+        if (N == 12 ? sum < 3 : sum < 2) {
+            continue;
+        }
 
-		// I3 and I11 aka 2 and 10
-		temp0 = IP[pixels16[2]];
-		temp1 = IP[pixels16[10]];
-		ddarkers16x1[2] = (darker - temp0);
-		dbrighters16x1[2] = (temp0 - brighter);
-		ddarkers16x1[10] = (darker - temp1);
-		dbrighters16x1[10] = (temp1 - brighter);
-		s = ((dbrighters16x1[2] > 0 || ddarkers16x1[2] > 0) ? 1 : 0) + ((dbrighters16x1[10] > 0 || ddarkers16x1[10] > 0) ? 1 : 0);
-		if (!s) {
-			continue;
-		}
-		sum += s;
-		if (N == 12 ? sum < 3 : sum < 2) {
-			continue;
-		}
+        // I2 and I10 aka 1 and 9
+        temp0 = IP[pixels16[1]];
+        temp1 = IP[pixels16[9]];
+        ddarkers16x1[1] = (darker - temp0);
+        dbrighters16x1[1] = (temp0 - brighter);
+        ddarkers16x1[9] = (darker - temp1);
+        dbrighters16x1[9] = (temp1 - brighter);
+        sum = ((dbrighters16x1[1] > 0 || ddarkers16x1[1] > 0) ? 1 : 0) + ((dbrighters16x1[9] > 0 || ddarkers16x1[9] > 0) ? 1 : 0);
+        if (!sum) {
+            continue;
+        }
 
-		// I4 and I12 aka 3 and 11
-		temp0 = IP[pixels16[3]];
-		temp1 = IP[pixels16[11]];
-		ddarkers16x1[3] = (darker - temp0);
-		dbrighters16x1[3] = (temp0 - brighter);
-		ddarkers16x1[11] = (darker - temp1);
-		dbrighters16x1[11] = (temp1 - brighter);
-		s = ((dbrighters16x1[3] > 0 || ddarkers16x1[3] > 0) ? 1 : 0) + ((dbrighters16x1[11] > 0 || ddarkers16x1[11] > 0) ? 1 : 0);
-		if (!s) {
-			continue;
-		}
-		sum += s;
-		if (N == 12 ? sum < 3 : sum < 2) {
-			continue;
-		}
+        // I3 and I11 aka 2 and 10
+        temp0 = IP[pixels16[2]];
+        temp1 = IP[pixels16[10]];
+        ddarkers16x1[2] = (darker - temp0);
+        dbrighters16x1[2] = (temp0 - brighter);
+        ddarkers16x1[10] = (darker - temp1);
+        dbrighters16x1[10] = (temp1 - brighter);
+        s = ((dbrighters16x1[2] > 0 || ddarkers16x1[2] > 0) ? 1 : 0) + ((dbrighters16x1[10] > 0 || ddarkers16x1[10] > 0) ? 1 : 0);
+        if (!s) {
+            continue;
+        }
+        sum += s;
+        if (N == 12 ? sum < 3 : sum < 2) {
+            continue;
+        }
 
-		// I6 and I14 aka 5 and 13
-		temp0 = IP[pixels16[5]];
-		temp1 = IP[pixels16[13]];
-		ddarkers16x1[5] = (darker - temp0);
-		dbrighters16x1[5] = (temp0 - brighter);
-		ddarkers16x1[13] = (darker - temp1);
-		dbrighters16x1[13] = (temp1 - brighter);
-		s = ((dbrighters16x1[5] > 0 || ddarkers16x1[5] > 0) ? 1 : 0) + ((dbrighters16x1[13] > 0 || ddarkers16x1[13] > 0) ? 1 : 0);
-		if (!s) {
-			continue;
-		}
-		sum += s;
-		if (N == 12 ? sum < 3 : sum < 2) {
-			continue;
-		}
+        // I4 and I12 aka 3 and 11
+        temp0 = IP[pixels16[3]];
+        temp1 = IP[pixels16[11]];
+        ddarkers16x1[3] = (darker - temp0);
+        dbrighters16x1[3] = (temp0 - brighter);
+        ddarkers16x1[11] = (darker - temp1);
+        dbrighters16x1[11] = (temp1 - brighter);
+        s = ((dbrighters16x1[3] > 0 || ddarkers16x1[3] > 0) ? 1 : 0) + ((dbrighters16x1[11] > 0 || ddarkers16x1[11] > 0) ? 1 : 0);
+        if (!s) {
+            continue;
+        }
+        sum += s;
+        if (N == 12 ? sum < 3 : sum < 2) {
+            continue;
+        }
 
-		// I7 and I15 aka 6 and 14
-		temp0 = IP[pixels16[6]];
-		temp1 = IP[pixels16[14]];
-		ddarkers16x1[6] = (darker - temp0);
-		dbrighters16x1[6] = (temp0- brighter);
-		ddarkers16x1[14] = (darker - temp1);
-		dbrighters16x1[14] = (temp1- brighter);
-		sum = ((dbrighters16x1[6] > 0 || ddarkers16x1[6] > 0) ? 1 : 0) + ((dbrighters16x1[14] > 0 || ddarkers16x1[14] > 0) ? 1 : 0);
-		if (!sum) {
-			continue;
-		}
+        // I6 and I14 aka 5 and 13
+        temp0 = IP[pixels16[5]];
+        temp1 = IP[pixels16[13]];
+        ddarkers16x1[5] = (darker - temp0);
+        dbrighters16x1[5] = (temp0 - brighter);
+        ddarkers16x1[13] = (darker - temp1);
+        dbrighters16x1[13] = (temp1 - brighter);
+        s = ((dbrighters16x1[5] > 0 || ddarkers16x1[5] > 0) ? 1 : 0) + ((dbrighters16x1[13] > 0 || ddarkers16x1[13] > 0) ? 1 : 0);
+        if (!s) {
+            continue;
+        }
+        sum += s;
+        if (N == 12 ? sum < 3 : sum < 2) {
+            continue;
+        }
 
-		// I8 and I16 aka 7 and 15
-		temp0 = IP[pixels16[7]];
-		temp1 = IP[pixels16[15]];
-		ddarkers16x1[7] = (darker - temp0);
-		dbrighters16x1[7] = (temp0 - brighter);
-		ddarkers16x1[15] = (darker - temp1);
-		dbrighters16x1[15] = (temp1 - brighter);
-		s = ((dbrighters16x1[7] > 0 || ddarkers16x1[7] > 0) ? 1 : 0) + ((dbrighters16x1[15] > 0 || ddarkers16x1[15] > 0) ? 1 : 0);
-		if (!s) {
-			continue;
-		}
-		sum += s;
-		if (N == 12 ? sum < 3 : sum < 2) {
-			continue;
-		}
+        // I7 and I15 aka 6 and 14
+        temp0 = IP[pixels16[6]];
+        temp1 = IP[pixels16[14]];
+        ddarkers16x1[6] = (darker - temp0);
+        dbrighters16x1[6] = (temp0- brighter);
+        ddarkers16x1[14] = (darker - temp1);
+        dbrighters16x1[14] = (temp1- brighter);
+        sum = ((dbrighters16x1[6] > 0 || ddarkers16x1[6] > 0) ? 1 : 0) + ((dbrighters16x1[14] > 0 || ddarkers16x1[14] > 0) ? 1 : 0);
+        if (!sum) {
+            continue;
+        }
+
+        // I8 and I16 aka 7 and 15
+        temp0 = IP[pixels16[7]];
+        temp1 = IP[pixels16[15]];
+        ddarkers16x1[7] = (darker - temp0);
+        dbrighters16x1[7] = (temp0 - brighter);
+        ddarkers16x1[15] = (darker - temp1);
+        dbrighters16x1[15] = (temp1 - brighter);
+        s = ((dbrighters16x1[7] > 0 || ddarkers16x1[7] > 0) ? 1 : 0) + ((dbrighters16x1[15] > 0 || ddarkers16x1[15] > 0) ? 1 : 0);
+        if (!s) {
+            continue;
+        }
+        sum += s;
+        if (N == 12 ? sum < 3 : sum < 2) {
+            continue;
+        }
 
 #define DARKERS_SET_AND_CLIP(k) if (ddarkers16x1[k] > 0) fdarkers1 |= (1 << k), ddarkers16[k] = (uint8_t)ddarkers16x1[k]; else ddarkers16[k] = 0;
-		fdarkers1 = 0;
-		DARKERS_SET_AND_CLIP(0); DARKERS_SET_AND_CLIP(1); DARKERS_SET_AND_CLIP(2); DARKERS_SET_AND_CLIP(3);
-		DARKERS_SET_AND_CLIP(4); DARKERS_SET_AND_CLIP(5); DARKERS_SET_AND_CLIP(6); DARKERS_SET_AND_CLIP(7);
-		DARKERS_SET_AND_CLIP(8); DARKERS_SET_AND_CLIP(9); DARKERS_SET_AND_CLIP(10); DARKERS_SET_AND_CLIP(11);
-		DARKERS_SET_AND_CLIP(12); DARKERS_SET_AND_CLIP(13); DARKERS_SET_AND_CLIP(14); DARKERS_SET_AND_CLIP(15);
+        fdarkers1 = 0;
+        DARKERS_SET_AND_CLIP(0);
+        DARKERS_SET_AND_CLIP(1);
+        DARKERS_SET_AND_CLIP(2);
+        DARKERS_SET_AND_CLIP(3);
+        DARKERS_SET_AND_CLIP(4);
+        DARKERS_SET_AND_CLIP(5);
+        DARKERS_SET_AND_CLIP(6);
+        DARKERS_SET_AND_CLIP(7);
+        DARKERS_SET_AND_CLIP(8);
+        DARKERS_SET_AND_CLIP(9);
+        DARKERS_SET_AND_CLIP(10);
+        DARKERS_SET_AND_CLIP(11);
+        DARKERS_SET_AND_CLIP(12);
+        DARKERS_SET_AND_CLIP(13);
+        DARKERS_SET_AND_CLIP(14);
+        DARKERS_SET_AND_CLIP(15);
 
 #define BRIGHTERS_SET_AND_CLIP(k) if (dbrighters16x1[k] > 0) fbrighters1 |= (1 << k), dbrighters16[k] = (uint8_t)dbrighters16x1[k]; else dbrighters16[k] = 0;
-		fbrighters1 = 0;
-		BRIGHTERS_SET_AND_CLIP(0); BRIGHTERS_SET_AND_CLIP(1); BRIGHTERS_SET_AND_CLIP(2); BRIGHTERS_SET_AND_CLIP(3);
-		BRIGHTERS_SET_AND_CLIP(4); BRIGHTERS_SET_AND_CLIP(5); BRIGHTERS_SET_AND_CLIP(6); BRIGHTERS_SET_AND_CLIP(7);
-		BRIGHTERS_SET_AND_CLIP(8); BRIGHTERS_SET_AND_CLIP(9); BRIGHTERS_SET_AND_CLIP(10); BRIGHTERS_SET_AND_CLIP(11);
-		BRIGHTERS_SET_AND_CLIP(12); BRIGHTERS_SET_AND_CLIP(13); BRIGHTERS_SET_AND_CLIP(14); BRIGHTERS_SET_AND_CLIP(15);
-				
-		FastStrengths1(dbrighters16, ddarkers16, fbrighters1, fdarkers1, strengths1, N);
-		
-	} // for (i ....width)
+        fbrighters1 = 0;
+        BRIGHTERS_SET_AND_CLIP(0);
+        BRIGHTERS_SET_AND_CLIP(1);
+        BRIGHTERS_SET_AND_CLIP(2);
+        BRIGHTERS_SET_AND_CLIP(3);
+        BRIGHTERS_SET_AND_CLIP(4);
+        BRIGHTERS_SET_AND_CLIP(5);
+        BRIGHTERS_SET_AND_CLIP(6);
+        BRIGHTERS_SET_AND_CLIP(7);
+        BRIGHTERS_SET_AND_CLIP(8);
+        BRIGHTERS_SET_AND_CLIP(9);
+        BRIGHTERS_SET_AND_CLIP(10);
+        BRIGHTERS_SET_AND_CLIP(11);
+        BRIGHTERS_SET_AND_CLIP(12);
+        BRIGHTERS_SET_AND_CLIP(13);
+        BRIGHTERS_SET_AND_CLIP(14);
+        BRIGHTERS_SET_AND_CLIP(15);
+
+        FastStrengths1(dbrighters16, ddarkers16, fbrighters1, fdarkers1, strengths1, N);
+
+    } // for (i ....width)
 }
 
 static void FastProcessRange(RangeFAST* range)
 {
     const uint8_t* IP, *IPprev;
-	int32_t j, kalign, kextra, align = 1, minj, maxj, rowstart, k;
-	uint8_t *strengths, *extra;
-	void(*FastDataRow)(
-		const uint8_t* IP,
-		const uint8_t* IPprev,
-		compv_scalar_t width,
-		const compv_scalar_t(&pixels16)[16],
-		compv_scalar_t N,
-		compv_scalar_t threshold,
-		uint8_t* strengths,
-		compv_scalar_t* me) = FastDataRow1_C;
+    int32_t j, kalign, kextra, align = 1, minj, maxj, rowstart, k;
+    uint8_t *strengths, *extra;
+    void(*FastDataRow)(
+        const uint8_t* IP,
+        const uint8_t* IPprev,
+        compv_scalar_t width,
+        const compv_scalar_t(&pixels16)[16],
+        compv_scalar_t N,
+        compv_scalar_t threshold,
+        uint8_t* strengths,
+        compv_scalar_t* me) = FastDataRow1_C;
 
     if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData16Row_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-		COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+        COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData16Row_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+        COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+        COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
     }
-	if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
-		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = FastData32Row_Asm_X86_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
-		COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = FastData32Row_Asm_X64_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
-	}
+    if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
+        COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
+        COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = FastData32Row_Asm_X86_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
+        COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = FastData32Row_Asm_X64_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
+    }
 
     // Number of pixels to process (multiple of align)
     kalign = (int32_t)CompVMem::alignForward((-3 + range->width - 3), align);
@@ -742,30 +768,30 @@ static void FastProcessRange(RangeFAST* range)
         COMPV_ASSERT(false);
         return;
     }
-	// Number of pixels to ignore
-	kextra = kalign - (-3 + range->width - 3);
+    // Number of pixels to ignore
+    kextra = kalign - (-3 + range->width - 3);
 
-	rowstart = range->rowStart;
-	minj = (rowstart == 0 ? 3 : 0);
-	maxj = (range->rowEnd - rowstart) - ((range->rowCount - range->rowEnd) <= 3 ? 3 - (range->rowCount - range->rowEnd) : 0);
-	IP = range->IP + ((rowstart + minj) * range->stride) + 3;
-	strengths = range->strengths + ((rowstart + minj) * range->stride) + 3;
-	IPprev = range->IPprev ? (range->IPprev + ((rowstart + minj) * range->stride) + 3) : NULL;
+    rowstart = range->rowStart;
+    minj = (rowstart == 0 ? 3 : 0);
+    maxj = (range->rowEnd - rowstart) - ((range->rowCount - range->rowEnd) <= 3 ? 3 - (range->rowCount - range->rowEnd) : 0);
+    IP = range->IP + ((rowstart + minj) * range->stride) + 3;
+    strengths = range->strengths + ((rowstart + minj) * range->stride) + 3;
+    IPprev = range->IPprev ? (range->IPprev + ((rowstart + minj) * range->stride) + 3) : NULL;
 
 
     // For testing with image "voiture", the first (i,j) to produce an interesting point is (1620, 279)
-	// We should have 64586 non-zero results for SSE and 66958 for AVX2
-    
-    for (j = minj; j < maxj; ++j) {
-		FastDataRow(IP, IPprev, kalign, (*range->pixels16), range->N, range->threshold, strengths, NULL);
+    // We should have 64586 non-zero results for SSE and 66958 for AVX2
 
-		// remove extra samples
-		extra = &strengths[kalign - 1];
-		for (k = 0; k < kextra; ++k) {
-			*extra-- = 0;
-		}
+    for (j = minj; j < maxj; ++j) {
+        FastDataRow(IP, IPprev, kalign, (*range->pixels16), range->N, range->threshold, strengths, NULL);
+
+        // remove extra samples
+        extra = &strengths[kalign - 1];
+        for (k = 0; k < kextra; ++k) {
+            *extra-- = 0;
+        }
         IP += range->stride;
-		strengths += range->stride;
+        strengths += range->stride;
     } // for (j)
 }
 
@@ -778,83 +804,83 @@ static COMPV_ERROR_CODE FastProcessRange_AsynExec(const struct compv_asynctoken_
 
 static COMPV_ERROR_CODE FastNMS_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
 {
-	int32_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, int32_t);
-	const uint8_t* pcStrengthsMap = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, const uint8_t*);
-	CompVInterestPoint* begin = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, CompVInterestPoint*);
-	CompVInterestPoint* end = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, CompVInterestPoint*);
-	FastNMS(stride, pcStrengthsMap, begin, end);
-	return COMPV_ERROR_CODE_S_OK;
+    int32_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, int32_t);
+    const uint8_t* pcStrengthsMap = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, const uint8_t*);
+    CompVInterestPoint* begin = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, CompVInterestPoint*);
+    CompVInterestPoint* end = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, CompVInterestPoint*);
+    FastNMS(stride, pcStrengthsMap, begin, end);
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 static void FastNMS(int32_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end)
 {
-	uint8_t strength;
-	int32_t currentIdx;
-	for (; begin < end; ++begin) {
-		strength = (uint8_t)begin->strength;
-		currentIdx = (begin->y * stride) + begin->x;
-		// No need to chech index as the point always has coords in (x+3, y+3)
-		// If-Else faster than a single if(|||||||)
-		if (pcStrengthsMap[currentIdx - 1] >= strength) { // left
-			begin->x = -1;
-		}
-		else if (pcStrengthsMap[currentIdx + 1] >= strength) { // right
-			begin->x = -1;
-		}
-		else if (pcStrengthsMap[currentIdx - stride - 1] >= strength) { // left-top
-			begin->x = -1;
-		}
-		else if (pcStrengthsMap[currentIdx - stride] >= strength) { // top
-			begin->x = -1;
-		}
-		else if (pcStrengthsMap[currentIdx - stride + 1] >= strength) { // right-top
-			begin->x = -1;
-		}
-		else if (pcStrengthsMap[currentIdx + stride - 1] >= strength) { // left-bottom
-			begin->x = -1;
-		}
-		else if (pcStrengthsMap[currentIdx + stride] >= strength) { // bottom
-			begin->x = -1;
-		}
-		else if (pcStrengthsMap[currentIdx + stride + 1] >= strength) { // right-bottom
-			begin->x = -1;
-		}
-	}
+    uint8_t strength;
+    int32_t currentIdx;
+    for (; begin < end; ++begin) {
+        strength = (uint8_t)begin->strength;
+        currentIdx = (begin->y * stride) + begin->x;
+        // No need to chech index as the point always has coords in (x+3, y+3)
+        // If-Else faster than a single if(|||||||)
+        if (pcStrengthsMap[currentIdx - 1] >= strength) { // left
+            begin->x = -1;
+        }
+        else if (pcStrengthsMap[currentIdx + 1] >= strength) { // right
+            begin->x = -1;
+        }
+        else if (pcStrengthsMap[currentIdx - stride - 1] >= strength) { // left-top
+            begin->x = -1;
+        }
+        else if (pcStrengthsMap[currentIdx - stride] >= strength) { // top
+            begin->x = -1;
+        }
+        else if (pcStrengthsMap[currentIdx - stride + 1] >= strength) { // right-top
+            begin->x = -1;
+        }
+        else if (pcStrengthsMap[currentIdx + stride - 1] >= strength) { // left-bottom
+            begin->x = -1;
+        }
+        else if (pcStrengthsMap[currentIdx + stride] >= strength) { // bottom
+            begin->x = -1;
+        }
+        else if (pcStrengthsMap[currentIdx + stride + 1] >= strength) { // right-bottom
+            begin->x = -1;
+        }
+    }
 }
 
 static COMPV_ERROR_CODE FastRangesAlloc(int32_t nRanges, RangeFAST** ppRanges, int32_t stride)
 {
-	COMPV_DEBUG_INFO("FAST: alloc %d ranges", nRanges);
+    COMPV_DEBUG_INFO("FAST: alloc %d ranges", nRanges);
 
-	COMPV_CHECK_EXP_RETURN(nRanges <= 0 || !ppRanges, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_EXP_RETURN(nRanges <= 0 || !ppRanges, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	COMPV_CHECK_CODE_RETURN(FastRangesFree(nRanges, ppRanges));
+    COMPV_CHECK_CODE_RETURN(FastRangesFree(nRanges, ppRanges));
 
-	*ppRanges = (RangeFAST*)CompVMem::calloc(nRanges, sizeof(RangeFAST));
-	COMPV_CHECK_EXP_RETURN(!*ppRanges, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    *ppRanges = (RangeFAST*)CompVMem::calloc(nRanges, sizeof(RangeFAST));
+    COMPV_CHECK_EXP_RETURN(!*ppRanges, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 #if 0
-	RangeFAST* pRanges = *ppRanges;
-	for (int32_t i = 0; i < nRanges; ++i) {
+    RangeFAST* pRanges = *ppRanges;
+    for (int32_t i = 0; i < nRanges; ++i) {
 
-		pRanges[i].me = (compv_scalar_t*)CompVMem::malloc(stride * 1 * sizeof(compv_scalar_t));
-		COMPV_CHECK_EXP_RETURN(!pRanges[i].me, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	}
+        pRanges[i].me = (compv_scalar_t*)CompVMem::malloc(stride * 1 * sizeof(compv_scalar_t));
+        COMPV_CHECK_EXP_RETURN(!pRanges[i].me, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    }
 #endif
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 static COMPV_ERROR_CODE FastRangesFree(int32_t nRanges, RangeFAST** ppRanges)
 {
-	if (ppRanges && *ppRanges) {
+    if (ppRanges && *ppRanges) {
 #if 0
-		RangeFAST* pRanges = *ppRanges;
-		for (int32_t i = 0; i < nRanges; ++i) {
-			CompVMem::free((void**)&pRanges[i].me);
-		}
+        RangeFAST* pRanges = *ppRanges;
+        for (int32_t i = 0; i < nRanges; ++i) {
+            CompVMem::free((void**)&pRanges[i].me);
+        }
 #endif
-		CompVMem::free((void**)ppRanges);
-	}
-	return COMPV_ERROR_CODE_S_OK;
+        CompVMem::free((void**)ppRanges);
+    }
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()
