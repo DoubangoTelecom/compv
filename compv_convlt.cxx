@@ -80,7 +80,7 @@ COMPV_ERROR_CODE CompVConvlt::convlt2(const uint8_t* img_ptr, int img_width, int
 				ker_ptr += kern_size;
 				topleft += img_stride;
 			}
-			outImg[(j * img_stride) + i] = (uint8_t)sum;
+			outImg[(j * img_stride) + i] = (uint8_t)sum;  // TODO(dmi): do not mul() but add()
 			++img_ptr_;
 		}
 		img_ptr_ += imgpad;
@@ -131,10 +131,6 @@ COMPV_ERROR_CODE CompVConvlt::convlt1(const uint8_t* img_ptr, int img_width, int
 
 	// Process
 
-	// FIXME(dmi):
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-	memset(imgTmp0, 0, (img_height * img_stride));
-
 	// Horizontal
 	topleft = img_ptr; // FIXME: not correct -> use start_idx
 	imgpad = (img_stride - img_width) + start_idx + start_idx;
@@ -144,7 +140,7 @@ COMPV_ERROR_CODE CompVConvlt::convlt1(const uint8_t* img_ptr, int img_width, int
 			for (col = 0; col < kern_size; ++col) {
 				sum += topleft[col] * hkern_ptr[col];
 			}
-			imgTmp0[(j * img_stride) + i] = (uint8_t)sum;
+			imgTmp0[(j * img_stride) + i] = (uint8_t)sum; // TODO(dmi): do not mul() but add()
 			++topleft;
 		}
 		topleft += imgpad;
@@ -161,7 +157,7 @@ COMPV_ERROR_CODE CompVConvlt::convlt1(const uint8_t* img_ptr, int img_width, int
 			for (row = 0; row < kern_size; ++row, ptr_ += img_stride) {
 				sum += *ptr_ * vkern_ptr[row];
 			}
-			imgTmp1[(j * img_stride) + i] = (uint8_t)sum; // FIXME: do not mul() but add()
+			imgTmp1[(j * img_stride) + i] = (uint8_t)sum; // TODO(dmi): do not mul() but add()
 			++topleft;
 		}
 		topleft += imgpad;

@@ -11,7 +11,8 @@ using namespace compv;
 #define testingMode			true
 #define cpuDisable			kCpuFlagNone
 
-#define TEST_GAUSS_FILTER			1
+#define TEST_GAUSS_FILTER_DIM1		1
+#define TEST_GAUSS_FILTER_DIM2		0
 #define TEST_GAUSS_KER_DIM1_GEN		0
 #define TEST_GAUSS_KER_DIM2_GEN		0
 #define TEST_CONVO					0
@@ -35,9 +36,14 @@ int main(int argc, char** argv)
 	COMPV_ASSERT(TestConvo());
 #endif
 
-#if TEST_GAUSS_FILTER
-	extern bool TestGaussFilter();
-	COMPV_ASSERT(TestGaussFilter());
+#if TEST_GAUSS_FILTER_DIM1
+	extern bool TestGaussFilter1();
+	COMPV_ASSERT(TestGaussFilter1());
+#endif
+
+#if TEST_GAUSS_FILTER_DIM2
+	extern bool TestGaussFilter2();
+	COMPV_ASSERT(TestGaussFilter2());
 #endif
 
 #if TEST_GAUSS_KER_DIM1_GEN
