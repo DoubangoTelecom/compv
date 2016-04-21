@@ -10,7 +10,7 @@ using namespace compv;
 #define GAUSS_SIGMA2_SIZE7_KERNEL_DIM2_MD5		"b450cff5c1540ca2602f0c21c245d50e" // MD5 value for the generated kernel with dim=2
 #define GAUSS_SIGMA2_SIZE7_KERNEL_DIM1_MD5		"5b538cf89aace2657d8330f38859f20f" // MD5 value for the generated kernel with dim=1
 
-#define GAUSS_LOOP_COUNT				1
+#define GAUSS_LOOP_COUNT				15
 
 // Sigma=2, Size=7, Expected kernel:
 // keep this matrix here for weak comparison in case of rounding issues

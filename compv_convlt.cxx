@@ -57,19 +57,20 @@ COMPV_ERROR_CODE CompVConvlt::convlt2(const uint8_t* img_ptr, int img_width, int
 	}
 
 	// Init variables
-	uint8_t* outImg = (uint8_t*)m_pDataPtr;
+	uint8_t* outImg = ((uint8_t*)m_pDataPtr) + (img_border * img_stride) + img_border;
 	const uint8_t *topleft, *img_ptr_;
 	double sum;
 	const double *ker_ptr;
 	int imgpad, i, j, row, col;
 	int ker_size_div2 = kern_size >> 1;
-	int start_idx = (img_border > ker_size_div2) ? ker_size_div2 : (ker_size_div2 - img_border);
-	img_ptr_ = img_ptr; // FIXME: not correct -> use start_idx
-	imgpad = (img_stride - img_width) + ker_size_div2 + ker_size_div2;
+	int start_margin = (img_border >= ker_size_div2) ? -ker_size_div2 : -img_border;
+	int start_center = start_margin + ker_size_div2;
+	img_ptr_ = img_ptr + (start_margin * img_stride) + start_margin;
+	imgpad = (img_stride - img_width) + start_center + start_center;
 
 	// Process
-	for (j = start_idx; j < img_height - start_idx; ++j) {
-		for (i = start_idx; i < img_width - start_idx; ++i) {
+	for (j = start_center; j < img_height - start_center; ++j) {
+		for (i = start_center; i < img_width - start_center; ++i) {
 			sum = 0;
 			topleft = img_ptr_;
 			ker_ptr = kern_ptr;
@@ -124,18 +125,19 @@ COMPV_ERROR_CODE CompVConvlt::convlt1(const uint8_t* img_ptr, int img_width, int
 	double sum;
 	int imgpad, i, j, row, col;
 	int ker_size_div2 = kern_size >> 1;
-	int start_idx = (img_border > ker_size_div2) ? ker_size_div2 : (ker_size_div2 - img_border);
+	int start_margin = (img_border >= ker_size_div2) ? -ker_size_div2 : -img_border;
+	int start_center = start_margin + ker_size_div2;
 
-	imgTmp0 = (uint8_t*)m_pDataPtr0;
-	imgTmp1 = (uint8_t*)m_pDataPtr;
+	imgTmp0 = ((uint8_t*)m_pDataPtr0) + (img_border * img_stride) + img_border;
+	imgTmp1 = ((uint8_t*)m_pDataPtr) + (img_border * img_stride) + img_border;
 
 	// Process
 
 	// Horizontal
-	topleft = img_ptr; // FIXME: not correct -> use start_idx
-	imgpad = (img_stride - img_width) + start_idx + start_idx;
+	topleft = img_ptr + start_margin;
+	imgpad = (img_stride - img_width) + start_center + start_center;
 	for (j = 0; j < img_height; ++j) {
-		for (i = start_idx; i < img_width - start_idx; ++i) {
+		for (i = start_center; i < img_width - start_center; ++i) {
 			sum = 0;
 			for (col = 0; col < kern_size; ++col) {
 				sum += topleft[col] * hkern_ptr[col];
@@ -147,10 +149,9 @@ COMPV_ERROR_CODE CompVConvlt::convlt1(const uint8_t* img_ptr, int img_width, int
 	}
 
 	// Vertical
-	// FIXME: not correct -> use start_idx
-	topleft = imgTmp0; // output from hz filtering is now used as input
+	topleft = imgTmp0 + (start_margin * img_stride); // output from hz filtering is now used as input
 	imgpad = (img_stride - img_width);
-	for (j = start_idx; j < img_height - start_idx; ++j) {
+	for (j = start_center; j < img_height - start_center; ++j) {
 		for (i = 0; i < img_width; ++i) {
 			sum = 0;
 			ptr_ = topleft;
