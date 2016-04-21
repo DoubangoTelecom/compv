@@ -20,16 +20,19 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_api.h" />
+    <ClInclude Include="include\compv\compv_array.h" />
     <ClInclude Include="include\compv\compv_bits.h" />
     <ClInclude Include="include\compv\compv_box.h" />
     <ClInclude Include="include\compv\compv_buffer.h" />
     <ClInclude Include="include\compv\compv_common.h" />
     <ClInclude Include="include\compv\compv_config.h" />
+    <ClInclude Include="include\compv\compv_convlt.h" />
     <ClInclude Include="include\compv\compv_cpu.h" />
     <ClInclude Include="include\compv\compv_debug.h" />
     <ClInclude Include="include\compv\compv_engine.h" />
     <ClInclude Include="include\compv\compv_errno.h" />
     <ClInclude Include="include\compv\compv_fileutils.h" />
+    <ClInclude Include="include\compv\compv_gauss.h" />
     <ClInclude Include="include\compv\compv_interestpoint.h" />
     <ClInclude Include="include\compv\compv_list.h" />
     <ClInclude Include="include\compv\compv_math.h" />
@@ -78,14 +81,17 @@
     <ClInclude Include="include\compv\time\compv_timer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="compv_array.cxx" />
     <ClCompile Include="compv_bits.cxx" />
     <ClCompile Include="compv_box.cxx" />
     <ClCompile Include="compv_buffer.cxx" />
     <ClCompile Include="compv_common.cxx" />
+    <ClCompile Include="compv_convlt.cxx" />
     <ClCompile Include="compv_cpu.cxx" />
     <ClCompile Include="compv_debug.cxx" />
     <ClCompile Include="compv_engine.cxx" />
     <ClCompile Include="compv_fileutils.cxx" />
+    <ClCompile Include="compv_gauss.cxx" />
     <ClCompile Include="compv_interestpoint.cxx" />
     <ClCompile Include="compv_list.cxx" />
     <ClCompile Include="compv_mathutils.cxx" />

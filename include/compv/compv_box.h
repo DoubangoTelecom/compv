@@ -264,12 +264,12 @@ private:
 	}
 
 protected:
+	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
 	COMPV_SORT_TYPE m_eSortType;
 	T* m_pMem;
 	size_t m_nItemSize;
 	size_t m_nSize;
 	size_t m_nCapacity;
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
 	CompVObjWrapper<CompVMutex*> m_Mutex;
 	COMPV_DISABLE_WARNINGS_END()
 };
