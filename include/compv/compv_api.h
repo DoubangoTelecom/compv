@@ -22,6 +22,7 @@
 
 #include "compv/compv_array.h"
 #include "compv/compv_box.h"
+#include "compv/compv_convlt.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
 #include "compv/compv_engine.h"

@@ -24,12 +24,27 @@
 #include "compv/compv_obj.h"
 #include "compv/compv_common.h"
 
-#include "compv/parallel/compv_threaddisp.h"
-
 COMPV_NAMESPACE_BEGIN()
 
 class COMPV_API CompVConvlt : public CompVObj
 {
+protected:
+	CompVConvlt();
+public:
+	virtual ~CompVConvlt();
+	virtual COMPV_INLINE const char* getObjectId() { return "CompVConvlt"; };
+	virtual COMPV_INLINE const void* getResultPtr() const { return m_pDataPtr; }
+	virtual COMPV_INLINE size_t getResultSize() const { return m_nDataSize; }
+	COMPV_ERROR_CODE convlt2(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const double* kern_ptr, int kern_size, const void** ret_ptr = NULL, int img_border = 0);
+	COMPV_ERROR_CODE convlt1(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const double* vkern_ptr, const double* hkern_ptr, int kern_size, const void** ret_ptr = NULL, int img_border = 0);
+
+	static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVConvlt* >* convlt);
+
+private:
+	void* m_pDataPtr;
+	void* m_pDataPtr0;
+	size_t m_nDataSize;
+	size_t m_nDataSize0;
 };
 
 COMPV_NAMESPACE_END()
