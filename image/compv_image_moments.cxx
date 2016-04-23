@@ -74,47 +74,81 @@ double CompVImageMoments::cirPQ(const uint8_t* ptr, int patch_diameter, int cent
     return (mpq);
 }
 
-void CompVImageMoments::cirM01M10(const uint8_t* ptr, int patch_diameter, int center_x, int center_y, int img_width, int img_stride, int img_height, double* m01, double* m10)
+
+void CompVImageMoments::cirM01M10(const uint8_t* ptr, int patch_diameter, const int* patch_max_abscissas, int center_x, int center_y, int img_width, int img_stride, int img_height, double* m01, double* m10)
 {
     double s01 = 0, s10 = 0;
     int patch_radius = (patch_diameter >> 1), img_y, i, j, dX, minI, maxI, minJ, maxJ;
     int patch_radius_pow2 = (patch_radius * patch_radius);
     const uint8_t* img_ptr;
+	bool closeToBorder = (center_x < patch_radius || (center_x + patch_radius) >= img_width || (center_y < patch_radius) || (center_y + patch_radius) >= img_height);
 
-    // Compute minJ and maxJ
-    minJ = -patch_radius;
-    if ((center_y + minJ) < 0) {
-        minJ = -center_y;
-    }
-    maxJ = +patch_radius;
-    if ((center_y + maxJ) >= img_height) {
-        maxJ = (img_height - center_y - 1);
-        maxJ = COMPV_MATH_CLIP3(minJ, patch_radius, maxJ);
-    }
+	if (closeToBorder) {
+		// Compute minJ and maxJ
+		minJ = -patch_radius;
+		if ((center_y + minJ) < 0) {
+			minJ = -center_y;
+		}
+		maxJ = +patch_radius;
+		if ((center_y + maxJ) >= img_height) {
+			maxJ = (img_height - center_y - 1);
+			maxJ = COMPV_MATH_CLIP3(minJ, patch_radius, maxJ);
+		}
 
-    for (j = minJ, img_y = (center_y + j); j <= maxJ; ++j, ++img_y) {
-        // Pythagorean theorem: x = sqrt(r**2 - y**2)
-        dX = ((int)sqrt(patch_radius_pow2 - (j * j))); // TODO: Compute once
+		for (j = minJ, img_y = (center_y + j); j <= maxJ; ++j, ++img_y) {
+			// Pythagorean theorem: x = sqrt(r**2 - y**2)
+			dX = ((int)sqrt(patch_radius_pow2 - (j * j))); // FIXME: Compute once
 
-        // Compute minI and maxI
-        minI = -dX;
-        if ((center_x + minI) < 0) {
-            minI = -center_x;
-        }
-        maxI = +dX;
-        if ((center_x + maxI) >= img_width) {
-            maxI = (img_width - center_x - 1);
-            maxI = COMPV_MATH_CLIP3(minI, dX, maxI);
-        }
+			// Compute minI and maxI
+			minI = -dX;
+			if ((center_x + minI) < 0) {
+				minI = -center_x;
+			}
+			maxI = +dX;
+			if ((center_x + maxI) >= img_width) {
+				maxI = (img_width - center_x - 1);
+				maxI = COMPV_MATH_CLIP3(minI, dX, maxI);
+			}
 
-        img_ptr = &ptr[(img_y * img_stride) + (center_x + minI)];
-        for (i = minI; i <= maxI; ++i, ++img_ptr) {
-            s10 += (i **img_ptr); // i^p * j^q * I(x, y) = i^1 * j^0 * I(x, y) = i * I(x, y)
-            s01 += j **img_ptr; // i^p * j^q * I(x, y) = i^0 * j^1 * I(x, y) = j * I(x, y)
-        }
-    }
+			img_ptr = &ptr[(img_y * img_stride) + (center_x + minI)];
+			for (i = minI; i <= maxI; ++i, ++img_ptr) {
+				s10 += (i **img_ptr); // i^p * j^q * I(x, y) = i^1 * j^0 * I(x, y) = i * I(x, y)
+				s01 += j **img_ptr; // i^p * j^q * I(x, y) = i^0 * j^1 * I(x, y) = j * I(x, y)
+			}
+		}
+	}
+	else {
+		const uint8_t *img_center, *img_top, *img_bottom;
+		uint8_t top, bottom;
+		
+		img_center = &ptr[(center_y * img_stride) + center_x];
+
+		// Handle j=0 case
+		for (i = -patch_radius; i <= +patch_radius; ++i) {
+			s10 += (i * img_center[i]);
+		}
+		img_top = img_center + img_stride;
+		img_bottom = img_center - img_stride;
+
+		// Handle j=1... cases
+		for (j = 1; j <= patch_radius; ++j) {
+			// Pythagorean theorem: x = sqrt(r**2 - y**2)
+			// dX = ((int)sqrt(patch_radius_pow2 - (j * j))); // TODO: Compute once
+			dX = patch_max_abscissas[j];
+
+			for (i = -dX; i <= +dX; ++i) {
+				top = img_top[i];
+				bottom = img_bottom[i];
+				s10 += (i * top) + (i * bottom);
+				s01 += (j * top) - (j * bottom);
+			}
+			img_top += img_stride;
+			img_bottom -= img_stride;
+		}
+	}
     *m01 = s01;
     *m10 = s10;
 }
+
 
 COMPV_NAMESPACE_END()

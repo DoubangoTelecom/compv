@@ -533,6 +533,8 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
 	CompVObjWrapper<CompVFeatureDete*> attachedDete = getAttachedDete();
     uint8_t* _descriptionsPtr = NULL;
 
+	// return COMPV_ERROR_CODE_S_OK;
+
     int nFeatures = (int)interestPoints->size();
     int nFeaturesBits = 256; // FIXME: depends on the patch size and brief type
     int nFeaturesBytes = nFeaturesBits >> 3;
@@ -565,8 +567,6 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
         //convlt2((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur2, 7); // Gaussing blur
         convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur1, 7);
     }
-
-    // FIXME: no test
 
     // TODO(dmi): multi-threading
     for (size_t i = 0; i < interestPoints->size(); ++i) {

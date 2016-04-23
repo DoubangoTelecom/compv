@@ -54,6 +54,9 @@ private:
     CompVObjWrapper<CompVFeatureDete* > m_internalDetector;
     CompVObjWrapper<CompVImageScalePyramid * > m_pyramid;
     int32_t m_nMaxFeatures;
+	int* m_pCircleMaxI;
+	size_t m_nCircleMaxICount;
+	int m_nPatchRadius;
 };
 
 COMPV_NAMESPACE_END()

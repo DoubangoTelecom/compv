@@ -33,7 +33,7 @@ class CompVImageMoments
 
 public:
     static double cirPQ(const uint8_t* ptr, int patch_diameter, int center_x, int center_y, int img_width, int img_stride, int img_height, int p, int q);
-    static void cirM01M10(const uint8_t* ptr, int patch_diameter, int center_x, int center_y, int img_width, int img_stride, int img_height, double* m01, double* m10);
+	static void cirM01M10(const uint8_t* ptr, int patch_diameter, const int* patch_max_abscissas, int center_x, int center_y, int img_width, int img_stride, int img_height, double* m01, double* m10);
 };
 
 COMPV_NAMESPACE_END()
