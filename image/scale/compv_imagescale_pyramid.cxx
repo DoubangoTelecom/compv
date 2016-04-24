@@ -87,15 +87,15 @@ COMPV_ERROR_CODE CompVImageScalePyramid::process(const CompVObjWrapper<CompVImag
 	if (level < 0) {
 		for (int32_t lev = 0; lev < m_nLevels; ++lev) {
 			sf = getScaleFactor(lev);
-			outWidth = (int32_t)(inWidth * sf + 1.f);
-			outHeight = (int32_t)(inHeight * sf + 1.f);
+			outWidth = (int32_t)(inWidth * sf);
+			outHeight = (int32_t)(inHeight * sf);
 			COMPV_CHECK_CODE_RETURN(inImage->scale(m_eScaleType, outWidth, outHeight, &m_pImages[lev]));
 		}
 	}
 	else {
 		sf = getScaleFactor(level);
-		outWidth = (int32_t)(inWidth * sf + 1.f);
-		outHeight = (int32_t)(inHeight * sf + 1.f);
+		outWidth = (int32_t)(inWidth * sf);
+		outHeight = (int32_t)(inHeight * sf);
 		COMPV_CHECK_CODE_RETURN(inImage->scale(m_eScaleType, outWidth, outHeight, &m_pImages[level]));
 	}
 #else
@@ -103,15 +103,15 @@ COMPV_ERROR_CODE CompVImageScalePyramid::process(const CompVObjWrapper<CompVImag
 		COMPV_CHECK_CODE_RETURN(inImage->scale(m_eScaleType, inWidth, inHeight, &m_pImages[0])); // level-0
 		for (int32_t lev = 1; lev < m_nLevels; ++lev) {
 			sf = getScaleFactor(lev);
-			outWidth = (int32_t)(inWidth * sf + 1.f);
-			outHeight = (int32_t)(inHeight * sf + 1.f);
+			outWidth = (int32_t)(inWidth * sf);
+			outHeight = (int32_t)(inHeight * sf);
 			COMPV_CHECK_CODE_RETURN(m_pImages[lev - 1]->scale(m_eScaleType, outWidth, outHeight, &m_pImages[lev]));
 		}
 	}
 	else {
 		sf = getScaleFactor(level);
-		outWidth = (int32_t)(inWidth * sf + 1.f);
-		outHeight = (int32_t)(inHeight * sf + 1.f);
+		outWidth = (int32_t)(inWidth * sf);
+		outHeight = (int32_t)(inHeight * sf);
 		COMPV_CHECK_CODE_RETURN(m_pImages[level - 1]->scale(m_eScaleType, outWidth, outHeight, &m_pImages[level]));
 	}
 #endif

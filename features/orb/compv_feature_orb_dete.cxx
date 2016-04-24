@@ -57,9 +57,11 @@ COMPV_SCALE_TYPE COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE = COMPV_SCALE_TYPE_BI
 CompVFeatureDeteORB::CompVFeatureDeteORB()
     : CompVFeatureDete(COMPV_ORB_ID)
     , m_nMaxFeatures(-1)
+	, m_nPyramidLevels(-1)
 	, m_pCircleMaxI(NULL)
 	, m_nCircleMaxICount(0)
 	, m_nPatchDiameter(COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER)
+	, m_pInterestPointsAtLevelN(NULL)
 {
 
 }
@@ -67,6 +69,7 @@ CompVFeatureDeteORB::CompVFeatureDeteORB()
 CompVFeatureDeteORB::~CompVFeatureDeteORB()
 {
 	CompVMem::free((void**)&m_pCircleMaxI);
+	freeInterestPoints();
 }
 
 // override CompVSettable::set
@@ -92,8 +95,20 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::set(int id, const void* valuePtr, size_t v
         if (id == COMPV_ORB_SET_INT32_PYRAMID_LEVELS) {
             COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int32_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
             int32_t nLevels = *((int32_t*)valuePtr);
-            if (m_pyramid->getLevels() != nLevels) {
-                return CompVImageScalePyramid::newObj(m_pyramid->getScaleFactor(), nLevels, m_pyramid->getScaleType(), &m_pyramid);
+            if (m_nPyramidLevels != nLevels) {
+				COMPV_ERROR_CODE err_ = CompVImageScalePyramid::newObj(m_pyramid->getScaleFactor(), nLevels, m_pyramid->getScaleType(), &m_pyramid);
+				if (COMPV_ERROR_CODE_IS_OK(err_)) {
+					err_ = createInterestPoints(nLevels);
+				}
+				if (COMPV_ERROR_CODE_IS_OK(err_)) {
+					m_nPyramidLevels = nLevels;
+				}
+				else {
+					m_pyramid = NULL;
+					freeInterestPoints();
+					m_nPyramidLevels = 0;
+				}
+				return err_;
             }
         }
         else if (id == COMPV_ORB_SET_INT32_PYRAMID_SCALE_TYPE) {
@@ -106,7 +121,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::set(int id, const void* valuePtr, size_t v
         else if (id == COMPV_ORB_SET_FLOAT_PYRAMID_SCALE_FACTOR) {
             COMPV_CHECK_EXP_RETURN(valueSize != sizeof(float), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
             float fScaleFactor = *((float*)valuePtr);
-            if (m_pyramid->getScaleFactor()!= fScaleFactor) {
+            if (m_pyramid->getScaleFactor() != fScaleFactor) {
                 return CompVImageScalePyramid::newObj(fScaleFactor, m_pyramid->getLevels(), m_pyramid->getScaleType(), &m_pyramid);
             }
         }
@@ -144,12 +159,6 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVObjWrapper<CompVImage*>
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-    CompVObjWrapper<CompVBoxInterestPoint* > interestPointsAtLevelN;
-    CompVObjWrapper<CompVImage*> imageAtLevelN;
-    float sf, sfs, patchSize;
-    int32_t prevLevel;
-    double m10, m01, orientRad;
-    CompVInterestPoint* point_;
 	int patch_radius = (m_nPatchDiameter >> 1);
 
     // create or reset points
@@ -160,10 +169,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVObjWrapper<CompVImage*>
         interestPoints->reset();
     }
 
-    // Scale the image
-    COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image));
-
-	// Create maximum abscissa for the circular patch
+	// Create maximum abscissa for the circular patch if not already done
 	if (m_nCircleMaxICount != (patch_radius + 1)) {
 		CompVMem::free((void**)&m_pCircleMaxI);
 		m_nCircleMaxICount = 0;
@@ -178,72 +184,123 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVObjWrapper<CompVImage*>
 		}
 	}
 
-    sfs = m_pyramid->getScaleFactorsSum();
-
     // Process feature detection for each level
-    // FIXME(dmi): multi-thread
-    for (int32_t level = 0; level < m_pyramid->getLevels(); ++level) {
-        sf = m_pyramid->getScaleFactor(level);
-        patchSize = m_nPatchDiameter / sf; // TODO(dmi): in OpenCV the patch size increase (instead of decreasing) with the level. Doesn't look correct.
-        // Clear previous points, will be done by the internal detector but we prefer do to it here to make sure it
-        // will work for buggy detectors
-        if (interestPointsAtLevelN) {
-            interestPointsAtLevelN->reset();
-        }
-        // Get image at level N
-        COMPV_CHECK_CODE_RETURN(m_pyramid->getImage(level, &imageAtLevelN));
-
-        // Detect features for level N
-        // For example, "m_internalDetector" would be FAST feature detector
-        COMPV_CHECK_CODE_RETURN(m_internalDetector->process(imageAtLevelN, interestPointsAtLevelN));
-        // Compute max features
-        if (m_nMaxFeatures > 0) {
-            int32_t maxFeatures = (int32_t)((m_nMaxFeatures / sfs) * sf);
-#if 0 // must not enable
-            if (m_internalDetector->getId() == COMPV_FAST_ID) {
-                COMPV_CHECK_CODE_RETURN(m_internalDetector->set(COMPV_FAST_SET_INT32_MAX_FEATURES, &maxFeatures, sizeof(maxFeatures)));
-            }
-#endif
-            interestPointsAtLevelN->sort(cmp_strength_dec);
-            interestPointsAtLevelN->resize(maxFeatures);
-        }
-
-        // TODO(dmi): optimize
-        for (size_t i = 0; i < interestPointsAtLevelN->size(); ++i) {
-            interestPointsAtLevelN->at(i)->level = level;
-            interestPointsAtLevelN->at(i)->size = patchSize;
-        }
-        interestPoints->append(interestPointsAtLevelN->begin(), interestPointsAtLevelN->end());
-    }
-
-    // For each point compute the orientation and scale(X,Y)
-    // FIXME(dmi): Multi-thread
-    prevLevel = -1;
-	for (point_ = interestPoints->begin(); point_ < interestPoints->end(); ++point_) {
-        if (point_->level != prevLevel) { // Guard to make sure we'll query for the image only when different
-            COMPV_CHECK_CODE_RETURN(m_pyramid->getImage(point_->level, &imageAtLevelN));
-            prevLevel = point_->level;
-        }
-
-        // computes moments
-		CompVImageMoments::cirM01M10((const uint8_t*)imageAtLevelN->getDataPtr(), m_nPatchDiameter, m_pCircleMaxI, point_->x, point_->y, imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), &m01, &m10);
-
-        // compute orientation
-		orientRad = COMPV_MATH_ATAN2(m01, m10);
-        //double orientRad = COMPV_MATH_ATAN2(cy, cx);
-        point_->orient = (float)COMPV_MATH_RADIAN_TO_DEGREE(orientRad);
-        if (point_->orient < 0) {
-            point_->orient += 360;    // ((point_->orient + 360) % 360)
-        }
-
-        // Now that orientation is computed (required real size), scaleup the size
-        if (point_->level != 0) {
-            sf = m_pyramid->getScaleFactor(point_->level);
-            point_->setXYf(point_->x / sf, point_->y / sf);
-        }
+    for (int level = 0; level < m_pyramid->getLevels(); ++level) {
+		COMPV_CHECK_CODE_RETURN(err_ = processLevelAt(image, level));
+		COMPV_CHECK_CODE_RETURN(err_ = interestPoints->append(m_pInterestPointsAtLevelN[level]->begin(), m_pInterestPointsAtLevelN[level]->end()));
     }
 
     return err_;
+}
+
+// Private function
+COMPV_ERROR_CODE CompVFeatureDeteORB::createInterestPoints(int32_t count /*= -1*/)
+{
+	int32_t levelsCount = count > 0 ? count : m_nPyramidLevels;
+	freeInterestPoints();
+	m_pInterestPointsAtLevelN = (CompVObjWrapper<CompVBoxInterestPoint *>*)CompVMem::calloc(levelsCount, sizeof(CompVObjWrapper<CompVBoxInterestPoint *>));
+	if (!m_pInterestPointsAtLevelN) {
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Private function
+COMPV_ERROR_CODE CompVFeatureDeteORB::freeInterestPoints(int32_t count /*= -1*/)
+{
+	if (m_pInterestPointsAtLevelN) {
+		int32_t levelsCount = count > 0 ? count : m_nPyramidLevels;
+		for (int32_t i = 0; i < levelsCount; ++i) {
+			m_pInterestPointsAtLevelN[i] = NULL;
+		}
+		CompVMem::free((void**)&m_pInterestPointsAtLevelN);
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Private function
+COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVObjWrapper<CompVImage*>& image, int level)
+{
+	COMPV_CHECK_EXP_RETURN(level < 0 || level >= m_nPyramidLevels, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+	CompVObjWrapper<CompVImage*> imageAtLevelN_;
+	CompVObjWrapper<CompVBoxInterestPoint* > interestPointsAtLevelN_;
+	float sf, sfs, patchSize;
+	double m10, m01, orientRad;
+	CompVInterestPoint* point_;
+	int patch_radius = (m_nPatchDiameter >> 1);
+	const uint8_t* imgPtr;
+	int32_t imgWidth, imgHeight, imgStride;
+
+	// Create or reset interest points at level N
+	interestPointsAtLevelN_ = m_pInterestPointsAtLevelN[level];
+	if (!interestPointsAtLevelN_) {
+		COMPV_CHECK_CODE_RETURN(err_ = CompVBoxInterestPoint::newObj(&interestPointsAtLevelN_));
+		m_pInterestPointsAtLevelN[level] = interestPointsAtLevelN_;
+	}
+	else {
+		interestPointsAtLevelN_->reset();
+	}
+
+	// Scale the image
+	COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image, level));
+
+	// Get image at level N
+	COMPV_CHECK_CODE_RETURN(m_pyramid->getImage(level, &imageAtLevelN_));
+	imgPtr = (const uint8_t*)imageAtLevelN_->getDataPtr();
+	imgWidth = imageAtLevelN_->getWidth();
+	imgStride = imageAtLevelN_->getStride();
+	imgHeight = imageAtLevelN_->getHeight();
+
+	sfs = m_pyramid->getScaleFactorsSum();
+	sf = m_pyramid->getScaleFactor(level);
+	
+	patchSize = m_nPatchDiameter / sf; // TODO(dmi): in OpenCV the patch size increase (instead of decreasing) with the level. Doesn't look correct.
+	// Clear previous points, will be done by the internal detector but we prefer do to it here to make sure it
+	// will work for buggy detectors
+
+	// Detect features for level N
+	// For example, "m_internalDetector" would be FAST feature detector
+	COMPV_CHECK_CODE_RETURN(m_internalDetector->process(imageAtLevelN_, interestPointsAtLevelN_));
+	// Retain best features only
+	if (m_nMaxFeatures > 0) {
+		int32_t maxFeatures = (int32_t)((m_nMaxFeatures / sfs) * sf);
+#if 0 // must not enable
+		if (m_internalDetector->getId() == COMPV_FAST_ID) {
+			COMPV_CHECK_CODE_RETURN(m_internalDetector->set(COMPV_FAST_SET_INT32_MAX_FEATURES, &maxFeatures, sizeof(maxFeatures)));
+		}
+#endif
+		interestPointsAtLevelN_->sort(cmp_strength_dec);
+		interestPointsAtLevelN_->resize(maxFeatures);
+	}
+
+	// For each point, set level and patch size, compute the orientation, scale (X,Y) coords...
+	for (point_ = interestPointsAtLevelN_->begin(); point_ < interestPointsAtLevelN_->end(); ++point_) {
+		point_->level = level;
+		point_->size = patchSize;
+
+		// computes moments
+		CompVImageMoments::cirM01M10(imgPtr, m_nPatchDiameter, m_pCircleMaxI, point_->x, point_->y, imgWidth, imgStride, imgHeight, &m01, &m10);
+
+		// compute orientation
+		orientRad = COMPV_MATH_ATAN2(m01, m10);
+		//double orientRad = COMPV_MATH_ATAN2(cy, cx);
+		point_->orient = (float)COMPV_MATH_RADIAN_TO_DEGREE(orientRad);
+		if (point_->orient < 0) {
+			point_->orient += 360;    // ((point_->orient + 360) % 360)
+		}
+
+		// Now that orientation is computed (required real size), scaleup the size to match the original one
+		// e.g. if original size is (100, 100) and sf = 0.5f
+		//	- Real size = (100*0.5, 100*0.5) = (50, 50) which is used to compute the orientation
+		//	- Once the orientation is computed, scaleup (x, y) which means (x/0.5, y/0.5) to have a representation in (100, 100) instead of (50, 50)
+		//  - All points, regardless the scale factor will have their coords represented (scaledup) in the original size
+		if (level != 0) {
+			point_->setXYf(point_->x / sf, point_->y / sf);
+		}
+	}
+
+	return err_;
 }
 
 COMPV_ERROR_CODE CompVFeatureDeteORB::newObj(CompVObjWrapper<CompVFeatureDete* >* orb)
@@ -269,6 +326,8 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::newObj(CompVObjWrapper<CompVFeatureDete* >
     }
     _orb->m_internalDetector = fast_;
     _orb->m_pyramid = pyramid_;
+	_orb->m_nPyramidLevels = COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS;
+	COMPV_CHECK_CODE_RETURN(_orb->createInterestPoints(COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS));
 
     *orb = *_orb;
     return COMPV_ERROR_CODE_S_OK;

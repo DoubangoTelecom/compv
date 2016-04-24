@@ -51,9 +51,16 @@ public:
     static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* orb);
 
 private:
+	COMPV_ERROR_CODE createInterestPoints(int32_t count = -1);
+	COMPV_ERROR_CODE freeInterestPoints(int32_t count = -1);
+	COMPV_ERROR_CODE processLevelAt(const CompVObjWrapper<CompVImage*>& image, int level);
+
+private:
     CompVObjWrapper<CompVFeatureDete* > m_internalDetector;
     CompVObjWrapper<CompVImageScalePyramid * > m_pyramid;
+	CompVObjWrapper<CompVBoxInterestPoint* >* m_pInterestPointsAtLevelN;
     int32_t m_nMaxFeatures;
+	int32_t m_nPyramidLevels;
 	int* m_pCircleMaxI;
 	size_t m_nCircleMaxICount;
 	int m_nPatchDiameter;
