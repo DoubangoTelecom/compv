@@ -68,7 +68,7 @@ COMPV_ERROR_CODE CompVBoxInterestPoint::newObj(CompVObjWrapper<CompVBoxInterestP
 
 static void sortByStrengthRange(CompVBoxInterestPoint* self, bool(*CompVBoxPredicateCompare)(const CompVInterestPoint*, const CompVInterestPoint*), intptr_t left, intptr_t right)
 {
-    CompVObjWrapper<CompVThreadDispatcher* >&threadDip = CompVEngine::getThreadDispatcher();
+    CompVObjWrapper<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
     int32_t threadsCount = threadDip ? threadDip->getThreadsCount() : 0;
     uint32_t threadIdx0 = UINT_MAX, threadIdx1 = UINT_MAX;
     const CompVInterestPoint pivot = *self->at((left + right) >> 1);

@@ -23,6 +23,8 @@
 #include "compv/compv_config.h"
 #include "compv/compv_debug.h"
 
+#include "compv/parallel/compv_mutex.h"
+
 COMPV_NAMESPACE_BEGIN()
 
 typedef struct compv_special_mem_s {
@@ -42,6 +44,8 @@ compv_special_mem_t;
 class COMPV_API CompVMem
 {
 public:
+	static COMPV_ERROR_CODE init();
+	static COMPV_ERROR_CODE deInit();
     static COMPV_ERROR_CODE copy(void* dstPtr, const void*srcPtr, size_t size);
     static COMPV_ERROR_CODE copyNTA(void* dstPtr, const void*srcPtr, size_t size);
 
@@ -69,8 +73,14 @@ public:
     static bool isEmpty();
 
 private:
-    COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	static void specialsLock();
+	static void specialsUnLock();
+
+private:
+	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	static bool s_bInitialize;
     static std::map<uintptr_t, compv_special_mem_t > s_Specials;
+	static CompVObjWrapper<CompVMutex* >s_SpecialsMutex;
     COMPV_DISABLE_WARNINGS_END()
 };
 

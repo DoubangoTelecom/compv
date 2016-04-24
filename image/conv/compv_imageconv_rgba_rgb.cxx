@@ -73,7 +73,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVObjWrapper<CompVIma
     int width = rgb->getWidth();
     int stride = rgb->getStride();
     int threadsCount = 1;
-    CompVObjWrapper<CompVThreadDispatcher* >&threadDip = CompVEngine::getThreadDispatcher();
+    CompVObjWrapper<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
 
     if (COMPV_IS_ALIGNED_SSE(stride)) {
         if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
