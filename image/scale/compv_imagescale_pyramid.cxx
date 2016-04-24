@@ -69,24 +69,52 @@ CompVImageScalePyramid::~CompVImageScalePyramid()
 
 COMPV_ERROR_CODE CompVImageScalePyramid::process(const CompVObjWrapper<CompVImage*>& inImage, int32_t level /*= -1*/)
 {
-    COMPV_CHECK_EXP_RETURN(!inImage, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    int32_t outWidth, outHeight;
+	COMPV_CHECK_EXP_RETURN(!inImage || (level >= m_nLevels), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    int32_t outWidth, outHeight, inWidth, inHeight;
+	float sf;
 
-    // level0 -> no change
-    outWidth = inImage->getWidth();
-    outHeight = inImage->getHeight();
-    COMPV_CHECK_CODE_RETURN(inImage->scale(m_eScaleType, outWidth, outHeight, &m_pImages[0]));
+	inWidth = inImage->getWidth();
+	inHeight = inImage->getHeight();
 
-    for (int32_t level = 1; level < m_nLevels; ++level) {
-        outWidth = (int32_t)(outWidth * m_fScaleFactor + 1.f);
-        outHeight = (int32_t)(outHeight * m_fScaleFactor + 1.f);
-#if 1 // TODO(dmi): This produce better quality. Create an option to choose which version to use (imageN=scale(imageN-1,sf) or imageN=scale(imageOrig,sf))
-        // I prefer this
-        COMPV_CHECK_CODE_RETURN(inImage->scale(m_eScaleType, outWidth, outHeight, &m_pImages[level]));
+	// TODO(dmi): We have two options here:
+	//	1/ imageN=scale(imageN-1,sf) 
+	//	2/ imageN=scale(imageOrig,sf)
+	// Option 2 produce better result in terms of quality and matching rate. Also option 2 can be multithreaded
+	// which is not the case for option 1.
+	// This funtion is sometimes multithreaded (e.g. when called from ORB dete), make sure we are using option 2
+
+#if 1 // Option 2
+	if (level < 0) {
+		for (int32_t lev = 0; lev < m_nLevels; ++lev) {
+			sf = getScaleFactor(lev);
+			outWidth = (int32_t)(inWidth * sf + 1.f);
+			outHeight = (int32_t)(inHeight * sf + 1.f);
+			COMPV_CHECK_CODE_RETURN(inImage->scale(m_eScaleType, outWidth, outHeight, &m_pImages[lev]));
+		}
+	}
+	else {
+		sf = getScaleFactor(level);
+		outWidth = (int32_t)(inWidth * sf + 1.f);
+		outHeight = (int32_t)(inHeight * sf + 1.f);
+		COMPV_CHECK_CODE_RETURN(inImage->scale(m_eScaleType, outWidth, outHeight, &m_pImages[level]));
+	}
 #else
-        COMPV_CHECK_CODE_RETURN(m_pImages[level - 1]->scale(m_eScaleType, outWidth, outHeight, &m_pImages[level]));
+	if (level < 0) {
+		COMPV_CHECK_CODE_RETURN(inImage->scale(m_eScaleType, inWidth, inHeight, &m_pImages[0])); // level-0
+		for (int32_t lev = 1; lev < m_nLevels; ++lev) {
+			sf = getScaleFactor(lev);
+			outWidth = (int32_t)(inWidth * sf + 1.f);
+			outHeight = (int32_t)(inHeight * sf + 1.f);
+			COMPV_CHECK_CODE_RETURN(m_pImages[lev - 1]->scale(m_eScaleType, outWidth, outHeight, &m_pImages[lev]));
+		}
+	}
+	else {
+		sf = getScaleFactor(level);
+		outWidth = (int32_t)(inWidth * sf + 1.f);
+		outHeight = (int32_t)(inHeight * sf + 1.f);
+		COMPV_CHECK_CODE_RETURN(m_pImages[level - 1]->scale(m_eScaleType, outWidth, outHeight, &m_pImages[level]));
+	}
 #endif
-    }
     return COMPV_ERROR_CODE_S_OK;
 }
 
