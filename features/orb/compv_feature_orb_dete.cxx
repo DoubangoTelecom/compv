@@ -52,7 +52,6 @@ bool COMPV_FEATURE_DETE_ORB_FAST_NON_MAXIMA_SUPP = true; // NMS:
 int COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS = 8; // number of levels
 float COMPV_FEATURE_DETE_ORB_PYRAMID_SF = 0.83f; // scale factor
 int COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER = 31;
-int COMPV_FEATURE_DETE_ORB_PATCH_RADIUS = COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER >> 1;
 COMPV_SCALE_TYPE COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE = COMPV_SCALE_TYPE_BILINEAR;
 
 CompVFeatureDeteORB::CompVFeatureDeteORB()
@@ -60,7 +59,7 @@ CompVFeatureDeteORB::CompVFeatureDeteORB()
     , m_nMaxFeatures(-1)
 	, m_pCircleMaxI(NULL)
 	, m_nCircleMaxICount(0)
-	, m_nPatchRadius(COMPV_FEATURE_DETE_ORB_PATCH_RADIUS)
+	, m_nPatchDiameter(COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER)
 {
 
 }
@@ -151,6 +150,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVObjWrapper<CompVImage*>
     int32_t prevLevel;
     double m10, m01, orientRad;
     CompVInterestPoint* point_;
+	int patch_radius = (m_nPatchDiameter >> 1);
 
     // create or reset points
     if (!interestPoints) {
@@ -164,15 +164,15 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVObjWrapper<CompVImage*>
     COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image));
 
 	// Create maximum abscissa for the circular patch
-	if (m_nCircleMaxICount != (m_nPatchRadius + 1)) {
+	if (m_nCircleMaxICount != (patch_radius + 1)) {
 		CompVMem::free((void**)&m_pCircleMaxI);
 		m_nCircleMaxICount = 0;
-		m_pCircleMaxI = (int*)CompVMem::malloc((m_nPatchRadius + 1) * sizeof(int));
+		m_pCircleMaxI = (int*)CompVMem::malloc((patch_radius + 1) * sizeof(int));
 		COMPV_CHECK_EXP_RETURN(!m_pCircleMaxI, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-		m_nCircleMaxICount = m_nPatchRadius + 1;
+		m_nCircleMaxICount = patch_radius + 1;
 
-		int patch_radius_pow2 = m_nPatchRadius * m_nPatchRadius;
-		for (int j = 0; j <= m_nPatchRadius; ++j) {
+		int patch_radius_pow2 = patch_radius * patch_radius;
+		for (int j = 0; j <= patch_radius; ++j) {
 			// Pythagorean theorem: x = sqrt(r**2 - y**2)
 			m_pCircleMaxI[j] = ((int)sqrt(patch_radius_pow2 - (j * j)));
 		}
@@ -184,7 +184,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVObjWrapper<CompVImage*>
     // FIXME(dmi): multi-thread
     for (int32_t level = 0; level < m_pyramid->getLevels(); ++level) {
         sf = m_pyramid->getScaleFactor(level);
-        patchSize = COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER / sf; // TODO(dmi): in OpenCV the patch size increase (instead of decreasing) with the level. Doesn't look correct.
+        patchSize = m_nPatchDiameter / sf; // TODO(dmi): in OpenCV the patch size increase (instead of decreasing) with the level. Doesn't look correct.
         // Clear previous points, will be done by the internal detector but we prefer do to it here to make sure it
         // will work for buggy detectors
         if (interestPointsAtLevelN) {
@@ -226,7 +226,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVObjWrapper<CompVImage*>
         }
 
         // computes moments
-		CompVImageMoments::cirM01M10((const uint8_t*)imageAtLevelN->getDataPtr(), COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER, m_pCircleMaxI, point_->x, point_->y, imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), &m01, &m10);
+		CompVImageMoments::cirM01M10((const uint8_t*)imageAtLevelN->getDataPtr(), m_nPatchDiameter, m_pCircleMaxI, point_->x, point_->y, imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), &m01, &m10);
 
         // compute orientation
 		orientRad = COMPV_MATH_ATAN2(m01, m10);

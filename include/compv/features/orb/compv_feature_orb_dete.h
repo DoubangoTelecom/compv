@@ -56,7 +56,7 @@ private:
     int32_t m_nMaxFeatures;
 	int* m_pCircleMaxI;
 	size_t m_nCircleMaxICount;
-	int m_nPatchRadius;
+	int m_nPatchDiameter;
 };
 
 COMPV_NAMESPACE_END()

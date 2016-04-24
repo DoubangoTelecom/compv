@@ -74,12 +74,11 @@ double CompVImageMoments::cirPQ(const uint8_t* ptr, int patch_diameter, int cent
     return (mpq);
 }
 
-
 void CompVImageMoments::cirM01M10(const uint8_t* ptr, int patch_diameter, const int* patch_max_abscissas, int center_x, int center_y, int img_width, int img_stride, int img_height, double* m01, double* m10)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): SIMD
     double s01 = 0, s10 = 0;
     int patch_radius = (patch_diameter >> 1), img_y, i, j, dX, minI, maxI, minJ, maxJ;
-    int patch_radius_pow2 = (patch_radius * patch_radius);
     const uint8_t* img_ptr;
 	bool closeToBorder = (center_x < patch_radius || (center_x + patch_radius) >= img_width || (center_y < patch_radius) || (center_y + patch_radius) >= img_height);
 
@@ -97,7 +96,8 @@ void CompVImageMoments::cirM01M10(const uint8_t* ptr, int patch_diameter, const 
 
 		for (j = minJ, img_y = (center_y + j); j <= maxJ; ++j, ++img_y) {
 			// Pythagorean theorem: x = sqrt(r**2 - y**2)
-			dX = ((int)sqrt(patch_radius_pow2 - (j * j))); // FIXME: Compute once
+			// dX = ((int)sqrt(patch_radius_pow2 - (j * j)));
+			dX = patch_max_abscissas[j < 0 ? -j : +j];
 
 			// Compute minI and maxI
 			minI = -dX;
@@ -133,7 +133,7 @@ void CompVImageMoments::cirM01M10(const uint8_t* ptr, int patch_diameter, const 
 		// Handle j=1... cases
 		for (j = 1; j <= patch_radius; ++j) {
 			// Pythagorean theorem: x = sqrt(r**2 - y**2)
-			// dX = ((int)sqrt(patch_radius_pow2 - (j * j))); // TODO: Compute once
+			// dX = ((int)sqrt(patch_radius_pow2 - (j * j)));
 			dX = patch_max_abscissas[j];
 
 			for (i = -dX; i <= +dX; ++i) {

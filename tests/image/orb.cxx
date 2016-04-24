@@ -60,7 +60,7 @@ bool TestORB()
     COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
     // Compute Descriptions MD5
-    const std::string md5 = CompVMd5::compute2(descriptions->getDataPtr(), descriptions->getDataSize());
+	const std::string md5 = descriptions ? CompVMd5::compute2(descriptions->getDataPtr(), descriptions->getDataSize()) : "";
     if (md5 != ORB_DESC_MD5) {
         COMPV_DEBUG_ERROR("MD5 mismatch");
         COMPV_ASSERT(false);

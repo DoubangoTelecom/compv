@@ -67,7 +67,7 @@ CompVImageScalePyramid::~CompVImageScalePyramid()
     }
 }
 
-COMPV_ERROR_CODE CompVImageScalePyramid::process(const CompVObjWrapper<CompVImage*>& inImage)
+COMPV_ERROR_CODE CompVImageScalePyramid::process(const CompVObjWrapper<CompVImage*>& inImage, int32_t level /*= -1*/)
 {
     COMPV_CHECK_EXP_RETURN(!inImage, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     int32_t outWidth, outHeight;
