@@ -178,6 +178,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVObjWrapper<CompVImage*>
 
 	// Create maximum abscissa for the circular patch if not already done
 	if (m_nCircleMaxICount != (patch_radius + 1)) {
+		COMPV_DEBUG_INFO("Alloc Patch Circle Abscissas");
 		CompVMem::free((void**)&m_pCircleMaxI);
 		m_nCircleMaxICount = 0;
 		m_pCircleMaxI = (int*)CompVMem::malloc((patch_radius + 1) * sizeof(int));
@@ -308,15 +309,17 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVObjWrapper<CompV
 	
 	// Retain best features only
 	interestPointsAtLevelN = m_pInterestPointsAtLevelN[level];
-	if (m_nMaxFeatures > 0) {
+	if (m_nMaxFeatures > 0 && interestPointsAtLevelN->size() > 0) {
 		int32_t maxFeatures = (int32_t)((m_nMaxFeatures / sfs) * sf);
 #if 0 // must not enable
 		if (m_internalDetector->getId() == COMPV_FAST_ID) {
 			COMPV_CHECK_CODE_RETURN(m_internalDetector->set(COMPV_FAST_SET_INT32_MAX_FEATURES, &maxFeatures, sizeof(maxFeatures)));
 		}
 #endif
-		interestPointsAtLevelN->sort(cmp_strength_dec);
-		interestPointsAtLevelN->resize(maxFeatures);
+		if (interestPointsAtLevelN->size() > maxFeatures) {
+			interestPointsAtLevelN->sort(cmp_strength_dec);
+			interestPointsAtLevelN->resize(maxFeatures);
+		}
 	}
 
 	// For each point, set level and patch size, compute the orientation, scale (X,Y) coords...
