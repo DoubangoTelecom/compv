@@ -54,7 +54,7 @@ public:
 private:
 	COMPV_ERROR_CODE createInterestPoints(int32_t count = -1);
 	COMPV_ERROR_CODE freeInterestPoints(int32_t count = -1);
-	static COMPV_ERROR_CODE processLevelAt(CompVObjWrapper<CompVFeatureDeteORB* >This, const CompVObjWrapper<CompVImage*>& image, int level);
+	COMPV_ERROR_CODE processLevelAt(const CompVObjWrapper<CompVImage*>& image, int level);
 	static COMPV_ERROR_CODE processLevelAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 
 private:

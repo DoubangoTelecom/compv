@@ -56,6 +56,10 @@ public:
     static COMPV_ERROR_CODE newObj(float fScaleFactor, int32_t nLevels, COMPV_SCALE_TYPE eScaleType, CompVObjWrapper<CompVImageScalePyramid*>* pyramid);
 
 private:
+	COMPV_ERROR_CODE processLevelAt(const CompVObjWrapper<CompVImage*>& inImage, int32_t level);
+	static COMPV_ERROR_CODE processLevelAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
+
+private:
     float m_fScaleFactor;
     float m_fScaleFactorsSum; // Sum of all scale factors (all levels added)
     int32_t m_nLevels;

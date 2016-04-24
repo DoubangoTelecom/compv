@@ -67,6 +67,5 @@ bool TestORB()
         return false;
     }
 
-
     return true;
 }
