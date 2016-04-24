@@ -123,15 +123,24 @@ void CompVImageMoments::cirM01M10(const uint8_t* ptr, int patch_diameter, const 
 		
 		img_center = &ptr[(center_y * img_stride) + center_x];
 
-		// Handle j=0 case
-		for (i = -patch_radius; i <= +patch_radius; ++i) {
-			s10 += (i * img_center[i]);
+		/* Handle 'j==0' case */
+		{
+			for (i = -patch_radius; i <= +patch_radius; ++i) {
+				s10 += (i * img_center[i]);
+			}
 		}
+		/* Handle 'j==patch_radius' case */
+		{
+			top = *(img_center + (img_stride * patch_radius));
+			bottom = *(img_center - (img_stride * patch_radius));
+			s01 += (patch_radius * top) - (patch_radius * bottom);
+		}
+
 		img_top = img_center + img_stride;
 		img_bottom = img_center - img_stride;
 
 		// Handle j=1... cases
-		for (j = 1; j <= patch_radius; ++j) {
+		for (j = 1; j < patch_radius; ++j) {
 			// Pythagorean theorem: x = sqrt(r**2 - y**2)
 			// dX = ((int)sqrt(patch_radius_pow2 - (j * j)));
 			dX = patch_max_abscissas[j];
