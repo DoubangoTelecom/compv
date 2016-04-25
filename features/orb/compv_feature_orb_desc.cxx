@@ -475,6 +475,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
     int nFeatures = (int)interestPoints->size();
     int nFeaturesBits = 256; // FIXME: depends on the patch size and brief type
     int nFeaturesBytes = nFeaturesBits >> 3;
+	static size_t COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED = (size_t)CompVMem::alignForward(COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT, COMPV_SIMD_ALIGNV_DEFAULT /* should be 32, we don't need best alignment (64)*/);
     COMPV_CHECK_CODE_RETURN(err_ = CompVFeatureDescriptions::newObj(nFeatures, nFeaturesBits, &_descriptions));
     _descriptionsPtr = (uint8_t*)_descriptions->getDataPtr();
 
@@ -505,28 +506,28 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
     }
 
 	// Alloc SIMD variables
-	if (!m_simd.m_pxf && !(m_simd.m_pxf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+	if (!m_simd.m_pxf && !(m_simd.m_pxf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
 		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
-	if (!m_simd.m_pyf && !(m_simd.m_pyf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+	if (!m_simd.m_pyf && !(m_simd.m_pyf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
 		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
-	if (!m_simd.m_psf && !(m_simd.m_psf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+	if (!m_simd.m_psf && !(m_simd.m_psf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
 		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
-	if (!m_simd.m_pangleInDegree && !(m_simd.m_pangleInDegree = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+	if (!m_simd.m_pangleInDegree && !(m_simd.m_pangleInDegree = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
 		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
-	if (!m_simd.m_pxi && !(m_simd.m_pxi = (int32_t*)CompVMem::mallocAligned(sizeof(int32_t) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+	if (!m_simd.m_pxi && !(m_simd.m_pxi = (int32_t*)CompVMem::mallocAligned(sizeof(int32_t) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
 		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
-	if (!m_simd.m_pyi && !(m_simd.m_pyi = (int32_t*)CompVMem::mallocAligned(sizeof(int32_t) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+	if (!m_simd.m_pyi && !(m_simd.m_pyi = (int32_t*)CompVMem::mallocAligned(sizeof(int32_t) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
 		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
-	if (!m_simd.m_pcos && !(m_simd.m_pcos = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+	if (!m_simd.m_pcos && !(m_simd.m_pcos = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
 		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
-	if (!m_simd.m_psin && !(m_simd.m_psin = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+	if (!m_simd.m_psin && !(m_simd.m_psin = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
 		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
 
@@ -538,7 +539,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
 		m_simd.m_pyf[simd_i] = point->y;
 		m_simd.m_psf[simd_i] = _pyramid->getScaleFactor(point->level);
 		m_simd.m_pangleInDegree[simd_i] = point->orient;
-		if (++simd_i == COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT || (point + 1) == interestPoints->end()) {
+		if (++simd_i == COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED || (point + 1) == interestPoints->end()) {
 			CompVInterestPointScaleAndRoundAndGetAngleSinCos(m_simd.m_pxf, m_simd.m_pyf, m_simd.m_psf, m_simd.m_pangleInDegree, m_simd.m_pxi, m_simd.m_pyi, m_simd.m_pcos, m_simd.m_psin, simd_i);
 			for (size_t i = 0; i < simd_i; ++i) {
 				brief256((const uint8_t*)m_pcImages[i]->getDataPtr(), m_pcImages[i]->getStride(), m_pcImages[i]->getWidth(), m_pcImages[i]->getHeight(), m_simd.m_pxi[i], m_simd.m_pyi[i], m_simd.m_pcos[i], m_simd.m_psin[i], (void*)_descriptionsPtr);
