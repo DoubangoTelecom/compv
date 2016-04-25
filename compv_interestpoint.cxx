@@ -30,7 +30,7 @@ COMPV_NAMESPACE_BEGIN()
 
 static void sortByStrengthRange(CompVBoxInterestPoint* self, intptr_t left, intptr_t right);
 static COMPV_ERROR_CODE sortByStrengthRangeAsynExec(const struct compv_asynctoken_param_xs* pc_params);
-static void CompVInterestPointScaleAndRoundAndGetAngleCosin_C(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count);
+static void scaleAndRoundAndGetAngleSinCos_C(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count);
 
 CompVBoxInterestPoint::CompVBoxInterestPoint(size_t nCapacity /*= 0*/, bool bLockable /*= false*/)
     : CompVBox<CompVInterestPoint >(nCapacity, bLockable)
@@ -162,15 +162,15 @@ static COMPV_ERROR_CODE sortByStrengthRangeAsynExec(const struct compv_asynctoke
 // Round the point: xi = round(xf), yi = round(yf)
 // Convert the angle to radian: angleInRad = degToRad(angleInDegree)
 // Get the angle cos and sin: cos = cos(angleInRad), sin = sin(angleInRad)
-void CompVInterestPointScaleAndRoundAndGetAngleCosin(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count)
+void CompVInterestPointScaleAndRoundAndGetAngleSinCos(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count)
 {
-	void(*scaleAndRoundAndGetAngleCosin)(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count)
-		= CompVInterestPointScaleAndRoundAndGetAngleCosin_C;
+	void(*scaleAndRoundAndGetAngleSinCos)(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count)
+		= scaleAndRoundAndGetAngleSinCos_C;
 
-	scaleAndRoundAndGetAngleCosin(xf, yf, sf, angleInDegree, xi, yi, cos, sin, count);
+	scaleAndRoundAndGetAngleSinCos(xf, yf, sf, angleInDegree, xi, yi, cos, sin, count);
 }
 
-static void CompVInterestPointScaleAndRoundAndGetAngleCosin_C(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count)
+static void scaleAndRoundAndGetAngleSinCos_C(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO: SIMD
 	float fx, fy, angleInRad;
@@ -184,8 +184,8 @@ static void CompVInterestPointScaleAndRoundAndGetAngleCosin_C(COMPV_ALIGNED(x) c
 		cos[i] = ::cos(angleInRad);
 		sin[i] = ::sin(angleInRad);
 		// Round the point
-		xi[i] = (int32_t)round(fx);
-		yi[i] = (int32_t)round(fy);
+		xi[i] = COMPV_MATH_ROUNDFU_2_INT(fx, int32_t);
+		yi[i] = COMPV_MATH_ROUNDFU_2_INT(fy, int32_t);
 	}
 }
 

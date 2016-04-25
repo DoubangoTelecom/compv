@@ -346,6 +346,7 @@ static int32_t bit_pattern_31_[256 * 4] = {
 static const double gfilterGaussianBlur1[7] = { 0.07015933, 0.13107488, 0.19071282, 0.21610594, 0.19071282, 0.13107488, 0.07015933 };
 static COMPV_ERROR_CODE convlt1(uint8_t* img, int imgw, int imgs, int imgh, const double* ker, int ker_size)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
     COMPV_CHECK_EXP_RETURN(!(ker_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER); // Kernel size must be odd number
 
     uint8_t *imgTmp;
@@ -398,11 +399,13 @@ static COMPV_ERROR_CODE convlt1(uint8_t* img, int imgw, int imgs, int imgh, cons
 // FIXME: adds support for BRIEF 128, 256 or 512 -> uint16, uint32, uint64
 static void brief256(const uint8_t* img, int imgs, int imgw, int imgh, int kpx, int kpy, float cosT, float sinT, void* desc)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO: SIMD
     uint8_t xi, yi;
     int x, y, i, j;
+	float xf, yf;
 
     uint64_t* _desc = (uint64_t*)desc;
-    const uint8_t* center = img + (int32_t)(((int)kpy * imgs) + (int)kpx); // Translate the image to have the keypoint at the center. This is required before applying the rotated patch.
+    const uint8_t* center = img + ((kpy * imgs) + kpx); // Translate the image to have the keypoint at the center. This is required before applying the rotated patch.
 
     // FIXME: To generate the locations (Xi, Yi):
     // See brief document: Isotropic Gaussian distribution
@@ -432,13 +435,17 @@ static void brief256(const uint8_t* img, int imgs, int imgw, int imgh, int kpx, 
     // Applying rotation matrix to each (x, y) point in the patch gives us:
     // xr = x*cosT - y*sinT and yr = x*sinT + y*cosT
     for (i = 0, j = 0; i < 256; ++i, j = i & 63) {
-        int32_t* bp = &bit_pattern_31_[i * 4];
-        x = (int)round(bp[0] * cosT - bp[1] * sinT);
-        y = (int)round(bp[0] * sinT + bp[1] * cosT);
+		int32_t* bp = &bit_pattern_31_[i * 4];
+		xf = (bp[0] * cosT - bp[1] * sinT);
+		yf = (bp[0] * sinT + bp[1] * cosT);
+		x = COMPV_MATH_ROUNDF_2_INT(xf, int);
+		y = COMPV_MATH_ROUNDF_2_INT(yf, int);
         xi = center[(y * imgs) + x];
 
-        x = (int)round(bp[2] * cosT - bp[3] * sinT);
-        y = (int)round(bp[2] * sinT + bp[3] * cosT);
+		xf = (bp[2] * cosT - bp[3] * sinT);
+		yf = (bp[2] * sinT + bp[3] * cosT);
+		x = COMPV_MATH_ROUNDF_2_INT(xf, int);
+		y = COMPV_MATH_ROUNDF_2_INT(yf, int);
         yi = center[(y * imgs) + x];
 
         _desc[0] |= (xi < yi) ? (u64_1 << j) : 0;
@@ -486,11 +493,12 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
         // This code is called when we fail to get a pyramid from the attached detector or when none is attached.
         // The pyramid should come from the detector. Attach a detector to this descriptor to give it access to the pyramid.
         COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-        COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image));
+        COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image)); // multithreaded function
         _pyramid = m_pyramid;
     }
 
     // apply gaussianblur filter on the pyramid
+	// TODO(dmi): mutlithread
     for (int level = 0; level < _pyramid->getLevels(); ++level) {
         COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(level, &imageAtLevelN));
         convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur1, 7);
@@ -524,26 +532,6 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
 
     // TODO(dmi): multi-threading
 	for (simd_i = 0, point = interestPoints->begin(); point < interestPoints->end(); ++point) {
-#if 0
-		COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(point->level, &imageAtLevelN));
-        // When the points were computed by the detector they have been rescaled to be in the imput image coords (level=0) -> now rescale the coords to the coresponding level
-        float fkpx = (point->x * _pyramid->getScaleFactor(point->level));
-        float fkpy = (point->y * _pyramid->getScaleFactor(point->level));
-        float angleDeg = point->orient; // orient to the center -> like having the orientation a zero-based
-        //if (angleDeg > 180) angleDeg -= 360;
-        // Rotate the point
-        float angleRad = (float)COMPV_MATH_DEGREE_TO_RADIAN(angleDeg);
-        //if (angleRad > COMPV_MATH_PI) angleRad -= (float)(2 * COMPV_MATH_PI);
-        float cosT = cos(angleRad);
-        float sinT = sin(angleRad);
-        // ipx/ipy are defined in cartesien coords x€(-w/2,w/2), y€(-h/2,h/2)
-        int32_t ikpx = (int32_t)round(fkpx);
-        int32_t ikpy = (int32_t)round(fkpy);
-
-        //FIXME: make sure we're really using PatchSize 31
-        brief256((const uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getStride(), imageAtLevelN->getWidth(), imageAtLevelN->getHeight(), ikpx, ikpy, cosT, sinT, (void*)_descriptionsPtr);
-        _descriptionsPtr += nFeaturesBytes;
-#else
 		COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(point->level, &imageAtLevelN));
 		m_pcImages[simd_i] = *imageAtLevelN;
 		m_simd.m_pxf[simd_i] = point->x;
@@ -551,14 +539,13 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
 		m_simd.m_psf[simd_i] = _pyramid->getScaleFactor(point->level);
 		m_simd.m_pangleInDegree[simd_i] = point->orient;
 		if (++simd_i == COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT || (point + 1) == interestPoints->end()) {
-			CompVInterestPointScaleAndRoundAndGetAngleCosin(m_simd.m_pxf, m_simd.m_pyf, m_simd.m_psf, m_simd.m_pangleInDegree, m_simd.m_pxi, m_simd.m_pyi, m_simd.m_pcos, m_simd.m_psin, simd_i);
+			CompVInterestPointScaleAndRoundAndGetAngleSinCos(m_simd.m_pxf, m_simd.m_pyf, m_simd.m_psf, m_simd.m_pangleInDegree, m_simd.m_pxi, m_simd.m_pyi, m_simd.m_pcos, m_simd.m_psin, simd_i);
 			for (size_t i = 0; i < simd_i; ++i) {
 				brief256((const uint8_t*)m_pcImages[i]->getDataPtr(), m_pcImages[i]->getStride(), m_pcImages[i]->getWidth(), m_pcImages[i]->getHeight(), m_simd.m_pxi[i], m_simd.m_pyi[i], m_simd.m_pcos[i], m_simd.m_psin[i], (void*)_descriptionsPtr);
 				_descriptionsPtr += nFeaturesBytes;
 			}
 			simd_i = 0;
 		}
-#endif
     }
 
     *descriptions = _descriptions;

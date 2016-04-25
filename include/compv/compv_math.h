@@ -64,6 +64,8 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_MATH_EXP								exp
 #define COMPV_MATH_POW								pow
 #define COMPV_MATH_ATAN2							atan2
+#define COMPV_MATH_ROUNDF_2_INT(f,inttype)			(inttype)((f) >= 0.0 ? ((f) + 0.5) : ((f) - 0.5)) //!\IMPORTANT: (f) is evaluated several times -> must be an 'immediate' value
+#define COMPV_MATH_ROUNDFU_2_INT(f,inttype)			(inttype)((f) + 0.5) // fast rounding: (f) must be > 0
 
 #if !defined(M_PI)
 #	define M_PI 3.14159265358979323846

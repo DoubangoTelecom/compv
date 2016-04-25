@@ -25,6 +25,7 @@
 #include "compv/compv_mem.h"
 #include "compv/compv_engine.h"
 #include "compv/compv_fileutils.h"
+#include "compv/compv_mathutils.h"
 #include "compv/compv_debug.h"
 
 #include <algorithm>
@@ -361,7 +362,7 @@ COMPV_ERROR_CODE CompVImage::getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelForm
         }
         else {
             float f = ((float)bitsCount) / 8.f;
-            *size = (int32_t)round((width * height) * f);
+			*size = COMPV_MATH_ROUNDFU_2_INT(((width * height) * f), int32_t);
         }
     }
     else {
