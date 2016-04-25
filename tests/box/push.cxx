@@ -14,12 +14,12 @@ using namespace compv;
 
 static COMPV_INLINE bool __isXMoreThan10Box(const CompVInterestPoint* point)
 {
-    return point->xf() > 10;
+    return point->x > 10;
 }
 
 static COMPV_INLINE bool __isXMoreThan10Vect(const CompVInterestPoint& point)
 {
-    return point.xf() > 10;
+    return point.x > 10;
 }
 
 static bool COMPV_INLINE __compareStrengthDecVect(const CompVInterestPoint& i, const  CompVInterestPoint& j)
@@ -49,7 +49,7 @@ bool TestPush()
         for (unsigned y = 0; y < loopInCount; ++y) {
             for (unsigned x = 0; x < loopInCount; ++x) {
 #if STD_VECTOR
-                interestPointsVect.push_back(CompVInterestPoint((y*loopInCount) + x, 0, (float)rand()));
+                interestPointsVect.push_back(CompVInterestPoint((float)(y*loopInCount) + x, 0.f, (float)rand()));
 #else
                 box->push(CompVInterestPoint((y*loopInCount) + x, 0, (float)rand()));
 #endif

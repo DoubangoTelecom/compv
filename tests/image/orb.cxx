@@ -10,7 +10,7 @@ using namespace compv;
 #define ORB_PYRAMID_SCALEFACTOR		0.83f
 #define ORB_PYRAMID_SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
 #define ORB_LOOOP_COUNT				1
-#define ORB_DESC_MD5				"2fa6be2318c9b045e129e3b08e0d75c7"
+#define ORB_DESC_MD5				"b7f8284133a4c9ed89d9d2285cafed06"
 #define JPEG_IMG  "C:/Projects/GitHub/pan360/images/opengl_programming_guide_8th_edition.jpg"
 
 bool TestORB()

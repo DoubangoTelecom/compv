@@ -27,6 +27,10 @@
 #include "compv/image/scale/compv_imagescale_pyramid.h"
 #include "compv/features/compv_feature.h"
 
+#if !defined(COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT)
+#	define COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT  32
+#endif
+
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
 #endif
@@ -56,6 +60,17 @@ private:
     CompVObjWrapper<CompVImageScalePyramid* > m_pyramid;
     CompVObjWrapper<CompVConvlt* > m_convlt;
     CompVObjWrapper<CompVArray<double>* > m_kern;
+	const CompVImage* m_pcImages[COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT];
+	struct {
+		float *m_pxf;
+		float *m_pyf;
+		float *m_psf;
+		float *m_pangleInDegree;
+		int32_t *m_pxi;
+		int32_t *m_pyi;
+		float *m_pcos;
+		float *m_psin;
+	} m_simd;
 };
 
 COMPV_NAMESPACE_END()

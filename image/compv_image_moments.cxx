@@ -83,6 +83,7 @@ void CompVImageMoments::cirM01M10(const uint8_t* ptr, int patch_diameter, const 
     bool closeToBorder = (center_x < patch_radius || (center_x + patch_radius) >= img_width || (center_y < patch_radius) || (center_y + patch_radius) >= img_height);
 
     if (closeToBorder) {
+		// This code must never be called as we remove elements close to the border before computing the moments
         // Compute minJ and maxJ
         minJ = -patch_radius;
         if ((center_y + minJ) < 0) {

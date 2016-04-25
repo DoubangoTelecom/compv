@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="box.cxx">
+    <ClCompile Include="push.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="push.cxx">
+    <ClCompile Include="main.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

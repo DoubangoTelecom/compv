@@ -104,7 +104,7 @@ size_t CompVImage::getDataSize(COMPV_BORDER_POS bordersToExclude /*= COMPV_BORDE
     return size_t(size);
 }
 
-const void* CompVImage::getDataPtr(COMPV_BORDER_POS bordersToExclude /*= COMPV_BORDER_POS_ALL*/)
+const void* CompVImage::getDataPtr(COMPV_BORDER_POS bordersToExclude /*= COMPV_BORDER_POS_ALL*/)const
 {
     const uint8_t* ptr = NULL;
     if (m_oData) {
@@ -124,12 +124,12 @@ const void* CompVImage::getDataPtr(COMPV_BORDER_POS bordersToExclude /*= COMPV_B
     return (const void*)(ptr);
 }
 
-int32_t CompVImage::getWidth()
+int32_t CompVImage::getWidth()const
 {
     return m_nWidth;
 }
 
-int32_t CompVImage::getHeight(COMPV_BORDER_POS bordersToExclude /*= COMPV_BORDER_POS_ALL*/)
+int32_t CompVImage::getHeight(COMPV_BORDER_POS bordersToExclude /*= COMPV_BORDER_POS_ALL*/)const
 {
     int height = m_nHeight;
     if ((bordersToExclude & COMPV_BORDER_POS_TOP)) {
@@ -141,7 +141,7 @@ int32_t CompVImage::getHeight(COMPV_BORDER_POS bordersToExclude /*= COMPV_BORDER
     return int32_t(height);
 }
 
-int32_t CompVImage::getStride()
+int32_t CompVImage::getStride()const
 {
 #if 0
     int stride = m_nStride;

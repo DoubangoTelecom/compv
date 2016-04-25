@@ -45,8 +45,8 @@ extern int COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS;
 extern float COMPV_FEATURE_DETE_ORB_PYRAMID_SF;
 extern COMPV_SCALE_TYPE COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE;
 
-int COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE = 7;
-double COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 2.0;
+static const int COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE = 7;
+static const double COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 2.0;
 
 // FIXME: GaussianBlure
 // FIXME: BorderExtend
@@ -54,13 +54,21 @@ double COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 2.0;
 
 CompVFeatureDescORB::CompVFeatureDescORB()
     : CompVFeatureDesc(COMPV_ORB_ID)
+	, m_simd({NULL})
 {
 
 }
 
 CompVFeatureDescORB::~CompVFeatureDescORB()
 {
-
+	CompVMem::freeAligned((void**)&m_simd.m_pxf);
+	CompVMem::freeAligned((void**)&m_simd.m_pyf);
+	CompVMem::freeAligned((void**)&m_simd.m_psf);
+	CompVMem::freeAligned((void**)&m_simd.m_pangleInDegree);
+	CompVMem::freeAligned((void**)&m_simd.m_pxi);
+	CompVMem::freeAligned((void**)&m_simd.m_pyi);
+	CompVMem::freeAligned((void**)&m_simd.m_pcos);
+	CompVMem::freeAligned((void**)&m_simd.m_psin);
 }
 
 // override CompVSettable::set
@@ -335,51 +343,7 @@ static int32_t bit_pattern_31_[256 * 4] = {
 };
 
 // Helpful site to generate gaussian values: http://dev.theomader.com/gaussian-kernel-calculator/
-static const double gfilterGaussianBlur2[7][7] = {
-    { 0.00492233, 0.00919613, 0.01338028, 0.01516185, 0.01338028, 0.00919613, 0.00492233 },
-    { 0.00919613, 0.01718062, 0.02499766, 0.02832606, 0.02499766, 0.01718062, 0.00919613 },
-    { 0.01338028, 0.02499766, 0.03637138, 0.04121417, 0.03637138, 0.02499766, 0.01338028 },
-    { 0.01516185, 0.02832606, 0.04121417, 0.04670178, 0.04121417, 0.02832606, 0.01516185 },
-    { 0.01338028, 0.02499766, 0.03637138, 0.04121417, 0.03637138, 0.02499766, 0.01338028 },
-    { 0.00919613, 0.01718062, 0.02499766, 0.02832606, 0.02499766, 0.01718062, 0.00919613 },
-    { 0.00492233, 0.00919613, 0.01338028, 0.01516185, 0.01338028, 0.00919613, 0.00492233 }
-};
 static const double gfilterGaussianBlur1[7] = { 0.07015933, 0.13107488, 0.19071282, 0.21610594, 0.19071282, 0.13107488, 0.07015933 };
-static COMPV_ERROR_CODE convlt2(uint8_t* img, int imgw, int imgs, int imgh, const double* ker, int ker_size)
-{
-    COMPV_CHECK_EXP_RETURN(!(ker_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER); // Kernel size must be odd number
-
-    uint8_t* outImg = (uint8_t*)CompVMem::malloc(imgh * imgs);
-    const uint8_t *topleft, *img_ptr;
-    double sum;
-    const double *ker_ptr;
-    int imgpad, i, j, row, col;
-    int ker_size_div2 = ker_size >> 1;
-    img_ptr = img;
-    imgpad = (imgs - imgw) + ker_size_div2 + ker_size_div2;
-
-    for (j = ker_size_div2; j < imgh - ker_size_div2; ++j) {
-        for (i = ker_size_div2; i < imgw - ker_size_div2; ++i) {
-            sum = 0;
-            topleft = img_ptr;
-            ker_ptr = ker;
-            for (row = 0; row < ker_size; ++row) {
-                for (col = 0; col < ker_size; ++col) {
-                    sum += topleft[col] * ker_ptr[col];
-                }
-                ker_ptr += ker_size;
-                topleft += imgs;
-            }
-            outImg[(j * imgs) + i] = (uint8_t)sum;
-            ++img_ptr;
-        }
-        img_ptr += imgpad;
-    }
-    CompVMem::copy(img, outImg, imgh * imgs); // FIXME: garbage
-    CompVMem::free((void**)&outImg);
-
-    return COMPV_ERROR_CODE_S_OK;
-}
 static COMPV_ERROR_CODE convlt1(uint8_t* img, int imgw, int imgs, int imgh, const double* ker, int ker_size)
 {
     COMPV_CHECK_EXP_RETURN(!(ker_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER); // Kernel size must be odd number
@@ -444,19 +408,9 @@ static void brief256(const uint8_t* img, int imgs, int imgw, int imgh, int kpx, 
     // See brief document: Isotropic Gaussian distribution
     static int Xi[256][2/*x,y*/] = { };
     static int Yi[256][2/*x,y*/] = { };
-    static bool gen = false;
     static const int patch_div2 = 15;
     static const uint64_t u64_1 = 1;
-    if (!gen) {
-        for (int i = 0; i < 256; ++i) {
-            // Patch centered at (0, 0). Rotation will be applied then translated to the image's center.
-            Xi[i][0] = (rand() % patch_div2) * ((rand() & 1) ? 1 : -1);
-            Xi[i][1] = (rand() % patch_div2) * ((rand() & 1) ? 1 : -1);
-            Yi[i][0] = (rand() % patch_div2) * ((rand() & 1) ? 1 : -1);
-            Yi[i][1] = (rand() % patch_div2) * ((rand() & 1) ? 1 : -1);
-        }
-        gen = true;
-    }
+
 
     // 256bits = 32Bytes = 4 uint64
     _desc[0] = _desc[1] = _desc[2] = _desc[3] = 0;
@@ -477,39 +431,14 @@ static void brief256(const uint8_t* img, int imgs, int imgw, int imgh, int kpx, 
 
     // Applying rotation matrix to each (x, y) point in the patch gives us:
     // xr = x*cosT - y*sinT and yr = x*sinT + y*cosT
-
-#if 0 // FIXME: my code
-    for (i = 0, j = 0; i < 256; ++i, j = i & 63) {
-        x = (int)round(Xi[i][0] * cosT - Yi[i][0] * sinT);
-        y = (int)round(Xi[i][0] * sinT + Yi[i][0] * cosT);
-        //if (x < 0 || x >= imgw) continue; // FIXME: remove keypoints too close to the border
-        //if (y < 0 || y >= imgh) continue; // FIXME: remove keypoints too close to the border
-        xi = center[(y * imgs) + x];
-
-        x = (int)round(Xi[i][1] * cosT - Yi[i][1] * sinT);
-        y = (int)round(Xi[i][1] * sinT + Yi[i][1] * cosT);
-        //if (x < 0 || x >= imgw) continue; // FIXME: remove keypoints too close to the border
-        //if (y < 0 || y >= imgh) continue; // FIXME: remove keypoints too close to the border
-        yi = center[(y * imgs) + x];
-
-        _desc[0] |= (xi < yi) ? (u64_1 << j) : 0;
-        if (i != 0 && j == 0) {
-            ++_desc;
-        }
-    }
-#else // FIXME: OpenCV's code
     for (i = 0, j = 0; i < 256; ++i, j = i & 63) {
         int32_t* bp = &bit_pattern_31_[i * 4];
         x = (int)round(bp[0] * cosT - bp[1] * sinT);
         y = (int)round(bp[0] * sinT + bp[1] * cosT);
-        //if (x < 0 || x >= imgw) continue; // FIXME: remove keypoints too close to the border
-        //if (y < 0 || y >= imgh) continue; // FIXME: remove keypoints too close to the border
         xi = center[(y * imgs) + x];
 
         x = (int)round(bp[2] * cosT - bp[3] * sinT);
         y = (int)round(bp[2] * sinT + bp[3] * cosT);
-        //if (x < 0 || x >= imgw) continue; // FIXME: remove keypoints too close to the border
-        //if (y < 0 || y >= imgh) continue; // FIXME: remove keypoints too close to the border
         yi = center[(y * imgs) + x];
 
         _desc[0] |= (xi < yi) ? (u64_1 << j) : 0;
@@ -517,7 +446,6 @@ static void brief256(const uint8_t* img, int imgs, int imgw, int imgh, int kpx, 
             ++_desc;
         }
     }
-#endif
 }
 
 // override CompVFeatureDesc::process
@@ -531,7 +459,9 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
     CompVObjWrapper<CompVImageScalePyramid * > _pyramid;
     CompVObjWrapper<CompVImage*> imageAtLevelN;
     CompVObjWrapper<CompVFeatureDete*> attachedDete = getAttachedDete();
+	const CompVInterestPoint* point;
     uint8_t* _descriptionsPtr = NULL;
+	size_t simd_i;
 
     // return COMPV_ERROR_CODE_S_OK;
 
@@ -563,14 +493,39 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
     // apply gaussianblur filter on the pyramid
     for (int level = 0; level < _pyramid->getLevels(); ++level) {
         COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(level, &imageAtLevelN));
-        //convlt2((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur2, 7); // Gaussing blur
         convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur1, 7);
     }
 
+	// Alloc SIMD variables
+	if (!m_simd.m_pxf && !(m_simd.m_pxf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!m_simd.m_pyf && !(m_simd.m_pyf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!m_simd.m_psf && !(m_simd.m_psf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!m_simd.m_pangleInDegree && !(m_simd.m_pangleInDegree = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!m_simd.m_pxi && !(m_simd.m_pxi = (int32_t*)CompVMem::mallocAligned(sizeof(int32_t) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!m_simd.m_pyi && !(m_simd.m_pyi = (int32_t*)CompVMem::mallocAligned(sizeof(int32_t) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!m_simd.m_pcos && !(m_simd.m_pcos = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!m_simd.m_psin && !(m_simd.m_psin = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+
     // TODO(dmi): multi-threading
-    for (size_t i = 0; i < interestPoints->size(); ++i) {
-        const CompVInterestPoint* point = interestPoints->at(i);
-        COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(point->level, &imageAtLevelN));
+	for (simd_i = 0, point = interestPoints->begin(); point < interestPoints->end(); ++point) {
+#if 0
+		COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(point->level, &imageAtLevelN));
         // When the points were computed by the detector they have been rescaled to be in the imput image coords (level=0) -> now rescale the coords to the coresponding level
         float fkpx = (point->x * _pyramid->getScaleFactor(point->level));
         float fkpy = (point->y * _pyramid->getScaleFactor(point->level));
@@ -588,6 +543,22 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
         //FIXME: make sure we're really using PatchSize 31
         brief256((const uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getStride(), imageAtLevelN->getWidth(), imageAtLevelN->getHeight(), ikpx, ikpy, cosT, sinT, (void*)_descriptionsPtr);
         _descriptionsPtr += nFeaturesBytes;
+#else
+		COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(point->level, &imageAtLevelN));
+		m_pcImages[simd_i] = *imageAtLevelN;
+		m_simd.m_pxf[simd_i] = point->x;
+		m_simd.m_pyf[simd_i] = point->y;
+		m_simd.m_psf[simd_i] = _pyramid->getScaleFactor(point->level);
+		m_simd.m_pangleInDegree[simd_i] = point->orient;
+		if (++simd_i == COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT || (point + 1) == interestPoints->end()) {
+			CompVInterestPointScaleAndRoundAndGetAngleCosin(m_simd.m_pxf, m_simd.m_pyf, m_simd.m_psf, m_simd.m_pangleInDegree, m_simd.m_pxi, m_simd.m_pyi, m_simd.m_pcos, m_simd.m_psin, simd_i);
+			for (size_t i = 0; i < simd_i; ++i) {
+				brief256((const uint8_t*)m_pcImages[i]->getDataPtr(), m_pcImages[i]->getStride(), m_pcImages[i]->getWidth(), m_pcImages[i]->getHeight(), m_simd.m_pxi[i], m_simd.m_pyi[i], m_simd.m_pcos[i], m_simd.m_psin[i], (void*)_descriptionsPtr);
+				_descriptionsPtr += nFeaturesBytes;
+			}
+			simd_i = 0;
+		}
+#endif
     }
 
     *descriptions = _descriptions;

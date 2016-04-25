@@ -32,9 +32,13 @@ protected:
     CompVBoxInterestPoint(size_t nCapacity = 0, bool bLockable = false);
 public:
     virtual ~CompVBoxInterestPoint();
-    COMPV_ERROR_CODE sort(bool(*CompVBoxPredicateCompare)(const CompVInterestPoint*, const CompVInterestPoint*)); // multithreaded sorting
+	COMPV_ERROR_CODE sortByStrength(); // multithreaded sorting
+	COMPV_ERROR_CODE retainBest(size_t count);
+	COMPV_ERROR_CODE eraseTooCloseToBorder(int32_t img_width, int32_t img_height, int32_t border_size);
     static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVBoxInterestPoint* >* box, size_t nCapacity = 0, bool bLockable = false);
 };
+
+void CompVInterestPointScaleAndRoundAndGetAngleCosin(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count);
 
 COMPV_NAMESPACE_END()
 

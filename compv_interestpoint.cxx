@@ -20,15 +20,17 @@
 */
 #include "compv/compv_interestpoint.h"
 #include "compv/compv_mem.h"
-#include "compv/compv_debug.h"
 #include "compv/compv_engine.h"
+#include "compv/compv_mathutils.h"
+#include "compv/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
 
 #define COMPV_QUICKSORT_MIN_SAMPLES_PER_THREAD 200*100
 
-static void sortByStrengthRange(CompVBoxInterestPoint* self, bool(*CompVBoxPredicateCompare)(const CompVInterestPoint*, const CompVInterestPoint*), intptr_t left, intptr_t right);
+static void sortByStrengthRange(CompVBoxInterestPoint* self, intptr_t left, intptr_t right);
 static COMPV_ERROR_CODE sortByStrengthRangeAsynExec(const struct compv_asynctoken_param_xs* pc_params);
+static void CompVInterestPointScaleAndRoundAndGetAngleCosin_C(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count);
 
 CompVBoxInterestPoint::CompVBoxInterestPoint(size_t nCapacity /*= 0*/, bool bLockable /*= false*/)
     : CompVBox<CompVInterestPoint >(nCapacity, bLockable)
@@ -41,10 +43,35 @@ CompVBoxInterestPoint::~CompVBoxInterestPoint()
 
 }
 
-COMPV_ERROR_CODE CompVBoxInterestPoint::sort(bool(*CompVBoxPredicateCompare)(const CompVInterestPoint*, const CompVInterestPoint*))
+COMPV_ERROR_CODE CompVBoxInterestPoint::sortByStrength()
 {
-    sortByStrengthRange(this, CompVBoxPredicateCompare, 0, (intptr_t)size() - 1);
+    sortByStrengthRange(this, 0, (intptr_t)size() - 1);
     return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVBoxInterestPoint::retainBest(size_t count)
+{
+	COMPV_CHECK_CODE_RETURN(sortByStrength());
+	resize(count);
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVBoxInterestPoint::eraseTooCloseToBorder(int32_t img_width, int32_t img_height, int32_t border_size)
+{
+	if (m_nSize > 0) {
+		const CompVInterestPoint* p;
+		float w = (float)img_width, h = (float)img_height, b = (float)border_size;
+		for (size_t i = 0; i < size();) {
+			p = at(i);
+			if ((p->x < b || (p->x + b) >= w || (p->y < b) || (p->y + b) >= h)) {
+				erase(at(i));
+			}
+			else {
+				++i;
+			}
+		}
+	}
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVBoxInterestPoint::newObj(CompVObjWrapper<CompVBoxInterestPoint* >* box, size_t nCapacity /*= 0*/, bool bLockable /*= false*/)
@@ -66,7 +93,7 @@ COMPV_ERROR_CODE CompVBoxInterestPoint::newObj(CompVObjWrapper<CompVBoxInterestP
     return COMPV_ERROR_CODE_S_OK;
 }
 
-static void sortByStrengthRange(CompVBoxInterestPoint* self, bool(*CompVBoxPredicateCompare)(const CompVInterestPoint*, const CompVInterestPoint*), intptr_t left, intptr_t right)
+static void sortByStrengthRange(CompVBoxInterestPoint* self, intptr_t left, intptr_t right)
 {
     CompVObjWrapper<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
     int32_t threadsCount = threadDip ? threadDip->getThreadsCount() : 0;
@@ -75,10 +102,10 @@ static void sortByStrengthRange(CompVBoxInterestPoint* self, bool(*CompVBoxPredi
     CompVInterestPoint atk, *ati = self->at(left), *atj = self->at(right);
     const CompVInterestPoint *ati_ = ati, *atj_ = atj;
     while (ati <= atj) {
-        while (CompVBoxPredicateCompare(ati, &pivot)) {
+        while (ati->strength > pivot.strength) {
             ++ati;
         }
-        while (CompVBoxPredicateCompare(&pivot, atj)) {
+        while (pivot.strength > atj->strength) {
             --atj;
         }
         if (ati > atj) {
@@ -96,22 +123,22 @@ static void sortByStrengthRange(CompVBoxInterestPoint* self, bool(*CompVBoxPredi
         if (threadsCount > 2 && (j - left) > COMPV_QUICKSORT_MIN_SAMPLES_PER_THREAD && !threadDip->isMotherOfTheCurrentThread()) {
             threadIdx0 = threadDip->getThreadIdxForNextToCurrentCore();
             COMPV_CHECK_CODE_ASSERT(threadDip->execute(threadIdx0, COMPV_TOKENIDX0, sortByStrengthRangeAsynExec,
-                                    COMPV_ASYNCTASK_SET_PARAM_ASISS(self, CompVBoxPredicateCompare, left, j),
+                                    COMPV_ASYNCTASK_SET_PARAM_ASISS(self, left, j),
                                     COMPV_ASYNCTASK_SET_PARAM_NULL()));
         }
         else {
-            sortByStrengthRange(self, CompVBoxPredicateCompare, left, j);
+            sortByStrengthRange(self, left, j);
         }
     }
     if (i < right) {
         if (threadsCount > 2 && (right - i) > COMPV_QUICKSORT_MIN_SAMPLES_PER_THREAD && !threadDip->isMotherOfTheCurrentThread()) {
             threadIdx1 = threadDip->getThreadIdxForNextToCurrentCore() + 1;
             COMPV_CHECK_CODE_ASSERT(threadDip->execute(threadIdx1, COMPV_TOKENIDX1, sortByStrengthRangeAsynExec,
-                                    COMPV_ASYNCTASK_SET_PARAM_ASISS(self, CompVBoxPredicateCompare, i, right),
+                                    COMPV_ASYNCTASK_SET_PARAM_ASISS(self, i, right),
                                     COMPV_ASYNCTASK_SET_PARAM_NULL()));
         }
         else {
-            sortByStrengthRange(self, CompVBoxPredicateCompare, i, right);
+            sortByStrengthRange(self, i, right);
         }
     }
     if (threadIdx0 != UINT_MAX) {
@@ -125,11 +152,41 @@ static void sortByStrengthRange(CompVBoxInterestPoint* self, bool(*CompVBoxPredi
 static COMPV_ERROR_CODE sortByStrengthRangeAsynExec(const struct compv_asynctoken_param_xs* pc_params)
 {
     CompVBoxInterestPoint* self = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, CompVBoxInterestPoint*);
-    bool(*CompVBoxPredicateCompare)(const CompVInterestPoint*, const CompVInterestPoint*) = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, bool(*)(const CompVInterestPoint*, const CompVInterestPoint*));
-    intptr_t left = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, intptr_t);
-    intptr_t right = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, intptr_t);
-    sortByStrengthRange(self, CompVBoxPredicateCompare, left, right);
+    intptr_t left = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, intptr_t);
+    intptr_t right = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, intptr_t);
+    sortByStrengthRange(self, left, right);
     return COMPV_ERROR_CODE_S_OK;
+}
+
+// Scale the point: xf *= sf, yf *= sf
+// Round the point: xi = round(xf), yi = round(yf)
+// Convert the angle to radian: angleInRad = degToRad(angleInDegree)
+// Get the angle cos and sin: cos = cos(angleInRad), sin = sin(angleInRad)
+void CompVInterestPointScaleAndRoundAndGetAngleCosin(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count)
+{
+	void(*scaleAndRoundAndGetAngleCosin)(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count)
+		= CompVInterestPointScaleAndRoundAndGetAngleCosin_C;
+
+	scaleAndRoundAndGetAngleCosin(xf, yf, sf, angleInDegree, xi, yi, cos, sin, count);
+}
+
+static void CompVInterestPointScaleAndRoundAndGetAngleCosin_C(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO: SIMD
+	float fx, fy, angleInRad;
+	for (compv_scalar_t i = 0; i < count; ++i) {
+		// Scale
+		fx = (xf[i] * sf[i]);
+		fy = (yf[i] * sf[i]);
+		// Convert the angle from degree to radian
+		angleInRad = COMPV_MATH_DEGREE_TO_RADIAN_FLOAT(angleInDegree[i]);
+		// Get angle's cos and sin
+		cos[i] = ::cos(angleInRad);
+		sin[i] = ::sin(angleInRad);
+		// Round the point
+		xi[i] = (int32_t)round(fx);
+		yi[i] = (int32_t)round(fy);
+	}
 }
 
 COMPV_NAMESPACE_END()

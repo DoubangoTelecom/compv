@@ -69,8 +69,10 @@ COMPV_NAMESPACE_BEGIN()
 #	define M_PI 3.14159265358979323846
 #endif
 #define COMPV_MATH_PI	(M_PI)
-#define COMPV_MATH_DEGREE_TO_RADIAN(deg_) (((deg_) * COMPV_MATH_PI) / 180.0)
-#define COMPV_MATH_RADIAN_TO_DEGREE(rad_) (((rad_) * 180.0) / COMPV_MATH_PI)
+#define COMPV_MATH_DEGREE_TO_RADIAN(deg_)			(((deg_) * COMPV_MATH_PI) / 180.0)
+#define COMPV_MATH_DEGREE_TO_RADIAN_FLOAT(deg_)		(float)(((deg_) * COMPV_MATH_PI) / 180.f)
+#define COMPV_MATH_RADIAN_TO_DEGREE(rad_)			(((rad_) * 180.0) / COMPV_MATH_PI)
+#define COMPV_MATH_RADIAN_TO_DEGREE_FLOAT(rad_)		(float)(((rad_) * 180.f) / COMPV_MATH_PI)
 
 COMPV_NAMESPACE_END()
 

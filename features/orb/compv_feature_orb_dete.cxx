@@ -149,12 +149,6 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::get(int id, const void*& valuePtr, size_t 
     }
 }
 
-// FIXME(dmi):
-static bool cmp_strength_dec(const CompVInterestPoint* i, const CompVInterestPoint* j)
-{
-    return (i->strength > j->strength);
-}
-
 // override CompVFeatureDete::process
 COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVObjWrapper<CompVImage*>& image, CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints)
 {
@@ -307,18 +301,22 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVObjWrapper<CompV
     // Clear previous points, will be done by the internal detector but we prefer do to it here to make sure it
     // will work for buggy detectors
 
-    // Retain best features only
+	// Get points at level N
     interestPointsAtLevelN = m_pInterestPointsAtLevelN[level];
+
+	// Erase points too close to the border
+	COMPV_CHECK_CODE_RETURN(err_ = interestPointsAtLevelN->eraseTooCloseToBorder(imgWidth, imgHeight, patch_radius));
+
+	// Retain best features only
     if (m_nMaxFeatures > 0 && interestPointsAtLevelN->size() > 0) {
         int32_t maxFeatures = (int32_t)((m_nMaxFeatures / sfs) * sf);
-#if 0 // must not enable
-        if (m_internalDetector->getId() == COMPV_FAST_ID) {
-            COMPV_CHECK_CODE_RETURN(m_internalDetector->set(COMPV_FAST_SET_INT32_MAX_FEATURES, &maxFeatures, sizeof(maxFeatures)));
-        }
+        if (interestPointsAtLevelN->size() > (size_t)maxFeatures) {
+#if 0 // Not multi-threaded
+			interestPointsAtLevelN->sort(static bool cmp_strength_dec(const CompVInterestPoint* i, const CompVInterestPoint* j) { return (i->strength > j->strength); });
+			interestPointsAtLevelN->resize(maxFeatures);
+#else
+			COMPV_CHECK_CODE_RETURN(err_ = interestPointsAtLevelN->retainBest((size_t)maxFeatures));
 #endif
-        if (interestPointsAtLevelN->size() > maxFeatures) {
-            interestPointsAtLevelN->sort(cmp_strength_dec);
-            interestPointsAtLevelN->resize(maxFeatures);
         }
     }
 

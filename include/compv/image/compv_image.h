@@ -40,10 +40,10 @@ public:
     COMPV_ERROR_CODE scale(COMPV_SCALE_TYPE type, int32_t outWidth, int32_t outHeight, CompVObjWrapper<CompVImage*>* outImage);
 
     size_t getDataSize(COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL);
-    const void* getDataPtr(COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL);
-    int32_t getWidth();
-    int32_t getHeight(COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL);
-    int32_t getStride();
+    const void* getDataPtr(COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL)const;
+    int32_t getWidth()const;
+    int32_t getHeight(COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL)const;
+    int32_t getStride()const;
     COMPV_INLINE COMPV_PIXEL_FORMAT getPixelFormat() {
         return m_ePixelFormat;
     }
