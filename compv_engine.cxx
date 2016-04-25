@@ -53,11 +53,11 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
 {
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
-	if (s_bInitialized || s_bInitializing) {
+    if (s_bInitialized || s_bInitializing) {
         return COMPV_ERROR_CODE_S_OK;
     }
 
-	s_bInitializing = true;
+    s_bInitializing = true;
 
     COMPV_DEBUG_INFO("Initializing engine (v %s)...", COMPV_VERSION_STRING);
 
@@ -136,8 +136,8 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     COMPV_DEBUG_INFO("Default alignment: #%d", COMPV_SIMD_ALIGNV_DEFAULT);
     COMPV_DEBUG_INFO("Best alignment: #%d", CompVMem::getBestAlignment());
 
-	/* Memory management */
-	COMPV_CHECK_CODE_BAIL(err_ = CompVMem::init());
+    /* Memory management */
+    COMPV_CHECK_CODE_BAIL(err_ = CompVMem::init());
 
     /* Features */
     COMPV_CHECK_CODE_BAIL(err_ = CompVFeature::init());
@@ -147,7 +147,7 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
 
 bail:
     s_bInitialized = COMPV_ERROR_CODE_IS_OK(err_);
-	s_bInitializing = false;
+    s_bInitializing = false;
     // cleanup if initialization failed
     if (!s_bInitialized) {
         s_ThreadDisp = NULL;
@@ -169,9 +169,9 @@ COMPV_ERROR_CODE CompVEngine::deInit()
 {
     s_bInitialized = false;
     s_ThreadDisp = NULL;
-    
-	// TODO(dmi): deInit other modules (not an issue because there is no memory allocation)
-	CompVMem::deInit();
+
+    // TODO(dmi): deInit other modules (not an issue because there is no memory allocation)
+    CompVMem::deInit();
 
     return COMPV_ERROR_CODE_S_OK;
 }
@@ -221,7 +221,7 @@ bool CompVEngine::isInitialized()
 
 bool CompVEngine::isInitializing()
 {
-	return s_bInitializing;
+    return s_bInitializing;
 }
 
 bool CompVEngine::isBigEndian()

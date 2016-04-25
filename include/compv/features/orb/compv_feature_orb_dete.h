@@ -52,22 +52,22 @@ public:
     static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* orb);
 
 private:
-	COMPV_ERROR_CODE createInterestPoints(int32_t count = -1);
-	COMPV_ERROR_CODE freeInterestPoints(int32_t count = -1);
-	COMPV_ERROR_CODE processLevelAt(const CompVObjWrapper<CompVImage*>& image, int level);
-	static COMPV_ERROR_CODE processLevelAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
+    COMPV_ERROR_CODE createInterestPoints(int32_t count = -1);
+    COMPV_ERROR_CODE freeInterestPoints(int32_t count = -1);
+    COMPV_ERROR_CODE processLevelAt(const CompVObjWrapper<CompVImage*>& image, int level);
+    static COMPV_ERROR_CODE processLevelAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 
 private:
     CompVObjWrapper<CompVImageScalePyramid* > m_pyramid;
-	CompVObjWrapper<CompVBoxInterestPoint* >* m_pInterestPointsAtLevelN;
-	CompVObjWrapper<CompVFeatureDete* > m_internalDetector;
+    CompVObjWrapper<CompVBoxInterestPoint* >* m_pInterestPointsAtLevelN;
+    CompVObjWrapper<CompVFeatureDete* > m_internalDetector;
     int32_t m_nMaxFeatures;
-	int32_t m_nPyramidLevels;
-	int32_t m_nThreshold;
-	bool m_bNMS;
-	int* m_pCircleMaxI;
-	size_t m_nCircleMaxICount;
-	int m_nPatchDiameter;
+    int32_t m_nPyramidLevels;
+    int32_t m_nThreshold;
+    bool m_bNMS;
+    int* m_pCircleMaxI;
+    size_t m_nCircleMaxICount;
+    int m_nPatchDiameter;
 };
 
 COMPV_NAMESPACE_END()

@@ -34,7 +34,7 @@ bool TestORB()
     COMPV_CHECK_CODE_ASSERT(CompVFeatureDete::newObj(COMPV_ORB_ID, &dete));
     // Create the ORB feature descriptor
     COMPV_CHECK_CODE_ASSERT(CompVFeatureDesc::newObj(COMPV_ORB_ID, &desc));
-	COMPV_CHECK_CODE_ASSERT(desc->attachDete(dete)); // attach detector to make sure we'll share context
+    COMPV_CHECK_CODE_ASSERT(desc->attachDete(dete)); // attach detector to make sure we'll share context
 
     // Set the default values for the detector
     val32 = FAST_THRESHOLD;
@@ -60,7 +60,7 @@ bool TestORB()
     COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
     // Compute Descriptions MD5
-	const std::string md5 = descriptions ? CompVMd5::compute2(descriptions->getDataPtr(), descriptions->getDataSize()) : "";
+    const std::string md5 = descriptions ? CompVMd5::compute2(descriptions->getDataPtr(), descriptions->getDataSize()) : "";
     if (md5 != ORB_DESC_MD5) {
         COMPV_DEBUG_ERROR("MD5 mismatch");
         COMPV_ASSERT(false);

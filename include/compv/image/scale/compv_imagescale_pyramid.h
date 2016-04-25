@@ -50,14 +50,14 @@ public:
         return getScaleFactor(COMPV_PYRAMOD_LEVEL_FIRST);
     }
     float getScaleFactor(int32_t level = COMPV_PYRAMOD_LEVEL_FIRST/*for level 0 it's always equal to 1.f*/);
-	COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& inImage, int32_t level = -1);
+    COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& inImage, int32_t level = -1);
     COMPV_ERROR_CODE getImage(int32_t level, CompVObjWrapper<CompVImage *>* image);
 
     static COMPV_ERROR_CODE newObj(float fScaleFactor, int32_t nLevels, COMPV_SCALE_TYPE eScaleType, CompVObjWrapper<CompVImageScalePyramid*>* pyramid);
 
 private:
-	COMPV_ERROR_CODE processLevelAt(const CompVObjWrapper<CompVImage*>& inImage, int32_t level);
-	static COMPV_ERROR_CODE processLevelAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
+    COMPV_ERROR_CODE processLevelAt(const CompVObjWrapper<CompVImage*>& inImage, int32_t level);
+    static COMPV_ERROR_CODE processLevelAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 
 private:
     float m_fScaleFactor;

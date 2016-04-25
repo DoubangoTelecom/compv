@@ -69,20 +69,20 @@ static void CompVMemCopy_C(void* dstPtr, const void*srcPtr, compv_uscalar_t size
 
 COMPV_ERROR_CODE CompVMem::init()
 {
-	if (!s_bInitialize) {
+    if (!s_bInitialize) {
 #if COMPV_MEM_CHECK
-		COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&s_SpecialsMutex));
+        COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&s_SpecialsMutex));
 #endif
-		s_bInitialize = true;
-	}
-	return COMPV_ERROR_CODE_S_OK;
+        s_bInitialize = true;
+    }
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVMem::deInit()
 {
-	s_SpecialsMutex = NULL;
-	s_bInitialize = false;
-	return COMPV_ERROR_CODE_S_OK;
+    s_SpecialsMutex = NULL;
+    s_bInitialize = false;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void*srcPtr, size_t size)
@@ -326,23 +326,23 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem
     pMem = _aligned_realloc(ptr, size, alignment);
 #	if COMPV_MEM_CHECK
     if (pMem != ptr) {
-		CompVMem::specialsLock();
+        CompVMem::specialsLock();
         CompVMem::s_Specials.erase((uintptr_t)ptr);
         if (pMem) {
             CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>((uintptr_t)pMem, compv_special_mem_t((uintptr_t)pMem, size, alignment)));
         }
-		CompVMem::specialsUnLock();
+        CompVMem::specialsUnLock();
     }
 #	endif
 #else
     pMem = CompVMem::mallocAligned(size);
     if (pMem && ptr) {
 #	if COMPV_MEM_CHECK
-		CompVMem::specialsLock();
+        CompVMem::specialsLock();
         std::map<uintptr_t, compv_special_mem_t >::iterator it = CompVMem::s_Specials.find((uintptr_t)ptr);
         COMPV_ASSERT(it != CompVMem::s_Specials.end());
         memcpy(pMem, ptr, COMPV_MATH_MIN(it->second.size, size));
-		CompVMem::specialsUnLock();
+        CompVMem::specialsUnLock();
 #	else
         COMPV_DEBUG_ERROR("Data lost");
 #	endif
@@ -358,9 +358,9 @@ void* CompVMem::callocAligned(size_t num, size_t size, int alignment/*= CompVMem
     if (pMem) {
         CompVMem::zero(pMem, (size * num));
 #	if COMPV_MEM_CHECK
-		CompVMem::specialsLock();
+        CompVMem::specialsLock();
         CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>((uintptr_t)pMem, compv_special_mem_t((uintptr_t)pMem, (size * num), alignment)));
-		CompVMem::specialsUnLock();
+        CompVMem::specialsUnLock();
 #	endif
     }
     return pMem;
@@ -375,9 +375,9 @@ void CompVMem::freeAligned(void** ptr)
             COMPV_DEBUG_FATAL("Using freeAligned on no-special address: %lx", (uintptr_t)ptr_);
         }
         else {
-			CompVMem::specialsLock();
+            CompVMem::specialsLock();
             CompVMem::s_Specials.erase((uintptr_t)ptr_);
-			CompVMem::specialsUnLock();
+            CompVMem::specialsUnLock();
         }
 #endif
 #if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
@@ -428,10 +428,10 @@ size_t CompVMem::alignSizeOnCacheLineAndSIMD(size_t size)
 bool CompVMem::isSpecial(void* ptr)
 {
 #	if COMPV_MEM_CHECK
-	CompVMem::specialsLock();
+    CompVMem::specialsLock();
     bool ret = CompVMem::s_Specials.find((uintptr_t)ptr) != CompVMem::s_Specials.end();
-	CompVMem::specialsUnLock();
-	return ret;
+    CompVMem::specialsUnLock();
+    return ret;
 #else
     COMPV_DEBUG_INFO("Memory check disabled. Returning false for CompVMem::isSpecial() function");
     return false;
@@ -442,12 +442,12 @@ size_t CompVMem::getSpecialTotalMemSize()
 {
 #	if COMPV_MEM_CHECK
     size_t total = 0;
-	CompVMem::specialsLock();
+    CompVMem::specialsLock();
     std::map<uintptr_t, compv_special_mem_t >::iterator it = CompVMem::s_Specials.begin();
     for (; it != CompVMem::s_Specials.end(); ++it) {
         total += it->second.size;
     }
-	CompVMem::specialsUnLock();
+    CompVMem::specialsUnLock();
     return total;
 #else
     COMPV_DEBUG_INFO("Memory check disabled. Returning 0 for CompVMem::getSpecialTotalMemSize() function");
@@ -458,10 +458,10 @@ size_t CompVMem::getSpecialTotalMemSize()
 size_t CompVMem::getSpecialsCount()
 {
 #	if COMPV_MEM_CHECK
-	CompVMem::specialsLock();
+    CompVMem::specialsLock();
     size_t ret = CompVMem::s_Specials.size();
-	CompVMem::specialsUnLock();
-	return ret;
+    CompVMem::specialsUnLock();
+    return ret;
 #else
     COMPV_DEBUG_INFO("Memory check disabled. Returning 0 for CompVMem::getSpecialsCount() function");
     return 0;
@@ -475,16 +475,16 @@ bool CompVMem::isEmpty()
 
 void CompVMem::specialsLock()
 {
-	if (CompVMem::s_SpecialsMutex) {
-		CompVMem::s_SpecialsMutex->lock();
-	}
+    if (CompVMem::s_SpecialsMutex) {
+        CompVMem::s_SpecialsMutex->lock();
+    }
 }
 
 void CompVMem::specialsUnLock()
 {
-	if (CompVMem::s_SpecialsMutex) {
-		CompVMem::s_SpecialsMutex->unlock();
-	}
+    if (CompVMem::s_SpecialsMutex) {
+        CompVMem::s_SpecialsMutex->unlock();
+    }
 }
 
 COMPV_NAMESPACE_END()

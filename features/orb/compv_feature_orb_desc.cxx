@@ -530,10 +530,10 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
     CompVObjWrapper<CompVFeatureDescriptions*> _descriptions;
     CompVObjWrapper<CompVImageScalePyramid * > _pyramid;
     CompVObjWrapper<CompVImage*> imageAtLevelN;
-	CompVObjWrapper<CompVFeatureDete*> attachedDete = getAttachedDete();
+    CompVObjWrapper<CompVFeatureDete*> attachedDete = getAttachedDete();
     uint8_t* _descriptionsPtr = NULL;
 
-	// return COMPV_ERROR_CODE_S_OK;
+    // return COMPV_ERROR_CODE_S_OK;
 
     int nFeatures = (int)interestPoints->size();
     int nFeaturesBits = 256; // FIXME: depends on the patch size and brief type
@@ -542,21 +542,20 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
     _descriptionsPtr = (uint8_t*)_descriptions->getDataPtr();
 
     // Get the pyramid from the detector or use or own pyramid
-	if ((attachedDete = getAttachedDete())) {
-		switch (attachedDete->getId()) {
-		case COMPV_ORB_ID:
-			{
-				const void* valuePtr = NULL;
-				COMPV_CHECK_CODE_RETURN(err_ = attachedDete->get(COMPV_FEATURE_GET_PTR_PYRAMID, valuePtr, sizeof(CompVImageScalePyramid)));
-				_pyramid = (CompVImageScalePyramid*)(valuePtr);
-				break;
-			}
-		}
-	}
-	if (!_pyramid) {
-		// This code is called when we fail to get a pyramid from the attached detector or when none is attached.
-		// The pyramid should come from the detector. Attach a detector to this descriptor to give it access to the pyramid.
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+    if ((attachedDete = getAttachedDete())) {
+        switch (attachedDete->getId()) {
+        case COMPV_ORB_ID: {
+            const void* valuePtr = NULL;
+            COMPV_CHECK_CODE_RETURN(err_ = attachedDete->get(COMPV_FEATURE_GET_PTR_PYRAMID, valuePtr, sizeof(CompVImageScalePyramid)));
+            _pyramid = (CompVImageScalePyramid*)(valuePtr);
+            break;
+        }
+        }
+    }
+    if (!_pyramid) {
+        // This code is called when we fail to get a pyramid from the attached detector or when none is attached.
+        // The pyramid should come from the detector. Attach a detector to this descriptor to give it access to the pyramid.
+        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
         COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image));
         _pyramid = m_pyramid;
     }
@@ -571,7 +570,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
     // TODO(dmi): multi-threading
     for (size_t i = 0; i < interestPoints->size(); ++i) {
         const CompVInterestPoint* point = interestPoints->at(i);
-		COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(point->level, &imageAtLevelN));
+        COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(point->level, &imageAtLevelN));
         // When the points were computed by the detector they have been rescaled to be in the imput image coords (level=0) -> now rescale the coords to the coresponding level
         float fkpx = (point->xf() * _pyramid->getScaleFactor(point->level));
         float fkpy = (point->yf() * _pyramid->getScaleFactor(point->level));
@@ -600,12 +599,12 @@ COMPV_ERROR_CODE CompVFeatureDescORB::newObj(CompVObjWrapper<CompVFeatureDesc* >
 {
     COMPV_CHECK_EXP_RETURN(orb == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVObjWrapper<CompVImageScalePyramid * > pyramid_;
-	CompVObjWrapper<CompVArray<double>* > kern_;
-	CompVObjWrapper<CompVConvlt* > convlt_;
-	// Create Gauss kernel values
-	COMPV_CHECK_CODE_RETURN(CompVGaussKern::buildKern1(&kern_, COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA));
-	// Create convolution context
-	COMPV_CHECK_CODE_RETURN(CompVConvlt::newObj(&convlt_));
+    CompVObjWrapper<CompVArray<double>* > kern_;
+    CompVObjWrapper<CompVConvlt* > convlt_;
+    // Create Gauss kernel values
+    COMPV_CHECK_CODE_RETURN(CompVGaussKern::buildKern1(&kern_, COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA));
+    // Create convolution context
+    COMPV_CHECK_CODE_RETURN(CompVConvlt::newObj(&convlt_));
     // Create the pyramid
     COMPV_CHECK_CODE_RETURN(CompVImageScalePyramid::newObj(COMPV_FEATURE_DETE_ORB_PYRAMID_SF, COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS, COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE, &pyramid_));
 
@@ -614,8 +613,8 @@ COMPV_ERROR_CODE CompVFeatureDescORB::newObj(CompVObjWrapper<CompVFeatureDesc* >
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }
     _orb->m_pyramid = pyramid_;
-	_orb->m_kern = kern_;
-	_orb->m_convlt = convlt_;
+    _orb->m_kern = kern_;
+    _orb->m_convlt = convlt_;
 
     *orb = *_orb;
     return COMPV_ERROR_CODE_S_OK;

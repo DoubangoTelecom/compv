@@ -54,8 +54,8 @@ public:
 private:
     // TODO(dmi): use internal detector: BRIEF (just like what is done for the detector and FAST internal dete)
     CompVObjWrapper<CompVImageScalePyramid* > m_pyramid;
-	CompVObjWrapper<CompVConvlt* > m_convlt;
-	CompVObjWrapper<CompVArray<double>* > m_kern;
+    CompVObjWrapper<CompVConvlt* > m_convlt;
+    CompVObjWrapper<CompVArray<double>* > m_kern;
 };
 
 COMPV_NAMESPACE_END()

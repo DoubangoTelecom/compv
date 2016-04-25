@@ -69,70 +69,70 @@ CompVImageScalePyramid::~CompVImageScalePyramid()
 
 COMPV_ERROR_CODE CompVImageScalePyramid::process(const CompVObjWrapper<CompVImage*>& inImage, int32_t level /*= -1*/)
 {
-	COMPV_CHECK_EXP_RETURN(!inImage || (level >= m_nLevels), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_EXP_RETURN(!inImage || (level >= m_nLevels), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	// TODO(dmi): We have two options here:
-	//	1/ imageN=scale(imageN-1,sf) 
-	//	2/ imageN=scale(imageOrig,sf)
-	// Option 2 produce better result in terms of quality and matching rate. Also option 2 can be multithreaded
-	// which is not the case for option 1.
-	// This funtion is sometimes multithreaded (e.g. when called from ORB dete), make sure we are using option 2
+    // TODO(dmi): We have two options here:
+    //	1/ imageN=scale(imageN-1,sf)
+    //	2/ imageN=scale(imageOrig,sf)
+    // Option 2 produce better result in terms of quality and matching rate. Also option 2 can be multithreaded
+    // which is not the case for option 1.
+    // This funtion is sometimes multithreaded (e.g. when called from ORB dete), make sure we are using option 2
 
 #if 1 // Option 2
-	if (level < 0) {
-		CompVObjWrapper<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
-		int32_t threadsCount = 1;
-		// Compute number of threads
-		if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-			threadsCount = threadDip->getThreadsCount();
-		}
-		if (threadsCount > 1) {
-			CompVObjWrapper<CompVImageScalePyramid* >This = this;
-			uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
-			// levelStart is used to make sure we won't schedule more than "threadsCount"
-			int levelStart, lev, levelMax;
-			for (levelStart = 0, levelMax = threadsCount; levelStart < m_nLevels; levelStart += threadsCount, levelMax += threadsCount) {
-				for (lev = levelStart; lev < m_nLevels && lev < levelMax; ++lev) {
-					COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + lev), COMPV_TOKENIDX0, CompVImageScalePyramid::processLevelAt_AsynExec,
-						COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *inImage, lev),
-						COMPV_ASYNCTASK_SET_PARAM_NULL()));
-				}
-				for (lev = levelStart; lev < m_nLevels && lev < levelMax; ++lev) {
-					COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + lev), COMPV_TOKENIDX0));
-				}
-			}
-		}
-		else {
-			for (int32_t lev = 0; lev < m_nLevels; ++lev) {
-				COMPV_CHECK_CODE_RETURN(processLevelAt(inImage, lev));
-			}
-		}
-	}
-	else {
-		COMPV_CHECK_CODE_RETURN(processLevelAt(inImage, level));
-	}
+    if (level < 0) {
+        CompVObjWrapper<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+        int32_t threadsCount = 1;
+        // Compute number of threads
+        if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
+            threadsCount = threadDip->getThreadsCount();
+        }
+        if (threadsCount > 1) {
+            CompVObjWrapper<CompVImageScalePyramid* >This = this;
+            uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+            // levelStart is used to make sure we won't schedule more than "threadsCount"
+            int levelStart, lev, levelMax;
+            for (levelStart = 0, levelMax = threadsCount; levelStart < m_nLevels; levelStart += threadsCount, levelMax += threadsCount) {
+                for (lev = levelStart; lev < m_nLevels && lev < levelMax; ++lev) {
+                    COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + lev), COMPV_TOKENIDX0, CompVImageScalePyramid::processLevelAt_AsynExec,
+                                            COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *inImage, lev),
+                                            COMPV_ASYNCTASK_SET_PARAM_NULL()));
+                }
+                for (lev = levelStart; lev < m_nLevels && lev < levelMax; ++lev) {
+                    COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + lev), COMPV_TOKENIDX0));
+                }
+            }
+        }
+        else {
+            for (int32_t lev = 0; lev < m_nLevels; ++lev) {
+                COMPV_CHECK_CODE_RETURN(processLevelAt(inImage, lev));
+            }
+        }
+    }
+    else {
+        COMPV_CHECK_CODE_RETURN(processLevelAt(inImage, level));
+    }
 #else
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): multi-thread
-	int32_t outWidth, outHeight, inWidth, inHeight;
-	float sf;
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): multi-thread
+    int32_t outWidth, outHeight, inWidth, inHeight;
+    float sf;
 
-	inWidth = inImage->getWidth();
-	inHeight = inImage->getHeight();
-	if (level < 0) {
-		COMPV_CHECK_CODE_RETURN(inImage->scale(m_eScaleType, inWidth, inHeight, &m_pImages[0])); // level-0
-		for (int32_t lev = 1; lev < m_nLevels; ++lev) {
-			sf = getScaleFactor(lev);
-			outWidth = (int32_t)(inWidth * sf);
-			outHeight = (int32_t)(inHeight * sf);
-			COMPV_CHECK_CODE_RETURN(m_pImages[lev - 1]->scale(m_eScaleType, outWidth, outHeight, &m_pImages[lev]));
-		}
-	}
-	else {
-		sf = getScaleFactor(level);
-		outWidth = (int32_t)(inWidth * sf);
-		outHeight = (int32_t)(inHeight * sf);
-		COMPV_CHECK_CODE_RETURN(m_pImages[level - 1]->scale(m_eScaleType, outWidth, outHeight, &m_pImages[level]));
-	}
+    inWidth = inImage->getWidth();
+    inHeight = inImage->getHeight();
+    if (level < 0) {
+        COMPV_CHECK_CODE_RETURN(inImage->scale(m_eScaleType, inWidth, inHeight, &m_pImages[0])); // level-0
+        for (int32_t lev = 1; lev < m_nLevels; ++lev) {
+            sf = getScaleFactor(lev);
+            outWidth = (int32_t)(inWidth * sf);
+            outHeight = (int32_t)(inHeight * sf);
+            COMPV_CHECK_CODE_RETURN(m_pImages[lev - 1]->scale(m_eScaleType, outWidth, outHeight, &m_pImages[lev]));
+        }
+    }
+    else {
+        sf = getScaleFactor(level);
+        outWidth = (int32_t)(inWidth * sf);
+        outHeight = (int32_t)(inHeight * sf);
+        COMPV_CHECK_CODE_RETURN(m_pImages[level - 1]->scale(m_eScaleType, outWidth, outHeight, &m_pImages[level]));
+    }
 #endif
     return COMPV_ERROR_CODE_S_OK;
 }
@@ -156,18 +156,18 @@ float CompVImageScalePyramid::getScaleFactor(int32_t level /*= COMPV_PYRAMOD_LEV
 // Private function
 COMPV_ERROR_CODE CompVImageScalePyramid::processLevelAt(const CompVObjWrapper<CompVImage*>& inImage, int32_t level)
 {
-	COMPV_CHECK_EXP_RETURN(!inImage || level < 0 || level >= m_nLevels, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	float sf = getScaleFactor(level);
-	COMPV_CHECK_CODE_RETURN(inImage->scale(m_eScaleType, (int32_t)(inImage->getWidth() * sf), (int32_t)(inImage->getHeight() * sf), &m_pImages[level]));
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(!inImage || level < 0 || level >= m_nLevels, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    float sf = getScaleFactor(level);
+    COMPV_CHECK_CODE_RETURN(inImage->scale(m_eScaleType, (int32_t)(inImage->getWidth() * sf), (int32_t)(inImage->getHeight() * sf), &m_pImages[level]));
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVImageScalePyramid::processLevelAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
 {
-	CompVImageScalePyramid*  This = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, CompVImageScalePyramid*);
-	CompVImage* image = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, CompVImage*);
-	int level = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, int);
-	return This->processLevelAt(image, level);
+    CompVImageScalePyramid*  This = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, CompVImageScalePyramid*);
+    CompVImage* image = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, CompVImage*);
+    int level = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, int);
+    return This->processLevelAt(image, level);
 }
 
 COMPV_ERROR_CODE CompVImageScalePyramid::newObj(float fScaleFactor, int32_t nLevels, COMPV_SCALE_TYPE eScaleType, CompVObjWrapper<CompVImageScalePyramid*>* pyramid)

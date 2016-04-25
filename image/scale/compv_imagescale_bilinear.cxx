@@ -53,24 +53,24 @@ static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, compv
         outPtr_ = (outPtr + (j * outStride));
         x = 0;
         for (compv_scalar_t i = 0, x = 0; i < outWidth; ++i) {
-			nearestX = (x >> 8); // nearest x-point
-			nearestX = COMPV_MATH_CLIP2(nearestX, inWidth - 2);
-			neighb0 = inPtr_[nearestX];
-			neighb1 = inPtr_[nearestX + 1];
-			neighb2 = inPtr_[nearestX + inStride];
-			neighb3 = inPtr_[nearestX + inStride + 1];
+            nearestX = (x >> 8); // nearest x-point
+            nearestX = COMPV_MATH_CLIP2(nearestX, inWidth - 2);
+            neighb0 = inPtr_[nearestX];
+            neighb1 = inPtr_[nearestX + 1];
+            neighb2 = inPtr_[nearestX + inStride];
+            neighb3 = inPtr_[nearestX + inStride + 1];
 
-			x0 = (x - (nearestX << 8));
-			x1 = 256 - x0;
-			y0 = (y - (nearestY << 8));
-			y1 = 256 - y0;
+            x0 = (x - (nearestX << 8));
+            x1 = 256 - x0;
+            y0 = (y - (nearestY << 8));
+            y1 = 256 - y0;
 
-			weight0 = x1 * y1;
-			weight1 = x0 * y1;
-			weight2 = x1 * y0;
-			weight3 = x0 * y0;
+            weight0 = x1 * y1;
+            weight1 = x0 * y1;
+            weight2 = x1 * y0;
+            weight3 = x0 * y0;
 
-			outPtr_[i] = (uint8_t)((neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3) >> 16);
+            outPtr_[i] = (uint8_t)((neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3) >> 16);
 
             x += sf_x;
         }
