@@ -328,7 +328,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVObjWrapper<CompV
         point_->size = patchSize;
 
         // computes moments
-        CompVImageMoments::cirM01M10(imgPtr, patch_diameter, pCircleMaxI, point_->x, point_->y, imgWidth, imgStride, imgHeight, &m01, &m10);
+		CompVImageMoments::cirM01M10(imgPtr, patch_diameter, pCircleMaxI, (int)point_->x, (int)point_->y, imgWidth, imgStride, imgHeight, &m01, &m10);
 
         // compute orientation
         orientRad = COMPV_MATH_ATAN2(m01, m10);
@@ -344,7 +344,8 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVObjWrapper<CompV
         //	- Once the orientation is computed, scaleup (x, y) which means (x/0.5, y/0.5) to have a representation in (100, 100) instead of (50, 50)
         //  - All points, regardless the scale factor will have their coords represented (scaledup) in the original size
         if (level != 0) {
-            point_->setXYf(point_->x / sf, point_->y / sf);
+			point_->x /= sf;
+			point_->y /= sf;
         }
     }
 

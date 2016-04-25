@@ -411,7 +411,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
     }
 
     // Build interest points
-#define COMPV_PUSH1() if (*begin1) { *begin1 += thresholdMinus1; interestPoints->push(CompVInterestPoint((int32_t)(begin1 - strengths), j, (float)*begin1)); } ++begin1;
+#define COMPV_PUSH1() if (*begin1) { *begin1 += thresholdMinus1; interestPoints->push(CompVInterestPoint((float)(begin1 - strengths), (float)j, (float)*begin1)); } ++begin1;
 #define COMPV_PUSH4() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1()
 #define COMPV_PUSH8() COMPV_PUSH4() COMPV_PUSH4()
     uint8_t *strengths = m_pStrengthsMap + (3 * stride), *begin1;
@@ -818,7 +818,7 @@ static void FastNMS(int32_t stride, const uint8_t* pcStrengthsMap, CompVInterest
     int32_t currentIdx;
     for (; begin < end; ++begin) {
         strength = (uint8_t)begin->strength;
-        currentIdx = (begin->y * stride) + begin->x;
+		currentIdx = (int32_t)((begin->y * stride) + begin->x);
         // No need to chech index as the point always has coords in (x+3, y+3)
         // If-Else faster than a single if(|||||||)
         if (pcStrengthsMap[currentIdx - 1] >= strength) { // left

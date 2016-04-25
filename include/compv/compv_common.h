@@ -314,44 +314,28 @@ public:
 CompVSize;
 
 typedef struct _CompVInterestPoint {
-    int32_t x; /**< Point.x */
-    int32_t y; /**< Point.y */
-    float fex; /**< Error after rounding. */
-    float fey; /**< Error after rounding. */
+	float x; /**< Point.x */
+	float y; /**< Point.y */
     float strength; /**< Corner/edge strength/response (e.g. FAST response or Harris response) */
     float orient; /**< angle in degree ([0-360]) */
     int32_t level; /**< pyramid level (when image is scaled, level0 is the first one) */
     float size; /**< patch size (e.g. BRIEF patch size-circle diameter-) */
 
 protected:
-    COMPV_INLINE void init(int32_t x_, int32_t y_, float strength_ = -1.f, float orient_ = -1.f, int32_t level_ = 0, float size_ = 0.f, float fex_ = 0.f, float fey_ = 0.f) {
+	COMPV_INLINE void init(float x_, float y_, float strength_ = -1.f, float orient_ = -1.f, int32_t level_ = 0, float size_ = 0.f) {
         x = x_;
         y = y_;
         strength = strength_;
         orient = orient_;
         level = level_;
         size = size_;
-        fex = fex_;
-        fey = fey_;
     }
 public:
     _CompVInterestPoint() {
         init(0,0);
     }
-    _CompVInterestPoint(int32_t x_, int32_t y_, float strength_ = -1.f, float orient_ = -1.f, int32_t level_ = 0, float size_ = 0.f, float fex_ = 0.f, float fey_ = 0.f) {
-        init(x_, y_, strength_, orient_, level_, size_, fex_, fey_);
-    }
-    COMPV_INLINE void setXYf(float x_, float y_) {
-        x = (int32_t)round(x_), fex = (x_ - x);
-        y = (int32_t)round(y_), fey = (y_ - y);
-    }
-    /** Convert x to float without rounding */
-    COMPV_INLINE float xf()const {
-        return (x + fex);
-    }
-    /** Convert y to float without rounding */
-    COMPV_INLINE float yf()const {
-        return (y + fey);
+	_CompVInterestPoint(float x_, float y_, float strength_ = -1.f, float orient_ = -1.f, int32_t level_ = 0, float size_ = 0.f) {
+        init(x_, y_, strength_, orient_, level_, size_);
     }
 }
 CompVInterestPoint;

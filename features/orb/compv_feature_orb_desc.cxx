@@ -572,8 +572,8 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
         const CompVInterestPoint* point = interestPoints->at(i);
         COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(point->level, &imageAtLevelN));
         // When the points were computed by the detector they have been rescaled to be in the imput image coords (level=0) -> now rescale the coords to the coresponding level
-        float fkpx = (point->xf() * _pyramid->getScaleFactor(point->level));
-        float fkpy = (point->yf() * _pyramid->getScaleFactor(point->level));
+        float fkpx = (point->x * _pyramid->getScaleFactor(point->level));
+        float fkpy = (point->y * _pyramid->getScaleFactor(point->level));
         float angleDeg = point->orient; // orient to the center -> like having the orientation a zero-based
         //if (angleDeg > 180) angleDeg -= 360;
         // Rotate the point

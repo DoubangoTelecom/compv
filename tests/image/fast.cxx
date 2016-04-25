@@ -212,8 +212,8 @@ bool TestFAST()
     float yf = 0.f;
     for (size_t i = 0; i < interestPoints->size(); ++i) {
         sum_scores += interestPoints->at(i)->strength;
-        xf += interestPoints->at(i)->xf();
-        yf += interestPoints->at(i)->yf();
+        xf += interestPoints->at(i)->x;
+        yf += interestPoints->at(i)->y;
     }
 #	if NONMAXIMA == 1
     COMPV_ASSERT(interestPoints->size() == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_COUNT : ((FASTTYPE == COMPV_FAST_TYPE_12) ? FAST12_T10_NONMAX_COUNT : FAST10_T10_NONMAX_COUNT)));
