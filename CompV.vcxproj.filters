@@ -133,6 +133,12 @@
     <Filter Include="Assembler Files\x86\features\fast">
       <UniqueIdentifier>{151be41c-4902-4617-aeff-5c76e166fc3b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\intrinsics\x86\features\orb">
+      <UniqueIdentifier>{8ef2daa2-7663-4ee5-af24-366bd72c867e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\intrinsics\x86\features\orb">
+      <UniqueIdentifier>{499293ef-26b7-46e6-a64b-2d0593a327e3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
@@ -318,6 +324,12 @@
     <ClInclude Include="include\compv\compv_math_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_sse.h">
+      <Filter>Header Files\intrinsics\x86\features\orb</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_avx2.h">
+      <Filter>Header Files\intrinsics\x86\features\orb</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -481,6 +493,12 @@
     </ClCompile>
     <ClCompile Include="compv_math_utils.cxx">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_sse.cxx">
+      <Filter>Source Files\intrinsics\x86\features\orb</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_avx2.cxx">
+      <Filter>Source Files\intrinsics\x86\features\orb</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

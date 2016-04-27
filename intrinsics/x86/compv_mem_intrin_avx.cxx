@@ -19,7 +19,7 @@
 */
 #include "compv/intrinsics/x86/compv_mem_intrin_avx.h"
 
-#if defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC)
+#if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/intrinsics/x86/compv_intrin_avx.h"
 #include "compv/compv_simd_globals.h"
 #include "compv/compv_math.h"

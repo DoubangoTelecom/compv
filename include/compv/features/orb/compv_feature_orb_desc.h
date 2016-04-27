@@ -56,7 +56,7 @@ public:
     static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDesc* >* orb);
 
 private:
-	bool brief256_31(const CompVImage* image, int kpx, int kpy, float cosT, float sinT, void* desc);
+	bool brief256_31(const CompVImage* image, int kpx, int kpy, float cosT, float sinT, COMPV_ALIGNED(x) void* desc);
 
 private:
     // TODO(dmi): use internal detector: BRIEF (just like what is done for the detector and FAST internal dete)

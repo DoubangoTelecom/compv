@@ -54,7 +54,7 @@ Some literature about FAST:
 #include <string>
 
 // Defines here outside the namespace to allow referencing in ASM code
-#if defined(COMPV_ARCH_X86) && (defined(COMPV_INTRINSIC) || defined(COMPV_ASM))
+#if COMPV_ARCH_X86 && (COMPV_INTRINSIC || COMPV_ASM)
 // Values generated using FastShufflesArc() in "tests/fast.cxx"
 extern "C" COMPV_API const COMPV_ALIGN_DEFAULT() uint8_t kFast9Arcs[16/*ArcStartIdx*/][16] = { // SHUFFLE_EPI8 values to select an arc
     { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, },

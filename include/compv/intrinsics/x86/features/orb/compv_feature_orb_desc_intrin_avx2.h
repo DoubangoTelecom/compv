@@ -17,8 +17,8 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_MEM_INTRIN_AVX_H_)
-#define _COMPV_MEM_INTRIN_AVX_H_
+#if !defined(_COMPV_FEATURE_ORB_DESC_INTRIN_AVX2_H_)
+#define _COMPV_FEATURE_ORB_DESC_INTRIN_AVX2_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -31,11 +31,10 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void MemCopy_Intrin_Aligned_AVX(COMPV_ALIGNED(AVX) void* dataDstPtr, COMPV_ALIGNED(AVX) const void* dataSrcPtr, compv_uscalar_t size);
-void MemCopyNTA_Intrin_Aligned_AVX(COMPV_ALIGNED(AVX) void* dataDstPtr, COMPV_ALIGNED(AVX) const void* dataSrcPtr, compv_uscalar_t size);
+void Brief256_31_Intrin_AVX2(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(AVX2) void* out);
 
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
 
-#endif /* _COMPV_MEM_INTRIN_AVX_H_ */
+#endif /* _COMPV_FEATURE_ORB_DESC_INTRIN_AVX2_H_ */
