@@ -24,7 +24,7 @@
 #include "compv/time/compv_time.h"
 #include "compv/image/compv_image.h"
 #include "compv/features/compv_feature.h"
-#include "compv/compv_mathutils.h"
+#include "compv/compv_math_utils.h"
 
 
 COMPV_NAMESPACE_BEGIN()
@@ -37,6 +37,7 @@ bool CompVEngine::s_bBigEndian = false;
 bool CompVEngine::s_bBigEndian = true;
 #endif
 bool CompVEngine::s_bTesting = false;
+bool CompVEngine::s_bMathTrigFast = true;
 CompVObjWrapper<CompVThreadDispatcher *> CompVEngine::s_ThreadDisp = NULL;
 
 CompVEngine::CompVEngine()
@@ -131,6 +132,7 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
 
     /* Math functions: Must be after CPU initialization */
     COMPV_CHECK_CODE_BAIL(err_ = CompVMathUtils::init());
+    COMPV_DEBUG_INFO("Math Fast Trig.: %s", CompVEngine::isMathTrigFast() ? "true" : "fast");
 
     /* Memory alignment */
     COMPV_DEBUG_INFO("Default alignment: #%d", COMPV_SIMD_ALIGNV_DEFAULT);
@@ -209,6 +211,13 @@ COMPV_ERROR_CODE CompVEngine::setTestingModeEnabled(bool bTesting)
     return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVEngine::setMathTrigFastEnabled(bool bMathTrigFast)
+{
+    COMPV_DEBUG_INFO("Engine math trig. fast = %s", bMathTrigFast ? "true" : "false");
+    s_bMathTrigFast = bMathTrigFast;
+    return COMPV_ERROR_CODE_S_OK;
+}
+
 bool CompVEngine::isMultiThreadingEnabled()
 {
     return !!s_ThreadDisp;
@@ -232,6 +241,11 @@ bool CompVEngine::isBigEndian()
 bool CompVEngine::isTestingMode()
 {
     return s_bTesting;
+}
+
+bool CompVEngine::isMathTrigFast()
+{
+    return s_bMathTrigFast;
 }
 
 COMPV_NAMESPACE_END()

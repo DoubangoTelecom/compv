@@ -17,7 +17,7 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#include "compv/compv_mathutils.h"
+#include "compv/compv_math_utils.h"
 #include "compv/compv_cpu.h"
 
 #include <algorithm>

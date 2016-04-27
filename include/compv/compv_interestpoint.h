@@ -32,9 +32,9 @@ protected:
     CompVBoxInterestPoint(size_t nCapacity = 0, bool bLockable = false);
 public:
     virtual ~CompVBoxInterestPoint();
-	COMPV_ERROR_CODE sortByStrength(); // multithreaded sorting
-	COMPV_ERROR_CODE retainBest(size_t count);
-	COMPV_ERROR_CODE eraseTooCloseToBorder(int32_t img_width, int32_t img_height, int32_t border_size);
+    COMPV_ERROR_CODE sortByStrength(); // multithreaded sorting
+    COMPV_ERROR_CODE retainBest(size_t count);
+    COMPV_ERROR_CODE eraseTooCloseToBorder(int32_t img_width, int32_t img_height, int32_t border_size);
     static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVBoxInterestPoint* >* box, size_t nCapacity = 0, bool bLockable = false);
 };
 

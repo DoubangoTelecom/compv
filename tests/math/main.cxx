@@ -6,13 +6,16 @@
 #define enableIntrinsics	true
 #define enableAsm			true
 #define testingMode			true
+#define mathTrigFast		true
 
 using namespace compv;
 
-#define TEST_MAX		1
-#define TEST_MIN		1
-#define TEST_CLIP3		1
-#define TEST_CLIP2		1
+#define TEST_MAX				0
+#define TEST_MIN				0
+#define TEST_CLIP3				0
+#define TEST_CLIP2				0
+#define TEST_SINCOS_P32			0 // 3.2 precision, theta within IR
+#define TEST_SINCOS_2PI_P32		1 // 3.2 precision, theta within [0, 2*PI]
 
 #if COMPV_OS_WINDOWS
 int _tmain(int argc, _TCHAR* argv[])
@@ -23,6 +26,7 @@ int main()
     CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
     COMPV_CHECK_CODE_ASSERT(CompVEngine::init(numThreads));
     COMPV_CHECK_CODE_ASSERT(CompVEngine::setTestingModeEnabled(testingMode));
+    COMPV_CHECK_CODE_ASSERT(CompVEngine::setMathTrigFastEnabled(mathTrigFast));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setAsmEnabled(enableAsm));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagNone));
@@ -42,6 +46,14 @@ int main()
 #if TEST_CLIP2
     extern bool TestClip2();
     COMPV_ASSERT(TestClip2());
+#endif
+#if TEST_SINCOS_P32
+	extern bool TestSinCosP32(bool thetaWithinZeroPiTimes2 = false);
+	COMPV_ASSERT(TestSinCosP32(false));
+#endif
+#if TEST_SINCOS_2PI_P32
+	extern bool TestSinCosP32(bool thetaWithinZeroPiTimes2 = false);
+	COMPV_ASSERT(TestSinCosP32(true));
 #endif
 
     // deInit the engine

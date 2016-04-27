@@ -72,9 +72,18 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 #define COMPV_MATH_PI	(M_PI)
 #define COMPV_MATH_DEGREE_TO_RADIAN(deg_)			(((deg_) * COMPV_MATH_PI) / 180.0)
-#define COMPV_MATH_DEGREE_TO_RADIAN_FLOAT(deg_)		(float)(((deg_) * COMPV_MATH_PI) / 180.f)
+#define COMPV_MATH_DEGREE_TO_RADIAN_FLOAT(deg_)		(float)((deg_) * kfMathTrigPiOver180)
 #define COMPV_MATH_RADIAN_TO_DEGREE(rad_)			(((rad_) * 180.0) / COMPV_MATH_PI)
-#define COMPV_MATH_RADIAN_TO_DEGREE_FLOAT(rad_)		(float)(((rad_) * 180.f) / COMPV_MATH_PI)
+#define COMPV_MATH_RADIAN_TO_DEGREE_FLOAT(rad_)		(float)((rad_) * kfMathTrig180OverPi)
+
+extern COMPV_API const float kfMathTrigPi; // PI
+extern COMPV_API const float kfMathTrigPiTimes2; // PI*2
+extern COMPV_API const float kfMathTrigPiOver2; // PI/2
+extern COMPV_API const float kfMathTrigPiOver180; // PI/180 (used to convert from degree to radian)
+extern COMPV_API const float kfMathTrig180OverPi; // 180/PI (used to convert from radian to degree)
+extern COMPV_API const float kMathTrigC1;
+extern COMPV_API const float kMathTrigC2;
+extern COMPV_API const float kMathTrigC3;
 
 COMPV_NAMESPACE_END()
 

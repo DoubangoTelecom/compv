@@ -56,21 +56,26 @@ public:
     static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDesc* >* orb);
 
 private:
+	bool brief256_31(const CompVImage* image, int kpx, int kpy, float cosT, float sinT, void* desc);
+
+private:
     // TODO(dmi): use internal detector: BRIEF (just like what is done for the detector and FAST internal dete)
     CompVObjWrapper<CompVImageScalePyramid* > m_pyramid;
     CompVObjWrapper<CompVConvlt* > m_convlt;
     CompVObjWrapper<CompVArray<double>* > m_kern;
-	const CompVImage* m_pcImages[COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT];
-	struct {
-		float *m_pxf;
-		float *m_pyf;
-		float *m_psf;
-		float *m_pangleInDegree;
-		int32_t *m_pxi;
-		int32_t *m_pyi;
-		float *m_pcos;
-		float *m_psin;
-	} m_simd;
+    const CompVImage* m_pcImages[COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT];
+	int m_nPatchDiameter;
+	int m_nPatchBits;
+    struct {
+        float *m_pxf;
+        float *m_pyf;
+        float *m_psf;
+        float *m_pangleInDegree;
+        int32_t *m_pxi;
+        int32_t *m_pyi;
+        float *m_pcos;
+        float *m_psin;
+    } m_simd;
 };
 
 COMPV_NAMESPACE_END()

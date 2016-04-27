@@ -151,8 +151,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="atan.cxx" />
     <ClCompile Include="clip.cxx" />
     <ClCompile Include="main.cxx" />
+    <ClCompile Include="sincos.cxx" />
+    <ClCompile Include="tan.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

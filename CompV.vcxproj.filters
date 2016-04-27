@@ -195,9 +195,6 @@
     <ClInclude Include="include\compv\compv_engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\compv_mathutils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_avx.h">
       <Filter>Header Files\intrinsics\x86</Filter>
     </ClInclude>
@@ -315,6 +312,12 @@
     <ClInclude Include="include\compv\compv_array.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\compv_math_trig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\compv_math_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -369,9 +372,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="compv_engine.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="compv_mathutils.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="compv_obj.cxx">
@@ -473,15 +473,21 @@
     <ClCompile Include="compv_array.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="compv_math_trig.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_math.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_math_utils.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="assembler\x86\compv_utils_x86.s">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
     <YASM Include="assembler\x86\compv_math_macros_x86.s">
-      <Filter>Assembler Files\x86</Filter>
-    </YASM>
-    <YASM Include="assembler\x86\compv_mathutils_x86.s">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
     <YASM Include="assembler\x86\compv_mem_x64_avx.s">
@@ -537,6 +543,9 @@
     </YASM>
     <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_rgb_x86_sse.s">
       <Filter>Assembler Files\x86\image\conv</Filter>
+    </YASM>
+    <YASM Include="assembler\x86\compv_math_utils_x86.s">
+      <Filter>Assembler Files\x86</Filter>
     </YASM>
   </ItemGroup>
 </Project>

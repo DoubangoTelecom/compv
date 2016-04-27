@@ -8,3 +8,6 @@
 
 ** compv_md5.cxx
 	--> Colin Plumb
+
+** compv_math_trig.cxx
+	--> http://sdphca.ucsd.edu/phy120b/student_dirs/shared/gnarly/misc_docs/trig_approximations.pdf

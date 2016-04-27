@@ -38,7 +38,7 @@ Some literature about FAST:
 #include "compv/features/fast/compv_feature_fast12_dete.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_engine.h"
-#include "compv/compv_mathutils.h"
+#include "compv/compv_math_utils.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_bits.h"
 
@@ -818,7 +818,7 @@ static void FastNMS(int32_t stride, const uint8_t* pcStrengthsMap, CompVInterest
     int32_t currentIdx;
     for (; begin < end; ++begin) {
         strength = (uint8_t)begin->strength;
-		currentIdx = (int32_t)((begin->y * stride) + begin->x);
+        currentIdx = (int32_t)((begin->y * stride) + begin->x);
         // No need to chech index as the point always has coords in (x+3, y+3)
         // If-Else faster than a single if(|||||||)
         if (pcStrengthsMap[currentIdx - 1] >= strength) { // left

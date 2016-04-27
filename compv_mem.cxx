@@ -20,7 +20,7 @@
 #include "compv/compv_mem.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
-#include "compv/compv_mathutils.h"
+#include "compv/compv_math_utils.h"
 
 #include "compv/parallel/compv_mutex.h"
 

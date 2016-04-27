@@ -314,15 +314,15 @@ public:
 CompVSize;
 
 typedef struct _CompVInterestPoint {
-	float x; /**< Point.x */
-	float y; /**< Point.y */
+    float x; /**< Point.x */
+    float y; /**< Point.y */
     float strength; /**< Corner/edge strength/response (e.g. FAST response or Harris response) */
     float orient; /**< angle in degree ([0-360]) */
     int32_t level; /**< pyramid level (when image is scaled, level0 is the first one) */
     float size; /**< patch size (e.g. BRIEF patch size-circle diameter-) */
 
 protected:
-	COMPV_INLINE void init(float x_, float y_, float strength_ = -1.f, float orient_ = -1.f, int32_t level_ = 0, float size_ = 0.f) {
+    COMPV_INLINE void init(float x_, float y_, float strength_ = -1.f, float orient_ = -1.f, int32_t level_ = 0, float size_ = 0.f) {
         x = x_;
         y = y_;
         strength = strength_;
@@ -334,7 +334,7 @@ public:
     _CompVInterestPoint() {
         init(0,0);
     }
-	_CompVInterestPoint(float x_, float y_, float strength_ = -1.f, float orient_ = -1.f, int32_t level_ = 0, float size_ = 0.f) {
+    _CompVInterestPoint(float x_, float y_, float strength_ = -1.f, float orient_ = -1.f, int32_t level_ = 0, float size_ = 0.f) {
         init(x_, y_, strength_, orient_, level_, size_);
     }
 }

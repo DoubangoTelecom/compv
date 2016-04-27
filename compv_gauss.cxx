@@ -18,7 +18,7 @@
 * along with CompV.
 */
 #include "compv/compv_gauss.h"
-#include "compv/compv_mathutils.h"
+#include "compv/compv_math_utils.h"
 #include "compv/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()

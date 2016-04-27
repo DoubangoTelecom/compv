@@ -42,7 +42,7 @@
 #include "compv/features/orb/compv_feature_orb_dete.h"
 #include "compv/image/compv_image_moments.h"
 #include "compv/compv_engine.h"
-#include "compv/compv_mathutils.h"
+#include "compv/compv_math_utils.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -53,6 +53,7 @@ bool COMPV_FEATURE_DETE_ORB_FAST_NON_MAXIMA_SUPP = true; // NMS:
 int COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS = 8; // number of levels
 float COMPV_FEATURE_DETE_ORB_PYRAMID_SF = 0.83f; // scale factor
 int COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER = 31;
+int COMPV_FEATURE_DETE_ORB_PATCH_BITS = 256;
 COMPV_SCALE_TYPE COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE = COMPV_SCALE_TYPE_BILINEAR;
 
 CompVFeatureDeteORB::CompVFeatureDeteORB()
@@ -301,21 +302,23 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVObjWrapper<CompV
     // Clear previous points, will be done by the internal detector but we prefer do to it here to make sure it
     // will work for buggy detectors
 
-	// Get points at level N
+    // Get points at level N
     interestPointsAtLevelN = m_pInterestPointsAtLevelN[level];
 
-	// Erase points too close to the border
-	COMPV_CHECK_CODE_RETURN(err_ = interestPointsAtLevelN->eraseTooCloseToBorder(imgWidth, imgHeight, patch_radius));
+    // Erase points too close to the border
+    COMPV_CHECK_CODE_RETURN(err_ = interestPointsAtLevelN->eraseTooCloseToBorder(imgWidth, imgHeight, patch_radius));
 
-	// Retain best features only
+    // Retain best features only
     if (m_nMaxFeatures > 0 && interestPointsAtLevelN->size() > 0) {
         int32_t maxFeatures = (int32_t)((m_nMaxFeatures / sfs) * sf);
         if (interestPointsAtLevelN->size() > (size_t)maxFeatures) {
 #if 0 // Not multi-threaded
-			interestPointsAtLevelN->sort(static bool cmp_strength_dec(const CompVInterestPoint* i, const CompVInterestPoint* j) { return (i->strength > j->strength); });
-			interestPointsAtLevelN->resize(maxFeatures);
+            interestPointsAtLevelN->sort(static bool cmp_strength_dec(const CompVInterestPoint* i, const CompVInterestPoint* j) {
+                return (i->strength > j->strength);
+            });
+            interestPointsAtLevelN->resize(maxFeatures);
 #else
-			COMPV_CHECK_CODE_RETURN(err_ = interestPointsAtLevelN->retainBest((size_t)maxFeatures));
+            COMPV_CHECK_CODE_RETURN(err_ = interestPointsAtLevelN->retainBest((size_t)maxFeatures));
 #endif
         }
     }
@@ -326,15 +329,16 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVObjWrapper<CompV
         point_->size = patchSize;
 
         // computes moments
-		CompVImageMoments::cirM01M10(imgPtr, patch_diameter, pCircleMaxI, (int)point_->x, (int)point_->y, imgWidth, imgStride, imgHeight, &m01, &m10);
+        CompVImageMoments::cirM01M10(imgPtr, patch_diameter, pCircleMaxI, (int)point_->x, (int)point_->y, imgWidth, imgStride, imgHeight, &m01, &m10);
 
         // compute orientation
         orientRad = COMPV_MATH_ATAN2(m01, m10);
         //double orientRad = COMPV_MATH_ATAN2(cy, cx);
-        point_->orient = (float)COMPV_MATH_RADIAN_TO_DEGREE(orientRad);
+        point_->orient = COMPV_MATH_RADIAN_TO_DEGREE_FLOAT(orientRad);
         if (point_->orient < 0) {
             point_->orient += 360;    // ((point_->orient + 360) % 360)
         }
+        // COMPV_ASSERT(point_->orient >= 0 && point_->orient < 360);
 
         // Now that orientation is computed (required real size), scaleup the size to match the original one
         // e.g. if original size is (100, 100) and sf = 0.5f
@@ -342,8 +346,8 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVObjWrapper<CompV
         //	- Once the orientation is computed, scaleup (x, y) which means (x/0.5, y/0.5) to have a representation in (100, 100) instead of (50, 50)
         //  - All points, regardless the scale factor will have their coords represented (scaledup) in the original size
         if (level != 0) {
-			point_->x /= sf;
-			point_->y /= sf;
+            point_->x /= sf;
+            point_->y /= sf;
         }
     }
 

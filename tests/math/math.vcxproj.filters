@@ -21,5 +21,14 @@
     <ClCompile Include="main.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="atan.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sincos.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tan.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
