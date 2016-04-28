@@ -88,7 +88,7 @@ sym(Brief256_31_Asm_X86_SSE41):
 	;	Loop
 	;;;;;;;;
 	.LoopStart
-		; xf = xmm0 = (kBrief256Pattern31AX[i] * cosT - kBrief256Pattern31AY[i] * sinT)
+		;; xmmA ;;
 		lea rax, [sym(kBrief256Pattern31AX)]
 		lea rbx, [sym(kBrief256Pattern31AY)]
 		movaps xmm2, [rax + rsi*COMPV_SIZE_OF_FLOAT] ; xmm2 = kBrief256Pattern31AX
@@ -97,16 +97,12 @@ sym(Brief256_31_Asm_X86_SSE41):
 		movaps xmm1, xmm3
 		mulps xmm0, xmm6
 		mulps xmm1, xmm5
-		subps xmm0, xmm1
-		; yf = xmm2 = (kBrief256Pattern31AX[i] * sinT + kBrief256Pattern31AY[i] * cosT);
 		mulps xmm2, xmm5
 		mulps xmm3, xmm6
+		subps xmm0, xmm1
 		addps xmm2, xmm3
-		; x = xmm0 = COMPV_MATH_ROUNDF_2_INT(xf, int);
 		cvtps2dq xmm0, xmm0
-		; y = xmm2 = COMPV_MATH_ROUNDF_2_INT(yf, int);
 		cvtps2dq xmm2, xmm2
-		; xmmIndex = ((y * img_stride) + x)
 		pmulld xmm2, xmm7
 		paddd xmm2, xmm0
 		movdqa [i_xmmIndex], xmm2
@@ -124,7 +120,7 @@ sym(Brief256_31_Asm_X86_SSE41):
 		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[3]]
 		mov [i_xmmA + rcx + 3], bl ; xmmA[u8_index + 3] = img_center[xmmIndex[3]]
 
-		; xmm0 = xf = (kBrief256Pattern31BX[i] * cosT - kBrief256Pattern31BY[i] * sinT);
+		;; xmmB ;;
 		lea rax, [sym(kBrief256Pattern31BX)]
 		lea rbx, [sym(kBrief256Pattern31BY)]
 		movaps xmm2, [rax + rsi*COMPV_SIZE_OF_FLOAT] ; xmm2 = kBrief256Pattern31BX
@@ -133,16 +129,12 @@ sym(Brief256_31_Asm_X86_SSE41):
 		movaps xmm1, xmm3
 		mulps xmm0, xmm6
 		mulps xmm1, xmm5
-		subps xmm0, xmm1
-		; xmm2 = yf = (kBrief256Pattern31BX[i] * sinT + kBrief256Pattern31BY[i] * cosT);
 		mulps xmm2, xmm5
 		mulps xmm3, xmm6
+		subps xmm0, xmm1
 		addps xmm2, xmm3
-		; x = xmm0 = COMPV_MATH_ROUNDF_2_INT(xf, int);
 		cvtps2dq xmm0, xmm0
-		; y = xmm2 = COMPV_MATH_ROUNDF_2_INT(yf, int);
 		cvtps2dq xmm2, xmm2
-		; xmmIndex = ((y * img_stride) + x)
 		pmulld xmm2, xmm7
 		paddd xmm2, xmm0
 		movdqa [i_xmmIndex], xmm2
