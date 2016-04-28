@@ -38,7 +38,7 @@ COMPV_NAMESPACE_BEGIN()
 #if defined __INTEL_COMPILER
 #	pragma intel optimization_parameter target_arch=avx
 #endif
-void Brief256_31_Intrin_AVX2(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(SSE) void* out)
+void Brief256_31_Intrin_AVX2(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Visual Studio inserts SSE code
 	_mm256_zeroupper();
@@ -60,8 +60,8 @@ void Brief256_31_Intrin_AVX2(const uint8_t* img_center, compv_scalar_t img_strid
 
 	_mm256_store_si256(&ymm128, _mm256_load_si256((__m256i*)k128_u8));
 	_mm256_store_si256(&ymmStride, _mm256_set1_epi32((int)img_stride));
-	_mm256_store_ps((float*)&ymmCosT, _mm256_set1_ps(cosT));
-	_mm256_store_ps((float*)&ymmSinT, _mm256_set1_ps(sinT));
+	_mm256_store_ps((float*)&ymmCosT, _mm256_set1_ps(*cos1));
+	_mm256_store_ps((float*)&ymmSinT, _mm256_set1_ps(*sin1));
 
 	u8_index = 0;
 

@@ -31,7 +31,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void Brief256_31_Intrin_AVX2(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(AVX2) void* out);
+void Brief256_31_Intrin_AVX2(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(AVX2) void* out);
 
 COMPV_NAMESPACE_END()
 

@@ -40,7 +40,7 @@
 #include <algorithm>
 
 #if COMPV_ARCH_X86 && COMPV_ASM
-COMPV_EXTERNC void Brief256_31_Asm_X86_SSE41(const uint8_t* img_center, compv::compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(SSE) void* out);
+COMPV_EXTERNC void Brief256_31_Asm_X86_SSE41(const uint8_t* img_center, compv::compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 COMPV_EXTERNC COMPV_API const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31AX[256] = {
@@ -116,7 +116,7 @@ extern COMPV_SCALE_TYPE COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE;
 static const int COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE = 7;
 static const double COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 2.0;
 
-static void Brief256_31_C(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(x) void* out);
+static void Brief256_31_C(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out);
 
 CompVFeatureDescORB::CompVFeatureDescORB()
     : CompVFeatureDesc(COMPV_ORB_ID)
@@ -224,7 +224,7 @@ bool CompVFeatureDescORB::brief256_31(const CompVImage* image, int kpx, int kpy,
 		return false; // ignore this keypoint => do not compute description
 	}
 
-	void(*Brief256_31)(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(x) void* out) = Brief256_31_C;
+	void(*Brief256_31)(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out) = Brief256_31_C;
 
 	if (size_of_float_is4) {
 		if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
@@ -242,13 +242,18 @@ bool CompVFeatureDescORB::brief256_31(const CompVImage* image, int kpx, int kpy,
 	imgs = image->getStride();
 	img_center = ((const uint8_t*)image->getDataPtr()) + ((kpy * imgs) + kpx); // Translate the image to have the keypoint at the center. This is required before applying the rotated patch.
 
-	Brief256_31(img_center, imgs, cosT, sinT, desc);
+	Brief256_31(img_center, imgs, &cosT, &sinT, desc);
 
 	// FIXME
-	float(*mem)[4] = (float(*)[4])desc;
-	if (mem){
-		int kaka = 0;
-	}
+	//uint8_t(*xmmA)[16] = (uint8_t(*)[16])desc;
+	//if (xmmA){
+	//	int kaka = 0;
+	//}
+	//uint16_t u16 = *(((uint16_t*)desc) + 1);
+	// if (u16) {
+	//		int kaka = 0;
+	//	
+	//}
 
 	return true;
 }
@@ -383,7 +388,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::newObj(CompVObjWrapper<CompVFeatureDesc* >
     return COMPV_ERROR_CODE_S_OK;
 }
 
-static void Brief256_31_C(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(x) void* out)
+static void Brief256_31_C(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 
@@ -391,7 +396,7 @@ static void Brief256_31_C(const uint8_t* img_center, compv_scalar_t img_stride, 
 	uint64_t* _out = (uint64_t*)out;
 	int i, j, x, y;
 	uint8_t a, b;
-	float xf, yf;
+	float xf, yf, cosT = *cos1, sinT = *sin1;
 
 	// 256bits = 32Bytes = 4 uint64
 	_out[0] = _out[1] = _out[2] = _out[3] = 0;

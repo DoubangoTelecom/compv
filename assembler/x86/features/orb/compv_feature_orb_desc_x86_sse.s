@@ -24,10 +24,10 @@ COMPV_YASM_DEFAULT_REL
 global sym(Brief256_31_Asm_X86_SSE41)
 
 section .data
-	;extern sym(kBrief256Pattern31AX)
-	;extern sym(kBrief256Pattern31AY)
-	;extern sym(kBrief256Pattern31BX)
-	;extern sym(kBrief256Pattern31BY)
+	extern sym(kBrief256Pattern31AX)
+	extern sym(kBrief256Pattern31AY)
+	extern sym(kBrief256Pattern31BX)
+	extern sym(kBrief256Pattern31BY)
 	extern sym(k128_u8)
 
 section .text
@@ -50,9 +50,10 @@ sym(Brief256_31_Asm_X86_SSE41):
 	;; end prolog ;;
 
 	%define COMPV_SIZE_OF_FLOAT 4 ; up to the caller to make sure sizeof(float)=4
-	%define i_xmmIndex	0
-	%define i_xmmA		16
-	%define i_xmmB		32
+	%define COMPV_SIZE_OF_UIN16	2
+	%define i_xmmIndex	rsp + 0
+	%define i_xmmA		rsp + 16
+	%define i_xmmB		rsp + 32
 
 	; align stack and alloc memory
 	COMPV_YASM_ALIGN_STACK 16, rax
@@ -60,13 +61,13 @@ sym(Brief256_31_Asm_X86_SSE41):
 	; [rsp + 0] = int32_t xmmIndex[4]
 	; [rsp + 16] = uint8_t xmmA[16]
 	; [rsp + 32] = uint8_t xmmB[16]
-
-	; rdi = max
-	mov rdi, 256
+	
 	; rsi = i
 	xor rsi, rsi
 	; rcx = u8_index
 	xor rcx, rcx
+	; rdi = outPtr
+	mov rdi, arg(4)
 
 	; xmm7 = xmmStride = _mm_set1_epi32((int)img_stride)
 	mov rax, arg(1)
@@ -83,57 +84,109 @@ sym(Brief256_31_Asm_X86_SSE41):
 	movss xmm5, [rax]
 	shufps xmm5, xmm5, 0x0
 
-	; xf = xmm0 = (kBrief256Pattern31AX[i] * cosT - kBrief256Pattern31AY[i] * sinT)
-	;lea rax, [sym(kBrief256Pattern31AX)]
-	;lea rbx, [sym(kBrief256Pattern31AY)]
-	movaps xmm3, [rax + rsi*COMPV_SIZE_OF_FLOAT] ; xmm3 = kBrief256Pattern31AX
-	movaps xmm4, [rbx + rsi*COMPV_SIZE_OF_FLOAT] ; xmm4 = kBrief256Pattern31AY
-	movaps xmm0, xmm3
-	movaps xmm1, xmm4
-	mulps xmm0, xmm6
-	mulps xmm1, xmm5
-	subps xmm0, xmm1
-	; yf = xmm3 = (kBrief256Pattern31AX[i] * sinT + kBrief256Pattern31AY[i] * cosT);
-	mulps xmm3, xmm5
-	mulps xmm4, xmm6
-	addps xmm3, xmm4
-	; x = xmm0 = COMPV_MATH_ROUNDF_2_INT(xf, int);
-	cvtps2dq xmm0, xmm0
-	; y = xmm3 = COMPV_MATH_ROUNDF_2_INT(yf, int);
-	cvtps2dq xmm3, xmm3
-	; xmmIndex = ((y * img_stride) + x)
-	pmulld xmm3, xmm7
-	paddd xmm3, xmm0
-	movdqa [i_xmmIndex], xmm3
-	mov rax, arg(0) ; rax = img_center
-	movsxd rdx, dword [i_xmmIndex + 0*4] ; rdx = xmmIndex[0]
-	movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[0]]
-	mov [i_xmmA + rcx + 0], bx ; xmmA[u8_index + 0] = img_center[xmmIndex[0]]
-	movsxd rdx, dword [i_xmmIndex + 1*4] ; rdx = xmmIndex[1]
-	movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[1]]
-	mov [i_xmmA + rcx + 1], bx ; xmmA[u8_index + 1] = img_center[xmmIndex[1]]
-	movsxd rdx, dword [i_xmmIndex + 2*4] ; rdx = xmmIndex[2]
-	movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[2]]
-	mov [i_xmmA + rcx + 2], bx ; xmmA[u8_index + 2] = img_center[xmmIndex[2]]
-	movsxd rdx, dword [i_xmmIndex + 3*4] ; rdx = xmmIndex[3]
-	movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[3]]
-	mov [i_xmmA + rcx + 3], bx ; xmmA[u8_index + 3] = img_center[xmmIndex[3]]
+	;;;;;;;;;
+	;	Loop
+	;;;;;;;;
+	.LoopStart
+		; xf = xmm0 = (kBrief256Pattern31AX[i] * cosT - kBrief256Pattern31AY[i] * sinT)
+		lea rax, [sym(kBrief256Pattern31AX)]
+		lea rbx, [sym(kBrief256Pattern31AY)]
+		movaps xmm2, [rax + rsi*COMPV_SIZE_OF_FLOAT] ; xmm2 = kBrief256Pattern31AX
+		movaps xmm3, [rbx + rsi*COMPV_SIZE_OF_FLOAT] ; xmm3 = kBrief256Pattern31AY
+		movaps xmm0, xmm2
+		movaps xmm1, xmm3
+		mulps xmm0, xmm6
+		mulps xmm1, xmm5
+		subps xmm0, xmm1
+		; yf = xmm2 = (kBrief256Pattern31AX[i] * sinT + kBrief256Pattern31AY[i] * cosT);
+		mulps xmm2, xmm5
+		mulps xmm3, xmm6
+		addps xmm2, xmm3
+		; x = xmm0 = COMPV_MATH_ROUNDF_2_INT(xf, int);
+		cvtps2dq xmm0, xmm0
+		; y = xmm2 = COMPV_MATH_ROUNDF_2_INT(yf, int);
+		cvtps2dq xmm2, xmm2
+		; xmmIndex = ((y * img_stride) + x)
+		pmulld xmm2, xmm7
+		paddd xmm2, xmm0
+		movdqa [i_xmmIndex], xmm2
+		mov rax, arg(0) ; rax = img_center
+		movsxd rdx, dword [i_xmmIndex + 0*4] ; rdx = xmmIndex[0]
+		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[0]]
+		mov [i_xmmA + rcx + 0], bx ; xmmA[u8_index + 0] = img_center[xmmIndex[0]]
+		movsxd rdx, dword [i_xmmIndex + 1*4] ; rdx = xmmIndex[1]
+		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[1]]
+		mov [i_xmmA + rcx + 1], bx ; xmmA[u8_index + 1] = img_center[xmmIndex[1]]
+		movsxd rdx, dword [i_xmmIndex + 2*4] ; rdx = xmmIndex[2]
+		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[2]]
+		mov [i_xmmA + rcx + 2], bx ; xmmA[u8_index + 2] = img_center[xmmIndex[2]]
+		movsxd rdx, dword [i_xmmIndex + 3*4] ; rdx = xmmIndex[3]
+		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[3]]
+		mov [i_xmmA + rcx + 3], bl ; xmmA[u8_index + 3] = img_center[xmmIndex[3]]
+
+		; xmm0 = xf = (kBrief256Pattern31BX[i] * cosT - kBrief256Pattern31BY[i] * sinT);
+		lea rax, [sym(kBrief256Pattern31BX)]
+		lea rbx, [sym(kBrief256Pattern31BY)]
+		movaps xmm2, [rax + rsi*COMPV_SIZE_OF_FLOAT] ; xmm2 = kBrief256Pattern31BX
+		movaps xmm3, [rbx + rsi*COMPV_SIZE_OF_FLOAT] ; xmm3 = kBrief256Pattern31BY
+		movaps xmm0, xmm2
+		movaps xmm1, xmm3
+		mulps xmm0, xmm6
+		mulps xmm1, xmm5
+		subps xmm0, xmm1
+		; xmm2 = yf = (kBrief256Pattern31BX[i] * sinT + kBrief256Pattern31BY[i] * cosT);
+		mulps xmm2, xmm5
+		mulps xmm3, xmm6
+		addps xmm2, xmm3
+		; x = xmm0 = COMPV_MATH_ROUNDF_2_INT(xf, int);
+		cvtps2dq xmm0, xmm0
+		; y = xmm2 = COMPV_MATH_ROUNDF_2_INT(yf, int);
+		cvtps2dq xmm2, xmm2
+		; xmmIndex = ((y * img_stride) + x)
+		pmulld xmm2, xmm7
+		paddd xmm2, xmm0
+		movdqa [i_xmmIndex], xmm2
+		mov rax, arg(0) ; rax = img_center
+		movsxd rdx, dword [i_xmmIndex + 0*4] ; rdx = xmmIndex[0]
+		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[0]]
+		mov [i_xmmB + rcx + 0], bx ; xmmB[u8_index + 0] = img_center[xmmIndex[0]]
+		movsxd rdx, dword [i_xmmIndex + 1*4] ; rdx = xmmIndex[1]
+		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[1]]
+		mov [i_xmmB + rcx + 1], bx ; xmmB[u8_index + 1] = img_center[xmmIndex[1]]
+		movsxd rdx, dword [i_xmmIndex + 2*4] ; rdx = xmmIndex[2]
+		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[2]]
+		mov [i_xmmB + rcx + 2], bx ; xmmB[u8_index + 2] = img_center[xmmIndex[2]]
+		movsxd rdx, dword [i_xmmIndex + 3*4] ; rdx = xmmIndex[3]
+		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[3]]
+		mov [i_xmmB + rcx + 3], bl ; xmmB[u8_index + 3] = img_center[xmmIndex[3]]
 	
+		add rcx, 4 ; u8_index += 4
+		cmp rcx, 16
+		jne .EndOfComputeDescription
+			; _out[i] |= (a < b) ? (u64_1 << j) : 0;
+			movdqa xmm0, [i_xmmB]
+			movdqa xmm1, [i_xmmA]
+			psubb xmm0, [sym(k128_u8)]
+			psubb xmm1, [sym(k128_u8)]
+			pcmpgtb xmm0, xmm1
+			pmovmskb ebx, xmm0
+			mov rax, arg(4)
+			mov [rdi], bx
 
-	; FIXME
-	mov rax, arg(4)
-	;movdqa [rax], xmm6
-	;movaps [rax], xmm0
-	movdqa xmm4, [i_xmmA]
-	movdqa [rax], xmm4
+			xor rcx, rcx ; u8_index = 0
+			add rdi, COMPV_SIZE_OF_UIN16 ; ++outPtr
+		.EndOfComputeDescription
 
-
+		add rsi, 4
+		cmp rsi, 256
+		jl .LoopStart
 
 	; unalign stack and free memory
 	add rsp, 4*4 + 16*1 + 16*1
 	COMPV_YASM_UNALIGN_STACK
 
 	%undef COMPV_SIZE_OF_FLOAT
+	%undef COMPV_SIZE_OF_UIN16
 	%undef i_xmmIndex
 	%undef i_xmmA
 	%undef i_xmmB

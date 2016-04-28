@@ -34,7 +34,7 @@ extern "C" const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31BY[256];
 COMPV_NAMESPACE_BEGIN()
 
 // TODO(dmi): add ASM version
-void Brief256_31_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(SSE) void* out)
+void Brief256_31_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SSE41, ASM
 	int i, u8_index;
@@ -54,8 +54,8 @@ void Brief256_31_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t img_strid
 	
 	_mm_store_si128(&xmm128, _mm_load_si128((__m128i*)k128_u8));
 	_mm_store_si128(&xmmStride, _mm_set1_epi32((int)img_stride));
-	_mm_store_ps((float*)&xmmCosT, _mm_set1_ps(cosT));
-	_mm_store_ps((float*)&xmmSinT, _mm_set1_ps(sinT));
+	_mm_store_ps((float*)&xmmCosT, _mm_set1_ps(*cos1));
+	_mm_store_ps((float*)&xmmSinT, _mm_set1_ps(*sin1));
 
 	u8_index = 0;
 
@@ -107,7 +107,7 @@ void Brief256_31_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t img_strid
 }
 
 // TODO(dmi): add ASM version
-void Brief256_31_Intrin_SSE41(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(SSE) void* out)
+void Brief256_31_Intrin_SSE41(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
 	int i, u8_index;
@@ -127,8 +127,8 @@ void Brief256_31_Intrin_SSE41(const uint8_t* img_center, compv_scalar_t img_stri
 
 	_mm_store_si128(&xmm128, _mm_load_si128((__m128i*)k128_u8));
 	_mm_store_si128(&xmmStride, _mm_set1_epi32((int)img_stride));
-	_mm_store_ps((float*)&xmmCosT, _mm_set1_ps(cosT));
-	_mm_store_ps((float*)&xmmSinT, _mm_set1_ps(sinT));
+	_mm_store_ps((float*)&xmmCosT, _mm_set1_ps(*cos1));
+	_mm_store_ps((float*)&xmmSinT, _mm_set1_ps(*sin1));
 
 	u8_index = 0;
 
@@ -164,12 +164,12 @@ void Brief256_31_Intrin_SSE41(const uint8_t* img_center, compv_scalar_t img_stri
 		xmmB[u8_index + 3] = img_center[xmmIndex[3]];
 
 		if ((u8_index += 4) == 16) {
-			// _out[0] |= (a < b) ? (u64_1 << j) : 0;
+			// _out[i] |= (a < b) ? (u64_1 << j) : 0;
 			_mm_store_si128(&xmmR, _mm_cmplt_epi8(_mm_sub_epi8(_mm_load_si128((__m128i*)xmmA), xmm128), _mm_sub_epi8(_mm_load_si128((__m128i*)xmmB), xmm128))); // _mm_cmplt_epu8 does exist
 			*outPtr = _mm_movemask_epi8(xmmR);
 
 			u8_index = 0;
-			outPtr += 1;
+			++outPtr;
 		}
 
 		Brief256Pattern31AX += 4;
