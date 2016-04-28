@@ -84,6 +84,9 @@ sym(Brief256_31_Asm_X86_SSE41):
 	movss xmm5, [rax]
 	shufps xmm5, xmm5, 0x0
 
+	; xmm4 = xmm128
+	movdqa xmm4, [sym(k128_u8)]
+
 	;;;;;;;;;
 	;	Loop
 	;;;;;;;;
@@ -158,11 +161,10 @@ sym(Brief256_31_Asm_X86_SSE41):
 			; _out[i] |= (a < b) ? (u64_1 << j) : 0;
 			movdqa xmm0, [i_xmmB]
 			movdqa xmm1, [i_xmmA]
-			psubb xmm0, [sym(k128_u8)]
-			psubb xmm1, [sym(k128_u8)]
+			psubb xmm0, xmm4
+			psubb xmm1, xmm4
 			pcmpgtb xmm0, xmm1
 			pmovmskb ebx, xmm0
-			mov rax, arg(4)
 			mov [rdi], bx
 
 			xor rcx, rcx ; u8_index = 0
