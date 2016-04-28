@@ -268,6 +268,11 @@
       <FileType>Document</FileType>
     </YASM>
   </ItemGroup>
+  <ItemGroup>
+    <YASM Include="assembler\x86\features\orb\compv_feature_orb_desc_x86_sse.s">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AAC1E1B3-CE47-4003-BE1A-00A20C409129}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

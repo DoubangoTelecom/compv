@@ -48,14 +48,14 @@ section .data
 section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; arg(0) -> cconst uint8_t* IP,
-; arg(1) -> cconst uint8_t* IPprev,
-; arg(2) -> ccompv_scalar_t width,
-; arg(3) -> cconst compv_scalar_t(&pixels16)[16],
-; arg(4) -> ccompv_scalar_t N,
-; arg(5) -> ccompv_scalar_t threshold,
-; arg(6) -> cuint8_t* strengths,
-; arg(7) -> ccompv_scalar_t* me
+; arg(0) -> const uint8_t* IP,
+; arg(1) -> const uint8_t* IPprev,
+; arg(2) -> compv_scalar_t width,
+; arg(3) -> const compv_scalar_t(&pixels16)[16],
+; arg(4) -> compv_scalar_t N,
+; arg(5) -> compv_scalar_t threshold,
+; arg(6) -> uint8_t* strengths,
+; arg(7) -> compv_scalar_t* me
 ; void FastData16Row_Asm_X86_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths, compv_scalar_t* me);
 sym(FastData16Row_Asm_X86_SSE2):
 	push rbp

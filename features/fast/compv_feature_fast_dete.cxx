@@ -99,7 +99,7 @@ COMPV_EXTERNC COMPV_API const COMPV_ALIGN_DEFAULT() uint16_t Fast9Flags[16] = { 
 COMPV_EXTERNC COMPV_API const COMPV_ALIGN_DEFAULT() uint16_t Fast12Flags[16] = { 0xfff, 0x1ffe, 0x3ffc, 0x7ff8, 0xfff0, 0xffe1, 0xffc3, 0xff87, 0xff0f, 0xfe1f, 0xfc3f, 0xf87f, 0xf0ff, 0xe1ff, 0xc3ff, 0x87ff };
 
 // X86
-#if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
+#if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC void FastData32Row_Asm_X86_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, uint8_t* strengths, compv::compv_scalar_t* me);
 
 COMPV_EXTERNC void FastData16Row_Asm_X86_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, uint8_t* strengths, compv::compv_scalar_t* me);
@@ -122,7 +122,7 @@ COMPV_EXTERNC void Fast12Strengths32_Asm_X86_AVX2(compv::compv_scalar_t rbrighte
 #endif
 
 // X64
-#if defined(COMPV_ARCH_X64) && defined(COMPV_ASM)
+#if COMPV_ARCH_X64 && COMPV_ASM
 COMPV_EXTERNC void FastData32Row_Asm_X64_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, uint8_t* strengths, compv::compv_scalar_t* me);
 
 COMPV_EXTERNC void FastData16Row_Asm_X64_SSE2(const uint8_t* IP, const uint8_t* IPprev, compv::compv_scalar_t width, const compv::compv_scalar_t(&pixels16)[16], compv::compv_scalar_t N, compv::compv_scalar_t threshold, uint8_t* strengths, compv::compv_scalar_t* me);

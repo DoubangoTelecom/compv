@@ -1,0 +1,7 @@
+**** _mm_set1_epi32(int32_t a) ****
+__m128i xmm0 = _mm_cvtsi32_si128(a);
+xmm0 = _mm_shuffle_epi32(xmm0, 0x0);
+
+**** _mm_set1_ps(float a) ****
+__m128 xmm0 = _mm_load_ss(&a);
+xmm0 = _mm_shuffle_ps(xmm0, xmm0, 0x0);

@@ -39,6 +39,10 @@
 
 #include <algorithm>
 
+#if COMPV_ARCH_X86 && COMPV_ASM
+COMPV_EXTERNC void Brief256_31_Asm_X86_SSE41(const uint8_t* img_center, compv::compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(SSE) void* out);
+#endif /* COMPV_ARCH_X86 && COMPV_ASM */
+
 COMPV_EXTERNC COMPV_API const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31AX[256] = {
 	8, 4, -11, 7, 2, 1, -2, -13, -13, 10, -13, -11, 7, -4, -13, -9, 12, -3, -6, 11,
 	4, 5, 3, -8, -2, -13, -7, -4, -10, 5, 5, 1, 9, 4, 2, -4, -8, 4, 0, -13, -3, -6,
@@ -224,13 +228,14 @@ bool CompVFeatureDescORB::brief256_31(const CompVImage* image, int kpx, int kpy,
 
 	if (size_of_float_is4) {
 		if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31 = compv::Brief256_31_Intrin_SSE2);
+			COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31 = Brief256_31_Intrin_SSE2);
 		}
 		if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31 = compv::Brief256_31_Intrin_SSE41);
+			COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31 = Brief256_31_Intrin_SSE41);
+			COMPV_EXEC_IFDEF_ASM_X86(Brief256_31 = Brief256_31_Asm_X86_SSE41);
 		}
 		if (compv::CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31 = compv::Brief256_31_Intrin_AVX2);
+			COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31 = Brief256_31_Intrin_AVX2);
 		}
 	}
 
@@ -238,6 +243,12 @@ bool CompVFeatureDescORB::brief256_31(const CompVImage* image, int kpx, int kpy,
 	img_center = ((const uint8_t*)image->getDataPtr()) + ((kpy * imgs) + kpx); // Translate the image to have the keypoint at the center. This is required before applying the rotated patch.
 
 	Brief256_31(img_center, imgs, cosT, sinT, desc);
+
+	// FIXME
+	float(*mem)[4] = (float(*)[4])desc;
+	if (mem){
+		int kaka = 0;
+	}
 
 	return true;
 }
@@ -288,40 +299,40 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
         _pyramid = m_pyramid;
     }
 
+	// Alloc SIMD variables
+	if (!m_simd.m_pxf && !(m_simd.m_pxf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!m_simd.m_pyf && !(m_simd.m_pyf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!m_simd.m_psf && !(m_simd.m_psf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!m_simd.m_pangleInDegree && !(m_simd.m_pangleInDegree = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!m_simd.m_pxi && !(m_simd.m_pxi = (int32_t*)CompVMem::mallocAligned(sizeof(int32_t) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!m_simd.m_pyi && !(m_simd.m_pyi = (int32_t*)CompVMem::mallocAligned(sizeof(int32_t) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!m_simd.m_pcos && !(m_simd.m_pcos = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!m_simd.m_psin && !(m_simd.m_psin = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
+		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+
+	// FIXME(dmi): multi-threading
+
     // apply gaussianblur filter on the pyramid
-    // TODO(dmi): mutlithread
     for (int level = 0; level < _pyramid->getLevels(); ++level) {
         COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(level, &imageAtLevelN));
         convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur1, 7);
     }
-
-    // Alloc SIMD variables
-    if (!m_simd.m_pxf && !(m_simd.m_pxf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-        COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
-    if (!m_simd.m_pyf && !(m_simd.m_pyf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-        COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
-    if (!m_simd.m_psf && !(m_simd.m_psf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-        COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
-    if (!m_simd.m_pangleInDegree && !(m_simd.m_pangleInDegree = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-        COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
-    if (!m_simd.m_pxi && !(m_simd.m_pxi = (int32_t*)CompVMem::mallocAligned(sizeof(int32_t) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-        COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
-    if (!m_simd.m_pyi && !(m_simd.m_pyi = (int32_t*)CompVMem::mallocAligned(sizeof(int32_t) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-        COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
-    if (!m_simd.m_pcos && !(m_simd.m_pcos = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-        COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
-    if (!m_simd.m_psin && !(m_simd.m_psin = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-        COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
-
-    // TODO(dmi): multi-threading
+	
     for (simd_i = 0, point = interestPoints->begin(); point < interestPoints->end(); ++point) {
         COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(point->level, &imageAtLevelN));
         m_pcImages[simd_i] = *imageAtLevelN;
