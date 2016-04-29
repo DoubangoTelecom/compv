@@ -193,8 +193,6 @@ sym(Brief256_31_Asm_X86_AVX2):
 		cmp rsi, 256
 		jl .LoopStart
 
-	vzeroupper
-
 	; unalign stack and free memory
 	add rsp, 4*8 + 32*1 + 32*1
 	COMPV_YASM_UNALIGN_STACK
@@ -213,5 +211,6 @@ sym(Brief256_31_Asm_X86_AVX2):
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 	

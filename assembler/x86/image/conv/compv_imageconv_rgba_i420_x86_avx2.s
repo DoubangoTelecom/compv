@@ -146,8 +146,6 @@ section .text
 	cmp rsi, 0
 	jg .LoopHeight
 
-	vzeroupper
-
 	; begin epilog
 	pop rbx
 	pop rdi
@@ -155,6 +153,7 @@ section .text
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 %endmacro
 
@@ -258,8 +257,6 @@ sym(rgbaToI420Kernel11_CompY_Asm_X86_Aligned1_AVX2):
 	sub rsi, 1
 	cmp rsi, 0
 	jg .LoopHeight
-
-	vzeroupper
 	
 	; begin epilog
 	pop rbx
@@ -268,6 +265,7 @@ sym(rgbaToI420Kernel11_CompY_Asm_X86_Aligned1_AVX2):
     COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 %endmacro
 
@@ -375,8 +373,6 @@ sym(rgbaToI420Kernel41_CompY_Asm_X86_Aligned11_AVX2):
 	cmp rsi, 0
 	jg .LoopHeight
 
-	vzeroupper
-
 	; begin epilog
 	add rsp, 16
 	pop rbx
@@ -385,6 +381,7 @@ sym(rgbaToI420Kernel41_CompY_Asm_X86_Aligned11_AVX2):
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 %endmacro
 
@@ -534,8 +531,6 @@ sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned1xx_AVX2):
 	cmp rsi, 0
 	jg .LoopHeight
 
-	vzeroupper
-
 	; begin epilog
 	add rsp, 16
 	pop rbx
@@ -545,6 +540,7 @@ sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned1xx_AVX2):
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 %endmacro
 
@@ -662,8 +658,6 @@ sym(rgbaToI420Kernel41_CompUV_Asm_X86_Aligned111_AVX2):
 	cmp rsi, 0
 	jg .LoopHeight
 
-	vzeroupper
-
 	; unalign stack and alloc memory
 	add rsp, 16+32+32+32+32
 	COMPV_YASM_UNALIGN_STACK
@@ -676,6 +670,7 @@ sym(rgbaToI420Kernel41_CompUV_Asm_X86_Aligned111_AVX2):
     COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 %endmacro
 
@@ -843,8 +838,6 @@ sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned11_AVX2):
 	cmp rsi, 0
 	jg .LoopHeight
 
-	vzeroupper
-
 	; unalign stack and alloc memory
 	add rsp, 16+16+32+32+32+32
 	COMPV_YASM_UNALIGN_STACK
@@ -857,6 +850,7 @@ sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned11_AVX2):
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 %endmacro
 
@@ -1103,8 +1097,6 @@ sym(rgbToI420Kernel31_CompUV_Asm_X86_Aligned111_AVX2):
 	cmp rsi, 0
 	jg .LoopHeight
 
-	vzeroupper
-
 	; unalign stack and alloc memory
 	add rsp, 32+32+32+8+8+8+8
 	COMPV_YASM_UNALIGN_STACK
@@ -1117,6 +1109,7 @@ sym(rgbToI420Kernel31_CompUV_Asm_X86_Aligned111_AVX2):
     COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 %endmacro
 

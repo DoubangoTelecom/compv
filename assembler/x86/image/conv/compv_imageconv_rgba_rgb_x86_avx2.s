@@ -157,8 +157,6 @@ section .text
 	dec rcx
 	jnz .LoopHeight
 
-	vzeroupper
-
 	; unalign stack and alloc memory
 	add rsp, 32
 	COMPV_YASM_UNALIGN_STACK
@@ -171,6 +169,7 @@ section .text
     COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 %endmacro
 

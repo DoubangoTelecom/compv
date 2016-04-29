@@ -9,7 +9,7 @@ using namespace compv;
 #define ORB_PYRAMID_LEVELS			8
 #define ORB_PYRAMID_SCALEFACTOR		0.83f
 #define ORB_PYRAMID_SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
-#define ORB_LOOOP_COUNT				1
+#define ORB_LOOOP_COUNT				100
 #define ORB_DESC_MD5				"ab74dddd34f60a2b05c2d7bebe6fc9b4"
 #define JPEG_IMG					"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
 
