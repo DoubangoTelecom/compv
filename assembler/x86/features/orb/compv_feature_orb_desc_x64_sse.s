@@ -19,9 +19,11 @@
 ;
 %include "../../compv_common_x86.s"
 
+%if COMPV_YASM_ABI_IS_64BIT
+
 COMPV_YASM_DEFAULT_REL
 
-global sym(Brief256_31_Asm_X86_SSE41)
+global sym(Brief256_31_Asm_X64_SSE41)
 
 section .data
 	extern sym(kBrief256Pattern31AX)
@@ -38,8 +40,8 @@ section .text
 ; agr(2) -> const float* cos1
 ; agr(3) -> const float* sin1
 ; agr(4) -> COMPV_ALIGNED(SSE) void* out
-; void Brief256_31_Asm_X86_SSE41(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(SSE) void* out)
-sym(Brief256_31_Asm_X86_SSE41):
+; void Brief256_31_Asm_X64_SSE41(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(SSE) void* out)
+sym(Brief256_31_Asm_X64_SSE41):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
@@ -47,6 +49,10 @@ sym(Brief256_31_Asm_X86_SSE41):
 	push rsi
 	push rdi
 	push rbx
+	push r12
+	push r13
+	push r14
+	push r15
 	;; end prolog ;;
 
 	%define COMPV_SIZE_OF_FLOAT 4 ; up to the caller to make sure sizeof(float)=4
@@ -68,6 +74,14 @@ sym(Brief256_31_Asm_X86_SSE41):
 	xor rcx, rcx
 	; rdi = outPtr
 	mov rdi, arg(4)
+	; r8 = &kBrief256Pattern31AX
+	lea r8, [sym(kBrief256Pattern31AX)]
+	; r9 = &kBrief256Pattern31AY
+	lea r9, [sym(kBrief256Pattern31AY)]
+	; r10 = &kBrief256Pattern31BX
+	lea r10, [sym(kBrief256Pattern31BX)]
+	; r11 = &kBrief256Pattern31BY
+	lea r11, [sym(kBrief256Pattern31BY)]
 
 	; xmm7 = xmmStride = _mm_set1_epi32((int)img_stride)
 	mov rax, arg(1)
@@ -92,10 +106,8 @@ sym(Brief256_31_Asm_X86_SSE41):
 	;;;;;;;;
 	.LoopStart
 		;; xmmA ;;
-		lea rax, [sym(kBrief256Pattern31AX)]
-		lea rbx, [sym(kBrief256Pattern31AY)]
-		movaps xmm2, [rax + rsi*COMPV_SIZE_OF_FLOAT] ; xmm2 = kBrief256Pattern31AX
-		movaps xmm3, [rbx + rsi*COMPV_SIZE_OF_FLOAT] ; xmm3 = kBrief256Pattern31AY
+		movaps xmm2, [r8] ; xmm2 = kBrief256Pattern31AX
+		movaps xmm3, [r9] ; xmm3 = kBrief256Pattern31AY
 		movaps xmm0, xmm2
 		movaps xmm1, xmm3
 		mulps xmm0, xmm6
@@ -124,10 +136,8 @@ sym(Brief256_31_Asm_X86_SSE41):
 		mov [i_xmmA + rcx + 3], byte bl ; xmmA[u8_index + 3] = img_center[xmmIndex[3]]
 
 		;; xmmB ;;
-		lea rax, [sym(kBrief256Pattern31BX)]
-		lea rbx, [sym(kBrief256Pattern31BY)]
-		movaps xmm2, [rax + rsi*COMPV_SIZE_OF_FLOAT] ; xmm2 = kBrief256Pattern31BX
-		movaps xmm3, [rbx + rsi*COMPV_SIZE_OF_FLOAT] ; xmm3 = kBrief256Pattern31BY
+		movaps xmm2, [r10] ; xmm2 = kBrief256Pattern31BX
+		movaps xmm3, [r11] ; xmm3 = kBrief256Pattern31BY
 		movaps xmm0, xmm2
 		movaps xmm1, xmm3
 		mulps xmm0, xmm6
@@ -171,6 +181,10 @@ sym(Brief256_31_Asm_X86_SSE41):
 			add rdi, COMPV_SIZE_OF_UIN16 ; ++outPtr
 		.EndOfComputeDescription
 
+		lea r8, [r8 + 4*COMPV_SIZE_OF_FLOAT] ; Brief256Pattern31AX+=4
+		lea r9, [r9 + 4*COMPV_SIZE_OF_FLOAT] ; Brief256Pattern31AY+=4
+		lea r10, [r10 + 4*COMPV_SIZE_OF_FLOAT] ; Brief256Pattern31BX+=4
+		lea r11, [r11 + 4*COMPV_SIZE_OF_FLOAT] ; Brief256Pattern31BY+=4
 		lea rsi, [rsi + 4]
 		cmp rsi, 256
 		jl .LoopStart
@@ -186,6 +200,10 @@ sym(Brief256_31_Asm_X86_SSE41):
 	%undef i_xmmB
 
 	;; begin epilog ;;
+	pop r15
+	pop r14
+	pop r13
+	pop r12
 	pop rbx
 	pop rdi
 	pop rsi
@@ -195,3 +213,4 @@ sym(Brief256_31_Asm_X86_SSE41):
 	pop rbp
 	ret
 	
+%endif ; COMPV_YASM_ABI_IS_64BIT
