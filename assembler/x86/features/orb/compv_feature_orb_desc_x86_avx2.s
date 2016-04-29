@@ -22,6 +22,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(Brief256_31_Asm_X86_AVX2)
+global sym(Brief256_31_Asm_X86_FMA3_AVX2)
 
 section .data
 	extern sym(kBrief256Pattern31AX)
@@ -39,7 +40,8 @@ section .text
 ; agr(3) -> const float* sin1
 ; agr(4) -> COMPV_ALIGNED(SSE) void* out
 ; void Brief256_31_Asm_X86_AVX2(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(SSE) void* out)
-sym(Brief256_31_Asm_X86_AVX2):
+; %1 -> 1: FMA3 supported, 0: FMA3 not supported
+%macro Brief256_31_Macro_X86_AVX2 1
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
@@ -96,12 +98,19 @@ sym(Brief256_31_Asm_X86_AVX2):
 		;; ymmA ;;
 		lea rax, [sym(kBrief256Pattern31AX)]
 		lea rbx, [sym(kBrief256Pattern31AY)]
-		vmulps ymm0, ymm6, [rax + rsi*COMPV_SIZE_OF_FLOAT]
-		vmulps ymm1, ymm5, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
-		vmulps ymm2, ymm5, [rax + rsi*COMPV_SIZE_OF_FLOAT]
-		vmulps ymm3, ymm6, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
-		vsubps ymm0, ymm1
-		vaddps ymm2, ymm3
+		%if %1 == 1 ; FMA3
+			vmulps ymm0, ymm5, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
+			vmulps ymm2, ymm5, [rax + rsi*COMPV_SIZE_OF_FLOAT]
+			vfmsub231ps ymm0, ymm6, [rax + rsi*COMPV_SIZE_OF_FLOAT]
+			vfmadd231ps ymm2, ymm6, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
+		%else
+			vmulps ymm0, ymm6, [rax + rsi*COMPV_SIZE_OF_FLOAT]
+			vmulps ymm1, ymm5, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
+			vmulps ymm2, ymm5, [rax + rsi*COMPV_SIZE_OF_FLOAT]
+			vmulps ymm3, ymm6, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
+			vsubps ymm0, ymm1
+			vaddps ymm2, ymm3
+		%endif
 		vcvtps2dq ymm0, ymm0
 		vcvtps2dq ymm2, ymm2
 		vpmulld ymm2, ymm7
@@ -136,12 +145,19 @@ sym(Brief256_31_Asm_X86_AVX2):
 		;; ymmB ;;
 		lea rax, [sym(kBrief256Pattern31BX)]
 		lea rbx, [sym(kBrief256Pattern31BY)]
-		vmulps ymm0, ymm6, [rax + rsi*COMPV_SIZE_OF_FLOAT]
-		vmulps ymm1, ymm5, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
-		vmulps ymm2, ymm5, [rax + rsi*COMPV_SIZE_OF_FLOAT]
-		vmulps ymm3, ymm6, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
-		vsubps ymm0, ymm1
-		vaddps ymm2, ymm3
+		%if %1 == 1 ; FMA3
+			vmulps ymm0, ymm5, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
+			vmulps ymm2, ymm5, [rax + rsi*COMPV_SIZE_OF_FLOAT]
+			vfmsub231ps ymm0, ymm6, [rax + rsi*COMPV_SIZE_OF_FLOAT]
+			vfmadd231ps ymm2, ymm6, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
+		%else
+			vmulps ymm0, ymm6, [rax + rsi*COMPV_SIZE_OF_FLOAT]
+			vmulps ymm1, ymm5, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
+			vmulps ymm2, ymm5, [rax + rsi*COMPV_SIZE_OF_FLOAT]
+			vmulps ymm3, ymm6, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
+			vsubps ymm0, ymm1
+			vaddps ymm2, ymm3
+		%endif
 		vcvtps2dq ymm0, ymm0
 		vcvtps2dq ymm2, ymm2
 		vpmulld ymm2, ymm7
@@ -213,4 +229,13 @@ sym(Brief256_31_Asm_X86_AVX2):
 	pop rbp
 	vzeroupper
 	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(Brief256_31_Asm_X86_AVX2):
+	Brief256_31_Macro_X86_AVX2 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(Brief256_31_Asm_X86_FMA3_AVX2):
+	Brief256_31_Macro_X86_AVX2 1
 	

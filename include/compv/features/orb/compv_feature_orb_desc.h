@@ -76,6 +76,7 @@ private:
         float *m_pcos;
         float *m_psin;
     } m_simd;
+	void(*m_funBrief256_31)(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out);
 };
 
 COMPV_NAMESPACE_END()

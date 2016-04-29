@@ -1,0 +1,8 @@
+*** _mm256_set1_epi32(a) ***
+vmovd xmm0, a
+vpbroadcastd ymm0,xmm0
+
+*** _mm256_set1_ps(a) ***
+vmovss xmm0, [rax]
+vbroadcastss ymm0, xmm0
+

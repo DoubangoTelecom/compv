@@ -42,10 +42,12 @@
 #if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC void Brief256_31_Asm_X86_SSE41(const uint8_t* img_center, compv::compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out);
 COMPV_EXTERNC void Brief256_31_Asm_X86_AVX2(const uint8_t* img_center, compv::compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out);
+COMPV_EXTERNC void Brief256_31_Asm_X86_FMA3_AVX2(const uint8_t* img_center, compv::compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 #if COMPV_ARCH_X64 && COMPV_ASM
 COMPV_EXTERNC void Brief256_31_Asm_X64_SSE41(const uint8_t* img_center, compv::compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out);
 COMPV_EXTERNC void Brief256_31_Asm_X64_AVX2(const uint8_t* img_center, compv::compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out);
+COMPV_EXTERNC void Brief256_31_Asm_X64_FMA3_AVX2(const uint8_t* img_center, compv::compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 COMPV_EXTERNC COMPV_API const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31AX[256] = {
@@ -128,6 +130,7 @@ CompVFeatureDescORB::CompVFeatureDescORB()
     , m_simd({NULL})
 	, m_nPatchDiameter(COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER)
 	, m_nPatchBits(COMPV_FEATURE_DETE_ORB_PATCH_BITS)
+	, m_funBrief256_31(Brief256_31_C)
 {
 
 }
@@ -217,7 +220,6 @@ bool CompVFeatureDescORB::brief256_31(const CompVImage* image, int kpx, int kpy,
 	int imgs, imgw, imgh;
 
 	static const int patch_radius = (m_nPatchDiameter >> 1);
-	static const bool size_of_float_is4 = (sizeof(float) == 4); // ASM and INTRIN code require it
 	
 	imgw = image->getWidth();
 	imgh = image->getHeight();
@@ -229,39 +231,10 @@ bool CompVFeatureDescORB::brief256_31(const CompVImage* image, int kpx, int kpy,
 		return false; // ignore this keypoint => do not compute description
 	}
 
-	void(*Brief256_31)(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out) = Brief256_31_C;
-
-	if (size_of_float_is4) {
-		if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31 = Brief256_31_Intrin_SSE2);
-		}
-		if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31 = Brief256_31_Intrin_SSE41);
-			COMPV_EXEC_IFDEF_ASM_X86(Brief256_31 = Brief256_31_Asm_X86_SSE41);
-			COMPV_EXEC_IFDEF_ASM_X64(Brief256_31 = Brief256_31_Asm_X64_SSE41);
-		}
-		if (compv::CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31 = Brief256_31_Intrin_AVX2);
-			COMPV_EXEC_IFDEF_ASM_X86(Brief256_31 = Brief256_31_Asm_X86_AVX2);
-			COMPV_EXEC_IFDEF_ASM_X64(Brief256_31 = Brief256_31_Asm_X64_AVX2);
-		}
-	}
-
 	imgs = image->getStride();
 	img_center = ((const uint8_t*)image->getDataPtr()) + ((kpy * imgs) + kpx); // Translate the image to have the keypoint at the center. This is required before applying the rotated patch.
 
-	Brief256_31(img_center, imgs, &cosT, &sinT, desc);
-
-	// FIXME
-	//uint8_t(*xmmA)[16] = (uint8_t(*)[16])desc;
-	//if (xmmA){
-	//	int kaka = 0;
-	//}
-	//uint16_t u16 = *(((uint16_t*)desc) + 1);
-	// if (u16) {
-	//		int kaka = 0;
-	//	
-	//}
+	m_funBrief256_31(img_center, imgs, &cosT, &sinT, desc);
 
 	return true;
 }
@@ -283,6 +256,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
     const CompVInterestPoint* point;
     uint8_t* _descriptionsPtr = NULL;
     size_t simd_i;
+	static const bool size_of_float_is4 = (sizeof(float) == 4); // ASM and INTRIN code require it
 
     // return COMPV_ERROR_CODE_S_OK;
 
@@ -346,6 +320,27 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
         convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur1, 7);
     }
 	
+	// Init "m_funBrief256_31" using current CPU flags
+	if (size_of_float_is4) {
+		if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(m_funBrief256_31 = Brief256_31_Intrin_SSE2);
+		}
+		if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(m_funBrief256_31 = Brief256_31_Intrin_SSE41);
+			COMPV_EXEC_IFDEF_ASM_X86(m_funBrief256_31 = Brief256_31_Asm_X86_SSE41);
+			COMPV_EXEC_IFDEF_ASM_X64(m_funBrief256_31 = Brief256_31_Asm_X64_SSE41);
+		}
+		if (compv::CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(m_funBrief256_31 = Brief256_31_Intrin_AVX2);
+			COMPV_EXEC_IFDEF_ASM_X86(m_funBrief256_31 = Brief256_31_Asm_X86_AVX2);
+			COMPV_EXEC_IFDEF_ASM_X64(m_funBrief256_31 = Brief256_31_Asm_X64_AVX2);
+			if (compv::CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
+				COMPV_EXEC_IFDEF_ASM_X86(m_funBrief256_31 = Brief256_31_Asm_X86_FMA3_AVX2);
+				COMPV_EXEC_IFDEF_ASM_X64(m_funBrief256_31 = Brief256_31_Asm_X64_FMA3_AVX2);
+			}
+		}
+	}
+
     for (simd_i = 0, point = interestPoints->begin(); point < interestPoints->end(); ++point) {
         COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(point->level, &imageAtLevelN));
         m_pcImages[simd_i] = *imageAtLevelN;

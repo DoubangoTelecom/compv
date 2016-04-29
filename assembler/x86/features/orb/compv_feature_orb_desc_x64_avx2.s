@@ -24,6 +24,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(Brief256_31_Asm_X64_AVX2)
+global sym(Brief256_31_Asm_X64_FMA3_AVX2)
 
 section .data
 	extern sym(kBrief256Pattern31AX)
@@ -41,7 +42,8 @@ section .text
 ; agr(3) -> const float* sin1
 ; agr(4) -> COMPV_ALIGNED(SSE) void* out
 ; void Brief256_31_Asm_X64_AVX2(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(SSE) void* out)
-sym(Brief256_31_Asm_X64_AVX2):
+; %1 -> 1: FMA enabled, 0: FMA disabled
+%macro Brief256_31_Macro_X64_AVX2 1
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
@@ -110,12 +112,19 @@ sym(Brief256_31_Asm_X64_AVX2):
 	;;;;;;;;
 	.LoopStart
 		;; ymmA ;;
-		vmulps ymm0, ymm6, [r8]
-		vmulps ymm1, ymm5, [r9]
-		vmulps ymm2, ymm5, [r8]
-		vmulps ymm3, ymm6, [r9]
-		vsubps ymm0, ymm1
-		vaddps ymm2, ymm3
+		%if %1 == 1 ; FMA3
+			vmulps ymm0, ymm5, [r9]
+			vmulps ymm2, ymm5, [r8]
+			vfmsub231ps ymm0, ymm6, [r8]
+			vfmadd231ps ymm2, ymm6, [r9]
+		%else
+			vmulps ymm0, ymm6, [r8]
+			vmulps ymm1, ymm5, [r9]
+			vmulps ymm2, ymm5, [r8]
+			vmulps ymm3, ymm6, [r9]
+			vsubps ymm0, ymm1
+			vaddps ymm2, ymm3
+		%endif
 		vcvtps2dq ymm0, ymm0
 		vcvtps2dq ymm2, ymm2
 		vpmulld ymm2, ymm7
@@ -147,12 +156,19 @@ sym(Brief256_31_Asm_X64_AVX2):
 		mov [i_ymmA + rcx + 7], byte dl ; ymmA[u8_index + 7] = img_center[ymmIndex[7]]
 
 		;; ymmB ;;
-		vmulps ymm0, ymm6, [r10]
-		vmulps ymm1, ymm5, [r11]
-		vmulps ymm2, ymm5, [r10]
-		vmulps ymm3, ymm6, [r11]
-		vsubps ymm0, ymm1
-		vaddps ymm2, ymm3
+		%if %1 == 1 ; FMA3
+			vmulps ymm0, ymm5, [r11]
+			vmulps ymm2, ymm5, [r10]
+			vfmsub231ps ymm0, ymm6, [r10]
+			vfmadd231ps ymm2, ymm6, [r11]
+		%else
+			vmulps ymm0, ymm6, [r10]
+			vmulps ymm1, ymm5, [r11]
+			vmulps ymm2, ymm5, [r10]
+			vmulps ymm3, ymm6, [r11]
+			vsubps ymm0, ymm1
+			vaddps ymm2, ymm3
+		%endif
 		vcvtps2dq ymm0, ymm0
 		vcvtps2dq ymm2, ymm2
 		vpmulld ymm2, ymm7
@@ -231,5 +247,14 @@ sym(Brief256_31_Asm_X64_AVX2):
 	pop rbp
 	vzeroupper
 	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(Brief256_31_Asm_X64_AVX2):
+	Brief256_31_Macro_X64_AVX2 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(Brief256_31_Asm_X64_FMA3_AVX2):
+	Brief256_31_Macro_X64_AVX2 1
 	
 %endif ; COMPV_YASM_ABI_IS_64BIT
