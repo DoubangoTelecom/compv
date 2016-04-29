@@ -89,10 +89,14 @@ section .text
 
 	vzeroupper
 
+	
 	; ymm7 = ymmStride = _mm256_set1_epi32((int)img_stride)
 	mov rax, arg(1)
 	vmovd xmm7, eax
 	vpbroadcastd ymm7, xmm7
+	%if %1 == 1 ; FMA3
+		vcvtdq2ps ymm7, ymm7 ; ymmStride = floats
+	%endif
 
 	; ymm6 = xmmCosT = _mm256_set1_ps(*cos1)
 	mov rax, arg(2)
@@ -117,6 +121,10 @@ section .text
 			vmulps ymm2, ymm5, [r8]
 			vfmsub231ps ymm0, ymm6, [r8]
 			vfmadd231ps ymm2, ymm6, [r9]
+			vroundps ymm0, ymm0, 0x8
+			vroundps ymm2, ymm2, 0x8
+			vfmadd231ps ymm0, ymm2, ymm7
+			vcvtps2dq ymm2, ymm0
 		%else
 			vmulps ymm0, ymm6, [r8]
 			vmulps ymm1, ymm5, [r9]
@@ -124,11 +132,11 @@ section .text
 			vmulps ymm3, ymm6, [r9]
 			vsubps ymm0, ymm1
 			vaddps ymm2, ymm3
+			vcvtps2dq ymm0, ymm0
+			vcvtps2dq ymm2, ymm2
+			vpmulld ymm2, ymm7
+			vpaddd ymm2, ymm0
 		%endif
-		vcvtps2dq ymm0, ymm0
-		vcvtps2dq ymm2, ymm2
-		vpmulld ymm2, ymm7
-		vpaddd ymm2, ymm0
 		vmovdqa [i_ymmIndex], ymm2
 		movsxd rax, dword [i_ymmIndex + 0*4] ; rax = ymmIndex[0]
 		movsxd rdx, dword [i_ymmIndex + 1*4] ; rdx = ymmIndex[1]
@@ -161,6 +169,10 @@ section .text
 			vmulps ymm2, ymm5, [r10]
 			vfmsub231ps ymm0, ymm6, [r10]
 			vfmadd231ps ymm2, ymm6, [r11]
+			vroundps ymm0, ymm0, 0x8
+			vroundps ymm2, ymm2, 0x8
+			vfmadd231ps ymm0, ymm2, ymm7
+			vcvtps2dq ymm2, ymm0
 		%else
 			vmulps ymm0, ymm6, [r10]
 			vmulps ymm1, ymm5, [r11]
@@ -168,11 +180,11 @@ section .text
 			vmulps ymm3, ymm6, [r11]
 			vsubps ymm0, ymm1
 			vaddps ymm2, ymm3
+			vcvtps2dq ymm0, ymm0
+			vcvtps2dq ymm2, ymm2
+			vpmulld ymm2, ymm7
+			vpaddd ymm2, ymm0
 		%endif
-		vcvtps2dq ymm0, ymm0
-		vcvtps2dq ymm2, ymm2
-		vpmulld ymm2, ymm7
-		vpaddd ymm2, ymm0
 		vmovdqa [i_ymmIndex], ymm2
 		movsxd rax, dword [i_ymmIndex + 0*4] ; rax = ymmIndex[0]
 		movsxd rdx, dword [i_ymmIndex + 1*4] ; rdx = ymmIndex[1]
