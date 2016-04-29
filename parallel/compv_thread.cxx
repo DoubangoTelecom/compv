@@ -24,7 +24,7 @@
 #include "compv/compv_debug.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM
-extern "C" int32_t compv_utils_thread_get_core_id_x86_asm();
+COMPV_EXTERNC int32_t compv_utils_thread_get_core_id_x86_asm();
 #endif
 
 COMPV_NAMESPACE_BEGIN()

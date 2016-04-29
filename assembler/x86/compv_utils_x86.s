@@ -42,7 +42,7 @@ sym(testPrologEpilog):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 3
-	COMPV_YASM_SAVE_XMM 15 ;XMM[6-15]
+	COMPV_YASM_SAVE_XMM 15 ;XMM[6-15] ; COMPV_YASM_SAVE_YMM for AVX
 	push rsi
 	push rdi
 	push rbx
@@ -68,8 +68,9 @@ sym(testPrologEpilog):
 	pop rbx
 	pop rdi
 	pop rsi
-	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_RESTORE_XMM ; COMPV_YASM_RESTORE_YMM for AVX
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	; vzeroupper ; For AVX
 	ret

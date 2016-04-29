@@ -31,16 +31,16 @@ COMPV_NAMESPACE_BEGIN()
 
 #if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
 // SSSE3
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned00_SSSE3(const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned01_SSSE3(const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned10_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned11_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+COMPV_EXTERNC void rgbToRgbaKernel31_Asm_X86_Aligned00_SSSE3(const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+COMPV_EXTERNC void rgbToRgbaKernel31_Asm_X86_Aligned01_SSSE3(const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+COMPV_EXTERNC void rgbToRgbaKernel31_Asm_X86_Aligned10_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+COMPV_EXTERNC void rgbToRgbaKernel31_Asm_X86_Aligned11_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
 
 // AVX2
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned00_AVX2(const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned01_AVX2(const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned10_AVX2(COMPV_ALIGNED(SSE) const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
-extern "C" void rgbToRgbaKernel31_Asm_X86_Aligned11_AVX2(COMPV_ALIGNED(SSE) const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+COMPV_EXTERNC void rgbToRgbaKernel31_Asm_X86_Aligned00_AVX2(const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+COMPV_EXTERNC void rgbToRgbaKernel31_Asm_X86_Aligned01_AVX2(const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+COMPV_EXTERNC void rgbToRgbaKernel31_Asm_X86_Aligned10_AVX2(COMPV_ALIGNED(SSE) const uint8_t* rgb, uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
+COMPV_EXTERNC void rgbToRgbaKernel31_Asm_X86_Aligned11_AVX2(COMPV_ALIGNED(SSE) const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride);
 
 #endif /* defined(COMPV_ARCH_X86) && defined(COMPV_ASM) */
 

@@ -615,8 +615,6 @@ sym(FastData32Row_Asm_X86_AVX2):
 	add rsp,  8 + 8 + 8 + 16*8 + 16*8 + 32 + 16*32 + 16*32 + 16*32 + 16*32 + 16*32 + 32
 	COMPV_YASM_UNALIGN_STACK
 
-	vzeroupper
-
 	; begin epilog
 	pop rbx
 	pop rdi
@@ -625,6 +623,7 @@ sym(FastData32Row_Asm_X86_AVX2):
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 
 

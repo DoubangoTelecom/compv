@@ -26,12 +26,12 @@
 
 #include <algorithm>
 
-extern "C" const COMPV_ALIGN_DEFAULT() uint8_t kFast9Arcs[16][16];
-extern "C" const COMPV_ALIGN_DEFAULT() uint8_t kFast12Arcs[16][16];
-extern "C" const COMPV_ALIGN_DEFAULT() uint16_t Fast9Flags[16];
-extern "C" const COMPV_ALIGN_DEFAULT() uint16_t Fast12Flags[16];
+COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() uint8_t kFast9Arcs[16][16];
+COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() uint8_t kFast12Arcs[16][16];
+COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() uint16_t Fast9Flags[16];
+COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() uint16_t Fast12Flags[16];
 
-extern "C" void FastStrengths32(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(AVX) const uint8_t* dbrighters16x32, COMPV_ALIGNED(AVX) const uint8_t* ddarkers16x32, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv::compv_scalar_t N);
+COMPV_EXTERNC void FastStrengths32(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(AVX) const uint8_t* dbrighters16x32, COMPV_ALIGNED(AVX) const uint8_t* ddarkers16x32, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv::compv_scalar_t N);
 
 COMPV_NAMESPACE_BEGIN()
 

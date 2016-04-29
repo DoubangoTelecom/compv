@@ -26,7 +26,7 @@
 #include <string>
 
 #if COMPV_ARCH_X86 && COMPV_ASM
-extern "C" long long compv_utils_rdtsc_x86_asm();
+COMPV_EXTERNC long long compv_utils_rdtsc_x86_asm();
 #endif
 
 #if COMPV_OS_APPLE || COMPV_OS_BSD || defined(HAVE_SYS_SYSCTL_H)

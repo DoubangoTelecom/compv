@@ -46,13 +46,13 @@ COMPV_NAMESPACE_BEGIN()
 
 // X86
 #if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
-extern "C" void MemCopyNTA_Asm_Aligned11_X86_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
-extern "C" void MemCopyNTA_Asm_Aligned11_X86_AVX(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
+COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X86_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
+COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X86_AVX(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
 #endif
 // X64
 #if defined(COMPV_ARCH_X64) && defined(COMPV_ASM)
-extern "C" void MemCopyNTA_Asm_Aligned11_X64_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
-extern "C" void MemCopyNTA_Asm_Aligned11_X64_AVX(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
+COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X64_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
+COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X64_AVX(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
 #endif
 
 std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;

@@ -26,10 +26,10 @@
 #include "compv/compv_bits.h"
 #include "compv/compv_cpu.h"
 
-extern "C" const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31AX[256];
-extern "C" const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31AY[256];
-extern "C" const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31BX[256];
-extern "C" const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31BY[256];
+COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31AX[256];
+COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31AY[256];
+COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31BX[256];
+COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31BY[256];
 
 COMPV_NAMESPACE_BEGIN()
 

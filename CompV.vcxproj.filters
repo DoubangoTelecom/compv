@@ -576,5 +576,11 @@
     <None Include="assembler\x86\features\orb\compv_feature_orb_desc_x64_sse.s">
       <Filter>Assembler Files\x86\features\orb</Filter>
     </None>
+    <None Include="assembler\x86\features\orb\compv_feature_orb_desc_x64_avx2.s">
+      <Filter>Assembler Files\x86\features\orb</Filter>
+    </None>
+    <None Include="assembler\x86\features\orb\compv_feature_orb_desc_x86_avx2.s">
+      <Filter>Assembler Files\x86\features\orb</Filter>
+    </None>
   </ItemGroup>
 </Project>
