@@ -56,7 +56,7 @@ sym(Brief256_31_Asm_X86_AVX2):
 	%define i_ymmB		rsp + 64
 
 	; align stack and alloc memory
-	COMPV_YASM_ALIGN_STACK 16, rax
+	COMPV_YASM_ALIGN_STACK 32, rax
 	sub rsp, 4*8 + 32*1 + 32*1
 	; [rsp + 0] = int32_t ymmIndex[8]
 	; [rsp + 32] = uint8_t ymmA[32]
@@ -98,10 +98,8 @@ sym(Brief256_31_Asm_X86_AVX2):
 		lea rbx, [sym(kBrief256Pattern31AY)]
 		vmovaps ymm2, [rax + rsi*COMPV_SIZE_OF_FLOAT] ; ymm2 = kBrief256Pattern31AX
 		vmovaps ymm3, [rbx + rsi*COMPV_SIZE_OF_FLOAT] ; ymm3 = kBrief256Pattern31AY
-		vmovaps ymm0, ymm2
-		vmovaps ymm1, ymm3
-		vmulps ymm0, ymm6
-		vmulps ymm1, ymm5
+		vmulps ymm0, ymm2, ymm6
+		vmulps ymm1, ymm3, ymm5
 		vmulps ymm2, ymm5
 		vmulps ymm3, ymm6
 		vsubps ymm0, ymm1
@@ -142,10 +140,8 @@ sym(Brief256_31_Asm_X86_AVX2):
 		lea rbx, [sym(kBrief256Pattern31BY)]
 		vmovaps ymm2, [rax + rsi*COMPV_SIZE_OF_FLOAT] ; ymm2 = kBrief256Pattern31BX
 		vmovaps ymm3, [rbx + rsi*COMPV_SIZE_OF_FLOAT] ; ymm3 = kBrief256Pattern31BY
-		vmovaps ymm0, ymm2
-		vmovaps ymm1, ymm3
-		vmulps ymm0, ymm6
-		vmulps ymm1, ymm5
+		vmulps ymm0, ymm2, ymm6
+		vmulps ymm1, ymm3, ymm5
 		vmulps ymm2, ymm5
 		vmulps ymm3, ymm6
 		vsubps ymm0, ymm1
