@@ -82,6 +82,8 @@ sym(Brief256_31_Asm_X64_SSE41):
 	lea r10, [sym(kBrief256Pattern31BX)]
 	; r11 = &kBrief256Pattern31BY
 	lea r11, [sym(kBrief256Pattern31BY)]
+	; r12 = img_center
+	mov r12, arg(0)
 
 	; xmm7 = xmmStride = _mm_set1_epi32((int)img_stride)
 	mov rax, arg(1)
@@ -121,19 +123,18 @@ sym(Brief256_31_Asm_X64_SSE41):
 		pmulld xmm2, xmm7
 		paddd xmm2, xmm0
 		movdqa [i_xmmIndex], xmm2
-		mov rax, arg(0) ; rax = img_center
-		movsxd rdx, dword [i_xmmIndex + 0*4] ; rdx = xmmIndex[0]
-		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[0]]
-		mov [i_xmmA + rcx + 0], byte bl ; xmmA[u8_index + 0] = img_center[xmmIndex[0]]
+		movsxd rax, dword [i_xmmIndex + 0*4] ; rax = xmmIndex[0]
 		movsxd rdx, dword [i_xmmIndex + 1*4] ; rdx = xmmIndex[1]
-		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[1]]
-		mov [i_xmmA + rcx + 1], byte bl ; xmmA[u8_index + 1] = img_center[xmmIndex[1]]
-		movsxd rdx, dword [i_xmmIndex + 2*4] ; rdx = xmmIndex[2]
-		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[2]]
-		mov [i_xmmA + rcx + 2], byte bl ; xmmA[u8_index + 2] = img_center[xmmIndex[2]]
-		movsxd rdx, dword [i_xmmIndex + 3*4] ; rdx = xmmIndex[3]
-		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[3]]
-		mov [i_xmmA + rcx + 3], byte bl ; xmmA[u8_index + 3] = img_center[xmmIndex[3]]
+		movsxd r13, dword [i_xmmIndex + 2*4] ; r13 = xmmIndex[2]
+		movsxd r14, dword [i_xmmIndex + 3*4] ; r14 = xmmIndex[3]
+		movzx rbx, byte [r12 + rax] ; rbx = img_center[xmmIndex[0]]
+		movzx r15, byte [r12 + rdx] ; r15 = img_center[xmmIndex[1]]
+		movzx rax, byte [r12 + r13] ; rax = img_center[xmmIndex[2]]
+		movzx rdx, byte [r12 + r14] ; rdx = img_center[xmmIndex[3]]
+		mov [i_xmmA + rcx + 0], byte bl ; xmmA[u8_index + 0] = img_center[xmmIndex[0]]
+		mov [i_xmmA + rcx + 1], byte r15b ; xmmA[u8_index + 1] = img_center[xmmIndex[1]]
+		mov [i_xmmA + rcx + 2], byte al ; xmmA[u8_index + 2] = img_center[xmmIndex[2]]
+		mov [i_xmmA + rcx + 3], byte dl ; xmmA[u8_index + 3] = img_center[xmmIndex[3]]
 
 		;; xmmB ;;
 		movaps xmm2, [r10] ; xmm2 = kBrief256Pattern31BX
@@ -151,19 +152,18 @@ sym(Brief256_31_Asm_X64_SSE41):
 		pmulld xmm2, xmm7
 		paddd xmm2, xmm0
 		movdqa [i_xmmIndex], xmm2
-		mov rax, arg(0) ; rax = img_center
-		movsxd rdx, dword [i_xmmIndex + 0*4] ; rdx = xmmIndex[0]
-		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[0]]
-		mov [i_xmmB + rcx + 0], byte bl ; xmmB[u8_index + 0] = img_center[xmmIndex[0]]
+		movsxd rax, dword [i_xmmIndex + 0*4] ; rax = xmmIndex[0]
 		movsxd rdx, dword [i_xmmIndex + 1*4] ; rdx = xmmIndex[1]
-		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[1]]
-		mov [i_xmmB + rcx + 1], byte bl ; xmmB[u8_index + 1] = img_center[xmmIndex[1]]
-		movsxd rdx, dword [i_xmmIndex + 2*4] ; rdx = xmmIndex[2]
-		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[2]]
-		mov [i_xmmB + rcx + 2], byte bl ; xmmB[u8_index + 2] = img_center[xmmIndex[2]]
-		movsxd rdx, dword [i_xmmIndex + 3*4] ; rdx = xmmIndex[3]
-		movzx rbx, byte [rax + rdx] ; rbx = img_center[xmmIndex[3]]
-		mov [i_xmmB + rcx + 3], byte bl ; xmmB[u8_index + 3] = img_center[xmmIndex[3]]
+		movsxd r13, dword [i_xmmIndex + 2*4] ; r13 = xmmIndex[2]
+		movsxd r14, dword [i_xmmIndex + 3*4] ; r14 = xmmIndex[3]
+		movzx rbx, byte [r12 + rax] ; rbx = img_center[xmmIndex[0]]
+		movzx r15, byte [r12 + rdx] ; r15 = img_center[xmmIndex[1]]
+		movzx rax, byte [r12 + r13] ; rax = img_center[xmmIndex[2]]
+		movzx rdx, byte [r12 + r14] ; rdx = img_center[xmmIndex[3]]
+		mov [i_xmmB + rcx + 0], byte bl ; xmmB[u8_index + 0] = img_center[xmmIndex[0]]
+		mov [i_xmmB + rcx + 1], byte r15b ; xmmB[u8_index + 1] = img_center[xmmIndex[1]]
+		mov [i_xmmB + rcx + 2], byte al ; xmmB[u8_index + 2] = img_center[xmmIndex[2]]
+		mov [i_xmmB + rcx + 3], byte dl ; xmmB[u8_index + 3] = img_center[xmmIndex[3]]
 	
 		add rcx, 4 ; u8_index += 4
 		cmp rcx, 16

@@ -42,6 +42,9 @@
 #if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC void Brief256_31_Asm_X86_SSE41(const uint8_t* img_center, compv::compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
+#if COMPV_ARCH_X64 && COMPV_ASM
+COMPV_EXTERNC void Brief256_31_Asm_X64_SSE41(const uint8_t* img_center, compv::compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out);
+#endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 COMPV_EXTERNC COMPV_API const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31AX[256] = {
 	8, 4, -11, 7, 2, 1, -2, -13, -13, 10, -13, -11, 7, -4, -13, -9, 12, -3, -6, 11,
@@ -233,6 +236,7 @@ bool CompVFeatureDescORB::brief256_31(const CompVImage* image, int kpx, int kpy,
 		if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31 = Brief256_31_Intrin_SSE41);
 			COMPV_EXEC_IFDEF_ASM_X86(Brief256_31 = Brief256_31_Asm_X86_SSE41);
+			COMPV_EXEC_IFDEF_ASM_X64(Brief256_31 = Brief256_31_Asm_X64_SSE41);
 		}
 		if (compv::CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31 = Brief256_31_Intrin_AVX2);
