@@ -96,12 +96,10 @@ sym(Brief256_31_Asm_X86_AVX2):
 		;; ymmA ;;
 		lea rax, [sym(kBrief256Pattern31AX)]
 		lea rbx, [sym(kBrief256Pattern31AY)]
-		vmovaps ymm2, [rax + rsi*COMPV_SIZE_OF_FLOAT] ; ymm2 = kBrief256Pattern31AX
-		vmovaps ymm3, [rbx + rsi*COMPV_SIZE_OF_FLOAT] ; ymm3 = kBrief256Pattern31AY
-		vmulps ymm0, ymm2, ymm6
-		vmulps ymm1, ymm3, ymm5
-		vmulps ymm2, ymm5
-		vmulps ymm3, ymm6
+		vmulps ymm0, ymm6, [rax + rsi*COMPV_SIZE_OF_FLOAT]
+		vmulps ymm1, ymm5, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
+		vmulps ymm2, ymm5, [rax + rsi*COMPV_SIZE_OF_FLOAT]
+		vmulps ymm3, ymm6, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
 		vsubps ymm0, ymm1
 		vaddps ymm2, ymm3
 		vcvtps2dq ymm0, ymm0
@@ -138,12 +136,10 @@ sym(Brief256_31_Asm_X86_AVX2):
 		;; ymmB ;;
 		lea rax, [sym(kBrief256Pattern31BX)]
 		lea rbx, [sym(kBrief256Pattern31BY)]
-		vmovaps ymm2, [rax + rsi*COMPV_SIZE_OF_FLOAT] ; ymm2 = kBrief256Pattern31BX
-		vmovaps ymm3, [rbx + rsi*COMPV_SIZE_OF_FLOAT] ; ymm3 = kBrief256Pattern31BY
-		vmulps ymm0, ymm2, ymm6
-		vmulps ymm1, ymm3, ymm5
-		vmulps ymm2, ymm5
-		vmulps ymm3, ymm6
+		vmulps ymm0, ymm6, [rax + rsi*COMPV_SIZE_OF_FLOAT]
+		vmulps ymm1, ymm5, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
+		vmulps ymm2, ymm5, [rax + rsi*COMPV_SIZE_OF_FLOAT]
+		vmulps ymm3, ymm6, [rbx + rsi*COMPV_SIZE_OF_FLOAT]
 		vsubps ymm0, ymm1
 		vaddps ymm2, ymm3
 		vcvtps2dq ymm0, ymm0
