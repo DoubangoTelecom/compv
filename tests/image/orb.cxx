@@ -15,11 +15,11 @@ using namespace compv;
 
 bool TestORB()
 {
-    CompVObjWrapper<CompVFeatureDete* > dete; // feature detector
-    CompVObjWrapper<CompVFeatureDesc* > desc; // feature descriptor
-    CompVObjWrapper<CompVImage *> image;
-    CompVObjWrapper<CompVBoxInterestPoint* > interestPoints;
-    CompVObjWrapper<CompVFeatureDescriptions*> descriptions;
+    CompVPtr<CompVFeatureDete* > dete; // feature detector
+    CompVPtr<CompVFeatureDesc* > desc; // feature descriptor
+    CompVPtr<CompVImage *> image;
+    CompVPtr<CompVBoxInterestPoint* > interestPoints;
+    CompVPtr<CompVFeatureDescriptions*> descriptions;
     int32_t val32;
     bool valBool;
     float valFloat;

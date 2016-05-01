@@ -57,9 +57,9 @@ public:
     // override CompVSettable::set
     virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
     // override CompVFeatureDete::process
-    virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints);
+    virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtr<CompVBoxInterestPoint* >& interestPoints);
 
-    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* fast);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVFeatureDete* >* fast);
 
 private:
     int32_t m_iThreshold;

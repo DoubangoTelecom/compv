@@ -48,10 +48,10 @@ public:
     bool isMotherOfTheCurrentThread();
     int32_t guessNumThreadsDividingAcrossY(int xcount, int ycount, int minSamplesPerThread);
 
-    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVThreadDispatcher*>* disp, int32_t numThreads = -1);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVThreadDispatcher*>* disp, int32_t numThreads = -1);
 
 private:
-    CompVObjWrapper<CompVAsyncTask *>* m_pTasks;
+    CompVPtr<CompVAsyncTask *>* m_pTasks;
     int32_t m_nTasksCount;
     bool m_bValid;
 };

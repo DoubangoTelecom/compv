@@ -38,7 +38,7 @@ bool CompVEngine::s_bBigEndian = true;
 #endif
 bool CompVEngine::s_bTesting = false;
 bool CompVEngine::s_bMathTrigFast = true;
-CompVObjWrapper<CompVThreadDispatcher *> CompVEngine::s_ThreadDisp = NULL;
+CompVPtr<CompVThreadDispatcher *> CompVEngine::s_ThreadDisp = NULL;
 
 CompVEngine::CompVEngine()
 {
@@ -179,12 +179,12 @@ COMPV_ERROR_CODE CompVEngine::deInit()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-CompVObjWrapper<CompVThreadDispatcher* > CompVEngine::getThreadDispatcher()
+CompVPtr<CompVThreadDispatcher* > CompVEngine::getThreadDispatcher()
 {
     return s_ThreadDisp;
 }
 
-COMPV_ERROR_CODE CompVEngine::multiThreadingEnable(CompVObjWrapper<CompVThreadDispatcher* > dispatcher)
+COMPV_ERROR_CODE CompVEngine::multiThreadingEnable(CompVPtr<CompVThreadDispatcher* > dispatcher)
 {
     COMPV_CHECK_EXP_RETURN(!dispatcher, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     s_ThreadDisp = dispatcher;
@@ -199,7 +199,7 @@ COMPV_ERROR_CODE CompVEngine::multiThreadingDisable()
 
 COMPV_ERROR_CODE CompVEngine::multiThreadingSetMaxThreads(size_t maxThreads)
 {
-    CompVObjWrapper<CompVThreadDispatcher *> newThreadDisp;
+    CompVPtr<CompVThreadDispatcher *> newThreadDisp;
     COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::newObj(&newThreadDisp));
     s_ThreadDisp = newThreadDisp;// TODO(dmi): function not optimal, we destroy all threads and create new ones
     return COMPV_ERROR_CODE_S_OK;

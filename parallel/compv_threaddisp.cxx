@@ -31,7 +31,7 @@ CompVThreadDispatcher::CompVThreadDispatcher(int32_t numThreads)
     , m_bValid(false)
 {
     COMPV_ASSERT(m_nTasksCount > 1); // never happen, we already checked it in newObj()
-    m_pTasks = (CompVObjWrapper<CompVAsyncTask *>*)CompVMem::calloc(numThreads, sizeof(CompVObjWrapper<CompVAsyncTask *>));
+    m_pTasks = (CompVPtr<CompVAsyncTask *>*)CompVMem::calloc(numThreads, sizeof(CompVPtr<CompVAsyncTask *>));
     if (!m_pTasks) {
         COMPV_DEBUG_ERROR("Failed to allocate the asynctasks");
         return;
@@ -66,7 +66,7 @@ CompVThreadDispatcher::~CompVThreadDispatcher()
 
 COMPV_ERROR_CODE CompVThreadDispatcher::execute(uint32_t threadIdx, compv_asynctoken_id_t tokenId, compv_asynctoken_f f_func, ...)
 {
-    CompVObjWrapper<CompVAsyncTask *> asyncTask = m_pTasks[threadIdx % m_nTasksCount];
+    CompVPtr<CompVAsyncTask *> asyncTask = m_pTasks[threadIdx % m_nTasksCount];
     COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -80,7 +80,7 @@ bail:
 
 COMPV_ERROR_CODE CompVThreadDispatcher::wait(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t u_timeout /*= 86400000*//* 1 day */)
 {
-    CompVObjWrapper<CompVAsyncTask *> asyncTask = m_pTasks[threadIdx % m_nTasksCount];
+    CompVPtr<CompVAsyncTask *> asyncTask = m_pTasks[threadIdx % m_nTasksCount];
     COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_CHECK_CODE_RETURN(asyncTask->wait(tokenId, u_timeout));
     return COMPV_ERROR_CODE_S_OK;
@@ -88,7 +88,7 @@ COMPV_ERROR_CODE CompVThreadDispatcher::wait(uint32_t threadIdx, compv_asynctoke
 
 COMPV_ERROR_CODE CompVThreadDispatcher::getIdleTime(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t* timeIdle)
 {
-    CompVObjWrapper<CompVAsyncTask *> asyncTask = m_pTasks[threadIdx % m_nTasksCount];
+    CompVPtr<CompVAsyncTask *> asyncTask = m_pTasks[threadIdx % m_nTasksCount];
     COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     return asyncTask->tokenGetIdleTime(tokenId, timeIdle);
 }
@@ -133,7 +133,7 @@ int32_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(int32_t xcount, in
     return divCount;
 }
 
-COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVObjWrapper<CompVThreadDispatcher*>* disp, int32_t numThreads /*= -1*/)
+COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVPtr<CompVThreadDispatcher*>* disp, int32_t numThreads /*= -1*/)
 {
     COMPV_CHECK_CODE_RETURN(CompVEngine::init());
     COMPV_CHECK_EXP_RETURN(disp == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -148,7 +148,7 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVObjWrapper<CompVThreadDispat
     if (numThreads > numCores) {
         COMPV_DEBUG_WARN("You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, (numCores - 1));
     }
-    CompVObjWrapper<CompVThreadDispatcher*>_disp = new CompVThreadDispatcher(numThreads);
+    CompVPtr<CompVThreadDispatcher*>_disp = new CompVThreadDispatcher(numThreads);
     if (!_disp || !_disp->m_bValid) {
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }

@@ -149,11 +149,11 @@ COMPV_ERROR_CODE CompVMutex::unlock()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMutex::newObj(CompVObjWrapper<CompVMutex*>* mutex, bool recursive /*= true*/)
+COMPV_ERROR_CODE CompVMutex::newObj(CompVPtr<CompVMutex*>* mutex, bool recursive /*= true*/)
 {
     COMPV_CHECK_CODE_RETURN(CompVEngine::init());
     COMPV_CHECK_EXP_RETURN(mutex == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVObjWrapper<CompVMutex*> mutex_ = new CompVMutex(recursive);
+    CompVPtr<CompVMutex*> mutex_ = new CompVMutex(recursive);
     COMPV_CHECK_EXP_RETURN(*mutex_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     *mutex = mutex_;
     return COMPV_ERROR_CODE_S_OK;

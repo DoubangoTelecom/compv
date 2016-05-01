@@ -11,11 +11,11 @@ using namespace compv;
 #define testingMode			true
 #define cpuDisable			kCpuFlagNone
 
-#define TEST_GAUSS_FILTER_DIM1		1
+#define TEST_GAUSS_FILTER_DIM1		0
 #define TEST_GAUSS_FILTER_DIM2		0
 #define TEST_GAUSS_KER_DIM1_GEN		0
 #define TEST_GAUSS_KER_DIM2_GEN		0
-#define TEST_CONVO					0
+#define TEST_CONVLT					1
 
 
 #if COMPV_OS_WINDOWS
@@ -31,9 +31,9 @@ int main(int argc, char** argv)
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));
 
-#if TEST_CONVO
-    extern bool TestConvo();
-    COMPV_ASSERT(TestConvo());
+#if TEST_CONVLT
+	extern bool TestConvlt();
+	COMPV_ASSERT(TestConvlt());
 #endif
 
 #if TEST_GAUSS_FILTER_DIM1

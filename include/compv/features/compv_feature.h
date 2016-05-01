@@ -37,8 +37,8 @@ class CompVFeatureDesc;
 struct CompVFeatureFactory {
     int id;
     const char* name;
-    COMPV_ERROR_CODE(*newObjDete)(CompVObjWrapper<CompVFeatureDete* >* dete);
-    COMPV_ERROR_CODE(*newObjDesc)(CompVObjWrapper<CompVFeatureDesc* >* desc);
+    COMPV_ERROR_CODE(*newObjDete)(CompVPtr<CompVFeatureDete* >* dete);
+    COMPV_ERROR_CODE(*newObjDesc)(CompVPtr<CompVFeatureDesc* >* desc);
 };
 
 /* Feature detectors and descriptors setters and getters */
@@ -100,13 +100,13 @@ public:
         return 0;
     }
 
-    static COMPV_ERROR_CODE newObj(int nFeaturesCount, int nFeatureBits, CompVObjWrapper<CompVFeatureDescriptions*>* descriptions);
+    static COMPV_ERROR_CODE newObj(int nFeaturesCount, int nFeatureBits, CompVPtr<CompVFeatureDescriptions*>* descriptions);
 
 private:
     int m_nFeaturesCount; // number of features
     int m_nFeatureBits; // number of bits each feature takes
     COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-    CompVObjWrapper<CompVBuffer *> m_data; // data holding the features
+    CompVPtr<CompVBuffer *> m_data; // data holding the features
     COMPV_DISABLE_WARNINGS_END()
 };
 
@@ -137,8 +137,8 @@ public:
     COMPV_INLINE int getId() {
         return m_nId;
     }
-    virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints) = 0;
-    static COMPV_ERROR_CODE newObj(int deteId, CompVObjWrapper<CompVFeatureDete* >* dete);
+    virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtr<CompVBoxInterestPoint* >& interestPoints) = 0;
+    static COMPV_ERROR_CODE newObj(int deteId, CompVPtr<CompVFeatureDete* >* dete);
 
 private:
     int m_nId;
@@ -154,7 +154,7 @@ public:
     COMPV_INLINE int getId() {
         return m_nId;
     }
-    virtual COMPV_ERROR_CODE attachDete(CompVObjWrapper<CompVFeatureDete* > dete) {
+    virtual COMPV_ERROR_CODE attachDete(CompVPtr<CompVFeatureDete* > dete) {
         m_AttachedDete = dete;
         return COMPV_ERROR_CODE_S_OK;
     }
@@ -162,18 +162,18 @@ public:
         m_AttachedDete = NULL;
         return COMPV_ERROR_CODE_S_OK;
     }
-    virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, const CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints, CompVObjWrapper<CompVFeatureDescriptions*>* descriptions) = 0;
-    static COMPV_ERROR_CODE newObj(int descId, CompVObjWrapper<CompVFeatureDesc* >* desc);
+    virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVFeatureDescriptions*>* descriptions) = 0;
+    static COMPV_ERROR_CODE newObj(int descId, CompVPtr<CompVFeatureDesc* >* desc);
 
 protected:
-    COMPV_INLINE CompVObjWrapper<CompVFeatureDete* >& getAttachedDete() {
+    COMPV_INLINE CompVPtr<CompVFeatureDete* >& getAttachedDete() {
         return m_AttachedDete;
     }
 
 private:
     int m_nId;
     COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-    CompVObjWrapper<CompVFeatureDete* >m_AttachedDete;
+    CompVPtr<CompVFeatureDete* >m_AttachedDete;
     COMPV_DISABLE_WARNINGS_END()
 };
 

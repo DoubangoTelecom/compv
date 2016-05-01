@@ -155,7 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="convo.cxx" />
+    <ClCompile Include="convlt.cxx" />
     <ClCompile Include="gauss.cxx" />
     <ClCompile Include="main.cxx" />
   </ItemGroup>

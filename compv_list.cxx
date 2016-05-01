@@ -227,10 +227,10 @@ const T* CompVList<T>::back()
 }
 
 template<class T>
-COMPV_ERROR_CODE CompVList<T>::newObj(CompVObjWrapper<CompVList<T>*>* list, bool bLockable /*= false*/)
+COMPV_ERROR_CODE CompVList<T>::newObj(CompVPtr<CompVList<T>*>* list, bool bLockable /*= false*/)
 {
     COMPV_CHECK_EXP_RETURN(!list, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVObjWrapper<CompVList<T>* > list_;
+    CompVPtr<CompVList<T>* > list_;
 
     list_ = new CompVList<T>();
     COMPV_CHECK_EXP_RETURN(!list_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

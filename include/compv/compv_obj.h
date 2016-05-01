@@ -72,20 +72,20 @@ private:
 };
 
 //
-//	CompVObjWrapper declaration
+//	CompVPtr declaration
 //
 template<class CompVObjType>
-class CompVObjWrapper
+class CompVPtr
 {
 
 public:
-    COMPV_INLINE CompVObjWrapper(CompVObjType obj
+    COMPV_INLINE CompVPtr(CompVObjType obj
 #if !defined(SWIG)
                                  = NULL
 #endif
                                 );
-    COMPV_INLINE CompVObjWrapper(const CompVObjWrapper<CompVObjType> &obj);
-    virtual ~CompVObjWrapper();
+    COMPV_INLINE CompVPtr(const CompVPtr<CompVObjType> &obj);
+    virtual ~CompVPtr();
 
 public:
 #if defined(SWIG)
@@ -93,11 +93,11 @@ public:
         return getWrappedObject();
     }
 #else
-    COMPV_INLINE CompVObjWrapper<CompVObjType>& operator=(const CompVObjType other);
-    COMPV_INLINE CompVObjWrapper<CompVObjType>& operator=(const CompVObjWrapper<CompVObjType> &other);
-    COMPV_INLINE bool operator ==(const CompVObjWrapper<CompVObjType> other) const;
-    COMPV_INLINE bool operator!=(const CompVObjWrapper<CompVObjType> &other) const;
-    COMPV_INLINE bool operator <(const CompVObjWrapper<CompVObjType> other) const;
+    COMPV_INLINE CompVPtr<CompVObjType>& operator=(const CompVObjType other);
+    COMPV_INLINE CompVPtr<CompVObjType>& operator=(const CompVPtr<CompVObjType> &other);
+    COMPV_INLINE bool operator ==(const CompVPtr<CompVObjType> other) const;
+    COMPV_INLINE bool operator!=(const CompVPtr<CompVObjType> &other) const;
+    COMPV_INLINE bool operator <(const CompVPtr<CompVObjType> other) const;
     COMPV_INLINE CompVObjType operator->() const;
     COMPV_INLINE CompVObjType operator*() const;
     COMPV_INLINE operator bool() const;
@@ -115,23 +115,23 @@ private:
 };
 
 //
-//	CompVObjWrapper implementation
+//	CompVPtr implementation
 //
 template<class CompVObjType>
-CompVObjWrapper<CompVObjType>::CompVObjWrapper(CompVObjType obj)
+CompVPtr<CompVObjType>::CompVPtr(CompVObjType obj)
 {
     wrapObject(obj), takeRef();
 }
 
 template<class CompVObjType>
-CompVObjWrapper<CompVObjType>::CompVObjWrapper(const CompVObjWrapper<CompVObjType> &obj)
+CompVPtr<CompVObjType>::CompVPtr(const CompVPtr<CompVObjType> &obj)
 {
     wrapObject(obj.getWrappedObject()),
                takeRef();
 }
 
 template<class CompVObjType>
-CompVObjWrapper<CompVObjType>::~CompVObjWrapper()
+CompVPtr<CompVObjType>::~CompVPtr()
 {
     releaseRef(),
                wrapObject(NULL);
@@ -139,7 +139,7 @@ CompVObjWrapper<CompVObjType>::~CompVObjWrapper()
 
 
 template<class CompVObjType>
-long CompVObjWrapper<CompVObjType>::takeRef()
+long CompVPtr<CompVObjType>::takeRef()
 {
     if (m_WrappedObject /*&& m_WrappedObject->getRefCount() At startup*/) {
         return m_WrappedObject->takeRef();
@@ -148,7 +148,7 @@ long CompVObjWrapper<CompVObjType>::takeRef()
 }
 
 template<class CompVObjType>
-long CompVObjWrapper<CompVObjType>::releaseRef()
+long CompVPtr<CompVObjType>::releaseRef()
 {
     if (m_WrappedObject && m_WrappedObject->getRefCount()) {
         if (m_WrappedObject->releaseRef() == 0) {
@@ -162,13 +162,13 @@ long CompVObjWrapper<CompVObjType>::releaseRef()
 }
 
 template<class CompVObjType>
-CompVObjType CompVObjWrapper<CompVObjType>::getWrappedObject() const
+CompVObjType CompVPtr<CompVObjType>::getWrappedObject() const
 {
     return m_WrappedObject;
 }
 
 template<class CompVObjType>
-void CompVObjWrapper<CompVObjType>::wrapObject(const CompVObjType obj)
+void CompVPtr<CompVObjType>::wrapObject(const CompVObjType obj)
 {
     if (obj) {
         if (!(m_WrappedObject = dynamic_cast<CompVObjType>(obj))) {
@@ -181,7 +181,7 @@ void CompVObjWrapper<CompVObjType>::wrapObject(const CompVObjType obj)
 }
 
 template<class CompVObjType>
-CompVObjWrapper<CompVObjType>& CompVObjWrapper<CompVObjType>::operator=(const CompVObjType obj)
+CompVPtr<CompVObjType>& CompVPtr<CompVObjType>::operator=(const CompVObjType obj)
 {
     releaseRef();
     wrapObject(obj), takeRef();
@@ -189,7 +189,7 @@ CompVObjWrapper<CompVObjType>& CompVObjWrapper<CompVObjType>::operator=(const Co
 }
 
 template<class CompVObjType>
-CompVObjWrapper<CompVObjType>& CompVObjWrapper<CompVObjType>::operator=(const CompVObjWrapper<CompVObjType> &obj)
+CompVPtr<CompVObjType>& CompVPtr<CompVObjType>::operator=(const CompVPtr<CompVObjType> &obj)
 {
     releaseRef();
     wrapObject(obj.getWrappedObject()), takeRef();
@@ -197,37 +197,37 @@ CompVObjWrapper<CompVObjType>& CompVObjWrapper<CompVObjType>::operator=(const Co
 }
 
 template<class CompVObjType>
-bool CompVObjWrapper<CompVObjType>::operator ==(const CompVObjWrapper<CompVObjType> other) const
+bool CompVPtr<CompVObjType>::operator ==(const CompVPtr<CompVObjType> other) const
 {
     return getWrappedObject() == other.getWrappedObject();
 }
 
 template<class CompVObjType>
-bool CompVObjWrapper<CompVObjType>::operator!=(const CompVObjWrapper<CompVObjType> &other) const
+bool CompVPtr<CompVObjType>::operator!=(const CompVPtr<CompVObjType> &other) const
 {
     return getWrappedObject() != other.getWrappedObject();
 }
 
 template<class CompVObjType>
-bool CompVObjWrapper<CompVObjType>::operator <(const CompVObjWrapper<CompVObjType> other) const
+bool CompVPtr<CompVObjType>::operator <(const CompVPtr<CompVObjType> other) const
 {
     return getWrappedObject() < other.getWrappedObject();
 }
 
 template<class CompVObjType>
-CompVObjWrapper<CompVObjType>::operator bool() const
+CompVPtr<CompVObjType>::operator bool() const
 {
     return (getWrappedObject() != NULL);
 }
 
 template<class CompVObjType>
-CompVObjType CompVObjWrapper<CompVObjType>::operator->() const
+CompVObjType CompVPtr<CompVObjType>::operator->() const
 {
     return getWrappedObject();
 }
 
 template<class CompVObjType>
-CompVObjType CompVObjWrapper<CompVObjType>::operator*() const
+CompVObjType CompVPtr<CompVObjType>::operator*() const
 {
     return getWrappedObject();
 }

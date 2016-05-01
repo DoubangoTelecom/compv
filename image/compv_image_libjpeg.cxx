@@ -37,7 +37,7 @@ COMPV_NAMESPACE_BEGIN()
 
 static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, int32_t *width, int32_t *stride, int32_t *height, COMPV_PIXEL_FORMAT* pixelFormat);
 
-COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVObjWrapper<CompVImage*>* image)
+COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVPtr<CompVImage*>* image)
 {
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     uint8_t* rawdata_ = NULL;

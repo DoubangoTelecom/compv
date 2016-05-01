@@ -10,7 +10,7 @@ using namespace compv;
 #define GAUSS_SIGMA2_SIZE7_KERNEL_DIM2_MD5		"b450cff5c1540ca2602f0c21c245d50e" // MD5 value for the generated kernel with dim=2
 #define GAUSS_SIGMA2_SIZE7_KERNEL_DIM1_MD5		"5b538cf89aace2657d8330f38859f20f" // MD5 value for the generated kernel with dim=1
 
-#define GAUSS_LOOP_COUNT				15
+#define GAUSS_LOOP_COUNT				1
 
 // Sigma=2, Size=7, Expected kernel:
 // keep this matrix here for weak comparison in case of rounding issues
@@ -27,9 +27,9 @@ static const double kGaussianKernelDim1Sigma2Size7[7] = { 0.07015933, 0.13107488
 
 bool TestGaussFilter2()
 {
-    CompVObjWrapper<CompVImage *> image;
-    CompVObjWrapper<CompVConvlt *> convlt;
-    CompVObjWrapper<CompVArray<double>* > kern2;
+    CompVPtr<CompVImage *> image;
+    CompVPtr<CompVConvlt *> convlt;
+    CompVPtr<CompVArray<double>* > kern2;
     uint64_t timeStart, timeEnd;
 
     // Create kernel
@@ -40,13 +40,13 @@ bool TestGaussFilter2()
     COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_IMG, &image));
     // Convert image to GrayScale
     COMPV_CHECK_CODE_ASSERT(image->convert(COMPV_PIXEL_FORMAT_GRAYSCALE, &image));
-    // Scale the image
+    // process the image
     timeStart = CompVTime::getNowMills();
     for (int i = 0; i < GAUSS_LOOP_COUNT; ++i) {
         convlt->convlt2((uint8_t*)image->getDataPtr(), image->getWidth(), image->getStride(), image->getHeight(), kern2->getDataPtr(), 7);
     }
     timeEnd = CompVTime::getNowMills();
-    COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
+    COMPV_DEBUG_INFO("Elapsed time(TestGaussFilter2) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
     const std::string expectedMD5 = CompVMd5::compute2(convlt->getResultPtr(), convlt->getResultSize());
     if (expectedMD5 != GAUSS_SIGMA2_SIZE7_FILTER_DIM2_MD5) {
@@ -64,9 +64,9 @@ bool TestGaussFilter2()
 
 bool TestGaussFilter1()
 {
-    CompVObjWrapper<CompVImage *> image;
-    CompVObjWrapper<CompVConvlt *> convlt;
-    CompVObjWrapper<CompVArray<double>* > kern1;
+    CompVPtr<CompVImage *> image;
+    CompVPtr<CompVConvlt *> convlt;
+    CompVPtr<CompVArray<double>* > kern1;
     uint64_t timeStart, timeEnd;
 
     // Create kernel
@@ -83,7 +83,7 @@ bool TestGaussFilter1()
         convlt->convlt1((uint8_t*)image->getDataPtr(), image->getWidth(), image->getStride(), image->getHeight(), kern1->getDataPtr(), kern1->getDataPtr(), 7);
     }
     timeEnd = CompVTime::getNowMills();
-    COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
+    COMPV_DEBUG_INFO("Elapsed time(TestGaussFilter1) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
     const std::string expectedMD5 = CompVMd5::compute2(convlt->getResultPtr(), convlt->getResultSize());
     if (expectedMD5 != GAUSS_SIGMA2_SIZE7_FILTER_DIM1_MD5) {
@@ -101,7 +101,7 @@ bool TestGaussFilter1()
 
 bool TestGaussKernDim1Gen()
 {
-    CompVObjWrapper<CompVArray<double>* > kern1;
+    CompVPtr<CompVArray<double>* > kern1;
     COMPV_ERROR_CODE err_ = CompVGaussKern::buildKern1(&kern1, 7, 2.0);
     if (COMPV_ERROR_CODE_IS_NOK(err_)) {
         COMPV_ASSERT(false);
@@ -131,7 +131,7 @@ bool TestGaussKernDim1Gen()
 bool TestGaussKernDim2Gen()
 {
 #define kernelAt(_y_, _x_) *(kern2_ + ((_y_) * 7) + (_x_))
-    CompVObjWrapper<CompVArray<double>* > kern2;
+    CompVPtr<CompVArray<double>* > kern2;
     COMPV_ERROR_CODE err_ = CompVGaussKern::buildKern2(&kern2, 7, 2.0);
     if (COMPV_ERROR_CODE_IS_NOK(err_)) {
         COMPV_ASSERT(false);

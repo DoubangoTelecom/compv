@@ -174,13 +174,13 @@ public:
         return COMPV_ERROR_CODE_S_OK;
     }
 
-    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVBox<T >* >* box, size_t nCapacity = 0, bool bLockable = false) {
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVBox<T >* >* box, size_t nCapacity = 0, bool bLockable = false) {
         if (sizeof(T) > kCompVBoxItemMaxSize) {
             COMPV_DEBUG_ERROR("Boxing is only allowed on object with size < %u, you're boxing an object with size = %u", (unsigned)kCompVBoxItemMaxSize, (unsigned)sizeof(T));
             return COMPV_ERROR_CODE_E_INVALID_CALL;
         }
         COMPV_CHECK_EXP_RETURN(!box, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-        CompVObjWrapper<CompVBox<T>* > box_;
+        CompVPtr<CompVBox<T>* > box_;
 
         box_ = new CompVBox<T>(nCapacity, bLockable);
         COMPV_CHECK_EXP_RETURN(!box_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -286,7 +286,7 @@ protected:
     size_t m_nItemSize;
     size_t m_nSize;
     size_t m_nCapacity;
-    CompVObjWrapper<CompVMutex*> m_Mutex;
+    CompVPtr<CompVMutex*> m_Mutex;
     COMPV_DISABLE_WARNINGS_END()
 };
 

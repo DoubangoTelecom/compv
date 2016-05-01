@@ -39,7 +39,7 @@ public:
     COMPV_ERROR_CODE increment();
     COMPV_ERROR_CODE decrement();
 
-    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVSemaphore*>* sem, int initialVal = 0);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVSemaphore*>* sem, int initialVal = 0);
 
 private:
     void* m_pHandle;

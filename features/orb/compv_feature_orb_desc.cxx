@@ -158,61 +158,6 @@ COMPV_ERROR_CODE CompVFeatureDescORB::set(int id, const void* valuePtr, size_t v
     }
 }
 
-// FIXME: remove convlt1()
-// Helpful site to generate gaussian values: http://dev.theomader.com/gaussian-kernel-calculator/
-static const double gfilterGaussianBlur1[7] = { 0.07015933, 0.13107488, 0.19071282, 0.21610594, 0.19071282, 0.13107488, 0.07015933 };
-static COMPV_ERROR_CODE convlt1(uint8_t* img, int imgw, int imgs, int imgh, const double* ker, int ker_size)
-{
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-    COMPV_CHECK_EXP_RETURN(!(ker_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER); // Kernel size must be odd number
-
-    uint8_t *imgTmp;
-    const uint8_t *topleft, *img_ptr;
-    double sum;
-    int imgpad, i, j, row, col;
-    int ker_size_div2 = ker_size >> 1;
-
-    imgTmp = (uint8_t*)CompVMem::malloc(imgh * imgs);
-    COMPV_CHECK_EXP_RETURN(!imgTmp, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-
-    // Horizontal
-    img_ptr = img + ker_size_div2;
-    imgpad = (imgs - imgw) + ker_size_div2 + ker_size_div2;
-    for (j = 0; j < imgh; ++j) {
-        for (i = ker_size_div2; i < imgw - ker_size_div2; ++i) {
-            sum = 0;
-            topleft = img_ptr - ker_size_div2;
-            for (col = 0; col < ker_size; ++col) {
-                sum += topleft[col] * ker[col];
-            }
-            imgTmp[(j * imgs) + i] = (uint8_t)sum;
-            ++img_ptr;
-        }
-        img_ptr += imgpad;
-    }
-
-    // Vertical
-    img_ptr = imgTmp + (ker_size_div2 * imgs); // output from hz filtering is now used as input
-    imgpad = (imgs - imgw);
-    for (j = ker_size_div2; j < imgh - ker_size_div2; ++j) {
-        for (i = 0; i < imgw; ++i) {
-            sum = 0;
-            topleft = img_ptr - (ker_size_div2 * imgs);
-            for (row = 0; row < ker_size; ++row) {
-                sum += topleft[0] * ker[row];
-                topleft += imgs;
-            }
-            img[(j * imgs) + i] = (uint8_t)sum;
-            ++img_ptr;
-        }
-        img_ptr += imgpad;
-    }
-
-    CompVMem::free((void**)&imgTmp);
-
-    return COMPV_ERROR_CODE_S_OK;
-}
-
 // Brief256 with patch diameter equal 31
 bool CompVFeatureDescORB::brief256_31(const CompVImage* image, int kpx, int kpy, float cosT, float sinT, COMPV_ALIGNED(x) void* desc)
 {
@@ -240,7 +185,7 @@ bool CompVFeatureDescORB::brief256_31(const CompVImage* image, int kpx, int kpy,
 }
 
 // override CompVFeatureDesc::process
-COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>& image, const CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints, CompVObjWrapper<CompVFeatureDescriptions*>* descriptions)
+COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVFeatureDescriptions*>* descriptions)
 {
     COMPV_CHECK_EXP_RETURN(*image == NULL || image->getDataPtr() == NULL || image->getPixelFormat() != COMPV_PIXEL_FORMAT_GRAYSCALE || !descriptions || !interestPoints || interestPoints->empty(),
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -249,10 +194,10 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
 	COMPV_CHECK_EXP_RETURN(m_nPatchBits != 256 || m_nPatchDiameter != 31, COMPV_ERROR_CODE_E_INVALID_CALL);
 	
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-    CompVObjWrapper<CompVFeatureDescriptions*> _descriptions;
-    CompVObjWrapper<CompVImageScalePyramid * > _pyramid;
-    CompVObjWrapper<CompVImage*> imageAtLevelN;
-    CompVObjWrapper<CompVFeatureDete*> attachedDete = getAttachedDete();
+    CompVPtr<CompVFeatureDescriptions*> _descriptions;
+    CompVPtr<CompVImageScalePyramid * > _pyramid;
+    CompVPtr<CompVImage*> imageAtLevelN;
+    CompVPtr<CompVFeatureDete*> attachedDete = getAttachedDete();
     const CompVInterestPoint* point;
     uint8_t* _descriptionsPtr = NULL;
     size_t simd_i;
@@ -317,7 +262,9 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
     // apply gaussianblur filter on the pyramid
     for (int level = 0; level < _pyramid->getLevels(); ++level) {
         COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(level, &imageAtLevelN));
-        convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)gfilterGaussianBlur1, 7);
+		// The out is the image itsel to avoid allocating temp buffer. This means the images in the pyramod are modified
+		// and any subsequent call must take care
+		m_convlt->convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)m_kern->getDataPtr(), (const double*)m_kern->getDataPtr(), COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, (uint8_t*)imageAtLevelN->getDataPtr());
     }
 	
 	// Init "m_funBrief256_31" using current CPU flags
@@ -359,19 +306,17 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVObjWrapper<CompVImage*>
         }
     }
 
-	// FIXME: decriptions size must be equal to what we wrote (writen when 'brief256_31' returned true)
-
     *descriptions = _descriptions;
 
     return err_;
 }
 
-COMPV_ERROR_CODE CompVFeatureDescORB::newObj(CompVObjWrapper<CompVFeatureDesc* >* orb)
+COMPV_ERROR_CODE CompVFeatureDescORB::newObj(CompVPtr<CompVFeatureDesc* >* orb)
 {
     COMPV_CHECK_EXP_RETURN(orb == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVObjWrapper<CompVImageScalePyramid * > pyramid_;
-    CompVObjWrapper<CompVArray<double>* > kern_;
-    CompVObjWrapper<CompVConvlt* > convlt_;
+    CompVPtr<CompVImageScalePyramid * > pyramid_;
+    CompVPtr<CompVArray<double>* > kern_;
+    CompVPtr<CompVConvlt* > convlt_;
     // Create Gauss kernel values
     COMPV_CHECK_CODE_RETURN(CompVGaussKern::buildKern1(&kern_, COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA));
     // Create convolution context
@@ -379,7 +324,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::newObj(CompVObjWrapper<CompVFeatureDesc* >
     // Create the pyramid
     COMPV_CHECK_CODE_RETURN(CompVImageScalePyramid::newObj(COMPV_FEATURE_DETE_ORB_PYRAMID_SF, COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS, COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE, &pyramid_));
 
-    CompVObjWrapper<CompVFeatureDescORB* >_orb = new CompVFeatureDescORB();
+    CompVPtr<CompVFeatureDescORB* >_orb = new CompVFeatureDescORB();
     if (!_orb) {
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }

@@ -53,7 +53,7 @@ public:
     const T* next(const T* curr);
     const T* back();
 
-    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVList<T >* >* list, bool bLockable = false);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVList<T >* >* list, bool bLockable = false);
 
 protected:
     void* nextFreeMemBlock(size_t** index, size_t** next_index, T** data);
@@ -68,7 +68,7 @@ private:
     size_t m_nItems;
     size_t m_nCapacity;
     COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-    CompVObjWrapper<CompVMutex*> m_Mutex;
+    CompVPtr<CompVMutex*> m_Mutex;
     COMPV_DISABLE_WARNINGS_END()
 };
 

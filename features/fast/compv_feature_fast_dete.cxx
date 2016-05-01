@@ -288,7 +288,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::set(int id, const void* valuePtr, size_t 
 }
 
 // overrides CompVFeatureDete::process
-COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*>& image, CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints)
+COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVPtr<CompVImage*>& image, CompVPtr<CompVBoxInterestPoint* >& interestPoints)
 {
     COMPV_CHECK_EXP_RETURN(*image == NULL || image->getDataPtr() == NULL || image->getPixelFormat() != COMPV_PIXEL_FORMAT_GRAYSCALE,
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -298,7 +298,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
     int32_t width = image->getWidth();
     int32_t height = image->getHeight();
     int32_t stride = image->getStride();
-    CompVObjWrapper<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
     int32_t threadsCountRange = 1;
 
     COMPV_CHECK_EXP_RETURN(width < 4 || height < 4, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -498,10 +498,10 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVObjWrapper<CompVImage*
     return err_;
 }
 
-COMPV_ERROR_CODE CompVFeatureDeteFAST::newObj(CompVObjWrapper<CompVFeatureDete* >* fast)
+COMPV_ERROR_CODE CompVFeatureDeteFAST::newObj(CompVPtr<CompVFeatureDete* >* fast)
 {
     COMPV_CHECK_EXP_RETURN(fast == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVObjWrapper<CompVFeatureDeteFAST* >_fast = new CompVFeatureDeteFAST();
+    CompVPtr<CompVFeatureDeteFAST* >_fast = new CompVFeatureDeteFAST();
     if (!_fast) {
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }

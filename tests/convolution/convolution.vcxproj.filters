@@ -18,10 +18,10 @@
     <ClCompile Include="main.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="convo.cxx">
+    <ClCompile Include="gauss.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gauss.cxx">
+    <ClCompile Include="convlt.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

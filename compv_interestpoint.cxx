@@ -74,14 +74,14 @@ COMPV_ERROR_CODE CompVBoxInterestPoint::eraseTooCloseToBorder(int32_t img_width,
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVBoxInterestPoint::newObj(CompVObjWrapper<CompVBoxInterestPoint* >* box, size_t nCapacity /*= 0*/, bool bLockable /*= false*/)
+COMPV_ERROR_CODE CompVBoxInterestPoint::newObj(CompVPtr<CompVBoxInterestPoint* >* box, size_t nCapacity /*= 0*/, bool bLockable /*= false*/)
 {
     if (sizeof(CompVBoxInterestPoint) > kCompVBoxItemMaxSize) {
         COMPV_DEBUG_ERROR("Boxing is only allowed on object with size < %u, you're boxing an object with size = %lu", (unsigned)kCompVBoxItemMaxSize, sizeof(CompVBoxInterestPoint));
         return COMPV_ERROR_CODE_E_INVALID_CALL;
     }
     COMPV_CHECK_EXP_RETURN(!box, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVObjWrapper<CompVBoxInterestPoint* > box_;
+    CompVPtr<CompVBoxInterestPoint* > box_;
 
     box_ = new CompVBoxInterestPoint(nCapacity, bLockable);
     COMPV_CHECK_EXP_RETURN(!box_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -95,7 +95,7 @@ COMPV_ERROR_CODE CompVBoxInterestPoint::newObj(CompVObjWrapper<CompVBoxInterestP
 
 static void sortByStrengthRange(CompVBoxInterestPoint* self, intptr_t left, intptr_t right)
 {
-    CompVObjWrapper<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
     int32_t threadsCount = threadDip ? threadDip->getThreadsCount() : 0;
     uint32_t threadIdx0 = UINT_MAX, threadIdx1 = UINT_MAX;
     const CompVInterestPoint pivot = *self->at((left + right) >> 1);

@@ -78,12 +78,12 @@ size_t CompVArray<T>::getDataSizeInBytes1(size_t nDimIdx) const
 }
 
 template<class T>
-COMPV_ERROR_CODE CompVArray<T>::newObj(CompVObjWrapper<CompVArray<T>* >* array, size_t nDimCount, COMPV_ARRAY_DIM_SIZES)
+COMPV_ERROR_CODE CompVArray<T>::newObj(CompVPtr<CompVArray<T>* >* array, size_t nDimCount, COMPV_ARRAY_DIM_SIZES)
 {
     COMPV_CHECK_EXP_RETURN(!array || !nDimCount, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVObjWrapper<CompVBuffer*> buffer_ = NULL;
+    CompVPtr<CompVBuffer*> buffer_ = NULL;
     size_t* pnDimSizes_ = NULL;
-    CompVObjWrapper<CompVArray<T>* > array_;
+    CompVPtr<CompVArray<T>* > array_;
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     size_t sizeInElmt_, totalSizeInElmt_ = 1;
     static size_t sizeOfElmt_ = sizeof(T);

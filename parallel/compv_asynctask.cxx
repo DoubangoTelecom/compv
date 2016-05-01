@@ -284,11 +284,11 @@ compv_asynctoken_id_t CompVAsyncTask::getUniqueTokenId()
     return compv_atomic_inc(&uniqueId);
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::newObj(CompVObjWrapper<CompVAsyncTask*>* asyncTask)
+COMPV_ERROR_CODE CompVAsyncTask::newObj(CompVPtr<CompVAsyncTask*>* asyncTask)
 {
     COMPV_CHECK_CODE_RETURN(CompVEngine::init());
     COMPV_CHECK_EXP_RETURN(asyncTask == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVObjWrapper<CompVAsyncTask*> asyncTask_ = new CompVAsyncTask();
+    CompVPtr<CompVAsyncTask*> asyncTask_ = new CompVAsyncTask();
     COMPV_CHECK_EXP_RETURN(*asyncTask_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     *asyncTask = asyncTask_;
     return COMPV_ERROR_CODE_S_OK;
@@ -296,10 +296,10 @@ COMPV_ERROR_CODE CompVAsyncTask::newObj(CompVObjWrapper<CompVAsyncTask*>* asyncT
 
 void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
 {
-    // "Self_" must not be "CompVObjWrapper<CompVAsyncTask *>" to avoid incrementing the refCount
+    // "Self_" must not be "CompVPtr<CompVAsyncTask *>" to avoid incrementing the refCount
     // It the refCount is incremented here this means it's value will be equal to #2 after newObj() followed by start()
     // Now let's imagine you call "obj = NULL;", this will decrease the refCount to 1 but won't destroy it. This means you have to call stop() first (followed by = NULL if you want to destroy it).
-    // This is why we use "CompVAsyncTask*" instead of "CompVObjWrapper<CompVAsyncTask *>". We're sure that the object cannot be destroyed while
+    // This is why we use "CompVAsyncTask*" instead of "CompVPtr<CompVAsyncTask *>". We're sure that the object cannot be destroyed while
     // we're running the below code because the destructor() calls stop() and wait the exit
     CompVAsyncTask* Self_ = (CompVAsyncTask*)pcArg;
     compv_asynctoken_xt* pToken_;

@@ -51,18 +51,18 @@ public:
     // override CompVSettable::set
     virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
     // override CompVFeatureDesc::process
-    virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, const CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints, CompVObjWrapper<CompVFeatureDescriptions*>* descriptions);
+    virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVFeatureDescriptions*>* descriptions);
 
-    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDesc* >* orb);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVFeatureDesc* >* orb);
 
 private:
 	bool brief256_31(const CompVImage* image, int kpx, int kpy, float cosT, float sinT, COMPV_ALIGNED(x) void* desc);
 
 private:
     // TODO(dmi): use internal detector: BRIEF (just like what is done for the detector and FAST internal dete)
-    CompVObjWrapper<CompVImageScalePyramid* > m_pyramid;
-    CompVObjWrapper<CompVConvlt* > m_convlt;
-    CompVObjWrapper<CompVArray<double>* > m_kern;
+    CompVPtr<CompVImageScalePyramid* > m_pyramid;
+    CompVPtr<CompVConvlt* > m_convlt;
+    CompVPtr<CompVArray<double>* > m_kern;
     const CompVImage* m_pcImages[COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT];
 	int m_nPatchDiameter;
 	int m_nPatchBits;

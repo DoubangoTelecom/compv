@@ -174,9 +174,9 @@ static void FastShufflesArc(int N)
 
 bool TestFAST()
 {
-    CompVObjWrapper<CompVFeatureDete* > fast;
-    CompVObjWrapper<CompVImage *> image;
-    CompVObjWrapper<CompVBoxInterestPoint* > interestPoints;
+    CompVPtr<CompVFeatureDete* > fast;
+    CompVPtr<CompVImage *> image;
+    CompVPtr<CompVBoxInterestPoint* > interestPoints;
     int32_t val32;
     bool valBool;
     uint64_t timeStart, timeEnd;

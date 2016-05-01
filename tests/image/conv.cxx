@@ -25,7 +25,7 @@ using namespace compv;
 #define FORMAT_DST			FORMAT_I420 // any format
 #define STRIDE_ALIGN		true // false to test CompVImage::wrap and CompVImage::copy
 
-static void rgbToSrc(const CompVObjWrapper<CompVImage *>& jpegImage, void** srcPtr, int &height, int &width, int &stride)
+static void rgbToSrc(const CompVPtr<CompVImage *>& jpegImage, void** srcPtr, int &height, int &width, int &stride)
 {
     // TODO(dmi): WIDTH_OFFSET -1 doesn't work or YUV player is buggy -> https://github.com/DoubangoTelecom/compv/issues/49
 #define WIDTH_OFFSET	-2 // amount of pixels to remove to width to make it wired (not standard)
@@ -95,9 +95,9 @@ static void rgbToSrc(const CompVObjWrapper<CompVImage *>& jpegImage, void** srcP
 
 bool TestConv()
 {
-    CompVObjWrapper<CompVImage *> jpegImage;
-    CompVObjWrapper<CompVImage *> dstImage;
-    CompVObjWrapper<CompVImage *> srcImage;
+    CompVPtr<CompVImage *> jpegImage;
+    CompVPtr<CompVImage *> dstImage;
+    CompVPtr<CompVImage *> srcImage;
     void* srcPtr = NULL;
     int width, height, stride;
     uint64_t timeStart, timeEnd;

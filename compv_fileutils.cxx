@@ -120,9 +120,9 @@ _COMPV_IMAGE_FORMAT CompVFileUtils::getImageFormat(const char* pcPath)
     }
 }
 
-COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVObjWrapper<CompVBuffer*> *buffer)
+COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVPtr<CompVBuffer*> *buffer)
 {
-    CompVObjWrapper<CompVBuffer*> buffer_ = NULL;
+    CompVPtr<CompVBuffer*> buffer_ = NULL;
     if (!pcPath || !buffer) {
         COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Invalid parameter");
         return COMPV_ERROR_CODE_E_INVALID_PARAMETER;

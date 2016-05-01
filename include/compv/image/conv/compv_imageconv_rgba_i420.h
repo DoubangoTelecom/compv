@@ -33,15 +33,15 @@ COMPV_NAMESPACE_BEGIN()
 class CompVImageConvRgbaI420
 {
 public:
-    static COMPV_ERROR_CODE rgbToI420(const CompVObjWrapper<CompVImage* >& rgb, CompVObjWrapper<CompVImage* >& i420);
-    static COMPV_ERROR_CODE bgrToI420(const CompVObjWrapper<CompVImage* >& bgr, CompVObjWrapper<CompVImage* >& i420);
+    static COMPV_ERROR_CODE rgbToI420(const CompVPtr<CompVImage* >& rgb, CompVPtr<CompVImage* >& i420);
+    static COMPV_ERROR_CODE bgrToI420(const CompVPtr<CompVImage* >& bgr, CompVPtr<CompVImage* >& i420);
 
-    static COMPV_ERROR_CODE rgbaToI420(const CompVObjWrapper<CompVImage* >& rgba, CompVObjWrapper<CompVImage* >& i420);
-    static COMPV_ERROR_CODE argbToI420(const CompVObjWrapper<CompVImage* >& argb, CompVObjWrapper<CompVImage* >& i420);
-    static COMPV_ERROR_CODE bgraToI420(const CompVObjWrapper<CompVImage* >& bgra, CompVObjWrapper<CompVImage* >& i420);
-    static COMPV_ERROR_CODE abgrToI420(const CompVObjWrapper<CompVImage* >& abgr, CompVObjWrapper<CompVImage* >& i420);
+    static COMPV_ERROR_CODE rgbaToI420(const CompVPtr<CompVImage* >& rgba, CompVPtr<CompVImage* >& i420);
+    static COMPV_ERROR_CODE argbToI420(const CompVPtr<CompVImage* >& argb, CompVPtr<CompVImage* >& i420);
+    static COMPV_ERROR_CODE bgraToI420(const CompVPtr<CompVImage* >& bgra, CompVPtr<CompVImage* >& i420);
+    static COMPV_ERROR_CODE abgrToI420(const CompVPtr<CompVImage* >& abgr, CompVPtr<CompVImage* >& i420);
 
-    static COMPV_ERROR_CODE i420ToRgba(const CompVObjWrapper<CompVImage* >& i420, CompVObjWrapper<CompVImage* >& rgba);
+    static COMPV_ERROR_CODE i420ToRgba(const CompVPtr<CompVImage* >& i420, CompVPtr<CompVImage* >& rgba);
 };
 
 COMPV_NAMESPACE_END()

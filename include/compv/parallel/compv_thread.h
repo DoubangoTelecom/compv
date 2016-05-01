@@ -64,7 +64,7 @@ public:
     static compv_thread_id_t getIdCurrent();
     static bool isEquals(compv_thread_id_t id1, compv_thread_id_t id2);
     static compv_core_id_t getCoreId();
-    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVThread*>* thread, void *(COMPV_STDCALL *start) (void *), void *arg = NULL);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVThread*>* thread, void *(COMPV_STDCALL *start) (void *), void *arg = NULL);
 
 private:
     comp_thread_handle_t* m_pHandle;

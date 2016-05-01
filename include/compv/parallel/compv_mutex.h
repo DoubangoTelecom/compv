@@ -43,7 +43,7 @@ public:
         return m_pHandle;    // "'pthread_mutex_t*' on Linux and 'HANDLE' on Windows"
     }
 
-    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVMutex*>* mutex, bool recursive = true);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVMutex*>* mutex, bool recursive = true);
 
 private:
     void* m_pHandle;

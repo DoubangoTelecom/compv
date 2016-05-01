@@ -281,17 +281,17 @@ std::string CompVMd5::compute(const void* input /*= NULL*/, size_t size /*= 0*/)
 
 std::string CompVMd5::compute2(const void* input, size_t size)
 {
-    CompVObjWrapper<CompVMd5*> md5;
+    CompVPtr<CompVMd5*> md5;
     if (COMPV_ERROR_CODE_IS_OK(CompVMd5::newObj(&md5))) {
         return md5->compute(input, size);
     }
     return "";
 }
 
-COMPV_ERROR_CODE CompVMd5::newObj(CompVObjWrapper<CompVMd5*>* md5)
+COMPV_ERROR_CODE CompVMd5::newObj(CompVPtr<CompVMd5*>* md5)
 {
     COMPV_CHECK_EXP_RETURN(!md5, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVObjWrapper<CompVMd5*> md5_;
+    CompVPtr<CompVMd5*> md5_;
 
     md5_ = new CompVMd5();
     if (!md5_) {

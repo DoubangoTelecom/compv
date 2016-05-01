@@ -48,11 +48,11 @@ public:
     COMPV_INLINE bool isEmpty() {
         return !(getSize() && getPtr());
     }
-    static COMPV_ERROR_CODE newObj(const void* pcPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer);
-    static COMPV_ERROR_CODE newObjAndNullData(CompVObjWrapper<CompVBuffer*>* buffer);
-    static COMPV_ERROR_CODE newObjAndTakeData(void** ppPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer);
-    static COMPV_ERROR_CODE newObjAndCopyData(const void* pcPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer);
-    static COMPV_ERROR_CODE newObjAndRefData(const void* pcPtr, int32_t size, CompVObjWrapper<CompVBuffer*>* buffer);
+    static COMPV_ERROR_CODE newObj(const void* pcPtr, int32_t size, CompVPtr<CompVBuffer*>* buffer);
+    static COMPV_ERROR_CODE newObjAndNullData(CompVPtr<CompVBuffer*>* buffer);
+    static COMPV_ERROR_CODE newObjAndTakeData(void** ppPtr, int32_t size, CompVPtr<CompVBuffer*>* buffer);
+    static COMPV_ERROR_CODE newObjAndCopyData(const void* pcPtr, int32_t size, CompVPtr<CompVBuffer*>* buffer);
+    static COMPV_ERROR_CODE newObjAndRefData(const void* pcPtr, int32_t size, CompVPtr<CompVBuffer*>* buffer);
 
 private:
     void* m_pPtr;

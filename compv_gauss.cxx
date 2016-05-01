@@ -23,7 +23,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-COMPV_ERROR_CODE CompVGaussKern::buildKern2(CompVObjWrapper<CompVArray<double>* >* kern, int size, double sigma)
+COMPV_ERROR_CODE CompVGaussKern::buildKern2(CompVPtr<CompVArray<double>* >* kern, int size, double sigma)
 {
     COMPV_CHECK_EXP_RETURN(!kern || !(size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
@@ -63,9 +63,10 @@ COMPV_ERROR_CODE CompVGaussKern::buildKern2(CompVObjWrapper<CompVArray<double>* 
     }
 
     // Normalize
+	sum = 1 / sum;
     for (y = 0; y < size; ++y) {
         for (x = 0; x < size; ++x) {
-            kernelAt(y, x) /= sum;
+            kernelAt(y, x) *= sum;
         }
     }
 
@@ -75,7 +76,7 @@ bail:
     return err_;
 }
 
-COMPV_ERROR_CODE CompVGaussKern::buildKern1(CompVObjWrapper<CompVArray<double>* >* kern, int size, double sigma)
+COMPV_ERROR_CODE CompVGaussKern::buildKern1(CompVPtr<CompVArray<double>* >* kern, int size, double sigma)
 {
     COMPV_CHECK_EXP_RETURN(!kern || !(size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
@@ -101,8 +102,9 @@ COMPV_ERROR_CODE CompVGaussKern::buildKern1(CompVObjWrapper<CompVArray<double>* 
     }
 
     // Normalize
+	sum = 1 / sum;
     for (x = 0; x < size; ++x) {
-        kernel[x] /= sum;
+        kernel[x] *= sum;
     }
 
 bail:

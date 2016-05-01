@@ -47,20 +47,20 @@ public:
     // override CompVSettable::get
     virtual COMPV_ERROR_CODE get(int id, const void*& valuePtr, size_t valueSize);
     // override CompVFeatureDete::process
-    virtual COMPV_ERROR_CODE process(const CompVObjWrapper<CompVImage*>& image, CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints);
+    virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtr<CompVBoxInterestPoint* >& interestPoints);
 
-    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVFeatureDete* >* orb);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVFeatureDete* >* orb);
 
 private:
     COMPV_ERROR_CODE createInterestPoints(int32_t count = -1);
     COMPV_ERROR_CODE freeInterestPoints(int32_t count = -1);
-    COMPV_ERROR_CODE processLevelAt(const CompVObjWrapper<CompVImage*>& image, int level);
+    COMPV_ERROR_CODE processLevelAt(const CompVPtr<CompVImage*>& image, int level);
     static COMPV_ERROR_CODE processLevelAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 
 private:
-    CompVObjWrapper<CompVImageScalePyramid* > m_pyramid;
-    CompVObjWrapper<CompVBoxInterestPoint* >* m_pInterestPointsAtLevelN;
-    CompVObjWrapper<CompVFeatureDete* > m_internalDetector;
+    CompVPtr<CompVImageScalePyramid* > m_pyramid;
+    CompVPtr<CompVBoxInterestPoint* >* m_pInterestPointsAtLevelN;
+    CompVPtr<CompVFeatureDete* > m_internalDetector;
     int32_t m_nMaxFeatures;
     int32_t m_nPyramidLevels;
     int32_t m_nThreshold;

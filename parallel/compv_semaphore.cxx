@@ -179,11 +179,11 @@ COMPV_ERROR_CODE CompVSemaphore::decrement()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVSemaphore::newObj(CompVObjWrapper<CompVSemaphore*>* sem, int initialVal /*= 0*/)
+COMPV_ERROR_CODE CompVSemaphore::newObj(CompVPtr<CompVSemaphore*>* sem, int initialVal /*= 0*/)
 {
     COMPV_CHECK_CODE_RETURN(CompVEngine::init());
     COMPV_CHECK_EXP_RETURN(sem == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVObjWrapper<CompVSemaphore*> sem_ = new CompVSemaphore(initialVal);
+    CompVPtr<CompVSemaphore*> sem_ = new CompVSemaphore(initialVal);
     COMPV_CHECK_EXP_RETURN(*sem_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     *sem = sem_;
     return COMPV_ERROR_CODE_S_OK;

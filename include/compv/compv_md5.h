@@ -51,7 +51,7 @@ public:
     std::string compute(const void* input = NULL, size_t size = 0);
 
     static std::string compute2(const void* input, size_t size);
-    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVMd5*>* md5);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVMd5*>* md5);
 
 private:
     void init();

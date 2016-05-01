@@ -50,11 +50,11 @@ public:
     const T* getDataPtr2(size_t nIdx0, size_t nIdx1) const;
     size_t getDataSizeInBytes() const;
     size_t getDataSizeInBytes1(size_t nDimIdx) const;
-    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVArray<T>* >* array, size_t nDimCount, COMPV_ARRAY_DIM_SIZES);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVArray<T>* >* array, size_t nDimCount, COMPV_ARRAY_DIM_SIZES);
 
 private:
     COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-    CompVObjWrapper<CompVBuffer*> m_pBuffer;
+    CompVPtr<CompVBuffer*> m_pBuffer;
     size_t* m_pnDimSizes;
     size_t m_nDimCount;
     COMPV_DISABLE_WARNINGS_END()

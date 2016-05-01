@@ -14,7 +14,7 @@ using namespace compv;
 
 bool TestScale()
 {
-    CompVObjWrapper<CompVImage *> image;
+    CompVPtr<CompVImage *> image;
     uint64_t timeStart, timeEnd;
 
     // Decode the jpeg image

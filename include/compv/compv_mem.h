@@ -80,7 +80,7 @@ private:
     COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
     static bool s_bInitialize;
     static std::map<uintptr_t, compv_special_mem_t > s_Specials;
-    static CompVObjWrapper<CompVMutex* >s_SpecialsMutex;
+    static CompVPtr<CompVMutex* >s_SpecialsMutex;
     COMPV_DISABLE_WARNINGS_END()
 };
 

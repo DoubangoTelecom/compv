@@ -78,7 +78,7 @@ static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, compv
     }
 }
 
-COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVObjWrapper<CompVImage* >& inImage, CompVObjWrapper<CompVImage* >& outImage)
+COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVPtr<CompVImage* >& inImage, CompVPtr<CompVImage* >& outImage)
 {
     // This is an internal function and it's up to the caller to check the input parameters
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;

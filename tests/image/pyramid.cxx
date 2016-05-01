@@ -16,8 +16,8 @@ using namespace compv;
 
 bool TestPyramid()
 {
-    CompVObjWrapper<CompVImage *> image;
-    CompVObjWrapper<CompVImageScalePyramid*> pyramid;
+    CompVPtr<CompVImage *> image;
+    CompVPtr<CompVImageScalePyramid*> pyramid;
     uint64_t timeStart, timeEnd;
 
     // Decode the jpeg image

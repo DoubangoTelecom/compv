@@ -151,16 +151,16 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::get(int id, const void*& valuePtr, size_t 
 }
 
 // override CompVFeatureDete::process
-COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVObjWrapper<CompVImage*>& image, CompVObjWrapper<CompVBoxInterestPoint* >& interestPoints)
+COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image, CompVPtr<CompVBoxInterestPoint* >& interestPoints)
 {
     COMPV_CHECK_EXP_RETURN(*image == NULL || image->getDataPtr() == NULL || image->getPixelFormat() != COMPV_PIXEL_FORMAT_GRAYSCALE,
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     int patch_radius = (m_nPatchDiameter >> 1);
-    CompVObjWrapper<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
-    CompVObjWrapper<CompVBoxInterestPoint* >interestPointsAtLevelN;
-    CompVObjWrapper<CompVImage*> imageAtLevelN;
+    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVBoxInterestPoint* >interestPointsAtLevelN;
+    CompVPtr<CompVImage*> imageAtLevelN;
     int32_t threadsCount = 1;
 
     // create or reset points
@@ -216,7 +216,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVObjWrapper<CompVImage*>
 
     // Process feature detection for each level
     if (threadsCount > 1) {
-        CompVObjWrapper<CompVFeatureDeteORB* >This = this;
+        CompVPtr<CompVFeatureDeteORB* >This = this;
         uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
         // levelStart is used to make sure we won't schedule more than "threadsCount"
         int levelStart, level, levelMax;
@@ -251,7 +251,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::createInterestPoints(int32_t count /*= -1*
 {
     int32_t levelsCount = count > 0 ? count : m_nPyramidLevels;
     freeInterestPoints();
-    m_pInterestPointsAtLevelN = (CompVObjWrapper<CompVBoxInterestPoint *>*)CompVMem::calloc(levelsCount, sizeof(CompVObjWrapper<CompVBoxInterestPoint *>));
+    m_pInterestPointsAtLevelN = (CompVPtr<CompVBoxInterestPoint *>*)CompVMem::calloc(levelsCount, sizeof(CompVPtr<CompVBoxInterestPoint *>));
     if (!m_pInterestPointsAtLevelN) {
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }
@@ -274,12 +274,12 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::freeInterestPoints(int32_t count /*= -1*/)
 
 
 // Private function
-COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVObjWrapper<CompVImage*>& image, int level)
+COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage*>& image, int level)
 {
     COMPV_CHECK_EXP_RETURN(level < 0 || level >= m_nPyramidLevels, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-    CompVObjWrapper<CompVImage*> imageAtLevelN;
-    CompVObjWrapper<CompVBoxInterestPoint* > interestPointsAtLevelN;
+    CompVPtr<CompVImage*> imageAtLevelN;
+    CompVPtr<CompVBoxInterestPoint* > interestPointsAtLevelN;
     float sf, sfs, patchSize;
     double m10, m01, orientRad;
     CompVInterestPoint* point_;
@@ -363,11 +363,11 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt_AsynExec(const struct compv
     return This->processLevelAt(image, level);
 }
 
-COMPV_ERROR_CODE CompVFeatureDeteORB::newObj(CompVObjWrapper<CompVFeatureDete* >* orb)
+COMPV_ERROR_CODE CompVFeatureDeteORB::newObj(CompVPtr<CompVFeatureDete* >* orb)
 {
     COMPV_CHECK_EXP_RETURN(orb == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVObjWrapper<CompVFeatureDete* >fast_;
-    CompVObjWrapper<CompVImageScalePyramid * > pyramid_;
+    CompVPtr<CompVFeatureDete* >fast_;
+    CompVPtr<CompVImageScalePyramid * > pyramid_;
     int32_t val32;
     bool valBool;
 
@@ -380,7 +380,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::newObj(CompVObjWrapper<CompVFeatureDete* >
     // Create the pyramid
     COMPV_CHECK_CODE_RETURN(CompVImageScalePyramid::newObj(COMPV_FEATURE_DETE_ORB_PYRAMID_SF, COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS, COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE, &pyramid_));
 
-    CompVObjWrapper<CompVFeatureDeteORB* >_orb = new CompVFeatureDeteORB();
+    CompVPtr<CompVFeatureDeteORB* >_orb = new CompVFeatureDeteORB();
     if (!_orb) {
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }

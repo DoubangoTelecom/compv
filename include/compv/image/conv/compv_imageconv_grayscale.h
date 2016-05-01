@@ -33,15 +33,15 @@ COMPV_NAMESPACE_BEGIN()
 class CompVImageConvGrayscale
 {
 public:
-    static COMPV_ERROR_CODE rgbToGrayscale(const CompVObjWrapper<CompVImage* >& rgb, CompVObjWrapper<CompVImage* >& grayscale);
-    static COMPV_ERROR_CODE bgrToGrayscale(const CompVObjWrapper<CompVImage* >& bgr, CompVObjWrapper<CompVImage* >& grayscale);
+    static COMPV_ERROR_CODE rgbToGrayscale(const CompVPtr<CompVImage* >& rgb, CompVPtr<CompVImage* >& grayscale);
+    static COMPV_ERROR_CODE bgrToGrayscale(const CompVPtr<CompVImage* >& bgr, CompVPtr<CompVImage* >& grayscale);
 
-    static COMPV_ERROR_CODE rgbaToGrayscale(const CompVObjWrapper<CompVImage* >& rgba, CompVObjWrapper<CompVImage* >& grayscale);
-    static COMPV_ERROR_CODE argbToGrayscale(const CompVObjWrapper<CompVImage* >& argb, CompVObjWrapper<CompVImage* >& grayscale);
-    static COMPV_ERROR_CODE bgraToGrayscale(const CompVObjWrapper<CompVImage* >& bgra, CompVObjWrapper<CompVImage* >& grayscale);
-    static COMPV_ERROR_CODE abgrToGrayscale(const CompVObjWrapper<CompVImage* >& abgr, CompVObjWrapper<CompVImage* >& grayscale);
+    static COMPV_ERROR_CODE rgbaToGrayscale(const CompVPtr<CompVImage* >& rgba, CompVPtr<CompVImage* >& grayscale);
+    static COMPV_ERROR_CODE argbToGrayscale(const CompVPtr<CompVImage* >& argb, CompVPtr<CompVImage* >& grayscale);
+    static COMPV_ERROR_CODE bgraToGrayscale(const CompVPtr<CompVImage* >& bgra, CompVPtr<CompVImage* >& grayscale);
+    static COMPV_ERROR_CODE abgrToGrayscale(const CompVPtr<CompVImage* >& abgr, CompVPtr<CompVImage* >& grayscale);
 
-    static COMPV_ERROR_CODE i420ToGrayscale(const CompVObjWrapper<CompVImage* >& i420, CompVObjWrapper<CompVImage* >& grayscale);
+    static COMPV_ERROR_CODE i420ToGrayscale(const CompVPtr<CompVImage* >& i420, CompVPtr<CompVImage* >& grayscale);
 };
 
 COMPV_NAMESPACE_END()

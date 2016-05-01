@@ -19,6 +19,7 @@
 */
 #include "compv/compv_convlt.h"
 #include "compv/compv_mem.h"
+#include "compv/compv_engine.h"
 #include "compv/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -28,6 +29,8 @@ CompVConvlt::CompVConvlt()
     , m_pDataPtr0(NULL)
     , m_nDataSize(0)
     , m_nDataSize0(0)
+	, m_pResultPtr(NULL)
+	, m_nResultSize(0)
 {
 
 }
@@ -38,16 +41,25 @@ CompVConvlt::~CompVConvlt()
     CompVMem::free((void**)&m_pDataPtr0);
 }
 
-COMPV_ERROR_CODE CompVConvlt::convlt2(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const double* kern_ptr, int kern_size, const void** ret_ptr /*= NULL*/, int img_border /*= 0*/)
+COMPV_ERROR_CODE CompVConvlt::convlt2(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const double* kern_ptr, int kern_size, uint8_t* out_ptr /*= NULL*/, int img_border /*= 0*/)
 {
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): Multi-threading and SIMD acceleration
+	// Multi-threading and SIMD acceleration
+	// Check if the kernel is separable (matrice rank = 1) and use convlt1 instead
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 
     // Check inputs
     COMPV_CHECK_EXP_RETURN(!img_ptr || !img_width || (img_stride < img_width) || !kern_ptr || !(kern_size & 1) || img_border < 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	
+	// Make sure we're not sharing the internal memory across threads
+	CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+	if (!out_ptr && threadDip && threadDip->isMotherOfTheCurrentThread()) {
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_CALL);
+	}
+	bool bUseInternalMemory = !out_ptr;
 
     // Alloc memory
     size_t neededSize = (img_height + (img_border << 1)) * (img_stride + (img_border << 1));
-    if (m_nDataSize < neededSize) {
+	if (bUseInternalMemory && m_nDataSize < neededSize) {
         m_pDataPtr = CompVMem::realloc(m_pDataPtr, neededSize);
         if (!m_pDataPtr) {
             m_nDataSize = 0;
@@ -57,7 +69,7 @@ COMPV_ERROR_CODE CompVConvlt::convlt2(const uint8_t* img_ptr, int img_width, int
     }
 
     // Init variables
-    uint8_t* outImg = ((uint8_t*)m_pDataPtr) + (img_border * img_stride) + img_border;
+	uint8_t* outImg = (bUseInternalMemory ? ((uint8_t*)m_pDataPtr) : out_ptr) + (img_border * img_stride) + img_border;
     const uint8_t *topleft, *img_ptr_;
     double sum;
     const double *ker_ptr;
@@ -87,23 +99,32 @@ COMPV_ERROR_CODE CompVConvlt::convlt2(const uint8_t* img_ptr, int img_width, int
         img_ptr_ += imgpad;
     }
 
-    if (ret_ptr) {
-        *ret_ptr = m_pDataPtr;
-    }
+	if (bUseInternalMemory && out_ptr) {
+		CompVMem::copy(out_ptr, outImg, neededSize);
+	}
+	m_pResultPtr = (const void*)outImg;
+	m_nResultSize = neededSize;
 
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVConvlt::convlt1(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const double* vkern_ptr, const double* hkern_ptr, int kern_size, const void** ret_ptr /*= NULL*/, int img_border /*= 0*/)
+COMPV_ERROR_CODE CompVConvlt::convlt1(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const double* vkern_ptr, const double* hkern_ptr, int kern_size, uint8_t* out_ptr /*= NULL*/, int img_border /*= 0*/)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): Multi-threading and SIMD acceleration
 
     // Check inputs
-    COMPV_CHECK_EXP_RETURN(!img_ptr || !img_width || (img_stride < img_width) || !vkern_ptr || !hkern_ptr || !(kern_size & 1) || img_border < 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!img_ptr || (img_width < kern_size * 2) || (img_height < kern_size * 2) || (img_stride < img_width) || !vkern_ptr || !hkern_ptr || img_border < 0 || !(kern_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	// Make sure we're not sharing the internal memory across threads
+	CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+	if (!out_ptr && threadDip && threadDip->isMotherOfTheCurrentThread()) {
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_CALL);
+	}
+	bool bUseInternalMemory = !out_ptr;
 
     // Alloc memory
     size_t neededSize = (img_height + (img_border << 1)) * (img_stride + (img_border << 1));
-    if (m_nDataSize < neededSize) {
+	if (bUseInternalMemory && m_nDataSize < neededSize) {
         m_pDataPtr = CompVMem::realloc(m_pDataPtr, neededSize);
         if (!m_pDataPtr) {
             m_nDataSize = 0;
@@ -120,61 +141,131 @@ COMPV_ERROR_CODE CompVConvlt::convlt1(const uint8_t* img_ptr, int img_width, int
         m_nDataSize0 = neededSize;
     }
 
-    uint8_t *imgTmp0, *imgTmp1;
-    const uint8_t *topleft, *ptr_;
-    double sum;
-    int imgpad, i, j, row, col;
+    uint8_t *imgTmp, *imgOut, *imgPtr;
+    const uint8_t *topleft;
+    int imgpad;
     int ker_size_div2 = kern_size >> 1;
     int start_margin = (img_border >= ker_size_div2) ? -ker_size_div2 : -img_border;
     int start_center = start_margin + ker_size_div2;
 
-    imgTmp0 = ((uint8_t*)m_pDataPtr0) + (img_border * img_stride) + img_border;
-    imgTmp1 = ((uint8_t*)m_pDataPtr) + (img_border * img_stride) + img_border;
+	imgTmp = ((uint8_t*)m_pDataPtr0) + (img_border * img_stride) + img_border;
+	imgOut = (bUseInternalMemory ? ((uint8_t*)m_pDataPtr) : out_ptr) + (img_border * img_stride) + img_border;
 
     // Process
 
     // Horizontal
     topleft = img_ptr + start_margin;
     imgpad = (img_stride - img_width) + start_center + start_center;
-    for (j = 0; j < img_height; ++j) {
-        for (i = start_center; i < img_width - start_center; ++i) {
-            sum = 0;
-            for (col = 0; col < kern_size; ++col) {
-                sum += topleft[col] * hkern_ptr[col];
-            }
-            imgTmp0[(j * img_stride) + i] = (uint8_t)sum; // TODO(dmi): do not mul() but add()
-            ++topleft;
-        }
-        topleft += imgpad;
-    }
+	imgPtr = imgTmp + start_center;
+#if 1
+	CompVConvlt::convlt1_hz(topleft, imgPtr, (img_width - start_center - start_center), img_height, imgpad, hkern_ptr, kern_size);
+#else
+	{
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+		int col, i, j;
+		double sum;
+		for (j = 0; j < img_height; ++j) {
+			for (i = start_center; i < img_width - start_center; ++i) {
+				sum = 0;
+				for (col = 0; col < kern_size; ++col) {
+					sum += topleft[col] * hkern_ptr[col];
+				}
+				*imgPtr = (uint8_t)sum; // TODO(dmi): do not mul() but add()
+				++topleft;
+				++imgPtr;
+			}
+			topleft += imgpad;
+			imgPtr += imgpad;
+		}
+	}
+#endif
 
     // Vertical
-    topleft = imgTmp0 + (start_margin * img_stride); // output from hz filtering is now used as input
+    topleft = imgTmp + (start_margin * img_stride); // output from hz filtering is now used as input
     imgpad = (img_stride - img_width);
-    for (j = start_center; j < img_height - start_center; ++j) {
-        for (i = 0; i < img_width; ++i) {
-            sum = 0;
-            ptr_ = topleft;
-            for (row = 0; row < kern_size; ++row, ptr_ += img_stride) {
-                sum += *ptr_ * vkern_ptr[row];
-            }
-            imgTmp1[(j * img_stride) + i] = (uint8_t)sum; // TODO(dmi): do not mul() but add()
-            ++topleft;
-        }
-        topleft += imgpad;
-    }
+	imgPtr = imgOut + (start_center * img_stride);
+#if 1
+	CompVConvlt::convlt1_vert(topleft, imgPtr, img_width, img_height - start_center - start_center, img_stride, imgpad, vkern_ptr, kern_size);
+#else
+	{
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+		int row, i, j;
+		const uint8_t *ptr_;
+		double sum;
+		for (j = start_center; j < img_height - start_center; ++j) {
+			for (i = 0; i < img_width; ++i) {
+				sum = 0;
+				ptr_ = topleft;
+				for (row = 0; row < kern_size; ++row, ptr_ += img_stride) {
+					sum += *ptr_ * vkern_ptr[row];
+				}
+				*imgPtr = (uint8_t)sum; // TODO(dmi): do not mul() but add()
+				++topleft;
+				++imgPtr;
+			}
+			topleft += imgpad;
+			imgPtr += imgpad;
+		}
+	}
+#endif
 
-    if (ret_ptr) {
-        *ret_ptr = m_pDataPtr;
-    }
+	if (bUseInternalMemory && out_ptr) {
+		CompVMem::copy(out_ptr, imgOut, neededSize);
+	}
+	m_pResultPtr = (const void*)imgOut;
+	m_nResultSize = neededSize;
 
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVConvlt::newObj(CompVObjWrapper<CompVConvlt* >* convlt)
+// Private function: do not check input parameters
+void CompVConvlt::convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int pad, const double* hkern_ptr, int kern_size)
+{
+	int i, j, col;
+	double sum;
+
+	for (j = 0; j < height; ++j) {
+		for (i = 0; i < width; ++i) {
+			sum = 0;
+			for (col = 0; col < kern_size; ++col) {
+				sum += in_ptr[col] * hkern_ptr[col];
+			}
+			*out_ptr = (uint8_t)sum;
+			++in_ptr;
+			++out_ptr;
+		}
+		in_ptr += pad;
+		out_ptr += pad;
+	}
+}
+
+void CompVConvlt::convlt1_vert(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const double* vkern_ptr, int kern_size)
+{
+	int i, j, row;
+	double sum, kern;
+	const uint8_t *ptr_;
+
+	for (j = 0; j < height; ++j) {
+		kern = vkern_ptr[j % kern_size]; // kernel value at row j
+		for (i = 0; i < width; ++i) {
+			sum = 0;
+			ptr_ = in_ptr;
+			for (row = 0; row < kern_size; ++row, ptr_ += stride) {
+				sum += *ptr_ * vkern_ptr[row];
+			}
+			*out_ptr = (uint8_t)sum; // TODO(dmi): do not mul() but add()
+			++in_ptr;
+			++out_ptr;
+		}
+		in_ptr += pad;
+		out_ptr += pad;
+	}
+}
+
+COMPV_ERROR_CODE CompVConvlt::newObj(CompVPtr<CompVConvlt* >* convlt)
 {
     COMPV_CHECK_EXP_RETURN(!convlt, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVObjWrapper<CompVConvlt*> convlt_ = NULL;
+    CompVPtr<CompVConvlt*> convlt_ = NULL;
 
     convlt_ = new CompVConvlt();
     COMPV_CHECK_EXP_RETURN(!convlt, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

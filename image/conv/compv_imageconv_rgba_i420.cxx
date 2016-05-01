@@ -212,7 +212,7 @@ static void i420ToRGBAKernel11_C(const uint8_t* yPtr, const uint8_t* uPtr, const
 }
 
 // RGB/BGR -> I420
-static COMPV_ERROR_CODE __xxxToI420(const CompVObjWrapper<CompVImage* >& rgb, CompVObjWrapper<CompVImage* >& i420, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXToYUV_YCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXToYUV_VCoeffs8)
+static COMPV_ERROR_CODE __xxxToI420(const CompVPtr<CompVImage* >& rgb, CompVPtr<CompVImage* >& i420, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXToYUV_YCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXToYUV_VCoeffs8)
 {
     // This is a private function, up to the caller to check the input parameters
     // The output format must be I420 or Graysacle
@@ -225,7 +225,7 @@ static COMPV_ERROR_CODE __xxxToI420(const CompVObjWrapper<CompVImage* >& rgb, Co
     uint8_t* outYPtr = (uint8_t*)(*i420)->getDataPtr();
     uint8_t* outUPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? NULL : outYPtr + (height * stride);
     uint8_t* outVPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? NULL : outUPtr + ((height * stride) >> 2);
-    CompVObjWrapper<CompVThreadDispatcher* > threadDip = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher* > threadDip = CompVEngine::getThreadDispatcher();
     int threadsCount = 1;
 
     // IS_ALIGNED(strideRgbaBytes, ALIGNV * 3) = IS_ALIGNED(stride * 3, ALIGNV * 3) = IS_ALIGNED(stride, ALIGNV)
@@ -318,18 +318,18 @@ static COMPV_ERROR_CODE __xxxToI420(const CompVObjWrapper<CompVImage* >& rgb, Co
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImageConvRgbaI420::rgbToI420(const CompVObjWrapper<CompVImage* >& rgb, CompVObjWrapper<CompVImage* >& i420)
+COMPV_ERROR_CODE CompVImageConvRgbaI420::rgbToI420(const CompVPtr<CompVImage* >& rgb, CompVPtr<CompVImage* >& i420)
 {
     return __xxxToI420(rgb, i420, kRGBAToYUV_YCoeffs8, kRGBAToYUV_UCoeffs8, kRGBAToYUV_VCoeffs8); // use RGBA coeffs because the smples are converted to RGBA first
 }
 
-COMPV_ERROR_CODE CompVImageConvRgbaI420::bgrToI420(const CompVObjWrapper<CompVImage* >& bgr, CompVObjWrapper<CompVImage* >& i420)
+COMPV_ERROR_CODE CompVImageConvRgbaI420::bgrToI420(const CompVPtr<CompVImage* >& bgr, CompVPtr<CompVImage* >& i420)
 {
     return __xxxToI420(bgr, i420, kBGRAToYUV_YCoeffs8, kBGRAToYUV_UCoeffs8, kBGRAToYUV_VCoeffs8); // use BGRA coeffs because the smples are converted to BGRA first
 }
 
 // RGBA/ARGB/BGRA/ABGR -> I420
-static COMPV_ERROR_CODE __xxxxToI420(const CompVObjWrapper<CompVImage* >& rgba, CompVObjWrapper<CompVImage* >& i420, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXXToYUV_YCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXXToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXXToYUV_VCoeffs8)
+static COMPV_ERROR_CODE __xxxxToI420(const CompVPtr<CompVImage* >& rgba, CompVPtr<CompVImage* >& i420, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXXToYUV_YCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXXToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kXXXXToYUV_VCoeffs8)
 {
     // This is a private function, up to the caller to check the input parameters
     // The output format must be I420 or Graysacle
@@ -343,7 +343,7 @@ static COMPV_ERROR_CODE __xxxxToI420(const CompVObjWrapper<CompVImage* >& rgba, 
     uint8_t* outUPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? NULL : outYPtr + (height * stride);
     uint8_t* outVPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? NULL : outUPtr + ((height * stride) >> 2);
     int strideRgbaBytes = (stride << 2); // #20 not SSE aligned but (20*4)=#80 is aligned
-    CompVObjWrapper<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
     int threadsCount = 1;
 
     // IS_ALIGNED(strideRgbaBytes, ALIGNV * 4) = IS_ALIGNED(stride * 4, ALIGNV * 4) = IS_ALIGNED(stride, ALIGNV)
@@ -456,24 +456,24 @@ static COMPV_ERROR_CODE __xxxxToI420(const CompVObjWrapper<CompVImage* >& rgba, 
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImageConvRgbaI420::rgbaToI420(const CompVObjWrapper<CompVImage* >& rgba, CompVObjWrapper<CompVImage* >& i420)
+COMPV_ERROR_CODE CompVImageConvRgbaI420::rgbaToI420(const CompVPtr<CompVImage* >& rgba, CompVPtr<CompVImage* >& i420)
 {
     return __xxxxToI420(rgba, i420, kRGBAToYUV_YCoeffs8, kRGBAToYUV_UCoeffs8, kRGBAToYUV_VCoeffs8);
 }
-COMPV_ERROR_CODE CompVImageConvRgbaI420::argbToI420(const CompVObjWrapper<CompVImage* >& argb, CompVObjWrapper<CompVImage* >& i420)
+COMPV_ERROR_CODE CompVImageConvRgbaI420::argbToI420(const CompVPtr<CompVImage* >& argb, CompVPtr<CompVImage* >& i420)
 {
     return __xxxxToI420(argb, i420, kARGBToYUV_YCoeffs8, kARGBToYUV_UCoeffs8, kARGBToYUV_VCoeffs8);
 }
-COMPV_ERROR_CODE CompVImageConvRgbaI420::bgraToI420(const CompVObjWrapper<CompVImage* >& bgra, CompVObjWrapper<CompVImage* >& i420)
+COMPV_ERROR_CODE CompVImageConvRgbaI420::bgraToI420(const CompVPtr<CompVImage* >& bgra, CompVPtr<CompVImage* >& i420)
 {
     return __xxxxToI420(bgra, i420, kBGRAToYUV_YCoeffs8, kBGRAToYUV_UCoeffs8, kBGRAToYUV_VCoeffs8);
 }
-COMPV_ERROR_CODE CompVImageConvRgbaI420::abgrToI420(const CompVObjWrapper<CompVImage* >& abgr, CompVObjWrapper<CompVImage* >& i420)
+COMPV_ERROR_CODE CompVImageConvRgbaI420::abgrToI420(const CompVPtr<CompVImage* >& abgr, CompVPtr<CompVImage* >& i420)
 {
     return __xxxxToI420(abgr, i420, kABGRToYUV_YCoeffs8, kABGRToYUV_UCoeffs8, kABGRToYUV_VCoeffs8);
 }
 
-COMPV_ERROR_CODE CompVImageConvRgbaI420::i420ToRgba(const CompVObjWrapper<CompVImage* >& i420, CompVObjWrapper<CompVImage* >& rgba)
+COMPV_ERROR_CODE CompVImageConvRgbaI420::i420ToRgba(const CompVPtr<CompVImage* >& i420, CompVPtr<CompVImage* >& rgba)
 {
     // This is a private function, up to the caller to check the input parameters
     i420ToRGBAKernel toRGBA = i420ToRGBAKernel11_C;
@@ -485,7 +485,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaI420::i420ToRgba(const CompVObjWrapper<CompVI
     const uint8_t* vPtr = uPtr + ((height * stride) >> 2);
     uint8_t* outRgbaPtr = (uint8_t*)rgba->getDataPtr();
 
-    CompVObjWrapper<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
 
     int threadsCount = 1;
 

@@ -33,7 +33,7 @@ CompVImageScalePyramid::CompVImageScalePyramid(float fScaleFactor, int32_t nLeve
     , m_pScaleFactors(NULL)
 {
     COMPV_ASSERT(m_nLevels > 0 && m_fScaleFactor > 0); // never happen, we already checked it in newObj()
-    m_pImages = (CompVObjWrapper<CompVImage *>*)CompVMem::calloc(m_nLevels, sizeof(CompVObjWrapper<CompVImage *>));
+    m_pImages = (CompVPtr<CompVImage *>*)CompVMem::calloc(m_nLevels, sizeof(CompVPtr<CompVImage *>));
     if (!m_pImages) {
         COMPV_DEBUG_ERROR("Failed to allocate memory");
         return;
@@ -67,7 +67,7 @@ CompVImageScalePyramid::~CompVImageScalePyramid()
     }
 }
 
-COMPV_ERROR_CODE CompVImageScalePyramid::process(const CompVObjWrapper<CompVImage*>& inImage, int32_t level /*= -1*/)
+COMPV_ERROR_CODE CompVImageScalePyramid::process(const CompVPtr<CompVImage*>& inImage, int32_t level /*= -1*/)
 {
     COMPV_CHECK_EXP_RETURN(!inImage || (level >= m_nLevels), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -80,14 +80,14 @@ COMPV_ERROR_CODE CompVImageScalePyramid::process(const CompVObjWrapper<CompVImag
 
 #if 1 // Option 2
     if (level < 0) {
-        CompVObjWrapper<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+        CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
         int32_t threadsCount = 1;
         // Compute number of threads
         if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
             threadsCount = threadDip->getThreadsCount();
         }
         if (threadsCount > 1) {
-            CompVObjWrapper<CompVImageScalePyramid* >This = this;
+            CompVPtr<CompVImageScalePyramid* >This = this;
             uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
             // levelStart is used to make sure we won't schedule more than "threadsCount"
             int levelStart, lev, levelMax;
@@ -137,7 +137,7 @@ COMPV_ERROR_CODE CompVImageScalePyramid::process(const CompVObjWrapper<CompVImag
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImageScalePyramid::getImage(int32_t level, CompVObjWrapper<CompVImage *>* image)
+COMPV_ERROR_CODE CompVImageScalePyramid::getImage(int32_t level, CompVPtr<CompVImage *>* image)
 {
     COMPV_CHECK_EXP_RETURN(!image || level >= m_nLevels, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     *image = m_pImages[level];
@@ -154,7 +154,7 @@ float CompVImageScalePyramid::getScaleFactor(int32_t level /*= COMPV_PYRAMOD_LEV
 }
 
 // Private function
-COMPV_ERROR_CODE CompVImageScalePyramid::processLevelAt(const CompVObjWrapper<CompVImage*>& inImage, int32_t level)
+COMPV_ERROR_CODE CompVImageScalePyramid::processLevelAt(const CompVPtr<CompVImage*>& inImage, int32_t level)
 {
     COMPV_CHECK_EXP_RETURN(!inImage || level < 0 || level >= m_nLevels, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     float sf = getScaleFactor(level);
@@ -170,11 +170,11 @@ COMPV_ERROR_CODE CompVImageScalePyramid::processLevelAt_AsynExec(const struct co
     return This->processLevelAt(image, level);
 }
 
-COMPV_ERROR_CODE CompVImageScalePyramid::newObj(float fScaleFactor, int32_t nLevels, COMPV_SCALE_TYPE eScaleType, CompVObjWrapper<CompVImageScalePyramid*>* pyramid)
+COMPV_ERROR_CODE CompVImageScalePyramid::newObj(float fScaleFactor, int32_t nLevels, COMPV_SCALE_TYPE eScaleType, CompVPtr<CompVImageScalePyramid*>* pyramid)
 {
     COMPV_CHECK_CODE_RETURN(CompVEngine::init());
     COMPV_CHECK_EXP_RETURN(pyramid == NULL || nLevels <= 0 || fScaleFactor <= 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVObjWrapper<CompVImageScalePyramid*>pyramid_ = new CompVImageScalePyramid(fScaleFactor, nLevels, eScaleType);
+    CompVPtr<CompVImageScalePyramid*>pyramid_ = new CompVImageScalePyramid(fScaleFactor, nLevels, eScaleType);
     if (!pyramid_ || !pyramid_->m_bValid) {
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }

@@ -60,10 +60,10 @@ CompVFeatureDescriptions::~CompVFeatureDescriptions()
 
 }
 
-COMPV_ERROR_CODE CompVFeatureDescriptions::newObj(int nFeaturesCount, int nFeatureBits, CompVObjWrapper<CompVFeatureDescriptions*>* descriptions)
+COMPV_ERROR_CODE CompVFeatureDescriptions::newObj(int nFeaturesCount, int nFeatureBits, CompVPtr<CompVFeatureDescriptions*>* descriptions)
 {
     COMPV_CHECK_EXP_RETURN(!descriptions || nFeaturesCount <= 0 || nFeatureBits <= 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVObjWrapper<CompVFeatureDescriptions*> descriptions_ = new CompVFeatureDescriptions(nFeaturesCount, nFeatureBits);
+    CompVPtr<CompVFeatureDescriptions*> descriptions_ = new CompVFeatureDescriptions(nFeaturesCount, nFeatureBits);
     if (!descriptions_ || descriptions_->m_nFeatureBits != nFeatureBits || descriptions_->m_nFeaturesCount != nFeaturesCount || !descriptions_->m_data) {
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }
@@ -135,7 +135,7 @@ CompVFeatureDete::~CompVFeatureDete()
 
 }
 
-COMPV_ERROR_CODE CompVFeatureDete::newObj(int deteId, CompVObjWrapper<CompVFeatureDete* >* dete)
+COMPV_ERROR_CODE CompVFeatureDete::newObj(int deteId, CompVPtr<CompVFeatureDete* >* dete)
 {
     COMPV_CHECK_CODE_RETURN(CompVEngine::init());
     COMPV_CHECK_EXP_RETURN(dete == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -166,7 +166,7 @@ CompVFeatureDesc::~CompVFeatureDesc()
 
 }
 
-COMPV_ERROR_CODE CompVFeatureDesc::newObj(int descId, CompVObjWrapper<CompVFeatureDesc* >* desc)
+COMPV_ERROR_CODE CompVFeatureDesc::newObj(int descId, CompVPtr<CompVFeatureDesc* >* desc)
 {
     COMPV_CHECK_CODE_RETURN(CompVEngine::init());
     COMPV_CHECK_EXP_RETURN(desc == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

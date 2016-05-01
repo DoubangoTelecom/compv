@@ -29,7 +29,7 @@ static const std::string formatExtension(COMPV_PIXEL_FORMAT pixelFormat)
     }
 }
 
-static void writeImgToFile(const CompVObjWrapper<CompVImage *>& img, COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL)
+static void writeImgToFile(const CompVPtr<CompVImage *>& img, COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL)
 {
     if (img) {
         std::string fileName = "./out." + formatExtension(img->getPixelFormat());
@@ -96,10 +96,10 @@ static void writeImgToFile(const CompVObjWrapper<CompVImage *>& img, COMPV_BORDE
     }
 }
 
-static const std::string imageMD5(const CompVObjWrapper<CompVImage *>& img, COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL)
+static const std::string imageMD5(const CompVPtr<CompVImage *>& img, COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL)
 {
     if (img) {
-        CompVObjWrapper<CompVMd5*> md5;
+        CompVPtr<CompVMd5*> md5;
         COMPV_CHECK_CODE_ASSERT(CompVMd5::newObj(&md5));
         int width = img->getWidth();
         int stride = img->getStride();

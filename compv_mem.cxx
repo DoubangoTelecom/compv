@@ -56,7 +56,7 @@ COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X64_AVX(COMPV_ALIGNED(SSE) void* dst
 #endif
 
 std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;
-CompVObjWrapper<CompVMutex* > CompVMem::s_SpecialsMutex;
+CompVPtr<CompVMutex* > CompVMem::s_SpecialsMutex;
 bool CompVMem::s_bInitialize = false;
 
 typedef void(*CompVMemCopy)(void* dstPtr, const void*srcPtr, compv_uscalar_t size);

@@ -110,7 +110,7 @@ public:
     COMPV_INLINE uint64_t getTockensCount() {
         return m_iTokensCount;
     }
-    COMPV_INLINE CompVObjWrapper<CompVThread* > getThread() {
+    COMPV_INLINE CompVPtr<CompVThread* > getThread() {
         return m_Thread;
     }
     COMPV_INLINE compv_core_id_t getCoreId() {
@@ -118,16 +118,16 @@ public:
     }
 
     static compv_asynctoken_id_t getUniqueTokenId();
-    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVAsyncTask*>* asyncTask);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVAsyncTask*>* asyncTask);
 
 private:
     static void* COMPV_STDCALL run(void *pcArg);
 
 private:
     COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-    CompVObjWrapper<CompVThread* >m_Thread;
-    CompVObjWrapper<CompVSemaphore* >m_SemRun;
-    CompVObjWrapper<CompVSemaphore* >m_SemExec;
+    CompVPtr<CompVThread* >m_Thread;
+    CompVPtr<CompVSemaphore* >m_SemRun;
+    CompVPtr<CompVSemaphore* >m_SemExec;
     struct compv_asynctoken_xs tokens[COMPV_ASYNCTASK_MAX_TOKEN_COUNT];
     COMPV_DISABLE_WARNINGS_END()
 

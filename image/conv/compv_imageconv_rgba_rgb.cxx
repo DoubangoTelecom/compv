@@ -63,7 +63,7 @@ static void __rgbToRgbaKernel11_C(const uint8_t* rgb, uint8_t* rgba, compv_scala
     }
 }
 
-COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVObjWrapper<CompVImage* >& rgb, CompVObjWrapper<CompVImage* >& rgba)
+COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVPtr<CompVImage* >& rgb, CompVPtr<CompVImage* >& rgba)
 {
     // This is a private function, up to the caller to check the input parameters
     rgbToRgbaKernel toRGBA = __rgbToRgbaKernel11_C;
@@ -73,7 +73,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVObjWrapper<CompVIma
     int width = rgb->getWidth();
     int stride = rgb->getStride();
     int threadsCount = 1;
-    CompVObjWrapper<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
 
     if (COMPV_IS_ALIGNED_SSE(stride)) {
         if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
@@ -138,7 +138,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVObjWrapper<CompVIma
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImageConvRgbaRgb::bgrToBgra(const CompVObjWrapper<CompVImage* >& bgr, CompVObjWrapper<CompVImage* >& bgra)
+COMPV_ERROR_CODE CompVImageConvRgbaRgb::bgrToBgra(const CompVPtr<CompVImage* >& bgr, CompVPtr<CompVImage* >& bgra)
 {
     // This is a private function, up to the caller to check the input parameters
 

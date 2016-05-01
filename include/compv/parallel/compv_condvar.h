@@ -41,7 +41,7 @@ public:
     COMPV_ERROR_CODE signal();
     COMPV_ERROR_CODE broadcast();
 
-    static COMPV_ERROR_CODE newObj(CompVObjWrapper<CompVCondvar*>* condvar);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVCondvar*>* condvar);
 
 private:
     COMPV_ERROR_CODE waitWithoutTimeout();
