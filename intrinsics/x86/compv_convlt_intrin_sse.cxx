@@ -34,7 +34,6 @@ void Convlt1_hz4_float_Intrin_SSE3(const uint8_t* in_ptr, uint8_t* out_ptr, comp
 	int i, j;
 	__m128 xmmKernel, xmmFloats[4];
 	__m128i xmmIn[4], xmmZero, xmm0;
-	float(&floats)[4] = ((float(&)[4])xmmFloats[0]); // FIXME: remove
 
 	xmmZero = _mm_setzero_si128();
 	xmmKernel = _mm_loadu_ps(hkern_ptr);
@@ -47,8 +46,8 @@ void Convlt1_hz4_float_Intrin_SSE3(const uint8_t* in_ptr, uint8_t* out_ptr, comp
 			xmmIn[1] = _mm_cvtsi32_si128(*((uint32_t*)(in_ptr + 1)));
 			xmmIn[2] = _mm_cvtsi32_si128(*((uint32_t*)(in_ptr + 2)));
 			xmmIn[3] = _mm_cvtsi32_si128(*((uint32_t*)(in_ptr + 3)));
-			// Convert each 4U8 to 4F32
 
+			// Convert each 4U8 to 4F32
 			xmmFloats[0] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(_mm_unpacklo_epi8(xmmIn[0], xmmZero), xmmZero));
 			xmmFloats[1] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(_mm_unpacklo_epi8(xmmIn[1], xmmZero), xmmZero));
 			xmmFloats[2] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(_mm_unpacklo_epi8(xmmIn[2], xmmZero), xmmZero));
@@ -62,20 +61,14 @@ void Convlt1_hz4_float_Intrin_SSE3(const uint8_t* in_ptr, uint8_t* out_ptr, comp
 			// SUM += H(IN * KERNEL)
 			xmmFloats[0] = _mm_hadd_ps(xmmFloats[0], xmmFloats[1]);
 			xmmFloats[2] = _mm_hadd_ps(xmmFloats[2], xmmFloats[3]);
-			xmmFloats[0] = _mm_hadd_ps(xmmFloats[0], xmmFloats[2]);			
+			xmmFloats[0] = _mm_hadd_ps(xmmFloats[0], xmmFloats[2]);
 
-#if 0
-			out_ptr[0] = (uint8_t)floats[0];
-			out_ptr[1] = (uint8_t)floats[1];
-			out_ptr[2] = (uint8_t)floats[2];
-			out_ptr[3] = (uint8_t)floats[3];
-#else
 			// Truncate to have same result as C++ implementation: out_ptr[x] = (uint8_t)floats[x];
 			xmm0 = _mm_cvttps_epi32(xmmFloats[0]); // Convert to Int32 with truncation
 			xmm0 = _mm_packs_epi32(xmm0, xmm0); // Convert to Int16
 			xmm0 = _mm_packus_epi16(xmm0, xmm0); // Convert to Uint8 and saturate
 			*((uint32_t*)out_ptr) = (uint32_t)_mm_cvtsi128_si32(xmm0);
-#endif
+
 			
 			in_ptr += 4;
 			out_ptr += 4;
@@ -88,7 +81,45 @@ void Convlt1_hz4_float_Intrin_SSE3(const uint8_t* in_ptr, uint8_t* out_ptr, comp
 			xmmFloats[0] = _mm_mul_ps(xmmFloats[0], xmmKernel);
 			xmmFloats[0] = _mm_hadd_ps(xmmFloats[0], xmmFloats[0]);
 			xmmFloats[0] = _mm_hadd_ps(xmmFloats[0], xmmFloats[0]);
-			out_ptr[0] = (uint8_t)_mm_cvtss_f32(xmmFloats[0]);
+			out_ptr[0] = (uint8_t)_mm_cvtt_ss2si(xmmFloats[0]);
+
+			in_ptr += 1;
+			out_ptr += 1;
+		}
+
+		in_ptr += pad;
+		out_ptr += pad;
+	}
+}
+
+// This function requires sizeof(float) = 4
+// TODO(dmi): add ASM
+void Convlt1_hz8_float_Intrin_SSE3(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+
+	int i, j;
+	__m128 xmmKernelLow, xmmKernelHigh, xmmFloatsLow, xmmFloatsHigh;
+	__m128i xmmInLow, xmmInHigh, xmmZero;
+
+	xmmZero = _mm_setzero_si128();
+	xmmKernelLow = _mm_loadu_ps(hkern_ptr);
+	xmmKernelHigh = _mm_loadu_ps(hkern_ptr + 4);
+
+	// C++ code produce slightly different result because of the precision
+	for (j = 0; j < height; ++j) {
+		/* 4 by 4 loop */
+		for (i = 0; i < width; i += 1) { // We can read rows up to (width + kernel_size) = (width + 8)
+			xmmInLow = _mm_cvtsi32_si128(*((uint32_t*)in_ptr));
+			xmmInHigh = _mm_cvtsi32_si128(*((uint32_t*)(in_ptr + 4)));
+			xmmFloatsLow = _mm_cvtepi32_ps(_mm_unpacklo_epi16(_mm_unpacklo_epi8(xmmInLow, xmmZero), xmmZero));
+			xmmFloatsHigh = _mm_cvtepi32_ps(_mm_unpacklo_epi16(_mm_unpacklo_epi8(xmmInHigh, xmmZero), xmmZero));
+			xmmFloatsLow = _mm_mul_ps(xmmFloatsLow, xmmKernelLow);
+			xmmFloatsHigh = _mm_mul_ps(xmmFloatsHigh, xmmKernelHigh);
+			xmmFloatsLow = _mm_hadd_ps(xmmFloatsLow, xmmFloatsHigh);
+			xmmFloatsLow = _mm_hadd_ps(xmmFloatsLow, xmmFloatsLow);
+			xmmFloatsLow = _mm_hadd_ps(xmmFloatsLow, xmmFloatsLow);
+			out_ptr[0] = (uint8_t)_mm_cvtt_ss2si(xmmFloatsLow);
 
 			in_ptr += 1;
 			out_ptr += 1;

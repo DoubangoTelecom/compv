@@ -120,8 +120,6 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt2(const uint8_t* img_ptr, int img_width, 
 template<class T>
 COMPV_ERROR_CODE CompVConvlt<T>::convlt1(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const T* vkern_ptr, const T* hkern_ptr, int kern_size, uint8_t* out_ptr /*= NULL*/, int img_border /*= 0*/)
 {
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): Multi-threading and SIMD acceleration
-
     // Check inputs
 	COMPV_CHECK_EXP_RETURN(!img_ptr || (img_width < kern_size * 2) || (img_height < kern_size * 2) || (img_stride < img_width) || !vkern_ptr || !hkern_ptr || img_border < 0 || !(kern_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -172,6 +170,7 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt1(const uint8_t* img_ptr, int img_width, 
 #else
 	{
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 		int col, i, j;
 		double sum;
 		for (j = 0; j < img_height; ++j) {
@@ -199,6 +198,7 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt1(const uint8_t* img_ptr, int img_width, 
 #else
 	{
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 		int row, i, j;
 		const uint8_t *ptr_;
 		double sum;
@@ -234,18 +234,34 @@ void CompVConvlt<T>::convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int wid
 {
 	static const bool size_of_float_is4 = (sizeof(float) == 4); // ASM and INTRIN code require it
 	
-	if (std::is_same<T, float>::value && size_of_float_is4 && kern_size <= 4) {
-		void (*Convlt1_hz4_float)(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr) = NULL;
-		if (CompVCpu::isEnabled(compv::kCpuFlagSSE3)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(Convlt1_hz4_float = Convlt1_hz4_float_Intrin_SSE3);
-		}
-		if (Convlt1_hz4_float) {
-			T hz4_float_kern[4] = { 0 }; // Kernel will be padded with zeros
-			for (int i = 0; i < kern_size; ++i) {
-				hz4_float_kern[i] = hkern_ptr[i];
+	// Floating point implementation
+	if (std::is_same<T, float>::value && size_of_float_is4) {
+		void(*Convlt1_hzx_float)(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr) = NULL;
+		if (kern_size <= 4) {
+			if (CompVCpu::isEnabled(compv::kCpuFlagSSE3)) {
+				COMPV_EXEC_IFDEF_INTRIN_X86(Convlt1_hzx_float = Convlt1_hz4_float_Intrin_SSE3);
 			}
-			Convlt1_hz4_float(in_ptr, out_ptr, width, height, pad, (const float*)hz4_float_kern);
-			return;
+			if (Convlt1_hzx_float) {
+				T hz4_float_kern[4] = { 0 }; // Kernel will be padded with zeros
+				for (int i = 0; i < kern_size; ++i) {
+					hz4_float_kern[i] = hkern_ptr[i];
+				}
+				Convlt1_hzx_float(in_ptr, out_ptr, width, height, pad, (const float*)hz4_float_kern);
+				return;
+			}
+		}
+		else if (kern_size <= 8) {
+			if (CompVCpu::isEnabled(compv::kCpuFlagSSE3)) {
+				COMPV_EXEC_IFDEF_INTRIN_X86(Convlt1_hzx_float = Convlt1_hz8_float_Intrin_SSE3);
+			}
+			if (Convlt1_hzx_float) {
+				T hz8_float_kern[8] = { 0 }; // Kernel will be padded with zeros
+				for (int i = 0; i < kern_size; ++i) {
+					hz8_float_kern[i] = hkern_ptr[i];
+				}
+				Convlt1_hzx_float(in_ptr, out_ptr, width, height, pad, (const float*)hz8_float_kern);
+				return;
+			}
 		}
 	}
 	
