@@ -121,7 +121,7 @@ extern int COMPV_FEATURE_DETE_ORB_PATCH_BITS;
 extern COMPV_SCALE_TYPE COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE;
 
 static const int COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE = 7;
-static const double COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 2.0;
+static const float COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 2.f;
 
 static void Brief256_31_C(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out);
 
@@ -264,7 +264,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
         COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(level, &imageAtLevelN));
 		// The out is the image itsel to avoid allocating temp buffer. This means the images in the pyramod are modified
 		// and any subsequent call must take care
-		m_convlt->convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), (const double*)m_kern->getDataPtr(), (const double*)m_kern->getDataPtr(), COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, (uint8_t*)imageAtLevelN->getDataPtr());
+		m_convlt->convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), m_kern->getDataPtr(), m_kern->getDataPtr(), COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, (uint8_t*)imageAtLevelN->getDataPtr());
     }
 	
 	// Init "m_funBrief256_31" using current CPU flags
@@ -315,12 +315,12 @@ COMPV_ERROR_CODE CompVFeatureDescORB::newObj(CompVPtr<CompVFeatureDesc* >* orb)
 {
     COMPV_CHECK_EXP_RETURN(orb == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVPtr<CompVImageScalePyramid * > pyramid_;
-    CompVPtr<CompVArray<double>* > kern_;
-    CompVPtr<CompVConvlt* > convlt_;
+	CompVPtr<CompVArray<float>* > kern_;
+	CompVPtr<CompVConvlt<float>* > convlt_;
     // Create Gauss kernel values
-    COMPV_CHECK_CODE_RETURN(CompVGaussKern::buildKern1(&kern_, COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA));
+	COMPV_CHECK_CODE_RETURN(CompVGaussKern<float>::buildKern1(&kern_, COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA));
     // Create convolution context
-    COMPV_CHECK_CODE_RETURN(CompVConvlt::newObj(&convlt_));
+	COMPV_CHECK_CODE_RETURN(CompVConvlt<float>::newObj(&convlt_));
     // Create the pyramid
     COMPV_CHECK_CODE_RETURN(CompVImageScalePyramid::newObj(COMPV_FEATURE_DETE_ORB_PYRAMID_SF, COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS, COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE, &pyramid_));
 

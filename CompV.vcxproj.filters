@@ -333,6 +333,9 @@
     <ClInclude Include="include\compv\intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_avx2.h">
       <Filter>Header Files\intrinsics\x86\features\orb</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\compv_convlt_intrin_sse.h">
+      <Filter>Header Files\intrinsics\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -502,6 +505,9 @@
     </ClCompile>
     <ClCompile Include="intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_avx2.cxx">
       <Filter>Source Files\intrinsics\x86\features\orb</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\compv_convlt_intrin_sse.cxx">
+      <Filter>Source Files\intrinsics\x86</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

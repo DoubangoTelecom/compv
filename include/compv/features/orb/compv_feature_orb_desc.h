@@ -61,8 +61,8 @@ private:
 private:
     // TODO(dmi): use internal detector: BRIEF (just like what is done for the detector and FAST internal dete)
     CompVPtr<CompVImageScalePyramid* > m_pyramid;
-    CompVPtr<CompVConvlt* > m_convlt;
-    CompVPtr<CompVArray<double>* > m_kern;
+	CompVPtr<CompVConvlt<float>* > m_convlt;
+    CompVPtr<CompVArray<float>* > m_kern;
     const CompVImage* m_pcImages[COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT];
 	int m_nPatchDiameter;
 	int m_nPatchBits;

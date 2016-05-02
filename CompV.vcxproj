@@ -60,6 +60,7 @@
     <ClInclude Include="include\compv\image\scale\compv_imagescale_bilinear.h" />
     <ClInclude Include="include\compv\image\scale\compv_imagescale_common.h" />
     <ClInclude Include="include\compv\image\scale\compv_imagescale_pyramid.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\compv_convlt_intrin_sse.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_avx.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_sse.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_mem_intrin_avx.h" />
@@ -120,6 +121,12 @@
     <ClCompile Include="image\scale\compv_imagescale_bilinear.cxx" />
     <ClCompile Include="image\scale\compv_imagescale_common.cxx" />
     <ClCompile Include="image\scale\compv_imagescale_pyramid.cxx" />
+    <ClCompile Include="intrinsics\x86\compv_convlt_intrin_sse.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="intrinsics\x86\compv_mem_intrin_avx.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>

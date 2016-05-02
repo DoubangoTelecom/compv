@@ -17,22 +17,24 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_GAUSS_H_)
-#define _COMPV_GAUSS_H_
+#if !defined(_COMPV_ACONVLT_INTRIN_SSE_H_)
+#define _COMPV_ACONVLT_INTRIN_SSE_H_
 
 #include "compv/compv_config.h"
-#include "compv/compv_array.h"
+#include "compv/compv_common.h"
+
+#if defined(_COMPV_API_H_)
+#error("This is a private file and must not be part of the API")
+#endif
+
+#if COMPV_ARCH_X86 && COMPV_INTRINSIC
 
 COMPV_NAMESPACE_BEGIN()
 
-template<class T>
-class COMPV_API CompVGaussKern
-{
-public:
-    static COMPV_ERROR_CODE buildKern2(CompVPtr<CompVArray<T>* >* kern, int size, T sigma);
-    static COMPV_ERROR_CODE buildKern1(CompVPtr<CompVArray<T>* >* kern, int size, T sigma);
-};
+void Convlt1_hz4_float_Intrin_SSE3(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr);
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_GAUSS_H_ */
+#endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
+
+#endif /* _COMPV_ACONVLT_INTRIN_SSE_H_ */

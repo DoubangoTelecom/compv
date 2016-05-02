@@ -26,6 +26,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+template<class T>
 class COMPV_API CompVConvlt : public CompVObj
 {
 protected:
@@ -42,13 +43,13 @@ public:
 		return m_nResultSize;
     }
 	COMPV_ERROR_CODE convlt2(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const double* kern_ptr, int kern_size, uint8_t* out_ptr = NULL, int img_border = 0);
-	COMPV_ERROR_CODE convlt1(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const double* vkern_ptr, const double* hkern_ptr, int kern_size, uint8_t* out_ptr = NULL, int img_border = 0);
+	COMPV_ERROR_CODE convlt1(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const T* vkern_ptr, const T* hkern_ptr, int kern_size, uint8_t* out_ptr = NULL, int img_border = 0);
 
     static COMPV_ERROR_CODE newObj(CompVPtr<CompVConvlt* >* convlt);
 
 private:
-	static void convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int pad, const double* hkern_ptr, int kern_size);
-	static void convlt1_vert(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const double* vkern_ptr, int kern_size);
+	static void convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int pad, const T* hkern_ptr, int kern_size);
+	static void convlt1_vert(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const T* vkern_ptr, int kern_size);
 
 private:
     void* m_pDataPtr;

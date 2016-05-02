@@ -60,12 +60,6 @@ private:
     COMPV_DISABLE_WARNINGS_END()
 };
 
-// See source file for instanciation
-typedef CompVArray<double > CompVArrayDouble;
-typedef CompVArray<float> CompVArrayFloat;
-typedef CompVArray<uint16_t> CompVArrayUInt16;
-typedef CompVArray<uint8_t> CompVArrayUInt8;
-
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_ARRAY_H_ */

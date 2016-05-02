@@ -27,7 +27,7 @@
 #error("This is a private file and must not be part of the API")
 #endif
 
-#if defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC)
+#if COMPV_ARCH_X86 && COMPV_INTRINSIC
 
 COMPV_NAMESPACE_BEGIN()
 

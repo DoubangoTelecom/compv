@@ -1,3 +1,4 @@
+#if 0
 #include <compv/compv_api.h>
 
 #include "../common.h"
@@ -163,3 +164,4 @@ bool TestGaussKernDim2Gen()
 
     return true;
 }
+#endif

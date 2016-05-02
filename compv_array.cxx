@@ -23,6 +23,11 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+template class CompVArray<double >;
+template class CompVArray<float >;
+template class CompVArray<uint16_t >;
+template class CompVArray<uint8_t >;
+
 template<class T>
 CompVArray<T>::CompVArray()
     : m_pBuffer(NULL)
@@ -124,11 +129,5 @@ bail:
 
     return err_;
 }
-
-// See header file
-template class CompVArray<double >;
-template class CompVArray<float >;
-template class CompVArray<uint16_t >;
-template class CompVArray<uint8_t >;
 
 COMPV_NAMESPACE_END()

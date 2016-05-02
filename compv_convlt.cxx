@@ -22,9 +22,15 @@
 #include "compv/compv_engine.h"
 #include "compv/compv_debug.h"
 
+#include "compv/intrinsics/x86/compv_convlt_intrin_sse.h"
+
 COMPV_NAMESPACE_BEGIN()
 
-CompVConvlt::CompVConvlt()
+template class CompVConvlt<double >;
+template class CompVConvlt<float >;
+
+template<class T>
+CompVConvlt<T>::CompVConvlt()
     : m_pDataPtr(NULL)
     , m_pDataPtr0(NULL)
     , m_nDataSize(0)
@@ -35,13 +41,15 @@ CompVConvlt::CompVConvlt()
 
 }
 
-CompVConvlt::~CompVConvlt()
+template<class T>
+CompVConvlt<T>::~CompVConvlt()
 {
     CompVMem::free((void**)&m_pDataPtr);
     CompVMem::free((void**)&m_pDataPtr0);
 }
 
-COMPV_ERROR_CODE CompVConvlt::convlt2(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const double* kern_ptr, int kern_size, uint8_t* out_ptr /*= NULL*/, int img_border /*= 0*/)
+template<class T>
+COMPV_ERROR_CODE CompVConvlt<T>::convlt2(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const double* kern_ptr, int kern_size, uint8_t* out_ptr /*= NULL*/, int img_border /*= 0*/)
 {
 	// Multi-threading and SIMD acceleration
 	// Check if the kernel is separable (matrice rank = 1) and use convlt1 instead
@@ -108,7 +116,8 @@ COMPV_ERROR_CODE CompVConvlt::convlt2(const uint8_t* img_ptr, int img_width, int
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVConvlt::convlt1(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const double* vkern_ptr, const double* hkern_ptr, int kern_size, uint8_t* out_ptr /*= NULL*/, int img_border /*= 0*/)
+template<class T>
+COMPV_ERROR_CODE CompVConvlt<T>::convlt1(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const T* vkern_ptr, const T* hkern_ptr, int kern_size, uint8_t* out_ptr /*= NULL*/, int img_border /*= 0*/)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): Multi-threading and SIMD acceleration
 
@@ -219,39 +228,51 @@ COMPV_ERROR_CODE CompVConvlt::convlt1(const uint8_t* img_ptr, int img_width, int
 }
 
 // Private function: do not check input parameters
-void CompVConvlt::convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int pad, const double* hkern_ptr, int kern_size)
+template <typename T>
+void CompVConvlt<T>::convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int pad, const T* hkern_ptr, int kern_size)
 {
-	int i, j, col;
-	double sum;
-
-	for (j = 0; j < height; ++j) {
-		for (i = 0; i < width; ++i) {
-			sum = 0;
-			for (col = 0; col < kern_size; ++col) {
-				sum += in_ptr[col] * hkern_ptr[col];
-			}
-			*out_ptr = (uint8_t)sum;
-			++in_ptr;
-			++out_ptr;
+	//FIXME:
+	if (1 && kern_size <= 4 && std::is_same<T, float>::value) {
+		T hz4_float_kern[4] = { 0 }; // Kernel will be padded with zeros
+		for (int i = 0; i < kern_size; ++i) {
+			hz4_float_kern[i] = hkern_ptr[i];
 		}
-		in_ptr += pad;
-		out_ptr += pad;
+		Convlt1_hz4_float_Intrin_SSE3(in_ptr, out_ptr, width, height, pad, (const float*)hz4_float_kern);
+	}
+	else {
+		int i, j, col;
+		T sum;
+
+		for (j = 0; j < height; ++j) {
+			for (i = 0; i < width; ++i) {
+				sum = 0;
+				for (col = 0; col < kern_size; ++col) {
+					sum += in_ptr[col] * hkern_ptr[col];
+				}
+				*out_ptr = (uint8_t)sum;
+				++in_ptr;
+				++out_ptr;
+			}
+			in_ptr += pad;
+			out_ptr += pad;
+		}
 	}
 }
 
-void CompVConvlt::convlt1_vert(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const double* vkern_ptr, int kern_size)
+template <typename T>
+void CompVConvlt<T>::convlt1_vert(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const T* vkern_ptr, int kern_size)
 {
 	int i, j, row;
-	double sum, kern;
+	T sum;
 	const uint8_t *ptr_;
 
 	for (j = 0; j < height; ++j) {
-		kern = vkern_ptr[j % kern_size]; // kernel value at row j
 		for (i = 0; i < width; ++i) {
 			sum = 0;
 			ptr_ = in_ptr;
-			for (row = 0; row < kern_size; ++row, ptr_ += stride) {
+			for (row = 0; row < kern_size; ++row) {
 				sum += *ptr_ * vkern_ptr[row];
+				ptr_ += stride;
 			}
 			*out_ptr = (uint8_t)sum; // TODO(dmi): do not mul() but add()
 			++in_ptr;
@@ -262,7 +283,8 @@ void CompVConvlt::convlt1_vert(const uint8_t* in_ptr, uint8_t* out_ptr, int widt
 	}
 }
 
-COMPV_ERROR_CODE CompVConvlt::newObj(CompVPtr<CompVConvlt* >* convlt)
+template<class T>
+COMPV_ERROR_CODE CompVConvlt<T>::newObj(CompVPtr<CompVConvlt* >* convlt)
 {
     COMPV_CHECK_EXP_RETURN(!convlt, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVPtr<CompVConvlt*> convlt_ = NULL;
