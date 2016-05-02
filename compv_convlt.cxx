@@ -20,6 +20,7 @@
 #include "compv/compv_convlt.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_engine.h"
+#include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
 
 #include "compv/intrinsics/x86/compv_convlt_intrin_sse.h"
@@ -231,15 +232,25 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt1(const uint8_t* img_ptr, int img_width, 
 template <typename T>
 void CompVConvlt<T>::convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int pad, const T* hkern_ptr, int kern_size)
 {
-	//FIXME:
-	if (1 && kern_size <= 4 && std::is_same<T, float>::value) {
-		T hz4_float_kern[4] = { 0 }; // Kernel will be padded with zeros
-		for (int i = 0; i < kern_size; ++i) {
-			hz4_float_kern[i] = hkern_ptr[i];
+	static const bool size_of_float_is4 = (sizeof(float) == 4); // ASM and INTRIN code require it
+	
+	if (std::is_same<T, float>::value && size_of_float_is4 && kern_size <= 4) {
+		void (*Convlt1_hz4_float)(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr) = NULL;
+		if (CompVCpu::isEnabled(compv::kCpuFlagSSE3)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(Convlt1_hz4_float = Convlt1_hz4_float_Intrin_SSE3);
 		}
-		Convlt1_hz4_float_Intrin_SSE3(in_ptr, out_ptr, width, height, pad, (const float*)hz4_float_kern);
+		if (Convlt1_hz4_float) {
+			T hz4_float_kern[4] = { 0 }; // Kernel will be padded with zeros
+			for (int i = 0; i < kern_size; ++i) {
+				hz4_float_kern[i] = hkern_ptr[i];
+			}
+			Convlt1_hz4_float(in_ptr, out_ptr, width, height, pad, (const float*)hz4_float_kern);
+			return;
+		}
 	}
-	else {
+	
+	{
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 		int i, j, col;
 		T sum;
 
