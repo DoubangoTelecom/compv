@@ -94,12 +94,12 @@ sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2):
 		; while (i > 15)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopColumns16
-			xorps xmm5, xmm5 ; xmm5 = xmmSF0
-			xorps xmm6, xmm6 ; xmm6 = xmmSF1
-			xorps xmm4, xmm4 ; xmm4 = xmmSF2
-			xorps xmm9, xmm9 ; xmm9 = xmmSF3
-
 			xor rcx, rcx ; col = 0
+			movaps xmm5, xmm7 ; xmm5 = xmmSF0 = xmmZero
+			movaps xmm6, xmm7 ; xmm6 = xmmSF1 = xmmZero
+			movaps xmm4, xmm7 ; xmm4 = xmmSF2 = xmmZero
+			movaps xmm9, xmm7 ; xmm9 = xmmSF3 = xmmZero
+			
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (col = 0; col < kern_size; ++col)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -158,9 +158,9 @@ sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2):
 		; while (i > 3)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopColumns4
-			xorps xmm4, xmm4 ; xmm4 = xmmSF0
-
 			xor rcx, rcx ; col = 0
+			movaps xmm4, xmm7 ; xmm4 = xmmSF0 = xmmZero
+			
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (col = 0; col < kern_size; ++col)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
