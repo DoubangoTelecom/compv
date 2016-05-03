@@ -62,8 +62,8 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 
 	; rbx = max
 
-	; j = rsi
-	xor rsi, rsi
+	; j = rsi = height
+	mov rsi, arg(3)
 
 	; xmm7 = xmmZero
 	pxor xmm7, xmm7
@@ -206,9 +206,9 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 		mov arg(1), rax ; out_ptr += pad
 		mov arg(0), rdx ; in_ptr += pad
 
-	inc rsi ; ++j
-	cmp rsi, arg(3)
-	jl .LoopRows
+	dec rsi ; --j
+	test rsi, rsi
+	jnz .LoopRows
 
 	; unalign stack and free memory
 	add rsp, 16*1
