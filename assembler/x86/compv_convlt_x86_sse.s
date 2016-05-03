@@ -153,6 +153,8 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 
 		mov rbx, arg(2) ; width
 		sub rbx, 3 ; rbx = (width - 3)
+		cmp rdi, rbx
+		jge .EndOfLoopColumns4
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (; i < width - 3; i += 4)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -195,6 +197,7 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 		lea rdi, [rdi + 4] ; i+= 4
 		cmp rdi, rbx
 		jl .LoopColumns4
+		.EndOfLoopColumns4
 
 		mov rax, arg(1) ; out_ptr
 		mov rdx, arg(0) ; in_ptr
