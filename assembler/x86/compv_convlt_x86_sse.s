@@ -60,7 +60,8 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 
 	; rcx = col
 
-	; rbx = max
+	; rbx = out_ptr
+	mov rbx, arg(1)
 
 	; j = rsi = height
 	mov rsi, arg(3)
@@ -135,7 +136,6 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 				test rcx, rcx
 				jnz .LoopColumns16Kern16		
 
-			mov rax, arg(1) ; out_ptr
 			mov rdx, arg(0) ; in_ptr
 			cvtps2dq xmm5, xmm5
 			cvtps2dq xmm6, xmm6
@@ -144,10 +144,9 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 			packssdw xmm5, xmm6
 			packssdw xmm4, xmm3
 			packuswb xmm5, xmm4
-			movdqu [rax], xmm5
-			lea rax, [rax + 16]
+			movdqu [rbx], xmm5
+			lea rbx, [rbx + 16] ; out_ptr += 16
 			lea rdx, [rdx + 16]
-			mov arg(1), rax ; out_ptr += 16
 			mov arg(0), rdx ; in_ptr += 16
 
 			sub rdi, 16 ; i -= 16
@@ -186,17 +185,15 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 				test rcx, rcx
 				jnz .LoopColumns4Kern16
 
-			mov rax, arg(1) ; out_ptr
 			cvtps2dq xmm4, xmm4
 			packssdw xmm4, xmm4
 			packuswb xmm4, xmm4
 			movd rdx, xmm4
-			mov [rax], dword edx
+			mov [rbx], dword edx
 			
 			mov rdx, arg(0) ; in_ptr
-			add rax, 4
-			add rdx, 4
-			mov arg(1), rax ; out_ptr += 4
+			lea rbx, [rbx + 4] ; out_ptr += 4
+			lea rdx, [rdx + 4]
 			mov arg(0), rdx ; in_ptr += 4
 
 			sub rdi, 4 ; i -= 4
@@ -204,11 +201,9 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 			jge .LoopColumns4
 			.EndOfLoopColumns4
 
-		mov rax, arg(1) ; out_ptr
 		mov rdx, arg(0) ; in_ptr
-		add rax, arg(4)
+		add rbx, arg(4) ; out_ptr += pad
 		add rdx, arg(4)
-		mov arg(1), rax ; out_ptr += pad
 		mov arg(0), rdx ; in_ptr += pad
 
 		dec rsi ; --j
