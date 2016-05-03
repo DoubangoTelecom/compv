@@ -75,6 +75,9 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 	and rdx, 3
 	add rax, rdx
 	mov arg(4), rax
+
+	; rax = in_ptr
+	;mov rax, arg(0)
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
@@ -92,15 +95,15 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 			xorps xmm4, xmm4 ; xmm4 = xmmSF2
 			movaps [i_xmmSF3], xmm7
 
-			mov rcx, arg(6) ; col = kern_size
+			xor rcx, rcx ; col = 0
 			mov rax, arg(0) ; in_ptr
 			mov rdx, arg(5) ; hkern_ptr
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (col = 0; col < kern_size; ++col)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			.LoopColumns16Kern16
-				movdqu xmm0, [rax] ; xmm0 = xmmI0
-				movss xmm1, [rdx]
+				movdqu xmm0, [rax + rcx] ; xmm0 = xmmI0
+				movss xmm1, [rdx + rcx*COMPV_SIZE_OF_FLOAT]
 				movdqa xmm2, xmm0
 				movdqa xmm3, xmm0
 				shufps xmm1, xmm1, 0x0 ; xmm1 = xmmCoeff
@@ -128,13 +131,10 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 				addps xmm4, xmm3
 				addps xmm0, [i_xmmSF3]
 				movaps [i_xmmSF3], xmm0
-				
-				inc rax
-				add rdx, COMPV_SIZE_OF_FLOAT
 
-				dec rcx
-				test rcx, rcx
-				jnz .LoopColumns16Kern16		
+				inc rcx
+				cmp rcx, arg(6)
+				jl .LoopColumns16Kern16		
 
 			mov rdx, arg(0) ; in_ptr
 			cvtps2dq xmm5, xmm5
@@ -162,15 +162,15 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 		.LoopColumns4
 			xorps xmm4, xmm4 ; xmm4 = xmmSF0
 
-			mov rcx, arg(6) ; col = kern_size
+			xor rcx, rcx ; col = 0
 			mov rax, arg(0) ; in_ptr
 			mov rdx, arg(5) ; hkern_ptr
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (col = 0; col < kern_size; ++col)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			.LoopColumns4Kern16
-				movd xmm0, [rax] ; xmm0 = xmmI0
-				movss xmm1, [rdx]
+				movd xmm0, [rax + rcx] ; xmm0 = xmmI0
+				movss xmm1, [rdx + rcx*COMPV_SIZE_OF_FLOAT]
 				punpcklbw xmm0, xmm7
 				shufps xmm1, xmm1, 0x0 ; xmm1 = xmmCoeff
 				punpcklwd xmm0, xmm7
@@ -178,12 +178,9 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 				mulps xmm0, xmm1
 				addps xmm4, xmm0
 
-				inc rax
-				add rdx, COMPV_SIZE_OF_FLOAT
-
-				dec rcx
-				test rcx, rcx
-				jnz .LoopColumns4Kern16
+				inc rcx
+				cmp rcx, arg(6)
+				jl .LoopColumns4Kern16
 
 			cvtps2dq xmm4, xmm4
 			packssdw xmm4, xmm4
