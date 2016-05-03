@@ -30,7 +30,7 @@ COMPV_NAMESPACE_BEGIN()
 void Convlt1_hz_float32_minpack4_Intrin_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
-	int i, j, col;
+	compv_scalar_t i, j, col;
 	__m128 xmmCoeff, xmmF0, xmmSF0, xmmSF1, xmmSF2, xmmSF3;
 	__m128i xmmI0, xmmI1, xmmI2, xmmI3, xmmZero;
 
@@ -41,7 +41,8 @@ void Convlt1_hz_float32_minpack4_Intrin_SSE2(const uint8_t* in_ptr, uint8_t* out
 	// (abcd conv 0123) = a0+b1+c2+d3
 	
 	for (j = 0; j < height; ++j) {
-		for (i = 0; i < width - 15; i += 16) {
+		i = width;
+		while (i > 15) {
 			xmmSF0 = _mm_setzero_ps();
 			xmmSF1 = _mm_setzero_ps();
 			xmmSF2 = _mm_setzero_ps();
@@ -83,11 +84,12 @@ void Convlt1_hz_float32_minpack4_Intrin_SSE2(const uint8_t* in_ptr, uint8_t* out
 
 			_mm_storeu_si128((__m128i*)out_ptr, xmmI0);
 			
+			i -= 16;
 			in_ptr += 16;
 			out_ptr += 16;
-		} // for (i...width-16)
+		} // while (i > 15)
 
-		for (; i < width - 3; i += 4) {
+		while (i > 3) {
 			xmmSF0 = _mm_setzero_ps();
 			for (col = 0; col < kern_size; ++col) {
 				xmmI0 = _mm_cvtsi32_si128(*((uint32_t*)&in_ptr[col]));
@@ -103,9 +105,10 @@ void Convlt1_hz_float32_minpack4_Intrin_SSE2(const uint8_t* in_ptr, uint8_t* out
 
 			*((uint32_t*)out_ptr) = (uint32_t)_mm_cvtsi128_si32(xmmI0);
 
+			i -= 4;
 			in_ptr += 4;
 			out_ptr += 4;
-		} // for (i...width-4)
+		} // while (i > 4)
 
 		in_ptr += pad;
 		out_ptr += pad;

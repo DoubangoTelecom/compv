@@ -30,9 +30,8 @@ template<class T>
 COMPV_ERROR_CODE CompVGaussKern<T>::buildKern2(CompVPtr<CompVArray<T>* >* kern, int size, T sigma)
 {
     COMPV_CHECK_EXP_RETURN(!kern || !(size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
-    COMPV_CHECK_CODE_BAIL(err_ = CompVArray<T>::newObj(kern, 2, COMPV_ARRAY_DIM_SIZE2(size, size)));
+	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(kern, 2, COMPV_ARRAY_DIM_SIZE2(size, size)));
 
     const T sigma2_times2 = 2 * (sigma * sigma); // 2*(sigma^2)
     const int size_div2 = (size >> 1);
@@ -76,17 +75,15 @@ COMPV_ERROR_CODE CompVGaussKern<T>::buildKern2(CompVPtr<CompVArray<T>* >* kern, 
 
 #undef kernelAt
 
-bail:
-    return err_;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 template<class T>
 COMPV_ERROR_CODE CompVGaussKern<T>::buildKern1(CompVPtr<CompVArray<T>* >* kern, int size, T sigma)
 {
     COMPV_CHECK_EXP_RETURN(!kern || !(size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
-    COMPV_CHECK_CODE_BAIL(err_ = CompVArray<T>::newObj(kern, 1, COMPV_ARRAY_DIM_SIZE1(size)));
+	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(kern, 1, COMPV_ARRAY_DIM_SIZE1(size)));
 
     const int size_div2 = (size >> 1);
 	const T sigma2_times2 = 2 * (sigma * sigma); // 2*(sigma^2)
@@ -112,8 +109,7 @@ COMPV_ERROR_CODE CompVGaussKern<T>::buildKern1(CompVPtr<CompVArray<T>* >* kern, 
         kernel[x] *= sum;
     }
 
-bail:
-    return err_;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

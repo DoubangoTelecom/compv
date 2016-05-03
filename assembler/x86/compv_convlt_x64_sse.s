@@ -191,8 +191,8 @@ sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2):
 			jge .LoopColumns4
 			.EndOfLoopColumns4
 		
-		add rbx, r9 ; out_ptr += pad
-		add rax, r9 ; in_ptr += pad
+		lea rbx, [rbx + r9] ; out_ptr += pad
+		lea rax, [rax + r9] ; in_ptr += pad
 
 		dec rsi ; --j
 		test rsi, rsi

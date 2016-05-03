@@ -589,5 +589,8 @@
     <YASM Include="assembler\x86\compv_convlt_x86_sse.s">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
+    <YASM Include="assembler\x86\compv_convlt_x64_sse.s">
+      <Filter>Assembler Files\x86</Filter>
+    </YASM>
   </ItemGroup>
 </Project>
