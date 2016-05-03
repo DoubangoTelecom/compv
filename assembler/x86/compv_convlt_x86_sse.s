@@ -48,18 +48,6 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 	;; end prolog ;;
 
 	%define COMPV_SIZE_OF_FLOAT 4 ; up to the caller to make sure sizeof(float)=4
-	%define i_xmmSF0	rsp + 0
-	%define i_xmmSF1	rsp + 16
-	%define i_xmmSF2	rsp + 32
-	%define i_xmmSF3	rsp + 48
-
-	; align stack and alloc memory
-	COMPV_YASM_ALIGN_STACK 16, rax
-	sub rsp, 16*1 + 16*1 + 16*1 + 16*1
-	; [rsp + 0] = xmmSF0
-	; [rsp + 16] = xmmSF1
-	; [rsp + 32] = xmmSF2
-	; [rsp + 48] = xmmSF3
 
 	; i = rdi
 	; xor rdi, rdi
@@ -92,10 +80,10 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 		; for (i = 0; i < width - 15; i += 16)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopColumns16
-			movaps [i_xmmSF0], xmm7
-			movaps [i_xmmSF1], xmm7
-			movaps [i_xmmSF2], xmm7
-			movaps [i_xmmSF3], xmm7
+			xorps xmm6, xmm6 ; xmm6 = xmmSF0
+			xorps xmm5, xmm5 ; xmm5 = xmmSF1
+			xorps xmm4, xmm4 ; xmm4 = xmmSF2
+			xorps xmm3, xmm3 ; xmm3 = xmmSF3
 
 			xor rcx, rcx ; col = 0
 			mov rax, arg(0) ; in_ptr
@@ -109,41 +97,31 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 				shufps xmm1, xmm1, 0x0 ; xmm1 = xmmCoeff
 
 				movdqa xmm2, xmm0
-				movdqa xmm3, xmm0
-				punpcklbw xmm2, xmm7 ; xmm2 = xmmI1
-				punpcklbw xmm3, xmm7 ; xmm3 = xmmI1
-
-				movaps xmm4, [i_xmmSF0]
+				punpcklbw xmm2, xmm7
 				punpcklwd xmm2, xmm7
 				cvtdq2ps xmm2, xmm2
-				mulps xmm2, xmm1 ; xmm2 = xmmF0
-				addps xmm4, xmm2 ; xmm4 = xmmSF0
-				movaps [i_xmmSF0], xmm4
-
-				movaps xmm4, [i_xmmSF1]
-				punpckhwd xmm3, xmm7
-				cvtdq2ps xmm3, xmm3
-				mulps xmm3, xmm1 ; xmm3 = xmmF0
-				addps xmm4, xmm3 ; xmm4 = xmmSF1
-				movaps [i_xmmSF1], xmm4
+				mulps xmm2, xmm1
+				addps xmm6, xmm2
 
 				movdqa xmm2, xmm0
-				punpckhbw xmm0, xmm7 ; xmm0 = xmmI1
-				punpckhbw xmm2, xmm7 ; xmm2 = xmmI1
-
-				movaps xmm4, [i_xmmSF2]
-				punpcklwd xmm0, xmm7
-				cvtdq2ps xmm0, xmm0
-				mulps xmm0, xmm1 ; xmm0 = xmmF0
-				addps xmm4, xmm0 ; xmm4 = xmmSF0
-				movaps [i_xmmSF2], xmm4
-
-				movaps xmm4, [i_xmmSF3]
+				punpcklbw xmm2, xmm7
 				punpckhwd xmm2, xmm7
 				cvtdq2ps xmm2, xmm2
-				mulps xmm2, xmm1 ; xmm2 = xmmF0
-				addps xmm4, xmm2 ; xmm4 = xmmSF1
-				movaps [i_xmmSF3], xmm4
+				mulps xmm2, xmm1
+				addps xmm5, xmm2
+
+				movdqa xmm2, xmm0
+				punpckhbw xmm2, xmm7
+				punpcklwd xmm2, xmm7
+				cvtdq2ps xmm2, xmm2
+				mulps xmm2, xmm1
+				addps xmm4, xmm2
+
+				punpckhbw xmm0, xmm7
+				punpckhwd xmm0, xmm7
+				cvtdq2ps xmm0, xmm0
+				mulps xmm0, xmm1
+				addps xmm3, xmm0
 
 			inc rcx
 			cmp rcx, arg(6)
@@ -151,18 +129,14 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 
 			mov rax, arg(1) ; out_ptr
 			mov rdx, arg(0) ; in_ptr
-			movaps xmm0, [i_xmmSF0]
-			movaps xmm1, [i_xmmSF1]
-			movaps xmm2, [i_xmmSF2]
-			movaps xmm3, [i_xmmSF3]
-			cvtps2dq xmm0, xmm0
-			cvtps2dq xmm1, xmm1
-			cvtps2dq xmm2, xmm2
+			cvtps2dq xmm6, xmm6
+			cvtps2dq xmm5, xmm5
+			cvtps2dq xmm4, xmm4
 			cvtps2dq xmm3, xmm3
-			packssdw xmm0, xmm1
-			packssdw xmm2, xmm3
-			packuswb xmm0, xmm2
-			movdqu [rax], xmm0
+			packssdw xmm6, xmm5
+			packssdw xmm4, xmm3
+			packuswb xmm6, xmm4
+			movdqu [rax], xmm6
 			add rax, 16
 			add rdx, 16
 			mov arg(1), rax ; out_ptr += 16
@@ -230,15 +204,7 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 	cmp rsi, arg(3)
 	jl .LoopRows
 
-	; unalign stack and free memory
-	add rsp, 16*1 + 16*1 + 16*1 + 16*1
-	COMPV_YASM_UNALIGN_STACK
-
 	%undef COMPV_SIZE_OF_FLOAT
-	%undef i_xmmSF0
-	%undef i_xmmSF1
-	%undef i_xmmSF2
-	%undef i_xmmSF3
 
 	;; begin epilog ;;
 	pop rbx
