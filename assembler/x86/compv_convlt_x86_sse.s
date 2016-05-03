@@ -188,23 +188,23 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 			cvtps2dq xmm4, xmm4
 			packssdw xmm4, xmm4
 			packuswb xmm4, xmm4
-			movd rdx, xmm4
-			mov [rbx], dword edx
+			movd rax, xmm4
+			mov [rbx], dword eax
 			
-			mov rdx, arg(0) ; in_ptr
+			mov rax, arg(0) ; in_ptr
 			lea rbx, [rbx + 4] ; out_ptr += 4
-			lea rdx, [rdx + 4]
-			mov arg(0), rdx ; in_ptr += 4
+			lea rax, [rax + 4]
+			mov arg(0), rax ; in_ptr += 4
 
 			sub rdi, 4 ; i -= 4
 			cmp rdi, 4
 			jge .LoopColumns4
 			.EndOfLoopColumns4
 
-		mov rdx, arg(0) ; in_ptr
+		mov rax, arg(0) ; in_ptr
 		add rbx, arg(4) ; out_ptr += pad
-		add rdx, arg(4)
-		mov arg(0), rdx ; in_ptr += pad
+		add rax, arg(4)
+		mov arg(0), rax ; in_ptr += pad
 
 		dec rsi ; --j
 		test rsi, rsi
