@@ -26,6 +26,10 @@
 
 #include "compv/intrinsics/x86/compv_convlt_intrin_sse.h"
 
+#if COMPV_ARCH_X86 && COMPV_ASM
+COMPV_EXTERNC void Convlt1_hz_float32_minpack4_Asm_X86_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
+#endif /* COMPV_ARCH_X86 && COMPV_ASM */
+
 COMPV_NAMESPACE_BEGIN()
 
 template class CompVConvlt<double >;
@@ -238,12 +242,13 @@ void CompVConvlt<T>::convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int wid
 	
 	// Floating point implementation
 	if (std::is_same<T, float>::value && size_of_float_is4) {
-		void(*Convlt1_hz_float)(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size) = NULL;
+		void(*Convlt1_hz_float32)(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size) = NULL;
 		if (width > 3 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_hz_float = Convlt1_hz_float_minpack4_Intrin_SSE2, minpack = 4));
+			COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_hz_float32 = Convlt1_hz_float32_minpack4_Intrin_SSE2, minpack = 4));
+			COMPV_EXEC_IFDEF_ASM_X86((Convlt1_hz_float32 = Convlt1_hz_float32_minpack4_Asm_X86_SSE2, minpack = 4));
 		}
-		if (Convlt1_hz_float) {
-			Convlt1_hz_float(in_ptr, out_ptr, width, height, pad, (const float*)hkern_ptr, kern_size);
+		if (Convlt1_hz_float32) {
+			Convlt1_hz_float32(in_ptr, out_ptr, width, height, pad, (const float*)hkern_ptr, kern_size);
 		}
 	}
 

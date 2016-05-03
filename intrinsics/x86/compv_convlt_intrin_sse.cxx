@@ -26,17 +26,17 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-// This function requires sizeof(float) = 4
-// TODO(dmi): add ASM
-void Convlt1_hz_float_minpack4_Intrin_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
+// This function requires sizeof(float) = 4byte = 32bits
+void Convlt1_hz_float32_minpack4_Intrin_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
 	int i, j, col;
 	__m128 xmmCoeff, xmmF0, xmmSF0, xmmSF1, xmmSF2, xmmSF3;
 	__m128i xmmI0, xmmI1, xmmI2, xmmI3, xmmZero;
 
 	xmmZero = _mm_setzero_si128();
 
-	pad += (width & 3); // 3 = (minpack - 1) = (4 - 1)
+	pad += (width & 3) ; // 3 = (minpack - 1) = (4 - 1)
 
 	// (abcd conv 0123) = a0+b1+c2+d3
 	
@@ -109,7 +109,7 @@ void Convlt1_hz_float_minpack4_Intrin_SSE2(const uint8_t* in_ptr, uint8_t* out_p
 
 		in_ptr += pad;
 		out_ptr += pad;
-	}
+	} // for (j...
 }
 
 COMPV_NAMESPACE_END()
