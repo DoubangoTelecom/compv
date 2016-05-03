@@ -336,6 +336,9 @@
     <ClInclude Include="include\compv\intrinsics\x86\compv_convlt_intrin_sse.h">
       <Filter>Header Files\intrinsics\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\compv_convlt_intrin_avx2.h">
+      <Filter>Header Files\intrinsics\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -509,6 +512,9 @@
     <ClCompile Include="intrinsics\x86\compv_convlt_intrin_sse.cxx">
       <Filter>Source Files\intrinsics\x86</Filter>
     </ClCompile>
+    <ClCompile Include="intrinsics\x86\compv_convlt_intrin_avx2.cxx">
+      <Filter>Source Files\intrinsics\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="assembler\x86\compv_utils_x86.s">
@@ -586,10 +592,10 @@
     <YASM Include="assembler\x86\features\orb\compv_feature_orb_desc_x86_sse.s">
       <Filter>Assembler Files\x86\features\orb</Filter>
     </YASM>
-    <YASM Include="assembler\x86\compv_convlt_x86_sse.s">
+    <YASM Include="assembler\x86\compv_convlt_x64_sse.s">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
-    <YASM Include="assembler\x86\compv_convlt_x64_sse.s">
+    <YASM Include="assembler\x86\compv_convlt_x86_sse.s">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
   </ItemGroup>

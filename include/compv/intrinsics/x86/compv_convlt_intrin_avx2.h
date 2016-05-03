@@ -17,8 +17,8 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_CONVLT_INTRIN_SSE_H_)
-#define _COMPV_CONVLT_INTRIN_SSE_H_
+#if !defined(_COMPV_CONVLT_INTRIN_AVX2_H_)
+#define _COMPV_CONVLT_INTRIN_AVX2_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -31,10 +31,10 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void Convlt1_hz_float32_minpack4_Intrin_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size);
+void Convlt1_hz_float32_minpack4_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size);
 
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
 
-#endif /* _COMPV_CONVLT_INTRIN_SSE_H_ */
+#endif /* _COMPV_CONVLT_INTRIN_AVX2_H_ */
