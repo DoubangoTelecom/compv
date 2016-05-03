@@ -78,6 +78,9 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 
 	; rax = in_ptr
 	mov rax, arg(0)
+
+	; rdx = hkern_ptr
+	mov rdx, arg(5)
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
@@ -96,7 +99,6 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 			movaps [i_xmmSF3], xmm7
 
 			xor rcx, rcx ; col = 0
-			mov rdx, arg(5) ; hkern_ptr
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (col = 0; col < kern_size; ++col)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -160,7 +162,6 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 			xorps xmm4, xmm4 ; xmm4 = xmmSF0
 
 			xor rcx, rcx ; col = 0
-			mov rdx, arg(5) ; hkern_ptr
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (col = 0; col < kern_size; ++col)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -181,8 +182,7 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 			cvtps2dq xmm4, xmm4
 			packssdw xmm4, xmm4
 			packuswb xmm4, xmm4
-			movd rdx, xmm4
-			mov [rbx], dword edx
+			movd [rbx], xmm4
 
 			lea rbx, [rbx + 4] ; out_ptr += 4
 			lea rax, [rax + 4] ; in_ptr += 4
