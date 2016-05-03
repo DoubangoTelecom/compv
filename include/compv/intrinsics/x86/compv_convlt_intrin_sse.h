@@ -31,8 +31,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void Convlt1_hz4_float_Intrin_SSE3(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr);
-void Convlt1_hz8_float_Intrin_SSE3(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr);
+void Convlt1_hz_float_minpack4_Intrin_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size);
 
 COMPV_NAMESPACE_END()
 

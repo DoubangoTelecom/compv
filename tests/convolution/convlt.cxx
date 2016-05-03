@@ -6,7 +6,7 @@ using namespace compv;
 
 #define JPEG_IMG				"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg"
 
-#define CONVLT_KERN_SIZE		7	// for 1 to 8
+#define CONVLT_KERN_SIZE		5	// for 1 to 8
 #define CONVLT_DIM				1	// #1 or #2 dimension 
 #define CONVLT_GAUSS_SIGMA		2
 #define CONVLT_KERN_TYPE		float
@@ -19,11 +19,11 @@ static const std::string expectedMD5Values[2/*dim*/][8/*kenel size*/] =
 	{
 		"", // 1
 		"", // 2
-		"58a820b80172257d520bb371aa218b89", // 3
+		"293eacaac227b6106e8a01f8a91a2186", // 3
 		"", // 4
-		"0fa627101b8c6f5548983e563d87b7a3", // 5
+		"4d2e897d8731211b22ec6b4bd7157cbb", // 5
 		"", // 6
-		"41a5229cf36681e0bde839705e70d9cd", // 7
+		"7d73c87b2fa8feee0cc6998efa488a1a", // 7
 		"", // 8
 	}
 	/* Dimension 2 */

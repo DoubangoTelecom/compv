@@ -20,6 +20,7 @@
 #include "compv/compv_convlt.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_engine.h"
+#include "compv/compv_math.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
 
@@ -233,40 +234,35 @@ template <typename T>
 void CompVConvlt<T>::convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int pad, const T* hkern_ptr, int kern_size)
 {
 	static const bool size_of_float_is4 = (sizeof(float) == 4); // ASM and INTRIN code require it
+	int minpack = 0; // Minimum number of pixels the function can handle for each operation (must be pof 2)
 	
 	// Floating point implementation
 	if (std::is_same<T, float>::value && size_of_float_is4) {
-		void(*Convlt1_hzx_float)(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr) = NULL;
-		if (kern_size <= 4) {
-			if (CompVCpu::isEnabled(compv::kCpuFlagSSE3)) {
-				COMPV_EXEC_IFDEF_INTRIN_X86(Convlt1_hzx_float = Convlt1_hz4_float_Intrin_SSE3);
-			}
-			if (Convlt1_hzx_float) {
-				T hz4_float_kern[4] = { 0 }; // Kernel will be padded with zeros
-				for (int i = 0; i < kern_size; ++i) {
-					hz4_float_kern[i] = hkern_ptr[i];
-				}
-				Convlt1_hzx_float(in_ptr, out_ptr, width, height, pad, (const float*)hz4_float_kern);
-				return;
-			}
+		void(*Convlt1_hz_float)(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size) = NULL;
+		if (width > 3 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_hz_float = Convlt1_hz_float_minpack4_Intrin_SSE2, minpack = 4));
 		}
-		else if (kern_size <= 8) {
-			if (CompVCpu::isEnabled(compv::kCpuFlagSSE3)) {
-				COMPV_EXEC_IFDEF_INTRIN_X86(Convlt1_hzx_float = Convlt1_hz8_float_Intrin_SSE3);
-			}
-			if (Convlt1_hzx_float) {
-				T hz8_float_kern[8] = { 0 }; // Kernel will be padded with zeros
-				for (int i = 0; i < kern_size; ++i) {
-					hz8_float_kern[i] = hkern_ptr[i];
-				}
-				Convlt1_hzx_float(in_ptr, out_ptr, width, height, pad, (const float*)hz8_float_kern);
-				return;
-			}
+		if (Convlt1_hz_float) {
+			Convlt1_hz_float(in_ptr, out_ptr, width, height, pad, (const float*)hkern_ptr, kern_size);
 		}
+	}
+
+	// Check missed pixels
+	if (minpack > 0) {
+		int missed = (width & (minpack - 1));
+		if (missed == 0) {
+			return;
+		}
+		in_ptr += (width - missed);
+		out_ptr += (width - missed);
+		pad += (width - missed);
+		width = missed;
+	}
+	else {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	}
 	
 	{
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 		int i, j, col;
 		T sum;
 
@@ -276,7 +272,7 @@ void CompVConvlt<T>::convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int wid
 				for (col = 0; col < kern_size; ++col) {
 					sum += in_ptr[col] * hkern_ptr[col];
 				}
-				*out_ptr = (uint8_t)sum;
+				*out_ptr = COMPV_MATH_ROUNDFU_2_INT(sum, uint8_t);
 				++in_ptr;
 				++out_ptr;
 			}

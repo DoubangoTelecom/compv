@@ -28,102 +28,84 @@ COMPV_NAMESPACE_BEGIN()
 
 // This function requires sizeof(float) = 4
 // TODO(dmi): add ASM
-void Convlt1_hz4_float_Intrin_SSE3(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr)
+void Convlt1_hz_float_minpack4_Intrin_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	int i, j;
-	__m128 xmmKernel, xmmFloats[4];
-	__m128i xmmIn[4], xmmZero, xmm0;
+	int i, j, col;
+	__m128 xmmCoeff, xmmF0, xmmSF0, xmmSF1, xmmSF2, xmmSF3;
+	__m128i xmmI0, xmmI1, xmmI2, xmmI3, xmmZero;
 
 	xmmZero = _mm_setzero_si128();
-	xmmKernel = _mm_loadu_ps(hkern_ptr);
 
+	pad += (width & 3); // 3 = (minpack - 1) = (4 - 1)
+
+	// (abcd conv 0123) = a0+b1+c2+d3
+	
 	for (j = 0; j < height; ++j) {
-		/* 4 by 4 loop */
-		for (i = 0; i < width - 4; i+=4) { // We can read rows up to (width + kernel_size) = (width + 4)
-			// Load 4*4 U8
-			xmmIn[0] = _mm_cvtsi32_si128(*((uint32_t*)in_ptr));
-			xmmIn[1] = _mm_cvtsi32_si128(*((uint32_t*)(in_ptr + 1)));
-			xmmIn[2] = _mm_cvtsi32_si128(*((uint32_t*)(in_ptr + 2)));
-			xmmIn[3] = _mm_cvtsi32_si128(*((uint32_t*)(in_ptr + 3)));
+		for (i = 0; i < width - 15; i += 16) {
+			xmmSF0 = _mm_setzero_ps();
+			xmmSF1 = _mm_setzero_ps();
+			xmmSF2 = _mm_setzero_ps();
+			xmmSF3 = _mm_setzero_ps();
+			for (col = 0; col < kern_size; ++col) {
+				xmmI0 = _mm_loadu_si128((__m128i*)&in_ptr[col]);
+				xmmCoeff = _mm_set1_ps(hkern_ptr[col]); // 0000
 
-			// Convert each 4U8 to 4F32
-			xmmFloats[0] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(_mm_unpacklo_epi8(xmmIn[0], xmmZero), xmmZero));
-			xmmFloats[1] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(_mm_unpacklo_epi8(xmmIn[1], xmmZero), xmmZero));
-			xmmFloats[2] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(_mm_unpacklo_epi8(xmmIn[2], xmmZero), xmmZero));
-			xmmFloats[3] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(_mm_unpacklo_epi8(xmmIn[3], xmmZero), xmmZero));
+				// TODO(dmi): Very good candidate for FMA3 / AVX
+				
+				xmmI1 = _mm_unpacklo_epi8(xmmI0, xmmZero); // Low(U8) -> Low(I16)
 
-			// IN * KERNEL
-			xmmFloats[0] = _mm_mul_ps(xmmFloats[0], xmmKernel);
-			xmmFloats[1] = _mm_mul_ps(xmmFloats[1], xmmKernel);
-			xmmFloats[2] = _mm_mul_ps(xmmFloats[2], xmmKernel);
-			xmmFloats[3] = _mm_mul_ps(xmmFloats[3], xmmKernel);
-			// SUM += H(IN * KERNEL)
-			xmmFloats[0] = _mm_hadd_ps(xmmFloats[0], xmmFloats[1]);
-			xmmFloats[2] = _mm_hadd_ps(xmmFloats[2], xmmFloats[3]);
-			xmmFloats[0] = _mm_hadd_ps(xmmFloats[0], xmmFloats[2]);
+				xmmF0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(xmmI1, xmmZero)); // I16 -> I32 -> F32
+				xmmF0 = _mm_mul_ps(xmmF0, xmmCoeff); // a0b0c0d0
+				xmmSF0 = _mm_add_ps(xmmSF0, xmmF0);
 
-			// Truncate to have same result as C++ implementation: out_ptr[x] = (uint8_t)floats[x];
-			xmm0 = _mm_cvttps_epi32(xmmFloats[0]); // Convert to Int32 with truncation
-			xmm0 = _mm_packs_epi32(xmm0, xmm0); // Convert to Int16
-			xmm0 = _mm_packus_epi16(xmm0, xmm0); // Convert to Uint8 and saturate
-			*((uint32_t*)out_ptr) = (uint32_t)_mm_cvtsi128_si32(xmm0);
+				xmmF0 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(xmmI1, xmmZero)); // I16 -> I32 -> F32
+				xmmF0 = _mm_mul_ps(xmmF0, xmmCoeff); // e0f0g0h0
+				xmmSF1 = _mm_add_ps(xmmSF1, xmmF0);
 
+				xmmI1 = _mm_unpackhi_epi8(xmmI0, xmmZero); // High(U8) -> High(I16)
+
+				xmmF0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(xmmI1, xmmZero)); // I16 -> I32 -> F32
+				xmmF0 = _mm_mul_ps(xmmF0, xmmCoeff); // i0j0k0l0
+				xmmSF2 = _mm_add_ps(xmmSF2, xmmF0);
+
+				xmmF0 = _mm_cvtepi32_ps(_mm_unpackhi_epi16(xmmI1, xmmZero)); // I16 -> I32 -> F32
+				xmmF0 = _mm_mul_ps(xmmF0, xmmCoeff); // m0n000p0
+				xmmSF3 = _mm_add_ps(xmmSF3, xmmF0);
+			}
+
+			xmmI0 = _mm_cvtps_epi32(xmmSF0);
+			xmmI1 = _mm_cvtps_epi32(xmmSF1);
+			xmmI2 = _mm_cvtps_epi32(xmmSF2);
+			xmmI3 = _mm_cvtps_epi32(xmmSF3);
+			xmmI0 = _mm_packs_epi32(xmmI0, xmmI1);
+			xmmI2 = _mm_packs_epi32(xmmI2, xmmI3);
+			xmmI0 = _mm_packus_epi16(xmmI0, xmmI2);
+
+			_mm_storeu_si128((__m128i*)out_ptr, xmmI0);
 			
+			in_ptr += 16;
+			out_ptr += 16;
+		} // for (i...width-16)
+
+		for (; i < width - 3; i += 4) {
+			xmmSF0 = _mm_setzero_ps();
+			for (col = 0; col < kern_size; ++col) {
+				xmmI0 = _mm_cvtsi32_si128(*((uint32_t*)&in_ptr[col]));
+				xmmCoeff = _mm_set1_ps(hkern_ptr[col]);
+
+				xmmF0 = _mm_cvtepi32_ps(_mm_unpacklo_epi16(_mm_unpacklo_epi8(xmmI0, xmmZero), xmmZero));
+				xmmF0 = _mm_mul_ps(xmmF0, xmmCoeff);
+				xmmSF0 = _mm_add_ps(xmmSF0, xmmF0);
+			}
+			xmmI0 = _mm_cvtps_epi32(xmmSF0);
+			xmmI0 = _mm_packs_epi32(xmmI0, xmmI0);
+			xmmI0 = _mm_packus_epi16(xmmI0, xmmI0);
+
+			*((uint32_t*)out_ptr) = (uint32_t)_mm_cvtsi128_si32(xmmI0);
+
 			in_ptr += 4;
 			out_ptr += 4;
-		}
-
-		/* 1 by 1 loop */
-		for (; i < width; ++i) {
-			xmmIn[0] = _mm_cvtsi32_si128(*((uint32_t*)in_ptr));
-			xmmFloats[0] = _mm_cvtepi32_ps(_mm_unpacklo_epi16(_mm_unpacklo_epi8(xmmIn[0], xmmZero), xmmZero));
-			xmmFloats[0] = _mm_mul_ps(xmmFloats[0], xmmKernel);
-			xmmFloats[0] = _mm_hadd_ps(xmmFloats[0], xmmFloats[0]);
-			xmmFloats[0] = _mm_hadd_ps(xmmFloats[0], xmmFloats[0]);
-			out_ptr[0] = (uint8_t)_mm_cvtt_ss2si(xmmFloats[0]);
-
-			in_ptr += 1;
-			out_ptr += 1;
-		}
-
-		in_ptr += pad;
-		out_ptr += pad;
-	}
-}
-
-// This function requires sizeof(float) = 4
-// TODO(dmi): add ASM
-void Convlt1_hz8_float_Intrin_SSE3(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr)
-{
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-
-	int i, j;
-	__m128 xmmKernelLow, xmmKernelHigh, xmmFloatsLow, xmmFloatsHigh;
-	__m128i xmmInLow, xmmInHigh, xmmZero;
-
-	xmmZero = _mm_setzero_si128();
-	xmmKernelLow = _mm_loadu_ps(hkern_ptr);
-	xmmKernelHigh = _mm_loadu_ps(hkern_ptr + 4);
-
-	// C++ code produce slightly different result because of the precision
-	for (j = 0; j < height; ++j) {
-		/* 4 by 4 loop */
-		for (i = 0; i < width; i += 1) { // We can read rows up to (width + kernel_size) = (width + 8)
-			xmmInLow = _mm_cvtsi32_si128(*((uint32_t*)in_ptr));
-			xmmInHigh = _mm_cvtsi32_si128(*((uint32_t*)(in_ptr + 4)));
-			xmmFloatsLow = _mm_cvtepi32_ps(_mm_unpacklo_epi16(_mm_unpacklo_epi8(xmmInLow, xmmZero), xmmZero));
-			xmmFloatsHigh = _mm_cvtepi32_ps(_mm_unpacklo_epi16(_mm_unpacklo_epi8(xmmInHigh, xmmZero), xmmZero));
-			xmmFloatsLow = _mm_mul_ps(xmmFloatsLow, xmmKernelLow);
-			xmmFloatsHigh = _mm_mul_ps(xmmFloatsHigh, xmmKernelHigh);
-			xmmFloatsLow = _mm_hadd_ps(xmmFloatsLow, xmmFloatsHigh);
-			xmmFloatsLow = _mm_hadd_ps(xmmFloatsLow, xmmFloatsLow);
-			xmmFloatsLow = _mm_hadd_ps(xmmFloatsLow, xmmFloatsLow);
-			out_ptr[0] = (uint8_t)_mm_cvtt_ss2si(xmmFloatsLow);
-
-			in_ptr += 1;
-			out_ptr += 1;
-		}
+		} // for (i...width-4)
 
 		in_ptr += pad;
 		out_ptr += pad;
