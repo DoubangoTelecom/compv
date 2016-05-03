@@ -79,11 +79,11 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 	; for (j = 0; j < height; ++j)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopRows
-		xor rdi, rdi ; i = 0
-		mov rbx, arg(2) ; width
-		sub rbx, 15 ; rbx = (width - 15)
+		mov rdi, arg(2) ; i = width
+		cmp rdi, 16
+		jl .EndOfLoopColumns16
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (i = 0; i < width - 15; i += 16)
+		; while (i > 15)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopColumns16
 			xorps xmm5, xmm5 ; xmm5 = xmmSF0
@@ -127,13 +127,13 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 				addps xmm4, xmm3
 				addps xmm0, [i_xmmSF3]
 				movaps [i_xmmSF3], xmm0
-
+				
 				inc rax
 				add rdx, COMPV_SIZE_OF_FLOAT
 
-			dec rcx
-			test rcx, rcx
-			jnz .LoopColumns16Kern16		
+				dec rcx
+				test rcx, rcx
+				jnz .LoopColumns16Kern16		
 
 			mov rax, arg(1) ; out_ptr
 			mov rdx, arg(0) ; in_ptr
@@ -150,16 +150,15 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 			mov arg(1), rax ; out_ptr += 16
 			mov arg(0), rdx ; in_ptr += 16
 
-		lea rdi, [rdi + 16] ; i += 16
-		cmp rdi, rbx
-		jl .LoopColumns16
+			sub rdi, 16 ; i -= 16
+			cmp rdi, 16
+			jge .LoopColumns16
+			.EndOfLoopColumns16
 
-		mov rbx, arg(2) ; width
-		sub rbx, 3 ; rbx = (width - 3)
-		cmp rdi, rbx
-		jge .EndOfLoopColumns4
+		cmp rdi, 4
+		jl .EndOfLoopColumns4
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (; i < width - 3; i += 4)
+		; while (i > 3)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopColumns4
 			xorps xmm4, xmm4 ; xmm4 = xmmSF0
@@ -183,9 +182,9 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 				inc rax
 				add rdx, COMPV_SIZE_OF_FLOAT
 
-			dec rcx
-			test rcx, rcx
-			jnz .LoopColumns4Kern16
+				dec rcx
+				test rcx, rcx
+				jnz .LoopColumns4Kern16
 
 			mov rax, arg(1) ; out_ptr
 			cvtps2dq xmm4, xmm4
@@ -200,10 +199,10 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 			mov arg(1), rax ; out_ptr += 4
 			mov arg(0), rdx ; in_ptr += 4
 
-		lea rdi, [rdi + 4] ; i+= 4
-		cmp rdi, rbx
-		jl .LoopColumns4
-		.EndOfLoopColumns4
+			sub rdi, 4 ; i -= 4
+			cmp rdi, 4
+			jge .LoopColumns4
+			.EndOfLoopColumns4
 
 		mov rax, arg(1) ; out_ptr
 		mov rdx, arg(0) ; in_ptr
@@ -212,9 +211,9 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 		mov arg(1), rax ; out_ptr += pad
 		mov arg(0), rdx ; in_ptr += pad
 
-	dec rsi ; --j
-	test rsi, rsi
-	jnz .LoopRows
+		dec rsi ; --j
+		test rsi, rsi
+		jnz .LoopRows
 
 	; unalign stack and free memory
 	add rsp, 16*1
