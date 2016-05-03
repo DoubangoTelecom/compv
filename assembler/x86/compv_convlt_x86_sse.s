@@ -77,7 +77,7 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 	mov arg(4), rax
 
 	; rax = in_ptr
-	;mov rax, arg(0)
+	mov rax, arg(0)
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
@@ -96,7 +96,6 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 			movaps [i_xmmSF3], xmm7
 
 			xor rcx, rcx ; col = 0
-			mov rax, arg(0) ; in_ptr
 			mov rdx, arg(5) ; hkern_ptr
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (col = 0; col < kern_size; ++col)
@@ -136,7 +135,6 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 				cmp rcx, arg(6)
 				jl .LoopColumns16Kern16		
 
-			mov rdx, arg(0) ; in_ptr
 			cvtps2dq xmm5, xmm5
 			cvtps2dq xmm6, xmm6
 			cvtps2dq xmm4, xmm4
@@ -146,8 +144,7 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 			packuswb xmm5, xmm4
 			movdqu [rbx], xmm5
 			lea rbx, [rbx + 16] ; out_ptr += 16
-			lea rdx, [rdx + 16]
-			mov arg(0), rdx ; in_ptr += 16
+			lea rax, [rax + 16] ; in_ptr += 16
 
 			sub rdi, 16 ; i -= 16
 			cmp rdi, 16
@@ -163,7 +160,6 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 			xorps xmm4, xmm4 ; xmm4 = xmmSF0
 
 			xor rcx, rcx ; col = 0
-			mov rax, arg(0) ; in_ptr
 			mov rdx, arg(5) ; hkern_ptr
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (col = 0; col < kern_size; ++col)
@@ -185,23 +181,19 @@ sym(Convlt1_hz_float32_minpack4_Asm_X86_SSE2):
 			cvtps2dq xmm4, xmm4
 			packssdw xmm4, xmm4
 			packuswb xmm4, xmm4
-			movd rax, xmm4
-			mov [rbx], dword eax
-			
-			mov rax, arg(0) ; in_ptr
+			movd rdx, xmm4
+			mov [rbx], dword edx
+
 			lea rbx, [rbx + 4] ; out_ptr += 4
-			lea rax, [rax + 4]
-			mov arg(0), rax ; in_ptr += 4
+			lea rax, [rax + 4] ; in_ptr += 4
 
 			sub rdi, 4 ; i -= 4
 			cmp rdi, 4
 			jge .LoopColumns4
 			.EndOfLoopColumns4
-
-		mov rax, arg(0) ; in_ptr
+		
 		add rbx, arg(4) ; out_ptr += pad
-		add rax, arg(4)
-		mov arg(0), rax ; in_ptr += pad
+		add rax, arg(4) ; in_ptr += pad
 
 		dec rsi ; --j
 		test rsi, rsi
