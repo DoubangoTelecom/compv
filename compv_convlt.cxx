@@ -29,6 +29,8 @@
 
 #if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC void Convlt1_hz_float32_minpack4_Asm_X86_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
+COMPV_EXTERNC void Convlt1_hz_float32_minpack16_Asm_X86_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
+COMPV_EXTERNC void Convlt1_hz_float32_minpack16_Asm_X86_FMA3_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 #if COMPV_ARCH_X64 && COMPV_ASM
@@ -254,10 +256,15 @@ void CompVConvlt<T>::convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int wid
 			COMPV_EXEC_IFDEF_ASM_X86((Convlt1_hz_float32 = Convlt1_hz_float32_minpack4_Asm_X86_SSE2, minpack = 4));
 			COMPV_EXEC_IFDEF_ASM_X64((Convlt1_hz_float32 = Convlt1_hz_float32_minpack4_Asm_X64_SSE2, minpack = 4));
 		}
-		if (width > 3 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+		if (width > 15 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_hz_float32 = Convlt1_hz_float32_minpack16_Intrin_AVX2, minpack = 16));
+			COMPV_EXEC_IFDEF_ASM_X86((Convlt1_hz_float32 = Convlt1_hz_float32_minpack16_Asm_X86_AVX2, minpack = 16));
+			if (CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
+				COMPV_EXEC_IFDEF_ASM_X86((Convlt1_hz_float32 = Convlt1_hz_float32_minpack16_Asm_X86_FMA3_AVX2, minpack = 16));
+			}
 		}
 		if (Convlt1_hz_float32) {
+			// TODO(dmi): execute AVX_minpack16 then, SSE_minpack4 for the remaining > 15 pixels
 			Convlt1_hz_float32(in_ptr, out_ptr, width, height, pad, (const float*)hkern_ptr, kern_size);
 		}
 	}

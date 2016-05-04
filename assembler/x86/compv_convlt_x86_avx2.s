@@ -22,6 +22,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(Convlt1_hz_float32_minpack16_Asm_X86_AVX2)
+global sym(Convlt1_hz_float32_minpack16_Asm_X86_FMA3_AVX2)
 
 section .data
 	extern sym(kAVXMaskstore_0_1_u64)
@@ -37,8 +38,9 @@ section .text
 ; arg(4) -> compv_scalar_t pad
 ; arg(5) -> const float* hkern_ptr
 ; arg(6) -> compv_scalar_t kern_size
+; %1 -> 1: FMA enabled, 0: FMA disabled
 ; void Convlt1_hz_float32_minpack16_Asm_X86_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
-sym(Convlt1_hz_float32_minpack16_Asm_X86_AVX2):
+%macro Convlt1_hz_float32_minpack16_Macro_X86_AVX2 1
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
@@ -51,12 +53,10 @@ sym(Convlt1_hz_float32_minpack16_Asm_X86_AVX2):
 	vzeroupper
 
 	%define COMPV_SIZE_OF_FLOAT 4 ; up to the caller to make sure sizeof(float)=4
-	%define i_ymmSF3	rsp + 0
 
 	; align stack and alloc memory
 	COMPV_YASM_ALIGN_STACK 32, rax
-	sub rsp, 32*1
-	; [rsp + 0] = ymmSF3
+	sub rsp, 32*1 + 32*1
 
 	; i = rdi
 	; xor rdi, rdi
@@ -71,6 +71,7 @@ sym(Convlt1_hz_float32_minpack16_Asm_X86_AVX2):
 
 	; ymm7 = ymmZero
 	vpxor ymm7, ymm7
+	vmovdqa [rsp + 0], ymm7
 
 	; arg(4) = pad += (width & 15)
 	mov rdx, arg(2) ; width
@@ -101,7 +102,7 @@ sym(Convlt1_hz_float32_minpack16_Asm_X86_AVX2):
 			vxorps ymm5, ymm5 ; ymm5 = ymmSF0
 			vxorps ymm6, ymm6 ; ymm6 = ymmSF1
 			vxorps ymm4, ymm4 ; ymm4 = ymmSF2
-			vmovaps [i_ymmSF3], ymm7
+			vxorps ymm7, ymm7 ; ymm7 = ymmSF3
 
 			xor rcx, rcx ; col = 0
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -111,29 +112,35 @@ sym(Convlt1_hz_float32_minpack16_Asm_X86_AVX2):
 				vmovss xmm1, [rdx + rcx*COMPV_SIZE_OF_FLOAT]
 				vmovdqu ymm0, [rax + rcx] ; ymm0 = ymmI0
 				vbroadcastss ymm1, xmm1 ; ymm1 = ymmCoeff
+				vmovdqa [rsp + 32], ymm1
 				
-				vpunpcklbw ymm2, ymm0, ymm7
-				vpunpcklbw ymm3, ymm0, ymm7
-				vpunpcklwd ymm2, ymm7
-				vpunpckhwd ymm3, ymm7
+				vpunpcklbw ymm2, ymm0, [rsp + 0]
+				vpunpcklbw ymm3, ymm0, [rsp + 0]
+				vpunpckhbw ymm1, ymm0, [rsp + 0]
+				vpunpckhbw ymm0, ymm0, [rsp + 0]
+				vpunpcklwd ymm2, [rsp + 0]
+				vpunpckhwd ymm3, [rsp + 0]
+				vpunpcklwd ymm1, [rsp + 0]
+				vpunpckhwd ymm0, [rsp + 0]
 				vcvtdq2ps ymm2, ymm2
 				vcvtdq2ps ymm3, ymm3
-				vmulps ymm2, ymm1
-				vmulps ymm3, ymm1
-				vaddps ymm5, ymm2
-				vaddps ymm6, ymm3
-				
-				vpunpckhbw ymm3, ymm0, ymm7
-				vpunpckhbw ymm0, ymm0, ymm7
-				vpunpcklwd ymm3, ymm7
-				vpunpckhwd ymm0, ymm7
-				vcvtdq2ps ymm3, ymm3
+				vcvtdq2ps ymm1, ymm1
 				vcvtdq2ps ymm0, ymm0
-				vmulps ymm3, ymm1
-				vmulps ymm0, ymm1
-				vaddps ymm4, ymm3
-				vaddps ymm0, [i_ymmSF3]
-				vmovaps [i_ymmSF3], ymm0
+				%if %1 == 1 ; FMA3
+					vfmadd231ps ymm5, ymm2, [rsp + 32]
+					vfmadd231ps ymm6, ymm3, [rsp + 32]
+					vfmadd231ps ymm4, ymm1, [rsp + 32]
+					vfmadd231ps ymm7, ymm0, [rsp + 32]
+				%else
+					vmulps ymm2, [rsp + 32]
+					vmulps ymm3, [rsp + 32]
+					vmulps ymm1, [rsp + 32]
+					vmulps ymm0, [rsp + 32]
+					vaddps ymm5, ymm2
+					vaddps ymm6, ymm3
+					vaddps ymm4, ymm1
+					vaddps ymm7, ymm0
+				%endif
 
 				inc rcx
 				cmp rcx, arg(6)
@@ -142,9 +149,9 @@ sym(Convlt1_hz_float32_minpack16_Asm_X86_AVX2):
 			vcvtps2dq ymm5, ymm5
 			vcvtps2dq ymm6, ymm6
 			vcvtps2dq ymm4, ymm4
-			vcvtps2dq ymm3, [i_ymmSF3]
+			vcvtps2dq ymm7, ymm7
 			vpackssdw ymm5, ymm6
-			vpackssdw ymm4, ymm3
+			vpackssdw ymm4, ymm7
 			vpackuswb ymm5, ymm4
 			lea rax, [rax + 32] ; in_ptr += 32
 			vmovdqu [rbx], ymm5
@@ -181,10 +188,15 @@ sym(Convlt1_hz_float32_minpack16_Asm_X86_AVX2):
 				vpunpckhwd ymm0, ymm0, ymm7
 				vcvtdq2ps ymm3, ymm3
 				vcvtdq2ps ymm0, ymm0
-				vmulps ymm3, ymm1
-				vmulps ymm0, ymm1
-				vaddps ymm4, ymm3				
-				vaddps ymm5, ymm0
+				%if %1 == 1 ; FMA3
+					vfmadd231ps ymm4, ymm3, ymm1
+					vfmadd231ps ymm5, ymm0, ymm1
+				%else
+					vmulps ymm3, ymm1
+					vmulps ymm0, ymm1
+					vaddps ymm4, ymm3				
+					vaddps ymm5, ymm0
+				%endif
 
 				inc rcx
 				cmp rcx, arg(6)
@@ -214,11 +226,10 @@ sym(Convlt1_hz_float32_minpack16_Asm_X86_AVX2):
 		jnz .LoopRows
 
 	; unalign stack and free memory
-	add rsp, 32*1
+	add rsp, 32*1 + 32*1
 	COMPV_YASM_UNALIGN_STACK
 
 	%undef COMPV_SIZE_OF_FLOAT
-	%undef i_ymmSF3
 
 	;; begin epilog ;;
 	pop rbx
@@ -230,3 +241,12 @@ sym(Convlt1_hz_float32_minpack16_Asm_X86_AVX2):
 	pop rbp
 	vzeroupper
 	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(Convlt1_hz_float32_minpack16_Asm_X86_AVX2):
+	Convlt1_hz_float32_minpack16_Macro_X86_AVX2 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(Convlt1_hz_float32_minpack16_Asm_X86_FMA3_AVX2):
+	Convlt1_hz_float32_minpack16_Macro_X86_AVX2 1

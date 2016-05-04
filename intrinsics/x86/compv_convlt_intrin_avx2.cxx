@@ -41,7 +41,7 @@ void Convlt1_hz_float32_minpack16_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* ou
 	ymmZero = _mm256_setzero_si256();
 	ymmMaskToExtractFirst128Bits = _mm256_load_si256((__m256i*)kAVXMaskstore_0_1_u64);
 
-	pad += (width & 15); // 3 = (minpack - 1) = (16 - 1)
+	pad += (width & 15); // 15 = (minpack - 1) = (16 - 1)
 
 	for (j = 0; j < height; ++j) {
 		i = width;
@@ -95,7 +95,7 @@ void Convlt1_hz_float32_minpack16_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* ou
 		
 		/* Loop-16 */
 		while (i > 15) {
-			// When width is mof 32 this code not, make sure to disable previous "while" if you change someting
+			// When width is mof 32 this code isn't executed, make sure to disable previous "while" if you change something
 			ymmSF0 = _mm256_setzero_ps();
 			ymmSF1 = _mm256_setzero_ps();
 			for (col = 0; col < kern_size; ++col) {

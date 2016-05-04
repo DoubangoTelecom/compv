@@ -41,8 +41,8 @@ section .text
 ; agr(2) -> const float* cos1
 ; agr(3) -> const float* sin1
 ; agr(4) -> COMPV_ALIGNED(SSE) void* out
-; void Brief256_31_Asm_X64_AVX2(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(SSE) void* out)
 ; %1 -> 1: FMA enabled, 0: FMA disabled
+; void Brief256_31_Asm_X64_AVX2(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(SSE) void* out)
 %macro Brief256_31_Macro_X64_AVX2 1
 	push rbp
 	mov rbp, rsp
