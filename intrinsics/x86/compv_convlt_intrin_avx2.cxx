@@ -28,13 +28,13 @@
 COMPV_NAMESPACE_BEGIN()
 
 // This function requires sizeof(float) = 4byte = 32bits
-void Convlt1_hz_float32_minpack16_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
+void Convlt1_verthz_float32_minpack16_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t stride, compv_scalar_t pad, const float* vhkern_ptr, compv_scalar_t kern_size)
 {
 	_mm256_zeroupper();
 	// Use ASM which support FMA3
 	// AVX/SSE mix penalities
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	compv_scalar_t i, j, col;
+	compv_scalar_t i, j, k;
 	__m256 ymmCoeff, ymmF0, ymmSF0, ymmSF1, ymmSF2, ymmSF3;
 	__m256i ymmI0, ymmI1, ymmI2, ymmI3, ymmZero, ymmMaskToExtractFirst128Bits;
 
@@ -51,9 +51,9 @@ void Convlt1_hz_float32_minpack16_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* ou
 			ymmSF1 = _mm256_setzero_ps();
 			ymmSF2 = _mm256_setzero_ps();
 			ymmSF3 = _mm256_setzero_ps();
-			for (col = 0; col < kern_size; ++col) {
-				ymmI0 = _mm256_loadu_si256((__m256i*)&in_ptr[col]);
-				ymmCoeff = _mm256_set1_ps(hkern_ptr[col]); // 0000
+			for (k = 0; k < kern_size; ++k) {
+				ymmI0 = _mm256_loadu_si256((__m256i*)&in_ptr[k * stride]);
+				ymmCoeff = _mm256_set1_ps(vhkern_ptr[k]); // 0000
 				
 				ymmI1 = _mm256_unpacklo_epi8(ymmI0, ymmZero); // Low(U8) -> Low(I16)
 
@@ -98,9 +98,9 @@ void Convlt1_hz_float32_minpack16_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* ou
 			// When width is mof 32 this code isn't executed, make sure to disable previous "while" if you change something
 			ymmSF0 = _mm256_setzero_ps();
 			ymmSF1 = _mm256_setzero_ps();
-			for (col = 0; col < kern_size; ++col) {
-				ymmI0 = _mm256_maskload_epi64((const int64_t*)&in_ptr[col], ymmMaskToExtractFirst128Bits); // ASM code: vmovdqa xmm0, [mem]
-				ymmCoeff = _mm256_set1_ps(hkern_ptr[col]);
+			for (k = 0; k < kern_size; ++k) {
+				ymmI0 = _mm256_maskload_epi64((const int64_t*)&in_ptr[k * stride], ymmMaskToExtractFirst128Bits); // ASM code: vmovdqa xmm0, [mem]
+				ymmCoeff = _mm256_set1_ps(vhkern_ptr[k]);
 
 				ymmI1 = _mm256_unpacklo_epi8(_mm256_permute4x64_epi64(ymmI0, COMPV_MM_SHUFFLE(3, 1, 2, 0)), ymmZero);
 

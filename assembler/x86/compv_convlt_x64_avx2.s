@@ -23,8 +23,8 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(Convlt1_hz_float32_minpack16_Asm_X64_AVX2)
-global sym(Convlt1_hz_float32_minpack16_Asm_X64_FMA3_AVX2)
+global sym(Convlt1_verthz_float32_minpack16_Asm_X64_AVX2)
+global sym(Convlt1_verthz_float32_minpack16_Asm_X64_FMA3_AVX2)
 
 section .data
 	extern sym(kAVXMaskstore_0_1_u64)
@@ -37,12 +37,13 @@ section .text
 ; arg(1) -> uint8_t* out_ptr
 ; arg(2) -> compv_scalar_t width
 ; arg(3) -> compv_scalar_t height
-; arg(4) -> compv_scalar_t pad
-; arg(5) -> const float* hkern_ptr
-; arg(6) -> compv_scalar_t kern_size
+; arg(4) -> compv_scalar_t stride
+; arg(5) -> compv_scalar_t pad
+; arg(6) -> const float* hkern_ptr
+; arg(7) -> compv_scalar_t kern_size
 ; %1 -> 1: FMA3 enabled, 0: FMA3 disabled
-; void Convlt1_hz_float32_minpack16_Asm_X64_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
-%macro Convlt1_hz_float32_minpack16_Macro_X64_AVX2 1
+; void Convlt1_verthz_float32_minpack16_Asm_X64_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t stride, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
+%macro Convlt1_verthz_float32_minpack16_Macro_X64_AVX2 1
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
@@ -50,6 +51,7 @@ section .text
 	push rsi
 	push rdi
 	push rbx
+	push r12
 	;; end prolog ;;
 
 	vzeroupper
@@ -75,7 +77,7 @@ section .text
 
 	; r9 = (pad += (width & 15))
 	mov rdx, arg(2) ; width
-	mov r9, arg(4) ; pad
+	mov r9, arg(5) ; pad
 	and rdx, 15
 	add r9, rdx
 
@@ -83,13 +85,18 @@ section .text
 	mov rax, arg(0)
 
 	; rdx = hkern_ptr
-	mov rdx, arg(5)
+	mov rdx, arg(6)
 
 	; r8 = kern_size
-	mov r8, arg(6)
+	mov r8, arg(7)
 
 	; r10 = width
 	mov r10, arg(2)
+
+	; r11 = stride
+	mov r11, arg(4)
+
+	; r12 reserved
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
@@ -103,6 +110,7 @@ section .text
 		; while (i > 31)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopColumns32
+			mov r12, rax ; in_ptr
 			xor rcx, rcx ; col = 0
 			vxorps xmm5, xmm5, xmm5 ; xmm5 = xmmSF0 = xmmZero
 			vxorps xmm6, xmm6, xmm6 ; xmm6 = xmmSF1 = xmmZero
@@ -113,7 +121,7 @@ section .text
 			; for (col = 0; col < kern_size; ++col)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			.LoopColumns32Kern
-				vmovdqu ymm0, [rax + rcx] ; ymm0 = ymmI0
+				vmovdqu ymm0, [r12] ; ymm0 = ymmI0
 				vmovss xmm1, [rdx + rcx*COMPV_SIZE_OF_FLOAT]
 				
 				vpunpcklbw ymm2, ymm0, ymm7
@@ -148,7 +156,8 @@ section .text
 				%endif
 
 				inc rcx
-				cmp rcx, r8
+				add r12, r11 ; += stride
+				cmp rcx, r8 ; ==? kern_size
 				jl .LoopColumns32Kern		
 
 			vcvtps2dq ymm5, ymm5
@@ -175,14 +184,15 @@ section .text
 		.LoopColumns16
 			vxorps ymm4, ymm4 ; ymm4 = ymmSF0
 			vxorps ymm5, ymm5 ; ymm5 = ymmSF1
-			
+
+			mov r12, rax ; in_ptr
 			xor rcx, rcx ; col = 0
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (col = 0; col < kern_size; ++col)
 			; When width is mof 32 this code isn't executed, make sure to disable previous "while" if you change something
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			.LoopColumns16Kern
-				vpmaskmovq ymm0, ymm10, [rax + rcx] ; ymm0 = ymmI0
+				vpmaskmovq ymm0, ymm10, [r12] ; ymm0 = ymmI0
 				vmovss xmm1, [rdx + rcx*COMPV_SIZE_OF_FLOAT]
 				vpermq ymm0, ymm0, 0xD8
 				vbroadcastss ymm1, xmm1 ; ymm1 = ymmCoeff				
@@ -203,7 +213,8 @@ section .text
 				%endif
 
 				inc rcx
-				cmp rcx, r8
+				add r12, r11 ; += stride
+				cmp rcx, r8 ; ==? kern_size
 				jl .LoopColumns16Kern
 
 			vcvtps2dq ymm4, ymm4
@@ -231,6 +242,7 @@ section .text
 	%undef COMPV_SIZE_OF_FLOAT
 
 	;; begin epilog ;;
+	pop r12
 	pop rbx
 	pop rdi
 	pop rsi
@@ -243,12 +255,12 @@ section .text
 %endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(Convlt1_hz_float32_minpack16_Asm_X64_AVX2):
-	Convlt1_hz_float32_minpack16_Macro_X64_AVX2 0
+sym(Convlt1_verthz_float32_minpack16_Asm_X64_AVX2):
+	Convlt1_verthz_float32_minpack16_Macro_X64_AVX2 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(Convlt1_hz_float32_minpack16_Asm_X64_FMA3_AVX2):
-	Convlt1_hz_float32_minpack16_Macro_X64_AVX2 1
+sym(Convlt1_verthz_float32_minpack16_Asm_X64_FMA3_AVX2):
+	Convlt1_verthz_float32_minpack16_Macro_X64_AVX2 1
 
 
 

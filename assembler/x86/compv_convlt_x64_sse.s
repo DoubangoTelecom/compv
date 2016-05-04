@@ -23,7 +23,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2)
+global sym(Convlt1_verthz_float32_minpack4_Asm_X64_SSE2)
 
 section .data
 
@@ -35,11 +35,12 @@ section .text
 ; arg(1) -> uint8_t* out_ptr
 ; arg(2) -> compv_scalar_t width
 ; arg(3) -> compv_scalar_t height
-; arg(4) -> compv_scalar_t pad
-; arg(5) -> const float* hkern_ptr
-; arg(6) -> compv_scalar_t kern_size
-; void Convlt1_hz_float32_minpack4_Asm_X64_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
-sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2):
+; arg(4) -> compv_scalar_t stride
+; arg(5) -> compv_scalar_t pad
+; arg(6) -> const float* hkern_ptr
+; arg(7) -> compv_scalar_t kern_size
+; void Convlt1_verthz_float32_minpack4_Asm_X64_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t stride, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
+sym(Convlt1_verthz_float32_minpack4_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
@@ -47,6 +48,7 @@ sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2):
 	push rsi
 	push rdi
 	push rbx
+	push r12
 	;; end prolog ;;
 
 	%define COMPV_SIZE_OF_FLOAT 4 ; up to the caller to make sure sizeof(float)=4
@@ -67,7 +69,7 @@ sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2):
 
 	; r9 = (pad += (width & 3))
 	mov rdx, arg(2) ; width
-	mov r9, arg(4) ; pad
+	mov r9, arg(5) ; pad
 	and rdx, 3
 	add r9, rdx
 
@@ -75,13 +77,18 @@ sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2):
 	mov rax, arg(0)
 
 	; rdx = hkern_ptr
-	mov rdx, arg(5)
+	mov rdx, arg(6)
 
 	; r8 = kern_size
-	mov r8, arg(6)
+	mov r8, arg(7)
 
 	; r10 = width
 	mov r10, arg(2)
+
+	; r11 = stride
+	mov r11, arg(4)
+
+	; r12 reserved
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
@@ -94,6 +101,7 @@ sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2):
 		; while (i > 15)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopColumns16
+			mov r12, rax ; in_ptr
 			xor rcx, rcx ; col = 0
 			movaps xmm5, xmm7 ; xmm5 = xmmSF0 = xmmZero
 			movaps xmm6, xmm7 ; xmm6 = xmmSF1 = xmmZero
@@ -104,7 +112,7 @@ sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2):
 			; for (col = 0; col < kern_size; ++col)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			.LoopColumns16Kern16
-				movdqu xmm0, [rax + rcx] ; xmm0 = xmmI0
+				movdqu xmm0, [r12] ; xmm0 = xmmI0
 				movss xmm1, [rdx + rcx*COMPV_SIZE_OF_FLOAT]
 				movdqa xmm2, xmm0
 				movdqa xmm3, xmm0
@@ -133,7 +141,8 @@ sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2):
 				addps xmm9, xmm0
 
 				inc rcx
-				cmp rcx, r8
+				add r12, r11 ; += stride
+				cmp rcx, r8 ; ==? kern_size
 				jl .LoopColumns16Kern16		
 
 			cvtps2dq xmm5, xmm5
@@ -158,6 +167,7 @@ sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2):
 		; while (i > 3)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopColumns4
+			mov r12, rax ; in_ptr
 			xor rcx, rcx ; col = 0
 			movaps xmm4, xmm7 ; xmm4 = xmmSF0 = xmmZero
 			
@@ -165,7 +175,7 @@ sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2):
 			; for (col = 0; col < kern_size; ++col)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			.LoopColumns4Kern16
-				movd xmm0, [rax + rcx] ; xmm0 = xmmI0
+				movd xmm0, [r12] ; xmm0 = xmmI0
 				movss xmm1, [rdx + rcx*COMPV_SIZE_OF_FLOAT]
 				punpcklbw xmm0, xmm7
 				shufps xmm1, xmm1, 0x0 ; xmm1 = xmmCoeff
@@ -175,7 +185,8 @@ sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2):
 				addps xmm4, xmm0
 
 				inc rcx
-				cmp rcx, r8
+				add r12, r11 ; += stride
+				cmp rcx, r8 ; ==? kern_size
 				jl .LoopColumns4Kern16
 
 			cvtps2dq xmm4, xmm4
@@ -201,6 +212,7 @@ sym(Convlt1_hz_float32_minpack4_Asm_X64_SSE2):
 	%undef COMPV_SIZE_OF_FLOAT
 
 	;; begin epilog ;;
+	pop r12
 	pop rbx
 	pop rdi
 	pop rsi

@@ -28,15 +28,15 @@
 #include "compv/intrinsics/x86/compv_convlt_intrin_avx2.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM
-COMPV_EXTERNC void Convlt1_hz_float32_minpack4_Asm_X86_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
-COMPV_EXTERNC void Convlt1_hz_float32_minpack16_Asm_X86_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
-COMPV_EXTERNC void Convlt1_hz_float32_minpack16_Asm_X86_FMA3_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
+COMPV_EXTERNC void Convlt1_verthz_float32_minpack4_Asm_X86_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
+COMPV_EXTERNC void Convlt1_verthz_float32_minpack16_Asm_X86_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
+COMPV_EXTERNC void Convlt1_verthz_float32_minpack16_Asm_X86_FMA3_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 #if COMPV_ARCH_X64 && COMPV_ASM
-COMPV_EXTERNC void Convlt1_hz_float32_minpack4_Asm_X64_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
-COMPV_EXTERNC void Convlt1_hz_float32_minpack16_Asm_X64_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
-COMPV_EXTERNC void Convlt1_hz_float32_minpack16_Asm_X64_FMA3_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
+COMPV_EXTERNC void Convlt1_verthz_float32_minpack4_Asm_X64_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
+COMPV_EXTERNC void Convlt1_verthz_float32_minpack16_Asm_X64_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
+COMPV_EXTERNC void Convlt1_verthz_float32_minpack16_Asm_X64_FMA3_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const float* hkern_ptr, compv::compv_scalar_t kern_size);
 #endif /* COMPV_ARCH_X64 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
@@ -173,65 +173,17 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt1(const uint8_t* img_ptr, int img_width, 
 	imgTmp = ((uint8_t*)m_pDataPtr0) + (img_border * img_stride) + img_border;
 	imgOut = (bUseInternalMemory ? ((uint8_t*)m_pDataPtr) : out_ptr) + (img_border * img_stride) + img_border;
 
-    // Process
-
     // Horizontal
     topleft = img_ptr + start_margin;
     imgpad = (img_stride - img_width) + start_center + start_center;
 	imgPtr = imgTmp + start_center;
-#if 1
-	CompVConvlt::convlt1_hz(topleft, imgPtr, (img_width - start_center - start_center), img_height, imgpad, hkern_ptr, kern_size);
-#else
-	{
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-		int col, i, j;
-		double sum;
-		for (j = 0; j < img_height; ++j) {
-			for (i = start_center; i < img_width - start_center; ++i) {
-				sum = 0;
-				for (col = 0; col < kern_size; ++col) {
-					sum += topleft[col] * hkern_ptr[col];
-				}
-				*imgPtr = (uint8_t)sum; // TODO(dmi): do not mul() but add()
-				++topleft;
-				++imgPtr;
-			}
-			topleft += imgpad;
-			imgPtr += imgpad;
-		}
-	}
-#endif
+	CompVConvlt::convlt1_verthz(topleft, imgPtr, (img_width - start_center - start_center), img_height, /*stride*/1, imgpad, hkern_ptr, kern_size);
 
     // Vertical
     topleft = imgTmp + (start_margin * img_stride); // output from hz filtering is now used as input
     imgpad = (img_stride - img_width);
 	imgPtr = imgOut + (start_center * img_stride);
-#if 1
-	CompVConvlt::convlt1_vert(topleft, imgPtr, img_width, img_height - start_center - start_center, img_stride, imgpad, vkern_ptr, kern_size);
-#else
-	{
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-		int row, i, j;
-		const uint8_t *ptr_;
-		double sum;
-		for (j = start_center; j < img_height - start_center; ++j) {
-			for (i = 0; i < img_width; ++i) {
-				sum = 0;
-				ptr_ = topleft;
-				for (row = 0; row < kern_size; ++row, ptr_ += img_stride) {
-					sum += *ptr_ * vkern_ptr[row];
-				}
-				*imgPtr = (uint8_t)sum; // TODO(dmi): do not mul() but add()
-				++topleft;
-				++imgPtr;
-			}
-			topleft += imgpad;
-			imgPtr += imgpad;
-		}
-	}
-#endif
+	CompVConvlt::convlt1_verthz(topleft, imgPtr, img_width, img_height - start_center - start_center, img_stride, imgpad, vkern_ptr, kern_size);
 
 	if (bUseInternalMemory && out_ptr) {
 		CompVMem::copy(out_ptr, imgOut, neededSize);
@@ -243,35 +195,35 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt1(const uint8_t* img_ptr, int img_width, 
 }
 
 // Private function: do not check input parameters
+// Use stride = 1 for "hz"
 template <typename T>
-void CompVConvlt<T>::convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int pad, const T* hkern_ptr, int kern_size)
+void CompVConvlt<T>::convlt1_verthz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const T* vhkern_ptr, int kern_size)
 {
 	static const bool size_of_float_is4 = (sizeof(float) == 4); // ASM and INTRIN code require it
 	int minpack = 0; // Minimum number of pixels the function can handle for each operation (must be pof 2)
-	
+
 	// Floating point implementation
 	if (std::is_same<T, float>::value && size_of_float_is4) {
-		void(*Convlt1_hz_float32)(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size) = NULL;
+		void(*Convlt1_verthz_float32)(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t stride, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size) = NULL;
 		if (width > 3 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_hz_float32 = Convlt1_hz_float32_minpack4_Intrin_SSE2, minpack = 4));
-			// Accroding to Intel VTune the intrinsic version (VS2013) is faster: Check ASM generated by VS2013 and we have better one
+			COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack4_Intrin_SSE2, minpack = 4));
+			// TODO(dmi): Accroding to Intel VTune the intrinsic version (VS2013) is faster: Check ASM generated by VS2013 and we have better one
 			// This is not the case for AVX: Our ASM code is faster than what VS2013 genereate
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-			COMPV_EXEC_IFDEF_ASM_X86((Convlt1_hz_float32 = Convlt1_hz_float32_minpack4_Asm_X86_SSE2, minpack = 4));
-			COMPV_EXEC_IFDEF_ASM_X64((Convlt1_hz_float32 = Convlt1_hz_float32_minpack4_Asm_X64_SSE2, minpack = 4));
+			COMPV_EXEC_IFDEF_ASM_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack4_Asm_X86_SSE2, minpack = 4));
+			COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack4_Asm_X64_SSE2, minpack = 4));
 		}
 		if (width > 15 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_hz_float32 = Convlt1_hz_float32_minpack16_Intrin_AVX2, minpack = 16));
-			COMPV_EXEC_IFDEF_ASM_X86((Convlt1_hz_float32 = Convlt1_hz_float32_minpack16_Asm_X86_AVX2, minpack = 16));
-			COMPV_EXEC_IFDEF_ASM_X64((Convlt1_hz_float32 = Convlt1_hz_float32_minpack16_Asm_X64_AVX2, minpack = 16));
+			COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Intrin_AVX2, minpack = 16));
+			COMPV_EXEC_IFDEF_ASM_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Asm_X86_AVX2, minpack = 16));
+			COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Asm_X64_AVX2, minpack = 16));
 			if (CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
-				 COMPV_EXEC_IFDEF_ASM_X86((Convlt1_hz_float32 = Convlt1_hz_float32_minpack16_Asm_X86_FMA3_AVX2, minpack = 16));
-				 COMPV_EXEC_IFDEF_ASM_X64((Convlt1_hz_float32 = Convlt1_hz_float32_minpack16_Asm_X64_FMA3_AVX2, minpack = 16));
+				COMPV_EXEC_IFDEF_ASM_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Asm_X86_FMA3_AVX2, minpack = 16));
+				COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Asm_X64_FMA3_AVX2, minpack = 16));
 			}
 		}
-		if (Convlt1_hz_float32) {
+		if (Convlt1_verthz_float32) {
 			// TODO(dmi): execute AVX_minpack16 then, SSE_minpack4 for the remaining > 15 pixels
-			Convlt1_hz_float32(in_ptr, out_ptr, width, height, pad, (const float*)hkern_ptr, kern_size);
+			Convlt1_verthz_float32(in_ptr, out_ptr, width, height, stride, pad, (const float*)vhkern_ptr, kern_size);
 		}
 	}
 
@@ -289,16 +241,18 @@ void CompVConvlt<T>::convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int wid
 	else {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	}
-	
 	{
-		int i, j, col;
+		int i, j, row;
 		T sum;
+		const uint8_t *ptr_;
 
 		for (j = 0; j < height; ++j) {
 			for (i = 0; i < width; ++i) {
 				sum = 0;
-				for (col = 0; col < kern_size; ++col) {
-					sum += in_ptr[col] * hkern_ptr[col];
+				ptr_ = in_ptr;
+				for (row = 0; row < kern_size; ++row) {
+					sum += *ptr_ * vhkern_ptr[row];
+					ptr_ += stride;
 				}
 				*out_ptr = COMPV_MATH_ROUNDFU_2_INT(sum, uint8_t);
 				++in_ptr;
@@ -307,30 +261,6 @@ void CompVConvlt<T>::convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int wid
 			in_ptr += pad;
 			out_ptr += pad;
 		}
-	}
-}
-
-template <typename T>
-void CompVConvlt<T>::convlt1_vert(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const T* vkern_ptr, int kern_size)
-{
-	int i, j, row;
-	T sum;
-	const uint8_t *ptr_;
-
-	for (j = 0; j < height; ++j) {
-		for (i = 0; i < width; ++i) {
-			sum = 0;
-			ptr_ = in_ptr;
-			for (row = 0; row < kern_size; ++row) {
-				sum += *ptr_ * vkern_ptr[row];
-				ptr_ += stride;
-			}
-			*out_ptr = (uint8_t)sum; // TODO(dmi): do not mul() but add()
-			++in_ptr;
-			++out_ptr;
-		}
-		in_ptr += pad;
-		out_ptr += pad;
 	}
 }
 

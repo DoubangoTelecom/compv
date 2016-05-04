@@ -48,8 +48,7 @@ public:
     static COMPV_ERROR_CODE newObj(CompVPtr<CompVConvlt* >* convlt);
 
 private:
-	static void convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int pad, const T* hkern_ptr, int kern_size);
-	static void convlt1_vert(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const T* vkern_ptr, int kern_size);
+	static void convlt1_verthz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const T* vhkern_ptr, int kern_size);
 
 private:
     void* m_pDataPtr;

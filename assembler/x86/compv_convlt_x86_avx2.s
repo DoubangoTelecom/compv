@@ -21,8 +21,8 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(Convlt1_hz_float32_minpack16_Asm_X86_AVX2)
-global sym(Convlt1_hz_float32_minpack16_Asm_X86_FMA3_AVX2)
+global sym(Convlt1_verthz_float32_minpack16_Asm_X86_AVX2)
+global sym(Convlt1_verthz_float32_minpack16_Asm_X86_FMA3_AVX2)
 
 section .data
 	extern sym(kAVXMaskstore_0_1_u64)
@@ -35,16 +35,17 @@ section .text
 ; arg(1) -> uint8_t* out_ptr
 ; arg(2) -> compv_scalar_t width
 ; arg(3) -> compv_scalar_t height
-; arg(4) -> compv_scalar_t pad
-; arg(5) -> const float* hkern_ptr
-; arg(6) -> compv_scalar_t kern_size
+; arg(4) -> compv_scalar_t stride
+; arg(5) -> compv_scalar_t pad
+; arg(6) -> const float* hkern_ptr
+; arg(7) -> compv_scalar_t kern_size
 ; %1 -> 1: FMA3 enabled, 0: FMA3 disabled
-; void Convlt1_hz_float32_minpack16_Asm_X86_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
-%macro Convlt1_hz_float32_minpack16_Macro_X86_AVX2 1
+; void Convlt1_verthz_float32_minpack16_Asm_X86_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
+%macro Convlt1_verthz_float32_minpack16_Macro_X86_AVX2 1
 	push rbp
 	mov rbp, rsp
-	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
-	COMPV_YASM_SAVE_YMM 7 ;XMM[6-7]
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
+	COMPV_YASM_SAVE_YMM 7 ;YMM[6-7]
 	push rsi
 	push rdi
 	push rbx
@@ -53,10 +54,16 @@ section .text
 	vzeroupper
 
 	%define COMPV_SIZE_OF_FLOAT 4 ; up to the caller to make sure sizeof(float)=4
+	%define i_tmp		rsp + 0
+	%define i_ymmZero	rsp + 8
+	%define i_ymmCoeff	rsp + 40
 
 	; align stack and alloc memory
 	COMPV_YASM_ALIGN_STACK 32, rax
-	sub rsp, 32*1 + 32*1
+	sub rsp, 32*1 + 32*1 + 8*1
+	; [rsp + 0] = compv_scalar_t tmp
+	; [rsp + 8] = ymmZero
+	; [rsp + 40] = ymmCoeff
 
 	; i = rdi
 	; xor rdi, rdi
@@ -71,20 +78,20 @@ section .text
 
 	; ymm7 = ymmZero
 	vpxor ymm7, ymm7
-	vmovdqa [rsp + 0], ymm7
+	vmovdqa [i_ymmZero], ymm7
 
-	; arg(4) = pad += (width & 15)
+	; arg(5) = pad += (width & 15)
 	mov rdx, arg(2) ; width
-	mov rax, arg(4) ; pad
+	mov rax, arg(5) ; pad
 	and rdx, 15
 	add rax, rdx
-	mov arg(4), rax
+	mov arg(5), rax
 
 	; rax = in_ptr
 	mov rax, arg(0)
 
 	; rdx = hkern_ptr
-	mov rdx, arg(5)
+	mov rdx, arg(6)
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
@@ -104,38 +111,39 @@ section .text
 			vxorps ymm4, ymm4 ; ymm4 = ymmSF2
 			vxorps ymm7, ymm7 ; ymm7 = ymmSF3
 
+			mov [i_tmp], rax ; save rax = in_ptr
 			xor rcx, rcx ; col = 0
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (col = 0; col < kern_size; ++col)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			.LoopColumns32Kern32
 				vmovss xmm1, [rdx + rcx*COMPV_SIZE_OF_FLOAT]
-				vmovdqu ymm0, [rax + rcx] ; ymm0 = ymmI0
+				vmovdqu ymm0, [rax] ; ymm0 = ymmI0
 				vbroadcastss ymm1, xmm1 ; ymm1 = ymmCoeff
-				vmovdqa [rsp + 32], ymm1
+				vmovdqa [i_ymmCoeff], ymm1
 				
-				vpunpcklbw ymm2, ymm0, [rsp + 0]
-				vpunpcklbw ymm3, ymm0, [rsp + 0]
-				vpunpckhbw ymm1, ymm0, [rsp + 0]
-				vpunpckhbw ymm0, ymm0, [rsp + 0]
-				vpunpcklwd ymm2, [rsp + 0]
-				vpunpckhwd ymm3, [rsp + 0]
-				vpunpcklwd ymm1, [rsp + 0]
-				vpunpckhwd ymm0, [rsp + 0]
+				vpunpcklbw ymm2, ymm0, [i_ymmZero]
+				vpunpcklbw ymm3, ymm0, [i_ymmZero]
+				vpunpckhbw ymm1, ymm0, [i_ymmZero]
+				vpunpckhbw ymm0, ymm0, [i_ymmZero]
+				vpunpcklwd ymm2, [i_ymmZero]
+				vpunpckhwd ymm3, [i_ymmZero]
+				vpunpcklwd ymm1, [i_ymmZero]
+				vpunpckhwd ymm0, [i_ymmZero]
 				vcvtdq2ps ymm2, ymm2
 				vcvtdq2ps ymm3, ymm3
 				vcvtdq2ps ymm1, ymm1
 				vcvtdq2ps ymm0, ymm0
 				%if %1 == 1 ; FMA3
-					vfmadd231ps ymm5, ymm2, [rsp + 32]
-					vfmadd231ps ymm6, ymm3, [rsp + 32]
-					vfmadd231ps ymm4, ymm1, [rsp + 32]
-					vfmadd231ps ymm7, ymm0, [rsp + 32]
+					vfmadd231ps ymm5, ymm2, [i_ymmCoeff]
+					vfmadd231ps ymm6, ymm3, [i_ymmCoeff]
+					vfmadd231ps ymm4, ymm1, [i_ymmCoeff]
+					vfmadd231ps ymm7, ymm0, [i_ymmCoeff]
 				%else
-					vmulps ymm2, [rsp + 32]
-					vmulps ymm3, [rsp + 32]
-					vmulps ymm1, [rsp + 32]
-					vmulps ymm0, [rsp + 32]
+					vmulps ymm2, [i_ymmCoeff]
+					vmulps ymm3, [i_ymmCoeff]
+					vmulps ymm1, [i_ymmCoeff]
+					vmulps ymm0, [i_ymmCoeff]
 					vaddps ymm5, ymm2
 					vaddps ymm6, ymm3
 					vaddps ymm4, ymm1
@@ -143,9 +151,11 @@ section .text
 				%endif
 
 				inc rcx
-				cmp rcx, arg(6)
+				add rax, arg(4) ; += stride
+				cmp rcx, arg(7) ; ==? kern_size
 				jl .LoopColumns32Kern32		
 
+			mov rax, [i_tmp] ; restore rax
 			vcvtps2dq ymm5, ymm5
 			vcvtps2dq ymm6, ymm6
 			vcvtps2dq ymm4, ymm4
@@ -172,20 +182,21 @@ section .text
 			vxorps ymm5, ymm5 ; ymm5 = ymmSF1
 			vmovdqa ymm6, [sym(kAVXMaskstore_0_1_u64)] ; ymm6 = ymmMaskToExtractFirst128Bits
 
+			mov [i_tmp], rax ; save rax = in_ptr
 			xor rcx, rcx ; col = 0
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (col = 0; col < kern_size; ++col)
 			; When width is mof 32 this code isn't executed, make sure to disable previous "while" if you change something
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			.LoopColumns16Kern16
-				vpmaskmovq ymm0, ymm6, [rax + rcx] ; ymm0 = ymmI0
+				vpmaskmovq ymm0, ymm6, [rax] ; ymm0 = ymmI0
 				vmovss xmm1, [rdx + rcx*COMPV_SIZE_OF_FLOAT]
 				vpermq ymm0, ymm0, 0xD8
 				vbroadcastss ymm1, xmm1 ; ymm1 = ymmCoeff				
-				vpunpcklbw ymm0, ymm0, [rsp + 0] ; ymm0 = ymmI1
+				vpunpcklbw ymm0, ymm0, [i_ymmZero] ; ymm0 = ymmI1
 
-				vpunpcklwd ymm3, ymm0, [rsp + 0]
-				vpunpckhwd ymm0, ymm0, [rsp + 0]
+				vpunpcklwd ymm3, ymm0, [i_ymmZero]
+				vpunpckhwd ymm0, ymm0, [i_ymmZero]
 				vcvtdq2ps ymm3, ymm3
 				vcvtdq2ps ymm0, ymm0
 				%if %1 == 1 ; FMA3
@@ -199,10 +210,11 @@ section .text
 				%endif
 
 				inc rcx
-				cmp rcx, arg(6)
+				add rax, arg(4) ; += stride
+				cmp rcx, arg(7) ; ==? kern_size
 				jl .LoopColumns16Kern16
 
-			
+			mov rax, [i_tmp] ; restore rax
 			vcvtps2dq ymm4, ymm4
 			vcvtps2dq ymm5, ymm5
 			vpackssdw ymm4, ymm5
@@ -218,18 +230,21 @@ section .text
 			jge .LoopColumns16
 			.EndOfLoopColumns16
 		
-		add rbx, arg(4) ; out_ptr += pad
-		add rax, arg(4) ; in_ptr += pad
+		add rbx, arg(5) ; out_ptr += pad
+		add rax, arg(5) ; in_ptr += pad
 
 		dec rsi ; --j
 		test rsi, rsi
 		jnz .LoopRows
 
 	; unalign stack and free memory
-	add rsp, 32*1 + 32*1
+	add rsp, 32*1 + 32*1 + 8*1
 	COMPV_YASM_UNALIGN_STACK
 
 	%undef COMPV_SIZE_OF_FLOAT
+	%undef i_tmp
+	%undef i_ymmZero
+	%undef i_ymmCoeff
 
 	;; begin epilog ;;
 	pop rbx
@@ -244,9 +259,9 @@ section .text
 %endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(Convlt1_hz_float32_minpack16_Asm_X86_AVX2):
-	Convlt1_hz_float32_minpack16_Macro_X86_AVX2 0
+sym(Convlt1_verthz_float32_minpack16_Asm_X86_AVX2):
+	Convlt1_verthz_float32_minpack16_Macro_X86_AVX2 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(Convlt1_hz_float32_minpack16_Asm_X86_FMA3_AVX2):
-	Convlt1_hz_float32_minpack16_Macro_X86_AVX2 1
+sym(Convlt1_verthz_float32_minpack16_Asm_X86_FMA3_AVX2):
+	Convlt1_verthz_float32_minpack16_Macro_X86_AVX2 1
