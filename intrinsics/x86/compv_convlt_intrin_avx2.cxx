@@ -28,12 +28,12 @@
 COMPV_NAMESPACE_BEGIN()
 
 // This function requires sizeof(float) = 4byte = 32bits
-// FIXME: minpack should be 16 or 4
-void Convlt1_hz_float32_minpack4_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
+void Convlt1_hz_float32_minpack16_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
 {
 	_mm256_zeroupper();
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Not fully tested yet
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM and FMA3, Not optimized at all
+	// Use ASM which support FMA3
+	// AVX/SSE mix penalities
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	compv_scalar_t i, j, col;
 	__m256 ymmCoeff, ymmF0, ymmSF0, ymmSF1, ymmSF2, ymmSF3;
 	__m256i ymmI0, ymmI1, ymmI2, ymmI3, ymmZero, ymmMaskToExtractFirst128Bits;
@@ -41,15 +41,7 @@ void Convlt1_hz_float32_minpack4_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* out
 	ymmZero = _mm256_setzero_si256();
 	ymmMaskToExtractFirst128Bits = _mm256_load_si256((__m256i*)kAVXMaskstore_0_1_u64);
 
-	// FIXME
-	//pad += (width & 3) ; // 3 = (minpack - 1) = (4 - 1)
 	pad += (width & 15); // 3 = (minpack - 1) = (16 - 1)
-
-	// (abcd conv 0123) = a0+b1+c2+d3
-
-	// FIXME
-	(ymmI1), (ymmI2), (ymmI3);
-	ymmSF2, ymmSF3;
 
 	for (j = 0; j < height; ++j) {
 		i = width;
@@ -62,8 +54,6 @@ void Convlt1_hz_float32_minpack4_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* out
 			for (col = 0; col < kern_size; ++col) {
 				ymmI0 = _mm256_loadu_si256((__m256i*)&in_ptr[col]);
 				ymmCoeff = _mm256_set1_ps(hkern_ptr[col]); // 0000
-
-				// FIXME(dmi): Very good candidate for FMA3 / AVX
 				
 				ymmI1 = _mm256_unpacklo_epi8(ymmI0, ymmZero); // Low(U8) -> Low(I16)
 
@@ -100,31 +90,34 @@ void Convlt1_hz_float32_minpack4_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* out
 			in_ptr += 32;
 			out_ptr += 32;
 		} // while (i > 31)
+
+		// Loop-16 is executed at most #1 time
 		
 		/* Loop-16 */
-		// FIXME: not optimized
-		// FIXME: this code not always called
 		while (i > 15) {
+			// When width is mof 32 this code not, make sure to disable previous "while" if you change someting
 			ymmSF0 = _mm256_setzero_ps();
 			ymmSF1 = _mm256_setzero_ps();
 			for (col = 0; col < kern_size; ++col) {
 				ymmI0 = _mm256_maskload_epi64((const int64_t*)&in_ptr[col], ymmMaskToExtractFirst128Bits); // ASM code: vmovdqa xmm0, [mem]
 				ymmCoeff = _mm256_set1_ps(hkern_ptr[col]);
 
-				ymmI1 = compv_avx2_unpacklo_epi8(ymmI0, ymmZero);
+				ymmI1 = _mm256_unpacklo_epi8(_mm256_permute4x64_epi64(ymmI0, COMPV_MM_SHUFFLE(3, 1, 2, 0)), ymmZero);
 
-				ymmF0 = _mm256_cvtepi32_ps(compv_avx2_unpacklo_epi16(ymmI1, ymmZero));
+				ymmF0 = _mm256_cvtepi32_ps(_mm256_unpacklo_epi16(ymmI1, ymmZero));
 				ymmF0 = _mm256_mul_ps(ymmF0, ymmCoeff);
 				ymmSF0 = _mm256_add_ps(ymmSF0, ymmF0);
 
-				ymmF0 = _mm256_cvtepi32_ps(compv_avx2_unpackhi_epi16(ymmI1, ymmZero));
+				ymmF0 = _mm256_cvtepi32_ps(_mm256_unpackhi_epi16(ymmI1, ymmZero));
 				ymmF0 = _mm256_mul_ps(ymmF0, ymmCoeff);
 				ymmSF1 = _mm256_add_ps(ymmSF1, ymmF0);
 			}
+			
 			ymmI0 = _mm256_cvtps_epi32(ymmSF0);
 			ymmI1 = _mm256_cvtps_epi32(ymmSF1);
-			ymmI0 = compv_avx2_packs_epi32(ymmI0, ymmI1);
-			ymmI0 = compv_avx2_packus_epi16(ymmI0, ymmI0);
+			ymmI0 = _mm256_packs_epi32(ymmI0, ymmI1);
+			ymmI0 = _mm256_packus_epi16(ymmI0, ymmI0);
+			ymmI0 = _mm256_permute4x64_epi64(ymmI0, COMPV_MM_SHUFFLE(3, 1, 2, 0));
 
 			_mm256_maskstore_epi64((int64_t*)out_ptr, ymmMaskToExtractFirst128Bits, ymmI0); // ASM code: vmovdqa [mem], xmm0
 
@@ -132,6 +125,8 @@ void Convlt1_hz_float32_minpack4_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* out
 			in_ptr += 16;
 			out_ptr += 16;
 		}
+
+		// Loop-8 is executed at most #1 time, doesn't worth it
 
 		in_ptr += pad;
 		out_ptr += pad;

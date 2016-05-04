@@ -254,8 +254,8 @@ void CompVConvlt<T>::convlt1_hz(const uint8_t* in_ptr, uint8_t* out_ptr, int wid
 			COMPV_EXEC_IFDEF_ASM_X86((Convlt1_hz_float32 = Convlt1_hz_float32_minpack4_Asm_X86_SSE2, minpack = 4));
 			COMPV_EXEC_IFDEF_ASM_X64((Convlt1_hz_float32 = Convlt1_hz_float32_minpack4_Asm_X64_SSE2, minpack = 4));
 		}
-		if (width > 3 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) { // FIXME: width > (minpack - 1)
-			//COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_hz_float32 = Convlt1_hz_float32_minpack4_Intrin_AVX2, minpack = 16)); // FIXME: minpack 32
+		if (width > 3 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_hz_float32 = Convlt1_hz_float32_minpack16_Intrin_AVX2, minpack = 16));
 		}
 		if (Convlt1_hz_float32) {
 			Convlt1_hz_float32(in_ptr, out_ptr, width, height, pad, (const float*)hkern_ptr, kern_size);
