@@ -6,6 +6,7 @@ using namespace compv;
 
 #define FAST_THRESHOLD				10
 #define FAST_NONMAXIMA				true
+#define ORB_MAX_FEATURES			-1
 #define ORB_PYRAMID_LEVELS			8
 #define ORB_PYRAMID_SCALEFACTOR		0.83f
 #define ORB_PYRAMID_SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
@@ -47,6 +48,8 @@ bool TestORB()
     COMPV_CHECK_CODE_ASSERT(dete->set(COMPV_ORB_SET_INT32_PYRAMID_SCALE_TYPE, &val32, sizeof(val32)));
     valFloat = ORB_PYRAMID_SCALEFACTOR;
     COMPV_CHECK_CODE_ASSERT(dete->set(COMPV_ORB_SET_FLOAT_PYRAMID_SCALE_FACTOR, &valFloat, sizeof(valFloat)));
+	val32 = ORB_MAX_FEATURES;
+	COMPV_CHECK_CODE_ASSERT(dete->set(COMPV_ORB_SET_INT32_MAX_FEATURES, &val32, sizeof(val32)));
 
     timeStart = CompVTime::getNowMills();
     for (int i = 0; i < ORB_LOOOP_COUNT; ++i) {

@@ -49,6 +49,7 @@ COMPV_NAMESPACE_BEGIN()
 // These default values are also used in the descriptor (extern...)
 int COMPV_FEATURE_DETE_ORB_FAST_THRESHOLD_DEFAULT = 20; // T: Default threshold (pixel intensity: [0-255])
 int COMPV_FEATURE_DETE_ORB_FAST_N_DEFAULT = 9; // N: Number of positive continuous pixel to have before declaring a candidate as an interest point
+int COMPV_FEATURE_DETE_ORB_FAST_MAX_FEATURES = 500;
 bool COMPV_FEATURE_DETE_ORB_FAST_NON_MAXIMA_SUPP = true; // NMS:
 int COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS = 8; // number of levels
 float COMPV_FEATURE_DETE_ORB_PYRAMID_SF = 0.83f; // scale factor
@@ -58,7 +59,7 @@ COMPV_SCALE_TYPE COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE = COMPV_SCALE_TYPE_BI
 
 CompVFeatureDeteORB::CompVFeatureDeteORB()
     : CompVFeatureDete(COMPV_ORB_ID)
-    , m_nMaxFeatures(-1)
+	, m_nMaxFeatures(COMPV_FEATURE_DETE_ORB_FAST_MAX_FEATURES)
     , m_nPyramidLevels(-1)
     , m_pCircleMaxI(NULL)
     , m_nCircleMaxICount(0)
@@ -280,7 +281,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage*>
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     CompVPtr<CompVImage*> imageAtLevelN;
     CompVPtr<CompVBoxInterestPoint* > interestPointsAtLevelN;
-    float sf, sfs, patchSize;
+    float sf, sfs, patchSize, nf;
     double m10, m01, orientRad;
     CompVInterestPoint* point_;
     int patch_diameter = m_nPatchDiameter, patch_radius = (patch_diameter >> 1);
@@ -305,12 +306,10 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage*>
     // Get points at level N
     interestPointsAtLevelN = m_pInterestPointsAtLevelN[level];
 
-    // Erase points too close to the border
-    COMPV_CHECK_CODE_RETURN(err_ = interestPointsAtLevelN->eraseTooCloseToBorder(imgWidth, imgHeight, patch_radius));
-
     // Retain best features only
     if (m_nMaxFeatures > 0 && interestPointsAtLevelN->size() > 0) {
-        int32_t maxFeatures = (int32_t)((m_nMaxFeatures / sfs) * sf);
+		nf = ((m_nMaxFeatures / sfs) * sf);
+		int32_t maxFeatures = COMPV_MATH_ROUNDFU_2_INT(nf, int32_t);
         if (interestPointsAtLevelN->size() > (size_t)maxFeatures) {
 #if 0 // Not multi-threaded
             interestPointsAtLevelN->sort(static bool cmp_strength_dec(const CompVInterestPoint* i, const CompVInterestPoint* j) {
@@ -322,6 +321,9 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage*>
 #endif
         }
     }
+
+	// Erase points too close to the border
+	COMPV_CHECK_CODE_RETURN(err_ = interestPointsAtLevelN->eraseTooCloseToBorder(imgWidth, imgHeight, patch_radius));
 
     // For each point, set level and patch size, compute the orientation, scale (X,Y) coords...
     for (point_ = interestPointsAtLevelN->begin(); point_ < interestPointsAtLevelN->end(); ++point_) {
