@@ -24,6 +24,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(Convlt1_hz_float32_minpack16_Asm_X64_AVX2)
+global sym(Convlt1_hz_float32_minpack16_Asm_X64_FMA3_AVX2)
 
 section .data
 	extern sym(kAVXMaskstore_0_1_u64)
@@ -39,8 +40,9 @@ section .text
 ; arg(4) -> compv_scalar_t pad
 ; arg(5) -> const float* hkern_ptr
 ; arg(6) -> compv_scalar_t kern_size
+; %1 -> 1: FMA3 enabled, 0: FMA3 disabled
 ; void Convlt1_hz_float32_minpack16_Asm_X64_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
-sym(Convlt1_hz_float32_minpack16_Asm_X64_AVX2):
+%macro Convlt1_hz_float32_minpack16_Macro_X64_AVX2 1
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
@@ -102,39 +104,48 @@ sym(Convlt1_hz_float32_minpack16_Asm_X64_AVX2):
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopColumns32
 			xor rcx, rcx ; col = 0
-			vxorps xmm5, xmm5 ; xmm5 = xmmSF0 = xmmZero
-			vxorps xmm6, xmm6 ; xmm6 = xmmSF1 = xmmZero
-			vxorps xmm4, xmm4 ; xmm4 = xmmSF2 = xmmZero
-			vxorps xmm9, xmm9 ; xmm9 = xmmSF3 = xmmZero
+			vxorps xmm5, xmm5, xmm5 ; xmm5 = xmmSF0 = xmmZero
+			vxorps xmm6, xmm6, xmm6 ; xmm6 = xmmSF1 = xmmZero
+			vxorps xmm4, xmm4, xmm4 ; xmm4 = xmmSF2 = xmmZero
+			vxorps xmm9, xmm9, xmm9 ; xmm9 = xmmSF3 = xmmZero
 			
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (col = 0; col < kern_size; ++col)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			.LoopColumns32Kern
-				vmovss xmm1, [rdx + rcx*COMPV_SIZE_OF_FLOAT]
 				vmovdqu ymm0, [rax + rcx] ; ymm0 = ymmI0
-				vbroadcastss ymm1, xmm1 ; ymm1 = ymmCoeff
+				vmovss xmm1, [rdx + rcx*COMPV_SIZE_OF_FLOAT]
 				
 				vpunpcklbw ymm2, ymm0, ymm7
 				vpunpcklbw ymm3, ymm0, ymm7
 				vpunpckhbw ymm8, ymm0, ymm7
 				vpunpckhbw ymm0, ymm0, ymm7
-				vpunpcklwd ymm2, ymm7
-				vpunpckhwd ymm3, ymm7
-				vpunpcklwd ymm8, ymm7
-				vpunpckhwd ymm0, ymm7
+				vpunpcklwd ymm2, ymm2, ymm7
+				vpunpckhwd ymm3, ymm3, ymm7
+				vpunpcklwd ymm8, ymm8, ymm7
+				vpunpckhwd ymm0, ymm0, ymm7
+
+				vbroadcastss ymm1, xmm1 ; ymm1 = ymmCoeff
+
 				vcvtdq2ps ymm2, ymm2
 				vcvtdq2ps ymm3, ymm3
 				vcvtdq2ps ymm8, ymm8
 				vcvtdq2ps ymm0, ymm0
-				vmulps ymm2, ymm1
-				vmulps ymm3, ymm1
-				vmulps ymm8, ymm1
-				vmulps ymm0, ymm1
-				vaddps ymm5, ymm2
-				vaddps ymm6, ymm3
-				vaddps ymm4, ymm8
-				vaddps ymm9, ymm0
+				%if %1 == 1 ; FMA3
+					vfmadd231ps ymm5, ymm2, ymm1
+					vfmadd231ps ymm6, ymm3, ymm1
+					vfmadd231ps ymm4, ymm8, ymm1
+					vfmadd231ps ymm9, ymm0, ymm1
+				%else
+					vmulps ymm2, ymm2, ymm1
+					vmulps ymm3, ymm3, ymm1
+					vmulps ymm8, ymm8, ymm1
+					vmulps ymm0, ymm0, ymm1
+					vaddps ymm5, ymm5, ymm2
+					vaddps ymm6, ymm6, ymm3
+					vaddps ymm4, ymm4, ymm8
+					vaddps ymm9, ymm9, ymm0
+				%endif
 
 				inc rcx
 				cmp rcx, r8
@@ -144,9 +155,9 @@ sym(Convlt1_hz_float32_minpack16_Asm_X64_AVX2):
 			vcvtps2dq ymm6, ymm6
 			vcvtps2dq ymm4, ymm4
 			vcvtps2dq ymm9, ymm9
-			vpackssdw ymm5, ymm6
-			vpackssdw ymm4, ymm9
-			vpackuswb ymm5, ymm4
+			vpackssdw ymm5, ymm5, ymm6
+			vpackssdw ymm4, ymm4, ymm9
+			vpackuswb ymm5, ymm5, ymm4
 			lea rax, [rax + 32] ; in_ptr += 32
 			vmovdqu [rbx], ymm5
 			lea rbx, [rbx + 32] ; out_ptr += 32
@@ -181,15 +192,15 @@ sym(Convlt1_hz_float32_minpack16_Asm_X64_AVX2):
 				vpunpckhwd ymm0, ymm0, ymm7
 				vcvtdq2ps ymm3, ymm3
 				vcvtdq2ps ymm0, ymm0
-				;%if %1 == 1 ; FMA3
-				;	vfmadd231ps ymm4, ymm3, ymm1
-				;	vfmadd231ps ymm5, ymm0, ymm1
-				;%else
+				%if %1 == 1 ; FMA3
+					vfmadd231ps ymm4, ymm3, ymm1
+					vfmadd231ps ymm5, ymm0, ymm1
+				%else
 					vmulps ymm3, ymm1
 					vmulps ymm0, ymm1
 					vaddps ymm4, ymm3				
 					vaddps ymm5, ymm0
-				;%endif
+				%endif
 
 				inc rcx
 				cmp rcx, r8
@@ -229,5 +240,16 @@ sym(Convlt1_hz_float32_minpack16_Asm_X64_AVX2):
 	pop rbp
 	vzeroupper
 	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(Convlt1_hz_float32_minpack16_Asm_X64_AVX2):
+	Convlt1_hz_float32_minpack16_Macro_X64_AVX2 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(Convlt1_hz_float32_minpack16_Asm_X64_FMA3_AVX2):
+	Convlt1_hz_float32_minpack16_Macro_X64_AVX2 1
+
+
 
 %endif ; COMPV_YASM_ABI_IS_64BIT

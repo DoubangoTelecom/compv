@@ -601,5 +601,8 @@
     <YASM Include="assembler\x86\compv_convlt_x86_avx2.s">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
+    <YASM Include="assembler\x86\compv_convlt_x64_avx2.s">
+      <Filter>Assembler Files\x86</Filter>
+    </YASM>
   </ItemGroup>
 </Project>

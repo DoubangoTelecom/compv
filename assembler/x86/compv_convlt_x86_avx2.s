@@ -38,7 +38,7 @@ section .text
 ; arg(4) -> compv_scalar_t pad
 ; arg(5) -> const float* hkern_ptr
 ; arg(6) -> compv_scalar_t kern_size
-; %1 -> 1: FMA enabled, 0: FMA disabled
+; %1 -> 1: FMA3 enabled, 0: FMA3 disabled
 ; void Convlt1_hz_float32_minpack16_Asm_X86_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
 %macro Convlt1_hz_float32_minpack16_Macro_X86_AVX2 1
 	push rbp
