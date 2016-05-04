@@ -90,7 +90,7 @@ sym(Convlt1_hz_float32_minpack16_Asm_X86_AVX2):
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopRows
 		mov rdi, arg(2) ; i = width
-		; jmp .EndOfLoopColumns32 ; Uncomment this line to skip Loop-32
+		; jmp .EndOfLoopColumns32 ; uncomment this line to skip Loop-32
 		cmp rdi, 32
 		jl .EndOfLoopColumns32
 		
