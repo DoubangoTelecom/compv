@@ -191,10 +191,10 @@ COMPV_EXTERNC COMPV_API void FastStrengths32(compv::compv_scalar_t rbrighters, c
 COMPV_NAMESPACE_BEGIN()
 
 // Default threshold (pixel intensity: [0-255])
-#define COMPV_FEATURE_DETE_FAST_THRESHOLD_DEFAULT		10
+#define COMPV_FEATURE_DETE_FAST_THRESHOLD_DEFAULT			10
 // Number of positive continuous pixel to have before declaring a candidate as an interest point
-#define COMPV_FEATURE_DETE_FAST_NON_MAXIMA_SUPP			true
-#define COMPV_FEATURE_DETE_FAST_MAX_FEATURTES			-1 // maximum number of features to retain (<0 means all)
+#define COMPV_FEATURE_DETE_FAST_NON_MAXIMA_SUPP				true
+#define COMPV_FEATURE_DETE_FAST_MAX_FEATURTES				2000 // maximum number of features to retain (<0 means all)
 #define COMPV_FEATURE_DETE_FAST_MIN_SAMPLES_PER_THREAD		(200*250) // number of pixels
 #define COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD	(80*80) // number of interestPoints
 
@@ -488,11 +488,8 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVPtr<CompVImage*>& imag
     }
 
     // Retain best "m_iMaxFeatures" features
-    // TODO(dmi): use retainBest
-    // FIXME: sort not tested yet
     if (m_iMaxFeatures > 0 && (int32_t)interestPoints->size() > m_iMaxFeatures) {
-        interestPoints->sort(__compareStrengthDec); // TODO(dmi): use sortStrengh() which is faster
-        interestPoints->resize(m_iMaxFeatures);
+		interestPoints->retainBest(m_iMaxFeatures);
     }
 
     return err_;

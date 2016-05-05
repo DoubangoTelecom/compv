@@ -31,6 +31,8 @@
 #	define COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT  32
 #endif
 
+#define COMPV_FEATURE_DESC_ORB_FXPQ15				0 // Fixed-Point implementation
+
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
 #endif
@@ -76,7 +78,10 @@ private:
         float *m_pcos;
         float *m_psin;
     } m_simd;
-	void(*m_funBrief256_31)(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out);
+	void(*m_funBrief256_31_Float32)(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out);
+#if COMPV_FEATURE_DESC_ORB_FXPQ15
+	void(*m_funBrief256_31_Fxpq15)(const uint8_t* img_center, compv_scalar_t img_stride, const int16_t* cos1, const int16_t* sin1, COMPV_ALIGNED(x) void* out);
+#endif
 };
 
 COMPV_NAMESPACE_END()

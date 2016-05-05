@@ -337,7 +337,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage*>
         orientRad = COMPV_MATH_ATAN2(m01, m10);
         //double orientRad = COMPV_MATH_ATAN2(cy, cx);
         point_->orient = COMPV_MATH_RADIAN_TO_DEGREE_FLOAT(orientRad);
-        if (point_->orient < 0) {
+        if (point_->orient < 0) { // clamp orient within [0-360], required by many internal functions
             point_->orient += 360;    // ((point_->orient + 360) % 360)
         }
         // COMPV_ASSERT(point_->orient >= 0 && point_->orient < 360);

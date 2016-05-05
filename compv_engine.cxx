@@ -38,6 +38,7 @@ bool CompVEngine::s_bBigEndian = true;
 #endif
 bool CompVEngine::s_bTesting = false;
 bool CompVEngine::s_bMathTrigFast = true;
+bool CompVEngine::s_bMathFixedPoint = true;
 CompVPtr<CompVThreadDispatcher *> CompVEngine::s_ThreadDisp = NULL;
 
 CompVEngine::CompVEngine()
@@ -134,6 +135,7 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     /* Math functions: Must be after CPU initialization */
     COMPV_CHECK_CODE_BAIL(err_ = CompVMathUtils::init());
     COMPV_DEBUG_INFO("Math Fast Trig.: %s", CompVEngine::isMathTrigFast() ? "true" : "fast");
+	COMPV_DEBUG_INFO("Math Fixed Point: %s", CompVEngine::isMathFixedPoint() ? "true" : "fast");
 
     /* Memory alignment */
     COMPV_DEBUG_INFO("Default alignment: #%d", COMPV_SIMD_ALIGNV_DEFAULT);
@@ -219,6 +221,13 @@ COMPV_ERROR_CODE CompVEngine::setMathTrigFastEnabled(bool bMathTrigFast)
     return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVEngine::setMathFixedPointEnabled(bool bMathFixedPoint)
+{
+	COMPV_DEBUG_INFO("Engine math trig. fast = %s", bMathFixedPoint ? "true" : "false");
+	s_bMathFixedPoint= bMathFixedPoint;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 bool CompVEngine::isMultiThreadingEnabled()
 {
     return !!s_ThreadDisp;
@@ -247,6 +256,11 @@ bool CompVEngine::isTestingMode()
 bool CompVEngine::isMathTrigFast()
 {
     return s_bMathTrigFast;
+}
+
+bool CompVEngine::isMathFixedPoint()
+{
+	return s_bMathFixedPoint;
 }
 
 COMPV_NAMESPACE_END()

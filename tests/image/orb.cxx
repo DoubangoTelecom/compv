@@ -11,7 +11,8 @@ using namespace compv;
 #define ORB_PYRAMID_SCALEFACTOR		0.83f
 #define ORB_PYRAMID_SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
 #define ORB_LOOOP_COUNT				1
-#define ORB_DESC_MD5				"ab74dddd34f60a2b05c2d7bebe6fc9b4"
+#define ORB_DESC_MD5_FLOAT			"a9aa1a90cd404639274cd03727cca28c"
+#define ORB_DESC_MD5_FXP			"a9aa1a90cd404639274cd03727cca28c" // "f1ba2ade7e357f14c5357a3587465b48"
 #define JPEG_IMG					"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture (2000*1000 = 2times more bytes than 720p)
 
 bool TestORB()
@@ -64,7 +65,7 @@ bool TestORB()
 
     // Compute Descriptions MD5
     const std::string md5 = descriptions ? CompVMd5::compute2(descriptions->getDataPtr(), descriptions->getDataSize()) : "";
-    if (md5 != ORB_DESC_MD5) {
+	if (md5 != (CompVEngine::isMathFixedPoint() ? ORB_DESC_MD5_FXP : ORB_DESC_MD5_FLOAT)) {
         COMPV_DEBUG_ERROR("MD5 mismatch");
         COMPV_ASSERT(false);
         return false;

@@ -157,7 +157,7 @@ public:
     }
 
     virtual COMPV_ERROR_CODE sort(bool(*CompVBoxPredicateCompare)(const T*, const T*)) {
-        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Should be multithreaded. See "CompVBoxInterestPoint::sort" as reference
+        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Should be multithreaded. See "CompVBoxInterestPoint::sort" or "retainBest()" as reference
         COMPV_CHECK_EXP_RETURN(!CompVBoxPredicateCompare, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         if (size() > 1) {
             switch (m_eSortType) {

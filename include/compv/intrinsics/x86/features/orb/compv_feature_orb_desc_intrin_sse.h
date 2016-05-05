@@ -32,7 +32,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 void Brief256_31_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out);
-void Brief256_31_Intrin_SSE41(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out);
+void Brief256_31_Fxpq15_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t img_stride, const int16_t* cos1, const int16_t* sin1, COMPV_ALIGNED(SSE) void* out);
 
 COMPV_NAMESPACE_END()
 
