@@ -58,7 +58,10 @@ public:
     static COMPV_ERROR_CODE newObj(CompVPtr<CompVFeatureDesc* >* orb);
 
 private:
-	bool brief256_31(const CompVImage* image, int kpx, int kpy, float cosT, float sinT, COMPV_ALIGNED(x) void* desc);
+	COMPV_ERROR_CODE convlt(CompVPtr<CompVImageScalePyramid * > pPyramid, int level);
+	COMPV_ERROR_CODE describe(CompVPtr<CompVImageScalePyramid * > pPyramid, const CompVInterestPoint* begin, const CompVInterestPoint* end, uint8_t* desc);
+	static COMPV_ERROR_CODE convlt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
+	static COMPV_ERROR_CODE describe_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 
 private:
     // TODO(dmi): use internal detector: BRIEF (just like what is done for the detector and FAST internal dete)
@@ -68,16 +71,6 @@ private:
     const CompVImage* m_pcImages[COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT];
 	int m_nPatchDiameter;
 	int m_nPatchBits;
-    struct {
-        float *m_pxf;
-        float *m_pyf;
-        float *m_psf;
-        float *m_pangleInDegree;
-        int32_t *m_pxi;
-        int32_t *m_pyi;
-        float *m_pcos;
-        float *m_psin;
-    } m_simd;
 	void(*m_funBrief256_31_Float32)(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out);
 #if COMPV_FEATURE_DESC_ORB_FXPQ15
 	void(*m_funBrief256_31_Fxpq15)(const uint8_t* img_center, compv_scalar_t img_stride, const int16_t* cos1, const int16_t* sin1, COMPV_ALIGNED(x) void* out);

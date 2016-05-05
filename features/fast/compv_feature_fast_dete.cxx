@@ -457,7 +457,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVPtr<CompVImage*>& imag
         // NMS
         if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
             threadsCountNMS = (int32_t)(interestPoints->size() / COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD);
-            threadsCountNMS = COMPV_MATH_CLIP3(0, threadDip->getThreadsCount() - 1, threadsCountNMS);
+            threadsCountNMS = COMPV_MATH_CLIP3(0, threadDip->getThreadsCount(), threadsCountNMS);
         }
         if (threadsCountNMS > 1) {
             int32_t total = 0, count, size = (int32_t)interestPoints->size();

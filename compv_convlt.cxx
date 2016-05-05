@@ -136,17 +136,16 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt1(const uint8_t* img_ptr, int img_width, 
 {
     // Check inputs
 	COMPV_CHECK_EXP_RETURN(!img_ptr || (img_width < kern_size * 2) || (img_height < kern_size * 2) || (img_stride < img_width) || !vkern_ptr || !hkern_ptr || img_border < 0 || !(kern_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	
+	CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+	bool bMultiThreaded = threadDip && threadDip->isMotherOfTheCurrentThread();
 
 	// Make sure we're not sharing the internal memory across threads
-	CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
-	if (!out_ptr && threadDip && threadDip->isMotherOfTheCurrentThread()) {
-		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_CALL);
-	}
-	bool bUseInternalMemory = !out_ptr;
-
-    // Alloc memory
+	COMPV_CHECK_EXP_RETURN(bMultiThreaded && !out_ptr, COMPV_ERROR_CODE_E_INVALID_CALL);
+    
+	/* Alloc memory */
     size_t neededSize = (img_height + (img_border << 1)) * (img_stride + (img_border << 1));
-	if (bUseInternalMemory && m_nDataSize < neededSize) {
+	if (!out_ptr && m_nDataSize < neededSize) {
         m_pDataPtr = CompVMem::realloc(m_pDataPtr, neededSize);
         if (!m_pDataPtr) {
             m_nDataSize = 0;
@@ -154,7 +153,13 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt1(const uint8_t* img_ptr, int img_width, 
         }
         m_nDataSize = neededSize;
     }
-    if (m_nDataSize0 < neededSize) {
+	// Allocate tmp memory if multithread to avoid sharing 'm_pDataPtr0'
+	void* imgTmpMT = NULL;
+	if (bMultiThreaded) {
+		imgTmpMT = CompVMem::malloc(neededSize);
+		COMPV_CHECK_EXP_RETURN(!imgTmpMT, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (!imgTmpMT && m_nDataSize0 < neededSize) {
         m_pDataPtr0 = CompVMem::realloc(m_pDataPtr0, neededSize);
         if (!m_pDataPtr0) {
             m_nDataSize0 = 0;
@@ -170,8 +175,8 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt1(const uint8_t* img_ptr, int img_width, 
     int start_margin = (img_border >= ker_size_div2) ? -ker_size_div2 : -img_border;
     int start_center = start_margin + ker_size_div2;
 
-	imgTmp = ((uint8_t*)m_pDataPtr0) + (img_border * img_stride) + img_border;
-	imgOut = (bUseInternalMemory ? ((uint8_t*)m_pDataPtr) : out_ptr) + (img_border * img_stride) + img_border;
+	imgTmp = (!imgTmpMT ? (uint8_t*)m_pDataPtr0 : (uint8_t*)imgTmpMT) + (img_border * img_stride) + img_border;
+	imgOut = (!out_ptr ? ((uint8_t*)m_pDataPtr) : out_ptr) + (img_border * img_stride) + img_border;
 
     // Horizontal
     topleft = img_ptr + start_margin;
@@ -184,12 +189,11 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt1(const uint8_t* img_ptr, int img_width, 
     imgpad = (img_stride - img_width);
 	imgPtr = imgOut + (start_center * img_stride);
 	CompVConvlt::convlt1_verthz(topleft, imgPtr, img_width, img_height - start_center - start_center, img_stride, imgpad, vkern_ptr, kern_size);
-
-	if (bUseInternalMemory && out_ptr) {
-		CompVMem::copy(out_ptr, imgOut, neededSize);
-	}
+	
 	m_pResultPtr = (const void*)imgOut;
 	m_nResultSize = neededSize;
+
+	CompVMem::free(&imgTmpMT);
 
     return COMPV_ERROR_CODE_S_OK;
 }

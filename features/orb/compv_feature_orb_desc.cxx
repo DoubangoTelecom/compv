@@ -131,6 +131,8 @@ extern COMPV_SCALE_TYPE COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE;
 static const int COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE = 7;
 static const float COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 2.f;
 
+#define COMPV_FEATURE_DESC_ORB_DESCRIBE_MIN_SAMPLES_PER_THREAD	(20*10) // number of interestPoints
+
 static void Brief256_31_Float32_C(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out);
 #if COMPV_FEATURE_DESC_ORB_FXPQ15
 static void Brief256_31_Fxpq15_C(const uint8_t* img_center, compv_scalar_t img_stride, const int16_t* cos1, const int16_t* sin1, COMPV_ALIGNED(x) void* out);
@@ -138,7 +140,6 @@ static void Brief256_31_Fxpq15_C(const uint8_t* img_center, compv_scalar_t img_s
 
 CompVFeatureDescORB::CompVFeatureDescORB()
     : CompVFeatureDesc(COMPV_ORB_ID)
-    , m_simd({NULL})
 	, m_nPatchDiameter(COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER)
 	, m_nPatchBits(COMPV_FEATURE_DETE_ORB_PATCH_BITS)
 	, m_funBrief256_31_Float32(Brief256_31_Float32_C)
@@ -151,14 +152,6 @@ CompVFeatureDescORB::CompVFeatureDescORB()
 
 CompVFeatureDescORB::~CompVFeatureDescORB()
 {
-    CompVMem::freeAligned((void**)&m_simd.m_pxf);
-    CompVMem::freeAligned((void**)&m_simd.m_pyf);
-    CompVMem::freeAligned((void**)&m_simd.m_psf);
-    CompVMem::freeAligned((void**)&m_simd.m_pangleInDegree);
-    CompVMem::freeAligned((void**)&m_simd.m_pxi);
-    CompVMem::freeAligned((void**)&m_simd.m_pyi);
-    CompVMem::freeAligned((void**)&m_simd.m_pcos);
-    CompVMem::freeAligned((void**)&m_simd.m_psin);
 }
 
 // override CompVSettable::set
@@ -172,41 +165,71 @@ COMPV_ERROR_CODE CompVFeatureDescORB::set(int id, const void* valuePtr, size_t v
     }
 }
 
-// Brief256 with patch diameter equal 31
-bool CompVFeatureDescORB::brief256_31(const CompVImage* image, int kpx, int kpy, float cosT, float sinT, COMPV_ALIGNED(x) void* desc)
+COMPV_ERROR_CODE CompVFeatureDescORB::convlt(CompVPtr<CompVImageScalePyramid * > pPyramid, int level)
 {
-	const uint8_t *img_center;
-	int imgs, imgw, imgh;
+	// apply gaussianblur filter on the pyramid
+	CompVPtr<CompVImage*> imageAtLevelN;
+	COMPV_CHECK_CODE_RETURN(pPyramid->getImage(level, &imageAtLevelN));
+	// The out is the image itself to avoid allocating temp buffer. This means the images in the pyramid are modified
+	// and any subsequent call must take care
+	COMPV_CHECK_CODE_RETURN(m_convlt->convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), m_kern->getDataPtr(), m_kern->getDataPtr(), COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, (uint8_t*)imageAtLevelN->getDataPtr()));
+	return COMPV_ERROR_CODE_S_OK;
+}
 
-	static const int patch_radius = (m_nPatchDiameter >> 1);
-	
-	imgw = image->getWidth();
-	imgh = image->getHeight();
+COMPV_ERROR_CODE CompVFeatureDescORB::describe(CompVPtr<CompVImageScalePyramid * > pPyramid, const CompVInterestPoint* begin, const CompVInterestPoint* end, uint8_t* desc)
+{
+	float fx, fy, angleInRad, sf, fcos, fsin;
+	int32_t xi, yi;
+	const CompVInterestPoint* point;
+	CompVPtr<CompVImage*> imageAtLevelN;
+	const int nFeaturesBytes = (m_nPatchBits >> 3);
+	const int nPatchRadius = (m_nPatchDiameter >> 1);
+	const uint8_t* img_center;
+	int32_t stride;
 
-	// Check if the keypoint is too close to the border
-	if ((kpx - patch_radius) < 0 || (kpx + patch_radius) >= imgw || (kpy - patch_radius) < 0 || (kpy + patch_radius) >= imgh) {
-		// Must never happen....unless you are using keypoints from another implementation (e.g. OpenCV)
-		COMPV_DEBUG_ERROR("Keypoint too close to the border");
-		return false; // ignore this keypoint => do not compute description
-	}
-
-	imgs = image->getStride();
-	img_center = ((const uint8_t*)image->getDataPtr()) + ((kpy * imgs) + kpx); // Translate the image to have the keypoint at the center. This is required before applying the rotated patch.
-
+	for (point = begin; point < end; ++point) {
+		// Get image at level N
+		COMPV_CHECK_CODE_RETURN(pPyramid->getImage(point->level, &imageAtLevelN));
+		stride = imageAtLevelN->getStride();
+		// Scale
+		sf = pPyramid->getScaleFactor(point->level);
+		fx = (point->x * sf);
+		fy = (point->y * sf);
+		// Convert the angle from degree to radian
+		angleInRad = COMPV_MATH_DEGREE_TO_RADIAN_FLOAT(point->orient);
+		// Get angle's cos and sin
+		fcos = ::cos(angleInRad);
+		fsin = ::sin(angleInRad);
+		// Round the point
+		xi = COMPV_MATH_ROUNDFU_2_INT(fx, int32_t);
+		yi = COMPV_MATH_ROUNDFU_2_INT(fy, int32_t);
+		// Compute description
+		{
+			// Check if the keypoint is too close to the border
+			if ((xi - nPatchRadius) < 0 || (xi + nPatchRadius) >= imageAtLevelN->getWidth() || (yi - nPatchRadius) < 0 || (yi + nPatchRadius) >= imageAtLevelN->getHeight()) {
+				// Must never happen....unless you are using keypoints from another implementation (e.g. OpenCV)
+				COMPV_DEBUG_ERROR("Keypoint too close to the border");
+				memset(desc, 0, nFeaturesBytes);
+			}
+			else {
+				img_center = ((const uint8_t*)imageAtLevelN->getDataPtr()) + ((yi * stride) + xi); // Translate the image to have the keypoint at the center. This is required before applying the rotated patch.
 #if COMPV_FEATURE_DESC_ORB_FXPQ15 // Disable fixed-point version until we found faster implementation
-	if (CompVEngine::isMathFixedPoint()) {
-		// cosT and sinT are within [0-1] which means we can just mulb 0x7fff
-		int16_t cosTQ15 = COMPV_MATH_ROUNDF_2_INT((cosT * 0x7fff), int16_t);
-		int16_t sinTQ15 = COMPV_MATH_ROUNDF_2_INT((sinT * 0x7fff), int16_t);
-		m_funBrief256_31_Fxpq15(img_center, imgs, &cosTQ15, &sinTQ15, desc);
-	}
-	else
+				if (CompVEngine::isMathFixedPoint()) {
+					// cosT and sinT are within [0-1] which means we can just mulb 0x7fff
+					int16_t cosTQ15 = COMPV_MATH_ROUNDF_2_INT((cosT * 0x7fff), int16_t);
+					int16_t sinTQ15 = COMPV_MATH_ROUNDF_2_INT((sinT * 0x7fff), int16_t);
+					m_funBrief256_31_Fxpq15(img_center, imageAtLevelN->getStride(), &cosTQ15, &sinTQ15, desc);
+				}
+				else
 #endif
-	{
-		m_funBrief256_31_Float32(img_center, imgs, &cosT, &sinT, desc);
+				{
+					m_funBrief256_31_Float32(img_center, stride, &fcos, &fsin, desc);
+				}
+				desc += nFeaturesBytes;
+			}
+		}
 	}
-
-	return true;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 // override CompVFeatureDesc::process
@@ -223,18 +246,19 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
     CompVPtr<CompVImageScalePyramid * > _pyramid;
     CompVPtr<CompVImage*> imageAtLevelN;
     CompVPtr<CompVFeatureDete*> attachedDete = getAttachedDete();
-    const CompVInterestPoint* point;
     uint8_t* _descriptionsPtr = NULL;
-    size_t simd_i;
 	static const bool size_of_float_is4 = (sizeof(float) == 4); // ASM and INTRIN code require it
+	CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+	int threadsCount = 1;
+	CompVPtr<CompVFeatureDescORB* >This = this;
 
     // return COMPV_ERROR_CODE_S_OK;
 
-    int nFeatures = (int)interestPoints->size();
-	int nFeaturesBits = m_nPatchBits;
-    int nFeaturesBytes = nFeaturesBits >> 3;
+	const int nFeatures = (int)interestPoints->size();
+	const int nFeaturesBits = m_nPatchBits;
+    const int nFeaturesBytes = nFeaturesBits >> 3;
     static size_t COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED = (size_t)CompVMem::alignForward(COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT, COMPV_SIMD_ALIGNV_DEFAULT /* should be 32, we don't need best alignment (64)*/);
-    COMPV_CHECK_CODE_RETURN(err_ = CompVFeatureDescriptions::newObj(nFeatures, nFeaturesBits, &_descriptions));
+    COMPV_CHECK_CODE_RETURN(err_ = CompVFeatureDescriptions::newObj(nFeatures, nFeaturesBits, &_descriptions)); // TODO(dmi): realloc instead of alloc()
     _descriptionsPtr = (uint8_t*)_descriptions->getDataPtr();
 
     // Get the pyramid from the detector or use or own pyramid
@@ -256,41 +280,32 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
         _pyramid = m_pyramid;
     }
 
-	// Alloc SIMD variables
-	if (!m_simd.m_pxf && !(m_simd.m_pxf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	}
-	if (!m_simd.m_pyf && !(m_simd.m_pyf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	}
-	if (!m_simd.m_psf && !(m_simd.m_psf = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	}
-	if (!m_simd.m_pangleInDegree && !(m_simd.m_pangleInDegree = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	}
-	if (!m_simd.m_pxi && !(m_simd.m_pxi = (int32_t*)CompVMem::mallocAligned(sizeof(int32_t) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	}
-	if (!m_simd.m_pyi && !(m_simd.m_pyi = (int32_t*)CompVMem::mallocAligned(sizeof(int32_t) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	}
-	if (!m_simd.m_pcos && !(m_simd.m_pcos = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	}
-	if (!m_simd.m_psin && !(m_simd.m_psin = (float*)CompVMem::mallocAligned(sizeof(float) * COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED))) {
-		COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	// Compute number of threads
+	if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
+		threadsCount = threadDip->getThreadsCount();
 	}
 
-	// FIXME(dmi): multi-threading
-
-    // apply gaussianblur filter on the pyramid
-    for (int level = 0; level < _pyramid->getLevels(); ++level) {
-        COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(level, &imageAtLevelN));
-		// The out is the image itsel to avoid allocating temp buffer. This means the images in the pyramod are modified
-		// and any subsequent call must take care
-		m_convlt->convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), m_kern->getDataPtr(), m_kern->getDataPtr(), COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, (uint8_t*)imageAtLevelN->getDataPtr());
-    }
+	// apply gaussianblur filter on the pyramid
+	if (threadsCount > 1) {
+		uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+		// levelStart is used to make sure we won't schedule more than "threadsCount"
+		int levelStart, level, levelMax;
+		for (levelStart = 0, levelMax = threadsCount; levelStart < _pyramid->getLevels(); levelStart += threadsCount, levelMax += threadsCount) {
+			for (level = levelStart; level < _pyramid->getLevels() && level < levelMax; ++level) {
+				COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + level), COMPV_TOKENIDX0, CompVFeatureDescORB::convlt_AsynExec,
+					COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *_pyramid, level),
+					COMPV_ASYNCTASK_SET_PARAM_NULL()));
+			}
+			for (level = levelStart; level < _pyramid->getLevels() && level < levelMax; ++level) {
+				COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + level), COMPV_TOKENIDX0));
+			}
+		}
+	}
+	else {
+		for (int level = 0; level < _pyramid->getLevels(); ++level) {
+			COMPV_CHECK_CODE_RETURN(err_ = convlt(_pyramid, level));
+		}
+	}    
 	
 	/* Init "m_funBrief256_31" using current CPU flags */
 #if COMPV_FEATURE_DESC_ORB_FXPQ15
@@ -322,23 +337,36 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
 		}
 	}
 
-    for (simd_i = 0, point = interestPoints->begin(); point < interestPoints->end(); ++point) {
-        COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(point->level, &imageAtLevelN));
-        m_pcImages[simd_i] = *imageAtLevelN;
-        m_simd.m_pxf[simd_i] = point->x;
-        m_simd.m_pyf[simd_i] = point->y;
-        m_simd.m_psf[simd_i] = _pyramid->getScaleFactor(point->level);
-        m_simd.m_pangleInDegree[simd_i] = point->orient;
-        if (++simd_i == COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT_ALIGNED || (point + 1) == interestPoints->end()) {
-            CompVInterestPointScaleAndRoundAndGetAngleSinCos(m_simd.m_pxf, m_simd.m_pyf, m_simd.m_psf, m_simd.m_pangleInDegree, m_simd.m_pxi, m_simd.m_pyi, m_simd.m_pcos, m_simd.m_psin, simd_i);
-            for (size_t i = 0; i < simd_i; ++i) {
-				if (brief256_31(m_pcImages[i], m_simd.m_pxi[i], m_simd.m_pyi[i], m_simd.m_pcos[i], m_simd.m_psin[i], (void*)_descriptionsPtr)) {
-					_descriptionsPtr += nFeaturesBytes;
-				}
-            }
-            simd_i = 0;
-        }
-    }
+	// Describe the points
+	int32_t threadsCountDescribe = 1;
+	if (threadsCount > 1) {
+		threadsCountDescribe = (int32_t)(interestPoints->size() / COMPV_FEATURE_DESC_ORB_DESCRIBE_MIN_SAMPLES_PER_THREAD);
+		threadsCountDescribe = COMPV_MATH_CLIP3(0, threadsCountDescribe, threadsCount);
+	}
+	if (threadsCountDescribe > 1) {
+		uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+		const CompVInterestPoint* begin = interestPoints->begin();
+		int32_t total = (int32_t)interestPoints->size();
+		int32_t count = total / threadsCountDescribe;
+		uint8_t* desc = _descriptionsPtr;
+		for (int32_t i = 0; count > 0 && i < threadsCountDescribe; ++i) {
+			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, describe_AsynExec,
+				COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *_pyramid, begin, begin + count, desc),
+				COMPV_ASYNCTASK_SET_PARAM_NULL()));
+			begin += count;
+			desc += (count * nFeaturesBytes);
+			total -= count;
+			if (i == (threadsCountDescribe - 2)) {
+				count = (total); // the remaining
+			}
+		}
+		for (int32_t i = 0; i < threadsCountDescribe; ++i) {
+			COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
+		}
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(err_ = describe(_pyramid, interestPoints->begin(), interestPoints->end(), _descriptionsPtr));
+	}
 
     *descriptions = _descriptions;
 
@@ -368,6 +396,24 @@ COMPV_ERROR_CODE CompVFeatureDescORB::newObj(CompVPtr<CompVFeatureDesc* >* orb)
 
     *orb = *_orb;
     return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVFeatureDescORB::convlt_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
+{
+	CompVPtr<CompVFeatureDescORB* >  This = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, CompVFeatureDescORB*);
+	CompVPtr<CompVImageScalePyramid* > pyramid = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, CompVImageScalePyramid*);
+	int level = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, int);
+	return This->convlt(pyramid, level);
+}
+
+COMPV_ERROR_CODE CompVFeatureDescORB::describe_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
+{
+	CompVPtr<CompVFeatureDescORB* >  This = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, CompVFeatureDescORB*);
+	CompVPtr<CompVImageScalePyramid* > pyramid = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, CompVImageScalePyramid*);
+	const CompVInterestPoint* begin = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, const CompVInterestPoint*);
+	const CompVInterestPoint* end = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, const CompVInterestPoint*);
+	uint8_t* desc = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, uint8_t*);
+	return This->describe(pyramid, begin, end, desc);
 }
 
 static void Brief256_31_Float32_C(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out)
