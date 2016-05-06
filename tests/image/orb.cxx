@@ -11,9 +11,10 @@ using namespace compv;
 #define ORB_PYRAMID_SCALEFACTOR		0.83f
 #define ORB_PYRAMID_SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
 #define ORB_LOOOP_COUNT				1
-#define ORB_DESC_MD5_FLOAT			"a9aa1a90cd404639274cd03727cca28c"
-#define ORB_DESC_MD5_FLOAT_MT		"b546372e48fba28c9265f6eadbafefea" // multithreaded (convolution create temporary memory)
-#define ORB_DESC_MD5_FXP			"a9aa1a90cd404639274cd03727cca28c" // "f1ba2ade7e357f14c5357a3587465b48"
+#define ORB_DESC_MD5_FLOAT			"94e459d1a9532af81d20d4044422883e"
+#define ORB_DESC_MD5_FLOAT_MT		"7f4f847671fb369774120c5ad8aad334" // multithreaded (convolution create temporary memory)
+#define ORB_DESC_MD5_FXP			"9d95dfec2fb1fb629a4300b1d63d1bd1"
+#define ORB_DESC_MD5_FXP_MT			"68844f9d78ef6165a2022d4aa454bfd4"
 #define JPEG_IMG					"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture (2000*1000 = 2times more bytes than 720p)
 
 bool TestORB()
@@ -66,7 +67,14 @@ bool TestORB()
 
     // Compute Descriptions MD5
     const std::string md5 = descriptions ? CompVMd5::compute2(descriptions->getDataPtr(), descriptions->getDataSize()) : "";
-	if (md5 != (CompVEngine::isMultiThreadingEnabled() ? ORB_DESC_MD5_FLOAT_MT : ORB_DESC_MD5_FLOAT)) {
+	bool ok;
+	if (CompVEngine::isMathFixedPoint()) {
+		ok = (md5 == (CompVEngine::isMultiThreadingEnabled() ? ORB_DESC_MD5_FXP_MT : ORB_DESC_MD5_FXP));
+	}
+	else {
+		ok = (md5 == (CompVEngine::isMultiThreadingEnabled() ? ORB_DESC_MD5_FLOAT_MT : ORB_DESC_MD5_FLOAT));
+	}
+	if (!ok) {
         COMPV_DEBUG_ERROR("MD5 mismatch");
         COMPV_ASSERT(false);
         return false;

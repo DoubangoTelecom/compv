@@ -135,6 +135,72 @@ void Convlt1_verthz_float32_minpack16_Intrin_AVX2(const uint8_t* in_ptr, uint8_t
 	_mm256_zeroupper();
 }
 
+void Convlt1_verthz_fxpq16_minpack16_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t stride, compv_scalar_t pad, const uint16_t* vhkern_ptr, compv_scalar_t kern_size)
+{
+	_mm256_zeroupper();
+	// Use ASM
+	// AVX/SSE mix penalities
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	compv_scalar_t i, j, k;
+	__m256i ymmI0, ymmS0, ymmS1, ymmZero, ymmCoeff, ymmMaskToExtractFirst128Bits;
+
+	ymmZero = _mm256_setzero_si256();
+	ymmMaskToExtractFirst128Bits = _mm256_load_si256((__m256i*)kAVXMaskstore_0_1_u64);
+
+	pad += (width & 15); // 15 = (minpack - 1) = (16 - 1)
+
+	for (j = 0; j < height; ++j) {
+		i = width;
+		// Loop-32
+		while (i > 31) {
+			ymmS0 = _mm256_setzero_si256();
+			ymmS1 = _mm256_setzero_si256();
+			for (k = 0; k < kern_size; ++k) {
+				ymmI0 = _mm256_loadu_si256((__m256i*)&in_ptr[k * stride]);
+				ymmCoeff = _mm256_set1_epi16(vhkern_ptr[k]);
+
+				ymmS0 = _mm256_add_epi16(ymmS0, _mm256_mulhi_epu16(_mm256_unpacklo_epi8(ymmI0, ymmZero), ymmCoeff));
+				ymmS1 = _mm256_add_epi16(ymmS1, _mm256_mulhi_epu16(_mm256_unpackhi_epi8(ymmI0, ymmZero), ymmCoeff));
+			}
+			_mm256_storeu_si256((__m256i*)out_ptr, _mm256_packus_epi16(ymmS0, ymmS1));
+
+			i -= 32;
+			in_ptr += 32;
+			out_ptr += 32;
+		} // while (i > 31)
+
+		// Loop-16 is executed at most #1 time
+
+		/* Loop-16 */
+		while (i > 15) {
+			// When width is mof 32 this code isn't executed, make sure to disable previous "while" if you change something
+			ymmS0 = _mm256_setzero_si256();
+			for (k = 0; k < kern_size; ++k) {
+				ymmI0 = _mm256_maskload_epi64((const int64_t*)&in_ptr[k * stride], ymmMaskToExtractFirst128Bits); // ASM code: vmovdqa xmm0, [mem]
+				ymmCoeff = _mm256_set1_epi16(vhkern_ptr[k]);
+
+				ymmI0 = _mm256_permute4x64_epi64(ymmI0, COMPV_MM_SHUFFLE(3, 1, 2, 0));
+				ymmS0 = _mm256_add_epi16(ymmS0, _mm256_mulhi_epu16(_mm256_unpacklo_epi8(ymmI0, ymmZero), ymmCoeff));
+			}
+			
+			ymmS0 = _mm256_packus_epi16(ymmS0, ymmS0);
+			ymmS0 = _mm256_permute4x64_epi64(ymmS0, COMPV_MM_SHUFFLE(3, 1, 2, 0));
+			_mm256_maskstore_epi64((int64_t*)out_ptr, ymmMaskToExtractFirst128Bits, ymmS0); // ASM code: vmovdqa [mem], xmm0
+
+			i -= 16;
+			in_ptr += 16;
+			out_ptr += 16;
+		}
+
+		// Loop-8 is executed at most #1 time, doesn't worth it
+
+		in_ptr += pad;
+		out_ptr += pad;
+	} // for (j...
+
+	_mm256_zeroupper();
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

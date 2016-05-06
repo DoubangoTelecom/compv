@@ -114,7 +114,7 @@
 #	define COMPV_ARCH_X64_AMD64				1
 #endif
 // ARCH:ARM
-#if defined(__arm__) || defined(__thumb__) || defined(__TARGET_ARCH_ARM) || defined(__TARGET_ARCH_THUMB) || defined(_ARM) || defined(_M_ARM) || defined(_M_ARMT) || defined(__arm)
+#if defined(__arm__) || defined(__thumb__) || defined(__TARGET_ARCH_ARM) || defined(__TARGET_ARCH_THUMB) || defined(_ARM) || defined(_M_ARM) || defined(_M_ARMT) || defined(__arm) || defined(__aarch64__)
 #	defined COMPV_ARCH_ARM					1
 #endif
 // ARCH: ARM64

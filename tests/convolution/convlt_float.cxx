@@ -40,7 +40,7 @@ static const std::string expectedMD5Values[2/*dim*/][8/*kenel size*/] =
 	}
 };
 
-bool TestConvlt()
+bool TestConvlt_float()
 {
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	CompVPtr<CompVArray<CONVLT_KERN_TYPE>* > kern;
@@ -97,7 +97,7 @@ bool TestConvlt()
 #endif
 	}
 	timeEnd = CompVTime::getNowMills();
-	COMPV_DEBUG_INFO("Elapsed time(TestConvlt) = [[[ %llu millis ]]]", (timeEnd - timeStart));
+	COMPV_DEBUG_INFO("Elapsed time(TestConvlt_float) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
 	// dump image to file
 	COMPV_CHECK_CODE_ASSERT(CompVImage::wrap(COMPV_PIXEL_FORMAT_GRAYSCALE, out_ptr, image->getWidth(), image->getHeight(), image->getStride(), &image));

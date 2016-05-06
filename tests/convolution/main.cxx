@@ -15,7 +15,8 @@ using namespace compv;
 #define TEST_GAUSS_FILTER_DIM2		0
 #define TEST_GAUSS_KER_DIM1_GEN		0
 #define TEST_GAUSS_KER_DIM2_GEN		0
-#define TEST_CONVLT					1
+#define TEST_CONVLT_FLOAT			0
+#define TEST_CONVLT_FXP				1
 
 
 #if COMPV_OS_WINDOWS
@@ -31,9 +32,14 @@ int main(int argc, char** argv)
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));
 
-#if TEST_CONVLT
-	extern bool TestConvlt();
-	COMPV_ASSERT(TestConvlt());
+#if TEST_CONVLT_FLOAT
+	extern bool TestConvlt_float();
+	COMPV_ASSERT(TestConvlt_float());
+#endif
+
+#if TEST_CONVLT_FXP
+	extern bool TestConvlt_fxp();
+	COMPV_ASSERT(TestConvlt_fxp());
 #endif
 
 #if TEST_GAUSS_FILTER_DIM1

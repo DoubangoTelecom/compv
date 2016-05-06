@@ -21,7 +21,10 @@
     <ClCompile Include="gauss.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="convlt.cxx">
+    <ClCompile Include="convlt_float.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="convlt_fxp.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

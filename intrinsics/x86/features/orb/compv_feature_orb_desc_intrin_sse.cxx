@@ -30,11 +30,11 @@ COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31AX[256];
 COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31AY[256];
 COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31BX[256];
 COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31BY[256];
-#if 0 // COMPV_FEATURE_DESC_ORB_FXPQ15
-COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() int16_t kBrief256Pattern31AXInt16[256];
-COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() int16_t kBrief256Pattern31AYInt16[256];
-COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() int16_t kBrief256Pattern31BXInt16[256];
-COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() int16_t kBrief256Pattern31BYInt16[256];
+#if 0 // COMPV_FEATURE_DESC_ORB_FXP_DESC
+COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() int16_t kBrief256Pattern31AXFxp[256];
+COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() int16_t kBrief256Pattern31AYFxp[256];
+COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() int16_t kBrief256Pattern31BXFxp[256];
+COMPV_EXTERNC const COMPV_ALIGN_DEFAULT() int16_t kBrief256Pattern31BYFxp[256];
 #endif
 
 COMPV_NAMESPACE_BEGIN()
@@ -112,52 +112,49 @@ void Brief256_31_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t img_strid
 	}
 }
 
-// This function not used yet (not faster than the float)
-#if 0 // COMPV_FEATURE_DESC_ORB_FXPQ15
-void Brief256_31_Fxpq15_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t img_stride, const int16_t* cos1, const int16_t* sin1, COMPV_ALIGNED(SSE) void* out)
+// This function not used yet and not fully tested
+#if 0 // COMPV_FEATURE_DESC_ORB_FXP_DESC
+void Brief256_31_Fxpq16_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t img_stride, const int16_t* cos1, const int16_t* sin1, COMPV_ALIGNED(SSE) void* out)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM, FMA3, SSE41
 
 	int i;
-	__m128i xmmCosT, xmmSinT, xmmStride, xmmR, xmm128, xmmX0, xmmY0, xmmLeftLow, xmmLeftHigh, xmmRightLow, xmmRightHigh;
+	__m128i xmmCosT, xmmSinT, xmmStride, xmmR, xmm128, xmmX0, xmmY0, xmmTemp, xmmZero;
 	COMPV_ALIGN_SSE() int32_t xmmIndex[4];
 	COMPV_ALIGN_SSE() uint8_t xmmA[16];
 	COMPV_ALIGN_SSE() uint8_t xmmB[16];
 	__m128i xmmX[2], xmmY[2];
 	uint16_t* outPtr = (uint16_t*)out;
 
+	xmmZero = _mm_setzero_si128(); //FIXME: remove
 	xmm128 = _mm_load_si128((__m128i*)k128_u8);
 	xmmCosT = _mm_set1_epi16(*cos1);
 	xmmSinT = _mm_set1_epi16(*sin1);
 	xmmStride = _mm_set1_epi32((int)img_stride);
 
-	const int16_t* Brief256Pattern31AX = &kBrief256Pattern31AXInt16[0];
-	const int16_t* Brief256Pattern31AY = &kBrief256Pattern31AYInt16[0];
-	const int16_t* Brief256Pattern31BX = &kBrief256Pattern31BXInt16[0];
-	const int16_t* Brief256Pattern31BY = &kBrief256Pattern31BYInt16[0];
+	const int16_t* Brief256Pattern31AX = &kBrief256Pattern31AXFxp[0];
+	const int16_t* Brief256Pattern31AY = &kBrief256Pattern31AYFxp[0];
+	const int16_t* Brief256Pattern31BX = &kBrief256Pattern31BXFxp[0];
+	const int16_t* Brief256Pattern31BY = &kBrief256Pattern31BYFxp[0];
 
-	// ASM: use "_mm_mullo_epi32" which is SSE4.1
-	// ASM: use FMA3
+	// TODO: ASM, use "_mm_cvtepi16_epi32", SSE4.1
 
 	for (i = 0; i < 256; i += 16) {
 		/********* A-[0 - 7] ************/
 		xmmX0 = _mm_load_si128((const __m128i*)(Brief256Pattern31AX + i));
 		xmmY0 = _mm_load_si128((const __m128i*)(Brief256Pattern31AY + i));
 
-		xmmLeftLow = _mm_mullo_epi16(xmmX0, xmmCosT);
-		xmmLeftHigh = _mm_mulhi_epi16(xmmX0, xmmCosT);
-		xmmRightLow = _mm_mullo_epi16(xmmY0, xmmSinT);
-		xmmRightHigh = _mm_mulhi_epi16(xmmY0, xmmSinT);
-		xmmX[0] = _mm_srai_epi32(_mm_sub_epi32(_mm_unpacklo_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpacklo_epi16(xmmRightLow, xmmRightHigh)), 15);
-		xmmX[1] = _mm_srai_epi32(_mm_sub_epi32(_mm_unpackhi_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpackhi_epi16(xmmRightLow, xmmRightHigh)), 15);
+		// "cosT" within [-0x7fff, 0x7fff]
+		// "Brief256Pattern31" within [-30, 30]
+		// -> "((Brief256Pattern31 * cosT) >> 16)" +- "((Brief256Pattern31 * cosT) >> 16)" whithin [-0x7fff, 0x7fff]
+		// -> Do not convert from I16 to I32 for the sub/add
 
-		xmmLeftLow = _mm_mullo_epi16(xmmX0, xmmSinT);
-		xmmLeftHigh = _mm_mulhi_epi16(xmmX0, xmmSinT);
-		xmmRightLow = _mm_mullo_epi16(xmmY0, xmmCosT);
-		xmmRightHigh = _mm_mulhi_epi16(xmmY0, xmmCosT);
-		xmmY[0] = _mm_srai_epi32(_mm_add_epi32(_mm_unpacklo_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpacklo_epi16(xmmRightLow, xmmRightHigh)), 15);
-		xmmY[1] = _mm_srai_epi32(_mm_add_epi32(_mm_unpackhi_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpackhi_epi16(xmmRightLow, xmmRightHigh)), 15);
-		
+		xmmTemp = _mm_sub_epi16(_mm_mulhi_epi16(xmmX0, xmmCosT), _mm_mulhi_epi16(xmmY0, xmmSinT));
+		xmmX[0] = _mm_cvtepi16_epi32_low_SSE2(xmmTemp);
+		xmmX[1] = _mm_cvtepi16_epi32_hi_SSE2(xmmTemp);
+		xmmTemp = _mm_add_epi16(_mm_mulhi_epi16(xmmX0, xmmSinT), _mm_mulhi_epi16(xmmY0, xmmCosT));
+		xmmY[0] = _mm_cvtepi16_epi32_low_SSE2(xmmTemp);
+		xmmY[1] = _mm_cvtepi16_epi32_hi_SSE2(xmmTemp);
 		_mm_store_si128((__m128i*)xmmIndex, _mm_add_epi32(_mm_mullo_epi32_SSE2(xmmY[0], xmmStride), xmmX[0]));
 		xmmA[0] = img_center[xmmIndex[0]];
 		xmmA[1] = img_center[xmmIndex[1]];
@@ -173,20 +170,12 @@ void Brief256_31_Fxpq15_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t im
 		xmmX0 = _mm_load_si128((const __m128i*)(Brief256Pattern31AX + i + 8));
 		xmmY0 = _mm_load_si128((const __m128i*)(Brief256Pattern31AY + i + 8));
 
-		xmmLeftLow = _mm_mullo_epi16(xmmX0, xmmCosT);
-		xmmLeftHigh = _mm_mulhi_epi16(xmmX0, xmmCosT);
-		xmmRightLow = _mm_mullo_epi16(xmmY0, xmmSinT);
-		xmmRightHigh = _mm_mulhi_epi16(xmmY0, xmmSinT);
-		xmmX[0] = _mm_srai_epi32(_mm_sub_epi32(_mm_unpacklo_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpacklo_epi16(xmmRightLow, xmmRightHigh)), 15);
-		xmmX[1] = _mm_srai_epi32(_mm_sub_epi32(_mm_unpackhi_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpackhi_epi16(xmmRightLow, xmmRightHigh)), 15);
-
-		xmmLeftLow = _mm_mullo_epi16(xmmX0, xmmSinT);
-		xmmLeftHigh = _mm_mulhi_epi16(xmmX0, xmmSinT);
-		xmmRightLow = _mm_mullo_epi16(xmmY0, xmmCosT);
-		xmmRightHigh = _mm_mulhi_epi16(xmmY0, xmmCosT);
-		xmmY[0] = _mm_srai_epi32(_mm_add_epi32(_mm_unpacklo_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpacklo_epi16(xmmRightLow, xmmRightHigh)), 15);
-		xmmY[1] = _mm_srai_epi32(_mm_add_epi32(_mm_unpackhi_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpackhi_epi16(xmmRightLow, xmmRightHigh)), 15);
-
+		xmmTemp = _mm_sub_epi16(_mm_mulhi_epi16(xmmX0, xmmCosT), _mm_mulhi_epi16(xmmY0, xmmSinT));
+		xmmX[0] = _mm_cvtepi16_epi32_low_SSE2(xmmTemp);
+		xmmX[1] = _mm_cvtepi16_epi32_hi_SSE2(xmmTemp);
+		xmmTemp = _mm_add_epi16(_mm_mulhi_epi16(xmmX0, xmmSinT), _mm_mulhi_epi16(xmmY0, xmmCosT));
+		xmmY[0] = _mm_cvtepi16_epi32_low_SSE2(xmmTemp);
+		xmmY[1] = _mm_cvtepi16_epi32_hi_SSE2(xmmTemp);
 		_mm_store_si128((__m128i*)xmmIndex, _mm_add_epi32(_mm_mullo_epi32_SSE2(xmmY[0], xmmStride), xmmX[0]));
 		xmmA[8] = img_center[xmmIndex[0]];
 		xmmA[9] = img_center[xmmIndex[1]];
@@ -202,20 +191,12 @@ void Brief256_31_Fxpq15_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t im
 		xmmX0 = _mm_load_si128((const __m128i*)(Brief256Pattern31BX + i));
 		xmmY0 = _mm_load_si128((const __m128i*)(Brief256Pattern31BY + i));
 
-		xmmLeftLow = _mm_mullo_epi16(xmmX0, xmmCosT);
-		xmmLeftHigh = _mm_mulhi_epi16(xmmX0, xmmCosT);
-		xmmRightLow = _mm_mullo_epi16(xmmY0, xmmSinT);
-		xmmRightHigh = _mm_mulhi_epi16(xmmY0, xmmSinT);
-		xmmX[0] = _mm_srai_epi32(_mm_sub_epi32(_mm_unpacklo_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpacklo_epi16(xmmRightLow, xmmRightHigh)), 15);
-		xmmX[1] = _mm_srai_epi32(_mm_sub_epi32(_mm_unpackhi_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpackhi_epi16(xmmRightLow, xmmRightHigh)), 15);
-
-		xmmLeftLow = _mm_mullo_epi16(xmmX0, xmmSinT);
-		xmmLeftHigh = _mm_mulhi_epi16(xmmX0, xmmSinT);
-		xmmRightLow = _mm_mullo_epi16(xmmY0, xmmCosT);
-		xmmRightHigh = _mm_mulhi_epi16(xmmY0, xmmCosT);
-		xmmY[0] = _mm_srai_epi32(_mm_add_epi32(_mm_unpacklo_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpacklo_epi16(xmmRightLow, xmmRightHigh)), 15);
-		xmmY[1] = _mm_srai_epi32(_mm_add_epi32(_mm_unpackhi_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpackhi_epi16(xmmRightLow, xmmRightHigh)), 15);
-
+		xmmTemp = _mm_sub_epi16(_mm_mulhi_epi16(xmmX0, xmmCosT), _mm_mulhi_epi16(xmmY0, xmmSinT));
+		xmmX[0] = _mm_cvtepi16_epi32_low_SSE2(xmmTemp);
+		xmmX[1] = _mm_cvtepi16_epi32_hi_SSE2(xmmTemp);
+		xmmTemp = _mm_add_epi16(_mm_mulhi_epi16(xmmX0, xmmSinT), _mm_mulhi_epi16(xmmY0, xmmCosT));
+		xmmY[0] = _mm_cvtepi16_epi32_low_SSE2(xmmTemp);
+		xmmY[1] = _mm_cvtepi16_epi32_hi_SSE2(xmmTemp);
 		_mm_store_si128((__m128i*)xmmIndex, _mm_add_epi32(_mm_mullo_epi32_SSE2(xmmY[0], xmmStride), xmmX[0]));
 		xmmB[0] = img_center[xmmIndex[0]];
 		xmmB[1] = img_center[xmmIndex[1]];
@@ -231,20 +212,12 @@ void Brief256_31_Fxpq15_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t im
 		xmmX0 = _mm_load_si128((const __m128i*)(Brief256Pattern31BX + i + 8));
 		xmmY0 = _mm_load_si128((const __m128i*)(Brief256Pattern31BY + i + 8));
 
-		xmmLeftLow = _mm_mullo_epi16(xmmX0, xmmCosT);
-		xmmLeftHigh = _mm_mulhi_epi16(xmmX0, xmmCosT);
-		xmmRightLow = _mm_mullo_epi16(xmmY0, xmmSinT);
-		xmmRightHigh = _mm_mulhi_epi16(xmmY0, xmmSinT);
-		xmmX[0] = _mm_srai_epi32(_mm_sub_epi32(_mm_unpacklo_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpacklo_epi16(xmmRightLow, xmmRightHigh)), 15);
-		xmmX[1] = _mm_srai_epi32(_mm_sub_epi32(_mm_unpackhi_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpackhi_epi16(xmmRightLow, xmmRightHigh)), 15);
-
-		xmmLeftLow = _mm_mullo_epi16(xmmX0, xmmSinT);
-		xmmLeftHigh = _mm_mulhi_epi16(xmmX0, xmmSinT);
-		xmmRightLow = _mm_mullo_epi16(xmmY0, xmmCosT);
-		xmmRightHigh = _mm_mulhi_epi16(xmmY0, xmmCosT);
-		xmmY[0] = _mm_srai_epi32(_mm_add_epi32(_mm_unpacklo_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpacklo_epi16(xmmRightLow, xmmRightHigh)), 15);
-		xmmY[1] = _mm_srai_epi32(_mm_add_epi32(_mm_unpackhi_epi16(xmmLeftLow, xmmLeftHigh), _mm_unpackhi_epi16(xmmRightLow, xmmRightHigh)), 15);
-
+		xmmTemp = _mm_sub_epi16(_mm_mulhi_epi16(xmmX0, xmmCosT), _mm_mulhi_epi16(xmmY0, xmmSinT));
+		xmmX[0] = _mm_cvtepi16_epi32_low_SSE2(xmmTemp);
+		xmmX[1] = _mm_cvtepi16_epi32_hi_SSE2(xmmTemp);
+		xmmTemp = _mm_add_epi16(_mm_mulhi_epi16(xmmX0, xmmSinT), _mm_mulhi_epi16(xmmY0, xmmCosT));
+		xmmY[0] = _mm_cvtepi16_epi32_low_SSE2(xmmTemp);
+		xmmY[1] = _mm_cvtepi16_epi32_hi_SSE2(xmmTemp);
 		_mm_store_si128((__m128i*)xmmIndex, _mm_add_epi32(_mm_mullo_epi32_SSE2(xmmY[0], xmmStride), xmmX[0]));
 		xmmB[8] = img_center[xmmIndex[0]];
 		xmmB[9] = img_center[xmmIndex[1]];

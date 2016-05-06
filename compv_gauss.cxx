@@ -23,11 +23,11 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-template class CompVGaussKern<double >;
+template class CompVGaussKern<double>;
 template class CompVGaussKern<float >;
 
 template<class T>
-COMPV_ERROR_CODE CompVGaussKern<T>::buildKern2(CompVPtr<CompVArray<T>* >* kern, int size, T sigma)
+COMPV_ERROR_CODE CompVGaussKern<T>::buildKern2(CompVPtr<CompVArray<T>* >* kern, int size, float sigma)
 {
     COMPV_CHECK_EXP_RETURN(!kern || !(size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -79,7 +79,7 @@ COMPV_ERROR_CODE CompVGaussKern<T>::buildKern2(CompVPtr<CompVArray<T>* >* kern, 
 }
 
 template<class T>
-COMPV_ERROR_CODE CompVGaussKern<T>::buildKern1(CompVPtr<CompVArray<T>* >* kern, int size, T sigma)
+COMPV_ERROR_CODE CompVGaussKern<T>::buildKern1(CompVPtr<CompVArray<T>* >* kern, int size, float sigma)
 {
     COMPV_CHECK_EXP_RETURN(!kern || !(size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -109,6 +109,25 @@ COMPV_ERROR_CODE CompVGaussKern<T>::buildKern1(CompVPtr<CompVArray<T>* >* kern, 
         kernel[x] *= sum;
     }
 
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// "kern_fxp" must be used with "convlt1_fxp"
+template<class T>
+COMPV_ERROR_CODE CompVGaussKern<T>::buildKern1_fxp(CompVPtr<CompVArray<uint16_t>* >* kern_fxp, int size, float sigma)
+{
+	CompVPtr<CompVArray<T>* > kern_float;
+	COMPV_CHECK_CODE_RETURN(CompVGaussKern<T>::buildKern1(&kern_float, size, sigma));
+	COMPV_CHECK_CODE_RETURN(CompVArray<uint16_t>::newObj(kern_fxp, 1, COMPV_ARRAY_DIM_SIZE1(size)));
+
+	uint16_t* kernFxpVals = (uint16_t*)(*kern_fxp)->getDataPtr();
+	const T* kernFloatVals = (*kern_float)->getDataPtr();
+	static const int maxVal = (~(1 << COMPV_FXPQ)) & 0xffff; // 0xffff for X86 and 0x7fff for ARM
+
+	for (int i = 0; i < size; ++i) {
+		kernFxpVals[i] = (uint16_t)(kernFloatVals[i] * maxVal);
+	}
+	
 	return COMPV_ERROR_CODE_S_OK;
 }
 

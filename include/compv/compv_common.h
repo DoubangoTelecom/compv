@@ -72,6 +72,13 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_NUM_THREADS_SINGLE	1
 #define COMPV_NUM_THREADS_BEST		-1
 
+// Fixed point Q value
+#if COMPV_ARCH_ARM
+#	define COMPV_FXPQ	15
+#else
+#	define COMPV_FXPQ	16
+#endif
+
 #define COMPV_IS_ALIGNED(p, a) (!((uintptr_t)(p) & ((a) - 1)))
 #define COMPV_IS_ALIGNED_MMX(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_MMX)
 #define COMPV_IS_ALIGNED_SSE(p) COMPV_IS_ALIGNED(p, COMPV_SIMD_ALIGNV_SSE)

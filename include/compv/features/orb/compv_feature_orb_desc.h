@@ -27,11 +27,12 @@
 #include "compv/image/scale/compv_imagescale_pyramid.h"
 #include "compv/features/compv_feature.h"
 
-#if !defined(COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT)
-#	define COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT  32
+#if !defined(COMPV_FEATURE_DESC_ORB_FXP_DESC)
+#	define COMPV_FEATURE_DESC_ORB_FXP_DESC					0 // Disable/Enable 'describe()' fixed point implementation. /!\ Must be disabled as it's buggy.
 #endif
-
-#define COMPV_FEATURE_DESC_ORB_FXPQ15				0 // Fixed-Point implementation
+#if !defined(COMPV_FEATURE_DESC_ORB_FXP_CONVLT)
+#	define COMPV_FEATURE_DESC_ORB_FXP_CONVLT				1 // Disable/Enable 'convlt()' fixed point implementation
+#endif
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -67,13 +68,13 @@ private:
     // TODO(dmi): use internal detector: BRIEF (just like what is done for the detector and FAST internal dete)
     CompVPtr<CompVImageScalePyramid* > m_pyramid;
 	CompVPtr<CompVConvlt<float>* > m_convlt;
-    CompVPtr<CompVArray<float>* > m_kern;
-    const CompVImage* m_pcImages[COMPV_FEATURE_DESC_ORB_SIMD_ELMT_COUNT];
+    CompVPtr<CompVArray<float>* > m_kern_float;
+	CompVPtr<CompVArray<uint16_t>* > m_kern_fxp;
 	int m_nPatchDiameter;
 	int m_nPatchBits;
 	void(*m_funBrief256_31_Float32)(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out);
-#if COMPV_FEATURE_DESC_ORB_FXPQ15
-	void(*m_funBrief256_31_Fxpq15)(const uint8_t* img_center, compv_scalar_t img_stride, const int16_t* cos1, const int16_t* sin1, COMPV_ALIGNED(x) void* out);
+#if COMPV_FEATURE_DESC_ORB_FXP_DESC
+	void(*m_funBrief256_31_Fxp)(const uint8_t* img_center, compv_scalar_t img_stride, const int16_t* cos1, const int16_t* sin1, COMPV_ALIGNED(x) void* out);
 #endif
 };
 

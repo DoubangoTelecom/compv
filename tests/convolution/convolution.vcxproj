@@ -155,7 +155,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="convlt.cxx" />
+    <ClCompile Include="convlt_float.cxx" />
+    <ClCompile Include="convlt_fxp.cxx" />
     <ClCompile Include="gauss.cxx" />
     <ClCompile Include="main.cxx" />
   </ItemGroup>

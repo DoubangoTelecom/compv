@@ -44,11 +44,16 @@ public:
     }
 	COMPV_ERROR_CODE convlt2(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const double* kern_ptr, int kern_size, uint8_t* out_ptr = NULL, int img_border = 0);
 	COMPV_ERROR_CODE convlt1(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const T* vkern_ptr, const T* hkern_ptr, int kern_size, uint8_t* out_ptr = NULL, int img_border = 0);
+	COMPV_ERROR_CODE convlt1_fxp(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const uint16_t* vkern_ptr, const uint16_t* hkern_ptr, int kern_size, uint8_t* out_ptr = NULL, int img_border = 0);
 
     static COMPV_ERROR_CODE newObj(CompVPtr<CompVConvlt* >* convlt);
 
 private:
+	COMPV_ERROR_CODE convlt1_private(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const T* vkern_ptr, const T* hkern_ptr, int kern_size, uint8_t* out_ptr, int img_border, bool bFxp = false);
 	static void convlt1_verthz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const T* vhkern_ptr, int kern_size);
+	static void convlt1_verthz_fxp(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const uint16_t* vhkern_ptr, int kern_size);
+	static void convlt1_verthz_C(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const T* vhkern_ptr, int kern_size);
+	static void convlt1_verthz_fxp_C(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const uint16_t* vhkern_ptr, int kern_size);
 
 private:
     void* m_pDataPtr;
