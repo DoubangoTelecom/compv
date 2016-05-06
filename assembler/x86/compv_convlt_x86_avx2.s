@@ -23,6 +23,7 @@ COMPV_YASM_DEFAULT_REL
 
 global sym(Convlt1_verthz_float32_minpack16_Asm_X86_AVX2)
 global sym(Convlt1_verthz_float32_minpack16_Asm_X86_FMA3_AVX2)
+global sym(Convlt1_verthz_fxpq16_minpack16_Asm_X86_AVX2)
 
 section .data
 	extern sym(kAVXMaskstore_0_1_u64)
@@ -265,3 +266,175 @@ sym(Convlt1_verthz_float32_minpack16_Asm_X86_AVX2):
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 sym(Convlt1_verthz_float32_minpack16_Asm_X86_FMA3_AVX2):
 	Convlt1_verthz_float32_minpack16_Macro_X86_AVX2 1
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; This function requires sizeof(float) = 4byte = 32bits
+; arg(0) -> const uint8_t* in_ptr
+; arg(1) -> uint8_t* out_ptr
+; arg(2) -> compv_scalar_t width
+; arg(3) -> compv_scalar_t height
+; arg(4) -> compv_scalar_t stride
+; arg(5) -> compv_scalar_t pad
+; arg(6) -> const uint16_t* hkern_ptr
+; arg(7) -> compv_scalar_t kern_size
+; void Convlt1_verthz_fxpq16_minpack16_Asm_X86_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t pad, const uint16_t* hkern_ptr, compv_scalar_t kern_size)
+sym(Convlt1_verthz_fxpq16_minpack16_Asm_X86_AVX2)
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	vzeroupper
+
+	%define COMPV_SIZE_OF_INT16 2
+	%define i_tmp		rsp + 0
+
+	; alloc memory
+	sub rsp, 8*1
+	; [rsp + 0] = compv_scalar_t tmp
+
+	; i = rdi
+	; xor rdi, rdi
+
+	; rcx = col
+
+	; rbx = out_ptr
+	mov rbx, arg(1)
+
+	; j = rsi = height
+	mov rsi, arg(3)
+
+	; ymm6 = ymmZero
+	vpxor ymm6, ymm6
+
+	; arg(5) = pad += (width & 15)
+	mov rdx, arg(2) ; width
+	mov rax, arg(5) ; pad
+	and rdx, 15
+	add rax, rdx
+	mov arg(5), rax
+
+	; rax = in_ptr
+	mov rax, arg(0)
+
+	; rdx = hkern_ptr
+	mov rdx, arg(6)
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopRows
+		mov rdi, arg(2) ; i = width
+		; jmp .EndOfLoopColumns32 ; uncomment this line to skip Loop-32
+		cmp rdi, 32
+		jl .EndOfLoopColumns32
+		
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; while (i > 31)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		.LoopColumns32
+			vpxor ymm4, ymm4 ; ymm4 = ymmS0
+			vpxor ymm5, ymm5 ; ymm5 = ymmS1
+
+			mov [i_tmp], rax ; save rax = in_ptr
+			xor rcx, rcx ; col = 0
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			; for (col = 0; col < kern_size; ++col)
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			.LoopColumns32Kern32
+				vmovd xmm1, [rdx + rcx*COMPV_SIZE_OF_INT16]
+				vmovdqu ymm0, [rax] ; ymm0 = ymmI0		
+				vpbroadcastw ymm1, xmm1 ; ymm1 = ymmCoeff
+				vpunpckhbw ymm2, ymm0, ymm6
+				vpunpcklbw ymm0, ymm0, ymm6
+				vpmulhuw ymm2, ymm1
+				vpmulhuw ymm0, ymm1
+				vpaddw ymm5, ymm2
+				vpaddw ymm4, ymm0
+
+				inc rcx
+				add rax, arg(4) ; += stride
+				cmp rcx, arg(7) ; ==? kern_size
+				jl .LoopColumns32Kern32		
+
+			mov rax, [i_tmp] ; restore rax
+			
+			vpackuswb ymm4, ymm5
+			lea rax, [rax + 32] ; in_ptr += 32
+			vmovdqu [rbx], ymm4
+			lea rbx, [rbx + 32] ; out_ptr += 32
+
+			sub rdi, 32 ; i -= 32
+			cmp rdi, 32
+			jge .LoopColumns32
+			.EndOfLoopColumns32
+
+		cmp rdi, 16
+		jl .EndOfLoopColumns16
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; while (i > 15)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		.LoopColumns16
+			vpxor ymm4, ymm4 ; ymm4 = ymmS0
+			vmovdqa ymm5, [sym(kAVXMaskstore_0_1_u64)] ; ymm5 = ymmMaskToExtractFirst128Bits
+
+			mov [i_tmp], rax ; save rax = in_ptr
+			xor rcx, rcx ; col = 0
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			; for (col = 0; col < kern_size; ++col)
+			; When width is mof 32 this code isn't executed, make sure to disable previous "while" if you change something
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			.LoopColumns16Kern16
+				vpmaskmovq ymm0, ymm5, [rax] ; ymm0 = ymmI0
+				vmovd xmm1, [rdx + rcx*COMPV_SIZE_OF_INT16]
+				vpbroadcastw ymm1, xmm1 ; ymm1 = ymmCoeff
+
+				vpermq ymm0, ymm0, 0xD8
+				vpunpcklbw ymm0, ymm0, ymm6 
+				vpmulhuw ymm0, ymm0, ymm1
+				vpaddw ymm4, ymm4, ymm0
+
+				inc rcx
+				add rax, arg(4) ; += stride
+				cmp rcx, arg(7) ; ==? kern_size
+				jl .LoopColumns16Kern16
+
+			mov rax, [i_tmp] ; restore rax
+			vpackuswb ymm4, ymm4, ymm4
+			vpermq ymm4, ymm4, 0xD8
+			vpmaskmovq [rbx], ymm5, ymm4
+
+			lea rbx, [rbx + 16] ; out_ptr += 16
+			lea rax, [rax + 16] ; in_ptr += 16
+
+			sub rdi, 16 ; i -= 16
+			cmp rdi, 16
+			jge .LoopColumns16
+			.EndOfLoopColumns16
+		
+		add rbx, arg(5) ; out_ptr += pad
+		add rax, arg(5) ; in_ptr += pad
+
+		dec rsi ; --j
+		test rsi, rsi
+		jnz .LoopRows
+
+	; free memory
+	add rsp, 8*1
+
+	%undef COMPV_SIZE_OF_INT16
+	%undef i_tmp
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	vzeroupper
+	ret

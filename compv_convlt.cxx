@@ -32,13 +32,15 @@ COMPV_EXTERNC void Convlt1_verthz_float32_minpack4_Asm_X86_SSE2(const uint8_t* i
 COMPV_EXTERNC void Convlt1_verthz_float32_minpack16_Asm_X86_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const float* vhkern_ptr, compv::compv_scalar_t kern_size);
 COMPV_EXTERNC void Convlt1_verthz_float32_minpack16_Asm_X86_FMA3_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const float* vhkern_ptr, compv::compv_scalar_t kern_size);
 COMPV_EXTERNC void Convlt1_verthz_fxpq16_minpack4_Asm_X86_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const uint16_t* vhkern_ptr, compv::compv_scalar_t kern_size);
-COMPV_EXTERNC void Convlt1_verthz_fxpq16_minpack4_Asm_X64_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const uint16_t* vhkern_ptr, compv::compv_scalar_t kern_size);
+COMPV_EXTERNC void Convlt1_verthz_fxpq16_minpack16_Asm_X86_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const uint16_t* vhkern_ptr, compv::compv_scalar_t kern_size);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 #if COMPV_ARCH_X64 && COMPV_ASM
 COMPV_EXTERNC void Convlt1_verthz_float32_minpack4_Asm_X64_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const float* vhkern_ptr, compv::compv_scalar_t kern_size);
 COMPV_EXTERNC void Convlt1_verthz_float32_minpack16_Asm_X64_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const float* vhkern_ptr, compv::compv_scalar_t kern_size);
 COMPV_EXTERNC void Convlt1_verthz_float32_minpack16_Asm_X64_FMA3_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const float* vhkern_ptr, compv::compv_scalar_t kern_size);
+COMPV_EXTERNC void Convlt1_verthz_fxpq16_minpack4_Asm_X64_SSE2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const uint16_t* vhkern_ptr, compv::compv_scalar_t kern_size);
+COMPV_EXTERNC void Convlt1_verthz_fxpq16_minpack16_Asm_X64_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv::compv_scalar_t width, compv::compv_scalar_t height, compv::compv_scalar_t stride, compv::compv_scalar_t pad, const uint16_t* vhkern_ptr, compv::compv_scalar_t kern_size);
 #endif /* COMPV_ARCH_X64 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
@@ -295,7 +297,9 @@ void CompVConvlt<T>::convlt1_verthz_fxp(const uint8_t* in_ptr, uint8_t* out_ptr,
 		COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack4_Asm_X64_SSE2, minpack = 4));
 	}
 	if (width > 15 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
-		//COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack16_Intrin_AVX2, minpack = 16));
+		COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack16_Intrin_AVX2, minpack = 16));
+		COMPV_EXEC_IFDEF_ASM_X86((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack16_Asm_X86_AVX2, minpack = 16));
+		COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack16_Asm_X64_AVX2, minpack = 16));
 	}
 	if (Convlt1_verthz_fxp) {
 		Convlt1_verthz_fxp(in_ptr, out_ptr, width, height, stride, pad, vhkern_ptr, kern_size);

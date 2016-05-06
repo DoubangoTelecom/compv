@@ -10,7 +10,7 @@ using namespace compv;
 #define CONVLT_GAUSS_SIGMA		2
 #define CONVLT_KERN_TYPE		float
 
-#define CONVLT_LOOP_COUNT		10000
+#define CONVLT_LOOP_COUNT		1
 
 static const std::string expectedMD5Values[8/*kenel size*/] =
 {
