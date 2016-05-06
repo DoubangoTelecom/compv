@@ -17,27 +17,41 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_IMAGE_IMAGE_MOMENTS_H_)
-#define _COMPV_IMAGE_IMAGE_MOMENTS_H_
+#if !defined(_COMPV_PATCH_H_)
+#define _COMPV_PATCH_H_
 
 #include "compv/compv_config.h"
-
-#if defined(_COMPV_API_H_)
-#error("This is a private file and must not be part of the API")
-#endif
+#include "compv/compv_obj.h"
+#include "compv/compv_common.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVImageMoments
+class COMPV_API CompVPatch : public CompVObj
 {
-
+protected:
+	CompVPatch();
 public:
-#if 0
-	static int cirPQ(const uint8_t* ptr, int patch_diameter, int center_x, int center_y, int img_width, int img_stride, int img_height, int p, int q);
-#endif
-	static void cirM01M10(const uint8_t* ptr, int patch_diameter, const int* patch_max_abscissas, int center_x, int center_y, int img_width, int img_stride, int img_height, int* m01, int* m10);
+	virtual ~CompVPatch();
+	virtual COMPV_INLINE const char* getObjectId() {
+		return "CompVPatch";
+	};
+	void moments0110(const uint8_t* ptr, const int* patch_max_abscissas, int center_x, int center_y, int img_width, int img_stride, int img_height, int* m01, int* m10);
+	static COMPV_ERROR_CODE newObj(CompVPtr<CompVPatch* >* patch, int diameter);
+
+private:
+	void initXYMax();
+
+private:
+	int16_t* m_nRadius;
+	int16_t* m_pMaxAbscissas;
+	int16_t* m_pX;
+	int16_t* m_pY;
+	uint8_t* m_pTop;
+	uint8_t* m_pBottom;
+	bool m_bInitialized;
+	size_t m_nElts;
 };
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_IMAGE_IMAGE_MOMENTS_H_ */
+#endif /* _COMPV_PATCH_H_ */

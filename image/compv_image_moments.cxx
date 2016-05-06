@@ -27,15 +27,18 @@
 #include "compv/compv_math_utils.h"
 #include "compv/compv_debug.h"
 
+// FIXME: delete file
+
 COMPV_NAMESPACE_BEGIN()
 
-double CompVImageMoments::cirPQ(const uint8_t* ptr, int patch_diameter, int center_x, int center_y, int img_width, int img_stride, int img_height, int p, int q)
+#if 0
+int CompVImageMoments::cirPQ(const uint8_t* ptr, int patch_diameter, int center_x, int center_y, int img_width, int img_stride, int img_height, int p, int q)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // use cir00, cir01, cirM01M10...
-    double mpq = 0;
+	int mpq = 0;
     int patch_radius = (patch_diameter >> 1), img_y, i, j, dX, minI, maxI, minJ, maxJ;
     int patch_radius_pow2 = (patch_radius * patch_radius);
-    double jq;
+	int jq;
     const uint8_t* img_ptr;
 
     // Compute minJ and maxJ
@@ -73,16 +76,18 @@ double CompVImageMoments::cirPQ(const uint8_t* ptr, int patch_diameter, int cent
     }
     return (mpq);
 }
+#endif
 
-void CompVImageMoments::cirM01M10(const uint8_t* ptr, int patch_diameter, const int* patch_max_abscissas, int center_x, int center_y, int img_width, int img_stride, int img_height, double* m01, double* m10)
+void CompVImageMoments::cirM01M10(const uint8_t* ptr, int patch_diameter, const int* patch_max_abscissas, int center_x, int center_y, int img_width, int img_stride, int img_height, int* m01, int* m10)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): SIMD
-    double s01 = 0, s10 = 0;
+	int s01 = 0, s10 = 0;
     int patch_radius = (patch_diameter >> 1), img_y, i, j, dX, minI, maxI, minJ, maxJ;
     const uint8_t* img_ptr;
     bool closeToBorder = (center_x < patch_radius || (center_x + patch_radius) >= img_width || (center_y < patch_radius) || (center_y + patch_radius) >= img_height);
 
     if (closeToBorder) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // It's useless to compute moments for these points because it won't be possible to have a description (partial circle)
         // This code must never be called as we remove elements close to the border before computing the moments
         // Compute minJ and maxJ
         minJ = -patch_radius;

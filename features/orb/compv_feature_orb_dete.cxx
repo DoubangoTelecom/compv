@@ -281,8 +281,8 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage*>
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     CompVPtr<CompVImage*> imageAtLevelN;
     CompVPtr<CompVBoxInterestPoint* > interestPointsAtLevelN;
-    float sf, sfs, patchSize, nf;
-    double m10, m01, orientRad;
+	float sf, sfs, patchSize, nf, orientRad;
+	int m10, m01;
     CompVInterestPoint* point_;
     int patch_diameter = m_nPatchDiameter, patch_radius = (patch_diameter >> 1);
     const int* pCircleMaxI = m_pCircleMaxI;
@@ -332,10 +332,8 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage*>
 
         // computes moments
         CompVImageMoments::cirM01M10(imgPtr, patch_diameter, pCircleMaxI, (int)point_->x, (int)point_->y, imgWidth, imgStride, imgHeight, &m01, &m10);
-
         // compute orientation
-        orientRad = COMPV_MATH_ATAN2(m01, m10);
-        //double orientRad = COMPV_MATH_ATAN2(cy, cx);
+		orientRad = COMPV_MATH_ATAN2F((float)m01, (float)m10);
         point_->orient = COMPV_MATH_RADIAN_TO_DEGREE_FLOAT(orientRad);
         if (point_->orient < 0) { // clamp orient within [0-360], required by many internal functions
             point_->orient += 360;    // ((point_->orient + 360) % 360)
