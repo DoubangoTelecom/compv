@@ -2,6 +2,11 @@
 movd xmm0, rax
 pshufd xmm0, xmm0, 0x0
 
+**** _mm_set1_epi16(int16_t a) ****
+movd xmm1, edx  
+punpcklwd xmm1, xmm1
+pshufd xmm1, xmm1, 0
+
 **** _mm_set1_ps(float a) ****
 movss xmm0, [rax]
 shufps xmm0, xmm0, 0x0
