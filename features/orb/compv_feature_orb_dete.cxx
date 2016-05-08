@@ -191,7 +191,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
     // Image scaling then feature could be multi-threaded but this requires a detector for each level -> memory issue
 
     // Scale the image (multi-threaded)
-    COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image));
+	COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image));
 
     // Create or reset interest points for each level then perform feature detection
     for (int level = 0; level < m_pyramid->getLevels(); ++level) {

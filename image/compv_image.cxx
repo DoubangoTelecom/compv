@@ -330,6 +330,75 @@ COMPV_ERROR_CODE CompVImage::scale(COMPV_SCALE_TYPE type, int32_t outWidth, int3
     return err_;
 }
 
+// Duplicate the image content
+COMPV_ERROR_CODE CompVImage::clone(CompVPtr<CompVImage*>* outImage)
+{
+	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+	COMPV_CHECK_CODE_RETURN(err_ = CompVImage::wrap(getPixelFormat(), NULL, getWidth(), getHeight(), getStride(), outImage));
+	COMPV_CHECK_CODE_RETURN(err_ = CompVImage::copy(getPixelFormat(), getDataPtr(), getWidth(), getHeight(), getStride(), (void*)(*outImage)->getDataPtr(), (*outImage)->getWidth(), (*outImage)->getHeight(), (*outImage)->getStride()));
+	return err_;
+}
+
+// Checks size and content
+COMPV_ERROR_CODE CompVImage::isEquals(const CompVPtr<CompVImage*>& image, bool &bEquals, int32_t rowStart /*= -1*/, int32_t rowCount /*= -1*/, int32_t colStart /*= -1*/, int32_t colCount /*= -1*/)
+{
+	if (rowStart < 0) {
+		rowStart = 0;
+	}
+	if (rowCount < 0){
+		rowCount = getHeight() - rowStart;
+	}
+	if (colStart < 0) {
+		colStart = 0;
+	}
+	if (colCount < 0) {
+		colCount = getWidth() - colStart;
+	}
+	COMPV_CHECK_EXP_RETURN(!image || !image->getDataPtr()
+		|| ((rowStart + rowCount) > getHeight()) 
+		|| ((colStart + colCount) > getWidth())
+		, 
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	bEquals = image->getPixelFormat() == getPixelFormat()
+		&& image->getWidth() == getWidth()
+		&& image->getHeight() == getHeight();
+	if (!bEquals) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	
+	int32_t bitsCount, bytesCount;
+	COMPV_CHECK_CODE_RETURN(CompVImage::getBitsCountForPixelFormat(getPixelFormat(), &bitsCount));
+	bytesCount = bitsCount >> 3;
+	
+	const uint8_t* img1_ptr = (const uint8_t*)getDataPtr();
+	const uint8_t* img2_ptr = (const uint8_t*)image->getDataPtr();
+	int32_t stride_bytes = getStride() * bytesCount;
+	int32_t colStart_bytes = colStart * bytesCount;
+	int32_t colCount_bytes = colCount * bytesCount;
+
+	// Zero-based
+	img1_ptr += (rowStart * stride_bytes) + colStart_bytes;
+	img2_ptr += (rowStart * stride_bytes) + colStart_bytes;
+	rowCount -= rowStart;
+	colCount_bytes -= (colStart * bytesCount);
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SSE, AVX, NEON
+	for (int32_t row = 0; row < rowCount; ++row) {
+		for (int32_t col_bytes = 0; col_bytes < colCount_bytes; ++col_bytes) {
+			if (img1_ptr[col_bytes] != img2_ptr[col_bytes]) {
+				bEquals = false;
+				return COMPV_ERROR_CODE_S_OK;
+			}
+		}
+		img1_ptr += stride_bytes;
+		img2_ptr += stride_bytes;
+	}
+
+	bEquals = true;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVImage::setBuffer(CompVPtr<CompVBuffer*> & buffer, int32_t width, int32_t height, int32_t stride /*= 0*/)
 {
     COMPV_CHECK_EXP_RETURN(!buffer || !width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

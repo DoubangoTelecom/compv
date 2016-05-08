@@ -40,41 +40,38 @@ COMPV_NAMESPACE_BEGIN()
 static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, compv_scalar_t inHeight, compv_scalar_t inWidth, compv_scalar_t inStride, compv_scalar_t outHeight, compv_scalar_t outWidth, compv_scalar_t outStride, compv_scalar_t sf_x, compv_scalar_t sf_y)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): SIMD, MT
-    compv_scalar_t x, y, x0, y0, x1, y1, nearestX, nearestY, weight0, weight1, weight2, weight3;
-    uint8_t neighb0, neighb1, neighb2, neighb3;
+    compv_scalar_t i, j, x, y, nearestX, nearestY, weight0, weight1, weight2, weight3;
+	uint8_t neighb0, neighb1, neighb2, neighb3, x0, y0, x1, y1;
     const uint8_t* inPtr_;
-    uint8_t* outPtr_;
-
-    y = 0;
-    for (compv_scalar_t j = 0, y = 0; j < outHeight; ++j) {
+    
+    for (j = 0, y = 0; j < outHeight; ++j) {
         nearestY = (y >> 8); // nearest y-point
-        nearestY = COMPV_MATH_CLIP2(nearestY, inHeight - 2);
         inPtr_ = (inPtr + (nearestY * inStride));
-        outPtr_ = (outPtr + (j * outStride));
-        x = 0;
-        for (compv_scalar_t i = 0, x = 0; i < outWidth; ++i) {
+        for (i = 0, x = 0; i < outWidth; ++i) {
             nearestX = (x >> 8); // nearest x-point
-            nearestX = COMPV_MATH_CLIP2(nearestX, inWidth - 2);
+
             neighb0 = inPtr_[nearestX];
             neighb1 = inPtr_[nearestX + 1];
             neighb2 = inPtr_[nearestX + inStride];
             neighb3 = inPtr_[nearestX + inStride + 1];
 
-            x0 = (x - (nearestX << 8));
-            x1 = 256 - x0;
-            y0 = (y - (nearestY << 8));
-            y1 = 256 - y0;
+			x0 = x & 0xff;
+            x1 = 255 - x0;
+			y0 = y & 0xff;
+            y1 = 255 - y0;
 
             weight0 = x1 * y1;
             weight1 = x0 * y1;
             weight2 = x1 * y0;
             weight3 = x0 * y0;
 
-            outPtr_[i] = (uint8_t)((neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3) >> 16);
+			outPtr[i] = (uint8_t)((neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3) >> 16);
 
             x += sf_x;
         }
+
         y += sf_y;
+		outPtr += outStride;
     }
 }
 
@@ -144,13 +141,13 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVPtr<CompVImage* >& 
     for (int k = 0; k < compSize; ++k) {
         const float float_sx = (float)inWidths[k] / outWidths[k];
         const float float_sy = (float)inHeights[k] / outHeights[k];
-        const compv_scalar_t int_sx = (compv_scalar_t)(float_sx * 256.f); // do not use "<< 8" to include the error
-        const compv_scalar_t int_sy = (compv_scalar_t)(float_sy * 256.f);  // do not use "<< 8" to include the error
+        const compv_scalar_t int_sx = (compv_scalar_t)(float_sx * 255.f); // do not use "<< 8" to include the error
+        const compv_scalar_t int_sy = (compv_scalar_t)(float_sy * 255.f);  // do not use "<< 8" to include the error
         // We're using fixed-point math and requiring factor between ]0-255]
         // Doesn't make sense (down/up)scaling an image >255 times its initial size. For example: (16 x 16) <-> (4080, 4080).
         // We expect image sizes to be within [16 - 4080] which means any (down/up)scaling will be ok. Off course you can (up/down)sample a 5k image if you want.
         // Most of the time scaling is used to create pyramids with scaling factor is ]0, 1[ and each time level has a scaling factor equal to (sf(n-1)<<1).
-        if (float_sx <= 0.f || float_sx >= 256.f || float_sy <= 0.f || float_sy >= 256.f) {
+        if (float_sx <= 0.f || float_sx >= 255.f || float_sy <= 0.f || float_sy >= 255.f) {
             COMPV_DEBUG_WARN("Invalid scaling factor: (%f,%f)", float_sx, float_sy);
             // We'll have a small distortion but do not break the conversion
         }

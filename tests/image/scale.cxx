@@ -6,11 +6,13 @@
 
 using namespace compv;
 
-#define IMAGE_SCALE_FACTOR					0.50f
+#define IMAGE_SCALE_FACTOR					0.83f // Values with MD5 check: 0.5f, 0.83f, 1.5f, 3.f
 #define IMAGE_SCALE_TYPE					COMPV_SCALE_TYPE_BILINEAR
 #define IMAGE_SACLE_LOOP_COUNT				1
-#define IMAGE_BILINEAR_FACTOR83_MD5_STRING	"e1b919373264838dfb1e0a39dbb69191" // MD5 for factor=0.83
-#define IMAGE_BILINEAR_FACTOR50_MD5_STRING	"8b04db64da0b882e255e7026d267cce4" // MD5 for factor=0.50
+#define IMAGE_BILINEAR_FACTOR050_MD5_STRING	"1a97693193c8df7919f70a6869af3fa9" // MD5 for factor=0.50
+#define IMAGE_BILINEAR_FACTOR083_MD5_STRING	"9777b441875d4f75c24fae8c1816c50d" // MD5 for factor=0.83
+#define IMAGE_BILINEAR_FACTOR150_MD5_STRING	"57eae70543a3f8944c6699e8ee97f7e2" // MD5 for factor=1.50
+#define IMAGE_BILINEAR_FACTOR300_MD5_STRING	"ae2a90b1560b463cd05cb24e95537c74" // MD5 for factor=3.00
 
 bool TestScale()
 {
@@ -29,11 +31,23 @@ bool TestScale()
         COMPV_CHECK_CODE_ASSERT(image->scale(IMAGE_SCALE_TYPE, outWidth, outHeight, &image));
     }
     timeEnd = CompVTime::getNowMills();
-    COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
+    COMPV_DEBUG_INFO("Elapsed time(TestScale) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
     COMPV_DEBUG_INFO("Image scaling: factor=%f, outWidth=%d, outStride=%d, outHeight=%d", IMAGE_SCALE_FACTOR, image->getWidth(), image->getStride(), image->getHeight());
 
-    const std::string expectedMD5 = (IMAGE_SCALE_FACTOR == 0.83f) ? IMAGE_BILINEAR_FACTOR83_MD5_STRING : ((IMAGE_SCALE_FACTOR == 0.5f ? IMAGE_BILINEAR_FACTOR50_MD5_STRING : ""));
+	std::string expectedMD5 = imageMD5(image);
+	if (IMAGE_SCALE_FACTOR == 0.5f) {
+		expectedMD5 = IMAGE_BILINEAR_FACTOR050_MD5_STRING;
+	}
+	else if (IMAGE_SCALE_FACTOR == 0.83f) {
+		expectedMD5 = IMAGE_BILINEAR_FACTOR083_MD5_STRING;
+	}
+	else if (IMAGE_SCALE_FACTOR == 1.5f) {
+		expectedMD5 = IMAGE_BILINEAR_FACTOR150_MD5_STRING;
+	}
+	else if (IMAGE_SCALE_FACTOR == 3.0f) {
+		expectedMD5 = IMAGE_BILINEAR_FACTOR300_MD5_STRING;
+	}
     if (!expectedMD5.empty()) {
         if (imageMD5(image) != expectedMD5) {
             COMPV_DEBUG_ERROR("MD5 mismatch");
@@ -41,6 +55,9 @@ bool TestScale()
             return false;
         }
     }
+	else {
+		COMPV_DEBUG_INFO("/!\\ Not checking MD5");
+	}
 
     // dump image to file
     writeImgToFile(image);

@@ -13,8 +13,8 @@ using namespace compv;
 #define ORB_LOOOP_COUNT				1
 #define ORB_DESC_MD5_FLOAT			"94e459d1a9532af81d20d4044422883e"
 #define ORB_DESC_MD5_FLOAT_MT		"7f4f847671fb369774120c5ad8aad334" // multithreaded (convolution create temporary memory)
-#define ORB_DESC_MD5_FXP			"9d95dfec2fb1fb629a4300b1d63d1bd1"
-#define ORB_DESC_MD5_FXP_MT			"68844f9d78ef6165a2022d4aa454bfd4"
+#define ORB_DESC_MD5_FXP			"f757b6c5eb607ab3ca14589900cf9f8b"
+#define ORB_DESC_MD5_FXP_MT			"6a33f7477cb2600d607067398a1456cc"
 #define JPEG_IMG					"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture (2000*1000 = 2times more bytes than 720p)
 
 bool TestORB()

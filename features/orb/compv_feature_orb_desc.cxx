@@ -133,7 +133,7 @@ extern int COMPV_FEATURE_DETE_ORB_PATCH_BITS;
 extern COMPV_SCALE_TYPE COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE;
 
 static const int COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE = 7;
-static const float COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 1.7f;
+static const float COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 1.52f;
 
 #define COMPV_FEATURE_DESC_ORB_DESCRIBE_MIN_SAMPLES_PER_THREAD	(20*10) // number of interestPoints
 
@@ -146,6 +146,7 @@ CompVFeatureDescORB::CompVFeatureDescORB()
     : CompVFeatureDesc(COMPV_ORB_ID)
 	, m_nPatchDiameter(COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER)
 	, m_nPatchBits(COMPV_FEATURE_DETE_ORB_PATCH_BITS)
+	, m_bMediaTypeVideo(false)
 	, m_funBrief256_31_Float32(Brief256_31_Float32_C)
 #if COMPV_FEATURE_DESC_ORB_FXP_DESC
 	, m_funBrief256_31_Fxp(Brief256_31_Fxp_C)
@@ -246,7 +247,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::describe(CompVPtr<CompVImageScalePyramid *
 // override CompVFeatureDesc::process
 COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVFeatureDescriptions*>* descriptions)
 {
-    COMPV_CHECK_EXP_RETURN(*image == NULL || image->getDataPtr() == NULL || image->getPixelFormat() != COMPV_PIXEL_FORMAT_GRAYSCALE || !descriptions || !interestPoints || interestPoints->empty(),
+    COMPV_CHECK_EXP_RETURN(*image == NULL || image->getDataPtr() == NULL || image->getPixelFormat() != COMPV_PIXEL_FORMAT_GRAYSCALE || !descriptions || !interestPoints,
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	// For now only Brief256_31 is supported
@@ -262,6 +263,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
 	CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
 	int threadsCount = 1;
 	CompVPtr<CompVFeatureDescORB* >This = this;
+	bool bLevelZeroBlurred = false;
 
     // return COMPV_ERROR_CODE_S_OK;
 
@@ -270,6 +272,9 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
     const int nFeaturesBytes = nFeaturesBits >> 3;
     COMPV_CHECK_CODE_RETURN(err_ = CompVFeatureDescriptions::newObj(nFeatures, nFeaturesBits, &_descriptions)); // TODO(dmi): realloc instead of alloc()
     _descriptionsPtr = (uint8_t*)_descriptions->getDataPtr();
+	if (nFeatures == 0) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
 
     // Get the pyramid from the detector or use or own pyramid
     if ((attachedDete = getAttachedDete())) {
@@ -290,6 +295,19 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
         _pyramid = m_pyramid;
     }
 
+	// Check if we have the same image
+	if (m_bMediaTypeVideo && m_image_blurred_prev) {
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+		// apply gaussianblur filter on the image at level 0
+		COMPV_CHECK_CODE_RETURN(err_ = convlt(_pyramid, 0));
+		// get blurred image
+		COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(0, &imageAtLevelN));
+		bLevelZeroBlurred = true; // to avoid apply gaussian blur again
+		bool bSameImageAsPrev = false;
+		COMPV_CHECK_CODE_RETURN(err_ = m_image_blurred_prev->isEquals(imageAtLevelN, bSameImageAsPrev, 15, m_image_blurred_prev->getHeight() - 15, 15, m_image_blurred_prev->getWidth() - 15));
+		// TODO(dmi): Do not use equality but SAD with thredshold: "(abs(img1_ptr[x] - img2_ptr[x]) > t"
+	}
+
 	// Compute number of threads
 	if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
 		threadsCount = threadDip->getThreadsCount();
@@ -300,7 +318,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
 		uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
 		// levelStart is used to make sure we won't schedule more than "threadsCount"
 		int levelStart, level, levelMax;
-		for (levelStart = 0, levelMax = threadsCount; levelStart < _pyramid->getLevels(); levelStart += threadsCount, levelMax += threadsCount) {
+		for (levelStart = bLevelZeroBlurred ? 1 : 0, levelMax = threadsCount; levelStart < _pyramid->getLevels(); levelStart += threadsCount, levelMax += threadsCount) {
 			for (level = levelStart; level < _pyramid->getLevels() && level < levelMax; ++level) {
 				COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + level), COMPV_TOKENIDX0, CompVFeatureDescORB::convlt_AsynExec,
 					COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *_pyramid, level),
@@ -312,7 +330,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
 		}
 	}
 	else {
-		for (int level = 0; level < _pyramid->getLevels(); ++level) {
+		for (int level = bLevelZeroBlurred ? 1 : 0; level < _pyramid->getLevels(); ++level) {
 			COMPV_CHECK_CODE_RETURN(err_ = convlt(_pyramid, level));
 		}
 	}    
@@ -380,6 +398,12 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
 	}
 
     *descriptions = _descriptions;
+	
+	if (m_bMediaTypeVideo) {
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+		COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(0, &imageAtLevelN));
+		COMPV_CHECK_CODE_RETURN(err_ = imageAtLevelN->clone(&m_image_blurred_prev));
+	}
 
     return err_;
 }

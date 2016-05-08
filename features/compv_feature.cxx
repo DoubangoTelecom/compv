@@ -49,10 +49,17 @@ CompVFeatureDescriptions::CompVFeatureDescriptions(int nFeatures_, int nFeatureB
     : m_nFeatureBits(0)
     , m_nFeaturesCount(0)
 {
-    if (COMPV_ERROR_CODE_IS_OK(CompVBuffer::newObjAndCopyData(NULL, nFeatures_ * ((nFeatureBits_ + 7) >> 3), &m_data))) {
-        m_nFeaturesCount = nFeatures_;
-        m_nFeatureBits = nFeatureBits_;
-    }
+	// It's allowed to have descriptor with zero features
+	if (nFeatures_ == 0) {
+		m_nFeaturesCount = 0;
+		m_nFeatureBits = nFeatureBits_;
+	}
+	else {
+		if (COMPV_ERROR_CODE_IS_OK(CompVBuffer::newObjAndCopyData(NULL, nFeatures_ * ((nFeatureBits_ + 7) >> 3), &m_data))) {
+			m_nFeaturesCount = nFeatures_;
+			m_nFeatureBits = nFeatureBits_;
+		}
+	}
 }
 
 CompVFeatureDescriptions::~CompVFeatureDescriptions()
@@ -62,9 +69,9 @@ CompVFeatureDescriptions::~CompVFeatureDescriptions()
 
 COMPV_ERROR_CODE CompVFeatureDescriptions::newObj(int nFeaturesCount, int nFeatureBits, CompVPtr<CompVFeatureDescriptions*>* descriptions)
 {
-    COMPV_CHECK_EXP_RETURN(!descriptions || nFeaturesCount <= 0 || nFeatureBits <= 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_EXP_RETURN(!descriptions || nFeaturesCount < 0 || nFeatureBits < 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVPtr<CompVFeatureDescriptions*> descriptions_ = new CompVFeatureDescriptions(nFeaturesCount, nFeatureBits);
-    if (!descriptions_ || descriptions_->m_nFeatureBits != nFeatureBits || descriptions_->m_nFeaturesCount != nFeaturesCount || !descriptions_->m_data) {
+    if (!descriptions_ || descriptions_->m_nFeatureBits != nFeatureBits || descriptions_->m_nFeaturesCount != nFeaturesCount) {
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }
     *descriptions = descriptions_;

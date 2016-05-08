@@ -191,7 +191,7 @@ COMPV_EXTERNC COMPV_API void FastStrengths32(compv::compv_scalar_t rbrighters, c
 COMPV_NAMESPACE_BEGIN()
 
 // Default threshold (pixel intensity: [0-255])
-#define COMPV_FEATURE_DETE_FAST_THRESHOLD_DEFAULT			10
+#define COMPV_FEATURE_DETE_FAST_THRESHOLD_DEFAULT			20
 // Number of positive continuous pixel to have before declaring a candidate as an interest point
 #define COMPV_FEATURE_DETE_FAST_NON_MAXIMA_SUPP				true
 #define COMPV_FEATURE_DETE_FAST_MAX_FEATURTES				2000 // maximum number of features to retain (<0 means all)

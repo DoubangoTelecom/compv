@@ -82,11 +82,12 @@ void CompVImageMoments::cirM01M10(const uint8_t* ptr, int patch_diameter, const 
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): SIMD
 	int s01 = 0, s10 = 0;
-    int patch_radius = (patch_diameter >> 1), img_y, i, j, dX, minI, maxI, minJ, maxJ;
-    const uint8_t* img_ptr;
+    int patch_radius = (patch_diameter >> 1), i, j;
     bool closeToBorder = (center_x < patch_radius || (center_x + patch_radius) >= img_width || (center_y < patch_radius) || (center_y + patch_radius) >= img_height);
 
     if (closeToBorder) {
+		const uint8_t* img_ptr;
+		int img_y, i, j, minI, maxI, minJ, maxJ, dX;
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // It's useless to compute moments for these points because it won't be possible to have a description (partial circle)
         // This code must never be called as we remove elements close to the border before computing the moments
         // Compute minJ and maxJ
@@ -124,8 +125,10 @@ void CompVImageMoments::cirM01M10(const uint8_t* ptr, int patch_diameter, const 
         }
     }
     else {
-        const uint8_t *img_center, *img_top, *img_bottom;
+        const uint8_t *img_center, *img_top, *img_bottom, *t, *b;
         uint8_t top, bottom;
+		const int *dX;
+		int sj;
 
         img_center = &ptr[(center_y * img_stride) + center_x];
 
@@ -146,17 +149,13 @@ void CompVImageMoments::cirM01M10(const uint8_t* ptr, int patch_diameter, const 
         img_bottom = img_center - img_stride;
 
         // Handle j=1... cases
-        for (j = 1; j < patch_radius; ++j) {
-            // Pythagorean theorem: x = sqrt(r**2 - y**2)
-            // dX = ((int)sqrt(patch_radius_pow2 - (j * j)));
-            dX = patch_max_abscissas[j];
-
-            for (i = -dX; i <= +dX; ++i) {
-                top = img_top[i];
-                bottom = img_bottom[i];
-                s10 += (i * top) + (i * bottom);
-                s01 += (j * top) - (j * bottom);
+		for (j = 1, dX = &patch_max_abscissas[j]; j < patch_radius; ++j, ++dX) {
+			sj = 0;
+			for (i = -*dX, t = &img_top[i], b = &img_bottom[i]; i <= *dX; ++i, ++t, ++b) {
+				s10 += i * (*t + *b); // (i * t) + (i * b)
+				sj += (*t - *b);
             }
+			s01 += j * sj; // for SIMD: move inside the loop and s01 = (j * t) - (j * b) = j * (t - b)
             img_top += img_stride;
             img_bottom -= img_stride;
         }

@@ -70,6 +70,8 @@ private:
 	CompVPtr<CompVConvlt<float>* > m_convlt;
     CompVPtr<CompVArray<float>* > m_kern_float;
 	CompVPtr<CompVArray<uint16_t>* > m_kern_fxp;
+	CompVPtr<CompVImage* > m_image_blurred_prev;
+	bool m_bMediaTypeVideo;
 	int m_nPatchDiameter;
 	int m_nPatchBits;
 	void(*m_funBrief256_31_Float32)(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out);
