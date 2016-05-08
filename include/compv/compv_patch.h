@@ -35,21 +35,21 @@ public:
 	virtual COMPV_INLINE const char* getObjectId() {
 		return "CompVPatch";
 	};
-	void moments0110(const uint8_t* ptr, const int* patch_max_abscissas, int center_x, int center_y, int img_width, int img_stride, int img_height, int* m01, int* m10);
+	void moments0110(const uint8_t* ptr, int center_x, int center_y, int img_width, int img_stride, int img_height, int* m01, int* m10);
 	static COMPV_ERROR_CODE newObj(CompVPtr<CompVPatch* >* patch, int diameter);
 
 private:
 	void initXYMax();
 
 private:
-	int16_t* m_nRadius;
+	int m_nRadius;
 	int16_t* m_pMaxAbscissas;
 	int16_t* m_pX;
 	int16_t* m_pY;
 	uint8_t* m_pTop;
 	uint8_t* m_pBottom;
-	bool m_bInitialized;
-	size_t m_nElts;
+	size_t m_nCount;
+	size_t m_nStride;
 };
 
 COMPV_NAMESPACE_END()

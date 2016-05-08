@@ -11,10 +11,10 @@ using namespace compv;
 #define ORB_PYRAMID_SCALEFACTOR		0.83f
 #define ORB_PYRAMID_SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
 #define ORB_LOOOP_COUNT				1
-#define ORB_DESC_MD5_FLOAT			"94e459d1a9532af81d20d4044422883e"
+#define ORB_DESC_MD5_FLOAT			"7a46dadf433e1e6d49f7fb60a6626064"
 #define ORB_DESC_MD5_FLOAT_MT		"7f4f847671fb369774120c5ad8aad334" // multithreaded (convolution create temporary memory)
-#define ORB_DESC_MD5_FXP			"f757b6c5eb607ab3ca14589900cf9f8b"
-#define ORB_DESC_MD5_FXP_MT			"6a33f7477cb2600d607067398a1456cc"
+#define ORB_DESC_MD5_FXP			"7a46dadf433e1e6d49f7fb60a6626064"
+#define ORB_DESC_MD5_FXP_MT			"ac6b661432e1bcd28cccd3e2096e91de"
 #define JPEG_IMG					"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture (2000*1000 = 2times more bytes than 720p)
 
 bool TestORB()

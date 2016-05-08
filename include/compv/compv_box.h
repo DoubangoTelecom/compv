@@ -90,7 +90,7 @@ public:
                 size_t newCapacity = newSize;
                 COMPV_CHECK_CODE_RETURN(alloc(newCapacity));
             }
-            CompVMem::copyNTA((void*)(m_pMem + size()), (void*)begin, (end - begin)*m_nItemSize);
+            CompVMem::copy((void*)(m_pMem + size()), (void*)begin, (end - begin)*m_nItemSize);
             m_nSize = newSize;
         }
         return COMPV_ERROR_CODE_S_OK;
@@ -209,7 +209,7 @@ private:
         if (m_nSize) {
             m_nSize = COMPV_MATH_CLIP3(0, nCapacity, m_nSize);
             size_t sizeToCopy = m_nSize * m_nItemSize;
-            CompVMem::copyNTA(pNewMem, m_pMem, sizeToCopy); // TODO(dmi): NTA copy only if (sizeToCopy > cache1Size)
+            CompVMem::copy(pNewMem, m_pMem, sizeToCopy); // TODO(dmi): NTA copy only if (sizeToCopy > cache1Size)
         }
         CompVMem::free((void**)&m_pMem);
         m_pMem = pNewMem;

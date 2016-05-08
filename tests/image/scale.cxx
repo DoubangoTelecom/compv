@@ -35,6 +35,9 @@ bool TestScale()
 
     COMPV_DEBUG_INFO("Image scaling: factor=%f, outWidth=%d, outStride=%d, outHeight=%d", IMAGE_SCALE_FACTOR, image->getWidth(), image->getStride(), image->getHeight());
 
+	// dump image to file
+	writeImgToFile(image);
+
 	std::string expectedMD5 = imageMD5(image);
 	if (IMAGE_SCALE_FACTOR == 0.5f) {
 		expectedMD5 = IMAGE_BILINEAR_FACTOR050_MD5_STRING;
@@ -58,9 +61,6 @@ bool TestScale()
 	else {
 		COMPV_DEBUG_INFO("/!\\ Not checking MD5");
 	}
-
-    // dump image to file
-    writeImgToFile(image);
 
     return true;
 }

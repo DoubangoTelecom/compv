@@ -28,6 +28,9 @@ Some literature:
 #include "compv/image/scale/compv_imagescale_bilinear.h"
 #include "compv/image/scale/compv_imagescale_common.h"
 #include "compv/compv_math.h"
+#include "compv/compv_mem.h"
+
+#include "compv/intrinsics/x86/image/scale/compv_imagescale_bilinear_intrin_sse.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -40,39 +43,180 @@ COMPV_NAMESPACE_BEGIN()
 static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, compv_scalar_t inHeight, compv_scalar_t inWidth, compv_scalar_t inStride, compv_scalar_t outHeight, compv_scalar_t outWidth, compv_scalar_t outStride, compv_scalar_t sf_x, compv_scalar_t sf_y)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): SIMD, MT
-    compv_scalar_t i, j, x, y, nearestX, nearestY, weight0, weight1, weight2, weight3;
+
+#if 0
+	compv_scalar_t i, j, x, y, nearestX, nearestY;
 	uint8_t neighb0, neighb1, neighb2, neighb3, x0, y0, x1, y1;
-    const uint8_t* inPtr_;
-    
+	const uint8_t* inPtr_;
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+	compv_scalar_t outPad = (outStride - outWidth);
+	ScaleBilinear_Intrin_SSE2(inPtr, outPtr, inHeight, inWidth, inStride, outHeight, outWidth, outPad, sf_x, sf_y);
+
+	static const compv_scalar_t minpack = 4;
+	compv_scalar_t missed = (outWidth & (minpack - 1));
+	if (missed > 0) {
+		compv_scalar_t skip = outWidth - missed;
+		outPtr += skip;
+		for (j = 0, y = 0; j < outHeight; ++j) {
+			nearestY = (y >> 8); // nearest y-point
+			inPtr_ = (inPtr + (nearestY * inStride));
+			for (i = skip, x = skip * sf_x; i < outWidth; ++i) {
+				nearestX = (x >> 8); // nearest x-point
+
+				neighb0 = inPtr_[nearestX];
+				neighb1 = inPtr_[nearestX + 1];
+				neighb2 = inPtr_[nearestX + inStride];
+				neighb3 = inPtr_[nearestX + inStride + 1];
+
+				x0 = x & 0xff;
+				x1 = 0xff - x0;
+				y0 = y & 0xff;
+				y1 = 0xff - y0;
+
+				uint8_t s = (uint8_t)((y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))) >> 16);
+				if (s != outPtr[i]) {
+					int kaka = 0;
+				}
+				outPtr[i] = s;
+
+				x += sf_x;
+			}
+
+			y += sf_y;
+			outPtr += outStride;
+		}
+	}
+#elif 0
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+	uint8_t* rows = (uint8_t*)CompVMem::malloc(4 * outWidth);
+	// FIXME: check row != NULL
+	uint8_t *neighb0, *neighb1, *neighb2, *neighb3;
+
+	neighb0 = rows;
+	neighb1 = neighb0 + outWidth;
+	neighb2 = neighb1 + outWidth;
+	neighb3 = neighb2 + outWidth;
+
+	compv_scalar_t i, j, x, y, nearestX, nearestY;
+	uint8_t x0, y0, x1, y1;
+	const uint8_t* inPtr_;
+
+	for (j = 0, y = 0; j < outHeight; ++j) {
+		nearestY = (y >> 8); // nearest y-point
+		inPtr_ = (inPtr + (nearestY * inStride));
+
+		// Load rows
+		for (i = 0, x = 0; i < outWidth; ++i, x += sf_x) {
+			nearestX = (x >> 8); // nearest x-point
+
+			neighb0[i] = *(inPtr_ + nearestX);
+			neighb1[i] = *(inPtr_ + nearestX + 1);
+			neighb2[i] = *(inPtr_ + nearestX + inStride);
+			neighb3[i] = *(inPtr_ + nearestX + inStride + 1);
+		}
+
+		// Process samples
+		for (i = 0, x = 0; i < outWidth; ++i, x += sf_x) {
+			x0 = x & 0xff;
+			y0 = y & 0xff;
+			x1 = 0xff - x0;
+			y1 = 0xff - y0;
+
+			// weight0 = x1 * y1;
+			// weight1 = x0 * y1;
+			// weight2 = x1 * y0;
+			// weight3 = x0 * y0;
+			// S = neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3
+			// S = neighb0 * (x1 * y1) + neighb1 * (x0 * y1) + neighb2 * (x1 * y0) + neighb3 * (x0 * y0)
+			// S = y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1 ) + (neighb3 * x0))
+			outPtr[i] = (uint8_t)((y1 * ((neighb0[i] * x1) + (neighb1[i] * x0)) + y0 * ((neighb2[i] * x1) + (neighb3[i] * x0))) >> 16);
+		}
+
+		y += sf_y;
+		outPtr += outStride;
+	}
+
+	CompVMem::free((void**)&rows);
+#elif 0
+	compv_scalar_t i, j, x, y, nearestX, nearestY, sf4_x = sf_x << 2, sf2_x = sf_x << 1, sf3_x = sf2_x + sf_x;
+	uint8_t n0, n1, n2, n3, x0, y0, x1, y1;
+	const uint8_t* inPtr_;
+
+	// weight0 = x1 * y1;
+	// weight1 = x0 * y1;
+	// weight2 = x1 * y0;
+	// weight3 = x0 * y0;
+	// S = neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3
+	// S = neighb0 * (x1 * y1) + neighb1 * (x0 * y1) + neighb2 * (x1 * y0) + neighb3 * (x0 * y0)
+	// S = y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1 ) + (neighb3 * x0))
+	// outPtr[i] = S
+
+	for (j = 0, y = 0; j < outHeight; ++j) {
+		nearestY = (y >> 8); // nearest y-point
+		inPtr_ = (inPtr + (nearestY * inStride));
+		for (i = 0, x = 0; i <= outWidth - 40; i += 4, x += sf4_x) {
+			nearestX = (x >> 8);
+			n0 = *(inPtr_ + nearestX), n1 = *(inPtr_ + nearestX + 1), n2 = *(inPtr_ + nearestX + inStride), n3 = *(inPtr_ + nearestX + inStride + 1);
+			x0 = x & 0xff, y0 = y & 0xff, x1 = 0xff - x0, y1 = 0xff - y0;
+			outPtr[i + 0] = (uint8_t)((y1 * ((n0 * x1) + (n1 * x0)) + y0 * ((n2 * x1) + (n3 * x0))) >> 16);
+			nearestX = ((x + sf_x) >> 8);
+			n0 = *(inPtr_ + nearestX), n1 = *(inPtr_ + nearestX + 1), n2 = *(inPtr_ + nearestX + inStride), n3 = *(inPtr_ + nearestX + inStride + 1);
+			x0 = (x + sf_x) & 0xff, y0 = y & 0xff, x1 = 0xff - x0, y1 = 0xff - y0;
+			outPtr[i + 1] = (uint8_t)((y1 * ((n0 * x1) + (n1 * x0)) + y0 * ((n2 * x1) + (n3 * x0))) >> 16);
+			nearestX = ((x + sf2_x) >> 8);
+			n0 = *(inPtr_ + nearestX), n1 = *(inPtr_ + nearestX + 1), n2 = *(inPtr_ + nearestX + inStride), n3 = *(inPtr_ + nearestX + inStride + 1);
+			x0 = (x + sf2_x) & 0xff, y0 = y & 0xff, x1 = 0xff - x0, y1 = 0xff - y0;
+			outPtr[i + 2] = (uint8_t)((y1 * ((n0 * x1) + (n1 * x0)) + y0 * ((n2 * x1) + (n3 * x0))) >> 16);
+			nearestX = ((x + sf3_x) >> 8);
+			n0 = *(inPtr_ + nearestX), n1 = *(inPtr_ + nearestX + 1), n2 = *(inPtr_ + nearestX + inStride), n3 = *(inPtr_ + nearestX + inStride + 1);
+			x0 = (x + sf3_x) & 0xff, y0 = y & 0xff, x1 = 0xff - x0, y1 = 0xff - y0;
+			outPtr[i + 3] = (uint8_t)((y1 * ((n0 * x1) + (n1 * x0)) + y0 * ((n2 * x1) + (n3 * x0))) >> 16);
+		}
+		for (; i < outWidth; i += 1, x += sf_x) {
+			nearestX = (x >> 8);
+			n0 = *(inPtr_ + nearestX), n1 = *(inPtr_ + nearestX + 1), n2 = *(inPtr_ + nearestX + inStride), n3 = *(inPtr_ + nearestX + inStride + 1);
+			x0 = x & 0xff, y0 = y & 0xff, x1 = 0xff - x0, y1 = 0xff - y0;
+			outPtr[i] = (uint8_t)((y1 * ((n0 * x1) + (n1 * x0)) + y0 * ((n2 * x1) + (n3 * x0))) >> 16);
+		}
+
+		y += sf_y;
+		outPtr += outStride;
+	}
+#else
+	compv_scalar_t i, j, x, y, nearestX, nearestY;
+	uint8_t neighb0, neighb1, neighb2, neighb3, x0, y0, x1, y1;
+	const uint8_t* inPtr_;
+
     for (j = 0, y = 0; j < outHeight; ++j) {
         nearestY = (y >> 8); // nearest y-point
         inPtr_ = (inPtr + (nearestY * inStride));
-        for (i = 0, x = 0; i < outWidth; ++i) {
+		for (i = 0, x = 0; i < outWidth; ++i, x += sf_x) {
             nearestX = (x >> 8); // nearest x-point
 
-            neighb0 = inPtr_[nearestX];
-            neighb1 = inPtr_[nearestX + 1];
-            neighb2 = inPtr_[nearestX + inStride];
-            neighb3 = inPtr_[nearestX + inStride + 1];
+            neighb0 = *(inPtr_ + nearestX);
+			neighb1 = *(inPtr_ + nearestX + 1);
+			neighb2 = *(inPtr_ + nearestX + inStride);
+			neighb3 = *(inPtr_ + nearestX + inStride + 1);
 
 			x0 = x & 0xff;
-            x1 = 255 - x0;
 			y0 = y & 0xff;
-            y1 = 255 - y0;
+            x1 = 0xff - x0;
+			y1 = 0xff - y0;
 
-            weight0 = x1 * y1;
-            weight1 = x0 * y1;
-            weight2 = x1 * y0;
-            weight3 = x0 * y0;
-
-			outPtr[i] = (uint8_t)((neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3) >> 16);
-
-            x += sf_x;
+            // weight0 = x1 * y1;
+			// weight1 = x0 * y1;
+			// weight2 = x1 * y0;
+			// weight3 = x0 * y0;
+			// S = neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3
+			// S = neighb0 * (x1 * y1) + neighb1 * (x0 * y1) + neighb2 * (x1 * y0) + neighb3 * (x0 * y0)
+			// S = y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1 ) + (neighb3 * x0))
+			outPtr[i] = (uint8_t)((y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))) >> 16);
         }
 
         y += sf_y;
 		outPtr += outStride;
     }
+#endif
 }
 
 COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVPtr<CompVImage* >& inImage, CompVPtr<CompVImage* >& outImage)

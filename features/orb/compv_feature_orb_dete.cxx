@@ -158,7 +158,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-    int patch_radius = (m_nPatchDiameter >> 1);
+    int patch_radius = (m_nPatchDiameter >> 1); // FIXME: remove
     CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
     CompVPtr<CompVBoxInterestPoint* >interestPointsAtLevelN;
     CompVPtr<CompVImage*> imageAtLevelN;
@@ -174,6 +174,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
 
     // Create maximum abscissa for the circular patch if not already done
     if (m_nCircleMaxICount != (patch_radius + 1)) {
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // remove m_pCircleMaxI, m_nCircleMaxICount and this block
         COMPV_DEBUG_INFO("Alloc Patch Circle Abscissas");
         CompVMem::free((void**)&m_pCircleMaxI);
         m_nCircleMaxICount = 0;
