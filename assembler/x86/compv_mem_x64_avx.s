@@ -38,14 +38,14 @@ section .text
 ; arg(2) ->compv_uscalar_t size
 ; void MemCopyNTA_Asm_Aligned11_X64_AVX(COMPV_ALIGNED(AVX) void* dataDstPtr, COMPV_ALIGNED(AVX) const void* dataSrcPtr, compv_uscalar_t size)
 sym(MemCopyNTA_Asm_Aligned11_X64_AVX):
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 3
-	COMPV_YASM_SAVE_YMM 15 ;XMM[6-n]
+	COMPV_YASM_SAVE_YMM 15 ;YMM[6-n]
 	push rsi
 	push rdi
 	push rbx
-    mamadou
 	; end prolog
 
 	%define cache_line_size 64

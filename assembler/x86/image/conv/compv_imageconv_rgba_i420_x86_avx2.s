@@ -408,10 +408,11 @@ sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned1xx_AVX2):
 ; %2 -> 1: outUPtr is aligned, 0: outUPtr isn't aligned
 ; %3 -> 1: outVPtr is aligned, 0: outVPtr isn't aligned
 %macro rgbaToI420Kernel41_CompUV_Asm_AVX2 3
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
-	COMPV_YASM_SAVE_YMM 7 ;XMM[6-n]
+	COMPV_YASM_SAVE_YMM 7 ;YMM[6-n]
 	push rsi
 	push rdi
 	push rbx
@@ -430,8 +431,6 @@ sym(rgbaToI420Kernel11_CompUV_Asm_X86_Aligned1xx_AVX2):
 	add rcx, arg(5)
 	shl rcx, 2
 	mov [rsp + 8], rcx ; [rsp + 8] = padRGBA
-
-	vzeroupper
 
 	mov rax, arg(6) 
 	mov rdx, arg(7)
@@ -575,6 +574,7 @@ sym(rgbaToI420Kernel41_CompUV_Asm_X86_Aligned111_AVX2):
 ; %1 -> 1: rgbPtr is aligned, 0: rgbPtr not aligned
 ; %2 -> 1: outYPtr is aligned, 0: outYPtr not aligned
 %macro rgbToI420Kernel31_CompY_Asm_X86_AVX2 2
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -595,8 +595,6 @@ sym(rgbaToI420Kernel41_CompUV_Asm_X86_Aligned111_AVX2):
 	sub rcx, rax ; rcx = padY
 	mov rdx, rcx
 	imul rdx, 3 ; rdx = padRGB
-
-	vzeroupper
 
 	mov rax, arg(5)
 	vmovdqa ymm0, [rax] ; ymmYCoeffs
@@ -708,6 +706,7 @@ sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned11_AVX2):
 ; %2 -> 1: outUPtr is SSE-aligned, 0: not aligned
 ; %3 -> 1: outVPtr is SSE-aligned, 0: not aligned
 %macro rgbToI420Kernel31_CompUV_Asm_X86_AVX2 3
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
@@ -733,8 +732,6 @@ sym(rgbToI420Kernel31_CompY_Asm_X86_Aligned11_AVX2):
 	add rcx, arg(5)
 	imul rcx, 3
 	mov [rsp + 8], rcx ; [rsp + 8] = padRGB
-
-	vzeroupper
 
 	mov rax, arg(6) 
 	mov rdx, arg(7)
@@ -885,6 +882,7 @@ sym(rgbToI420Kernel31_CompUV_Asm_X86_Aligned111_AVX2):
 ; %1 -> 1: yPtr aligned, 0: yPtr not aligned
 ; %2 -> 1: outRgbaPtr aligned, 0: outRgbaPtr not aligned
 %macro i420ToRGBAKernel11_Asm_AVX2 2
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
@@ -922,8 +920,6 @@ sym(rgbToI420Kernel31_CompUV_Asm_X86_Aligned111_AVX2):
 	mov rbx, arg(2) ; vPtr
 	mov rax, arg(3) ; outRgbaPtr
 	mov rsi, arg(4) ; height
-
-	vzeroupper
 
 	.LoopHeight:
 		xor rdi, rdi

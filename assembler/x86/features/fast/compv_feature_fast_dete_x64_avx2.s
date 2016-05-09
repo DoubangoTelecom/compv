@@ -57,10 +57,11 @@ section .text
 ; arg(7) -> compv_scalar_t* me
 ; void FastData32Row_Asm_X64_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths, compv_scalar_t* me);
 sym(FastData32Row_Asm_X64_AVX2):
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
-	COMPV_YASM_SAVE_YMM 15 ;XMM[6-n]
+	COMPV_YASM_SAVE_YMM 15 ;YMM[6-n]
 	push rsi
 	push rdi
 	push rbx
@@ -99,8 +100,6 @@ sym(FastData32Row_Asm_X64_AVX2):
 	shr rdx, 5 ; div width with 32 and mov rsi by 1 -> because of argi(x,rsi)
 	xor rsi, rsi
 	mov arg(2), rdx
-
-	vzeroupper
 
 	; Compute ymmNMinusOne and save
 	vpbroadcastb ymm0, xmm0

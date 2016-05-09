@@ -44,10 +44,11 @@ section .text
 ; %1 -> 1: FMA enabled, 0: FMA disabled
 ; void Brief256_31_Asm_X64_AVX2(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(SSE) void* out)
 %macro Brief256_31_Macro_X64_AVX2 1
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
-	COMPV_YASM_SAVE_YMM 7 ;XMM[6-7]
+	COMPV_YASM_SAVE_YMM 7 ;YMM[6-7]
 	push rsi
 	push rdi
 	push rbx
@@ -86,8 +87,6 @@ section .text
 	lea r11, [sym(kBrief256Pattern31BY)]
 	; r12 = img_center
 	mov r12, arg(0)
-
-	vzeroupper
 
 	
 	; ymm7 = ymmStride = _mm256_set1_epi32((int)img_stride)

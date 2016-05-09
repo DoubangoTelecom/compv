@@ -45,17 +45,16 @@ section .text
 ; %1 -> 1: FMA3 enabled, 0: FMA3 disabled
 ; void Convlt1_verthz_float32_minpack16_Asm_X64_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t stride, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size)
 %macro Convlt1_verthz_float32_minpack16_Macro_X64_AVX2 1
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
-	COMPV_YASM_SAVE_YMM 10 ;XMM[6-10]
+	COMPV_YASM_SAVE_YMM 10 ;YMM[6-10]
 	push rsi
 	push rdi
 	push rbx
 	push r12
 	;; end prolog ;;
-
-	vzeroupper
 
 	%define COMPV_SIZE_OF_FLOAT 4 ; up to the caller to make sure sizeof(float)=4
 

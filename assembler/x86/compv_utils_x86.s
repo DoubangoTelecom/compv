@@ -39,6 +39,7 @@ sym(compv_utils_thread_get_core_id_x86_asm):
 ;;;
 ;;; void testPrologEpilog(int a, int b, int c)
 sym(testPrologEpilog):
+	; vzeroupper ; For AVX
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 3

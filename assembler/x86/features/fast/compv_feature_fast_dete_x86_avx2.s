@@ -58,10 +58,11 @@ section .text
 ; arg(7) -> compv_scalar_t* me
 ; void FastData32Row_Asm_X86_AVX2(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths, compv_scalar_t* me);
 sym(FastData32Row_Asm_X86_AVX2):
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
-	COMPV_YASM_SAVE_YMM 7 ;XMM[6-n]
+	COMPV_YASM_SAVE_YMM 7 ;YMM[6-n]
 	push rsi
 	push rdi
 	push rbx
@@ -93,8 +94,6 @@ sym(FastData32Row_Asm_X86_AVX2):
 
 	mov rsi, arg(2) ; rsi = width
 	mov rbx, arg(0) ; rbx = IP
-
-	vzeroupper
 	
 	; Compute ymmThreshold and save
 	vpbroadcastb ymm7, xmm7 ;  ymm7 = ymmThreshold
@@ -639,10 +638,11 @@ sym(FastData32Row_Asm_X86_AVX2):
 ; %1 -> 1: CMOV is supported, 0 CMOV not supported
 ; %2 -> 9: Use FAST9, 12: FAST12 ....
 %macro FastStrengths32_Asm_X86_AVX2 2
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
-	COMPV_YASM_SAVE_YMM 7 ;XMM[6-n]
+	COMPV_YASM_SAVE_YMM 7 ;YMM[6-n]
 	push rsi
 	push rdi
 	push rbx

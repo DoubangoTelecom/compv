@@ -54,11 +54,14 @@ sym(Moments0110_Asm_X86_SSE41):
 	; rsi = i
 	xor rsi, rsi
 
-	; rcx = x
-	mov rcx, arg(2)
+	mov rax, arg(5)
+	mov rbx, arg(6)
 
-	; rdx = y
-	mov rdx, arg(3)
+	; rcx = [s01]
+	mov rcx, [rax]
+
+	; rdx = [s10]
+	mov rdx, [rbx]
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (compv_scalar_t i = 0; i < count; i += 16)
@@ -71,6 +74,9 @@ sym(Moments0110_Asm_X86_SSE41):
 		movdqa xmm2, xmm0 ; xmm2 = xmmTop
 		movdqa xmm3, xmm1 ; xmm3 = xmmBottom
 
+		mov rdi, arg(2) ; x
+		mov rbx, arg(3) ; y
+
 		punpcklbw xmm0, xmm7
 		punpcklbw xmm1, xmm7
 		movdqa xmm4, xmm0
@@ -78,7 +84,7 @@ sym(Moments0110_Asm_X86_SSE41):
 
 		paddw xmm0, xmm1
 		pxor xmm1, xmm1
-		pmullw xmm0, [rcx + rsi*COMPV_SIZE_OF_INT16]
+		pmullw xmm0, [rdi + rsi*COMPV_SIZE_OF_INT16]
 		pxor xmm6, xmm6
 		punpcklwd xmm1, xmm0
 		punpckhwd xmm6, xmm0
@@ -86,7 +92,7 @@ sym(Moments0110_Asm_X86_SSE41):
 		psrad xmm6, 16
 		psubw xmm4, xmm5
 		phaddd xmm1, xmm6
-		pmullw xmm4, [rdx + rsi*COMPV_SIZE_OF_INT16]
+		pmullw xmm4, [rbx + rsi*COMPV_SIZE_OF_INT16]
 		pxor xmm0, xmm0
 		pxor xmm5, xmm5
 		punpcklwd xmm0, xmm4
@@ -100,7 +106,7 @@ sym(Moments0110_Asm_X86_SSE41):
 		movdqa xmm5, xmm3		
 		paddw xmm2, xmm3
 		phaddd xmm1, xmm0
-		pmullw xmm2, [rcx + rsi*COMPV_SIZE_OF_INT16 + 8*COMPV_SIZE_OF_INT16]
+		pmullw xmm2, [rdi + rsi*COMPV_SIZE_OF_INT16 + 8*COMPV_SIZE_OF_INT16]
 		pxor xmm0, xmm0
 		pxor xmm6, xmm6
 		punpcklwd xmm0, xmm2
@@ -108,7 +114,7 @@ sym(Moments0110_Asm_X86_SSE41):
 		psubw xmm4, xmm5
 		psrad xmm0, 16
 		psrad xmm6, 16
-		pmullw xmm4, [rdx + rsi*COMPV_SIZE_OF_INT16 + 8*COMPV_SIZE_OF_INT16]
+		pmullw xmm4, [rbx + rsi*COMPV_SIZE_OF_INT16 + 8*COMPV_SIZE_OF_INT16]
 		pxor xmm2, xmm2
 		pxor xmm5, xmm5
 		punpcklwd xmm2, xmm4
@@ -122,18 +128,21 @@ sym(Moments0110_Asm_X86_SSE41):
 
 		pextrd dword edi, xmm1, 1
 		pextrd dword ebx, xmm1, 3
-		mov rax, arg(5) ; s01
-		add dword edi, ebx
-		add dword [rax], edi
+		add dword ecx, edi
+		add dword ecx, ebx
 		pextrd dword edi, xmm1, 0
 		pextrd dword ebx, xmm1, 2
-		mov rax, arg(6) ; s10
-		add dword edi, ebx
-		add dword [rax], edi
+		add dword edx, edi
+		add dword edx, ebx
 
 		add rsi, 16
 		cmp rsi, arg(4)
 		jl .LoopRows
+
+	mov rax, arg(5)
+	mov rbx, arg(6)
+	mov [rax], rcx
+	mov [rbx], rdx
 
 	%undef COMPV_SIZE_OF_INT16
 

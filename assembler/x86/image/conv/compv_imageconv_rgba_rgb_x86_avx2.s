@@ -45,6 +45,7 @@ section .text
 ; %1 -> 1: rgb aligned, 0: rgb not aligned
 ; %2 -> 1: rgba aligned, 0: rgba not aligned
 %macro rgbToRgbaKernel31_Asm_X86_AVX2 2
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
@@ -72,8 +73,6 @@ section .text
 	mov rax, arg(0) ; rgb
 	mov rdx, arg(1) ; rgba
 	mov rcx, arg(2) ; height
-
-	vzeroupper
 
 	vmovdqa ymm4, [sym(kAVXPermutevar8x32_CDEFFGHX_i32)]
 	vmovdqa ymm5, [sym(kAVXPermutevar8x32_XXABBCDE_i32)] ; ymmXXABBCDE

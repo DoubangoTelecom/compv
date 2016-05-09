@@ -26,6 +26,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if defined __INTEL_COMPILER
+#	pragma intel optimization_parameter target_arch=avx
+#endif
 void Moments0110_Intrin_AVX2(COMPV_ALIGNED(AVX2) const uint8_t* top, COMPV_ALIGNED(AVX2)const uint8_t* bottom, COMPV_ALIGNED(AVX2)const int16_t* x, COMPV_ALIGNED(AVX2) const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM

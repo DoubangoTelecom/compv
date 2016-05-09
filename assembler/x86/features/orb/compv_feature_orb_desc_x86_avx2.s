@@ -42,6 +42,7 @@ section .text
 ; void Brief256_31_Asm_X86_AVX2(const uint8_t* img_center, compv_scalar_t img_stride, float cosT, float sinT, COMPV_ALIGNED(SSE) void* out)
 ; %1 -> 1: FMA3 supported, 0: FMA3 not supported
 %macro Brief256_31_Macro_X86_AVX2 1
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
@@ -70,8 +71,6 @@ section .text
 	xor rcx, rcx
 	; rdi = outPtr
 	mov rdi, arg(4)
-
-	vzeroupper
 
 	; ymm7 = ymmStride = _mm256_set1_epi32((int)img_stride)
 	mov rax, arg(1)
