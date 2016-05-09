@@ -155,7 +155,7 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVPtr<CompVThreadDispatcher*>*
 #endif /* COMPV_THREAD_SET_AFFINITY */
     }
 	if (numThreads > maxCores) {
-        COMPV_DEBUG_WARN("You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, (numCores - 1));
+		COMPV_DEBUG_WARN("You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, maxCores);
     }
     CompVPtr<CompVThreadDispatcher*>_disp = new CompVThreadDispatcher(numThreads);
     if (!_disp || !_disp->m_bValid) {

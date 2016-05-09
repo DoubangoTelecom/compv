@@ -67,6 +67,7 @@ CompVImageScalePyramid::~CompVImageScalePyramid()
     }
 }
 
+// Must be thread safe
 COMPV_ERROR_CODE CompVImageScalePyramid::process(const CompVPtr<CompVImage*>& inImage, int32_t level /*= -1*/)
 {
     COMPV_CHECK_EXP_RETURN(!inImage || (level >= m_nLevels), COMPV_ERROR_CODE_E_INVALID_PARAMETER);

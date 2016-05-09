@@ -65,8 +65,10 @@ CompVFeatureDeteORB::CompVFeatureDeteORB()
     , m_pInterestPointsAtLevelN(NULL)
     , m_bNMS(COMPV_FEATURE_DETE_ORB_FAST_NON_MAXIMA_SUPP)
     , m_nThreshold(COMPV_FEATURE_DETE_ORB_FAST_THRESHOLD_DEFAULT)
+	, m_pDetectors(NULL)
+	, m_nDetectors(0)
 	, m_pPatches(NULL)
-	, m_nPatches(NULL)
+	, m_nPatches(0)
 {
 
 }
@@ -75,6 +77,7 @@ CompVFeatureDeteORB::~CompVFeatureDeteORB()
 {
     freeInterestPoints();
 	freePatches();
+	freeDetectors();
 }
 
 // override CompVSettable::set
@@ -83,10 +86,14 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::set(int id, const void* valuePtr, size_t v
     COMPV_CHECK_EXP_RETURN(valuePtr == NULL || valueSize == 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     switch (id) {
     case COMPV_ORB_SET_INT32_FAST_THRESHOLD: {
-        return m_internalDetector->set(COMPV_FAST_SET_INT32_THRESHOLD, valuePtr, valueSize);
+		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int32_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		m_nThreshold = *((int32_t*)valuePtr);
+        return initDetectors();
     }
     case COMPV_ORB_SET_BOOL_FAST_NON_MAXIMA_SUPP: {
-        return m_internalDetector->set(COMPV_FAST_SET_BOOL_NON_MAXIMA_SUPP, valuePtr, valueSize);
+		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(bool), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		m_bNMS = *((bool*)valuePtr);
+		return initDetectors();
     }
     case COMPV_ORB_SET_INT32_MAX_FEATURES: {
         COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int32_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -174,6 +181,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
 
     // Image scaling then feature could be multi-threaded but this requires a detector for each level -> memory issue
 
+#if 0
     // Scale the image (multi-threaded)
 	COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image));
 
@@ -193,11 +201,27 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
         // For example, "m_internalDetector" would be FAST feature detector
         COMPV_CHECK_CODE_RETURN(m_internalDetector->process(imageAtLevelN, interestPointsAtLevelN));
     }
+#endif
 
     // Compute number of threads
     if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
         threadsCount = threadDip->getThreadsCount();
     }
+
+	// Create and init detectors
+	// Number of detectors must be equal to the number of threads (not the case for interestpoints array which is equal to the number of levels)
+	int32_t nDetectors = COMPV_MATH_CLIP3(1, threadsCount, m_pyramid->getLevels());
+	if ((int32_t)m_nDetectors < nDetectors) {
+		COMPV_CHECK_CODE_RETURN(createDetectors(nDetectors));
+		for (int32_t d = 0; d < nDetectors; ++d) {
+			err_ = CompVFeatureDete::newObj(COMPV_FAST_ID, &m_pDetectors[d]);
+			if (COMPV_ERROR_CODE_IS_NOK(err_)) {
+				freeDetectors();
+				COMPV_CHECK_CODE_RETURN(err_);
+			}
+		}
+		COMPV_CHECK_CODE_RETURN(initDetectors());
+	}
 
 	// Create patches
 	// Number of patches must be equal to the number of threads (not the case for interestpoints array which is equal to the number of levels)
@@ -222,7 +246,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
         for (levelStart = 0, levelMax = threadsCount; levelStart < m_pyramid->getLevels(); levelStart += threadsCount, levelMax += threadsCount) {
             for (level = levelStart; level < m_pyramid->getLevels() && level < levelMax; ++level) {
                 COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + level), COMPV_TOKENIDX0, CompVFeatureDeteORB::processLevelAt_AsynExec,
-					COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *image, *m_pPatches[level % nPatches], level),
+					COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *image, *m_pPatches[level % nPatches], *m_pDetectors[level % nDetectors], level),
                                         COMPV_ASYNCTASK_SET_PARAM_NULL()));
             }
             for (level = levelStart; level < m_pyramid->getLevels() && level < levelMax; ++level) {
@@ -232,7 +256,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
     }
     else {
         for (int level = 0; level < m_pyramid->getLevels(); ++level) {
-            COMPV_CHECK_CODE_RETURN(err_ = processLevelAt(image, m_pPatches[0], level));
+            COMPV_CHECK_CODE_RETURN(err_ = processLevelAt(image, m_pPatches[0], m_pDetectors[0], level));
         }
     }
 
@@ -299,7 +323,54 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::freePatches(int32_t count /*= -1*/)
 }
 
 // Private function
-COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage* >& image, CompVPtr<CompVPatch* >& patch, int level)
+// TODO(dmi): template function
+COMPV_ERROR_CODE CompVFeatureDeteORB::createDetectors(int32_t count /*= -1*/)
+{
+	int32_t detectorsCount = count > 0 ? count : (int32_t)m_nDetectors;
+	freeDetectors();
+	m_pDetectors = (CompVPtr<CompVFeatureDete *>*)CompVMem::calloc(detectorsCount, sizeof(CompVPtr<CompVFeatureDete *>));
+	COMPV_CHECK_EXP_RETURN(!m_pDetectors, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	m_nDetectors = detectorsCount;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVFeatureDeteORB::initDetector(CompVPtr<CompVFeatureDete* >& detector)
+{
+	if (detector) {
+		COMPV_CHECK_CODE_RETURN(detector->set(COMPV_FAST_SET_INT32_THRESHOLD, &m_nThreshold, sizeof(m_nThreshold)));
+		COMPV_CHECK_CODE_RETURN(detector->set(COMPV_FAST_SET_BOOL_NON_MAXIMA_SUPP, &m_bNMS, sizeof(m_bNMS)));
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVFeatureDeteORB::initDetectors()
+{
+	if (m_pDetectors) {
+		for (size_t i = 0; i < m_nDetectors; ++i) {
+			COMPV_CHECK_CODE_RETURN(initDetector(m_pDetectors[i]));
+		}
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Private function
+// TODO(dmi): template function
+COMPV_ERROR_CODE CompVFeatureDeteORB::freeDetectors(int32_t count /*= -1*/)
+{
+	if (m_pDetectors) {
+		int32_t detectorsCount = count > 0 ? count : (int32_t)m_nDetectors;
+		for (int32_t i = 0; i < detectorsCount; ++i) {
+			m_pDetectors[i] = NULL;
+		}
+		CompVMem::free((void**)&m_pDetectors);
+	}
+	m_nDetectors = 0;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Private function
+// Must be thread-safe
+COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage* >& image, CompVPtr<CompVPatch* >& patch, CompVPtr<CompVFeatureDete* >& detector, int level)
 {
     COMPV_CHECK_EXP_RETURN(level < 0 || level >= m_nPyramidLevels, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
@@ -311,6 +382,9 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage* 
     int patch_diameter = m_nPatchDiameter, patch_radius = (patch_diameter >> 1);
     const uint8_t* imgPtr;
     int32_t imgWidth, imgHeight, imgStride;
+
+	// Scale the image for the current level, multi-threaded and thread safe
+	COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image, level));
 
     // Get image at level N
     COMPV_CHECK_CODE_RETURN(m_pyramid->getImage(level, &imageAtLevelN));
@@ -326,22 +400,25 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage* 
     // Clear previous points, will be done by the internal detector but we prefer do to it here to make sure it
     // will work for buggy detectors
 
-    // Get points at level N
-    interestPointsAtLevelN = m_pInterestPointsAtLevelN[level];
+	// Create or reset interest points for the current level then perform feature detection
+	interestPointsAtLevelN = m_pInterestPointsAtLevelN[level];
+	if (!interestPointsAtLevelN) {
+		COMPV_CHECK_CODE_RETURN(err_ = CompVBoxInterestPoint::newObj(&interestPointsAtLevelN));
+		m_pInterestPointsAtLevelN[level] = interestPointsAtLevelN;
+	}
+	else {
+		interestPointsAtLevelN->reset();
+	}
+	// Detect features for level N (multi-threaded)
+	// For example, "detector" would be FAST feature detector
+	COMPV_CHECK_CODE_RETURN(detector->process(imageAtLevelN, interestPointsAtLevelN));
 
     // Retain best features only
     if (m_nMaxFeatures > 0 && interestPointsAtLevelN->size() > 0) {
 		nf = ((m_nMaxFeatures / sfs) * sf);
 		int32_t maxFeatures = COMPV_MATH_ROUNDFU_2_INT(nf, int32_t);
         if (interestPointsAtLevelN->size() > (size_t)maxFeatures) {
-#if 0 // Not multi-threaded
-            interestPointsAtLevelN->sort(static bool cmp_strength_dec(const CompVInterestPoint* i, const CompVInterestPoint* j) {
-                return (i->strength > j->strength);
-            });
-            interestPointsAtLevelN->resize(maxFeatures);
-#else
             COMPV_CHECK_CODE_RETURN(err_ = interestPointsAtLevelN->retainBest((size_t)maxFeatures));
-#endif
         }
     }
 
@@ -384,24 +461,16 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt_AsynExec(const struct compv
     CompVFeatureDeteORB*  This = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, CompVFeatureDeteORB*);
 	CompVPtr< CompVImage* > image = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, CompVImage*);
 	CompVPtr<CompVPatch* > patch = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, CompVPatch*);
-    int level = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, int);
-	return This->processLevelAt(image, patch, level);
+	CompVPtr<CompVFeatureDete* > detector = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, CompVFeatureDete*);
+    int level = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, int);
+	return This->processLevelAt(image, patch, detector, level);
 }
 
 COMPV_ERROR_CODE CompVFeatureDeteORB::newObj(CompVPtr<CompVFeatureDete* >* orb)
 {
     COMPV_CHECK_EXP_RETURN(orb == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVPtr<CompVFeatureDete* >fast_;
     CompVPtr<CompVImageScalePyramid * > pyramid_;
-    int32_t val32;
-    bool valBool;
-
-    // Create the FAST feature detector
-    COMPV_CHECK_CODE_RETURN(CompVFeatureDete::newObj(COMPV_FAST_ID, &fast_));
-    val32 = COMPV_FEATURE_DETE_ORB_FAST_THRESHOLD_DEFAULT;
-    COMPV_CHECK_CODE_RETURN(fast_->set(COMPV_FAST_SET_INT32_THRESHOLD, &val32, sizeof(val32)));
-    valBool = COMPV_FEATURE_DETE_ORB_FAST_NON_MAXIMA_SUPP;
-    COMPV_CHECK_CODE_RETURN(fast_->set(COMPV_FAST_SET_BOOL_NON_MAXIMA_SUPP, &valBool, sizeof(valBool)));
+    
     // Create the pyramid
     COMPV_CHECK_CODE_RETURN(CompVImageScalePyramid::newObj(COMPV_FEATURE_DETE_ORB_PYRAMID_SF, COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS, COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE, &pyramid_));
 
@@ -409,7 +478,6 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::newObj(CompVPtr<CompVFeatureDete* >* orb)
     if (!_orb) {
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }
-    _orb->m_internalDetector = fast_;
     _orb->m_pyramid = pyramid_;
     _orb->m_nPyramidLevels = COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS;
     COMPV_CHECK_CODE_RETURN(_orb->createInterestPoints(COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS));
