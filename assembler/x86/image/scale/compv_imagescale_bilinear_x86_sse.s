@@ -28,6 +28,7 @@ section .data
 section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function not used yet: C++ version is faster
 ; arg(0) -> const uint8_t* inPtr
 ; arg(1) -> COMPV_ALIGNED(SSE) uint8_t* outPtr
 ; arg(2) -> compv_scalar_t inHeight
@@ -55,24 +56,16 @@ sym(ScaleBilinear_Asm_X86_SSE41):
 	%define i_xmmInStride		rsp + 48
 	%define i_xmmFF				rsp + 64
 	%define i_xmmXStart			rsp + 80
-	%define i_xmmTempNearestX	rsp + 96
-	%define i_xmmNearestX		rsp + 112
-	%define i_xmmTempNearestX	rsp + 128
-	%define i_xmmNeighb			rsp + 144
 
 	; align stack and alloc memory
 	COMPV_YASM_ALIGN_STACK 16, rax
-	sub rsp, 16*1 + 16*1 + 16*1 + 16*1 + 16*1 + 16*1 + 16*1 + 4*4 + 4*4 + 1*16
+	sub rsp, 16*1 + 16*1 + 16*1 + 16*1 + 16*1 + 16*1
 	; [rsp + 0] -> __m128i xmmSFX
 	; [rsp + 16] -> __m128i xmmOnes
 	; [rsp + 32] -> __m128i xmmZeros
 	; [rsp + 48] -> __m128i xmmInStride
 	; [rsp + 64] -> __m128i xmmFF
 	; [rsp + 80] -> __m128i xmmXStart
-	; [rsp + 96] -> __m128i xmmTempNearestX
-	; [rsp + 112] -> int32_t xmmNearestX[4]
-	; [rsp + 128] -> int32_t xmmTempNearestX[4]
-	; [rsp + 144] -> uint8_t xmmNeighb[16]
 
 	mov rax, arg(8) ; sf_x
 	mov rcx, 1
@@ -129,14 +122,14 @@ sym(ScaleBilinear_Asm_X86_SSE41):
 	.LoopRows
 		xor rdi, rdi ; rdi = i = 0
 		mov rax, rbx
-		mov rdx, arg(4) ; inStride
 		shr rax, 8 ; nearestY
+		mov rdx, arg(4) ; inStride
 		imul rax, rdx
 		mov rdx, arg(0) ; inPtr
 		add rdx, rax ; rdx = _inPtr
 		movd xmm0, rbx
-		pshufd xmm0, xmm0, 0x0 ; xmm0 = xmmY
 		movdqa xmm1, [i_xmmXStart] ; xmm1 = xmmX
+		pshufd xmm0, xmm0, 0x0 ; xmm0 = xmmY
 
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (i = 0; i < outWidth; i+= 4)
@@ -144,127 +137,111 @@ sym(ScaleBilinear_Asm_X86_SSE41):
 		.LoopColumns
 			movdqa xmm2, xmm1
 			psrld xmm2, 8
-			movdqa [i_xmmNearestX], xmm2
+			movdqa xmm4, xmm2
 
 			; neighb0 = inPtr_[nearestX]
-			mov eax, dword [i_xmmNearestX + 0*4]
+			pextrd eax, xmm2, 0
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 0*1], ax
-			mov eax, dword [i_xmmNearestX + 1*4]
+			pinsrb xmm7, eax, 0
+			pextrd eax, xmm2, 1
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 1*1], ax
-			mov eax, dword [i_xmmNearestX + 2*4]
+			pinsrb xmm7, eax, 1
+			pextrd eax, xmm2, 2
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 2*1], ax
-			mov eax, dword [i_xmmNearestX + 3*4]
+			pinsrb xmm7, eax, 2
+			pextrd eax, xmm2, 3
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 3*1], ax
-			movdqa xmm7, [i_xmmNeighb]
+			pinsrb xmm7, eax, 3
 			punpcklbw xmm7, [i_xmmZeros]
 			punpcklwd xmm7, [i_xmmZeros]
 
 			; neighb1 = inPtr_[nearestX + 1]
-			movdqa xmm2, [i_xmmNearestX]
-			paddd xmm2, [i_xmmOnes]
-			movdqa [i_xmmTempNearestX], xmm2
-			mov eax, dword [i_xmmTempNearestX + 0*4]
+			paddd xmm4, [i_xmmOnes]
+			pextrd eax, xmm4, 0
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 0*1], ax
-			mov eax, dword [i_xmmTempNearestX + 1*4]
+			pinsrb xmm6, eax, 0
+			pextrd eax, xmm4, 1
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 1*1], ax
-			mov eax, dword [i_xmmTempNearestX + 2*4]
+			pinsrb xmm6, eax, 1
+			pextrd eax, xmm4, 2
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 2*1], ax
-			mov eax, dword [i_xmmTempNearestX + 3*4]
+			pinsrb xmm6, eax, 2
+			pextrd eax, xmm4, 3
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 3*1], ax
-			movdqa xmm6, [i_xmmNeighb]
+			pinsrb xmm6, eax, 3
 			punpcklbw xmm6, [i_xmmZeros]
 			punpcklwd xmm6, [i_xmmZeros]
 
 			; neighb2 = inPtr_[nearestX + inStride]
-			movdqa xmm2, [i_xmmNearestX]
 			paddd xmm2, [i_xmmInStride]
-			movdqa [i_xmmTempNearestX], xmm2
-			mov eax, dword [i_xmmTempNearestX + 0*4]
+			pextrd eax, xmm2, 0
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 0*1], ax
-			mov eax, dword [i_xmmTempNearestX + 1*4]
+			pinsrb xmm5, eax, 0
+			pextrd eax, xmm2, 1
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 1*1], ax
-			mov eax, dword [i_xmmTempNearestX + 2*4]
+			pinsrb xmm5, eax, 1
+			pextrd eax, xmm2, 2
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 2*1], ax
-			mov eax, dword [i_xmmTempNearestX + 3*4]
+			pinsrb xmm5, eax, 2
+			pextrd eax, xmm2, 3
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 3*1], ax
-			movdqa xmm5, [i_xmmNeighb]
+			pinsrb xmm5, eax, 3
 			punpcklbw xmm5, [i_xmmZeros]
 			punpcklwd xmm5, [i_xmmZeros]
-
-			; neighb3 = inPtr_[nearestX + inStride + 1]
-			movdqa xmm2, [i_xmmTempNearestX]
+			
 			paddd xmm2, [i_xmmOnes]
-			movdqa [i_xmmTempNearestX], xmm2
-			mov eax, dword [i_xmmTempNearestX + 0*4]
+			pextrd eax, xmm2, 0
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 0*1], ax
-			mov eax, dword [i_xmmTempNearestX + 1*4]
+			pinsrb xmm4, eax, 0
+			pextrd eax, xmm2, 1
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 1*1], ax
-			mov eax, dword [i_xmmTempNearestX + 2*4]
+			pinsrb xmm4, eax, 1
+			pextrd eax, xmm2, 2
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 2*1], ax
-			mov eax, dword [i_xmmTempNearestX + 3*4]
+			pinsrb xmm4, eax, 2
+			pextrd eax, xmm2, 3
 			lea rax, [rdx + rax]
 			movzx rax, byte [rax]
-			mov [i_xmmNeighb + 3*1], ax
-			movdqa xmm4, [i_xmmNeighb]
+			pinsrb xmm4, eax, 3
 			punpcklbw xmm4, [i_xmmZeros]
 			punpcklwd xmm4, [i_xmmZeros]
 
-			; x0 = x & 0xff
 			movdqa xmm2, xmm1
 			pand xmm2, [i_xmmFF]
+			movdqa xmm3, [i_xmmFF]
 			pmulld xmm6, xmm2
 			pmulld xmm4, xmm2
-			; x1 = 255 - x0
-			movdqa xmm3, [i_xmmFF]
 			psubd xmm3, xmm2
+			movdqa xmm2, xmm0
 			pmulld xmm7, xmm3
 			pmulld xmm5, xmm3
-			; y0 = y & 0xff
-			movdqa xmm2, xmm0
-			pand xmm2, [i_xmmFF]
-			; y1 = 255 - y0
 			movdqa xmm3, [i_xmmFF]
-			psubd xmm3, xmm2
-
+			pand xmm2, [i_xmmFF]
 			paddd xmm7, xmm6
-			pmulld xmm7, xmm3
+			psubd xmm3, xmm2
 			paddd xmm5, xmm4
+			pmulld xmm7, xmm3
 			pmulld xmm5, xmm2
 			paddd xmm7, xmm5
 			psrld xmm7, 16
 			packssdw xmm7, xmm7
 			packuswb xmm7, xmm7
-			mov rax, arg(1) ; FIXME
+			mov rax, arg(1)
 			movd dword [rax], xmm7
 
 			; x += sf_x;
@@ -292,7 +269,7 @@ sym(ScaleBilinear_Asm_X86_SSE41):
 
 
 	; unalign stack and free memory
-	add rsp, 16*1 + 16*1 + 16*1 + 16*1 + 16*1 + 16*1 + 16*1 + 4*4 + 4*4 + 1*16
+	add rsp, 16*1 + 16*1 + 16*1 + 16*1 + 16*1 + 16*1
 	COMPV_YASM_UNALIGN_STACK
 
 	%undef i_xmmSFX
@@ -301,10 +278,6 @@ sym(ScaleBilinear_Asm_X86_SSE41):
 	%undef i_xmmInStride
 	%undef i_xmmFF
 	%undef i_xmmXStart
-	%undef i_xmmTempNearestX
-	%undef i_xmmNearestX
-	%undef i_xmmTempNearestX
-	%undef i_xmmNeighb
 
 	;; begin epilog ;;
 	pop rbx

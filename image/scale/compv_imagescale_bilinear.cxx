@@ -160,7 +160,7 @@ static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, compv
 	for (j = 0, y = 0; j < outHeight; ++j) {
 		nearestY = (y >> 8); // nearest y-point
 		inPtr_ = (inPtr + (nearestY * inStride));
-		for (i = 0, x = 0; i <= outWidth - 40; i += 4, x += sf4_x) {
+		for (i = 0, x = 0; i <= outWidth - 4; i += 4, x += sf4_x) {
 			nearestX = (x >> 8);
 			n0 = *(inPtr_ + nearestX), n1 = *(inPtr_ + nearestX + 1), n2 = *(inPtr_ + nearestX + inStride), n3 = *(inPtr_ + nearestX + inStride + 1);
 			x0 = x & 0xff, y0 = y & 0xff, x1 = 0xff - x0, y1 = 0xff - y0;
@@ -238,10 +238,13 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVPtr<CompVImage* >& 
     int compSize = 1, alignv = 1;
 	scaleBilinear scale_SIMD = NULL;
 
-	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86((scale_SIMD = ScaleBilinear_Intrin_SSE2, alignv = COMPV_SIMD_ALIGNV_SSE));
+#if 0 // C++ code is faster
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+	if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((scale_SIMD = ScaleBilinear_Intrin_SSE41, alignv = COMPV_SIMD_ALIGNV_SSE));
 		COMPV_EXEC_IFDEF_ASM_X86((scale_SIMD = ScaleBilinear_Asm_X86_SSE41, alignv = COMPV_SIMD_ALIGNV_SSE));
 	}
+#endif
 
     switch (pixelFormat) {
     case COMPV_PIXEL_FORMAT_GRAYSCALE:
