@@ -24,9 +24,11 @@
 #include "compv/compv_cpu.h"
 
 #include "compv/intrinsics/x86/compv_patch_intrin_sse.h"
+#include "compv/intrinsics/x86/compv_patch_intrin_avx2.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC void Moments0110_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const uint8_t* top, COMPV_ALIGNED(SSE)const uint8_t* bottom, COMPV_ALIGNED(SSE)const int16_t* x, COMPV_ALIGNED(SSE) const int16_t* y, compv::compv_scalar_t count, compv::compv_scalar_t* s01, compv::compv_scalar_t* s10);
+COMPV_EXTERNC void Moments0110_Asm_X86_AVX2(COMPV_ALIGNED(SSE) const uint8_t* top, COMPV_ALIGNED(SSE)const uint8_t* bottom, COMPV_ALIGNED(SSE)const int16_t* x, COMPV_ALIGNED(SSE) const int16_t* y, compv::compv_scalar_t count, compv::compv_scalar_t* s01, compv::compv_scalar_t* s10);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 #if COMPV_ARCH_X64 && COMPV_ASM
 COMPV_EXTERNC void Moments0110_Asm_X64_SSE41(COMPV_ALIGNED(SSE) const uint8_t* top, COMPV_ALIGNED(SSE)const uint8_t* bottom, COMPV_ALIGNED(SSE)const int16_t* x, COMPV_ALIGNED(SSE) const int16_t* y, compv::compv_scalar_t count, compv::compv_scalar_t* s01, compv::compv_scalar_t* s10);
@@ -185,6 +187,10 @@ COMPV_ERROR_CODE CompVPatch::newObj(CompVPtr<CompVPatch* >* patch, int diameter)
 			COMPV_EXEC_IFDEF_INTRIN_X86(Moments0110_ = Moments0110_Intrin_SSE41);
 			COMPV_EXEC_IFDEF_ASM_X86(Moments0110_ = Moments0110_Asm_X86_SSE41);
 			COMPV_EXEC_IFDEF_ASM_X64(Moments0110_ = Moments0110_Asm_X64_SSE41);
+		}
+		if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(Moments0110_ = Moments0110_Intrin_AVX2);
+			COMPV_EXEC_IFDEF_ASM_X86(Moments0110_ = Moments0110_Asm_X86_AVX2);
 		}
 	}
 
