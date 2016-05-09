@@ -67,6 +67,7 @@
     <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_sse.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_mem_intrin_avx.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_mem_intrin_sse.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\compv_patch_intrin_sse.h" />
     <ClInclude Include="include\compv\intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_avx2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse.h" />
     <ClInclude Include="include\compv\intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_avx2.h" />
@@ -148,6 +149,7 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="intrinsics\x86\compv_patch_intrin_sse.cxx" />
     <ClCompile Include="intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -319,6 +321,16 @@
   </ItemGroup>
   <ItemGroup>
     <YASM Include="assembler\x86\compv_convlt_x64_avx2.s">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <YASM Include="assembler\x86\compv_patch_x86_sse.s">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <YASM Include="assembler\x86\compv_patch_x64_sse.s">
       <FileType>Document</FileType>
     </YASM>
   </ItemGroup>

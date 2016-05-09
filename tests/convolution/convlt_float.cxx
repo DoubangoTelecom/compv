@@ -23,7 +23,7 @@ static const std::string expectedMD5Values[2/*dim*/][8/*kenel size*/] =
 		"", // 4
 		"c00b313e62541dc2d4fa963404ea2187", // 5
 		"", // 6
-		"6326fef13e8cf1e74eb837c13fc6a6ff", // 7
+		"74d86c5ecbb00d0dff98e08bab805a11", // 7
 		"", // 8
 	}
 	/* Dimension 2 */

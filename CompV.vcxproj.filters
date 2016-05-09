@@ -342,6 +342,9 @@
     <ClInclude Include="include\compv\compv_patch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\compv_patch_intrin_sse.h">
+      <Filter>Header Files\intrinsics\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -521,6 +524,9 @@
     <ClCompile Include="compv_patch.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="intrinsics\x86\compv_patch_intrin_sse.cxx">
+      <Filter>Source Files\intrinsics\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="assembler\x86\compv_utils_x86.s">
@@ -608,6 +614,12 @@
       <Filter>Assembler Files\x86</Filter>
     </YASM>
     <YASM Include="assembler\x86\compv_convlt_x64_avx2.s">
+      <Filter>Assembler Files\x86</Filter>
+    </YASM>
+    <YASM Include="assembler\x86\compv_patch_x64_sse.s">
+      <Filter>Assembler Files\x86</Filter>
+    </YASM>
+    <YASM Include="assembler\x86\compv_patch_x86_sse.s">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
   </ItemGroup>

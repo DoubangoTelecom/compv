@@ -26,12 +26,11 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void Moments0110_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* top, COMPV_ALIGNED(SSE)const uint8_t* bottom, COMPV_ALIGNED(SSE)const int16_t* x, COMPV_ALIGNED(SSE) const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10)
+void Moments0110_Intrin_SSE41(COMPV_ALIGNED(SSE) const uint8_t* top, COMPV_ALIGNED(SSE)const uint8_t* bottom, COMPV_ALIGNED(SSE)const int16_t* x, COMPV_ALIGNED(SSE) const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM, FMA3
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // SSSE3 not SSE2, because of _mm_hadd_epi32
 
-	__m128i xmmTop, xmmBottom, xmmT, xmmB, xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmmX, xmmY, xmmZero;
+	__m128i xmmTop, xmmBottom, xmmT, xmmB, xmm0, xmm1, xmm2, xmm3, xmm4, xmmX, xmmY, xmmZero;
 
 	compv_scalar_t s01_ = *s01;
 	compv_scalar_t s10_ = *s10;
@@ -40,8 +39,10 @@ void Moments0110_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* top, COMPV_ALIGNE
 
 	// TODO(dmi): FMA3 for AVX
 
-	// max(x/y) = 15
-	// max(top/bottom) = 255
+	// max(x|y) = 15 (patch radius)
+	// max(top|bottom) = 255
+	// -> (x|y) * (top|bottom +- (top|bottom)) is within [-32640, +32640] = [-0x7F80, +0x7F80]
+	// -> we can use "_mm_mullo_epi16" without overflow
 
 	// top, bottom, x, y are allocated with padding which means you can read up to align_fwd(count, 16)
 	for (compv_scalar_t i = 0; i < count; i += 16) {
@@ -51,55 +52,45 @@ void Moments0110_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* top, COMPV_ALIGNE
 		// s10_ += *x * (*top + *bottom) or (x * top) + (x * bottom)
 		// s01_ += *y * (*top - *bottom) or (y * top) - (y * bottom)
 
-		xmmT = _mm_unpacklo_epi8(xmmTop, xmmZero);
+		xmmT = _mm_unpacklo_epi8(xmmTop, xmmZero); // SSE4.1: _mm_cvtepi8_epi16
 		xmmB = _mm_unpacklo_epi8(xmmBottom, xmmZero);
 		xmmX = _mm_load_si128((__m128i*)&x[i]);
 		xmmY = _mm_load_si128((__m128i*)&y[i]);
-		xmm0 = _mm_add_epi16(xmmT, xmmB); // FIXME: xmm0, xmm1 not need, use once
-		xmm1 = _mm_sub_epi16(xmmT, xmmB);
+		
+		xmm2 = _mm_mullo_epi16(xmmX, _mm_add_epi16(xmmT, xmmB));
+		xmm3 = _mm_srai_epi32(_mm_unpacklo_epi16(xmmZero, xmm2), 16); // Convert from I16 to I32 while shifting in sign bits, ASM: use '_mm_cvtepi16_epi32' which is SSE4.1
+		xmm4 = _mm_srai_epi32(_mm_unpackhi_epi16(xmmZero, xmm2), 16);
+		xmm0 = _mm_hadd_epi32(xmm3, xmm4);
 
-		xmm2 = _mm_mullo_epi16(xmmX, xmm0);
-		xmm3 = _mm_mulhi_epi16(xmmX, xmm0);
-		xmm4 = _mm_unpacklo_epi16(xmm2, xmm3);
-		xmm5 = _mm_unpackhi_epi16(xmm2, xmm3);
-		xmm4 = _mm_hadd_epi32(xmm4, xmm5);
-		xmm4 = _mm_hadd_epi32(xmm4, xmm4);
-		xmm4 = _mm_hadd_epi32(xmm4, xmm4);
-		s10_ += (int32_t)_mm_extract_epi32(xmm4, 0);
+		xmm2 = _mm_mullo_epi16(xmmY, _mm_sub_epi16(xmmT, xmmB));
+		xmm3 = _mm_srai_epi32(_mm_unpacklo_epi16(xmmZero, xmm2), 16);
+		xmm4 = _mm_srai_epi32(_mm_unpackhi_epi16(xmmZero, xmm2), 16);
+		xmm1 = _mm_hadd_epi32(xmm3, xmm4);
 
-		xmm2 = _mm_mullo_epi16(xmmY, xmm1);
-		xmm3 = _mm_mulhi_epi16(xmmY, xmm1);
-		xmm4 = _mm_unpacklo_epi16(xmm2, xmm3);
-		xmm5 = _mm_unpackhi_epi16(xmm2, xmm3);
-		xmm4 = _mm_hadd_epi32(xmm4, xmm5);
-		xmm4 = _mm_hadd_epi32(xmm4, xmm4);
-		xmm4 = _mm_hadd_epi32(xmm4, xmm4);
-		s01_ += (int32_t)_mm_extract_epi32(xmm4, 0);
+		xmm0 = _mm_hadd_epi32(xmm0, xmm1);
 
 		xmmT = _mm_unpackhi_epi8(xmmTop, xmmZero);
 		xmmB = _mm_unpackhi_epi8(xmmBottom, xmmZero);
 		xmmX = _mm_load_si128((__m128i*)&x[i + 8]);
 		xmmY = _mm_load_si128((__m128i*)&y[i + 8]);
-		xmm0 = _mm_add_epi16(xmmT, xmmB); // FIXME: xmm0, xmm1 not need, use once
-		xmm1 = _mm_sub_epi16(xmmT, xmmB);
 
-		xmm2 = _mm_mullo_epi16(xmmX, xmm0);
-		xmm3 = _mm_mulhi_epi16(xmmX, xmm0);
-		xmm4 = _mm_unpacklo_epi16(xmm2, xmm3);
-		xmm5 = _mm_unpackhi_epi16(xmm2, xmm3);
-		xmm4 = _mm_hadd_epi32(xmm4, xmm5);
-		xmm4 = _mm_hadd_epi32(xmm4, xmm4);
-		xmm4 = _mm_hadd_epi32(xmm4, xmm4);
-		s10_ += (int32_t)_mm_extract_epi32(xmm4, 0);
+		xmm2 = _mm_mullo_epi16(xmmX, _mm_add_epi16(xmmT, xmmB));
+		xmm3 = _mm_srai_epi32(_mm_unpacklo_epi16(xmmZero, xmm2), 16);
+		xmm4 = _mm_srai_epi32(_mm_unpackhi_epi16(xmmZero, xmm2), 16);
+		xmm1 = _mm_hadd_epi32(xmm3, xmm4);
 
-		xmm2 = _mm_mullo_epi16(xmmY, xmm1);
-		xmm3 = _mm_mulhi_epi16(xmmY, xmm1);
-		xmm4 = _mm_unpacklo_epi16(xmm2, xmm3);
-		xmm5 = _mm_unpackhi_epi16(xmm2, xmm3);
-		xmm4 = _mm_hadd_epi32(xmm4, xmm5);
-		xmm4 = _mm_hadd_epi32(xmm4, xmm4);
-		xmm4 = _mm_hadd_epi32(xmm4, xmm4);
-		s01_ += (int32_t)_mm_extract_epi32(xmm4, 0);
+		xmm2 = _mm_mullo_epi16(xmmY, _mm_sub_epi16(xmmT, xmmB));
+		xmm3 = _mm_srai_epi32(_mm_unpacklo_epi16(xmmZero, xmm2), 16);
+		xmm4 = _mm_srai_epi32(_mm_unpackhi_epi16(xmmZero, xmm2), 16);
+		xmm3 = _mm_hadd_epi32(xmm3, xmm4);
+
+		xmm1 = _mm_hadd_epi32(xmm1, xmm3);
+
+		xmm0 = _mm_hadd_epi32(xmm0, xmm1);
+		s10_ += (int32_t)_mm_extract_epi32(xmm0, 0);
+		s01_ += (int32_t)_mm_extract_epi32(xmm0, 1);
+		s10_ += (int32_t)_mm_extract_epi32(xmm0, 2);
+		s01_ += (int32_t)_mm_extract_epi32(xmm0, 3);
 	}
 
 	*s01 = s01_;

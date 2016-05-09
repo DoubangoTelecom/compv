@@ -50,6 +50,7 @@ private:
 	uint8_t* m_pBottom;
 	size_t m_nCount;
 	size_t m_nStride;
+	void(*m_Moments0110)(const uint8_t* top, const uint8_t* bottom, const int16_t* x, const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
 };
 
 COMPV_NAMESPACE_END()

@@ -61,20 +61,20 @@ CompVFeatureDeteORB::CompVFeatureDeteORB()
     : CompVFeatureDete(COMPV_ORB_ID)
 	, m_nMaxFeatures(COMPV_FEATURE_DETE_ORB_FAST_MAX_FEATURES)
     , m_nPyramidLevels(-1)
-    , m_pCircleMaxI(NULL)
-    , m_nCircleMaxICount(0)
     , m_nPatchDiameter(COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER)
     , m_pInterestPointsAtLevelN(NULL)
     , m_bNMS(COMPV_FEATURE_DETE_ORB_FAST_NON_MAXIMA_SUPP)
     , m_nThreshold(COMPV_FEATURE_DETE_ORB_FAST_THRESHOLD_DEFAULT)
+	, m_pPatches(NULL)
+	, m_nPatches(NULL)
 {
 
 }
 
 CompVFeatureDeteORB::~CompVFeatureDeteORB()
 {
-    CompVMem::free((void**)&m_pCircleMaxI);
     freeInterestPoints();
+	freePatches();
 }
 
 // override CompVSettable::set
@@ -172,23 +172,6 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
         interestPoints->reset();
     }
 
-    // Create maximum abscissa for the circular patch if not already done
-    if (m_nCircleMaxICount != (patch_radius + 1)) {
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // remove m_pCircleMaxI, m_nCircleMaxICount and this block
-        COMPV_DEBUG_INFO("Alloc Patch Circle Abscissas");
-        CompVMem::free((void**)&m_pCircleMaxI);
-        m_nCircleMaxICount = 0;
-        m_pCircleMaxI = (int*)CompVMem::malloc((patch_radius + 1) * sizeof(int));
-        COMPV_CHECK_EXP_RETURN(!m_pCircleMaxI, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-        m_nCircleMaxICount = patch_radius + 1;
-
-        int patch_radius_pow2 = patch_radius * patch_radius;
-        for (int j = 0; j <= patch_radius; ++j) {
-            // Pythagorean theorem: x = sqrt(r**2 - y**2)
-            m_pCircleMaxI[j] = ((int)sqrt(patch_radius_pow2 - (j * j)));
-        }
-    }
-
     // Image scaling then feature could be multi-threaded but this requires a detector for each level -> memory issue
 
     // Scale the image (multi-threaded)
@@ -216,6 +199,20 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
         threadsCount = threadDip->getThreadsCount();
     }
 
+	// Create patches
+	// Number of patches must be equal to the number of threads (not the case for interestpoints array which is equal to the number of levels)
+	int32_t nPatches = COMPV_MATH_CLIP3(1, threadsCount, m_pyramid->getLevels());
+	if ((int32_t)m_nPatches < nPatches) {
+		COMPV_CHECK_CODE_RETURN(createPatches(nPatches));
+		for (int32_t p = 0; p < nPatches; ++p) {
+			err_ = CompVPatch::newObj(&m_pPatches[p], m_nPatchDiameter);
+			if (COMPV_ERROR_CODE_IS_NOK(err_)) {
+				freePatches();
+				COMPV_CHECK_CODE_RETURN(err_);
+			}
+		}
+	}
+
     // Process feature detection for each level
     if (threadsCount > 1) {
         CompVPtr<CompVFeatureDeteORB* >This = this;
@@ -225,7 +222,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
         for (levelStart = 0, levelMax = threadsCount; levelStart < m_pyramid->getLevels(); levelStart += threadsCount, levelMax += threadsCount) {
             for (level = levelStart; level < m_pyramid->getLevels() && level < levelMax; ++level) {
                 COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + level), COMPV_TOKENIDX0, CompVFeatureDeteORB::processLevelAt_AsynExec,
-                                        COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *image, level),
+					COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *image, *m_pPatches[level % nPatches], level),
                                         COMPV_ASYNCTASK_SET_PARAM_NULL()));
             }
             for (level = levelStart; level < m_pyramid->getLevels() && level < levelMax; ++level) {
@@ -235,7 +232,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
     }
     else {
         for (int level = 0; level < m_pyramid->getLevels(); ++level) {
-            COMPV_CHECK_CODE_RETURN(err_ = processLevelAt(image, level));
+            COMPV_CHECK_CODE_RETURN(err_ = processLevelAt(image, m_pPatches[0], level));
         }
     }
 
@@ -274,9 +271,35 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::freeInterestPoints(int32_t count /*= -1*/)
     return COMPV_ERROR_CODE_S_OK;
 }
 
+// Private function
+// TODO(dmi): template function
+COMPV_ERROR_CODE CompVFeatureDeteORB::createPatches(int32_t count /*= -1*/)
+{
+	int32_t patchesCount = count > 0 ? count : (int32_t)m_nPatches;
+	freePatches();
+	m_pPatches = (CompVPtr<CompVPatch *>*)CompVMem::calloc(patchesCount, sizeof(CompVPtr<CompVPatch *>));
+	COMPV_CHECK_EXP_RETURN(!m_pPatches, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	m_nPatches = patchesCount;
+	return COMPV_ERROR_CODE_S_OK;
+}
 
 // Private function
-COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage*>& image, int level)
+// TODO(dmi): template function
+COMPV_ERROR_CODE CompVFeatureDeteORB::freePatches(int32_t count /*= -1*/)
+{
+	if (m_pPatches) {
+		int32_t patchesCount = count > 0 ? count : (int32_t)m_nPatches;
+		for (int32_t i = 0; i < patchesCount; ++i) {
+			m_pPatches[i] = NULL;
+		}
+		CompVMem::free((void**)&m_pPatches);
+	}
+	m_nPatches = 0;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Private function
+COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage* >& image, CompVPtr<CompVPatch* >& patch, int level)
 {
     COMPV_CHECK_EXP_RETURN(level < 0 || level >= m_nPyramidLevels, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
@@ -286,7 +309,6 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage*>
 	int m10, m01;
     CompVInterestPoint* point_;
     int patch_diameter = m_nPatchDiameter, patch_radius = (patch_diameter >> 1);
-    const int* pCircleMaxI = m_pCircleMaxI;
     const uint8_t* imgPtr;
     int32_t imgWidth, imgHeight, imgStride;
 
@@ -332,7 +354,8 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage*>
         point_->size = patchSize;
 
         // computes moments
-        CompVImageMoments::cirM01M10(imgPtr, patch_diameter, pCircleMaxI, (int)point_->x, (int)point_->y, imgWidth, imgStride, imgHeight, &m01, &m10);
+		patch->moments0110(imgPtr, (int)point_->x, (int)point_->y, imgWidth, imgStride, imgHeight, &m01, &m10);
+
         // compute orientation
 		orientRad = COMPV_MATH_ATAN2F((float)m01, (float)m10);
         point_->orient = COMPV_MATH_RADIAN_TO_DEGREE_FLOAT(orientRad);
@@ -359,9 +382,10 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage*>
 COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
 {
     CompVFeatureDeteORB*  This = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, CompVFeatureDeteORB*);
-    CompVImage* image = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, CompVImage*);
-    int level = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, int);
-    return This->processLevelAt(image, level);
+	CompVPtr< CompVImage* > image = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, CompVImage*);
+	CompVPtr<CompVPatch* > patch = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, CompVPatch*);
+    int level = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, int);
+	return This->processLevelAt(image, patch, level);
 }
 
 COMPV_ERROR_CODE CompVFeatureDeteORB::newObj(CompVPtr<CompVFeatureDete* >* orb)

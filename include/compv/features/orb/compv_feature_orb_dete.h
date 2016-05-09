@@ -25,6 +25,7 @@
 #include "compv/image/scale/compv_imagescale_pyramid.h"
 #include "compv/features/compv_feature.h"
 #include "compv/parallel/compv_mutex.h"
+#include "compv/compv_patch.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -54,19 +55,21 @@ public:
 private:
     COMPV_ERROR_CODE createInterestPoints(int32_t count = -1);
     COMPV_ERROR_CODE freeInterestPoints(int32_t count = -1);
-    COMPV_ERROR_CODE processLevelAt(const CompVPtr<CompVImage*>& image, int level);
+	COMPV_ERROR_CODE createPatches(int32_t count = -1);
+	COMPV_ERROR_CODE freePatches(int32_t count = -1);
+	COMPV_ERROR_CODE processLevelAt(const CompVPtr<CompVImage*>& image, CompVPtr<CompVPatch* >& patch, int level);
     static COMPV_ERROR_CODE processLevelAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 
 private:
     CompVPtr<CompVImageScalePyramid* > m_pyramid;
     CompVPtr<CompVBoxInterestPoint* >* m_pInterestPointsAtLevelN;
+	CompVPtr<CompVPatch* >* m_pPatches;
+	size_t m_nPatches;
     CompVPtr<CompVFeatureDete* > m_internalDetector;
     int32_t m_nMaxFeatures;
     int32_t m_nPyramidLevels;
     int32_t m_nThreshold;
     bool m_bNMS;
-    int* m_pCircleMaxI;
-    size_t m_nCircleMaxICount;
     int m_nPatchDiameter;
 };
 
