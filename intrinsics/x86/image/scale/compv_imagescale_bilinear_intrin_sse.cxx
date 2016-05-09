@@ -28,10 +28,11 @@ COMPV_NAMESPACE_BEGIN()
 
 // inPtr doesn't need to be aligned
 // outPtr doesn't need to be aligned
-void ScaleBilinear_Intrin_SSE2(const uint8_t* inPtr, uint8_t* outPtr, compv_scalar_t inHeight, compv_scalar_t inWidth, compv_scalar_t inStride, compv_scalar_t outHeight, compv_scalar_t outWidth, compv_scalar_t outPad, compv_scalar_t sf_x, compv_scalar_t sf_y)
+// outStride must be aligned
+void ScaleBilinear_Intrin_SSE2(const uint8_t* inPtr, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_scalar_t inHeight, compv_scalar_t inWidth, compv_scalar_t inStride, COMPV_ALIGNED(SSE) compv_scalar_t outHeight, compv_scalar_t outWidth, compv_scalar_t outStride, compv_scalar_t sf_x, compv_scalar_t sf_y)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
-	compv_scalar_t i, j, y, nearestY;
+	compv_scalar_t i, j, y, nearestY, maxI = ((outWidth + 3) & -4), outPad = (outStride - maxI);
 	const uint8_t* inPtr_;
 
 	__m128i xmmX, xmmY, xmmX0, xmmX1, xmmY0, xmmY1, xmmSFX, xmmOnes, xmmZeros, xmmFF, xmmInStride, xmmXStart, xmmNeighb0, xmmNeighb1, xmmNeighb2, xmmNeighb3;
@@ -45,8 +46,6 @@ void ScaleBilinear_Intrin_SSE2(const uint8_t* inPtr, uint8_t* outPtr, compv_scal
 	xmmInStride = _mm_set1_epi32((int)inStride);
 	xmmFF = _mm_set1_epi32((int)0xFF);
 	xmmXStart = _mm_set_epi32((int)sf_x * 3, (int)sf_x *2, (int)sf_x * 1, (int)sf_x * 0);
-	
-	outPad += (outWidth & 3);
 
 	for (j = 0, y = 0; j < outHeight; ++j) {
 		nearestY = (y >> 8); // nearest y-point
@@ -55,8 +54,7 @@ void ScaleBilinear_Intrin_SSE2(const uint8_t* inPtr, uint8_t* outPtr, compv_scal
 		xmmY = _mm_set1_epi32((int)y);
 
 		xmmX = xmmXStart;
-		i = outWidth;
-		while (i > 3) {
+		for (i = 0; i < outWidth; i+= 4) {
 			// nearestX = (x >> 8); // nearest x-point
 			_mm_store_si128((__m128i*)xmmNearestX, _mm_srli_epi32(xmmX, 8));
 
@@ -93,19 +91,19 @@ void ScaleBilinear_Intrin_SSE2(const uint8_t* inPtr, uint8_t* outPtr, compv_scal
 
 			// x0 = x & 0xff;
 			xmmX0 = _mm_and_si128(xmmX, xmmFF);
-			// y0 = y & 0xff;
-			xmmY0 = _mm_and_si128(xmmY, xmmFF);
 			// x1 = 255 - x0;
 			xmmX1 = _mm_sub_epi32(xmmFF, xmmX0);
+			// y0 = y & 0xff;
+			xmmY0 = _mm_and_si128(xmmY, xmmFF);
 			// y1 = 255 - y0;
 			xmmY1 = _mm_sub_epi32(xmmFF, xmmY0);
 
 			// S = y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1 ) + (neighb3 * x0))
-			xmmNeighb0 = _mm_mullo_epi32_SSE2(xmmNeighb0, xmmX1);
 			xmmNeighb1 = _mm_mullo_epi32_SSE2(xmmNeighb1, xmmX0);
-			xmmNeighb0 = _mm_mullo_epi32_SSE2(_mm_add_epi32(xmmNeighb0, xmmNeighb1), xmmY1);
-			xmmNeighb2 = _mm_mullo_epi32_SSE2(xmmNeighb2, xmmX1);
 			xmmNeighb3 = _mm_mullo_epi32_SSE2(xmmNeighb3, xmmX0);
+			xmmNeighb0 = _mm_mullo_epi32_SSE2(xmmNeighb0, xmmX1);
+			xmmNeighb2 = _mm_mullo_epi32_SSE2(xmmNeighb2, xmmX1);
+			xmmNeighb0 = _mm_mullo_epi32_SSE2(_mm_add_epi32(xmmNeighb0, xmmNeighb1), xmmY1);			
 			xmmNeighb2 = _mm_mullo_epi32_SSE2(_mm_add_epi32(xmmNeighb2, xmmNeighb3), xmmY0);
 			xmmNeighb0 = _mm_srli_epi32(_mm_add_epi32(xmmNeighb0, xmmNeighb2), 16);
 			xmmNeighb0 = _mm_packs_epi32(xmmNeighb0, xmmNeighb0);
@@ -114,8 +112,7 @@ void ScaleBilinear_Intrin_SSE2(const uint8_t* inPtr, uint8_t* outPtr, compv_scal
 
 			// x += sf_x;
 			xmmX = _mm_add_epi32(xmmX, xmmSFX);
-
-			i -= 4;
+			
 			outPtr += 4;
 		}
 

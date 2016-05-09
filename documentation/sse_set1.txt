@@ -2,6 +2,15 @@
 movd xmm0, rax
 pshufd xmm0, xmm0, 0x0
 
+*** _mm_set_epi32(d, c, b, a) ***
+movd xmm0, rax
+movd xmm1, rbx
+movd xmm2, rcx
+movd xmm3, rdx
+punpckldq xmm0, xmm1
+punpckldq xmm2, xmm3
+punpcklqdq xmm0, xmm2
+
 **** _mm_set1_epi16(int16_t a) ****
 movd xmm1, edx  
 punpcklwd xmm1, xmm1

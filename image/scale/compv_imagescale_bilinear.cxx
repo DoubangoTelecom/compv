@@ -27,10 +27,15 @@ Some literature:
 */
 #include "compv/image/scale/compv_imagescale_bilinear.h"
 #include "compv/image/scale/compv_imagescale_common.h"
+#include "compv/compv_cpu.h"
 #include "compv/compv_math.h"
 #include "compv/compv_mem.h"
 
 #include "compv/intrinsics/x86/image/scale/compv_imagescale_bilinear_intrin_sse.h"
+
+#if COMPV_ARCH_X86 && COMPV_ASM
+COMPV_EXTERNC void ScaleBilinear_Asm_X86_SSE41(const uint8_t* inPtr, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv::compv_scalar_t inHeight, compv::compv_scalar_t inWidth, compv::compv_scalar_t inStride, compv::compv_scalar_t outHeight, compv::compv_scalar_t outWidth, COMPV_ALIGNED(SSE) compv::compv_scalar_t outStride, compv::compv_scalar_t sf_x, compv::compv_scalar_t sf_y);
+#endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -45,10 +50,10 @@ static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, compv
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): SIMD, MT
 
 #if 0
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 	compv_scalar_t i, j, x, y, nearestX, nearestY;
 	uint8_t neighb0, neighb1, neighb2, neighb3, x0, y0, x1, y1;
 	const uint8_t* inPtr_;
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 	compv_scalar_t outPad = (outStride - outWidth);
 	ScaleBilinear_Intrin_SSE2(inPtr, outPtr, inHeight, inWidth, inStride, outHeight, outWidth, outPad, sf_x, sf_y);
 
@@ -138,6 +143,7 @@ static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, compv
 
 	CompVMem::free((void**)&rows);
 #elif 0
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 	compv_scalar_t i, j, x, y, nearestX, nearestY, sf4_x = sf_x << 2, sf2_x = sf_x << 1, sf3_x = sf2_x + sf_x;
 	uint8_t n0, n1, n2, n3, x0, y0, x1, y1;
 	const uint8_t* inPtr_;
@@ -229,8 +235,13 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVPtr<CompVImage* >& 
     compv_scalar_t inWidths[4], outWidths[4];
     compv_scalar_t inHeights[4], outHeights[4];
     compv_scalar_t inStrides[4], outStrides[4];
-    int compSize = 1;
-    scaleBilinear scale = scaleBilinearKernel11_C;
+    int compSize = 1, alignv = 1;
+	scaleBilinear scale_SIMD = NULL;
+
+	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((scale_SIMD = ScaleBilinear_Intrin_SSE2, alignv = COMPV_SIMD_ALIGNV_SSE));
+		COMPV_EXEC_IFDEF_ASM_X86((scale_SIMD = ScaleBilinear_Asm_X86_SSE41, alignv = COMPV_SIMD_ALIGNV_SSE));
+	}
 
     switch (pixelFormat) {
     case COMPV_PIXEL_FORMAT_GRAYSCALE:
@@ -247,6 +258,7 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVPtr<CompVImage* >& 
         compSize = 1;
         break;
     case COMPV_PIXEL_FORMAT_I420:
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // The scale() function is optimized for grayscale only
         inPtrs[0] = (const uint8_t*)inImage->getDataPtr();
         inWidths[0] = inImage->getWidth();
         inHeights[0] = inImage->getHeight();
@@ -276,6 +288,7 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVPtr<CompVImage* >& 
         compSize = 3;
         break;
     default:
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
         COMPV_CHECK_CODE_RETURN(err_ = COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
         break;
     }
@@ -295,7 +308,12 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVPtr<CompVImage* >& 
             COMPV_DEBUG_WARN("Invalid scaling factor: (%f,%f)", float_sx, float_sy);
             // We'll have a small distortion but do not break the conversion
         }
-        scale(inPtrs[k], (uint8_t*)outPtrs[k], inHeights[k], inWidths[k], inStrides[k], outHeights[k], outWidths[k], outStrides[k], int_sx, int_sy);
+		if (scale_SIMD && COMPV_IS_ALIGNED(outPtrs[k], alignv) && COMPV_IS_ALIGNED(outStrides[k], alignv)) {
+			scale_SIMD(inPtrs[k], (uint8_t*)outPtrs[k], inHeights[k], inWidths[k], inStrides[k], outHeights[k], outWidths[k], outStrides[k], int_sx, int_sy);
+		}
+		else {
+			scaleBilinearKernel11_C(inPtrs[k], (uint8_t*)outPtrs[k], inHeights[k], inWidths[k], inStrides[k], outHeights[k], outWidths[k], outStrides[k], int_sx, int_sy);
+		}
     }
 
     return err_;
