@@ -50,7 +50,7 @@ bool TestConvlt_fxp()
 
 	timeStart = CompVTime::getNowMills();
 	for (int i = 0; i < CONVLT_LOOP_COUNT; ++i) {
-		convlt->convlt1_fxp((uint8_t*)image->getDataPtr(), image->getWidth(), image->getStride(), image->getHeight(), kern_fxp->getDataPtr(), kern_fxp->getDataPtr(), CONVLT_KERN_SIZE, out_ptr);
+		convlt->convlt1_fxp((uint8_t*)image->getDataPtr(), image->getWidth(), image->getStride(), image->getHeight(), kern_fxp->ptr(), kern_fxp->ptr(), CONVLT_KERN_SIZE, out_ptr);
 	}
 	timeEnd = CompVTime::getNowMills();
 	COMPV_DEBUG_INFO("Elapsed time(TestConvlt_fxp) = [[[ %llu millis ]]]", (timeEnd - timeStart));

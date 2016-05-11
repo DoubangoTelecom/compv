@@ -62,7 +62,7 @@ bool TestConvlt_float()
 	else {
 		COMPV_CHECK_CODE_BAIL(err_ = CompVArray<CONVLT_KERN_TYPE>::newObj(&kern, CONVLT_DIM, CONVLT_KERN_SIZE, CONVLT_KERN_SIZE));
 		CONVLT_KERN_TYPE sum;
-		CONVLT_KERN_TYPE *kern_ptr = (CONVLT_KERN_TYPE*)kern->getDataPtr();
+		CONVLT_KERN_TYPE *kern_ptr = (CONVLT_KERN_TYPE*)kern->ptr();
 		for (int j = 0; j < CONVLT_DIM; ++j) {
 			sum = 0;
 			// random coeffs.
@@ -91,9 +91,9 @@ bool TestConvlt_float()
 	timeStart = CompVTime::getNowMills();
 	for (int i = 0; i < CONVLT_LOOP_COUNT; ++i) {
 #if CONVLT_DIM == 1
-		convlt->convlt1((uint8_t*)image->getDataPtr(), image->getWidth(), image->getStride(), image->getHeight(), kern->getDataPtr(), kern->getDataPtr(), CONVLT_KERN_SIZE, out_ptr);
+		convlt->convlt1((uint8_t*)image->getDataPtr(), image->getWidth(), image->getStride(), image->getHeight(), kern->ptr(), kern->ptr(), CONVLT_KERN_SIZE, out_ptr);
 #else
-		convlt->convlt2((uint8_t*)image->getDataPtr(), image->getWidth(), image->getStride(), image->getHeight(), kern->getDataPtr(), CONVLT_KERNEL_SIZE, out_ptr);
+		convlt->convlt2((uint8_t*)image->getDataPtr(), image->getWidth(), image->getStride(), image->getHeight(), kern->ptr(), CONVLT_KERNEL_SIZE, out_ptr);
 #endif
 	}
 	timeEnd = CompVTime::getNowMills();

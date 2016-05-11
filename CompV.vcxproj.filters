@@ -348,6 +348,9 @@
     <ClInclude Include="include\compv\intrinsics\x86\compv_patch_intrin_avx2.h">
       <Filter>Header Files\intrinsics\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\compv_hamming.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -532,6 +535,9 @@
     </ClCompile>
     <ClCompile Include="intrinsics\x86\compv_patch_intrin_avx2.cxx">
       <Filter>Source Files\intrinsics\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_hamming.cxx">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

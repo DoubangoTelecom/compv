@@ -31,8 +31,12 @@ template class CompVArray<uint8_t >;
 
 template<class T>
 CompVArray<T>::CompVArray()
-    : m_pBuffer(NULL)
-    , m_pnDimSizes(NULL)
+	: m_pDataPtr(NULL)
+	, m_nCols(0)
+	, m_nRows(0)
+	, m_nElmtInBytes(0)
+	, m_nStrideInBytes(0)
+	, m_nAlignV(1)
 {
 
 }
@@ -40,92 +44,39 @@ CompVArray<T>::CompVArray()
 template<class T>
 CompVArray<T>::~CompVArray()
 {
-    m_pBuffer = NULL;
-    CompVMem::free((void**)&m_pnDimSizes);
+	CompVMem::free((void**)&m_pDataPtr);
 }
 
+// alignv must be 1 for backward compatibility and to create compact array by default
 template<class T>
-const T* CompVArray<T>::getDataPtr() const
+COMPV_ERROR_CODE CompVArray<T>::newObj(CompVPtr<CompVArray<T>* >* array, size_t cols, size_t rows /*= 1*/, size_t alignv /*= 1*/)
 {
-    return ((const T*)m_pBuffer->getPtr());
-}
-
-template<class T>
-const T* CompVArray<T>::getDataPtr1(size_t nIdx0) const
-{
-    if (nIdx0 < m_pnDimSizes[0]) {
-        return ((const T*)m_pBuffer->getPtr()) + nIdx0;
-    }
-    return NULL;
-}
-
-template<class T>
-const T* CompVArray<T>::getDataPtr2(size_t nIdx0, size_t nIdx1) const
-{
-    if (nIdx0 < m_pnDimSizes[0] && nIdx1 < m_pnDimSizes[1]) {
-        return ((const T*)m_pBuffer->getPtr()) + ((nIdx0 * m_pnDimSizes[0]) + nIdx1);
-    }
-    return NULL;
-}
-
-template<class T>
-size_t CompVArray<T>::getDataSizeInBytes() const
-{
-    return (size_t)m_pBuffer->getSize();
-}
-
-template<class T>
-size_t CompVArray<T>::getDataSizeInBytes1(size_t nDimIdx) const
-{
-    if (nDimIdx < m_nDimCount) {
-        return m_pnDimSizes[nDimIdx] * sizeof(T);
-    }
-    return 0;
-}
-
-template<class T>
-COMPV_ERROR_CODE CompVArray<T>::newObj(CompVPtr<CompVArray<T>* >* array, size_t nDimCount, COMPV_ARRAY_DIM_SIZES)
-{
-    COMPV_CHECK_EXP_RETURN(!array || !nDimCount, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVPtr<CompVBuffer*> buffer_ = NULL;
-    size_t* pnDimSizes_ = NULL;
+	COMPV_CHECK_EXP_RETURN(!array || !rows || !cols || !alignv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    
     CompVPtr<CompVArray<T>* > array_;
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-    size_t sizeInElmt_, totalSizeInElmt_ = 1;
-    static size_t sizeOfElmt_ = sizeof(T);
+	size_t nElmtInBytes_ = sizeof(T);
+	size_t strideInBytes_ = CompVMem::alignForward((cols * nElmtInBytes_), (int)alignv);
+	void* pMem_ = NULL;
 
-    va_list ap;
-    va_start(ap, nDimCount);
-
-    pnDimSizes_ = (size_t*)CompVMem::calloc(nDimCount, sizeof(size_t));
-    if (!pnDimSizes_) {
-        COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
-
-    for (size_t i = 0; i < nDimCount; ++i) {
-        if ((sizeInElmt_ = va_arg(ap, size_t)) == 0) {
-            COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-        }
-        totalSizeInElmt_ *= sizeInElmt_;
-        pnDimSizes_[i] = sizeInElmt_;
-    }
-
-    COMPV_CHECK_CODE_BAIL(err_ = CompVBuffer::newObj(NULL, (int32_t)(totalSizeInElmt_ * sizeOfElmt_), &buffer_));
+	pMem_ = CompVMem::malloc(strideInBytes_ * rows);
+	COMPV_CHECK_EXP_BAIL(!pMem_, (err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
 
     array_ = new CompVArray<T>();
-    if (!array_) {
-        COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
-    array_->m_pBuffer = buffer_;
-    array_->m_pnDimSizes = pnDimSizes_;
-    array_->m_nDimCount = nDimCount;
+	COMPV_CHECK_EXP_BAIL(!array_, (err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
+
+	array_->m_pDataPtr = (T*)pMem_;
+	array_->m_nCols = cols;
+	array_->m_nRows = rows;
+	array_->m_nElmtInBytes = nElmtInBytes_;
+	array_->m_nStrideInBytes = strideInBytes_;
+	array_->m_nAlignV = alignv;
 
     *array = array_;
 
 bail:
-    va_end(ap);
     if (COMPV_ERROR_CODE_IS_NOK(err_)) {
-        CompVMem::free((void**)&pnDimSizes_);
+		CompVMem::free((void**)&pMem_);
     }
 
     return err_;

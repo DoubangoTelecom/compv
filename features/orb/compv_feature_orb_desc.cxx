@@ -179,11 +179,11 @@ COMPV_ERROR_CODE CompVFeatureDescORB::convlt(CompVPtr<CompVImageScalePyramid * >
 	// and any subsequent call must take care
 	if (m_kern_fxp) {
 		// Fixed-point
-		COMPV_CHECK_CODE_RETURN(m_convlt->convlt1_fxp((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), m_kern_fxp->getDataPtr(), m_kern_fxp->getDataPtr(), COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, (uint8_t*)imageAtLevelN->getDataPtr()));
+		COMPV_CHECK_CODE_RETURN(m_convlt->convlt1_fxp((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), m_kern_fxp->ptr(), m_kern_fxp->ptr(), COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, (uint8_t*)imageAtLevelN->getDataPtr()));
 	}
 	else {
 		// Floating-point
-		COMPV_CHECK_CODE_RETURN(m_convlt->convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), m_kern_float->getDataPtr(), m_kern_float->getDataPtr(), COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, (uint8_t*)imageAtLevelN->getDataPtr()));
+		COMPV_CHECK_CODE_RETURN(m_convlt->convlt1((uint8_t*)imageAtLevelN->getDataPtr(), imageAtLevelN->getWidth(), imageAtLevelN->getStride(), imageAtLevelN->getHeight(), m_kern_float->ptr(), m_kern_float->ptr(), COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE, (uint8_t*)imageAtLevelN->getDataPtr()));
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

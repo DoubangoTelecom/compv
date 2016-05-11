@@ -25,11 +25,6 @@
 
 #include "compv/parallel/compv_threaddisp.h"
 
-#define COMPV_ARRAY_DIM_SIZES ... // size_t values
-#define COMPV_ARRAY_DIM_SIZE1(s1) ((size_t)s1), ((size_t)0)
-#define COMPV_ARRAY_DIM_SIZE2(s1, s2) ((size_t)s1), ((size_t)s2), ((size_t)0)
-#define COMPV_ARRAY_DIM_SIZE3(s1, s2, s3) ((size_t)s1), ((size_t)s2), ((size_t)s3), ((size_t)0)
-
 COMPV_NAMESPACE_BEGIN()
 
 template<class T>
@@ -42,21 +37,21 @@ public:
     virtual COMPV_INLINE const char* getObjectId() {
         return "CompVArray";
     };
-    virtual COMPV_INLINE size_t getDimCount() {
-        return m_nDimCount;
-    }
-    const T* getDataPtr() const;
-    const T* getDataPtr1(size_t nIdx0) const;
-    const T* getDataPtr2(size_t nIdx0, size_t nIdx1) const;
-    size_t getDataSizeInBytes() const;
-    size_t getDataSizeInBytes1(size_t nDimIdx) const;
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVArray<T>* >* array, size_t nDimCount, COMPV_ARRAY_DIM_SIZES);
+	COMPV_INLINE const T* ptr(size_t row = 0, size_t col = 0)const { return (row > m_nRows || col > m_nCols) ? NULL : (const T*)(((const uint8_t*)m_pDataPtr) + (row * m_nStrideInBytes) + (col * m_nElmtInBytes)); }
+	COMPV_INLINE size_t rows()const { return m_nRows; } // In samples
+	COMPV_INLINE size_t cols()const { return m_nCols; } // In samples
+	COMPV_INLINE size_t elmtInBytes() { return m_nElmtInBytes; }
+	COMPV_INLINE size_t strideInBytes()const { return m_nStrideInBytes; } // in bytes
+	static COMPV_ERROR_CODE newObj(CompVPtr<CompVArray<T>* >* array, size_t cols, size_t rows = 1, size_t alignv = 1);
 
 private:
-    COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-    CompVPtr<CompVBuffer*> m_pBuffer;
-    size_t* m_pnDimSizes;
-    size_t m_nDimCount;
+	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	T* m_pDataPtr;
+	size_t m_nCols;
+	size_t m_nRows;
+	size_t m_nStrideInBytes;
+	size_t m_nElmtInBytes;
+	size_t m_nAlignV;
     COMPV_DISABLE_WARNINGS_END()
 };
 
