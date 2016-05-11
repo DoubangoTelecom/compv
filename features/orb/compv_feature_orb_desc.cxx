@@ -135,7 +135,7 @@ extern COMPV_SCALE_TYPE COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE;
 static const int COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE = 7;
 static const float COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 1.52f;
 
-#define COMPV_FEATURE_DESC_ORB_DESCRIBE_MIN_SAMPLES_PER_THREAD	(20*10) // number of interestPoints
+#define COMPV_FEATURE_DESC_ORB_DESCRIBE_MIN_SAMPLES_PER_THREAD	(500 >> 3) // number of interestPoints
 
 static void Brief256_31_Float32_C(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out);
 #if COMPV_FEATURE_DESC_ORB_FXP_DESC
@@ -199,6 +199,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::describe(CompVPtr<CompVImageScalePyramid *
 	const uint8_t* img_center;
 	int32_t stride;
 
+	// Describe the points
 	for (point = begin; point < end; ++point) {
 		// Get image at level N
 		COMPV_CHECK_CODE_RETURN(pPyramid->getImage(point->level, &imageAtLevelN));
@@ -261,7 +262,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
     uint8_t* _descriptionsPtr = NULL;
 	static const bool size_of_float_is4 = (sizeof(float) == 4); // ASM and INTRIN code require it
 	CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
-	int threadsCount = 1;
+	int threadsCount = 1, levelsCount, threadStartIdx = 0;
 	CompVPtr<CompVFeatureDescORB* >This = this;
 	bool bLevelZeroBlurred = false;
 
@@ -295,6 +296,8 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
         _pyramid = m_pyramid;
     }
 
+	levelsCount = _pyramid->getLevels();
+
 	// Check if we have the same image
 	if (m_bMediaTypeVideo && m_image_blurred_prev) {
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
@@ -311,29 +314,29 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
 	// Compute number of threads
 	if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
 		threadsCount = threadDip->getThreadsCount();
+		threadStartIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
 	}
 
 	// apply gaussianblur filter on the pyramid
 	if (threadsCount > 1) {
-		uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
 		// levelStart is used to make sure we won't schedule more than "threadsCount"
 		int levelStart, level, levelMax;
-		for (levelStart = bLevelZeroBlurred ? 1 : 0, levelMax = threadsCount; levelStart < _pyramid->getLevels(); levelStart += threadsCount, levelMax += threadsCount) {
-			for (level = levelStart; level < _pyramid->getLevels() && level < levelMax; ++level) {
-				COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + level), COMPV_TOKENIDX0, CompVFeatureDescORB::convlt_AsynExec,
+		for (levelStart = bLevelZeroBlurred ? 1 : 0, levelMax = threadsCount; levelStart < levelsCount; levelStart += threadsCount, levelMax += threadsCount) {
+			for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
+				COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadStartIdx + level), COMPV_TOKENIDX0, CompVFeatureDescORB::convlt_AsynExec,
 					COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *_pyramid, level),
 					COMPV_ASYNCTASK_SET_PARAM_NULL()));
 			}
-			for (level = levelStart; level < _pyramid->getLevels() && level < levelMax; ++level) {
-				COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + level), COMPV_TOKENIDX0));
+			for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
+				COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadStartIdx + level), COMPV_TOKENIDX0));
 			}
 		}
 	}
 	else {
-		for (int level = bLevelZeroBlurred ? 1 : 0; level < _pyramid->getLevels(); ++level) {
+		for (int level = bLevelZeroBlurred ? 1 : 0; level < levelsCount; ++level) {
 			COMPV_CHECK_CODE_RETURN(err_ = convlt(_pyramid, level));
 		}
-	}    
+	}
 	
 	/* Init "m_funBrief256_31" using current CPU flags */
 #if COMPV_FEATURE_DESC_ORB_FXP_DESC
@@ -370,16 +373,15 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
 	int32_t threadsCountDescribe = 1;
 	if (threadsCount > 1) {
 		threadsCountDescribe = (int32_t)(interestPoints->size() / COMPV_FEATURE_DESC_ORB_DESCRIBE_MIN_SAMPLES_PER_THREAD);
-		threadsCountDescribe = COMPV_MATH_CLIP3(0, threadsCountDescribe, threadsCount);
+		threadsCountDescribe = COMPV_MATH_MIN(threadsCountDescribe, threadsCount);
 	}
 	if (threadsCountDescribe > 1) {
-		uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
 		const CompVInterestPoint* begin = interestPoints->begin();
 		int32_t total = (int32_t)interestPoints->size();
 		int32_t count = total / threadsCountDescribe;
 		uint8_t* desc = _descriptionsPtr;
 		for (int32_t i = 0; count > 0 && i < threadsCountDescribe; ++i) {
-			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, describe_AsynExec,
+			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadStartIdx + i), COMPV_TOKENIDX0, describe_AsynExec,
 				COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *_pyramid, begin, begin + count, desc),
 				COMPV_ASYNCTASK_SET_PARAM_NULL()));
 			begin += count;
@@ -389,21 +391,27 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
 				count = (total); // the remaining
 			}
 		}
-		for (int32_t i = 0; i < threadsCountDescribe; ++i) {
-			COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
-		}
+		// wait() for threads execution later
 	}
 	else {
 		COMPV_CHECK_CODE_RETURN(err_ = describe(_pyramid, interestPoints->begin(), interestPoints->end(), _descriptionsPtr));
 	}
-
-    *descriptions = _descriptions;
 	
+	// TODO(dmi): if MT, call wait() after image cloning
 	if (m_bMediaTypeVideo) {
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 		COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(0, &imageAtLevelN));
 		COMPV_CHECK_CODE_RETURN(err_ = imageAtLevelN->clone(&m_image_blurred_prev));
 	}
+
+	// Wait for the threads to finish the work
+	if (threadsCountDescribe > 1) {
+		for (int32_t i = 0; i < threadsCountDescribe; ++i) {
+			COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadStartIdx + i), COMPV_TOKENIDX0));
+		}
+	}
+
+	*descriptions = _descriptions;
 
     return err_;
 }
