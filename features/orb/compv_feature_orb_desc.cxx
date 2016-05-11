@@ -246,7 +246,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::describe(CompVPtr<CompVImageScalePyramid *
 }
 
 // override CompVFeatureDesc::process
-COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVFeatureDescriptions*>* descriptions)
+COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVArray<uint8_t>* >* descriptions)
 {
     COMPV_CHECK_EXP_RETURN(*image == NULL || image->getDataPtr() == NULL || image->getPixelFormat() != COMPV_PIXEL_FORMAT_GRAYSCALE || !descriptions || !interestPoints,
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -255,7 +255,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
 	COMPV_CHECK_EXP_RETURN(m_nPatchBits != 256 || m_nPatchDiameter != 31, COMPV_ERROR_CODE_E_INVALID_CALL);
 	
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-    CompVPtr<CompVFeatureDescriptions*> _descriptions;
+	CompVPtr<CompVArray<uint8_t>* > _descriptions;
     CompVPtr<CompVImageScalePyramid * > _pyramid;
     CompVPtr<CompVImage*> imageAtLevelN;
     CompVPtr<CompVFeatureDete*> attachedDete = getAttachedDete();
@@ -271,8 +271,8 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
 	const int nFeatures = (int)interestPoints->size();
 	const int nFeaturesBits = m_nPatchBits;
     const int nFeaturesBytes = nFeaturesBits >> 3;
-    COMPV_CHECK_CODE_RETURN(err_ = CompVFeatureDescriptions::newObj(nFeatures, nFeaturesBits, &_descriptions)); // TODO(dmi): realloc instead of alloc()
-    _descriptionsPtr = (uint8_t*)_descriptions->getDataPtr();
+	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<uint8_t>::newObj(&_descriptions, nFeaturesBytes, nFeatures)); // do not align nFeaturesBytes(32) which is already good for AVX, SSE and NEON
+    _descriptionsPtr = (uint8_t*)_descriptions->ptr();
 	if (nFeatures == 0) {
 		return COMPV_ERROR_CODE_S_OK;
 	}

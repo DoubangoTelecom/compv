@@ -24,6 +24,7 @@
 #include "compv/compv_common.h"
 #include "compv/compv_obj.h"
 #include "compv/compv_settable.h"
+#include "compv/compv_array.h"
 #include "compv/compv_buffer.h"
 #include "compv/compv_interestpoint.h"
 #include "compv/image/compv_image.h"
@@ -68,46 +69,6 @@ enum {
     COMPV_ORB_SET_INT32_BRIEF_PATCH_SIZE,
     COMPV_ORB_STRENGTH_TYPE_FAST,
     COMPV_ORB_STRENGTH_TYPE_HARRIS,
-};
-
-// Class: CompVFeatureDescriptions
-class COMPV_API CompVFeatureDescriptions : public CompVObj
-{
-protected:
-    CompVFeatureDescriptions(int nFeatures_, int nFeatureBits_);
-public:
-    virtual ~CompVFeatureDescriptions();
-    virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVFeatureDescriptions";
-    };
-
-    virtual COMPV_INLINE int getFeaturesCount() {
-        return m_nFeaturesCount;
-    };
-    virtual COMPV_INLINE int getFeatureBits() {
-        return m_nFeatureBits;
-    };
-    virtual COMPV_INLINE const void* getDataPtr() {
-        if (m_data) {
-            return m_data->getPtr();
-        }
-        return NULL;
-    }
-    virtual COMPV_INLINE const size_t getDataSize() {
-        if (m_data) {
-            return m_data->getSize();
-        }
-        return 0;
-    }
-
-    static COMPV_ERROR_CODE newObj(int nFeaturesCount, int nFeatureBits, CompVPtr<CompVFeatureDescriptions*>* descriptions);
-
-private:
-    int m_nFeaturesCount; // number of features
-    int m_nFeatureBits; // number of bits each feature takes
-    COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-    CompVPtr<CompVBuffer *> m_data; // data holding the features
-    COMPV_DISABLE_WARNINGS_END()
 };
 
 // Class: CompVFeature
@@ -162,7 +123,7 @@ public:
         m_AttachedDete = NULL;
         return COMPV_ERROR_CODE_S_OK;
     }
-    virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVFeatureDescriptions*>* descriptions) = 0;
+	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVArray<uint8_t>* >* descriptions) = 0;
     static COMPV_ERROR_CODE newObj(int descId, CompVPtr<CompVFeatureDesc* >* desc);
 
 protected:

@@ -309,9 +309,6 @@
     <ClInclude Include="include\compv\compv_interestpoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\image\compv_image_moments.h">
-      <Filter>Header Files\image</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\compv_convlt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -493,9 +490,6 @@
     </ClCompile>
     <ClCompile Include="compv_interestpoint.cxx">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="image\compv_image_moments.cxx">
-      <Filter>Source Files\image</Filter>
     </ClCompile>
     <ClCompile Include="compv_convlt.cxx">
       <Filter>Source Files</Filter>

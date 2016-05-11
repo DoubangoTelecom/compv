@@ -10,7 +10,7 @@ using namespace compv;
 #define ORB_PYRAMID_LEVELS			8
 #define ORB_PYRAMID_SCALEFACTOR		0.83f
 #define ORB_PYRAMID_SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
-#define ORB_LOOOP_COUNT				1
+#define ORB_LOOOP_COUNT				10
 #define ORB_DESC_MD5_FLOAT			"7a46dadf433e1e6d49f7fb60a6626064"
 #define ORB_DESC_MD5_FLOAT_MT		"7f4f847671fb369774120c5ad8aad334" // multithreaded (convolution create temporary memory)
 #define ORB_DESC_MD5_FXP			"7a46dadf433e1e6d49f7fb60a6626064"
@@ -23,7 +23,7 @@ bool TestORB()
     CompVPtr<CompVFeatureDesc* > desc; // feature descriptor
     CompVPtr<CompVImage *> image;
     CompVPtr<CompVBoxInterestPoint* > interestPoints;
-    CompVPtr<CompVFeatureDescriptions*> descriptions;
+    CompVPtr<CompVArray<uint8_t>* > descriptions;
     int32_t val32;
     bool valBool;
     float valFloat;
@@ -66,7 +66,7 @@ bool TestORB()
     COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
     // Compute Descriptions MD5
-    const std::string md5 = descriptions ? CompVMd5::compute2(descriptions->getDataPtr(), descriptions->getDataSize()) : "";
+	const std::string md5 = descriptions ? arrayMD5<uint8_t>(descriptions) : "";
 	bool ok;
 	if (CompVEngine::isMathFixedPoint()) {
 		ok = (md5 == (CompVEngine::isMultiThreadingEnabled() ? ORB_DESC_MD5_FXP_MT : ORB_DESC_MD5_FXP));

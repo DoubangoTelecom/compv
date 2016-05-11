@@ -54,7 +54,7 @@ public:
     // override CompVSettable::set
     virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
     // override CompVFeatureDesc::process
-    virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVFeatureDescriptions*>* descriptions);
+	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVArray<uint8_t>* >* descriptions);
 
     static COMPV_ERROR_CODE newObj(CompVPtr<CompVFeatureDesc* >* orb);
 

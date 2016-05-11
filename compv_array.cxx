@@ -32,6 +32,8 @@ template class CompVArray<uint8_t >;
 template<class T>
 CompVArray<T>::CompVArray()
 	: m_pDataPtr(NULL)
+	, m_nDataSize(0)
+	, m_nDataCapacity(0)
 	, m_nCols(0)
 	, m_nRows(0)
 	, m_nElmtInBytes(0)
@@ -47,39 +49,52 @@ CompVArray<T>::~CompVArray()
 	CompVMem::free((void**)&m_pDataPtr);
 }
 
+template<class T>
+COMPV_ERROR_CODE CompVArray<T>::alloc(size_t cols, size_t rows /*= 1*/, size_t alignv /*= 1*/)
+{
+	COMPV_CHECK_EXP_RETURN(!rows || !cols || !alignv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+	size_t nElmtInBytes_ = sizeof(T);
+	size_t strideInBytes_ = CompVMem::alignForward((cols * nElmtInBytes_), (int)alignv);
+	size_t newDataSize_ = strideInBytes_ * rows;
+	void* pMem_ = NULL;
+
+	if (newDataSize_ > m_nDataCapacity) {
+		pMem_ = CompVMem::malloc(newDataSize_);
+		COMPV_CHECK_EXP_BAIL(!pMem_, (err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
+		m_nDataCapacity = newDataSize_;
+
+		// realloc()
+		CompVMem::free((void**)&m_pDataPtr);
+		m_pDataPtr = (T*)pMem_;
+	}
+	
+	// Do not update capacity
+	m_nDataSize = newDataSize_;
+	m_nCols = cols;
+	m_nRows = rows;
+	m_nElmtInBytes = nElmtInBytes_;
+	m_nStrideInBytes = strideInBytes_;
+	m_nAlignV = alignv;
+
+bail:
+	if (COMPV_ERROR_CODE_IS_NOK(err_)) {
+		CompVMem::free((void**)&pMem_);
+	}
+	return err_;
+}
+
 // alignv must be 1 for backward compatibility and to create compact array by default
 template<class T>
 COMPV_ERROR_CODE CompVArray<T>::newObj(CompVPtr<CompVArray<T>* >* array, size_t cols, size_t rows /*= 1*/, size_t alignv /*= 1*/)
 {
 	COMPV_CHECK_EXP_RETURN(!array || !rows || !cols || !alignv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    
-    CompVPtr<CompVArray<T>* > array_;
-    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	size_t nElmtInBytes_ = sizeof(T);
-	size_t strideInBytes_ = CompVMem::alignForward((cols * nElmtInBytes_), (int)alignv);
-	void* pMem_ = NULL;
-
-	pMem_ = CompVMem::malloc(strideInBytes_ * rows);
-	COMPV_CHECK_EXP_BAIL(!pMem_, (err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
-
-    array_ = new CompVArray<T>();
-	COMPV_CHECK_EXP_BAIL(!array_, (err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
-
-	array_->m_pDataPtr = (T*)pMem_;
-	array_->m_nCols = cols;
-	array_->m_nRows = rows;
-	array_->m_nElmtInBytes = nElmtInBytes_;
-	array_->m_nStrideInBytes = strideInBytes_;
-	array_->m_nAlignV = alignv;
-
-    *array = array_;
-
-bail:
-    if (COMPV_ERROR_CODE_IS_NOK(err_)) {
-		CompVMem::free((void**)&pMem_);
-    }
-
-    return err_;
+	if (!*array) {
+		*array = new CompVArray<T>();
+		COMPV_CHECK_EXP_RETURN(!*array, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	COMPV_CHECK_CODE_RETURN((*array)->alloc(cols, rows, alignv));
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()
