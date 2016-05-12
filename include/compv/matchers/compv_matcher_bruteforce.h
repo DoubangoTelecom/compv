@@ -21,6 +21,7 @@
 #define _COMPV_MATCHERS_MATCHER_BRUTEFORCE_H_
 
 #include "compv/compv_config.h"
+#include "compv/compv_array.h"
 #include "compv/matchers/compv_matcher.h"
 
 #if defined(_COMPV_API_H_)
@@ -53,6 +54,7 @@ private:
 	bool m_bCrossCheck;
 	int32_t m_nNormType;
 	int32_t m_nKNN;
+	CompVPtr<CompVArray<compv_scalar_t>* > m_hammingDistances;
 	COMPV_DISABLE_WARNINGS_END()
 };
 

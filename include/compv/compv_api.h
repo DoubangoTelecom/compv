@@ -36,6 +36,8 @@
 #include "compv/compv_mem.h"
 #include "compv/compv_obj.h"
 
+#include "compv/features/compv_feature.h"
+
 #include "compv/matchers/compv_matcher.h"
 
 #include "compv/image/compv_image.h"

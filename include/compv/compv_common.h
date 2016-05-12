@@ -348,9 +348,9 @@ public:
 CompVInterestPoint;
 
 typedef struct _CompVDMatch {
-	int32_t queryIdx;
-	int32_t trainIdx;
-	int32_t imageIdx;
+	size_t queryIdx;
+	size_t trainIdx;
+	size_t imageIdx;
 	compv_scalar_t distance;
 protected:
 	COMPV_INLINE void init(int32_t queryIdx_, int32_t trainIdx_, compv_scalar_t distance_, int32_t imageIdx_ = 0) {

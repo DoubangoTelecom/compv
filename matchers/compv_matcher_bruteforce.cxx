@@ -18,6 +18,7 @@
 * along with CompV.
 */
 #include "compv/matchers/compv_matcher_bruteforce.h"
+#include "compv/compv_hamming.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -78,9 +79,50 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::get(int id, const void*& valuePtr, size
 // override CompVMatcher::process
 COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVPtr<CompVArray<uint8_t>* >&queryDescriptions, const CompVPtr<CompVArray<uint8_t>* >&trainDescriptions, CompVPtr<CompVArray<CompVDMatch>* >* matches)
 {
-	COMPV_CHECK_EXP_RETURN(!queryDescriptions || queryDescriptions->isEmpty() || !trainDescriptions || trainDescriptions->isEmpty() || !matches, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(
+		!matches
+		|| !queryDescriptions 
+		|| queryDescriptions->isEmpty() 
+		|| !trainDescriptions 
+		|| trainDescriptions->isEmpty()
+		|| queryDescriptions->cols() != trainDescriptions->cols()
+		, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+	CompVDMatch* match;
 
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+
+	// realloc() matchers
+	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<CompVDMatch>::newObj(matches, queryDescriptions->rows(), m_nKNN));
+
+	// realloc() hamming distances
+	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<compv_scalar_t>::newObj(&m_hammingDistances, queryDescriptions->rows(), 1));
+
+	// Process hamming distances
+	// Each row in the train is used as patch over the entire query descriptions
+	size_t trainRows = trainDescriptions->rows();
+	for (size_t trainIdx = 0; trainIdx < trainRows; ++trainIdx) {
+		COMPV_CHECK_CODE_RETURN(err_ = CompVHamming::distance(queryDescriptions->ptr(), (int)queryDescriptions->cols(), (int)queryDescriptions->strideInBytes(), (int)queryDescriptions->rows(),
+			trainDescriptions->ptr(trainIdx), (compv_scalar_t*)m_hammingDistances->ptr(0)));
+		if (trainIdx == 0) { // FIXME: move outside
+			for (size_t queryIdx = 0; queryIdx < (*matches)->cols(); ++queryIdx) {
+				match = (CompVDMatch*)(*matches)->ptr(0, queryIdx);
+				match->distance = *m_hammingDistances->ptr(0, queryIdx);
+				match->queryIdx = queryIdx;
+				match->trainIdx = trainIdx;
+			}
+		}
+		else {
+			for (size_t queryIdx = 0; queryIdx < (*matches)->cols(); ++queryIdx) {
+				match = (CompVDMatch*)(*matches)->ptr(0, queryIdx);
+				if (match->distance > *m_hammingDistances->ptr(0, queryIdx)) {
+					match->distance = *m_hammingDistances->ptr(0, queryIdx);
+					match->queryIdx = queryIdx;
+					match->trainIdx = trainIdx;
+				}
+			}
+		}
+	}
 
 	return err_;
 }
