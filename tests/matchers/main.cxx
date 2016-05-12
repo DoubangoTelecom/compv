@@ -13,7 +13,8 @@ using namespace compv;
 
 #define cpuDisable				kCpuFlagNone
 
-#define TEST_HAMMING			1
+#define TEST_HAMMING			0
+#define TEST_BRUTEFORCE			1
 
 
 #if COMPV_OS_WINDOWS
@@ -33,6 +34,10 @@ int main(int argc, char** argv)
 #if TEST_HAMMING
 	extern bool TestHamming();
 	COMPV_ASSERT(TestHamming());
+#endif
+#if TEST_BRUTEFORCE
+	extern bool TestBruteForce();
+	COMPV_ASSERT(TestBruteForce());
 #endif
 
 	// deInit the engine

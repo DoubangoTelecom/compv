@@ -21,10 +21,11 @@
 #include "compv/compv_mem.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
+#include "compv/compv_math_utils.h"
 #include "compv/time/compv_time.h"
 #include "compv/image/compv_image.h"
 #include "compv/features/compv_feature.h"
-#include "compv/compv_math_utils.h"
+#include "compv/matchers/compv_matcher.h"
 
 
 COMPV_NAMESPACE_BEGIN()
@@ -147,6 +148,8 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     /* Features */
     COMPV_CHECK_CODE_BAIL(err_ = CompVFeature::init());
 
+	/* Matchers */
+	COMPV_CHECK_CODE_BAIL(err_ = CompVMatcher::init());
 
     COMPV_DEBUG_INFO("Engine initialized");
 

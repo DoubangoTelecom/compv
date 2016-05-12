@@ -38,7 +38,6 @@
 #error("This is a private file and must not be part of the API")
 #endif
 
-
 COMPV_NAMESPACE_BEGIN()
 
 class CompVFeatureDescORB : public CompVFeatureDesc

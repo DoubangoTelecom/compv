@@ -27,6 +27,7 @@
 #include "compv/compv_debug.h"
 #include "compv/compv_engine.h"
 #include "compv/compv_gauss.h"
+#include "compv/compv_hamming.h"
 #include "compv/compv_interestpoint.h"
 #include "compv/compv_list.h"
 #include "compv/compv_math_trig.h"
@@ -35,11 +36,10 @@
 #include "compv/compv_mem.h"
 #include "compv/compv_obj.h"
 
+#include "compv/matchers/compv_matcher.h"
+
 #include "compv/image/compv_image.h"
-
 #include "compv/image/scale/compv_imagescale_pyramid.h"
-
-#include "compv/features/compv_feature.h"
 
 #include "compv/parallel/compv_asynctask.h"
 #include "compv/parallel/compv_condvar.h"

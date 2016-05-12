@@ -79,6 +79,9 @@
     <ClInclude Include="include\compv\intrinsics\x86\image\conv\compv_imageconv_rgba_rgb_intrin_sse.h" />
     <ClInclude Include="include\compv\intrinsics\x86\image\scale\compv_imagescale_bilinear_intrin_avx2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\image\scale\compv_imagescale_bilinear_intrin_sse.h" />
+    <ClInclude Include="include\compv\matchers\compv_matcher.h" />
+    <ClInclude Include="include\compv\matchers\compv_matcher_bruteforce.h" />
+    <ClInclude Include="include\compv\matchers\compv_matcher_flann.h" />
     <ClInclude Include="include\compv\parallel\compv_asynctask.h" />
     <ClInclude Include="include\compv\parallel\compv_condvar.h" />
     <ClInclude Include="include\compv\parallel\compv_mutex.h" />
@@ -218,6 +221,9 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="matchers\compv_matcher.cxx" />
+    <ClCompile Include="matchers\compv_matcher_bruteforce.cxx" />
+    <ClCompile Include="matchers\compv_matcher_flann.cxx" />
     <ClCompile Include="parallel\compv_asynctask.cxx" />
     <ClCompile Include="parallel\compv_condvar.cxx" />
     <ClCompile Include="parallel\compv_mutex.cxx" />

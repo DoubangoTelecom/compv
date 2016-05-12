@@ -65,6 +65,7 @@ CompVFeatureDeteORB::CompVFeatureDeteORB()
     , m_pInterestPointsAtLevelN(NULL)
     , m_bNMS(COMPV_FEATURE_DETE_ORB_FAST_NON_MAXIMA_SUPP)
     , m_nThreshold(COMPV_FEATURE_DETE_ORB_FAST_THRESHOLD_DEFAULT)
+	, m_nFastType(COMPV_FAST_TYPE_9)
 	, m_pDetectors(NULL)
 	, m_nDetectors(0)
 	, m_pPatches(NULL)
@@ -338,6 +339,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::initDetector(CompVPtr<CompVFeatureDete* >&
 	if (detector) {
 		COMPV_CHECK_CODE_RETURN(detector->set(COMPV_FAST_SET_INT32_THRESHOLD, &m_nThreshold, sizeof(m_nThreshold)));
 		COMPV_CHECK_CODE_RETURN(detector->set(COMPV_FAST_SET_BOOL_NON_MAXIMA_SUPP, &m_bNMS, sizeof(m_bNMS)));
+		COMPV_CHECK_CODE_ASSERT(detector->set(COMPV_FAST_SET_INT32_FAST_TYPE, &m_nFastType, sizeof(m_nFastType)));
 		// Do not set maxFeatures, let FAST detector returns all features then retain best (later Harris will be used to update scores)
 	}
 	return COMPV_ERROR_CODE_S_OK;

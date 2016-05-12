@@ -74,6 +74,7 @@ private:
     int32_t m_nMaxFeatures;
     int32_t m_nPyramidLevels;
     int32_t m_nThreshold;
+	int32_t m_nFastType;
     bool m_bNMS;
     int m_nPatchDiameter;
 };

@@ -10,7 +10,7 @@ using namespace compv;
 #define ORB_PYRAMID_LEVELS			8
 #define ORB_PYRAMID_SCALEFACTOR		0.83f
 #define ORB_PYRAMID_SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
-#define ORB_LOOOP_COUNT				10
+#define ORB_LOOOP_COUNT				1
 #define ORB_DESC_MD5_FLOAT			"7a46dadf433e1e6d49f7fb60a6626064"
 #define ORB_DESC_MD5_FLOAT_MT		"7f4f847671fb369774120c5ad8aad334" // multithreaded (convolution create temporary memory)
 #define ORB_DESC_MD5_FXP			"7a46dadf433e1e6d49f7fb60a6626064"

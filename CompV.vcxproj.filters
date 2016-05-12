@@ -142,6 +142,12 @@
     <Filter Include="Assembler Files\x86\features\orb">
       <UniqueIdentifier>{6e432477-3fb5-487a-8324-72f06f292009}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\matchers">
+      <UniqueIdentifier>{17843d4e-a5b5-4330-b7b1-c4d558d33f3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\matchers">
+      <UniqueIdentifier>{2bb978fe-9574-471f-b3bc-4377fc564db9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
@@ -348,6 +354,15 @@
     <ClInclude Include="include\compv\compv_hamming.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\matchers\compv_matcher.h">
+      <Filter>Header Files\matchers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\matchers\compv_matcher_bruteforce.h">
+      <Filter>Header Files\matchers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\matchers\compv_matcher_flann.h">
+      <Filter>Header Files\matchers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -532,6 +547,15 @@
     </ClCompile>
     <ClCompile Include="compv_hamming.cxx">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="matchers\compv_matcher.cxx">
+      <Filter>Source Files\matchers</Filter>
+    </ClCompile>
+    <ClCompile Include="matchers\compv_matcher_bruteforce.cxx">
+      <Filter>Source Files\matchers</Filter>
+    </ClCompile>
+    <ClCompile Include="matchers\compv_matcher_flann.cxx">
+      <Filter>Source Files\matchers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
