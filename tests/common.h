@@ -124,7 +124,7 @@ static const std::string arrayMD5(const CompVPtr<CompVArray<T>* >& array)
 		COMPV_CHECK_CODE_ASSERT(CompVMd5::newObj(&md5));
 		const size_t rowInBytes = array->rowInBytes();
 		for (size_t row = 0; row < array->rows(); ++row) {
-			COMPV_CHECK_CODE_ASSERT(md5->update(array->ptr(row), rowInBytes));
+			COMPV_CHECK_CODE_ASSERT(md5->update((const uint8_t*)array->ptr(row), rowInBytes));
 		}
 		return md5->compute();
 	}
