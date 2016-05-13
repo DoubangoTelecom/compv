@@ -351,9 +351,9 @@ typedef struct _CompVDMatch {
 	size_t queryIdx;
 	size_t trainIdx;
 	size_t imageIdx;
-	compv_scalar_t distance;
+	int32_t distance;
 protected:
-	COMPV_INLINE void init(int32_t queryIdx_, int32_t trainIdx_, compv_scalar_t distance_, int32_t imageIdx_ = 0) {
+	COMPV_INLINE void init(int32_t queryIdx_, int32_t trainIdx_, int32_t distance_, int32_t imageIdx_ = 0) {
 		queryIdx = queryIdx_;
 		trainIdx = trainIdx_;
 		distance = distance_;
@@ -363,7 +363,7 @@ public:
 	_CompVDMatch() {
 		init(0, 0, 0, 0);
 	}
-	_CompVDMatch(int32_t queryIdx_, int32_t trainIdx_, compv_scalar_t distance_, int32_t imageIdx_ = 0) {
+	_CompVDMatch(int32_t queryIdx_, int32_t trainIdx_, int32_t distance_, int32_t imageIdx_ = 0) {
 		init(queryIdx_, trainIdx_, distance_, imageIdx_);
 	}
 }

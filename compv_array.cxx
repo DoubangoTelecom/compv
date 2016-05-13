@@ -24,7 +24,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 template class CompVArray<CompVDMatch >;
-template class CompVArray<compv_scalar_t >;
+template class CompVArray<int32_t >;
 template class CompVArray<double >;
 template class CompVArray<float >;
 template class CompVArray<uint16_t >;

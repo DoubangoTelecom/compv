@@ -182,28 +182,6 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
 
     // Image scaling then feature could be multi-threaded but this requires a detector for each level -> memory issue
 
-#if 0
-    // Scale the image (multi-threaded)
-	COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image));
-
-    // Create or reset interest points for each level then perform feature detection
-    for (int level = 0; level < m_pyramid->getLevels(); ++level) {
-        interestPointsAtLevelN = m_pInterestPointsAtLevelN[level];
-        if (!interestPointsAtLevelN) {
-            COMPV_CHECK_CODE_RETURN(err_ = CompVBoxInterestPoint::newObj(&interestPointsAtLevelN));
-            m_pInterestPointsAtLevelN[level] = interestPointsAtLevelN;
-        }
-        else {
-            interestPointsAtLevelN->reset();
-        }
-        // Get image at level N
-        COMPV_CHECK_CODE_RETURN(m_pyramid->getImage(level, &imageAtLevelN));
-        // Detect features for level (multi-threaded)
-        // For example, "m_internalDetector" would be FAST feature detector
-        COMPV_CHECK_CODE_RETURN(m_internalDetector->process(imageAtLevelN, interestPointsAtLevelN));
-    }
-#endif
-
 	levelsCount = m_pyramid->getLevels();
 
     // Compute number of threads
@@ -241,6 +219,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
 	}
 
     // Process feature detection for each level
+	// TODO(dmi): not optimized when levels > maxThreads, single-threaded when levels == 1
     if (threadsCount > 1) {
         CompVPtr<CompVFeatureDeteORB* >This = this;
         uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core

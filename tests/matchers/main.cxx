@@ -13,8 +13,8 @@ using namespace compv;
 
 #define cpuDisable				kCpuFlagNone
 
-#define TEST_HAMMING			0
-#define TEST_BRUTEFORCE			1
+#define TEST_HAMMING			1
+#define TEST_BRUTEFORCE			0
 
 
 #if COMPV_OS_WINDOWS

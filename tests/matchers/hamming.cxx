@@ -5,16 +5,17 @@
 using namespace compv;
 
 #define JPEG_IMG		"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
-#define LOOP_COUNT		1
 #define WIDTH_MINUS		0 // values used to unalign the width for testing (must be within [0, 3])
 
 static const std::string expectedMD5[4/*WIDTH_MINUS*/] = 
 {
-	"5b0cb53ea712377f1c6991cbe38ced59",
-	"856f29b2800ddce568fddb2bb98688eb",
-	"007157ff4a485460b07e270b473ccf6b",
-	"ddb55adf9bf32af942bc2881f633d27e"
+	"a3e0c0f04f2018e90cbc52963ddb4ba9",
+	"2c89aecb3b1eeea6486574a473f03c6a",
+	"80e5e5ec382607a5fb1d10a5a6248930",
+	"fb7ba81a253c89416aa88ae9a2b7c389"
 };
+
+#define LOOP_COUNT		1
 
 bool TestHamming()
 {
@@ -23,7 +24,7 @@ bool TestHamming()
 	int width, stride, height;
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	uint8_t* patch1xnPtr = NULL;
-	compv_scalar_t* distPtr = NULL;
+	int32_t* distPtr = NULL;
 
 	// Decode the jpeg image
 	COMPV_CHECK_CODE_BAIL(err_ = CompVImageDecoder::decodeFile(JPEG_IMG, &image));
@@ -37,7 +38,7 @@ bool TestHamming()
 	patch1xnPtr = (uint8_t*)CompVMem::calloc(width, sizeof(uint8_t));
 	COMPV_CHECK_EXP_BAIL(!patch1xnPtr, (err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
 
-	distPtr = (compv_scalar_t*)CompVMem::calloc(width, sizeof(compv_scalar_t));
+	distPtr = (int32_t*)CompVMem::calloc(width, sizeof(int32_t));
 	COMPV_CHECK_EXP_BAIL(!distPtr, (err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
 
 	// Detect keypoints
@@ -49,7 +50,8 @@ bool TestHamming()
 	COMPV_DEBUG_INFO("Elapsed time (TestHamming) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
 	// Check MD5
-	if (expectedMD5[WIDTH_MINUS] != CompVMd5::compute2(distPtr, width * sizeof(compv_scalar_t))) {
+	COMPV_DEBUG_INFO("%s", CompVMd5::compute2(distPtr, width * sizeof(int32_t)).c_str());
+	if (expectedMD5[WIDTH_MINUS] != CompVMd5::compute2(distPtr, width * sizeof(int32_t))) {
 		COMPV_DEBUG_ERROR("MD5 mismatch");
 		COMPV_ASSERT(false);
 		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_UNITTEST_FAILED);

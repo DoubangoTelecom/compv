@@ -28,6 +28,7 @@ bool CompVMathUtils::s_Initialized = false;
 
 static compv_scalar_t maxVal_C(compv_scalar_t x, compv_scalar_t y);
 static compv_scalar_t minVal_C(compv_scalar_t x, compv_scalar_t y);
+static int32_t minArrayI32_C(const int32_t* array, compv_scalar_t count);
 static compv_scalar_t clip3_C(compv_scalar_t min, compv_scalar_t max, compv_scalar_t val);
 static compv_scalar_t clip2_C(compv_scalar_t max, compv_scalar_t val);
 
@@ -40,6 +41,7 @@ COMPV_EXTERNC compv_scalar_t compv_mathutils_clip2_asm_x86_cmov(compv_scalar_t m
 
 compv_scalar_t(*CompVMathUtils::maxValFunc)(compv_scalar_t a, compv_scalar_t b) = maxVal_C;
 compv_scalar_t(*CompVMathUtils::minValFunc)(compv_scalar_t a, compv_scalar_t b) = minVal_C;
+int32_t(*CompVMathUtils::minArrayI32Func)(const int32_t* array, compv_scalar_t count) = minArrayI32_C;
 compv_scalar_t(*CompVMathUtils::clip3Func)(compv_scalar_t min, compv_scalar_t max, compv_scalar_t val) = clip3_C;
 compv_scalar_t(*CompVMathUtils::clip2Func)(compv_scalar_t max, compv_scalar_t val) = clip2_C;
 
@@ -70,6 +72,16 @@ static compv_scalar_t minVal_C(compv_scalar_t x, compv_scalar_t y)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
     return std::min(x, y);
+}
+
+static int32_t minArrayI32_C(const int32_t* array, compv_scalar_t count)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	int32_t min = array[0];
+	for (compv_scalar_t i = 1; i < count; ++i) {
+		min = std::min(min, array[i]);
+	}
+	return min;
 }
 
 compv_scalar_t clip3_C(compv_scalar_t min, compv_scalar_t max, compv_scalar_t val)

@@ -40,7 +40,7 @@ Algorithm:
 for (row = 0; row < height; ++row) 
 	distPtr[row] = hamming(dataPtr[row], key1xnPtr);
 */
-COMPV_ERROR_CODE CompVHamming::distance(const uint8_t* dataPtr, int width, int stride, int height, const uint8_t* patch1xnPtr, compv_scalar_t* distPtr)
+COMPV_ERROR_CODE CompVHamming::distance(const uint8_t* dataPtr, int width, int stride, int height, const uint8_t* patch1xnPtr, int32_t* distPtr)
 {
 	COMPV_CHECK_EXP_RETURN(!dataPtr || !width || width > stride || !height || !patch1xnPtr || !distPtr, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
@@ -49,7 +49,7 @@ COMPV_ERROR_CODE CompVHamming::distance(const uint8_t* dataPtr, int width, int s
 
 	int i, pad = (stride - width);
 	uint64_t pop;
-	compv_scalar_t cnt;
+	int32_t cnt;
 
 	// FIXME: M$ specific
 
@@ -58,25 +58,25 @@ COMPV_ERROR_CODE CompVHamming::distance(const uint8_t* dataPtr, int width, int s
 		cnt = 0;
 		while (i > 7) {
 			pop = *((uint64_t*)dataPtr) ^ *((const uint64_t*)&patch1xnPtr[width - i]);
-			cnt += __popcnt64(pop);
+			cnt += (int32_t)__popcnt64(pop);
 			dataPtr += 8;
 			i -= 8;
 		}
 		if (i > 3) {
 			pop = *((uint32_t*)dataPtr) ^ *((const uint32_t*)&patch1xnPtr[width - i]);
-			cnt += __popcnt((uint32_t)pop);
+			cnt += (int32_t)__popcnt((uint32_t)pop);
 			dataPtr += 4;
 			i -= 4;
 		}
 		if (i > 1) {
 			pop = *((uint16_t*)dataPtr) ^ *((const uint16_t*)&patch1xnPtr[width - i]);
-			cnt += __popcnt16((uint16_t)pop);
+			cnt += (int32_t)__popcnt16((uint16_t)pop);
 			dataPtr += 2;
 			i -= 2;
 		}
 		if (i) {
 			pop = *((uint8_t*)dataPtr) ^ *((const uint8_t*)&patch1xnPtr[width - i]);
-			cnt += kPopcnt256[pop];
+			cnt += (int32_t)kPopcnt256[pop];
 			dataPtr += 1;
 			i -= 1;
 		}

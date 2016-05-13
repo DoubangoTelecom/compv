@@ -54,7 +54,7 @@ private:
 	bool m_bCrossCheck;
 	int32_t m_nNormType;
 	int32_t m_nKNN;
-	CompVPtr<CompVArray<compv_scalar_t>* > m_hammingDistances;
+	CompVPtr<CompVArray<int32_t>* > m_hammingDistances;
 	COMPV_DISABLE_WARNINGS_END()
 };
 

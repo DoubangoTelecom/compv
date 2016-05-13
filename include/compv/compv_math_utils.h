@@ -45,6 +45,9 @@ public:
     static COMPV_INLINE compv_scalar_t minVal(compv_scalar_t x, compv_scalar_t y) {
         return minValFunc(x, y);
     }
+	static COMPV_INLINE int32_t minArrayI32(const int32_t* array, compv_scalar_t count) {
+		return minArrayI32Func(array, count);
+	}
     static COMPV_INLINE compv_scalar_t clip3(compv_scalar_t min, compv_scalar_t max, compv_scalar_t val) {
         return clip3Func(min, max, val);
     }
@@ -55,6 +58,7 @@ private:
     static bool s_Initialized;
     static compv_scalar_t(*maxValFunc)(compv_scalar_t a, compv_scalar_t b);
     static compv_scalar_t(*minValFunc)(compv_scalar_t a, compv_scalar_t b);
+	static int32_t(*minArrayI32Func)(const int32_t* array, compv_scalar_t count);
     static compv_scalar_t(*clip3Func)(compv_scalar_t min, compv_scalar_t max, compv_scalar_t val);
     static compv_scalar_t(*clip2Func)(compv_scalar_t max, compv_scalar_t val);
 };
