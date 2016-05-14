@@ -307,7 +307,9 @@ void* CompVMem::mallocAligned(size_t size, int alignment/*= CompVMem::getBestAli
 #endif
 #	if COMPV_MEM_CHECK
     if (pMem) {
+		CompVMem::specialsLock();
         CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>((uintptr_t)pMem, compv_special_mem_t((uintptr_t)pMem, size, alignment)));
+		CompVMem::specialsUnLock();
     }
 #	endif
     return pMem;

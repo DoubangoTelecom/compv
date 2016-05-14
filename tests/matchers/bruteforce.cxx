@@ -9,7 +9,7 @@
 #define ORB_PYRAMID_SCALEFACTOR		0.83f
 #define ORB_PYRAMID_SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
 #define CROSS_CHECK					false
-#define KNN							2 // for this test use values from 1..4
+#define KNN							4 // for this test use values from 1..4
 #define NORM						COMPV_BRUTEFORCE_NORM_HAMMING
 #define JPEG_TRAIN_IMG				"C:/Projects/GitHub/pan360/images/mandekalou.JPG" // Mande Griots
 #define JPEG_QUERY_IMAGE			"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
