@@ -50,11 +50,13 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVPtr<CompVMatcher* >* matcher);
 
 private:
+	static COMPV_ERROR_CODE processAt(size_t queryIdxStart, size_t count, const CompVArray<uint8_t>* queryDescriptions, const CompVArray<uint8_t>* trainDescriptions, CompVArray<CompVDMatch>* matches);
+	static COMPV_ERROR_CODE processAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
+private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
 	bool m_bCrossCheck;
 	int32_t m_nNormType;
 	int32_t m_nKNN;
-	CompVPtr<CompVArray<int32_t>* > m_hammingDistances;
 	COMPV_DISABLE_WARNINGS_END()
 };
 

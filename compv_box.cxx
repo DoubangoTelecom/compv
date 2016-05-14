@@ -23,8 +23,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-
-
+template class CompVBox<CompVInterestPoint >;
+template class CompVBox<CompVDMatch >;
 
 
 COMPV_NAMESPACE_END()

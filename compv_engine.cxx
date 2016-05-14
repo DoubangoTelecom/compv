@@ -115,6 +115,9 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     COMPV_DEBUG_INFO("Binary type: X86_64");
 #	else
     COMPV_DEBUG_INFO("Binary type: X86_32");
+	if (CompVCpu::isSupported(kCpuFlagX64)) {
+		COMPV_DEBUG_INFO("/!\\Using 32bits binaries on 64bits machine: optimization issues");
+	}
 #	endif
 #endif
 #if defined(COMPV_INTRINSIC)

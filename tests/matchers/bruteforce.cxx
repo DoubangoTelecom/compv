@@ -16,18 +16,32 @@
 
 #define LOOP_COUNT					1
 
-static const std::string expectedMD5[KNN] = {
+static const std::string expectedMD5_ST[KNN] = {
 #if KNN > 0
-	"87cfdc610c2d91ae6d8b992da125be00", // KNN = 1
+	"550e2cc896ec11103593815af64226be", // KNN = 1
 #endif
 #if KNN > 1
-	"6f1753d57097a854d2dbf9542b874967", // KNN = 2
+	"b846befc7e349bb57bbadd1f0ee8c709", // KNN = 2
 #endif
 #if KNN > 2
-	"c9bc7f6e25e0462cc157a01f2507c7a4", // KNN = 3
+	"ce4251684e649f8a3299120056342f40", // KNN = 3
 #endif
 #if KNN > 3
-	"ca769653342573f65d58952740abe441", // KNN = 4
+	"62ea24e07898727de748d36d47aa342f", // KNN = 4
+#endif
+};
+static const std::string expectedMD5_MT[KNN] = {
+#if KNN > 0
+	"6fbdc5ff7279a63c922514e3033f586b", // KNN = 1
+#endif
+#if KNN > 1
+	"097e549336f04c46b91d2070037d0efd", // KNN = 2
+#endif
+#if KNN > 2
+	"6580f428fd94b3585bcf273b9719d4dd", // KNN = 3
+#endif
+#if KNN > 3
+	"7ccb58da0c2518d16183e71bfd7b5fbd", // KNN = 4
 #endif
 };
 
@@ -87,10 +101,17 @@ bool TestBruteForce()
 		COMPV_CHECK_CODE_BAIL(err_ = matcher->process(queryDescriptors, trainDescriptors, &matches));
 	}
 	timeEnd = CompVTime::getNowMills();
+	
+	for (size_t row = 0; row < matches->rows(); ++row) {
+		for (size_t col = 0; col < matches->cols(); ++col) {
+			COMPV_CHECK_EXP_BAIL(row > 0 && matches->ptr(row - 1, col)->distance > matches->ptr(row, col)->distance, (err_ = COMPV_ERROR_CODE_E_UNITTEST_FAILED));
+		}
+	}
 
 	COMPV_DEBUG_INFO("Elapsed time (TestBruteForce) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-	COMPV_CHECK_EXP_BAIL(arrayMD5<CompVDMatch>(matches) != expectedMD5[KNN - 1], (err_ = COMPV_ERROR_CODE_E_UNITTEST_FAILED));
+	const std::string(*expectedMD5)[KNN] = CompVEngine::isMultiThreadingEnabled() ? &expectedMD5_MT : &expectedMD5_ST;
+	COMPV_CHECK_EXP_BAIL(arrayMD5<CompVDMatch>(matches) != (*expectedMD5)[KNN - 1], (err_ = COMPV_ERROR_CODE_E_UNITTEST_FAILED));
 
 bail:
 	COMPV_CHECK_CODE_ASSERT(err_);

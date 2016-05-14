@@ -52,10 +52,12 @@ COMPV_ERROR_CODE CompVHamming::distance(const uint8_t* dataPtr, int width, int s
 	int32_t cnt;
 
 	// FIXME: M$ specific
+	// FIXME: test with WIN32
 
 	for (int j = 0; j < height; ++j) {
 		i = width;
 		cnt = 0;
+#if COMPV_ARCH_X64
 		while (i > 7) {
 			pop = *((uint64_t*)dataPtr) ^ *((const uint64_t*)&patch1xnPtr[width - i]);
 			cnt += (int32_t)__popcnt64(pop);
@@ -63,6 +65,9 @@ COMPV_ERROR_CODE CompVHamming::distance(const uint8_t* dataPtr, int width, int s
 			i -= 8;
 		}
 		if (i > 3) {
+#else
+		while (i > 3) {
+#endif
 			pop = *((uint32_t*)dataPtr) ^ *((const uint32_t*)&patch1xnPtr[width - i]);
 			cnt += (int32_t)__popcnt((uint32_t)pop);
 			dataPtr += 4;
