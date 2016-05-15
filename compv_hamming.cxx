@@ -25,10 +25,13 @@
 #include "compv/intrinsics/x86/compv_hamming_intrin_sse.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM
-COMPV_EXTERNC void HamminDistance_Asm_POPCNT_X86_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv::compv_scalar_t width, compv::compv_scalar_t stride, compv::compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
+COMPV_EXTERNC void HammingDistance_Asm_POPCNT_X86_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv::compv_scalar_t width, compv::compv_scalar_t stride, compv::compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
+COMPV_EXTERNC void HammingDistance_Asm_POPCNT_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* dataPtr, compv::compv_scalar_t width, compv::compv_scalar_t stride, compv::compv_scalar_t height, COMPV_ALIGNED(AVX) const uint8_t* patch1xnPtr, int32_t* distPtr);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 #if COMPV_ARCH_X64 && COMPV_ASM
+COMPV_EXTERNC void HammingDistance_Asm_POPCNT_X64_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv::compv_scalar_t width, compv::compv_scalar_t stride, compv::compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
+COMPV_EXTERNC void HammingDistance_Asm_POPCNT_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* dataPtr, compv::compv_scalar_t width, compv::compv_scalar_t stride, compv::compv_scalar_t height, COMPV_ALIGNED(AVX) const uint8_t* patch1xnPtr, int32_t* distPtr);
 #endif /* COMPV_ARCH_X64 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
@@ -110,9 +113,18 @@ COMPV_ERROR_CODE CompVHamming::distance(const uint8_t* dataPtr, int width, int s
 	if (CompVCpu::isEnabled(kCpuFlagPOPCNT)) {
 		HammingDistance = HammingDistance_POPCNT_C;
 		if (CompVCpu::isEnabled(kCpuFlagSSE42) && COMPV_IS_ALIGNED_SSE(dataPtr) && COMPV_IS_ALIGNED_SSE(patch1xnPtr)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86((HammingDistance = HamminDistance_Intrin_POPCNT_SSE42));
-			COMPV_EXEC_IFDEF_ASM_X86((HammingDistance = HamminDistance_Asm_POPCNT_X86_SSE42));
+			COMPV_EXEC_IFDEF_INTRIN_X86((HammingDistance = HammingDistance_Intrin_POPCNT_SSE42));
+			COMPV_EXEC_IFDEF_ASM_X86((HammingDistance = HammingDistance_Asm_POPCNT_X86_SSE42));
+			COMPV_EXEC_IFDEF_ASM_X64((HammingDistance = HammingDistance_Asm_POPCNT_X64_SSE42));
 		}
+		// There is no math operations (except the xor) in hamming function but a lot of loads and this is why SSE42 version is
+		// slightly faster than AVX
+#if 1
+		if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(dataPtr) && COMPV_IS_ALIGNED_AVX2(patch1xnPtr)) {
+			COMPV_EXEC_IFDEF_ASM_X86((HammingDistance = HammingDistance_Asm_POPCNT_X86_AVX2));
+			COMPV_EXEC_IFDEF_ASM_X64((HammingDistance = HammingDistance_Asm_POPCNT_X64_AVX2));
+		}
+#endif
 	}
 
 	HammingDistance(dataPtr, width, stride, height,  patch1xnPtr, distPtr);

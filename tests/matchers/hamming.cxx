@@ -15,7 +15,7 @@ static const std::string expectedMD5[4/*WIDTH_MINUS*/] =
 	"fb7ba81a253c89416aa88ae9a2b7c389"
 };
 
-#define LOOP_COUNT		1
+#define LOOP_COUNT		1000
 
 bool TestHamming()
 {

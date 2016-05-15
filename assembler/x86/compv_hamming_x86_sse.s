@@ -21,7 +21,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(HamminDistance_Asm_POPCNT_X86_SSE42)
+global sym(HammingDistance_Asm_POPCNT_X86_SSE42)
 
 section .data
 
@@ -34,8 +34,8 @@ section .text
 ; arg(3) -> compv_scalar_t height
 ; arg(4) -> COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr
 ; arg(5) -> int32_t* distPtr
-; void HamminDistance_Asm_POPCNT_X86_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_scalar_t width, compv_scalar_t stride, compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr)
-sym(HamminDistance_Asm_POPCNT_X86_SSE42):
+; void HammingDistance_Asm_POPCNT_X86_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_scalar_t width, compv_scalar_t stride, compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr)
+sym(HammingDistance_Asm_POPCNT_X86_SSE42):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -86,7 +86,7 @@ sym(HamminDistance_Asm_POPCNT_X86_SSE42):
 			movdqa xmm0, [rcx + rsi]
 			movdqa xmm1, [rdx + rsi]
 			pxor xmm0, xmm1
-			pextrd eax, xmm0, 0
+			movd eax, xmm0
 			popcnt eax, eax
 			add ebx, eax
 			pextrd eax, xmm0, 1

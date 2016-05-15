@@ -27,7 +27,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 // popcnt available starting SSE4.2 but up to the caller to check its availability using CPU features
-void HamminDistance_Intrin_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_scalar_t width, compv_scalar_t stride, compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr)
+void HammingDistance_Intrin_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_scalar_t width, compv_scalar_t stride, compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
 
@@ -43,10 +43,10 @@ void HamminDistance_Intrin_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPt
 		for (; i <= width - 16; i += 16) {
 			xmm0 = _mm_xor_si128(_mm_load_si128((__m128i*)&dataPtr[i]), _mm_load_si128((__m128i*)&patch1xnPtr[i]));
 #if COMPV_ARCH_X64
-			cnt += compv_popcnt64((uint64_t)_mm_extract_epi64(xmm0, 0));
+			cnt += compv_popcnt64((uint64_t)_mm_cvtsi128_si64(xmm0));
 			cnt += compv_popcnt64((uint64_t)_mm_extract_epi64(xmm0, 1));
 #else
-			cnt += compv_popcnt32((uint32_t)_mm_extract_epi32(xmm0, 0));
+			cnt += compv_popcnt32((uint32_t)_mm_cvtsi128_si32(xmm0));
 			cnt += compv_popcnt32((uint32_t)_mm_extract_epi32(xmm0, 1));
 			cnt += compv_popcnt32((uint32_t)_mm_extract_epi32(xmm0, 2));
 			cnt += compv_popcnt32((uint32_t)_mm_extract_epi32(xmm0, 3));

@@ -14,7 +14,7 @@
 #define JPEG_TRAIN_IMG				"C:/Projects/GitHub/pan360/images/mandekalou.JPG" // Mande Griots
 #define JPEG_QUERY_IMAGE			"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
 
-#define LOOP_COUNT					1
+#define LOOP_COUNT					1000
 
 static const std::string expectedMD5_ST[KNN] = {
 #if KNN > 0

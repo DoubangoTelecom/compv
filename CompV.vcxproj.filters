@@ -667,19 +667,17 @@
     <YASM Include="assembler\x86\image\scale\compv_imagescale_bilinear_x86_sse.s">
       <Filter>Assembler Files\x86\image\scale</Filter>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assembler\x86\compv_hamming_x64_avx2.s">
+    <YASM Include="assembler\x86\compv_hamming_x64_avx2.s">
       <Filter>Assembler Files\x86</Filter>
-    </None>
-    <None Include="assembler\x86\compv_hamming_x64_sse.s">
+    </YASM>
+    <YASM Include="assembler\x86\compv_hamming_x64_sse.s">
       <Filter>Assembler Files\x86</Filter>
-    </None>
-    <None Include="assembler\x86\compv_hamming_x86_avx2.s">
+    </YASM>
+    <YASM Include="assembler\x86\compv_hamming_x86_avx2.s">
       <Filter>Assembler Files\x86</Filter>
-    </None>
-    <None Include="assembler\x86\compv_hamming_x86_sse.s">
+    </YASM>
+    <YASM Include="assembler\x86\compv_hamming_x86_sse.s">
       <Filter>Assembler Files\x86</Filter>
-    </None>
+    </YASM>
   </ItemGroup>
 </Project>
