@@ -14,7 +14,7 @@
 #define JPEG_TRAIN_IMG				"C:/Projects/GitHub/pan360/images/mandekalou.JPG" // Mande Griots
 #define JPEG_QUERY_IMAGE			"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
 
-#define LOOP_COUNT					1000
+#define LOOP_COUNT					1
 
 static const std::string expectedMD5_ST[KNN] = {
 #if KNN > 0
@@ -101,6 +101,8 @@ bool TestBruteForce()
 		COMPV_CHECK_CODE_BAIL(err_ = matcher->process(queryDescriptors, trainDescriptors, &matches));
 	}
 	timeEnd = CompVTime::getNowMills();
+
+	COMPV_DEBUG_INFO("%s", arrayMD5<CompVDMatch>(matches).c_str());
 	
 	for (size_t row = 0; row < matches->rows(); ++row) {
 		for (size_t col = 0; col < matches->cols(); ++col) {

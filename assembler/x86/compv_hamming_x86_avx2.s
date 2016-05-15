@@ -36,6 +36,7 @@ section .text
 ; arg(5) -> int32_t* distPtr
 ; void HammingDistance_Asm_POPCNT_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* dataPtr, compv_scalar_t width, compv_scalar_t stride, compv_scalar_t height, COMPV_ALIGNED(AVX) const uint8_t* patch1xnPtr, int32_t* distPtr)
 sym(HammingDistance_Asm_POPCNT_X86_AVX2):
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -113,9 +114,8 @@ sym(HammingDistance_Asm_POPCNT_X86_AVX2):
 			add ebx, eax
 			vpextrd eax, xmm1, 3
 			popcnt eax, eax
-			add ebx, eax
-		
 			add rsi, 32
+			add ebx, eax
 			cmp rsi, [i_sub32]
 			jle .LoopCols32
 			.EndOfLoopCols32
@@ -139,9 +139,8 @@ sym(HammingDistance_Asm_POPCNT_X86_AVX2):
 			add ebx, eax
 			vpextrd eax, xmm0, 3
 			popcnt eax, eax
-			add ebx, eax
-		
 			add rsi, 16
+			add ebx, eax
 			cmp rsi, [i_sub16]
 			jle .LoopCols16
 			.EndOfLoopCols16
@@ -155,9 +154,8 @@ sym(HammingDistance_Asm_POPCNT_X86_AVX2):
 			mov eax, dword [rcx + rsi]
 			xor eax, dword [rdx + rsi]
 			popcnt eax, eax
-			add ebx, eax
-
 			add rsi, 4
+			add ebx, eax
 			cmp rsi, [i_sub4]
 			jle .LoopCols4
 			.EndOfLoopCols4
@@ -170,9 +168,8 @@ sym(HammingDistance_Asm_POPCNT_X86_AVX2):
 			mov ax, word [rcx + rsi]
 			xor ax, word [rdx + rsi]
 			popcnt ax, ax
-			add ebx, eax
-
 			add rsi, 2
+			add ebx, eax
 			.EndOfIf2
 
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -183,9 +180,8 @@ sym(HammingDistance_Asm_POPCNT_X86_AVX2):
 			mov al, byte [rcx + rsi]
 			xor al, byte [rdx + rsi]
 			popcnt ax, ax
-			add ebx, eax
-
 			add rsi, 1
+			add ebx, eax
 			.EndOfIf1
 
 		mov rax, arg(5) ; distPtr
@@ -211,4 +207,5 @@ sym(HammingDistance_Asm_POPCNT_X86_AVX2):
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret

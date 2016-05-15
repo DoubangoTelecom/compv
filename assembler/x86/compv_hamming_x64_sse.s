@@ -24,6 +24,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(HammingDistance_Asm_POPCNT_X64_SSE42)
+global sym(HammingDistance256_Asm_POPCNT_X64_SSE42)
 
 section .data
 
@@ -90,8 +91,8 @@ sym(HammingDistance_Asm_POPCNT_X64_SSE42):
 		jg .EndOfLoopCols32
 		.LoopCols32
 			movdqa xmm0, [rcx + rsi]
-			movdqa xmm2, [rcx + rsi + 16]
 			movdqa xmm1, [rdx + rsi]
+			movdqa xmm2, [rcx + rsi + 16]
 			movdqa xmm3, [rdx + rsi + 16]
 			pxor xmm0, xmm1
 			pxor xmm2, xmm3
@@ -105,10 +106,9 @@ sym(HammingDistance_Asm_POPCNT_X64_SSE42):
 			pextrq r15, xmm2, 1
 			popcnt r14, r14
 			popcnt r15, r15
+			add rsi, 32
 			add rbx, r14
 			add rbx, r15
-					
-			add rsi, 32
 			cmp rsi, rax
 			jle .LoopCols32
 			.EndOfLoopCols32
@@ -126,10 +126,9 @@ sym(HammingDistance_Asm_POPCNT_X64_SSE42):
 			pextrq r15, xmm0, 1
 			popcnt r14, r14
 			popcnt r15, r15
+			add rsi, 16
 			add rbx, r14
 			add rbx, r15
-					
-			add rsi, 16
 			cmp rsi, r10
 			jle .LoopCols16
 			.EndOfLoopCols16
@@ -143,9 +142,8 @@ sym(HammingDistance_Asm_POPCNT_X64_SSE42):
 			mov r14d, dword [rcx + rsi]
 			xor r14d, dword [rdx + rsi]
 			popcnt r14d, r14d
-			add rbx, r14
-
 			add rsi, 4
+			add rbx, r14
 			cmp rsi, r13
 			jle .LoopCols4
 			.EndOfLoopCols4
@@ -158,9 +156,8 @@ sym(HammingDistance_Asm_POPCNT_X64_SSE42):
 			mov r14w, word [rcx + rsi]
 			xor r14w, word [rdx + rsi]
 			popcnt r14w, r14w
-			add rbx, r14
-
 			add rsi, 2
+			add rbx, r14
 			.EndOfIf2
 
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -171,9 +168,8 @@ sym(HammingDistance_Asm_POPCNT_X64_SSE42):
 			mov r14b, byte [rcx + rsi]
 			xor r14b, byte [rdx + rsi]
 			popcnt r14w, r14w
-			add rbx, r14
-
 			inc rsi
+			add rbx, r14
 			.EndOfIf1
 		
 		add rcx, r8 ; dataPtr += stride
@@ -189,6 +185,75 @@ sym(HammingDistance_Asm_POPCNT_X64_SSE42):
 	pop r13
 	pop r12
 	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	vzeroupper
+	ret
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* dataPtr
+; arg(1) -> compv_scalar_t height
+; arg(2) -> COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr
+; arg(3) -> int32_t* distPtr
+; void HammingDistance256_Asm_POPCNT_X64_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr)
+sym(HammingDistance256_Asm_POPCNT_X64_SSE42):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 4
+	push rsi
+	push rdi
+	;; end prolog ;;
+
+	; rdi = j = 0
+	xor rdi, rdi
+
+	; rcx = dataPtr
+	mov rcx, arg(0)
+
+	; r8 = height
+	mov r8, arg(1)
+
+	; rdx = patch1xnPtr
+	mov rdx, arg(2)
+
+	; r9 = distPtr
+	mov r9, arg(3)
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopRows
+		movdqa xmm0, [rcx]
+		movdqa xmm1, [rdx]
+		movdqa xmm2, [rcx + 16]
+		movdqa xmm3, [rdx + 16]
+		pxor xmm0, xmm1
+		pxor xmm2, xmm3
+		movq r11, xmm0
+		pextrq r10, xmm0, 1
+		movq rax, xmm2
+		pextrq rsi, xmm2, 1
+		popcnt r11, r11
+		popcnt r10, r10
+		popcnt rax, rax
+		popcnt rsi, rsi
+		add r11, r10
+		add r11, rax
+		add r11, rsi
+
+		mov [r9 + rdi*4], dword r11d ; distPtr[j] = (int32_t)(cnt)
+
+		add rcx, 32 ; dataPtr += 32
+		inc rdi
+		cmp rdi, r8
+		jl .LoopRows
+
+	;; begin epilog ;;
 	pop rdi
 	pop rsi
 	COMPV_YASM_UNSHADOW_ARGS

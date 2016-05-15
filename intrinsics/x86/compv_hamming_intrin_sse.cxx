@@ -29,7 +29,7 @@ COMPV_NAMESPACE_BEGIN()
 // popcnt available starting SSE4.2 but up to the caller to check its availability using CPU features
 void HammingDistance_Intrin_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_scalar_t width, compv_scalar_t stride, compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM code almost #2 times faster (VS2013)
 
 	compv_scalar_t i, j;
 	uint64_t cnt;
@@ -73,6 +73,37 @@ void HammingDistance_Intrin_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataP
 			++i;
 		}
 		dataPtr += stride;
+		distPtr[j] = (int32_t)(cnt);
+	}
+}
+
+// popcnt available starting SSE4.2 but up to the caller to check its availability using CPU features
+void HammingDistance256_Intrin_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM code almost #2 times faster (VS2013)
+
+	uint64_t cnt;
+	__m128i xmm0, xmm1;
+
+	for (compv_scalar_t j = 0; j < height; ++j) {
+		xmm0 = _mm_xor_si128(_mm_load_si128((__m128i*)&dataPtr[0]), _mm_load_si128((__m128i*)&patch1xnPtr[0]));
+		xmm1 = _mm_xor_si128(_mm_load_si128((__m128i*)&dataPtr[16]), _mm_load_si128((__m128i*)&patch1xnPtr[16]));
+#if COMPV_ARCH_X64
+		cnt = compv_popcnt64((uint64_t)_mm_cvtsi128_si64(xmm0));
+		cnt += compv_popcnt64((uint64_t)_mm_extract_epi64(xmm0, 1));
+		cnt += compv_popcnt64((uint64_t)_mm_cvtsi128_si64(xmm1));
+		cnt += compv_popcnt64((uint64_t)_mm_extract_epi64(xmm1, 1));
+#else
+		cnt = compv_popcnt32((uint32_t)_mm_cvtsi128_si32(xmm0));
+		cnt += compv_popcnt32((uint32_t)_mm_extract_epi32(xmm0, 1));
+		cnt += compv_popcnt32((uint32_t)_mm_extract_epi32(xmm0, 2));
+		cnt += compv_popcnt32((uint32_t)_mm_extract_epi32(xmm0, 3));
+		cnt += compv_popcnt32((uint32_t)_mm_cvtsi128_si32(xmm1));
+		cnt += compv_popcnt32((uint32_t)_mm_extract_epi32(xmm1, 1));
+		cnt += compv_popcnt32((uint32_t)_mm_extract_epi32(xmm1, 2));
+		cnt += compv_popcnt32((uint32_t)_mm_extract_epi32(xmm1, 3));
+#endif
+		dataPtr += 32;
 		distPtr[j] = (int32_t)(cnt);
 	}
 }

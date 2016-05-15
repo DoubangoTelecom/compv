@@ -22,6 +22,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(HammingDistance_Asm_POPCNT_X86_SSE42)
+global sym(HammingDistance256_Asm_POPCNT_X86_SSE42)
 
 section .data
 
@@ -97,9 +98,8 @@ sym(HammingDistance_Asm_POPCNT_X86_SSE42):
 			add ebx, eax
 			pextrd eax, xmm0, 3
 			popcnt eax, eax
-			add ebx, eax
-		
 			add rsi, 16
+			add ebx, eax
 			cmp rsi, [i_sub16]
 			jle .LoopCols16
 			.EndOfLoopCols16
@@ -113,9 +113,8 @@ sym(HammingDistance_Asm_POPCNT_X86_SSE42):
 			mov eax, dword [rcx + rsi]
 			xor eax, dword [rdx + rsi]
 			popcnt eax, eax
-			add ebx, eax
-
 			add rsi, 4
+			add ebx, eax
 			cmp rsi, [i_sub4]
 			jle .LoopCols4
 			.EndOfLoopCols4
@@ -128,9 +127,8 @@ sym(HammingDistance_Asm_POPCNT_X86_SSE42):
 			mov ax, word [rcx + rsi]
 			xor ax, word [rdx + rsi]
 			popcnt ax, ax
-			add ebx, eax
-
 			add rsi, 2
+			add ebx, eax
 			.EndOfIf2
 
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -141,9 +139,8 @@ sym(HammingDistance_Asm_POPCNT_X86_SSE42):
 			mov al, byte [rcx + rsi]
 			xor al, byte [rdx + rsi]
 			popcnt ax, ax
-			add ebx, eax
-
 			add rsi, 1
+			add ebx, eax
 			.EndOfIf1
 
 		mov rax, arg(5) ; distPtr
@@ -160,6 +157,88 @@ sym(HammingDistance_Asm_POPCNT_X86_SSE42):
 	%undef i_sub4
 	%undef i_sub2
 	%undef i_sub1
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* dataPtr
+; arg(1) -> compv_scalar_t height
+; arg(2) -> COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr
+; arg(3) -> int32_t* distPtr
+; void HammingDistance256_Asm_POPCNT_X86_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_scalar_t width, compv_scalar_t stride, compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr)
+sym(HammingDistance256_Asm_POPCNT_X86_SSE42):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 4
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	; alloc memory
+	sub rsp, 4*8
+
+	; rdi = j = 0
+	xor rdi, rdi
+
+	; rcx = dataPtr
+	mov rcx, arg(0)
+
+	; rdx = patch1xnPtr
+	mov rdx, arg(2)
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopRows
+		movdqa xmm0, [rcx]
+		movdqa xmm1, [rdx]
+		movdqa xmm2, [rcx + 16]
+		movdqa xmm3, [rdx + 16]
+		pxor xmm0, xmm1
+		pxor xmm2, xmm3
+		movd [rsp + 0], xmm0
+		pextrd dword [rsp + 4], xmm0, 1
+		pextrd dword [rsp + 8], xmm0, 2
+		pextrd dword [rsp + 12], xmm0, 3
+		movd [rsp + 16], xmm2
+		pextrd dword [rsp + 20], xmm2, 1
+		pextrd dword [rsp + 24], xmm2, 2
+		pextrd dword [rsp + 28], xmm2, 3
+		popcnt ebx, [rsp + 0]
+		popcnt eax, [rsp + 4]
+		add ebx, eax
+		popcnt eax, [rsp + 8]
+		popcnt esi, [rsp + 12]
+		add ebx, eax
+		add ebx, esi
+		popcnt eax, [rsp + 16]
+		popcnt esi, [rsp + 20]
+		add ebx, eax
+		add ebx, esi
+		popcnt eax, [rsp + 24]
+		popcnt esi, [rsp + 28]
+		add ebx, eax
+		add ebx, esi
+
+		mov rsi, arg(3)
+		add rcx, 32 ; dataPtr += 32
+		mov [rsi + rdi*4], ebx ; distPtr[j] = (int32_t)(cnt)
+
+		inc rdi
+		cmp rdi, arg(1)
+		jl .LoopRows
+
+	; free memory
+	add rsp, 4*8
 
 	;; begin epilog ;;
 	pop rbx
