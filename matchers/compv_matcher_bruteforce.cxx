@@ -148,8 +148,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(size_t queryIdxStart, size_t 
 	size_t trainStrideBytes_ = trainDescriptions->strideInBytes();
 	size_t queryCols_ = queryDescriptions->cols();
 	size_t queryIdx_, trainIdx_, oldTrainIdx_, oldQueryIdx_, k_;
-	int32_t oldDistance_, newDistance_;
-	size_t hammingIdx_;
+	int32_t oldDistance_;
 	size_t queryIdxEnd_ = queryIdxStart + count;
 
 	size_t matchesRows = matches->rows();
@@ -161,6 +160,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(size_t queryIdxStart, size_t 
 	int32_t *hammingDistances_ = const_cast<int32_t*>(hammingDistancesArray->ptr());
 
 	const uint8_t *queryDescriptions_ = queryDescriptions->ptr(queryIdxStart, 0), *trainDescriptions_ = trainDescriptions->ptr(0, 0);
+	CompVDMatch* matches_ = const_cast<CompVDMatch*>(matches->ptr(0, queryIdxStart));
 
 	// Set default values for the first knn-th rows to INT_MAX to make sure we will sort correctly the first inserted values
 	// We'll have knn sorted values for the first round-trip. As the sorting is done for knn elements only then, when a candidate is
@@ -168,29 +168,30 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(size_t queryIdxStart, size_t 
 
 
 	if (matchesRows == 2) { // Means KNN = 2, frequently used for ratio test
+		const int32_t* hD;
 		// initialization
-		for (queryIdx_ = queryIdxStart, match0_ = const_cast<CompVDMatch*>(matches->ptr(0, queryIdx_)); queryIdx_ < queryIdxEnd_; ++queryIdx_, ++match0_) {
+		for (queryIdx_ = queryIdxStart, match0_ = matches_, match1_ = (matches_ + matchesCols); queryIdx_ < queryIdxEnd_; ++queryIdx_, ++match0_, ++match1_) {
 			match0_->distance = INT_MAX;
-			(match0_ + matchesCols)->distance = INT_MAX;
+			match0_->imageIdx = 0;
+			match1_->distance = INT_MAX;
+			match1_->imageIdx = 0;
 		}
 		// round-trips
 		for (trainIdx_ = 0; trainIdx_ < trainRows_; ++trainIdx_, trainDescriptions_ += trainStrideBytes_) {
 			COMPV_CHECK_CODE_RETURN(err_ = CompVHamming::distance(queryDescriptions_, (int)queryCols_, (int)queryDescriptions->strideInBytes(), (int)count,
 				trainDescriptions_, hammingDistances_));
-			for (queryIdx_ = queryIdxStart, hammingIdx_ = 0, match0_ = const_cast<CompVDMatch*>(matches->ptr(0, queryIdx_)); queryIdx_ < queryIdxEnd_; ++queryIdx_, ++hammingIdx_, ++match0_) {
-				newDistance_ = hammingDistances_[hammingIdx_];
-				match1_ = (match0_ + matchesCols);
+			for (queryIdx_ = queryIdxStart, hD = hammingDistances_, match0_ = matches_, match1_ = (matches_ + matchesCols); queryIdx_ < queryIdxEnd_; ++queryIdx_, ++hD, ++match0_, ++match1_) {
 				// "match0_ <= match1_" -> if (newDistance_ not< match1_) then, newDistance_ not < match0_
-				if (newDistance_ < match1_->distance) {
-					if (newDistance_ < match0_->distance) {
+				if (*hD < match1_->distance) {
+					if (*hD < match0_->distance) {
 						oldDistance_ = match0_->distance, oldTrainIdx_ = match0_->trainIdx, oldQueryIdx_ = match0_->queryIdx;
-						match0_->distance = newDistance_, match0_->trainIdx = trainIdx_, match0_->queryIdx = queryIdx_;
+						match0_->distance = *hD, match0_->trainIdx = trainIdx_, match0_->queryIdx = queryIdx_;
 						if (oldDistance_ < match1_->distance) {
 							match1_->distance = oldDistance_, match1_->trainIdx = oldTrainIdx_, match1_->queryIdx = oldQueryIdx_;
 						}
 					}
 					else {
-						match1_->distance = newDistance_, match1_->trainIdx = trainIdx_, match1_->queryIdx = queryIdx_;
+						match1_->distance = *hD, match1_->trainIdx = trainIdx_, match1_->queryIdx = queryIdx_;
 					}
 				}
 			}
@@ -198,12 +199,14 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(size_t queryIdxStart, size_t 
 	}
 	else {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-		size_t newTrainIdx_, newQueryIdx_;
+		size_t newTrainIdx_, newQueryIdx_, hammingIdx_;
+		int32_t newDistance_;
 		// initialization
-		for (queryIdx_ = queryIdxStart, match0_ = const_cast<CompVDMatch*>(matches->ptr(0, queryIdx_)); queryIdx_ < queryIdxEnd_; ++queryIdx_, ++match0_) {
+		for (queryIdx_ = queryIdxStart, match0_ = matches_; queryIdx_ < queryIdxEnd_; ++queryIdx_, ++match0_) {
 			match1_ = match0_;
 			for (k_ = 0; k_ < matchesRows; ++k_) {
 				match1_->distance = INT_MAX;
+				match1_->imageIdx = 0;
 				match1_ += matchesCols;
 			}
 		}
@@ -211,7 +214,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(size_t queryIdxStart, size_t 
 		for (trainIdx_ = 0; trainIdx_ < trainRows_; ++trainIdx_, trainDescriptions_ += trainStrideBytes_) {
 			COMPV_CHECK_CODE_RETURN(err_ = CompVHamming::distance(queryDescriptions_, (int)queryCols_, (int)queryDescriptions->strideInBytes(), (int)count,
 				trainDescriptions_, hammingDistances_));
-			for (queryIdx_ = queryIdxStart, hammingIdx_ = 0, match0_ = const_cast<CompVDMatch*>(matches->ptr(0, queryIdx_)); queryIdx_ < queryIdxEnd_; ++queryIdx_, ++hammingIdx_, ++match0_) {
+			for (queryIdx_ = queryIdxStart, hammingIdx_ = 0, match0_ = matches_; queryIdx_ < queryIdxEnd_; ++queryIdx_, ++hammingIdx_, ++match0_) {
 				newDistance_ = hammingDistances_[hammingIdx_], newTrainIdx_ = trainIdx_, newQueryIdx_ = queryIdx_;
 				match1_ = match0_;
 				for (k_ = 0; k_ < matchesRows; ++k_) {

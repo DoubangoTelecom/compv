@@ -9,7 +9,7 @@
 #define ORB_PYRAMID_SCALEFACTOR		0.83f
 #define ORB_PYRAMID_SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
 #define CROSS_CHECK					false
-#define KNN							4 // for this test use values from 1..4
+#define KNN							2 // for this test use values from 1..4
 #define NORM						COMPV_BRUTEFORCE_NORM_HAMMING
 #define JPEG_TRAIN_IMG				"C:/Projects/GitHub/pan360/images/mandekalou.JPG" // Mande Griots
 #define JPEG_QUERY_IMAGE			"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
@@ -18,30 +18,30 @@
 
 static const std::string expectedMD5_ST[KNN] = {
 #if KNN > 0
-	"550e2cc896ec11103593815af64226be", // KNN = 1
+	"87cfdc610c2d91ae6d8b992da125be00", // KNN = 1
 #endif
 #if KNN > 1
-	"b846befc7e349bb57bbadd1f0ee8c709", // KNN = 2
+	"d28742d73274f326bf33842c9d2cd959", // KNN = 2
 #endif
 #if KNN > 2
-	"ce4251684e649f8a3299120056342f40", // KNN = 3
+	"0a1293ef4eaf9c18de8765e549cb581d", // KNN = 3
 #endif
 #if KNN > 3
-	"62ea24e07898727de748d36d47aa342f", // KNN = 4
+	"81c34dfb92c5400f35d19fa4eec16fce", // KNN = 4
 #endif
 };
 static const std::string expectedMD5_MT[KNN] = {
 #if KNN > 0
-	"6fbdc5ff7279a63c922514e3033f586b", // KNN = 1
+	"8cb765943621b6a6de2f1c5d35411d33", // KNN = 1
 #endif
 #if KNN > 1
-	"097e549336f04c46b91d2070037d0efd", // KNN = 2
+	"e1b2c33e88bf7b249d4fdf50a438b69c", // KNN = 2
 #endif
 #if KNN > 2
-	"6580f428fd94b3585bcf273b9719d4dd", // KNN = 3
+	"09731700b55eb3aa6d70964f5ba8f585", // KNN = 3
 #endif
 #if KNN > 3
-	"7ccb58da0c2518d16183e71bfd7b5fbd", // KNN = 4
+	"feba5bd3c982c6563ef4101c0473107c", // KNN = 4
 #endif
 };
 
@@ -107,6 +107,8 @@ bool TestBruteForce()
 			COMPV_CHECK_EXP_BAIL(row > 0 && matches->ptr(row - 1, col)->distance > matches->ptr(row, col)->distance, (err_ = COMPV_ERROR_CODE_E_UNITTEST_FAILED));
 		}
 	}
+
+	COMPV_DEBUG_INFO("%s", arrayMD5<CompVDMatch>(matches).c_str());
 
 	COMPV_DEBUG_INFO("Elapsed time (TestBruteForce) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 

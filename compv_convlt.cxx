@@ -161,10 +161,13 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt1_private(const uint8_t* img_ptr, int img
 	// Make sure we're not sharing the internal memory across threads
 	COMPV_CHECK_EXP_RETURN(bMultiThreaded && !out_ptr, COMPV_ERROR_CODE_E_INVALID_CALL);
 
+	// The realloc_aligned() implementation memcpy() old data which is slow. Prefer, free_aligned() followed by malloc_aligned()
+
 	/* Alloc memory */
 	size_t neededSize = (img_height + (img_border << 1)) * (img_stride + (img_border << 1));
 	if (!out_ptr && m_nDataSize < neededSize) {
-		m_pDataPtr = CompVMem::realloc(m_pDataPtr, neededSize);
+		CompVMem::free(&m_pDataPtr);
+		m_pDataPtr = CompVMem::malloc(neededSize);
 		if (!m_pDataPtr) {
 			m_nDataSize = 0;
 			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -178,7 +181,8 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt1_private(const uint8_t* img_ptr, int img
 		COMPV_CHECK_EXP_RETURN(!imgTmpMT, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
 	if (!imgTmpMT && m_nDataSize0 < neededSize) {
-		m_pDataPtr0 = CompVMem::realloc(m_pDataPtr0, neededSize);
+		CompVMem::free(&m_pDataPtr0);
+		m_pDataPtr0 = CompVMem::malloc(neededSize);
 		if (!m_pDataPtr0) {
 			m_nDataSize0 = 0;
 			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
