@@ -179,24 +179,27 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(size_t queryIdxStart, size_t 
 				trainDescriptions_, hammingDistances_));
 			for (queryIdx_ = queryIdxStart, hammingIdx_ = 0, match0_ = const_cast<CompVDMatch*>(matches->ptr(0, queryIdx_)); queryIdx_ < queryIdxEnd_; ++queryIdx_, ++hammingIdx_, ++match0_) {
 				newDistance_ = hammingDistances_[hammingIdx_];
-				if (newDistance_ < match0_->distance) {
-					match1_ = (match0_ + matchesCols);
-					oldDistance_ = match0_->distance, oldTrainIdx_ = match0_->trainIdx, oldQueryIdx_ = match0_->queryIdx;
-					match0_->distance = newDistance_, match0_->trainIdx = trainIdx_, match0_->queryIdx = queryIdx_;
-					if (oldDistance_ < match1_->distance) {
-						match1_->distance = oldDistance_, match1_->trainIdx = oldTrainIdx_, match1_->queryIdx = oldQueryIdx_;
+				match1_ = (match0_ + matchesCols);
+				// "match0_ <= match1_" -> if (newDistance_ not< match1_) then, newDistance_ not < match0_
+				if (newDistance_ < match1_->distance) {
+					if (newDistance_ < match0_->distance) {
+						oldDistance_ = match0_->distance, oldTrainIdx_ = match0_->trainIdx, oldQueryIdx_ = match0_->queryIdx;
+						match0_->distance = newDistance_, match0_->trainIdx = trainIdx_, match0_->queryIdx = queryIdx_;
+						if (oldDistance_ < match1_->distance) {
+							match1_->distance = oldDistance_, match1_->trainIdx = oldTrainIdx_, match1_->queryIdx = oldQueryIdx_;
+						}
 					}
-				}
-				else if (newDistance_ < (match1_ = (match0_ + matchesCols))->distance) {
-					match1_->distance = newDistance_, match1_->trainIdx = trainIdx_, match1_->queryIdx = queryIdx_;
+					else {
+						match1_->distance = newDistance_, match1_->trainIdx = trainIdx_, match1_->queryIdx = queryIdx_;
+					}
 				}
 			}
 		}
 	}
 	else {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-		// initialization
 		size_t newTrainIdx_, newQueryIdx_;
+		// initialization
 		for (queryIdx_ = queryIdxStart, match0_ = const_cast<CompVDMatch*>(matches->ptr(0, queryIdx_)); queryIdx_ < queryIdxEnd_; ++queryIdx_, ++match0_) {
 			match1_ = match0_;
 			for (k_ = 0; k_ < matchesRows; ++k_) {
