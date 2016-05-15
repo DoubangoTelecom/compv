@@ -363,6 +363,9 @@
     <ClInclude Include="include\compv\matchers\compv_matcher_flann.h">
       <Filter>Header Files\matchers</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\compv_hamming_intrin_sse.h">
+      <Filter>Header Files\intrinsics\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -557,6 +560,9 @@
     <ClCompile Include="matchers\compv_matcher_flann.cxx">
       <Filter>Source Files\matchers</Filter>
     </ClCompile>
+    <ClCompile Include="intrinsics\x86\compv_hamming_intrin_sse.cxx">
+      <Filter>Source Files\intrinsics\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="assembler\x86\compv_utils_x86.s">
@@ -661,5 +667,19 @@
     <YASM Include="assembler\x86\image\scale\compv_imagescale_bilinear_x86_sse.s">
       <Filter>Assembler Files\x86\image\scale</Filter>
     </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assembler\x86\compv_hamming_x64_avx2.s">
+      <Filter>Assembler Files\x86</Filter>
+    </None>
+    <None Include="assembler\x86\compv_hamming_x64_sse.s">
+      <Filter>Assembler Files\x86</Filter>
+    </None>
+    <None Include="assembler\x86\compv_hamming_x86_avx2.s">
+      <Filter>Assembler Files\x86</Filter>
+    </None>
+    <None Include="assembler\x86\compv_hamming_x86_sse.s">
+      <Filter>Assembler Files\x86</Filter>
+    </None>
   </ItemGroup>
 </Project>

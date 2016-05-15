@@ -50,7 +50,6 @@ bool TestHamming()
 	COMPV_DEBUG_INFO("Elapsed time (TestHamming) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
 	// Check MD5
-	COMPV_DEBUG_INFO("%s", CompVMd5::compute2(distPtr, width * sizeof(int32_t)).c_str());
 	if (expectedMD5[WIDTH_MINUS] != CompVMd5::compute2(distPtr, width * sizeof(int32_t))) {
 		COMPV_DEBUG_ERROR("MD5 mismatch");
 		COMPV_ASSERT(false);

@@ -17,39 +17,24 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_BITS_H_)
-#define _COMPV_BITS_H_
+#if !defined(_COMPV_HAMMING_INTRIN_SSE_H_)
+#define _COMPV_HAMMING_INTRIN_SSE_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
 
-COMPV_EXTERNC_BEGIN()
+#if defined(_COMPV_API_H_)
+#error("This is a private file and must not be part of the API")
+#endif
 
-extern COMPV_API compv::compv_scalar_t kPopcnt256[];
-
-COMPV_EXTERNC_END()
+#if COMPV_ARCH_X86 && COMPV_INTRINSIC
 
 COMPV_NAMESPACE_BEGIN()
 
-class COMPV_API CompVBits
-{
-public:
-};
-
-#if defined(_MSC_VER)
-#	define compv_popcnt16(val)		__popcnt16((val))
-#	define compv_popcnt32(val)		__popcnt((val))
-#	define compv_popcnt64(val)		__popcnt64((val))
-#else
-#	define compv_popcnt16(val)		__builtin_popcount((val))
-#	define compv_popcnt32(val)		__builtin_popcount((val))
-#	define compv_popcnt64(val)		__builtin_popcountll((val))
-#endif
-#define compv_popcnt16_soft(val)		(kPopcnt256[val & 0xFF] + kPopcnt256[(val >> 8) & 0xFF])
-
-// https://github.com/DoubangoTelecom/compv/issues/27
-// #define compv_popcnt16(hard, val)		(val ? compv_popcnt16_hard((val)) : compv_popcnt16_soft((val)))
+void HamminDistance_Intrin_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_scalar_t width, compv_scalar_t stride, compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_BITS_H_ */
+#endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
+
+#endif /* _COMPV_HAMMING_INTRIN_SSE_H_ */

@@ -18,16 +18,77 @@
 * along with CompV.
 */
 #include "compv/compv_hamming.h"
+#include "compv/compv_cpu.h"
 #include "compv/compv_bits.h"
 #include "compv/compv_debug.h"
 
+#include "compv/intrinsics/x86/compv_hamming_intrin_sse.h"
+
 #if COMPV_ARCH_X86 && COMPV_ASM
+COMPV_EXTERNC void HamminDistance_Asm_POPCNT_X86_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv::compv_scalar_t width, compv::compv_scalar_t stride, compv::compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 #if COMPV_ARCH_X64 && COMPV_ASM
 #endif /* COMPV_ARCH_X64 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
+
+// Private function, up to the caller to check input parameters
+static void HammingDistance_C(const uint8_t* dataPtr, compv_scalar_t width, compv_scalar_t stride, compv_scalar_t height, const uint8_t* patch1xnPtr, int32_t* distPtr)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	
+	compv_scalar_t i, j, cnt;
+	uint8_t pop;
+
+	for (j = 0; j < height; ++j) {
+		cnt = 0;
+		for (i = 0; i < width; ++i) {
+			pop = dataPtr[i] ^ patch1xnPtr[i];
+			cnt += kPopcnt256[pop];
+		}
+		dataPtr += stride;
+		distPtr[j] = (int32_t)(cnt);
+	}
+}
+
+// Private function, up to the caller to check input parameters
+static void HammingDistance_POPCNT_C(const uint8_t* dataPtr, compv_scalar_t width, compv_scalar_t stride, compv_scalar_t height, const uint8_t* patch1xnPtr, int32_t* distPtr)
+{
+	// POPCNT is available with SSE4.2, there is no reason to fallback to this function. Use ASM_SSE42 instead.
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+
+	compv_scalar_t i, j;
+	uint64_t cnt;
+	uint64_t pop;
+
+	for (j = 0; j < height; ++j) {
+		cnt = 0;
+		i = 0;
+#if COMPV_ARCH_X64
+		for (; i <= width - 8; i+=8) {
+			pop = *((uint64_t*)&dataPtr[i]) ^ *((uint64_t*)&patch1xnPtr[i]);
+			cnt += compv_popcnt64(pop);
+		}
+#endif
+		for (; i <= width - 4; i += 4) {
+			pop = *((uint32_t*)&dataPtr[i]) ^ *((uint32_t*)&patch1xnPtr[i]);
+			cnt += compv_popcnt32((uint32_t)pop);
+		}
+		if (i <= width - 2) {
+			pop = *((uint16_t*)&dataPtr[i]) ^ *((uint16_t*)&patch1xnPtr[i]);
+			cnt += compv_popcnt16((uint16_t)pop);
+			i += 2;
+		}
+		if (i <= width - 1) {
+			pop = *((uint8_t*)&dataPtr[i]) ^ *((uint8_t*)&patch1xnPtr[i]);
+			cnt += compv_popcnt16((uint16_t)pop);
+			++i;
+		}
+		dataPtr += stride;
+		distPtr[j] = (int32_t)(cnt);
+	}
+}
 
 /*
 dataPtr: The pointer to the data for which we want to compute the hamming distance. Hamming distance will be compute for each width-bytes.
@@ -44,54 +105,17 @@ COMPV_ERROR_CODE CompVHamming::distance(const uint8_t* dataPtr, int width, int s
 {
 	COMPV_CHECK_EXP_RETURN(!dataPtr || !width || width > stride || !height || !patch1xnPtr || !distPtr, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	void (*HammingDistance)(const uint8_t* dataPtr, compv_scalar_t width, compv_scalar_t stride, compv_scalar_t height, const uint8_t* patch1xnPtr, int32_t* distPtr) = HammingDistance_C;
 
-	int i, pad = (stride - width);
-	uint64_t pop;
-	int32_t cnt;
-
-	// FIXME: M$ specific
-	// FIXME: test with WIN32
-
-	for (int j = 0; j < height; ++j) {
-		i = width;
-		cnt = 0;
-#if COMPV_ARCH_X64
-		while (i > 7) {
-			pop = *((uint64_t*)dataPtr) ^ *((const uint64_t*)&patch1xnPtr[width - i]);
-			cnt += (int32_t)__popcnt64(pop);
-			dataPtr += 8;
-			i -= 8;
+	if (CompVCpu::isEnabled(kCpuFlagPOPCNT)) {
+		HammingDistance = HammingDistance_POPCNT_C;
+		if (CompVCpu::isEnabled(kCpuFlagSSE42) && COMPV_IS_ALIGNED_SSE(dataPtr) && COMPV_IS_ALIGNED_SSE(patch1xnPtr)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((HammingDistance = HamminDistance_Intrin_POPCNT_SSE42));
+			COMPV_EXEC_IFDEF_ASM_X86((HammingDistance = HamminDistance_Asm_POPCNT_X86_SSE42));
 		}
-		if (i > 3) {
-#else
-		while (i > 3) {
-#endif
-			pop = *((uint32_t*)dataPtr) ^ *((const uint32_t*)&patch1xnPtr[width - i]);
-			cnt += (int32_t)__popcnt((uint32_t)pop);
-			dataPtr += 4;
-			i -= 4;
-		}
-		if (i > 1) {
-			pop = *((uint16_t*)dataPtr) ^ *((const uint16_t*)&patch1xnPtr[width - i]);
-			cnt += (int32_t)__popcnt16((uint16_t)pop);
-			dataPtr += 2;
-			i -= 2;
-		}
-		if (i) {
-			pop = *((uint8_t*)dataPtr) ^ *((const uint8_t*)&patch1xnPtr[width - i]);
-			cnt += (int32_t)kPopcnt256[pop];
-			dataPtr += 1;
-			i -= 1;
-		}
-
-		// FIXME: remove
-		COMPV_ASSERT(i == 0);
-
-		dataPtr += pad;
-		distPtr[j] = cnt;
 	}
+
+	HammingDistance(dataPtr, width, stride, height,  patch1xnPtr, distPtr);
 	
 	return COMPV_ERROR_CODE_S_OK;
 }

@@ -108,8 +108,6 @@ bool TestBruteForce()
 		}
 	}
 
-	COMPV_DEBUG_INFO("%s", arrayMD5<CompVDMatch>(matches).c_str());
-
 	COMPV_DEBUG_INFO("Elapsed time (TestBruteForce) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
 	const std::string(*expectedMD5)[KNN] = CompVEngine::isMultiThreadingEnabled() ? &expectedMD5_MT : &expectedMD5_ST;
