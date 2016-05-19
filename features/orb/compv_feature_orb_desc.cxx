@@ -271,7 +271,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
 	const int nFeatures = (int)interestPoints->size();
 	const int nFeaturesBits = m_nPatchBits;
     const int nFeaturesBytes = nFeaturesBits >> 3;
-	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<uint8_t>::newObj(&_descriptions, nFeaturesBytes, nFeatures)); // do not align nFeaturesBytes(32) which is already good for AVX, SSE and NEON
+	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<uint8_t>::newObj(&_descriptions, nFeatures, nFeaturesBytes)); // do not align nFeaturesBytes(32) which is already good for AVX, SSE and NEON
     _descriptionsPtr = (uint8_t*)_descriptions->ptr();
 	if (nFeatures == 0) {
 		return COMPV_ERROR_CODE_S_OK;
@@ -381,7 +381,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
 		int32_t count = total / threadsCountDescribe;
 		uint8_t* desc = _descriptionsPtr;
 		for (int32_t i = 0; count > 0 && i < threadsCountDescribe; ++i) {
-			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadStartIdx + i), COMPV_TOKENIDX0, describe_AsynExec,
+			COMPV_CHECK_CODE_RETURN(err_ = threadDip->execute((uint32_t)(threadStartIdx + i), COMPV_TOKENIDX0, describe_AsynExec,
 				COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *_pyramid, begin, begin + count, desc),
 				COMPV_ASYNCTASK_SET_PARAM_NULL()));
 			begin += count;
@@ -407,7 +407,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
 	// Wait for the threads to finish the work
 	if (threadsCountDescribe > 1) {
 		for (int32_t i = 0; i < threadsCountDescribe; ++i) {
-			COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadStartIdx + i), COMPV_TOKENIDX0));
+			COMPV_CHECK_CODE_RETURN(err_ = threadDip->wait((uint32_t)(threadStartIdx + i), COMPV_TOKENIDX0));
 		}
 	}
 

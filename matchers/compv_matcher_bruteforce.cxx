@@ -23,6 +23,8 @@
 #include "compv/compv_math.h"
 #include "compv/compv_engine.h"
 
+#define COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD	1 // very intensive op -> use max threads
+
 COMPV_NAMESPACE_BEGIN()
 
 CompVMatcherBruteForce::CompVMatcherBruteForce()
@@ -103,13 +105,13 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVPtr<CompVArray<uint8
 	size_t matchesCols = queryRows_;
 
 	// realloc() matchers
-	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<CompVDMatch>::newObj(matches, matchesCols, matchesRows));
+	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<CompVDMatch>::newObj(matches, matchesRows, matchesCols));
 
 	int32_t threadsCount = 1;
 	CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
 	// Compute number of threads
 	if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-		threadsCount = COMPV_MATH_CLIP3(1, threadDip->getThreadsCount(), (int32_t)matchesCols / 10);
+		threadsCount = COMPV_MATH_CLIP3(1, threadDip->getThreadsCount(), (int32_t)matchesCols / COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD);
 	}
 
 	// process starting at queryIdxStart
@@ -119,7 +121,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVPtr<CompVArray<uint8
 		size_t count = (size_t)(total / threadsCount); // must be "size_t"
 		size_t queryIdxStart = 0; // must be "size_t"
 		for (int32_t i = 0; i < threadsCount; ++i) {
-			COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadStartIdx + i), COMPV_TOKENIDX0, processAt_AsynExec,
+			COMPV_CHECK_CODE_RETURN(err_ = threadDip->execute((uint32_t)(threadStartIdx + i), COMPV_TOKENIDX0, processAt_AsynExec,
 				COMPV_ASYNCTASK_SET_PARAM_ASISS(queryIdxStart, count, *queryDescriptions, *trainDescriptions, **matches),
 				COMPV_ASYNCTASK_SET_PARAM_NULL()));
 			queryIdxStart += count;
@@ -129,7 +131,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVPtr<CompVArray<uint8
 			}
 		}
 		for (int32_t i = 0; i < threadsCount; ++i) {
-			COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadStartIdx + i), COMPV_TOKENIDX0));
+			COMPV_CHECK_CODE_RETURN(err_ = threadDip->wait((uint32_t)(threadStartIdx + i), COMPV_TOKENIDX0));
 		}
 	}
 	else {
@@ -156,7 +158,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(size_t queryIdxStart, size_t 
 
 	// alloc() hamming distances
 	CompVPtr<CompVArray<int32_t>* > hammingDistancesArray;
-	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<int32_t>::newObj(&hammingDistancesArray, count, 1));
+	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<int32_t>::newObj(&hammingDistancesArray, 1, count));
 	int32_t *hammingDistances_ = const_cast<int32_t*>(hammingDistancesArray->ptr());
 
 	const uint8_t *queryDescriptions_ = queryDescriptions->ptr(queryIdxStart, 0), *trainDescriptions_ = trainDescriptions->ptr(0, 0);

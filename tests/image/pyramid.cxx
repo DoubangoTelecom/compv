@@ -9,7 +9,7 @@ using namespace compv;
 #define IMAGE_PYRAMID_FACTOR		.83f
 #define IMAGE_PYRAMID_LEVELS		8
 #define IMAGE_PYRAMID_SCALE_TYPE	COMPV_SCALE_TYPE_BILINEAR
-#define IMAGE_PYRAMID_LOOP_COUNT	1
+#define IMAGE_PYRAMID_LOOP_COUNT	1000
 
 static const std::string expectedMD5[IMAGE_PYRAMID_LEVELS] = 
 {

@@ -34,7 +34,7 @@ Some literature:
 #include "compv/intrinsics/x86/image/scale/compv_imagescale_bilinear_intrin_sse.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM
-COMPV_EXTERNC void ScaleBilinear_Asm_X86_SSE41(const uint8_t* inPtr, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv::compv_scalar_t inHeight, compv::compv_scalar_t inWidth, compv::compv_scalar_t inStride, compv::compv_scalar_t outHeight, compv::compv_scalar_t outWidth, COMPV_ALIGNED(SSE) compv::compv_scalar_t outStride, compv::compv_scalar_t sf_x, compv::compv_scalar_t sf_y);
+COMPV_EXTERNC void ScaleBilinear_Asm_X86_SSE41(const uint8_t* inPtr, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv::compv_uscalar_t inHeight, compv::compv_uscalar_t inWidth, compv::compv_uscalar_t inStride, compv::compv_uscalar_t outHeight, compv::compv_uscalar_t outWidth, COMPV_ALIGNED(SSE) compv::compv_uscalar_t outStride, compv::compv_uscalar_t sf_x, compv::compv_uscalar_t sf_y);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
@@ -43,155 +43,15 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_IMAGESCALE_BILINEAR_SAMPLES_PER_THREAD (200 * 200) // minimum number of samples to consider per thread when multi-threading
 #endif
 
-// TODO(dmi): check if fixed-point implementation doesn't introduce noise
-
-static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, compv_scalar_t inHeight, compv_scalar_t inWidth, compv_scalar_t inStride, compv_scalar_t outHeight, compv_scalar_t outWidth, compv_scalar_t outStride, compv_scalar_t sf_x, compv_scalar_t sf_y)
+static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t inHeight, compv_uscalar_t inWidth, compv_uscalar_t inStride, compv_uscalar_t outHeight, compv_uscalar_t outWidth, compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): SIMD, MT
 
-#if 0
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-	compv_scalar_t i, j, x, y, nearestX, nearestY;
-	uint8_t neighb0, neighb1, neighb2, neighb3, x0, y0, x1, y1;
-	const uint8_t* inPtr_;
-	compv_scalar_t outPad = (outStride - outWidth);
-	ScaleBilinear_Intrin_SSE2(inPtr, outPtr, inHeight, inWidth, inStride, outHeight, outWidth, outPad, sf_x, sf_y);
-
-	static const compv_scalar_t minpack = 4;
-	compv_scalar_t missed = (outWidth & (minpack - 1));
-	if (missed > 0) {
-		compv_scalar_t skip = outWidth - missed;
-		outPtr += skip;
-		for (j = 0, y = 0; j < outHeight; ++j) {
-			nearestY = (y >> 8); // nearest y-point
-			inPtr_ = (inPtr + (nearestY * inStride));
-			for (i = skip, x = skip * sf_x; i < outWidth; ++i) {
-				nearestX = (x >> 8); // nearest x-point
-
-				neighb0 = inPtr_[nearestX];
-				neighb1 = inPtr_[nearestX + 1];
-				neighb2 = inPtr_[nearestX + inStride];
-				neighb3 = inPtr_[nearestX + inStride + 1];
-
-				x0 = x & 0xff;
-				x1 = 0xff - x0;
-				y0 = y & 0xff;
-				y1 = 0xff - y0;
-
-				uint8_t s = (uint8_t)((y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))) >> 16);
-				if (s != outPtr[i]) {
-					int kaka = 0;
-				}
-				outPtr[i] = s;
-
-				x += sf_x;
-			}
-
-			y += sf_y;
-			outPtr += outStride;
-		}
-	}
-#elif 0
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-	uint8_t* rows = (uint8_t*)CompVMem::malloc(4 * outWidth);
-	// FIXME: check row != NULL
-	uint8_t *neighb0, *neighb1, *neighb2, *neighb3;
-
-	neighb0 = rows;
-	neighb1 = neighb0 + outWidth;
-	neighb2 = neighb1 + outWidth;
-	neighb3 = neighb2 + outWidth;
-
-	compv_scalar_t i, j, x, y, nearestX, nearestY;
-	uint8_t x0, y0, x1, y1;
+	compv_uscalar_t i, j, x, y, nearestX, nearestY;
+	unsigned neighb0, neighb1, neighb2, neighb3, x0, y0, x1, y1, S, S0, S1;
 	const uint8_t* inPtr_;
 
-	for (j = 0, y = 0; j < outHeight; ++j) {
-		nearestY = (y >> 8); // nearest y-point
-		inPtr_ = (inPtr + (nearestY * inStride));
-
-		// Load rows
-		for (i = 0, x = 0; i < outWidth; ++i, x += sf_x) {
-			nearestX = (x >> 8); // nearest x-point
-
-			neighb0[i] = *(inPtr_ + nearestX);
-			neighb1[i] = *(inPtr_ + nearestX + 1);
-			neighb2[i] = *(inPtr_ + nearestX + inStride);
-			neighb3[i] = *(inPtr_ + nearestX + inStride + 1);
-		}
-
-		// Process samples
-		for (i = 0, x = 0; i < outWidth; ++i, x += sf_x) {
-			x0 = x & 0xff;
-			y0 = y & 0xff;
-			x1 = 0xff - x0;
-			y1 = 0xff - y0;
-
-			// weight0 = x1 * y1;
-			// weight1 = x0 * y1;
-			// weight2 = x1 * y0;
-			// weight3 = x0 * y0;
-			// S = neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3
-			// S = neighb0 * (x1 * y1) + neighb1 * (x0 * y1) + neighb2 * (x1 * y0) + neighb3 * (x0 * y0)
-			// S = y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1 ) + (neighb3 * x0))
-			outPtr[i] = (uint8_t)((y1 * ((neighb0[i] * x1) + (neighb1[i] * x0)) + y0 * ((neighb2[i] * x1) + (neighb3[i] * x0))) >> 16);
-		}
-
-		y += sf_y;
-		outPtr += outStride;
-	}
-
-	CompVMem::free((void**)&rows);
-#elif 0
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-	compv_scalar_t i, j, x, y, nearestX, nearestY, sf4_x = sf_x << 2, sf2_x = sf_x << 1, sf3_x = sf2_x + sf_x;
-	uint8_t n0, n1, n2, n3, x0, y0, x1, y1;
-	const uint8_t* inPtr_;
-
-	// weight0 = x1 * y1;
-	// weight1 = x0 * y1;
-	// weight2 = x1 * y0;
-	// weight3 = x0 * y0;
-	// S = neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3
-	// S = neighb0 * (x1 * y1) + neighb1 * (x0 * y1) + neighb2 * (x1 * y0) + neighb3 * (x0 * y0)
-	// S = y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1 ) + (neighb3 * x0))
-	// outPtr[i] = S
-
-	for (j = 0, y = 0; j < outHeight; ++j) {
-		nearestY = (y >> 8); // nearest y-point
-		inPtr_ = (inPtr + (nearestY * inStride));
-		for (i = 0, x = 0; i <= outWidth - 4; i += 4, x += sf4_x) {
-			nearestX = (x >> 8);
-			n0 = *(inPtr_ + nearestX), n1 = *(inPtr_ + nearestX + 1), n2 = *(inPtr_ + nearestX + inStride), n3 = *(inPtr_ + nearestX + inStride + 1);
-			x0 = x & 0xff, y0 = y & 0xff, x1 = 0xff - x0, y1 = 0xff - y0;
-			outPtr[i + 0] = (uint8_t)((y1 * ((n0 * x1) + (n1 * x0)) + y0 * ((n2 * x1) + (n3 * x0))) >> 16);
-			nearestX = ((x + sf_x) >> 8);
-			n0 = *(inPtr_ + nearestX), n1 = *(inPtr_ + nearestX + 1), n2 = *(inPtr_ + nearestX + inStride), n3 = *(inPtr_ + nearestX + inStride + 1);
-			x0 = (x + sf_x) & 0xff, y0 = y & 0xff, x1 = 0xff - x0, y1 = 0xff - y0;
-			outPtr[i + 1] = (uint8_t)((y1 * ((n0 * x1) + (n1 * x0)) + y0 * ((n2 * x1) + (n3 * x0))) >> 16);
-			nearestX = ((x + sf2_x) >> 8);
-			n0 = *(inPtr_ + nearestX), n1 = *(inPtr_ + nearestX + 1), n2 = *(inPtr_ + nearestX + inStride), n3 = *(inPtr_ + nearestX + inStride + 1);
-			x0 = (x + sf2_x) & 0xff, y0 = y & 0xff, x1 = 0xff - x0, y1 = 0xff - y0;
-			outPtr[i + 2] = (uint8_t)((y1 * ((n0 * x1) + (n1 * x0)) + y0 * ((n2 * x1) + (n3 * x0))) >> 16);
-			nearestX = ((x + sf3_x) >> 8);
-			n0 = *(inPtr_ + nearestX), n1 = *(inPtr_ + nearestX + 1), n2 = *(inPtr_ + nearestX + inStride), n3 = *(inPtr_ + nearestX + inStride + 1);
-			x0 = (x + sf3_x) & 0xff, y0 = y & 0xff, x1 = 0xff - x0, y1 = 0xff - y0;
-			outPtr[i + 3] = (uint8_t)((y1 * ((n0 * x1) + (n1 * x0)) + y0 * ((n2 * x1) + (n3 * x0))) >> 16);
-		}
-		for (; i < outWidth; i += 1, x += sf_x) {
-			nearestX = (x >> 8);
-			n0 = *(inPtr_ + nearestX), n1 = *(inPtr_ + nearestX + 1), n2 = *(inPtr_ + nearestX + inStride), n3 = *(inPtr_ + nearestX + inStride + 1);
-			x0 = x & 0xff, y0 = y & 0xff, x1 = 0xff - x0, y1 = 0xff - y0;
-			outPtr[i] = (uint8_t)((y1 * ((n0 * x1) + (n1 * x0)) + y0 * ((n2 * x1) + (n3 * x0))) >> 16);
-		}
-
-		y += sf_y;
-		outPtr += outStride;
-	}
-#else
-	compv_scalar_t i, j, x, y, nearestX, nearestY;
-	uint8_t neighb0, neighb1, neighb2, neighb3, x0, y0, x1, y1;
-	const uint8_t* inPtr_;
+	S, S0, S1;
 
     for (j = 0, y = 0; j < outHeight; ++j) {
         nearestY = (y >> 8); // nearest y-point
@@ -208,7 +68,7 @@ static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, compv
 			y0 = y & 0xff;
             x1 = 0xff - x0;
 			y1 = 0xff - y0;
-
+#if 1
             // weight0 = x1 * y1;
 			// weight1 = x0 * y1;
 			// weight2 = x1 * y0;
@@ -217,12 +77,103 @@ static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, compv
 			// S = neighb0 * (x1 * y1) + neighb1 * (x0 * y1) + neighb2 * (x1 * y0) + neighb3 * (x0 * y0)
 			// S = y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1 ) + (neighb3 * x0))
 			outPtr[i] = (uint8_t)((y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))) >> 16);
+#else
+			// x0 = x & 0xff;
+			// y0 = y & 0xff;
+			// x1 = 0xff - x0;
+			// y1 = 0xff - y0;
+			// weight0 = x1 * y1;
+			// weight1 = x0 * y1;
+			// weight2 = x1 * y0;
+			// weight3 = x0 * y0;
+			// S = neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3
+			// S = neighb0 * (x1 * y1) + neighb1 * (x0 * y1) + neighb2 * (x1 * y0) + neighb3 * (x0 * y0)
+			// S = y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))
+			// S = y1 * ((neighb0 * (0xff - x0)) + (neighb1 * x0)) + y0 * ((neighb2 * (0xff - x0)) + (neighb3 * x0))
+			// S = y1 * (neighb0 * 0xff - neighb0 * x0 + neighb1 * x0) + y0 * (neighb2 * 0xff - neighb2 * x0 + neighb3 * x0)
+			// S = y1 * (neighb0 * 0xff - (neighb0 + neighb1) * x0) + y0 * (neighb2 * 0xff - (neighb2 + neighb3) * x0)
+			// S = y1 * ((neighb0 << 8) - neighb0 - x0 * (neighb0 - neighb1)) + y0 * ((neighb2 << 8) - neighb2 - x0 * (neighb2 - neighb3)
+			// S = (0xff - y0) * S0 + y0 * S1
+			// S = S0 * 0xff - y0 * S0 + y0 * S1
+			// S = (S0 << 8) - S0 - y0 * (S0 - S1)
+			S0 = ((neighb0 << 8) - neighb0 - x0 * (neighb0 - neighb1));
+			S1 = ((neighb2 << 8) - neighb2 - x0 * (neighb2 - neighb3));
+			S = (S0 << 8) - S0 - y0 * (S0 - S1);
+			outPtr[i] = (uint8_t)(S >> 16);
+#endif
         }
 
         y += sf_y;
 		outPtr += outStride;
     }
+}
+
+// Function not used
+static COMPV_ERROR_CODE scaleBilinearGrayscale(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t inHeight, compv_uscalar_t inWidth, compv_uscalar_t inStride, compv_uscalar_t outHeight, compv_uscalar_t outWidth, compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y)
+{
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): SIMD, MT
+	size_t nearestYCount = CompVMem::alignForward(outHeight * sizeof(int32_t), COMPV_SIMD_ALIGNV_DEFAULT);
+	size_t nearestXCount = CompVMem::alignForward(outWidth * sizeof(int32_t), COMPV_SIMD_ALIGNV_DEFAULT);
+	size_t yCount = CompVMem::alignForward(outHeight * sizeof(int32_t), COMPV_SIMD_ALIGNV_DEFAULT);
+	size_t xCount = CompVMem::alignForward(outWidth * sizeof(int32_t), COMPV_SIMD_ALIGNV_DEFAULT);
+	int8_t *mem = (int8_t *)CompVMem::malloc(nearestYCount + nearestXCount + (yCount << 1) + (xCount << 1)); // For (2k x 1k) image we'll alloc 24k memory -> the speedup worth it
+	COMPV_CHECK_EXP_RETURN(!mem, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+
+	int32_t *nearestY = (int32_t*)mem;
+	int32_t *nearestX = (int32_t*)(mem + nearestYCount);
+	int32_t *x0 = (int32_t*)(((uint8_t*)nearestX) + nearestXCount);
+	int32_t *x1 = (int32_t*)(((uint8_t*)x0) + xCount);
+	int32_t *y0 = (int32_t*)(((uint8_t*)x1) + xCount);
+	int32_t *y1 = (int32_t*)(((uint8_t*)y0) + yCount);
+
+#if 1
+	// No need for outPtr to be aligned
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+	ScaleBilinearGrayscale_Intrin_SSE41(inPtr, outPtr, inStride, outHeight, outWidth, outStride, sf_x, sf_y, nearestX, nearestY, x0, y0, x1, y1);
+#else
+
+	compv_uscalar_t i, j;
+	int32_t x, y, sf_y_ = (int32_t)sf_y, sf_x_ = (int32_t)sf_x, inStride_ = (int32_t)inStride;
+	uint8_t neighb0, neighb1, neighb2, neighb3;
+	const uint8_t *inPtr_;
+	const int32_t *nearestX_, *x0_, *x1_;
+
+	for (j = 0, y = 0; j < outHeight; ++j) {
+		nearestY[j] = (y >> 8) * inStride_;
+		y0[j] = y & 0xff;
+		y1[j] = 0xff - y0[j];
+		y += sf_y_;
+	}
+	for (i = 0, x = 0; i < outWidth; ++i) {
+		nearestX[i] = (x >> 8);
+		x0[i] = x & 0xff;
+		x1[i] = 0xff - x0[i];
+		x += sf_x_;
+	}
+	for (j = 0; j < outHeight; ++j, ++y0, ++y1, ++nearestY) {
+		inPtr_ = (inPtr + *nearestY);
+		for (i = 0, nearestX_ = nearestX, x0_ = x0, x1_ = x1; i < outWidth; ++i, ++nearestX_, ++x0_, ++x1_) {
+			neighb0 = *(inPtr_ + *nearestX_);
+			neighb1 = *(inPtr_ + *nearestX_ + 1);
+			neighb2 = *(inPtr_ + *nearestX_ + inStride);
+			neighb3 = *(inPtr_ + *nearestX_ + inStride + 1);
+
+			// weight0 = x1 * y1;
+			// weight1 = x0 * y1;
+			// weight2 = x1 * y0;
+			// weight3 = x0 * y0;
+			// S = neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3
+			// S = neighb0 * (x1 * y1) + neighb1 * (x0 * y1) + neighb2 * (x1 * y0) + neighb3 * (x0 * y0)
+			// S = y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1 ) + (neighb3 * x0))
+			outPtr[i] = (uint8_t)((*y1 * ((neighb0 * *x1_) + (neighb1 * *x0_)) + *y0 * ((neighb2 * *x1_) + (neighb3 * *x0_))) >> 16);
+		}
+		outPtr += outStride;
+	}
 #endif
+
+	CompVMem::free((void**)&mem);
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVPtr<CompVImage* >& inImage, CompVPtr<CompVImage* >& outImage)
@@ -232,9 +183,9 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVPtr<CompVImage* >& 
     COMPV_PIXEL_FORMAT pixelFormat = outImage->getPixelFormat(); // caller must check input and output have same format
 
     const uint8_t* inPtrs[4] = { NULL, NULL, NULL, NULL }, *outPtrs[4] = { NULL, NULL, NULL, NULL };
-    compv_scalar_t inWidths[4], outWidths[4];
-    compv_scalar_t inHeights[4], outHeights[4];
-    compv_scalar_t inStrides[4], outStrides[4];
+	compv_uscalar_t inWidths[4], outWidths[4];
+	compv_uscalar_t inHeights[4], outHeights[4];
+	compv_uscalar_t inStrides[4], outStrides[4];
     int compSize = 1, alignv = 1;
 	scaleBilinear scale_SIMD = NULL;
 
@@ -315,7 +266,7 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVPtr<CompVImage* >& 
 			scale_SIMD(inPtrs[k], (uint8_t*)outPtrs[k], inHeights[k], inWidths[k], inStrides[k], outHeights[k], outWidths[k], outStrides[k], int_sx, int_sy);
 		}
 		else {
-			scaleBilinearKernel11_C(inPtrs[k], (uint8_t*)outPtrs[k], inHeights[k], inWidths[k], inStrides[k], outHeights[k], outWidths[k], outStrides[k], int_sx, int_sy);
+			 scaleBilinearKernel11_C(inPtrs[k], (uint8_t*)outPtrs[k], inHeights[k], inWidths[k], inStrides[k], outHeights[k], outWidths[k], outStrides[k], int_sx, int_sy);
 		}
     }
 

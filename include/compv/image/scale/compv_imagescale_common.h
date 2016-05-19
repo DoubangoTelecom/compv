@@ -30,7 +30,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-typedef void(*scaleBilinear)(const uint8_t* inPtr, uint8_t* outPtr, compv_scalar_t inHeight, compv_scalar_t inWidth, compv_scalar_t inStride, compv_scalar_t outHeight, compv_scalar_t outWidth, compv_scalar_t outStride, compv_scalar_t sf_x, compv_scalar_t sf_y);
+typedef void(*scaleBilinear)(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t inHeight, compv_uscalar_t inWidth, compv_uscalar_t inStride, compv_uscalar_t outHeight, compv_uscalar_t outWidth, compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
 
 COMPV_NAMESPACE_END()
 

@@ -31,7 +31,7 @@ COMPV_ERROR_CODE CompVGaussKern<T>::buildKern2(CompVPtr<CompVArray<T>* >* kern, 
 {
     COMPV_CHECK_EXP_RETURN(!kern || !(size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(kern, (size_t)size, (size_t)size));
+	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(kern, (size_t)size, (size_t)size, false));
 
     const T sigma2_times2 = 2 * (sigma * sigma); // 2*(sigma^2)
     const int size_div2 = (size >> 1);
@@ -83,7 +83,7 @@ COMPV_ERROR_CODE CompVGaussKern<T>::buildKern1(CompVPtr<CompVArray<T>* >* kern, 
 {
     COMPV_CHECK_EXP_RETURN(!kern || !(size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(kern, (size_t)size));
+	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(kern, 1, (size_t)size));
 
     const int size_div2 = (size >> 1);
 	const T sigma2_times2 = 2 * (sigma * sigma); // 2*(sigma^2)
@@ -118,7 +118,7 @@ COMPV_ERROR_CODE CompVGaussKern<T>::buildKern1_fxp(CompVPtr<CompVArray<uint16_t>
 {
 	CompVPtr<CompVArray<T>* > kern_float;
 	COMPV_CHECK_CODE_RETURN(CompVGaussKern<T>::buildKern1(&kern_float, size, sigma));
-	COMPV_CHECK_CODE_RETURN(CompVArray<uint16_t>::newObj(kern_fxp, (size_t)size));
+	COMPV_CHECK_CODE_RETURN(CompVArray<uint16_t>::newObj(kern_fxp, 1, (size_t)size));
 
 	uint16_t* kernFxpVals = (uint16_t*)(*kern_fxp)->ptr();
 	const T* kernFloatVals = (*kern_float)->ptr();

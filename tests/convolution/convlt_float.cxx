@@ -60,7 +60,7 @@ bool TestConvlt_float()
 		}
 	}
 	else {
-		COMPV_CHECK_CODE_BAIL(err_ = CompVArray<CONVLT_KERN_TYPE>::newObj(&kern, CONVLT_DIM, CONVLT_KERN_SIZE, CONVLT_KERN_SIZE));
+		COMPV_CHECK_CODE_BAIL(err_ = CompVArray<CONVLT_KERN_TYPE>::newObj(&kern, CONVLT_KERN_SIZE, CONVLT_KERN_SIZE, false));
 		CONVLT_KERN_TYPE sum;
 		CONVLT_KERN_TYPE *kern_ptr = (CONVLT_KERN_TYPE*)kern->ptr();
 		for (int j = 0; j < CONVLT_DIM; ++j) {
