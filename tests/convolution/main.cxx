@@ -33,13 +33,13 @@ int main(int argc, char** argv)
     COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));
 
 #if TEST_CONVLT_FLOAT
-	extern bool TestConvlt_float();
-	COMPV_ASSERT(TestConvlt_float());
+    extern bool TestConvlt_float();
+    COMPV_ASSERT(TestConvlt_float());
 #endif
 
 #if TEST_CONVLT_FXP
-	extern bool TestConvlt_fxp();
-	COMPV_ASSERT(TestConvlt_fxp());
+    extern bool TestConvlt_fxp();
+    COMPV_ASSERT(TestConvlt_fxp());
 #endif
 
 #if TEST_GAUSS_FILTER_DIM1

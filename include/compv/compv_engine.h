@@ -42,14 +42,14 @@ public:
     static COMPV_ERROR_CODE multiThreadingSetMaxThreads(size_t maxThreads);
     static COMPV_ERROR_CODE setTestingModeEnabled(bool bTesting);
     static COMPV_ERROR_CODE setMathTrigFastEnabled(bool bMathTrigFast);
-	static COMPV_ERROR_CODE setMathFixedPointEnabled(bool bMathFixedPoint);
+    static COMPV_ERROR_CODE setMathFixedPointEnabled(bool bMathFixedPoint);
     static bool isMultiThreadingEnabled();
     static bool isInitialized();
     static bool isInitializing();
     static bool isBigEndian();
     static bool isTestingMode();
     static bool isMathTrigFast();
-	static bool isMathFixedPoint();
+    static bool isMathFixedPoint();
 
 private:
     COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
@@ -59,7 +59,7 @@ private:
     static bool s_bBigEndian;
     static bool s_bTesting;
     static bool s_bMathTrigFast;
-	static bool s_bMathFixedPoint;
+    static bool s_bMathFixedPoint;
     COMPV_DISABLE_WARNINGS_END()
 };
 

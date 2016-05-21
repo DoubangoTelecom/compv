@@ -72,7 +72,7 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     }
 #endif
     COMPV_DEBUG_INFO("sizeof(compv_scalar_t)= #%lu", sizeof(compv_scalar_t));
-	COMPV_DEBUG_INFO("sizeof(float)= #%lu", sizeof(float));
+    COMPV_DEBUG_INFO("sizeof(float)= #%lu", sizeof(float));
 
     // endianness
     // https://developer.apple.com/library/mac/documentation/Darwin/Conceptual/64bitPorting/MakingCode64-BitClean/MakingCode64-BitClean.html
@@ -115,9 +115,9 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     COMPV_DEBUG_INFO("Binary type: X86_64");
 #	else
     COMPV_DEBUG_INFO("Binary type: X86_32");
-	if (CompVCpu::isSupported(kCpuFlagX64)) {
-		COMPV_DEBUG_INFO("/!\\Using 32bits binaries on 64bits machine: optimization issues");
-	}
+    if (CompVCpu::isSupported(kCpuFlagX64)) {
+        COMPV_DEBUG_INFO("/!\\Using 32bits binaries on 64bits machine: optimization issues");
+    }
 #	endif
 #endif
 #if defined(COMPV_INTRINSIC)
@@ -139,7 +139,7 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     /* Math functions: Must be after CPU initialization */
     COMPV_CHECK_CODE_BAIL(err_ = CompVMathUtils::init());
     COMPV_DEBUG_INFO("Math Fast Trig.: %s", CompVEngine::isMathTrigFast() ? "true" : "fast");
-	COMPV_DEBUG_INFO("Math Fixed Point: %s", CompVEngine::isMathFixedPoint() ? "true" : "fast");
+    COMPV_DEBUG_INFO("Math Fixed Point: %s", CompVEngine::isMathFixedPoint() ? "true" : "fast");
 
     /* Memory alignment */
     COMPV_DEBUG_INFO("Default alignment: #%d", COMPV_SIMD_ALIGNV_DEFAULT);
@@ -151,8 +151,8 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     /* Features */
     COMPV_CHECK_CODE_BAIL(err_ = CompVFeature::init());
 
-	/* Matchers */
-	COMPV_CHECK_CODE_BAIL(err_ = CompVMatcher::init());
+    /* Matchers */
+    COMPV_CHECK_CODE_BAIL(err_ = CompVMatcher::init());
 
     COMPV_DEBUG_INFO("Engine initialized");
 
@@ -229,9 +229,9 @@ COMPV_ERROR_CODE CompVEngine::setMathTrigFastEnabled(bool bMathTrigFast)
 
 COMPV_ERROR_CODE CompVEngine::setMathFixedPointEnabled(bool bMathFixedPoint)
 {
-	COMPV_DEBUG_INFO("Engine math trig. fast = %s", bMathFixedPoint ? "true" : "false");
-	s_bMathFixedPoint= bMathFixedPoint;
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_DEBUG_INFO("Engine math trig. fast = %s", bMathFixedPoint ? "true" : "false");
+    s_bMathFixedPoint= bMathFixedPoint;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 bool CompVEngine::isMultiThreadingEnabled()
@@ -266,7 +266,7 @@ bool CompVEngine::isMathTrigFast()
 
 bool CompVEngine::isMathFixedPoint()
 {
-	return s_bMathFixedPoint;
+    return s_bMathFixedPoint;
 }
 
 COMPV_NAMESPACE_END()

@@ -55,26 +55,26 @@ public:
 private:
     COMPV_ERROR_CODE createInterestPoints(int32_t count = -1);
     COMPV_ERROR_CODE freeInterestPoints(int32_t count = -1);
-	COMPV_ERROR_CODE createPatches(int32_t count = -1);
-	COMPV_ERROR_CODE freePatches(int32_t count = -1);
-	COMPV_ERROR_CODE createDetectors(int32_t count = -1);
-	COMPV_ERROR_CODE initDetector(CompVPtr<CompVFeatureDete* >& detector);
-	COMPV_ERROR_CODE initDetectors();
-	COMPV_ERROR_CODE freeDetectors(int32_t count = -1);
-	COMPV_ERROR_CODE processLevelAt(const CompVPtr<CompVImage*>& image, CompVPtr<CompVPatch* >& patch, CompVPtr<CompVFeatureDete* >& detector, int level);
+    COMPV_ERROR_CODE createPatches(int32_t count = -1);
+    COMPV_ERROR_CODE freePatches(int32_t count = -1);
+    COMPV_ERROR_CODE createDetectors(int32_t count = -1);
+    COMPV_ERROR_CODE initDetector(CompVPtr<CompVFeatureDete* >& detector);
+    COMPV_ERROR_CODE initDetectors();
+    COMPV_ERROR_CODE freeDetectors(int32_t count = -1);
+    COMPV_ERROR_CODE processLevelAt(const CompVPtr<CompVImage*>& image, CompVPtr<CompVPatch* >& patch, CompVPtr<CompVFeatureDete* >& detector, int level);
     static COMPV_ERROR_CODE processLevelAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 
 private:
     CompVPtr<CompVImageScalePyramid* > m_pyramid;
     CompVPtr<CompVBoxInterestPoint* >* m_pInterestPointsAtLevelN;
-	CompVPtr<CompVPatch* >* m_pPatches;
-	size_t m_nPatches;
-	CompVPtr<CompVFeatureDete* >* m_pDetectors;
-	size_t m_nDetectors;
+    CompVPtr<CompVPatch* >* m_pPatches;
+    size_t m_nPatches;
+    CompVPtr<CompVFeatureDete* >* m_pDetectors;
+    size_t m_nDetectors;
     int32_t m_nMaxFeatures;
     int32_t m_nPyramidLevels;
     int32_t m_nThreshold;
-	int32_t m_nFastType;
+    int32_t m_nFastType;
     bool m_bNMS;
     int m_nPatchDiameter;
 };

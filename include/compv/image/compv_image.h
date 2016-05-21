@@ -38,8 +38,8 @@ public:
     };
     COMPV_ERROR_CODE convert(COMPV_PIXEL_FORMAT eDstPixelFormat, CompVPtr<CompVImage*>* outImage);
     COMPV_ERROR_CODE scale(COMPV_SCALE_TYPE type, int32_t outWidth, int32_t outHeight, CompVPtr<CompVImage*>* outImage);
-	COMPV_ERROR_CODE clone(CompVPtr<CompVImage*>* outImage);
-	COMPV_ERROR_CODE isEquals(const CompVPtr<CompVImage*>& image, bool &bEquals, int32_t rowStart = -1, int32_t rowCount = -1, int32_t colStart = -1, int32_t colCount = -1);
+    COMPV_ERROR_CODE clone(CompVPtr<CompVImage*>* outImage);
+    COMPV_ERROR_CODE isEquals(const CompVPtr<CompVImage*>& image, bool &bEquals, int32_t rowStart = -1, int32_t rowCount = -1, int32_t colStart = -1, int32_t colCount = -1);
 
     size_t getDataSize(COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL);
     const void* getDataPtr(COMPV_BORDER_POS bordersToExclude = COMPV_BORDER_POS_ALL)const;

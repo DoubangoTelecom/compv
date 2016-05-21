@@ -195,8 +195,8 @@ bool TestFAST()
     COMPV_CHECK_CODE_ASSERT(fast->set(COMPV_FAST_SET_INT32_THRESHOLD, &val32, sizeof(val32)));
     val32 = FASTTYPE;
     COMPV_CHECK_CODE_ASSERT(fast->set(COMPV_FAST_SET_INT32_FAST_TYPE, &val32, sizeof(val32)));
-	val32 = MAXFEATURES;
-	COMPV_CHECK_CODE_ASSERT(fast->set(COMPV_FAST_SET_INT32_MAX_FEATURES, &val32, sizeof(val32)));
+    val32 = MAXFEATURES;
+    COMPV_CHECK_CODE_ASSERT(fast->set(COMPV_FAST_SET_INT32_MAX_FEATURES, &val32, sizeof(val32)));
     valBool = NONMAXIMA;
     COMPV_CHECK_CODE_ASSERT(fast->set(COMPV_FAST_SET_BOOL_NON_MAXIMA_SUPP, &valBool, sizeof(valBool)));
 
@@ -214,9 +214,9 @@ bool TestFAST()
     float xf = 0.f;
     float yf = 0.f;
     for (size_t i = 0; i < interestPoints->size(); ++i) {
-		sum_scores += interestPoints->ptr(i)->strength;
+        sum_scores += interestPoints->ptr(i)->strength;
         xf += interestPoints->ptr(i)->x;
-		yf += interestPoints->ptr(i)->y;
+        yf += interestPoints->ptr(i)->y;
     }
 #	if NONMAXIMA == 1
     COMPV_ASSERT(interestPoints->size() == ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_COUNT : ((FASTTYPE == COMPV_FAST_TYPE_12) ? FAST12_T10_NONMAX_COUNT : FAST10_T10_NONMAX_COUNT)));

@@ -46,10 +46,10 @@ COMPV_ERROR_CODE CompVBuffer::copyData(const void* pcPtr, int32_t size)
     COMPV_CHECK_EXP_RETURN(!size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     if (m_bOweMem) {
-		COMPV_ASSERT((m_pPtr = CompVMem::realloc(m_pPtr, size + 8)) != NULL);
+        COMPV_ASSERT((m_pPtr = CompVMem::realloc(m_pPtr, size + 8)) != NULL);
     }
     else {
-		COMPV_ASSERT((m_pPtr = CompVMem::malloc(size + 8)) != NULL);
+        COMPV_ASSERT((m_pPtr = CompVMem::malloc(size + 8)) != NULL);
         m_bOweMem = true;
     }
     if (m_pPtr) {

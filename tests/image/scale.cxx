@@ -35,22 +35,22 @@ bool TestScale()
 
     COMPV_DEBUG_INFO("Image scaling: factor=%f, outWidth=%d, outStride=%d, outHeight=%d", IMAGE_SCALE_FACTOR, image->getWidth(), image->getStride(), image->getHeight());
 
-	// dump image to file
-	writeImgToFile(image);
+    // dump image to file
+    writeImgToFile(image);
 
-	std::string expectedMD5 = imageMD5(image);
-	if (IMAGE_SCALE_FACTOR == 0.5f) {
-		expectedMD5 = IMAGE_BILINEAR_FACTOR050_MD5_STRING;
-	}
-	else if (IMAGE_SCALE_FACTOR == 0.83f) {
-		expectedMD5 = IMAGE_BILINEAR_FACTOR083_MD5_STRING;
-	}
-	else if (IMAGE_SCALE_FACTOR == 1.5f) {
-		expectedMD5 = IMAGE_BILINEAR_FACTOR150_MD5_STRING;
-	}
-	else if (IMAGE_SCALE_FACTOR == 3.0f) {
-		expectedMD5 = IMAGE_BILINEAR_FACTOR300_MD5_STRING;
-	}
+    std::string expectedMD5 = imageMD5(image);
+    if (IMAGE_SCALE_FACTOR == 0.5f) {
+        expectedMD5 = IMAGE_BILINEAR_FACTOR050_MD5_STRING;
+    }
+    else if (IMAGE_SCALE_FACTOR == 0.83f) {
+        expectedMD5 = IMAGE_BILINEAR_FACTOR083_MD5_STRING;
+    }
+    else if (IMAGE_SCALE_FACTOR == 1.5f) {
+        expectedMD5 = IMAGE_BILINEAR_FACTOR150_MD5_STRING;
+    }
+    else if (IMAGE_SCALE_FACTOR == 3.0f) {
+        expectedMD5 = IMAGE_BILINEAR_FACTOR300_MD5_STRING;
+    }
     if (!expectedMD5.empty()) {
         if (imageMD5(image) != expectedMD5) {
             COMPV_DEBUG_ERROR("MD5 mismatch");
@@ -58,9 +58,9 @@ bool TestScale()
             return false;
         }
     }
-	else {
-		COMPV_DEBUG_INFO("/!\\ Not checking MD5");
-	}
+    else {
+        COMPV_DEBUG_INFO("/!\\ Not checking MD5");
+    }
 
     return true;
 }

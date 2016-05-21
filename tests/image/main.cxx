@@ -28,8 +28,8 @@ int main(int argc, char** argv)
 {
     CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
     COMPV_CHECK_CODE_ASSERT(CompVEngine::init(numThreads));
-	COMPV_CHECK_CODE_ASSERT(CompVEngine::setTestingModeEnabled(enableTestingMode));
-	COMPV_CHECK_CODE_ASSERT(CompVEngine::setMathFixedPointEnabled(enableMathFixedPoint));
+    COMPV_CHECK_CODE_ASSERT(CompVEngine::setTestingModeEnabled(enableTestingMode));
+    COMPV_CHECK_CODE_ASSERT(CompVEngine::setMathFixedPointEnabled(enableMathFixedPoint));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setAsmEnabled(enableAsm));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));

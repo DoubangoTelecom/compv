@@ -28,7 +28,7 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_API CompVHamming
 {
 public:
-	static COMPV_ERROR_CODE distance(const uint8_t* dataPtr, int width, int stride, int height, const uint8_t* patch1xnPtr, int32_t* distPtr);
+    static COMPV_ERROR_CODE distance(const uint8_t* dataPtr, int width, int stride, int height, const uint8_t* patch1xnPtr, int32_t* distPtr);
 };
 
 COMPV_NAMESPACE_END()

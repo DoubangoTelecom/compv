@@ -31,14 +31,14 @@ COMPV_ERROR_CODE CompVGaussKern<T>::buildKern2(CompVPtr<CompVArray<T>* >* kern, 
 {
     COMPV_CHECK_EXP_RETURN(!kern || !(size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(kern, (size_t)size, (size_t)size, false));
+    COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(kern, (size_t)size, (size_t)size, false));
 
     const T sigma2_times2 = 2 * (sigma * sigma); // 2*(sigma^2)
     const int size_div2 = (size >> 1);
     int x, y, kx, ky;
     T sum = 0, x2_plus_y2, y2, k;
     const T one_over_pi_times_sigma2_times2 = (1 / ((T)COMPV_MATH_PI * sigma2_times2)); // 1 / (2 * pi * sigma^2)
-	T* kernel = (T*)(*kern)->ptr();
+    T* kernel = (T*)(*kern)->ptr();
 
 #define kernelAt(_y_, _x_) *(kernel + ((_y_) * size) + (_x_))
 
@@ -66,7 +66,7 @@ COMPV_ERROR_CODE CompVGaussKern<T>::buildKern2(CompVPtr<CompVArray<T>* >* kern, 
     }
 
     // Normalize
-	sum = 1 / sum;
+    sum = 1 / sum;
     for (y = 0; y < size; ++y) {
         for (x = 0; x < size; ++x) {
             kernelAt(y, x) *= sum;
@@ -75,7 +75,7 @@ COMPV_ERROR_CODE CompVGaussKern<T>::buildKern2(CompVPtr<CompVArray<T>* >* kern, 
 
 #undef kernelAt
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 template<class T>
@@ -83,14 +83,14 @@ COMPV_ERROR_CODE CompVGaussKern<T>::buildKern1(CompVPtr<CompVArray<T>* >* kern, 
 {
     COMPV_CHECK_EXP_RETURN(!kern || !(size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(kern, 1, (size_t)size));
+    COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(kern, 1, (size_t)size));
 
     const int size_div2 = (size >> 1);
-	const T sigma2_times2 = 2 * (sigma * sigma); // 2*(sigma^2)
-	const T one_over_sqrt_pi_times_sigma2_times2 = (1 / sqrt((T)COMPV_MATH_PI * sigma2_times2)); // 1 / sqrt(2 * pi * sigma^2)
-	T sum, k;
+    const T sigma2_times2 = 2 * (sigma * sigma); // 2*(sigma^2)
+    const T one_over_sqrt_pi_times_sigma2_times2 = (1 / sqrt((T)COMPV_MATH_PI * sigma2_times2)); // 1 / sqrt(2 * pi * sigma^2)
+    T sum, k;
     int x;
-	T* kernel = (T*)(*kern)->ptr();
+    T* kernel = (T*)(*kern)->ptr();
 
     // for x = 0
     kernel[0 + size_div2] = one_over_sqrt_pi_times_sigma2_times2;
@@ -104,31 +104,31 @@ COMPV_ERROR_CODE CompVGaussKern<T>::buildKern1(CompVPtr<CompVArray<T>* >* kern, 
     }
 
     // Normalize
-	sum = 1 / sum;
+    sum = 1 / sum;
     for (x = 0; x < size; ++x) {
         kernel[x] *= sum;
     }
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 // "kern_fxp" must be used with "convlt1_fxp"
 template<class T>
 COMPV_ERROR_CODE CompVGaussKern<T>::buildKern1_fxp(CompVPtr<CompVArray<uint16_t>* >* kern_fxp, int size, float sigma)
 {
-	CompVPtr<CompVArray<T>* > kern_float;
-	COMPV_CHECK_CODE_RETURN(CompVGaussKern<T>::buildKern1(&kern_float, size, sigma));
-	COMPV_CHECK_CODE_RETURN(CompVArray<uint16_t>::newObj(kern_fxp, 1, (size_t)size));
+    CompVPtr<CompVArray<T>* > kern_float;
+    COMPV_CHECK_CODE_RETURN(CompVGaussKern<T>::buildKern1(&kern_float, size, sigma));
+    COMPV_CHECK_CODE_RETURN(CompVArray<uint16_t>::newObj(kern_fxp, 1, (size_t)size));
 
-	uint16_t* kernFxpVals = (uint16_t*)(*kern_fxp)->ptr();
-	const T* kernFloatVals = (*kern_float)->ptr();
-	static const int maxVal = (~(1 << COMPV_FXPQ)) & 0xffff; // 0xffff for X86 and 0x7fff for ARM
+    uint16_t* kernFxpVals = (uint16_t*)(*kern_fxp)->ptr();
+    const T* kernFloatVals = (*kern_float)->ptr();
+    static const int maxVal = (~(1 << COMPV_FXPQ)) & 0xffff; // 0xffff for X86 and 0x7fff for ARM
 
-	for (int i = 0; i < size; ++i) {
-		kernFxpVals[i] = (uint16_t)(kernFloatVals[i] * maxVal);
-	}
-	
-	return COMPV_ERROR_CODE_S_OK;
+    for (int i = 0; i < size; ++i) {
+        kernFxpVals[i] = (uint16_t)(kernFloatVals[i] * maxVal);
+    }
+
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

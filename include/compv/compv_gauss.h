@@ -30,8 +30,8 @@ class COMPV_API CompVGaussKern
 {
 public:
     static COMPV_ERROR_CODE buildKern2(CompVPtr<CompVArray<T>* >* kern, int size, float sigma);
-	static COMPV_ERROR_CODE buildKern1(CompVPtr<CompVArray<T>* >* kern, int size, float sigma);
-	static COMPV_ERROR_CODE buildKern1_fxp(CompVPtr<CompVArray<uint16_t>* >* kern_fxp, int size, float sigma);
+    static COMPV_ERROR_CODE buildKern1(CompVPtr<CompVArray<T>* >* kern, int size, float sigma);
+    static COMPV_ERROR_CODE buildKern1_fxp(CompVPtr<CompVArray<uint16_t>* >* kern_fxp, int size, float sigma);
 };
 
 COMPV_NAMESPACE_END()

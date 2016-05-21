@@ -101,15 +101,15 @@ public:
         m_nCapacity = 0;
     }
     void resize(size_t nNewSize = 0, bool bForce = false) {
-		if (bForce) {
-			m_nSize = COMPV_MATH_MIN(nNewSize, m_nCapacity);
-		}
+        if (bForce) {
+            m_nSize = COMPV_MATH_MIN(nNewSize, m_nCapacity);
+        }
         else if (nNewSize < m_nSize) {
             m_nSize = nNewSize;
         }
     }
-	// Reset all items without freeing the allocated memory
-	// Usefull if you want to re-use the list
+    // Reset all items without freeing the allocated memory
+    // Usefull if you want to re-use the list
     void reset() {
         resize(0);
     }
@@ -131,7 +131,7 @@ public:
         return (m_pMem + m_nSize);
     }
     COMPV_INLINE T* operator[](size_t idx) const {
-		return ptr(idx);
+        return ptr(idx);
     };
     COMPV_INLINE T* ptr(size_t idx = 0) const {
         return idx < m_nSize ? (m_pMem + idx) : NULL;
@@ -149,8 +149,8 @@ public:
     void erase(bool(*CompVBoxPredicateMatch)(const T*)) {
         if (m_nSize > 0 && CompVBoxPredicateMatch) {
             for (size_t i = 0; i < size();) {
-				if (CompVBoxPredicateMatch(ptr(i))) {
-					erase(ptr(i));
+                if (CompVBoxPredicateMatch(ptr(i))) {
+                    erase(ptr(i));
                 }
                 else {
                     ++i;
@@ -228,7 +228,7 @@ private:
 
         // this requires CompVBoxPredicateCompare to reture false for equality, otherwise we'll have an endless loop
         // e.g. compare(i, j) = (i > j) instead of compare(i, j) = (i >= j)
-		if (CompVBoxPredicateCompare(self->ptr(0), self->ptr(0))) {
+        if (CompVBoxPredicateCompare(self->ptr(0), self->ptr(0))) {
             COMPV_DEBUG_ERROR("Invalid compare function");
             COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         }
@@ -237,7 +237,7 @@ private:
         bool swapped;
 
         do {
-			for (swapped = false, j = 0, a = self->ptr(0), b = self->ptr(1); j < size_minus1; ++j, ++a, ++b) {
+            for (swapped = false, j = 0, a = self->ptr(0), b = self->ptr(1); j < size_minus1; ++j, ++a, ++b) {
                 if (CompVBoxPredicateCompare(b, a)) {
                     c = *b, *b = *a, *a = c; // swap
                     swapped = true;
@@ -253,8 +253,8 @@ private:
     // https://en.wikipedia.org/wiki/Quicksort
     static COMPV_INLINE void sort_quick(CompVBox<T>* self, bool(*CompVBoxPredicateCompare)(const T*, const T*), intptr_t left, intptr_t right) {
         // This is a private function, up to the caller to check input params
-		const T pivot = *self->ptr((left + right) >> 1);
-		T atk, *ati = self->ptr(left), *atj = self->ptr(right);
+        const T pivot = *self->ptr((left + right) >> 1);
+        T atk, *ati = self->ptr(left), *atj = self->ptr(right);
         const T *ati_ = ati, *atj_ = atj;
         while (ati <= atj) {
             while (CompVBoxPredicateCompare(ati, &pivot)) {

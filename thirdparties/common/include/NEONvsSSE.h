@@ -46,7 +46,7 @@
 //!!!!!!!!!!!!!!
 #ifndef USE_SSE4
 #if defined(__SSE4_2__)
-    #define USE_SSE4
+#define USE_SSE4
 #endif
 #endif
 //if USE_SSE4 is defined, some functions use SSE4 instructions instead of earlier SSE versions, when undefined - SIMD up to SSSE3 are used
@@ -70,52 +70,52 @@
 #define _NEON2SSE_ALIGN_16  __attribute__((aligned(16)))
 #define _NEON2SSE_INLINE extern inline __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 #if _GCC_VERSION <  40500
-    #define _NEON2SSE_PERFORMANCE_WARNING(function, explanation)   __attribute__((deprecated)) function
+#define _NEON2SSE_PERFORMANCE_WARNING(function, explanation)   __attribute__((deprecated)) function
 #else
-    #define _NEON2SSE_PERFORMANCE_WARNING(function, explanation)   __attribute__((deprecated(explanation))) function
+#define _NEON2SSE_PERFORMANCE_WARNING(function, explanation)   __attribute__((deprecated(explanation))) function
 #endif
 #if defined(__x86_64__)
-    #define _NEON2SSE_64BIT  __x86_64__
+#define _NEON2SSE_64BIT  __x86_64__
 #endif
 #else
 #define _NEON2SSE_ALIGN_16  __declspec(align(16))
 #define _NEON2SSE_INLINE __inline
-#if defined(_MSC_VER)|| defined (__INTEL_COMPILER)  
-    #define _NEON2SSE_PERFORMANCE_WARNING(function, EXPLANATION) __declspec(deprecated(EXPLANATION)) function
+#if defined(_MSC_VER)|| defined (__INTEL_COMPILER)
+#define _NEON2SSE_PERFORMANCE_WARNING(function, EXPLANATION) __declspec(deprecated(EXPLANATION)) function
 #if defined(_M_X64)
-        #define _NEON2SSE_64BIT  _M_X64
+#define _NEON2SSE_64BIT  _M_X64
 #endif
 #else
-    #define _NEON2SSE_PERFORMANCE_WARNING(function, explanation)  function
+#define _NEON2SSE_PERFORMANCE_WARNING(function, explanation)  function
 #endif
 #endif
 
 #if defined  (_NEON2SSE_64BIT) && defined (USE_SSE4)
-    #define _NEON2SSE_64BIT_SSE4
+#define _NEON2SSE_64BIT_SSE4
 #endif
 
 /*********************************************************************************************************************/
 //    data types conversion
 /*********************************************************************************************************************/
 #if defined(_MSC_VER) && (_MSC_VER < 1300)
-    typedef signed char int8_t;
-    typedef unsigned char uint8_t;
-    typedef signed short int16_t;
-    typedef unsigned short uint16_t;
-    typedef signed int int32_t;
-    typedef unsigned int uint32_t;
-    typedef signed long long int64_t;
-    typedef unsigned long long uint64_t;
+typedef signed char int8_t;
+typedef unsigned char uint8_t;
+typedef signed short int16_t;
+typedef unsigned short uint16_t;
+typedef signed int int32_t;
+typedef unsigned int uint32_t;
+typedef signed long long int64_t;
+typedef unsigned long long uint64_t;
 #elif defined(_MSC_VER)
-    typedef signed __int8 int8_t;
-    typedef unsigned __int8 uint8_t;
-    typedef signed __int16 int16_t;
-    typedef unsigned __int16 uint16_t;
-    typedef signed __int32 int32_t;
-    typedef unsigned __int32 uint32_t;
+typedef signed __int8 int8_t;
+typedef unsigned __int8 uint8_t;
+typedef signed __int16 int16_t;
+typedef unsigned __int16 uint16_t;
+typedef signed __int32 int32_t;
+typedef unsigned __int32 uint32_t;
 
-    typedef signed long long int64_t;
-    typedef unsigned long long uint64_t;
+typedef signed long long int64_t;
+typedef unsigned long long uint64_t;
 #else
 #include <stdint.h>
 #include <limits.h>
@@ -162,11 +162,11 @@ typedef __m128i poly8x16_t;
 typedef __m128i poly16x8_t;
 
 #if defined(_MSC_VER)
-    #define SINT_MIN     (-2147483647 - 1) /* min signed int value */
-    #define SINT_MAX       2147483647 /* max signed int value */
+#define SINT_MIN     (-2147483647 - 1) /* min signed int value */
+#define SINT_MAX       2147483647 /* max signed int value */
 #else
-    #define SINT_MIN     INT_MIN /* min signed int value */
-    #define SINT_MAX     INT_MAX /* max signed int value */
+#define SINT_MIN     INT_MIN /* min signed int value */
+#define SINT_MAX     INT_MAX /* max signed int value */
 #endif
 
 typedef   float float32_t;
@@ -389,14 +389,14 @@ typedef  float16x8x3_t float16x4x3_t;
 //here the most performance effective implementation is compiler and 32/64 bits build dependent
 #if defined (_NEON2SSE_64BIT) || (defined (__INTEL_COMPILER) && (__INTEL_COMPILER  >= 1500) )
 
-        #define _pM128i(a) _mm_cvtsi64_si128(*(int64_t*)(&(a)))
-        #define _M64(out, inp) out.m64_i64[0] = _mm_cvtsi128_si64 (inp);
-        #define _M64f(out, inp) out.m64_i64[0] = _mm_cvtsi128_si64 (_M128i(inp));
-#else  
-   //for 32bit gcc and Microsoft compilers builds
-    #define _pM128i(a) _mm_loadl_epi64((__m128i*)&(a))
-    #define _M64(out, inp)  _mm_storel_epi64 ((__m128i*)&(out), inp)
-    #define _M64f(out, inp)  _mm_storel_epi64 ((__m128i*)&(out), _M128i(inp))
+#define _pM128i(a) _mm_cvtsi64_si128(*(int64_t*)(&(a)))
+#define _M64(out, inp) out.m64_i64[0] = _mm_cvtsi128_si64 (inp);
+#define _M64f(out, inp) out.m64_i64[0] = _mm_cvtsi128_si64 (_M128i(inp));
+#else
+//for 32bit gcc and Microsoft compilers builds
+#define _pM128i(a) _mm_loadl_epi64((__m128i*)&(a))
+#define _M64(out, inp)  _mm_storel_epi64 ((__m128i*)&(out), inp)
+#define _M64f(out, inp)  _mm_storel_epi64 ((__m128i*)&(out), _M128i(inp))
 #endif
 #define _pM128(a) _mm_castsi128_ps(_pM128i(a))
 
@@ -2251,31 +2251,31 @@ poly16x8x2_t vuzpq_p16(poly16x8_t a, poly16x8_t b); // VUZP.16 q0,q0
 
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-// the following macros solve the problem of the "immediate parameters requirement" for some x86 intrinsics. 
+// the following macros solve the problem of the "immediate parameters requirement" for some x86 intrinsics.
 // we need it to compile the code unless the "Intrinsic parameter must be an immediate value" error is our goal
 //
-#if ( ((defined(_MSC_VER)|| defined (__INTEL_COMPILER)) && defined DEBUG ) || defined(__GNUC__) )    
+#if ( ((defined(_MSC_VER)|| defined (__INTEL_COMPILER)) && defined DEBUG ) || defined(__GNUC__) )
 
-    #define _MM_ALIGNR_EPI8 _mm_alignr_epi8
+#define _MM_ALIGNR_EPI8 _mm_alignr_epi8
 
-    #define _MM_EXTRACT_EPI16  _mm_extract_epi16
-    #define _MM_INSERT_EPI16 _mm_insert_epi16
+#define _MM_EXTRACT_EPI16  _mm_extract_epi16
+#define _MM_INSERT_EPI16 _mm_insert_epi16
 #ifdef USE_SSE4
-        #define _MM_EXTRACT_EPI8  _mm_extract_epi8
-        #define _MM_EXTRACT_EPI32  _mm_extract_epi32
-        #define _MM_EXTRACT_PS  _mm_extract_ps
+#define _MM_EXTRACT_EPI8  _mm_extract_epi8
+#define _MM_EXTRACT_EPI32  _mm_extract_epi32
+#define _MM_EXTRACT_PS  _mm_extract_ps
 
-        #define _MM_INSERT_EPI8  _mm_insert_epi8
-        #define _MM_INSERT_EPI32 _mm_insert_epi32
-        #define _MM_INSERT_PS    _mm_insert_ps
+#define _MM_INSERT_EPI8  _mm_insert_epi8
+#define _MM_INSERT_EPI32 _mm_insert_epi32
+#define _MM_INSERT_PS    _mm_insert_ps
 #ifdef  _NEON2SSE_64BIT
-            #define _MM_INSERT_EPI64 _mm_insert_epi64
-            #define _MM_EXTRACT_EPI64 _mm_extract_epi64
+#define _MM_INSERT_EPI64 _mm_insert_epi64
+#define _MM_EXTRACT_EPI64 _mm_extract_epi64
 #endif
 #endif //SSE4
 #else
-    #define _NEON2SSE_COMMA ,
-    #define _NEON2SSE_SWITCH16(NAME, a, b, LANE) \
+#define _NEON2SSE_COMMA ,
+#define _NEON2SSE_SWITCH16(NAME, a, b, LANE) \
             switch(LANE)         \
         {                \
         case 0:     return NAME(a b, 0); \
@@ -2297,7 +2297,7 @@ poly16x8x2_t vuzpq_p16(poly16x8_t a, poly16x8_t b); // VUZP.16 q0,q0
         default:    return NAME(a b, 0); \
         }
 
-    #define _NEON2SSE_SWITCH8(NAME, vec, LANE, p) \
+#define _NEON2SSE_SWITCH8(NAME, vec, LANE, p) \
             switch(LANE)              \
         {                          \
         case 0:  return NAME(vec p,0); \
@@ -2311,7 +2311,7 @@ poly16x8x2_t vuzpq_p16(poly16x8_t a, poly16x8_t b); // VUZP.16 q0,q0
         default: return NAME(vec p,0); \
         }
 
-    #define _NEON2SSE_SWITCH4(NAME, case0, case1, case2, case3, vec, LANE, p) \
+#define _NEON2SSE_SWITCH4(NAME, case0, case1, case2, case3, vec, LANE, p) \
             switch(LANE)              \
         {                          \
         case case0:  return NAME(vec p,case0); \
@@ -2321,72 +2321,76 @@ poly16x8x2_t vuzpq_p16(poly16x8_t a, poly16x8_t b); // VUZP.16 q0,q0
         default:     return NAME(vec p,case0); \
         }
 
-    _NEON2SSE_INLINE __m128i _MM_ALIGNR_EPI8(__m128i a, __m128i b, int LANE)
-    {
-        _NEON2SSE_SWITCH16(_mm_alignr_epi8, a, _NEON2SSE_COMMA b, LANE)
-    }
+_NEON2SSE_INLINE __m128i _MM_ALIGNR_EPI8(__m128i a, __m128i b, int LANE)
+{
+    _NEON2SSE_SWITCH16(_mm_alignr_epi8, a, _NEON2SSE_COMMA b, LANE)
+}
 
-    _NEON2SSE_INLINE __m128i  _MM_INSERT_EPI16(__m128i vec, int p, const int LANE)
-    {
-        _NEON2SSE_SWITCH8(_mm_insert_epi16, vec, LANE, _NEON2SSE_COMMA p)
-    }
+_NEON2SSE_INLINE __m128i  _MM_INSERT_EPI16(__m128i vec, int p, const int LANE)
+{
+    _NEON2SSE_SWITCH8(_mm_insert_epi16, vec, LANE, _NEON2SSE_COMMA p)
+}
 
-    _NEON2SSE_INLINE int _MM_EXTRACT_EPI16(__m128i vec, const int LANE)
-    {
-        _NEON2SSE_SWITCH8(_mm_extract_epi16, vec, LANE,)
-    }
+_NEON2SSE_INLINE int _MM_EXTRACT_EPI16(__m128i vec, const int LANE)
+{
+    _NEON2SSE_SWITCH8(_mm_extract_epi16, vec, LANE,)
+}
 
 #ifdef USE_SSE4
-        _NEON2SSE_INLINE int _MM_EXTRACT_EPI32(__m128i vec, const int LANE)
-        {
-            _NEON2SSE_SWITCH4(_mm_extract_epi32, 0,1,2,3, vec, LANE,)
-        }
+_NEON2SSE_INLINE int _MM_EXTRACT_EPI32(__m128i vec, const int LANE)
+{
+    _NEON2SSE_SWITCH4(_mm_extract_epi32, 0,1,2,3, vec, LANE,)
+}
 
-        _NEON2SSE_INLINE int _MM_EXTRACT_PS(__m128 vec, const int LANE)
-        {
-            _NEON2SSE_SWITCH4(_mm_extract_ps, 0,1,2,3, vec, LANE,)
-        }
+_NEON2SSE_INLINE int _MM_EXTRACT_PS(__m128 vec, const int LANE)
+{
+    _NEON2SSE_SWITCH4(_mm_extract_ps, 0,1,2,3, vec, LANE,)
+}
 
-        _NEON2SSE_INLINE int _MM_EXTRACT_EPI8(__m128i vec, const int LANE)
-        {
-            _NEON2SSE_SWITCH16(_mm_extract_epi8, vec, , LANE)
-        }
+_NEON2SSE_INLINE int _MM_EXTRACT_EPI8(__m128i vec, const int LANE)
+{
+    _NEON2SSE_SWITCH16(_mm_extract_epi8, vec, , LANE)
+}
 
-        _NEON2SSE_INLINE __m128i  _MM_INSERT_EPI32(__m128i vec, int p, const int LANE)
-        {
-            _NEON2SSE_SWITCH4(_mm_insert_epi32, 0, 1, 2, 3, vec, LANE, _NEON2SSE_COMMA p)
-        }
+_NEON2SSE_INLINE __m128i  _MM_INSERT_EPI32(__m128i vec, int p, const int LANE)
+{
+    _NEON2SSE_SWITCH4(_mm_insert_epi32, 0, 1, 2, 3, vec, LANE, _NEON2SSE_COMMA p)
+}
 
-        _NEON2SSE_INLINE __m128i  _MM_INSERT_EPI8(__m128i vec, int p, const int LANE)
-        {
-            _NEON2SSE_SWITCH16(_mm_insert_epi8, vec, _NEON2SSE_COMMA p, LANE)
-        }
+_NEON2SSE_INLINE __m128i  _MM_INSERT_EPI8(__m128i vec, int p, const int LANE)
+{
+    _NEON2SSE_SWITCH16(_mm_insert_epi8, vec, _NEON2SSE_COMMA p, LANE)
+}
 
 #ifdef  _NEON2SSE_64BIT
-            //the special case of functions available only for SSE4 and 64-bit build.
-            _NEON2SSE_INLINE __m128i  _MM_INSERT_EPI64(__m128i vec, int p, const int LANE)
-            {
-                switch(LANE) {
-                case 0:
-                    return _mm_insert_epi64(vec,  p, 0);
-                case 1:
-                    return _mm_insert_epi64(vec,  p, 1);
-                default:
-                    return _mm_insert_epi64(vec,  p, 0);
-                }
-            }
+//the special case of functions available only for SSE4 and 64-bit build.
+_NEON2SSE_INLINE __m128i  _MM_INSERT_EPI64(__m128i vec, int p, const int LANE)
+{
+    switch(LANE) {
+    case 0:
+        return _mm_insert_epi64(vec,  p, 0);
+    case 1:
+        return _mm_insert_epi64(vec,  p, 1);
+    default:
+        return _mm_insert_epi64(vec,  p, 0);
+    }
+}
 
-            _NEON2SSE_INLINE int64_t _MM_EXTRACT_EPI64(__m128i val, const int LANE)
-            {
-                if (LANE ==0) return _mm_extract_epi64(val, 0);
-                else return _mm_extract_epi64(val, 1);
-            }
+_NEON2SSE_INLINE int64_t _MM_EXTRACT_EPI64(__m128i val, const int LANE)
+{
+    if (LANE ==0) {
+        return _mm_extract_epi64(val, 0);
+    }
+    else {
+        return _mm_extract_epi64(val, 1);
+    }
+}
 #endif
 
-        _NEON2SSE_INLINE __m128 _MM_INSERT_PS(__m128 vec, __m128 p, const int LANE)
-        {
-            _NEON2SSE_SWITCH4(_mm_insert_ps, 0, 16, 32, 48, vec, LANE, _NEON2SSE_COMMA p)
-        }
+_NEON2SSE_INLINE __m128 _MM_INSERT_PS(__m128 vec, __m128 p, const int LANE)
+{
+    _NEON2SSE_SWITCH4(_mm_insert_ps, 0, 16, 32, 48, vec, LANE, _NEON2SSE_COMMA p)
+}
 
 #endif //USE_SSE4
 
@@ -2396,290 +2400,290 @@ poly16x8x2_t vuzpq_p16(poly16x8_t a, poly16x8_t b); // VUZP.16 q0,q0
 // Below are some helper functions used either for SSE4 intrinsics "emulation" for SSSE3 limited devices
 // or for some specific commonly used operations implementation missing in SSE
 #ifdef USE_SSE4
-    #define _MM_CVTEPU8_EPI16  _mm_cvtepu8_epi16
-    #define _MM_CVTEPU16_EPI32 _mm_cvtepu16_epi32
-    #define _MM_CVTEPU32_EPI64  _mm_cvtepu32_epi64
+#define _MM_CVTEPU8_EPI16  _mm_cvtepu8_epi16
+#define _MM_CVTEPU16_EPI32 _mm_cvtepu16_epi32
+#define _MM_CVTEPU32_EPI64  _mm_cvtepu32_epi64
 
-    #define _MM_CVTEPI8_EPI16  _mm_cvtepi8_epi16
-    #define _MM_CVTEPI16_EPI32 _mm_cvtepi16_epi32
-    #define _MM_CVTEPI32_EPI64  _mm_cvtepi32_epi64
+#define _MM_CVTEPI8_EPI16  _mm_cvtepi8_epi16
+#define _MM_CVTEPI16_EPI32 _mm_cvtepi16_epi32
+#define _MM_CVTEPI32_EPI64  _mm_cvtepi32_epi64
 
-    #define _MM_MAX_EPI8  _mm_max_epi8
-    #define _MM_MAX_EPI32 _mm_max_epi32
-    #define _MM_MAX_EPU16 _mm_max_epu16
-    #define _MM_MAX_EPU32 _mm_max_epu32
+#define _MM_MAX_EPI8  _mm_max_epi8
+#define _MM_MAX_EPI32 _mm_max_epi32
+#define _MM_MAX_EPU16 _mm_max_epu16
+#define _MM_MAX_EPU32 _mm_max_epu32
 
-    #define _MM_MIN_EPI8  _mm_min_epi8
-    #define _MM_MIN_EPI32 _mm_min_epi32
-    #define _MM_MIN_EPU16 _mm_min_epu16
-    #define _MM_MIN_EPU32 _mm_min_epu32
+#define _MM_MIN_EPI8  _mm_min_epi8
+#define _MM_MIN_EPI32 _mm_min_epi32
+#define _MM_MIN_EPU16 _mm_min_epu16
+#define _MM_MIN_EPU32 _mm_min_epu32
 
-    #define _MM_BLENDV_EPI8 _mm_blendv_epi8
-    #define _MM_PACKUS_EPI32 _mm_packus_epi32
-    #define _MM_PACKUS1_EPI32(a) _mm_packus_epi32(a, a)
+#define _MM_BLENDV_EPI8 _mm_blendv_epi8
+#define _MM_PACKUS_EPI32 _mm_packus_epi32
+#define _MM_PACKUS1_EPI32(a) _mm_packus_epi32(a, a)
 
-    #define _MM_MULLO_EPI32 _mm_mullo_epi32
-    #define _MM_MUL_EPI32  _mm_mul_epi32
+#define _MM_MULLO_EPI32 _mm_mullo_epi32
+#define _MM_MUL_EPI32  _mm_mul_epi32
 
-    #define _MM_CMPEQ_EPI64 _mm_cmpeq_epi64
+#define _MM_CMPEQ_EPI64 _mm_cmpeq_epi64
 #else     //no SSE4 !!!!!!
-    _NEON2SSE_INLINE __m128i _MM_CVTEPU8_EPI16(__m128i a)
-    {
-        __m128i zero = _mm_setzero_si128();
-        return _mm_unpacklo_epi8(a, zero);
-    }
+_NEON2SSE_INLINE __m128i _MM_CVTEPU8_EPI16(__m128i a)
+{
+    __m128i zero = _mm_setzero_si128();
+    return _mm_unpacklo_epi8(a, zero);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_CVTEPU16_EPI32(__m128i a)
-    {
-        __m128i zero = _mm_setzero_si128();
-        return _mm_unpacklo_epi16(a, zero);
-    }
+_NEON2SSE_INLINE __m128i _MM_CVTEPU16_EPI32(__m128i a)
+{
+    __m128i zero = _mm_setzero_si128();
+    return _mm_unpacklo_epi16(a, zero);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_CVTEPU32_EPI64(__m128i a)
-    {
-        __m128i zero = _mm_setzero_si128();
-        return _mm_unpacklo_epi32(a, zero);
-    }
+_NEON2SSE_INLINE __m128i _MM_CVTEPU32_EPI64(__m128i a)
+{
+    __m128i zero = _mm_setzero_si128();
+    return _mm_unpacklo_epi32(a, zero);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_CVTEPI8_EPI16(__m128i a)
-    {
-        __m128i zero = _mm_setzero_si128();
-        __m128i sign = _mm_cmpgt_epi8(zero, a);
-        return _mm_unpacklo_epi8(a, sign);
-    }
+_NEON2SSE_INLINE __m128i _MM_CVTEPI8_EPI16(__m128i a)
+{
+    __m128i zero = _mm_setzero_si128();
+    __m128i sign = _mm_cmpgt_epi8(zero, a);
+    return _mm_unpacklo_epi8(a, sign);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_CVTEPI16_EPI32(__m128i a)
-    {
-        __m128i zero = _mm_setzero_si128();
-        __m128i sign = _mm_cmpgt_epi16(zero, a);
-        return _mm_unpacklo_epi16(a, sign);
-    }
+_NEON2SSE_INLINE __m128i _MM_CVTEPI16_EPI32(__m128i a)
+{
+    __m128i zero = _mm_setzero_si128();
+    __m128i sign = _mm_cmpgt_epi16(zero, a);
+    return _mm_unpacklo_epi16(a, sign);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_CVTEPI32_EPI64(__m128i a)
-    {
-        __m128i zero = _mm_setzero_si128();
-        __m128i sign = _mm_cmpgt_epi32(zero, a);
-        return _mm_unpacklo_epi32(a, sign);
-    }
+_NEON2SSE_INLINE __m128i _MM_CVTEPI32_EPI64(__m128i a)
+{
+    __m128i zero = _mm_setzero_si128();
+    __m128i sign = _mm_cmpgt_epi32(zero, a);
+    return _mm_unpacklo_epi32(a, sign);
+}
 
-    _NEON2SSE_INLINE int _MM_EXTRACT_EPI32(__m128i vec, const int LANE)
-    {
-        _NEON2SSE_ALIGN_16 int32_t tmp[4];
-        _mm_store_si128((__m128i*)tmp, vec);
-        return tmp[LANE];
-    }
+_NEON2SSE_INLINE int _MM_EXTRACT_EPI32(__m128i vec, const int LANE)
+{
+    _NEON2SSE_ALIGN_16 int32_t tmp[4];
+    _mm_store_si128((__m128i*)tmp, vec);
+    return tmp[LANE];
+}
 
-    _NEON2SSE_INLINE int _MM_EXTRACT_EPI8(__m128i vec, const int LANE)
-    {
-        _NEON2SSE_ALIGN_16 int8_t tmp[16];
-        _mm_store_si128((__m128i*)tmp, vec);
-        return (int)tmp[LANE];
-    }
+_NEON2SSE_INLINE int _MM_EXTRACT_EPI8(__m128i vec, const int LANE)
+{
+    _NEON2SSE_ALIGN_16 int8_t tmp[16];
+    _mm_store_si128((__m128i*)tmp, vec);
+    return (int)tmp[LANE];
+}
 
-    _NEON2SSE_INLINE int _MM_EXTRACT_PS(__m128 vec, const int LANE)
-    {
-        _NEON2SSE_ALIGN_16 int32_t tmp[4];
-        _mm_store_si128((__m128i*)tmp, _M128i(vec));
-        return tmp[LANE];
-    }
+_NEON2SSE_INLINE int _MM_EXTRACT_PS(__m128 vec, const int LANE)
+{
+    _NEON2SSE_ALIGN_16 int32_t tmp[4];
+    _mm_store_si128((__m128i*)tmp, _M128i(vec));
+    return tmp[LANE];
+}
 
-    _NEON2SSE_INLINE __m128i  _MM_INSERT_EPI32(__m128i vec, int p, const int LANE)
-    {
-        _NEON2SSE_ALIGN_16 int32_t pvec[4] = {0,0,0,0};
-        _NEON2SSE_ALIGN_16 uint32_t mask[4] = {0xffffffff,0xffffffff,0xffffffff,0xffffffff};
-        __m128i vec_masked, p_masked;
-        pvec[LANE] = p;
-        mask[LANE] = 0x0;
-        vec_masked = _mm_and_si128 (*(__m128i*)mask,vec); //ready for p
-        p_masked = _mm_andnot_si128 (*(__m128i*)mask,*(__m128i*)pvec); //ready for vec
-        return _mm_or_si128(vec_masked, p_masked);
-    }
+_NEON2SSE_INLINE __m128i  _MM_INSERT_EPI32(__m128i vec, int p, const int LANE)
+{
+    _NEON2SSE_ALIGN_16 int32_t pvec[4] = {0,0,0,0};
+    _NEON2SSE_ALIGN_16 uint32_t mask[4] = {0xffffffff,0xffffffff,0xffffffff,0xffffffff};
+    __m128i vec_masked, p_masked;
+    pvec[LANE] = p;
+    mask[LANE] = 0x0;
+    vec_masked = _mm_and_si128 (*(__m128i*)mask,vec); //ready for p
+    p_masked = _mm_andnot_si128 (*(__m128i*)mask,*(__m128i*)pvec); //ready for vec
+    return _mm_or_si128(vec_masked, p_masked);
+}
 
-    _NEON2SSE_INLINE __m128i  _MM_INSERT_EPI8(__m128i vec, int p, const int LANE)
-    {
-        _NEON2SSE_ALIGN_16 int8_t pvec[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
-        _NEON2SSE_ALIGN_16 uint8_t mask[16] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-        __m128i vec_masked, p_masked;
-        pvec[LANE] = (int8_t)p;
-        mask[LANE] = 0x0;
-        vec_masked = _mm_and_si128 (*(__m128i*)mask,vec); //ready for p
-        p_masked = _mm_andnot_si128  (*(__m128i*)mask,*(__m128i*)pvec); //ready for vec
-        return _mm_or_si128(vec_masked, p_masked);
-    }
+_NEON2SSE_INLINE __m128i  _MM_INSERT_EPI8(__m128i vec, int p, const int LANE)
+{
+    _NEON2SSE_ALIGN_16 int8_t pvec[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
+    _NEON2SSE_ALIGN_16 uint8_t mask[16] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+    __m128i vec_masked, p_masked;
+    pvec[LANE] = (int8_t)p;
+    mask[LANE] = 0x0;
+    vec_masked = _mm_and_si128 (*(__m128i*)mask,vec); //ready for p
+    p_masked = _mm_andnot_si128  (*(__m128i*)mask,*(__m128i*)pvec); //ready for vec
+    return _mm_or_si128(vec_masked, p_masked);
+}
 
-    _NEON2SSE_INLINE __m128 _MM_INSERT_PS(__m128 vec, __m128 p, const int LANE)
-    {
-        _NEON2SSE_ALIGN_16 int32_t mask[4] = {0xffffffff,0xffffffff,0xffffffff,0xffffffff};
-        __m128 tmp, vec_masked, p_masked;
-        mask[LANE >> 4] = 0x0; //here the LANE is not actural lane, need to deal with it
-        vec_masked = _mm_and_ps (*(__m128*)mask,vec); //ready for p
-        p_masked = _mm_andnot_ps (*(__m128*)mask, p); //ready for vec
-        tmp = _mm_or_ps(vec_masked, p_masked);
-        return tmp;
-    }
+_NEON2SSE_INLINE __m128 _MM_INSERT_PS(__m128 vec, __m128 p, const int LANE)
+{
+    _NEON2SSE_ALIGN_16 int32_t mask[4] = {0xffffffff,0xffffffff,0xffffffff,0xffffffff};
+    __m128 tmp, vec_masked, p_masked;
+    mask[LANE >> 4] = 0x0; //here the LANE is not actural lane, need to deal with it
+    vec_masked = _mm_and_ps (*(__m128*)mask,vec); //ready for p
+    p_masked = _mm_andnot_ps (*(__m128*)mask, p); //ready for vec
+    tmp = _mm_or_ps(vec_masked, p_masked);
+    return tmp;
+}
 
-    _NEON2SSE_INLINE __m128i _MM_MAX_EPI8(__m128i a, __m128i b)
-    {
-        __m128i cmp, resa, resb;
-        cmp = _mm_cmpgt_epi8 (a, b);
-        resa = _mm_and_si128 (cmp, a);
-        resb = _mm_andnot_si128 (cmp,b);
-        return _mm_or_si128(resa, resb);
-    }
+_NEON2SSE_INLINE __m128i _MM_MAX_EPI8(__m128i a, __m128i b)
+{
+    __m128i cmp, resa, resb;
+    cmp = _mm_cmpgt_epi8 (a, b);
+    resa = _mm_and_si128 (cmp, a);
+    resb = _mm_andnot_si128 (cmp,b);
+    return _mm_or_si128(resa, resb);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_MAX_EPI32(__m128i a, __m128i b)
-    {
-        __m128i cmp, resa, resb;
-        cmp = _mm_cmpgt_epi32(a, b);
-        resa = _mm_and_si128 (cmp, a);
-        resb = _mm_andnot_si128 (cmp,b);
-        return _mm_or_si128(resa, resb);
-    }
+_NEON2SSE_INLINE __m128i _MM_MAX_EPI32(__m128i a, __m128i b)
+{
+    __m128i cmp, resa, resb;
+    cmp = _mm_cmpgt_epi32(a, b);
+    resa = _mm_and_si128 (cmp, a);
+    resb = _mm_andnot_si128 (cmp,b);
+    return _mm_or_si128(resa, resb);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_MAX_EPU16(__m128i a, __m128i b)
-    {
-        __m128i c8000, b_s, a_s, cmp;
-        c8000 = _mm_cmpeq_epi16 (a,a); //0xffff
-        c8000 = _mm_slli_epi16 (c8000, 15); //0x8000
-        b_s = _mm_sub_epi16 (b, c8000);
-        a_s = _mm_sub_epi16 (a, c8000);
-        cmp = _mm_cmpgt_epi16 (a_s, b_s); //no unsigned comparison, need to go to signed
-        a_s = _mm_and_si128 (cmp,a);
-        b_s = _mm_andnot_si128 (cmp,b);
-        return _mm_or_si128(a_s, b_s);
-    }
+_NEON2SSE_INLINE __m128i _MM_MAX_EPU16(__m128i a, __m128i b)
+{
+    __m128i c8000, b_s, a_s, cmp;
+    c8000 = _mm_cmpeq_epi16 (a,a); //0xffff
+    c8000 = _mm_slli_epi16 (c8000, 15); //0x8000
+    b_s = _mm_sub_epi16 (b, c8000);
+    a_s = _mm_sub_epi16 (a, c8000);
+    cmp = _mm_cmpgt_epi16 (a_s, b_s); //no unsigned comparison, need to go to signed
+    a_s = _mm_and_si128 (cmp,a);
+    b_s = _mm_andnot_si128 (cmp,b);
+    return _mm_or_si128(a_s, b_s);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_MAX_EPU32(__m128i a, __m128i b)
-    {
-        __m128i c80000000, b_s, a_s, cmp;
-        c80000000 = _mm_cmpeq_epi32 (a,a); //0xffffffff
-        c80000000 = _mm_slli_epi32 (c80000000, 31); //0x80000000
-        b_s = _mm_sub_epi32 (b, c80000000);
-        a_s = _mm_sub_epi32 (a, c80000000);
-        cmp = _mm_cmpgt_epi32 (a_s, b_s); //no unsigned comparison, need to go to signed
-        a_s = _mm_and_si128 (cmp,a);
-        b_s = _mm_andnot_si128 (cmp,b);
-        return _mm_or_si128(a_s, b_s);
-    }
+_NEON2SSE_INLINE __m128i _MM_MAX_EPU32(__m128i a, __m128i b)
+{
+    __m128i c80000000, b_s, a_s, cmp;
+    c80000000 = _mm_cmpeq_epi32 (a,a); //0xffffffff
+    c80000000 = _mm_slli_epi32 (c80000000, 31); //0x80000000
+    b_s = _mm_sub_epi32 (b, c80000000);
+    a_s = _mm_sub_epi32 (a, c80000000);
+    cmp = _mm_cmpgt_epi32 (a_s, b_s); //no unsigned comparison, need to go to signed
+    a_s = _mm_and_si128 (cmp,a);
+    b_s = _mm_andnot_si128 (cmp,b);
+    return _mm_or_si128(a_s, b_s);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_MIN_EPI8(__m128i a, __m128i b)
-    {
-        __m128i cmp, resa, resb;
-        cmp = _mm_cmpgt_epi8 (b, a);
-        resa = _mm_and_si128 (cmp, a);
-        resb = _mm_andnot_si128 (cmp,b);
-        return _mm_or_si128(resa, resb);
-    }
+_NEON2SSE_INLINE __m128i _MM_MIN_EPI8(__m128i a, __m128i b)
+{
+    __m128i cmp, resa, resb;
+    cmp = _mm_cmpgt_epi8 (b, a);
+    resa = _mm_and_si128 (cmp, a);
+    resb = _mm_andnot_si128 (cmp,b);
+    return _mm_or_si128(resa, resb);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_MIN_EPI32(__m128i a, __m128i b)
-    {
-        __m128i cmp, resa, resb;
-        cmp = _mm_cmpgt_epi32(b, a);
-        resa = _mm_and_si128 (cmp, a);
-        resb = _mm_andnot_si128 (cmp,b);
-        return _mm_or_si128(resa, resb);
-    }
+_NEON2SSE_INLINE __m128i _MM_MIN_EPI32(__m128i a, __m128i b)
+{
+    __m128i cmp, resa, resb;
+    cmp = _mm_cmpgt_epi32(b, a);
+    resa = _mm_and_si128 (cmp, a);
+    resb = _mm_andnot_si128 (cmp,b);
+    return _mm_or_si128(resa, resb);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_MIN_EPU16(__m128i a, __m128i b)
-    {
-        __m128i c8000, b_s, a_s, cmp;
-        c8000 = _mm_cmpeq_epi16 (a,a); //0xffff
-        c8000 = _mm_slli_epi16 (c8000, 15); //0x8000
-        b_s = _mm_sub_epi16 (b, c8000);
-        a_s = _mm_sub_epi16 (a, c8000);
-        cmp = _mm_cmpgt_epi16 (b_s, a_s); //no unsigned comparison, need to go to signed
-        a_s = _mm_and_si128 (cmp,a);
-        b_s = _mm_andnot_si128 (cmp,b);
-        return _mm_or_si128(a_s, b_s);
-    }
+_NEON2SSE_INLINE __m128i _MM_MIN_EPU16(__m128i a, __m128i b)
+{
+    __m128i c8000, b_s, a_s, cmp;
+    c8000 = _mm_cmpeq_epi16 (a,a); //0xffff
+    c8000 = _mm_slli_epi16 (c8000, 15); //0x8000
+    b_s = _mm_sub_epi16 (b, c8000);
+    a_s = _mm_sub_epi16 (a, c8000);
+    cmp = _mm_cmpgt_epi16 (b_s, a_s); //no unsigned comparison, need to go to signed
+    a_s = _mm_and_si128 (cmp,a);
+    b_s = _mm_andnot_si128 (cmp,b);
+    return _mm_or_si128(a_s, b_s);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_MIN_EPU32(__m128i a, __m128i b)
-    {
-        __m128i c80000000, b_s, a_s, cmp;
-        c80000000 = _mm_cmpeq_epi32 (a,a); //0xffffffff
-        c80000000 = _mm_slli_epi32 (c80000000, 31); //0x80000000
-        b_s = _mm_sub_epi32 (b, c80000000);
-        a_s = _mm_sub_epi32 (a, c80000000);
-        cmp = _mm_cmpgt_epi32 (b_s, a_s); //no unsigned comparison, need to go to signed
-        a_s = _mm_and_si128 (cmp,a);
-        b_s = _mm_andnot_si128 (cmp,b);
-        return _mm_or_si128(a_s, b_s);
-    }
+_NEON2SSE_INLINE __m128i _MM_MIN_EPU32(__m128i a, __m128i b)
+{
+    __m128i c80000000, b_s, a_s, cmp;
+    c80000000 = _mm_cmpeq_epi32 (a,a); //0xffffffff
+    c80000000 = _mm_slli_epi32 (c80000000, 31); //0x80000000
+    b_s = _mm_sub_epi32 (b, c80000000);
+    a_s = _mm_sub_epi32 (a, c80000000);
+    cmp = _mm_cmpgt_epi32 (b_s, a_s); //no unsigned comparison, need to go to signed
+    a_s = _mm_and_si128 (cmp,a);
+    b_s = _mm_andnot_si128 (cmp,b);
+    return _mm_or_si128(a_s, b_s);
+}
 
-    _NEON2SSE_INLINE __m128i  _MM_BLENDV_EPI8(__m128i a, __m128i b, __m128i mask) //this is NOT exact implementation of _mm_blendv_epi8  !!!!! - please see below
-    {
-        //it assumes mask is either 0xff or 0  always (like in all usecases below) while for the original _mm_blendv_epi8 only MSB mask byte matters.
-        __m128i a_masked, b_masked;
-        b_masked = _mm_and_si128 (mask,b); //use b if mask 0xff
-        a_masked = _mm_andnot_si128 (mask,a);
-        return _mm_or_si128(a_masked, b_masked);
-    }
+_NEON2SSE_INLINE __m128i  _MM_BLENDV_EPI8(__m128i a, __m128i b, __m128i mask) //this is NOT exact implementation of _mm_blendv_epi8  !!!!! - please see below
+{
+    //it assumes mask is either 0xff or 0  always (like in all usecases below) while for the original _mm_blendv_epi8 only MSB mask byte matters.
+    __m128i a_masked, b_masked;
+    b_masked = _mm_and_si128 (mask,b); //use b if mask 0xff
+    a_masked = _mm_andnot_si128 (mask,a);
+    return _mm_or_si128(a_masked, b_masked);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_PACKUS_EPI32(__m128i a, __m128i b)
-    {
-        _NEON2SSE_ALIGN_16 int8_t mask8_32_even_odd[16] = { 0,1, 4,5, 8,9,  12,13,  2,3, 6,7,10,11,14,15};
-        __m128i a16, b16, res, reshi,cmp, zero;
-        zero = _mm_setzero_si128();
-        a16 = _mm_shuffle_epi8 (a, *(__m128i*) mask8_32_even_odd);
-        b16 = _mm_shuffle_epi8 (b, *(__m128i*) mask8_32_even_odd);
-        res = _mm_unpacklo_epi64(a16, b16); //result without saturation
-        reshi = _mm_unpackhi_epi64(a16, b16); //hi part of result used for saturation
-        cmp = _mm_cmpgt_epi16(zero, reshi); //if cmp<0 the result should be zero
-        res = _mm_andnot_si128(cmp,res); //if cmp zero - do nothing, otherwise cmp <0  and the result is 0
-        cmp = _mm_cmpgt_epi16(reshi,zero); //if cmp positive
-        return _mm_or_si128(res, cmp); //if cmp positive we are out of 16bits need to saturaate to 0xffff
-    }
+_NEON2SSE_INLINE __m128i _MM_PACKUS_EPI32(__m128i a, __m128i b)
+{
+    _NEON2SSE_ALIGN_16 int8_t mask8_32_even_odd[16] = { 0,1, 4,5, 8,9,  12,13,  2,3, 6,7,10,11,14,15};
+    __m128i a16, b16, res, reshi,cmp, zero;
+    zero = _mm_setzero_si128();
+    a16 = _mm_shuffle_epi8 (a, *(__m128i*) mask8_32_even_odd);
+    b16 = _mm_shuffle_epi8 (b, *(__m128i*) mask8_32_even_odd);
+    res = _mm_unpacklo_epi64(a16, b16); //result without saturation
+    reshi = _mm_unpackhi_epi64(a16, b16); //hi part of result used for saturation
+    cmp = _mm_cmpgt_epi16(zero, reshi); //if cmp<0 the result should be zero
+    res = _mm_andnot_si128(cmp,res); //if cmp zero - do nothing, otherwise cmp <0  and the result is 0
+    cmp = _mm_cmpgt_epi16(reshi,zero); //if cmp positive
+    return _mm_or_si128(res, cmp); //if cmp positive we are out of 16bits need to saturaate to 0xffff
+}
 
-    _NEON2SSE_INLINE __m128i _MM_PACKUS1_EPI32(__m128i a)
-    {
-        _NEON2SSE_ALIGN_16 int8_t mask8_32_even_odd[16] = { 0,1, 4,5, 8,9,  12,13,  2,3, 6,7,10,11,14,15};
-        __m128i a16, res, reshi,cmp, zero;
-        zero = _mm_setzero_si128();
-        a16 = _mm_shuffle_epi8 (a, *(__m128i*)mask8_32_even_odd);
-        reshi = _mm_unpackhi_epi64(a16, a16); //hi part of result used for saturation
-        cmp = _mm_cmpgt_epi16(zero, reshi); //if cmp<0 the result should be zero
-        res = _mm_andnot_si128(cmp, a16); //if cmp zero - do nothing, otherwise cmp <0  and the result is 0
-        cmp = _mm_cmpgt_epi16(reshi,zero); //if cmp positive
-        return _mm_or_si128(res, cmp); //if cmp positive we are out of 16bits need to saturaate to 0xffff
-    }
+_NEON2SSE_INLINE __m128i _MM_PACKUS1_EPI32(__m128i a)
+{
+    _NEON2SSE_ALIGN_16 int8_t mask8_32_even_odd[16] = { 0,1, 4,5, 8,9,  12,13,  2,3, 6,7,10,11,14,15};
+    __m128i a16, res, reshi,cmp, zero;
+    zero = _mm_setzero_si128();
+    a16 = _mm_shuffle_epi8 (a, *(__m128i*)mask8_32_even_odd);
+    reshi = _mm_unpackhi_epi64(a16, a16); //hi part of result used for saturation
+    cmp = _mm_cmpgt_epi16(zero, reshi); //if cmp<0 the result should be zero
+    res = _mm_andnot_si128(cmp, a16); //if cmp zero - do nothing, otherwise cmp <0  and the result is 0
+    cmp = _mm_cmpgt_epi16(reshi,zero); //if cmp positive
+    return _mm_or_si128(res, cmp); //if cmp positive we are out of 16bits need to saturaate to 0xffff
+}
 
 
-    _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(__m128i _MM_MULLO_EPI32(__m128i a, __m128i b), _NEON2SSE_REASON_SLOW_SERIAL)
-    {
-        _NEON2SSE_ALIGN_16 int32_t atmp[4], btmp[4], res[4];
-        int64_t res64;
-        int i;
-        _mm_store_si128((__m128i*)atmp, a);
-        _mm_store_si128((__m128i*)btmp, b);
-        for (i = 0; i<4; i++) {
-            res64 = atmp[i] * btmp[i];
-            res[i] = (int)(res64 & 0xffffffff);
-        }
-        return _mm_load_si128((__m128i*)res);
+_NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(__m128i _MM_MULLO_EPI32(__m128i a, __m128i b), _NEON2SSE_REASON_SLOW_SERIAL)
+{
+    _NEON2SSE_ALIGN_16 int32_t atmp[4], btmp[4], res[4];
+    int64_t res64;
+    int i;
+    _mm_store_si128((__m128i*)atmp, a);
+    _mm_store_si128((__m128i*)btmp, b);
+    for (i = 0; i<4; i++) {
+        res64 = atmp[i] * btmp[i];
+        res[i] = (int)(res64 & 0xffffffff);
     }
+    return _mm_load_si128((__m128i*)res);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_MUL_EPI32(__m128i a, __m128i b)
-    {
-        __m128i sign, zero,  mul_us, a_neg, b_neg, mul_us_neg;
-        sign = _mm_xor_si128 (a, b);
-        sign =  _mm_srai_epi32 (sign, 31); //promote sign bit to all fields, all fff if negative and all 0 if positive
-		sign = _mm_shuffle_epi32(sign, _MM_SHUFFLE(2, 2, 0, 0)); //promote sign bit to 3 and 1st data lanes
-        zero = _mm_setzero_si128();
-        a_neg = _mm_abs_epi32 (a); //negate a and b
-        b_neg = _mm_abs_epi32 (b); //negate a and b
-        mul_us = _mm_mul_epu32 (a_neg, b_neg); //uses 0 and 2nd data lanes, (abs), the multiplication gives 64 bit result
-        mul_us_neg = _mm_sub_epi64(zero, mul_us);
-        mul_us_neg = _mm_and_si128(sign, mul_us_neg);
-        mul_us = _mm_andnot_si128(sign, mul_us);
-        return _mm_or_si128 (mul_us, mul_us_neg);
-    }
+_NEON2SSE_INLINE __m128i _MM_MUL_EPI32(__m128i a, __m128i b)
+{
+    __m128i sign, zero,  mul_us, a_neg, b_neg, mul_us_neg;
+    sign = _mm_xor_si128 (a, b);
+    sign =  _mm_srai_epi32 (sign, 31); //promote sign bit to all fields, all fff if negative and all 0 if positive
+    sign = _mm_shuffle_epi32(sign, _MM_SHUFFLE(2, 2, 0, 0)); //promote sign bit to 3 and 1st data lanes
+    zero = _mm_setzero_si128();
+    a_neg = _mm_abs_epi32 (a); //negate a and b
+    b_neg = _mm_abs_epi32 (b); //negate a and b
+    mul_us = _mm_mul_epu32 (a_neg, b_neg); //uses 0 and 2nd data lanes, (abs), the multiplication gives 64 bit result
+    mul_us_neg = _mm_sub_epi64(zero, mul_us);
+    mul_us_neg = _mm_and_si128(sign, mul_us_neg);
+    mul_us = _mm_andnot_si128(sign, mul_us);
+    return _mm_or_si128 (mul_us, mul_us_neg);
+}
 
-    _NEON2SSE_INLINE __m128i _MM_CMPEQ_EPI64(__m128i a, __m128i b)
-    {
-        __m128i res;
-        res = _mm_cmpeq_epi32 (a, b);
-        return _mm_shuffle_epi32 (res, 1 | (1 << 2) | (3 << 4) | (3 << 6)); //copy the information from hi to low part of the 64 bit data
-    }
+_NEON2SSE_INLINE __m128i _MM_CMPEQ_EPI64(__m128i a, __m128i b)
+{
+    __m128i res;
+    res = _mm_cmpeq_epi32 (a, b);
+    return _mm_shuffle_epi32 (res, 1 | (1 << 2) | (3 << 4) | (3 << 6)); //copy the information from hi to low part of the 64 bit data
+}
 #endif     //SSE4
 
 //the special case of functions working only for 32 bits, no SSE4
@@ -2703,8 +2707,8 @@ _NEON2SSE_INLINE int64_t _MM_EXTRACT_EPI64_32(__m128i val, const int LANE)
 }
 
 #ifndef _NEON2SSE_64BIT_SSE4
-    #define _MM_INSERT_EPI64 _MM_INSERT_EPI64_32
-    #define _MM_EXTRACT_EPI64 _MM_EXTRACT_EPI64_32
+#define _MM_INSERT_EPI64 _MM_INSERT_EPI64_32
+#define _MM_EXTRACT_EPI64 _MM_EXTRACT_EPI64_32
 #endif
 
 int32x4_t  vqd_s32(int32x4_t a); //Doubling saturation for signed ints
@@ -3320,28 +3324,32 @@ _NEON2SSE_INLINE uint32x4_t vqaddq_u32(uint32x4_t a, uint32x4_t b)
 
 uint64x2_t vqaddq_u64(uint64x2_t a, uint64x2_t b); // VQADD.U64 q0,q0,q0
 #ifdef USE_SSE4
-    _NEON2SSE_INLINE uint64x2_t vqaddq_u64(uint64x2_t a, uint64x2_t b)
-    {
-        __m128i c80000000, sum, cmp, suba, subsum;
-        c80000000 = _mm_set_epi32 (0x80000000, 0x0, 0x80000000, 0x0);
-        sum = _mm_add_epi64 (a, b);
-        subsum = _mm_sub_epi64 (sum, c80000000);
-        suba = _mm_sub_epi64 (a, c80000000);
-        cmp = _mm_cmpgt_epi64 ( suba, subsum); //no unsigned comparison, need to go to signed, SSE4.2!!!
-        return _mm_or_si128 (sum, cmp); //saturation
-    }
+_NEON2SSE_INLINE uint64x2_t vqaddq_u64(uint64x2_t a, uint64x2_t b)
+{
+    __m128i c80000000, sum, cmp, suba, subsum;
+    c80000000 = _mm_set_epi32 (0x80000000, 0x0, 0x80000000, 0x0);
+    sum = _mm_add_epi64 (a, b);
+    subsum = _mm_sub_epi64 (sum, c80000000);
+    suba = _mm_sub_epi64 (a, c80000000);
+    cmp = _mm_cmpgt_epi64 ( suba, subsum); //no unsigned comparison, need to go to signed, SSE4.2!!!
+    return _mm_or_si128 (sum, cmp); //saturation
+}
 #else
-    _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint64x2_t vqaddq_u64(uint64x2_t a, uint64x2_t b), _NEON2SSE_REASON_SLOW_SERIAL)
-    {
-        _NEON2SSE_ALIGN_16 uint64_t atmp[2], btmp[2], res[2];
-        _mm_store_si128((__m128i*)atmp, a);
-        _mm_store_si128((__m128i*)btmp, b);
-        res[0] = atmp[0] + btmp[0];
-        res[1] = atmp[1] + btmp[1];
-        if (res[0] < atmp[0]) res[0] = ~(uint64_t)0;
-        if (res[1] < atmp[1]) res[1] = ~(uint64_t)0;
-        return _mm_load_si128((__m128i*)(res));
+_NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint64x2_t vqaddq_u64(uint64x2_t a, uint64x2_t b), _NEON2SSE_REASON_SLOW_SERIAL)
+{
+    _NEON2SSE_ALIGN_16 uint64_t atmp[2], btmp[2], res[2];
+    _mm_store_si128((__m128i*)atmp, a);
+    _mm_store_si128((__m128i*)btmp, b);
+    res[0] = atmp[0] + btmp[0];
+    res[1] = atmp[1] + btmp[1];
+    if (res[0] < atmp[0]) {
+        res[0] = ~(uint64_t)0;
     }
+    if (res[1] < atmp[1]) {
+        res[1] = ~(uint64_t)0;
+    }
+    return _mm_load_si128((__m128i*)(res));
+}
 #endif
 
 
@@ -3665,19 +3673,19 @@ _NEON2SSE_INLINE int16x8_t vmull_s8(int8x8_t a, int8x8_t b) // VMULL.S8 q0,d0,d0
 int32x4_t vmull_s16(int16x4_t a, int16x4_t b); // VMULL.S16 q0,d0,d0
 _NEON2SSE_INLINE int32x4_t vmull_s16(int16x4_t a, int16x4_t b) // VMULL.S16 q0,d0,d0
 {
-    #ifdef USE_SSE4
-        __m128i a16, b16;
-        a16 = _MM_CVTEPI16_EPI32 (_pM128i(a)); // SSE 4.1
-        b16 = _MM_CVTEPI16_EPI32 (_pM128i(b)); // SSE 4.1
-        return _MM_MULLO_EPI32 (a16, b16); // SSE 4.1
-    #else
-        __m128i low, hi, a128,b128;
-        a128 = _pM128i(a);
-        b128 = _pM128i(b);
-        low =  _mm_mullo_epi16(a128,b128);
-        hi =   _mm_mulhi_epi16(a128,b128);
-        return _mm_unpacklo_epi16(low,hi);
-    #endif
+#ifdef USE_SSE4
+    __m128i a16, b16;
+    a16 = _MM_CVTEPI16_EPI32 (_pM128i(a)); // SSE 4.1
+    b16 = _MM_CVTEPI16_EPI32 (_pM128i(b)); // SSE 4.1
+    return _MM_MULLO_EPI32 (a16, b16); // SSE 4.1
+#else
+    __m128i low, hi, a128,b128;
+    a128 = _pM128i(a);
+    b128 = _pM128i(b);
+    low =  _mm_mullo_epi16(a128,b128);
+    hi =   _mm_mulhi_epi16(a128,b128);
+    return _mm_unpacklo_epi16(low,hi);
+#endif
 }
 
 int64x2_t vmull_s32(int32x2_t a, int32x2_t b); // VMULL.S32 q0,d0,d0
@@ -3704,19 +3712,19 @@ _NEON2SSE_INLINE uint16x8_t vmull_u8(uint8x8_t a, uint8x8_t b) // VMULL.U8 q0,d0
 uint32x4_t vmull_u16(uint16x4_t a, uint16x4_t b); // VMULL.s16 q0,d0,d0
 _NEON2SSE_INLINE uint32x4_t vmull_u16(uint16x4_t a, uint16x4_t b) // VMULL.s16 q0,d0,d0
 {
-    #ifdef USE_SSE4
-        __m128i a16, b16;
-        a16 = _MM_CVTEPU16_EPI32 (_pM128i(a)); // SSE 4.1
-        b16 = _MM_CVTEPU16_EPI32 (_pM128i(b)); // SSE 4.1
-        return _MM_MULLO_EPI32 (a16, b16); // SSE 4.1
-    #else
-        __m128i a128,b128,low, hi;
-        a128 = _pM128i(a);
-        b128 = _pM128i(b);
-        low =  _mm_mullo_epi16(a128,b128);
-        hi =   _mm_mulhi_epu16(a128,b128);
-        return _mm_unpacklo_epi16(low,hi);
-    #endif
+#ifdef USE_SSE4
+    __m128i a16, b16;
+    a16 = _MM_CVTEPU16_EPI32 (_pM128i(a)); // SSE 4.1
+    b16 = _MM_CVTEPU16_EPI32 (_pM128i(b)); // SSE 4.1
+    return _MM_MULLO_EPI32 (a16, b16); // SSE 4.1
+#else
+    __m128i a128,b128,low, hi;
+    a128 = _pM128i(a);
+    b128 = _pM128i(b);
+    low =  _mm_mullo_epi16(a128,b128);
+    hi =   _mm_mulhi_epu16(a128,b128);
+    return _mm_unpacklo_epi16(low,hi);
+#endif
 }
 
 uint64x2_t vmull_u32(uint32x2_t a, uint32x2_t b); // VMULL.U32 q0,d0,d0
@@ -4608,7 +4616,8 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint64x1_t vqsub_u64(uint64x1_t a
     b64 = _Ui64(b);
     if (a64 > b64) {
         res.m64_u64[0] = a64 - b64;
-    } else {
+    }
+    else {
         res.m64_u64[0] = 0;
     }
     return res;
@@ -4674,26 +4683,26 @@ _NEON2SSE_INLINE uint32x4_t vqsubq_u32(uint32x4_t a, uint32x4_t b) // VQSUB.U32 
 
 _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint64x2_t vqsubq_u64(uint64x2_t a, uint64x2_t b), _NEON2SSE_REASON_SLOW_SERIAL); // VQSUB.U64 q0,q0,q0
 #ifdef USE_SSE4
-    _NEON2SSE_INLINE uint64x2_t vqsubq_u64(uint64x2_t a, uint64x2_t b)
-    {
-        __m128i c80000000, subb, suba, cmp, sub;
-        c80000000 = _mm_set_epi32 (0x80000000, 0x0, 0x80000000, 0x0);
-        sub  = _mm_sub_epi64 (a, b);
-        suba = _mm_sub_epi64 (a, c80000000);
-        subb = _mm_sub_epi64 (b, c80000000);
-        cmp = _mm_cmpgt_epi64 ( suba, subb); //no unsigned comparison, need to go to signed, SSE4.2!!!
-        return _mm_and_si128 (sub, cmp); //saturation
-    }
+_NEON2SSE_INLINE uint64x2_t vqsubq_u64(uint64x2_t a, uint64x2_t b)
+{
+    __m128i c80000000, subb, suba, cmp, sub;
+    c80000000 = _mm_set_epi32 (0x80000000, 0x0, 0x80000000, 0x0);
+    sub  = _mm_sub_epi64 (a, b);
+    suba = _mm_sub_epi64 (a, c80000000);
+    subb = _mm_sub_epi64 (b, c80000000);
+    cmp = _mm_cmpgt_epi64 ( suba, subb); //no unsigned comparison, need to go to signed, SSE4.2!!!
+    return _mm_and_si128 (sub, cmp); //saturation
+}
 #else
-    _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint64x2_t vqsubq_u64(uint64x2_t a, uint64x2_t b), _NEON2SSE_REASON_SLOW_SERIAL)
-    {
-        _NEON2SSE_ALIGN_16 uint64_t atmp[2], btmp[2], res[2];
-        _mm_store_si128((__m128i*)atmp, a);
-        _mm_store_si128((__m128i*)btmp, b);
-        res[0] = (atmp[0] > btmp[0]) ? atmp[0] -  btmp[0] : 0;
-        res[1] = (atmp[1] > btmp[1]) ? atmp[1] -  btmp[1] : 0;
-        return _mm_load_si128((__m128i*)(res));
-    }
+_NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint64x2_t vqsubq_u64(uint64x2_t a, uint64x2_t b), _NEON2SSE_REASON_SLOW_SERIAL)
+{
+    _NEON2SSE_ALIGN_16 uint64_t atmp[2], btmp[2], res[2];
+    _mm_store_si128((__m128i*)atmp, a);
+    _mm_store_si128((__m128i*)btmp, b);
+    res[0] = (atmp[0] > btmp[0]) ? atmp[0] -  btmp[0] : 0;
+    res[1] = (atmp[1] > btmp[1]) ? atmp[1] -  btmp[1] : 0;
+    return _mm_load_si128((__m128i*)(res));
+}
 #endif
 
 //**********Vector halving subtract Vr[i]:=(Va[i]-Vb[i])>>1  ******************************************************
@@ -5177,48 +5186,48 @@ uint8x16_t vcgeq_u8(uint8x16_t a, uint8x16_t b); // VCGE.U8 q0, q0, q0
 _NEON2SSE_INLINE uint8x16_t vcgeq_u8(uint8x16_t a, uint8x16_t b) // VCGE.U8 q0, q0, q0
 {
     //no unsigned chars comparison, only signed available,so need the trick
-        __m128i cmp;
-        cmp = _mm_max_epu8(a, b);
-        return _mm_cmpeq_epi8(cmp, a); //a>=b
+    __m128i cmp;
+    cmp = _mm_max_epu8(a, b);
+    return _mm_cmpeq_epi8(cmp, a); //a>=b
 }
 
 uint16x8_t vcgeq_u16(uint16x8_t a, uint16x8_t b); // VCGE.s16 q0, q0, q0
 _NEON2SSE_INLINE uint16x8_t vcgeq_u16(uint16x8_t a, uint16x8_t b) // VCGE.s16 q0, q0, q0
 {
     //no unsigned shorts comparison, only signed available,so need the trick
-    #ifdef USE_SSE4
-        __m128i cmp;
-        cmp = _mm_max_epu16(a, b);
-        return _mm_cmpeq_epi16(cmp, a); //a>=b
-    #else
-        __m128i c8000, as, bs, m1, m2;
-        c8000 = _mm_set1_epi16 (0x8000);
-        as = _mm_sub_epi16(a,c8000);
-        bs = _mm_sub_epi16(b,c8000);
-        m1 = _mm_cmpgt_epi16(as, bs);
-        m2 = _mm_cmpeq_epi16 (as, bs);
-        return _mm_or_si128 ( m1, m2);
-    #endif
+#ifdef USE_SSE4
+    __m128i cmp;
+    cmp = _mm_max_epu16(a, b);
+    return _mm_cmpeq_epi16(cmp, a); //a>=b
+#else
+    __m128i c8000, as, bs, m1, m2;
+    c8000 = _mm_set1_epi16 (0x8000);
+    as = _mm_sub_epi16(a,c8000);
+    bs = _mm_sub_epi16(b,c8000);
+    m1 = _mm_cmpgt_epi16(as, bs);
+    m2 = _mm_cmpeq_epi16 (as, bs);
+    return _mm_or_si128 ( m1, m2);
+#endif
 }
 
 uint32x4_t vcgeq_u32(uint32x4_t a, uint32x4_t b); // VCGE.U32 q0, q0, q0
 _NEON2SSE_INLINE uint32x4_t vcgeq_u32(uint32x4_t a, uint32x4_t b) // VCGE.U32 q0, q0, q0
 {
     //no unsigned ints comparison, only signed available,so need the trick
-    #ifdef USE_SSE4
-        __m128i cmp;
-        cmp = _mm_max_epu32(a, b);
-        return _mm_cmpeq_epi32(cmp, a); //a>=b
-    #else
-        //serial solution may be faster
-        __m128i c80000000, as, bs, m1, m2;
-        c80000000 = _mm_set1_epi32 (0x80000000);
-        as = _mm_sub_epi32(a,c80000000);
-        bs = _mm_sub_epi32(b,c80000000);
-        m1 = _mm_cmpgt_epi32 (as, bs);
-        m2 = _mm_cmpeq_epi32 (as, bs);
-        return _mm_or_si128 ( m1,  m2);
-    #endif
+#ifdef USE_SSE4
+    __m128i cmp;
+    cmp = _mm_max_epu32(a, b);
+    return _mm_cmpeq_epi32(cmp, a); //a>=b
+#else
+    //serial solution may be faster
+    __m128i c80000000, as, bs, m1, m2;
+    c80000000 = _mm_set1_epi32 (0x80000000);
+    as = _mm_sub_epi32(a,c80000000);
+    bs = _mm_sub_epi32(b,c80000000);
+    m1 = _mm_cmpgt_epi32 (as, bs);
+    m2 = _mm_cmpeq_epi32 (as, bs);
+    return _mm_or_si128 ( m1,  m2);
+#endif
 }
 
 //**********************Vector compare less-than or equal******************************
@@ -5306,44 +5315,44 @@ _NEON2SSE_INLINE uint32x4_t vcleq_f32(float32x4_t a, float32x4_t b)
 
 uint8x16_t vcleq_u8(uint8x16_t a, uint8x16_t b); // VCGE.U8 q0, q0, q0
 #ifdef USE_SSE4
-    _NEON2SSE_INLINE uint8x16_t vcleq_u8(uint8x16_t a, uint8x16_t b) // VCGE.U8 q0, q0, q0
-    {
-        //no unsigned chars comparison in SSE, only signed available,so need the trick
-        __m128i cmp;
-        cmp = _mm_min_epu8(a, b);
-        return _mm_cmpeq_epi8(cmp, a); //a<=b
-    }
+_NEON2SSE_INLINE uint8x16_t vcleq_u8(uint8x16_t a, uint8x16_t b) // VCGE.U8 q0, q0, q0
+{
+    //no unsigned chars comparison in SSE, only signed available,so need the trick
+    __m128i cmp;
+    cmp = _mm_min_epu8(a, b);
+    return _mm_cmpeq_epi8(cmp, a); //a<=b
+}
 #else
-    #define vcleq_u8(a,b) vcgeq_u8(b,a)
+#define vcleq_u8(a,b) vcgeq_u8(b,a)
 #endif
 
 
 uint16x8_t vcleq_u16(uint16x8_t a, uint16x8_t b); // VCGE.s16 q0, q0, q0
 #ifdef USE_SSE4
-    _NEON2SSE_INLINE uint16x8_t vcleq_u16(uint16x8_t a, uint16x8_t b) // VCGE.s16 q0, q0, q0
-    {
-        //no unsigned shorts comparison in SSE, only signed available,so need the trick
-        __m128i cmp;
-        cmp = _mm_min_epu16(a, b);
-        return _mm_cmpeq_epi16(cmp, a); //a<=b
-    }
+_NEON2SSE_INLINE uint16x8_t vcleq_u16(uint16x8_t a, uint16x8_t b) // VCGE.s16 q0, q0, q0
+{
+    //no unsigned shorts comparison in SSE, only signed available,so need the trick
+    __m128i cmp;
+    cmp = _mm_min_epu16(a, b);
+    return _mm_cmpeq_epi16(cmp, a); //a<=b
+}
 #else
-    #define vcleq_u16(a,b) vcgeq_u16(b,a)
+#define vcleq_u16(a,b) vcgeq_u16(b,a)
 #endif
 
 
 uint32x4_t vcleq_u32(uint32x4_t a, uint32x4_t b); // VCGE.U32 q0, q0, q0
 #ifdef USE_SSE4
-    _NEON2SSE_INLINE uint32x4_t vcleq_u32(uint32x4_t a, uint32x4_t b) // VCGE.U32 q0, q0, q0
-    {
-        //no unsigned chars comparison in SSE, only signed available,so need the trick
-        __m128i cmp;
-        cmp = _mm_min_epu32(a, b);
-        return _mm_cmpeq_epi32(cmp, a); //a<=b
-    }
+_NEON2SSE_INLINE uint32x4_t vcleq_u32(uint32x4_t a, uint32x4_t b) // VCGE.U32 q0, q0, q0
+{
+    //no unsigned chars comparison in SSE, only signed available,so need the trick
+    __m128i cmp;
+    cmp = _mm_min_epu32(a, b);
+    return _mm_cmpeq_epi32(cmp, a); //a<=b
+}
 #else
 //solution may be not optimal compared with the serial one
-    #define vcleq_u32(a,b) vcgeq_u32(b,a)
+#define vcleq_u32(a,b) vcgeq_u32(b,a)
 #endif
 
 
@@ -5704,8 +5713,8 @@ uint8x16_t vtstq_p8(poly8x16_t a, poly8x16_t b); // VTST.8 q0, q0, q0
 //*** Absolute difference between the arguments: Vr[i] = | Va[i] - Vb[i] |*****
 //************************************************************
 int8x8_t vabd_s8(int8x8_t a,  int8x8_t b); // VABD.S8 d0,d0,d0
-_NEON2SSE_INLINE int8x8_t vabd_s8(int8x8_t a,  int8x8_t b) 
-{ 
+_NEON2SSE_INLINE int8x8_t vabd_s8(int8x8_t a,  int8x8_t b)
+{
     int8x8_t res64;
     return64(vabdq_s8(_pM128i(a), _pM128i(b)));
 }
@@ -5719,11 +5728,12 @@ _NEON2SSE_INLINE int16x4_t vabd_s16(int16x4_t a,  int16x4_t b)
 
 int32x2_t vabd_s32(int32x2_t a,  int32x2_t b); // VABD.S32 d0,d0,d0
 _NEON2SSE_INLINE int32x2_t vabd_s32(int32x2_t a,  int32x2_t b)
-{//need to deal with an intermediate overflow
+{
+    //need to deal with an intermediate overflow
     int32x2_t res;
     res.m64_i32[0] = (a.m64_i32[0] > b.m64_i32[0]) ? a.m64_i32[0] -  b.m64_i32[0]: b.m64_i32[0] -  a.m64_i32[0];
     res.m64_i32[1] = (a.m64_i32[1] > b.m64_i32[1]) ? a.m64_i32[1] -  b.m64_i32[1]: b.m64_i32[1] -  a.m64_i32[1];
-	return res;
+    return res;
 }
 
 uint8x8_t vabd_u8(uint8x8_t a,  uint8x8_t b); // VABD.U8 d0,d0,d0
@@ -5759,38 +5769,41 @@ _NEON2SSE_INLINE float32x2_t vabd_f32(float32x2_t a, float32x2_t b)
 
 int8x16_t vabdq_s8(int8x16_t a, int8x16_t b); // VABD.S8 q0,q0,q0
 _NEON2SSE_INLINE int8x16_t vabdq_s8(int8x16_t a, int8x16_t b) // VABD.S8 q0,q0,q0
-{ //need to deal with an intermediate overflow
-   __m128i cmp, difab, difba; 
-   cmp = vcgtq_s8(a,b); 
-   difab = _mm_sub_epi8(a,b); 
-   difba = _mm_sub_epi8(b,a); 
-   difab = _mm_and_si128(cmp, difab); 
-   difba = _mm_andnot_si128(cmp, difba); 
-   return _mm_or_si128(difab, difba); 
+{
+    //need to deal with an intermediate overflow
+    __m128i cmp, difab, difba;
+    cmp = vcgtq_s8(a,b);
+    difab = _mm_sub_epi8(a,b);
+    difba = _mm_sub_epi8(b,a);
+    difab = _mm_and_si128(cmp, difab);
+    difba = _mm_andnot_si128(cmp, difba);
+    return _mm_or_si128(difab, difba);
 }
 
 int16x8_t vabdq_s16(int16x8_t a, int16x8_t b); // VABD.S16 q0,q0,q0
 _NEON2SSE_INLINE int16x8_t vabdq_s16(int16x8_t a, int16x8_t b) // VABD.S16 q0,q0,q0
-{//need to deal with an intermediate overflow
-    __m128i cmp, difab, difba; 
-    cmp = vcgtq_s16(a,b); 
-    difab = _mm_sub_epi16(a,b); 
-    difba = _mm_sub_epi16 (b,a); 
-    difab = _mm_and_si128(cmp, difab); 
-    difba = _mm_andnot_si128(cmp, difba); 
-    return _mm_or_si128(difab, difba); 
+{
+    //need to deal with an intermediate overflow
+    __m128i cmp, difab, difba;
+    cmp = vcgtq_s16(a,b);
+    difab = _mm_sub_epi16(a,b);
+    difba = _mm_sub_epi16 (b,a);
+    difab = _mm_and_si128(cmp, difab);
+    difba = _mm_andnot_si128(cmp, difba);
+    return _mm_or_si128(difab, difba);
 }
 
 int32x4_t vabdq_s32(int32x4_t a, int32x4_t b); // VABD.S32 q0,q0,q0
 _NEON2SSE_INLINE int32x4_t vabdq_s32(int32x4_t a, int32x4_t b) // VABD.S32 q0,q0,q0
-{//need to deal with an intermediate overflow
-    __m128i cmp, difab, difba; 
-    cmp = vcgtq_s32(a,b); 
-    difab = _mm_sub_epi32(a,b); 
-    difba = _mm_sub_epi32(b,a); 
-    difab = _mm_and_si128(cmp, difab); 
-    difba = _mm_andnot_si128(cmp, difba); 
-    return _mm_or_si128(difab, difba); 
+{
+    //need to deal with an intermediate overflow
+    __m128i cmp, difab, difba;
+    cmp = vcgtq_s32(a,b);
+    difab = _mm_sub_epi32(a,b);
+    difba = _mm_sub_epi32(b,a);
+    difab = _mm_and_si128(cmp, difab);
+    difba = _mm_andnot_si128(cmp, difba);
+    return _mm_or_si128(difab, difba);
 }
 
 uint8x16_t vabdq_u8(uint8x16_t a, uint8x16_t b); // VABD.U8 q0,q0,q0
@@ -5865,10 +5878,18 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING (int64x2_t vabdl_s32(int32x2_t a,
 {
     //no optimal SIMD solution, serial looks faster
     _NEON2SSE_ALIGN_16 int64_t res[2];
-    if(a.m64_i32[0] > b.m64_i32[0]) res[0] = ( int64_t) a.m64_i32[0] - ( int64_t) b.m64_i32[0];
-    else res[0] = ( int64_t) b.m64_i32[0] - ( int64_t) a.m64_i32[0];
-    if(a.m64_i32[1] > b.m64_i32[1]) res[1] = ( int64_t) a.m64_i32[1] - ( int64_t) b.m64_i32[1];
-    else res[1] = ( int64_t) b.m64_i32[1] - ( int64_t) a.m64_i32[1];
+    if(a.m64_i32[0] > b.m64_i32[0]) {
+        res[0] = ( int64_t) a.m64_i32[0] - ( int64_t) b.m64_i32[0];
+    }
+    else {
+        res[0] = ( int64_t) b.m64_i32[0] - ( int64_t) a.m64_i32[0];
+    }
+    if(a.m64_i32[1] > b.m64_i32[1]) {
+        res[1] = ( int64_t) a.m64_i32[1] - ( int64_t) b.m64_i32[1];
+    }
+    else {
+        res[1] = ( int64_t) b.m64_i32[1] - ( int64_t) a.m64_i32[1];
+    }
     return _mm_load_si128((__m128i*)res);
 }
 
@@ -5892,10 +5913,18 @@ uint64x2_t vabdl_u32(uint32x2_t a, uint32x2_t b); // VABDL.U32 q0,d0,d0
 _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING (uint64x2_t vabdl_u32(uint32x2_t a, uint32x2_t b), _NEON2SSE_REASON_SLOW_SERIAL)
 {
     _NEON2SSE_ALIGN_16 uint64_t res[2];
-    if(a.m64_u32[0] > b.m64_u32[0]) res[0] = ( uint64_t) a.m64_u32[0] - ( uint64_t) b.m64_u32[0];
-    else res[0] = ( uint64_t) b.m64_u32[0] - ( uint64_t) a.m64_u32[0];
-    if(a.m64_u32[1] > b.m64_u32[1]) res[1] = ( uint64_t) a.m64_u32[1] - ( uint64_t) b.m64_u32[1];
-    else res[1] = ( uint64_t) b.m64_u32[1] - ( uint64_t) a.m64_u32[1];
+    if(a.m64_u32[0] > b.m64_u32[0]) {
+        res[0] = ( uint64_t) a.m64_u32[0] - ( uint64_t) b.m64_u32[0];
+    }
+    else {
+        res[0] = ( uint64_t) b.m64_u32[0] - ( uint64_t) a.m64_u32[0];
+    }
+    if(a.m64_u32[1] > b.m64_u32[1]) {
+        res[1] = ( uint64_t) a.m64_u32[1] - ( uint64_t) b.m64_u32[1];
+    }
+    else {
+        res[1] = ( uint64_t) b.m64_u32[1] - ( uint64_t) a.m64_u32[1];
+    }
     return _mm_load_si128((__m128i*)res);
 }
 
@@ -5923,19 +5952,19 @@ _NEON2SSE_INLINE int32x2_t vaba_s32(int32x2_t a,  int32x2_t b, int32x2_t c)
 }
 
 uint8x8_t vaba_u8(uint8x8_t a,  uint8x8_t b, uint8x8_t c); // VABA.U8 d0,d0,d0
-_NEON2SSE_INLINE uint8x8_t vaba_u8(uint8x8_t a,  uint8x8_t b, uint8x8_t c) 
-{ 
-    int8x8_t res64; 
-    return64(vabaq_u8(_pM128i(a),_pM128i(b), _pM128i(c))); 
-} 
+_NEON2SSE_INLINE uint8x8_t vaba_u8(uint8x8_t a,  uint8x8_t b, uint8x8_t c)
+{
+    int8x8_t res64;
+    return64(vabaq_u8(_pM128i(a),_pM128i(b), _pM128i(c)));
+}
 
 
 uint16x4_t vaba_u16(uint16x4_t a,  uint16x4_t b, uint16x4_t c); // VABA.s16 d0,d0,d0
-_NEON2SSE_INLINE uint16x4_t vaba_u16(uint16x4_t a,  uint16x4_t b, uint16x4_t c) 
-{ 
-    int16x4_t res64; 
-    return64(vabaq_u16(_pM128i(a), _pM128i(b), _pM128i(c))); 
-} 
+_NEON2SSE_INLINE uint16x4_t vaba_u16(uint16x4_t a,  uint16x4_t b, uint16x4_t c)
+{
+    int16x4_t res64;
+    return64(vabaq_u16(_pM128i(a), _pM128i(b), _pM128i(c)));
+}
 
 uint32x2_t vaba_u32(uint32x2_t a,  uint32x2_t b, uint32x2_t c); // VABA.U32 d0,d0,d0
 _NEON2SSE_INLINE uint32x2_t vaba_u32(uint32x2_t a,  uint32x2_t b, uint32x2_t c)
@@ -6635,7 +6664,7 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint32x2_t vpmax_u32(uint32x2_t a
     res.m64_u32[0] = (a.m64_u32[0] < a.m64_u32[1]) ? a.m64_u32[1] : a.m64_u32[0];
     res.m64_u32[1] = (b.m64_u32[0] < b.m64_u32[1]) ? b.m64_u32[1] : b.m64_u32[0];
     return res;
-} 
+}
 
 float32x2_t vpmax_f32(float32x2_t a, float32x2_t b); // VPMAX.F32 d0,d0,d0
 _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(float32x2_t vpmax_f32(float32x2_t a, float32x2_t b), _NEON2SSE_REASON_SLOW_SERIAL)
@@ -6760,10 +6789,11 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint32x2_t vrecpe_u32(uint32x2_t 
     uint32x2_t res;
     float resf, r;
     int i, q, s;
-    for (i =0; i<2; i++){
+    for (i =0; i<2; i++) {
         if((a.m64_u32[i] & 0x80000000) == 0) {
             res.m64_u32[i] = 0xffffffff;
-        }else{
+        }
+        else {
             resf =  (float) (a.m64_u32[i] * (0.5f / (uint32_t)(1 << 31)));
             q = (int)(resf * 512.0); /* a in units of 1/512 rounded down */
             r = (float)(1.0 / (((float)q + 0.5) / 512.0)); /* reciprocal r */
@@ -6786,13 +6816,13 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint32x4_t vrecpeq_u32(uint32x4_t
     //We implement the recip_estimate function as described in ARMv7 reference manual (VRECPE instruction) but use float instead of double
     _NEON2SSE_ALIGN_16 uint32_t atmp[4];
     _NEON2SSE_ALIGN_16 uint32_t res[4];
-   _NEON2SSE_ALIGN_16 int c80000000[4] = {0x80000000,0x80000000, 0x80000000,0x80000000};
+    _NEON2SSE_ALIGN_16 int c80000000[4] = {0x80000000,0x80000000, 0x80000000,0x80000000};
     float resf, r;
     int i, q, s;
-  __m128i res128, mask, zero;
+    __m128i res128, mask, zero;
     _mm_store_si128((__m128i*)atmp, a);
     zero = _mm_setzero_si128();
-    for (i =0; i<4; i++){
+    for (i =0; i<4; i++) {
         resf = (atmp[i] * (0.5f / (uint32_t) (1 << 31)));  //  2.3283064365386963E-10 ~(0.5f / (uint32_t) (1 << 31))
         q = (int)(resf * 512.0); /* a in units of 1/512 rounded down */
         r = 1.0 / (((float)q + 0.5) / 512.0); /* reciprocal r */
@@ -6822,18 +6852,19 @@ _NEON2SSE_INLINE float32x2_t vrsqrte_f32(float32x2_t a) //use low 64 bits
 }
 
 uint32x2_t vrsqrte_u32(uint32x2_t a); // VRSQRTE.U32 d0,d0
-_NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint32x2_t vrsqrte_u32(uint32x2_t a), _NEON2SSE_REASON_SLOW_SERIAL) 
+_NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint32x2_t vrsqrte_u32(uint32x2_t a), _NEON2SSE_REASON_SLOW_SERIAL)
 {
-    //Input is  fixed point number!!! 
+    //Input is  fixed point number!!!
     //We implement the recip_sqrt_estimate function as described in ARMv7 reference manual (VRSQRTE instruction) but use float instead of double
-   uint32x2_t res;
-   __m128 tmp;
-    float r, resf, coeff;	
+    uint32x2_t res;
+    __m128 tmp;
+    float r, resf, coeff;
     int i,q0, s;
-    for (i =0; i<2; i++){
+    for (i =0; i<2; i++) {
         if((a.m64_u32[i] & 0xc0000000) == 0) { //a <=0x3fffffff
             res.m64_u32[i] = 0xffffffff;
-        }else{
+        }
+        else {
             resf =  (float) (a.m64_u32[i] * (0.5f / (uint32_t)(1 << 31)));
             coeff = (resf < 0.5)? 512.0 : 256.0 ; /* range 0.25 <= resf < 0.5  or range 0.5 <= resf < 1.0*/
             q0 = (int)(resf * coeff); /* a in units of 1/512 rounded down */
@@ -6852,20 +6883,20 @@ float32x4_t vrsqrteq_f32(float32x4_t a); // VRSQRTE.F32 q0,q0
 #define vrsqrteq_f32 _mm_rsqrt_ps
 
 uint32x4_t vrsqrteq_u32(uint32x4_t a); // VRSQRTE.U32 q0,q0
-_NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint32x4_t vrsqrteq_u32(uint32x4_t a), _NEON2SSE_REASON_SLOW_SERIAL) 
+_NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint32x4_t vrsqrteq_u32(uint32x4_t a), _NEON2SSE_REASON_SLOW_SERIAL)
 {
-    //Input is  fixed point number!!! 
+    //Input is  fixed point number!!!
     //We implement the recip_sqrt_estimate function as described in ARMv7 reference manual (VRSQRTE instruction) but use float instead of double
-   _NEON2SSE_ALIGN_16 uint32_t  atmp[4], res[4];
-   _NEON2SSE_ALIGN_16 float c1_31[4] = {(float)(((uint32_t)1) << 31), (float)(((uint32_t)1) << 31),(float)(((uint32_t)1) << 31), (float)(((uint32_t)1) << 31)};
-   _NEON2SSE_ALIGN_16 int c_c0000000[4] = {0xc0000000,0xc0000000, 0xc0000000,0xc0000000};
-  __m128 tmp;
-  __m128i res128, mask, zero;
-    float r, resf, coeff;	
+    _NEON2SSE_ALIGN_16 uint32_t  atmp[4], res[4];
+    _NEON2SSE_ALIGN_16 float c1_31[4] = {(float)(((uint32_t)1) << 31), (float)(((uint32_t)1) << 31),(float)(((uint32_t)1) << 31), (float)(((uint32_t)1) << 31)};
+    _NEON2SSE_ALIGN_16 int c_c0000000[4] = {0xc0000000,0xc0000000, 0xc0000000,0xc0000000};
+    __m128 tmp;
+    __m128i res128, mask, zero;
+    float r, resf, coeff;
     int i,q0, s;
     _mm_store_si128((__m128i*)atmp, a);
     zero = _mm_setzero_si128();
-    for (i =0; i<4; i++){
+    for (i =0; i<4; i++) {
         resf =  (float) (atmp[i] * (0.5f / (uint32_t)(1 << 31)));
         coeff = (float)((resf < 0.5)? 512.0 : 256.0); /* range 0.25 <= resf < 0.5  or range 0.5 <= resf < 1.0*/
         q0 = (int)(resf * coeff); /* a in units of 1/512 rounded down */
@@ -7541,8 +7572,12 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(int64x1_t vshr_n_s64(int64x1_t a,
 {
     //no arithmetic shift for 64bit values, serial solution used
     int64x1_t res;
-    if(b>=64) res.m64_i64[0] = 0;
-    else res.m64_i64[0] = (*(int64_t*)&a) >> b;
+    if(b>=64) {
+        res.m64_i64[0] = 0;
+    }
+    else {
+        res.m64_i64[0] = (*(int64_t*)&a) >> b;
+    }
     return res;
 }
 
@@ -7776,7 +7811,8 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(int64x1_t vrshr_n_s64(int64x1_t a
     int64_t a_i64 = *( int64_t*)&a;
     if(b==64) {
         res.m64_i64[0] = 0; //for some compilers rounding happens and we need to use(a_i64 & _SIGNBIT64)>>63;
-    } else {
+    }
+    else {
         int64_t maskb = a_i64 & (( int64_t)1 << (b - 1));
         res.m64_i64[0] = (a_i64 >> b) + (maskb >> (b - 1));
     }
@@ -8223,7 +8259,8 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(int64x1_t vqshl_n_s64(int64x1_t a
     bmask = ( int64_t)1 << (63 - b); //positive
     if (a_i64 >= bmask) {
         res.m64_i64[0] = ~(_SIGNBIT64);
-    } else {
+    }
+    else {
         res.m64_i64[0]  = (a_i64 <= -bmask) ? _SIGNBIT64 : a_i64 << b;
     }
     return res;
@@ -8335,7 +8372,8 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(int64x2_t vqshlq_n_s64(int64x2_t 
     for (i = 0; i<2; i++) {
         if (atmp[i] >= bmask) {
             res[i] = ~(_SIGNBIT64);
-        } else {
+        }
+        else {
             res[i] = (atmp[i] <= -bmask) ? _SIGNBIT64 : atmp[i] << b;
         }
     }
@@ -8438,7 +8476,8 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint64x1_t vqshlu_n_s64(int64x1_t
     uint64_t limit;
     if (a.m64_i64[0]<=0) {
         res.m64_u64[0] = 0;
-    } else {
+    }
+    else {
         limit = (uint64_t) 1 << (64 - b);
         res.m64_u64[0] = ( ((uint64_t)a.m64_i64[0]) >= limit) ? res.m64_u64[0] = ~((uint64_t)0) : a.m64_i64[0] << b;
     }
@@ -8502,7 +8541,8 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint64x2_t vqshluq_n_s64(int64x2_
     for (i = 0; i<2; i++) {
         if (atmp[i]<=0) {
             res[i] = 0;
-        } else {
+        }
+        else {
             limit = (uint64_t) 1 << (64 - b);
             res[i] = ( ((uint64_t)atmp[i]) >= limit) ? res[i] = ~((uint64_t)0) : atmp[i] << b;
         }
@@ -8528,7 +8568,7 @@ _NEON2SSE_INLINE int16x4_t vshrn_n_s32(int32x4_t a, __constrange(1,16) int b) //
 {
     int16x4_t res64;
     __m128i r32;
-    _NEON2SSE_ALIGN_16 int8_t mask16_odd[16] ={ 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 };
+    _NEON2SSE_ALIGN_16 int8_t mask16_odd[16] = { 0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15 };
     r32  = vshrq_n_s32(a,b);
     r32  =  _mm_shuffle_epi8 (r32, *(__m128i*) mask16_odd); //narrow, use low 64 bits only. Impossible to use _mm_packs because of negative saturation problems
     return64(r32);
@@ -8609,13 +8649,15 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint32x2_t vqshrun_n_s64(int64x2_
     _mm_store_si128((__m128i*)atmp, a);
     if (atmp[0] < 0) {
         res.m64_u32[0] = 0;
-    } else {
+    }
+    else {
         res64 = (atmp[0] >> b);
         res.m64_u32[0] = (res64 > (int64_t)0xffffffff) ? 0xffffffff : (uint32_t) res64;
     }
     if (atmp[1] < 0) {
         res.m64_u32[1] = 0;
-    } else {
+    }
+    else {
         res64 = (atmp[1] >> b);
         res.m64_u32[1] = (res64 > (int64_t)0xffffffff) ? 0xffffffff : (uint32_t)res64;
     }
@@ -8654,13 +8696,15 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(uint32x2_t vqrshrun_n_s64(int64x2
     _mm_store_si128((__m128i*)atmp, a);
     if (atmp[0] < 0) {
         res.m64_u32[0] = 0;
-    } else {
+    }
+    else {
         res64 = (atmp[0] >> b) + ( (atmp[0] & ((int64_t)1 << (b - 1))) >> (b - 1)  );
         res.m64_u32[0] = (uint32_t) ((res64 > (int64_t)0xffffffff ) ? 0xffffffff : res64);
     }
     if (atmp[1] < 0) {
         res.m64_u32[1] = 0;
-    } else {
+    }
+    else {
         res64 = (atmp[1] >> b) + ( (atmp[0] & ((int64_t)1 << (b - 1))) >> (b - 1)  );
         res.m64_u32[1] = (uint32_t)((res64 > (int64_t)0xffffffff ) ? 0xffffffff : res64);
     }
@@ -8698,10 +8742,18 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(int32x2_t vqshrn_n_s64(int64x2_t 
     _mm_store_si128((__m128i*)atmp, a);
     res64[0] = (atmp[0] >> b);
     res64[1] = (atmp[1] >> b);
-    if(res64[0]>SINT_MAX) res64[0] = SINT_MAX;
-    if(res64[0]<SINT_MIN) res64[0] = SINT_MIN;
-    if(res64[1]>SINT_MAX) res64[1] = SINT_MAX;
-    if(res64[1]<SINT_MIN) res64[1] = SINT_MIN;
+    if(res64[0]>SINT_MAX) {
+        res64[0] = SINT_MAX;
+    }
+    if(res64[0]<SINT_MIN) {
+        res64[0] = SINT_MIN;
+    }
+    if(res64[1]>SINT_MAX) {
+        res64[1] = SINT_MAX;
+    }
+    if(res64[1]<SINT_MIN) {
+        res64[1] = SINT_MIN;
+    }
     res.m64_i32[0] = (int32_t)res64[0];
     res.m64_i32[1] = (int32_t)res64[1];
     return res;
@@ -8844,10 +8896,18 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(int32x2_t vqrshrn_n_s64(int64x2_t
     res64[0] = (atmp[0] >> b) + (maskb[0] >> (b - 1)); //rounded result
     maskb[1] = atmp[1] & (( int64_t)1 << (b - 1));
     res64[1] = (atmp[1] >> b) + (maskb[1] >> (b - 1)); //rounded result
-    if(res64[0]>SINT_MAX) res64[0] = SINT_MAX;
-    if(res64[0]<SINT_MIN) res64[0] = SINT_MIN;
-    if(res64[1]>SINT_MAX) res64[1] = SINT_MAX;
-    if(res64[1]<SINT_MIN) res64[1] = SINT_MIN;
+    if(res64[0]>SINT_MAX) {
+        res64[0] = SINT_MAX;
+    }
+    if(res64[0]<SINT_MIN) {
+        res64[0] = SINT_MIN;
+    }
+    if(res64[1]>SINT_MAX) {
+        res64[1] = SINT_MAX;
+    }
+    if(res64[1]<SINT_MIN) {
+        res64[1] = SINT_MIN;
+    }
     res.m64_i32[0] = (int32_t)res64[0];
     res.m64_i32[1] = (int32_t)res64[1];
     return res;
@@ -8981,9 +9041,10 @@ int64x1_t vsri_n_s64(int64x1_t a, int64x1_t b, __constrange(1,64) int c); // VSR
 _NEON2SSE_INLINE int64x1_t vsri_n_s64(int64x1_t a, int64x1_t b, __constrange(1,64) int c)
 {
     int64x1_t res;
-    if (c ==64)
+    if (c ==64) {
         res = a;
-    else{
+    }
+    else {
         res.m64_i64[0] = (b.m64_u64[0] >> c) | ((a.m64_i64[0] >> (64 - c)) << (64 - c)); //treat b as unsigned for shift to get leading zeros
     }
     return res;
@@ -9244,10 +9305,12 @@ f2 = _mm_set_ps (ptr[7], ptr[6], ptr[5], ptr[4]);
 float32x4_t vld1q_f32(__transfersize(4) float32_t const * ptr); // VLD1.32 {d0, d1}, [r0]
 _NEON2SSE_INLINE float32x4_t vld1q_f32(__transfersize(4) float32_t const * ptr)
 {
-    if( (((unsigned long)(ptr)) & 15 ) == 0 ) //16 bits aligned
+    if( (((unsigned long)(ptr)) & 15 ) == 0 ) { //16 bits aligned
         return _mm_load_ps(ptr);
-    else
+    }
+    else {
         return _mm_loadu_ps(ptr);
+    }
 }
 
 poly8x16_t vld1q_p8(__transfersize(16) poly8_t const * ptr); // VLD1.8 {d0, d1}, [r0]
@@ -9565,10 +9628,12 @@ void vst1q_f16(__transfersize(8) __fp16 * ptr, float16x8_t val); // VST1.16 {d0,
 void vst1q_f32(__transfersize(4) float32_t * ptr, float32x4_t val); // VST1.32 {d0, d1}, [r0]
 _NEON2SSE_INLINE void vst1q_f32(__transfersize(4) float32_t * ptr, float32x4_t val)
 {
-    if( ((unsigned long)(ptr) & 15)  == 0 ) //16 bits aligned
+    if( ((unsigned long)(ptr) & 15)  == 0 ) { //16 bits aligned
         _mm_store_ps (ptr, val);
-    else
+    }
+    else {
         _mm_storeu_ps (ptr, val);
+    }
 }
 
 void vst1q_p8(__transfersize(16) poly8_t * ptr, poly8x16_t val); // VST1.8 {d0, d1}, [r0]
@@ -12486,7 +12551,8 @@ _NEON2SSE_INLINE uint16x8_t vdupq_lane_u16(uint16x4_t vec, __constrange(0,3) int
     //we could use 8bit shuffle for 16 bit as well
     const int8_t lane16 = ((int8_t) lane) << 1;
     _NEON2SSE_ALIGN_16 int8_t lanemask_e16[16] = {lane16, lane16 + 1, lane16, lane16 + 1, lane16, lane16 + 1, lane16, lane16 + 1,
-                                                lane16, lane16 + 1, lane16, lane16 + 1, lane16, lane16 + 1, lane16, lane16 + 1};
+                                                  lane16, lane16 + 1, lane16, lane16 + 1, lane16, lane16 + 1, lane16, lane16 + 1
+                                                 };
     return _mm_shuffle_epi8 (_pM128i(vec), *(__m128i*)lanemask_e16);
 }
 
@@ -12970,10 +13036,18 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(int32x2_t vqmovn_s64(int64x2_t a)
     int32x2_t res;
     _NEON2SSE_ALIGN_16 int64_t atmp[2];
     _mm_store_si128((__m128i*)atmp, a);
-    if(atmp[0]>SINT_MAX) atmp[0] = SINT_MAX;
-    if(atmp[0]<SINT_MIN) atmp[0] = SINT_MIN;
-    if(atmp[1]>SINT_MAX) atmp[1] = SINT_MAX;
-    if(atmp[1]<SINT_MIN) atmp[1] = SINT_MIN;
+    if(atmp[0]>SINT_MAX) {
+        atmp[0] = SINT_MAX;
+    }
+    if(atmp[0]<SINT_MIN) {
+        atmp[0] = SINT_MIN;
+    }
+    if(atmp[1]>SINT_MAX) {
+        atmp[1] = SINT_MAX;
+    }
+    if(atmp[1]<SINT_MIN) {
+        atmp[1] = SINT_MIN;
+    }
     res.m64_i32[0] = (int32_t)atmp[0];
     res.m64_i32[1] = (int32_t)atmp[1];
     return res;
@@ -14180,9 +14254,9 @@ _NEON2SSE_INLINE int32x4_t vmlsq_n_s32(int32x4_t a, int32x4_t b, int32_t c) // V
 uint16x8_t vmlsq_n_u16(uint16x8_t a, uint16x8_t b, uint16_t c); // VMLS.I16 q0, q0, d0[0]
 _NEON2SSE_INLINE uint16x8_t vmlsq_n_u16(uint16x8_t a, uint16x8_t b, uint16_t c) // VMLS.I16 q0, q0, d0[0]
 {
-    uint16x8_t vc; 
-    vc = vdupq_n_u16(c); 
-    return vmlsq_u16(a,b,vc); 
+    uint16x8_t vc;
+    vc = vdupq_n_u16(c);
+    return vmlsq_u16(a,b,vc);
 }
 
 uint32x4_t vmlsq_n_u32(uint32x4_t a, uint32x4_t b, uint32_t c); // VMLS.I32 q0, q0, d0[0]
@@ -14305,7 +14379,8 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(int32x2_t vext_s32(int32x2_t a, i
     if (c==0) {
         res.m64_i32[0] = a.m64_i32[0];
         res.m64_i32[1] = a.m64_i32[1];
-    } else {
+    }
+    else {
         res.m64_i32[0] = a.m64_i32[1];
         res.m64_i32[1] = b.m64_i32[0];
     }
@@ -14319,7 +14394,8 @@ _NEON2SSE_INLINE _NEON2SSE_PERFORMANCE_WARNING(float32x2_t vext_f32(float32x2_t 
     if (c==0) {
         res.m64_f32[0] = a.m64_f32[0];
         res.m64_f32[1] = a.m64_f32[1];
-    } else {
+    }
+    else {
         res.m64_f32[0] = a.m64_f32[1];
         res.m64_f32[1] = b.m64_f32[0];
     }
@@ -14846,9 +14922,10 @@ int8x16_t vclzq_s8(int8x16_t a); // VCLZ.I8 q0,q0
 _NEON2SSE_INLINE int8x16_t vclzq_s8(int8x16_t a)
 {
     _NEON2SSE_ALIGN_16 int8_t mask_CLZ[16] = { /* 0 */ 4,/* 1 */ 3,/* 2 */ 2,/* 3 */ 2,
-                                                    /* 4 */ 1,/* 5 */ 1,/* 6 */ 1,/* 7 */ 1,
-                                                    /* 8 */ 0,/* 9 */ 0,/* a */ 0,/* b */ 0,
-                                                    /* c */ 0,/* d */ 0,/* e */ 0,/* f */ 0                          };
+                                                       /* 4 */ 1,/* 5 */ 1,/* 6 */ 1,/* 7 */ 1,
+                                                       /* 8 */ 0,/* 9 */ 0,/* a */ 0,/* b */ 0,
+                                                       /* c */ 0,/* d */ 0,/* e */ 0,/* f */ 0
+                                             };
     __m128i maskLOW, c4, lowclz, mask, hiclz;
     maskLOW = _mm_set1_epi8(0x0f); //low 4 bits, don't need masking low to avoid zero if MSB is set - it happens automatically
     c4 = _mm_set1_epi8(4);
@@ -15038,9 +15115,10 @@ uint8x16_t vcntq_u8(uint8x16_t a); // VCNT.8 q0,q0
 _NEON2SSE_INLINE uint8x16_t vcntq_u8(uint8x16_t a)
 {
     _NEON2SSE_ALIGN_16 int8_t mask_POPCOUNT[16] = { /* 0 */ 0,/* 1 */ 1,/* 2 */ 1,/* 3 */ 2,
-                                                        /* 4 */ 1,/* 5 */ 2,/* 6 */ 2,/* 7 */ 3,
-                                                        /* 8 */ 1,/* 9 */ 2,/* a */ 2,/* b */ 3,
-                                                        /* c */ 2,/* d */ 3,/* e */ 3,/* f */ 4                                   };
+                                                            /* 4 */ 1,/* 5 */ 2,/* 6 */ 2,/* 7 */ 3,
+                                                            /* 8 */ 1,/* 9 */ 2,/* a */ 2,/* b */ 3,
+                                                            /* c */ 2,/* d */ 3,/* e */ 3,/* f */ 4
+                                                  };
     __m128i maskLOW, mask, lowpopcnt, hipopcnt;
     maskLOW = _mm_set1_epi8(0x0f); //low 4 bits, need masking to avoid zero if MSB is set
     mask = _mm_and_si128(a, maskLOW);

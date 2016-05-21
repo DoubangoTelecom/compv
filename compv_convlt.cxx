@@ -56,8 +56,8 @@ CompVConvlt<T>::CompVConvlt()
     , m_pDataPtr0(NULL)
     , m_nDataSize(0)
     , m_nDataSize0(0)
-	, m_pResultPtr(NULL)
-	, m_nResultSize(0)
+    , m_pResultPtr(NULL)
+    , m_nResultSize(0)
 {
 
 }
@@ -72,23 +72,23 @@ CompVConvlt<T>::~CompVConvlt()
 template<class T>
 COMPV_ERROR_CODE CompVConvlt<T>::convlt2(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const double* kern_ptr, int kern_size, uint8_t* out_ptr /*= NULL*/, int img_border /*= 0*/)
 {
-	// Multi-threading and SIMD acceleration
-	// Check if the kernel is separable (matrice rank = 1) and use convlt1 instead
+    // Multi-threading and SIMD acceleration
+    // Check if the kernel is separable (matrice rank = 1) and use convlt1 instead
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 
     // Check inputs
     COMPV_CHECK_EXP_RETURN(!img_ptr || !img_width || (img_stride < img_width) || !kern_ptr || !(kern_size & 1) || img_border < 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	
-	// Make sure we're not sharing the internal memory across threads
-	CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
-	if (!out_ptr && threadDip && threadDip->isMotherOfTheCurrentThread()) {
-		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_CALL);
-	}
-	bool bUseInternalMemory = !out_ptr;
+
+    // Make sure we're not sharing the internal memory across threads
+    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+    if (!out_ptr && threadDip && threadDip->isMotherOfTheCurrentThread()) {
+        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_CALL);
+    }
+    bool bUseInternalMemory = !out_ptr;
 
     // Alloc memory
     size_t neededSize = (img_height + (img_border << 1)) * (img_stride + (img_border << 1));
-	if (bUseInternalMemory && m_nDataSize < neededSize) {
+    if (bUseInternalMemory && m_nDataSize < neededSize) {
         m_pDataPtr = CompVMem::realloc(m_pDataPtr, neededSize);
         if (!m_pDataPtr) {
             m_nDataSize = 0;
@@ -98,7 +98,7 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt2(const uint8_t* img_ptr, int img_width, 
     }
 
     // Init variables
-	uint8_t* outImg = (bUseInternalMemory ? ((uint8_t*)m_pDataPtr) : out_ptr) + (img_border * img_stride) + img_border;
+    uint8_t* outImg = (bUseInternalMemory ? ((uint8_t*)m_pDataPtr) : out_ptr) + (img_border * img_stride) + img_border;
     const uint8_t *topleft, *img_ptr_;
     double sum;
     const double *ker_ptr;
@@ -128,11 +128,11 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt2(const uint8_t* img_ptr, int img_width, 
         img_ptr_ += imgpad;
     }
 
-	if (bUseInternalMemory && out_ptr) {
-		CompVMem::copy(out_ptr, outImg, neededSize);
-	}
-	m_pResultPtr = (const void*)outImg;
-	m_nResultSize = neededSize;
+    if (bUseInternalMemory && out_ptr) {
+        CompVMem::copy(out_ptr, outImg, neededSize);
+    }
+    m_pResultPtr = (const void*)outImg;
+    m_nResultSize = neededSize;
 
     return COMPV_ERROR_CODE_S_OK;
 }
@@ -140,94 +140,94 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt2(const uint8_t* img_ptr, int img_width, 
 template<class T>
 COMPV_ERROR_CODE CompVConvlt<T>::convlt1(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const T* vkern_ptr, const T* hkern_ptr, int kern_size, uint8_t* out_ptr /*= NULL*/, int img_border /*= 0*/)
 {
-	return convlt1_private(img_ptr, img_width, img_stride, img_height, vkern_ptr, hkern_ptr, kern_size, out_ptr, img_border);
+    return convlt1_private(img_ptr, img_width, img_stride, img_height, vkern_ptr, hkern_ptr, kern_size, out_ptr, img_border);
 }
 
 template <class T>
 COMPV_ERROR_CODE CompVConvlt<T>::convlt1_fxp(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const uint16_t* vkern_ptr, const uint16_t* hkern_ptr, int kern_size, uint8_t* out_ptr /*= NULL*/, int img_border /*= 0*/)
 {
-	return convlt1_private(img_ptr, img_width, img_stride, img_height, (const T*)vkern_ptr, (const T*)hkern_ptr, kern_size, out_ptr, img_border, true);
+    return convlt1_private(img_ptr, img_width, img_stride, img_height, (const T*)vkern_ptr, (const T*)hkern_ptr, kern_size, out_ptr, img_border, true);
 }
 
 template <typename T>
 COMPV_ERROR_CODE CompVConvlt<T>::convlt1_private(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const T* vkern_ptr, const T* hkern_ptr, int kern_size, uint8_t* out_ptr, int img_border, bool bFxp /*= false*/)
 {
-	// Check inputs
-	COMPV_CHECK_EXP_RETURN(!img_ptr || (img_width < kern_size * 2) || (img_height < kern_size * 2) || (img_stride < img_width) || !vkern_ptr || !hkern_ptr || img_border < 0 || !(kern_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    // Check inputs
+    COMPV_CHECK_EXP_RETURN(!img_ptr || (img_width < kern_size * 2) || (img_height < kern_size * 2) || (img_stride < img_width) || !vkern_ptr || !hkern_ptr || img_border < 0 || !(kern_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
-	bool bMultiThreaded = threadDip && threadDip->isMotherOfTheCurrentThread();
+    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+    bool bMultiThreaded = threadDip && threadDip->isMotherOfTheCurrentThread();
 
-	// Make sure we're not sharing the internal memory across threads
-	COMPV_CHECK_EXP_RETURN(bMultiThreaded && !out_ptr, COMPV_ERROR_CODE_E_INVALID_CALL);
+    // Make sure we're not sharing the internal memory across threads
+    COMPV_CHECK_EXP_RETURN(bMultiThreaded && !out_ptr, COMPV_ERROR_CODE_E_INVALID_CALL);
 
-	// The realloc_aligned() implementation memcpy() old data which is slow. Prefer, free_aligned() followed by malloc_aligned()
+    // The realloc_aligned() implementation memcpy() old data which is slow. Prefer, free_aligned() followed by malloc_aligned()
 
-	/* Alloc memory */
-	size_t neededSize = (img_height + (img_border << 1)) * (img_stride + (img_border << 1));
-	if (!out_ptr && m_nDataSize < neededSize) {
-		CompVMem::free(&m_pDataPtr);
-		m_pDataPtr = CompVMem::malloc(neededSize);
-		if (!m_pDataPtr) {
-			m_nDataSize = 0;
-			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-		}
-		m_nDataSize = neededSize;
-	}
-	// Allocate tmp memory if multithread to avoid sharing 'm_pDataPtr0'
-	void* imgTmpMT = NULL;
-	if (bMultiThreaded) {
-		imgTmpMT = CompVMem::malloc(neededSize);
-		COMPV_CHECK_EXP_RETURN(!imgTmpMT, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	}
-	if (!imgTmpMT && m_nDataSize0 < neededSize) {
-		CompVMem::free(&m_pDataPtr0);
-		m_pDataPtr0 = CompVMem::malloc(neededSize);
-		if (!m_pDataPtr0) {
-			m_nDataSize0 = 0;
-			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-		}
-		m_nDataSize0 = neededSize;
-	}
+    /* Alloc memory */
+    size_t neededSize = (img_height + (img_border << 1)) * (img_stride + (img_border << 1));
+    if (!out_ptr && m_nDataSize < neededSize) {
+        CompVMem::free(&m_pDataPtr);
+        m_pDataPtr = CompVMem::malloc(neededSize);
+        if (!m_pDataPtr) {
+            m_nDataSize = 0;
+            COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+        }
+        m_nDataSize = neededSize;
+    }
+    // Allocate tmp memory if multithread to avoid sharing 'm_pDataPtr0'
+    void* imgTmpMT = NULL;
+    if (bMultiThreaded) {
+        imgTmpMT = CompVMem::malloc(neededSize);
+        COMPV_CHECK_EXP_RETURN(!imgTmpMT, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    }
+    if (!imgTmpMT && m_nDataSize0 < neededSize) {
+        CompVMem::free(&m_pDataPtr0);
+        m_pDataPtr0 = CompVMem::malloc(neededSize);
+        if (!m_pDataPtr0) {
+            m_nDataSize0 = 0;
+            COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+        }
+        m_nDataSize0 = neededSize;
+    }
 
-	uint8_t *imgTmp, *imgOut, *imgPtr;
-	const uint8_t *topleft;
-	int imgpad;
-	int ker_size_div2 = kern_size >> 1;
-	int start_margin = (img_border >= ker_size_div2) ? -ker_size_div2 : -img_border;
-	int start_center = start_margin + ker_size_div2;
+    uint8_t *imgTmp, *imgOut, *imgPtr;
+    const uint8_t *topleft;
+    int imgpad;
+    int ker_size_div2 = kern_size >> 1;
+    int start_margin = (img_border >= ker_size_div2) ? -ker_size_div2 : -img_border;
+    int start_center = start_margin + ker_size_div2;
 
-	imgTmp = (!imgTmpMT ? (uint8_t*)m_pDataPtr0 : (uint8_t*)imgTmpMT) + (img_border * img_stride) + img_border;
-	imgOut = (!out_ptr ? ((uint8_t*)m_pDataPtr) : out_ptr) + (img_border * img_stride) + img_border;
+    imgTmp = (!imgTmpMT ? (uint8_t*)m_pDataPtr0 : (uint8_t*)imgTmpMT) + (img_border * img_stride) + img_border;
+    imgOut = (!out_ptr ? ((uint8_t*)m_pDataPtr) : out_ptr) + (img_border * img_stride) + img_border;
 
-	// Horizontal
-	topleft = img_ptr + start_margin;
-	imgpad = (img_stride - img_width) + start_center + start_center;
-	imgPtr = imgTmp + start_center;
-	if (bFxp) {
-		CompVConvlt::convlt1_verthz_fxp(topleft, imgPtr, (img_width - start_center - start_center), img_height, /*stride*/1, imgpad, (const uint16_t*)hkern_ptr, kern_size);
-	}
-	else {
-		CompVConvlt::convlt1_verthz(topleft, imgPtr, (img_width - start_center - start_center), img_height, /*stride*/1, imgpad, hkern_ptr, kern_size);
-	}
+    // Horizontal
+    topleft = img_ptr + start_margin;
+    imgpad = (img_stride - img_width) + start_center + start_center;
+    imgPtr = imgTmp + start_center;
+    if (bFxp) {
+        CompVConvlt::convlt1_verthz_fxp(topleft, imgPtr, (img_width - start_center - start_center), img_height, /*stride*/1, imgpad, (const uint16_t*)hkern_ptr, kern_size);
+    }
+    else {
+        CompVConvlt::convlt1_verthz(topleft, imgPtr, (img_width - start_center - start_center), img_height, /*stride*/1, imgpad, hkern_ptr, kern_size);
+    }
 
-	// Vertical
-	topleft = imgTmp + (start_margin * img_stride); // output from hz filtering is now used as input
-	imgpad = (img_stride - img_width);
-	imgPtr = imgOut + (start_center * img_stride);
-	if (bFxp) {
-		CompVConvlt::convlt1_verthz_fxp(topleft, imgPtr, img_width, img_height - start_center - start_center, img_stride, imgpad, (const uint16_t*)vkern_ptr, kern_size);
-	}
-	else {
-		CompVConvlt::convlt1_verthz(topleft, imgPtr, img_width, img_height - start_center - start_center, img_stride, imgpad, vkern_ptr, kern_size);
-	}
+    // Vertical
+    topleft = imgTmp + (start_margin * img_stride); // output from hz filtering is now used as input
+    imgpad = (img_stride - img_width);
+    imgPtr = imgOut + (start_center * img_stride);
+    if (bFxp) {
+        CompVConvlt::convlt1_verthz_fxp(topleft, imgPtr, img_width, img_height - start_center - start_center, img_stride, imgpad, (const uint16_t*)vkern_ptr, kern_size);
+    }
+    else {
+        CompVConvlt::convlt1_verthz(topleft, imgPtr, img_width, img_height - start_center - start_center, img_stride, imgpad, vkern_ptr, kern_size);
+    }
 
-	m_pResultPtr = (const void*)imgOut;
-	m_nResultSize = neededSize;
+    m_pResultPtr = (const void*)imgOut;
+    m_nResultSize = neededSize;
 
-	CompVMem::free(&imgTmpMT);
+    CompVMem::free(&imgTmpMT);
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 // Private function: do not check input parameters
@@ -235,51 +235,51 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt1_private(const uint8_t* img_ptr, int img
 template <typename T>
 void CompVConvlt<T>::convlt1_verthz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const T* vhkern_ptr, int kern_size)
 {
-	static const bool size_of_float_is4 = (sizeof(float) == 4); // ASM and INTRIN code require it
-	int minpack = 0; // Minimum number of pixels the function can handle for each operation (must be pof 2)
+    static const bool size_of_float_is4 = (sizeof(float) == 4); // ASM and INTRIN code require it
+    int minpack = 0; // Minimum number of pixels the function can handle for each operation (must be pof 2)
 
-	// Floating point implementation
-	if (std::is_same<T, float>::value && size_of_float_is4) {
-		void(*Convlt1_verthz_float32)(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t stride, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size) = NULL;
-		if (width > 3 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack4_Intrin_SSE2, minpack = 4));
-			// TODO(dmi): Accroding to Intel VTune the intrinsic version (VS2013) is faster: Check ASM generated by VS2013 and we have better one
-			// This is not the case for AVX: Our ASM code is faster than what VS2013 genereate
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-			COMPV_EXEC_IFDEF_ASM_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack4_Asm_X86_SSE2, minpack = 4));
-			COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack4_Asm_X64_SSE2, minpack = 4));
-		}
-		if (width > 15 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Intrin_AVX2, minpack = 16));
-			COMPV_EXEC_IFDEF_ASM_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Asm_X86_AVX2, minpack = 16));
-			COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Asm_X64_AVX2, minpack = 16));
-			if (CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
-				COMPV_EXEC_IFDEF_ASM_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Asm_X86_FMA3_AVX2, minpack = 16));
-				COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Asm_X64_FMA3_AVX2, minpack = 16));
-			}
-		}
-		if (Convlt1_verthz_float32) {
-			// TODO(dmi): execute AVX_minpack16 then, SSE_minpack4 for the remaining > 15 pixels
-			Convlt1_verthz_float32(in_ptr, out_ptr, width, height, stride, pad, (const float*)vhkern_ptr, kern_size);
-		}
-	}
+    // Floating point implementation
+    if (std::is_same<T, float>::value && size_of_float_is4) {
+        void(*Convlt1_verthz_float32)(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t stride, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size) = NULL;
+        if (width > 3 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+            COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack4_Intrin_SSE2, minpack = 4));
+            // TODO(dmi): Accroding to Intel VTune the intrinsic version (VS2013) is faster: Check ASM generated by VS2013 and we have better one
+            // This is not the case for AVX: Our ASM code is faster than what VS2013 genereate
+            COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+            COMPV_EXEC_IFDEF_ASM_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack4_Asm_X86_SSE2, minpack = 4));
+            COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack4_Asm_X64_SSE2, minpack = 4));
+        }
+        if (width > 15 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+            COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Intrin_AVX2, minpack = 16));
+            COMPV_EXEC_IFDEF_ASM_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Asm_X86_AVX2, minpack = 16));
+            COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Asm_X64_AVX2, minpack = 16));
+            if (CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
+                COMPV_EXEC_IFDEF_ASM_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Asm_X86_FMA3_AVX2, minpack = 16));
+                COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack16_Asm_X64_FMA3_AVX2, minpack = 16));
+            }
+        }
+        if (Convlt1_verthz_float32) {
+            // TODO(dmi): execute AVX_minpack16 then, SSE_minpack4 for the remaining > 15 pixels
+            Convlt1_verthz_float32(in_ptr, out_ptr, width, height, stride, pad, (const float*)vhkern_ptr, kern_size);
+        }
+    }
 
-	// Check missed pixels
-	if (minpack > 0) {
-		int missed = (width & (minpack - 1));
-		if (missed == 0) {
-			return;
-		}
-		in_ptr += (width - missed);
-		out_ptr += (width - missed);
-		pad += (width - missed);
-		width = missed;
-	}
-	else {
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	}
+    // Check missed pixels
+    if (minpack > 0) {
+        int missed = (width & (minpack - 1));
+        if (missed == 0) {
+            return;
+        }
+        in_ptr += (width - missed);
+        out_ptr += (width - missed);
+        pad += (width - missed);
+        width = missed;
+    }
+    else {
+        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+    }
 
-	CompVConvlt<T>::convlt1_verthz_C(in_ptr, out_ptr, width, height, stride, pad, vhkern_ptr, kern_size);
+    CompVConvlt<T>::convlt1_verthz_C(in_ptr, out_ptr, width, height, stride, pad, vhkern_ptr, kern_size);
 }
 
 // ARM: maxVal(vhkern_ptr) = 0x7fff, FXPQ(vhkern_ptr) = 15
@@ -287,87 +287,87 @@ void CompVConvlt<T>::convlt1_verthz(const uint8_t* in_ptr, uint8_t* out_ptr, int
 template <typename T>
 void CompVConvlt<T>::convlt1_verthz_fxp(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const uint16_t* vhkern_ptr, int kern_size)
 {
-	int minpack = 0; // Minimum number of pixels the function can handle for each operation (must be pof 2)
+    int minpack = 0; // Minimum number of pixels the function can handle for each operation (must be pof 2)
 
-	// ARM-NEON: cast uint16_t to int16_t
-	// Up to the caller to make sure that "vhkern_ptr" values are equal to (x * (1<<COMPV_FXPQ)), x within [0.f, 1.f]
+    // ARM-NEON: cast uint16_t to int16_t
+    // Up to the caller to make sure that "vhkern_ptr" values are equal to (x * (1<<COMPV_FXPQ)), x within [0.f, 1.f]
 
-	// Unlike the floating-point implementation our ASM code is by far faster than what VS2013 generate
+    // Unlike the floating-point implementation our ASM code is by far faster than what VS2013 generate
 
-	void(*Convlt1_verthz_fxp)(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t stride, compv_scalar_t pad, const uint16_t* hkern_ptr, compv_scalar_t kern_size) = NULL;
-	if (width > 3 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack4_Intrin_SSE2, minpack = 4));
-		COMPV_EXEC_IFDEF_ASM_X86((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack4_Asm_X86_SSE2, minpack = 4));
-		COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack4_Asm_X64_SSE2, minpack = 4));
-	}
-	if (width > 15 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack16_Intrin_AVX2, minpack = 16));
-		COMPV_EXEC_IFDEF_ASM_X86((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack16_Asm_X86_AVX2, minpack = 16));
-		COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack16_Asm_X64_AVX2, minpack = 16));
-	}
-	if (Convlt1_verthz_fxp) {
-		Convlt1_verthz_fxp(in_ptr, out_ptr, width, height, stride, pad, vhkern_ptr, kern_size);
-		int missed = (width & (minpack - 1));
-		if (missed == 0) {
-			return;
-		}
-		in_ptr += (width - missed);
-		out_ptr += (width - missed);
-		pad += (width - missed);
-		width = missed;
-	}
-	else {
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	}
+    void(*Convlt1_verthz_fxp)(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t stride, compv_scalar_t pad, const uint16_t* hkern_ptr, compv_scalar_t kern_size) = NULL;
+    if (width > 3 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+        COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack4_Intrin_SSE2, minpack = 4));
+        COMPV_EXEC_IFDEF_ASM_X86((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack4_Asm_X86_SSE2, minpack = 4));
+        COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack4_Asm_X64_SSE2, minpack = 4));
+    }
+    if (width > 15 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+        COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack16_Intrin_AVX2, minpack = 16));
+        COMPV_EXEC_IFDEF_ASM_X86((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack16_Asm_X86_AVX2, minpack = 16));
+        COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack16_Asm_X64_AVX2, minpack = 16));
+    }
+    if (Convlt1_verthz_fxp) {
+        Convlt1_verthz_fxp(in_ptr, out_ptr, width, height, stride, pad, vhkern_ptr, kern_size);
+        int missed = (width & (minpack - 1));
+        if (missed == 0) {
+            return;
+        }
+        in_ptr += (width - missed);
+        out_ptr += (width - missed);
+        pad += (width - missed);
+        width = missed;
+    }
+    else {
+        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+    }
 
-	CompVConvlt<T>::convlt1_verthz_fxp_C(in_ptr, out_ptr, width, height, stride, pad, vhkern_ptr, kern_size);
+    CompVConvlt<T>::convlt1_verthz_fxp_C(in_ptr, out_ptr, width, height, stride, pad, vhkern_ptr, kern_size);
 }
 
 template <typename T>
 void CompVConvlt<T>::convlt1_verthz_C(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const T* vhkern_ptr, int kern_size)
 {
-	int i, j, row;
-	T sum;
-	const uint8_t *ptr_;
+    int i, j, row;
+    T sum;
+    const uint8_t *ptr_;
 
-	for (j = 0; j < height; ++j) {
-		for (i = 0; i < width; ++i) {
-			sum = 0;
-			ptr_ = in_ptr;
-			for (row = 0; row < kern_size; ++row) {
-				sum += *ptr_ * vhkern_ptr[row];
-				ptr_ += stride;
-			}
-			*out_ptr = COMPV_MATH_ROUNDFU_2_INT(sum, uint8_t);
-			++in_ptr;
-			++out_ptr;
-		}
-		in_ptr += pad;
-		out_ptr += pad;
-	}
+    for (j = 0; j < height; ++j) {
+        for (i = 0; i < width; ++i) {
+            sum = 0;
+            ptr_ = in_ptr;
+            for (row = 0; row < kern_size; ++row) {
+                sum += *ptr_ * vhkern_ptr[row];
+                ptr_ += stride;
+            }
+            *out_ptr = COMPV_MATH_ROUNDFU_2_INT(sum, uint8_t);
+            ++in_ptr;
+            ++out_ptr;
+        }
+        in_ptr += pad;
+        out_ptr += pad;
+    }
 }
 
 template <typename T>
 void CompVConvlt<T>::convlt1_verthz_fxp_C(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const uint16_t* vhkern_ptr, int kern_size)
 {
-	int i, j, row, sum;
-	const uint8_t *ptr_;
+    int i, j, row, sum;
+    const uint8_t *ptr_;
 
-	for (j = 0; j < height; ++j) {
-		for (i = 0; i < width; ++i) {
-			sum = 0;
-			ptr_ = in_ptr;
-			for (row = 0; row < kern_size; ++row) {
-				sum += (*ptr_ * (int)vhkern_ptr[row]) >> COMPV_FXPQ;
-				ptr_ += stride;
-			}
-			*out_ptr = (uint8_t)(sum);
-			++in_ptr;
-			++out_ptr;
-		}
-		in_ptr += pad;
-		out_ptr += pad;
-	}
+    for (j = 0; j < height; ++j) {
+        for (i = 0; i < width; ++i) {
+            sum = 0;
+            ptr_ = in_ptr;
+            for (row = 0; row < kern_size; ++row) {
+                sum += (*ptr_ * (int)vhkern_ptr[row]) >> COMPV_FXPQ;
+                ptr_ += stride;
+            }
+            *out_ptr = (uint8_t)(sum);
+            ++in_ptr;
+            ++out_ptr;
+        }
+        in_ptr += pad;
+        out_ptr += pad;
+    }
 }
 
 template<class T>

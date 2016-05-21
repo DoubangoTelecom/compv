@@ -123,7 +123,7 @@ public:
         m_AttachedDete = NULL;
         return COMPV_ERROR_CODE_S_OK;
     }
-	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVArray<uint8_t>* >* descriptions) = 0;
+    virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVArray<uint8_t>* >* descriptions) = 0;
     static COMPV_ERROR_CODE newObj(int descId, CompVPtr<CompVFeatureDesc* >* desc);
 
 protected:

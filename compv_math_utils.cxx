@@ -76,12 +76,12 @@ static compv_scalar_t minVal_C(compv_scalar_t x, compv_scalar_t y)
 
 static int32_t minArrayI32_C(const int32_t* array, compv_scalar_t count)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	int32_t min = array[0];
-	for (compv_scalar_t i = 1; i < count; ++i) {
-		min = std::min(min, array[i]);
-	}
-	return min;
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+    int32_t min = array[0];
+    for (compv_scalar_t i = 1; i < count; ++i) {
+        min = std::min(min, array[i]);
+    }
+    return min;
 }
 
 compv_scalar_t clip3_C(compv_scalar_t min, compv_scalar_t max, compv_scalar_t val)

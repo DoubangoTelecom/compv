@@ -48,12 +48,12 @@ int main()
     COMPV_ASSERT(TestClip2());
 #endif
 #if TEST_SINCOS_P32
-	extern bool TestSinCosP32(bool thetaWithinZeroPiTimes2 = false);
-	COMPV_ASSERT(TestSinCosP32(false));
+    extern bool TestSinCosP32(bool thetaWithinZeroPiTimes2 = false);
+    COMPV_ASSERT(TestSinCosP32(false));
 #endif
 #if TEST_SINCOS_2PI_P32
-	extern bool TestSinCosP32(bool thetaWithinZeroPiTimes2 = false);
-	COMPV_ASSERT(TestSinCosP32(true));
+    extern bool TestSinCosP32(bool thetaWithinZeroPiTimes2 = false);
+    COMPV_ASSERT(TestSinCosP32(true));
 #endif
 
     // deInit the engine

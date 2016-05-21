@@ -489,7 +489,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVPtr<CompVImage*>& imag
 
     // Retain best "m_iMaxFeatures" features
     if (m_iMaxFeatures > 0 && (int32_t)interestPoints->size() > m_iMaxFeatures) {
-		interestPoints->retainBest(m_iMaxFeatures);
+        interestPoints->retainBest(m_iMaxFeatures);
     }
 
     return err_;
@@ -847,7 +847,7 @@ static void FastNMS(int32_t stride, const uint8_t* pcStrengthsMap, CompVInterest
 
 static COMPV_ERROR_CODE FastRangesAlloc(int32_t nRanges, RangeFAST** ppRanges, int32_t stride)
 {
-	/* COMPV_DEBUG_INFO("FAST: alloc %d ranges", nRanges); */
+    /* COMPV_DEBUG_INFO("FAST: alloc %d ranges", nRanges); */
 
     COMPV_CHECK_EXP_RETURN(nRanges <= 0 || !ppRanges, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 

@@ -72,7 +72,7 @@ COMPV_ERROR_CODE CompVMem::init()
     if (!s_bInitialize) {
 #if COMPV_MEM_CHECK
         COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&s_SpecialsMutex));
-		COMPV_DEBUG_INFO("Memory check enabled for debugging, this may slowdown the code");
+        COMPV_DEBUG_INFO("Memory check enabled for debugging, this may slowdown the code");
 #endif
         s_bInitialize = true;
     }
@@ -308,9 +308,9 @@ void* CompVMem::mallocAligned(size_t size, int alignment/*= CompVMem::getBestAli
 #endif
 #	if COMPV_MEM_CHECK
     if (pMem) {
-		CompVMem::specialsLock();
+        CompVMem::specialsLock();
         CompVMem::s_Specials.insert(std::pair<uintptr_t, compv_special_mem_t>((uintptr_t)pMem, compv_special_mem_t((uintptr_t)pMem, size, alignment)));
-		CompVMem::specialsUnLock();
+        CompVMem::specialsUnLock();
     }
 #	endif
     return pMem;

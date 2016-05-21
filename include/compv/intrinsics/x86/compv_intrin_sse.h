@@ -31,10 +31,10 @@ COMPV_NAMESPACE_BEGIN()
 
 static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i &b)
 {
-	__m128i x, y;
-	_mm_store_si128(&x, _mm_mul_epu32(a, b));
-	_mm_store_si128(&y, _mm_mul_epu32(_mm_srli_si128(a, 4), _mm_srli_si128(b, 4)));
-	return _mm_unpacklo_epi32(_mm_shuffle_epi32(x, 0x8), _mm_shuffle_epi32(y, 0x8));
+    __m128i x, y;
+    _mm_store_si128(&x, _mm_mul_epu32(a, b));
+    _mm_store_si128(&y, _mm_mul_epu32(_mm_srli_si128(a, 4), _mm_srli_si128(b, 4)));
+    return _mm_unpacklo_epi32(_mm_shuffle_epi32(x, 0x8), _mm_shuffle_epi32(y, 0x8));
 }
 
 #define _mm_cvtepi16_epi32_low_SSE2(a) _mm_srai_epi32(_mm_unpacklo_epi16(a, a), 16)

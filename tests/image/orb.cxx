@@ -51,8 +51,8 @@ bool TestORB()
     COMPV_CHECK_CODE_ASSERT(dete->set(COMPV_ORB_SET_INT32_PYRAMID_SCALE_TYPE, &val32, sizeof(val32)));
     valFloat = ORB_PYRAMID_SCALEFACTOR;
     COMPV_CHECK_CODE_ASSERT(dete->set(COMPV_ORB_SET_FLOAT_PYRAMID_SCALE_FACTOR, &valFloat, sizeof(valFloat)));
-	val32 = ORB_MAX_FEATURES;
-	COMPV_CHECK_CODE_ASSERT(dete->set(COMPV_ORB_SET_INT32_MAX_FEATURES, &val32, sizeof(val32)));
+    val32 = ORB_MAX_FEATURES;
+    COMPV_CHECK_CODE_ASSERT(dete->set(COMPV_ORB_SET_INT32_MAX_FEATURES, &val32, sizeof(val32)));
 
     timeStart = CompVTime::getNowMills();
     for (int i = 0; i < ORB_LOOOP_COUNT; ++i) {
@@ -66,15 +66,15 @@ bool TestORB()
     COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
     // Compute Descriptions MD5
-	const std::string md5 = descriptions ? arrayMD5<uint8_t>(descriptions) : "";
-	bool ok;
-	if (CompVEngine::isMathFixedPoint()) {
-		ok = (md5 == (CompVEngine::isMultiThreadingEnabled() ? ORB_DESC_MD5_FXP_MT : ORB_DESC_MD5_FXP));
-	}
-	else {
-		ok = (md5 == (CompVEngine::isMultiThreadingEnabled() ? ORB_DESC_MD5_FLOAT_MT : ORB_DESC_MD5_FLOAT));
-	}
-	if (!ok) {
+    const std::string md5 = descriptions ? arrayMD5<uint8_t>(descriptions) : "";
+    bool ok;
+    if (CompVEngine::isMathFixedPoint()) {
+        ok = (md5 == (CompVEngine::isMultiThreadingEnabled() ? ORB_DESC_MD5_FXP_MT : ORB_DESC_MD5_FXP));
+    }
+    else {
+        ok = (md5 == (CompVEngine::isMultiThreadingEnabled() ? ORB_DESC_MD5_FLOAT_MT : ORB_DESC_MD5_FLOAT));
+    }
+    if (!ok) {
         COMPV_DEBUG_ERROR("MD5 mismatch");
         COMPV_ASSERT(false);
         return false;

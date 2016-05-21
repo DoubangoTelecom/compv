@@ -36,9 +36,9 @@ Computes cos(x) with 3.2 decimal accuracy. x must be within [0, PI/2]
 */
 void CompVMathTrig::sincos_Zero_PiOver2_P32(const float* inRad, float* outSin, float* outCos, compv_scalar_t count)
 {
-	void(*fn)(const float* inRad, float* outSin, float* outCos, compv_scalar_t count) = sincos_Zero_PiOver2_P32_C;
+    void(*fn)(const float* inRad, float* outSin, float* outCos, compv_scalar_t count) = sincos_Zero_PiOver2_P32_C;
 
-	fn(inRad, outSin, outCos, count);
+    fn(inRad, outSin, outCos, count);
 }
 
 /*
@@ -47,9 +47,9 @@ If the angle is within [0, Pi/2] then, use "sincos_Zero_PiOver2_P32" which is fa
 */
 void CompVMathTrig::sincos_Zero_PiTime2_P32(const float* inRad, float* outSin, float* outCos, compv_scalar_t count)
 {
-	void(*fn)(const float* inRad, float* outSin, float* outCos, compv_scalar_t count) = sincos_Zero_PiTime2_P32_C;
+    void(*fn)(const float* inRad, float* outSin, float* outCos, compv_scalar_t count) = sincos_Zero_PiTime2_P32_C;
 
-	fn(inRad, outSin, outCos, count);
+    fn(inRad, outSin, outCos, count);
 }
 
 /*
@@ -58,34 +58,34 @@ If the angle is within [0, Pi/2] then, use "sincos_Zero_PiOver2_P32" which is fa
 */
 void CompVMathTrig::sincos_P32(const float* inRad, float* outSin, float* outCos, compv_scalar_t count)
 {
-	void(*fn)(const float* inRad, float* outSin, float* outCos, compv_scalar_t count) = sincos_P32_C;
+    void(*fn)(const float* inRad, float* outSin, float* outCos, compv_scalar_t count) = sincos_P32_C;
 
-	fn(inRad, outSin, outCos, count);
+    fn(inRad, outSin, outCos, count);
 }
 
 static void sincos_Zero_PiOver2_P32_C(const float* inRad, float* outSin, float* outCos, compv_scalar_t count)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	COMPV_DEBUG_INFO_CODE_NOT_TESTED();
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+    COMPV_DEBUG_INFO_CODE_NOT_TESTED();
     float in2;
     for (compv_scalar_t i = 0; i < count; ++i) {
-		// cos(x)
-		in2 = inRad[i];
-		in2 *= in2;
-		outCos[i] = (kMathTrigC1 + in2 * (kMathTrigC2 + kMathTrigC3 * in2));
-		// sin(x) = cos((pi/2)-x)
-		in2 = kfMathTrigPiOver2 - inRad[i];
-		in2 *= in2;
-		outSin[i] = (kMathTrigC1 + in2 * (kMathTrigC2 + kMathTrigC3 * in2));
+        // cos(x)
+        in2 = inRad[i];
+        in2 *= in2;
+        outCos[i] = (kMathTrigC1 + in2 * (kMathTrigC2 + kMathTrigC3 * in2));
+        // sin(x) = cos((pi/2)-x)
+        in2 = kfMathTrigPiOver2 - inRad[i];
+        in2 *= in2;
+        outSin[i] = (kMathTrigC1 + in2 * (kMathTrigC2 + kMathTrigC3 * in2));
     }
 }
 
 static void sincos_Zero_PiTime2_P32_C(const float* inRad, float* outSin, float* outCos, compv_scalar_t count)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	int q_;
-	float in_, in2_, out_;
-	bool signed_;
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+    int q_;
+    float in_, in2_, out_;
+    bool signed_;
 
 #define SINCOS_GET_IN2_AND_SIGN(angle) { \
 	q_ = int(angle / kfMathTrigPiOver2); /* Get quadrant # (0 to 3) */ \
@@ -104,34 +104,34 @@ static void sincos_Zero_PiTime2_P32_C(const float* inRad, float* outSin, float* 
 		in2_ = in_ * in_; \
 		}
 
-	for (compv_scalar_t i = 0; i < count; ++i) {
-		// cos(x)
-		in_ = inRad[i];
-		//in_ = fmodf(in_, kfMathTrigPiTimes2);
-		if (in_ < 0) {
-			in_ = -in_;
-		}
-		SINCOS_GET_IN2_AND_SIGN(in_);
-		out_ = (kMathTrigC1 + in2_ * (kMathTrigC2 + kMathTrigC3 * in2_));
-		outCos[i] = signed_ ? -out_ : out_;
-		// sin(x) = cos((pi/2)-x)
-		in_ = (kfMathTrigPiOver2 - inRad[i]);
-		//in_ = fmodf(in_, kfMathTrigPiTimes2);
-		if (in_ < 0) {
-			in_ = -in_;
-		}
-		SINCOS_GET_IN2_AND_SIGN(in_);
-		out_ = (kMathTrigC1 + in2_ * (kMathTrigC2 + kMathTrigC3 * in2_));
-		outSin[i] = signed_ ? -out_ : out_;
-	}
+    for (compv_scalar_t i = 0; i < count; ++i) {
+        // cos(x)
+        in_ = inRad[i];
+        //in_ = fmodf(in_, kfMathTrigPiTimes2);
+        if (in_ < 0) {
+            in_ = -in_;
+        }
+        SINCOS_GET_IN2_AND_SIGN(in_);
+        out_ = (kMathTrigC1 + in2_ * (kMathTrigC2 + kMathTrigC3 * in2_));
+        outCos[i] = signed_ ? -out_ : out_;
+        // sin(x) = cos((pi/2)-x)
+        in_ = (kfMathTrigPiOver2 - inRad[i]);
+        //in_ = fmodf(in_, kfMathTrigPiTimes2);
+        if (in_ < 0) {
+            in_ = -in_;
+        }
+        SINCOS_GET_IN2_AND_SIGN(in_);
+        out_ = (kMathTrigC1 + in2_ * (kMathTrigC2 + kMathTrigC3 * in2_));
+        outSin[i] = signed_ ? -out_ : out_;
+    }
 }
 
 static void sincos_P32_C(const float* inRad, float* outSin, float* outCos, compv_scalar_t count)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Not faster than cosf/sinf, because of fmodf
-	int q_;
-	float in_, in2_, out_;
-	bool signed_;
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Not faster than cosf/sinf, because of fmodf
+    int q_;
+    float in_, in2_, out_;
+    bool signed_;
 
 #define SINCOS_GET_IN2_AND_SIGN(angle) { \
 	q_ = int(angle / kfMathTrigPiOver2); /* Get quadrant # (0 to 3) */ \
@@ -150,26 +150,26 @@ static void sincos_P32_C(const float* inRad, float* outSin, float* outCos, compv
 		in2_ = in_ * in_; \
 	}
 
-	for (compv_scalar_t i = 0; i < count; ++i) {
-		// cos(x)
-		in_ = inRad[i];
-		in_ = fmodf(in_, kfMathTrigPiTimes2);
-		if (in_ < 0) {
-			in_ = -in_;
-		}
-		SINCOS_GET_IN2_AND_SIGN(in_);
-		out_ = (kMathTrigC1 + in2_ * (kMathTrigC2 + kMathTrigC3 * in2_));
-		outCos[i] = signed_ ? -out_ : out_;
-		// sin(x) = cos((pi/2)-x)
-		in_ = (kfMathTrigPiOver2 - inRad[i]);
-		in_ = fmodf(in_, kfMathTrigPiTimes2);
-		if (in_ < 0) {
-			in_ = -in_;
-		}
-		SINCOS_GET_IN2_AND_SIGN(in_);
-		out_ = (kMathTrigC1 + in2_ * (kMathTrigC2 + kMathTrigC3 * in2_));
-		outSin[i] = signed_ ? -out_ : out_;
-	}
+    for (compv_scalar_t i = 0; i < count; ++i) {
+        // cos(x)
+        in_ = inRad[i];
+        in_ = fmodf(in_, kfMathTrigPiTimes2);
+        if (in_ < 0) {
+            in_ = -in_;
+        }
+        SINCOS_GET_IN2_AND_SIGN(in_);
+        out_ = (kMathTrigC1 + in2_ * (kMathTrigC2 + kMathTrigC3 * in2_));
+        outCos[i] = signed_ ? -out_ : out_;
+        // sin(x) = cos((pi/2)-x)
+        in_ = (kfMathTrigPiOver2 - inRad[i]);
+        in_ = fmodf(in_, kfMathTrigPiTimes2);
+        if (in_ < 0) {
+            in_ = -in_;
+        }
+        SINCOS_GET_IN2_AND_SIGN(in_);
+        out_ = (kMathTrigC1 + in2_ * (kMathTrigC2 + kMathTrigC3 * in2_));
+        outSin[i] = signed_ ? -out_ : out_;
+    }
 }
 
 COMPV_NAMESPACE_END()

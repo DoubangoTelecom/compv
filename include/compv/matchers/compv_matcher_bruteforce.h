@@ -34,30 +34,30 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_API CompVMatcherBruteForce : public CompVMatcher
 {
 protected:
-	CompVMatcherBruteForce();
+    CompVMatcherBruteForce();
 public:
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVMatcherBruteForce";
-	};
-	virtual ~CompVMatcherBruteForce();
-	// override CompVSettable::set
-	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
-	// override CompVSettable::get
-	virtual COMPV_ERROR_CODE get(int id, const void*& valuePtr, size_t valueSize);
-	// override CompVMatcher::process
-	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVArray<uint8_t>* >&queryDescriptions, const CompVPtr<CompVArray<uint8_t>* >&trainDescriptions, CompVPtr<CompVArray<CompVDMatch>* >* matches);
-	
-	static COMPV_ERROR_CODE newObj(CompVPtr<CompVMatcher* >* matcher);
+    virtual COMPV_INLINE const char* getObjectId() {
+        return "CompVMatcherBruteForce";
+    };
+    virtual ~CompVMatcherBruteForce();
+    // override CompVSettable::set
+    virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
+    // override CompVSettable::get
+    virtual COMPV_ERROR_CODE get(int id, const void*& valuePtr, size_t valueSize);
+    // override CompVMatcher::process
+    virtual COMPV_ERROR_CODE process(const CompVPtr<CompVArray<uint8_t>* >&queryDescriptions, const CompVPtr<CompVArray<uint8_t>* >&trainDescriptions, CompVPtr<CompVArray<CompVDMatch>* >* matches);
+
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVMatcher* >* matcher);
 
 private:
-	static COMPV_ERROR_CODE processAt(size_t queryIdxStart, size_t count, const CompVArray<uint8_t>* queryDescriptions, const CompVArray<uint8_t>* trainDescriptions, CompVArray<CompVDMatch>* matches);
-	static COMPV_ERROR_CODE processAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
+    static COMPV_ERROR_CODE processAt(size_t queryIdxStart, size_t count, const CompVArray<uint8_t>* queryDescriptions, const CompVArray<uint8_t>* trainDescriptions, CompVArray<CompVDMatch>* matches);
+    static COMPV_ERROR_CODE processAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-	bool m_bCrossCheck;
-	int32_t m_nNormType;
-	int32_t m_nKNN;
-	COMPV_DISABLE_WARNINGS_END()
+    COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+    bool m_bCrossCheck;
+    int32_t m_nNormType;
+    int32_t m_nKNN;
+    COMPV_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

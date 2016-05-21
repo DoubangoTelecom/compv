@@ -62,9 +62,9 @@ COMPV_ERROR_CODE CompVBoxInterestPoint::eraseTooCloseToBorder(int32_t img_width,
         const CompVInterestPoint* p;
         float w = (float)img_width, h = (float)img_height, b = (float)border_size;
         for (size_t i = 0; i < size();) {
-			p = ptr(i);
+            p = ptr(i);
             if ((p->x < b || (p->x + b) >= w || (p->y < b) || (p->y + b) >= h)) {
-				erase(ptr(i));
+                erase(ptr(i));
             }
             else {
                 ++i;
@@ -98,8 +98,8 @@ static void sortByStrengthRange(CompVBoxInterestPoint* self, intptr_t left, intp
     CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
     int32_t threadsCount = threadDip ? threadDip->getThreadsCount() : 0;
     uint32_t threadIdx0 = UINT_MAX, threadIdx1 = UINT_MAX;
-	const CompVInterestPoint pivot = *self->ptr((left + right) >> 1);
-	CompVInterestPoint atk, *ati = self->ptr(left), *atj = self->ptr(right);
+    const CompVInterestPoint pivot = *self->ptr((left + right) >> 1);
+    CompVInterestPoint atk, *ati = self->ptr(left), *atj = self->ptr(right);
     const CompVInterestPoint *ati_ = ati, *atj_ = atj;
     while (ati <= atj) {
         while (ati->strength > pivot.strength) {

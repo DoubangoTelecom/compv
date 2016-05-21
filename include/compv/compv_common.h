@@ -348,24 +348,24 @@ public:
 CompVInterestPoint;
 
 typedef struct _CompVDMatch {
-	size_t queryIdx;
-	size_t trainIdx;
-	size_t imageIdx;
-	int32_t distance;
+    size_t queryIdx;
+    size_t trainIdx;
+    size_t imageIdx;
+    int32_t distance;
 protected:
-	COMPV_INLINE void init(int32_t queryIdx_, int32_t trainIdx_, int32_t distance_, int32_t imageIdx_ = 0) {
-		queryIdx = queryIdx_;
-		trainIdx = trainIdx_;
-		distance = distance_;
-		imageIdx = imageIdx_;
-	}
+    COMPV_INLINE void init(int32_t queryIdx_, int32_t trainIdx_, int32_t distance_, int32_t imageIdx_ = 0) {
+        queryIdx = queryIdx_;
+        trainIdx = trainIdx_;
+        distance = distance_;
+        imageIdx = imageIdx_;
+    }
 public:
-	_CompVDMatch() {
-		init(0, 0, 0, 0);
-	}
-	_CompVDMatch(int32_t queryIdx_, int32_t trainIdx_, int32_t distance_, int32_t imageIdx_ = 0) {
-		init(queryIdx_, trainIdx_, distance_, imageIdx_);
-	}
+    _CompVDMatch() {
+        init(0, 0, 0, 0);
+    }
+    _CompVDMatch(int32_t queryIdx_, int32_t trainIdx_, int32_t distance_, int32_t imageIdx_ = 0) {
+        init(queryIdx_, trainIdx_, distance_, imageIdx_);
+    }
 }
 CompVDMatch;
 

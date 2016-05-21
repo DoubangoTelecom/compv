@@ -81,9 +81,9 @@ class CompVPtr
 public:
     COMPV_INLINE CompVPtr(CompVObjType obj
 #if !defined(SWIG)
-                                 = NULL
+                          = NULL
 #endif
-                                );
+                         );
     COMPV_INLINE CompVPtr(const CompVPtr<CompVObjType> &obj);
     virtual ~CompVPtr();
 

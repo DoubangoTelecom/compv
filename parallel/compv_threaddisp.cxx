@@ -138,15 +138,15 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVPtr<CompVThreadDispatcher*>*
     COMPV_CHECK_CODE_RETURN(CompVEngine::init());
     COMPV_CHECK_EXP_RETURN(disp == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	int32_t numCores = CompVCpu::getCoresCount();
+    int32_t numCores = CompVCpu::getCoresCount();
 #if COMPV_THREAD_SET_AFFINITY
-	int32_t maxCores = numCores > 0 ? (numCores - 1) : 0; // To avoid overusing all cores
+    int32_t maxCores = numCores > 0 ? (numCores - 1) : 0; // To avoid overusing all cores
 #else
-	int32_t maxCores = numCores; // Up to the system to dispatch the work and avoid overusing all cores
+    int32_t maxCores = numCores; // Up to the system to dispatch the work and avoid overusing all cores
 #endif /* COMPV_THREAD_SET_AFFINITY */
-    
+
     if (numThreads <= 0) {
-		numThreads = maxCores;
+        numThreads = maxCores;
     }
     if (numThreads < 2) {
         COMPV_DEBUG_ERROR("Multi-threading requires at least #2 threads but you're requesting #%d", numThreads);
@@ -154,8 +154,8 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVPtr<CompVThreadDispatcher*>*
         return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
 #endif /* COMPV_THREAD_SET_AFFINITY */
     }
-	if (numThreads > maxCores) {
-		COMPV_DEBUG_WARN("You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, maxCores);
+    if (numThreads > maxCores) {
+        COMPV_DEBUG_WARN("You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, maxCores);
     }
     CompVPtr<CompVThreadDispatcher*>_disp = new CompVThreadDispatcher(numThreads);
     if (!_disp || !_disp->m_bValid) {

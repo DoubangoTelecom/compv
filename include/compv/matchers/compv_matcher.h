@@ -31,46 +31,46 @@ COMPV_NAMESPACE_BEGIN()
 class CompVMatcher;
 
 struct CompVMatcherFactory {
-	int id;
-	const char* name;
-	COMPV_ERROR_CODE(*newObj)(CompVPtr<CompVMatcher* >* matcher);
+    int id;
+    const char* name;
+    COMPV_ERROR_CODE(*newObj)(CompVPtr<CompVMatcher* >* matcher);
 };
 
 /* Matchers setters and getters */
 enum {
-	/* Common to all matchers */
-	// COMPV_MATCHER_SET_XXX_YYY,
+    /* Common to all matchers */
+    // COMPV_MATCHER_SET_XXX_YYY,
 
-	/* Brute force */
-	COMPV_BRUTEFORCE_ID,
-	COMPV_BRUTEFORCE_SET_INT32_KNN,
-	COMPV_BRUTEFORCE_SET_INT32_NORM,
-	COMPV_BRUTEFORCE_SET_BOOL_CROSS_CHECK,
-	COMPV_BRUTEFORCE_NORM_HAMMING,
-	COMPV_BRUTEFORCE_NORM_HAMMING2,
-	COMPV_BRUTEFORCE_NORM_L2,
+    /* Brute force */
+    COMPV_BRUTEFORCE_ID,
+    COMPV_BRUTEFORCE_SET_INT32_KNN,
+    COMPV_BRUTEFORCE_SET_INT32_NORM,
+    COMPV_BRUTEFORCE_SET_BOOL_CROSS_CHECK,
+    COMPV_BRUTEFORCE_NORM_HAMMING,
+    COMPV_BRUTEFORCE_NORM_HAMMING2,
+    COMPV_BRUTEFORCE_NORM_L2,
 
-	/*  FLANN */
-	COMPV_FLANN_ID,
+    /*  FLANN */
+    COMPV_FLANN_ID,
 };
 
 // Class: CompVMatcher
 class COMPV_API CompVMatcher : public CompVObj, public CompVSettable
 {
 protected:
-	CompVMatcher();
+    CompVMatcher();
 public:
-	virtual ~CompVMatcher();
-	static COMPV_ERROR_CODE init();
-	static COMPV_ERROR_CODE addFactory(const CompVMatcherFactory* factory);
-	static const CompVMatcherFactory* findFactory(int matcherId);
-	static COMPV_ERROR_CODE newObj(int matcherId, CompVPtr<CompVMatcher* >* matcher);
-	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVArray<uint8_t>* >&queryDescriptions, const CompVPtr<CompVArray<uint8_t>* >&trainDescriptions, CompVPtr<CompVArray<CompVDMatch>* >* matches) = 0;
-	
+    virtual ~CompVMatcher();
+    static COMPV_ERROR_CODE init();
+    static COMPV_ERROR_CODE addFactory(const CompVMatcherFactory* factory);
+    static const CompVMatcherFactory* findFactory(int matcherId);
+    static COMPV_ERROR_CODE newObj(int matcherId, CompVPtr<CompVMatcher* >* matcher);
+    virtual COMPV_ERROR_CODE process(const CompVPtr<CompVArray<uint8_t>* >&queryDescriptions, const CompVPtr<CompVArray<uint8_t>* >&trainDescriptions, CompVPtr<CompVArray<CompVDMatch>* >* matches) = 0;
+
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-	static std::map<int, const CompVMatcherFactory*> s_Factories;
-	COMPV_DISABLE_WARNINGS_END()
+    COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+    static std::map<int, const CompVMatcherFactory*> s_Factories;
+    COMPV_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()
