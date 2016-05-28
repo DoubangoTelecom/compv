@@ -22,7 +22,7 @@
 #include "compv/compv_engine.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_mem.h"
-#include "compv/compv_math_utils.h"
+#include "compv/math/compv_math_utils.h"
 
 #include "compv/intrinsics/x86/image/conv/compv_imageconv_rgba_i420_intrin_sse.h"
 #include "compv/intrinsics/x86/image/conv/compv_imageconv_rgba_i420_intrin_avx2.h"

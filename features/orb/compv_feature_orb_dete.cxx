@@ -41,7 +41,7 @@
 
 #include "compv/features/orb/compv_feature_orb_dete.h"
 #include "compv/compv_engine.h"
-#include "compv/compv_math_utils.h"
+#include "compv/math/compv_math_utils.h"
 
 COMPV_NAMESPACE_BEGIN()
 

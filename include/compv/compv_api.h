@@ -18,7 +18,7 @@
 * along with CompV.
 */
 #if !defined(_COMPV_API_H_)
-#define _COMPV_API_H_ /* Must not change this name, used as guard in private header files */
+#define _COMPV_API_H_ //!\\ Must not change this name, used as guard in private header files
 
 #include "compv/compv_array.h"
 #include "compv/compv_box.h"
@@ -30,8 +30,8 @@
 #include "compv/compv_hamming.h"
 #include "compv/compv_interestpoint.h"
 #include "compv/compv_list.h"
-#include "compv/compv_math_trig.h"
-#include "compv/compv_math_utils.h"
+#include "compv/math/compv_math_trig.h"
+#include "compv/math/compv_math_utils.h"
 #include "compv/compv_md5.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_obj.h"
@@ -39,6 +39,9 @@
 #include "compv/features/compv_feature.h"
 
 #include "compv/matchers/compv_matcher.h"
+
+#include "compv/math/compv_math_eigen.h"
+#include "compv/math/compv_math_svd.h"
 
 #include "compv/image/compv_image.h"
 #include "compv/image/scale/compv_imagescale_pyramid.h"

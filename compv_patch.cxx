@@ -20,7 +20,7 @@
 
 #include "compv/compv_patch.h"
 #include "compv/compv_mem.h"
-#include "compv/compv_math_utils.h"
+#include "compv/math/compv_math_utils.h"
 #include "compv/compv_cpu.h"
 
 #include "compv/intrinsics/x86/compv_patch_intrin_sse.h"

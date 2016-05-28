@@ -28,7 +28,7 @@ Some literature:
 #include "compv/image/scale/compv_imagescale_bilinear.h"
 #include "compv/image/scale/compv_imagescale_common.h"
 #include "compv/compv_cpu.h"
-#include "compv/compv_math.h"
+#include "compv/math/compv_math.h"
 #include "compv/compv_mem.h"
 
 #include "compv/intrinsics/x86/image/scale/compv_imagescale_bilinear_intrin_sse.h"

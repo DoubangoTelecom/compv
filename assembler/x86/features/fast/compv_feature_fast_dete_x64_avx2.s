@@ -22,7 +22,7 @@
 %if COMPV_YASM_ABI_IS_64BIT
 
 %include "../../compv_bits_macros_x86.s"
-%include "../../compv_math_macros_x86.s"
+%include "../../math/compv_math_macros_x86.s"
 %include "compv_feature_fast_dete_macros_x86.s"
 
 COMPV_YASM_DEFAULT_REL

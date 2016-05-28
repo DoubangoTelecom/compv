@@ -148,6 +148,15 @@
     <Filter Include="Source Files\matchers">
       <UniqueIdentifier>{2bb978fe-9574-471f-b3bc-4377fc564db9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\math">
+      <UniqueIdentifier>{6c7f8ab1-4047-4fda-be21-335d018dbee0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math">
+      <UniqueIdentifier>{66f67e71-d867-4554-a2c7-5443948b67e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assembler Files\x86\math">
+      <UniqueIdentifier>{c264af49-687a-47ea-b76c-1dabf4d60b9b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
@@ -237,9 +246,6 @@
     <ClInclude Include="include\compv\features\orb\compv_feature_orb_dete.h">
       <Filter>Header Files\features\orb</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\compv_math.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\image\conv\compv_imageconv_common.h">
       <Filter>Header Files\image\conv</Filter>
     </ClInclude>
@@ -324,12 +330,6 @@
     <ClInclude Include="include\compv\compv_array.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\compv_math_trig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\compv_math_utils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_sse.h">
       <Filter>Header Files\intrinsics\x86\features\orb</Filter>
     </ClInclude>
@@ -365,6 +365,24 @@
     </ClInclude>
     <ClInclude Include="include\compv\intrinsics\x86\compv_hamming_intrin_sse.h">
       <Filter>Header Files\intrinsics\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\math\compv_math.h">
+      <Filter>Header Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\math\compv_math_trig.h">
+      <Filter>Header Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\math\compv_math_utils.h">
+      <Filter>Header Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\math\compv_math_eigen.h">
+      <Filter>Header Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\math\compv_math_svd.h">
+      <Filter>Header Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\math\compv_math_jacobi.h">
+      <Filter>Header Files\math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -518,15 +536,6 @@
     <ClCompile Include="compv_array.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="compv_math_trig.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="compv_math.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="compv_math_utils.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_sse.cxx">
       <Filter>Source Files\intrinsics\x86\features\orb</Filter>
     </ClCompile>
@@ -563,12 +572,27 @@
     <ClCompile Include="intrinsics\x86\compv_hamming_intrin_sse.cxx">
       <Filter>Source Files\intrinsics\x86</Filter>
     </ClCompile>
+    <ClCompile Include="math\compv_math.cxx">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_trig.cxx">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_utils.cxx">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_eigen.cxx">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_jacobi.cxx">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_svd.cxx">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="assembler\x86\compv_utils_x86.s">
-      <Filter>Assembler Files\x86</Filter>
-    </YASM>
-    <YASM Include="assembler\x86\compv_math_macros_x86.s">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
     <YASM Include="assembler\x86\compv_mem_x64_avx.s">
@@ -625,9 +649,6 @@
     <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_rgb_x86_sse.s">
       <Filter>Assembler Files\x86\image\conv</Filter>
     </YASM>
-    <YASM Include="assembler\x86\compv_math_utils_x86.s">
-      <Filter>Assembler Files\x86</Filter>
-    </YASM>
     <YASM Include="assembler\x86\features\orb\compv_feature_orb_desc_x64_avx2.s">
       <Filter>Assembler Files\x86\features\orb</Filter>
     </YASM>
@@ -679,5 +700,13 @@
     <YASM Include="assembler\x86\compv_hamming_x86_sse.s">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assembler\x86\math\compv_math_macros_x86.s">
+      <Filter>Assembler Files\x86\math</Filter>
+    </None>
+    <None Include="assembler\x86\math\compv_math_utils_x86.s">
+      <Filter>Assembler Files\x86\math</Filter>
+    </None>
   </ItemGroup>
 </Project>

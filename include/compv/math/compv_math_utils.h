@@ -22,7 +22,7 @@
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
-#include "compv/compv_math.h"
+#include "compv/math/compv_math.h"
 
 COMPV_NAMESPACE_BEGIN()
 

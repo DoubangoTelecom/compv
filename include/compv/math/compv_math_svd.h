@@ -17,23 +17,15 @@
 * You should have received a copy of the GNU General Public License
 * along with CompV.
 */
-#if !defined(_COMPV_MATH_TRIG_H_)
-#define _COMPV_MATH_TRIG_H_
+#if !defined(_COMPV_MATH_SVD_H_)
+#define _COMPV_MATH_SVD_H_
 
 #include "compv/compv_config.h"
-#include "compv/compv_common.h"
-#include "compv/compv_math.h"
+
+#include <math.h>
 
 COMPV_NAMESPACE_BEGIN()
 
-class COMPV_API CompVMathTrig
-{
-public:
-    static void sincos_Zero_PiOver2_P32(const float* inRad, float* outSin, float* outCos, compv_scalar_t count);
-    static void sincos_Zero_PiTime2_P32(const float* inRad, float* outSin, float* outCos, compv_scalar_t count);
-    static void sincos_P32(const float* inRad, float* outSin, float* outCos, compv_scalar_t count);
-};
-
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_MATH_TRIG_H_ */
+#endif /* _COMPV_MATH_SVD_H_ */

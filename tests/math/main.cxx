@@ -15,7 +15,8 @@ using namespace compv;
 #define TEST_CLIP3				0
 #define TEST_CLIP2				0
 #define TEST_SINCOS_P32			0 // 3.2 precision, theta within IR
-#define TEST_SINCOS_2PI_P32		1 // 3.2 precision, theta within [0, 2*PI]
+#define TEST_SINCOS_2PI_P32		0 // 3.2 precision, theta within [0, 2*PI]
+#define TEST_EIGEN				1
 
 #if COMPV_OS_WINDOWS
 int _tmain(int argc, _TCHAR* argv[])
@@ -54,6 +55,10 @@ int main()
 #if TEST_SINCOS_2PI_P32
     extern bool TestSinCosP32(bool thetaWithinZeroPiTimes2 = false);
     COMPV_ASSERT(TestSinCosP32(true));
+#endif
+#if TEST_EIGEN
+	extern bool TestEigen();
+	COMPV_ASSERT(TestEigen());
 #endif
 
     // deInit the engine

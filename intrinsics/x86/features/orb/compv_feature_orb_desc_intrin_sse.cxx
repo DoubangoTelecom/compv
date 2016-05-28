@@ -22,7 +22,7 @@
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/intrinsics/x86/compv_intrin_sse.h"
 #include "compv/compv_simd_globals.h"
-#include "compv/compv_math_utils.h"
+#include "compv/math/compv_math_utils.h"
 #include "compv/compv_bits.h"
 #include "compv/compv_cpu.h"
 

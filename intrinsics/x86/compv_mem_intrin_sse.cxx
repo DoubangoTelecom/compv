@@ -21,7 +21,7 @@
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/compv_simd_globals.h"
-#include "compv/compv_math.h"
+#include "compv/math/compv_math.h"
 
 COMPV_NAMESPACE_BEGIN()
 

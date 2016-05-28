@@ -20,7 +20,7 @@
 #include "compv/compv_convlt.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_engine.h"
-#include "compv/compv_math.h"
+#include "compv/math/compv_math.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
 

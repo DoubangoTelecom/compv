@@ -25,7 +25,7 @@
 #include "compv/compv_obj.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_common.h"
-#include "compv/compv_math_utils.h"
+#include "compv/math/compv_math_utils.h"
 #include "compv/parallel/compv_mutex.h"
 
 COMPV_NAMESPACE_BEGIN()

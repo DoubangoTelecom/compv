@@ -38,7 +38,7 @@ Some literature about FAST:
 #include "compv/features/fast/compv_feature_fast12_dete.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_engine.h"
-#include "compv/compv_math_utils.h"
+#include "compv/math/compv_math_utils.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_bits.h"
 

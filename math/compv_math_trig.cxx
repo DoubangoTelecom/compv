@@ -20,7 +20,7 @@
 /*
 Most of trig approx. are implemented using document at "documentation/trig_approximations.pdf"
 */
-#include "compv/compv_math_trig.h"
+#include "compv/math/compv_math_trig.h"
 #include "compv/compv_cpu.h"
 
 #include <algorithm>

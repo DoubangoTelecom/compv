@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClCompile Include="atan.cxx" />
     <ClCompile Include="clip.cxx" />
+    <ClCompile Include="eigen.cxx" />
     <ClCompile Include="main.cxx" />
     <ClCompile Include="sincos.cxx" />
     <ClCompile Include="tan.cxx" />

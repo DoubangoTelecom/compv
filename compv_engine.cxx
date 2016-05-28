@@ -21,7 +21,7 @@
 #include "compv/compv_mem.h"
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
-#include "compv/compv_math_utils.h"
+#include "compv/math/compv_math_utils.h"
 #include "compv/time/compv_time.h"
 #include "compv/image/compv_image.h"
 #include "compv/features/compv_feature.h"

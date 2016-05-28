@@ -20,7 +20,7 @@
 #include "compv/matchers/compv_matcher_bruteforce.h"
 #include "compv/compv_hamming.h"
 #include "compv/compv_box.h"
-#include "compv/compv_math.h"
+#include "compv/math/compv_math.h"
 #include "compv/compv_engine.h"
 
 #define COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD	1 // very intensive op -> use max threads

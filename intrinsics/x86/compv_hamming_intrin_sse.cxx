@@ -20,7 +20,7 @@
 #include "compv/intrinsics/x86/compv_hamming_intrin_sse.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
-#include "compv/compv_math.h"
+#include "compv/math/compv_math.h"
 #include "compv/compv_bits.h"
 #include "compv/compv_debug.h"
 
