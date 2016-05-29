@@ -277,7 +277,7 @@ static void Homography(double(*H)[3][3])
 #endif
 	};
 	// x' = Hx
-	const double XPrime_[3/*x',y',z'*/][kNumPoints] = { // (X', Y', Z')
+	double XPrime_[3/*x',y',z'*/][kNumPoints] = { // (X', Y', Z')
 #if 0
 		{ -2.1213, 0.7071, -2.8284, 2.8284 },
 		{ 4.9497, 3.5355, 9.8995, 8.4853 },
@@ -289,11 +289,58 @@ static void Homography(double(*H)[3][3])
 #endif
 	};
 	// x
-	const double X_[3/*x,y,z*/][kNumPoints] = { // (X, Y, Z)
+	double X_[3/*x,y,z*/][kNumPoints] = { // (X, Y, Z)
 		{ 2, 3, 5, 8 },
 		{ 5, 2, 9, 4 },
 		{ 1, 1, 1, 1 },
 	};
+
+	// TODO(dmi): Scaling+Translation = single matrix
+
+	// Hartley and Zisserman
+	// Normalization, translation to have coordinate system centered at the centroid
+	// https://en.wikipedia.org/wiki/Centroid#Of_a_finite_set_of_points
+	// https://en.wikipedia.org/wiki/Eight-point_algorithm#How_it_can_be_solved
+	// centroid = sum(xi)/k
+	double c0x_ = 0, c0y_ = 0, c1x_ = 0, c1y_ = 0;
+	for (int i = 0; i < kNumPoints; ++i) {
+		// The origin of the new coordinate system should be centered (have its origin) at the centroid (center of gravity) of the image points. This is accomplished by a translation of the original origin to the new one.
+		c0x_ += X_[0][i];
+		c0y_ += X_[1][i];
+		c1x_ += XPrime_[0][i];
+		c1y_ += XPrime_[1][i];
+	}
+	c0x_ /= kNumPoints;
+	c0y_ /= kNumPoints;
+	c1x_ /= kNumPoints;
+	c1y_ /= kNumPoints;
+
+	// Translate
+	for (int i = 0; i < kNumPoints; ++i) {
+		X_[0][i] -= c0x_;
+		X_[1][i] -= c0y_;
+		XPrime_[0][i] -= c1x_;
+		XPrime_[1][i] -= c1y_;
+	}
+
+	// Normalization, scaling
+	// After the translation the coordinates are uniformly scaled (Isotropic scaling) so that the mean distance from the origin to a point equals sqrt{2} .
+	// Isotropic scaling -> scaling is invariant with respect to direction
+	double mag0 = 0, mag1 = 0;
+	for (int i = 0; i < kNumPoints; ++i) {
+		mag0 += compv_hypot(X_[0][i], X_[1][i]);
+		mag1 += compv_hypot(XPrime_[0][i], XPrime_[1][i]);
+	}
+	mag0 /= kNumPoints;
+	mag1 /= kNumPoints;
+	double scale0 = COMPV_MATH_SQRT_2 / mag0;
+	double scale1 = COMPV_MATH_SQRT_2 / mag1;
+	for (int i = 0; i < kNumPoints; ++i) {
+		X_[0][i] *= scale0;
+		X_[1][i] *= scale0;
+		XPrime_[0][i] *= scale1;
+		XPrime_[1][i] *= scale1;
+	}
 	
 	// homogeneous equation: Mh = 0
 
