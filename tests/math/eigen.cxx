@@ -120,6 +120,11 @@ static void JacobiAngles(const double *S, int ith, int jth, double *c, double *s
 	}
 	*c = ::cos(theta);
 	*s = ::sin(theta);
+#elif 0
+	double d = (S[(ith * ARRAY_COLS) + ith] - S[(jth * ARRAY_COLS) + jth]) / (2.0*S[(ith * ARRAY_COLS) + jth]);
+	double t = (d >= 0 ? +1 : -1) / (::abs(d) + ::sqrt(d*d + 1));
+	*c = 1.0 / ::sqrt(t*t + 1);
+	*s = t**c;
 #else
 	// FIXME: use this but find where comes the sign error
 	double Sij = S[(ith * ARRAY_COLS) + jth];
@@ -143,19 +148,37 @@ static void JacobiAngles(const double *S, int ith, int jth, double *c, double *s
 #endif
 }
 
+// Largest absolute val
+static double MaxOffDiagVal(const double *M, int *row, int *col)
+{
+	double r0_ = 0.0, r1_;
+	const double* M_;
+	for (int j = 0; j < ARRAY_ROWS; ++j) {
+		M_ = M + (j * ARRAY_COLS);
+		for (int i = 0; i < j; ++i) {
+			if ((r1_ = abs(M_[i])) > r0_) {
+				r0_ = r1_;
+				*row = j;
+				*col = i;
+			}
+		}
+	}
+	return r0_;
+}
+
 // Requires symetric matrix
 // D: Diagonal matrix of eigenvalues
 // Q: Matrix of eigenvectors
-static bool JacobiIter(const double *in, double *D, double *Q)
+static void JacobiIter(const double *in, double *D, double *Q)
 {
 	int row, col;
 	double G[ARRAY_ROWS][ARRAY_COLS], matrixTemp0[ARRAY_ROWS][ARRAY_COLS];
-	const double *in_;
 	double gc_, gs_;
 	const double *matrixIn = (double*)in;
 	double *matrixOut0 = (double*)matrixTemp0;
-	bool is_diag = true;
-	int sweeps = 0;
+	bool is_diag = false;
+	int sweeps = 0, ops = 0;
+	double laxOffDiag;
 
 	// Set Q to identity matrix
 	CompVMem::zero(Q, ARRAY_ROWS*ARRAY_COLS*sizeof(double));
@@ -167,27 +190,43 @@ static bool JacobiIter(const double *in, double *D, double *Q)
 		}
 	}
 
-	// Find first non-zero (close-to-zero) off-diag element
-	for (row = 0; row < ARRAY_ROWS; ++row) {
-		in_ = in + (row * ARRAY_COLS);
-		for (col = 0; col < row; ++col) {
-			if (::abs(in_[col]) > EIGEN_CLOSE_TO_ZERO) {
-				// FIXME: In order to optimize this effect, Sij should be the off-diagonal component with the largest absolute value, called the pivot.
-				is_diag = false;
-				goto sweep;
-			}
-		}
+#if 1
+	// Sign correct
+	// Less ops
+	// Could be MT?
+	// TODO(dmi): No need for matrix multiplication -> use vector mul on the concerned rows (all other rows are unchanged)
+	while ((laxOffDiag = MaxOffDiagVal(matrixIn, &row, &col)) > EIGEN_CLOSE_TO_ZERO) {
+		++ops;
+		JacobiAngles(matrixIn, row, col, &gc_, &gs_);
+		GivensRotMatrix((double*)G, row, col, gc_, gs_);
+		//matrixPrint((const double*)G, "G");
+		// Q = QG
+		matrixSquareMul(Q, (const double*)G, matrixOut0);
+		matrixCopy(Q, matrixOut0);
+		//matrixPrint((const double*)Q, "Q=QG");
+		// AG
+		matrixSquareMul(matrixIn, (const double*)G, matrixOut0); // Input and Output must be different 
+		//matrixPrint((const double*)matrixOut0, "AG");
+		// G*
+		// matrixSquareTranspose((double*)matrixGivens, (double*)matrixGivens);
+		GivensRotMatrix((double*)G, col, row, gc_, gs_); // FIXME: change GivensRotMatrix to output G and G*
+		//matrixPrint((const double*)G, "G*");
+		// G*AG
+		matrixSquareMul((const double*)G, matrixOut0, D);
+		//matrixPrint((const double*)D, "D=G*AG");
+		matrixIn = D;
 	}
-	return true;
-
-	// FIXME: In order to optimize this effect, Sij should be the off-diagonal component with the largest absolute value, called the pivot.
-
-sweep:
+#else
+	// Easier to MT
+	// More ops
+	// Sign not correct
+	const double *in_;
 	while (!is_diag) {
 		is_diag = true;
 		for (row = 0; row < ARRAY_ROWS; ++row) {
 			for (col = 0; col < row; ++col) {
 				if (::abs(matrixIn[(row * ARRAY_COLS) + col]) > EIGEN_CLOSE_TO_ZERO) {
+					++ops;
 					is_diag = false;
 					JacobiAngles(matrixIn, row, col, &gc_, &gs_);
 					GivensRotMatrix((double*)G, row, col, gc_, gs_);
@@ -212,13 +251,12 @@ sweep:
 		}
 		if (!is_diag) ++sweeps;
 	}
+#endif
 
 	matrixPrint((const double*)D, "D = Eigenvalues");
 	matrixPrint((const double*)Q, "Q = Eigenvectors");
 	
-	COMPV_DEBUG_INFO("Number of sweeps: %d", sweeps);
-	
-	return is_diag;
+	COMPV_DEBUG_INFO("Number of sweeps: %d, ops: %d", sweeps, ops);
 }
 
 static void Homography(double(*H)[3][3])
