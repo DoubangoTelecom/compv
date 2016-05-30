@@ -7,7 +7,7 @@ using namespace compv;
 // 9 for Homography, otherwise 3 or 4
 #define ARRAY_ROWS				9
 #define ARRAY_COLS				9
-#define EIGEN_CLOSE_TO_ZERO		1e-5
+#define EIGEN_EPSILON			1.1921e-07 // 1e-5
 
 static double compv_hypot(double x, double y)
 {
@@ -51,6 +51,24 @@ static void matrixSquareMul(const double* A, const double* B, double* C)
 		for (int j = 0; j < count; ++j) {
 			for (int k = 0; k < count; ++k) {
 				C[(i*count) + j] += A[(i*count) + k] * B[(k*count) + j];
+			}
+		}
+	}
+}
+
+static void matrixMulAB(const double *A, int a_rows, int a_cols, const double *B, int b_rows, int b_cols, double *R)
+{
+	COMPV_ASSERT(a_rows && a_cols && b_rows == a_cols && b_cols && A && B && R && R != A && R != B);
+	const double *a;
+	double *r;
+	// R is a (a_rows, b_cols) matrix
+	for (int i = 0; i < a_rows; ++i) { // m1 rows
+		for (int j = 0; j < b_cols; ++j) { // m2 cols
+			a = A + (i * a_cols);
+			r = R + (i * b_cols);
+			r[j] = 0;
+			for (int k = 0; k < b_rows; ++k) { // m2 rows
+				r[j] += a[k] * B[(k*b_cols) + j];
 			}
 		}
 	}
@@ -149,14 +167,15 @@ static void JacobiAngles(const double *S, int ith, int jth, double *c, double *s
 }
 
 // Largest absolute val
-static double MaxOffDiagVal(const double *M, int *row, int *col)
+// S must be symmetric
+static double SymmMaxOffDiag(const double *S, int *row, int *col)
 {
 	double r0_ = 0.0, r1_;
-	const double* M_;
+	const double* S_;
 	for (int j = 0; j < ARRAY_ROWS; ++j) {
-		M_ = M + (j * ARRAY_COLS);
-		for (int i = 0; i < j; ++i) {
-			if ((r1_ = abs(M_[i])) > r0_) {
+		S_ = S + (j * ARRAY_COLS);
+		for (int i = 0; i < j; ++i) { // i stops at j because the matrix is symmetric and remains symetric after #1 Jacobi iteration
+			if ((r1_ = abs(S_[i])) > r0_) {
 				r0_ = r1_;
 				*row = j;
 				*col = i;
@@ -166,7 +185,7 @@ static double MaxOffDiagVal(const double *M, int *row, int *col)
 	return r0_;
 }
 
-// Requires symetric matrix
+// Requires symetric matrix as input
 // D: Diagonal matrix of eigenvalues
 // Q: Matrix of eigenvectors
 static void JacobiIter(const double *in, double *D, double *Q)
@@ -195,7 +214,7 @@ static void JacobiIter(const double *in, double *D, double *Q)
 	// Less ops
 	// Could be MT?
 	// TODO(dmi): No need for matrix multiplication -> use vector mul on the concerned rows (all other rows are unchanged)
-	while ((laxOffDiag = MaxOffDiagVal(matrixIn, &row, &col)) > EIGEN_CLOSE_TO_ZERO) {
+	while ((laxOffDiag = SymmMaxOffDiag(matrixIn, &row, &col)) > EIGEN_EPSILON) {
 		++ops;
 		JacobiAngles(matrixIn, row, col, &gc_, &gs_);
 		GivensRotMatrix((double*)G, row, col, gc_, gs_);
@@ -225,7 +244,7 @@ static void JacobiIter(const double *in, double *D, double *Q)
 		is_diag = true;
 		for (row = 0; row < ARRAY_ROWS; ++row) {
 			for (col = 0; col < row; ++col) {
-				if (::abs(matrixIn[(row * ARRAY_COLS) + col]) > EIGEN_CLOSE_TO_ZERO) {
+				if (::abs(matrixIn[(row * ARRAY_COLS) + col]) > EIGEN_EPSILON) {
 					++ops;
 					is_diag = false;
 					JacobiAngles(matrixIn, row, col, &gc_, &gs_);
@@ -264,82 +283,99 @@ static void Homography(double(*H)[3][3])
 	// Solve: equation x' = Hx
 	static const int kNumPoints = 4;
 	static const double angle = COMPV_MATH_PI / 4;
+	static const double scaleX = 5.0;
+	static const double scaleY = 3.0;
+	static const double transX = 28.5;
+	static const double transY = 10.0;
 
-	const double H_[3][3] = { // expected H
-#if 0
-		{ ::cos(angle), -::sin(angle), 0 },
-		{ ::sin(angle), ::cos(angle), 0 },
+	// expected H
+	const double H_[3][3] = {
+		{ ::cos(angle)*scaleX, -::sin(angle), transX },
+		{ ::sin(angle), ::cos(angle)*scaleY, transY },
 		{ 0, 0, 1 },
-#else
-		{ 0.70710678118654757, -0.70710678118654757, 0 },
-		{ 0.70710678118654757, 0.70710678118654757, 0 },
-		{ 0, 0, 1 },
-#endif
-	};
-	// x' = Hx
-	double XPrime_[3/*x',y',z'*/][kNumPoints] = { // (X', Y', Z')
-#if 0
-		{ -2.1213, 0.7071, -2.8284, 2.8284 },
-		{ 4.9497, 3.5355, 9.8995, 8.4853 },
-		{ 1.0000, 1.0000, 1.0000, 1.0000 }
-#else
-		{ 2, 3, 5, 8 },
-		{ 5, 2, 9, 4 },
-		{ 1, 1, 1, 1 },
-#endif
 	};
 	// x
-	double X_[3/*x,y,z*/][kNumPoints] = { // (X, Y, Z)
+	const double X_[3/*x,y,z*/][kNumPoints] = { // (X, Y, Z)
 		{ 2, 3, 5, 8 },
 		{ 5, 2, 9, 4 },
 		{ 1, 1, 1, 1 },
 	};
-
-	// TODO(dmi): Scaling+Translation = single matrix
+	// x' = Hx
+	double XPrime_[3/*x',y',z'*/][kNumPoints]; // (X', Y', Z')
+	matrixMulAB(&H_[0][0], 3, 3, &X_[0][0], 3, kNumPoints, &XPrime_[0][0]);
 
 	// Hartley and Zisserman
 	// Normalization, translation to have coordinate system centered at the centroid
 	// https://en.wikipedia.org/wiki/Centroid#Of_a_finite_set_of_points
 	// https://en.wikipedia.org/wiki/Eight-point_algorithm#How_it_can_be_solved
 	// centroid = sum(xi)/k
-	double c0x_ = 0, c0y_ = 0, c1x_ = 0, c1y_ = 0;
+	double t0x_ = 0, t0y_ = 0, t1x_ = 0, t1y_ = 0;
 	for (int i = 0; i < kNumPoints; ++i) {
 		// The origin of the new coordinate system should be centered (have its origin) at the centroid (center of gravity) of the image points. This is accomplished by a translation of the original origin to the new one.
-		c0x_ += X_[0][i];
-		c0y_ += X_[1][i];
-		c1x_ += XPrime_[0][i];
-		c1y_ += XPrime_[1][i];
+		t0x_ += X_[0][i];
+		t0y_ += X_[1][i];
+		t1x_ += XPrime_[0][i];
+		t1y_ += XPrime_[1][i];
 	}
-	c0x_ /= kNumPoints;
-	c0y_ /= kNumPoints;
-	c1x_ /= kNumPoints;
-	c1y_ /= kNumPoints;
+	t0x_ /= kNumPoints;
+	t0y_ /= kNumPoints;
+	t1x_ /= kNumPoints;
+	t1y_ /= kNumPoints;
 
 	// Translate
-	for (int i = 0; i < kNumPoints; ++i) {
-		X_[0][i] -= c0x_;
-		X_[1][i] -= c0y_;
-		XPrime_[0][i] -= c1x_;
-		XPrime_[1][i] -= c1y_;
-	}
+	/*for (int i = 0; i < kNumPoints; ++i) {
+		X_[0][i] -= t0x_;
+		X_[1][i] -= t0y_;
+		XPrime_[0][i] -= t1x_;
+		XPrime_[1][i] -= t1y_;
+	}*/
 
 	// Normalization, scaling
-	// After the translation the coordinates are uniformly scaled (Isotropic scaling) so that the mean distance from the origin to a point equals sqrt{2} .
+	// AFTER the translation the coordinates are uniformly scaled (Isotropic scaling) so that the mean distance from the origin to a point equals sqrt{2} .
 	// Isotropic scaling -> scaling is invariant with respect to direction
 	double mag0 = 0, mag1 = 0;
 	for (int i = 0; i < kNumPoints; ++i) {
-		mag0 += compv_hypot(X_[0][i], X_[1][i]);
-		mag1 += compv_hypot(XPrime_[0][i], XPrime_[1][i]);
+		mag0 += compv_hypot((X_[0][i] - t0x_), (X_[1][i] - t0y_));
+		mag1 += compv_hypot((XPrime_[0][i] - t1x_), (XPrime_[1][i] - t1y_));
 	}
 	mag0 /= kNumPoints;
 	mag1 /= kNumPoints;
-	double scale0 = COMPV_MATH_SQRT_2 / mag0;
-	double scale1 = COMPV_MATH_SQRT_2 / mag1;
-	for (int i = 0; i < kNumPoints; ++i) {
-		X_[0][i] *= scale0;
-		X_[1][i] *= scale0;
-		XPrime_[0][i] *= scale1;
-		XPrime_[1][i] *= scale1;
+	double s0 = COMPV_MATH_SQRT_2 / mag0;
+	double s1 = COMPV_MATH_SQRT_2 / mag1;
+	// Scale
+	/*for (int i = 0; i < kNumPoints; ++i) {
+		X_[0][i] *= s0;
+		X_[1][i] *= s0;
+		XPrime_[0][i] *= s1;
+		XPrime_[1][i] *= s1;
+	}*/
+
+	// Translation(t) to centroid then scaling(s) operation:
+	// -> b = (a+t)*s = a*s+t*s = a*s+t' with t'= t*s
+	const double T1[3][3] = {
+		{ s0, 0, -t0x_*s0 },
+		{ 0, s0, -t0y_*s0 },
+		{ 0, 0, 1 }
+	};
+	const double T2[3][3] = {
+		{ s1, 0, -t1x_*s1 },
+		{ 0, s1, -t1y_*s1 },
+		{ 0, 0, 1 }
+	};
+
+	// Normalize X: Xn = T1X
+	double Xn_[3/*x,y,z*/][kNumPoints];
+	matrixMulAB(&T1[0][0], 3, 3, &X_[0][0], 3, kNumPoints, &Xn_[0][0]);
+	// Normalize Xprime: Xnprime = T2Xprime
+	double XnPrime_[3/*x,y,z*/][kNumPoints];
+	matrixMulAB(&T2[0][0], 3, 3, &XPrime_[0][0], 3, kNumPoints, &XnPrime_[0][0]);
+
+	//FIXME
+	for (int j = 0; j < 3; ++j) {
+		for (int i = 0; i < kNumPoints; ++i) {
+			//Xn_[j][i] = X_[j][i];
+			//XnPrime_[j][i] = XPrime_[j][i];
+		}
 	}
 	
 	// homogeneous equation: Mh = 0
@@ -347,28 +383,28 @@ static void Homography(double(*H)[3][3])
 	// Build M (FIXME: z' = 1 in compv as we'll append it to Xprime)
 	double M[2 * kNumPoints][9], Mt[9][2 * kNumPoints];
 	for (int j = 0, k = 0; k < kNumPoints; j += 2, ++k) {
-		M[j][0] = -X_[0][k]; // -x
-		M[j][1] = -X_[1][k]; // -y
+		M[j][0] = -Xn_[0][k]; // -x
+		M[j][1] = -Xn_[1][k]; // -y
 		M[j][2] = -1; // -1
 		M[j][3] = 0;
 		M[j][4] = 0;
 		M[j][5] = 0;
-		M[j][6] = (XPrime_[0][k] * X_[0][k]) / XPrime_[2][k]; // (x'x)/z'
-		M[j][7] = (XPrime_[0][k] * X_[1][k]) / XPrime_[2][k]; // (x'y)/z'
-		M[j][8] = XPrime_[0][k] / XPrime_[2][k]; // x'/z'
+		M[j][6] = (XnPrime_[0][k] * Xn_[0][k]) / XnPrime_[2][k]; // (x'x)/z'
+		M[j][7] = (XnPrime_[0][k] * Xn_[1][k]) / XnPrime_[2][k]; // (x'y)/z'
+		M[j][8] = XnPrime_[0][k] / XnPrime_[2][k]; // x'/z'
 
 		M[j + 1][0] = 0;
 		M[j + 1][1] = 0;
 		M[j + 1][2] = 0;
-		M[j + 1][3] = -X_[0][k]; // -x
-		M[j + 1][4] = -X_[1][k]; // -y
+		M[j + 1][3] = -Xn_[0][k]; // -x
+		M[j + 1][4] = -Xn_[1][k]; // -y
 		M[j + 1][5] = -1; // -1
-		M[j + 1][6] = (XPrime_[1][k] * X_[0][k]) / XPrime_[2][k]; // (y'x)/z'
-		M[j + 1][7] = (XPrime_[1][k] * X_[1][k]) / XPrime_[2][k]; // (y'y)/z'
-		M[j + 1][8] = XPrime_[1][k] / XPrime_[2][k]; // y'/z'
+		M[j + 1][6] = (XnPrime_[1][k] * Xn_[0][k]) / XnPrime_[2][k]; // (y'x)/z'
+		M[j + 1][7] = (XnPrime_[1][k] * Xn_[1][k]) / XnPrime_[2][k]; // (y'y)/z'
+		M[j + 1][8] = XnPrime_[1][k] / XnPrime_[2][k]; // y'/z'
 	}
 
-	// M*
+	// M* = transpose(M)
 	for (int j = 0; j < 2 * kNumPoints; ++j) {
 		for (int i = 0; i < 9; ++i) {
 			Mt[i][j] = M[j][i];
@@ -377,13 +413,14 @@ static void Homography(double(*H)[3][3])
 
 	// S = M*M (M transpose M)
 	double S[9][9] = { 0 }; // Symetric matrix
-	for (int i = 0; i < 9; ++i) { // m1 rows
+	matrixMulAB((const double*)Mt, 9, 2 * kNumPoints, (const double*)M, 2 * kNumPoints, 9, (double*)S);
+	/*for (int i = 0; i < 9; ++i) { // m1 rows
 		for (int j = 0; j < 9; ++j) { // m2 cols
 			for (int k = 0; k < 2 * kNumPoints; ++k) { // m2 rows
 				S[i][j] += Mt[i][k] * M[k][j];
 			}
 		}
-	}
+	}*/
 	// Check symmetry
 	for (int i = 0; i < 9; ++i) {
 		for (int j = 0; j < 9; ++j) {
@@ -399,22 +436,73 @@ static void Homography(double(*H)[3][3])
 	JacobiIter((const double*)S, (double*)D, (double*)Q);
 
 	// h
-	double h[9][1];
-	for (int j = 0; j < 9; ++j) {
-		for (int i = 0; i < 1; ++i) {
-			h[j][i] = Q[j][ARRAY_COLS - 1]; // FIXME: assumed EigenValues are sorted and the smallest one is on the last column
+	double h[3][3];
+	// FIXME: assumed EigenValues are sorted and the smallest one is on the last column
+	h[0][0] = Q[0][ARRAY_COLS - 1];
+	h[0][1] = Q[1][ARRAY_COLS - 1];
+	h[0][2] = Q[2][ARRAY_COLS - 1];
+	h[1][0] = Q[3][ARRAY_COLS - 1];
+	h[1][1] = Q[4][ARRAY_COLS - 1];
+	h[1][2] = Q[5][ARRAY_COLS - 1];
+	h[2][0] = Q[6][ARRAY_COLS - 1]; // Should be #0
+	h[2][1] = Q[7][ARRAY_COLS - 1]; // Should be #0
+	h[2][2] = Q[8][ARRAY_COLS - 1]; // Should be #1 (up to a to scalar Z, homogeneous coordinates)
+	double Z = 1.0 / h[2][2];
+
+	// Inverse operation
+	// -> b = a*s+t'
+	// -> a = b*(1/s)-t'*(1/s) = b*(1/s)+t'' whith t'' = -t'/s = -(t*s)/s = -t
+	// Everything is multiplied (scaled) by 1/Z to retrieve the homogeneous coordinates system (Z = 1)
+	const double invT2[3][3] = {
+		{ Z / s1, 0, Z * t1x_ },
+		{ 0, Z / s1, Z * t1y_ },
+		{ 0, 0, Z }
+	};
+
+	// HnAn = Bn, where Hn, An and Bn are normalized points
+	// ->HnT1A = T2B
+	// ->T2*HnT1A = T2*T2B = B
+	// ->(T2*HnT1)A = B -> H'A = B whith H' = T2*HnT1 our final homography matrix
+	double temp[3][1];
+	matrixMulAB(&invT2[0][0], 3, 3, &h[0][0], 3, 3, &temp[0][0]);
+	matrixMulAB(&temp[0][0], 3, 3, &T1[0][0], 3, 3, &(*H)[0][0]);
+
+	// print H
+	printf("H(expected) = ");
+	for (int j = 0; j < 3; ++j) {
+		for (int i = 0; i < 3; ++i) {
+			printf("%e, ", H_[j][i]);
 		}
+		printf("\n");
 	}
+	printf("H(computed) = ");
+	for (int j = 0; j < 3; ++j) {
+		for (int i = 0; i < 3; ++i) {
+			printf("%e, ", (*H)[j][i]);
+		}
+		printf("\n");
+	}
+
+	// TODO(dmi): limite H to an affine transform (last row = 0 0 1)
+
+	// TODO(dmi): RANSAC check colinearity
+
+	// TODO(dmi): Use SIMD_DP
+
+	// TODO(dmi): Mul_AtA, Mul_AtB, Mul_ABt, Mul_AB...
+	// TODO(dmi): Mul3x3_AB, Mul3x3_AtB...
+	// TODO(dmi): Mul3x3_AtBC
 
 	// Mh =?
 	double Mh[2 * kNumPoints][1] = {0};
-	for (int i = 0; i < 2 * kNumPoints; ++i) { // m1 rows
+	matrixMulAB(&M[0][0], 2 * kNumPoints, 9, &h[0][0], 9, 1, &Mh[0][0]);
+	/*for (int i = 0; i < 2 * kNumPoints; ++i) { // m1 rows
 		for (int j = 0; j < 1; ++j) { // m2 cols
 			for (int k = 0; k < 9; ++k) { // m2 rows
 				Mh[i][j] += M[i][k] * h[k][j];
 			}
 		}
-	}
+	}*/
 	// print Mh
 	printf("Mh=");
 	for (int j = 0; j < 2 * kNumPoints; ++j) {
