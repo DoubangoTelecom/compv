@@ -23,7 +23,7 @@ static double compv_hypot(double x, double y)
 	x = COMPV_MATH_MAX(x, y);
 	t = t / x;
 	return x*COMPV_MATH_SQRT(1 + t*t);
-#elif 0
+#elif 1
 	// naive implementation
 	return sqrt(x*x + y*y);
 #endif
@@ -363,20 +363,21 @@ static void Homography(double(*H)[3][3])
 		{ 0, 0, 1 }
 	};
 
+	// Inverse operation
+	// -> b = a*s+t'
+	// -> a = b*(1/s)-t'*(1/s) = b*(1/s)+t'' whith t'' = -t'/s = -(t*s)/s = -t
+	const double invT2[3][3] = {
+		{ 1 / s1, 0, t1x_ },
+		{ 0, 1 / s1, t1y_ },
+		{ 0, 0, 1 }
+	};
+
 	// Normalize X: Xn = T1X
 	double Xn_[3/*x,y,z*/][kNumPoints];
 	matrixMulAB(&T1[0][0], 3, 3, &X_[0][0], 3, kNumPoints, &Xn_[0][0]);
 	// Normalize Xprime: Xnprime = T2Xprime
 	double XnPrime_[3/*x,y,z*/][kNumPoints];
 	matrixMulAB(&T2[0][0], 3, 3, &XPrime_[0][0], 3, kNumPoints, &XnPrime_[0][0]);
-
-	//FIXME
-	for (int j = 0; j < 3; ++j) {
-		for (int i = 0; i < kNumPoints; ++i) {
-			//Xn_[j][i] = X_[j][i];
-			//XnPrime_[j][i] = XPrime_[j][i];
-		}
-	}
 	
 	// homogeneous equation: Mh = 0
 
@@ -444,20 +445,9 @@ static void Homography(double(*H)[3][3])
 	h[1][0] = Q[3][ARRAY_COLS - 1];
 	h[1][1] = Q[4][ARRAY_COLS - 1];
 	h[1][2] = Q[5][ARRAY_COLS - 1];
-	h[2][0] = Q[6][ARRAY_COLS - 1]; // Should be #0
-	h[2][1] = Q[7][ARRAY_COLS - 1]; // Should be #0
-	h[2][2] = Q[8][ARRAY_COLS - 1]; // Should be #1 (up to a to scalar Z, homogeneous coordinates)
-	double Z = 1.0 / h[2][2];
-
-	// Inverse operation
-	// -> b = a*s+t'
-	// -> a = b*(1/s)-t'*(1/s) = b*(1/s)+t'' whith t'' = -t'/s = -(t*s)/s = -t
-	// Everything is multiplied (scaled) by 1/Z to retrieve the homogeneous coordinates system (Z = 1)
-	const double invT2[3][3] = {
-		{ Z / s1, 0, Z * t1x_ },
-		{ 0, Z / s1, Z * t1y_ },
-		{ 0, 0, Z }
-	};
+	h[2][0] = Q[6][ARRAY_COLS - 1];
+	h[2][1] = Q[7][ARRAY_COLS - 1];
+	h[2][2] = Q[8][ARRAY_COLS - 1]; // Should be #1 (up to a to scalar 1/Z)
 
 	// HnAn = Bn, where Hn, An and Bn are normalized points
 	// ->HnT1A = T2B
@@ -466,6 +456,18 @@ static void Homography(double(*H)[3][3])
 	double temp[3][1];
 	matrixMulAB(&invT2[0][0], 3, 3, &h[0][0], 3, 3, &temp[0][0]);
 	matrixMulAB(&temp[0][0], 3, 3, &T1[0][0], 3, 3, &(*H)[0][0]);
+
+	// Scale H to make it homogeneous (Z = 1)
+	double Z = 1.0 / (*H)[2][2];
+	(*H)[0][0] *= Z;
+	(*H)[0][1] *= Z;
+	(*H)[0][2] *= Z;
+	(*H)[1][0] *= Z;
+	(*H)[1][1] *= Z;
+	(*H)[1][2] *= Z;
+	(*H)[2][0] *= Z;
+	(*H)[2][1] *= Z;
+	(*H)[2][2] *= Z; // should be #1
 
 	// print H
 	printf("H(expected) = ");
