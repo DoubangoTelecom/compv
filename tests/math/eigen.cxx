@@ -10,6 +10,7 @@ using namespace compv;
 #define ARRAY_ROWS				9
 #define ARRAY_COLS				9
 #define EIGEN_EPSILON			1.1921e-07 // 1e-5
+#define USE_API					1
 
 static double compv_hypot(double x, double y)
 {
@@ -44,6 +45,7 @@ static void matrixPrint(const double* M, const char* desc = "Matrix")
 }
 
 // C <> A,B
+#if 0
 static void matrixSquareMul(const double* A, const double* B, double* C)
 {
     CompVMem::zero(C, ARRAY_ROWS * ARRAY_COLS * sizeof(double));
@@ -57,23 +59,35 @@ static void matrixSquareMul(const double* A, const double* B, double* C)
         }
     }
 }
+#endif
 
 static void matrixMulAB(const double *A, int a_rows, int a_cols, const double *B, int b_rows, int b_cols, double *R)
 {
+#if USE_API
+	CompVPtr<CompVArray<double>* > A_;
+	CompVPtr<CompVArray<double>* > B_;
+	CompVPtr<CompVArray<double>* > R_;
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&A_, A, a_rows, a_cols, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&B_, B, b_rows, b_cols, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&R_, R, a_rows, b_cols, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVMatrix<double>::mulAB(A_, B_, R_));
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::unwrap(const_cast<double*>(R), R_, 1));
+#else
     COMPV_ASSERT(a_rows && a_cols && b_rows == a_cols && b_cols && A && B && R && R != A && R != B);
     const double *a;
     double *r;
     // R is a (a_rows, b_cols) matrix
     for (int i = 0; i < a_rows; ++i) { // m1 rows
+		a = A + (i * a_cols);
+		r = R + (i * b_cols);
         for (int j = 0; j < b_cols; ++j) { // m2 cols
-            a = A + (i * a_cols);
-            r = R + (i * b_cols);
             r[j] = 0;
             for (int k = 0; k < b_rows; ++k) { // m2 rows
                 r[j] += a[k] * B[(k*b_cols) + j];
             }
         }
-    }
+    }	
+#endif
 }
 
 // B <> A
@@ -172,19 +186,27 @@ static void JacobiAngles(const double *S, int ith, int jth, double *c, double *s
 // S must be symmetric
 static double SymmMaxOffDiag(const double *S, int *row, int *col)
 {
-    double r0_ = 0.0, r1_;
-    const double* S_;
-    for (int j = 0; j < ARRAY_ROWS; ++j) {
-        S_ = S + (j * ARRAY_COLS);
-        for (int i = 0; i < j; ++i) { // i stops at j because the matrix is symmetric and remains symetric after #1 Jacobi iteration
-            if ((r1_ = abs(S_[i])) > r0_) {
-                r0_ = r1_;
-                *row = j;
-                *col = i;
-            }
-        }
-    }
-    return r0_;
+#if USE_API
+	double max = 0.0;
+	CompVPtr<CompVArray<double>* > S_;
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&S_, S, ARRAY_ROWS, ARRAY_COLS, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVMatrix<double>::maxAbsOffDiag_symm(S_, row, col, &max));
+	return max;
+#else
+	double r0_ = 0.0, r1_;
+	const double* S_;
+	for (int j = 0; j < ARRAY_ROWS; ++j) {
+		S_ = S + (j * ARRAY_COLS);
+		for (int i = 0; i < j; ++i) { // i stops at j because the matrix is symmetric and remains symetric after #1 Jacobi iteration
+			if ((r1_ = abs(S_[i])) > r0_) {
+				r0_ = r1_;
+				*row = j;
+				*col = i;
+			}
+		}
+	}
+	return r0_;
+#endif
 }
 
 // Requires symetric matrix as input
@@ -222,18 +244,18 @@ static void JacobiIter(const double *in, double *D, double *Q)
         GivensRotMatrix((double*)G, row, col, gc_, gs_);
         //matrixPrint((const double*)G, "G");
         // Q = QG
-        matrixSquareMul(Q, (const double*)G, matrixOut0);
+		matrixMulAB(Q, ARRAY_ROWS, ARRAY_COLS, (const double*)G, ARRAY_ROWS, ARRAY_COLS, matrixOut0);
         matrixCopy(Q, matrixOut0);
         //matrixPrint((const double*)Q, "Q=QG");
         // AG
-        matrixSquareMul(matrixIn, (const double*)G, matrixOut0); // Input and Output must be different
+		matrixMulAB(matrixIn, ARRAY_ROWS, ARRAY_COLS, (const double*)G, ARRAY_ROWS, ARRAY_COLS, matrixOut0); // Input and Output must be different
         //matrixPrint((const double*)matrixOut0, "AG");
         // G*
         // matrixSquareTranspose((double*)matrixGivens, (double*)matrixGivens);
         GivensRotMatrix((double*)G, col, row, gc_, gs_); // FIXME: change GivensRotMatrix to output G and G*
         //matrixPrint((const double*)G, "G*");
         // G*AG
-        matrixSquareMul((const double*)G, matrixOut0, D);
+		matrixMulAB((const double*)G, ARRAY_ROWS, ARRAY_COLS, matrixOut0, ARRAY_ROWS, ARRAY_COLS, D);
         //matrixPrint((const double*)D, "D=G*AG");
         matrixIn = D;
     }
@@ -253,18 +275,18 @@ static void JacobiIter(const double *in, double *D, double *Q)
                     GivensRotMatrix((double*)G, row, col, gc_, gs_);
                     //matrixPrint((const double*)G, "G");
                     // Q = QG
-                    matrixSquareMul(Q, (const double*)G, matrixOut0);
+					matrixMulAB(Q, ARRAY_ROWS, ARRAY_COLS, (const double*)G, ARRAY_ROWS, ARRAY_COLS, matrixOut0);
                     matrixCopy(Q, matrixOut0);
                     //matrixPrint((const double*)Q, "Q=QG");
                     // AG
-                    matrixSquareMul(matrixIn, (const double*)G, matrixOut0); // Input and Output must be different
+					matrixMulAB(matrixIn, ARRAY_ROWS, ARRAY_COLS, (const double*)G, ARRAY_ROWS, ARRAY_COLS, matrixOut0); // Input and Output must be different
                     //matrixPrint((const double*)matrixOut0, "AG");
                     // G*
                     // matrixSquareTranspose((double*)matrixGivens, (double*)matrixGivens);
                     GivensRotMatrix((double*)G, col, row, gc_, gs_); // FIXME: change GivensRotMatrix to output G and G*
                     //matrixPrint((const double*)G, "G*");
                     // G*AG
-                    matrixSquareMul((const double*)G, matrixOut0, D);
+					matrixMulAB((const double*)G, ARRAY_ROWS, ARRAY_COLS, matrixOut0, ARRAY_ROWS, ARRAY_COLS, D);
                     //matrixPrint((const double*)D, "D=G*AG");
                     matrixIn = D;
                 }

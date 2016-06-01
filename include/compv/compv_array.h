@@ -25,6 +25,7 @@ public:
         return "CompVArray";
     };
     COMPV_ERROR_CODE alloc(size_t rows, size_t cols, size_t alignv = 1);
+	COMPV_ERROR_CODE zero();
     COMPV_INLINE const T* ptr(size_t row = 0, size_t col = 0)const {
         return (row > m_nRows || col > m_nCols) ? NULL : (const T*)(((const uint8_t*)m_pDataPtr) + (row * m_nStrideInBytes) + (col * m_nElmtInBytes));
     }
@@ -49,6 +50,8 @@ public:
     COMPV_INLINE bool isEmpty()const {
         return !m_nCols || !m_nRows;
     };
+	static COMPV_ERROR_CODE wrap(CompVPtr<CompVArray<T>* >* array, const T* mem, size_t rows, size_t cols, size_t arrayAlign = 1, size_t memAlign = 1);
+	static COMPV_ERROR_CODE unwrap(T* mem, const CompVPtr<CompVArray<T>* >& array, size_t memAlign = 1);
     static COMPV_ERROR_CODE newObj(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols, size_t alignv = 1);
 
 private:

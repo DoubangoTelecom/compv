@@ -163,6 +163,12 @@
     <Filter Include="Source Files\calib">
       <UniqueIdentifier>{92533d44-e076-4da0-9ef0-d0344b20b18a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\intrinsics\x86\math">
+      <UniqueIdentifier>{e46b0f03-5434-41e8-85fa-c636699e905c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\intrinsics\x86\math">
+      <UniqueIdentifier>{533f03aa-1973-41b0-92ba-6fafa8c66cf9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
