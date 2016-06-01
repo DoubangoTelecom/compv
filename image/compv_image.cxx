@@ -664,7 +664,7 @@ COMPV_ERROR_CODE CompVImageDecoder::decodeFile(const char* filePath, CompVPtr<Co
         COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
         return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
     }
-    _COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
+    COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     switch (format_) {
     case COMPV_IMAGE_FORMAT_JPEG:
@@ -696,7 +696,7 @@ COMPV_ERROR_CODE  CompVImageDecoder::decodeInfo(const char* filePath, CompVImage
         COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
         return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
     }
-    _COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
+    COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     switch (format_) {
     case COMPV_IMAGE_FORMAT_JPEG:

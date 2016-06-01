@@ -4,9 +4,6 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-/*
-Functions to compute Eigenvalues and Eigenvectors
-*/
 #include "compv/math/compv_math_matrix.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -19,7 +16,7 @@ template class CompVMatrix<int16_t >;
 template class CompVMatrix<uint8_t >;
 
 template <class T>
-COMPV_ERROR_CODE CompVMatrix<T>::mulAB(const CompVPtr<CompVArray<T>* >&A, const CompVPtr<CompVArray<T>* >&B, CompVPtr<CompVArray<T>* >&R)
+COMPV_ERROR_CODE CompVMatrix<T>::mulAB(const CompVPtrArray(T) &A, const CompVPtrArray(T) &B, CompVPtrArray(T) &R)
 {
 	COMPV_CHECK_EXP_RETURN(!A || !B || !R || !A->rows() || !A->cols() || B->rows() != A->cols() || !B->cols() || R->rows() != A->rows() || R->cols() != B->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Should use mulABt, mulAB_square, mulAB_3x3, mulAB_2x2, SIMD accelerated....
@@ -45,7 +42,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulAB(const CompVPtr<CompVArray<T>* >&A, const 
 }
 
 template <class T>
-COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtr<CompVArray<T>* >&S, int *row, int *col, T* max)
+COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, int *row, int *col, T* max)
 {
 	COMPV_CHECK_EXP_RETURN(!S || S->rows() != S->cols() || !S->rows() || !row || !col || !max, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();

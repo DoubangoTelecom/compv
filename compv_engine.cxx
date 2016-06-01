@@ -57,6 +57,10 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
         COMPV_DEBUG_ERROR("sizeof(compv_scalar_t)= #%lu not equal to sizeof(void*)= #%lu", sizeof(compv_scalar_t), sizeof(void*));
         return COMPV_ERROR_CODE_E_SYSTEM;
     }
+	if (sizeof(compv_float32_t) != 4) {
+		COMPV_DEBUG_ERROR("sizeof(compv_float32_t)= #%lu not equal to 4", sizeof(compv_float32_t));
+		return COMPV_ERROR_CODE_E_SYSTEM;
+	}
 #endif
     COMPV_DEBUG_INFO("sizeof(compv_scalar_t)= #%lu", sizeof(compv_scalar_t));
     COMPV_DEBUG_INFO("sizeof(float)= #%lu", sizeof(float));

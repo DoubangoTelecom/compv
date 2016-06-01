@@ -89,7 +89,7 @@ std::string CompVFileUtils::getExt(const char* pcPath)
     return ext_;
 }
 
-_COMPV_IMAGE_FORMAT CompVFileUtils::getImageFormat(const char* pcPath)
+COMPV_IMAGE_FORMAT CompVFileUtils::getImageFormat(const char* pcPath)
 {
     std::string ext_ = CompVFileUtils::getExt(pcPath); // UpperCase
     if (ext_ == "JPEG" || ext_ == "JPG" || ext_ == "JPE" || ext_ == "JFIF" || ext_ == "JIF") {

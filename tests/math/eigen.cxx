@@ -64,9 +64,9 @@ static void matrixSquareMul(const double* A, const double* B, double* C)
 static void matrixMulAB(const double *A, int a_rows, int a_cols, const double *B, int b_rows, int b_cols, double *R)
 {
 #if USE_API
-	CompVPtr<CompVArray<double>* > A_;
-	CompVPtr<CompVArray<double>* > B_;
-	CompVPtr<CompVArray<double>* > R_;
+	CompVPtrArray(double) A_;
+	CompVPtrArray(double) B_;
+	CompVPtrArray(double) R_;
 	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&A_, A, a_rows, a_cols, COMPV_SIMD_ALIGNV_DEFAULT, 1));
 	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&B_, B, b_rows, b_cols, COMPV_SIMD_ALIGNV_DEFAULT, 1));
 	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&R_, R, a_rows, b_cols, COMPV_SIMD_ALIGNV_DEFAULT, 1));
@@ -188,7 +188,7 @@ static double SymmMaxOffDiag(const double *S, int *row, int *col)
 {
 #if USE_API
 	double max = 0.0;
-	CompVPtr<CompVArray<double>* > S_;
+	CompVPtrArray(double) S_;
 	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&S_, S, ARRAY_ROWS, ARRAY_COLS, COMPV_SIMD_ALIGNV_DEFAULT, 1));
 	COMPV_CHECK_CODE_ASSERT(CompVMatrix<double>::maxAbsOffDiag_symm(S_, row, col, &max));
 	return max;

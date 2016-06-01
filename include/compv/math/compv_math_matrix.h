@@ -16,8 +16,8 @@ template<class T>
 class COMPV_API CompVMatrix
 {
 public:
-	static COMPV_ERROR_CODE mulAB(const CompVPtr<CompVArray<T>* >&A, const CompVPtr<CompVArray<T>* >&B, CompVPtr<CompVArray<T>* >&R);
-	static COMPV_ERROR_CODE maxAbsOffDiag_symm(const CompVPtr<CompVArray<T>* >&S, int *row, int *col, T* max);
+	static COMPV_ERROR_CODE mulAB(const CompVPtrArray(T) &A, const CompVPtrArray(T) &B, CompVPtrArray(T) &R);
+	static COMPV_ERROR_CODE maxAbsOffDiag_symm(const CompVPtrArray(T) &S, int *row, int *col, T* max);
 };
 
 COMPV_NAMESPACE_END()

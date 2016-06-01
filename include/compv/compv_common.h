@@ -86,6 +86,15 @@ COMPV_NAMESPACE_BEGIN()
 
 #define COMPV_IS_POW2(x) (((x) != 0) && !((x) & ((x) - 1)))
 
+#define CompVPtrDef(T)			CompVPtr<T* >
+#define CompVPtrArray(T)		CompVPtrDef(CompVArray<T >)
+#define CompVPtrBox(T)			CompVPtrDef(CompVBox<T >)
+#define CompVPtrBoxPoint(T)		CompVPtrDef(CompVBox<CompVPoint<T > >)
+
+#define CompVPtrArrayNew(T)		CompVArray<T >::newObj
+#define CompVPtrBoxNew(T)			CompVBox<T >::newObj
+#define CompVPtrBoxPointNew(T)		CompVBox<CompVPoint<T > >::newObj
+
 #if defined(_MSC_VER)
 #	define snprintf		_snprintf
 #	define vsnprintf	_vsnprintf
@@ -120,14 +129,14 @@ a,b,c,d must be <= 16 for _mm128_shuffle_epi8() and <32 for _mm256_shuffle_epi8(
 typedef int32_t compv_core_id_t;
 typedef intptr_t compv_scalar_t;  /* This type *must* have the width of a general-purpose register on the target CPU. 64bits or 32bits. */
 typedef uintptr_t compv_uscalar_t;  /* This type *must* have the width of a general-purpose register on the target CPU. 64bits or 32bits. */
+typedef float compv_float32_t;
 
-typedef enum _COMPV_DEBUG_LEVEL {
+enum COMPV_DEBUG_LEVEL {
     COMPV_DEBUG_LEVEL_INFO = 4,
     COMPV_DEBUG_LEVEL_WARN = 3,
     COMPV_DEBUG_LEVEL_ERROR = 2,
     COMPV_DEBUG_LEVEL_FATAL = 1,
-}
-COMPV_DEBUG_LEVEL;
+};
 
 #define kErrorCodeSuccessStart		0
 #define kErrorCodeWarnStart			10000
@@ -135,7 +144,7 @@ COMPV_DEBUG_LEVEL;
 #define kErrorCodeFatalStart		(kErrorCodeErrorStart << 1)
 
 // TODO(dmi) complete COMPVGetErrorString(code) with all the newly added codes
-typedef enum _COMPV_ERROR_CODE {
+enum COMPV_ERROR_CODE {
     COMPV_ERROR_CODE_S_OK = kErrorCodeSuccessStart,
 
     COMPV_ERROR_CODE_W = kErrorCodeWarnStart,
@@ -164,8 +173,7 @@ typedef enum _COMPV_ERROR_CODE {
     COMPV_ERROR_CODE_E_GLFW,
 
     COMPV_ERROR_CODE_F = kErrorCodeFatalStart,
-}
-COMPV_ERROR_CODE;
+};
 
 #define COMPV_ERROR_CODE_IS_SUCCESS(code_) ((code_) < kErrorCodeWarnStart)
 #define COMPV_ERROR_CODE_IS_OK(code_) COMPV_ERROR_CODE_IS_SUCCESS((code_))
@@ -183,7 +191,7 @@ extern COMPV_API const char* CompVGetErrorString(COMPV_NAMESPACE::COMPV_ERROR_CO
 #define COMPV_CHECK_EXP_RETURN(exp, errcode) do { if ((exp)) COMPV_CHECK_CODE_RETURN(errcode); } while(0)
 #define COMPV_CHECK_EXP_BAIL(exp, errcode) do { if ((exp)) COMPV_CHECK_CODE_BAIL(errcode); } while(0)
 
-typedef enum _COMPV_PIXEL_FORMAT {
+enum COMPV_PIXEL_FORMAT {
     COMPV_PIXEL_FORMAT_NONE,
     COMPV_PIXEL_FORMAT_R8G8B8, // RGB24
     COMPV_PIXEL_FORMAT_B8G8R8, // BGR8
@@ -194,10 +202,9 @@ typedef enum _COMPV_PIXEL_FORMAT {
     COMPV_PIXEL_FORMAT_GRAYSCALE, // Y-only
     COMPV_PIXEL_FORMAT_I420, // http://www.fourcc.org/yuv.php#IYUV
     COMPV_PIXEL_FORMAT_IYUV = COMPV_PIXEL_FORMAT_I420
-}
-COMPV_PIXEL_FORMAT;
+};
 
-typedef enum _COMPV_IMAGE_FORMAT {
+enum COMPV_IMAGE_FORMAT {
     COMPV_IMAGE_FORMAT_NONE,
     COMPV_IMAGE_FORMAT_RAW,
     COMPV_IMAGE_FORMAT_JPEG,
@@ -205,38 +212,33 @@ typedef enum _COMPV_IMAGE_FORMAT {
     COMPV_IMAGE_FORMAT_BMP,
     COMPV_IMAGE_FORMAT_BITMAP = COMPV_IMAGE_FORMAT_BMP,
     COMPV_IMAGE_FORMAT_PNG
-}
-COMPV_IMAGE_FORMAT;
+};
 
-typedef enum _COMPV_BORDER_TYPE {
+enum COMPV_BORDER_TYPE {
     COMPV_BORDER_TYPE_NONE,
     COMPV_BORDER_TYPE_CONSTANT,
     COMPV_BORDER_TYPE_REFLECT,
     COMPV_BORDER_TYPE_REPLICATE,
     COMPV_BORDER_TYPE_WRAP
-}
-COMPV_BORDER_TYPE;
+};
 
-typedef enum _COMPV_BORDER_POS {
+enum COMPV_BORDER_POS {
     COMPV_BORDER_POS_NONE = 0x00,
     COMPV_BORDER_POS_LEFT = 1 << 0,
     COMPV_BORDER_POS_TOP = 1 << 1,
     COMPV_BORDER_POS_RIGHT = 1 << 2,
     COMPV_BORDER_POS_BOTTOM = 1 << 3,
     COMPV_BORDER_POS_ALL = 0xFF
-}
-COMPV_BORDER_POS;
+};
 
-typedef enum _COMPV_SCALE_TYPE {
+enum COMPV_SCALE_TYPE {
     COMPV_SCALE_TYPE_BILINEAR
-}
-COMPV_SCALE_TYPE;
+};
 
-typedef enum _COMPV_SORT_TYPE {
+enum COMPV_SORT_TYPE {
     COMPV_SORT_TYPE_BUBBLE, /**< https://en.wikipedia.org/wiki/Bubble_sort */
     COMPV_SORT_TYPE_QUICK, /**< https://en.wikipedia.org/wiki/Quicksort */
-}
-COMPV_SORT_TYPE;
+};
 
 enum {
     // These are per function-scope
@@ -249,14 +251,15 @@ enum {
     // no limitation but alloc memory -> do not abuse
 };
 
-typedef struct _CompVImageInfo {
+/** CompVImageInfo
+*/
+struct CompVImageInfo {
     COMPV_IMAGE_FORMAT format;
     COMPV_PIXEL_FORMAT pixelFormat;
     int32_t width;
     int32_t stride;
     int32_t height;
-}
-CompVImageInfo;
+};
 
 #define COMPV_PIXEL_COMP_MAX	4 // RGBA or YUV
 typedef union _CompVPixelData {
@@ -266,47 +269,48 @@ typedef union _CompVPixelData {
 }
 CompVPixelData;
 
-typedef struct _CompVPixel {
+/** CompVPixel
+*/
+struct CompVPixel {
     COMPV_PIXEL_FORMAT format;
     CompVPixelData data;
-}
-CompVPixel;
+};
 
-typedef struct _CompVRect {
-    int32_t left;
-    int32_t top;
-    int32_t right;
-    int32_t bottom;
-
+/** CompVRect
+*/
+struct CompVRect {
 protected:
     COMPV_INLINE void init(int32_t left_ = 0, int32_t top_ = 0, int32_t right_ = 0, int32_t bottom_ = 0) {
-        left = left_;
-        top = top_;
-        right = right_;
-        bottom = bottom_;
+        left = left_, top = top_, right = right_, bottom = bottom_;
     }
 public:
-    _CompVRect() {
+    CompVRect() {
         init();
     }
-    _CompVRect(int32_t left_, int32_t top_, int32_t right_, int32_t bottom_) {
+    CompVRect(int32_t left_, int32_t top_, int32_t right_, int32_t bottom_) {
         init(left_, top_, right_, bottom_);
     }
-}
-CompVRect;
+	int32_t left;
+	int32_t top;
+	int32_t right;
+	int32_t bottom;
+};
 
-typedef struct _CompVSize {
-    int32_t width;
-    int32_t height;
+/** CompVSize
+*/
+struct CompVSize {
 public:
-    _CompVSize(int32_t width_ = 0, int32_t height_ = 0) {
+    CompVSize(int32_t width_ = 0, int32_t height_ = 0) {
         width = width_;
         height = height_;
     }
-}
-CompVSize;
+	int32_t width;
+	int32_t height;
+};
 
-typedef struct _CompVInterestPoint {
+/** CompVInterestPoint
+*/
+struct CompVInterestPoint {
     float x; /**< Point.x */
     float y; /**< Point.y */
     float strength; /**< Corner/edge strength/response (e.g. FAST response or Harris response) */
@@ -316,44 +320,58 @@ typedef struct _CompVInterestPoint {
 
 protected:
     COMPV_INLINE void init(float x_, float y_, float strength_ = -1.f, float orient_ = -1.f, int32_t level_ = 0, float size_ = 0.f) {
-        x = x_;
-        y = y_;
-        strength = strength_;
-        orient = orient_;
-        level = level_;
-        size = size_;
+        x = x_, y = y_, strength = strength_, orient = orient_, level = level_, size = size_;
     }
 public:
-    _CompVInterestPoint() {
+    CompVInterestPoint() {
         init(0,0);
     }
-    _CompVInterestPoint(float x_, float y_, float strength_ = -1.f, float orient_ = -1.f, int32_t level_ = 0, float size_ = 0.f) {
+    CompVInterestPoint(float x_, float y_, float strength_ = -1.f, float orient_ = -1.f, int32_t level_ = 0, float size_ = 0.f) {
         init(x_, y_, strength_, orient_, level_, size_);
     }
-}
-CompVInterestPoint;
+};
 
-typedef struct _CompVDMatch {
+/** CompVPoint
+*/
+template <typename T>
+struct CompVPoint {
+	COMPV_INLINE void init(T x_ = 0, T y_ = 0 , T z_ = 1) {
+		x = x_, y = y_, z = z_;
+	}
+public:
+	CompVPoint() { 
+		init();
+	}
+	CompVPoint(T x_, T y_, T z_ = 1) {
+		init(x_, y_, z_);
+	}
+	T x; T y; T z;
+};
+typedef CompVPoint<float> PointF;
+typedef CompVPoint<double> PointD;
+typedef CompVPoint<int32_t> PointInt32;
+
+
+/** CompVDMatch
+*/
+struct CompVDMatch {
     size_t queryIdx;
     size_t trainIdx;
     size_t imageIdx;
     int32_t distance;
 protected:
     COMPV_INLINE void init(int32_t queryIdx_, int32_t trainIdx_, int32_t distance_, int32_t imageIdx_ = 0) {
-        queryIdx = queryIdx_;
-        trainIdx = trainIdx_;
-        distance = distance_;
-        imageIdx = imageIdx_;
+        queryIdx = queryIdx_, trainIdx = trainIdx_, distance = distance_, imageIdx = imageIdx_;
     }
 public:
-    _CompVDMatch() {
+    CompVDMatch() {
         init(0, 0, 0, 0);
     }
-    _CompVDMatch(int32_t queryIdx_, int32_t trainIdx_, int32_t distance_, int32_t imageIdx_ = 0) {
+    CompVDMatch(int32_t queryIdx_, int32_t trainIdx_, int32_t distance_, int32_t imageIdx_ = 0) {
         init(queryIdx_, trainIdx_, distance_, imageIdx_);
     }
 }
-CompVDMatch;
+;
 
 COMPV_NAMESPACE_END()
 
