@@ -57,8 +57,8 @@ int main()
     COMPV_ASSERT(TestSinCosP32(true));
 #endif
 #if TEST_EIGEN
-	extern bool TestEigen();
-	COMPV_ASSERT(TestEigen());
+    extern bool TestEigen();
+    COMPV_ASSERT(TestEigen());
 #endif
 
     // deInit the engine

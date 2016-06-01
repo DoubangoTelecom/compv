@@ -157,6 +157,12 @@
     <Filter Include="Assembler Files\x86\math">
       <UniqueIdentifier>{c264af49-687a-47ea-b76c-1dabf4d60b9b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\calib">
+      <UniqueIdentifier>{bad0e8ef-90c5-4bfb-9f07-99a8672d9041}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\calib">
+      <UniqueIdentifier>{92533d44-e076-4da0-9ef0-d0344b20b18a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
@@ -381,7 +387,10 @@
     <ClInclude Include="include\compv\math\compv_math_svd.h">
       <Filter>Header Files\math</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\math\compv_math_jacobi.h">
+    <ClInclude Include="include\compv\calib\compv_calib_homography.h">
+      <Filter>Header Files\calib</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\math\compv_math_matrix.h">
       <Filter>Header Files\math</Filter>
     </ClInclude>
   </ItemGroup>
@@ -584,10 +593,13 @@
     <ClCompile Include="math\compv_math_eigen.cxx">
       <Filter>Source Files\math</Filter>
     </ClCompile>
-    <ClCompile Include="math\compv_math_jacobi.cxx">
+    <ClCompile Include="math\compv_math_svd.cxx">
       <Filter>Source Files\math</Filter>
     </ClCompile>
-    <ClCompile Include="math\compv_math_svd.cxx">
+    <ClCompile Include="calib\compv_calib_homography.cxx">
+      <Filter>Source Files\calib</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_matrix.cxx">
       <Filter>Source Files\math</Filter>
     </ClCompile>
   </ItemGroup>
@@ -700,13 +712,11 @@
     <YASM Include="assembler\x86\compv_hamming_x86_sse.s">
       <Filter>Assembler Files\x86</Filter>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assembler\x86\math\compv_math_macros_x86.s">
+    <YASM Include="assembler\x86\math\compv_math_macros_x86.s">
       <Filter>Assembler Files\x86\math</Filter>
-    </None>
-    <None Include="assembler\x86\math\compv_math_utils_x86.s">
+    </YASM>
+    <YASM Include="assembler\x86\math\compv_math_utils_x86.s">
       <Filter>Assembler Files\x86\math</Filter>
-    </None>
+    </YASM>
   </ItemGroup>
 </Project>
