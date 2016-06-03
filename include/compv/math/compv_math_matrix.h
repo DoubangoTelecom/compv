@@ -18,8 +18,10 @@ class COMPV_API CompVMatrix
 public:
 	static COMPV_ERROR_CODE mulAB(const CompVPtrArray(T) &A, const CompVPtrArray(T) &B, CompVPtrArray(T) &R);
 	static COMPV_ERROR_CODE mulABt(const CompVPtrArray(T) &A, const CompVPtrArray(T) &B, CompVPtrArray(T) &R);
+	static COMPV_ERROR_CODE mulAtA(const CompVPtrArray(T) &A, CompVPtrArray(T) &R);
 	static COMPV_ERROR_CODE mulAG(CompVPtrArray(T) &A, size_t ith, size_t jth, T c, T s);
 	static COMPV_ERROR_CODE mulGA(CompVPtrArray(T) &A, size_t ith, size_t jth, T c, T s);
+	static COMPV_ERROR_CODE transpose(const CompVPtrArray(T) &A, CompVPtrArray(T) &R);
 	static COMPV_ERROR_CODE maxAbsOffDiag_symm(const CompVPtrArray(T) &S, size_t *row, size_t *col, T* max);
 	static COMPV_ERROR_CODE givens(CompVPtrArray(T) &G, size_t rows, size_t cols, size_t ith, size_t jth, T c, T s);
 	static COMPV_ERROR_CODE identity(CompVPtrArray(T) &I, size_t rows, size_t cols);

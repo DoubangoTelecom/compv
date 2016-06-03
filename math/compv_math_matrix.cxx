@@ -21,8 +21,8 @@ template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::mulAB(const CompVPtrArray(T) &A, const CompVPtrArray(T) &B, CompVPtrArray(T) &R)
 {
 	COMPV_CHECK_EXP_RETURN(!A || !B || !A->rows() || !A->cols() || B->rows() != A->cols() || !B->cols() || R == A || R == B, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+#if 0 // TODO(dmi): check speed
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Should use mulABt, mulAB_square, mulAB_3x3, mulAB_2x2, SIMD accelerated....
-
 	size_t i, j, k, a_rows = A->rows(), b_rows = B->rows(), b_cols = B->cols();
 	const T *a0;
 	T *r0;
@@ -44,7 +44,27 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulAB(const CompVPtrArray(T) &A, const CompVPtr
 			r0[j] = sum;
 		}
 	}
-	
+	return COMPV_ERROR_CODE_S_OK;
+#else
+	// AB = AB**= A(B*)* = AC*, with C = B*
+	CompVPtrArray(T) C;
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::transpose(B, C));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(A, C, R));
+	return COMPV_ERROR_CODE_S_OK;
+#endif
+}
+
+// R must be <> A
+// R = mul(A*, A)
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::mulAtA(const CompVPtrArray(T) &A, CompVPtrArray(T) &R)
+{
+	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols() || R == A, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	// A*A = A*A** = (A*)(A*)* = BB*, with B = A*
+	CompVPtrArray(T) B;
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::transpose(A, B));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(B, B, R));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -53,10 +73,8 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulAB(const CompVPtrArray(T) &A, const CompVPtr
 template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::mulABt(const CompVPtrArray(T) &A, const CompVPtrArray(T) &B, CompVPtrArray(T) &R)
 {
-	COMPV_CHECK_EXP_RETURN(!A || !B || !A->rows() || !A->cols() || B->rows() != A->rows() || !B->cols() || R == A || R == B, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!A || !B || !A->rows() || !A->cols() || A->cols() != B->cols() || !B->cols() || R == A || R == B, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Should use mulAB_square, mulAB_3x3, mulAB_2x2, SIMD accelerated....
-	COMPV_DEBUG_INFO_CODE_NOT_TESTED(); // not tested yet
-	COMPV_ASSERT(false);
 
 	size_t i, j, k, a_rows = A->rows(), b_rows = B->rows(), b_cols = B->cols();
 	const T *a0, *b0;
@@ -64,19 +82,18 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulABt(const CompVPtrArray(T) &A, const CompVPt
 	T sum;
 
 	// Create R if not already done
-	if (!R || R->rows() != A->rows() || R->cols() != B->cols()) {
+	if (!R || R->rows() != A->rows() || R->cols() != B->rows()) {
 		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(&R, A->rows(), B->rows(), COMPV_SIMD_ALIGNV_DEFAULT));
 	}
 
 	for (i = 0; i < a_rows; ++i) {
 		a0 = A->ptr(i);
-		b0 = B->ptr(i);
 		r0 = const_cast<T*>(R->ptr(i));
-		for (j = 0; j < b_cols; ++j) {
-			// DotProduct
+		for (j = 0; j < b_rows; ++j) {
+			b0 = B->ptr(j);
 			sum = 0;
 			for (k = 0; k < b_cols; ++k) {
-				sum += a0[k] * b0[k];
+				sum += a0[k] * b0[k]; // DotProduct
 			}
 			r0[j] = sum;
 		}
@@ -104,7 +121,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulAG(CompVPtrArray(T) &A, size_t ith, size_t j
 	// G* = swap(sign(s))
 	// -> mul(G*, A) = R = mul(A, G)
 	// -> mulGA(c, s-) = mulAG(c, s)	
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
 
 	// When Givens matrix is multiplied to the right of a matrix then, all rows change
 	// -> this function cannot be multi-threaded
@@ -159,6 +176,29 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulGA(CompVPtrArray(T) &A, size_t ith, size_t j
 		rj_[col_] = aj;
 	}
 
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// R<>A
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::transpose(const CompVPtrArray(T) &A, CompVPtrArray(T) &R)
+{
+	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols() || A == R, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
+
+	// Create A if not already done
+	if (!R || R->rows() != A->cols() || R->cols() != A->rows()) {
+		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(&R, A->cols(), A->rows(), COMPV_SIMD_ALIGNV_DEFAULT));
+	}
+	const T* a;
+	size_t rows_ = A->rows();
+	size_t cols_ = A->cols();
+	for (size_t row_ = 0; row_ < rows_; ++row_) {
+		a = A->ptr(row_);
+		for (size_t col_ = 0; col_ < cols_; ++col_) {
+			*const_cast<T*>(R->ptr(col_, row_)) = a[col_];
+		}
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 

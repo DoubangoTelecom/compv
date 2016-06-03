@@ -201,33 +201,41 @@ static void Homography(double(*H)[3][3])
     // Build M (FIXME: z' = 1 in compv as we'll append it to Xprime)
     double M[2 * kNumPoints][9];
 	CompVPtrArray(double) S_;
-#if 0
-	double S[9][9];
+#if USE_API
+	double S[9][9], *mj0, *mj1;
+	const double *xn0, *yn0, *xn1, *yn1;
+	xn0 = Xn_[0];
+	yn0 = Xn_[1];
+	xn1 = XnPrime_[0];
+	yn1 = XnPrime_[1];
 	for (int j = 0, k = 0; k < kNumPoints; j += 2, ++k) {
-		M[j][0] = -Xn_[0][k]; // -x
-		M[j][1] = -Xn_[1][k]; // -y
-		M[j][2] = -1; // -1
-		M[j][3] = 0;
-		M[j][4] = 0;
-		M[j][5] = 0;
-		M[j][6] = (XnPrime_[0][k] * Xn_[0][k]) / XnPrime_[2][k]; // (x'x)/z'
-		M[j][7] = (XnPrime_[0][k] * Xn_[1][k]) / XnPrime_[2][k]; // (x'y)/z'
-		M[j][8] = XnPrime_[0][k] / XnPrime_[2][k]; // x'/z'
+		mj0 = M[j];
+		mj1 = M[j + 1];
 
-		M[j + 1][0] = 0;
-		M[j + 1][1] = 0;
-		M[j + 1][2] = 0;
-		M[j + 1][3] = -Xn_[0][k]; // -x
-		M[j + 1][4] = -Xn_[1][k]; // -y
-		M[j + 1][5] = -1; // -1
-		M[j + 1][6] = (XnPrime_[1][k] * Xn_[0][k]) / XnPrime_[2][k]; // (y'x)/z'
-		M[j + 1][7] = (XnPrime_[1][k] * Xn_[1][k]) / XnPrime_[2][k]; // (y'y)/z'
-		M[j + 1][8] = XnPrime_[1][k] / XnPrime_[2][k]; // y'/z'
+		mj0[0] = -xn0[k]; // -x
+		mj0[1] = -yn0[k]; // -y
+		mj0[2] = -1; // -1
+		mj0[3] = 0;
+		mj0[4] = 0;
+		mj0[5] = 0;
+		mj0[6] = (xn1[k] * xn0[k]); // (x'x)/z'
+		mj0[7] = (xn1[k] * yn0[k]); // (x'y)/z'
+		mj0[8] = xn1[k]; // x'/z'
+
+		mj1[0] = 0;
+		mj1[1] = 0;
+		mj1[2] = 0;
+		mj1[3] = -xn0[k]; // -x
+		mj1[4] = -yn0[k]; // -y
+		mj1[5] = -1; // -1
+		mj1[6] = (yn1[k] * xn0[k]); // (y'x)/z'
+		mj1[7] = (yn1[k] * yn0[k]); // (y'y)/z'
+		mj1[8] = yn1[k]; // y'/z'
 	}
 	CompVPtrArray(double) M_;
 	
 	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&M_, &M[0][0], 2 * kNumPoints, 9, COMPV_SIMD_ALIGNV_DEFAULT, 1));
-	COMPV_CHECK_CODE_ASSERT(CompVMatrix<double>::mulABt(M_, M_, S_)); // R = MM*
+	COMPV_CHECK_CODE_ASSERT(CompVMatrix<double>::mulAtA(M_, S_)); // R = M*M
 	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::unwrap(&S[0][0], S_, 1));
 #else
 	double Mt[9][2 * kNumPoints];
