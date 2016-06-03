@@ -25,7 +25,8 @@ public:
         return "CompVArray";
     };
     COMPV_ERROR_CODE alloc(size_t rows, size_t cols, size_t alignv = 1);
-	COMPV_ERROR_CODE zero();
+	COMPV_ERROR_CODE zero_all();
+	COMPV_ERROR_CODE zero_rows();
     COMPV_INLINE const T* ptr(size_t row = 0, size_t col = 0)const {
         return (row > m_nRows || col > m_nCols) ? NULL : (const T*)(((const uint8_t*)m_pDataPtr) + (row * m_nStrideInBytes) + (col * m_nElmtInBytes));
     }

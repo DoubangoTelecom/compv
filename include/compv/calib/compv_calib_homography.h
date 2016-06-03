@@ -17,7 +17,7 @@ template<class T>
 class COMPV_API CompVHomography
 {
 public:
-	static COMPV_ERROR_CODE find(const CompVPtrBoxPoint(T) &src, const CompVPtrBoxPoint(T) &dst, CompVPtrArray(T) &H);
+	static COMPV_ERROR_CODE find(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H);
 };
 
 COMPV_NAMESPACE_END()

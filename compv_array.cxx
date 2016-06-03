@@ -73,13 +73,30 @@ bail:
     return err_;
 }
 
-// Set all values to zero
+// Set all (even paddings) values to zero
 template<class T>
-COMPV_ERROR_CODE CompVArray<T>::zero()
+COMPV_ERROR_CODE CompVArray<T>::zero_all()
 {
 	void* ptr_ = (void*)ptr();
 	if (ptr_ && rows() && cols()) {
-		CompVMem::zero(ptr_, rowInBytes() * rows());
+		CompVMem::zero(ptr_, strideInBytes() * rows());
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template<class T>
+COMPV_ERROR_CODE CompVArray<T>::zero_rows()
+{
+	if (ptr() && rows() && cols()) {
+		if (rowInBytes() == strideInBytes()) {
+			CompVMem::zero((void*)ptr(), strideInBytes() * rows());
+		}
+		else {
+			size_t row_, rows_ = rows(), rowInBytes_ = rowInBytes();
+			for (row_ = 0; row_ < rows_; ++row_) {
+				CompVMem::zero((void*)ptr(row_), rowInBytes_);
+			}
+		}
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

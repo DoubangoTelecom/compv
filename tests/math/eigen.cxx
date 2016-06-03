@@ -32,6 +32,10 @@ static double compv_hypot(double x, double y)
 #endif
 }
 
+
+
+
+
 static void matrixPrint(const double* M, const char* desc = "Matrix")
 {
     printf("----------\n%s\n----------\n", desc);
@@ -90,219 +94,6 @@ static void matrixMulAB(const double *A, int a_rows, int a_cols, const double *B
 #endif
 }
 
-// B <> A
-static void matrixSquareTranspose(const double* A, double* B)
-{
-    COMPV_ASSERT(ARRAY_ROWS == ARRAY_COLS);
-    COMPV_ASSERT(A != B);
-    static const int count = ARRAY_ROWS;
-    for (int j = 0; j < count; ++j) {
-        for (int i = 0; i < count; ++i) {
-            B[(j*count) + i] = A[(i*count) + j];
-        }
-    }
-}
-
-static void matrixCopy(double* dst, const double* src)
-{
-    CompVMem::copy(dst, src, (ARRAY_ROWS * ARRAY_COLS) * sizeof(double));
-}
-
-// Build Givens rotation matrix at (i, j) with
-static void GivensRotMatrix(double *G, int ith, int jth, double c, double s)
-{
-    int j, i;
-
-    // i -> row
-    // j -> col
-
-    // From https://en.wikipedia.org/wiki/Givens_rotation
-
-    // Identity matrix
-    CompVMem::zero(G, ARRAY_ROWS*ARRAY_COLS*sizeof(double));
-    for (i = 0; i < ARRAY_ROWS; ++i) {
-        for (j = 0; j < ARRAY_COLS; ++j) {
-            if (i == j) {
-                G[(i*ARRAY_COLS) + j] = 1.0;
-            }
-        }
-    }
-
-    // Gii = c
-    G[(ith*ARRAY_COLS) + ith] = c;
-    // Gjj = c
-    G[(jth*ARRAY_COLS) + jth] = c;
-    // Gji = -s
-    G[(jth*ARRAY_COLS) + ith] = -s;
-    // Gij = s
-    G[(ith*ARRAY_COLS) + jth] = s;
-}
-
-// Compute cos('c') and sin ('s')
-static void JacobiAngles(const double *S, int ith, int jth, double *c, double *s)
-{
-#if 1
-    // From https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
-    double theta;
-    double Sii = S[(ith * ARRAY_COLS) + ith];
-    double Sjj = S[(jth * ARRAY_COLS) + jth];
-    if (Sii == Sjj) {
-        theta = COMPV_MATH_PI / 4.0;
-    }
-    else {
-        theta = 0.5 * ::atan2(2.0*S[(ith * ARRAY_COLS) + jth], Sjj - Sii);
-    }
-    *c = ::cos(theta);
-    *s = ::sin(theta);
-#elif 0
-    double d = (S[(ith * ARRAY_COLS) + ith] - S[(jth * ARRAY_COLS) + jth]) / (2.0*S[(ith * ARRAY_COLS) + jth]);
-    double t = (d >= 0 ? +1 : -1) / (::abs(d) + ::sqrt(d*d + 1));
-    *c = 1.0 / ::sqrt(t*t + 1);
-    *s = t**c;
-#else
-    // FIXME: use this but find where comes the sign error
-    double Sij = S[(ith * ARRAY_COLS) + jth];
-    if (Sij == 0.0) {
-        *c = 1.0;
-        *s = 0.0;
-    }
-    else {
-        // rho = (Aii - Ajj) / 2Aij
-        double rho = (S[(ith * ARRAY_COLS) + ith] - S[(jth * ARRAY_COLS) + jth]) / (2.0 * Sij);
-        double t;
-        if (rho >= 0) {
-            t = 1.0 / (rho + sqrt(1 + (rho * rho)));
-        }
-        else {
-            t = -1 / (-rho + sqrt(1 + (rho * rho)));
-        }
-        *c = 1.0 / sqrt(1 + (t * t));
-        *s = t **c;
-    }
-#endif
-}
-
-// Largest absolute val
-// S must be symmetric
-static double SymmMaxOffDiag(const double *S, int *row, int *col)
-{
-#if USE_API
-	double max = 0.0;
-	CompVPtrArray(double) S_;
-	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&S_, S, ARRAY_ROWS, ARRAY_COLS, COMPV_SIMD_ALIGNV_DEFAULT, 1));
-	COMPV_CHECK_CODE_ASSERT(CompVMatrix<double>::maxAbsOffDiag_symm(S_, row, col, &max));
-	return max;
-#else
-	double r0_ = 0.0, r1_;
-	const double* S_;
-	for (int j = 0; j < ARRAY_ROWS; ++j) {
-		S_ = S + (j * ARRAY_COLS);
-		for (int i = 0; i < j; ++i) { // i stops at j because the matrix is symmetric and remains symetric after #1 Jacobi iteration
-			if ((r1_ = abs(S_[i])) > r0_) {
-				r0_ = r1_;
-				*row = j;
-				*col = i;
-			}
-		}
-	}
-	return r0_;
-#endif
-}
-
-// Requires symetric matrix as input
-// D: Diagonal matrix of eigenvalues
-// Q: Matrix of eigenvectors
-static void JacobiIter(const double *in, double *D, double *Q)
-{
-    int row, col;
-    double G[ARRAY_ROWS][ARRAY_COLS], matrixTemp0[ARRAY_ROWS][ARRAY_COLS];
-    double gc_, gs_;
-    const double *matrixIn = (double*)in;
-    double *matrixOut0 = (double*)matrixTemp0;
-    bool is_diag = false;
-    int sweeps = 0, ops = 0;
-    double laxOffDiag;
-
-    // Set Q to identity matrix
-    CompVMem::zero(Q, ARRAY_ROWS*ARRAY_COLS*sizeof(double));
-    for (row = 0; row < ARRAY_ROWS; ++row) {
-        for (col = 0; col < ARRAY_COLS; ++col) {
-            if (row == col) {
-                Q[(row*ARRAY_COLS) + col] = 1.0;
-            }
-        }
-    }
-
-#if 1
-    // Sign correct
-    // Less ops
-    // Could be MT?
-    // TODO(dmi): No need for matrix multiplication -> use vector mul on the concerned rows (all other rows are unchanged)
-    while ((laxOffDiag = SymmMaxOffDiag(matrixIn, &row, &col)) > EIGEN_EPSILON) {
-        ++ops;
-        JacobiAngles(matrixIn, row, col, &gc_, &gs_);
-        GivensRotMatrix((double*)G, row, col, gc_, gs_);
-        //matrixPrint((const double*)G, "G");
-        // Q = QG
-		matrixMulAB(Q, ARRAY_ROWS, ARRAY_COLS, (const double*)G, ARRAY_ROWS, ARRAY_COLS, matrixOut0);
-        matrixCopy(Q, matrixOut0);
-        //matrixPrint((const double*)Q, "Q=QG");
-        // AG
-		matrixMulAB(matrixIn, ARRAY_ROWS, ARRAY_COLS, (const double*)G, ARRAY_ROWS, ARRAY_COLS, matrixOut0); // Input and Output must be different
-        //matrixPrint((const double*)matrixOut0, "AG");
-        // G*
-        // matrixSquareTranspose((double*)matrixGivens, (double*)matrixGivens);
-        GivensRotMatrix((double*)G, col, row, gc_, gs_); // FIXME: change GivensRotMatrix to output G and G*
-        //matrixPrint((const double*)G, "G*");
-        // G*AG
-		matrixMulAB((const double*)G, ARRAY_ROWS, ARRAY_COLS, matrixOut0, ARRAY_ROWS, ARRAY_COLS, D);
-        //matrixPrint((const double*)D, "D=G*AG");
-        matrixIn = D;
-    }
-#else
-    // Easier to MT
-    // More ops
-    // Sign not correct
-    const double *in_;
-    while (!is_diag) {
-        is_diag = true;
-        for (row = 0; row < ARRAY_ROWS; ++row) {
-            for (col = 0; col < row; ++col) {
-                if (::abs(matrixIn[(row * ARRAY_COLS) + col]) > EIGEN_EPSILON) {
-                    ++ops;
-                    is_diag = false;
-                    JacobiAngles(matrixIn, row, col, &gc_, &gs_);
-                    GivensRotMatrix((double*)G, row, col, gc_, gs_);
-                    //matrixPrint((const double*)G, "G");
-                    // Q = QG
-					matrixMulAB(Q, ARRAY_ROWS, ARRAY_COLS, (const double*)G, ARRAY_ROWS, ARRAY_COLS, matrixOut0);
-                    matrixCopy(Q, matrixOut0);
-                    //matrixPrint((const double*)Q, "Q=QG");
-                    // AG
-					matrixMulAB(matrixIn, ARRAY_ROWS, ARRAY_COLS, (const double*)G, ARRAY_ROWS, ARRAY_COLS, matrixOut0); // Input and Output must be different
-                    //matrixPrint((const double*)matrixOut0, "AG");
-                    // G*
-                    // matrixSquareTranspose((double*)matrixGivens, (double*)matrixGivens);
-                    GivensRotMatrix((double*)G, col, row, gc_, gs_); // FIXME: change GivensRotMatrix to output G and G*
-                    //matrixPrint((const double*)G, "G*");
-                    // G*AG
-					matrixMulAB((const double*)G, ARRAY_ROWS, ARRAY_COLS, matrixOut0, ARRAY_ROWS, ARRAY_COLS, D);
-                    //matrixPrint((const double*)D, "D=G*AG");
-                    matrixIn = D;
-                }
-            }
-        }
-        if (!is_diag) {
-            ++sweeps;
-        }
-    }
-#endif
-
-    matrixPrint((const double*)D, "D = Eigenvalues");
-    matrixPrint((const double*)Q, "Q = Eigenvectors");
-
-    COMPV_DEBUG_INFO("Number of sweeps: %d, ops: %d", sweeps, ops);
-}
 
 static void Homography(double(*H)[3][3])
 {
@@ -408,7 +199,38 @@ static void Homography(double(*H)[3][3])
     // homogeneous equation: Mh = 0
 
     // Build M (FIXME: z' = 1 in compv as we'll append it to Xprime)
-    double M[2 * kNumPoints][9], Mt[9][2 * kNumPoints];
+    double M[2 * kNumPoints][9];
+	CompVPtrArray(double) S_;
+#if 0
+	double S[9][9];
+	for (int j = 0, k = 0; k < kNumPoints; j += 2, ++k) {
+		M[j][0] = -Xn_[0][k]; // -x
+		M[j][1] = -Xn_[1][k]; // -y
+		M[j][2] = -1; // -1
+		M[j][3] = 0;
+		M[j][4] = 0;
+		M[j][5] = 0;
+		M[j][6] = (XnPrime_[0][k] * Xn_[0][k]) / XnPrime_[2][k]; // (x'x)/z'
+		M[j][7] = (XnPrime_[0][k] * Xn_[1][k]) / XnPrime_[2][k]; // (x'y)/z'
+		M[j][8] = XnPrime_[0][k] / XnPrime_[2][k]; // x'/z'
+
+		M[j + 1][0] = 0;
+		M[j + 1][1] = 0;
+		M[j + 1][2] = 0;
+		M[j + 1][3] = -Xn_[0][k]; // -x
+		M[j + 1][4] = -Xn_[1][k]; // -y
+		M[j + 1][5] = -1; // -1
+		M[j + 1][6] = (XnPrime_[1][k] * Xn_[0][k]) / XnPrime_[2][k]; // (y'x)/z'
+		M[j + 1][7] = (XnPrime_[1][k] * Xn_[1][k]) / XnPrime_[2][k]; // (y'y)/z'
+		M[j + 1][8] = XnPrime_[1][k] / XnPrime_[2][k]; // y'/z'
+	}
+	CompVPtrArray(double) M_;
+	
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&M_, &M[0][0], 2 * kNumPoints, 9, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVMatrix<double>::mulABt(M_, M_, S_)); // R = MM*
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::unwrap(&S[0][0], S_, 1));
+#else
+	double Mt[9][2 * kNumPoints];
     for (int j = 0, k = 0; k < kNumPoints; j += 2, ++k) {
         M[j][0] = -Xn_[0][k]; // -x
         M[j][1] = -Xn_[1][k]; // -y
@@ -416,9 +238,9 @@ static void Homography(double(*H)[3][3])
         M[j][3] = 0;
         M[j][4] = 0;
         M[j][5] = 0;
-        M[j][6] = (XnPrime_[0][k] * Xn_[0][k]) / XnPrime_[2][k]; // (x'x)/z'
-        M[j][7] = (XnPrime_[0][k] * Xn_[1][k]) / XnPrime_[2][k]; // (x'y)/z'
-        M[j][8] = XnPrime_[0][k] / XnPrime_[2][k]; // x'/z'
+        M[j][6] = (XnPrime_[0][k] * Xn_[0][k]) / 1; // (x'x)/z'
+        M[j][7] = (XnPrime_[0][k] * Xn_[1][k]) / 1; // (x'y)/z'
+        M[j][8] = XnPrime_[0][k] / 1; // x'/z'
 
         M[j + 1][0] = 0;
         M[j + 1][1] = 0;
@@ -426,9 +248,9 @@ static void Homography(double(*H)[3][3])
         M[j + 1][3] = -Xn_[0][k]; // -x
         M[j + 1][4] = -Xn_[1][k]; // -y
         M[j + 1][5] = -1; // -1
-        M[j + 1][6] = (XnPrime_[1][k] * Xn_[0][k]) / XnPrime_[2][k]; // (y'x)/z'
-        M[j + 1][7] = (XnPrime_[1][k] * Xn_[1][k]) / XnPrime_[2][k]; // (y'y)/z'
-        M[j + 1][8] = XnPrime_[1][k] / XnPrime_[2][k]; // y'/z'
+        M[j + 1][6] = (XnPrime_[1][k] * Xn_[0][k]) / 1; // (y'x)/z'
+        M[j + 1][7] = (XnPrime_[1][k] * Xn_[1][k]) / 1; // (y'y)/z'
+        M[j + 1][8] = XnPrime_[1][k] / 1; // y'/z'
     }
 
     // M* = transpose(M)
@@ -438,16 +260,9 @@ static void Homography(double(*H)[3][3])
         }
     }
 
-    // S = M*M (M transpose M)
+    // S = M*M
     double S[9][9] = { 0 }; // Symetric matrix
     matrixMulAB((const double*)Mt, 9, 2 * kNumPoints, (const double*)M, 2 * kNumPoints, 9, (double*)S);
-    /*for (int i = 0; i < 9; ++i) { // m1 rows
-    	for (int j = 0; j < 9; ++j) { // m2 cols
-    		for (int k = 0; k < 2 * kNumPoints; ++k) { // m2 rows
-    			S[i][j] += Mt[i][k] * M[k][j];
-    		}
-    	}
-    }*/
     // Check symmetry
     for (int i = 0; i < 9; ++i) {
         for (int j = 0; j < 9; ++j) {
@@ -455,12 +270,19 @@ static void Homography(double(*H)[3][3])
         }
     }
     //matrixPrint((const double*)S, "S = M*M");
+#endif
 
     // Eigenvalues and eigenvectors
     double D[ARRAY_ROWS][ARRAY_COLS];
     double Q[ARRAY_ROWS][ARRAY_COLS];
 
-    JacobiIter((const double*)S, (double*)D, (double*)Q);
+	//CompVPtrArray(double) S_;
+	CompVPtrArray(double) D_;
+	CompVPtrArray(double) Q_;
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&S_, &S[0][0], ARRAY_ROWS, ARRAY_COLS, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVEigen<double>::findSymm(S_, D_, Q_, false));
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::unwrap(&D[0][0], D_, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::unwrap(&Q[0][0], Q_, 1));
 
     // h
     double h[3][3];

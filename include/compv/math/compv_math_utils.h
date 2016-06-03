@@ -41,6 +41,28 @@ public:
     static COMPV_INLINE compv_scalar_t clip2(compv_scalar_t max, compv_scalar_t val) {
         return clip2Func(max, val);
     }
+
+
+	template <typename T>
+	static COMPV_INLINE T hypot(T x, T y) {
+#if 1
+		return hypot(x, y);
+#elif 0
+		// https://en.wikipedia.org/wiki/Hypot
+		// Without overflow / underflow
+		T t;
+		x = COMPV_MATH_ABS(x);
+		y = COMPV_MATH_ABS(y);
+		t = COMPV_MATH_MIN(x, y);
+		x = COMPV_MATH_MAX(x, y);
+		t = t / x;
+		return x * COMPV_MATH_SQRT(1 + t*t);
+#endif
+	}
+	template <typename T>
+	static COMPV_INLINE T hypot_naive(T x, T y) {
+		return COMPV_MATH_SQRT(x*x + y*y);
+	}
 private:
     static bool s_Initialized;
     static compv_scalar_t(*maxValFunc)(compv_scalar_t a, compv_scalar_t b);
