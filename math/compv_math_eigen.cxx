@@ -55,6 +55,20 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 	// If matrix A is symmetric then, mulAG(c, s) = mulGA(c, -s)
 
 	// TODO(dmi): For multithreading, change 'maxAbsOffDiag_symm' to add max rows and use it as guard
+
+	// TODO(dmi): Instead of returning Q, return Q*, Q* = G*Q*
+
+	// TODO(dmi): Add JacobiAngles_Left() function to be used in mulGA() only
+
+	// TODO(dmi): Change D = G*DG
+	// DG = (DG)** = (G*D*)*
+	// -> G*DG = G*(G*D*)*
+	// D is symmetric -> G*DG = G*(G*D)* = mulGA(transpose(mulGA(D))
+
+	// TODO(dmi): add mulGA9x9, transposeA9x9
+	// Homography and Fundamental matrices are 3x3 which means we will be frequently working with 9x9 eigenvectors/eigenvalues matrices (Q* and D)
+
+	// TODO(dmi): Moments, replace vpextrd r32, xmm, 0 with vmod r32, xmm
 	
 	do {
 		CompVEigen<T>::jacobiAngles(D, row, col, &gcos_, &gsin_);
@@ -62,7 +76,7 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 		CompVMatrix<T>::mulAG(Q, row, col, gcos_, gsin_); // Not thread-safe
 		// D = DG
 		CompVMatrix<T>::mulAG(D, row, col, gcos_, gsin_); // Not thread-safe
-		// D = G*D = G*AG
+		// D = G*D = G*DG
 		CompVMatrix<T>::mulGA(D, row, col, gcos_, -gsin_);
 	} while (++ops < maxops &&  COMPV_ERROR_CODE_IS_OK(err_ = CompVMatrix<T>::maxAbsOffDiag_symm(D, &row, &col, &maxOffDiag)) && maxOffDiag > COMPV_MATH_EIGEN_EPSILON);
 
@@ -77,8 +91,7 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 template <class T>
 void CompVEigen<T>::jacobiAngles(const CompVPtrArray(T) &S, size_t ith, size_t jth, T *c, T *s)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Do not need to compute cos(x) and sin(x)
-#if 1
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Do not need to compute cos(x) and sin(x), use jacobiAngles_Left instead
 	// From https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
 	T Sii = *S->ptr(ith, ith);
 	T Sjj = *S->ptr(jth, jth);
@@ -92,34 +105,6 @@ void CompVEigen<T>::jacobiAngles(const CompVPtrArray(T) &S, size_t ith, size_t j
 		*c = (T)::cos(theta);
 		*s = (T)::sin(theta);
 	}
-#elif 0
-	// FIXME
-	double d = (S[(ith * ARRAY_COLS) + ith] - S[(jth * ARRAY_COLS) + jth]) / (2.0*S[(ith * ARRAY_COLS) + jth]);
-	double t = (d >= 0 ? +1 : -1) / (::abs(d) + ::sqrt(d*d + 1));
-	*c = 1.0 / ::sqrt(t*t + 1);
-	*s = t**c;
-#else
-	// FIXME: remove
-	// FIXME: use this but find where comes the sign error
-	double Sij = S[(ith * ARRAY_COLS) + jth];
-	if (Sij == 0.0) {
-		*c = 1.0;
-		*s = 0.0;
-	}
-	else {
-		// rho = (Aii - Ajj) / 2Aij
-		double rho = (S[(ith * ARRAY_COLS) + ith] - S[(jth * ARRAY_COLS) + jth]) / (2.0 * Sij);
-		double t;
-		if (rho >= 0) {
-			t = 1.0 / (rho + sqrt(1 + (rho * rho)));
-		}
-		else {
-			t = -1 / (-rho + sqrt(1 + (rho * rho)));
-		}
-		*c = 1.0 / sqrt(1 + (t * t));
-		*s = t **c;
-	}
-#endif
 }
 
 COMPV_NAMESPACE_END()

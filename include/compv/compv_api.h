@@ -23,6 +23,8 @@
 #include "compv/compv_mem.h"
 #include "compv/compv_obj.h"
 
+#include "compv/calib/compv_calib_homography.h"
+
 #include "compv/features/compv_feature.h"
 
 #include "compv/matchers/compv_matcher.h"

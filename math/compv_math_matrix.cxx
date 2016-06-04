@@ -114,25 +114,18 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulAG(CompVPtrArray(T) &A, size_t ith, size_t j
 {
 	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols() || ith <= jth || ith > A->cols() || jth > A->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	// This function isn't optimized and cannot be multithreaded, you should use mulGA() instead
-	// mul(A, G) = R
-	// -> mul(G*, A*) = R*
-	// If A is symmetric then R is symetric
-	// G* = swap(sign(s))
-	// -> mul(G*, A) = R = mul(A, G)
-	// -> mulGA(c, s-) = mulAG(c, s)	
+	// This function isn't optimized and cannot be multithreaded, you should use mulGA() instead.
+	// Not SIMD-friendly
+	// Not Cache-friendly
+	// AG = (G*A*)*, if A is symmetric then = (G*A)*
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
 
 	// When Givens matrix is multiplied to the right of a matrix then, all rows change
-	// -> this function cannot be multi-threaded
+	// -> this function cannot be multi-threaded and isn't (SIMD/Cache)-friendly
 
 	size_t rows_ = A->rows();
 	T* a;
 	T ai, aj;
-	// T Gij = s;
-	// T Gjj = c;
-	// T Gii = c;
-	// T Gji = -s;
 	for (size_t row_ = 0; row_ < rows_; ++row_) {
 		a = const_cast<T*>(A->ptr(row_));
 		ai = a[ith] * c - a[jth] * s;
@@ -207,6 +200,8 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 {
 	COMPV_CHECK_EXP_RETURN(!S || S->rows() != S->cols() || !S->rows() || !row || !col || !max, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();  // SIMD
+
+	// TODO(dmi): SIMD, compute lower triangle abs
 
 	*row = *col = 0;
 	*max = 0;

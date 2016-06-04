@@ -121,6 +121,31 @@ static void Homography(double(*H)[3][3])
     double XPrime_[3/*x',y',z'*/][kNumPoints]; // (X', Y', Z')
     matrixMulAB(&H_[0][0], 3, 3, &X_[0][0], 3, kNumPoints, &XPrime_[0][0]);
 
+#if 1
+	CompVPtrArray(double) src_;
+	CompVPtrArray(double) dst_;
+	CompVPtrArray(double) h_;
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&src_, &X_[0][0], 3, kNumPoints, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&dst_, &XPrime_[0][0], 3, kNumPoints, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVHomography<double>::find(src_, dst_, h_));
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::unwrap(&(*H)[0][0], h_, 1));
+
+	printf("H(expected) = ");
+	for (int j = 0; j < 3; ++j) {
+		for (int i = 0; i < 3; ++i) {
+			printf("%e, ", H_[j][i]);
+		}
+		printf("\n");
+	}
+	printf("H(computed) = ");
+	for (int j = 0; j < 3; ++j) {
+		for (int i = 0; i < 3; ++i) {
+			printf("%e, ", (*H)[j][i]);
+		}
+		printf("\n");
+	}
+#else
+
     // Hartley and Zisserman
     // Normalization, translation to have coordinate system centered at the centroid
     // https://en.wikipedia.org/wiki/Centroid#Of_a_finite_set_of_points
@@ -305,7 +330,7 @@ static void Homography(double(*H)[3][3])
     h[2][1] = Q[7][ARRAY_COLS - 1];
     h[2][2] = Q[8][ARRAY_COLS - 1]; // Should be #1 (up to a to scalar 1/Z)
 
-    // HnAn = Bn, where Hn, An and Bn are normalized points
+    // HnAn = Bn, where Hn, An=T1A and Bn=T2B are normalized points
     // ->HnT1A = T2B
     // ->T2*HnT1A = T2*T2B = B
     // ->(T2*HnT1)A = B -> H'A = B whith H' = T2*HnT1 our final homography matrix
@@ -372,6 +397,7 @@ static void Homography(double(*H)[3][3])
     if (Mh[0]) {
         int kaka = 0;
     }
+#endif
 }
 
 bool TestEigen()
