@@ -71,9 +71,9 @@ static void matrixMulAB(const double *A, int a_rows, int a_cols, const double *B
 	CompVPtrArray(double) A_;
 	CompVPtrArray(double) B_;
 	CompVPtrArray(double) R_;
-	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&A_, A, a_rows, a_cols, COMPV_SIMD_ALIGNV_DEFAULT, 1));
-	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&B_, B, b_rows, b_cols, COMPV_SIMD_ALIGNV_DEFAULT, 1));
-	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&R_, R, a_rows, b_cols, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(A_, A, a_rows, a_cols, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(B_, B, b_rows, b_cols, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(R_, R, a_rows, b_cols, COMPV_SIMD_ALIGNV_DEFAULT, 1));
 	COMPV_CHECK_CODE_ASSERT(CompVMatrix<double>::mulAB(A_, B_, R_));
 	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::unwrap(const_cast<double*>(R), R_, 1));
 #else
@@ -112,21 +112,23 @@ static void Homography(double(*H)[3][3])
         { 0, 0, 1 },
     };
     // x
-    const double X_[3/*x,y,z*/][kNumPoints] = { // (X, Y, Z)
-        { 2, 3, 5, 8 },
-        { 5, 2, 9, 4 },
-        { 1, 1, 1, 1 },
-    };
+	const double X_[3/*x,y,z*/][kNumPoints] =
+	{
+		{ 0.500000e+000, 1.000000e+000, -2.000000e+000, 3.000000e+000 },
+		{ 0.000000e+000, 1.200000e+000, 1.600000e+000, 3.600000e+000 },
+		{ 1.000000e+000, 1.000000e+000, 1.000000e+000, 1.000000e+000 },
+	};
     // x' = Hx
     double XPrime_[3/*x',y',z'*/][kNumPoints]; // (X', Y', Z')
     matrixMulAB(&H_[0][0], 3, 3, &X_[0][0], 3, kNumPoints, &XPrime_[0][0]);
+
 
 #if 1
 	CompVPtrArray(double) src_;
 	CompVPtrArray(double) dst_;
 	CompVPtrArray(double) h_;
-	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&src_, &X_[0][0], 3, kNumPoints, COMPV_SIMD_ALIGNV_DEFAULT, 1));
-	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&dst_, &XPrime_[0][0], 3, kNumPoints, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(src_, &X_[0][0], 3, kNumPoints, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(dst_, &XPrime_[0][0], 3, kNumPoints, COMPV_SIMD_ALIGNV_DEFAULT, 1));
 	COMPV_CHECK_CODE_ASSERT(CompVHomography<double>::find(src_, dst_, h_));
 	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::unwrap(&(*H)[0][0], h_, 1));
 
@@ -259,7 +261,7 @@ static void Homography(double(*H)[3][3])
 	}
 	CompVPtrArray(double) M_;
 	
-	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&M_, &M[0][0], 2 * kNumPoints, 9, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(M_, &M[0][0], 2 * kNumPoints, 9, COMPV_SIMD_ALIGNV_DEFAULT, 1));
 	COMPV_CHECK_CODE_ASSERT(CompVMatrix<double>::mulAtA(M_, S_)); // R = M*M
 	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::unwrap(&S[0][0], S_, 1));
 #else
@@ -312,7 +314,7 @@ static void Homography(double(*H)[3][3])
 	//CompVPtrArray(double) S_;
 	CompVPtrArray(double) D_;
 	CompVPtrArray(double) Q_;
-	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(&S_, &S[0][0], ARRAY_ROWS, ARRAY_COLS, COMPV_SIMD_ALIGNV_DEFAULT, 1));
+	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::wrap(S_, &S[0][0], ARRAY_ROWS, ARRAY_COLS, COMPV_SIMD_ALIGNV_DEFAULT, 1));
 	COMPV_CHECK_CODE_ASSERT(CompVEigen<double>::findSymm(S_, D_, Q_, false));
 	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::unwrap(&D[0][0], D_, 1));
 	COMPV_CHECK_CODE_ASSERT(CompVArray<double>::unwrap(&Q[0][0], Q_, 1));
@@ -438,7 +440,7 @@ bool TestEigen()
     double H[3][3];
     Homography(&H);
     const std::string md5 = CompVMd5::compute2((const void*)H, sizeof(H));
-    COMPV_ASSERT(md5 == "59509e047ea66dfa529848ec59878ece");
+    COMPV_ASSERT(md5 == "a6e962f8aa556853a591883546a4fc7e");
     COMPV_DEBUG_INFO("TestEigen() ...done");
 #endif
 
