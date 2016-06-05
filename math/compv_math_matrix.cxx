@@ -22,37 +22,11 @@ template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::mulAB(const CompVPtrArray(T) &A, const CompVPtrArray(T) &B, CompVPtrArray(T) &R)
 {
 	COMPV_CHECK_EXP_RETURN(!A || !B || !A->rows() || !A->cols() || B->rows() != A->cols() || !B->cols() || R == A || R == B, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-#if 0 // TODO(dmi): check speed
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Should use mulABt, mulAB_square, mulAB_3x3, mulAB_2x2, SIMD accelerated....
-	size_t i, j, k, a_rows = A->rows(), b_rows = B->rows(), b_cols = B->cols();
-	const T *a0;
-	T *r0;
-	T sum;
-
-	// Create R if not already done
-	if (!R || R->rows() != A->rows() || R->cols() != B->cols()) {
-		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&R, A->rows(), B->cols()));
-	}
-
-	for (i = 0; i < a_rows; ++i) {
-		a0 = A->ptr(i);
-		r0 = const_cast<T*>(R->ptr(i));
-		for (j = 0; j < b_cols; ++j) {
-			sum = 0;
-			for (k = 0; k < b_rows; ++k) {
-				sum += a0[k] * *B->ptr(k, j);
-			}
-			r0[j] = sum;
-		}
-	}
-	return COMPV_ERROR_CODE_S_OK;
-#else
 	// AB = AB**= A(B*)* = AC*, with C = B*
 	CompVPtrArray(T) C;
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::transpose(B, C));
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(A, C, R));
 	return COMPV_ERROR_CODE_S_OK;
-#endif
 }
 
 // R must be <> A
@@ -118,6 +92,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulAG(CompVPtrArray(T) &A, size_t ith, size_t j
 	// This function isn't optimized and cannot be multithreaded, you should use mulGA() instead.
 	// Not SIMD-friendly
 	// Not Cache-friendly
+	// Not MT-friendly
 	// AG = (G*A*)*, if A is symmetric then = (G*A)*
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
 
@@ -127,7 +102,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulAG(CompVPtrArray(T) &A, size_t ith, size_t j
 	size_t rows_ = A->rows();
 	T* a;
 	T ai, aj;
-	for (size_t row_ = 0; row_ < rows_; ++row_) {
+	for (size_t row_ = 0; row_ < rows_; ++row_) { // we don't need all these muls
 		a = const_cast<T*>(A->ptr(row_));
 		ai = a[ith] * c - a[jth] * s;
 		aj = a[ith] * s + a[jth] * c;
@@ -147,22 +122,16 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulAG(CompVPtrArray(T) &A, size_t ith, size_t j
 template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::mulGA(CompVPtrArray(T) &A, size_t ith, size_t jth, T c, T s)
 {
-	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols() || ith <= jth || ith > A->cols() || jth > A->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols() /*|| ith <= jth*/ || ith >= A->rows() || jth >= A->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
 
 	// When Givens matrix is multiplied to the left of a matrix then, only ith and jth rows change
-	// -> this function could be multi-threaded
+	// -> this function could be multi-threaded	
 
-	// T Gij = s;
-	// T Gjj = c;
-	// T Gii = c;
-	// T Gji = -s;
-
-	size_t cols_ = A->cols();
 	T* ri_ = const_cast<T*>(A->ptr(ith));
 	T* rj_ = const_cast<T*>(A->ptr(jth));
 	T ai, aj;
-
+	size_t cols_ = A->cols();
 	for (size_t col_ = 0; col_ < cols_; ++col_) {
 		ai = ri_[col_] * c + s* rj_[col_];
 		aj = ri_[col_] * -s + c* rj_[col_];
@@ -184,13 +153,17 @@ COMPV_ERROR_CODE CompVMatrix<T>::transpose(const CompVPtrArray(T) &A, CompVPtrAr
 	if (!R || R->rows() != A->cols() || R->cols() != A->rows()) {
 		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&R, A->cols(), A->rows()));
 	}
-	const T* a;
+	const T* a_;
+	T *r0_ = const_cast<T*>(R->ptr(0, 0));
+	uint8_t* r1_;
+	size_t rstride_ = R->strideInBytes();
 	size_t rows_ = A->rows();
 	size_t cols_ = A->cols();
-	for (size_t row_ = 0; row_ < rows_; ++row_) {
-		a = A->ptr(row_);
-		for (size_t col_ = 0; col_ < cols_; ++col_) {
-			*const_cast<T*>(R->ptr(col_, row_)) = a[col_];
+	for (size_t row_ = 0; row_ < rows_; ++row_, ++r0_) {
+		a_ = A->ptr(row_);
+		r1_ = reinterpret_cast<uint8_t*>(r0_);
+		for (size_t col_ = 0; col_ < cols_; ++col_, r1_ += rstride_) {
+			*reinterpret_cast<T*>(r1_) = a_[col_];
 		}
 	}
 	return COMPV_ERROR_CODE_S_OK;
@@ -296,6 +269,7 @@ template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::rank(const CompVPtrArray(T) &A, int &r, bool rowspace /*= true*/, size_t maxRowsOrCols /*= 0*/)
 {
 	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // remove maxRowsOrCols
 	CompVPtrArray(T) S_; // temp symmetric array
 	if (rowspace) {
 		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAtA(A, S_)); // Row-space: S = A*A
@@ -326,6 +300,7 @@ template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::isColinear(const CompVPtrArray(T) &A, bool &colinear, bool rowspace /*= false*/, size_t maxRowsOrCols /*= 0*/)
 {
 	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // remove maxRowsOrCols
 	if (rowspace) {
 		if (A->rows() < 3) {
 			colinear = true;

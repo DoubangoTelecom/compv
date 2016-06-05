@@ -46,7 +46,7 @@ public:
 	template <typename T>
 	static COMPV_INLINE T hypot(T x, T y) {
 #if 1
-		return hypot(x, y);
+		return (T)::hypot(x, y);
 #elif 0
 		// https://en.wikipedia.org/wiki/Hypot
 		// Without overflow / underflow
@@ -61,7 +61,7 @@ public:
 	}
 	template <typename T>
 	static COMPV_INLINE T hypot_naive(T x, T y) {
-		return COMPV_MATH_SQRT(x*x + y*y);
+		return (T)COMPV_MATH_SQRT(x*x + y*y);
 	}
 private:
     static bool s_Initialized;

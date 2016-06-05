@@ -103,15 +103,6 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	row_ = const_cast<T*>(T2_->ptr(1)), row_[0] = 0, row_[1] = dstScale_, row_[2] = -dstTY_ * dstScale_;
 	row_ = const_cast<T*>(T2_->ptr(2)), row_[0] = 0, row_[1] = 0, row_[2] = 1;
 	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulAB(T2_, dst, dstn_));
-	// Inverse operation for T2
-	// -> b = as+t'
-	// -> a = b(1/s)-t'(1/s) = b(1/s)+t'' whith t'' = -t'/s = -(ts)/s = -t
-	// { 1 / s, 0, +tx },
-	// { 0, 1 / s, +ty },
-	// { 0, 0, 1 }
-	row_ = const_cast<T*>(T2_->ptr(0)), row_[0] = 1 / dstScale_, row_[1] = 0, row_[2] = dstTX_;
-	row_ = const_cast<T*>(T2_->ptr(1)), row_[0] = 0, row_[1] = 1 / dstScale_, row_[2] = dstTY_;
-	row_ = const_cast<T*>(T2_->ptr(2)), row_[0] = 0, row_[1] = 0, row_[2] = 1;
 
 	// Build homogeneous equation: Mh = 0
 	// Each correpondance adds 2 rows
@@ -176,6 +167,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	T* hn0_ = const_cast<T*>(H->ptr(0));
 	T* hn1_ = const_cast<T*>(H->ptr(1));
 	T* hn2_ = const_cast<T*>(H->ptr(2));
+	// Hn = H normalized
 	hn0_[0] = q_[0];
 	hn0_[1] = q_[1];
 	hn0_[2] = q_[2];
@@ -186,14 +178,30 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	hn2_[1] = q_[7];
 	hn2_[2] = q_[8];
 
+	// Transpose for T1
+	row_ = const_cast<T*>(T1_->ptr(0)), row_[0] = srcScale_, row_[1] = 0, row_[2] = 0;
+	row_ = const_cast<T*>(T1_->ptr(1)), row_[0] = 0, row_[1] = srcScale_, row_[2] = 0;
+	row_ = const_cast<T*>(T1_->ptr(2)), row_[0] = -srcTX_ * srcScale_, row_[1] = -srcTY_ * srcScale_, row_[2] = 1;
+
+	// Inverse operation for T2
+	// -> b = as+t'
+	// -> a = b(1/s)-t'(1/s) = b(1/s)+t'' whith t'' = -t'/s = -(ts)/s = -t
+	// { 1 / s, 0, +tx },
+	// { 0, 1 / s, +ty },
+	// { 0, 0, 1 }
+	row_ = const_cast<T*>(T2_->ptr(0)), row_[0] = 1 / dstScale_, row_[1] = 0, row_[2] = dstTX_;
+	row_ = const_cast<T*>(T2_->ptr(1)), row_[0] = 0, row_[1] = 1 / dstScale_, row_[2] = dstTY_;
+	row_ = const_cast<T*>(T2_->ptr(2)), row_[0] = 0, row_[1] = 0, row_[2] = 1;
+
 	// De-normalize
 	// HnAn = Bn, where Hn, An=T1A and Bn=T2B are normalized points
 	// ->HnT1A = T2B
 	// ->T2^HnT1A = T2^T2B = B
 	// ->(T2^HnT1)A = B -> H'A = B whith H' = T2^HnT1 our final homography matrix
-	// TODO(dmi): add mul3x3(a, b, c)
-	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulAB(T2_, H, M_)); // T2^Hn
-	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulAB(M_, T1_, H)); // T2^HnT1
+	// T2^HnT1 = T2^(T1*Hn*)* = T2^(T3Hn*)* with T3 = T1*
+	// TODO(dmi): add mulABt_3x3(a, b)
+	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulABt(T1_, H, M_));
+	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulABt(T2_, M_, H));
 
 	// Scale H to make it homogeneous (Z = 1)
 	T h22_ = (T)1.0 / hn2_[2];

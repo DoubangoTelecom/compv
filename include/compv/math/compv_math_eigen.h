@@ -24,6 +24,9 @@ public:
 
 private:
 	static void jacobiAngles(const CompVPtrArray(T) &S, size_t ith, size_t jth, T *c, T *s);
+	static void jacobiAngles_Left(const CompVPtrArray(T) &S, size_t ith, size_t jth, T *c, T *s);
+	static void extract2Cols(const CompVPtrArray(T) &A, size_t a_col0, size_t a_col1, CompVPtrArray(T) &R);
+	static void insert2Cols(const CompVPtrArray(T) &A, CompVPtrArray(T) &R, size_t r_col0, size_t r_col1);
 };
 
 COMPV_NAMESPACE_END()
