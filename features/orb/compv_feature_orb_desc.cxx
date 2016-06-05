@@ -258,7 +258,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
     const int nFeatures = (int)interestPoints->size();
     const int nFeaturesBits = m_nPatchBits;
     const int nFeaturesBytes = nFeaturesBits >> 3;
-    COMPV_CHECK_CODE_RETURN(err_ = CompVArray<uint8_t>::newObj(&_descriptions, nFeatures, nFeaturesBytes)); // do not align nFeaturesBytes(32) which is already good for AVX, SSE and NEON
+    COMPV_CHECK_CODE_RETURN(err_ = CompVArray<uint8_t>::newObjStrideless(&_descriptions, nFeatures, nFeaturesBytes)); // do not align nFeaturesBytes(32) which is already good for AVX, SSE and NEON
     _descriptionsPtr = (uint8_t*)_descriptions->ptr();
     if (nFeatures == 0) {
         return COMPV_ERROR_CODE_S_OK;

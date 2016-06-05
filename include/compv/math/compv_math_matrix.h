@@ -27,6 +27,10 @@ public:
 	static COMPV_ERROR_CODE identity(CompVPtrArray(T) &I, size_t rows, size_t cols);
 	static COMPV_ERROR_CODE zero(CompVPtrArray(T) &Z, size_t rows, size_t cols);
 	static COMPV_ERROR_CODE copy(CompVPtrArray(T) &A, const CompVPtrArray(T) &B);
+	static COMPV_ERROR_CODE rank(const CompVPtrArray(T) &A, int &r, bool rowspace = true, size_t maxRowsOrCols = 0);
+	static COMPV_ERROR_CODE isColinear(const CompVPtrArray(T) &A, bool &colinear, bool rowspace = false, size_t maxRowsOrCols = 0);
+	static COMPV_ERROR_CODE isColinear2D(const CompVPtrArray(T) &A, bool &colinear, bool rowspace = false);
+	static COMPV_ERROR_CODE isColinear3D(const CompVPtrArray(T) &A, bool &colinear, bool rowspace = false);
 };
 
 COMPV_NAMESPACE_END()

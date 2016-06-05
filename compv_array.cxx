@@ -103,18 +103,18 @@ COMPV_ERROR_CODE CompVArray<T>::zero_rows()
 
 // Copy mem to array
 template<class T>
-COMPV_ERROR_CODE CompVArray<T>::wrap(CompVPtr<CompVArray<T>* >* array, const T* mem, size_t rows, size_t cols, size_t arrayAlign /*= 1*/, size_t memAlign /*= 1*/)
+COMPV_ERROR_CODE CompVArray<T>::wrap(CompVPtr<CompVArray<T>* >& array, const T* mem, size_t rows, size_t cols, size_t arrayAlign /*= COMPV_SIMD_ALIGNV_DEFAULT*/, size_t memAlign /*= 1*/)
 {
-	COMPV_CHECK_EXP_RETURN(!array || !rows || !cols || !memAlign || !arrayAlign || !mem, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(array, rows, cols, arrayAlign));
+	COMPV_CHECK_EXP_RETURN(!rows || !cols || !memAlign || !arrayAlign || !mem, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(&array, rows, cols, arrayAlign));
 	if (arrayAlign == memAlign) {
-		CompVMem::copy((void*)(*array)->ptr(), mem, (*array)->strideInBytes() * rows);
+		CompVMem::copy((void*)(*array)->ptr(), mem, array->strideInBytes() * rows);
 	}
 	else {
 		const uint8_t* src = (const uint8_t*)mem;
-		uint8_t* dst = (uint8_t*)(*array)->ptr();
-		size_t rowInBytes = (*array)->rowInBytes();
-		size_t dstStrideInBytes = (*array)->strideInBytes();
+		uint8_t* dst = (uint8_t*)array->ptr();
+		size_t rowInBytes = array->rowInBytes();
+		size_t dstStrideInBytes = array->strideInBytes();
 		size_t srcStrideInBytes = CompVMem::alignForward(rowInBytes, (int)memAlign);
 		for (size_t j = 0; j < rows; ++j) {
 			CompVMem::copy(dst, src, rowInBytes);
@@ -149,9 +149,8 @@ COMPV_ERROR_CODE CompVArray<T>::unwrap(T* mem, const CompVPtr<CompVArray<T>* >& 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// alignv must be 1 for backward compatibility and to create compact array by default
 template<class T>
-COMPV_ERROR_CODE CompVArray<T>::newObj(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols, size_t alignv /*= 1*/)
+COMPV_ERROR_CODE CompVArray<T>::newObj(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols, size_t alignv)
 {
     COMPV_CHECK_EXP_RETURN(!array || !rows || !cols || !alignv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     if (!*array) {
@@ -160,6 +159,18 @@ COMPV_ERROR_CODE CompVArray<T>::newObj(CompVPtr<CompVArray<T>* >* array, size_t 
     }
     COMPV_CHECK_CODE_RETURN((*array)->alloc(rows, cols, alignv));
     return COMPV_ERROR_CODE_S_OK;
+}
+
+template<class T>
+COMPV_ERROR_CODE CompVArray<T>::newObjStrideless(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols)
+{
+	return CompVArray<T>::newObj(array, rows, cols, 1);
+}
+
+template<class T>
+COMPV_ERROR_CODE CompVArray<T>::newObjAligned(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols)
+{
+	return CompVArray<T>::newObj(array, rows, cols, COMPV_SIMD_ALIGNV_DEFAULT);
 }
 
 COMPV_NAMESPACE_END()

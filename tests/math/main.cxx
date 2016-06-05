@@ -33,32 +33,32 @@ int main()
     COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagNone));
 
 #if TEST_MAX
-    extern bool TestMax();
-    COMPV_ASSERT(TestMax());
+	extern COMPV_ERROR_CODE TestMax();
+	COMPV_CHECK_CODE_ASSERT(TestMax());
 #endif
 #if TEST_MIN
-    extern bool TestMin();
+	extern COMPV_ERROR_CODE TestMin();
     COMPV_ASSERT(TestMin());
 #endif
 #if TEST_CLIP3
-    extern bool TestClip3();
-    COMPV_ASSERT(TestClip3());
+	extern COMPV_ERROR_CODE TestClip3();
+	COMPV_CHECK_CODE_ASSERT(TestClip3());
 #endif
 #if TEST_CLIP2
-    extern bool TestClip2();
-    COMPV_ASSERT(TestClip2());
+	extern COMPV_ERROR_CODE TestClip2();
+	COMPV_CHECK_CODE_ASSERT(TestClip2());
 #endif
 #if TEST_SINCOS_P32
-    extern bool TestSinCosP32(bool thetaWithinZeroPiTimes2 = false);
-    COMPV_ASSERT(TestSinCosP32(false));
+	extern COMPV_ERROR_CODE TestSinCosP32(bool thetaWithinZeroPiTimes2 = false);
+	COMPV_CHECK_CODE_ASSERT(TestSinCosP32(false));
 #endif
 #if TEST_SINCOS_2PI_P32
-    extern bool TestSinCosP32(bool thetaWithinZeroPiTimes2 = false);
-    COMPV_ASSERT(TestSinCosP32(true));
+	extern COMPV_ERROR_CODE TestSinCosP32(bool thetaWithinZeroPiTimes2 = false);
+	COMPV_CHECK_CODE_ASSERT(TestSinCosP32(true));
 #endif
 #if TEST_EIGEN
-    extern bool TestEigen();
-    COMPV_ASSERT(TestEigen());
+	extern COMPV_ERROR_CODE TestEigen();
+    COMPV_CHECK_CODE_ASSERT(TestEigen());
 #endif
 
     // deInit the engine

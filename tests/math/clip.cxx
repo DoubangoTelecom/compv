@@ -4,7 +4,7 @@ using namespace compv;
 
 #define LOOP_COUNT	100000000
 
-bool TestMax()
+COMPV_ERROR_CODE TestMax()
 {
     compv_scalar_t x, y, z;
     uint64_t timeStart, timeEnd;
@@ -19,10 +19,10 @@ bool TestMax()
     timeEnd = CompVTime::getNowMills();
     COMPV_DEBUG_INFO("Elapsed time (TestMax) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-    return true;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
-bool TestMin()
+COMPV_ERROR_CODE TestMin()
 {
     compv_scalar_t x, y, z;
     uint64_t timeStart, timeEnd;
@@ -37,10 +37,10 @@ bool TestMin()
     timeEnd = CompVTime::getNowMills();
     COMPV_DEBUG_INFO("Elapsed time (TestMin) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-    return true;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
-bool TestClip3()
+COMPV_ERROR_CODE TestClip3()
 {
     compv_scalar_t x, y, z;
     uint64_t timeStart, timeEnd;
@@ -61,10 +61,10 @@ bool TestClip3()
     timeEnd = CompVTime::getNowMills();
     COMPV_DEBUG_INFO("Elapsed time (TestClip3) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-    return true;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
-bool TestClip2()
+COMPV_ERROR_CODE TestClip2()
 {
     compv_scalar_t x, y, z;
     uint64_t timeStart, timeEnd;
@@ -79,5 +79,5 @@ bool TestClip2()
     timeEnd = CompVTime::getNowMills();
     COMPV_DEBUG_INFO("Elapsed time (TestClip2) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-    return true;
+	return COMPV_ERROR_CODE_S_OK;
 }

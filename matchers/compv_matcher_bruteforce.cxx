@@ -92,7 +92,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVPtr<CompVArray<uint8
     size_t matchesCols = queryRows_;
 
     // realloc() matchers
-    COMPV_CHECK_CODE_RETURN(err_ = CompVArray<CompVDMatch>::newObj(matches, matchesRows, matchesCols));
+    COMPV_CHECK_CODE_RETURN(err_ = CompVArray<CompVDMatch>::newObj(matches, matchesRows, matchesCols, 1));
 
     int32_t threadsCount = 1;
     CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
@@ -145,7 +145,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(size_t queryIdxStart, size_t 
 
     // alloc() hamming distances
     CompVPtr<CompVArray<int32_t>* > hammingDistancesArray;
-    COMPV_CHECK_CODE_RETURN(err_ = CompVArray<int32_t>::newObj(&hammingDistancesArray, 1, count));
+    COMPV_CHECK_CODE_RETURN(err_ = CompVArray<int32_t>::newObj(&hammingDistancesArray, 1, count, 1));
     int32_t *hammingDistances_ = const_cast<int32_t*>(hammingDistancesArray->ptr());
 
     const uint8_t *queryDescriptions_ = queryDescriptions->ptr(queryIdxStart, 0), *trainDescriptions_ = trainDescriptions->ptr(0, 0);

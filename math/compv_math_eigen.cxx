@@ -8,6 +8,7 @@
 Functions to compute Eigenvalues and Eigenvectors
 */
 #include "compv/math/compv_math_eigen.h"
+#include "compv/math/compv_math.h"
 #include "compv/math/compv_math_matrix.h"
 
 #if !defined(COMPV_MATH_EIGEN_EPSILON)
@@ -16,16 +17,19 @@ Functions to compute Eigenvalues and Eigenvectors
 
 COMPV_NAMESPACE_BEGIN()
 
+template class CompVEigen<int32_t >;
 template class CompVEigen<double >;
 template class CompVEigen<float >;
-
+template class CompVEigen<uint16_t >;
+template class CompVEigen<int16_t >;
+template class CompVEigen<uint8_t >;
 
 // S: an (n x n) symmetric matrix
 // D: a (n x n) diagonal matrix containing the eigenvalues
-// Q: an (n x n) matrix containing the eigenvectors
+// Qt: an (n x n) matrix containing the eigenvectors (rows)
 // sort: Whether to sort the eigenvalues and eigenvectors (from higher to lower)
 template <class T>
-COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArray(T) &D, CompVPtrArray(T) &Q, bool sort /* = true*/)
+COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArray(T) &D, CompVPtrArray(T) &Qt, bool sort /* = true*/, bool forceZerosInD /*= false*/)
 {
 	COMPV_CHECK_EXP_RETURN(!S || !S->rows() || S->rows() != S->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
@@ -41,8 +45,8 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 	size_t ops = 0, maxops = S->rows() * S->cols() * 30;
 	T maxOffDiag;
 
-	// Q = I
-	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::identity(Q, S->rows(), S->cols()));
+	// Qt = I
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::identity(Qt, S->rows(), S->cols()));
 	// D = S
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::copy(D, S));
 	// Check is S is already diagonal or not
@@ -56,8 +60,6 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 
 	// TODO(dmi): For multithreading, change 'maxAbsOffDiag_symm' to add max rows and use it as guard
 
-	// TODO(dmi): Instead of returning Q, return Q*, Q* = G*Q*
-
 	// TODO(dmi): Add JacobiAngles_Left() function to be used in mulGA() only
 
 	// TODO(dmi): Change D = G*DG
@@ -70,21 +72,49 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 
 	// TODO(dmi): Moments, replace vpextrd r32, xmm, 0 with vmod r32, xmm
 	
+	// Instead of returning Q = QG, return Q*, Q* = G*Q*
+
 	do {
 		CompVEigen<T>::jacobiAngles(D, row, col, &gcos_, &gsin_);
-		// Q = QG
-		CompVMatrix<T>::mulAG(Q, row, col, gcos_, gsin_); // Not thread-safe
+		// Qt = G*Qt
+		CompVMatrix<T>::mulGA(Qt, row, col, gcos_, -gsin_); // Thread-safe
 		// D = DG
-		CompVMatrix<T>::mulAG(D, row, col, gcos_, gsin_); // Not thread-safe
+		CompVMatrix<T>::mulAG(D, row, col, gcos_, gsin_); //!\\ NOT thread-safe
 		// D = G*D = G*DG
-		CompVMatrix<T>::mulGA(D, row, col, gcos_, -gsin_);
+		CompVMatrix<T>::mulGA(D, row, col, gcos_, -gsin_); // Thread-safe
 	} while (++ops < maxops &&  COMPV_ERROR_CODE_IS_OK(err_ = CompVMatrix<T>::maxAbsOffDiag_symm(D, &row, &col, &maxOffDiag)) && maxOffDiag > COMPV_MATH_EIGEN_EPSILON);
+
+	// Off-diagonal values in D contains epsilons which is close to zero but not equal to zero
+	if (forceZerosInD) {
+		T* d;
+		for (row = 0; row < D->rows(); ++row) {
+			d = const_cast<T*>(D->ptr(row));
+			for (col = 0; col < row; ++col) {
+				d[col] = 0;
+			}
+			for (col = row + 1; col < D->cols(); ++col) {
+				d[col] = 0;
+			}
+		}
+	}
 
 	if (ops >= maxops) {
 		COMPV_DEBUG_ERROR("ops(%d) >= maxops(%d)", ops, maxops);
 	}
 
 	return err_;
+}
+
+template <class T>
+T CompVEigen<T>::epsilon()
+{
+	return (T)COMPV_MATH_EIGEN_EPSILON;
+}
+
+template <class T>
+bool CompVEigen<T>::isCloseToZero(T a)
+{
+	return (COMPV_MATH_ABS(a) <= CompVEigen<T>::epsilon());
 }
 
 // Compute cos('c') and sin ('s')
@@ -101,9 +131,9 @@ void CompVEigen<T>::jacobiAngles(const CompVPtrArray(T) &S, size_t ith, size_t j
 		*s = (T)0.70710678118654757; // :: cos(PI/4)
 	}
 	else {
-		T theta = (T)0.5 * (T)::atan2(2.0 * *S->ptr(ith, jth), Sjj - Sii);
-		*c = (T)::cos(theta);
-		*s = (T)::sin(theta);
+		T theta = (T)0.5 * (T)COMPV_MATH_ATAN2(2.0 * *S->ptr(ith, jth), Sjj - Sii);
+		*c = (T)COMPV_MATH_COS(theta);
+		*s = (T)COMPV_MATH_SIN(theta);
 	}
 }
 

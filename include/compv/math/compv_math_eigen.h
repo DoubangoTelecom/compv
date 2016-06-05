@@ -18,7 +18,9 @@ template<class T>
 class COMPV_API CompVEigen
 {
 public:
-	static COMPV_ERROR_CODE findSymm(const CompVPtrArray(T) &S, CompVPtrArray(T) &D, CompVPtrArray(T) &Q, bool sort = true);
+	static COMPV_ERROR_CODE findSymm(const CompVPtrArray(T) &S, CompVPtrArray(T) &D, CompVPtrArray(T) &Qt, bool sort = true, bool forceZerosInD = false);
+	static T epsilon();
+	static bool isCloseToZero(T a);
 
 private:
 	static void jacobiAngles(const CompVPtrArray(T) &S, size_t ith, size_t jth, T *c, T *s);

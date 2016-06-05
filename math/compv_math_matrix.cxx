@@ -5,6 +5,7 @@
 * WebSite: http://compv.org
 */
 #include "compv/math/compv_math_matrix.h"
+#include "compv/math/compv_math_eigen.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -30,7 +31,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulAB(const CompVPtrArray(T) &A, const CompVPtr
 
 	// Create R if not already done
 	if (!R || R->rows() != A->rows() || R->cols() != B->cols()) {
-		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(&R, A->rows(), B->cols(), COMPV_SIMD_ALIGNV_DEFAULT));
+		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&R, A->rows(), B->cols()));
 	}
 
 	for (i = 0; i < a_rows; ++i) {
@@ -83,7 +84,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulABt(const CompVPtrArray(T) &A, const CompVPt
 
 	// Create R if not already done
 	if (!R || R->rows() != A->rows() || R->cols() != B->rows()) {
-		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(&R, A->rows(), B->rows(), COMPV_SIMD_ALIGNV_DEFAULT));
+		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&R, A->rows(), B->rows()));
 	}
 
 	for (i = 0; i < a_rows; ++i) {
@@ -181,7 +182,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::transpose(const CompVPtrArray(T) &A, CompVPtrAr
 
 	// Create A if not already done
 	if (!R || R->rows() != A->cols() || R->cols() != A->rows()) {
-		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(&R, A->cols(), A->rows(), COMPV_SIMD_ALIGNV_DEFAULT));
+		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&R, A->cols(), A->rows()));
 	}
 	const T* a;
 	size_t rows_ = A->rows();
@@ -254,7 +255,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::identity(CompVPtrArray(T) &I, size_t rows, size
 	COMPV_CHECK_EXP_RETURN(!rows || !cols, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	if (!I || I->rows() != rows || I->cols() != cols) {
-		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(&I, rows, cols, COMPV_SIMD_ALIGNV_DEFAULT));
+		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&I, rows, cols));
 	}
 	COMPV_CHECK_CODE_RETURN(I->zero_rows());
 	uint8_t* i0_ = (uint8_t*)I->ptr();
@@ -273,7 +274,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::zero(CompVPtrArray(T) &Z, size_t rows, size_t c
 	COMPV_CHECK_EXP_RETURN(!rows || !cols, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	if (!Z || Z->rows() != rows || Z->cols() != cols) {
-		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(&Z, rows, cols, COMPV_SIMD_ALIGNV_DEFAULT));
+		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&Z, rows, cols));
 	}
 	COMPV_CHECK_CODE_RETURN(Z->zero_rows());
 	return COMPV_ERROR_CODE_S_OK;
@@ -285,10 +286,74 @@ COMPV_ERROR_CODE CompVMatrix<T>::copy(CompVPtrArray(T) &A, const CompVPtrArray(T
 	COMPV_CHECK_EXP_RETURN(!B || !B->rows() || !B->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	if (!A || A->rows() != B->rows() || A->cols() != B->cols()) {
-		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(&A, B->rows(), B->cols(), COMPV_SIMD_ALIGNV_DEFAULT));
+		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&A, B->rows(), B->cols()));
 	}
 	COMPV_CHECK_CODE_RETURN(CompVArray<T>::unwrap(const_cast<T*>(A->ptr()), B, A->alignV()));
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::rank(const CompVPtrArray(T) &A, int &r, bool rowspace /*= true*/, size_t maxRowsOrCols /*= 0*/)
+{
+	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVPtrArray(T) S_; // temp symmetric array
+	if (rowspace) {
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAtA(A, S_)); // Row-space: S = A*A
+		if (maxRowsOrCols <= 0) {
+			maxRowsOrCols = A->rows();
+		}
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(A, A, S_)); // Column-space: S = AA*
+		if (maxRowsOrCols <= 0) {
+			maxRowsOrCols = A->cols();
+		}
+	}
+	CompVPtrArray(T) D_;
+	CompVPtrArray(T) Qt_;
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // D must be sorted
+	COMPV_CHECK_CODE_RETURN(CompVEigen<T>::findSymm(S_, D_, Qt_, false)); // FIXME: must be sorted
+	r = 0;
+	for (size_t row_ = 0; row_ < maxRowsOrCols; ++row_) {
+		if (!CompVEigen<T>::isCloseToZero(*D_->ptr(row_, row_))) {
+			++r;
+		}
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::isColinear(const CompVPtrArray(T) &A, bool &colinear, bool rowspace /*= false*/, size_t maxRowsOrCols /*= 0*/)
+{
+	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	if (rowspace) {
+		if (A->rows() < 3) {
+			colinear = true;
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
+	else {
+		if (A->cols() < 3) {
+			colinear = true;
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
+	int rank;
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::rank(A, rank, rowspace, maxRowsOrCols));
+	colinear = (rank == 1);
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::isColinear2D(const CompVPtrArray(T) &A, bool &colinear, bool rowspace /*= false*/)
+{
+	return CompVMatrix<T>::isColinear(A, colinear, rowspace, 2);
+}
+
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::isColinear3D(const CompVPtrArray(T) &A, bool &colinear, bool rowspace /*= false*/)
+{
+	return CompVMatrix<T>::isColinear(A, colinear, rowspace, 3);
 }
 
 COMPV_NAMESPACE_END()

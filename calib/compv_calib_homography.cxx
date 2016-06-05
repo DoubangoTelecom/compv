@@ -13,8 +13,8 @@ COMPV_NAMESPACE_BEGIN()
 template class CompVHomography<double >;
 template class CompVHomography<float >;
 
-// src: 3xN homogeneous array (X, Y, Z=1). N-cols with N >= 4.
-// dst: 3xN homogeneous array (X, Y, Z=1). N-cols with N >= 4.
+// src: 3xN homogeneous array (X, Y, Z=1). N-cols with N >= 4. The N points must not be colinear.
+// dst: 3xN homogeneous array (X, Y, Z=1). N-cols with N >= 4. The N points must not be colinear.
 // H: (3 x 3) array. Will be created if NULL.
 // src and dst must have the same number of columns.
 template<class T>
@@ -26,7 +26,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	const CompVArray<T >* src_ = *src;
 	const CompVArray<T >* dst_ = *dst;
-	const T *srcX_, *srcY_, *dstX_, *dstY_;
+	const T *srcX_, *srcY_, *srcZ_, *dstX_, *dstY_, *dstZ_;
 	T *row_;
 	size_t numPoints_ = src_->cols(), numPointsTimes2_ = numPoints_ * 2;
 	size_t i;
@@ -38,8 +38,15 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 
 	srcX_ = src_->ptr(0);
 	srcY_ = src_->ptr(1);
+	srcZ_ = dst_->ptr(2);
 	dstX_ = dst_->ptr(0);
 	dstY_ = dst_->ptr(1);
+	dstZ_ = dst_->ptr(2);
+
+	// Make sure coordinates are homegeneous 2D
+	for (i = 0; i < numPoints_; ++i) {
+		COMPV_CHECK_EXP_RETURN(srcZ_[i] != 1 || dstZ_[i] != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	}
 
 	// Resolving Ha = b equation (4-point algorithm)
 	// -> Ah = 0 (homogeneous equation)
@@ -71,8 +78,8 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	}
 	srcMag_ /= numPoints_;
 	dstMag_ /= numPoints_;
-	T srcScale_ = (T)(COMPV_MATH_SQRT_2 / srcMag_);
-	T dstScale_ = (T)(COMPV_MATH_SQRT_2 / dstMag_);
+	T srcScale_ = srcMag_ ? (T)(COMPV_MATH_SQRT_2 / srcMag_) : (T)COMPV_MATH_SQRT_2;
+	T dstScale_ = dstMag_ ? (T)(COMPV_MATH_SQRT_2 / dstMag_) : (T)COMPV_MATH_SQRT_2;
 
 	// Translation(t) to centroid then scaling(s) operation:
 	// -> b = (a+t)s = as+ts = as+t' with t'= ts
@@ -82,7 +89,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	//	0		0		1
 	CompVPtrArray(T) T1_;
 	CompVPtrArray(T) srcn_;
-	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<T>::newObj(&T1_, 3, 3, COMPV_SIMD_ALIGNV_DEFAULT));
+	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<T>::newObjAligned(&T1_, 3, 3));
 	// Normalize src_: srcn_ = T.src_
 	row_ = const_cast<T*>(T1_->ptr(0)), row_[0] = srcScale_, row_[1] = 0, row_[2] = -srcTX_ * srcScale_;
 	row_ = const_cast<T*>(T1_->ptr(1)), row_[0] = 0, row_[1] = srcScale_, row_[2] = -srcTY_ * srcScale_;
@@ -91,7 +98,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	// Normilize dst_: dstn_ = T.dst_
 	CompVPtrArray(T) T2_;
 	CompVPtrArray(T) dstn_;
-	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<T>::newObj(&T2_, 3, 3, COMPV_SIMD_ALIGNV_DEFAULT));
+	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<T>::newObjAligned(&T2_, 3, 3));
 	row_ = const_cast<T*>(T2_->ptr(0)), row_[0] = dstScale_, row_[1] = 0, row_[2] = -dstTX_ * dstScale_;
 	row_ = const_cast<T*>(T2_->ptr(1)), row_[0] = 0, row_[1] = dstScale_, row_[2] = -dstTY_ * dstScale_;
 	row_ = const_cast<T*>(T2_->ptr(2)), row_[0] = 0, row_[1] = 0, row_[2] = 1;
@@ -109,7 +116,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	// Build homogeneous equation: Mh = 0
 	// Each correpondance adds 2 rows
 	CompVPtrArray(T) M_; // temp array
-	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<T>::newObj(&M_, numPointsTimes2_, 9, COMPV_SIMD_ALIGNV_DEFAULT));
+	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<T>::newObjAligned(&M_, numPointsTimes2_, 9));
 	const T *srcnx_, *srcny_, *dstnx_, *dstny_;
 	T* m_;
 	srcnx_ = srcn_->ptr(0);
@@ -149,8 +156,8 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 
 	// Find eigenvalues and eigenvectors (no sorting)
 	CompVPtrArray(T) D_; // 9x9 diagonal matrix containing the eigenvalues
-	CompVPtrArray(T) Q_; // 9x9 matrix containing the eigenvectors (cols)
-	COMPV_CHECK_CODE_RETURN(err_ = CompVEigen<T>::findSymm(S_, D_, Q_, false));
+	CompVPtrArray(T) Qt_; // 9x9 matrix containing the eigenvectors (rows)
+	COMPV_CHECK_CODE_RETURN(err_ = CompVEigen<T>::findSymm(S_, D_, Qt_, false));
 	// Find index of the smallest eigenvalue (this code is required because findSymm() is called without sorting for speed-up)
 	int minIndex_ = 8;
 	T minEigenValue_ = *D_->ptr(8);
@@ -163,20 +170,21 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	
 	// Set homography values (normalized) using the egeinvector at "minIndex_"
 	if (!H || H->rows() != 3 || H->cols() != 3) {
-		COMPV_CHECK_CODE_RETURN(err_ = CompVArray<T>::newObj(&H, 3, 3, COMPV_SIMD_ALIGNV_DEFAULT));
+		COMPV_CHECK_CODE_RETURN(err_ = CompVArray<T>::newObjAligned(&H, 3, 3));
 	}
+	const T* q_ = Qt_->ptr(minIndex_);
 	T* hn0_ = const_cast<T*>(H->ptr(0));
 	T* hn1_ = const_cast<T*>(H->ptr(1));
 	T* hn2_ = const_cast<T*>(H->ptr(2));
-	hn0_[0] = *Q_->ptr(0, minIndex_);
-	hn0_[1] = *Q_->ptr(1, minIndex_);
-	hn0_[2] = *Q_->ptr(2, minIndex_);
-	hn1_[0] = *Q_->ptr(3, minIndex_);
-	hn1_[1] = *Q_->ptr(4, minIndex_);
-	hn1_[2] = *Q_->ptr(5, minIndex_);
-	hn2_[0] = *Q_->ptr(6, minIndex_);
-	hn2_[1] = *Q_->ptr(7, minIndex_);
-	hn2_[2] = *Q_->ptr(8, minIndex_);
+	hn0_[0] = q_[0];
+	hn0_[1] = q_[1];
+	hn0_[2] = q_[2];
+	hn1_[0] = q_[3];
+	hn1_[1] = q_[4];
+	hn1_[2] = q_[5];
+	hn2_[0] = q_[6];
+	hn2_[1] = q_[7];
+	hn2_[2] = q_[8];
 
 	// De-normalize
 	// HnAn = Bn, where Hn, An=T1A and Bn=T2B are normalized points

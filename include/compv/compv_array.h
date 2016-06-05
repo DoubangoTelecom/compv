@@ -51,9 +51,11 @@ public:
     COMPV_INLINE bool isEmpty()const {
         return !m_nCols || !m_nRows;
     };
-	static COMPV_ERROR_CODE wrap(CompVPtr<CompVArray<T>* >* array, const T* mem, size_t rows, size_t cols, size_t arrayAlign = 1, size_t memAlign = 1);
+	static COMPV_ERROR_CODE wrap(CompVPtr<CompVArray<T>* >& array, const T* mem, size_t rows, size_t cols, size_t arrayAlign = COMPV_SIMD_ALIGNV_DEFAULT, size_t memAlign = 1);
 	static COMPV_ERROR_CODE unwrap(T* mem, const CompVPtr<CompVArray<T>* >& array, size_t memAlign = 1);
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols, size_t alignv = 1);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols, size_t alignv);
+	static COMPV_ERROR_CODE newObjStrideless(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols);
+	static COMPV_ERROR_CODE newObjAligned(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols);
 
 private:
     COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)

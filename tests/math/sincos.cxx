@@ -14,7 +14,7 @@ static void sincos_System(const float* inRad, float* outSin, float* outCos, comp
     }
 }
 
-bool TestSinCosP32(bool thetaWithinZeroPiTimes2 = false)
+COMPV_ERROR_CODE TestSinCosP32(bool thetaWithinZeroPiTimes2 = false)
 {
     uint64_t timeStart, timeEnd;
     float *inRad = NULL, *outSin = NULL, *outCos = NULL;
@@ -78,5 +78,5 @@ bail:
     CompVMem::free((void**)&outSin);
     CompVMem::free((void**)&outCos);
 
-    return COMPV_ERROR_CODE_IS_OK(err_);
+    return err_;
 }
