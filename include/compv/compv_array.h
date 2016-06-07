@@ -24,7 +24,6 @@ public:
     virtual COMPV_INLINE const char* getObjectId() {
         return "CompVArray";
     };
-    COMPV_ERROR_CODE alloc(size_t rows, size_t cols, size_t alignv = 1);
 	COMPV_ERROR_CODE zero_all();
 	COMPV_ERROR_CODE zero_rows();
     COMPV_INLINE const T* ptr(size_t row = 0, size_t col = 0)const {
@@ -51,11 +50,17 @@ public:
     COMPV_INLINE bool isEmpty()const {
         return !m_nCols || !m_nRows;
     };
-	static COMPV_ERROR_CODE wrap(CompVPtr<CompVArray<T>* >& array, const T* mem, size_t rows, size_t cols, size_t arrayAlign = COMPV_SIMD_ALIGNV_DEFAULT, size_t memAlign = 1);
-	static COMPV_ERROR_CODE unwrap(T* mem, const CompVPtr<CompVArray<T>* >& array, size_t memAlign = 1);
+
+	COMPV_ERROR_CODE shrink(CompVPtr<CompVArray<T>* >& array, size_t newRows, size_t newCols);
+
+	static COMPV_ERROR_CODE copy(CompVPtr<CompVArray<T>* >& array, const T* mem, size_t rows, size_t cols, size_t arrayAlign = COMPV_SIMD_ALIGNV_DEFAULT, size_t memAlign = 1);
+	static COMPV_ERROR_CODE copy(T* mem, const CompVPtr<CompVArray<T>* >& array, size_t memAlign = 1);
     static COMPV_ERROR_CODE newObj(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols, size_t alignv);
 	static COMPV_ERROR_CODE newObjStrideless(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols);
 	static COMPV_ERROR_CODE newObjAligned(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols);
+
+protected:
+	COMPV_ERROR_CODE alloc(size_t rows, size_t cols, size_t alignv = 1);
 
 private:
     COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
@@ -67,6 +72,7 @@ private:
     size_t m_nAlignV;
     size_t m_nDataSize;
     size_t m_nDataCapacity;
+	bool m_bOweMem;
     COMPV_DISABLE_WARNINGS_END()
 };
 

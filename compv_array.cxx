@@ -21,6 +21,7 @@ template class CompVArray<uint8_t >;
 template<class T>
 CompVArray<T>::CompVArray()
     : m_pDataPtr(NULL)
+	, m_bOweMem(true)
     , m_nDataSize(0)
     , m_nDataCapacity(0)
     , m_nCols(0)
@@ -29,33 +30,38 @@ CompVArray<T>::CompVArray()
     , m_nStrideInBytes(0)
     , m_nAlignV(1)
 {
-
+	//!\ If you add new member, check shrink() to see if it needs update
 }
 
 template<class T>
 CompVArray<T>::~CompVArray()
 {
-    CompVMem::free((void**)&m_pDataPtr);
+	if (m_bOweMem) {
+		CompVMem::free((void**)&m_pDataPtr);
+	}
 }
 
 template<class T>
 COMPV_ERROR_CODE CompVArray<T>::alloc(size_t rows, size_t cols, size_t alignv /*= 1*/)
 {
-    COMPV_CHECK_EXP_RETURN(!rows || !cols || !alignv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_EXP_RETURN(!alignv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     size_t nElmtInBytes_ = sizeof(T);
     size_t strideInBytes_ = CompVMem::alignForward((cols * nElmtInBytes_), (int)alignv);
     size_t newDataSize_ = strideInBytes_ * rows;
     void* pMem_ = NULL;
-
+	
     if (newDataSize_ > m_nDataCapacity) {
         pMem_ = CompVMem::malloc(newDataSize_);
         COMPV_CHECK_EXP_BAIL(!pMem_, (err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
         m_nDataCapacity = newDataSize_;
 
         // realloc()
-        CompVMem::free((void**)&m_pDataPtr);
+		if (m_bOweMem) {
+			CompVMem::free((void**)&m_pDataPtr);
+		}
         m_pDataPtr = (T*)pMem_;
+		m_bOweMem = true;
     }
 
     // Do not update capacity
@@ -101,9 +107,25 @@ COMPV_ERROR_CODE CompVArray<T>::zero_rows()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// returned object doesn't have ownership on the internal memory and depends on its creator
+template<class T>
+COMPV_ERROR_CODE CompVArray<T>::shrink(CompVPtr<CompVArray<T>* >& array, size_t newRows, size_t newCols)
+{
+	COMPV_CHECK_EXP_RETURN(newCols > m_nCols || newRows > m_nRows, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(&array, 0, 0, m_nAlignV));
+	array->m_nCols = newCols;
+	array->m_nRows = newRows;
+	array->m_nElmtInBytes = m_nElmtInBytes;
+	array->m_nStrideInBytes = m_nStrideInBytes;
+	array->m_nAlignV = m_nAlignV;
+	array->m_bOweMem = false;
+	array->m_pDataPtr = m_pDataPtr;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 // Copy mem to array
 template<class T>
-COMPV_ERROR_CODE CompVArray<T>::wrap(CompVPtr<CompVArray<T>* >& array, const T* mem, size_t rows, size_t cols, size_t arrayAlign /*= COMPV_SIMD_ALIGNV_DEFAULT*/, size_t memAlign /*= 1*/)
+COMPV_ERROR_CODE CompVArray<T>::copy(CompVPtr<CompVArray<T>* >& array, const T* mem, size_t rows, size_t cols, size_t arrayAlign /*= COMPV_SIMD_ALIGNV_DEFAULT*/, size_t memAlign /*= 1*/)
 {
 	COMPV_CHECK_EXP_RETURN(!rows || !cols || !memAlign || !arrayAlign || !mem, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObj(&array, rows, cols, arrayAlign));
@@ -127,7 +149,7 @@ COMPV_ERROR_CODE CompVArray<T>::wrap(CompVPtr<CompVArray<T>* >& array, const T* 
 
 // Copy array to mem
 template<class T>
-COMPV_ERROR_CODE CompVArray<T>::unwrap(T* mem, const CompVPtr<CompVArray<T>* >& array, size_t memAlign = 1)
+COMPV_ERROR_CODE CompVArray<T>::copy(T* mem, const CompVPtr<CompVArray<T>* >& array, size_t memAlign = 1)
 {
 	COMPV_CHECK_EXP_RETURN(!array || !array->rows() || !array->cols() || !memAlign || !mem, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	if (memAlign == array->alignV()) {
@@ -152,12 +174,12 @@ COMPV_ERROR_CODE CompVArray<T>::unwrap(T* mem, const CompVPtr<CompVArray<T>* >& 
 template<class T>
 COMPV_ERROR_CODE CompVArray<T>::newObj(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols, size_t alignv)
 {
-    COMPV_CHECK_EXP_RETURN(!array || !rows || !cols || !alignv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_EXP_RETURN(!array || !alignv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     if (!*array) {
         *array = new CompVArray<T>();
         COMPV_CHECK_EXP_RETURN(!*array, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }
-    COMPV_CHECK_CODE_RETURN((*array)->alloc(rows, cols, alignv));
+	COMPV_CHECK_CODE_RETURN((*array)->alloc(rows, cols, alignv));
     return COMPV_ERROR_CODE_S_OK;
 }
 

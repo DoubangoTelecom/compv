@@ -36,7 +36,7 @@ COMPV_ERROR_CODE TestHomography()
 	TYPE *x, *y, *z;
 	COMPV_CHECK_CODE_RETURN(CompVArray<TYPE>::newObjAligned(&input, 3, NUM_POINTS));
 	COMPV_CHECK_CODE_RETURN(CompVArray<TYPE>::newObjAligned(&output, 3, NUM_POINTS));
-	COMPV_CHECK_CODE_RETURN(CompVArray<TYPE>::wrap(h, &H_expected[0][0], 3, 3));
+	COMPV_CHECK_CODE_RETURN(CompVArray<TYPE>::copy(h, &H_expected[0][0], 3, 3));
 
 	// Initialize input
 	// These points must not be colinear
@@ -48,6 +48,7 @@ COMPV_ERROR_CODE TestHomography()
 		y[i] = ((TYPE)(x[i] * 0.2)) + i + 0.7;
 		z[i] = 1; // required
 	}
+
 	// Check if input points are colinear
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<TYPE>::isColinear2D(input, colinear));
 	COMPV_ASSERT(!colinear);

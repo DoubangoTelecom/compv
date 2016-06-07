@@ -57,8 +57,14 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
         COMPV_DEBUG_ERROR("sizeof(compv_scalar_t)= #%lu not equal to sizeof(void*)= #%lu", sizeof(compv_scalar_t), sizeof(void*));
         return COMPV_ERROR_CODE_E_SYSTEM;
     }
+	// https://en.wikipedia.org/wiki/Single-precision_floating-point_format
 	if (sizeof(compv_float32_t) != 4) {
 		COMPV_DEBUG_ERROR("sizeof(compv_float32_t)= #%lu not equal to 4", sizeof(compv_float32_t));
+		return COMPV_ERROR_CODE_E_SYSTEM;
+	}
+	// https://en.wikipedia.org/wiki/Double-precision_floating-point_format
+	if (sizeof(compv_float64_t) != 8) {
+		COMPV_DEBUG_ERROR("sizeof(compv_float64_t)= #%lu not equal to 8", sizeof(compv_float64_t));
 		return COMPV_ERROR_CODE_E_SYSTEM;
 	}
 #endif

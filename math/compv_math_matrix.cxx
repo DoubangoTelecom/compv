@@ -261,34 +261,41 @@ COMPV_ERROR_CODE CompVMatrix<T>::copy(CompVPtrArray(T) &A, const CompVPtrArray(T
 	if (!A || A->rows() != B->rows() || A->cols() != B->cols()) {
 		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&A, B->rows(), B->cols()));
 	}
-	COMPV_CHECK_CODE_RETURN(CompVArray<T>::unwrap(const_cast<T*>(A->ptr()), B, A->alignV()));
+	COMPV_CHECK_CODE_RETURN(CompVArray<T>::copy(const_cast<T*>(A->ptr()), B, A->alignV()));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 template <class T>
-COMPV_ERROR_CODE CompVMatrix<T>::rank(const CompVPtrArray(T) &A, int &r, bool rowspace /*= true*/, size_t maxRowsOrCols /*= 0*/)
+COMPV_ERROR_CODE CompVMatrix<T>::rank(const CompVPtrArray(T) &A, int &r, bool rowspace /*= true*/, size_t maxRows /*= 0*/, size_t maxCols /*= 0*/)
 {
-	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // remove maxRowsOrCols
-	CompVPtrArray(T) S_; // temp symmetric array
-	if (rowspace) {
-		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAtA(A, S_)); // Row-space: S = A*A
-		if (maxRowsOrCols <= 0) {
-			maxRowsOrCols = A->rows();
+	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols() || A->rows() < maxRows || A->cols() < maxCols, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVPtrArray(T) B_;
+	if (maxRows != A->rows() || maxRows != A->cols()) {
+		if (maxRows == 0) {
+			maxRows = A->rows();
 		}
+		if (maxCols == 0) {
+			maxCols = A->cols();
+		}
+		COMPV_CHECK_CODE_RETURN(A->shrink(B_, maxRows, maxCols));
+	}
+
+	CompVPtrArray(T) S_;
+	if (rowspace) {
+		// Row-space: S = A*A
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAtA(B_ ? B_ : A, S_));
 	}
 	else {
-		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(A, A, S_)); // Column-space: S = AA*
-		if (maxRowsOrCols <= 0) {
-			maxRowsOrCols = A->cols();
-		}
+		// Column-space: S = AA*
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(B_ ? B_ : A, B_ ? B_ : A, S_));
 	}
 	CompVPtrArray(T) D_;
 	CompVPtrArray(T) Qt_;
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // D must be sorted
 	COMPV_CHECK_CODE_RETURN(CompVEigen<T>::findSymm(S_, D_, Qt_, false)); // FIXME: must be sorted
 	r = 0;
-	for (size_t row_ = 0; row_ < maxRowsOrCols; ++row_) {
+	size_t rows_ = D_->rows();
+	for (size_t row_ = 0; row_ < rows_; ++row_) {
 		if (!CompVEigen<T>::isCloseToZero(*D_->ptr(row_, row_))) {
 			++r;
 		}
@@ -297,10 +304,9 @@ COMPV_ERROR_CODE CompVMatrix<T>::rank(const CompVPtrArray(T) &A, int &r, bool ro
 }
 
 template <class T>
-COMPV_ERROR_CODE CompVMatrix<T>::isColinear(const CompVPtrArray(T) &A, bool &colinear, bool rowspace /*= false*/, size_t maxRowsOrCols /*= 0*/)
+COMPV_ERROR_CODE CompVMatrix<T>::isColinear(const CompVPtrArray(T) &A, bool &colinear, bool rowspace /*= false*/, size_t maxRows /*= 0*/, size_t maxCols /*= 0*/)
 {
 	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // remove maxRowsOrCols
 	if (rowspace) {
 		if (A->rows() < 3) {
 			colinear = true;
@@ -314,21 +320,27 @@ COMPV_ERROR_CODE CompVMatrix<T>::isColinear(const CompVPtrArray(T) &A, bool &col
 		}
 	}
 	int rank;
-	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::rank(A, rank, rowspace, maxRowsOrCols));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::rank(A, rank, rowspace, maxRows, maxCols));
 	colinear = (rank == 1);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// A is an array of MxN elements, each row represent a dimension (x or y) and each column represent a point.
 template <class T>
-COMPV_ERROR_CODE CompVMatrix<T>::isColinear2D(const CompVPtrArray(T) &A, bool &colinear, bool rowspace /*= false*/)
+COMPV_ERROR_CODE CompVMatrix<T>::isColinear2D(const CompVPtrArray(T) &A, bool &colinear)
 {
-	return CompVMatrix<T>::isColinear(A, colinear, rowspace, 2);
+	COMPV_CHECK_EXP_RETURN(!A || A->rows() < 2, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	// A could be 3xN array (if homogeneous) and this is why we force the number of rows to #2
+	return CompVMatrix<T>::isColinear(A, colinear, false/*column-space*/, 2, A->cols());
 }
 
+// A is an array of MxN elements, each row represent a dimension (x or y or z) and each column represent a point.
 template <class T>
-COMPV_ERROR_CODE CompVMatrix<T>::isColinear3D(const CompVPtrArray(T) &A, bool &colinear, bool rowspace /*= false*/)
+COMPV_ERROR_CODE CompVMatrix<T>::isColinear3D(const CompVPtrArray(T) &A, bool &colinear)
 {
-	return CompVMatrix<T>::isColinear(A, colinear, rowspace, 3);
+	COMPV_CHECK_EXP_RETURN(!A || A->rows() < 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	// A could be 4xN array (if homogeneous) and this is why we force the number of rows to #2
+	return CompVMatrix<T>::isColinear(A, colinear, false/*column-space*/, 3, A->cols());
 }
 
 COMPV_NAMESPACE_END()
