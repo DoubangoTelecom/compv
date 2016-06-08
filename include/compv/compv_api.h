@@ -32,7 +32,6 @@
 #include "compv/math/compv_math.h"
 #include "compv/math/compv_math_eigen.h"
 #include "compv/math/compv_math_matrix.h"
-#include "compv/math/compv_math_svd.h"
 
 #include "compv/image/compv_image.h"
 #include "compv/image/scale/compv_imagescale_pyramid.h"

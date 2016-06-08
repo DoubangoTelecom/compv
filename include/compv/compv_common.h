@@ -241,6 +241,12 @@ enum COMPV_SORT_TYPE {
     COMPV_SORT_TYPE_QUICK, /**< https://en.wikipedia.org/wiki/Quicksort */
 };
 
+
+enum COMPV_MODELEST_TYPE {
+	COMPV_MODELEST_TYPE_NONE,
+	COMPV_MODELEST_TYPE_RANSAC
+};
+
 enum {
     // These are per function-scope
     COMPV_TOKENIDX0,

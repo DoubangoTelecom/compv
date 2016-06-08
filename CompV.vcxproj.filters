@@ -390,14 +390,14 @@
     <ClInclude Include="include\compv\math\compv_math_eigen.h">
       <Filter>Header Files\math</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\math\compv_math_svd.h">
-      <Filter>Header Files\math</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\calib\compv_calib_homography.h">
       <Filter>Header Files\calib</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\math\compv_math_matrix.h">
       <Filter>Header Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\compv_ransac.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -599,14 +599,14 @@
     <ClCompile Include="math\compv_math_eigen.cxx">
       <Filter>Source Files\math</Filter>
     </ClCompile>
-    <ClCompile Include="math\compv_math_svd.cxx">
-      <Filter>Source Files\math</Filter>
-    </ClCompile>
     <ClCompile Include="calib\compv_calib_homography.cxx">
       <Filter>Source Files\calib</Filter>
     </ClCompile>
     <ClCompile Include="math\compv_math_matrix.cxx">
       <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_ransac.cxx">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

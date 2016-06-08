@@ -17,6 +17,7 @@ template class CompVArray<float >;
 template class CompVArray<uint16_t >;
 template class CompVArray<int16_t >;
 template class CompVArray<uint8_t >;
+template class CompVArray<size_t >;
 
 template<class T>
 CompVArray<T>::CompVArray()

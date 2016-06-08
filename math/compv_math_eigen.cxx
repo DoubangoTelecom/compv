@@ -27,10 +27,11 @@ template class CompVEigen<uint8_t >;
 
 // S: an (n x n) symmetric matrix
 // D: a (n x n) diagonal matrix containing the eigenvalues
-// Qt: an (n x n) matrix containing the eigenvectors (rows)
+// Q: an (n x n) matrix containing the eigenvectors (columns unless transposed)
+// rowVectors: true -> eigenvectors are rows, otherwise it's columns. True is faster.
 // sort: Whether to sort the eigenvalues and eigenvectors (from higher to lower)
 template <class T>
-COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArray(T) &D, CompVPtrArray(T) &Qt, bool sort /* = true*/, bool forceZerosInD /*= false*/)
+COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArray(T) &D, CompVPtrArray(T) &Q, bool sort /* = true*/, bool rowVectors /*= false*/, bool forceZerosInD /*= false*/)
 {
 	COMPV_CHECK_EXP_RETURN(!S || !S->rows() || S->rows() != S->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
@@ -45,17 +46,26 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 	bool is_diag = false;
 	size_t ops = 0, maxops = S->rows() * S->cols() * 30;
 	T maxOffDiag;
+	CompVPtrArray(T) Qt;
 
 	// Qt = I
-	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::identity(Qt, S->rows(), S->cols()));
+	if (rowVectors) {
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::identity(Q, S->rows(), S->cols()));
+		Qt = Q;
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::identity(Qt, S->rows(), S->cols()));
+	}
 	// D = S
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::copy(D, S));
 	// Check is S is already diagonal or not
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::maxAbsOffDiag_symm(S, &row, &col, &maxOffDiag));
+#if 0 // not true, only means that the lower triangle is 0
 	if (maxOffDiag < COMPV_MATH_EIGEN_EPSILON) { // S already diagonal -> D = S, Q = I
-		COMPV_DEBUG_INFO("Symmetric matrix already diagonal -> do nothing");
+	 	COMPV_DEBUG_INFO("Symmetric matrix already diagonal -> do nothing");
 		return COMPV_ERROR_CODE_S_OK;
 	}
+#endif
 
 	// If matrix A is symmetric then, mulAG(c, s) = mulGA(c, -s)
 
@@ -89,16 +99,24 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 
 	// Off-diagonal values in D contains epsilons which is close to zero but not equal to zero
 	if (forceZerosInD) {
-		T* d;
-		for (row = 0; row < D->rows(); ++row) {
-			d = const_cast<T*>(D->ptr(row));
-			for (col = 0; col < row; ++col) {
-				d[col] = 0;
-			}
-			for (col = row + 1; col < D->cols(); ++col) {
-				d[col] = 0;
+		T* row;
+		for (size_t j = 0; j < D->rows(); ++j) {
+			row = const_cast<T*>(D->ptr(j));
+			for (size_t i = 0; i < D->cols(); ++i) {
+				if (i == j) {
+					if (CompVEigen<T>::isCloseToZero(row[i])) {
+						row[i] = 0;
+					}
+				}
+				else {
+					row[i] = 0;
+				}
 			}
 		}
+	}
+
+	if (!rowVectors) {
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::transpose(Qt, Q));
 	}
 
 	if (ops >= maxops) {

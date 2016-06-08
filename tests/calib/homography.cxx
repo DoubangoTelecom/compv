@@ -67,7 +67,7 @@ COMPV_ERROR_CODE TestHomography()
 
 	timeStart = CompVTime::getNowMills();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVHomography<TYPE>::find(input, output, h));
+		COMPV_CHECK_CODE_RETURN(CompVHomography<TYPE>::find(input, output, h, COMPV_MODELEST_TYPE_NONE)); // NONE to make sure we'll always have the same result (ransac is nondeterministic)
 	}
 	timeEnd = CompVTime::getNowMills();
 

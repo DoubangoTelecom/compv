@@ -6,6 +6,7 @@
 */
 #include "compv/math/compv_math_matrix.h"
 #include "compv/math/compv_math_eigen.h"
+#include "compv/math/compv_math.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -196,6 +197,55 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 	}
 	*max = r0_;
 
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Vt is really transposed
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::svd(const CompVPtrArray(T) &A, CompVPtrArray(T) &U, CompVPtrArray(T) &D, CompVPtrArray(T) &V, bool sort /*= true*/)
+{
+	COMPV_CHECK_EXP_RETURN(!A || !A->cols() || !A->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVPtrArray(T) S_;
+
+	// D and V (columnspace)
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAtA(A, S_)); // A*A
+	COMPV_CHECK_CODE_RETURN(CompVEigen<T>::findSymm(S_, D, V, sort, false, true));
+	// U (rowspace)
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(A, A, S_)); // AA*
+	COMPV_CHECK_CODE_RETURN(CompVEigen<T>::findSymm(S_, D, U, sort, false, true));
+
+	// singular values = sqrt(eigenvalues)
+	T* row;
+	for (size_t j = 0; j < D->rows(); ++j) {
+		row = const_cast<T*>(D->ptr(j));
+		row[j] = (T)COMPV_MATH_SQRT(row[j]);
+	}
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// https://en.wikipedia.org/wiki/Moore%E2%80%93Penrose_pseudoinverse
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::pseudoinverse(const CompVPtrArray(T) &A, CompVPtrArray(T) &R)
+{
+	COMPV_CHECK_EXP_RETURN(!A || !A->cols() || !A->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // SVD not correct but not this function
+	CompVPtrArray(T) U, D, V;
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::svd(A, U, D, V, false));
+
+	// compute inverse (D), D already cleaned with zeros
+	T* row;
+	for (size_t j = 0; j < D->rows(); ++j) {
+		row = const_cast<T*>(D->ptr(j));
+		if (row[j] != 0) {
+			row[j] = (T)(1 / row[j]);
+		}
+	}
+	CompVPtrArray(T) B;
+	// A^ = VD^U*
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(V, D, B));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(B, U, R));
+	
 	return COMPV_ERROR_CODE_S_OK;
 }
 

@@ -35,7 +35,7 @@ COMPV_ERROR_CODE TestEigen()
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		// D (diagonal) contains the eigenvalues
 		// Q (square) contain eigenvectors (each row is an eigenvector)
-		COMPV_CHECK_CODE_RETURN(CompVEigen<TYPE>::findSymm(S, D, Q, false));
+		COMPV_CHECK_CODE_RETURN(CompVEigen<TYPE>::findSymm(S, D, Q, false, true));
 	}
 	timeEnd = CompVTime::getNowMills();
 

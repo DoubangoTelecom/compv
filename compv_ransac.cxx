@@ -4,15 +4,9 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_MATH_SVD_H_)
-#define _COMPV_MATH_SVD_H_
-
-#include "compv/compv_config.h"
-
-#include <math.h>
+#include "compv/compv_ransac.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_MATH_SVD_H_ */
+COMPV_NAMESPACE_END()

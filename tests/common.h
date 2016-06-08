@@ -117,7 +117,7 @@ static const std::string imageMD5(const CompVPtr<CompVImage *>& img, COMPV_BORDE
 }
 
 template<typename T>
-static const std::string arrayMD5(const CompVPtr<CompVArray<T>* >& array)
+static const std::string arrayMD5(const CompVPtrArray(T)& array)
 {
     if (array) {
         CompVPtr<CompVMd5*> md5;
@@ -129,6 +129,23 @@ static const std::string arrayMD5(const CompVPtr<CompVArray<T>* >& array)
         return md5->compute();
     }
     return "";
+}
+
+template<typename T>
+static void matrixPrint(const CompVPtrArray(T)& M, const char* name)
+{
+	const T* row;
+	const char* type_sz = std::is_same<T, float>::value ? "%f" : (std::is_same<T, double>::value ? "%e" : "%d");
+	printf("%s={", name);
+	for (size_t i = 0; i < M->rows(); ++i) {
+		row = M->ptr(i);
+		printf("{");
+		for (size_t j = 0; j < M->cols(); ++j) {
+			printf(type_sz, row[j]); printf(", ");
+		}
+		printf("}\n");
+	}
+	printf("}\n");
 }
 
 #endif /* COMPV_TESTS_COMMON_H_ */

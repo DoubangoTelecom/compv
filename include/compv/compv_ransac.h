@@ -4,12 +4,20 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-/*
-Functions to compute Singular Value Decomposition (SVD)
-https://en.wikipedia.org/wiki/Singular_value_decomposition
-*/
-#include "compv/math/compv_math_svd.h"
+#if !defined(_COMPV_RANSAC_H_)
+#define _COMPV_RANSAC_H_
+
+#include "compv/compv_config.h"
+#include "compv/compv_obj.h"
+#include "compv/compv_common.h"
 
 COMPV_NAMESPACE_BEGIN()
 
+class COMPV_API CompVRansac
+{
+
+};
+
 COMPV_NAMESPACE_END()
+
+#endif /* _COMPV_RANSAC_H_ */
