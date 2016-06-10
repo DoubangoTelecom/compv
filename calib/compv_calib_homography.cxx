@@ -18,7 +18,7 @@ template class CompVHomography<float >;
 template<typename T>
 static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H, bool promoteZeros = false);
 template<typename T>
-static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, size_t &inliersCount, CompVPtrArray(size_t)& inliers);
+static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, size_t &inliersCount, CompVPtrArray(size_t)& inliers, size_t &std2);
 template<typename T>
 static void promoteZeros(CompVPtrArray(T) &H);
 
@@ -62,6 +62,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	
 	int idx0, idx1, idx2, idx3;
 	size_t inliersCount_, bestInlinersCount_ = 0;
+	size_t std2_, bestStd2_ = INT_MAX;
 	CompVPtrArray(T) src_;
 	CompVPtrArray(T) dst_;
 	CompVPtrArray(T) H_;
@@ -73,7 +74,8 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	n_ = (size_t)(logf(1 - p_) / logf(1 - powf(1 - e_, (float)s_)));
 	t_ = 0;
 
-	COMPV_CHECK_CODE_RETURN(CompVArray<size_t>::newObjAligned(&inliers_, 1, k_));
+	// inliers_-> row-0: point indexes, row-1: distances
+	COMPV_CHECK_CODE_RETURN(CompVArray<size_t>::newObjAligned(&inliers_, 2, k_));
 
 	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&H, 3, 3));
 	hx0_ = const_cast<T*>(H->ptr(0));
@@ -119,14 +121,14 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 		COMPV_CHECK_CODE_RETURN(computeH<T>(src_, dst_, H_));
 
 		// Count outliers using all points
-		COMPV_CHECK_CODE_RETURN(countInliers(src, dst, H_, inliersCount_, inliers_));
+		COMPV_CHECK_CODE_RETURN(countInliers(src, dst, H_, inliersCount_, inliers_, std2_));
 
-		if (inliersCount_ > bestInlinersCount_) { // FIXME: compare std
+		if (inliersCount_ >= s_ && (inliersCount_ > bestInlinersCount_ || (inliersCount_ == bestInlinersCount_ && std2_ < bestStd2_))) {
+			if (inliersCount_ == bestInlinersCount_) {
+				COMPV_DEBUG_INFO("STD COOOOOL");
+			}
 			bestInlinersCount_ = inliersCount_;
-			// update outliers ratio
-			e_ = 1 - (inliersCount_ / (float)k_);
-			// update total tries
-			n_ = (size_t)(logf(1 - p_) / logf(1 - powf(1 - e_, (float)s_)));
+			bestStd2_ = std2_;
 			// update H
 			hx1_ = H_->ptr(0);
 			hy1_ = H_->ptr(1);
@@ -136,7 +138,14 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 			hz0_[0] = hz1_[0], hz0_[1] = hz1_[1], hz0_[2] = hz1_[2];
 			// Copy inliers
 			COMPV_CHECK_CODE_RETURN(CompVArray<size_t>::newObjAligned(&bestInliers_, 1, inliersCount_));
-			CompVMem::copyNTA(const_cast<size_t*>(bestInliers_->ptr()), inliers_->ptr(), (inliersCount_ * sizeof(size_t)));
+			CompVMem::copyNTA(const_cast<size_t*>(bestInliers_->ptr(0)), inliers_->ptr(0), (inliersCount_ * sizeof(size_t)));
+		}
+
+		if (inliersCount_) {
+			// update outliers ratio
+			e_ = 1 - (inliersCount_ / (float)k_);
+			// update total tries
+			n_ = (size_t)(logf(1 - p_) / logf(1 - powf(1 - e_, (float)s_)));
 		}
 
 		++t_;
@@ -373,7 +382,7 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 }
 
 template<typename T>
-static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, size_t &inliersCount, CompVPtrArray(size_t)& inliers)
+static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, size_t &inliersCount, CompVPtrArray(size_t)& inliers, size_t &std2)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Hinv not correct
@@ -381,6 +390,7 @@ static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtr
 	size_t numPoints_ = src->cols();
 	static const T threshold = 30; // FIXME
 	inliersCount = 0;
+	std2 = 0; // standard deviation square (std * std)
 	
 	// Ha = b, residual(Ha, b), a = src, b = dst
 	// -> a = H^b, residual(a, H^b)
@@ -401,28 +411,49 @@ static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtr
 	const T* dsty_ = dst->ptr(1);
 	const T* srcx_ = src->ptr(0);
 	const T* srcy_ = src->ptr(1);
-	T r_, scale_, ex_, ey_;
+	T d_, scale_, ex_, ey_;
+	size_t sd_;
 
-	size_t* inliers_ = const_cast<size_t*>(inliers->ptr());
+	size_t* indexes_ = const_cast<size_t*>(inliers->ptr(0));
+	size_t* distances_ = const_cast<size_t*>(inliers->ptr(1));
 
 	// FIXME: compute inverse(H) and mse(a, h^b)
 	// FIXME: compute standard deviation (STD) 
 
+	sd_ = 0; // sum distances
 	for (size_t n_ = 0; n_ < numPoints_; ++n_) {
 		// Ha = b
 		scale_ = 1 / bz_[n_];
 		ex_ = (bx_[n_] * scale_) - dstx_[n_];
 		ey_ = (by_[n_] * scale_) - dsty_[n_];
-		r_ = ((ex_ * ex_) + (ey_ * ey_));
+		d_ = ((ex_ * ex_) + (ey_ * ey_));
 		// a = H^b
 		scale_ = 1 / az_[n_];
 		ex_ = (ax_[n_] * scale_) - srcx_[n_];
 		ey_ = (ay_[n_] * scale_) - srcy_[n_];
-		r_ += ((ex_ * ex_) + (ey_ * ey_));
+		d_ += ((ex_ * ex_) + (ey_ * ey_));
 
-		if (r_ < threshold) {
-			inliers_[inliersCount++] = n_;
+		if (d_ < threshold) {
+			indexes_[inliersCount] = n_;
+			distances_[inliersCount] = (size_t)d_;
+			++inliersCount;
+			sd_ += (size_t)d_;
 		}
+	}
+
+	// Standard deviation: https://en.wikipedia.org/wiki/Standard_deviation
+	if (inliersCount > 1) {
+		size_t md_ = sd_ / inliersCount; // mean
+		signed dev_; // must be signed
+		for (size_t n_ = 0; n_ < inliersCount; ++n_) {
+			dev_ = (signed)(distances_[n_] - md_);
+			std2 += (dev_ * dev_);
+		}
+		// variance = std2 (std squared)
+		std2 /= (inliersCount - 1); // -1 for Bessel's correction: https://en.wikipedia.org/wiki/Bessel%27s_correction
+		// standard deviation
+		// std_ = COMPV_MATH_SQRT(std_);
+		// for comparisons no need to use std, variance is enought
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
