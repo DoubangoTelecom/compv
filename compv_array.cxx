@@ -176,11 +176,13 @@ template<class T>
 COMPV_ERROR_CODE CompVArray<T>::newObj(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols, size_t alignv)
 {
     COMPV_CHECK_EXP_RETURN(!array || !alignv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    if (!*array) {
-        *array = new CompVArray<T>();
-        COMPV_CHECK_EXP_RETURN(!*array, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	CompVPtr<CompVArray<T>* > array_ = *array;
+	if (!array_) {
+		array_ = new CompVArray<T>();
+		COMPV_CHECK_EXP_RETURN(!array_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		*array = array_;
     }
-	COMPV_CHECK_CODE_RETURN((*array)->alloc(rows, cols, alignv));
+	COMPV_CHECK_CODE_RETURN(array_->alloc(rows, cols, alignv));
     return COMPV_ERROR_CODE_S_OK;
 }
 

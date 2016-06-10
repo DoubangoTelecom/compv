@@ -16,9 +16,9 @@ using namespace compv;
 #define TEST_CLIP2				0
 #define TEST_SINCOS_P32			0 // 3.2 precision, theta within IR
 #define TEST_SINCOS_2PI_P32		0 // 3.2 precision, theta within [0, 2*PI]
-#define TEST_EIGEN				0
+#define TEST_EIGEN				1
 #define TEST_SVD				0
-#define TEST_PSI				1 // Moore–Penrose pseudoinverse
+#define TEST_PSI				0 // Moore–Penrose pseudoinverse
 
 #if COMPV_OS_WINDOWS
 int _tmain(int argc, _TCHAR* argv[])

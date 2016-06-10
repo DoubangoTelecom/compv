@@ -23,11 +23,14 @@ public:
 	static COMPV_ERROR_CODE mulGA(CompVPtrArray(T) &A, size_t ith, size_t jth, T c, T s);
 	static COMPV_ERROR_CODE transpose(const CompVPtrArray(T) &A, CompVPtrArray(T) &R);
 	static COMPV_ERROR_CODE maxAbsOffDiag_symm(const CompVPtrArray(T) &S, size_t *row, size_t *col, T* max);
+	static COMPV_ERROR_CODE eigenS(const CompVPtrArray(T) &S, CompVPtrArray(T) &D, CompVPtrArray(T) &Q, bool sort = true, bool rowVectors = false, bool forceZerosInD = true);
 	static COMPV_ERROR_CODE svd(const CompVPtrArray(T) &A, CompVPtrArray(T) &U, CompVPtrArray(T) &D, CompVPtrArray(T) &V, bool sort = true);
-	static COMPV_ERROR_CODE pseudoinverse(const CompVPtrArray(T) &A, CompVPtrArray(T) &R);
+	static COMPV_ERROR_CODE pseudoinv(const CompVPtrArray(T) &A, CompVPtrArray(T) &R);
+	static COMPV_ERROR_CODE invD(const CompVPtrArray(T) &D, CompVPtrArray(T) &R, bool dIsSortedAndPositive = false);
 	static COMPV_ERROR_CODE givens(CompVPtrArray(T) &G, size_t rows, size_t cols, size_t ith, size_t jth, T c, T s);
 	static COMPV_ERROR_CODE identity(CompVPtrArray(T) &I, size_t rows, size_t cols);
 	static COMPV_ERROR_CODE zero(CompVPtrArray(T) &Z, size_t rows, size_t cols);
+	static COMPV_ERROR_CODE resize0(CompVPtrArray(T) &A, size_t rows, size_t cols);
 	static COMPV_ERROR_CODE copy(CompVPtrArray(T) &A, const CompVPtrArray(T) &B);
 	static COMPV_ERROR_CODE rank(const CompVPtrArray(T) &A, int &r, bool rowspace = true, size_t maxRows = 0, size_t maxCols = 0);
 	static COMPV_ERROR_CODE isColinear(const CompVPtrArray(T) &A, bool &colinear, bool rowspace = false, size_t maxRows = 0, size_t maxCols = 0);

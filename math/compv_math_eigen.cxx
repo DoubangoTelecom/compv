@@ -11,6 +11,7 @@ Functions to compute Eigenvalues and Eigenvectors
 #include "compv/math/compv_math.h"
 #include "compv/math/compv_math_utils.h"
 #include "compv/math/compv_math_matrix.h"
+#include "compv/compv_mem.h"
 
 #if !defined(COMPV_MATH_EIGEN_EPSILON)
 #	define COMPV_MATH_EIGEN_EPSILON		FLT_EPSILON
@@ -35,9 +36,6 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 {
 	COMPV_CHECK_EXP_RETURN(!S || !S->rows() || S->rows() != S->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	
-	// sorting not implemented yet
-	COMPV_CHECK_EXP_RETURN(sort, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD and MT
 
@@ -47,6 +45,8 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 	size_t ops = 0, maxops = S->rows() * S->cols() * 30;
 	T maxOffDiag;
 	CompVPtrArray(T) Qt;
+	CompVPtrArray(T) GD_2rows;
+	bool transpose = !rowVectors;
 
 	// Qt = I
 	if (rowVectors) {
@@ -60,12 +60,10 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::copy(D, S));
 	// Check is S is already diagonal or not
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::maxAbsOffDiag_symm(S, &row, &col, &maxOffDiag));
-#if 0 // not true, only means that the lower triangle is 0
 	if (maxOffDiag < COMPV_MATH_EIGEN_EPSILON) { // S already diagonal -> D = S, Q = I
 	 	COMPV_DEBUG_INFO("Symmetric matrix already diagonal -> do nothing");
-		return COMPV_ERROR_CODE_S_OK;
+		goto done;
 	}
-#endif
 
 	// If matrix A is symmetric then, mulAG(c, s) = mulGA(c, -s)
 
@@ -82,8 +80,7 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 	// TODO(dmi): Moments, replace vpextrd r32, xmm, 0 with vmod r32, xmm
 	
 	// Instead of returning Q = QG, return Q*, Q* = G*Q*
-
-	CompVPtrArray(T) GD_2rows;
+	
 	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&GD_2rows, 2, D->rows()));
 	do {
 		CompVEigen<T>::jacobiAngles(D, row, col, &gcos_, &gsin_);
@@ -96,6 +93,55 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 		CompVEigen<T>::insert2Cols(GD_2rows, D, row, col); // GD_2rows = (G*D*)*
 		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulGA(D, row, col, gcos_, -gsin_)); // Thread-safe
 	} while (++ops < maxops &&  COMPV_ERROR_CODE_IS_OK(err_ = CompVMatrix<T>::maxAbsOffDiag_symm(D, &row, &col, &maxOffDiag)) && maxOffDiag > COMPV_MATH_EIGEN_EPSILON);
+
+	// Sort Qt (eigenvectors are rows)
+	if (sort) {
+		size_t eigenValuesCount = D->cols(), index, oldIndex;
+		CompVPtrArray(size_t) Idx;
+		COMPV_CHECK_CODE_RETURN(CompVArray<size_t>::newObjAligned(&Idx, 1, eigenValuesCount));
+		size_t* indexes = const_cast<size_t*>(Idx->ptr());
+		for (size_t i = 0; i < eigenValuesCount; ++i) {
+			indexes[i] = i;
+		}
+		bool sorted, wasSorted = true;
+		do {
+			sorted = true;
+			for (size_t i = 0; i < eigenValuesCount - 1; ++i) {
+				index = indexes[i];
+				if (*D->ptr(indexes[i], indexes[i]) < *D->ptr(indexes[i + 1], indexes[i + 1])) {
+					oldIndex = indexes[i];
+					indexes[i] = indexes[i + 1];
+					indexes[i + 1] = oldIndex;
+					sorted = false;
+					wasSorted = false;
+				}
+			}
+		} while (!sorted);
+
+		if (!wasSorted) {
+			CompVPtrArray(T) Dsorted;
+			CompVPtrArray(T) Qsorted;
+			COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::zero(Dsorted, D->rows(), D->cols()));
+			COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&Qsorted, S->rows(), S->cols()));
+			for (size_t i = 0; i < eigenValuesCount; ++i) {
+				*const_cast<T*>(Dsorted->ptr(i, i)) = *D->ptr(indexes[i], indexes[i]);
+				COMPV_CHECK_CODE_RETURN(CompVMem::copy(const_cast<T*>(Qsorted->ptr(i)), Qt->ptr(indexes[i]), Qsorted->rowInBytes()));
+			}
+			D = Dsorted;
+			if (transpose) {
+				COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::transpose(Qsorted, Q));
+				transpose = false; // to avoid transpose after the done
+			}
+			else {
+				Q = Qsorted;
+			}
+		}
+	}
+
+done:
+	if (transpose) {
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::transpose(Qt, Q));
+	}
 
 	// Off-diagonal values in D contains epsilons which is close to zero but not equal to zero
 	if (forceZerosInD) {
@@ -113,10 +159,6 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 				}
 			}
 		}
-	}
-
-	if (!rowVectors) {
-		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::transpose(Qt, Q));
 	}
 
 	if (ops >= maxops) {
@@ -149,7 +191,7 @@ void CompVEigen<T>::jacobiAngles(const CompVPtrArray(T) &S, size_t ith, size_t j
 	if (Sii == Sjj) {
 		// theta = PI/4
 		*c = (T)0.70710678118654757; // :: cos(PI/4)
-		*s = (T)0.70710678118654757; // :: cos(PI/4)
+		*s = (T)0.70710678118654757; // :: sin(PI/4)
 	}
 	else {
 		T theta = (T)0.5 * (T)COMPV_MATH_ATAN2(2.0 * *S->ptr(ith, jth), Sjj - Sii);

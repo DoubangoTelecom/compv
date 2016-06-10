@@ -16,9 +16,11 @@ template class CompVHomography<double >;
 template class CompVHomography<float >;
 
 template<typename T>
-static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H);
+static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H, bool promoteZeros = false);
 template<typename T>
 static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, size_t &inliersCount, CompVPtrArray(size_t)& inliers);
+template<typename T>
+static void promoteZeros(CompVPtrArray(T) &H);
 
 // src: 3xN homogeneous array (X, Y, Z=1). N-cols with N >= 4. The N points must not be colinear.
 // dst: 3xN homogeneous array (X, Y, Z=1). N-cols with N >= 4. The N points must not be colinear.
@@ -47,7 +49,8 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	}
 
 	if (model == COMPV_MODELEST_TYPE_NONE) {
-		return computeH<T>(src, dst, H);
+		COMPV_CHECK_CODE_RETURN(computeH<T>(src, dst, H, true));
+		return COMPV_ERROR_CODE_S_OK;
 	}
 
 	float p_ = 0.99f; // probability for inlier (TODO(dmi): try with 0.95f which is more realistic)
@@ -163,11 +166,13 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 		dstx0_[i] = dstx1_[idx], dsty0_[i] = dsty1_[idx], dstz0_[i] = 1;
 	}
 
-	return computeH<T>(src_, dst_, H);;
+	COMPV_CHECK_CODE_RETURN(computeH<T>(src_, dst_, H, true));
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 template<typename T>
-static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H)
+static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H, bool promoteZeros /*= false*/)
 {
 	// Private function, do not check input parameters
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
@@ -345,8 +350,15 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulABt(T1_, H, M_));
 	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulABt(T2_, M_, H));
 
+	if (promoteZeros) {
+#define COMPV_PROMOTE_ZEROS(_h_, _i_) if (CompVEigen<T>::isCloseToZero((_h_)[(_i_)])) (_h_)[(_i_)] = 0;
+		COMPV_PROMOTE_ZEROS(hn0_, 0); COMPV_PROMOTE_ZEROS(hn0_, 1); COMPV_PROMOTE_ZEROS(hn0_, 2);
+		COMPV_PROMOTE_ZEROS(hn1_, 0); COMPV_PROMOTE_ZEROS(hn1_, 1); COMPV_PROMOTE_ZEROS(hn1_, 2);
+		COMPV_PROMOTE_ZEROS(hn2_, 0); COMPV_PROMOTE_ZEROS(hn2_, 1);
+	}
+
 	// Scale H to make it homogeneous (Z = 1)
-	T h22_ = (T)1.0 / hn2_[2];
+	T h22_ = hn2_[2] ? ((T)1 / hn2_[2]) : 1;
 	hn0_[0] *= h22_;
 	hn0_[1] *= h22_;
 	hn0_[2] *= h22_;
@@ -375,7 +387,7 @@ static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtr
 	CompVPtrArray(T) b_; // TODO(dmi): make member or a parameter to avoid allocating several times
 	CompVPtrArray(T) a_; // TODO(dmi): make member or a parameter to avoid allocating several times
 	CompVPtrArray(T) Hinv_;
-	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::pseudoinverse(H, Hinv_));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::pseudoinv(H, Hinv_));
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAB(H, src, b_));
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAB(Hinv_, dst, a_));
 	// compute residual
@@ -414,6 +426,24 @@ static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtr
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+template<typename T>
+void promoteZeros(CompVPtrArray(T) &H)
+{
+	// Private function, do not check input parameters
+
+	size_t i, j, rows = H->rows(), cols = H->cols();
+	T* row;
+
+	for (j = 0; j < rows; ++j) {
+		row = const_cast<T*>(H->ptr(j));
+		for (i = 0; i < cols; ++i) {
+			if (CompVEigen<T>::isCloseToZero(row[i])) {
+				row[i] = 0;
+			}
+		}
+	}
 }
 
 COMPV_NAMESPACE_END()

@@ -18,7 +18,7 @@ template<class T>
 class COMPV_API CompVEigen
 {
 public:
-	static COMPV_ERROR_CODE findSymm(const CompVPtrArray(T) &S, CompVPtrArray(T) &D, CompVPtrArray(T) &Q, bool sort = true, bool rowVectors = false, bool forceZerosInD = false);
+	static COMPV_ERROR_CODE findSymm(const CompVPtrArray(T) &S, CompVPtrArray(T) &D, CompVPtrArray(T) &Q, bool sort = true, bool rowVectors = false, bool forceZerosInD = true);
 	static T epsilon();
 	static bool isCloseToZero(T a);
 

@@ -7,6 +7,7 @@
 #include "compv/math/compv_math_matrix.h"
 #include "compv/math/compv_math_eigen.h"
 #include "compv/math/compv_math.h"
+#include "compv/compv_mem.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -124,7 +125,7 @@ template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::mulGA(CompVPtrArray(T) &A, size_t ith, size_t jth, T c, T s)
 {
 	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols() /*|| ith <= jth*/ || ith >= A->rows() || jth >= A->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD-friendly
 
 	// When Givens matrix is multiplied to the left of a matrix then, only ith and jth rows change
 	// -> this function could be multi-threaded	
@@ -170,6 +171,15 @@ COMPV_ERROR_CODE CompVMatrix<T>::transpose(const CompVPtrArray(T) &A, CompVPtrAr
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// S must be symmetric matrix
+// 
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::eigenS(const CompVPtrArray(T) &S, CompVPtrArray(T) &D, CompVPtrArray(T) &Q, bool sort /*= true*/, bool rowVectors /*= false*/, bool forceZerosInD /*= true*/)
+{
+	COMPV_CHECK_CODE_RETURN(CompVEigen<T>::findSymm(S, D, Q, sort, rowVectors, forceZerosInD));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, size_t *row, size_t *col, T* max)
 {
@@ -200,52 +210,111 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Vt is really transposed
+// sort -> sort D and V
 template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::svd(const CompVPtrArray(T) &A, CompVPtrArray(T) &U, CompVPtrArray(T) &D, CompVPtrArray(T) &V, bool sort /*= true*/)
 {
 	COMPV_CHECK_EXP_RETURN(!A || !A->cols() || !A->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVPtrArray(T) S_;
-
+	CompVPtrArray(T) S_, D_;
+	bool aIsSquare = (A->rows() == A->cols());
+	bool dIsSortedAndPositive = sort;
+	
 	// D and V (columnspace)
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAtA(A, S_)); // A*A
-	COMPV_CHECK_CODE_RETURN(CompVEigen<T>::findSymm(S_, D, V, sort, false, true));
-	// U (rowspace)
-	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(A, A, S_)); // AA*
-	COMPV_CHECK_CODE_RETURN(CompVEigen<T>::findSymm(S_, D, U, sort, false, true));
-
-	// singular values = sqrt(eigenvalues)
-	T* row;
-	for (size_t j = 0; j < D->rows(); ++j) {
-		row = const_cast<T*>(D->ptr(j));
-		row[j] = (T)COMPV_MATH_SQRT(row[j]);
+	COMPV_CHECK_CODE_RETURN(CompVEigen<T>::findSymm(S_, aIsSquare ? D : D_, V, sort)); // output D is nxn matrix	
+	
+	if (aIsSquare) { // D is nxn and this is correct
+		if (dIsSortedAndPositive) {
+			T d_;
+			for (size_t j = 0; j < D->rows(); ++j) {
+				d_ = *D->ptr(j, j);
+				if (!d_) {
+					break;
+				}
+				*const_cast<T*>(D->ptr(j, j)) = (T)COMPV_MATH_SQRT(d_);
+			}
+		}
+		else {
+			for (size_t j = 0; j < D->rows(); ++j) {
+				*const_cast<T*>(D->ptr(j, j)) = (T)COMPV_MATH_SQRT(*D->ptr(j, j));
+			}
+		}
 	}
+	else { // -> D must be mxn -> complete with zeros
+		size_t rows = COMPV_MATH_MIN(A->rows(), D_->rows());
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::zero(D, A->rows(), A->cols()));
+		if (dIsSortedAndPositive) {
+			T d_;
+			for (size_t j = 0; j < rows; ++j) {
+				d_ = *D_->ptr(j, j);
+				if (!d_) {
+					break;
+				}
+				*const_cast<T*>(D->ptr(j, j)) = (T)COMPV_MATH_SQRT(d_);
+			}
+		}
+		else {
+			for (size_t j = 0; j < rows; ++j) {
+				*const_cast<T*>(D->ptr(j, j)) = (T)COMPV_MATH_SQRT(*D_->ptr(j, j));
+			}
+		}
+	}
+
+
+	// A = UDV* -> AV = UD -> AVD^ = U
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::invD(D, D_, dIsSortedAndPositive));// D_ will contain inverse(D) = D^
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(V, D_, S_)); // transpose inverseOf(D) -> nop for square matrix
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAB(A, S_, U));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // https://en.wikipedia.org/wiki/Moore%E2%80%93Penrose_pseudoinverse
 template <class T>
-COMPV_ERROR_CODE CompVMatrix<T>::pseudoinverse(const CompVPtrArray(T) &A, CompVPtrArray(T) &R)
+COMPV_ERROR_CODE CompVMatrix<T>::pseudoinv(const CompVPtrArray(T) &A, CompVPtrArray(T) &R)
 {
 	COMPV_CHECK_EXP_RETURN(!A || !A->cols() || !A->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // SVD not correct but not this function
 	CompVPtrArray(T) U, D, V;
-	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::svd(A, U, D, V, false));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::svd(A, U, D, V));
 
 	// compute inverse (D), D already cleaned with zeros
-	T* row;
-	for (size_t j = 0; j < D->rows(); ++j) {
-		row = const_cast<T*>(D->ptr(j));
-		if (row[j] != 0) {
-			row[j] = (T)(1 / row[j]);
-		}
-	}
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::invD(D, D, true)); // will be transposed later
+
 	CompVPtrArray(T) B;
 	// A^ = VD^U*
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(V, D, B));
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(B, U, R));
 	
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// D must be diagonal matrix and could be equal to R
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::invD(const CompVPtrArray(T) &D, CompVPtrArray(T) &R, bool dIsSortedAndPositive /*= false*/)
+{
+	COMPV_CHECK_EXP_RETURN(!D || !D->cols() || !D->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	if (R != D) {
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::zero(R, D->rows(), D->cols()));
+	}
+	T v_;
+	size_t dcount_ = COMPV_MATH_MIN(D->rows(), D->cols()); // Diagonal matrix could be rectangular
+	if (dIsSortedAndPositive) {
+		for (size_t j = 0; j < dcount_; ++j) {
+			v_ = *D->ptr(j, j);
+			if (!v_) {
+				break;
+			}
+			*const_cast<T*>(R->ptr(j, j)) = (T)(1 / v_);
+		}
+	}
+	else {
+		for (size_t j = 0; j < dcount_; ++j) {
+			v_ = *D->ptr(j, j);
+			if (v_) {
+				*const_cast<T*>(R->ptr(j, j)) = (T)(1 / v_);
+			}
+		}
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -300,6 +369,31 @@ COMPV_ERROR_CODE CompVMatrix<T>::zero(CompVPtrArray(T) &Z, size_t rows, size_t c
 		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&Z, rows, cols));
 	}
 	COMPV_CHECK_CODE_RETURN(Z->zero_rows());
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// resize and fill the missing elements with zeros
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::resize0(CompVPtrArray(T) &A, size_t rows, size_t cols)
+{
+	COMPV_CHECK_EXP_RETURN(!A || !rows || !cols, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+	if (A->rows() == rows && A->cols() == cols) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	CompVPtrArray(T) B;
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::zero(B, rows, cols));
+	rows = COMPV_MATH_MIN(rows, A->rows());
+	if (cols == A->cols()) {
+		CompVMem::copy(const_cast<T*>(B->ptr()), A->ptr(), A->rowInBytes() * rows);
+	}
+	else {
+		cols = COMPV_MATH_MIN(cols, A->cols());
+		for (size_t j = 0; j < rows; ++j) {
+			CompVMem::copy(const_cast<T*>(B->ptr(j)), A->ptr(j), A->rowInBytes());
+		}
+	}
+	A = B;
 	return COMPV_ERROR_CODE_S_OK;
 }
 

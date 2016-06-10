@@ -7,8 +7,8 @@ using namespace compv;
 #define LOOP_COUNT		1 // dense matrix -> will take time to compute eigenvalues and eigenvectors
 #define NUM_POINTS		200 + 9 // +9 to make it SIMD-unfriendly for testing
 #define TYPE			double  // double or float
-#define MD5_D			"c4df8cd26fb52a88c4adc42c6c3cfb03"
-#define MD5_Q			"6860666cc77735dbcba4fb19125d19f7"
+#define MD5_D			"5e58169e3a19845ab01293febf562b24"
+#define MD5_Q			"13893b77ea53821b5b7539dacfda07ba"
 
 COMPV_ERROR_CODE TestEigen()
 {
@@ -34,8 +34,8 @@ COMPV_ERROR_CODE TestEigen()
 	timeStart = CompVTime::getNowMills();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		// D (diagonal) contains the eigenvalues
-		// Q (square) contain eigenvectors (each row is an eigenvector)
-		COMPV_CHECK_CODE_RETURN(CompVEigen<TYPE>::findSymm(S, D, Q, false, true));
+		// Q (square) contain eigenvectors (each col is an eigenvector)
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<TYPE>::eigenS(S, D, Q));
 	}
 	timeEnd = CompVTime::getNowMills();
 
@@ -44,7 +44,7 @@ COMPV_ERROR_CODE TestEigen()
 	COMPV_ASSERT(md5D == MD5_D);
 	COMPV_ASSERT(md5Q == MD5_Q);
 
-	COMPV_DEBUG_INFO("Elapsed time (TestHomography) = [[[ %llu millis ]]]", (timeEnd - timeStart));
+	COMPV_DEBUG_INFO("Elapsed time (TestEigen) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
 	return err_;
 }
