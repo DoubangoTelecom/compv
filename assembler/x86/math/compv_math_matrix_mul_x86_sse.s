@@ -33,6 +33,7 @@ sym(MatrixMulGA_float64_minpack2_Asm_X86_SSE2):
 	xor rcx, rcx ; rcx = i
 	mov rbx, arg(4) ; rbx = count
 	sub rbx, 2
+	imul rbx, 8
 
 	mov rax, arg(2)
 	mov rdx, arg(3)
@@ -48,8 +49,8 @@ sym(MatrixMulGA_float64_minpack2_Asm_X86_SSE2):
 	; while (i < count)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopProcess
-		movapd xmm2, [rax + rcx * 8] ; xmmRI
-		movapd xmm3, [rdx + rcx * 8] ; XmmRJ
+		movapd xmm2, [rax + rcx] ; xmmRI
+		movapd xmm3, [rdx + rcx] ; XmmRJ
 		movapd xmm4, xmm2 ; xmmRI
 		movapd xmm5, xmm3 ; xmmRJ
 
@@ -61,10 +62,10 @@ sym(MatrixMulGA_float64_minpack2_Asm_X86_SSE2):
 		addpd xmm2, xmm3
 		subpd xmm5, xmm4
 
-		movapd [rax + rcx * 8], xmm2
-		movapd [rdx + rcx * 8], xmm5
+		movapd [rax + rcx], xmm2
+		movapd [rdx + rcx], xmm5
 
-		add rcx, 2
+		add rcx, 16
 		cmp rcx, rbx
 		jl .LoopProcess
 
