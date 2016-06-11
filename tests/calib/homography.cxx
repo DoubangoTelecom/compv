@@ -15,7 +15,7 @@ using namespace compv;
 #define TRANSX			28.5
 #define TRANSY			-10.0
 #define TYPE			double  // double or float
-#define TYPE_SZ			"%e"	// %e or %f
+#define TYPE_SZ			"%f"	// %e or %f
 #define MD5_EXPECTED	"3248f48b27e7b01ee6db4ec2a20343e6"
 
 COMPV_ERROR_CODE TestHomography()

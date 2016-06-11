@@ -27,9 +27,11 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 void Brief256_31_Intrin_AVX2(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out)
 {
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Visual Studio inserts SSE code
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
+#if !defined(__AVX2__)
+	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
+#endif
     _mm256_zeroupper();
-
     int i, u8_index;
     COMPV_ALIGN_AVX2() int32_t ymmIndex[8];
     COMPV_ALIGN_AVX2() uint8_t ymmA[32];

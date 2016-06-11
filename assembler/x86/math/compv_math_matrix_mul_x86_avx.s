@@ -10,7 +10,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MatrixMulGA_float64_minpack2_Asm_X86_SSE2)
+global sym(MatrixMulGA_float64_minpack4_Asm_X86_AVX)
 
 section .data
 
@@ -22,8 +22,9 @@ section .text
 ; arg(2) -> const compv_float64_t* c1
 ; arg(3) -> const compv_float64_t* s1
 ; arg(4) -> compv_uscalar_t count
-; void MatrixMulGA_float64_minpack2_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
-sym(MatrixMulGA_float64_minpack2_Asm_X86_SSE2):
+; void MatrixMulGA_float64_minpack4_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
+sym(MatrixMulGA_float64_minpack4_Asm_X86_AVX):
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
@@ -32,15 +33,13 @@ sym(MatrixMulGA_float64_minpack2_Asm_X86_SSE2):
 
 	xor rcx, rcx ; rcx = i
 	mov rbx, arg(4) ; rbx = count
-	sub rbx, 2
+	sub rbx, 4
 	imul rbx, 8
 
 	mov rax, arg(2)
 	mov rdx, arg(3)
-	movsd xmm0, [rax]
-	movsd xmm1, [rdx]
-	shufpd xmm0, xmm0, 0x0 ; xmm0 = xmmC
-	shufpd xmm1, xmm1, 0x0 ; xmm1 = xmmS
+	vbroadcastsd ymm0, [rax]
+	vbroadcastsd ymm1, [rdx]
 
 	mov rax, arg(0) ; ri
 	mov rdx, arg(1) ; rj 
@@ -49,23 +48,28 @@ sym(MatrixMulGA_float64_minpack2_Asm_X86_SSE2):
 	; while (i < count)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopProcess
-		movapd xmm2, [rax + rcx] ; xmmRI
-		movapd xmm3, [rdx + rcx] ; XmmRJ
-		movapd xmm4, xmm1
-		movapd xmm5, xmm0
+		vmovapd ymm2, [rax + rcx] ; ymmRI
+		vmovapd ymm3, [rdx + rcx] ; ymmRJ
 
-		mulpd xmm4, xmm2
-		mulpd xmm2, xmm0
-		mulpd xmm5, xmm3
-		mulpd xmm3, xmm1
+		add rcx, 32
 
-		add rcx, 16
-
-		subpd xmm5, xmm4
-		addpd xmm2, xmm3
-		
-		movapd [rdx + rcx - 16], xmm5
-		movapd [rax + rcx - 16], xmm2
+%if 0 ; FMA3 disabled
+		vmulpd ymm4, ymm1, ymm2
+		vmulpd ymm2, ymm2, ymm0
+		vfmadd231pd ymm2, ymm3, ymm1
+		vfmsub231pd ymm4, ymm0, ymm3
+		vmovapd [rax + rcx - 32], ymm2
+		vmovapd [rdx + rcx - 32], ymm4		
+%else
+		vmulpd ymm4, ymm1, ymm2
+		vmulpd ymm2, ymm2, ymm0
+		vmulpd ymm5, ymm0, ymm3
+		vmulpd ymm3, ymm3, ymm1
+		vsubpd ymm5, ymm5, ymm4
+		vaddpd ymm2, ymm2, ymm3
+		vmovapd [rdx + rcx - 32], ymm5
+		vmovapd [rax + rcx - 32], ymm2
+%endif
 		
 		cmp rcx, rbx
 		jl .LoopProcess
@@ -75,4 +79,5 @@ sym(MatrixMulGA_float64_minpack2_Asm_X86_SSE2):
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret

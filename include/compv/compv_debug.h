@@ -92,6 +92,7 @@ private:
 #define COMPV_DEBUG_INFO_CODE_NOT_TESTED() do { static bool printed = false; if (!printed) { printed = true; COMPV_DEBUG_INFO("/!\\ Code not tested: Code block in file '%s' in function '%s' starting at line #%u not tested", __FILE__, __FUNCTION__, __LINE__); } } while(0)
 #define COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED() do { static bool printed = false; if (!printed) { printed = true; COMPV_DEBUG_INFO("/!\\ Optimization issue: Code block in file '%s' in function '%s' starting at line #%u not optimized", __FILE__, __FUNCTION__, __LINE__); } } while(0)
 #define COMPV_DEBUG_INFO_CODE_FOR_TESTING() do { static bool printed = false; if (!printed) { printed = true; COMPV_DEBUG_INFO("/!\\ Test code: Code block in file '%s' in function '%s' starting at line #%u must not be called", __FILE__, __FUNCTION__, __LINE__); } } while(0)
+#define COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX() do { static bool printed = false; if (!printed) { printed = true; COMPV_DEBUG_INFO("/!\\ Test code: Code block in file '%s' in function '%s' starting at line #%u may be slow because of AVX/SSE transition issues", __FILE__, __FUNCTION__, __LINE__); } } while(0)
 
 COMPV_NAMESPACE_END()
 

@@ -22,6 +22,9 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 void MemCopy_Intrin_Aligned_AVX(COMPV_ALIGNED(AVX) void* dataDstPtr, COMPV_ALIGNED(AVX) const void* dataSrcPtr, compv_uscalar_t size)
 {
+#if !defined(__AVX2__)
+	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
+#endif
     _mm256_zeroupper();
     const __m256i* ymmSrc = (const __m256i*)dataSrcPtr;
     __m256i* ymmDst = (__m256i*)dataDstPtr;

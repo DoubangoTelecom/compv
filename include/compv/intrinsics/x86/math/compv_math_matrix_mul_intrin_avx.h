@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_MATH_MATRIX_MUL_INTRIN_SSE41_H_)
-#define _COMPV_MATH_MATRIX_MUL_INTRIN_SSE41_H_
+#if !defined(_COMPV_MATH_MATRIX_MUL_INTRIN_AVX_H_)
+#define _COMPV_MATH_MATRIX_MUL_INTRIN_AVX_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -18,11 +18,11 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void MatrixMulGA_float64_minpack2_Intrin_SSE41(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
-void MatrixMulGA_float32_minpack4_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float32_t* ri, COMPV_ALIGNED(SSE) compv_float32_t* rj, const compv_float32_t* c1, const compv_float32_t* s1, compv_uscalar_t count);
+void MatrixMulGA_float64_minpack4_Intrin_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
+void MatrixMulGA_float32_minpack8_Intrin_AVX(COMPV_ALIGNED(AVX) compv_float32_t* ri, COMPV_ALIGNED(AVX) compv_float32_t* rj, const compv_float32_t* c1, const compv_float32_t* s1, compv_uscalar_t count);
 
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
 
-#endif /* _COMPV_MATH_MATRIX_MUL_INTRIN_SSE41_H_ */
+#endif /* _COMPV_MATH_MATRIX_MUL_INTRIN_AVX_H_ */

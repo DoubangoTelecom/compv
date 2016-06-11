@@ -7,8 +7,10 @@ using namespace compv;
 #define LOOP_COUNT		1 // dense matrix -> will take time to compute eigenvalues and eigenvectors
 #define NUM_POINTS		200 + 9 // +9 to make it SIMD-unfriendly for testing
 #define TYPE			double  // double or float
-#define MD5_D			"5e58169e3a19845ab01293febf562b24"
-#define MD5_Q			"13893b77ea53821b5b7539dacfda07ba"
+#define MD5_D			"5e58169e3a19845ab01293febf562b24" // 200 + 9 points
+#define MD5_Q			"13893b77ea53821b5b7539dacfda07ba" // 200 + 9 points
+#define MD5_D9			"f0f6a4a9e49459240a6433578ab6d8ec" // 0 + 9 points
+#define MD5_Q9			"c9b6584c289a6e618e2208fe438a7e17" // 0 + 9 points
 
 COMPV_ERROR_CODE TestEigen()
 {
@@ -62,8 +64,13 @@ COMPV_ERROR_CODE TestEigen()
 
 	const std::string md5D = arrayMD5<TYPE>(D);
 	const std::string md5Q = arrayMD5<TYPE>(Q);
+#if NUM_POINTS == 0 + 9 // homography (3x3)
+	COMPV_ASSERT(md5D == MD5_D9);
+	COMPV_ASSERT(md5Q == MD5_Q9);
+#else
 	COMPV_ASSERT(md5D == MD5_D);
 	COMPV_ASSERT(md5Q == MD5_Q);
+#endif
 
 	COMPV_DEBUG_INFO("Elapsed time (TestEigen) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 

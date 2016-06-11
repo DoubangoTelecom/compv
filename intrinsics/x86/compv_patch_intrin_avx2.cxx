@@ -19,7 +19,9 @@ COMPV_NAMESPACE_BEGIN()
 void Moments0110_Intrin_AVX2(COMPV_ALIGNED(AVX2) const uint8_t* top, COMPV_ALIGNED(AVX2)const uint8_t* bottom, COMPV_ALIGNED(AVX2)const int16_t* x, COMPV_ALIGNED(AVX2) const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
-    COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // AVX-SSE transition penalities
+#if !defined(__AVX2__)
+	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
+#endif
 
     __m256i ymmTop, ymmBottom, ymmT, ymmB, ymm0, ymm1, ymm2, ymm3, ymm4, ymmX, ymmY, ymmZero;
 
@@ -85,7 +87,9 @@ void Moments0110_Intrin_AVX2(COMPV_ALIGNED(AVX2) const uint8_t* top, COMPV_ALIGN
         s01_ += (int32_t)_mm256_extract_epi32(ymm0, 3);
 #else
         // AVX-SSE transition issue
-        COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+#if !defined(__AVX2__)
+		COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
+#endif
         __m128i xmm0 = _mm256_extracti128_si256(ymm0, 0);
         s10_ += (int32_t)_mm_extract_epi32(xmm0, 0);
         s01_ += (int32_t)_mm_extract_epi32(xmm0, 1);
