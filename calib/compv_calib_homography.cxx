@@ -22,6 +22,7 @@ static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtr
 template<typename T>
 static void promoteZeros(CompVPtrArray(T) &H);
 
+// Homography 'double' is faster because EigenValues/EigenVectors computation converge faster (less residual error)
 // src: 3xN homogeneous array (X, Y, Z=1). N-cols with N >= 4. The N points must not be colinear.
 // dst: 3xN homogeneous array (X, Y, Z=1). N-cols with N >= 4. The N points must not be colinear.
 // H: (3 x 3) array. Will be created if NULL.
@@ -63,6 +64,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	int idx0, idx1, idx2, idx3;
 	size_t inliersCount_, bestInlinersCount_ = 0;
 	size_t std2_, bestStd2_ = INT_MAX;
+
 	CompVPtrArray(T) src_;
 	CompVPtrArray(T) dst_;
 	CompVPtrArray(T) H_;
@@ -97,6 +99,8 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	dstz0_[0] = dstz0_[1] = dstz0_[2] = dstz0_[3] = 1;
 
 	while (t_ < n_ && bestInlinersCount_ < d_) {
+		// TODO(dmi): use rand4()
+		// TODO(dmi): use prng
 		do { idx0 = rand() % k_; } while (0);
 		do { idx1 = rand() % k_; } while (idx1 == idx0);
 		do { idx2 = rand() % k_; } while (idx2 == idx1 || idx2 == idx0);
@@ -124,9 +128,6 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 		COMPV_CHECK_CODE_RETURN(countInliers(src, dst, H_, inliersCount_, inliers_, std2_));
 
 		if (inliersCount_ >= s_ && (inliersCount_ > bestInlinersCount_ || (inliersCount_ == bestInlinersCount_ && std2_ < bestStd2_))) {
-			if (inliersCount_ == bestInlinersCount_) {
-				COMPV_DEBUG_INFO("STD COOOOOL");
-			}
 			bestInlinersCount_ = inliersCount_;
 			bestStd2_ = std2_;
 			// update H
@@ -388,7 +389,7 @@ static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtr
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Hinv not correct
 	// Private function, do not check input parameters
 	size_t numPoints_ = src->cols();
-	static const T threshold = 30; // FIXME
+	static const T threshold = 25; // FIXME
 	inliersCount = 0;
 	std2 = 0; // standard deviation square (std * std)
 	

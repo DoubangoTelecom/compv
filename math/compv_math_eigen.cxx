@@ -14,8 +14,13 @@ Functions to compute Eigenvalues and Eigenvectors
 #include "compv/compv_mem.h"
 
 #if !defined(COMPV_MATH_EIGEN_EPSILON)
-#	define COMPV_MATH_EIGEN_EPSILON		FLT_EPSILON
+#	define COMPV_MATH_EIGEN_DOUBLE_EPSILON		1.192092896e-07 // FLT_EPSILON
+#	define COMPV_MATH_EIGEN_FLOAT_EPSILON		1.192092896e-07
 #endif /* COMPV_MATH_EIGEN_EPSILON */
+
+#if !defined(COMPV_MATH_EIGEN_MAX_ROUNDS)
+#	define COMPV_MATH_EIGEN_MAX_ROUNDS 30
+#endif
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -41,8 +46,9 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 
 	size_t row, col;
 	T gcos_, gsin_;
+	const T epsilon_ = CompVEigen<T>::epsilon();
 	bool is_diag = false;
-	size_t ops = 0, maxops = S->rows() * S->cols() * 30;
+	size_t ops = 0, maxops = S->rows() * S->cols() * COMPV_MATH_EIGEN_MAX_ROUNDS;
 	T maxOffDiag;
 	CompVPtrArray(T) Qt;
 	CompVPtrArray(T) GD_2rows;
@@ -60,7 +66,7 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::copy(D, S));
 	// Check is S is already diagonal or not
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::maxAbsOffDiag_symm(S, &row, &col, &maxOffDiag));
-	if (maxOffDiag < COMPV_MATH_EIGEN_EPSILON) { // S already diagonal -> D = S, Q = I
+	if (maxOffDiag < epsilon_) { // S already diagonal -> D = S, Q = I
 	 	COMPV_DEBUG_INFO("Symmetric matrix already diagonal -> do nothing");
 		goto done;
 	}
@@ -84,15 +90,20 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&GD_2rows, 2, D->rows()));
 	do {
 		CompVEigen<T>::jacobiAngles(D, row, col, &gcos_, &gsin_);
+		// COMPV_DEBUG_INFO("A(%d) = %d, %d, %f, %f", ops, row, col, gcos_, gsin_);
 		// Qt = G*Qt
 		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulGA(Qt, row, col, gcos_, -gsin_)); // Thread-safe		
 		// G*D*
 		CompVEigen<T>::extract2Cols(D, row, col, GD_2rows); // GD_2rows = D*
-		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulGA(GD_2rows, 0, 1, gcos_, -gsin_)); // Thread-safe		
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulGA(GD_2rows, 0, 1, gcos_, -gsin_)); // Thread-safe
+		// COMPV_DEBUG_INFO("B0(%d) = %f, %f, %f", ops, *GD_2rows->ptr(0, 0), *GD_2rows->ptr(0, 1), *GD_2rows->ptr(0, 2));
+		// COMPV_DEBUG_INFO("B1(%d) = %f, %f, %f", ops, *GD_2rows->ptr(1, 0), *GD_2rows->ptr(1, 1), *GD_2rows->ptr(1, 2));
 		// G*(G*D*)*
 		CompVEigen<T>::insert2Cols(GD_2rows, D, row, col); // GD_2rows = (G*D*)*
 		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulGA(D, row, col, gcos_, -gsin_)); // Thread-safe
-	} while (++ops < maxops &&  COMPV_ERROR_CODE_IS_OK(err_ = CompVMatrix<T>::maxAbsOffDiag_symm(D, &row, &col, &maxOffDiag)) && maxOffDiag > COMPV_MATH_EIGEN_EPSILON);
+		// COMPV_DEBUG_INFO("C0(%d) = %f, %f, %f", ops, *GD_2rows->ptr(0, 0), *GD_2rows->ptr(0, 1), *GD_2rows->ptr(0, 2));
+		// COMPV_DEBUG_INFO("C1(%d) = %f, %f, %f", ops, *GD_2rows->ptr(1, 0), *GD_2rows->ptr(1, 1), *GD_2rows->ptr(1, 2));
+	} while (++ops < maxops &&  COMPV_ERROR_CODE_IS_OK(err_ = CompVMatrix<T>::maxAbsOffDiag_symm(D, &row, &col, &maxOffDiag)) && maxOffDiag > epsilon_);
 
 	// Sort Qt (eigenvectors are rows)
 	if (sort) {
@@ -162,7 +173,7 @@ done:
 	}
 
 	if (ops >= maxops) {
-		COMPV_DEBUG_ERROR("ops(%d) >= maxops(%d)", ops, maxops);
+		COMPV_DEBUG_ERROR("ops(%d) >= maxops(%d). Using 'double': %s", ops, maxops, std::is_same<T, double>::value ? "true" : "false");
 	}
 
 	return err_;
@@ -171,7 +182,7 @@ done:
 template <class T>
 T CompVEigen<T>::epsilon()
 {
-	return (T)COMPV_MATH_EIGEN_EPSILON;
+	return (T)(std::is_same<T, double>::value ? COMPV_MATH_EIGEN_DOUBLE_EPSILON : COMPV_MATH_EIGEN_FLOAT_EPSILON);
 }
 
 template <class T>
