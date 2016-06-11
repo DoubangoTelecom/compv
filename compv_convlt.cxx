@@ -11,7 +11,7 @@
 #include "compv/compv_cpu.h"
 #include "compv/compv_debug.h"
 
-#include "compv/intrinsics/x86/compv_convlt_intrin_sse.h"
+#include "compv/intrinsics/x86/compv_convlt_intrin_sse2.h"
 #include "compv/intrinsics/x86/compv_convlt_intrin_avx2.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM

@@ -61,24 +61,27 @@
     <ClInclude Include="include\compv\image\scale\compv_imagescale_common.h" />
     <ClInclude Include="include\compv\image\scale\compv_imagescale_pyramid.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_convlt_intrin_avx2.h" />
-    <ClInclude Include="include\compv\intrinsics\x86\compv_convlt_intrin_sse.h" />
-    <ClInclude Include="include\compv\intrinsics\x86\compv_hamming_intrin_sse.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\compv_convlt_intrin_sse2.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\compv_hamming_intrin_sse42.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_avx.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_intrin_sse.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_mem_intrin_avx.h" />
-    <ClInclude Include="include\compv\intrinsics\x86\compv_mem_intrin_sse.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\compv_mem_intrin_sse2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\compv_patch_intrin_avx2.h" />
-    <ClInclude Include="include\compv\intrinsics\x86\compv_patch_intrin_sse.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\compv_patch_intrin_sse41.h" />
     <ClInclude Include="include\compv\intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_avx2.h" />
-    <ClInclude Include="include\compv\intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse2.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse41.h" />
     <ClInclude Include="include\compv\intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_avx2.h" />
-    <ClInclude Include="include\compv\intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_sse.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_sse2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\image\conv\compv_imageconv_rgba_i420_intrin_avx2.h" />
-    <ClInclude Include="include\compv\intrinsics\x86\image\conv\compv_imageconv_rgba_i420_intrin_sse.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\image\conv\compv_imageconv_rgba_i420_intrin_ssse3.h" />
     <ClInclude Include="include\compv\intrinsics\x86\image\conv\compv_imageconv_rgba_rgb_intrin_avx2.h" />
-    <ClInclude Include="include\compv\intrinsics\x86\image\conv\compv_imageconv_rgba_rgb_intrin_sse.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\image\conv\compv_imageconv_rgba_rgb_intrin_ssse3.h" />
     <ClInclude Include="include\compv\intrinsics\x86\image\scale\compv_imagescale_bilinear_intrin_avx2.h" />
-    <ClInclude Include="include\compv\intrinsics\x86\image\scale\compv_imagescale_bilinear_intrin_sse.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\image\scale\compv_imagescale_bilinear_intrin_sse41.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_mul_intrin_sse2.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_mul_intrin_sse41.h" />
     <ClInclude Include="include\compv\matchers\compv_matcher.h" />
     <ClInclude Include="include\compv\matchers\compv_matcher_bruteforce.h" />
     <ClInclude Include="include\compv\matchers\compv_matcher_flann.h" />
@@ -139,102 +142,60 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="intrinsics\x86\compv_convlt_intrin_sse.cxx">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <ClCompile Include="intrinsics\x86\compv_hamming_intrin_sse.cxx">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
+    <ClCompile Include="intrinsics\x86\compv_convlt_intrin_sse2.cxx" />
+    <ClCompile Include="intrinsics\x86\compv_hamming_intrin_sse42.cxx" />
     <ClCompile Include="intrinsics\x86\compv_mem_intrin_avx.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="intrinsics\x86\compv_mem_intrin_sse.cxx">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
+    <ClCompile Include="intrinsics\x86\compv_mem_intrin_sse2.cxx" />
     <ClCompile Include="intrinsics\x86\compv_patch_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="intrinsics\x86\compv_patch_intrin_sse.cxx">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
+    <ClCompile Include="intrinsics\x86\compv_patch_intrin_sse41.cxx" />
     <ClCompile Include="intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse.cxx">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
+    <ClCompile Include="intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse2.cxx" />
+    <ClCompile Include="intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse41.cxx" />
     <ClCompile Include="intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_sse.cxx">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
+    <ClCompile Include="intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_sse2.cxx" />
     <ClCompile Include="intrinsics\x86\image\conv\compv_imageconv_rgba_i420_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="intrinsics\x86\image\conv\compv_imageconv_rgba_i420_intrin_sse.cxx">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
+    <ClCompile Include="intrinsics\x86\image\conv\compv_imageconv_rgba_i420_intrin_ssse3.cxx" />
     <ClCompile Include="intrinsics\x86\image\conv\compv_imageconv_rgba_rgb_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="intrinsics\x86\image\conv\compv_imageconv_rgba_rgb_intrin_sse.cxx">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
+    <ClCompile Include="intrinsics\x86\image\conv\compv_imageconv_rgba_rgb_intrin_ssse3.cxx" />
     <ClCompile Include="intrinsics\x86\image\scale\compv_imagescale_bilinear_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="intrinsics\x86\image\scale\compv_imagescale_bilinear_intrin_sse.cxx">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
+    <ClCompile Include="intrinsics\x86\image\scale\compv_imagescale_bilinear_intrin_sse41.cxx" />
+    <ClCompile Include="intrinsics\x86\math\compv_math_matrix_mul_intrin_sse2.cxx" />
+    <ClCompile Include="intrinsics\x86\math\compv_math_matrix_mul_intrin_sse41.cxx" />
     <ClCompile Include="matchers\compv_matcher.cxx" />
     <ClCompile Include="matchers\compv_matcher_bruteforce.cxx" />
     <ClCompile Include="matchers\compv_matcher_flann.cxx" />
@@ -280,13 +241,7 @@
     <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_macros_x86.s">
       <FileType>Document</FileType>
     </YASM>
-    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x64_avx2.s">
-      <FileType>Document</FileType>
-    </YASM>
     <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x64_sse.s">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x86_avx2.s">
       <FileType>Document</FileType>
     </YASM>
     <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x86_sse.s">
@@ -298,13 +253,7 @@
     <YASM Include="assembler\x86\image\conv\compv_imageconv_macros_x86_sse.s">
       <FileType>Document</FileType>
     </YASM>
-    <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_i420_x86_avx2.s">
-      <FileType>Document</FileType>
-    </YASM>
     <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_i420_x86_sse.s">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_rgb_x86_avx2.s">
       <FileType>Document</FileType>
     </YASM>
     <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_rgb_x86_sse.s">
@@ -322,30 +271,12 @@
     </YASM>
   </ItemGroup>
   <ItemGroup>
-    <YASM Include="assembler\x86\features\orb\compv_feature_orb_desc_x64_avx2.s">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="assembler\x86\features\orb\compv_feature_orb_desc_x86_avx2.s">
-      <FileType>Document</FileType>
-    </YASM>
-  </ItemGroup>
-  <ItemGroup>
     <YASM Include="assembler\x86\compv_convlt_x86_sse.s">
       <FileType>Document</FileType>
     </YASM>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="assembler\x86\compv_convlt_x64_sse.s">
-      <FileType>Document</FileType>
-    </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <YASM Include="assembler\x86\compv_convlt_x86_avx2.s">
-      <FileType>Document</FileType>
-    </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <YASM Include="assembler\x86\compv_convlt_x64_avx2.s">
       <FileType>Document</FileType>
     </YASM>
   </ItemGroup>
@@ -360,28 +291,12 @@
     </YASM>
   </ItemGroup>
   <ItemGroup>
-    <YASM Include="assembler\x86\compv_patch_x86_avx2.s">
-      <FileType>Document</FileType>
-    </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <YASM Include="assembler\x86\compv_patch_x64_avx2.s">
-      <FileType>Document</FileType>
-    </YASM>
-  </ItemGroup>
-  <ItemGroup>
     <YASM Include="assembler\x86\image\scale\compv_imagescale_bilinear_x86_sse.s">
       <FileType>Document</FileType>
     </YASM>
   </ItemGroup>
   <ItemGroup>
-    <YASM Include="assembler\x86\compv_hamming_x64_avx2.s">
-      <FileType>Document</FileType>
-    </YASM>
     <YASM Include="assembler\x86\compv_hamming_x64_sse.s">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="assembler\x86\compv_hamming_x86_avx2.s">
       <FileType>Document</FileType>
     </YASM>
     <YASM Include="assembler\x86\compv_hamming_x86_sse.s">
@@ -393,6 +308,44 @@
       <FileType>Document</FileType>
     </YASM>
     <YASM Include="assembler\x86\math\compv_math_utils_x86.s">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <YASM Include="assembler\x86\features\orb\compv_feature_orb_desc_x64_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\features\orb\compv_feature_orb_desc_x86_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x64_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\features\fast\compv_feature_fast_dete_x86_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_i420_x86_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\image\conv\compv_imageconv_rgba_rgb_x86_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\compv_convlt_x64_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\compv_convlt_x86_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\compv_hamming_x64_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\compv_hamming_x86_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\compv_patch_x64_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="assembler\x86\compv_patch_x86_avx.s">
       <FileType>Document</FileType>
     </YASM>
   </ItemGroup>

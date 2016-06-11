@@ -74,6 +74,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::get(int id, const void*& valuePtr, size
 }
 
 // override CompVMatcher::process
+// queryDescriptions and trainDescriptions must be strideless
 COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVPtr<CompVArray<uint8_t>* >&queryDescriptions, const CompVPtr<CompVArray<uint8_t>* >&trainDescriptions, CompVPtr<CompVArray<CompVDMatch>* >* matches)
 {
     COMPV_CHECK_EXP_RETURN(
@@ -83,6 +84,8 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVPtr<CompVArray<uint8
         || !trainDescriptions
         || trainDescriptions->isEmpty()
         || queryDescriptions->cols() != trainDescriptions->cols()
+		|| queryDescriptions->strideInBytes() != queryDescriptions->rowInBytes()
+		|| trainDescriptions->strideInBytes() != trainDescriptions->rowInBytes()
         , COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 

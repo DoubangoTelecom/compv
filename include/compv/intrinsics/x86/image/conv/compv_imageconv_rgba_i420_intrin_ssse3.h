@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_IMAGE_CONV_IMAGECONV_RGBA_I420_INTRIN_SSE_H_)
-#define _COMPV_IMAGE_CONV_IMAGECONV_RGBA_I420_INTRIN_SSE_H_
+#if !defined(_COMPV_IMAGE_CONV_IMAGECONV_RGBA_I420_INTRIN_SSSE3_H_)
+#define _COMPV_IMAGE_CONV_IMAGECONV_RGBA_I420_INTRIN_SSSE3_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -34,4 +34,4 @@ COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC*/
 
-#endif /* _COMPV_IMAGE_CONV_IMAGECONV_RGBA_I420_INTRIN_SSE_H_ */
+#endif /* _COMPV_IMAGE_CONV_IMAGECONV_RGBA_I420_INTRIN_SSSE3_H_ */

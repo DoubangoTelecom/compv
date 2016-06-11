@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_FEATURE_ORB_DESC_INTRIN_SSE_H_)
-#define _COMPV_FEATURE_ORB_DESC_INTRIN_SSE_H_
+#if !defined(_COMPV_PATCH_INTRIN_SSE41_H_)
+#define _COMPV_PATCH_INTRIN_SSE41_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -18,11 +18,10 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void Brief256_31_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out);
-void Brief256_31_Fxpq16_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t img_stride, const int16_t* cos1, const int16_t* sin1, COMPV_ALIGNED(SSE) void* out);
+void Moments0110_Intrin_SSE41(COMPV_ALIGNED(SSE) const uint8_t* top, COMPV_ALIGNED(SSE)const uint8_t* bottom, COMPV_ALIGNED(SSE)const int16_t* x, COMPV_ALIGNED(SSE) const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
 
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
 
-#endif /* _COMPV_FEATURE_ORB_DESC_INTRIN_SSE_H_ */
+#endif /* _COMPV_PATCH_INTRIN_SSE41_H_ */

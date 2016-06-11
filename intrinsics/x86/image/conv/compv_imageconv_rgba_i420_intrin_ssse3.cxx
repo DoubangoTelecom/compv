@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/intrinsics/x86/image/conv/compv_imageconv_rgba_i420_intrin_sse.h"
+#include "compv/intrinsics/x86/image/conv/compv_imageconv_rgba_i420_intrin_ssse3.h"
 
 #if defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC)
 #include "compv/intrinsics/x86/compv_intrin_sse.h"

@@ -11,7 +11,7 @@
 
 #include "compv/parallel/compv_mutex.h"
 
-#include "compv/intrinsics/x86/compv_mem_intrin_sse.h"
+#include "compv/intrinsics/x86/compv_mem_intrin_sse2.h"
 #include "compv/intrinsics/x86/compv_mem_intrin_avx.h"
 
 COMPV_NAMESPACE_BEGIN()

@@ -9,7 +9,7 @@
 #include "compv/compv_bits.h"
 #include "compv/compv_debug.h"
 
-#include "compv/intrinsics/x86/compv_hamming_intrin_sse.h"
+#include "compv/intrinsics/x86/compv_hamming_intrin_sse42.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC void HammingDistance_Asm_POPCNT_X86_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv::compv_scalar_t width, compv::compv_scalar_t stride, compv::compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);

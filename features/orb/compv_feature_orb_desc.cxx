@@ -22,7 +22,7 @@
 #include "compv/compv_gauss.h"
 #include "compv/compv_debug.h"
 
-#include "compv/intrinsics/x86/features/orb/compv_feature_orb_desc_intrin_sse.h"
+#include "compv/intrinsics/x86/features/orb/compv_feature_orb_desc_intrin_sse2.h"
 #include "compv/intrinsics/x86/features/orb/compv_feature_orb_desc_intrin_avx2.h"
 
 #include <algorithm>

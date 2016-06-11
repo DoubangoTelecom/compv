@@ -18,7 +18,7 @@ Some literature:
 #include "compv/math/compv_math.h"
 #include "compv/compv_mem.h"
 
-#include "compv/intrinsics/x86/image/scale/compv_imagescale_bilinear_intrin_sse.h"
+#include "compv/intrinsics/x86/image/scale/compv_imagescale_bilinear_intrin_sse41.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC void ScaleBilinear_Asm_X86_SSE41(const uint8_t* inPtr, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv::compv_uscalar_t inHeight, compv::compv_uscalar_t inWidth, compv::compv_uscalar_t inStride, compv::compv_uscalar_t outHeight, compv::compv_uscalar_t outWidth, COMPV_ALIGNED(SSE) compv::compv_uscalar_t outStride, compv::compv_uscalar_t sf_x, compv::compv_uscalar_t sf_y);

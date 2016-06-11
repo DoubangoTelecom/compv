@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/intrinsics/x86/image/scale/compv_imagescale_bilinear_intrin_sse.h"
+#include "compv/intrinsics/x86/image/scale/compv_imagescale_bilinear_intrin_sse41.h"
 
 #if defined(COMPV_ARCH_X86) && defined(COMPV_INTRINSIC)
 #include "compv/compv_simd_globals.h"

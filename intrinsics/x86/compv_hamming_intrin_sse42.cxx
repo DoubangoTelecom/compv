@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/intrinsics/x86/compv_hamming_intrin_sse.h"
+#include "compv/intrinsics/x86/compv_hamming_intrin_sse42.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/math/compv_math.h"

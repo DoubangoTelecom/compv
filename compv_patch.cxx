@@ -10,7 +10,7 @@
 #include "compv/math/compv_math_utils.h"
 #include "compv/compv_cpu.h"
 
-#include "compv/intrinsics/x86/compv_patch_intrin_sse.h"
+#include "compv/intrinsics/x86/compv_patch_intrin_sse41.h"
 #include "compv/intrinsics/x86/compv_patch_intrin_avx2.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM

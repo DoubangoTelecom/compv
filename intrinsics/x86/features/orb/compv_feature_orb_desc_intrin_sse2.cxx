@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/intrinsics/x86/features/orb/compv_feature_orb_desc_intrin_sse.h"
+#include "compv/intrinsics/x86/features/orb/compv_feature_orb_desc_intrin_sse2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/intrinsics/x86/compv_intrin_sse.h"

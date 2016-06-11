@@ -28,7 +28,8 @@ Some literature about FAST:
 #include "compv/compv_cpu.h"
 #include "compv/compv_bits.h"
 
-#include "compv/intrinsics/x86/features/fast/compv_feature_fast_dete_intrin_sse.h"
+#include "compv/intrinsics/x86/features/fast/compv_feature_fast_dete_intrin_sse2.h"
+#include "compv/intrinsics/x86/features/fast/compv_feature_fast_dete_intrin_sse41.h"
 #include "compv/intrinsics/x86/features/fast/compv_feature_fast_dete_intrin_avx2.h"
 
 #include <map>

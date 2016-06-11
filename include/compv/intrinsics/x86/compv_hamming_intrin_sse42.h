@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_PATCH_INTRIN_SSE_H_)
-#define _COMPV_PATCH_INTRIN_SSE_H_
+#if !defined(_COMPV_HAMMING_INTRIN_SSE42_H_)
+#define _COMPV_HAMMING_INTRIN_SSE42_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -18,10 +18,11 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void Moments0110_Intrin_SSE41(COMPV_ALIGNED(SSE) const uint8_t* top, COMPV_ALIGNED(SSE)const uint8_t* bottom, COMPV_ALIGNED(SSE)const int16_t* x, COMPV_ALIGNED(SSE) const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
+void HammingDistance_Intrin_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_scalar_t width, compv_scalar_t stride, compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
+void HammingDistance256_Intrin_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
 
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
 
-#endif /* _COMPV_PATCH_INTRIN_SSE_H_ */
+#endif /* _COMPV_HAMMING_INTRIN_SSE42_H_ */

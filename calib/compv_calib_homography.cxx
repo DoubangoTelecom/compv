@@ -21,6 +21,8 @@ template<typename T>
 static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, size_t &inliersCount, CompVPtrArray(size_t)& inliers, size_t &std2);
 template<typename T>
 static void promoteZeros(CompVPtrArray(T) &H);
+template<typename T>
+static COMPV_ERROR_CODE normalize(const CompVPtrArray(T) &H, CompVPtrArray(T) &Hn);
 
 // Homography 'double' is faster because EigenValues/EigenVectors computation converge faster (less residual error)
 // src: 3xN homogeneous array (X, Y, Z=1). N-cols with N >= 4. The N points must not be colinear.
@@ -307,6 +309,7 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	CompVPtrArray(T) Qt_; // 9x9 matrix containing the eigenvectors (rows) - transposed
 	COMPV_CHECK_CODE_RETURN(err_ = CompVEigen<T>::findSymm(S_, D_, Qt_, false, true));
 	// Find index of the smallest eigenvalue (this code is required because findSymm() is called without sorting for speed-up)
+	// Smallest eigenvalue point to the eigenvector solution equal to the nullspace
 	int minIndex_ = 8;
 	T minEigenValue_ = *D_->ptr(8);
 	for (int j = 7; j >= 0; --j) { // starting at the end as the smallest value is probably there
@@ -461,7 +464,7 @@ static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtr
 }
 
 template<typename T>
-void promoteZeros(CompVPtrArray(T) &H)
+static void promoteZeros(CompVPtrArray(T) &H)
 {
 	// Private function, do not check input parameters
 
@@ -476,6 +479,22 @@ void promoteZeros(CompVPtrArray(T) &H)
 			}
 		}
 	}
+}
+
+template<typename T>
+static COMPV_ERROR_CODE normalize(const CompVPtrArray(T) &H, CompVPtrArray(T) &Hn)
+{
+	// Private function, do not check input parameters
+
+	if (!Hn || Hn->rows() != 3 || Hn->cols() != 3) {
+		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&Hn, 3, 3));
+	}
+	T scale = 1 / *H->ptr(2, 2);
+	T* row = Hn->ptr(0), row[0] *= scale, row[1] *= scale, row[2] *= scale;
+	row = Hn->ptr(1), row[0] *= scale, row[1] *= scale, row[2] *= scale;
+	row = Hn->ptr(2), row[0] *= scale, row[1] *= scale, row[2] = 1;
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

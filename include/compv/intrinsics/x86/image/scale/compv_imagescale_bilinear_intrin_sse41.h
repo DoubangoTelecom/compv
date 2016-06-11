@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_INTRIN_SSE_H_)
-#define _COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_INTRIN_SSE_H_
+#if !defined(_COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_INTRIN_SSE41_H_)
+#define _COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_INTRIN_SSE41_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -26,4 +26,4 @@ COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 */
 
-#endif /* _COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_INTRIN_SSE_H_ */
+#endif /* _COMPV_IMAGE_SCALE_IMAGESCALE_BILINEAR_INTRIN_SSE41_H_ */

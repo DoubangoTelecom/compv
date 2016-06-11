@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_FEATURES_FAST_DETE_INTRIN_SSE_H_)
-#define _COMPV_FEATURES_FAST_DETE_INTRIN_SSE_H_
+#if !defined(_COMPV_FEATURES_FAST_DETE_INTRIN_SSE2_H_)
+#define _COMPV_FEATURES_FAST_DETE_INTRIN_SSE2_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -29,11 +29,9 @@ void FastData16Row_Intrin_SSE2(
     compv_scalar_t* me);
 
 void FastStrengths16_Intrin_SSE2(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x16, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x16, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv_scalar_t N);
-void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x16, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x16, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv_scalar_t N);
-void FastStrengths32_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x32, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x32, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv_scalar_t N);
 
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
 
-#endif /* _COMPV_FEATURES_FAST_DETE_INTRIN_SSE_H_ */
+#endif /* _COMPV_FEATURES_FAST_DETE_INTRIN_SSE2_H_ */

@@ -195,8 +195,9 @@ bool CompVEigen<T>::isCloseToZero(T a)
 template <class T>
 void CompVEigen<T>::jacobiAngles(const CompVPtrArray(T) &S, size_t ith, size_t jth, T *c, T *s)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Do not need to compute cos(x) and sin(x), use jacobiAngles_Left instead
 	// From https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm#Description
+	// https://github.com/DoubangoTelecom/compv/issues/86
+#if 1
 	T Sii = *S->ptr(ith, ith);
 	T Sjj = *S->ptr(jth, jth);
 	if (Sii == Sjj) {
@@ -209,6 +210,22 @@ void CompVEigen<T>::jacobiAngles(const CompVPtrArray(T) &S, size_t ith, size_t j
 		*c = (T)COMPV_MATH_COS(theta);
 		*s = (T)COMPV_MATH_SIN(theta);
 	}
+#else
+	// Not correct
+	// Using SQRT function isn't faster than using cos(), sin() - At least on Win64
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+	T Sii = *S->ptr(ith, ith);
+	T Sjj = *S->ptr(jth, jth);
+	T Sij = *S->ptr(ith, jth);
+	T b = (Sjj - Sii) / Sij;
+	T b2 = b*b;
+	T tan0 = (T)(-b + sqrt(b2 + 4)) / 2;
+	T tan1 = (T)(-b - sqrt(b2 + 4)) / 2;
+	T tan = (T)(abs(tan0) > abs(tan1) ? tan0 : tan1);
+	T tan2 = tan * tan;
+	*c = (T)sqrt(1 / (1 + tan2));
+	*s = (*c * tan);
+#endif
 }
 
 // Compute cos('c') and sin ('s')
