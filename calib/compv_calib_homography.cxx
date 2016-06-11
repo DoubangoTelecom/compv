@@ -12,8 +12,8 @@ COMPV_NAMESPACE_BEGIN()
 
 #define kModuleNameHomography "Homography"
 
-template class CompVHomography<double >;
-template class CompVHomography<float >;
+template class CompVHomography<compv_float64_t >;
+template class CompVHomography<compv_float32_t >;
 
 template<typename T>
 static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H, bool promoteZeros = false);

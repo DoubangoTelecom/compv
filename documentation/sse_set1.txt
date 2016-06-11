@@ -19,3 +19,7 @@ pshufd xmm1, xmm1, 0
 **** _mm_set1_ps(float a) ****
 movss xmm0, [rax]
 shufps xmm0, xmm0, 0x0
+
+**** _mm_set1_pd(double a) ****
+movsd xmm0, [rax]  
+shufpd xmm0, xmm0, 0x0

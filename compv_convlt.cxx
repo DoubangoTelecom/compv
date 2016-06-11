@@ -33,8 +33,8 @@ COMPV_EXTERNC void Convlt1_verthz_fxpq16_minpack16_Asm_X64_AVX2(const uint8_t* i
 COMPV_NAMESPACE_BEGIN()
 
 template class CompVConvlt<uint16_t >;
-template class CompVConvlt<double >;
-template class CompVConvlt<float >;
+template class CompVConvlt<compv_float64_t >;
+template class CompVConvlt<compv_float32_t >;
 
 
 template<class T>
@@ -222,11 +222,10 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt1_private(const uint8_t* img_ptr, int img
 template <typename T>
 void CompVConvlt<T>::convlt1_verthz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const T* vhkern_ptr, int kern_size)
 {
-    static const bool size_of_float_is4 = (sizeof(float) == 4); // ASM and INTRIN code require it
     int minpack = 0; // Minimum number of pixels the function can handle for each operation (must be pof 2)
 
     // Floating point implementation
-    if (std::is_same<T, float>::value && size_of_float_is4) {
+    if (std::is_same<T, compv_float32_t>::value) {
         void(*Convlt1_verthz_float32)(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t stride, compv_scalar_t pad, const float* hkern_ptr, compv_scalar_t kern_size) = NULL;
         if (width > 3 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
             COMPV_EXEC_IFDEF_INTRIN_X86((Convlt1_verthz_float32 = Convlt1_verthz_float32_minpack4_Intrin_SSE2, minpack = 4));

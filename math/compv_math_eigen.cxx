@@ -25,8 +25,8 @@ Functions to compute Eigenvalues and Eigenvectors
 COMPV_NAMESPACE_BEGIN()
 
 template class CompVEigen<int32_t >;
-template class CompVEigen<double >;
-template class CompVEigen<float >;
+template class CompVEigen<compv_float64_t >;
+template class CompVEigen<compv_float32_t >;
 template class CompVEigen<uint16_t >;
 template class CompVEigen<int16_t >;
 template class CompVEigen<uint8_t >;
@@ -173,7 +173,7 @@ done:
 	}
 
 	if (ops >= maxops) {
-		COMPV_DEBUG_ERROR("ops(%d) >= maxops(%d). Using 'double': %s", ops, maxops, std::is_same<T, double>::value ? "true" : "false");
+		COMPV_DEBUG_ERROR("ops(%d) >= maxops(%d). Using 'double': %s", ops, maxops, std::is_same<T, compv_float64_t>::value ? "true" : "false");
 	}
 
 	return err_;
@@ -182,7 +182,7 @@ done:
 template <class T>
 T CompVEigen<T>::epsilon()
 {
-	return (T)(std::is_same<T, double>::value ? COMPV_MATH_EIGEN_DOUBLE_EPSILON : COMPV_MATH_EIGEN_FLOAT_EPSILON);
+	return (T)(std::is_same<T, compv_float64_t>::value ? COMPV_MATH_EIGEN_DOUBLE_EPSILON : COMPV_MATH_EIGEN_FLOAT_EPSILON);
 }
 
 template <class T>

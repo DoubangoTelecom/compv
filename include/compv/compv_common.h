@@ -92,8 +92,8 @@ COMPV_NAMESPACE_BEGIN()
 #define CompVPtrBoxPoint(T)		CompVPtrDef(CompVBox<CompVPoint<T > >)
 
 #define CompVPtrArrayNew(T)		CompVArray<T >::newObj
-#define CompVPtrBoxNew(T)			CompVBox<T >::newObj
-#define CompVPtrBoxPointNew(T)		CompVBox<CompVPoint<T > >::newObj
+#define CompVPtrBoxNew(T)		CompVBox<T >::newObj
+#define CompVPtrBoxPointNew(T)	CompVBox<CompVPoint<T > >::newObj
 
 #if defined(_MSC_VER)
 #	define snprintf		_snprintf

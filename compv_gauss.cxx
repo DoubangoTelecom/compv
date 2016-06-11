@@ -10,8 +10,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-template class CompVGaussKern<double>;
-template class CompVGaussKern<float >;
+template class CompVGaussKern<compv_float64_t>;
+template class CompVGaussKern<compv_float32_t >;
 
 template<class T>
 COMPV_ERROR_CODE CompVGaussKern<T>::buildKern2(CompVPtr<CompVArray<T>* >* kern, int size, float sigma)

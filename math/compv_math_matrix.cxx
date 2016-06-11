@@ -8,12 +8,19 @@
 #include "compv/math/compv_math_eigen.h"
 #include "compv/math/compv_math.h"
 #include "compv/compv_mem.h"
+#include "compv/compv_cpu.h"
+
+#include "compv/intrinsics/x86/math/compv_math_matrix_mul_intrin_sse2.h"
+
+#if COMPV_ARCH_X86 && COMPV_ASM
+COMPV_EXTERNC void MatrixMulGA_float64_minpack2_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv::compv_float64_t* ri, COMPV_ALIGNED(SSE) compv::compv_float64_t* rj, const compv::compv_float64_t* c1, const compv::compv_float64_t* s1, compv::compv_uscalar_t count);
+#endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
 
 template class CompVMatrix<int32_t >;
-template class CompVMatrix<double >;
-template class CompVMatrix<float >;
+template class CompVMatrix<compv_float64_t >;
+template class CompVMatrix<compv_float32_t >;
 template class CompVMatrix<uint16_t >;
 template class CompVMatrix<int16_t >;
 template class CompVMatrix<uint8_t >;
@@ -125,15 +132,39 @@ template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::mulGA(CompVPtrArray(T) &A, size_t ith, size_t jth, T c, T s)
 {
 	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols() /*|| ith <= jth*/ || ith >= A->rows() || jth >= A->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD-friendly
 
 	// When Givens matrix is multiplied to the left of a matrix then, only ith and jth rows change
 	// -> this function could be multi-threaded	
 
+	size_t minpack_ = 1; // must be pof #2 if not equal to #1
 	T* ri_ = const_cast<T*>(A->ptr(ith));
 	T* rj_ = const_cast<T*>(A->ptr(jth));
 	T ai, aj;
 	size_t cols_ = A->cols();
+
+	if (std::is_same<T, compv_float64_t>::value) {
+		void(*MatrixMulGA_float64)(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count) = NULL;
+		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && cols_ >= 2 && COMPV_IS_ALIGNED_SSE(ri_) && COMPV_IS_ALIGNED_SSE(rj_)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((MatrixMulGA_float64 = MatrixMulGA_float64_minpack2_Intrin_SSE2, minpack_ = 2));
+			COMPV_EXEC_IFDEF_ASM_X86((MatrixMulGA_float64 = MatrixMulGA_float64_minpack2_Asm_X86_SSE2, minpack_ = 2));
+		}
+		if (MatrixMulGA_float64) {
+			MatrixMulGA_float64((compv_float64_t*)ri_, (compv_float64_t*)rj_, (const compv_float64_t*)&c, (const compv_float64_t*)&s, cols_);
+		}
+	}
+
+	if (minpack_ == 1) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	}
+	else {
+		// minpack must be pof 2
+		size_t ignored_ = cols_ & (minpack_ - 1);
+		size_t consumed_ = cols_ - ignored_;
+		cols_ = ignored_;
+		ri_ += consumed_;
+		rj_ += consumed_;
+	}
+
 	for (size_t col_ = 0; col_ < cols_; ++col_) {
 		ai = ri_[col_] * c + s* rj_[col_];
 		aj = ri_[col_] * -s + c* rj_[col_];
