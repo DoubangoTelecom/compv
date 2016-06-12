@@ -16,7 +16,9 @@
 
 #if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC void MatrixMulGA_float64_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv::compv_float64_t* ri, COMPV_ALIGNED(SSE) compv::compv_float64_t* rj, const compv::compv_float64_t* c1, const compv::compv_float64_t* s1, compv::compv_uscalar_t count);
+COMPV_EXTERNC void MatrixMulGA_float32_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv::compv_float32_t* ri, COMPV_ALIGNED(SSE) compv::compv_float32_t* rj, const compv::compv_float32_t* c1, const compv::compv_float32_t* s1, compv::compv_uscalar_t count);
 COMPV_EXTERNC void MatrixMulGA_float64_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv::compv_float64_t* ri, COMPV_ALIGNED(AVX) compv::compv_float64_t* rj, const compv::compv_float64_t* c1, const compv::compv_float64_t* s1, compv::compv_uscalar_t count);
+COMPV_EXTERNC void MatrixMulGA_float32_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv::compv_float32_t* ri, COMPV_ALIGNED(AVX) compv::compv_float32_t* rj, const compv::compv_float32_t* c1, const compv::compv_float32_t* s1, compv::compv_uscalar_t count);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
@@ -146,7 +148,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulGA(CompVPtrArray(T) &A, size_t ith, size_t j
 
 	if (std::is_same<T, compv_float64_t>::value) {
 		void(*MatrixMulGA_float64)(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count) = NULL;
-		if (cols_ >= 2 && A->isAlignedSSE()) {
+		if (A->isAlignedSSE()) {
 			if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
 				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixMulGA_float64 = MatrixMulGA_float64_Intrin_SSE2));
 				COMPV_EXEC_IFDEF_ASM_X86((MatrixMulGA_float64 = MatrixMulGA_float64_Asm_X86_SSE2));
@@ -157,7 +159,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulGA(CompVPtrArray(T) &A, size_t ith, size_t j
 			}
 #endif
 		}
-		if (cols_ >= 4 && A->isAlignedAVX()) {
+		if (A->isAlignedAVX()) {
 			if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
 				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixMulGA_float64 = MatrixMulGA_float64_Intrin_AVX));
 				COMPV_EXEC_IFDEF_ASM_X86((MatrixMulGA_float64 = MatrixMulGA_float64_Asm_X86_AVX));
@@ -165,6 +167,25 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulGA(CompVPtrArray(T) &A, size_t ith, size_t j
 		}
 		if (MatrixMulGA_float64) {
 			MatrixMulGA_float64((compv_float64_t*)ri_, (compv_float64_t*)rj_, (const compv_float64_t*)&c, (const compv_float64_t*)&s, cols_);
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
+	else if (std::is_same<T, compv_float32_t>::value) {
+		void(*MatrixMulGA_float32)(COMPV_ALIGNED(SSE) compv_float32_t* ri, COMPV_ALIGNED(SSE) compv_float32_t* rj, const compv_float32_t* c1, const compv_float32_t* s1, compv_uscalar_t count) = NULL;
+		if (A->isAlignedSSE()) {
+			if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixMulGA_float32 = MatrixMulGA_float32_Intrin_SSE2));
+				COMPV_EXEC_IFDEF_ASM_X86((MatrixMulGA_float32 = MatrixMulGA_float32_Asm_X86_SSE2));
+			}
+		}
+		if (A->isAlignedAVX()) {
+			if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
+				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixMulGA_float32 = MatrixMulGA_float32_Intrin_AVX));
+				COMPV_EXEC_IFDEF_ASM_X86((MatrixMulGA_float32 = MatrixMulGA_float32_Asm_X86_AVX));
+			}
+		}
+		if (MatrixMulGA_float32) {
+			MatrixMulGA_float32((compv_float32_t*)ri_, (compv_float32_t*)rj_, (const compv_float32_t*)&c, (const compv_float32_t*)&s, cols_);
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}

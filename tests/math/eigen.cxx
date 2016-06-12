@@ -11,7 +11,7 @@ using namespace compv;
 
 #define LOOP_COUNT			1 // sparse matrix, dense matrix slowly converge when using floats
 #define NUM_POINTS			200 + 9 // +9 to make it SIMD-unfriendly for testing
-#define TYPE				TYPE_FLOAT  // double or float
+#define TYPE				TYPE_DOUBLE  // double or float
 
 #if TYPE == TYPE_DOUBLE
 #	if COMPV_ARCH_X64
