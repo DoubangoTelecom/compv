@@ -124,6 +124,38 @@ COMPV_ERROR_CODE CompVArray<T>::shrink(CompVPtr<CompVArray<T>* >& array, size_t 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// Set extra bytes (between the endof the row and the endof the stride).
+// This function is useful to prepare data for SIMD function designed to read beyond the row and up to the end of the stride
+// alignV: SIMD-alignment function for which to prepare the data. If not defined all padding data will be set to zero (CPU consuming). 
+// alignV must be pof 2
+template<class T>
+COMPV_ERROR_CODE CompVArray<T>::wash(int alignV /*= -1*/)
+{
+	if (alignV <= 0) {
+		alignV = (int)m_nAlignV;
+	}
+	size_t rowInBytes_ = rowInBytes();
+	size_t neededBytes_ = CompVMem::alignForward(rowInBytes_, alignV);
+	size_t strideInBytes_ = strideInBytes();
+	COMPV_CHECK_EXP_RETURN(neededBytes_ > strideInBytes_, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	size_t washBytes_ = neededBytes_ - rowInBytes_;
+	if (washBytes_ == 0) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	uint8_t* data_ = reinterpret_cast<uint8_t*>(m_pDataPtr)+ rowInBytes_;
+	size_t row_, col_;
+	for (row_ = 0; row_ < rows(); ++row_) {
+		for (col_ = 0; col_ <= washBytes_ - 8; col_ += 8) {
+			*((uint64_t*)&data_[col_]) = 0;
+		}
+		for ( ; col_ < washBytes_; ++col_) {
+			data_[col_] = 0;
+		}
+		data_ += strideInBytes_;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 // Copy mem to array
 template<class T>
 COMPV_ERROR_CODE CompVArray<T>::copy(CompVPtr<CompVArray<T>* >& array, const T* mem, size_t rows, size_t cols, size_t arrayAlign /*= COMPV_SIMD_ALIGNV_DEFAULT*/, size_t memAlign /*= 1*/)

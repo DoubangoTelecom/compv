@@ -64,6 +64,7 @@ public:
 	};
 
 	COMPV_ERROR_CODE shrink(CompVPtr<CompVArray<T>* >& array, size_t newRows, size_t newCols);
+	COMPV_ERROR_CODE wash(int alignV = -1);
 
 	static COMPV_ERROR_CODE copy(CompVPtr<CompVArray<T>* >& array, const T* mem, size_t rows, size_t cols, size_t arrayAlign = COMPV_SIMD_ALIGNV_DEFAULT, size_t memAlign = 1);
 	static COMPV_ERROR_CODE copy(T* mem, const CompVPtr<CompVArray<T>* >& array, size_t memAlign = 1);

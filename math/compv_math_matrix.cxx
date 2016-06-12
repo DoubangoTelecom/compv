@@ -241,26 +241,56 @@ template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, size_t *row, size_t *col, T* max)
 {
 	COMPV_CHECK_EXP_RETURN(!S || S->rows() != S->cols() || !S->rows() || !row || !col || !max, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();  // SIMD
+	
+	if (std::is_same<T, compv_float64_t>::value) {
+		int alignv = -1;
+		void(*maxAbsOffDiag_symm_float64)(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rows, compv_uscalar_t strideInBytes) = NULL;
+		if (S->isAlignedSSE()) {
+			if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+				//COMPV_EXEC_IFDEF_INTRIN_X86((maxAbsOffDiag_symm_float64 = MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2, alignv = COMPV_SIMD_ALIGNV_SSE));
+				// COMPV_EXEC_IFDEF_ASM_X86((maxAbsOffDiag_symm_float64 = , alignv = COMPV_SIMD_ALIGNV_SSE));
+			}
+		}
+		if (S->isAlignedAVX()) {
+			if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
+				//COMPV_EXEC_IFDEF_INTRIN_X86((maxAbsOffDiag_symm_float64 = , alignv = COMPV_SIMD_ALIGNV_AVX));
+				//COMPV_EXEC_IFDEF_ASM_X86((maxAbsOffDiag_symm_float64 = , alignv = COMPV_SIMD_ALIGNV_AVX));
+			}
+		}
+		if (maxAbsOffDiag_symm_float64) {
+			CompVPtrArray(T) Sw;
+			COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::washDiag(S, Sw, alignv)); // must be washed
+			compv_uscalar_t row_ = 0, col_ = 0;
+			compv_float64_t max_ = 0;
+			maxAbsOffDiag_symm_float64(reinterpret_cast<const compv_float64_t*>(Sw->ptr()), &row_, &col_, &max_, (compv_uscalar_t)Sw->rows(), (compv_uscalar_t)Sw->strideInBytes());
+			*row = (size_t)row_;
+			*col = (size_t)col_;
+			*max = (T)max_;
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
 
-	// TODO(dmi): SIMD, compute lower triangle abs
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 
 	*row = *col = 0;
 	*max = 0;
 
 	T r0_ = 0, r1_;
-	int i, j;
-	int rows = (int)S->rows();
-	const T* S_;
+	size_t i, j;
+	size_t rows = S->rows();
+	size_t strideInBytes = S->strideInBytes();
+	const T* S1_;
+	const uint8_t* S0_ = reinterpret_cast<const uint8_t*>(S->ptr(1));
 	for (j = 1; j < rows; ++j) {
-		S_ = S->ptr(j);
+		S1_ = reinterpret_cast<const T*>(S0_);
 		for (i = 0; i < j; ++i) { // i stops at j because the matrix is symmetric
-			if ((r1_ = ::abs(S_[i])) > r0_) {
+			if ((r1_ = ::abs(S1_[i])) > r0_) {
 				r0_ = r1_;
 				*row = j;
 				*col = i;
 			}
 		}
+		S0_ += strideInBytes;
 	}
 	*max = r0_;
 
@@ -451,6 +481,47 @@ COMPV_ERROR_CODE CompVMatrix<T>::resize0(CompVPtrArray(T) &A, size_t rows, size_
 		}
 	}
 	A = B;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Set bytes from the diagonal (included) up to the alignment to zero
+// S must be square
+//!\\ First row is ignored
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::washDiag(const CompVPtrArray(T) &S, CompVPtrArray(T) &R, int alignv /*= -1*/)
+{
+	COMPV_CHECK_EXP_RETURN(!S || !S->rows() || !S->cols() || S->rows() != S->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	
+	if (!R || R->rows() != S->rows() || R->cols() != S->cols()) {
+		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&R, S->rows(), S->cols()));
+	}
+	if (alignv <= 0) {
+		alignv = (int)R->alignV();
+	}
+
+	size_t row_, col_, elts_ = R->elmtInBytes();
+	const T* src_;
+	T* dst_;
+
+	COMPV_CHECK_EXP_RETURN((alignv % elts_), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	const size_t istep_ = (size_t)(alignv / elts_);
+	size_t ibound_ = istep_;
+
+	for (row_ = 1; row_ < R->rows(); ++row_) {
+		src_ = S->ptr(row_);
+		dst_ = const_cast<T*>(R->ptr(row_));
+		for (col_ = 0; col_ < row_; ++col_) {
+			dst_[col_] = src_[col_];
+		}
+		for (; col_ < ibound_; ++col_) {
+			dst_[col_] = 0;
+		}
+		if (row_ == ibound_) {
+			ibound_ += istep_;
+		}
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
