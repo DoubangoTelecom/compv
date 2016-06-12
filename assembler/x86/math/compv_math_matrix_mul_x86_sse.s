@@ -10,7 +10,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MatrixMulGA_float64_minpack2_Asm_X86_SSE2)
+global sym(MatrixMulGA_float64_Asm_X86_SSE2)
 
 section .data
 
@@ -22,8 +22,8 @@ section .text
 ; arg(2) -> const compv_float64_t* c1
 ; arg(3) -> const compv_float64_t* s1
 ; arg(4) -> compv_uscalar_t count
-; void MatrixMulGA_float64_minpack2_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
-sym(MatrixMulGA_float64_minpack2_Asm_X86_SSE2):
+; void MatrixMulGA_float64_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
+sym(MatrixMulGA_float64_Asm_X86_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
@@ -32,7 +32,6 @@ sym(MatrixMulGA_float64_minpack2_Asm_X86_SSE2):
 
 	xor rcx, rcx ; rcx = i
 	mov rbx, arg(4) ; rbx = count
-	sub rbx, 2
 	imul rbx, 8
 
 	mov rax, arg(2)

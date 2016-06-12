@@ -10,7 +10,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MatrixMulGA_float64_minpack4_Asm_X86_AVX)
+global sym(MatrixMulGA_float64_Asm_X86_AVX)
 
 section .data
 
@@ -22,8 +22,8 @@ section .text
 ; arg(2) -> const compv_float64_t* c1
 ; arg(3) -> const compv_float64_t* s1
 ; arg(4) -> compv_uscalar_t count
-; void MatrixMulGA_float64_minpack4_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
-sym(MatrixMulGA_float64_minpack4_Asm_X86_AVX):
+; void MatrixMulGA_float64_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
+sym(MatrixMulGA_float64_Asm_X86_AVX):
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -33,7 +33,6 @@ sym(MatrixMulGA_float64_minpack4_Asm_X86_AVX):
 
 	xor rcx, rcx ; rcx = i
 	mov rbx, arg(4) ; rbx = count
-	sub rbx, 4
 	imul rbx, 8
 
 	mov rax, arg(2)

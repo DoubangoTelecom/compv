@@ -292,6 +292,7 @@
 #define COMPV_SIMD_ALIGNV_SSE		16
 #define COMPV_SIMD_ALIGNV_AVX		32
 #define COMPV_SIMD_ALIGNV_AVX2		COMPV_SIMD_ALIGNV_AVX
+#define COMPV_SIMD_ALIGNV_AVX512	64
 #define COMPV_SIMD_ALIGNV_NEON		16 // ARM NEON
 #define COMPV_SIMD_ALIGNV_DEFAULT	32 // This is max to make sure all requirements will work
 

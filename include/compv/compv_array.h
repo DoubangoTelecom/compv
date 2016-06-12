@@ -50,6 +50,18 @@ public:
     COMPV_INLINE bool isEmpty()const {
         return !m_nCols || !m_nRows;
     };
+	COMPV_INLINE bool isAlignedSSE()const {
+		return COMPV_IS_ALIGNED_SSE(m_nAlignV);
+	};
+	COMPV_INLINE bool isAlignedAVX()const {
+		return COMPV_IS_ALIGNED_AVX(m_nAlignV);
+	};
+	COMPV_INLINE bool isAlignedAVX512()const {
+		return COMPV_IS_ALIGNED_AVX512(m_nAlignV);
+	};
+	COMPV_INLINE bool isAlignedNEON()const {
+		return COMPV_IS_ALIGNED_NEON(m_nAlignV);
+	};
 
 	COMPV_ERROR_CODE shrink(CompVPtr<CompVArray<T>* >& array, size_t newRows, size_t newCols);
 

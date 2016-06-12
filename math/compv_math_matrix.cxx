@@ -15,8 +15,8 @@
 #include "compv/intrinsics/x86/math/compv_math_matrix_mul_intrin_avx.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM
-COMPV_EXTERNC void MatrixMulGA_float64_minpack2_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv::compv_float64_t* ri, COMPV_ALIGNED(SSE) compv::compv_float64_t* rj, const compv::compv_float64_t* c1, const compv::compv_float64_t* s1, compv::compv_uscalar_t count);
-COMPV_EXTERNC void MatrixMulGA_float64_minpack4_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv::compv_float64_t* ri, COMPV_ALIGNED(AVX) compv::compv_float64_t* rj, const compv::compv_float64_t* c1, const compv::compv_float64_t* s1, compv::compv_uscalar_t count);
+COMPV_EXTERNC void MatrixMulGA_float64_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv::compv_float64_t* ri, COMPV_ALIGNED(SSE) compv::compv_float64_t* rj, const compv::compv_float64_t* c1, const compv::compv_float64_t* s1, compv::compv_uscalar_t count);
+COMPV_EXTERNC void MatrixMulGA_float64_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv::compv_float64_t* ri, COMPV_ALIGNED(AVX) compv::compv_float64_t* rj, const compv::compv_float64_t* c1, const compv::compv_float64_t* s1, compv::compv_uscalar_t count);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
@@ -138,8 +138,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulGA(CompVPtrArray(T) &A, size_t ith, size_t j
 
 	// When Givens matrix is multiplied to the left of a matrix then, only ith and jth rows change
 	// -> this function could be multi-threaded	
-
-	size_t minpack_ = 1; // must be pof #2 if not equal to #1
+	
 	T* ri_ = const_cast<T*>(A->ptr(ith));
 	T* rj_ = const_cast<T*>(A->ptr(jth));
 	T ai, aj;
@@ -147,40 +146,30 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulGA(CompVPtrArray(T) &A, size_t ith, size_t j
 
 	if (std::is_same<T, compv_float64_t>::value) {
 		void(*MatrixMulGA_float64)(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count) = NULL;
-		if (cols_ >= 2 && COMPV_IS_ALIGNED_SSE(ri_) && COMPV_IS_ALIGNED_SSE(rj_)) {
+		if (cols_ >= 2 && A->isAlignedSSE()) {
 			if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixMulGA_float64 = MatrixMulGA_float64_minpack2_Intrin_SSE2, minpack_ = 2));
-				COMPV_EXEC_IFDEF_ASM_X86((MatrixMulGA_float64 = MatrixMulGA_float64_minpack2_Asm_X86_SSE2, minpack_ = 2));
+				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixMulGA_float64 = MatrixMulGA_float64_Intrin_SSE2));
+				COMPV_EXEC_IFDEF_ASM_X86((MatrixMulGA_float64 = MatrixMulGA_float64_Asm_X86_SSE2));
 			}
 #if 0 // SSE2 faster
 			if (CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
-				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixMulGA_float64 = MatrixMulGA_float64_minpack2_Intrin_SSE41, minpack_ = 2));
+				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixMulGA_float64 = MatrixMulGA_float64_Intrin_SSE41));
 			}
 #endif
 		}
-		if (cols_ >= 4 && COMPV_IS_ALIGNED_AVX(ri_) && COMPV_IS_ALIGNED_AVX(rj_)) {
+		if (cols_ >= 4 && A->isAlignedAVX()) {
 			if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
-				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixMulGA_float64 = MatrixMulGA_float64_minpack4_Intrin_AVX, minpack_ = 4));
-				COMPV_EXEC_IFDEF_ASM_X86((MatrixMulGA_float64 = MatrixMulGA_float64_minpack4_Asm_X86_AVX, minpack_ = 4));
+				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixMulGA_float64 = MatrixMulGA_float64_Intrin_AVX));
+				COMPV_EXEC_IFDEF_ASM_X86((MatrixMulGA_float64 = MatrixMulGA_float64_Asm_X86_AVX));
 			}
 		}
 		if (MatrixMulGA_float64) {
 			MatrixMulGA_float64((compv_float64_t*)ri_, (compv_float64_t*)rj_, (const compv_float64_t*)&c, (const compv_float64_t*)&s, cols_);
+			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
-
-	if (minpack_ == 1) {
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	}
-	else {
-		// minpack must be pof 2
-		size_t ignored_ = cols_ & (minpack_ - 1);
-		size_t consumed_ = cols_ - ignored_;
-		cols_ = ignored_;
-		ri_ += consumed_;
-		rj_ += consumed_;
-	}
-
+	
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	for (size_t col_ = 0; col_ < cols_; ++col_) {
 		ai = ri_[col_] * c + s* rj_[col_];
 		aj = ri_[col_] * -s + c* rj_[col_];
@@ -491,6 +480,35 @@ COMPV_ERROR_CODE CompVMatrix<T>::rank(const CompVPtrArray(T) &A, int &r, bool ro
 			++r;
 		}
 	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::isSymmetric(const CompVPtrArray(T) &A, bool &symmetric)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
+	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	if (A->rows() != A->cols()) {
+		symmetric = false; // must be square
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	CompVPtrArray(T) At;
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::transpose(A, At)); // transpose to make it SIMD-friendly
+
+	const T *r, *rt;
+	for (size_t j = 0; j < A->rows(); ++j) {
+		r = A->ptr(j);
+		rt = At->ptr(j);
+		for (size_t i = 0; i < A->cols(); ++i) {
+			if (r[i] != rt[i]) {
+				symmetric = false;
+				return COMPV_ERROR_CODE_S_OK;
+			}
+		}
+	}
+	symmetric = true;
 	return COMPV_ERROR_CODE_S_OK;
 }
 

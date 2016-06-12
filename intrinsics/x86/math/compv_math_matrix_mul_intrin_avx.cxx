@@ -16,7 +16,8 @@ COMPV_NAMESPACE_BEGIN()
 #if defined __INTEL_COMPILER
 #	pragma intel optimization_parameter target_arch=avx
 #endif
-void MatrixMulGA_float64_minpack4_Intrin_AVX(COMPV_ALIGNED(AVX2) compv_float64_t* ri, COMPV_ALIGNED(AVX2) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
+// We'll read beyond the end of the data which means ri and rj must be strided
+void MatrixMulGA_float64_Intrin_AVX(COMPV_ALIGNED(AVX2) compv_float64_t* ri, COMPV_ALIGNED(AVX2) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM which support FMA3
 #if !defined(__AVX__)
@@ -25,15 +26,11 @@ void MatrixMulGA_float64_minpack4_Intrin_AVX(COMPV_ALIGNED(AVX2) compv_float64_t
 	_mm256_zeroupper();
 
 	__m256d ymmC, ymmS, ymmRI, ymmRJ;
-	compv_uscalar_t i;
-
-	i = 0;
-	count -= 4; // up to the caller to check that  count is >= 4
 
 	ymmC = _mm256_broadcast_sd(c1);
 	ymmS = _mm256_broadcast_sd(s1);
 
-	do {
+	for (compv_uscalar_t i = 0; i < count; i += 4) { // more than count, upto stride
 		ymmRI = _mm256_load_pd(&ri[i]);
 		ymmRJ = _mm256_load_pd(&rj[i]);
 
@@ -45,7 +42,7 @@ void MatrixMulGA_float64_minpack4_Intrin_AVX(COMPV_ALIGNED(AVX2) compv_float64_t
 		_mm256_store_pd(&ri[i], _mm256_fmadd_pd(ymmC, ymmRI, _mm256_mul_pd(ymmS, ymmRJ)));
 		_mm256_store_pd(&rj[i], _mm256_fmsub_pd(ymmC, ymmRJ, _mm256_mul_pd(ymmS, ymmRI)));
 #endif
-	} while ((i += 4) < count);
+	}
 	_mm256_zeroupper();
 }
 
