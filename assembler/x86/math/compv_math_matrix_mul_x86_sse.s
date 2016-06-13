@@ -194,11 +194,11 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41):
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 		.LoopCols1
 			movapd xmm0, [rdx + rdi * 8]
+			lea rdi, [rdi + 2] ; increment i
 			andpd xmm0, xmm4
 			movapd xmm1, xmm5
 			cmppd xmm1, xmm0, 1 ; testing lT instead of GT
 			ptest xmm1, xmm3
-			lea rdi, [rdi + 2] ; increment i
 			jz .LoopCols1NotGreater1
 				comisd xmm0, xmm5
 				mov rcx, rsi ; update row
