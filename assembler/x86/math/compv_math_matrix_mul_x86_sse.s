@@ -141,7 +141,9 @@ sym(MatrixMulGA_float32_Asm_X86_SSE2):
 	pop rbp
 	ret
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; %1 -> 41 -> use SSE41, 2 -> use SSE2
 ; arg(0) -> COMPV_ALIGNED(SSE) compv_float64_t* S
 ; arg(1) -> compv_uscalar_t *row
 ; arg(2) -> compv_uscalar_t *col
@@ -149,8 +151,8 @@ sym(MatrixMulGA_float32_Asm_X86_SSE2):
 ; arg(4) -> compv_uscalar_t rowStart
 ; arg(5) -> compv_uscalar_t rowEnd
 ; arg(6) -> compv_uscalar_t strideInBytes
-; void MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rowStart, compv_uscalar_t rowEnd, compv_uscalar_t strideInBytes)
-sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41):
+; void MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rowStart, compv_uscalar_t rowEnd, compv_uscalar_t strideInBytes)
+%macro MatrixMaxAbsOffDiagSymm_float64_Asm_X86 1
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
@@ -158,6 +160,16 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41):
 	push rdi
 	push rbx
 	;; end prolog ;;
+
+%if %1 != 41 && %1 != 2
+	%error "not supported"
+%endif
+
+%if %1 == 2 ; SSE2
+	; alloc memory
+	sub rsp, 8
+	; [rsp + 0] = j - 1
+%endif
 
 	; xmm4 = xmmAbsMask
 	movapd xmm4, [sym(kAVXFloat64MaskAbs)]
@@ -188,17 +200,26 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41):
 		lea rax, [rsi - 1]
 		cmp rdi, rax
 		jge .EndOfLoopCols1
+%if %1 == 2 ; SSE2
+		mov [rsp + 0], rax
+%endif
 		
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (; i < j - 1; i += 2)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 		.LoopCols1
 			movapd xmm0, [rdx + rdi * 8]
-			lea rdi, [rdi + 2] ; increment i
-			andpd xmm0, xmm4
 			movapd xmm1, xmm5
+			andpd xmm0, xmm4
 			cmppd xmm1, xmm0, 1 ; testing lT instead of GT
+%if %1 == 41 ; SSE41
 			ptest xmm1, xmm3
+			lea rdi, [rdi + 2] ; increment i
+%else ; SSE2
+			movmskpd rax, xmm1
+			lea rdi, [rdi + 2] ; increment i
+			test rax, rax
+%endif
 			jz .LoopCols1NotGreater1
 				comisd xmm0, xmm5
 				mov rcx, rsi ; update row
@@ -213,7 +234,11 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41):
 					pshufd xmm5, xmm1, 0x44 ; duplicate low 8bytes
 				.LoopCols1NotGreater3
 			.LoopCols1NotGreater1
+%if %1 == 2 ; SSE2
+			cmp rdi, [rsp + 0] ; i <? j -1
+%else ; SSE41
 			cmp rdi, rax ; i <? j -1
+%endif
 			jl .LoopCols1
 		.EndOfLoopCols1
 		
@@ -225,7 +250,7 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41):
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopCols2
 			movsd xmm0, [rdx + rdi * 8] ; 8 = sizeof(#1 double)
-			pand xmm0, xmm4
+			andpd xmm0, xmm4
 			comisd xmm0, xmm5
 			lea rdi, [rdi + 1] ; increment i
 			jbe .LoopCols2NotGreater1
@@ -250,6 +275,11 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41):
 	mov [rsi], rcx
 	mov [rdi], rbx
 
+%if %1 == 2 ; SSE2
+	; free memory
+	add rsp, 8
+%endif
+
 	;; begin epilog ;;
 	pop rbx
 	pop rdi
@@ -258,18 +288,20 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41):
 	mov rsp, rbp
 	pop rbp
 	ret
-
-
+%endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; arg(0) -> COMPV_ALIGNED(SSE) compv_float64_t* S
-; arg(1) -> compv_uscalar_t *row
-; arg(2) -> compv_uscalar_t *col
-; arg(3) -> compv_float64_t* max
-; arg(4) -> compv_uscalar_t rowStart
-; arg(5) -> compv_uscalar_t rowEnd
-; arg(6) -> compv_uscalar_t strideInBytes
-; void MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rowStart, compv_uscalar_t rowEnd, compv_uscalar_t strideInBytes)
+sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41):
+	MatrixMaxAbsOffDiagSymm_float64_Asm_X86 41
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
-	
-	ret
+	MatrixMaxAbsOffDiagSymm_float64_Asm_X86 2
+
+
+
+
+
+
+
+
