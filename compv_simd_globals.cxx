@@ -109,3 +109,8 @@ COMPV_API COMPV_ALIGN_DEFAULT() int32_t kAVXPermutevar8x32_CDEFFGHX_i32[] = { //
 COMPV_API COMPV_ALIGN_DEFAULT() int32_t kAVXPermutevar8x32_XXABBCDE_i32[] = { // = k_X_X_0_1_1_2_3_4
     0xFF, 0xFF, COMPV_AVX_A64, COMPV_AVX_B64, COMPV_AVX_B64, COMPV_AVX_C64, COMPV_AVX_D64, COMPV_AVX_E64
 };
+
+COMPV_API COMPV_ALIGN_DEFAULT() uint32_t kAVXFloat64MaskAbs[] = { // Mask used in and operations to compute the absolute value
+	0xffffffff, 0x7fffffff, 0xffffffff, 0x7fffffff, // SSE
+	0xffffffff, 0x7fffffff, 0xffffffff, 0x7fffffff // AVX
+};

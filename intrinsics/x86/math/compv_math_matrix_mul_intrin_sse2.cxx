@@ -9,6 +9,7 @@
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/compv_simd_globals.h"
 #include "compv/math/compv_math.h"
+#include "compv/compv_mem.h"
 #include "compv/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -51,112 +52,91 @@ void MatrixMulGA_float32_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float32_t* ri, COM
 
 // We'll read beyond the end of the data which means S must be strided and washed
 // S must be symmetric matrix
-void MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rows, compv_uscalar_t strideInBytes)
+// rowStart should be >= 1 as it doesn't make sense
+void MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rowStart, compv_uscalar_t rowEnd, compv_uscalar_t strideInBytes)
 {
-	compv_uscalar_t i, j, tmpi, tmpj;
-	__m128d xmmAbsMask, xmmAbs, xmmMax;
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
+	compv_uscalar_t i, j;
+	__m128d xmmAbs, xmmMax, xmm0;
+	__m128i xmmAbsMask, xmmAllZerosMask;
 	int cmp;
 
-	xmmAbsMask = _mm_set1_pd(-0.); // Sign bit (bit-63) to 1 (https://en.wikipedia.org/wiki/Double-precision_floating-point_format) and all other bites to 0
+	xmmAbsMask = _mm_load_si128(reinterpret_cast<const __m128i*>(kAVXFloat64MaskAbs));
+	xmmAllZerosMask = _mm_cmpeq_epi32(xmmAbsMask, xmmAbsMask); // 0xfff....
 	xmmMax = _mm_setzero_pd();
-
-	tmpi = 0, tmpj = 0;
-	*row = *col = 0;
 	*max = 0;
-	
-	// Find max value without worrying about the indexes
-	const uint8_t* S0_ = reinterpret_cast<const uint8_t*>(S) + strideInBytes; // j start at row index 1
-	const compv_float64_t* S1_;
-	for (j = 1; j < rows; ++j) { // j = 0 is on diagonal
-		S1_ = reinterpret_cast<const compv_float64_t*>(S0_);
-		for (i = 0; i < j; i += 2) { // i stops at j because the matrix is symmetric
-			//COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-			//if (i == 206 && j == 207) {
-				//__m128d xmm0 = _mm_load_pd(&S1_[i]);
-			//	int kaka = 0;
-			//}
-			//if (i == j - 1) { // 1 double will cross or touch the diagonal ?
-			//	xmmAbs = _mm_andnot_pd(xmmAbsMask, _mm_load_sd(&S1_[i])); // abs(S)
-			//}
-			//else {
-				xmmAbs = _mm_andnot_pd(xmmAbsMask, _mm_load_pd(&S1_[i])); // abs(S)
-			//}
-			cmp = _mm_movemask_pd(_mm_cmpgt_pd(xmmAbs, xmmMax)); // must be "cmpge" instead of "cmpgt" to make sure we'll not stop when we cross the column throught the diagonal
-			if (cmp) {
-				tmpi = i;
-				tmpj = j;
-				xmmMax = _mm_max_pd(xmmMax, xmmAbs);
-			}
-		}
-		S0_ += strideInBytes;
+	*row = 0;
+	*col = 0;
+	(xmm0);
+
+	// "j" is undigned which means "j - 1" will overflow when rowStart is equal to zero
+	// we don't need this check on asm (using registers)
+	if (rowStart == 0) {
+		rowStart = 1;
 	}
 
-#if 1
-	// Now find the indexes
-	if (tmpi && tmpj) {
-		__m128d xmm0 = _mm_shuffle_pd(xmmMax, xmmMax, 0x01); // move high double to the low position
-		cmp = _mm_movemask_pd(_mm_cmpgt_pd(xmmMax, xmm0));
-		*row = tmpj;
-		if (cmp & 1) {
-			// max in the first position
-			*max = _mm_cvtsd_f64(xmmMax);
-			*col = tmpi + 0;
-		}
-		else {
-			// max in the second position
-			*max = _mm_cvtsd_f64(xmm0);
-			*col = tmpi + 1;
-		}
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-		if (*col >= *row) { // reading upper triangle ?
-			// swap
-			compv_uscalar_t tmp = *row;
-			*row = *col;
-			*col = tmp;
-		}
-	}
-#else
-	__m128d xmm0 = _mm_shuffle_pd(xmmMax, xmmMax, 0x01); // move high double to the low position
-	cmp = _mm_movemask_pd(_mm_cmpgt_pd(xmmMax, xmm0));
-	*max = _mm_cvtsd_f64((cmp & 1) ? xmmMax : xmm0);
-	S0_ = reinterpret_cast<const uint8_t*>(S)+strideInBytes; // j start at row index 1
-	for (j = 1; j < rows; ++j) { // j = 0 is on diagonal
+	// Find max value without worrying about the indexes
+	const uint8_t* S0_ = reinterpret_cast<const uint8_t*>(S) + (rowStart * strideInBytes); // j start at row index 1
+	const compv_float64_t* S1_;
+	for (j = rowStart; j < rowEnd; ++j) { // j = 0 is on diagonal
 		S1_ = reinterpret_cast<const compv_float64_t*>(S0_);
-		for (i = 0; i < j; i += 1) {
-			if (::abs(S1_[i]) == *max) {
+		i = 0;
+		for (; i < j - 1; i += 2) { // i stops at j because the matrix is symmetric
+			xmmAbs = _mm_castsi128_pd(_mm_and_si128(_mm_castpd_si128(_mm_load_pd(&S1_[i])), xmmAbsMask)); // abs(S)
+#if 0 // SSE41
+			COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+			cmp = _mm_test_all_zeros(_mm_castpd_si128(_mm_cmpgt_pd(xmmAbs, xmmMax)), xmmAllZerosMask);
+			if (!cmp) {
+				*row = j;
+				xmm0 = _mm_shuffle_pd(xmmAbs, xmmAbs, 0x01); // invert: high | low
+				if (_mm_comigt_sd(xmmAbs, xmmMax)) {
+					xmmMax = xmmAbs;
+					*col = i;
+				}
+				if (_mm_comigt_sd(xmm0, xmmMax)) {
+					xmmMax = xmm0;
+					*col = i + 1;
+				}
+				xmmMax = _mm_shuffle_pd(xmmMax, xmmMax, 0x0); // duplicate low double
+			}
+#else // SSE2
+			cmp = _mm_movemask_pd(_mm_cmpgt_pd(xmmAbs, xmmMax));
+			if (cmp) { // most of the time matrix will be full of zeros/epsilons (sparse)
+				*row = j;
+				if (cmp == 1) {
+					xmmMax = xmmAbs;
+					*col = i;
+				}
+				else if (cmp == 2) {
+					xmmMax = _mm_shuffle_pd(xmmAbs, xmmAbs, 0x01);
+					*col = i + 1;
+				}
+				else {
+					xmm0 = _mm_shuffle_pd(xmmAbs, xmmAbs, 0x01);
+					if (_mm_comigt_sd(xmmAbs, xmmMax)) {
+						xmmMax = xmmAbs;
+						*col = i;
+					}
+					if (_mm_comigt_sd(xmm0, xmmMax)) {
+						xmmMax = xmm0;
+						*col = i + 1;
+					}
+				}
+				xmmMax = _mm_shuffle_pd(xmmMax, xmmMax, 0x0); // duplicate low double
+			}
+#endif
+		}
+		for (; i < j; i += 1) { // i stops at j because the matrix is symmetric
+			xmmAbs = _mm_castsi128_pd(_mm_and_si128(_mm_castpd_si128(_mm_load_sd(&S1_[i])), xmmAbsMask)); // abs(S)
+			if (_mm_comigt_sd(xmmAbs, xmmMax)) {
+				xmmMax = _mm_shuffle_pd(xmmAbs, xmmAbs, 0); // duplicate low double
 				*row = j;
 				*col = i;
-				goto done;
 			}
 		}
 		S0_ += strideInBytes;
 	}
-done:;
-#endif
-
-		
-#if 0
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-	compv_uscalar_t a = 0, b = 0;
-	compv_float64_t r0_ = 0, r1_;
-	S0_ = reinterpret_cast<const uint8_t*>(S)+strideInBytes; // j start at row index 1
-	for (j = 1; j < rows; ++j) { // j = 0 is on diagonal
-		S1_ = reinterpret_cast<const compv_float64_t*>(S0_);
-		for (i = 0; i < j; i += 1) {
-			if ((r1_ = ::abs(S1_[i])) > r0_) {
-				r0_ = r1_;
-				a = j;
-				b = i;
-			}
-		}
-		S0_ += strideInBytes;
-	}
-
-	if (b != *col || a != *row || r0_ != *max) {
-		int kaka = 0;
-	}
-#endif
-
+	*max = _mm_cvtsd_f64(xmmMax);
 }
 
 COMPV_NAMESPACE_END()

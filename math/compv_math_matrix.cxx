@@ -19,6 +19,7 @@ COMPV_EXTERNC void MatrixMulGA_float64_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv::co
 COMPV_EXTERNC void MatrixMulGA_float32_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv::compv_float32_t* ri, COMPV_ALIGNED(SSE) compv::compv_float32_t* rj, const compv::compv_float32_t* c1, const compv::compv_float32_t* s1, compv::compv_uscalar_t count);
 COMPV_EXTERNC void MatrixMulGA_float64_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv::compv_float64_t* ri, COMPV_ALIGNED(AVX) compv::compv_float64_t* rj, const compv::compv_float64_t* c1, const compv::compv_float64_t* s1, compv::compv_uscalar_t count);
 COMPV_EXTERNC void MatrixMulGA_float32_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv::compv_float32_t* ri, COMPV_ALIGNED(AVX) compv::compv_float32_t* rj, const compv::compv_float32_t* c1, const compv::compv_float32_t* s1, compv::compv_uscalar_t count);
+COMPV_EXTERNC void MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41(const COMPV_ALIGNED(SSE) compv::compv_float64_t* S, compv::compv_uscalar_t *row, compv::compv_uscalar_t *col, compv::compv_float64_t* max, compv::compv_uscalar_t rowStart, compv::compv_uscalar_t rowEnd, compv::compv_uscalar_t strideInBytes);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
@@ -241,14 +242,15 @@ template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, size_t *row, size_t *col, T* max)
 {
 	COMPV_CHECK_EXP_RETURN(!S || S->rows() != S->cols() || !S->rows() || !row || !col || !max, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	
+
 	if (std::is_same<T, compv_float64_t>::value) {
-		int alignv = -1;
-		void(*maxAbsOffDiag_symm_float64)(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rows, compv_uscalar_t strideInBytes) = NULL;
+		void(*maxAbsOffDiag_symm_float64)(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rowStart, compv_uscalar_t rowEnd, compv_uscalar_t strideInBytes) = NULL;
 		if (S->isAlignedSSE()) {
 			if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-				//COMPV_EXEC_IFDEF_INTRIN_X86((maxAbsOffDiag_symm_float64 = MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2, alignv = COMPV_SIMD_ALIGNV_SSE));
-				// COMPV_EXEC_IFDEF_ASM_X86((maxAbsOffDiag_symm_float64 = , alignv = COMPV_SIMD_ALIGNV_SSE));
+				COMPV_EXEC_IFDEF_INTRIN_X86((maxAbsOffDiag_symm_float64 = MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2));
+			}
+			if (CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
+				COMPV_EXEC_IFDEF_ASM_X86((maxAbsOffDiag_symm_float64 = MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41));
 			}
 		}
 		if (S->isAlignedAVX()) {
@@ -258,11 +260,9 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 			}
 		}
 		if (maxAbsOffDiag_symm_float64) {
-			CompVPtrArray(T) Sw;
-			COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::washDiag(S, Sw, alignv)); // must be washed
 			compv_uscalar_t row_ = 0, col_ = 0;
 			compv_float64_t max_ = 0;
-			maxAbsOffDiag_symm_float64(reinterpret_cast<const compv_float64_t*>(Sw->ptr()), &row_, &col_, &max_, (compv_uscalar_t)Sw->rows(), (compv_uscalar_t)Sw->strideInBytes());
+			maxAbsOffDiag_symm_float64(reinterpret_cast<const compv_float64_t*>(S->ptr()), &row_, &col_, &max_, 1, (compv_uscalar_t)S->rows(), (compv_uscalar_t)S->strideInBytes());
 			*row = (size_t)row_;
 			*col = (size_t)col_;
 			*max = (T)max_;
