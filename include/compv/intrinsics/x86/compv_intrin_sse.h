@@ -18,7 +18,7 @@ COMPV_NAMESPACE_BEGIN()
 
 // -0: Sign bit (bit-63) to 1 (https://en.wikipedia.org/wiki/Double-precision_floating-point_format) and all other bites to 0
 // not(-0.) = 0x7fffffffffffffff. r=0x7fffffffffffffff doesn't fill in 32bit register and this is why we use not(-0) instead of the result.
-// we can also use: _mm_castsi128_pd(_mm_and_si128(_mm_castpd_si128(a), _mm_load_si128(reinterpret_cast<const __m128i*>(kAVXFloat64MaskAbs)))) which doesn't override the mask in asm
+// we can also use: _mm_and_pd(a, _mm_load_pd(reinterpret_cast<const double*>(kAVXFloat64MaskAbs)))) which doesn't override the mask in asm and is faster
 #define _mm_abs_pd_SSE2(a) _mm_andnot_pd(_mm_set1_pd(-0.), a)
 
 static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i &b)

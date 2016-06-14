@@ -57,12 +57,11 @@ void MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
 	compv_uscalar_t i, j;
-	__m128d xmmAbs, xmmMax, xmm0;
-	__m128i xmmAbsMask, xmmAllZerosMask;
+	__m128d xmmAbs, xmmMax, xmm0, xmmAbsMask, xmmAllZerosMask;
 	int cmp;
 
-	xmmAbsMask = _mm_load_si128(reinterpret_cast<const __m128i*>(kAVXFloat64MaskAbs));
-	xmmAllZerosMask = _mm_cmpeq_epi32(xmmAbsMask, xmmAbsMask); // 0xfff....
+	xmmAbsMask = _mm_load_pd(reinterpret_cast<const double*>(kAVXFloat64MaskAbs));
+	xmmAllZerosMask = _mm_cmpeq_pd(xmmAbsMask, xmmAbsMask); // 0xfff....
 	xmmMax = _mm_setzero_pd();
 	*max = 0;
 	*row = 0;
@@ -82,8 +81,8 @@ void MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_
 		S1_ = reinterpret_cast<const compv_float64_t*>(S0_);
 		i = 0;
 		for (; i < j - 1; i += 2) { // i stops at j because the matrix is symmetric
-			xmmAbs = _mm_castsi128_pd(_mm_and_si128(_mm_castpd_si128(_mm_load_pd(&S1_[i])), xmmAbsMask)); // abs(S)
-#if 0 // SSE41
+			xmmAbs = _mm_and_pd(_mm_load_pd(&S1_[i]), xmmAbsMask); // abs(S)
+#if 0 // SSE41 and not faster
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 			cmp = _mm_test_all_zeros(_mm_castpd_si128(_mm_cmpgt_pd(xmmAbs, xmmMax)), xmmAllZerosMask);
 			if (!cmp) {
@@ -127,7 +126,7 @@ void MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_
 #endif
 		}
 		for (; i < j; i += 1) { // i stops at j because the matrix is symmetric
-			xmmAbs = _mm_castsi128_pd(_mm_and_si128(_mm_castpd_si128(_mm_load_sd(&S1_[i])), xmmAbsMask)); // abs(S)
+			xmmAbs = _mm_and_pd(_mm_load_sd(&S1_[i]), xmmAbsMask); // abs(S)
 			if (_mm_comigt_sd(xmmAbs, xmmMax)) {
 				xmmMax = _mm_shuffle_pd(xmmAbs, xmmAbs, 0); // duplicate low double
 				*row = j;

@@ -21,6 +21,8 @@ COMPV_EXTERNC void MatrixMulGA_float64_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv::com
 COMPV_EXTERNC void MatrixMulGA_float32_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv::compv_float32_t* ri, COMPV_ALIGNED(AVX) compv::compv_float32_t* rj, const compv::compv_float32_t* c1, const compv::compv_float32_t* s1, compv::compv_uscalar_t count);
 COMPV_EXTERNC void MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41(const COMPV_ALIGNED(SSE) compv::compv_float64_t* S, compv::compv_uscalar_t *row, compv::compv_uscalar_t *col, compv::compv_float64_t* max, compv::compv_uscalar_t rowStart, compv::compv_uscalar_t rowEnd, compv::compv_uscalar_t strideInBytes);
 COMPV_EXTERNC void MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* S, compv::compv_uscalar_t *row, compv::compv_uscalar_t *col, compv::compv_float64_t* max, compv::compv_uscalar_t rowStart, compv::compv_uscalar_t rowEnd, compv::compv_uscalar_t strideInBytes);
+COMPV_EXTERNC void MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE41(const COMPV_ALIGNED(SSE) compv::compv_float64_t* S, compv::compv_uscalar_t *row, compv::compv_uscalar_t *col, compv::compv_float64_t* max, compv::compv_uscalar_t rowStart, compv::compv_uscalar_t rowEnd, compv::compv_uscalar_t strideInBytes);
+COMPV_EXTERNC void MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* S, compv::compv_uscalar_t *row, compv::compv_uscalar_t *col, compv::compv_float64_t* max, compv::compv_uscalar_t rowStart, compv::compv_uscalar_t rowEnd, compv::compv_uscalar_t strideInBytes);
 
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
@@ -251,12 +253,14 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 			if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
 				COMPV_EXEC_IFDEF_INTRIN_X86((maxAbsOffDiag_symm_float64 = MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2));
 				COMPV_EXEC_IFDEF_ASM_X86((maxAbsOffDiag_symm_float64 = MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2));
+				COMPV_EXEC_IFDEF_ASM_X64((maxAbsOffDiag_symm_float64 = MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE2));
 			}
 			if (CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
 #if 0
 				// SSE2 is slightly faster. Probably because SSE41 'ptest' instruction expect integers instead of doubles
 				// According to [1], the xmm registers are flagged with the data type. [1] http://www.popoloski.com/posts/sse_move_instructions/
 				COMPV_EXEC_IFDEF_ASM_X86((maxAbsOffDiag_symm_float64 = MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41));
+				COMPV_EXEC_IFDEF_ASM_X64((maxAbsOffDiag_symm_float64 = MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE41));
 #endif
 			}
 		}
@@ -570,8 +574,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::rank(const CompVPtrArray(T) &A, int &r, bool ro
 	}
 	CompVPtrArray(T) D_;
 	CompVPtrArray(T) Qt_;
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // D must be sorted
-	COMPV_CHECK_CODE_RETURN(CompVEigen<T>::findSymm(S_, D_, Qt_, false)); // FIXME: must be sorted
+	COMPV_CHECK_CODE_RETURN(CompVEigen<T>::findSymm(S_, D_, Qt_, false, true, false)); // no-sort, no-rowvectors, no-zeropromotion
 	r = 0;
 	size_t rows_ = D_->rows();
 	for (size_t row_ = 0; row_ < rows_; ++row_) {
