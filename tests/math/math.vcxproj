@@ -156,6 +156,7 @@
     <ClCompile Include="eigen.cxx" />
     <ClCompile Include="main.cxx" />
     <ClCompile Include="pseudoinverse.cxx" />
+    <ClCompile Include="rand.cxx" />
     <ClCompile Include="sincos.cxx" />
     <ClCompile Include="svd.cxx" />
     <ClCompile Include="tan.cxx" />

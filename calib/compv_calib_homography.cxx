@@ -63,7 +63,8 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	size_t n_; // maximum number of tries
 	size_t t_; // number of tries
 	
-	int idx0, idx1, idx2, idx3;
+	uint32_t rand4[4];
+	uint32_t idx0, idx1, idx2, idx3;
 	size_t inliersCount_, bestInlinersCount_ = 0;
 	size_t std2_, bestStd2_ = INT_MAX;
 
@@ -101,12 +102,14 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	dstz0_[0] = dstz0_[1] = dstz0_[2] = dstz0_[3] = 1;
 
 	while (t_ < n_ && bestInlinersCount_ < d_) {
-		// TODO(dmi): use rand4()
 		// TODO(dmi): use prng
-		do { idx0 = rand() % k_; } while (0);
-		do { idx1 = rand() % k_; } while (idx1 == idx0);
-		do { idx2 = rand() % k_; } while (idx2 == idx1 || idx2 == idx0);
-		do { idx3 = rand() % k_; } while (idx3 == idx2 || idx3 == idx1 || idx3 == idx0);
+		do {
+			CompVMathUtils::rand(rand4, 4);
+			idx0 = rand4[0] % k_;
+			idx1 = rand4[1] % k_;
+			idx2 = rand4[2] % k_;
+			idx3 = rand4[3] % k_;
+		} while (idx0 == idx1 || idx0 == idx2 || idx0 == idx3 || idx1 == idx2 || idx1 == idx3 || idx2 == idx3);
 
 		// Set the #4 random points
 		srcx0_[0] = srcx1_[idx0], srcx0_[1] = srcx1_[idx1], srcx0_[2] = srcx1_[idx2], srcx0_[3] = srcx1_[idx3];

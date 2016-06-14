@@ -19,6 +19,7 @@ using namespace compv;
 #define TEST_EIGEN				1
 #define TEST_SVD				0
 #define TEST_PSI				0 // Moore–Penrose pseudoinverse
+#define TEST_RAND				0
 
 #if COMPV_OS_WINDOWS
 int _tmain(int argc, _TCHAR* argv[])
@@ -69,6 +70,10 @@ int main()
 #if TEST_PSI
 	extern COMPV_ERROR_CODE TestPseudoInverse();
 	COMPV_CHECK_CODE_ASSERT(TestPseudoInverse());
+#endif
+#if TEST_RAND
+	extern COMPV_ERROR_CODE TestRand();
+	COMPV_CHECK_CODE_ASSERT(TestRand());
 #endif
 
     // deInit the engine

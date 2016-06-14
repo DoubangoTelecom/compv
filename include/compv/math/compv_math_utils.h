@@ -41,7 +41,9 @@ public:
     static COMPV_INLINE compv_scalar_t clip2(compv_scalar_t max, compv_scalar_t val) {
         return clip2Func(max, val);
     }
-
+	static COMPV_INLINE void rand(uint32_t *r, compv_scalar_t count) {
+		randFunc(r, count);
+	}
 
 	template <typename T>
 	static COMPV_INLINE T hypot(T x, T y) {
@@ -70,6 +72,7 @@ private:
     static int32_t(*minArrayI32Func)(const int32_t* array, compv_scalar_t count);
     static compv_scalar_t(*clip3Func)(compv_scalar_t min, compv_scalar_t max, compv_scalar_t val);
     static compv_scalar_t(*clip2Func)(compv_scalar_t max, compv_scalar_t val);
+	static void(*randFunc)(uint32_t *r, compv_scalar_t count);
 };
 
 COMPV_NAMESPACE_END()

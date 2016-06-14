@@ -14,6 +14,7 @@ global sym(compv_mathutils_maxval_asm_x86_cmov)
 global sym(compv_mathutils_minval_asm_x86_cmov)
 global sym(compv_mathutils_clip3_asm_x86_cmov)
 global sym(compv_mathutils_clip2_asm_x86_cmov)
+global sym(compv_mathutils_rand_asm_x86_rdrand)
 
 section .data
 
@@ -81,6 +82,36 @@ sym(compv_mathutils_clip2_asm_x86_cmov):
 	cmovl rax, rdx
 	cmp rax, 0
 	cmovl rax, rcx
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; void rand(uint32_t* r, compv_scalar_t count);
+sym(compv_mathutils_rand_asm_x86_rdrand):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 2
+	push rsi
+	push rdi
+	push rbx
+	xor rcx, rcx ; rcx = i = 0
+	mov rdx, arg(0) ; rdx = r
+	mov rbx, arg(1) ; rbx = count
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (compv_scalar_t i = 0; i < count; ++i)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopRands
+		rdrand eax
+		mov dword [rdx + rcx * 4], eax
+		inc rcx
+		cmp rcx, rbx
+		jl .LoopRands
+	.EndOfLoopRands
+	pop rbx
+	pop rdi
+	pop rsi
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
