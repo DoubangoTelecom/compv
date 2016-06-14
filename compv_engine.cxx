@@ -28,6 +28,7 @@ bool CompVEngine::s_bTesting = false;
 bool CompVEngine::s_bMathTrigFast = true;
 bool CompVEngine::s_bMathFixedPoint = true;
 CompVPtr<CompVThreadDispatcher *> CompVEngine::s_ThreadDisp = NULL;
+CompVPtr<CompVThreadDispatcher11 *> CompVEngine::s_ThreadDisp11 = NULL;
 
 CompVEngine::CompVEngine()
 {
@@ -159,6 +160,7 @@ bail:
     // cleanup if initialization failed
     if (!s_bInitialized) {
         s_ThreadDisp = NULL;
+		s_ThreadDisp11 = NULL;
     }
     else {
         // The next functions are called here because they recursively call "CompVEngine::init()"
@@ -168,6 +170,7 @@ bail:
         // maxThreads: <= 0 means choose the best one, ==1 means disable, > 1 means enable
         if (numThreads > 1 || (numThreads <= 0 && CompVCpu::getCoresCount() > 1)) {
             COMPV_CHECK_CODE_BAIL(err_ = CompVThreadDispatcher::newObj(&s_ThreadDisp, numThreads));
+			COMPV_CHECK_CODE_BAIL(err_ = CompVThreadDispatcher11::newObj(&s_ThreadDisp11, numThreads));
         }
     }
     return err_;
@@ -177,6 +180,7 @@ COMPV_ERROR_CODE CompVEngine::deInit()
 {
     s_bInitialized = false;
     s_ThreadDisp = NULL;
+	s_ThreadDisp11 = NULL;
 
     // TODO(dmi): deInit other modules (not an issue because there is no memory allocation)
     CompVMem::deInit();
@@ -196,9 +200,22 @@ COMPV_ERROR_CODE CompVEngine::multiThreadingEnable(CompVPtr<CompVThreadDispatche
     return COMPV_ERROR_CODE_S_OK;
 }
 
+CompVPtr<CompVThreadDispatcher11* > CompVEngine::getThreadDispatcher11()
+{
+	return s_ThreadDisp11;
+}
+
+COMPV_ERROR_CODE CompVEngine::multiThreadingEnable11(CompVPtr<CompVThreadDispatcher11* > dispatcher)
+{
+	COMPV_CHECK_EXP_RETURN(!dispatcher, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	s_ThreadDisp11 = dispatcher;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVEngine::multiThreadingDisable()
 {
     s_ThreadDisp = NULL;
+	s_ThreadDisp11 = NULL;
     return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -207,6 +224,11 @@ COMPV_ERROR_CODE CompVEngine::multiThreadingSetMaxThreads(size_t maxThreads)
     CompVPtr<CompVThreadDispatcher *> newThreadDisp;
     COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::newObj(&newThreadDisp));
     s_ThreadDisp = newThreadDisp;// TODO(dmi): function not optimal, we destroy all threads and create new ones
+
+	CompVPtr<CompVThreadDispatcher11 *> newThreadDisp11;
+	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher11::newObj(&newThreadDisp11));
+	s_ThreadDisp11 = newThreadDisp11;// TODO(dmi): function not optimal, we destroy all threads and create new ones
+
     return COMPV_ERROR_CODE_S_OK;
 }
 

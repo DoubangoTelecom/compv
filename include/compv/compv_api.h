@@ -37,11 +37,13 @@
 #include "compv/image/scale/compv_imagescale_pyramid.h"
 
 #include "compv/parallel/compv_asynctask.h"
+#include "compv/parallel/compv_asynctask11.h"
 #include "compv/parallel/compv_condvar.h"
 #include "compv/parallel/compv_mutex.h"
 #include "compv/parallel/compv_semaphore.h"
 #include "compv/parallel/compv_thread.h"
 #include "compv/parallel/compv_threaddisp.h"
+#include "compv/parallel/compv_threaddisp11.h"
 
 #include "compv/time/compv_time.h"
 #include "compv/time/compv_timer.h"

@@ -330,6 +330,9 @@
 #include <map>
 #include <cmath>
 
+// C++11
+#include <functional>
+
 // Must be at the bottom to make sure we can redifine all macros
 #if HAVE_CONFIG_H
 #include <config.h>

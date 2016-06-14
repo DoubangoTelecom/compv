@@ -9,6 +9,7 @@
 #include "compv/math/compv_math.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_cpu.h"
+#include "compv/compv_engine.h"
 
 #include "compv/intrinsics/x86/math/compv_math_matrix_mul_intrin_sse2.h"
 #include "compv/intrinsics/x86/math/compv_math_matrix_mul_intrin_sse41.h"
@@ -247,8 +248,9 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 {
 	COMPV_CHECK_EXP_RETURN(!S || S->rows() != S->cols() || !S->rows() || !row || !col || !max, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
+	void(*maxAbsOffDiag_symm_float64)(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rowStart, compv_uscalar_t rowEnd, compv_uscalar_t strideInBytes) = NULL;
+
 	if (std::is_same<T, compv_float64_t>::value) {
-		void(*maxAbsOffDiag_symm_float64)(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rowStart, compv_uscalar_t rowEnd, compv_uscalar_t strideInBytes) = NULL;
 		if (S->isAlignedSSE()) {
 			if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
 				COMPV_EXEC_IFDEF_INTRIN_X86((maxAbsOffDiag_symm_float64 = MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2));
@@ -270,6 +272,9 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 				//COMPV_EXEC_IFDEF_ASM_X86((maxAbsOffDiag_symm_float64 = , alignv = COMPV_SIMD_ALIGNV_AVX));
 			}
 		}
+	}
+	// Declare function pointer
+	std::function<COMPV_ERROR_CODE()> funcPtr = [&]() -> COMPV_ERROR_CODE {
 		if (maxAbsOffDiag_symm_float64) {
 			compv_uscalar_t row_ = 0, col_ = 0;
 			compv_float64_t max_ = 0;
@@ -277,33 +282,42 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 			*row = (size_t)row_;
 			*col = (size_t)col_;
 			*max = (T)max_;
-			return COMPV_ERROR_CODE_S_OK;
 		}
-	}
+		else {
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+			*row = *col = 0;
+			*max = 0;
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-
-	*row = *col = 0;
-	*max = 0;
-
-	T r0_ = 0, r1_;
-	size_t i, j;
-	size_t rows = S->rows();
-	size_t strideInBytes = S->strideInBytes();
-	const T* S1_;
-	const uint8_t* S0_ = reinterpret_cast<const uint8_t*>(S->ptr(1));
-	for (j = 1; j < rows; ++j) {
-		S1_ = reinterpret_cast<const T*>(S0_);
-		for (i = 0; i < j; ++i) { // i stops at j because the matrix is symmetric
-			if ((r1_ = ::abs(S1_[i])) > r0_) {
-				r0_ = r1_;
-				*row = j;
-				*col = i;
+			T r0_ = 0, r1_;
+			size_t i, j;
+			size_t rows = S->rows();
+			size_t strideInBytes = S->strideInBytes();
+			const T* S1_;
+			const uint8_t* S0_ = reinterpret_cast<const uint8_t*>(S->ptr(1));
+			for (j = 1; j < rows; ++j) {
+				S1_ = reinterpret_cast<const T*>(S0_);
+				for (i = 0; i < j; ++i) { // i stops at j because the matrix is symmetric
+					if ((r1_ = ::abs(S1_[i])) > r0_) {
+						r0_ = r1_;
+						*row = j;
+						*col = i;
+					}
+				}
+				S0_ += strideInBytes;
 			}
+			*max = r0_;
 		}
-		S0_ += strideInBytes;
+		return COMPV_ERROR_CODE_S_OK;
+	};
+
+	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
+	if (threadDisp && threadDisp->getThreadsCount() > 0) {
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(funcPtr));
+		COMPV_CHECK_CODE_RETURN(threadDisp->waitAll());
 	}
-	*max = r0_;
+	else {
+		COMPV_CHECK_CODE_RETURN(funcPtr());
+	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }

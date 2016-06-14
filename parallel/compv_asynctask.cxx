@@ -303,9 +303,6 @@ void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
     COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=useless, threadId:%ld, kThreadSetAffinity:false) - ENTER", Self_->m_iCoreId, (long)CompVThread::getIdCurrent());
 #endif
 
-
-
-
     while (Self_->m_bStarted) {
         COMPV_CHECK_CODE_BAIL(err_ = Self_->m_SemRun->decrement());
         if (COMPV_ERROR_CODE_IS_NOK(err_) || !Self_->m_bStarted) {
