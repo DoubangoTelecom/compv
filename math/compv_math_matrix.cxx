@@ -14,6 +14,7 @@
 #include "compv/intrinsics/x86/math/compv_math_matrix_mul_intrin_sse2.h"
 #include "compv/intrinsics/x86/math/compv_math_matrix_mul_intrin_sse41.h"
 #include "compv/intrinsics/x86/math/compv_math_matrix_mul_intrin_avx.h"
+#include "compv/intrinsics/x86/math/compv_math_matrix_mul_intrin_avx2.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC void MatrixMulGA_float64_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv::compv_float64_t* ri, COMPV_ALIGNED(SSE) compv::compv_float64_t* rj, const compv::compv_float64_t* c1, const compv::compv_float64_t* s1, compv::compv_uscalar_t count);
@@ -267,12 +268,6 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 				COMPV_EXEC_IFDEF_ASM_X86((maxAbsOffDiag_symm_float64 = MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41));
 				COMPV_EXEC_IFDEF_ASM_X64((maxAbsOffDiag_symm_float64 = MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE41));
 #endif
-			}
-		}
-		if (S->isAlignedAVX()) {
-			if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
-				//COMPV_EXEC_IFDEF_INTRIN_X86((maxAbsOffDiag_symm_float64 = , alignv = COMPV_SIMD_ALIGNV_AVX));
-				//COMPV_EXEC_IFDEF_ASM_X86((maxAbsOffDiag_symm_float64 = , alignv = COMPV_SIMD_ALIGNV_AVX));
 			}
 		}
 		if (maxAbsOffDiag_symm_float64) {
@@ -591,7 +586,6 @@ COMPV_ERROR_CODE CompVMatrix<T>::rank(const CompVPtrArray(T) &A, int &r, bool ro
 template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::isSymmetric(const CompVPtrArray(T) &A, bool &symmetric)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
 	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	if (A->rows() != A->cols()) {
@@ -601,19 +595,57 @@ COMPV_ERROR_CODE CompVMatrix<T>::isSymmetric(const CompVPtrArray(T) &A, bool &sy
 
 	CompVPtrArray(T) At;
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::transpose(A, At)); // transpose to make it SIMD-friendly
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::isEqual(A, At, symmetric));
+	return COMPV_ERROR_CODE_S_OK;
+}
 
-	const T *r, *rt;
+// A and B must have the same alignment -> same stride
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::isEqual(const CompVPtrArray(T) &A, const CompVPtrArray(T) &B, bool &equal)
+{
+	COMPV_CHECK_EXP_RETURN(!A || !B || !A->rows() || !A->cols() || A->alignV() != B->alignV(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	equal = false;
+
+	if (A->rows() != B->rows() || A->cols() != B->cols()) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	size_t cols_ = A->cols();
+
+	if (std::is_same<T, compv_float64_t>::value) {
+		void(*MatrixIsEqual_float64)(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t rows, compv_uscalar_t cols, compv_uscalar_t strideInBytes, compv_scalar_t *equal) = NULL;
+		if (A->isAlignedSSE() && B->isAlignedSSE()) {
+			if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixIsEqual_float64 = MatrixIsEqual_float64_Intrin_SSE2));
+			}
+		}
+		if (A->isAlignedAVX() && B->isAlignedAVX()) {
+			if (CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixIsEqual_float64 = MatrixIsEqual_float64_Intrin_AVX2));
+			}
+		}
+		if (MatrixIsEqual_float64) {
+			compv_scalar_t equal_ = 0;
+			MatrixIsEqual_float64((const compv_float64_t*)A->ptr(), (const compv_float64_t*)B->ptr(), (compv_uscalar_t)A->rows(), (compv_uscalar_t)A->cols(), (compv_uscalar_t)A->strideInBytes(), &equal_);
+			equal = (equal_ != 0);
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
+	
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	
+	const T *a, *b;
 	for (size_t j = 0; j < A->rows(); ++j) {
-		r = A->ptr(j);
-		rt = At->ptr(j);
+		a = A->ptr(j);
+		b = B->ptr(j);
 		for (size_t i = 0; i < A->cols(); ++i) {
-			if (r[i] != rt[i]) {
-				symmetric = false;
+			if (a[i] != b[i]) {
 				return COMPV_ERROR_CODE_S_OK;
 			}
 		}
 	}
-	symmetric = true;
+	equal = true;
 	return COMPV_ERROR_CODE_S_OK;
 }
 

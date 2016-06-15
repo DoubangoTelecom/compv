@@ -42,5 +42,8 @@
     <ClCompile Include="rand.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="matrix_ops.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

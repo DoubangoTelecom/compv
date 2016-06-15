@@ -417,6 +417,9 @@
     <ClInclude Include="include\compv\parallel\compv_threaddisp11.h">
       <Filter>Header Files\parallel</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_mul_intrin_avx2.h">
+      <Filter>Header Files\intrinsics\x86\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -643,6 +646,9 @@
     </ClCompile>
     <ClCompile Include="parallel\compv_threaddisp11.cxx">
       <Filter>Source Files\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\math\compv_math_matrix_mul_intrin_avx2.cxx">
+      <Filter>Source Files\intrinsics\x86\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

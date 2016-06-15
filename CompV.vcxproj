@@ -81,6 +81,7 @@
     <ClInclude Include="include\compv\intrinsics\x86\image\scale\compv_imagescale_bilinear_intrin_avx2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\image\scale\compv_imagescale_bilinear_intrin_sse41.h" />
     <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_mul_intrin_avx.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_mul_intrin_avx2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_mul_intrin_sse2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_mul_intrin_sse41.h" />
     <ClInclude Include="include\compv\matchers\compv_matcher.h" />
@@ -202,6 +203,12 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\math\compv_math_matrix_mul_intrin_avx2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <ClCompile Include="intrinsics\x86\math\compv_math_matrix_mul_intrin_sse2.cxx" />
     <ClCompile Include="intrinsics\x86\math\compv_math_matrix_mul_intrin_sse41.cxx" />

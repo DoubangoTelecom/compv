@@ -35,6 +35,7 @@ public:
 	static COMPV_ERROR_CODE copy(CompVPtrArray(T) &A, const CompVPtrArray(T) &B);
 	static COMPV_ERROR_CODE rank(const CompVPtrArray(T) &A, int &r, bool rowspace = true, size_t maxRows = 0, size_t maxCols = 0);
 	static COMPV_ERROR_CODE isSymmetric(const CompVPtrArray(T) &A, bool &symmetric);
+	static COMPV_ERROR_CODE isEqual(const CompVPtrArray(T) &A, const CompVPtrArray(T) &B, bool &equal);
 	static COMPV_ERROR_CODE isColinear(const CompVPtrArray(T) &A, bool &colinear, bool rowspace = false, size_t maxRows = 0, size_t maxCols = 0);
 	static COMPV_ERROR_CODE isColinear2D(const CompVPtrArray(T) &A, bool &colinear);
 	static COMPV_ERROR_CODE isColinear3D(const CompVPtrArray(T) &A, bool &colinear);

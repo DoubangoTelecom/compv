@@ -138,6 +138,41 @@ void MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_
 	*max = _mm_cvtsd_f64(xmmMax);
 }
 
+// A and B must have same rows, cols and alignment
+void MatrixIsEqual_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t rows, compv_uscalar_t cols, compv_uscalar_t strideInBytes, compv_scalar_t *equal)
+{
+	// TODO(dmi): add ASM (not urgent, function used rarely)
+	compv_uscalar_t i, j;
+	*equal = 0;
+
+	// _mm_cmpeq_epi8: Latency = 1, Throughput = 0.5
+	// _mm_cmpeq_pd: Latency = 3, Throughput = 0.5
+	// -> use binary comparison which is faster
+
+	const uint8_t* a = reinterpret_cast<const uint8_t*>(A);
+	const uint8_t* b = reinterpret_cast<const uint8_t*>(B);
+
+	cols <<= 3; // float64 to bytes
+
+	for (j = 0; j < rows; ++j) {
+		i = 0;
+		for (; i < cols - 15; i += 16) {			
+			if (0xffff != _mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(&a[i])), _mm_load_si128(reinterpret_cast<const __m128i*>(&b[i]))))) {
+				return;
+			}
+		}
+		if (i < cols - 7) {
+			if (0xffff != _mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&a[i])), _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&b[i]))))) {
+				return;
+			}
+		}
+		a += strideInBytes;
+		b += strideInBytes;
+	}
+
+	*equal = 1;
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

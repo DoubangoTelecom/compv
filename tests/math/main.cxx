@@ -1,7 +1,7 @@
 #include <compv/compv_api.h>
 #include <tchar.h>
 
-#define numThreads			COMPV_NUM_THREADS_BEST
+#define numThreads			COMPV_NUM_THREADS_SINGLE
 
 #define enableIntrinsics	true
 #define enableAsm			true
@@ -10,16 +10,17 @@
 
 using namespace compv;
 
-#define TEST_MAX				0
-#define TEST_MIN				0
-#define TEST_CLIP3				0
-#define TEST_CLIP2				0
-#define TEST_SINCOS_P32			0 // 3.2 precision, theta within IR
-#define TEST_SINCOS_2PI_P32		0 // 3.2 precision, theta within [0, 2*PI]
-#define TEST_EIGEN				1
-#define TEST_SVD				0
-#define TEST_PSI				0 // Moore–Penrose pseudoinverse
-#define TEST_RAND				0
+#define TEST_MAX					0
+#define TEST_MIN					0
+#define TEST_CLIP3					0
+#define TEST_CLIP2					0
+#define TEST_SINCOS_P32				0 // 3.2 precision, theta within IR
+#define TEST_SINCOS_2PI_P32			0 // 3.2 precision, theta within [0, 2*PI]
+#define TEST_EIGEN					0
+#define TEST_SVD					0
+#define TEST_PSI					0 // Moore–Penrose pseudoinverse
+#define TEST_RAND					0
+#define TEST_MOPS_ISSYMMETRIC		1
 
 #if COMPV_OS_WINDOWS
 int _tmain(int argc, _TCHAR* argv[])
@@ -74,6 +75,10 @@ int main()
 #if TEST_RAND
 	extern COMPV_ERROR_CODE TestRand();
 	COMPV_CHECK_CODE_ASSERT(TestRand());
+#endif
+#if TEST_MOPS_ISSYMMETRIC
+	extern COMPV_ERROR_CODE TestIsSymmetric();
+	COMPV_CHECK_CODE_ASSERT(TestIsSymmetric());
 #endif
 
     // deInit the engine
