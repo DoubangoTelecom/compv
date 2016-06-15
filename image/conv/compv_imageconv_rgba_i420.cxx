@@ -212,7 +212,7 @@ static COMPV_ERROR_CODE __xxxToI420(const CompVPtr<CompVImage* >& rgb, CompVPtr<
     uint8_t* outYPtr = (uint8_t*)(*i420)->getDataPtr();
     uint8_t* outUPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? NULL : outYPtr + (height * stride);
     uint8_t* outVPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? NULL : outUPtr + ((height * stride) >> 2);
-    CompVPtr<CompVThreadDispatcher* > threadDip = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher* > threadDisp = CompVEngine::getThreadDispatcher();
     int threadsCount = 1;
 
     // IS_ALIGNED(strideRgbaBytes, ALIGNV * 3) = IS_ALIGNED(stride * 3, ALIGNV * 3) = IS_ALIGNED(stride, ALIGNV)
@@ -259,18 +259,18 @@ static COMPV_ERROR_CODE __xxxToI420(const CompVPtr<CompVImage* >& rgb, CompVPtr<
     } // end-of-AVX
 
     // Compute number of threads
-    if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-        threadsCount = threadDip->guessNumThreadsDividingAcrossY(stride, height, COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD);
+    if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
+        threadsCount = threadDisp->guessNumThreadsDividingAcrossY(stride, height, COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD);
     }
 
     // Process Y and UV lines
     if (threadsCount > 1) {
         int32_t rgbIdx = 0, YIdx = 0, UVIdx = 0, threadHeight, totalHeight = 0;
-        uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+        uint32_t threadIdx = threadDisp->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
         for (int32_t i = 0; i < threadsCount; ++i) {
             threadHeight = ((height - totalHeight) / (threadsCount - i)) & -2; // the & -2 is to make sure we'll deal with even heights
             // YUV-rows
-            COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, ImageConvKernelxx_AsynExec,
+            COMPV_CHECK_CODE_ASSERT(threadDisp->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, ImageConvKernelxx_AsynExec,
                                     COMPV_ASYNCTASK_SET_PARAM_ASISS(
                                         COMPV_IMAGECONV_FUNCID_RGBToI420_YUV,
                                         CompY,
@@ -292,7 +292,7 @@ static COMPV_ERROR_CODE __xxxToI420(const CompVPtr<CompVImage* >& rgb, CompVPtr<
             totalHeight += threadHeight;
         }
         for (int32_t i = 0; i < threadsCount; ++i) {
-            COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
+            COMPV_CHECK_CODE_ASSERT(threadDisp->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
         }
     }
     else {
@@ -330,7 +330,7 @@ static COMPV_ERROR_CODE __xxxxToI420(const CompVPtr<CompVImage* >& rgba, CompVPt
     uint8_t* outUPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? NULL : outYPtr + (height * stride);
     uint8_t* outVPtr = i420->getPixelFormat() == COMPV_PIXEL_FORMAT_GRAYSCALE ? NULL : outUPtr + ((height * stride) >> 2);
     int strideRgbaBytes = (stride << 2); // #20 not SSE aligned but (20*4)=#80 is aligned
-    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher* >threadDisp = CompVEngine::getThreadDispatcher();
     int threadsCount = 1;
 
     // IS_ALIGNED(strideRgbaBytes, ALIGNV * 4) = IS_ALIGNED(stride * 4, ALIGNV * 4) = IS_ALIGNED(stride, ALIGNV)
@@ -397,18 +397,18 @@ static COMPV_ERROR_CODE __xxxxToI420(const CompVPtr<CompVImage* >& rgba, CompVPt
     }
 
     // Compute number of threads
-    if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-        threadsCount = threadDip->guessNumThreadsDividingAcrossY(stride, height, COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD);
+    if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
+        threadsCount = threadDisp->guessNumThreadsDividingAcrossY(stride, height, COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD);
     }
 
     // Process Y and UV lines
     if (threadsCount > 1) {
         int32_t rgbaIdx = 0, YIdx = 0, UVIdx = 0, threadHeight, totalHeight = 0;
-        uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+        uint32_t threadIdx = threadDisp->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
         for (int32_t i = 0; i < threadsCount; ++i) {
             threadHeight = ((height - totalHeight) / (threadsCount - i)) & -2; // the & -2 is to make sure we'll deal with odd heights
             // YUV-rows
-            COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, ImageConvKernelxx_AsynExec,
+            COMPV_CHECK_CODE_ASSERT(threadDisp->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, ImageConvKernelxx_AsynExec,
                                     COMPV_ASYNCTASK_SET_PARAM_ASISS(
                                         COMPV_IMAGECONV_FUNCID_RGBAToI420_YUV,
                                         CompY,
@@ -430,7 +430,7 @@ static COMPV_ERROR_CODE __xxxxToI420(const CompVPtr<CompVImage* >& rgba, CompVPt
             totalHeight += threadHeight;
         }
         for (int32_t i = 0; i < threadsCount; ++i) {
-            COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
+            COMPV_CHECK_CODE_ASSERT(threadDisp->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
         }
     }
     else {
@@ -472,7 +472,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaI420::i420ToRgba(const CompVPtr<CompVImage* >
     const uint8_t* vPtr = uPtr + ((height * stride) >> 2);
     uint8_t* outRgbaPtr = (uint8_t*)rgba->getDataPtr();
 
-    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher* >threadDisp = CompVEngine::getThreadDispatcher();
 
     int threadsCount = 1;
 
@@ -513,16 +513,16 @@ COMPV_ERROR_CODE CompVImageConvRgbaI420::i420ToRgba(const CompVPtr<CompVImage* >
 #endif
 
     // Compute number of threads
-    if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-        threadsCount = threadDip->guessNumThreadsDividingAcrossY(stride, height, COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD);
+    if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
+        threadsCount = threadDisp->guessNumThreadsDividingAcrossY(stride, height, COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD);
     }
 
     if (threadsCount > 1) {
         int32_t rgbaIdx = 0, YIdx = 0, UVIdx = 0, threadHeight, totalHeight = 0;
-        uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+        uint32_t threadIdx = threadDisp->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
         for (int32_t i = 0; i < threadsCount; ++i) {
             threadHeight = ((height - totalHeight) / (threadsCount - i)) & -2; // the & -2 is to make sure we'll deal with odd heights
-            COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, ImageConvKernelxx_AsynExec,
+            COMPV_CHECK_CODE_ASSERT(threadDisp->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, ImageConvKernelxx_AsynExec,
                                     COMPV_ASYNCTASK_SET_PARAM_ASISS(COMPV_IMAGECONV_FUNCID_I420ToRGBA, toRGBA, (yPtr + YIdx), (uPtr + UVIdx), (vPtr + UVIdx), (outRgbaPtr + rgbaIdx), threadHeight, width, stride),
                                     COMPV_ASYNCTASK_SET_PARAM_NULL()));
             rgbaIdx += (threadHeight * stride) << 2;
@@ -531,7 +531,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaI420::i420ToRgba(const CompVPtr<CompVImage* >
             totalHeight += threadHeight;
         }
         for (int32_t i = 0; i < threadsCount; ++i) {
-            COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
+            COMPV_CHECK_CODE_ASSERT(threadDisp->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
         }
     }
     else {

@@ -273,12 +273,16 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 			}
 		}
 	}
+
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 	// Declare function pointer
-	std::function<COMPV_ERROR_CODE()> funcPtr = [&]() -> COMPV_ERROR_CODE {
+	auto funcPtr = [&](const CompVPtrArray(T) &S, size_t rowStart, size_t rowEnd, size_t *row, size_t *col, T* max) -> COMPV_ERROR_CODE {
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+		COMPV_CHECK_EXP_RETURN(rowStart >= rowEnd, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		if (maxAbsOffDiag_symm_float64) {
 			compv_uscalar_t row_ = 0, col_ = 0;
 			compv_float64_t max_ = 0;
-			maxAbsOffDiag_symm_float64(reinterpret_cast<const compv_float64_t*>(S->ptr()), &row_, &col_, &max_, 1, (compv_uscalar_t)S->rows(), (compv_uscalar_t)S->strideInBytes());
+			maxAbsOffDiag_symm_float64(reinterpret_cast<const compv_float64_t*>(S->ptr()), &row_, &col_, &max_, rowStart, rowEnd, (compv_uscalar_t)S->strideInBytes());
 			*row = (size_t)row_;
 			*col = (size_t)col_;
 			*max = (T)max_;
@@ -290,11 +294,10 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 
 			T r0_ = 0, r1_;
 			size_t i, j;
-			size_t rows = S->rows();
 			size_t strideInBytes = S->strideInBytes();
 			const T* S1_;
-			const uint8_t* S0_ = reinterpret_cast<const uint8_t*>(S->ptr(1));
-			for (j = 1; j < rows; ++j) {
+			const uint8_t* S0_ = reinterpret_cast<const uint8_t*>(S->ptr(rowStart));
+			for (j = rowStart; j < rowEnd; ++j) {
 				S1_ = reinterpret_cast<const T*>(S0_);
 				for (i = 0; i < j; ++i) { // i stops at j because the matrix is symmetric
 					if ((r1_ = ::abs(S1_[i])) > r0_) {
@@ -310,13 +313,38 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 		return COMPV_ERROR_CODE_S_OK;
 	};
 
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
 	if (threadDisp && threadDisp->getThreadsCount() > 0) {
-		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(funcPtr));
-		COMPV_CHECK_CODE_RETURN(threadDisp->waitAll());
+#define THREADS 8
+		CompVAsyncTaskIds taskIds;
+		taskIds.reserve(THREADS);
+		T maxs[THREADS];
+		size_t rows[THREADS], cols[THREADS];
+		size_t rowsPerThread = S->rows() / THREADS;
+		size_t rowStart = 1, rowEnd;
+		for (size_t i = 0; i < THREADS; ++i) {
+			if (i == THREADS - 1) {
+				rowEnd = S->rows();
+			}
+			else {
+				rowEnd = rowStart + rowsPerThread;
+			}
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, S, rowStart, rowEnd, &rows[i], &cols[i], &maxs[i]), taskIds));
+			rowStart = rowEnd;
+		}
+		*max = 0;
+		for (size_t i = 0; i < taskIds.size(); ++i) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+			if (maxs[i] > *max) {
+				*max = maxs[i];
+				*col = cols[i];
+				*row = rows[i];
+			}
+		}
 	}
 	else {
-		COMPV_CHECK_CODE_RETURN(funcPtr());
+		COMPV_CHECK_CODE_RETURN(funcPtr(S, 1, S->rows(), row, col, max));
 	}
 
 	return COMPV_ERROR_CODE_S_OK;

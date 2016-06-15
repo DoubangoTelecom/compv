@@ -49,7 +49,6 @@ private:
     COMPV_ERROR_CODE initDetectors();
     COMPV_ERROR_CODE freeDetectors(int32_t count = -1);
     COMPV_ERROR_CODE processLevelAt(const CompVPtr<CompVImage*>& image, CompVPtr<CompVPatch* >& patch, CompVPtr<CompVFeatureDete* >& detector, int level);
-    static COMPV_ERROR_CODE processLevelAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 
 private:
     CompVPtr<CompVImageScalePyramid* > m_pyramid;

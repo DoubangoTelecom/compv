@@ -68,25 +68,25 @@ COMPV_ERROR_CODE CompVImageScalePyramid::process(const CompVPtr<CompVImage*>& in
 
 #if 1 // Option 2
     if (level < 0) {
-        CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+        CompVPtr<CompVThreadDispatcher* >threadDisp = CompVEngine::getThreadDispatcher();
         int32_t threadsCount = 1;
         // Compute number of threads
-        if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-            threadsCount = threadDip->getThreadsCount();
+        if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
+            threadsCount = threadDisp->getThreadsCount();
         }
         if (threadsCount > 1) {
             CompVPtr<CompVImageScalePyramid* >This = this;
-            uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+            uint32_t threadIdx = threadDisp->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
             // levelStart is used to make sure we won't schedule more than "threadsCount"
             int levelStart, lev, levelMax;
             for (levelStart = 0, levelMax = threadsCount; levelStart < m_nLevels; levelStart += threadsCount, levelMax += threadsCount) {
                 for (lev = levelStart; lev < m_nLevels && lev < levelMax; ++lev) {
-                    COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + lev), COMPV_TOKENIDX0, CompVImageScalePyramid::processLevelAt_AsynExec,
+                    COMPV_CHECK_CODE_ASSERT(threadDisp->execute((uint32_t)(threadIdx + lev), COMPV_TOKENIDX0, CompVImageScalePyramid::processLevelAt_AsynExec,
                                             COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *inImage, lev),
                                             COMPV_ASYNCTASK_SET_PARAM_NULL()));
                 }
                 for (lev = levelStart; lev < m_nLevels && lev < levelMax; ++lev) {
-                    COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + lev), COMPV_TOKENIDX0));
+                    COMPV_CHECK_CODE_ASSERT(threadDisp->wait((uint32_t)(threadIdx + lev), COMPV_TOKENIDX0));
                 }
             }
         }

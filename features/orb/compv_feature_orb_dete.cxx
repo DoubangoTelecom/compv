@@ -154,7 +154,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
 
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     int patch_radius = (m_nPatchDiameter >> 1); // FIXME: remove
-    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
     CompVPtr<CompVBoxInterestPoint* >interestPointsAtLevelN;
     CompVPtr<CompVImage*> imageAtLevelN;
     int32_t threadsCount = 1, levelsCount;
@@ -172,8 +172,8 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
     levelsCount = m_pyramid->getLevels();
 
     // Compute number of threads
-    if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-        threadsCount = threadDip->getThreadsCount();
+    if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
+        threadsCount = threadDisp->getThreadsCount();
     }
 
     // Create and init detectors
@@ -210,17 +210,19 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
     //			Not a high prio. issue beacuse the most time consuming function is FAST feature detector and it's multi-threaded
     if (threadsCount > 1) {
         CompVPtr<CompVFeatureDeteORB* >This = this;
-        uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
         // levelStart is used to make sure we won't schedule more than "threadsCount"
         int levelStart, level, levelMax;
+		CompVAsyncTaskIds taskIds;
+		taskIds.reserve(m_pyramid->getLevels());
+		auto funcPtr = [&](const CompVPtr<CompVImage* >& image, CompVPtr<CompVPatch* >& patch, CompVPtr<CompVFeatureDete* >& detector, int level) -> COMPV_ERROR_CODE {
+			return processLevelAt(*image, patch, detector, level);
+		};
         for (levelStart = 0, levelMax = threadsCount; levelStart < m_pyramid->getLevels(); levelStart += threadsCount, levelMax += threadsCount) {
             for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
-                COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + level), COMPV_TOKENIDX0, CompVFeatureDeteORB::processLevelAt_AsynExec,
-                                        COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *image, *m_pPatches[level % nPatches], *m_pDetectors[level % nDetectors], level),
-                                        COMPV_ASYNCTASK_SET_PARAM_NULL()));
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, image, m_pPatches[level % nPatches], m_pDetectors[level % nDetectors], level), taskIds));
             }
             for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
-                COMPV_CHECK_CODE_RETURN(threadDip->wait((uint32_t)(threadIdx + level), COMPV_TOKENIDX0));
+				COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[level]));
                 COMPV_CHECK_CODE_RETURN(interestPoints->append(m_pInterestPointsAtLevelN[level]->begin(), m_pInterestPointsAtLevelN[level]->end()));
             }
         }
@@ -423,17 +425,6 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage* 
     }
 
     return err_;
-}
-
-// Private function
-COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
-{
-    CompVFeatureDeteORB*  This = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, CompVFeatureDeteORB*);
-    CompVPtr< CompVImage* > image = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, CompVImage*);
-    CompVPtr<CompVPatch* > patch = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, CompVPatch*);
-    CompVPtr<CompVFeatureDete* > detector = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, CompVFeatureDete*);
-    int level = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[4].pcParamPtr, int);
-    return This->processLevelAt(image, patch, detector, level);
 }
 
 COMPV_ERROR_CODE CompVFeatureDeteORB::newObj(CompVPtr<CompVFeatureDete* >* orb)

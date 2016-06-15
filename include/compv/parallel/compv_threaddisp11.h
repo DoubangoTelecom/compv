@@ -27,8 +27,9 @@ public:
 		return m_nTasksCount;
 	}
 
-	COMPV_ERROR_CODE invoke(std::function<COMPV_ERROR_CODE()> fFunc, uint64_t *taskId = NULL, uint64_t *tokenId = NULL);
-	COMPV_ERROR_CODE waitOne(uint64_t taskId, uint64_t tokenId, uint64_t u_timeout = 86400000/* 1 day */);
+	COMPV_ERROR_CODE invoke(std::function<COMPV_ERROR_CODE()> fFunc, CompVAsyncTaskIds& taskIds);
+	COMPV_ERROR_CODE wait(const CompVAsyncTaskIds& taskIds, uint64_t u_timeout = 86400000/* 1 day */);
+	COMPV_ERROR_CODE waitOne(const CompVAsyncTaskId& taskId, uint64_t u_timeout = 86400000/* 1 day */);
 	COMPV_ERROR_CODE waitAll(uint64_t u_timeout = 86400000/* 1 day */);
 	uint32_t getThreadIdxCurrent();
 	bool isMotherOfTheCurrentThread();

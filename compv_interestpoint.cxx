@@ -81,8 +81,8 @@ COMPV_ERROR_CODE CompVBoxInterestPoint::newObj(CompVPtr<CompVBoxInterestPoint* >
 
 static void sortByStrengthRange(CompVBoxInterestPoint* self, intptr_t left, intptr_t right)
 {
-    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
-    int32_t threadsCount = threadDip ? threadDip->getThreadsCount() : 0;
+    CompVPtr<CompVThreadDispatcher* >threadDisp = CompVEngine::getThreadDispatcher();
+    int32_t threadsCount = threadDisp ? threadDisp->getThreadsCount() : 0;
     uint32_t threadIdx0 = UINT_MAX, threadIdx1 = UINT_MAX;
     const CompVInterestPoint pivot = *self->ptr((left + right) >> 1);
     CompVInterestPoint atk, *ati = self->ptr(left), *atj = self->ptr(right);
@@ -106,9 +106,9 @@ static void sortByStrengthRange(CompVBoxInterestPoint* self, intptr_t left, intp
     intptr_t i = left + (ati - ati_);
     intptr_t j = right + (atj - atj_);
     if (left < j) {
-        if (threadsCount > 2 && (j - left) > COMPV_QUICKSORT_MIN_SAMPLES_PER_THREAD && !threadDip->isMotherOfTheCurrentThread()) {
-            threadIdx0 = threadDip->getThreadIdxForNextToCurrentCore();
-            COMPV_CHECK_CODE_ASSERT(threadDip->execute(threadIdx0, COMPV_TOKENIDX0, sortByStrengthRangeAsynExec,
+        if (threadsCount > 2 && (j - left) > COMPV_QUICKSORT_MIN_SAMPLES_PER_THREAD && !threadDisp->isMotherOfTheCurrentThread()) {
+            threadIdx0 = threadDisp->getThreadIdxForNextToCurrentCore();
+            COMPV_CHECK_CODE_ASSERT(threadDisp->execute(threadIdx0, COMPV_TOKENIDX0, sortByStrengthRangeAsynExec,
                                     COMPV_ASYNCTASK_SET_PARAM_ASISS(self, left, j),
                                     COMPV_ASYNCTASK_SET_PARAM_NULL()));
         }
@@ -117,9 +117,9 @@ static void sortByStrengthRange(CompVBoxInterestPoint* self, intptr_t left, intp
         }
     }
     if (i < right) {
-        if (threadsCount > 2 && (right - i) > COMPV_QUICKSORT_MIN_SAMPLES_PER_THREAD && !threadDip->isMotherOfTheCurrentThread()) {
-            threadIdx1 = threadDip->getThreadIdxForNextToCurrentCore() + 1;
-            COMPV_CHECK_CODE_ASSERT(threadDip->execute(threadIdx1, COMPV_TOKENIDX1, sortByStrengthRangeAsynExec,
+        if (threadsCount > 2 && (right - i) > COMPV_QUICKSORT_MIN_SAMPLES_PER_THREAD && !threadDisp->isMotherOfTheCurrentThread()) {
+            threadIdx1 = threadDisp->getThreadIdxForNextToCurrentCore() + 1;
+            COMPV_CHECK_CODE_ASSERT(threadDisp->execute(threadIdx1, COMPV_TOKENIDX1, sortByStrengthRangeAsynExec,
                                     COMPV_ASYNCTASK_SET_PARAM_ASISS(self, i, right),
                                     COMPV_ASYNCTASK_SET_PARAM_NULL()));
         }
@@ -128,10 +128,10 @@ static void sortByStrengthRange(CompVBoxInterestPoint* self, intptr_t left, intp
         }
     }
     if (threadIdx0 != UINT_MAX) {
-        COMPV_CHECK_CODE_ASSERT(threadDip->wait(threadIdx0, COMPV_TOKENIDX0));
+        COMPV_CHECK_CODE_ASSERT(threadDisp->wait(threadIdx0, COMPV_TOKENIDX0));
     }
     if (threadIdx1 != UINT_MAX) {
-        COMPV_CHECK_CODE_ASSERT(threadDip->wait(threadIdx1, COMPV_TOKENIDX1));
+        COMPV_CHECK_CODE_ASSERT(threadDisp->wait(threadIdx1, COMPV_TOKENIDX1));
     }
 }
 

@@ -51,29 +51,36 @@ CompVThreadDispatcher11::~CompVThreadDispatcher11()
 	}
 }
 
-COMPV_ERROR_CODE CompVThreadDispatcher11::invoke(std::function<COMPV_ERROR_CODE()> fFunc, uint64_t *taskId /*= NULL*/, uint64_t *tokenId /*= NULL*/)
+COMPV_ERROR_CODE CompVThreadDispatcher11::invoke(std::function<COMPV_ERROR_CODE()> fFunc, CompVAsyncTaskIds& taskIds)
 {
 	uint64_t taskId_ = (uint64_t)nextTaskIdx();
+	uint64_t tokenId_ = 0;
 	CompVPtr<CompVAsyncTask11 *> asyncTask = m_pTasks[taskId_];
 	COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_CHECK_CODE_RETURN(asyncTask->invoke(fFunc, tokenId));
-	if (taskId) {
-		*taskId = taskId_;
+	COMPV_CHECK_CODE_RETURN(asyncTask->invoke(fFunc, &tokenId_));
+	taskIds.push_back(CompVAsyncTaskId(taskId_, tokenId_));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVThreadDispatcher11::wait(const CompVAsyncTaskIds& taskIds, uint64_t u_timeout /*= 86400000 -> 1 day */)
+{
+	for (size_t i = 0; i < taskIds.size(); ++i) {
+		COMPV_CHECK_CODE_RETURN(waitOne(taskIds[i]));
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVThreadDispatcher11::waitOne(uint64_t taskId, uint64_t tokenId, uint64_t u_timeout /*= 86400000 -> 1 day */)
+COMPV_ERROR_CODE CompVThreadDispatcher11::waitOne(const CompVAsyncTaskId& taskId, uint64_t u_timeout /*= 86400000 -> 1 day */)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_TESTED();
-	if (taskId < m_nTasksCount) {
-		COMPV_CHECK_CODE_RETURN(m_pTasks[taskId]->waitOne(tokenId, u_timeout));
-	}
+	COMPV_CHECK_EXP_RETURN(taskId.uTaskId >= m_nTasksCount, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_CODE_RETURN(m_pTasks[taskId.uTaskId]->waitOne(taskId.uTokenId, u_timeout));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVThreadDispatcher11::waitAll(uint64_t u_timeout /*= 86400000 -> 1 day */)
 {
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Deadlock when mt functions are chained
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // We check all tasks and tokens
 	for (int32_t taskId = 0; taskId < m_nTasksCount; ++taskId) {
 		COMPV_CHECK_CODE_RETURN(m_pTasks[taskId]->waitAll(u_timeout));
 	}

@@ -207,9 +207,7 @@ static bool COMPV_INLINE __isNonMaximal(const CompVInterestPoint* point)
     return point->x < 0;
 }
 
-static COMPV_ERROR_CODE FastProcessRange_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 static void FastProcessRange(RangeFAST* range);
-static COMPV_ERROR_CODE FastNMS_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 static void FastNMS(int32_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end);
 static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths1, compv_scalar_t* me);
 static void FastStrengths1_C(COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x1, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x1, const compv::compv_scalar_t fbrighters1, const compv::compv_scalar_t fdarkers1, uint8_t* strengths1, compv::compv_scalar_t N);
@@ -285,7 +283,7 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVPtr<CompVImage*>& imag
     int32_t width = image->getWidth();
     int32_t height = image->getHeight();
     int32_t stride = image->getStride();
-    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
     int32_t threadsCountRange = 1;
 
     COMPV_CHECK_EXP_RETURN(width < 4 || height < 4, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -342,8 +340,8 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVPtr<CompVImage*>& imag
     };
 
     // Compute number of threads
-    if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-        threadsCountRange = threadDip->guessNumThreadsDividingAcrossY(stride, height, COMPV_FEATURE_DETE_FAST_MIN_SAMPLES_PER_THREAD);
+    if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
+        threadsCountRange = threadDisp->guessNumThreadsDividingAcrossY(stride, height, COMPV_FEATURE_DETE_FAST_MIN_SAMPLES_PER_THREAD);
     }
 
     // Alloc ranges
@@ -355,8 +353,13 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVPtr<CompVImage*>& imag
 
     if (threadsCountRange > 1) {
         int32_t rowStart = 0, threadHeight, totalHeight = 0;
-        uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
         RangeFAST* pRange;
+		CompVAsyncTaskIds taskIds;
+		taskIds.reserve(threadsCountRange);
+		auto funcPtr = [&](RangeFAST* pRange) -> COMPV_ERROR_CODE {
+			FastProcessRange(pRange);
+			return COMPV_ERROR_CODE_S_OK;
+		};
         for (int i = 0; i < threadsCountRange; ++i) {
             threadHeight = ((height - totalHeight) / (threadsCountRange - i)) & -2; // the & -2 is to make sure we'll deal with odd heights
             pRange = &m_pRanges[i];
@@ -371,15 +374,11 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVPtr<CompVImage*>& imag
             pRange->N = m_iNumContinuous;
             pRange->pixels16 = &pixels16;
             pRange->strengths = m_pStrengthsMap;
-            COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, FastProcessRange_AsynExec,
-                                    COMPV_ASYNCTASK_SET_PARAM_ASISS(pRange),
-                                    COMPV_ASYNCTASK_SET_PARAM_NULL()));
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, pRange), taskIds));
             rowStart += threadHeight;
             totalHeight += threadHeight;
         }
-        for (int32_t i = 0; i < threadsCountRange; ++i) {
-            COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
-        }
+		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
     }
     else {
         RangeFAST* pRange = &m_pRanges[0];
@@ -442,29 +441,26 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVPtr<CompVImage*>& imag
     if (m_bNonMaximaSupp && interestPoints->size() > 0) {
         int32_t threadsCountNMS = 1;
         // NMS
-        if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
+        if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
             threadsCountNMS = (int32_t)(interestPoints->size() / COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD);
-            threadsCountNMS = COMPV_MATH_CLIP3(0, threadDip->getThreadsCount(), threadsCountNMS);
+            threadsCountNMS = COMPV_MATH_CLIP3(0, threadDisp->getThreadsCount(), threadsCountNMS);
         }
         if (threadsCountNMS > 1) {
             int32_t total = 0, count, size = (int32_t)interestPoints->size();
             CompVInterestPoint * begin = interestPoints->begin();
-            uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+			CompVAsyncTaskIds taskIds;
+			taskIds.reserve(threadsCountNMS);
+			auto funcPtr = [&](int32_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end) -> COMPV_ERROR_CODE {
+				FastNMS(stride, pcStrengthsMap, begin, end);
+				return COMPV_ERROR_CODE_S_OK;
+			};
             for (int32_t i = 0; i < threadsCountNMS; ++i) {
                 count = ((size - total) / (threadsCountNMS - i)) & -2;
-                COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, FastNMS_AsynExec,
-                                        COMPV_ASYNCTASK_SET_PARAM_ASISS(
-                                            stride,
-                                            m_pStrengthsMap,
-                                            begin,
-                                            begin + count),
-                                        COMPV_ASYNCTASK_SET_PARAM_NULL()));
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, stride, m_pStrengthsMap, begin, begin + count), taskIds));
                 begin += count;
                 total += count;
             }
-            for (int32_t i = 0; i < threadsCountNMS; ++i) {
-                COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
-            }
+			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
         }
         else {
             FastNMS(stride, m_pStrengthsMap, interestPoints->begin(), interestPoints->end());
@@ -777,23 +773,6 @@ static void FastProcessRange(RangeFAST* range)
         IP += range->stride;
         strengths += range->stride;
     } // for (j)
-}
-
-static COMPV_ERROR_CODE FastProcessRange_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
-{
-    RangeFAST* range = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, RangeFAST*);
-    FastProcessRange(range);
-    return COMPV_ERROR_CODE_S_OK;
-}
-
-static COMPV_ERROR_CODE FastNMS_AsynExec(const struct compv_asynctoken_param_xs* pc_params)
-{
-    int32_t stride = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[0].pcParamPtr, int32_t);
-    const uint8_t* pcStrengthsMap = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[1].pcParamPtr, const uint8_t*);
-    CompVInterestPoint* begin = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[2].pcParamPtr, CompVInterestPoint*);
-    CompVInterestPoint* end = COMPV_ASYNCTASK_GET_PARAM_ASIS(pc_params[3].pcParamPtr, CompVInterestPoint*);
-    FastNMS(stride, pcStrengthsMap, begin, end);
-    return COMPV_ERROR_CODE_S_OK;
 }
 
 static void FastNMS(int32_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end)

@@ -248,7 +248,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
     CompVPtr<CompVFeatureDete*> attachedDete = getAttachedDete();
     uint8_t* _descriptionsPtr = NULL;
     static const bool size_of_float_is4 = (sizeof(float) == 4); // ASM and INTRIN code require it
-    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher* >threadDisp = CompVEngine::getThreadDispatcher();
     int threadsCount = 1, levelsCount, threadStartIdx = 0;
     CompVPtr<CompVFeatureDescORB* >This = this;
     bool bLevelZeroBlurred = false;
@@ -299,9 +299,9 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
     }
 
     // Compute number of threads
-    if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
-        threadsCount = threadDip->getThreadsCount();
-        threadStartIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+    if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
+        threadsCount = threadDisp->getThreadsCount();
+        threadStartIdx = threadDisp->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
     }
 
     // apply gaussianblur filter on the pyramid
@@ -310,12 +310,12 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
         int levelStart, level, levelMax;
         for (levelStart = bLevelZeroBlurred ? 1 : 0, levelMax = threadsCount; levelStart < levelsCount; levelStart += threadsCount, levelMax += threadsCount) {
             for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
-                COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadStartIdx + level), COMPV_TOKENIDX0, CompVFeatureDescORB::convlt_AsynExec,
+                COMPV_CHECK_CODE_ASSERT(threadDisp->execute((uint32_t)(threadStartIdx + level), COMPV_TOKENIDX0, CompVFeatureDescORB::convlt_AsynExec,
                                         COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *_pyramid, level),
                                         COMPV_ASYNCTASK_SET_PARAM_NULL()));
             }
             for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
-                COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadStartIdx + level), COMPV_TOKENIDX0));
+                COMPV_CHECK_CODE_ASSERT(threadDisp->wait((uint32_t)(threadStartIdx + level), COMPV_TOKENIDX0));
             }
         }
     }
@@ -368,7 +368,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
         int32_t count = total / threadsCountDescribe;
         uint8_t* desc = _descriptionsPtr;
         for (int32_t i = 0; count > 0 && i < threadsCountDescribe; ++i) {
-            COMPV_CHECK_CODE_RETURN(err_ = threadDip->execute((uint32_t)(threadStartIdx + i), COMPV_TOKENIDX0, describe_AsynExec,
+            COMPV_CHECK_CODE_RETURN(err_ = threadDisp->execute((uint32_t)(threadStartIdx + i), COMPV_TOKENIDX0, describe_AsynExec,
                                            COMPV_ASYNCTASK_SET_PARAM_ASISS(*This, *_pyramid, begin, begin + count, desc),
                                            COMPV_ASYNCTASK_SET_PARAM_NULL()));
             begin += count;
@@ -394,7 +394,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
     // Wait for the threads to finish the work
     if (threadsCountDescribe > 1) {
         for (int32_t i = 0; i < threadsCountDescribe; ++i) {
-            COMPV_CHECK_CODE_RETURN(err_ = threadDip->wait((uint32_t)(threadStartIdx + i), COMPV_TOKENIDX0));
+            COMPV_CHECK_CODE_RETURN(err_ = threadDisp->wait((uint32_t)(threadStartIdx + i), COMPV_TOKENIDX0));
         }
     }
 

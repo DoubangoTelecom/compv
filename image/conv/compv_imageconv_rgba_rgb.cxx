@@ -60,7 +60,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVPtr<CompVImage* >& 
     int width = rgb->getWidth();
     int stride = rgb->getStride();
     int threadsCount = 1;
-    CompVPtr<CompVThreadDispatcher* >threadDip = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher* >threadDisp = CompVEngine::getThreadDispatcher();
 
     if (COMPV_IS_ALIGNED_SSE(stride)) {
         if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
@@ -95,19 +95,19 @@ COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVPtr<CompVImage* >& 
     }
 
     // Compute number of threads
-    if (threadDip && threadDip->getThreadsCount() > 1 && !threadDip->isMotherOfTheCurrentThread()) {
+    if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
         // RGB<->RGBA is a memcpy operation and not CPU demanding -> use more samples per thread
         static const int minSamplesPerThread = COMPV_IMAGCONV_MIN_SAMPLES_PER_THREAD << 2;
-        threadsCount = threadDip->guessNumThreadsDividingAcrossY(stride, height, minSamplesPerThread);
+        threadsCount = threadDisp->guessNumThreadsDividingAcrossY(stride, height, minSamplesPerThread);
     }
 
     // Process
     if (threadsCount > 1) {
         int32_t rgbIdx = 0, rgbaIdx = 0, threadHeight, totalHeight = 0;
-        uint32_t threadIdx = threadDip->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
+        uint32_t threadIdx = threadDisp->getThreadIdxForNextToCurrentCore(); // start execution on the next CPU core
         for (int32_t i = 0; i < threadsCount; ++i) {
             threadHeight = ((height - totalHeight) / (threadsCount - i)) & -2; // the & -2 is to make sure we'll deal with odd heights
-            COMPV_CHECK_CODE_ASSERT(threadDip->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, ImageConvKernelxx_AsynExec,
+            COMPV_CHECK_CODE_ASSERT(threadDisp->execute((uint32_t)(threadIdx + i), COMPV_TOKENIDX0, ImageConvKernelxx_AsynExec,
                                     COMPV_ASYNCTASK_SET_PARAM_ASISS(COMPV_IMAGECONV_FUNCID_RGBToRGBA, toRGBA, (rgbPtr + rgbIdx), (rgbaPtr + rgbaIdx), threadHeight, width, stride),
                                     COMPV_ASYNCTASK_SET_PARAM_NULL()));
             rgbIdx += (threadHeight * stride) * 3;
@@ -115,7 +115,7 @@ COMPV_ERROR_CODE CompVImageConvRgbaRgb::rgbToRgba(const CompVPtr<CompVImage* >& 
             totalHeight += threadHeight;
         }
         for (int32_t i = 0; i < threadsCount; ++i) {
-            COMPV_CHECK_CODE_ASSERT(threadDip->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
+            COMPV_CHECK_CODE_ASSERT(threadDisp->wait((uint32_t)(threadIdx + i), COMPV_TOKENIDX0));
         }
     }
     else {

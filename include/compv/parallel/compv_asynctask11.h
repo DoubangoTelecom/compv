@@ -9,15 +9,49 @@
 
 #include "compv/compv_config.h"
 #include "compv/parallel/compv_thread.h"
+#include "compv/parallel/compv_mutex.h"
 #include "compv/parallel/compv_semaphore.h"
 #include "compv/compv_obj.h"
 #include "compv/compv_common.h"
 
-#include <map>
+#include <vector>
 
 COMPV_NAMESPACE_BEGIN()
 
-struct CompVAsyncToken;
+#if !defined (COMPV_ASYNCTASK11_CHAIN_ENABLED)
+#	define COMPV_ASYNCTASK11_CHAIN_ENABLED	0
+#endif /* COMPV_ASYNCTASK11_CHAIN_ENABLED */
+
+// Maximum number of mt functions you can have on the callstack for each thread
+// For example, if A, B, C, D... are mt functions and have a single thread then, A->B->C->D forms 4 tokens.
+// This number is per thread wich means the total tokens will be "COMPV_ASYNCTASK11_MAX_TOKEN_COUNT * numThreads"
+// This means we can have up to 64 mt functions on our callstack for each thread
+#if !defined(COMPV_ASYNCTASK11_MAX_TOKEN_COUNT)
+#	if COMPV_ASYNCTASK11_CHAIN_ENABLED
+#		define COMPV_ASYNCTASK11_MAX_TOKEN_COUNT				16
+#	else
+#		define COMPV_ASYNCTASK11_MAX_TOKEN_COUNT				1
+#	endif
+#endif /* COMPV_ASYNCTASK11_MAX_TOKEN_COUNT */
+
+struct CompVAsyncTaskId {
+	uint64_t uTaskId;
+	uint64_t uTokenId;
+public:
+	CompVAsyncTaskId() : uTaskId(0), uTokenId(0) { }
+	CompVAsyncTaskId(uint64_t taskId, uint64_t tokenId) : uTaskId(taskId), uTokenId(tokenId) { }
+};
+typedef std::vector<CompVAsyncTaskId> CompVAsyncTaskIds;
+
+struct CompVAsyncToken {
+	bool bExecute;
+	std::function<COMPV_ERROR_CODE()> fFunc;
+public:
+	void init() {
+		fFunc = nullptr;
+		bExecute = false;
+	}
+};
 
 class COMPV_API CompVAsyncTask11 : public CompVObj
 {
@@ -53,21 +87,14 @@ private:
 	CompVPtr<CompVThread* >m_Thread;
 	CompVPtr<CompVSemaphore* >m_SemRun;
 	CompVPtr<CompVSemaphore* >m_SemExec;
-	std::map<uint64_t, CompVAsyncToken> m_Tokens;
+#if COMPV_ASYNCTASK11_CHAIN_ENABLED
+	CompVPtr<CompVMutex* >m_MutexTokens;
+#endif
+	CompVAsyncToken m_Tokens[COMPV_ASYNCTASK11_MAX_TOKEN_COUNT];
 	COMPV_DISABLE_WARNINGS_END()
 
 	bool m_bStarted;
 	compv_core_id_t m_iCoreId;
-};
-
-struct CompVAsyncToken {
-	uint64_t uId;
-	std::function<COMPV_ERROR_CODE()> fFunc;
-public:
-	CompVAsyncToken(std::function<COMPV_ERROR_CODE()> f) {
-		fFunc = f;
-		uId = CompVAsyncTask11::getUniqueTokenId();
-	}
 };
 
 COMPV_NAMESPACE_END()

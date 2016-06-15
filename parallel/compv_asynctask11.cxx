@@ -37,6 +37,11 @@ COMPV_ERROR_CODE CompVAsyncTask11::start()
 	if (!m_SemExec) {
 		COMPV_CHECK_CODE_RETURN(CompVSemaphore::newObj(&m_SemExec));
 	}
+#if COMPV_ASYNCTASK11_CHAIN_ENABLED
+	if (!m_MutexTokens) {
+		COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&m_MutexTokens));
+	}
+#endif
 	m_Thread = NULL; // join the thread
 	m_bStarted = true; // must be here to make sure the run thread will have it equal to true
 	err_ = CompVThread::newObj(&m_Thread, CompVAsyncTask11::run, this);
@@ -60,6 +65,12 @@ COMPV_ERROR_CODE CompVAsyncTask11::start()
 		err_ = COMPV_ERROR_CODE_S_OK; // not fatal error, once the user is alerted continue
 	}
 
+	// Init tokens
+	CompVAsyncToken* token = &m_Tokens[0];
+	for (unsigned i = 0; i < COMPV_ASYNCTASK11_MAX_TOKEN_COUNT; ++i) {
+		token->init();
+	}
+
 	return err_;
 }
 
@@ -79,75 +90,74 @@ COMPV_ERROR_CODE CompVAsyncTask11::invoke(std::function<COMPV_ERROR_CODE()> fFun
 	COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
 	COMPV_CHECK_EXP_RETURN(!fFunc, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
-	CompVAsyncToken newToken(fFunc);
-	if (tokenId) {
-		*tokenId = newToken.uId;
+	// Init tokens
+	CompVAsyncToken* tokens = &m_Tokens[0];
+	CompVAsyncToken* token = NULL;
+#if COMPV_ASYNCTASK11_CHAIN_ENABLED
+	// We need to lock the tokens for acquisitions for conccurent call when mt functions are chained
+	// Locking isn't needed for token release (done in run())
+	COMPV_CHECK_CODE_RETURN(m_MutexTokens->lock());
+#endif
+	for (unsigned i = 0; i < COMPV_ASYNCTASK11_MAX_TOKEN_COUNT; ++i) {
+		if (!tokens[i].bExecute) {
+			token = &tokens[i];
+			token->init();
+			token->bExecute = true;
+			if (tokenId) {
+				*tokenId = i;
+			}
+			break;
+		}
 	}
-	m_Tokens.insert(std::pair<uint64_t, CompVAsyncToken>(newToken.uId, newToken));
+#if COMPV_ASYNCTASK11_CHAIN_ENABLED
+	COMPV_CHECK_CODE_RETURN(m_MutexTokens->unlock());
+#endif
+
+	if (!token) {
+		COMPV_DEBUG_ERROR("Running out of tokens. You should increment COMPV_ASYNCTASK11_MAX_TOKEN_COUNT(%d)", COMPV_ASYNCTASK11_MAX_TOKEN_COUNT);
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_CALL);
+	}
+	token->fFunc = fFunc;
 	COMPV_ERROR_CODE err = m_SemRun->increment();
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
-		m_Tokens.erase(newToken.uId);
-		COMPV_CHECK_CODE_RETURN(err); // must not exit the function: goto bail and call va_end(ap)
+		token->bExecute = false;
+		COMPV_CHECK_CODE_RETURN(err);
 	}
-#if 0
-	COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(i_token) || !f_func || !ap, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-
-	compv_asynctoken_xt* pToken = &tokens[i_token];
-	if (pToken->bExecuting || pToken->bExecute) {
-		COMPV_DEBUG_ERROR("Token with id = %llu already executing or scheduled", i_token);
-		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	}
-	if (!pToken->bTaken) {
-		// token was not taken -> use it with warning
-		pToken->bTaken = true;
-		++m_iTokensCount;
-	}
-	pToken->fFunc = f_func;
-	pToken->iParamsCount = 0;
-	pToken->uTimeSchedStart = CompVTime::getNowMills();
-
-	uintptr_t pc_param_ptr;
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	while ((pc_param_ptr = va_arg(*ap, uintptr_t)) != COMPV_ASYNCTASK_PARAM_PTR_INVALID) {
-		if (pToken->iParamsCount >= COMPV_ASYNCTASK_MAX_TOKEN_PARAMS_COUNT) {
-			COMPV_DEBUG_ERROR("Too many params");
-			COMPV_CHECK_CODE_RETURN(err = COMPV_ERROR_CODE_E_OUT_OF_BOUND); // must not exit the function: goto bail and call va_end(ap)
-		}
-		pToken->params[pToken->iParamsCount++].pcParamPtr = pc_param_ptr;
-	}
-
-	pToken->bExecute = true;
-	err = m_SemRun->increment();
-	if (COMPV_ERROR_CODE_IS_NOK(err)) {
-		pToken->bExecute = false;
-		pToken->uTimeSchedStop = pToken->uTimeSchedStart;
-		COMPV_CHECK_CODE_RETURN(err); // must not exit the function: goto bail and call va_end(ap)
-	}
-
-	return err;
-#endif
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVAsyncTask11::waitAll(uint64_t u_timeout /* = 86400000 -> 1 day */)
 {
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Deadlock when mt functions are chained
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // We check all tokens
 	COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
-	std::map<uint64_t, CompVAsyncToken>::iterator it;
 	uint64_t u_end = (CompVTime::getNowMills() + u_timeout);
-	while ((it = m_Tokens.begin()) != m_Tokens.end() && u_end > CompVTime::getNowMills()) {
-		m_SemExec->decrement();
+	bool empty;
+	do {
+		empty = true;
+		for (int i = 0; i < COMPV_ASYNCTASK11_MAX_TOKEN_COUNT; ++i) {
+			const CompVAsyncToken* token = &m_Tokens[i];
+			if (token->bExecute && u_end > CompVTime::getNowMills()) {
+				m_SemExec->decrement();
+				empty &= !token->bExecute;
+			}
+		}
 	}
+	while (!empty);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVAsyncTask11::waitOne(uint64_t tokenId, uint64_t u_timeout /* = 86400000 -> 1 day */)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_TESTED();
-	std::map<uint64_t, CompVAsyncToken>::iterator it;
+	COMPV_CHECK_EXP_RETURN(!m_bStarted || tokenId >= COMPV_ASYNCTASK11_MAX_TOKEN_COUNT, COMPV_ERROR_CODE_E_INVALID_STATE);
+	CompVAsyncToken* token = &m_Tokens[tokenId];
 	uint64_t u_end = (CompVTime::getNowMills() + u_timeout);
-	while ((it = m_Tokens.find(tokenId)) != m_Tokens.end() && u_end > CompVTime::getNowMills()) {
+	while (token->bExecute && u_end > CompVTime::getNowMills()) {
 		m_SemExec->decrement();
+	}
+	if (token->bExecute) {
+		COMPV_DEBUG_WARN("Async token with id = %llu timedout", tokenId);
+		return COMPV_ERROR_CODE_E_TIMEDOUT;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -190,10 +200,9 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
 	// This is why we use "CompVAsyncTask*" instead of "CompVPtr<CompVAsyncTask *>". We're sure that the object cannot be destroyed while
 	// we're running the below code because the destructor() calls stop() and wait the exit
 	CompVAsyncTask11* Self_ = static_cast<CompVAsyncTask11*>(pcArg);
-	compv_asynctoken_xt* pToken_;
+	CompVAsyncToken* pToken_;
 	COMPV_ERROR_CODE err_;
 	size_t size_;
-	std::map<uint64_t, CompVAsyncToken>::iterator it;
 
 	(pToken_);
 	(size_);
@@ -213,26 +222,14 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
 		if (COMPV_ERROR_CODE_IS_NOK(err_) || !Self_->m_bStarted) {
 			break;
 		}
-		while ((it = Self_->m_Tokens.begin()) != Self_->m_Tokens.end()) {
-			COMPV_CHECK_CODE_BAIL(err_ = it->second.fFunc());
-			Self_->m_Tokens.erase(it);
-			COMPV_CHECK_CODE_BAIL(err_ = Self_->m_SemExec->increment());
-		}
-#if 0
-		for (size_ = 0; size_ < COMPV_ASYNCTASK_MAX_TOKEN_COUNT; ++size_) {
-			pToken_ = &Self_->tokens[size_];
+		for (size_ = 0; size_ < COMPV_ASYNCTASK11_MAX_TOKEN_COUNT; ++size_) {
+			pToken_ = &Self_->m_Tokens[size_];
 			if (pToken_->bExecute) {
-				pToken_->bExecuting = true; // must be set first because "wait()" uses both "b_execute" and "b_executing"
-				pToken_->uTimeFuncExecStart = CompVTime::getNowMills();
-				pToken_->fFunc(pToken_->params);
-				pToken_->uTimeFuncExecStop = CompVTime::getNowMills();
+				pToken_->fFunc();
 				pToken_->bExecute = false;
-				pToken_->bExecuting = false;
 				COMPV_CHECK_CODE_BAIL(err_ = Self_->m_SemExec->increment());
-				pToken_->uTimeSchedStop = CompVTime::getNowMills(); // updated in wait() which means we are sure to have the highest value
 			}
 		}
-#endif
 	}
 
 bail:
