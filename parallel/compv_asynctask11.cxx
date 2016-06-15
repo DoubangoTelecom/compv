@@ -31,12 +31,21 @@ COMPV_ERROR_CODE CompVAsyncTask11::start()
 	if (m_bStarted) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
+#if COMPV_SEMAPHORE11
+	if (!m_SemRun) {
+		m_SemRun = std::make_shared<CompVSemaphore11>();
+	}
+	if (!m_SemExec) {
+		m_SemExec = std::make_shared<CompVSemaphore11>();
+	}
+#else
 	if (!m_SemRun) {
 		COMPV_CHECK_CODE_RETURN(CompVSemaphore::newObj(&m_SemRun));
 	}
 	if (!m_SemExec) {
 		COMPV_CHECK_CODE_RETURN(CompVSemaphore::newObj(&m_SemExec));
 	}
+#endif
 #if COMPV_ASYNCTASK11_CHAIN_ENABLED
 	if (!m_MutexTokens) {
 		COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&m_MutexTokens));

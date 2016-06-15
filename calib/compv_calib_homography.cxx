@@ -8,6 +8,14 @@
 #include "compv/math/compv_math_eigen.h"
 #include "compv/math/compv_math_matrix.h"
 
+#if !defined (COMPV_PRNG11)
+#	define COMPV_PRNG11 1
+#endif
+
+#if COMPV_PRNG11
+#	include <random>
+#endif
+
 COMPV_NAMESPACE_BEGIN()
 
 #define kModuleNameHomography "Homography"
@@ -63,10 +71,16 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	size_t n_; // maximum number of tries
 	size_t t_; // number of tries
 	
-	uint32_t rand4[4];
 	uint32_t idx0, idx1, idx2, idx3;
 	size_t inliersCount_, bestInlinersCount_ = 0;
 	size_t std2_, bestStd2_ = INT_MAX;
+
+#if COMPV_PRNG11
+	std::mt19937 prng_(12345);
+	std::uniform_int_distribution<> unifd_ { 0, static_cast<int>(k_ - 1) };
+#else
+	uint32_t rand4[4];
+#endif
 
 	CompVPtrArray(T) src_;
 	CompVPtrArray(T) dst_;
@@ -76,7 +90,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	T *srcx0_, *srcy0_, *srcz0_, *dstx0_, *dsty0_, *dstz0_, *hx0_, *hy0_, *hz0_;
 	bool colinear;
 
-	n_ = (size_t)(logf(1 - p_) / logf(1 - powf(1 - e_, (float)s_)));
+	n_ = static_cast<size_t>(logf(1 - p_) / logf(1 - powf(1 - e_, static_cast<float>(s_))));
 	t_ = 0;
 
 	// inliers_-> row-0: point indexes, row-1: distances
@@ -102,13 +116,21 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	dstz0_[0] = dstz0_[1] = dstz0_[2] = dstz0_[3] = 1;
 
 	while (t_ < n_ && bestInlinersCount_ < d_) {
-		// TODO(dmi): use prng
 		do {
+#if COMPV_PRNG11
+			idx0 = static_cast<uint32_t>(unifd_(prng_));
+			idx1 = static_cast<uint32_t>(unifd_(prng_));
+			idx2 = static_cast<uint32_t>(unifd_(prng_));
+			idx3 = static_cast<uint32_t>(unifd_(prng_));
+#else
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+			COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 			CompVMathUtils::rand(rand4, 4);
 			idx0 = rand4[0] % k_;
 			idx1 = rand4[1] % k_;
 			idx2 = rand4[2] % k_;
 			idx3 = rand4[3] % k_;
+#endif
 		} while (idx0 == idx1 || idx0 == idx2 || idx0 == idx3 || idx1 == idx2 || idx1 == idx3 || idx2 == idx3);
 
 		// Set the #4 random points

@@ -250,6 +250,9 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 
 	void(*maxAbsOffDiag_symm_float64)(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rowStart, compv_uscalar_t rowEnd, compv_uscalar_t strideInBytes) = NULL;
 
+	size_t rowStart = 1;
+	size_t rowEnd = S->rows();
+
 	if (std::is_same<T, compv_float64_t>::value) {
 		if (S->isAlignedSSE()) {
 			if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
@@ -272,13 +275,6 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 				//COMPV_EXEC_IFDEF_ASM_X86((maxAbsOffDiag_symm_float64 = , alignv = COMPV_SIMD_ALIGNV_AVX));
 			}
 		}
-	}
-
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-	// Declare function pointer
-	auto funcPtr = [&](const CompVPtrArray(T) &S, size_t rowStart, size_t rowEnd, size_t *row, size_t *col, T* max) -> COMPV_ERROR_CODE {
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-		COMPV_CHECK_EXP_RETURN(rowStart >= rowEnd, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		if (maxAbsOffDiag_symm_float64) {
 			compv_uscalar_t row_ = 0, col_ = 0;
 			compv_float64_t max_ = 0;
@@ -287,65 +283,29 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 			*col = (size_t)col_;
 			*max = (T)max_;
 		}
-		else {
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-			*row = *col = 0;
-			*max = 0;
-
-			T r0_ = 0, r1_;
-			size_t i, j;
-			size_t strideInBytes = S->strideInBytes();
-			const T* S1_;
-			const uint8_t* S0_ = reinterpret_cast<const uint8_t*>(S->ptr(rowStart));
-			for (j = rowStart; j < rowEnd; ++j) {
-				S1_ = reinterpret_cast<const T*>(S0_);
-				for (i = 0; i < j; ++i) { // i stops at j because the matrix is symmetric
-					if ((r1_ = ::abs(S1_[i])) > r0_) {
-						r0_ = r1_;
-						*row = j;
-						*col = i;
-					}
-				}
-				S0_ += strideInBytes;
-			}
-			*max = r0_;
-		}
-		return COMPV_ERROR_CODE_S_OK;
-	};
-
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
-	if (threadDisp && threadDisp->getThreadsCount() > 0) {
-#define THREADS 8
-		CompVAsyncTaskIds taskIds;
-		taskIds.reserve(THREADS);
-		T maxs[THREADS];
-		size_t rows[THREADS], cols[THREADS];
-		size_t rowsPerThread = S->rows() / THREADS;
-		size_t rowStart = 1, rowEnd;
-		for (size_t i = 0; i < THREADS; ++i) {
-			if (i == THREADS - 1) {
-				rowEnd = S->rows();
-			}
-			else {
-				rowEnd = rowStart + rowsPerThread;
-			}
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, S, rowStart, rowEnd, &rows[i], &cols[i], &maxs[i]), taskIds));
-			rowStart = rowEnd;
-		}
-		*max = 0;
-		for (size_t i = 0; i < taskIds.size(); ++i) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
-			if (maxs[i] > *max) {
-				*max = maxs[i];
-				*col = cols[i];
-				*row = rows[i];
-			}
-		}
 	}
-	else {
-		COMPV_CHECK_CODE_RETURN(funcPtr(S, 1, S->rows(), row, col, max));
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	*row = *col = 0;
+	*max = 0;
+
+	T r0_ = 0, r1_;
+	size_t i, j;
+	size_t strideInBytes = S->strideInBytes();
+	const T* S1_;
+	const uint8_t* S0_ = reinterpret_cast<const uint8_t*>(S->ptr(rowStart));
+	for (j = rowStart; j < rowEnd; ++j) {
+		S1_ = reinterpret_cast<const T*>(S0_);
+		for (i = 0; i < j; ++i) { // i stops at j because the matrix is symmetric
+			if ((r1_ = ::abs(S1_[i])) > r0_) {
+				r0_ = r1_;
+				*row = j;
+				*col = i;
+			}
+		}
+		S0_ += strideInBytes;
 	}
+	*max = r0_;
 
 	return COMPV_ERROR_CODE_S_OK;
 }

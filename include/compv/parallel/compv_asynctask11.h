@@ -14,7 +14,18 @@
 #include "compv/compv_obj.h"
 #include "compv/compv_common.h"
 
+#if !defined(COMPV_SEMAPHORE11)
+#	define COMPV_SEMAPHORE11 1 // use C++11 Semophores?
+#endif
+
 #include <vector>
+
+// C++11
+#if COMPV_SEMAPHORE11
+#	include <mutex>
+#	include <condition_variable>
+#	include <memory>
+#endif
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -53,6 +64,34 @@ public:
 	}
 };
 
+#if COMPV_SEMAPHORE11
+class CompVSemaphore11 {
+public:
+	CompVSemaphore11(int count_ = 0)
+		: count(count_) {}
+
+	COMPV_INLINE COMPV_ERROR_CODE increment(){
+		std::unique_lock<std::mutex> lock(mtx);
+		count++;
+		cv.notify_one();
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	COMPV_INLINE COMPV_ERROR_CODE decrement() {
+		std::unique_lock<std::mutex> lock(mtx);
+		while (count == 0){
+			cv.wait(lock);
+		}
+		count--;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+private:
+	std::mutex mtx;
+	std::condition_variable cv;
+	int count;
+};
+#endif
+
 class COMPV_API CompVAsyncTask11 : public CompVObj
 {
 protected:
@@ -85,8 +124,13 @@ private:
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
 	CompVPtr<CompVThread* >m_Thread;
+#if COMPV_SEMAPHORE11
+	std::shared_ptr<CompVSemaphore11> m_SemRun;
+	std::shared_ptr<CompVSemaphore11> m_SemExec;
+#else
 	CompVPtr<CompVSemaphore* >m_SemRun;
 	CompVPtr<CompVSemaphore* >m_SemExec;
+#endif
 #if COMPV_ASYNCTASK11_CHAIN_ENABLED
 	CompVPtr<CompVMutex* >m_MutexTokens;
 #endif
