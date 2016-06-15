@@ -282,6 +282,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::maxAbsOffDiag_symm(const CompVPtrArray(T) &S, s
 			*row = (size_t)row_;
 			*col = (size_t)col_;
 			*max = (T)max_;
+			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
 
