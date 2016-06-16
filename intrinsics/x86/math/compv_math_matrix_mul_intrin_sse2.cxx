@@ -173,6 +173,37 @@ void MatrixIsEqual_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t*
 	*equal = 1;
 }
 
+void MatrixMulABt_float64_minpack1_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM, SSE41 (DotProduct)
+
+	compv_uscalar_t i, j, k;
+
+	const compv_float64_t* a = A;
+	const compv_float64_t* b;
+	compv_float64_t* r = R;
+
+	__m128d xmmSum;
+
+	for (i = 0; i < aRows; ++i) {
+		b = B;
+		for (j = 0; j < bRows; ++j) {
+			xmmSum = _mm_setzero_pd();
+			for (k = 0; k < bCols - 1; k += 2) {
+				xmmSum = _mm_add_pd(_mm_mul_pd(_mm_load_pd(&a[k]), _mm_load_pd(&b[k])), xmmSum);
+			}
+			if (bCols & 1) {
+				xmmSum = _mm_add_pd(_mm_mul_pd(_mm_load_sd(&a[k]), _mm_load_sd(&b[k])), xmmSum);
+			}
+			xmmSum = _mm_add_pd(xmmSum, _mm_shuffle_pd(xmmSum, xmmSum, 0x1));
+			_mm_store_sd(&r[j], xmmSum);
+			b = reinterpret_cast<const compv_float64_t*>(reinterpret_cast<const uint8_t*>(b)+bStrideInBytes);
+		}
+		a = reinterpret_cast<const compv_float64_t*>(reinterpret_cast<const uint8_t*>(a) + aStrideInBytes);
+		r = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(r) + rStrideInBytes);
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

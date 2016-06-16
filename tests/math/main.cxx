@@ -20,7 +20,8 @@ using namespace compv;
 #define TEST_SVD					0
 #define TEST_PSI					0 // Moore–Penrose pseudoinverse
 #define TEST_RAND					0
-#define TEST_MOPS_ISSYMMETRIC		1
+#define TEST_MOPS_ISSYMMETRIC		0
+#define TEST_MOPS_MULAB				1
 
 #if COMPV_OS_WINDOWS
 int _tmain(int argc, _TCHAR* argv[])
@@ -79,6 +80,10 @@ int main()
 #if TEST_MOPS_ISSYMMETRIC
 	extern COMPV_ERROR_CODE TestIsSymmetric();
 	COMPV_CHECK_CODE_ASSERT(TestIsSymmetric());
+#endif
+#if TEST_MOPS_MULAB
+	extern COMPV_ERROR_CODE TestMulAB();
+	COMPV_CHECK_CODE_ASSERT(TestMulAB());
 #endif
 
     // deInit the engine

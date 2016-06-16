@@ -12,6 +12,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
+global sym(MatrixMulABt_float64_minpack1_Asm_X64_SSE2)
 global sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE41)
 global sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE2)
 
@@ -19,6 +20,102 @@ section .data
 	extern sym(kAVXFloat64MaskAbs)
 
 section .text
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) - > const COMPV_ALIGNED(SSE) compv_float64_t* A
+; arg(1) - > const COMPV_ALIGNED(SSE) compv_float64_t* B
+; arg(2) - > compv_uscalar_t aRows
+; arg(3) - > compv_uscalar_t bRows
+; arg(4) - > compv_uscalar_t bCols
+; arg(5) - > compv_uscalar_t aStrideInBytes
+; arg(6) - > compv_uscalar_t bStrideInBytes
+; arg(7) - > COMPV_ALIGNED(SSE) compv_float64_t* R
+; arg(8) - > compv_uscalar_t rStrideInBytes
+; void MatrixMulABt_float64_minpack1_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
+sym(MatrixMulABt_float64_minpack1_Asm_X64_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 9
+	push rsi
+	push rdi
+	push rbx
+	push r12
+	push r13
+	;; end prolog ;;
+	
+	mov rax, arg(7) ; rax = R
+	mov rsi, arg(2) ; rsi = aRows
+	mov rdx, arg(0) ; rdx = a
+	mov r8, arg(8) ; r8 = rStrideInBytes
+	mov r9, arg(5) ; r9 = aStrideInBytes
+	mov r10, arg(4)
+	dec r10 ; r10 = bCols - 1
+	mov r11, arg(6) ; r11 = bStrideInBytes
+	mov r12, arg(3) ; r12 = bRows
+	mov r13, arg(4) ; r13 = bCols
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (i = 0; i < aRows; ++i) 
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopARows
+		mov rbx, arg(1) ; rbx = B
+		xor rdi, rdi ; rdi = j = 0
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (j = 0; j < bRows; ++j)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		.LoopBRows
+			pxor xmm0, xmm0 ; xmm0 = xmmSum
+			xor rcx, rcx ; rcx = k = 0
+
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			; for (k = 0; k < bCols - 1; k += 2)
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			.LoopBCols
+				movapd xmm1, [rdx + rcx*8]
+				mulpd xmm1, [rbx + rcx*8]
+				lea rcx, [rcx + 2] ; k += 2
+				addpd xmm0, xmm1	
+				cmp rcx, r10 ; k <? (Cols - 1)
+				jl .LoopBCols
+			.EndOfLoopBCols
+			
+			test r13, 1 ; IsOdd(bCols)?
+			jz .BColsNotOdd
+				movsd xmm1, [rdx + rcx*8]
+				movsd xmm2, [rbx + rcx*8]
+				mulpd xmm1, xmm2
+				addpd xmm0, xmm1
+			.BColsNotOdd
+			
+			movapd xmm1, xmm0
+			shufpd xmm1, xmm0, 0x1
+			addpd xmm0, xmm1
+			movsd [rax + rdi*8], xmm0
+
+			inc rdi ; ++j
+			add rbx, r11 ; b += bStrideInBytes
+			cmp rdi, r12 ; j <? bRows
+			jl .LoopBRows
+		.EndOfLoopBRows
+
+		dec rsi ; --i
+		lea rax, [rax + r8] ; r += rStrideInBytes
+		test rsi, rsi
+		lea rdx, [rdx + r9] ; a += aStrideInBytes		
+		jnz .LoopARows
+	.EndOfLoopARows
+
+	;; begin epilog ;;
+	pop r13
+	pop r12
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; %1 -> 41 -> use SSE41, 2 -> use SSE2

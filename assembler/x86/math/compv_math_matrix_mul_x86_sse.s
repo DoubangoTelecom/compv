@@ -162,17 +162,8 @@ sym(MatrixMulABt_float64_minpack1_Asm_X86_SSE2):
 	push rbx
 	;; end prolog ;;
 
-	; alloc memory
-	sub rsp, 8
-	; [rsp + 0] = bCols - 1
-
-	mov rax, arg(4)
-	dec rax
-	mov [rsp + 0], rax
-
 	mov rsi, arg(2) ; rsi = aRows
 	mov rdx, arg(0) ; rdx = a
-	mov rax, arg(7) ; rax = r
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (i = 0; i < aRows; ++i) 
@@ -185,8 +176,10 @@ sym(MatrixMulABt_float64_minpack1_Asm_X86_SSE2):
 		; for (j = 0; j < bRows; ++j)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopBRows
+			mov rax, arg(4); bCols
 			pxor xmm0, xmm0 ; xmm0 = xmmSum
 			xor rcx, rcx ; rcx = k = 0
+			dec rax ; rax = bCols - 1
 
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (k = 0; k < bCols - 1; k += 2)
@@ -196,10 +189,10 @@ sym(MatrixMulABt_float64_minpack1_Asm_X86_SSE2):
 				mulpd xmm1, [rbx + rcx*8]
 				lea rcx, [rcx + 2] ; k += 2
 				addpd xmm0, xmm1	
-				cmp rcx, [rsp] ; k <? (Cols - 1)
+				cmp rcx, rax ; k <? (Cols - 1)
 				jl .LoopBCols
 			.EndOfLoopBCols
-
+			
 			cmp rcx, arg(4) ; IsOdd(bCols)?
 			jge .BColsNotOdd
 				movsd xmm1, [rdx + rcx*8]
@@ -210,6 +203,7 @@ sym(MatrixMulABt_float64_minpack1_Asm_X86_SSE2):
 			
 			movapd xmm1, xmm0
 			shufpd xmm1, xmm0, 0x1
+			mov rax, arg(7) ; R
 			addpd xmm0, xmm1
 			movsd [rax + rdi*8], xmm0
 
@@ -219,18 +213,16 @@ sym(MatrixMulABt_float64_minpack1_Asm_X86_SSE2):
 			jl .LoopBRows
 		.EndOfLoopBRows
 
-		mov rdi, arg(5) ; aStrideInBytes
-		mov rcx, arg(8) ; rStrideInBytes
-		lea rdx, [rdx + rdi] ; a += aStrideInBytes
-		lea rax, [rax + rcx] ; r += rStrideInBytes
-
 		dec rsi ; --i
+		mov rcx, arg(8) ; rStrideInBytes
+		mov rdi, arg(5) ; aStrideInBytes
+		lea rax, [rax + rcx] ; r += rStrideInBytes
+		lea rdx, [rdx + rdi] ; a += aStrideInBytes
+		mov arg(7), rax
+		
 		test rsi, rsi
 		jnz .LoopARows
 	.EndOfLoopARows
-
-	; free memory
-	add rsp, 8
 
 	;; begin epilog ;;
 	pop rbx
