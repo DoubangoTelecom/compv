@@ -41,10 +41,20 @@ section .text
 	push rsi
 	push rdi
 	push rbx
+	push r12
+	push r13
 	;; end prolog ;;
 
+	mov rax, arg(7) ; rax = R
 	mov rsi, arg(2) ; rsi = aRows
 	mov rdx, arg(0) ; rdx = a
+	mov r8, arg(8) ; r8 = rStrideInBytes
+	mov r9, arg(5) ; r9 = aStrideInBytes
+	mov r10, arg(4)
+	sub r10, 3 ; r10 = bCols - 3
+	mov r11, arg(6) ; r11 = bStrideInBytes
+	mov r12, arg(3) ; r12 = bRows
+	mov r13, arg(4) ; r13 = bCols
 
 	vmovapd ymm3, [sym(kAVXMaskstore_0_u64)] ; ymm3 = ymmMaskToExtractFirst64Bits
 
@@ -59,13 +69,11 @@ section .text
 		; for (j = 0; j < bRows; ++j)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopBRows
-			mov rax, arg(4); bCols
 			vpxor ymm0, ymm0 ; ymm0 = ymmSum
 			xor rcx, rcx ; rcx = k = 0
-			lea rax, [rax - 3] ; rax = bCols - 3
 
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			; for (k = 0; k < bCols - 1; k += 2)
+			; for (k = 0; k < bCols - 3; k += 4)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			.LoopBCols
 				vmovapd ymm1, [rdx + rcx*8]
@@ -77,12 +85,11 @@ section .text
 					lea rcx, [rcx + 4] ; k += 4
 					vaddpd ymm0, ymm0, ymm1
 				%endif
-				cmp rcx, rax ; k <? (Cols - 3)
+				cmp rcx, r10 ; k <? (Cols - 3)
 				jl .LoopBCols
 			.EndOfLoopBCols
-
-			lea rax, [rax + 3] ; rax = bCols
-			cmp rcx, rax ; k <? bCols
+			
+			cmp rcx, r13 ; k <? bCols
 			jge .BColsIsPerfectlyAVXAligned
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 				; for (; k < bCols; k += 1)
@@ -97,35 +104,31 @@ section .text
 						vmulpd ymm1, ymm1, ymm2
 						vaddpd ymm0, ymm0, ymm1
 					%endif
-					cmp rcx, rax ; k <? bCols
+					cmp rcx, r13 ; k <? bCols
 					jl .LoopBColsRemaining
 				.EndOfLoopBColsRemaining
 			.BColsIsPerfectlyAVXAligned			
 			
+			inc rdi ; ++j
 			vhaddpd ymm0, ymm0, ymm0
 			vperm2f128 ymm1, ymm0, ymm0, 0x11
-			mov rax, arg(7) ; R
+			lea rbx, [rbx + r11] ; b += bStrideInBytes
 			vaddpd ymm0, ymm0, ymm1
-			vmaskmovpd [rax + rdi*8], ymm3, ymm0
-
-			inc rdi ; ++j
-			add rbx, arg(6) ; b += bStrideInBytes
-			cmp rdi, arg(3) ; j <? bRows
+			cmp rdi, r12 ; j <? bRows
+			vmaskmovpd [rax + rdi*8 - 8], ymm3, ymm0		
 			jl .LoopBRows
 		.EndOfLoopBRows
 
 		dec rsi ; --i
-		mov rcx, arg(8) ; rStrideInBytes
-		mov rdi, arg(5) ; aStrideInBytes
-		lea rax, [rax + rcx] ; r += rStrideInBytes
-		lea rdx, [rdx + rdi] ; a += aStrideInBytes
-		mov arg(7), rax
-		
-		test rsi, rsi
+		lea rax, [rax + r8] ; r += rStrideInBytes
+		lea rdx, [rdx + r9] ; a += aStrideInBytes
+		test rsi, rsi	
 		jnz .LoopARows
 	.EndOfLoopARows
 
 	;; begin epilog ;;
+	pop r13
+	pop r12
 	pop rbx
 	pop rdi
 	pop rsi

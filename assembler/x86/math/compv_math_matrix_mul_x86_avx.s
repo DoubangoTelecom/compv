@@ -194,7 +194,7 @@ sym(MatrixMulGA_float32_Asm_X86_AVX):
 			lea rax, [rax - 3] ; rax = bCols - 3
 
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			; for (k = 0; k < bCols - 1; k += 2)
+			; for (k = 0; k < bCols - 3; k += 4)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			.LoopBCols
 				vmovapd ymm1, [rdx + rcx*8]

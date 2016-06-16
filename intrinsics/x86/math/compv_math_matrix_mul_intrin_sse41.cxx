@@ -39,6 +39,53 @@ void MatrixMulGA_float64_minpack2_Intrin_SSE41(COMPV_ALIGNED(SSE) compv_float64_
 	} while ((i += 2) < count);
 }
 
+// aRows == bRows == bCols == 3
+void MatrixMulABt_float64_3x3_Intrin_SSE41(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM, FMA3
+	const uint8_t* a = reinterpret_cast<const uint8_t*>(A);
+	const uint8_t* b = reinterpret_cast<const uint8_t*>(B);
+	uint8_t* r = reinterpret_cast<uint8_t*>(R);
+
+	__m128d xmmB00 = _mm_load_pd(B);
+	__m128d xmmB01 = _mm_load_sd(&B[2]);
+	__m128d xmmB10 = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(&b[bStrideInBytes]));
+	__m128d xmmB11 = _mm_load_sd(reinterpret_cast<const compv_float64_t*>(&b[bStrideInBytes + 16]));
+	__m128d xmmB20 = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(&b[bStrideInBytes << 1]));
+	__m128d xmmB21 = _mm_load_sd(reinterpret_cast<const compv_float64_t*>(&b[(bStrideInBytes << 1) + 16]));
+
+	__m128d xmmA00 = _mm_load_pd(A);
+	__m128d xmmA01 = _mm_load_sd(&A[2]);
+	__m128d xmm0 = _mm_add_pd(_mm_dp_pd(xmmA00, xmmB00, 0xff), _mm_mul_pd(xmmA01, xmmB01)); // FMA3
+	__m128d xmm1 = _mm_add_pd(_mm_dp_pd(xmmA00, xmmB10, 0xff), _mm_mul_pd(xmmA01, xmmB11)); // FMA3
+	__m128d xmm2 = _mm_add_pd(_mm_dp_pd(xmmA00, xmmB20, 0xff), _mm_mul_pd(xmmA01, xmmB21)); // FMA3
+	__m128d xmm3 = _mm_shuffle_pd(xmm0, xmm1, 0x0);
+	_mm_store_pd(&R[0], xmm3);
+	_mm_store_sd(&R[2], xmm2);
+
+	a += aStrideInBytes;
+	r += rStrideInBytes;
+	xmmA00 = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(a));
+	xmmA01 = _mm_load_sd(reinterpret_cast<const compv_float64_t*>(a) + 2);
+	xmm0 = _mm_add_pd(_mm_dp_pd(xmmA00, xmmB00, 0xff), _mm_mul_pd(xmmA01, xmmB01)); // FMA3
+	xmm1 = _mm_add_pd(_mm_dp_pd(xmmA00, xmmB10, 0xff), _mm_mul_pd(xmmA01, xmmB11)); // FMA3
+	xmm2 = _mm_add_pd(_mm_dp_pd(xmmA00, xmmB20, 0xff), _mm_mul_pd(xmmA01, xmmB21)); // FMA3
+	xmm3 = _mm_shuffle_pd(xmm0, xmm1, 0x0);
+	_mm_store_pd(reinterpret_cast<compv_float64_t*>(r), xmm3);
+	_mm_store_sd(reinterpret_cast<compv_float64_t*>(r) + 2, xmm2);
+
+	a += aStrideInBytes;
+	r += rStrideInBytes;
+	xmmA00 = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(a));
+	xmmA01 = _mm_load_sd(reinterpret_cast<const compv_float64_t*>(a) + 2);
+	xmm0 = _mm_add_pd(_mm_dp_pd(xmmA00, xmmB00, 0xff), _mm_mul_pd(xmmA01, xmmB01)); // FMA3
+	xmm1 = _mm_add_pd(_mm_dp_pd(xmmA00, xmmB10, 0xff), _mm_mul_pd(xmmA01, xmmB11)); // FMA3
+	xmm2 = _mm_add_pd(_mm_dp_pd(xmmA00, xmmB20, 0xff), _mm_mul_pd(xmmA01, xmmB21)); // FMA3
+	xmm3 = _mm_shuffle_pd(xmm0, xmm1, 0x0);
+	_mm_store_pd(reinterpret_cast<compv_float64_t*>(r), xmm3);
+	_mm_store_sd(reinterpret_cast<compv_float64_t*>(r)+2, xmm2);
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

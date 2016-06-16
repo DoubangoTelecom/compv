@@ -13,6 +13,7 @@ COMPV_YASM_DEFAULT_REL
 global sym(MatrixMulGA_float64_Asm_X86_SSE2)
 global sym(MatrixMulGA_float32_Asm_X86_SSE2)
 global sym(MatrixMulABt_float64_minpack1_Asm_X86_SSE2)
+global sym(MatrixMulABt_float64_3x3_Asm_X86_SSE41)
 global sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41)
 global sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2)
 
@@ -223,6 +224,126 @@ sym(MatrixMulABt_float64_minpack1_Asm_X86_SSE2):
 		test rsi, rsi
 		jnz .LoopARows
 	.EndOfLoopARows
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) - > const COMPV_ALIGNED(SSE) compv_float64_t* A
+; arg(1) - > const COMPV_ALIGNED(SSE) compv_float64_t* B
+; arg(2) - > compv_uscalar_t aRows
+; arg(3) - > compv_uscalar_t bRows
+; arg(4) - > compv_uscalar_t bCols
+; arg(5) - > compv_uscalar_t aStrideInBytes
+; arg(6) - > compv_uscalar_t bStrideInBytes
+; arg(7) - > COMPV_ALIGNED(SSE) compv_float64_t* R
+; arg(8) - > compv_uscalar_t rStrideInBytes
+; void MatrixMulABt_float64_3x3_Asm_X86_SSE41(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t rStrideInBytes);
+sym(MatrixMulABt_float64_3x3_Asm_X86_SSE41):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 9
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	mov rsi, arg(0) ; rsi = A
+	mov rdi, arg(1) ; rdi = B
+	mov rbx, arg(7) ; rbx = R
+	mov rcx, arg(6) ; rcx = bStrideInBytes
+	mov rdx, arg(8) ; rdx = rStrideInBytes
+	mov rax, arg(5) ; rax = aStrideInBytes
+
+	movapd xmm0, [rsi]
+	movsd xmm1, [rsi + 16]
+	movapd xmm2, xmm0
+	movapd xmm3, xmm1
+	movapd xmm4, xmm0
+	movapd xmm5, xmm1
+	%if 0 ; FMA3 (AVX/SSE transition issue)
+		dppd xmm0, [rdi], 0xff
+		dppd xmm2, [rdi + rcx*1], 0xff
+		dppd xmm4, [rdi + rcx*2], 0xff
+		vfmadd231pd xmm0, xmm1, [rdi + 16]
+		vfmadd231pd xmm2, xmm3, [rdi + rcx*1 + 16]
+		vfmadd231pd xmm4, xmm5, [rdi + rcx*2 + 16]
+	%else
+		dppd xmm0, [rdi], 0xff
+		mulpd xmm1, [rdi + 16]
+		dppd xmm2, [rdi + rcx*1], 0xff
+		mulpd xmm3, [rdi + rcx*1 + 16]
+		dppd xmm4, [rdi + rcx*2], 0xff
+		mulpd xmm5, [rdi + rcx*2 + 16]
+		addpd xmm0, xmm1
+		addpd xmm2, xmm3
+		addpd xmm4, xmm5
+	%endif
+	shufpd xmm0, xmm2, 0x0
+	movapd [rbx + 16], xmm4
+	movapd [rbx], xmm0
+
+	movapd xmm0, [rsi + rax]
+	movsd xmm1, [rsi + rax + 16]
+	movapd xmm2, xmm0
+	movapd xmm3, xmm1
+	movapd xmm4, xmm0
+	movapd xmm5, xmm1
+	%if 0 ; FMA3 (AVX/SSE transition issue)
+		dppd xmm0, [rdi], 0xff
+		vfmadd231pd xmm0, xmm1, [rdi + 16]
+		dppd xmm2, [rdi + rcx*1], 0xff
+		vfmadd231pd xmm2, xmm3, [rdi + rcx*1 + 16]
+		dppd xmm4, [rdi + rcx*2], 0xff
+		vfmadd231pd xmm4, xmm5, [rdi + rcx*2 + 16]		
+	%else
+		dppd xmm0, [rdi], 0xff
+		mulpd xmm1, [rdi + 16]
+		dppd xmm2, [rdi + rcx*1], 0xff
+		mulpd xmm3, [rdi + rcx*1 + 16]
+		dppd xmm4, [rdi + rcx*2], 0xff
+		mulpd xmm5, [rdi + rcx*2 + 16]
+		addpd xmm0, xmm1
+		addpd xmm2, xmm3
+		addpd xmm4, xmm5
+	%endif
+	shufpd xmm0, xmm2, 0x0
+	movapd [rbx + rdx + 16], xmm4
+	movapd [rbx + rdx], xmm0
+	
+	movapd xmm0, [rsi + rax*2]
+	movsd xmm1, [rsi + rax*2 + 16]
+	movapd xmm2, xmm0
+	movapd xmm3, xmm1
+	movapd xmm4, xmm0
+	movapd xmm5, xmm1
+	%if 0 ; FMA3 (AVX/SSE transition issue)
+		dppd xmm0, [rdi], 0xff
+		vfmadd231pd xmm0, xmm1, [rdi + 16]
+		dppd xmm2, [rdi + rcx*1], 0xff
+		vfmadd231pd xmm2, xmm3, [rdi + rcx*1 + 16]
+		dppd xmm4, [rdi + rcx*2], 0xff
+		vfmadd231pd xmm4, xmm5, [rdi + rcx*2 + 16]
+	%else
+		dppd xmm0, [rdi], 0xff
+		mulpd xmm1, [rdi + 16]
+		dppd xmm2, [rdi + rcx*1], 0xff
+		mulpd xmm3, [rdi + rcx*1 + 16]
+		dppd xmm4, [rdi + rcx*2], 0xff
+		mulpd xmm5, [rdi + rcx*2 + 16]
+		addpd xmm0, xmm1
+		addpd xmm2, xmm3
+		addpd xmm4, xmm5
+	%endif
+	shufpd xmm0, xmm2, 0x0
+	movapd [rbx + rdx*2 + 16], xmm4
+	movapd [rbx + rdx*2], xmm0
 
 	;; begin epilog ;;
 	pop rbx

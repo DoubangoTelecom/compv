@@ -53,31 +53,24 @@ COMPV_ERROR_CODE TestIsSymmetric()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE TestMulAB()
+static COMPV_ERROR_CODE _TestMulAB(size_t aRows, size_t aCols, size_t bRows, size_t bCols, CompVPtrArray(TYP)& R, const char* name)
 {
 	uint64_t timeStart, timeEnd;
-	TYP array0[215][115];
-	TYP array1[115][75];
-#if TYPE == TYPE_DOUBLE
-#	define MD5_EXPECTED "5e1883dfd24448b64e1b6ae007b91758"
-#else
-#	define MD5_EXPECTED "7a7967e10f80ab6c7a68feb5d8deb8da"
-#endif
+	CompVPtrArray(TYP) A, B;
 
-	for (size_t i = 0; i < 215; ++i) {
-		for (size_t j = 0; j < 115; ++j) {
-			array0[i][j] = (TYP) (i + j) * (i + 1);
+	COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::newObjAligned(&A, aRows, aCols));
+	COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::newObjAligned(&B, bRows, bCols));
+
+	for (size_t i = 0; i < aRows; ++i) {
+		for (size_t j = 0; j < aCols; ++j) {
+			*const_cast<TYP*>(A->ptr(i, j)) = (TYP)(i + j) * (i + 1);
 		}
 	}
-	for (size_t i = 0; i < 115; ++i) {
-		for (size_t j = 0; j < 75; ++j) {
-			array1[i][j] = (TYP)(i + j) * (i + 1);
+	for (size_t i = 0; i < bRows; ++i) {
+		for (size_t j = 0; j < bCols; ++j) {
+			*const_cast<TYP*>(B->ptr(i, j)) = (TYP)(i + j) * (i + 1);
 		}
-	}
-	CompVPtrArray(TYP) A, B, R;
-
-	COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::copy(A, &array0[0][0], 215, 115));
-	COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::copy(B, &array1[0][0], 115, 75));
+	}	
 
 	timeStart = CompVTime::getNowMills();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
@@ -85,10 +78,37 @@ COMPV_ERROR_CODE TestMulAB()
 	}
 	timeEnd = CompVTime::getNowMills();
 
-	COMPV_CHECK_EXP_RETURN(arrayMD5(R) != MD5_EXPECTED, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	COMPV_DEBUG_INFO("Elapsed time (TestMulAB[%s]) = [[[ %llu millis ]]]", name, (timeEnd - timeStart));
 
-	COMPV_DEBUG_INFO("Elapsed time (TestMulAB) = [[[ %llu millis ]]]", (timeEnd - timeStart));
-
-#undef MD5_EXPECTED
 	return COMPV_ERROR_CODE_S_OK;
 }
+
+COMPV_ERROR_CODE TestMulAB()
+{
+#if TYPE == TYPE_DOUBLE
+#	define MD5_EXPECTED		"5e1883dfd24448b64e1b6ae007b91758"
+#	define MD5_EXPECTED3x3	"de628e91457c329220badfb524016b99"
+#	define MD5_EXPECTED4x4	"5b2f3f02883ef6f944d90373be188104"
+#else
+#	define MD5_EXPECTED		"7a7967e10f80ab6c7a68feb5d8deb8da"
+#	define MD5_EXPECTED3x3	"db5d1d779c11164e72964f6f69289c77"
+#	define MD5_EXPECTED4x4	"fccbc6a3eea330fd07b9325a13f462f2"
+#endif
+	CompVPtrArray(TYP) R;
+	
+	// Random size
+	//COMPV_CHECK_CODE_RETURN(_TestMulAB(215, 115, 115, 75, R, "nxn"));
+	//COMPV_CHECK_EXP_RETURN(arrayMD5(R) != MD5_EXPECTED, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	// 3x3
+	COMPV_CHECK_CODE_RETURN(_TestMulAB(3, 3, 3, 3, R, "3x3"));
+	COMPV_CHECK_EXP_RETURN(arrayMD5(R) != MD5_EXPECTED3x3, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	// 4x4
+	//COMPV_CHECK_CODE_RETURN(_TestMulAB(4, 4, 4, 4, R, "4x4"));
+	//COMPV_CHECK_EXP_RETURN(arrayMD5(R) != MD5_EXPECTED4x4, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+
+	return COMPV_ERROR_CODE_S_OK;
+#undef MD5_EXPECTED
+#undef MD5_EXPECTED3x3
+#undef MD5_EXPECTED4x4
+}
+

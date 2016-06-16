@@ -94,7 +94,7 @@ sym(MatrixMulABt_float64_minpack1_Asm_X64_SSE2):
 			movsd [rax + rdi*8], xmm0
 
 			inc rdi ; ++j
-			add rbx, r11 ; b += bStrideInBytes
+			lea rbx, [rbx + r11] ; b += bStrideInBytes
 			cmp rdi, r12 ; j <? bRows
 			jl .LoopBRows
 		.EndOfLoopBRows

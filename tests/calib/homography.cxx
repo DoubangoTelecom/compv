@@ -5,18 +5,20 @@
 using namespace compv;
 
 
-#define LOOP_COUNT		1
-#define NUM_POINTS		5000 + 9 // +9 to make it SIMD-unfriendly for testing
-#define ANGLE			COMPV_MATH_PI / 4
-#define SCALEX			5.0
-#define SCALEY			5.0
-#define ERRORPX			0.0 // percent, within [0.f, 1.f]
-#define ERRORPY			0.0 // percent, within [0.f, 1.f]
-#define TRANSX			28.5
-#define TRANSY			-10.0
-#define TYPE			double  // double or float
-#define TYPE_SZ			"%f"	// %e or %f
-#define MD5_EXPECTED	"3248f48b27e7b01ee6db4ec2a20343e6"
+#define LOOP_COUNT			1
+#define NUM_POINTS			5000 + 9 // +9 to make it SIMD-unfriendly for testing
+#define ANGLE				COMPV_MATH_PI / 4
+#define SCALEX				5.0
+#define SCALEY				5.0
+#define ERRORPX				0.0 // percent, within [0.f, 1.f]
+#define ERRORPY				0.0 // percent, within [0.f, 1.f]
+#define TRANSX				28.5
+#define TRANSY				-10.0
+#define TYPE				double  // double or float
+#define TYPE_SZ				"%f"	// %e or %f
+#define MD5_EXPECTED_SSE2	"fc81ea0a8487320df9778dc01b96439d"
+#define MD5_EXPECTED_AVX	"855dbbcc3d92edf9efb3068e413dae5d"
+#define MD5_EXPECTED		"3248f48b27e7b01ee6db4ec2a20343e6" // Without SIMD
 
 COMPV_ERROR_CODE TestHomography()
 {
@@ -86,8 +88,17 @@ COMPV_ERROR_CODE TestHomography()
 		*h->ptr(1, 0), *h->ptr(1, 1), *h->ptr(1, 2),
 		*h->ptr(2, 0), *h->ptr(2, 1), *h->ptr(2, 2));
 
+	// TODO(dmi): Use residual results instead of MD5
 	const std::string md5 = arrayMD5<TYPE>(h);
-	COMPV_ASSERT(md5 == MD5_EXPECTED);
+	if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
+		COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED_AVX, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	}
+	else if (CompVCpu::isEnabled(compv::kCpuFlagAVX) || CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+		COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED_SSE2, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	}
+	else {
+		COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	}
 
 	COMPV_DEBUG_INFO("Elapsed time (TestHomography) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
