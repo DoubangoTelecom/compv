@@ -454,25 +454,20 @@ sym(MatrixMulABt_float64_3x3_Asm_X86_SSE41):
 			jl .LoopCols1
 		.EndOfLoopCols1
 		
-		cmp rdi, rsi ; i <? j
-		jge .EndOfLoopCols2
-
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (; i < j; i += 1)
+		; if (j & 1)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		.LoopCols2
+		test rsi, 1
+		jz .PerfectlyAligned
 			movsd xmm0, [rdx + rdi * 8] ; 8 = sizeof(#1 double)
 			andpd xmm0, xmm4
 			comisd xmm0, xmm5
-			lea rdi, [rdi + 1] ; increment i
 			jbe .LoopCols2NotGreater1
 				pshufd xmm5, xmm0, 0x44 ; duplicate low 8bytes
-				lea rbx, [rdi - 1] ; update col = i + 0
+				mov rbx, rdi ; update col = i
 				mov rcx, rsi ; update row
 			.LoopCols2NotGreater1
-			cmp rdi, rsi ; i <? j
-			jl .LoopCols2
-		.EndOfLoopCols2
+		.PerfectlyAligned			
 		
 		inc rsi
 		add rdx, arg(6) ; S0_ += strideInBytes
