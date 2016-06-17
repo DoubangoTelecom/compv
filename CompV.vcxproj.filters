@@ -420,6 +420,9 @@
     <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_intrin_sse41.h">
       <Filter>Header Files\intrinsics\x86\math</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\math\compv_math_stats.h">
+      <Filter>Header Files\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -649,6 +652,9 @@
     </ClCompile>
     <ClCompile Include="intrinsics\x86\math\compv_math_matrix_intrin_sse41.cxx">
       <Filter>Source Files\intrinsics\x86\math</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_stats.cxx">
+      <Filter>Source Files\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

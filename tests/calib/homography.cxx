@@ -15,7 +15,8 @@ using namespace compv;
 #define TRANSX				28.5
 #define TRANSY				-10.0
 #define TYPE				double  // double or float
-#define TYPE_SZ				"%f"	// %e or %f
+#define MODE_EST			COMPV_MODELEST_TYPE_RANSAC
+#define TYPE_SZ				"%e"	// %e or %f
 #define MD5_EXPECTED_SSE2	"bc5dc038e5fabe9b5ff01824b0ab5326"
 #define MD5_EXPECTED_AVX	"e68cfb1962fa437d996dc8c619e9d12d"
 #define MD5_EXPECTED		"9fe391540c2d999442f3dea64f0db76e" // Without SIMD
@@ -69,7 +70,7 @@ COMPV_ERROR_CODE TestHomography()
 
 	timeStart = CompVTime::getNowMills();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVHomography<TYPE>::find(input, output, h, COMPV_MODELEST_TYPE_NONE)); // NONE to make sure we'll always have the same result (ransac is nondeterministic)
+		COMPV_CHECK_CODE_RETURN(CompVHomography<TYPE>::find(input, output, h, MODE_EST)); // NONE to make sure we'll always have the same result (ransac is nondeterministic)
 	}
 	timeEnd = CompVTime::getNowMills();
 

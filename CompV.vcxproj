@@ -90,6 +90,7 @@
     <ClInclude Include="include\compv\math\compv_math.h" />
     <ClInclude Include="include\compv\math\compv_math_eigen.h" />
     <ClInclude Include="include\compv\math\compv_math_matrix.h" />
+    <ClInclude Include="include\compv\math\compv_math_stats.h" />
     <ClInclude Include="include\compv\math\compv_math_trig.h" />
     <ClInclude Include="include\compv\math\compv_math_utils.h" />
     <ClInclude Include="include\compv\parallel\compv_asynctask.h" />
@@ -208,6 +209,7 @@
     <ClCompile Include="math\compv_math.cxx" />
     <ClCompile Include="math\compv_math_eigen.cxx" />
     <ClCompile Include="math\compv_math_matrix.cxx" />
+    <ClCompile Include="math\compv_math_stats.cxx" />
     <ClCompile Include="math\compv_math_trig.cxx" />
     <ClCompile Include="math\compv_math_utils.cxx" />
     <ClCompile Include="parallel\compv_asynctask.cxx" />

@@ -767,4 +767,61 @@ COMPV_ERROR_CODE CompVMatrix<T>::isColinear3D(const CompVPtrArray(T) &A, bool &c
 	return CompVMatrix<T>::isColinear(A, colinear, false/*column-space*/, 3, A->cols());
 }
 
+// Build matrix M = Ah used to solve Ah = 0 homogeneous equation. A is an Nx9 matrix, h an 9x1 matrix.
+// This equation is used to compute H (3x3) such that "Ha = b", "a" = "src" points and "b" = destination points.
+// "src" and "dst" should be normized first.
+// "M" has numPointsTimes2 rows and 9 columns (each column is an value for h).
+// We need at least 4 points
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::buildHomographyEqMatrix(const T* srcX, const T* srcY, const T* dstX, const T* dstY, CompVPtrArray(T)& M, size_t numPoints)
+{
+	COMPV_CHECK_EXP_RETURN(!srcX || !srcY || !dstX || !dstY || numPoints < 4, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
+
+	// Each point (x, y) contribute two rows in M which means has (2 x numPoints) rows
+	// "h" is a vector representing H (3x3) and is a 9x1 vector. This means M has 9 columns.
+	size_t M_rows = 2 * numPoints;
+	size_t M_cols = 9;
+	if (!M || M->rows() != M_rows || M->cols() != M_cols) {
+		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&M, M_rows, M_cols));
+	}
+
+	size_t i;
+	size_t M_strideInBytes = M->strideInBytes();
+	T* M0_ptr = const_cast<T*>(M->ptr());
+	T* M1_ptr = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(M0_ptr)+M_strideInBytes);
+	size_t M_strideInBytesTimes2 = M_strideInBytes << 1;
+	
+	for (i = 0; i < numPoints; ++i) {
+		// z' = 1
+
+		// First #9 contributions
+		M0_ptr[0] = -srcX[i]; // -x
+		M0_ptr[1] = -srcY[i]; // -y
+		M0_ptr[2] = -1; // -1
+		M0_ptr[3] = 0;
+		M0_ptr[4] = 0;
+		M0_ptr[5] = 0;
+		M0_ptr[6] = (dstX[i] * srcX[i]); // (x'x)/z'
+		M0_ptr[7] = (dstX[i] * srcY[i]); // (x'y)/z'
+		M0_ptr[8] = dstX[i]; // x'/z'
+
+		// Second #9 contributions
+		M1_ptr[0] = 0;
+		M1_ptr[1] = 0;
+		M1_ptr[2] = 0;
+		M1_ptr[3] = M0_ptr[0]; // -x
+		M1_ptr[4] = M0_ptr[1]; // -y
+		M1_ptr[5] = -1; // -1
+		M1_ptr[6] = (dstY[i] * srcX[i]); // (y'x)/z'
+		M1_ptr[7] = (dstY[i] * srcY[i]); // (y'y)/z'
+		M1_ptr[8] = dstY[i]; // y'/z'
+
+		M0_ptr = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(M0_ptr)+M_strideInBytesTimes2);
+		M1_ptr = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(M1_ptr)+M_strideInBytesTimes2);
+	}
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_NAMESPACE_END()

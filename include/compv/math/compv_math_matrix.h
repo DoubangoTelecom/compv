@@ -39,6 +39,7 @@ public:
 	static COMPV_ERROR_CODE isColinear(const CompVPtrArray(T) &A, bool &colinear, bool rowspace = false, size_t maxRows = 0, size_t maxCols = 0);
 	static COMPV_ERROR_CODE isColinear2D(const CompVPtrArray(T) &A, bool &colinear);
 	static COMPV_ERROR_CODE isColinear3D(const CompVPtrArray(T) &A, bool &colinear);
+	static COMPV_ERROR_CODE buildHomographyEqMatrix(const T* srcX, const T* srcY, const T* dstX, const T* dstY, CompVPtrArray(T)& M, size_t numPoints);
 };
 
 COMPV_NAMESPACE_END()

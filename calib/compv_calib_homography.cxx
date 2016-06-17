@@ -7,9 +7,14 @@
 #include "compv/calib/compv_calib_homography.h"
 #include "compv/math/compv_math_eigen.h"
 #include "compv/math/compv_math_matrix.h"
+#include "compv/math/compv_math_stats.h"
 
 #if !defined (COMPV_PRNG11)
 #	define COMPV_PRNG11 1
+#endif
+
+#if !defined (COMPV_HOMOGRAPHY_OUTLIER_THRESHOLD)
+#	define	COMPV_HOMOGRAPHY_OUTLIER_THRESHOLD 30
 #endif
 
 #if COMPV_PRNG11
@@ -26,11 +31,7 @@ template class CompVHomography<compv_float32_t >;
 template<typename T>
 static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H, bool promoteZeros = false);
 template<typename T>
-static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, size_t &inliersCount, CompVPtrArray(size_t)& inliers, size_t &std2);
-template<typename T>
-static void promoteZeros(CompVPtrArray(T) &H);
-template<typename T>
-static COMPV_ERROR_CODE normalize(const CompVPtrArray(T) &H, CompVPtrArray(T) &Hn);
+static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, size_t &inliersCount, CompVPtrArray(size_t)& inliers, T &variance);
 
 // Homography 'double' is faster because EigenValues/EigenVectors computation converge faster (less residual error)
 // src: 3xN homogeneous array (X, Y, Z=1). N-cols with N >= 4. The N points must not be colinear.
@@ -76,10 +77,10 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	
 	uint32_t idx0, idx1, idx2, idx3;
 	size_t inliersCount_, bestInlinersCount_ = 0;
-	size_t std2_, bestStd2_ = INT_MAX;
+	T variance_, bestVariance_ = T(FLT_MAX); // Using variance instead of standard deviation because it's the same result as we are doing comparison
 
 #if COMPV_PRNG11
-	std::mt19937 prng_(12345);
+	std::mt19937 prng_(12345); // TODO(dmi): use device random source for multithreading to avoid generating same numbers for each thread
 	std::uniform_int_distribution<> unifd_ { 0, static_cast<int>(k_ - 1) };
 #else
 	uint32_t rand4[4];
@@ -95,9 +96,8 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 
 	n_ = static_cast<size_t>(logf(1 - p_) / logf(1 - powf(1 - e_, static_cast<float>(s_))));
 	t_ = 0;
-
-	// inliers_-> row-0: point indexes, row-1: distances
-	COMPV_CHECK_CODE_RETURN(CompVArray<size_t>::newObjAligned(&inliers_, 2, k_));
+	
+	COMPV_CHECK_CODE_RETURN(CompVArray<size_t>::newObjAligned(&inliers_, 1, k_));
 
 	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&H, 3, 3));
 	hx0_ = const_cast<T*>(H->ptr(0));
@@ -155,11 +155,11 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 		COMPV_CHECK_CODE_RETURN(computeH<T>(src_, dst_, H_));
 
 		// Count outliers using all points and current homography using the inliers only
-		COMPV_CHECK_CODE_RETURN(countInliers(src, dst, H_, inliersCount_, inliers_, std2_));
+		COMPV_CHECK_CODE_RETURN(countInliers<T>(src, dst, H_, inliersCount_, inliers_, variance_));
 
-		if (inliersCount_ >= s_ && (inliersCount_ > bestInlinersCount_ || (inliersCount_ == bestInlinersCount_ && std2_ < bestStd2_))) {
+		if (inliersCount_ >= s_ && (inliersCount_ > bestInlinersCount_ || (inliersCount_ == bestInlinersCount_ && variance_ < bestVariance_))) {
 			bestInlinersCount_ = inliersCount_;
-			bestStd2_ = std2_;
+			bestVariance_ = variance_;
 			// update H
 			hx1_ = H_->ptr(0);
 			hy1_ = H_->ptr(1);
@@ -220,8 +220,7 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	const CompVArray<T >* dst_ = *dst;
 	const T *srcX_, *srcY_, *srcZ_, *dstX_, *dstY_, *dstZ_;
 	T *row_;
-	size_t numPoints_ = src_->cols(), numPointsTimes2_ = numPoints_ * 2;
-	size_t i;
+	size_t numPoints_ = src_->cols();
 
 	// TODO(dmi): use calib class and store "srcn", "dstn", "M_", "S_", "D_", "Q_", "T1", "T2"....
 
@@ -235,39 +234,17 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	dstY_ = dst_->ptr(1);
 	dstZ_ = dst_->ptr(2);
 
-	// Resolving Ha = b equation (4-point algorithm)
+	/* Resolving Ha = b equation (4-point algorithm) */
 	// -> Ah = 0 (homogeneous equation), with h a 9x1 vector
 	// -> h is in the nullspace of A, means eigenvector with the smallest eigenvalue. If the equation is exactly determined then, the smallest eigenvalue must be equal to zero.
 
-	// Based on the same normalization as the 8-point algorithm (Hartley and Zisserman, https://en.wikipedia.org/wiki/Eight-point_algorithm#How_it_can_be_solved).
-	// Compute the centroid (https://en.wikipedia.org/wiki/Centroid#Of_a_finite_set_of_points)
-	T srcTX_ = 0, srcTY_ = 0, dstTX_ = 0, dstTY_ = 0;
-	for (i = 0; i < numPoints_; ++i) {
-		srcTX_ += srcX_[i];
-		srcTY_ += srcY_[i];
-		dstTX_ += dstX_[i];
-		dstTY_ += dstY_[i];
-	}
-	srcTX_ /= numPoints_;
-	srcTY_ /= numPoints_;
-	dstTX_ /= numPoints_;
-	dstTY_ /= numPoints_;
-	// AFTER the translation the coordinates are uniformly scaled (Isotropic scaling) so that the mean distance from the origin to a point equals sqrt(2).
-	// TODO(dmi): use classic normalization ((x,y)/(max_norm) € [0, 1])
-	// TODO(dmi): norm(a) = sqrt(x^2 + y^2) = sqrt(dp(a, a))
-	// Isotropic scaling -> scaling is invariant with respect to direction
-	T srcMag_ = 0, dstMag_ = 0;
-	for (i = 0; i < numPoints_; ++i) {
-		// Using naive hypot because X and Y contains point coordinates (no risk for overflow / underflow)
-		// TODO(dmi): check if OS built-in hypot() isn't faster than our naive implementation
-		srcMag_ += CompVMathUtils::hypot_naive((srcX_[i] - srcTX_), (srcY_[i] - srcTY_));
-		dstMag_ += CompVMathUtils::hypot_naive((dstX_[i] - dstTX_), (dstY_[i] - dstTY_));
-	}
-	srcMag_ /= numPoints_;
-	dstMag_ /= numPoints_;
-	T srcScale_ = srcMag_ ? (T)(COMPV_MATH_SQRT_2 / srcMag_) : (T)COMPV_MATH_SQRT_2;
-	T dstScale_ = dstMag_ ? (T)(COMPV_MATH_SQRT_2 / dstMag_) : (T)COMPV_MATH_SQRT_2;
+	/* Normalize the points as described at https://en.wikipedia.org/wiki/Eight-point_algorithm#How_it_can_be_solved */
+	T srcTX_, srcTY_, dstTX_, dstTY_; // translation (to the centroid) values
+	T srcScale_, dstScale_; // scaling factors to have mean distance to the centroid = sqrt(2)
+	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::normalize2D_hartley(srcX_, srcY_, numPoints_, &srcTX_, &srcTY_, &srcScale_));
+	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::normalize2D_hartley(dstX_, dstY_, numPoints_, &dstTX_, &dstTY_, &dstScale_));
 
+	/* Build transformation matrixes (T1 and T2) using the translation and scaling values from the normalization process */
 	// Translation(t) to centroid then scaling(s) operation:
 	// -> b = (a+t)s = as+ts = as+t' with t'= ts
 	// T matrix
@@ -291,42 +268,9 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	row_ = const_cast<T*>(T2_->ptr(2)), row_[0] = 0, row_[1] = 0, row_[2] = 1;
 	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulAB(T2_, dst, dstn_));
 
-	// Build homogeneous equation: Mh = 0
-	// Each correpondance adds 2 rows
-	CompVPtrArray(T) M_; // temp array
-	COMPV_CHECK_CODE_RETURN(err_ = CompVArray<T>::newObjAligned(&M_, numPointsTimes2_, 9));
-	const T *srcnx_, *srcny_, *dstnx_, *dstny_;
-	T* m_;
-	srcnx_ = srcn_->ptr(0);
-	srcny_ = srcn_->ptr(1);
-	dstnx_ = dstn_->ptr(0);
-	dstny_ = dstn_->ptr(1);
-	for (i = 0; i < numPoints_; ++i) {
-		// z' = 1
-		// TODO(dmi): srcnx_++ then *srcnx_
-
-		m_ = const_cast<T*>(M_->ptr(i << 1));
-		m_[0] = -srcnx_[i]; // -x
-		m_[1] = -srcny_[i]; // -y
-		m_[2] = -1; // -1
-		m_[3] = 0;
-		m_[4] = 0;
-		m_[5] = 0;
-		m_[6] = (dstnx_[i] * srcnx_[i]); // (x'x)/z'
-		m_[7] = (dstnx_[i] * srcny_[i]); // (x'y)/z'
-		m_[8] = dstnx_[i]; // x'/z'
-
-		m_ = const_cast<T*>(M_->ptr((i << 1) + 1));
-		m_[0] = 0;
-		m_[1] = 0;
-		m_[2] = 0;
-		m_[3] = -srcnx_[i]; // -x
-		m_[4] = -srcny_[i]; // -y
-		m_[5] = -1; // -1
-		m_[6] = (dstny_[i] * srcnx_[i]); // (y'x)/z'
-		m_[7] = (dstny_[i] * srcny_[i]); // (y'y)/z'
-		m_[8] = dstny_[i]; // y'/z'
-	}
+	// Build M for homogeneous equation: Mh = 0
+	CompVPtrArray(T) M_;
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::buildHomographyEqMatrix(srcn_->ptr(0), srcn_->ptr(1), dstn_->ptr(0), dstn_->ptr(1), M_, numPoints_));
 
 	// Build symmetric matrix S = M*M
 	CompVPtrArray(T) S_; // temp symmetric array
@@ -335,12 +279,12 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	// Find eigenvalues and eigenvectors (no sorting and vectors in rows instead of columns)
 	CompVPtrArray(T) D_; // 9x9 diagonal matrix containing the eigenvalues
 	CompVPtrArray(T) Qt_; // 9x9 matrix containing the eigenvectors (rows) - transposed
-	COMPV_CHECK_CODE_RETURN(err_ = CompVEigen<T>::findSymm(S_, D_, Qt_, false, true));
+	COMPV_CHECK_CODE_RETURN(err_ = CompVEigen<T>::findSymm(S_, D_, Qt_, false, true, false));
 	// Find index of the smallest eigenvalue (this code is required because findSymm() is called without sorting for speed-up)
-	// Smallest eigenvalue point to the eigenvector solution equal to the nullspace
-	int minIndex_ = 8;
+	// Eigenvector corresponding to the smallest eigenvalue is the nullspace of M and equal h (homogeneous equation: Ah = 0)
+	signed minIndex_ = 8;
 	T minEigenValue_ = *D_->ptr(8);
-	for (int j = 7; j >= 0; --j) { // starting at the end as the smallest value is probably there
+	for (signed j = 7; j >= 0; --j) { // starting at the end as the smallest value is probably there
 		if (*D_->ptr(j, j) < minEigenValue_) {
 			minEigenValue_ = *D_->ptr(j, j);
 			minIndex_ = j;
@@ -366,13 +310,13 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	hn2_[1] = q_[7];
 	hn2_[2] = q_[8];
 
-	// Transpose for T1
+	// change T1 = T1^
 	row_ = const_cast<T*>(T1_->ptr(0)), row_[0] = srcScale_, row_[1] = 0, row_[2] = 0;
 	row_ = const_cast<T*>(T1_->ptr(1)), row_[0] = 0, row_[1] = srcScale_, row_[2] = 0;
 	row_ = const_cast<T*>(T1_->ptr(2)), row_[0] = -srcTX_ * srcScale_, row_[1] = -srcTY_ * srcScale_, row_[2] = 1;
 
-	// Inverse operation for T2
-	// -> b = as+t'
+	// change T2 = T2* - Matrix to obtain "a" from "b" (transformed by equation Ta=b)
+	// -> b = as+t' (see above for t'=ts)
 	// -> a = b(1/s)-t'(1/s) = b(1/s)+t'' whith t'' = -t'/s = -(ts)/s = -t
 	// { 1 / s, 0, +tx },
 	// { 0, 1 / s, +ty },
@@ -382,12 +326,11 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	row_ = const_cast<T*>(T2_->ptr(2)), row_[0] = 0, row_[1] = 0, row_[2] = 1;
 
 	// De-normalize
-	// HnAn = Bn, where Hn, An=T1A and Bn=T2B are normalized points
+	// HnAn = Bn, with An=T1A and Bn=T2B are normalized points
 	// ->HnT1A = T2B
 	// ->T2^HnT1A = T2^T2B = B
 	// ->(T2^HnT1)A = B -> H'A = B whith H' = T2^HnT1 our final homography matrix
 	// T2^HnT1 = T2^(T1*Hn*)* = T2^(T3Hn*)* with T3 = T1*
-	// TODO(dmi): add mulABt_3x3(a, b)
 	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulABt(T1_, H, M_));
 	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulABt(T2_, M_, H));
 
@@ -399,7 +342,7 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	}
 
 	// Scale H to make it homogeneous (Z = 1)
-	T h22_ = hn2_[2] ? ((T)1 / hn2_[2]) : 1;
+	T h22_ = hn2_[2] ? (T(1) / hn2_[2]) : T(1);
 	hn0_[0] *= h22_;
 	hn0_[1] *= h22_;
 	hn0_[2] *= h22_;
@@ -414,113 +357,51 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 }
 
 template<typename T>
-static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, size_t &inliersCount, CompVPtrArray(size_t)& inliers, size_t &std2)
+static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, size_t &inliersCount, CompVPtrArray(size_t)& inliers, T &variance)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Hinv not correct
 	// Private function, do not check input parameters
 	size_t numPoints_ = src->cols();
-	static const T threshold = 25; // FIXME
 	inliersCount = 0;
-	std2 = 0; // standard deviation square (std * std)
-	
-	// Ha = b, residual(Ha, b), a = src, b = dst
-	// -> a = H^b, residual(a, H^b)
-	CompVPtrArray(T) b_; // TODO(dmi): make member or a parameter to avoid allocating several times
-	CompVPtrArray(T) a_; // TODO(dmi): make member or a parameter to avoid allocating several times
-	CompVPtrArray(T) Hinv_;
-	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::pseudoinv(H, Hinv_));
+	variance = T(FLT_MAX);
+
+	size_t* indexes_ = const_cast<size_t*>(inliers->ptr());
+
+	// Apply H to the source and compute mse: Ha = b, mse(Ha, b)
+	CompVPtrArray(T) b_;
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAB(H, src, b_));
+	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::mse2D_homogeneous(b_->ptr(0), b_->ptr(1), b_->ptr(2), dst->ptr(0), dst->ptr(1), b_, numPoints_));
+
+
+	// Apply H* to the destination and compute mse: a = H*b, mse(a, H*b)
+	CompVPtrArray(T) a_;
+	CompVPtrArray(T) Hinv_;
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::pseudoinv(H, Hinv_)); // TODO(dmi): these are 3x3 matrixes -> add support for eigen_3x3 for speedup
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAB(Hinv_, dst, a_));
-	// compute residual
-	const T* bx_ = b_->ptr(0);
-	const T* by_ = b_->ptr(1);
-	const T* bz_ = b_->ptr(2);
-	const T* ax_ = a_->ptr(0);
-	const T* ay_ = a_->ptr(1);
-	const T* az_ = a_->ptr(2);
-	const T* dstx_ = dst->ptr(0);
-	const T* dsty_ = dst->ptr(1);
-	const T* srcx_ = src->ptr(0);
-	const T* srcy_ = src->ptr(1);
-	T d_, scale_, ex_, ey_;
-	size_t sd_;
+	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::mse2D_homogeneous(a_->ptr(0), a_->ptr(1), a_->ptr(2), src->ptr(0), src->ptr(1), a_, numPoints_));
 
-	size_t* indexes_ = const_cast<size_t*>(inliers->ptr(0));
-	size_t* distances_ = const_cast<size_t*>(inliers->ptr(1));
-
-	// FIXME: compute inverse(H) and mse(a, h^b)
-	// FIXME: compute standard deviation (STD) 
-
-	sd_ = 0; // sum distances
-	for (size_t n_ = 0; n_ < numPoints_; ++n_) {
-		// Ha = b
-		scale_ = 1 / bz_[n_];
-		ex_ = (bx_[n_] * scale_) - dstx_[n_];
-		ey_ = (by_[n_] * scale_) - dsty_[n_];
-		d_ = ((ex_ * ex_) + (ey_ * ey_));
-		// a = H^b
-		scale_ = 1 / az_[n_];
-		ex_ = (ax_[n_] * scale_) - srcx_[n_];
-		ey_ = (ay_[n_] * scale_) - srcy_[n_];
-		d_ += ((ex_ * ex_) + (ey_ * ey_));
-
-		if (d_ < threshold) {
-			indexes_[inliersCount] = n_;
-			distances_[inliersCount] = (size_t)d_;
+	// Sum the MSE values and build the inliers
+	const T* aPtr_ = a_->ptr(); // FIXME: remove
+	const T* bPtr_ = b_->ptr();
+	T sumd_ = 0; // sum deviations
+	T d_;
+	CompVPtrArray(T) distances_;
+	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&distances_, 1, numPoints_)); // "inliersCount" values only are needed but for now we don't now how many we have
+	T* distancesPtr_ = const_cast<T*>(distances_->ptr());
+	for (size_t i_ = 0; i_ < numPoints_; ++i_) {
+		d_ = aPtr_[i_] + bPtr_[i_];
+		if (d_ < COMPV_HOMOGRAPHY_OUTLIER_THRESHOLD) {
+			indexes_[inliersCount] = i_;
+			distancesPtr_[inliersCount] = d_;
 			++inliersCount;
-			sd_ += (size_t)d_;
+			sumd_ += d_;
 		}
 	}
 
-	// Standard deviation: https://en.wikipedia.org/wiki/Standard_deviation
+	// Compute standard deviation (or variance)
 	if (inliersCount > 1) {
-		size_t md_ = sd_ / inliersCount; // mean
-		signed dev_; // must be signed
-		for (size_t n_ = 0; n_ < inliersCount; ++n_) {
-			dev_ = (signed)(distances_[n_] - md_);
-			std2 += (dev_ * dev_);
-		}
-		// variance = std2 (std squared)
-		std2 /= (inliersCount - 1); // -1 for Bessel's correction: https://en.wikipedia.org/wiki/Bessel%27s_correction
-		// standard deviation
-		// std_ = COMPV_MATH_SQRT(std_);
-		// for comparisons no need to use std, variance is enought
+		T mean_ = T(sumd_ / inliersCount);
+		CompVMathStats<T>::variance(distancesPtr_, inliersCount, &mean_, &variance);
 	}
-
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-template<typename T>
-static void promoteZeros(CompVPtrArray(T) &H)
-{
-	// Private function, do not check input parameters
-
-	size_t i, j, rows = H->rows(), cols = H->cols();
-	T* row;
-
-	for (j = 0; j < rows; ++j) {
-		row = const_cast<T*>(H->ptr(j));
-		for (i = 0; i < cols; ++i) {
-			if (CompVEigen<T>::isCloseToZero(row[i])) {
-				row[i] = 0;
-			}
-		}
-	}
-}
-
-template<typename T>
-static COMPV_ERROR_CODE normalize(const CompVPtrArray(T) &H, CompVPtrArray(T) &Hn)
-{
-	// Private function, do not check input parameters
-
-	if (!Hn || Hn->rows() != 3 || Hn->cols() != 3) {
-		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&Hn, 3, 3));
-	}
-	T scale = 1 / *H->ptr(2, 2);
-	T* row = Hn->ptr(0), row[0] *= scale, row[1] *= scale, row[2] *= scale;
-	row = Hn->ptr(1), row[0] *= scale, row[1] *= scale, row[2] *= scale;
-	row = Hn->ptr(2), row[0] *= scale, row[1] *= scale, row[2] = 1;
 
 	return COMPV_ERROR_CODE_S_OK;
 }
