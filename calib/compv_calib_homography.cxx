@@ -54,11 +54,14 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	dsty1_ = dst->ptr(1);
 	dstz1_ = dst->ptr(2);
 
-	// Make sure coordinates are homegeneous 2D
+	// Make sure coordinates are homogeneous 2D
 	for (size_t i = 0; i < k_; ++i) {
-		COMPV_CHECK_EXP_RETURN(srcz1_[i] != 1 || dstz1_[i] != 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		if (srcz1_[i] != 1 || dstz1_[i] != 1){
+			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		}
 	}
 
+	// No estimation model select -> compute homography using all points (inliers + outliers)
 	if (model == COMPV_MODELEST_TYPE_NONE) {
 		COMPV_CHECK_CODE_RETURN(computeH<T>(src, dst, H, true));
 		return COMPV_ERROR_CODE_S_OK;
@@ -139,8 +142,8 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 		dstx0_[0] = dstx1_[idx0], dstx0_[1] = dstx1_[idx1], dstx0_[2] = dstx1_[idx2], dstx0_[3] = dstx1_[idx3];
 		dsty0_[0] = dsty1_[idx0], dsty0_[1] = dsty1_[idx1], dsty0_[2] = dsty1_[idx2], dsty0_[3] = dsty1_[idx3];
 		
-		// Colinears?
-		// TODO(dmi): doesn't worth it -> colinear points will compute a wrong homography to much outliers -> not an issue
+		// Reject colinear points
+		// TODO(dmi): doesn't worth it -> colinear points will compute a wrong homography with too much outliers -> not an issue
 		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::isColinear2D(src_, colinear));
 		if (colinear) {
 			COMPV_DEBUG_INFO_EX(kModuleNameHomography, "ignore colinear points ...");
@@ -148,10 +151,10 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 			continue;
 		}
 
-		// Compute Homography using the #4 random points
+		// Compute Homography using the #4 random points selected above
 		COMPV_CHECK_CODE_RETURN(computeH<T>(src_, dst_, H_));
 
-		// Count outliers using all points
+		// Count outliers using all points and current homography using the inliers only
 		COMPV_CHECK_CODE_RETURN(countInliers(src, dst, H_, inliersCount_, inliers_, std2_));
 
 		if (inliersCount_ >= s_ && (inliersCount_ > bestInlinersCount_ || (inliersCount_ == bestInlinersCount_ && std2_ < bestStd2_))) {
@@ -169,7 +172,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 			CompVMem::copyNTA(const_cast<size_t*>(bestInliers_->ptr(0)), inliers_->ptr(0), (inliersCount_ * sizeof(size_t)));
 		}
 
-		if (inliersCount_) {
+		if (inliersCount_) { // zero will produce NaN
 			// update outliers ratio
 			e_ = 1 - (inliersCount_ / (float)k_);
 			// update total tries
@@ -179,8 +182,8 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 		++t_;
 	}
 
-	if (bestInlinersCount_ == k_ || bestInlinersCount_ < s_) { // all points are inliers or not enought points ?
-		COMPV_DEBUG_INFO_EX(kModuleNameHomography, "All points are inliers or not enought inliers(< 4). InlinersCount = %lu, k = %lu", bestInlinersCount_, k_);
+	if (bestInlinersCount_ < s_) { // not enought points ?
+		COMPV_DEBUG_INFO_EX(kModuleNameHomography, "Not enought inliers(< 4). InlinersCount = %lu, k = %lu", bestInlinersCount_, k_);
 		return COMPV_ERROR_CODE_S_OK; // Return the best H
 	}
 
@@ -233,7 +236,7 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	dstZ_ = dst_->ptr(2);
 
 	// Resolving Ha = b equation (4-point algorithm)
-	// -> Ah = 0 (homogeneous equation)
+	// -> Ah = 0 (homogeneous equation), with h a 9x1 vector
 	// -> h is in the nullspace of A, means eigenvector with the smallest eigenvalue. If the equation is exactly determined then, the smallest eigenvalue must be equal to zero.
 
 	// Based on the same normalization as the 8-point algorithm (Hartley and Zisserman, https://en.wikipedia.org/wiki/Eight-point_algorithm#How_it_can_be_solved).

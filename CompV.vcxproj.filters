@@ -357,12 +357,6 @@
     <ClInclude Include="include\compv\compv_ransac.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_mul_intrin_sse2.h">
-      <Filter>Header Files\intrinsics\x86\math</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_mul_intrin_sse41.h">
-      <Filter>Header Files\intrinsics\x86\math</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse2.h">
       <Filter>Header Files\intrinsics\x86\features\fast</Filter>
     </ClInclude>
@@ -408,16 +402,22 @@
     <ClInclude Include="include\compv\intrinsics\x86\compv_patch_intrin_sse41.h">
       <Filter>Header Files\intrinsics\x86</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_mul_intrin_avx.h">
-      <Filter>Header Files\intrinsics\x86\math</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\parallel\compv_asynctask11.h">
       <Filter>Header Files\parallel</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\parallel\compv_threaddisp11.h">
       <Filter>Header Files\parallel</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_mul_intrin_avx2.h">
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_intrin_avx.h">
+      <Filter>Header Files\intrinsics\x86\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_intrin_avx2.h">
+      <Filter>Header Files\intrinsics\x86\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_intrin_sse2.h">
+      <Filter>Header Files\intrinsics\x86\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_intrin_sse41.h">
       <Filter>Header Files\intrinsics\x86\math</Filter>
     </ClInclude>
   </ItemGroup>
@@ -602,12 +602,6 @@
     <ClCompile Include="compv_ransac.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="intrinsics\x86\math\compv_math_matrix_mul_intrin_sse2.cxx">
-      <Filter>Source Files\intrinsics\x86\math</Filter>
-    </ClCompile>
-    <ClCompile Include="intrinsics\x86\math\compv_math_matrix_mul_intrin_sse41.cxx">
-      <Filter>Source Files\intrinsics\x86\math</Filter>
-    </ClCompile>
     <ClCompile Include="intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse2.cxx">
       <Filter>Source Files\intrinsics\x86\features\fast</Filter>
     </ClCompile>
@@ -638,16 +632,22 @@
     <ClCompile Include="intrinsics\x86\compv_patch_intrin_sse41.cxx">
       <Filter>Source Files\intrinsics\x86</Filter>
     </ClCompile>
-    <ClCompile Include="intrinsics\x86\math\compv_math_matrix_mul_intrin_avx.cxx">
-      <Filter>Source Files\intrinsics\x86\math</Filter>
-    </ClCompile>
     <ClCompile Include="parallel\compv_asynctask11.cxx">
       <Filter>Source Files\parallel</Filter>
     </ClCompile>
     <ClCompile Include="parallel\compv_threaddisp11.cxx">
       <Filter>Source Files\parallel</Filter>
     </ClCompile>
-    <ClCompile Include="intrinsics\x86\math\compv_math_matrix_mul_intrin_avx2.cxx">
+    <ClCompile Include="intrinsics\x86\math\compv_math_matrix_intrin_avx.cxx">
+      <Filter>Source Files\intrinsics\x86\math</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\math\compv_math_matrix_intrin_avx2.cxx">
+      <Filter>Source Files\intrinsics\x86\math</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\math\compv_math_matrix_intrin_sse2.cxx">
+      <Filter>Source Files\intrinsics\x86\math</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\math\compv_math_matrix_intrin_sse41.cxx">
       <Filter>Source Files\intrinsics\x86\math</Filter>
     </ClCompile>
   </ItemGroup>
@@ -766,16 +766,16 @@
     <YASM Include="assembler\x86\features\orb\compv_feature_orb_desc_x64_avx.s">
       <Filter>Assembler Files\x86\features\orb</Filter>
     </YASM>
-    <YASM Include="assembler\x86\math\compv_math_matrix_mul_x86_sse.s">
+    <YASM Include="assembler\x86\math\compv_math_matrix_x64_avx.s">
       <Filter>Assembler Files\x86\math</Filter>
     </YASM>
-    <YASM Include="assembler\x86\math\compv_math_matrix_mul_x86_avx.s">
+    <YASM Include="assembler\x86\math\compv_math_matrix_x64_sse.s">
       <Filter>Assembler Files\x86\math</Filter>
     </YASM>
-    <YASM Include="assembler\x86\math\compv_math_matrix_mul_x64_sse.s">
+    <YASM Include="assembler\x86\math\compv_math_matrix_x86_avx.s">
       <Filter>Assembler Files\x86\math</Filter>
     </YASM>
-    <YASM Include="assembler\x86\math\compv_math_matrix_mul_x64_avx.s">
+    <YASM Include="assembler\x86\math\compv_math_matrix_x86_sse.s">
       <Filter>Assembler Files\x86\math</Filter>
     </YASM>
   </ItemGroup>

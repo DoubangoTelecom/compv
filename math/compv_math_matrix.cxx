@@ -11,10 +11,10 @@
 #include "compv/compv_cpu.h"
 #include "compv/compv_engine.h"
 
-#include "compv/intrinsics/x86/math/compv_math_matrix_mul_intrin_sse2.h"
-#include "compv/intrinsics/x86/math/compv_math_matrix_mul_intrin_sse41.h"
-#include "compv/intrinsics/x86/math/compv_math_matrix_mul_intrin_avx.h"
-#include "compv/intrinsics/x86/math/compv_math_matrix_mul_intrin_avx2.h"
+#include "compv/intrinsics/x86/math/compv_math_matrix_intrin_sse2.h"
+#include "compv/intrinsics/x86/math/compv_math_matrix_intrin_sse41.h"
+#include "compv/intrinsics/x86/math/compv_math_matrix_intrin_avx.h"
+#include "compv/intrinsics/x86/math/compv_math_matrix_intrin_avx2.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC void MatrixMulGA_float64_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv::compv_float64_t* ri, COMPV_ALIGNED(SSE) compv::compv_float64_t* rj, const compv::compv_float64_t* c1, const compv::compv_float64_t* s1, compv::compv_uscalar_t count);

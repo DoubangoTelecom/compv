@@ -7,6 +7,7 @@
 #define enableAsm			true
 #define testingMode			true
 #define mathTrigFast		true
+#define cpuDisable			kCpuFlagNone
 
 using namespace compv;
 
@@ -16,12 +17,12 @@ using namespace compv;
 #define TEST_CLIP2					0
 #define TEST_SINCOS_P32				0 // 3.2 precision, theta within IR
 #define TEST_SINCOS_2PI_P32			0 // 3.2 precision, theta within [0, 2*PI]
-#define TEST_EIGEN					0
+#define TEST_EIGEN					1
 #define TEST_SVD					0
 #define TEST_PSI					0 // Moore–Penrose pseudoinverse
 #define TEST_RAND					0
 #define TEST_MOPS_ISSYMMETRIC		0
-#define TEST_MOPS_MULAB				1
+#define TEST_MOPS_MULAB				0
 
 #if COMPV_OS_WINDOWS
 int _tmain(int argc, _TCHAR* argv[])
@@ -35,7 +36,7 @@ int main()
     COMPV_CHECK_CODE_ASSERT(CompVEngine::setMathTrigFastEnabled(mathTrigFast));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setAsmEnabled(enableAsm));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
-    COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagNone));
+	COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));
 
 #if TEST_MAX
 	extern COMPV_ERROR_CODE TestMax();

@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_MATH_MATRIX_MUL_INTRIN_AVX_H_)
-#define _COMPV_MATH_MATRIX_MUL_INTRIN_AVX_H_
+#if !defined(_COMPV_MATH_MATRIX_INTRIN_AVX_H_)
+#define _COMPV_MATH_MATRIX_INTRIN_AVX_H_
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
@@ -26,4 +26,4 @@ COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
 
-#endif /* _COMPV_MATH_MATRIX_MUL_INTRIN_AVX_H_ */
+#endif /* _COMPV_MATH_MATRIX_INTRIN_AVX_H_ */

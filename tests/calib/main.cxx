@@ -7,6 +7,7 @@
 #define enableAsm			true
 #define testingMode			true
 #define mathTrigFast		true
+#define cpuDisable			kCpuFlagNone
 
 using namespace compv;
 
@@ -24,7 +25,7 @@ int main()
     COMPV_CHECK_CODE_ASSERT(CompVEngine::setMathTrigFastEnabled(mathTrigFast));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setAsmEnabled(enableAsm));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
-    COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(kCpuFlagNone));
+	COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));
 
 #if TEST_HOMOGRAPHY
 	extern COMPV_ERROR_CODE TestHomography();

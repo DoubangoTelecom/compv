@@ -15,11 +15,16 @@ using namespace compv;
 
 #if TYPE == TYPE_DOUBLE
 #	if COMPV_ARCH_X64
-#		define MD5_D	"0c191d633cdf3f26b21c8badfd2ba3d4" // 200 + 9 points
-#		define MD5_Q	"84722db880903f6a5fbfcfaf26e53998" // 200 + 9 points
-#		define MD5_D9	"cbadb9f8c6be8aa7abf7172423f7d5bd" // 0 + 9 points
-#		define MD5_Q9	"473597e9b6f33c6308893f68e715a674" // 0 + 9 points
+#		define MD5_D		"0c191d633cdf3f26b21c8badfd2ba3d4" // 200 + 9 points
+#		define MD5_Q		"84722db880903f6a5fbfcfaf26e53998" // 200 + 9 points
+#		define MD5_D_SSE2	"80d28a2af63e6b341e7deb13844a0c55" // 200 + 9 points
+#		define MD5_Q_SSE2	"7d493a7fbf7f3adae01279c65aad900d" // 200 + 9 points
+#		define MD5_D9_SSE2	"cbadb9f8c6be8aa7abf7172423f7d5bd" // 0 + 9 points
+#		define MD5_Q9_SSE2	"473597e9b6f33c6308893f68e715a674" // 0 + 9 points
+#		define MD5_D9		"cbadb9f8c6be8aa7abf7172423f7d5bd" // 0 + 9 points
+#		define MD5_Q9		"473597e9b6f33c6308893f68e715a674" // 0 + 9 points
 #	else
+	// Not uptodate
 #		define MD5_D	"e643f74657501e838bacaeba7287ed0f" // 200 + 9 points
 #		define MD5_Q	"5c23dd9118db5e3e72465d4791984fae" // 200 + 9 points
 #		define MD5_D9	"904d259aac76f1fa495f4fbcdc072a07" // 0 + 9 points
@@ -27,11 +32,13 @@ using namespace compv;
 #	endif // ARCH
 #else
 #	if COMPV_ARCH_X64
+	// Not uptodate
 #		define MD5_D	"3434888c193281e5985902003beaf481" // 200 + 9 points
 #		define MD5_Q	"2631c71d337040e32ba2c1b91d33117d" // 200 + 9 points
 #		define MD5_D9	"3e1b312669b2c8806eb04ddc00578d4c" // 0 + 9 points
 #		define MD5_Q9	"476c0cc46432c9adeaa853b490440776" // 0 + 9 points
 #	else
+// Not uptodate
 #		define MD5_D	"3434888c193281e5985902003beaf481" // 200 + 9 points
 #		define MD5_Q	"0d82444216886adc07b30eb980a43ae3" // 200 + 9 points
 #		define MD5_D9	"3e1b312669b2c8806eb04ddc00578d4c" // 0 + 9 points
@@ -108,11 +115,23 @@ COMPV_ERROR_CODE TestEigen()
 	const std::string md5D = arrayMD5<TYP>(D);
 	const std::string md5Q = arrayMD5<TYP>(Q);
 #if NUM_POINTS == 0 + 9 // homography (3x3)
-	COMPV_ASSERT(md5D == MD5_D9);
-	COMPV_ASSERT(md5Q == MD5_Q9);
+	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+		COMPV_CHECK_EXP_RETURN(md5D != MD5_D9_SSE2, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+		COMPV_CHECK_EXP_RETURN(md5Q != MD5_Q9_SSE2, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	}
+	else {
+		COMPV_CHECK_EXP_RETURN(md5D != MD5_D9, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+		COMPV_CHECK_EXP_RETURN(md5Q != MD5_Q9, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	}
 #else
-	COMPV_ASSERT(md5D == MD5_D);
-	COMPV_ASSERT(md5Q == MD5_Q);
+	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+		COMPV_CHECK_EXP_RETURN(md5D != MD5_D_SSE2, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+		COMPV_CHECK_EXP_RETURN(md5Q != MD5_Q_SSE2, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	}
+	else {
+		COMPV_CHECK_EXP_RETURN(md5D != MD5_D, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+		COMPV_CHECK_EXP_RETURN(md5Q != MD5_Q, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	}
 #endif
 
 	COMPV_DEBUG_INFO("Elapsed time (TestEigen) = [[[ %llu millis ]]]", (timeEnd - timeStart));

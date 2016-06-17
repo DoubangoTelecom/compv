@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/intrinsics/x86/math/compv_math_matrix_mul_intrin_avx.h"
+#include "compv/intrinsics/x86/math/compv_math_matrix_intrin_avx.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/intrinsics/x86/compv_intrin_avx.h"

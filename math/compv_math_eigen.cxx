@@ -77,7 +77,7 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 
 	// TODO(dmi): Add JacobiAngles_Left() function to be used in mulGA() only
 
-	// TODO(dmi): Change D = G*DG
+	// Change D = G*DG :
 	// D = G*DG = G*(G*D*)*
 
 	// TODO(dmi): add mulGA9x9, transposeA9x9

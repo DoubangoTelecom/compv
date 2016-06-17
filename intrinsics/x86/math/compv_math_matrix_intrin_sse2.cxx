@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/intrinsics/x86/math/compv_math_matrix_mul_intrin_sse2.h"
+#include "compv/intrinsics/x86/math/compv_math_matrix_intrin_sse2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/compv_simd_globals.h"
@@ -125,7 +125,7 @@ void MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_
 			}
 #endif
 		}
-		for (; i < j; i += 1) { // i stops at j because the matrix is symmetric
+		if (j & 1) {
 			xmmAbs = _mm_and_pd(_mm_load_sd(&S1_[i]), xmmAbsMask); // abs(S)
 			if (_mm_comigt_sd(xmmAbs, xmmMax)) {
 				xmmMax = _mm_shuffle_pd(xmmAbs, xmmAbs, 0); // duplicate low double

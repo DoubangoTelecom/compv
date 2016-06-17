@@ -6,7 +6,7 @@ using namespace compv;
 
 
 #define LOOP_COUNT			1
-#define NUM_POINTS			5000 + 9 // +9 to make it SIMD-unfriendly for testing
+#define NUM_POINTS			5000 + 15 // +15 to make it SIMD-unfriendly for testing
 #define ANGLE				COMPV_MATH_PI / 4
 #define SCALEX				5.0
 #define SCALEY				5.0
@@ -16,9 +16,9 @@ using namespace compv;
 #define TRANSY				-10.0
 #define TYPE				double  // double or float
 #define TYPE_SZ				"%f"	// %e or %f
-#define MD5_EXPECTED_SSE2	"fc81ea0a8487320df9778dc01b96439d"
-#define MD5_EXPECTED_AVX	"855dbbcc3d92edf9efb3068e413dae5d"
-#define MD5_EXPECTED		"3248f48b27e7b01ee6db4ec2a20343e6" // Without SIMD
+#define MD5_EXPECTED_SSE2	"bc5dc038e5fabe9b5ff01824b0ab5326"
+#define MD5_EXPECTED_AVX	"e68cfb1962fa437d996dc8c619e9d12d"
+#define MD5_EXPECTED		"9fe391540c2d999442f3dea64f0db76e" // Without SIMD
 
 COMPV_ERROR_CODE TestHomography()
 {
@@ -93,7 +93,7 @@ COMPV_ERROR_CODE TestHomography()
 	if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
 		COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED_AVX, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 	}
-	else if (CompVCpu::isEnabled(compv::kCpuFlagAVX) || CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+	else if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
 		COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED_SSE2, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 	}
 	else {
