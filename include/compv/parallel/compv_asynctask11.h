@@ -15,7 +15,7 @@
 #include "compv/compv_common.h"
 
 #if !defined(COMPV_SEMAPHORE11)
-#	define COMPV_SEMAPHORE11 1 // use C++11 Semophores?
+#	define COMPV_SEMAPHORE11 0 // use C++11 Semophores?
 #endif
 
 #include <vector>

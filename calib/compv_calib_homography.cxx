@@ -76,7 +76,6 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	if (threadDisp && threadDisp->getThreadsCount() > 1) {
 		threadsCount_ = COMPV_MATH_MIN(numPoints_ / COMPV_RANSAC_HOMOGRAPHY_MIN_SAMPLES_PER_THREAD, size_t(threadDisp->getThreadsCount()));
 	}
-	COMPV_DEBUG_INFO("NumThreads=%u", (unsigned)threadsCount_);
 	if (threadsCount_ > 1) {
 		std::vector<T> variances_(threadsCount_); // variance used when number of inliers are equal
 		std::vector<CompVPtrArray(size_t)> inliers_(threadsCount_);
@@ -117,7 +116,9 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	}
 	
 	if (bestInliersCount_ == numPoints_) {
+#if defined(DEBUG_) || defined(DEBUG)
 		COMPV_DEBUG_INFO_EX(kModuleNameHomography, "All %llu points are inliers", numPoints_);
+#endif
 		// Copy H
 		COMPV_CHECK_CODE_RETURN(computeH<T>(src, dst, H, true));
 		return COMPV_ERROR_CODE_S_OK;
@@ -181,9 +182,14 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 	CompVPtrArray(T) Hsubset_;
 
 #if COMPV_PRNG11
+#	if 0
+	std::random_device rd_;
+	std::mt19937 prng_{ rd_() };
+#	else
 	// CompVThread::getIdCurrent() must return different number for each thread otherwise we'll generate the same suite of numbers
 	// We're not using a random device number (std::random_device) in order to generate the same suite of numbers for each thread everytime
 	std::mt19937 prng_(CompVThread::getIdCurrent());
+#	endif
 	std::uniform_int_distribution<> unifd_{ 0, static_cast<int>(k_ - 1) };
 #else
 	uint32_t rand4[4];
