@@ -64,7 +64,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	}
 
 	// No estimation model selected -> compute homography using all points (inliers + outliers)
-	if (model == COMPV_MODELEST_TYPE_NONE) {
+	/*if (model == COMPV_MODELEST_TYPE_NONE)*/ {
 		COMPV_CHECK_CODE_RETURN(computeH<T>(src, dst, H, true));
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -293,11 +293,6 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	T *row_;
 	size_t numPoints_ = src_->cols();
 
-	// TODO(dmi): use calib class and store "srcn", "dstn", "M_", "S_", "D_", "Q_", "T1", "T2"....
-
-	// TODO(dmi): Use SIMD for the normaization part to generate 3x3 matrix
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-
 	srcX_ = src_->ptr(0);
 	srcY_ = src_->ptr(1);
 	srcZ_ = dst_->ptr(2);
@@ -329,7 +324,7 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	row_ = const_cast<T*>(T1_->ptr(0)), row_[0] = srcScale_, row_[1] = 0, row_[2] = -srcTX_ * srcScale_;
 	row_ = const_cast<T*>(T1_->ptr(1)), row_[0] = 0, row_[1] = srcScale_, row_[2] = -srcTY_ * srcScale_;
 	row_ = const_cast<T*>(T1_->ptr(2)), row_[0] = 0, row_[1] = 0, row_[2] = 1;
-	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulAB(T1_, src, srcn_));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAB(T1_, src, srcn_));
 	// Normilize dst_: dstn_ = T.dst_
 	CompVPtrArray(T) T2_;
 	CompVPtrArray(T) dstn_;
@@ -337,7 +332,7 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	row_ = const_cast<T*>(T2_->ptr(0)), row_[0] = dstScale_, row_[1] = 0, row_[2] = -dstTX_ * dstScale_;
 	row_ = const_cast<T*>(T2_->ptr(1)), row_[0] = 0, row_[1] = dstScale_, row_[2] = -dstTY_ * dstScale_;
 	row_ = const_cast<T*>(T2_->ptr(2)), row_[0] = 0, row_[1] = 0, row_[2] = 1;
-	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulAB(T2_, dst, dstn_));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAB(T2_, dst, dstn_));
 
 	// Build M for homogeneous equation: Mh = 0
 	CompVPtrArray(T) M_;
@@ -345,12 +340,12 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 
 	// Build symmetric matrix S = M*M
 	CompVPtrArray(T) S_; // temp symmetric array
-	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulAtA(M_, S_));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAtA(M_, S_));
 
 	// Find eigenvalues and eigenvectors (no sorting and vectors in rows instead of columns)
 	CompVPtrArray(T) D_; // 9x9 diagonal matrix containing the eigenvalues
 	CompVPtrArray(T) Qt_; // 9x9 matrix containing the eigenvectors (rows) - transposed
-	COMPV_CHECK_CODE_RETURN(err_ = CompVEigen<T>::findSymm(S_, D_, Qt_, false, true, false));
+	COMPV_CHECK_CODE_RETURN(CompVEigen<T>::findSymm(S_, D_, Qt_, false, true, false));
 	// Find index of the smallest eigenvalue (this code is required because findSymm() is called without sorting for speed-up)
 	// Eigenvector corresponding to the smallest eigenvalue is the nullspace of M and equal h (homogeneous equation: Ah = 0)
 	signed minIndex_ = 8;
@@ -402,8 +397,8 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	// ->T2^HnT1A = T2^T2B = B
 	// ->(T2^HnT1)A = B -> H'A = B whith H' = T2^HnT1 our final homography matrix
 	// T2^HnT1 = T2^(T1*Hn*)* = T2^(T3Hn*)* with T3 = T1*
-	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulABt(T1_, H, M_));
-	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulABt(T2_, M_, H));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(T1_, H, M_));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulABt(T2_, M_, H));
 
 	if (promoteZeros) {
 		COMPV_PROMOTE_ZEROS(hn0_, 0); COMPV_PROMOTE_ZEROS(hn0_, 1); COMPV_PROMOTE_ZEROS(hn0_, 2);
