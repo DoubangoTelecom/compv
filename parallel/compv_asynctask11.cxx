@@ -221,9 +221,9 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
 	if (Self_->m_iCoreId >= 0) {
 		COMPV_CHECK_CODE_BAIL(err_ = Self_->m_Thread->setAffinity(Self_->m_iCoreId));
 	}
-	COMPV_DEBUG_INFO("CompVAsyncTask11::run(coreId:requested=%d,set=%d, threadId:%ld, kThreadSetAffinity:true) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), (long)CompVThread::getIdCurrent());
+	COMPV_DEBUG_INFO("CompVAsyncTask11::run(coreId:requested=%d,set=%d, threadId:%llu, kThreadSetAffinity:true) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), (unsigned long)CompVThread::getIdCurrent());
 #else
-	COMPV_DEBUG_INFO("CompVAsyncTask11::run(coreId:requested=%d,set=useless, threadId:%ld, kThreadSetAffinity:false) - ENTER", Self_->m_iCoreId, (long)CompVThread::getIdCurrent());
+	COMPV_DEBUG_INFO("CompVAsyncTask11::run(coreId:requested=%d,set=useless, threadId:%llu, kThreadSetAffinity:false) - ENTER", Self_->m_iCoreId, (unsigned long)CompVThread::getIdCurrent());
 #endif
 
 	while (Self_->m_bStarted) {

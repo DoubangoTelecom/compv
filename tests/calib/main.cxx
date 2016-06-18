@@ -1,7 +1,7 @@
 #include <compv/compv_api.h>
 #include <tchar.h>
 
-#define numThreads			COMPV_NUM_THREADS_SINGLE
+#define numThreads			COMPV_NUM_THREADS_BEST
 
 #define enableIntrinsics	true
 #define enableAsm			true

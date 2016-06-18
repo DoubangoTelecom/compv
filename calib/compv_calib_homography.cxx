@@ -8,6 +8,7 @@
 #include "compv/math/compv_math_eigen.h"
 #include "compv/math/compv_math_matrix.h"
 #include "compv/math/compv_math_stats.h"
+#include "compv/compv_engine.h"
 
 #include <vector>
 
@@ -24,6 +25,8 @@
 #	include <random>
 #endif
 
+#define COMPV_RANSAC_HOMOGRAPHY_MIN_SAMPLES_PER_THREAD	(10) // number of samples per thread
+
 COMPV_NAMESPACE_BEGIN()
 
 #define kModuleNameHomography "Homography"
@@ -34,9 +37,9 @@ template class CompVHomography<compv_float32_t >;
 template<typename T>
 static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H, bool promoteZeros = false);
 template<typename T>
-static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H, CompVPtrArray(size_t)& inliers, T& variance, size_t threadsCount);
+static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(size_t)& inliers, T& variance, size_t threadsCount);
 template<typename T>
-static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, size_t &inliersCount, CompVPtrArray(size_t)& inliers, T &variance);
+static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, size_t &inliersCount, CompVPtrArray(size_t)& inliers, T &variance);
 
 // Homography 'double' is faster because EigenValues/EigenVectors computation converge faster (less residual error)
 // src: 3xN homogeneous array (X, Y, Z=1). N-cols with N >= 4. The N points must not be colinear.
@@ -65,46 +68,58 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 		COMPV_CHECK_CODE_RETURN(computeH<T>(src, dst, H, true));
 		return COMPV_ERROR_CODE_S_OK;
 	}
-
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-	size_t threadsCount_ = 1;
-	std::vector<T> variances_(threadsCount_);
-	std::vector<CompVPtrArray(size_t)> inliers_(threadsCount_);
-	std::vector<CompVPtrArray(T)> homographies_(threadsCount_);
-	COMPV_CHECK_CODE_RETURN(ransac(src, dst, homographies_[0], inliers_[0], variances_[0], threadsCount_));
 	
-
-	// Find best homography index for the threads
-	size_t bestHomographyIndex_ = 0;
+	CompVPtrArray(size_t) bestInliers_;
 	size_t bestInliersCount_ = 0;
-	T bestVariance_ = T(FLT_MAX);
-	for (size_t threadIdx_ = 0; threadIdx_ < threadsCount_; ++threadIdx_) {
-		if (inliers_[threadIdx_] && (inliers_[threadIdx_]->cols() > bestInliersCount_ || (inliers_[threadIdx_]->cols() == bestInliersCount_ && bestVariance_ < variances_[threadIdx_]))) {
-			bestVariance_ = variances_[threadIdx_];
-			bestInliersCount_ = inliers_[threadIdx_]->cols();
-			bestHomographyIndex_ = threadIdx_;
-		}
+	size_t threadsCount_ = 1;
+	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
+	if (threadDisp && threadDisp->getThreadsCount() > 1) {
+		threadsCount_ = COMPV_MATH_MIN(numPoints_ / COMPV_RANSAC_HOMOGRAPHY_MIN_SAMPLES_PER_THREAD, size_t(threadDisp->getThreadsCount()));
 	}
-	const CompVPtrArray(T)& bestHomography_ = homographies_[bestHomographyIndex_];
-	const CompVPtrArray(size_t)& bestInliers_ = inliers_[bestHomographyIndex_];
+	COMPV_DEBUG_INFO("NumThreads=%u", (unsigned)threadsCount_);
+	if (threadsCount_ > 1) {
+		std::vector<T> variances_(threadsCount_); // variance used when number of inliers are equal
+		std::vector<CompVPtrArray(size_t)> inliers_(threadsCount_);
+		CompVAsyncTaskIds taskIds;
+		taskIds.reserve(threadsCount_);
+		auto funcPtr = [&](const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, size_t threadIdx_) -> COMPV_ERROR_CODE {
+			return ransac<T>(src, dst, inliers_[threadIdx_], variances_[threadIdx_], threadsCount_);
+		};
+		// Run threads
+		for (size_t threadIdx_ = 0; threadIdx_ < threadsCount_; ++threadIdx_) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, src, dst, threadIdx_), taskIds));
+		}		
+		// Find best homography index for the threads
+		size_t bestHomographyIndex_ = 0;
+		T bestVariance_ = T(FLT_MAX);
+		for (size_t threadIdx_ = 0; threadIdx_ < threadsCount_; ++threadIdx_) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx_]));
+			if (inliers_[threadIdx_] && (inliers_[threadIdx_]->cols() > bestInliersCount_ || (inliers_[threadIdx_]->cols() == bestInliersCount_ && variances_[threadIdx_] < bestVariance_))) {
+				bestVariance_ = variances_[threadIdx_];
+				bestInliersCount_ = inliers_[threadIdx_]->cols();
+				bestHomographyIndex_ = threadIdx_;
+			}
+		}
+		bestInliers_ = inliers_[bestHomographyIndex_];
+	}
+	else {
+		T variance_;
+		COMPV_CHECK_CODE_RETURN(ransac(src, dst, bestInliers_, variance_, 1));
+		bestInliersCount_ = bestInliers_ ? bestInliers_->cols() : 0;
+	}
 
 	// RANSAC failed to find more than #4 inliers (must never happen)
 	// -> compute homography using all points
 	if (bestInliersCount_ < 4) {
+		COMPV_DEBUG_INFO_EX(kModuleNameHomography, "Not enought inliers(< 4). InlinersCount = %lu, NumPoints = %lu, threadsCount = %lu", bestInliersCount_, numPoints_, threadsCount_);
 		COMPV_CHECK_CODE_RETURN(computeH<T>(src, dst, H, true));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	
 	if (bestInliersCount_ == numPoints_) {
-		COMPV_DEBUG_INFO("All %llu points are inliers", numPoints_);
+		COMPV_DEBUG_INFO_EX(kModuleNameHomography, "All %llu points are inliers", numPoints_);
 		// Copy H
-		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::copy(H, bestHomography_));
-		T* h0_ = const_cast<T*>(H->ptr(0));
-		T* h1_ = const_cast<T*>(H->ptr(1));
-		T* h2_ = const_cast<T*>(H->ptr(2));
-		COMPV_PROMOTE_ZEROS(h0_, 0); COMPV_PROMOTE_ZEROS(h0_, 1); COMPV_PROMOTE_ZEROS(h0_, 2);
-		COMPV_PROMOTE_ZEROS(h1_, 0); COMPV_PROMOTE_ZEROS(h1_, 1); COMPV_PROMOTE_ZEROS(h1_, 2);
-		COMPV_PROMOTE_ZEROS(h2_, 0); COMPV_PROMOTE_ZEROS(h2_, 1);
+		COMPV_CHECK_CODE_RETURN(computeH<T>(src, dst, H, true));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	else {
@@ -139,10 +154,10 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 }
 
 template<typename T>
-static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H, CompVPtrArray(size_t)& inliers, T& variance, size_t threadsCount)
+static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(size_t)& inliers, T& variance, size_t threadsCount)
 {
 	COMPV_CHECK_EXP_RETURN(!threadsCount, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	const T *srcx_, *srcy_, *dstx1_, *dsty1_, *hsubsetx_, *hsubsety_, *hsubsetz_;
+	const T *srcx_, *srcy_, *dstx1_, *dsty1_;
 
 	variance = T(FLT_MAX);
 
@@ -166,7 +181,9 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 	CompVPtrArray(T) Hsubset_;
 
 #if COMPV_PRNG11
-	std::mt19937 prng_(12345); // FIXME(dmi): use device random source for multithreading to avoid generating same numbers for each thread
+	// CompVThread::getIdCurrent() must return different number for each thread otherwise we'll generate the same suite of numbers
+	// We're not using a random device number (std::random_device) in order to generate the same suite of numbers for each thread everytime
+	std::mt19937 prng_(CompVThread::getIdCurrent());
 	std::uniform_int_distribution<> unifd_{ 0, static_cast<int>(k_ - 1) };
 #else
 	uint32_t rand4[4];
@@ -177,11 +194,6 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 
 	CompVPtrArray(size_t) inliersubset_; // inliers indexes
 	COMPV_CHECK_CODE_RETURN(CompVArray<size_t>::newObjAligned(&inliersubset_, 1, k_));
-
-	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&H, 3, 3));
-	T* hx_ = const_cast<T*>(H->ptr(0));
-	T* hy_ = const_cast<T*>(H->ptr(1));
-	T* hz_ = const_cast<T*>(H->ptr(2));
 
 	CompVPtrArray(T) srcsubset_;
 	CompVPtrArray(T) dstsubset_;
@@ -215,11 +227,9 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 #endif
 		} while (idx0 == idx1 || idx0 == idx2 || idx0 == idx3 || idx1 == idx2 || idx1 == idx3 || idx2 == idx3);
 
-		// Set the #4 random points
+		// Set the #4 random points (src)
 		srcsubsetx_[0] = srcx_[idx0],	srcsubsetx_[1] = srcx_[idx1],	srcsubsetx_[2] = srcx_[idx2],	srcsubsetx_[3] = srcx_[idx3];
 		srcsubsety_[0] = srcy_[idx0],	srcsubsety_[1] = srcy_[idx1],	srcsubsety_[2] = srcy_[idx2],	srcsubsety_[3] = srcy_[idx3];
-		dstsubsetx_[0] = dstx1_[idx0],	dstsubsetx_[1] = dstx1_[idx1],	dstsubsetx_[2] = dstx1_[idx2],	dstsubsetx_[3] = dstx1_[idx3];
-		dstsubsety_[0] = dsty1_[idx0],	dstsubsety_[1] = dsty1_[idx1],	dstsubsety_[2] = dsty1_[idx2],	dstsubsety_[3] = dsty1_[idx3];
 
 		// Reject colinear points
 		// TODO(dmi): doesn't worth it -> colinear points will compute a wrong homography with too much outliers -> not an issue
@@ -229,6 +239,9 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 			++t_; // to avoid endless loops
 			continue;
 		}
+		// Set the #4 random points (dst)
+		dstsubsetx_[0] = dstx1_[idx0], dstsubsetx_[1] = dstx1_[idx1], dstsubsetx_[2] = dstx1_[idx2], dstsubsetx_[3] = dstx1_[idx3];
+		dstsubsety_[0] = dsty1_[idx0], dstsubsety_[1] = dsty1_[idx1], dstsubsety_[2] = dsty1_[idx2], dstsubsety_[3] = dsty1_[idx3];
 
 		// Compute Homography using the #4 random points selected above (subset)
 		COMPV_CHECK_CODE_RETURN(computeH<T>(srcsubset_, dstsubset_, Hsubset_));
@@ -239,13 +252,6 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 		if (inliersCount_ >= subset_ && (inliersCount_ > bestInlinersCount_ || (inliersCount_ == bestInlinersCount_ && variance_ < variance))) {
 			bestInlinersCount_ = inliersCount_;
 			variance = variance_;
-			// update H
-			hsubsetx_ = Hsubset_->ptr(0);
-			hsubsety_ = Hsubset_->ptr(1);
-			hsubsetz_ = Hsubset_->ptr(2);
-			hx_[0] = hsubsetx_[0], hx_[1] = hsubsetx_[1], hx_[2] = hsubsetx_[2];
-			hy_[0] = hsubsety_[0], hy_[1] = hsubsety_[1], hy_[2] = hsubsety_[2];
-			hz_[0] = hsubsetz_[0], hz_[1] = hsubsetz_[1], hz_[2] = hsubsetz_[2];
 			// Copy inliers
 			COMPV_CHECK_CODE_RETURN(CompVArray<size_t>::newObjAligned(&inliers, 1, inliersCount_));
 			CompVMem::copyNTA(const_cast<size_t*>(inliers->ptr(0)), inliersubset_->ptr(0), (inliersCount_ * sizeof(size_t)));
@@ -263,7 +269,8 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 
 	if (bestInlinersCount_ < subset_) { // not enought points ?
 		inliers = NULL; // If the user provided a valid array, reset it
-		COMPV_DEBUG_INFO_EX(kModuleNameHomography, "Not enought inliers(< 4). InlinersCount = %lu, k = %lu", bestInlinersCount_, k_);
+		// Not an error if there more threads
+		COMPV_DEBUG_INFO_EX(kModuleNameHomography, "[RANSAC] Not enought inliers(< 4). InlinersCount = %lu, k = %lu", bestInlinersCount_, k_);
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
