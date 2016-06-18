@@ -29,15 +29,15 @@ COMPV_ERROR_CODE CompVMathStats<T>::normalize2D_hartley(const T* x, const T* y, 
 
 	size_t i;
 
-	T tx = 0, ty = 0, magnitude = 0;
+	T tx = 0, ty = 0, magnitude = 0, OneOverNumPoints = T(T(1) / numPoints);
 
 	// Compute the centroid (https://en.wikipedia.org/wiki/Centroid#Of_a_finite_set_of_points)
 	for (i = 0; i < numPoints; ++i) {
 		tx += x[i];
 		ty += y[i];
 	}
-	tx = T(tx / numPoints);
-	ty = T(ty / numPoints);
+	tx *= OneOverNumPoints;
+	ty *= OneOverNumPoints;
 
 	// AFTER the translation the coordinates are uniformly scaled (Isotropic scaling) so that the mean distance from the origin to a point equals sqrt(2).
 	// TODO(dmi): use classic normalization ((x,y)/(max_norm) € [0, 1])
@@ -47,7 +47,7 @@ COMPV_ERROR_CODE CompVMathStats<T>::normalize2D_hartley(const T* x, const T* y, 
 		// Using naive hypot because X and Y contains point coordinates (no risk for overflow / underflow)
 		magnitude += CompVMathUtils::hypot_naive((x[i] - tx), (y[i] - ty));
 	}
-	magnitude = T(magnitude / numPoints);
+	magnitude *= OneOverNumPoints;
 
 	*s1 = magnitude ? T(COMPV_MATH_SQRT_2 / magnitude) : T(COMPV_MATH_SQRT_2);
 	*tx1 = tx;
