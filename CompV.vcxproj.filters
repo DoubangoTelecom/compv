@@ -354,9 +354,6 @@
     <ClInclude Include="include\compv\math\compv_math_matrix.h">
       <Filter>Header Files\math</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\compv_ransac.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse2.h">
       <Filter>Header Files\intrinsics\x86\features\fast</Filter>
     </ClInclude>
@@ -601,9 +598,6 @@
     </ClCompile>
     <ClCompile Include="math\compv_math_matrix.cxx">
       <Filter>Source Files\math</Filter>
-    </ClCompile>
-    <ClCompile Include="compv_ransac.cxx">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse2.cxx">
       <Filter>Source Files\intrinsics\x86\features\fast</Filter>

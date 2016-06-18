@@ -9,6 +9,8 @@
 #include "compv/math/compv_math_matrix.h"
 #include "compv/math/compv_math_stats.h"
 
+#include <vector>
+
 #if !defined (COMPV_PRNG11)
 #	define COMPV_PRNG11 1
 #endif
@@ -16,6 +18,7 @@
 #if !defined (COMPV_HOMOGRAPHY_OUTLIER_THRESHOLD)
 #	define	COMPV_HOMOGRAPHY_OUTLIER_THRESHOLD 30
 #endif
+#define COMPV_PROMOTE_ZEROS(_h_, _i_) if (CompVEigen<T>::isCloseToZero((_h_)[(_i_)])) (_h_)[(_i_)] = 0;
 
 #if COMPV_PRNG11
 #	include <random>
@@ -31,6 +34,8 @@ template class CompVHomography<compv_float32_t >;
 template<typename T>
 static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H, bool promoteZeros = false);
 template<typename T>
+static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H, CompVPtrArray(size_t)& inliers, T& variance, size_t threadsCount);
+template<typename T>
 static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, size_t &inliersCount, CompVPtrArray(size_t)& inliers, T &variance);
 
 // Homography 'double' is faster because EigenValues/EigenVectors computation converge faster (less residual error)
@@ -44,79 +49,153 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	// Homography requires at least #4 points
 	// src and dst must be 2-rows array. 1st row = X, 2nd-row = Y
 	COMPV_CHECK_EXP_RETURN(!src || !dst || src->rows() != 3 || dst->rows() != 3 || src->cols() < 4 || src->cols() != dst->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	
-	size_t k_ = src->cols(); // total number of elements (must be > 4)
-	const T *srcx1_, *srcy1_, *srcz1_, *dstx1_, *dsty1_, *dstz1_, *hx1_, *hy1_, *hz1_;
-
-	srcx1_ = src->ptr(0);
-	srcy1_ = src->ptr(1);
-	srcz1_ = src->ptr(2);
-	dstx1_ = dst->ptr(0);
-	dsty1_ = dst->ptr(1);
-	dstz1_ = dst->ptr(2);
 
 	// Make sure coordinates are homogeneous 2D
-	for (size_t i = 0; i < k_; ++i) {
-		if (srcz1_[i] != 1 || dstz1_[i] != 1){
+	size_t numPoints_ = src->cols();
+	const T* srcz_ = src->ptr(2);
+	const T* dstz_ = dst->ptr(2);
+	for (size_t i = 0; i < numPoints_; ++i) {
+		if (srcz_[i] != 1 || dstz_[i] != 1){
 			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		}
 	}
 
-	// No estimation model select -> compute homography using all points (inliers + outliers)
+	// No estimation model selected -> compute homography using all points (inliers + outliers)
 	if (model == COMPV_MODELEST_TYPE_NONE) {
 		COMPV_CHECK_CODE_RETURN(computeH<T>(src, dst, H, true));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+	size_t threadsCount_ = 1;
+	std::vector<T> variances_(threadsCount_);
+	std::vector<CompVPtrArray(size_t)> inliers_(threadsCount_);
+	std::vector<CompVPtrArray(T)> homographies_(threadsCount_);
+	COMPV_CHECK_CODE_RETURN(ransac(src, dst, homographies_[0], inliers_[0], variances_[0], threadsCount_));
+	
+
+	// Find best homography index for the threads
+	size_t bestHomographyIndex_ = 0;
+	size_t bestInliersCount_ = 0;
+	T bestVariance_ = T(FLT_MAX);
+	for (size_t threadIdx_ = 0; threadIdx_ < threadsCount_; ++threadIdx_) {
+		if (inliers_[threadIdx_] && (inliers_[threadIdx_]->cols() > bestInliersCount_ || (inliers_[threadIdx_]->cols() == bestInliersCount_ && bestVariance_ < variances_[threadIdx_]))) {
+			bestVariance_ = variances_[threadIdx_];
+			bestInliersCount_ = inliers_[threadIdx_]->cols();
+			bestHomographyIndex_ = threadIdx_;
+		}
+	}
+	const CompVPtrArray(T)& bestHomography_ = homographies_[bestHomographyIndex_];
+	const CompVPtrArray(size_t)& bestInliers_ = inliers_[bestHomographyIndex_];
+
+	// RANSAC failed to find more than #4 inliers (must never happen)
+	// -> compute homography using all points
+	if (bestInliersCount_ < 4) {
+		COMPV_CHECK_CODE_RETURN(computeH<T>(src, dst, H, true));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	
+	if (bestInliersCount_ == numPoints_) {
+		COMPV_DEBUG_INFO("All %llu points are inliers", numPoints_);
+		// Copy H
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::copy(H, bestHomography_));
+		T* h0_ = const_cast<T*>(H->ptr(0));
+		T* h1_ = const_cast<T*>(H->ptr(1));
+		T* h2_ = const_cast<T*>(H->ptr(2));
+		COMPV_PROMOTE_ZEROS(h0_, 0); COMPV_PROMOTE_ZEROS(h0_, 1); COMPV_PROMOTE_ZEROS(h0_, 2);
+		COMPV_PROMOTE_ZEROS(h1_, 0); COMPV_PROMOTE_ZEROS(h1_, 1); COMPV_PROMOTE_ZEROS(h1_, 2);
+		COMPV_PROMOTE_ZEROS(h2_, 0); COMPV_PROMOTE_ZEROS(h2_, 1);
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	else {
+
+		// Compute final H using inliers only
+		CompVPtrArray(T) srcinliers_;
+		CompVPtrArray(T) dstinliers_;
+		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&srcinliers_, 3, bestInliersCount_));
+		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&dstinliers_, 3, bestInliersCount_));
+		T* srcinliersx_ = const_cast<T*>(srcinliers_->ptr(0));
+		T* srcinliersy_ = const_cast<T*>(srcinliers_->ptr(1));
+		T* srcinliersz_ = const_cast<T*>(srcinliers_->ptr(2));
+		T* dstinliersx_ = const_cast<T*>(dstinliers_->ptr(0));
+		T* dstinliersy_ = const_cast<T*>(dstinliers_->ptr(1));
+		T* dstinliersz_ = const_cast<T*>(dstinliers_->ptr(2));
+
+		size_t idx;
+		const size_t* inliersIdx_ = bestInliers_->ptr();
+		const T* srcx_ = src->ptr(0);
+		const T* srcy_ = src->ptr(1);
+		const T* dstx_ = dst->ptr(0);
+		const T* dsty_ = dst->ptr(1);
+		for (size_t i = 0; i < bestInliersCount_; ++i) {
+			idx = inliersIdx_[i];
+			srcinliersx_[i] = srcx_[idx], srcinliersy_[i] = srcy_[idx], srcinliersz_[i] = 1;
+			dstinliersx_[i] = dstx_[idx], dstinliersy_[i] = dsty_[idx], dstinliersz_[i] = 1;
+		}
+
+		COMPV_CHECK_CODE_RETURN(computeH<T>(srcinliers_, dstinliers_, H, true));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+}
+
+template<typename T>
+static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H, CompVPtrArray(size_t)& inliers, T& variance, size_t threadsCount)
+{
+	COMPV_CHECK_EXP_RETURN(!threadsCount, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	const T *srcx_, *srcy_, *dstx1_, *dsty1_, *hsubsetx_, *hsubsety_, *hsubsetz_;
+
+	variance = T(FLT_MAX);
+
+	srcx_ = src->ptr(0);
+	srcy_ = src->ptr(1);
+	dstx1_ = dst->ptr(0);
+	dsty1_ = dst->ptr(1);
+	
+	size_t k_ = src->cols(); // total number of elements (must be > 4)
 	float p_ = 0.99f; // probability for inlier (TODO(dmi): try with 0.95f which is more realistic)
 	size_t d_ = (size_t)(p_ * k_); // minimum number of inliers to stop the tries
-	size_t s_ = 4; // subset size: 2 for line, 3 for plane, 4 for homography, 8 for essential / essential matrix
+	size_t subset_ = 4; // subset size: 2 for line, 3 for plane, 4 for homography, 8 for essential / essential matrix
 	float e_ = 0.50f; // outliers ratio (50% is a worst case, will be updated) = 1 - (inliersCount/total)
 	size_t n_; // maximum number of tries
 	size_t t_; // number of tries
-	
+
 	uint32_t idx0, idx1, idx2, idx3;
 	size_t inliersCount_, bestInlinersCount_ = 0;
-	T variance_, bestVariance_ = T(FLT_MAX); // Using variance instead of standard deviation because it's the same result as we are doing comparison
+	T variance_; // Using variance instead of standard deviation because it's the same result as we are doing comparison
+	bool colinear;
+	CompVPtrArray(T) Hsubset_;
 
 #if COMPV_PRNG11
-	std::mt19937 prng_(12345); // TODO(dmi): use device random source for multithreading to avoid generating same numbers for each thread
-	std::uniform_int_distribution<> unifd_ { 0, static_cast<int>(k_ - 1) };
+	std::mt19937 prng_(12345); // FIXME(dmi): use device random source for multithreading to avoid generating same numbers for each thread
+	std::uniform_int_distribution<> unifd_{ 0, static_cast<int>(k_ - 1) };
 #else
 	uint32_t rand4[4];
 #endif
 
-	CompVPtrArray(T) src_;
-	CompVPtrArray(T) dst_;
-	CompVPtrArray(T) H_;
-	CompVPtrArray(size_t) inliers_; // inliers indexes
-	CompVPtrArray(size_t) bestInliers_; // if you change the type (size_t) thenn change the below memcpy;
-	T *srcx0_, *srcy0_, *srcz0_, *dstx0_, *dsty0_, *dstz0_, *hx0_, *hy0_, *hz0_;
-	bool colinear;
-
-	n_ = static_cast<size_t>(logf(1 - p_) / logf(1 - powf(1 - e_, static_cast<float>(s_))));
+	n_ = ((static_cast<size_t>(logf(1 - p_) / logf(1 - powf(1 - e_, static_cast<float>(subset_))))) / threadsCount) + 1;
 	t_ = 0;
-	
-	COMPV_CHECK_CODE_RETURN(CompVArray<size_t>::newObjAligned(&inliers_, 1, k_));
+
+	CompVPtrArray(size_t) inliersubset_; // inliers indexes
+	COMPV_CHECK_CODE_RETURN(CompVArray<size_t>::newObjAligned(&inliersubset_, 1, k_));
 
 	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&H, 3, 3));
-	hx0_ = const_cast<T*>(H->ptr(0));
-	hy0_ = const_cast<T*>(H->ptr(1));
-	hz0_ = const_cast<T*>(H->ptr(2));
+	T* hx_ = const_cast<T*>(H->ptr(0));
+	T* hy_ = const_cast<T*>(H->ptr(1));
+	T* hz_ = const_cast<T*>(H->ptr(2));
 
-	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&src_, 3, s_));
-	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&dst_, 3, s_));
-
-	srcx0_ = const_cast<T*>(src_->ptr(0));
-	srcy0_ = const_cast<T*>(src_->ptr(1));
-	srcz0_ = const_cast<T*>(src_->ptr(2));
-	dstx0_ = const_cast<T*>(dst_->ptr(0));
-	dsty0_ = const_cast<T*>(dst_->ptr(1));
-	dstz0_ = const_cast<T*>(dst_->ptr(2));
-
+	CompVPtrArray(T) srcsubset_;
+	CompVPtrArray(T) dstsubset_;
+	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&srcsubset_, 3, subset_));
+	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&dstsubset_, 3, subset_));
+	T* srcsubsetx_ = const_cast<T*>(srcsubset_->ptr(0));
+	T* srcsubsety_ = const_cast<T*>(srcsubset_->ptr(1));
+	T* srcsubsetz_ = const_cast<T*>(srcsubset_->ptr(2));
+	T* dstsubsetx_ = const_cast<T*>(dstsubset_->ptr(0));
+	T* dstsubsety_ = const_cast<T*>(dstsubset_->ptr(1));
+	T* dstsubsetz_ = const_cast<T*>(dstsubset_->ptr(2));
 	// 2D planar
-	srcz0_[0] = srcz0_[1] = srcz0_[2] = srcz0_[3] = 1;
-	dstz0_[0] = dstz0_[1] = dstz0_[2] = dstz0_[3] = 1;
+	srcsubsetz_[0] = srcsubsetz_[1] = srcsubsetz_[2] = srcsubsetz_[3] = 1;
+	dstsubsetz_[0] = dstsubsetz_[1] = dstsubsetz_[2] = dstsubsetz_[3] = 1;
 
 	while (t_ < n_ && bestInlinersCount_ < d_) {
 		do {
@@ -137,76 +216,55 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 		} while (idx0 == idx1 || idx0 == idx2 || idx0 == idx3 || idx1 == idx2 || idx1 == idx3 || idx2 == idx3);
 
 		// Set the #4 random points
-		srcx0_[0] = srcx1_[idx0], srcx0_[1] = srcx1_[idx1], srcx0_[2] = srcx1_[idx2], srcx0_[3] = srcx1_[idx3];
-		srcy0_[0] = srcy1_[idx0], srcy0_[1] = srcy1_[idx1], srcy0_[2] = srcy1_[idx2], srcy0_[3] = srcy1_[idx3];
-		dstx0_[0] = dstx1_[idx0], dstx0_[1] = dstx1_[idx1], dstx0_[2] = dstx1_[idx2], dstx0_[3] = dstx1_[idx3];
-		dsty0_[0] = dsty1_[idx0], dsty0_[1] = dsty1_[idx1], dsty0_[2] = dsty1_[idx2], dsty0_[3] = dsty1_[idx3];
-		
+		srcsubsetx_[0] = srcx_[idx0],	srcsubsetx_[1] = srcx_[idx1],	srcsubsetx_[2] = srcx_[idx2],	srcsubsetx_[3] = srcx_[idx3];
+		srcsubsety_[0] = srcy_[idx0],	srcsubsety_[1] = srcy_[idx1],	srcsubsety_[2] = srcy_[idx2],	srcsubsety_[3] = srcy_[idx3];
+		dstsubsetx_[0] = dstx1_[idx0],	dstsubsetx_[1] = dstx1_[idx1],	dstsubsetx_[2] = dstx1_[idx2],	dstsubsetx_[3] = dstx1_[idx3];
+		dstsubsety_[0] = dsty1_[idx0],	dstsubsety_[1] = dsty1_[idx1],	dstsubsety_[2] = dsty1_[idx2],	dstsubsety_[3] = dsty1_[idx3];
+
 		// Reject colinear points
 		// TODO(dmi): doesn't worth it -> colinear points will compute a wrong homography with too much outliers -> not an issue
-		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::isColinear2D(src_, colinear));
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::isColinear2D(srcsubset_, colinear));
 		if (colinear) {
 			COMPV_DEBUG_INFO_EX(kModuleNameHomography, "ignore colinear points ...");
 			++t_; // to avoid endless loops
 			continue;
 		}
 
-		// Compute Homography using the #4 random points selected above
-		COMPV_CHECK_CODE_RETURN(computeH<T>(src_, dst_, H_));
+		// Compute Homography using the #4 random points selected above (subset)
+		COMPV_CHECK_CODE_RETURN(computeH<T>(srcsubset_, dstsubset_, Hsubset_));
 
 		// Count outliers using all points and current homography using the inliers only
-		COMPV_CHECK_CODE_RETURN(countInliers<T>(src, dst, H_, inliersCount_, inliers_, variance_));
+		COMPV_CHECK_CODE_RETURN(countInliers<T>(src, dst, Hsubset_, inliersCount_, inliersubset_, variance_));
 
-		if (inliersCount_ >= s_ && (inliersCount_ > bestInlinersCount_ || (inliersCount_ == bestInlinersCount_ && variance_ < bestVariance_))) {
+		if (inliersCount_ >= subset_ && (inliersCount_ > bestInlinersCount_ || (inliersCount_ == bestInlinersCount_ && variance_ < variance))) {
 			bestInlinersCount_ = inliersCount_;
-			bestVariance_ = variance_;
+			variance = variance_;
 			// update H
-			hx1_ = H_->ptr(0);
-			hy1_ = H_->ptr(1);
-			hz1_ = H_->ptr(2);
-			hx0_[0] = hx1_[0], hx0_[1] = hx1_[1], hx0_[2] = hx1_[2];
-			hy0_[0] = hy1_[0], hy0_[1] = hy1_[1], hy0_[2] = hy1_[2];
-			hz0_[0] = hz1_[0], hz0_[1] = hz1_[1], hz0_[2] = hz1_[2];
+			hsubsetx_ = Hsubset_->ptr(0);
+			hsubsety_ = Hsubset_->ptr(1);
+			hsubsetz_ = Hsubset_->ptr(2);
+			hx_[0] = hsubsetx_[0], hx_[1] = hsubsetx_[1], hx_[2] = hsubsetx_[2];
+			hy_[0] = hsubsety_[0], hy_[1] = hsubsety_[1], hy_[2] = hsubsety_[2];
+			hz_[0] = hsubsetz_[0], hz_[1] = hsubsetz_[1], hz_[2] = hsubsetz_[2];
 			// Copy inliers
-			COMPV_CHECK_CODE_RETURN(CompVArray<size_t>::newObjAligned(&bestInliers_, 1, inliersCount_));
-			CompVMem::copyNTA(const_cast<size_t*>(bestInliers_->ptr(0)), inliers_->ptr(0), (inliersCount_ * sizeof(size_t)));
+			COMPV_CHECK_CODE_RETURN(CompVArray<size_t>::newObjAligned(&inliers, 1, inliersCount_));
+			CompVMem::copyNTA(const_cast<size_t*>(inliers->ptr(0)), inliersubset_->ptr(0), (inliersCount_ * sizeof(size_t)));
 		}
 
 		if (inliersCount_) { // zero will produce NaN
 			// update outliers ratio
-			e_ = 1 - (inliersCount_ / (float)k_);
+			e_ = 1 - (inliersCount_ / static_cast<float>(k_));
 			// update total tries
-			n_ = (size_t)(logf(1 - p_) / logf(1 - powf(1 - e_, (float)s_)));
+			n_ = (static_cast<size_t>(logf(1 - p_) / logf(1 - powf(1 - e_, static_cast<float>(subset_)))) / threadsCount) + 1;
 		}
 
 		++t_;
 	}
 
-	if (bestInlinersCount_ < s_) { // not enought points ?
+	if (bestInlinersCount_ < subset_) { // not enought points ?
+		inliers = NULL; // If the user provided a valid array, reset it
 		COMPV_DEBUG_INFO_EX(kModuleNameHomography, "Not enought inliers(< 4). InlinersCount = %lu, k = %lu", bestInlinersCount_, k_);
-		return COMPV_ERROR_CODE_S_OK; // Return the best H
 	}
-
-	// Compute final H using inliers only
-	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&src_, 3, bestInlinersCount_));
-	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&dst_, 3, bestInlinersCount_));
-
-	srcx0_ = const_cast<T*>(src_->ptr(0));
-	srcy0_ = const_cast<T*>(src_->ptr(1));
-	srcz0_ = const_cast<T*>(src_->ptr(2));
-	dstx0_ = const_cast<T*>(dst_->ptr(0));
-	dsty0_ = const_cast<T*>(dst_->ptr(1));
-	dstz0_ = const_cast<T*>(dst_->ptr(2));
-
-	size_t idx;
-	const size_t* inliersIdx_ = inliers_->ptr();
-	for (size_t i = 0; i < bestInlinersCount_; ++i) {
-		idx = inliersIdx_[i];
-		srcx0_[i] = srcx1_[idx], srcy0_[i] = srcy1_[idx], srcz0_[i] = 1;
-		dstx0_[i] = dstx1_[idx], dsty0_[i] = dsty1_[idx], dstz0_[i] = 1;
-	}
-
-	COMPV_CHECK_CODE_RETURN(computeH<T>(src_, dst_, H, true));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -335,7 +393,6 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	COMPV_CHECK_CODE_RETURN(err_ = CompVMatrix<T>::mulABt(T2_, M_, H));
 
 	if (promoteZeros) {
-#define COMPV_PROMOTE_ZEROS(_h_, _i_) if (CompVEigen<T>::isCloseToZero((_h_)[(_i_)])) (_h_)[(_i_)] = 0;
 		COMPV_PROMOTE_ZEROS(hn0_, 0); COMPV_PROMOTE_ZEROS(hn0_, 1); COMPV_PROMOTE_ZEROS(hn0_, 2);
 		COMPV_PROMOTE_ZEROS(hn1_, 0); COMPV_PROMOTE_ZEROS(hn1_, 1); COMPV_PROMOTE_ZEROS(hn1_, 2);
 		COMPV_PROMOTE_ZEROS(hn2_, 0); COMPV_PROMOTE_ZEROS(hn2_, 1);
@@ -380,7 +437,7 @@ static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtr
 	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::mse2D_homogeneous(a_->ptr(0), a_->ptr(1), a_->ptr(2), src->ptr(0), src->ptr(1), a_, numPoints_));
 
 	// Sum the MSE values and build the inliers
-	const T* aPtr_ = a_->ptr(); // FIXME: remove
+	const T* aPtr_ = a_->ptr();
 	const T* bPtr_ = b_->ptr();
 	T sumd_ = 0; // sum deviations
 	T d_;

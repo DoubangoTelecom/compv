@@ -153,7 +153,6 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-    int patch_radius = (m_nPatchDiameter >> 1); // FIXME: remove
     CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
     CompVPtr<CompVBoxInterestPoint* >interestPointsAtLevelN;
     CompVPtr<CompVImage*> imageAtLevelN;

@@ -112,8 +112,7 @@ void Brief256_31_Fxpq16_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t im
     COMPV_ALIGN_SSE() uint8_t xmmB[16];
     __m128i xmmX[2], xmmY[2];
     uint16_t* outPtr = (uint16_t*)out;
-
-    xmmZero = _mm_setzero_si128(); //FIXME: remove
+	
     xmm128 = _mm_load_si128((__m128i*)k128_u8);
     xmmCosT = _mm_set1_epi16(*cos1);
     xmmSinT = _mm_set1_epi16(*sin1);

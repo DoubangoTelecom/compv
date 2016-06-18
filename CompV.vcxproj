@@ -42,7 +42,6 @@
     <ClInclude Include="include\compv\compv_obj.h" />
     <ClInclude Include="include\compv\compv_patch.h" />
     <ClInclude Include="include\compv\compv_ragel.h" />
-    <ClInclude Include="include\compv\compv_ransac.h" />
     <ClInclude Include="include\compv\compv_settable.h" />
     <ClInclude Include="include\compv\compv_simd_globals.h" />
     <ClInclude Include="include\compv\features\compv_feature.h" />
@@ -124,7 +123,6 @@
     <ClCompile Include="compv_mem.cxx" />
     <ClCompile Include="compv_obj.cxx" />
     <ClCompile Include="compv_patch.cxx" />
-    <ClCompile Include="compv_ransac.cxx" />
     <ClCompile Include="compv_settable.cxx" />
     <ClCompile Include="compv_simd_globals.cxx" />
     <ClCompile Include="features\compv_feature.cxx" />
