@@ -14,7 +14,6 @@ global sym(MatrixMulGA_float64_Asm_X86_SSE2)
 global sym(MatrixMulGA_float32_Asm_X86_SSE2)
 global sym(MatrixMulABt_float64_minpack1_Asm_X86_SSE2)
 global sym(MatrixMulABt_float64_3x3_Asm_X86_SSE41)
-global sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41)
 global sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2)
 
 section .data
@@ -355,7 +354,6 @@ sym(MatrixMulABt_float64_3x3_Asm_X86_SSE41):
 	ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; %1 -> 41 -> use SSE41, 2 -> use SSE2
 ; arg(0) -> COMPV_ALIGNED(SSE) compv_float64_t* S
 ; arg(1) -> compv_uscalar_t *row
 ; arg(2) -> compv_uscalar_t *col
@@ -364,24 +362,19 @@ sym(MatrixMulABt_float64_3x3_Asm_X86_SSE41):
 ; arg(5) -> compv_uscalar_t rowEnd
 ; arg(6) -> compv_uscalar_t strideInBytes
 ; void MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rowStart, compv_uscalar_t rowEnd, compv_uscalar_t strideInBytes)
-%macro MatrixMaxAbsOffDiagSymm_float64_Asm_X86 1
+sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
+	COMPV_YASM_SAVE_XMM 6
 	push rsi
 	push rdi
 	push rbx
 	;; end prolog ;;
 
-%if %1 != 41 && %1 != 2
-	%error "not supported"
-%endif
-
-%if %1 == 2 ; SSE2
 	; alloc memory
 	sub rsp, 8
 	; [rsp + 0] = j - 1
-%endif
 
 	; xmm4 = xmmAbsMask
 	movapd xmm4, [sym(kAVXFloat64MaskAbs)]
@@ -409,65 +402,109 @@ sym(MatrixMulABt_float64_3x3_Asm_X86_SSE41):
 	.LoopRows
 		xor rdi, rdi ; rdi = i = 0
 
-		lea rax, [rsi - 1]
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (; i < j - 3; i += 4)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		lea rax, [rsi - 3]
 		cmp rdi, rax
-		jge .EndOfLoopCols1
-%if %1 == 2 ; SSE2
+		jge .EndOfLoopCols0
 		mov [rsp + 0], rax
-%endif
+		.LoopCols0
+			movapd xmm0, [rdx + rdi * 8]
+			movapd xmm2, [rdx + rdi * 8 + 16]
+			movapd xmm1, xmm5
+			movapd xmm6, xmm5
+			andpd xmm0, xmm4
+			andpd xmm2, xmm4
+			cmppd xmm1, xmm0, 1 ; testing lT instead of GT
+			cmppd xmm6, xmm2, 1 ; testing lT instead of GT
+			
+			; First #2 doubles
+			movmskpd rax, xmm1
+			lea rdi, [rdi + 4] ; increment i
+			test rax, rax
+			jz .LoopCols0NotGreater1
+				comisd xmm0, xmm5
+				mov rcx, rsi ; update row
+				pshufd xmm1, xmm0, 0x4E ; swap first and second doube -> high first then low
+				jbe .LoopCols0NotGreater2
+					pshufd xmm5, xmm0, 0x44 ; duplicate low 8bytes
+					lea rbx, [rdi - 4] ; update col = i + 0
+				.LoopCols0NotGreater2
+				comisd xmm1, xmm5
+				jbe .LoopCols0NotGreater3
+					lea rbx, [rdi - 3] ; update col = i + 1
+					pshufd xmm5, xmm1, 0x44 ; duplicate low 8bytes
+				.LoopCols0NotGreater3
+			.LoopCols0NotGreater1
+
+			; Second #2 doubles
+			movmskpd rax, xmm6
+			test rax, rax
+			jz .LoopCols0NotGreater4
+				comisd xmm2, xmm5
+				mov rcx, rsi ; update row
+				pshufd xmm1, xmm2, 0x4E ; swap first and second doube -> high first then low
+				jbe .LoopCols0NotGreater5
+					pshufd xmm5, xmm2, 0x44 ; duplicate low 8bytes
+					lea rbx, [rdi - 2] ; update col = i + 2 + 0
+				.LoopCols0NotGreater5
+				comisd xmm1, xmm5
+				jbe .LoopCols0NotGreater6
+					lea rbx, [rdi - 1] ; update col = i + 2 + 1
+					pshufd xmm5, xmm1, 0x44 ; duplicate low 8bytes
+				.LoopCols0NotGreater6
+			.LoopCols0NotGreater4
+
+			cmp rdi, [rsp + 0] ; i <? j - 3
+			jl .LoopCols0
+		.EndOfLoopCols0
 		
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (; i < j - 1; i += 2)
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-		.LoopCols1
+		; if (i < (j - 1))
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		lea rax, [rsi - 1]
+		cmp rdi, rax
+		jge .EndOfMoreThanOneRemain
+		.MoreThanOneRemain
 			movapd xmm0, [rdx + rdi * 8]
 			movapd xmm1, xmm5
 			andpd xmm0, xmm4
 			cmppd xmm1, xmm0, 1 ; testing lT instead of GT
-%if %1 == 41 ; SSE41
-			ptest xmm1, xmm3
-			lea rdi, [rdi + 2] ; increment i
-%else ; SSE2
 			movmskpd rax, xmm1
 			lea rdi, [rdi + 2] ; increment i
 			test rax, rax
-%endif
-			jz .LoopCols1NotGreater1
+			jz .MoreThanOneRemainNotGreater1
 				comisd xmm0, xmm5
 				mov rcx, rsi ; update row
 				pshufd xmm1, xmm0, 0x4E ; swap first and second doube -> high first then low
-				jbe .LoopCols1NotGreater2
+				jbe .MoreThanOneRemainNotGreater2
 					pshufd xmm5, xmm0, 0x44 ; duplicate low 8bytes
 					lea rbx, [rdi - 2] ; update col = i + 0
-				.LoopCols1NotGreater2
+				.MoreThanOneRemainNotGreater2
 				comisd xmm1, xmm5
-				jbe .LoopCols1NotGreater3
+				jbe .MoreThanOneRemainNotGreater3
 					lea rbx, [rdi - 1] ; update col = i + 1
 					pshufd xmm5, xmm1, 0x44 ; duplicate low 8bytes
-				.LoopCols1NotGreater3
-			.LoopCols1NotGreater1
-%if %1 == 2 ; SSE2
-			cmp rdi, [rsp + 0] ; i <? j -1
-%else ; SSE41
-			cmp rdi, rax ; i <? j -1
-%endif
-			jl .LoopCols1
-		.EndOfLoopCols1
+				.MoreThanOneRemainNotGreater3
+			.MoreThanOneRemainNotGreater1
+		.EndOfMoreThanOneRemain
 		
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; if (j & 1)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		test rsi, 1
-		jz .PerfectlyAligned
+		jz .EndOfMoreThanZeroRemain
+		.MoreThanZeroRemain
 			movsd xmm0, [rdx + rdi * 8] ; 8 = sizeof(#1 double)
 			andpd xmm0, xmm4
 			comisd xmm0, xmm5
-			jbe .LoopCols2NotGreater1
+			jbe .MoreThanZeroRemainNotGreater1
 				pshufd xmm5, xmm0, 0x44 ; duplicate low 8bytes
 				mov rbx, rdi ; update col = i
 				mov rcx, rsi ; update row
-			.LoopCols2NotGreater1
-		.PerfectlyAligned			
+			.MoreThanZeroRemainNotGreater1
+		.EndOfMoreThanZeroRemain			
 		
 		inc rsi
 		add rdx, arg(6) ; S0_ += strideInBytes
@@ -482,28 +519,18 @@ sym(MatrixMulABt_float64_3x3_Asm_X86_SSE41):
 	mov [rsi], rcx
 	mov [rdi], rbx
 
-%if %1 == 2 ; SSE2
 	; free memory
 	add rsp, 8
-%endif
 
 	;; begin epilog ;;
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_RESTORE_XMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
 	ret
-%endmacro
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE41):
-	MatrixMaxAbsOffDiagSymm_float64_Asm_X86 41
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
-	MatrixMaxAbsOffDiagSymm_float64_Asm_X86 2
 
 
 
