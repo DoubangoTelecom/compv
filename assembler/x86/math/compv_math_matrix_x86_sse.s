@@ -373,8 +373,10 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
 	;; end prolog ;;
 
 	; alloc memory
-	sub rsp, 8
+	sub rsp, 8 + 8 + 8
 	; [rsp + 0] = j - 1
+	; [rsp + 8] = row
+	; [rsp + 16] = col
 
 	; xmm4 = xmmAbsMask
 	movapd xmm4, [sym(kAVXFloat64MaskAbs)]
@@ -384,6 +386,10 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
 
 	; xmm5 = xmmMax
 	xorpd xmm5, xmm5
+
+	xor rax, rax
+	mov [rsp + 8], rax ; row = 0
+	mov [rsp + 16], rax ; col = 0
 	
 	mov rcx, arg(6) ; strideInBytes
 	mov rax, arg(4) ; rowStart
@@ -391,9 +397,7 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
 	mov rdx, arg(0)
 	add rdx, rax ; rdx = S0_
 
-	xor rcx, rcx ; rcx = row
 	xor rbx, rbx ; rbx = col
-
 	mov rsi, arg(4) ; rsi = j = rowStart
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -405,10 +409,9 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (; i < j - 3; i += 4)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		lea rax, [rsi - 3]
-		cmp rdi, rax
+		lea rcx, [rsi - 3] ; rcx = (j - 3)
+		cmp rdi, rcx
 		jge .EndOfLoopCols0
-		mov [rsp + 0], rax
 		.LoopCols0
 			movapd xmm0, [rdx + rdi * 8]
 			movapd xmm2, [rdx + rdi * 8 + 16]
@@ -417,15 +420,16 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
 			andpd xmm0, xmm4
 			andpd xmm2, xmm4
 			cmppd xmm1, xmm0, 1 ; testing lT instead of GT
-			cmppd xmm6, xmm2, 1 ; testing lT instead of GT
+			cmppd xmm6, xmm2, 1 ; testing lT instead of GT		
 			
 			; First #2 doubles
 			movmskpd rax, xmm1
 			lea rdi, [rdi + 4] ; increment i
 			test rax, rax
+			movmskpd rax, xmm6 ; prepare mask for second #2 doubles
 			jz .LoopCols0NotGreater1
 				comisd xmm0, xmm5
-				mov rcx, rsi ; update row
+				mov [rsp + 8], rsi ; update row
 				pshufd xmm1, xmm0, 0x4E ; swap first and second doube -> high first then low
 				jbe .LoopCols0NotGreater2
 					pshufd xmm5, xmm0, 0x44 ; duplicate low 8bytes
@@ -439,11 +443,10 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
 			.LoopCols0NotGreater1
 
 			; Second #2 doubles
-			movmskpd rax, xmm6
 			test rax, rax
 			jz .LoopCols0NotGreater4
 				comisd xmm2, xmm5
-				mov rcx, rsi ; update row
+				mov [rsp + 8], rsi ; update row
 				pshufd xmm1, xmm2, 0x4E ; swap first and second doube -> high first then low
 				jbe .LoopCols0NotGreater5
 					pshufd xmm5, xmm2, 0x44 ; duplicate low 8bytes
@@ -456,7 +459,7 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
 				.LoopCols0NotGreater6
 			.LoopCols0NotGreater4
 
-			cmp rdi, [rsp + 0] ; i <? j - 3
+			cmp rdi, rcx ; i <? j - 3
 			jl .LoopCols0
 		.EndOfLoopCols0
 		
@@ -476,7 +479,7 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
 			test rax, rax
 			jz .MoreThanOneRemainNotGreater1
 				comisd xmm0, xmm5
-				mov rcx, rsi ; update row
+				mov [rsp + 8], rsi ; update row
 				pshufd xmm1, xmm0, 0x4E ; swap first and second doube -> high first then low
 				jbe .MoreThanOneRemainNotGreater2
 					pshufd xmm5, xmm0, 0x44 ; duplicate low 8bytes
@@ -502,7 +505,7 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
 			jbe .MoreThanZeroRemainNotGreater1
 				pshufd xmm5, xmm0, 0x44 ; duplicate low 8bytes
 				mov rbx, rdi ; update col = i
-				mov rcx, rsi ; update row
+				mov [rsp + 8], rsi ; update row
 			.MoreThanZeroRemainNotGreater1
 		.EndOfMoreThanZeroRemain			
 		
@@ -512,15 +515,16 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
 		jl .LoopRows
 	.EndOfLoopRows
 
-	mov rax, arg(3) ; max
-	mov rsi, arg(1) ; row
-	mov rdi, arg(2) ; col
+	mov rcx, [rsp + 8] ; row
+	mov rax, arg(3) ; &max
+	mov rsi, arg(1) ; &row
+	mov rdi, arg(2) ; &col
 	movsd [rax], xmm5
 	mov [rsi], rcx
 	mov [rdi], rbx
 
 	; free memory
-	add rsp, 8
+	add rsp, 8 + 8 + 8
 
 	;; begin epilog ;;
 	pop rbx
