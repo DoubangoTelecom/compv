@@ -468,8 +468,8 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		lea rax, [rsi - 1]
 		cmp rdi, rax
-		jge .EndOfMoreThanOneRemain
-		.MoreThanOneRemain
+		jge .EndOfMoreThanTwoRemain
+		.MoreThanTwoRemain
 			movapd xmm0, [rdx + rdi * 8]
 			movapd xmm1, xmm5
 			andpd xmm0, xmm4
@@ -477,37 +477,37 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
 			movmskpd rax, xmm1
 			lea rdi, [rdi + 2] ; increment i
 			test rax, rax
-			jz .MoreThanOneRemainNotGreater1
+			jz .MoreThanTwoRemainNotGreater1
 				comisd xmm0, xmm5
 				mov [rsp + 8], rsi ; update row
 				pshufd xmm1, xmm0, 0x4E ; swap first and second doube -> high first then low
-				jbe .MoreThanOneRemainNotGreater2
+				jbe .MoreThanTwoRemainNotGreater2
 					pshufd xmm5, xmm0, 0x44 ; duplicate low 8bytes
 					lea rbx, [rdi - 2] ; update col = i + 0
-				.MoreThanOneRemainNotGreater2
+				.MoreThanTwoRemainNotGreater2
 				comisd xmm1, xmm5
-				jbe .MoreThanOneRemainNotGreater3
+				jbe .MoreThanTwoRemainNotGreater3
 					lea rbx, [rdi - 1] ; update col = i + 1
 					pshufd xmm5, xmm1, 0x44 ; duplicate low 8bytes
-				.MoreThanOneRemainNotGreater3
-			.MoreThanOneRemainNotGreater1
-		.EndOfMoreThanOneRemain
+				.MoreThanTwoRemainNotGreater3
+			.MoreThanTwoRemainNotGreater1
+		.EndOfMoreThanTwoRemain
 		
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; if (j & 1)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		test rsi, 1
-		jz .EndOfMoreThanZeroRemain
-		.MoreThanZeroRemain
+		jz .EndOfMoreThanOneRemain
+		.MoreThanOneRemain
 			movsd xmm0, [rdx + rdi * 8] ; 8 = sizeof(#1 double)
 			andpd xmm0, xmm4
 			comisd xmm0, xmm5
-			jbe .MoreThanZeroRemainNotGreater1
+			jbe .MoreThanOneRemainNotGreater1
 				pshufd xmm5, xmm0, 0x44 ; duplicate low 8bytes
 				mov rbx, rdi ; update col = i
 				mov [rsp + 8], rsi ; update row
-			.MoreThanZeroRemainNotGreater1
-		.EndOfMoreThanZeroRemain			
+			.MoreThanOneRemainNotGreater1
+		.EndOfMoreThanOneRemain			
 		
 		inc rsi
 		add rdx, arg(6) ; S0_ += strideInBytes
