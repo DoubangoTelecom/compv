@@ -521,11 +521,11 @@ COMPV_ERROR_CODE CompVMatrix<T>::identity(CompVPtrArray(T) &I, size_t rows, size
 	COMPV_CHECK_CODE_RETURN(I->zero_rows());
 	uint8_t* i0_ = (uint8_t*)I->ptr();
 	size_t stride_ = I->strideInBytes() + I->elmtInBytes();
-	for (size_t row_ = 0; row_ < rows; ++row_) {
+	size_t maxRows_ = COMPV_MATH_MIN(rows, cols);
+	for (size_t row_ = 0; row_ < maxRows_; ++row_) {
 		*((T*)i0_) = 1;
 		i0_ += stride_;
 	}
-
 	return COMPV_ERROR_CODE_S_OK;
 }
 
