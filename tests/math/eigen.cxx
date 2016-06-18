@@ -25,10 +25,12 @@ using namespace compv;
 #		define MD5_Q9		"473597e9b6f33c6308893f68e715a674" // 0 + 9 points
 #	else
 	// Not uptodate
-#		define MD5_D	"e643f74657501e838bacaeba7287ed0f" // 200 + 9 points
-#		define MD5_Q	"5c23dd9118db5e3e72465d4791984fae" // 200 + 9 points
-#		define MD5_D9	"904d259aac76f1fa495f4fbcdc072a07" // 0 + 9 points
-#		define MD5_Q9	"b974abccdb70eb65f80d16c66d675919" // 0 + 9 points
+#		define MD5_D		"e643f74657501e838bacaeba7287ed0f" // 200 + 9 points
+#		define MD5_Q		"5c23dd9118db5e3e72465d4791984fae" // 200 + 9 points
+#		define MD5_D9		"904d259aac76f1fa495f4fbcdc072a07" // 0 + 9 points
+#		define MD5_Q9		"b974abccdb70eb65f80d16c66d675919" // 0 + 9 points
+#		define MD5_D_SSE2	"ca7a8225888632b0ebf18d60f252e7d9" // 200 + 9 points
+#		define MD5_Q_SSE2	"c50f1218b20be9b1cd349f169d1c0597" // 200 + 9 points
 #	endif // ARCH
 #else
 #	if COMPV_ARCH_X64

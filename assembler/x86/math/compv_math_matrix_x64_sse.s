@@ -166,11 +166,10 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE2):
 	; for (j = rowStart; j < rowEnd; ++j)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopRows
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < j - 3; i += 4)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor rdi, rdi ; rdi = i = 0
-
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (; i < j - 3; i += 4)
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		cmp rdi, r8
 		jge .EndOfLoopCols0
 		.LoopCols0
