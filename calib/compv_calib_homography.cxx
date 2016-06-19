@@ -11,6 +11,8 @@
 #include "compv/compv_engine.h"
 
 #include <vector>
+#include <algorithm>
+#include <numeric> /* std::iota */
 
 #if !defined (COMPV_PRNG11)
 #	define COMPV_PRNG11 1
@@ -174,8 +176,7 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 	float e_ = 0.70f; // outliers ratio (70% is a worst case, will be updated) = 1 - (inliersCount/total)
 	size_t n_; // maximum number of tries
 	size_t t_; // number of tries
-
-	uint32_t idx0, idx1, idx2, idx3;
+	
 	size_t inliersCount_, bestInlinersCount_ = 0;
 	T variance_; // Using variance instead of standard deviation because it's the same result as we are doing comparison
 	bool colinear;
@@ -190,9 +191,10 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 	// We're not using a random device number (std::random_device) in order to generate the same suite of numbers for each thread everytime
 	std::mt19937 prng_(CompVThread::getIdCurrent());
 #	endif
-	std::uniform_int_distribution<> unifd_{ 0, static_cast<int>(k_ - 1) };
+	// TODO(dmi): use uniform distribution
+	// std::uniform_int_distribution<> unifd_{ 0, static_cast<int>(k_ - 1) };
 #else
-	uint32_t rand4[4];
+	srand(CompVThread::getIdCurrent());
 #endif
 
 	n_ = ((static_cast<size_t>(logf(1 - p_) / logf(1 - powf(1 - e_, static_cast<float>(subset_))))) / threadsCount) + 1;
@@ -215,23 +217,18 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 	srcsubsetz_[0] = srcsubsetz_[1] = srcsubsetz_[2] = srcsubsetz_[3] = 1;
 	dstsubsetz_[0] = dstsubsetz_[1] = dstsubsetz_[2] = dstsubsetz_[3] = 1;
 
+	size_t idx0, idx1, idx2, idx3;
+	std::vector<size_t> randomIdx_(k_);
+	std::iota(randomIdx_.begin(), randomIdx_.end(), 0);
+
 	while (t_ < n_ && bestInlinersCount_ < d_) {
-		do {
+		// Generate the random points
 #if COMPV_PRNG11
-			idx0 = static_cast<uint32_t>(unifd_(prng_));
-			idx1 = static_cast<uint32_t>(unifd_(prng_));
-			idx2 = static_cast<uint32_t>(unifd_(prng_));
-			idx3 = static_cast<uint32_t>(unifd_(prng_));
+		std::shuffle(randomIdx_.begin(), randomIdx_.end(), prng_);
 #else
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-			COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-			CompVMathUtils::rand(rand4, 4);
-			idx0 = rand4[0] % k_;
-			idx1 = rand4[1] % k_;
-			idx2 = rand4[2] % k_;
-			idx3 = rand4[3] % k_;
+		std::random_shuffle(randomIdx_.begin(), randomIdx_.end());
 #endif
-		} while (idx0 == idx1 || idx0 == idx2 || idx0 == idx3 || idx1 == idx2 || idx1 == idx3 || idx2 == idx3);
+		idx0 = randomIdx_[0], idx1 = randomIdx_[1], idx2 = randomIdx_[2], idx3 = randomIdx_[3];
 
 		// Set the #4 random points (src)
 		srcsubsetx_[0] = srcx_[idx0],	srcsubsetx_[1] = srcx_[idx1],	srcsubsetx_[2] = srcx_[idx2],	srcsubsetx_[3] = srcx_[idx3];
