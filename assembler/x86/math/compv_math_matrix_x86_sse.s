@@ -162,8 +162,20 @@ sym(MatrixMulABt_float64_minpack1_Asm_X86_SSE2):
 	push rbx
 	;; end prolog ;;
 
+	; alloc memory
+	sub rsp, 8 + 8
+	; [rsp + 0] -> bCols - 3
+	; [rsp + 8] -> bCols - 1
+
 	mov rsi, arg(2) ; rsi = aRows
 	mov rdx, arg(0) ; rdx = a
+
+	mov rax, arg(4)
+	lea rax, [rax - 3]
+	mov [rsp + 0], rax ; [rsp + 0] = (bCols - 3)
+	lea rax, [rax + 2]
+	mov [rsp + 8], rax ; [rsp + 8] = ((bCols - 3) + 2) = (bCols - 1)
+	lea rax, [rax - 6] ; rax = ((bCols - 1) - 6) = (bCols - 7)
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (i = 0; i < aRows; ++i) 
@@ -176,36 +188,76 @@ sym(MatrixMulABt_float64_minpack1_Asm_X86_SSE2):
 		; for (j = 0; j < bRows; ++j)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopBRows
-			mov rax, arg(4); bCols
 			pxor xmm0, xmm0 ; xmm0 = xmmSum
 			xor rcx, rcx ; rcx = k = 0
-			dec rax ; rax = bCols - 1
 
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			; for (k = 0; k < bCols - 1; k += 2)
+			; for (k = 0; k < bCols - 7; k += 8)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			.LoopBCols
+			cmp rcx, rax
+			jge .EndOfLoop8BCols
+			.Loop8BCols
+				movapd xmm1, [rdx + rcx*8]
+				movapd xmm2, [rdx + rcx*8 + 16]
+				movapd xmm3, [rdx + rcx*8 + 16 + 16]
+				movapd xmm4, [rdx + rcx*8 + 16 + 16 + 16]
+				mulpd xmm1, [rbx + rcx*8]
+				mulpd xmm2, [rbx + rcx*8 + 16]
+				mulpd xmm3, [rbx + rcx*8 + 16 + 16]
+				mulpd xmm4, [rbx + rcx*8 + 16 + 16 + 16]
+				lea rcx, [rcx + 8] ; k += 8
+				addpd xmm1, xmm2
+				addpd xmm3, xmm4
+				addpd xmm0, xmm1
+				addpd xmm0, xmm3
+				cmp rcx, rax ; k <? (Cols - 7)
+				jl .Loop8BCols
+			.EndOfLoop8BCols
+
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			; if (k < bCols - 3)
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			cmp rcx, [rsp + 0]
+			jge .EndOfMoreThanFourRemain
+			.MoreThanFourRemain
+				movapd xmm1, [rdx + rcx*8]
+				movapd xmm2, [rdx + rcx*8 + 16]
+				mulpd xmm1, [rbx + rcx*8]
+				mulpd xmm2, [rbx + rcx*8 + 16]
+				lea rcx, [rcx + 4] ; k += 4
+				addpd xmm0, xmm1
+				addpd xmm0, xmm2
+			.EndOfMoreThanFourRemain
+
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			; if (k < bCols - 1)
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			cmp rcx, [rsp + 8]
+			jge .EndOfMoreThanTwoRemains
+			.MoreThanTwoRemains
 				movapd xmm1, [rdx + rcx*8]
 				mulpd xmm1, [rbx + rcx*8]
 				lea rcx, [rcx + 2] ; k += 2
-				addpd xmm0, xmm1	
-				cmp rcx, rax ; k <? (Cols - 1)
-				jl .LoopBCols
-			.EndOfLoopBCols
-			
-			cmp rcx, arg(4) ; IsOdd(bCols)?
-			jge .BColsNotOdd
+				addpd xmm0, xmm1
+			.EndOfMoreThanTwoRemains
+
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			; if (k < bCols)
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			cmp rcx, arg(4)
+			jge .EndOfMoreThanOneRemains
+			.MoreThanOneRemains
 				movsd xmm1, [rdx + rcx*8]
 				movsd xmm2, [rbx + rcx*8]
 				mulpd xmm1, xmm2
 				addpd xmm0, xmm1
-			.BColsNotOdd
+			.EndOfMoreThanOneRemains
 			
 			movapd xmm1, xmm0
 			shufpd xmm1, xmm0, 0x1
-			mov rax, arg(7) ; R
+			mov rcx, arg(7) ; R
 			addpd xmm0, xmm1
-			movsd [rax + rdi*8], xmm0
+			movsd [rcx + rdi*8], xmm0
 
 			inc rdi ; ++j
 			add rbx, arg(6) ; b += bStrideInBytes
@@ -216,13 +268,15 @@ sym(MatrixMulABt_float64_minpack1_Asm_X86_SSE2):
 		dec rsi ; --i
 		mov rcx, arg(8) ; rStrideInBytes
 		mov rdi, arg(5) ; aStrideInBytes
-		lea rax, [rax + rcx] ; r += rStrideInBytes
+		add arg(7), rcx ; r += rStrideInBytes
 		lea rdx, [rdx + rdi] ; a += aStrideInBytes
-		mov arg(7), rax
 		
 		test rsi, rsi
 		jnz .LoopARows
 	.EndOfLoopARows
+
+	; free memory
+	add rsp, 8 + 8
 
 	;; begin epilog ;;
 	pop rbx

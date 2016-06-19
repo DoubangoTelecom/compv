@@ -140,7 +140,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulABt(const CompVPtrArray(T) &A, const CompVPt
 			b0Ptr = bPtr;
 			for (j = 0; j < bRows; ++j) {
 				sum = 0;
-				for (k = 0; k < bCols; ++k) {
+				for (k = 0; k < bCols; ++k) { // asm: unroll loop
 					sum += aPtr[k] * b0Ptr[k]; // DotProduct
 				}
 				rPtr[j] = sum;

@@ -7,7 +7,7 @@
 #define enableAsm			true
 #define testingMode			true
 #define mathTrigFast		true
-#define cpuDisable			kCpuFlagNone
+#define cpuDisable			kCpuFlagAVX
 
 using namespace compv;
 

@@ -189,7 +189,7 @@ void MatrixMulABt_float64_minpack1_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_fl
 		b = B;
 		for (j = 0; j < bRows; ++j) {
 			xmmSum = _mm_setzero_pd();
-			for (k = 0; k < bCols - 1; k += 2) {
+			for (k = 0; k < bCols - 1; k += 2) { // asm: unroll loop
 				xmmSum = _mm_add_pd(_mm_mul_pd(_mm_load_pd(&a[k]), _mm_load_pd(&b[k])), xmmSum);
 			}
 			if (bCols & 1) {
