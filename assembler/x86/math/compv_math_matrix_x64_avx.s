@@ -13,16 +13,18 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(MatrixMulABt_float64_minpack1_Asm_X64_AVX)
-global sym(MatrixMulABt_float64_minpack1_Asm_X64_FMA3_AVX)
 
 section .data
 	extern sym(kAVXMaskstore_0_u64)
+	extern sym(kAVXMaskstore_0_1_u64)
 
 section .text
 
 
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; %1 -> 0: FMA3 not supported, 1: FMA3 supported
+; TODO(dmi): FMA good candidate but testing shows not faster
 ; arg(0) - > const COMPV_ALIGNED(AVX) compv_float64_t* A
 ; arg(1) - > const COMPV_ALIGNED(AVX) compv_float64_t* B
 ; arg(2) - > compv_uscalar_t aRows
@@ -33,7 +35,7 @@ section .text
 ; arg(7) - > COMPV_ALIGNED(AVX) compv_float64_t* R
 ; arg(8) - > compv_uscalar_t rStrideInBytes
 ; void MatrixMulABt_float64_minpack1_Macro_X64_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
-%macro MatrixMulABt_float64_minpack1_Macro_X64_AVX 1
+sym(MatrixMulABt_float64_minpack1_Asm_X64_AVX):
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -43,20 +45,25 @@ section .text
 	push rbx
 	push r12
 	push r13
+	push r14
+	push r15
 	;; end prolog ;;
 
 	mov rax, arg(7) ; rax = R
 	mov rsi, arg(2) ; rsi = aRows
 	mov rdx, arg(0) ; rdx = a
-	mov r8, arg(8) ; r8 = rStrideInBytes
-	mov r9, arg(5) ; r9 = aStrideInBytes
-	mov r10, arg(4)
-	sub r10, 3 ; r10 = bCols - 3
-	mov r11, arg(6) ; r11 = bStrideInBytes
-	mov r12, arg(3) ; r12 = bRows
-	mov r13, arg(4) ; r13 = bCols
+	
+	mov r8, arg(4) ; r8 = bCols
+	lea r9, [r8 - 7] ; r9 = (bCols - 7)
+	lea r10, [r8 - 3] ; r10 = (bCols - 3)
+	lea r11, [r8 - 1] ; r11 = (bCols - 1)
+	mov r12, arg(8) ; r12 = rStrideInBytes
+	mov r13, arg(5) ; r13 = aStrideInBytes
+	mov r14, arg(6) ; r14 = bStrideInBytes
+	mov r15, arg(3) ; r15 = bRows
 
 	vmovapd ymm3, [sym(kAVXMaskstore_0_u64)] ; ymm3 = ymmMaskToExtractFirst64Bits
+	vmovapd ymm4, [sym(kAVXMaskstore_0_1_u64)] ; ymm4 = ymmMaskToExtractFirst128Bits
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (i = 0; i < aRows; ++i) 
@@ -72,61 +79,82 @@ section .text
 			vpxor ymm0, ymm0 ; ymm0 = ymmSum
 			xor rcx, rcx ; rcx = k = 0
 
-			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			; for (k = 0; k < bCols - 3; k += 4)
-			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			.LoopBCols
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			; for (k = 0; k < bColsSigned - 7; k += 8)
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			cmp rcx, r9
+			jge .EndOfLoop8Cols
+			.Loop8Cols
 				vmovapd ymm1, [rdx + rcx*8]
-				%if %1 == 1 ; FMA3
-					lea rcx, [rcx + 4] ; k += 4
-					vfmadd231pd ymm0, ymm1, [rbx + rcx*8 - 32]
-				%else
-					vmulpd ymm1, ymm1, [rbx + rcx*8]
-					lea rcx, [rcx + 4] ; k += 4
-					vaddpd ymm0, ymm0, ymm1
-				%endif
-				cmp rcx, r10 ; k <? (Cols - 3)
-				jl .LoopBCols
-			.EndOfLoopBCols
+				vmovapd ymm2, [rdx + rcx*8 + 32]
+				vmulpd ymm1, ymm1, [rbx + rcx*8]
+				vmulpd ymm2, ymm2, [rbx + rcx*8 + 32]
+				lea rcx, [rcx + 8] ; k += 8
+				vaddpd ymm0, ymm0, ymm1
+				vaddpd ymm0, ymm0, ymm2
+				cmp rcx, r9
+				jl .Loop8Cols
+			.EndOfLoop8Cols
+
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			; if (k < bColsSigned - 3)
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			cmp rcx, r10
+			jge .EndOfMoreThanFourRemains
+			.MoreThanFourRemains
+				vmovapd ymm1, [rdx + rcx*8]
+				vmulpd ymm1, ymm1, [rbx + rcx*8]
+				lea rcx, [rcx + 4] ; k += 4
+				vaddpd ymm0, ymm0, ymm1
+			.EndOfMoreThanFourRemains
+
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			; if (k < bColsSigned - 1)
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			cmp rcx, r11
+			jge .EndOfMoreThanTwoRemains
+			.MoreThanTwoRemains
+				vmaskmovpd ymm1, ymm4, [rdx + rcx*8]
+				vmaskmovpd ymm2, ymm4, [rbx + rcx*8]
+				lea rcx, [rcx + 2]  ; k += 2
+				vmulpd ymm1, ymm1, ymm2
+				vaddpd ymm0, ymm0, ymm1
+			.EndOfMoreThanTwoRemains
+
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			; if (k < bColsSigned)
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			cmp rcx, r8
+			jge .EndOfMoreThanOneRemains
+			.MoreThanOneRemains
+				vmaskmovpd ymm1, ymm3, [rdx + rcx*8]
+				vmaskmovpd ymm2, ymm3, [rbx + rcx*8]
+				vmulpd ymm1, ymm1, ymm2
+				vaddpd ymm0, ymm0, ymm1
+			.EndOfMoreThanOneRemains		
 			
-			cmp rcx, r13 ; k <? bCols
-			jge .BColsIsPerfectlyAVXAligned
-				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-				; for (; k < bCols; k += 1)
-				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-				.LoopBColsRemaining
-					vmaskmovpd ymm1, ymm3, [rdx + rcx*8]
-					vmaskmovpd ymm2, ymm3, [rbx + rcx*8]
-					inc rcx
-					%if %1 == 1 ; FMA3
-						vfmadd231pd ymm0, ymm1, ymm2
-					%else
-						vmulpd ymm1, ymm1, ymm2
-						vaddpd ymm0, ymm0, ymm1
-					%endif
-					cmp rcx, r13 ; k <? bCols
-					jl .LoopBColsRemaining
-				.EndOfLoopBColsRemaining
-			.BColsIsPerfectlyAVXAligned			
-			
-			inc rdi ; ++j
 			vhaddpd ymm0, ymm0, ymm0
 			vperm2f128 ymm1, ymm0, ymm0, 0x11
-			lea rbx, [rbx + r11] ; b += bStrideInBytes
 			vaddpd ymm0, ymm0, ymm1
-			cmp rdi, r12 ; j <? bRows
-			vmaskmovpd [rax + rdi*8 - 8], ymm3, ymm0		
+			vmaskmovpd [rax + rdi*8], ymm3, ymm0
+
+			inc rdi ; ++j
+			lea rbx, [rbx + r14] ; b += bStrideInBytes
+			cmp rdi, r15 ; j <? bRows
 			jl .LoopBRows
 		.EndOfLoopBRows
 
 		dec rsi ; --i
-		lea rax, [rax + r8] ; r += rStrideInBytes
-		lea rdx, [rdx + r9] ; a += aStrideInBytes
-		test rsi, rsi	
+		lea rax, [rax + r12] ; r += rStrideInBytes
+		lea rdx, [rdx + r13] ; a += aStrideInBytes
+		
+		test rsi, rsi
 		jnz .LoopARows
 	.EndOfLoopARows
 
 	;; begin epilog ;;
+	pop r15
+	pop r14
 	pop r13
 	pop r12
 	pop rbx
@@ -137,15 +165,8 @@ section .text
 	pop rbp
 	vzeroupper
 	ret
-%endmacro
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(MatrixMulABt_float64_minpack1_Asm_X64_AVX):
-	MatrixMulABt_float64_minpack1_Macro_X64_AVX 0
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(MatrixMulABt_float64_minpack1_Asm_X64_FMA3_AVX):
-	MatrixMulABt_float64_minpack1_Macro_X64_AVX 1
 
 
 

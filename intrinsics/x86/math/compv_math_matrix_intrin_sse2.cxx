@@ -177,11 +177,12 @@ void MatrixMulABt_float64_minpack1_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_fl
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM, SSE41 (DotProduct)
 
-	compv_uscalar_t i, j, k;
+	compv_uscalar_t i, j;
 
 	const compv_float64_t* a = A;
 	const compv_float64_t* b;
 	compv_float64_t* r = R;
+	compv_scalar_t k, bColsSigned = static_cast<compv_scalar_t>(bCols);
 
 	__m128d xmmSum;
 
@@ -189,10 +190,24 @@ void MatrixMulABt_float64_minpack1_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_fl
 		b = B;
 		for (j = 0; j < bRows; ++j) {
 			xmmSum = _mm_setzero_pd();
-			for (k = 0; k < bCols - 1; k += 2) { // asm: unroll loop
-				xmmSum = _mm_add_pd(_mm_mul_pd(_mm_load_pd(&a[k]), _mm_load_pd(&b[k])), xmmSum);
+			for (k = 0; k < bColsSigned - 7; k += 8) {
+				xmmSum = _mm_add_pd(_mm_add_pd(
+					_mm_mul_pd(_mm_load_pd(&a[k]), _mm_load_pd(&b[k])),
+					_mm_mul_pd(_mm_load_pd(&a[k + 2]), _mm_load_pd(&b[k + 2]))), xmmSum);
+				xmmSum = _mm_add_pd(_mm_add_pd(
+					_mm_mul_pd(_mm_load_pd(&a[k + 4]), _mm_load_pd(&b[k + 4])),
+					_mm_mul_pd(_mm_load_pd(&a[k + 6]), _mm_load_pd(&b[k + 6]))), xmmSum);
 			}
-			if (bCols & 1) {
+			if (k < bColsSigned - 3) {
+				xmmSum = _mm_add_pd(_mm_mul_pd(_mm_load_pd(&a[k]), _mm_load_pd(&b[k])), xmmSum);
+				xmmSum = _mm_add_pd(_mm_mul_pd(_mm_load_pd(&a[k + 2]), _mm_load_pd(&b[k + 2])), xmmSum);
+				k += 4;
+			}
+			if (k < bColsSigned - 1) {
+				xmmSum = _mm_add_pd(_mm_mul_pd(_mm_load_pd(&a[k]), _mm_load_pd(&b[k])), xmmSum);
+				k += 2;
+			}
+			if (k < bColsSigned) {
 				xmmSum = _mm_add_pd(_mm_mul_pd(_mm_load_sd(&a[k]), _mm_load_sd(&b[k])), xmmSum);
 			}
 			xmmSum = _mm_add_pd(xmmSum, _mm_shuffle_pd(xmmSum, xmmSum, 0x1));

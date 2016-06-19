@@ -123,6 +123,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulABt(const CompVPtrArray(T) &A, const CompVPt
 #endif
 			}
 		}
+		
 		if (MatrixMulABt_float64) {
 			MatrixMulABt_float64((const compv_float64_t*)aPtr, (const compv_float64_t*)bPtr, (compv_uscalar_t)aRows, (compv_uscalar_t)bRows, (compv_uscalar_t)bCols, (compv_uscalar_t)aStrideInBytes, (compv_uscalar_t)bStrideInBytes, (compv_float64_t*)rPtr, (compv_uscalar_t)rStrideInBytes);
 			if (minpack == 1) { // SIMD can handle all data

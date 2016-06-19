@@ -63,7 +63,7 @@ sym(MatrixMulGA_float64_Asm_X86_SSE2):
 		mulpd xmm5, xmm3
 		mulpd xmm3, xmm1
 
-		add rcx, 16
+		lea rcx, [rcx + 16]
 
 		subpd xmm5, xmm4
 		addpd xmm2, xmm3
