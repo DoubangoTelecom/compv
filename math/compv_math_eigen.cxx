@@ -19,7 +19,7 @@ Functions to compute Eigenvalues and Eigenvectors
 #endif /* COMPV_MATH_EIGEN_EPSILON */
 
 #if !defined(COMPV_MATH_EIGEN_MAX_ROUNDS)
-#	define COMPV_MATH_EIGEN_MAX_ROUNDS 30
+#	define COMPV_MATH_EIGEN_MAX_ROUNDS 30 // should be 30
 #endif
 
 COMPV_NAMESPACE_BEGIN()

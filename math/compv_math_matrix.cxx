@@ -23,7 +23,6 @@ COMPV_EXTERNC void MatrixMulGA_float64_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv::com
 COMPV_EXTERNC void MatrixMulGA_float32_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv::compv_float32_t* ri, COMPV_ALIGNED(AVX) compv::compv_float32_t* rj, const compv::compv_float32_t* c1, const compv::compv_float32_t* s1, compv::compv_uscalar_t count);
 COMPV_EXTERNC void MatrixMulABt_float64_minpack1_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* A, const COMPV_ALIGNED(SSE) compv::compv_float64_t* B, compv::compv_uscalar_t aRows, compv::compv_uscalar_t bRows, compv::compv_uscalar_t bCols, compv::compv_uscalar_t aStrideInBytes, compv::compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv::compv_float64_t* R, compv::compv_uscalar_t rStrideInBytes);
 COMPV_EXTERNC void MatrixMulABt_float64_minpack1_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv::compv_float64_t* A, const COMPV_ALIGNED(AVX) compv::compv_float64_t* B, compv::compv_uscalar_t aRows, compv::compv_uscalar_t bRows, compv::compv_uscalar_t bCols, compv::compv_uscalar_t aStrideInBytes, compv::compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv::compv_float64_t* R, compv::compv_uscalar_t rStrideInBytes);
-COMPV_EXTERNC void MatrixMulABt_float64_minpack1_Asm_X86_FMA3_AVX(const COMPV_ALIGNED(AVX) compv::compv_float64_t* A, const COMPV_ALIGNED(AVX) compv::compv_float64_t* B, compv::compv_uscalar_t aRows, compv::compv_uscalar_t bRows, compv::compv_uscalar_t bCols, compv::compv_uscalar_t aStrideInBytes, compv::compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv::compv_float64_t* R, compv::compv_uscalar_t rStrideInBytes);
 COMPV_EXTERNC void MatrixMulABt_float64_3x3_Asm_X86_SSE41(const COMPV_ALIGNED(AVX) compv::compv_float64_t* A, const COMPV_ALIGNED(AVX) compv::compv_float64_t* B, compv::compv_uscalar_t aRows, compv::compv_uscalar_t bRows, compv::compv_uscalar_t bCols, compv::compv_uscalar_t aStrideInBytes, compv::compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv::compv_float64_t* R, compv::compv_uscalar_t rStrideInBytes);
 COMPV_EXTERNC void MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* S, compv::compv_uscalar_t *row, compv::compv_uscalar_t *col, compv::compv_float64_t* max, compv::compv_uscalar_t rowStart, compv::compv_uscalar_t rowEnd, compv::compv_uscalar_t strideInBytes);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
@@ -31,7 +30,6 @@ COMPV_EXTERNC void MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2(const COMPV_ALIG
 #if COMPV_ARCH_X64 && COMPV_ASM
 COMPV_EXTERNC void MatrixMulABt_float64_minpack1_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* A, const COMPV_ALIGNED(SSE) compv::compv_float64_t* B, compv::compv_uscalar_t aRows, compv::compv_uscalar_t bRows, compv::compv_uscalar_t bCols, compv::compv_uscalar_t aStrideInBytes, compv::compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv::compv_float64_t* R, compv::compv_uscalar_t rStrideInBytes);
 COMPV_EXTERNC void MatrixMulABt_float64_minpack1_Asm_X64_AVX(const COMPV_ALIGNED(AVX) compv::compv_float64_t* A, const COMPV_ALIGNED(AVX) compv::compv_float64_t* B, compv::compv_uscalar_t aRows, compv::compv_uscalar_t bRows, compv::compv_uscalar_t bCols, compv::compv_uscalar_t aStrideInBytes, compv::compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv::compv_float64_t* R, compv::compv_uscalar_t rStrideInBytes);
-COMPV_EXTERNC void MatrixMulABt_float64_minpack1_Asm_X64_FMA3_AVX(const COMPV_ALIGNED(AVX) compv::compv_float64_t* A, const COMPV_ALIGNED(AVX) compv::compv_float64_t* B, compv::compv_uscalar_t aRows, compv::compv_uscalar_t bRows, compv::compv_uscalar_t bCols, compv::compv_uscalar_t aStrideInBytes, compv::compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv::compv_float64_t* R, compv::compv_uscalar_t rStrideInBytes);
 COMPV_EXTERNC void MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* S, compv::compv_uscalar_t *row, compv::compv_uscalar_t *col, compv::compv_float64_t* max, compv::compv_uscalar_t rowStart, compv::compv_uscalar_t rowEnd, compv::compv_uscalar_t strideInBytes);
 #endif /* COMPV_ARCH_X64 && COMPV_ASM */
 
@@ -118,6 +116,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulABt(const CompVPtrArray(T) &A, const CompVPt
 #if 0 // FMA3 not faster (even slower)
 				if (CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
 					COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // FMA3 not faster
+					COMPV_EXEC_IFDEF_INTRIN_X86((MatrixMulABt_float64 = MatrixMulABt_float64_minpack1_Intrin_FMA3_AVX, minpack = 1));
 					COMPV_EXEC_IFDEF_ASM_X86((MatrixMulABt_float64 = MatrixMulABt_float64_minpack1_Asm_X86_FMA3_AVX, minpack = 1));
 					COMPV_EXEC_IFDEF_ASM_X64((MatrixMulABt_float64 = MatrixMulABt_float64_minpack1_Asm_X64_FMA3_AVX, minpack = 1));
 				}

@@ -5,7 +5,7 @@
 using namespace compv;
 
 
-#define LOOP_COUNT			1
+#define LOOP_COUNT			10000
 #define NUM_POINTS			(5000 + 15) // +15 to make it SIMD-unfriendly for testing
 #define ANGLE				COMPV_MATH_PI / 4
 #define SCALEX				5.0
@@ -23,7 +23,7 @@ using namespace compv;
 #	define MD5_EXPECTED			"4ac20362aefe978d084369c2e39e5911" // Without SIMD
 #else
 #	define MD5_EXPECTED_SSE2	"da724a468db3cd717e699ed9a811c459"
-#	define MD5_EXPECTED_AVX		"963214b2a73073b498387396c65653bb"
+#	define MD5_EXPECTED_AVX		"4b459b1df9b46dfa5781dc9d9985c0f9"
 #	define MD5_EXPECTED			"86013aa6fc4ddc47dbbf094826fb6aec" // Without SIMD
 #endif
 

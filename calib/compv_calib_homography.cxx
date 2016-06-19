@@ -264,7 +264,7 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 		}
 		
 		// update outliers ratio
-		e_ = inliersCount_ ? (1 - (inliersCount_ / static_cast<float>(k_))) : (1 - FLT_EPSILON); // "inliersCount_" == 0 lead to NaN for "n_"
+		e_ = (1 - (COMPV_MATH_MAX(1, inliersCount_) / static_cast<float>(k_))); // "inliersCount_" == 0 lead to NaN for "n_"
 		// update total tries
 		n_ = (static_cast<size_t>(logf(1 - p_) / logf(1 - powf(1 - e_, static_cast<float>(subset_)))) / threadsCount) + 1;
 
