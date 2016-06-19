@@ -117,7 +117,8 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
 		}
 		if (!bHeapDebuggingDisabled) {
 			COMPV_DEBUG_INFO("/!\\ Heap debugging enabled on release mode while running your app from Visual Studio. You may experiment performance issues.\n"
-				"Consider disabling this feature: Configuration Properties->Debugging->Environment: _NO_DEBUG_HEAP=1");
+				"Consider disabling this feature: Configuration Properties->Debugging->Environment: _NO_DEBUG_HEAP=1\n"
+				"Must be set on the app (executable) itself.");
 		}
 	}
 #endif

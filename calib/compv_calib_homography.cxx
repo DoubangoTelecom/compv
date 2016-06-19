@@ -25,7 +25,7 @@
 #	include <random>
 #endif
 
-#define COMPV_RANSAC_HOMOGRAPHY_MIN_SAMPLES_PER_THREAD	(10) // number of samples per thread
+#define COMPV_RANSAC_HOMOGRAPHY_MIN_SAMPLES_PER_THREAD	(4*3) // number of samples per thread
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -64,8 +64,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	}
 
 	// No estimation model selected -> compute homography using all points (inliers + outliers)
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-	/*if (model == COMPV_MODELEST_TYPE_NONE)*/ {
+	if (model == COMPV_MODELEST_TYPE_NONE) {
 		COMPV_CHECK_CODE_RETURN(computeH<T>(src, dst, H, true));
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -172,7 +171,7 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 	float p_ = 0.99f; // probability for inlier (TODO(dmi): try with 0.95f which is more realistic)
 	size_t d_ = (size_t)(p_ * k_); // minimum number of inliers to stop the tries
 	size_t subset_ = 4; // subset size: 2 for line, 3 for plane, 4 for homography, 8 for essential / essential matrix
-	float e_ = 0.50f; // outliers ratio (50% is a worst case, will be updated) = 1 - (inliersCount/total)
+	float e_ = 0.70f; // outliers ratio (70% is a worst case, will be updated) = 1 - (inliersCount/total)
 	size_t n_; // maximum number of tries
 	size_t t_; // number of tries
 
@@ -263,13 +262,11 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 			COMPV_CHECK_CODE_RETURN(CompVArray<size_t>::newObjAligned(&inliers, 1, inliersCount_));
 			CompVMem::copyNTA(const_cast<size_t*>(inliers->ptr(0)), inliersubset_->ptr(0), (inliersCount_ * sizeof(size_t)));
 		}
-
-		if (inliersCount_) { // zero will produce NaN
-			// update outliers ratio
-			e_ = 1 - (inliersCount_ / static_cast<float>(k_));
-			// update total tries
-			n_ = (static_cast<size_t>(logf(1 - p_) / logf(1 - powf(1 - e_, static_cast<float>(subset_)))) / threadsCount) + 1;
-		}
+		
+		// update outliers ratio
+		e_ = inliersCount_ ? (1 - (inliersCount_ / static_cast<float>(k_))) : (1 - FLT_EPSILON); // "inliersCount_" == 0 lead to NaN for "n_"
+		// update total tries
+		n_ = (static_cast<size_t>(logf(1 - p_) / logf(1 - powf(1 - e_, static_cast<float>(subset_)))) / threadsCount) + 1;
 
 		++t_;
 	}
