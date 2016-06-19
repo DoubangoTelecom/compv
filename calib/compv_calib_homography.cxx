@@ -64,6 +64,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	}
 
 	// No estimation model selected -> compute homography using all points (inliers + outliers)
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 	/*if (model == COMPV_MODELEST_TYPE_NONE)*/ {
 		COMPV_CHECK_CODE_RETURN(computeH<T>(src, dst, H, true));
 		return COMPV_ERROR_CODE_S_OK;
@@ -336,7 +337,7 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 
 	// Build M for homogeneous equation: Mh = 0
 	CompVPtrArray(T) M_;
-	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::buildHomographyEqMatrix(srcn_->ptr(0), srcn_->ptr(1), dstn_->ptr(0), dstn_->ptr(1), M_, numPoints_));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::buildHomographyEqMatrix(srcn_->ptr(0), srcn_->ptr(1), dstn_->ptr(0), dstn_->ptr(1), M_, numPoints_));	
 
 	// Build symmetric matrix S = M*M
 	CompVPtrArray(T) S_; // temp symmetric array
@@ -346,6 +347,7 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 	CompVPtrArray(T) D_; // 9x9 diagonal matrix containing the eigenvalues
 	CompVPtrArray(T) Qt_; // 9x9 matrix containing the eigenvectors (rows) - transposed
 	COMPV_CHECK_CODE_RETURN(CompVEigen<T>::findSymm(S_, D_, Qt_, false, true, false));
+
 	// Find index of the smallest eigenvalue (this code is required because findSymm() is called without sorting for speed-up)
 	// Eigenvector corresponding to the smallest eigenvalue is the nullspace of M and equal h (homogeneous equation: Ah = 0)
 	signed minIndex_ = 8;

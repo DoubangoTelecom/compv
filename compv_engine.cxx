@@ -99,6 +99,29 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     }
 #endif
 
+	/* Make sure heap debugging is disabled (release mode only) */
+#if COMPV_OS_WINDOWS && defined(_MSC_VER) && defined(NDEBUG)
+	if (IsDebuggerPresent()) {
+		// TODO(dmi): Looks like this feature is OFF (by default) on VS2015
+		DWORD size = GetEnvironmentVariable(TEXT("_NO_DEBUG_HEAP"), NULL, 0);
+		bool bHeapDebuggingDisabled = false;
+		if (size) {
+			TCHAR* _NO_DEBUG_HEAP = (TCHAR*)CompVMem::malloc(size * sizeof(TCHAR));
+			if (_NO_DEBUG_HEAP) {
+				size = GetEnvironmentVariable(TEXT("_NO_DEBUG_HEAP"), _NO_DEBUG_HEAP, size);
+				if (size) {
+					bHeapDebuggingDisabled = (_NO_DEBUG_HEAP[0] == TEXT('1'));
+				}
+				CompVMem::free((void**)&_NO_DEBUG_HEAP);
+			}
+		}
+		if (!bHeapDebuggingDisabled) {
+			COMPV_DEBUG_INFO("/!\\ Heap debugging enabled on release mode while running your app from Visual Studio. You may experiment performance issues.\n"
+				"Consider disabling this feature: Configuration Properties->Debugging->Environment: _NO_DEBUG_HEAP=1");
+		}
+	}
+#endif
+
     /* Image handlers initialization */
     COMPV_CHECK_CODE_BAIL(err_ = CompVImageDecoder::init());
 

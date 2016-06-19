@@ -5,7 +5,7 @@
 using namespace compv;
 
 
-#define LOOP_COUNT			1
+#define LOOP_COUNT			10000
 #define NUM_POINTS			(5000 + 15) // +15 to make it SIMD-unfriendly for testing
 #define ANGLE				COMPV_MATH_PI / 4
 #define SCALEX				5.0
@@ -67,7 +67,7 @@ COMPV_ERROR_CODE TestHomography()
 		y[i] += y[i] * ((i * ERRORPY) / NUM_POINTS);
 		// z[i] = 1; // required, but already set after mul(H, input)
 	}
-
+	
 	h = NULL;
 	timeStart = CompVTime::getNowMills();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
@@ -90,6 +90,8 @@ COMPV_ERROR_CODE TestHomography()
 		*h->ptr(1, 0), *h->ptr(1, 1), *h->ptr(1, 2),
 		*h->ptr(2, 0), *h->ptr(2, 1), *h->ptr(2, 2));
 
+	COMPV_DEBUG_INFO("Elapsed time (TestHomography) = [[[ %llu millis ]]]", (timeEnd - timeStart));
+
 	// TODO(dmi): Use residual results instead of MD5
 	const std::string md5 = arrayMD5<TYP>(h);
 	if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
@@ -101,8 +103,6 @@ COMPV_ERROR_CODE TestHomography()
 	else {
 		COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 	}
-
-	COMPV_DEBUG_INFO("Elapsed time (TestHomography) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
 	return err_;
 }
