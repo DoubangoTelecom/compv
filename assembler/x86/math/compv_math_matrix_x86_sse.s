@@ -252,13 +252,13 @@ sym(MatrixMulABt_float64_minpack1_Asm_X86_SSE2):
 				mulpd xmm1, xmm2
 				addpd xmm0, xmm1
 			.EndOfMoreThanOneRemains
-			
+
 			movapd xmm1, xmm0
-			shufpd xmm1, xmm0, 0x1
 			mov rcx, arg(7) ; R
+			shufpd xmm1, xmm0, 0x1
 			addpd xmm0, xmm1
 			movsd [rcx + rdi*8], xmm0
-
+			
 			inc rdi ; ++j
 			add rbx, arg(6) ; b += bStrideInBytes
 			cmp rdi, arg(3) ; j <? bRows

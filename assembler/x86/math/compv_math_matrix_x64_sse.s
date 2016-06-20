@@ -133,20 +133,21 @@ sym(MatrixMulABt_float64_minpack1_Asm_X64_SSE2):
 				addpd xmm0, xmm1
 			.EndOfMoreThanOneRemains
 			
+			inc rdi ; ++j
+
 			movapd xmm1, xmm0
 			shufpd xmm1, xmm0, 0x1
 			addpd xmm0, xmm1
-			movsd [rax + rdi*8], xmm0
-
-			inc rdi ; ++j
+			movsd [rax + rdi*8 - 8], xmm0
+			
 			lea rbx, [rbx + r12] ; b += bStrideInBytes
 			cmp rdi, r13 ; j <? bRows
 			jl .LoopBRows
 		.EndOfLoopBRows
 
 		dec rsi ; --i
-		test rsi, rsi
 		lea rax, [rax + r14] ; r += rStrideInBytes
+		test rsi, rsi
 		lea rdx, [rdx + r15] ; a += aStrideInBytes		
 		jnz .LoopARows
 	.EndOfLoopARows

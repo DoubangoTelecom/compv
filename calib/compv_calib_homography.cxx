@@ -11,8 +11,6 @@
 #include "compv/compv_engine.h"
 
 #include <vector>
-#include <algorithm>
-#include <numeric> /* std::iota */
 
 #if !defined (COMPV_PRNG11)
 #	define COMPV_PRNG11 1
@@ -182,6 +180,7 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 	bool colinear;
 	CompVPtrArray(T) Hsubset_;
 
+	size_t idx0, idx1, idx2, idx3;
 #if COMPV_PRNG11
 #	if 0
 	std::random_device rd_;
@@ -191,10 +190,10 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 	// We're not using a random device number (std::random_device) in order to generate the same suite of numbers for each thread everytime
 	std::mt19937 prng_(CompVThread::getIdCurrent());
 #	endif
-	// TODO(dmi): use uniform distribution
-	// std::uniform_int_distribution<> unifd_{ 0, static_cast<int>(k_ - 1) };
+	std::uniform_int_distribution<> unifd_{ 0, static_cast<int>(k_ - 1) };
 #else
 	srand(CompVThread::getIdCurrent());
+	uint32_t rand4[4];
 #endif
 
 	n_ = ((static_cast<size_t>(logf(1 - p_) / logf(1 - powf(1 - e_, static_cast<float>(subset_))))) / threadsCount) + 1;
@@ -217,18 +216,19 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 	srcsubsetz_[0] = srcsubsetz_[1] = srcsubsetz_[2] = srcsubsetz_[3] = 1;
 	dstsubsetz_[0] = dstsubsetz_[1] = dstsubsetz_[2] = dstsubsetz_[3] = 1;
 
-	size_t idx0, idx1, idx2, idx3;
-	std::vector<size_t> randomIdx_(k_);
-	std::iota(randomIdx_.begin(), randomIdx_.end(), 0);
-
 	while (t_ < n_ && bestInlinersCount_ < d_) {
 		// Generate the random points
 #if COMPV_PRNG11
-		std::shuffle(randomIdx_.begin(), randomIdx_.end(), prng_);
+		idx0 = static_cast<uint32_t>(unifd_(prng_));
+		do { idx1 = static_cast<uint32_t>(unifd_(prng_)); } while (idx1 == idx0);
+		do { idx2 = static_cast<uint32_t>(unifd_(prng_)); } while (idx2 == idx0 || idx2 == idx1);
+		do { idx3 = static_cast<uint32_t>(unifd_(prng_)); } while (idx3 == idx0 || idx3 == idx1 || idx3 == idx2);
 #else
-		std::random_shuffle(randomIdx_.begin(), randomIdx_.end());
+		idx0 = static_cast<uint32_t>(rand()) % k_;
+		do { idx1 = static_cast<uint32_t>(rand()) % k_; } while (idx1 == idx0);
+		do { idx2 = static_cast<uint32_t>(rand()) % k_; } while (idx2 == idx0 || idx2 == idx1);
+		do { idx3 = static_cast<uint32_t>(rand()) % k_; } while (idx3 == idx0 || idx3 == idx1 || idx3 == idx2);
 #endif
-		idx0 = randomIdx_[0], idx1 = randomIdx_[1], idx2 = randomIdx_[2], idx3 = randomIdx_[3];
 
 		// Set the #4 random points (src)
 		srcsubsetx_[0] = srcx_[idx0],	srcsubsetx_[1] = srcx_[idx1],	srcsubsetx_[2] = srcx_[idx2],	srcsubsetx_[3] = srcx_[idx3];
