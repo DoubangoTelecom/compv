@@ -52,9 +52,10 @@ sym(MathStatsNormalize2DHartley_float64_Asm_X86_SSE2):
 	lea rcx, [rax - 7] ; rcx = (numPoints - 7)
 	lea rdi, [rax - 3] ; rdx = (numPoints - 3)
 
-	movsd xmm2, arg(2)
+	movd xmm2, rax
+	pshufd xmm2, xmm2, 0x0
 	movapd xmm6, [sym(k1_f64)]
-	shufpd xmm2, xmm2, 0x0
+	cvtdq2pd xmm2, xmm2
 	divpd xmm6, xmm2 ; xmm6 = xmmOneOverNumPoints
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -158,8 +159,10 @@ sym(MathStatsNormalize2DHartley_float64_Asm_X86_SSE2):
 		addpd xmm3, xmm5
 		sqrtpd xmm2, xmm2
 		sqrtpd xmm3, xmm3
+		cmp rsi, rdi
 		addpd xmm7, xmm2
-		addpd xmm7, xmm3 
+		addpd xmm7, xmm3
+		jl .Loop4Magnitude
 	.EndOfLoop4Magnitude
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
