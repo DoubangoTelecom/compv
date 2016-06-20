@@ -7,8 +7,8 @@ using namespace compv;
 #define TYPE_DOUBLE			0
 #define TYPE_FLOAT			1
 
-#define TYPE	TYPE_DOUBLE  // double or float
-#define LOOP_COUNT 1
+#define TYPE		TYPE_DOUBLE  // double or float
+#define LOOP_COUNT	1
 
 #if TYPE == TYPE_DOUBLE
 #	define TYP		double
@@ -22,7 +22,8 @@ using namespace compv;
 
 COMPV_ERROR_CODE TestNormalize2DHartley()
 {
-	TYP x[2015], y[2015];
+	COMPV_ALIGN_DEFAULT() TYP x[2015];
+	COMPV_ALIGN_DEFAULT() TYP y[2015];
 	TYP tx, ty, scale;
 	uint64_t timeStart, timeEnd;
 #define TX		151.12521091811413 // c++
@@ -55,6 +56,8 @@ COMPV_ERROR_CODE TestNormalize2DHartley()
 	TYP err_scale = COMPV_MATH_ABS(SCALE - scale);
 	COMPV_DEBUG_INFO_EX("TestNormalize2DHartley", "tx="TYP_SZ", ty="TYP_SZ", scale="TYP_SZ", err_tx="TYP_SZ", err_ty="TYP_SZ", err_scale="TYP_SZ, tx, ty, scale, err_tx, err_ty, err_scale);
 
+	COMPV_DEBUG_INFO_EX("TestNormalize2DHartley", "Elapsed time (TestNormalize2DHartley) = [[[ %llu millis ]]]", (timeEnd - timeStart));
+
 	// Normale test (*must*)
 	COMPV_CHECK_EXP_RETURN(err_tx > ERR_MAX || err_ty > ERR_MAX || err_scale > ERR_MAX, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 
@@ -64,8 +67,6 @@ COMPV_ERROR_CODE TestNormalize2DHartley()
 		COMPV_CHECK_EXP_RETURN(tx != TX_SSE2 || ty != TY_SSE2 || scale != SCALE_SSE2, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 	}
 #endif
-
-	COMPV_DEBUG_INFO_EX("TestNormalize2DHartley", "Elapsed time (TestNormalize2DHartley) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
 	return COMPV_ERROR_CODE_S_OK;
 #undef TX

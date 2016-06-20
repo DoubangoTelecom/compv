@@ -6,6 +6,7 @@
 */
 #include "compv/compv_simd_globals.h"
 #include "compv/intrinsics/x86/compv_intrin_avx.h"
+#include "compv/math/compv_math.h"
 
 COMPV_API COMPV_ALIGN_DEFAULT() uint8_t k_0_0_0_255_u8[] = {
     0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255,
@@ -15,6 +16,11 @@ COMPV_API COMPV_ALIGN_DEFAULT() uint8_t k_0_0_0_255_u8[] = {
 COMPV_API COMPV_ALIGN_DEFAULT() int8_t k1_i8[] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+};
+
+COMPV_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t k1_f64[] = {
+	1., 1., // SSE
+	1., 1., // AVX
 };
 
 COMPV_API COMPV_ALIGN_DEFAULT() int8_t k2_i8[] = {
@@ -85,6 +91,11 @@ COMPV_API COMPV_ALIGN_DEFAULT() int16_t k4400_i16[] = {
     4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400,
 };
 
+COMPV_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t ksqrt2_f64[] = {
+	COMPV_MATH_SQRT_2, COMPV_MATH_SQRT_2, // SSE
+	COMPV_MATH_SQRT_2, COMPV_MATH_SQRT_2 // AVX
+};
+
 COMPV_API COMPV_ALIGN_DEFAULT() uint64_t kAVXMaskstore_0_u64[] = {
     0xF000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000
 };
@@ -110,7 +121,7 @@ COMPV_API COMPV_ALIGN_DEFAULT() int32_t kAVXPermutevar8x32_XXABBCDE_i32[] = { //
     0xFF, 0xFF, COMPV_AVX_A64, COMPV_AVX_B64, COMPV_AVX_B64, COMPV_AVX_C64, COMPV_AVX_D64, COMPV_AVX_E64
 };
 
-COMPV_API COMPV_ALIGN_DEFAULT() uint32_t kAVXFloat64MaskAbs[] = { // Mask used in and operations to compute the absolute value
+COMPV_API COMPV_ALIGN_DEFAULT() uint32_t kAVXFloat64MaskAbs[] = { // Mask used for operations to compute the absolute value
 	0xffffffff, 0x7fffffff, 0xffffffff, 0x7fffffff, // SSE
 	0xffffffff, 0x7fffffff, 0xffffffff, 0x7fffffff // AVX
 };

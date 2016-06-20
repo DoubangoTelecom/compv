@@ -146,7 +146,6 @@ sym(MathStatsNormalize2DHartley_float64_Asm_X86_SSE2):
 		movapd xmm3, [rbx + rsi * 8 + 2*8]
 		movapd xmm4, [rdx + rsi * 8 + 0*8]
 		movapd xmm5, [rdx + rsi * 8 + 2*8]
-		lea rsi, [rsi + 4] ; i += 4
 		subpd xmm2, xmm0
 		subpd xmm3, xmm0
 		subpd xmm4, xmm1
@@ -157,10 +156,11 @@ sym(MathStatsNormalize2DHartley_float64_Asm_X86_SSE2):
 		mulpd xmm5, xmm5
 		addpd xmm2, xmm4
 		addpd xmm3, xmm5
+		lea rsi, [rsi + 4] ; i += 4
 		sqrtpd xmm2, xmm2
 		sqrtpd xmm3, xmm3
-		cmp rsi, rdi
 		addpd xmm7, xmm2
+		cmp rsi, rdi
 		addpd xmm7, xmm3
 		jl .Loop4Magnitude
 	.EndOfLoop4Magnitude

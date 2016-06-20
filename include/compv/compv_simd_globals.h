@@ -19,6 +19,7 @@ COMPV_EXTERNC_BEGIN()
 
 extern COMPV_API COMPV_ALIGN_DEFAULT() uint8_t k_0_0_0_255_u8[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() int8_t k1_i8[];
+extern COMPV_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t k1_f64[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() int8_t k2_i8[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() int8_t k3_i8[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() int8_t k5_i8[];
@@ -34,6 +35,7 @@ extern COMPV_API COMPV_ALIGN_DEFAULT() int16_t k7120_i16[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() int16_t k8912_i16[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() int16_t k4400_i16[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() int32_t k_0_2_4_6_0_2_4_6_i32[];
+extern COMPV_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t ksqrt2_f64[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() uint64_t kAVXMaskstore_0_u64[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() uint64_t kAVXMaskstore_0_1_u64[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() uint32_t kAVXMaskstore_0_u32[];
