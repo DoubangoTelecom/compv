@@ -36,6 +36,9 @@ COMPV_ERROR_CODE TestNormalize2DHartley()
 #		define TX_SSE2		151.12521091811411
 #		define TY_SSE2		1209.0999999999999
 #		define SCALE_SSE2	0.0012386495368348507
+#		define TX_AVX		151.12521091811416
+#		define TY_AVX		1209.0999999999999
+#		define SCALE_AVX	0.0012386495368348523
 #	else
 	// No guarantee, this could change from one run to another -> be careful
 #		define TX_SSE2		151.12521091811413
@@ -72,9 +75,14 @@ COMPV_ERROR_CODE TestNormalize2DHartley()
 
 	// To enforce testing (*optionale*)
 #if COMPV_ARCH_X64 && POINTS_COUNT == 2015
-	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+	if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
+		COMPV_CHECK_EXP_RETURN(tx != TX_AVX || ty != TY_AVX || scale != SCALE_AVX, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	}
+	else if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
 		COMPV_CHECK_EXP_RETURN(tx != TX_SSE2 || ty != TY_SSE2 || scale != SCALE_SSE2, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 	}
+#elif POINTS_COUNT == 4
+	COMPV_CHECK_EXP_RETURN(err_tx != 0 || err_ty != 0 || err_scale != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 #endif
 
 	return COMPV_ERROR_CODE_S_OK;
