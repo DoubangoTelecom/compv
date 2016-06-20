@@ -284,61 +284,48 @@ sym(MathStatsNormalize2DHartley_4_float64_Asm_X86_AVX):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
-	COMPV_YASM_SAVE_YMM 7 ; FIXME: needed?
+	COMPV_YASM_SAVE_YMM 7
 	;; end prolog ;;
 
+	mov rax, arg(2) ; rax = numPoints
 	mov rcx, arg(0) ; rcx = x
 	mov rdx, arg(1) ; rdx = y
 
-	movd xmm2, arg(2)
-	pshufd xmm2, xmm2, 0x0
-	movapd xmm6, [sym(k1_f64)]
-	cvtdq2pd xmm2, xmm2
-	
-	movapd xmm0, [rcx + 0*8]
-	movapd xmm1, [rdx + 0*8]
-	divpd xmm6, xmm2 ; xmm6 = xmmOneOverNumPoints
-	addpd xmm0, [rcx + 2*8]
-	addpd xmm1, [rdx + 2*8]
-	movapd xmm2, xmm0
-	movapd xmm3, xmm1
-	shufpd xmm2, xmm2, 0x1
-	shufpd xmm3, xmm3, 0x1
-	addsd xmm0, xmm2
-	addsd xmm1, xmm3
-	mulsd xmm0, xmm6
-	mulsd xmm1, xmm6
-	movapd xmm2, [rcx + 0*8]
-	movapd xmm3, [rcx + 2*8]
-	shufpd xmm0, xmm0, 0x0
-	shufpd xmm1, xmm1, 0x0	
-	movapd xmm4, [rdx + 0*8]
-	movapd xmm5, [rdx + 2*8]
-	subpd xmm2, xmm0
-	subpd xmm3, xmm0
-	subpd xmm4, xmm1
-	subpd xmm5, xmm1
-	mulpd xmm2, xmm2
-	mulpd xmm4, xmm4
-	mulpd xmm3, xmm3
-	mulpd xmm5, xmm5
-	addpd xmm2, xmm4
-	addpd xmm3, xmm5
-	movapd xmm4, [sym(ksqrt2_f64)] ; xmm4 = xmmSqrt2
-	sqrtpd xmm7, xmm2
-	sqrtpd xmm3, xmm3
-	mov rax, arg(3)
-	mov rcx, arg(4)
-	mov rdx, arg(5)
-	addpd xmm7, xmm3
-	movapd xmm2, xmm7
-	shufpd xmm2, xmm2, 0x01
-	addsd xmm7, xmm2
-	mulsd xmm7, xmm6
-	divsd xmm4, xmm7 ; now xmm4 = xmmMagnitude
-	movsd [rax], xmm0
-	movsd [rcx], xmm1
-	movsd [rdx], xmm4
+	vmovd xmm2, eax
+	vpshufd xmm2, xmm2, 0x0
+	vmovapd ymm7, [sym(k1_f64)]
+	vcvtdq2pd ymm2, xmm2
+	vmovapd ymm0, [rcx]
+	vmovapd ymm1, [rdx]
+	vmovapd ymm6, [sym(ksqrt2_f64)] ; ymm6 = ymmSqrt2
+	vdivpd ymm7, ymm7, ymm2 ; ymm7 = ymmOneOverNumPoints
+	vhaddpd ymm2, ymm0, ymm0
+	vhaddpd ymm3, ymm1, ymm1
+	vperm2f128 ymm4, ymm2, ymm2, 0x11
+	vperm2f128 ymm5, ymm3, ymm3, 0x11
+	vaddpd ymm2, ymm2, ymm4
+	vaddpd ymm3, ymm3, ymm5
+	vmulpd ymm2, ymm2, ymm7
+	vmulpd ymm3, ymm3, ymm7
+	vperm2f128 ymm2, ymm2, ymm2, 0x00
+	vperm2f128 ymm3, ymm3, ymm3, 0x00
+	vsubpd ymm0, ymm0, ymm2
+	vsubpd ymm1, ymm1, ymm3
+	vmulpd ymm0, ymm0, ymm0
+	vmulpd ymm1, ymm1, ymm1
+	vaddpd ymm0, ymm0, ymm1
+	vsqrtpd ymm0, ymm0
+	mov rax, arg(3) ; tx1
+	mov rbx, arg(4) ; ty1
+	mov rcx, arg(5) ; s1
+	vhaddpd ymm0, ymm0, ymm0
+	vperm2f128 ymm4, ymm0, ymm0, 0x11
+	vaddpd ymm0, ymm0, ymm4
+	vmulpd ymm0, ymm0, ymm7
+	vdivpd ymm0, ymm6, ymm0
+	vmovsd [rax], xmm2
+	vmovsd [rbx], xmm3
+	vmovsd [rcx], xmm0
 
 	;; begin epilog ;;
 	COMPV_YASM_RESTORE_YMM

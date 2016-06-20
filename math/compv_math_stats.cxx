@@ -16,6 +16,7 @@
 COMPV_EXTERNC void MathStatsNormalize2DHartley_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* x, const COMPV_ALIGNED(SSE) compv::compv_float64_t* y, compv::compv_uscalar_t numPoints, compv::compv_float64_t* tx1, compv::compv_float64_t* ty1, compv::compv_float64_t* s1);
 COMPV_EXTERNC void MathStatsNormalize2DHartley_float64_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv::compv_float64_t* x, const COMPV_ALIGNED(AVX) compv::compv_float64_t* y, compv::compv_uscalar_t numPoints, compv::compv_float64_t* tx1, compv::compv_float64_t* ty1, compv::compv_float64_t* s1);
 COMPV_EXTERNC void MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* x, const COMPV_ALIGNED(SSE) compv::compv_float64_t* y, compv::compv_uscalar_t numPoints, compv::compv_float64_t* tx1, compv::compv_float64_t* ty1, compv::compv_float64_t* s1);
+COMPV_EXTERNC void MathStatsNormalize2DHartley_4_float64_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv::compv_float64_t* x, const COMPV_ALIGNED(AVX) compv::compv_float64_t* y, compv::compv_uscalar_t numPoints, compv::compv_float64_t* tx1, compv::compv_float64_t* ty1, compv::compv_float64_t* s1);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
@@ -45,15 +46,17 @@ COMPV_ERROR_CODE CompVMathStats<T>::normalize2D_hartley(const T* x, const T* y, 
 				COMPV_EXEC_IFDEF_ASM_X86(MathStatsNormalize2DHartley_float64 = MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2);
 			}
 		}
+#if 0 // TODO(dmi): AVX code not faster than SSE
 		if (numPoints > 3 && COMPV_IS_ALIGNED_AVX(x) && COMPV_IS_ALIGNED_AVX(y)) {
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // AVX code not faster
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // AVX code not faster than SSE
 			COMPV_EXEC_IFDEF_INTRIN_X86(MathStatsNormalize2DHartley_float64 = MathStatsNormalize2DHartley_float64_Intrin_AVX);
 			COMPV_EXEC_IFDEF_ASM_X86(MathStatsNormalize2DHartley_float64 = MathStatsNormalize2DHartley_float64_Asm_X86_AVX);
 			if (numPoints == 4) { // Homography -> very common
 				COMPV_EXEC_IFDEF_INTRIN_X86(MathStatsNormalize2DHartley_float64 = MathStatsNormalize2DHartley_4_float64_Intrin_AVX);
-				//COMPV_EXEC_IFDEF_ASM_X86(MathStatsNormalize2DHartley_float64 = MathStatsNormalize2DHartley_4_float64_Asm_X86_AVX);
+				COMPV_EXEC_IFDEF_ASM_X86(MathStatsNormalize2DHartley_float64 = MathStatsNormalize2DHartley_4_float64_Asm_X86_AVX);
 			}
 		}
+#endif
 		if (MathStatsNormalize2DHartley_float64) {
 			MathStatsNormalize2DHartley_float64((const compv_float64_t*)x, (const compv_float64_t*)y, (compv_uscalar_t)numPoints, (compv_float64_t*)tx1, (compv_float64_t*)ty1, (compv_float64_t*)s1);
 			return COMPV_ERROR_CODE_S_OK;
