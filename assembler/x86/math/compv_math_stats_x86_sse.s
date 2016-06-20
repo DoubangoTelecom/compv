@@ -11,6 +11,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(MathStatsNormalize2DHartley_float64_Asm_X86_SSE2)
+global sym(MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2)
 
 section .data
 	extern sym(ksqrt2_f64)
@@ -218,6 +219,82 @@ sym(MathStatsNormalize2DHartley_float64_Asm_X86_SSE2):
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const COMPV_ALIGNED(SSE) compv_float64_t* x;
+; arg(1) -> const COMPV_ALIGNED(SSE) compv_float64_t* y
+; arg(2) -> compv_uscalar_t numPoints;
+; arg(3) -> compv_float64_t* tx1
+; arg(4) -> compv_float64_t* ty1
+; arg(5) -> compv_float64_t* s1
+; void MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* x, const COMPV_ALIGNED(SSE) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
+sym(MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+	COMPV_YASM_SAVE_XMM 7
+	;; end prolog ;;
+
+	mov rcx, arg(0) ; rcx = x
+	mov rdx, arg(1) ; rdx = y
+
+	movd xmm2, arg(2)
+	pshufd xmm2, xmm2, 0x0
+	movapd xmm6, [sym(k1_f64)]
+	cvtdq2pd xmm2, xmm2
+	
+	movapd xmm0, [rcx + 0*8]
+	movapd xmm1, [rdx + 0*8]
+	divpd xmm6, xmm2 ; xmm6 = xmmOneOverNumPoints
+	addpd xmm0, [rcx + 2*8]
+	addpd xmm1, [rdx + 2*8]
+	movapd xmm2, xmm0
+	movapd xmm3, xmm1
+	shufpd xmm2, xmm2, 0x1
+	shufpd xmm3, xmm3, 0x1
+	addsd xmm0, xmm2
+	addsd xmm1, xmm3
+	mulsd xmm0, xmm6
+	mulsd xmm1, xmm6
+	movapd xmm2, [rcx + 0*8]
+	movapd xmm3, [rcx + 2*8]
+	shufpd xmm0, xmm0, 0x0
+	shufpd xmm1, xmm1, 0x0	
+	movapd xmm4, [rdx + 0*8]
+	movapd xmm5, [rdx + 2*8]
+	subpd xmm2, xmm0
+	subpd xmm3, xmm0
+	subpd xmm4, xmm1
+	subpd xmm5, xmm1
+	mulpd xmm2, xmm2
+	mulpd xmm4, xmm4
+	mulpd xmm3, xmm3
+	mulpd xmm5, xmm5
+	addpd xmm2, xmm4
+	addpd xmm3, xmm5
+	movapd xmm4, [sym(ksqrt2_f64)] ; xmm4 = xmmSqrt2
+	sqrtpd xmm7, xmm2
+	sqrtpd xmm3, xmm3
+	mov rax, arg(3)
+	mov rcx, arg(4)
+	mov rdx, arg(5)
+	addpd xmm7, xmm3
+	movapd xmm2, xmm7
+	shufpd xmm2, xmm2, 0x01
+	addsd xmm7, xmm2
+	mulsd xmm7, xmm6
+	divsd xmm4, xmm7 ; now xmm4 = xmmMagnitude
+	movsd [rax], xmm0
+	movsd [rcx], xmm1
+	movsd [rdx], xmm4
+
+	;; begin epilog ;;
 	COMPV_YASM_RESTORE_XMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp

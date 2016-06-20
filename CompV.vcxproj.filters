@@ -784,10 +784,8 @@
     <YASM Include="assembler\x86\math\compv_math_matrix_x86_sse.s">
       <Filter>Assembler Files\x86\math</Filter>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assembler\x86\math\compv_math_stats_x86_sse.s">
+    <YASM Include="assembler\x86\math\compv_math_stats_x86_sse.s">
       <Filter>Assembler Files\x86\math</Filter>
-    </None>
+    </YASM>
   </ItemGroup>
 </Project>

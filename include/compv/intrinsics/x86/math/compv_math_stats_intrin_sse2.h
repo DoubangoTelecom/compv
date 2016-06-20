@@ -19,6 +19,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 void MathStatsNormalize2DHartley_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* x, const COMPV_ALIGNED(SSE) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1);
+void MathStatsNormalize2DHartley_4_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* x, const COMPV_ALIGNED(SSE) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1);
 
 COMPV_NAMESPACE_END()
 

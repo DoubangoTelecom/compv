@@ -88,6 +88,35 @@ void MathStatsNormalize2DHartley_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) co
 	_mm_store_sd(s1, xmmMagnitude);
 }
 
+// "numPoints = 4" -> Very common (Homography)
+void MathStatsNormalize2DHartley_4_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* x, const COMPV_ALIGNED(SSE) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
+	const __m128d xmmOneOverNumPoints = _mm_div_pd(_mm_set1_pd(1.), _mm_set1_pd(static_cast<compv_float64_t>(numPoints)));
+	const __m128d xmmSqrt2 = _mm_set1_pd(COMPV_MATH_SQRT_2);
+
+	__m128d xmmTx = _mm_add_pd(_mm_load_pd(&x[0]), _mm_load_pd(&x[2]));
+	__m128d xmmTy = _mm_add_pd(_mm_load_pd(&y[0]), _mm_load_pd(&y[2]));
+	xmmTx = _mm_mul_sd(_mm_add_sd(xmmTx, _mm_shuffle_pd(xmmTx, xmmTx, 0x1)), xmmOneOverNumPoints);
+	xmmTy = _mm_mul_sd(_mm_add_sd(xmmTy, _mm_shuffle_pd(xmmTy, xmmTy, 0x1)), xmmOneOverNumPoints);
+	xmmTx = _mm_shuffle_pd(xmmTx, xmmTx, 0x0);
+	xmmTy = _mm_shuffle_pd(xmmTy, xmmTy, 0x0);
+
+	__m128d xmm0 = _mm_sub_pd(_mm_load_pd(&x[0]), xmmTx);
+	__m128d xmm1 = _mm_sub_pd(_mm_load_pd(&y[0]), xmmTy);
+	__m128d xmmMagnitude = _mm_sqrt_pd(_mm_add_pd(_mm_mul_pd(xmm0, xmm0), _mm_mul_pd(xmm1, xmm1)));
+	xmm0 = _mm_sub_pd(_mm_load_pd(&x[2]), xmmTx);
+	xmm1 = _mm_sub_pd(_mm_load_pd(&y[2]), xmmTy);
+	__m128d xmm2 = _mm_sqrt_pd(_mm_add_pd(_mm_mul_pd(xmm0, xmm0), _mm_mul_pd(xmm1, xmm1)));
+	xmmMagnitude = _mm_add_pd(xmm2, xmmMagnitude);
+	xmmMagnitude = _mm_mul_sd(_mm_add_sd(xmmMagnitude, _mm_shuffle_pd(xmmMagnitude, xmmMagnitude, 0x1)), xmmOneOverNumPoints);
+	xmmMagnitude = _mm_div_sd(xmmSqrt2, xmmMagnitude);
+
+	_mm_store_sd(tx1, xmmTx);
+	_mm_store_sd(ty1, xmmTy);
+	_mm_store_sd(s1, xmmMagnitude);
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

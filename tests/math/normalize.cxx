@@ -22,32 +22,41 @@ using namespace compv;
 
 COMPV_ERROR_CODE TestNormalize2DHartley()
 {
-	COMPV_ALIGN_DEFAULT() TYP x[2015];
-	COMPV_ALIGN_DEFAULT() TYP y[2015];
+#define POINTS_COUNT 4 // #2015 (odd number) or #4 (is very common -Homography-)
+	COMPV_ALIGN_DEFAULT() TYP x[POINTS_COUNT];
+	COMPV_ALIGN_DEFAULT() TYP y[POINTS_COUNT];
 	TYP tx, ty, scale;
 	uint64_t timeStart, timeEnd;
-#define TX		151.12521091811413 // c++
-#define TY		1209.0999999999999 // c++
-#define SCALE	0.0012386495368348494 // c++
-#if COMPV_ARCH_X64
-#define TX_SSE2		151.12521091811411
-#define TY_SSE2		1209.0999999999999
-#define SCALE_SSE2	0.0012386495368348507
-#else
+
+#if POINTS_COUNT == 2015
+#	define TX		151.12521091811413 // c++
+#	define TY		1209.0999999999999 // c++
+#	define SCALE	0.0012386495368348494 // c++
+#	if COMPV_ARCH_X64
+#		define TX_SSE2		151.12521091811411
+#		define TY_SSE2		1209.0999999999999
+#		define SCALE_SSE2	0.0012386495368348507
+#	else
 	// No guarantee, this could change from one run to another -> be careful
-#define TX_SSE2		151.12521091811413
-#define TY_SSE2		1209.0999999999999
-#define SCALE_SSE2	0.0012386495368348494
+#		define TX_SSE2		151.12521091811413
+#		define TY_SSE2		1209.0999999999999
+#		define SCALE_SSE2	0.0012386495368348494
+#	endif
+#elif POINTS_COUNT == 4
+#	define TX		1.1499999999999999 // c++
+#	define TY		2.5000000000000000 // c++
+#	define SCALE	0.73422338733516390 // c++
 #endif
 
-	for (signed i = 0; i < 2015; ++i) {
+
+	for (signed i = 0; i < POINTS_COUNT; ++i) {
 		x[i] = (TYP)((i & 1) ? i : (-i * 0.7)) + 0.5;
 		y[i] = ((TYP)(i * 0.2)) + i + 0.7;
 	}
 
 	timeStart = CompVTime::getNowMills();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVMathStats<TYP>::normalize2D_hartley(&x[0], &y[0], 2015, &tx, &ty, &scale));
+		COMPV_CHECK_CODE_RETURN(CompVMathStats<TYP>::normalize2D_hartley(&x[0], &y[0], POINTS_COUNT, &tx, &ty, &scale));
 	}
 	timeEnd = CompVTime::getNowMills();
 	
@@ -62,7 +71,7 @@ COMPV_ERROR_CODE TestNormalize2DHartley()
 	COMPV_CHECK_EXP_RETURN(err_tx > ERR_MAX || err_ty > ERR_MAX || err_scale > ERR_MAX, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 
 	// To enforce testing (*optionale*)
-#if COMPV_ARCH_X64
+#if COMPV_ARCH_X64 && POINTS_COUNT == 2015
 	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
 		COMPV_CHECK_EXP_RETURN(tx != TX_SSE2 || ty != TY_SSE2 || scale != SCALE_SSE2, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 	}

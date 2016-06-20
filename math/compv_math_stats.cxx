@@ -13,6 +13,7 @@
 
 #if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC void MathStatsNormalize2DHartley_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* x, const COMPV_ALIGNED(SSE) compv::compv_float64_t* y, compv::compv_uscalar_t numPoints, compv::compv_float64_t* tx1, compv::compv_float64_t* ty1, compv::compv_float64_t* s1);
+COMPV_EXTERNC void MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* x, const COMPV_ALIGNED(SSE) compv::compv_float64_t* y, compv::compv_uscalar_t numPoints, compv::compv_float64_t* tx1, compv::compv_float64_t* ty1, compv::compv_float64_t* s1);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
@@ -36,7 +37,11 @@ COMPV_ERROR_CODE CompVMathStats<T>::normalize2D_hartley(const T* x, const T* y, 
 		void(*MathStatsNormalize2DHartley_float64)(const COMPV_ALIGNED(V) compv_float64_t* x, const COMPV_ALIGNED(V) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1) = NULL;
 		if (numPoints > 1 && COMPV_IS_ALIGNED_SSE(x) && COMPV_IS_ALIGNED_SSE(y)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(MathStatsNormalize2DHartley_float64 = MathStatsNormalize2DHartley_float64_Intrin_SSE2);
-			COMPV_EXEC_IFDEF_ASM_X86(MathStatsNormalize2DHartley_float64 = MathStatsNormalize2DHartley_float64_Asm_X86_SSE2);	
+			COMPV_EXEC_IFDEF_ASM_X86(MathStatsNormalize2DHartley_float64 = MathStatsNormalize2DHartley_float64_Asm_X86_SSE2);
+			if (numPoints == 4) { // Homography -> very common
+				COMPV_EXEC_IFDEF_INTRIN_X86(MathStatsNormalize2DHartley_float64 = MathStatsNormalize2DHartley_4_float64_Intrin_SSE2);
+				COMPV_EXEC_IFDEF_ASM_X86(MathStatsNormalize2DHartley_float64 = MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2);
+			}
 		}
 		if (MathStatsNormalize2DHartley_float64) {
 			MathStatsNormalize2DHartley_float64((const compv_float64_t*)x, (const compv_float64_t*)y, (compv_uscalar_t)numPoints, (compv_float64_t*)tx1, (compv_float64_t*)ty1, (compv_float64_t*)s1);
