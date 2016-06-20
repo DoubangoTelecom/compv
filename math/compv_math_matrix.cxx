@@ -689,7 +689,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::isEqual(const CompVPtrArray(T) &A, const CompVP
 
 	if (A->alignV() == B->alignV()) {
 		if (std::is_same<T, compv_float64_t>::value) {
-			void(*MatrixIsEqual_float64)(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t rows, compv_uscalar_t cols, compv_uscalar_t strideInBytes, compv_scalar_t *equal) = NULL;
+			void(*MatrixIsEqual_float64)(const COMPV_ALIGNED(V) compv_float64_t* A, const COMPV_ALIGNED(V) compv_float64_t* B, compv_uscalar_t rows, compv_uscalar_t cols, compv_uscalar_t strideInBytes, compv_scalar_t *equal) = NULL;
 			if (A->isAlignedSSE() && B->isAlignedSSE()) {
 				if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
 					COMPV_EXEC_IFDEF_INTRIN_X86((MatrixIsEqual_float64 = MatrixIsEqual_float64_Intrin_SSE2));

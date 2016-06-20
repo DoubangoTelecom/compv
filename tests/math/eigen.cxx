@@ -68,7 +68,7 @@ COMPV_ERROR_CODE TestEigen()
 	for (signed i = 0; i < NUM_POINTS; ++i) {
 #if TYPE == TYPE_DOUBLE
 		// Dense matrix
-		x[i] = (TYP)((i & 1) ? i : -i) + 0.5;
+		x[i] = (TYP)((i & 1) ? i : -i) + 0.5; // use "(TYP)((i & 1) ? i : (-i * 0.7)) + 0.5" instead. Otherwise i sign alterns with same values -> cancel when added
 		y[i] = ((TYP)(i * 0.2)) + i + 0.7;
 		z[i] = i*i;
 #else

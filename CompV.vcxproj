@@ -83,6 +83,7 @@
     <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_intrin_avx2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_intrin_sse2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_matrix_intrin_sse41.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_stats_intrin_sse2.h" />
     <ClInclude Include="include\compv\matchers\compv_matcher.h" />
     <ClInclude Include="include\compv\matchers\compv_matcher_bruteforce.h" />
     <ClInclude Include="include\compv\matchers\compv_matcher_flann.h" />
@@ -221,6 +222,7 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="intrinsics\x86\math\compv_math_stats_intrin_sse2.cxx" />
     <ClCompile Include="matchers\compv_matcher.cxx" />
     <ClCompile Include="matchers\compv_matcher_bruteforce.cxx" />
     <ClCompile Include="matchers\compv_matcher_flann.cxx" />

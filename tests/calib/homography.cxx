@@ -14,9 +14,10 @@ using namespace compv;
 #define ERRORPY				0.0 // percent, within [0.f, 1.f]
 #define TRANSX				28.5
 #define TRANSY				-10.0
-#define TYP					double  // double or float
+#define TYP					double  // double or float (float is useless because of slow convergence issue)
 #define MODE_EST			COMPV_MODELEST_TYPE_RANSAC
 #define TYP_SZ				"%e"	// %e or %f
+#define MSE					9.1831692240696733e-017
 #if COMPV_ARCH_X64
 #	define MD5_EXPECTED_SSE2	"70f3860cfd03927ff5babbb14099db0e"
 #	define MD5_EXPECTED_AVX		"882e4a573ccdf258221d956cb60358fe"
@@ -81,6 +82,18 @@ COMPV_ERROR_CODE TestHomography()
 	}
 	timeEnd = CompVTime::getNowMills();
 
+	// Compute MSE
+	TYP mse = (TYP)COMPV_MATH_POW(H_expected[0][0] - *h->ptr(0, 0), 2);
+	mse += (TYP)COMPV_MATH_POW(H_expected[0][1] - *h->ptr(0, 1), 2);
+	mse += (TYP)COMPV_MATH_POW(H_expected[0][2] - *h->ptr(0, 2), 2);
+	mse += (TYP)COMPV_MATH_POW(H_expected[1][0] - *h->ptr(1, 0), 2);
+	mse += (TYP)COMPV_MATH_POW(H_expected[1][1] - *h->ptr(1, 1), 2);
+	mse += (TYP)COMPV_MATH_POW(H_expected[1][2] - *h->ptr(1, 2), 2);
+	mse += (TYP)COMPV_MATH_POW(H_expected[2][0] - *h->ptr(2, 0), 2);
+	mse += (TYP)COMPV_MATH_POW(H_expected[2][1] - *h->ptr(2, 1), 2);
+	mse += (TYP)COMPV_MATH_POW(H_expected[2][2] - *h->ptr(2, 2), 2);
+	COMPV_DEBUG_INFO("MSE="TYP_SZ", expected="TYP_SZ, mse, MSE);
+
 	COMPV_DEBUG_INFO("H_expected:\n"
 		"{\t"TYP_SZ"\t"TYP_SZ"\t"TYP_SZ"\t}\n"
 		"{\t"TYP_SZ"\t"TYP_SZ"\t"TYP_SZ"\t}\n"
@@ -97,8 +110,12 @@ COMPV_ERROR_CODE TestHomography()
 		*h->ptr(2, 0), *h->ptr(2, 1), *h->ptr(2, 2));
 
 	COMPV_DEBUG_INFO("Elapsed time (TestHomography) = [[[ %llu millis ]]]", (timeEnd - timeStart));
-
-	// TODO(dmi): Use residual results instead of MD5
+	
+	// Check MSE
+	COMPV_CHECK_EXP_RETURN(mse > (TYP)MSE, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	
+	// Check MD5: This not accurate as it could change depending on the SIMD type (NEON, FMA, AVX, SSE, MMX...) and CPU (X64, X86, ARM...)
+	// We're using it now for regression test for asm porting
 	const std::string md5 = arrayMD5<TYP>(h);
 	if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
 		COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED_AVX, COMPV_ERROR_CODE_E_UNITTEST_FAILED);

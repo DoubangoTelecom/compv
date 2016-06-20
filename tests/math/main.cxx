@@ -17,10 +17,11 @@ using namespace compv;
 #define TEST_CLIP2					0
 #define TEST_SINCOS_P32				0 // 3.2 precision, theta within IR
 #define TEST_SINCOS_2PI_P32			0 // 3.2 precision, theta within [0, 2*PI]
-#define TEST_EIGEN					1
+#define TEST_EIGEN					0
 #define TEST_SVD					0
 #define TEST_PSI					0 // Moore–Penrose pseudoinverse
 #define TEST_RAND					0
+#define TEST_NORMALIZE_HARTLEY		1
 #define TEST_MOPS_ISSYMMETRIC		0
 #define TEST_MOPS_MULAB				0
 
@@ -77,6 +78,10 @@ int main()
 #if TEST_RAND
 	extern COMPV_ERROR_CODE TestRand();
 	COMPV_CHECK_CODE_ASSERT(TestRand());
+#endif
+#if TEST_NORMALIZE_HARTLEY
+	extern COMPV_ERROR_CODE TestNormalize2DHartley();
+	COMPV_CHECK_CODE_ASSERT(TestNormalize2DHartley());
 #endif
 #if TEST_MOPS_ISSYMMETRIC
 	extern COMPV_ERROR_CODE TestIsSymmetric();
