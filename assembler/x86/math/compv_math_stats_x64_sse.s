@@ -48,7 +48,7 @@ sym(MathStatsMSE2DHomogeneous_float64_Asm_X64_SSE2):
 	mov r8, arg(5) ; mse
 	mov r9, arg(6) ; r9 = numPoints
 	lea r10, [r9 - 3] ; r10 = (numPoints - 3)
-	lea r11, [r9 + 2] ; r11 = (numPoints - 1)
+	lea r11, [r9 - 1] ; r11 = (numPoints - 1)
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (i = 0; i < numPointsSigned - 3; i += 4)
