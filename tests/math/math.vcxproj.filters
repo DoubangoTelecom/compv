@@ -51,5 +51,8 @@
     <ClCompile Include="mse.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="variance.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

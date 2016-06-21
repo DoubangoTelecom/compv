@@ -25,7 +25,7 @@
 #	include <random>
 #endif
 
-#define COMPV_RANSAC_HOMOGRAPHY_MIN_SAMPLES_PER_THREAD	(4*3) // number of samples per thread
+#define COMPV_RANSAC_HOMOGRAPHY_MIN_SAMPLES_PER_THREAD	(4*5) // number of samples per thread
 
 COMPV_NAMESPACE_BEGIN()
 

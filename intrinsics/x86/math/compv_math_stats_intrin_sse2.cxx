@@ -166,6 +166,33 @@ void MathStatsMSE2DHomogeneous_4_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) co
 	_mm_store_pd(&mse[2], _mm_add_pd(_mm_mul_pd(xmmEX1, xmmEX1), _mm_mul_pd(xmmEY1, xmmEY1)));	
 }
 
+void MathStatsVariance_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1)
+{
+	compv_scalar_t countSigned = static_cast<compv_scalar_t>(count), i;
+	__m128d xmmDev0, xmmDev1;
+	__m128d xmmVar = _mm_setzero_pd();
+	const __m128d xmmCountMinus1 = _mm_set1_pd(static_cast<compv_float64_t>(count - 1)); // asm: ctv(epi32, double) and no need to duplicate
+	const __m128d xmmMean = _mm_set1_pd(*mean1); // asm: load_sd() then shufle
+	for (i = 0; i < countSigned - 3; i += 4) {
+		xmmDev0 = _mm_sub_pd(_mm_load_pd(&data[i]), xmmMean);
+		xmmDev1 = _mm_sub_pd(_mm_load_pd(&data[i + 2]), xmmMean);
+		xmmVar = _mm_add_pd(xmmVar, _mm_mul_pd(xmmDev0, xmmDev0));
+		xmmVar = _mm_add_pd(xmmVar, _mm_mul_pd(xmmDev1, xmmDev1));
+	}
+	if (i < countSigned - 1) {
+		xmmDev0 = _mm_sub_pd(_mm_load_pd(&data[i]), xmmMean);
+		xmmVar = _mm_add_pd(xmmVar, _mm_mul_pd(xmmDev0, xmmDev0));
+		i += 2;
+	}
+	if (countSigned & 1) {
+		xmmDev0 = _mm_sub_sd(_mm_load_sd(&data[i]), xmmMean);
+		xmmVar = _mm_add_sd(xmmVar, _mm_mul_sd(xmmDev0, xmmDev0));
+	}
+	xmmVar = _mm_add_sd(xmmVar, _mm_shuffle_pd(xmmVar, xmmVar, 0x1));
+	xmmVar = _mm_div_sd(xmmVar, xmmCountMinus1);
+	_mm_store_sd(var1, xmmVar);
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

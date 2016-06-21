@@ -19,6 +19,8 @@ COMPV_EXTERNC void MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2(const COMP
 COMPV_EXTERNC void MathStatsNormalize2DHartley_4_float64_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv::compv_float64_t* x, const COMPV_ALIGNED(AVX) compv::compv_float64_t* y, compv::compv_uscalar_t numPoints, compv::compv_float64_t* tx1, compv::compv_float64_t* ty1, compv::compv_float64_t* s1);
 COMPV_EXTERNC void MathStatsMSE2DHomogeneous_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv::compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv::compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv::compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv::compv_float64_t* bY, COMPV_ALIGNED(SSE) compv::compv_float64_t* mse, compv::compv_uscalar_t numPoints);
 COMPV_EXTERNC void MathStatsMSE2DHomogeneous_4_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv::compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv::compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv::compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv::compv_float64_t* bY, COMPV_ALIGNED(SSE) compv::compv_float64_t* mse, compv::compv_uscalar_t numPoints);
+COMPV_EXTERNC void MathStatsVariance_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* data, compv::compv_uscalar_t count, const compv::compv_float64_t* mean1, compv::compv_float64_t* var1);
+
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 #if COMPV_ARCH_X64 && COMPV_ASM
@@ -118,7 +120,7 @@ COMPV_ERROR_CODE CompVMathStats<T>::mse2D_homogeneous(const T* aX_h, const T* aY
 			COMPV_EXEC_IFDEF_INTRIN_X86(MathStatsMSE2DHomogeneous_float64 = MathStatsMSE2DHomogeneous_float64_Intrin_SSE2);
 			COMPV_EXEC_IFDEF_ASM_X86(MathStatsMSE2DHomogeneous_float64 = MathStatsMSE2DHomogeneous_float64_Asm_X86_SSE2);
 			COMPV_EXEC_IFDEF_ASM_X64(MathStatsMSE2DHomogeneous_float64 = MathStatsMSE2DHomogeneous_float64_Asm_X64_SSE2);
-			if (numPoints == 4) { // Homography -> very common
+			if (numPoints == 4) { // Homography -> very common (not true!!)
 				COMPV_EXEC_IFDEF_INTRIN_X86(MathStatsMSE2DHomogeneous_float64 = MathStatsMSE2DHomogeneous_4_float64_Intrin_SSE2);
 				COMPV_EXEC_IFDEF_ASM_X86(MathStatsMSE2DHomogeneous_float64 = MathStatsMSE2DHomogeneous_4_float64_Asm_X86_SSE2);
 			}
@@ -154,8 +156,20 @@ template <class T>
 COMPV_ERROR_CODE CompVMathStats<T>::variance(const T* data, size_t count, const T* mean1, T* var1)
 {
 	COMPV_CHECK_EXP_RETURN(!data || count < 2 || !mean1 || !var1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
-
+	
+	if (std::is_same<T, compv_float64_t>::value) {
+		void (*MathStatsVariance_float64)(const COMPV_ALIGNED(X) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1) = NULL;
+		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && count > 1 && COMPV_IS_ALIGNED_SSE(data)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(MathStatsVariance_float64 = MathStatsVariance_float64_Intrin_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X86(MathStatsVariance_float64 = MathStatsVariance_float64_Asm_X86_SSE2);
+		}
+		if (MathStatsVariance_float64) {
+			MathStatsVariance_float64((const compv_float64_t*)data, (compv_uscalar_t)count, (const compv_float64_t*)mean1, (compv_float64_t*)var1);
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
+	
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	T dev, var = 0, mean = *mean1;
 	for (size_t i = 0; i < count; ++i) {
 		dev = (data[i] - mean);

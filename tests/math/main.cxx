@@ -22,7 +22,8 @@ using namespace compv;
 #define TEST_PSI					0 // Moore–Penrose pseudoinverse
 #define TEST_RAND					0
 #define TEST_NORMALIZE_HARTLEY		0
-#define TEST_MSE_2D_HOMOG			1
+#define TEST_VARIANCE				1
+#define TEST_MSE_2D_HOMOG			0
 #define TEST_MOPS_ISSYMMETRIC		0
 #define TEST_MOPS_MULAB				0
 
@@ -83,6 +84,10 @@ int main()
 #if TEST_NORMALIZE_HARTLEY
 	extern COMPV_ERROR_CODE TestNormalize2DHartley();
 	COMPV_CHECK_CODE_ASSERT(TestNormalize2DHartley());
+#endif
+#if TEST_VARIANCE
+	extern COMPV_ERROR_CODE TestVariance();
+	COMPV_CHECK_CODE_ASSERT(TestVariance());
 #endif
 #if TEST_MSE_2D_HOMOG
 	extern COMPV_ERROR_CODE TestMSE2D_homogeneous();
