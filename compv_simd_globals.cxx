@@ -18,6 +18,16 @@ COMPV_API COMPV_ALIGN_DEFAULT() int8_t k1_i8[] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };
 
+COMPV_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t km1_f64[] = {
+	-1., -1., // SSE
+	-1., -1., // AVX
+};
+
+COMPV_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t km1_0_f64[] = {
+	-1., 0., // SSE
+	-1., 0. // AVX
+};
+
 COMPV_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t k1_f64[] = {
 	1., 1., // SSE
 	1., 1., // AVX
@@ -133,7 +143,12 @@ COMPV_API COMPV_ALIGN_DEFAULT() int32_t kAVXPermutevar8x32_XXABBCDE_i32[] = { //
     0xFF, 0xFF, COMPV_AVX_A64, COMPV_AVX_B64, COMPV_AVX_B64, COMPV_AVX_C64, COMPV_AVX_D64, COMPV_AVX_E64
 };
 
-COMPV_API COMPV_ALIGN_DEFAULT() uint32_t kAVXFloat64MaskAbs[] = { // Mask used for operations to compute the absolute value
+COMPV_API COMPV_ALIGN_DEFAULT() uint32_t kAVXFloat64MaskAbs[] = { // Mask used for operations to compute the absolute value -> and(xmm, mask)
 	0xffffffff, 0x7fffffff, 0xffffffff, 0x7fffffff, // SSE
 	0xffffffff, 0x7fffffff, 0xffffffff, 0x7fffffff // AVX
+};
+
+COMPV_API COMPV_ALIGN_DEFAULT() uint32_t kAVXFloat64MaskNegate[] = { // Mask used for operations to negate values -> xor(xmm, mask)
+	0x00000000, 0x80000000, 0x00000000, 0x80000000, // SSE
+	0x00000000, 0x80000000, 0x00000000, 0x80000000 // AVX
 };

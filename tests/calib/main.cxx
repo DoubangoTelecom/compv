@@ -11,7 +11,8 @@
 
 using namespace compv;
 
-#define TEST_HOMOGRAPHY				1
+#define TEST_HOMOGRAPHY					0
+#define TEST_HOMOGRAPHY_BUILD_MATRIX	1
 
 #if COMPV_OS_WINDOWS
 int _tmain(int argc, _TCHAR* argv[])
@@ -30,6 +31,10 @@ int main()
 #if TEST_HOMOGRAPHY
 	extern COMPV_ERROR_CODE TestHomography();
 	COMPV_CHECK_CODE_ASSERT(TestHomography());
+#endif
+#if TEST_HOMOGRAPHY_BUILD_MATRIX
+	extern COMPV_ERROR_CODE TestBuildHomographyMatrixEq();
+	COMPV_CHECK_CODE_ASSERT(TestBuildHomographyMatrixEq());
 #endif
 
     // deInit the engine

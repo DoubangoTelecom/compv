@@ -163,7 +163,7 @@ COMPV_ERROR_CODE CompVMathStats<T>::variance(const T* data, size_t count, const 
 			COMPV_EXEC_IFDEF_INTRIN_X86(MathStatsVariance_float64 = MathStatsVariance_float64_Intrin_SSE2);
 			COMPV_EXEC_IFDEF_ASM_X86(MathStatsVariance_float64 = MathStatsVariance_float64_Asm_X86_SSE2);
 		}
-		if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && count > 1 && COMPV_IS_ALIGNED_AVX(data)) {
+		if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && count > 3 && COMPV_IS_ALIGNED_AVX(data)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(MathStatsVariance_float64 = MathStatsVariance_float64_Intrin_AVX);
 			COMPV_EXEC_IFDEF_ASM_X86(MathStatsVariance_float64 = MathStatsVariance_float64_Asm_X86_AVX);
 		}

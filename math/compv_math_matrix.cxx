@@ -25,12 +25,16 @@ COMPV_EXTERNC void MatrixMulABt_float64_minpack1_Asm_X86_SSE2(const COMPV_ALIGNE
 COMPV_EXTERNC void MatrixMulABt_float64_minpack1_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv::compv_float64_t* A, const COMPV_ALIGNED(AVX) compv::compv_float64_t* B, compv::compv_uscalar_t aRows, compv::compv_uscalar_t bRows, compv::compv_uscalar_t bCols, compv::compv_uscalar_t aStrideInBytes, compv::compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv::compv_float64_t* R, compv::compv_uscalar_t rStrideInBytes);
 COMPV_EXTERNC void MatrixMulABt_float64_3x3_Asm_X86_SSE41(const COMPV_ALIGNED(AVX) compv::compv_float64_t* A, const COMPV_ALIGNED(AVX) compv::compv_float64_t* B, compv::compv_uscalar_t aRows, compv::compv_uscalar_t bRows, compv::compv_uscalar_t bCols, compv::compv_uscalar_t aStrideInBytes, compv::compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv::compv_float64_t* R, compv::compv_uscalar_t rStrideInBytes);
 COMPV_EXTERNC void MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* S, compv::compv_uscalar_t *row, compv::compv_uscalar_t *col, compv::compv_float64_t* max, compv::compv_uscalar_t rowStart, compv::compv_uscalar_t rowEnd, compv::compv_uscalar_t strideInBytes);
+COMPV_EXTERNC void MatrixBuildHomographyEqMatrix_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv::compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv::compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv::compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv::compv_float64_t* M, COMPV_ALIGNED(SSE)compv::compv_uscalar_t M_strideInBytes, compv::compv_uscalar_t numPoints);
+
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 #if COMPV_ARCH_X64 && COMPV_ASM
 COMPV_EXTERNC void MatrixMulABt_float64_minpack1_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* A, const COMPV_ALIGNED(SSE) compv::compv_float64_t* B, compv::compv_uscalar_t aRows, compv::compv_uscalar_t bRows, compv::compv_uscalar_t bCols, compv::compv_uscalar_t aStrideInBytes, compv::compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv::compv_float64_t* R, compv::compv_uscalar_t rStrideInBytes);
 COMPV_EXTERNC void MatrixMulABt_float64_minpack1_Asm_X64_AVX(const COMPV_ALIGNED(AVX) compv::compv_float64_t* A, const COMPV_ALIGNED(AVX) compv::compv_float64_t* B, compv::compv_uscalar_t aRows, compv::compv_uscalar_t bRows, compv::compv_uscalar_t bCols, compv::compv_uscalar_t aStrideInBytes, compv::compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv::compv_float64_t* R, compv::compv_uscalar_t rStrideInBytes);
 COMPV_EXTERNC void MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* S, compv::compv_uscalar_t *row, compv::compv_uscalar_t *col, compv::compv_float64_t* max, compv::compv_uscalar_t rowStart, compv::compv_uscalar_t rowEnd, compv::compv_uscalar_t strideInBytes);
+COMPV_EXTERNC void MatrixBuildHomographyEqMatrix_float64_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv::compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv::compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv::compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv::compv_float64_t* M, COMPV_ALIGNED(SSE)compv::compv_uscalar_t M_strideInBytes, compv::compv_uscalar_t numPoints);
+
 #endif /* COMPV_ARCH_X64 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
@@ -774,7 +778,6 @@ template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::buildHomographyEqMatrix(const T* srcX, const T* srcY, const T* dstX, const T* dstY, CompVPtrArray(T)& M, size_t numPoints)
 {
 	COMPV_CHECK_EXP_RETURN(!srcX || !srcY || !dstX || !dstY || numPoints < 4, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
 
 	// Each point (x, y) contribute two rows in M which means has (2 x numPoints) rows
 	// "h" is a vector representing H (3x3) and is a 9x1 vector. This means M has 9 columns.
@@ -787,6 +790,24 @@ COMPV_ERROR_CODE CompVMatrix<T>::buildHomographyEqMatrix(const T* srcX, const T*
 	size_t i;
 	size_t M_strideInBytes = M->strideInBytes();
 	T* M0_ptr = const_cast<T*>(M->ptr());
+
+	// TODO(dmi): transpose M to make it more SIMD friendly
+
+	if (std::is_same<T, compv_float64_t>::value) {
+		void (*MatrixBuildHomographyEqMatrix_float64)(const COMPV_ALIGNED(X) compv_float64_t* srcX, const COMPV_ALIGNED(X) compv_float64_t* srcY, const COMPV_ALIGNED(X) compv_float64_t* dstX, const COMPV_ALIGNED(X) compv_float64_t* dstY, COMPV_ALIGNED(X) compv_float64_t* M, COMPV_ALIGNED(X)compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints) = NULL;
+		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && numPoints > 1 && COMPV_IS_ALIGNED_SSE(srcX) && COMPV_IS_ALIGNED_SSE(srcY) && COMPV_IS_ALIGNED_SSE(dstY) && M->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(MatrixBuildHomographyEqMatrix_float64 = MatrixBuildHomographyEqMatrix_float64_Intrin_SSE2);
+			COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Intrin code faster
+			//COMPV_EXEC_IFDEF_ASM_X86(MatrixBuildHomographyEqMatrix_float64 = MatrixBuildHomographyEqMatrix_float64_Asm_X86_SSE2);
+			//COMPV_EXEC_IFDEF_ASM_X64(MatrixBuildHomographyEqMatrix_float64 = MatrixBuildHomographyEqMatrix_float64_Asm_X64_SSE2);
+		}
+		if (MatrixBuildHomographyEqMatrix_float64) {
+			MatrixBuildHomographyEqMatrix_float64((const compv_float64_t*)srcX, (const compv_float64_t*)srcY, (const compv_float64_t*)dstX, (const compv_float64_t*)dstY, (compv_float64_t*)M0_ptr, (compv_uscalar_t)M_strideInBytes, (compv_uscalar_t)numPoints);
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	T* M1_ptr = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(M0_ptr)+M_strideInBytes);
 	size_t M_strideInBytesTimes2 = M_strideInBytes << 1;
 	

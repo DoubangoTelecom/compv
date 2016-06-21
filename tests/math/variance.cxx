@@ -8,7 +8,7 @@ using namespace compv;
 #define TYPE_FLOAT			1
 
 #define TYPE		TYPE_DOUBLE  // double or float
-#define LOOP_COUNT	10000000
+#define LOOP_COUNT	1
 
 #if TYPE == TYPE_DOUBLE
 #	define TYP		double

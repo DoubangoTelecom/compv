@@ -15,7 +15,7 @@ using namespace compv;
 #define TRANSX				28.5
 #define TRANSY				-10.0
 #define TYP					double  // double or float (float is useless because of slow convergence issue)
-#define MODE_EST			COMPV_MODELEST_TYPE_RANSAC
+#define MODE_EST			COMPV_MODELEST_TYPE_NONE
 #define TYP_SZ				"%e"	// %e or %f
 #define MSE					9.1831692240696733e-017
 #if COMPV_ARCH_X64
@@ -27,6 +27,38 @@ using namespace compv;
 #	define MD5_EXPECTED_AVX		"4b459b1df9b46dfa5781dc9d9985c0f9"
 #	define MD5_EXPECTED			"86013aa6fc4ddc47dbbf094826fb6aec" // Without SIMD
 #endif
+
+COMPV_ERROR_CODE TestBuildHomographyMatrixEq()
+{
+	uint64_t timeStart, timeEnd;
+	COMPV_ALIGN_DEFAULT() TYP srcX[NUM_POINTS];
+	COMPV_ALIGN_DEFAULT() TYP srcY[NUM_POINTS];
+	COMPV_ALIGN_DEFAULT() TYP srcZ[NUM_POINTS];
+	COMPV_ALIGN_DEFAULT() TYP dstX[NUM_POINTS];
+	COMPV_ALIGN_DEFAULT() TYP dstY[NUM_POINTS];
+	CompVPtrArray(TYP) M;
+	
+	for (signed i = 0; i < NUM_POINTS; ++i) {
+		srcX[i] = (TYP)((i & 1) ? i : -i) + 0.5;
+		srcY[i] = ((TYP)(srcX[i] * 0.2)) + i + 0.7;
+		srcZ[i] = ((TYP)(srcX[i] * 0.2)) + i + 8.7;
+		dstX[i] = ((TYP)(srcX[i] * 8.2)) + i + 0.7;
+		dstY[i] = (TYP)((i & 1) ? i : -i) + 8.5;
+	}
+
+	timeStart = CompVTime::getNowMills();
+	for (size_t i = 0; i < LOOP_COUNT; ++i) {
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<TYP>::buildHomographyEqMatrix(&srcX[0], &srcY[0], &dstX[0], &dstY[0], M, NUM_POINTS));
+	}
+	timeEnd = CompVTime::getNowMills();
+
+	COMPV_DEBUG_INFO("Elapsed time (TestBuildHomographyMatrixEq) = [[[ %llu millis ]]]", (timeEnd - timeStart));
+
+	const std::string md5 = arrayMD5<TYP>(M);
+	COMPV_CHECK_EXP_RETURN(md5 != "540181662bad9a3d001b8b8969a7cb5f", COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+
+	return COMPV_ERROR_CODE_S_OK;
+}
 
 COMPV_ERROR_CODE TestHomography()
 {

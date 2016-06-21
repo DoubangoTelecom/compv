@@ -15,9 +15,13 @@ global sym(MatrixMulGA_float32_Asm_X86_SSE2)
 global sym(MatrixMulABt_float64_minpack1_Asm_X86_SSE2)
 global sym(MatrixMulABt_float64_3x3_Asm_X86_SSE41)
 global sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2)
+global sym(MatrixBuildHomographyEqMatrix_float64_Asm_X86_SSE2)
 
 section .data
 	extern sym(kAVXFloat64MaskAbs)
+	extern sym(km1_f64)
+	extern sym(km1_0_f64)
+	extern sym(kAVXFloat64MaskNegate)
 
 section .text
 
@@ -590,7 +594,85 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X86_SSE2):
 	pop rbp
 	ret
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const COMPV_ALIGNED(SSE) compv_float64_t* srcX
+; arg(1) -> const COMPV_ALIGNED(SSE) compv_float64_t* srcY
+; arg(2) -> const COMPV_ALIGNED(SSE) compv_float64_t* dstX
+; arg(3) -> const COMPV_ALIGNED(SSE) compv_float64_t* dstY
+; arg(4) -> COMPV_ALIGNED(SSE) compv_float64_t* M
+; arg(5) -> COMPV_ALIGNED(SSE)compv_uscalar_t M_strideInBytes
+; arg(6) -> compv_uscalar_t numPoints
+; void MatrixBuildHomographyEqMatrix_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE)compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints)
+sym(MatrixBuildHomographyEqMatrix_float64_Asm_X86_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
+	COMPV_YASM_SAVE_XMM 7
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
 
+	xor rcx, rcx ; rcx = i = 0
+	mov rax, arg(5)
+	mov rsi, arg(4) ; rsi = M0_ptr
+	lea rdi, [rsi + rax] ; rdi = M1_ptr
+	shl rax, 1 ; rax = M_strideInBytesTimes2
 
+	xorpd xmm7, xmm7 ; xmm7 = xmmZero
+	movapd xmm6, [sym(km1_0_f64)]; xmm6 = xmmMinusOneZero
+	movapd xmm5, [sym(kAVXFloat64MaskNegate)] ; xmm5 = xmmMaskNegate
 
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (size_t i = 0; i < numPoints; ++i)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopPoints
+		mov rbx, arg(0) ; srcX
+		mov rdx, arg(1) ; srcY
+		movsd xmm0, [rbx + rcx*8]
+		movsd xmm1, [rdx + rcx*8]
+		unpcklpd xmm0, xmm1 ; xmmSrcXY
+		mov rbx, arg(2) ; dstX		
+		mov rdx, arg(3) ; dstY
+		movsd xmm1, [rbx + rcx*8]
+		movsd xmm2, [rdx + rcx*8]
+		unpcklpd xmm1, xmm1 ; xmmDstX
+		unpcklpd xmm2, xmm2 ; xmmDstY
+		; First #9 contributions
+		movapd xmm3, xmm1
+		movapd xmm4, xmm0
+		mulpd xmm3, xmm0 ; (dstX * srcX), (dstX * srcY)
+		xorpd xmm4, xmm5 ; -x, -y
+		movapd [rsi + 2*8], xmm6
+		movapd [rsi + 4*8], xmm7 ; 0, 0
+		movsd [rsi + 8*8], xmm1 ; xmmDstX
+		movapd [rsi + 0*8], xmm4 ; -x, -y
+		movapd [rsi + 6*8], xmm3 ; (dstX * srcX), (dstX * srcY)
+		; Second #9 contributions
+		xorpd xmm1, xmm1
+		movapd [rdi + 8*8], xmm2 ; xmmDstY
+		movapd [rdi + 0*8], xmm7
+		mulpd xmm2, xmm0 ; (dstY * srcX), (dstY * srcY)
+		unpcklpd xmm1, xmm4 ; 0, -x
+		unpckhpd xmm4, [km1_f64] ; -y, -1
+		
+		inc rcx
+		movapd [rdi + 2*8], xmm1
+		movapd [rdi + 4*8], xmm4
+		movapd [rdi + 6*8], xmm2
 
+		lea rsi, [rsi + rax]
+		lea rdi, [rdi + rax]
+		
+		cmp rcx, arg(6)
+		jl .LoopPoints
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret

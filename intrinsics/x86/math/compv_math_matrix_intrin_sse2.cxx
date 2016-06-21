@@ -219,6 +219,44 @@ void MatrixMulABt_float64_minpack1_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_fl
 	}
 }
 
+void MatrixBuildHomographyEqMatrix_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE)compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
+	compv_float64_t* M0_ptr = const_cast<compv_float64_t*>(M);
+	compv_float64_t* M1_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M0_ptr)+M_strideInBytes);
+	size_t M_strideInBytesTimes2 = M_strideInBytes << 1;
+	__m128d xmmZero = _mm_setzero_pd();
+	__m128d xmmMinusOne = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(km1_f64));
+	__m128d xmmMinusOneZero = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(km1_0_f64));
+	__m128d xmmMaskNegate = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXFloat64MaskNegate));
+	__m128d xmmSrcXY, xmmDstX, xmmDstY;
+	__m128d xmm0;
+	
+	for (size_t i = 0; i < numPoints; ++i) {
+		xmmSrcXY = _mm_unpacklo_pd(_mm_load_sd(&srcX[i]), _mm_load_sd(&srcY[i]));
+		xmmDstX = _mm_load_sd(&dstX[i]);
+		xmmDstY = _mm_load_sd(&dstY[i]);
+		xmmDstX = _mm_unpacklo_pd(xmmDstX, xmmDstX);
+		xmmDstY = _mm_unpacklo_pd(xmmDstY, xmmDstY);
+		// First #9 contributions
+		xmm0 = _mm_xor_pd(xmmSrcXY, xmmMaskNegate); // -x, -y
+		_mm_store_pd(&M0_ptr[0], xmm0); // -x, -y
+		_mm_store_pd(&M0_ptr[2], xmmMinusOneZero); // -1, 0
+		_mm_store_pd(&M0_ptr[4], xmmZero); // 0, 0
+		_mm_store_pd(&M0_ptr[6], _mm_mul_pd(xmmDstX, xmmSrcXY)); // (dstX * srcX), (dstX * srcY)
+		_mm_store_sd(&M0_ptr[8], xmmDstX);
+		// Second #9 contributions 
+		_mm_store_pd(&M1_ptr[0], xmmZero); // 0, 0
+		_mm_store_pd(&M1_ptr[2], _mm_unpacklo_pd(xmmZero, xmm0)); // 0, -x
+		_mm_store_pd(&M1_ptr[4], _mm_unpackhi_pd(xmm0, xmmMinusOne)); // -y, -1
+		_mm_store_pd(&M1_ptr[6], _mm_mul_pd(xmmDstY, xmmSrcXY)); // (dstY * srcX), (dstY * srcY)
+		_mm_store_sd(&M1_ptr[8], xmmDstY);
+		// Move to the next point
+		M0_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M0_ptr)+M_strideInBytesTimes2);
+		M1_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M1_ptr)+M_strideInBytesTimes2);
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
