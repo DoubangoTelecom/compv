@@ -14,6 +14,7 @@ global sym(MathStatsNormalize2DHartley_float64_Asm_X86_SSE2)
 global sym(MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2)
 global sym(MathStatsMSE2DHomogeneous_float64_Asm_X86_SSE2)
 global sym(MathStatsMSE2DHomogeneous_4_float64_Asm_X86_SSE2)
+global sym(MathStatsVariance_float64_Asm_X86_SSE2)
 
 section .data
 	extern sym(ksqrt2_f64)
@@ -497,6 +498,92 @@ sym(MathStatsMSE2DHomogeneous_4_float64_Asm_X86_SSE2):
 	pop rdi
 	pop rsi
 	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const COMPV_ALIGNED(SSE) compv_float64_t* data
+; arg(1) -> compv_uscalar_t count
+; arg(2) -> const compv_float64_t* mean1
+; arg(3) -> compv_float64_t* var1
+; void MathStatsVariance_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1)
+sym(MathStatsVariance_float64_Asm_X86_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 4
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	mov rax, arg(2)
+	mov rcx, arg(1) ; rcx = count
+	xor rsi, rsi ; rsi = i = 0
+	movsd xmm0, [rax]
+	lea rbx, [rcx - 1] ; rbx = (count - 1)
+	lea rdx, [rcx - 3] ; rdx = (count - 3)
+	xorpd xmm5, xmm5 ; xmm5 = xmmVar
+	movd xmm1, rbx
+	shufpd xmm0, xmm0, 0x0 ; xmm0 = xmmMean
+	pshufd xmm1, xmm1, 0x0
+	mov rax, arg(0) ; rax = data
+	mov rdi, arg(3) ; rdi = var1
+	cvtdq2pd xmm1, xmm1 ; xmm1 = xmmCountMinus1
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (i = 0; i < countSigned - 3; i += 4)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	cmp rsi, rdx
+	jge .EndOfLoop4
+	.Loop4
+		movapd xmm2, [rax + rsi*8]
+		movapd xmm3, [rax + rsi*8 + 2*8]
+		lea rsi, [rsi + 4]
+		subpd xmm2, xmm0
+		subpd xmm3, xmm0
+		mulpd xmm2, xmm2
+		mulpd xmm3, xmm3
+		addpd xmm5, xmm2
+		addpd xmm5, xmm3
+		cmp rsi, rdx
+		jl .Loop4
+	.EndOfLoop4
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; if (i < countSigned - 1)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	cmp rsi, rbx
+	jge .EnOfMoreThanTwoRemains
+		movapd xmm2, [rax + rsi*8]
+		lea rsi, [rsi + 2]
+		subpd xmm2, xmm0
+		mulpd xmm2, xmm2
+		addpd xmm5, xmm2
+	.EnOfMoreThanTwoRemains
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; if (countSigned & 1)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	test rcx, 1
+	jz .EndOfMoreThanOneRamains
+		movsd xmm2, [rax + rsi*8]
+		subsd xmm2, xmm0
+		mulsd xmm2, xmm2
+		addsd xmm5, xmm2
+	.EndOfMoreThanOneRamains
+
+	movapd xmm2, xmm5
+	shufpd xmm2, xmm2, 0x1
+	addsd xmm5, xmm2
+	divsd xmm5, xmm1
+	movsd [rdi], xmm5
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
