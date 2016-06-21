@@ -8,7 +8,7 @@ using namespace compv;
 #define TYPE_FLOAT			1
 
 #define TYPE		TYPE_DOUBLE  // double or float
-#define LOOP_COUNT	1
+#define LOOP_COUNT	10000000
 
 #if TYPE == TYPE_DOUBLE
 #	define TYP		double
@@ -24,6 +24,7 @@ COMPV_ERROR_CODE TestVariance()
 #	define POINTS_COUNT 2015
 #	define VARIANCE		1524545458375.9475
 #	define VARIANCE_SSE	1524545458375.9446
+#	define VARIANCE_AVX	1524545458375.9414
 
 	COMPV_ALIGN_DEFAULT() TYP data[POINTS_COUNT];
 	TYP mean = 1234569.156325, var_computed, var_expected;
@@ -39,7 +40,7 @@ COMPV_ERROR_CODE TestVariance()
 	}
 	timeEnd = CompVTime::getNowMills();
 
-	var_expected = CompVCpu::isEnabled(compv::kCpuFlagSSE2) ? VARIANCE_SSE : VARIANCE;
+	var_expected = CompVCpu::isEnabled(compv::kCpuFlagAVX) ? VARIANCE_AVX : (CompVCpu::isEnabled(compv::kCpuFlagSSE2) ? VARIANCE_SSE : VARIANCE);
 	TYP var_error = COMPV_MATH_ABS(var_computed - VARIANCE);
 	
 	COMPV_DEBUG_INFO_EX("TestVariance", "VAR_computed="TYP_SZ", VAR_expected="TYP_SZ", VAR_err="TYP_SZ, var_computed, var_expected, var_error);

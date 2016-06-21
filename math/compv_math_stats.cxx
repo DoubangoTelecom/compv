@@ -20,7 +20,7 @@ COMPV_EXTERNC void MathStatsNormalize2DHartley_4_float64_Asm_X86_AVX(const COMPV
 COMPV_EXTERNC void MathStatsMSE2DHomogeneous_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv::compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv::compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv::compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv::compv_float64_t* bY, COMPV_ALIGNED(SSE) compv::compv_float64_t* mse, compv::compv_uscalar_t numPoints);
 COMPV_EXTERNC void MathStatsMSE2DHomogeneous_4_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv::compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv::compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv::compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv::compv_float64_t* bY, COMPV_ALIGNED(SSE) compv::compv_float64_t* mse, compv::compv_uscalar_t numPoints);
 COMPV_EXTERNC void MathStatsVariance_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* data, compv::compv_uscalar_t count, const compv::compv_float64_t* mean1, compv::compv_float64_t* var1);
-
+COMPV_EXTERNC void MathStatsVariance_float64_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv::compv_float64_t* data, compv::compv_uscalar_t count, const compv::compv_float64_t* mean1, compv::compv_float64_t* var1);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 #if COMPV_ARCH_X64 && COMPV_ASM
@@ -162,6 +162,10 @@ COMPV_ERROR_CODE CompVMathStats<T>::variance(const T* data, size_t count, const 
 		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && count > 1 && COMPV_IS_ALIGNED_SSE(data)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(MathStatsVariance_float64 = MathStatsVariance_float64_Intrin_SSE2);
 			COMPV_EXEC_IFDEF_ASM_X86(MathStatsVariance_float64 = MathStatsVariance_float64_Asm_X86_SSE2);
+		}
+		if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && count > 1 && COMPV_IS_ALIGNED_AVX(data)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(MathStatsVariance_float64 = MathStatsVariance_float64_Intrin_AVX);
+			COMPV_EXEC_IFDEF_ASM_X86(MathStatsVariance_float64 = MathStatsVariance_float64_Asm_X86_AVX);
 		}
 		if (MathStatsVariance_float64) {
 			MathStatsVariance_float64((const compv_float64_t*)data, (compv_uscalar_t)count, (const compv_float64_t*)mean1, (compv_float64_t*)var1);

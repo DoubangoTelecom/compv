@@ -12,6 +12,7 @@ COMPV_YASM_DEFAULT_REL
 
 global sym(MathStatsNormalize2DHartley_float64_Asm_X86_AVX)
 global sym(MathStatsNormalize2DHartley_4_float64_Asm_X86_AVX)
+global sym(MathStatsVariance_float64_Asm_X86_AVX)
 
 section .data
 	extern sym(ksqrt2_f64)
@@ -20,6 +21,7 @@ section .data
 	extern sym(kAVXMaskstore_0_1_u64)
 	extern sym(kAVXMaskzero_2_3_u64)
 	extern sym(kAVXMaskzero_1_2_3_u64)
+	extern sym(kAVXMaskzero_3_u64)
 
 section .text
 
@@ -329,6 +331,99 @@ sym(MathStatsNormalize2DHartley_4_float64_Asm_X86_AVX):
 
 	;; begin epilog ;;
 	COMPV_YASM_RESTORE_YMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	vzeroupper
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; TODO(dmi): FMA3 disabled because not faster
+; arg(0) -> const COMPV_ALIGNED(AVX) compv_float64_t* data;
+; arg(1) ->compv_uscalar_t count
+; arg(2) ->const compv_float64_t* mean1
+; arg(3) ->compv_float64_t* var1
+; void MathStatsVariance_float64_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1)
+sym(MathStatsVariance_float64_Asm_X86_AVX):
+	vzeroupper
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 4
+	;; end prolog ;;
+
+	mov rax, arg(2)
+	mov rcx, arg(1) ; rcx = count
+	xor rsi, rsi ; rsi = i = 0
+	vmovsd xmm0, [rax]
+	lea rbx, [rcx - 1] ; rbx = (count - 1)
+	lea rdx, [rcx - 3] ; rdx = (count - 3)
+	vxorpd ymm5, ymm5 ; ymm5 = ymmVar
+	vmovd xmm1, ebx
+	vshufpd xmm0, xmm0, 0x0
+	vpshufd xmm1, xmm1, 0x0
+	mov rax, arg(0) ; rax = data
+	mov rdi, arg(3) ; rdi = var1
+	vcvtdq2pd ymm1, xmm1 ; ymm1 = ymmCountMinus1
+	vperm2f128 ymm0, ymm0, ymm0, 0x0 ; ymm0 = ymmMean
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (i = 0; i < countSigned - 3; i += 4)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	cmp rsi, rdx
+	jge .EndOfLoop4
+	.Loop4
+		vmovapd ymm2, [rax + rsi*8]
+		lea rsi, [rsi + 4]
+		vsubpd ymm2, ymm2, ymm0
+		%if 0 ; FMA3
+			vfmadd231pd ymm5, ymm2, ymm2
+		%else
+			vmulpd ymm2, ymm2, ymm2
+			vaddpd ymm5, ymm5, ymm2
+		%endif
+		cmp rsi, rdx
+		jl .Loop4
+	.EndOfLoop4
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; if (i < countSigned)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	cmp rsi, rcx
+	jge .EndOfMoreThanOneRemain
+		vmovapd ymm2, [rax + rsi*8]
+		sub rcx, rsi
+		vsubpd ymm2, ymm2, ymm0
+		cmp rcx, 3
+		je .ThreeRemains
+		cmp rcx, 2
+		je .TwoRemains
+		jmp .OneRemains
+
+		.ThreeRemains
+			vandpd ymm2, ymm2, [sym(kAVXMaskzero_3_u64)]
+			jmp .MaskApplied
+		.TwoRemains
+			vandpd ymm2, ymm2, [sym(kAVXMaskzero_2_3_u64)]
+			jmp .MaskApplied
+		.OneRemains
+			vandpd ymm2, ymm2, [sym(kAVXMaskzero_1_2_3_u64)]
+
+		.MaskApplied
+			%if 0 ; FMA3
+				vfmadd231pd ymm5, ymm2, ymm2
+			%else
+				vmulpd ymm2, ymm2, ymm2
+				vaddpd ymm5, ymm5, ymm2
+			%endif
+	.EndOfMoreThanOneRemain
+	
+	vhaddpd ymm5, ymm5, ymm5
+	vperm2f128 ymm2, ymm5, ymm5, 0x11
+	vaddpd ymm5, ymm5, ymm2
+	vdivsd xmm5, xmm5, xmm1
+	vmovsd [rdi], xmm5
+
+	;; begin epilog ;;
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

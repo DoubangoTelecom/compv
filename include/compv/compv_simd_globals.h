@@ -39,6 +39,7 @@ extern COMPV_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t ksqrt2_f64[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() uint64_t kAVXMaskstore_0_u64[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() uint64_t kAVXMaskstore_0_1_u64[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() uint32_t kAVXMaskstore_0_u32[];
+extern COMPV_API COMPV_ALIGN_DEFAULT() uint64_t kAVXMaskzero_3_u64[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() uint64_t kAVXMaskzero_2_3_u64[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() uint64_t kAVXMaskzero_1_2_3_u64[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() int32_t kAVXPermutevar8x32_AEBFCGDH_i32[];

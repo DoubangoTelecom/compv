@@ -135,11 +135,11 @@ void MathStatsNormalize2DHartley_4_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) c
 	const __m256d ymmSqrt2 = _mm256_set1_pd(COMPV_MATH_SQRT_2);
 	const __m256i ymmMaskToExtractFirst64Bits = _mm256_load_si256((__m256i*)kAVXMaskstore_0_u64); // not need for asm
 
-	__m256d xmmX = _mm256_load_pd(&x[0]);
-	__m256d xmmY = _mm256_load_pd(&y[0]);
+	__m256d ymmX = _mm256_load_pd(&x[0]);
+	__m256d ymmY = _mm256_load_pd(&y[0]);
 	
-	__m256d ymmTx = _mm256_hadd_pd(xmmX, xmmX);
-	__m256d ymmTy = _mm256_hadd_pd(xmmY, xmmY);
+	__m256d ymmTx = _mm256_hadd_pd(ymmX, ymmX);
+	__m256d ymmTy = _mm256_hadd_pd(ymmY, ymmY);
 	ymmTx = _mm256_add_pd(ymmTx, _mm256_permute2f128_pd(ymmTx, ymmTx, 0x11)); // hadd and result in first double
 	ymmTy = _mm256_add_pd(ymmTy, _mm256_permute2f128_pd(ymmTy, ymmTy, 0x11)); // hadd and result in first double
 	ymmTx = _mm256_mul_pd(ymmTx, ymmOneOverNumPoints);
@@ -147,9 +147,9 @@ void MathStatsNormalize2DHartley_4_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) c
 	ymmTx = _mm256_permute2f128_pd(ymmTx, ymmTx, 0x0); // duplicate first double	
 	ymmTy = _mm256_permute2f128_pd(ymmTy, ymmTy, 0x0); // duplicate first double
 
-	xmmX = _mm256_sub_pd(xmmX, ymmTx);
-	xmmY = _mm256_sub_pd(xmmY, ymmTy);
-	__m256d ymmMagnitude = _mm256_sqrt_pd(_mm256_add_pd(_mm256_mul_pd(xmmX, xmmX), _mm256_mul_pd(xmmY, xmmY)));
+	ymmX = _mm256_sub_pd(ymmX, ymmTx);
+	ymmY = _mm256_sub_pd(ymmY, ymmTy);
+	__m256d ymmMagnitude = _mm256_sqrt_pd(_mm256_add_pd(_mm256_mul_pd(ymmX, ymmX), _mm256_mul_pd(ymmY, ymmY)));
 	ymmMagnitude = _mm256_hadd_pd(ymmMagnitude, ymmMagnitude);
 	ymmMagnitude = _mm256_add_pd(ymmMagnitude, _mm256_permute2f128_pd(ymmMagnitude, ymmMagnitude, 0x11)); // hadd and result in first double
 	ymmMagnitude = _mm256_mul_pd(ymmMagnitude, ymmOneOverNumPoints);
@@ -174,15 +174,60 @@ void MathStatsMSE2DHomogeneous_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) compv
 	_mm256_zeroupper();
 
 	compv_scalar_t numPointsSigned = static_cast<compv_scalar_t>(numPoints);
-	__m256d xmmEX, xmmEY, xmmScale;
-	const __m256d xmmOne = _mm256_set1_pd(1.);
+	__m256d ymmEX, ymmEY, ymmScale;
+	const __m256d ymmOne = _mm256_set1_pd(1.);
 
 	for (compv_scalar_t i = 0; i < numPointsSigned; i += 4) { // memory aligned -> can read beyond the end of the data and up to stride
-		xmmScale = _mm256_div_pd(xmmOne, _mm256_load_pd(&aZ_h[i]));
-		xmmEX = _mm256_sub_pd(_mm256_mul_pd(_mm256_load_pd(&aX_h[i]), xmmScale), _mm256_load_pd(&bX[i]));
-		xmmEY = _mm256_sub_pd(_mm256_mul_pd(_mm256_load_pd(&aY_h[i]), xmmScale), _mm256_load_pd(&bY[i]));
-		_mm256_store_pd(&mse[i], _mm256_add_pd(_mm256_mul_pd(xmmEX, xmmEX), _mm256_mul_pd(xmmEY, xmmEY)));
+		ymmScale = _mm256_div_pd(ymmOne, _mm256_load_pd(&aZ_h[i]));
+		ymmEX = _mm256_sub_pd(_mm256_mul_pd(_mm256_load_pd(&aX_h[i]), ymmScale), _mm256_load_pd(&bX[i]));
+		ymmEY = _mm256_sub_pd(_mm256_mul_pd(_mm256_load_pd(&aY_h[i]), ymmScale), _mm256_load_pd(&bY[i]));
+		_mm256_store_pd(&mse[i], _mm256_add_pd(_mm256_mul_pd(ymmEX, ymmEX), _mm256_mul_pd(ymmEY, ymmEY)));
 	}
+
+	_mm256_zeroupper();
+}
+
+#if defined __INTEL_COMPILER
+#	pragma intel optimization_parameter target_arch=avx
+#endif
+void MathStatsVariance_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
+#if !defined(__AVX__)
+	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
+#endif
+	_mm256_zeroupper();
+
+	compv_scalar_t countSigned = static_cast<compv_scalar_t>(count), i;
+	__m256d ymmDev;
+	__m256d ymmVar = _mm256_setzero_pd();
+	const __m256d ymmCountMinus1 = _mm256_set1_pd(static_cast<compv_float64_t>(count - 1)); // asm: ctv(epi32, double) and no need to duplicate
+	const __m256d ymmMean = _mm256_set1_pd(*mean1); // asm: vmovsd() then shufle
+	for (i = 0; i < countSigned - 3; i += 4) {
+		ymmDev = _mm256_sub_pd(_mm256_load_pd(&data[i]), ymmMean);
+		ymmVar = _mm256_add_pd(ymmVar, _mm256_mul_pd(ymmDev, ymmDev));
+	}
+	if (i < countSigned) {
+		compv_scalar_t remain = (countSigned - i);
+		ymmDev = _mm256_sub_pd(_mm256_load_pd(&data[i]), ymmMean); // data is aligned on AVX which means we can read beyond the bounds and up to the stride
+		if (remain == 3) {
+			const __m256d ymmMaskToHideLast64Bits = _mm256_load_pd((compv_float64_t*)kAVXMaskzero_3_u64); // not need for asm
+			ymmDev = _mm256_and_pd(ymmDev, ymmMaskToHideLast64Bits);
+		}
+		else if (remain == 2) {
+			const __m256d ymmMaskToHideLast128Bits = _mm256_load_pd((compv_float64_t*)kAVXMaskzero_2_3_u64); // not need for asm
+			ymmDev = _mm256_and_pd(ymmDev, ymmMaskToHideLast128Bits);
+		}
+		else {
+			const __m256d ymmMaskToHideLast192Bits = _mm256_load_pd((compv_float64_t*)kAVXMaskzero_1_2_3_u64); // not need for asm
+			ymmDev = _mm256_and_pd(ymmDev, ymmMaskToHideLast192Bits);
+		}
+		ymmVar = _mm256_add_pd(ymmVar, _mm256_mul_pd(ymmDev, ymmDev));
+	}
+	ymmVar = _mm256_hadd_pd(ymmVar, ymmVar);
+	ymmVar = _mm256_add_pd(ymmVar, _mm256_permute2f128_pd(ymmVar, ymmVar, 0x11)); // hadd and result in first double
+	ymmVar = _mm256_div_pd(ymmVar, ymmCountMinus1); // asm: vdivsd
+	_mm256_maskstore_pd(var1, _mm256_load_si256((__m256i*)kAVXMaskstore_0_u64), ymmVar); // asm: vmovsd
 
 	_mm256_zeroupper();
 }
