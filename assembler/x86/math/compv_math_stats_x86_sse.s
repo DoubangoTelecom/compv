@@ -12,6 +12,8 @@ COMPV_YASM_DEFAULT_REL
 
 global sym(MathStatsNormalize2DHartley_float64_Asm_X86_SSE2)
 global sym(MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2)
+global sym(MathStatsMSE2DHomogeneous_float64_Asm_X86_SSE2)
+global sym(MathStatsMSE2DHomogeneous_4_float64_Asm_X86_SSE2)
 
 section .data
 	extern sym(ksqrt2_f64)
@@ -295,6 +297,205 @@ sym(MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2):
 	movsd [rdx], xmm4
 
 	;; begin epilog ;;
+	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const COMPV_ALIGNED(SSE) compv_float64_t* aX_h
+; arg(1) -> const COMPV_ALIGNED(SSE) compv_float64_t* aY_h
+; arg(2) -> const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h
+; arg(3) -> const COMPV_ALIGNED(SSE) compv_float64_t* bX
+; arg(4) -> const COMPV_ALIGNED(SSE) compv_float64_t* bY
+; arg(5) -> COMPV_ALIGNED(SSE) compv_float64_t* mse
+; arg(6) -> compv_uscalar_t numPoints
+; void MathStatsMSE2DHomogeneous_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints)
+sym(MathStatsMSE2DHomogeneous_float64_Asm_X86_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
+	COMPV_YASM_SAVE_XMM 7
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	; alloc memory
+	sub rsp, 8 + 8
+	; [rsp + 0] = numPointsSigned - 3
+	; [rsp + 8] = numPointsSigned - 1
+
+	mov rax, arg(6)
+	lea rax, [rax - 3]
+	mov [rsp + 0], rax
+	lea rax, [rax + 2]
+	mov [rsp + 8], rax
+
+	xor rcx, rcx ; rcx = i
+	mov rsi, arg(0) ; aX_h
+	mov rdi, arg(1) ; aY_h
+	mov rax, arg(2) ; aZ_h
+	mov rbx, arg(3) ; bX
+	mov rdx, arg(4) ; bY
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (i = 0; i < numPointsSigned - 3; i += 4)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	cmp rcx, [rsp + 0]
+	jge .EndOfLoop4
+	.Loop4
+		movapd xmm0, [sym(k1_f64)]
+		movapd xmm1, [sym(k1_f64)]
+		divpd xmm0, [rax + rcx*8]
+		divpd xmm1, [rax + rcx*8 + 2*8]
+		mov rax, arg(5) ; mse
+		movapd xmm2, [rsi + rcx*8]
+		movapd xmm3, [rbx + rcx*8]
+		movapd xmm4, [rsi + rcx*8 + 2*8]
+		movapd xmm5, [rbx + rcx*8 + 2*8]
+		mulpd xmm2, xmm0
+		mulpd xmm4, xmm1
+		movapd xmm6, [rdi + rcx*8 + 2*8]
+		movapd xmm7, [rdx + rcx*8 + 2*8]
+		subpd xmm2, xmm3 ; xmm2 = xmmEX0
+		subpd xmm4, xmm5 ; xmm4 = xmmEX1		
+		movapd xmm3, [rdi + rcx*8]
+		movapd xmm5, [rdx + rcx*8]
+		mulpd xmm3, xmm0
+		mulpd xmm6, xmm1
+		lea rcx, [rcx + 4]
+		subpd xmm3, xmm5
+		subpd xmm6, xmm7
+		mulpd xmm2, xmm2
+		mulpd xmm4, xmm4
+		mulpd xmm3, xmm3
+		mulpd xmm6, xmm6
+		addpd xmm2, xmm3
+		addpd xmm4, xmm6
+		movapd [rax + rcx*8 - 4*8], xmm2
+		movapd [rax + rcx*8 + 2*8 - 4*8], xmm4
+		mov rax, arg(2) ; aZ_h
+		cmp rcx, [rsp + 0]
+		jl .Loop4
+	.EndOfLoop4
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; if (i < numPointsSigned - 1)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	cmp rcx, [rsp + 8]
+	jge .EndOfMoreThanTwoRemains
+	.MoreThanTwoRemains
+		movapd xmm0, [sym(k1_f64)]
+		divpd xmm0, [rax + rcx*8]
+		mov rax, arg(5) ; mse
+		movapd xmm1, [rsi + rcx*8]
+		movapd xmm2, [rdi + rcx*8]
+		mulpd xmm1, xmm0
+		mulpd xmm2, xmm0
+		subpd xmm1, [rbx + rcx*8]
+		subpd xmm2, [rdx + rcx*8]
+		mulpd xmm1, xmm1
+		mulpd xmm2, xmm2
+		addpd xmm1, xmm2
+		movapd [rax + rcx*8], xmm1
+		lea rcx, [rcx + 2]
+		mov rax, arg(2) ; aZ_h
+	.EndOfMoreThanTwoRemains
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; if (numPointsSigned & 1)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	cmp rcx, arg(6)
+	jge .EndOfMoreThanOneRemains
+	.MoreThanOneRemains
+		movsd xmm0, [sym(k1_f64)]
+		divsd xmm0, [rax + rcx*8]
+		mov rax, arg(5) ; mse
+		movsd xmm1, [rsi + rcx*8]
+		movsd xmm2, [rdi + rcx*8]
+		mulsd xmm1, xmm0
+		mulsd xmm2, xmm0
+		subsd xmm1, [rbx + rcx*8]
+		subsd xmm2, [rdx + rcx*8]
+		mulsd xmm1, xmm1
+		mulsd xmm2, xmm2
+		addsd xmm1, xmm2
+		movsd [rax + rcx*8], xmm1
+	.EndOfMoreThanOneRemains
+
+	; free memory
+	add rsp, 8 + 8
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const COMPV_ALIGNED(SSE) compv_float64_t* aX_h
+; arg(1) -> const COMPV_ALIGNED(SSE) compv_float64_t* aY_h
+; arg(2) -> const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h
+; arg(3) -> const COMPV_ALIGNED(SSE) compv_float64_t* bX
+; arg(4) -> const COMPV_ALIGNED(SSE) compv_float64_t* bY
+; arg(5) -> COMPV_ALIGNED(SSE) compv_float64_t* mse
+; arg(6) -> compv_uscalar_t numPoints
+; void MathStatsMSE2DHomogeneous_4_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints)
+sym(MathStatsMSE2DHomogeneous_4_float64_Asm_X86_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
+	COMPV_YASM_SAVE_XMM 7
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+	
+	movapd xmm0, [sym(k1_f64)]
+	movapd xmm1, [sym(k1_f64)]
+	mov rax, arg(2) ; aZ_h
+	mov rsi, arg(0) ; aX_h
+	mov rbx, arg(3) ; bX
+	mov rdi, arg(1) ; aY_h	
+	mov rdx, arg(4) ; bY
+	mov rcx, arg(5) ; mse	
+	divpd xmm0, [rax]
+	divpd xmm1, [rax + 2*8]
+	movapd xmm2, [rsi]
+	movapd xmm3, [rbx]
+	movapd xmm4, [rsi + 2*8]
+	movapd xmm5, [rbx + 2*8]
+	mulpd xmm2, xmm0
+	mulpd xmm4, xmm1
+	movapd xmm6, [rdi + 2*8]
+	movapd xmm7, [rdx + 2*8]
+	subpd xmm2, xmm3
+	subpd xmm4, xmm5		
+	movapd xmm3, [rdi]
+	movapd xmm5, [rdx]
+	mulpd xmm3, xmm0
+	mulpd xmm6, xmm1
+	subpd xmm3, xmm5
+	subpd xmm6, xmm7
+	mulpd xmm2, xmm2
+	mulpd xmm4, xmm4
+	mulpd xmm3, xmm3
+	mulpd xmm6, xmm6
+	addpd xmm2, xmm3
+	addpd xmm4, xmm6
+	movapd [rcx], xmm2
+	movapd [rcx + 2*8], xmm4
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
 	COMPV_YASM_RESTORE_XMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp

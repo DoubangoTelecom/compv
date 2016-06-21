@@ -162,6 +162,31 @@ void MathStatsNormalize2DHartley_4_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) c
 	_mm256_zeroupper();
 }
 
+#if defined __INTEL_COMPILER
+#	pragma intel optimization_parameter target_arch=avx
+#endif
+void MathStatsMSE2DHomogeneous_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* aX_h, const COMPV_ALIGNED(AVX) compv_float64_t* aY_h, const COMPV_ALIGNED(AVX) compv_float64_t* aZ_h, const COMPV_ALIGNED(AVX) compv_float64_t* bX, const COMPV_ALIGNED(AVX) compv_float64_t* bY, COMPV_ALIGNED(AVX) compv_float64_t* mse, compv_uscalar_t numPoints)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
+#if !defined(__AVX__)
+	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
+#endif
+	_mm256_zeroupper();
+
+	compv_scalar_t numPointsSigned = static_cast<compv_scalar_t>(numPoints);
+	__m256d xmmEX, xmmEY, xmmScale;
+	const __m256d xmmOne = _mm256_set1_pd(1.);
+
+	for (compv_scalar_t i = 0; i < numPointsSigned; i += 4) { // memory aligned -> can read beyond the end of the data and up to stride
+		xmmScale = _mm256_div_pd(xmmOne, _mm256_load_pd(&aZ_h[i]));
+		xmmEX = _mm256_sub_pd(_mm256_mul_pd(_mm256_load_pd(&aX_h[i]), xmmScale), _mm256_load_pd(&bX[i]));
+		xmmEY = _mm256_sub_pd(_mm256_mul_pd(_mm256_load_pd(&aY_h[i]), xmmScale), _mm256_load_pd(&bY[i]));
+		_mm256_store_pd(&mse[i], _mm256_add_pd(_mm256_mul_pd(xmmEX, xmmEX), _mm256_mul_pd(xmmEY, xmmEY)));
+	}
+
+	_mm256_zeroupper();
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

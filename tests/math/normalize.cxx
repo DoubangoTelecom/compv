@@ -22,7 +22,7 @@ using namespace compv;
 
 COMPV_ERROR_CODE TestNormalize2DHartley()
 {
-#define POINTS_COUNT 4 // #2015 (odd number) or #4 (is very common -Homography-)
+#define POINTS_COUNT 2015 // #2015 (odd number) or #4 (is very common -Homography-)
 	COMPV_ALIGN_DEFAULT() TYP x[POINTS_COUNT];
 	COMPV_ALIGN_DEFAULT() TYP y[POINTS_COUNT];
 	TYP tx, ty, scale;

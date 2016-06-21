@@ -35,11 +35,21 @@ template class CompVHomography<compv_float64_t >;
 template class CompVHomography<compv_float32_t >;
 
 template<typename T>
+struct CompVTempArraysCountInliers {
+	CompVPtrArray(T) b_;
+	CompVPtrArray(T) mseb_;
+	CompVPtrArray(T) a_;
+	CompVPtrArray(T) msea_;
+	CompVPtrArray(T) Hinv_;
+	CompVPtrArray(T) distances_;
+};
+
+template<typename T>
 static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(T) &H, bool promoteZeros = false);
 template<typename T>
 static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, CompVPtrArray(size_t)& inliers, T& variance, size_t threadsCount);
 template<typename T>
-static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, size_t &inliersCount, CompVPtrArray(size_t)& inliers, T &variance);
+static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, CompVTempArraysCountInliers<T>& tempArrays, size_t &inliersCount, CompVPtrArray(size_t)& inliers, T &variance);
 
 // Homography 'double' is faster because EigenValues/EigenVectors computation converge faster (less residual error)
 // src: 3xN homogeneous array (X, Y, Z=1). N-cols with N >= 4. The N points must not be colinear.
@@ -216,6 +226,8 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 	srcsubsetz_[0] = srcsubsetz_[1] = srcsubsetz_[2] = srcsubsetz_[3] = 1;
 	dstsubsetz_[0] = dstsubsetz_[1] = dstsubsetz_[2] = dstsubsetz_[3] = 1;
 
+	CompVTempArraysCountInliers<T> tempArrays_;
+
 	while (t_ < n_ && bestInlinersCount_ < d_) {
 		// Generate the random points
 #if COMPV_PRNG11
@@ -250,7 +262,7 @@ static COMPV_ERROR_CODE ransac(const CompVPtrArray(T) &src, const CompVPtrArray(
 		COMPV_CHECK_CODE_RETURN(computeH<T>(srcsubset_, dstsubset_, Hsubset_));
 
 		// Count outliers using all points and current homography using the inliers only
-		COMPV_CHECK_CODE_RETURN(countInliers<T>(src, dst, Hsubset_, inliersCount_, inliersubset_, variance_));
+		COMPV_CHECK_CODE_RETURN(countInliers<T>(src, dst, Hsubset_, tempArrays_, inliersCount_, inliersubset_, variance_));
 
 		if (inliersCount_ >= subset_ && (inliersCount_ > bestInlinersCount_ || (inliersCount_ == bestInlinersCount_ && variance_ < variance))) {
 			bestInlinersCount_ = inliersCount_;
@@ -418,7 +430,7 @@ static COMPV_ERROR_CODE computeH(const CompVPtrArray(T) &src, const CompVPtrArra
 }
 
 template<typename T>
-static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, size_t &inliersCount, CompVPtrArray(size_t)& inliers, T &variance)
+static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtrArray(T) &dst, const CompVPtrArray(T) &H, CompVTempArraysCountInliers<T>& tempArrays, size_t &inliersCount, CompVPtrArray(size_t)& inliers, T &variance)
 {
 	// Private function, do not check input parameters
 	size_t numPoints_ = src->cols();
@@ -428,28 +440,23 @@ static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtr
 	size_t* indexes_ = const_cast<size_t*>(inliers->ptr());
 
 	// Apply H to the source and compute mse: Ha = b, mse(Ha, b)
-	CompVPtrArray(T) b_;
-	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAB(H, src, b_));
-	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::mse2D_homogeneous(b_->ptr(0), b_->ptr(1), b_->ptr(2), dst->ptr(0), dst->ptr(1), b_, numPoints_));
-
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAB(H, src, tempArrays.b_));
+	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::mse2D_homogeneous(tempArrays.b_->ptr(0), tempArrays.b_->ptr(1), tempArrays.b_->ptr(2), dst->ptr(0), dst->ptr(1), tempArrays.mseb_, numPoints_));
 
 	// Apply H* to the destination and compute mse: a = H*b, mse(a, H*b)
-	CompVPtrArray(T) a_;
-	CompVPtrArray(T) Hinv_;
-	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::pseudoinv(H, Hinv_)); // TODO(dmi): these are 3x3 matrixes -> add support for eigen_3x3 for speedup
-	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAB(Hinv_, dst, a_));
-	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::mse2D_homogeneous(a_->ptr(0), a_->ptr(1), a_->ptr(2), src->ptr(0), src->ptr(1), a_, numPoints_));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::pseudoinv(H, tempArrays.Hinv_)); // TODO(dmi): these are 3x3 matrixes -> add support for eigen_3x3 for speedup
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAB(tempArrays.Hinv_, dst, tempArrays.a_));
+	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::mse2D_homogeneous(tempArrays.a_->ptr(0), tempArrays.a_->ptr(1), tempArrays.a_->ptr(2), src->ptr(0), src->ptr(1), tempArrays.msea_, numPoints_));
 
 	// Sum the MSE values and build the inliers
-	const T* aPtr_ = a_->ptr();
-	const T* bPtr_ = b_->ptr();
+	const T* mseaPtr_ = tempArrays.msea_->ptr();
+	const T* msebPtr_ = tempArrays.mseb_->ptr();
 	T sumd_ = 0; // sum deviations
 	T d_;
-	CompVPtrArray(T) distances_;
-	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&distances_, 1, numPoints_)); // "inliersCount" values only are needed but for now we don't now how many we have
-	T* distancesPtr_ = const_cast<T*>(distances_->ptr());
+	COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&tempArrays.distances_, 1, numPoints_)); // "inliersCount" values only are needed but for now we don't now how many we have
+	T* distancesPtr_ = const_cast<T*>(tempArrays.distances_->ptr());
 	for (size_t i_ = 0; i_ < numPoints_; ++i_) {
-		d_ = aPtr_[i_] + bPtr_[i_];
+		d_ = mseaPtr_[i_] + msebPtr_[i_];
 		if (d_ < COMPV_HOMOGRAPHY_OUTLIER_THRESHOLD) {
 			indexes_[inliersCount] = i_;
 			distancesPtr_[inliersCount] = d_;
