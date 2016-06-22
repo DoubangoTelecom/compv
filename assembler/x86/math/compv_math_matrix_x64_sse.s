@@ -385,50 +385,37 @@ sym(MatrixBuildHomographyEqMatrix_float64_Asm_X64_SSE2):
 	; for (size_t i = 0; i < numPoints; ++i)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopPoints
-		movsd xmm0, [rbx + rcx*8] ; srcX
-		movsd xmm1, [rdx + rcx*8] ; srcY
-		movsd xmm2, [r8 + rcx*8] ; dstX
-		movsd xmm3, [r9 + rcx*8] ; dstY
-		unpcklpd xmm0, xmm1 ; xmmSrcXY
-		unpcklpd xmm2, xmm2 ; xmmDstX
-		unpcklpd xmm3, xmm3 ; xmmDstY
+		movsd xmm0, [rbx + rcx*8]
+		movsd xmm1, [rdx + rcx*8]
+		movsd xmm2, [r8 + rcx*8]
+		movsd xmm3, [r9 + rcx*8]
+		inc rcx
+		unpcklpd xmm0, xmm1
+		unpcklpd xmm2, xmm2
+		unpcklpd xmm3, xmm3
+		movapd xmm5, xmm2
+		mulpd xmm5, xmm0
+		movapd xmm7, xmm3
+		mulpd xmm7, xmm0
 		movapd xmm4, xmm0
-		xorpd xmm4, xmm11 ; -x, -y
+		xorpd xmm4, xmm11
 		xorpd xmm6, xmm6
 		movapd xmm8, xmm4
-		unpcklpd xmm6, xmm4 ; 0, -x
-		unpckhpd xmm8, xmm12 ; -y, -1
-		movapd xmm5, xmm2
-		mulpd xmm5, xmm0 ; (dstX * srcX), (dstX * srcY)
-		movapd xmm7, xmm3
-		mulpd xmm7, xmm0 ; (dstY * srcX), (dstY * srcY)
-		
-		
-		
-		
-		
-		
-
-		inc rcx
-		movapd [rsi + 2*8], xmm10 ; -1, 0
-		movapd [rsi + 4*8], xmm9 ; 0, 0
-		movsd [rsi + 8*8], xmm2 ; dstX
-		movapd [rdi + 0*8], xmm9 ; 0, 0
-		movsd [rdi + 8*8], xmm3 ; dstY
-
-		movapd [rsi + 0*8], xmm4 ; -x, -y
-		movapd [rsi + 6*8], xmm5 ; (dstX * srcX), (dstX * srcY)
-		
-		
-		
-		movapd [rdi + 2*8], xmm6 ; 0, -x
-		movapd [rdi + 4*8], xmm8 ; -y, -1
-		movapd [rdi + 6*8], xmm7 ; (dstY * srcX), (dstY * srcY)
-		
-
+		unpcklpd xmm6, xmm4
+		unpckhpd xmm8, xmm12
+		;/!\ do not revert store instructions: will be slower (because of cache issues)
+		movapd [rsi + 0*8], xmm4
+		movapd [rsi + 2*8], xmm10
+		movapd [rsi + 4*8], xmm9
+		movapd [rsi + 6*8], xmm5
+		movsd [rsi + 8*8], xmm2
+		movapd [rdi + 0*8], xmm9
+		movapd [rdi + 2*8], xmm6
+		movapd [rdi + 4*8], xmm8
+		movapd [rdi + 6*8], xmm7
+		movsd [rdi + 8*8], xmm3
 		lea rsi, [rsi + rax]
 		lea rdi, [rdi + rax]
-		
 		cmp rcx, arg(6)
 		jl .LoopPoints
 
