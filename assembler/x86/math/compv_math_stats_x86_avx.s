@@ -349,6 +349,9 @@ sym(MathStatsVariance_float64_Asm_X86_AVX):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 4
+	push rsi
+	push rdi
+	push rbx
 	;; end prolog ;;
 
 	mov rax, arg(2)
@@ -424,6 +427,9 @@ sym(MathStatsVariance_float64_Asm_X86_AVX):
 	vmovsd [rdi], xmm5
 
 	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

@@ -15,7 +15,7 @@ using namespace compv;
 #define TRANSX				28.5
 #define TRANSY				-10.0
 #define TYP					double  // double or float (float is useless because of slow convergence issue)
-#define MODE_EST			COMPV_MODELEST_TYPE_NONE
+#define MODE_EST			COMPV_MODELEST_TYPE_RANSAC
 #define TYP_SZ				"%e"	// %e or %f
 #define MSE					9.1831692240696733e-017
 #if COMPV_ARCH_X64

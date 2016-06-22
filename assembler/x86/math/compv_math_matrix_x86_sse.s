@@ -654,7 +654,7 @@ sym(MatrixBuildHomographyEqMatrix_float64_Asm_X86_SSE2):
 		movapd [rdi + 0*8], xmm7
 		mulpd xmm2, xmm0 ; (dstY * srcX), (dstY * srcY)
 		unpcklpd xmm1, xmm4 ; 0, -x
-		unpckhpd xmm4, [km1_f64] ; -y, -1
+		unpckhpd xmm4, [sym(km1_f64)] ; -y, -1
 		
 		inc rcx
 		movapd [rdi + 2*8], xmm1
