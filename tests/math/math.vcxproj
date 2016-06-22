@@ -154,11 +154,11 @@
     <ClCompile Include="atan.cxx" />
     <ClCompile Include="clip.cxx" />
     <ClCompile Include="eigen.cxx" />
+    <ClCompile Include="inverse.cxx" />
     <ClCompile Include="main.cxx" />
     <ClCompile Include="matrix_ops.cxx" />
     <ClCompile Include="mse.cxx" />
     <ClCompile Include="normalize.cxx" />
-    <ClCompile Include="pseudoinverse.cxx" />
     <ClCompile Include="rand.cxx" />
     <ClCompile Include="sincos.cxx" />
     <ClCompile Include="svd.cxx" />

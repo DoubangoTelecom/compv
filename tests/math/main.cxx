@@ -18,11 +18,13 @@ using namespace compv;
 #define TEST_SINCOS_P32				0 // 3.2 precision, theta within IR
 #define TEST_SINCOS_2PI_P32			0 // 3.2 precision, theta within [0, 2*PI]
 #define TEST_EIGEN					0
+#define TEST_EIGEN3x3				0
 #define TEST_SVD					0
 #define TEST_PSI					0 // Moore–Penrose pseudoinverse
+#define TEST_INV3x3					1 // Inverse 3x3
 #define TEST_RAND					0
 #define TEST_NORMALIZE_HARTLEY		0
-#define TEST_VARIANCE				1
+#define TEST_VARIANCE				0
 #define TEST_MSE_2D_HOMOG			0
 #define TEST_MOPS_ISSYMMETRIC		0
 #define TEST_MOPS_MULAB				0
@@ -69,6 +71,10 @@ int main()
 	extern COMPV_ERROR_CODE TestEigen();
     COMPV_CHECK_CODE_ASSERT(TestEigen());
 #endif
+#if TEST_EIGEN3x3
+	extern COMPV_ERROR_CODE TestEigen3x3();
+	COMPV_CHECK_CODE_ASSERT(TestEigen3x3());
+#endif
 #if TEST_SVD
 	extern COMPV_ERROR_CODE TestSVD();
 	COMPV_CHECK_CODE_ASSERT(TestSVD());
@@ -76,6 +82,10 @@ int main()
 #if TEST_PSI
 	extern COMPV_ERROR_CODE TestPseudoInverse();
 	COMPV_CHECK_CODE_ASSERT(TestPseudoInverse());
+#endif
+#if TEST_INV3x3
+	extern COMPV_ERROR_CODE TestInverse3x3();
+	COMPV_CHECK_CODE_ASSERT(TestInverse3x3());
 #endif
 #if TEST_RAND
 	extern COMPV_ERROR_CODE TestRand();

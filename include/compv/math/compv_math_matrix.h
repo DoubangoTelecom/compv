@@ -26,6 +26,7 @@ public:
 	static COMPV_ERROR_CODE eigenS(const CompVPtrArray(T) &S, CompVPtrArray(T) &D, CompVPtrArray(T) &Q, bool sort = true, bool rowVectors = false, bool forceZerosInD = true);
 	static COMPV_ERROR_CODE svd(const CompVPtrArray(T) &A, CompVPtrArray(T) &U, CompVPtrArray(T) &D, CompVPtrArray(T) &V, bool sort = true);
 	static COMPV_ERROR_CODE pseudoinv(const CompVPtrArray(T) &A, CompVPtrArray(T) &R);
+	static COMPV_ERROR_CODE invA3x3(const CompVPtrArray(T) &A3x3, CompVPtrArray(T) &R);
 	static COMPV_ERROR_CODE invD(const CompVPtrArray(T) &D, CompVPtrArray(T) &R, bool dIsSortedAndPositive = false);
 	static COMPV_ERROR_CODE givens(CompVPtrArray(T) &G, size_t rows, size_t cols, size_t ith, size_t jth, T c, T s);
 	static COMPV_ERROR_CODE identity(CompVPtrArray(T) &I, size_t rows, size_t cols);

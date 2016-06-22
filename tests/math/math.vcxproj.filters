@@ -36,9 +36,6 @@
     <ClCompile Include="svd.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pseudoinverse.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="rand.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -52,6 +49,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="variance.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="inverse.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

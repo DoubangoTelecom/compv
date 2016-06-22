@@ -42,7 +42,11 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 	COMPV_CHECK_EXP_RETURN(!S || !S->rows() || S->rows() != S->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD and MT
+	// TODO(dmi): make this function MT
+
+	if (S->cols() == 3 && S->rows() == 3) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	}
 
 	size_t row, col;
 	T gcos_, gsin_;
@@ -130,6 +134,7 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 		} while (!sorted);
 
 		if (!wasSorted) {
+			COMPV_DEBUG_INFO_CODE_NOT_TESTED();
 			CompVPtrArray(T) Dsorted;
 			CompVPtrArray(T) Qsorted;
 			COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::zero(Dsorted, D->rows(), D->cols()));

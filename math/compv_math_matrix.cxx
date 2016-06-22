@@ -461,6 +461,51 @@ COMPV_ERROR_CODE CompVMatrix<T>::pseudoinv(const CompVPtrArray(T) &A, CompVPtrAr
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// This function will return the pseudoinv if A is singular
+template <class T>
+COMPV_ERROR_CODE CompVMatrix<T>::invA3x3(const CompVPtrArray(T) &A3x3, CompVPtrArray(T) &R)
+{
+	COMPV_CHECK_EXP_RETURN(!A3x3 || A3x3->cols() != 3 || A3x3->rows() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	
+	// http://mathworld.wolfram.com/MatrixInverse.html
+	const T* a0 = A3x3->ptr(0);
+	const T* a1 = A3x3->ptr(1);
+	const T* a2 = A3x3->ptr(2);
+	// det(A)
+	T detA =
+		a0[0] * (a1[1] * a2[2] - a2[1] * a1[2])
+		- a1[0] * (a0[1] * a2[2] - a2[1] * a0[2])
+		+ a2[0] * (a0[1] * a1[2] - a1[1] * a0[2]);
+	if (detA == 0) {
+		COMPV_DEBUG_INFO("3x3 Matrix is singluar... computing pseudoinverse instead of the inverse");
+		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::pseudoinv(A3x3, R));
+	}
+	else {
+		// Create R if not already done
+		if (!R || R->rows() != 3 || R->cols() != 3 || R->alignV() != A3x3->alignV()) { // same align to make sure we'll have the same stride
+			COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&R, 3, 3));
+		}
+		detA = T(1) / detA;
+		T* r0 = const_cast<T*>(R->ptr(0));
+		T* r1 = const_cast<T*>(R->ptr(1));
+		T* r2 = const_cast<T*>(R->ptr(2));
+		r0[0] = ((a1[1] * a2[2]) - (a2[1] * a1[2])) * detA;
+		r0[1] = ((a0[2] * a2[1]) - (a2[2] * a0[1])) * detA;
+		r0[2] = ((a0[1] * a1[2]) - (a1[1] * a0[2])) * detA;
+
+		r1[0] = ((a1[2] * a2[0]) - (a2[2] * a1[0])) * detA;
+		r1[1] = ((a0[0] * a2[2]) - (a2[0] * a0[2])) * detA;
+		r1[2] = ((a0[2] * a1[0]) - (a1[2] * a0[0])) * detA;
+			
+		r2[0] = ((a1[0] * a2[1]) - (a2[0] * a1[1])) * detA;
+		r2[1] = ((a0[1] * a2[0]) - (a2[1] * a0[0])) * detA;
+		r2[2] = ((a0[0] * a1[1]) - (a1[0] * a0[1])) * detA;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 // D must be diagonal matrix and could be equal to R
 template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::invD(const CompVPtrArray(T) &D, CompVPtrArray(T) &R, bool dIsSortedAndPositive /*= false*/)
@@ -797,7 +842,6 @@ COMPV_ERROR_CODE CompVMatrix<T>::buildHomographyEqMatrix(const T* srcX, const T*
 		void (*MatrixBuildHomographyEqMatrix_float64)(const COMPV_ALIGNED(X) compv_float64_t* srcX, const COMPV_ALIGNED(X) compv_float64_t* srcY, const COMPV_ALIGNED(X) compv_float64_t* dstX, const COMPV_ALIGNED(X) compv_float64_t* dstY, COMPV_ALIGNED(X) compv_float64_t* M, COMPV_ALIGNED(X)compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints) = NULL;
 		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && numPoints > 1 && COMPV_IS_ALIGNED_SSE(srcX) && COMPV_IS_ALIGNED_SSE(srcY) && COMPV_IS_ALIGNED_SSE(dstY) && M->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(MatrixBuildHomographyEqMatrix_float64 = MatrixBuildHomographyEqMatrix_float64_Intrin_SSE2);
-			COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Intrin code faster
 			//COMPV_EXEC_IFDEF_ASM_X86(MatrixBuildHomographyEqMatrix_float64 = MatrixBuildHomographyEqMatrix_float64_Asm_X86_SSE2);
 			//COMPV_EXEC_IFDEF_ASM_X64(MatrixBuildHomographyEqMatrix_float64 = MatrixBuildHomographyEqMatrix_float64_Asm_X64_SSE2);
 		}

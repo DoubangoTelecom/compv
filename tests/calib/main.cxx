@@ -11,8 +11,8 @@
 
 using namespace compv;
 
-#define TEST_HOMOGRAPHY					0
-#define TEST_HOMOGRAPHY_BUILD_MATRIX	1
+#define TEST_HOMOGRAPHY					1
+#define TEST_HOMOGRAPHY_BUILD_MATRIX	0
 
 #if COMPV_OS_WINDOWS
 int _tmain(int argc, _TCHAR* argv[])

@@ -140,3 +140,101 @@ COMPV_ERROR_CODE TestEigen()
 
 	return err_;
 }
+
+COMPV_ERROR_CODE TestEigen3x3()
+{
+	TYP S[3][3] = {
+		{ 3, 2, -2 },
+		{ 2, 2, 5 },
+		{-2, 5, -4 }
+	};
+
+#if 0
+	CompVPtrArray(TYP) Sx, D, Q;
+	COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::copy(Sx, &S[0][0], 3, 3));
+	COMPV_CHECK_CODE_RETURN(CompVEigen<TYP>::findSymm(Sx, D, Q));
+#endif
+
+	// SIMD: eigenval3x3
+
+	TYP eig1, eig2, eig3;
+	TYP p1 = (S[0][1] * S[0][1]) + (S[0][2] * S[0][2]) + (S[1][2] * S[1][2]); // TODO: revert, to make cache friendly
+	if (p1 == 0) {
+		// A is diagonal
+		eig1 = S[0][0];
+		eig2 = S[1][1];
+		eig3 = S[2][2];
+	}
+	else {
+		TYP t = (S[0][0] + S[1][1] + S[2][2]);
+		TYP q = t / 3;
+		TYP p2 = ::pow((S[0][0] - q), 2) + ::pow((S[1][1] - q), 2) + ::pow((S[2][2] - q), 2) + 2 * p1;
+		TYP p = ::sqrt(p2 / 6);
+		TYP pv = TYP(1) / p;
+		TYP B[3][3] = {
+			{ (S[0][0] - q) * pv, (S[0][1] - q) * pv, (S[0][2] - q) * pv },
+			{ (S[1][0] - q) * pv, (S[1][1] - q) * pv, (S[1][2] - q) * pv },
+			{ (S[2][0] - q) * pv, (S[2][1] - q) * pv, (S[2][2] - q) * pv }
+		};
+		TYP r = ((B[0][0] * B[1][1] * B[2][2]) + (B[0][1] * B[1][2] * B[2][0]) + (B[0][2] * B[1][0] * B[2][1]) - (B[0][2] * B[1][1] * B[2][0]) - (B[0][1] * B[1][0] * B[2][2]) - (B[0][0] * B[1][2] * B[2][1])) / 2;
+		TYP phi;
+		if (r <= -1) {
+			static const TYP piOver3 = COMPV_MATH_PI / 3;
+			phi = piOver3;
+		}
+		else if (r >= 1) {
+			phi = 0;
+		}
+		else {
+			phi = COMPV_MATH_ACOS(r) / 3;
+		}
+		static const TYP twoPiOver3 = (2 * COMPV_MATH_PI / 3);
+		eig1 = q + 2 * p * cos(phi);
+		eig3 = q + 2 * p * cos(phi + twoPiOver3);
+		eig2 = t - eig1 - eig3;
+	}
+
+	// SIMD: eigenvect3x3
+
+	// Add support for sub_scalar_3x3
+	TYP S1[3][3] = {
+		{ S[0][0] - eig1, S[0][1], S[0][2] },
+		{ S[1][0], S[1][1] - eig1, S[1][2] },
+		{ S[2][0], S[2][1], S[2][2] - eig1 },
+	};
+	TYP S2[3][3] = {
+		{ S[0][0] - eig2, S[0][1], S[0][2] },
+		{ S[1][0], S[1][1] - eig2, S[1][2] },
+		{ S[2][0], S[2][1], S[2][2] - eig2 },
+	};
+	TYP S3[3][3] = {
+		{ S[0][0] - eig3, S[0][1], S[0][2] },
+		{ S[1][0], S[1][1] - eig3, S[1][2] },
+		{ S[2][0], S[2][1], S[2][2] - eig3 },
+	};
+
+	// TODO(dmi): add support for dot3x3
+
+	CompVPtrArray(TYP) M1, M2, M3, R1, R2, R3;
+	
+	COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::copy(M1, &S1[0][0], 3, 3));
+	COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::copy(M2, &S2[0][0], 3, 3));
+	COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::copy(M3, &S3[0][0], 3, 3));
+
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<TYP>::mulAB(M2, M3, R1));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<TYP>::mulAB(M1, M3, R2));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<TYP>::mulAB(M1, M2, R3));
+	
+	// Normalizarion
+	TYP r0 = *R1->ptr(0, 0);
+	TYP r1 = *R1->ptr(1, 0);
+	TYP r2 = *R1->ptr(2, 0);
+	TYP n = sqrt(r0 * r0 + r1 * r1 + r2* r2);
+	//r0 /= n;
+	//r1 /= n;
+	//r2 /= n;
+
+	TYP kaka = eig1 * r0;
+
+	return COMPV_ERROR_CODE_S_OK;
+}
