@@ -634,31 +634,31 @@ sym(MatrixBuildHomographyEqMatrix_float64_Asm_X86_SSE2):
 	; for (size_t i = 0; i < numPoints; ++i)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopPoints
-		mov rdx, arg(1) ; srcY
+		mov rdx, arg(1)
 		movsd xmm0, [rax + rcx*8]
 		movsd xmm1, [rdx + rcx*8]
-		unpcklpd xmm0, xmm1 ; xmmSrcXY
+		unpcklpd xmm0, xmm1
 		mov rdx, arg(3) ; dstY
 		movsd xmm1, [rbx + rcx*8]
 		movsd xmm2, [rdx + rcx*8]
-		unpcklpd xmm1, xmm1 ; xmmDstX
-		unpcklpd xmm2, xmm2 ; xmmDstY
-		movapd [rdi + 8*8], xmm2 ; xmmDstY
-		mulpd xmm2, xmm0 ; (dstY * srcX), (dstY * srcY)
+		unpcklpd xmm1, xmm1
+		unpcklpd xmm2, xmm2
+		movapd [rdi + 8*8], xmm2
+		mulpd xmm2, xmm0
 		movapd xmm3, xmm1
-		movsd [rsi + 8*8], xmm1 ; xmmDstX
+		movsd [rsi + 8*8], xmm1
 		xorpd xmm1, xmm1
 		movapd xmm4, xmm0
-		mulpd xmm3, xmm0 ; (dstX * srcX), (dstX * srcY)
-		xorpd xmm4, xmm5 ; -x, -y
-		movapd [rsi + 0*8], xmm4 ; -x, -y		
-		unpcklpd xmm1, xmm4 ; 0, -x
-		unpckhpd xmm4, [sym(km1_f64)] ; -y, -1
+		mulpd xmm3, xmm0
+		xorpd xmm4, xmm5
+		movapd [rsi + 0*8], xmm4	
+		unpcklpd xmm1, xmm4
+		unpckhpd xmm4, [sym(km1_f64)]
 		inc rcx	
-		movapd [rsi + 2*8], xmm6 ; -1, 0
-		movapd [rsi + 4*8], xmm7 ; 0, 0
+		movapd [rsi + 2*8], xmm6
+		movapd [rsi + 4*8], xmm7
 		movapd [rdi + 0*8], xmm7
-		movapd [rsi + 6*8], xmm3 ; (dstX * srcX), (dstX * srcY)
+		movapd [rsi + 6*8], xmm3
 		movapd [rdi + 2*8], xmm1
 		movapd [rdi + 4*8], xmm4
 		movapd [rdi + 6*8], xmm2	

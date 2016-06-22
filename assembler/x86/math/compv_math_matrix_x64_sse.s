@@ -360,7 +360,7 @@ sym(MatrixBuildHomographyEqMatrix_float64_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
-	COMPV_YASM_SAVE_XMM 8
+	COMPV_YASM_SAVE_XMM 12
 	push rsi
 	push rdi
 	push rbx
@@ -376,43 +376,55 @@ sym(MatrixBuildHomographyEqMatrix_float64_Asm_X64_SSE2):
 	mov r8, arg(2) ; r8 = dstX		
 	mov r9, arg(3) ; r9 = dstY 
 
-	xorpd xmm7, xmm7 ; xmm7 = xmmZero
-	movapd xmm6, [sym(km1_0_f64)]; xmm6 = xmmMinusOneZero
-	movapd xmm5, [sym(kAVXFloat64MaskNegate)] ; xmm5 = xmmMaskNegate
-	movapd xmm8, [sym(km1_f64)]
+	xorpd xmm9, xmm9 ; xmm7 = xmmZero
+	movapd xmm10, [sym(km1_0_f64)]; xmm10 = xmmMinusOneZero
+	movapd xmm11, [sym(kAVXFloat64MaskNegate)] ; xmm11 = xmmMaskNegate
+	movapd xmm12, [sym(km1_f64)]
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (size_t i = 0; i < numPoints; ++i)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopPoints
-		movsd xmm0, [rbx + rcx*8]
-		movsd xmm3, [rdx + rcx*8]
-		movsd xmm1, [r8 + rcx*8]
-		movsd xmm2, [r9 + rcx*8]
-		unpcklpd xmm0, xmm3 ; xmmSrcXY
-		unpcklpd xmm1, xmm1 ; xmmDstX
-		unpcklpd xmm2, xmm2 ; xmmDstY
-		; First #9 contributions
-		movapd xmm3, xmm1
+		movsd xmm0, [rbx + rcx*8] ; srcX
+		movsd xmm1, [rdx + rcx*8] ; srcY
+		movsd xmm2, [r8 + rcx*8] ; dstX
+		movsd xmm3, [r9 + rcx*8] ; dstY
+		unpcklpd xmm0, xmm1 ; xmmSrcXY
+		unpcklpd xmm2, xmm2 ; xmmDstX
+		unpcklpd xmm3, xmm3 ; xmmDstY
 		movapd xmm4, xmm0
-		mulpd xmm3, xmm0 ; (dstX * srcX), (dstX * srcY)
-		xorpd xmm4, xmm5 ; -x, -y
-		movapd [rsi + 2*8], xmm6
-		movapd [rsi + 4*8], xmm7 ; 0, 0
-		movsd [rsi + 8*8], xmm1 ; xmmDstX
-		movapd [rsi + 0*8], xmm4 ; -x, -y
-		movapd [rsi + 6*8], xmm3 ; (dstX * srcX), (dstX * srcY)
-		; Second #9 contributions
-		xorpd xmm1, xmm1
-		movapd [rdi + 8*8], xmm2 ; xmmDstY
-		movapd [rdi + 0*8], xmm7
-		unpcklpd xmm1, xmm4 ; 0, -x
-		unpckhpd xmm4, xmm8 ; -y, -1
-		mulpd xmm2, xmm0 ; (dstY * srcX), (dstY * srcY)
+		xorpd xmm4, xmm11 ; -x, -y
+		xorpd xmm6, xmm6
+		movapd xmm8, xmm4
+		unpcklpd xmm6, xmm4 ; 0, -x
+		unpckhpd xmm8, xmm12 ; -y, -1
+		movapd xmm5, xmm2
+		mulpd xmm5, xmm0 ; (dstX * srcX), (dstX * srcY)
+		movapd xmm7, xmm3
+		mulpd xmm7, xmm0 ; (dstY * srcX), (dstY * srcY)
+		
+		
+		
+		
+		
+		
+
 		inc rcx
-		movapd [rdi + 2*8], xmm1
-		movapd [rdi + 4*8], xmm4
-		movapd [rdi + 6*8], xmm2
+		movapd [rsi + 2*8], xmm10 ; -1, 0
+		movapd [rsi + 4*8], xmm9 ; 0, 0
+		movsd [rsi + 8*8], xmm2 ; dstX
+		movapd [rdi + 0*8], xmm9 ; 0, 0
+		movsd [rdi + 8*8], xmm3 ; dstY
+
+		movapd [rsi + 0*8], xmm4 ; -x, -y
+		movapd [rsi + 6*8], xmm5 ; (dstX * srcX), (dstX * srcY)
+		
+		
+		
+		movapd [rdi + 2*8], xmm6 ; 0, -x
+		movapd [rdi + 4*8], xmm8 ; -y, -1
+		movapd [rdi + 6*8], xmm7 ; (dstY * srcX), (dstY * srcY)
+		
 
 		lea rsi, [rsi + rax]
 		lea rdi, [rdi + rax]
