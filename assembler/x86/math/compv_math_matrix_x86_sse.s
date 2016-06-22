@@ -613,11 +613,18 @@ sym(MatrixBuildHomographyEqMatrix_float64_Asm_X86_SSE2):
 	push rbx
 	;; end prolog ;;
 
+	; alloc memory
+	sub rsp, 8
+	; [rsp + 0] = M_strideInBytesTimes2
+
 	xor rcx, rcx ; rcx = i = 0
 	mov rax, arg(5)
 	mov rsi, arg(4) ; rsi = M0_ptr
 	lea rdi, [rsi + rax] ; rdi = M1_ptr
-	shl rax, 1 ; rax = M_strideInBytesTimes2
+	shl rax, 1
+	mov [rsp + 0], rax ; [rsp + 0] = M_strideInBytesTimes2
+	mov rax, arg(0) ; rax = srcX
+	mov rbx, arg(2) ; dstX
 
 	xorpd xmm7, xmm7 ; xmm7 = xmmZero
 	movapd xmm6, [sym(km1_0_f64)]; xmm6 = xmmMinusOneZero
@@ -627,45 +634,41 @@ sym(MatrixBuildHomographyEqMatrix_float64_Asm_X86_SSE2):
 	; for (size_t i = 0; i < numPoints; ++i)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopPoints
-		mov rbx, arg(0) ; srcX
 		mov rdx, arg(1) ; srcY
-		movsd xmm0, [rbx + rcx*8]
+		movsd xmm0, [rax + rcx*8]
 		movsd xmm1, [rdx + rcx*8]
 		unpcklpd xmm0, xmm1 ; xmmSrcXY
-		mov rbx, arg(2) ; dstX		
 		mov rdx, arg(3) ; dstY
 		movsd xmm1, [rbx + rcx*8]
 		movsd xmm2, [rdx + rcx*8]
 		unpcklpd xmm1, xmm1 ; xmmDstX
 		unpcklpd xmm2, xmm2 ; xmmDstY
-		; First #9 contributions
+		movapd [rdi + 8*8], xmm2 ; xmmDstY
+		mulpd xmm2, xmm0 ; (dstY * srcX), (dstY * srcY)
 		movapd xmm3, xmm1
+		movsd [rsi + 8*8], xmm1 ; xmmDstX
+		xorpd xmm1, xmm1
 		movapd xmm4, xmm0
 		mulpd xmm3, xmm0 ; (dstX * srcX), (dstX * srcY)
 		xorpd xmm4, xmm5 ; -x, -y
-		movapd [rsi + 2*8], xmm6
-		movapd [rsi + 4*8], xmm7 ; 0, 0
-		movsd [rsi + 8*8], xmm1 ; xmmDstX
-		movapd [rsi + 0*8], xmm4 ; -x, -y
-		movapd [rsi + 6*8], xmm3 ; (dstX * srcX), (dstX * srcY)
-		; Second #9 contributions
-		xorpd xmm1, xmm1
-		movapd [rdi + 8*8], xmm2 ; xmmDstY
-		movapd [rdi + 0*8], xmm7
-		mulpd xmm2, xmm0 ; (dstY * srcX), (dstY * srcY)
+		movapd [rsi + 0*8], xmm4 ; -x, -y		
 		unpcklpd xmm1, xmm4 ; 0, -x
 		unpckhpd xmm4, [sym(km1_f64)] ; -y, -1
-		
-		inc rcx
+		inc rcx	
+		movapd [rsi + 2*8], xmm6 ; -1, 0
+		movapd [rsi + 4*8], xmm7 ; 0, 0
+		movapd [rdi + 0*8], xmm7
+		movapd [rsi + 6*8], xmm3 ; (dstX * srcX), (dstX * srcY)
 		movapd [rdi + 2*8], xmm1
 		movapd [rdi + 4*8], xmm4
-		movapd [rdi + 6*8], xmm2
-
-		lea rsi, [rsi + rax]
-		lea rdi, [rdi + rax]
-		
+		movapd [rdi + 6*8], xmm2	
+		add rsi, [rsp + 0]
+		add rdi, [rsp + 0]
 		cmp rcx, arg(6)
 		jl .LoopPoints
+
+	; free memory
+	add rsp, 8
 
 	;; begin epilog ;;
 	pop rbx
