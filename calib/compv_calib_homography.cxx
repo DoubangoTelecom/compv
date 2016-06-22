@@ -444,7 +444,7 @@ static COMPV_ERROR_CODE countInliers(const CompVPtrArray(T) &src, const CompVPtr
 	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::mse2D_homogeneous(tempArrays.b_->ptr(0), tempArrays.b_->ptr(1), tempArrays.b_->ptr(2), dst->ptr(0), dst->ptr(1), tempArrays.mseb_, numPoints_));
 
 	// Apply H* to the destination and compute mse: a = H*b, mse(a, H*b)
-	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::pseudoinv(H, tempArrays.Hinv_)); // TODO(dmi): these are 3x3 matrixes -> add support for eigen_3x3 for speedup
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::invA3x3(H, tempArrays.Hinv_));
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::mulAB(tempArrays.Hinv_, dst, tempArrays.a_));
 	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::mse2D_homogeneous(tempArrays.a_->ptr(0), tempArrays.a_->ptr(1), tempArrays.a_->ptr(2), src->ptr(0), src->ptr(1), tempArrays.msea_, numPoints_));
 

@@ -5,7 +5,7 @@
 using namespace compv;
 
 #define LOOP_COUNT		1
-#define TYP			double  // double or float
+#define TYP				double  // double or float
 #define NUM_ROWS		200 + 9 // +9 to make it SIMD-unfriendly for testing
 #define NUM_COLS		100 + 9 // +9 to make it SIMD-unfriendly for testing
 
