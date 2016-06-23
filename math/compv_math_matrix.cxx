@@ -30,6 +30,7 @@ COMPV_EXTERNC void MatrixBuildHomographyEqMatrix_float64_Asm_X86_SSE2(const COMP
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 #if COMPV_ARCH_X64 && COMPV_ASM
+COMPV_EXTERNC void MatrixMulGA_float64_Asm_X64_AVX(COMPV_ALIGNED(AVX) compv::compv_float64_t* ri, COMPV_ALIGNED(AVX) compv::compv_float64_t* rj, const compv::compv_float64_t* c1, const compv::compv_float64_t* s1, compv::compv_uscalar_t count);
 COMPV_EXTERNC void MatrixMulABt_float64_minpack1_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* A, const COMPV_ALIGNED(SSE) compv::compv_float64_t* B, compv::compv_uscalar_t aRows, compv::compv_uscalar_t bRows, compv::compv_uscalar_t bCols, compv::compv_uscalar_t aStrideInBytes, compv::compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv::compv_float64_t* R, compv::compv_uscalar_t rStrideInBytes);
 COMPV_EXTERNC void MatrixMulABt_float64_minpack1_Asm_X64_AVX(const COMPV_ALIGNED(AVX) compv::compv_float64_t* A, const COMPV_ALIGNED(AVX) compv::compv_float64_t* B, compv::compv_uscalar_t aRows, compv::compv_uscalar_t bRows, compv::compv_uscalar_t bCols, compv::compv_uscalar_t aStrideInBytes, compv::compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv::compv_float64_t* R, compv::compv_uscalar_t rStrideInBytes);
 COMPV_EXTERNC void MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* S, compv::compv_uscalar_t *row, compv::compv_uscalar_t *col, compv::compv_float64_t* max, compv::compv_uscalar_t rowStart, compv::compv_uscalar_t rowEnd, compv::compv_uscalar_t strideInBytes);
@@ -247,6 +248,7 @@ COMPV_ERROR_CODE CompVMatrix<T>::mulGA(CompVPtrArray(T) &A, size_t ith, size_t j
 			if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
 				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixMulGA_float64 = MatrixMulGA_float64_Intrin_AVX));
 				COMPV_EXEC_IFDEF_ASM_X86((MatrixMulGA_float64 = MatrixMulGA_float64_Asm_X86_AVX));
+				COMPV_EXEC_IFDEF_ASM_X64((MatrixMulGA_float64 = MatrixMulGA_float64_Asm_X64_AVX));
 			}
 		}
 		if (MatrixMulGA_float64) {

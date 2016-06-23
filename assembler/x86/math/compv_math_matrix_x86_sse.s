@@ -253,14 +253,14 @@ sym(MatrixMulABt_float64_minpack1_Asm_X86_SSE2):
 			.MoreThanOneRemains
 				movsd xmm1, [rdx + rcx*8]
 				movsd xmm2, [rbx + rcx*8]
-				mulpd xmm1, xmm2
-				addpd xmm0, xmm1
+				mulsd xmm1, xmm2
+				addsd xmm0, xmm1
 			.EndOfMoreThanOneRemains
 
 			movapd xmm1, xmm0
 			mov rcx, arg(7) ; R
 			shufpd xmm1, xmm0, 0x1
-			addpd xmm0, xmm1
+			addsd xmm0, xmm1
 			movsd [rcx + rdi*8], xmm0
 			
 			inc rdi ; ++j

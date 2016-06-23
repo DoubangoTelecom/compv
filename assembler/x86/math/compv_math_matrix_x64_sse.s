@@ -118,7 +118,6 @@ sym(MatrixMulABt_float64_minpack1_Asm_X64_SSE2):
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			cmp rcx, r11
 			jge .EndOfMoreThanTwoRemains
-			.MoreThanTwoRemains
 				movapd xmm1, [rdx + rcx*8]
 				mulpd xmm1, [rbx + rcx*8]
 				lea rcx, [rcx + 2] ; k += 2
@@ -128,20 +127,19 @@ sym(MatrixMulABt_float64_minpack1_Asm_X64_SSE2):
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; if (k < bCols)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			cmp rcx, r8
-			jge .EndOfMoreThanOneRemains
-			.MoreThanOneRemains
+			test r8, 1
+			jz .EndOfMoreThanOneRemains
 				movsd xmm1, [rdx + rcx*8]
 				movsd xmm2, [rbx + rcx*8]
-				mulpd xmm1, xmm2
-				addpd xmm0, xmm1
+				mulsd xmm1, xmm2
+				addsd xmm0, xmm1
 			.EndOfMoreThanOneRemains
 			
 			inc rdi ; ++j
 
 			movapd xmm1, xmm0
 			shufpd xmm1, xmm0, 0x1
-			addpd xmm0, xmm1
+			addsd xmm0, xmm1
 			movsd [rax + rdi*8 - 8], xmm0
 			
 			lea rbx, [rbx + r12] ; b += bStrideInBytes

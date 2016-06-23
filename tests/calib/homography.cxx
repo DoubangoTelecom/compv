@@ -17,9 +17,9 @@ using namespace compv;
 #define TYP					double  // double or float (float is useless because of slow convergence issue)
 #define MODE_EST			COMPV_MODELEST_TYPE_NONE
 #define TYP_SZ				"%e"	// %e or %f
-#define MSE					9.1831692240696733e-017
+#define MSE					9.2316868153284422e-017
 #if COMPV_ARCH_X64
-#	define MD5_EXPECTED_SSE2	"70f3860cfd03927ff5babbb14099db0e"
+#	define MD5_EXPECTED_SSE2	"2b0d5c33abedf8116818e3d181626932"
 #	define MD5_EXPECTED_AVX		"544c0c17e747cf9893335042c770d1e0"
 #	define MD5_EXPECTED			"4ac20362aefe978d084369c2e39e5911" // Without SIMD
 #else

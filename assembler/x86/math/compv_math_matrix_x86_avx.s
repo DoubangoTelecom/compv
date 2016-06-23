@@ -49,6 +49,7 @@ sym(MatrixMulGA_float64_Asm_X86_AVX):
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; while (i < count)
+	; Not unrolled -> see x64 version
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopProcess
 		vmovapd ymm2, [rax + rcx] ; ymmRI

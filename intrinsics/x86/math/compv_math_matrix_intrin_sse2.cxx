@@ -213,8 +213,8 @@ void MatrixMulABt_float64_minpack1_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_fl
 				xmmSum = _mm_add_pd(_mm_mul_pd(_mm_load_pd(&a[k]), _mm_load_pd(&b[k])), xmmSum);
 				k += 2;
 			}
-			if (k < bColsSigned) {
-				xmmSum = _mm_add_pd(_mm_mul_pd(_mm_load_sd(&a[k]), _mm_load_sd(&b[k])), xmmSum);
+			if (bColsSigned & 1) {
+				xmmSum = _mm_add_sd(xmmSum, _mm_mul_sd(_mm_load_sd(&a[k]), _mm_load_sd(&b[k])));
 			}
 			xmmSum = _mm_add_pd(xmmSum, _mm_shuffle_pd(xmmSum, xmmSum, 0x1));
 			_mm_store_sd(&r[j], xmmSum);
@@ -264,6 +264,7 @@ void MatrixBuildHomographyEqMatrix_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) 
 	}
 }
 
+
 // "a_strideInBytes" and "r_strideInBytes" must be aligned
 void MatrixTranspose_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t a_rows, compv_uscalar_t a_cols, COMPV_ALIGNED(SSE) compv_uscalar_t a_strideInBytes, COMPV_ALIGNED(SSE) compv_uscalar_t r_strideInBytes)
 {
@@ -283,13 +284,24 @@ void MatrixTranspose_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_
 	for (compv_uscalar_t row_ = 0; row_ < a_rows; ++row_) {
 		r = r0;
 		for (col_ = 0; col_ < a_cols_ - 3; col_ += 4, r += rstrideInEltsTimes4) {
+#if COMPV_ARCH_X64
 			_mm_stream_si64(&r[0], a0[col_]);
 			_mm_stream_si64(&r[rstrideInElts], a0[col_ + 1]);
 			_mm_stream_si64(&r[rstrideInEltsTimes2], a0[col_ + 2]);
 			_mm_stream_si64(&r[rstrideInEltsTimes3], a0[col_ + 3]);
+#else
+			r[0] = a0[col_];
+			r[rstrideInElts] = a0[col_ + 1];
+			r[rstrideInEltsTimes2] = a0[col_ + 2];
+			r[rstrideInEltsTimes3] = a0[col_ + 3];
+#endif
 		}
 		for (; col_ < a_cols_; ++col_, r += rstrideInElts) {
+#if COMPV_ARCH_X64
 			_mm_stream_si64(&r[0], a0[col_]);
+#else
+			r[0] = a0[col_];
+#endif
 		}
 		r0 += 1;
 		a0 += astrideInElts;

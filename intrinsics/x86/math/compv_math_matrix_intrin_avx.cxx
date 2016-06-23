@@ -17,32 +17,39 @@ COMPV_NAMESPACE_BEGIN()
 #if defined __INTEL_COMPILER
 #	pragma intel optimization_parameter target_arch=avx
 #endif
-// We'll read beyond the end of the data which means ri and rj must be strided
+// We'll read beyond the end of the data which means ri and rj must be strided and IS_ALIGNED_AVX(strideInBytes)
 void MatrixMulGA_float64_Intrin_AVX(COMPV_ALIGNED(AVX2) compv_float64_t* ri, COMPV_ALIGNED(AVX2) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM which support FMA3
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
 	COMPV_DEBUG_INFO_CHECK_AVX();
 
 	_mm256_zeroupper();
 
-	__m256d ymmC, ymmS, ymmRI, ymmRJ;
+	__m256d ymmC, ymmS, ymmRI0, ymmRJ0, ymmRI1, ymmRJ1;
+	compv_scalar_t i, countSigned = static_cast<compv_scalar_t>(count);
 
 	ymmC = _mm256_broadcast_sd(c1);
 	ymmS = _mm256_broadcast_sd(s1);
 
-	for (compv_uscalar_t i = 0; i < count; i += 4) { // more than count, upto stride
-		ymmRI = _mm256_load_pd(&ri[i]);
-		ymmRJ = _mm256_load_pd(&rj[i]);
+	// FMA3 friendly but unfortunately not faster
 
-#if 1
-		_mm256_store_pd(&ri[i], _mm256_add_pd(_mm256_mul_pd(ymmRI, ymmC), _mm256_mul_pd(ymmRJ, ymmS)));
-		_mm256_store_pd(&rj[i], _mm256_sub_pd(_mm256_mul_pd(ymmRJ, ymmC), _mm256_mul_pd(ymmRI, ymmS)));
-#else // FMA3 disable (different MD5 result and not faster)
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // FMA3
-		_mm256_store_pd(&ri[i], _mm256_fmadd_pd(ymmC, ymmRI, _mm256_mul_pd(ymmS, ymmRJ)));
-		_mm256_store_pd(&rj[i], _mm256_fmsub_pd(ymmC, ymmRJ, _mm256_mul_pd(ymmS, ymmRI)));
-#endif
+	for (i = 0; i < countSigned - 7; i += 8) {
+		ymmRI0 = _mm256_load_pd(&ri[i]);
+		ymmRI1 = _mm256_load_pd(&ri[i + 4]);
+		ymmRJ0 = _mm256_load_pd(&rj[i]);
+		ymmRJ1 = _mm256_load_pd(&rj[i + 4]);
+		_mm256_store_pd(&ri[i], _mm256_add_pd(_mm256_mul_pd(ymmRI0, ymmC), _mm256_mul_pd(ymmRJ0, ymmS)));
+		_mm256_store_pd(&ri[i + 4], _mm256_add_pd(_mm256_mul_pd(ymmRI1, ymmC), _mm256_mul_pd(ymmRJ1, ymmS)));
+		_mm256_store_pd(&rj[i], _mm256_sub_pd(_mm256_mul_pd(ymmRJ0, ymmC), _mm256_mul_pd(ymmRI0, ymmS)));
+		_mm256_store_pd(&rj[i + 4], _mm256_sub_pd(_mm256_mul_pd(ymmRJ1, ymmC), _mm256_mul_pd(ymmRI1, ymmS)));
 	}
+	for (; i < countSigned; i += 4) { // more than count, upto stride
+		ymmRI0 = _mm256_load_pd(&ri[i]);
+		ymmRJ0 = _mm256_load_pd(&rj[i]);
+		_mm256_store_pd(&ri[i], _mm256_add_pd(_mm256_mul_pd(ymmRI0, ymmC), _mm256_mul_pd(ymmRJ0, ymmS)));
+		_mm256_store_pd(&rj[i], _mm256_sub_pd(_mm256_mul_pd(ymmRJ0, ymmC), _mm256_mul_pd(ymmRI0, ymmS)));
+	}
+
 	_mm256_zeroupper();
 }
 

@@ -12,6 +12,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
+global sym(MatrixMulGA_float64_Asm_X64_AVX)
 global sym(MatrixMulABt_float64_minpack1_Asm_X64_AVX)
 
 section .data
@@ -20,7 +21,90 @@ section .data
 
 section .text
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) compv_float64_t* ri
+; arg(1) -> COMPV_ALIGNED(SSE) compv_float64_t* rj
+; arg(2) -> const compv_float64_t* c1
+; arg(3) -> const compv_float64_t* s1
+; arg(4) -> compv_uscalar_t count
+; void MatrixMulGA_float64_Asm_X64_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
+sym(MatrixMulGA_float64_Asm_X64_AVX):
+	vzeroupper
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
+	COMPV_YASM_SAVE_YMM 13
+	;; end prolog ;;
 
+	xor rcx, rcx ; rcx = i
+	mov r8, arg(4) ; r8 = count
+	shl r8, 3
+	lea r9, [r8 - 7*8] ; r9 = count - 7
+
+	mov rax, arg(2)
+	mov rdx, arg(3)
+	vbroadcastsd ymm0, [rax]
+	vbroadcastsd ymm1, [rdx]
+
+	mov rax, arg(0) ; ri
+	mov rdx, arg(1) ; rj 
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (i = 0; i < countSigned - 7; i += 8)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.Loop8
+		vmovapd ymm10, [rax + rcx]
+		vmovapd ymm11, [rdx + rcx]
+		vmovapd ymm12, [rax + rcx + 4*8]
+		vmovapd ymm13, [rdx + rcx + 4*8]
+		lea rcx, [rcx + 8*8]
+		vmulpd ymm2, ymm1, ymm10
+		vmulpd ymm3, ymm0, ymm10
+		vmulpd ymm4, ymm0, ymm11
+		vmulpd ymm5, ymm1, ymm11
+		vmulpd ymm6, ymm1, ymm12
+		vmulpd ymm7, ymm0, ymm12
+		vmulpd ymm8, ymm0, ymm13
+		vmulpd ymm9, ymm1, ymm13
+		vsubpd ymm2, ymm4, ymm2
+		vaddpd ymm3, ymm3, ymm5
+		vsubpd ymm6, ymm8, ymm6
+		vaddpd ymm7, ymm7, ymm9
+		vmovapd [rdx + rcx - 8*8], ymm2
+		vmovapd [rdx + rcx - 8*8 + 4*8], ymm6
+		vmovapd [rax + rcx - 8*8], ymm3		
+		vmovapd [rax + rcx - 8*8 + 4*8], ymm7
+		cmp rcx, r9
+		jl .Loop8
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (; i < countSigned; i += 4)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	cmp rcx, r8
+	jge .EndOfLoop4
+	.Loop4
+		vmovapd ymm6, [rax + rcx]
+		vmovapd ymm7, [rdx + rcx]
+		lea rcx, [rcx + 4*8]
+		vmulpd ymm2, ymm1, ymm6
+		vmulpd ymm3, ymm0, ymm6
+		vmulpd ymm4, ymm0, ymm7
+		vmulpd ymm5, ymm1, ymm7
+		vsubpd ymm2, ymm4, ymm2
+		vaddpd ymm3, ymm3, ymm5
+		vmovapd [rdx + rcx - 4*8], ymm2
+		vmovapd [rax + rcx - 4*8], ymm3
+		cmp rcx, r8
+		jl .Loop4
+	.EndOfLoop4
+
+	;; begin epilog ;;
+	COMPV_YASM_RESTORE_YMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	vzeroupper
+	ret
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

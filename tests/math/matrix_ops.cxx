@@ -112,3 +112,35 @@ COMPV_ERROR_CODE TestMulAB()
 #undef MD5_EXPECTED4x4
 }
 
+COMPV_ERROR_CODE TestMulGA()
+{
+#define MD5_MULGA "1d28996c99db6fdb058a487ed8a57c45"
+	CompVPtrArray(TYP) A;
+
+	COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::newObjAligned(&A, 215, 215));
+
+	for (size_t i = 0; i < 215; ++i) {
+		for (size_t j = 0; j < 215; ++j) {
+			*const_cast<TYP*>(A->ptr(i, j)) = (TYP)(i + j) * (i + 1) + 0.7 + (100 * ((i & 1) ? -1 : 1));
+		}
+	}
+	
+	uint64_t timeStart = CompVTime::getNowMills();
+	for (size_t i = 0; i < LOOP_COUNT; ++i) {
+		for (size_t ith = 0; ith < 215; ++ith) {
+			for (size_t jth = 0; jth < ith; ++jth) {
+				COMPV_CHECK_CODE_RETURN(CompVMatrix<TYP>::mulGA(A, ith, jth, -0.9855, 0.777774));
+			}
+		}
+	}
+	uint64_t timeEnd = CompVTime::getNowMills();
+
+	if (LOOP_COUNT == 1) { // A will be overrided if loopCount > 1
+		const std::string md5 = arrayMD5<TYP>(A);
+		COMPV_CHECK_EXP_RETURN(md5 != MD5_MULGA, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	}
+
+	COMPV_DEBUG_INFO("Elapsed time (TestMulGA = [[[ %llu millis ]]]", (timeEnd - timeStart));
+
+	return COMPV_ERROR_CODE_S_OK;
+}
