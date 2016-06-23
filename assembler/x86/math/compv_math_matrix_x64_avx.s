@@ -52,18 +52,20 @@ sym(MatrixMulGA_float64_Asm_X64_AVX):
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (i = 0; i < countSigned - 7; i += 8)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	cmp rcx, r9
+	jge .EndOfLoop8
 	.Loop8
 		vmovapd ymm10, [rax + rcx]
-		vmovapd ymm11, [rdx + rcx]
 		vmovapd ymm12, [rax + rcx + 4*8]
+		vmovapd ymm11, [rdx + rcx]
 		vmovapd ymm13, [rdx + rcx + 4*8]
 		lea rcx, [rcx + 8*8]
 		vmulpd ymm2, ymm1, ymm10
 		vmulpd ymm3, ymm0, ymm10
-		vmulpd ymm4, ymm0, ymm11
-		vmulpd ymm5, ymm1, ymm11
 		vmulpd ymm6, ymm1, ymm12
 		vmulpd ymm7, ymm0, ymm12
+		vmulpd ymm4, ymm0, ymm11
+		vmulpd ymm5, ymm1, ymm11
 		vmulpd ymm8, ymm0, ymm13
 		vmulpd ymm9, ymm1, ymm13
 		vsubpd ymm2, ymm4, ymm2
@@ -76,6 +78,7 @@ sym(MatrixMulGA_float64_Asm_X64_AVX):
 		vmovapd [rax + rcx - 8*8 + 4*8], ymm7
 		cmp rcx, r9
 		jl .Loop8
+	.EndOfLoop8
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (; i < countSigned; i += 4)
