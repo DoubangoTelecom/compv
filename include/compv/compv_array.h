@@ -44,6 +44,13 @@ public:
     COMPV_INLINE size_t strideInBytes()const {
         return m_nStrideInBytes;    // in bytes
     }
+	COMPV_INLINE COMPV_ERROR_CODE strideInElts(size_t &strideInElts) {
+		if (!m_bStrideInEltsIsIntegral) {
+			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_CALL);
+		}
+		strideInElts = m_nStrideInElts;
+		return COMPV_ERROR_CODE_S_OK;
+	}
     COMPV_INLINE size_t alignV()const {
         return m_nAlignV;
     }
@@ -81,11 +88,13 @@ private:
     size_t m_nCols;
     size_t m_nRows;
     size_t m_nStrideInBytes;
+	size_t m_nStrideInElts;
     size_t m_nElmtInBytes;
     size_t m_nAlignV;
     size_t m_nDataSize;
     size_t m_nDataCapacity;
 	bool m_bOweMem;
+	bool m_bStrideInEltsIsIntegral;
     COMPV_DISABLE_WARNINGS_END()
 };
 

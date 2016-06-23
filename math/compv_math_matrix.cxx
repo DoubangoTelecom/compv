@@ -290,24 +290,37 @@ template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::transpose(const CompVPtrArray(T) &A, CompVPtrArray(T) &R)
 {
 	COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols() || A == R, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
-
+	
 	// Create A if not already done
 	if (!R || R->rows() != A->cols() || R->cols() != A->rows()) {
 		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&R, A->cols(), A->rows()));
 	}
-	const T* a_;
-	T *r0_ = const_cast<T*>(R->ptr(0, 0));
-	uint8_t* r1_;
-	size_t rstride_ = R->strideInBytes();
+	const T* a0_ = A->ptr();
 	size_t rows_ = A->rows();
-	size_t cols_ = A->cols();
-	for (size_t row_ = 0; row_ < rows_; ++row_, ++r0_) {
-		a_ = A->ptr(row_);
-		r1_ = reinterpret_cast<uint8_t*>(r0_);
-		for (size_t col_ = 0; col_ < cols_; ++col_, r1_ += rstride_) {
-			*reinterpret_cast<T*>(r1_) = a_[col_];
+	signed cols_ = static_cast<signed>(A->cols());
+	T *r0_ = const_cast<T*>(R->ptr());
+	size_t rstrideInElts_;
+	size_t astrideInElts_;
+	T * r_;
+	signed col_;
+	COMPV_CHECK_CODE_RETURN(R->strideInElts(rstrideInElts_));
+	COMPV_CHECK_CODE_RETURN(A->strideInElts(astrideInElts_));
+	size_t rstrideInEltsTimes2_ = rstrideInElts_ << 1;
+	size_t rstrideInEltsTimes3_ = rstrideInEltsTimes2_ + rstrideInElts_;
+	size_t rstrideInEltsTimes4_ = rstrideInElts_ << 2;
+	for (size_t row_ = 0; row_ < rows_; ++row_) {
+		r_ = r0_;
+		for (col_ = 0; col_ < cols_ - 3; col_ += 4, r_ += rstrideInEltsTimes4_) {
+			r_[0] = a0_[col_];
+			r_[rstrideInElts_] = a0_[col_ + 1];
+			r_[rstrideInEltsTimes2_] = a0_[col_ + 2];
+			r_[rstrideInEltsTimes3_] = a0_[col_ + 3];
 		}
+		for (; col_ < cols_; ++col_, r_ += rstrideInElts_) {
+			r_[0] = a0_[col_];
+		}
+		r0_ += 1;
+		a0_ += astrideInElts_;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -466,7 +479,6 @@ template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::invA3x3(const CompVPtrArray(T) &A3x3, CompVPtrArray(T) &R)
 {
 	COMPV_CHECK_EXP_RETURN(!A3x3 || A3x3->cols() != 3 || A3x3->rows() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	
 	// http://mathworld.wolfram.com/MatrixInverse.html
@@ -842,8 +854,8 @@ COMPV_ERROR_CODE CompVMatrix<T>::buildHomographyEqMatrix(const T* srcX, const T*
 		void (*MatrixBuildHomographyEqMatrix_float64)(const COMPV_ALIGNED(X) compv_float64_t* srcX, const COMPV_ALIGNED(X) compv_float64_t* srcY, const COMPV_ALIGNED(X) compv_float64_t* dstX, const COMPV_ALIGNED(X) compv_float64_t* dstY, COMPV_ALIGNED(X) compv_float64_t* M, COMPV_ALIGNED(X)compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints) = NULL;
 		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && numPoints > 1 && COMPV_IS_ALIGNED_SSE(srcX) && COMPV_IS_ALIGNED_SSE(srcY) && COMPV_IS_ALIGNED_SSE(dstY) && M->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(MatrixBuildHomographyEqMatrix_float64 = MatrixBuildHomographyEqMatrix_float64_Intrin_SSE2);
-			//COMPV_EXEC_IFDEF_ASM_X86(MatrixBuildHomographyEqMatrix_float64 = MatrixBuildHomographyEqMatrix_float64_Asm_X86_SSE2);
-			//COMPV_EXEC_IFDEF_ASM_X64(MatrixBuildHomographyEqMatrix_float64 = MatrixBuildHomographyEqMatrix_float64_Asm_X64_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X86(MatrixBuildHomographyEqMatrix_float64 = MatrixBuildHomographyEqMatrix_float64_Asm_X86_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X64(MatrixBuildHomographyEqMatrix_float64 = MatrixBuildHomographyEqMatrix_float64_Asm_X64_SSE2);
 		}
 		if (MatrixBuildHomographyEqMatrix_float64) {
 			MatrixBuildHomographyEqMatrix_float64((const compv_float64_t*)srcX, (const compv_float64_t*)srcY, (const compv_float64_t*)dstX, (const compv_float64_t*)dstY, (compv_float64_t*)M0_ptr, (compv_uscalar_t)M_strideInBytes, (compv_uscalar_t)numPoints);

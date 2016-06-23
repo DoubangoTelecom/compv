@@ -154,8 +154,33 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     // https://msdn.microsoft.com/en-us/library/jj620901.aspx
 #if defined(__AVX2__)
     COMPV_DEBUG_INFO("Code built with option /arch:AVX2");
-#elif defined(__AVX__)
+#endif
+#if defined(__AVX__)
     COMPV_DEBUG_INFO("Code built with option /arch:AVX");
+#endif
+#if defined(__FMA3__)
+	COMPV_DEBUG_INFO("Code built with option /arch:FMA3");
+#endif
+#if defined(__SSE__)
+	COMPV_DEBUG_INFO("Code built with option /arch:SSE");
+#endif
+#if defined(__SSE2__)
+	COMPV_DEBUG_INFO("Code built with option /arch:SSE2");
+#endif
+#if defined(__SSE3__)
+	COMPV_DEBUG_INFO("Code built with option /arch:SSE3");
+#endif
+#if defined(__SSSE3__)
+	COMPV_DEBUG_INFO("Code built with option /arch:SSSE3");
+#endif
+#if defined(__SSE4_1__)
+	COMPV_DEBUG_INFO("Code built with option /arch:SSE41");
+#endif
+#if defined(__SSE4_2__)
+	COMPV_DEBUG_INFO("Code built with option /arch:SSE42");
+#endif
+#if defined(__ARM_NEON__)
+	COMPV_DEBUG_INFO("Code built with option /arch:NEON");
 #endif
 
     /* Math functions: Must be after CPU initialization */

@@ -14,6 +14,7 @@ COMPV_NAMESPACE_BEGIN()
 
 void rgbToRgbaKernel31_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb, COMPV_ALIGNED(SSE) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride)
 {
+	COMPV_DEBUG_INFO_CHECK_SSSE3();
     __m128i xmm0, xmm1, xmmMaskRgbToRgba, xmmAlpha;
     compv_scalar_t i, j, maxI = ((width + 15) & -16), pad = (stride - maxI), padRGB = pad * 3, padRGBA = pad << 2;
 

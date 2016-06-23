@@ -23,12 +23,14 @@ template<class T>
 CompVArray<T>::CompVArray()
     : m_pDataPtr(NULL)
 	, m_bOweMem(true)
+	, m_bStrideInEltsIsIntegral(true)
     , m_nDataSize(0)
     , m_nDataCapacity(0)
     , m_nCols(0)
     , m_nRows(0)
     , m_nElmtInBytes(0)
     , m_nStrideInBytes(0)
+	, m_nStrideInElts(0)
     , m_nAlignV(1)
 {
 	//!\ If you add new member, check shrink() to see if it needs update
@@ -71,7 +73,9 @@ COMPV_ERROR_CODE CompVArray<T>::alloc(size_t rows, size_t cols, size_t alignv /*
     m_nRows = rows;
     m_nElmtInBytes = nElmtInBytes_;
     m_nStrideInBytes = strideInBytes_;
+	m_nStrideInElts = (m_nStrideInBytes / m_nElmtInBytes);
     m_nAlignV = alignv;
+	m_bStrideInEltsIsIntegral = !(m_nStrideInBytes % m_nElmtInBytes);
 
 bail:
     if (COMPV_ERROR_CODE_IS_NOK(err_)) {

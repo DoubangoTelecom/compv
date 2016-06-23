@@ -89,10 +89,63 @@ private:
 #define COMPV_DEBUG_ERROR_EX(MODULE, FMT, ...) COMPV_DEBUG_ERROR("[" MODULE "] " FMT, ##__VA_ARGS__)
 #define COMPV_DEBUG_FATAL_EX(MODULE, FMT, ...) COMPV_DEBUG_FATAL("[" MODULE "] " FMT, ##__VA_ARGS__)
 
-#define COMPV_DEBUG_INFO_CODE_NOT_TESTED() do { static bool printed = false; if (!printed) { printed = true; COMPV_DEBUG_INFO("/!\\ Code not tested: Code block in file '%s' in function '%s' starting at line #%u not tested", __FILE__, __FUNCTION__, __LINE__); } } while(0)
-#define COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED() do { static bool printed = false; if (!printed) { printed = true; COMPV_DEBUG_INFO("/!\\ Optimization issue: Code block in file '%s' in function '%s' starting at line #%u not optimized", __FILE__, __FUNCTION__, __LINE__); } } while(0)
-#define COMPV_DEBUG_INFO_CODE_FOR_TESTING() do { static bool printed = false; if (!printed) { printed = true; COMPV_DEBUG_INFO("/!\\ Test code: Code block in file '%s' in function '%s' starting at line #%u must not be called", __FILE__, __FUNCTION__, __LINE__); } } while(0)
-#define COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX() do { static bool printed = false; if (!printed) { printed = true; COMPV_DEBUG_INFO("/!\\ Test code: Code block in file '%s' in function '%s' starting at line #%u may be slow because of AVX/SSE transition issues", __FILE__, __FUNCTION__, __LINE__); } } while(0)
+#define COMPV_DEBUG_INFO_CODE_ONCE(FMT, ...) do { static bool printed = false; if (!printed) { printed = true; COMPV_DEBUG_INFO("/!\\ Code in file '%s' in function '%s' starting at line #%u: " FMT, __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__); } } while(0)
+
+#define COMPV_DEBUG_INFO_CODE_NOT_TESTED()	COMPV_DEBUG_INFO_CODE_ONCE("Not tested")
+#define COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED() COMPV_DEBUG_INFO_CODE_ONCE("Not optimized")
+#define COMPV_DEBUG_INFO_CODE_FOR_TESTING() COMPV_DEBUG_INFO_CODE_ONCE("Is for testing and must not be called")
+
+#if !defined(__AVX__)
+#	define COMPV_DEBUG_INFO_CHECK_AVX() COMPV_DEBUG_INFO_CODE_ONCE("May be slow because of AVX/SSE transition issues")
+#else
+#	define COMPV_DEBUG_INFO_CHECK_AVX() 
+#endif
+#if !defined(__AVX2__)
+#	define COMPV_DEBUG_INFO_CHECK_AVX2() COMPV_DEBUG_INFO_CODE_ONCE("May be slow because of AVX/SSE transition issues")
+#else
+#	define COMPV_DEBUG_INFO_CHECK_AVX2() 
+#endif
+#if !defined(__FMA3__)
+#	define COMPV_DEBUG_INFO_CHECK_FMA3() COMPV_DEBUG_INFO_CODE_ONCE("May be slow because of AVX/SSE transition issues")
+#else
+#	define COMPV_DEBUG_INFO_CHECK_FMA3() 
+#endif
+#if !defined(__SSE__)
+#	define COMPV_DEBUG_INFO_CHECK_SSE() COMPV_DEBUG_INFO_CODE_ONCE("Not built with SSE support")
+#else
+#	define COMPV_DEBUG_INFO_CHECK_SSE() 
+#endif
+#if !defined(__SSE2__) && !COMPV_ARCH_X64 // SSE2 enabled on all x64
+#	define COMPV_DEBUG_INFO_CHECK_SSE2() COMPV_DEBUG_INFO_CODE_ONCE("Not built with SSE2 support")
+#else
+#	define COMPV_DEBUG_INFO_CHECK_SSE2() 
+#endif
+#if !defined(__SSE3__)
+#	define COMPV_DEBUG_INFO_CHECK_SSE3() COMPV_DEBUG_INFO_CODE_ONCE("Not built with SSE3 support")
+#else
+#	define COMPV_DEBUG_INFO_CHECK_SSE3() 
+#endif
+#if !defined(__SSSE3__)
+#	define COMPV_DEBUG_INFO_CHECK_SSSE3() COMPV_DEBUG_INFO_CODE_ONCE("Not built with SSSE3 support")
+#else
+#	define COMPV_DEBUG_INFO_CHECK_SSSE3() 
+#endif
+#if !defined(__SSE4_1__)
+#	define COMPV_DEBUG_INFO_CHECK_SSE41() COMPV_DEBUG_INFO_CODE_ONCE("Not built with SSE41 support")
+#else
+#	define COMPV_DEBUG_INFO_CHECK_SSE41() 
+#endif
+#if !defined(__SSE4_2__)
+#	define COMPV_DEBUG_INFO_CHECK_SSE42() COMPV_DEBUG_INFO_CODE_ONCE("Not built with SSE42 support")
+#else
+#	define COMPV_DEBUG_INFO_CHECK_SSE42() 
+#endif
+#if !defined(__ARM_NEON__)
+#	define COMPV_DEBUG_INFO_CHECK_NEON() COMPV_DEBUG_INFO_CODE_ONCE("Not built with NEON support")
+#else
+#	define COMPV_DEBUG_INFO_CHECK_NEON() 
+#endif
+
 
 COMPV_NAMESPACE_END()
 

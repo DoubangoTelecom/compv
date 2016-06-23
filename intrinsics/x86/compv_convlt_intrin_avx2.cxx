@@ -21,9 +21,8 @@ COMPV_NAMESPACE_BEGIN()
 void Convlt1_verthz_float32_minpack16_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t stride, compv_scalar_t pad, const float* vhkern_ptr, compv_scalar_t kern_size)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM which support FMA3
-#if !defined(__AVX2__)
-	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
-#endif
+	COMPV_DEBUG_INFO_CHECK_AVX2();
+	
     _mm256_zeroupper();
     compv_scalar_t i, j, k;
     __m256 ymmCoeff, ymmF0, ymmSF0, ymmSF1, ymmSF2, ymmSF3;
@@ -132,9 +131,8 @@ void Convlt1_verthz_float32_minpack16_Intrin_AVX2(const uint8_t* in_ptr, uint8_t
 void Convlt1_verthz_fxpq16_minpack16_Intrin_AVX2(const uint8_t* in_ptr, uint8_t* out_ptr, compv_scalar_t width, compv_scalar_t height, compv_scalar_t stride, compv_scalar_t pad, const uint16_t* vhkern_ptr, compv_scalar_t kern_size)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
-#if !defined(__AVX2__)
-	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
-#endif
+	COMPV_DEBUG_INFO_CHECK_AVX2();
+	
     _mm256_zeroupper();
     compv_scalar_t i, j, k;
     __m256i ymmI0, ymmS0, ymmS1, ymmZero, ymmCoeff, ymmMaskToExtractFirst128Bits;

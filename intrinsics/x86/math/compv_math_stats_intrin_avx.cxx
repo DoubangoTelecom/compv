@@ -20,9 +20,8 @@ COMPV_NAMESPACE_BEGIN()
 void MathStatsNormalize2DHartley_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* x, const COMPV_ALIGNED(AVX) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
-#if !defined(__AVX__)
-	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
-#endif
+	COMPV_DEBUG_INFO_CHECK_AVX();
+
 	_mm256_zeroupper();
 	compv_scalar_t i, numPoints_ = static_cast<compv_uscalar_t>(numPoints);
 
@@ -127,9 +126,8 @@ void MathStatsNormalize2DHartley_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) com
 void MathStatsNormalize2DHartley_4_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* x, const COMPV_ALIGNED(AVX) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
-#if !defined(__AVX__)
-	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
-#endif
+	COMPV_DEBUG_INFO_CHECK_AVX();
+	
 	_mm256_zeroupper();
 	const __m256d ymmOneOverNumPoints = _mm256_div_pd(_mm256_set1_pd(1.), _mm256_set1_pd(static_cast<compv_float64_t>(numPoints)));
 	const __m256d ymmSqrt2 = _mm256_set1_pd(COMPV_MATH_SQRT_2);
@@ -168,9 +166,8 @@ void MathStatsNormalize2DHartley_4_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) c
 void MathStatsMSE2DHomogeneous_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* aX_h, const COMPV_ALIGNED(AVX) compv_float64_t* aY_h, const COMPV_ALIGNED(AVX) compv_float64_t* aZ_h, const COMPV_ALIGNED(AVX) compv_float64_t* bX, const COMPV_ALIGNED(AVX) compv_float64_t* bY, COMPV_ALIGNED(AVX) compv_float64_t* mse, compv_uscalar_t numPoints)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
-#if !defined(__AVX__)
-	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
-#endif
+	COMPV_DEBUG_INFO_CHECK_AVX();
+	
 	_mm256_zeroupper();
 
 	compv_scalar_t numPointsSigned = static_cast<compv_scalar_t>(numPoints);
@@ -193,9 +190,8 @@ void MathStatsMSE2DHomogeneous_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) compv
 void MathStatsVariance_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
-#if !defined(__AVX__)
-	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
-#endif
+	COMPV_DEBUG_INFO_CHECK_AVX();
+	
 	_mm256_zeroupper();
 
 	compv_scalar_t countSigned = static_cast<compv_scalar_t>(count), i;

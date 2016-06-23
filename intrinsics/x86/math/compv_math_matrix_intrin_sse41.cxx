@@ -17,6 +17,7 @@ void MatrixMulGA_float64_minpack2_Intrin_SSE41(COMPV_ALIGNED(SSE) compv_float64_
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // SSE2 faster
+	COMPV_DEBUG_INFO_CHECK_SSE41();
 
 	__m128d xmmCS, xmmMSC, xmmRI, xmmRJ, xmmLow, xmmHigh;
 	compv_uscalar_t i;
@@ -43,6 +44,7 @@ void MatrixMulGA_float64_minpack2_Intrin_SSE41(COMPV_ALIGNED(SSE) compv_float64_
 void MatrixMulABt_float64_3x3_Intrin_SSE41(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM, FMA3
+	COMPV_DEBUG_INFO_CHECK_SSE41();
 	const uint8_t* a = reinterpret_cast<const uint8_t*>(A);
 	const uint8_t* b = reinterpret_cast<const uint8_t*>(B);
 	uint8_t* r = reinterpret_cast<uint8_t*>(R);

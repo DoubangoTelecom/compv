@@ -18,6 +18,7 @@ COMPV_NAMESPACE_BEGIN()
 void MatrixMulGA_float64_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 
 	__m128d xmmC, xmmS, xmmRI, xmmRJ;
 
@@ -36,6 +37,7 @@ void MatrixMulGA_float64_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri, COM
 void MatrixMulGA_float32_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float32_t* ri, COMPV_ALIGNED(SSE) compv_float32_t* rj, const compv_float32_t* c1, const compv_float32_t* s1, compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 
 	__m128 xmmC, xmmS, xmmRI, xmmRJ;
 
@@ -56,6 +58,8 @@ void MatrixMulGA_float32_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float32_t* ri, COM
 void MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rowStart, compv_uscalar_t rowEnd, compv_uscalar_t strideInBytes)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+
 	compv_uscalar_t i, j;
 	__m128d xmmAbs, xmmMax, xmm0, xmmAbsMask, xmmAllZerosMask;
 	int cmp;
@@ -141,6 +145,7 @@ void MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_
 // A and B must have same rows, cols and alignment
 void MatrixIsEqual_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t rows, compv_uscalar_t cols, compv_uscalar_t strideInBytes, compv_scalar_t *equal)
 {
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 	// TODO(dmi): add ASM (not urgent, function used rarely)
 	compv_uscalar_t i, j;
 	*equal = 0;
@@ -176,6 +181,7 @@ void MatrixIsEqual_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t*
 void MatrixMulABt_float64_minpack1_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM, SSE41 (DotProduct)
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 
 	compv_uscalar_t i, j;
 
@@ -222,6 +228,7 @@ void MatrixMulABt_float64_minpack1_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_fl
 void MatrixBuildHomographyEqMatrix_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE)compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_float64_t* M0_ptr = const_cast<compv_float64_t*>(M);
 	compv_float64_t* M1_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M0_ptr)+M_strideInBytes);
 	size_t M_strideInBytesTimes2 = M_strideInBytes << 1;
@@ -254,6 +261,38 @@ void MatrixBuildHomographyEqMatrix_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) 
 		// Move to the next point
 		M0_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M0_ptr)+M_strideInBytesTimes2);
 		M1_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M1_ptr)+M_strideInBytesTimes2);
+	}
+}
+
+// "a_strideInBytes" and "r_strideInBytes" must be aligned
+void MatrixTranspose_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t a_rows, compv_uscalar_t a_cols, COMPV_ALIGNED(SSE) compv_uscalar_t a_strideInBytes, COMPV_ALIGNED(SSE) compv_uscalar_t r_strideInBytes)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Very slow compared to C++ code
+
+	int64_t *r, *r0 = reinterpret_cast<int64_t*>(R);
+	const int64_t* a0 = reinterpret_cast<const int64_t*>(A);
+	compv_uscalar_t rstrideInElts = r_strideInBytes >> 3;
+	compv_uscalar_t rstrideInEltsTimes4 = rstrideInElts << 2;
+	compv_uscalar_t rstrideInEltsTimes2 = rstrideInElts << 1;
+	compv_uscalar_t rstrideInEltsTimes3 = rstrideInEltsTimes2 + rstrideInElts;
+	compv_uscalar_t astrideInElts = a_strideInBytes >> 3;
+	compv_scalar_t col_;
+	compv_scalar_t a_cols_ = static_cast<compv_scalar_t>(a_cols);
+	for (compv_uscalar_t row_ = 0; row_ < a_rows; ++row_) {
+		r = r0;
+		for (col_ = 0; col_ < a_cols_ - 3; col_ += 4, r += rstrideInEltsTimes4) {
+			_mm_stream_si64(&r[0], a0[col_]);
+			_mm_stream_si64(&r[rstrideInElts], a0[col_ + 1]);
+			_mm_stream_si64(&r[rstrideInEltsTimes2], a0[col_ + 2]);
+			_mm_stream_si64(&r[rstrideInEltsTimes3], a0[col_ + 3]);
+		}
+		for (; col_ < a_cols_; ++col_, r += rstrideInElts) {
+			_mm_stream_si64(&r[0], a0[col_]);
+		}
+		r0 += 1;
+		a0 += astrideInElts;
 	}
 }
 

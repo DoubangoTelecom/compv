@@ -17,6 +17,7 @@ COMPV_NAMESPACE_BEGIN()
 void HammingDistance_Intrin_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_scalar_t width, compv_scalar_t stride, compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM code almost #2 times faster (VS2013)
+	COMPV_DEBUG_INFO_CHECK_SSE42();
 
     compv_scalar_t i, j;
     uint64_t cnt;
@@ -68,6 +69,7 @@ void HammingDistance_Intrin_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataP
 void HammingDistance256_Intrin_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_scalar_t height, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM code almost #2 times faster (VS2013)
+	COMPV_DEBUG_INFO_CHECK_SSE42();
 
     uint64_t cnt;
     __m128i xmm0, xmm1;

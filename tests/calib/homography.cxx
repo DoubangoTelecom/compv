@@ -15,7 +15,7 @@ using namespace compv;
 #define TRANSX				28.5
 #define TRANSY				-10.0
 #define TYP					double  // double or float (float is useless because of slow convergence issue)
-#define MODE_EST			COMPV_MODELEST_TYPE_RANSAC
+#define MODE_EST			COMPV_MODELEST_TYPE_NONE
 #define TYP_SZ				"%e"	// %e or %f
 #define MSE					9.1831692240696733e-017
 #if COMPV_ARCH_X64
@@ -65,6 +65,8 @@ COMPV_ERROR_CODE TestHomography()
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	uint64_t timeStart, timeEnd;
 	bool colinear = false;
+
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // MODE_EST not correct
 
 	// expected H
 	const TYP H_expected[3][3] = {

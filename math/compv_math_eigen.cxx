@@ -14,8 +14,8 @@ Functions to compute Eigenvalues and Eigenvectors
 #include "compv/compv_mem.h"
 
 #if !defined(COMPV_MATH_EIGEN_EPSILON)
-#	define COMPV_MATH_EIGEN_DOUBLE_EPSILON		1.192092896e-07 // FLT_EPSILON
-#	define COMPV_MATH_EIGEN_FLOAT_EPSILON		1.192092896e-04
+#	define COMPV_MATH_EIGEN_DOUBLE_EPSILON		1.192092896e-07 // FLT_EPSILON TODO(dmi): set to DBL_EPSILON
+#	define COMPV_MATH_EIGEN_FLOAT_EPSILON		1.192092896e-04 // TODO(dmi): set to FLT_EPSILON
 #endif /* COMPV_MATH_EIGEN_EPSILON */
 
 #if !defined(COMPV_MATH_EIGEN_MAX_ROUNDS)
@@ -44,9 +44,12 @@ COMPV_ERROR_CODE CompVEigen<T>::findSymm(const CompVPtrArray(T) &S, CompVPtrArra
 
 	// TODO(dmi): make this function MT
 
+#if defined(_DEBUG) || defined(DEBUG)
 	if (S->cols() == 3 && S->rows() == 3) {
+		// https://github.com/DoubangoTelecom/compv/issues/85
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	}
+#endif
 
 	size_t row, col;
 	T gcos_, gsin_;
@@ -255,13 +258,50 @@ void CompVEigen<T>::extract2Cols(const CompVPtrArray(T) &A, size_t a_col0, size_
 	// Private function -> do not check input parameters
 	T* r0 = const_cast<T*>(R->ptr(0));
 	T* r1 = const_cast<T*>(R->ptr(1));
-	const uint8_t* a0 = reinterpret_cast<const uint8_t*>(A->ptr(0, a_col0));
-	const uint8_t* a1 = reinterpret_cast<const uint8_t*>(A->ptr(0, a_col1));
-	size_t astride = A->strideInBytes();
-	size_t rows_ = A->rows();
-	for (size_t row_ = 0, aidx = 0; row_ < rows_; ++row_, aidx += astride) {
-		r0[row_] = *reinterpret_cast<const T*>(&a0[aidx]);
-		r1[row_] = *reinterpret_cast<const T*>(&a1[aidx]);
+	const T* a0 = A->ptr(0, a_col0);
+	const T* a1 = A->ptr(0, a_col1);
+	size_t astrideInElts;
+	COMPV_CHECK_CODE_ASSERT(A->strideInElts(astrideInElts));
+	const size_t rows_ = A->rows();
+	switch (rows_) {
+	case 1:
+		r0[0] = a0[0];
+		r1[0] = a1[0];
+		break;
+	case 2:
+		r0[0] = a0[0];
+		r0[1] = a0[astrideInElts];
+		r1[0] = a1[0];
+		r1[1] = a1[astrideInElts];
+		break;
+	case 3:
+		r0[0] = a0[0];
+		r0[1] = a0[astrideInElts];
+		r0[2] = a0[astrideInElts<<1];
+		r1[0] = a1[0];
+		r1[1] = a1[astrideInElts];
+		r1[2] = a1[astrideInElts<<1];
+		break;
+	default:
+		size_t row_, aidx_, rowminus3 = rows_ - 3;
+		size_t astrideInEltsTimes2 = astrideInElts << 1;
+		size_t astrideInEltsTimes3 = astrideInEltsTimes2 + astrideInElts;
+		size_t astrideInEltsTimes4 = astrideInEltsTimes3 + astrideInElts;
+		for (row_ = 0, aidx_ = 0; row_ < rowminus3; row_ += 4, aidx_ += astrideInEltsTimes4) {
+			r0[row_] = a0[aidx_];
+			r0[row_ + 1] = a0[aidx_ + astrideInElts];
+			r0[row_ + 2] = a0[aidx_ + astrideInEltsTimes2];
+			r0[row_ + 3] = a0[aidx_ + astrideInEltsTimes3];
+			r1[row_] = a1[aidx_];
+			r1[row_ + 1] = a1[aidx_ + astrideInElts];
+			r1[row_ + 2] = a1[aidx_ + astrideInEltsTimes2];
+			r1[row_ + 3] = a1[aidx_ + astrideInEltsTimes3];
+		}
+		for (; row_ < rows_; ++row_, aidx_ += astrideInElts) {
+			r0[row_] = a0[aidx_];
+			r1[row_] = a1[aidx_];
+		}
+		break;
 	}
 }
 
@@ -271,13 +311,51 @@ void CompVEigen<T>::insert2Cols(const CompVPtrArray(T) &A, CompVPtrArray(T) &R, 
 	// Private function -> do not check input parameters
 	const T* a0 = A->ptr(0);
 	const T* a1 = A->ptr(1);
-	uint8_t* r0 = reinterpret_cast<uint8_t*>(const_cast<T*>(R->ptr(0, r_col0)));
-	uint8_t* r1 = reinterpret_cast<uint8_t*>(const_cast<T*>(R->ptr(0, r_col1)));
-	size_t rstride = R->strideInBytes();
-	size_t rows_ = R->rows();
-	for (size_t row_ = 0, ridx = 0; row_ < rows_; ++row_, ridx += rstride) {
-		*reinterpret_cast<T*>(&r0[ridx]) = a0[row_];
-		*reinterpret_cast<T*>(&r1[ridx]) = a1[row_];
+	T* r0 = const_cast<T*>(R->ptr(0, r_col0));
+	T* r1 = const_cast<T*>(R->ptr(0, r_col1));
+	size_t rstrideInElts;
+	COMPV_CHECK_CODE_ASSERT(R->strideInElts(rstrideInElts));
+	const size_t rows_ = R->rows();
+	switch (rows_) {
+	case 1:
+		r0[0] = a0[0];
+		r1[0] = a1[0];
+		break;
+	case 2:
+		r0[0] = a0[0];
+		r0[rstrideInElts] = a0[1];
+		r1[0] = a1[0];
+		r1[rstrideInElts] = a1[1];
+		break;
+	case 3:
+		r0[0] = a0[0];
+		r0[rstrideInElts] = a0[1];
+		r0[rstrideInElts<<1] = a0[2];
+		r1[0] = a1[0];
+		r1[rstrideInElts] = a1[1];
+		r1[rstrideInElts<<1] = a1[2];
+		break;
+	default:
+		size_t row_, ridx_, rowminus3 = rows_ - 3;
+		size_t rstrideInEltsTimes2 = rstrideInElts << 1;
+		size_t rstrideInEltsTimes3 = rstrideInEltsTimes2 + rstrideInElts;
+		size_t rstrideInEltsTimes4 = rstrideInEltsTimes3 + rstrideInElts;
+		for (row_ = 0, ridx_ = 0; row_ < rowminus3; row_ += 4, ridx_ += rstrideInEltsTimes4) {
+			r0[ridx_] = a0[row_];
+			r0[ridx_ + rstrideInElts] = a0[row_ + 1];
+			r0[ridx_ + rstrideInEltsTimes2] = a0[row_ + 2];
+			r0[ridx_ + rstrideInEltsTimes3] = a0[row_ + 3];
+
+			r1[ridx_] = a1[row_];
+			r1[ridx_ + rstrideInElts] = a1[row_ + 1];
+			r1[ridx_ + rstrideInEltsTimes2] = a1[row_ + 2];
+			r1[ridx_ + rstrideInEltsTimes3] = a1[row_ + 3];
+		}
+		for (; row_ < rows_; ++row_, ridx_ += rstrideInElts) {
+			r0[ridx_] = a0[row_];
+			r1[ridx_] = a1[row_];
+		}
+		break;
 	}
 }
 

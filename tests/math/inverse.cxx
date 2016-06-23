@@ -44,8 +44,9 @@ COMPV_ERROR_CODE TestPseudoInverse()
 COMPV_ERROR_CODE TestInverse3x3()
 {
 	uint64_t timeStart, timeEnd;
-#define MD5_DOUBLE		"5a0e43d0961d5b714aa11e835c555971"
-	static const TYP A[3][3] = {
+#define MD5A_DOUBLE		"5a0e43d0961d5b714aa11e835c555971" // non-singular
+#define MD5B_DOUBLE		"25b38f92f51f06a2ac4e60f767583f69" // singluar
+	static const TYP A[3][3] = { // non-singular
 		{ 5, 7, 2 },
 		{ 1, 9, 4 },
 		{ 2, 6, 3 }
@@ -61,9 +62,22 @@ COMPV_ERROR_CODE TestInverse3x3()
 
 	COMPV_DEBUG_INFO("Elapsed time (TestInverse3x3) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 	
-	const std::string md5 = arrayMD5<TYP>(A3x3inv);
-	COMPV_CHECK_EXP_RETURN(md5 != MD5_DOUBLE, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	std::string md5 = arrayMD5<TYP>(A3x3inv);
+	COMPV_CHECK_EXP_RETURN(md5 != MD5A_DOUBLE, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+
+	// Check singular matrix
+	static const TYP B[3][3] = {
+		{ 1, 2, 3 },
+		{ 4, 5, 6 },
+		{ 7, 8, 9 }
+	};
+	COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::copy(A3x3, &B[0][0], 3, 3));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix<TYP>::invA3x3(A3x3, A3x3inv)); // pseudo-inverse
+	md5 = arrayMD5<TYP>(A3x3inv);
+	COMPV_CHECK_EXP_RETURN(md5 != MD5B_DOUBLE, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+	
 
 	return COMPV_ERROR_CODE_S_OK;
-#undef MD5_DOUBLE
+#undef MD5A_DOUBLE
+#undef MD5B_DOUBLE
 }

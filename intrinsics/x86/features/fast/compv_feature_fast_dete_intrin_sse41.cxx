@@ -26,6 +26,7 @@ COMPV_NAMESPACE_BEGIN()
 
 void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x16, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x16, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv_scalar_t N)
 {
+	COMPV_DEBUG_INFO_CHECK_SSE41();
     __m128i xmm0, xmm1, xmmFastXFlagsLow, xmmFastXFlagsHigh, xmmFdarkers, xmmFbrighters;
     __m128i xmmZeros;
     int r0 = 0, r1 = 0, maxn;
@@ -109,6 +110,7 @@ void FastStrengths16_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdar
 // TODO(dmi) this is a temp function to replace the AVX version until we found a non SSE/AVX mixing implementation
 void FastStrengths32_Intrin_SSE41(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x32, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x32, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv_scalar_t N)
 {
+	COMPV_DEBUG_INFO_CHECK_SSE41();
     __m128i xmm0, xmm1, xmmFastXFlagsLow, xmmFastXFlagsHigh, xmmFX;
     __m128i xmmZeros;
     int r0 , r1, g = 0, maxn;

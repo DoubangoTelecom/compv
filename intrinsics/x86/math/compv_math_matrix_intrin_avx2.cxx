@@ -19,9 +19,9 @@ COMPV_NAMESPACE_BEGIN()
 // A and B must have same rows, cols and alignment
 void MatrixIsEqual_float64_Intrin_AVX2(const COMPV_ALIGNED(AVX) compv_float64_t* A, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t rows, compv_uscalar_t cols, compv_uscalar_t strideInBytes, compv_scalar_t *equal)
 {
-#if !defined(__AVX__) && !defined (__AVX2__)
-	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
-#endif
+	COMPV_DEBUG_INFO_CHECK_AVX();
+	COMPV_DEBUG_INFO_CHECK_AVX2();
+	
 	_mm256_zeroupper();
 	// TODO(dmi): add ASM (not urgent, function used rarely)
 	compv_uscalar_t i, j;

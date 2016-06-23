@@ -17,6 +17,7 @@ COMPV_NAMESPACE_BEGIN()
 void MathStatsNormalize2DHartley_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* x, const COMPV_ALIGNED(SSE) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_scalar_t i, numPoints_ = static_cast<compv_uscalar_t>(numPoints);
 
 	__m128d xmm0, xmm1, xmm2, xmm3;
@@ -92,6 +93,7 @@ void MathStatsNormalize2DHartley_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) co
 void MathStatsNormalize2DHartley_4_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* x, const COMPV_ALIGNED(SSE) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 	const __m128d xmmOneOverNumPoints = _mm_div_pd(_mm_set1_pd(1.), _mm_set1_pd(static_cast<compv_float64_t>(numPoints)));
 	const __m128d xmmSqrt2 = _mm_set1_pd(COMPV_MATH_SQRT_2);
 
@@ -120,6 +122,7 @@ void MathStatsNormalize2DHartley_4_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) 
 void MathStatsMSE2DHomogeneous_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_scalar_t numPointsSigned = static_cast<compv_scalar_t>(numPoints), i;
 	__m128d xmmEX0, xmmEY0, xmmScale0, xmmEX1, xmmEY1, xmmScale1;
 	const __m128d xmmOne = _mm_set1_pd(1.);
@@ -153,6 +156,7 @@ void MathStatsMSE2DHomogeneous_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) comp
 void MathStatsMSE2DHomogeneous_4_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 	__m128d xmmEX0, xmmEY0, xmmScale0, xmmEX1, xmmEY1, xmmScale1;
 	const __m128d xmmOne = _mm_set1_pd(1.);
 	
@@ -168,6 +172,8 @@ void MathStatsMSE2DHomogeneous_4_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) co
 
 void MathStatsVariance_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_scalar_t countSigned = static_cast<compv_scalar_t>(count), i;
 	__m128d xmmDev0, xmmDev1;
 	__m128d xmmVar = _mm_setzero_pd();

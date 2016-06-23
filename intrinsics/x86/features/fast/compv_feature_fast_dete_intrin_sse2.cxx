@@ -34,6 +34,7 @@ void FastData16Row_Intrin_SSE2(
     uint8_t* strengths,
     compv_scalar_t* me)
 {
+	COMPV_DEBUG_INFO_CHECK_SSE2();
     compv_scalar_t i, sum, s;
 
     int colDarkersFlags, colBrightersFlags; // Flags defining which column has more than N non-zero bits
@@ -352,6 +353,7 @@ next:
 void FastStrengths16_Intrin_SSE2(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(SSE) const uint8_t* dbrighters16x16, COMPV_ALIGNED(SSE) const uint8_t* ddarkers16x16, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv_scalar_t N)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // FastStrengths_(ASM/INTRIN)_SSE41 is the best choice
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 
     __m128i xmm0, xmm1, xmmFbrighters, xmmFdarkers, xmmZeros, xmmFastXFlagsLow, xmmFastXFlagsHigh;
     int r0 = 0, r1 = 0, maxn;

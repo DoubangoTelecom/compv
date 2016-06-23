@@ -21,9 +21,8 @@ COMPV_NAMESPACE_BEGIN()
 void MatrixMulGA_float64_Intrin_AVX(COMPV_ALIGNED(AVX2) compv_float64_t* ri, COMPV_ALIGNED(AVX2) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM which support FMA3
-#if !defined(__AVX__)
-	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
-#endif
+	COMPV_DEBUG_INFO_CHECK_AVX();
+
 	_mm256_zeroupper();
 
 	__m256d ymmC, ymmS, ymmRI, ymmRJ;
@@ -54,9 +53,8 @@ void MatrixMulGA_float64_Intrin_AVX(COMPV_ALIGNED(AVX2) compv_float64_t* ri, COM
 void MatrixMulGA_float32_Intrin_AVX(COMPV_ALIGNED(AVX) compv_float32_t* ri, COMPV_ALIGNED(AVX) compv_float32_t* rj, const compv_float32_t* c1, const compv_float32_t* s1, compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM which support FMA3
-#if !defined(__AVX__)
-	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
-#endif
+	COMPV_DEBUG_INFO_CHECK_AVX();
+
 	_mm256_zeroupper();
 
 	__m256 ymmC, ymmS, ymmRI, ymmRJ;
@@ -86,9 +84,8 @@ void MatrixMulGA_float32_Intrin_AVX(COMPV_ALIGNED(AVX) compv_float32_t* ri, COMP
 void MatrixMulABt_float64_minpack1_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
-#if !defined(__AVX__)
-	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
-#endif
+	COMPV_DEBUG_INFO_CHECK_AVX();
+	
 	_mm256_zeroupper();
 
 	compv_uscalar_t i, j;
@@ -142,9 +139,8 @@ void MatrixMulABt_float64_minpack1_Intrin_FMA3_AVX(const COMPV_ALIGNED(AVX) comp
 #	pragma intel optimization_parameter target_arch=avx
 #endif
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
-#if !defined(__AVX__)
-	COMPV_DEBUG_INFO_CODE_AVX_SSE_MIX();
-#endif
+	COMPV_DEBUG_INFO_CHECK_AVX();
+	
 	_mm256_zeroupper();
 
 	compv_uscalar_t i, j;
