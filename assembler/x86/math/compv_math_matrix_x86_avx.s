@@ -188,9 +188,6 @@ sym(MatrixMulABt_float64_minpack1_Asm_X86_AVX):
 	mov [rsp + 8], rax
 	lea rax, [rax - 6] ; rax = (bCols - 7)
 
-	vmovapd ymm3, [sym(kAVXMaskstore_0_u64)] ; ymm3 = ymmMaskToExtractFirst64Bits
-	vmovapd ymm4, [sym(kAVXMaskstore_0_1_u64)] ; ymm4 = ymmMaskToExtractFirst128Bits
-
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (i = 0; i < aRows; ++i) 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -240,10 +237,10 @@ sym(MatrixMulABt_float64_minpack1_Asm_X86_AVX):
 			cmp rcx, [rsp + 8]
 			jge .EndOfMoreThanTwoRemains
 			.MoreThanTwoRemains
-				vmaskmovpd ymm1, ymm4, [rdx + rcx*8]
-				vmaskmovpd ymm2, ymm4, [rbx + rcx*8]
+				vmovapd xmm1, [rdx + rcx*8]
+				vmovapd xmm2, [rbx + rcx*8]
 				lea rcx, [rcx + 2]  ; k += 2
-				vmulpd ymm1, ymm1, ymm2
+				vmulpd xmm1, xmm1, xmm2
 				vaddpd ymm0, ymm0, ymm1
 			.EndOfMoreThanTwoRemains
 
@@ -253,17 +250,17 @@ sym(MatrixMulABt_float64_minpack1_Asm_X86_AVX):
 			cmp rcx, arg(4)
 			jge .EndOfMoreThanOneRemains
 			.MoreThanOneRemains
-				vmaskmovpd ymm1, ymm3, [rdx + rcx*8]
-				vmaskmovpd ymm2, ymm3, [rbx + rcx*8]
-				vmulpd ymm1, ymm1, ymm2
+				vmovsd xmm1, [rdx + rcx*8]
+				vmovsd xmm2, [rbx + rcx*8]
+				vmulsd xmm1, xmm1, xmm2
 				vaddpd ymm0, ymm0, ymm1
 			.EndOfMoreThanOneRemains		
 			
 			vhaddpd ymm0, ymm0, ymm0
 			vperm2f128 ymm1, ymm0, ymm0, 0x11
 			mov rcx, arg(7) ; R
-			vaddpd ymm0, ymm0, ymm1
-			vmaskmovpd [rcx + rdi*8], ymm3, ymm0
+			vaddsd xmm0, xmm0, xmm1
+			vmovsd [rcx + rdi*8], xmm0
 
 			inc rdi ; ++j
 			add rbx, arg(6) ; b += bStrideInBytes

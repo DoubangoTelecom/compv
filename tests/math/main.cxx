@@ -27,8 +27,8 @@ using namespace compv;
 #define TEST_VARIANCE				0
 #define TEST_MSE_2D_HOMOG			0
 #define TEST_MOPS_ISSYMMETRIC		0
-#define TEST_MOPS_MULAB				0
-#define TEST_MOPS_MULGA				1
+#define TEST_MOPS_MULAB				1
+#define TEST_MOPS_MULGA				0
 
 #if COMPV_OS_WINDOWS
 int _tmain(int argc, _TCHAR* argv[])
