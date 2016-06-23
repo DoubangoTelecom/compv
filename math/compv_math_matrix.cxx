@@ -462,6 +462,9 @@ template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::pseudoinv(const CompVPtrArray(T) &A, CompVPtrArray(T) &R)
 {
 	COMPV_CHECK_EXP_RETURN(!A || !A->cols() || !A->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	// Do not try to check size and call "invA3x3" -> undless loop when matrix is singular ("invA3x3" will call "pseudoinv")
+
 	CompVPtrArray(T) U, D, V;
 	COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::svd(A, U, D, V));
 
@@ -481,41 +484,64 @@ template <class T>
 COMPV_ERROR_CODE CompVMatrix<T>::invA3x3(const CompVPtrArray(T) &A3x3, CompVPtrArray(T) &R)
 {
 	COMPV_CHECK_EXP_RETURN(!A3x3 || A3x3->cols() != 3 || A3x3->rows() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	
-	// http://mathworld.wolfram.com/MatrixInverse.html
+	// Create R if not already done
+	if (!R || R->rows() != 3 || R->cols() != 3 || R->alignV() != A3x3->alignV()) { // same align to make sure we'll have the same stride (required by SIMD)
+		COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&R, 3, 3));
+	}
+	bool hasSIMD = false;
+	const char* nameSIMD = NULL;
 	const T* a0 = A3x3->ptr(0);
-	const T* a1 = A3x3->ptr(1);
-	const T* a2 = A3x3->ptr(2);
-	// det(A)
-	T detA =
-		a0[0] * (a1[1] * a2[2] - a2[1] * a1[2])
-		- a1[0] * (a0[1] * a2[2] - a2[1] * a0[2])
-		+ a2[0] * (a0[1] * a1[2] - a1[1] * a0[2]);
-	if (detA == 0) {
-		COMPV_DEBUG_INFO("3x3 Matrix is singluar... computing pseudoinverse instead of the inverse");
+	T* r0 = const_cast<T*>(R->ptr(0));
+
+	if (std::is_same<T, compv_float64_t>::value) {
+		void(*MatrixInvA3x3_float64)(const COMPV_ALIGNED(X) compv_float64_t* A3x3, COMPV_ALIGNED(X) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1) = NULL;
+		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && A3x3->isAlignedSSE() && R->isAlignedSSE() && A3x3->strideInBytes() == R->strideInBytes()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((MatrixInvA3x3_float64 = MatrixInvA3x3_float64_Intrin_SSE2, hasSIMD = true, nameSIMD = "MatrixInvA3x3_float64_Intrin_SSE2"));
+		}
+		if (MatrixInvA3x3_float64) {
+			compv_float64_t detA;
+			MatrixInvA3x3_float64((const compv_float64_t*)a0, (compv_float64_t*)r0, (compv_uscalar_t)A3x3->strideInBytes(), &detA);
+			if (detA != 0) {
+				return COMPV_ERROR_CODE_S_OK; // Matrix not singular -> break process
+			}
+		}
+	}
+
+	if (hasSIMD) {
+		// Matrix is singular
+		COMPV_DEBUG_INFO("3x3 Matrix is singluar according to '%s'... computing pseudoinverse instead of the inverse", nameSIMD);
 		COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::pseudoinv(A3x3, R));
 	}
 	else {
-		// Create R if not already done
-		if (!R || R->rows() != 3 || R->cols() != 3 || R->alignV() != A3x3->alignV()) { // same align to make sure we'll have the same stride
-			COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&R, 3, 3));
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+		// http://mathworld.wolfram.com/MatrixInverse.html
+		const T* a1 = A3x3->ptr(1);
+		const T* a2 = A3x3->ptr(2);
+		// det(A)
+		T detA =
+			a0[0] * (a1[1] * a2[2] - a2[1] * a1[2])
+			- a1[0] * (a0[1] * a2[2] - a2[1] * a0[2])
+			+ a2[0] * (a0[1] * a1[2] - a1[1] * a0[2]);
+		if (detA == 0) {
+			COMPV_DEBUG_INFO("3x3 Matrix is singluar... computing pseudoinverse instead of the inverse");
+			COMPV_CHECK_CODE_RETURN(CompVMatrix<T>::pseudoinv(A3x3, R));
 		}
-		detA = T(1) / detA;
-		T* r0 = const_cast<T*>(R->ptr(0));
-		T* r1 = const_cast<T*>(R->ptr(1));
-		T* r2 = const_cast<T*>(R->ptr(2));
-		r0[0] = ((a1[1] * a2[2]) - (a2[1] * a1[2])) * detA;
-		r0[1] = ((a0[2] * a2[1]) - (a2[2] * a0[1])) * detA;
-		r0[2] = ((a0[1] * a1[2]) - (a1[1] * a0[2])) * detA;
+		else {
+			detA = T(1) / detA;
+			T* r1 = const_cast<T*>(R->ptr(1));
+			T* r2 = const_cast<T*>(R->ptr(2));
+			r0[0] = ((a1[1] * a2[2]) - (a2[1] * a1[2])) * detA;
+			r0[1] = ((a0[2] * a2[1]) - (a2[2] * a0[1])) * detA;
+			r0[2] = ((a0[1] * a1[2]) - (a1[1] * a0[2])) * detA;
 
-		r1[0] = ((a1[2] * a2[0]) - (a2[2] * a1[0])) * detA;
-		r1[1] = ((a0[0] * a2[2]) - (a2[0] * a0[2])) * detA;
-		r1[2] = ((a0[2] * a1[0]) - (a1[2] * a0[0])) * detA;
-			
-		r2[0] = ((a1[0] * a2[1]) - (a2[0] * a1[1])) * detA;
-		r2[1] = ((a0[1] * a2[0]) - (a2[1] * a0[0])) * detA;
-		r2[2] = ((a0[0] * a1[1]) - (a1[0] * a0[1])) * detA;
+			r1[0] = ((a1[2] * a2[0]) - (a2[2] * a1[0])) * detA;
+			r1[1] = ((a0[0] * a2[2]) - (a2[0] * a0[2])) * detA;
+			r1[2] = ((a0[2] * a1[0]) - (a1[2] * a0[0])) * detA;
+
+			r2[0] = ((a1[0] * a2[1]) - (a2[0] * a1[1])) * detA;
+			r2[1] = ((a0[1] * a2[0]) - (a2[1] * a0[0])) * detA;
+			r2[2] = ((a0[0] * a1[1]) - (a1[0] * a0[1])) * detA;
+		}
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

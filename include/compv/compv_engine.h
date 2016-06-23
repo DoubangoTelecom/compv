@@ -24,9 +24,9 @@ public:
     virtual ~CompVEngine();
     static COMPV_ERROR_CODE init(int32_t numThreads = -1);
     static COMPV_ERROR_CODE deInit();
-    static CompVPtr<CompVThreadDispatcher* > getThreadDispatcher();
+	static COMPV_INLINE CompVPtr<CompVThreadDispatcher* > getThreadDispatcher() { return CompVEngine::s_ThreadDisp; }
     static COMPV_ERROR_CODE multiThreadingEnable(CompVPtr<CompVThreadDispatcher* > dispatcher);
-	static CompVPtr<CompVThreadDispatcher11* > getThreadDispatcher11();
+	static COMPV_INLINE CompVPtr<CompVThreadDispatcher11* > getThreadDispatcher11() { return CompVEngine::s_ThreadDisp11; }
 	static COMPV_ERROR_CODE multiThreadingEnable11(CompVPtr<CompVThreadDispatcher11* > dispatcher);
     static COMPV_ERROR_CODE multiThreadingDisable();
     static COMPV_ERROR_CODE multiThreadingSetMaxThreads(size_t maxThreads);

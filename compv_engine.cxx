@@ -237,21 +237,11 @@ COMPV_ERROR_CODE CompVEngine::deInit()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-CompVPtr<CompVThreadDispatcher* > CompVEngine::getThreadDispatcher()
-{
-    return s_ThreadDisp;
-}
-
 COMPV_ERROR_CODE CompVEngine::multiThreadingEnable(CompVPtr<CompVThreadDispatcher* > dispatcher)
 {
     COMPV_CHECK_EXP_RETURN(!dispatcher, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     s_ThreadDisp = dispatcher;
     return COMPV_ERROR_CODE_S_OK;
-}
-
-CompVPtr<CompVThreadDispatcher11* > CompVEngine::getThreadDispatcher11()
-{
-	return s_ThreadDisp11;
 }
 
 COMPV_ERROR_CODE CompVEngine::multiThreadingEnable11(CompVPtr<CompVThreadDispatcher11* > dispatcher)

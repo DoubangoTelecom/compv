@@ -232,10 +232,10 @@ void MatrixBuildHomographyEqMatrix_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) 
 	compv_float64_t* M0_ptr = const_cast<compv_float64_t*>(M);
 	compv_float64_t* M1_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M0_ptr)+M_strideInBytes);
 	size_t M_strideInBytesTimes2 = M_strideInBytes << 1;
-	__m128d xmmZero = _mm_setzero_pd();
-	__m128d xmmMinusOne = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(km1_f64));
-	__m128d xmmMinusOneZero = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(km1_0_f64));
-	__m128d xmmMaskNegate = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXFloat64MaskNegate));
+	const __m128d xmmZero = _mm_setzero_pd();
+	const __m128d xmmMinusOne = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(km1_f64));
+	const __m128d xmmMinusOneZero = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(km1_0_f64));
+	const __m128d xmmMaskNegate = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXFloat64MaskNegate));
 	__m128d xmmSrcXY, xmmDstX, xmmDstY;
 	__m128d xmm0;
 	
@@ -306,6 +306,60 @@ void MatrixTranspose_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_
 		r0 += 1;
 		a0 += astrideInElts;
 	}
+}
+
+// A and R must have same stride
+// This function returns det(A). If det(A) = 0 then, A is singluar and not inverse is computed.
+void MatrixInvA3x3_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1)
+{
+	// TODO(dmi): add ASM (not urgent, not CPU intensive)
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	const compv_float64_t* a0 = A;
+	const compv_float64_t* a1 = reinterpret_cast<const compv_float64_t*>(reinterpret_cast<const uint8_t*>(a0)+strideInBytes);
+	const compv_float64_t* a2 = reinterpret_cast<const compv_float64_t*>(reinterpret_cast<const uint8_t*>(a1)+strideInBytes);
+	// det(A)
+	__m128d xmm0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a0[1])), _mm_unpacklo_pd(_mm_load_sd(&a2[2]), _mm_load_sd(&a2[2])));
+	__m128d xmm1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a2[1]), _mm_load_sd(&a2[1])), _mm_unpacklo_pd(_mm_load_sd(&a1[2]), _mm_load_sd(&a0[2])));
+	__m128d xmm2 = _mm_unpacklo_pd(_mm_load_sd(&a0[0]), _mm_load_sd(&a1[0]));
+	__m128d xmm3 = _mm_mul_pd(xmm2, _mm_sub_pd(xmm0, xmm1));
+	xmm3 = _mm_sub_sd(xmm3, _mm_shuffle_pd(xmm3, xmm3, 0x01));
+	xmm0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a0[1]), _mm_load_sd(&a1[1])), _mm_unpacklo_pd(_mm_load_sd(&a1[2]), _mm_load_sd(&a0[2])));
+	xmm0 = _mm_sub_sd(xmm0, _mm_shuffle_pd(xmm0, xmm0, 0x01));
+	xmm0 = _mm_mul_sd(xmm0, _mm_load_sd(&a2[0]));
+	compv_float64_t detA = _mm_cvtsd_f64(_mm_add_sd(xmm0, xmm3));
+	if (detA == 0) {
+		COMPV_DEBUG_INFO_EX("IntrinSSE2", "3x3 Matrix is singluar... computing pseudoinverse instead of the inverse");
+	}
+	else {
+		__m128d xmmDetA = _mm_set1_pd(1.0 / detA);
+		detA = 1 / detA;
+		compv_float64_t* r0 = R;
+		compv_float64_t* r1 = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(r0)+strideInBytes);
+		compv_float64_t* r2 = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(r1)+strideInBytes);
+
+		xmm0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a0[2])), _mm_unpacklo_pd(_mm_load_sd(&a2[2]), _mm_load_sd(&a2[1])));
+		xmm1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a2[1]), _mm_load_sd(&a2[2])), _mm_unpacklo_pd(_mm_load_sd(&a1[2]), _mm_load_sd(&a0[1])));
+		_mm_store_pd(&r0[0], _mm_mul_pd(_mm_sub_pd(xmm0, xmm1), xmmDetA));
+		
+		xmm0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a0[1]), _mm_load_sd(&a1[2])), _mm_unpacklo_pd(_mm_load_sd(&a1[2]), _mm_load_sd(&a2[0])));
+		xmm1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a2[2])), _mm_unpacklo_pd(_mm_load_sd(&a0[2]), _mm_load_sd(&a1[0])));
+		xmm3 = _mm_mul_pd(_mm_sub_pd(xmm0, xmm1), xmmDetA);
+		_mm_store_sd(&r0[2], xmm3);
+		_mm_store_sd(&r1[0], _mm_shuffle_pd(xmm3, xmm3, 0x1));
+
+		xmm0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a0[0]), _mm_load_sd(&a0[2])), _mm_unpacklo_pd(_mm_load_sd(&a2[2]), _mm_load_sd(&a1[0])));
+		xmm1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a2[0]), _mm_load_sd(&a1[2])), _mm_unpacklo_pd(_mm_load_sd(&a0[2]), _mm_load_sd(&a0[0])));
+		_mm_storeu_pd(&r1[1], _mm_mul_pd(_mm_sub_pd(xmm0, xmm1), xmmDetA));
+		
+		xmm0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a1[0]), _mm_load_sd(&a0[1])), _mm_unpacklo_pd(_mm_load_sd(&a2[1]), _mm_load_sd(&a2[0])));
+		xmm1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a2[0]), _mm_load_sd(&a2[1])), _mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a0[0])));
+		_mm_store_pd(&r2[0], _mm_mul_pd(_mm_sub_pd(xmm0, xmm1), xmmDetA));
+
+		xmm0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a0[0]), _mm_load_sd(&a1[0])), _mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a0[1])));
+		xmm0 = _mm_sub_sd(xmm0, _mm_shuffle_pd(xmm0, xmm0, 0x01));
+		_mm_store_sd(&r2[2], _mm_mul_sd(xmm0, xmmDetA));
+	}
+	*det1 = detA;
 }
 
 COMPV_NAMESPACE_END()
