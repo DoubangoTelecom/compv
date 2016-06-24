@@ -101,8 +101,7 @@ COMPV_ERROR_CODE CompVMathStats<T>::normalize2D_hartley(const T* x, const T* y, 
 }
 
 /*
-Computes Mean Squared Error (MSE) / Mean Squared Deviation (MSD) between A(x,y,z) and B(x,y).
-A is in homogeneous coordinates system which means A.x and A.y must be scaled to such that A.z = 1 (equal B.z) before computing the MSE.
+Computes Mean Squared Error (MSE) / Mean Squared Deviation (MSD) between A(x,y,z) in homogeneous coordsys and B(x,y) in cartesian coordsys.
 */
 template <class T>
 COMPV_ERROR_CODE CompVMathStats<T>::mse2D_homogeneous(const T* aX_h, const T* aY_h, const T* aZ_h, const T* bX, const T* bY, CompVPtrArray(T)& mse, size_t numPoints)
@@ -141,6 +140,8 @@ COMPV_ERROR_CODE CompVMathStats<T>::mse2D_homogeneous(const T* aX_h, const T* aY
 	T ex, ey, scale;
 	
 	for (size_t i = 0; i < numPoints; ++i) {
+		// scale used to convert A from homogeneous to cartesian coordsys
+		// z = 0 -> point a infinity (no division error is T is floating point numer)
 		scale = T(1) / aZ_h[i];
 		ex = (aX_h[i] * scale) - bX[i];
 		ey = (aY_h[i] * scale) - bY[i];

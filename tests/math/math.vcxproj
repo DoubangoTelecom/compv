@@ -163,6 +163,7 @@
     <ClCompile Include="sincos.cxx" />
     <ClCompile Include="svd.cxx" />
     <ClCompile Include="tan.cxx" />
+    <ClCompile Include="transform.cxx" />
     <ClCompile Include="variance.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

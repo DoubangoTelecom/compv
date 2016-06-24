@@ -429,6 +429,12 @@
     <ClInclude Include="include\compv\math\compv_math_transform.h">
       <Filter>Header Files\math</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_transform_intrin_sse2.h">
+      <Filter>Header Files\intrinsics\x86\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_transform_intrin_avx.h">
+      <Filter>Header Files\intrinsics\x86\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -668,6 +674,12 @@
     <ClCompile Include="math\compv_math_transform.cxx">
       <Filter>Source Files\math</Filter>
     </ClCompile>
+    <ClCompile Include="intrinsics\x86\math\compv_math_transform_intrin_sse2.cxx">
+      <Filter>Source Files\intrinsics\x86\math</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\math\compv_math_transform_intrin_avx.cxx">
+      <Filter>Source Files\intrinsics\x86\math</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="assembler\x86\compv_utils_x86.s">
@@ -805,5 +817,13 @@
     <YASM Include="assembler\x86\math\compv_math_stats_x64_sse.s">
       <Filter>Assembler Files\x86\math</Filter>
     </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assembler\x86\math\compv_math_transform_x86_avx.s">
+      <Filter>Assembler Files\x86\math</Filter>
+    </None>
+    <None Include="assembler\x86\math\compv_math_transform_x86_sse.s">
+      <Filter>Assembler Files\x86\math</Filter>
+    </None>
   </ItemGroup>
 </Project>

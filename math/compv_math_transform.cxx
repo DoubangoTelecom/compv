@@ -9,6 +9,15 @@ Most of trig approx. are implemented using document at "documentation/trig_appro
 */
 #include "compv/math/compv_math_transform.h"
 #include "compv/math/compv_math_matrix.h"
+#include "compv/compv_cpu.h"
+
+#include "compv/intrinsics/x86/math/compv_math_transform_intrin_sse2.h"
+#include "compv/intrinsics/x86/math/compv_math_transform_intrin_avx.h"
+
+#if COMPV_ARCH_X86 && COMPV_ASM
+COMPV_EXTERNC void TransformHomogeneousToCartesian2D_4_float64_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv::compv_float64_t* srcX, const COMPV_ALIGNED(AVX) compv::compv_float64_t* srcY, const COMPV_ALIGNED(AVX) compv::compv_float64_t* srcZ, COMPV_ALIGNED(AVX) compv::compv_float64_t* dstX, COMPV_ALIGNED(AVX) compv::compv_float64_t* dstY, compv::compv_uscalar_t numPoints);
+COMPV_EXTERNC void TransformHomogeneousToCartesian2D_4_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv::compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv::compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv::compv_float64_t* srcZ, COMPV_ALIGNED(SSE) compv::compv_float64_t* dstX, COMPV_ALIGNED(SSE) compv::compv_float64_t* dstY, compv::compv_uscalar_t numPoints);
+#endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -45,16 +54,35 @@ COMPV_ERROR_CODE CompVTransform<T>::homogeneousToCartesian2D(const CompVPtrArray
 			COMPV_CHECK_CODE_RETURN(CompVArray<T>::newObjAligned(&dst, src->rows(), src->cols()));
 		}
 	}
-	
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD, Special version with cols == 4
 	const T* srcX = src->ptr(0);
 	const T* srcY = src->ptr(1);
 	const T* srcZ = src->ptr(2);
 	T* dstX = const_cast<T*>(dst->ptr(0));
 	T* dstY = const_cast<T*>(dst->ptr(1));
+
+	if (std::is_same<T, compv_float64_t>::value) {
+		void (*TransformHomogeneousToCartesian2D_float64)(const COMPV_ALIGNED(X) compv_float64_t* srcX, const COMPV_ALIGNED(X) compv_float64_t* srcY, const COMPV_ALIGNED(X) compv_float64_t* srcZ, COMPV_ALIGNED(X) compv_float64_t* dstX, COMPV_ALIGNED(X) compv_float64_t* dstY, compv_uscalar_t numPoints) = NULL;
+		if (cols > 1 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && src->isAlignedSSE() && dst->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(TransformHomogeneousToCartesian2D_float64 = TransformHomogeneousToCartesian2D_float64_Intrin_SSE2);
+			if (cols == 4) {
+				COMPV_EXEC_IFDEF_INTRIN_X86(TransformHomogeneousToCartesian2D_float64 = TransformHomogeneousToCartesian2D_4_float64_Intrin_SSE2);
+				COMPV_EXEC_IFDEF_ASM_X86(TransformHomogeneousToCartesian2D_float64 = TransformHomogeneousToCartesian2D_4_float64_Asm_X86_SSE2);
+			}
+		}
+		if (cols == 4 && CompVCpu::isEnabled(compv::kCpuFlagAVX) && src->isAlignedAVX() && dst->isAlignedAVX()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(TransformHomogeneousToCartesian2D_float64 = TransformHomogeneousToCartesian2D_4_float64_Intrin_AVX);
+			COMPV_EXEC_IFDEF_ASM_X86(TransformHomogeneousToCartesian2D_float64 = TransformHomogeneousToCartesian2D_4_float64_Asm_X86_AVX);
+		}
+		if (TransformHomogeneousToCartesian2D_float64) {
+			TransformHomogeneousToCartesian2D_float64((const compv_float64_t*)srcX, (const compv_float64_t*)srcY, (const compv_float64_t*)srcZ, (compv_float64_t*)dstX, (compv_float64_t*)dstY, (compv_uscalar_t)cols);
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
+	
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD, Special version with cols == 4
 	T scale;
 	for (size_t i = 0; i < cols; ++i) {
-		scale = T(1) / srcZ[i]; // no point at infinity
+		scale = T(1) / srcZ[i]; // z = 0 -> point at infinity (no division error is T is floating point numer)
 		dstX[i] = srcX[i] * scale;
 		dstY[i] = srcY[i] * scale;
 	}

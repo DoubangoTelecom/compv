@@ -21,7 +21,7 @@ using namespace compv;
 #define TEST_EIGEN3x3				0
 #define TEST_SVD					0
 #define TEST_PSI					0 // Moore–Penrose pseudoinverse
-#define TEST_INV3x3					1 // Inverse 3x3
+#define TEST_INV3x3					0 // Inverse 3x3
 #define TEST_RAND					0
 #define TEST_NORMALIZE_HARTLEY		0
 #define TEST_VARIANCE				0
@@ -29,6 +29,7 @@ using namespace compv;
 #define TEST_MOPS_ISSYMMETRIC		0
 #define TEST_MOPS_MULAB				0
 #define TEST_MOPS_MULGA				0
+#define TEST_HOMOG_TO_CART			1 // homogeneousToCartesian2D()
 
 #if COMPV_OS_WINDOWS
 int _tmain(int argc, _TCHAR* argv[])
@@ -115,6 +116,10 @@ int main()
 #if TEST_MOPS_MULGA
 	extern COMPV_ERROR_CODE TestMulGA();
 	COMPV_CHECK_CODE_ASSERT(TestMulGA());
+#endif
+#if TEST_HOMOG_TO_CART
+	extern COMPV_ERROR_CODE TestHomogeneousToCartesian2D();
+	COMPV_CHECK_CODE_ASSERT(TestHomogeneousToCartesian2D());
 #endif
 
     // deInit the engine
