@@ -158,6 +158,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="border.cxx" />
+    <ClCompile Include="canny.cxx" />
     <ClCompile Include="conv.cxx" />
     <ClCompile Include="fast.cxx" />
     <ClCompile Include="main.cxx" />

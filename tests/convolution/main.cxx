@@ -15,7 +15,7 @@ using namespace compv;
 #define TEST_GAUSS_FILTER_DIM2		0
 #define TEST_GAUSS_KER_DIM1_GEN		0
 #define TEST_GAUSS_KER_DIM2_GEN		0
-#define TEST_CONVLT_FLOAT			1
+#define TEST_CONVLT_FLOAT			0
 #define TEST_CONVLT_FXP				1
 
 

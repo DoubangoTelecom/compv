@@ -1,7 +1,7 @@
 #include <compv/compv_api.h>
 #include "../common.h"
 
-#define JPEG_EQUIRECTANGULAR_FILE "/Users/mamadou/Documents/compv/tests/7019363969_a80a5d6acc_o.jpg"	//"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
+#define JPEG_EQUIRECTANGULAR_FILE "C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
 //#define JPEG_EQUIRECTANGULAR_FILE	"C:/Projects/GitHub/pan360/tests/sphere_mapping/3867257549_6ca855e08d_o.jpg" //paris (BIIIIG)
 
 using namespace compv;
@@ -25,7 +25,7 @@ using namespace compv;
 #define FORMAT_DST			FORMAT_I420 // any format
 #define STRIDE_ALIGN		true // false to test CompVImage::wrap and CompVImage::copy
 
-static void rgbToSrc(const CompVPtr<CompVImage *>& jpegImage, void** srcPtr, int &height, int &width, int &stride)
+static COMPV_ERROR_CODE rgbToSrc(const CompVPtr<CompVImage *>& jpegImage, void** srcPtr, int &height, int &width, int &stride)
 {
     // TODO(dmi): WIDTH_OFFSET -1 doesn't work or YUV player is buggy -> https://github.com/DoubangoTelecom/compv/issues/49
 #define WIDTH_OFFSET	-2 // amount of pixels to remove to width to make it wired (not standard)
@@ -34,7 +34,7 @@ static void rgbToSrc(const CompVPtr<CompVImage *>& jpegImage, void** srcPtr, int
     width = jpegImage->getWidth() + WIDTH_OFFSET;
     height = jpegImage->getHeight() + HEIGHT_OFFSET;
     if (STRIDE_ALIGN) {
-        COMPV_CHECK_CODE_ASSERT(CompVImage::getBestStride(jpegImageStride, &stride));
+        COMPV_CHECK_CODE_RETURN(CompVImage::getBestStride(jpegImageStride, &stride));
     }
     else {
         stride = jpegImageStride + 2;
@@ -91,9 +91,10 @@ static void rgbToSrc(const CompVPtr<CompVImage *>& jpegImage, void** srcPtr, int
         srcPtr_ += (stride - width) * compSize;
         rgbPtr_ += (jpegImageStride - width) * 3;
     }
+	return COMPV_ERROR_CODE_S_OK;
 }
 
-bool TestConv()
+COMPV_ERROR_CODE TestConv()
 {
     CompVPtr<CompVImage *> jpegImage;
     CompVPtr<CompVImage *> dstImage;
@@ -111,22 +112,22 @@ bool TestConv()
     COMPV_ASSERT(FORMAT_BGR == COMPV_PIXEL_FORMAT_B8G8R8);
     COMPV_ASSERT(FORMAT_I420 == COMPV_PIXEL_FORMAT_I420);
 
-    COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_EQUIRECTANGULAR_FILE, &jpegImage));
+    COMPV_CHECK_CODE_RETURN(CompVImageDecoder::decodeFile(JPEG_EQUIRECTANGULAR_FILE, &jpegImage));
     COMPV_ASSERT(jpegImage->getPixelFormat() == COMPV_PIXEL_FORMAT_R8G8B8);
-    rgbToSrc(jpegImage, &srcPtr, height, width, stride);
-    COMPV_CHECK_CODE_ASSERT(CompVImage::wrap((COMPV_PIXEL_FORMAT)FORMAT_SRC, srcPtr, width, height, stride, &srcImage)); // FIXME: slooow
+	COMPV_CHECK_CODE_RETURN(rgbToSrc(jpegImage, &srcPtr, height, width, stride));
+    COMPV_CHECK_CODE_RETURN(CompVImage::wrap((COMPV_PIXEL_FORMAT)FORMAT_SRC, srcPtr, width, height, stride, &srcImage)); // FIXME: slooow
 
     COMPV_DEBUG_INFO("Converting from %s to %s", formatExtension((COMPV_PIXEL_FORMAT)FORMAT_SRC).c_str(), formatExtension((COMPV_PIXEL_FORMAT)FORMAT_DST).c_str());
 
     timeStart = CompVTime::getNowMills();
     for (size_t i = 0; i < loopCount; ++i) {
-        COMPV_CHECK_CODE_ASSERT(srcImage->convert((COMPV_PIXEL_FORMAT)FORMAT_DST, &dstImage)); // e.g. RGBA -> I420
+        COMPV_CHECK_CODE_RETURN(srcImage->convert((COMPV_PIXEL_FORMAT)FORMAT_DST, &dstImage)); // e.g. RGBA -> I420
 #if FORMAT_SRC == FORMAT_RGBA && 0 // only I420 -> RGBA is supported
         const uint8_t* yPtr = (const uint8_t*)dstImage->getDataPtr();
         const uint8_t* uPtr = yPtr + (dstImage->getHeight() * dstImage->getStride());
         const uint8_t* vPtr = uPtr + ((dstImage->getHeight() * dstImage->getStride()) >> 2);
-        COMPV_CHECK_CODE_ASSERT(dstImage->convert((COMPV_PIXEL_FORMAT)FORMAT_SRC, &srcImage)); // // I420 -> RGBA
-        COMPV_CHECK_CODE_ASSERT(srcImage->convert(COMPV_PIXEL_FORMAT_I420, &dstImage)); // // RGBA -> I420
+        COMPV_CHECK_CODE_RETURN(dstImage->convert((COMPV_PIXEL_FORMAT)FORMAT_SRC, &srcImage)); // // I420 -> RGBA
+        COMPV_CHECK_CODE_RETURN(srcImage->convert(COMPV_PIXEL_FORMAT_I420, &dstImage)); // // RGBA -> I420
 #endif
     }
     timeEnd = CompVTime::getNowMills();
@@ -145,5 +146,5 @@ bool TestConv()
     writeImgToFile(dstImage);
 
     CompVMem::free(&srcPtr);
-    return true;
+	return COMPV_ERROR_CODE_S_OK;
 }

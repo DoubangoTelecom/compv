@@ -14,21 +14,21 @@ using namespace compv;
 #define IMAGE_BILINEAR_FACTOR150_MD5_STRING	"57eae70543a3f8944c6699e8ee97f7e2" // MD5 for factor=1.50
 #define IMAGE_BILINEAR_FACTOR300_MD5_STRING	"ae2a90b1560b463cd05cb24e95537c74" // MD5 for factor=3.00
 
-bool TestScale()
+COMPV_ERROR_CODE TestScale()
 {
     CompVPtr<CompVImage *> image;
     uint64_t timeStart, timeEnd;
 
     // Decode the jpeg image
-    COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_IMG, &image));
+    COMPV_CHECK_CODE_RETURN(CompVImageDecoder::decodeFile(JPEG_IMG, &image));
     int32_t outWidth = (int32_t)(image->getWidth() * IMAGE_SCALE_FACTOR);
     int32_t outHeight = (int32_t)(image->getHeight() * IMAGE_SCALE_FACTOR);
     // Convert image to GrayScale
-    COMPV_CHECK_CODE_ASSERT(image->convert(COMPV_PIXEL_FORMAT_GRAYSCALE, &image));
+    COMPV_CHECK_CODE_RETURN(image->convert(COMPV_PIXEL_FORMAT_GRAYSCALE, &image));
     // Scale the image
     timeStart = CompVTime::getNowMills();
     for (int i = 0; i < IMAGE_SACLE_LOOP_COUNT; ++i) {
-        COMPV_CHECK_CODE_ASSERT(image->scale(IMAGE_SCALE_TYPE, outWidth, outHeight, &image));
+        COMPV_CHECK_CODE_RETURN(image->scale(IMAGE_SCALE_TYPE, outWidth, outHeight, &image));
     }
     timeEnd = CompVTime::getNowMills();
     COMPV_DEBUG_INFO("Elapsed time(TestScale) = [[[ %llu millis ]]]", (timeEnd - timeStart));
@@ -52,15 +52,11 @@ bool TestScale()
         expectedMD5 = IMAGE_BILINEAR_FACTOR300_MD5_STRING;
     }
     if (!expectedMD5.empty()) {
-        if (imageMD5(image) != expectedMD5) {
-            COMPV_DEBUG_ERROR("MD5 mismatch");
-            COMPV_ASSERT(false);
-            return false;
-        }
+		COMPV_CHECK_EXP_RETURN(imageMD5(image) != expectedMD5, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
     }
     else {
         COMPV_DEBUG_INFO("/!\\ Not checking MD5");
     }
 
-    return true;
+	return COMPV_ERROR_CODE_S_OK;
 }

@@ -67,7 +67,7 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt2(const uint8_t* img_ptr, int img_width, 
     COMPV_CHECK_EXP_RETURN(!img_ptr || !img_width || (img_stride < img_width) || !kern_ptr || !(kern_size & 1) || img_border < 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     // Make sure we're not sharing the internal memory across threads
-    CompVPtr<CompVThreadDispatcher* >threadDisp = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
     if (!out_ptr && threadDisp && threadDisp->isMotherOfTheCurrentThread()) {
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_CALL);
     }
@@ -142,7 +142,7 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt1_private(const uint8_t* img_ptr, int img
     // Check inputs
     COMPV_CHECK_EXP_RETURN(!img_ptr || (img_width < kern_size * 2) || (img_height < kern_size * 2) || (img_stride < img_width) || !vkern_ptr || !hkern_ptr || img_border < 0 || !(kern_size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-    CompVPtr<CompVThreadDispatcher* >threadDisp = CompVEngine::getThreadDispatcher();
+    CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
     bool bMultiThreaded = threadDisp && threadDisp->isMotherOfTheCurrentThread();
 
     // Make sure we're not sharing the internal memory across threads

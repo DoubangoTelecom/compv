@@ -47,8 +47,6 @@ public:
 private:
     COMPV_ERROR_CODE convlt(CompVPtr<CompVImageScalePyramid * > pPyramid, int level);
     COMPV_ERROR_CODE describe(CompVPtr<CompVImageScalePyramid * > pPyramid, const CompVInterestPoint* begin, const CompVInterestPoint* end, uint8_t* desc);
-    static COMPV_ERROR_CODE convlt_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
-    static COMPV_ERROR_CODE describe_AsynExec(const struct compv_asynctoken_param_xs* pc_params);
 
 private:
     // TODO(dmi): use internal detector: BRIEF (just like what is done for the detector and FAST internal dete)

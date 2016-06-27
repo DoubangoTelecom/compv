@@ -6,7 +6,7 @@ using namespace compv;
 
 #define JPEG_IMG				"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg"
 
-#define CONVLT_KERN_SIZE		3	// for 1 to 8
+#define CONVLT_KERN_SIZE		7	// for 1 to 8
 #define CONVLT_GAUSS_SIGMA		2
 #define CONVLT_KERN_TYPE		float
 

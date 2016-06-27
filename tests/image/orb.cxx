@@ -17,7 +17,7 @@ using namespace compv;
 #define ORB_DESC_MD5_FXP_MT			"ac6b661432e1bcd28cccd3e2096e91de"
 #define JPEG_IMG					"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture (2000*1000 = 2times more bytes than 720p)
 
-bool TestORB()
+COMPV_ERROR_CODE TestORB()
 {
     CompVPtr<CompVFeatureDete* > dete; // feature detector
     CompVPtr<CompVFeatureDesc* > desc; // feature descriptor
@@ -30,37 +30,37 @@ bool TestORB()
     uint64_t timeStart, timeEnd;
 
     // Decode the jpeg image
-    COMPV_CHECK_CODE_ASSERT(CompVImageDecoder::decodeFile(JPEG_IMG, &image));
+	COMPV_CHECK_CODE_RETURN(CompVImageDecoder::decodeFile(JPEG_IMG, &image));
     // Convert the image to grayscal (required by feture detectors)
-    COMPV_CHECK_CODE_ASSERT(image->convert(COMPV_PIXEL_FORMAT_GRAYSCALE, &image));
+	COMPV_CHECK_CODE_RETURN(image->convert(COMPV_PIXEL_FORMAT_GRAYSCALE, &image));
 
     // Create the ORB feature detector
-    COMPV_CHECK_CODE_ASSERT(CompVFeatureDete::newObj(COMPV_ORB_ID, &dete));
+	COMPV_CHECK_CODE_RETURN(CompVFeatureDete::newObj(COMPV_ORB_ID, &dete));
     // Create the ORB feature descriptor
-    COMPV_CHECK_CODE_ASSERT(CompVFeatureDesc::newObj(COMPV_ORB_ID, &desc));
-    COMPV_CHECK_CODE_ASSERT(desc->attachDete(dete)); // attach detector to make sure we'll share context
+	COMPV_CHECK_CODE_RETURN(CompVFeatureDesc::newObj(COMPV_ORB_ID, &desc));
+	COMPV_CHECK_CODE_RETURN(desc->attachDete(dete)); // attach detector to make sure we'll share context
 
     // Set the default values for the detector
     val32 = FAST_THRESHOLD;
-    COMPV_CHECK_CODE_ASSERT(dete->set(COMPV_ORB_SET_INT32_FAST_THRESHOLD, &val32, sizeof(val32)));
+	COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_INT32_FAST_THRESHOLD, &val32, sizeof(val32)));
     valBool = FAST_NONMAXIMA;
-    COMPV_CHECK_CODE_ASSERT(dete->set(COMPV_ORB_SET_BOOL_FAST_NON_MAXIMA_SUPP, &valBool, sizeof(valBool)));
+	COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_BOOL_FAST_NON_MAXIMA_SUPP, &valBool, sizeof(valBool)));
     val32 = ORB_PYRAMID_LEVELS;
-    COMPV_CHECK_CODE_ASSERT(dete->set(COMPV_ORB_SET_INT32_PYRAMID_LEVELS, &val32, sizeof(val32)));
+	COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_INT32_PYRAMID_LEVELS, &val32, sizeof(val32)));
     val32 = ORB_PYRAMID_SCALE_TYPE;
-    COMPV_CHECK_CODE_ASSERT(dete->set(COMPV_ORB_SET_INT32_PYRAMID_SCALE_TYPE, &val32, sizeof(val32)));
+	COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_INT32_PYRAMID_SCALE_TYPE, &val32, sizeof(val32)));
     valFloat = ORB_PYRAMID_SCALEFACTOR;
-    COMPV_CHECK_CODE_ASSERT(dete->set(COMPV_ORB_SET_FLOAT_PYRAMID_SCALE_FACTOR, &valFloat, sizeof(valFloat)));
+	COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_FLOAT_PYRAMID_SCALE_FACTOR, &valFloat, sizeof(valFloat)));
     val32 = ORB_MAX_FEATURES;
-    COMPV_CHECK_CODE_ASSERT(dete->set(COMPV_ORB_SET_INT32_MAX_FEATURES, &val32, sizeof(val32)));
+	COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_INT32_MAX_FEATURES, &val32, sizeof(val32)));
 
     timeStart = CompVTime::getNowMills();
     for (int i = 0; i < ORB_LOOOP_COUNT; ++i) {
         // Detect keypoints
-        COMPV_CHECK_CODE_ASSERT(dete->process(image, interestPoints));
+		COMPV_CHECK_CODE_RETURN(dete->process(image, interestPoints));
 
         // Describe keypoints
-        COMPV_CHECK_CODE_ASSERT(desc->process(image, interestPoints, &descriptions));
+        COMPV_CHECK_CODE_RETURN(desc->process(image, interestPoints, &descriptions));
     }
     timeEnd = CompVTime::getNowMills();
     COMPV_DEBUG_INFO("Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
@@ -74,11 +74,7 @@ bool TestORB()
     else {
         ok = (md5 == (CompVEngine::isMultiThreadingEnabled() ? ORB_DESC_MD5_FLOAT_MT : ORB_DESC_MD5_FLOAT));
     }
-    if (!ok) {
-        COMPV_DEBUG_ERROR("MD5 mismatch");
-        COMPV_ASSERT(false);
-        return false;
-    }
+	COMPV_CHECK_EXP_RETURN(!ok, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 
-    return true;
+	return COMPV_ERROR_CODE_S_OK;
 }

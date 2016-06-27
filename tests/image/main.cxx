@@ -5,7 +5,7 @@
 
 using namespace compv;
 
-#define numThreads				COMPV_NUM_THREADS_SINGLE
+#define numThreads				COMPV_NUM_THREADS_BEST
 #define enableIntrinsics		true
 #define enableAsm				true
 #define enableMathFixedPoint	true
@@ -16,6 +16,7 @@ using namespace compv;
 #define TEST_CONV				0
 #define TEST_FAST				0
 #define TEST_ORB				1
+#define TEST_CANNY				0
 #define TEST_SCALE				0
 #define TEST_PYRAMID			0
 
@@ -35,24 +36,28 @@ int main(int argc, char** argv)
     COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));
 
 #if TEST_CONV
-    extern bool TestConv();
-    COMPV_ASSERT(TestConv());
+	extern COMPV_ERROR_CODE TestConv();
+	COMPV_CHECK_CODE_ASSERT(TestConv());
 #endif
 #if TEST_FAST
-    extern bool TestFAST();
-    COMPV_ASSERT(TestFAST());
+	extern COMPV_ERROR_CODE TestFAST();
+	COMPV_CHECK_CODE_ASSERT(TestFAST());
 #endif
 #if TEST_ORB
-    extern bool TestORB();
-    COMPV_ASSERT(TestORB());
+	extern COMPV_ERROR_CODE TestORB();
+    COMPV_CHECK_CODE_ASSERT(TestORB());
+#endif
+#if TEST_CANNY
+	extern COMPV_ERROR_CODE TestCanny();
+	COMPV_CHECK_CODE_ASSERT(TestCanny());
 #endif
 #if TEST_SCALE
-    extern bool TestScale();
-    COMPV_ASSERT(TestScale());
+	extern COMPV_ERROR_CODE TestScale();
+	COMPV_CHECK_CODE_ASSERT(TestScale());
 #endif
 #if TEST_PYRAMID
-    extern bool TestPyramid();
-    COMPV_ASSERT(TestPyramid());
+	extern COMPV_ERROR_CODE TestPyramid();
+	COMPV_CHECK_CODE_ASSERT(TestPyramid());
 #endif
 
     // deInit the engine
