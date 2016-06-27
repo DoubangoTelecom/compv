@@ -218,8 +218,8 @@ sym(HammingDistance256_Asm_POPCNT_X64_SSE42):
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopRows
 		movdqa xmm0, [rcx]
-		movdqa xmm1, [rdx]
 		movdqa xmm2, [rcx + 16]
+		movdqa xmm1, [rdx]
 		movdqa xmm3, [rdx + 16]
 		
 		lea rcx, [rcx + 32] ; dataPtr += 32
@@ -236,8 +236,8 @@ sym(HammingDistance256_Asm_POPCNT_X64_SSE42):
 		popcnt rax, rax
 		popcnt rsi, rsi
 		add r11, r10
+		add rax, rsi
 		add r11, rax
-		add r11, rsi
 
 		mov [r9 + rdi*4 - 4], dword r11d ; distPtr[j] = (int32_t)(cnt)
 				
