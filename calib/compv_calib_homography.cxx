@@ -83,7 +83,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(const CompVPtrArray(T) &src, const Com
 	size_t bestInliersCount_ = 0;
 	size_t threadsCount_ = 1;
 	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
-	if (threadDisp && threadDisp->getThreadsCount() > 1) {
+	if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
 		threadsCount_ = COMPV_MATH_MIN(numPoints_ / COMPV_RANSAC_HOMOGRAPHY_MIN_SAMPLES_PER_THREAD, size_t(threadDisp->getThreadsCount()));
 	}
 	if (threadsCount_ > 1) {
