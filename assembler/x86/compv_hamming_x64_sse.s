@@ -217,24 +217,24 @@ sym(HammingDistance256_Asm_POPCNT_X64_SSE42):
 	; for (j = 0; j < height; ++j)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopRows
-		movdqa xmm0, [rcx]
-		movdqa xmm1, [rcx + 16]
-		pxor xmm0, [rdx]
-		pxor xmm1, [rdx + 16]
+		mov r11, qword [rcx]
+		mov r10, qword [rcx + 8]
+		mov rax, qword [rcx + 16]
+		mov rsi, qword [rcx + 24]
+		xor r11, [rdx]
+		xor r10, [rdx + 8]
+		xor rax, [rdx + 16]
+		xor rsi, [rdx + 24]
 		lea rcx, [rcx + 32] ; dataPtr += 32
 		inc rdi ; ++j
-		movq r11, xmm0
-		pextrq r10, xmm0, 1
-		movq rax, xmm1
-		pextrq rsi, xmm1, 1
 		popcnt r11, r11
 		popcnt r10, r10
 		popcnt rax, rax
 		popcnt rsi, rsi
-		add r11, r10
-		add rax, rsi
-		add r11, rax
 		cmp rdi, r8
+		lea r11, [r11 + r10]
+		lea rax, [rax + rsi]
+		lea r11, [r11 + rax]
 		mov [r9 + rdi*4 - 4], dword r11d ; distPtr[j] = (int32_t)(cnt)		
 		jl .LoopRows
 

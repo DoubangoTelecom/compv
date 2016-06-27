@@ -102,6 +102,7 @@ public:
     COMPV_INLINE int getId() {
         return m_nId;
     }
+	// Detector must be attached to descriptor only if describe() use the same input as the previous detect()
     virtual COMPV_ERROR_CODE attachDete(CompVPtr<CompVFeatureDete* > dete) {
         m_AttachedDete = dete;
         return COMPV_ERROR_CODE_S_OK;
