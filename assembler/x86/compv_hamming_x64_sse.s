@@ -218,19 +218,15 @@ sym(HammingDistance256_Asm_POPCNT_X64_SSE42):
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopRows
 		movdqa xmm0, [rcx]
-		movdqa xmm2, [rcx + 16]
-		movdqa xmm1, [rdx]
-		movdqa xmm3, [rdx + 16]
-		
+		movdqa xmm1, [rcx + 16]
+		pxor xmm0, [rdx]
+		pxor xmm1, [rdx + 16]
 		lea rcx, [rcx + 32] ; dataPtr += 32
 		inc rdi ; ++j
-
-		pxor xmm0, xmm1
-		pxor xmm2, xmm3
 		movq r11, xmm0
 		pextrq r10, xmm0, 1
-		movq rax, xmm2
-		pextrq rsi, xmm2, 1
+		movq rax, xmm1
+		pextrq rsi, xmm1, 1
 		popcnt r11, r11
 		popcnt r10, r10
 		popcnt rax, rax
@@ -238,10 +234,8 @@ sym(HammingDistance256_Asm_POPCNT_X64_SSE42):
 		add r11, r10
 		add rax, rsi
 		add r11, rax
-
-		mov [r9 + rdi*4 - 4], dword r11d ; distPtr[j] = (int32_t)(cnt)
-				
 		cmp rdi, r8
+		mov [r9 + rdi*4 - 4], dword r11d ; distPtr[j] = (int32_t)(cnt)		
 		jl .LoopRows
 
 	;; begin epilog ;;
