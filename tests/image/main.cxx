@@ -5,13 +5,13 @@
 
 using namespace compv;
 
-#define numThreads				COMPV_NUM_THREADS_BEST
+#define numThreads				COMPV_NUM_THREADS_SINGLE
 #define enableIntrinsics		true
 #define enableAsm				true
 #define enableMathFixedPoint	true
 #define enableTestingMode		true
 
-#define cpuDisable				kCpuFlagNone
+#define cpuDisable				kCpuFlagAll
 
 #define TEST_CONV				0
 #define TEST_FAST				0

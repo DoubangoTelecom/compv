@@ -33,33 +33,33 @@ int main(int argc, char** argv)
     COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));
 
 #if TEST_CONVLT_FLOAT
-    extern bool TestConvlt_float();
+	extern COMPV_ERROR_CODE TestConvlt_float();
     COMPV_ASSERT(TestConvlt_float());
 #endif
 
 #if TEST_CONVLT_FXP
-    extern bool TestConvlt_fxp();
-    COMPV_ASSERT(TestConvlt_fxp());
+	extern COMPV_ERROR_CODE TestConvlt_fxp();
+    COMPV_CHECK_CODE_ASSERT(TestConvlt_fxp());
 #endif
 
 #if TEST_GAUSS_FILTER_DIM1
-    extern bool TestGaussFilter1();
-    COMPV_ASSERT(TestGaussFilter1());
+	extern COMPV_ERROR_CODE TestGaussFilter1();
+	COMPV_CHECK_CODE_ASSERT(TestGaussFilter1());
 #endif
 
 #if TEST_GAUSS_FILTER_DIM2
-    extern bool TestGaussFilter2();
-    COMPV_ASSERT(TestGaussFilter2());
+	extern COMPV_ERROR_CODE TestGaussFilter2();
+	COMPV_CHECK_CODE_ASSERT(TestGaussFilter2());
 #endif
 
 #if TEST_GAUSS_KER_DIM1_GEN
-    extern bool TestGaussKernDim1Gen();
-    COMPV_ASSERT(TestGaussKernDim1Gen());
+	extern COMPV_ERROR_CODE TestGaussKernDim1Gen();
+	COMPV_CHECK_CODE_ASSERT(TestGaussKernDim1Gen());
 #endif
 
 #if TEST_GAUSS_KER_DIM2_GEN
-    extern bool TestGaussKernDim2Gen();
-    COMPV_ASSERT(TestGaussKernDim2Gen());
+	extern COMPV_ERROR_CODE TestGaussKernDim2Gen();
+	COMPV_CHECK_CODE_ASSERT(TestGaussKernDim2Gen());
 #endif
 
     // deInit the engine

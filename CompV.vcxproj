@@ -91,6 +91,7 @@
     <ClInclude Include="include\compv\matchers\compv_matcher_bruteforce.h" />
     <ClInclude Include="include\compv\matchers\compv_matcher_flann.h" />
     <ClInclude Include="include\compv\math\compv_math.h" />
+    <ClInclude Include="include\compv\math\compv_math_convlt.h" />
     <ClInclude Include="include\compv\math\compv_math_eigen.h" />
     <ClInclude Include="include\compv\math\compv_math_matrix.h" />
     <ClInclude Include="include\compv\math\compv_math_stats.h" />

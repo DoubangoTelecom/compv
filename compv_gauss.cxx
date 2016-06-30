@@ -100,6 +100,7 @@ COMPV_ERROR_CODE CompVGaussKern<T>::buildKern1(CompVPtr<CompVArray<T>* >* kern, 
 }
 
 // "kern_fxp" must be used with "convlt1_fxp"
+// Requires kernel with all positive values
 template<class T>
 COMPV_ERROR_CODE CompVGaussKern<T>::buildKern1_fxp(CompVPtr<CompVArray<uint16_t>* >* kern_fxp, int size, float sigma)
 {

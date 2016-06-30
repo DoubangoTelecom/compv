@@ -23,7 +23,7 @@ static const std::string expectedMD5Values[8/*kenel size*/] = {
     "", // 8
 };
 
-bool TestConvlt_fxp()
+COMPV_ERROR_CODE TestConvlt_fxp()
 {
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     CompVPtr<CompVArray<uint16_t>* > kern_fxp;
@@ -67,6 +67,5 @@ bool TestConvlt_fxp()
     }
 
 bail:
-    COMPV_CHECK_CODE_ASSERT(err_);
-    return COMPV_ERROR_CODE_IS_OK(err_);
+    return err_;
 }

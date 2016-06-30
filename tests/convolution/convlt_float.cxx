@@ -39,7 +39,7 @@ static const std::string expectedMD5Values[2/*dim*/][8/*kenel size*/] = {
     }
 };
 
-bool TestConvlt_float()
+COMPV_ERROR_CODE TestConvlt_float()
 {
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     CompVPtr<CompVArray<CONVLT_KERN_TYPE>* > kern;
@@ -109,6 +109,5 @@ bool TestConvlt_float()
     }
 
 bail:
-    COMPV_CHECK_CODE_ASSERT(err_);
-    return COMPV_ERROR_CODE_IS_OK(err_);
+    return err_;
 }

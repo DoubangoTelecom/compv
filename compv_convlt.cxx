@@ -34,7 +34,8 @@ COMPV_EXTERNC void Convlt1_verthz_fxpq16_minpack16_Asm_X64_AVX2(const uint8_t* i
 
 COMPV_NAMESPACE_BEGIN()
 
-template class CompVConvlt<uint16_t >;
+template class CompVConvlt<uint16_t >; // for fixed points only (to be sued when kernel values are positive)
+template class CompVConvlt<int16_t >;
 template class CompVConvlt<compv_float64_t >;
 template class CompVConvlt<compv_float32_t >;
 
@@ -126,12 +127,14 @@ COMPV_ERROR_CODE CompVConvlt<T>::convlt2(const uint8_t* img_ptr, int img_width, 
     return COMPV_ERROR_CODE_S_OK;
 }
 
+// if "out_ptr" is defined, its size must be at least (img_height * img_stride) + borders
 template<class T>
 COMPV_ERROR_CODE CompVConvlt<T>::convlt1(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const T* vkern_ptr, const T* hkern_ptr, int kern_size, uint8_t* out_ptr /*= NULL*/, int img_border /*= 0*/)
 {
     return convlt1_private(img_ptr, img_width, img_stride, img_height, vkern_ptr, hkern_ptr, kern_size, out_ptr, img_border);
 }
 
+// if "out_ptr" is defined, its size must be at least (img_height * img_stride) + borders
 template <class T>
 COMPV_ERROR_CODE CompVConvlt<T>::convlt1_fxp(const uint8_t* img_ptr, int img_width, int img_stride, int img_height, const uint16_t* vkern_ptr, const uint16_t* hkern_ptr, int kern_size, uint8_t* out_ptr /*= NULL*/, int img_border /*= 0*/)
 {
