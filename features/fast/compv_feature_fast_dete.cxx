@@ -214,8 +214,8 @@ static void FastStrengths1_C(COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x
 static COMPV_ERROR_CODE FastRangesAlloc(int32_t nRanges, RangeFAST** ppRanges, int32_t stride);
 static COMPV_ERROR_CODE FastRangesFree(int32_t nRanges, RangeFAST** ppRanges);
 
-CompVFeatureDeteFAST::CompVFeatureDeteFAST()
-    : CompVFeatureDete(COMPV_FAST_ID)
+CompVCornerDeteFAST::CompVCornerDeteFAST()
+    : CompVCornerDete(COMPV_FAST_ID)
     , m_iThreshold(COMPV_FEATURE_DETE_FAST_THRESHOLD_DEFAULT)
     , m_iType(COMPV_FAST_TYPE_9)
     , m_iNumContinuous(__continuousCount(COMPV_FAST_TYPE_9))
@@ -232,14 +232,14 @@ CompVFeatureDeteFAST::CompVFeatureDeteFAST()
 
 }
 
-CompVFeatureDeteFAST::~CompVFeatureDeteFAST()
+CompVCornerDeteFAST::~CompVCornerDeteFAST()
 {
     FastRangesFree(m_nRanges, &m_pRanges);
     CompVMem::free((void**)&m_pStrengthsMap);
 }
 
 // overrides CompVSettable::set
-COMPV_ERROR_CODE CompVFeatureDeteFAST::set(int id, const void* valuePtr, size_t valueSize)
+COMPV_ERROR_CODE CompVCornerDeteFAST::set(int id, const void* valuePtr, size_t valueSize)
 {
     COMPV_CHECK_EXP_RETURN(valuePtr == NULL || valueSize == 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     switch (id) {
@@ -272,8 +272,8 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::set(int id, const void* valuePtr, size_t 
     }
 }
 
-// overrides CompVFeatureDete::process
-COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVPtr<CompVImage*>& image, CompVPtr<CompVBoxInterestPoint* >& interestPoints)
+// overrides CompVCornerDete::process
+COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVPtr<CompVImage*>& image, CompVPtr<CompVBoxInterestPoint* >& interestPoints)
 {
     COMPV_CHECK_EXP_RETURN(*image == NULL || image->getDataPtr() == NULL || image->getPixelFormat() != COMPV_PIXEL_FORMAT_GRAYSCALE,
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -478,10 +478,10 @@ COMPV_ERROR_CODE CompVFeatureDeteFAST::process(const CompVPtr<CompVImage*>& imag
     return err_;
 }
 
-COMPV_ERROR_CODE CompVFeatureDeteFAST::newObj(CompVPtr<CompVFeatureDete* >* fast)
+COMPV_ERROR_CODE CompVCornerDeteFAST::newObj(CompVPtr<CompVCornerDete* >* fast)
 {
     COMPV_CHECK_EXP_RETURN(fast == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVPtr<CompVFeatureDeteFAST* >_fast = new CompVFeatureDeteFAST();
+    CompVPtr<CompVCornerDeteFAST* >_fast = new CompVCornerDeteFAST();
     if (!_fast) {
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }

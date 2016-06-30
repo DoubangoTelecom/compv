@@ -27,22 +27,22 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVFeatureDescORB : public CompVFeatureDesc
+class CompVCornerDescORB : public CompVCornerDesc
 {
 protected:
-    CompVFeatureDescORB();
+    CompVCornerDescORB();
 public:
-    virtual ~CompVFeatureDescORB();
+    virtual ~CompVCornerDescORB();
     virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVFeatureDescORB";
+        return "CompVCornerDescORB";
     };
 
     // override CompVSettable::set
     virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
-    // override CompVFeatureDesc::process
+    // override CompVCornerDesc::process
     virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVArray<uint8_t>* >* descriptions);
 
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVFeatureDesc* >* orb);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVCornerDesc* >* orb);
 
 private:
     COMPV_ERROR_CODE convlt(CompVPtr<CompVImageScalePyramid * > pPyramid, int level);

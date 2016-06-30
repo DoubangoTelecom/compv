@@ -55,19 +55,27 @@ public:
 		if (dataBorder < ker_size_div2) {
 			// Set hz borders to zero
 			OutputType *outPtr0 = outPtr, *outPtr1 = outPtr + (dataWidth - ker_size_div2);
+			OutputType *tmpPtr0 = imgTmp0, *tmpPtr1 = imgTmp0 + (dataWidth - ker_size_div2);
 			for (size_t row = 0; row < dataHeight; ++row) {
 				for (size_t col = 0; col < ker_size_div2; ++col) {
 					outPtr0[col] = 0, outPtr1[col] = 0;
+					tmpPtr0[col] = 0, tmpPtr1[col] = 0;
 				}
 				outPtr0 += dataStride;
 				outPtr1 += dataStride;
+				tmpPtr0 += dataStride;
+				tmpPtr1 += dataStride;
 			}
 			// Set vert borders to zero
 			outPtr0 = outPtr;
 			outPtr1 = outPtr + ((dataHeight - ker_size_div2) * dataStride);
+			tmpPtr0 = imgTmp0;
+			tmpPtr1 = imgTmp0 + ((dataHeight - ker_size_div2) * dataStride);
 			size_t bSize = (ker_size_div2 * dataStride) * sizeof(OutputType);
-			CompVMem::zero(outPtr, bSize);
+			CompVMem::zero(outPtr0, bSize);
 			CompVMem::zero(outPtr1, bSize);
+			CompVMem::zero(tmpPtr0, bSize);
+			CompVMem::zero(tmpPtr1, bSize);
 		}
 
 		imgTmp = imgTmp0 + (dataBorder * dataStride) + dataBorder;

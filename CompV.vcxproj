@@ -45,6 +45,8 @@
     <ClInclude Include="include\compv\compv_settable.h" />
     <ClInclude Include="include\compv\compv_simd_globals.h" />
     <ClInclude Include="include\compv\features\compv_feature.h" />
+    <ClInclude Include="include\compv\features\edges\compv_feature_canny_dete.h" />
+    <ClInclude Include="include\compv\features\edges\compv_feature_edge_dete.h" />
     <ClInclude Include="include\compv\features\fast\compv_feature_fast12_dete.h" />
     <ClInclude Include="include\compv\features\fast\compv_feature_fast9_dete.h" />
     <ClInclude Include="include\compv\features\fast\compv_feature_fast_dete.h" />
@@ -132,6 +134,8 @@
     <ClCompile Include="compv_settable.cxx" />
     <ClCompile Include="compv_simd_globals.cxx" />
     <ClCompile Include="features\compv_feature.cxx" />
+    <ClCompile Include="features\edges\compv_feature_canny_dete.cxx" />
+    <ClCompile Include="features\edges\compv_feature_edge_dete.cxx" />
     <ClCompile Include="features\fast\compv_feature_fast_dete.cxx" />
     <ClCompile Include="features\orb\compv_feature_orb_desc.cxx" />
     <ClCompile Include="features\orb\compv_feature_orb_dete.cxx" />

@@ -45,12 +45,12 @@ CompVArray<T>::~CompVArray()
 }
 
 template<class T>
-COMPV_ERROR_CODE CompVArray<T>::alloc(size_t rows, size_t cols, size_t alignv /*= 1*/)
+COMPV_ERROR_CODE CompVArray<T>::alloc(size_t rows, size_t cols, size_t alignv /*= 1*/, size_t stride /*= 0*/)
 {
-    COMPV_CHECK_EXP_RETURN(!alignv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!alignv || (stride && stride < cols), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     size_t nElmtInBytes_ = sizeof(T);
-    size_t strideInBytes_ = CompVMem::alignForward((cols * nElmtInBytes_), (int)alignv);
+	size_t strideInBytes_ = stride ? (stride * nElmtInBytes_) : CompVMem::alignForward((cols * nElmtInBytes_), (int)alignv);
     size_t newDataSize_ = strideInBytes_ * rows;
     void* pMem_ = NULL;
 	
@@ -209,7 +209,7 @@ COMPV_ERROR_CODE CompVArray<T>::copy(T* mem, const CompVPtr<CompVArray<T>* >& ar
 }
 
 template<class T>
-COMPV_ERROR_CODE CompVArray<T>::newObj(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols, size_t alignv)
+COMPV_ERROR_CODE CompVArray<T>::newObj(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols, size_t alignv, size_t stride /*= 0*/)
 {
     COMPV_CHECK_EXP_RETURN(!array || !alignv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVPtr<CompVArray<T>* > array_ = *array;
@@ -218,7 +218,7 @@ COMPV_ERROR_CODE CompVArray<T>::newObj(CompVPtr<CompVArray<T>* >* array, size_t 
 		COMPV_CHECK_EXP_RETURN(!array_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 		*array = array_;
     }
-	COMPV_CHECK_CODE_RETURN(array_->alloc(rows, cols, alignv));
+	COMPV_CHECK_CODE_RETURN(array_->alloc(rows, cols, alignv, stride));
     return COMPV_ERROR_CODE_S_OK;
 }
 

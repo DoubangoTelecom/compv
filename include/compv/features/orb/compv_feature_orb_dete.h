@@ -20,24 +20,24 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVFeatureDeteORB : public CompVFeatureDete
+class CompVCornerDeteORB : public CompVCornerDete
 {
 protected:
-    CompVFeatureDeteORB();
+    CompVCornerDeteORB();
 public:
-    virtual ~CompVFeatureDeteORB();
+    virtual ~CompVCornerDeteORB();
     virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVFeatureDeteORB";
+        return "CompVCornerDeteORB";
     };
 
     // override CompVSettable::set
     virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
     // override CompVSettable::get
     virtual COMPV_ERROR_CODE get(int id, const void*& valuePtr, size_t valueSize);
-    // override CompVFeatureDete::process
+    // override CompVCornerDete::process
     virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtr<CompVBoxInterestPoint* >& interestPoints);
 
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVFeatureDete* >* orb);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVCornerDete* >* orb);
 
 private:
     COMPV_ERROR_CODE createInterestPoints(int32_t count = -1);
@@ -45,17 +45,17 @@ private:
     COMPV_ERROR_CODE createPatches(int32_t count = -1);
     COMPV_ERROR_CODE freePatches(int32_t count = -1);
     COMPV_ERROR_CODE createDetectors(int32_t count = -1);
-    COMPV_ERROR_CODE initDetector(CompVPtr<CompVFeatureDete* >& detector);
+    COMPV_ERROR_CODE initDetector(CompVPtr<CompVCornerDete* >& detector);
     COMPV_ERROR_CODE initDetectors();
     COMPV_ERROR_CODE freeDetectors(int32_t count = -1);
-    COMPV_ERROR_CODE processLevelAt(const CompVPtr<CompVImage*>& image, CompVPtr<CompVPatch* >& patch, CompVPtr<CompVFeatureDete* >& detector, int level);
+    COMPV_ERROR_CODE processLevelAt(const CompVPtr<CompVImage*>& image, CompVPtr<CompVPatch* >& patch, CompVPtr<CompVCornerDete* >& detector, int level);
 
 private:
     CompVPtr<CompVImageScalePyramid* > m_pyramid;
     CompVPtr<CompVBoxInterestPoint* >* m_pInterestPointsAtLevelN;
     CompVPtr<CompVPatch* >* m_pPatches;
     size_t m_nPatches;
-    CompVPtr<CompVFeatureDete* >* m_pDetectors;
+    CompVPtr<CompVCornerDete* >* m_pDetectors;
     size_t m_nDetectors;
     int32_t m_nMaxFeatures;
     int32_t m_nPyramidLevels;

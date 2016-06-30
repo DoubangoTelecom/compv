@@ -58,16 +58,16 @@ public:
         return !m_nCols || !m_nRows;
     };
 	COMPV_INLINE bool isAlignedSSE()const {
-		return COMPV_IS_ALIGNED_SSE(m_nAlignV);
+		return COMPV_IS_ALIGNED_SSE(m_pDataPtr) && COMPV_IS_ALIGNED_SSE(m_nStrideInBytes);
 	};
 	COMPV_INLINE bool isAlignedAVX()const {
-		return COMPV_IS_ALIGNED_AVX(m_nAlignV);
+		return COMPV_IS_ALIGNED_AVX(m_pDataPtr) && COMPV_IS_ALIGNED_AVX(m_nStrideInBytes);
 	};
 	COMPV_INLINE bool isAlignedAVX512()const {
-		return COMPV_IS_ALIGNED_AVX512(m_nAlignV);
+		return COMPV_IS_ALIGNED_AVX512(m_pDataPtr) && COMPV_IS_ALIGNED_AVX512(m_nStrideInBytes);
 	};
 	COMPV_INLINE bool isAlignedNEON()const {
-		return COMPV_IS_ALIGNED_NEON(m_nAlignV);
+		return COMPV_IS_ALIGNED_NEON(m_pDataPtr) && COMPV_IS_ALIGNED_NEON(m_nStrideInBytes);
 	};
 
 	COMPV_ERROR_CODE shrink(CompVPtr<CompVArray<T>* >& array, size_t newRows, size_t newCols);
@@ -75,12 +75,12 @@ public:
 
 	static COMPV_ERROR_CODE copy(CompVPtr<CompVArray<T>* >& array, const T* mem, size_t rows, size_t cols, size_t arrayAlign = COMPV_SIMD_ALIGNV_DEFAULT, size_t memAlign = 1);
 	static COMPV_ERROR_CODE copy(T* mem, const CompVPtr<CompVArray<T>* >& array, size_t memAlign = 1);
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols, size_t alignv);
+	static COMPV_ERROR_CODE newObj(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols, size_t alignv, size_t stride = 0);
 	static COMPV_ERROR_CODE newObjStrideless(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols);
 	static COMPV_ERROR_CODE newObjAligned(CompVPtr<CompVArray<T>* >* array, size_t rows, size_t cols);
 
 protected:
-	COMPV_ERROR_CODE alloc(size_t rows, size_t cols, size_t alignv = 1);
+	COMPV_ERROR_CODE alloc(size_t rows, size_t cols, size_t alignv = 1, size_t stride = 0);
 
 private:
     COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)

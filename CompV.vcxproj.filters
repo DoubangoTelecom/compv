@@ -169,6 +169,12 @@
     <Filter Include="Source Files\intrinsics\x86\math">
       <UniqueIdentifier>{533f03aa-1973-41b0-92ba-6fafa8c66cf9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\features\edges">
+      <UniqueIdentifier>{a83a45ab-4870-49c3-b5fb-db30fbde5620}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\features\edges">
+      <UniqueIdentifier>{210c008a-0ed4-4618-ba12-ac25b8b3de4f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
@@ -438,6 +444,12 @@
     <ClInclude Include="include\compv\math\compv_math_convlt.h">
       <Filter>Header Files\math</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\features\edges\compv_feature_canny_dete.h">
+      <Filter>Header Files\features\edges</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\features\edges\compv_feature_edge_dete.h">
+      <Filter>Header Files\features\edges</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -682,6 +694,12 @@
     </ClCompile>
     <ClCompile Include="intrinsics\x86\math\compv_math_transform_intrin_avx.cxx">
       <Filter>Source Files\intrinsics\x86\math</Filter>
+    </ClCompile>
+    <ClCompile Include="features\edges\compv_feature_canny_dete.cxx">
+      <Filter>Source Files\features\edges</Filter>
+    </ClCompile>
+    <ClCompile Include="features\edges\compv_feature_edge_dete.cxx">
+      <Filter>Source Files\features\edges</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

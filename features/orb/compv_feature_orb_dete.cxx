@@ -44,8 +44,8 @@ int COMPV_FEATURE_DETE_ORB_PATCH_BITS = 256;
 #define COMPV_FEATURE_DETE_ORB_MIN_FEATUES_PER_LEVEL 10
 COMPV_SCALE_TYPE COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE = COMPV_SCALE_TYPE_BILINEAR;
 
-CompVFeatureDeteORB::CompVFeatureDeteORB()
-    : CompVFeatureDete(COMPV_ORB_ID)
+CompVCornerDeteORB::CompVCornerDeteORB()
+    : CompVCornerDete(COMPV_ORB_ID)
     , m_nMaxFeatures(COMPV_FEATURE_DETE_ORB_FAST_MAX_FEATURES)
     , m_nPyramidLevels(-1)
     , m_nPatchDiameter(COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER)
@@ -61,7 +61,7 @@ CompVFeatureDeteORB::CompVFeatureDeteORB()
 
 }
 
-CompVFeatureDeteORB::~CompVFeatureDeteORB()
+CompVCornerDeteORB::~CompVCornerDeteORB()
 {
     freeInterestPoints();
     freePatches();
@@ -69,7 +69,7 @@ CompVFeatureDeteORB::~CompVFeatureDeteORB()
 }
 
 // override CompVSettable::set
-COMPV_ERROR_CODE CompVFeatureDeteORB::set(int id, const void* valuePtr, size_t valueSize)
+COMPV_ERROR_CODE CompVCornerDeteORB::set(int id, const void* valuePtr, size_t valueSize)
 {
     COMPV_CHECK_EXP_RETURN(valuePtr == NULL || valueSize == 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     switch (id) {
@@ -132,7 +132,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::set(int id, const void* valuePtr, size_t v
     }
 }
 
-COMPV_ERROR_CODE CompVFeatureDeteORB::get(int id, const void*& valuePtr, size_t valueSize)
+COMPV_ERROR_CODE CompVCornerDeteORB::get(int id, const void*& valuePtr, size_t valueSize)
 {
     COMPV_CHECK_EXP_RETURN(valueSize == 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     switch (id) {
@@ -146,8 +146,8 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::get(int id, const void*& valuePtr, size_t 
     }
 }
 
-// override CompVFeatureDete::process
-COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image, CompVPtr<CompVBoxInterestPoint* >& interestPoints)
+// override CompVCornerDete::process
+COMPV_ERROR_CODE CompVCornerDeteORB::process(const CompVPtr<CompVImage*>& image, CompVPtr<CompVBoxInterestPoint* >& interestPoints)
 {
     COMPV_CHECK_EXP_RETURN(*image == NULL || image->getDataPtr() == NULL || image->getPixelFormat() != COMPV_PIXEL_FORMAT_GRAYSCALE,
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -181,7 +181,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
     if ((int32_t)m_nDetectors < nDetectors) {
         COMPV_CHECK_CODE_RETURN(createDetectors(nDetectors));
         for (int32_t d = 0; d < nDetectors; ++d) {
-            err_ = CompVFeatureDete::newObj(COMPV_FAST_ID, &m_pDetectors[d]);
+            err_ = CompVCornerDete::newObj(COMPV_FAST_ID, &m_pDetectors[d]);
             if (COMPV_ERROR_CODE_IS_NOK(err_)) {
                 freeDetectors();
                 COMPV_CHECK_CODE_RETURN(err_);
@@ -208,12 +208,12 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
     // TODO(dmi): not optimized when levels > maxThreads, single-threaded when levels == 1
     //			Not a high prio. issue beacuse the most time consuming function is FAST feature detector and it's multi-threaded
     if (threadsCount > 1) {
-        CompVPtr<CompVFeatureDeteORB* >This = this;
+        CompVPtr<CompVCornerDeteORB* >This = this;
         // levelStart is used to make sure we won't schedule more than "threadsCount"
         int levelStart, level, levelMax;
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(m_pyramid->getLevels());
-		auto funcPtr = [&](const CompVPtr<CompVImage* >& image, CompVPtr<CompVPatch* >& patch, CompVPtr<CompVFeatureDete* >& detector, int level) -> COMPV_ERROR_CODE {
+		auto funcPtr = [&](const CompVPtr<CompVImage* >& image, CompVPtr<CompVPatch* >& patch, CompVPtr<CompVCornerDete* >& detector, int level) -> COMPV_ERROR_CODE {
 			return processLevelAt(*image, patch, detector, level);
 		};
         for (levelStart = 0, levelMax = threadsCount; levelStart < m_pyramid->getLevels(); levelStart += threadsCount, levelMax += threadsCount) {
@@ -238,7 +238,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::process(const CompVPtr<CompVImage*>& image
 
 // Private function
 // TODO(dmi): template function
-COMPV_ERROR_CODE CompVFeatureDeteORB::createInterestPoints(int32_t count /*= -1*/)
+COMPV_ERROR_CODE CompVCornerDeteORB::createInterestPoints(int32_t count /*= -1*/)
 {
     int32_t levelsCount = count > 0 ? count : m_nPyramidLevels;
     freeInterestPoints();
@@ -251,7 +251,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::createInterestPoints(int32_t count /*= -1*
 
 // Private function
 // TODO(dmi): template function
-COMPV_ERROR_CODE CompVFeatureDeteORB::freeInterestPoints(int32_t count /*= -1*/)
+COMPV_ERROR_CODE CompVCornerDeteORB::freeInterestPoints(int32_t count /*= -1*/)
 {
     if (m_pInterestPointsAtLevelN) {
         int32_t levelsCount = count > 0 ? count : m_nPyramidLevels;
@@ -265,7 +265,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::freeInterestPoints(int32_t count /*= -1*/)
 
 // Private function
 // TODO(dmi): template function
-COMPV_ERROR_CODE CompVFeatureDeteORB::createPatches(int32_t count /*= -1*/)
+COMPV_ERROR_CODE CompVCornerDeteORB::createPatches(int32_t count /*= -1*/)
 {
     int32_t patchesCount = count > 0 ? count : (int32_t)m_nPatches;
     freePatches();
@@ -277,7 +277,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::createPatches(int32_t count /*= -1*/)
 
 // Private function
 // TODO(dmi): template function
-COMPV_ERROR_CODE CompVFeatureDeteORB::freePatches(int32_t count /*= -1*/)
+COMPV_ERROR_CODE CompVCornerDeteORB::freePatches(int32_t count /*= -1*/)
 {
     if (m_pPatches) {
         int32_t patchesCount = count > 0 ? count : (int32_t)m_nPatches;
@@ -292,17 +292,17 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::freePatches(int32_t count /*= -1*/)
 
 // Private function
 // TODO(dmi): template function
-COMPV_ERROR_CODE CompVFeatureDeteORB::createDetectors(int32_t count /*= -1*/)
+COMPV_ERROR_CODE CompVCornerDeteORB::createDetectors(int32_t count /*= -1*/)
 {
     int32_t detectorsCount = count > 0 ? count : (int32_t)m_nDetectors;
     freeDetectors();
-    m_pDetectors = (CompVPtr<CompVFeatureDete *>*)CompVMem::calloc(detectorsCount, sizeof(CompVPtr<CompVFeatureDete *>));
+    m_pDetectors = (CompVPtr<CompVCornerDete *>*)CompVMem::calloc(detectorsCount, sizeof(CompVPtr<CompVCornerDete *>));
     COMPV_CHECK_EXP_RETURN(!m_pDetectors, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     m_nDetectors = detectorsCount;
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVFeatureDeteORB::initDetector(CompVPtr<CompVFeatureDete* >& detector)
+COMPV_ERROR_CODE CompVCornerDeteORB::initDetector(CompVPtr<CompVCornerDete* >& detector)
 {
     if (detector) {
         COMPV_CHECK_CODE_RETURN(detector->set(COMPV_FAST_SET_INT32_THRESHOLD, &m_nThreshold, sizeof(m_nThreshold)));
@@ -313,7 +313,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::initDetector(CompVPtr<CompVFeatureDete* >&
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVFeatureDeteORB::initDetectors()
+COMPV_ERROR_CODE CompVCornerDeteORB::initDetectors()
 {
     if (m_pDetectors) {
         for (size_t i = 0; i < m_nDetectors; ++i) {
@@ -325,7 +325,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::initDetectors()
 
 // Private function
 // TODO(dmi): template function
-COMPV_ERROR_CODE CompVFeatureDeteORB::freeDetectors(int32_t count /*= -1*/)
+COMPV_ERROR_CODE CompVCornerDeteORB::freeDetectors(int32_t count /*= -1*/)
 {
     if (m_pDetectors) {
         int32_t detectorsCount = count > 0 ? count : (int32_t)m_nDetectors;
@@ -340,7 +340,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::freeDetectors(int32_t count /*= -1*/)
 
 // Private function
 // Must be thread-safe
-COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage* >& image, CompVPtr<CompVPatch* >& patch, CompVPtr<CompVFeatureDete* >& detector, int level)
+COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVPtr<CompVImage* >& image, CompVPtr<CompVPatch* >& patch, CompVPtr<CompVCornerDete* >& detector, int level)
 {
     COMPV_CHECK_EXP_RETURN(level < 0 || level >= m_nPyramidLevels, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
@@ -426,7 +426,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::processLevelAt(const CompVPtr<CompVImage* 
     return err_;
 }
 
-COMPV_ERROR_CODE CompVFeatureDeteORB::newObj(CompVPtr<CompVFeatureDete* >* orb)
+COMPV_ERROR_CODE CompVCornerDeteORB::newObj(CompVPtr<CompVCornerDete* >* orb)
 {
     COMPV_CHECK_EXP_RETURN(orb == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVPtr<CompVImageScalePyramid * > pyramid_;
@@ -434,7 +434,7 @@ COMPV_ERROR_CODE CompVFeatureDeteORB::newObj(CompVPtr<CompVFeatureDete* >* orb)
     // Create the pyramid
     COMPV_CHECK_CODE_RETURN(CompVImageScalePyramid::newObj(COMPV_FEATURE_DETE_ORB_PYRAMID_SF, COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS, COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE, &pyramid_));
 
-    CompVPtr<CompVFeatureDeteORB* >_orb = new CompVFeatureDeteORB();
+    CompVPtr<CompVCornerDeteORB* >_orb = new CompVCornerDeteORB();
     if (!_orb) {
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }

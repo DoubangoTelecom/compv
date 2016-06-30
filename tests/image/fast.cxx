@@ -175,7 +175,7 @@ static void FastShufflesArc(int N)
 
 COMPV_ERROR_CODE TestFAST()
 {
-    CompVPtr<CompVFeatureDete* > fast;
+    CompVPtr<CompVCornerDete* > fast;
     CompVPtr<CompVImage *> image;
     CompVPtr<CompVBoxInterestPoint* > interestPoints;
     int32_t val32;
@@ -188,7 +188,7 @@ COMPV_ERROR_CODE TestFAST()
     COMPV_CHECK_CODE_RETURN(image->convert(COMPV_PIXEL_FORMAT_GRAYSCALE, &image));
 
     // Create the FAST feature detector
-    COMPV_CHECK_CODE_RETURN(CompVFeatureDete::newObj(COMPV_FAST_ID, &fast));
+    COMPV_CHECK_CODE_RETURN(CompVCornerDete::newObj(COMPV_FAST_ID, &fast));
 
     // Set the default values
     val32 = THRESHOLD;

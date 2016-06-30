@@ -129,8 +129,8 @@ static void Brief256_31_Float32_C(const uint8_t* img_center, compv_scalar_t img_
 static void Brief256_31_Fxp_C(const uint8_t* img_center, compv_scalar_t img_stride, const int16_t* cos1, const int16_t* sin1, COMPV_ALIGNED(x) void* out);
 #endif
 
-CompVFeatureDescORB::CompVFeatureDescORB()
-    : CompVFeatureDesc(COMPV_ORB_ID)
+CompVCornerDescORB::CompVCornerDescORB()
+    : CompVCornerDesc(COMPV_ORB_ID)
     , m_nPatchDiameter(COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER)
     , m_nPatchBits(COMPV_FEATURE_DETE_ORB_PATCH_BITS)
     , m_bMediaTypeVideo(false)
@@ -142,12 +142,12 @@ CompVFeatureDescORB::CompVFeatureDescORB()
 
 }
 
-CompVFeatureDescORB::~CompVFeatureDescORB()
+CompVCornerDescORB::~CompVCornerDescORB()
 {
 }
 
 // override CompVSettable::set
-COMPV_ERROR_CODE CompVFeatureDescORB::set(int id, const void* valuePtr, size_t valueSize)
+COMPV_ERROR_CODE CompVCornerDescORB::set(int id, const void* valuePtr, size_t valueSize)
 {
     COMPV_CHECK_EXP_RETURN(valuePtr == NULL || valueSize == 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     switch (id) {
@@ -157,7 +157,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::set(int id, const void* valuePtr, size_t v
     }
 }
 
-COMPV_ERROR_CODE CompVFeatureDescORB::convlt(CompVPtr<CompVImageScalePyramid * > pPyramid, int level)
+COMPV_ERROR_CODE CompVCornerDescORB::convlt(CompVPtr<CompVImageScalePyramid * > pPyramid, int level)
 {
     // apply gaussianblur filter on the pyramid
     CompVPtr<CompVImage*> imageAtLevelN;
@@ -175,7 +175,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::convlt(CompVPtr<CompVImageScalePyramid * >
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVFeatureDescORB::describe(CompVPtr<CompVImageScalePyramid * > pPyramid, const CompVInterestPoint* begin, const CompVInterestPoint* end, uint8_t* desc)
+COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVPtr<CompVImageScalePyramid * > pPyramid, const CompVInterestPoint* begin, const CompVInterestPoint* end, uint8_t* desc)
 {
     float fx, fy, angleInRad, sf, fcos, fsin;
     int32_t xi, yi;
@@ -232,8 +232,8 @@ COMPV_ERROR_CODE CompVFeatureDescORB::describe(CompVPtr<CompVImageScalePyramid *
     return COMPV_ERROR_CODE_S_OK;
 }
 
-// override CompVFeatureDesc::process
-COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVArray<uint8_t>* >* descriptions)
+// override CompVCornerDesc::process
+COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVArray<uint8_t>* >* descriptions)
 {
     COMPV_CHECK_EXP_RETURN(*image == NULL || image->getDataPtr() == NULL || image->getPixelFormat() != COMPV_PIXEL_FORMAT_GRAYSCALE || !descriptions || !interestPoints,
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -245,12 +245,12 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
     CompVPtr<CompVArray<uint8_t>* > _descriptions;
     CompVPtr<CompVImageScalePyramid * > _pyramid;
     CompVPtr<CompVImage*> imageAtLevelN;
-    CompVPtr<CompVFeatureDete*> attachedDete = getAttachedDete();
+    CompVPtr<CompVCornerDete*> attachedDete = getAttachedDete();
     uint8_t* _descriptionsPtr = NULL;
     static const bool size_of_float_is4 = (sizeof(float) == 4); // ASM and INTRIN code require it
     CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
     int threadsCount = 1, levelsCount, threadStartIdx = 0;
-    CompVPtr<CompVFeatureDescORB* >This = this;
+    CompVPtr<CompVCornerDescORB* >This = this;
     bool bLevelZeroBlurred = false;
 
     // return COMPV_ERROR_CODE_S_OK;
@@ -404,7 +404,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::process(const CompVPtr<CompVImage*>& image
     return err_;
 }
 
-COMPV_ERROR_CODE CompVFeatureDescORB::newObj(CompVPtr<CompVFeatureDesc* >* orb)
+COMPV_ERROR_CODE CompVCornerDescORB::newObj(CompVPtr<CompVCornerDesc* >* orb)
 {
     COMPV_CHECK_EXP_RETURN(orb == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVPtr<CompVImageScalePyramid * > pyramid_;
@@ -426,7 +426,7 @@ COMPV_ERROR_CODE CompVFeatureDescORB::newObj(CompVPtr<CompVFeatureDesc* >* orb)
     // Create the pyramid
     COMPV_CHECK_CODE_RETURN(CompVImageScalePyramid::newObj(COMPV_FEATURE_DETE_ORB_PYRAMID_SF, COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS, COMPV_FEATURE_DETE_ORB_PYRAMID_SCALE_TYPE, &pyramid_));
 
-    CompVPtr<CompVFeatureDescORB* >_orb = new CompVFeatureDescORB();
+    CompVPtr<CompVCornerDescORB* >_orb = new CompVCornerDescORB();
     if (!_orb) {
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }

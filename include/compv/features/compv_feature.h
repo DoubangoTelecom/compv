@@ -18,15 +18,16 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVFeatureDete;
-class CompVFeatureDesc;
-
+class CompVCornerDete;
+class CompVCornerDesc;
+class CompVEdgeDete;
 
 struct CompVFeatureFactory {
     int id;
     const char* name;
-    COMPV_ERROR_CODE(*newObjDete)(CompVPtr<CompVFeatureDete* >* dete);
-    COMPV_ERROR_CODE(*newObjDesc)(CompVPtr<CompVFeatureDesc* >* desc);
+    COMPV_ERROR_CODE(*newObjCornerDete)(CompVPtr<CompVCornerDete* >* dete);
+    COMPV_ERROR_CODE(*newObjCornerDesc)(CompVPtr<CompVCornerDesc* >* desc);
+	COMPV_ERROR_CODE(*newObjEdgeDete)(CompVPtr<CompVEdgeDete* >* dete);
 };
 
 /* Feature detectors and descriptors setters and getters */
@@ -56,6 +57,18 @@ enum {
     COMPV_ORB_SET_INT32_BRIEF_PATCH_SIZE,
     COMPV_ORB_STRENGTH_TYPE_FAST,
     COMPV_ORB_STRENGTH_TYPE_HARRIS,
+
+	/* Canny */
+	COMPV_CANNY_ID,
+
+	/* Sobel */
+	COMPV_SOBEL_ID,
+
+	/* Scharr */
+	COMPV_SCHARR_ID,
+
+	/* Prewitt */
+	COMPV_PREWITT_ID,
 };
 
 // Class: CompVFeature
@@ -75,55 +88,70 @@ private:
     COMPV_DISABLE_WARNINGS_END()
 };
 
-// Class: CompVFeatureDete
-class COMPV_API CompVFeatureDete : public CompVObj, public CompVSettable
+// Class: CompVFeatureBase
+class COMPV_API CompVFeatureBase : public CompVObj, public CompVSettable
 {
 protected:
-    CompVFeatureDete(int id);
+	CompVFeatureBase(int id);
 public:
-    virtual ~CompVFeatureDete();
-    COMPV_INLINE int getId() {
-        return m_nId;
-    }
-    virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtr<CompVBoxInterestPoint* >& interestPoints) = 0;
-    static COMPV_ERROR_CODE newObj(int deteId, CompVPtr<CompVFeatureDete* >* dete);
-
+	virtual ~CompVFeatureBase();
+	COMPV_INLINE int getId() {
+		return m_nId;
+	}
 private:
-    int m_nId;
+	int m_nId;
 };
 
-// Class: CompVFeatureDesc
-class COMPV_API CompVFeatureDesc : public CompVObj, public CompVSettable
+// Class: CompVCornerDete
+class COMPV_API CompVCornerDete : public CompVFeatureBase
 {
 protected:
-    CompVFeatureDesc(int id);
+    CompVCornerDete(int id);
 public:
-    virtual ~CompVFeatureDesc();
-    COMPV_INLINE int getId() {
-        return m_nId;
-    }
+    virtual ~CompVCornerDete();
+    virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtr<CompVBoxInterestPoint* >& interestPoints) = 0;
+    static COMPV_ERROR_CODE newObj(int deteId, CompVPtr<CompVCornerDete* >* dete);
+};
+
+// Class: CompVCornerDesc
+class COMPV_API CompVCornerDesc : public CompVFeatureBase
+{
+protected:
+    CompVCornerDesc(int id);
+public:
+    virtual ~CompVCornerDesc();
 	// Detector must be attached to descriptor only if describe() use the same input as the previous detect()
-    virtual COMPV_ERROR_CODE attachDete(CompVPtr<CompVFeatureDete* > dete) {
+    COMPV_INLINE virtual COMPV_ERROR_CODE attachDete(CompVPtr<CompVCornerDete* > dete) {
         m_AttachedDete = dete;
         return COMPV_ERROR_CODE_S_OK;
     }
-    virtual COMPV_ERROR_CODE dettachDete() {
+    COMPV_INLINE virtual COMPV_ERROR_CODE dettachDete() {
         m_AttachedDete = NULL;
         return COMPV_ERROR_CODE_S_OK;
     }
     virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, const CompVPtr<CompVBoxInterestPoint* >& interestPoints, CompVPtr<CompVArray<uint8_t>* >* descriptions) = 0;
-    static COMPV_ERROR_CODE newObj(int descId, CompVPtr<CompVFeatureDesc* >* desc);
+    static COMPV_ERROR_CODE newObj(int descId, CompVPtr<CompVCornerDesc* >* desc);
 
 protected:
-    COMPV_INLINE CompVPtr<CompVFeatureDete* >& getAttachedDete() {
+    COMPV_INLINE CompVPtr<CompVCornerDete* >& getAttachedDete() {
         return m_AttachedDete;
     }
 
 private:
-    int m_nId;
     COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-    CompVPtr<CompVFeatureDete* >m_AttachedDete;
+    CompVPtr<CompVCornerDete* >m_AttachedDete;
     COMPV_DISABLE_WARNINGS_END()
+};
+
+// Class: CompVEdgeDete
+class COMPV_API CompVEdgeDete : public CompVFeatureBase
+{
+protected:
+	CompVEdgeDete(int id);
+public:
+	virtual ~CompVEdgeDete();
+	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtrArray(uint8_t)& egdes) = 0;
+	static COMPV_ERROR_CODE newObj(int deteId, CompVPtr<CompVEdgeDete* >* dete);
 };
 
 COMPV_NAMESPACE_END()

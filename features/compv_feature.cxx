@@ -8,6 +8,7 @@
 #include "compv/features/fast/compv_feature_fast_dete.h"
 #include "compv/features/orb/compv_feature_orb_dete.h"
 #include "compv/features/orb/compv_feature_orb_desc.h"
+#include "compv/features/edges/compv_feature_edge_dete.h"
 #include "compv/compv_engine.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -18,14 +19,37 @@ std::map<int, const CompVFeatureFactory*> CompVFeature::s_Factories;
 static const CompVFeatureFactory fastFactory = {
     COMPV_FAST_ID,
     "FAST (Features from Accelerated Segment Test)",
-    CompVFeatureDeteFAST::newObj,
+    CompVCornerDeteFAST::newObj,
     NULL,
+	NULL,
 };
 static const CompVFeatureFactory orbFactory = {
     COMPV_ORB_ID,
     "ORB (Oriented FAST and Rotated BRIEF)",
-    CompVFeatureDeteORB::newObj,
-    CompVFeatureDescORB::newObj,
+    CompVCornerDeteORB::newObj,
+    CompVCornerDescORB::newObj,
+	NULL,
+};
+static const CompVFeatureFactory sobelFactory = {
+	COMPV_SOBEL_ID,
+	"Sobel edge detector",
+	NULL,
+	NULL,
+	CompVEdgeDeteBASE::newObjSobel,
+};
+static const CompVFeatureFactory scharrFactory = {
+	COMPV_SCHARR_ID,
+	"Scharr edge detector",
+	NULL,
+	NULL,
+	CompVEdgeDeteBASE::newObjScharr,
+};
+static const CompVFeatureFactory prewittFactory = {
+	COMPV_PREWITT_ID,
+	"Prewitt edge detector",
+	NULL,
+	NULL,
+	CompVEdgeDeteBASE::newObjPrewitt,
 };
 
 //
@@ -52,6 +76,12 @@ COMPV_ERROR_CODE CompVFeature::init()
     COMPV_CHECK_CODE_RETURN(addFactory(&fastFactory));
     // ORB(ORiented BRIEF)
     COMPV_CHECK_CODE_RETURN(addFactory(&orbFactory));
+	// Sobel edge detector
+	COMPV_CHECK_CODE_RETURN(addFactory(&sobelFactory));
+	// Scharr edge detector
+	COMPV_CHECK_CODE_RETURN(addFactory(&scharrFactory));
+	// Prewitt edge detector
+	COMPV_CHECK_CODE_RETURN(addFactory(&prewittFactory));
 
     return COMPV_ERROR_CODE_S_OK;
 }
@@ -77,22 +107,36 @@ const CompVFeatureFactory* CompVFeature::findFactory(int deteId)
     return it->second;
 }
 
-//
-//	CompVFeatureDete
-//
+// Class: CompVFeatureBase
 
-CompVFeatureDete::CompVFeatureDete(int id)
-    : m_nId(id)
+CompVFeatureBase::CompVFeatureBase(int id)
+	: m_nId(id)
 {
 
 }
 
-CompVFeatureDete::~CompVFeatureDete()
+CompVFeatureBase::~CompVFeatureBase()
 {
 
 }
 
-COMPV_ERROR_CODE CompVFeatureDete::newObj(int deteId, CompVPtr<CompVFeatureDete* >* dete)
+
+//
+//	CompVCornerDete
+//
+
+CompVCornerDete::CompVCornerDete(int id)
+	: CompVFeatureBase(id)
+{
+
+}
+
+CompVCornerDete::~CompVCornerDete()
+{
+
+}
+
+COMPV_ERROR_CODE CompVCornerDete::newObj(int deteId, CompVPtr<CompVCornerDete* >* dete)
 {
     COMPV_CHECK_CODE_RETURN(CompVEngine::init());
     COMPV_CHECK_EXP_RETURN(dete == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -101,29 +145,29 @@ COMPV_ERROR_CODE CompVFeatureDete::newObj(int deteId, CompVPtr<CompVFeatureDete*
         COMPV_DEBUG_ERROR("Failed to find feature factory with id = %d", deteId);
         return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
     }
-    if (!factory_->newObjDete) {
+	if (!factory_->newObjCornerDete) {
         COMPV_DEBUG_ERROR("Factory with id = %d and name = '%s' doesn't have a constructor for detectors", factory_->id, factory_->name);
         return COMPV_ERROR_CODE_E_INVALID_CALL;
     }
-    return factory_->newObjDete(dete);
+	return factory_->newObjCornerDete(dete);
 }
 
 //
-//	CompVFeatureDesc
+//	CompVCornerDesc
 //
 
-CompVFeatureDesc::CompVFeatureDesc(int id)
-    : m_nId(id)
+CompVCornerDesc::CompVCornerDesc(int id)
+	: CompVFeatureBase(id)
 {
 
 }
 
-CompVFeatureDesc::~CompVFeatureDesc()
+CompVCornerDesc::~CompVCornerDesc()
 {
 
 }
 
-COMPV_ERROR_CODE CompVFeatureDesc::newObj(int descId, CompVPtr<CompVFeatureDesc* >* desc)
+COMPV_ERROR_CODE CompVCornerDesc::newObj(int descId, CompVPtr<CompVCornerDesc* >* desc)
 {
     COMPV_CHECK_CODE_RETURN(CompVEngine::init());
     COMPV_CHECK_EXP_RETURN(desc == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -132,11 +176,44 @@ COMPV_ERROR_CODE CompVFeatureDesc::newObj(int descId, CompVPtr<CompVFeatureDesc*
         COMPV_DEBUG_ERROR("Failed to find feature factory with id = %d", descId);
         return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
     }
-    if (!factory_->newObjDesc) {
+    if (!factory_->newObjCornerDesc) {
         COMPV_DEBUG_ERROR("Factory with id = %d and name = '%s' doesn't have a constructor for descriptors", factory_->id, factory_->name);
         return COMPV_ERROR_CODE_E_INVALID_CALL;
     }
-    return factory_->newObjDesc(desc);
+	return factory_->newObjCornerDesc(desc);
 }
+
+//
+// Class: CompVEdgeDete
+//
+
+CompVEdgeDete::CompVEdgeDete(int id)
+	: CompVFeatureBase(id)
+{
+
+}
+
+
+CompVEdgeDete::~CompVEdgeDete()
+{
+
+}
+
+COMPV_ERROR_CODE CompVEdgeDete::newObj(int deteId, CompVPtr<CompVEdgeDete* >* dete)
+{
+	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
+	COMPV_CHECK_EXP_RETURN(!dete, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	const CompVFeatureFactory* factory_ = CompVFeature::findFactory(deteId);
+	if (!factory_) {
+		COMPV_DEBUG_ERROR("Failed to find feature factory with id = %d", deteId);
+		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+	}
+	if (!factory_->newObjEdgeDete) {
+		COMPV_DEBUG_ERROR("Factory with id = %d and name = '%s' doesn't have a constructor for edge detector", factory_->id, factory_->name);
+		return COMPV_ERROR_CODE_E_INVALID_CALL;
+	}
+	return factory_->newObjEdgeDete(dete);
+}
+
 
 COMPV_NAMESPACE_END()

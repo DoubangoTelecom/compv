@@ -8,8 +8,9 @@
 #define _COMPV_MATHUTILS_H_
 
 #include "compv/compv_config.h"
-#include "compv/compv_common.h"
 #include "compv/math/compv_math.h"
+#include "compv/compv_common.h"
+#include "compv/compv_mem.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -43,6 +44,57 @@ public:
     }
 	static COMPV_INLINE void rand(uint32_t *r, compv_scalar_t count) {
 		randFunc(r, count);
+	}
+
+	// compute gradient using L1 distance (g = abs(gx) + abs(gy)) and the maximum value
+	template <typename InputType, typename OutputType>
+	static COMPV_ERROR_CODE gradientL1(const InputType* gx, const InputType* gy, OutputType*& g, OutputType& max, size_t width, size_t height, size_t stride)
+	{
+		COMPV_CHECK_EXP_RETURN(!gx || !gy || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		if (!g) {
+			g = (OutputType*)CompVMem::malloc(height * stride * sizeof(OutputType));
+			COMPV_CHECK_EXP_RETURN(!g, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		}
+
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+		size_t i, j;
+		max = 1;
+		OutputType* g_ = g;
+		for (j = 0; j < height; ++j) {
+			for (i = 0; i < width; ++i) {
+				g_[i] = (OutputType)(COMPV_MATH_ABS(gx[i]) + COMPV_MATH_ABS(gy[i]));
+				if (max < g_[i]) {
+					max = g_[i];
+				}
+			}
+			g_ += stride;
+			gx += stride;
+			gy += stride;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	// ret = clip(min, max, v*scale)
+	template <typename InputType, typename ScaleType, typename OutputType>
+	static COMPV_ERROR_CODE scaleAndClip(const InputType* in, const ScaleType scale, OutputType*& out, OutputType min, OutputType max, size_t width, size_t height, size_t stride)
+	{
+		COMPV_CHECK_EXP_RETURN(!in || !width || !height || stride < width || max < min, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		if (!out) {
+			out = (OutputType*)CompVMem::malloc(height * stride * sizeof(OutputType));
+			COMPV_CHECK_EXP_RETURN(!out, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		}
+
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+		OutputType* out_ = out;
+		size_t i, j;
+		for (j = 0; j < height; ++j) {
+			for (i = 0; i < width; ++i) {
+				out_[i] = (OutputType)COMPV_MATH_CLIP3(min, max, (in[i] * scale));
+			}
+			out_ += stride;
+			in += stride;
+		}
+		return COMPV_ERROR_CODE_S_OK;
 	}
 
 	template <typename T>

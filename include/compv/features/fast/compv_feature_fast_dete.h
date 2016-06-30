@@ -31,22 +31,22 @@ struct RangeFAST {
     const compv_scalar_t(*pixels16)[16];
 };
 
-class CompVFeatureDeteFAST : public CompVFeatureDete
+class CompVCornerDeteFAST : public CompVCornerDete
 {
 protected:
-    CompVFeatureDeteFAST();
+    CompVCornerDeteFAST();
 public:
-    virtual ~CompVFeatureDeteFAST();
+    virtual ~CompVCornerDeteFAST();
     virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVFeatureDeteFAST";
+        return "CompVCornerDeteFAST";
     };
 
     // override CompVSettable::set
     virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
-    // override CompVFeatureDete::process
+    // override CompVCornerDete::process
     virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtr<CompVBoxInterestPoint* >& interestPoints);
 
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVFeatureDete* >* fast);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVCornerDete* >* fast);
 
 private:
     int32_t m_iThreshold;

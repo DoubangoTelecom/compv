@@ -12,15 +12,15 @@ using namespace compv;
 #define ORB_PYRAMID_SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
 #define ORB_LOOOP_COUNT				1
 #define ORB_DESC_MD5_FLOAT			"7a46dadf433e1e6d49f7fb60a6626064"
-#define ORB_DESC_MD5_FLOAT_MT		"7f4f847671fb369774120c5ad8aad334" // multithreaded (convolution create temporary memory)
-#define ORB_DESC_MD5_FXP			"7a46dadf433e1e6d49f7fb60a6626064"
+#define ORB_DESC_MD5_FLOAT_MT		"7f4f847671fb369774120c5ad8aad334" // multithreaded (convolution create temporary memory) - FIXME: set borders to zero
+#define ORB_DESC_MD5_FXP			"8b5f9ec67cb5accf848a65f82c6b6b61"
 #define ORB_DESC_MD5_FXP_MT			"ac6b661432e1bcd28cccd3e2096e91de"
 #define JPEG_IMG					"C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture (2000*1000 = 2times more bytes than 720p)
 
 COMPV_ERROR_CODE TestORB()
 {
-    CompVPtr<CompVFeatureDete* > dete; // feature detector
-    CompVPtr<CompVFeatureDesc* > desc; // feature descriptor
+    CompVPtr<CompVCornerDete* > dete; // feature detector
+    CompVPtr<CompVCornerDesc* > desc; // feature descriptor
     CompVPtr<CompVImage *> image;
     CompVPtr<CompVBoxInterestPoint* > interestPoints;
     CompVPtr<CompVArray<uint8_t>* > descriptions;
@@ -35,9 +35,9 @@ COMPV_ERROR_CODE TestORB()
 	COMPV_CHECK_CODE_RETURN(image->convert(COMPV_PIXEL_FORMAT_GRAYSCALE, &image));
 
     // Create the ORB feature detector
-	COMPV_CHECK_CODE_RETURN(CompVFeatureDete::newObj(COMPV_ORB_ID, &dete));
+	COMPV_CHECK_CODE_RETURN(CompVCornerDete::newObj(COMPV_ORB_ID, &dete));
     // Create the ORB feature descriptor
-	COMPV_CHECK_CODE_RETURN(CompVFeatureDesc::newObj(COMPV_ORB_ID, &desc));
+	COMPV_CHECK_CODE_RETURN(CompVCornerDesc::newObj(COMPV_ORB_ID, &desc));
 	COMPV_CHECK_CODE_RETURN(desc->attachDete(dete)); // attach detector to make sure we'll share context
 
     // Set the default values for the detector

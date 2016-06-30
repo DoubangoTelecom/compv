@@ -399,7 +399,7 @@ COMPV_ERROR_CODE CompVImage::setBuffer(CompVPtr<CompVBuffer*> & buffer, int32_t 
 COMPV_ERROR_CODE CompVImage::getBestStride(int32_t stride, int32_t *bestStride)
 {
     COMPV_CHECK_EXP_RETURN(bestStride == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    *bestStride = (int32_t)CompVMem::alignForward(stride, CompVMem::getBestAlignment());
+    *bestStride = (int32_t)CompVMem::alignForward(stride, COMPV_SIMD_ALIGNV_DEFAULT);
     return COMPV_ERROR_CODE_S_OK;
 }
 
