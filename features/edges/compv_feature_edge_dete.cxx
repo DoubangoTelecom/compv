@@ -11,16 +11,6 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-// https://en.wikipedia.org/wiki/Sobel_operator#Alternative_operators
-static const int16_t ScharrGx_vt[3] = { 3, 10, 3 };
-static const int16_t ScharrGx_hz[3] = { -1, 0, 1 };
-// https://en.wikipedia.org/wiki/Sobel_operator
-static const int16_t SobelGx_vt[3] = { 1, 2, 1 };
-static const int16_t SobelGx_hz[3] = { 1, 0, -1 };
-// https://en.wikipedia.org/wiki/Prewitt_operator
-static const int16_t PrewittGx_vt[3] = { 1, 1, 1 };
-static const int16_t PrewittGx_hz[3] = { -1, 0, 1 };
-
 CompVEdgeDeteBASE::CompVEdgeDeteBASE(int id, const int16_t* kernelPtrVt, const int16_t* kernelPtrHz, size_t kernelSize)
 	: CompVEdgeDete(id)
 	, m_pcKernelVt(kernelPtrVt)
@@ -55,7 +45,7 @@ COMPV_ERROR_CODE CompVEdgeDeteBASE::set(int id, const void* valuePtr, size_t val
 }
 
 // overrides CompVEdgeDete::process
-COMPV_ERROR_CODE CompVEdgeDeteBASE::process(const CompVPtr<CompVImage*>& image, CompVPtrArray(uint8_t)& egdes)
+COMPV_ERROR_CODE CompVEdgeDeteBASE::process(const CompVPtr<CompVImage*>& image, CompVPtrArray(uint8_t)& edges)
 {
 	COMPV_CHECK_EXP_RETURN(!image || image->getPixelFormat() != COMPV_PIXEL_FORMAT_GRAYSCALE, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // MT
@@ -79,11 +69,11 @@ COMPV_ERROR_CODE CompVEdgeDeteBASE::process(const CompVPtr<CompVImage*>& image, 
 	
 	// Create edges buffer
 	// edges must have same stride than m_pG (required by scaleAndClip)
-	COMPV_CHECK_CODE_RETURN(CompVArray<uint8_t>::newObj(&egdes, m_nImageHeight, m_nImageWidth, COMPV_SIMD_ALIGNV_DEFAULT, m_nImageStride));
+	COMPV_CHECK_CODE_RETURN(CompVArray<uint8_t>::newObj(&edges, m_nImageHeight, m_nImageWidth, COMPV_SIMD_ALIGNV_DEFAULT, m_nImageStride));
 
 	// scale (normalization)
 	float scale = 255.f / float(gmax);
-	uint8_t* edgesPtr = const_cast<uint8_t*>(egdes->ptr());
+	uint8_t* edgesPtr = const_cast<uint8_t*>(edges->ptr());
 	COMPV_CHECK_CODE_RETURN((CompVMathUtils::scaleAndClip<uint16_t, float, uint8_t>(m_pG, scale, edgesPtr, 0, 255, m_nImageWidth, m_nImageHeight, m_nImageStride)));
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -112,18 +102,18 @@ COMPV_ERROR_CODE CompVEdgeDeteBASE::newObj(CompVPtr<CompVEdgeDete* >* dete, int 
 	switch (id)
 	{
 	case COMPV_SOBEL_ID: 
-		kernelPtrVt_ = SobelGx_vt; 
-		kernelPtrHz_ = SobelGx_hz;
+		kernelPtrVt_ = CompVSobelGx_vt;
+		kernelPtrHz_ = CompVSobelGx_hz;
 		kernelSize_ = 3;
 		break;
 	case COMPV_SCHARR_ID:
-		kernelPtrVt_ = ScharrGx_vt;
-		kernelPtrHz_ = ScharrGx_hz;
+		kernelPtrVt_ = CompVScharrGx_vt;
+		kernelPtrHz_ = CompVScharrGx_hz;
 		kernelSize_ = 3;
 		break;
 	case COMPV_PREWITT_ID:
-		kernelPtrVt_ = PrewittGx_vt;
-		kernelPtrHz_ = PrewittGx_hz;
+		kernelPtrVt_ = CompVPrewittGx_vt;
+		kernelPtrHz_ = CompVPrewittGx_hz;
 		kernelSize_ = 3;
 		break;
 	default:

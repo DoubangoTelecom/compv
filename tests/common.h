@@ -131,6 +131,19 @@ static const std::string arrayMD5(const CompVPtrArray(T)& array)
     return "";
 }
 
+template <typename T>
+static COMPV_ERROR_CODE arrayToFile(const CompVPtrArray(T)& data, const char* filename = "./out.gray")
+{
+	FILE* file = fopen(filename, "wb+");
+	COMPV_CHECK_EXP_RETURN(!file, COMPV_ERROR_CODE_E_FILE_NOT_FOUND);
+	COMPV_DEBUG_INFO("Writing %s file... (cols=%d, rows=%d)", filename, data->cols(), data->rows());
+	for (size_t i = 0; i < data->rows(); ++i) {
+		fwrite(data->ptr(i), 1, data->rowInBytes(), file);
+	}
+	fclose(file);
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 template<typename T>
 static void matrixPrint(const CompVPtrArray(T)& M, const char* name)
 {

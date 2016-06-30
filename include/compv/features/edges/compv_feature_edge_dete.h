@@ -30,7 +30,7 @@ public:
 	// override CompVSettable::set
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
 	// override CompVEdgeDete::process
-	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtrArray(uint8_t)& egdes);
+	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtrArray(uint8_t)& edges);
 
 	static COMPV_ERROR_CODE newObjSobel(CompVPtr<CompVEdgeDete* >* dete);
 	static COMPV_ERROR_CODE newObjScharr(CompVPtr<CompVEdgeDete* >* dete);

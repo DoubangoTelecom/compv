@@ -71,6 +71,16 @@ enum {
 	COMPV_PREWITT_ID,
 };
 
+// https://en.wikipedia.org/wiki/Sobel_operator#Alternative_operators
+static const int16_t CompVScharrGx_vt[3] = { 3, 10, 3 };
+static const int16_t CompVScharrGx_hz[3] = { -1, 0, 1 };
+// https://en.wikipedia.org/wiki/Sobel_operator
+static const int16_t CompVSobelGx_vt[3] = { 1, 2, 1 };
+static const int16_t CompVSobelGx_hz[3] = { 1, 0, -1 };
+// https://en.wikipedia.org/wiki/Prewitt_operator
+static const int16_t CompVPrewittGx_vt[3] = { 1, 1, 1 };
+static const int16_t CompVPrewittGx_hz[3] = { -1, 0, 1 };
+
 // Class: CompVFeature
 class COMPV_API CompVFeature : public CompVObj, public CompVSettable
 {
@@ -150,7 +160,7 @@ protected:
 	CompVEdgeDete(int id);
 public:
 	virtual ~CompVEdgeDete();
-	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtrArray(uint8_t)& egdes) = 0;
+	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtrArray(uint8_t)& edges) = 0;
 	static COMPV_ERROR_CODE newObj(int deteId, CompVPtr<CompVEdgeDete* >* dete);
 };
 

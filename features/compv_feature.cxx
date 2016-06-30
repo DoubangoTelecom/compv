@@ -9,6 +9,7 @@
 #include "compv/features/orb/compv_feature_orb_dete.h"
 #include "compv/features/orb/compv_feature_orb_desc.h"
 #include "compv/features/edges/compv_feature_edge_dete.h"
+#include "compv/features/edges/compv_feature_canny_dete.h"
 #include "compv/compv_engine.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -29,6 +30,13 @@ static const CompVFeatureFactory orbFactory = {
     CompVCornerDeteORB::newObj,
     CompVCornerDescORB::newObj,
 	NULL,
+};
+static const CompVFeatureFactory cannyFactory = {
+	COMPV_CANNY_ID,
+	"Canny edge detector",
+	NULL,
+	NULL,
+	CompVEdgeDeteCanny::newObj,
 };
 static const CompVFeatureFactory sobelFactory = {
 	COMPV_SOBEL_ID,
@@ -76,6 +84,8 @@ COMPV_ERROR_CODE CompVFeature::init()
     COMPV_CHECK_CODE_RETURN(addFactory(&fastFactory));
     // ORB(ORiented BRIEF)
     COMPV_CHECK_CODE_RETURN(addFactory(&orbFactory));
+	// Canny edge detector
+	COMPV_CHECK_CODE_RETURN(addFactory(&cannyFactory));
 	// Sobel edge detector
 	COMPV_CHECK_CODE_RETURN(addFactory(&sobelFactory));
 	// Scharr edge detector
