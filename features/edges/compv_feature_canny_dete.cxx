@@ -14,10 +14,10 @@
 COMPV_NAMESPACE_BEGIN()
 
 static const int COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIZE = 5;
-static const float COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIGMA = 1.4f;
+static const float COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIGMA = 0.001f; // FIXME: 1.4
 
-#define COMPV_FEATURE_DETE_CANNY_TMIN 15
-#define COMPV_FEATURE_DETE_CANNY_TMAX 65
+#define COMPV_FEATURE_DETE_CANNY_TMIN 10
+#define COMPV_FEATURE_DETE_CANNY_TMAX 80
 
 CompVEdgeDeteCanny::CompVEdgeDeteCanny()
 	: CompVEdgeDete(COMPV_CANNY_ID)
@@ -75,6 +75,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 	// edges must have same stride than m_pG (required by scaleAndClip) and image (required by gaussian blur)
 	COMPV_CHECK_CODE_RETURN(CompVArray<uint8_t>::newObj(&edges, m_nImageHeight, m_nImageWidth, COMPV_SIMD_ALIGNV_DEFAULT, m_nImageStride));
 
+	// FIXME: combine gaussianblur with sobel/scharr to one op
 	// Gaussian Blurr
 	if (m_gblurKernFxp) {
 		// Fixed-point
@@ -151,6 +152,77 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::direction()
 	const int16_t* gy = m_pGy;
 	for (size_t j = 0; j < m_nImageHeight; ++j) {
 		for (size_t i = 0; i < m_nImageWidth; ++i) {
+#if 1
+			if (gx[i] == gy[i] && gx[i] == 0) {
+				dirs[i] = 0;
+			}
+			else if (gx[i] > 0 && gy[i] == 0) {
+				dirs[i] = 1;
+			}
+			else if (gx[i] > 0 && gy[i] > 0 && gx[i] == gy[i]) {
+				dirs[i] = 3;
+			}
+			else if (gx[i] == 0 && gy[i] > 0) {
+				dirs[i] = 5;
+			}
+			else if (gx[i] < 0 && gy[i] > 0 && -gx[i] == gy[i]) {
+				dirs[i] = 7;
+			}
+			else if (gx[i] < 0 && gy[i] == 0) {
+				dirs[i] = 9;
+			}
+			else if (gx[i] < 0 && gy[i] < 0 && gx[i] == gy[i]) {
+				dirs[i] = 11;
+			}
+			else if (gx[i] == 0 && gy[i] < 0) {
+				dirs[i] = 13;
+			}
+			else if (gx[i] > 0 && gy[i] < 0 && gx[i] == -gy[i]) {
+				dirs[i] = 15;
+			}
+			else {
+				float angle = atan2f(float(gy[i]), float(gx[i]));
+				angle = fmodf(angle, 360.f);
+				angle = COMPV_MATH_RADIAN_TO_DEGREE_FLOAT(angle);
+				if (angle < 0)
+					angle += 360.0;
+				if (angle < 45) {
+					// dirs[i] = 2;
+					dirs[i] = angle < (45 - 22.5) ? 1 : 3;
+				}
+				else if (angle < 90) {
+					//dirs[i] = 4;
+					dirs[i] = angle < (90 - 22.5) ? 3 : 5;
+				}
+				else if (angle < 135) {
+					//dirs[i] = 6;
+					dirs[i] = angle < (135 - 22.5) ? 5 : 7;
+				}
+				else if (angle < 180) {
+					//dirs[i] = 8;
+					dirs[i] = angle < (180 - 22.5) ? 7 : 9;
+				}
+				else if (angle < 225) {
+					//dirs[i] = 10;
+					dirs[i] = angle < (225 - 22.5) ? 9 : 11;
+				}
+				else if (angle < 270) {
+					//dirs[i] = 12;
+					dirs[i] = angle < (270 - 22.5) ? 11 : 13;
+				}
+				else if (angle < 315) {
+					//dirs[i] = 14;
+					dirs[i] = angle < (315 - 22.5) ? 13 : 15;
+				}
+				else if (angle < 360) {
+					//dirs[i] = 16;
+					dirs[i] = angle < (360 - 22.5) ? 15 : 1;
+				}
+				else {
+					COMPV_DEBUG_ERROR("Not expected, gx=%d, gy=%d", gx[i], gy[i]);
+				}
+			}
+#else
 			if (gx[i] == gy[i] && gx[i] == 0) {
 				dirs[i] = 0;
 			}
@@ -205,7 +277,9 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::direction()
 			else {
 				COMPV_DEBUG_ERROR("Not expected, gx=%d, gy=%d", gx[i], gy[i]);
 			}
+#endif
 		}
+
 		gx += m_nImageStride;
 		gy += m_nImageStride;
 		dirs += m_nImageWidth;
@@ -236,29 +310,73 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			currGrad = m_pG[idxStridefull];
 			currDir = m_pDirs[idxStrideless];
 #if 0
-			if (m_pG[idxStridefull - 1] >= currGrad && m_pDirs[idxStrideless - 1] == currDir) { // left
-				m_pNms[idxStrideless] = 1;
-			}
-			else if (m_pG[idxStridefull + 1] >= currGrad && m_pDirs[idxStrideless + 1] == currDir) { // right
-				m_pNms[idxStrideless] = 1;
-			}
-			else if (m_pG[idxStridefull - m_nImageStride - 1] >= currGrad && m_pDirs[idxStrideless - m_nImageWidth - 1] == currDir) { // left-top
-				m_pNms[idxStrideless] = 1;
-			}
-			else if (m_pG[idxStridefull - m_nImageStride] >= currGrad && m_pDirs[idxStrideless - m_nImageWidth] == currDir) { // top
-				m_pNms[idxStrideless] = 1;
-			}
-			else if (m_pG[idxStridefull - m_nImageStride + 1] >= currGrad && m_pDirs[idxStrideless - m_nImageWidth + 1] == currDir) { // right-top
-				m_pNms[idxStrideless] = 1;
-			}
-			else if (m_pG[idxStridefull + m_nImageStride - 1] >= currGrad && m_pDirs[idxStrideless + m_nImageWidth - 1] == currDir) { // left-bottom
-				m_pNms[idxStrideless] = 1;
-			}
-			else if (m_pG[idxStridefull + m_nImageStride] >= currGrad && m_pDirs[idxStrideless + m_nImageWidth] == currDir) { // bottom
-				m_pNms[idxStrideless] = 1;
-			}
-			else if (m_pG[idxStridefull + m_nImageStride + 1] >= currGrad && m_pDirs[idxStrideless + m_nImageWidth + 1] == currDir) { // right-bottom
-				m_pNms[idxStrideless] = 1;
+			// FIXME: interpolation
+			switch (currDir) {
+			case 0:
+				// no-direction
+				break;
+			case 1: case 9:
+				// left, right
+				if (m_pG[idxStridefull - 1] >= currGrad || m_pG[idxStridefull + 1] >= currGrad) {
+					m_pNms[idxStrideless] = 1;
+				}
+				break;
+			case 2: case 10:
+				// right, top-right, left, bottom-left
+				//if ((m_pG[idxStridefull + 1] + m_pG[idxStridefull - m_nImageStride + 1])>>1 >= currGrad || (m_pG[idxStridefull - 1] + m_pG[idxStridefull + m_nImageStride - 1])>>1 >= currGrad) {
+				//	m_pNms[idxStrideless] = 1;
+				//}
+				grad0 = (uint16_t)(m_pG[idxStridefull + 1] * 0.7f + m_pG[idxStridefull - m_nImageStride + 1] * 0.3f);
+				grad1 = (uint16_t)(m_pG[idxStridefull - 1] * 0.7f + m_pG[idxStridefull + m_nImageStride - 1] * 0.3f);
+				if (grad0 >= currGrad || grad1 >= currGrad) {
+					//m_pNms[idxStrideless] = 1;
+				}
+				break;
+			case 3: case 11:
+				// top-right, bottom-left
+				if (m_pG[idxStridefull - m_nImageStride + 1] >= currGrad || m_pG[idxStridefull + m_nImageStride - 1] >= currGrad) {
+					m_pNms[idxStrideless] = 1;
+				}
+				break;
+			case 4: case 12:
+				// top-right, top, bottom, bottom-left
+				//if ((m_pG[idxStridefull - m_nImageStride + 1] + m_pG[idxStridefull - m_nImageStride])>>1 >= currGrad || (m_pG[idxStridefull + m_nImageStride] + m_pG[idxStridefull + m_nImageStride - 1])>>1 >= currGrad) {
+					//m_pNms[idxStrideless] = 1;
+				//}
+				grad0 = (uint16_t)(m_pG[idxStridefull - m_nImageStride] * 0.5f + m_pG[idxStridefull - m_nImageStride + 1] * 0.5f);
+				grad1 = (uint16_t)(m_pG[idxStridefull + m_nImageStride] * 0.5f + m_pG[idxStridefull + m_nImageStride - 1] * 0.5f);
+				if (grad0 >= currGrad || grad1 >= currGrad) {
+					//m_pNms[idxStrideless] = 1;
+				}
+				break;
+			case 5: case 13:
+				// top, bottom
+				if (m_pG[idxStridefull - m_nImageStride] >= currGrad || m_pG[idxStridefull + m_nImageStride] >= currGrad) {
+					m_pNms[idxStrideless] = 1;
+				}
+				break;
+			case 6: case 14:
+				// top, top-left, bottom, bottom-right
+				if ((m_pG[idxStridefull - m_nImageStride] + m_pG[idxStridefull - m_nImageStride - 1])>>1 >= currGrad || (m_pG[idxStridefull + m_nImageStride] + m_pG[idxStridefull + m_nImageStride + 1])>>1 >= currGrad) {
+					//m_pNms[idxStrideless] = 1;
+				}
+				break;
+			case 7: case 15:
+				// top-left, bottom-right
+				if (m_pG[idxStridefull - m_nImageStride - 1] >= currGrad || m_pG[idxStridefull + m_nImageStride + 1] >= currGrad) {
+					m_pNms[idxStrideless] = 1;
+				}
+				break;
+			case 8: case 16:
+				// top-left, left, right, bottom-right
+				if ((m_pG[idxStridefull - m_nImageStride - 1] + m_pG[idxStridefull - 1])>>1 >= currGrad || (m_pG[idxStridefull + 1] + m_pG[idxStridefull + m_nImageStride + 1])>>1 >= currGrad) {
+					//m_pNms[idxStrideless] = 1;
+				}
+				break;
+
+			default:
+				COMPV_DEBUG_ERROR("Not expected. Dir=%u", currDir);
+				break;
 			}
 #elif 1
 			switch (currDir) {
@@ -269,14 +387,18 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			case 2: case 10:
 				// left, right
 				if (m_pG[idxStridefull - 1] >= currGrad || m_pG[idxStridefull + 1] >= currGrad) {
-					m_pNms[idxStrideless] = 1;
+					if (currDir == 1 || currDir == 9) {
+						m_pNms[idxStrideless] = 1;
+					}
 				}
 				break;
 			case 3: case 11:
 			case 4: case 12:
 				// top-right, bottom-left
 				if (m_pG[idxStridefull - m_nImageStride + 1] >= currGrad || m_pG[idxStridefull + m_nImageStride - 1] >= currGrad) {
-					m_pNms[idxStrideless] = 1;
+					if (currDir == 3 || currDir == 11) {
+						m_pNms[idxStrideless] = 1;
+					}
 				}
 				break;
 
@@ -284,7 +406,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			case 6: case 14:
 				// top, bottom
 				if (m_pG[idxStridefull - m_nImageStride] >= currGrad || m_pG[idxStridefull + m_nImageStride] >= currGrad) {
-					m_pNms[idxStrideless] = 1;
+					//m_pNms[idxStrideless] = 1;
 				}
 				break;
 
@@ -292,7 +414,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			case 8: case 16:
 				// top-left, bottom-right
 				if (m_pG[idxStridefull - m_nImageStride - 1] >= currGrad || m_pG[idxStridefull + m_nImageStride + 1] >= currGrad) {
-					m_pNms[idxStrideless] = 1;
+					//m_pNms[idxStrideless] = 1;
 				}
 				break;
 
@@ -367,7 +489,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 		for (size_t col = 1; col < edges->cols() - 1; ++col) {
 			idxStrideless = (row * m_nImageWidth) + col;
 			idxStridefull = (row * m_nImageStride) + col;
-			if (m_pNms[idxStrideless] || m_pG[idxStridefull] < COMPV_FEATURE_DETE_CANNY_TMIN) {
+			if (m_pNms[idxStrideless] /*|| m_pG[idxStridefull] < COMPV_FEATURE_DETE_CANNY_TMIN*/) {
 				m_pNms[idxStrideless] = 0; // reset for the next call
 				m_pG[idxStridefull] = 0;
 			}
@@ -391,7 +513,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges)
 
 	COMPV_CHECK_CODE_RETURN(edges->zero_all()); // FIXME
 
-#if 1
+#if 0
 	for (size_t row = 1; row < edges->rows() - 1; ++row) {
 		for (size_t col = 1; col < edges->cols() - 1; ++col) {
 			idxStridefull = (row * m_nImageStride) + col;
