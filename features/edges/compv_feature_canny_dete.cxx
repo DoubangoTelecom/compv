@@ -16,7 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 static const int COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIZE = 5;
 static const float COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIGMA = 0.001f; // FIXME: 1.4
 
-#define COMPV_FEATURE_DETE_CANNY_TMIN 10
+#define COMPV_FEATURE_DETE_CANNY_TMIN 40
 #define COMPV_FEATURE_DETE_CANNY_TMAX 80
 
 CompVEdgeDeteCanny::CompVEdgeDeteCanny()
@@ -387,18 +387,14 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			case 2: case 10:
 				// left, right
 				if (m_pG[idxStridefull - 1] >= currGrad || m_pG[idxStridefull + 1] >= currGrad) {
-					if (currDir == 1 || currDir == 9) {
-						m_pNms[idxStrideless] = 1;
-					}
+					m_pNms[idxStrideless] = 1;
 				}
 				break;
 			case 3: case 11:
 			case 4: case 12:
 				// top-right, bottom-left
 				if (m_pG[idxStridefull - m_nImageStride + 1] >= currGrad || m_pG[idxStridefull + m_nImageStride - 1] >= currGrad) {
-					if (currDir == 3 || currDir == 11) {
-						m_pNms[idxStrideless] = 1;
-					}
+					m_pNms[idxStrideless] = 1;
 				}
 				break;
 
@@ -406,7 +402,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			case 6: case 14:
 				// top, bottom
 				if (m_pG[idxStridefull - m_nImageStride] >= currGrad || m_pG[idxStridefull + m_nImageStride] >= currGrad) {
-					//m_pNms[idxStrideless] = 1;
+					m_pNms[idxStrideless] = 1;
 				}
 				break;
 
@@ -414,7 +410,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			case 8: case 16:
 				// top-left, bottom-right
 				if (m_pG[idxStridefull - m_nImageStride - 1] >= currGrad || m_pG[idxStridefull + m_nImageStride + 1] >= currGrad) {
-					//m_pNms[idxStrideless] = 1;
+					m_pNms[idxStrideless] = 1;
 				}
 				break;
 

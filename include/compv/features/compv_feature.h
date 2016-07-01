@@ -76,7 +76,7 @@ static const int16_t CompVScharrGx_vt[3] = { 3, 10, 3 };
 static const int16_t CompVScharrGx_hz[3] = { -1, 0, 1 };
 // https://en.wikipedia.org/wiki/Sobel_operator
 static const int16_t CompVSobelGx_vt[3] = { 1, 2, 1 };
-static const int16_t CompVSobelGx_hz[3] = { 1, 0, -1 };
+static const int16_t CompVSobelGx_hz[3] = { -1, 0, 1 };
 // https://en.wikipedia.org/wiki/Prewitt_operator
 static const int16_t CompVPrewittGx_vt[3] = { 1, 1, 1 };
 static const int16_t CompVPrewittGx_hz[3] = { -1, 0, 1 };
