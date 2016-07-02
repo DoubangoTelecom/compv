@@ -465,11 +465,8 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 				int x0, y0, x1, y1;
 				double angle_ = angle(m_pGx[idxStridefull], m_pGy[idxStridefull]);
 				angle_ = COMPV_MATH_RADIAN_TO_DEGREE(angle_);
-				if (angle_ == 0.f) {
+				if (angle_ <= 0.5) {
 					// no angle
-					break;
-				}
-				else if (angle_ <= 22.5 || angle_ >= 360. + 22.5 ) {
 					x0 = 1, y0 = 0;
 				}
 				else if (angle_ >= 45. - 22.5 && angle_ <= 45. + 22.5) {
@@ -493,7 +490,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 				else if (angle_ >= 315. - 22.5 && angle_ <= 315. + 22.5) {
 					x0 = 1, y0 = -1;
 				}
-				else if (angle_ >= 360. - 22.5) {
+				else if (angle_ >= 360. - 22.5 || angle_ <= 22.5) { // else
 					x0 = 1, y0 = 0;
 				}
 				else {
@@ -520,6 +517,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 				}
 				if (g0 > currGrad || g1 > currGrad) {
 					m_pNms[idxStrideless] = 1;
+					//m_pG[idxStridefull] = 0;
 				}
 				break;
 			}
