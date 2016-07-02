@@ -497,18 +497,10 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 				x1 += (int)col;
 				y0 += (int)row;
 				y1 += (int)row;
-
-				x0 = COMPV_MATH_CLIP3(0, (int)m_nImageWidth - 1, x0);
-				x1 = COMPV_MATH_CLIP3(0, (int)m_nImageWidth - 1, x1);
-				y0 = COMPV_MATH_CLIP3(0, (int)m_nImageHeight - 1, y0);
-				y1 = COMPV_MATH_CLIP3(0, (int)m_nImageHeight - 1, y1);
 				
-				if (x0 >= 0. && x0 < m_nImageWidth && y0 >= 0. && y0 < m_nImageHeight) {
-					g0 = m_pG[(x0 + (y0 * m_nImageStride))];
-				}
-				if (x1 >= 0. && x1 < m_nImageWidth && y1 >= 0. && y1 < m_nImageHeight) {
-					g1 = m_pG[(x1 + (y1 * m_nImageStride))];
-				}
+				g0 = m_pG[(x0 + (y0 * m_nImageStride))];				
+				g1 = m_pG[(x1 + (y1 * m_nImageStride))];
+				
 				if (g0 > currGrad || g1 > currGrad) {
 					m_pNms[idxStrideless] = 1;
 					//m_pG[idxStridefull] = 0;
