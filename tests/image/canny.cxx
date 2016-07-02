@@ -2,7 +2,8 @@
 
 #include "../common.h"
 
-#define CANNY_JPEG_IMG		"C:/Projects/GitHub/compv/tests/canny.jpg" //C:/Projects/GitHub/compv/tests/Bikesgray.jpg" // "C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
+//#define CANNY_JPEG_IMG		"C:/Projects/GitHub/compv/tests/canny.jpg" //C:/Projects/GitHub/compv/tests/Bikesgray.jpg" // "C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
+#define CANNY_JPEG_IMG		"C:/Projects/GitHub/compv/tests/line_hz.jpg"
 #define CANNY_MD5			"08739c6f92a579f08cc7b417ec20e243"
 #define CANNY_LOOP_COUNT	1
 

@@ -14,10 +14,10 @@
 COMPV_NAMESPACE_BEGIN()
 
 static const int COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIZE = 5;
-static const float COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIGMA = 0.001f; // FIXME: 1.4
+static const float COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIGMA = 1.4f; // FIXME: 1.4
 
-#define COMPV_FEATURE_DETE_CANNY_TMIN 40
-#define COMPV_FEATURE_DETE_CANNY_TMAX 80
+#define COMPV_FEATURE_DETE_CANNY_TMIN 90
+#define COMPV_FEATURE_DETE_CANNY_TMAX 170
 
 CompVEdgeDeteCanny::CompVEdgeDeteCanny()
 	: CompVEdgeDete(COMPV_CANNY_ID)
@@ -70,13 +70,14 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 		m_nImageHeight = static_cast<size_t>(image->getHeight());
 		m_nImageStride = static_cast<size_t>(image->getStride());
 	}
-	
+
 	// Create edges buffer
 	// edges must have same stride than m_pG (required by scaleAndClip) and image (required by gaussian blur)
 	COMPV_CHECK_CODE_RETURN(CompVArray<uint8_t>::newObj(&edges, m_nImageHeight, m_nImageWidth, COMPV_SIMD_ALIGNV_DEFAULT, m_nImageStride));
 
-	// FIXME: combine gaussianblur with sobel/scharr to one op
+	// FIXME(dmi): combine gaussianblur with sobel/scharr to one op
 	// Gaussian Blurr
+#if 0
 	if (m_gblurKernFxp) {
 		// Fixed-point
 		COMPV_CHECK_CODE_RETURN(m_gblur->convlt1_fxp((uint8_t*)image->getDataPtr(), (int)m_nImageWidth, (int)m_nImageStride, (int)m_nImageHeight, m_gblurKernFxp->ptr(), m_gblurKernFxp->ptr(), COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIZE, (uint8_t*)edges->ptr()));
@@ -85,22 +86,27 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 		// Floating-point
 		COMPV_CHECK_CODE_RETURN(m_gblur->convlt1((uint8_t*)image->getDataPtr(), (int)m_nImageWidth, (int)m_nImageStride, (int)m_nImageHeight, m_gblurKernFloat->ptr(), m_gblurKernFloat->ptr(), COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIZE, (uint8_t*)edges->ptr()));
 	}
+#endif
 
-	// FIXME: use Scharr instead of sobel
+	// FIXME(dmi): use Scharr instead of sobel
+	// FIXME(dmi): restore gaussian blur
 	// Convolution
-	COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>((const uint8_t*)edges->ptr(), m_nImageWidth, m_nImageStride, m_nImageHeight, &CompVSobelGx_vt[0], &CompVSobelGx_hz[0], 3, m_pGx)));
-	COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>((const uint8_t*)edges->ptr(), m_nImageWidth, m_nImageStride, m_nImageHeight, &CompVSobelGx_hz[0], &CompVSobelGx_vt[0], 3, m_pGy)));
+	COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>((const uint8_t*)image->getDataPtr(), m_nImageWidth, m_nImageStride, m_nImageHeight, &CompVSobelGx_vt[0], &CompVSobelGx_hz[0], 3, m_pGx)));
+	COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>((const uint8_t*)image->getDataPtr(), m_nImageWidth, m_nImageStride, m_nImageHeight, &CompVSobelGx_hz[0], &CompVSobelGx_vt[0], 3, m_pGy)));
 
 	// Compute gradiant using L1 distance
 	// FIXME: gmax not needed
 	uint16_t gmax = 1;
 	COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, gmax, m_nImageWidth, m_nImageHeight, m_nImageStride)));
 
+#if 0
 	// scale (normalization)
-	//float scale = 255.f / float(gmax);
-	//uint8_t* edgesPtr = const_cast<uint8_t*>(edges->ptr());
-	//COMPV_CHECK_CODE_RETURN((CompVMathUtils::scaleAndClip<uint16_t, float, uint8_t>(m_pG, scale, edgesPtr, 0, 255, m_nImageWidth, m_nImageHeight, m_nImageStride)));
+	float scale = 255.f / float(gmax);
+	uint8_t* edgesPtr = const_cast<uint8_t*>(edges->ptr());
+	COMPV_CHECK_CODE_RETURN((CompVMathUtils::scaleAndClip<uint16_t, float, uint8_t>(m_pG, scale, edgesPtr, 0, 255, m_nImageWidth, m_nImageHeight, m_nImageStride)));
+#endif
 
+#if 1
 	// Directions
 	COMPV_CHECK_CODE_RETURN(direction());
 
@@ -109,6 +115,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 
 	// Hysteresis
 	COMPV_CHECK_CODE_RETURN(hysteresis(edges));
+#endif
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -152,7 +159,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::direction()
 	const int16_t* gy = m_pGy;
 	for (size_t j = 0; j < m_nImageHeight; ++j) {
 		for (size_t i = 0; i < m_nImageWidth; ++i) {
-#if 1
+#if 0
 			if (gx[i] == gy[i] && gx[i] == 0) {
 				dirs[i] = 0;
 			}
@@ -186,37 +193,37 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::direction()
 				angle = COMPV_MATH_RADIAN_TO_DEGREE_FLOAT(angle);
 				if (angle < 0)
 					angle += 360.0;
-				if (angle < 45) {
+				if (angle <= 45) {
 					// dirs[i] = 2;
-					dirs[i] = angle < (45 - 22.5) ? 1 : 3;
+					dirs[i] = angle <= (45 - 22.5) ? 1 : 3;
 				}
-				else if (angle < 90) {
+				else if (angle <= 90) {
 					//dirs[i] = 4;
-					dirs[i] = angle < (90 - 22.5) ? 3 : 5;
+					dirs[i] = angle <= (90 - 22.5) ? 3 : 5;
 				}
-				else if (angle < 135) {
+				else if (angle <= 135) {
 					//dirs[i] = 6;
-					dirs[i] = angle < (135 - 22.5) ? 5 : 7;
+					dirs[i] = angle <= (135 - 22.5) ? 5 : 7;
 				}
-				else if (angle < 180) {
+				else if (angle <= 180) {
 					//dirs[i] = 8;
-					dirs[i] = angle < (180 - 22.5) ? 7 : 9;
+					dirs[i] = angle <= (180 - 22.5) ? 7 : 9;
 				}
-				else if (angle < 225) {
+				else if (angle <= 225) {
 					//dirs[i] = 10;
-					dirs[i] = angle < (225 - 22.5) ? 9 : 11;
+					dirs[i] = angle <= (225 - 22.5) ? 9 : 11;
 				}
-				else if (angle < 270) {
+				else if (angle <= 270) {
 					//dirs[i] = 12;
-					dirs[i] = angle < (270 - 22.5) ? 11 : 13;
+					dirs[i] = angle <= (270 - 22.5) ? 11 : 13;
 				}
-				else if (angle < 315) {
+				else if (angle <= 315) {
 					//dirs[i] = 14;
-					dirs[i] = angle < (315 - 22.5) ? 13 : 15;
+					dirs[i] = angle <= (315 - 22.5) ? 13 : 15;
 				}
-				else if (angle < 360) {
+				else if (angle <= 360) {
 					//dirs[i] = 16;
-					dirs[i] = angle < (360 - 22.5) ? 15 : 1;
+					dirs[i] = angle <= (360 - 22.5) ? 15 : 1;
 				}
 				else {
 					COMPV_DEBUG_ERROR("Not expected, gx=%d, gy=%d", gx[i], gy[i]);
@@ -235,7 +242,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::direction()
 			else if (gx[i] > 0 && gy[i] > 0 && gx[i] == gy[i]) {
 				dirs[i] = 3;
 			}
-			else if (gx[i] > 0 && gy[i] > 0, gx[i] < gy[i]) {
+			else if (gx[i] > 0 && gy[i] > 0 && gx[i] < gy[i]) {
 				dirs[i] = 4;
 			}
 			else if (gx[i] == 0 && gy[i] > 0) {
@@ -288,6 +295,77 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::direction()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// FIXME(dmi)
+static double angle(int16_t gx, int16_t gy)
+{
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+	if (gy == 0) {
+		if (gx >= 0) {
+			return 0.;
+		}
+		else {
+			return COMPV_MATH_PI;
+		}
+	}
+
+	float angle = atan2f(float(gy), float(gx));
+	angle = fmodf(angle, kfMathTrigPiTimes2);
+	if (angle < 0)
+		angle += kfMathTrigPiTimes2;
+	return angle;
+}
+
+// FIXME(dmi)
+static void interp(int16_t gx, int16_t gy, int16_t gx0, int16_t gy0, int16_t gx1, int16_t gy1, uint16_t &g)
+{
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+#if 0
+	uint16_t diffx0 = abs(abs(gx0) - abs(gx)) + 1;
+	uint16_t diffx1 = abs(abs(gx1) - abs(gx)) + 1;
+	uint16_t diffx = diffx0 + diffx1;
+	float scalex0 = 1.f - (diffx0 / (float)diffx);
+	float scalex1 = 1.f - scalex0;
+	
+	uint16_t diffy0 = abs(abs(gy0) - abs(gy)) + 1;
+	uint16_t diffy1 = abs(abs(gy1) - abs(gy)) + 1;
+	uint16_t diffy = diffy0 + diffy1;
+	float scaley0 = 1.f - (diffy0 / (float)diffy);
+	float scaley1 = 1.f - scaley0;
+	g = (uint16_t)round((scalex0 * abs(gx0))
+		+ (scalex1 * abs(gx1))
+		+ (scaley0 * abs(gy0))
+		+ (scaley1 * abs(gy1)));
+#elif 1
+	uint16_t diffx0 = ((gx0 - gx) * (gx0 - gx)) + 1;
+	uint16_t diffx1 = ((gx1 - gx) * (gx1 - gx)) + 1;
+	uint16_t diffx = diffx0 + diffx1;
+	float scalex0 = 1.f - (diffx0 / (float)diffx);
+	float scalex1 = 1.f - scalex0;
+
+	uint16_t diffy0 = ((gy0 - gy) * (gy0 - gy)) + 1;
+	uint16_t diffy1 = ((gy1 - gy) * (gy1 - gy)) + 1;
+	uint16_t diffy = diffy0 + diffy1;
+	float scaley0 = 1.f - (diffy0 / (float)diffy);
+	float scaley1 = 1.f - scaley0;
+	g = (uint16_t)round((scalex0 * abs(gx0))
+		+ (scalex1 * abs(gx1))
+		+ (scaley0 * abs(gy0))
+		+ (scaley1 * abs(gy1)));
+#else
+	int diffx0 = ((gx0 - gx) * (gx0 - gx));
+	int diffy0 = ((gy0 - gy) * (gy0 - gy));
+	int diffx1 = ((gx1 - gx) * (gx1 - gx));
+	int diffy1 = ((gy1 - gy) * (gy1 - gy));
+	float diff0 = sqrtf(float(diffx0) + diffy0) + 1.f;
+	float diff1 = sqrtf(float(diffx1) + diffy1) + 1.f;
+	float diff = (diff0 + diff1);
+	float scalex0 = 1.f - (diff0 / diff);
+	float scalex1 = 1.f - scalex0;
+	float gf = ((abs(gx0) + abs(gy0)) * scalex0) + ((abs(gx1) + abs(gy1)) * scalex1); // g0*s0 + g1*s1
+	g = COMPV_MATH_ROUNDFU_2_INT(gf, uint16_t);
+#endif
+}
+
 // NonMaximaSuppression
 COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 {
@@ -301,7 +379,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 	uint8_t currDir;
 	uint16_t currGrad;
 	size_t idxStrideless, idxStridefull;
-	
+
 	// mark points to supp
 	for (size_t row = 1; row < edges->rows() - 1; ++row) {
 		for (size_t col = 1; col < edges->cols() - 1; ++col) {
@@ -309,6 +387,10 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			idxStridefull = (row * m_nImageStride) + col;
 			currGrad = m_pG[idxStridefull];
 			currDir = m_pDirs[idxStrideless];
+
+			if (col == 204 && row == 154) {
+				int kaka=0;
+			}
 #if 0
 			// FIXME: interpolation
 			switch (currDir) {
@@ -341,7 +423,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			case 4: case 12:
 				// top-right, top, bottom, bottom-left
 				//if ((m_pG[idxStridefull - m_nImageStride + 1] + m_pG[idxStridefull - m_nImageStride])>>1 >= currGrad || (m_pG[idxStridefull + m_nImageStride] + m_pG[idxStridefull + m_nImageStride - 1])>>1 >= currGrad) {
-					//m_pNms[idxStrideless] = 1;
+				//m_pNms[idxStrideless] = 1;
 				//}
 				grad0 = (uint16_t)(m_pG[idxStridefull - m_nImageStride] * 0.5f + m_pG[idxStridefull - m_nImageStride + 1] * 0.5f);
 				grad1 = (uint16_t)(m_pG[idxStridefull + m_nImageStride] * 0.5f + m_pG[idxStridefull + m_nImageStride - 1] * 0.5f);
@@ -378,47 +460,164 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 				COMPV_DEBUG_ERROR("Not expected. Dir=%u", currDir);
 				break;
 			}
-#elif 1
+#elif 0
 			switch (currDir) {
 			case 0:
 				// no-direction
 				break;
 			case 1: case 9:
-			case 2: case 10:
+				//case 2: case 10:
 				// left, right
-				if (m_pG[idxStridefull - 1] >= currGrad || m_pG[idxStridefull + 1] >= currGrad) {
-					m_pNms[idxStrideless] = 1;
-				}
+				//if (m_pG[idxStridefull - 1] >= currGrad || m_pG[idxStridefull + 1] >= currGrad) {
+				//m_pNms[idxStrideless] = 1;
+				//m_pG[idxStridefull] = 0;
+				//}
 				break;
 			case 3: case 11:
-			case 4: case 12:
+				//case 4: case 12:
 				// top-right, bottom-left
-				if (m_pG[idxStridefull - m_nImageStride + 1] >= currGrad || m_pG[idxStridefull + m_nImageStride - 1] >= currGrad) {
-					m_pNms[idxStrideless] = 1;
-				}
+				//if (m_pG[idxStridefull - m_nImageStride + 1] >= currGrad || m_pG[idxStridefull + m_nImageStride - 1] >= currGrad) {
+				//m_pNms[idxStrideless] = 1;
+				//m_pG[idxStridefull] = 0;
+				//}
 				break;
 
 			case 5: case 13:
-			case 6: case 14:
+				//case 6: case 14:
 				// top, bottom
 				if (m_pG[idxStridefull - m_nImageStride] >= currGrad || m_pG[idxStridefull + m_nImageStride] >= currGrad) {
-					m_pNms[idxStrideless] = 1;
+					//m_pNms[idxStrideless] = 1;
+					m_pG[idxStridefull] = 0;
 				}
 				break;
 
 			case 7: case 15:
-			case 8: case 16:
+				//case 8: case 16:
 				// top-left, bottom-right
-				if (m_pG[idxStridefull - m_nImageStride - 1] >= currGrad || m_pG[idxStridefull + m_nImageStride + 1] >= currGrad) {
-					m_pNms[idxStrideless] = 1;
-				}
+				//if (m_pG[idxStridefull - m_nImageStride - 1] >= currGrad || m_pG[idxStridefull + m_nImageStride + 1] >= currGrad) {
+				//m_pNms[idxStrideless] = 1;
+				//m_pG[idxStridefull] = 0;
+				//}
 				break;
 
 			default:
 				COMPV_DEBUG_ERROR("Not expected. Dir=%u", currDir);
 				break;
 			}
-#else
+#elif 1
+			double angle_ = angle(m_pGx[idxStridefull], m_pGy[idxStridefull]);
+			double angleDeg = COMPV_MATH_RADIAN_TO_DEGREE(angle_);
+			static const int x = 1, y = 0;
+			double x0 = round(x * ::cos(angle_) - y * ::sin(angle_));
+			double y0 = round(x * ::sin(angle_) + y * ::cos(angle_));
+			angle_ += COMPV_MATH_PI;
+			double x1 = round(x * ::cos(angle_) - y * ::sin(angle_));
+			double y1 = round(x * ::sin(angle_) + y * ::cos(angle_));
+			uint16_t g0 = 0, g1 = 0;
+			x0 += (double)col;
+			x1 += (double)col;
+			y0 += (double)row;
+			y1 += (double)row;
+
+			if (x0 >= 0. && x0 < m_nImageWidth && y0 >= 0. && y0 < m_nImageHeight) {
+				g0 = m_pG[(int)round(x0 + (y0 * m_nImageStride))];
+			}
+			if (x1 >= 0. && x1 < m_nImageWidth && y1 >= 0. && y1 < m_nImageHeight) {
+				g1 = m_pG[(int)round(x1 + (y1 * m_nImageStride))];
+			}
+			if (g0 >= currGrad || g1 >= currGrad) {
+				m_pG[idxStridefull] = 0;
+			}
+#elif 1
+			switch (currDir) {
+			case 0:
+				// no-direction
+				//m_pG[idxStridefull] = 0; // FIXME(dmi): correct?
+				break;
+			case 1: case 9:
+				// left, right
+				if (m_pG[idxStridefull - 1] >= currGrad || m_pG[idxStridefull + 1] >= currGrad) {
+					//m_pG[idxStridefull] = 0;
+				}
+				break;
+			case 2: case 10:
+				// right, top-right, left, bottom-left
+				if (true) {
+					uint16_t g0, g1;
+					int16_t gx = m_pGx[idxStridefull];
+					int16_t gy = m_pGy[idxStridefull];
+					interp(gx, gy, m_pGx[idxStridefull + 1], m_pGy[idxStridefull + 1], m_pGx[idxStridefull - m_nImageStride + 1], m_pGy[idxStridefull - m_nImageStride + 1], g0);
+					interp(gx, gy, m_pGx[idxStridefull - 1], m_pGy[idxStridefull - 1], m_pGx[idxStridefull + m_nImageStride - 1], m_pGy[idxStridefull + m_nImageStride - 1], g1);
+					if (g0 >= currGrad || g1 >= currGrad) {
+						//m_pG[idxStridefull] = 0;
+					}
+				}
+				break;
+			case 3: case 11:
+				// top-right, bottom-left
+				if (m_pG[idxStridefull - m_nImageStride + 1] >= currGrad || m_pG[idxStridefull + m_nImageStride - 1] >= currGrad) {
+					//m_pG[idxStridefull] = 0;
+				}
+				break;
+			case 4: case 12:
+				// top-righ, top, bottom, bottom-left
+				if (true) {
+					uint16_t g0, g1;
+					int16_t gx = m_pGx[idxStridefull];
+					int16_t gy = m_pGy[idxStridefull];
+					interp(gx, gy, m_pGx[idxStridefull - m_nImageStride + 1], m_pGy[idxStridefull - m_nImageStride + 1], m_pGx[idxStridefull - m_nImageStride], m_pGy[idxStridefull - m_nImageStride], g0);
+					interp(gx, gy, m_pGx[idxStridefull + m_nImageStride], m_pGy[idxStridefull + m_nImageStride], m_pGx[idxStridefull + m_nImageStride - 1], m_pGy[idxStridefull + m_nImageStride - 1], g1);
+					if (g0 >= currGrad || g1 >= currGrad) {
+						//m_pG[idxStridefull] = 0;
+					}
+				}
+				break;
+			case 5: case 13:
+				// top, bottom
+				if (m_pG[idxStridefull - m_nImageStride] >= currGrad || m_pG[idxStridefull + m_nImageStride] >= currGrad) {
+					//m_pG[idxStridefull] = 0;
+				}
+				break;
+			case 6: case 14:
+				// top, top-left, bottom, bottom-right
+				if (true) {
+					uint16_t g0, g1;
+					int16_t gx = m_pGx[idxStridefull];
+					int16_t gy = m_pGy[idxStridefull];
+					interp(gx, gy, m_pGx[idxStridefull - m_nImageStride], m_pGy[idxStridefull - m_nImageStride], m_pGx[idxStridefull - m_nImageStride - 1], m_pGy[idxStridefull - m_nImageStride - 1], g0);
+					interp(gx, gy, m_pGx[idxStridefull + m_nImageStride], m_pGy[idxStridefull + m_nImageStride], m_pGx[idxStridefull + m_nImageStride + 1], m_pGy[idxStridefull + m_nImageStride + 1], g1);
+					if (g0 >= currGrad || g1 >= currGrad) {
+						//m_pG[idxStridefull] = 0;
+					}
+				}
+				break;
+			case 7: case 15:
+				// top-left, bottom-right
+				if (m_pG[idxStridefull - m_nImageStride - 1] >= currGrad || m_pG[idxStridefull + m_nImageStride + 1] >= currGrad) {
+					//m_pG[idxStridefull] = 0;
+				}
+				break;
+			case 8: case 16:
+				// top-left, left, right, bottom-right
+				if (true) {
+					/*uint16_t g0, g1;
+					int16_t gx = m_pGx[idxStridefull];
+					int16_t gy = m_pGy[idxStridefull];
+					interp(gx, gy, m_pGx[idxStridefull - m_nImageStride - 1], m_pGy[idxStridefull - m_nImageStride - 1], m_pGx[idxStridefull - 1], m_pGy[idxStridefull - 1], g0);
+					interp(gx, gy, m_pGx[idxStridefull + 1], m_pGy[idxStridefull + 1], m_pGx[idxStridefull + m_nImageStride + 1], m_pGy[idxStridefull + m_nImageStride + 1], g1);
+					if (g0 >= currGrad || g1 >= currGrad) {
+						m_pG[idxStridefull] = 0;
+					}*/
+				}
+				break;
+
+			default:
+				// FIXME(dmi):
+				COMPV_DEBUG_INFO_CODE_NOT_TESTED();
+				//COMPV_DEBUG_ERROR("Not expected. Dir=%u", currDir);
+				break;
+			}
+#elif 0
 			switch (currDir) {
 			case 0:
 				// no-direction
@@ -471,7 +670,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 					m_pNms[idxStrideless] = 1;
 				}
 				break;
-				
+
 			default:
 				COMPV_DEBUG_ERROR("Not expected. Dir=%u", currDir);
 				break;
@@ -485,7 +684,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 		for (size_t col = 1; col < edges->cols() - 1; ++col) {
 			idxStrideless = (row * m_nImageWidth) + col;
 			idxStridefull = (row * m_nImageStride) + col;
-			if (m_pNms[idxStrideless] /*|| m_pG[idxStridefull] < COMPV_FEATURE_DETE_CANNY_TMIN*/) {
+			if (m_pNms[idxStrideless] || m_pG[idxStridefull] < COMPV_FEATURE_DETE_CANNY_TMIN) {
 				m_pNms[idxStrideless] = 0; // reset for the next call
 				m_pG[idxStridefull] = 0;
 			}
@@ -505,16 +704,21 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges)
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // check for 255 not correct as could be there
 
-	size_t idxStridefull;
+	size_t idxStridefull, numEdges;
 
 	COMPV_CHECK_CODE_RETURN(edges->zero_all()); // FIXME
 
-#if 0
+#if 1
+	// FIXME(dmi): is count == 1 -> supp
 	for (size_t row = 1; row < edges->rows() - 1; ++row) {
 		for (size_t col = 1; col < edges->cols() - 1; ++col) {
 			idxStridefull = (row * m_nImageStride) + col;
 			if (m_pG[idxStridefull] >= COMPV_FEATURE_DETE_CANNY_TMAX) { // strong edge
-				connectEdge(edges, row, col);
+				numEdges = 0;
+				connectEdge(edges, row, col, numEdges);
+				if (numEdges < 2) { // FIXME: find better
+					*const_cast<uint8_t*>(edges->ptr(row, col)) = 0;
+				}
 			}
 		}
 	}
@@ -531,66 +735,72 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVEdgeDeteCanny::connectEdge(CompVPtrArray(uint8_t)& edges, size_t rowIdx, size_t colIdx)
+bool CompVEdgeDeteCanny::connectEdge(CompVPtrArray(uint8_t)& edges, size_t rowIdx, size_t colIdx, size_t& numEdges)
 {
 	// Private function -> do not check input parameters
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 
 	// at the border ?
 	if (!rowIdx || !colIdx) {
-		return COMPV_ERROR_CODE_S_OK;
+		return false;
 	}
 
 	// already strong edge ?
 	if (*edges->ptr(rowIdx, colIdx) == 255) {
-		return COMPV_ERROR_CODE_S_OK;
+		numEdges = SIZE_MAX;
+		//return true;
 	}
-	*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
 	
+	*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
+	++numEdges;
+
 	size_t idxStridefull;
 
-	for (size_t row = rowIdx; row < edges->rows() - 1; ++row) {
-		for (size_t col = colIdx; col < edges->cols() - 1; ++col) {
-			if (row == rowIdx && col == colIdx) continue; // FIXME
-			idxStridefull = (row * m_nImageStride) + col;
+	// FIXME: use grid
+
+	/*for (size_t row = rowIdx; row < edges->rows() - 1; ++row)*/ {
+		/*for (size_t col = colIdx; col < edges->cols() - 1; ++col)*/ {
+			// if (row == rowIdx && col == colIdx) continue; // FIXME
+			idxStridefull = (rowIdx * m_nImageStride) + colIdx;
+
 			if (m_pG[idxStridefull - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left
 				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
-				connectEdge(edges, row, col - 1);
+				connectEdge(edges, rowIdx, colIdx - 1, numEdges);
 			}
-			else if (m_pG[idxStridefull + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right
+			if (m_pG[idxStridefull + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right
 				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
-				connectEdge(edges, row, col + 1);
+				connectEdge(edges, rowIdx, colIdx + 1, numEdges);
 			}
-			else if (m_pG[idxStridefull - m_nImageStride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-top
+			if (m_pG[idxStridefull - m_nImageStride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-top
 				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
-				connectEdge(edges, row - 1, col - 1);
+				connectEdge(edges, rowIdx - 1, colIdx - 1, numEdges);
 			}
-			else if (m_pG[idxStridefull - m_nImageStride] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // top
+			if (m_pG[idxStridefull - m_nImageStride] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // top
 				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
-				connectEdge(edges, row - 1, col);
+				connectEdge(edges, rowIdx - 1, colIdx, numEdges);
 			}
-			else if (m_pG[idxStridefull - m_nImageStride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-top
+			if (m_pG[idxStridefull - m_nImageStride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-top
 				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
-				connectEdge(edges, row - 1, col + 1);
+				connectEdge(edges, rowIdx - 1, colIdx + 1, numEdges);
 			}
-			else if (m_pG[idxStridefull + m_nImageStride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-bottom
+			if (m_pG[idxStridefull + m_nImageStride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-bottom
 				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
-				connectEdge(edges, row + 1, col - 1);
+				connectEdge(edges, rowIdx + 1, colIdx - 1, numEdges);
 			}
-			else if (m_pG[idxStridefull + m_nImageStride] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // bottom
+			if (m_pG[idxStridefull + m_nImageStride] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // bottom
 				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
-				connectEdge(edges, row + 1, col);
+				connectEdge(edges, rowIdx + 1, colIdx, numEdges);
 			}
-			else if (m_pG[idxStridefull + m_nImageStride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-bottom
+			if (m_pG[idxStridefull + m_nImageStride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-bottom
 				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
-				connectEdge(edges, row + 1, col + 1);
+				connectEdge(edges, rowIdx + 1, colIdx + 1, numEdges);
 			}
 			else {
-				return COMPV_ERROR_CODE_S_OK;
+				return false;
 			}
 		}
 	}
-	return COMPV_ERROR_CODE_S_OK;
+	return false;
 }
 
 COMPV_ERROR_CODE CompVEdgeDeteCanny::newObj(CompVPtr<CompVEdgeDete* >* dete)
