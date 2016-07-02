@@ -159,6 +159,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::direction()
 	const int16_t* gy = m_pGy;
 	for (size_t j = 0; j < m_nImageHeight; ++j) {
 		for (size_t i = 0; i < m_nImageWidth; ++i) {
+
 #if 0
 			if (gx[i] == gy[i] && gx[i] == 0) {
 				dirs[i] = 0;
@@ -387,10 +388,6 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			idxStridefull = (row * m_nImageStride) + col;
 			currGrad = m_pG[idxStridefull];
 			currDir = m_pDirs[idxStrideless];
-
-			if (col == 204 && row == 154) {
-				int kaka=0;
-			}
 #if 0
 			// FIXME: interpolation
 			switch (currDir) {
@@ -460,53 +457,76 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 				COMPV_DEBUG_ERROR("Not expected. Dir=%u", currDir);
 				break;
 			}
-#elif 0
+#elif 1
 			switch (currDir) {
-			case 0:
-				// no-direction
-				break;
-			case 1: case 9:
-				//case 2: case 10:
-				// left, right
-				//if (m_pG[idxStridefull - 1] >= currGrad || m_pG[idxStridefull + 1] >= currGrad) {
-				//m_pNms[idxStrideless] = 1;
-				//m_pG[idxStridefull] = 0;
-				//}
-				break;
-			case 3: case 11:
-				//case 4: case 12:
-				// top-right, bottom-left
-				//if (m_pG[idxStridefull - m_nImageStride + 1] >= currGrad || m_pG[idxStridefull + m_nImageStride - 1] >= currGrad) {
-				//m_pNms[idxStrideless] = 1;
-				//m_pG[idxStridefull] = 0;
-				//}
-				break;
+			case 8: case 16:
+			default:
+				uint16_t g0 = 0, g1 = 0;
+				int x0, y0, x1, y1;
+				double angle_ = angle(m_pGx[idxStridefull], m_pGy[idxStridefull]);
+				angle_ = COMPV_MATH_RADIAN_TO_DEGREE(angle_);
+				if (angle_ == 0.f) {
+					// no angle
+					break;
+				}
+				else if (angle_ <= 22.5 || angle_ >= 360. + 22.5 ) {
+					x0 = 1, y0 = 0;
+				}
+				else if (angle_ >= 45. - 22.5 && angle_ <= 45. + 22.5) {
+					x0 = 1, y0 = 1;
+				}
+				else if (angle_ >= 90. - 22.5 && angle_ <= 90. + 22.5) {
+					x0 = 0, y0 = 1;
+				}
+				else if (angle_ >= 135. - 22.5 && angle_ <= 135. + 22.5) {
+					x0 = -1, y0 = 1;
+				}
+				else if (angle_ >= 180. - 22.5 && angle_ <= 180. + 22.5) {
+					x0 = -1, y0 = 0;
+				}
+				else if (angle_ >= 225. - 22.5 && angle_ <= 225. + 22.5) {
+					x0 = -1, y0 = -1;
+				}
+				else if (angle_ >= 270. - 22.5 && angle_ <= 270. + 22.5) {
+					x0 = 0, y0 = -1;
+				}
+				else if (angle_ >= 315. - 22.5 && angle_ <= 315. + 22.5) {
+					x0 = 1, y0 = -1;
+				}
+				else if (angle_ >= 360. - 22.5) {
+					x0 = 1, y0 = 0;
+				}
+				else {
+					COMPV_DEBUG_ERROR("Not expected");
+				}
+				x1 = -x0;
+				y1 = -y0;
 
-			case 5: case 13:
-				//case 6: case 14:
-				// top, bottom
-				if (m_pG[idxStridefull - m_nImageStride] >= currGrad || m_pG[idxStridefull + m_nImageStride] >= currGrad) {
-					//m_pNms[idxStrideless] = 1;
-					m_pG[idxStridefull] = 0;
+				x0 += (int)col;
+				x1 += (int)col;
+				y0 += (int)row;
+				y1 += (int)row;
+
+				x0 = COMPV_MATH_CLIP3(0, (int)m_nImageWidth - 1, x0);
+				x1 = COMPV_MATH_CLIP3(0, (int)m_nImageWidth - 1, x1);
+				y0 = COMPV_MATH_CLIP3(0, (int)m_nImageHeight - 1, y0);
+				y1 = COMPV_MATH_CLIP3(0, (int)m_nImageHeight - 1, y1);
+				
+				if (x0 >= 0. && x0 < m_nImageWidth && y0 >= 0. && y0 < m_nImageHeight) {
+					g0 = m_pG[(x0 + (y0 * m_nImageStride))];
+				}
+				if (x1 >= 0. && x1 < m_nImageWidth && y1 >= 0. && y1 < m_nImageHeight) {
+					g1 = m_pG[(x1 + (y1 * m_nImageStride))];
+				}
+				if (g0 > currGrad || g1 > currGrad) {
+					m_pNms[idxStrideless] = 1;
 				}
 				break;
-
-			case 7: case 15:
-				//case 8: case 16:
-				// top-left, bottom-right
-				//if (m_pG[idxStridefull - m_nImageStride - 1] >= currGrad || m_pG[idxStridefull + m_nImageStride + 1] >= currGrad) {
-				//m_pNms[idxStrideless] = 1;
-				//m_pG[idxStridefull] = 0;
-				//}
-				break;
-
-			default:
-				COMPV_DEBUG_ERROR("Not expected. Dir=%u", currDir);
-				break;
 			}
-#elif 1
+			
+			
+#elif 0
 			double angle_ = angle(m_pGx[idxStridefull], m_pGy[idxStridefull]);
-			double angleDeg = COMPV_MATH_RADIAN_TO_DEGREE(angle_);
 			static const int x = 1, y = 0;
 			double x0 = round(x * ::cos(angle_) - y * ::sin(angle_));
 			double y0 = round(x * ::sin(angle_) + y * ::cos(angle_));
@@ -519,10 +539,10 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			y0 += (double)row;
 			y1 += (double)row;
 
-			if (x0 >= 0. && x0 < m_nImageWidth && y0 >= 0. && y0 < m_nImageHeight) {
+			/*if (x0 >= 0. && x0 < m_nImageWidth && y0 >= 0. && y0 < m_nImageHeight)*/ {
 				g0 = m_pG[(int)round(x0 + (y0 * m_nImageStride))];
 			}
-			if (x1 >= 0. && x1 < m_nImageWidth && y1 >= 0. && y1 < m_nImageHeight) {
+			/*if (x1 >= 0. && x1 < m_nImageWidth && y1 >= 0. && y1 < m_nImageHeight)*/ {
 				g1 = m_pG[(int)round(x1 + (y1 * m_nImageStride))];
 			}
 			if (g0 >= currGrad || g1 >= currGrad) {
@@ -537,7 +557,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			case 1: case 9:
 				// left, right
 				if (m_pG[idxStridefull - 1] >= currGrad || m_pG[idxStridefull + 1] >= currGrad) {
-					//m_pG[idxStridefull] = 0;
+					m_pG[idxStridefull] = 0;
 				}
 				break;
 			case 2: case 10:
@@ -556,7 +576,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			case 3: case 11:
 				// top-right, bottom-left
 				if (m_pG[idxStridefull - m_nImageStride + 1] >= currGrad || m_pG[idxStridefull + m_nImageStride - 1] >= currGrad) {
-					//m_pG[idxStridefull] = 0;
+					m_pG[idxStridefull] = 0;
 				}
 				break;
 			case 4: case 12:
@@ -575,7 +595,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			case 5: case 13:
 				// top, bottom
 				if (m_pG[idxStridefull - m_nImageStride] >= currGrad || m_pG[idxStridefull + m_nImageStride] >= currGrad) {
-					//m_pG[idxStridefull] = 0;
+					m_pG[idxStridefull] = 0;
 				}
 				break;
 			case 6: case 14:
@@ -594,7 +614,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			case 7: case 15:
 				// top-left, bottom-right
 				if (m_pG[idxStridefull - m_nImageStride - 1] >= currGrad || m_pG[idxStridefull + m_nImageStride + 1] >= currGrad) {
-					//m_pG[idxStridefull] = 0;
+					m_pG[idxStridefull] = 0;
 				}
 				break;
 			case 8: case 16:
@@ -680,6 +700,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 	}
 
 	// supp marked points
+#if 1
 	for (size_t row = 1; row < edges->rows() - 1; ++row) {
 		for (size_t col = 1; col < edges->cols() - 1; ++col) {
 			idxStrideless = (row * m_nImageWidth) + col;
@@ -694,6 +715,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			}
 		}
 	}
+#endif
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -704,7 +726,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges)
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // check for 255 not correct as could be there
 
-	size_t idxStridefull, numEdges;
+	size_t idxStridefull, numEdges = 0;
 
 	COMPV_CHECK_CODE_RETURN(edges->zero_all()); // FIXME
 
@@ -726,7 +748,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges)
 	for (size_t row = 1; row < edges->rows() - 1; ++row) {
 		for (size_t col = 1; col < edges->cols() - 1; ++col) {
 			idxStridefull = (row * m_nImageStride) + col;
-			if (m_pG[idxStridefull] > COMPV_FEATURE_DETE_CANNY_TMIN) { // strong edge
+			if (m_pG[idxStridefull] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // weak edge
 				*const_cast<uint8_t*>(edges->ptr(row, col)) = 255;
 			}
 		}
@@ -741,18 +763,20 @@ bool CompVEdgeDeteCanny::connectEdge(CompVPtrArray(uint8_t)& edges, size_t rowId
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 
 	// at the border ?
-	if (!rowIdx || !colIdx) {
+	if (rowIdx == 0 || colIdx == 0 || rowIdx >= m_nImageHeight - 1 || colIdx >= m_nImageWidth - 1) {
 		return false;
 	}
 
 	// already strong edge ?
 	if (*edges->ptr(rowIdx, colIdx) == 255) {
 		numEdges = SIZE_MAX;
-		//return true;
+		return true;
 	}
 	
 	*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
-	++numEdges;
+	if (m_pG[(rowIdx * m_nImageStride) + colIdx] >= COMPV_FEATURE_DETE_CANNY_TMAX) {
+		++numEdges;
+	}
 
 	size_t idxStridefull;
 
@@ -762,41 +786,29 @@ bool CompVEdgeDeteCanny::connectEdge(CompVPtrArray(uint8_t)& edges, size_t rowId
 		/*for (size_t col = colIdx; col < edges->cols() - 1; ++col)*/ {
 			// if (row == rowIdx && col == colIdx) continue; // FIXME
 			idxStridefull = (rowIdx * m_nImageStride) + colIdx;
-
 			if (m_pG[idxStridefull - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left
-				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
 				connectEdge(edges, rowIdx, colIdx - 1, numEdges);
 			}
 			if (m_pG[idxStridefull + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right
-				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
 				connectEdge(edges, rowIdx, colIdx + 1, numEdges);
 			}
 			if (m_pG[idxStridefull - m_nImageStride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-top
-				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
 				connectEdge(edges, rowIdx - 1, colIdx - 1, numEdges);
 			}
 			if (m_pG[idxStridefull - m_nImageStride] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // top
-				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
 				connectEdge(edges, rowIdx - 1, colIdx, numEdges);
 			}
 			if (m_pG[idxStridefull - m_nImageStride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-top
-				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
 				connectEdge(edges, rowIdx - 1, colIdx + 1, numEdges);
 			}
 			if (m_pG[idxStridefull + m_nImageStride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-bottom
-				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
 				connectEdge(edges, rowIdx + 1, colIdx - 1, numEdges);
 			}
 			if (m_pG[idxStridefull + m_nImageStride] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // bottom
-				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
 				connectEdge(edges, rowIdx + 1, colIdx, numEdges);
 			}
 			if (m_pG[idxStridefull + m_nImageStride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-bottom
-				//*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
 				connectEdge(edges, rowIdx + 1, colIdx + 1, numEdges);
-			}
-			else {
-				return false;
 			}
 		}
 	}
