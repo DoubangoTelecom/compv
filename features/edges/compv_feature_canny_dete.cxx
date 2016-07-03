@@ -117,60 +117,49 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 	// Private function -> do not check input parameters
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	if (!m_pNms) {
-		m_pNms = (uint8_t*)CompVMem::calloc(edges->rows() * edges->cols(), sizeof(uint8_t));
+		m_pNms = (uint8_t*)CompVMem::malloc(edges->rows() * edges->cols() * sizeof(uint8_t));
 		COMPV_CHECK_EXP_RETURN(!m_pNms, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
 
-	size_t x0, y0, x1, y1, row, col, maxRows = edges->rows() - 1, maxCols = edges->cols() - 1;
-	uint16_t g0, g1;
+	size_t row, col;
+	const size_t maxRows = edges->rows() - 1, maxCols = edges->cols() - 1;
 	const int16_t *gx = m_pGx + m_nImageStride, *gy = m_pGy + m_nImageStride;
-	uint16_t *g = m_pG + m_nImageStride;
+	uint16_t *g = m_pG + m_nImageStride, gcol;
 	uint8_t *nms = m_pNms + m_nImageWidth;
 	int a, b;
+	const int stride = (int)m_nImageStride;
 
 	// mark points to supp
 	for (row = 1; row < maxRows; ++row) {
 		for (col = 1; col < maxCols; ++col) {
+			gcol = g[col];
 			// The angle is guessed using the first quadrant ([0-45] degree) only then completed.
 			// We want "arctan(gy/gx)" to be within [0, 22.5], [22.5, 67.5], ]67.5, inf[, with 67.5 = (45. + 22.5)
+			//!\\ All NMS values must be set to reset all values (no guarantee it contains zeros).
 							
 			if (!gy[col]) {
 				// angle = 0° or 180°
-				x0 = col + 1, y0 = row;
-				x1 = col - 1, y1 = row;
+				nms[col] = g[col + 1] > gcol || g[col - 1] > gcol;
 			}
 			else if (!gx[col]) {
 				// angle = 90° or 270°
-				x0 = col + 0, y0 = row + 1;
-				x1 = col + 0, y1 = row - 1;
+				nms[col] = g[col + m_nImageStride] > gcol || g[col - m_nImageStride] > gcol;
 			}
 			else {
 				static const float kTangentPiOver8 = 0.414213568f; // tan(22.5)
 				static const float kTangentPiTimes3Over8 = 2.41421366f; // tan(67.5)
-				// theta = arctan(gy/gx) 
-				// -> tan(theta) = gy/gx
-				float tangentTheta = COMPV_MATH_ABS(gy[col] / float(gx[col]));
-				if (tangentTheta < kTangentPiOver8) {
-					// angle = 0° or 180°
-					x0 = col + 1, y0 = row;
-					x1 = col - 1, y1 = row;
+				// "theta = arctan(gy/gx)" -> "tan(theta) = gy/gx" -> compare "gy/gx" with "tan(quadrants)"
+				float tangentTheta = COMPV_MATH_ABS(float(gy[col]) / float(gx[col]));
+				if (tangentTheta < kTangentPiOver8) { // angle = 0° or 180°
+					nms[col] = g[col + 1] > gcol || g[col - 1] > gcol;
 				}
-				else if (tangentTheta < kTangentPiTimes3Over8) {
-					// angle = 45° or 225°
-					a = gx[col] < 0 ? -1 : 1, b = gy[col] < 0 ? -1 : 1;
-					x0 = col + a, y0 = row + b;
-					x1 = col - a, y1 = row - b;
+				else if (tangentTheta < kTangentPiTimes3Over8) { // angle = 45° or 225°
+					a = gx[col] < 0 ? -1 : 1, b = gy[col] < 0 ? -stride : stride;
+					nms[col] = g[col + a + b] > gcol || g[col - a - b] > gcol;
 				}
-				else {
-					// angle = 90° or 270°
-					x0 = col, y0 = row + 1;
-					x1 = col, y1 = row - 1;
+				else { // angle = 90° or 270°
+					nms[col] = g[col + m_nImageStride] > gcol || g[col - m_nImageStride] > gcol;
 				}
-			}				
-			g0 = m_pG[(x0 + (y0 * m_nImageStride))];				
-			g1 = m_pG[(x1 + (y1 * m_nImageStride))];
-			if (g0 > g[col] || g1 > g[col]) {
-				nms[col] = 1;
 			}
 		}
 		gx += m_nImageStride;
@@ -184,8 +173,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 	g = m_pG + m_nImageStride;
 	for (row = 1; row < maxRows; ++row) {
 		for (col = 1; col < maxCols; ++col) {
-			if (nms[col] || g[col] < COMPV_FEATURE_DETE_CANNY_TMIN) {
-				nms[col] = 0; // reset for the next call
+			if (nms[col]) {
 				g[col] = 0;
 			}
 		}

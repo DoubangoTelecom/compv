@@ -36,7 +36,6 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVPtr<CompVEdgeDete* >* dete);
 
 private:
-	COMPV_ERROR_CODE direction();
 	COMPV_ERROR_CODE nms(CompVPtrArray(uint8_t)& edges);
 	COMPV_ERROR_CODE hysteresis(CompVPtrArray(uint8_t)& edges);
 	bool connectEdge(CompVPtrArray(uint8_t)& edges, size_t rowIdx, size_t colIdx, size_t& numEdges);
@@ -48,7 +47,6 @@ private:
 	int16_t* m_pGx;
 	int16_t* m_pGy;
 	uint16_t* m_pG;
-	uint8_t* m_pDirs;
 	uint8_t* m_pNms;
 	CompVPtr<CompVConvlt<float>* > m_gblur;
 	CompVPtr<CompVArray<float>* > m_gblurKernFloat;
