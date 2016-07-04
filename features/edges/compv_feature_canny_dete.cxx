@@ -19,6 +19,12 @@ static const float COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIGMA = 1.4f; // FIXME: 1
 #define COMPV_FEATURE_DETE_CANNY_TMIN	90
 #define COMPV_FEATURE_DETE_CANNY_TMAX	170
 
+static const float kTangentPiOver8 = 0.414213568f; // tan(22.5)
+static const float kTangentPiTimes3Over8 = 2.41421366f; // tan(67.5)
+static const float kTangentDiv = (kTangentPiTimes3Over8 / kTangentPiOver8); // tan(67.5) / tan(22.5)
+static const float kTangentPiOver8M = -kTangentPiOver8;
+static const float kTangentPiTimes3Over8M = -kTangentPiTimes3Over8;
+
 CompVEdgeDeteCanny::CompVEdgeDeteCanny()
 	: CompVEdgeDete(COMPV_CANNY_ID)
 	, m_nImageWidth(0)
@@ -91,8 +97,9 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 	COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>((const uint8_t*)image->getDataPtr(), m_nImageWidth, m_nImageStride, m_nImageHeight, &CompVSobelGx_vt[0], &CompVSobelGx_hz[0], 3, m_pGx)));
 	COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>((const uint8_t*)image->getDataPtr(), m_nImageWidth, m_nImageStride, m_nImageHeight, &CompVSobelGx_hz[0], &CompVSobelGx_vt[0], 3, m_pGy)));
 
-	// Compute gradiant using L1 distance
-	// FIXME: gmax not needed
+	// Compute gradiant using L1 distance.
+	//!\\ Important: NMS function requires distance metric to be L1 instead of L2 (see comment in nms())
+	// FIXME'dmi): gmax not needed
 	uint16_t gmax = 1;
 	COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, gmax, m_nImageWidth, m_nImageHeight, m_nImageStride)));
 
@@ -124,11 +131,14 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 	size_t row, col;
 	const size_t maxRows = edges->rows() - 1, maxCols = edges->cols() - 1;
 	const int16_t *gx = m_pGx + m_nImageStride, *gy = m_pGy + m_nImageStride;
-	uint16_t *g = m_pG + m_nImageStride, gcol;
+	uint16_t *g = m_pG + m_nImageStride;
+	const uint16_t *gcol;
+	uint16_t absgy;
 	uint8_t *nms = m_pNms + m_nImageWidth;
 	uint8_t *e = const_cast<uint8_t*>(edges->ptr(1));
-	int a, b;
+	int c;
 	const int stride = (int)m_nImageStride;
+	float absGxTimesPiOver8;
 
 	// non-maximasupp is multi-threaded and we will use this property to zero the edge buffer with low cost (compared to edges->zeroall() which is not MT)
 	// TODO(dmi): perform next op only if startIndex == 0
@@ -138,34 +148,48 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 	// mark points to supp
 	for (row = 1; row < maxRows; ++row) {
 		CompVMem::zero(e, m_nImageWidth);
-		for (col = 1; col < maxCols; ++col) {
-			gcol = g[col];
+		for (col = 1, gcol = (g + 1); col < maxCols; ++col, ++gcol) {
 			// The angle is guessed using the first quadrant ([0-45] degree) only then completed.
 			// We want "arctan(gy/gx)" to be within [0, 22.5], [22.5, 67.5], ]67.5, inf[, with 67.5 = (45. + 22.5)
 			//!\\ All NMS values must be set to reset all values (no guarantee it contains zeros).
-							
+			
+#if 1 // Slower
 			if (!gy[col]) {
 				// angle = 0° or 180°
-				nms[col] = g[col + 1] > gcol || g[col - 1] > gcol;
+				nms[col] = (gcol[1] > *gcol || gcol[-1] > *gcol);
 			}
 			else if (!gx[col]) {
 				// angle = 90° or 270°
-				nms[col] = g[col + m_nImageStride] > gcol || g[col - m_nImageStride] > gcol;
+				nms[col] = (gcol[m_nImageStride] > *gcol || *(gcol-m_nImageStride) > *gcol);
 			}
-			else {
-				static const float kTangentPiOver8 = 0.414213568f; // tan(22.5)
-				static const float kTangentPiTimes3Over8 = 2.41421366f; // tan(67.5)
+			else
+#endif
+			{
 				// "theta = arctan(gy/gx)" -> "tan(theta) = gy/gx" -> compare "gy/gx" with "tan(quadrants)"
-				float tangentTheta = COMPV_MATH_ABS(float(gy[col]) / float(gx[col]));
-				if (tangentTheta < kTangentPiOver8) { // angle = 0° or 180°
-					nms[col] = g[col + 1] > gcol || g[col - 1] > gcol;
+				// Instead of comparing "abs(gy/gx)" with "tanTheta" we will compare "abs(gy)" with "tanTheta*abs(gx)" to avoid division.
+				// G = "abs(GX) + abs(GY)" -> "abs(GY) = G - abs(GX)"
+
+				if (gx[col] < 0) {
+					absgy = *gcol + gx[col];
+					absGxTimesPiOver8 = (kTangentPiOver8M * gx[col]);
+					c = gy[col] < 0 ? (-1 - stride) : (-1 + stride);
 				}
-				else if (tangentTheta < kTangentPiTimes3Over8) { // angle = 45° or 225°
-					a = gx[col] < 0 ? -1 : 1, b = gy[col] < 0 ? -stride : stride;
-					nms[col] = g[col + a + b] > gcol || g[col - a - b] > gcol;
+				else {
+					absgy = *gcol - gx[col];
+					absGxTimesPiOver8 = (kTangentPiOver8 * gx[col]);
+					c = gy[col] < 0 ? (1 - stride) : (1 + stride);
+				}
+				//nms[col] = (absgy < absGxTimesPiOver8)
+				//	? (gcol[1] > *gcol || gcol[-1] > *gcol)
+				//	: ((absgy < (absGxTimesPiOver8 * kTangentDiv)) ? (gcol[c] > *gcol || gcol[-c] > *gcol) : (gcol[m_nImageStride] > *gcol || *(gcol - m_nImageStride) > *gcol));
+				if (absgy < absGxTimesPiOver8) { // angle = 0° or 180°
+					nms[col] = (gcol[1] > *gcol || gcol[-1] > *gcol);
+				}
+				else if (absgy < (absGxTimesPiOver8 * kTangentDiv)) { // angle = 45° or 225°
+					nms[col] = (gcol[c] > *gcol || gcol[-c] > *gcol);
 				}
 				else { // angle = 90° or 270°
-					nms[col] = g[col + m_nImageStride] > gcol || g[col - m_nImageStride] > gcol;
+					nms[col] = (gcol[m_nImageStride] > *gcol || *(gcol-m_nImageStride) > *gcol);
 				}
 			}
 		}
