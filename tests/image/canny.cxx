@@ -13,16 +13,16 @@
 
 #if TEST_TYPE == TEST_TYPE_GIRL
 #	define CANNY_JPEG_IMG			"C:/Projects/GitHub/compv/tests/girl.jpg"
-#	define CANNY_MD5				"a52286eae1498f1f9358aba7717ce8d8"
+#	define CANNY_MD5				"8c186abac53615785ad81cc4e203bbaf"
 #elif TEST_TYPE == TEST_TYPE_EQUIRECT
 #	define CANNY_JPEG_IMG			"C:/Projects/GitHub/compv/tests/equirectangular.jpg"
-#	define CANNY_MD5				"c7f5e535b20e3994a3e1934dc38739ec"
+#	define CANNY_MD5				"8cf08c0e06eea65b7554801db4f199fa"
 #elif TEST_TYPE == TEST_TYPE_MANDEKALOU
 #	define CANNY_JPEG_IMG			"C:/Projects/GitHub/compv/tests/mandekalou.jpg"
-#	define CANNY_MD5				"8d1376afa79f3e1761062df647739696"
+#	define CANNY_MD5				"9173ee8db078995d5e62eafbec9ed71d"
 #elif TEST_TYPE == TEST_TYPE_VALVE
 #	define CANNY_JPEG_IMG			"C:/Projects/GitHub/compv/tests/Valve_original.jpg"
-#	define CANNY_MD5				"9169c11b8d9f4e389b54f1be4dbfb9ad"
+#	define CANNY_MD5				"63b2b84cc318f51e42b9156dba6c03f1"
 #endif
 
 using namespace compv;
