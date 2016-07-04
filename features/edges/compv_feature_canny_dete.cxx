@@ -140,24 +140,19 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 	const uint16_t *top = g - m_nImageStride, *bottom = g + m_nImageStride, *left = g - 1, *right = g + 1;
 	uint8_t *nms = m_pNms + m_nImageWidth + 1;
 	uint8_t *e = const_cast<uint8_t*>(edges->ptr(1));
-	int32_t gxInt, gyInt, absgyInt;
+	int32_t gxInt, gyInt, absgyInt, absgxInt;
 	const int stride = static_cast<const int>(m_nImageStride);
 	const int pad = static_cast<const int>(m_nImageStride - m_nImageWidth) + 2;
-	const struct gridMap {
-		int orient; // used to choose between "45° / 225°" or "135 / 315"
-		int piOver8Int;
-		int piTimes3Over8Int;
-	} GridMaps[2/*sign(Gx)*/][2/*sign(Gx)*/] = { // sign(G) = 0 if positive, otherwise = 1
+	const int cMap[2/*sign(Gx)*/][2/*sign(Gx)*/] = { // sign(G) = 0 if positive, otherwise = 1
 		{ 
-			{ 1 + stride, kTangentPiOver8Int, kTangentPiTimes3Over8Int }, // Gx > 0, Gy > 0
-			{ 1 - stride, kTangentPiOver8Int, kTangentPiTimes3Over8Int }  // Gx > 0, Gy < 0
+			{ 1 + stride }, // Gx > 0, Gy > 0
+			{ 1 - stride }  // Gx > 0, Gy < 0
 		},
 		{
-			{ -1 + stride, kTangentPiOver8MInt, kTangentPiTimes3Over8MInt }, // Gx < 0, Gy > 0
-			{ -1 - stride, kTangentPiOver8MInt, kTangentPiTimes3Over8MInt } // Gx < 0, Gy < 0
+			{ -1 + stride }, // Gx < 0, Gy > 0
+			{ -1 - stride } // Gx < 0, Gy < 0
 		}
 	};
-	const gridMap* gMap;
 
 	// non-maximasupp is multi-threaded and we will use this property to zero the edge buffer with low cost (compared to edges->zeroall() which is not MT)
 	// TODO(dmi): perform next op only if startIndex == 0
@@ -177,26 +172,17 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			
 			gxInt = static_cast<int32_t>(*gx);
 			gyInt = static_cast<int32_t>(*gy);
-			if (!gyInt) {
-				// angle = 0° or 180°
+			absgyInt = ((gyInt ^ (gyInt >> 31)) - (gyInt >> 31)) << 16; // "<< 16" for FixedPoint math
+			absgxInt = ((gxInt ^ (gxInt >> 31)) - (gxInt >> 31));
+			if (absgyInt < (kTangentPiOver8Int * absgxInt)) { // angle = "0° / 180°"
 				*nms = (*left > *g || *right > *g);
 			}
-			else if (!gxInt) {
-				// angle = 90° or 270°
-				*nms = (*top > *g || *bottom > *g);
+			else if (absgyInt < (kTangentPiTimes3Over8Int * absgxInt)) { // angle = "45° / 225°" or "135 / 315"
+				int c = cMap[gxInt < 0][gyInt < 0];
+				*nms = (g[-c] > *g || g[c] > *g);
 			}
-			else {
-				absgyInt = ((gyInt ^ (gyInt >> 31)) - (gyInt >> 31)) << 16;
-				gMap = &GridMaps[gxInt < 0][gyInt < 0];
-				if (absgyInt < (gMap->piOver8Int * gxInt)) { // angle = "0° / 180°"
-					*nms = (*left > *g || *right > *g);
-				}
-				else if (absgyInt < (gMap->piTimes3Over8Int * gxInt)) { // angle = "45° / 225°" or "135 / 315"
-					*nms = (g[-gMap->orient] > *g || g[gMap->orient] > *g);
-				}
-				else { // angle = "90° / 270°"
-					*nms = (*top > *g || *bottom > *g);
-				}
+			else { // angle = "90° / 270°"
+				*nms = (*top > *g || *bottom > *g);
 			}
 		}
 		top += pad;
