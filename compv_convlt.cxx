@@ -302,7 +302,7 @@ void CompVConvlt<T>::convlt1_verthz_fxp(const uint8_t* in_ptr, uint8_t* out_ptr,
 	CompVAsyncTaskIds taskIds;
 	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
 	if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
-		threadsCount = COMPV_MATH_MIN((width * height) / COMPV_CONVOLUTION_MIN_SAMPLES_PER_THREAD, size_t(threadDisp->getThreadsCount()));
+		threadsCount = COMPV_MATH_MIN((width * height) / COMPV_CONVOLUTION_MIN_SAMPLES_PER_THREAD, int(threadDisp->getThreadsCount()));
 		threadsCount = COMPV_MATH_MIN(threadsCount, (int)height); // divide across rows
 	}
 

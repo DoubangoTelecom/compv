@@ -37,8 +37,7 @@ public:
 
 private:
 	COMPV_ERROR_CODE nms(CompVPtrArray(uint8_t)& edges);
-	COMPV_ERROR_CODE hysteresis(CompVPtrArray(uint8_t)& edges);
-	bool connectEdge(CompVPtrArray(uint8_t)& edges, size_t rowIdx, size_t colIdx, size_t& numEdges);
+	void hysteresis(CompVPtrArray(uint8_t)& edges);
 
 private:
 	size_t m_nImageWidth;

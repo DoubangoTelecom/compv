@@ -233,30 +233,30 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 static COMPV_INLINE void connectEdge(uint8_t* pixel, const uint16_t* g, size_t rowIdx, size_t colIdx, int stride, size_t maxRows, size_t maxCols)
 {	
 	// Private function -> do not check input parameters
-	if (*pixel != 255 && rowIdx && colIdx && rowIdx < maxRows && colIdx < maxCols) {
+	if (rowIdx && colIdx && rowIdx < maxRows && colIdx < maxCols) {
 		*pixel = 255; // set as strong edge
-		if (g[-1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left
+		if (g[-1] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[-1] != 255) { // left
 			connectEdge(pixel - 1, g - 1, rowIdx, colIdx - 1, stride, maxRows, maxCols);
 		}
-		if (g[1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right
+		if (g[1] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[1] != 255) { // right
 			connectEdge(pixel + 1, g + 1, rowIdx, colIdx + 1, stride, maxRows, maxCols);
 		}
-		if (g[-stride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-top
+		if (g[-stride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[-stride - 1] != 255) { // left-top
 			connectEdge(pixel - stride - 1, g - stride - 1, rowIdx - 1, colIdx - 1, stride, maxRows, maxCols);
 		}
-		if (g[-stride] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // top
+		if (g[-stride] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[-stride] != 255) { // top
 			connectEdge(pixel - stride, g - stride, rowIdx - 1, colIdx, stride, maxRows, maxCols);
 		}
-		if (g[-stride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-top
+		if (g[-stride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[-stride + 1] != 255) { // right-top
 			connectEdge(pixel - stride + 1, g - stride + 1, rowIdx - 1, colIdx + 1, stride, maxRows, maxCols);
 		}
-		if (g[stride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-bottom
+		if (g[stride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[stride - 1] != 255) { // left-bottom
 			connectEdge(pixel + stride - 1, g + stride - 1, rowIdx + 1, colIdx - 1, stride, maxRows, maxCols);
 		}
-		if (g[stride] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // bottom
+		if (g[stride] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[stride] != 255) { // bottom
 			connectEdge(pixel + stride, g + stride, rowIdx + 1, colIdx, stride, maxRows, maxCols);
 		}
-		if (g[stride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-bottom
+		if (g[stride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[stride + 1] != 255) { // right-bottom
 			connectEdge(pixel + stride + 1, g + stride + 1, rowIdx + 1, colIdx + 1, stride, maxRows, maxCols);
 		}
 	}
