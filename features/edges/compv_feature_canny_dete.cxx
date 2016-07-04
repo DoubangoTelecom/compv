@@ -20,10 +20,15 @@ static const float COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIGMA = 1.4f; // FIXME: 1
 #define COMPV_FEATURE_DETE_CANNY_TMAX	170
 
 static const float kTangentPiOver8 = 0.414213568f; // tan(22.5)
+static const int32_t kTangentPiOver8Int = static_cast<int32_t>(kTangentPiOver8 * (1 << 16));
 static const float kTangentPiTimes3Over8 = 2.41421366f; // tan(67.5)
+static const int32_t kTangentPiTimes3Over8Int = static_cast<int32_t>(kTangentPiTimes3Over8 * (1 << 16));
 static const float kTangentDiv = (kTangentPiTimes3Over8 / kTangentPiOver8); // tan(67.5) / tan(22.5)
 static const float kTangentPiOver8M = -kTangentPiOver8;
+static const int32_t kTangentPiOver8MInt = -kTangentPiOver8Int;
+static const int32_t kTangentDivInt = static_cast<int32_t>(kTangentDiv * (1 << 16));
 static const float kTangentPiTimes3Over8M = -kTangentPiTimes3Over8;
+static const int32_t kTangentPiTimes3Over8MInt = -kTangentPiTimes3Over8Int;
 
 CompVEdgeDeteCanny::CompVEdgeDeteCanny()
 	: CompVEdgeDete(COMPV_CANNY_ID)
@@ -133,17 +138,30 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 	const int16_t *gx = m_pGx + m_nImageStride, *gy = m_pGy + m_nImageStride;
 	uint16_t *g = m_pG + m_nImageStride;
 	const uint16_t *gcol;
-	uint16_t absgy;
 	uint8_t *nms = m_pNms + m_nImageWidth;
 	uint8_t *e = const_cast<uint8_t*>(edges->ptr(1));
-	int c;
-	const int stride = (int)m_nImageStride;
-	float absGxTimesPiOver8;
+	int32_t gxInt, gyInt, absgyInt;
+	const int stride = static_cast<const int>(m_nImageStride);
+	const struct gridMap {
+		int orient; // used to choose between "45° / 225°" or "135 / 315"
+		int piOver8Int;
+		int piTimes3Over8Int;
+	} GridMaps[2/*sign(Gx)*/][2/*sign(Gx)*/] = { // sign(G) = 0 if positive, otherwise = 1
+		{ 
+			{ 1 + stride, kTangentPiOver8Int, kTangentPiTimes3Over8Int }, // Gx > 0, Gy > 0
+			{ 1 - stride, kTangentPiOver8Int, kTangentPiTimes3Over8Int }  // Gx > 0, Gy < 0
+		},
+		{
+			{ -1 + stride, kTangentPiOver8MInt, kTangentPiTimes3Over8MInt }, // Gx < 0, Gy > 0
+			{ -1 - stride, kTangentPiOver8MInt, kTangentPiTimes3Over8MInt } // Gx < 0, Gy < 0
+		}
+	};
+	const gridMap* gMap;
 
 	// non-maximasupp is multi-threaded and we will use this property to zero the edge buffer with low cost (compared to edges->zeroall() which is not MT)
 	// TODO(dmi): perform next op only if startIndex == 0
 	CompVMem::zero(e - m_nImageStride, m_nImageWidth); // zero first line
-	CompVMem::zero(e + ((maxRows - 1)*m_nImageStride), m_nImageWidth); // zero last line
+	CompVMem::zero(e + ((maxRows - 1) * m_nImageStride), m_nImageWidth); // zero last line
 
 	// mark points to supp
 	for (row = 1; row < maxRows; ++row) {
@@ -153,42 +171,41 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			// We want "arctan(gy/gx)" to be within [0, 22.5], [22.5, 67.5], ]67.5, inf[, with 67.5 = (45. + 22.5)
 			//!\\ All NMS values must be set to reset all values (no guarantee it contains zeros).
 			
-#if 0 // Slower
-			if (!gy[col]) {
+			// "theta = arctan(gy/gx)" -> "tan(theta) = gy/gx" -> compare "gy/gx" with "tan(quadrants)"
+			// Instead of comparing "abs(gy/gx)" with "tanTheta" we will compare "abs(gy)" with "tanTheta*abs(gx)" to avoid division.
+			
+			gxInt = static_cast<int32_t>(gx[col]);
+			gyInt = static_cast<int32_t>(gy[col]);
+
+			if (!gyInt) {
 				// angle = 0° or 180°
 				nms[col] = (gcol[1] > *gcol || gcol[-1] > *gcol);
 			}
-			else if (!gx[col]) {
+			else if (!gxInt) {
 				// angle = 90° or 270°
-				nms[col] = (gcol[m_nImageStride] > *gcol || *(gcol-m_nImageStride) > *gcol);
+				nms[col] = (gcol[stride] > *gcol || gcol[-stride] > *gcol);
 			}
-			else
-#endif
-			{
-				// "theta = arctan(gy/gx)" -> "tan(theta) = gy/gx" -> compare "gy/gx" with "tan(quadrants)"
-				// Instead of comparing "abs(gy/gx)" with "tanTheta" we will compare "abs(gy)" with "tanTheta*abs(gx)" to avoid division.
-				// G = "abs(GX) + abs(GY)" -> "abs(GY) = G - abs(GX)"
-
-				if (gx[col] < 0) {
-					absGxTimesPiOver8 = (kTangentPiOver8M * gx[col]);
-					if (gy[col] < 0) c = -1 - stride, absgy = -gy[col];
-					else c = -1 + stride, absgy = gy[col];
-				}
-				else {
-					absGxTimesPiOver8 = (kTangentPiOver8 * gx[col]);
-					if (gy[col] < 0) c = 1 - stride, absgy = -gy[col];
-					else c = 1 + stride, absgy = gy[col];
-				}
-				if (absgy < absGxTimesPiOver8) { // angle = 0° or 180°
+			else {
+				absgyInt = ((gyInt ^ (gyInt >> 31)) - (gyInt >> 31)) << 16;
+				gMap = &GridMaps[gxInt < 0][gyInt < 0];
+#if 0 // strange, code below is faster (at least on VS2013)
+				nms[col] = (absgyInt < (gMap->piOver8Int * gxInt))
+					? (gcol[1] > *gcol || gcol[-1] > *gcol) // angle = "0° / 180°"
+					: ((absgyInt < (gMap->piTimes3Over8Int * gxInt))
+					? (gcol[gMap->orient] > *gcol || gcol[-gMap->orient] > *gcol) // angle = "45° / 225°" or "135 / 315"
+					: (*(gcol + m_nImageStride) > *gcol || *(gcol - m_nImageStride) > *gcol)); // angle = "90° / 270°"
+#else
+				if (absgyInt < (gMap->piOver8Int * gxInt)) { // angle = "0° / 180°"
 					nms[col] = (gcol[1] > *gcol || gcol[-1] > *gcol);
 				}
-				else if (absgy < (absGxTimesPiOver8 * kTangentDiv)) { // angle = 45° or 225°
-					nms[col] = (gcol[c] > *gcol || gcol[-c] > *gcol);
+				else if (absgyInt < (gMap->piTimes3Over8Int * gxInt)) { // angle = "45° / 225°" or "135 / 315"
+					nms[col] = (gcol[gMap->orient] > *gcol || gcol[-gMap->orient] > *gcol);
 				}
-				else { // angle = 90° or 270°
-					nms[col] = (*(gcol+m_nImageStride) > *gcol || *(gcol-m_nImageStride) > *gcol);
+				else { // angle = "90° / 270°"
+					nms[col] = (gcol[stride] > *gcol || gcol[-stride] > *gcol);
 				}
 			}
+#endif
 		}
 		gx += m_nImageStride;
 		gy += m_nImageStride;
@@ -213,6 +230,38 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+static COMPV_INLINE void connectEdge(uint8_t* pixel, const uint16_t* g, size_t rowIdx, size_t colIdx, int stride, size_t maxRows, size_t maxCols)
+{	
+	// Private function -> do not check input parameters
+	if (*pixel != 255 && rowIdx && colIdx && rowIdx < maxRows && colIdx < maxCols) {
+		*pixel = 255; // set as strong edge
+		if (g[-1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left
+			connectEdge(pixel - 1, g - 1, rowIdx, colIdx - 1, stride, maxRows, maxCols);
+		}
+		if (g[1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right
+			connectEdge(pixel + 1, g + 1, rowIdx, colIdx + 1, stride, maxRows, maxCols);
+		}
+		if (g[-stride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-top
+			connectEdge(pixel - stride - 1, g - stride - 1, rowIdx - 1, colIdx - 1, stride, maxRows, maxCols);
+		}
+		if (g[-stride] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // top
+			connectEdge(pixel - stride, g - stride, rowIdx - 1, colIdx, stride, maxRows, maxCols);
+		}
+		if (g[-stride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-top
+			connectEdge(pixel - stride + 1, g - stride + 1, rowIdx - 1, colIdx + 1, stride, maxRows, maxCols);
+		}
+		if (g[stride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-bottom
+			connectEdge(pixel + stride - 1, g + stride - 1, rowIdx + 1, colIdx - 1, stride, maxRows, maxCols);
+		}
+		if (g[stride] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // bottom
+			connectEdge(pixel + stride, g + stride, rowIdx + 1, colIdx, stride, maxRows, maxCols);
+		}
+		if (g[stride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-bottom
+			connectEdge(pixel + stride + 1, g + stride + 1, rowIdx + 1, colIdx + 1, stride, maxRows, maxCols);
+		}
+	}
+}
+
 void CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges)
 {
 	// Private function -> do not check input parameters
@@ -221,53 +270,16 @@ void CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges)
 	size_t row, col;
 	const size_t maxRows = edges->rows() - 1, maxCols = edges->cols() - 1;
 	const uint16_t *g = m_pG + m_nImageStride;
+	uint8_t* e = const_cast<uint8_t*>(edges->ptr(1));
+	const int stride = static_cast<const int>(m_nImageStride);
 	for (row = 1; row < maxRows; ++row) {
 		for (col = 1; col < maxCols; ++col) {
 			if (g[col] >= COMPV_FEATURE_DETE_CANNY_TMAX) { // strong edge
-				connectEdge(edges, row, col);
+				connectEdge((e + col), (g + col), row, col, stride, maxRows, maxCols);
 			}
 		}
 		g += m_nImageStride;
-	}
-}
-
-void CompVEdgeDeteCanny::connectEdge(CompVPtrArray(uint8_t)& edges, size_t rowIdx, size_t colIdx)
-{
-	// Private function -> do not check input parameters
-	// at the border ?
-	if (!rowIdx || !colIdx || rowIdx > m_nImageHeight - 2 || colIdx > m_nImageWidth - 2) {
-		return;
-	}
-	uint8_t* pixel = const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx));
-	// already strong edge ?
-	if (*pixel == 255) {
-		return;
-	}
-	*pixel = 255; // set as strong edge
-	const uint16_t* g = &m_pG[(rowIdx * m_nImageStride) + colIdx];
-	if (*(g-1) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left
-		connectEdge(edges, rowIdx, colIdx - 1);
-	}
-	if (*(g+1) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right
-		connectEdge(edges, rowIdx, colIdx + 1);
-	}
-	if (*(g-m_nImageStride-1) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-top
-		connectEdge(edges, rowIdx - 1, colIdx - 1);
-	}
-	if (*(g-m_nImageStride) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // top
-		connectEdge(edges, rowIdx - 1, colIdx);
-	}
-	if (*(g-m_nImageStride+1) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-top
-		connectEdge(edges, rowIdx - 1, colIdx + 1);
-	}
-	if (*(g+ m_nImageStride-1) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-bottom
-		connectEdge(edges, rowIdx + 1, colIdx - 1);
-	}
-	if (*(g+m_nImageStride) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // bottom
-		connectEdge(edges, rowIdx + 1, colIdx);
-	}
-	if (*(g+m_nImageStride+1) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-bottom
-		connectEdge(edges, rowIdx + 1, colIdx + 1);
+		e += m_nImageStride;
 	}
 }
 
