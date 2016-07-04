@@ -170,19 +170,27 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			// "theta = arctan(gy/gx)" -> "tan(theta) = gy/gx" -> compare "gy/gx" with "tan(quadrants)"
 			// Instead of comparing "abs(gy/gx)" with "tanTheta" we will compare "abs(gy)" with "tanTheta*abs(gx)" to avoid division.
 			
-			gxInt = static_cast<int32_t>(*gx);
-			gyInt = static_cast<int32_t>(*gy);
-			absgyInt = ((gyInt ^ (gyInt >> 31)) - (gyInt >> 31)) << 16; // "<< 16" for FixedPoint math
-			absgxInt = ((gxInt ^ (gxInt >> 31)) - (gxInt >> 31));
-			if (absgyInt < (kTangentPiOver8Int * absgxInt)) { // angle = "0° / 180°"
-				*nms = (*left > *g || *right > *g);
-			}
-			else if (absgyInt < (kTangentPiTimes3Over8Int * absgxInt)) { // angle = "45° / 225°" or "135 / 315"
-				int c = cMap[gxInt < 0][gyInt < 0];
-				*nms = (g[-c] > *g || g[c] > *g);
-			}
-			else { // angle = "90° / 270°"
-				*nms = (*top > *g || *bottom > *g);
+			if (*g >= COMPV_FEATURE_DETE_CANNY_TMIN) {
+				gxInt = static_cast<int32_t>(*gx);
+				gyInt = static_cast<int32_t>(*gy);
+				absgyInt = ((gyInt ^ (gyInt >> 31)) - (gyInt >> 31)) << 16; // "<< 16" for FixedPoint math
+				absgxInt = ((gxInt ^ (gxInt >> 31)) - (gxInt >> 31));
+				if (absgyInt < (kTangentPiOver8Int * absgxInt)) { // angle = "0° / 180°"
+					if (*left > *g || *right > *g) {
+						*nms = 1;
+					}
+				}
+				else if (absgyInt < (kTangentPiTimes3Over8Int * absgxInt)) { // angle = "45° / 225°" or "135 / 315"
+					const int c = cMap[gxInt < 0][gyInt < 0];
+					if (g[-c] > *g || g[c] > *g) {
+						*nms = 1;
+					}
+				}
+				else { // angle = "90° / 270°"
+					if (*top > *g || *bottom > *g) {
+						*nms = 1;
+					}
+				}
 			}
 		}
 		top += pad;
@@ -203,6 +211,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 		for (col = 1; col < maxCols; ++col, ++g, ++nms) {
 			if (*nms) {
 				*g = 0;
+				*nms = 0;
 			}
 		}
 		nms += 2;
