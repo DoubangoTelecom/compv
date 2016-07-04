@@ -129,19 +129,20 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 	// Private function -> do not check input parameters
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // MT
 	if (!m_pNms) {
-		m_pNms = (uint8_t*)CompVMem::malloc(edges->rows() * edges->cols() * sizeof(uint8_t));
+		m_pNms = (uint8_t*)CompVMem::calloc(edges->rows() * edges->cols(), sizeof(uint8_t));
 		COMPV_CHECK_EXP_RETURN(!m_pNms, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
 
 	size_t row, col;
 	const size_t maxRows = edges->rows() - 1, maxCols = edges->cols() - 1;
-	const int16_t *gx = m_pGx + m_nImageStride, *gy = m_pGy + m_nImageStride;
-	uint16_t *g = m_pG + m_nImageStride;
-	const uint16_t *gcol;
-	uint8_t *nms = m_pNms + m_nImageWidth;
+	const int16_t *gx = m_pGx + m_nImageStride + 1, *gy = m_pGy + m_nImageStride + 1;
+	uint16_t *g = m_pG + m_nImageStride + 1;
+	const uint16_t *top = g - m_nImageStride, *bottom = g + m_nImageStride, *left = g - 1, *right = g + 1;
+	uint8_t *nms = m_pNms + m_nImageWidth + 1;
 	uint8_t *e = const_cast<uint8_t*>(edges->ptr(1));
 	int32_t gxInt, gyInt, absgyInt;
 	const int stride = static_cast<const int>(m_nImageStride);
+	const int pad = static_cast<const int>(m_nImageStride - m_nImageWidth) + 2;
 	const struct gridMap {
 		int orient; // used to choose between "45° / 225°" or "135 / 315"
 		int piOver8Int;
@@ -166,7 +167,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 	// mark points to supp
 	for (row = 1; row < maxRows; ++row) {
 		CompVMem::zero(e, m_nImageWidth);
-		for (col = 1, gcol = (g + 1); col < maxCols; ++col, ++gcol) {
+		for (col = 1; col < maxCols; ++col, ++nms, ++gx, ++gy, ++g, ++top, ++bottom, ++left, ++right) {
 			// The angle is guessed using the first quadrant ([0-45] degree) only then completed.
 			// We want "arctan(gy/gx)" to be within [0, 22.5], [22.5, 67.5], ]67.5, inf[, with 67.5 = (45. + 22.5)
 			//!\\ All NMS values must be set to reset all values (no guarantee it contains zeros).
@@ -174,57 +175,52 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			// "theta = arctan(gy/gx)" -> "tan(theta) = gy/gx" -> compare "gy/gx" with "tan(quadrants)"
 			// Instead of comparing "abs(gy/gx)" with "tanTheta" we will compare "abs(gy)" with "tanTheta*abs(gx)" to avoid division.
 			
-			gxInt = static_cast<int32_t>(gx[col]);
-			gyInt = static_cast<int32_t>(gy[col]);
-
+			gxInt = static_cast<int32_t>(*gx);
+			gyInt = static_cast<int32_t>(*gy);
 			if (!gyInt) {
 				// angle = 0° or 180°
-				nms[col] = (gcol[1] > *gcol || gcol[-1] > *gcol);
+				*nms = (*left > *g || *right > *g);
 			}
 			else if (!gxInt) {
 				// angle = 90° or 270°
-				nms[col] = (gcol[stride] > *gcol || gcol[-stride] > *gcol);
+				*nms = (*top > *g || *bottom > *g);
 			}
 			else {
 				absgyInt = ((gyInt ^ (gyInt >> 31)) - (gyInt >> 31)) << 16;
 				gMap = &GridMaps[gxInt < 0][gyInt < 0];
-#if 0 // strange, code below is faster (at least on VS2013)
-				nms[col] = (absgyInt < (gMap->piOver8Int * gxInt))
-					? (gcol[1] > *gcol || gcol[-1] > *gcol) // angle = "0° / 180°"
-					: ((absgyInt < (gMap->piTimes3Over8Int * gxInt))
-					? (gcol[gMap->orient] > *gcol || gcol[-gMap->orient] > *gcol) // angle = "45° / 225°" or "135 / 315"
-					: (*(gcol + m_nImageStride) > *gcol || *(gcol - m_nImageStride) > *gcol)); // angle = "90° / 270°"
-#else
 				if (absgyInt < (gMap->piOver8Int * gxInt)) { // angle = "0° / 180°"
-					nms[col] = (gcol[1] > *gcol || gcol[-1] > *gcol);
+					*nms = (*left > *g || *right > *g);
 				}
 				else if (absgyInt < (gMap->piTimes3Over8Int * gxInt)) { // angle = "45° / 225°" or "135 / 315"
-					nms[col] = (gcol[gMap->orient] > *gcol || gcol[-gMap->orient] > *gcol);
+					*nms = (g[-gMap->orient] > *g || g[gMap->orient] > *g);
 				}
 				else { // angle = "90° / 270°"
-					nms[col] = (gcol[stride] > *gcol || gcol[-stride] > *gcol);
+					*nms = (*top > *g || *bottom > *g);
 				}
 			}
-#endif
 		}
-		gx += m_nImageStride;
-		gy += m_nImageStride;
-		g += m_nImageStride;
+		top += pad;
+		bottom += pad;
+		left += pad;
+		right += pad;
+		gx += pad;
+		gy += pad;
+		g += pad;
 		e += m_nImageStride;
-		nms += m_nImageWidth;
+		nms += 2;
 	}
 
 	// supp marked points
-	nms = m_pNms + m_nImageWidth;
-	g = m_pG + m_nImageStride;
+	nms = m_pNms + m_nImageWidth + 1;
+	g = m_pG + m_nImageStride + 1;
 	for (row = 1; row < maxRows; ++row) {
-		for (col = 1; col < maxCols; ++col) {
-			if (nms[col]) {
-				g[col] = 0;
+		for (col = 1; col < maxCols; ++col, ++g, ++nms) {
+			if (*nms) {
+				*g = 0;
 			}
 		}
-		nms += m_nImageWidth;
-		g += m_nImageStride;
+		nms += 2;
+		g += pad;
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
