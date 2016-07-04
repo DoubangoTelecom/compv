@@ -153,7 +153,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 			// We want "arctan(gy/gx)" to be within [0, 22.5], [22.5, 67.5], ]67.5, inf[, with 67.5 = (45. + 22.5)
 			//!\\ All NMS values must be set to reset all values (no guarantee it contains zeros).
 			
-#if 1 // Slower
+#if 0 // Slower
 			if (!gy[col]) {
 				// angle = 0° or 180°
 				nms[col] = (gcol[1] > *gcol || gcol[-1] > *gcol);
@@ -170,18 +170,15 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 				// G = "abs(GX) + abs(GY)" -> "abs(GY) = G - abs(GX)"
 
 				if (gx[col] < 0) {
-					absgy = *gcol + gx[col];
 					absGxTimesPiOver8 = (kTangentPiOver8M * gx[col]);
-					c = gy[col] < 0 ? (-1 - stride) : (-1 + stride);
+					if (gy[col] < 0) c = -1 - stride, absgy = -gy[col];
+					else c = -1 + stride, absgy = gy[col];
 				}
 				else {
-					absgy = *gcol - gx[col];
 					absGxTimesPiOver8 = (kTangentPiOver8 * gx[col]);
-					c = gy[col] < 0 ? (1 - stride) : (1 + stride);
+					if (gy[col] < 0) c = 1 - stride, absgy = -gy[col];
+					else c = 1 + stride, absgy = gy[col];
 				}
-				//nms[col] = (absgy < absGxTimesPiOver8)
-				//	? (gcol[1] > *gcol || gcol[-1] > *gcol)
-				//	: ((absgy < (absGxTimesPiOver8 * kTangentDiv)) ? (gcol[c] > *gcol || gcol[-c] > *gcol) : (gcol[m_nImageStride] > *gcol || *(gcol - m_nImageStride) > *gcol));
 				if (absgy < absGxTimesPiOver8) { // angle = 0° or 180°
 					nms[col] = (gcol[1] > *gcol || gcol[-1] > *gcol);
 				}
@@ -189,7 +186,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 					nms[col] = (gcol[c] > *gcol || gcol[-c] > *gcol);
 				}
 				else { // angle = 90° or 270°
-					nms[col] = (gcol[m_nImageStride] > *gcol || *(gcol-m_nImageStride) > *gcol);
+					nms[col] = (*(gcol+m_nImageStride) > *gcol || *(gcol-m_nImageStride) > *gcol);
 				}
 			}
 		}
