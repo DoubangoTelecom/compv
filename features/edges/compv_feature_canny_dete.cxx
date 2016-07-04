@@ -16,8 +16,8 @@ COMPV_NAMESPACE_BEGIN()
 static const int COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIZE = 5;
 static const float COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIGMA = 1.4f; // FIXME: 1.4
 
-#define COMPV_FEATURE_DETE_CANNY_TMIN 90
-#define COMPV_FEATURE_DETE_CANNY_TMAX 170
+#define COMPV_FEATURE_DETE_CANNY_TMIN	90
+#define COMPV_FEATURE_DETE_CANNY_TMAX	170
 
 CompVEdgeDeteCanny::CompVEdgeDeteCanny()
 	: CompVEdgeDete(COMPV_CANNY_ID)
@@ -115,7 +115,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 {
 	// Private function -> do not check input parameters
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // MT
 	if (!m_pNms) {
 		m_pNms = (uint8_t*)CompVMem::malloc(edges->rows() * edges->cols() * sizeof(uint8_t));
 		COMPV_CHECK_EXP_RETURN(!m_pNms, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -126,11 +126,18 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 	const int16_t *gx = m_pGx + m_nImageStride, *gy = m_pGy + m_nImageStride;
 	uint16_t *g = m_pG + m_nImageStride, gcol;
 	uint8_t *nms = m_pNms + m_nImageWidth;
+	uint8_t *e = const_cast<uint8_t*>(edges->ptr(1));
 	int a, b;
 	const int stride = (int)m_nImageStride;
 
+	// non-maximasupp is multi-threaded and we will use this property to zero the edge buffer with low cost (compared to edges->zeroall() which is not MT)
+	// TODO(dmi): perform next op only if startIndex == 0
+	CompVMem::zero(e - m_nImageStride, m_nImageWidth); // zero first line
+	CompVMem::zero(e + ((maxRows - 1)*m_nImageStride), m_nImageWidth); // zero last line
+
 	// mark points to supp
 	for (row = 1; row < maxRows; ++row) {
+		CompVMem::zero(e, m_nImageWidth);
 		for (col = 1; col < maxCols; ++col) {
 			gcol = g[col];
 			// The angle is guessed using the first quadrant ([0-45] degree) only then completed.
@@ -165,6 +172,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 		gx += m_nImageStride;
 		gy += m_nImageStride;
 		g += m_nImageStride;
+		e += m_nImageStride;
 		nms += m_nImageWidth;
 	}
 
@@ -187,17 +195,13 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges)
 COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges)
 {
 	// Private function -> do not check input parameters
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // check for 255 not correct as could be there
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();  // MT
 
-	size_t idxStridefull, numEdges = 0;
-
-	COMPV_CHECK_CODE_RETURN(edges->zero_all()); // FIXME
-
-#if 1
+	size_t idxStridefull, numEdges = 0, row, col;
+	
 	// FIXME(dmi): is count == 1 -> supp
-	for (size_t row = 1; row < edges->rows() - 1; ++row) {
-		for (size_t col = 1; col < edges->cols() - 1; ++col) {
+	for (row = 1; row < edges->rows() - 1; ++row) {
+		for (col = 1; col < edges->cols() - 1; ++col) {
 			idxStridefull = (row * m_nImageStride) + col;
 			if (m_pG[idxStridefull] >= COMPV_FEATURE_DETE_CANNY_TMAX) { // strong edge
 				numEdges = 0;
@@ -208,75 +212,56 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges)
 			}
 		}
 	}
-#else
-	for (size_t row = 1; row < edges->rows() - 1; ++row) {
-		for (size_t col = 1; col < edges->cols() - 1; ++col) {
-			idxStridefull = (row * m_nImageStride) + col;
-			if (m_pG[idxStridefull] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // weak edge
-				*const_cast<uint8_t*>(edges->ptr(row, col)) = 255;
-			}
-		}
-	}
-#endif
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-bool CompVEdgeDeteCanny::connectEdge(CompVPtrArray(uint8_t)& edges, size_t rowIdx, size_t colIdx, size_t& numEdges)
+void CompVEdgeDeteCanny::connectEdge(CompVPtrArray(uint8_t)& edges, size_t rowIdx, size_t colIdx, size_t& numEdges)
 {
 	// Private function -> do not check input parameters
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 
 	// at the border ?
-	if (rowIdx == 0 || colIdx == 0 || rowIdx >= m_nImageHeight - 1 || colIdx >= m_nImageWidth - 1) {
-		return false;
+	if (!rowIdx || !colIdx || rowIdx > m_nImageHeight - 2 || colIdx > m_nImageWidth - 2) {
+		return;
 	}
+
+	uint8_t* pixel = const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx));
 
 	// already strong edge ?
-	if (*edges->ptr(rowIdx, colIdx) == 255) {
+	if (*pixel == 255) {
 		numEdges = SIZE_MAX;
-		return true;
+		return;
 	}
 	
-	*const_cast<uint8_t*>(edges->ptr(rowIdx, colIdx)) = 255;
-	if (m_pG[(rowIdx * m_nImageStride) + colIdx] >= COMPV_FEATURE_DETE_CANNY_TMAX) {
-		++numEdges;
+	*pixel = 255;
+	++numEdges;
+
+	const uint16_t* g = &m_pG[(rowIdx * m_nImageStride) + colIdx];
+	if (*(g-1) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left
+		connectEdge(edges, rowIdx, colIdx - 1, numEdges);
 	}
-
-	size_t idxStridefull;
-
-	// FIXME: use grid
-
-	/*for (size_t row = rowIdx; row < edges->rows() - 1; ++row)*/ {
-		/*for (size_t col = colIdx; col < edges->cols() - 1; ++col)*/ {
-			// if (row == rowIdx && col == colIdx) continue; // FIXME
-			idxStridefull = (rowIdx * m_nImageStride) + colIdx;
-			if (m_pG[idxStridefull - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left
-				connectEdge(edges, rowIdx, colIdx - 1, numEdges);
-			}
-			if (m_pG[idxStridefull + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right
-				connectEdge(edges, rowIdx, colIdx + 1, numEdges);
-			}
-			if (m_pG[idxStridefull - m_nImageStride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-top
-				connectEdge(edges, rowIdx - 1, colIdx - 1, numEdges);
-			}
-			if (m_pG[idxStridefull - m_nImageStride] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // top
-				connectEdge(edges, rowIdx - 1, colIdx, numEdges);
-			}
-			if (m_pG[idxStridefull - m_nImageStride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-top
-				connectEdge(edges, rowIdx - 1, colIdx + 1, numEdges);
-			}
-			if (m_pG[idxStridefull + m_nImageStride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-bottom
-				connectEdge(edges, rowIdx + 1, colIdx - 1, numEdges);
-			}
-			if (m_pG[idxStridefull + m_nImageStride] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // bottom
-				connectEdge(edges, rowIdx + 1, colIdx, numEdges);
-			}
-			if (m_pG[idxStridefull + m_nImageStride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-bottom
-				connectEdge(edges, rowIdx + 1, colIdx + 1, numEdges);
-			}
-		}
+	if (*(g+1) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right
+		connectEdge(edges, rowIdx, colIdx + 1, numEdges);
 	}
-	return false;
+	if (*(g-m_nImageStride-1) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-top
+		connectEdge(edges, rowIdx - 1, colIdx - 1, numEdges);
+	}
+	if (*(g-m_nImageStride) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // top
+		connectEdge(edges, rowIdx - 1, colIdx, numEdges);
+	}
+	if (*(g-m_nImageStride+1) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-top
+		connectEdge(edges, rowIdx - 1, colIdx + 1, numEdges);
+	}
+	if (*(g+ m_nImageStride-1) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-bottom
+		connectEdge(edges, rowIdx + 1, colIdx - 1, numEdges);
+	}
+	if (*(g+m_nImageStride) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // bottom
+		connectEdge(edges, rowIdx + 1, colIdx, numEdges);
+	}
+	if (*(g+m_nImageStride+1) >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-bottom
+		connectEdge(edges, rowIdx + 1, colIdx + 1, numEdges);
+	}
 }
 
 COMPV_ERROR_CODE CompVEdgeDeteCanny::newObj(CompVPtr<CompVEdgeDete* >* dete)
