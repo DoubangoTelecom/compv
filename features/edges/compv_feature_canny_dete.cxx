@@ -99,6 +99,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 	// FIXME(dmi): use Scharr instead of sobel
 	// FIXME(dmi): restore gaussian blur
 	// Convolution
+	// Convolution + gradient can be packed for multithreading
 	COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>((const uint8_t*)image->getDataPtr(), m_nImageWidth, m_nImageStride, m_nImageHeight, &CompVSobelGx_vt[0], &CompVSobelGx_hz[0], 3, m_pGx)));
 	COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>((const uint8_t*)image->getDataPtr(), m_nImageWidth, m_nImageStride, m_nImageHeight, &CompVSobelGx_hz[0], &CompVSobelGx_vt[0], 3, m_pGy)));
 
@@ -225,29 +226,29 @@ static COMPV_INLINE void connectEdge(uint8_t* pixel, const uint16_t* g, size_t r
 {	
 	// Private function -> do not check input parameters
 	if (rowIdx && colIdx && rowIdx < maxRows && colIdx < maxCols) {
-		*pixel = 255; // set as strong edge
-		if (g[-1] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[-1] != 255) { // left
+		*pixel = 0xff; // set as strong edge
+		if (pixel[-1] ^ 0xff && g[-1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left
 			connectEdge(pixel - 1, g - 1, rowIdx, colIdx - 1, stride, maxRows, maxCols);
 		}
-		if (g[1] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[1] != 255) { // right
+		if (pixel[1] ^ 0xff && g[1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right
 			connectEdge(pixel + 1, g + 1, rowIdx, colIdx + 1, stride, maxRows, maxCols);
 		}
-		if (g[-stride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[-stride - 1] != 255) { // left-top
+		if (pixel[-stride - 1] ^ 0xff && g[-stride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-top
 			connectEdge(pixel - stride - 1, g - stride - 1, rowIdx - 1, colIdx - 1, stride, maxRows, maxCols);
 		}
-		if (g[-stride] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[-stride] != 255) { // top
+		if (pixel[-stride] ^ 0xff && g[-stride] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // top
 			connectEdge(pixel - stride, g - stride, rowIdx - 1, colIdx, stride, maxRows, maxCols);
 		}
-		if (g[-stride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[-stride + 1] != 255) { // right-top
+		if (pixel[-stride + 1] ^ 0xff && g[-stride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-top
 			connectEdge(pixel - stride + 1, g - stride + 1, rowIdx - 1, colIdx + 1, stride, maxRows, maxCols);
 		}
-		if (g[stride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[stride - 1] != 255) { // left-bottom
+		if (pixel[stride - 1] ^ 0xff && g[stride - 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // left-bottom
 			connectEdge(pixel + stride - 1, g + stride - 1, rowIdx + 1, colIdx - 1, stride, maxRows, maxCols);
 		}
-		if (g[stride] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[stride] != 255) { // bottom
+		if (pixel[stride] ^ 0xff && g[stride] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // bottom
 			connectEdge(pixel + stride, g + stride, rowIdx + 1, colIdx, stride, maxRows, maxCols);
 		}
-		if (g[stride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN && pixel[stride + 1] != 255) { // right-bottom
+		if (pixel[stride + 1] ^ 0xff && g[stride + 1] >= COMPV_FEATURE_DETE_CANNY_TMIN) { // right-bottom
 			connectEdge(pixel + stride + 1, g + stride + 1, rowIdx + 1, colIdx + 1, stride, maxRows, maxCols);
 		}
 	}
