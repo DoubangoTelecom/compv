@@ -10,14 +10,14 @@
 #include "compv/math/compv_math_utils.h"
 #include "compv/compv_engine.h"
 #include "compv/compv_gauss.h"
+#include "compv/compv_md5.h" // FIXME(dmi): remove
 
 COMPV_NAMESPACE_BEGIN()
 
-static const int COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIZE = 5;
-static const float COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIGMA = 1.4f; // FIXME: 1.4
-
 #define COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW	(0.68f)
 #define COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH	(COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW * 2.f)
+
+#define COMPV_FEATURE_DETE_CANY_MIN_SAMPLES_PER_THREAD	3 // must be >= 3 because of the convolution ("rowsOverlapCount")
 
 static const float kTangentPiOver8 = 0.414213568f; // tan(22.5)
 static const int32_t kTangentPiOver8Int = static_cast<int32_t>(kTangentPiOver8 * (1 << 16));
@@ -35,6 +35,9 @@ CompVEdgeDeteCanny::CompVEdgeDeteCanny()
 	, m_pGy(NULL)
 	, m_pG(NULL)
 	, m_pNms(NULL)
+	, m_pcKernelVt(CompVSobel3x3Gx_vt)
+	, m_pcKernelHz(CompVSobel3x3Gx_hz)
+	, m_nKernelSize(3)
 {
 
 }
@@ -62,6 +65,15 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::set(int id, const void* valuePtr, size_t va
 		m_fThresholdHigh = *((float*)valuePtr);
 		return COMPV_ERROR_CODE_S_OK;
 	}
+	case COMPV_CANNY_SET_INT32_KERNEL_SIZE: {
+		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int32_t) || (*((int32_t*)valuePtr) != 3 && *((int32_t*)valuePtr) != 5), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		m_nKernelSize = *((int32_t*)valuePtr);
+		switch (m_nKernelSize) {
+		case 3: m_pcKernelVt = CompVSobel3x3Gx_vt, m_pcKernelHz = CompVSobel3x3Gx_hz; return COMPV_ERROR_CODE_S_OK;
+		case 5: m_pcKernelVt = CompVSobel5x5Gx_vt, m_pcKernelHz = CompVSobel5x5Gx_hz; return COMPV_ERROR_CODE_S_OK;
+		default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PARAMETER); return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+		}
+	}
 	default:
 		return CompVSettable::set(id, valuePtr, valueSize);
 	}
@@ -83,51 +95,117 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 		m_nImageWidth = static_cast<size_t>(image->getWidth());
 		m_nImageHeight = static_cast<size_t>(image->getHeight());
 		m_nImageStride = static_cast<size_t>(image->getStride());
+		m_pGx = (int16_t*)CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, m_nImageHeight));
+		COMPV_CHECK_EXP_RETURN(!m_pGx, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		m_pGy = (int16_t*)CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, m_nImageHeight));
+		COMPV_CHECK_EXP_RETURN(!m_pGy, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		m_pG = (uint16_t*)CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<uint16_t>(m_nImageStride, m_nImageHeight));
+		COMPV_CHECK_EXP_RETURN(!m_pG, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
 
 	// Create edges buffer
 	// edges must have same stride than m_pG (required by scaleAndClip) and image (required by gaussian blur)
 	COMPV_CHECK_CODE_RETURN(CompVArray<uint8_t>::newObj(&edges, m_nImageHeight, m_nImageWidth, COMPV_SIMD_ALIGNV_DEFAULT, m_nImageStride));
 
-	// FIXME(dmi): combine gaussianblur with sobel/scharr to one op
-	// Gaussian Blurr
-#if 0
-	if (m_gblurKernFxp) {
-		// Fixed-point
-		COMPV_CHECK_CODE_RETURN(m_gblur->convlt1_fxp((uint8_t*)image->getDataPtr(), (int)m_nImageWidth, (int)m_nImageStride, (int)m_nImageHeight, m_gblurKernFxp->ptr(), m_gblurKernFxp->ptr(), COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIZE, (uint8_t*)edges->ptr()));
-	}
-	else {
-		// Floating-point
-		COMPV_CHECK_CODE_RETURN(m_gblur->convlt1((uint8_t*)image->getDataPtr(), (int)m_nImageWidth, (int)m_nImageStride, (int)m_nImageHeight, m_gblurKernFloat->ptr(), m_gblurKernFloat->ptr(), COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIZE, (uint8_t*)edges->ptr()));
-	}
-#endif
-
-	// FIXME(dmi): use Scharr instead of sobel
-	// FIXME(dmi): restore gaussian blur
-	// Convolution
-	// Convolution + gradient + mean can be packed for multithreading
-	COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>((const uint8_t*)image->getDataPtr(), m_nImageWidth, m_nImageStride, m_nImageHeight, &CompVSobelGx_vt[0], &CompVSobelGx_hz[0], 3, m_pGx)));
-	COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>((const uint8_t*)image->getDataPtr(), m_nImageWidth, m_nImageStride, m_nImageHeight, &CompVSobelGx_hz[0], &CompVSobelGx_vt[0], 3, m_pGy)));
-
 	// Compute mean and get tLow and tMin
 	// TODO(dmi): add support for otsu and median
 	uint8_t mean = 1;
-	COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t, uint32_t>((const uint8_t*)image->getDataPtr(), m_nImageWidth, m_nImageHeight, m_nImageStride, mean)));
-	const uint16_t tLow = static_cast<uint16_t>(mean * m_fThresholdLow);
-	const uint16_t tHigh = static_cast<uint16_t>(mean * m_fThresholdHigh);
+	
+	int32_t threadsCount = 1;
+	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
+	if (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) {
+		threadsCount = static_cast<int32_t>(m_nImageHeight / COMPV_FEATURE_DETE_CANY_MIN_SAMPLES_PER_THREAD);
+		threadsCount = COMPV_MATH_MIN(threadsCount, threadDisp->getThreadsCount());
+	}
 
-	// Compute gradiant using L1 distance.
-	//!\\ Important: NMS function requires distance metric to be L1 instead of L2 (see comment in nms())
-	// FIXME'dmi): gmax not needed
-	uint16_t gmax = 1;
-	COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, gmax, m_nImageWidth, m_nImageHeight, m_nImageStride)));
+	// When multithreading is enabled the mean value could be "+-1" compared to the single threaded value.
 
-#if 0
-	// scale (normalization)
-	float scale = 255.f / float(gmax);
-	uint8_t* edgesPtr = const_cast<uint8_t*>(edges->ptr());
-	COMPV_CHECK_CODE_RETURN((CompVMathUtils::scaleAndClip<uint16_t, float, uint8_t>(m_pG, scale, edgesPtr, 0, 255, m_nImageWidth, m_nImageHeight, m_nImageStride)));
-#endif
+	if (threadsCount > 1) {
+		const size_t rowsOverlapCount = ((m_nKernelSize >> 1) << 1); // (kernelRadius times 2)
+		const size_t rowsOverlapPad = rowsOverlapCount * m_nImageStride;
+		const size_t countAny = (size_t)(m_nImageHeight / threadsCount);
+		const size_t countLast = (size_t)countAny + (m_nImageHeight % threadsCount);
+		const size_t countAnyTimesStride = countAny * m_nImageStride;
+		const uint8_t* inPtr_ = static_cast<const uint8_t*>(image->getDataPtr());
+		int16_t* imgTmpGx = (int16_t*)CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, m_nImageHeight));
+		COMPV_CHECK_EXP_RETURN(!imgTmpGx, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		int16_t* imgTmpGy = (int16_t*)CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, m_nImageHeight));
+		COMPV_CHECK_EXP_RETURN(!imgTmpGy, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		uint8_t* means = (uint8_t*)CompVMem::malloc(threadsCount * sizeof(uint8_t));
+		int16_t* tmpPtrGx_ = imgTmpGx;
+		int16_t* tmpPtrGy_ = imgTmpGy;
+		int16_t* outPtrGx_ = m_pGx;
+		int16_t* outPtrGy_ = m_pGy;
+		uint16_t* outPtrG_ = m_pG;
+		CompVAsyncTaskIds taskIds;
+		taskIds.reserve(threadsCount);
+		auto funcPtrFirst = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrTmpGx, int16_t* ptrOutGy, int16_t* ptrTmpGy, uint16_t* ptrOutG, uint8_t* ptrMean, size_t h) -> COMPV_ERROR_CODE {
+			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, ptrTmpGx, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
+			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, ptrTmpGy, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
+			CompVMathConvlt::convlt1Vert<int16_t, int16_t, int16_t>(ptrTmpGx, ptrOutGx, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, true, false);
+			CompVMathConvlt::convlt1Vert<int16_t, int16_t, int16_t>(ptrTmpGy, ptrOutGy, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, true, false);
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx, ptrOutGy, ptrOutG, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
+			uint8_t mean_ = 1;
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t, uint32_t>(ptrIn, m_nImageWidth, h, m_nImageStride, mean_)));
+			*ptrMean = mean_;
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		auto funcPtrOthers = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrTmpGx, int16_t* ptrOutGy, int16_t* ptrTmpGy, uint16_t* ptrOutG, uint8_t* ptrMean, size_t h, bool last) -> COMPV_ERROR_CODE {
+			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - rowsOverlapPad, ptrTmpGx - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
+			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - rowsOverlapPad, ptrTmpGy - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
+			CompVMathConvlt::convlt1Vert<int16_t, int16_t, int16_t>(ptrTmpGx - rowsOverlapPad, ptrOutGx - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, false, last);
+			uint16_t* g_ = ptrOutG - rowsOverlapPad;
+			CompVMathConvlt::convlt1Vert<int16_t, int16_t, int16_t>(ptrTmpGy - rowsOverlapPad, ptrOutGy - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, false, last);
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx - rowsOverlapPad, ptrOutGy - rowsOverlapPad, g_, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
+			uint8_t mean_ = 1;
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t, uint32_t>(ptrIn, m_nImageWidth, h, m_nImageStride, mean_)));
+			*ptrMean = mean_;
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		/* first */
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrFirst, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &means[0], countAny), taskIds));
+		inPtr_ += countAny * m_nImageStride;
+		tmpPtrGx_ += countAnyTimesStride;
+		outPtrGx_ += countAnyTimesStride;
+		tmpPtrGy_ += countAnyTimesStride;
+		outPtrGy_ += countAnyTimesStride;
+		outPtrG_ += countAnyTimesStride;
+		/* others */
+		for (int32_t threadIdx = 1; threadIdx < threadsCount - 1; ++threadIdx) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &means[threadIdx], countAny, false), taskIds));
+			inPtr_ += countAnyTimesStride;
+			tmpPtrGx_ += countAnyTimesStride;
+			outPtrGx_ += countAnyTimesStride;
+			tmpPtrGy_ += countAnyTimesStride;
+			outPtrGy_ += countAnyTimesStride;
+			outPtrG_ += countAnyTimesStride;
+		}
+		/* last */
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &means[threadsCount - 1], countLast, true), taskIds));
+		/* wait */
+		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+		/* mean */
+		uint32_t sum = 0;
+		for (int32_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+			sum += means[threadIdx];
+		}
+		mean = (sum + 1) / threadsCount;
+		CompVMem::free((void**)&imgTmpGx);
+		CompVMem::free((void**)&imgTmpGy);
+		CompVMem::free((void**)&means);
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(static_cast<const uint8_t*>(image->getDataPtr()), m_nImageWidth, m_nImageStride, m_nImageHeight, m_pcKernelVt, m_pcKernelHz, m_nKernelSize, m_pGx)));
+		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(static_cast<const uint8_t*>(image->getDataPtr()), m_nImageWidth, m_nImageStride, m_nImageHeight, m_pcKernelHz, m_pcKernelVt, m_nKernelSize, m_pGy)));
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride)));
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t, uint32_t>((const uint8_t*)image->getDataPtr(), m_nImageWidth, m_nImageHeight, m_nImageStride, mean)));
+	}
+	
+	mean = COMPV_MATH_MAX(1, mean);
+	uint16_t tLow = static_cast<uint16_t>(mean * m_fThresholdLow);
+	uint16_t tHigh = static_cast<uint16_t>(mean * m_fThresholdHigh);
+	tLow = COMPV_MATH_MAX(1, tLow);
+	tHigh = COMPV_MATH_MAX(tLow + 2, tHigh);
 
 	// NMS
 	COMPV_CHECK_CODE_RETURN(nms(edges, tLow));
@@ -138,14 +216,18 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 }
 
 // NonMaximaSuppression
-COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges, uint16_t tLow)
+COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges, uint16_t tLow, size_t rowStart, size_t rowCount)
 {
 	// Private function -> do not check input parameters
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // MT
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // MT and SIMD
 	if (!m_pNms) {
 		m_pNms = (uint8_t*)CompVMem::calloc(edges->rows() * edges->cols(), sizeof(uint8_t));
 		COMPV_CHECK_EXP_RETURN(!m_pNms, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
+
+	rowStart = COMPV_MATH_MAX(1, rowStart);
+	size_t maxRows = rowStart + rowCount;
+	maxRows = COMPV_MATH_MIN(maxRows, rowStart);
 
 	size_t row, col;
 	const size_t maxRows = edges->rows() - 1, maxCols = edges->cols() - 1;
@@ -283,13 +365,6 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::newObj(CompVPtr<CompVEdgeDete* >* dete)
 	COMPV_CHECK_EXP_RETURN(!dete, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVPtr<CompVEdgeDeteCanny* >dete_ = new CompVEdgeDeteCanny();
 	COMPV_CHECK_EXP_RETURN(!dete_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	COMPV_CHECK_CODE_RETURN(CompVConvlt<float>::newObj(&dete_->m_gblur));
-	if (CompVEngine::isMathFixedPoint()) {
-		COMPV_CHECK_CODE_RETURN(CompVGaussKern<float>::buildKern1_fxp(&dete_->m_gblurKernFxp, COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIZE, COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIGMA));
-	}
-	if (!dete_->m_gblurKernFxp) {
-		COMPV_CHECK_CODE_RETURN(CompVGaussKern<float>::buildKern1(&dete_->m_gblurKernFloat, COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIZE, COMPV_FEATURE_DETE_CANNY_GAUSS_KERN_SIGMA));
-	}
 
 	*dete = *dete_;
 	return COMPV_ERROR_CODE_S_OK;

@@ -36,8 +36,8 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVPtr<CompVEdgeDete* >* dete);
 
 private:
-	COMPV_ERROR_CODE nms(CompVPtrArray(uint8_t)& edges);
-	void hysteresis(CompVPtrArray(uint8_t)& edges);
+	COMPV_ERROR_CODE nms(CompVPtrArray(uint8_t)& edges, uint16_t tLow, size_t rowStart, size_t rowCount);
+	void hysteresis(CompVPtrArray(uint8_t)& edges, uint16_t tLow, uint16_t tHigh);
 
 private:
 	size_t m_nImageWidth;
@@ -46,10 +46,12 @@ private:
 	int16_t* m_pGx;
 	int16_t* m_pGy;
 	uint16_t* m_pG;
+	const int16_t* m_pcKernelVt;
+	const int16_t* m_pcKernelHz;
+	size_t m_nKernelSize;
+	float m_fThresholdLow;
+	float m_fThresholdHigh;
 	uint8_t* m_pNms;
-	CompVPtr<CompVConvlt<float>* > m_gblur;
-	CompVPtr<CompVArray<float>* > m_gblurKernFloat;
-	CompVPtr<CompVArray<uint16_t>* > m_gblurKernFxp;
 };
 
 COMPV_NAMESPACE_END()

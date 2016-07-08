@@ -10,6 +10,7 @@
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
 #include "compv/math/compv_math.h"
+#include "compv/compv_engine.h"
 #include "compv/compv_mem.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -17,6 +18,16 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_API CompVMathConvlt
 {
 public:
+	template <typename T>
+	struct convltData {
+		CompVPtrArray(T) tmp;
+	};
+
+	template <typename InputType, typename KernelType, typename OutputType>
+	static COMPV_ERROR_CODE initData(convltData<OutputType>&data)
+	{
+		return COMPV_ERROR_CODE_S_OK;
+	}
 	// Convolution using separable kernel
 	// sizeof(outPtr) must be computed using CompVMathConvlt::outputSizeInBytes()
 	template <typename InputType, typename KernelType, typename OutputType>
@@ -36,66 +47,105 @@ public:
 			outPtrAllocated = true;
 		}
 		// Allocate tmp memory
-		OutputType* imgTmp0 = NULL;
-		imgTmp0 = (OutputType*)CompVMem::malloc(neededSize);
-		if (!imgTmp0) {
+		OutputType* imgTmp = NULL;
+		imgTmp = (OutputType*)CompVMem::malloc(neededSize);
+		if (!imgTmp) {
 			if (outPtrAllocated) {
 				CompVMem::free((void**)&outPtr);
 			}
 			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 		}
-
-		OutputType *imgTmp, *imgOut, *imgPtr;
-		size_t imgpad;
-		size_t ker_size_div2 = kernSize >> 1;
-		int start_margin = (int)(dataBorder >= ker_size_div2) ? -(int)ker_size_div2 : -(int)dataBorder;
-		int start_center = (int)(start_margin + ker_size_div2);
-
-		// We must not accept garbage in the border (coul be used by the calling function -e.g to find the max value for normalization)
-		if (dataBorder < ker_size_div2) {
-			// Set hz borders to zero
-			OutputType *outPtr0 = outPtr, *outPtr1 = outPtr + (dataWidth - ker_size_div2);
-			OutputType *tmpPtr0 = imgTmp0, *tmpPtr1 = imgTmp0 + (dataWidth - ker_size_div2);
-			for (size_t row = 0; row < dataHeight; ++row) {
-				for (size_t col = 0; col < ker_size_div2; ++col) {
-					outPtr0[col] = 0, outPtr1[col] = 0;
-					tmpPtr0[col] = 0, tmpPtr1[col] = 0;
-				}
-				outPtr0 += dataStride;
-				outPtr1 += dataStride;
-				tmpPtr0 += dataStride;
-				tmpPtr1 += dataStride;
-			}
-			// Set vert borders to zero
-			outPtr0 = outPtr;
-			outPtr1 = outPtr + ((dataHeight - ker_size_div2) * dataStride);
-			tmpPtr0 = imgTmp0;
-			tmpPtr1 = imgTmp0 + ((dataHeight - ker_size_div2) * dataStride);
-			size_t bSize = (ker_size_div2 * dataStride) * sizeof(OutputType);
-			CompVMem::zero(outPtr0, bSize);
-			CompVMem::zero(outPtr1, bSize);
-			CompVMem::zero(tmpPtr0, bSize);
-			CompVMem::zero(tmpPtr1, bSize);
+		int32_t threadsCount = 1;
+		CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
+		if (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) {
+			threadsCount = static_cast<int32_t>(dataHeight / (kernSize << 1)); // at least "rowsOverlapCount"
+			threadsCount = COMPV_MATH_MIN(threadsCount, threadDisp->getThreadsCount());
 		}
 
-		imgTmp = imgTmp0 + (dataBorder * dataStride) + dataBorder;
-		imgOut = outPtr + (dataBorder * dataStride) + dataBorder;
+		if (threadsCount > 1 && kernSize < 20) { // only if overlaping is small
+			const size_t rowsOverlapCount = ((kernSize >> 1) << 1); // (kernelRadius times 2)
+			const size_t rowsOverlapPad = rowsOverlapCount * dataStride;
+			const size_t countAny = (size_t)(dataHeight / threadsCount);
+			const size_t countLast = (size_t)countAny + (dataHeight % threadsCount);
+			const InputType* inPtr_ = dataPtr;
+			OutputType* tmpPtr_ = imgTmp;
+			OutputType* outPtr_ = outPtr;
+			CompVAsyncTaskIds taskIds;
+			taskIds.reserve(threadsCount);
+			auto funcPtrFirst = [&](const InputType* ptrIn, OutputType* ptrOut, OutputType* ptrTmp, size_t h) -> COMPV_ERROR_CODE {
+				CompVMathConvlt::convlt1Hz<InputType, KernelType, OutputType>(ptrIn, ptrTmp, dataWidth, h + rowsOverlapCount, dataStride, hkernPtr, kernSize);
+				CompVMathConvlt::convlt1Vert<OutputType, KernelType, OutputType>(ptrTmp, ptrOut, dataWidth, h + rowsOverlapCount, dataStride, vkernPtr, kernSize, true, false);
+				return COMPV_ERROR_CODE_S_OK;
+			};
+			auto funcPtrOthers = [&](const InputType* ptrIn, OutputType* ptrOut, OutputType* ptrTmp, size_t h, bool last) -> COMPV_ERROR_CODE {
+				CompVMathConvlt::convlt1Hz<InputType, KernelType, OutputType>(ptrIn - rowsOverlapPad, ptrTmp - rowsOverlapPad, dataWidth, h + rowsOverlapCount, dataStride, hkernPtr, kernSize);
+				CompVMathConvlt::convlt1Vert<OutputType, KernelType, OutputType>(ptrTmp - rowsOverlapPad, ptrOut - rowsOverlapPad, dataWidth, h + rowsOverlapCount, dataStride, vkernPtr, kernSize, false, last);
+				return COMPV_ERROR_CODE_S_OK;
+			};
+			/* first */
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrFirst, inPtr_, outPtr_, tmpPtr_, countAny), taskIds));
+			inPtr_ += countAny * dataStride;
+			tmpPtr_ += countAny * dataStride;
+			outPtr_ += countAny * dataStride;
+			/* others */
+			for (int32_t threadIdx = 1; threadIdx < threadsCount - 1; ++threadIdx) {
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtr_, tmpPtr_, countAny, false), taskIds));
+				inPtr_ += countAny * dataStride;
+				tmpPtr_ += countAny * dataStride;
+				outPtr_ += countAny * dataStride;
+			}
+			/* last */
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtr_, tmpPtr_, countLast, true), taskIds));
+			/* wait */
+			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+		}
+		else {
+			CompVMathConvlt::convlt1Hz<InputType, KernelType, OutputType>(dataPtr, imgTmp, dataWidth, dataHeight, dataStride, hkernPtr, kernSize);
+			CompVMathConvlt::convlt1Vert<OutputType, KernelType, OutputType>(imgTmp, outPtr, dataWidth, dataHeight, dataStride, vkernPtr, kernSize);
+		}
 
-		/* Horizontal */
-		const InputType *topleft0 = dataPtr + start_margin;
-		imgpad = (size_t)((dataStride - dataWidth) + start_center + start_center);
-		imgPtr = imgTmp + start_center;
-		CompVMathConvlt::convlt1VertHz<InputType, KernelType, OutputType>(topleft0, imgPtr, (size_t)(dataWidth - start_center - start_center), dataHeight, /*stride*/1, imgpad, hkernPtr, kernSize);
-
-		/* Vertical */
-		const OutputType* topleft1 = imgTmp + (start_margin * dataStride); // output from hz filtering is now used as input
-		imgpad = (dataStride - dataWidth);
-		imgPtr = imgOut + (start_center * dataStride);
-		CompVMathConvlt::convlt1VertHz<OutputType, KernelType, OutputType>(topleft1, imgPtr, dataWidth, (size_t)(dataHeight - start_center - start_center), dataStride, imgpad, vkernPtr, kernSize);
-
-		CompVMem::free((void**)&imgTmp0);
+		CompVMem::free((void**)&imgTmp);
 
 		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	template <typename InputType, typename KernelType, typename OutputType>
+	static void convlt1Hz(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* hkernPtr, size_t kernSize, bool resetBorders = true)
+	{
+		size_t ker_size_div2 = (kernSize >> 1);
+		size_t imgpad = ((stride - width) + ker_size_div2 + ker_size_div2);
+		// Set hz borders to zero
+		// We must not accept garbage in the border (coul be used by the calling function -e.g to find the max value for normalization)
+		if (resetBorders) {
+			OutputType *outPtr0 = outPtr, *outPtr1 = outPtr + (width - ker_size_div2);
+			for (size_t row = 0; row < height; ++row) {
+				for (size_t col = 0; col < ker_size_div2; ++col) {
+					outPtr0[col] = 0, outPtr1[col] = 0;
+				}
+				outPtr0 += stride;
+				outPtr1 += stride;
+			}
+		}
+		// Perform horizontal convolution
+		CompVMathConvlt::convlt1VertHz<InputType, KernelType, OutputType>(inPtr, outPtr + ker_size_div2, (size_t)(width - ker_size_div2 - ker_size_div2), height, 1, imgpad, hkernPtr, kernSize);
+	}
+
+	template <typename InputType, typename KernelType, typename OutputType>
+	static void convlt1Vert(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* vkernPtr, size_t kernSize, bool resetTopBorder = true, bool resetBottomBorder = true)
+	{
+		size_t ker_size_div2 = (kernSize >> 1);
+		size_t imgpad = (stride - width);
+		// Set top and bottom vert borders to zero
+		// We must not accept garbage in the border (coul be used by the calling function -e.g to find the max value for normalization)
+		const size_t bSize = (ker_size_div2 * stride) * sizeof(OutputType);
+		if (resetTopBorder) {
+			CompVMem::zero(outPtr, bSize);
+		}
+		if (resetBottomBorder) {
+			CompVMem::zero(outPtr + ((height - ker_size_div2) * stride), bSize);
+		}
+		// Perform vertical convolution
+		CompVMathConvlt::convlt1VertHz<InputType, KernelType, OutputType>(inPtr, outPtr + (ker_size_div2 * stride), width, (height - ker_size_div2 - ker_size_div2), stride, imgpad, vkernPtr, kernSize);
 	}
 	
 	// Convolution using no separable kernel

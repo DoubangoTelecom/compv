@@ -65,7 +65,7 @@ COMPV_ERROR_CODE CompVEdgeDeteBASE::process(const CompVPtr<CompVImage*>& image, 
 	
 	// Compute gradiant using L1 distance
 	uint16_t gmax = 1;
-	COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, gmax, m_nImageWidth, m_nImageHeight, m_nImageStride)));
+	COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride, &gmax)));
 	
 	// Create edges buffer
 	// edges must have same stride than m_pG (required by scaleAndClip)
@@ -102,8 +102,8 @@ COMPV_ERROR_CODE CompVEdgeDeteBASE::newObj(CompVPtr<CompVEdgeDete* >* dete, int 
 	switch (id)
 	{
 	case COMPV_SOBEL_ID: 
-		kernelPtrVt_ = CompVSobelGx_vt;
-		kernelPtrHz_ = CompVSobelGx_hz;
+		kernelPtrVt_ = CompVSobel3x3Gx_vt;
+		kernelPtrHz_ = CompVSobel3x3Gx_hz;
 		kernelSize_ = 3;
 		break;
 	case COMPV_SCHARR_ID:

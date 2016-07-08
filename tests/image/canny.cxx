@@ -2,6 +2,9 @@
 
 #include "../common.h"
 
+// Depending on the number of threads, the mean value could be "+-1" compared to the single threaded version
+// -> Unit-test -> use 8 threads
+
 #define TEST_TYPE_GIRL			0
 #define TEST_TYPE_EQUIRECT		1
 #define TEST_TYPE_MANDEKALOU	2
@@ -13,16 +16,16 @@
 
 #if TEST_TYPE == TEST_TYPE_GIRL
 #	define CANNY_JPEG_IMG			"C:/Projects/GitHub/compv/tests/girl.jpg"
-#	define CANNY_MD5				"8c186abac53615785ad81cc4e203bbaf"
+#	define CANNY_MD5				"bb748a24b280717614dc43bf5bba2f2c"
 #elif TEST_TYPE == TEST_TYPE_EQUIRECT
 #	define CANNY_JPEG_IMG			"C:/Projects/GitHub/compv/tests/equirectangular.jpg"
-#	define CANNY_MD5				"8cf08c0e06eea65b7554801db4f199fa"
+#	define CANNY_MD5				"2476dd77aa998a90723a767ca56da4e3"
 #elif TEST_TYPE == TEST_TYPE_MANDEKALOU
 #	define CANNY_JPEG_IMG			"C:/Projects/GitHub/compv/tests/mandekalou.jpg"
-#	define CANNY_MD5				"9173ee8db078995d5e62eafbec9ed71d"
+#	define CANNY_MD5				"ec02f12a204dc0c9368f6decfd30842f"
 #elif TEST_TYPE == TEST_TYPE_VALVE
 #	define CANNY_JPEG_IMG			"C:/Projects/GitHub/compv/tests/Valve_original.jpg"
-#	define CANNY_MD5				"63b2b84cc318f51e42b9156dba6c03f1"
+#	define CANNY_MD5				"bb1973a618532af24529d8e08d1184b7"
 #endif
 
 using namespace compv;

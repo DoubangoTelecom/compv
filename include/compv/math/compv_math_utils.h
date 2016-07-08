@@ -46,31 +46,65 @@ public:
 		randFunc(r, count);
 	}
 
-	// compute gradient using L1 distance (g = abs(gx) + abs(gy)) and the maximum value
-	template <typename InputType, typename OutputType>
-	static COMPV_ERROR_CODE gradientL1(const InputType* gx, const InputType* gy, OutputType*& g, OutputType& max, size_t width, size_t height, size_t stride)
+	template <typename InputType>
+	static COMPV_ERROR_CODE max(const InputType* data, size_t width, size_t height, size_t stride, InputType &max)
 	{
-		COMPV_CHECK_EXP_RETURN(!gx || !gy || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		if (!g) {
-			g = (OutputType*)CompVMem::malloc(height * stride * sizeof(OutputType));
-			COMPV_CHECK_EXP_RETURN(!g, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-		}
-
+		COMPV_CHECK_EXP_RETURN(!data || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-		size_t i, j;
-		max = 1;
-		OutputType* g_ = g;
-		for (j = 0; j < height; ++j) {
-			for (i = 0; i < width; ++i) {
-				g_[i] = (OutputType)(COMPV_MATH_ABS(gx[i]) + COMPV_MATH_ABS(gy[i]));
-				if (max < g_[i]) {
-					max = g_[i];
+		max = data[0];
+		for (size_t j = 0; j < height; ++j) {
+			for (size_t i = 0; i < width; ++i) {
+				if (data[i] > max) {
+					max = data[i];
 				}
 			}
-			g_ += stride;
-			gx += stride;
-			gy += stride;
+			data += stride;
 		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	template <typename InputType, typename AccumulatorType>
+	static COMPV_ERROR_CODE mean(const InputType* data, size_t count, InputType &mean)
+	{
+		COMPV_CHECK_EXP_RETURN(!data || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+		AccumulatorType sum = 0;
+		for (size_t i = 0; i < count; ++i) {
+			sum += data[i]; // UpTo the caller to choose correct "InputType" and "AccumulatorType" to avoid overflow
+		}
+		mean = (InputType)(sum / count);
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	template <typename InputType, typename AccumulatorType>
+	static COMPV_ERROR_CODE mean(const InputType* data, size_t width, size_t height, size_t stride, InputType &mean)
+	{
+		COMPV_CHECK_EXP_RETURN(!data || !width || !height || !stride, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		InputType* means = (InputType*)CompVMem::malloc(height * sizeof(InputType));
+		COMPV_CHECK_EXP_RETURN(!means, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		for (size_t j = 0; j < height; ++j) {
+			CompVMathUtils::mean<InputType, AccumulatorType>(data, width, means[j]);
+			data += stride;
+		}
+		CompVMathUtils::mean<InputType, AccumulatorType>(means, height, mean);
+		CompVMem::free((void**)&means);
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	// compute gradient using L1 distance (g = abs(gx) + abs(gy)) and the maximum value
+	template <typename InputType, typename OutputType>
+	static COMPV_ERROR_CODE gradientL1(const InputType* gx, const InputType* gy, OutputType*& g, size_t width, size_t height, size_t stride, OutputType* max = NULL)
+	{
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradient<InputType, OutputType>(gx, gy, g, width, height, stride, max, true)));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	// compute gradient using L2 distance (g = hypot(gx, gy) and the maximum value
+	template <typename InputType, typename OutputType>
+	static COMPV_ERROR_CODE gradientL2(const InputType* gx, const InputType* gy, OutputType*& g, size_t width, size_t height, size_t stride, OutputType* max = NULL)
+	{
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradient<InputType, OutputType>(gx, gy, g, width, height, stride, max, true)));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -117,6 +151,47 @@ public:
 	static COMPV_INLINE T hypot_naive(T x, T y) {
 		return (T)COMPV_MATH_SQRT(x*x + y*y);
 	}
+
+private:
+		template <typename InputType, typename OutputType>
+		static COMPV_ERROR_CODE gradient(const InputType* gx, const InputType* gy, OutputType*& g, size_t width, size_t height, size_t stride, OutputType* max = NULL, bool L1 = true)
+		{
+			COMPV_CHECK_EXP_RETURN(!gx || !gy || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+			if (!g) {
+				g = (OutputType*)CompVMem::malloc(height * stride * sizeof(OutputType));
+				COMPV_CHECK_EXP_RETURN(!g, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+			}
+			
+			size_t i, j;
+			OutputType* g_ = g;
+			if (L1) {
+				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+				for (j = 0; j < height; ++j) {
+					for (i = 0; i < width; ++i) {
+						g_[i] = (OutputType)(COMPV_MATH_ABS(gx[i]) + COMPV_MATH_ABS(gy[i]));
+					}
+					g_ += stride;
+					gx += stride;
+					gy += stride;
+				}
+			}
+			else {
+				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+				for (j = 0; j < height; ++j) {
+					for (i = 0; i < width; ++i) {
+						g_[i] = (OutputType)hypot(gx[i], gy[i]);
+					}
+					g_ += stride;
+					gx += stride;
+					gy += stride;
+				}
+			}
+			if (max) {
+				COMPV_CHECK_CODE_RETURN(CompVMathUtils::max<OutputType>(g, width, height, stride, *max));
+			}
+			return COMPV_ERROR_CODE_S_OK;
+		}
+
 private:
     static bool s_Initialized;
     static compv_scalar_t(*maxValFunc)(compv_scalar_t a, compv_scalar_t b);

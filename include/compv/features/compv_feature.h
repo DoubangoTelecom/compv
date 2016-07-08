@@ -60,6 +60,9 @@ enum {
 
 	/* Canny */
 	COMPV_CANNY_ID,
+	COMPV_CANNY_SET_INT32_KERNEL_SIZE,
+	COMPV_CANNY_SET_FLOAT_THRESHOLD_LOW,
+	COMPV_CANNY_SET_FLOAT_THRESHOLD_HIGH,
 
 	/* Sobel */
 	COMPV_SOBEL_ID,
@@ -75,8 +78,10 @@ enum {
 static const int16_t CompVScharrGx_vt[3] = { 3, 10, 3 };
 static const int16_t CompVScharrGx_hz[3] = { -1, 0, 1 };
 // https://en.wikipedia.org/wiki/Sobel_operator
-static const int16_t CompVSobelGx_vt[3] = { 1, 2, 1 };
-static const int16_t CompVSobelGx_hz[3] = { -1, 0, 1 };
+static const int16_t CompVSobel3x3Gx_vt[3] = { 1, 2, 1 };
+static const int16_t CompVSobel3x3Gx_hz[3] = { -1, 0, 1 };
+static const int16_t CompVSobel5x5Gx_vt[5] = { 1, 4, 6, 4, 1 };
+static const int16_t CompVSobel5x5Gx_hz[5] = { 1, 2, 0, -2, -1 };
 // https://en.wikipedia.org/wiki/Prewitt_operator
 static const int16_t CompVPrewittGx_vt[3] = { 1, 1, 1 };
 static const int16_t CompVPrewittGx_hz[3] = { -1, 0, 1 };
