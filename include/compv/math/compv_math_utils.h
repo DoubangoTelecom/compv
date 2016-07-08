@@ -98,6 +98,7 @@ public:
 	template <typename InputType, typename OutputType>
 	static COMPV_ERROR_CODE addAbs(const InputType* a, const InputType* b, OutputType*& r, size_t width, size_t height, size_t stride)
 	{
+		COMPV_CHECK_EXP_RETURN(!a || !b || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		if (!r) {
 			r = (OutputType*)CompVMem::malloc(height * stride * sizeof(OutputType));
 			COMPV_CHECK_EXP_RETURN(!r, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

@@ -10,7 +10,6 @@
 #include "compv/math/compv_math_utils.h"
 #include "compv/compv_engine.h"
 #include "compv/compv_gauss.h"
-#include "compv/compv_md5.h" // FIXME(dmi): remove
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -24,6 +23,13 @@ static const float kTangentPiOver8 = 0.414213568f; // tan(22.5)
 static const int32_t kTangentPiOver8Int = static_cast<int32_t>(kTangentPiOver8 * (1 << 16));
 static const float kTangentPiTimes3Over8 = 2.41421366f; // tan(67.5)
 static const int32_t kTangentPiTimes3Over8Int = static_cast<int32_t>(kTangentPiTimes3Over8 * (1 << 16));
+
+struct CompVCandidateEdge{
+	size_t row;
+	size_t col;
+	uint8_t* pixel;
+	const uint16_t* grad;
+};
 
 CompVEdgeDeteCanny::CompVEdgeDeteCanny()
 	: CompVEdgeDete(COMPV_CANNY_ID)
@@ -228,7 +234,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		auto funcPtrHysteresis = [&](size_t rowStart, size_t rowCount) -> COMPV_ERROR_CODE {
-			hysteresis(edges, tLow, tHigh, rowStart, rowCount);
+			COMPV_CHECK_CODE_RETURN(hysteresis(edges, tLow, tHigh, rowStart, rowCount));
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		size_t rowStart, threadIdx;
@@ -251,7 +257,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 	else {
 		COMPV_CHECK_CODE_RETURN(nms_gather(edges, tLow, 0, m_nImageHeight));
 		nms_supp();
-		hysteresis(edges, tLow, tHigh, 0, m_nImageHeight);
+		COMPV_CHECK_CODE_RETURN(hysteresis(edges, tLow, tHigh, 0, m_nImageHeight));
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -349,39 +355,126 @@ void CompVEdgeDeteCanny::nms_supp()
 	}
 }
 
-static COMPV_INLINE void connectEdge(uint8_t* pixel, const uint16_t* g, size_t rowIdx, size_t colIdx, int stride, size_t maxRows, size_t maxCols, uint16_t tLow)
+static COMPV_INLINE void connectEdgeInPlace(uint8_t* pixel, const uint16_t* grad, size_t rowIdx, size_t colIdx, int stride, size_t maxRows, size_t maxCols, uint16_t tLow, CompVCandidateEdge* edges)
+{
+	size_t count = 1;
+	edges->col = colIdx;
+	edges->row = rowIdx;
+	edges->pixel = pixel;
+	edges->grad = grad;
+	*pixel = 0xff;
+	CompVCandidateEdge* e;
+	uint8_t* p;
+	const uint16_t *g, *gb, *gt;
+	size_t c, r;
+	uint8_t *pb, *pt;
+
+	do {
+		e = &edges[--count];
+		c = e->col;
+		r = e->row;
+		if (r && c && r < maxRows && c < maxCols) {
+			p = e->pixel;
+			g = e->grad;
+			pb = p + stride;
+			pt = p - stride;
+			gb = g + stride;
+			gt = g - stride;
+			if (!p[-1] && g[-1] >= tLow) { // left
+				p[-1] = 0xff;
+				edges[count].row = r;
+				edges[count].col = c - 1;
+				edges[count].pixel = p - 1;
+				edges[count++].grad = g - 1;
+			}
+			if (!p[1] && g[1] >= tLow) { // right
+				p[1] = 0xff;
+				edges[count].row = r;
+				edges[count].col = c + 1;
+				edges[count].pixel = p + 1;
+				edges[count++].grad = g + 1;
+			}
+			if (!pt[-1] && gt[-1] >= tLow) { // left-top
+				pt[-1] = 0xff;
+				edges[count].row = r - 1;
+				edges[count].col = c - 1;
+				edges[count].pixel = pt - 1;
+				edges[count++].grad = gt - 1;
+			}
+			if (!*pt && *gt >= tLow) { // top
+				*pt = 0xff;
+				edges[count].row = r - 1;
+				edges[count].col = c;
+				edges[count].pixel = pt;
+				edges[count++].grad = gt;
+			}
+			if (!pt[1] && gt[1] >= tLow) { // right-top
+				pt[1] = 0xff;
+				edges[count].row = r - 1;
+				edges[count].col = c + 1;
+				edges[count].pixel = pt + 1;
+				edges[count++].grad = gt + 1;
+			}
+			if (!pb[-1] && gb[-1] >= tLow) { // left-bottom
+				pb[-1] = 0xff;
+				edges[count].row = r + 1;
+				edges[count].col = c - 1;
+				edges[count].pixel = pb - 1;
+				edges[count++].grad = gb - 1;
+			}
+			if (!*pb && *gb >= tLow) { // bottom
+				*pb = 0xff;
+				edges[count].row = r + 1;
+				edges[count].col = c;
+				edges[count].pixel = pb;
+				edges[count++].grad = gb;
+			}
+			if (!pb[1] && gb[1] >= tLow) { // right-bottom
+				pb[1] = 0xff;
+				edges[count].row = r + 1;
+				edges[count].col = c + 1;
+				edges[count].pixel = pb + 1;
+				edges[count++].grad = gb + 1;
+			}
+		}
+	} while (count);
+}
+
+// StackOverflow when there are more than 4k connected edges
+static COMPV_INLINE void connectEdgeRecursive(uint8_t* pixel, const uint16_t* grad, size_t rowIdx, size_t colIdx, int stride, size_t maxRows, size_t maxCols, uint16_t tLow)
 {	
 	// Private function -> do not check input parameters
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 	if (rowIdx && colIdx && rowIdx < maxRows && colIdx < maxCols) {
 		*pixel = 0xff; // set as strong edge
-		if (pixel[-1] ^ 0xff && g[-1] >= tLow) { // left
-			connectEdge(pixel - 1, g - 1, rowIdx, colIdx - 1, stride, maxRows, maxCols, tLow);
+		if (pixel[-1] ^ 0xff && grad[-1] >= tLow) { // left
+			connectEdgeRecursive(pixel - 1, grad - 1, rowIdx, colIdx - 1, stride, maxRows, maxCols, tLow);
 		}
-		if (pixel[1] ^ 0xff && g[1] >= tLow) { // right
-			connectEdge(pixel + 1, g + 1, rowIdx, colIdx + 1, stride, maxRows, maxCols, tLow);
+		if (pixel[1] ^ 0xff && grad[1] >= tLow) { // right
+			connectEdgeRecursive(pixel + 1, grad + 1, rowIdx, colIdx + 1, stride, maxRows, maxCols, tLow);
 		}
-		if (pixel[-stride - 1] ^ 0xff && g[-stride - 1] >= tLow) { // left-top
-			connectEdge(pixel - stride - 1, g - stride - 1, rowIdx - 1, colIdx - 1, stride, maxRows, maxCols, tLow);
+		if (pixel[-stride - 1] ^ 0xff && grad[-stride - 1] >= tLow) { // left-top
+			connectEdgeRecursive(pixel - stride - 1, grad - stride - 1, rowIdx - 1, colIdx - 1, stride, maxRows, maxCols, tLow);
 		}
-		if (pixel[-stride] ^ 0xff && g[-stride] >= tLow) { // top
-			connectEdge(pixel - stride, g - stride, rowIdx - 1, colIdx, stride, maxRows, maxCols, tLow);
+		if (pixel[-stride] ^ 0xff && grad[-stride] >= tLow) { // top
+			connectEdgeRecursive(pixel - stride, grad - stride, rowIdx - 1, colIdx, stride, maxRows, maxCols, tLow);
 		}
-		if (pixel[-stride + 1] ^ 0xff && g[-stride + 1] >= tLow) { // right-top
-			connectEdge(pixel - stride + 1, g - stride + 1, rowIdx - 1, colIdx + 1, stride, maxRows, maxCols, tLow);
+		if (pixel[-stride + 1] ^ 0xff && grad[-stride + 1] >= tLow) { // right-top
+			connectEdgeRecursive(pixel - stride + 1, grad - stride + 1, rowIdx - 1, colIdx + 1, stride, maxRows, maxCols, tLow);
 		}
-		if (pixel[stride - 1] ^ 0xff && g[stride - 1] >= tLow) { // left-bottom
-			connectEdge(pixel + stride - 1, g + stride - 1, rowIdx + 1, colIdx - 1, stride, maxRows, maxCols, tLow);
+		if (pixel[stride - 1] ^ 0xff && grad[stride - 1] >= tLow) { // left-bottom
+			connectEdgeRecursive(pixel + stride - 1, grad + stride - 1, rowIdx + 1, colIdx - 1, stride, maxRows, maxCols, tLow);
 		}
-		if (pixel[stride] ^ 0xff && g[stride] >= tLow) { // bottom
-			connectEdge(pixel + stride, g + stride, rowIdx + 1, colIdx, stride, maxRows, maxCols, tLow);
+		if (pixel[stride] ^ 0xff && grad[stride] >= tLow) { // bottom
+			connectEdgeRecursive(pixel + stride, grad + stride, rowIdx + 1, colIdx, stride, maxRows, maxCols, tLow);
 		}
-		if (pixel[stride + 1] ^ 0xff && g[stride + 1] >= tLow) { // right-bottom
-			connectEdge(pixel + stride + 1, g + stride + 1, rowIdx + 1, colIdx + 1, stride, maxRows, maxCols, tLow);
+		if (pixel[stride + 1] ^ 0xff && grad[stride + 1] >= tLow) { // right-bottom
+			connectEdgeRecursive(pixel + stride + 1, grad + stride + 1, rowIdx + 1, colIdx + 1, stride, maxRows, maxCols, tLow);
 		}
 	}
 }
 
-void CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, uint16_t tLow, uint16_t tHigh, size_t rowStart, size_t rowCount)
+COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, uint16_t tLow, uint16_t tHigh, size_t rowStart, size_t rowCount)
 {
 	// Private function -> do not check input parameters
 	size_t rowEnd = rowStart + rowCount;
@@ -394,15 +487,26 @@ void CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, uint16_t tLow
 	const uint16_t *g = m_pG + (rowStart * m_nImageStride);
 	uint8_t* e = const_cast<uint8_t*>(edges->ptr(rowStart));
 	const int stride = static_cast<const int>(m_nImageStride);
+
+	CompVCandidateEdge* candidates = (CompVCandidateEdge*)CompVMem::malloc(imageHeightMinus1 * imageWidthMinus1 * sizeof(CompVCandidateEdge));
+	COMPV_CHECK_EXP_RETURN(!candidates, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+
 	for (row = rowStart; row < rowEnd; ++row) {
 		for (col = 1; col < imageWidthMinus1; ++col) {
-			if (g[col] >= tHigh) { // strong edge
-				connectEdge((e + col), (g + col), row, col, stride, imageHeightMinus1, imageWidthMinus1, tLow);
+			if (!*e && g[col] >= tHigh) { // strong edge
+#if 1
+				connectEdgeInPlace((e + col), (g + col), row, col, stride, imageHeightMinus1, imageWidthMinus1, tLow, candidates);
+#else
+				connectEdgeRecursive((e + col), (g + col), row, col, stride, imageHeightMinus1, imageWidthMinus1, tLow);
+#endif
 			}
 		}
 		g += m_nImageStride;
 		e += m_nImageStride;
 	}
+	CompVMem::free((void**)&candidates);
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVEdgeDeteCanny::newObj(CompVPtr<CompVEdgeDete* >* dete)

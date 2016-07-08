@@ -119,6 +119,7 @@ void rand_C(uint32_t* r, compv_scalar_t count)
 template <>
 COMPV_ERROR_CODE CompVMathUtils::addAbs(const int16_t* a, const int16_t* b, uint16_t*& r, size_t width, size_t height, size_t stride)
 {
+	COMPV_CHECK_EXP_RETURN(!a || !b || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	if (!r) {
 		r = (uint16_t*)CompVMem::malloc(height * stride * sizeof(uint16_t));
 		COMPV_CHECK_EXP_RETURN(!r, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -132,12 +133,14 @@ COMPV_ERROR_CODE CompVMathUtils::addAbs(const int16_t* a, const int16_t* b, uint
 			COMPV_EXEC_IFDEF_ASM_X86(MathUtilsAddAbs_16i16u = MathUtilsAddAbs_16i16u_Asm_X86_SSSE3);
 		}
 	}
+#if 0 // TODO(dmi): SSSE3 faster than AVX2
 	if (width >= 16 && COMPV_IS_ALIGNED_AVX(strideInBytes) && COMPV_IS_ALIGNED_AVX(a) && COMPV_IS_ALIGNED_AVX(b) && COMPV_IS_ALIGNED_AVX(r)) {
 		if (CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
-			//COMPV_EXEC_IFDEF_INTRIN_X86(MathUtilsAddAbs_16i16u = MathUtilsAddAbs_16i16u_Intrin_AVX2);
-			//COMPV_EXEC_IFDEF_ASM_X86(MathUtilsAddAbs_16i16u = MathUtilsAddAbs_16i16u_Asm_X86_AVX2);
+			COMPV_EXEC_IFDEF_INTRIN_X86(MathUtilsAddAbs_16i16u = MathUtilsAddAbs_16i16u_Intrin_AVX2);
+			COMPV_EXEC_IFDEF_ASM_X86(MathUtilsAddAbs_16i16u = MathUtilsAddAbs_16i16u_Asm_X86_AVX2);
 		}
 	}
+#endif
 	if (MathUtilsAddAbs_16i16u) {
 		MathUtilsAddAbs_16i16u((const int16_t*)a, (const int16_t*)b, (uint16_t*)r, (compv_uscalar_t)width, (compv_uscalar_t)height, (compv_uscalar_t)stride);
 		return COMPV_ERROR_CODE_S_OK;

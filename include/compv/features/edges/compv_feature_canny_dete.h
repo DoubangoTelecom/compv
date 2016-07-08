@@ -9,7 +9,7 @@
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
-#include "compv/compv_convlt.h"
+#include "compv/compv_box.h"
 #include "compv/features/compv_feature.h"
 
 #if defined(_COMPV_API_H_)
@@ -38,7 +38,7 @@ public:
 private:
 	COMPV_ERROR_CODE nms_gather(CompVPtrArray(uint8_t)& edges, uint16_t tLow, size_t rowStart, size_t rowCount);
 	void nms_supp();
-	void hysteresis(CompVPtrArray(uint8_t)& edges, uint16_t tLow, uint16_t tHigh, size_t rowStart, size_t rowCount);
+	COMPV_ERROR_CODE hysteresis(CompVPtrArray(uint8_t)& edges, uint16_t tLow, uint16_t tHigh, size_t rowStart, size_t rowCount);
 
 private:
 	size_t m_nImageWidth;
