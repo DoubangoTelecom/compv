@@ -36,8 +36,9 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVPtr<CompVEdgeDete* >* dete);
 
 private:
-	COMPV_ERROR_CODE nms(CompVPtrArray(uint8_t)& edges, uint16_t tLow, size_t rowStart, size_t rowCount);
-	void hysteresis(CompVPtrArray(uint8_t)& edges, uint16_t tLow, uint16_t tHigh);
+	COMPV_ERROR_CODE nms_gather(CompVPtrArray(uint8_t)& edges, uint16_t tLow, size_t rowStart, size_t rowCount);
+	void nms_supp();
+	void hysteresis(CompVPtrArray(uint8_t)& edges, uint16_t tLow, uint16_t tHigh, size_t rowStart, size_t rowCount);
 
 private:
 	size_t m_nImageWidth;

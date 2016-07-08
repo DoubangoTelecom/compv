@@ -17,7 +17,8 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW	(0.68f)
 #define COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH	(COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW * 2.f)
 
-#define COMPV_FEATURE_DETE_CANY_MIN_SAMPLES_PER_THREAD	3 // must be >= 3 because of the convolution ("rowsOverlapCount")
+#define COMPV_FEATURE_DETE_CANY_GRAD_MIN_SAMPLES_PER_THREAD	3 // must be >= 3 because of the convolution ("rowsOverlapCount")
+#define COMPV_FEATURE_DETE_CANY_NMS_MIN_SAMPLES_PER_THREAD	(20*20)
 
 static const float kTangentPiOver8 = 0.414213568f; // tan(22.5)
 static const int32_t kTangentPiOver8Int = static_cast<int32_t>(kTangentPiOver8 * (1 << 16));
@@ -110,15 +111,16 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 	// Compute mean and get tLow and tMin
 	// TODO(dmi): add support for otsu and median
 	uint8_t mean = 1;
-	
-	int32_t threadsCount = 1;
-	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
-	if (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) {
-		threadsCount = static_cast<int32_t>(m_nImageHeight / COMPV_FEATURE_DETE_CANY_MIN_SAMPLES_PER_THREAD);
-		threadsCount = COMPV_MATH_MIN(threadsCount, threadDisp->getThreadsCount());
-	}
 
 	// When multithreading is enabled the mean value could be "+-1" compared to the single threaded value.
+	
+	/* Convolution + Gradient + Mean */
+	size_t threadsCount = 1;
+	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
+	if (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) {
+		threadsCount = m_nImageHeight / COMPV_FEATURE_DETE_CANY_GRAD_MIN_SAMPLES_PER_THREAD;
+		threadsCount = COMPV_MATH_MIN_3(threadsCount, m_nImageHeight, (size_t)threadDisp->getThreadsCount());
+	}
 
 	if (threadsCount > 1) {
 		const size_t rowsOverlapCount = ((m_nKernelSize >> 1) << 1); // (kernelRadius times 2)
@@ -162,7 +164,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 			*ptrMean = mean_;
 			return COMPV_ERROR_CODE_S_OK;
 		};
-		/* first */
+		// first
 		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrFirst, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &means[0], countAny), taskIds));
 		inPtr_ += countAny * m_nImageStride;
 		tmpPtrGx_ += countAnyTimesStride;
@@ -170,8 +172,8 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 		tmpPtrGy_ += countAnyTimesStride;
 		outPtrGy_ += countAnyTimesStride;
 		outPtrG_ += countAnyTimesStride;
-		/* others */
-		for (int32_t threadIdx = 1; threadIdx < threadsCount - 1; ++threadIdx) {
+		// others
+		for (size_t threadIdx = 1; threadIdx < threadsCount - 1; ++threadIdx) {
 			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &means[threadIdx], countAny, false), taskIds));
 			inPtr_ += countAnyTimesStride;
 			tmpPtrGx_ += countAnyTimesStride;
@@ -180,16 +182,16 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 			outPtrGy_ += countAnyTimesStride;
 			outPtrG_ += countAnyTimesStride;
 		}
-		/* last */
+		// last
 		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &means[threadsCount - 1], countLast, true), taskIds));
-		/* wait */
+		// wait
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
-		/* mean */
+		// mean
 		uint32_t sum = 0;
 		for (int32_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
 			sum += means[threadIdx];
 		}
-		mean = (sum + 1) / threadsCount;
+		mean = (sum + 1) / (uint32_t)threadsCount;
 		CompVMem::free((void**)&imgTmpGx);
 		CompVMem::free((void**)&imgTmpGy);
 		CompVMem::free((void**)&means);
@@ -207,55 +209,87 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 	tLow = COMPV_MATH_MAX(1, tLow);
 	tHigh = COMPV_MATH_MAX(tLow + 2, tHigh);
 
-	// NMS
-	COMPV_CHECK_CODE_RETURN(nms(edges, tLow));
-	// Hysteresis
-	hysteresis(edges, tLow, tHigh);
+	/* NMS + Hysteresis */
+	if (!m_pNms) {
+		m_pNms = (uint8_t*)CompVMem::calloc(m_nImageWidth * m_nImageHeight, sizeof(uint8_t));
+		COMPV_CHECK_EXP_RETURN(!m_pNms, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	if (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) {
+		threadsCount = (m_nImageHeight * m_nImageWidth) / COMPV_FEATURE_DETE_CANY_NMS_MIN_SAMPLES_PER_THREAD;
+		threadsCount = COMPV_MATH_MIN_3(threadsCount, m_nImageHeight, (size_t)threadDisp->getThreadsCount());
+	}
+	if (threadsCount > 1) {
+		CompVAsyncTaskIds taskIds;
+		taskIds.reserve(threadsCount);
+		const size_t countAny = (size_t)(m_nImageHeight / threadsCount);
+		const size_t countLast = (size_t)countAny + (m_nImageHeight % threadsCount);
+		auto funcPtrNMS = [&](size_t rowStart, size_t rowCount) -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN(nms_gather(edges, tLow, rowStart, rowCount));
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		auto funcPtrHysteresis = [&](size_t rowStart, size_t rowCount) -> COMPV_ERROR_CODE {
+			hysteresis(edges, tLow, tHigh, rowStart, rowCount);
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		size_t rowStart, threadIdx;
+		// NMS gathering
+		for (threadIdx = 0, rowStart = 0; threadIdx < threadsCount - 1; ++threadIdx, rowStart += countAny) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNMS, rowStart, countAny), taskIds));
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNMS, rowStart, countLast), taskIds));
+		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+		// NMS supp
+		nms_supp();
+		// Hysteresis
+		taskIds.clear();
+		for (threadIdx = 0, rowStart = 0; threadIdx < threadsCount - 1; ++threadIdx, rowStart += countAny) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrHysteresis, rowStart, countAny), taskIds));
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrHysteresis, rowStart, countLast), taskIds));
+		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(nms_gather(edges, tLow, 0, m_nImageHeight));
+		nms_supp();
+		hysteresis(edges, tLow, tHigh, 0, m_nImageHeight);
+	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // NonMaximaSuppression
-COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges, uint16_t tLow, size_t rowStart, size_t rowCount)
+COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, uint16_t tLow, size_t rowStart, size_t rowCount)
 {
 	// Private function -> do not check input parameters
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // MT and SIMD
-	if (!m_pNms) {
-		m_pNms = (uint8_t*)CompVMem::calloc(edges->rows() * edges->cols(), sizeof(uint8_t));
-		COMPV_CHECK_EXP_RETURN(!m_pNms, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	}
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
 
-	rowStart = COMPV_MATH_MAX(1, rowStart);
 	size_t maxRows = rowStart + rowCount;
-	maxRows = COMPV_MATH_MIN(maxRows, rowStart);
+	maxRows = COMPV_MATH_MIN(maxRows, m_nImageHeight - 1);
+	rowStart = COMPV_MATH_MAX(1, rowStart);
+	size_t rowStartTimesStride = rowStart * m_nImageStride;
+	size_t rowStartTimesWidth = rowStart * m_nImageWidth;
 
 	size_t row, col;
-	const size_t maxRows = edges->rows() - 1, maxCols = edges->cols() - 1;
-	const int16_t *gx = m_pGx + m_nImageStride + 1, *gy = m_pGy + m_nImageStride + 1;
-	uint16_t *g = m_pG + m_nImageStride + 1;
+	const size_t maxCols = edges->cols() - 1;
+	const int16_t *gx = m_pGx + rowStartTimesStride + 1, *gy = m_pGy + rowStartTimesStride + 1;
+	uint16_t *g = m_pG + rowStartTimesStride + 1;
 	const uint16_t *top = g - m_nImageStride, *bottom = g + m_nImageStride, *left = g - 1, *right = g + 1;
-	uint8_t *nms = m_pNms + m_nImageWidth + 1;
-	uint8_t *e = const_cast<uint8_t*>(edges->ptr(1));
+	uint8_t *nms = m_pNms + rowStartTimesWidth + 1;
+	uint8_t *e = const_cast<uint8_t*>(edges->ptr(rowStart));
 	int32_t gxInt, gyInt, absgyInt, absgxInt;
 	const int stride = static_cast<const int>(m_nImageStride);
 	const int pad = static_cast<const int>(m_nImageStride - m_nImageWidth) + 2;
 
 	// non-maximasupp is multi-threaded and we will use this property to zero the edge buffer with low cost (compared to edges->zeroall() which is not MT)
-	// TODO(dmi): perform next op only if startIndex == 0
-	CompVMem::zero(e - m_nImageStride, m_nImageWidth); // zero first line
-	CompVMem::zero(e + ((maxRows - 1) * m_nImageStride), m_nImageWidth); // zero last line
+	if (rowStart == 1) { // First time ?
+		CompVMem::zero(const_cast<uint8_t*>(edges->ptr(0)), m_nImageWidth); // zero first line
+		CompVMem::zero(const_cast<uint8_t*>(edges->ptr(m_nImageHeight - 1)), m_nImageWidth); // zero last line
+	}
 
 	// mark points to supp
-	for (row = 1; row < maxRows; ++row) {
+	for (row = rowStart; row < maxRows; ++row) {
 		CompVMem::zero(e, m_nImageWidth);
-		for (col = 1; col < maxCols; ++col, ++nms, ++gx, ++gy, ++g, ++top, ++bottom, ++left, ++right) {
-			// The angle is guessed using the first quadrant ([0-45] degree) only then completed.
-			// We want "arctan(gy/gx)" to be within [0, 22.5], [22.5, 67.5], ]67.5, inf[, with 67.5 = (45. + 22.5)
-			//!\\ All NMS values must be set to reset all values (no guarantee it contains zeros).
-			
-			// "theta = arctan(gy/gx)" -> "tan(theta) = gy/gx" -> compare "gy/gx" with "tan(quadrants)"
-			// Instead of comparing "abs(gy/gx)" with "tanTheta" we will compare "abs(gy)" with "tanTheta*abs(gx)" to avoid division.
-			
+		for (col = 1; col < maxCols; ++col, ++nms, ++gx, ++gy, ++g, ++top, ++bottom, ++left, ++right) {			
 			if (*g >= tLow) {
 				gxInt = static_cast<int32_t>(*gx);
 				gyInt = static_cast<int32_t>(*gy);
@@ -290,21 +324,29 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms(CompVPtrArray(uint8_t)& edges, uint16_t
 		nms += 2;
 	}
 
-	// supp marked points
-	nms = m_pNms + m_nImageWidth + 1;
-	g = m_pG + m_nImageStride + 1;
-	for (row = 1; row < maxRows; ++row) {
-		for (col = 1; col < maxCols; ++col, ++g, ++nms) {
-			if (*nms) {
-				*g = 0;
-				*nms = 0;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+void CompVEdgeDeteCanny::nms_supp()
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
+	// Private function -> do not check input parameters
+
+	// supp marked points (not thread-safe to change "m_pG")
+	uint8_t *nms_ = m_pNms + m_nImageWidth + 1;
+	uint16_t *g_ = m_pG + m_nImageStride + 1;
+	size_t imageWidthMinus1_ = m_nImageWidth - 1;
+	size_t imageHeightMinus1_ = m_nImageHeight - 1;
+	const size_t pad_ = (m_nImageStride - m_nImageWidth) + 2;
+	for (size_t row_ = 1; row_ < imageHeightMinus1_; ++row_) {
+		for (size_t col_ = 1; col_ < imageWidthMinus1_; ++col_, ++g_, ++nms_) { // SIMD, starts at 0 to have memory aligned
+			if (*nms_) {
+				*g_ = 0, *nms_ = 0;
 			}
 		}
-		nms += 2;
-		g += pad;
+		nms_ += 2;
+		g_ += pad_;
 	}
-
-	return COMPV_ERROR_CODE_S_OK;
 }
 
 static COMPV_INLINE void connectEdge(uint8_t* pixel, const uint16_t* g, size_t rowIdx, size_t colIdx, int stride, size_t maxRows, size_t maxCols, uint16_t tLow)
@@ -339,20 +381,23 @@ static COMPV_INLINE void connectEdge(uint8_t* pixel, const uint16_t* g, size_t r
 	}
 }
 
-void CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, uint16_t tLow, uint16_t tHigh)
+void CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, uint16_t tLow, uint16_t tHigh, size_t rowStart, size_t rowCount)
 {
 	// Private function -> do not check input parameters
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();  // MT
+	size_t rowEnd = rowStart + rowCount;
+	const size_t imageHeightMinus1 = m_nImageHeight - 1;
+	rowEnd = COMPV_MATH_MIN(rowEnd, imageHeightMinus1);
+	rowStart = COMPV_MATH_MAX(1, rowStart);
 
 	size_t row, col;
-	const size_t maxRows = edges->rows() - 1, maxCols = edges->cols() - 1;
-	const uint16_t *g = m_pG + m_nImageStride;
-	uint8_t* e = const_cast<uint8_t*>(edges->ptr(1));
+	const size_t imageWidthMinus1 = m_nImageWidth - 1;
+	const uint16_t *g = m_pG + (rowStart * m_nImageStride);
+	uint8_t* e = const_cast<uint8_t*>(edges->ptr(rowStart));
 	const int stride = static_cast<const int>(m_nImageStride);
-	for (row = 1; row < maxRows; ++row) {
-		for (col = 1; col < maxCols; ++col) {
+	for (row = rowStart; row < rowEnd; ++row) {
+		for (col = 1; col < imageWidthMinus1; ++col) {
 			if (g[col] >= tHigh) { // strong edge
-				connectEdge((e + col), (g + col), row, col, stride, maxRows, maxCols, tLow);
+				connectEdge((e + col), (g + col), row, col, stride, imageHeightMinus1, imageWidthMinus1, tLow);
 			}
 		}
 		g += m_nImageStride;
