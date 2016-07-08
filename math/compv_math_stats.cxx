@@ -73,7 +73,7 @@ COMPV_ERROR_CODE CompVMathStats<T>::normalize2D_hartley(const T* x, const T* y, 
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	size_t i;
-	T tx = 0, ty = 0, magnitude = 0, OneOverNumPoints = T(T(1) / numPoints);
+	T tx = 0, ty = 0, magnitude = 0, OneOverNumPoints = T(T(1) / numPoints), a, b;
 
 	// Compute the centroid (https://en.wikipedia.org/wiki/Centroid#Of_a_finite_set_of_points)
 	for (i = 0; i < numPoints; ++i) { // asm: unroll loop
@@ -89,7 +89,9 @@ COMPV_ERROR_CODE CompVMathStats<T>::normalize2D_hartley(const T* x, const T* y, 
 	// Isotropic scaling -> scaling is invariant with respect to direction
 	for (i = 0; i < numPoints; ++i) { // asm: unroll loop
 		// Using naive hypot because X and Y contains point coordinates (no risk for overflow / underflow)
-		magnitude += CompVMathUtils::hypot_naive((x[i] - tx), (y[i] - ty));
+		a = (x[i] - tx);
+		b = (y[i] - ty);
+		magnitude += T(COMPV_MATH_HYPOT_NAIVE(a, b));
 	}
 	magnitude *= OneOverNumPoints;
 

@@ -450,6 +450,15 @@
     <ClInclude Include="include\compv\features\edges\compv_feature_edge_dete.h">
       <Filter>Header Files\features\edges</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_utils_intrin_sse2.h">
+      <Filter>Header Files\intrinsics\x86\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_utils_intrin_ssse3.h">
+      <Filter>Header Files\intrinsics\x86\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_utils_intrin_avx2.h">
+      <Filter>Header Files\intrinsics\x86\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -701,6 +710,15 @@
     <ClCompile Include="features\edges\compv_feature_edge_dete.cxx">
       <Filter>Source Files\features\edges</Filter>
     </ClCompile>
+    <ClCompile Include="intrinsics\x86\math\compv_math_utils_intrin_sse2.cxx">
+      <Filter>Source Files\intrinsics\x86\math</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\math\compv_math_utils_intrin_ssse3.cxx">
+      <Filter>Source Files\intrinsics\x86\math</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\math\compv_math_utils_intrin_avx2.cxx">
+      <Filter>Source Files\intrinsics\x86\math</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="assembler\x86\compv_utils_x86.s">
@@ -844,5 +862,13 @@
     <YASM Include="assembler\x86\math\compv_math_transform_x86_sse.s">
       <Filter>Assembler Files\x86\math</Filter>
     </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assembler\x86\math\compv_math_utils_x86_sse.s">
+      <Filter>Assembler Files\x86\math</Filter>
+    </None>
+    <None Include="assembler\x86\math\compv_math_utils_x86_avx.s">
+      <Filter>Assembler Files\x86\math</Filter>
+    </None>
   </ItemGroup>
 </Project>

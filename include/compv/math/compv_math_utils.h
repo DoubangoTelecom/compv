@@ -11,6 +11,7 @@
 #include "compv/math/compv_math.h"
 #include "compv/compv_common.h"
 #include "compv/compv_mem.h"
+#include "compv/compv_cpu.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -92,6 +93,19 @@ public:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
+	// Function used to compute L1 distance
+	// r = abs(a) + abs(b)
+	template <typename InputType, typename OutputType>
+	static COMPV_ERROR_CODE addAbs(const InputType* a, const InputType* b, OutputType*& r, size_t width, size_t height, size_t stride)
+	{
+		if (!r) {
+			r = (OutputType*)CompVMem::malloc(height * stride * sizeof(OutputType));
+			COMPV_CHECK_EXP_RETURN(!r, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		}
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::addAbs_C<InputType, OutputType>(a, b, r, width, height, stride)));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
 	// compute gradient using L1 distance (g = abs(gx) + abs(gy)) and the maximum value
 	template <typename InputType, typename OutputType>
 	static COMPV_ERROR_CODE gradientL1(const InputType* gx, const InputType* gy, OutputType*& g, size_t width, size_t height, size_t stride, OutputType* max = NULL)
@@ -147,12 +161,25 @@ public:
 		return x * COMPV_MATH_SQRT(1 + t*t);
 #endif
 	}
-	template <typename T>
-	static COMPV_INLINE T hypot_naive(T x, T y) {
-		return (T)COMPV_MATH_SQRT(x*x + y*y);
-	}
 
 private:
+		template <typename InputType, typename OutputType>
+		static COMPV_ERROR_CODE addAbs_C(const InputType* a, const InputType* b, OutputType*& r, size_t width, size_t height, size_t stride)
+		{
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+			OutputType* r_ = r;
+			size_t i, j;
+			for (j = 0; j < height; ++j) {
+				for (i = 0; i < width; ++i) {
+					r_[i] = (OutputType)(COMPV_MATH_ABS(a[i]) + COMPV_MATH_ABS(b[i]));
+				}
+				r_ += stride;
+				a += stride;
+				b += stride;
+			}
+			return COMPV_ERROR_CODE_S_OK;
+		}
+
 		template <typename InputType, typename OutputType>
 		static COMPV_ERROR_CODE gradient(const InputType* gx, const InputType* gy, OutputType*& g, size_t width, size_t height, size_t stride, OutputType* max = NULL, bool L1 = true)
 		{
@@ -165,15 +192,7 @@ private:
 			size_t i, j;
 			OutputType* g_ = g;
 			if (L1) {
-				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-				for (j = 0; j < height; ++j) {
-					for (i = 0; i < width; ++i) {
-						g_[i] = (OutputType)(COMPV_MATH_ABS(gx[i]) + COMPV_MATH_ABS(gy[i]));
-					}
-					g_ += stride;
-					gx += stride;
-					gy += stride;
-				}
+				COMPV_CHECK_CODE_RETURN((CompVMathUtils::addAbs<InputType, OutputType>(gx, gy, g, width, height, stride)));
 			}
 			else {
 				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
@@ -201,6 +220,8 @@ private:
     static compv_scalar_t(*clip2Func)(compv_scalar_t max, compv_scalar_t val);
 	static void(*randFunc)(uint32_t *r, compv_scalar_t count);
 };
+
+extern template COMPV_ERROR_CODE CompVMathUtils::addAbs(const int16_t* a, const int16_t* b, uint16_t*& r, size_t width, size_t height, size_t stride);
 
 COMPV_NAMESPACE_END()
 

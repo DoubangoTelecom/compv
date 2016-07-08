@@ -7,7 +7,16 @@
 #include "compv/math/compv_math_utils.h"
 #include "compv/compv_cpu.h"
 
+#include "compv/intrinsics/x86/math/compv_math_utils_intrin_sse2.h"
+#include "compv/intrinsics/x86/math/compv_math_utils_intrin_ssse3.h"
+#include "compv/intrinsics/x86/math/compv_math_utils_intrin_avx2.h"
+
 #include <algorithm>
+
+#if COMPV_ARCH_X86 && COMPV_ASM
+COMPV_EXTERNC void MathUtilsAddAbs_16i16u_Asm_X86_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, const COMPV_ALIGNED(SSE) int16_t* b, COMPV_ALIGNED(SSE) uint16_t* r, compv::compv_uscalar_t width, compv::compv_uscalar_t height, COMPV_ALIGNED(SSE) compv::compv_uscalar_t stride);
+COMPV_EXTERNC void MathUtilsAddAbs_16i16u_Asm_X86_AVX2(const COMPV_ALIGNED(AVX) int16_t* a, const COMPV_ALIGNED(AVX) int16_t* b, COMPV_ALIGNED(AVX) uint16_t* r, compv::compv_uscalar_t width, compv::compv_uscalar_t height, COMPV_ALIGNED(AVX) compv::compv_uscalar_t stride);
+#endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -105,6 +114,38 @@ void rand_C(uint32_t* r, compv_scalar_t count)
 	for (; i < count; i += 1) {
 		r[i] = static_cast<uint32_t>(rand());
 	}
+}
+
+template <>
+COMPV_ERROR_CODE CompVMathUtils::addAbs(const int16_t* a, const int16_t* b, uint16_t*& r, size_t width, size_t height, size_t stride)
+{
+	if (!r) {
+		r = (uint16_t*)CompVMem::malloc(height * stride * sizeof(uint16_t));
+		COMPV_CHECK_EXP_RETURN(!r, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+#if COMPV_ARCH_X86
+	const size_t strideInBytes = stride * sizeof(int16_t);
+	void(*MathUtilsAddAbs_16i16u)(const COMPV_ALIGNED(X) int16_t* a, const COMPV_ALIGNED(X) int16_t* b, COMPV_ALIGNED(X) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride) = NULL;
+	if (width >= 8 && COMPV_IS_ALIGNED_SSE(strideInBytes) && COMPV_IS_ALIGNED_SSE(a) && COMPV_IS_ALIGNED_SSE(b) && COMPV_IS_ALIGNED_SSE(r)) {
+		if (CompVCpu::isEnabled(compv::kCpuFlagSSSE3)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(MathUtilsAddAbs_16i16u = MathUtilsAddAbs_16i16u_Intrin_SSSE3);
+			COMPV_EXEC_IFDEF_ASM_X86(MathUtilsAddAbs_16i16u = MathUtilsAddAbs_16i16u_Asm_X86_SSSE3);
+		}
+	}
+	if (width >= 16 && COMPV_IS_ALIGNED_AVX(strideInBytes) && COMPV_IS_ALIGNED_AVX(a) && COMPV_IS_ALIGNED_AVX(b) && COMPV_IS_ALIGNED_AVX(r)) {
+		if (CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+			//COMPV_EXEC_IFDEF_INTRIN_X86(MathUtilsAddAbs_16i16u = MathUtilsAddAbs_16i16u_Intrin_AVX2);
+			//COMPV_EXEC_IFDEF_ASM_X86(MathUtilsAddAbs_16i16u = MathUtilsAddAbs_16i16u_Asm_X86_AVX2);
+		}
+	}
+	if (MathUtilsAddAbs_16i16u) {
+		MathUtilsAddAbs_16i16u((const int16_t*)a, (const int16_t*)b, (uint16_t*)r, (compv_uscalar_t)width, (compv_uscalar_t)height, (compv_uscalar_t)stride);
+		return COMPV_ERROR_CODE_S_OK;
+	}
+#endif /* COMPV_ARCH_X86 */
+
+	COMPV_CHECK_CODE_RETURN((CompVMathUtils::addAbs_C<int16_t, uint16_t>(a, b, r, width, height, stride)));
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

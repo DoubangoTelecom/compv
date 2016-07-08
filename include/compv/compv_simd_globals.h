@@ -51,6 +51,7 @@ extern COMPV_API COMPV_ALIGN_DEFAULT() int32_t kAVXPermutevar8x32_XXABBCDE_i32[]
 extern COMPV_API COMPV_ALIGN_DEFAULT() uint32_t kAVXFloat64MaskAbs[];
 extern COMPV_API COMPV_ALIGN_DEFAULT() uint32_t kAVXFloat64MaskNegate[];
 
+
 COMPV_EXTERNC_END()
 
 #endif /* _COMPV_SIMD_GLOBALS_H_ */

@@ -89,6 +89,9 @@
     <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_stats_intrin_sse2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_transform_intrin_avx.h" />
     <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_transform_intrin_sse2.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_utils_intrin_avx2.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_utils_intrin_sse2.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_utils_intrin_ssse3.h" />
     <ClInclude Include="include\compv\matchers\compv_matcher.h" />
     <ClInclude Include="include\compv\matchers\compv_matcher_bruteforce.h" />
     <ClInclude Include="include\compv\matchers\compv_matcher_flann.h" />
@@ -250,6 +253,24 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
     <ClCompile Include="intrinsics\x86\math\compv_math_transform_intrin_sse2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\math\compv_math_utils_intrin_avx2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\math\compv_math_utils_intrin_sse2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\math\compv_math_utils_intrin_ssse3.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -446,6 +467,16 @@
       <FileType>Document</FileType>
     </YASM>
     <YASM Include="assembler\x86\math\compv_math_transform_x86_sse.s">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <YASM Include="assembler\x86\math\compv_math_utils_x86_sse.s">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <YASM Include="assembler\x86\math\compv_math_utils_x86_avx.s">
       <FileType>Document</FileType>
     </YASM>
   </ItemGroup>
