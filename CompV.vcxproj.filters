@@ -883,13 +883,14 @@
     <YASM Include="assembler\x86\math\compv_math_utils_x86_sse.s">
       <Filter>Assembler Files\x86\math</Filter>
     </YASM>
-    <YASM Include="assembler\x86\features\edges\compv_feature_canny_dete_x86_sse2.s">
+    <YASM Include="assembler\x86\features\edges\compv_feature_canny_dete_x86_sse.s">
       <Filter>Assembler Files\x86\features\edges</Filter>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assembler\x86\features\edges\compv_feature_canny_dete_x64_sse2.s">
+    <YASM Include="assembler\x86\features\edges\compv_feature_canny_dete_x64_avx.s">
       <Filter>Assembler Files\x86\features\edges</Filter>
-    </None>
+    </YASM>
+    <YASM Include="assembler\x86\features\edges\compv_feature_canny_dete_x64_sse.s">
+      <Filter>Assembler Files\x86\features\edges</Filter>
+    </YASM>
   </ItemGroup>
 </Project>

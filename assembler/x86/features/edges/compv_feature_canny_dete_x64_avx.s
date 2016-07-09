@@ -12,26 +12,27 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(CannyNMSApply_Asm_X64_SSE2)
+global sym(CannyNMSApply_Asm_X64_AVX2)
 
 section .data
 
 section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; arg(0) -> COMPV_ALIGNED(SSE) uint16_t* grad
-; arg(1) -> COMPV_ALIGNED(SSE) uint8_t* nms
+; arg(0) -> COMPV_ALIGNED(AVX) uint16_t* grad
+; arg(1) -> COMPV_ALIGNED(AVX) uint8_t* nms
 ; arg(2) -> compv_uscalar_t width
 ; arg(3) -> compv_uscalar_t height
-; arg(4) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
-sym(CannyNMSApply_Asm_X64_SSE2):
+; arg(4) -> COMPV_ALIGNED(AVX) compv_uscalar_t stride
+sym(CannyNMSApply_Asm_X64_AVX2):
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
 	push rdi
 	;; end prolog ;;
 	
-	pxor xmm0, xmm0
+	vpxor ymm0, ymm0
 
 	mov rax, arg(0) ; rax = grad
 	mov rdx, arg(1) ; rdx = nms
@@ -46,20 +47,21 @@ sym(CannyNMSApply_Asm_X64_SSE2):
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopRows		
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (col_ = 0; col_ < width; col_ += 8)
+		; for (col_ = 0; col_ < width; col_ += 16)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor rdi, rdi
 		.LoopCols
-			movq xmm1, [rdx + rdi]
-			pcmpeqb xmm1, xmm0
-			pmovmskb r11, xmm1
+			vpcmpeqb xmm1, xmm0, [rdx + rdi]
+			vpmovmskb r11, xmm1
 			xor r11, 0xffff
-			lea rdi, [rdi + 8]
+			lea rdi, [rdi + 16]
 			jz .AllZeros
-				punpcklbw xmm1, xmm1
-				pand xmm1, [rax + rdi*2 - 16]
-				movq [rdx + rdi - 8], xmm0
-				movdqa [rax + rdi*2 - 16], xmm1
+				vpunpckhbw xmm2, xmm1, xmm1
+				vpunpcklbw xmm1, xmm1, xmm1
+				vinsertf128 ymm1, ymm1, xmm2, 1
+				vmovdqa [rdx + rdi - 16], xmm0
+				vpand ymm1, [rax + rdi*2 - 32]
+				vmovdqa [rax + rdi*2 - 32], ymm1
 			.AllZeros
 			cmp rdi, r10
 			jl .LoopCols
@@ -70,10 +72,11 @@ sym(CannyNMSApply_Asm_X64_SSE2):
 		jnz .LoopRows
 
 	;; begin epilog ;;
-	pop rsi
+	pop rdi
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 
 %endif ; COMPV_YASM_ABI_IS_64BIT

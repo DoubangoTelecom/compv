@@ -64,31 +64,24 @@ public:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-	template <typename InputType, typename AccumulatorType>
+	template <typename InputType>
 	static COMPV_ERROR_CODE mean(const InputType* data, size_t count, InputType &mean)
 	{
 		COMPV_CHECK_EXP_RETURN(!data || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-		AccumulatorType sum = 0;
-		for (size_t i = 0; i < count; ++i) {
-			sum += data[i]; // UpTo the caller to choose correct "InputType" and "AccumulatorType" to avoid overflow
-		}
-		mean = (InputType)(sum / count);
-		return COMPV_ERROR_CODE_S_OK;
+		return mean_C<InputType>(data, count, mean);
 	}
 
-	template <typename InputType, typename AccumulatorType>
+	template <typename InputType>
 	static COMPV_ERROR_CODE mean(const InputType* data, size_t width, size_t height, size_t stride, InputType &mean)
 	{
 		COMPV_CHECK_EXP_RETURN(!data || !width || !height || !stride, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		InputType* means = (InputType*)CompVMem::malloc(height * sizeof(InputType));
 		COMPV_CHECK_EXP_RETURN(!means, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 		for (size_t j = 0; j < height; ++j) {
-			CompVMathUtils::mean<InputType, AccumulatorType>(data, width, means[j]);
+			CompVMathUtils::mean<InputType>(data, width, means[j]);
 			data += stride;
 		}
-		CompVMathUtils::mean<InputType, AccumulatorType>(means, height, mean);
+		CompVMathUtils::mean<InputType>(means, height, mean);
 		CompVMem::free((void**)&means);
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -96,14 +89,37 @@ public:
 	// Function used to compute L1 distance
 	// r = abs(a) + abs(b)
 	template <typename InputType, typename OutputType>
-	static COMPV_ERROR_CODE addAbs(const InputType* a, const InputType* b, OutputType*& r, size_t width, size_t height, size_t stride)
+	static COMPV_ERROR_CODE sumAbs(const InputType* a, const InputType* b, OutputType*& r, size_t width, size_t height, size_t stride)
 	{
 		COMPV_CHECK_EXP_RETURN(!a || !b || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		if (!r) {
 			r = (OutputType*)CompVMem::malloc(height * stride * sizeof(OutputType));
 			COMPV_CHECK_EXP_RETURN(!r, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 		}
-		COMPV_CHECK_CODE_RETURN((CompVMathUtils::addAbs_C<InputType, OutputType>(a, b, r, width, height, stride)));
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs_C<InputType, OutputType>(a, b, r, width, height, stride)));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	template <typename InputType, typename OutputType>
+	static COMPV_ERROR_CODE sum(const InputType* a, size_t count, OutputType &r)
+	{
+		COMPV_CHECK_EXP_RETURN(!a || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum_C<InputType, OutputType>(a, count, r)));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	template <typename InputType, typename OutputType>
+	static COMPV_ERROR_CODE sum(const InputType* a, size_t width, size_t height, size_t stride, OutputType &r)
+	{
+		COMPV_CHECK_EXP_RETURN(!a || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		OutputType* sums = (OutputType*)CompVMem::malloc(height * sizeof(OutputType));
+		COMPV_CHECK_EXP_RETURN(!sums, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		for (size_t j = 0; j < height; ++j) {
+			CompVMathUtils::sum<InputType, OutputType>(data, width, sums[j]);
+			a += stride;
+		}
+		CompVMathUtils::sum<OutputType, OutputType>(sums, height, r);
+		CompVMem::free((void**)&sums);
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -111,6 +127,7 @@ public:
 	template <typename InputType, typename OutputType>
 	static COMPV_ERROR_CODE gradientL1(const InputType* gx, const InputType* gy, OutputType*& g, size_t width, size_t height, size_t stride, OutputType* max = NULL)
 	{
+		COMPV_CHECK_EXP_RETURN(!gx || !gy || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradient<InputType, OutputType>(gx, gy, g, width, height, stride, max, true)));
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -119,6 +136,7 @@ public:
 	template <typename InputType, typename OutputType>
 	static COMPV_ERROR_CODE gradientL2(const InputType* gx, const InputType* gy, OutputType*& g, size_t width, size_t height, size_t stride, OutputType* max = NULL)
 	{
+		COMPV_CHECK_EXP_RETURN(!gx || !gy || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradient<InputType, OutputType>(gx, gy, g, width, height, stride, max, true)));
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -165,7 +183,7 @@ public:
 
 private:
 		template <typename InputType, typename OutputType>
-		static COMPV_ERROR_CODE addAbs_C(const InputType* a, const InputType* b, OutputType*& r, size_t width, size_t height, size_t stride)
+		static COMPV_ERROR_CODE sumAbs_C(const InputType* a, const InputType* b, OutputType*& r, size_t width, size_t height, size_t stride)
 		{
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 			OutputType* r_ = r;
@@ -182,9 +200,29 @@ private:
 		}
 
 		template <typename InputType, typename OutputType>
+		static COMPV_ERROR_CODE sum_C(const InputType* a, size_t count, OutputType &r)
+		{
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+			r = 0;
+			for (size_t i = 0; i < count; ++i) {
+				r += a[i];
+			}
+			return COMPV_ERROR_CODE_S_OK;
+		}
+
+		template <typename InputType>
+		static COMPV_ERROR_CODE mean_C(const InputType* data, size_t count, InputType &mean)
+		{
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+			double sum;
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<InputType, double>(data, count, sum)));
+			mean = (InputType)(sum / count);
+			return COMPV_ERROR_CODE_S_OK;
+		}
+
+		template <typename InputType, typename OutputType>
 		static COMPV_ERROR_CODE gradient(const InputType* gx, const InputType* gy, OutputType*& g, size_t width, size_t height, size_t stride, OutputType* max = NULL, bool L1 = true)
 		{
-			COMPV_CHECK_EXP_RETURN(!gx || !gy || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 			if (!g) {
 				g = (OutputType*)CompVMem::malloc(height * stride * sizeof(OutputType));
 				COMPV_CHECK_EXP_RETURN(!g, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -193,7 +231,7 @@ private:
 			size_t i, j;
 			OutputType* g_ = g;
 			if (L1) {
-				COMPV_CHECK_CODE_RETURN((CompVMathUtils::addAbs<InputType, OutputType>(gx, gy, g, width, height, stride)));
+				COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs<InputType, OutputType>(gx, gy, g, width, height, stride)));
 			}
 			else {
 				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
@@ -222,7 +260,9 @@ private:
 	static void(*randFunc)(uint32_t *r, compv_scalar_t count);
 };
 
-extern template COMPV_ERROR_CODE CompVMathUtils::addAbs(const int16_t* a, const int16_t* b, uint16_t*& r, size_t width, size_t height, size_t stride);
+extern template COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint16_t*& r, size_t width, size_t height, size_t stride);
+extern template COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t count, uint32_t &r);
+extern template COMPV_ERROR_CODE CompVMathUtils::mean(const uint8_t* data, size_t count, uint8_t &mean);
 
 COMPV_NAMESPACE_END()
 

@@ -19,6 +19,7 @@ COMPV_EXTERNC void CannyNMSApply_Asm_X86_SSE2(COMPV_ALIGNED(SSE) uint16_t* grad,
 
 #if COMPV_ARCH_X64 && COMPV_ASM
 COMPV_EXTERNC void CannyNMSApply_Asm_X64_SSE2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALIGNED(SSE) uint8_t* nms, compv::compv_uscalar_t width, compv::compv_uscalar_t height, COMPV_ALIGNED(SSE) compv::compv_uscalar_t stride);
+COMPV_EXTERNC void CannyNMSApply_Asm_X64_AVX2(COMPV_ALIGNED(AVX) uint16_t* grad, COMPV_ALIGNED(AVX) uint8_t* nms, compv::compv_uscalar_t width, compv::compv_uscalar_t height, COMPV_ALIGNED(AVX) compv::compv_uscalar_t stride);
 #endif /* COMPV_ARCH_X64 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
@@ -166,7 +167,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 			CompVMathConvlt::convlt1Vert<int16_t, int16_t, int16_t>(ptrTmpGy, ptrOutGy, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, true, false);
 			COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx, ptrOutGy, ptrOutG, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
 			uint8_t mean_ = 1;
-			COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t, uint32_t>(ptrIn, m_nImageWidth, h, m_nImageStride, mean_)));
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t>(ptrIn, m_nImageWidth, h, m_nImageStride, mean_)));
 			*ptrMean = mean_;
 			return COMPV_ERROR_CODE_S_OK;
 		};
@@ -178,7 +179,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 			CompVMathConvlt::convlt1Vert<int16_t, int16_t, int16_t>(ptrTmpGy - rowsOverlapPad, ptrOutGy - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, false, last);
 			COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx - rowsOverlapPad, ptrOutGy - rowsOverlapPad, g_, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
 			uint8_t mean_ = 1;
-			COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t, uint32_t>(ptrIn, m_nImageWidth, h, m_nImageStride, mean_)));
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t>(ptrIn, m_nImageWidth, h, m_nImageStride, mean_)));
 			*ptrMean = mean_;
 			return COMPV_ERROR_CODE_S_OK;
 		};
@@ -206,7 +207,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 		// mean
 		uint32_t sum = 0;
-		for (int32_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
 			sum += means[threadIdx];
 		}
 		mean = (sum + 1) / (uint32_t)threadsCount;
@@ -218,7 +219,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(static_cast<const uint8_t*>(image->getDataPtr()), m_nImageWidth, m_nImageStride, m_nImageHeight, m_pcKernelVt, m_pcKernelHz, m_nKernelSize, m_pGx)));
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(static_cast<const uint8_t*>(image->getDataPtr()), m_nImageWidth, m_nImageStride, m_nImageHeight, m_pcKernelHz, m_pcKernelVt, m_nKernelSize, m_pGy)));
 		COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride)));
-		COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t, uint32_t>((const uint8_t*)image->getDataPtr(), m_nImageWidth, m_nImageHeight, m_nImageStride, mean)));
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t>((const uint8_t*)image->getDataPtr(), m_nImageWidth, m_nImageHeight, m_nImageStride, mean)));
 	}
 	
 	mean = COMPV_MATH_MAX(1, mean);
@@ -360,6 +361,9 @@ void CompVEdgeDeteCanny::nms_supp()
 		COMPV_EXEC_IFDEF_INTRIN_X86(CannyNMSApply = CannyNMSApply_Intrin_SSE2);
 		COMPV_EXEC_IFDEF_ASM_X86(CannyNMSApply = CannyNMSApply_Asm_X86_SSE2);
 		COMPV_EXEC_IFDEF_ASM_X64(CannyNMSApply = CannyNMSApply_Asm_X64_SSE2);
+	}
+	if (imageWidthMinus1_ >= 16 && CompVCpu::isEnabled(compv::kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(nms_) && COMPV_IS_ALIGNED_AVX2(g_) && COMPV_IS_ALIGNED_AVX2(m_nImageStride) && COMPV_IS_ALIGNED_AVX2(gStrideInBytes)) {
+		COMPV_EXEC_IFDEF_ASM_X64(CannyNMSApply = CannyNMSApply_Asm_X64_AVX2);
 	}
 	if (CannyNMSApply) {
 		CannyNMSApply(g_, nms_, (compv_uscalar_t)imageWidthMinus1_, (compv_uscalar_t)imageHeightMinus1_, (compv_uscalar_t)m_nImageStride);

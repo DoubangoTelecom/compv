@@ -18,7 +18,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void MathUtilsAddAbs_16i16u_Intrin_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, const COMPV_ALIGNED(SSE) int16_t* b, COMPV_ALIGNED(SSE) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+void MathUtilsSumAbs_16i16u_Intrin_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, const COMPV_ALIGNED(SSE) int16_t* b, COMPV_ALIGNED(SSE) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+void MathUtilsSum_8u32u_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* data, compv_uscalar_t count, uint32_t *sum1);
 
 COMPV_NAMESPACE_END()
 
