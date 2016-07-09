@@ -69,6 +69,13 @@ public:
         ++m_nSize;
         return COMPV_ERROR_CODE_S_OK;
     }
+	const T* pop_back() {
+		if (m_nSize) {
+			--m_nSize;
+			return end();
+		}
+		return NULL;
+	}
     COMPV_ERROR_CODE append(const T* begin, const T* end) { // append up2end, "end" excluded
         if (begin && end && begin < end) { // begin = null means empty array
             size_t newSize = size() + (end - begin);
@@ -81,12 +88,12 @@ public:
         }
         return COMPV_ERROR_CODE_S_OK;
     }
-    void free() {
+	COMPV_INLINE void free() {
         CompVMem::free((void**)&m_pMem);
         m_nSize = 0;
         m_nCapacity = 0;
     }
-    void resize(size_t nNewSize = 0, bool bForce = false) {
+	COMPV_INLINE void resize(size_t nNewSize = 0, bool bForce = false) {
         if (bForce) {
             m_nSize = COMPV_MATH_MIN(nNewSize, m_nCapacity);
         }
@@ -96,7 +103,7 @@ public:
     }
     // Reset all items without freeing the allocated memory
     // Usefull if you want to re-use the list
-    void reset() {
+	COMPV_INLINE void reset() {
         resize(0);
     }
 
@@ -123,7 +130,7 @@ public:
         return idx < m_nSize ? (m_pMem + idx) : NULL;
     };
 
-    void erase(const T* position) {
+	COMPV_INLINE void erase(const T* position) {
         if (m_nSize > 0 && position >= begin() && position < end()) {
             if (m_nSize > 1) {
                 // move last element to position

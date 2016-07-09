@@ -29,6 +29,8 @@ struct CompVCandidateEdge{
 	size_t col;
 	uint8_t* pixel;
 	const uint16_t* grad;
+	CompVCandidateEdge(size_t r, size_t c, uint8_t* p, const uint16_t* g) : row(r), col(c), pixel(p), grad(g) {  }
+	CompVCandidateEdge() {  }
 };
 
 CompVEdgeDeteCanny::CompVEdgeDeteCanny()
@@ -355,22 +357,18 @@ void CompVEdgeDeteCanny::nms_supp()
 	}
 }
 
-static COMPV_INLINE void connectEdgeInPlace(uint8_t* pixel, const uint16_t* grad, size_t rowIdx, size_t colIdx, int stride, size_t maxRows, size_t maxCols, uint16_t tLow, CompVCandidateEdge* edges)
+static COMPV_INLINE void connectEdgeInPlace(uint8_t* pixel, const uint16_t* grad, size_t rowIdx, size_t colIdx, int stride, size_t maxRows, size_t maxCols, uint16_t tLow, CompVPtr<CompVBox<CompVCandidateEdge>* >& edges)
 {
-	size_t count = 1;
-	edges->col = colIdx;
-	edges->row = rowIdx;
-	edges->pixel = pixel;
-	edges->grad = grad;
 	*pixel = 0xff;
-	CompVCandidateEdge* e;
+	const CompVCandidateEdge* e;
 	uint8_t* p;
 	const uint16_t *g, *gb, *gt;
 	size_t c, r;
 	uint8_t *pb, *pt;
 
-	do {
-		e = &edges[--count];
+	edges->push(CompVCandidateEdge(rowIdx, colIdx, pixel, grad));
+
+	while ((e = edges->pop_back())) {
 		c = e->col;
 		r = e->row;
 		if (r && c && r < maxRows && c < maxCols) {
@@ -382,62 +380,38 @@ static COMPV_INLINE void connectEdgeInPlace(uint8_t* pixel, const uint16_t* grad
 			gt = g - stride;
 			if (!p[-1] && g[-1] >= tLow) { // left
 				p[-1] = 0xff;
-				edges[count].row = r;
-				edges[count].col = c - 1;
-				edges[count].pixel = p - 1;
-				edges[count++].grad = g - 1;
+				edges->push(CompVCandidateEdge(r, c - 1, p - 1, g - 1));
 			}
 			if (!p[1] && g[1] >= tLow) { // right
 				p[1] = 0xff;
-				edges[count].row = r;
-				edges[count].col = c + 1;
-				edges[count].pixel = p + 1;
-				edges[count++].grad = g + 1;
+				edges->push(CompVCandidateEdge(r, c + 1, p + 1, g + 1));
 			}
 			if (!pt[-1] && gt[-1] >= tLow) { // left-top
 				pt[-1] = 0xff;
-				edges[count].row = r - 1;
-				edges[count].col = c - 1;
-				edges[count].pixel = pt - 1;
-				edges[count++].grad = gt - 1;
+				edges->push(CompVCandidateEdge(r - 1, c - 1, pt - 1, gt - 1));
 			}
 			if (!*pt && *gt >= tLow) { // top
 				*pt = 0xff;
-				edges[count].row = r - 1;
-				edges[count].col = c;
-				edges[count].pixel = pt;
-				edges[count++].grad = gt;
+				edges->push(CompVCandidateEdge(r - 1, c, pt, gt));
 			}
 			if (!pt[1] && gt[1] >= tLow) { // right-top
 				pt[1] = 0xff;
-				edges[count].row = r - 1;
-				edges[count].col = c + 1;
-				edges[count].pixel = pt + 1;
-				edges[count++].grad = gt + 1;
+				edges->push(CompVCandidateEdge(r - 1, c + 1, pt + 1, gt + 1));
 			}
 			if (!pb[-1] && gb[-1] >= tLow) { // left-bottom
 				pb[-1] = 0xff;
-				edges[count].row = r + 1;
-				edges[count].col = c - 1;
-				edges[count].pixel = pb - 1;
-				edges[count++].grad = gb - 1;
+				edges->push(CompVCandidateEdge(r + 1, c - 1, pb - 1, gb - 1));
 			}
 			if (!*pb && *gb >= tLow) { // bottom
 				*pb = 0xff;
-				edges[count].row = r + 1;
-				edges[count].col = c;
-				edges[count].pixel = pb;
-				edges[count++].grad = gb;
+				edges->push(CompVCandidateEdge(r + 1, c, pb, gb));
 			}
 			if (!pb[1] && gb[1] >= tLow) { // right-bottom
 				pb[1] = 0xff;
-				edges[count].row = r + 1;
-				edges[count].col = c + 1;
-				edges[count].pixel = pb + 1;
-				edges[count++].grad = gb + 1;
+				edges->push(CompVCandidateEdge(r + 1, c + 1, pb + 1, gb + 1));
 			}
 		}
-	} while (count);
+	}
 }
 
 // StackOverflow when there are more than 4k connected edges
@@ -482,14 +456,14 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 	rowEnd = COMPV_MATH_MIN(rowEnd, imageHeightMinus1);
 	rowStart = COMPV_MATH_MAX(1, rowStart);
 
+	CompVPtr<CompVBox<CompVCandidateEdge>* >candidates;
+	CompVBox<CompVCandidateEdge>::newObj(&candidates);
+
 	size_t row, col;
 	const size_t imageWidthMinus1 = m_nImageWidth - 1;
 	const uint16_t *g = m_pG + (rowStart * m_nImageStride);
 	uint8_t* e = const_cast<uint8_t*>(edges->ptr(rowStart));
 	const int stride = static_cast<const int>(m_nImageStride);
-
-	CompVCandidateEdge* candidates = (CompVCandidateEdge*)CompVMem::malloc(imageHeightMinus1 * imageWidthMinus1 * sizeof(CompVCandidateEdge));
-	COMPV_CHECK_EXP_RETURN(!candidates, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
 	for (row = rowStart; row < rowEnd; ++row) {
 		for (col = 1; col < imageWidthMinus1; ++col) {
@@ -504,7 +478,6 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 		g += m_nImageStride;
 		e += m_nImageStride;
 	}
-	CompVMem::free((void**)&candidates);
 
 	return COMPV_ERROR_CODE_S_OK;
 }
