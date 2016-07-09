@@ -11,6 +11,16 @@
 #include "compv/compv_engine.h"
 #include "compv/compv_gauss.h"
 
+#include "compv/intrinsics/x86/features/edges/compv_feature_canny_dete_intrin_sse2.h"
+
+#if COMPV_ARCH_X86 && COMPV_ASM
+COMPV_EXTERNC void CannyNMSApply_Asm_X86_SSE2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALIGNED(SSE) uint8_t* nms, compv::compv_uscalar_t width, compv::compv_uscalar_t height, COMPV_ALIGNED(SSE) compv::compv_uscalar_t stride);
+#endif /* COMPV_ARCH_X86 && COMPV_ASM */
+
+#if COMPV_ARCH_X64 && COMPV_ASM
+COMPV_EXTERNC void CannyNMSApply_Asm_X64_SSE2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALIGNED(SSE) uint8_t* nms, compv::compv_uscalar_t width, compv::compv_uscalar_t height, COMPV_ALIGNED(SSE) compv::compv_uscalar_t stride);
+#endif /* COMPV_ARCH_X64 && COMPV_ASM */
+
 COMPV_NAMESPACE_BEGIN()
 
 #define COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW	(0.68f)
@@ -338,47 +348,34 @@ void CompVEdgeDeteCanny::nms_supp()
 {
 	// Private function -> do not check input parameters
 
-#if 1
-	// Intrin: strideInBytes must be aligned
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Move to Intrin file
 	uint8_t *nms_ = m_pNms + m_nImageStride;
 	uint16_t *g_ = m_pG + m_nImageStride;
 	size_t imageWidthMinus1_ = m_nImageWidth - 1;
 	size_t imageHeightMinus1_ = m_nImageHeight - 1;
-	__m128i xmm0;
-	size_t col_;
-	const __m128i xmmZero = _mm_setzero_si128();
+
+#if COMPV_ARCH_X86
+	const size_t gStrideInBytes = m_nImageStride * sizeof(uint16_t);
+	void(*CannyNMSApply)(COMPV_ALIGNED(X) uint16_t* grad, COMPV_ALIGNED(X) uint8_t* nms, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride) = NULL;
+	if (imageWidthMinus1_ >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(nms_) && COMPV_IS_ALIGNED_SSE(g_) && COMPV_IS_ALIGNED_SSE(m_nImageStride) && COMPV_IS_ALIGNED_SSE(gStrideInBytes)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CannyNMSApply = CannyNMSApply_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X86(CannyNMSApply = CannyNMSApply_Asm_X86_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X64(CannyNMSApply = CannyNMSApply_Asm_X64_SSE2);
+	}
+	if (CannyNMSApply) {
+		CannyNMSApply(g_, nms_, (compv_uscalar_t)imageWidthMinus1_, (compv_uscalar_t)imageHeightMinus1_, (compv_uscalar_t)m_nImageStride);
+		return;
+	}
+#endif /* COMPV_ARCH_X86 */
+
 	for (size_t row_ = 1; row_ < imageHeightMinus1_; ++row_) {
-		for (col_ = 0; col_ < imageWidthMinus1_; col_ += 8) { // SIMD, starts at 0 to have memory aligned
-			xmm0 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&nms_[col_]));
-			xmm0 = _mm_cmpeq_epi8(xmm0, xmmZero);
-			if (_mm_movemask_epi8(xmm0) ^ 0xFFFF) {
-				xmm0 = _mm_and_si128(_mm_unpacklo_epi8(xmm0, xmm0), _mm_load_si128(reinterpret_cast<const __m128i*>(&g_[col_])));
-				_mm_store_si128(reinterpret_cast<__m128i*>(&g_[col_]), xmm0);
-				_mm_storel_epi64(reinterpret_cast<__m128i*>(&nms_[col_]), xmmZero);
+		for (size_t col_ = 1; col_ < imageWidthMinus1_; ++col_) { // SIMD, starts at 0 to have memory aligned
+			if (nms_[col_]) {
+				g_[col_] = 0, nms_[col_] = 0;
 			}
 		}
 		nms_ += m_nImageStride;
 		g_ += m_nImageStride;
 	}
-#else
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
-	// supp marked points (not thread-safe to change "m_pG")
-	uint8_t *nms_ = m_pNms + m_nImageStride + 1;
-	uint16_t *g_ = m_pG + m_nImageStride + 1;
-	size_t imageWidthMinus1_ = m_nImageWidth - 1;
-	size_t imageHeightMinus1_ = m_nImageHeight - 1;
-	const size_t pad_ = (m_nImageStride - m_nImageWidth) + 2;
-	for (size_t row_ = 1; row_ < imageHeightMinus1_; ++row_) {
-		for (size_t col_ = 1; col_ < imageWidthMinus1_; ++col_, ++g_, ++nms_) { // SIMD, starts at 0 to have memory aligned
-			if (*nms_) {
-				*g_ = 0, *nms_ = 0;
-			}
-		}
-		nms_ += pad_;
-		g_ += pad_;
-	}
-#endif	
 }
 
 static COMPV_INLINE void connectEdgeInPlace(uint8_t* pixel, const uint16_t* grad, size_t rowIdx, size_t colIdx, int stride, size_t maxRows, size_t maxCols, uint16_t tLow, CompVPtr<CompVBox<CompVCandidateEdge>* >& edges)
