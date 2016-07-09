@@ -219,7 +219,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 
 	/* NMS + Hysteresis */
 	if (!m_pNms) {
-		m_pNms = (uint8_t*)CompVMem::calloc(m_nImageWidth * m_nImageHeight, sizeof(uint8_t));
+		m_pNms = (uint8_t*)CompVMem::calloc(m_nImageStride * m_nImageHeight, sizeof(uint8_t));
 		COMPV_CHECK_EXP_RETURN(!m_pNms, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
 	if (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) {
@@ -275,14 +275,13 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, u
 	maxRows = COMPV_MATH_MIN(maxRows, m_nImageHeight - 1);
 	rowStart = COMPV_MATH_MAX(1, rowStart);
 	size_t rowStartTimesStride = rowStart * m_nImageStride;
-	size_t rowStartTimesWidth = rowStart * m_nImageWidth;
 
 	size_t row, col;
 	const size_t maxCols = edges->cols() - 1;
 	const int16_t *gx = m_pGx + rowStartTimesStride + 1, *gy = m_pGy + rowStartTimesStride + 1;
 	uint16_t *g = m_pG + rowStartTimesStride + 1;
 	const uint16_t *top = g - m_nImageStride, *bottom = g + m_nImageStride, *left = g - 1, *right = g + 1;
-	uint8_t *nms = m_pNms + rowStartTimesWidth + 1;
+	uint8_t *nms = m_pNms + rowStartTimesStride + 1;
 	uint8_t *e = const_cast<uint8_t*>(edges->ptr(rowStart));
 	int32_t gxInt, gyInt, absgyInt, absgxInt;
 	const int stride = static_cast<const int>(m_nImageStride);
@@ -305,18 +304,18 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, u
 				absgxInt = ((gxInt ^ (gxInt >> 31)) - (gxInt >> 31));
 				if (absgyInt < (kTangentPiOver8Int * absgxInt)) { // angle = "0° / 180°"
 					if (*left > *g || *right > *g) {
-						*nms = 1;
+						*nms = 0xff;
 					}
 				}
 				else if (absgyInt < (kTangentPiTimes3Over8Int * absgxInt)) { // angle = "45° / 225°" or "135 / 315"
 					const int c = (gxInt ^ gyInt) < 0 ? 1 - stride : 1 + stride;
 					if (g[-c] > *g || g[c] > *g) {
-						*nms = 1;
+						*nms = 0xff;
 					}
 				}
 				else { // angle = "90° / 270°"
 					if (*top > *g || *bottom > *g) {
-						*nms = 1;
+						*nms = 0xff;
 					}
 				}
 			}
@@ -329,7 +328,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, u
 		gy += pad;
 		g += pad;
 		e += m_nImageStride;
-		nms += 2;
+		nms += pad;
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -337,11 +336,35 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, u
 
 void CompVEdgeDeteCanny::nms_supp()
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
 	// Private function -> do not check input parameters
 
+#if 1
+	// Intrin: strideInBytes must be aligned
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Move to Intrin file
+	uint8_t *nms_ = m_pNms + m_nImageStride;
+	uint16_t *g_ = m_pG + m_nImageStride;
+	size_t imageWidthMinus1_ = m_nImageWidth - 1;
+	size_t imageHeightMinus1_ = m_nImageHeight - 1;
+	__m128i xmm0;
+	size_t col_;
+	const __m128i xmmZero = _mm_setzero_si128();
+	for (size_t row_ = 1; row_ < imageHeightMinus1_; ++row_) {
+		for (col_ = 0; col_ < imageWidthMinus1_; col_ += 8) { // SIMD, starts at 0 to have memory aligned
+			xmm0 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&nms_[col_]));
+			xmm0 = _mm_cmpeq_epi8(xmm0, xmmZero);
+			if (_mm_movemask_epi8(xmm0) ^ 0xFFFF) {
+				xmm0 = _mm_and_si128(_mm_unpacklo_epi8(xmm0, xmm0), _mm_load_si128(reinterpret_cast<const __m128i*>(&g_[col_])));
+				_mm_store_si128(reinterpret_cast<__m128i*>(&g_[col_]), xmm0);
+				_mm_storel_epi64(reinterpret_cast<__m128i*>(&nms_[col_]), xmmZero);
+			}
+		}
+		nms_ += m_nImageStride;
+		g_ += m_nImageStride;
+	}
+#else
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
 	// supp marked points (not thread-safe to change "m_pG")
-	uint8_t *nms_ = m_pNms + m_nImageWidth + 1;
+	uint8_t *nms_ = m_pNms + m_nImageStride + 1;
 	uint16_t *g_ = m_pG + m_nImageStride + 1;
 	size_t imageWidthMinus1_ = m_nImageWidth - 1;
 	size_t imageHeightMinus1_ = m_nImageHeight - 1;
@@ -352,9 +375,10 @@ void CompVEdgeDeteCanny::nms_supp()
 				*g_ = 0, *nms_ = 0;
 			}
 		}
-		nms_ += 2;
+		nms_ += pad_;
 		g_ += pad_;
 	}
+#endif	
 }
 
 static COMPV_INLINE void connectEdgeInPlace(uint8_t* pixel, const uint16_t* grad, size_t rowIdx, size_t colIdx, int stride, size_t maxRows, size_t maxCols, uint16_t tLow, CompVPtr<CompVBox<CompVCandidateEdge>* >& edges)
