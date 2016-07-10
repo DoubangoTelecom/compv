@@ -40,9 +40,8 @@ COMPV_ALIGN(64) struct CompVCandidateEdge{
 	size_t col;
 	const uint16_t* grad;
 	uint8_t* pixel;
-	CompVCandidateEdge(size_t r, size_t c, uint8_t* p, const uint16_t* g) : row(r), col(c), pixel(p), grad(g) {  }
-	CompVCandidateEdge() {  }
 };
+#define COMPV_CANNY_PUSH_CANDIDATE(r, c, p, g) edges->new_item(&ne), ne->row = (r), ne->col = (c), ne->pixel = (p), ne->grad = (g)
 
 CompVEdgeDeteCanny::CompVEdgeDeteCanny()
 	: CompVEdgeDete(COMPV_CANNY_ID)
@@ -382,8 +381,9 @@ static COMPV_INLINE void connectEdgeInPlace(uint8_t* pixel, const uint16_t* grad
 	const uint16_t *g, *gb, *gt;
 	size_t c, r;
 	uint8_t *pb, *pt;
-
-	edges->push(CompVCandidateEdge(rowIdx, colIdx, pixel, grad));
+	CompVCandidateEdge* ne;
+	
+	COMPV_CANNY_PUSH_CANDIDATE(rowIdx, colIdx, pixel, grad);
 
 	while ((e = edges->pop_back())) {
 		c = e->col;
@@ -397,35 +397,35 @@ static COMPV_INLINE void connectEdgeInPlace(uint8_t* pixel, const uint16_t* grad
 			gt = g - stride;
 			if (!p[-1] && g[-1] >= tLow) { // left
 				p[-1] = 0xff;
-				edges->push(CompVCandidateEdge(r, c - 1, p - 1, g - 1));
+				COMPV_CANNY_PUSH_CANDIDATE(r, c - 1, p - 1, g - 1);
 			}
 			if (!p[1] && g[1] >= tLow) { // right
 				p[1] = 0xff;
-				edges->push(CompVCandidateEdge(r, c + 1, p + 1, g + 1));
+				COMPV_CANNY_PUSH_CANDIDATE(r, c + 1, p + 1, g + 1);
 			}
 			if (!pt[-1] && gt[-1] >= tLow) { // left-top
 				pt[-1] = 0xff;
-				edges->push(CompVCandidateEdge(r - 1, c - 1, pt - 1, gt - 1));
+				COMPV_CANNY_PUSH_CANDIDATE(r - 1, c - 1, pt - 1, gt - 1);
 			}
 			if (!*pt && *gt >= tLow) { // top
 				*pt = 0xff;
-				edges->push(CompVCandidateEdge(r - 1, c, pt, gt));
+				COMPV_CANNY_PUSH_CANDIDATE(r - 1, c, pt, gt);
 			}
 			if (!pt[1] && gt[1] >= tLow) { // right-top
 				pt[1] = 0xff;
-				edges->push(CompVCandidateEdge(r - 1, c + 1, pt + 1, gt + 1));
+				COMPV_CANNY_PUSH_CANDIDATE(r - 1, c + 1, pt + 1, gt + 1);
 			}
 			if (!pb[-1] && gb[-1] >= tLow) { // left-bottom
 				pb[-1] = 0xff;
-				edges->push(CompVCandidateEdge(r + 1, c - 1, pb - 1, gb - 1));
+				COMPV_CANNY_PUSH_CANDIDATE(r + 1, c - 1, pb - 1, gb - 1);
 			}
 			if (!*pb && *gb >= tLow) { // bottom
 				*pb = 0xff;
-				edges->push(CompVCandidateEdge(r + 1, c, pb, gb));
+				COMPV_CANNY_PUSH_CANDIDATE(r + 1, c, pb, gb);
 			}
 			if (!pb[1] && gb[1] >= tLow) { // right-bottom
 				pb[1] = 0xff;
-				edges->push(CompVCandidateEdge(r + 1, c + 1, pb + 1, gb + 1));
+				COMPV_CANNY_PUSH_CANDIDATE(r + 1, c + 1, pb + 1, gb + 1);
 			}
 		}
 	}

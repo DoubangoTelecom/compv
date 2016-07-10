@@ -175,14 +175,14 @@ void MathConvlt1VertHz_16i16i16i_Intrin_AVX2(const int16_t* inPtr, int16_t* outP
 			inPtr += 4;
 			outPtr += 4;
 		}
-		for (; i < width_; i += 1) {
+		for (; i < width_; ++i) {
 			sum = inPtr[0] * vhkernPtr[0];
 			for (k = 1; k < kernSize; ++k) {
 				sum += inPtr[k * stride] * vhkernPtr[k];
 			}
 			*reinterpret_cast<int16_t*>(outPtr) = sum;
-			inPtr += 1;
-			outPtr += 1;
+			inPtr++;
+			outPtr++;
 		}
 
 		inPtr += pad;

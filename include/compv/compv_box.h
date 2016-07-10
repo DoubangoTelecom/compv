@@ -57,19 +57,25 @@ public:
         return m_Mutex->unlock();
     }
 
-    COMPV_ERROR_CODE push(const T& elem) {
-        if (m_nCapacity == m_nSize) {
-            size_t itemsPerGrowth = ((kCompVBoxMemGrowth + m_nItemSize) / m_nItemSize);
-            size_t newCapacity = (m_nCapacity < itemsPerGrowth) ? itemsPerGrowth : (m_nCapacity << 1); // start with itemsPerGrowth then double it
-            COMPV_CHECK_CODE_RETURN(alloc(newCapacity));
-        }
-        T* newItem = end();
-        *newItem = elem;
+	COMPV_INLINE COMPV_ERROR_CODE new_item(T** newIem) {
+		if (m_nCapacity == m_nSize) {
+			size_t itemsPerGrowth = ((kCompVBoxMemGrowth + m_nItemSize) / m_nItemSize);
+			size_t newCapacity = (m_nCapacity < itemsPerGrowth) ? itemsPerGrowth : (m_nCapacity << 1); // start with itemsPerGrowth then double it
+			COMPV_CHECK_CODE_RETURN(alloc(newCapacity));
+		}
+		*newIem = end();
+		++m_nSize;
+		return COMPV_ERROR_CODE_S_OK;
+	}
 
-        ++m_nSize;
-        return COMPV_ERROR_CODE_S_OK;
+	COMPV_INLINE COMPV_ERROR_CODE push(const T& elem) {
+		T* newIem;
+		COMPV_CHECK_CODE_RETURN(new_item(&newIem));
+		*newIem = elem;
+		return COMPV_ERROR_CODE_S_OK;
     }
-	const T* pop_back() {
+
+	COMPV_INLINE const T* pop_back() {
 		if (m_nSize) {
 			--m_nSize;
 			return end();
