@@ -217,7 +217,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(static_cast<const uint8_t*>(image->getDataPtr()), m_nImageWidth, m_nImageStride, m_nImageHeight, m_pcKernelVt, m_pcKernelHz, m_nKernelSize, m_pGx)));
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(static_cast<const uint8_t*>(image->getDataPtr()), m_nImageWidth, m_nImageStride, m_nImageHeight, m_pcKernelHz, m_pcKernelVt, m_nKernelSize, m_pGy)));
 		COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride)));
-		COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t>((const uint8_t*)image->getDataPtr(), m_nImageWidth, m_nImageHeight, m_nImageStride, mean)));
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t>(static_cast<const uint8_t*>(image->getDataPtr()), m_nImageWidth, m_nImageHeight, m_nImageStride, mean)));
 	}
 	
 	mean = COMPV_MATH_MAX(1, mean);
@@ -484,7 +484,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 
 	for (row = rowStart; row < rowEnd; ++row) {
 		for (col = 1; col < imageWidthMinus1; ++col) {
-			if (!*e && g[col] >= tHigh) { // strong edge
+			if (!e[col] && g[col] >= tHigh) { // strong edge and not connected yet
 #if 1
 				connectEdgeInPlace((e + col), (g + col), row, col, stride, imageHeightMinus1, imageWidthMinus1, tLow, candidates);
 #else
