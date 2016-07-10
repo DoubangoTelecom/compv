@@ -12,6 +12,7 @@
 #include "compv/math/compv_math.h"
 #include "compv/compv_engine.h"
 #include "compv/compv_mem.h"
+#include "compv/compv_array.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -167,24 +168,7 @@ private:
 	template <typename InputType, typename KernelType, typename OutputType>
 	static void convlt1VertHz(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, size_t pad, const KernelType* vhkernPtr, size_t kernSize)
 	{
-		int minpack = 0; // Minimum number of pixels the function can handle for each operation (must be pof 2)
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-
-		// Check missed pixels
-		if (minpack > 0) {
-			int missed = (width & (minpack - 1));
-			if (missed == 0) {
-				return;
-			}
-			inPtr += (width - missed);
-			outPtr += (width - missed);
-			pad += (width - missed);
-			width = missed;
-		}
-		else {
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-		}
-
 		CompVMathConvlt::convlt1VertHz_C<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, pad, vhkernPtr, kernSize);
 	}
 
@@ -212,6 +196,9 @@ private:
 		}
 	}
 };
+
+extern template void CompVMathConvlt::convlt1VertHz(const uint8_t* inPtr, int16_t* outPtr, size_t width, size_t height, size_t stride, size_t pad, const int16_t* vhkernPtr, size_t kernSize);
+extern template void CompVMathConvlt::convlt1VertHz(const int16_t* inPtr, int16_t* outPtr, size_t width, size_t height, size_t stride, size_t pad, const int16_t* vhkernPtr, size_t kernSize);
 
 COMPV_NAMESPACE_END()
 

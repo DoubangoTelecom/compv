@@ -115,7 +115,7 @@ private:
 #else
 #	define COMPV_DEBUG_INFO_CHECK_SSE() 
 #endif
-#if !defined(__SSE2__) && !COMPV_ARCH_X64 // SSE2 enabled on all x64
+#if !defined(__SSE2__) && !(COMPV_ARCH_X64 && defined(_MSC_VER)) // SSE2 enabled on all x64 (Visual Studio)
 #	define COMPV_DEBUG_INFO_CHECK_SSE2() COMPV_DEBUG_INFO_CODE_ONCE("Not built with SSE2 support")
 #else
 #	define COMPV_DEBUG_INFO_CHECK_SSE2() 

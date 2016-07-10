@@ -104,7 +104,6 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 {
 	COMPV_CHECK_EXP_RETURN(!image || image->getPixelFormat() != COMPV_PIXEL_FORMAT_GRAYSCALE, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(m_fThresholdLow >= m_fThresholdHigh, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // MT
 
 	// Force memory realloc if image size changes
 	if (!m_pGx || !m_pGy || !m_pG || !m_pNms || image->getWidth() != m_nImageWidth || image->getHeight() != m_nImageHeight || image->getStride() != m_nImageStride) {
@@ -280,8 +279,6 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, uint16_t tLow, size_t rowStart, size_t rowCount)
 {
 	// Private function -> do not check input parameters
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SIMD
-
 	size_t maxRows = rowStart + rowCount;
 	maxRows = COMPV_MATH_MIN(maxRows, m_nImageHeight - 1);
 	rowStart = COMPV_MATH_MAX(1, rowStart);
@@ -307,6 +304,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, u
 	// mark points to supp
 	for (row = rowStart; row < maxRows; ++row) {
 		CompVMem::zero(e, m_nImageWidth);
+		// TODO(dmi): add support SIMD ->  "nms_gather_row"
 		for (col = 1; col < maxCols; ++col, ++nms, ++gx, ++gy, ++g, ++top, ++bottom, ++left, ++right) {			
 			if (*g >= tLow) {
 				gxInt = static_cast<int32_t>(*gx);
