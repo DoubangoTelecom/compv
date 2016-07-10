@@ -140,11 +140,11 @@ void MatrixMulABt_float64_minpack1_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_flo
 	_mm256_zeroupper();
 }
 
-void MatrixMulABt_float64_minpack1_Intrin_FMA3_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
-{
 #if defined __INTEL_COMPILER
 #	pragma intel optimization_parameter target_arch=avx
 #endif
+void MatrixMulABt_float64_minpack1_Intrin_FMA3_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
+{
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
 	COMPV_DEBUG_INFO_CHECK_AVX();
 	

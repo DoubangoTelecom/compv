@@ -24,14 +24,16 @@ void MathConvlt1VertHz_8u16i16i_Intrin_SSE2(const uint8_t* inPtr, int16_t* outPt
 	__m128i xmmI0, xmmS0, xmmS1, xmmCoeff;
 	int16_t sum;
 	const __m128i xmmZero = _mm_setzero_si128();
+	const __m128i xmmCoeff0 = _mm_set1_epi16(vhkernPtr[0]);
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width_ - 15; i += 16) {
-			xmmS0 = _mm_setzero_si128();
-			xmmS1 = _mm_setzero_si128();
-			for (k = 0, m = 0; k < kernSize; ++k, m += stride) {
-				xmmI0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[m]));
+			xmmI0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[0]));
+			xmmS0 = _mm_mullo_epi16(_mm_unpacklo_epi8(xmmI0, xmmZero), xmmCoeff0);
+			xmmS1 = _mm_mullo_epi16(_mm_unpackhi_epi8(xmmI0, xmmZero), xmmCoeff0);
+			for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
 				xmmCoeff = _mm_set1_epi16(vhkernPtr[k]);
+				xmmI0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[m]));
 				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(_mm_unpacklo_epi8(xmmI0, xmmZero), xmmCoeff));
 				xmmS1 = _mm_add_epi16(xmmS1, _mm_mullo_epi16(_mm_unpackhi_epi8(xmmI0, xmmZero), xmmCoeff));
 			}
@@ -41,10 +43,10 @@ void MathConvlt1VertHz_8u16i16i_Intrin_SSE2(const uint8_t* inPtr, int16_t* outPt
 			outPtr += 16;
 		}
 		if (i < width_ - 7) {
-			xmmS0 = _mm_setzero_si128();
-			for (k = 0, m = 0; k < kernSize; ++k, m += stride) {
-				xmmI0 = _mm_cvtsi64_si128(*reinterpret_cast<const uint64_t*>(&inPtr[m]));
+			xmmS0 = _mm_mullo_epi16(_mm_unpacklo_epi8(_mm_cvtsi64_si128(*reinterpret_cast<const uint64_t*>(&inPtr[0])), xmmZero), xmmCoeff0);
+			for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
 				xmmCoeff = _mm_set1_epi16(vhkernPtr[k]);
+				xmmI0 = _mm_cvtsi64_si128(*reinterpret_cast<const uint64_t*>(&inPtr[m]));
 				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(_mm_unpacklo_epi8(xmmI0, xmmZero), xmmCoeff));
 			}
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(outPtr), xmmS0);
@@ -53,10 +55,10 @@ void MathConvlt1VertHz_8u16i16i_Intrin_SSE2(const uint8_t* inPtr, int16_t* outPt
 			outPtr += 8;
 		}
 		if (i < width_ - 3) {
-			xmmS0 = _mm_setzero_si128();
-			for (k = 0, m = 0; k < kernSize; ++k, m += stride) {
-				xmmI0 = _mm_cvtsi32_si128(*reinterpret_cast<const uint32_t*>(&inPtr[m]));
+			xmmS0 = _mm_mullo_epi16(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const uint32_t*>(&inPtr[0])), xmmZero), xmmCoeff0);
+			for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
 				xmmCoeff = _mm_set1_epi16(vhkernPtr[k]);
+				xmmI0 = _mm_cvtsi32_si128(*reinterpret_cast<const uint32_t*>(&inPtr[m]));
 				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(_mm_unpacklo_epi8(xmmI0, xmmZero), xmmCoeff));
 			}
 			*reinterpret_cast<uint64_t*>(outPtr) = static_cast<uint64_t>(_mm_cvtsi128_si64(xmmS0));
@@ -65,8 +67,8 @@ void MathConvlt1VertHz_8u16i16i_Intrin_SSE2(const uint8_t* inPtr, int16_t* outPt
 			outPtr += 4;
 		}
 		for (; i < width_; i += 1) {
-			sum = 0;
-			for (k = 0; k < kernSize; ++k) {
+			sum = inPtr[0] * vhkernPtr[0];
+			for (k = 1; k < kernSize; ++k) {
 				sum += inPtr[k * stride] * vhkernPtr[k];
 			}
 			*reinterpret_cast<int16_t*>(outPtr) = sum;
@@ -88,12 +90,13 @@ void MathConvlt1VertHz_16i16i16i_Intrin_SSE2(const int16_t* inPtr, int16_t* outP
 	compv_uscalar_t j, k, m;
 	__m128i xmmI0, xmmI1, xmmS0, xmmS1, xmmCoeff;
 	int16_t sum;
+	const __m128i xmmCoeff0 = _mm_set1_epi16(vhkernPtr[0]);
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width_ - 15; i += 16) {
-			xmmS0 = _mm_setzero_si128();
-			xmmS1 = _mm_setzero_si128();
-			for (k = 0, m = 0; k < kernSize; ++k, m += stride) {
+			xmmS0 = _mm_mullo_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[0])), xmmCoeff0);
+			xmmS1 = _mm_mullo_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[8])), xmmCoeff0);
+			for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
 				xmmI0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[m]));
 				xmmI1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[m + 8]));
 				xmmCoeff = _mm_set1_epi16(vhkernPtr[k]);
@@ -106,8 +109,8 @@ void MathConvlt1VertHz_16i16i16i_Intrin_SSE2(const int16_t* inPtr, int16_t* outP
 			outPtr += 16;
 		}
 		if (i < width_ - 7) {
-			xmmS0 = _mm_setzero_si128();
-			for (k = 0, m = 0; k < kernSize; ++k, m += stride) {
+			xmmS0 = _mm_mullo_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[0])), xmmCoeff0);
+			for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
 				xmmI0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[m]));
 				xmmCoeff = _mm_set1_epi16(vhkernPtr[k]);
 				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(xmmI0, xmmCoeff));
@@ -118,8 +121,8 @@ void MathConvlt1VertHz_16i16i16i_Intrin_SSE2(const int16_t* inPtr, int16_t* outP
 			outPtr += 8;
 		}
 		if (i < width_ - 3) {
-			xmmS0 = _mm_setzero_si128();
-			for (k = 0, m = 0; k < kernSize; ++k, m += stride) {
+			xmmS0 = _mm_mullo_epi16(_mm_cvtsi64_si128(*reinterpret_cast<const uint64_t*>(&inPtr[0])), xmmCoeff0);
+			for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
 				xmmI0 = _mm_cvtsi64_si128(*reinterpret_cast<const uint64_t*>(&inPtr[m]));
 				xmmCoeff = _mm_set1_epi16(vhkernPtr[k]);
 				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(xmmI0, xmmCoeff));
@@ -130,8 +133,8 @@ void MathConvlt1VertHz_16i16i16i_Intrin_SSE2(const int16_t* inPtr, int16_t* outP
 			outPtr += 4;
 		}
 		for (; i < width_; i += 1) {
-			sum = 0;
-			for (k = 0; k < kernSize; ++k) {
+			sum = inPtr[0] * vhkernPtr[0];
+			for (k = 1; k < kernSize; ++k) {
 				sum += inPtr[k * stride] * vhkernPtr[k];
 			}
 			*reinterpret_cast<int16_t*>(outPtr) = sum;

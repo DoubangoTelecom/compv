@@ -35,11 +35,11 @@ static const int32_t kTangentPiOver8Int = static_cast<int32_t>(kTangentPiOver8 *
 static const float kTangentPiTimes3Over8 = 2.41421366f; // tan(67.5)
 static const int32_t kTangentPiTimes3Over8Int = static_cast<int32_t>(kTangentPiTimes3Over8 * (1 << 16));
 
-struct CompVCandidateEdge{
+COMPV_ALIGN(64) struct CompVCandidateEdge{
 	size_t row;
 	size_t col;
-	uint8_t* pixel;
 	const uint16_t* grad;
+	uint8_t* pixel;
 	CompVCandidateEdge(size_t r, size_t c, uint8_t* p, const uint16_t* g) : row(r), col(c), pixel(p), grad(g) {  }
 	CompVCandidateEdge() {  }
 };

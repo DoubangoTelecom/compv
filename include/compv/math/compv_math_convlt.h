@@ -175,19 +175,16 @@ private:
 	template <typename InputType, typename KernelType, typename OutputType>
 	static void convlt1VertHz_C(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, size_t pad, const KernelType* vhkernPtr, size_t kernSize)
 	{
-		size_t i, j, row;
+		size_t i, j, k, row;
 		OutputType sum;
-		const InputType *ptr_;
 
 		for (j = 0; j < height; ++j) {
 			for (i = 0; i < width; ++i) {
-				sum = 0;
-				ptr_ = inPtr;
-				for (row = 0; row < kernSize; ++row) {
-					sum += OutputType(*ptr_ * vhkernPtr[row]);
-					ptr_ += stride;
+				sum = static_cast<OutputType>(*inPtr * *vhkernPtr);
+				for (row = 1, k = stride; row < kernSize; ++row, k += stride) {
+					sum += static_cast<OutputType>(inPtr[k] * vhkernPtr[row]);
 				}
-				*outPtr = OutputType(sum);
+				*outPtr = static_cast<OutputType>(sum);
 				++inPtr;
 				++outPtr;
 			}
