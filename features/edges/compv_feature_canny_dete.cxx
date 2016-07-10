@@ -286,14 +286,12 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, u
 
 	size_t row, col;
 	const size_t maxCols = edges->cols() - 1;
-	const int16_t *gx = m_pGx + rowStartTimesStride + 1, *gy = m_pGy + rowStartTimesStride + 1;
-	uint16_t *g = m_pG + rowStartTimesStride + 1;
-	const uint16_t *top = g - m_nImageStride, *bottom = g + m_nImageStride, *left = g - 1, *right = g + 1;
-	uint8_t *nms = m_pNms + rowStartTimesStride + 1;
+	const int16_t *gx = m_pGx + rowStartTimesStride, *gy = m_pGy + rowStartTimesStride;
+	uint16_t *g = m_pG + rowStartTimesStride;
+	uint8_t *nms = m_pNms + rowStartTimesStride;
 	uint8_t *e = const_cast<uint8_t*>(edges->ptr(rowStart));
 	int32_t gxInt, gyInt, absgyInt, absgxInt;
 	const int stride = static_cast<const int>(m_nImageStride);
-	const int pad = static_cast<const int>(m_nImageStride - m_nImageWidth) + 2;
 
 	// non-maximasupp is multi-threaded and we will use this property to zero the edge buffer with low cost (compared to edges->zeroall() which is not MT)
 	if (rowStart == 1) { // First time ?
@@ -305,39 +303,35 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, u
 	for (row = rowStart; row < maxRows; ++row) {
 		CompVMem::zero(e, m_nImageWidth);
 		// TODO(dmi): add support SIMD ->  "nms_gather_row"
-		for (col = 1; col < maxCols; ++col, ++nms, ++gx, ++gy, ++g, ++top, ++bottom, ++left, ++right) {			
-			if (*g >= tLow) {
-				gxInt = static_cast<int32_t>(*gx);
-				gyInt = static_cast<int32_t>(*gy);
-				absgyInt = ((gyInt ^ (gyInt >> 31)) - (gyInt >> 31)) << 16;
-				absgxInt = ((gxInt ^ (gxInt >> 31)) - (gxInt >> 31));
+		for (col = 1; col < maxCols; ++col) {			
+			if (g[col] >= tLow) {
+				gxInt = static_cast<int32_t>(gx[col]);
+				gyInt = static_cast<int32_t>(gy[col]);
+				absgyInt = COMPV_MATH_ABS(gyInt) << 16;
+				absgxInt = COMPV_MATH_ABS(gxInt);
 				if (absgyInt < (kTangentPiOver8Int * absgxInt)) { // angle = "0° / 180°"
-					if (*left > *g || *right > *g) {
-						*nms = 0xff;
+					if (g[col - 1] > g[col] || g[col + 1] > g[col]) {
+						nms[col] = 0xff;
 					}
 				}
 				else if (absgyInt < (kTangentPiTimes3Over8Int * absgxInt)) { // angle = "45° / 225°" or "135 / 315"
 					const int c = (gxInt ^ gyInt) < 0 ? 1 - stride : 1 + stride;
-					if (g[-c] > *g || g[c] > *g) {
-						*nms = 0xff;
+					if (g[col - c] > g[col] || g[col + c] > g[col]) {
+						nms[col] = 0xff;
 					}
 				}
 				else { // angle = "90° / 270°"
-					if (*top > *g || *bottom > *g) {
-						*nms = 0xff;
+					if (g[col - m_nImageStride] > g[col] || g[col + m_nImageStride] > g[col]) {
+						nms[col] = 0xff;
 					}
 				}
 			}
 		}
-		top += pad;
-		bottom += pad;
-		left += pad;
-		right += pad;
-		gx += pad;
-		gy += pad;
-		g += pad;
+		gx += m_nImageStride;
+		gy += m_nImageStride;
+		g += m_nImageStride;
 		e += m_nImageStride;
-		nms += pad;
+		nms += m_nImageStride;
 	}
 
 	return COMPV_ERROR_CODE_S_OK;

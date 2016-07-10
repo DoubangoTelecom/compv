@@ -12,7 +12,7 @@
 
 #define TEST_TYPE				TEST_TYPE_GIRL
 
-#define CANNY_LOOP_COUNT		1000
+#define CANNY_LOOP_COUNT		1
 
 #if TEST_TYPE == TEST_TYPE_GIRL
 #	define CANNY_JPEG_IMG			"C:/Projects/GitHub/compv/tests/girl.jpg"
