@@ -97,9 +97,9 @@ void MathConvlt1VertHz_16i16i16i_Intrin_SSE2(const int16_t* inPtr, int16_t* outP
 			xmmS0 = _mm_mullo_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[0])), xmmCoeff0);
 			xmmS1 = _mm_mullo_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[8])), xmmCoeff0);
 			for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
+				xmmCoeff = _mm_set1_epi16(vhkernPtr[k]);
 				xmmI0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[m]));
 				xmmI1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[m + 8]));
-				xmmCoeff = _mm_set1_epi16(vhkernPtr[k]);
 				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(xmmI0, xmmCoeff));
 				xmmS1 = _mm_add_epi16(xmmS1, _mm_mullo_epi16(xmmI1, xmmCoeff));
 			}

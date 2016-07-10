@@ -9,6 +9,7 @@
 #include "compv/compv_cpu.h"
 
 #include "compv/intrinsics/x86/math/compv_math_convlt_intrin_sse2.h"
+#include "compv/intrinsics/x86/math/compv_math_convlt_intrin_avx2.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -19,6 +20,9 @@ void CompVMathConvlt::convlt1VertHz(const uint8_t* inPtr, int16_t* outPtr, size_
 	void (*MathConvlt1VertHz_8u16i16i)(const uint8_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, compv_uscalar_t pad, const int16_t* vhkernPtr, compv_uscalar_t kernSize) = NULL;
 	if (width >= 16 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(MathConvlt1VertHz_8u16i16i = MathConvlt1VertHz_8u16i16i_Intrin_SSE2);
+	}
+	if (width >= 32 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(MathConvlt1VertHz_8u16i16i = MathConvlt1VertHz_8u16i16i_Intrin_AVX2);
 	}
 	if (MathConvlt1VertHz_8u16i16i) {
 		MathConvlt1VertHz_8u16i16i(inPtr, outPtr, (compv_uscalar_t)width, (compv_uscalar_t)height, (compv_uscalar_t)stride, (compv_uscalar_t)pad, vhkernPtr, (compv_uscalar_t)kernSize);
@@ -35,6 +39,9 @@ void CompVMathConvlt::convlt1VertHz(const int16_t* inPtr, int16_t* outPtr, size_
 	void(*MathConvlt1VertHz_16i16i16i)(const int16_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, compv_uscalar_t pad, const int16_t* vhkernPtr, compv_uscalar_t kernSize) = NULL;
 	if (width >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(MathConvlt1VertHz_16i16i16i = MathConvlt1VertHz_16i16i16i_Intrin_SSE2);
+	}
+	if (width >= 16 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(MathConvlt1VertHz_16i16i16i = MathConvlt1VertHz_16i16i16i_Intrin_AVX2);
 	}
 	if (MathConvlt1VertHz_16i16i16i) {
 		MathConvlt1VertHz_16i16i16i(inPtr, outPtr, (compv_uscalar_t)width, (compv_uscalar_t)height, (compv_uscalar_t)stride, (compv_uscalar_t)pad, vhkernPtr, (compv_uscalar_t)kernSize);

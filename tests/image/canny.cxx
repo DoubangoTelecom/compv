@@ -10,9 +10,9 @@
 #define TEST_TYPE_MANDEKALOU	2
 #define TEST_TYPE_VALVE			3
 
-#define TEST_TYPE				TEST_TYPE_GIRL
+#define TEST_TYPE				TEST_TYPE_EQUIRECT
 
-#define CANNY_LOOP_COUNT		1
+#define CANNY_LOOP_COUNT		1000
 
 #if TEST_TYPE == TEST_TYPE_GIRL
 #	define CANNY_JPEG_IMG			"C:/Projects/GitHub/compv/tests/girl.jpg"
