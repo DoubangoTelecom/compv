@@ -398,7 +398,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 
 	for (row = rowStart; row < rowEnd; ++row) {
 		for (col = 1; col < imageWidthMinus1; ++col) {
-			if (!e[col] && grad[col] >= tHigh) { // strong edge and not connected yet
+			if (grad[col] >= tHigh && !e[col]) { // strong edge and not connected yet
 				e[col] = 0xff;
 				COMPV_CANNY_PUSH_CANDIDATE(candidates, row, col, (e + col), (grad + col));
 				while ((edge = candidates->pop_back())) {
