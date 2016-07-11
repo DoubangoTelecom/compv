@@ -302,12 +302,12 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, u
 	for (row = rowStart; row < maxRows; ++row) {
 		CompVMem::zero(e, m_nImageWidth);
 		// TODO(dmi): add support SIMD ->  "nms_gather_row"
-		for (col = 1; col < maxCols; ++col) {			
+		for (col = 1; col < maxCols; ++col) {
 			if (g[col] >= tLow) {
 				gxInt = static_cast<int32_t>(gx[col]);
 				gyInt = static_cast<int32_t>(gy[col]);
-				absgyInt = COMPV_MATH_ABS(gyInt) << 16;
-				absgxInt = COMPV_MATH_ABS(gxInt);
+				absgyInt = ((gyInt ^ (gyInt >> 31)) - (gyInt >> 31)) << 16;
+				absgxInt = ((gxInt ^ (gxInt >> 31)) - (gxInt >> 31));
 				if (absgyInt < (kTangentPiOver8Int * absgxInt)) { // angle = "0° / 180°"
 					if (g[col - 1] > g[col] || g[col + 1] > g[col]) {
 						nms[col] = 0xff;
@@ -411,35 +411,35 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 						pt = p - stride;
 						gb = g + stride;
 						gt = g - stride;
-						if (!p[-1] && g[-1] >= tLow) { // left
+						if (g[-1] >= tLow && !p[-1]) { // left
 							p[-1] = 0xff;
 							COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c - 1, p - 1, g - 1);
 						}
-						if (!p[1] && g[1] >= tLow) { // right
+						if (g[1] >= tLow && !p[1]) { // right
 							p[1] = 0xff;
 							COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c + 1, p + 1, g + 1);
 						}
-						if (!pt[-1] && gt[-1] >= tLow) { // left-top
+						if (gt[-1] >= tLow && !pt[-1]) { // left-top
 							pt[-1] = 0xff;
 							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c - 1, pt - 1, gt - 1);
 						}
-						if (!*pt && *gt >= tLow) { // top
+						if (*gt >= tLow && !*pt) { // top
 							*pt = 0xff;
 							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c, pt, gt);
 						}
-						if (!pt[1] && gt[1] >= tLow) { // right-top
+						if (gt[1] >= tLow && !pt[1]) { // right-top
 							pt[1] = 0xff;
 							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c + 1, pt + 1, gt + 1);
 						}
-						if (!pb[-1] && gb[-1] >= tLow) { // left-bottom
+						if (gb[-1] >= tLow && !pb[-1]) { // left-bottom
 							pb[-1] = 0xff;
 							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c - 1, pb - 1, gb - 1);
 						}
-						if (!*pb && *gb >= tLow) { // bottom
+						if (*gb >= tLow && !*pb) { // bottom
 							*pb = 0xff;
 							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c, pb, gb);
 						}
-						if (!pb[1] && gb[1] >= tLow) { // right-bottom
+						if (gb[1] >= tLow && !pb[1]) { // right-bottom
 							pb[1] = 0xff;
 							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c + 1, pb + 1, gb + 1);
 						}
