@@ -41,7 +41,7 @@ COMPV_ALIGN(64) struct CompVCandidateEdge{
 	const uint16_t* grad;
 	uint8_t* pixel;
 };
-#define COMPV_CANNY_PUSH_CANDIDATE(r, c, p, g) edges->new_item(&ne), ne->row = (r), ne->col = (c), ne->pixel = (p), ne->grad = (g)
+#define COMPV_CANNY_PUSH_CANDIDATE(box, r, c, p, g) (box)->new_item(&ne), ne->row = (r), ne->col = (c), ne->pixel = (p), ne->grad = (g)
 
 CompVEdgeDeteCanny::CompVEdgeDeteCanny()
 	: CompVEdgeDete(COMPV_CANNY_ID)
@@ -373,98 +373,6 @@ void CompVEdgeDeteCanny::nms_supp()
 	}
 }
 
-static COMPV_INLINE void connectEdgeInPlace(uint8_t* pixel, const uint16_t* grad, size_t rowIdx, size_t colIdx, int stride, size_t maxRows, size_t maxCols, uint16_t tLow, CompVPtr<CompVBox<CompVCandidateEdge>* >& edges)
-{
-	*pixel = 0xff;
-	const CompVCandidateEdge* e;
-	uint8_t* p;
-	const uint16_t *g, *gb, *gt;
-	size_t c, r;
-	uint8_t *pb, *pt;
-	CompVCandidateEdge* ne;
-	
-	COMPV_CANNY_PUSH_CANDIDATE(rowIdx, colIdx, pixel, grad);
-
-	while ((e = edges->pop_back())) {
-		c = e->col;
-		r = e->row;
-		if (r && c && r < maxRows && c < maxCols) {
-			p = e->pixel;
-			g = e->grad;
-			pb = p + stride;
-			pt = p - stride;
-			gb = g + stride;
-			gt = g - stride;
-			if (!p[-1] && g[-1] >= tLow) { // left
-				p[-1] = 0xff;
-				COMPV_CANNY_PUSH_CANDIDATE(r, c - 1, p - 1, g - 1);
-			}
-			if (!p[1] && g[1] >= tLow) { // right
-				p[1] = 0xff;
-				COMPV_CANNY_PUSH_CANDIDATE(r, c + 1, p + 1, g + 1);
-			}
-			if (!pt[-1] && gt[-1] >= tLow) { // left-top
-				pt[-1] = 0xff;
-				COMPV_CANNY_PUSH_CANDIDATE(r - 1, c - 1, pt - 1, gt - 1);
-			}
-			if (!*pt && *gt >= tLow) { // top
-				*pt = 0xff;
-				COMPV_CANNY_PUSH_CANDIDATE(r - 1, c, pt, gt);
-			}
-			if (!pt[1] && gt[1] >= tLow) { // right-top
-				pt[1] = 0xff;
-				COMPV_CANNY_PUSH_CANDIDATE(r - 1, c + 1, pt + 1, gt + 1);
-			}
-			if (!pb[-1] && gb[-1] >= tLow) { // left-bottom
-				pb[-1] = 0xff;
-				COMPV_CANNY_PUSH_CANDIDATE(r + 1, c - 1, pb - 1, gb - 1);
-			}
-			if (!*pb && *gb >= tLow) { // bottom
-				*pb = 0xff;
-				COMPV_CANNY_PUSH_CANDIDATE(r + 1, c, pb, gb);
-			}
-			if (!pb[1] && gb[1] >= tLow) { // right-bottom
-				pb[1] = 0xff;
-				COMPV_CANNY_PUSH_CANDIDATE(r + 1, c + 1, pb + 1, gb + 1);
-			}
-		}
-	}
-}
-
-// StackOverflow when there are more than 4k connected edges
-static COMPV_INLINE void connectEdgeRecursive(uint8_t* pixel, const uint16_t* grad, size_t rowIdx, size_t colIdx, int stride, size_t maxRows, size_t maxCols, uint16_t tLow)
-{	
-	// Private function -> do not check input parameters
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-	if (rowIdx && colIdx && rowIdx < maxRows && colIdx < maxCols) {
-		*pixel = 0xff; // set as strong edge
-		if (pixel[-1] ^ 0xff && grad[-1] >= tLow) { // left
-			connectEdgeRecursive(pixel - 1, grad - 1, rowIdx, colIdx - 1, stride, maxRows, maxCols, tLow);
-		}
-		if (pixel[1] ^ 0xff && grad[1] >= tLow) { // right
-			connectEdgeRecursive(pixel + 1, grad + 1, rowIdx, colIdx + 1, stride, maxRows, maxCols, tLow);
-		}
-		if (pixel[-stride - 1] ^ 0xff && grad[-stride - 1] >= tLow) { // left-top
-			connectEdgeRecursive(pixel - stride - 1, grad - stride - 1, rowIdx - 1, colIdx - 1, stride, maxRows, maxCols, tLow);
-		}
-		if (pixel[-stride] ^ 0xff && grad[-stride] >= tLow) { // top
-			connectEdgeRecursive(pixel - stride, grad - stride, rowIdx - 1, colIdx, stride, maxRows, maxCols, tLow);
-		}
-		if (pixel[-stride + 1] ^ 0xff && grad[-stride + 1] >= tLow) { // right-top
-			connectEdgeRecursive(pixel - stride + 1, grad - stride + 1, rowIdx - 1, colIdx + 1, stride, maxRows, maxCols, tLow);
-		}
-		if (pixel[stride - 1] ^ 0xff && grad[stride - 1] >= tLow) { // left-bottom
-			connectEdgeRecursive(pixel + stride - 1, grad + stride - 1, rowIdx + 1, colIdx - 1, stride, maxRows, maxCols, tLow);
-		}
-		if (pixel[stride] ^ 0xff && grad[stride] >= tLow) { // bottom
-			connectEdgeRecursive(pixel + stride, grad + stride, rowIdx + 1, colIdx, stride, maxRows, maxCols, tLow);
-		}
-		if (pixel[stride + 1] ^ 0xff && grad[stride + 1] >= tLow) { // right-bottom
-			connectEdgeRecursive(pixel + stride + 1, grad + stride + 1, rowIdx + 1, colIdx + 1, stride, maxRows, maxCols, tLow);
-		}
-	}
-}
-
 COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, uint16_t tLow, uint16_t tHigh, size_t rowStart, size_t rowCount)
 {
 	// Private function -> do not check input parameters
@@ -478,21 +386,68 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 
 	size_t row, col;
 	const size_t imageWidthMinus1 = m_nImageWidth - 1;
-	const uint16_t *g = m_pG + (rowStart * m_nImageStride);
+	const uint16_t *grad = m_pG + (rowStart * m_nImageStride);
 	uint8_t* e = const_cast<uint8_t*>(edges->ptr(rowStart));
-	const int stride = static_cast<const int>(m_nImageStride);
+	const int stride = static_cast<const int>(m_nImageStride);	
+	const CompVCandidateEdge* edge;
+	uint8_t* p;
+	const uint16_t *g, *gb, *gt;
+	size_t c, r;
+	uint8_t *pb, *pt;
+	CompVCandidateEdge* ne;
 
 	for (row = rowStart; row < rowEnd; ++row) {
 		for (col = 1; col < imageWidthMinus1; ++col) {
-			if (!e[col] && g[col] >= tHigh) { // strong edge and not connected yet
-#if 1
-				connectEdgeInPlace((e + col), (g + col), row, col, stride, imageHeightMinus1, imageWidthMinus1, tLow, candidates);
-#else
-				connectEdgeRecursive((e + col), (g + col), row, col, stride, imageHeightMinus1, imageWidthMinus1, tLow);
-#endif
+			if (!e[col] && grad[col] >= tHigh) { // strong edge and not connected yet
+				e[col] = 0xff;
+				COMPV_CANNY_PUSH_CANDIDATE(candidates, row, col, (e + col), (grad + col));
+				while ((edge = candidates->pop_back())) {
+					c = edge->col;
+					r = edge->row;
+					if (r && c && r < imageHeightMinus1 && c < imageWidthMinus1) {
+						p = edge->pixel;
+						g = edge->grad;
+						pb = p + stride;
+						pt = p - stride;
+						gb = g + stride;
+						gt = g - stride;
+						if (!p[-1] && g[-1] >= tLow) { // left
+							p[-1] = 0xff;
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c - 1, p - 1, g - 1);
+						}
+						if (!p[1] && g[1] >= tLow) { // right
+							p[1] = 0xff;
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c + 1, p + 1, g + 1);
+						}
+						if (!pt[-1] && gt[-1] >= tLow) { // left-top
+							pt[-1] = 0xff;
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c - 1, pt - 1, gt - 1);
+						}
+						if (!*pt && *gt >= tLow) { // top
+							*pt = 0xff;
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c, pt, gt);
+						}
+						if (!pt[1] && gt[1] >= tLow) { // right-top
+							pt[1] = 0xff;
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c + 1, pt + 1, gt + 1);
+						}
+						if (!pb[-1] && gb[-1] >= tLow) { // left-bottom
+							pb[-1] = 0xff;
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c - 1, pb - 1, gb - 1);
+						}
+						if (!*pb && *gb >= tLow) { // bottom
+							*pb = 0xff;
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c, pb, gb);
+						}
+						if (!pb[1] && gb[1] >= tLow) { // right-bottom
+							pb[1] = 0xff;
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c + 1, pb + 1, gb + 1);
+						}
+					}
+				}
 			}
 		}
-		g += m_nImageStride;
+		grad += m_nImageStride;
 		e += m_nImageStride;
 	}
 
