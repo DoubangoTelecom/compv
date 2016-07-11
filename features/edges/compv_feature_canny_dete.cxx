@@ -395,6 +395,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 	size_t c, r;
 	uint8_t *pb, *pt;
 	CompVCandidateEdge* ne;
+	uint32_t cmp32;
 
 	for (row = rowStart; row < rowEnd; ++row) {
 		for (col = 1; col < imageWidthMinus1; ++col) {
@@ -419,29 +420,37 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 							p[1] = 0xff;
 							COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c + 1, p + 1, g + 1);
 						}
-						if (gt[-1] >= tLow && !pt[-1]) { // left-top
-							pt[-1] = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c - 1, pt - 1, gt - 1);
+						/* TOP */
+						cmp32 = *reinterpret_cast<const uint32_t*>(&pt[-1]) ^ 0xffffff;
+						if (cmp32) {
+							if (cmp32 & 0xff && gt[-1] >= tLow) { // left
+								pt[-1] = 0xff;
+								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c - 1, pt - 1, gt - 1);
+							}
+							if (cmp32 & 0xff00 && *gt >= tLow) { // center
+								*pt = 0xff;
+								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c, pt, gt);
+							}
+							if (cmp32 & 0xff0000 && gt[1] >= tLow && !pt[1]) { // right
+								pt[1] = 0xff;
+								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c + 1, pt + 1, gt + 1);
+							}
 						}
-						if (*gt >= tLow && !*pt) { // top
-							*pt = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c, pt, gt);
-						}
-						if (gt[1] >= tLow && !pt[1]) { // right-top
-							pt[1] = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c + 1, pt + 1, gt + 1);
-						}
-						if (gb[-1] >= tLow && !pb[-1]) { // left-bottom
-							pb[-1] = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c - 1, pb - 1, gb - 1);
-						}
-						if (*gb >= tLow && !*pb) { // bottom
-							*pb = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c, pb, gb);
-						}
-						if (gb[1] >= tLow && !pb[1]) { // right-bottom
-							pb[1] = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c + 1, pb + 1, gb + 1);
+						/* BOTTOM */
+						cmp32 = *reinterpret_cast<const uint32_t*>(&pb[-1]) ^ 0xffffff;
+						if (cmp32) {
+							if (cmp32 & 0xff && gb[-1] >= tLow) { // left
+								pb[-1] = 0xff;
+								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c - 1, pb - 1, gb - 1);
+							}
+							if (cmp32 & 0xff00 && *gb >= tLow) { // center
+								*pb = 0xff;
+								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c, pb, gb);
+							}
+							if (cmp32 & 0xff0000 && gb[1] >= tLow) { // right
+								pb[1] = 0xff;
+								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c + 1, pb + 1, gb + 1);
+							}
 						}
 					}
 				}
