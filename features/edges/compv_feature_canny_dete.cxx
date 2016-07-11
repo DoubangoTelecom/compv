@@ -38,10 +38,8 @@ static const int32_t kTangentPiTimes3Over8Int = static_cast<int32_t>(kTangentPiT
 COMPV_ALIGN(64) struct CompVCandidateEdge{
 	size_t row;
 	size_t col;
-	const uint16_t* grad;
-	uint8_t* pixel;
 };
-#define COMPV_CANNY_PUSH_CANDIDATE(box, r, c, p, g) (box)->new_item(&ne), ne->row = (r), ne->col = (c), ne->pixel = (p), ne->grad = (g)
+#define COMPV_CANNY_PUSH_CANDIDATE(box, r, c) (box)->new_item(&ne), ne->row = (r), ne->col = (c)
 
 CompVEdgeDeteCanny::CompVEdgeDeteCanny()
 	: CompVEdgeDete(COMPV_CANNY_ID)
@@ -386,13 +384,13 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 
 	size_t row, col;
 	const size_t imageWidthMinus1 = m_nImageWidth - 1;
-	const uint16_t *grad = m_pG + (rowStart * m_nImageStride);
-	uint8_t* e = const_cast<uint8_t*>(edges->ptr(rowStart));
+	const uint16_t *grad = m_pG + (rowStart * m_nImageStride), *g0 = m_pG;
+	uint8_t *e = const_cast<uint8_t*>(edges->ptr(rowStart)), *e0 = const_cast<uint8_t*>(edges->ptr(0));
 	const int stride = static_cast<const int>(m_nImageStride);	
 	const CompVCandidateEdge* edge;
 	uint8_t* p;
 	const uint16_t *g, *gb, *gt;
-	size_t c, r;
+	size_t c, r, s;
 	uint8_t *pb, *pt;
 	CompVCandidateEdge* ne;
 	uint32_t cmp32;
@@ -401,39 +399,40 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 		for (col = 1; col < imageWidthMinus1; ++col) {
 			if (grad[col] >= tHigh && !e[col]) { // strong edge and not connected yet
 				e[col] = 0xff;
-				COMPV_CANNY_PUSH_CANDIDATE(candidates, row, col, (e + col), (grad + col));
+				COMPV_CANNY_PUSH_CANDIDATE(candidates, row, col);
 				while ((edge = candidates->pop_back())) {
 					c = edge->col;
 					r = edge->row;
 					if (r && c && r < imageHeightMinus1 && c < imageWidthMinus1) {
-						p = edge->pixel;
-						g = edge->grad;
+						s = (r * m_nImageStride) + c;
+						p = e0 + s;
+						g = g0 + s;
 						pb = p + stride;
 						pt = p - stride;
 						gb = g + stride;
 						gt = g - stride;
 						if (g[-1] >= tLow && !p[-1]) { // left
 							p[-1] = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c - 1, p - 1, g - 1);
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c - 1);
 						}
 						if (g[1] >= tLow && !p[1]) { // right
 							p[1] = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c + 1, p + 1, g + 1);
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c + 1);
 						}
 						/* TOP */
 						cmp32 = *reinterpret_cast<const uint32_t*>(&pt[-1]) ^ 0xffffff;
 						if (cmp32) {
 							if (cmp32 & 0xff && gt[-1] >= tLow) { // left
 								pt[-1] = 0xff;
-								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c - 1, pt - 1, gt - 1);
+								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c - 1);
 							}
 							if (cmp32 & 0xff00 && *gt >= tLow) { // center
 								*pt = 0xff;
-								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c, pt, gt);
+								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c);
 							}
 							if (cmp32 & 0xff0000 && gt[1] >= tLow && !pt[1]) { // right
 								pt[1] = 0xff;
-								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c + 1, pt + 1, gt + 1);
+								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c + 1);
 							}
 						}
 						/* BOTTOM */
@@ -441,15 +440,15 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 						if (cmp32) {
 							if (cmp32 & 0xff && gb[-1] >= tLow) { // left
 								pb[-1] = 0xff;
-								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c - 1, pb - 1, gb - 1);
+								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c - 1);
 							}
 							if (cmp32 & 0xff00 && *gb >= tLow) { // center
 								*pb = 0xff;
-								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c, pb, gb);
+								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c);
 							}
 							if (cmp32 & 0xff0000 && gb[1] >= tLow) { // right
 								pb[1] = 0xff;
-								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c + 1, pb + 1, gb + 1);
+								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c + 1);
 							}
 						}
 					}
