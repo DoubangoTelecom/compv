@@ -28,6 +28,7 @@ sym(MathUtilsSumAbs_16i16u_Asm_X86_SSSE3):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+	COMPV_YASM_SAVE_XMM 7
 	push rsi
 	push rdi
 	push rbx
@@ -41,7 +42,8 @@ sym(MathUtilsSumAbs_16i16u_Asm_X86_SSSE3):
 	mov rdx, arg(1) ; rdx = b
 	shl rcx, 1
 	mov rbx, arg(2) ; rbx = r
-	mov rdi, arg(3) ; rdi = width
+	mov rdi, arg(3) 
+	lea rdi, [rdi - 31] ; rdi = width - 31
 	mov rsi, arg(4) ; rsi = height
 	mov [rsp + 0], rcx ; [rsp + 0] = strideInBytes
 
@@ -50,17 +52,51 @@ sym(MathUtilsSumAbs_16i16u_Asm_X86_SSSE3):
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopRows
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (i = 0; i < width; i += 8)
+		; for (i = 0; i < width_ - 31; i += 32)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor rcx, rcx ; rcx = i = 0
-		.LoopCols
+		cmp rdi, 0
+		jle .EndOfLoopCols32
+		.LoopCols32
+			pabsw xmm0, [rax + rcx*2]
+			pabsw xmm1, [rax + rcx*2 + 16]
+			pabsw xmm2, [rax + rcx*2 + 32]
+			pabsw xmm3, [rax + rcx*2 + 48]
+			pabsw xmm4, [rdx + rcx*2]
+			pabsw xmm5, [rdx + rcx*2 + 16]
+			pabsw xmm6, [rdx + rcx*2 + 32]
+			pabsw xmm7, [rdx + rcx*2 + 48]
+			lea rcx, [rcx + 32]
+			paddusw xmm0, xmm4
+			paddusw xmm1, xmm5
+			paddusw xmm2, xmm6
+			paddusw xmm3, xmm7
+			cmp rcx, rdi
+			movdqa [rbx + rcx*2 - 64], xmm0
+			movdqa [rbx + rcx*2 - 64 + 16], xmm1
+			movdqa [rbx + rcx*2 - 64 + 32], xmm2
+			movdqa [rbx + rcx*2 - 64 + 48], xmm3
+			jl .LoopCols32
+		.EndOfLoopCols32
+
+		lea rdi, [rdi + 31]
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < width_; i += 8)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		cmp rcx, rdi
+		jge .EndOfLoopCols8
+		.LoopCols8
 			pabsw xmm0, [rax + rcx*2]
 			pabsw xmm1, [rdx + rcx*2]
 			lea rcx, [rcx + 8]
 			paddusw xmm0, xmm1
 			cmp rcx, rdi
 			movdqa [rbx + rcx*2 - 16], xmm0
-			jl .LoopCols
+			jl .LoopCols8
+		.EndOfLoopCols8
+
+		lea rdi, [rdi - 31]
 
 		add rax, [rsp + 0]
 		add rdx, [rsp + 0]
@@ -75,6 +111,7 @@ sym(MathUtilsSumAbs_16i16u_Asm_X86_SSSE3):
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_RESTORE_XMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
