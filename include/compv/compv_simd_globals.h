@@ -8,7 +8,6 @@
 #define _COMPV_SIMD_GLOBALS_H_
 
 #include "compv/compv_config.h"
-#include "compv/compv_obj.h"
 #include "compv/compv_common.h"
 
 #if defined(_COMPV_API_H_)

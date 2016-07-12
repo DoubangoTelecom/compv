@@ -13,6 +13,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+// Expect small kernel values (e.g. sobel) to avoid mul_epi16/add_epi16 overflow
 // Also works with "uint16"
 // TODO(dmi): add support for ASM
 void MathConvlt1VertHz_8u16i16i_Intrin_SSE2(const uint8_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, compv_uscalar_t pad, const int16_t* vhkernPtr, compv_uscalar_t kernSize)
@@ -81,6 +82,7 @@ void MathConvlt1VertHz_8u16i16i_Intrin_SSE2(const uint8_t* inPtr, int16_t* outPt
 	}
 }
 
+// Expect small kernel values (e.g. sobel) to avoid mul_epi16/add_epi16 overflow
 // TODO(dmi): add support for ASM
 void MathConvlt1VertHz_16i16i16i_Intrin_SSE2(COMPV_ALIGNED(SSE) const int16_t* inPtr, COMPV_ALIGNED(SSE) int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, compv_uscalar_t pad, const int16_t* vhkernPtr, compv_uscalar_t kernSize)
 {

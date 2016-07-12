@@ -31,12 +31,6 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_FEATURE_DETE_CANY_GRAD_MIN_SAMPLES_PER_THREAD	3 // must be >= 3 because of the convolution ("rowsOverlapCount")
 #define COMPV_FEATURE_DETE_CANY_NMS_MIN_SAMPLES_PER_THREAD	(20*20)
 
-struct CompVCandidateEdge{
-	size_t row;
-	size_t col;
-};
-#define COMPV_CANNY_PUSH_CANDIDATE(box, r, c) (box)->new_item(&ne), ne->row = (r), ne->col = (c)
-
 CompVEdgeDeteCanny::CompVEdgeDeteCanny()
 	: CompVEdgeDete(COMPV_CANNY_ID)
 	, m_nImageWidth(0)
@@ -340,6 +334,7 @@ void CompVEdgeDeteCanny::nms_supp()
 	}
 #endif /* COMPV_ARCH_X86 */
 
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	for (size_t row_ = 1; row_ < imageHeightMinus1_; ++row_) {
 		for (size_t col_ = 1; col_ < imageWidthMinus1_; ++col_) { // SIMD, starts at 0 to have memory aligned
 			if (nms_[col_]) {
@@ -359,86 +354,34 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 	rowEnd = COMPV_MATH_MIN(rowEnd, imageHeightMinus1);
 	rowStart = COMPV_MATH_MAX(1, rowStart);
 
-	CompVPtr<CompVBox<CompVCandidateEdge>* >candidates;
-	CompVBox<CompVCandidateEdge>::newObj(&candidates);
+	CompVPtr<CompVBox<CompVIndex>* >candidates;
+	CompVBox<CompVIndex>::newObj(&candidates);
 
-	size_t row, col;
+	size_t row;
 	const size_t imageWidthMinus1 = m_nImageWidth - 1;
 	const uint16_t *grad = m_pG + (rowStart * m_nImageStride), *g0 = m_pG;
 	uint8_t *e = const_cast<uint8_t*>(edges->ptr(rowStart)), *e0 = const_cast<uint8_t*>(edges->ptr(0));
-	const int stride = static_cast<const int>(m_nImageStride);	
-	const CompVCandidateEdge* edge;
-	uint8_t* p;
-	const uint16_t *g, *gb, *gt;
-	size_t c, r, s;
-	uint8_t *pb, *pt;
-	CompVCandidateEdge* ne;
-	uint32_t cmp32;
+	const int stride = static_cast<const int>(m_nImageStride);
 
-	for (row = rowStart; row < rowEnd; ++row) {
-		for (col = 1; col < imageWidthMinus1; ++col) {
-			if (grad[col] > tHigh && !e[col]) { // strong edge and not connected yet
-				e[col] = 0xff;
-				COMPV_CANNY_PUSH_CANDIDATE(candidates, row, col);
-				while ((edge = candidates->pop_back())) {
-					c = edge->col;
-					r = edge->row;
-					if (r && c && r < imageHeightMinus1 && c < imageWidthMinus1) {
-						s = (r * m_nImageStride) + c;
-						p = e0 + s;
-						g = g0 + s;
-						pb = p + stride;
-						pt = p - stride;
-						gb = g + stride;
-						gt = g - stride;
-						if (g[-1] > tLow && !p[-1]) { // left
-							p[-1] = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c - 1);
-						}
-						if (g[1] > tLow && !p[1]) { // right
-							p[1] = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c + 1);
-						}
-						/* TOP */
-						cmp32 = *reinterpret_cast<const uint32_t*>(&pt[-1]) ^ 0xffffff;
-						if (cmp32) {
-							if (cmp32 & 0xff && gt[-1] > tLow) { // left
-								pt[-1] = 0xff;
-								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c - 1);
-							}
-							if (cmp32 & 0xff00 && *gt > tLow) { // center
-								*pt = 0xff;
-								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c);
-							}
-							if (cmp32 & 0xff0000 && gt[1] > tLow && !pt[1]) { // right
-								pt[1] = 0xff;
-								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c + 1);
-							}
-						}
-						/* BOTTOM */
-						cmp32 = *reinterpret_cast<const uint32_t*>(&pb[-1]) ^ 0xffffff;
-						if (cmp32) {
-							if (cmp32 & 0xff && gb[-1] > tLow) { // left
-								pb[-1] = 0xff;
-								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c - 1);
-							}
-							if (cmp32 & 0xff00 && *gb > tLow) { // center
-								*pb = 0xff;
-								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c);
-							}
-							if (cmp32 & 0xff0000 && gb[1] > tLow) { // right
-								pb[1] = 0xff;
-								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c + 1);
-							}
-						}
-					}
-				}
-			}
-		}
-		grad += m_nImageStride;
-		e += m_nImageStride;
+#if COMPV_ARCH_X86
+	void (*CannyHysteresis)(compv_uscalar_t row, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0, CompVPtr<CompVBox<CompVIndex>* >& candidates) = NULL;
+	if (imageWidthMinus1 >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CannyHysteresis = CannyHysteresis_Intrin_SSE2);
 	}
+	if (CannyHysteresis) {
+		for (row = rowStart; row < rowEnd; ++row) {
+			CannyHysteresis((compv_uscalar_t)row, (compv_uscalar_t)imageWidthMinus1, (compv_uscalar_t)imageHeightMinus1, (compv_uscalar_t)m_nImageStride, tLow, tHigh, grad, g0, e, e0, candidates);
+			grad += m_nImageStride, e += m_nImageStride;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+#endif /* COMPV_ARCH_X86 */
 
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	for (row = rowStart; row < rowEnd; ++row) {
+		hysteresis_row_C(row, 1, imageWidthMinus1, imageHeightMinus1, m_nImageStride, tLow, tHigh, grad, g0, e, e0, candidates);
+		grad += m_nImageStride, e += m_nImageStride;
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -477,6 +420,77 @@ void nms_gather_row_C(uint8_t* nms, const uint16_t* g, const int16_t* gx, const 
 			else { // angle = "90° / 270°"
 				if (g[col - s] > g[col] || g[col + s] > g[col]) {
 					nms[col] = 0xff;
+				}
+			}
+		}
+	}
+}
+
+void hysteresis_row_C(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0, CompVPtr<CompVBox<CompVIndex>* >& candidates)
+{
+	const CompVIndex* edge;
+	uint8_t* p;
+	const uint16_t *g, *gb, *gt;
+	size_t c, r, s;
+	uint8_t *pb, *pt;
+	CompVIndex* ne;
+	uint32_t cmp32;
+
+	for (size_t col = colStart; col < width; ++col) {
+		if (grad[col] > tHigh && !e[col]) { // strong edge and not connected yet
+			e[col] = 0xff;
+			COMPV_CANNY_PUSH_CANDIDATE(candidates, row, col);
+			while ((edge = candidates->pop_back())) {
+				c = edge->col;
+				r = edge->row;
+				if (r && c && r < height && c < width) {
+					s = (r * stride) + c;
+					p = e0 + s;
+					g = g0 + s;
+					pb = p + stride;
+					pt = p - stride;
+					gb = g + stride;
+					gt = g - stride;
+					if (g[-1] > tLow && !p[-1]) { // left
+						p[-1] = 0xff;
+						COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c - 1);
+					}
+					if (g[1] > tLow && !p[1]) { // right
+						p[1] = 0xff;
+						COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c + 1);
+					}
+					/* TOP */
+					cmp32 = *reinterpret_cast<const uint32_t*>(&pt[-1]) ^ 0xffffff;
+					if (cmp32) {
+						if (cmp32 & 0xff && gt[-1] > tLow) { // left
+							pt[-1] = 0xff;
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c - 1);
+						}
+						if (cmp32 & 0xff00 && *gt > tLow) { // center
+							*pt = 0xff;
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c);
+						}
+						if (cmp32 & 0xff0000 && gt[1] > tLow && !pt[1]) { // right
+							pt[1] = 0xff;
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c + 1);
+						}
+					}
+					/* BOTTOM */
+					cmp32 = *reinterpret_cast<const uint32_t*>(&pb[-1]) ^ 0xffffff;
+					if (cmp32) {
+						if (cmp32 & 0xff && gb[-1] > tLow) { // left
+							pb[-1] = 0xff;
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c - 1);
+						}
+						if (cmp32 & 0xff00 && *gb > tLow) { // center
+							*pb = 0xff;
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c);
+						}
+						if (cmp32 & 0xff0000 && gb[1] > tLow) { // right
+							pb[1] = 0xff;
+							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c + 1);
+						}
+					}
 				}
 			}
 		}

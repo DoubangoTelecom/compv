@@ -7,6 +7,7 @@
 #include "compv/intrinsics/x86/features/edges/compv_feature_canny_dete_intrin_sse2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
+#include "compv/features/edges/compv_feature_canny_dete.h"
 #include "compv/intrinsics/x86/compv_intrin_sse.h"
 #include "compv/compv_simd_globals.h"
 
@@ -31,6 +32,101 @@ void CannyNMSApply_Intrin_SSE2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALIGNED(
 		}
 		nms += stride;
 		grad += stride;
+	}
+}
+
+// TODO(dmi): add ASM
+// "g" and "tLow" are unsigned but we're using "epi16" instead of "epu16" because "g" is always < 0xFFFF (from u8 convolution operation)
+void CannyHysteresis_Intrin_SSE2(compv_uscalar_t row, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0, CompVPtr<CompVBox<CompVIndex>* >& candidates)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	compv_uscalar_t col, mi;
+	__m128i xmmG, xmmP, xmmGrad, xmmE;
+	const __m128i xmmTLow = _mm_set1_epi16(tLow);
+	const __m128i xmmTHigh = _mm_set1_epi16(tHigh);
+	const __m128i xmmZero = _mm_setzero_si128();
+	int m0, m1, mf;
+	const CompVIndex* edge;
+	uint8_t* p;
+	const uint16_t *g, *gb, *gt;
+	size_t c, r, s;
+	uint8_t *pb, *pt;
+	CompVIndex* ne;
+
+	for (col = 1; col < width - 7; col += 8) {
+		xmmGrad = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&grad[col]));
+		xmmE = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&e[col]));
+		m0 = _mm_movemask_epi8(_mm_and_si128(_mm_cmpeq_epi16(_mm_unpacklo_epi8(xmmE, xmmE), xmmZero), _mm_cmpgt_epi16(xmmGrad, xmmTHigh)));
+		if (m0) {
+			mi = 0, mf = 3;
+			do {
+				if (m0 & mf) {
+					e[col + mi] = 0xff;
+					COMPV_CANNY_PUSH_CANDIDATE(candidates, row, col + mi);
+					while ((edge = candidates->pop_back())) {
+						c = edge->col;
+						r = edge->row;
+						if (r && c && r < height && c < width) {
+							s = (r * stride) + c;
+							p = e0 + s;
+							g = g0 + s;
+							pb = p + stride;
+							pt = p - stride;
+							gb = g + stride;
+							gt = g - stride;
+							xmmG = _mm_setr_epi16(g[-1], g[1], gt[-1], *gt, gt[1], gb[-1], *gb, gb[1]);
+							xmmP = _mm_setr_epi16(p[-1], p[1], pt[-1], *pt, pt[1], pb[-1], *pb, pb[1]);
+							m1 = _mm_movemask_epi8(_mm_and_si128(_mm_cmpeq_epi16(xmmP, xmmZero), _mm_cmpgt_epi16(xmmG, xmmTLow)));
+							if (m1) {
+								if (m1 & 0x00ff) {
+									if (m1 & 0x0003) { // left
+										p[-1] = 0xff;
+										COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c - 1);
+									}
+									if (m1 & 0x000c) { // right
+										p[1] = 0xff;
+										COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c + 1);
+									}
+									if (m1 & 0x0030) { // top-left
+										pt[-1] = 0xff;
+										COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c - 1);
+									}
+									if (m1 & 0x00c0) { // top-center
+										*pt = 0xff;
+										COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c);
+									}
+									m1 &= 0xff00;
+								}
+								if (m1 & 0xff00) {
+									if (m1 & 0x0300) { // top-right
+										pt[1] = 0xff;
+										COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c + 1);
+									}
+									if (m1 & 0x0c00) { // bottom-left
+										pb[-1] = 0xff;
+										COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c - 1);
+									}
+									if (m1 & 0x3000) { // bottom-center
+										*pb = 0xff;
+										COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c);
+									}
+									if (m1 & 0xc000) { // bottom-right
+										pb[1] = 0xff;
+										COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c + 1);
+									}
+								}
+							}
+						}
+					}
+					m0 ^= mf;
+				}
+				mf <<= 2, ++mi;
+			} while (m0);
+		}
+	}
+
+	if (col < width) {
+		hysteresis_row_C(row, col, width, height, stride, tLow, tHigh, grad, g0, e, e0, candidates);
 	}
 }
 

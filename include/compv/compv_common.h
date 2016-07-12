@@ -283,6 +283,11 @@ struct CompVPixel {
     CompVPixelData data;
 };
 
+struct CompVIndex{
+	size_t row;
+	size_t col;
+};
+
 /** CompVRect
 */
 struct CompVRect {

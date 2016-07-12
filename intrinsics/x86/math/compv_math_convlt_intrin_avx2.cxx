@@ -14,6 +14,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+// Expect small kernel values (e.g. sobel) to avoid mul_epi16/add_epi16 overflow
 // TODO(dmi): Add support for ASM
 // Also works with "uint16"
 #if defined __INTEL_COMPILER
@@ -105,6 +106,7 @@ void MathConvlt1VertHz_8u16i16i_Intrin_AVX2(const uint8_t* inPtr, int16_t* outPt
 	_mm256_zeroupper();
 }
 
+// Expect small kernel values (e.g. sobel) to avoid mul_epi16/add_epi16 overflow
 // TODO(dmi): add support for ASM
 #if defined __INTEL_COMPILER
 #	pragma intel optimization_parameter target_arch=avx
