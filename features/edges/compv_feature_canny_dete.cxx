@@ -289,6 +289,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, u
 	uint8_t *e = const_cast<uint8_t*>(edges->ptr(rowStart));
 	int32_t gxInt, gyInt, absgyInt, absgxInt;
 	const int stride = static_cast<const int>(m_nImageStride);
+	const int c0 = 1 - stride, c1 = 1 + stride;
 
 	// non-maximasupp is multi-threaded and we will use this property to zero the edge buffer with low cost (compared to edges->zeroall() which is not MT)
 	if (rowStart == 1) { // First time ?
@@ -312,7 +313,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, u
 					}
 				}
 				else if (absgyInt < (kTangentPiTimes3Over8Int * absgxInt)) { // angle = "45° / 225°" or "135 / 315"
-					const int c = (gxInt ^ gyInt) < 0 ? 1 - stride : 1 + stride;
+					const int c = (gxInt ^ gyInt) < 0 ? c0 : c1;
 					if (g[col - c] > g[col] || g[col + c] > g[col]) {
 						nms[col] = 0xff;
 					}
