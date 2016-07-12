@@ -29,6 +29,7 @@ sym(MathUtilsSumAbs_16i16u_Asm_X86_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+	COMPV_YASM_SAVE_YMM 7
 	push rsi
 	push rdi
 	push rbx
@@ -51,17 +52,51 @@ sym(MathUtilsSumAbs_16i16u_Asm_X86_AVX2):
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopRows
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (i = 0; i < width; i += 16)
+		; for (i = 0; i < width - 63; i += 64)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor rcx, rcx ; rcx = i = 0
-		.LoopCols
+		cmp rdi, 0
+		jl .EndOfLoopCols64
+		.LoopCols64
+			vpabsw ymm0, [rax + rcx*2]
+			vpabsw ymm1, [rax + rcx*2 + 32]
+			vpabsw ymm2, [rax + rcx*2 + 64]
+			vpabsw ymm3, [rax + rcx*2 + 96]
+			vpabsw ymm4, [rdx + rcx*2]
+			vpabsw ymm5, [rdx + rcx*2 + 32]
+			vpabsw ymm6, [rdx + rcx*2 + 64]
+			vpabsw ymm7, [rdx + rcx*2 + 96]
+			lea rcx, [rcx + 64]
+			vpaddusw ymm0, ymm4
+			vpaddusw ymm1, ymm5
+			vpaddusw ymm2, ymm6
+			vpaddusw ymm3, ymm7
+			cmp rcx, rdi
+			vmovdqa [rbx + rcx*2 - 128], ymm0
+			vmovdqa [rbx + rcx*2 - 128 + 32], ymm1
+			vmovdqa [rbx + rcx*2 - 128 + 64], ymm2
+			vmovdqa [rbx + rcx*2 - 128 + 96], ymm3
+			jl .LoopCols64
+		.EndOfLoopCols64
+
+		lea rdi, [rdi + 63]
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < width; i += 16)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		cmp rcx, rdi
+		jge .EndOfLoopCols16
+		.LoopCols16
 			vpabsw ymm0, [rax + rcx*2]
 			vpabsw ymm1, [rdx + rcx*2]
 			lea rcx, [rcx + 16]
 			vpaddusw ymm0, ymm0, ymm1
 			cmp rcx, rdi
 			vmovdqa [rbx + rcx*2 - 32], ymm0
-			jl .LoopCols
+			jl .LoopCols16
+		.EndOfLoopCols16
+
+		lea rdi, [rdi - 63]
 
 		add rax, [rsp + 0]
 		add rdx, [rsp + 0]
@@ -76,6 +111,7 @@ sym(MathUtilsSumAbs_16i16u_Asm_X86_AVX2):
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_RESTORE_YMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

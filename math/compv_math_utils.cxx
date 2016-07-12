@@ -135,7 +135,7 @@ COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint
 			COMPV_EXEC_IFDEF_ASM_X86(MathUtilsSumAbs_16i16u = MathUtilsSumAbs_16i16u_Asm_X86_SSSE3);
 		}
 	}
-#if 0 // TODO(dmi): SSSE3 faster than AVX2
+#if 1 // TODO(dmi): SSSE3 faster than AVX2
 	if (width >= 16 && COMPV_IS_ALIGNED_AVX(strideInBytes) && COMPV_IS_ALIGNED_AVX(a) && COMPV_IS_ALIGNED_AVX(b) && COMPV_IS_ALIGNED_AVX(r)) {
 		if (CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(MathUtilsSumAbs_16i16u = MathUtilsSumAbs_16i16u_Intrin_AVX2);

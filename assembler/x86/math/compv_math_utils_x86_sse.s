@@ -56,7 +56,7 @@ sym(MathUtilsSumAbs_16i16u_Asm_X86_SSSE3):
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor rcx, rcx ; rcx = i = 0
 		cmp rdi, 0
-		jle .EndOfLoopCols32
+		jl .EndOfLoopCols32
 		.LoopCols32
 			pabsw xmm0, [rax + rcx*2]
 			pabsw xmm1, [rax + rcx*2 + 16]

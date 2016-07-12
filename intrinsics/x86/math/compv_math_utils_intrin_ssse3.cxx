@@ -19,12 +19,25 @@ void MathUtilsSumAbs_16i16u_Intrin_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, co
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): add ASM SSSE3 version (use "pabsw")
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
-	compv_uscalar_t i, j;
+	compv_uscalar_t j;
+	__m128i xmm0, xmm1, xmm2, xmm3;
+	compv_scalar_t i, width_ = static_cast<compv_scalar_t>(width);
 
 	for (j = 0; j < height; ++j) {
-		for (i = 0; i < width; i += 8) {
+		for (i = 0; i < width_ - 31; i += 32) {
+			xmm0 = _mm_adds_epu16(_mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(a + i))), _mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(b + i))));
+			xmm1 = _mm_adds_epu16(_mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(a + i + 8))), _mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(b + i + 8))));
+			xmm2 = _mm_adds_epu16(_mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(a + i + 16))), _mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(b + i + 16))));
+			xmm3 = _mm_adds_epu16(_mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(a + i + 24))), _mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(b + i + 24))));
+			_mm_store_si128(reinterpret_cast<__m128i*>(r + i), xmm0);
+			_mm_store_si128(reinterpret_cast<__m128i*>(r + i + 8), xmm1);
+			_mm_store_si128(reinterpret_cast<__m128i*>(r + i + 16), xmm2);
+			_mm_store_si128(reinterpret_cast<__m128i*>(r + i + 24), xmm3);
+		}
+		for (; i < width_; i += 8) {
 			_mm_store_si128(reinterpret_cast<__m128i*>(r + i), _mm_adds_epu16(_mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(a + i))), _mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(b + i)))));
 		}
+
 		r += stride;
 		a += stride;
 		b += stride;
