@@ -16,9 +16,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+// TODO(dmi): add ASM version
 void CannyNMSGatherRow_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
 
 	__m128i xmmNMS, xmmG, xmmGX, xmmAbsGX0, xmmAbsGX1, xmmGY, xmmAbsGY0, xmmAbsGY1, xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6;

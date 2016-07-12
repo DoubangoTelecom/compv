@@ -194,12 +194,11 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 			outPtrG_ += countAnyTimesStride;
 		}
 		// last
-		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &means[threadsCount - 1], countLast, true), taskIds));
-		// wait
-		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &means[threadsCount - 1], countLast, true), taskIds));		
 		// mean
 		uint32_t sum = 0;
 		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
 			sum += means[threadIdx];
 		}
 		mean = (sum + 1) / (uint32_t)threadsCount;

@@ -109,7 +109,7 @@ void MathConvlt1VertHz_8u16i16i_Intrin_AVX2(const uint8_t* inPtr, int16_t* outPt
 #if defined __INTEL_COMPILER
 #	pragma intel optimization_parameter target_arch=avx
 #endif
-void MathConvlt1VertHz_16i16i16i_Intrin_AVX2(const int16_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, compv_uscalar_t pad, const int16_t* vhkernPtr, compv_uscalar_t kernSize)
+void MathConvlt1VertHz_16i16i16i_Intrin_AVX2(COMPV_ALIGNED(AVX) const int16_t* inPtr, COMPV_ALIGNED(AVX) int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, compv_uscalar_t pad, const int16_t* vhkernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX();
 	COMPV_DEBUG_INFO_CHECK_AVX2();
@@ -123,28 +123,28 @@ void MathConvlt1VertHz_16i16i16i_Intrin_AVX2(const int16_t* inPtr, int16_t* outP
 	
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width_ - 31; i += 32) {
-			ymmS0 = _mm256_mullo_epi16(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[0])), ymmCoeff0);
-			ymmS1 = _mm256_mullo_epi16(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[16])), ymmCoeff0);
+			ymmS0 = _mm256_mullo_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(&inPtr[0])), ymmCoeff0);
+			ymmS1 = _mm256_mullo_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(&inPtr[16])), ymmCoeff0);
 			for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
 				ymmCoeff = _mm256_set1_epi16(vhkernPtr[k]);
-				ymmI0 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[m]));
-				ymmI1 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[m + 16]));
+				ymmI0 = _mm256_load_si256(reinterpret_cast<const __m256i*>(&inPtr[m]));
+				ymmI1 = _mm256_load_si256(reinterpret_cast<const __m256i*>(&inPtr[m + 16]));
 				ymmS0 = _mm256_add_epi16(ymmS0, _mm256_mullo_epi16(ymmI0, ymmCoeff));
 				ymmS1 = _mm256_add_epi16(ymmS1, _mm256_mullo_epi16(ymmI1, ymmCoeff));
 			}
-			_mm256_storeu_si256(reinterpret_cast<__m256i*>(outPtr), ymmS0);
-			_mm256_storeu_si256(reinterpret_cast<__m256i*>(outPtr + 16), ymmS1);
+			_mm256_store_si256(reinterpret_cast<__m256i*>(outPtr), ymmS0);
+			_mm256_store_si256(reinterpret_cast<__m256i*>(outPtr + 16), ymmS1);
 			inPtr += 32;
 			outPtr += 32;
 		}
 		if (i < width_ - 15) {
-			ymmS0 = _mm256_mullo_epi16(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[0])), ymmCoeff0);
+			ymmS0 = _mm256_mullo_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(&inPtr[0])), ymmCoeff0);
 			for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
-				ymmI0 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[m]));
+				ymmI0 = _mm256_load_si256(reinterpret_cast<const __m256i*>(&inPtr[m]));
 				ymmCoeff = _mm256_set1_epi16(vhkernPtr[k]);
 				ymmS0 = _mm256_add_epi16(ymmS0, _mm256_mullo_epi16(ymmI0, ymmCoeff));
 			}
-			_mm256_storeu_si256(reinterpret_cast<__m256i*>(outPtr), ymmS0);
+			_mm256_store_si256(reinterpret_cast<__m256i*>(outPtr), ymmS0);
 			i += 16;
 			inPtr += 16;
 			outPtr += 16;
