@@ -12,6 +12,7 @@
 #include "compv/compv_gauss.h"
 
 #include "compv/intrinsics/x86/features/edges/compv_feature_canny_dete_intrin_sse2.h"
+#include "compv/intrinsics/x86/features/edges/compv_feature_canny_dete_intrin_ssse3.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC void CannyNMSApply_Asm_X86_SSE2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALIGNED(SSE) uint8_t* nms, compv::compv_uscalar_t width, compv::compv_uscalar_t height, COMPV_ALIGNED(SSE) compv::compv_uscalar_t stride);
@@ -30,12 +31,7 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_FEATURE_DETE_CANY_GRAD_MIN_SAMPLES_PER_THREAD	3 // must be >= 3 because of the convolution ("rowsOverlapCount")
 #define COMPV_FEATURE_DETE_CANY_NMS_MIN_SAMPLES_PER_THREAD	(20*20)
 
-static const float kTangentPiOver8 = 0.414213568f; // tan(22.5)
-static const int32_t kTangentPiOver8Int = static_cast<int32_t>(kTangentPiOver8 * (1 << 16));
-static const float kTangentPiTimes3Over8 = 2.41421366f; // tan(67.5)
-static const int32_t kTangentPiTimes3Over8Int = static_cast<int32_t>(kTangentPiTimes3Over8 * (1 << 16));
-
-COMPV_ALIGN(64) struct CompVCandidateEdge{
+struct CompVCandidateEdge{
 	size_t row;
 	size_t col;
 };
@@ -281,15 +277,12 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, u
 	rowStart = COMPV_MATH_MAX(1, rowStart);
 	size_t rowStartTimesStride = rowStart * m_nImageStride;
 
-	size_t row, col;
+	size_t row;
 	const size_t maxCols = edges->cols() - 1;
 	const int16_t *gx = m_pGx + rowStartTimesStride, *gy = m_pGy + rowStartTimesStride;
 	uint16_t *g = m_pG + rowStartTimesStride;
 	uint8_t *nms = m_pNms + rowStartTimesStride;
 	uint8_t *e = const_cast<uint8_t*>(edges->ptr(rowStart));
-	int32_t gxInt, gyInt, absgyInt, absgxInt;
-	const int stride = static_cast<const int>(m_nImageStride);
-	const int c0 = 1 - stride, c1 = 1 + stride;
 
 	// non-maximasupp is multi-threaded and we will use this property to zero the edge buffer with low cost (compared to edges->zeroall() which is not MT)
 	if (rowStart == 1) { // First time ?
@@ -297,39 +290,26 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, u
 		CompVMem::zero(const_cast<uint8_t*>(edges->ptr(m_nImageHeight - 1)), m_nImageWidth); // zero last line
 	}
 
-	// mark points to supp
+#if COMPV_ARCH_X86
+	void(*CannyNMSGatherRow)(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride) = NULL;
+	if (maxCols >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSSE3)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CannyNMSGatherRow = CannyNMSGatherRow_Intrin_SSSE3);
+	}
+	if (CannyNMSGatherRow) {
+		for (row = rowStart; row < maxRows; ++row) {
+			CompVMem::zero(e, m_nImageWidth);
+			CannyNMSGatherRow(nms, g, gx, gy, &tLow, maxCols, m_nImageStride);
+			gx += m_nImageStride, gy += m_nImageStride, g += m_nImageStride, e += m_nImageStride, nms += m_nImageStride;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+#endif /* COMPV_ARCH_X86 */
+	
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	for (row = rowStart; row < maxRows; ++row) {
 		CompVMem::zero(e, m_nImageWidth);
-		// TODO(dmi): add support SIMD ->  "nms_gather_row"
-		for (col = 1; col < maxCols; ++col) {
-			if (g[col] >= tLow) {
-				gxInt = static_cast<int32_t>(gx[col]);
-				gyInt = static_cast<int32_t>(gy[col]);
-				absgyInt = ((gyInt ^ (gyInt >> 31)) - (gyInt >> 31)) << 16;
-				absgxInt = ((gxInt ^ (gxInt >> 31)) - (gxInt >> 31));
-				if (absgyInt < (kTangentPiOver8Int * absgxInt)) { // angle = "0° / 180°"
-					if (g[col - 1] > g[col] || g[col + 1] > g[col]) {
-						nms[col] = 0xff;
-					}
-				}
-				else if (absgyInt < (kTangentPiTimes3Over8Int * absgxInt)) { // angle = "45° / 225°" or "135 / 315"
-					const int c = (gxInt ^ gyInt) < 0 ? c0 : c1;
-					if (g[col - c] > g[col] || g[col + c] > g[col]) {
-						nms[col] = 0xff;
-					}
-				}
-				else { // angle = "90° / 270°"
-					if (g[col - m_nImageStride] > g[col] || g[col + m_nImageStride] > g[col]) {
-						nms[col] = 0xff;
-					}
-				}
-			}
-		}
-		gx += m_nImageStride;
-		gy += m_nImageStride;
-		g += m_nImageStride;
-		e += m_nImageStride;
-		nms += m_nImageStride;
+		nms_gather_row_C(nms, g, gx, gy, tLow, 1, maxCols, m_nImageStride);
+		gx += m_nImageStride, gy += m_nImageStride, g += m_nImageStride, e += m_nImageStride, nms += m_nImageStride;
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -398,7 +378,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 
 	for (row = rowStart; row < rowEnd; ++row) {
 		for (col = 1; col < imageWidthMinus1; ++col) {
-			if (grad[col] >= tHigh && !e[col]) { // strong edge and not connected yet
+			if (grad[col] > tHigh && !e[col]) { // strong edge and not connected yet
 				e[col] = 0xff;
 				COMPV_CANNY_PUSH_CANDIDATE(candidates, row, col);
 				while ((edge = candidates->pop_back())) {
@@ -412,26 +392,26 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 						pt = p - stride;
 						gb = g + stride;
 						gt = g - stride;
-						if (g[-1] >= tLow && !p[-1]) { // left
+						if (g[-1] > tLow && !p[-1]) { // left
 							p[-1] = 0xff;
 							COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c - 1);
 						}
-						if (g[1] >= tLow && !p[1]) { // right
+						if (g[1] > tLow && !p[1]) { // right
 							p[1] = 0xff;
 							COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c + 1);
 						}
 						/* TOP */
 						cmp32 = *reinterpret_cast<const uint32_t*>(&pt[-1]) ^ 0xffffff;
 						if (cmp32) {
-							if (cmp32 & 0xff && gt[-1] >= tLow) { // left
+							if (cmp32 & 0xff && gt[-1] > tLow) { // left
 								pt[-1] = 0xff;
 								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c - 1);
 							}
-							if (cmp32 & 0xff00 && *gt >= tLow) { // center
+							if (cmp32 & 0xff00 && *gt > tLow) { // center
 								*pt = 0xff;
 								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c);
 							}
-							if (cmp32 & 0xff0000 && gt[1] >= tLow && !pt[1]) { // right
+							if (cmp32 & 0xff0000 && gt[1] > tLow && !pt[1]) { // right
 								pt[1] = 0xff;
 								COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c + 1);
 							}
@@ -439,15 +419,15 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 						/* BOTTOM */
 						cmp32 = *reinterpret_cast<const uint32_t*>(&pb[-1]) ^ 0xffffff;
 						if (cmp32) {
-							if (cmp32 & 0xff && gb[-1] >= tLow) { // left
+							if (cmp32 & 0xff && gb[-1] > tLow) { // left
 								pb[-1] = 0xff;
 								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c - 1);
 							}
-							if (cmp32 & 0xff00 && *gb >= tLow) { // center
+							if (cmp32 & 0xff00 && *gb > tLow) { // center
 								*pb = 0xff;
 								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c);
 							}
-							if (cmp32 & 0xff0000 && gb[1] >= tLow) { // right
+							if (cmp32 & 0xff0000 && gb[1] > tLow) { // right
 								pb[1] = 0xff;
 								COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c + 1);
 							}
@@ -471,6 +451,37 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::newObj(CompVPtr<CompVEdgeDete* >* dete)
 
 	*dete = *dete_;
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+void nms_gather_row_C(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, uint16_t tLow, size_t colStart, size_t maxCols, size_t stride)
+{
+	int32_t gxInt, gyInt, absgyInt, absgxInt;
+	const int s = static_cast<const int>(stride);
+	const int c0 = 1 - s, c1 = 1 + s;
+	for (size_t col = colStart; col < maxCols; ++col) {
+		if (g[col] > tLow) {
+			gxInt = static_cast<int32_t>(gx[col]);
+			gyInt = static_cast<int32_t>(gy[col]);
+			absgyInt = ((gyInt ^ (gyInt >> 31)) - (gyInt >> 31)) << 16;
+			absgxInt = ((gxInt ^ (gxInt >> 31)) - (gxInt >> 31));
+			if (absgyInt < (kTangentPiOver8Int * absgxInt)) { // angle = "0° / 180°"
+				if (g[col - 1] > g[col] || g[col + 1] > g[col]) {
+					nms[col] = 0xff;
+				}
+			}
+			else if (absgyInt < (kTangentPiTimes3Over8Int * absgxInt)) { // angle = "45° / 225°" or "135 / 315"
+				const int c = (gxInt ^ gyInt) < 0 ? c0 : c1;
+				if (g[col - c] > g[col] || g[col + c] > g[col]) {
+					nms[col] = 0xff;
+				}
+			}
+			else { // angle = "90° / 270°"
+				if (g[col - s] > g[col] || g[col + s] > g[col]) {
+					nms[col] = 0xff;
+				}
+			}
+		}
+	}
 }
 
 COMPV_NAMESPACE_END()

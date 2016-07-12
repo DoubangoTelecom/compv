@@ -55,6 +55,12 @@ private:
 	uint8_t* m_pNms;
 };
 
+void nms_gather_row_C(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, uint16_t tLow, size_t rowStart, size_t width, size_t stride);
+static const float kTangentPiOver8 = 0.414213568f; // tan(22.5)
+static const int32_t kTangentPiOver8Int = static_cast<int32_t>(kTangentPiOver8 * (1 << 16));
+static const float kTangentPiTimes3Over8 = 2.41421366f; // tan(67.5)
+static const int32_t kTangentPiTimes3Over8Int = static_cast<int32_t>(kTangentPiTimes3Over8 * (1 << 16));
+
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_FEATURES_CANNY_DETE_H_ */

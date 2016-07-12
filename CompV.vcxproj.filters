@@ -477,6 +477,9 @@
     <ClInclude Include="include\compv\intrinsics\x86\math\compv_math_convlt_intrin_avx2.h">
       <Filter>Header Files\intrinsics\x86\math</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\features\edges\compv_feature_canny_dete_intrin_ssse3.h">
+      <Filter>Header Files\intrinsics\x86\features\edges</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -748,6 +751,9 @@
     </ClCompile>
     <ClCompile Include="intrinsics\x86\math\compv_math_convlt_intrin_avx2.cxx">
       <Filter>Source Files\intrinsics\x86\math</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\features\edges\compv_feature_canny_dete_intrin_ssse3.cxx">
+      <Filter>Source Files\intrinsics\x86\features\edges</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

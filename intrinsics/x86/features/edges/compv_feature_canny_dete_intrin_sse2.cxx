@@ -15,6 +15,7 @@ COMPV_NAMESPACE_BEGIN()
 void CannyNMSApply_Intrin_SSE2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALIGNED(SSE) uint8_t* nms, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 
 	__m128i xmm0;
 	compv_uscalar_t col_, row_;
