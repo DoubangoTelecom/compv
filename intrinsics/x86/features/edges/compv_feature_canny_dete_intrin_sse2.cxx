@@ -44,7 +44,9 @@ void CannyHysteresis_Intrin_SSE2(compv_uscalar_t row, compv_uscalar_t width, com
 	__m128i xmmG, xmmP, xmmGrad, xmmE;
 	const __m128i xmmTLow = _mm_set1_epi16(tLow);
 	const __m128i xmmTHigh = _mm_set1_epi16(tHigh);
-	const __m128i xmmZero = _mm_setzero_si128();
+	static const __m128i xmmZero = _mm_setzero_si128();
+	static const __m128i xmmMaskFF = _mm_setr_epi16(-1, -1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0);
+	static const __m128i xmmMaskFFF = _mm_setr_epi16(-1, -1, -1, 0x0, 0x0, 0x0, 0x0, 0x0);
 	int m0, m1, mf;
 	const CompVIndex* edge;
 	uint8_t* p;
@@ -73,9 +75,13 @@ void CannyHysteresis_Intrin_SSE2(compv_uscalar_t row, compv_uscalar_t width, com
 							pb = p + stride;
 							pt = p - stride;
 							gb = g + stride;
-							gt = g - stride;
-							xmmG = _mm_setr_epi16(g[-1], g[1], gt[-1], *gt, gt[1], gb[-1], *gb, gb[1]);
-							xmmP = _mm_setr_epi16(p[-1], p[1], pt[-1], *pt, pt[1], pb[-1], *pb, pb[1]);
+							gt = g - stride;							
+							xmmG = _mm_or_si128(_mm_or_si128(_mm_and_si128(_mm_shufflelo_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&g[-1])), 0x8), xmmMaskFF), 
+								_mm_slli_si128(_mm_and_si128(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&gt[-1])), xmmMaskFFF), 4)),
+								_mm_slli_si128(_mm_and_si128(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&gb[-1])), xmmMaskFFF), 10));
+							xmmP = _mm_or_si128(_mm_or_si128(_mm_and_si128(_mm_shufflelo_epi16(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(&p[-1])), xmmZero), 0x8), xmmMaskFF),
+								_mm_slli_si128(_mm_and_si128(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(&pt[-1])), xmmZero), xmmMaskFFF), 4)),
+								_mm_slli_si128(_mm_and_si128(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(&pb[-1])), xmmZero), xmmMaskFFF), 10));
 							m1 = _mm_movemask_epi8(_mm_and_si128(_mm_cmpeq_epi16(xmmP, xmmZero), _mm_cmpgt_epi16(xmmG, xmmTLow)));
 							if (m1) {
 								if (m1 & 0x00ff) {
@@ -95,7 +101,6 @@ void CannyHysteresis_Intrin_SSE2(compv_uscalar_t row, compv_uscalar_t width, com
 										*pt = 0xff;
 										COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c);
 									}
-									m1 &= 0xff00;
 								}
 								if (m1 & 0xff00) {
 									if (m1 & 0x0300) { // top-right
