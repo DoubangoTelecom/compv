@@ -167,6 +167,13 @@ public:
 	virtual ~CompVEdgeDete();
 	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtrArray(uint8_t)& edges) = 0;
 	static COMPV_ERROR_CODE newObj(int deteId, CompVPtr<CompVEdgeDete* >* dete);
+	void setOtsu(int low, int high) {
+		otsu_low = low;
+		otsu_high = high;
+	}
+protected:
+	int otsu_low;
+	int otsu_high;
 };
 
 COMPV_NAMESPACE_END()

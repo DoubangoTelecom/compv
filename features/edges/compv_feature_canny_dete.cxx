@@ -213,6 +213,11 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 	tLow = COMPV_MATH_MAX(1, tLow);
 	tHigh = COMPV_MATH_MAX(tLow + 2, tHigh);
 
+	if (otsu_low && otsu_high) {
+		tLow = (uint16_t)otsu_low;
+		tHigh = (uint16_t)otsu_high;
+	}
+
 	/* NMS + Hysteresis */
 	if (!m_pNms) {
 		m_pNms = (uint8_t*)CompVMem::calloc(m_nImageStride * m_nImageHeight, sizeof(uint8_t));

@@ -199,6 +199,8 @@ COMPV_ERROR_CODE CompVCornerDesc::newObj(int descId, CompVPtr<CompVCornerDesc* >
 
 CompVEdgeDete::CompVEdgeDete(int id)
 	: CompVFeatureBase(id)
+	, otsu_low(0)
+	, otsu_high(0)
 {
 
 }

@@ -90,7 +90,7 @@ void MathConvlt1VertHz_16i16i16i_Intrin_SSE2(COMPV_ALIGNED(SSE) const int16_t* i
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_scalar_t i, width_ = static_cast<compv_scalar_t>(width);
 	compv_uscalar_t j, k, m;
-	__m128i xmmI0, xmmI1, xmmS0, xmmS1, xmmCoeff;
+	__m128i xmmS0, xmmS1, xmmCoeff;
 	int16_t sum;
 	const __m128i xmmCoeff0 = _mm_set1_epi16(vhkernPtr[0]);
 
@@ -100,10 +100,8 @@ void MathConvlt1VertHz_16i16i16i_Intrin_SSE2(COMPV_ALIGNED(SSE) const int16_t* i
 			xmmS1 = _mm_mullo_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(&inPtr[8])), xmmCoeff0);
 			for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
 				xmmCoeff = _mm_set1_epi16(vhkernPtr[k]);
-				xmmI0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&inPtr[m]));
-				xmmI1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&inPtr[m + 8]));
-				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(xmmI0, xmmCoeff));
-				xmmS1 = _mm_add_epi16(xmmS1, _mm_mullo_epi16(xmmI1, xmmCoeff));
+				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(&inPtr[m])), xmmCoeff));
+				xmmS1 = _mm_add_epi16(xmmS1, _mm_mullo_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(&inPtr[m + 8])), xmmCoeff));
 			}
 			_mm_store_si128(reinterpret_cast<__m128i*>(outPtr), xmmS0);
 			_mm_store_si128(reinterpret_cast<__m128i*>(outPtr + 8), xmmS1);
@@ -113,9 +111,8 @@ void MathConvlt1VertHz_16i16i16i_Intrin_SSE2(COMPV_ALIGNED(SSE) const int16_t* i
 		if (i < width_ - 7) {
 			xmmS0 = _mm_mullo_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(&inPtr[0])), xmmCoeff0);
 			for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
-				xmmI0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&inPtr[m]));
 				xmmCoeff = _mm_set1_epi16(vhkernPtr[k]);
-				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(xmmI0, xmmCoeff));
+				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(&inPtr[m])), xmmCoeff));
 			}
 			_mm_store_si128(reinterpret_cast<__m128i*>(outPtr), xmmS0);
 			i += 8;
@@ -125,9 +122,8 @@ void MathConvlt1VertHz_16i16i16i_Intrin_SSE2(COMPV_ALIGNED(SSE) const int16_t* i
 		if (i < width_ - 3) {
 			xmmS0 = _mm_mullo_epi16(_mm_cvtsi64_si128(*reinterpret_cast<const uint64_t*>(&inPtr[0])), xmmCoeff0);
 			for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
-				xmmI0 = _mm_cvtsi64_si128(*reinterpret_cast<const uint64_t*>(&inPtr[m]));
 				xmmCoeff = _mm_set1_epi16(vhkernPtr[k]);
-				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(xmmI0, xmmCoeff));
+				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(_mm_cvtsi64_si128(*reinterpret_cast<const uint64_t*>(&inPtr[m])), xmmCoeff));
 			}
 			*reinterpret_cast<uint64_t*>(outPtr) = static_cast<uint64_t>(_mm_cvtsi128_si64(xmmS0));
 			i += 4;
