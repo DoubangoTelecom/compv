@@ -79,22 +79,22 @@ COMPV_ERROR_CODE CompVEdgeDeteBASE::process(const CompVPtr<CompVImage*>& image, 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVEdgeDeteBASE::newObjSobel(CompVPtr<CompVEdgeDete* >* dete)
+COMPV_ERROR_CODE CompVEdgeDeteBASE::newObjSobel(CompVPtr<CompVEdgeDete* >* dete, float tLow /*= 0.68f*/, float tHigh /*= 0.68f*2.f*/, int32_t kernSize /*= 3*/)
 {
 	return CompVEdgeDeteBASE::newObj(dete, COMPV_SOBEL_ID);
 }
 
-COMPV_ERROR_CODE CompVEdgeDeteBASE::newObjScharr(CompVPtr<CompVEdgeDete* >* dete)
+COMPV_ERROR_CODE CompVEdgeDeteBASE::newObjScharr(CompVPtr<CompVEdgeDete* >* dete, float tLow /*= 0.68f*/, float tHigh /*= 0.68f*2.f*/, int32_t kernSize /*= 3*/)
 {
 	return CompVEdgeDeteBASE::newObj(dete, COMPV_SCHARR_ID);
 }
 
-COMPV_ERROR_CODE CompVEdgeDeteBASE::newObjPrewitt(CompVPtr<CompVEdgeDete* >* dete)
+COMPV_ERROR_CODE CompVEdgeDeteBASE::newObjPrewitt(CompVPtr<CompVEdgeDete* >* dete, float tLow /*= 0.68f*/, float tHigh /*= 0.68f*2.f*/, int32_t kernSize /*= 3*/)
 {
 	return CompVEdgeDeteBASE::newObj(dete, COMPV_PREWITT_ID);
 }
 
-COMPV_ERROR_CODE CompVEdgeDeteBASE::newObj(CompVPtr<CompVEdgeDete* >* dete, int id)
+COMPV_ERROR_CODE CompVEdgeDeteBASE::newObj(CompVPtr<CompVEdgeDete* >* dete, int id, float tLow /*= 0.68f*/, float tHigh /*= 0.68f*2.f*/, int32_t kernSize /*= 3*/)
 {
 	COMPV_CHECK_EXP_RETURN(!dete, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	const int16_t *kernelPtrVt_ = NULL, *kernelPtrHz_ = NULL;

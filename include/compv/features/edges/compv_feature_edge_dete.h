@@ -32,12 +32,12 @@ public:
 	// override CompVEdgeDete::process
 	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtrArray(uint8_t)& edges);
 
-	static COMPV_ERROR_CODE newObjSobel(CompVPtr<CompVEdgeDete* >* dete);
-	static COMPV_ERROR_CODE newObjScharr(CompVPtr<CompVEdgeDete* >* dete);
-	static COMPV_ERROR_CODE newObjPrewitt(CompVPtr<CompVEdgeDete* >* dete);
+	static COMPV_ERROR_CODE newObjSobel(CompVPtr<CompVEdgeDete* >* dete, float tLow = 0.68f, float tHigh = 0.68f*2.f, int32_t kernSize = 3);
+	static COMPV_ERROR_CODE newObjScharr(CompVPtr<CompVEdgeDete* >* dete, float tLow = 0.68f, float tHigh = 0.68f*2.f, int32_t kernSize = 3);
+	static COMPV_ERROR_CODE newObjPrewitt(CompVPtr<CompVEdgeDete* >* dete, float tLow = 0.68f, float tHigh = 0.68f*2.f, int32_t kernSize = 3);
 
 private:
-	static COMPV_ERROR_CODE newObj(CompVPtr<CompVEdgeDete* >* dete, int id);
+	static COMPV_ERROR_CODE newObj(CompVPtr<CompVEdgeDete* >* dete, int id, float tLow = 0.68f, float tHigh = 0.68f*2.f, int32_t kernSize = 3);
 	const int16_t* m_pcKernelVt;
 	const int16_t* m_pcKernelHz;
 	size_t m_nKernelSize;

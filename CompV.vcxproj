@@ -50,6 +50,7 @@
     <ClInclude Include="include\compv\features\fast\compv_feature_fast12_dete.h" />
     <ClInclude Include="include\compv\features\fast\compv_feature_fast9_dete.h" />
     <ClInclude Include="include\compv\features\fast\compv_feature_fast_dete.h" />
+    <ClInclude Include="include\compv\features\hough\compv_feature_houghstd.h" />
     <ClInclude Include="include\compv\features\orb\compv_feature_orb_desc.h" />
     <ClInclude Include="include\compv\features\orb\compv_feature_orb_dete.h" />
     <ClInclude Include="include\compv\image\compv_image.h" />
@@ -144,6 +145,7 @@
     <ClCompile Include="features\edges\compv_feature_canny_dete.cxx" />
     <ClCompile Include="features\edges\compv_feature_edge_dete.cxx" />
     <ClCompile Include="features\fast\compv_feature_fast_dete.cxx" />
+    <ClCompile Include="features\hough\compv_feature_houghstd.cxx" />
     <ClCompile Include="features\orb\compv_feature_orb_desc.cxx" />
     <ClCompile Include="features\orb\compv_feature_orb_dete.cxx" />
     <ClCompile Include="image\compv_image.cxx" />

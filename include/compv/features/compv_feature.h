@@ -21,13 +21,15 @@ COMPV_NAMESPACE_BEGIN()
 class CompVCornerDete;
 class CompVCornerDesc;
 class CompVEdgeDete;
+class CompVHough;
 
 struct CompVFeatureFactory {
     int id;
     const char* name;
     COMPV_ERROR_CODE(*newObjCornerDete)(CompVPtr<CompVCornerDete* >* dete);
     COMPV_ERROR_CODE(*newObjCornerDesc)(CompVPtr<CompVCornerDesc* >* desc);
-	COMPV_ERROR_CODE(*newObjEdgeDete)(CompVPtr<CompVEdgeDete* >* dete);
+	COMPV_ERROR_CODE(*newObjEdgeDete)(CompVPtr<CompVEdgeDete* >* dete, float tLow /*= 0.68f*/, float tHigh /*= 0.68f*2.f*/, int32_t kernSize /*= 3*/);
+	COMPV_ERROR_CODE(*newObjHough)(CompVPtr<CompVHough* >* hough, int32_t rho /*= 1*/, float theta /*= kfMathTrigPiOver180*/, int32_t threshold /*= 1*/);
 };
 
 /* Feature detectors and descriptors setters and getters */
@@ -72,6 +74,12 @@ enum {
 
 	/* Prewitt */
 	COMPV_PREWITT_ID,
+
+	/* Hough */
+	COMPV_HOUGH_STANDARD_ID,
+	COMPV_HOUGH_SET_INT32_RHO,
+	COMPV_HOUGH_SET_FLOAT_THETA,
+	COMPV_HOUGH_SET_INT32_THRESHOLD
 };
 
 // https://en.wikipedia.org/wiki/Sobel_operator#Alternative_operators
@@ -166,14 +174,18 @@ protected:
 public:
 	virtual ~CompVEdgeDete();
 	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtrArray(uint8_t)& edges) = 0;
-	static COMPV_ERROR_CODE newObj(int deteId, CompVPtr<CompVEdgeDete* >* dete);
-	void setOtsu(int low, int high) {
-		otsu_low = low;
-		otsu_high = high;
-	}
+	static COMPV_ERROR_CODE newObj(int deteId, CompVPtr<CompVEdgeDete* >* dete, float tLow = 0.68f, float tHigh = 0.68f*2.f, int32_t kernSize = 3);
+};
+
+// Class: CompVHough
+class COMPV_API CompVHough : public CompVFeatureBase
+{
 protected:
-	int otsu_low;
-	int otsu_high;
+	CompVHough(int id);
+public:
+	virtual ~CompVHough();
+	virtual COMPV_ERROR_CODE process(const CompVPtrArray(uint8_t)& edges) = 0;
+	static COMPV_ERROR_CODE newObj(int id, CompVPtr<CompVHough* >* hough, int32_t rho = 1, float theta = kfMathTrigPiOver180, int32_t threshold = 1);
 };
 
 COMPV_NAMESPACE_END()

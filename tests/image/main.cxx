@@ -16,7 +16,8 @@ using namespace compv;
 #define TEST_CONV				0
 #define TEST_FAST				0
 #define TEST_ORB				0
-#define TEST_CANNY				1
+#define TEST_CANNY				0
+#define TEST_HOUGHSTD			1
 #define TEST_SCALE				0
 #define TEST_PYRAMID			0
 
@@ -50,6 +51,10 @@ int main(int argc, char** argv)
 #if TEST_CANNY
 	extern COMPV_ERROR_CODE TestCanny();
 	COMPV_CHECK_CODE_ASSERT(TestCanny());
+#endif
+#if TEST_HOUGHSTD
+	extern COMPV_ERROR_CODE TestHoughStd();
+	COMPV_CHECK_CODE_ASSERT(TestHoughStd());
 #endif
 #if TEST_SCALE
 	extern COMPV_ERROR_CODE TestScale();

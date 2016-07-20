@@ -184,6 +184,12 @@
     <Filter Include="Assembler Files\x86\features\edges">
       <UniqueIdentifier>{612060bd-4dd0-4097-bea2-aa3d29e0303b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\features\hough">
+      <UniqueIdentifier>{a9ac5545-a012-47e7-aee4-80eaeec9aae4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\hough">
+      <UniqueIdentifier>{d106a962-e8b3-434d-8f0b-a007ae31be19}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
@@ -480,6 +486,9 @@
     <ClInclude Include="include\compv\intrinsics\x86\features\edges\compv_feature_canny_dete_intrin_ssse3.h">
       <Filter>Header Files\intrinsics\x86\features\edges</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\features\hough\compv_feature_houghstd.h">
+      <Filter>Header Files\features\hough</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -754,6 +763,9 @@
     </ClCompile>
     <ClCompile Include="intrinsics\x86\features\edges\compv_feature_canny_dete_intrin_ssse3.cxx">
       <Filter>Source Files\intrinsics\x86\features\edges</Filter>
+    </ClCompile>
+    <ClCompile Include="features\hough\compv_feature_houghstd.cxx">
+      <Filter>Source Files\features\hough</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

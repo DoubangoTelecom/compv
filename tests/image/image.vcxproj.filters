@@ -39,6 +39,9 @@
     <ClCompile Include="canny.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hough.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common.h">

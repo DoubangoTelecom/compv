@@ -25,26 +25,23 @@ COMPV_EXTERNC void CannyNMSApply_Asm_X64_AVX2(COMPV_ALIGNED(AVX) uint16_t* grad,
 
 COMPV_NAMESPACE_BEGIN()
 
-#define COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW	(0.68f)
-#define COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH	(COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW * 2.f)
-
 #define COMPV_FEATURE_DETE_CANY_GRAD_MIN_SAMPLES_PER_THREAD	3 // must be >= 3 because of the convolution ("rowsOverlapCount")
 #define COMPV_FEATURE_DETE_CANY_NMS_MIN_SAMPLES_PER_THREAD	(20*20)
 
-CompVEdgeDeteCanny::CompVEdgeDeteCanny()
+CompVEdgeDeteCanny::CompVEdgeDeteCanny(float tLow /*= COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW*/, float tHigh /*= COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH*/, int32_t kernSize /*= 3*/)
 	: CompVEdgeDete(COMPV_CANNY_ID)
 	, m_nImageWidth(0)
 	, m_nImageHeight(0)
 	, m_nImageStride(0)
-	, m_fThresholdLow(COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW)
-	, m_fThresholdHigh(COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH)
+	, m_fThresholdLow(tLow)
+	, m_fThresholdHigh(tHigh)
 	, m_pGx(NULL)
 	, m_pGy(NULL)
 	, m_pG(NULL)
 	, m_pNms(NULL)
-	, m_pcKernelVt(CompVSobel3x3Gx_vt)
-	, m_pcKernelHz(CompVSobel3x3Gx_hz)
-	, m_nKernelSize(3)
+	, m_pcKernelVt(kernSize == 3 ? CompVSobel3x3Gx_vt : CompVSobel5x5Gx_vt)
+	, m_pcKernelHz(kernSize == 3 ? CompVSobel3x3Gx_hz : CompVSobel5x5Gx_hz)
+	, m_nKernelSize(kernSize == 5 ? 5 : 3)
 {
 
 }
@@ -212,11 +209,6 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 	uint16_t tHigh = static_cast<uint16_t>(mean * m_fThresholdHigh);
 	tLow = COMPV_MATH_MAX(1, tLow);
 	tHigh = COMPV_MATH_MAX(tLow + 2, tHigh);
-
-	if (otsu_low && otsu_high) {
-		tLow = (uint16_t)otsu_low;
-		tHigh = (uint16_t)otsu_high;
-	}
 
 	/* NMS + Hysteresis */
 	if (!m_pNms) {
@@ -390,10 +382,10 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVEdgeDeteCanny::newObj(CompVPtr<CompVEdgeDete* >* dete)
+COMPV_ERROR_CODE CompVEdgeDeteCanny::newObj(CompVPtr<CompVEdgeDete* >* dete, float tLow /*= COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW*/, float tHigh /*= COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH*/, int32_t kernSize /*= 3*/)
 {
 	COMPV_CHECK_EXP_RETURN(!dete, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVPtr<CompVEdgeDeteCanny* >dete_ = new CompVEdgeDeteCanny();
+	CompVPtr<CompVEdgeDeteCanny* >dete_ = new CompVEdgeDeteCanny(tLow, tHigh, kernSize);
 	COMPV_CHECK_EXP_RETURN(!dete_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
 	*dete = *dete_;
