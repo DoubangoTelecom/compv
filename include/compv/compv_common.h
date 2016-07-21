@@ -297,6 +297,7 @@ struct CompVHoughEntry {
 struct CompVCoordPolar2f {
 	float theta;
 	float rho;
+	size_t count;
 };
 
 /** CompVRect
