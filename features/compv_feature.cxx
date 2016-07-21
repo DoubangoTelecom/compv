@@ -257,7 +257,7 @@ CompVHough::~CompVHough()
 {
 }
 
-COMPV_ERROR_CODE CompVHough::newObj(int id, CompVPtr<CompVHough* >* hough, int32_t rho /*= 1*/, float theta /*= kfMathTrigPiOver180*/, int32_t threshold /*= 1*/)
+COMPV_ERROR_CODE CompVHough::newObj(int id, CompVPtr<CompVHough* >* hough, float rho /*= 1.f*/, float theta /*= kfMathTrigPiOver180*/, int32_t threshold /*= 1*/)
 {
 	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
 	COMPV_CHECK_EXP_RETURN(!hough, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

@@ -4,7 +4,7 @@
 #define JPEG_IMG		"C:/Projects/GitHub/compv/tests/line_hz.jpg"
 #define LOOP_COUNT		1
 
-#define RHO			1
+#define RHO			1.f
 #define THETA		kfMathTrigPiOver180 // radian(1d)
 #define THRESHOLD	100
 

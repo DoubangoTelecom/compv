@@ -20,7 +20,7 @@ COMPV_NAMESPACE_BEGIN()
 class CompVHoughStd : public CompVHough
 {
 protected:
-	CompVHoughStd(int32_t rho = 1, float theta = kfMathTrigPiOver180, int32_t threshold = 1);
+	CompVHoughStd(float rho = 1.f, float theta = kfMathTrigPiOver180, int32_t threshold = 1);
 public:
 	virtual ~CompVHoughStd();
 	virtual COMPV_INLINE const char* getObjectId() {
@@ -32,10 +32,10 @@ public:
 	// override CompVHough::process
 	virtual COMPV_ERROR_CODE process(const CompVPtrArray(uint8_t)& edges, CompVPtrArray(CompVCoordPolar2f)& coords);
 
-	static COMPV_ERROR_CODE newObj(CompVPtr<CompVHough* >* hough, int32_t rho = 1, float theta = kfMathTrigPiOver180, int32_t threshold = 1);
+	static COMPV_ERROR_CODE newObj(CompVPtr<CompVHough* >* hough, float rho = 1.f, float theta = kfMathTrigPiOver180, int32_t threshold = 1);
 
 private:
-	int32_t m_nRho;
+	float m_fRho;
 	float m_fTheta;
 	int32_t m_nThreshold;
 };

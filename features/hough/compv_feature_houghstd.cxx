@@ -8,9 +8,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVHoughStd::CompVHoughStd(int32_t rho /*= 1*/, float theta /*= kfMathTrigPiOver180*/, int threshold /*= 1*/)
+CompVHoughStd::CompVHoughStd(float rho /*= 1.f*/, float theta /*= kfMathTrigPiOver180*/, int threshold /*= 1*/)
 :CompVHough(COMPV_HOUGH_STANDARD_ID)
-, m_nRho(rho)
+, m_fRho(rho)
 , m_fTheta(theta)
 , m_nThreshold(threshold)
 {
@@ -103,7 +103,7 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVPtrArray(uint8_t)& edges, Com
 	const size_t cols = edges->cols();
 	const size_t rows = edges->rows();
 
-	const size_t maxRhoCount = COMPV_MATH_ROUNDFU_2_INT(((cols + rows) * 2 + 1) / m_nRho, size_t);
+	const size_t maxRhoCount = COMPV_MATH_ROUNDFU_2_INT(((cols + rows) * 2 + 1) / m_fRho, size_t);
 	const size_t maxThetaCount = COMPV_MATH_ROUNDFU_2_INT(kfMathTrigPi / m_fTheta, size_t);
 
 	COMPV_CHECK_CODE_RETURN(CompVArray<CompVHoughEntry>::newObjStrideless(&accumulator, maxRhoCount, maxThetaCount));
@@ -244,7 +244,7 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVPtrArray(uint8_t)& edges, Com
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::newObj(CompVPtr<CompVHough* >* hough, int32_t rho /*= 1*/, float theta /*= kfMathTrigPiOver180*/, int threshold /*= 1*/)
+COMPV_ERROR_CODE CompVHoughStd::newObj(CompVPtr<CompVHough* >* hough, float rho /*= 1.f*/, float theta /*= kfMathTrigPiOver180*/, int threshold /*= 1*/)
 {
 	COMPV_CHECK_EXP_RETURN(!hough, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVPtr<CompVHoughStd* >hough_ = new CompVHoughStd(rho, theta, threshold);
