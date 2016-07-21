@@ -30,7 +30,7 @@ public:
 	// override CompVSettable::set
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
 	// override CompVHough::process
-	virtual COMPV_ERROR_CODE process(const CompVPtrArray(uint8_t)& edges);
+	virtual COMPV_ERROR_CODE process(const CompVPtrArray(uint8_t)& edges, CompVPtrArray(CompVCoordPolar2f)& coords);
 
 	static COMPV_ERROR_CODE newObj(CompVPtr<CompVHough* >* hough, int32_t rho = 1, float theta = kfMathTrigPiOver180, int32_t threshold = 1);
 

@@ -184,7 +184,7 @@ protected:
 	CompVHough(int id);
 public:
 	virtual ~CompVHough();
-	virtual COMPV_ERROR_CODE process(const CompVPtrArray(uint8_t)& edges) = 0;
+	virtual COMPV_ERROR_CODE process(const CompVPtrArray(uint8_t)& edges, CompVPtrArray(CompVCoordPolar2f)& coords) = 0;
 	static COMPV_ERROR_CODE newObj(int id, CompVPtr<CompVHough* >* hough, int32_t rho = 1, float theta = kfMathTrigPiOver180, int32_t threshold = 1);
 };
 

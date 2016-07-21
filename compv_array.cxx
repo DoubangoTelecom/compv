@@ -10,6 +10,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+template class CompVArray<CompVHoughEntry >;
+template class CompVArray<CompVCoordPolar2f >;
 template class CompVArray<CompVDMatch >;
 template class CompVArray<int32_t >;
 template class CompVArray<compv_float64_t >;

@@ -6,7 +6,7 @@
 
 #define RHO			1
 #define THETA		kfMathTrigPiOver180 // radian(1d)
-#define THRESHOLD	1
+#define THRESHOLD	100
 
 using namespace compv;
 
@@ -16,6 +16,7 @@ COMPV_ERROR_CODE TestHoughStd()
 	CompVPtrArray(uint8_t) edges;
 	CompVPtr<CompVImage *> image;
 	CompVPtr<CompVHough* >hough;
+	CompVPtrArray(CompVCoordPolar2f) coords;
 
 	COMPV_CHECK_CODE_RETURN(CompVImageDecoder::decodeFile(JPEG_IMG, &image));
 	COMPV_CHECK_CODE_RETURN(image->convert(COMPV_PIXEL_FORMAT_GRAYSCALE, &image));
@@ -23,11 +24,11 @@ COMPV_ERROR_CODE TestHoughStd()
 	COMPV_CHECK_CODE_RETURN(CompVEdgeDete::newObj(COMPV_CANNY_ID, &canny));
 	COMPV_CHECK_CODE_RETURN(canny->process(image, edges));
 
-	COMPV_CHECK_CODE_RETURN(CompVHough::newObj(COMPV_HOUGH_STANDARD_ID, &hough));
+	COMPV_CHECK_CODE_RETURN(CompVHough::newObj(COMPV_HOUGH_STANDARD_ID, &hough, RHO, THETA, THRESHOLD));
 
 	uint64_t timeStart = CompVTime::getNowMills();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(hough->process(edges));
+		COMPV_CHECK_CODE_RETURN(hough->process(edges, coords));
 	}
 	uint64_t timeEnd = CompVTime::getNowMills();
 	COMPV_DEBUG_INFO("Elapsed time (TestHoughStd) = [[[ %llu millis ]]]", (timeEnd - timeStart));

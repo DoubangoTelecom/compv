@@ -288,6 +288,17 @@ struct CompVIndex{
 	size_t col;
 };
 
+struct CompVHoughEntry {
+	float theta;
+	float rho;
+	size_t count;
+};
+
+struct CompVCoordPolar2f {
+	float theta;
+	float rho;
+};
+
 /** CompVRect
 */
 struct CompVRect {
