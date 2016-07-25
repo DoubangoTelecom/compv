@@ -30,14 +30,26 @@ public:
 	// override CompVSettable::set
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
 	// override CompVHough::process
-	virtual COMPV_ERROR_CODE process(const CompVPtrArray(uint8_t)& edges, CompVPtrArray(CompVCoordPolar2f)& coords);
+	virtual COMPV_ERROR_CODE process(const CompVPtrArray(uint8_t)& edges, CompVPtrArray(compv_float32x2_t)& coords);
 
 	static COMPV_ERROR_CODE newObj(CompVPtr<CompVHough* >* hough, float rho = 1.f, float theta = kfMathTrigPiOver180, int32_t threshold = 1);
+
+private:
+	COMPV_ERROR_CODE initCoords(float fRho, float fTheta, int32_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
+	COMPV_ERROR_CODE nms();
 
 private:
 	float m_fRho;
 	float m_fTheta;
 	int32_t m_nThreshold;
+	size_t m_nWidth;
+	size_t m_nHeight;
+	size_t m_nBarrier;
+	CompVPtrArray(compv_float32_t) m_SinRho;
+	CompVPtrArray(compv_float32_t) m_CosRho;
+	CompVPtrArray(int32_t) m_Accumulator;
+	CompVPtrArray(compv_float32_t) m_Rho;
+	CompVPtrArray(uint8_t) m_NMS;
 };
 
 COMPV_NAMESPACE_END()

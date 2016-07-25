@@ -131,6 +131,7 @@ typedef intptr_t compv_scalar_t;  /* This type *must* have the width of a genera
 typedef uintptr_t compv_uscalar_t;  /* This type *must* have the width of a general-purpose register on the target CPU. 64bits or 32bits. */
 typedef float compv_float32_t;
 typedef double compv_float64_t;
+typedef compv_float32_t compv_float32x2_t[2];
 
 enum COMPV_DEBUG_LEVEL {
     COMPV_DEBUG_LEVEL_INFO = 4,

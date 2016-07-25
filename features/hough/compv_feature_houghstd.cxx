@@ -13,8 +13,10 @@ CompVHoughStd::CompVHoughStd(float rho /*= 1.f*/, float theta /*= kfMathTrigPiOv
 , m_fRho(rho)
 , m_fTheta(theta)
 , m_nThreshold(threshold)
+, m_nWidth(0)
+, m_nHeight(0)
 {
-
+	
 }
 
 CompVHoughStd:: ~CompVHoughStd()
@@ -30,50 +32,6 @@ COMPV_ERROR_CODE CompVHoughStd::set(int id, const void* valuePtr, size_t valueSi
 	case -1:
 	default:
 		return CompVSettable::set(id, valuePtr, valueSize);
-	}
-}
-
-static bool nonMaxSupp(CompVPtrArray(CompVHoughEntry)& accumulator, uint8_t* nms, int32_t threshold, int32_t radius)
-{
-	bool found = false;
-	for (size_t row = radius; row < accumulator->rows() - radius; ++row) {
-		for (size_t col = radius; col < accumulator->cols() - radius; ++col) {
-			if (accumulator->ptr(row, col)->count > threshold && !nms[row * accumulator->cols() + col]) {
-				//COMPV_DEBUG_INFO("Line at (%d, %f)", m_nRho * row, m_fTheta * (float)col);
-				const CompVHoughEntry* e = accumulator->ptr(row, col);
-				const CompVHoughEntry* top = accumulator->ptr(row - radius, col);
-				const CompVHoughEntry* bottom = accumulator->ptr(row + radius, col);
-				if (e[-radius].count >= e->count || e[+radius].count >= e->count || top[-radius].count >= e->count || top[0].count >= e->count || top[+radius].count >= e->count || bottom[-radius].count >= e->count || bottom[0].count >= e->count || bottom[+radius].count >= e->count) {
-					nms[row * accumulator->cols() + col] = 1;
-					found = true;
-				}
-			}
-		}
-	}
-	return found;
-}
-
-static void nonMaxSupp2(CompVPtrArray(CompVHoughEntry)& accumulator, uint8_t* nms, int32_t threshold, int32_t radius)
-{
-	for (size_t row = 0; row < accumulator->rows(); ++row) {
-		for (size_t col = 0; col < accumulator->cols(); ++col) {
-			if (accumulator->ptr(row, col)->count > threshold) {
-				const CompVHoughEntry* e = accumulator->ptr(row, col);
-				int32_t minY = COMPV_MATH_MAX(0, int32_t(row - radius));
-				int32_t maxY = COMPV_MATH_MIN(int32_t(accumulator->rows()), int32_t(row + radius));
-				int32_t minX = COMPV_MATH_MAX(0, int32_t(col - radius));
-				int32_t maxX = COMPV_MATH_MIN(int32_t(accumulator->cols()), int32_t(col + radius));
-				for (int32_t y = minY; y < maxY; ++y) {
-					for (int32_t x = minX; x < maxX; ++x) {
-						if (accumulator->ptr(y, x)->count > e->count) {
-							nms[row * accumulator->cols() + col] = 1;
-							goto next;
-						}
-					}
-				}
-			}
-		next:;
-		}
 	}
 }
 
@@ -94,129 +52,103 @@ static void nonMaxSupp3(CompVPtrArray(CompVHoughEntry)& accumulator, uint8_t* nm
 }
 
 // override CompVHough::process
-COMPV_ERROR_CODE CompVHoughStd::process(const CompVPtrArray(uint8_t)& edges, CompVPtrArray(CompVCoordPolar2f)& coords)
+COMPV_ERROR_CODE CompVHoughStd::process(const CompVPtrArray(uint8_t)& edges, CompVPtrArray(compv_float32x2_t)& coords)
 {
 	COMPV_CHECK_EXP_RETURN(!edges || edges->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	CompVPtrArray(CompVHoughEntry) accumulator;
+	COMPV_CHECK_CODE_RETURN(initCoords(m_fRho, m_fTheta, m_nThreshold, edges->cols(), edges->rows()));
 
-	const size_t cols = edges->cols();
-	const size_t rows = edges->rows();
+	size_t cols = edges->cols();
+	size_t rows = edges->rows();
 
-	const size_t maxRhoCount = COMPV_MATH_ROUNDFU_2_INT(((cols + rows) * 2 + 1) / m_fRho, size_t);
-	const size_t maxThetaCount = COMPV_MATH_ROUNDFU_2_INT(kfMathTrigPi / m_fTheta, size_t);
-
-	COMPV_CHECK_CODE_RETURN(CompVArray<CompVHoughEntry>::newObjStrideless(&accumulator, maxRhoCount, maxThetaCount));
-	COMPV_CHECK_CODE_RETURN(accumulator->zero_all());
-
-	const size_t stride = edges->strideInBytes();
+	const size_t edgeStride = edges->strideInBytes();
 	const uint8_t* pixels = edges->ptr(0);
-	CompVHoughEntry* entry;
+	
+	const compv_float32_t* pSinRho = m_SinRho->ptr();
+	const compv_float32_t* pCosRho = m_CosRho->ptr();
+	compv_float32_t* pRho = const_cast<compv_float32_t*>(m_Rho->ptr());
+	const size_t maxThetaCount = m_Accumulator->cols();
 
+	// Accumulator gathering
 	for (size_t row = 0; row < rows; ++row) {
 		for (size_t col = 0; col < cols; ++col) {
 			if (pixels[col]) {
 				for (size_t t = 0; t < maxThetaCount; ++t) {
 					float theta = t * m_fTheta;
-					float r = col * cos(theta) + row * sin(theta); // FIXME: use m_nRho here and must be float (combined with sin and cos tables)
+					float r = col * pCosRho[t] + row * pSinRho[t] ;
 					size_t rabs = COMPV_MATH_ROUNDFU_2_INT(fabs(r), size_t);
 					if (r < 0) {
-						rabs += (cols + rows);
+						rabs += m_nBarrier;
 					}
-					if (rabs < maxRhoCount) {
-						entry = const_cast<CompVHoughEntry*>(accumulator->ptr(rabs, t));
-						if (entry->count) {
-							int kaka = 0;
-						}
-						entry->rho = r;
-						entry->theta = theta;
-						entry->count += 1;
-					}
-					else {
-						COMPV_DEBUG_ERROR("Not expected");
-					}
+					const_cast<int32_t*>(m_Accumulator->ptr(rabs, t))[0]++;
+					const_cast<compv_float32_t*>(m_Rho->ptr(rabs, t))[0] = (float)COMPV_MATH_ROUNDFU_2_INT(r, int); // FIXME
 				}
 			}
 		}
-		pixels += stride;
+		pixels += edgeStride;
 	}
-
-	uint8_t* nms = (uint8_t*)CompVMem::calloc(accumulator->rows() * accumulator->cols(), sizeof(uint8_t));
-
-	// NMS
-	//int32_t maxRadius = (int32_t)COMPV_MATH_MIN(cols, rows);
-	//int32_t radius = 1;
-	//while (nonMaxSupp(accumulator, nms, m_nThreshold, radius++) && radius < maxRadius) ;
-	//nonMaxSupp2(accumulator, nms, m_nThreshold, 2);
-	//nonMaxSupp(accumulator, nms, m_nThreshold, 1);
-	nonMaxSupp3(accumulator, nms, m_nThreshold);
 	
-	/*for (size_t row = 1; row < accumulator->rows(); ++row) {
-		for (size_t col = 1; col < accumulator->cols(); ++col) {
-			if (accumulator->ptr(row, col)->count > m_nThreshold) {
-				//COMPV_DEBUG_INFO("Line at (%d, %f)", m_nRho * row, m_fTheta * (float)col);
-				const CompVHoughEntry* e = accumulator->ptr(row, col);
-				const CompVHoughEntry* top = accumulator->ptr(row - 1, col);
-				const CompVHoughEntry* bottom = accumulator->ptr(row + 1, col);
-				if (e[-1].count >= e->count || e[+1].count >= e->count || top[-1].count >= e->count || top[0].count >= e->count || top[+1].count >= e->count || bottom[-1].count >= e->count || bottom[0].count >= e->count || bottom[+1].count >= e->count) {
-					nms[row * accumulator->cols() + col] = 1;
-				}
-			}
-		}
-	}*/
+	// Non-maxima suppression (NMS)
+	COMPV_CHECK_CODE_RETURN(nms());
 
-	for (size_t row = 0; row < accumulator->rows(); ++row) {
-		for (size_t col = 0; col < accumulator->cols(); ++col) {
-			if (nms[row * accumulator->cols() + col]) {
-				const_cast<CompVHoughEntry*>(accumulator->ptr(row, col))->count = 0;
-				//COMPV_DEBUG_INFO("Suppressed");
+	// NMS-apply
+	uint8_t* pNMS = const_cast<uint8_t*>(m_NMS->ptr());
+	int32_t* pACC = const_cast<int32_t*>(m_Accumulator->ptr());
+	size_t count = 0, nmsStride, accStride;
+	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));
+	COMPV_CHECK_CODE_RETURN(m_Accumulator->strideInElts(accStride));
+	for (size_t row = 0; row < m_Accumulator->rows(); ++row) {
+		for (size_t col = 0; col < m_Accumulator->cols(); ++col) {
+			if (pNMS[col]) {
+				pACC[col] = 0;
+				pNMS[col] = 0; // reset for  next time
 			}
-		}
-	}
-
-	size_t count = 0;
-	for (size_t row = 0; row < accumulator->rows(); ++row) {
-		for (size_t col = 0; col < accumulator->cols(); ++col) {
-			if (accumulator->ptr(row, col)->count > m_nThreshold) {
-				//COMPV_DEBUG_INFO("Line at (%d, %f)", m_nRho * row, m_fTheta * (float)col);
+			else if (pACC[col] > m_nThreshold) {
 				++count;
 			}
 		}
-	}
+		pNMS += nmsStride;
+		pACC += accStride;
+	}	
 
 	if (count) {
 		CompVPtrArray(size_t) Idx;
 		COMPV_CHECK_CODE_RETURN(CompVArray<size_t>::newObjAligned(&Idx, 1, count));
 		size_t* indexes = const_cast<size_t*>(Idx->ptr());
-		size_t index, oldIndex;
+		size_t index, oldIndex, rhoStride;
+		COMPV_CHECK_CODE_RETURN(m_Rho->strideInElts(rhoStride));
 		for (size_t i = 0; i < count; ++i) {
 			indexes[i] = i;
 		}
 
 		CompVPtrArray(CompVCoordPolar2f) coords_;
 		COMPV_CHECK_CODE_RETURN(CompVArray<CompVCoordPolar2f>::newObjStrideless(&coords_, 1, count));
-		size_t i = 0;
-		CompVCoordPolar2f* coord;
-		for (size_t row = 0; row < accumulator->rows(); ++row) {
-			for (size_t col = 0; col < accumulator->cols(); ++col) {
-				if (accumulator->ptr(row, col)->count > m_nThreshold) {
-					entry = const_cast<CompVHoughEntry*>(accumulator->ptr(row, col));
-					coord = const_cast<CompVCoordPolar2f*>(coords_->ptr(0, i++));
-					//coord->rho = m_nRho * (float)row;
-					//coord->theta = m_fTheta * (float)col;
-					coord->rho = entry->rho;
-					coord->theta = entry->theta;
-					coord->count = entry->count;
+		CompVCoordPolar2f* coord = const_cast<CompVCoordPolar2f*>(coords_->ptr());
+		pACC = const_cast<int32_t*>(m_Accumulator->ptr());
+		const compv_float32_t* pRho = m_Rho->ptr();
+		for (size_t row = 0; row < m_Accumulator->rows(); ++row) {
+			for (size_t col = 0; col < m_Accumulator->cols(); ++col) {
+				if (pACC[col]) {
+					if (pACC[col] > m_nThreshold) {
+						coord->rho = pRho[col];
+						coord->theta = col * m_fTheta;
+						coord->count = pACC[col];
+						++coord;
+					}
+					pACC[col] = 0; // reset for next time
 				}
 			}
+			pACC += accStride;
+			pRho += rhoStride;
 		}
 		// sorting
 		bool sorted, wasSorted = true;
+		coord = const_cast<CompVCoordPolar2f*>(coords_->ptr());
 		do {
 			sorted = true;
 			for (size_t i = 0; i < count - 1; ++i) {
 				index = indexes[i];
-				if (coords_->ptr(0, indexes[i])->count < coords_->ptr(0, indexes[i + 1])->count) {
+				if (coord[indexes[i]].count < coord[indexes[i + 1]].count) {
 					oldIndex = indexes[i];
 					indexes[i] = indexes[i + 1];
 					indexes[i + 1] = oldIndex;
@@ -225,21 +157,22 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVPtrArray(uint8_t)& edges, Com
 				}
 			}
 		} while (!sorted);
-		if (wasSorted) {
+		// FIXME
+		/*if (wasSorted) {
 			coords = coords_;
 		}
-		else {
-			COMPV_CHECK_CODE_RETURN(CompVArray<CompVCoordPolar2f>::newObjStrideless(&coords, 1, count));
+		else*/ {
+			COMPV_CHECK_CODE_RETURN(CompVArray<compv_float32x2_t>::newObjStrideless(&coords, 1, count));
+			compv_float32x2_t* f32x2 = const_cast<compv_float32x2_t*>(coords->ptr());
 			for (size_t col = 0; col < count; ++col) {
-				*const_cast<CompVCoordPolar2f*>(coords->ptr(0, col)) = *coords_->ptr(0, indexes[col]);
+				f32x2[col][0] = coords_->ptr(0, indexes[col])->rho;
+				f32x2[col][1] = coords_->ptr(0, indexes[col])->theta;
 			}
 		}
 	}
 	else {
 		coords = NULL;
 	}
-	
-	CompVMem::free((void**)&nms);
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -251,6 +184,70 @@ COMPV_ERROR_CODE CompVHoughStd::newObj(CompVPtr<CompVHough* >* hough, float rho 
 	COMPV_CHECK_EXP_RETURN(!hough_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
 	*hough = *hough_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVHoughStd::initCoords(float fRho, float fTheta, int32_t nThreshold, size_t nWidth/*=0*/, size_t nHeight/*=0*/)
+{
+	nWidth = !nWidth ? m_nWidth : nWidth;
+	nHeight = !nHeight ? m_nHeight : nHeight;
+	if (m_fRho != fRho || m_fTheta != fTheta || m_nWidth != nWidth || m_nHeight != nHeight) {
+		// rho = x*cos(t) + y*sin(t), "cos" and "sin" in [-1, 1] which means we have (x+y)*2 values
+		const size_t maxRhoCount = COMPV_MATH_ROUNDFU_2_INT((((nWidth + nHeight) << 1) + 1) / fRho, size_t);
+		const size_t maxThetaCount = COMPV_MATH_ROUNDFU_2_INT(kfMathTrigPi / fTheta, size_t);
+		COMPV_CHECK_CODE_RETURN(CompVArray<compv_float32_t>::newObjAligned(&m_Rho, maxRhoCount, maxThetaCount));
+		COMPV_CHECK_CODE_RETURN(CompVArray<int32_t>::newObjAligned(&m_Accumulator, maxRhoCount, maxThetaCount));
+		COMPV_CHECK_CODE_RETURN(m_Accumulator->zero_rows());
+		COMPV_CHECK_CODE_RETURN(CompVArray<uint8_t>::newObjAligned(&m_NMS, maxRhoCount, maxThetaCount));
+		COMPV_CHECK_CODE_RETURN(m_NMS->zero_rows());
+		COMPV_CHECK_CODE_RETURN(CompVArray<compv_float32_t>::newObjAligned(&m_SinRho, 1, maxThetaCount));
+		COMPV_CHECK_CODE_RETURN(CompVArray<compv_float32_t>::newObjAligned(&m_CosRho, 1, maxThetaCount));
+		
+		compv_float32_t* pSinRho = const_cast<compv_float32_t*>(m_SinRho->ptr());
+		compv_float32_t* pCosRho = const_cast<compv_float32_t*>(m_CosRho->ptr());
+		float tt;
+		size_t t;
+		for (t = 0, tt = 0.f; t < maxThetaCount; ++t, tt += fTheta) {
+			pSinRho[t] = COMPV_MATH_SIN(tt) * m_fRho;
+			pCosRho[t] = COMPV_MATH_COS(tt) * m_fRho;
+		}
+		
+		m_fRho = fRho;
+		m_fTheta = fTheta;
+		m_nWidth = nWidth;
+		m_nHeight = nHeight;
+		m_nBarrier = m_nWidth + m_nHeight;
+	}
+	m_nThreshold = nThreshold;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVHoughStd::nms()
+{
+	size_t rows = m_Accumulator->rows();
+	size_t cols = m_Accumulator->cols();
+	const int32_t *pAccumulator = m_Accumulator->ptr(1), *curr, *top, *bottom;
+	uint8_t* nms = const_cast<uint8_t*>(m_NMS->ptr(1));
+	size_t nmsStride, accStride;
+	int32_t t;
+	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));
+	COMPV_CHECK_CODE_RETURN(m_Accumulator->strideInElts(accStride));
+
+	for (size_t row = 1; row < rows - 1; ++row) {
+		for (size_t col = 1; col < cols - 1; ++col) {
+			if (pAccumulator[col] > m_nThreshold) {
+				t = pAccumulator[col];
+				curr = &pAccumulator[col];
+				top = m_Accumulator->ptr(row - 1, col); // FIXME
+				bottom = m_Accumulator->ptr(row + 1, col); // FIXME
+				if (curr[-1] > t || curr[+1] > t || top[-1] > t || top[0] > t || top[+1] > t || bottom[-1] > t || bottom[0] > t || bottom[+1] > t) {
+					nms[col] = 1;
+				}
+			}
+		}
+		pAccumulator += accStride;
+		nms += nmsStride;
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 

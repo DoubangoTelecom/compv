@@ -53,7 +53,7 @@ enum {
     COMPV_ORB_SET_BOOL_FAST_NON_MAXIMA_SUPP,
     COMPV_ORB_SET_INT32_PYRAMID_LEVELS,
     COMPV_ORB_SET_INT32_PYRAMID_SCALE_TYPE,
-    COMPV_ORB_SET_FLOAT_PYRAMID_SCALE_FACTOR,
+    COMPV_ORB_SET_FLT32_PYRAMID_SCALE_FACTOR,
     COMPV_ORB_SET_INT32_MAX_FEATURES,
     COMPV_ORB_SET_INT32_STRENGTH_TYPE,
     COMPV_ORB_SET_INT32_BRIEF_PATCH_SIZE,
@@ -63,8 +63,8 @@ enum {
 	/* Canny */
 	COMPV_CANNY_ID,
 	COMPV_CANNY_SET_INT32_KERNEL_SIZE,
-	COMPV_CANNY_SET_FLOAT_THRESHOLD_LOW,
-	COMPV_CANNY_SET_FLOAT_THRESHOLD_HIGH,
+	COMPV_CANNY_SET_FLT32_THRESHOLD_LOW,
+	COMPV_CANNY_SET_FLT32_THRESHOLD_HIGH,
 
 	/* Sobel */
 	COMPV_SOBEL_ID,
@@ -78,7 +78,7 @@ enum {
 	/* Hough */
 	COMPV_HOUGH_STANDARD_ID,
 	COMPV_HOUGH_SET_INT32_RHO,
-	COMPV_HOUGH_SET_FLOAT_THETA,
+	COMPV_HOUGH_SET_FLT32_THETA,
 	COMPV_HOUGH_SET_INT32_THRESHOLD
 };
 
@@ -184,7 +184,7 @@ protected:
 	CompVHough(int id);
 public:
 	virtual ~CompVHough();
-	virtual COMPV_ERROR_CODE process(const CompVPtrArray(uint8_t)& edges, CompVPtrArray(CompVCoordPolar2f)& coords) = 0;
+	virtual COMPV_ERROR_CODE process(const CompVPtrArray(uint8_t)& edges, CompVPtrArray(compv_float32x2_t)& coords) = 0;
 	static COMPV_ERROR_CODE newObj(int id, CompVPtr<CompVHough* >* hough, float rho = 1.f, float theta = kfMathTrigPiOver180, int32_t threshold = 1);
 };
 

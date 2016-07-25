@@ -91,7 +91,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::set(int id, const void* valuePtr, size_t va
     }
     case COMPV_ORB_SET_INT32_PYRAMID_LEVELS:
     case COMPV_ORB_SET_INT32_PYRAMID_SCALE_TYPE:
-    case COMPV_ORB_SET_FLOAT_PYRAMID_SCALE_FACTOR: {
+    case COMPV_ORB_SET_FLT32_PYRAMID_SCALE_FACTOR: {
         if (id == COMPV_ORB_SET_INT32_PYRAMID_LEVELS) {
             COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int32_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
             int32_t nLevels = *((int32_t*)valuePtr);
@@ -118,7 +118,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::set(int id, const void* valuePtr, size_t va
                 return CompVImageScalePyramid::newObj(m_pyramid->getScaleFactor(), m_pyramid->getLevels(), eScaleType, &m_pyramid);
             }
         }
-        else if (id == COMPV_ORB_SET_FLOAT_PYRAMID_SCALE_FACTOR) {
+        else if (id == COMPV_ORB_SET_FLT32_PYRAMID_SCALE_FACTOR) {
             COMPV_CHECK_EXP_RETURN(valueSize != sizeof(float), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
             float fScaleFactor = *((float*)valuePtr);
             if (m_pyramid->getScaleFactor() != fScaleFactor) {

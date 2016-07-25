@@ -59,12 +59,12 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::set(int id, const void* valuePtr, size_t va
 {
 	COMPV_CHECK_EXP_RETURN(valuePtr == NULL || valueSize == 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	switch (id) {
-	case COMPV_CANNY_SET_FLOAT_THRESHOLD_LOW:{
+	case COMPV_CANNY_SET_FLT32_THRESHOLD_LOW:{
 		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(float) || *((float*)valuePtr) <= 0.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		m_fThresholdLow = *((float*)valuePtr);
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	case COMPV_CANNY_SET_FLOAT_THRESHOLD_HIGH:{
+	case COMPV_CANNY_SET_FLT32_THRESHOLD_HIGH:{
 		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(float) || *((float*)valuePtr) <= 0.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		m_fThresholdHigh = *((float*)valuePtr);
 		return COMPV_ERROR_CODE_S_OK;
