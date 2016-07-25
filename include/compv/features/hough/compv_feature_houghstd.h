@@ -9,6 +9,7 @@
 
 #include "compv/compv_config.h"
 #include "compv/compv_common.h"
+#include "compv/compv_box.h"
 #include "compv/features/compv_feature.h"
 
 #if defined(_COMPV_API_H_)
@@ -42,14 +43,15 @@ private:
 	float m_fRho;
 	float m_fTheta;
 	int32_t m_nThreshold;
+	int32_t m_nMaxLines;
 	size_t m_nWidth;
 	size_t m_nHeight;
 	size_t m_nBarrier;
 	CompVPtrArray(compv_float32_t) m_SinRho;
 	CompVPtrArray(compv_float32_t) m_CosRho;
 	CompVPtrArray(int32_t) m_Accumulator;
-	CompVPtrArray(compv_float32_t) m_Rho;
 	CompVPtrArray(uint8_t) m_NMS;
+	CompVPtrBox(CompVCoordPolar2f) m_Coords;
 };
 
 COMPV_NAMESPACE_END()

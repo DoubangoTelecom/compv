@@ -78,30 +78,26 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVPtrArray(uint8_t)& edges, Com
 	const compv_float32_t* pSinRho = m_SinRho->ptr();
 	const compv_float32_t* pCosRho = m_CosRho->ptr();
 	const size_t maxThetaCount = m_Accumulator->cols();
-	compv_float32_t rho;
-	size_t absRho,nmsStride, accStride, rhoStride;
+	compv_float32_t rho, fBarrier = static_cast<compv_float32_t>(m_nBarrier);
+	size_t nmsStride, accStride;
 	uint8_t* pNMS;
-	int32_t* pACC;
-	compv_float32_t* pRho;
+	int32_t *pACC, rhoInt32;
+	compv_float32_t colf, rowf;
 
 	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));
 	COMPV_CHECK_CODE_RETURN(m_Accumulator->strideInElts(accStride));
-	COMPV_CHECK_CODE_RETURN(m_Rho->strideInElts(rhoStride));
 
 	// Accumulator gathering
-	pACC = const_cast<int32_t*>(m_Accumulator->ptr());
-	pRho = const_cast<compv_float32_t*>(m_Rho->ptr());
+	pACC = const_cast<int32_t*>(m_Accumulator->ptr(m_nBarrier));
 	for (size_t row = 0; row < rows; ++row) {
 		for (size_t col = 0; col < cols; ++col) {
 			if (pixels[col]) {
+				colf = static_cast<compv_float32_t>(col);
+				rowf = static_cast<compv_float32_t>(row);
 				for (size_t t = 0; t < maxThetaCount; ++t) {
-					rho = col * pCosRho[t] + row * pSinRho[t];
-					absRho = COMPV_MATH_ROUNDFU_2_INT(fabs(rho), size_t);
-					if (rho < 0) {
-						absRho += m_nBarrier;
-					}
-					pACC[(absRho * accStride) + t]++;
-					pRho[(absRho * rhoStride) + t] = rho;
+					rho = colf * pCosRho[t] + rowf * pSinRho[t];
+					rhoInt32 = COMPV_MATH_ROUNDF_2_INT(rho, int32_t);
+					pACC[t - (rhoInt32 * accStride)]++;
 				}
 			}
 		}
@@ -120,7 +116,6 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVPtrArray(uint8_t)& edges, Com
 	CompVCoordPolar2f* coord;
 	pNMS = const_cast<uint8_t*>(m_NMS->ptr());
 	pACC = const_cast<int32_t*>(m_Accumulator->ptr());
-	pRho = const_cast<compv_float32_t*>(m_Rho->ptr());
 	m_Coords->reset();
 	for (size_t row = 0; row < m_Accumulator->rows(); ++row) {
 		for (size_t col = 0; col < m_Accumulator->cols(); ++col) {
@@ -128,16 +123,15 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVPtrArray(uint8_t)& edges, Com
 				pNMS[col] = 0; // reset for  next time
 			}
 			else if (pACC[col] > m_nThreshold) {
-				COMPV_CHECK_CODE_RETURN(m_Coords->new_item(&coord));
+				COMPV_CHECK_CODE_RETURN(m_Coords->new_item(&coord));				
 				coord->count = pACC[col];
-				coord->rho = pRho[col];
+				coord->rho = fBarrier - static_cast<compv_float32_t>(row);
 				coord->theta = col * m_fTheta;
 			}
 			pACC[col] = 0;
 		}
 		pNMS += nmsStride;
 		pACC += accStride;
-		pRho += rhoStride;
 	}	
 
 	if (!m_Coords->empty()) {
@@ -177,7 +171,6 @@ COMPV_ERROR_CODE CompVHoughStd::initCoords(float fRho, float fTheta, int32_t nTh
 		// rho = x*cos(t) + y*sin(t), "cos" and "sin" in [-1, 1] which means we have (x+y)*2 values
 		const size_t maxRhoCount = COMPV_MATH_ROUNDFU_2_INT((((nWidth + nHeight) << 1) + 1) / fRho, size_t);
 		const size_t maxThetaCount = COMPV_MATH_ROUNDFU_2_INT(kfMathTrigPi / fTheta, size_t);
-		COMPV_CHECK_CODE_RETURN(CompVArray<compv_float32_t>::newObjAligned(&m_Rho, maxRhoCount, maxThetaCount));
 		COMPV_CHECK_CODE_RETURN(CompVArray<int32_t>::newObjAligned(&m_Accumulator, maxRhoCount, maxThetaCount));
 		COMPV_CHECK_CODE_RETURN(m_Accumulator->zero_rows());
 		COMPV_CHECK_CODE_RETURN(CompVArray<uint8_t>::newObjAligned(&m_NMS, maxRhoCount, maxThetaCount));
