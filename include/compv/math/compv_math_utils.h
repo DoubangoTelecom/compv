@@ -46,6 +46,15 @@ public:
 	static COMPV_INLINE void rand(uint32_t *r, compv_scalar_t count) {
 		randFunc(r, count);
 	}
+	
+	template <typename OutputType>
+	static COMPV_INLINE OutputType roundFloatUnsigned(float f) {
+		return static_cast<OutputType>(roundFloatUnsignedFunc(f));
+	}
+	template <typename OutputType>
+	static COMPV_INLINE OutputType roundFloatSigned(float f) {
+		return static_cast<OutputType>(roundFloatSignedFunc(f));
+	}
 
 	template <typename InputType>
 	static COMPV_ERROR_CODE max(const InputType* data, size_t width, size_t height, size_t stride, InputType &max)
@@ -258,6 +267,8 @@ private:
     static compv_scalar_t(*clip3Func)(compv_scalar_t min, compv_scalar_t max, compv_scalar_t val);
     static compv_scalar_t(*clip2Func)(compv_scalar_t max, compv_scalar_t val);
 	static void(*randFunc)(uint32_t *r, compv_scalar_t count);
+	static int(*roundFloatUnsignedFunc)(float f);
+	static int(*roundFloatSignedFunc)(float f);
 };
 
 extern template COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint16_t*& r, size_t width, size_t height, size_t stride);

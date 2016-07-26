@@ -12,16 +12,16 @@
 
 #if TEST_TYPE == TEST_TYPE_GIRL
 #	define HOUGH_JPEG_IMG			"C:/Projects/GitHub/compv/tests/girl.jpg"
-#	define HOUGH_MD5				"e79255318ace8ff16e4678a0a8625eac"
+#	define HOUGH_MD5				"32e6d6d6371407c34ae7b09bc9dfeab0"
 #elif TEST_TYPE == TEST_TYPE_EQUIRECT
 #	define HOUGH_JPEG_IMG			"C:/Projects/GitHub/compv/tests/equirectangular.jpg"
-#	define HOUGH_MD5				"711322158662b7778bbd663de423d306"
+#	define HOUGH_MD5				"8b668478e8a7b10c2dc3410ca031e8f0"
 #elif TEST_TYPE == TEST_TYPE_MANDEKALOU
 #	define HOUGH_JPEG_IMG			"C:/Projects/GitHub/compv/tests/mandekalou.jpg"
-#	define HOUGH_MD5				"364e89044f65dc30d219a5a290f47b42"
+#	define HOUGH_MD5				"9802ee0595b6f5e82927383b6f9b6cf7"
 #elif TEST_TYPE == TEST_TYPE_VALVE
 #	define HOUGH_JPEG_IMG			"C:/Projects/GitHub/compv/tests/Valve_original.jpg"
-#	define HOUGH_MD5				"1d831fefa3fc34761bb137683608d9ca"
+#	define HOUGH_MD5				"dfa105b50bd17b8f7b08ff5ab889695c"
 #endif
 
 #define RHO			1.f

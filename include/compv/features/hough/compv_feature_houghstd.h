@@ -47,8 +47,8 @@ private:
 	size_t m_nWidth;
 	size_t m_nHeight;
 	size_t m_nBarrier;
-	CompVPtrArray(compv_float32_t) m_SinRho;
-	CompVPtrArray(compv_float32_t) m_CosRho;
+	CompVPtrArray(int32_t) m_SinRho;
+	CompVPtrArray(int32_t) m_CosRho;
 	CompVPtrArray(int32_t) m_Accumulator;
 	CompVPtrArray(uint8_t) m_NMS;
 	CompVPtrBox(CompVCoordPolar2f) m_Coords;
