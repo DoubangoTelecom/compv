@@ -114,11 +114,13 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVPtrArray(uint8_t)& edges, Com
 
 	// NMS-apply
 	CompVCoordPolar2f* coord;
+	cols = m_Accumulator->cols();
+	rows = m_Accumulator->rows();
 	pNMS = const_cast<uint8_t*>(m_NMS->ptr());
 	pACC = const_cast<int32_t*>(m_Accumulator->ptr());
 	m_Coords->reset();
-	for (size_t row = 0; row < m_Accumulator->rows(); ++row) {
-		for (size_t col = 0; col < m_Accumulator->cols(); ++col) {
+	for (size_t row = 0; row < rows; ++row) {
+		for (size_t col = 0; col < cols; ++col) {
 			if (pNMS[col]) {
 				pNMS[col] = 0; // reset for  next time
 			}
