@@ -146,7 +146,10 @@
     <ClCompile Include="features\edges\compv_feature_canny_dete.cxx" />
     <ClCompile Include="features\edges\compv_feature_edge_dete.cxx" />
     <ClCompile Include="features\fast\compv_feature_fast_dete.cxx" />
-    <ClCompile Include="features\hough\compv_feature_houghstd.cxx" />
+    <ClCompile Include="features\hough\compv_feature_houghstd.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="features\orb\compv_feature_orb_desc.cxx" />
     <ClCompile Include="features\orb\compv_feature_orb_dete.cxx" />
     <ClCompile Include="image\compv_image.cxx" />

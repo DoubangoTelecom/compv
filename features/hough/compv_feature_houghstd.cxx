@@ -7,6 +7,8 @@
 #include "compv/features/hough/compv_feature_houghstd.h"
 #include "compv/compv_engine.h"
 
+#include "compv/intrinsics/x86/features/hough/compv_feature_houghstd_intrin_sse2.h"
+
 static bool COMPV_INLINE __compareAccCountDec(const compv::CompVCoordPolar2f* i, const  compv::CompVCoordPolar2f* j) {
 	return (i->count > j->count);
 }
@@ -200,19 +202,33 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(const CompVPtrArray(uint8_t)& edges)
 COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount)
 {
 	size_t rows = m_Accumulator->rows();
-	size_t cols = m_Accumulator->cols();	
+	size_t maxCols = m_Accumulator->cols() - 1;	
 	size_t rowEnd = COMPV_MATH_MIN((rowStart + rowCount), (rows - 1));
 	rowStart = COMPV_MATH_MAX(1, rowStart);
 
 	const int32_t *pACC = m_Accumulator->ptr(rowStart);
 	uint8_t* pNMS = const_cast<uint8_t*>(m_NMS->ptr(rowStart));
-	size_t nmsStride, accStride;
+	size_t nmsStride, accStride, row;
 	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));
 	COMPV_CHECK_CODE_RETURN(m_Accumulator->strideInElts(accStride));
 
+#if COMPV_ARCH_X86
+	void (*HoughStdNmsGatherRow)(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, int32_t nThreshold, compv_uscalar_t width) = NULL;
+	if (maxCols >= 4 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(HoughStdNmsGatherRow = HoughStdNmsGatherRow_Intrin_SSE2);
+	}
+	if (HoughStdNmsGatherRow) {
+		for (row = rowStart; row < rowEnd; ++row) {
+			HoughStdNmsGatherRow(pACC, (compv_uscalar_t)accStride, pNMS, m_nThreshold, (compv_uscalar_t)maxCols);
+			pACC += accStride, pNMS += nmsStride;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+#endif /* COMPV_ARCH_X86 */
+
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	for (size_t row = rowStart; row < rowEnd; ++row) {
-		HoughStdNmsGatherRow_C(pACC, accStride, pNMS, m_nThreshold, 1, cols - 1);
+	for (row = rowStart; row < rowEnd; ++row) {
+		HoughStdNmsGatherRow_C(pACC, accStride, pNMS, m_nThreshold, 1, maxCols);
 		pACC += accStride, pNMS += nmsStride;
 	}
 	return COMPV_ERROR_CODE_S_OK;
@@ -255,7 +271,7 @@ void HoughStdNmsGatherRow_C(const int32_t * pAcc, size_t nAccStride, uint8_t* pN
 			top = &pAcc[col - stride];
 			bottom = &pAcc[col + stride];
 			if (curr[-1] > t || curr[+1] > t || top[-1] > t || top[0] > t || top[+1] > t || bottom[-1] > t || bottom[0] > t || bottom[+1] > t) {
-				pNms[col] = 1;
+				pNms[col] = 0xf;
 			}
 		}
 	}
