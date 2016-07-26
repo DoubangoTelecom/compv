@@ -131,7 +131,7 @@ void CannyHysteresis_Intrin_SSE2(compv_uscalar_t row, compv_uscalar_t width, com
 	}
 
 	if (col < width) {
-		hysteresis_row_C(row, col, width, height, stride, tLow, tHigh, grad, g0, e, e0, candidates);
+		CannyHysteresisRow_C(row, col, width, height, stride, tLow, tHigh, grad, g0, e, e0, candidates);
 	}
 }
 

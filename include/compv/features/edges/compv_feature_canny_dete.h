@@ -40,7 +40,7 @@ public:
 
 private:
 	COMPV_ERROR_CODE nms_gather(CompVPtrArray(uint8_t)& edges, uint16_t tLow, size_t rowStart, size_t rowCount);
-	void nms_supp();
+	void nms_apply();
 	COMPV_ERROR_CODE hysteresis(CompVPtrArray(uint8_t)& edges, uint16_t tLow, uint16_t tHigh, size_t rowStart, size_t rowCount);
 
 private:
@@ -60,8 +60,8 @@ private:
 
 #define COMPV_CANNY_PUSH_CANDIDATE(box, r, c) (box)->new_item(&ne), ne->row = (r), ne->col = (c)
 
-void nms_gather_row_C(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, uint16_t tLow, size_t colStart, size_t width, size_t stride);
-void hysteresis_row_C(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0, CompVPtr<CompVBox<CompVIndex>* >& candidates);
+void CannyNmsGatherRow_C(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, uint16_t tLow, size_t colStart, size_t width, size_t stride);
+void CannyHysteresisRow_C(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0, CompVPtr<CompVBox<CompVIndex>* >& candidates);
 
 static const float kTangentPiOver8 = 0.414213568f; // tan(22.5)
 static const int32_t kTangentPiOver8Int = static_cast<int32_t>(kTangentPiOver8 * (1 << 16));

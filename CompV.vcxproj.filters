@@ -190,6 +190,12 @@
     <Filter Include="Source Files\features\hough">
       <UniqueIdentifier>{d106a962-e8b3-434d-8f0b-a007ae31be19}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\intrinsics\x86\features\hough">
+      <UniqueIdentifier>{525fe4c4-47a7-4f70-bed1-d8b7fe1243c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\intrinsics\x86\features\hough">
+      <UniqueIdentifier>{2c37c402-858d-4775-9fc7-1f273205ee1c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
@@ -489,6 +495,9 @@
     <ClInclude Include="include\compv\features\hough\compv_feature_houghstd.h">
       <Filter>Header Files\features\hough</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\intrinsics\x86\features\hough\compv_feature_houghstd_intrin_sse2.h">
+      <Filter>Header Files\intrinsics\x86\features\hough</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_debug.cxx">
@@ -766,6 +775,9 @@
     </ClCompile>
     <ClCompile Include="features\hough\compv_feature_houghstd.cxx">
       <Filter>Source Files\features\hough</Filter>
+    </ClCompile>
+    <ClCompile Include="intrinsics\x86\features\hough\compv_feature_houghstd_intrin_sse2.cxx">
+      <Filter>Source Files\intrinsics\x86\features\hough</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

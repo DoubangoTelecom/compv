@@ -25,8 +25,8 @@ COMPV_EXTERNC void CannyNMSApply_Asm_X64_AVX2(COMPV_ALIGNED(AVX) uint16_t* grad,
 
 COMPV_NAMESPACE_BEGIN()
 
-#define COMPV_FEATURE_DETE_CANY_GRAD_MIN_SAMPLES_PER_THREAD	3 // must be >= 3 because of the convolution ("rowsOverlapCount")
-#define COMPV_FEATURE_DETE_CANY_NMS_MIN_SAMPLES_PER_THREAD	(20*20)
+#define COMPV_FEATURE_DETE_CANNY_GRAD_MIN_SAMPLES_PER_THREAD	3 // must be >= 3 because of the convolution ("rowsOverlapCount")
+#define COMPV_FEATURE_DETE_CANNY_NMS_MIN_SAMPLES_PER_THREAD	(20*20)
 
 CompVEdgeDeteCanny::CompVEdgeDeteCanny(float tLow /*= COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW*/, float tHigh /*= COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH*/, int32_t kernSize /*= 3*/)
 	: CompVEdgeDete(COMPV_CANNY_ID)
@@ -120,7 +120,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 	size_t threadsCount = 1;
 	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
 	if (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) {
-		threadsCount = m_nImageHeight / COMPV_FEATURE_DETE_CANY_GRAD_MIN_SAMPLES_PER_THREAD;
+		threadsCount = m_nImageHeight / COMPV_FEATURE_DETE_CANNY_GRAD_MIN_SAMPLES_PER_THREAD;
 		threadsCount = COMPV_MATH_MIN_3(threadsCount, m_nImageHeight, (size_t)threadDisp->getThreadsCount());
 	}
 
@@ -216,7 +216,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 		COMPV_CHECK_EXP_RETURN(!m_pNms, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
 	if (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) {
-		threadsCount = (m_nImageHeight * m_nImageWidth) / COMPV_FEATURE_DETE_CANY_NMS_MIN_SAMPLES_PER_THREAD;
+		threadsCount = (m_nImageHeight * m_nImageWidth) / COMPV_FEATURE_DETE_CANNY_NMS_MIN_SAMPLES_PER_THREAD;
 		threadsCount = COMPV_MATH_MIN_3(threadsCount, m_nImageHeight, (size_t)threadDisp->getThreadsCount());
 	}
 	if (threadsCount > 1) {
@@ -240,7 +240,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNMS, rowStart, countLast), taskIds));
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 		// NMS supp
-		nms_supp();
+		nms_apply();
 		// Hysteresis
 		taskIds.clear();
 		for (threadIdx = 0, rowStart = 0; threadIdx < threadsCount - 1; ++threadIdx, rowStart += countAny) {
@@ -251,7 +251,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
 	}
 	else {
 		COMPV_CHECK_CODE_RETURN(nms_gather(edges, tLow, 0, m_nImageHeight));
-		nms_supp();
+		nms_apply();
 		COMPV_CHECK_CODE_RETURN(hysteresis(edges, tLow, tHigh, 0, m_nImageHeight));
 	}
 
@@ -298,14 +298,14 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, u
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	for (row = rowStart; row < maxRows; ++row) {
 		CompVMem::zero(e, m_nImageWidth);
-		nms_gather_row_C(nms, g, gx, gy, tLow, 1, maxCols, m_nImageStride);
+		CannyNmsGatherRow_C(nms, g, gx, gy, tLow, 1, maxCols, m_nImageStride);
 		gx += m_nImageStride, gy += m_nImageStride, g += m_nImageStride, e += m_nImageStride, nms += m_nImageStride;
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-void CompVEdgeDeteCanny::nms_supp()
+void CompVEdgeDeteCanny::nms_apply()
 {
 	// Private function -> do not check input parameters
 
@@ -376,7 +376,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVPtrArray(uint8_t)& edges, u
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	for (row = rowStart; row < rowEnd; ++row) {
-		hysteresis_row_C(row, 1, imageWidthMinus1, imageHeightMinus1, m_nImageStride, tLow, tHigh, grad, g0, e, e0, candidates);
+		CannyHysteresisRow_C(row, 1, imageWidthMinus1, imageHeightMinus1, m_nImageStride, tLow, tHigh, grad, g0, e, e0, candidates);
 		grad += m_nImageStride, e += m_nImageStride;
 	}
 	return COMPV_ERROR_CODE_S_OK;
@@ -392,7 +392,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::newObj(CompVPtr<CompVEdgeDete* >* dete, flo
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-void nms_gather_row_C(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, uint16_t tLow, size_t colStart, size_t maxCols, size_t stride)
+void CannyNmsGatherRow_C(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, uint16_t tLow, size_t colStart, size_t maxCols, size_t stride)
 {
 	int32_t gxInt, gyInt, absgyInt, absgxInt;
 	const int s = static_cast<const int>(stride);
@@ -423,7 +423,7 @@ void nms_gather_row_C(uint8_t* nms, const uint16_t* g, const int16_t* gx, const 
 	}
 }
 
-void hysteresis_row_C(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0, CompVPtr<CompVBox<CompVIndex>* >& candidates)
+void CannyHysteresisRow_C(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0, CompVPtr<CompVBox<CompVIndex>* >& candidates)
 {
 	const CompVIndex* edge;
 	uint8_t* p;

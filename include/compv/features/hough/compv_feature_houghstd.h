@@ -37,7 +37,9 @@ public:
 
 private:
 	COMPV_ERROR_CODE initCoords(float fRho, float fTheta, int32_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
-	COMPV_ERROR_CODE nms();
+	COMPV_ERROR_CODE acc_gather(const CompVPtrArray(uint8_t)& edges);
+	COMPV_ERROR_CODE nms_gather(size_t rowStart, size_t rowCount);
+	COMPV_ERROR_CODE nms_apply();
 
 private:
 	float m_fRho;
@@ -53,6 +55,10 @@ private:
 	CompVPtrArray(uint8_t) m_NMS;
 	CompVPtrBox(CompVCoordPolar2f) m_Coords;
 };
+
+void HoughStdNmsGatherRow_C(const int32_t * pAcc, size_t nAccStride, uint8_t* pNms, int32_t nThreshold, size_t colStart, size_t maxCols);
+void HoughStdNmsApplyRow_C(int32_t* pACC, uint8_t* pNMS, int32_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVPtrBox(CompVCoordPolar2f)& coords);
+void HoughStdAccGatherRow_C(int32_t* pACC, int32_t accStride, const uint8_t* pixels, int32_t colStart, int32_t maxCols, int32_t maxThetaCount, int32_t row, const int32_t* pCosRho, const int32_t* pSinRho);
 
 COMPV_NAMESPACE_END()
 

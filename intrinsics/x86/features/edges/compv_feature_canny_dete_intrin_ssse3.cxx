@@ -97,7 +97,7 @@ void CannyNMSGatherRow_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, const int16
 		}
 	}
 	if (col < width) {
-		nms_gather_row_C(nms, g, gx, gy, *tLow1, col, width, stride);
+		CannyNmsGatherRow_C(nms, g, gx, gy, *tLow1, col, width, stride);
 	}
 }
 
