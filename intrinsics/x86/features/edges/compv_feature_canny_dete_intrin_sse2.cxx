@@ -20,7 +20,7 @@ void CannyNMSApply_Intrin_SSE2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALIGNED(
 
 	__m128i xmm0;
 	compv_uscalar_t col_, row_;
-	const __m128i xmmZero = _mm_setzero_si128();
+	static const __m128i xmmZero = _mm_setzero_si128();
 	for (row_ = 1; row_ < height; ++row_) {
 		for (col_ = 0; col_ < width; col_ += 8) { // SIMD, starts at 0 (instead of 1) to have memory aligned
 			xmm0 = _mm_cmpeq_epi8(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&nms[col_])), xmmZero);

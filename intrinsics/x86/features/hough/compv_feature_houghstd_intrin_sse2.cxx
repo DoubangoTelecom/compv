@@ -54,6 +54,45 @@ void HoughStdNmsGatherRow_Intrin_SSE2(const int32_t * pAcc, compv_uscalar_t nAcc
 	}
 }
 
+// TODO(dmi): add ASM
+void HoughStdNmsApplyRow_Intrin_SSE2(COMPV_ALIGNED(SSE) int32_t* pACC, COMPV_ALIGNED(SSE) uint8_t* pNMS, int32_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t maxCols, CompVPtrBox(CompVCoordPolar2f)& coords)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	compv_uscalar_t col, maxColsSSE = maxCols - 15; // must not go beyond the stride as "acc" and "nms" have different ones
+	const __m128i xmmThreshold = _mm_set1_epi32(threshold);
+	__m128i xmm0, xmm1, xmm2;
+	static const __m128i xmmZero = _mm_setzero_si128();
+	int m0, mi;
+	CompVCoordPolar2f* coord;
+
+	for (col = 0; col < maxColsSSE; col += 16) { // start at zero to have alignment
+		xmm0 = _mm_cmpeq_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(&pNMS[col])), xmmZero);
+		xmm1 = _mm_unpacklo_epi8(xmm0, xmm0);
+		xmm2 = _mm_unpackhi_epi8(xmm0, xmm0);
+		m0 = _mm_movemask_epi8(
+			_mm_packs_epi16(_mm_packs_epi32(_mm_and_si128(_mm_unpacklo_epi16(xmm1, xmm1), _mm_cmpgt_epi32(_mm_load_si128(reinterpret_cast<const __m128i*>(&pACC[col])), xmmThreshold)), _mm_and_si128(_mm_unpackhi_epi16(xmm1, xmm1), _mm_cmpgt_epi32(_mm_load_si128(reinterpret_cast<const __m128i*>(&pACC[col + 4])), xmmThreshold))),
+			_mm_packs_epi32(_mm_and_si128(_mm_unpacklo_epi16(xmm2, xmm2), _mm_cmpgt_epi32(_mm_load_si128(reinterpret_cast<const __m128i*>(&pACC[col + 8])), xmmThreshold)), _mm_and_si128(_mm_unpackhi_epi16(xmm2, xmm2), _mm_cmpgt_epi32(_mm_load_si128(reinterpret_cast<const __m128i*>(&pACC[col + 12])), xmmThreshold)))));
+		if (m0) { 
+			for (mi = 0; mi < 16 && m0; ++mi, m0 >>= 1) {
+				if (m0 & 1) {
+					coords->new_item(&coord);
+					coord->count = pACC[col + mi];
+					coord->rho = static_cast<compv_float32_t>(barrier - row);
+					coord->theta = (col + mi) * theta;
+				}
+			}
+		}
+		_mm_store_si128(reinterpret_cast<__m128i*>(&pNMS[col]), xmmZero);
+		_mm_store_si128(reinterpret_cast<__m128i*>(&pACC[col]), xmmZero);
+		_mm_store_si128(reinterpret_cast<__m128i*>(&pACC[col + 4]), xmmZero);
+		_mm_store_si128(reinterpret_cast<__m128i*>(&pACC[col + 8]), xmmZero);
+		_mm_store_si128(reinterpret_cast<__m128i*>(&pACC[col + 12]), xmmZero);
+	}
+	if (col < maxCols) {
+		HoughStdNmsApplyRow_C(pACC, pNMS, threshold, theta, barrier, row, col, maxCols, coords);
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

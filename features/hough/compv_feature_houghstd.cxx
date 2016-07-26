@@ -251,6 +251,21 @@ COMPV_ERROR_CODE CompVHoughStd::nms_apply()
 		m_Coords->reset();
 	}
 
+#if COMPV_ARCH_X86
+	void (*HoughStdNmsApplyRow)(COMPV_ALIGNED(X) int32_t* pACC, COMPV_ALIGNED(X) uint8_t* pNMS, int32_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t maxCols, CompVPtrBox(CompVCoordPolar2f)& coords) = NULL;
+	if (cols >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(pACC) && COMPV_IS_ALIGNED_SSE(pNMS)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(HoughStdNmsApplyRow = HoughStdNmsApplyRow_Intrin_SSE2);
+	}
+	if (HoughStdNmsApplyRow) {
+		for (int32_t row = 0; row < rows; ++row) {
+			HoughStdNmsApplyRow(pACC, pNMS, m_nThreshold, m_fTheta, nBarrier, row, cols, m_Coords);
+			pACC += accStride, pNMS += nmsStride;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+#endif /* COMPV_ARCH_X86 */
+
+
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	for (int32_t row = 0; row < rows; ++row) {
 		HoughStdNmsApplyRow_C(pACC, pNMS, m_nThreshold, m_fTheta, nBarrier, row, 0, cols, m_Coords);
