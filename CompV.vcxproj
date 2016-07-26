@@ -77,6 +77,7 @@
     <ClInclude Include="include\compv\intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse41.h" />
     <ClInclude Include="include\compv\intrinsics\x86\features\hough\compv_feature_houghstd_intrin_sse2.h" />
+    <ClInclude Include="include\compv\intrinsics\x86\features\hough\compv_feature_houghstd_intrin_sse41.h" />
     <ClInclude Include="include\compv\intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_avx2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_sse2.h" />
     <ClInclude Include="include\compv\intrinsics\x86\image\conv\compv_imageconv_rgba_i420_intrin_avx2.h" />
@@ -209,6 +210,12 @@
     <ClCompile Include="intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse2.cxx" />
     <ClCompile Include="intrinsics\x86\features\fast\compv_feature_fast_dete_intrin_sse41.cxx" />
     <ClCompile Include="intrinsics\x86\features\hough\compv_feature_houghstd_intrin_sse2.cxx" />
+    <ClCompile Include="intrinsics\x86\features\hough\compv_feature_houghstd_intrin_sse41.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">__SSE4_1__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">__SSE4_1__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>

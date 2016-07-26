@@ -8,6 +8,7 @@
 #include "compv/compv_engine.h"
 
 #include "compv/intrinsics/x86/features/hough/compv_feature_houghstd_intrin_sse2.h"
+#include "compv/intrinsics/x86/features/hough/compv_feature_houghstd_intrin_sse41.h"
 
 static bool COMPV_INLINE __compareAccCountDec(const compv::CompVCoordPolar2f* i, const  compv::CompVCoordPolar2f* j) {
 	return (i->count > j->count);
@@ -190,10 +191,32 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(const CompVPtrArray(uint8_t)& edges)
 	const int32_t* pSinRho = m_SinRho->ptr();
 	const int32_t* pCosRho = m_CosRho->ptr();
 	int32_t *pACC = const_cast<int32_t*>(m_Accumulator->ptr(m_nBarrier));
+	int32_t theta, rhoInt32, col;
+
+#if COMPV_ARCH_X86
+	void (*HoughStdAccGatherRow)(int32_t* pACC, int32_t accStride, const uint8_t* pixels, int32_t maxCols, int32_t maxThetaCount, int32_t row, COMPV_ALIGNED(X) const int32_t* pCosRho, COMPV_ALIGNED(X) const int32_t* pSinRho) = NULL;
+	if (maxThetaCount >= 4 && CompVCpu::isEnabled(compv::kCpuFlagSSE41) && COMPV_IS_ALIGNED_SSE(pCosRho) && COMPV_IS_ALIGNED_SSE(pSinRho)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(HoughStdAccGatherRow = HoughStdAccGatherRow_Intrin_SSE41);
+	}
+	if (HoughStdAccGatherRow) {
+		for (int32_t row = 0; row < rowsInt32; ++row) {
+			HoughStdAccGatherRow(pACC, accStrideInt32, pixels, colsInt32, maxThetaCount, row, pCosRho, pSinRho);
+			pixels += edgeStride;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+#endif /* COMPV_ARCH_X86 */
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
 	for (int32_t row = 0; row < rowsInt32; ++row) {
-		HoughStdAccGatherRow_C(pACC, accStrideInt32, pixels, 0, colsInt32, maxThetaCount, row, pCosRho, pSinRho);
+		for (col = 0; col < colsInt32; ++col) {
+			if (pixels[col]) {
+				for (theta = 0; theta < maxThetaCount; ++theta) {
+					rhoInt32 = (col * pCosRho[theta] + row * pSinRho[theta]) >> 16;
+					pACC[theta - (rhoInt32 * accStride)]++; //!\\ Not thread-safe
+				}
+			}
+		}
 		pixels += edgeStride;
 	}
 	return COMPV_ERROR_CODE_S_OK;
@@ -308,19 +331,6 @@ void HoughStdNmsApplyRow_C(int32_t* pACC, uint8_t* pNMS, int32_t threshold, comp
 		}
 		pACC[col] = 0;
 	}	
-}
-
-void HoughStdAccGatherRow_C(int32_t* pACC, int32_t accStride, const uint8_t* pixels, int32_t colStart, int32_t maxCols, int32_t maxThetaCount, int32_t row, const int32_t* pCosRho, const int32_t* pSinRho)
-{
-	int32_t theta, rhoInt32;
-	for (int32_t col = colStart; col < maxCols; ++col) {
-		if (pixels[col]) {
-			for (theta = 0; theta < maxThetaCount; ++theta) {
-				rhoInt32 = (col * pCosRho[theta] + row * pSinRho[theta]) >> 16;
-				pACC[theta - (rhoInt32 * accStride)]++; //!\\ Not thread-safe
-			}
-		}
-	}
 }
 
 COMPV_NAMESPACE_END()
