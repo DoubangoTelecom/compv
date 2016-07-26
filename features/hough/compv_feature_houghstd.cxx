@@ -195,7 +195,7 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(const CompVPtrArray(uint8_t)& edges)
 
 #if COMPV_ARCH_X86
 	void (*HoughStdAccGatherRow)(int32_t* pACC, int32_t accStride, const uint8_t* pixels, int32_t maxCols, int32_t maxThetaCount, int32_t row, COMPV_ALIGNED(X) const int32_t* pCosRho, COMPV_ALIGNED(X) const int32_t* pSinRho) = NULL;
-	if (maxThetaCount >= 4 && CompVCpu::isEnabled(compv::kCpuFlagSSE41) && COMPV_IS_ALIGNED_SSE(pCosRho) && COMPV_IS_ALIGNED_SSE(pSinRho)) {
+	if (maxThetaCount >= 4 && CompVCpu::isEnabled(compv::kCpuFlagSSE41) && COMPV_IS_ALIGNED_SSE(pixels) && COMPV_IS_ALIGNED_SSE(edgeStride) && COMPV_IS_ALIGNED_SSE(pCosRho) && COMPV_IS_ALIGNED_SSE(pSinRho)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(HoughStdAccGatherRow = HoughStdAccGatherRow_Intrin_SSE41);
 	}
 	if (HoughStdAccGatherRow) {

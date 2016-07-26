@@ -6,9 +6,9 @@
 #define TEST_TYPE_MANDEKALOU	2
 #define TEST_TYPE_VALVE			3
 
-#define TEST_TYPE				TEST_TYPE_GIRL
+#define TEST_TYPE				TEST_TYPE_EQUIRECT
 
-#define HOUGH_LOOP_COUNT		1
+#define HOUGH_LOOP_COUNT		100
 
 #if TEST_TYPE == TEST_TYPE_GIRL
 #	define HOUGH_JPEG_IMG			"C:/Projects/GitHub/compv/tests/girl.jpg"

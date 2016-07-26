@@ -20,7 +20,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void HoughStdAccGatherRow_Intrin_SSE41(int32_t* pACC, int32_t accStride, const uint8_t* pixels, int32_t maxCols, int32_t maxThetaCount, int32_t row, COMPV_ALIGNED(SSE) const int32_t* pCosRho, COMPV_ALIGNED(SSE) const int32_t* pSinRho);
+void HoughStdAccGatherRow_Intrin_SSE41(int32_t* pACC, int32_t accStride, COMPV_ALIGNED(SSE) const uint8_t* pixels, int32_t maxCols, int32_t maxThetaCount, int32_t row, COMPV_ALIGNED(SSE) const int32_t* pCosRho, COMPV_ALIGNED(SSE) const int32_t* pSinRho);
 
 COMPV_NAMESPACE_END()
 
