@@ -39,7 +39,7 @@ private:
 	COMPV_ERROR_CODE initCoords(float fRho, float fTheta, int32_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
 	COMPV_ERROR_CODE acc_gather(const CompVPtrArray(uint8_t)& edges);
 	COMPV_ERROR_CODE nms_gather(size_t rowStart, size_t rowCount);
-	COMPV_ERROR_CODE nms_apply();
+	COMPV_ERROR_CODE nms_apply(size_t rowStart, size_t rowCount, CompVPtrBox(CompVCoordPolar2f)& coords);
 
 private:
 	float m_fRho;

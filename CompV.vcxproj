@@ -215,6 +215,8 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">__SSE4_1__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">__SSE4_1__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">__SSE4_1__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">__SSE4_1__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="intrinsics\x86\features\orb\compv_feature_orb_desc_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -530,6 +532,11 @@
       <FileType>Document</FileType>
     </YASM>
     <YASM Include="assembler\x86\features\edges\compv_feature_canny_dete_x86_sse.s">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <YASM Include="assembler\x86\features\hough\compv_feature_houghstd_x86.s">
       <FileType>Document</FileType>
     </YASM>
   </ItemGroup>

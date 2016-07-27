@@ -196,6 +196,9 @@
     <Filter Include="Header Files\intrinsics\x86\features\hough">
       <UniqueIdentifier>{2c37c402-858d-4775-9fc7-1f273205ee1c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Assembler Files\x86\features\hough">
+      <UniqueIdentifier>{b49d1db2-be78-4d3c-b319-933d985a7a2e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\compv_common.h">
@@ -943,5 +946,10 @@
     <YASM Include="assembler\x86\features\edges\compv_feature_canny_dete_x64_sse.s">
       <Filter>Assembler Files\x86\features\edges</Filter>
     </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assembler\x86\features\hough\compv_feature_houghstd_x86.s">
+      <Filter>Assembler Files\x86\features\hough</Filter>
+    </None>
   </ItemGroup>
 </Project>

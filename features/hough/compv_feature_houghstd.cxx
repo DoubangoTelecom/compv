@@ -78,6 +78,14 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVPtrArray(uint8_t)& edges, Com
 
 	// Accumulator gathering
 	COMPV_CHECK_CODE_RETURN(acc_gather(edges));
+
+	// Create result
+	if (!m_Coords) {
+		COMPV_CHECK_CODE_RETURN(CompVPtrBoxNew(CompVCoordPolar2f)(&m_Coords));
+	}
+	else {
+		m_Coords->reset();
+	}
 	
 	// Thread dispatcher
 	size_t threadsCount = 1;
@@ -89,28 +97,43 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVPtrArray(uint8_t)& edges, Com
 
 	// Non-maxima suppression (NMS)
 	if (threadsCount > 1) {
-		CompVAsyncTaskIds taskIds;
-		taskIds.reserve(threadsCount);
+		std::vector<CompVPtrBox(CompVCoordPolar2f) > coords(threadsCount);
 		const size_t countAny = (size_t)(m_Accumulator->rows() / threadsCount);
 		const size_t countLast = (size_t)countAny + (m_Accumulator->rows() % threadsCount);
 		auto funcPtrNmsGather = [&](size_t rowStart, size_t rowCount) -> COMPV_ERROR_CODE {
 			COMPV_CHECK_CODE_RETURN(nms_gather(rowStart, rowCount));
 			return COMPV_ERROR_CODE_S_OK;
 		};
+		auto funcPtrNmsApply = [&](size_t rowStart, size_t rowCount, size_t threadIdx) -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN(nms_apply(rowStart, rowCount, coords[threadIdx]));
+			return COMPV_ERROR_CODE_S_OK;
+		};
 		size_t rowStart, threadIdx;
 		// NMS gathering
+		CompVAsyncTaskIds taskIds;
+		taskIds.reserve(threadsCount);
 		for (threadIdx = 0, rowStart = 0; threadIdx < threadsCount - 1; ++threadIdx, rowStart += countAny) {
 			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNmsGather, rowStart, countAny), taskIds));
 		}
 		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNmsGather, rowStart, countLast), taskIds));
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+		// NMS-apply
+		taskIds.clear();
+		for (threadIdx = 0, rowStart = 0; threadIdx < threadsCount - 1; ++threadIdx, rowStart += countAny) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNmsApply, rowStart, countAny, threadIdx), taskIds));
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNmsApply, rowStart, countLast, threadIdx), taskIds));
+		for (threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
+			if (coords[threadIdx] && !coords[threadIdx]->empty()) {
+				COMPV_CHECK_CODE_RETURN(m_Coords->append(coords[threadIdx]->begin(), coords[threadIdx]->end()));
+			}
+		}
 	}
 	else {
 		COMPV_CHECK_CODE_RETURN(nms_gather(0, m_Accumulator->rows()));
+		COMPV_CHECK_CODE_RETURN(nms_apply(0, m_Accumulator->rows(), m_Coords));
 	}
-
-	// NMS-apply
-	COMPV_CHECK_CODE_RETURN(nms_apply());
 
 	// Set result
 	if (!m_Coords->empty()) {
@@ -257,21 +280,23 @@ COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::nms_apply()
+COMPV_ERROR_CODE CompVHoughStd::nms_apply(size_t rowStart, size_t rowCount, CompVPtrBox(CompVCoordPolar2f)& coords)
 {
-	int32_t rows = static_cast<int32_t>(m_Accumulator->rows());
 	size_t cols = m_Accumulator->cols();
-	uint8_t* pNMS = const_cast<uint8_t*>(m_NMS->ptr());
-	int32_t* pACC = const_cast<int32_t*>(m_Accumulator->ptr());
+	int32_t rEnd = static_cast<int32_t>(COMPV_MATH_MIN((rowStart + rowCount), m_Accumulator->rows()));
+	int32_t rStart = static_cast<int32_t>(COMPV_MATH_MAX(0, rowStart));
+	uint8_t* pNMS = const_cast<uint8_t*>(m_NMS->ptr(rStart));
+	int32_t* pACC = const_cast<int32_t*>(m_Accumulator->ptr(rStart));
 	size_t nmsStride, accStride;
 	int32_t nBarrier = static_cast<int32_t>(m_nBarrier);
 	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));
 	COMPV_CHECK_CODE_RETURN(m_Accumulator->strideInElts(accStride));
-	if (!m_Coords) {
-		COMPV_CHECK_CODE_RETURN(CompVPtrBoxNew(CompVCoordPolar2f)(&m_Coords));
+
+	if (!coords) {
+		COMPV_CHECK_CODE_RETURN(CompVPtrBoxNew(CompVCoordPolar2f)(&coords));
 	}
 	else {
-		m_Coords->reset();
+		coords->reset();
 	}
 
 #if COMPV_ARCH_X86
@@ -280,8 +305,8 @@ COMPV_ERROR_CODE CompVHoughStd::nms_apply()
 		COMPV_EXEC_IFDEF_INTRIN_X86(HoughStdNmsApplyRow = HoughStdNmsApplyRow_Intrin_SSE2);
 	}
 	if (HoughStdNmsApplyRow) {
-		for (int32_t row = 0; row < rows; ++row) {
-			HoughStdNmsApplyRow(pACC, pNMS, m_nThreshold, m_fTheta, nBarrier, row, cols, m_Coords);
+		for (int32_t row = rStart; row < rEnd; ++row) {
+			HoughStdNmsApplyRow(pACC, pNMS, m_nThreshold, m_fTheta, nBarrier, row, cols, coords);
 			pACC += accStride, pNMS += nmsStride;
 		}
 		return COMPV_ERROR_CODE_S_OK;
@@ -290,8 +315,8 @@ COMPV_ERROR_CODE CompVHoughStd::nms_apply()
 
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-	for (int32_t row = 0; row < rows; ++row) {
-		HoughStdNmsApplyRow_C(pACC, pNMS, m_nThreshold, m_fTheta, nBarrier, row, 0, cols, m_Coords);
+	for (int32_t row = rStart; row < rEnd; ++row) {
+		HoughStdNmsApplyRow_C(pACC, pNMS, m_nThreshold, m_fTheta, nBarrier, row, 0, cols, coords);
 		pACC += accStride, pNMS += nmsStride;
 	}
 	return COMPV_ERROR_CODE_S_OK;
