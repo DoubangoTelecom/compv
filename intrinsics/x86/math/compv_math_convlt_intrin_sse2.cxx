@@ -44,10 +44,10 @@ void MathConvlt1VertHz_8u16i16i_Intrin_SSE2(const uint8_t* inPtr, int16_t* outPt
 			outPtr += 16;
 		}
 		if (i < width_ - 7) {
-			xmmS0 = _mm_mullo_epi16(_mm_unpacklo_epi8(_mm_cvtsi64_si128(*reinterpret_cast<const uint64_t*>(&inPtr[0])), xmmZero), xmmCoeff0);
+			xmmS0 = _mm_mullo_epi16(_mm_unpacklo_epi8(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&inPtr[0])), xmmZero), xmmCoeff0);
 			for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
 				xmmCoeff = _mm_set1_epi16(vhkernPtr[k]);
-				xmmI0 = _mm_cvtsi64_si128(*reinterpret_cast<const uint64_t*>(&inPtr[m]));
+				xmmI0 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&inPtr[m]));
 				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(_mm_unpacklo_epi8(xmmI0, xmmZero), xmmCoeff));
 			}
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(outPtr), xmmS0);
@@ -62,7 +62,7 @@ void MathConvlt1VertHz_8u16i16i_Intrin_SSE2(const uint8_t* inPtr, int16_t* outPt
 				xmmI0 = _mm_cvtsi32_si128(*reinterpret_cast<const uint32_t*>(&inPtr[m]));
 				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(_mm_unpacklo_epi8(xmmI0, xmmZero), xmmCoeff));
 			}
-			*reinterpret_cast<uint64_t*>(outPtr) = static_cast<uint64_t>(_mm_cvtsi128_si64(xmmS0));
+			_mm_storel_epi64(reinterpret_cast<__m128i*>(outPtr), xmmS0);
 			i += 4;
 			inPtr += 4;
 			outPtr += 4;
@@ -120,12 +120,12 @@ void MathConvlt1VertHz_16i16i16i_Intrin_SSE2(COMPV_ALIGNED(SSE) const int16_t* i
 			outPtr += 8;
 		}
 		if (i < width_ - 3) {
-			xmmS0 = _mm_mullo_epi16(_mm_cvtsi64_si128(*reinterpret_cast<const uint64_t*>(&inPtr[0])), xmmCoeff0);
+			xmmS0 = _mm_mullo_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&inPtr[0])), xmmCoeff0);
 			for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
 				xmmCoeff = _mm_set1_epi16(vhkernPtr[k]);
-				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(_mm_cvtsi64_si128(*reinterpret_cast<const uint64_t*>(&inPtr[m])), xmmCoeff));
+				xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&inPtr[m])), xmmCoeff));
 			}
-			*reinterpret_cast<uint64_t*>(outPtr) = static_cast<uint64_t>(_mm_cvtsi128_si64(xmmS0));
+			_mm_storel_epi64(reinterpret_cast<__m128i*>(outPtr), xmmS0);
 			i += 4;
 			inPtr += 4;
 			outPtr += 4;

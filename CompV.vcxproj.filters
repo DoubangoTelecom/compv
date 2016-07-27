@@ -151,9 +151,6 @@
     <Filter Include="Header Files\math">
       <UniqueIdentifier>{6c7f8ab1-4047-4fda-be21-335d018dbee0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\math">
-      <UniqueIdentifier>{66f67e71-d867-4554-a2c7-5443948b67e7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Assembler Files\x86\math">
       <UniqueIdentifier>{c264af49-687a-47ea-b76c-1dabf4d60b9b}</UniqueIdentifier>
     </Filter>
@@ -198,6 +195,9 @@
     </Filter>
     <Filter Include="Assembler Files\x86\features\hough">
       <UniqueIdentifier>{b49d1db2-be78-4d3c-b319-933d985a7a2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math">
+      <UniqueIdentifier>{66f67e71-d867-4554-a2c7-5443948b67e7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -946,10 +946,6 @@
     <YASM Include="assembler\x86\features\edges\compv_feature_canny_dete_x64_sse.s">
       <Filter>Assembler Files\x86\features\edges</Filter>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assembler\x86\features\hough\compv_feature_houghstd_x86.s">
-      <Filter>Assembler Files\x86\features\hough</Filter>
-    </None>
+    <YASM Include="assembler\x86\features\hough\compv_feature_houghstd_x86.s" />
   </ItemGroup>
 </Project>
