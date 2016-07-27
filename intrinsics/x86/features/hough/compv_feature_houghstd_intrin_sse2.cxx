@@ -22,7 +22,6 @@ void HoughStdNmsGatherRow_Intrin_SSE2(const int32_t * pAcc, compv_uscalar_t nAcc
 	int stride = static_cast<int>(nAccStride);
 	__m128i xmmAcc, xmm0, xmm1;
 	const int32_t *curr, *top, *bottom;
-	int mask;
 
 	for (col = 1; col < maxColsSSE; col += 4) {
 		xmmAcc = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&pAcc[col]));
@@ -40,13 +39,7 @@ void HoughStdNmsGatherRow_Intrin_SSE2(const int32_t * pAcc, compv_uscalar_t nAcc
 			xmm1 = _mm_or_si128(xmm1, _mm_cmpgt_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&bottom[0])), xmmAcc));
 			xmm1 = _mm_or_si128(xmm1, _mm_cmpgt_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&bottom[+1])), xmmAcc));
 			xmm0 = _mm_and_si128(xmm0, xmm1);
-			mask = _mm_movemask_epi8(xmm0);
-			if (mask) {
-				pNms[col + 0] = (mask & 0x000F);
-				pNms[col + 1] = (mask & 0x00F0) >> 4;
-				pNms[col + 2] = (mask & 0x0F00) >> 8;
-				pNms[col + 3] = (mask & 0xF000) >> 12;
-			}
+			*reinterpret_cast<uint32_t*>(&pNms[col]) = static_cast<uint32_t>(_mm_cvtsi128_si32(_mm_packs_epi16(_mm_packs_epi32(xmm0, xmm0), xmm0))); // ASM: second argument for packs could be anything, we only need the first 4 Bytes
 		}
 	}
 	if (col < width) {
