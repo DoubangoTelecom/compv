@@ -25,6 +25,7 @@ void HoughStdAccGatherRow_Intrin_SSE41(int32_t* pACC, int32_t accStride, COMPV_A
 	const __m128i xmmRow = _mm_set1_epi32(row);
 	const __m128i xmmStride = _mm_set1_epi32(accStride);
 	static const __m128i xmm4 = _mm_set1_epi32(4);
+	static const __m128i xmm0123 = _mm_setr_epi32(0, 1, 2, 3);
 	int m0, mi;
 	for (col = 0; col < maxColsSSE; col += 16) {
 		m0 = _mm_movemask_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(&pixels[col])));
@@ -32,14 +33,12 @@ void HoughStdAccGatherRow_Intrin_SSE41(int32_t* pACC, int32_t accStride, COMPV_A
 			for (mi = 0; mi < 16 && m0; ++mi, m0 >>= 1) {
 				if (m0 & 1) {
 					xmmCol = _mm_set1_epi32(col + mi);
-					xmmTheta = _mm_setr_epi32(0, 1, 2, 3);
-					for (theta = 0; theta < maxThetaCountSSE; theta += 4) {
+					for (theta = 0, xmmTheta = xmm0123; theta < maxThetaCountSSE; theta += 4, xmmTheta = _mm_add_epi32(xmmTheta, xmm4)) {
 						xmmRho = _mm_srai_epi32(_mm_add_epi32(_mm_mullo_epi32(xmmCol, _mm_load_si128(reinterpret_cast<const __m128i*>(&pCosRho[theta]))),
 							_mm_mullo_epi32(xmmRow, _mm_load_si128(reinterpret_cast<const __m128i*>(&pSinRho[theta])))), 16);
 						xmm0 = _mm_sub_epi32(xmmTheta, _mm_mullo_epi32(xmmRho, xmmStride));
 						pACC[_mm_cvtsi128_si32(xmm0)]++;
 						pACC[_mm_extract_epi32(xmm0, 1)]++;
-						xmmTheta = _mm_add_epi32(xmmTheta, xmm4);
 						pACC[_mm_extract_epi32(xmm0, 2)]++;
 						pACC[_mm_extract_epi32(xmm0, 3)]++;
 					}
