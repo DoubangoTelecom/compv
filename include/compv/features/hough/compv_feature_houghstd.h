@@ -13,6 +13,8 @@
 #include "compv/features/compv_feature.h"
 #include "compv/parallel/compv_mutex.h"
 
+#include <vector>
+
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
 #endif
@@ -38,9 +40,9 @@ public:
 
 private:
 	COMPV_ERROR_CODE initCoords(float fRho, float fTheta, int32_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
-	COMPV_ERROR_CODE acc_gather(size_t rowStart, size_t rowCount, const CompVPtrArray(uint8_t)& edges);
-	COMPV_ERROR_CODE nms_gather(size_t rowStart, size_t rowCount);
-	COMPV_ERROR_CODE nms_apply(size_t rowStart, size_t rowCount, CompVPtrBox(CompVCoordPolar2f)& coords);
+	COMPV_ERROR_CODE acc_gather(size_t rowStart, size_t rowCount, CompVPtrArray(int32_t)& acc, const CompVPtrArray(uint8_t)& edges);
+	COMPV_ERROR_CODE nms_gather(size_t rowStart, size_t rowCount, CompVPtrArray(int32_t)& acc);
+	COMPV_ERROR_CODE nms_apply(size_t rowStart, size_t rowCount, CompVPtrArray(int32_t)& acc, CompVPtrBox(CompVCoordPolar2f)& coords);
 
 private:
 	float m_fRho;
@@ -52,7 +54,6 @@ private:
 	size_t m_nBarrier;
 	CompVPtrArray(int32_t) m_SinRho;
 	CompVPtrArray(int32_t) m_CosRho;
-	CompVPtrArray(int32_t) m_Accumulator;
 	CompVPtrArray(uint8_t) m_NMS;
 	CompVPtrBox(CompVCoordPolar2f) m_Coords;
 };

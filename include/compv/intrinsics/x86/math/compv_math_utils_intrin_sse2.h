@@ -18,7 +18,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-
+void MathUtilsSum2_32i32i_Intrin_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, COMPV_ALIGNED(SSE) const int32_t* b, COMPV_ALIGNED(SSE) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 
 COMPV_NAMESPACE_END()
 

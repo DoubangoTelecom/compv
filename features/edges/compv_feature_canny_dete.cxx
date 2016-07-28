@@ -276,8 +276,8 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVPtrArray(uint8_t)& edges, u
 
 	// non-maximasupp is multi-threaded and we will use this property to zero the edge buffer with low cost (compared to edges->zeroall() which is not MT)
 	if (rowStart == 1) { // First time ?
-		CompVMem::zero(const_cast<uint8_t*>(edges->ptr(0)), m_nImageWidth); // zero first line
-		CompVMem::zero(const_cast<uint8_t*>(edges->ptr(m_nImageHeight - 1)), m_nImageWidth); // zero last line
+		COMPV_CHECK_CODE_RETURN(edges->zero_row(0)); // zero first line
+		COMPV_CHECK_CODE_RETURN(edges->zero_row(m_nImageHeight - 1)); // zero last line
 	}
 
 #if COMPV_ARCH_X86

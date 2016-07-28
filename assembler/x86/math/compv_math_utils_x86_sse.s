@@ -12,6 +12,7 @@ COMPV_YASM_DEFAULT_REL
 
 global sym(MathUtilsSumAbs_16i16u_Asm_X86_SSSE3)
 global sym(MathUtilsSum_8u32u_Asm_X86_SSSE3)
+global sym(MathUtilsSum2_32i32i_Asm_X86_SSE2)
 
 section .data
 
@@ -215,6 +216,99 @@ sym(MathUtilsSum_8u32u_Asm_X86_SSSE3):
 
 	mov rax, arg(2)
 	mov [rax], dword ebx
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const int32_t* a
+; arg(1) -> COMPV_ALIGNED(SSE) const int32_t* b
+; arg(2) -> COMPV_ALIGNED(SSE) int32_t* s
+; arg(3) -> compv_uscalar_t width
+; arg(4) -> compv_uscalar_t height
+; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
+sym(MathUtilsSum2_32i32i_Asm_X86_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	; alloc memory
+	sub rsp, 8
+	; [rsp + 0] = strideInBytes
+
+	mov rax, arg(5)
+	shl rax, 2
+	mov [rsp + 0], rax
+
+	mov rsi, arg(0) ; rsi = a
+	mov rdi, arg(1) ; rdi = b
+	mov rbx, arg(2) ; rbx = s
+	mov rdx, arg(4) ; rdx = height
+	mov rax, arg(3) ; rax = width
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopRows
+		lea rax, [rax - 15] ; rax = width - 15
+		xor rcx, rcx ; rcx = i = 0
+		cmp rcx, rax
+		jge .EndOfLoopCols16
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < width_ - 15; i += 16) 
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		.LoopCols16
+			lea rcx, [rcx + 16]
+			movdqa xmm0, [rsi + rcx*4 - 64]
+			movdqa xmm1, [rsi + rcx*4 - 48]
+			movdqa xmm2, [rsi + rcx*4 - 32]
+			movdqa xmm3, [rsi + rcx*4 - 16]
+			paddd xmm0, [rdi + rcx*4 - 64]
+			paddd xmm1, [rdi + rcx*4 - 48]
+			cmp rcx, rax
+			paddd xmm2, [rdi + rcx*4 - 32]
+			paddd xmm3, [rdi + rcx*4 - 16]
+			movdqa [rbx + rcx*4 - 64], xmm0
+			movdqa [rbx + rcx*4 - 48], xmm1
+			movdqa [rbx + rcx*4 - 32], xmm2
+			movdqa [rbx + rcx*4 - 16], xmm3			
+			jl .LoopCols16
+		.EndOfLoopCols16
+
+		lea rax, [rax + 15] ; rax = width
+		cmp rcx, rax
+		jge .EndOfLoopCols4
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (; i < width_; i += 4)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		.LoopCols4
+			lea rcx, [rcx + 4]
+			movdqa xmm0, [rsi + rcx*4 - 16]
+			cmp rcx, rax
+			paddd xmm0, [rdi + rcx*4 - 16]
+			movdqa [rbx + rcx*4 - 16], xmm0			
+			jl .LoopCols4
+		.EndOfLoopCols4
+		
+		add rsi, [rsp + 0]
+		add rdi, [rsp + 0]
+		add rbx, [rsp + 0]
+
+		dec rdx
+		jnz .LoopRows
+
+	; free memory
+	add rsp, 8
 
 	;; begin epilog ;;
 	pop rbx

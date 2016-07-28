@@ -76,10 +76,6 @@ void HoughStdNmsApplyRow_Intrin_SSE2(COMPV_ALIGNED(SSE) int32_t* pACC, COMPV_ALI
 			}
 		}
 		_mm_store_si128(reinterpret_cast<__m128i*>(&pNMS[col]), xmmZero);
-		_mm_store_si128(reinterpret_cast<__m128i*>(&pACC[col]), xmmZero);
-		_mm_store_si128(reinterpret_cast<__m128i*>(&pACC[col + 4]), xmmZero);
-		_mm_store_si128(reinterpret_cast<__m128i*>(&pACC[col + 8]), xmmZero);
-		_mm_store_si128(reinterpret_cast<__m128i*>(&pACC[col + 12]), xmmZero);
 	}
 	if (col < maxCols) {
 		HoughStdNmsApplyRow_C(pACC, pNMS, threshold, theta, barrier, row, col, maxCols, coords);

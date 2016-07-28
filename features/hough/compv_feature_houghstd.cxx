@@ -5,6 +5,7 @@
 * WebSite: http://compv.org
 */
 #include "compv/features/hough/compv_feature_houghstd.h"
+#include "compv/math/compv_math_utils.h"
 #include "compv/compv_engine.h"
 
 #include "compv/intrinsics/x86/features/hough/compv_feature_houghstd_intrin_sse2.h"
@@ -81,12 +82,10 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVPtrArray(uint8_t)& edges, Com
 	size_t threadsCountNMS = 1, threadsCountACC = 1;
 	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
 	if (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) {
-		threadsCountNMS = (m_Accumulator->rows() * m_Accumulator->cols()) / COMPV_FEATURE_HOUGHSTD_NMS_MIN_SAMPLES_PER_THREAD;
-		threadsCountNMS = COMPV_MATH_MIN_3(threadsCountNMS, m_Accumulator->rows(), (size_t)threadDisp->getThreadsCount());
-#if 0
+		threadsCountNMS = (m_NMS->rows() * m_NMS->cols()) / COMPV_FEATURE_HOUGHSTD_NMS_MIN_SAMPLES_PER_THREAD;
+		threadsCountNMS = COMPV_MATH_MIN_3(threadsCountNMS, m_NMS->rows(), (size_t)threadDisp->getThreadsCount());
 		threadsCountACC = (edges->rows() * edges->cols()) / COMPV_FEATURE_HOUGHSTD_ACC_MIN_SAMPLES_PER_THREAD;
 		threadsCountACC = COMPV_MATH_MIN_3(threadsCountACC, edges->rows(), (size_t)threadDisp->getThreadsCount());
-#endif
 	}
 
 	// Create result
@@ -98,40 +97,51 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVPtrArray(uint8_t)& edges, Com
 	}
 
 	// Accumulator gathering
+	CompVPtrArray(int32_t) acc_;
 	if (threadsCountACC > 1) {
-		//COMPV_CHECK_CODE_RETURN(acc_gather(edges));
+		std::vector<CompVPtrArray(int32_t) > acc(threadsCountACC);
 		const size_t countAny = (size_t)(edges->rows() / threadsCountACC);
 		const size_t countLast = (size_t)countAny + (edges->rows() % threadsCountACC);
-		auto funcPtrAccGather = [&](size_t rowStart, size_t rowCount) -> COMPV_ERROR_CODE {
-			COMPV_CHECK_CODE_RETURN(acc_gather(rowStart, rowCount, edges));
+		auto funcPtrAccGather = [&](size_t rowStart, size_t rowCount, size_t threadIdx) -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN(acc_gather(rowStart, rowCount, acc[threadIdx], edges));
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		size_t rowStart, threadIdx;
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCountACC);
 		for (threadIdx = 0, rowStart = 0; threadIdx < threadsCountACC - 1; ++threadIdx, rowStart += countAny) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrAccGather, rowStart, countAny), taskIds));
-			// FIXME
-			//COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrAccGather, rowStart, countAny, threadIdx), taskIds));
 		}
-		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrAccGather, rowStart, countLast), taskIds));
-		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrAccGather, rowStart, countLast, threadIdx), taskIds));
+		COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[0]));
+		
+		int32_t* acc_sum = const_cast<int32_t*>(acc[0]->ptr(0));
+		size_t acc_width = acc[0]->cols();
+		size_t acc_height = acc[0]->rows();
+		size_t acc_stride;
+		COMPV_CHECK_CODE_RETURN(acc[0]->strideInElts(acc_stride));
+		for (threadIdx = 1; threadIdx < threadsCountACC; ++threadIdx) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
+			COMPV_CHECK_CODE_RETURN(CompVMathUtils::sum2<int32_t>(acc_sum, acc[threadIdx]->ptr(), acc_sum, acc_width, acc_height, acc_stride));
+		}
+
+		acc_ = acc[0];
 	}
 	else {
-		COMPV_CHECK_CODE_RETURN(acc_gather(0, edges->rows(), edges));
+		COMPV_CHECK_CODE_RETURN(acc_gather(0, edges->rows(), acc_, edges));
 	}
 
 	// Non-maxima suppression (NMS)
 	if (threadsCountNMS > 1) {
 		std::vector<CompVPtrBox(CompVCoordPolar2f) > coords(threadsCountNMS);
-		const size_t countAny = (size_t)(m_Accumulator->rows() / threadsCountNMS);
-		const size_t countLast = (size_t)countAny + (m_Accumulator->rows() % threadsCountNMS);
+		const size_t countAny = (size_t)(m_NMS->rows() / threadsCountNMS);
+		const size_t countLast = (size_t)countAny + (m_NMS->rows() % threadsCountNMS);
 		auto funcPtrNmsGather = [&](size_t rowStart, size_t rowCount) -> COMPV_ERROR_CODE {
-			COMPV_CHECK_CODE_RETURN(nms_gather(rowStart, rowCount));
+			COMPV_CHECK_CODE_RETURN(nms_gather(rowStart, rowCount, acc_));
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		auto funcPtrNmsApply = [&](size_t rowStart, size_t rowCount, size_t threadIdx) -> COMPV_ERROR_CODE {
-			COMPV_CHECK_CODE_RETURN(nms_apply(rowStart, rowCount, coords[threadIdx]));
+			COMPV_CHECK_CODE_RETURN(nms_apply(rowStart, rowCount, acc_, coords[threadIdx]));
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		size_t rowStart, threadIdx;
@@ -157,8 +167,8 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVPtrArray(uint8_t)& edges, Com
 		}
 	}
 	else {
-		COMPV_CHECK_CODE_RETURN(nms_gather(0, m_Accumulator->rows()));
-		COMPV_CHECK_CODE_RETURN(nms_apply(0, m_Accumulator->rows(), m_Coords));
+		COMPV_CHECK_CODE_RETURN(nms_gather(0, m_NMS->rows(), acc_));
+		COMPV_CHECK_CODE_RETURN(nms_apply(0, m_NMS->rows(), acc_, m_Coords));
 	}
 
 	// Set result
@@ -200,8 +210,6 @@ COMPV_ERROR_CODE CompVHoughStd::initCoords(float fRho, float fTheta, int32_t nTh
 		// rho = x*cos(t) + y*sin(t), "cos" and "sin" in [-1, 1] which means we have (x+y)*2 values
 		const size_t maxRhoCount = COMPV_MATH_ROUNDFU_2_INT((((nWidth + nHeight) << 1) + 1) / fRho, size_t);
 		const size_t maxThetaCount = COMPV_MATH_ROUNDFU_2_INT(kfMathTrigPi / fTheta, size_t);
-		COMPV_CHECK_CODE_RETURN(CompVArray<int32_t>::newObjAligned(&m_Accumulator, maxRhoCount, maxThetaCount));
-		COMPV_CHECK_CODE_RETURN(m_Accumulator->zero_rows());
 		COMPV_CHECK_CODE_RETURN(CompVArray<uint8_t>::newObjAligned(&m_NMS, maxRhoCount, maxThetaCount));
 		COMPV_CHECK_CODE_RETURN(m_NMS->zero_rows());
 		COMPV_CHECK_CODE_RETURN(CompVArray<int32_t>::newObjAligned(&m_SinRho, 1, maxThetaCount));
@@ -226,21 +234,25 @@ COMPV_ERROR_CODE CompVHoughStd::initCoords(float fRho, float fTheta, int32_t nTh
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, const CompVPtrArray(uint8_t)& edges)
+COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, CompVPtrArray(int32_t)& acc, const CompVPtrArray(uint8_t)& edges)
 {
+	if (!acc || acc->rows() != m_NMS->rows() || acc->cols() != m_NMS->cols()) {
+		COMPV_CHECK_CODE_RETURN(CompVArray<int32_t>::newObjAligned(&acc, m_NMS->rows(), m_NMS->cols()));
+		COMPV_CHECK_CODE_RETURN(acc->zero_rows());
+	}
 	size_t nmsStride, accStride;
 	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));
-	COMPV_CHECK_CODE_RETURN(m_Accumulator->strideInElts(accStride));
+	COMPV_CHECK_CODE_RETURN(acc->strideInElts(accStride));
 	const int32_t accStrideInt32 = static_cast<int32_t>(accStride);
 	int32_t rEnd = static_cast<int32_t>(COMPV_MATH_MIN((rowStart + rowCount), edges->rows()));
 	int32_t rStart = static_cast<int32_t>(COMPV_MATH_MAX(0, rowStart));
 	int32_t colsInt32 = static_cast<int32_t>(edges->cols());
 	const size_t edgeStride = edges->strideInBytes();
 	const uint8_t* pixels = edges->ptr(rStart);
-	const int32_t maxThetaCount = static_cast<int32_t>(m_Accumulator->cols());
+	const int32_t maxThetaCount = static_cast<int32_t>(acc->cols());
 	const int32_t* pSinRho = m_SinRho->ptr();
 	const int32_t* pCosRho = m_CosRho->ptr();
-	int32_t *pACC = const_cast<int32_t*>(m_Accumulator->ptr(m_nBarrier));
+	int32_t *pACC = const_cast<int32_t*>(acc->ptr(m_nBarrier));
 	int32_t theta, rhoInt32, col;
 
 #if COMPV_ARCH_X86
@@ -273,18 +285,18 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, con
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount)
+COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount, CompVPtrArray(int32_t)& acc)
 {
-	size_t rows = m_Accumulator->rows();
-	size_t maxCols = m_Accumulator->cols() - 1;	
+	size_t rows = m_NMS->rows();
+	size_t maxCols = m_NMS->cols() - 1;	
 	size_t rowEnd = COMPV_MATH_MIN((rowStart + rowCount), (rows - 1));
 	rowStart = COMPV_MATH_MAX(1, rowStart);
 
-	const int32_t *pACC = m_Accumulator->ptr(rowStart);
+	const int32_t *pACC = acc->ptr(rowStart);
 	uint8_t* pNMS = const_cast<uint8_t*>(m_NMS->ptr(rowStart));
 	size_t nmsStride, accStride, row;
 	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));
-	COMPV_CHECK_CODE_RETURN(m_Accumulator->strideInElts(accStride));
+	COMPV_CHECK_CODE_RETURN(acc->strideInElts(accStride));
 
 #if COMPV_ARCH_X86
 	void (*HoughStdNmsGatherRow)(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, int32_t nThreshold, compv_uscalar_t width) = NULL;
@@ -308,17 +320,17 @@ COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::nms_apply(size_t rowStart, size_t rowCount, CompVPtrBox(CompVCoordPolar2f)& coords)
+COMPV_ERROR_CODE CompVHoughStd::nms_apply(size_t rowStart, size_t rowCount, CompVPtrArray(int32_t)& acc, CompVPtrBox(CompVCoordPolar2f)& coords)
 {
-	size_t cols = m_Accumulator->cols();
-	int32_t rEnd = static_cast<int32_t>(COMPV_MATH_MIN((rowStart + rowCount), m_Accumulator->rows()));
+	size_t cols = m_NMS->cols();
+	int32_t rEnd = static_cast<int32_t>(COMPV_MATH_MIN((rowStart + rowCount), m_NMS->rows()));
 	int32_t rStart = static_cast<int32_t>(COMPV_MATH_MAX(0, rowStart));
 	uint8_t* pNMS = const_cast<uint8_t*>(m_NMS->ptr(rStart));
-	int32_t* pACC = const_cast<int32_t*>(m_Accumulator->ptr(rStart));
+	int32_t* pACC = const_cast<int32_t*>(acc->ptr(rStart));
 	size_t nmsStride, accStride;
 	int32_t nBarrier = static_cast<int32_t>(m_nBarrier);
 	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));
-	COMPV_CHECK_CODE_RETURN(m_Accumulator->strideInElts(accStride));
+	COMPV_CHECK_CODE_RETURN(acc->strideInElts(accStride));
 
 	if (!coords) {
 		COMPV_CHECK_CODE_RETURN(CompVPtrBoxNew(CompVCoordPolar2f)(&coords));
@@ -382,7 +394,6 @@ void HoughStdNmsApplyRow_C(int32_t* pACC, uint8_t* pNMS, int32_t threshold, comp
 			coord->rho = static_cast<compv_float32_t>(barrier - row);
 			coord->theta = col * theta;
 		}
-		pACC[col] = 0;
 	}	
 }
 

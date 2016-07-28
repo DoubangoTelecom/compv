@@ -18,6 +18,7 @@ COMPV_EXTERNC void MathUtilsSumAbs_16i16u_Asm_X86_SSSE3(const COMPV_ALIGNED(SSE)
 COMPV_EXTERNC void MathUtilsSumAbs_16i16u_Asm_X86_AVX2(const COMPV_ALIGNED(AVX) int16_t* a, const COMPV_ALIGNED(AVX) int16_t* b, COMPV_ALIGNED(AVX) uint16_t* r, compv::compv_uscalar_t width, compv::compv_uscalar_t height, COMPV_ALIGNED(AVX) compv::compv_uscalar_t stride);
 COMPV_EXTERNC void MathUtilsSum_8u32u_Asm_X86_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* data, compv::compv_uscalar_t count, uint32_t *sum1);
 COMPV_EXTERNC void MathUtilsSum_8u32u_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* data, compv::compv_uscalar_t count, uint32_t *sum1);
+COMPV_EXTERNC void MathUtilsSum2_32i32i_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, COMPV_ALIGNED(SSE) const int32_t* b, COMPV_ALIGNED(SSE) int32_t* s, compv::compv_uscalar_t width, compv::compv_uscalar_t height, COMPV_ALIGNED(SSE) compv::compv_uscalar_t stride);
 #endif /* COMPV_ARCH_X86 && COMPV_ASM */
 
 COMPV_NAMESPACE_BEGIN()
@@ -202,6 +203,24 @@ COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t count, uint32_t &r
 	}
 #endif /* COMPV_ARCH_X86 */
 	COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum_C<uint8_t>(a, count, r)));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template<>
+COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_t* s, size_t width, size_t height, size_t stride)
+{
+#if COMPV_ARCH_X86
+	void (*MathUtilsSum2_32i32i)(COMPV_ALIGNED(X) const int32_t* a, COMPV_ALIGNED(X) const int32_t* b, COMPV_ALIGNED(X) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride) = NULL;
+	if (width >= 4 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(a) && COMPV_IS_ALIGNED_SSE(b) && COMPV_IS_ALIGNED_SSE(stride*sizeof(int32_t))) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(MathUtilsSum2_32i32i = MathUtilsSum2_32i32i_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X86(MathUtilsSum2_32i32i = MathUtilsSum2_32i32i_Asm_X86_SSE2);
+	}
+	if (MathUtilsSum2_32i32i) {
+		MathUtilsSum2_32i32i(a, b, s, (compv_uscalar_t)width, (compv_uscalar_t)height, (compv_uscalar_t)stride);
+		return COMPV_ERROR_CODE_S_OK;
+	}
+#endif /* COMPV_ARCH_X86 */
+	COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum2_C<int32_t, int32_t>(a, b, s, width, height, stride)));
 	return COMPV_ERROR_CODE_S_OK;
 }
 

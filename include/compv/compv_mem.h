@@ -36,6 +36,8 @@ public:
     static COMPV_ERROR_CODE copy(void* dstPtr, const void*srcPtr, size_t size);
     static COMPV_ERROR_CODE copyNTA(void* dstPtr, const void*srcPtr, size_t size);
 
+	static COMPV_ERROR_CODE set(void* dstPtr, compv_scalar_t val, compv_uscalar_t count, compv_uscalar_t sizeOfEltInBytes = 1);
+
     static COMPV_ERROR_CODE zero(void* dstPtr, size_t size);
     static COMPV_ERROR_CODE zeroNTA(void* dstPtr, size_t size);
 
@@ -68,6 +70,9 @@ private:
     static bool s_bInitialize;
     static std::map<uintptr_t, compv_special_mem_t > s_Specials;
     static CompVPtr<CompVMutex* >s_SpecialsMutex;
+	static void(*MemSetDword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
+	static void(*MemSetQword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
+	static void(*MemSetDQword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
     COMPV_DISABLE_WARNINGS_END()
 };
 

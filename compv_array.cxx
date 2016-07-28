@@ -99,6 +99,15 @@ COMPV_ERROR_CODE CompVArray<T>::zero_all()
 }
 
 template<class T>
+COMPV_ERROR_CODE CompVArray<T>::zero_row(size_t row)
+{
+	void* ptr_ = (void*)ptr(row);
+	COMPV_CHECK_EXP_RETURN(!ptr_ || row >= rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_CODE_RETURN(CompVMem::zero(ptr_, rowInBytes()));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template<class T>
 COMPV_ERROR_CODE CompVArray<T>::zero_rows()
 {
 	if (ptr() && rows() && cols()) {

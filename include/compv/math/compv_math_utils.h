@@ -132,6 +132,14 @@ public:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
+	template <typename InputType, typename OutputType>
+	static COMPV_ERROR_CODE sum2(const InputType* a, const InputType* b, OutputType* s, size_t width, size_t height, size_t stride)
+	{
+		COMPV_CHECK_EXP_RETURN(!a || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum2_C<InputType, OutputType>(a, b, s, width, height, stride)));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
 	// compute gradient using L1 distance (g = abs(gx) + abs(gy)) and the maximum value
 	template <typename InputType, typename OutputType>
 	static COMPV_ERROR_CODE gradientL1(const InputType* gx, const InputType* gy, OutputType*& g, size_t width, size_t height, size_t stride, OutputType* max = NULL)
@@ -219,6 +227,22 @@ private:
 			return COMPV_ERROR_CODE_S_OK;
 		}
 
+		template <typename InputType, typename OutputType>
+		static COMPV_ERROR_CODE sum2_C(const InputType* a, const InputType* b, OutputType* s, size_t width, size_t height, size_t stride)
+		{
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+			size_t i, j;
+			for (j = 0; j < height; ++j) {
+				for (i = 0; i < width; ++i) {
+					s[i] = a[i] + b[i];
+				}
+				a += stride;
+				b += stride;
+				s += stride;
+			}
+			return COMPV_ERROR_CODE_S_OK;
+		}
+
 		template <typename InputType>
 		static COMPV_ERROR_CODE mean_C(const InputType* data, size_t count, InputType &mean)
 		{
@@ -273,6 +297,7 @@ private:
 
 extern template COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint16_t*& r, size_t width, size_t height, size_t stride);
 extern template COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t count, uint32_t &r);
+extern template COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_t* s, size_t width, size_t height, size_t stride);
 extern template COMPV_ERROR_CODE CompVMathUtils::mean(const uint8_t* data, size_t count, uint8_t &mean);
 
 COMPV_NAMESPACE_END()

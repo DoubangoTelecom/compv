@@ -11,11 +11,46 @@
 
 COMPV_YASM_DEFAULT_REL
 
+global sym(MemSetDword_Asm_X86_SSE2)
+global sym(MemSetQword_Asm_X86_SSE2)
+global sym(MemSetDQword_Asm_X86_SSE2)
 global sym(MemCopyNTA_Asm_Aligned11_X86_SSE2)
 
 section .data
 
 section .text
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; %1 -> sizeOfEltmInBytes
+; %2 -> instruction
+; arg(0) -> void* dstPtr
+; arg(1) -> compv_scalar_t val
+; arg(2) -> compv_uscalar_t count
+%macro MemSet_Asm_X86_SSE2 2
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 3	
+	mov rax, arg(1)
+	movd xmm0, rax
+	pshufd xmm0, xmm0, 0x0
+	mov rcx, arg(2)
+	mov rax, arg(0)
+	.Loop
+		%2 [rax], xmm0
+		dec rcx
+		lea rax, [rax + %1]
+		jnz .Loop
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+%endmacro
+sym(MemSetDword_Asm_X86_SSE2):
+	MemSet_Asm_X86_SSE2 4, movd
+sym(MemSetQword_Asm_X86_SSE2):
+	MemSet_Asm_X86_SSE2 8, movq
+sym(MemSetDQword_Asm_X86_SSE2):
+	MemSet_Asm_X86_SSE2 16, movdqa
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; size must be > 16 and it's up to the caller to check it

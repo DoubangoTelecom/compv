@@ -35,6 +35,10 @@ COMPV_NAMESPACE_BEGIN()
 #if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
 COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X86_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
 COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X86_AVX(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
+COMPV_EXTERNC void MemSetDword_Asm_X86(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
+COMPV_EXTERNC void MemSetDword_Asm_X86_SSE2(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
+COMPV_EXTERNC void MemSetQword_Asm_X86_SSE2(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
+COMPV_EXTERNC void MemSetDQword_Asm_X86_SSE2(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
 #endif
 // X64
 #if defined(COMPV_ARCH_X64) && defined(COMPV_ASM)
@@ -45,6 +49,9 @@ COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X64_AVX(COMPV_ALIGNED(SSE) void* dst
 std::map<uintptr_t, compv_special_mem_t > CompVMem::s_Specials;
 CompVPtr<CompVMutex* > CompVMem::s_SpecialsMutex;
 bool CompVMem::s_bInitialize = false;
+void(*CompVMem::MemSetDword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count) = NULL;
+void(*CompVMem::MemSetQword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count) = NULL;
+void(*CompVMem::MemSetDQword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count) = NULL;
 
 typedef void(*CompVMemCopy)(void* dstPtr, const void*srcPtr, compv_uscalar_t size);
 
@@ -61,6 +68,12 @@ COMPV_ERROR_CODE CompVMem::init()
         COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&s_SpecialsMutex));
         COMPV_DEBUG_INFO("Memory check enabled for debugging, this may slowdown the code");
 #endif
+		COMPV_EXEC_IFDEF_ASM_X86(CompVMem::MemSetDword = MemSetDword_Asm_X86);
+		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+			COMPV_EXEC_IFDEF_ASM_X86(CompVMem::MemSetDword = MemSetDword_Asm_X86_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X86(CompVMem::MemSetQword = MemSetQword_Asm_X86_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X86(CompVMem::MemSetDQword = MemSetDQword_Asm_X86_SSE2);
+		}
         s_bInitialize = true;
     }
     return COMPV_ERROR_CODE_S_OK;
@@ -116,6 +129,36 @@ COMPV_ERROR_CODE CompVMem::copyNTA(void* dstPtr, const void*srcPtr, size_t size)
     return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVMem::set(void* dstPtr, compv_scalar_t val, compv_uscalar_t count, compv_uscalar_t sizeOfEltInBytes /*= 1*/)
+{
+	COMPV_CHECK_EXP_RETURN(!dstPtr || !count || !sizeOfEltInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	switch (sizeOfEltInBytes) {
+	case 4:
+		if (CompVMem::MemSetDword) {
+			CompVMem::MemSetDword(dstPtr, val, count);
+			return COMPV_ERROR_CODE_S_OK;
+		}
+		break;
+	case 8:
+		if (CompVMem::MemSetQword) {
+			CompVMem::MemSetQword(dstPtr, val, count);
+			return COMPV_ERROR_CODE_S_OK;
+		}
+		break;
+	case 16:
+		if (CompVMem::MemSetDQword && COMPV_IS_ALIGNED(dstPtr, 16)) {
+			CompVMem::MemSetDQword(dstPtr, val, count);
+			return COMPV_ERROR_CODE_S_OK;
+		}
+		break;
+	}
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+	COMPV_CHECK_EXP_RETURN(val > 0xff, COMPV_ERROR_CODE_E_INVALID_PARAMETER); // memset() supports "byte" only
+	memset(dstPtr, static_cast<int>(val), count*sizeOfEltInBytes);
+	
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 typedef void(*CompVMemZero)(void* dstPtr, compv_uscalar_t size);
 
 static void CompVMemZero_C(void* dstPtr, compv_uscalar_t size)
@@ -127,8 +170,26 @@ static void CompVMemZero_C(void* dstPtr, compv_uscalar_t size)
 COMPV_ERROR_CODE CompVMem::zero(void* dstPtr, size_t size)
 {
     COMPV_CHECK_EXP_RETURN(!dstPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVMemZero setz = CompVMemZero_C;
-    setz(dstPtr, size);
+#if 0
+	uint8_t* dstPtr_ = static_cast<uint8_t*>(dstPtr);
+	if (size >= 16) {
+		COMPV_CHECK_CODE_RETURN(CompVMem::set(dstPtr_, 0, size >> 4, 16));
+		dstPtr_ += (size - (size & 15));
+		size &= 15;
+	}
+	else if (size >= 8) {
+		COMPV_CHECK_CODE_RETURN(CompVMem::set(dstPtr_, 0, size >> 3, 8));
+		dstPtr_ += (size - (size & 7));
+		size &= 7;
+	}
+	if (size) {
+		CompVMemZero setz = CompVMemZero_C;
+		setz(dstPtr_, size);
+	}
+#else
+	CompVMemZero setz = CompVMemZero_C;
+	setz(dstPtr, size);
+#endif
     return COMPV_ERROR_CODE_S_OK;
 }
 
