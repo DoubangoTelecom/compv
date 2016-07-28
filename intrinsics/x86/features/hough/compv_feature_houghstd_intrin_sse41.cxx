@@ -45,9 +45,9 @@ void HoughStdAccGatherRow_Intrin_SSE41(int32_t* pACC, int32_t accStride, COMPV_A
 						xmm0 = _mm_cvtepi32_epi64(xmm1);
 						xmm1 = _mm_cvtepi32_epi64(_mm_srli_si128(xmm1, 8));
 						pACC[_mm_cvtsi128_si64(xmm0)]++;
-						pACC[_mm_cvtsi128_si64(_mm_srli_si128(xmm0, 8))]++;
+						pACC[_mm_extract_epi64(xmm0, 1)]++;
 						pACC[_mm_cvtsi128_si64(xmm1)]++;
-						pACC[_mm_cvtsi128_si64(_mm_srli_si128(xmm1, 8))]++;
+						pACC[_mm_extract_epi64(xmm1, 1)]++;
 #else
 						xmm0 = _mm_sub_epi32(xmmTheta, _mm_mullo_epi32(xmmRho, xmmStride));
 						pACC[_mm_cvtsi128_si32(xmm0)]++;
