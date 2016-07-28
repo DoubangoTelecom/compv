@@ -11,6 +11,7 @@
 #include "compv/compv_common.h"
 #include "compv/compv_box.h"
 #include "compv/features/compv_feature.h"
+#include "compv/parallel/compv_mutex.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -37,7 +38,7 @@ public:
 
 private:
 	COMPV_ERROR_CODE initCoords(float fRho, float fTheta, int32_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
-	COMPV_ERROR_CODE acc_gather(const CompVPtrArray(uint8_t)& edges);
+	COMPV_ERROR_CODE acc_gather(size_t rowStart, size_t rowCount, const CompVPtrArray(uint8_t)& edges);
 	COMPV_ERROR_CODE nms_gather(size_t rowStart, size_t rowCount);
 	COMPV_ERROR_CODE nms_apply(size_t rowStart, size_t rowCount, CompVPtrBox(CompVCoordPolar2f)& coords);
 
