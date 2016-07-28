@@ -946,6 +946,8 @@
     <YASM Include="assembler\x86\features\edges\compv_feature_canny_dete_x64_sse.s">
       <Filter>Assembler Files\x86\features\edges</Filter>
     </YASM>
-    <YASM Include="assembler\x86\features\hough\compv_feature_houghstd_x86.s" />
+    <YASM Include="assembler\x86\features\hough\compv_feature_houghstd_x86.s">
+      <Filter>Assembler Files\x86\features\hough</Filter>
+    </YASM>
   </ItemGroup>
 </Project>
