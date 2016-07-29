@@ -21,6 +21,52 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+// Class not requiring memset(0) to zero buffer
+class CompVHoughAcc : public CompVObj
+{
+protected:
+	CompVHoughAcc(size_t rows, size_t cols) : m_nRows(rows), m_nCols(cols) {
+		size_t strideInBytes = CompVMem::alignForward(cols * sizeof(int32_t));
+		m_pMem = static_cast<uint8_t*>(::calloc(((strideInBytes * rows)) + CompVMem::getBestAlignment(), sizeof(uint8_t))); // Do not use CompVMem::calloc() which call memset
+		m_pPtr = reinterpret_cast<int32_t*>(CompVMem::alignForward(reinterpret_cast<uintptr_t>(m_pMem)));
+		m_nStride = strideInBytes / sizeof(int32_t);
+	}
+public:
+	virtual ~CompVHoughAcc() {
+		if (m_pMem) {
+			free(m_pMem);
+		}
+	}
+	virtual COMPV_INLINE const char* getObjectId() {
+		return "CompVHoughAcc";
+	};
+	COMPV_INLINE int32_t* ptr(size_t row = 0, size_t col = 0) { return (m_pPtr + (row * m_nStride)) + col; }
+	COMPV_INLINE size_t cols() { return m_nCols; }
+	COMPV_INLINE size_t rows() { return m_nRows; }
+	COMPV_INLINE size_t stride() { return m_nStride; }
+	static COMPV_ERROR_CODE newObj(CompVPtr<CompVHoughAcc*>* acc, size_t rows, size_t cols) {
+		COMPV_CHECK_EXP_RETURN(!acc || !rows || !cols, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		CompVHoughAcc* acc_ = new CompVHoughAcc(rows, cols);
+		COMPV_CHECK_EXP_RETURN(!acc_, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_EXP_RETURN(!acc_->m_pPtr, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		*acc = acc_;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+private:
+	int32_t* m_pPtr;
+	size_t m_nCols;
+	size_t m_nRows;
+	size_t m_nStride;
+	uint8_t* m_pMem;
+};
+
+struct CompVHoughAccThreadsCtx {
+	CompVPtr<CompVMutex*> mutex;
+	CompVPtr<CompVHoughAcc* > acc;
+	size_t threadsCount;
+};
+
 class CompVHoughStd : public CompVHough
 {
 protected:
@@ -40,9 +86,9 @@ public:
 
 private:
 	COMPV_ERROR_CODE initCoords(float fRho, float fTheta, int32_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
-	COMPV_ERROR_CODE acc_gather(size_t rowStart, size_t rowCount, CompVPtrArray(int32_t)& acc, const CompVPtrArray(uint8_t)& edges);
-	COMPV_ERROR_CODE nms_gather(size_t rowStart, size_t rowCount, CompVPtrArray(int32_t)& acc);
-	COMPV_ERROR_CODE nms_apply(size_t rowStart, size_t rowCount, CompVPtrArray(int32_t)& acc, CompVPtrBox(CompVCoordPolar2f)& coords);
+	COMPV_ERROR_CODE acc_gather(size_t rowStart, size_t rowCount, const CompVPtrArray(uint8_t)& edges, CompVHoughAccThreadsCtx* threadsCtx);
+	COMPV_ERROR_CODE nms_gather(size_t rowStart, size_t rowCount, CompVPtr<CompVHoughAcc* >& acc);
+	COMPV_ERROR_CODE nms_apply(size_t rowStart, size_t rowCount, CompVPtr<CompVHoughAcc* >& acc, CompVPtrBox(CompVCoordPolar2f)& coords);
 
 private:
 	float m_fRho;
