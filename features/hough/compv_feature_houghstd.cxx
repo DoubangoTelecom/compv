@@ -240,27 +240,40 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, con
 	const int32_t* pSinRho = m_SinRho->ptr();
 	const int32_t* pCosRho = m_CosRho->ptr();
 	int32_t *pACC = const_cast<int32_t*>(acc->ptr(m_nBarrier));
-	int32_t theta, rhoInt32, col;
+	int32_t theta, rhoInt32;
+	int32_t maxCol = -1;
+	int32_t maxRow = -1;
 	bool haveFastImpl = false;
+	bool multiThreaded = (threadsCtx->threadsCount > 1);
 
 #if COMPV_ARCH_X86
-	void (*HoughStdAccGatherRow)(int32_t* pACC, int32_t accStride, const uint8_t* pixels, int32_t maxCols, int32_t maxThetaCount, int32_t row, COMPV_ALIGNED(X) const int32_t* pCosRho, COMPV_ALIGNED(X) const int32_t* pSinRho) = NULL;
+	void(*HoughStdAccGatherRow)(int32_t* pACC, int32_t accStride, const uint8_t* pixels, int32_t maxCols, int32_t maxThetaCount, int32_t row, COMPV_ALIGNED(X) const int32_t* pCosRho, COMPV_ALIGNED(X) const int32_t* pSinRho, int32_t* maxCol) = NULL;
 	if (maxThetaCount >= 4 && CompVCpu::isEnabled(compv::kCpuFlagSSE41) && COMPV_IS_ALIGNED_SSE(pixels) && COMPV_IS_ALIGNED_SSE(edgeStride) && COMPV_IS_ALIGNED_SSE(pCosRho) && COMPV_IS_ALIGNED_SSE(pSinRho)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((HoughStdAccGatherRow = HoughStdAccGatherRow_Intrin_SSE41, haveFastImpl = true));
 	}
 	if (HoughStdAccGatherRow) {
+		int32_t mCol = -1;
 		for (int32_t row = rStart; row < rEnd; ++row) {
-			HoughStdAccGatherRow(pACC, accStrideInt32, pixels, colsInt32, maxThetaCount, row, pCosRho, pSinRho);
+			HoughStdAccGatherRow(pACC, accStrideInt32, pixels, colsInt32, maxThetaCount, row, pCosRho, pSinRho, &mCol);
+			if (multiThreaded && mCol != -1) {
+				maxCol = COMPV_MATH_MAX(maxCol, mCol);
+				maxRow = COMPV_MATH_MAX(maxRow, row);
+			}
 			pixels += edgeStride;
 		}
 	}
 #endif /* COMPV_ARCH_X86 */
-
+	
 	if (!haveFastImpl) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+		int32_t col;
 		for (int32_t row = rStart; row < rEnd; ++row) {
 			for (col = 0; col < colsInt32; ++col) {
 				if (pixels[col]) {
+					if (multiThreaded) {
+						maxRow = COMPV_MATH_MAX(maxRow, row);
+						maxCol = COMPV_MATH_MAX(maxCol, col);
+					}
 					for (theta = 0; theta < maxThetaCount; ++theta) {
 						rhoInt32 = (col * pCosRho[theta] + row * pSinRho[theta]) >> 16;
 						pACC[theta - (rhoInt32 * accStride)]++; //!\\ Not thread-safe
@@ -270,14 +283,18 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, con
 			pixels += edgeStride;
 		}
 	}
-	if (threadsCtx->threadsCount > 1) {
+	if (multiThreaded) {
 		// multi-threaded
 		COMPV_CHECK_CODE_RETURN(threadsCtx->mutex->lock());
 		if (!threadsCtx->acc) {
 			threadsCtx->acc = acc;
 		}
-		else {
-			COMPV_CHECK_CODE_ASSERT(CompVMathUtils::sum2<int32_t>(threadsCtx->acc->ptr(), acc->ptr(), const_cast<int32_t*>(threadsCtx->acc->ptr()), acc->cols(), acc->rows(), acc->stride()));
+		else if (maxCol != -1) { // sum only if there is at least #1 non-null pixel
+			const int32_t minRhoInt32 = ((int32_t)m_nBarrier) + maxCol; // min = "cos=-1, sin=0"
+			const int32_t maxRhoInt32 = ((int32_t)m_nBarrier) - maxCol - maxRow; // max = "cos=1,sin=1"
+			const int32_t sumStart = COMPV_MATH_MIN(minRhoInt32, maxRhoInt32);
+			const int32_t sumEnd = COMPV_MATH_MAX(minRhoInt32, maxRhoInt32);
+			COMPV_CHECK_CODE_ASSERT(CompVMathUtils::sum2<int32_t>(threadsCtx->acc->ptr(sumStart), acc->ptr(sumStart), const_cast<int32_t*>(threadsCtx->acc->ptr(sumStart)), acc->cols(), (sumEnd - sumStart), acc->stride()));
 		}
 		COMPV_CHECK_CODE_RETURN(threadsCtx->mutex->unlock());
 	}
