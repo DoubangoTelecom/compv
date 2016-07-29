@@ -290,10 +290,8 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, con
 			threadsCtx->acc = acc;
 		}
 		else if (maxCol != -1) { // sum only if there is at least #1 non-null pixel
-			const int32_t minRhoInt32 = ((int32_t)m_nBarrier) + maxCol; // min = "cos=-1, sin=0"
-			const int32_t maxRhoInt32 = ((int32_t)m_nBarrier) - maxCol - maxRow; // max = "cos=1,sin=1"
-			const int32_t sumStart = COMPV_MATH_MIN(minRhoInt32, maxRhoInt32);
-			const int32_t sumEnd = COMPV_MATH_MAX(minRhoInt32, maxRhoInt32);
+			const size_t sumStart = m_nBarrier - (maxCol + maxRow); // "cos=1,sin=1"
+			const size_t sumEnd = m_nBarrier - (-maxCol); //"cos=-1, sin=0"
 			COMPV_CHECK_CODE_ASSERT(CompVMathUtils::sum2<int32_t>(threadsCtx->acc->ptr(sumStart), acc->ptr(sumStart), const_cast<int32_t*>(threadsCtx->acc->ptr(sumStart)), acc->cols(), (sumEnd - sumStart), acc->stride()));
 		}
 		COMPV_CHECK_CODE_RETURN(threadsCtx->mutex->unlock());
