@@ -12,7 +12,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MathStatsMSE2DHomogeneous_float64_Asm_X64_SSE2)
+global sym(MathStatsMSE2DHomogeneous_64f_Asm_X64_SSE2)
 
 section .data
 	extern sym(k1_f64)
@@ -27,8 +27,8 @@ section .text
 ; arg(4) -> const COMPV_ALIGNED(SSE) compv_float64_t* bY
 ; arg(5) -> COMPV_ALIGNED(SSE) compv_float64_t* mse
 ; arg(6) -> compv_uscalar_t numPoints
-; void MathStatsMSE2DHomogeneous_float64_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints)
-sym(MathStatsMSE2DHomogeneous_float64_Asm_X64_SSE2):
+; void MathStatsMSE2DHomogeneous_64f_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints)
+sym(MathStatsMSE2DHomogeneous_64f_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7

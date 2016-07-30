@@ -10,9 +10,9 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MathStatsNormalize2DHartley_float64_Asm_X86_AVX)
-global sym(MathStatsNormalize2DHartley_4_float64_Asm_X86_AVX)
-global sym(MathStatsVariance_float64_Asm_X86_AVX)
+global sym(MathStatsNormalize2DHartley_64f_Asm_X86_AVX)
+global sym(MathStatsNormalize2DHartley_4_64f_Asm_X86_AVX)
+global sym(MathStatsVariance_64f_Asm_X86_AVX)
 
 section .data
 	extern sym(ksqrt2_f64)
@@ -32,8 +32,8 @@ section .text
 ; arg(3) -> compv_float64_t* tx1
 ; arg(4) -> compv_float64_t* ty1
 ; arg(5) -> compv_float64_t* s1
-; void MathStatsNormalize2DHartley_float64_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* x, const COMPV_ALIGNED(AVX) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
-sym(MathStatsNormalize2DHartley_float64_Asm_X86_AVX):
+; void MathStatsNormalize2DHartley_64f_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* x, const COMPV_ALIGNED(AVX) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
+sym(MathStatsNormalize2DHartley_64f_Asm_X86_AVX):
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -280,8 +280,8 @@ sym(MathStatsNormalize2DHartley_float64_Asm_X86_AVX):
 ; arg(3) -> compv_float64_t* tx1
 ; arg(4) -> compv_float64_t* ty1
 ; arg(5) -> compv_float64_t* s1
-; void MathStatsNormalize2DHartley_4_float64_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* x, const COMPV_ALIGNED(AVX) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
-sym(MathStatsNormalize2DHartley_4_float64_Asm_X86_AVX):
+; void MathStatsNormalize2DHartley_4_64f_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* x, const COMPV_ALIGNED(AVX) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
+sym(MathStatsNormalize2DHartley_4_64f_Asm_X86_AVX):
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -343,8 +343,8 @@ sym(MathStatsNormalize2DHartley_4_float64_Asm_X86_AVX):
 ; arg(1) ->compv_uscalar_t count
 ; arg(2) ->const compv_float64_t* mean1
 ; arg(3) ->compv_float64_t* var1
-; void MathStatsVariance_float64_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1)
-sym(MathStatsVariance_float64_Asm_X86_AVX):
+; void MathStatsVariance_64f_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1)
+sym(MathStatsVariance_64f_Asm_X86_AVX):
 	vzeroupper
 	push rbp
 	mov rbp, rsp

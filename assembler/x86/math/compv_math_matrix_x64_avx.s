@@ -12,8 +12,8 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MatrixMulGA_float64_Asm_X64_AVX)
-global sym(MatrixMulABt_float64_minpack1_Asm_X64_AVX)
+global sym(MatrixMulGA_64f_Asm_X64_AVX)
+global sym(MatrixMulABt_64f_minpack1_Asm_X64_AVX)
 
 section .data
 	extern sym(kAVXMaskstore_0_u64)
@@ -27,8 +27,8 @@ section .text
 ; arg(2) -> const compv_float64_t* c1
 ; arg(3) -> const compv_float64_t* s1
 ; arg(4) -> compv_uscalar_t count
-; void MatrixMulGA_float64_Asm_X64_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
-sym(MatrixMulGA_float64_Asm_X64_AVX):
+; void MatrixMulGA_64f_Asm_X64_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
+sym(MatrixMulGA_64f_Asm_X64_AVX):
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -121,8 +121,8 @@ sym(MatrixMulGA_float64_Asm_X64_AVX):
 ; arg(6) - > compv_uscalar_t bStrideInBytes
 ; arg(7) - > COMPV_ALIGNED(AVX) compv_float64_t* R
 ; arg(8) - > compv_uscalar_t rStrideInBytes
-; void MatrixMulABt_float64_minpack1_Macro_X64_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
-sym(MatrixMulABt_float64_minpack1_Asm_X64_AVX):
+; void MatrixMulABt_64f_minpack1_Macro_X64_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
+sym(MatrixMulABt_64f_minpack1_Asm_X64_AVX):
 	vzeroupper
 	push rbp
 	mov rbp, rsp

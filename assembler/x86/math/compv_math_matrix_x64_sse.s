@@ -12,9 +12,9 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MatrixMulABt_float64_minpack1_Asm_X64_SSE2)
-global sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE2)
-global sym(MatrixBuildHomographyEqMatrix_float64_Asm_X64_SSE2)
+global sym(MatrixMulABt_64f_minpack1_Asm_X64_SSE2)
+global sym(MatrixMaxAbsOffDiagSymm_64f_Asm_X64_SSE2)
+global sym(MatrixBuildHomographyEqMatrix_64f_Asm_X64_SSE2)
 
 section .data
 	extern sym(kAVXFloat64MaskAbs)
@@ -34,8 +34,8 @@ section .text
 ; arg(6) - > compv_uscalar_t bStrideInBytes
 ; arg(7) - > COMPV_ALIGNED(SSE) compv_float64_t* R
 ; arg(8) - > compv_uscalar_t rStrideInBytes
-; void MatrixMulABt_float64_minpack1_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
-sym(MatrixMulABt_float64_minpack1_Asm_X64_SSE2):
+; void MatrixMulABt_64f_minpack1_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
+sym(MatrixMulABt_64f_minpack1_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 9
@@ -175,8 +175,8 @@ sym(MatrixMulABt_float64_minpack1_Asm_X64_SSE2):
 ; arg(4) -> compv_uscalar_t rowStart
 ; arg(5) -> compv_uscalar_t rowEnd
 ; arg(6) -> compv_uscalar_t strideInBytes
-; void MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rowStart, compv_uscalar_t rowEnd, compv_uscalar_t strideInBytes)
-sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE2):
+; void MatrixMaxAbsOffDiagSymm_64f_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rowStart, compv_uscalar_t rowEnd, compv_uscalar_t strideInBytes)
+sym(MatrixMaxAbsOffDiagSymm_64f_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
@@ -353,8 +353,8 @@ sym(MatrixMaxAbsOffDiagSymm_float64_Asm_X64_SSE2):
 ; arg(4) -> COMPV_ALIGNED(SSE) compv_float64_t* M
 ; arg(5) -> COMPV_ALIGNED(SSE)compv_uscalar_t M_strideInBytes
 ; arg(6) -> compv_uscalar_t numPoints
-; void MatrixBuildHomographyEqMatrix_float64_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE)compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints)
-sym(MatrixBuildHomographyEqMatrix_float64_Asm_X64_SSE2):
+; void MatrixBuildHomographyEqMatrix_64f_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE)compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints)
+sym(MatrixBuildHomographyEqMatrix_64f_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7

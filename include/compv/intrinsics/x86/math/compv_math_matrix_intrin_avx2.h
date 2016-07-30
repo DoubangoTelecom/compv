@@ -18,7 +18,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void MatrixIsEqual_float64_Intrin_AVX2(const COMPV_ALIGNED(AVX2) compv_float64_t* A, const COMPV_ALIGNED(AVX2) compv_float64_t* B, compv_uscalar_t rows, compv_uscalar_t cols, compv_uscalar_t strideInBytes, compv_scalar_t *equal);
+void MatrixIsEqual_64f_Intrin_AVX2(const COMPV_ALIGNED(AVX2) compv_float64_t* A, const COMPV_ALIGNED(AVX2) compv_float64_t* B, compv_uscalar_t rows, compv_uscalar_t cols, compv_uscalar_t strideInBytes, compv_scalar_t *equal);
 
 COMPV_NAMESPACE_END()
 

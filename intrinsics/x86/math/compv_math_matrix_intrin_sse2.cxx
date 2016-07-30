@@ -15,7 +15,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 // We'll read beyond the end of the data which means ri and rj must be strided
-void MatrixMulGA_float64_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
+void MatrixMulGA_64f_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
 	COMPV_DEBUG_INFO_CHECK_SSE2();
@@ -34,7 +34,7 @@ void MatrixMulGA_float64_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri, COM
 }
 
 // We'll read beyond the end of the data which means ri and rj must be strided
-void MatrixMulGA_float32_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float32_t* ri, COMPV_ALIGNED(SSE) compv_float32_t* rj, const compv_float32_t* c1, const compv_float32_t* s1, compv_uscalar_t count)
+void MatrixMulGA_32f_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float32_t* ri, COMPV_ALIGNED(SSE) compv_float32_t* rj, const compv_float32_t* c1, const compv_float32_t* s1, compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
 	COMPV_DEBUG_INFO_CHECK_SSE2();
@@ -55,7 +55,7 @@ void MatrixMulGA_float32_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float32_t* ri, COM
 // We'll read beyond the end of the data which means S must be strided and washed
 // S must be symmetric matrix
 // rowStart should be >= 1 as it doesn't make sense
-void MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rowStart, compv_uscalar_t rowEnd, compv_uscalar_t strideInBytes)
+void MatrixMaxAbsOffDiagSymm_64f_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* S, compv_uscalar_t *row, compv_uscalar_t *col, compv_float64_t* max, compv_uscalar_t rowStart, compv_uscalar_t rowEnd, compv_uscalar_t strideInBytes)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
 	COMPV_DEBUG_INFO_CHECK_SSE2();
@@ -143,7 +143,7 @@ void MatrixMaxAbsOffDiagSymm_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_
 }
 
 // A and B must have same rows, cols and alignment
-void MatrixIsEqual_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t rows, compv_uscalar_t cols, compv_uscalar_t strideInBytes, compv_scalar_t *equal)
+void MatrixIsEqual_64f_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t rows, compv_uscalar_t cols, compv_uscalar_t strideInBytes, compv_scalar_t *equal)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	// TODO(dmi): add ASM (not urgent, function used rarely)
@@ -178,7 +178,7 @@ void MatrixIsEqual_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t*
 	*equal = 1;
 }
 
-void MatrixMulABt_float64_minpack1_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
+void MatrixMulABt_64f_minpack1_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM, SSE41 (DotProduct)
 	COMPV_DEBUG_INFO_CHECK_SSE2();
@@ -225,7 +225,7 @@ void MatrixMulABt_float64_minpack1_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_fl
 	}
 }
 
-void MatrixBuildHomographyEqMatrix_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE)compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints)
+void MatrixBuildHomographyEqMatrix_64f_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE)compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
 	COMPV_DEBUG_INFO_CHECK_SSE2();
@@ -266,7 +266,7 @@ void MatrixBuildHomographyEqMatrix_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) 
 
 
 // "a_strideInBytes" and "r_strideInBytes" must be aligned
-void MatrixTranspose_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t a_rows, compv_uscalar_t a_cols, COMPV_ALIGNED(SSE) compv_uscalar_t a_strideInBytes, COMPV_ALIGNED(SSE) compv_uscalar_t r_strideInBytes)
+void MatrixTranspose_64f_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t a_rows, compv_uscalar_t a_cols, COMPV_ALIGNED(SSE) compv_uscalar_t a_strideInBytes, COMPV_ALIGNED(SSE) compv_uscalar_t r_strideInBytes)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
 	COMPV_DEBUG_INFO_CHECK_SSE2();
@@ -310,7 +310,7 @@ void MatrixTranspose_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_
 
 // A and R must have same stride
 // This function returns det(A). If det(A) = 0 then, A is singluar and not inverse is computed.
-void MatrixInvA3x3_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1)
+void MatrixInvA3x3_64f_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1)
 {
 	// TODO(dmi): add ASM (not urgent, not CPU intensive)
 	COMPV_DEBUG_INFO_CHECK_SSE2();

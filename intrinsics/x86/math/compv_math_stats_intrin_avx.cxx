@@ -17,7 +17,7 @@ COMPV_NAMESPACE_BEGIN()
 #if defined __INTEL_COMPILER
 #	pragma intel optimization_parameter target_arch=avx
 #endif
-void MathStatsNormalize2DHartley_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* x, const COMPV_ALIGNED(AVX) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
+void MathStatsNormalize2DHartley_64f_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* x, const COMPV_ALIGNED(AVX) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
 	COMPV_DEBUG_INFO_CHECK_AVX();
@@ -123,7 +123,7 @@ void MathStatsNormalize2DHartley_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) com
 #	pragma intel optimization_parameter target_arch=avx
 #endif
 // "numPoints = 4" -> Very common (Homography)
-void MathStatsNormalize2DHartley_4_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* x, const COMPV_ALIGNED(AVX) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
+void MathStatsNormalize2DHartley_4_64f_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* x, const COMPV_ALIGNED(AVX) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
 	COMPV_DEBUG_INFO_CHECK_AVX();
@@ -163,7 +163,7 @@ void MathStatsNormalize2DHartley_4_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) c
 #if defined __INTEL_COMPILER
 #	pragma intel optimization_parameter target_arch=avx
 #endif
-void MathStatsMSE2DHomogeneous_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* aX_h, const COMPV_ALIGNED(AVX) compv_float64_t* aY_h, const COMPV_ALIGNED(AVX) compv_float64_t* aZ_h, const COMPV_ALIGNED(AVX) compv_float64_t* bX, const COMPV_ALIGNED(AVX) compv_float64_t* bY, COMPV_ALIGNED(AVX) compv_float64_t* mse, compv_uscalar_t numPoints)
+void MathStatsMSE2DHomogeneous_64f_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* aX_h, const COMPV_ALIGNED(AVX) compv_float64_t* aY_h, const COMPV_ALIGNED(AVX) compv_float64_t* aZ_h, const COMPV_ALIGNED(AVX) compv_float64_t* bX, const COMPV_ALIGNED(AVX) compv_float64_t* bY, COMPV_ALIGNED(AVX) compv_float64_t* mse, compv_uscalar_t numPoints)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
 	COMPV_DEBUG_INFO_CHECK_AVX();
@@ -187,7 +187,7 @@ void MathStatsMSE2DHomogeneous_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) compv
 #if defined __INTEL_COMPILER
 #	pragma intel optimization_parameter target_arch=avx
 #endif
-void MathStatsVariance_float64_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1)
+void MathStatsVariance_64f_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
 	COMPV_DEBUG_INFO_CHECK_AVX();

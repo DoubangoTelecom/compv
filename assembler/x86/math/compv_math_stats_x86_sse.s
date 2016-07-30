@@ -10,11 +10,11 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MathStatsNormalize2DHartley_float64_Asm_X86_SSE2)
-global sym(MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2)
-global sym(MathStatsMSE2DHomogeneous_float64_Asm_X86_SSE2)
-global sym(MathStatsMSE2DHomogeneous_4_float64_Asm_X86_SSE2)
-global sym(MathStatsVariance_float64_Asm_X86_SSE2)
+global sym(MathStatsNormalize2DHartley_64f_Asm_X86_SSE2)
+global sym(MathStatsNormalize2DHartley_4_64f_Asm_X86_SSE2)
+global sym(MathStatsMSE2DHomogeneous_64f_Asm_X86_SSE2)
+global sym(MathStatsMSE2DHomogeneous_4_64f_Asm_X86_SSE2)
+global sym(MathStatsVariance_64f_Asm_X86_SSE2)
 
 section .data
 	extern sym(ksqrt2_f64)
@@ -29,8 +29,8 @@ section .text
 ; arg(3) -> compv_float64_t* tx1
 ; arg(4) -> compv_float64_t* ty1
 ; arg(5) -> compv_float64_t* s1
-; void MathStatsNormalize2DHartley_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* x, const COMPV_ALIGNED(SSE) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
-sym(MathStatsNormalize2DHartley_float64_Asm_X86_SSE2):
+; void MathStatsNormalize2DHartley_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* x, const COMPV_ALIGNED(SSE) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
+sym(MathStatsNormalize2DHartley_64f_Asm_X86_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -236,8 +236,8 @@ sym(MathStatsNormalize2DHartley_float64_Asm_X86_SSE2):
 ; arg(3) -> compv_float64_t* tx1
 ; arg(4) -> compv_float64_t* ty1
 ; arg(5) -> compv_float64_t* s1
-; void MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* x, const COMPV_ALIGNED(SSE) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
-sym(MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2):
+; void MathStatsNormalize2DHartley_4_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* x, const COMPV_ALIGNED(SSE) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
+sym(MathStatsNormalize2DHartley_4_64f_Asm_X86_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -312,8 +312,8 @@ sym(MathStatsNormalize2DHartley_4_float64_Asm_X86_SSE2):
 ; arg(4) -> const COMPV_ALIGNED(SSE) compv_float64_t* bY
 ; arg(5) -> COMPV_ALIGNED(SSE) compv_float64_t* mse
 ; arg(6) -> compv_uscalar_t numPoints
-; void MathStatsMSE2DHomogeneous_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints)
-sym(MathStatsMSE2DHomogeneous_float64_Asm_X86_SSE2):
+; void MathStatsMSE2DHomogeneous_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints)
+sym(MathStatsMSE2DHomogeneous_64f_Asm_X86_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
@@ -447,8 +447,8 @@ sym(MathStatsMSE2DHomogeneous_float64_Asm_X86_SSE2):
 ; arg(4) -> const COMPV_ALIGNED(SSE) compv_float64_t* bY
 ; arg(5) -> COMPV_ALIGNED(SSE) compv_float64_t* mse
 ; arg(6) -> compv_uscalar_t numPoints
-; void MathStatsMSE2DHomogeneous_4_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints)
-sym(MathStatsMSE2DHomogeneous_4_float64_Asm_X86_SSE2):
+; void MathStatsMSE2DHomogeneous_4_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints)
+sym(MathStatsMSE2DHomogeneous_4_64f_Asm_X86_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
@@ -508,8 +508,8 @@ sym(MathStatsMSE2DHomogeneous_4_float64_Asm_X86_SSE2):
 ; arg(1) -> compv_uscalar_t count
 ; arg(2) -> const compv_float64_t* mean1
 ; arg(3) -> compv_float64_t* var1
-; void MathStatsVariance_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1)
-sym(MathStatsVariance_float64_Asm_X86_SSE2):
+; void MathStatsVariance_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1)
+sym(MathStatsVariance_64f_Asm_X86_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 4

@@ -17,7 +17,7 @@ COMPV_NAMESPACE_BEGIN()
 #	pragma intel optimization_parameter target_arch=avx
 #endif
 // A and B must have same rows, cols and alignment
-void MatrixIsEqual_float64_Intrin_AVX2(const COMPV_ALIGNED(AVX) compv_float64_t* A, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t rows, compv_uscalar_t cols, compv_uscalar_t strideInBytes, compv_scalar_t *equal)
+void MatrixIsEqual_64f_Intrin_AVX2(const COMPV_ALIGNED(AVX) compv_float64_t* A, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t rows, compv_uscalar_t cols, compv_uscalar_t strideInBytes, compv_scalar_t *equal)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX();
 	COMPV_DEBUG_INFO_CHECK_AVX2();

@@ -10,7 +10,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(TransformHomogeneousToCartesian2D_4_float64_Asm_X86_SSE2)
+global sym(TransformHomogeneousToCartesian2D_4_64f_Asm_X86_SSE2)
 
 section .data
 	extern sym(k1_f64)
@@ -24,8 +24,8 @@ section .text
 ; arg(3) -> COMPV_ALIGNED(SSE) compv_float64_t* dstX
 ; arg(4) -> COMPV_ALIGNED(SSE) compv_float64_t* dstY
 ; arg(5) -> compv_uscalar_t numPoints
-; void TransformHomogeneousToCartesian2D_4_float64_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* srcZ, COMPV_ALIGNED(SSE) compv_float64_t* dstX, COMPV_ALIGNED(SSE) compv_float64_t* dstY, compv_uscalar_t numPoints)
-sym(TransformHomogeneousToCartesian2D_4_float64_Asm_X86_SSE2):
+; void TransformHomogeneousToCartesian2D_4_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* srcZ, COMPV_ALIGNED(SSE) compv_float64_t* dstX, COMPV_ALIGNED(SSE) compv_float64_t* dstY, compv_uscalar_t numPoints)
+sym(TransformHomogeneousToCartesian2D_4_64f_Asm_X86_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6

@@ -10,7 +10,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(TransformHomogeneousToCartesian2D_4_float64_Asm_X86_AVX)
+global sym(TransformHomogeneousToCartesian2D_4_64f_Asm_X86_AVX)
 section .data
 	extern sym(k1_f64)
 
@@ -23,8 +23,8 @@ section .text
 ; arg(3) -> COMPV_ALIGNED(AVX) compv_float64_t* dstX
 ; arg(4) -> COMPV_ALIGNED(AVX) compv_float64_t* dstY
 ; arg(5) -> compv_uscalar_t numPoints
-; void TransformHomogeneousToCartesian2D_4_float64_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* srcX, const COMPV_ALIGNED(AVX) compv_float64_t* srcY, const COMPV_ALIGNED(AVX) compv_float64_t* srcZ, COMPV_ALIGNED(AVX) compv_float64_t* dstX, COMPV_ALIGNED(AVX) compv_float64_t* dstY, compv_uscalar_t numPoints)
-sym(TransformHomogeneousToCartesian2D_4_float64_Asm_X86_AVX):
+; void TransformHomogeneousToCartesian2D_4_64f_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* srcX, const COMPV_ALIGNED(AVX) compv_float64_t* srcY, const COMPV_ALIGNED(AVX) compv_float64_t* srcZ, COMPV_ALIGNED(AVX) compv_float64_t* dstX, COMPV_ALIGNED(AVX) compv_float64_t* dstY, compv_uscalar_t numPoints)
+sym(TransformHomogeneousToCartesian2D_4_64f_Asm_X86_AVX):
 	vzeroupper
 	push rbp
 	mov rbp, rsp

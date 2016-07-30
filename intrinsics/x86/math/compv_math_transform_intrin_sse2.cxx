@@ -16,7 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 
 // "src" and "dst" must have the same stride and "strideInBytes" must be SSE-aligned
 // AVX version not faster
-void TransformHomogeneousToCartesian2D_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* srcZ, COMPV_ALIGNED(SSE) compv_float64_t* dstX, COMPV_ALIGNED(SSE) compv_float64_t* dstY, compv_uscalar_t numPoints)
+void TransformHomogeneousToCartesian2D_64f_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* srcZ, COMPV_ALIGNED(SSE) compv_float64_t* dstX, COMPV_ALIGNED(SSE) compv_float64_t* dstY, compv_uscalar_t numPoints)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): add ASM
 	COMPV_DEBUG_INFO_CHECK_SSE2();
@@ -62,7 +62,7 @@ void TransformHomogeneousToCartesian2D_float64_Intrin_SSE2(const COMPV_ALIGNED(S
 }
 
 // numPoints = 4 (very common: transforming a rectangular box)
-void TransformHomogeneousToCartesian2D_4_float64_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* srcZ, COMPV_ALIGNED(SSE) compv_float64_t* dstX, COMPV_ALIGNED(SSE) compv_float64_t* dstY, compv_uscalar_t numPoints)
+void TransformHomogeneousToCartesian2D_4_64f_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* srcZ, COMPV_ALIGNED(SSE) compv_float64_t* dstX, COMPV_ALIGNED(SSE) compv_float64_t* dstY, compv_uscalar_t numPoints)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): add ASM
 	COMPV_DEBUG_INFO_CHECK_SSE2();

@@ -257,7 +257,7 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, con
 			HoughStdAccGatherRow(pACC, accStrideInt32, pixels, colsInt32, maxThetaCount, row, pCosRho, pSinRho, &mCol);
 			if (multiThreaded && mCol != -1) {
 				maxCol = COMPV_MATH_MAX(maxCol, mCol);
-				maxRow = COMPV_MATH_MAX(maxRow, row);
+				maxRow = row;
 			}
 			pixels += edgeStride;
 		}
@@ -271,7 +271,7 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, con
 			for (col = 0; col < colsInt32; ++col) {
 				if (pixels[col]) {
 					if (multiThreaded) {
-						maxRow = COMPV_MATH_MAX(maxRow, row);
+						maxRow = row;
 						maxCol = COMPV_MATH_MAX(maxCol, col);
 					}
 					for (theta = 0; theta < maxThetaCount; ++theta) {
