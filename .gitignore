@@ -46,3 +46,4 @@ Debug
 /tests/matchers/My Amplifier XE Results - matchers
 *.gray
 My Amplifier XE Results - calib
+*.ipch

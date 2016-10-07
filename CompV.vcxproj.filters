@@ -949,13 +949,11 @@
     <YASM Include="assembler\x86\features\hough\compv_feature_houghstd_x86.s">
       <Filter>Assembler Files\x86\features\hough</Filter>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assembler\x86\compv_mem_x86.s">
+    <YASM Include="assembler\x86\compv_mem_x64.s">
       <Filter>Assembler Files\x86</Filter>
-    </None>
-    <None Include="assembler\x86\compv_mem_x64.s">
+    </YASM>
+    <YASM Include="assembler\x86\compv_mem_x86.s">
       <Filter>Assembler Files\x86</Filter>
-    </None>
+    </YASM>
   </ItemGroup>
 </Project>
