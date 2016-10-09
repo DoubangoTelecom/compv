@@ -149,12 +149,32 @@
     <ClInclude Include="include\compv\base\compv_common.h" />
     <ClInclude Include="include\compv\base\compv_config.h" />
     <ClInclude Include="include\compv\base\compv_debug.h" />
+    <ClInclude Include="include\compv\base\parallel\compv_asynctask.h" />
+    <ClInclude Include="include\compv\base\parallel\compv_asynctask11.h" />
+    <ClInclude Include="include\compv\base\parallel\compv_condvar.h" />
+    <ClInclude Include="include\compv\base\parallel\compv_mutex.h" />
+    <ClInclude Include="include\compv\base\parallel\compv_semaphore.h" />
+    <ClInclude Include="include\compv\base\parallel\compv_thread.h" />
+    <ClInclude Include="include\compv\base\parallel\compv_threaddisp.h" />
+    <ClInclude Include="include\compv\base\parallel\compv_threaddisp11.h" />
+    <ClInclude Include="include\compv\base\time\compv_time.h" />
+    <ClInclude Include="include\compv\base\time\compv_timer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx" />
     <ClCompile Include="compv_common.cxx" />
     <ClCompile Include="compv_debug.cxx" />
     <ClCompile Include="compv_obj.cxx" />
+    <ClCompile Include="parallel\compv_asynctask.cxx" />
+    <ClCompile Include="parallel\compv_asynctask11.cxx" />
+    <ClCompile Include="parallel\compv_condvar.cxx" />
+    <ClCompile Include="parallel\compv_mutex.cxx" />
+    <ClCompile Include="parallel\compv_semaphore.cxx" />
+    <ClCompile Include="parallel\compv_thread.cxx" />
+    <ClCompile Include="parallel\compv_threaddisp.cxx" />
+    <ClCompile Include="parallel\compv_threaddisp11.cxx" />
+    <ClCompile Include="time\compv_time.cxx" />
+    <ClCompile Include="time\compv_timer.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

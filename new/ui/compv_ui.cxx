@@ -47,7 +47,7 @@ COMPV_ERROR_CODE CompVUI::init()
 		COMPV_DEBUG_ERROR_EX("GLFW", "glfwInit failed");
 		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_GLFW);
 	}
-	COMPV_DEBUG_ERROR_EX("GLFW", "glfwInit succeeded");
+	COMPV_DEBUG_INFO_EX("GLFW", "glfwInit succeeded");
 #else
 	COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_S_OK);
 	COMPV_DEBUG_INFO("GLFW not supported on the current platform");

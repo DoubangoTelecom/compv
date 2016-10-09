@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_OBJECT_H_)
-#define _COMPV_OBJECT_H_
+#if !defined(_COMPV_BASE_OBJECT_H_)
+#define _COMPV_BASE_OBJECT_H_
 
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_debug.h"
@@ -221,4 +221,4 @@ CompVObjType CompVPtr<CompVObjType>::operator*() const
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_OBJECT_H_ */
+#endif /* _COMPV_BASE_OBJECT_H_ */
