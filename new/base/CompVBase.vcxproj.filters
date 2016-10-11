@@ -25,6 +25,48 @@
     <Filter Include="Source Files\time">
       <UniqueIdentifier>{bbe7e782-901b-4f8c-871e-a0aadfab1c03}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\math">
+      <UniqueIdentifier>{87217f18-998b-4547-8c1f-426073672fe5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math">
+      <UniqueIdentifier>{d9c5706e-21e0-443b-a051-d2bc6bb105af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\math\intrin">
+      <UniqueIdentifier>{8544046f-dce1-4e67-88ce-a11463a0df8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\math\intrin\x86">
+      <UniqueIdentifier>{70630731-472f-4912-908d-e7f6e3e62949}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math\intrin">
+      <UniqueIdentifier>{41c9eb9b-259c-4062-ad91-83813412a95d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math\asm">
+      <UniqueIdentifier>{7b84a53b-109b-436e-84ca-8464e334e973}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math\intrin\x86">
+      <UniqueIdentifier>{4ec5d94a-8e3c-4464-85d3-734941b7a053}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math\asm\x86">
+      <UniqueIdentifier>{e7d43dbc-5c63-4159-91bd-73bbe5355be8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\intrin">
+      <UniqueIdentifier>{e1bf9fd5-b9fc-4e4a-8e06-5547f2e1f8c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\intrin\x86">
+      <UniqueIdentifier>{8ccc474a-bdcd-48aa-8272-5eb64a8ad9b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\intrin">
+      <UniqueIdentifier>{56c2d431-9b41-4e39-b1e7-2ca94025b0e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\intrin\x86">
+      <UniqueIdentifier>{0a4824cd-3b7c-42fc-b009-791112a78509}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\asm">
+      <UniqueIdentifier>{6b882d4a-d0fb-4dc9-9e81-507e5493df29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\asm\x86">
+      <UniqueIdentifier>{5dcd429c-1a03-48f8-a2fa-934f49d82b3d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_config.h">
@@ -68,6 +110,84 @@
     </ClInclude>
     <ClInclude Include="include\compv\base\time\compv_timer.h">
       <Filter>Header Files\time</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_md5.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_mem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_cpu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_errno.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math.h">
+      <Filter>Header Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_utils.h">
+      <Filter>Header Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_convlt_intrin_avx2.h">
+      <Filter>Header Files\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_convlt_intrin_sse2.h">
+      <Filter>Header Files\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_avx.h">
+      <Filter>Header Files\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_avx2.h">
+      <Filter>Header Files\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse2.h">
+      <Filter>Header Files\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse41.h">
+      <Filter>Header Files\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_stats_intrin_avx.h">
+      <Filter>Header Files\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_stats_intrin_sse2.h">
+      <Filter>Header Files\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_transform_intrin_avx.h">
+      <Filter>Header Files\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_transform_intrin_sse2.h">
+      <Filter>Header Files\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_avx2.h">
+      <Filter>Header Files\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h">
+      <Filter>Header Files\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_ssse3.h">
+      <Filter>Header Files\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_simd_globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_avx.h">
+      <Filter>Header Files\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_sse.h">
+      <Filter>Header Files\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\intrin\x86\compv_mem_intrin_avx.h">
+      <Filter>Header Files\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\intrin\x86\compv_mem_intrin_sse2.h">
+      <Filter>Header Files\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\parallel\compv_parallel.h">
+      <Filter>Header Files\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_obj.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -113,5 +233,85 @@
     <ClCompile Include="time\compv_timer.cxx">
       <Filter>Source Files\time</Filter>
     </ClCompile>
+    <ClCompile Include="compv_md5.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_mem.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_cpu.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math.cxx">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_utils.cxx">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_simd_globals.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="parallel\compv_parallel.cxx">
+      <Filter>Source Files\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="intrin\x86\compv_mem_intrin_avx.cxx">
+      <Filter>Source Files\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="intrin\x86\compv_mem_intrin_sse2.cxx">
+      <Filter>Source Files\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_utils_intrin_avx2.cxx">
+      <Filter>Source Files\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_utils_intrin_sse2.cxx">
+      <Filter>Source Files\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_utils_intrin_ssse3.cxx">
+      <Filter>Source Files\math\intrin\x86</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="math\asm\x86\compv_math_macros_x86.s">
+      <Filter>Source Files\math\asm\x86</Filter>
+    </None>
+    <None Include="math\asm\x86\compv_math_utils_x86.s">
+      <Filter>Source Files\math\asm\x86</Filter>
+    </None>
+    <None Include="math\asm\x86\compv_math_utils_x86_avx.s">
+      <Filter>Source Files\math\asm\x86</Filter>
+    </None>
+    <None Include="math\asm\x86\compv_math_utils_x86_sse.s">
+      <Filter>Source Files\math\asm\x86</Filter>
+    </None>
+    <None Include="asm\x86\compv_bits_macros_x86.s">
+      <Filter>Source Files\asm\x86</Filter>
+    </None>
+    <None Include="asm\x86\compv_bits_x86.s">
+      <Filter>Source Files\asm\x86</Filter>
+    </None>
+    <None Include="asm\x86\compv_common_x86.s">
+      <Filter>Source Files\asm\x86</Filter>
+    </None>
+    <None Include="asm\x86\compv_mem_x64.s">
+      <Filter>Source Files\asm\x86</Filter>
+    </None>
+    <None Include="asm\x86\compv_mem_x64_avx.s">
+      <Filter>Source Files\asm\x86</Filter>
+    </None>
+    <None Include="asm\x86\compv_mem_x64_sse.s">
+      <Filter>Source Files\asm\x86</Filter>
+    </None>
+    <None Include="asm\x86\compv_mem_x86.s">
+      <Filter>Source Files\asm\x86</Filter>
+    </None>
+    <None Include="asm\x86\compv_mem_x86_avx.s">
+      <Filter>Source Files\asm\x86</Filter>
+    </None>
+    <None Include="asm\x86\compv_mem_x86_sse.s">
+      <Filter>Source Files\asm\x86</Filter>
+    </None>
+    <None Include="asm\x86\compv_utils_x86.s">
+      <Filter>Source Files\asm\x86</Filter>
+    </None>
   </ItemGroup>
 </Project>

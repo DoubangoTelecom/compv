@@ -7,7 +7,7 @@
 #include "compv/base/parallel/compv_semaphore.h"
 #include "compv/base/time/compv_time.h"
 #include "compv/base/compv_cpu.h"
-#include "compv/base/compv_engine.h"
+#include "compv/base/compv_base.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_errno.h"
 #include "compv/base/compv_debug.h"
@@ -168,7 +168,7 @@ COMPV_ERROR_CODE CompVSemaphore::decrement()
 
 COMPV_ERROR_CODE CompVSemaphore::newObj(CompVPtr<CompVSemaphore*>* sem, int initialVal /*= 0*/)
 {
-    COMPV_CHECK_CODE_RETURN(CompVEngine::init());
+    COMPV_CHECK_CODE_RETURN(CompVBase::init());
     COMPV_CHECK_EXP_RETURN(sem == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVPtr<CompVSemaphore*> sem_ = new CompVSemaphore(initialVal);
     COMPV_CHECK_EXP_RETURN(*sem_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

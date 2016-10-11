@@ -6,7 +6,7 @@
 */
 #include "compv/base/parallel/compv_condvar.h"
 #include "compv/base/time/compv_time.h"
-#include "compv/base/compv_engine.h"
+#include "compv/base/compv_base.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_errno.h"
 #include "compv/base/compv_debug.h"
@@ -249,7 +249,7 @@ COMPV_ERROR_CODE CompVCondvar::waitWithTimeout(uint64_t millis)
 
 COMPV_ERROR_CODE CompVCondvar::newObj(CompVPtr<CompVCondvar*>* condvar)
 {
-    COMPV_CHECK_CODE_RETURN(CompVEngine::init());
+    COMPV_CHECK_CODE_RETURN(CompVBase::init());
     COMPV_CHECK_EXP_RETURN(condvar == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVPtr<CompVCondvar*> condvar_ = new CompVCondvar();
     COMPV_CHECK_EXP_RETURN(*condvar_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

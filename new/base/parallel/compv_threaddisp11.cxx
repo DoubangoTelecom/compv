@@ -5,9 +5,10 @@
 * WebSite: http://compv.org
 */
 #include "compv/base/parallel/compv_threaddisp11.h"
+#if COMPV_PARALLEL_THREADDISP11
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_mem.h"
-#include "compv/base/compv_engine.h"
+#include "compv/base/compv_base.h"
 #include "compv/base/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -130,24 +131,24 @@ long CompVThreadDispatcher11::nextTaskIdx()
 
 COMPV_ERROR_CODE CompVThreadDispatcher11::newObj(CompVPtr<CompVThreadDispatcher11*>* disp, int32_t numThreads /*= -1*/)
 {
-	COMPV_CHECK_CODE_RETURN(CompVEngine::init());
+	COMPV_CHECK_CODE_RETURN(CompVBase::init());
 	COMPV_CHECK_EXP_RETURN(disp == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	int32_t numCores = CompVCpu::getCoresCount();
-#if COMPV_THREAD_SET_AFFINITY
+#if COMPV_PARALLEL_THREAD_SET_AFFINITY
 	int32_t maxCores = numCores > 0 ? (numCores - 1) : 0; // To avoid overusing all cores
 #else
 	int32_t maxCores = numCores; // Up to the system to dispatch the work and avoid overusing all cores
-#endif /* COMPV_THREAD_SET_AFFINITY */
+#endif /* COMPV_PARALLEL_THREAD_SET_AFFINITY */
 
 	if (numThreads <= 0) {
 		numThreads = maxCores;
 	}
 	if (numThreads < 2) {
 		COMPV_DEBUG_ERROR("Multi-threading requires at least #2 threads but you're requesting #%d", numThreads);
-#if COMPV_THREAD_SET_AFFINITY
+#if COMPV_PARALLEL_THREAD_SET_AFFINITY
 		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-#endif /* COMPV_THREAD_SET_AFFINITY */
+#endif /* COMPV_PARALLEL_THREAD_SET_AFFINITY */
 	}
 	if (numThreads > maxCores) {
 		COMPV_DEBUG_WARN("You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, maxCores);
@@ -164,3 +165,5 @@ COMPV_ERROR_CODE CompVThreadDispatcher11::newObj(CompVPtr<CompVThreadDispatcher1
 }
 
 COMPV_NAMESPACE_END()
+
+#endif /* COMPV_PARALLEL_THREADDISP11 */

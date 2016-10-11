@@ -7,12 +7,13 @@
 #if !defined(_COMPV_API_H_)
 #define _COMPV_API_H_ //!\\ Must not change this name, used as guard in private header files
 
-/* Library: Base */
+/* Module: Base */
 #include <compv/base/compv_base.h>
-#include <compv/base/compv_obj.h>
 #include <compv/base/compv_debug.h>
+#include <compv/base/compv_mem.h>
+#include <compv/base/compv_obj.h>
 
-/* Library: UI */
+/* Module: UI */
 #include <compv/ui/compv_ui.h>
 #include <compv/ui/compv_window.h>
 

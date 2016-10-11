@@ -8,20 +8,17 @@
 #define _COMPV_BASE_PRALLEL_ASYNCTASK11_H_
 
 #include "compv/base/compv_config.h"
+#if COMPV_PARALLEL_THREADDISP11
 #include "compv/base/parallel/compv_thread.h"
 #include "compv/base/parallel/compv_mutex.h"
 #include "compv/base/parallel/compv_semaphore.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_common.h"
 
-#if !defined(COMPV_SEMAPHORE11)
-#	define COMPV_SEMAPHORE11 0 // use C++11 Semophores?
-#endif
-
 #include <vector>
 
 // C++11
-#if COMPV_SEMAPHORE11
+#if COMPV_PARALLEL_SEMA11
 #	include <mutex>
 #	include <condition_variable>
 #	include <memory>
@@ -64,7 +61,7 @@ public:
 	}
 };
 
-#if COMPV_SEMAPHORE11
+#if COMPV_PARALLEL_SEMA11
 class CompVSemaphore11 {
 public:
 	CompVSemaphore11(int count_ = 0)
@@ -124,7 +121,7 @@ private:
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
 	CompVPtr<CompVThread* >m_Thread;
-#if COMPV_SEMAPHORE11
+#if COMPV_PARALLEL_SEMA11
 	std::shared_ptr<CompVSemaphore11> m_SemRun;
 	std::shared_ptr<CompVSemaphore11> m_SemExec;
 #else
@@ -142,5 +139,7 @@ private:
 };
 
 COMPV_NAMESPACE_END()
+
+#endif /* COMPV_PARALLEL_THREADDISP11 */
 
 #endif /* _COMPV_BASE_PRALLEL_ASYNCTASK11_H_ */

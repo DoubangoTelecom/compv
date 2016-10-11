@@ -6,7 +6,7 @@
 */
 #include "compv/base/parallel/compv_thread.h"
 #include "compv/base/compv_cpu.h"
-#include "compv/base/compv_engine.h"
+#include "compv/base/compv_base.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_debug.h"
 
@@ -238,7 +238,7 @@ compv_core_id_t CompVThread::getCoreId()
 
 COMPV_ERROR_CODE CompVThread::newObj(CompVPtr<CompVThread*>* thread, void *(COMPV_STDCALL *start) (void *), void *arg /*= NULL*/)
 {
-    COMPV_CHECK_CODE_RETURN(CompVEngine::init());
+    COMPV_CHECK_CODE_RETURN(CompVBase::init());
     COMPV_CHECK_EXP_RETURN(thread == NULL || start == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVPtr<CompVThread*> thread_ = new CompVThread(start, arg);
     COMPV_CHECK_EXP_RETURN(*thread_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

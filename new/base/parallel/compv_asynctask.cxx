@@ -5,8 +5,9 @@
 * WebSite: http://compv.org
 */
 #include "compv/base/parallel/compv_asynctask.h"
+#if !COMPV_PARALLEL_THREADDISP11
 #include "compv/base/time/compv_time.h"
-#include "compv/base/compv_engine.h"
+#include "compv/base/compv_base.h"
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_debug.h"
@@ -46,7 +47,7 @@ COMPV_ERROR_CODE CompVAsyncTask::start()
         COMPV_CHECK_CODE_RETURN(err_);
     }
     if (m_iCoreId >= 0) {
-#if COMPV_THREAD_SET_AFFINITY
+#if COMPV_PARALLEL_THREAD_SET_AFFINITY
         err_ = m_Thread->setAffinity(m_iCoreId);
         if (COMPV_ERROR_CODE_IS_NOK(err_)) {
             COMPV_DEBUG_ERROR("Failed to set thread affinity value to %d with error code = %d", m_iCoreId, err_);
@@ -67,7 +68,7 @@ COMPV_ERROR_CODE CompVAsyncTask::start()
 COMPV_ERROR_CODE CompVAsyncTask::setAffinity(compv_core_id_t coreId)
 {
     if (m_Thread) {
-#if COMPV_THREAD_SET_AFFINITY
+#if COMPV_PARALLEL_THREAD_SET_AFFINITY
         COMPV_CHECK_CODE_RETURN(m_Thread->setAffinity(coreId));
 #endif
     }
@@ -273,7 +274,7 @@ compv_asynctoken_id_t CompVAsyncTask::getUniqueTokenId()
 
 COMPV_ERROR_CODE CompVAsyncTask::newObj(CompVPtr<CompVAsyncTask*>* asyncTask)
 {
-    COMPV_CHECK_CODE_RETURN(CompVEngine::init());
+    COMPV_CHECK_CODE_RETURN(CompVBase::init());
     COMPV_CHECK_EXP_RETURN(asyncTask == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVPtr<CompVAsyncTask*> asyncTask_ = new CompVAsyncTask();
     COMPV_CHECK_EXP_RETURN(*asyncTask_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -294,7 +295,7 @@ void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
     size_t size_;
 
     // Make sure the affinity is defined. This function is called in start() but after thread creation which means we could miss it if this function is called very fast
-#if COMPV_THREAD_SET_AFFINITY
+#if COMPV_PARALLEL_THREAD_SET_AFFINITY
     if (Self_->m_iCoreId >= 0) {
         COMPV_CHECK_CODE_BAIL(err_ = Self_->m_Thread->setAffinity(Self_->m_iCoreId));
     }
@@ -329,3 +330,5 @@ bail:
 }
 
 COMPV_NAMESPACE_END()
+
+#endif /* COMPV_PARALLEL_THREADDISP11 */

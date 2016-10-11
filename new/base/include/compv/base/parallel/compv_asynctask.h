@@ -8,6 +8,7 @@
 #define _COMPV_BASE_PRALLEL_ASYNCTASK_H_
 
 #include "compv/base/compv_config.h"
+#if !COMPV_PARALLEL_THREADDISP11
 #include "compv/base/parallel/compv_thread.h"
 #include "compv/base/parallel/compv_semaphore.h"
 #include "compv/base/compv_obj.h"
@@ -125,5 +126,7 @@ private:
 };
 
 COMPV_NAMESPACE_END()
+
+#endif /* COMPV_PARALLEL_THREADDISP11 */
 
 #endif /* _COMPV_BASE_PRALLEL_ASYNCTASK_H_ */

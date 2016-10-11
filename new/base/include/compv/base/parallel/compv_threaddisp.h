@@ -8,6 +8,7 @@
 #define _COMPV_BASE_PRALLEL_THREADDISP_H_
 
 #include "compv/base/compv_config.h"
+#if !COMPV_PARALLEL_THREADDISP11
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_common.h"
 #include "compv/base/parallel/compv_asynctask.h"
@@ -44,5 +45,7 @@ private:
 };
 
 COMPV_NAMESPACE_END()
+
+#endif /* COMPV_PARALLEL_THREADDISP11 */
 
 #endif /* _COMPV_BASE_PRALLEL_THREADDISP_H_ */

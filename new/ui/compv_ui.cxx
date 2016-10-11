@@ -38,7 +38,7 @@ COMPV_ERROR_CODE CompVUI::init()
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	COMPV_DEBUG_INFO("Initializing UI module...");
+	COMPV_DEBUG_INFO("Initializing UI module (v %s)...", COMPV_VERSION_STRING);
 
 	/* GLFW */
 #if HAVE_GLFW
@@ -76,10 +76,18 @@ COMPV_ERROR_CODE CompVUI::deInit()
 	if (!CompVUI::s_bInitialized) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
+
+	COMPV_DEBUG_INFO("DeInitializing UI module (v %s)...", COMPV_VERSION_STRING);
 #if HAVE_GLFW
 	glfwTerminate();
 	glfwSetErrorCallback(NULL);
 #endif /* HAVE_GLFW */
+
+	/* Base */
+	CompVBase::deInit();
+
+	COMPV_DEBUG_INFO("UI module deinitialized");
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 

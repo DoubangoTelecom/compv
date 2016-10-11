@@ -315,8 +315,19 @@
 #	define HAVE_CLOCK_GETTIME				1
 #endif
 
-#if !defined (COMPV_THREAD_SET_AFFINITY)
-#	define COMPV_THREAD_SET_AFFINITY 0
+// Multi-threading dispatcher type: CPP11 or CPPstd
+#if !defined(COMPV_PARALLEL_THREADDISP11)
+#	define COMPV_PARALLEL_THREADDISP11	1  // use C++11 thread dispatcher ?
+#endif
+
+// Semaphore type: CPP11 or CPPstd
+#if !defined(COMPV_PARALLEL_SEMA11)
+#	define COMPV_PARALLEL_SEMA11 0 // use C++11 Semophores ?
+#endif
+
+// Thread affinity setting
+#if !defined (COMPV_PARALLEL_THREAD_SET_AFFINITY)
+#	define COMPV_PARALLEL_THREAD_SET_AFFINITY 0 // set thread affinity after starting?
 #endif
 
 #if COMPV_OS_WINDOWS
