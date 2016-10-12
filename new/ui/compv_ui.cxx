@@ -88,6 +88,8 @@ COMPV_ERROR_CODE CompVUI::deInit()
 
 	COMPV_DEBUG_INFO("UI module deinitialized");
 
+	CompVUI::s_bInitialized = false;
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 

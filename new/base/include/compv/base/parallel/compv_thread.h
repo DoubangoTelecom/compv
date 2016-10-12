@@ -58,6 +58,8 @@ private:
     compv_thread_id_t m_Id;
 };
 
+typedef CompVPtr<CompVThread* > CompVThreadPtr;
+
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_BASE_PRALLEL_THREAD_H_ */

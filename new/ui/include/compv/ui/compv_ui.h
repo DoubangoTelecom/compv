@@ -21,6 +21,7 @@ public:
 	virtual ~CompVUI();
 	static COMPV_ERROR_CODE init();
 	static COMPV_ERROR_CODE deInit();
+	static COMPV_INLINE bool isInitialized() { return s_bInitialized; }
 
 private:
 	static bool s_bInitialized;
