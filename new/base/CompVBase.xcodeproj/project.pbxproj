@@ -1,0 +1,743 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		152EC35C1DAEE49F00471C1B /* compv_bits_macros_x86.s in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2CB1DAEE49F00471C1B /* compv_bits_macros_x86.s */; };
+		152EC35D1DAEE49F00471C1B /* compv_bits_x86.s in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2CC1DAEE49F00471C1B /* compv_bits_x86.s */; };
+		152EC35E1DAEE49F00471C1B /* compv_common_x86.s in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2CD1DAEE49F00471C1B /* compv_common_x86.s */; };
+		152EC3671DAEE49F00471C1B /* compv_mem_x64.s in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2D61DAEE49F00471C1B /* compv_mem_x64.s */; };
+		152EC3681DAEE49F00471C1B /* compv_mem_x64_avx.s in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2D71DAEE49F00471C1B /* compv_mem_x64_avx.s */; };
+		152EC3691DAEE49F00471C1B /* compv_mem_x64_sse.s in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2D81DAEE49F00471C1B /* compv_mem_x64_sse.s */; };
+		152EC36A1DAEE49F00471C1B /* compv_mem_x86.s in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2D91DAEE49F00471C1B /* compv_mem_x86.s */; };
+		152EC36B1DAEE49F00471C1B /* compv_mem_x86_avx.s in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2DA1DAEE49F00471C1B /* compv_mem_x86_avx.s */; };
+		152EC36C1DAEE49F00471C1B /* compv_mem_x86_sse.s in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2DB1DAEE49F00471C1B /* compv_mem_x86_sse.s */; };
+		152EC3711DAEE49F00471C1B /* compv_utils_x86.s in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2E01DAEE49F00471C1B /* compv_utils_x86.s */; };
+		152EC3721DAEE49F00471C1B /* compv_base.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2E11DAEE49F00471C1B /* compv_base.cxx */; };
+		152EC3731DAEE49F00471C1B /* compv_common.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2E21DAEE49F00471C1B /* compv_common.cxx */; };
+		152EC3741DAEE49F00471C1B /* compv_cpu.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2E31DAEE49F00471C1B /* compv_cpu.cxx */; };
+		152EC3751DAEE49F00471C1B /* compv_debug.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2E41DAEE49F00471C1B /* compv_debug.cxx */; };
+		152EC3761DAEE49F00471C1B /* compv_md5.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2E51DAEE49F00471C1B /* compv_md5.cxx */; };
+		152EC3771DAEE49F00471C1B /* compv_mem.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2E61DAEE49F00471C1B /* compv_mem.cxx */; };
+		152EC3781DAEE49F00471C1B /* compv_obj.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2E71DAEE49F00471C1B /* compv_obj.cxx */; };
+		152EC3791DAEE49F00471C1B /* compv_simd_globals.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC2E81DAEE49F00471C1B /* compv_simd_globals.cxx */; };
+		152EC37A1DAEE49F00471C1B /* compv_base.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC2EC1DAEE49F00471C1B /* compv_base.h */; };
+		152EC37B1DAEE49F00471C1B /* compv_common.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC2ED1DAEE49F00471C1B /* compv_common.h */; };
+		152EC37C1DAEE49F00471C1B /* compv_config.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC2EE1DAEE49F00471C1B /* compv_config.h */; };
+		152EC37D1DAEE49F00471C1B /* compv_cpu.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC2EF1DAEE49F00471C1B /* compv_cpu.h */; };
+		152EC37E1DAEE49F00471C1B /* compv_debug.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC2F01DAEE49F00471C1B /* compv_debug.h */; };
+		152EC37F1DAEE49F00471C1B /* compv_errno.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC2F11DAEE49F00471C1B /* compv_errno.h */; };
+		152EC3801DAEE49F00471C1B /* compv_md5.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC2F21DAEE49F00471C1B /* compv_md5.h */; };
+		152EC3811DAEE49F00471C1B /* compv_mem.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC2F31DAEE49F00471C1B /* compv_mem.h */; };
+		152EC3821DAEE49F00471C1B /* compv_obj.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC2F41DAEE49F00471C1B /* compv_obj.h */; };
+		152EC3831DAEE49F00471C1B /* compv_simd_globals.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC2F51DAEE49F00471C1B /* compv_simd_globals.h */; };
+		152EC3841DAEE49F00471C1B /* compv_intrin_avx.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC2F81DAEE49F00471C1B /* compv_intrin_avx.h */; };
+		152EC3851DAEE49F00471C1B /* compv_intrin_sse.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC2F91DAEE49F00471C1B /* compv_intrin_sse.h */; };
+		152EC3861DAEE49F00471C1B /* compv_mem_intrin_avx.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC2FA1DAEE49F00471C1B /* compv_mem_intrin_avx.h */; };
+		152EC3871DAEE49F00471C1B /* compv_mem_intrin_sse2.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC2FB1DAEE49F00471C1B /* compv_mem_intrin_sse2.h */; };
+		152EC3951DAEE49F00471C1B /* compv_math.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC30C1DAEE49F00471C1B /* compv_math.h */; };
+		152EC3961DAEE49F00471C1B /* compv_math_utils.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC30D1DAEE49F00471C1B /* compv_math_utils.h */; };
+		152EC3971DAEE49F00471C1B /* compv_math_convlt_intrin_avx2.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3101DAEE49F00471C1B /* compv_math_convlt_intrin_avx2.h */; };
+		152EC3981DAEE49F00471C1B /* compv_math_convlt_intrin_sse2.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3111DAEE49F00471C1B /* compv_math_convlt_intrin_sse2.h */; };
+		152EC3991DAEE49F00471C1B /* compv_math_matrix_intrin_avx.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3121DAEE49F00471C1B /* compv_math_matrix_intrin_avx.h */; };
+		152EC39A1DAEE49F00471C1B /* compv_math_matrix_intrin_avx2.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3131DAEE49F00471C1B /* compv_math_matrix_intrin_avx2.h */; };
+		152EC39B1DAEE49F00471C1B /* compv_math_matrix_intrin_sse2.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3141DAEE49F00471C1B /* compv_math_matrix_intrin_sse2.h */; };
+		152EC39C1DAEE49F00471C1B /* compv_math_matrix_intrin_sse41.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3151DAEE49F00471C1B /* compv_math_matrix_intrin_sse41.h */; };
+		152EC39D1DAEE49F00471C1B /* compv_math_stats_intrin_avx.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3161DAEE49F00471C1B /* compv_math_stats_intrin_avx.h */; };
+		152EC39E1DAEE49F00471C1B /* compv_math_stats_intrin_sse2.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3171DAEE49F00471C1B /* compv_math_stats_intrin_sse2.h */; };
+		152EC39F1DAEE49F00471C1B /* compv_math_transform_intrin_avx.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3181DAEE49F00471C1B /* compv_math_transform_intrin_avx.h */; };
+		152EC3A01DAEE49F00471C1B /* compv_math_transform_intrin_sse2.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3191DAEE49F00471C1B /* compv_math_transform_intrin_sse2.h */; };
+		152EC3A11DAEE49F00471C1B /* compv_math_utils_intrin_avx2.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC31A1DAEE49F00471C1B /* compv_math_utils_intrin_avx2.h */; };
+		152EC3A21DAEE49F00471C1B /* compv_math_utils_intrin_sse2.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC31B1DAEE49F00471C1B /* compv_math_utils_intrin_sse2.h */; };
+		152EC3A31DAEE49F00471C1B /* compv_math_utils_intrin_ssse3.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC31C1DAEE49F00471C1B /* compv_math_utils_intrin_ssse3.h */; };
+		152EC3A41DAEE49F00471C1B /* compv_asynctask.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC31E1DAEE49F00471C1B /* compv_asynctask.h */; };
+		152EC3A51DAEE49F00471C1B /* compv_asynctask11.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC31F1DAEE49F00471C1B /* compv_asynctask11.h */; };
+		152EC3A61DAEE4A000471C1B /* compv_condvar.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3201DAEE49F00471C1B /* compv_condvar.h */; };
+		152EC3A71DAEE4A000471C1B /* compv_mutex.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3211DAEE49F00471C1B /* compv_mutex.h */; };
+		152EC3A81DAEE4A000471C1B /* compv_parallel.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3221DAEE49F00471C1B /* compv_parallel.h */; };
+		152EC3A91DAEE4A000471C1B /* compv_semaphore.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3231DAEE49F00471C1B /* compv_semaphore.h */; };
+		152EC3AA1DAEE4A000471C1B /* compv_thread.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3241DAEE49F00471C1B /* compv_thread.h */; };
+		152EC3AB1DAEE4A000471C1B /* compv_threaddisp.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3251DAEE49F00471C1B /* compv_threaddisp.h */; };
+		152EC3AC1DAEE4A000471C1B /* compv_threaddisp11.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3261DAEE49F00471C1B /* compv_threaddisp11.h */; };
+		152EC3AD1DAEE4A000471C1B /* compv_time.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3281DAEE49F00471C1B /* compv_time.h */; };
+		152EC3AE1DAEE4A000471C1B /* compv_timer.h in Headers */ = {isa = PBXBuildFile; fileRef = 152EC3291DAEE49F00471C1B /* compv_timer.h */; };
+		152EC3AF1DAEE4A000471C1B /* compv_mem_intrin_avx.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC32C1DAEE49F00471C1B /* compv_mem_intrin_avx.cxx */; };
+		152EC3B01DAEE4A000471C1B /* compv_mem_intrin_sse2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC32D1DAEE49F00471C1B /* compv_mem_intrin_sse2.cxx */; };
+		152EC3B11DAEE4A000471C1B /* compv_math_macros_x86.s in Sources */ = {isa = PBXBuildFile; fileRef = 152EC3311DAEE49F00471C1B /* compv_math_macros_x86.s */; };
+		152EC3BB1DAEE4A000471C1B /* compv_math_utils_x86.s in Sources */ = {isa = PBXBuildFile; fileRef = 152EC33B1DAEE49F00471C1B /* compv_math_utils_x86.s */; };
+		152EC3BC1DAEE4A000471C1B /* compv_math_utils_x86_avx.s in Sources */ = {isa = PBXBuildFile; fileRef = 152EC33C1DAEE49F00471C1B /* compv_math_utils_x86_avx.s */; };
+		152EC3BD1DAEE4A000471C1B /* compv_math_utils_x86_sse.s in Sources */ = {isa = PBXBuildFile; fileRef = 152EC33D1DAEE49F00471C1B /* compv_math_utils_x86_sse.s */; };
+		152EC3BE1DAEE4A000471C1B /* compv_math.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC33E1DAEE49F00471C1B /* compv_math.cxx */; };
+		152EC3BF1DAEE4A000471C1B /* compv_math_utils.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC33F1DAEE49F00471C1B /* compv_math_utils.cxx */; };
+		152EC3CA1DAEE4A000471C1B /* compv_math_utils_intrin_avx2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC34C1DAEE49F00471C1B /* compv_math_utils_intrin_avx2.cxx */; };
+		152EC3CB1DAEE4A000471C1B /* compv_math_utils_intrin_sse2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC34D1DAEE49F00471C1B /* compv_math_utils_intrin_sse2.cxx */; };
+		152EC3CC1DAEE4A000471C1B /* compv_math_utils_intrin_ssse3.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC34E1DAEE49F00471C1B /* compv_math_utils_intrin_ssse3.cxx */; };
+		152EC3CD1DAEE4A000471C1B /* compv_asynctask.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC3501DAEE49F00471C1B /* compv_asynctask.cxx */; };
+		152EC3CE1DAEE4A000471C1B /* compv_asynctask11.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC3511DAEE49F00471C1B /* compv_asynctask11.cxx */; };
+		152EC3CF1DAEE4A000471C1B /* compv_condvar.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC3521DAEE49F00471C1B /* compv_condvar.cxx */; };
+		152EC3D01DAEE4A000471C1B /* compv_mutex.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC3531DAEE49F00471C1B /* compv_mutex.cxx */; };
+		152EC3D11DAEE4A000471C1B /* compv_parallel.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC3541DAEE49F00471C1B /* compv_parallel.cxx */; };
+		152EC3D21DAEE4A000471C1B /* compv_semaphore.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC3551DAEE49F00471C1B /* compv_semaphore.cxx */; };
+		152EC3D31DAEE4A000471C1B /* compv_thread.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC3561DAEE49F00471C1B /* compv_thread.cxx */; };
+		152EC3D41DAEE4A000471C1B /* compv_threaddisp.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC3571DAEE49F00471C1B /* compv_threaddisp.cxx */; };
+		152EC3D51DAEE4A000471C1B /* compv_threaddisp11.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC3581DAEE49F00471C1B /* compv_threaddisp11.cxx */; };
+		152EC3D61DAEE4A000471C1B /* compv_time.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC35A1DAEE49F00471C1B /* compv_time.cxx */; };
+		152EC3D71DAEE4A000471C1B /* compv_timer.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 152EC35B1DAEE49F00471C1B /* compv_timer.cxx */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildRule section */
+		152EC3D81DAEE60C00471C1B /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			fileType = sourcecode.asm;
+			isEditable = 1;
+			outputFiles = (
+				"${OBJECT_FILE_DIR_normal}/${CURRENT_ARCH}/${INPUT_FILE_BASE}.o",
+			);
+			script = "#!/bin/bash\nexport YASM_ARCH=macho64\nif [ \"${CURRENT_ARCH}\" = \"i386\" ]; then\nexport YASM_ARCH=macho32\nfi\nyasm -f ${YASM_ARCH} -o ${OBJECT_FILE_DIR_normal}/${CURRENT_ARCH}/${INPUT_FILE_BASE}.o ${INPUT_FILE_DIR}/${INPUT_FILE_NAME}";
+		};
+/* End PBXBuildRule section */
+
+/* Begin PBXFileReference section */
+		152EC1A81DAEE38F00471C1B /* libCompVBase.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCompVBase.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		152EC2CB1DAEE49F00471C1B /* compv_bits_macros_x86.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_bits_macros_x86.s; sourceTree = "<group>"; };
+		152EC2CC1DAEE49F00471C1B /* compv_bits_x86.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_bits_x86.s; sourceTree = "<group>"; };
+		152EC2CD1DAEE49F00471C1B /* compv_common_x86.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_common_x86.s; sourceTree = "<group>"; };
+		152EC2D61DAEE49F00471C1B /* compv_mem_x64.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_mem_x64.s; sourceTree = "<group>"; };
+		152EC2D71DAEE49F00471C1B /* compv_mem_x64_avx.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_mem_x64_avx.s; sourceTree = "<group>"; };
+		152EC2D81DAEE49F00471C1B /* compv_mem_x64_sse.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_mem_x64_sse.s; sourceTree = "<group>"; };
+		152EC2D91DAEE49F00471C1B /* compv_mem_x86.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_mem_x86.s; sourceTree = "<group>"; };
+		152EC2DA1DAEE49F00471C1B /* compv_mem_x86_avx.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_mem_x86_avx.s; sourceTree = "<group>"; };
+		152EC2DB1DAEE49F00471C1B /* compv_mem_x86_sse.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_mem_x86_sse.s; sourceTree = "<group>"; };
+		152EC2E01DAEE49F00471C1B /* compv_utils_x86.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_utils_x86.s; sourceTree = "<group>"; };
+		152EC2E11DAEE49F00471C1B /* compv_base.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_base.cxx; sourceTree = "<group>"; };
+		152EC2E21DAEE49F00471C1B /* compv_common.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_common.cxx; sourceTree = "<group>"; };
+		152EC2E31DAEE49F00471C1B /* compv_cpu.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_cpu.cxx; sourceTree = "<group>"; };
+		152EC2E41DAEE49F00471C1B /* compv_debug.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_debug.cxx; sourceTree = "<group>"; };
+		152EC2E51DAEE49F00471C1B /* compv_md5.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_md5.cxx; sourceTree = "<group>"; };
+		152EC2E61DAEE49F00471C1B /* compv_mem.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_mem.cxx; sourceTree = "<group>"; };
+		152EC2E71DAEE49F00471C1B /* compv_obj.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_obj.cxx; sourceTree = "<group>"; };
+		152EC2E81DAEE49F00471C1B /* compv_simd_globals.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_simd_globals.cxx; sourceTree = "<group>"; };
+		152EC2EC1DAEE49F00471C1B /* compv_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_base.h; sourceTree = "<group>"; };
+		152EC2ED1DAEE49F00471C1B /* compv_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_common.h; sourceTree = "<group>"; };
+		152EC2EE1DAEE49F00471C1B /* compv_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_config.h; sourceTree = "<group>"; };
+		152EC2EF1DAEE49F00471C1B /* compv_cpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_cpu.h; sourceTree = "<group>"; };
+		152EC2F01DAEE49F00471C1B /* compv_debug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_debug.h; sourceTree = "<group>"; };
+		152EC2F11DAEE49F00471C1B /* compv_errno.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_errno.h; sourceTree = "<group>"; };
+		152EC2F21DAEE49F00471C1B /* compv_md5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_md5.h; sourceTree = "<group>"; };
+		152EC2F31DAEE49F00471C1B /* compv_mem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_mem.h; sourceTree = "<group>"; };
+		152EC2F41DAEE49F00471C1B /* compv_obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_obj.h; sourceTree = "<group>"; };
+		152EC2F51DAEE49F00471C1B /* compv_simd_globals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_simd_globals.h; sourceTree = "<group>"; };
+		152EC2F81DAEE49F00471C1B /* compv_intrin_avx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_intrin_avx.h; sourceTree = "<group>"; };
+		152EC2F91DAEE49F00471C1B /* compv_intrin_sse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_intrin_sse.h; sourceTree = "<group>"; };
+		152EC2FA1DAEE49F00471C1B /* compv_mem_intrin_avx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_mem_intrin_avx.h; sourceTree = "<group>"; };
+		152EC2FB1DAEE49F00471C1B /* compv_mem_intrin_sse2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_mem_intrin_sse2.h; sourceTree = "<group>"; };
+		152EC30C1DAEE49F00471C1B /* compv_math.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math.h; sourceTree = "<group>"; };
+		152EC30D1DAEE49F00471C1B /* compv_math_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_utils.h; sourceTree = "<group>"; };
+		152EC3101DAEE49F00471C1B /* compv_math_convlt_intrin_avx2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_convlt_intrin_avx2.h; sourceTree = "<group>"; };
+		152EC3111DAEE49F00471C1B /* compv_math_convlt_intrin_sse2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_convlt_intrin_sse2.h; sourceTree = "<group>"; };
+		152EC3121DAEE49F00471C1B /* compv_math_matrix_intrin_avx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_matrix_intrin_avx.h; sourceTree = "<group>"; };
+		152EC3131DAEE49F00471C1B /* compv_math_matrix_intrin_avx2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_matrix_intrin_avx2.h; sourceTree = "<group>"; };
+		152EC3141DAEE49F00471C1B /* compv_math_matrix_intrin_sse2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_matrix_intrin_sse2.h; sourceTree = "<group>"; };
+		152EC3151DAEE49F00471C1B /* compv_math_matrix_intrin_sse41.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_matrix_intrin_sse41.h; sourceTree = "<group>"; };
+		152EC3161DAEE49F00471C1B /* compv_math_stats_intrin_avx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_stats_intrin_avx.h; sourceTree = "<group>"; };
+		152EC3171DAEE49F00471C1B /* compv_math_stats_intrin_sse2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_stats_intrin_sse2.h; sourceTree = "<group>"; };
+		152EC3181DAEE49F00471C1B /* compv_math_transform_intrin_avx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_transform_intrin_avx.h; sourceTree = "<group>"; };
+		152EC3191DAEE49F00471C1B /* compv_math_transform_intrin_sse2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_transform_intrin_sse2.h; sourceTree = "<group>"; };
+		152EC31A1DAEE49F00471C1B /* compv_math_utils_intrin_avx2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_utils_intrin_avx2.h; sourceTree = "<group>"; };
+		152EC31B1DAEE49F00471C1B /* compv_math_utils_intrin_sse2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_utils_intrin_sse2.h; sourceTree = "<group>"; };
+		152EC31C1DAEE49F00471C1B /* compv_math_utils_intrin_ssse3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_utils_intrin_ssse3.h; sourceTree = "<group>"; };
+		152EC31E1DAEE49F00471C1B /* compv_asynctask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_asynctask.h; sourceTree = "<group>"; };
+		152EC31F1DAEE49F00471C1B /* compv_asynctask11.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_asynctask11.h; sourceTree = "<group>"; };
+		152EC3201DAEE49F00471C1B /* compv_condvar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_condvar.h; sourceTree = "<group>"; };
+		152EC3211DAEE49F00471C1B /* compv_mutex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_mutex.h; sourceTree = "<group>"; };
+		152EC3221DAEE49F00471C1B /* compv_parallel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_parallel.h; sourceTree = "<group>"; };
+		152EC3231DAEE49F00471C1B /* compv_semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_semaphore.h; sourceTree = "<group>"; };
+		152EC3241DAEE49F00471C1B /* compv_thread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_thread.h; sourceTree = "<group>"; };
+		152EC3251DAEE49F00471C1B /* compv_threaddisp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_threaddisp.h; sourceTree = "<group>"; };
+		152EC3261DAEE49F00471C1B /* compv_threaddisp11.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_threaddisp11.h; sourceTree = "<group>"; };
+		152EC3281DAEE49F00471C1B /* compv_time.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_time.h; sourceTree = "<group>"; };
+		152EC3291DAEE49F00471C1B /* compv_timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_timer.h; sourceTree = "<group>"; };
+		152EC32C1DAEE49F00471C1B /* compv_mem_intrin_avx.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_mem_intrin_avx.cxx; sourceTree = "<group>"; };
+		152EC32D1DAEE49F00471C1B /* compv_mem_intrin_sse2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_mem_intrin_sse2.cxx; sourceTree = "<group>"; };
+		152EC3311DAEE49F00471C1B /* compv_math_macros_x86.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_math_macros_x86.s; sourceTree = "<group>"; };
+		152EC33B1DAEE49F00471C1B /* compv_math_utils_x86.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_math_utils_x86.s; sourceTree = "<group>"; };
+		152EC33C1DAEE49F00471C1B /* compv_math_utils_x86_avx.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_math_utils_x86_avx.s; sourceTree = "<group>"; };
+		152EC33D1DAEE49F00471C1B /* compv_math_utils_x86_sse.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_math_utils_x86_sse.s; sourceTree = "<group>"; };
+		152EC33E1DAEE49F00471C1B /* compv_math.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_math.cxx; sourceTree = "<group>"; };
+		152EC33F1DAEE49F00471C1B /* compv_math_utils.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_math_utils.cxx; sourceTree = "<group>"; };
+		152EC34C1DAEE49F00471C1B /* compv_math_utils_intrin_avx2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_math_utils_intrin_avx2.cxx; sourceTree = "<group>"; };
+		152EC34D1DAEE49F00471C1B /* compv_math_utils_intrin_sse2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_math_utils_intrin_sse2.cxx; sourceTree = "<group>"; };
+		152EC34E1DAEE49F00471C1B /* compv_math_utils_intrin_ssse3.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_math_utils_intrin_ssse3.cxx; sourceTree = "<group>"; };
+		152EC3501DAEE49F00471C1B /* compv_asynctask.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_asynctask.cxx; sourceTree = "<group>"; };
+		152EC3511DAEE49F00471C1B /* compv_asynctask11.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_asynctask11.cxx; sourceTree = "<group>"; };
+		152EC3521DAEE49F00471C1B /* compv_condvar.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_condvar.cxx; sourceTree = "<group>"; };
+		152EC3531DAEE49F00471C1B /* compv_mutex.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_mutex.cxx; sourceTree = "<group>"; };
+		152EC3541DAEE49F00471C1B /* compv_parallel.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_parallel.cxx; sourceTree = "<group>"; };
+		152EC3551DAEE49F00471C1B /* compv_semaphore.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_semaphore.cxx; sourceTree = "<group>"; };
+		152EC3561DAEE49F00471C1B /* compv_thread.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_thread.cxx; sourceTree = "<group>"; };
+		152EC3571DAEE49F00471C1B /* compv_threaddisp.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_threaddisp.cxx; sourceTree = "<group>"; };
+		152EC3581DAEE49F00471C1B /* compv_threaddisp11.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_threaddisp11.cxx; sourceTree = "<group>"; };
+		152EC35A1DAEE49F00471C1B /* compv_time.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_time.cxx; sourceTree = "<group>"; };
+		152EC35B1DAEE49F00471C1B /* compv_timer.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_timer.cxx; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		152EC1A51DAEE38F00471C1B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		152EC19F1DAEE38F00471C1B = {
+			isa = PBXGroup;
+			children = (
+				152EC2E11DAEE49F00471C1B /* compv_base.cxx */,
+				152EC2E21DAEE49F00471C1B /* compv_common.cxx */,
+				152EC2E31DAEE49F00471C1B /* compv_cpu.cxx */,
+				152EC2E41DAEE49F00471C1B /* compv_debug.cxx */,
+				152EC2E51DAEE49F00471C1B /* compv_md5.cxx */,
+				152EC2E61DAEE49F00471C1B /* compv_mem.cxx */,
+				152EC2E71DAEE49F00471C1B /* compv_obj.cxx */,
+				152EC2E81DAEE49F00471C1B /* compv_simd_globals.cxx */,
+				152EC2C91DAEE49F00471C1B /* asm */,
+				152EC2E91DAEE49F00471C1B /* include */,
+				152EC32A1DAEE49F00471C1B /* intrin */,
+				152EC32E1DAEE49F00471C1B /* math */,
+				152EC34F1DAEE49F00471C1B /* parallel */,
+				152EC3591DAEE49F00471C1B /* time */,
+				152EC1A91DAEE38F00471C1B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		152EC1A91DAEE38F00471C1B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				152EC1A81DAEE38F00471C1B /* libCompVBase.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		152EC2C91DAEE49F00471C1B /* asm */ = {
+			isa = PBXGroup;
+			children = (
+				152EC2CA1DAEE49F00471C1B /* x86 */,
+			);
+			path = asm;
+			sourceTree = "<group>";
+		};
+		152EC2CA1DAEE49F00471C1B /* x86 */ = {
+			isa = PBXGroup;
+			children = (
+				152EC2CB1DAEE49F00471C1B /* compv_bits_macros_x86.s */,
+				152EC2CC1DAEE49F00471C1B /* compv_bits_x86.s */,
+				152EC2CD1DAEE49F00471C1B /* compv_common_x86.s */,
+				152EC2D61DAEE49F00471C1B /* compv_mem_x64.s */,
+				152EC2D71DAEE49F00471C1B /* compv_mem_x64_avx.s */,
+				152EC2D81DAEE49F00471C1B /* compv_mem_x64_sse.s */,
+				152EC2D91DAEE49F00471C1B /* compv_mem_x86.s */,
+				152EC2DA1DAEE49F00471C1B /* compv_mem_x86_avx.s */,
+				152EC2DB1DAEE49F00471C1B /* compv_mem_x86_sse.s */,
+				152EC2E01DAEE49F00471C1B /* compv_utils_x86.s */,
+			);
+			path = x86;
+			sourceTree = "<group>";
+		};
+		152EC2E91DAEE49F00471C1B /* include */ = {
+			isa = PBXGroup;
+			children = (
+				152EC2EA1DAEE49F00471C1B /* compv */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		152EC2EA1DAEE49F00471C1B /* compv */ = {
+			isa = PBXGroup;
+			children = (
+				152EC2EB1DAEE49F00471C1B /* base */,
+			);
+			path = compv;
+			sourceTree = "<group>";
+		};
+		152EC2EB1DAEE49F00471C1B /* base */ = {
+			isa = PBXGroup;
+			children = (
+				152EC2EC1DAEE49F00471C1B /* compv_base.h */,
+				152EC2ED1DAEE49F00471C1B /* compv_common.h */,
+				152EC2EE1DAEE49F00471C1B /* compv_config.h */,
+				152EC2EF1DAEE49F00471C1B /* compv_cpu.h */,
+				152EC2F01DAEE49F00471C1B /* compv_debug.h */,
+				152EC2F11DAEE49F00471C1B /* compv_errno.h */,
+				152EC2F21DAEE49F00471C1B /* compv_md5.h */,
+				152EC2F31DAEE49F00471C1B /* compv_mem.h */,
+				152EC2F41DAEE49F00471C1B /* compv_obj.h */,
+				152EC2F51DAEE49F00471C1B /* compv_simd_globals.h */,
+				152EC2F61DAEE49F00471C1B /* intrin */,
+				152EC2FC1DAEE49F00471C1B /* math */,
+				152EC31D1DAEE49F00471C1B /* parallel */,
+				152EC3271DAEE49F00471C1B /* time */,
+			);
+			path = base;
+			sourceTree = "<group>";
+		};
+		152EC2F61DAEE49F00471C1B /* intrin */ = {
+			isa = PBXGroup;
+			children = (
+				152EC2F71DAEE49F00471C1B /* x86 */,
+			);
+			path = intrin;
+			sourceTree = "<group>";
+		};
+		152EC2F71DAEE49F00471C1B /* x86 */ = {
+			isa = PBXGroup;
+			children = (
+				152EC2F81DAEE49F00471C1B /* compv_intrin_avx.h */,
+				152EC2F91DAEE49F00471C1B /* compv_intrin_sse.h */,
+				152EC2FA1DAEE49F00471C1B /* compv_mem_intrin_avx.h */,
+				152EC2FB1DAEE49F00471C1B /* compv_mem_intrin_sse2.h */,
+			);
+			path = x86;
+			sourceTree = "<group>";
+		};
+		152EC2FC1DAEE49F00471C1B /* math */ = {
+			isa = PBXGroup;
+			children = (
+				152EC30C1DAEE49F00471C1B /* compv_math.h */,
+				152EC30D1DAEE49F00471C1B /* compv_math_utils.h */,
+				152EC30E1DAEE49F00471C1B /* intrin */,
+			);
+			path = math;
+			sourceTree = "<group>";
+		};
+		152EC30E1DAEE49F00471C1B /* intrin */ = {
+			isa = PBXGroup;
+			children = (
+				152EC30F1DAEE49F00471C1B /* x86 */,
+			);
+			path = intrin;
+			sourceTree = "<group>";
+		};
+		152EC30F1DAEE49F00471C1B /* x86 */ = {
+			isa = PBXGroup;
+			children = (
+				152EC3101DAEE49F00471C1B /* compv_math_convlt_intrin_avx2.h */,
+				152EC3111DAEE49F00471C1B /* compv_math_convlt_intrin_sse2.h */,
+				152EC3121DAEE49F00471C1B /* compv_math_matrix_intrin_avx.h */,
+				152EC3131DAEE49F00471C1B /* compv_math_matrix_intrin_avx2.h */,
+				152EC3141DAEE49F00471C1B /* compv_math_matrix_intrin_sse2.h */,
+				152EC3151DAEE49F00471C1B /* compv_math_matrix_intrin_sse41.h */,
+				152EC3161DAEE49F00471C1B /* compv_math_stats_intrin_avx.h */,
+				152EC3171DAEE49F00471C1B /* compv_math_stats_intrin_sse2.h */,
+				152EC3181DAEE49F00471C1B /* compv_math_transform_intrin_avx.h */,
+				152EC3191DAEE49F00471C1B /* compv_math_transform_intrin_sse2.h */,
+				152EC31A1DAEE49F00471C1B /* compv_math_utils_intrin_avx2.h */,
+				152EC31B1DAEE49F00471C1B /* compv_math_utils_intrin_sse2.h */,
+				152EC31C1DAEE49F00471C1B /* compv_math_utils_intrin_ssse3.h */,
+			);
+			path = x86;
+			sourceTree = "<group>";
+		};
+		152EC31D1DAEE49F00471C1B /* parallel */ = {
+			isa = PBXGroup;
+			children = (
+				152EC31E1DAEE49F00471C1B /* compv_asynctask.h */,
+				152EC31F1DAEE49F00471C1B /* compv_asynctask11.h */,
+				152EC3201DAEE49F00471C1B /* compv_condvar.h */,
+				152EC3211DAEE49F00471C1B /* compv_mutex.h */,
+				152EC3221DAEE49F00471C1B /* compv_parallel.h */,
+				152EC3231DAEE49F00471C1B /* compv_semaphore.h */,
+				152EC3241DAEE49F00471C1B /* compv_thread.h */,
+				152EC3251DAEE49F00471C1B /* compv_threaddisp.h */,
+				152EC3261DAEE49F00471C1B /* compv_threaddisp11.h */,
+			);
+			path = parallel;
+			sourceTree = "<group>";
+		};
+		152EC3271DAEE49F00471C1B /* time */ = {
+			isa = PBXGroup;
+			children = (
+				152EC3281DAEE49F00471C1B /* compv_time.h */,
+				152EC3291DAEE49F00471C1B /* compv_timer.h */,
+			);
+			path = time;
+			sourceTree = "<group>";
+		};
+		152EC32A1DAEE49F00471C1B /* intrin */ = {
+			isa = PBXGroup;
+			children = (
+				152EC32B1DAEE49F00471C1B /* x86 */,
+			);
+			path = intrin;
+			sourceTree = "<group>";
+		};
+		152EC32B1DAEE49F00471C1B /* x86 */ = {
+			isa = PBXGroup;
+			children = (
+				152EC32C1DAEE49F00471C1B /* compv_mem_intrin_avx.cxx */,
+				152EC32D1DAEE49F00471C1B /* compv_mem_intrin_sse2.cxx */,
+			);
+			path = x86;
+			sourceTree = "<group>";
+		};
+		152EC32E1DAEE49F00471C1B /* math */ = {
+			isa = PBXGroup;
+			children = (
+				152EC32F1DAEE49F00471C1B /* asm */,
+				152EC33E1DAEE49F00471C1B /* compv_math.cxx */,
+				152EC33F1DAEE49F00471C1B /* compv_math_utils.cxx */,
+				152EC3401DAEE49F00471C1B /* intrin */,
+			);
+			path = math;
+			sourceTree = "<group>";
+		};
+		152EC32F1DAEE49F00471C1B /* asm */ = {
+			isa = PBXGroup;
+			children = (
+				152EC3301DAEE49F00471C1B /* x86 */,
+			);
+			path = asm;
+			sourceTree = "<group>";
+		};
+		152EC3301DAEE49F00471C1B /* x86 */ = {
+			isa = PBXGroup;
+			children = (
+				152EC3311DAEE49F00471C1B /* compv_math_macros_x86.s */,
+				152EC33B1DAEE49F00471C1B /* compv_math_utils_x86.s */,
+				152EC33C1DAEE49F00471C1B /* compv_math_utils_x86_avx.s */,
+				152EC33D1DAEE49F00471C1B /* compv_math_utils_x86_sse.s */,
+			);
+			path = x86;
+			sourceTree = "<group>";
+		};
+		152EC3401DAEE49F00471C1B /* intrin */ = {
+			isa = PBXGroup;
+			children = (
+				152EC3411DAEE49F00471C1B /* x86 */,
+			);
+			path = intrin;
+			sourceTree = "<group>";
+		};
+		152EC3411DAEE49F00471C1B /* x86 */ = {
+			isa = PBXGroup;
+			children = (
+				152EC34C1DAEE49F00471C1B /* compv_math_utils_intrin_avx2.cxx */,
+				152EC34D1DAEE49F00471C1B /* compv_math_utils_intrin_sse2.cxx */,
+				152EC34E1DAEE49F00471C1B /* compv_math_utils_intrin_ssse3.cxx */,
+			);
+			path = x86;
+			sourceTree = "<group>";
+		};
+		152EC34F1DAEE49F00471C1B /* parallel */ = {
+			isa = PBXGroup;
+			children = (
+				152EC3501DAEE49F00471C1B /* compv_asynctask.cxx */,
+				152EC3511DAEE49F00471C1B /* compv_asynctask11.cxx */,
+				152EC3521DAEE49F00471C1B /* compv_condvar.cxx */,
+				152EC3531DAEE49F00471C1B /* compv_mutex.cxx */,
+				152EC3541DAEE49F00471C1B /* compv_parallel.cxx */,
+				152EC3551DAEE49F00471C1B /* compv_semaphore.cxx */,
+				152EC3561DAEE49F00471C1B /* compv_thread.cxx */,
+				152EC3571DAEE49F00471C1B /* compv_threaddisp.cxx */,
+				152EC3581DAEE49F00471C1B /* compv_threaddisp11.cxx */,
+			);
+			path = parallel;
+			sourceTree = "<group>";
+		};
+		152EC3591DAEE49F00471C1B /* time */ = {
+			isa = PBXGroup;
+			children = (
+				152EC35A1DAEE49F00471C1B /* compv_time.cxx */,
+				152EC35B1DAEE49F00471C1B /* compv_timer.cxx */,
+			);
+			path = time;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		152EC1A61DAEE38F00471C1B /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				152EC37E1DAEE49F00471C1B /* compv_debug.h in Headers */,
+				152EC37A1DAEE49F00471C1B /* compv_base.h in Headers */,
+				152EC3A91DAEE4A000471C1B /* compv_semaphore.h in Headers */,
+				152EC3851DAEE49F00471C1B /* compv_intrin_sse.h in Headers */,
+				152EC3831DAEE49F00471C1B /* compv_simd_globals.h in Headers */,
+				152EC39C1DAEE49F00471C1B /* compv_math_matrix_intrin_sse41.h in Headers */,
+				152EC3841DAEE49F00471C1B /* compv_intrin_avx.h in Headers */,
+				152EC3A01DAEE49F00471C1B /* compv_math_transform_intrin_sse2.h in Headers */,
+				152EC3971DAEE49F00471C1B /* compv_math_convlt_intrin_avx2.h in Headers */,
+				152EC3A51DAEE49F00471C1B /* compv_asynctask11.h in Headers */,
+				152EC3AD1DAEE4A000471C1B /* compv_time.h in Headers */,
+				152EC3951DAEE49F00471C1B /* compv_math.h in Headers */,
+				152EC3961DAEE49F00471C1B /* compv_math_utils.h in Headers */,
+				152EC37D1DAEE49F00471C1B /* compv_cpu.h in Headers */,
+				152EC3821DAEE49F00471C1B /* compv_obj.h in Headers */,
+				152EC39A1DAEE49F00471C1B /* compv_math_matrix_intrin_avx2.h in Headers */,
+				152EC3AE1DAEE4A000471C1B /* compv_timer.h in Headers */,
+				152EC3A21DAEE49F00471C1B /* compv_math_utils_intrin_sse2.h in Headers */,
+				152EC37F1DAEE49F00471C1B /* compv_errno.h in Headers */,
+				152EC3861DAEE49F00471C1B /* compv_mem_intrin_avx.h in Headers */,
+				152EC3811DAEE49F00471C1B /* compv_mem.h in Headers */,
+				152EC3A11DAEE49F00471C1B /* compv_math_utils_intrin_avx2.h in Headers */,
+				152EC39E1DAEE49F00471C1B /* compv_math_stats_intrin_sse2.h in Headers */,
+				152EC3981DAEE49F00471C1B /* compv_math_convlt_intrin_sse2.h in Headers */,
+				152EC39D1DAEE49F00471C1B /* compv_math_stats_intrin_avx.h in Headers */,
+				152EC3A61DAEE4A000471C1B /* compv_condvar.h in Headers */,
+				152EC3AA1DAEE4A000471C1B /* compv_thread.h in Headers */,
+				152EC3991DAEE49F00471C1B /* compv_math_matrix_intrin_avx.h in Headers */,
+				152EC3A71DAEE4A000471C1B /* compv_mutex.h in Headers */,
+				152EC3A41DAEE49F00471C1B /* compv_asynctask.h in Headers */,
+				152EC37B1DAEE49F00471C1B /* compv_common.h in Headers */,
+				152EC3AB1DAEE4A000471C1B /* compv_threaddisp.h in Headers */,
+				152EC3A31DAEE49F00471C1B /* compv_math_utils_intrin_ssse3.h in Headers */,
+				152EC37C1DAEE49F00471C1B /* compv_config.h in Headers */,
+				152EC3A81DAEE4A000471C1B /* compv_parallel.h in Headers */,
+				152EC39F1DAEE49F00471C1B /* compv_math_transform_intrin_avx.h in Headers */,
+				152EC3AC1DAEE4A000471C1B /* compv_threaddisp11.h in Headers */,
+				152EC3801DAEE49F00471C1B /* compv_md5.h in Headers */,
+				152EC3871DAEE49F00471C1B /* compv_mem_intrin_sse2.h in Headers */,
+				152EC39B1DAEE49F00471C1B /* compv_math_matrix_intrin_sse2.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		152EC1A71DAEE38F00471C1B /* CompVBase */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 152EC1B31DAEE38F00471C1B /* Build configuration list for PBXNativeTarget "CompVBase" */;
+			buildPhases = (
+				152EC1A41DAEE38F00471C1B /* Sources */,
+				152EC1A51DAEE38F00471C1B /* Frameworks */,
+				152EC1A61DAEE38F00471C1B /* Headers */,
+			);
+			buildRules = (
+				152EC3D81DAEE60C00471C1B /* PBXBuildRule */,
+			);
+			dependencies = (
+			);
+			name = CompVBase;
+			productName = CompVBase;
+			productReference = 152EC1A81DAEE38F00471C1B /* libCompVBase.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		152EC1A01DAEE38F00471C1B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0720;
+				ORGANIZATIONNAME = "Doubango Telecom";
+				TargetAttributes = {
+					152EC1A71DAEE38F00471C1B = {
+						CreatedOnToolsVersion = 7.2.1;
+					};
+				};
+			};
+			buildConfigurationList = 152EC1A31DAEE38F00471C1B /* Build configuration list for PBXProject "CompVBase" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 152EC19F1DAEE38F00471C1B;
+			productRefGroup = 152EC1A91DAEE38F00471C1B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				152EC1A71DAEE38F00471C1B /* CompVBase */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		152EC1A41DAEE38F00471C1B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				152EC3681DAEE49F00471C1B /* compv_mem_x64_avx.s in Sources */,
+				152EC3D01DAEE4A000471C1B /* compv_mutex.cxx in Sources */,
+				152EC3691DAEE49F00471C1B /* compv_mem_x64_sse.s in Sources */,
+				152EC3791DAEE49F00471C1B /* compv_simd_globals.cxx in Sources */,
+				152EC3671DAEE49F00471C1B /* compv_mem_x64.s in Sources */,
+				152EC3BD1DAEE4A000471C1B /* compv_math_utils_x86_sse.s in Sources */,
+				152EC3CC1DAEE4A000471C1B /* compv_math_utils_intrin_ssse3.cxx in Sources */,
+				152EC3711DAEE49F00471C1B /* compv_utils_x86.s in Sources */,
+				152EC3721DAEE49F00471C1B /* compv_base.cxx in Sources */,
+				152EC3D71DAEE4A000471C1B /* compv_timer.cxx in Sources */,
+				152EC3D61DAEE4A000471C1B /* compv_time.cxx in Sources */,
+				152EC3BE1DAEE4A000471C1B /* compv_math.cxx in Sources */,
+				152EC3B01DAEE4A000471C1B /* compv_mem_intrin_sse2.cxx in Sources */,
+				152EC3BF1DAEE4A000471C1B /* compv_math_utils.cxx in Sources */,
+				152EC3741DAEE49F00471C1B /* compv_cpu.cxx in Sources */,
+				152EC3D41DAEE4A000471C1B /* compv_threaddisp.cxx in Sources */,
+				152EC3D31DAEE4A000471C1B /* compv_thread.cxx in Sources */,
+				152EC3CD1DAEE4A000471C1B /* compv_asynctask.cxx in Sources */,
+				152EC36B1DAEE49F00471C1B /* compv_mem_x86_avx.s in Sources */,
+				152EC3D51DAEE4A000471C1B /* compv_threaddisp11.cxx in Sources */,
+				152EC36C1DAEE49F00471C1B /* compv_mem_x86_sse.s in Sources */,
+				152EC36A1DAEE49F00471C1B /* compv_mem_x86.s in Sources */,
+				152EC3D21DAEE4A000471C1B /* compv_semaphore.cxx in Sources */,
+				152EC3BB1DAEE4A000471C1B /* compv_math_utils_x86.s in Sources */,
+				152EC3761DAEE49F00471C1B /* compv_md5.cxx in Sources */,
+				152EC35D1DAEE49F00471C1B /* compv_bits_x86.s in Sources */,
+				152EC35C1DAEE49F00471C1B /* compv_bits_macros_x86.s in Sources */,
+				152EC3731DAEE49F00471C1B /* compv_common.cxx in Sources */,
+				152EC3AF1DAEE4A000471C1B /* compv_mem_intrin_avx.cxx in Sources */,
+				152EC3D11DAEE4A000471C1B /* compv_parallel.cxx in Sources */,
+				152EC3B11DAEE4A000471C1B /* compv_math_macros_x86.s in Sources */,
+				152EC3771DAEE49F00471C1B /* compv_mem.cxx in Sources */,
+				152EC3CA1DAEE4A000471C1B /* compv_math_utils_intrin_avx2.cxx in Sources */,
+				152EC35E1DAEE49F00471C1B /* compv_common_x86.s in Sources */,
+				152EC3CB1DAEE4A000471C1B /* compv_math_utils_intrin_sse2.cxx in Sources */,
+				152EC3751DAEE49F00471C1B /* compv_debug.cxx in Sources */,
+				152EC3781DAEE49F00471C1B /* compv_obj.cxx in Sources */,
+				152EC3BC1DAEE4A000471C1B /* compv_math_utils_x86_avx.s in Sources */,
+				152EC3CE1DAEE4A000471C1B /* compv_asynctask11.cxx in Sources */,
+				152EC3CF1DAEE4A000471C1B /* compv_condvar.cxx in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		152EC1B11DAEE38F00471C1B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "-march=native";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		152EC1B21DAEE38F00471C1B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_CFLAGS = "-march=native";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		152EC1B41DAEE38F00471C1B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				GCC_ENABLE_CPP_RTTI = YES;
+				HEADER_SEARCH_PATHS = include;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		152EC1B51DAEE38F00471C1B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				GCC_ENABLE_CPP_RTTI = YES;
+				HEADER_SEARCH_PATHS = include;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		152EC1A31DAEE38F00471C1B /* Build configuration list for PBXProject "CompVBase" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				152EC1B11DAEE38F00471C1B /* Debug */,
+				152EC1B21DAEE38F00471C1B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		152EC1B31DAEE38F00471C1B /* Build configuration list for PBXNativeTarget "CompVBase" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				152EC1B41DAEE38F00471C1B /* Debug */,
+				152EC1B51DAEE38F00471C1B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 152EC1A01DAEE38F00471C1B /* Project object */;
+}

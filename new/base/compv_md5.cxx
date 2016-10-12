@@ -165,7 +165,7 @@ COMPV_ERROR_CODE CompVMd5::final(compv_md5digest_t digest)
 */
 COMPV_ERROR_CODE CompVMd5::transform(uint32_t buf[4], uint32_t const in[COMPV_MD5_DIGEST_SIZE])
 {
-    register uint32_t a, b, c, d;
+    uint32_t a, b, c, d;
 
     a = buf[0];
     b = buf[1];

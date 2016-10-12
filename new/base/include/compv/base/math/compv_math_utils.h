@@ -124,7 +124,7 @@ public:
 		OutputType* sums = (OutputType*)CompVMem::malloc(height * sizeof(OutputType));
 		COMPV_CHECK_EXP_RETURN(!sums, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 		for (size_t j = 0; j < height; ++j) {
-			CompVMathUtils::sum<InputType, OutputType>(data, width, sums[j]);
+			CompVMathUtils::sum<InputType, OutputType>(a, width, sums[j]);
 			a += stride;
 		}
 		CompVMathUtils::sum<OutputType, OutputType>(sums, height, r);
@@ -295,10 +295,12 @@ private:
 	static int(*roundFloatSignedFunc)(float f);
 };
 
+#if defined(_MSC_VER)
 extern template COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint16_t*& r, size_t width, size_t height, size_t stride);
 extern template COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t count, uint32_t &r);
 extern template COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_t* s, size_t width, size_t height, size_t stride);
 extern template COMPV_ERROR_CODE CompVMathUtils::mean(const uint8_t* data, size_t count, uint8_t &mean);
+#endif /* _MSC_VER */
 
 COMPV_NAMESPACE_END()
 

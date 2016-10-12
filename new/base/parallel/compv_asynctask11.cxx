@@ -214,9 +214,6 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
 	COMPV_ERROR_CODE err_;
 	size_t size_;
 
-	(pToken_);
-	(size_);
-
 	// Make sure the affinity is defined. This function is called in start() but after thread creation which means we could miss it if this function is called very fast
 #if COMPV_PARALLEL_THREAD_SET_AFFINITY
 	if (Self_->m_iCoreId >= 0) {
@@ -224,7 +221,7 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
 	}
 	COMPV_DEBUG_INFO("CompVAsyncTask11::run(coreId:requested=%d,set=%d, threadId:%llu, kThreadSetAffinity:true) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), (unsigned long)CompVThread::getIdCurrent());
 #else
-	COMPV_DEBUG_INFO("CompVAsyncTask11::run(coreId:requested=%d,set=useless, threadId:%llu, kThreadSetAffinity:false) - ENTER", Self_->m_iCoreId, (unsigned long)CompVThread::getIdCurrent());
+	COMPV_DEBUG_INFO("CompVAsyncTask11::run(coreId:requested=%d,set=useless, threadId:%lu, kThreadSetAffinity:false) - ENTER", Self_->m_iCoreId, (unsigned long)CompVThread::getIdCurrent());
 #endif
 
 	while (Self_->m_bStarted) {

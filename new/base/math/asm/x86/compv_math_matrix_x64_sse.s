@@ -6,7 +6,7 @@
 ; WebSite: http://compv.org												;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-%include "../compv_common_x86.s"
+%include "../../../asm/x86/compv_common_x86.s"
 
 %if COMPV_YASM_ABI_IS_64BIT
 

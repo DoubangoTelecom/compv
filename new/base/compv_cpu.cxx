@@ -106,6 +106,7 @@ static void CompVX86CpuId(uint32_t eax, uint32_t ecx, uint32* cpu_info)
 }
 #endif
 
+#if COMPV_ARCH_ARM
 static uint64_t CompVArmCaps(const char* cpuinfo_name)
 {
     char cpuinfo_line[1024];
@@ -133,6 +134,7 @@ static uint64_t CompVArmCaps(const char* cpuinfo_name)
     fclose(f);
     return 0;
 }
+#endif
 
 #if defined(COMPV_ARCH_MIPS) && defined(__linux__)
 static uint64_t CompVMipsCaps(const char* search_string)

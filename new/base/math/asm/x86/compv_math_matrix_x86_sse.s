@@ -6,7 +6,7 @@
 ; WebSite: http://compv.org												;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-%include "../compv_common_x86.s"
+%include "../../../asm/x86/compv_common_x86.s"
 
 COMPV_YASM_DEFAULT_REL
 
