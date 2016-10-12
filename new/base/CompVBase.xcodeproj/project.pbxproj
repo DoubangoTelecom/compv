@@ -103,7 +103,7 @@
 /* End PBXBuildRule section */
 
 /* Begin PBXFileReference section */
-		152EC1A81DAEE38F00471C1B /* libCompVBase.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCompVBase.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		152EC1A81DAEE38F00471C1B /* libCompVBase.dylib */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCompVBase.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		152EC2CB1DAEE49F00471C1B /* compv_bits_macros_x86.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_bits_macros_x86.s; sourceTree = "<group>"; };
 		152EC2CC1DAEE49F00471C1B /* compv_bits_x86.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_bits_x86.s; sourceTree = "<group>"; };
 		152EC2CD1DAEE49F00471C1B /* compv_common_x86.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_common_x86.s; sourceTree = "<group>"; };
@@ -221,7 +221,7 @@
 		152EC1A91DAEE38F00471C1B /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				152EC1A81DAEE38F00471C1B /* libCompVBase.a */,
+				152EC1A81DAEE38F00471C1B /* libCompVBase.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -528,7 +528,7 @@
 			);
 			name = CompVBase;
 			productName = CompVBase;
-			productReference = 152EC1A81DAEE38F00471C1B /* libCompVBase.a */;
+			productReference = 152EC1A81DAEE38F00471C1B /* libCompVBase.dylib */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -649,6 +649,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACH_O_TYPE = mh_dylib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -687,6 +688,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACH_O_TYPE = mh_dylib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_CFLAGS = "-march=native";
@@ -697,6 +699,7 @@
 		152EC1B41DAEE38F00471C1B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				EXECUTABLE_EXTENSION = dylib;
 				EXECUTABLE_PREFIX = lib;
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_CPP_RTTI = YES;
@@ -708,6 +711,7 @@
 		152EC1B51DAEE38F00471C1B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				EXECUTABLE_EXTENSION = dylib;
 				EXECUTABLE_PREFIX = lib;
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_CPP_RTTI = YES;

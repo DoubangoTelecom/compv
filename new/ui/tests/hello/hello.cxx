@@ -1,12 +1,16 @@
-// hello.cpp : Defines the entry point for the console application.
-//
-
-#include "stdafx.h"
 #include <compv/compv_api.h>
+
+#if COMPV_OS_WINDOWS
+#include <tchar.h>
+#endif
 
 using namespace compv;
 
+#if COMPV_OS_WINDOWS
 int _tmain(int argc, _TCHAR* argv[])
+#else
+int main(int argc, char** argv)
+#endif
 {
 	COMPV_ERROR_CODE err;
 	CompVWindowPtr window;
@@ -33,6 +37,7 @@ bail:
 	COMPV_ASSERT(CompVMem::isEmpty());
 	// Make sure we freed all allocated objects
 	COMPV_ASSERT(CompVObj::isEmpty());
-	return -1;
+    
+	return 0;
 }
 
