@@ -23,6 +23,11 @@ CompVWindow::CompVWindow(int width, int height, const char* title /*= "Unknown"*
 {
 	m_WindowCreationThreadId = CompVThread::getIdCurrent();
 #if HAVE_GLFW
+#   if COMPV_OS_APPLE
+    if (!pthread_main_np()) {
+        COMPV_DEBUG_WARN("MacOS: Creating window outside main thread");
+    }
+#   endif /* COMPV_OS_APPLE */
 	m_pGLFWwindow = glfwCreateWindow(width, height, title, NULL, NULL);
 	if (!m_pGLFWwindow) {
 		COMPV_DEBUG_ERROR("glfwCreateWindow(%d, %d, %s) failed", width, height, title);

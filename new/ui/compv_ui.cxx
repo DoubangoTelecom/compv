@@ -119,6 +119,11 @@ COMPV_ERROR_CODE CompVUI::runLoop()
 	if (CompVUI::isLoopRunning()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
+#   if COMPV_OS_APPLE
+    if (!pthread_main_np()) {
+        COMPV_DEBUG_WARN("MacOS: Runnin even loop outside main thread");
+    }
+#   endif /* COMPV_OS_APPLE */
 	CompVUI::s_bLoopRunning = true;
 	compv_thread_id_t eventLoopThreadId = CompVThread::getIdCurrent();
 
@@ -149,7 +154,7 @@ again:
 			}
 #elif COMPV_OS_APPLE
 			// OSX requires to use same thread for window/context creation and event polling. And this thread must be the main (thread 0).
-			COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Check it's the main thread
+            // Checking if the current thread is the main one is done above
 			if (window->getWindowCreationThreadId() != eventLoopThreadId) {
 				COMPV_DEBUG_WARN("MacOS: context creation thread (%ld) different than event looping thread (%ld)", (long)window->getWindowCreationThreadId(), (long)eventLoopThreadId);
 			}
