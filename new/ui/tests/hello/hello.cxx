@@ -26,7 +26,7 @@ bail:
 		COMPV_DEBUG_ERROR("Something went wrong!!");
 	}
 	
-	getchar();
+	COMPV_CHECK_CODE_BAIL(err = CompVUI::runLoop());
 
 	// Destroy window (not required)
 	window = NULL;
