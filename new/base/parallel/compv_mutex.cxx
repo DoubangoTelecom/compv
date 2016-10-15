@@ -56,7 +56,7 @@ CompVMutex::CompVMutex(bool recursive /*= true*/)
     /* if we are here: all is ok */
     m_pHandle = CompVMem::calloc(1, sizeof(MUTEX_S));
     if (pthread_mutex_init((MUTEX_T)m_pHandle, &mta)) {
-        CompVMem::free((void**)m_pHandle);
+        CompVMem::free((void**)&m_pHandle);
     }
     pthread_mutexattr_destroy(&mta);
 #endif
@@ -74,8 +74,9 @@ CompVMutex::~CompVMutex()
         CloseHandle((MUTEX_T)m_pHandle);
         m_pHandle = NULL;
 #else
-        pthread_mutex_destroy((MUTEX_T)m_pHandle);
-        CompVMem::free((void**)m_pHandle);
+        MUTEX_S mutex = *((MUTEX_T)m_pHandle); // save mutex to avoid recursive call in CompVMem::isSpecial()
+        CompVMem::free((void**)&m_pHandle);
+        pthread_mutex_destroy(&mutex);
 #endif
     }
 }

@@ -151,7 +151,7 @@ again:
 			// OSX requires to use same thread for window/context creation and event polling. And this thread must be the main (thread 0).
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Check it's the main thread
 			if (window->getWindowCreationThreadId() != eventLoopThreadId) {
-				COMPV_DEBUG_WARN("MacOS: context creation thread (%ld) different than event looping thread (%ld)", window->getWindowCreationThreadId(), eventLoopThreadId);
+				COMPV_DEBUG_WARN("MacOS: context creation thread (%ld) different than event looping thread (%ld)", (long)window->getWindowCreationThreadId(), (long)eventLoopThreadId);
 			}
 #else
 			// No requirement for Linux
