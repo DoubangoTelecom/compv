@@ -23,6 +23,7 @@ CompVWindow::CompVWindow(int width, int height, const char* title /*= "Unknown"*
 {
 	m_WindowCreationThreadId = CompVThread::getIdCurrent();
 #if HAVE_GLFW
+    COMPV_DEBUG_INFO("Creating window on thread with id = %ld", (long)CompVThread::getIdCurrent());
 #   if COMPV_OS_APPLE
     if (!pthread_main_np()) {
         COMPV_DEBUG_WARN("MacOS: Creating window outside main thread");
@@ -33,8 +34,7 @@ CompVWindow::CompVWindow(int width, int height, const char* title /*= "Unknown"*
 		COMPV_DEBUG_ERROR("glfwCreateWindow(%d, %d, %s) failed", width, height, title);
 		return;
 	}
-	glfwMakeContextCurrent(m_pGLFWwindow);
-	glfwSwapInterval(1);
+    CompVThread::newObj(&m_GLFWThread, CompVWindow::GLFWThread, this);
 #else
 	COMPV_DEBUG_INFO("GLFW not enabled. No window will be created.")
 #endif /* HAVE_GLFW */
@@ -51,6 +51,15 @@ CompVWindow::~CompVWindow()
 #endif /* HAVE_GLFW */
 
 	COMPV_CHECK_CODE_ASSERT(CompVUI::unregisterWindow(m_Id)); // do not use "this" in the destructor (issue with reference counting which is equal to zero)
+    m_GLFWThread = NULL;
+}
+
+COMPV_ERROR_CODE CompVWindow::close()
+{
+    if (m_pGLFWwindow) {
+        glfwSetWindowShouldClose(m_pGLFWwindow, GLFW_TRUE);
+    }
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVWindow::newObj(CompVPtr<CompVWindow*>* window, int width, int height, const char* title /*= "Unknown"*/)
@@ -61,10 +70,36 @@ COMPV_ERROR_CODE CompVWindow::newObj(CompVPtr<CompVWindow*>* window, int width, 
 	COMPV_CHECK_EXP_RETURN(!window_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 #if HAVE_GLFW
 	COMPV_CHECK_EXP_RETURN(!window_->m_pGLFWwindow, COMPV_ERROR_CODE_E_GLFW);
+    COMPV_CHECK_EXP_RETURN(!window_->m_GLFWThread, COMPV_ERROR_CODE_E_SYSTEM);
 #endif
 	*window = window_;
 	return COMPV_ERROR_CODE_S_OK;
 }
+
+#if HAVE_GLFW
+void* CompVWindow::GLFWThread(void* arg)
+{
+    CompVWindow* This = static_cast<CompVWindow*>(arg);
+    
+    glfwMakeContextCurrent(This->m_pGLFWwindow);
+    glfwSwapInterval(1);
+    
+    while (!glfwWindowShouldClose(This->m_pGLFWwindow)) {
+        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor((GLclampf)(rand() % 255) / 255.f,
+                     (GLclampf)(rand() % 255) / 255.f,
+                     (GLclampf)(rand() % 255) / 255.f,
+                     (GLclampf)(rand() % 255) / 255.f);
+        glfwSwapBuffers(This->m_pGLFWwindow);
+    }
+    
+    COMPV_CHECK_CODE_ASSERT(CompVUI::unregisterWindow(This));
+    
+    COMPV_DEBUG_INFO("GLFWThread, windowId = %ld exited", This->m_Id);
+    
+    return NULL;
+}
+#endif /* HAVE_GLFW */
 
 COMPV_NAMESPACE_END()
 

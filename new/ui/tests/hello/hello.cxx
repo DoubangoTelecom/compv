@@ -13,13 +13,14 @@ int main(int argc, char** argv)
 #endif
 {
 	COMPV_ERROR_CODE err;
-	CompVWindowPtr window;
+	CompVWindowPtr window1, window2;
 
 	// Init the modules
 	COMPV_CHECK_CODE_BAIL(err = CompVInit());
 
 	// Create "Hello world!" window
-	COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window, 640, 480, "Hello world!"));
+	COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window1, 640, 480, "Hello world!"));
+    COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window2, 640, 480, "Hello france!"));
 
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
@@ -29,7 +30,8 @@ bail:
 	COMPV_CHECK_CODE_BAIL(err = CompVUI::runLoop());
 
 	// Destroy window (not required)
-	window = NULL;
+	window1 = NULL;
+    window2 = NULL;
 	
 	// DeInit the modules
 	COMPV_CHECK_CODE_ASSERT(err = CompVDeInit());

@@ -126,55 +126,20 @@ COMPV_ERROR_CODE CompVUI::runLoop()
 #   endif /* COMPV_OS_APPLE */
 	CompVUI::s_bLoopRunning = true;
 	compv_thread_id_t eventLoopThreadId = CompVThread::getIdCurrent();
+    
+    
+    // Windows requires to use same thread for window/context creation and event polling
+    // OSX requires to use same thread for window/context creation and event polling. And this thread must be the main (thread 0).
+    COMPV_DEBUG_INFO("Running event loop on thread with id = %ld", (long)eventLoopThreadId);
 
 	while (CompVUI::s_bLoopRunning) {
+        if (CompVUI::windowsCount() == 0) {
+            COMPV_DEBUG_INFO("No active windows in the event loop... breaking the loop")
+            CompVUI::s_bLoopRunning = false;
+            break;
+        }
 #if HAVE_GLFW
-		COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->lock());
-
-		if (CompVUI::m_sWindows.size() == 0) {
-			COMPV_DEBUG_INFO("No active windows in the event loop... breaking the loop")
-			CompVUI::s_bLoopRunning = false;
-			COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->unlock());
-			break;
-		}
-
-		std::map<compv_window_id_t, CompVPtr<CompVWindow* > >::iterator it;
-again:
-		for (it = CompVUI::m_sWindows.begin(); it != CompVUI::m_sWindows.end(); ++it) {
-			CompVPtr<CompVWindow* > window = it->second;
-			struct GLFWwindow * glfwWindow = window->getGLFWwindow();
-			if (!glfwWindow || glfwWindowShouldClose(glfwWindow)) {
-				CompVUI::unregisterWindow(window);
-				goto again;
-			}
-#if COMPV_OS_WINDOWS
-			// Windows requires to use same thread for window/context creation and event polling
-			if (window->getWindowCreationThreadId() != eventLoopThreadId) {
-				COMPV_DEBUG_WARN("Windows: context creation thread (%ld) different than event looping thread (%ld)", window->getWindowCreationThreadId(), eventLoopThreadId);
-			}
-#elif COMPV_OS_APPLE
-			// OSX requires to use same thread for window/context creation and event polling. And this thread must be the main (thread 0).
-            // Checking if the current thread is the main one is done above
-			if (window->getWindowCreationThreadId() != eventLoopThreadId) {
-				COMPV_DEBUG_WARN("MacOS: context creation thread (%ld) different than event looping thread (%ld)", (long)window->getWindowCreationThreadId(), (long)eventLoopThreadId);
-			}
-#else
-			// No requirement for Linux
-#endif
-			glfwMakeContextCurrent(glfwWindow);
-			/* Render here */
-			glClear(GL_COLOR_BUFFER_BIT);
-			glClearColor((GLclampf)(rand() % 255) / 255.f,
-				(GLclampf)(rand() % 255) / 255.f,
-				(GLclampf)(rand() % 255) / 255.f,
-				(GLclampf)(rand() % 255) / 255.f);
-
-			/* Swap buffers and render */
-			glfwSwapBuffers(glfwWindow);
-			glfwPollEvents();
-		}
-
-		COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->unlock());
+        glfwWaitEvents();
 #else
 		CompVThread::sleep(1);
 #endif /* HAVE_GLFW */
@@ -187,6 +152,16 @@ COMPV_ERROR_CODE CompVUI::breakLoop()
 {
 	COMPV_CHECK_EXP_RETURN(!isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	CompVUI::s_bLoopRunning = false;
+    
+    COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->lock());
+    std::map<compv_window_id_t, CompVPtr<CompVWindow* > >::iterator it;
+    for (it = CompVUI::m_sWindows.begin(); it != CompVUI::m_sWindows.end(); ++it) {
+        CompVPtr<CompVWindow* > window = it->second;
+        COMPV_CHECK_CODE_ASSERT(window->close());
+    }
+    CompVUI::m_sWindows.clear();
+    COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->unlock());
+    
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -205,6 +180,8 @@ COMPV_ERROR_CODE CompVUI::deInit()
 	/* Base */
 	CompVBase::deInit();
 
+    CompVUI::breakLoop();
+    
 	CompVUI::m_sWindows.clear();
 	CompVUI::m_sWindowsMutex = NULL;
 

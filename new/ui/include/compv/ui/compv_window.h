@@ -32,10 +32,13 @@ public:
 
 	COMPV_INLINE compv_window_id_t getId() { return m_Id; }
 	COMPV_INLINE compv_thread_id_t getWindowCreationThreadId() { return m_WindowCreationThreadId; }
+    
+    COMPV_ERROR_CODE close();
 
 	static COMPV_ERROR_CODE newObj(CompVPtr<CompVWindow*>* window, int width, int height, const char* title = "Unknown");
 #if HAVE_GLFW
 	COMPV_INLINE struct GLFWwindow * getGLFWwindow() { return m_pGLFWwindow; }
+    static void* GLFWThread(void*);
 #endif
 
 private:
@@ -48,6 +51,7 @@ private:
 	compv_window_id_t m_Id;
 #if HAVE_GLFW
 	struct GLFWwindow *m_pGLFWwindow;
+    CompVPtr<CompVThread* > m_GLFWThread;
 #endif
 	COMPV_DISABLE_WARNINGS_END()
 };
