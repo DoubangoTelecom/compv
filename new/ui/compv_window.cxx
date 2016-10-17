@@ -23,7 +23,7 @@ CompVWindow::CompVWindow(int width, int height, const char* title /*= "Unknown"*
 {
 	m_WindowCreationThreadId = CompVThread::getIdCurrent();
 #if HAVE_GLFW
-    COMPV_DEBUG_INFO("Creating window on thread with id = %ld", (long)CompVThread::getIdCurrent());
+	COMPV_DEBUG_INFO("Creating window (%s) on thread with id = %ld", title, (long)CompVThread::getIdCurrent());
 #   if COMPV_OS_APPLE
     if (!pthread_main_np()) {
         COMPV_DEBUG_WARN("MacOS: Creating window outside main thread");
@@ -34,6 +34,9 @@ CompVWindow::CompVWindow(int width, int height, const char* title /*= "Unknown"*
 		COMPV_DEBUG_ERROR("glfwCreateWindow(%d, %d, %s) failed", width, height, title);
 		return;
 	}
+	glfwMakeContextCurrent(m_pGLFWwindow);
+	glfwSwapInterval(1);
+	glfwMakeContextCurrent(NULL);
     CompVThread::newObj(&m_GLFWThread, CompVWindow::GLFWThread, this);
 #else
 	COMPV_DEBUG_INFO("GLFW not enabled. No window will be created.")
@@ -62,6 +65,27 @@ COMPV_ERROR_CODE CompVWindow::close()
     return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVWindow::draw()
+{
+#if HAVE_GLFW
+	COMPV_CHECK_EXP_RETURN(!m_pGLFWwindow, COMPV_ERROR_CODE_E_INVALID_STATE);
+	if (!glfwWindowShouldClose(m_pGLFWwindow)) {
+		glfwMakeContextCurrent(m_pGLFWwindow);
+
+		glClear(GL_COLOR_BUFFER_BIT);
+		glClearColor((GLclampf)(rand() % 255) / 255.f,
+			(GLclampf)(rand() % 255) / 255.f,
+			(GLclampf)(rand() % 255) / 255.f,
+			(GLclampf)(rand() % 255) / 255.f);
+
+		glfwSwapBuffers(m_pGLFWwindow);
+	}
+#else
+#endif /* HAVE_GLFW */
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVWindow::newObj(CompVPtr<CompVWindow*>* window, int width, int height, const char* title /*= "Unknown"*/)
 {
 	COMPV_CHECK_CODE_RETURN(CompVUI::init());
@@ -77,11 +101,11 @@ COMPV_ERROR_CODE CompVWindow::newObj(CompVPtr<CompVWindow*>* window, int width, 
 }
 
 #if HAVE_GLFW
-void* CompVWindow::GLFWThread(void* arg)
+void* COMPV_STDCALL CompVWindow::GLFWThread(void* arg)
 {
     CompVWindow* This = static_cast<CompVWindow*>(arg);
     
-    glfwMakeContextCurrent(This->m_pGLFWwindow);
+    /*glfwMakeContextCurrent(This->m_pGLFWwindow);
     glfwSwapInterval(1);
     
     while (!glfwWindowShouldClose(This->m_pGLFWwindow)) {
@@ -94,6 +118,7 @@ void* CompVWindow::GLFWThread(void* arg)
     }
     
     COMPV_CHECK_CODE_ASSERT(CompVUI::unregisterWindow(This));
+	*/
     
     COMPV_DEBUG_INFO("GLFWThread, windowId = %ld exited", This->m_Id);
     

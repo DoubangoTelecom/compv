@@ -13,6 +13,15 @@
 #include <compv/base/compv_mem.h>
 #include <compv/base/compv_obj.h>
 
+#include <compv/base/parallel/compv_asynctask.h>
+#include <compv/base/parallel/compv_asynctask11.h>
+#include <compv/base/parallel/compv_condvar.h>
+#include <compv/base/parallel/compv_mutex.h>
+#include <compv/base/parallel/compv_semaphore.h>
+#include <compv/base/parallel/compv_thread.h>
+#include <compv/base/parallel/compv_threaddisp.h>
+#include <compv/base/parallel/compv_threaddisp11.h>
+
 /* Module: UI */
 #include <compv/ui/compv_ui.h>
 #include <compv/ui/compv_window.h>

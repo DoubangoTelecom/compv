@@ -34,11 +34,12 @@ public:
 	COMPV_INLINE compv_thread_id_t getWindowCreationThreadId() { return m_WindowCreationThreadId; }
     
     COMPV_ERROR_CODE close();
+	COMPV_ERROR_CODE draw();
 
 	static COMPV_ERROR_CODE newObj(CompVPtr<CompVWindow*>* window, int width, int height, const char* title = "Unknown");
 #if HAVE_GLFW
 	COMPV_INLINE struct GLFWwindow * getGLFWwindow() { return m_pGLFWwindow; }
-    static void* GLFWThread(void*);
+	static void* COMPV_STDCALL GLFWThread(void*);
 #endif
 
 private:

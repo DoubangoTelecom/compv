@@ -128,8 +128,12 @@ COMPV_ERROR_CODE CompVUI::runLoop()
 	compv_thread_id_t eventLoopThreadId = CompVThread::getIdCurrent();
     
     
-    // Windows requires to use same thread for window/context creation and event polling
-    // OSX requires to use same thread for window/context creation and event polling. And this thread must be the main (thread 0).
+    // http://forum.lwjgl.org/index.php?topic=5836.0
+	// Context creation and using rules:
+	//There are 3 concepts you need to be aware of : (A)window / context creation(B) running the event loop that dispatches events for the window and(C) making the context current in a thread.
+	//	- On Windows, (A)and(B) must happen on the same thread.It doesn't have to be the main thread. (C) can happen on any thread.
+	//	- On Linux, you can have(A), (B)and(C) on any thread.
+	//	- On Mac OS X, (A)and(B) must happen on the same thread, that must also be the main thread(thread 0).Again, (C)can happen on any thread.
     COMPV_DEBUG_INFO("Running event loop on thread with id = %ld", (long)eventLoopThreadId);
 
 	while (CompVUI::s_bLoopRunning) {
