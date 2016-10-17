@@ -143,7 +143,7 @@ COMPV_ERROR_CODE CompVUI::runLoop()
             break;
         }
 #if HAVE_GLFW
-        glfwWaitEvents();
+		glfwWaitEvents();
 #else
 		CompVThread::sleep(1);
 #endif /* HAVE_GLFW */

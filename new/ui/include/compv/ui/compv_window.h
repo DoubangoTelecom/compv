@@ -11,6 +11,7 @@
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/parallel/compv_thread.h"
+#include "compv/base/parallel/compv_mutex.h"
 
 #include <string>
 
@@ -33,13 +34,15 @@ public:
 	COMPV_INLINE compv_window_id_t getId() { return m_Id; }
 	COMPV_INLINE compv_thread_id_t getWindowCreationThreadId() { return m_WindowCreationThreadId; }
     
+	bool isClosed();
+
     COMPV_ERROR_CODE close();
 	COMPV_ERROR_CODE draw();
 
 	static COMPV_ERROR_CODE newObj(CompVPtr<CompVWindow*>* window, int width, int height, const char* title = "Unknown");
 #if HAVE_GLFW
 	COMPV_INLINE struct GLFWwindow * getGLFWwindow() { return m_pGLFWwindow; }
-	static void* COMPV_STDCALL GLFWThread(void*);
+	static void GLFWwindowcloseCallback(GLFWwindow* window);
 #endif
 
 private:
@@ -52,7 +55,7 @@ private:
 	compv_window_id_t m_Id;
 #if HAVE_GLFW
 	struct GLFWwindow *m_pGLFWwindow;
-    CompVPtr<CompVThread* > m_GLFWThread;
+	CompVPtr<CompVMutex* > m_GLFWMutex;
 #endif
 	COMPV_DISABLE_WARNINGS_END()
 };

@@ -35,7 +35,7 @@ bail:
 		COMPV_DEBUG_ERROR("Something went wrong!!");
 	}
 
-	// Destroy window (not required)
+	workerThread = NULL;
 	window1 = NULL;
     window2 = NULL;
 	
@@ -53,8 +53,9 @@ bail:
 static void* COMPV_STDCALL WorkerThread(void* arg)
 {
 	while (CompVUI::isLoopRunning()) {
-		COMPV_CHECK_CODE_BAIL(window1->draw());
-		COMPV_CHECK_CODE_BAIL(window2->draw());
+		COMPV_ERROR_CODE err;
+		COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window1->draw()) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
+		COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window2->draw()) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
 	}
 
 bail:
