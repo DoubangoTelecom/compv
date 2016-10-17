@@ -7,7 +7,6 @@
 using namespace compv;
 
 CompVWindowPtr window1, window2;
-CompVPtr<CompVThread* > workerThread;
 
 static void* COMPV_STDCALL WorkerThread(void* arg);
 
@@ -26,16 +25,13 @@ int main(int argc, char** argv)
 	COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window1, 640, 480, "Hello world!"));
     COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window2, 640, 480, "Hello france!"));
 
-	COMPV_CHECK_CODE_BAIL(err = CompVThread::newObj(&workerThread, WorkerThread, NULL));
-
-	COMPV_CHECK_CODE_BAIL(err = CompVUI::runLoop());
+	COMPV_CHECK_CODE_BAIL(err = CompVUI::runLoop(WorkerThread));
 
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
 		COMPV_DEBUG_ERROR("Something went wrong!!");
 	}
 
-	workerThread = NULL;
 	window1 = NULL;
     window2 = NULL;
 	
@@ -52,8 +48,8 @@ bail:
 
 static void* COMPV_STDCALL WorkerThread(void* arg)
 {
+	COMPV_ERROR_CODE err;
 	while (CompVUI::isLoopRunning()) {
-		COMPV_ERROR_CODE err;
 		COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window1->draw()) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
 		COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window2->draw()) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
 	}

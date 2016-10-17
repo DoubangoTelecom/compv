@@ -49,12 +49,7 @@ CompVWindow::CompVWindow(int width, int height, const char* title /*= "Unknown"*
 
 CompVWindow::~CompVWindow()
 {
-#if HAVE_GLFW
-	if (m_pGLFWwindow) {
-		glfwDestroyWindow(m_pGLFWwindow);
-	}
-#endif /* HAVE_GLFW */
-
+	COMPV_CHECK_CODE_ASSERT(close());
 	COMPV_CHECK_CODE_ASSERT(CompVUI::unregisterWindow(m_Id)); // do not use "this" in the destructor (issue with reference counting which is equal to zero)
 
 	m_GLFWMutex = NULL;

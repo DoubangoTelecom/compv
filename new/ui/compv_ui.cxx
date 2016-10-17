@@ -17,6 +17,7 @@ bool CompVUI::s_bInitialized = false;
 bool CompVUI::s_bLoopRunning = false;
 std::map<compv_window_id_t, CompVPtr<CompVWindow* > > CompVUI::m_sWindows;
 CompVPtr<CompVMutex* > CompVUI::m_sWindowsMutex = NULL;
+CompVPtr<CompVThread* > CompVUI::m_sWorkerThread = NULL;
 
 #if HAVE_GLFW
 static void GLFW_ErrorCallback(int error, const char* description);
@@ -113,7 +114,7 @@ size_t CompVUI::windowsCount()
 	return count;
 }
 
-COMPV_ERROR_CODE CompVUI::runLoop()
+COMPV_ERROR_CODE CompVUI::runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) /*= NULL*/, void *userData /*= NULL*/)
 {
 	COMPV_CHECK_EXP_RETURN(!isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	if (CompVUI::isLoopRunning()) {
@@ -124,9 +125,14 @@ COMPV_ERROR_CODE CompVUI::runLoop()
         COMPV_DEBUG_WARN("MacOS: Runnin even loop outside main thread");
     }
 #   endif /* COMPV_OS_APPLE */
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	CompVUI::s_bLoopRunning = true;
 	compv_thread_id_t eventLoopThreadId = CompVThread::getIdCurrent();
-    
+
+	// Run worker thread (s_bLoopRunning must be equal to true)
+	if (WorkerThread) {
+		COMPV_CHECK_CODE_BAIL(err = CompVThread::newObj(&CompVUI::m_sWorkerThread, WorkerThread, userData));
+	}
     
     // http://forum.lwjgl.org/index.php?topic=5836.0
 	// Context creation and using rules:
@@ -139,8 +145,7 @@ COMPV_ERROR_CODE CompVUI::runLoop()
 	while (CompVUI::s_bLoopRunning) {
         if (CompVUI::windowsCount() == 0) {
             COMPV_DEBUG_INFO("No active windows in the event loop... breaking the loop")
-            CompVUI::s_bLoopRunning = false;
-            break;
+            goto bail;
         }
 #if HAVE_GLFW
 		glfwWaitEvents();
@@ -148,14 +153,25 @@ COMPV_ERROR_CODE CompVUI::runLoop()
 		CompVThread::sleep(1);
 #endif /* HAVE_GLFW */
 	}
-	
-	return COMPV_ERROR_CODE_S_OK;
+
+bail:
+	CompVUI::s_bLoopRunning = false;
+	CompVUI::m_sWorkerThread = NULL;
+	return err;
 }
 
 COMPV_ERROR_CODE CompVUI::breakLoop()
 {
 	COMPV_CHECK_EXP_RETURN(!isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	CompVUI::s_bLoopRunning = false;
+	
+#if HAVE_GLFW
+	// Setting "s_bLoopRunning" will break the loop which means we'll no longer poll the events.
+	// Instead of doing this, just close all the windows. Closing the windows will break the loop 
+	// and set 's_bLoopRunning' value to false
+#else
+	 // Required to break the sleep loop
+	 CompVUI::s_bLoopRunning = false;
+#endif
     
     COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->lock());
     std::map<compv_window_id_t, CompVPtr<CompVWindow* > >::iterator it;
@@ -165,6 +181,8 @@ COMPV_ERROR_CODE CompVUI::breakLoop()
     }
     CompVUI::m_sWindows.clear();
     COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->unlock());
+
+	CompVUI::m_sWorkerThread = NULL;
     
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -188,6 +206,7 @@ COMPV_ERROR_CODE CompVUI::deInit()
     
 	CompVUI::m_sWindows.clear();
 	CompVUI::m_sWindowsMutex = NULL;
+	CompVUI::m_sWorkerThread = NULL;
 
 	COMPV_DEBUG_INFO("UI module deinitialized");
 

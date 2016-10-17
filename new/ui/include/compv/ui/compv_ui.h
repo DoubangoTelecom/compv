@@ -11,6 +11,7 @@
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/parallel/compv_mutex.h"
+#include "compv/base/parallel/compv_thread.h"
 
 #include "compv/ui/compv_window.h"
 
@@ -31,7 +32,7 @@ public:
 	static COMPV_INLINE bool isLoopRunning() { return s_bLoopRunning; }
 
 	static size_t windowsCount();
-	static COMPV_ERROR_CODE runLoop();
+	static COMPV_ERROR_CODE runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) = NULL, void *userData = NULL);
 	static COMPV_ERROR_CODE breakLoop();
 
 private:
@@ -45,6 +46,7 @@ private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static std::map<compv_window_id_t, CompVPtr<CompVWindow* > > m_sWindows;
 	static CompVPtr<CompVMutex* > m_sWindowsMutex;
+	static CompVPtr<CompVThread* > m_sWorkerThread;
 	COMPV_DISABLE_WARNINGS_END()
 };
 
