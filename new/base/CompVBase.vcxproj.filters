@@ -67,6 +67,12 @@
     <Filter Include="Source Files\asm\x86">
       <UniqueIdentifier>{5dcd429c-1a03-48f8-a2fa-934f49d82b3d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\image">
+      <UniqueIdentifier>{6d940d10-e297-4df4-9a28-cca108da29ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\image">
+      <UniqueIdentifier>{3b56fa33-8872-4cf8-9497-20dd7d2d0628}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_config.h">
@@ -189,6 +195,12 @@
     <ClInclude Include="include\compv\base\compv_obj.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\compv_array.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_buffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_obj.cxx">
@@ -268,6 +280,15 @@
     </ClCompile>
     <ClCompile Include="math\intrin\x86\compv_math_utils_intrin_ssse3.cxx">
       <Filter>Source Files\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_array.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_buffer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="image\compv_image_libjpeg.cxx">
+      <Filter>Source Files\image</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

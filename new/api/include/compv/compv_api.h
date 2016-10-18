@@ -8,7 +8,9 @@
 #define _COMPV_API_H_ //!\\ Must not change this name, used as guard in private header files
 
 /* Module: Base */
+#include <compv/base/compv_array.h>
 #include <compv/base/compv_base.h>
+#include <compv/base/compv_buffer.h>
 #include <compv/base/compv_debug.h>
 #include <compv/base/compv_mem.h>
 #include <compv/base/compv_obj.h>
