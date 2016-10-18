@@ -168,6 +168,7 @@
     <ClInclude Include="include\compv\base\compv_mem.h" />
     <ClInclude Include="include\compv\base\compv_obj.h" />
     <ClInclude Include="include\compv\base\compv_simd_globals.h" />
+    <ClInclude Include="include\compv\base\image\compv_image_decoder.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_avx.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_sse.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_mem_intrin_avx.h" />
@@ -210,6 +211,7 @@
     <ClCompile Include="compv_mem.cxx" />
     <ClCompile Include="compv_obj.cxx" />
     <ClCompile Include="compv_simd_globals.cxx" />
+    <ClCompile Include="image\compv_image_decoder.cxx" />
     <ClCompile Include="image\compv_image_libjpeg.cxx" />
     <ClCompile Include="intrin\x86\compv_mem_intrin_avx.cxx" />
     <ClCompile Include="intrin\x86\compv_mem_intrin_sse2.cxx" />

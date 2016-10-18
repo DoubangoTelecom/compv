@@ -201,6 +201,9 @@
     <ClInclude Include="include\compv\base\compv_buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\image\compv_image_decoder.h">
+      <Filter>Header Files\image</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_obj.cxx">
@@ -288,6 +291,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="image\compv_image_libjpeg.cxx">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="image\compv_image_decoder.cxx">
       <Filter>Source Files\image</Filter>
     </ClCompile>
   </ItemGroup>

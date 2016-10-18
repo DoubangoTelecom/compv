@@ -1,0 +1,32 @@
+/* Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>
+* File author: Mamadou DIOP (Doubango Telecom, France).
+* License: GPLv3. For commercial license please contact us.
+* Source code: https://github.com/DoubangoTelecom/compv
+* WebSite: http://compv.org
+*/
+#if !defined(_COMPV_BASE_IMAGE_DECODER_H_)
+#define _COMPV_BASE_IMAGE_DECODER_H_
+
+#include "compv/base/compv_config.h"
+#include "compv/base/compv_array.h"
+
+COMPV_NAMESPACE_BEGIN()
+
+typedef COMPV_ERROR_CODE(*CompVDecodeFileFuncPtr)(const char* filePath, CompVPtr<CompVArray<uint8_t>* >* array);
+typedef COMPV_ERROR_CODE(*CompVDecodeInfoFuncPtr)(const char* filePath, CompVImageInfo& info);
+
+class COMPV_BASE_API CompVImageDecoder
+{
+public:
+	static COMPV_ERROR_CODE decodeFile(const char* filePath, CompVPtr<CompVArray<uint8_t>* >* array);
+	static COMPV_ERROR_CODE decodeInfo(const char* filePath, CompVImageInfo& info);
+	static COMPV_ERROR_CODE init();
+
+private:
+	static CompVDecodeFileFuncPtr s_funcptrDecodeFileJpeg;
+	static CompVDecodeInfoFuncPtr s_funcptrDecodeInfoJpeg;
+};
+
+COMPV_NAMESPACE_END()
+
+#endif /* _COMPV_BASE_IMAGE_DECODER_H_ */
