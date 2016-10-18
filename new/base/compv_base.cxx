@@ -10,6 +10,7 @@
 #include "compv/base/time/compv_time.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/parallel/compv_parallel.h"
+#include "compv/base/image/compv_image_decoder.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -109,7 +110,7 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
 #endif
 
 	/* Image handlers initialization */
-	// COMPV_CHECK_CODE_BAIL(err_ = CompVImageDecoder::init());
+	COMPV_CHECK_CODE_BAIL(err_ = CompVImageDecoder::init());
 
 	/* CPU features initialization */
 	COMPV_CHECK_CODE_BAIL(err_ = CompVCpu::init());
@@ -220,6 +221,8 @@ COMPV_ERROR_CODE CompVBase::deInit()
 
 	// TODO(dmi): deInit other modules (not an issue because there is no memory allocation)
 	CompVMem::deInit();
+	
+	CompVImageDecoder::deInit();
 
 	COMPV_DEBUG_INFO("Base modules deinitialized");
 

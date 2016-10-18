@@ -18,11 +18,13 @@ typedef COMPV_ERROR_CODE(*CompVDecodeInfoFuncPtr)(const char* filePath, CompVIma
 class COMPV_BASE_API CompVImageDecoder
 {
 public:
+	static COMPV_ERROR_CODE init();
+	static COMPV_ERROR_CODE deInit();
 	static COMPV_ERROR_CODE decodeFile(const char* filePath, CompVPtr<CompVArray<uint8_t>* >* array);
 	static COMPV_ERROR_CODE decodeInfo(const char* filePath, CompVImageInfo& info);
-	static COMPV_ERROR_CODE init();
 
 private:
+	static bool s_bInitialize;
 	static CompVDecodeFileFuncPtr s_funcptrDecodeFileJpeg;
 	static CompVDecodeInfoFuncPtr s_funcptrDecodeInfoJpeg;
 };

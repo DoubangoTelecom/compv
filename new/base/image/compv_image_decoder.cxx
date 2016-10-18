@@ -5,9 +5,118 @@
 * WebSite: http://compv.org
 */
 #include "compv/base/image/compv_image_decoder.h"
+#include "compv/base/compv_base.h"
+#include "compv/base/compv_fileutils.h"
 
 COMPV_NAMESPACE_BEGIN()
 
+#if defined(HAVE_LIBJPEG)
+extern COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVPtr<CompVArray<uint8_t>* >* array);
+extern COMPV_ERROR_CODE libjpegDecodeInfo(const char* filePath, CompVImageInfo& info);
+#endif
 
+bool CompVImageDecoder::s_bInitialize = false;
+CompVDecodeFileFuncPtr CompVImageDecoder::s_funcptrDecodeFileJpeg = NULL;
+CompVDecodeInfoFuncPtr CompVImageDecoder::s_funcptrDecodeInfoJpeg = NULL;
+
+#define kModuleNameImageDecoder "ImageDecoder"
+
+COMPV_ERROR_CODE CompVImageDecoder::init()
+{
+	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+
+	if (!CompVImageDecoder::s_bInitialize) {
+		COMPV_DEBUG_INFO_EX(kModuleNameImageDecoder, "Initializing image decoder...");
+
+#if defined(HAVE_LIBJPEG)
+		CompVImageDecoder::s_funcptrDecodeFileJpeg = libjpegDecodeFile;
+		CompVImageDecoder::s_funcptrDecodeInfoJpeg = libjpegDecodeInfo;
+#else
+		COMPV_DEBUG_WARN_EX(kModuleNameImageDecoder, "No jpeg decoder found");
+#endif /* HAVE_LIBJPEG */
+
+		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
+
+		CompVImageDecoder::s_bInitialize = true;
+	}
+
+bail:
+	return err_;
+}
+
+COMPV_ERROR_CODE CompVImageDecoder::deInit()
+{
+	if (CompVImageDecoder::s_bInitialize) {
+		CompVImageDecoder::s_funcptrDecodeFileJpeg = NULL;
+		CompVImageDecoder::s_funcptrDecodeInfoJpeg = NULL;
+
+		CompVImageDecoder::s_bInitialize = false;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVImageDecoder::decodeFile(const char* filePath, CompVPtr<CompVArray<uint8_t>* >* array)
+{
+	COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
+		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
+		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+	}
+	COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
+	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+	switch (format_) {
+	case COMPV_IMAGE_FORMAT_JPEG:
+		if (CompVImageDecoder::s_funcptrDecodeFileJpeg) {
+			return CompVImageDecoder::s_funcptrDecodeFileJpeg(filePath, array);
+		}
+		else {
+			COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find jpeg decoder for file: %s", filePath);
+			COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
+		}
+		break;
+	case COMPV_IMAGE_FORMAT_RAW:
+	case COMPV_IMAGE_FORMAT_BITMAP:
+	case COMPV_IMAGE_FORMAT_PNG:
+	default:
+		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find decoder for file: %s, format: %d", filePath, format_);
+		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
+		break;
+	}
+
+bail:
+	return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+}
+
+COMPV_ERROR_CODE  CompVImageDecoder::decodeInfo(const char* filePath, CompVImageInfo& info)
+{
+	COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
+		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
+		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+	}
+	COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
+	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+	switch (format_) {
+	case COMPV_IMAGE_FORMAT_JPEG:
+		if (CompVImageDecoder::s_funcptrDecodeInfoJpeg) {
+			return CompVImageDecoder::s_funcptrDecodeInfoJpeg(filePath, info);
+		}
+		else {
+			COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find jpeg decoder for file: %s", filePath);
+			COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
+		}
+		break;
+	case COMPV_IMAGE_FORMAT_RAW:
+	case COMPV_IMAGE_FORMAT_BITMAP:
+	case COMPV_IMAGE_FORMAT_PNG:
+	default:
+		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find decoder for file: %s, format: %d", filePath, format_);
+		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
+		break;
+	}
+
+bail:
+	return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+}
 
 COMPV_NAMESPACE_END()

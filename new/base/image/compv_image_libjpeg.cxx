@@ -25,7 +25,7 @@ COMPV_NAMESPACE_BEGIN()
 // Private function
 static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, int32_t *width, int32_t *stride, int32_t *height, COMPV_PIXEL_FORMAT* pixelFormat);
 
-// Public functiond
+// Public functions
 COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVPtr<CompVArray<uint8_t>* >* array);
 COMPV_ERROR_CODE libjpegDecodeInfo(const char* filePath, CompVImageInfo& info);
 
