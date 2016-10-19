@@ -8,8 +8,9 @@
 #include "compv/base/compv_buffer.h"
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_debug.h"
-#include "compv/base/compv_array.h"
+#include "compv/base/compv_mat.h"
 #include "compv/base/math/compv_math.h"
+#include "compv/base/image/compv_image.h"
 
 #if defined(HAVE_LIBJPEG)
 
@@ -26,36 +27,33 @@ COMPV_NAMESPACE_BEGIN()
 static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, int32_t *width, int32_t *stride, int32_t *height, COMPV_PIXEL_FORMAT* pixelFormat);
 
 // Public functions
-COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVPtr<CompVArray<uint8_t>* >* array);
+COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVMatPtrPtr mat);
 COMPV_ERROR_CODE libjpegDecodeInfo(const char* filePath, CompVImageInfo& info);
 
-COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVPtr<CompVArray<uint8_t>* >* array)
+COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVMatPtrPtr mat)
 {
+	COMPV_CHECK_EXP_RETURN(!filePath || !mat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     uint8_t* rawdata_ = NULL;
 	int32_t width_, stride_, height_;
 	COMPV_PIXEL_FORMAT pixelFormat_;
 	CompVImageInfo info = {};
 
-	if (!filePath || !array) {
-        COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "Invalid parameter");
-        COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    }
-
 	// Get image data without decoding
 	COMPV_CHECK_CODE_BAIL(err_ = libjpegDecodeInfo(filePath, info));
 	// Alloc image data
-	size_t bestArrayStride = static_cast<size_t>(CompVMem::alignForward((info.stride * sizeof(uint8_t)), COMPV_SIMD_ALIGNV_DEFAULT));
-	COMPV_CHECK_CODE_BAIL(err_ = CompVArray<uint8_t>::newObj(array, info.height, info.width, COMPV_SIMD_ALIGNV_DEFAULT, COMPV_ARRAY_TYPE_PIXELS, static_cast<COMPV_ARRAY_SUBTYPE>(info.format), bestArrayStride));
-	rawdata_ = const_cast<uint8_t*>((*array)->ptr());
-	width_ = static_cast<int32_t>((*array)->cols());
-	height_ = static_cast<int32_t>((*array)->rows());
-	stride_ = static_cast<int32_t>((*array)->strideInBytes());
-	pixelFormat_ = static_cast<COMPV_PIXEL_FORMAT>((*array)->subType());
+	COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj8u(mat, static_cast<size_t>(info.height), static_cast<size_t>(info.width), info.pixelFormat));
+	rawdata_ = const_cast<uint8_t*>((*mat)->ptr<uint8_t>());
+	width_ = static_cast<int32_t>((*mat)->cols());
+	height_ = static_cast<int32_t>((*mat)->rows());
+	stride_ = static_cast<int32_t>((*mat)->strideInBytes());
+	pixelFormat_ = static_cast<COMPV_PIXEL_FORMAT>((*mat)->subType());
     COMPV_CHECK_CODE_BAIL(err_ = decode_jpeg(filePath, kReadDataTrue, &rawdata_, &width_, &stride_, &height_, &pixelFormat_));
 
 bail:
-    CompVMem::free((void**)&rawdata_);
+	if (COMPV_ERROR_CODE_IS_NOK(err_)) {
+		*mat = NULL;
+	}
     return err_;
 }
 
@@ -99,6 +97,7 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
 {
     struct jpeg_decompress_struct cinfo = { 0 };
     bool cinfo_created = false;
+	bool rawdata_allocated = false;
     /* We use our private extension JPEG error handler.
     * Note that this struct must live as long as the main JPEG parameter
     * struct, to avoid dangling-pointer problems.
@@ -117,7 +116,7 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
     * requires it in order to read binary files.
     */
 
-    if ((readData && (!rawdata || *rawdata)) || !width || !height || !pixelFormat) {
+    if ((readData && !rawdata) || !width || !height) {
         COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "Invalid parameter");
         COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     }
@@ -194,7 +193,7 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
     }
 
 	// When rawdata is already allocated then, we must have valid size
-	if (readData && *rawdata && (static_cast<JDIMENSION>(*width) != cinfo.output_width || static_cast<JDIMENSION>(!*height) != cinfo.output_height || static_cast<JDIMENSION>(!*stride) < cinfo.output_width)) {
+	if (readData && *rawdata && (static_cast<JDIMENSION>(*width) != cinfo.output_width || static_cast<JDIMENSION>(*height) != cinfo.output_height || static_cast<JDIMENSION>(*stride) < cinfo.output_width)) {
 		COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "Data already allocated, you must define correct size");
 		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	}
@@ -221,6 +220,7 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
 
 		if (!*rawdata) {
 			*rawdata = (uint8_t*)CompVMem::malloc(row_stride_bytes * cinfo.output_height);
+			rawdata_allocated = true;
 		}
         if (!*rawdata) {
             COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "Failed to allocate %d bytes", row_width_bytes * cinfo.output_height);
@@ -247,7 +247,9 @@ bail:
     if (cinfo_created) { // null exception in libjpeg if create is nok
         /* Step 7: Finish decompression */
 
-        (void)jpeg_finish_decompress(&cinfo);
+		if (readData) {
+			(void)jpeg_finish_decompress(&cinfo);
+		}
         /* We can ignore the return value since suspension is not possible
         * with the stdio data source.
         */
@@ -257,7 +259,7 @@ bail:
         fclose(infile);
     }
 
-    if (COMPV_ERROR_CODE_IS_NOK(err)) {
+	if (COMPV_ERROR_CODE_IS_NOK(err) && rawdata_allocated) {
         CompVMem::free((void**)rawdata);
     }
 

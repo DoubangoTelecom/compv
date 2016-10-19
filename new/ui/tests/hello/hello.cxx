@@ -49,6 +49,10 @@ bail:
 static void* COMPV_STDCALL WorkerThread(void* arg)
 {
 	COMPV_ERROR_CODE err;
+
+	CompVMatPtr mat;
+	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile("C:/Projects/GitHub/compv/tests/girl.jpg", &mat));
+
 	while (CompVUI::isLoopRunning()) {
 		COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window1->draw()) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
 		COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window2->draw()) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);

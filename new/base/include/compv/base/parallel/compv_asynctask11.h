@@ -138,6 +138,8 @@ private:
 	compv_core_id_t m_iCoreId;
 };
 
+typedef CompVPtr<CompVAsyncTask11* > CompVAsyncTask11Ptr;
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_PARALLEL_THREADDISP11 */

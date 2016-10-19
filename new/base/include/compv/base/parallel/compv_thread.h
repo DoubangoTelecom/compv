@@ -30,6 +30,10 @@ typedef pthread_t compv_thread_id_t;
 #	define COMPV_THREAD_PRIORITY_HIGH					((COMPV_THREAD_PRIORITY_MEDIUM * 3) >> 1)
 #endif
 
+class CompVThread;
+typedef CompVPtr<CompVThread* > CompVThreadPtr;
+typedef CompVThreadPtr* CompVThreadPtrPtr;
+
 class COMPV_BASE_API CompVThread : public CompVObj
 {
 protected:
@@ -57,8 +61,6 @@ private:
     comp_thread_handle_t* m_pHandle;
     compv_thread_id_t m_Id;
 };
-
-typedef CompVPtr<CompVThread* > CompVThreadPtr;
 
 COMPV_NAMESPACE_END()
 

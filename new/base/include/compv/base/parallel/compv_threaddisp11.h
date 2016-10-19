@@ -47,6 +47,8 @@ private:
 	bool m_bValid;
 };
 
+typedef CompVPtr<CompVThreadDispatcher11* > CompVThreadDispatcher11Ptr;
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_PARALLEL_THREADDISP11 */

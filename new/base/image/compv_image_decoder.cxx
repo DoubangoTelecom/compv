@@ -11,7 +11,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 #if defined(HAVE_LIBJPEG)
-extern COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVPtr<CompVArray<uint8_t>* >* array);
+extern COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVMatPtrPtr mat);
 extern COMPV_ERROR_CODE libjpegDecodeInfo(const char* filePath, CompVImageInfo& info);
 #endif
 
@@ -55,7 +55,7 @@ COMPV_ERROR_CODE CompVImageDecoder::deInit()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVImageDecoder::decodeFile(const char* filePath, CompVPtr<CompVArray<uint8_t>* >* array)
+COMPV_ERROR_CODE CompVImageDecoder::decodeFile(const char* filePath, CompVMatPtrPtr mat)
 {
 	COMPV_CHECK_CODE_RETURN(CompVBase::init());
 	if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
@@ -67,7 +67,7 @@ COMPV_ERROR_CODE CompVImageDecoder::decodeFile(const char* filePath, CompVPtr<Co
 	switch (format_) {
 	case COMPV_IMAGE_FORMAT_JPEG:
 		if (CompVImageDecoder::s_funcptrDecodeFileJpeg) {
-			return CompVImageDecoder::s_funcptrDecodeFileJpeg(filePath, array);
+			return CompVImageDecoder::s_funcptrDecodeFileJpeg(filePath, mat);
 		}
 		else {
 			COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find jpeg decoder for file: %s", filePath);

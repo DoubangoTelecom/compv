@@ -32,6 +32,8 @@ private:
     void* m_pHandle;
 };
 
+typedef CompVPtr<CompVSemaphore* > CompVSemaphorePtr;
+
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_BASE_PRALLEL_SEMAPHORE_H_ */

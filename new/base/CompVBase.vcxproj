@@ -156,7 +156,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\compv\base\compv_array.h" />
     <ClInclude Include="include\compv\base\compv_base.h" />
     <ClInclude Include="include\compv\base\compv_buffer.h" />
     <ClInclude Include="include\compv\base\compv_common.h" />
@@ -165,11 +164,14 @@
     <ClInclude Include="include\compv\base\compv_debug.h" />
     <ClInclude Include="include\compv\base\compv_errno.h" />
     <ClInclude Include="include\compv\base\compv_fileutils.h" />
+    <ClInclude Include="include\compv\base\compv_mat.h" />
     <ClInclude Include="include\compv\base\compv_md5.h" />
     <ClInclude Include="include\compv\base\compv_mem.h" />
     <ClInclude Include="include\compv\base\compv_obj.h" />
     <ClInclude Include="include\compv\base\compv_simd_globals.h" />
+    <ClInclude Include="include\compv\base\image\compv_image.h" />
     <ClInclude Include="include\compv\base\image\compv_image_decoder.h" />
+    <ClInclude Include="include\compv\base\image\compv_image_utils.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_avx.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_sse.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_mem_intrin_avx.h" />
@@ -202,19 +204,21 @@
     <ClInclude Include="include\compv\base\time\compv_timer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="compv_array.cxx" />
     <ClCompile Include="compv_base.cxx" />
     <ClCompile Include="compv_buffer.cxx" />
     <ClCompile Include="compv_common.cxx" />
     <ClCompile Include="compv_cpu.cxx" />
     <ClCompile Include="compv_debug.cxx" />
     <ClCompile Include="compv_fileutils.cxx" />
+    <ClCompile Include="compv_mat.cxx" />
     <ClCompile Include="compv_md5.cxx" />
     <ClCompile Include="compv_mem.cxx" />
     <ClCompile Include="compv_obj.cxx" />
     <ClCompile Include="compv_simd_globals.cxx" />
+    <ClCompile Include="image\compv_image.cxx" />
     <ClCompile Include="image\compv_image_decoder.cxx" />
     <ClCompile Include="image\compv_image_libjpeg.cxx" />
+    <ClCompile Include="image\compv_image_utils.cxx" />
     <ClCompile Include="intrin\x86\compv_mem_intrin_avx.cxx" />
     <ClCompile Include="intrin\x86\compv_mem_intrin_sse2.cxx" />
     <ClCompile Include="math\compv_math.cxx" />
