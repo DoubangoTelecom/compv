@@ -4,15 +4,17 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/ui/opengl/compv_window_glfw.h"
-#if HAVE_GLFW
+#include "compv/ui/opengl/compv_window_glfw3.h"
+#if defined(HAVE_GLFW_GLFW3_H)
 #include "compv/ui/compv_ui.h"
 
-#include <GLFW/glfw3.h>
+#if defined(HAVE_GLFW_GLFW3_H)
+#	include <GLFW/glfw3.h>
+#endif /* HAVE_GLFW_GLFW3_H */
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVWindowGLFW::CompVWindowGLFW(int width, int height, const char* title)
+CompVWindowGLFW3::CompVWindowGLFW3(int width, int height, const char* title)
 : CompVWindow(width, height, title)
 {
 #   if COMPV_OS_APPLE
@@ -27,24 +29,24 @@ CompVWindowGLFW::CompVWindowGLFW(int width, int height, const char* title)
 	}
 	COMPV_CHECK_CODE_ASSERT(CompVMutex::newObj(&m_GLFWMutex));
 	glfwSetWindowUserPointer(m_pGLFWwindow, this);
-	glfwSetWindowCloseCallback(m_pGLFWwindow, CompVWindowGLFW::GLFWwindowcloseCallback);
+	glfwSetWindowCloseCallback(m_pGLFWwindow, CompVWindowGLFW3::GLFWwindowcloseCallback);
 	glfwMakeContextCurrent(m_pGLFWwindow);
 	glfwSwapInterval(1);
 	glfwMakeContextCurrent(NULL);
 }
 
-CompVWindowGLFW::~CompVWindowGLFW()
+CompVWindowGLFW3::~CompVWindowGLFW3()
 {
 	COMPV_CHECK_CODE_ASSERT(close());
 	m_GLFWMutex = NULL;
 }
 
-bool CompVWindowGLFW::isClosed()
+bool CompVWindowGLFW3::isClosed()
 {
 	return !m_pGLFWwindow;
 }
 
-COMPV_ERROR_CODE CompVWindowGLFW::close()
+COMPV_ERROR_CODE CompVWindowGLFW3::close()
 {
 	COMPV_CHECK_CODE_ASSERT(m_GLFWMutex->lock());
 	if (m_pGLFWwindow) {
@@ -56,7 +58,7 @@ COMPV_ERROR_CODE CompVWindowGLFW::close()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVWindowGLFW::draw()
+COMPV_ERROR_CODE CompVWindowGLFW3::draw()
 {
 	COMPV_CHECK_CODE_ASSERT(m_GLFWMutex->lock());
 	if (!m_pGLFWwindow) {
@@ -81,11 +83,11 @@ COMPV_ERROR_CODE CompVWindowGLFW::draw()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVWindowGLFW::newObj(CompVWindowGLFWPtrPtr glfwWindow, int width, int height, const char* title)
+COMPV_ERROR_CODE CompVWindowGLFW3::newObj(CompVWindowGLFW3PtrPtr glfwWindow, int width, int height, const char* title)
 {
 	COMPV_CHECK_CODE_RETURN(CompVUI::init());
 	COMPV_CHECK_EXP_RETURN(glfwWindow == NULL || width <= 0 || height <= 0 || !title || !::strlen(title), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVWindowGLFWPtr glfwWindow_ = new CompVWindowGLFW(width, height, title);
+	CompVWindowGLFW3Ptr glfwWindow_ = new CompVWindowGLFW3(width, height, title);
 	COMPV_CHECK_EXP_RETURN(!glfwWindow_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	COMPV_CHECK_EXP_RETURN(!glfwWindow_->m_pGLFWwindow, COMPV_ERROR_CODE_E_GLFW);
 	COMPV_CHECK_EXP_RETURN(!glfwWindow_->m_GLFWMutex, COMPV_ERROR_CODE_E_SYSTEM);
@@ -93,9 +95,9 @@ COMPV_ERROR_CODE CompVWindowGLFW::newObj(CompVWindowGLFWPtrPtr glfwWindow, int w
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-void CompVWindowGLFW::GLFWwindowcloseCallback(GLFWwindow* window)
+void CompVWindowGLFW3::GLFWwindowcloseCallback(GLFWwindow* window)
 {
-	CompVWindowGLFWPtr This = static_cast<CompVWindowGLFW*>(glfwGetWindowUserPointer(window));
+	CompVWindowGLFW3Ptr This = static_cast<CompVWindowGLFW3*>(glfwGetWindowUserPointer(window));
 	COMPV_DEBUG_INFO("GLFWwindowcloseCallback(Id=%ld, Title=%s)", This->getId(), This->getTitle());
 	COMPV_ASSERT(window == This->m_pGLFWwindow);
 	COMPV_CHECK_CODE_ASSERT(This->m_GLFWMutex->lock());
@@ -108,4 +110,4 @@ void CompVWindowGLFW::GLFWwindowcloseCallback(GLFWwindow* window)
 
 COMPV_NAMESPACE_END()
 
-#endif /* HAVE_GLFW */
+#endif /* HAVE_GLFW_GLFW3_H */

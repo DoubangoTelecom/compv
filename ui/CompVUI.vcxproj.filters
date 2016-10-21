@@ -27,7 +27,7 @@
     <ClCompile Include="compv_window.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\compv_window_glfw.cxx">
+    <ClCompile Include="opengl\compv_window_glfw3.cxx">
       <Filter>Source Files\opengl</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,7 +38,7 @@
     <ClInclude Include="include\compv\ui\compv_window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\ui\opengl\compv_window_glfw.h">
+    <ClInclude Include="include\compv\ui\opengl\compv_window_glfw3.h">
       <Filter>Header Files\opengl</Filter>
     </ClInclude>
   </ItemGroup>

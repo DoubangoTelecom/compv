@@ -7,9 +7,12 @@
 #include "compv/ui/compv_ui.h"
 #include "compv/base/compv_base.h"
 
-#if HAVE_GLFW
-#include <GLFW/glfw3.h>
-#endif /* HAVE_GLFW */
+#if defined(HAVE_GLFW_GLFW3_H)
+#	if !defined(HAVE_GLFW)
+#		define HAVE_GLFW	1
+#	endif /* HAVE_GLFW */
+#	include <GLFW/glfw3.h>
+#endif /* HAVE_GLFW_GLFW3_H */
 
 COMPV_NAMESPACE_BEGIN()
 
