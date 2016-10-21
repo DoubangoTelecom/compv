@@ -11,15 +11,16 @@
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/parallel/compv_thread.h"
-#include "compv/base/parallel/compv_mutex.h"
 
 #include <string>
-
-struct GLFWwindow;
 
 COMPV_NAMESPACE_BEGIN()
 
 typedef long compv_window_id_t;
+
+class CompVWindow;
+typedef CompVPtr<CompVWindow* > CompVWindowPtr;
+typedef CompVWindowPtr* CompVWindowPtrPtr;
 
 class COMPV_UI_API CompVWindow : public CompVObj
 {
@@ -31,19 +32,21 @@ public:
 		return "CompVWindow";
 	};
 
+	COMPV_INLINE int getWidth() { return m_nWidth; }
+	COMPV_INLINE int getHeight() { return m_nHeight; }
+	COMPV_INLINE const char* getTitle() { return m_strTitle.c_str(); }
 	COMPV_INLINE compv_window_id_t getId() { return m_Id; }
 	COMPV_INLINE compv_thread_id_t getWindowCreationThreadId() { return m_WindowCreationThreadId; }
     
-	bool isClosed();
+	virtual bool isClosed() = 0;
 
-    COMPV_ERROR_CODE close();
-	COMPV_ERROR_CODE draw();
+    virtual COMPV_ERROR_CODE close() = 0;
+	virtual COMPV_ERROR_CODE draw() = 0;
 
-	static COMPV_ERROR_CODE newObj(CompVPtr<CompVWindow*>* window, int width, int height, const char* title = "Unknown");
-#if HAVE_GLFW
-	COMPV_INLINE struct GLFWwindow * getGLFWwindow() { return m_pGLFWwindow; }
-	static void GLFWwindowcloseCallback(GLFWwindow* window);
-#endif
+	static COMPV_ERROR_CODE newObj(CompVWindowPtrPtr window, int width, int height, const char* title = "Unknown");
+
+protected:
+	COMPV_ERROR_CODE unregister();
 
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
@@ -53,14 +56,8 @@ private:
 	int m_nHeight;
 	std::string m_strTitle;
 	compv_window_id_t m_Id;
-#if HAVE_GLFW
-	struct GLFWwindow *m_pGLFWwindow;
-	CompVPtr<CompVMutex* > m_GLFWMutex;
-#endif
 	COMPV_DISABLE_WARNINGS_END()
 };
-
-typedef CompVPtr<CompVWindow* > CompVWindowPtr;
 
 COMPV_NAMESPACE_END()
 

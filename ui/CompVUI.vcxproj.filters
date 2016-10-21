@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\opengl">
+      <UniqueIdentifier>{36caed81-ae6b-4ba5-a762-f32be56a29ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\opengl">
+      <UniqueIdentifier>{d89d770d-e960-4a13-9b02-f764ff026407}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_ui.cxx">
@@ -21,6 +27,9 @@
     <ClCompile Include="compv_window.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="opengl\compv_window_glfw.cxx">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\ui\compv_ui.h">
@@ -28,6 +37,9 @@
     </ClInclude>
     <ClInclude Include="include\compv\ui\compv_window.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\ui\opengl\compv_window_glfw.h">
+      <Filter>Header Files\opengl</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
