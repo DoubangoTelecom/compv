@@ -6,44 +6,10 @@
 *.DS_Store
 /ipch
 /x64
-/My Amplifier XE Results - CompV
 *.idb
 /Debug
-/tests/math/Debug
-/tests/math/x64
-/tests/parallel/x64
-/tests/image/x64
-/tests/image/i420.yuv
 Release
-/tests/image/Debug
 *.orig
-/tests/image/My Advisor XE Results - image
-/tests/image/My Amplifier XE Results - image/My Amplifier XE Results - image.amplxeproj
-/tests/image/My Amplifier XE Results - image/r000hs
-/tests/image/My Amplifier XE Results - image/r001hs
-/tests/image/My Amplifier XE Results - image
-/tests/image/My Inspector XE Results - image
-/tests/image/*.bgr
-/tests/image/*.bgra
-/tests/image/out.rgb
-/tests/image/out.i420
-/tests/image/out.rgba
-/tests/image/out.png
-/tests/image/out.gray
-/tests/memory/Debug
-/tests/memory/x64/Debug
-/tests/list/x64/Debug
-/tests/list/My Amplifier XE Results - list
-/tests/memory/My Amplifier XE Results - memory
-/tests/memory/My Advisor XE Results - memory
-/tests/box/My Amplifier XE Results - box
-/tests/box/x64/Debug
-/tests/image/out.argb
-/tests/convolution/x64
 Debug
-/tests/math/My Amplifier XE Results - math
-/tests/convolution/My Amplifier XE Results - convolution
-/tests/matchers/My Amplifier XE Results - matchers
 *.gray
-My Amplifier XE Results - calib
 *.ipch
