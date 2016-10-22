@@ -11,13 +11,13 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-compv_window_id_t CompVWindow::m_sWindowId = 0;
+compv_window_id_t CompVWindow::s_WindowId = 0;
 
 CompVWindow::CompVWindow(int width, int height, const char* title /*= "Unknown"*/)
 : m_nWidth(width)
 , m_nHeight(height)
 , m_strTitle(title)
-, m_Id(compv_atomic_inc(&CompVWindow::m_sWindowId))
+, m_Id(compv_atomic_inc(&CompVWindow::s_WindowId))
 {
 	m_WindowCreationThreadId = CompVThread::getIdCurrent();
 	COMPV_DEBUG_INFO("Creating window (%s) on thread with id = %ld", title, (long)m_WindowCreationThreadId);

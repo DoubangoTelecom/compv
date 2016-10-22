@@ -50,7 +50,7 @@ protected:
 
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-	static compv_window_id_t m_sWindowId;
+	static compv_window_id_t s_WindowId;
 	compv_thread_id_t m_WindowCreationThreadId;
 	int m_nWidth;
 	int m_nHeight;

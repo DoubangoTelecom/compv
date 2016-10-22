@@ -22,7 +22,7 @@ CompVWindowGLFW3::CompVWindowGLFW3(int width, int height, const char* title)
 		COMPV_DEBUG_WARN("MacOS: Creating window outside main thread");
 	}
 #   endif /* COMPV_OS_APPLE */
-	m_pGLFWwindow = glfwCreateWindow(width, height, title, NULL, NULL);
+	m_pGLFWwindow = glfwCreateWindow(width, height, title, NULL, CompVUI::getGLFWWindow());
 	if (!m_pGLFWwindow) {
 		COMPV_DEBUG_ERROR("glfwCreateWindow(%d, %d, %s) failed", width, height, title);
 		return;

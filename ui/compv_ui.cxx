@@ -7,10 +7,11 @@
 #include "compv/ui/compv_ui.h"
 #include "compv/base/compv_base.h"
 
+#if defined(HAVE_GL_GLEW_H)
+#include <GL/glew.h>
+#endif /* HAVE_GL_GLEW_H */
+
 #if defined(HAVE_GLFW_GLFW3_H)
-#	if !defined(HAVE_GLFW)
-#		define HAVE_GLFW	1
-#	endif /* HAVE_GLFW */
 #	include <GLFW/glfw3.h>
 #endif /* HAVE_GLFW_GLFW3_H */
 
@@ -18,12 +19,15 @@ COMPV_NAMESPACE_BEGIN()
 
 bool CompVUI::s_bInitialized = false;
 bool CompVUI::s_bLoopRunning = false;
+int CompVUI::s_iGLVersionMajor = 0;
+int CompVUI::s_iGLVersionMinor = 0;
 std::map<compv_window_id_t, CompVPtr<CompVWindow* > > CompVUI::m_sWindows;
-CompVPtr<CompVMutex* > CompVUI::m_sWindowsMutex = NULL;
-CompVPtr<CompVThread* > CompVUI::m_sWorkerThread = NULL;
+CompVPtr<CompVMutex* > CompVUI::s_WindowsMutex = NULL;
+CompVPtr<CompVThread* > CompVUI::s_WorkerThread = NULL;
 
 #if HAVE_GLFW
 static void GLFW_ErrorCallback(int error, const char* description);
+struct GLFWwindow* CompVUI::s_pGLFWMainWindow = NULL;
 #endif /* HAVE_GLFW */
 
 CompVUI::CompVUI()
@@ -47,16 +51,38 @@ COMPV_ERROR_CODE CompVUI::init()
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_DEBUG_INFO("Initializing UI module (v %s)...", COMPV_VERSION_STRING);
 
-	COMPV_CHECK_CODE_BAIL(err = CompVMutex::newObj(&CompVUI::m_sWindowsMutex));
+	COMPV_CHECK_CODE_BAIL(err = CompVMutex::newObj(&CompVUI::s_WindowsMutex));
 
 	/* GLFW */
 #if HAVE_GLFW
+	COMPV_DEBUG_INFO("GLFW version being used: %s", glfwGetVersionString());
+	// Initialize GLFW
 	glfwSetErrorCallback(GLFW_ErrorCallback);
 	if (!glfwInit()) {
 		COMPV_DEBUG_ERROR_EX("GLFW", "glfwInit failed");
 		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_GLFW);
 	}
 	COMPV_DEBUG_INFO_EX("GLFW", "glfwInit succeeded");
+	// Create main hidden to have a current context (required by GLEW)
+#if 0
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+#endif
+	glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+	CompVUI::s_pGLFWMainWindow = glfwCreateWindow(1, 1, "Main Window", NULL, NULL);
+	glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
+	if (!CompVUI::s_pGLFWMainWindow) {
+		COMPV_DEBUG_ERROR_EX("GLFW", "glfwCreateWindow failed");
+		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_GLFW);
+	}
+	glfwMakeContextCurrent(CompVUI::s_pGLFWMainWindow);
+	COMPV_DEBUG_INFO("OpenGL version string: %s", glGetString(GL_VERSION));
+	GLint major, minor;
+	glGetIntegerv(GL_MAJOR_VERSION, &major), CompVUI::s_iGLVersionMajor = static_cast<int>(major);
+	glGetIntegerv(GL_MINOR_VERSION, &minor), CompVUI::s_iGLVersionMinor = static_cast<int>(minor);
+	COMPV_DEBUG_INFO("OpenGL parsed major and minor versions: %d.%d", CompVUI::s_iGLVersionMajor, CompVUI::s_iGLVersionMinor);
+	glfwSwapInterval(1);
+	glfwMakeContextCurrent(NULL);
 #else
 	COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_S_OK);
 	COMPV_DEBUG_INFO("GLFW not supported on the current platform");
@@ -71,10 +97,7 @@ bail:
 	}
 	else {
 		/* Something went wrong */
-#if HAVE_GLFW
-		glfwTerminate();
-		glfwSetErrorCallback(NULL);
-#endif /* HAVE_GLFW */
+		COMPV_CHECK_CODE_ASSERT(CompVUI::deInit());
 	}
 
 	return err;
@@ -85,9 +108,9 @@ COMPV_ERROR_CODE CompVUI::registerWindow(CompVPtr<CompVWindow* > window)
 	COMPV_CHECK_EXP_RETURN(!isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(!window, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->lock());
+	COMPV_CHECK_CODE_ASSERT(CompVUI::s_WindowsMutex->lock());
 	CompVUI::m_sWindows.insert(std::pair<compv_window_id_t, CompVPtr<CompVWindow* > >(window->getId(), window));
-	COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->unlock());
+	COMPV_CHECK_CODE_ASSERT(CompVUI::s_WindowsMutex->unlock());
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -102,18 +125,18 @@ COMPV_ERROR_CODE CompVUI::unregisterWindow(compv_window_id_t windowId)
 {
 	COMPV_CHECK_EXP_RETURN(!isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 
-	COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->lock());
+	COMPV_CHECK_CODE_ASSERT(CompVUI::s_WindowsMutex->lock());
 	CompVUI::m_sWindows.erase(windowId);
-	COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->unlock());
+	COMPV_CHECK_CODE_ASSERT(CompVUI::s_WindowsMutex->unlock());
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 size_t CompVUI::windowsCount()
 {
-	COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->lock());
+	COMPV_CHECK_CODE_ASSERT(CompVUI::s_WindowsMutex->lock());
 	size_t count = CompVUI::m_sWindows.size();
-	COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->unlock());
+	COMPV_CHECK_CODE_ASSERT(CompVUI::s_WindowsMutex->unlock());
 	return count;
 }
 
@@ -134,7 +157,7 @@ COMPV_ERROR_CODE CompVUI::runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) /
 
 	// Run worker thread (s_bLoopRunning must be equal to true)
 	if (WorkerThread) {
-		COMPV_CHECK_CODE_BAIL(err = CompVThread::newObj(&CompVUI::m_sWorkerThread, WorkerThread, userData));
+		COMPV_CHECK_CODE_BAIL(err = CompVThread::newObj(&CompVUI::s_WorkerThread, WorkerThread, userData));
 	}
     
     // http://forum.lwjgl.org/index.php?topic=5836.0
@@ -159,7 +182,7 @@ COMPV_ERROR_CODE CompVUI::runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) /
 
 bail:
 	CompVUI::s_bLoopRunning = false;
-	CompVUI::m_sWorkerThread = NULL;
+	CompVUI::s_WorkerThread = NULL;
 	return err;
 }
 
@@ -176,40 +199,47 @@ COMPV_ERROR_CODE CompVUI::breakLoop()
 	 CompVUI::s_bLoopRunning = false;
 #endif
     
-    COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->lock());
+    COMPV_CHECK_CODE_ASSERT(CompVUI::s_WindowsMutex->lock());
     std::map<compv_window_id_t, CompVPtr<CompVWindow* > >::iterator it;
     for (it = CompVUI::m_sWindows.begin(); it != CompVUI::m_sWindows.end(); ++it) {
         CompVPtr<CompVWindow* > window = it->second;
         COMPV_CHECK_CODE_ASSERT(window->close());
     }
     CompVUI::m_sWindows.clear();
-    COMPV_CHECK_CODE_ASSERT(CompVUI::m_sWindowsMutex->unlock());
+    COMPV_CHECK_CODE_ASSERT(CompVUI::s_WindowsMutex->unlock());
 
-	CompVUI::m_sWorkerThread = NULL;
+	CompVUI::s_WorkerThread = NULL;
     
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVUI::deInit()
 {
+#if 0 // This function can be called to deInit partial initialization which means "s_bInitialized" is equal to false
 	if (!CompVUI::s_bInitialized) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
+#endif
 
 	COMPV_DEBUG_INFO("DeInitializing UI module (v %s)...", COMPV_VERSION_STRING);
-#if HAVE_GLFW
-	glfwTerminate();
-	glfwSetErrorCallback(NULL);
-#endif /* HAVE_GLFW */
 
 	/* Base */
 	CompVBase::deInit();
 
     CompVUI::breakLoop();
-    
 	CompVUI::m_sWindows.clear();
-	CompVUI::m_sWindowsMutex = NULL;
-	CompVUI::m_sWorkerThread = NULL;
+	CompVUI::s_WindowsMutex = NULL;
+	CompVUI::s_WorkerThread = NULL;
+
+#if HAVE_GLFW
+	if (CompVUI::s_pGLFWMainWindow) {
+		glfwSetWindowShouldClose(CompVUI::s_pGLFWMainWindow, GLFW_TRUE);
+		glfwDestroyWindow(CompVUI::s_pGLFWMainWindow);
+		CompVUI::s_pGLFWMainWindow = NULL;
+	}
+	glfwTerminate();
+	glfwSetErrorCallback(NULL);
+#endif /* HAVE_GLFW */
 
 	COMPV_DEBUG_INFO("UI module deinitialized");
 
