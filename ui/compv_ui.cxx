@@ -53,6 +53,10 @@ COMPV_ERROR_CODE CompVUI::init()
 
 	COMPV_CHECK_CODE_BAIL(err = CompVMutex::newObj(&CompVUI::s_WindowsMutex));
 
+#if defined(HAVE_GL_GLEW_H)
+	COMPV_DEBUG_INFO("GLEW version being used: %d.%d.%d", GLEW_VERSION_MAJOR, GLEW_VERSION_MINOR, GLEW_VERSION_MICRO);
+#endif /* HAVE_GL_GLEW_H */
+
 	/* GLFW */
 #if HAVE_GLFW
 	COMPV_DEBUG_INFO("GLFW version being used: %s", glfwGetVersionString());
@@ -77,10 +81,19 @@ COMPV_ERROR_CODE CompVUI::init()
 	}
 	glfwMakeContextCurrent(CompVUI::s_pGLFWMainWindow);
 	COMPV_DEBUG_INFO("OpenGL version string: %s", glGetString(GL_VERSION));
+	COMPV_DEBUG_INFO("OpenGL shading version string: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 	GLint major, minor;
 	glGetIntegerv(GL_MAJOR_VERSION, &major), CompVUI::s_iGLVersionMajor = static_cast<int>(major);
 	glGetIntegerv(GL_MINOR_VERSION, &minor), CompVUI::s_iGLVersionMinor = static_cast<int>(minor);
 	COMPV_DEBUG_INFO("OpenGL parsed major and minor versions: %d.%d", CompVUI::s_iGLVersionMajor, CompVUI::s_iGLVersionMinor);
+#if defined(HAVE_GL_GLEW_H)
+	GLenum glewErr = glewInit();
+	if (GLEW_OK != glewErr) {
+		COMPV_DEBUG_ERROR_EX("GLEW", "glewInit failed: %s", glewGetErrorString(glewErr));
+		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_GLEW);
+	}
+	COMPV_DEBUG_INFO_EX("GLEW", "glewInit succeeded");
+#endif /* HAVE_GL_GLEW_H */
 	glfwSwapInterval(1);
 	glfwMakeContextCurrent(NULL);
 #else
@@ -240,6 +253,10 @@ COMPV_ERROR_CODE CompVUI::deInit()
 	glfwTerminate();
 	glfwSetErrorCallback(NULL);
 #endif /* HAVE_GLFW */
+
+#if defined(HAVE_GL_GLEW_H)
+	// TODO(dmi): glewTerminate()
+#endif /* HAVE_GL_GLEW_H */
 
 	COMPV_DEBUG_INFO("UI module deinitialized");
 
