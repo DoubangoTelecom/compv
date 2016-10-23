@@ -158,12 +158,25 @@
   <ItemGroup>
     <ClCompile Include="compv_ui.cxx" />
     <ClCompile Include="compv_window.cxx" />
+    <ClCompile Include="opengl\compv_program.cxx" />
+    <ClCompile Include="opengl\compv_program_gl.cxx" />
+    <ClCompile Include="opengl\compv_program_gles.cxx" />
+    <ClCompile Include="opengl\compv_utils_gl.cxx" />
     <ClCompile Include="opengl\compv_window_glfw3.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\ui\compv_ui.h" />
     <ClInclude Include="include\compv\ui\compv_window.h" />
+    <ClInclude Include="include\compv\ui\opengl\compv_headers_gl.h" />
+    <ClInclude Include="include\compv\ui\opengl\compv_program.h" />
+    <ClInclude Include="include\compv\ui\opengl\compv_program_gl.h" />
+    <ClInclude Include="include\compv\ui\opengl\compv_program_gles.h" />
+    <ClInclude Include="include\compv\ui\opengl\compv_utils_gl.h" />
     <ClInclude Include="include\compv\ui\opengl\compv_window_glfw3.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="glsl\test.frag.glsl" />
+    <None Include="glsl\test.vert.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -48,10 +48,15 @@ bail:
 static void* COMPV_STDCALL WorkerThread(void* arg)
 {
 	COMPV_ERROR_CODE err;
-
+	CompVMatPtr mat[3];
+	int index = 0;
+	
+	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile("C:/Projects/GitHub/compv/deprecated/tests/girl.jpg", &mat[0]));
+	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile("C:/Projects/GitHub/compv/deprecated/tests/Valve_original.jpg", &mat[1]));
+	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile("C:/Projects/GitHub/compv/deprecated/tests/mandekalou.jpg", &mat[2]));
 	while (CompVUI::isLoopRunning()) {
-		COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window1->draw()) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
-		COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window2->draw()) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
+		COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window1->draw(mat[/*index % 3*/0])) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
+		COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window2->draw(mat[/*index++ % 3*/0])) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
 	}
 
 bail:

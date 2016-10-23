@@ -8,6 +8,10 @@
 #if defined(HAVE_GLFW_GLFW3_H)
 #include "compv/ui/compv_ui.h"
 
+#if defined(HAVE_GL_GLEW_H)
+#include <GL/glew.h>
+#endif /* HAVE_GL_GLEW_H */
+
 #if defined(HAVE_GLFW_GLFW3_H)
 #	include <GLFW/glfw3.h>
 #endif /* HAVE_GLFW_GLFW3_H */
@@ -39,6 +43,7 @@ CompVWindowGLFW3::~CompVWindowGLFW3()
 {
 	COMPV_CHECK_CODE_ASSERT(close());
 	m_GLFWMutex = NULL;
+	m_Program = NULL;
 }
 
 bool CompVWindowGLFW3::isClosed()
@@ -58,8 +63,10 @@ COMPV_ERROR_CODE CompVWindowGLFW3::close()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVWindowGLFW3::draw()
+COMPV_ERROR_CODE CompVWindowGLFW3::draw(CompVMatPtr mat)
 {
+	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_ASSERT(mat->subType() == COMPV_MAT_SUBTYPE_PIXELS_R8G8B8);
 	COMPV_CHECK_CODE_ASSERT(m_GLFWMutex->lock());
 	if (!m_pGLFWwindow) {
 		COMPV_CHECK_CODE_ASSERT(m_GLFWMutex->unlock());
@@ -68,12 +75,95 @@ COMPV_ERROR_CODE CompVWindowGLFW3::draw()
 	}
 	if (!glfwWindowShouldClose(m_pGLFWwindow)) {
 		glfwMakeContextCurrent(m_pGLFWwindow);
-
+#if 0
 		glClear(GL_COLOR_BUFFER_BIT);
 		glClearColor((GLclampf)(rand() % 255) / 255.f,
 			(GLclampf)(rand() % 255) / 255.f,
 			(GLclampf)(rand() % 255) / 255.f,
 			(GLclampf)(rand() % 255) / 255.f);
+#else
+		if (!m_Program) {
+			COMPV_CHECK_CODE_ASSERT(CompVProgram::newObj(&m_Program));
+			COMPV_CHECK_CODE_ASSERT(m_Program->shadAttachVertexFile("C:/Projects/GitHub/compv/ui/glsl/test.vert.glsl"));
+			COMPV_CHECK_CODE_ASSERT(m_Program->shadAttachFragmentFile("C:/Projects/GitHub/compv/ui/glsl/test.frag.glsl"));
+			COMPV_CHECK_CODE_ASSERT(m_Program->link());
+		}
+
+		static GLuint tex = 0;
+		if (!tex) {
+			glGenTextures(1, &tex);
+			/* OpenGL-2 or later is assumed; OpenGL-2 supports NPOT textures. */
+			glBindTexture(GL_TEXTURE_2D, tex);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			if ((mat->stride() & 3)) { // multiple of 4?
+				glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)mat->stride());
+				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			}
+
+			glTexImage2D(
+				GL_TEXTURE_2D,
+				0,
+				GL_RGB,
+				static_cast<GLsizei>(mat->stride()),
+				static_cast<GLsizei>(mat->rows()),
+				0,
+				GL_RGB,
+				GL_UNSIGNED_BYTE,
+				NULL);
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
+
+		glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_FALSE);
+		glPixelStorei(GL_UNPACK_LSB_FIRST, GL_TRUE);
+		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+		glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+		glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glTexSubImage2D(
+			GL_TEXTURE_2D,
+			0,
+			0,
+			0,
+			static_cast<GLsizei>(mat->stride()),
+			static_cast<GLsizei>(mat->rows()),
+			GL_RGB,
+			GL_UNSIGNED_BYTE,
+			mat->ptr());
+
+		COMPV_CHECK_CODE_ASSERT(m_Program->useBegin());
+
+		glClearColor(0.f, 0.f, 0.f, 1.f);
+		int width, height;
+		glfwGetFramebufferSize(m_pGLFWwindow, &width, &height);
+		glViewport(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluOrtho2D((GLdouble)0, static_cast<GLdouble>(mat->stride()), static_cast<GLdouble>(mat->rows()), (GLdouble)0); // glOrtho((GLdouble)0, (GLdouble)m_nWidth, (GLdouble)m_nWidth, (GLdouble)0, (GLdouble)-1, (GLdouble)1);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
+		glBegin(GL_QUADS);
+		glTexCoord2i(0, 0);
+		glVertex2i(0, 0);
+		glTexCoord2i(0, 1);
+		glVertex2i(0, static_cast<GLint>(mat->rows()));
+		glTexCoord2i(1, 1);
+		glVertex2i(static_cast<GLint>(mat->stride()), static_cast<GLint>(mat->rows()));
+		glTexCoord2i(1, 0);
+		glVertex2i(static_cast<GLint>(mat->stride()), 0);
+		glEnd();
+
+		COMPV_CHECK_CODE_ASSERT(m_Program->useEnd());
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+#endif
 
 		glfwSwapBuffers(m_pGLFWwindow);
 		glfwMakeContextCurrent(NULL);

@@ -10,6 +10,7 @@
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
+#include "compv/base/compv_mat.h"
 #include "compv/base/parallel/compv_thread.h"
 
 #include <string>
@@ -41,7 +42,7 @@ public:
 	virtual bool isClosed() = 0;
 
     virtual COMPV_ERROR_CODE close() = 0;
-	virtual COMPV_ERROR_CODE draw() = 0;
+	virtual COMPV_ERROR_CODE draw(CompVMatPtr mat) = 0;
 
 	static COMPV_ERROR_CODE newObj(CompVWindowPtrPtr window, int width, int height, const char* title = "Unknown");
 

@@ -39,6 +39,10 @@ public:
 		return m_eSubType;
 	}
 
+	COMPV_INLINE bool isEmpty() {
+		return !ptr() || !rows() || !cols();
+	}
+
 	template<class ptrType = void, int32_t compId = 0>
 	COMPV_INLINE const ptrType* ptr(size_t row = 0, size_t col = 0)const {
 		if (compId >= 0 && compId < m_nCompCount) {
@@ -98,6 +102,18 @@ public:
 		}
 		COMPV_DEBUG_ERROR("Invalid parameter");
 		return 0;  
+	}
+
+	template<int32_t compId = -1>
+	COMPV_INLINE size_t stride()const { // in samples
+		if (compId < 0) {
+			return m_nStrideInElts;
+		}
+		else if (compId < m_nCompCount) {
+			return m_nCompStrideInElts[compId];
+		}
+		COMPV_DEBUG_ERROR("Invalid parameter");
+		return 0;
 	}
 
 	template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_MAT_SUBTYPE dataSubType = COMPV_MAT_SUBTYPE_RAW>

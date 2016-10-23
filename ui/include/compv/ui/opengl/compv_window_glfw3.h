@@ -11,6 +11,7 @@
 #if defined(HAVE_GLFW_GLFW3_H)
 #include "compv/base/compv_common.h"
 #include "compv/ui/compv_window.h"
+#include "compv/ui/opengl/compv_program.h"
 #include "compv/base/parallel/compv_thread.h"
 #include "compv/base/parallel/compv_mutex.h"
 
@@ -42,7 +43,7 @@ public:
 
 	virtual bool isClosed();
 	virtual COMPV_ERROR_CODE close();
-	virtual COMPV_ERROR_CODE draw();
+	virtual COMPV_ERROR_CODE draw(CompVMatPtr mat);
 
 	static COMPV_ERROR_CODE newObj(CompVWindowGLFW3PtrPtr glfwWindow, int width, int height, const char* title);
 	static void GLFWwindowcloseCallback(GLFWwindow* window);
@@ -51,6 +52,7 @@ private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
 	struct GLFWwindow *m_pGLFWwindow;
 	CompVMutexPtr m_GLFWMutex;
+	CompVProgramPtr m_Program;
 	COMPV_DISABLE_WARNINGS_END()
 };
 

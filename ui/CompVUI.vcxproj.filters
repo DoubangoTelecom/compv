@@ -19,6 +19,9 @@
     <Filter Include="Header Files\opengl">
       <UniqueIdentifier>{d89d770d-e960-4a13-9b02-f764ff026407}</UniqueIdentifier>
     </Filter>
+    <Filter Include="glsl">
+      <UniqueIdentifier>{0440ca5a-7ffd-4085-9e1b-368080e64c68}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_ui.cxx">
@@ -28,6 +31,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="opengl\compv_window_glfw3.cxx">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl\compv_program.cxx">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl\compv_program_gl.cxx">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl\compv_program_gles.cxx">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl\compv_utils_gl.cxx">
       <Filter>Source Files\opengl</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,5 +56,28 @@
     <ClInclude Include="include\compv\ui\opengl\compv_window_glfw3.h">
       <Filter>Header Files\opengl</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\ui\opengl\compv_program.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\ui\opengl\compv_program_gl.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\ui\opengl\compv_program_gles.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\ui\opengl\compv_utils_gl.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\ui\opengl\compv_headers_gl.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="glsl\test.frag.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\test.vert.glsl">
+      <Filter>glsl</Filter>
+    </None>
   </ItemGroup>
 </Project>

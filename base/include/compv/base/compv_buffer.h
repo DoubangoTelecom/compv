@@ -13,6 +13,10 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+class CompVBuffer;
+typedef CompVPtr<CompVBuffer*> CompVBufferPtr;
+typedef CompVBufferPtr* CompVBufferPtrPtr;
+
 class COMPV_BASE_API CompVBuffer : public CompVObj
 {
 protected:
@@ -35,11 +39,11 @@ public:
     COMPV_INLINE bool isEmpty() {
         return !(getSize() && getPtr());
     }
-    static COMPV_ERROR_CODE newObj(const void* pcPtr, int32_t size, CompVPtr<CompVBuffer*>* buffer);
-    static COMPV_ERROR_CODE newObjAndNullData(CompVPtr<CompVBuffer*>* buffer);
-    static COMPV_ERROR_CODE newObjAndTakeData(void** ppPtr, int32_t size, CompVPtr<CompVBuffer*>* buffer);
-    static COMPV_ERROR_CODE newObjAndCopyData(const void* pcPtr, int32_t size, CompVPtr<CompVBuffer*>* buffer);
-    static COMPV_ERROR_CODE newObjAndRefData(const void* pcPtr, int32_t size, CompVPtr<CompVBuffer*>* buffer);
+	static COMPV_ERROR_CODE newObj(const void* pcPtr, int32_t size, CompVBufferPtrPtr buffer);
+	static COMPV_ERROR_CODE newObjAndNullData(CompVBufferPtrPtr buffer);
+	static COMPV_ERROR_CODE newObjAndTakeData(void** ppPtr, int32_t size, CompVBufferPtrPtr buffer);
+	static COMPV_ERROR_CODE newObjAndCopyData(const void* pcPtr, int32_t size, CompVBufferPtrPtr buffer);
+	static COMPV_ERROR_CODE newObjAndRefData(const void* pcPtr, int32_t size, CompVBufferPtrPtr buffer);
 
 private:
     void* m_pPtr;
