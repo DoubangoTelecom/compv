@@ -1,0 +1,28 @@
+Visual Studio Community 2015: https://www.visualstudio.com/vs/community/
+
+mkdir base_skia
+cd base_skia
+set GYP_MSVS_VERSION=2015
+gclient runhooks
+gclient config --unmanaged https://skia.googlesource.com/skia.git
+gclient sync
+
+mkdir skia
+cd skia
+git clone https://skia.googlesource.com/skia.git
+git checkout chrome/m55
+
+Edit 'skia/gyp/libjpeg-turbo.gyp' and add '../third_party/externals/libjpeg-turbo/jdatasrc.c',
+-> This adds support for 'jpeg_stdio_src'
+
+********** Windows **********
+python gyp_skia -Dskia_arch_type=x86 -Dskia_os=win
+ninja -C out/Debug
+ninja -C out/Release
+
+delete out folder
+
+python gyp_skia -Dskia_arch_type=x86_64 -Dskia_os=win
+ninja -C out/Debug_x64
+ninja -C out/Release_x64
+---------------------

@@ -49,22 +49,22 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
 	// Make sure sizeof(compv_scalar_t) is correct
 #if defined(COMPV_ASM) || defined(COMPV_INTRINSIC)
 	if (sizeof(compv_scalar_t) != sizeof(void*)) {
-		COMPV_DEBUG_ERROR("sizeof(compv_scalar_t)= #%lu not equal to sizeof(void*)= #%lu", sizeof(compv_scalar_t), sizeof(void*));
+		COMPV_DEBUG_ERROR("sizeof(compv_scalar_t)= #%zu not equal to sizeof(void*)= #%zu", sizeof(compv_scalar_t), sizeof(void*));
 		return COMPV_ERROR_CODE_E_SYSTEM;
 	}
 	// https://en.wikipedia.org/wiki/Single-precision_floating-point_format
 	if (sizeof(compv_float32_t) != 4) {
-		COMPV_DEBUG_ERROR("sizeof(compv_float32_t)= #%lu not equal to 4", sizeof(compv_float32_t));
+		COMPV_DEBUG_ERROR("sizeof(compv_float32_t)= #%zu not equal to 4", sizeof(compv_float32_t));
 		return COMPV_ERROR_CODE_E_SYSTEM;
 	}
 	// https://en.wikipedia.org/wiki/Double-precision_floating-point_format
 	if (sizeof(compv_float64_t) != 8) {
-		COMPV_DEBUG_ERROR("sizeof(compv_float64_t)= #%lu not equal to 8", sizeof(compv_float64_t));
+		COMPV_DEBUG_ERROR("sizeof(compv_float64_t)= #%zu not equal to 8", sizeof(compv_float64_t));
 		return COMPV_ERROR_CODE_E_SYSTEM;
 	}
 #endif
-	COMPV_DEBUG_INFO("sizeof(compv_scalar_t)= #%lu", sizeof(compv_scalar_t));
-	COMPV_DEBUG_INFO("sizeof(float)= #%lu", sizeof(float));
+	COMPV_DEBUG_INFO("sizeof(compv_scalar_t)= #%zu", sizeof(compv_scalar_t));
+	COMPV_DEBUG_INFO("sizeof(float)= #%zu", sizeof(float));
 
 	// endianness
 	// https://developer.apple.com/library/mac/documentation/Darwin/Conceptual/64bitPorting/MakingCode64-BitClean/MakingCode64-BitClean.html

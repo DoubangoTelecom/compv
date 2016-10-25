@@ -14,8 +14,10 @@
 
 #if defined(HAVE_LIBJPEG)
 
+// 'jmorecfg.h' is patched to avoid "JPEG parameter struct mismatch: library thinks size is 632, caller expects 600" error, by using correct typedef for 'boolean'
+extern "C" {
 #include <jpeglib.h>
-#include <setjmp.h>
+}
 
 #define kModuleNameLibjpeg "libjpeg"
 #define kReadDataTrue	true
@@ -85,10 +87,15 @@ static void my_error_exit(j_common_ptr cinfo)
     /* cinfo->err really points to a my_error_mgr struct, so coerce pointer */
     my_error_ptr myerr = (my_error_ptr)cinfo->err;
 
+#if 0
     /* Always display the message. */
     /* We could postpone this until after returning, if we chose. */
     (*cinfo->err->output_message) (cinfo);
-
+#else
+		char buffer[JMSG_LENGTH_MAX];
+		(*cinfo->err->format_message) (cinfo, buffer);
+		COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "error message: %s", buffer);
+#endif
     /* Return control to the setjmp point */
     longjmp(myerr->setjmp_buffer, 1);
 }

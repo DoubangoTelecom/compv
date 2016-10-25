@@ -16,6 +16,10 @@
 #	include <GLFW/glfw3.h>
 #endif /* HAVE_GLFW_GLFW3_H */
 
+#if defined(_MSC_VER) && _MSC_VER >= 1900
+#	pragma comment(lib, "legacy_stdio_definitions.lib")
+#endif
+
 COMPV_NAMESPACE_BEGIN()
 
 CompVWindowGLFW3::CompVWindowGLFW3(int width, int height, const char* title)

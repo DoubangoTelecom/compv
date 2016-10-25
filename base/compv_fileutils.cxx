@@ -130,7 +130,7 @@ COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buff
         }
         size_t read_;
         if (size_ != (read_ = fread(mem_, 1, size_, file_))) {
-            COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "fread(%s) returned %lu instead of %u", pcPath, read_, (unsigned)size_);
+            COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "fread(%s) returned %zu instead of %d", pcPath, read_, size_);
             fclose(file_);
             CompVMem::free(&mem_);
             return COMPV_ERROR_CODE_E_FAILED_TO_READ_FILE;

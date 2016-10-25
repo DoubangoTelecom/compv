@@ -13,3 +13,5 @@ Release
 Debug
 *.gray
 *.ipch
+*.opendb
+*.db

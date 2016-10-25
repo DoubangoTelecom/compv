@@ -368,7 +368,7 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem
 {
 #if COMPV_MEM_CHECK
     if (ptr && !isSpecial(ptr)) {
-        COMPV_DEBUG_FATAL("Using reallocAligned on no-special address: %lx", (uintptr_t)ptr);
+        COMPV_DEBUG_FATAL("Using reallocAligned on no-special address: %p", ptr);
         return NULL;
     }
 #endif
@@ -423,7 +423,7 @@ void CompVMem::freeAligned(void** ptr)
         void* ptr_ = *ptr;
 #if COMPV_MEM_CHECK
         if (!isSpecial(ptr_)) {
-            COMPV_DEBUG_FATAL("Using freeAligned on no-special address: %lx", (uintptr_t)ptr_);
+            COMPV_DEBUG_FATAL("Using freeAligned on no-special address: %p", ptr_);
         }
         else {
             CompVMem::specialsLock();
