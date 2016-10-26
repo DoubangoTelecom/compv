@@ -6,15 +6,14 @@
 */
 #include "compv/ui/opengl/compv_window_glfw3.h"
 #if defined(HAVE_GLFW_GLFW3_H)
+#error "GLFW is deprecated and replaced with SDL"
 #include "compv/ui/compv_ui.h"
 
 #if defined(HAVE_GL_GLEW_H)
 #include <GL/glew.h>
 #endif /* HAVE_GL_GLEW_H */
 
-#if defined(HAVE_GLFW_GLFW3_H)
-#	include <GLFW/glfw3.h>
-#endif /* HAVE_GLFW_GLFW3_H */
+#include <GLFW/glfw3.h>
 
 #if defined(_MSC_VER) && _MSC_VER >= 1900
 #	pragma comment(lib, "legacy_stdio_definitions.lib")
@@ -24,6 +23,7 @@ COMPV_NAMESPACE_BEGIN()
 
 CompVWindowGLFW3::CompVWindowGLFW3(int width, int height, const char* title)
 : CompVWindow(width, height, title)
+, m_pGLFWwindow(NULL)
 {
 #   if COMPV_OS_APPLE
 	if (!pthread_main_np()) {

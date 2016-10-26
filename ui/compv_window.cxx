@@ -8,6 +8,7 @@
 #include "compv/ui/compv_ui.h"
 
 #include "compv/ui/opengl/compv_window_glfw3.h"
+#include "compv/ui/opengl/compv_window_sdl.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -38,10 +39,21 @@ COMPV_ERROR_CODE CompVWindow::newObj(CompVWindowPtrPtr window, int width, int he
 {
 	COMPV_CHECK_CODE_RETURN(CompVUI::init());
 	COMPV_CHECK_EXP_RETURN(window == NULL || width <= 0 || height <= 0 || !title || !::strlen(title), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	*window = NULL;
 #if defined(HAVE_GLFW_GLFW3_H)
-	CompVWindowGLFW3Ptr glfw3Window;
-	COMPV_CHECK_CODE_RETURN(CompVWindowGLFW3::newObj(&glfw3Window, width, height, title));
-	*window = dynamic_cast<CompVWindow*>(*glfw3Window);
+	if (!*window) {
+		CompVWindowGLFW3Ptr glfw3Window;
+		COMPV_CHECK_CODE_RETURN(CompVWindowGLFW3::newObj(&glfw3Window, width, height, title));
+		*window = dynamic_cast<CompVWindow*>(*glfw3Window);
+	}
+#endif /* HAVE_GLFW_GLFW3_H */
+
+#if defined(HAVE_SDL_H)
+	if (!*window) {
+		CompVWindowSDLPtr sdlWindow;
+		COMPV_CHECK_CODE_RETURN(CompVWindowSDL::newObj(&sdlWindow, width, height, title));
+		*window = dynamic_cast<CompVWindow*>(*sdlWindow);
+	}
 #endif /* HAVE_GLFW_GLFW3_H */
 
 	COMPV_CHECK_EXP_RETURN(!*window, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);	

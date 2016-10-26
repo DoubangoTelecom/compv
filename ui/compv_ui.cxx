@@ -15,6 +15,10 @@
 #	include <GLFW/glfw3.h>
 #endif /* HAVE_GLFW_GLFW3_H */
 
+#if defined(HAVE_SDL_H)
+#include <SDL.h>
+#endif /* HAVE_SDL_H */
+
 COMPV_NAMESPACE_BEGIN()
 
 bool CompVUI::s_bInitialized = false;
@@ -29,6 +33,11 @@ CompVPtr<CompVThread* > CompVUI::s_WorkerThread = NULL;
 static void GLFW_ErrorCallback(int error, const char* description);
 struct GLFWwindow* CompVUI::s_pGLFWMainWindow = NULL;
 #endif /* HAVE_GLFW */
+
+#if HAVE_SDL_H
+static SDL_Window *s_pSDLMainWindow = NULL;
+static SDL_GLContext s_pSDLMainContext = NULL;
+#endif /* HAVE_SDL_H */
 
 CompVUI::CompVUI()
 {
@@ -59,6 +68,7 @@ COMPV_ERROR_CODE CompVUI::init()
 
 	/* GLFW */
 #if HAVE_GLFW
+#	error "GLFW is deprecated and replaced with SDL"
 	COMPV_DEBUG_INFO("GLFW version being used: %s", glfwGetVersionString());
 	// Initialize GLFW
 	glfwSetErrorCallback(GLFW_ErrorCallback);
@@ -86,20 +96,56 @@ COMPV_ERROR_CODE CompVUI::init()
 	glGetIntegerv(GL_MAJOR_VERSION, &major), CompVUI::s_iGLVersionMajor = static_cast<int>(major);
 	glGetIntegerv(GL_MINOR_VERSION, &minor), CompVUI::s_iGLVersionMinor = static_cast<int>(minor);
 	COMPV_DEBUG_INFO("OpenGL parsed major and minor versions: %d.%d", CompVUI::s_iGLVersionMajor, CompVUI::s_iGLVersionMinor);
-#if defined(HAVE_GL_GLEW_H)
+	glfwSwapInterval(1);
+	glfwMakeContextCurrent(NULL);
+#endif /* GLFW */
+
+	/* SDL */
+#if defined(HAVE_SDL_H)
+	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+		COMPV_DEBUG_ERROR_EX("SDL", "SDL_Init failed: %s", SDL_GetError());
+		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SDL);
+	}
+	COMPV_DEBUG_INFO_EX("SDL", "SDL_Init succeeded");
+	
+#if 0
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+#endif
+	s_pSDLMainWindow = SDL_CreateWindow(
+		"Main window",
+		SDL_WINDOWPOS_UNDEFINED,
+		SDL_WINDOWPOS_UNDEFINED,
+		1,
+		1,
+		SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN
+	);
+	if (!s_pSDLMainWindow) {
+		COMPV_DEBUG_ERROR("SDL_CreateWindow(%d, %d, %s) failed: %s", 1, 1, "Main window", SDL_GetError());
+		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SDL);
+	}
+	s_pSDLMainContext = SDL_GL_CreateContext(s_pSDLMainWindow);
+	if (!s_pSDLMainContext) {
+		COMPV_DEBUG_ERROR("SDL_GL_CreateContext() failed: %s", SDL_GetError());
+		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SDL);
+	}
+	COMPV_CHECK_EXP_BAIL(SDL_GL_MakeCurrent(s_pSDLMainWindow, s_pSDLMainContext) != 0, COMPV_ERROR_CODE_E_SDL);
+
+#endif /* SDL */
+
+#if (HAVE_GLFW || defined(HAVE_SDL_H)) && defined(HAVE_GL_GLEW_H)
 	GLenum glewErr = glewInit();
 	if (GLEW_OK != glewErr) {
 		COMPV_DEBUG_ERROR_EX("GLEW", "glewInit failed: %s", glewGetErrorString(glewErr));
 		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_GLEW);
-	}
+}
 	COMPV_DEBUG_INFO_EX("GLEW", "glewInit succeeded");
 #endif /* HAVE_GL_GLEW_H */
-	glfwSwapInterval(1);
-	glfwMakeContextCurrent(NULL);
-#else
+
+#if !HAVE_GLFW && !defined(HAVE_SDL_H)
 	COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_S_OK);
-	COMPV_DEBUG_INFO("GLFW not supported on the current platform");
-#endif /* HAVE_GLFW */
+	COMPV_DEBUG_INFO("Neither GLFW nor SDL is supported on the current platform");
+#endif
 
 bail:
 	if (COMPV_ERROR_CODE_IS_OK(err)) {
@@ -181,6 +227,10 @@ COMPV_ERROR_CODE CompVUI::runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) /
 	//	- On Mac OS X, (A)and(B) must happen on the same thread, that must also be the main thread(thread 0).Again, (C)can happen on any thread.
     COMPV_DEBUG_INFO("Running event loop on thread with id = %ld", (long)eventLoopThreadId);
 
+#if defined(HAVE_SDL_H)
+	SDL_Event sdlEvent;
+#endif
+
 	while (CompVUI::s_bLoopRunning) {
         if (CompVUI::windowsCount() == 0) {
             COMPV_DEBUG_INFO("No active windows in the event loop... breaking the loop")
@@ -188,6 +238,25 @@ COMPV_ERROR_CODE CompVUI::runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) /
         }
 #if HAVE_GLFW
 		glfwWaitEvents();
+#elif defined(HAVE_SDL_H)
+		if (SDL_WaitEvent(&sdlEvent)) {
+			if (sdlEvent.type == SDL_QUIT) {
+				COMPV_DEBUG_INFO_EX("UI", "Quit called");
+				CompVUI::s_bLoopRunning = false;
+			}
+			else if (sdlEvent.type == SDL_WINDOWEVENT && sdlEvent.window.event == SDL_WINDOWEVENT_CLOSE) {
+				SDL_Window* window = SDL_GetWindowFromID(sdlEvent.window.windowID);
+				if (window) {
+					CompVWindowPtr wind = static_cast<CompVWindow*>(SDL_GetWindowData(window, "This"));
+					if (wind) {
+						COMPV_CHECK_CODE_ASSERT(wind->close());
+					}
+				}
+			}
+		}
+		else {
+			CompVUI::s_bLoopRunning = false;
+		}
 #else
 		CompVThread::sleep(1);
 #endif /* HAVE_GLFW */
@@ -253,6 +322,18 @@ COMPV_ERROR_CODE CompVUI::deInit()
 	glfwTerminate();
 	glfwSetErrorCallback(NULL);
 #endif /* HAVE_GLFW */
+
+#if defined(HAVE_SDL_H)
+	if (s_pSDLMainContext) {
+		SDL_GL_DeleteContext(s_pSDLMainContext);
+		s_pSDLMainContext = NULL;
+	}
+	if (s_pSDLMainWindow) {
+		SDL_DestroyWindow(s_pSDLMainWindow);
+		s_pSDLMainWindow = NULL;
+	}
+	SDL_Quit();
+#endif /* HAVE_SDL_H */
 
 #if defined(HAVE_GL_GLEW_H)
 	// TODO(dmi): glewTerminate()
