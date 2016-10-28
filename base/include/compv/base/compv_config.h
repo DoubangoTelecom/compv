@@ -226,9 +226,15 @@
 #	else
 # 		define COMPV_UI_API		__declspec(dllimport)
 #	endif
+#	if defined(COMPV_DRAWING_EXPORTS)
+# 		define COMPV_DRAWING_API		__declspec(dllexport)
+#	else
+# 		define COMPV_DRAWING_API		__declspec(dllimport)
+#	endif
 #else
 # 	define COMPV_BASE_API
 # 	define COMPV_UI_API
+#	define COMPV_DRAWING_API
 #endif
 
 #ifdef __GNUC__

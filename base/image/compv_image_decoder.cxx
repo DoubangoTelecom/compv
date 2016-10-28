@@ -28,11 +28,10 @@ COMPV_ERROR_CODE CompVImageDecoder::init()
 	if (!CompVImageDecoder::s_bInitialize) {
 		COMPV_DEBUG_INFO_EX(kModuleNameImageDecoder, "Initializing image decoder...");
 
+		/* Setting decoders function pointers in CompVBase is deprecated (to avoid linking against 3rd-party libraries in base). *Must* use CompVDrawing.*/
 #if defined(HAVE_LIBJPEG)
 		CompVImageDecoder::s_funcptrDecodeFileJpeg = libjpegDecodeFile;
 		CompVImageDecoder::s_funcptrDecodeInfoJpeg = libjpegDecodeInfo;
-#else
-		COMPV_DEBUG_WARN_EX(kModuleNameImageDecoder, "No jpeg decoder found");
 #endif /* HAVE_LIBJPEG */
 
 		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
@@ -51,6 +50,25 @@ COMPV_ERROR_CODE CompVImageDecoder::deInit()
 		CompVImageDecoder::s_funcptrDecodeInfoJpeg = NULL;
 
 		CompVImageDecoder::s_bInitialize = false;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVImageDecoder::setFuncPtrs(COMPV_IMAGE_FORMAT format, CompVDecodeFileFuncPtr funcptrDecodeFile, CompVDecodeInfoFuncPtr funcptrDecodeInfo)
+{
+	COMPV_DEBUG_INFO_EX(kModuleNameImageDecoder, "Setting decode function pointers for JPEG");
+	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+	switch (format) {
+	case COMPV_IMAGE_FORMAT_JPEG:
+		CompVImageDecoder::s_funcptrDecodeFileJpeg = funcptrDecodeFile;
+		CompVImageDecoder::s_funcptrDecodeInfoJpeg = funcptrDecodeInfo;
+		break;
+	case COMPV_IMAGE_FORMAT_RAW:
+	case COMPV_IMAGE_FORMAT_BITMAP:
+	case COMPV_IMAGE_FORMAT_PNG:
+	default:
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT);
+		break;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

@@ -20,6 +20,7 @@ class COMPV_BASE_API CompVImageDecoder
 public:
 	static COMPV_ERROR_CODE init();
 	static COMPV_ERROR_CODE deInit();
+	static COMPV_ERROR_CODE setFuncPtrs(COMPV_IMAGE_FORMAT format, CompVDecodeFileFuncPtr funcptrDecodeFile, CompVDecodeInfoFuncPtr funcptrDecodeInfo);
 	static COMPV_ERROR_CODE decodeFile(const char* filePath, CompVMatPtrPtr mat);
 	static COMPV_ERROR_CODE decodeInfo(const char* filePath, CompVImageInfo& info);
 

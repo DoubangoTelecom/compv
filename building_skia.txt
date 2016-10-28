@@ -15,6 +15,8 @@ git checkout chrome/m55
 Edit 'skia/gyp/libjpeg-turbo.gyp' and add '../third_party/externals/libjpeg-turbo/jdatasrc.c',
 -> This adds support for 'jpeg_stdio_src'
 
+* For Windows only, In 'jmorecfg.h' redefine 'boolean' as 'unsigned char boolean'
+
 ********** Windows **********
 python gyp_skia -Dskia_arch_type=x86 -Dskia_os=win
 ninja -C out/Debug

@@ -296,9 +296,6 @@
     <ClCompile Include="compv_buffer.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="image\compv_image_libjpeg.cxx">
-      <Filter>Source Files\image</Filter>
-    </ClCompile>
     <ClCompile Include="image\compv_image_decoder.cxx">
       <Filter>Source Files\image</Filter>
     </ClCompile>
