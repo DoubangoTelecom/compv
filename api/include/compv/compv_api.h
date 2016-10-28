@@ -30,9 +30,6 @@
 #include <compv/drawing/compv_canvas.h>
 #include <compv/drawing/compv_drawing.h>
 
-/* Module: UI */
-#include <compv/ui/compv_ui.h>
-#include <compv/ui/compv_window.h>
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -40,7 +37,6 @@ static COMPV_ERROR_CODE CompVInit()
 {
 	COMPV_CHECK_CODE_RETURN(CompVBase::init());
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
-	COMPV_CHECK_CODE_RETURN(CompVUI::init());
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -48,7 +44,6 @@ static COMPV_ERROR_CODE CompVDeInit()
 {
 	COMPV_CHECK_CODE_ASSERT(CompVBase::deInit());
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::deInit());
-	COMPV_CHECK_CODE_ASSERT(CompVUI::deInit());
 	return COMPV_ERROR_CODE_S_OK;
 }
 

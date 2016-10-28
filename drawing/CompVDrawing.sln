@@ -1,0 +1,60 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVDrawing", "CompVDrawing.vcxproj", "{3B044340-C223-474B-BB77-CE2F430C0190}"
+	ProjectSection(ProjectDependencies) = postProject
+		{52028A97-E6D7-4C48-82E9-3789FD42BC56} = {52028A97-E6D7-4C48-82E9-3789FD42BC56}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hello", "tests\hello\hello.vcxproj", "{65705590-2EEC-44C9-B485-4D077D3FBACA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3B044340-C223-474B-BB77-CE2F430C0190} = {3B044340-C223-474B-BB77-CE2F430C0190}
+		{52028A97-E6D7-4C48-82E9-3789FD42BC56} = {52028A97-E6D7-4C48-82E9-3789FD42BC56}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVBase", "..\base\CompVBase.vcxproj", "{52028A97-E6D7-4C48-82E9-3789FD42BC56}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0BFCCD01-44BA-4E14-AB4F-C9342D90AD50}"
+	ProjectSection(SolutionItems) = preProject
+		..\api\include\compv\compv_api.h = ..\api\include\compv\compv_api.h
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3B044340-C223-474B-BB77-CE2F430C0190}.Debug|x64.ActiveCfg = Debug|x64
+		{3B044340-C223-474B-BB77-CE2F430C0190}.Debug|x64.Build.0 = Debug|x64
+		{3B044340-C223-474B-BB77-CE2F430C0190}.Debug|x86.ActiveCfg = Debug|Win32
+		{3B044340-C223-474B-BB77-CE2F430C0190}.Debug|x86.Build.0 = Debug|Win32
+		{3B044340-C223-474B-BB77-CE2F430C0190}.Release|x64.ActiveCfg = Release|x64
+		{3B044340-C223-474B-BB77-CE2F430C0190}.Release|x64.Build.0 = Release|x64
+		{3B044340-C223-474B-BB77-CE2F430C0190}.Release|x86.ActiveCfg = Release|Win32
+		{3B044340-C223-474B-BB77-CE2F430C0190}.Release|x86.Build.0 = Release|Win32
+		{65705590-2EEC-44C9-B485-4D077D3FBACA}.Debug|x64.ActiveCfg = Debug|x64
+		{65705590-2EEC-44C9-B485-4D077D3FBACA}.Debug|x64.Build.0 = Debug|x64
+		{65705590-2EEC-44C9-B485-4D077D3FBACA}.Debug|x86.ActiveCfg = Debug|Win32
+		{65705590-2EEC-44C9-B485-4D077D3FBACA}.Debug|x86.Build.0 = Debug|Win32
+		{65705590-2EEC-44C9-B485-4D077D3FBACA}.Release|x64.ActiveCfg = Release|x64
+		{65705590-2EEC-44C9-B485-4D077D3FBACA}.Release|x64.Build.0 = Release|x64
+		{65705590-2EEC-44C9-B485-4D077D3FBACA}.Release|x86.ActiveCfg = Release|Win32
+		{65705590-2EEC-44C9-B485-4D077D3FBACA}.Release|x86.Build.0 = Release|Win32
+		{52028A97-E6D7-4C48-82E9-3789FD42BC56}.Debug|x64.ActiveCfg = Debug|x64
+		{52028A97-E6D7-4C48-82E9-3789FD42BC56}.Debug|x64.Build.0 = Debug|x64
+		{52028A97-E6D7-4C48-82E9-3789FD42BC56}.Debug|x86.ActiveCfg = Debug|Win32
+		{52028A97-E6D7-4C48-82E9-3789FD42BC56}.Debug|x86.Build.0 = Debug|Win32
+		{52028A97-E6D7-4C48-82E9-3789FD42BC56}.Release|x64.ActiveCfg = Release|x64
+		{52028A97-E6D7-4C48-82E9-3789FD42BC56}.Release|x64.Build.0 = Release|x64
+		{52028A97-E6D7-4C48-82E9-3789FD42BC56}.Release|x86.ActiveCfg = Release|Win32
+		{52028A97-E6D7-4C48-82E9-3789FD42BC56}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
