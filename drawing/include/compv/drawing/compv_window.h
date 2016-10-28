@@ -38,9 +38,11 @@ public:
 	COMPV_INLINE const char* getTitle() { return m_strTitle.c_str(); }
 	COMPV_INLINE compv_window_id_t getId() { return m_nId; }
 	COMPV_INLINE compv_thread_id_t getWindowCreationThreadId() { return m_WindowCreationThreadId; }
+	COMPV_INLINE bool isGLEnabled() { return !!getGLContext(); }
     
 	virtual bool isClosed() = 0;
 
+	virtual CompVGLContext getGLContext() { return NULL; }
     virtual COMPV_ERROR_CODE close() = 0;
 	virtual COMPV_ERROR_CODE draw(CompVMatPtr mat) = 0;
 

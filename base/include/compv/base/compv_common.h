@@ -133,6 +133,8 @@ typedef float compv_float32_t;
 typedef double compv_float64_t;
 typedef compv_float32_t compv_float32x2_t[2];
 
+typedef void* CompVGLContext;
+
 enum COMPV_DEBUG_LEVEL {
     COMPV_DEBUG_LEVEL_INFO = 4,
     COMPV_DEBUG_LEVEL_WARN = 3,

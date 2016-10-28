@@ -25,15 +25,15 @@ COMPV_ERROR_CODE CompVCanvas::newObj(CompVCanvasPtrPtr canvas)
 {
 	COMPV_CHECK_CODE_RETURN(CompVBase::init());
 	COMPV_CHECK_EXP_RETURN(!canvas, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	*canvas = NULL;
+	CompVCanvasPtr canvas_;
 
 #if defined(HAVE_SKIA)
 	CompVCanvasSkiaPtr skiaCanvas;
 	COMPV_CHECK_CODE_RETURN(CompVCanvasSkia::newObj(&skiaCanvas));
-	*canvas = dynamic_cast<CompVCanvas*>(*skiaCanvas);
+	canvas_ = dynamic_cast<CompVCanvas*>(*skiaCanvas);
 #endif /* HAVE_GLFW_GLFW3_H */
 
-	COMPV_CHECK_EXP_RETURN(!*canvas, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	COMPV_CHECK_EXP_RETURN(!(*canvas = canvas_), COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 
 	return COMPV_ERROR_CODE_S_OK;
 }

@@ -23,15 +23,16 @@ CompVProgram::~CompVProgram()
 COMPV_ERROR_CODE CompVProgram::newObj(CompVProgramPtrPtr program)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
-	COMPV_CHECK_EXP_RETURN(program == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!program, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVProgramPtr program_;
 
 #if defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES)
-	CompVProgramGLPtr program_;
-	COMPV_CHECK_CODE_RETURN(CompVProgramGL::newObj(&program_));
-	*program = static_cast<CompVProgram*>(*program_);
+	CompVProgramGLPtr glProgram_;
+	COMPV_CHECK_CODE_RETURN(CompVProgramGL::newObj(&glProgram_));
+	program_ = static_cast<CompVProgram*>(*glProgram_);
 #endif /* HAVE_GL_GLEW_H */
 
-	COMPV_CHECK_EXP_RETURN(!*program, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	COMPV_CHECK_EXP_RETURN(!(*program = program_), COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 	return COMPV_ERROR_CODE_S_OK;
 }
 

@@ -4,10 +4,14 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/opengl/compv_window_sdl.h"
+#include "compv/drawing/sdl/compv_window_sdl.h"
 #if defined(HAVE_SDL_H)
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/compv_canvas.h"
+
+#if !defined(COMPV_SDL_DISABLE_GL)
+#	define COMPV_SDL_DISABLE_GL 0 // To test CPU drawing (no GL)
+#endif
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -21,13 +25,21 @@ CompVWindowSDL::CompVWindowSDL(int width, int height, const char* title)
 		COMPV_DEBUG_WARN("MacOS: Creating window outside main thread");
 	}
 #   endif /* COMPV_OS_APPLE */
+	static const SDL_WindowFlags sWindowFlags = static_cast<SDL_WindowFlags>(SDL_WINDOW_RESIZABLE
+#if !COMPV_SDL_DISABLE_GL
+		| SDL_WINDOW_OPENGL
+#endif
+#if COMPV_OS_ANDROID || COMPV_OS_IPHONE || COMPV_OS_IPHONE_SIMULATOR
+		 | SDL_WINDOW_BORDERLESS | SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_ALLOW_HIGHDPI
+#endif
+		);
 	m_pSDLWindow = SDL_CreateWindow(
 		title,
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
 		width,
 		height,
-		SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
+		sWindowFlags
 	);
 	if (!m_pSDLWindow) {
 		COMPV_DEBUG_ERROR("SDL_CreateWindow(%d, %d, %s) failed: %s", width, height, title, SDL_GetError());
@@ -36,15 +48,16 @@ CompVWindowSDL::CompVWindowSDL(int width, int height, const char* title)
 	m_pSDLContext = SDL_GL_CreateContext(m_pSDLWindow);
 	if (!m_pSDLContext) {
 		COMPV_DEBUG_ERROR("SDL_GL_CreateContext() failed: %s", SDL_GetError());
-		return;
 	}
 
 	COMPV_CHECK_CODE_ASSERT(CompVMutex::newObj(&m_SDLMutex));
 	SDL_SetWindowData(m_pSDLWindow, "This", this);
-	COMPV_ASSERT(SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) == 0);
-	SDL_GL_SetSwapInterval(1);
-	SDL_SetEventFilter(CompVWindowSDL::FilterEvents, this);
-	SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
+	if (m_pSDLContext) {
+		COMPV_ASSERT(SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) == 0);
+		SDL_GL_SetSwapInterval(1);
+		SDL_SetEventFilter(CompVWindowSDL::FilterEvents, this);
+		SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
+	}
 }
 
 CompVWindowSDL::~CompVWindowSDL()
@@ -346,13 +359,16 @@ COMPV_ERROR_CODE CompVWindowSDL::newObj(CompVWindowSDLPtrPtr sdlWindow, int widt
 	COMPV_CHECK_EXP_RETURN(sdlWindow == NULL || width <= 0 || height <= 0 || !title || !::strlen(title), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVWindowSDLPtr sdlWindow_ = new CompVWindowSDL(width, height, title);
 	COMPV_CHECK_EXP_RETURN(!sdlWindow_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_pSDLWindow, COMPV_ERROR_CODE_E_GLFW);
-	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_pSDLContext, COMPV_ERROR_CODE_E_GLFW);
+	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_pSDLWindow, COMPV_ERROR_CODE_E_SDL);
+#if 0 // OpenGL could be unavailable -> CPU drawing fallback
+	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_pSDLContext, COMPV_ERROR_CODE_E_SDL);
+#endif
 	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_SDLMutex, COMPV_ERROR_CODE_E_SYSTEM);
 	*sdlWindow = sdlWindow_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// TODO(dmi): remove if not used
 int CompVWindowSDL::FilterEvents(void *userdata, SDL_Event* event)
 {
 	/*if (event->type == SDL_WINDOWEVENT) {

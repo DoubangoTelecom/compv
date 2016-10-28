@@ -172,7 +172,7 @@
     <ClInclude Include="include\compv\drawing\opengl\compv_utils_gl.h" />
     <ClInclude Include="include\compv\drawing\opengl\compv_surface_gl.h" />
     <ClInclude Include="include\compv\drawing\opengl\compv_window_glfw3.h" />
-    <ClInclude Include="include\compv\drawing\opengl\compv_window_sdl.h" />
+    <ClInclude Include="include\compv\drawing\sdl\compv_window_sdl.h" />
     <ClInclude Include="include\compv\drawing\skia\compv_canvas_skia.h" />
   </ItemGroup>
   <ItemGroup>
@@ -189,7 +189,7 @@
     <ClCompile Include="opengl\compv_utils_gl.cxx" />
     <ClCompile Include="opengl\compv_surface_gl.cxx" />
     <ClCompile Include="opengl\compv_window_glfw3.cxx" />
-    <ClCompile Include="opengl\compv_window_sdl.cxx" />
+    <ClCompile Include="sdl\compv_window_sdl.cxx" />
     <ClCompile Include="skia\compv_canvas_skia.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

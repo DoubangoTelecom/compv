@@ -4,15 +4,15 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_DRAWING_OPENGL_WINDOW_SDL_H_)
-#define _COMPV_DRAWING_OPENGL_WINDOW_SDL_H_
+#if !defined(_COMPV_DRAWING_WINDOW_SDL_H_)
+#define _COMPV_DRAWING_WINDOW_SDL_H_
 
 #include "compv/base/compv_config.h"
 #if defined(HAVE_SDL_H)
 #include "compv/base/compv_common.h"
 #include "compv/drawing/compv_window.h"
 #include "compv/drawing/compv_program.h"
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/drawing/opengl/compv_headers_gl.h" // FIXME(dmi): remove
 #include "compv/base/parallel/compv_thread.h"
 #include "compv/base/parallel/compv_mutex.h"
 
@@ -42,6 +42,7 @@ public:
 
 	COMPV_INLINE struct SDL_Window * getSDLWwindow() { return m_pSDLWindow; }
 
+	virtual CompVGLContext getGLContext() { return static_cast<CompVGLContext>(m_pSDLContext); }
 	virtual bool isClosed();
 	virtual COMPV_ERROR_CODE close();
 	virtual COMPV_ERROR_CODE draw(CompVMatPtr mat);
@@ -60,6 +61,6 @@ private:
 
 COMPV_NAMESPACE_END()
 
-#endif /* HAVE_GLFW_GLFW3_H */
+#endif /* HAVE_SDL_H */
 
-#endif /* _COMPV_DRAWING_OPENGL_WINDOW_SDL_H_ */
+#endif /* _COMPV_DRAWING_WINDOW_SDL_H_ */
