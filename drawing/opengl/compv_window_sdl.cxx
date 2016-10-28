@@ -192,8 +192,8 @@ COMPV_ERROR_CODE CompVWindowSDL::draw(CompVMatPtr mat)
 				uniform sampler2D tex;
 				void main(void) {
 					//gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); 
-					vec4 color = texture2D(tex, gl_TexCoord[0]);
-					gl_FragColor = color;
+					//vec4 color = texture2D(tex, gl_TexCoord[0]);
+					gl_FragColor = texture2D(tex, gl_TexCoord[0]);
 				}
 			);
 #define main SAVED_MAIN
@@ -215,8 +215,8 @@ COMPV_ERROR_CODE CompVWindowSDL::draw(CompVMatPtr mat)
 		glEnable(GL_DEPTH_TEST);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		//gluOrtho2D((GLdouble)0, static_cast<GLdouble>(mat->stride()), static_cast<GLdouble>(mat->rows()), (GLdouble)0); 
-		glOrtho((GLdouble)0, static_cast<GLdouble>(640), static_cast<GLdouble>(480), (GLdouble)0, (GLdouble)-1, (GLdouble)1);
+		//gluOrtho2D((GLdouble)0, static_cast<GLdouble>(640), (GLdouble)0, static_cast<GLdouble>(480));
+		glOrtho((GLdouble)0, static_cast<GLdouble>(640), (GLdouble)0, static_cast<GLdouble>(480), (GLdouble)-1, (GLdouble)1);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 
@@ -311,8 +311,8 @@ COMPV_ERROR_CODE CompVWindowSDL::draw(CompVMatPtr mat)
 		glEnable(GL_DEPTH_TEST);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		//gluOrtho2D((GLdouble)0, static_cast<GLdouble>(mat->stride()), static_cast<GLdouble>(mat->rows()), (GLdouble)0); 
-		glOrtho((GLdouble)0, static_cast<GLdouble>(mat->stride()), static_cast<GLdouble>(mat->rows()), (GLdouble)0, (GLdouble)-1, (GLdouble)1);
+		//gluOrtho2D((GLdouble)0, static_cast<GLdouble>(mat->stride()), (GLdouble)0, static_cast<GLdouble>(mat->rows())); 
+		glOrtho((GLdouble)0, static_cast<GLdouble>(mat->stride()), (GLdouble)0, static_cast<GLdouble>(mat->rows()), (GLdouble)-1, (GLdouble)1);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 

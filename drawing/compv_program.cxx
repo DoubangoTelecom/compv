@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/opengl/compv_program.h"
+#include "compv/drawing/compv_program.h"
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/opengl/compv_program_gl.h"
 
@@ -25,7 +25,7 @@ COMPV_ERROR_CODE CompVProgram::newObj(CompVProgramPtrPtr program)
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
 	COMPV_CHECK_EXP_RETURN(program == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-#if defined(HAVE_GL_GLEW_H)
+#if defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES)
 	CompVProgramGLPtr program_;
 	COMPV_CHECK_CODE_RETURN(CompVProgramGL::newObj(&program_));
 	*program = static_cast<CompVProgram*>(*program_);

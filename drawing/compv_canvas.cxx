@@ -7,7 +7,7 @@
 #include "compv/drawing/compv_canvas.h"
 #include "compv/base/compv_base.h"
 
-#include "compv/drawing/compv_canvas_skia.h"
+#include "compv/drawing/skia/compv_canvas_skia.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -24,7 +24,7 @@ CompVCanvas::~CompVCanvas()
 COMPV_ERROR_CODE CompVCanvas::newObj(CompVCanvasPtrPtr canvas)
 {
 	COMPV_CHECK_CODE_RETURN(CompVBase::init());
-	COMPV_CHECK_EXP_RETURN(canvas == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!canvas, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	*canvas = NULL;
 
 #if defined(HAVE_SKIA)

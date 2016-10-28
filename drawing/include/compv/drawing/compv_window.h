@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_UI_WINDOW_H_)
-#define _COMPV_UI_WINDOW_H_
+#if !defined(_COMPV_DRAWING_WINDOW_H_)
+#define _COMPV_DRAWING_WINDOW_H_
 
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_common.h"
@@ -36,7 +36,7 @@ public:
 	COMPV_INLINE int getWidth() { return m_nWidth; }
 	COMPV_INLINE int getHeight() { return m_nHeight; }
 	COMPV_INLINE const char* getTitle() { return m_strTitle.c_str(); }
-	COMPV_INLINE compv_window_id_t getId() { return m_Id; }
+	COMPV_INLINE compv_window_id_t getId() { return m_nId; }
 	COMPV_INLINE compv_thread_id_t getWindowCreationThreadId() { return m_WindowCreationThreadId; }
     
 	virtual bool isClosed() = 0;
@@ -51,15 +51,15 @@ protected:
 
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-	static compv_window_id_t s_WindowId;
+	static compv_window_id_t s_nWindowId;
 	compv_thread_id_t m_WindowCreationThreadId;
 	int m_nWidth;
 	int m_nHeight;
 	std::string m_strTitle;
-	compv_window_id_t m_Id;
+	compv_window_id_t m_nId;
 	COMPV_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_UI_WINDOW_H_ */
+#endif /* _COMPV_DRAWING_WINDOW_H_ */

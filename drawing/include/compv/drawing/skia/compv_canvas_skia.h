@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_UI_CANVAS_SKIA_H_)
-#define _COMPV_UI_CANVAS_SKIA_H_
+#if !defined(_COMPV_DRAWING_CANVAS_SKIA_H_)
+#define _COMPV_DRAWING_CANVAS_SKIA_H_
 
 #include "compv/base/compv_config.h"
 #if HAVE_SKIA
@@ -52,4 +52,4 @@ COMPV_NAMESPACE_END()
 
 #endif /* HAVE_SKIA */
 
-#endif /* _COMPV_UI_CANVAS_SKIA_H_ */
+#endif /* _COMPV_DRAWING_CANVAS_SKIA_H_ */

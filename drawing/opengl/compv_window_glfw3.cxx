@@ -7,11 +7,8 @@
 #include "compv/drawing/opengl/compv_window_glfw3.h"
 #if defined(HAVE_GLFW_GLFW3_H)
 #error "GLFW is deprecated and replaced with SDL"
-#include "compv/ui/compv_ui.h"
-
-#if defined(HAVE_GL_GLEW_H)
-#include <GL/glew.h>
-#endif /* HAVE_GL_GLEW_H */
+#include "compv/drawing/compv_drawing.h"
+#include "compv/drawing/opengl/compv_headers_gl.h"
 
 #include <GLFW/glfw3.h>
 
@@ -179,7 +176,7 @@ COMPV_ERROR_CODE CompVWindowGLFW3::draw(CompVMatPtr mat)
 
 COMPV_ERROR_CODE CompVWindowGLFW3::newObj(CompVWindowGLFW3PtrPtr glfwWindow, int width, int height, const char* title)
 {
-	COMPV_CHECK_CODE_RETURN(CompVUI::init());
+	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
 	COMPV_CHECK_EXP_RETURN(glfwWindow == NULL || width <= 0 || height <= 0 || !title || !::strlen(title), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVWindowGLFW3Ptr glfwWindow_ = new CompVWindowGLFW3(width, height, title);
 	COMPV_CHECK_EXP_RETURN(!glfwWindow_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);

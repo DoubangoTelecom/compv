@@ -19,6 +19,12 @@
     <Filter Include="Source Files\opengl">
       <UniqueIdentifier>{1af8a8f4-4174-41a1-9bba-b61538c5853a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\skia">
+      <UniqueIdentifier>{0727282a-65c1-4551-9cf5-96c1d76b4007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\skia">
+      <UniqueIdentifier>{837924eb-9d50-4fdd-ab73-b1e2c59d182d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\drawing\compv_canvas.h">
@@ -30,13 +36,7 @@
     <ClInclude Include="include\compv\drawing\compv_image_libjpeg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\drawing\compv_canvas_skia.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\drawing\opengl\compv_headers_gl.h">
-      <Filter>Header Files\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_program.h">
       <Filter>Header Files\opengl</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\drawing\opengl\compv_program_gl.h">
@@ -54,6 +54,27 @@
     <ClInclude Include="include\compv\drawing\compv_window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\drawing\compv_renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\compv_surface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\opengl\compv_surface_gl.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\skia\compv_canvas_skia.h">
+      <Filter>Header Files\skia</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\opengl\compv_renderer_gl.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\opengl\compv_renderer_gl_rgb.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\compv_program.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_canvas.cxx">
@@ -64,12 +85,6 @@
     </ClCompile>
     <ClCompile Include="compv_image_libjpeg.cxx">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="compv_canvas_skia.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="opengl\compv_program.cxx">
-      <Filter>Source Files\opengl</Filter>
     </ClCompile>
     <ClCompile Include="opengl\compv_program_gl.cxx">
       <Filter>Source Files\opengl</Filter>
@@ -85,6 +100,27 @@
     </ClCompile>
     <ClCompile Include="opengl\compv_utils_gl.cxx">
       <Filter>Source Files\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_renderer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl\compv_surface_gl.cxx">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_surface.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="skia\compv_canvas_skia.cxx">
+      <Filter>Source Files\skia</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl\compv_renderer_gl.cxx">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl\compv_renderer_gl_rgb.cxx">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_program.cxx">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

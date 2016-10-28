@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/compv_canvas_skia.h"
+#include "compv/drawing/skia/compv_canvas_skia.h"
 #if HAVE_SKIA
 #include "compv/drawing/opengl/compv_headers_gl.h"
 #include "compv/base/compv_base.h"
@@ -31,6 +31,7 @@ CompVCanvasSkia::~CompVCanvasSkia()
 // https://github.com/google/skia/blob/master/experimental/GLFWTest/glfw_main.cpp
 // https://groups.google.com/forum/#!topic/skia-discuss/P4GO92rxIaM
 // http://stackoverflow.com/questions/12157646/how-to-render-offscreen-on-opengl
+// https://developer.apple.com/library/content/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_offscreen/opengl_offscreen.html
 
 static SkPath create_star() {
 	static const int kNumPoints = 5;

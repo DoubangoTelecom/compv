@@ -63,15 +63,14 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 #endif
-#if 0
-	static const int kStencilBits = 8;  // Skia needs 8 stencil bits
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
-	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, kStencilBits);
-	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1); // FIXME(dmi):Hwacc required
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8); // Skia requires 8bits stencil
+#if 0 // TODO(dmi): allowing sotftware rendering fallback
+	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 #endif
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		COMPV_DEBUG_ERROR_EX("SDL", "SDL_Init failed: %s", SDL_GetError());
@@ -104,6 +103,12 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	}
 	COMPV_DEBUG_INFO_EX("GLEW", "glewInit succeeded");
 #	endif /* HAVE_GL_GLEW_H */
+	COMPV_DEBUG_INFO("OpenGL version string: %s", glGetString(GL_VERSION));
+	COMPV_DEBUG_INFO("OpenGL shading version string: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+	GLint major, minor;
+	glGetIntegerv(GL_MAJOR_VERSION, &major), CompVDrawing::s_iGLVersionMajor = static_cast<int>(major);
+	glGetIntegerv(GL_MINOR_VERSION, &minor), CompVDrawing::s_iGLVersionMinor = static_cast<int>(minor);
+	COMPV_DEBUG_INFO("OpenGL parsed major and minor versions: %d.%d", CompVDrawing::s_iGLVersionMajor, CompVDrawing::s_iGLVersionMinor);
 #endif /* SDL */
 
 #if defined(HAVE_JPEGLIB_H) || defined(HAVE_SKIA)

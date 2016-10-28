@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_DRAWING_OPENGL_PROGRAM_H_)
-#define _COMPV_DRAWING_OPENGL_PROGRAM_H_
+#if !defined(_COMPV_DRAWING_PROGRAM_H_)
+#define _COMPV_DRAWING_PROGRAM_H_
 
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_obj.h"
@@ -44,4 +44,4 @@ private:
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_DRAWING_OPENGL_PROGRAM_H_ */
+#endif /* _COMPV_DRAWING_PROGRAM_H_ */

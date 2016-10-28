@@ -11,8 +11,8 @@
 #if defined(HAVE_SDL_H)
 #include "compv/base/compv_common.h"
 #include "compv/drawing/compv_window.h"
+#include "compv/drawing/compv_program.h"
 #include "compv/drawing/opengl/compv_headers_gl.h"
-#include "compv/drawing/opengl/compv_program.h"
 #include "compv/base/parallel/compv_thread.h"
 #include "compv/base/parallel/compv_mutex.h"
 
