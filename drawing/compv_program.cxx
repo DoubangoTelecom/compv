@@ -29,8 +29,8 @@ COMPV_ERROR_CODE CompVProgram::newObj(CompVProgramPtrPtr program)
 #if defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES)
 	CompVProgramGLPtr glProgram_;
 	COMPV_CHECK_CODE_RETURN(CompVProgramGL::newObj(&glProgram_));
-	program_ = static_cast<CompVProgram*>(*glProgram_);
-#endif /* HAVE_GL_GLEW_H */
+	program_ = dynamic_cast<CompVProgram*>(*glProgram_);
+#endif /* defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES) */
 
 	COMPV_CHECK_EXP_RETURN(!(*program = program_), COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 	return COMPV_ERROR_CODE_S_OK;

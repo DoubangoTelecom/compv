@@ -66,8 +66,9 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24); // because of 'GL_DEPTH24_STENCIL8'
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8); // Skia requires 8bits stencil
 #if 0 // TODO(dmi): allowing sotftware rendering fallback
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
@@ -109,6 +110,15 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	glGetIntegerv(GL_MAJOR_VERSION, &major), CompVDrawing::s_iGLVersionMajor = static_cast<int>(major);
 	glGetIntegerv(GL_MINOR_VERSION, &minor), CompVDrawing::s_iGLVersionMinor = static_cast<int>(minor);
 	COMPV_DEBUG_INFO("OpenGL parsed major and minor versions: %d.%d", CompVDrawing::s_iGLVersionMajor, CompVDrawing::s_iGLVersionMinor);
+	COMPV_DEBUG_INFO("OpenGL renderer string: %s", glGetString(GL_RENDERER));
+	COMPV_DEBUG_INFO("OpenGL vendor string: %s", glGetString(GL_VENDOR));
+	GLint maxColorAttachments = 0;
+	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+	COMPV_DEBUG_INFO("GL_MAX_DRAW_BUFFERS: %d", maxColorAttachments);
+	GLint maxDrawBuffers = 0;
+	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuffers);
+	COMPV_DEBUG_INFO("GL_MAX_DRAW_BUFFERS: %d", maxDrawBuffers);
+	COMPV_DEBUG_INFO("OpenGL extensions string: %s", glGetString(GL_EXTENSIONS));
 #endif /* SDL */
 
 #if defined(HAVE_JPEGLIB_H) || defined(HAVE_SKIA)

@@ -99,8 +99,13 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	desc.fOrigin = kBottomLeft_GrSurfaceOrigin;
 	desc.fSampleCnt = kMsaaSampleCount;
 	desc.fStencilBits = kStencilBits;
-	GrGLint buffer;
+	
+	GLint buffer;
 	glGetIntegerv(GLenum(GL_FRAMEBUFFER_BINDING), &buffer);
+	if (!buffer) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED_GPU();
+	}
+	// GrGLint buffer;
 	//GR_GL_GetIntegerv(interf, GR_GL_FRAMEBUFFER_BINDING, &buffer);
 	desc.fRenderTargetHandle = buffer;
 #endif
@@ -118,7 +123,7 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 
 	SkCanvas* canvas = sSurface->getCanvas();   // We don't manage this pointer's lifetime.
 
-	canvas->clear(SK_ColorBLACK);
+	//canvas->clear(SK_ColorBLACK);
 
 	SkPaint paint;
 	paint.setFilterQuality(kLow_SkFilterQuality);
@@ -155,33 +160,12 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	path.close();
 	canvas->translate(0.5f * scale, 0.5f * scale);
 	canvas->drawPath(path, paint);
-
-	//const SkScalar scale = 256.0f;
-	//const SkScalar R = 0.45f * scale;
-	//const SkScalar TAU = 6.2831853f;
-	//SkPath path;
-	//for (int i = 0; i < 2; ++i) {
-	//	SkScalar theta = 2 * i * TAU / 5;
-	//	if (i == 0) {
-	//		path.moveTo(R * cos(theta), R * sin(theta));
-	//	}
-	//	else {
-	//		path.lineTo(R * cos(theta), R * sin(theta));
-	//	}
-	//}
-	//path.close();
-	//paint.reset();
-	//paint.setAntiAlias(true);
-	//canvas->clear(SK_ColorWHITE);
-	//canvas->translate(0.5f * scale, 0.5f * scale);
-	//canvas->drawPath(path, paint);
+	
 	//canvas->drawPath(create_star(), paint);
-
-	//paint.reset();
-	//canvas->drawColor(SK_ColorRED);
-	//SkRect r(SkRect::MakeWH(200, 200));
-	//paint.setARGB(200, 100, 100, 100);
-	//--canvas->drawOval(r, paint);
+	
+	SkRect r(SkRect::MakeWH(200, 200));
+	paint.setARGB(200, 100, 100, 100);
+	canvas->drawOval(r, paint);
 
 	//canvas->restore();
 	canvas->flush();

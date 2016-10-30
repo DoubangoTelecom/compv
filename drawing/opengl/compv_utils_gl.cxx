@@ -32,6 +32,36 @@ COMPV_ERROR_CODE CompVUtilsGL::getLastError(std::string *error)
 	return err_;
 }
 
+COMPV_ERROR_CODE CompVUtilsGL::checkLastError()
+{
+	std::string errString_;
+	COMPV_CHECK_CODE_RETURN(CompVUtilsGL::getLastError(&errString_));
+	if (!errString_.empty()) {
+		COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "OpenGL error: %s", errString_.c_str());
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+CompVGLContext CompVUtilsGL::getCurrentContext()
+{
+#if defined(HAVE_OPENGLES)
+	EGLContext ctx = eglGetCurrentContext();
+	if (ctx == EGL_NO_CONTEXT) {
+		return NULL;
+	}
+	return static_cast<CompVGLContext>(ctx);
+#else
+#	if COMPV_OS_WINDOWS
+	return static_cast<CompVGLContext>(wglGetCurrentContext());
+#	elif COMPV_OS_APPLE
+	return static_cast<CompVGLContext>(aglGetCurrentContext());
+#	else
+	return static_cast<CompVGLContext>(glXGetCurrentContext());
+#	endif
+#endif
+}
+
 COMPV_ERROR_CODE CompVUtilsGL::shadDelete(GLuint* uShad)
 {
 	COMPV_CHECK_EXP_RETURN(!uShad, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

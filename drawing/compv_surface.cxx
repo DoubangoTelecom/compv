@@ -6,13 +6,18 @@
 */
 #include "compv/drawing/compv_surface.h"
 #include "compv/drawing/compv_drawing.h"
+#include "compv/drawing/compv_window.h"
+
+#include "compv/drawing/opengl/compv_surface_gl.h"
 
 COMPV_NAMESPACE_BEGIN()
 
 compv_surface_id_t CompVSurface::s_nSurfaceId = 0;
 
-CompVSurface::CompVSurface()
+CompVSurface::CompVSurface(int width, int height)
 	: m_nId(compv_atomic_inc(&CompVSurface::s_nSurfaceId))
+	, m_nWidth(width)
+	, m_nHeight(height)
 {
 }
 
@@ -21,13 +26,21 @@ CompVSurface::~CompVSurface()
 
 }
 
-COMPV_ERROR_CODE CompVSurface::newObj(CompVSurfacePtrPtr surface)
+COMPV_ERROR_CODE CompVSurface::newObj(CompVSurfacePtrPtr surface, const CompVWindow* window)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
-	COMPV_CHECK_EXP_RETURN(!surface == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	*surface = NULL;
+	COMPV_CHECK_EXP_RETURN(!surface, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVSurfacePtr surface_;
 
-	COMPV_CHECK_EXP_RETURN(!*surface, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+#if defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES)
+	CompVSurfaceGLPtr glSurface_;
+	if (window->isGLEnabled()) {
+		COMPV_CHECK_CODE_RETURN(CompVSurfaceGL::newObj(&glSurface_, window));
+		surface_ = dynamic_cast<CompVSurface*>(*glSurface_);
+	}
+#endif /* defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES) */
+
+	COMPV_CHECK_EXP_RETURN(!(*surface = surface_), COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 
 	return COMPV_ERROR_CODE_S_OK;
 }

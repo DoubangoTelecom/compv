@@ -41,7 +41,7 @@ public:
 	
 	COMPV_INLINE struct GLFWwindow * getGLFWwindow() { return m_pGLFWwindow; }
 
-	virtual bool isClosed();
+	virtual bool isClosed()const;
 	virtual COMPV_ERROR_CODE close();
 	virtual COMPV_ERROR_CODE draw(CompVMatPtr mat);
 

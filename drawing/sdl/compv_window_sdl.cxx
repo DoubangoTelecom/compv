@@ -9,6 +9,8 @@
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/compv_canvas.h"
 
+#include "compv/drawing/opengl/compv_surface_gl.h"
+
 #if !defined(COMPV_SDL_DISABLE_GL)
 #	define COMPV_SDL_DISABLE_GL 0 // To test CPU drawing (no GL)
 #endif
@@ -19,6 +21,7 @@ CompVWindowSDL::CompVWindowSDL(int width, int height, const char* title)
 	: CompVWindow(width, height, title)
 	, m_pSDLWindow(NULL)
 	, m_pSDLContext(NULL)
+	, m_bDrawing(false)
 {
 #   if COMPV_OS_APPLE
 	if (!pthread_main_np()) {
@@ -50,7 +53,7 @@ CompVWindowSDL::CompVWindowSDL(int width, int height, const char* title)
 		COMPV_DEBUG_ERROR("SDL_GL_CreateContext() failed: %s", SDL_GetError());
 	}
 
-	COMPV_CHECK_CODE_ASSERT(CompVMutex::newObj(&m_SDLMutex));
+	COMPV_CHECK_CODE_ASSERT(CompVMutex::newObj(&m_ptrSDLMutex));
 	SDL_SetWindowData(m_pSDLWindow, "This", this);
 	if (m_pSDLContext) {
 		COMPV_ASSERT(SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) == 0);
@@ -58,16 +61,16 @@ CompVWindowSDL::CompVWindowSDL(int width, int height, const char* title)
 		SDL_SetEventFilter(CompVWindowSDL::FilterEvents, this);
 		SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
 	}
+	// Surface creation must be here to make sure the GL context is initialized
+	COMPV_CHECK_CODE_ASSERT(CompVSurface::newObj(&m_ptrSurface, this));
 }
 
 CompVWindowSDL::~CompVWindowSDL()
 {
 	COMPV_CHECK_CODE_ASSERT(close());
-	m_SDLMutex = NULL;
-	m_Program = NULL;
 }
 
-bool CompVWindowSDL::isClosed()
+bool CompVWindowSDL::isClosed()const
 {
 	return !m_pSDLWindow;
 }
@@ -75,8 +78,13 @@ bool CompVWindowSDL::isClosed()
 COMPV_ERROR_CODE CompVWindowSDL::close()
 {
 	COMPV_CHECK_CODE_ASSERT(unregister());
-	COMPV_CHECK_CODE_ASSERT(m_SDLMutex->lock());
+	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->lock());
 	if (m_pSDLContext) {
+		// GL Surface needs GLContext to deInit state
+		SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext);
+		m_ptrSurface = NULL;
+		SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
+		// Delete GL context
 		SDL_GL_DeleteContext(m_pSDLContext);
 		m_pSDLContext = NULL;
 	}
@@ -85,17 +93,75 @@ COMPV_ERROR_CODE CompVWindowSDL::close()
 		SDL_DestroyWindow(m_pSDLWindow);
 		m_pSDLWindow = NULL;
 	}
-	COMPV_CHECK_CODE_ASSERT(m_SDLMutex->unlock());
+	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVWindowSDL::draw(CompVMatPtr mat)
+COMPV_ERROR_CODE CompVWindowSDL::beginDraw()
+{
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	COMPV_CHECK_CODE_BAIL(err = m_ptrSDLMutex->lock());
+	COMPV_CHECK_EXP_BAIL(m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
+	COMPV_CHECK_CODE_BAIL(err = makeGLContextCurrent());
+	//SDL_GL_GetDrawableSize(m_pSDLWindow, &width, &height);
+	COMPV_CHECK_CODE_BAIL(err = m_ptrSurface->beginDraw());	
+	m_bDrawing = true;
+bail:
+	//COMPV_CHECK_CODE_ASSERT(unmakeGLContextCurrent());
+	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
+	return err;
+}
+
+COMPV_ERROR_CODE CompVWindowSDL::endDraw()
+{
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	COMPV_CHECK_CODE_BAIL(err = m_ptrSDLMutex->lock());
+	COMPV_CHECK_EXP_BAIL(!m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
+	//COMPV_CHECK_CODE_BAIL(err = makeGLContextCurrent());
+	COMPV_CHECK_CODE_BAIL(err = m_ptrSurface->endDraw());
+	if (m_pSDLWindow) {
+		SDL_GL_SwapWindow(m_pSDLWindow);
+	}
+bail:
+	m_bDrawing = false;
+	//COMPV_CHECK_CODE_ASSERT(unmakeGLContextCurrent());
+	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
+	return err;
+}
+
+COMPV_ERROR_CODE CompVWindowSDL::drawImage(CompVMatPtr mat)
+{
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	COMPV_CHECK_CODE_BAIL(err = m_ptrSDLMutex->lock());
+	COMPV_CHECK_EXP_BAIL(!m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
+	//COMPV_CHECK_CODE_BAIL(err = makeGLContextCurrent());
+	COMPV_CHECK_CODE_BAIL(err = m_ptrSurface->drawImage(mat));
+bail:
+	//COMPV_CHECK_CODE_ASSERT(unmakeGLContextCurrent());
+	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
+	return err;
+}
+
+COMPV_ERROR_CODE CompVWindowSDL::drawText(const void* textPtr, size_t textLengthInBytes)
+{
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	COMPV_CHECK_CODE_BAIL(err = m_ptrSDLMutex->lock());
+	COMPV_CHECK_EXP_BAIL(!m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
+	//COMPV_CHECK_CODE_BAIL(err = makeGLContextCurrent());
+	COMPV_CHECK_CODE_BAIL(err = m_ptrSurface->drawText(textPtr, textLengthInBytes));
+bail:
+	//COMPV_CHECK_CODE_ASSERT(unmakeGLContextCurrent());
+	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
+	return err;
+}
+
+COMPV_ERROR_CODE CompVWindowSDL::test(CompVMatPtr mat)
 {
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ASSERT(mat->subType() == COMPV_MAT_SUBTYPE_PIXELS_R8G8B8);
-	COMPV_CHECK_CODE_ASSERT(m_SDLMutex->lock());
+	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->lock());
 	if (!m_pSDLWindow || !m_pSDLContext) {
-		COMPV_CHECK_CODE_ASSERT(m_SDLMutex->unlock());
+		COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
 		// COMPV_DEBUG_INFO("Window closed. Ignoring draw() instruction");
 		return COMPV_ERROR_CODE_W_WINDOW_CLOSED;
 	}
@@ -184,8 +250,8 @@ COMPV_ERROR_CODE CompVWindowSDL::draw(CompVMatPtr mat)
 		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		//glViewport(0, 0, static_cast<GLsizei>(640), static_cast<GLsizei>(480));
 
-		if (!m_Program) {
-			COMPV_CHECK_CODE_ASSERT(CompVProgram::newObj(&m_Program));
+		if (!m_ptrProgram) {
+			COMPV_CHECK_CODE_ASSERT(CompVProgram::newObj(&m_ptrProgram));
 
 #define SAVED_MAIN main // because of SDL_main issue
 #undef main
@@ -211,14 +277,14 @@ COMPV_ERROR_CODE CompVWindowSDL::draw(CompVMatPtr mat)
 			);
 #define main SAVED_MAIN
 
-			COMPV_CHECK_CODE_ASSERT(m_Program->shadAttachVertexData(kShaderVertex, sizeof(kShaderVertex)));
-			COMPV_CHECK_CODE_ASSERT(m_Program->shadAttachFragmentData(kShaderFragment, sizeof(kShaderFragment)));
-			COMPV_CHECK_CODE_ASSERT(m_Program->link());
+			COMPV_CHECK_CODE_ASSERT(m_ptrProgram->shadAttachVertexData(kShaderVertex, sizeof(kShaderVertex)));
+			COMPV_CHECK_CODE_ASSERT(m_ptrProgram->shadAttachFragmentData(kShaderFragment, sizeof(kShaderFragment)));
+			COMPV_CHECK_CODE_ASSERT(m_ptrProgram->link());
 		}
 
 		glBindTexture(GL_TEXTURE_2D, mFBOTextureID);
 
-		COMPV_CHECK_CODE_ASSERT(m_Program->useBegin());
+		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->useBegin());
 
 		//glClearColor(0.f, 0.f, 0.f, 1.f);
 		int width, height;
@@ -244,7 +310,7 @@ COMPV_ERROR_CODE CompVWindowSDL::draw(CompVMatPtr mat)
 		glVertex2i(static_cast<GLint>(640), 0);
 		glEnd();
 
-		COMPV_CHECK_CODE_ASSERT(m_Program->useEnd());
+		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->useEnd());
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -260,11 +326,11 @@ COMPV_ERROR_CODE CompVWindowSDL::draw(CompVMatPtr mat)
 		SDL_GL_SwapWindow(m_pSDLWindow);
 		SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
 #else
-		if (!m_Program) {
-			COMPV_CHECK_CODE_ASSERT(CompVProgram::newObj(&m_Program));
-			COMPV_CHECK_CODE_ASSERT(m_Program->shadAttachVertexFile("C:/Projects/GitHub/compv/ui/glsl/test.vert.glsl"));
-			COMPV_CHECK_CODE_ASSERT(m_Program->shadAttachFragmentFile("C:/Projects/GitHub/compv/ui/glsl/test.frag.glsl"));
-			COMPV_CHECK_CODE_ASSERT(m_Program->link());
+		if (!m_ptrProgram) {
+			COMPV_CHECK_CODE_ASSERT(CompVProgram::newObj(&m_ptrProgram));
+			COMPV_CHECK_CODE_ASSERT(m_ptrProgram->shadAttachVertexFile("C:/Projects/GitHub/compv/ui/glsl/test.vert.glsl"));
+			COMPV_CHECK_CODE_ASSERT(m_ptrProgram->shadAttachFragmentFile("C:/Projects/GitHub/compv/ui/glsl/test.frag.glsl"));
+			COMPV_CHECK_CODE_ASSERT(m_ptrProgram->link());
 		}
 
 		static GLuint tex = 0;
@@ -314,7 +380,7 @@ COMPV_ERROR_CODE CompVWindowSDL::draw(CompVMatPtr mat)
 			GL_UNSIGNED_BYTE,
 			mat->ptr());
 
-		COMPV_CHECK_CODE_ASSERT(m_Program->useBegin());
+		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->useBegin());
 
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		int width, height;
@@ -340,7 +406,7 @@ COMPV_ERROR_CODE CompVWindowSDL::draw(CompVMatPtr mat)
 		glVertex2i(static_cast<GLint>(mat->stride()), 0);
 		glEnd();
 
-		COMPV_CHECK_CODE_ASSERT(m_Program->useEnd());
+		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->useEnd());
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -348,8 +414,30 @@ COMPV_ERROR_CODE CompVWindowSDL::draw(CompVMatPtr mat)
 		SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
 #endif		
 	}
-	COMPV_CHECK_CODE_ASSERT(m_SDLMutex->unlock());
+	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
 
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Private function: not thread-safe
+COMPV_ERROR_CODE CompVWindowSDL::makeGLContextCurrent()
+{
+	if (m_pSDLWindow) {
+		if (SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) != 0) {
+			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_SDL);
+		}
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Private function: not thread-safe
+COMPV_ERROR_CODE CompVWindowSDL::unmakeGLContextCurrent()
+{
+	if (m_pSDLWindow) {
+		if (SDL_GL_MakeCurrent(m_pSDLWindow, NULL) != 0) {
+			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_SDL);
+		}
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -363,7 +451,9 @@ COMPV_ERROR_CODE CompVWindowSDL::newObj(CompVWindowSDLPtrPtr sdlWindow, int widt
 #if 0 // OpenGL could be unavailable -> CPU drawing fallback
 	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_pSDLContext, COMPV_ERROR_CODE_E_SDL);
 #endif
-	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_SDLMutex, COMPV_ERROR_CODE_E_SYSTEM);
+	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_ptrSDLMutex, COMPV_ERROR_CODE_E_SYSTEM);
+	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_ptrSurface, COMPV_ERROR_CODE_E_SYSTEM);
+	COMPV_CHECK_EXP_RETURN(sdlWindow_->isGLEnabled() != sdlWindow_->m_ptrSurface->isGLEnabled(), COMPV_ERROR_CODE_E_INVALID_STATE);
 	*sdlWindow = sdlWindow_;
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -375,10 +465,10 @@ int CompVWindowSDL::FilterEvents(void *userdata, SDL_Event* event)
 		CompVWindowSDLPtr This = static_cast<CompVWindowSDL*>(userdata);
 		switch (event->window.event) {
 		case SDL_WINDOWEVENT_CLOSE:
-			COMPV_CHECK_CODE_ASSERT(This->m_SDLMutex->lock());
+			COMPV_CHECK_CODE_ASSERT(This->m_ptrSDLMutex->lock());
 			COMPV_CHECK_CODE_ASSERT(This->unregister());
 			COMPV_CHECK_CODE_ASSERT(This->close());
-			COMPV_CHECK_CODE_ASSERT(This->m_SDLMutex->unlock());
+			COMPV_CHECK_CODE_ASSERT(This->m_ptrSDLMutex->unlock());
 			return 0;
 		default:
 			break;

@@ -92,6 +92,7 @@ private:
 
 #define COMPV_DEBUG_INFO_CODE_NOT_TESTED()	COMPV_DEBUG_INFO_CODE_ONCE("Not tested")
 #define COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED() COMPV_DEBUG_INFO_CODE_ONCE("Not optimized")
+#define COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED_GPU() COMPV_DEBUG_INFO_CODE_ONCE("Not optimized for GPU")
 #define COMPV_DEBUG_INFO_CODE_FOR_TESTING() COMPV_DEBUG_INFO_CODE_ONCE("Is for testing and must not be called")
 
 #if !defined(__AVX__)

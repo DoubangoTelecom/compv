@@ -19,6 +19,8 @@ COMPV_NAMESPACE_BEGIN()
 
 typedef long compv_surface_id_t;
 
+class CompVWindow;
+
 class CompVSurface;
 typedef CompVPtr<CompVSurface* > CompVSurfacePtr;
 typedef CompVSurfacePtr* CompVSurfacePtrPtr;
@@ -26,7 +28,7 @@ typedef CompVSurfacePtr* CompVSurfacePtrPtr;
 class COMPV_DRAWING_API CompVSurface : public CompVObj
 {
 protected:
-	CompVSurface();
+	CompVSurface(int width, int height);
 public:
 	virtual ~CompVSurface();
 	virtual COMPV_INLINE const char* getObjectId() {
@@ -34,8 +36,17 @@ public:
 	};
 
 	COMPV_INLINE compv_surface_id_t getId() { return m_nId; }
+	COMPV_INLINE int getWidth() { return m_nWidth; }
+	COMPV_INLINE int getHeight() { return m_nHeight; }
 
-	static COMPV_ERROR_CODE newObj(CompVSurfacePtrPtr surface);
+	virtual bool isGLEnabled()const = 0;
+
+	virtual COMPV_ERROR_CODE beginDraw() = 0;
+	virtual COMPV_ERROR_CODE endDraw() = 0;
+	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
+	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes) = 0;
+
+	static COMPV_ERROR_CODE newObj(CompVSurfacePtrPtr surface, const CompVWindow* window);
 
 protected:
 	COMPV_INLINE CompVRendererPtr getRenderer() { return m_ptrRenderer; }
@@ -47,6 +58,8 @@ private:
 	compv_surface_id_t m_nId;
 	CompVRendererPtr m_ptrRenderer;
 	CompVCanvasPtr m_ptrCanvas;
+	int m_nWidth;
+	int m_nHeight;
 	COMPV_DISABLE_WARNINGS_END()
 };
 

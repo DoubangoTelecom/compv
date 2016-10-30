@@ -20,6 +20,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+class CompVWindow;
+
 class CompVSurfaceGL;
 typedef CompVPtr<CompVSurfaceGL* > CompVSurfaceGLPtr;
 typedef CompVSurfaceGLPtr* CompVSurfaceGLPtrPtr;
@@ -27,17 +29,31 @@ typedef CompVSurfaceGLPtr* CompVSurfaceGLPtrPtr;
 class CompVSurfaceGL : public CompVSurface
 {
 protected:
-	CompVSurfaceGL();
+	CompVSurfaceGL(int width, int height);
 public:
 	virtual ~CompVSurfaceGL();
 	virtual COMPV_INLINE const char* getObjectId() {
 		return "CompVSurfaceGL";
 	};
 
-	static COMPV_ERROR_CODE newObj(CompVSurfaceGLPtrPtr glSurface);
+	virtual bool isGLEnabled()const { return true; };
+
+	virtual COMPV_ERROR_CODE beginDraw();
+	virtual COMPV_ERROR_CODE endDraw();
+	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
+	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes);
+
+	static COMPV_ERROR_CODE newObj(CompVSurfaceGLPtrPtr glSurface, const CompVWindow* window);
+
+private:
+	COMPV_ERROR_CODE initFrameBuffer();
+	COMPV_ERROR_CODE deInitFrameBuffer();
 
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	GLuint m_uNameFrameBuffer;
+	GLuint m_uNameTexture;
+	GLuint m_uNameDepthStencil;
 	COMPV_DISABLE_WARNINGS_END()
 };
 

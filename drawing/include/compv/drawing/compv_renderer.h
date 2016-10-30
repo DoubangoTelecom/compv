@@ -25,21 +25,23 @@ typedef CompVRendererPtr* CompVRendererPtrPtr;
 class COMPV_DRAWING_API CompVRenderer : public CompVObj
 {
 protected:
-	CompVRenderer();
+	CompVRenderer(COMPV_PIXEL_FORMAT ePixelFormat);
 public:
 	virtual ~CompVRenderer();
 	virtual COMPV_INLINE const char* getObjectId() {
 		return "CompVRenderer";
 	};
 
+	COMPV_INLINE COMPV_PIXEL_FORMAT getPixelFormat() { return m_ePixelFormat; }
 	COMPV_INLINE compv_renderer_id_t getId() { return m_nId; }
 
-	static COMPV_ERROR_CODE newObj(CompVRendererPtrPtr renderer);
+	static COMPV_ERROR_CODE newObj(CompVRendererPtrPtr renderer, COMPV_PIXEL_FORMAT ePixelFormat);
 
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static compv_renderer_id_t s_nRendererId;
 	compv_renderer_id_t m_nId;
+	COMPV_PIXEL_FORMAT m_ePixelFormat;
 	COMPV_DISABLE_WARNINGS_END()
 };
 

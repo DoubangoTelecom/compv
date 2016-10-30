@@ -12,6 +12,7 @@
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_mat.h"
 #include "compv/base/parallel/compv_thread.h"
+#include "compv/drawing/compv_surface.h"
 
 #include <string>
 
@@ -33,22 +34,26 @@ public:
 		return "CompVWindow";
 	};
 
-	COMPV_INLINE int getWidth() { return m_nWidth; }
-	COMPV_INLINE int getHeight() { return m_nHeight; }
-	COMPV_INLINE const char* getTitle() { return m_strTitle.c_str(); }
-	COMPV_INLINE compv_window_id_t getId() { return m_nId; }
-	COMPV_INLINE compv_thread_id_t getWindowCreationThreadId() { return m_WindowCreationThreadId; }
-	COMPV_INLINE bool isGLEnabled() { return !!getGLContext(); }
+	COMPV_INLINE int getWidth()const { return m_nWidth; }
+	COMPV_INLINE int getHeight()const { return m_nHeight; }
+	COMPV_INLINE const char* getTitle()const { return m_strTitle.c_str(); }
+	COMPV_INLINE compv_window_id_t getId()const { return m_nId; }
+	COMPV_INLINE compv_thread_id_t getWindowCreationThreadId()const { return m_WindowCreationThreadId; }
+	COMPV_INLINE bool isGLEnabled()const { return getGLContext() != NULL; }
     
-	virtual bool isClosed() = 0;
-
-	virtual CompVGLContext getGLContext() { return NULL; }
+	virtual bool isClosed()const = 0;
+	
     virtual COMPV_ERROR_CODE close() = 0;
-	virtual COMPV_ERROR_CODE draw(CompVMatPtr mat) = 0;
+	virtual COMPV_ERROR_CODE test(CompVMatPtr mat) = 0;
+	virtual COMPV_ERROR_CODE beginDraw() = 0;
+	virtual COMPV_ERROR_CODE endDraw() = 0;
+	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
+	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes) = 0;
 
 	static COMPV_ERROR_CODE newObj(CompVWindowPtrPtr window, int width, int height, const char* title = "Unknown");
 
 protected:
+	virtual CompVGLContext getGLContext()const = 0;
 	COMPV_ERROR_CODE unregister();
 
 private:

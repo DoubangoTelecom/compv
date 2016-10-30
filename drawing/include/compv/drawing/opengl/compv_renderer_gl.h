@@ -27,14 +27,14 @@ typedef CompVRendererGLPtr* CompVRendererGLPtrPtr;
 class CompVRendererGL : public CompVRenderer
 {
 protected:
-	CompVRendererGL();
+	CompVRendererGL(COMPV_PIXEL_FORMAT ePixelFormat);
 public:
 	virtual ~CompVRendererGL();
 	virtual COMPV_INLINE const char* getObjectId() {
 		return "CompVRendererGL";
 	};
 
-	static COMPV_ERROR_CODE newObj(CompVRendererGLPtrPtr glRenderer);
+	static COMPV_ERROR_CODE newObj(CompVRendererGLPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat);
 
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)

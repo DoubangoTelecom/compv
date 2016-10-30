@@ -19,6 +19,7 @@ CompVWindow::CompVWindow(int width, int height, const char* title /*= "Unknown"*
 , m_nHeight(height)
 , m_strTitle(title)
 , m_nId(compv_atomic_inc(&CompVWindow::s_nWindowId))
+
 {
 	m_WindowCreationThreadId = CompVThread::getIdCurrent();
 	COMPV_DEBUG_INFO("Creating window (%s) on thread with id = %ld", title, (long)m_WindowCreationThreadId);
@@ -40,7 +41,10 @@ COMPV_ERROR_CODE CompVWindow::newObj(CompVWindowPtrPtr window, int width, int he
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
 	COMPV_CHECK_EXP_RETURN(!window || width <= 0 || height <= 0 || !title || !::strlen(title), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVWindowPtr window_;
+	
+	/* Create GLFW window (Deprecated) */
 #if defined(HAVE_GLFW_GLFW3_H)
+#error "GLFW is depreacted"
 	if (!window_) {
 		CompVWindowGLFW3Ptr glfw3Window;
 		COMPV_CHECK_CODE_RETURN(CompVWindowGLFW3::newObj(&glfw3Window, width, height, title));
@@ -48,15 +52,18 @@ COMPV_ERROR_CODE CompVWindow::newObj(CompVWindowPtrPtr window, int width, int he
 	}
 #endif /* HAVE_GLFW_GLFW3_H */
 
+	/* Create SDL window */
 #if defined(HAVE_SDL_H)
 	if (!window_) {
 		CompVWindowSDLPtr sdlWindow;
 		COMPV_CHECK_CODE_RETURN(CompVWindowSDL::newObj(&sdlWindow, width, height, title));
 		window_ = dynamic_cast<CompVWindow*>(*sdlWindow);
 	}
-#endif /* HAVE_GLFW_GLFW3_H */
-
+#endif /* HAVE_SDL_H */
+	
+	// Set output and check pointer validity
 	COMPV_CHECK_EXP_RETURN(!(*window = window_), COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	// Register the newly created window
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::registerWindow(window_));
 
 	return COMPV_ERROR_CODE_S_OK;

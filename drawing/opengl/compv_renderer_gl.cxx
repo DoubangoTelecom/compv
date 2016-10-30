@@ -10,7 +10,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVRendererGL::CompVRendererGL()
+CompVRendererGL::CompVRendererGL(COMPV_PIXEL_FORMAT ePixelFormat)
+	: CompVRenderer(ePixelFormat)
 {
 
 }
@@ -20,11 +21,17 @@ CompVRendererGL::~CompVRendererGL()
 
 }
 
-COMPV_ERROR_CODE CompVRendererGL::newObj(CompVRendererGLPtrPtr glRenderer)
+COMPV_ERROR_CODE CompVRendererGL::newObj(CompVRendererGLPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
 	COMPV_CHECK_EXP_RETURN(!glRenderer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
+	// FIXME(dmi): check surface is GLEnabled
+
+	CompVRendererGLPtr glRenderer_ = new CompVRendererGL(ePixelFormat);
+	COMPV_CHECK_EXP_RETURN(!glRenderer_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+
+	*glRenderer = glRenderer_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 

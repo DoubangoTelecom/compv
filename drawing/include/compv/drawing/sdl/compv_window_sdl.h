@@ -40,22 +40,34 @@ public:
 		return "CompVWindowSDL";
 	};
 
-	COMPV_INLINE struct SDL_Window * getSDLWwindow() { return m_pSDLWindow; }
-
-	virtual CompVGLContext getGLContext() { return static_cast<CompVGLContext>(m_pSDLContext); }
-	virtual bool isClosed();
+	COMPV_INLINE struct SDL_Window * getSDLWwindow()const { return m_pSDLWindow; }
+	
+	virtual bool isClosed()const;
 	virtual COMPV_ERROR_CODE close();
-	virtual COMPV_ERROR_CODE draw(CompVMatPtr mat);
+	virtual COMPV_ERROR_CODE test(CompVMatPtr mat);
+	virtual COMPV_ERROR_CODE beginDraw();
+	virtual COMPV_ERROR_CODE endDraw();
+	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
+	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes);
 
 	static COMPV_ERROR_CODE newObj(CompVWindowSDLPtrPtr sdlWindow, int width, int height, const char* title);
 	static int FilterEvents(void *userdata, SDL_Event * event);
+
+protected:
+	virtual CompVGLContext getGLContext()const { return static_cast<CompVGLContext>(m_pSDLContext); }
+
+private:
+	COMPV_ERROR_CODE makeGLContextCurrent();
+	COMPV_ERROR_CODE unmakeGLContextCurrent();
 
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
 	SDL_Window *m_pSDLWindow;
 	SDL_GLContext m_pSDLContext;
-	CompVMutexPtr m_SDLMutex;
-	CompVProgramPtr m_Program;
+	CompVMutexPtr m_ptrSDLMutex;
+	CompVProgramPtr m_ptrProgram;
+	CompVSurfacePtr m_ptrSurface;
+	bool m_bDrawing;
 	COMPV_DISABLE_WARNINGS_END()
 };
 
