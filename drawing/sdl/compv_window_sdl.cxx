@@ -61,8 +61,6 @@ CompVWindowSDL::CompVWindowSDL(int width, int height, const char* title)
 		SDL_SetEventFilter(CompVWindowSDL::FilterEvents, this);
 		SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
 	}
-	// Surface creation must be here to make sure the GL context is initialized
-	COMPV_CHECK_CODE_ASSERT(CompVSurface::newObj(&m_ptrSurface, this));
 }
 
 CompVWindowSDL::~CompVWindowSDL()
@@ -103,11 +101,8 @@ COMPV_ERROR_CODE CompVWindowSDL::beginDraw()
 	COMPV_CHECK_CODE_BAIL(err = m_ptrSDLMutex->lock());
 	COMPV_CHECK_EXP_BAIL(m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
 	COMPV_CHECK_CODE_BAIL(err = makeGLContextCurrent());
-	//SDL_GL_GetDrawableSize(m_pSDLWindow, &width, &height);
-	COMPV_CHECK_CODE_BAIL(err = m_ptrSurface->beginDraw());	
 	m_bDrawing = true;
 bail:
-	//COMPV_CHECK_CODE_ASSERT(unmakeGLContextCurrent());
 	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
 	return err;
 }
@@ -117,306 +112,32 @@ COMPV_ERROR_CODE CompVWindowSDL::endDraw()
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_CODE_BAIL(err = m_ptrSDLMutex->lock());
 	COMPV_CHECK_EXP_BAIL(!m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
-	//COMPV_CHECK_CODE_BAIL(err = makeGLContextCurrent());
-	COMPV_CHECK_CODE_BAIL(err = m_ptrSurface->endDraw());
 	if (m_pSDLWindow) {
 		SDL_GL_SwapWindow(m_pSDLWindow);
 	}
 bail:
 	m_bDrawing = false;
-	//COMPV_CHECK_CODE_ASSERT(unmakeGLContextCurrent());
+	COMPV_CHECK_CODE_ASSERT(unmakeGLContextCurrent());
 	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
 	return err;
 }
 
-COMPV_ERROR_CODE CompVWindowSDL::drawImage(CompVMatPtr mat)
+CompVSurfacePtr CompVWindowSDL::surface()
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_CODE_BAIL(err = m_ptrSDLMutex->lock());
 	COMPV_CHECK_EXP_BAIL(!m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
-	//COMPV_CHECK_CODE_BAIL(err = makeGLContextCurrent());
-	COMPV_CHECK_CODE_BAIL(err = m_ptrSurface->drawImage(mat));
-bail:
-	//COMPV_CHECK_CODE_ASSERT(unmakeGLContextCurrent());
-	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
-	return err;
-}
-
-COMPV_ERROR_CODE CompVWindowSDL::drawText(const void* textPtr, size_t textLengthInBytes)
-{
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	COMPV_CHECK_CODE_BAIL(err = m_ptrSDLMutex->lock());
-	COMPV_CHECK_EXP_BAIL(!m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
-	//COMPV_CHECK_CODE_BAIL(err = makeGLContextCurrent());
-	COMPV_CHECK_CODE_BAIL(err = m_ptrSurface->drawText(textPtr, textLengthInBytes));
-bail:
-	//COMPV_CHECK_CODE_ASSERT(unmakeGLContextCurrent());
-	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
-	return err;
-}
-
-COMPV_ERROR_CODE CompVWindowSDL::test(CompVMatPtr mat)
-{
-	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_ASSERT(mat->subType() == COMPV_MAT_SUBTYPE_PIXELS_R8G8B8);
-	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->lock());
-	if (!m_pSDLWindow || !m_pSDLContext) {
-		COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
-		// COMPV_DEBUG_INFO("Window closed. Ignoring draw() instruction");
-		return COMPV_ERROR_CODE_W_WINDOW_CLOSED;
+	if (!m_ptrSurface) {
+		// Create the surface
+		CompVSurfacePtr surface_;
+		COMPV_CHECK_CODE_BAIL(err = CompVSurface::newObj(&surface_, this));
+		// If GL activation (enabled/disabled) must be the same on both the window and surace
+		COMPV_CHECK_EXP_BAIL(isGLEnabled() != surface_->isGLEnabled(), err = COMPV_ERROR_CODE_E_INVALID_STATE);
+		m_ptrSurface = surface_;
 	}
-	/*if (!glfwWindowShouldClose(m_pGLFWwindow))*/ {
-		COMPV_ASSERT(SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) == 0);
-
-#if 0
-		CompVCanvasPtr canvas;
-		COMPV_CHECK_CODE_ASSERT(CompVCanvas::newObj(&canvas));
-		COMPV_CHECK_CODE_ASSERT(canvas->test());
-
-		SDL_GL_SwapWindow(m_pSDLWindow);
-		SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
-#elif 1
-		//glClear(GL_COLOR_BUFFER_BIT);
-		SDL_DisplayMode dm;
-		if (SDL_GetDesktopDisplayMode(0, &dm) != 0) {
-
-		}
-		glEnable(GL_TEXTURE_2D); // Enable texturing so we can bind our frame buffer texture
-		glEnable(GL_DEPTH_TEST); // Enable depth testing
-		glViewport(0, 0, dm.w, dm.h);
-		glClearColor(1, 1, 1, 1);
-		glClearStencil(0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-		//glClearStencil(0);
-		static GLuint mFBOTextureID = 0;
-		static GLuint mFboStencilId = 0;
-		static GLuint mFBOID = 0;
-		if (mFBOTextureID == 0) {
-			glGenTextures(1, &mFBOTextureID);
-			glBindTexture(GL_TEXTURE_2D, mFBOTextureID);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); //GL_REPEAT
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); //GL_REPEAT
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //GL_LINEAR
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //GL_LINEAR        
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 640, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			// Use a single buffer for stencil and depth
-			glGenRenderbuffers(1, &mFboStencilId);
-			glBindRenderbuffer(GL_RENDERBUFFER, mFboStencilId);
-			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 640, 480);
-			glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-			// Generate Framebuffer and bind it
-			glGenFramebuffers(1, &mFBOID);
-			glBindFramebuffer(GL_FRAMEBUFFER, mFBOID);
-
-			// Attach texture to color
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mFBOTextureID, 0);
-
-			// Attach depth buffer
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, mFboStencilId);
-
-			// Attach stencil buffer
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, mFboStencilId);
-
-			GLenum fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-			if (fboStatus != GL_FRAMEBUFFER_COMPLETE)
-				fprintf(stderr, "FBO Error in skia buffer!\n");
-
-			// Unbind
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		}
-
-		glBindFramebuffer(GL_FRAMEBUFFER, mFBOID); // Draw to application FBO
-		//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		//glClearDepth(0.0f);
-		//glClearStencil(0);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		//glViewport(0, 0, static_cast<GLsizei>(640), static_cast<GLsizei>(480));
-
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		static CompVCanvasPtr canvas = NULL;
-		if (!canvas) {
-			COMPV_CHECK_CODE_ASSERT(CompVCanvas::newObj(&canvas));
-		}
-		COMPV_CHECK_CODE_ASSERT(canvas->test());
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);  // Draw to system FBO
-		//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		//glClearDepth(0.0f);
-		//glClearStencil(0);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		//glViewport(0, 0, static_cast<GLsizei>(640), static_cast<GLsizei>(480));
-
-		if (!m_ptrProgram) {
-			COMPV_CHECK_CODE_ASSERT(CompVProgram::newObj(&m_ptrProgram));
-
-#define SAVED_MAIN main // because of SDL_main issue
-#undef main
-			static const char kShaderVertex[] = COMPV_STRING(
-				void main(void) {
-					gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
-					// gl_Position = ftransform();
-					// gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
-					gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex;
-				}
-			);
-			static const char kShaderFragment[] 
-				= COMPV_STRING(
-				/*
-				* Fragment shader
-				*/
-				uniform sampler2D tex;
-				void main(void) {
-					//gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); 
-					//vec4 color = texture2D(tex, gl_TexCoord[0]);
-					gl_FragColor = texture2D(tex, gl_TexCoord[0]);
-				}
-			);
-#define main SAVED_MAIN
-
-			COMPV_CHECK_CODE_ASSERT(m_ptrProgram->shadAttachVertexData(kShaderVertex, sizeof(kShaderVertex)));
-			COMPV_CHECK_CODE_ASSERT(m_ptrProgram->shadAttachFragmentData(kShaderFragment, sizeof(kShaderFragment)));
-			COMPV_CHECK_CODE_ASSERT(m_ptrProgram->link());
-		}
-
-		glBindTexture(GL_TEXTURE_2D, mFBOTextureID);
-
-		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->useBegin());
-
-		//glClearColor(0.f, 0.f, 0.f, 1.f);
-		int width, height;
-		SDL_GL_GetDrawableSize(m_pSDLWindow, &width, &height);
-		glViewport(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		//gluOrtho2D((GLdouble)0, static_cast<GLdouble>(640), (GLdouble)0, static_cast<GLdouble>(480));
-		glOrtho((GLdouble)0, static_cast<GLdouble>(640), (GLdouble)0, static_cast<GLdouble>(480), (GLdouble)-1, (GLdouble)1);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-
-		glBegin(GL_QUADS);
-		glTexCoord2i(0, 0);
-		glVertex2i(0, 0);
-		glTexCoord2i(0, 1);
-		glVertex2i(0, static_cast<GLint>(480));
-		glTexCoord2i(1, 1);
-		glVertex2i(static_cast<GLint>(640), static_cast<GLint>(480));
-		glTexCoord2i(1, 0);
-		glVertex2i(static_cast<GLint>(640), 0);
-		glEnd();
-
-		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->useEnd());
-
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-
-		SDL_GL_SwapWindow(m_pSDLWindow);
-		SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
-#elif 0
-		glClear(GL_COLOR_BUFFER_BIT);
-		glClearColor((GLclampf)(rand() % 255) / 255.f,
-			(GLclampf)(rand() % 255) / 255.f,
-			(GLclampf)(rand() % 255) / 255.f,
-			(GLclampf)(rand() % 255) / 255.f);
-		SDL_GL_SwapWindow(m_pSDLWindow);
-		SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
-#else
-		if (!m_ptrProgram) {
-			COMPV_CHECK_CODE_ASSERT(CompVProgram::newObj(&m_ptrProgram));
-			COMPV_CHECK_CODE_ASSERT(m_ptrProgram->shadAttachVertexFile("C:/Projects/GitHub/compv/ui/glsl/test.vert.glsl"));
-			COMPV_CHECK_CODE_ASSERT(m_ptrProgram->shadAttachFragmentFile("C:/Projects/GitHub/compv/ui/glsl/test.frag.glsl"));
-			COMPV_CHECK_CODE_ASSERT(m_ptrProgram->link());
-		}
-
-		static GLuint tex = 0;
-		if (!tex) {
-			glGenTextures(1, &tex);
-			glBindTexture(GL_TEXTURE_2D, tex);
-			/* OpenGL-2 or later is assumed; OpenGL-2 supports NPOT textures. */
-			glBindTexture(GL_TEXTURE_2D, tex);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			if ((mat->stride() & 3)) { // multiple of 4?
-				glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)mat->stride());
-				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-			}
-
-			glTexImage2D(
-				GL_TEXTURE_2D,
-				0,
-				GL_RGB,
-				static_cast<GLsizei>(mat->stride()),
-				static_cast<GLsizei>(mat->rows()),
-				0,
-				GL_RGB,
-				GL_UNSIGNED_BYTE,
-				NULL);
-			glBindTexture(GL_TEXTURE_2D, 0);
-		}
-
-		glBindTexture(GL_TEXTURE_2D, tex);
-		glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_FALSE);
-		glPixelStorei(GL_UNPACK_LSB_FIRST, GL_TRUE);
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-		glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-		glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-		glTexSubImage2D(
-			GL_TEXTURE_2D,
-			0,
-			0,
-			0,
-			static_cast<GLsizei>(mat->stride()),
-			static_cast<GLsizei>(mat->rows()),
-			GL_RGB,
-			GL_UNSIGNED_BYTE,
-			mat->ptr());
-
-		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->useBegin());
-
-		glClearColor(0.f, 0.f, 0.f, 1.f);
-		int width, height;
-		SDL_GL_GetDrawableSize(m_pSDLWindow, &width, &height);
-		glViewport(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		//gluOrtho2D((GLdouble)0, static_cast<GLdouble>(mat->stride()), (GLdouble)0, static_cast<GLdouble>(mat->rows())); 
-		glOrtho((GLdouble)0, static_cast<GLdouble>(mat->stride()), (GLdouble)0, static_cast<GLdouble>(mat->rows()), (GLdouble)-1, (GLdouble)1);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-
-		glBegin(GL_QUADS);
-		glTexCoord2i(0, 0);
-		glVertex2i(0, 0);
-		glTexCoord2i(0, 1);
-		glVertex2i(0, static_cast<GLint>(mat->rows()));
-		glTexCoord2i(1, 1);
-		glVertex2i(static_cast<GLint>(mat->stride()), static_cast<GLint>(mat->rows()));
-		glTexCoord2i(1, 0);
-		glVertex2i(static_cast<GLint>(mat->stride()), 0);
-		glEnd();
-
-		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->useEnd());
-
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		SDL_GL_SwapWindow(m_pSDLWindow);
-		SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
-#endif		
-	}
+bail:
 	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
-
-	return COMPV_ERROR_CODE_S_OK;
+	return COMPV_ERROR_CODE_IS_OK(err) ? m_ptrSurface : NULL;
 }
 
 // Private function: not thread-safe
@@ -452,8 +173,6 @@ COMPV_ERROR_CODE CompVWindowSDL::newObj(CompVWindowSDLPtrPtr sdlWindow, int widt
 	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_pSDLContext, COMPV_ERROR_CODE_E_SDL);
 #endif
 	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_ptrSDLMutex, COMPV_ERROR_CODE_E_SYSTEM);
-	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_ptrSurface, COMPV_ERROR_CODE_E_SYSTEM);
-	COMPV_CHECK_EXP_RETURN(sdlWindow_->isGLEnabled() != sdlWindow_->m_ptrSurface->isGLEnabled(), COMPV_ERROR_CODE_E_INVALID_STATE);
 	*sdlWindow = sdlWindow_;
 	return COMPV_ERROR_CODE_S_OK;
 }

@@ -44,11 +44,9 @@ public:
 	
 	virtual bool isClosed()const;
 	virtual COMPV_ERROR_CODE close();
-	virtual COMPV_ERROR_CODE test(CompVMatPtr mat);
 	virtual COMPV_ERROR_CODE beginDraw();
 	virtual COMPV_ERROR_CODE endDraw();
-	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
-	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes);
+	virtual CompVSurfacePtr surface();
 
 	static COMPV_ERROR_CODE newObj(CompVWindowSDLPtrPtr sdlWindow, int width, int height, const char* title);
 	static int FilterEvents(void *userdata, SDL_Event * event);

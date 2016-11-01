@@ -44,12 +44,9 @@ public:
 	virtual bool isClosed()const = 0;
 	
     virtual COMPV_ERROR_CODE close() = 0;
-	virtual COMPV_ERROR_CODE test(CompVMatPtr mat) = 0;
 	virtual COMPV_ERROR_CODE beginDraw() = 0;
 	virtual COMPV_ERROR_CODE endDraw() = 0;
-	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
-	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes) = 0;
-
+	virtual CompVSurfacePtr surface() = 0;
 	static COMPV_ERROR_CODE newObj(CompVWindowPtrPtr window, int width, int height, const char* title = "Unknown");
 
 protected:

@@ -13,6 +13,10 @@
 
 #include "compv/drawing/opengl/compv_utils_gl.h"
 
+#include "compv/drawing/opengl/compv_surface_gl_rgb.h"
+#include "compv/drawing/opengl/compv_surface_gl_grayscale.h"
+#include "compv/drawing/opengl/compv_surface_gl_yuv.h"
+
 // FIXME(dmi)
 #if defined(main)
 #error "main must not be defined"
@@ -60,27 +64,6 @@ CompVSurfaceGL::~CompVSurfaceGL()
 	COMPV_CHECK_CODE_ASSERT(deInitFrameBuffer());
 }
 
-COMPV_ERROR_CODE CompVSurfaceGL::beginDraw()
-{
-	// FIXME(dmi):
-
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_DEPTH_TEST);
-	glViewport(0, 0, static_cast<GLsizei>(getWidth()), static_cast<GLsizei>(getHeight()));
-	glClearColor(0.f, 0.f, 0.f, 1);
-	glClearStencil(0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	//gluOrtho2D((GLdouble)0, static_cast<GLdouble>(width), (GLdouble)0, static_cast<GLdouble>(height));
-	glOrtho((GLdouble)0, static_cast<GLdouble>(getWidth()), (GLdouble)0, static_cast<GLdouble>(getHeight()), (GLdouble)-1, (GLdouble)1);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-
-	return COMPV_ERROR_CODE_S_OK;
-}
-
 static void drawToTexture()
 {
 	GLuint text;
@@ -94,7 +77,7 @@ static void drawToTexture()
 	if ((256 & 3)) { // multiple of 4?
 		glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)256);
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-}
+	}
 
 	int size = 256 * 256 * 1;
 	uint8_t* data = (uint8_t*)malloc(size);
@@ -129,68 +112,6 @@ static void drawToTexture()
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-COMPV_ERROR_CODE CompVSurfaceGL::endDraw()
-{
-	// FIXME(dmi):
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system
-
-	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
-
-	CompVProgramPtr ptrProgram;
-	COMPV_CHECK_CODE_ASSERT(CompVProgram::newObj(&ptrProgram));
-
-	COMPV_CHECK_CODE_ASSERT(ptrProgram->shadAttachVertexData(kShaderVertex, sizeof(kShaderVertex)));
-	COMPV_CHECK_CODE_ASSERT(ptrProgram->shadAttachFragmentData(kShaderFragment, sizeof(kShaderFragment)));
-	COMPV_CHECK_CODE_ASSERT(ptrProgram->link());
-
-	//COMPV_CHECK_CODE_ASSERT(ptrProgram->useBegin());
-
-	//glClearColor(0.f, 0.f, 0.f, 1.f);
-	//glViewport(0, 0, static_cast<GLsizei>(getWidth()), static_cast<GLsizei>(getHeight()));
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//glEnable(GL_DEPTH_TEST);
-	//glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-	//glOrtho((GLdouble)0, static_cast<GLdouble>(getWidth()), (GLdouble)0, static_cast<GLdouble>(getHeight()), (GLdouble)-1, (GLdouble)1);
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
-
-	//drawToTexture();
-
-	glBegin(GL_QUADS);
-	glTexCoord2i(0, 0);
-	glVertex2i(0, 0);
-
-	glTexCoord2i(0, 1);
-	glVertex2i(0, static_cast<GLint>(getHeight()));
-
-	glTexCoord2i(1, 1);
-	glVertex2i(static_cast<GLint>(getWidth()), static_cast<GLint>(getHeight()));
-
-	glTexCoord2i(1, 0);
-	glVertex2i(static_cast<GLint>(getWidth()), 0);
-	glEnd();
-
-	//COMPV_CHECK_CODE_ASSERT(ptrProgram->useEnd());
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	drawToTexture();
-
-#if 0
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); // System's framebuffer
-	uint8_t* data = (uint8_t*)malloc(640 * 480 * 4);
-	glReadBuffer(GL_COLOR_ATTACHMENT0);
-	glReadPixels(0, 0, 640, 480, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	FILE* file = fopen("C:/Projects/image.rgba", "wb+");
-	fwrite(data, 1, (640 * 480 * 4), file);
-	fclose(file);
-	free(data);
-#endif
-	
-	return COMPV_ERROR_CODE_S_OK;
-}
-
 COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat)
 {
 	COMPV_CHECK_EXP_RETURN(!mat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -208,12 +129,12 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat)
 	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
 #endif
 
-	CompVProgramPtr ptrProgram;
-	COMPV_CHECK_CODE_ASSERT(CompVProgram::newObj(&ptrProgram));
+	//CompVProgramPtr ptrProgram;
+	//COMPV_CHECK_CODE_ASSERT(CompVProgram::newObj(&ptrProgram));
 
-	COMPV_CHECK_CODE_ASSERT(ptrProgram->shadAttachVertexData(kShaderVertex, sizeof(kShaderVertex)));
-	COMPV_CHECK_CODE_ASSERT(ptrProgram->shadAttachFragmentData(kShaderFragmentGreen, sizeof(kShaderFragment)));
-	COMPV_CHECK_CODE_ASSERT(ptrProgram->link());
+	//COMPV_CHECK_CODE_ASSERT(ptrProgram->shadAttachVertexData(kShaderVertex, sizeof(kShaderVertex)));
+	//COMPV_CHECK_CODE_ASSERT(ptrProgram->shadAttachFragmentData(kShaderFragmentGreen, sizeof(kShaderFragment)));
+	//COMPV_CHECK_CODE_ASSERT(ptrProgram->link());
 
 	//COMPV_CHECK_CODE_ASSERT(ptrProgram->useBegin());
 

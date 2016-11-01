@@ -10,7 +10,6 @@
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
-#include "compv/drawing/compv_renderer.h"
 #include "compv/drawing/compv_canvas.h"
 
 #include <string>
@@ -40,23 +39,18 @@ public:
 	COMPV_INLINE int getHeight() { return m_nHeight; }
 
 	virtual bool isGLEnabled()const = 0;
-
-	virtual COMPV_ERROR_CODE beginDraw() = 0;
-	virtual COMPV_ERROR_CODE endDraw() = 0;
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
 	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes) = 0;
 
 	static COMPV_ERROR_CODE newObj(CompVSurfacePtrPtr surface, const CompVWindow* window);
 
 protected:
-	COMPV_INLINE CompVRendererPtr getRenderer() { return m_ptrRenderer; }
 	COMPV_INLINE CompVCanvasPtr getCanvas() { return m_ptrCanvas; }
 
 private:
 	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static compv_surface_id_t s_nSurfaceId;
 	compv_surface_id_t m_nId;
-	CompVRendererPtr m_ptrRenderer;
 	CompVCanvasPtr m_ptrCanvas;
 	int m_nWidth;
 	int m_nHeight;

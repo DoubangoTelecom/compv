@@ -57,9 +57,6 @@
     <ClInclude Include="include\compv\drawing\compv_window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\drawing\compv_renderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\drawing\compv_surface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -69,17 +66,20 @@
     <ClInclude Include="include\compv\drawing\skia\compv_canvas_skia.h">
       <Filter>Header Files\skia</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_renderer_gl.h">
-      <Filter>Header Files\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_renderer_gl_rgb.h">
-      <Filter>Header Files\opengl</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\drawing\compv_program.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\drawing\sdl\compv_window_sdl.h">
       <Filter>Header Files\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\opengl\compv_surface_gl_grayscale.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\opengl\compv_surface_gl_rgb.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\opengl\compv_surface_gl_yuv.h">
+      <Filter>Header Files\opengl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -104,9 +104,6 @@
     <ClCompile Include="opengl\compv_utils_gl.cxx">
       <Filter>Source Files\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="compv_renderer.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="opengl\compv_surface_gl.cxx">
       <Filter>Source Files\opengl</Filter>
     </ClCompile>
@@ -116,17 +113,20 @@
     <ClCompile Include="skia\compv_canvas_skia.cxx">
       <Filter>Source Files\skia</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\compv_renderer_gl.cxx">
-      <Filter>Source Files\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="opengl\compv_renderer_gl_rgb.cxx">
-      <Filter>Source Files\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="compv_program.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sdl\compv_window_sdl.cxx">
       <Filter>Source Files\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl\compv_surface_gl_grayscale.cxx">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl\compv_surface_gl_rgb.cxx">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl\compv_surface_gl_yuv.cxx">
+      <Filter>Source Files\opengl</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

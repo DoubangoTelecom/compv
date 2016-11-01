@@ -38,8 +38,6 @@ public:
 
 	virtual bool isGLEnabled()const { return true; };
 
-	virtual COMPV_ERROR_CODE beginDraw();
-	virtual COMPV_ERROR_CODE endDraw();
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
 	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes);
 
