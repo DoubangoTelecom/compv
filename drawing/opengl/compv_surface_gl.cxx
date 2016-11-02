@@ -13,11 +13,9 @@
 
 #include "compv/drawing/opengl/compv_utils_gl.h"
 
-#include "compv/drawing/opengl/compv_surface_gl_rgb.h"
-#include "compv/drawing/opengl/compv_surface_gl_grayscale.h"
-#include "compv/drawing/opengl/compv_surface_gl_yuv.h"
+// FIXME: OpenGL error handling not ok, impossible to find which function cause the error (erros stacked)
 
-// FIXME(dmi)
+// FIXME(dmi): remove
 #if defined(main)
 #error "main must not be defined"
 #endif
@@ -51,6 +49,7 @@ COMPV_NAMESPACE_BEGIN()
 
 CompVSurfaceGL::CompVSurfaceGL(int width, int height)
 	: CompVSurface(width, height)
+	, CompVSurfaceBlit()
 	, m_uNameFrameBuffer(0)
 	, m_uNameTexture(0)
 	, m_uNameDepthStencil(0)
@@ -64,10 +63,12 @@ CompVSurfaceGL::~CompVSurfaceGL()
 	COMPV_CHECK_CODE_ASSERT(deInitFrameBuffer());
 }
 
-static void drawToTexture()
+// FIXME: remove
+static void drawToTexture(GLint xoff = 0, GLint yoff = 0)
 {
 	GLuint text;
 	glGenTextures(1, &text);
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, text);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -85,8 +86,8 @@ static void drawToTexture()
 	glTexSubImage2D(
 		GL_TEXTURE_2D,
 		0,
-		0,
-		0,
+		xoff,
+		yoff,
 		static_cast<GLsizei>(256),
 		static_cast<GLsizei>(256),
 		GL_LUMINANCE,
@@ -114,149 +115,152 @@ static void drawToTexture()
 
 COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat)
 {
+#if 1
 	COMPV_CHECK_EXP_RETURN(!mat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_CODE_RETURN(initFrameBuffer());
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
+	// FIXME: remove if 'm_uNameFrameBuffer' is passed as parameter
 	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer); // Draw to framebuffer
+	
+	// FIXME: Make sure Renderer has different format than mat and print perf issue message
+	if (!m_ptrRenderer) { // FIXME: check chroma
+		COMPV_CHECK_CODE_RETURN(CompVRenderer::newObj(&m_ptrRenderer, static_cast<COMPV_PIXEL_FORMAT>(mat->subType()), this));
+	}
+	COMPV_CHECK_CODE_RETURN(m_ptrRenderer->render(mat));
 
 #if 0
-	// Get current texture
-	GLint textureName;
-	glGetIntegerv(GLenum(GL_TEXTURE_BINDING_2D), &textureName);
-	COMPV_CHECK_EXP_RETURN(!textureName, COMPV_ERROR_CODE_E_GL);
-#else
-	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
+	uint8_t* data = (uint8_t*)malloc(640 * 480 * 4);
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+	glReadPixels(0, 0, 640, 480, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	FILE* file = fopen("C:/Projects/image.rgba", "wb+");
+	fwrite(data, 1, (640 * 480 * 4), file);
+	fclose(file);
+	free(data);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); // System's framebuffer
 #endif
 
-	//CompVProgramPtr ptrProgram;
-	//COMPV_CHECK_CODE_ASSERT(CompVProgram::newObj(&ptrProgram));
-
-	//COMPV_CHECK_CODE_ASSERT(ptrProgram->shadAttachVertexData(kShaderVertex, sizeof(kShaderVertex)));
-	//COMPV_CHECK_CODE_ASSERT(ptrProgram->shadAttachFragmentData(kShaderFragmentGreen, sizeof(kShaderFragment)));
-	//COMPV_CHECK_CODE_ASSERT(ptrProgram->link());
-
-	//COMPV_CHECK_CODE_ASSERT(ptrProgram->useBegin());
-
-	// FIXME:
-#if 1
-	int size = getWidth()*getHeight() * 4;
-	uint8_t* data = (uint8_t*)malloc(size);
-	for (int i = 0; i < size; ++i)data[i] = rand();
-	glTexSubImage2D(
-		GL_TEXTURE_2D,
-		0,
-		0,
-		0,
-		static_cast<GLsizei>(getWidth()),
-		static_cast<GLsizei>(getHeight()),
-		GL_RGBA,
-		GL_UNSIGNED_BYTE,
-		data);
-	free(data);
-#else
-	int size = getWidth()*getHeight() * 4;
-	uint8_t* data = (uint8_t*)malloc(size);
-	for (int i = 0; i < size; ++i)data[i] = rand();
-	glTexSubImage2D(
-		GL_TEXTURE_2D,
-		0,
-		0,
-		0,
-		static_cast<GLsizei>(200),
-		static_cast<GLsizei>(100),
-		GL_RGB,
-		GL_UNSIGNED_BYTE,
-		mat->ptr());
-	free(data);
-#endif
-
-	
-
-	
-	//glClearColor(0.f, 0.f, 0.f, 1.f);
-	//glViewport(0, 0, static_cast<GLsizei>(getWidth()), static_cast<GLsizei>(getHeight()));
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//glEnable(GL_DEPTH_TEST);
-	//glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-	//glOrtho((GLdouble)0, static_cast<GLdouble>(getWidth()), (GLdouble)0, static_cast<GLdouble>(getHeight()), (GLdouble)-1, (GLdouble)1);
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
-
-	/*glBegin(GL_QUADS);
-	glTexCoord2i(0, 0);
-	glVertex2i(0, 0);
-	glTexCoord2i(0, 1);
-	glVertex2i(0, static_cast<GLint>(getHeight()));
-	glTexCoord2i(1, 1);
-	glVertex2i(static_cast<GLint>(getWidth()), static_cast<GLint>(getHeight()));
-	glTexCoord2i(1, 0);
-	glVertex2i(static_cast<GLint>(getWidth()), 0);
-	glEnd();*/
-
-	//glDrawArrays(GL_TRIANGLES, 0, 1);
-
-	//COMPV_CHECK_CODE_ASSERT(ptrProgram->useEnd());
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
+	// FIXME: remove if 'm_uNameFrameBuffer' is passed as parameter
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system
+
+#endif
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVSurfaceGL::drawText(const void* textPtr, size_t textLengthInBytes)
 {
+#if 1
 	COMPV_CHECK_EXP_RETURN(!textPtr || !textLengthInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_CODE_RETURN(initFrameBuffer());
 	
+	/*glPushAttrib(
+		//GL_VIEWPORT_BIT
+		//| GL_TRANSFORM_BIT
+		// GL_TEXTURE_BIT
+		//| GL_STENCIL_BUFFER_BIT
+		//| GL_SCISSOR_BIT
+		//| GL_POLYGON_STIPPLE_BIT
+		//| GL_POLYGON_BIT
+		//| GL_POINT_BIT
+		//| GL_PIXEL_MODE_BIT
+		//| GL_MULTISAMPLE_BIT
+		//| GL_LIST_BIT
+		//| GL_LINE_BIT
+		//| GL_LIGHTING_BIT
+		//| GL_HINT_BIT
+		//| GL_FOG_BIT
+		//| GL_EVAL_BIT
+		//| GL_ENABLE_BIT
+		 GL_DEPTH_BUFFER_BIT
+		//| GL_CURRENT_BIT
+		//| GL_COLOR_BUFFER_BIT
+		//| GL_ACCUM_BUFFER_BIT
+	);*/
+	//--glPushAttrib(GL_ALL_ATTRIB_BITS);
+	//glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer); // Draw to framebuffer
 
-	CompVCanvasPtr ptrCanvas;
-	COMPV_CHECK_CODE_ASSERT(CompVCanvas::newObj(&ptrCanvas));
+	// FIXME:
+	static CompVCanvasPtr ptrCanvas;
+	if (!ptrCanvas) {
+		COMPV_CHECK_CODE_ASSERT(CompVCanvas::newObj(&ptrCanvas));
+	}
 	COMPV_CHECK_CODE_ASSERT(ptrCanvas->test());
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);  // Draw to system
 
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	//glEnable(GL_DEPTH_TEST);
+	
+	//glDisable(GL_DEPTH_WRITEMASK);
+	//glDepthFunc(GL_LESS);
+	
+
+	//glPopClientAttrib();
+	//glPopAttrib();
+#endif
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVSurfaceGL::clear()
+{
+	if (m_uNameFrameBuffer) {
+		COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+		GLint fbo;
+		glGetIntegerv(GLenum(GL_FRAMEBUFFER_BINDING), &fbo);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVSurfaceGL::blit()
+{
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+
 #if 0
+	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
+	uint8_t* data = (uint8_t*)malloc(640 * 480 * 4);
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+	glReadPixels(0, 0, 640, 480, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	FILE* file = fopen("C:/Projects/image.rgba", "wb+");
+	fwrite(data, 1, (640 * 480 * 4), file);
+	fclose(file);
+	free(data);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); // System's framebuffer
+#endif
+
+	// FIXME: check texture validity
+
+	//drawToTexture();
+	
+
+	/* Text1 */
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
-
-	CompVProgramPtr ptrProgram;
-	COMPV_CHECK_CODE_ASSERT(CompVProgram::newObj(&ptrProgram));
-
-	COMPV_CHECK_CODE_ASSERT(ptrProgram->shadAttachVertexData(kShaderVertex, sizeof(kShaderVertex)));
-	COMPV_CHECK_CODE_ASSERT(ptrProgram->shadAttachFragmentData(kShaderFragment, sizeof(kShaderFragment)));
-	COMPV_CHECK_CODE_ASSERT(ptrProgram->link());
-
-	COMPV_CHECK_CODE_ASSERT(ptrProgram->useBegin());
-
-	glClearColor(0.f, 0.f, 0.f, 1.f);
-	glViewport(0, 0, static_cast<GLsizei>(getWidth()), static_cast<GLsizei>(getHeight()));
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_DEPTH_TEST);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho((GLdouble)0, static_cast<GLdouble>(getWidth()), (GLdouble)0, static_cast<GLdouble>(getHeight()), (GLdouble)-1, (GLdouble)1);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
 
 	glBegin(GL_QUADS);
 	glTexCoord2i(0, 0);
 	glVertex2i(0, 0);
+
 	glTexCoord2i(0, 1);
 	glVertex2i(0, static_cast<GLint>(getHeight()));
+
 	glTexCoord2i(1, 1);
 	glVertex2i(static_cast<GLint>(getWidth()), static_cast<GLint>(getHeight()));
+
 	glTexCoord2i(1, 0);
 	glVertex2i(static_cast<GLint>(getWidth()), 0);
 	glEnd();
-
-	COMPV_CHECK_CODE_ASSERT(ptrProgram->useEnd());
-#endif
-
-	glBindTexture(GL_TEXTURE_2D, 0);
 	
+	glBindTexture(GL_TEXTURE_2D, 0);	
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -292,6 +296,22 @@ COMPV_ERROR_CODE CompVSurfaceGL::initFrameBuffer()
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	}
 
+	// FIXME: not needed
+	/*int size = getWidth() * getHeight() * 4;
+	uint8_t* data = (uint8_t*)malloc(size);
+	for (int i = 0; i < size; ++i)data[i] = rand();
+	glTexSubImage2D(
+		GL_TEXTURE_2D,
+		0,
+		0,
+		0,
+		static_cast<GLsizei>(getWidth()),
+		static_cast<GLsizei>(getHeight()),
+		GL_RGBA,
+		GL_UNSIGNED_BYTE,
+		data);
+	free(data);*/
+
 	// Generate a renderbuffer and use it for both for stencil and depth
 	glGenRenderbuffers(1, &m_uNameDepthStencil);
 	if (!m_uNameDepthStencil) {
@@ -316,6 +336,8 @@ COMPV_ERROR_CODE CompVSurfaceGL::initFrameBuffer()
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_uNameDepthStencil);
 	// Attach stencil buffer
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_uNameDepthStencil);
+	// Clear buffers
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	// Check FBO status
 	if ((fboStatus_ = glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)) {

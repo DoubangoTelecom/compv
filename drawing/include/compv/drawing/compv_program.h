@@ -34,6 +34,7 @@ public:
 	virtual COMPV_ERROR_CODE link() = 0;
 	virtual COMPV_ERROR_CODE useBegin() = 0;
 	virtual COMPV_ERROR_CODE useEnd() = 0;
+	virtual unsigned int id() = 0;
 
 	static COMPV_ERROR_CODE newObj(CompVProgramPtrPtr program);
 

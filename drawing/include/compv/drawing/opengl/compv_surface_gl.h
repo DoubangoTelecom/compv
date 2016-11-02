@@ -13,6 +13,7 @@
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/compv_surface.h"
+#include "compv/drawing/compv_renderer.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -26,7 +27,7 @@ class CompVSurfaceGL;
 typedef CompVPtr<CompVSurfaceGL* > CompVSurfaceGLPtr;
 typedef CompVSurfaceGLPtr* CompVSurfaceGLPtrPtr;
 
-class CompVSurfaceGL : public CompVSurface
+class CompVSurfaceGL : public CompVSurface, public CompVSurfaceBlit
 {
 protected:
 	CompVSurfaceGL(int width, int height);
@@ -41,6 +42,9 @@ public:
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
 	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes);
 
+	virtual COMPV_ERROR_CODE clear();
+	virtual COMPV_ERROR_CODE blit();
+
 	static COMPV_ERROR_CODE newObj(CompVSurfaceGLPtrPtr glSurface, const CompVWindow* window);
 
 private:
@@ -52,6 +56,7 @@ private:
 	GLuint m_uNameFrameBuffer;
 	GLuint m_uNameTexture;
 	GLuint m_uNameDepthStencil;
+	CompVRendererPtr m_ptrRenderer;
 	COMPV_DISABLE_WARNINGS_END()
 };
 

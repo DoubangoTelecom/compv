@@ -120,9 +120,12 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	if (!sSurface) {
 		sSurface = SkSurface::MakeFromBackendRenderTarget(sContext, desc, &props).release();
 	}
+	SkCanvas* canvas = NULL;
+	if (sSurface) {
+		canvas = sSurface->getCanvas();   // We don't manage this pointer's lifetime.
+	}
 
-	SkCanvas* canvas = sSurface->getCanvas();   // We don't manage this pointer's lifetime.
-
+#if 1
 	//canvas->clear(SK_ColorBLACK);
 
 	SkPaint paint;
@@ -142,8 +145,6 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	std::string outString = "Hello skia";
 	canvas->drawText(outString.c_str(),outString.length(), SkIntToScalar(100), SkIntToScalar(100), paint);
 #endif
-
-
 
 	//paint.reset();
 	//paint.setAntiAlias(true);
@@ -167,9 +168,37 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	paint.setARGB(200, 100, 100, 100);
 	canvas->drawOval(r, paint);
 
+#endif
+	//glDisable(GL_BLEND);
+	//glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+	//glDisable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+	//glDisable(GL_VERTEX_PROGRAM_POINT_SIZE_NV);
+	//glDisable(GL_VERTEX_ATTRIB_ARRAY0_NV);
+	//glDisable(GL_VERTEX_ATTRIB_ARRAY1_NV);
+	/*glBindVertexArray(0);
+	//glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER_EXT, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER_EXT, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
+	glUseProgram(0);
+	glUseProgramObjectARB(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER_ARB, 0);*/
+	//glDrawBuffer(GL_BACK);
+	//glEnable(GL_DOUBLEBUFFER);
+	//glEnable(GL_DITHER);
+	//glEnable(GL_DEPTH_WRITEMASK);
+
+	//canvas->clear(SK_ColorBLACK);
+
 	//canvas->restore();
 	canvas->flush();
-
+	//sContext->resetContext();
 #if 0
 	// convert.exe -depth 8 -size 640x480 image.rgba image.png
 	uint8_t* data = (uint8_t*)malloc(640 * 480 * 4);
@@ -227,10 +256,14 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	}
 #endif
 
-	delete sSurface;
-	sSurface = NULL;
-	delete sContext;
-	sContext = NULL;
+	if (sSurface) {
+		delete sSurface;
+		sSurface = NULL;
+	}
+	if (sContext) {
+		delete sContext;
+		sContext = NULL;
+	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }

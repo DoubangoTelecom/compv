@@ -22,12 +22,18 @@ COMPV_ERROR_CODE CompVUtilsGL::getLastError(std::string *error)
 	while ((err = glGetError()) != GL_NO_ERROR) {
 		if (error) {
 #if defined(HAVE_GL_GLU_H) || defined(HAVE_GLU_H) || defined(__glu_h__) || defined(__GLU_H__)
-			*error += "\n" + std::string((const char*)gluErrorString(err));
+			const char* str = reinterpret_cast<const char*>(gluErrorString(err));
+			if (str) {
+				*error += "\n" + std::string(str);
+			}
+			else {
+				*error += "\ncode:" + std::string((const char*)itoa((int)err, buff_, 10));
+				// err_ = COMPV_ERROR_CODE_E_GL;
+			}
 #else
 			*error += "\n" + std::string((const char*)itoa((int)err, buff_, 10));
 #endif
 		}
-		err_ = COMPV_ERROR_CODE_E_GL;
 	}
 	return err_;
 }

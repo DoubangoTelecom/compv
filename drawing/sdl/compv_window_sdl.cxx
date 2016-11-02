@@ -98,9 +98,33 @@ COMPV_ERROR_CODE CompVWindowSDL::close()
 COMPV_ERROR_CODE CompVWindowSDL::beginDraw()
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	CompVSurfaceBlit* surfaceBlit = NULL;
 	COMPV_CHECK_CODE_BAIL(err = m_ptrSDLMutex->lock());
 	COMPV_CHECK_EXP_BAIL(m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
 	COMPV_CHECK_CODE_BAIL(err = makeGLContextCurrent());
+
+	// FIXME:
+	glEnable(GL_TEXTURE_2D);
+	glDisable(GL_DEPTH_TEST); // Required by Skia, otherwise we'll need to use 'glPushAttrib(GL_ALL_ATTRIB_BITS); glPopAttrib();' before/after canvas drawing
+	glDisable(GL_BLEND);
+	glViewport(0, 0, static_cast<GLsizei>(getWidth()), static_cast<GLsizei>(getHeight()));
+	glClearColor(0.f, 0.f, 0.f, 1.f);
+	glClearStencil(0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	//gluOrtho2D((GLdouble)0, static_cast<GLdouble>(width), (GLdouble)0, static_cast<GLdouble>(height));
+	glOrtho((GLdouble)0, static_cast<GLdouble>(getWidth()), (GLdouble)0, static_cast<GLdouble>(getHeight()), (GLdouble)-1, (GLdouble)1);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	if (m_ptrSurface) {
+		surfaceBlit = dynamic_cast<CompVSurfaceBlit*>(*m_ptrSurface);
+		if (surfaceBlit) {
+			COMPV_CHECK_CODE_BAIL(err = surfaceBlit->clear());
+		}
+	}
+
 	m_bDrawing = true;
 bail:
 	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
@@ -112,9 +136,38 @@ COMPV_ERROR_CODE CompVWindowSDL::endDraw()
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_CODE_BAIL(err = m_ptrSDLMutex->lock());
 	COMPV_CHECK_EXP_BAIL(!m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
+
+	CompVSurfaceBlit* surfaceBlit = dynamic_cast<CompVSurfaceBlit*>(*m_ptrSurface);
+
+	// FIXME:
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system
+
+	//glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
+
+	//COMPV_CHECK_CODE_BAIL(err = surfaceBlit->blit());
+
+	/*glBegin(GL_QUADS);
+	glTexCoord2i(0, 0);
+	glVertex2i(0, 0);
+
+	glTexCoord2i(0, 1);
+	glVertex2i(0, static_cast<GLint>(getHeight()));
+
+	glTexCoord2i(1, 1);
+	glVertex2i(static_cast<GLint>(getWidth()), static_cast<GLint>(getHeight()));
+
+	glTexCoord2i(1, 0);
+	glVertex2i(static_cast<GLint>(getWidth()), 0);
+	glEnd();*/
+
+	COMPV_CHECK_CODE_BAIL(err = surfaceBlit->blit());
+
+	//glBindTexture(GL_TEXTURE_2D, 0);
+
 	if (m_pSDLWindow) {
 		SDL_GL_SwapWindow(m_pSDLWindow);
 	}
+
 bail:
 	m_bDrawing = false;
 	COMPV_CHECK_CODE_ASSERT(unmakeGLContextCurrent());

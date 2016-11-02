@@ -43,6 +43,7 @@ public:
 	virtual COMPV_ERROR_CODE link();
 	virtual COMPV_ERROR_CODE useBegin();
 	virtual COMPV_ERROR_CODE useEnd();
+	virtual unsigned int id() { return static_cast<unsigned int>(m_uPrg); };
 
 	static COMPV_ERROR_CODE newObj(CompVProgramGLPtrPtr program);
 

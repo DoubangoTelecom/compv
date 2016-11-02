@@ -57,6 +57,12 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	COMPV_DEBUG_INFO("GLEW version being used: %d.%d.%d", GLEW_VERSION_MAJOR, GLEW_VERSION_MINOR, GLEW_VERSION_MICRO);
 #endif /* HAVE_GL_GLEW_H */
 
+#if	defined(HAVE_OPENGLES)
+	COMPV_DEBUG_INFO("OpenGL-ES implementation enabled");
+#elif defined(HAVE_OPENGL)
+	COMPV_DEBUG_INFO("OpenGL implementation enabled");
+#endif
+
 	/* SDL */
 #if defined(HAVE_SDL_H)
 #if 0
@@ -70,6 +76,11 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24); // because of 'GL_DEPTH24_STENCIL8'
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8); // Skia requires 8bits stencil
+#if defined(HAVE_OPENGL) && 0
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#elif defined(HAVE_OPENGLES) && 0
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#endif
 #if 0 // TODO(dmi): allowing sotftware rendering fallback
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 #endif
