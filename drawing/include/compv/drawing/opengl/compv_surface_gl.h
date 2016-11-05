@@ -14,6 +14,7 @@
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/compv_surface.h"
 #include "compv/drawing/compv_renderer.h"
+#include "compv/drawing/compv_program.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -50,14 +51,24 @@ public:
 private:
 	COMPV_ERROR_CODE initFrameBuffer();
 	COMPV_ERROR_CODE deInitFrameBuffer();
+	COMPV_ERROR_CODE initProgram();
+	COMPV_ERROR_CODE deInitProgram();
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	GLuint m_uNameFrameBuffer;
 	GLuint m_uNameTexture;
 	GLuint m_uNameDepthStencil;
+	GLuint m_uNameVertexBuffer;
+	GLuint m_uNameIndiceBuffer;
+	GLuint m_uNameSlotPosition;
+	GLuint m_uNameSlotTexCoord;
+#if defined(HAVE_OPENGL) // FIXME
+	GLuint m_uNameVAO;
+#endif
 	CompVRendererPtr m_ptrRenderer;
-	COMPV_DISABLE_WARNINGS_END()
+	CompVProgramPtr m_ptrProgram;
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

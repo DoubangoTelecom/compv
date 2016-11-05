@@ -69,7 +69,7 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 		//COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window1->endDraw()) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
 		//COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window1->test(mat[/*index % 3*/0])) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
 		//COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window2->draw(mat[/*index++ % 3*/0])) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
-		//break;
+		//if(count==1)break;
 	}
 
 bail:

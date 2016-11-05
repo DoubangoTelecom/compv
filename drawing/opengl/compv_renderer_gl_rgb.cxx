@@ -57,7 +57,9 @@ COMPV_ERROR_CODE CompVRendererGLRgb::render(CompVMatPtr mat)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, static_cast<GLsizei>(mat->stride()), static_cast<GLsizei>(mat->rows()), 0, GL_RGB, GL_UNSIGNED_BYTE, mat->ptr());
 		if ((mat->stride() & 3)) { // multiple of 4?
+#if defined(COMPV_OPENGL) // TODO(dmi)
 			glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)mat->stride());
+#endif
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		}
 	}
@@ -75,6 +77,7 @@ COMPV_ERROR_CODE CompVRendererGLRgb::render(CompVMatPtr mat)
 			GL_UNSIGNED_BYTE,
 			mat->ptr());
 	}
+	/*
 	// Attach texture to FBO
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_uNameTexture, 0); // FIXME: later, detach
 	
@@ -83,6 +86,7 @@ COMPV_ERROR_CODE CompVRendererGLRgb::render(CompVMatPtr mat)
 		COMPV_CHECK_CODE_BAIL(err = CompVUtilsGL::checkLastError());
 		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_GL);
 	}
+	*/
 
 	// FIXME: move to blit?
 	
@@ -96,36 +100,47 @@ COMPV_ERROR_CODE CompVRendererGLRgb::render(CompVMatPtr mat)
 
 bail:
 	// dettach
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, 0, 0);
+	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, 0, 0);
 
 	return err;
 }
 
 COMPV_ERROR_CODE CompVRendererGLRgb::blit()
 {
+	// FIXME: use VAO
 	// FIXME: check GLContext is available
 	// FIXME: create program once
+	// FIXME: use 'precision mediump float;' on OpenGLES
 #if defined(main)
 #error "main must not be defined"
 #endif
 	static const char kShaderVertex[] = COMPV_STRING(
+		attribute vec4 position;
+		attribute vec2 texCoord;
+		varying vec2 texCoordVarying;
 		void main() {
-			gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
-			gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;
+			//gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+			//gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;
 			//gl_Position = ftransform();
 			// gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
-			gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex;
+			//gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex;
+			gl_Position = position;
+			texCoordVarying = texCoord;
 		}
 	);
 	static const char kShaderFragment[] = COMPV_STRING(
-		uniform sampler2D tex0;
-		uniform sampler2D tex1;
+		//precision mediump float; // TODO(dmi): should be GLES only
+		//uniform sampler2D tex0;
+		//uniform sampler2D tex1;
+		varying vec2 texCoordVarying;
+		uniform sampler2D SamplerRGB;
 		void main() {
 			//gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); 
 			//vec4 color = texture2D(tex, gl_TexCoord[0]);
 			//gl_FragColor = texture2D(tex0, gl_TexCoord[0]);
 			//gl_FragColor = texture2D(tex1, gl_TexCoord[0]);
-			gl_FragColor = vec4(texture2D(tex1, gl_TexCoord[0]).rgb, 1.0);
+			//gl_FragColor = vec4(texture2D(tex1, gl_TexCoord[0]).rgb, 1.0);
+			gl_FragColor = vec4(texture2D(SamplerRGB, texCoordVarying).rgb, 1.0);
 		}
 	);
 	
@@ -137,14 +152,25 @@ COMPV_ERROR_CODE CompVRendererGLRgb::blit()
 	COMPV_CHECK_CODE_RETURN(ptrProgram->link());
 	COMPV_CHECK_CODE_ASSERT(ptrProgram->useBegin());
 
+	// TODO(dmi): retrieving positions must be done once
+	GLuint slotPosition = glGetAttribLocation(ptrProgram->id(), "position");
+	GLuint slotTexCoord = glGetAttribLocation(ptrProgram->id(), "texCoord");
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer());
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indiceBuffer());
+	glEnableVertexAttribArray(slotTexCoord);
+	glEnableVertexAttribArray(slotPosition);
+	glVertexAttribPointer(slotPosition, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), 0);
+	glVertexAttribPointer(slotTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), (GLvoid*)(sizeof(GLfloat) * 3));
+
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 1); // FIXME
-	glUniform1i(glGetUniformLocation(ptrProgram->id(), "tex0"), 0);
+	//glUniform1i(glGetUniformLocation(ptrProgram->id(), "tex0"), 0);
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, m_uNameTexture); // FIXME
-	glUniform1i(glGetUniformLocation(ptrProgram->id(), "tex1"), 1);
+	glUniform1i(glGetUniformLocation(ptrProgram->id(), "SamplerRGB"), 1); // TODO(dmi): must be done once
 
+#if 0
 	glBegin(GL_QUADS);
 	glTexCoord2i(0, 0);
 	glVertex2i(0, 0);
@@ -159,6 +185,9 @@ COMPV_ERROR_CODE CompVRendererGLRgb::blit()
 	glVertex2i(static_cast<GLint>(m_uStride), 0);
 
 	glEnd();
+#else
+	glDrawElements(GL_TRIANGLES, CompVRendererGL::indicesCount(), GL_UNSIGNED_BYTE, 0);
+#endif
 
 	COMPV_CHECK_CODE_ASSERT(ptrProgram->useEnd());
 

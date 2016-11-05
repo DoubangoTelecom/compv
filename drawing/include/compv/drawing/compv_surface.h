@@ -48,13 +48,13 @@ protected:
 	COMPV_INLINE CompVCanvasPtr getCanvas() { return m_ptrCanvas; }
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static compv_surface_id_t s_nSurfaceId;
 	compv_surface_id_t m_nId;
 	CompVCanvasPtr m_ptrCanvas;
 	int m_nWidth;
 	int m_nHeight;
-	COMPV_DISABLE_WARNINGS_END()
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 // FIXME: different file and make sure not public API and rename to CompVSurfacePriv

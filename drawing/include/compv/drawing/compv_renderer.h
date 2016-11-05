@@ -43,11 +43,11 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVRendererPtrPtr renderer, COMPV_PIXEL_FORMAT ePixelFormat, const CompVSurface* surface);
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static compv_renderer_id_t s_nRendererId;
 	compv_renderer_id_t m_nId;
 	COMPV_PIXEL_FORMAT m_ePixelFormat;
-	COMPV_DISABLE_WARNINGS_END()
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

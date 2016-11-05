@@ -169,6 +169,7 @@
     <ClInclude Include="include\compv\drawing\compv_renderer.h" />
     <ClInclude Include="include\compv\drawing\compv_surface.h" />
     <ClInclude Include="include\compv\drawing\compv_window.h" />
+    <ClInclude Include="include\compv\drawing\opengl\compv_consts_gl.h" />
     <ClInclude Include="include\compv\drawing\opengl\compv_headers_gl.h" />
     <ClInclude Include="include\compv\drawing\opengl\compv_program_gl.h" />
     <ClInclude Include="include\compv\drawing\opengl\compv_renderer_gl.h" />

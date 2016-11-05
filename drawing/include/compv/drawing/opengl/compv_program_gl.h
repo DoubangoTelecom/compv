@@ -51,13 +51,13 @@ private:
 	COMPV_ERROR_CODE shaderAttachData(const char* dataPtr, size_t dataLength, bool vertexType);
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	GLuint m_uShadVertex;
 	GLuint m_uShadFragment;
 	GLuint m_uPrg;
 	bool m_bLinked;
 	bool m_bUsed;
-	COMPV_DISABLE_WARNINGS_END()
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

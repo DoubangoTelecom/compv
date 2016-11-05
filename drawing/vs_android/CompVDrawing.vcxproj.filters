@@ -1,0 +1,132 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{f10fa7af-0a91-4b39-9c68-77fcbf88ce40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{18811a95-6965-4f2f-aa67-86103da6cb14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sdl">
+      <UniqueIdentifier>{2cbc47ff-7824-4ce5-a686-4e03d8ae4e54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\opengl">
+      <UniqueIdentifier>{9adb9ef6-93a9-460b-999d-724f04672d33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\skia">
+      <UniqueIdentifier>{8795a19a-ecf2-4e15-afc9-15e0179aff54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\skia">
+      <UniqueIdentifier>{ceedbcea-84f5-4343-b78c-0b54b9f8d452}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\opengl">
+      <UniqueIdentifier>{9fc81ba9-6fe9-440f-91db-b6b2a9f03769}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\sdl">
+      <UniqueIdentifier>{ca7c8dfc-0eef-4fb4-819e-720752ce815a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\compv_canvas.cxx">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_drawing.cxx">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_image_libjpeg.cxx">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_program.cxx">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_renderer.cxx">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_surface.cxx">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_window.cxx">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sdl\compv_window_sdl.cxx">
+      <Filter>src\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\opengl\compv_program_gl.cxx">
+      <Filter>src\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\opengl\compv_renderer_gl.cxx">
+      <Filter>src\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\opengl\compv_renderer_gl_rgb.cxx">
+      <Filter>src\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\opengl\compv_renderer_gl_yuv.cxx">
+      <Filter>src\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\opengl\compv_surface_gl.cxx">
+      <Filter>src\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\opengl\compv_utils_gl.cxx">
+      <Filter>src\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\opengl\compv_window_glfw3.cxx">
+      <Filter>src\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skia\compv_canvas_skia.cxx">
+      <Filter>src\skia</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\compv\drawing\compv_canvas.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\compv_drawing.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\compv_image_libjpeg.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\compv_program.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\compv_renderer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\compv_surface.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\compv_window.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\sdl\compv_window_sdl.h">
+      <Filter>include\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\opengl\compv_headers_gl.h">
+      <Filter>include\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\opengl\compv_program_gl.h">
+      <Filter>include\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\opengl\compv_renderer_gl.h">
+      <Filter>include\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\opengl\compv_renderer_gl_rgb.h">
+      <Filter>include\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\opengl\compv_renderer_gl_yuv.h">
+      <Filter>include\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\opengl\compv_surface_gl.h">
+      <Filter>include\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\opengl\compv_utils_gl.h">
+      <Filter>include\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\opengl\compv_window_glfw3.h">
+      <Filter>include\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\skia\compv_canvas_skia.h">
+      <Filter>include\skia</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

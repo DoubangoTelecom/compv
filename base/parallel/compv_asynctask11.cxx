@@ -15,8 +15,8 @@
 COMPV_NAMESPACE_BEGIN()
 
 CompVAsyncTask11::CompVAsyncTask11()
-: m_iCoreId(-1)
-, m_bStarted(false)
+: m_bStarted(false)
+, m_iCoreId(-1)
 {
 
 }

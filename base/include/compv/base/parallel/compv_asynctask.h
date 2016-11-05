@@ -112,12 +112,12 @@ private:
     static void* COMPV_STDCALL run(void *pcArg);
 
 private:
-    COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     CompVPtr<CompVThread* >m_Thread;
     CompVPtr<CompVSemaphore* >m_SemRun;
     CompVPtr<CompVSemaphore* >m_SemExec;
     struct compv_asynctoken_xs tokens[COMPV_ASYNCTASK_MAX_TOKEN_COUNT];
-    COMPV_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_END()
 
     bool m_bStarted;
     compv_core_id_t m_iCoreId;

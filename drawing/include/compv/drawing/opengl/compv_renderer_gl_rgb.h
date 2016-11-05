@@ -42,13 +42,13 @@ private:
 	virtual COMPV_ERROR_CODE blit();
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	GLuint m_uNameTexture;
 	// FIXME(dmi): move to base class
 	size_t m_uWidth;
 	size_t m_uHeight;
 	size_t m_uStride;
-	COMPV_DISABLE_WARNINGS_END()
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

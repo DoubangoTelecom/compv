@@ -9,6 +9,9 @@
 #include "compv/base/compv_fileutils.h"
 #include "compv/base/compv_mem.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 COMPV_NAMESPACE_BEGIN()
 
 
@@ -27,11 +30,13 @@ COMPV_ERROR_CODE CompVUtilsGL::getLastError(std::string *error)
 				*error += "\n" + std::string(str);
 			}
 			else {
-				*error += "\ncode:" + std::string((const char*)itoa((int)err, buff_, 10));
+				snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(err));
+				*error += "\ncode:" + std::string(buff_);
 				// err_ = COMPV_ERROR_CODE_E_GL;
 			}
 #else
-			*error += "\n" + std::string((const char*)itoa((int)err, buff_, 10));
+			snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(err));
+			*error += "\n" + std::string(buff_);
 #endif
 		}
 	}
@@ -51,7 +56,7 @@ COMPV_ERROR_CODE CompVUtilsGL::checkLastError()
 
 CompVGLContext CompVUtilsGL::getCurrentContext()
 {
-#if defined(HAVE_OPENGLES)
+#if defined(HAVE_EGL)
 	EGLContext ctx = eglGetCurrentContext();
 	if (ctx == EGL_NO_CONTEXT) {
 		return NULL;

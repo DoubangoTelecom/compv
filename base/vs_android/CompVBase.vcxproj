@@ -1,0 +1,260 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM">
+      <Configuration>Release</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x86">
+      <Configuration>Debug</Configuration>
+      <Platform>x86</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x86">
+      <Configuration>Release</Configuration>
+      <Platform>x86</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\compv_android_cpu-features.cxx" />
+    <ClCompile Include="..\compv_base.cxx" />
+    <ClCompile Include="..\compv_buffer.cxx" />
+    <ClCompile Include="..\compv_common.cxx" />
+    <ClCompile Include="..\compv_cpu.cxx" />
+    <ClCompile Include="..\compv_debug.cxx" />
+    <ClCompile Include="..\compv_fileutils.cxx" />
+    <ClCompile Include="..\compv_mat.cxx" />
+    <ClCompile Include="..\compv_md5.cxx" />
+    <ClCompile Include="..\compv_mem.cxx" />
+    <ClCompile Include="..\compv_obj.cxx" />
+    <ClCompile Include="..\compv_simd_globals.cxx" />
+    <ClCompile Include="..\image\compv_image.cxx" />
+    <ClCompile Include="..\image\compv_image_decoder.cxx" />
+    <ClCompile Include="..\image\compv_image_utils.cxx" />
+    <ClCompile Include="..\math\compv_math.cxx" />
+    <ClCompile Include="..\math\compv_math_utils.cxx" />
+    <ClCompile Include="..\parallel\compv_asynctask.cxx" />
+    <ClCompile Include="..\parallel\compv_asynctask11.cxx" />
+    <ClCompile Include="..\parallel\compv_condvar.cxx" />
+    <ClCompile Include="..\parallel\compv_mutex.cxx" />
+    <ClCompile Include="..\parallel\compv_parallel.cxx" />
+    <ClCompile Include="..\parallel\compv_semaphore.cxx" />
+    <ClCompile Include="..\parallel\compv_thread.cxx" />
+    <ClCompile Include="..\parallel\compv_threaddisp.cxx" />
+    <ClCompile Include="..\parallel\compv_threaddisp11.cxx" />
+    <ClCompile Include="..\time\compv_time.cxx" />
+    <ClCompile Include="..\time\compv_timer.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\compv\base\compv_android_cpu-features.h" />
+    <ClInclude Include="..\include\compv\base\compv_base.h" />
+    <ClInclude Include="..\include\compv\base\compv_buffer.h" />
+    <ClInclude Include="..\include\compv\base\compv_common.h" />
+    <ClInclude Include="..\include\compv\base\compv_config.h" />
+    <ClInclude Include="..\include\compv\base\compv_cpu.h" />
+    <ClInclude Include="..\include\compv\base\compv_debug.h" />
+    <ClInclude Include="..\include\compv\base\compv_errno.h" />
+    <ClInclude Include="..\include\compv\base\compv_fileutils.h" />
+    <ClInclude Include="..\include\compv\base\compv_mat.h" />
+    <ClInclude Include="..\include\compv\base\compv_md5.h" />
+    <ClInclude Include="..\include\compv\base\compv_mem.h" />
+    <ClInclude Include="..\include\compv\base\compv_obj.h" />
+    <ClInclude Include="..\include\compv\base\compv_simd_globals.h" />
+    <ClInclude Include="..\include\compv\base\image\compv_image.h" />
+    <ClInclude Include="..\include\compv\base\image\compv_image_decoder.h" />
+    <ClInclude Include="..\include\compv\base\image\compv_image_utils.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_utils.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_asynctask.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_asynctask11.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_condvar.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_mutex.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_parallel.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_semaphore.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_thread.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_threaddisp.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_threaddisp11.h" />
+    <ClInclude Include="..\include\compv\base\time\compv_time.h" />
+    <ClInclude Include="..\include\compv\base\time\compv_timer.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{9320e994-aa59-49ba-ab64-f82aedec49a3}</ProjectGuid>
+    <Keyword>Android</Keyword>
+    <RootNamespace>CompVBase</RootNamespace>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <ApplicationType>Android</ApplicationType>
+    <ApplicationTypeRevision>2.0</ApplicationTypeRevision>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>Clang_3_8</PlatformToolset>
+    <UseOfStl>gnustl_static</UseOfStl>
+    <AndroidAPILevel>android-18</AndroidAPILevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>Clang_3_8</PlatformToolset>
+    <UseOfStl>gnustl_static</UseOfStl>
+    <AndroidAPILevel>android-18</AndroidAPILevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>Clang_3_8</PlatformToolset>
+    <UseOfStl>gnustl_static</UseOfStl>
+    <AndroidAPILevel>android-18</AndroidAPILevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>Clang_3_8</PlatformToolset>
+    <UseOfStl>gnustl_static</UseOfStl>
+    <AndroidAPILevel>android-18</AndroidAPILevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>Clang_3_8</PlatformToolset>
+    <UseOfStl>gnustl_static</UseOfStl>
+    <AndroidAPILevel>android-18</AndroidAPILevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>Clang_3_8</PlatformToolset>
+    <UseOfStl>gnustl_static</UseOfStl>
+    <AndroidAPILevel>android-18</AndroidAPILevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>Clang_3_8</PlatformToolset>
+    <UseOfStl>gnustl_static</UseOfStl>
+    <AndroidAPILevel>android-18</AndroidAPILevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>Clang_3_8</PlatformToolset>
+    <UseOfStl>gnustl_static</UseOfStl>
+    <AndroidAPILevel>android-18</AndroidAPILevel>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

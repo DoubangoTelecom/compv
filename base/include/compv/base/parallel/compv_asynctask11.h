@@ -16,6 +16,7 @@
 #include "compv/base/compv_common.h"
 
 #include <vector>
+#include <functional>
 
 // C++11
 #if COMPV_PARALLEL_SEMA11
@@ -119,7 +120,7 @@ private:
 	static void* COMPV_STDCALL run(void *pcArg);
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	CompVPtr<CompVThread* >m_Thread;
 #if COMPV_PARALLEL_SEMA11
 	std::shared_ptr<CompVSemaphore11> m_SemRun;
@@ -132,7 +133,7 @@ private:
 	CompVPtr<CompVMutex* >m_MutexTokens;
 #endif
 	CompVAsyncToken m_Tokens[COMPV_ASYNCTASK11_MAX_TOKEN_COUNT];
-	COMPV_DISABLE_WARNINGS_END()
+	COMPV_VS_DISABLE_WARNINGS_END()
 
 	bool m_bStarted;
 	compv_core_id_t m_iCoreId;

@@ -9,8 +9,7 @@
 
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_debug.h"
-
-#include <string>
+#include "compv/base/compv_android_cpu-features.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC long long compv_utils_rdtsc_x86_asm();
@@ -20,6 +19,10 @@ COMPV_EXTERNC long long compv_utils_rdtsc_x86_asm();
 #   include <sys/sysctl.h>
 #elif COMPV_OS_LINUX || defined(HAVE_LINUX_SYSCTL_H)
 #   include <linux/sysctl.h>
+#endif
+
+#if COMPV_OS_LINUX || defined(HAVE_UNISTD_H) || COMPV_OS_ANDROID
+#	include <unistd.h>
 #endif
 
 #if defined(_OPENMP) || defined(_OPENMP) || defined(HAVE_OMP_H)
@@ -99,8 +102,8 @@ int TestOsSaveYmm()
     return((xcr0 & 6) == 6);  // Is ymm saved?
 }
 #endif  // !defined(__native_client__)
-#else
-static void CompVX86CpuId(uint32_t eax, uint32_t ecx, uint32* cpu_info)
+#elif COMPV_ARCH_X86 || COMPV_ARCH_X64
+static void CompVX86CpuId(uint32_t eax, uint32_t ecx, uint32_t* cpu_info)
 {
     cpu_info[0] = cpu_info[1] = cpu_info[2] = cpu_info[3] = 0;
 }
@@ -307,8 +310,10 @@ COMPV_ERROR_CODE CompVCpu::init()
     size_t len = sizeof(s_iCores);
     int mib0[2] = { CTL_HW, HW_NCPU };
     sysctl(mib0, 2, &s_iCores, &len, NULL, 0);
+#elif COMPV_OS_ANDROID
+	s_iCores = static_cast<int32_t>(android_getCpuCount());
 #elif defined(__GNUC__)
-    s_iCores = (int32_t)sysconf(_SC_NPROCESSORS_ONLN);
+    s_iCores = static_cast<int32_t>(sysconf(_SC_NPROCESSORS_ONLN));
 #else
     COMPV_DEBUG_ERROR("getCoresCount function not implemented ...using 1 as default value");
     s_iCores = 1;
@@ -348,6 +353,10 @@ COMPV_ERROR_CODE CompVCpu::init()
 
     sysctl(mib1, 2, &s_iCache1LineSize, &sizeof_cls, NULL, 0);
     sysctl(mib2, 2, &s_iCache1Size, &sizeof_cs, NULL, 0);
+#elif COMPV_OS_ANDROID
+	COMPV_DEBUG_INFO_CODE_ONCE("_SC_LEVEL1_DCACHE_LINESIZE and _SC_LEVEL1_DCACHE_SIZE not availabe and Android");
+	s_iCache1LineSize = 64;
+	s_iCache1Size = 4096;
 #else
     s_iCache1LineSize = (int32_t)sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
     s_iCache1Size = (int32_t)sysconf(_SC_LEVEL1_DCACHE_SIZE);

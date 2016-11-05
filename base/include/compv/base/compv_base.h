@@ -31,14 +31,14 @@ public:
 	static bool isMathFixedPoint();
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static bool s_bInitialized;
 	static bool s_bInitializing;
 	static bool s_bBigEndian;
 	static bool s_bTesting;
 	static bool s_bMathTrigFast;
 	static bool s_bMathFixedPoint;
-	COMPV_DISABLE_WARNINGS_END()
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

@@ -59,14 +59,14 @@ private:
 	COMPV_ERROR_CODE unmakeGLContextCurrent();
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	SDL_Window *m_pSDLWindow;
 	SDL_GLContext m_pSDLContext;
 	CompVMutexPtr m_ptrSDLMutex;
 	CompVProgramPtr m_ptrProgram;
 	CompVSurfacePtr m_ptrSurface;
 	bool m_bDrawing;
-	COMPV_DISABLE_WARNINGS_END()
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

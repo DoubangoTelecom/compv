@@ -17,9 +17,9 @@
 COMPV_NAMESPACE_BEGIN()
 
 CompVProgramGL::CompVProgramGL()
-: m_uPrg(0)
-, m_uShadVertex(0)
+: m_uShadVertex(0)
 , m_uShadFragment(0)
+, m_uPrg(0)
 , m_bLinked(false)
 , m_bUsed(false)
 {
@@ -109,10 +109,12 @@ COMPV_ERROR_CODE CompVProgramGL::shaderAttachData(const char* dataPtr, size_t da
 	COMPV_CHECK_EXP_RETURN(!dataPtr || !dataLength, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	GLuint newShad_ = 0;
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+	const GLchar *data_;
+	GLint length_;
 
 	COMPV_CHECK_CODE_BAIL(err_ = vertexType ? CompVUtilsGL::shadCreateVert(&newShad_) : CompVUtilsGL::shadCreateFrag(&newShad_));
-	const GLchar *data_ = static_cast<const GLchar *>(dataPtr);
-	const GLint length_ = static_cast<GLint>(dataLength);
+	data_ = static_cast<const GLchar *>(dataPtr);
+	length_ = static_cast<GLint>(dataLength);
 	COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::shadSetSource(newShad_, 1, &data_, &length_));
 	COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::shadCompile(newShad_));
 	COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::shadAttach(m_uPrg, newShad_));

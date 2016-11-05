@@ -14,6 +14,9 @@
 #include "compv/base/intrin/x86/compv_mem_intrin_sse2.h"
 #include "compv/base/intrin/x86/compv_mem_intrin_avx.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 COMPV_NAMESPACE_BEGIN()
 
 #if !defined(COMPV_MEMALIGN_ALWAYS)
@@ -343,10 +346,13 @@ void* CompVMem::mallocAligned(size_t size, int alignment/*= CompVMem::getBestAli
     void* pMem;
 #if COMPV_OS_WINDOWS && !COMPV_UNDER_OS_CE && !COMPV_OS_WINDOWS_RT
     pMem = _aligned_malloc(size, alignment);
-#elif HAVE_POSIX_MEMALIGN
+#elif HAVE_POSIX_MEMALIGN || _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
     pMem = NULL;
-    posix_memalign(&pMem, (size_t)alignment, size);
+    posix_memalign(&pMem, (size_t)alignment, size); // TODO(dmi): available starting 'android-18'
+#elif _ISOC11_SOURCE
+	pMem = aligned_alloc(alignment, size);
 #else
+	COMPV_DEBUG_INFO_CODE_NOT_TESTED();
     pMem = ::malloc(size + alignment);
     if (pMem) {
         long pad = ((~(long)pMem) % alignment) + 1;
@@ -433,9 +439,10 @@ void CompVMem::freeAligned(void** ptr)
 #endif
 #if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_CE && !COMPV_OS_WINDOWS_RT
         _aligned_free(ptr_);
-#elif HAVE_POSIX_MEMALIGN
+#elif HAVE_POSIX_MEMALIGN || _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600 || _ISOC11_SOURCE
         ::free(ptr_);
 #else
+		COMPV_DEBUG_INFO_CODE_NOT_TESTED();
         ::free((((uint8_t*)ptr_) - ((uint8_t*)ptr_)[-1]));
 #endif
         *ptr = NULL;

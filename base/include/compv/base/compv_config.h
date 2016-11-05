@@ -102,7 +102,7 @@
 #endif
 // ARCH:ARM
 #if defined(__arm__) || defined(__thumb__) || defined(__TARGET_ARCH_ARM) || defined(__TARGET_ARCH_THUMB) || defined(_ARM) || defined(_M_ARM) || defined(_M_ARMT) || defined(__arm) || defined(__aarch64__)
-#	defined COMPV_ARCH_ARM					1
+#	define COMPV_ARCH_ARM					1
 #endif
 // ARCH: ARM64
 #if defined(__aarch64__)
@@ -189,15 +189,26 @@
 
 // Disable some well-known warnings
 #if defined(_MSC_VER)
-#	define COMPV_DISABLE_WARNINGS_BEGIN(nn) \
+#	define COMPV_VS_DISABLE_WARNINGS_BEGIN(nn) \
 		__pragma(warning( push )) \
 		__pragma(warning( disable : ##nn ))
-#	define COMPV_DISABLE_WARNINGS_END() \
+#	define COMPV_VS_DISABLE_WARNINGS_END() \
 		__pragma(warning( pop ))
 #else
-#	define COMPV_DISABLE_WARNINGS_BEGIN(nn)
-#	define COMPV_DISABLE_WARNINGS_END()
+#	define COMPV_VS_DISABLE_WARNINGS_BEGIN(nn)
+#	define COMPV_VS_DISABLE_WARNINGS_END()
 #endif /* _MSC_VER */
+#if defined(__GNUC__)
+#	define COMPV_GCC_DO_PRAGMA(x) _Pragma (#x)
+#	define COMPV_GCC_DISABLE_WARNINGS_BEGIN(w) \
+		COMPV_GCC_DO_PRAGMA(GCC diagnostic push) \
+		COMPV_GCC_DO_PRAGMA(GCC diagnostic ignored w)
+#	define COMPV_GCC_DISABLE_WARNINGS_END() \
+		COMPV_GCC_DO_PRAGMA(GCC diagnostic pop)
+#else
+#	define COMPV_GCC_DISABLE_WARNINGS_BEGIN(tt)
+#	define COMPV_GCC_DISABLE_WARNINGS_END()
+#endif /* __GNUC__ */
 
 // Guards against C++ name mangling
 #if defined(__cplusplus)
@@ -351,11 +362,6 @@
 #include <math.h>
 
 #include <string>
-#include <map>
-#include <cmath>
-
-// C++11
-#include <functional>
 
 // Must be at the bottom to make sure we can redifine all macros
 #if HAVE_CONFIG_H

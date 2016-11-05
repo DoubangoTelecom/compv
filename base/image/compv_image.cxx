@@ -10,8 +10,8 @@
 
 
 #define COMPV_IMAGE_NEWOBJ_CASE(elmType,pixelFormat) \
-		case COMPV_PIXEL_FORMAT_##pixelFormat##: \
-			COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<##elmType##, COMPV_MAT_TYPE_PIXELS, COMPV_MAT_SUBTYPE_PIXELS_##pixelFormat##>(mat, rows, cols))); \
+		case COMPV_PIXEL_FORMAT_##pixelFormat: \
+			COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<elmType, COMPV_MAT_TYPE_PIXELS, COMPV_MAT_SUBTYPE_PIXELS_##pixelFormat>(mat, rows, cols))); \
 			return COMPV_ERROR_CODE_S_OK;
 #define COMPV_IMAGE_NEWOBJ_SWITCH(elmType, subType) \
 	switch (subType) { \

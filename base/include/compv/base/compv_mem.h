@@ -12,6 +12,8 @@
 
 #include "compv/base/parallel/compv_mutex.h"
 
+#include <map>
+
 COMPV_NAMESPACE_BEGIN()
 
 typedef struct compv_special_mem_s {
@@ -19,7 +21,7 @@ typedef struct compv_special_mem_s {
     size_t size;
     size_t alignment;
 public:
-    compv_special_mem_s() : addr(NULL), size(0), alignment(0) { }
+    compv_special_mem_s() : addr(0), size(0), alignment(0) { }
     compv_special_mem_s(uintptr_t _addr, size_t _size, size_t _alignment) {
         addr = _addr;
         size = _size;
@@ -66,14 +68,14 @@ private:
     static void specialsUnLock();
 
 private:
-    COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     static bool s_bInitialize;
     static std::map<uintptr_t, compv_special_mem_t > s_Specials;
     static CompVPtr<CompVMutex* >s_SpecialsMutex;
 	static void(*MemSetDword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
 	static void(*MemSetQword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
 	static void(*MemSetDQword)(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
-    COMPV_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

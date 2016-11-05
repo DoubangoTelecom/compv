@@ -44,11 +44,11 @@ private:
 	static bool s_bLoopRunning;
 	static int s_iGLVersionMajor;
 	static int s_iGLVersionMinor;
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static std::map<compv_window_id_t, CompVPtr<CompVWindow* > > m_sWindows;
 	static CompVPtr<CompVMutex* > s_WindowsMutex;
 	static CompVPtr<CompVThread* > s_WorkerThread;
-	COMPV_DISABLE_WARNINGS_END()
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

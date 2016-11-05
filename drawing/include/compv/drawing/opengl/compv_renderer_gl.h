@@ -9,10 +9,11 @@
 
 #include "compv/base/compv_config.h"
 #include "compv/drawing/opengl/compv_headers_gl.h"
-#if defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES)
+#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
+#include "compv/drawing/compv_renderer.h"
+#include "compv/drawing/opengl/compv_consts_gl.h"
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
-#include "compv/drawing/compv_renderer.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -39,9 +40,20 @@ public:
 
 	static COMPV_ERROR_CODE newObj(CompVRendererGLPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat, const CompVSurface* surface);
 
+protected:
+	COMPV_INLINE GLuint vertexBuffer() { return m_uVertexBuffer; }
+	COMPV_INLINE GLuint indiceBuffer() { return m_uIndiceBuffer; }
+	COMPV_INLINE GLuint indicesCount() { return sizeof(CompVGLTexture2DIndices) / sizeof(CompVGLTexture2DIndices[0]); }
+
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-	COMPV_DISABLE_WARNINGS_END()
+	COMPV_ERROR_CODE deInitBuffers();
+	COMPV_ERROR_CODE initBuffers();
+
+private:
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+	GLuint m_uVertexBuffer;
+	GLuint m_uIndiceBuffer;
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

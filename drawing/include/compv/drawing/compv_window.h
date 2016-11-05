@@ -54,14 +54,14 @@ protected:
 	COMPV_ERROR_CODE unregister();
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static compv_window_id_t s_nWindowId;
 	compv_thread_id_t m_WindowCreationThreadId;
 	int m_nWidth;
 	int m_nHeight;
 	std::string m_strTitle;
 	compv_window_id_t m_nId;
-	COMPV_DISABLE_WARNINGS_END()
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

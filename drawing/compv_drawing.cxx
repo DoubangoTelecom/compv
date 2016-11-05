@@ -65,7 +65,12 @@ COMPV_ERROR_CODE CompVDrawing::init()
 
 	/* SDL */
 #if defined(HAVE_SDL_H)
-#if 0
+	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+		COMPV_DEBUG_ERROR_EX("SDL", "SDL_Init failed: %s", SDL_GetError());
+		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SDL);
+	}
+	COMPV_DEBUG_INFO_EX("SDL", "SDL_Init succeeded");
+#if 0 // TODO(dmi)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 #endif
@@ -76,19 +81,15 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24); // because of 'GL_DEPTH24_STENCIL8'
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8); // Skia requires 8bits stencil
-#if defined(HAVE_OPENGL) && 0
+#if defined(HAVE_OPENGL) && 0 // TODO(dmi)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-#elif defined(HAVE_OPENGLES) && 0
+#elif defined(HAVE_OPENGLES) && 0 // TODO(dmi)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #endif
 #if 0 // TODO(dmi): allowing sotftware rendering fallback
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 #endif
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		COMPV_DEBUG_ERROR_EX("SDL", "SDL_Init failed: %s", SDL_GetError());
-		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SDL);
-	}
-	COMPV_DEBUG_INFO_EX("SDL", "SDL_Init succeeded");
+	
 	s_pSDLMainWindow = SDL_CreateWindow(
 		"Main window",
 		SDL_WINDOWPOS_UNDEFINED,
@@ -137,7 +138,7 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	extern COMPV_ERROR_CODE libjpegDecodeInfo(const char* filePath, CompVImageInfo& info);
 	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::setFuncPtrs(COMPV_IMAGE_FORMAT_JPEG, libjpegDecodeFile, libjpegDecodeInfo));
 #else
-	COMPV_DEBUG_INFO_EX(kModuleNameImageDecoder, "/!\\ No jpeg decoder found");
+	COMPV_DEBUG_INFO("/!\\ No jpeg decoder found");
 #endif
 
 	CompVDrawing::s_bInitialized = true;

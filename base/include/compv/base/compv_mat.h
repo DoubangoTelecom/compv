@@ -9,9 +9,11 @@
 
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_buffer.h"
+#include "compv/base/compv_mem.h"
 #include "compv/base/image/compv_image_utils.h"
 
 COMPV_NAMESPACE_BEGIN()
+COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Warray-bounds")
 
 class CompVMat;
 typedef CompVPtr<CompVMat* > CompVMatPtr;
@@ -52,6 +54,7 @@ public:
 		return NULL;
 	}
 
+	
 	template<int32_t compId = -1>
 	COMPV_INLINE size_t rows()const { // In samples
 		if (compId < 0) {
@@ -63,7 +66,7 @@ public:
 		COMPV_DEBUG_ERROR("Invalid parameter");
 		return 0;
 	}
-
+		
 	template<int32_t compId = -1>
 	COMPV_INLINE size_t cols()const { // In samples
 		if (compId < 0) {
@@ -158,6 +161,7 @@ protected:
 		size_t nCompCols[COMPV_MAT_MAX_COMP_COUNT];
 		size_t nCompRows[COMPV_MAT_MAX_COMP_COUNT];
 		size_t nCompSizeInBytes[COMPV_MAT_MAX_COMP_COUNT];
+		void* pMem = NULL;
 
 		nElmtInBytes = sizeof(elmType);
 		nBestStrideInBytes = stride ? (stride * nElmtInBytes) : static_cast<size_t>(CompVMem::alignForward((cols * nElmtInBytes), (int)alignv));
@@ -189,8 +193,7 @@ protected:
 		else {
 			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 		}
-
-		void* pMem = NULL;
+		
 		if (nNewDataSize > m_nDataCapacity) {
 			pMem = CompVMem::malloc(nNewDataSize);
 			COMPV_CHECK_EXP_BAIL(!pMem, (err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
@@ -237,8 +240,7 @@ protected:
 			m_nCompStrideInElts[compId] = (nCompStrideInBytes[compId] / nElmtInBytes);
 			m_bCompStrideInEltsIsIntegral[compId] = !(nCompStrideInBytes[compId] % nElmtInBytes);
 		}
-
-		(this);
+		
 	bail:
 		if (COMPV_ERROR_CODE_IS_NOK(err_)) {
 			CompVMem::free((void**)&pMem);
@@ -270,8 +272,7 @@ private:
 	COMPV_MAT_SUBTYPE m_eSubType;
 };
 
-
-
+COMPV_GCC_DISABLE_WARNINGS_END()
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_BASE_MAT_H_ */

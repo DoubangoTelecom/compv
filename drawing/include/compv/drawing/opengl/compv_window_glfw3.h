@@ -49,11 +49,11 @@ public:
 	static void GLFWwindowcloseCallback(GLFWwindow* window);
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	struct GLFWwindow *m_pGLFWwindow;
 	CompVMutexPtr m_GLFWMutex;
 	CompVProgramPtr m_Program;
-	COMPV_DISABLE_WARNINGS_END()
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

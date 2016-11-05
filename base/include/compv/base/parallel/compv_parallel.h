@@ -38,7 +38,7 @@ public:
 	static bool isInitializing();
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 #if COMPV_PARALLEL_THREADDISP11
 	static CompVPtr<CompVThreadDispatcher11 *> s_ThreadDisp11;
 #else
@@ -46,7 +46,7 @@ private:
 #endif	
 	static bool s_bInitialized;
 	static bool s_bInitializing;
-	COMPV_DISABLE_WARNINGS_END()
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

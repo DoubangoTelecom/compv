@@ -13,20 +13,25 @@
 #error("This is a private file and must not be part of the API")
 #endif
 
+/* GLEW */
 #if defined(HAVE_GL_GLEW_H)
 #	include <GL/glew.h>
 #endif
 
-#if COMPV_OS_ANDROID || COMPV_OS_IPHONE || COMPV_OS_IPHONE_SIMULATOR || defined(HAVE_OPENGLES_ES2_GL_H)
+/* OpenGL-ES 2 */
+#if COMPV_OS_ANDROID || (defined(HAVE_GLSES2_GL2_H) && defined(HAVE_GLSES2_GL2EXT_H))
+#	define HAVE_OPENGLES	1
+#	include <GLES2/gl2.h>
+#	include <GLES2/gl2ext.h>
+#endif 
+
+#if COMPV_OS_IPHONE || COMPV_OS_IPHONE_SIMULATOR || (defined(HAVE_OPENGLES_ES2_GL_H) && defined(HAVE_OPENGLES_ES2_GLEXT_H))
 #	define HAVE_OPENGLES	1
 #	include <OpenGLES/ES2/gl.h>
-#endif
-
-#if COMPV_OS_ANDROID || COMPV_OS_IPHONE || COMPV_OS_IPHONE_SIMULATOR || defined(HAVE_OPENGLES_ES2_GLEXT_H)
-#	define HAVE_OPENGLES	1
 #	include <OpenGLES/ES2/glext.h>
 #endif
 
+/* OpenGL */
 #if COMPV_OS_WINDOWS || (defined(HAVE_GL_GL_H) && defined(HAVE_GL_GLU_H))
 #	define HAVE_OPENGL	1
 #	include <GL/GL.h>
@@ -35,10 +40,17 @@
 #	define HAVE_OPENGL	1
 #	include <OpenGL/gl.h>
 #	include <OpenGL/glu.h>
-#elif COMPV_OS_LINUX || (defined(HAVE_GL_GL_H) && defined(HAVE_GL_GLU_H))
+#elif (COMPV_OS_LINUX && !COMPV_OS_ANDROID) || (defined(HAVE_GL_GL_H) && defined(HAVE_GL_GLU_H))
 #	define HAVE_OPENGL	1
 #	include <GL/gl.h>
 #	include <GL/glu.h>
 #endif
+
+/* EGL */
+#if COMPV_OS_ANDROID || (defined(HAVE_EGL_EGL_H) && defined(HAVE_EGL_EGLEXT_H))
+#	define HAVE_EGL		1
+#	include <EGL/egl.h>
+#	include <EGL/eglext.h>
+#endif 
 
 #endif /* _COMPV_DRAWING_OPENGL_HEADERS_GL_H_ */
