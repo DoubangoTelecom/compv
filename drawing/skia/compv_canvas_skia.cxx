@@ -54,19 +54,29 @@ static SkPath create_star() {
 
 COMPV_ERROR_CODE CompVCanvasSkia::test()
 {
-	GrContext *sContext = NULL;
+	//GrContext *sContext = NULL;
 	SkSurface *sSurface = NULL;
 
 	// setup GrContext
-	//SkAutoTUnref<const GrGLInterface> interf(GrGLCreateNativeInterface());
+	SkAutoTUnref<const GrGLInterface> interf(GrGLCreateNativeInterface());
 
 	// To use NVPR, comment this out
-	//interf.reset(GrGLInterfaceRemoveNVPR(interf));
-	//SkASSERT(interf);
+	interf.reset(GrGLInterfaceRemoveNVPR(interf));
+	SkASSERT(interf);
 
-	if (!sContext) {
-		sContext = GrContext::Create(kOpenGL_GrBackend, 0);
-	}
+	//SkAutoTUnref<const GrGLInterface> interface(GrGLCreateNativeInterface());
+
+	// To use NVPR, comment this out
+	//interface.reset(GrGLInterfaceRemoveNVPR(interface));
+	//SkASSERT(interface);
+
+	// setup contexts
+	SkAutoTUnref<GrContext> grContext(GrContext::Create(kOpenGL_GrBackend,
+		(GrBackendContext)interf.get()));
+
+	//if (!sContext) {
+	//	sContext = GrContext::Create(kOpenGL_GrBackend, 0);
+	//}
 
 #if 0
 	GrBackendRenderTargetDesc desc;
@@ -93,8 +103,13 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	GrBackendRenderTargetDesc desc;
 	static const int kStencilBits = 8;  // Skia needs 8 stencil bits
 	static const int kMsaaSampleCount = 0; //4;
+#if COMPV_OS_ANDROID
+	desc.fWidth = 1080;
+	desc.fHeight = 1776;
+#else
 	desc.fWidth = 640;
 	desc.fHeight = 480;
+#endif
 	desc.fConfig = kSkia8888_GrPixelConfig;
 	desc.fOrigin = kBottomLeft_GrSurfaceOrigin;
 	desc.fSampleCnt = kMsaaSampleCount;
@@ -102,8 +117,8 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	
 	GLint buffer;
 	glGetIntegerv(GLenum(GL_FRAMEBUFFER_BINDING), &buffer);
-	if (!buffer) {
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED_GPU();
+	if (buffer == 0) {
+		COMPV_DEBUG_WARN("Drawing to system buffer");
 	}
 	// GrGLint buffer;
 	//GR_GL_GetIntegerv(interf, GR_GL_FRAMEBUFFER_BINDING, &buffer);
@@ -116,9 +131,8 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	//                      SkSurfaceProps::kLegacyFontHost_InitType);
 	SkSurfaceProps props(SkSurfaceProps::kLegacyFontHost_InitType);
 
-
 	if (!sSurface) {
-		sSurface = SkSurface::MakeFromBackendRenderTarget(sContext, desc, &props).release();
+		sSurface = SkSurface::MakeFromBackendRenderTarget(grContext, desc, &props).release();
 	}
 	SkCanvas* canvas = NULL;
 	if (sSurface) {
@@ -139,8 +153,10 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	//canvas->clear(SK_ColorBLACK);
 #if 1
 	static int count = 0;
-	std::string outString = "Hello skia " + std::to_string(++count);
-	canvas->drawText(outString.c_str(), outString.length(), SkIntToScalar(10), SkIntToScalar(10), paint);
+	char buff_[33] = { 0 };
+	snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(++count));
+	std::string outString = "Hello skia " + std::string(buff_);
+	canvas->drawText(outString.c_str(), outString.length(), SkIntToScalar(50), SkIntToScalar(500), paint);
 #else
 	std::string outString = "Hello skia";
 	canvas->drawText(outString.c_str(),outString.length(), SkIntToScalar(100), SkIntToScalar(100), paint);
@@ -260,10 +276,10 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 		delete sSurface;
 		sSurface = NULL;
 	}
-	if (sContext) {
-		delete sContext;
-		sContext = NULL;
-	}
+	//if (sContext) {
+	//	delete sContext;
+	//	sContext = NULL;
+	//}
 
 	return COMPV_ERROR_CODE_S_OK;
 }

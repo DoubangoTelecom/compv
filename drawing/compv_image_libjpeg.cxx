@@ -6,7 +6,7 @@
 */
 #include "compv/drawing/compv_image_libjpeg.h"
 
-#if defined(HAVE_JPEGLIB_H) || defined(HAVE_SKIA)
+#if (defined(HAVE_JPEGLIB_H) || defined(HAVE_SKIA))
 
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_buffer.h"
@@ -18,6 +18,7 @@
 extern "C" {
 #include <jpeglib.h>
 }
+#include <setjmp.h>
 
 #define kModuleNameLibjpeg "libjpeg"
 #define kReadDataTrue	true

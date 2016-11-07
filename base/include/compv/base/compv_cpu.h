@@ -22,8 +22,9 @@ static const uint64_t kCpuFlagAMD = COMPV_CPU_FLAG_BIT(1);
 // These flags are only valid on ARM processors.
 static const uint64_t kCpuFlagARM = COMPV_CPU_FLAG_BIT(5);
 static const uint64_t kCpuFlagARM64 = COMPV_CPU_FLAG_BIT(6);
-static const uint64_t kCpuFlagNEON = COMPV_CPU_FLAG_BIT(7);
-// 0x8 reserved for future ARM flag.
+static const uint64_t kCpuFlagARM_NEON = COMPV_CPU_FLAG_BIT(7);
+static const uint64_t kCpuFlagARM_NEON_FMA = COMPV_CPU_FLAG_BIT(8);
+// 0x9 reserved for future ARM flag.
 
 // These flags are only valid on x86/x64 processors.
 static const uint64_t kCpuFlagX86 = COMPV_CPU_FLAG_BIT(10);

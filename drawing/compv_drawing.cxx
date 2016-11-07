@@ -24,6 +24,16 @@ int CompVDrawing::s_iGLVersionMinor = 0;
 std::map<compv_window_id_t, CompVPtr<CompVWindow* > > CompVDrawing::m_sWindows;
 CompVPtr<CompVMutex* > CompVDrawing::s_WindowsMutex = NULL;
 CompVPtr<CompVThread* > CompVDrawing::s_WorkerThread = NULL;
+#if COMPV_OS_ANDROID
+CompVDrawingAndroidEngine CompVDrawing::s_AndroidEngine = {
+	.animating = false,
+	.app = NULL,
+	.width = 0,
+	.height = 0,
+	.state = {.angle = 0.f,.x = 0, .y = 0 },
+	.worker_thread = { .run_fun  = NULL, .user_data  = NULL }
+};
+#endif /* COMPV_OS_ANDROID */
 
 #if HAVE_SDL_H
 static SDL_Window *s_pSDLMainWindow = NULL;
@@ -133,9 +143,9 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	COMPV_DEBUG_INFO("OpenGL extensions string: %s", glGetString(GL_EXTENSIONS));
 #endif /* SDL */
 
-#if defined(HAVE_JPEGLIB_H) || defined(HAVE_SKIA)
-	extern COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVMatPtrPtr mat);
-	extern COMPV_ERROR_CODE libjpegDecodeInfo(const char* filePath, CompVImageInfo& info);
+#if (defined(HAVE_JPEGLIB_H) || defined(HAVE_SKIA))
+	//extern COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVMatPtrPtr mat);
+	//extern COMPV_ERROR_CODE libjpegDecodeInfo(const char* filePath, CompVImageInfo& info);
 	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::setFuncPtrs(COMPV_IMAGE_FORMAT_JPEG, libjpegDecodeFile, libjpegDecodeInfo));
 #else
 	COMPV_DEBUG_INFO("/!\\ No jpeg decoder found");
@@ -214,7 +224,11 @@ size_t CompVDrawing::windowsCount()
 	return count;
 }
 
+#if COMPV_OS_ANDROID
+COMPV_ERROR_CODE CompVDrawing::runLoop(struct android_app* state, void *(COMPV_STDCALL *WorkerThread) (void *) /*= NULL*/, void *userData /*= NULL*/)
+#else
 COMPV_ERROR_CODE CompVDrawing::runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) /*= NULL*/, void *userData /*= NULL*/)
+#endif
 {
 	COMPV_CHECK_EXP_RETURN(!CompVDrawing::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	if (CompVDrawing::isLoopRunning()) {
@@ -229,11 +243,6 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(void *(COMPV_STDCALL *WorkerThread) (void
 	CompVDrawing::s_bLoopRunning = true;
 	compv_thread_id_t eventLoopThreadId = CompVThread::getIdCurrent();
 
-	// Run worker thread (s_bLoopRunning must be equal to true)
-	if (WorkerThread) {
-		COMPV_CHECK_CODE_BAIL(err = CompVThread::newObj(&CompVDrawing::s_WorkerThread, WorkerThread, userData));
-	}
-
 	// http://forum.lwjgl.org/index.php?topic=5836.0
 	// Context creation and using rules:
 	//There are 3 concepts you need to be aware of : (A)window / context creation(B) running the event loop that dispatches events for the window and(C) making the context current in a thread.
@@ -242,16 +251,46 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(void *(COMPV_STDCALL *WorkerThread) (void
 	//	- On Mac OS X, (A)and(B) must happen on the same thread, that must also be the main thread(thread 0).Again, (C)can happen on any thread.
 	COMPV_DEBUG_INFO("Running event loop on thread with id = %ld", (long)eventLoopThreadId);
 
-#if defined(HAVE_SDL_H)
-	SDL_Event sdlEvent;
+#if COMPV_OS_ANDROID
+	CompVDrawing::s_AndroidEngine.worker_thread.run_fun = WorkerThread;
+	CompVDrawing::s_AndroidEngine.worker_thread.user_data = userData;
+	COMPV_CHECK_CODE_BAIL(err = CompVDrawing::android_runLoop(state));
+#elif defined(HAVE_SDL_H)
+	if (WorkerThread) {
+		COMPV_CHECK_CODE_BAIL(err = CompVThread::newObj(&CompVDrawing::s_WorkerThread, WorkerThread, userData));
+	}
+	COMPV_CHECK_CODE_BAIL(err = CompVDrawing::sdl_runLoop());
+#else
+	if (WorkerThread) {
+		COMPV_CHECK_CODE_BAIL(err = CompVThread::newObj(&CompVDrawing::s_WorkerThread, WorkerThread, userData));
+	}
+	while (CompVDrawing::s_bLoopRunning) {
+		if (CompVDrawing::windowsCount() == 0) {
+			COMPV_DEBUG_INFO("No active windows in the event loop... breaking the loop");
+			goto bail;
+		}
+		CompVThread::sleep(1);
+	}
 #endif
+
+bail:
+	CompVDrawing::s_bLoopRunning = false;
+	CompVDrawing::s_WorkerThread = NULL;
+	return err;
+}
+
+#if defined(HAVE_SDL_H)
+COMPV_ERROR_CODE CompVDrawing::sdl_runLoop()
+{
+	SDL_Event sdlEvent;
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
 	while (CompVDrawing::s_bLoopRunning) {
 		if (CompVDrawing::windowsCount() == 0) {
 			COMPV_DEBUG_INFO("No active windows in the event loop... breaking the loop");
 			goto bail;
 		}
-#if defined(HAVE_SDL_H)
+
 		if (SDL_WaitEvent(&sdlEvent)) {
 			if (sdlEvent.type == SDL_QUIT) {
 				COMPV_DEBUG_INFO_EX("UI", "Quit called");
@@ -262,7 +301,7 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(void *(COMPV_STDCALL *WorkerThread) (void
 				if (window) {
 					CompVWindowPtr wind = static_cast<CompVWindow*>(SDL_GetWindowData(window, "This"));
 					if (wind) {
-						COMPV_CHECK_CODE_ASSERT(wind->close());
+						COMPV_CHECK_CODE_ASSERT(err = wind->close());
 					}
 				}
 			}
@@ -270,16 +309,146 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(void *(COMPV_STDCALL *WorkerThread) (void
 		else {
 			CompVDrawing::s_bLoopRunning = false;
 		}
-#else
-		CompVThread::sleep(1);
-#endif /* HAVE_SDL_H */
 	}
 
 bail:
-	CompVDrawing::s_bLoopRunning = false;
-	CompVDrawing::s_WorkerThread = NULL;
 	return err;
 }
+#endif /* HAVE_SDL_H */
+
+#if COMPV_OS_ANDROID
+
+// Process the next input event
+int32_t CompVDrawing::android_engine_handle_input(struct android_app* app, AInputEvent* event)
+{
+	CompVDrawingAndroidEngine* engine = static_cast<CompVDrawingAndroidEngine*>(app->userData);
+	if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
+		engine->state.x = AMotionEvent_getX(event, 0);
+		engine->state.y = AMotionEvent_getY(event, 0);
+		return 1;
+	}
+	return 0;
+}
+
+// Process the next main command
+void CompVDrawing::android_engine_handle_cmd(struct android_app* app, int32_t cmd)
+{
+	CompVDrawingAndroidEngine* engine = static_cast<CompVDrawingAndroidEngine*>(app->userData);
+	switch (cmd) {
+	case APP_CMD_SAVE_STATE:
+		// The system has asked us to save our current state.  Do so.
+		if (!engine->app->savedState) {
+			engine->app->savedState = CompVMem::malloc(sizeof(CompVDrawingAndroidSavedState));
+		}
+		*static_cast<CompVDrawingAndroidSavedState*>(engine->app->savedState) = engine->state;
+		engine->app->savedStateSize = sizeof(CompVDrawingAndroidSavedState);
+		break;
+	case APP_CMD_INIT_WINDOW:
+		// The window is being shown, get it ready.
+		if (engine->app->window != NULL) {
+			if (engine->worker_thread.run_fun) {
+				COMPV_CHECK_CODE_ASSERT(CompVThread::newObj(&CompVDrawing::s_WorkerThread, engine->worker_thread.run_fun, engine->worker_thread.user_data));
+			}
+			//engine_init_display(engine);
+			//engine_draw_frame(engine);
+		}
+		break;
+	case APP_CMD_TERM_WINDOW:
+		// The window is being hidden or closed, clean it up.
+		//engine_term_display(engine);
+		break;
+	case APP_CMD_GAINED_FOCUS:
+		// When our app gains focus, we start monitoring the accelerometer.
+		//if (engine->accelerometerSensor != NULL) {
+		//	ASensorEventQueue_enableSensor(engine->sensorEventQueue,
+		//		engine->accelerometerSensor);
+		//	// We'd like to get 60 events per second (in us).
+		//	ASensorEventQueue_setEventRate(engine->sensorEventQueue,
+		//		engine->accelerometerSensor, (1000L / 60) * 1000);
+		//}
+		break;
+	case APP_CMD_LOST_FOCUS:
+		// When our app loses focus, we stop monitoring the accelerometer.
+		// This is to avoid consuming battery while not being used.
+		//if (engine->accelerometerSensor != NULL) {
+		//	ASensorEventQueue_disableSensor(engine->sensorEventQueue,
+		//		engine->accelerometerSensor);
+		//}
+		// Also stop animating.
+		engine->animating = false;
+		//engine_draw_frame(engine);
+		break;
+	}
+}
+
+COMPV_ERROR_CODE CompVDrawing::android_runLoop(struct android_app* state)
+{
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	int ident;
+	int events;
+	struct android_poll_source* source;
+
+	state->userData = &CompVDrawing::s_AndroidEngine;
+	state->onAppCmd = CompVDrawing::android_engine_handle_cmd;
+	state->onInputEvent = CompVDrawing::android_engine_handle_input;
+	CompVDrawing::s_AndroidEngine.app = state;
+
+	CompVDrawing::s_AndroidEngine.animating = true;
+	while (CompVDrawing::s_bLoopRunning) {
+		if (CompVDrawing::windowsCount() == 0) {
+			COMPV_DEBUG_INFO("No active windows in the event loop... breaking the loop");
+			goto bail;
+		}
+		// Read all pending events.
+		// If not animating, we will block forever waiting for events.
+		// If animating, we loop until all events are read, then continue
+		// to draw the next frame of animation.
+		while ((ident = ALooper_pollAll(CompVDrawing::s_AndroidEngine.animating ? 0 : -1, NULL, &events, (void**)&source)) >= 0) { // FIXME(dmi): always wait forever?
+			// Process this event.
+			if (source != NULL) {
+				source->process(state, source);
+			}
+
+			// If a sensor has data, process it now.
+			//if (ident == LOOPER_ID_USER) {
+			//	if (CompVDrawing::s_AndroidEngine.accelerometerSensor != NULL) {
+			//		ASensorEvent event;
+			//		while (ASensorEventQueue_getEvents(engine.sensorEventQueue,
+			//			&event, 1) > 0) {
+			//			LOGI("accelerometer: x=%f y=%f z=%f",
+			//				event.acceleration.x, event.acceleration.y,
+			//				event.acceleration.z);
+			//		}
+			//	}
+			//}
+
+			// Check if we are exiting.
+			if (state->destroyRequested != 0) {
+				//engine_term_display(&engine);
+				goto bail;
+			}
+		}
+
+		if (CompVDrawing::s_AndroidEngine.animating) {
+			// Done with events; draw next animation frame.
+			//CompVDrawing::s_AndroidEngine.state.angle += .01f;
+			//if (CompVDrawing::s_AndroidEngine.state.angle > 1) {
+			//	CompVDrawing::s_AndroidEngine.state.angle = 0;
+			//}
+
+			// Drawing is throttled to the screen update rate, so there
+			// is no need to do timing here.
+			//engine_draw_frame(&engine);
+		}
+
+		// FIXME(dmi):
+		CompVThread::sleep(1);
+	}
+
+bail:
+	return err;
+}
+#endif /* COMPV_OS_ANDROID */
 
 COMPV_ERROR_CODE CompVDrawing::breakLoop()
 {

@@ -102,6 +102,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawText(const void* textPtr, size_t textLength
 {
 #if 1
 	COMPV_CHECK_EXP_RETURN(!textPtr || !textLengthInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_CODE_RETURN(initFrameBuffer());
 	
 	/*glPushAttrib(

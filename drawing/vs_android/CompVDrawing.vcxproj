@@ -35,6 +35,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\android\compv_android_native_activity.cxx" />
+    <ClCompile Include="..\android\compv_window_android_egl.cxx" />
     <ClCompile Include="..\compv_canvas.cxx" />
     <ClCompile Include="..\compv_drawing.cxx" />
     <ClCompile Include="..\compv_image_libjpeg.cxx" />
@@ -48,11 +50,14 @@
     <ClCompile Include="..\opengl\compv_renderer_gl_yuv.cxx" />
     <ClCompile Include="..\opengl\compv_surface_gl.cxx" />
     <ClCompile Include="..\opengl\compv_utils_gl.cxx" />
+    <ClCompile Include="..\opengl\compv_window_egl.cxx" />
     <ClCompile Include="..\opengl\compv_window_glfw3.cxx" />
     <ClCompile Include="..\sdl\compv_window_sdl.cxx" />
     <ClCompile Include="..\skia\compv_canvas_skia.cxx" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\compv\drawing\android\compv_android_native_activity.h" />
+    <ClInclude Include="..\include\compv\drawing\android\compv_window_android_egl.h" />
     <ClInclude Include="..\include\compv\drawing\compv_canvas.h" />
     <ClInclude Include="..\include\compv\drawing\compv_drawing.h" />
     <ClInclude Include="..\include\compv\drawing\compv_image_libjpeg.h" />
@@ -67,6 +72,7 @@
     <ClInclude Include="..\include\compv\drawing\opengl\compv_renderer_gl_yuv.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_surface_gl.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_utils_gl.h" />
+    <ClInclude Include="..\include\compv\drawing\opengl\compv_window_egl.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_window_glfw3.h" />
     <ClInclude Include="..\include\compv\drawing\sdl\compv_window_sdl.h" />
     <ClInclude Include="..\include\compv\drawing\skia\compv_canvas_skia.h" />
@@ -167,8 +173,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <PreprocessorDefinitions>HAVE_JPEGLIB_H;HAVE_SKIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -182,8 +189,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <PreprocessorDefinitions>HAVE_JPEGLIB_H;HAVE_SKIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -197,8 +205,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <PreprocessorDefinitions>HAVE_JPEGLIB_H;HAVE_SKIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -212,8 +221,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <PreprocessorDefinitions>HAVE_JPEGLIB_H;HAVE_SKIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -227,8 +237,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <PreprocessorDefinitions>HAVE_JPEGLIB_H;HAVE_SKIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -242,8 +253,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <PreprocessorDefinitions>HAVE_JPEGLIB_H;HAVE_SKIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -257,8 +269,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <PreprocessorDefinitions>HAVE_SKIA;HAVE_JPEGLIB_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -272,8 +285,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;../../thirdparties/include/common/skia-m55/libjpeg-turbo;../../thirdparties/include/common/skia-m55/skia/core;../../thirdparties/include/common/skia-m55/skia/config;../../thirdparties/include/common/skia-m55/skia/gpu;../../thirdparties/include/common/skia-m55/skia/utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <PreprocessorDefinitions>HAVE_JPEGLIB_H;HAVE_SKIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>

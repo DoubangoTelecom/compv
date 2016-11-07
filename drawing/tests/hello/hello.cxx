@@ -52,7 +52,7 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 	static int count = 0;
 	
 	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile("C:/Projects/GitHub/compv/deprecated/tests/girl.jpg", &mat[0]));
-	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile("C:/Projects/GitHub/compv/deprecated/tests/Valve_original.jpg", &mat[1]));
+	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile("C:/Projects/GitHub/compv/deprecated/tests/valve_original.jpg", &mat[1]));
 	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile("C:/Projects/GitHub/compv/deprecated/tests/mandekalou.jpg", &mat[2]));
 	while (CompVDrawing::isLoopRunning()) {
 		std::string text = "Hello Doubango " + std::to_string(count);

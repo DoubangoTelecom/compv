@@ -103,7 +103,7 @@ COMPV_ERROR_CODE CompVWindowSDL::beginDraw()
 	COMPV_CHECK_EXP_BAIL(m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
 	COMPV_CHECK_CODE_BAIL(err = makeGLContextCurrent());
 
-	// FIXME:
+	// FIXME: factor (same code in all window implementations)
 	glEnable(GL_TEXTURE_2D);
 	glDisable(GL_DEPTH_TEST); // Required by Skia, otherwise we'll need to use 'glPushAttrib(GL_ALL_ATTRIB_BITS); glPopAttrib();' before/after canvas drawing
 	glDisable(GL_BLEND);
@@ -111,12 +111,12 @@ COMPV_ERROR_CODE CompVWindowSDL::beginDraw()
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 	glClearStencil(0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+	//glMatrixMode(GL_PROJECTION);
+	//glLoadIdentity();
 	//gluOrtho2D((GLdouble)0, static_cast<GLdouble>(width), (GLdouble)0, static_cast<GLdouble>(height));
-	glOrtho((GLdouble)0, static_cast<GLdouble>(getWidth()), (GLdouble)0, static_cast<GLdouble>(getHeight()), (GLdouble)-1, (GLdouble)1);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	//glOrtho((GLdouble)0, static_cast<GLdouble>(getWidth()), (GLdouble)0, static_cast<GLdouble>(getHeight()), (GLdouble)-1, (GLdouble)1);
+	//glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity();
 
 	if (m_ptrSurface) {
 		surfaceBlit = dynamic_cast<CompVSurfaceBlit*>(*m_ptrSurface);
@@ -196,7 +196,7 @@ bail:
 // Private function: not thread-safe
 COMPV_ERROR_CODE CompVWindowSDL::makeGLContextCurrent()
 {
-	if (m_pSDLWindow) {
+	if (m_pSDLWindow) { // FIXME: if null return error
 		if (SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) != 0) {
 			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_SDL);
 		}
@@ -207,7 +207,7 @@ COMPV_ERROR_CODE CompVWindowSDL::makeGLContextCurrent()
 // Private function: not thread-safe
 COMPV_ERROR_CODE CompVWindowSDL::unmakeGLContextCurrent()
 {
-	if (m_pSDLWindow) {
+	if (m_pSDLWindow) { // FIXME: if null return error
 		if (SDL_GL_MakeCurrent(m_pSDLWindow, NULL) != 0) {
 			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_SDL);
 		}

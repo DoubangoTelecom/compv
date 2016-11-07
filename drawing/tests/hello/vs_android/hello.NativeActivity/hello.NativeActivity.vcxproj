@@ -144,11 +144,11 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../../android-native-app-glue;../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;SharedObject1</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
@@ -160,11 +160,11 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../../android-native-app-glue;../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;SharedObject1</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
@@ -176,12 +176,12 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../../android-native-app-glue;../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL</LibraryDependencies>
-      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);../../../../../thirdparties/libraries/android/skia-m55-armv7a-neon-release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
     </Link>
@@ -192,11 +192,11 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../../android-native-app-glue;../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;SharedObject1</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
@@ -208,11 +208,11 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../../android-native-app-glue;../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;SharedObject1</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
@@ -224,11 +224,11 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../../android-native-app-glue;../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;SharedObject1</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
@@ -240,11 +240,11 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../../android-native-app-glue;../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;SharedObject1</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
@@ -256,22 +256,18 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../../android-native-app-glue;../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../../api/include;../../../../../base/include;../../../../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;SharedObject1</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\android-native-app-glue\android_native_app_glue.c" />
     <ClCompile Include="main.cxx" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\android-native-app-glue\android_native_app_glue.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\base\vs_android\CompVBase.vcxproj">

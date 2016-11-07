@@ -8,7 +8,9 @@
 #include "compv/drawing/compv_drawing.h"
 
 #include "compv/drawing/opengl/compv_window_glfw3.h"
+#include "compv/drawing/opengl/compv_window_egl.h"
 #include "compv/drawing/sdl/compv_window_sdl.h"
+#include "compv/drawing/android/compv_window_android_egl.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -58,6 +60,15 @@ COMPV_ERROR_CODE CompVWindow::newObj(CompVWindowPtrPtr window, int width, int he
 		CompVWindowSDLPtr sdlWindow;
 		COMPV_CHECK_CODE_RETURN(CompVWindowSDL::newObj(&sdlWindow, width, height, title));
 		window_ = dynamic_cast<CompVWindow*>(*sdlWindow);
+	}
+#endif /* HAVE_SDL_H */
+
+	/* Create Android EGL window */
+#if COMPV_OS_ANDROID && defined(HAVE_EGL)
+	if (!window_) {
+		CompVWindowAndroidEGLPtr eglWindow;
+		COMPV_CHECK_CODE_RETURN(CompVWindowAndroidEGL::newObj(&eglWindow, width, height, title));
+		window_ = dynamic_cast<CompVWindow*>(*eglWindow);
 	}
 #endif /* HAVE_SDL_H */
 	

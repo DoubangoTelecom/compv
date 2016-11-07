@@ -22,6 +22,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVDrawing", "..\..\..\vs
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVBase", "..\..\..\..\base\vs_android\CompVBase.vcxproj", "{9320E994-AA59-49BA-AB64-F82AEDEC49A3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3CBD37D1-E778-4C7A-B537-1E2F7176E6B0}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\api\include\compv\compv_api.h = ..\..\..\..\api\include\compv\compv_api.h
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM

@@ -119,6 +119,15 @@
     </AntPackage>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Content Include="..\..\..\..\..\deprecated\tests\girl.jpg">
+      <Link>assets\girl.jpg</Link>
+    </Content>
+    <Content Include="..\..\..\..\..\deprecated\tests\mandekalou.jpg">
+      <Link>assets\mandekalou.jpg</Link>
+    </Content>
+    <Content Include="..\..\..\..\..\deprecated\tests\valve_original.jpg">
+      <Link>assets\valve_original.jpg</Link>
+    </Content>
     <Content Include="res\values\strings.xml" />
     <AntBuildXml Include="build.xml" />
     <AndroidManifest Include="AndroidManifest.xml">
@@ -128,6 +137,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\hello.NativeActivity\hello.NativeActivity.vcxproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="assets\" />
   </ItemGroup>
   <Import Project="$(AndroidTargetsPath)\Android.targets" />
   <ImportGroup Label="ExtensionTargets" />

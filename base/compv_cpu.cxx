@@ -109,7 +109,7 @@ static void CompVX86CpuId(uint32_t eax, uint32_t ecx, uint32_t* cpu_info)
 }
 #endif
 
-#if COMPV_ARCH_ARM
+#if COMPV_ARCH_ARM && !COMPV_OS_ANDROID
 static uint64_t CompVArmCaps(const char* cpuinfo_name)
 {
     char cpuinfo_line[1024];
@@ -117,20 +117,20 @@ static uint64_t CompVArmCaps(const char* cpuinfo_name)
     if (!f) {
         // Assume Neon if /proc/cpuinfo is unavailable.
         // This will occur for Chrome sandbox for Pepper or Render process.
-        return kCpuFlagNEON;
+        return kCpuFlagARM_NEON;
     }
     while (fgets(cpuinfo_line, sizeof(cpuinfo_line) - 1, f)) {
         if (memcmp(cpuinfo_line, "Features", 8) == 0) {
             char* p = strstr(cpuinfo_line, " neon");
             if (p && (p[5] == ' ' || p[5] == '\n')) {
                 fclose(f);
-                return kCpuFlagNEON;
+                return kCpuFlagARM_NEON;
             }
             // aarch64 uses asimd for Neon.
             p = strstr(cpuinfo_line, " asimd");
             if (p && (p[6] == ' ' || p[6] == '\n')) {
                 fclose(f);
-                return kCpuFlagNEON;
+                return kCpuFlagARM_NEON;
             }
         }
     }
@@ -277,8 +277,14 @@ COMPV_ERROR_CODE CompVCpu::init()
     }
 
 #elif defined(COMPV_ARCH_ARM) || defined(COMPV_ARCH_ARM64)
-    CompVCpu::s_uFlags = kCpuFlagARM;
+	CompVCpu::s_uFlags = kCpuFlagARM;
+#	if COMPV_OS_ANDROID
+	uint64_t android_flags = android_getCpuFeatures();
+	if (android_flags & ANDROID_CPU_ARM_FEATURE_NEON) CompVCpu::s_uFlags |= kCpuFlagARM_NEON;
+	if (android_flags & ANDROID_CPU_ARM_FEATURE_NEON_FMA) CompVCpu::s_uFlags |= kCpuFlagARM_NEON_FMA;
+#	else
     CompVCpu::s_uFlags |= CompVArmCaps("/proc/cpuinfo");
+#endif
 #elif defined(COMPV_ARCH_MIPS) && defined(__linux__)
     CompVCpu::s_uFlags = kCpuFlagMIPS;
     // Linux mips parse text file for dsp detect.
@@ -378,8 +384,9 @@ const char* CompVCpu::getFlagsAsString(uint64_t uFlags)
         // These flags are only valid on ARM processors.
         { kCpuFlagARM, "[arm]" },
         { kCpuFlagARM64, "[arm64]" },
-        { kCpuFlagNEON, "neon" },
-        // 0x8 reserved for future ARM flag.
+        { kCpuFlagARM_NEON, "neon" },
+		{ kCpuFlagARM_NEON_FMA, "neon-fma" },
+        // 0x9 reserved for future ARM flag.
 
         // These flags are only valid on x86/x64 processors.
         { kCpuFlagX86, "[x86]" },

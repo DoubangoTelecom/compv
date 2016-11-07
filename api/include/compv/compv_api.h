@@ -15,6 +15,7 @@
 #include <compv/base/compv_mem.h>
 #include <compv/base/compv_obj.h>
 
+#include <compv/base/image/compv_image.h>
 #include <compv/base/image/compv_image_decoder.h>
 
 #include <compv/base/parallel/compv_asynctask.h>
@@ -29,7 +30,7 @@
 /* Module: Drawing */
 #include <compv/drawing/compv_canvas.h>
 #include <compv/drawing/compv_drawing.h>
-
+#include <compv/drawing/android/compv_android_native_activity.h>
 
 COMPV_NAMESPACE_BEGIN()
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
