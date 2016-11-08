@@ -11,6 +11,10 @@
 
 #if COMPV_OS_ANDROID
 
+#if defined(_COMPV_API_H_)
+#error("This is a private file and must not be part of the API")
+#endif
+
 /*
 * Copyright (C) 2010 The Android Open Source Project
 * All rights reserved.

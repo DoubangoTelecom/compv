@@ -267,7 +267,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cxx" />
+    <ClCompile Include="..\..\hello.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\base\vs_android\CompVBase.vcxproj">

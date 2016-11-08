@@ -31,6 +31,12 @@
     <Filter Include="include\time">
       <UniqueIdentifier>{f7aba37b-d0bd-4c3f-a2ca-f3f12704546f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\android">
+      <UniqueIdentifier>{697a84e0-3177-44cd-9705-6244d13accbe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\android">
+      <UniqueIdentifier>{e0271f58-a1ac-460f-8f04-12a03cfe1de5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -114,8 +120,11 @@
     <ClCompile Include="..\time\compv_timer.cxx">
       <Filter>src\time</Filter>
     </ClCompile>
-    <ClCompile Include="..\compv_android_cpu-features.cxx">
-      <Filter>src</Filter>
+    <ClCompile Include="..\android\compv_android_cpu-features.cxx">
+      <Filter>src\android</Filter>
+    </ClCompile>
+    <ClCompile Include="..\android\compv_android_native_activity.cxx">
+      <Filter>src\android</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -206,8 +215,14 @@
     <ClInclude Include="..\include\compv\base\parallel\compv_threaddisp11.h">
       <Filter>include\parallel</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_android_cpu-features.h">
-      <Filter>include</Filter>
+    <ClInclude Include="..\include\compv\base\android\compv_android_cpu-features.h">
+      <Filter>include\android</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\android\compv_android_native_activity.h">
+      <Filter>include\android</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\android\compv_android_fileutils.h">
+      <Filter>include\android</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

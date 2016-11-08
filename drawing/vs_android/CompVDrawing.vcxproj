@@ -35,7 +35,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\android\compv_android_native_activity.cxx" />
     <ClCompile Include="..\android\compv_window_android_egl.cxx" />
     <ClCompile Include="..\compv_canvas.cxx" />
     <ClCompile Include="..\compv_drawing.cxx" />
@@ -56,7 +55,6 @@
     <ClCompile Include="..\skia\compv_canvas_skia.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\compv\drawing\android\compv_android_native_activity.h" />
     <ClInclude Include="..\include\compv\drawing\android\compv_window_android_egl.h" />
     <ClInclude Include="..\include\compv\drawing\compv_canvas.h" />
     <ClInclude Include="..\include\compv\drawing\compv_drawing.h" />

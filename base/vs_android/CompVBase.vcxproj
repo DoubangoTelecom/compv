@@ -35,7 +35,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\compv_android_cpu-features.cxx" />
+    <ClCompile Include="..\android\compv_android_cpu-features.cxx" />
+    <ClCompile Include="..\android\compv_android_native_activity.cxx" />
     <ClCompile Include="..\compv_base.cxx" />
     <ClCompile Include="..\compv_buffer.cxx" />
     <ClCompile Include="..\compv_common.cxx" />
@@ -65,7 +66,9 @@
     <ClCompile Include="..\time\compv_timer.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\compv\base\compv_android_cpu-features.h" />
+    <ClInclude Include="..\include\compv\base\android\compv_android_cpu-features.h" />
+    <ClInclude Include="..\include\compv\base\android\compv_android_fileutils.h" />
+    <ClInclude Include="..\include\compv\base\android\compv_android_native_activity.h" />
     <ClInclude Include="..\include\compv\base\compv_base.h" />
     <ClInclude Include="..\include\compv\base\compv_buffer.h" />
     <ClInclude Include="..\include\compv\base\compv_common.h" />

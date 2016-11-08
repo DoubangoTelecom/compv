@@ -12,8 +12,8 @@
 #include "compv/base/compv_obj.h"
 #include "compv/base/parallel/compv_mutex.h"
 #include "compv/base/parallel/compv_thread.h"
+#include "compv/base/android/compv_android_native_activity.h"
 #include "compv/drawing/compv_window.h"
-#include "compv/drawing/android/compv_android_native_activity.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -54,11 +54,7 @@ public:
 #endif
 
 	static size_t windowsCount();
-#if COMPV_OS_ANDROID
-	static COMPV_ERROR_CODE runLoop(struct android_app* state, void *(COMPV_STDCALL *WorkerThread) (void *) = NULL, void *userData = NULL);
-#else
 	static COMPV_ERROR_CODE runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) = NULL, void *userData = NULL);
-#endif
 	static COMPV_ERROR_CODE breakLoop();
 
 private:

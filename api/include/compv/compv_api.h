@@ -11,9 +11,12 @@
 #include <compv/base/compv_base.h>
 #include <compv/base/compv_buffer.h>
 #include <compv/base/compv_debug.h>
+#include <compv/base/compv_fileutils.h>
 #include <compv/base/compv_mat.h>
 #include <compv/base/compv_mem.h>
 #include <compv/base/compv_obj.h>
+
+#include <compv/base/android/compv_android_native_activity.h>
 
 #include <compv/base/image/compv_image.h>
 #include <compv/base/image/compv_image_decoder.h>
@@ -30,7 +33,28 @@
 /* Module: Drawing */
 #include <compv/drawing/compv_canvas.h>
 #include <compv/drawing/compv_drawing.h>
-#include <compv/drawing/android/compv_android_native_activity.h>
+
+/* Android native activity entry point */
+
+#if COMPV_OS_ANDROID && !defined(COMPV_ANDROID_NATIVE_ACTIVITY_ENTRY_POINT)
+#	define COMPV_ANDROID_NATIVE_ACTIVITY_ENTRY_POINT
+void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t savedStateSize) { 
+	ANativeActivity_onCreatePriv(activity, savedState, savedStateSize); 
+}
+#endif // COMPV_OS_ANDROID
+
+/* main definition */
+#if COMPV_OS_WINDOWS
+#	include <tchar.h>
+#	define compv_main() int _tmain(int argc, _TCHAR* argv[])
+#	define compv_main_return(code) return (code)
+#elif COMPV_OS_ANDROID
+#	define compv_main() void android_main(struct android_app* state)
+#	define compv_main_return(code) 
+#else
+#	define compv_main() int main(int argc, char** argv)
+#	define compv_main_return(code) return (code)
+#endif
 
 COMPV_NAMESPACE_BEGIN()
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")

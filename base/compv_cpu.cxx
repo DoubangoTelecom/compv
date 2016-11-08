@@ -9,7 +9,7 @@
 
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_debug.h"
-#include "compv/base/compv_android_cpu-features.h"
+#include "compv/base/android/compv_android_cpu-features.h"
 
 #if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC long long compv_utils_rdtsc_x86_asm();

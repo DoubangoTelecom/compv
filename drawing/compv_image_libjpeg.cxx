@@ -11,6 +11,7 @@
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_buffer.h"
 #include "compv/base/compv_debug.h"
+#include "compv/base/compv_fileutils.h"
 #include "compv/base/math/compv_math.h"
 #include "compv/base/image/compv_image.h"
 
@@ -106,7 +107,7 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
     * Note that this struct must live as long as the main JPEG parameter
     * struct, to avoid dangling-pointer problems.
     */
-    struct my_error_mgr jerr = { 0 };
+    struct my_error_mgr jerr = {  };
     /* More stuff */
     FILE * infile = NULL;		/* source file */
     JSAMPARRAY buffer = NULL;		/* Output row buffer */
@@ -125,7 +126,7 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
         COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     }
 
-    if ((infile = fopen(filename, "rb")) == NULL) {
+    if ((infile = CompVFileUtils::open(filename, "rb")) == NULL) {
         COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "Can't open %s", filename);
         COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_FAILED_TO_OPEN_FILE); // can safely return
     }

@@ -103,9 +103,10 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	GrBackendRenderTargetDesc desc;
 	static const int kStencilBits = 8;  // Skia needs 8 stencil bits
 	static const int kMsaaSampleCount = 0; //4;
+	// FIXME
 #if COMPV_OS_ANDROID
-	desc.fWidth = 1080;
-	desc.fHeight = 1776;
+	desc.fWidth = 1080; // FIXME
+	desc.fHeight = 1776; // FIXME
 #else
 	desc.fWidth = 640;
 	desc.fHeight = 480;
@@ -117,8 +118,8 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	
 	GLint buffer;
 	glGetIntegerv(GLenum(GL_FRAMEBUFFER_BINDING), &buffer);
-	if (buffer == 0) {
-		COMPV_DEBUG_WARN("Drawing to system buffer");
+	if (!buffer) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED_GPU();
 	}
 	// GrGLint buffer;
 	//GR_GL_GetIntegerv(interf, GR_GL_FRAMEBUFFER_BINDING, &buffer);
@@ -140,7 +141,7 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	}
 
 #if 1
-	//canvas->clear(SK_ColorBLACK);
+	//canvas->clear(rand()&1?SK_ColorWHITE: SK_ColorRED);
 
 	SkPaint paint;
 	paint.setFilterQuality(kLow_SkFilterQuality);
@@ -156,7 +157,7 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	char buff_[33] = { 0 };
 	snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(++count));
 	std::string outString = "Hello skia " + std::string(buff_);
-	canvas->drawText(outString.c_str(), outString.length(), SkIntToScalar(50), SkIntToScalar(500), paint);
+	canvas->drawText(outString.c_str(), outString.length(), SkIntToScalar(10), SkIntToScalar(10), paint);
 #else
 	std::string outString = "Hello skia";
 	canvas->drawText(outString.c_str(),outString.length(), SkIntToScalar(100), SkIntToScalar(100), paint);
@@ -177,8 +178,6 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	path.close();
 	canvas->translate(0.5f * scale, 0.5f * scale);
 	canvas->drawPath(path, paint);
-	
-	//canvas->drawPath(create_star(), paint);
 	
 	SkRect r(SkRect::MakeWH(200, 200));
 	paint.setARGB(200, 100, 100, 100);

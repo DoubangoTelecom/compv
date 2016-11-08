@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/base/compv_android_cpu-features.h"
+#include "compv/base/android/compv_android_cpu-features.h"
 
 #if COMPV_OS_ANDROID
 

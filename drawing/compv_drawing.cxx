@@ -10,6 +10,7 @@
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_mat.h"
 #include "compv/base/image/compv_image_decoder.h"
+#include "compv/base/android/compv_android_native_activity.h"
 
 #if defined(HAVE_SDL_H)
 #include <SDL.h>
@@ -224,11 +225,7 @@ size_t CompVDrawing::windowsCount()
 	return count;
 }
 
-#if COMPV_OS_ANDROID
-COMPV_ERROR_CODE CompVDrawing::runLoop(struct android_app* state, void *(COMPV_STDCALL *WorkerThread) (void *) /*= NULL*/, void *userData /*= NULL*/)
-#else
 COMPV_ERROR_CODE CompVDrawing::runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) /*= NULL*/, void *userData /*= NULL*/)
-#endif
 {
 	COMPV_CHECK_EXP_RETURN(!CompVDrawing::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	if (CompVDrawing::isLoopRunning()) {
@@ -254,7 +251,7 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(void *(COMPV_STDCALL *WorkerThread) (void
 #if COMPV_OS_ANDROID
 	CompVDrawing::s_AndroidEngine.worker_thread.run_fun = WorkerThread;
 	CompVDrawing::s_AndroidEngine.worker_thread.user_data = userData;
-	COMPV_CHECK_CODE_BAIL(err = CompVDrawing::android_runLoop(state));
+	COMPV_CHECK_CODE_BAIL(err = CompVDrawing::android_runLoop(AndroidApp_get()));
 #elif defined(HAVE_SDL_H)
 	if (WorkerThread) {
 		COMPV_CHECK_CODE_BAIL(err = CompVThread::newObj(&CompVDrawing::s_WorkerThread, WorkerThread, userData));
@@ -383,6 +380,7 @@ void CompVDrawing::android_engine_handle_cmd(struct android_app* app, int32_t cm
 
 COMPV_ERROR_CODE CompVDrawing::android_runLoop(struct android_app* state)
 {
+	COMPV_CHECK_EXP_RETURN(!state, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	int ident;
 	int events;

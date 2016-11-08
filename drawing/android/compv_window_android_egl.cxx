@@ -9,6 +9,9 @@
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/opengl/compv_headers_gl.h"
 
+// FIXME:
+#include "compv/drawing/opengl/compv_surface_gl.h"
+
 COMPV_NAMESPACE_BEGIN()
 
 // FIXME:factore this class to have an egl implementation for rasberrypi
@@ -49,8 +52,8 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::init()
 	EGLint major, minor;
 	EGLConfig config;
 	EGLint numConfigs;
-	EGLint format;
 	EGLint width, height;
+	int32_t result;
 
 	// Retrieve the window associated to the native activity
 	window = CompVDrawing::getAndroidNativeActivityWindow();
@@ -67,12 +70,17 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::init()
 
 	COMPV_CHECK_EXP_BAIL(eglChooseConfig(m_pEGLDisplay, CompVEGLAttribs, &config, 1, &numConfigs) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));	
 
-	/* EGL_NATIVE_VISUAL_ID is an attribute of the EGLConfig that is
-	* guaranteed to be accepted by ANativeWindow_setBuffersGeometry().
-	* As soon as we picked a EGLConfig, we can safely reconfigure the
-	* ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID. */
-	COMPV_CHECK_EXP_BAIL(eglGetConfigAttrib(m_pEGLDisplay, config, EGL_NATIVE_VISUAL_ID, &format) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));
-	ANativeWindow_setBuffersGeometry(window, 0, 0, format);
+	if ((result = ANativeWindow_setBuffersGeometry(window, 0, 0, WINDOW_FORMAT_RGBA_8888)) != 0) {
+		EGLint format;
+		COMPV_DEBUG_ERROR("ANativeWindow_setBuffersGeometry(WINDOW_FORMAT_RGBA_8888) failed with error code = %d", result);
+		/* EGL_NATIVE_VISUAL_ID is an attribute of the EGLConfig that is
+		* guaranteed to be accepted by ANativeWindow_setBuffersGeometry().
+		* As soon as we picked a EGLConfig, we can safely reconfigure the
+		* ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID. */
+		COMPV_CHECK_EXP_BAIL(eglGetConfigAttrib(m_pEGLDisplay, config, EGL_NATIVE_VISUAL_ID, &format) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));
+		COMPV_DEBUG_INFO("EGL_NATIVE_VISUAL_ID = %d", format);
+		COMPV_CHECK_EXP_BAIL((result = ANativeWindow_setBuffersGeometry(window, 0, 0, format)) != 0, (err = COMPV_ERROR_CODE_E_EGL));
+	}
 
 	// Create and initialize the surface
 	COMPV_CHECK_EXP_BAIL((m_pEGLSurface = eglCreateWindowSurface(m_pEGLDisplay, config, window, NULL)) == EGL_NO_SURFACE, (err = COMPV_ERROR_CODE_E_EGL));
@@ -139,7 +147,7 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::beginDraw()
 	COMPV_CHECK_CODE_BAIL(err = makeGLContextCurrent());
 
 	// FIXME: factor (same code in all window implementations)
-	glEnable(GL_TEXTURE_2D);
+	//glEnable(GL_TEXTURE_2D); // <process_gl_state_enables:519>: GL_INVALID_ENUM
 	glDisable(GL_DEPTH_TEST); // Required by Skia, otherwise we'll need to use 'glPushAttrib(GL_ALL_ATTRIB_BITS); glPopAttrib();' before/after canvas drawing
 	glDisable(GL_BLEND);
 	glViewport(0, 0, static_cast<GLsizei>(getWidth()), static_cast<GLsizei>(getHeight()));
@@ -169,10 +177,11 @@ bail:
 COMPV_ERROR_CODE CompVWindowAndroidEGL::endDraw()
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	CompVSurfaceBlit* surfaceBlit;
 	COMPV_CHECK_CODE_BAIL(err = m_ptrSDLMutex->lock());
 	COMPV_CHECK_EXP_BAIL(!m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
 
-	//CompVSurfaceBlit* surfaceBlit = dynamic_cast<CompVSurfaceBlit*>(*m_ptrSurface);
+	surfaceBlit = (CompVSurfaceBlit*)(*m_ptrSurface);
 
 	// FIXME:
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system
@@ -195,7 +204,11 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::endDraw()
 	glVertex2i(static_cast<GLint>(getWidth()), 0);
 	glEnd();*/
 
-	//COMPV_CHECK_CODE_BAIL(err = surfaceBlit->blit());
+#if 0 // FIXME(dmi): this is the correct code
+	COMPV_CHECK_CODE_BAIL(err = surfaceBlit->blit());
+#else
+	((CompVSurfaceGL*)*m_ptrSurface)->blit();
+#endif
 
 	//glBindTexture(GL_TEXTURE_2D, 0);
 

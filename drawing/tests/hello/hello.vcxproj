@@ -153,6 +153,22 @@
   <ItemGroup>
     <ClCompile Include="hello.cxx" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\deprecated\tests\girl.jpg" />
+    <Image Include="..\..\..\deprecated\tests\mandekalou.jpg" />
+    <Image Include="..\..\..\deprecated\tests\valve_original.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\..\deprecated\tests\girl.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\deprecated\tests\mandekalou.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\deprecated\tests\valve_original.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

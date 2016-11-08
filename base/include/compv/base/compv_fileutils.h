@@ -12,6 +12,8 @@
 #include "compv/base/compv_buffer.h"
 #include "compv/base/compv_common.h"
 
+#define COMPV_PATH_FROM_NAME(name) (CompVFileUtils::getFullPathFromFileName((name)).c_str())
+
 COMPV_NAMESPACE_BEGIN()
 
 class COMPV_BASE_API CompVFileUtils
@@ -20,12 +22,15 @@ private:
     CompVFileUtils();
 public:
     virtual ~CompVFileUtils();
+	static std::string getCurrentDirectory();
+	static std::string getFullPathFromFileName(const char* filename);
     static bool exists(const char* pcPath);
     static bool empty(const char* pcPath);
     static size_t getSize(const char* pcPath);
     static std::string getExt(const char* pcPath);
     static COMPV_IMAGE_FORMAT getImageFormat(const char* pcPath);
 	static COMPV_ERROR_CODE read(const char* pcPath, CompVBufferPtrPtr buffer);
+	static FILE* open(const char* fname, const char* mode);
 };
 
 COMPV_NAMESPACE_END()

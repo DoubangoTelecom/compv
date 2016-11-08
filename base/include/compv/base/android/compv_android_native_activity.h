@@ -339,6 +339,10 @@ extern "C" {
 	*/
 	void android_app_post_exec_cmd(struct android_app* android_app, int8_t cmd);
 	
+	struct android_app* AndroidApp_get();
+
+	ANativeActivity* ANativeActivity_get();
+
 	void ANativeActivity_onCreatePriv(ANativeActivity* activity,
 		void* savedState, size_t savedStateSize);
 
