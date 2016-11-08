@@ -1,0 +1,13 @@
+#### Windows Skia ###
+windows/skia-m55-win32-debug/*.lib
+windows/skia-m55-win32-release/*.lib
+windows/skia-m55-win64-debug/*.lib
+windows/skia-m55-win64-release/*.lib
+
+#### Android Skia ####
+android/skia-m55-arm64-release/*.a
+android/skia-m55-armv7a-neon-release/*.a
+android/skia-m55-mips64el-release/*.a
+android/skia-m55-mipsel-release/*.a
+android/skia-m55-x64-release/*.a
+android/skia-m55-x86-release/*.a
