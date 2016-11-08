@@ -50,7 +50,7 @@ COMPV_ERROR_CODE CompVWindow::newObj(CompVWindowPtrPtr window, int width, int he
 	if (!window_) {
 		CompVWindowGLFW3Ptr glfw3Window;
 		COMPV_CHECK_CODE_RETURN(CompVWindowGLFW3::newObj(&glfw3Window, width, height, title));
-		window_ = dynamic_cast<CompVWindow*>(*glfw3Window);
+		window_ = *glfw3Window;
 	}
 #endif /* HAVE_GLFW_GLFW3_H */
 
@@ -59,7 +59,7 @@ COMPV_ERROR_CODE CompVWindow::newObj(CompVWindowPtrPtr window, int width, int he
 	if (!window_) {
 		CompVWindowSDLPtr sdlWindow;
 		COMPV_CHECK_CODE_RETURN(CompVWindowSDL::newObj(&sdlWindow, width, height, title));
-		window_ = dynamic_cast<CompVWindow*>(*sdlWindow);
+		window_ = *sdlWindow;
 	}
 #endif /* HAVE_SDL_H */
 
@@ -68,7 +68,7 @@ COMPV_ERROR_CODE CompVWindow::newObj(CompVWindowPtrPtr window, int width, int he
 	if (!window_) {
 		CompVWindowAndroidEGLPtr eglWindow;
 		COMPV_CHECK_CODE_RETURN(CompVWindowAndroidEGL::newObj(&eglWindow, width, height, title));
-		window_ = dynamic_cast<CompVWindow*>(*eglWindow);
+		window_ = *eglWindow;
 	}
 #endif /* HAVE_SDL_H */
 	

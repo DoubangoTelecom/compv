@@ -9,7 +9,7 @@
 
 #include "compv/base/compv_config.h"
 #include "compv/drawing/opengl/compv_headers_gl.h"
-#if defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES)
+#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/opengl/compv_renderer_gl.h"
@@ -53,6 +53,6 @@ private:
 
 COMPV_NAMESPACE_END()
 
-#endif /* defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES) */
+#endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
 
 #endif /* _COMPV_DRAWING_RENDERER_GL_RGB_H_ */

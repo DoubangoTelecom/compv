@@ -7,9 +7,7 @@
 #include "compv/drawing/sdl/compv_window_sdl.h"
 #if defined(HAVE_SDL_H)
 #include "compv/drawing/compv_drawing.h"
-#include "compv/drawing/compv_canvas.h"
-
-#include "compv/drawing/opengl/compv_surface_gl.h"
+#include "compv/base/parallel/compv_thread.h"
 
 #if !defined(COMPV_SDL_DISABLE_GL)
 #	define COMPV_SDL_DISABLE_GL 0 // To test CPU drawing (no GL)
@@ -18,10 +16,9 @@
 COMPV_NAMESPACE_BEGIN()
 
 CompVWindowSDL::CompVWindowSDL(int width, int height, const char* title)
-	: CompVWindow(width, height, title)
+	: CompVWindowGL(width, height, title)
 	, m_pSDLWindow(NULL)
 	, m_pSDLContext(NULL)
-	, m_bDrawing(false)
 {
 #   if COMPV_OS_APPLE
 	if (!pthread_main_np()) {
@@ -53,7 +50,6 @@ CompVWindowSDL::CompVWindowSDL(int width, int height, const char* title)
 		COMPV_DEBUG_ERROR("SDL_GL_CreateContext() failed: %s", SDL_GetError());
 	}
 
-	COMPV_CHECK_CODE_ASSERT(CompVMutex::newObj(&m_ptrSDLMutex));
 	SDL_SetWindowData(m_pSDLWindow, "This", this);
 	if (m_pSDLContext) {
 		COMPV_ASSERT(SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) == 0);
@@ -68,20 +64,18 @@ CompVWindowSDL::~CompVWindowSDL()
 	COMPV_CHECK_CODE_ASSERT(close());
 }
 
+// Overrides 'CompVWindow::isClosed'
 bool CompVWindowSDL::isClosed()const
 {
 	return !m_pSDLWindow;
 }
 
+// Overrides 'CompVWindow::close'
 COMPV_ERROR_CODE CompVWindowSDL::close()
 {
+	CompVAutoLock<CompVWindowSDL>(this);
 	COMPV_CHECK_CODE_ASSERT(unregister());
-	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->lock());
 	if (m_pSDLContext) {
-		// GL Surface needs GLContext to deInit state
-		SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext);
-		m_ptrSurface = NULL;
-		SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
 		// Delete GL context
 		SDL_GL_DeleteContext(m_pSDLContext);
 		m_pSDLContext = NULL;
@@ -91,127 +85,32 @@ COMPV_ERROR_CODE CompVWindowSDL::close()
 		SDL_DestroyWindow(m_pSDLWindow);
 		m_pSDLWindow = NULL;
 	}
-	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVWindowSDL::beginDraw()
-{
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	CompVSurfaceBlit* surfaceBlit = NULL;
-	COMPV_CHECK_CODE_BAIL(err = m_ptrSDLMutex->lock());
-	COMPV_CHECK_EXP_BAIL(m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
-	COMPV_CHECK_CODE_BAIL(err = makeGLContextCurrent());
-
-	// FIXME: factor (same code in all window implementations)
-	glEnable(GL_TEXTURE_2D);
-	glDisable(GL_DEPTH_TEST); // Required by Skia, otherwise we'll need to use 'glPushAttrib(GL_ALL_ATTRIB_BITS); glPopAttrib();' before/after canvas drawing
-	glDisable(GL_BLEND);
-	glViewport(0, 0, static_cast<GLsizei>(getWidth()), static_cast<GLsizei>(getHeight()));
-	glClearColor(0.f, 0.f, 0.f, 1.f);
-	glClearStencil(0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	//glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-	//gluOrtho2D((GLdouble)0, static_cast<GLdouble>(width), (GLdouble)0, static_cast<GLdouble>(height));
-	//glOrtho((GLdouble)0, static_cast<GLdouble>(getWidth()), (GLdouble)0, static_cast<GLdouble>(getHeight()), (GLdouble)-1, (GLdouble)1);
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
-
-	if (m_ptrSurface) {
-		surfaceBlit = dynamic_cast<CompVSurfaceBlit*>(*m_ptrSurface);
-		if (surfaceBlit) {
-			COMPV_CHECK_CODE_BAIL(err = surfaceBlit->clear());
-		}
-	}
-
-	m_bDrawing = true;
-bail:
-	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
-	return err;
-}
-
-COMPV_ERROR_CODE CompVWindowSDL::endDraw()
-{
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	COMPV_CHECK_CODE_BAIL(err = m_ptrSDLMutex->lock());
-	COMPV_CHECK_EXP_BAIL(!m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
-
-	CompVSurfaceBlit* surfaceBlit = dynamic_cast<CompVSurfaceBlit*>(*m_ptrSurface);
-
-	// FIXME:
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system
-
-	//glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
-
-	//COMPV_CHECK_CODE_BAIL(err = surfaceBlit->blit());
-
-	/*glBegin(GL_QUADS);
-	glTexCoord2i(0, 0);
-	glVertex2i(0, 0);
-
-	glTexCoord2i(0, 1);
-	glVertex2i(0, static_cast<GLint>(getHeight()));
-
-	glTexCoord2i(1, 1);
-	glVertex2i(static_cast<GLint>(getWidth()), static_cast<GLint>(getHeight()));
-
-	glTexCoord2i(1, 0);
-	glVertex2i(static_cast<GLint>(getWidth()), 0);
-	glEnd();*/
-
-	COMPV_CHECK_CODE_BAIL(err = surfaceBlit->blit());
-
-	//glBindTexture(GL_TEXTURE_2D, 0);
-
-	if (m_pSDLWindow) {
-		SDL_GL_SwapWindow(m_pSDLWindow);
-	}
-
-bail:
-	m_bDrawing = false;
-	COMPV_CHECK_CODE_ASSERT(unmakeGLContextCurrent());
-	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
-	return err;
-}
-
-CompVSurfacePtr CompVWindowSDL::surface()
-{
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	COMPV_CHECK_CODE_BAIL(err = m_ptrSDLMutex->lock());
-	COMPV_CHECK_EXP_BAIL(!m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
-	if (!m_ptrSurface) {
-		// Create the surface
-		CompVSurfacePtr surface_;
-		COMPV_CHECK_CODE_BAIL(err = CompVSurface::newObj(&surface_, this));
-		// If GL activation (enabled/disabled) must be the same on both the window and surace
-		COMPV_CHECK_EXP_BAIL(isGLEnabled() != surface_->isGLEnabled(), err = COMPV_ERROR_CODE_E_INVALID_STATE);
-		m_ptrSurface = surface_;
-	}
-bail:
-	COMPV_CHECK_CODE_ASSERT(m_ptrSDLMutex->unlock());
-	return COMPV_ERROR_CODE_IS_OK(err) ? m_ptrSurface : NULL;
-}
-
-// Private function: not thread-safe
+// Overrides 'CompVWindowGL::makeGLContextCurrent'
 COMPV_ERROR_CODE CompVWindowSDL::makeGLContextCurrent()
 {
-	if (m_pSDLWindow) { // FIXME: if null return error
-		if (SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) != 0) {
-			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_SDL);
-		}
-	}
+	CompVAutoLock<CompVWindowSDL>(this);
+	COMPV_CHECK_EXP_RETURN(!m_pSDLWindow, COMPV_ERROR_CODE_E_INVALID_STATE);
+	COMPV_CHECK_EXP_RETURN(SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) != 0, COMPV_ERROR_CODE_E_SDL);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Private function: not thread-safe
+// Overrides 'CompVWindowGL::unmakeGLContextCurrent'
 COMPV_ERROR_CODE CompVWindowSDL::unmakeGLContextCurrent()
 {
-	if (m_pSDLWindow) { // FIXME: if null return error
-		if (SDL_GL_MakeCurrent(m_pSDLWindow, NULL) != 0) {
-			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_SDL);
-		}
-	}
+	CompVAutoLock<CompVWindowSDL>(this);
+	COMPV_CHECK_EXP_RETURN(!m_pSDLWindow, COMPV_ERROR_CODE_E_INVALID_STATE);
+	COMPV_CHECK_EXP_RETURN(SDL_GL_MakeCurrent(m_pSDLWindow, NULL) != 0, COMPV_ERROR_CODE_E_SDL);
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVWindowSDL::swapGLBuffers()
+{
+	CompVAutoLock<CompVWindowSDL>(this);
+	COMPV_CHECK_EXP_RETURN(!m_pSDLWindow, COMPV_ERROR_CODE_E_INVALID_STATE);
+	SDL_GL_SwapWindow(m_pSDLWindow);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -221,16 +120,16 @@ COMPV_ERROR_CODE CompVWindowSDL::newObj(CompVWindowSDLPtrPtr sdlWindow, int widt
 	COMPV_CHECK_EXP_RETURN(sdlWindow == NULL || width <= 0 || height <= 0 || !title || !::strlen(title), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVWindowSDLPtr sdlWindow_ = new CompVWindowSDL(width, height, title);
 	COMPV_CHECK_EXP_RETURN(!sdlWindow_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	COMPV_CHECK_EXP_RETURN(!sdlWindow_->isInitialized(), COMPV_ERROR_CODE_E_SYSTEM);
 	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_pSDLWindow, COMPV_ERROR_CODE_E_SDL);
-#if 0 // OpenGL could be unavailable -> CPU drawing fallback
+#if 1 // OpenGL could be unavailable -> CPU drawing fallback. TODO(dmi): For now OpenGL is required.
 	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_pSDLContext, COMPV_ERROR_CODE_E_SDL);
 #endif
-	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_ptrSDLMutex, COMPV_ERROR_CODE_E_SYSTEM);
 	*sdlWindow = sdlWindow_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// TODO(dmi): remove if not used
+// FIXME(dmi): remove if not used
 int CompVWindowSDL::FilterEvents(void *userdata, SDL_Event* event)
 {
 	/*if (event->type == SDL_WINDOWEVENT) {

@@ -35,7 +35,7 @@ COMPV_ERROR_CODE CompVRenderer::newObj(CompVRendererPtrPtr renderer, COMPV_PIXEL
 	if (surface->isGLEnabled()) {
 		CompVRendererGLPtr glRenderer;
 		COMPV_CHECK_CODE_RETURN(CompVRendererGL::newObj(&glRenderer, ePixelFormat, surface));
-		renderer_ = dynamic_cast<CompVRenderer*>(*glRenderer);
+		renderer_ = *glRenderer;
 	}
 #endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
 

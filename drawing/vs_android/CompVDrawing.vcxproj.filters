@@ -87,6 +87,9 @@
     <ClCompile Include="..\android\compv_window_android_egl.cxx">
       <Filter>src\android</Filter>
     </ClCompile>
+    <ClCompile Include="..\opengl\compv_window_gl.cxx">
+      <Filter>src\opengl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\drawing\compv_canvas.h">
@@ -145,6 +148,9 @@
     </ClInclude>
     <ClInclude Include="..\include\compv\drawing\android\compv_window_android_egl.h">
       <Filter>include\android</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\opengl\compv_window_gl.h">
+      <Filter>include\opengl</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

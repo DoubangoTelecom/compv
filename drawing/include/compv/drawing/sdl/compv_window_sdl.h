@@ -9,12 +9,8 @@
 
 #include "compv/base/compv_config.h"
 #if defined(HAVE_SDL_H)
+#include "compv/drawing/opengl/compv_window_gl.h"
 #include "compv/base/compv_common.h"
-#include "compv/drawing/compv_window.h"
-#include "compv/base/parallel/compv_thread.h"
-#include "compv/base/parallel/compv_mutex.h"
-
-#include <string>
 
 #include <SDL.h>
 
@@ -28,7 +24,7 @@ class CompVWindowSDL;
 typedef CompVPtr<CompVWindowSDL* > CompVWindowSDLPtr;
 typedef CompVWindowSDLPtr* CompVWindowSDLPtrPtr;
 
-class CompVWindowSDL : public CompVWindow
+class CompVWindowSDL : public CompVWindowGL
 {
 protected:
 	CompVWindowSDL(int width, int height, const char* title);
@@ -37,32 +33,28 @@ public:
 	virtual COMPV_INLINE const char* getObjectId() {
 		return "CompVWindowSDL";
 	};
-
-	COMPV_INLINE struct SDL_Window * getSDLWwindow()const { return m_pSDLWindow; }
 	
+	/* CompVWindow overrides */
 	virtual bool isClosed()const;
 	virtual COMPV_ERROR_CODE close();
-	virtual COMPV_ERROR_CODE beginDraw();
-	virtual COMPV_ERROR_CODE endDraw();
-	virtual CompVSurfacePtr surface();
+	// Override(CompVWindow::beginDraw) -> CompVWindowGL
+	// Override(CompVWindow::endDraw) -> CompVWindowGL
+	// Override(CompVWindow::surface) -> CompVWindowGL
 
 	static COMPV_ERROR_CODE newObj(CompVWindowSDLPtrPtr sdlWindow, int width, int height, const char* title);
 	static int FilterEvents(void *userdata, SDL_Event * event);
 
 protected:
-	virtual CompVGLContext getGLContext()const { return static_cast<CompVGLContext>(m_pSDLContext); }
-
-private:
-	COMPV_ERROR_CODE makeGLContextCurrent();
-	COMPV_ERROR_CODE unmakeGLContextCurrent();
+	/* CompVWindowGL overrides */
+	virtual CompVGLContext getGLContext()const { return static_cast<CompVGLContext>(m_pSDLContext); } // FIXME: CompVWindow override
+	virtual COMPV_ERROR_CODE makeGLContextCurrent();
+	virtual COMPV_ERROR_CODE unmakeGLContextCurrent();
+	virtual COMPV_ERROR_CODE swapGLBuffers();
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	SDL_Window *m_pSDLWindow;
 	SDL_GLContext m_pSDLContext;
-	CompVMutexPtr m_ptrSDLMutex;
-	CompVSurfacePtr m_ptrSurface;
-	bool m_bDrawing;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

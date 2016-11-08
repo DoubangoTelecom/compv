@@ -87,6 +87,9 @@
     <ClInclude Include="include\compv\drawing\opengl\compv_consts_gl.h">
       <Filter>Header Files\opengl</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\drawing\opengl\compv_window_gl.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_canvas.cxx">
@@ -136,6 +139,9 @@
     </ClCompile>
     <ClCompile Include="compv_renderer.cxx">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl\compv_window_gl.cxx">
+      <Filter>Source Files\opengl</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

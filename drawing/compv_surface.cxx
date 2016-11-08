@@ -32,13 +32,13 @@ COMPV_ERROR_CODE CompVSurface::newObj(CompVSurfacePtrPtr surface, const CompVWin
 	COMPV_CHECK_EXP_RETURN(!surface, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVSurfacePtr surface_;
 
-#if defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES)
+#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 	CompVSurfaceGLPtr glSurface_;
 	if (window->isGLEnabled()) {
 		COMPV_CHECK_CODE_RETURN(CompVSurfaceGL::newObj(&glSurface_, window));
-		surface_ = dynamic_cast<CompVSurface*>(*glSurface_);
+		surface_ = *glSurface_;
 	}
-#endif /* defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES) */
+#endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
 
 	COMPV_CHECK_EXP_RETURN(!(*surface = surface_), COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 

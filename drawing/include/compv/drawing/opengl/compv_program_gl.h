@@ -9,12 +9,10 @@
 
 #include "compv/base/compv_config.h"
 #include "compv/drawing/opengl/compv_headers_gl.h"
-#if defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES)
+#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_program.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_common.h"
-
-#include <vector>
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -62,6 +60,6 @@ private:
 
 COMPV_NAMESPACE_END()
 
-#endif /* defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES) */
+#endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
 
 #endif /* _COMPV_DRAWING_OPENGL_PROGRAM_GL_H_ */

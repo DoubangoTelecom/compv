@@ -221,4 +221,4 @@ COMPV_ERROR_CODE CompVRendererGLRgb::newObj(CompVRendererGLRgbPtrPtr glRgbRender
 
 COMPV_NAMESPACE_END()
 
-#endif /* defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES) */
+#endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */

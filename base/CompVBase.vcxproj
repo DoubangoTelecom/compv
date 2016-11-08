@@ -165,6 +165,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\compv\base\compv_autolock.h" />
     <ClInclude Include="include\compv\base\compv_base.h" />
     <ClInclude Include="include\compv\base\compv_buffer.h" />
     <ClInclude Include="include\compv\base\compv_common.h" />
@@ -213,6 +214,7 @@
     <ClInclude Include="include\compv\base\time\compv_timer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="compv_autolock.cxx" />
     <ClCompile Include="compv_base.cxx" />
     <ClCompile Include="compv_buffer.cxx" />
     <ClCompile Include="compv_common.cxx" />

@@ -57,15 +57,6 @@ private:
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
-// FIXME: different file and make sure not public API and rename to CompVSurfacePriv
-class CompVSurfaceBlit {
-public:
-	CompVSurfaceBlit() {  }
-	virtual ~CompVSurfaceBlit() { }
-	virtual COMPV_ERROR_CODE clear() = 0;
-	virtual COMPV_ERROR_CODE blit() = 0;
-};
-
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_DRAWING_SURFACE_H_ */

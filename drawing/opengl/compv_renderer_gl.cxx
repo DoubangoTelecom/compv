@@ -88,7 +88,7 @@ COMPV_ERROR_CODE CompVRendererGL::newObj(CompVRendererGLPtrPtr glRenderer, COMPV
 	{
 		CompVRendererGLRgbPtr glRgbRenderer_;
 		COMPV_CHECK_CODE_RETURN(CompVRendererGLRgb::newObj(&glRgbRenderer_, ePixelFormat, surface));
-		glRenderer_ = dynamic_cast<CompVRendererGL*>(*glRgbRenderer_);
+		glRenderer_ = *glRgbRenderer_;
 		break;
 	}
 	default:
@@ -102,4 +102,4 @@ COMPV_ERROR_CODE CompVRendererGL::newObj(CompVRendererGLPtrPtr glRenderer, COMPV
 
 COMPV_NAMESPACE_END()
 
-#endif /* defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES) */
+#endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */

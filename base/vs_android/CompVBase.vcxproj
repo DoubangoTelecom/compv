@@ -37,6 +37,7 @@
   <ItemGroup>
     <ClCompile Include="..\android\compv_android_cpu-features.cxx" />
     <ClCompile Include="..\android\compv_android_native_activity.cxx" />
+    <ClCompile Include="..\compv_autolock.cxx" />
     <ClCompile Include="..\compv_base.cxx" />
     <ClCompile Include="..\compv_buffer.cxx" />
     <ClCompile Include="..\compv_common.cxx" />
@@ -69,6 +70,7 @@
     <ClInclude Include="..\include\compv\base\android\compv_android_cpu-features.h" />
     <ClInclude Include="..\include\compv\base\android\compv_android_fileutils.h" />
     <ClInclude Include="..\include\compv\base\android\compv_android_native_activity.h" />
+    <ClInclude Include="..\include\compv\base\compv_autolock.h" />
     <ClInclude Include="..\include\compv\base\compv_base.h" />
     <ClInclude Include="..\include\compv\base\compv_buffer.h" />
     <ClInclude Include="..\include\compv\base\compv_common.h" />

@@ -41,7 +41,6 @@ COMPV_NAMESPACE_BEGIN()
 
 CompVSurfaceGL::CompVSurfaceGL(int width, int height)
 	: CompVSurface(width, height)
-	, CompVSurfaceBlit()
 	, m_uNameFrameBuffer(0)
 	, m_uNameTexture(0)
 	, m_uNameDepthStencil(0)
@@ -158,6 +157,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawText(const void* textPtr, size_t textLength
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+
 COMPV_ERROR_CODE CompVSurfaceGL::clear()
 {
 	if (m_uNameFrameBuffer) {
@@ -181,7 +181,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::blit()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system buffer
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
-	
+
 
 #if defined(HAVE_OPENGL) // FIXME
 	glBindVertexArray(m_uNameVAO);
@@ -206,7 +206,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::blit()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	COMPV_CHECK_CODE_RETURN(m_ptrProgram->useEnd());
-	
+
 #elif 1
 #if 0
 	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
@@ -220,12 +220,12 @@ COMPV_ERROR_CODE CompVSurfaceGL::blit()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // System's framebuffer
 #endif
 
-	// FIXME: check texture validity
+										  // FIXME: check texture validity
 
-	//drawToTexture();
-	
+										  //drawToTexture();
 
-	/* Text1 */
+
+										  /* Text1 */
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
 
@@ -242,8 +242,8 @@ COMPV_ERROR_CODE CompVSurfaceGL::blit()
 	glTexCoord2i(1, 0);
 	glVertex2i(static_cast<GLint>(getWidth()), 0);
 	glEnd();
-	
-	glBindTexture(GL_TEXTURE_2D, 0);	
+
+	glBindTexture(GL_TEXTURE_2D, 0);
 #endif
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -467,4 +467,4 @@ COMPV_ERROR_CODE CompVSurfaceGL::newObj(CompVSurfaceGLPtrPtr glSurface, const Co
 
 COMPV_NAMESPACE_END()
 
-#endif /* defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES) */
+#endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */

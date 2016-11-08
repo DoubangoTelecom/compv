@@ -58,6 +58,6 @@ private:
 
 COMPV_NAMESPACE_END()
 
-#endif /* defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES) */
+#endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
 
 #endif /* _COMPV_DRAWING_RENDERER_GL_H_ */

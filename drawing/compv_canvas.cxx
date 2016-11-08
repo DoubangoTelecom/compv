@@ -30,7 +30,7 @@ COMPV_ERROR_CODE CompVCanvas::newObj(CompVCanvasPtrPtr canvas)
 #if defined(HAVE_SKIA)
 	CompVCanvasSkiaPtr skiaCanvas;
 	COMPV_CHECK_CODE_RETURN(CompVCanvasSkia::newObj(&skiaCanvas));
-	canvas_ = dynamic_cast<CompVCanvas*>(*skiaCanvas);
+	canvas_ = *skiaCanvas;
 #endif /* HAVE_GLFW_GLFW3_H */
 
 	COMPV_CHECK_EXP_RETURN(!(*canvas = canvas_), COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);

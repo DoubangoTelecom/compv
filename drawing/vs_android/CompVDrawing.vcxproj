@@ -50,6 +50,7 @@
     <ClCompile Include="..\opengl\compv_surface_gl.cxx" />
     <ClCompile Include="..\opengl\compv_utils_gl.cxx" />
     <ClCompile Include="..\opengl\compv_window_egl.cxx" />
+    <ClCompile Include="..\opengl\compv_window_gl.cxx" />
     <ClCompile Include="..\opengl\compv_window_glfw3.cxx" />
     <ClCompile Include="..\sdl\compv_window_sdl.cxx" />
     <ClCompile Include="..\skia\compv_canvas_skia.cxx" />
@@ -71,6 +72,7 @@
     <ClInclude Include="..\include\compv\drawing\opengl\compv_surface_gl.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_utils_gl.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_window_egl.h" />
+    <ClInclude Include="..\include\compv\drawing\opengl\compv_window_gl.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_window_glfw3.h" />
     <ClInclude Include="..\include\compv\drawing\sdl\compv_window_sdl.h" />
     <ClInclude Include="..\include\compv\drawing\skia\compv_canvas_skia.h" />

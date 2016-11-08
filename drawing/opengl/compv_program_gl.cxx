@@ -151,4 +151,4 @@ COMPV_ERROR_CODE CompVProgramGL::newObj(CompVProgramGLPtrPtr program)
 
 COMPV_NAMESPACE_END()
 
-#endif /* defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES) */
+#endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */

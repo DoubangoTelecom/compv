@@ -26,11 +26,11 @@ COMPV_ERROR_CODE CompVProgram::newObj(CompVProgramPtrPtr program)
 	COMPV_CHECK_EXP_RETURN(!program, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVProgramPtr program_;
 
-#if defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES)
+#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 	CompVProgramGLPtr glProgram_;
 	COMPV_CHECK_CODE_RETURN(CompVProgramGL::newObj(&glProgram_));
-	program_ = dynamic_cast<CompVProgram*>(*glProgram_);
-#endif /* defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES) */
+	program_ = *glProgram_;
+#endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
 
 	COMPV_CHECK_EXP_RETURN(!(*program = program_), COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 	return COMPV_ERROR_CODE_S_OK;

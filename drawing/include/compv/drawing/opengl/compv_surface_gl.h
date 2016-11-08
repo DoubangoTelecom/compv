@@ -9,7 +9,7 @@
 
 #include "compv/base/compv_config.h"
 #include "compv/drawing/opengl/compv_headers_gl.h"
-#if defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES)
+#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/compv_surface.h"
@@ -28,7 +28,7 @@ class CompVSurfaceGL;
 typedef CompVPtr<CompVSurfaceGL* > CompVSurfaceGLPtr;
 typedef CompVSurfaceGLPtr* CompVSurfaceGLPtrPtr;
 
-class CompVSurfaceGL : public CompVSurface, public CompVSurfaceBlit
+class CompVSurfaceGL : public CompVSurface
 {
 protected:
 	CompVSurfaceGL(int width, int height);
@@ -40,11 +40,12 @@ public:
 
 	virtual bool isGLEnabled()const { return true; };
 
+	// Overrides(CompVSurface)
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
 	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes);
 
-	virtual COMPV_ERROR_CODE clear();
-	virtual COMPV_ERROR_CODE blit();
+	COMPV_ERROR_CODE clear();
+	COMPV_ERROR_CODE blit();
 
 	static COMPV_ERROR_CODE newObj(CompVSurfaceGLPtrPtr glSurface, const CompVWindow* window);
 
@@ -73,6 +74,6 @@ private:
 
 COMPV_NAMESPACE_END()
 
-#endif /* defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES) */
+#endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
 
 #endif /* _COMPV_DRAWING_SURFACE_GL_H_ */

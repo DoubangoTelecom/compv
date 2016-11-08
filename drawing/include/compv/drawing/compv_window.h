@@ -42,7 +42,7 @@ public:
 	COMPV_INLINE bool isGLEnabled()const { return getGLContext() != NULL; }
     
 	virtual bool isClosed()const = 0;
-	
+	virtual bool isDrawing()const = 0;
     virtual COMPV_ERROR_CODE close() = 0;
 	virtual COMPV_ERROR_CODE beginDraw() = 0;
 	virtual COMPV_ERROR_CODE endDraw() = 0;
