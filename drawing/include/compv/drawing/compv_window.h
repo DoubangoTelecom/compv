@@ -46,7 +46,11 @@ public:
     virtual COMPV_ERROR_CODE close() = 0;
 	virtual COMPV_ERROR_CODE beginDraw() = 0;
 	virtual COMPV_ERROR_CODE endDraw() = 0;
-	virtual CompVSurfacePtr surface() = 0;
+	virtual size_t numSurface() = 0;
+	virtual COMPV_ERROR_CODE removeAllSurfaces() = 0;
+	virtual COMPV_ERROR_CODE addSurface() = 0;
+	virtual COMPV_ERROR_CODE removeSurface(size_t index) = 0;
+	virtual CompVSurfacePtr surface(size_t index = 0) = 0;
 	static COMPV_ERROR_CODE newObj(CompVWindowPtrPtr window, int width, int height, const char* title = "Unknown");
 
 protected:

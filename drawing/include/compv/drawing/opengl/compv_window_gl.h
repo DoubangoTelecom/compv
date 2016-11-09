@@ -17,6 +17,8 @@
 #include "compv/base/parallel/compv_mutex.h"
 #include "compv/base/compv_autolock.h"
 
+#include <vector>
+
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
 #endif
@@ -43,7 +45,11 @@ public:
 	virtual bool isDrawing()const { return m_bDrawing;  }
 	virtual COMPV_ERROR_CODE beginDraw();
 	virtual COMPV_ERROR_CODE endDraw();
-	virtual CompVSurfacePtr surface();
+	virtual size_t numSurface();
+	virtual COMPV_ERROR_CODE removeAllSurfaces();
+	virtual COMPV_ERROR_CODE addSurface();
+	virtual COMPV_ERROR_CODE removeSurface(size_t index);
+	virtual CompVSurfacePtr surface(size_t index = 0);
 
 protected:
 	virtual COMPV_ERROR_CODE makeGLContextCurrent() = 0;
@@ -53,7 +59,7 @@ protected:
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	bool m_bDrawing;
-	CompVSurfaceGLPtr m_ptrGLSurface;
+	std::vector<CompVSurfaceGLPtr > m_vecGLSurfaces;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

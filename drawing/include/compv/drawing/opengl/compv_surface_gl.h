@@ -41,6 +41,7 @@ public:
 	virtual bool isGLEnabled()const { return true; };
 
 	// Overrides(CompVSurface)
+	virtual COMPV_ERROR_CODE setViewPort(int x, int y, int width = -1, int height = -1);
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
 	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes);
 

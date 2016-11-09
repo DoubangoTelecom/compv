@@ -32,3 +32,6 @@ ninja -C out/Release_x64
 If you get 'bash\r: No such file or directory' on OSX: Reconfigure git to ignore rewriting endlines: git config --global core.autocrlf false
 
 If you get 'python: /lib64/libc.so.6: version `GLIBC_2.14' not found (required by python)' on CentOS6: http://unix.stackexchange.com/questions/176489/how-to-update-glibc-to-2-14-in-centos-6-5
+
+***** Android *****
+gn gen out/arm --args='ndk="/Users/mamadou/Documents/android-ndk-r11c” target_cpu="arm" target_os="android" is_debug=false ndk_api=18'

@@ -48,13 +48,29 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile(COMPV_PATH_FROM_NAME("girl.jpg"), &mat[0]));
 	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile(COMPV_PATH_FROM_NAME("valve_original.jpg"), &mat[1]));
 	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile(COMPV_PATH_FROM_NAME("mandekalou.jpg"), &mat[2]));
+
+	COMPV_CHECK_CODE_BAIL(err = window->addSurface());
+	//COMPV_CHECK_CODE_BAIL(err = window->addSurface());
+	//COMPV_CHECK_CODE_BAIL(err = window->addSurface());
+
+	COMPV_CHECK_CODE_BAIL(err = window->surface(0)->setViewPort(0, 0, 640/2, 480/2));
+	//COMPV_CHECK_CODE_BAIL(err = window->surface(1)->setViewPort(100, 100, 100, 100));
+	//COMPV_CHECK_CODE_BAIL(err = window->surface(2)->setViewPort(200, 200, 100, 100));
+
 	while (CompVDrawing::isLoopRunning()) {
 		snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(count));
 		std::string text = "Hello Doubango " + std::string(buff_);
-		COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window->beginDraw()) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
-		COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window->surface()->drawImage(mat[count % 3])) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
-		COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window->surface()->drawText(text.c_str(), text.length())) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
-		COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window->endDraw()) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
+		COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
+		//COMPV_CHECK_CODE_BAIL(err = window->surface(0)->drawImage(mat[(count + 0) % 3]));
+		COMPV_CHECK_CODE_BAIL(err = window->surface(0)->drawText(text.c_str(), text.length()));
+		//COMPV_CHECK_CODE_BAIL(err = window->surface(1)->drawImage(mat[(count + 1) % 3]));
+		//COMPV_CHECK_CODE_BAIL(err = window->surface(2)->drawImage(mat[(count + 2) % 3]));
+		COMPV_CHECK_CODE_BAIL(err = window->endDraw());
+
+		//COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window->beginDraw()) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
+		//COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window->surface()->drawImage(mat[count % 3])) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
+		//COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window->surface()->drawText(text.c_str(), text.length())) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
+		//COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window->endDraw()) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
 
 		++count;
 		

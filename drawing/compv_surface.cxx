@@ -26,6 +26,15 @@ CompVSurface::~CompVSurface()
 
 }
 
+COMPV_ERROR_CODE CompVSurface::setViewPort(int x, int y, int width /*= -1*/, int height /*= -1*/)
+{
+	m_Viewport.x = x;
+	m_Viewport.y = y;
+	m_Viewport.width = width;
+	m_Viewport.height = height;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVSurface::newObj(CompVSurfacePtrPtr surface, const CompVWindow* window)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());

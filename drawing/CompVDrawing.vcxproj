@@ -163,6 +163,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\drawing\compv_canvas.h" />
+    <ClInclude Include="include\compv\drawing\compv_common.h" />
     <ClInclude Include="include\compv\drawing\compv_drawing.h" />
     <ClInclude Include="include\compv\drawing\compv_image_libjpeg.h" />
     <ClInclude Include="include\compv\drawing\compv_program.h" />
