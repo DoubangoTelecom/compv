@@ -39,10 +39,12 @@
     <ClCompile Include="..\compv_canvas.cxx" />
     <ClCompile Include="..\compv_drawing.cxx" />
     <ClCompile Include="..\compv_image_libjpeg.cxx" />
+    <ClCompile Include="..\compv_mvp.cxx" />
     <ClCompile Include="..\compv_program.cxx" />
     <ClCompile Include="..\compv_renderer.cxx" />
     <ClCompile Include="..\compv_surface.cxx" />
     <ClCompile Include="..\compv_window.cxx" />
+    <ClCompile Include="..\opengl\compv_mvp_glm.cxx" />
     <ClCompile Include="..\opengl\compv_program_gl.cxx" />
     <ClCompile Include="..\opengl\compv_renderer_gl.cxx" />
     <ClCompile Include="..\opengl\compv_renderer_gl_rgb.cxx" />
@@ -60,11 +62,13 @@
     <ClInclude Include="..\include\compv\drawing\compv_canvas.h" />
     <ClInclude Include="..\include\compv\drawing\compv_drawing.h" />
     <ClInclude Include="..\include\compv\drawing\compv_image_libjpeg.h" />
+    <ClInclude Include="..\include\compv\drawing\compv_mvp.h" />
     <ClInclude Include="..\include\compv\drawing\compv_program.h" />
     <ClInclude Include="..\include\compv\drawing\compv_renderer.h" />
     <ClInclude Include="..\include\compv\drawing\compv_surface.h" />
     <ClInclude Include="..\include\compv\drawing\compv_window.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_headers_gl.h" />
+    <ClInclude Include="..\include\compv\drawing\opengl\compv_mvp_glm.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_program_gl.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_renderer_gl.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_renderer_gl_rgb.h" />

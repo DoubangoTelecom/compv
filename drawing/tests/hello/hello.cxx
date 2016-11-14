@@ -19,6 +19,7 @@ compv_main()
 	// Create "Hello world!" window
 	COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window, 640, 480, "Hello world!"));
 
+	// Start ui runloop
 	COMPV_CHECK_CODE_BAIL(err = CompVDrawing::runLoop(WorkerThread));
 
 bail:
@@ -53,9 +54,8 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 	//COMPV_CHECK_CODE_BAIL(err = window->addSurface());
 	//COMPV_CHECK_CODE_BAIL(err = window->addSurface());
 
-	//COMPV_CHECK_CODE_BAIL(err = window->surface(0)->setViewPort(0, 0, 640/2, 480/2));
-	//COMPV_CHECK_CODE_BAIL(err = window->surface(1)->setViewPort(100, 100, 100, 100));
-	//COMPV_CHECK_CODE_BAIL(err = window->surface(2)->setViewPort(200, 200, 100, 100));
+	COMPV_CHECK_CODE_BAIL(err = window->surface(0)->MVP()->view()->setUpPos(CompVDrawingVec3f(0.f, 1.f, 0.f)));
+	// COMPV_CHECK_CODE_BAIL(err = window->surface(0)->MVP()->model()->matrix()->translate(CompVDrawingVec3f(1.0f, 0.f, 0.f)));
 
 	while (CompVDrawing::isLoopRunning()) {
 		snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(count));
@@ -66,8 +66,6 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 		//COMPV_CHECK_CODE_BAIL(err = window->surface(1)->drawImage(mat[(count + 1) % 3]));
 		//COMPV_CHECK_CODE_BAIL(err = window->surface(2)->drawImage(mat[(count + 2) % 3]));
 		COMPV_CHECK_CODE_BAIL(err = window->endDraw());
-
-		COMPV_CHECK_CODE_BAIL(err = window->surface(0)->MVP()->view()->setUpPos(CompVDrawingVec3f(0.f, -1.f, 0.f)));
 
 		//COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window->beginDraw()) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
 		//COMPV_CHECK_EXP_BAIL(COMPV_ERROR_CODE_IS_NOK(err = window->surface()->drawImage(mat[count % 3])) && err != COMPV_ERROR_CODE_W_WINDOW_CLOSED, err);
