@@ -61,7 +61,7 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 		snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(count));
 		std::string text = "Hello Doubango " + std::string(buff_);
 		COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
-		COMPV_CHECK_CODE_BAIL(err = window->surface(0)->drawImage(mat[(count + 0) % 3]));
+		COMPV_CHECK_CODE_BAIL(err = window->surface(0)->drawImage(mat[0/*(count + 0) % 3*/]));
 		COMPV_CHECK_CODE_BAIL(err = window->surface(0)->drawText(text.c_str(), text.length()));
 		//COMPV_CHECK_CODE_BAIL(err = window->surface(1)->drawImage(mat[(count + 1) % 3]));
 		//COMPV_CHECK_CODE_BAIL(err = window->surface(2)->drawImage(mat[(count + 2) % 3]));
