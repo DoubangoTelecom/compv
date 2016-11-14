@@ -30,9 +30,7 @@ protected:
 	CompVProgramGL();
 public:
 	virtual ~CompVProgramGL();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVProgramGL";
-	};
+	COMPV_GET_OBJECT_ID("CompVProgramGL");
 
 	virtual COMPV_ERROR_CODE shadAttachVertexFile(const char* pcFilePath);
 	virtual COMPV_ERROR_CODE shadAttachFragmentFile(const char* pcFilePath);

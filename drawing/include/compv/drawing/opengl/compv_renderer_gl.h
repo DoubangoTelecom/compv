@@ -12,6 +12,7 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_renderer.h"
 #include "compv/drawing/opengl/compv_consts_gl.h"
+#include "compv/drawing/compv_program.h"
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
 
@@ -28,31 +29,40 @@ typedef CompVRendererGLPtr* CompVRendererGLPtrPtr;
 class CompVRendererGL : public CompVRenderer
 {
 protected:
-	CompVRendererGL(COMPV_PIXEL_FORMAT ePixelFormat);
+	CompVRendererGL(COMPV_PIXEL_FORMAT ePixelFormat, GLuint uNameSurfaceTexture);
 public:
 	virtual ~CompVRendererGL();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVRendererGL";
-	};
+	COMPV_GET_OBJECT_ID("CompVRendererGL");
 
 	virtual bool isGLEnabled()const { return true; };
-	virtual COMPV_ERROR_CODE render(CompVMatPtr mat) { COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED); return COMPV_ERROR_CODE_S_OK; }
 
-	static COMPV_ERROR_CODE newObj(CompVRendererGLPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat, const CompVSurface* surface);
+	static COMPV_ERROR_CODE newObj(CompVRendererGLPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat, GLuint uNameSurfaceTexture);
 
 protected:
-	COMPV_INLINE GLuint vertexBuffer() { return m_uVertexBuffer; }
-	COMPV_INLINE GLuint indiceBuffer() { return m_uIndiceBuffer; }
-	COMPV_INLINE GLuint indicesCount() { return sizeof(CompVGLTexture2DIndices) / sizeof(CompVGLTexture2DIndices[0]); }
-
-private:
-	COMPV_ERROR_CODE deInitBuffers();
-	COMPV_ERROR_CODE initBuffers();
+	virtual CompVProgramPtr program() { return m_ptrProgram; }
+	virtual const std::string& programVertexData()const = 0;
+	virtual const std::string& programFragData()const = 0;
+	virtual GLuint nameVertexBuffer()const { return m_uNameVertexBuffer; }
+	virtual GLuint nameIndiceBuffer()const { return m_uNameIndiceBuffer; }
+	virtual GLuint namePrgAttPosition()const { return m_uNamePrgAttPosition; }
+	virtual GLuint namePrgAttTexCoord()const { return m_uNamePrgAttTexCoord; }
+	virtual GLuint nameSurfaceTexture()const { return m_uNameSurfaceTexture;  }
+	virtual GLuint indicesCount()const { return sizeof(CompVGLTexture2DIndices) / sizeof(CompVGLTexture2DIndices[0]); }
+	virtual COMPV_ERROR_CODE bindBuffers();
+	virtual COMPV_ERROR_CODE unbindBuffers();
+	virtual COMPV_ERROR_CODE deInit();
+	virtual COMPV_ERROR_CODE init(CompVMatPtr mat);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	GLuint m_uVertexBuffer;
-	GLuint m_uIndiceBuffer;
+	bool m_bInit;
+	GLuint m_uNameSurfaceTexture;
+	CompVGLVertex m_Vertices[4];
+	GLuint m_uNameVertexBuffer;
+	GLuint m_uNameIndiceBuffer;
+	GLuint m_uNamePrgAttPosition;
+	GLuint m_uNamePrgAttTexCoord;
+	CompVProgramPtr m_ptrProgram;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

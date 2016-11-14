@@ -78,18 +78,18 @@ CompVMVPPtr CompVSurfaceGL::MVP()
 COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat)
 {
 #if 1
-	COMPV_CHECK_EXP_RETURN(!mat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_CODE_RETURN(initFrameBuffer());
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
-	// FIXME: remove if 'm_uNameFrameBuffer' is passed as parameter
+	// FIXME(dmi): remove if 'm_uNameFrameBuffer' is passed as parameter
 	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer); // Draw to framebuffer
-	
-	// FIXME: Make sure Renderer has different format than mat and print perf issue message
-	if (!m_ptrRenderer) { // FIXME: check chroma
-		COMPV_CHECK_CODE_RETURN(CompVRenderer::newObj(&m_ptrRenderer, static_cast<COMPV_PIXEL_FORMAT>(mat->subType()), this));
+
+	const COMPV_PIXEL_FORMAT pixelFormat = static_cast<COMPV_PIXEL_FORMAT>(mat->subType());
+	if (!m_ptrRenderer || m_ptrRenderer->pixelFormat() != pixelFormat) {
+		COMPV_CHECK_CODE_RETURN(CompVRendererGL::newObj(&m_ptrRenderer, pixelFormat, m_uNameTexture));
 	}
-	COMPV_CHECK_CODE_RETURN(m_ptrRenderer->render(mat));
+	COMPV_CHECK_CODE_RETURN(m_ptrRenderer->drawImage(mat));
 
 #if 0
 	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
@@ -103,7 +103,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // System's framebuffer
 #endif
 
-	// FIXME: remove if 'm_uNameFrameBuffer' is passed as parameter
+	// FIXME(dmi): remove if 'm_uNameFrameBuffer' is passed as parameter
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system
 
 #endif
@@ -351,6 +351,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::deInitFrameBuffer()
 {
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	m_ptrRenderer = NULL;
 	if (m_uNameTexture) {
 		glDeleteTextures(1, &m_uNameTexture);
 		m_uNameTexture = 0;

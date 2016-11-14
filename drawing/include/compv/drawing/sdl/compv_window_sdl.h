@@ -30,9 +30,7 @@ protected:
 	CompVWindowSDL(int width, int height, const char* title);
 public:
 	virtual ~CompVWindowSDL();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVWindowSDL";
-	};
+	COMPV_GET_OBJECT_ID("CompVWindowSDL");
 	
 	/* CompVWindow overrides */
 	virtual bool isClosed()const;

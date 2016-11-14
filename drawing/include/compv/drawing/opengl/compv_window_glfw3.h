@@ -35,9 +35,7 @@ protected:
 	CompVWindowGLFW3(int width, int height, const char* title);
 public:
 	virtual ~CompVWindowGLFW3();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVWindowGLFW3";
-	};
+	COMPV_GET_OBJECT_ID("CompVWindowGLFW3");
 	
 	COMPV_INLINE struct GLFWwindow * getGLFWwindow() { return m_pGLFWwindow; }
 

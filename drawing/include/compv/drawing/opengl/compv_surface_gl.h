@@ -13,6 +13,7 @@
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/opengl/compv_mvp_glm.h"
+#include "compv/drawing/opengl/compv_renderer_gl.h"
 #include "compv/drawing/compv_surface.h"
 #include "compv/drawing/compv_renderer.h"
 #include "compv/drawing/compv_program.h"
@@ -35,10 +36,7 @@ protected:
 	CompVSurfaceGL(int width, int height);
 public:
 	virtual ~CompVSurfaceGL();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVSurfaceGL";
-	};
-
+	COMPV_GET_OBJECT_ID("CompVSurfaceGL");
 	
 
 	// Overrides(CompVSurface)
@@ -71,7 +69,7 @@ private:
 #if defined(HAVE_OPENGL) // FIXME
 	GLuint m_uNameVAO;
 #endif
-	CompVRendererPtr m_ptrRenderer;
+	CompVRendererGLPtr m_ptrRenderer;
 	CompVProgramPtr m_ptrProgram;
 	CompVMVPGLMPtr m_ptrMVP;
 	COMPV_VS_DISABLE_WARNINGS_END()

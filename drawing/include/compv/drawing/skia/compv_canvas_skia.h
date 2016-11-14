@@ -32,9 +32,7 @@ protected:
 	CompVCanvasSkia();
 public:
 	virtual ~CompVCanvasSkia();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVCanvasSkia";
-	};
+	COMPV_GET_OBJECT_ID("CompVCanvasSkia");
 
 	virtual COMPV_ERROR_CODE test();
 

@@ -31,19 +31,17 @@ protected:
 public:
 	virtual ~CompVRenderer();
 	
-	COMPV_INLINE COMPV_PIXEL_FORMAT getPixelFormat() { return m_ePixelFormat; }
-	COMPV_INLINE compv_renderer_id_t getId() { return m_nId; }
+	COMPV_INLINE COMPV_PIXEL_FORMAT pixelFormat()const { return m_ePixelFormat; }
+	COMPV_INLINE compv_renderer_id_t getId()const { return m_nId; }
 
 	virtual bool isGLEnabled()const = 0;
-	virtual COMPV_ERROR_CODE render(CompVMatPtr mat) = 0; // FIXME(dmi): rename to drawImage()
-
-	static COMPV_ERROR_CODE newObj(CompVRendererPtrPtr renderer, COMPV_PIXEL_FORMAT ePixelFormat, const CompVSurface* surface);
+	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+	COMPV_PIXEL_FORMAT m_ePixelFormat;
 	static compv_renderer_id_t s_nRendererId;
 	compv_renderer_id_t m_nId;
-	COMPV_PIXEL_FORMAT m_ePixelFormat;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

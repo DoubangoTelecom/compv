@@ -45,18 +45,18 @@ public:
 		return !ptr() || !rows() || !cols();
 	}
 
-	template<class ptrType = void, int32_t compId = 0>
-	COMPV_INLINE const ptrType* ptr(size_t row = 0, size_t col = 0)const {
+	COMPV_INLINE size_t compCount() { return static_cast<size_t>(m_nCompCount); }
+
+	template<class ptrType = void>
+	COMPV_INLINE const ptrType* ptr(size_t row = 0, size_t col = 0, int32_t compId = 0)const {
 		if (compId >= 0 && compId < m_nCompCount) {
 			return (row > m_nCompRows[compId] || col > m_nCompCols[compId]) ? NULL : static_cast<const ptrType*>(static_cast<const uint8_t*>(m_pCompPtr[compId]) + (row * m_nCompStrideInBytes[compId]) + (col * m_nElmtInBytes));
 		}
 		COMPV_DEBUG_ERROR("Invalid parameter");
 		return NULL;
 	}
-
 	
-	template<int32_t compId = -1>
-	COMPV_INLINE size_t rows()const { // In samples
+	COMPV_INLINE size_t rows(int32_t compId = -1)const { // In samples
 		if (compId < 0) {
 			return m_nRows;
 		}
@@ -66,9 +66,8 @@ public:
 		COMPV_DEBUG_ERROR("Invalid parameter");
 		return 0;
 	}
-		
-	template<int32_t compId = -1>
-	COMPV_INLINE size_t cols()const { // In samples
+	
+	COMPV_INLINE size_t cols(int32_t compId = -1)const { // In samples
 		if (compId < 0) {
 			return m_nCols;
 		}
@@ -82,9 +81,8 @@ public:
 	COMPV_INLINE size_t elmtInBytes() {
 		return m_nElmtInBytes;
 	}
-
-	template<int32_t compId = -1>
-	COMPV_INLINE size_t rowInBytes()const { // in bytes
+	
+	COMPV_INLINE size_t rowInBytes(int32_t compId = -1)const { // in bytes
 		if (compId < 0) {
 			return m_nCols * m_nElmtInBytes;
 		}
@@ -94,9 +92,8 @@ public:
 		COMPV_DEBUG_ERROR("Invalid parameter");
 		return 0;
 	}
-
-	template<int32_t compId = -1>
-	COMPV_INLINE size_t strideInBytes()const { // in bytes
+	
+	COMPV_INLINE size_t strideInBytes(int32_t compId = -1)const { // in bytes
 		if (compId < 0) {
 			return m_nStrideInBytes;
 		}
@@ -106,9 +103,8 @@ public:
 		COMPV_DEBUG_ERROR("Invalid parameter");
 		return 0;  
 	}
-
-	template<int32_t compId = -1>
-	COMPV_INLINE size_t stride()const { // in samples
+	
+	COMPV_INLINE size_t stride(int32_t compId = -1)const { // in samples
 		if (compId < 0) {
 			return m_nStrideInElts;
 		}

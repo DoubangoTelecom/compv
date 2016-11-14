@@ -20,34 +20,39 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVRendererGLRgb;
-typedef CompVPtr<CompVRendererGLRgb* > CompVRendererGLRgbPtr;
-typedef CompVRendererGLRgbPtr* CompVRendererGLRgbPtrPtr;
+class CompVRendererGLRGB;
+typedef CompVPtr<CompVRendererGLRGB* > CompVRendererGLRGBPtr;
+typedef CompVRendererGLRGBPtr* CompVRendererGLRGBPtrPtr;
 
-class CompVRendererGLRgb : public CompVRendererGL
+class CompVRendererGLRGB : public CompVRendererGL
 {
 protected:
-	CompVRendererGLRgb(COMPV_PIXEL_FORMAT ePixelFormat);
+	CompVRendererGLRGB(COMPV_PIXEL_FORMAT eRGBPixelFormat, GLuint uNameSurfaceTexture);
 public:
-	virtual ~CompVRendererGLRgb();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVRendererGLRgb";
-	};
+	virtual ~CompVRendererGLRGB();
+	COMPV_GET_OBJECT_ID("CompVRendererGLRGB");
 
-	virtual COMPV_ERROR_CODE render(CompVMatPtr mat);
+	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
 
-	static COMPV_ERROR_CODE newObj(CompVRendererGLRgbPtrPtr glRgbRenderer, COMPV_PIXEL_FORMAT ePixelFormat, const CompVSurface* surface);
+	static COMPV_ERROR_CODE newObj(CompVRendererGLRGBPtrPtr glRgbRenderer, COMPV_PIXEL_FORMAT eRGBPixelFormat, GLuint uNameSurfaceTexture);
 
-private:
-	virtual COMPV_ERROR_CODE blit();
+protected:
+	virtual const std::string& programVertexData()const { return m_strPrgVertexData; }
+	virtual const std::string& programFragData()const {	return m_strPrgFragData; }
+	virtual COMPV_ERROR_CODE deInit();
+	virtual COMPV_ERROR_CODE init(CompVMatPtr mat);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+	bool m_bInit;
+	GLint m_iFormat;
 	GLuint m_uNameTexture;
-	// FIXME(dmi): move to base class
+	GLuint m_uNameSampler;
 	size_t m_uWidth;
 	size_t m_uHeight;
 	size_t m_uStride;
+	std::string m_strPrgVertexData;
+	std::string m_strPrgFragData;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

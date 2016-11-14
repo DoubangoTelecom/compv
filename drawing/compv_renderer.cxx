@@ -25,22 +25,4 @@ CompVRenderer::~CompVRenderer()
 
 }
 
-COMPV_ERROR_CODE CompVRenderer::newObj(CompVRendererPtrPtr renderer, COMPV_PIXEL_FORMAT ePixelFormat, const CompVSurface* surface)
-{
-	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
-	COMPV_CHECK_EXP_RETURN(!renderer || !surface, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVRendererPtr renderer_;
-
-#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-	if (surface->isGLEnabled()) {
-		CompVRendererGLPtr glRenderer;
-		COMPV_CHECK_CODE_RETURN(CompVRendererGL::newObj(&glRenderer, ePixelFormat, surface));
-		renderer_ = *glRenderer;
-	}
-#endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
-
-	COMPV_CHECK_EXP_RETURN(!(*renderer = renderer_), COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
-	return COMPV_ERROR_CODE_S_OK;
-}
-
 COMPV_NAMESPACE_END()

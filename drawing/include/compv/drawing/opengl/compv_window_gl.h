@@ -35,9 +35,7 @@ protected:
 	CompVWindowGL(int width, int height, const char* title);
 public:
 	virtual ~CompVWindowGL();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVWindowGL";
-	};
+	COMPV_GET_OBJECT_ID("CompVWindowGL");
 
 	bool isInitialized()const;
 

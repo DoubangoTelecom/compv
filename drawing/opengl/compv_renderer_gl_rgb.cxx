@@ -8,223 +8,188 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/compv_program.h"
-
 #include "compv/drawing/opengl/compv_utils_gl.h"
 
-#define COMPV_SUPPORT_STRIDE 0
+static const std::string& kProgramVertexData = ""
+"	attribute vec4 position;"
+"	attribute vec2 texCoord;"
+"	varying vec2 texCoordVarying;"
+"	void main() {"
+"		gl_Position = position;"
+"		texCoordVarying = texCoord;"
+"	}";
+
+static const std::string& kProgramShaderDataR8G8B8 = ""
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D mySampler;"
+"	void main() {"
+"		gl_FragColor = vec4(texture2D(mySampler, texCoordVarying).rgb, 1.0); /* RGB -> RGBA */"
+"	}";
+
+static const std::string& kProgramShaderDataR8G8B8A8 = ""
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D mySampler;"
+"	void main() {"
+"		gl_FragColor = texture2D(mySampler, texCoordVarying).rgba; /* RGBA -> RGBA */"
+"	}";
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVRendererGLRgb::CompVRendererGLRgb(COMPV_PIXEL_FORMAT ePixelFormat)
-	: CompVRendererGL(ePixelFormat)
+CompVRendererGLRGB::CompVRendererGLRGB(COMPV_PIXEL_FORMAT ePixelFormat, GLuint uNameSurfaceTexture)
+	: CompVRendererGL(ePixelFormat, uNameSurfaceTexture)
+	, m_bInit(false)
+	, m_iFormat(GL_RGB)
 	, m_uNameTexture(0)
+	, m_uNameSampler(0)
 	, m_uWidth(0)
 	, m_uHeight(0)
 	, m_uStride(0)
+	, m_strPrgVertexData(kProgramVertexData)
+	, m_strPrgFragData("")
 {
 
 }
 
-CompVRendererGLRgb::~CompVRendererGLRgb()
+CompVRendererGLRGB::~CompVRendererGLRGB()
 {
-	// FIXME: check glcontext
-	if (m_uNameTexture) {
-		glDeleteTextures(1, &m_uNameTexture);
+	if (m_bInit) {
+		COMPV_CHECK_CODE_ASSERT(deInit());
 	}
 }
 
-COMPV_ERROR_CODE CompVRendererGLRgb::render(CompVMatPtr mat)
+COMPV_ERROR_CODE CompVRendererGLRGB::drawImage(CompVMatPtr mat)
 {
+	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	// Make sure we're bound to our frambuffer (FIXME: use name as parameter)
-	GLint uNameFramebuffer;
-	glGetIntegerv(GLenum(GL_FRAMEBUFFER_BINDING), &uNameFramebuffer);
-	COMPV_CHECK_EXP_RETURN(!uNameFramebuffer, COMPV_ERROR_CODE_E_INVALID_STATE);
 
+	// Get pixel format and make sure it's supported
+	COMPV_PIXEL_FORMAT pixelFormat = static_cast<COMPV_PIXEL_FORMAT>(mat->subType());
+	COMPV_CHECK_EXP_RETURN(CompVRenderer::pixelFormat() != pixelFormat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	// Check if format changed
+	if (mat->cols(0) != m_uWidth || mat->rows() != m_uHeight || mat->stride() != m_uStride) {
+		COMPV_DEBUG_INFO("GL renderer format changed: %d -> %d", CompVRenderer::pixelFormat(), pixelFormat);
+		COMPV_CHECK_CODE_RETURN(deInit());
+	}
+
+	// Init if not already done
+	if (!m_bInit) {
+		COMPV_CHECK_CODE_RETURN(init(mat));
+	}
 	
-	if (m_uNameTexture && (m_uWidth != mat->cols() || m_uHeight != mat->rows() || m_uStride != mat->stride())) {
-		glDeleteTextures(1, &m_uNameTexture);
-		m_uNameTexture = 0;
-	}
+	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::program()->useBegin());
+	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::bindBuffers());
 
-#if COMPV_SUPPORT_STRIDE
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)mat->stride());
-#endif
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, CompVRendererGL::nameSurfaceTexture());
 
-	// Create texture if not already done
-	// FIXME(dmi): m_uNameTexture
-	if (!m_uNameTexture) {
-		glGenTextures(1, &m_uNameTexture);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-#if COMPV_SUPPORT_STRIDE
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, static_cast<GLsizei>(mat->cols()), static_cast<GLsizei>(mat->rows()), 0, GL_RGB, GL_UNSIGNED_BYTE, mat->ptr());
-#else
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, static_cast<GLsizei>(mat->stride()), static_cast<GLsizei>(mat->rows()), 0, GL_RGB, GL_UNSIGNED_BYTE, mat->ptr());
-#endif
-	}
-	else {
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
-		glTexSubImage2D(
-			GL_TEXTURE_2D,
-			0,
-			0,
-			0,
-#if COMPV_SUPPORT_STRIDE
-			static_cast<GLsizei>(mat->cols()),
-#else
-			static_cast<GLsizei>(mat->stride()),
-#endif
-			static_cast<GLsizei>(mat->rows()),
-			GL_RGB,
-			GL_UNSIGNED_BYTE,
-			mat->ptr());
-	}
-	/*
-	// Attach texture to FBO
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_uNameTexture, 0); // FIXME: later, detach
-	
-	// Check FBO's status
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		COMPV_CHECK_CODE_BAIL(err = CompVUtilsGL::checkLastError());
-		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_GL);
-	}
-	*/
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, m_iFormat, static_cast<GLsizei>(mat->stride()), static_cast<GLsizei>(mat->rows()), 0, m_iFormat, GL_UNSIGNED_BYTE, mat->ptr());
 
-	// FIXME: move to blit?
-	
+	glDrawElements(GL_TRIANGLES, CompVRendererGL::indicesCount(), GL_UNSIGNED_BYTE, 0);
 
-	m_uWidth = mat->cols();
+	m_uWidth = mat->cols(0);
 	m_uHeight = mat->rows();
 	m_uStride = mat->stride();
 
-	// Draw
-	COMPV_CHECK_CODE_BAIL(err = blit());
-
 bail:
-#if COMPV_SUPPORT_STRIDE
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-#endif
-	// dettach
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, 0, 0);
+	COMPV_CHECK_CODE_ASSERT(CompVRendererGL::unbindBuffers());
+	COMPV_CHECK_CODE_ASSERT(program()->useEnd());
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	return err;
 }
 
-COMPV_ERROR_CODE CompVRendererGLRgb::blit()
+COMPV_ERROR_CODE CompVRendererGLRGB::deInit()
 {
-	// FIXME: use VAO
-	// FIXME: check GLContext is available
-	// FIXME: create program once
-	// FIXME: use 'precision mediump float;' on OpenGLES
-#if defined(main)
-#error "main must not be defined"
-#endif
-	static const char kShaderVertex[] = COMPV_STRING(
-		attribute vec4 position;
-		attribute vec2 texCoord;
-		varying vec2 texCoordVarying;
-		void main() {
-			gl_Position = position;
-			texCoordVarying = texCoord;
-		}
-	);
-	static const char kShaderFragment[] = COMPV_STRING(
-		//precision mediump float; // TODO(dmi): should be GLES only
-		//uniform sampler2D tex0;
-		//uniform sampler2D tex1;
-		varying vec2 texCoordVarying;
-		uniform sampler2D SamplerRGB;
-		void main() {
-			gl_FragColor = vec4(texture2D(SamplerRGB, texCoordVarying).rgb, 1.0);
-		}
-	);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_CODE_RETURN(CompVRendererGL::deInit()); // Base class implementation
+	if (m_uNameTexture) {
+		glDeleteTextures(1, &m_uNameTexture);
+	}
 
-#if !COMPV_SUPPORT_STRIDE
-	GLfloat uMax = ((GLfloat)m_uWidth / (GLfloat)m_uStride);
-	GLfloat vMax = 1.f;
-	static const CompVGLVertex Vertices[] = {
-		{ { 1.f, -1.f, 0.f }, { uMax, vMax } },
-		{ { 1.f, 1.f, 0.f }, { uMax, 0.f } },
-		{ { -1.f, 1.f, 0.f }, { 0.f, 0.f } },
-		{ { -1.f, -1.f, 0.f }, { 0.f, vMax } }
-	};
-#endif
-	
-	// FIXME: create program once and move to base class
-	CompVProgramPtr ptrProgram;
-	COMPV_CHECK_CODE_RETURN(CompVProgram::newObj(&ptrProgram));
-	COMPV_CHECK_CODE_RETURN(ptrProgram->shadAttachVertexData(kShaderVertex, sizeof(kShaderVertex)));
-	COMPV_CHECK_CODE_RETURN(ptrProgram->shadAttachFragmentData(kShaderFragment, sizeof(kShaderFragment)));
-	COMPV_CHECK_CODE_RETURN(ptrProgram->link());
-	COMPV_CHECK_CODE_ASSERT(ptrProgram->useBegin());
-
-	// TODO(dmi): retrieving positions must be done once
-	GLuint slotPosition = glGetAttribLocation(ptrProgram->id(), "position");
-	GLuint slotTexCoord = glGetAttribLocation(ptrProgram->id(), "texCoord");
-#if COMPV_SUPPORT_STRIDE
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer());
-#else
-	GLuint nameVertexBuffer;
-	glGenBuffers(1, &nameVertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, nameVertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
-#endif
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indiceBuffer());
-	glEnableVertexAttribArray(slotTexCoord);
-	glEnableVertexAttribArray(slotPosition);
-	glVertexAttribPointer(slotPosition, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), 0);
-	glVertexAttribPointer(slotTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), (GLvoid*)(sizeof(GLfloat) * 3));
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, 1); // FIXME
-	//glUniform1i(glGetUniformLocation(ptrProgram->id(), "tex0"), 0);
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, m_uNameTexture); // FIXME
-	glUniform1i(glGetUniformLocation(ptrProgram->id(), "SamplerRGB"), 1); // TODO(dmi): must be done once
-
-	glDrawElements(GL_TRIANGLES, CompVRendererGL::indicesCount(), GL_UNSIGNED_BYTE, 0);
-
-	COMPV_CHECK_CODE_ASSERT(ptrProgram->useEnd());
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-#if COMPV_SUPPORT_STRIDE
-#else
-	glDeleteBuffers(1, &nameVertexBuffer);
-#endif
-
+	m_bInit = false;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVRendererGLRgb::newObj(CompVRendererGLRgbPtrPtr glRgbRenderer, COMPV_PIXEL_FORMAT ePixelFormat, const CompVSurface* surface)
+COMPV_ERROR_CODE CompVRendererGLRGB::init(CompVMatPtr mat)
+{
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	CompVProgramPtr ptrProgram;
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
+	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::init(mat)); // Base class implementation
+	COMPV_CHECK_EXP_BAIL(!(ptrProgram = program()), (err = COMPV_ERROR_CODE_E_GL));
+	COMPV_CHECK_CODE_BAIL(err = ptrProgram->useBegin());
+
+	glGenTextures(1, &m_uNameTexture);
+	glActiveTexture(GL_TEXTURE1);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, m_iFormat, static_cast<GLsizei>(mat->stride()), static_cast<GLsizei>(mat->rows()), 0, m_iFormat, GL_UNSIGNED_BYTE, NULL);
+	m_uNameSampler = glGetUniformLocation(ptrProgram->id(), "mySampler");
+	glUniform1i(m_uNameSampler, 1);
+
+bail:
+	if (ptrProgram) {
+		COMPV_CHECK_CODE_ASSERT(ptrProgram->useEnd());
+	}
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	if (COMPV_ERROR_CODE_IS_NOK(err)) {
+		COMPV_CHECK_CODE_ASSERT(deInit());
+	}
+	else {
+		m_bInit = true;
+		return err;
+	}
+	return err;
+}
+
+COMPV_ERROR_CODE CompVRendererGLRGB::newObj(CompVRendererGLRGBPtrPtr glRenderer, COMPV_PIXEL_FORMAT eRGBPixelFormat, GLuint uNameSurfaceTexture)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
-	COMPV_CHECK_EXP_RETURN(!glRgbRenderer || !surface, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(!surface->isGLEnabled(), COMPV_ERROR_CODE_E_INVALID_PARAMETER); // Make sure both the window and surface have an GL context attached
-	CompVRendererGLRgbPtr glRgbRenderer_;
-	switch (ePixelFormat) {
+	COMPV_CHECK_EXP_RETURN(!glRenderer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(
+		eRGBPixelFormat != COMPV_PIXEL_FORMAT_R8G8B8
+		&& eRGBPixelFormat != COMPV_PIXEL_FORMAT_B8G8R8
+		&& eRGBPixelFormat != COMPV_PIXEL_FORMAT_R8G8B8A8
+		&& eRGBPixelFormat != COMPV_PIXEL_FORMAT_B8G8R8A8
+		&& eRGBPixelFormat != COMPV_PIXEL_FORMAT_A8B8G8R8
+		&& eRGBPixelFormat != COMPV_PIXEL_FORMAT_A8R8G8B8,
+		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	CompVRendererGLRGBPtr glRenderer_ = new CompVRendererGLRGB(eRGBPixelFormat, uNameSurfaceTexture);
+	COMPV_CHECK_EXP_RETURN(!glRenderer_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	glRenderer_->m_iFormat = (eRGBPixelFormat == COMPV_PIXEL_FORMAT_R8G8B8A8
+		|| eRGBPixelFormat == COMPV_PIXEL_FORMAT_B8G8R8A8
+		|| eRGBPixelFormat == COMPV_PIXEL_FORMAT_A8B8G8R8
+		|| eRGBPixelFormat == COMPV_PIXEL_FORMAT_A8R8G8B8) 
+		? GL_RGBA : GL_RGB;
+
+	switch (eRGBPixelFormat) {
 	case COMPV_PIXEL_FORMAT_R8G8B8:
-		glRgbRenderer_ = new CompVRendererGLRgb(ePixelFormat);
-		COMPV_CHECK_EXP_RETURN(!glRgbRenderer_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		glRenderer_->m_strPrgFragData = kProgramShaderDataR8G8B8;
+		break;
+	case COMPV_PIXEL_FORMAT_R8G8B8A8:
+		glRenderer_->m_strPrgFragData = kProgramShaderDataR8G8B8A8;
 		break;
 	default:
-		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 		break;
-	}	
+	}
 
-	*glRgbRenderer = glRgbRenderer_;
+	COMPV_CHECK_EXP_RETURN(!(*glRenderer = glRenderer_), COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
