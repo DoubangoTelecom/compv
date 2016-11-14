@@ -12,6 +12,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#define COMPV_GET_OBJECT_ID(objName) virtual COMPV_INLINE const char* getObjectId() { return #objName; };
+
 class COMPV_BASE_API CompVObj
 {
 public:

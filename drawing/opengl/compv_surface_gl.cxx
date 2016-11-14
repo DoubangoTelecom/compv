@@ -13,6 +13,12 @@
 #include "compv/drawing/opengl/compv_consts_gl.h"
 #include "compv/drawing/opengl/compv_utils_gl.h"
 
+// FIXME(dmi): GLM, not here
+#include <glm/vec3.hpp> // glm::vec3
+#include <glm/vec4.hpp> // glm::vec4
+#include <glm/mat4x4.hpp> // glm::mat4
+#include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
+
 // FIXME: OpenGL error handling not ok, impossible to find which function cause the error (erros stacked)
 
 // FIXME(dmi): remove
@@ -23,8 +29,9 @@ static const char kShaderVertex[] = COMPV_STRING(
 	attribute vec4 position;
 	attribute vec2 texCoord;
 	varying vec2 texCoordVarying;
+	uniform mat4 MVP;
 	void main() {
-		gl_Position = position;
+		gl_Position = MVP * position;
 		texCoordVarying = texCoord;
 	}
 );
@@ -49,6 +56,7 @@ CompVSurfaceGL::CompVSurfaceGL(int width, int height)
 	, m_uNameIndiceBuffer(0)
 	, m_uNameSlotPosition(0)
 	, m_uNameSlotTexCoord(0)
+	, m_uNameSlotMVP(0)
 #if defined(HAVE_OPENGL) // FIXME
 	, m_uNameVAO(0)
 #endif
@@ -62,12 +70,9 @@ CompVSurfaceGL::~CompVSurfaceGL()
 	COMPV_CHECK_CODE_ASSERT(deInitFrameBuffer());
 }
 
-COMPV_ERROR_CODE CompVSurfaceGL::setViewPort(int x, int y, int width /*= -1*/, int height /*= -1*/)
+CompVMVPPtr CompVSurfaceGL::MVP()
 {
-	// Call base class' implementation
-	COMPV_CHECK_CODE_RETURN(CompVSurface::setViewPort(x, y, width, height));
-
-	return COMPV_ERROR_CODE_S_OK;
+	return *m_ptrMVP;
 }
 
 COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat)
@@ -176,14 +181,6 @@ COMPV_ERROR_CODE CompVSurfaceGL::clear()
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
 
-		// FIXME: factor
-		const CompVDrawingViewport* viewport_ = viewport();
-		GLint x_ = static_cast<GLint>(viewport_->x);
-		GLint y_ = static_cast<GLint>(viewport_->y);
-		GLsizei width_ = viewport_->width > 0 ? static_cast<GLsizei>(viewport_->width) : static_cast<GLsizei>(getWidth());
-		GLsizei height_ = viewport_->height > 0 ? static_cast<GLsizei>(viewport_->height) : static_cast<GLsizei>(getHeight());
-		glViewport(x_, y_, width_, height_);
-
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	}
@@ -192,19 +189,13 @@ COMPV_ERROR_CODE CompVSurfaceGL::clear()
 
 COMPV_ERROR_CODE CompVSurfaceGL::blit()
 {
-	const CompVDrawingViewport* viewport_ = viewport();
-	GLint x_ = static_cast<GLint>(viewport_->x);
-	GLint y_ = static_cast<GLint>(viewport_->y);
-	GLsizei width_ = viewport_->width > 0 ? static_cast<GLsizei>(viewport_->width) : static_cast<GLsizei>(getWidth());
-	GLsizei height_ = viewport_->height > 0 ? static_cast<GLsizei>(viewport_->height) : static_cast<GLsizei>(getHeight());
-
 #if 1
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_CODE_RETURN(initProgram());
 	COMPV_CHECK_CODE_RETURN(m_ptrProgram->useBegin());
 	// draw to current FB
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system buffer
-	glViewport(x_, y_, width_, height_);
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system buffer
+	//glViewport(x_, y_, width_, height_);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
 
@@ -293,8 +284,8 @@ COMPV_ERROR_CODE CompVSurfaceGL::initFrameBuffer()
 		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
 	}
 	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);        
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -427,12 +418,14 @@ COMPV_ERROR_CODE CompVSurfaceGL::initProgram()
 
 	m_uNameSlotPosition = glGetAttribLocation(m_ptrProgram->id(), "position");
 	m_uNameSlotTexCoord = glGetAttribLocation(m_ptrProgram->id(), "texCoord");
+	m_uNameSlotMVP = glGetUniformLocation(m_ptrProgram->id(), "MVP");
 	glBindBuffer(GL_ARRAY_BUFFER, m_uNameVertexBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uNameIndiceBuffer);
 	glEnableVertexAttribArray(m_uNameSlotPosition);
 	glEnableVertexAttribArray(m_uNameSlotTexCoord);
 	glVertexAttribPointer(m_uNameSlotPosition, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), 0);
 	glVertexAttribPointer(m_uNameSlotTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), (GLvoid*)(sizeof(GLfloat) * 3));
+	glUniformMatrix4fv(m_uNameSlotMVP, 1, GL_FALSE, MVP()->matrix()->ptr());
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
@@ -482,6 +475,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::newObj(CompVSurfaceGLPtrPtr glSurface, const Co
 
 	CompVSurfaceGLPtr glSurface_ = new CompVSurfaceGL(window->getWidth(), window->getHeight());
 	COMPV_CHECK_EXP_RETURN(!glSurface_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	COMPV_CHECK_CODE_RETURN(CompVMVPGLM::newObj(&glSurface_->m_ptrMVP));
 	
 	*glSurface = glSurface_;
 	return COMPV_ERROR_CODE_S_OK;

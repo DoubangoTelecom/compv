@@ -33,6 +33,8 @@
 /* Module: Drawing */
 #include <compv/drawing/compv_canvas.h>
 #include <compv/drawing/compv_drawing.h>
+#include <compv/drawing/compv_mvp.h>
+#include <compv/drawing/compv_surface.h>
 
 /* Android native activity entry point */
 

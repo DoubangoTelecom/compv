@@ -26,9 +26,6 @@ protected:
 	CompVCanvas();
 public:
 	virtual ~CompVCanvas();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVCanvas";
-	};
 
 	virtual COMPV_ERROR_CODE test() = 0;
 

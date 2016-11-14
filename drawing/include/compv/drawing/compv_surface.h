@@ -11,6 +11,7 @@
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/compv_canvas.h"
+#include "compv/drawing/compv_mvp.h"
 #include "compv/drawing/compv_common.h"
 
 #include <string>
@@ -31,16 +32,12 @@ protected:
 	CompVSurface(int width, int height);
 public:
 	virtual ~CompVSurface();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVSurface";
-	};
 
 	COMPV_INLINE compv_surface_id_t getId()const { return m_nId; }
 	COMPV_INLINE int getWidth()const { return m_nWidth; }
 	COMPV_INLINE int getHeight()const { return m_nHeight; }
-	COMPV_INLINE const CompVDrawingViewport* viewport() { return &m_Viewport; }
-
-	virtual COMPV_ERROR_CODE setViewPort(int x, int y, int width = -1, int height = -1);
+	
+	virtual CompVMVPPtr MVP() = 0;
 	virtual bool isGLEnabled()const = 0;
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
 	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes) = 0;
@@ -55,7 +52,6 @@ private:
 	static compv_surface_id_t s_nSurfaceId;
 	compv_surface_id_t m_nId;
 	CompVCanvasPtr m_ptrCanvas;
-	CompVDrawingViewport m_Viewport;
 	int m_nWidth;
 	int m_nHeight;
 	COMPV_VS_DISABLE_WARNINGS_END()

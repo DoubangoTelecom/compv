@@ -30,9 +30,6 @@ protected:
 	CompVWindow(int width, int height, const char* title = "Unknown");
 public:
 	virtual ~CompVWindow();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVWindow";
-	};
 
 	COMPV_INLINE int getWidth()const { return m_nWidth; }
 	COMPV_INLINE int getHeight()const { return m_nHeight; }

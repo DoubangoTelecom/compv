@@ -30,9 +30,6 @@ protected:
 	CompVRenderer(COMPV_PIXEL_FORMAT ePixelFormat);
 public:
 	virtual ~CompVRenderer();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVRenderer";
-	};
 	
 	COMPV_INLINE COMPV_PIXEL_FORMAT getPixelFormat() { return m_ePixelFormat; }
 	COMPV_INLINE compv_renderer_id_t getId() { return m_nId; }

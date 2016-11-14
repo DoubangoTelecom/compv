@@ -12,6 +12,7 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
+#include "compv/drawing/opengl/compv_mvp_glm.h"
 #include "compv/drawing/compv_surface.h"
 #include "compv/drawing/compv_renderer.h"
 #include "compv/drawing/compv_program.h"
@@ -38,10 +39,11 @@ public:
 		return "CompVSurfaceGL";
 	};
 
-	virtual bool isGLEnabled()const { return true; };
+	
 
 	// Overrides(CompVSurface)
-	virtual COMPV_ERROR_CODE setViewPort(int x, int y, int width = -1, int height = -1);
+	virtual bool isGLEnabled()const { return true; };
+	virtual CompVMVPPtr MVP();
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
 	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes);
 
@@ -65,11 +67,13 @@ private:
 	GLuint m_uNameIndiceBuffer;
 	GLuint m_uNameSlotPosition;
 	GLuint m_uNameSlotTexCoord;
+	GLuint m_uNameSlotMVP;
 #if defined(HAVE_OPENGL) // FIXME
 	GLuint m_uNameVAO;
 #endif
 	CompVRendererPtr m_ptrRenderer;
 	CompVProgramPtr m_ptrProgram;
+	CompVMVPGLMPtr m_ptrMVP;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

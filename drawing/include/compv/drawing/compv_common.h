@@ -12,10 +12,14 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-struct CompVDrawingViewport {
+struct CompVDrawingVec3f {
 public:
-	int x; int y; int width; int height;
-	CompVDrawingViewport(int x_ = 0, int y_ = 0, int width_ = -1, int height_ = -1) : x(x_), y(y_), width(width_), height(height_) { }
+	union {
+		struct { float x, y, z; };
+		struct { float r, g, b; };
+		struct { float s, t, p; };
+	};
+	CompVDrawingVec3f(float x_, float y_, float z_) : x(x_), y(y_), z(z_) { }
 };
 
 COMPV_NAMESPACE_END()

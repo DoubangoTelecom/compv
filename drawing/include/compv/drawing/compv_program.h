@@ -22,11 +22,7 @@ class COMPV_DRAWING_API CompVProgram : public CompVObj
 protected:
 	CompVProgram();
 public:
-	virtual ~CompVProgram();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVProgram";
-	};
-	
+	virtual ~CompVProgram();	
 	virtual COMPV_ERROR_CODE shadAttachVertexFile(const char* pcFilePath) = 0;
 	virtual COMPV_ERROR_CODE shadAttachFragmentFile(const char* pcFilePath) = 0;
 	virtual COMPV_ERROR_CODE shadAttachVertexData(const char* dataPtr, size_t dataLength) = 0;

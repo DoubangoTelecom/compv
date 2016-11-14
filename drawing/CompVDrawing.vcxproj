@@ -89,7 +89,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;COMPV_DRAWING_EXPORTS;HAVE_JPEGLIB_H;HAVE_SKIA;HAVE_GL_GLEW_H;GLEW_STATIC;HAVE_SDL_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/sdl-2.0.5;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/skia-m55/libjpeg-turbo;../thirdparties/include/common/skia-m55/skia/core;../thirdparties/include/common/skia-m55/skia/config;../thirdparties/include/common/skia-m55/skia/gpu;../thirdparties/include/common/skia-m55/skia/utils</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/sdl-2.0.5;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/skia-m55/libjpeg-turbo;../thirdparties/include/common/skia-m55/skia/core;../thirdparties/include/common/skia-m55/skia/config;../thirdparties/include/common/skia-m55/skia/gpu;../thirdparties/include/common/skia-m55/skia/utils;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -107,7 +107,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;COMPV_DRAWING_EXPORTS;HAVE_JPEGLIB_H;HAVE_SKIA;HAVE_GL_GLEW_H;GLEW_STATIC;HAVE_SDL_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/sdl-2.0.5;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/skia-m55/libjpeg-turbo;../thirdparties/include/common/skia-m55/skia/core;../thirdparties/include/common/skia-m55/skia/config;../thirdparties/include/common/skia-m55/skia/gpu;../thirdparties/include/common/skia-m55/skia/utils</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/sdl-2.0.5;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/skia-m55/libjpeg-turbo;../thirdparties/include/common/skia-m55/skia/core;../thirdparties/include/common/skia-m55/skia/config;../thirdparties/include/common/skia-m55/skia/gpu;../thirdparties/include/common/skia-m55/skia/utils;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -127,7 +127,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;COMPV_DRAWING_EXPORTS;HAVE_JPEGLIB_H;HAVE_SKIA;HAVE_GL_GLEW_H;GLEW_STATIC;HAVE_SDL_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/sdl-2.0.5;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/skia-m55/libjpeg-turbo;../thirdparties/include/common/skia-m55/skia/core;../thirdparties/include/common/skia-m55/skia/config;../thirdparties/include/common/skia-m55/skia/gpu;../thirdparties/include/common/skia-m55/skia/utils</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/sdl-2.0.5;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/skia-m55/libjpeg-turbo;../thirdparties/include/common/skia-m55/skia/core;../thirdparties/include/common/skia-m55/skia/config;../thirdparties/include/common/skia-m55/skia/gpu;../thirdparties/include/common/skia-m55/skia/utils;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -149,7 +149,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;COMPV_DRAWING_EXPORTS;HAVE_JPEGLIB_H;HAVE_SKIA;HAVE_GL_GLEW_H;GLEW_STATIC;HAVE_SDL_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/sdl-2.0.5;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/skia-m55/libjpeg-turbo;../thirdparties/include/common/skia-m55/skia/core;../thirdparties/include/common/skia-m55/skia/config;../thirdparties/include/common/skia-m55/skia/gpu;../thirdparties/include/common/skia-m55/skia/utils</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/sdl-2.0.5;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/skia-m55/libjpeg-turbo;../thirdparties/include/common/skia-m55/skia/core;../thirdparties/include/common/skia-m55/skia/config;../thirdparties/include/common/skia-m55/skia/gpu;../thirdparties/include/common/skia-m55/skia/utils;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -166,12 +166,14 @@
     <ClInclude Include="include\compv\drawing\compv_common.h" />
     <ClInclude Include="include\compv\drawing\compv_drawing.h" />
     <ClInclude Include="include\compv\drawing\compv_image_libjpeg.h" />
+    <ClInclude Include="include\compv\drawing\compv_mvp.h" />
     <ClInclude Include="include\compv\drawing\compv_program.h" />
     <ClInclude Include="include\compv\drawing\compv_renderer.h" />
     <ClInclude Include="include\compv\drawing\compv_surface.h" />
     <ClInclude Include="include\compv\drawing\compv_window.h" />
     <ClInclude Include="include\compv\drawing\opengl\compv_consts_gl.h" />
     <ClInclude Include="include\compv\drawing\opengl\compv_headers_gl.h" />
+    <ClInclude Include="include\compv\drawing\opengl\compv_mvp_glm.h" />
     <ClInclude Include="include\compv\drawing\opengl\compv_program_gl.h" />
     <ClInclude Include="include\compv\drawing\opengl\compv_renderer_gl.h" />
     <ClInclude Include="include\compv\drawing\opengl\compv_renderer_gl_rgb.h" />
@@ -187,10 +189,12 @@
     <ClCompile Include="compv_canvas.cxx" />
     <ClCompile Include="compv_drawing.cxx" />
     <ClCompile Include="compv_image_libjpeg.cxx" />
+    <ClCompile Include="compv_mvp.cxx" />
     <ClCompile Include="compv_program.cxx" />
     <ClCompile Include="compv_renderer.cxx" />
     <ClCompile Include="compv_surface.cxx" />
     <ClCompile Include="compv_window.cxx" />
+    <ClCompile Include="opengl\compv_mvp_glm.cxx" />
     <ClCompile Include="opengl\compv_program_gl.cxx" />
     <ClCompile Include="opengl\compv_renderer_gl.cxx" />
     <ClCompile Include="opengl\compv_renderer_gl_rgb.cxx" />
