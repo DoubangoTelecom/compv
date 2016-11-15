@@ -126,9 +126,9 @@ public:
 	COMPV_GET_OBJECT_ID("CompVDrawingProjectionGLM");
 
 	virtual CompVDrawingMat4fPtr matrix();
-	virtual COMPV_ERROR_CODE setFOVY(float fovy = 90.f);
-	virtual COMPV_ERROR_CODE setAspectRatio(float aspect = -1.f);
-	virtual COMPV_ERROR_CODE setNearFar(float near = 0.1f, float far = 100.f);
+	virtual COMPV_ERROR_CODE setFOVY(float fovy = COMPV_MVP_PROJ_FOVY);
+	virtual COMPV_ERROR_CODE setAspectRatio(float aspect = COMPV_MVP_PROJ_ASPECT_RATIO);
+	virtual COMPV_ERROR_CODE setNearFar(float near = COMPV_MVP_PROJ_NEAR, float far = COMPV_MVP_PROJ_FAR);
 	virtual COMPV_ERROR_CODE reset();
 	
 	static COMPV_ERROR_CODE newObj(CompVDrawingProjectionGLMPtrPtr proj);

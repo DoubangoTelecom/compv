@@ -17,7 +17,7 @@ compv_main()
 	COMPV_CHECK_CODE_BAIL(err = CompVInit());
 
 	// Create "Hello world!" window
-	COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window, 740, 680, "Hello world!"));
+	COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window, 906, 472, "Hello world!"));
 
 	// Start ui runloop
 	COMPV_CHECK_CODE_BAIL(err = CompVDrawing::runLoop(WorkerThread));
@@ -55,16 +55,20 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 	//COMPV_CHECK_CODE_BAIL(err = window->addSurface());
 	//COMPV_CHECK_CODE_BAIL(err = window->addSurface());
 
-	//COMPV_CHECK_CODE_BAIL(err = window->surface(0)->MVP()->view()->setUpPos(CompVDrawingVec3f(0.f, 1.f, 0.f)));
-	// COMPV_CHECK_CODE_BAIL(err = window->surface(0)->MVP()->model()->matrix()->translate(CompVDrawingVec3f(1.0f, 0.f, 0.f)));
+#if 0
+	COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
+	COMPV_CHECK_CODE_BAIL(err = window->surface(0)->MVP()->view()->setUpPos(CompVDrawingVec3f(0.f, -1.f, 0.f)));
+	COMPV_CHECK_CODE_BAIL(err = window->surface(0)->MVP()->model()->matrix()->translate(CompVDrawingVec3f(0.0f, 0.f, 0.f)));
+	COMPV_CHECK_CODE_BAIL(err = window->endDraw());
+#endif
 
 	while (CompVDrawing::isLoopRunning()) {
 		snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(count));
 		std::string text = "Hello Doubango " + std::string(buff_);
 		COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
 		COMPV_CHECK_CODE_BAIL(err = window->surface(0)->drawImage(mat[0/*(count + 0) % 3*/], &ptrImageRenderer));
-		COMPV_CHECK_CODE_BAIL(err = ptrImageRenderer->drawText(text.c_str(), text.length(), 422, 102));
-		COMPV_CHECK_CODE_BAIL(err = window->surface(0)->drawText(text.c_str(), text.length(), 422, 102));
+		COMPV_CHECK_CODE_BAIL(err = ptrImageRenderer->drawText(text.c_str(), text.length(), 463, 86));
+		//COMPV_CHECK_CODE_BAIL(err = window->surface(0)->drawText(text.c_str(), text.length(), 463, 86));
 		//COMPV_CHECK_CODE_BAIL(err = window->surface(1)->drawImage(mat[(count + 1) % 3]));
 		//COMPV_CHECK_CODE_BAIL(err = window->surface(2)->drawImage(mat[(count + 2) % 3]));
 		COMPV_CHECK_CODE_BAIL(err = window->endDraw());

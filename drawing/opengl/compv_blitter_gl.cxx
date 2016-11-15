@@ -53,6 +53,13 @@ COMPV_ERROR_CODE CompVBlitterGL::bind()
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
 	COMPV_CHECK_CODE_RETURN(m_ptrProgram->useBegin());
+
+	// Because MVP could be dirty we have to send the data again
+	// FIXME(dmi): find a way to detect that MVP is dirty
+	if (m_bMVP && m_ptrMVP) {
+		glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, m_ptrMVP->matrix()->ptr());
+	}
+
 #if COMPV_VAO && 0 // FIXME(dmi):
 	glBindVertexArray(m_uNameVAO);
 #else
@@ -199,6 +206,12 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 	glVertexAttribPointer(m_uNamePrgAttPosition, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), 0);
 	glVertexAttribPointer(m_uNamePrgAttTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), (GLvoid*)(sizeof(GLfloat) * 3));
 	if (bMVP) {
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+		// Set aspect ratio
+		//float arX = static_cast<float>(width) / static_cast<float>(height);
+		//float arY = static_cast<float>(height) / static_cast<float>(width);
+		//COMPV_CHECK_CODE_BAIL(err = m_ptrMVP->projection()->setAspectRatio(arX));
+		//COMPV_CHECK_CODE_BAIL(err = m_ptrMVP->model()->matrix()->scale(CompVDrawingVec3f(1.f/arX, 1.f/arY, 1.f)));
 		glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, m_ptrMVP->matrix()->ptr());
 	}
 

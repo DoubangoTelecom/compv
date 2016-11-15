@@ -11,29 +11,6 @@
 
 #define COMPV_GLM_MAT4(CompVObjPtr) (const glm::mat4&)(**(CompVObjPtr))
 
-#if !defined(COMPV_MVP_PROJ_FOVY)
-#	define COMPV_MVP_PROJ_FOVY			90.f
-#endif
-#if !defined(COMPV_MVP_PROJ_ASPECT_RATIO)
-#	define COMPV_MVP_PROJ_ASPECT_RATIO	-1.f
-#endif
-#if !defined(COMPV_MVP_PROJ_NEAR)
-#	define COMPV_MVP_PROJ_NEAR			0.1f
-#endif
-#if !defined(COMPV_MVP_PROJ_FAR)
-#	define COMPV_MVP_PROJ_FAR			100.f
-#endif
-
-#if !defined(COMPV_MVP_VIEW_EYE)
-#	define COMPV_MVP_VIEW_EYE		0, 0, 1 // Camera is at (0, 0, 0), in World Space
-#endif
-#if !defined(COMPV_MVP_VIEW_TARGET)
-#	define COMPV_MVP_VIEW_TARGET	0, 0, 0 // and looks at the origin
-#endif
-#if !defined(COMPV_MVP_VIEW_UP)
-#	define COMPV_MVP_VIEW_UP		0, 1, 0 // Head is up(set to 0, -1, 0 to look upside - down)
-#endif
-
 COMPV_NAMESPACE_BEGIN()
 
 //
@@ -183,7 +160,7 @@ COMPV_ERROR_CODE CompVDrawingViewGLM::newObj(CompVDrawingViewGLMPtrPtr view)
 	CompVDrawingViewGLMPtr view_ = new CompVDrawingViewGLM();
 	COMPV_CHECK_EXP_RETURN(!view_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	COMPV_CHECK_CODE_RETURN(CompVDrawingMat4fGLM::newObj(&view_->m_ptrMatrix, glm::lookAt(view_->m_vec3Eye, view_->m_vec3Target, view_->m_vec3Up)));
-
+	
 	*view = view_;
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -211,25 +188,25 @@ CompVDrawingMat4fPtr CompVDrawingProjectionGLM::matrix()
 	return *m_ptrMatrix;
 }
 
-COMPV_ERROR_CODE CompVDrawingProjectionGLM::setFOVY(float fovy /*= 90.f*/)
+COMPV_ERROR_CODE CompVDrawingProjectionGLM::setFOVY(float fovy /*= COMPV_MVP_PROJ_FOVY*/)
 {
 	m_fFOVY = fovy;
-	**m_ptrMatrix = glm::perspective(glm::radians(m_fFOVY), m_fAspectRatio < 0.f ? 1.f : m_fAspectRatio, m_fNear, m_fFar);
+	**m_ptrMatrix = glm::perspective(glm::radians(m_fFOVY), m_fAspectRatio, m_fNear, m_fFar);
 	return COMPV_ERROR_CODE_S_OK;
 }
 	
-COMPV_ERROR_CODE CompVDrawingProjectionGLM::setAspectRatio(float aspect /*= -1.f*/)
+COMPV_ERROR_CODE CompVDrawingProjectionGLM::setAspectRatio(float aspect /*= COMPV_MVP_PROJ_ASPECT_RATIO */)
 {
 	m_fAspectRatio = aspect;
-	**m_ptrMatrix = glm::perspective(glm::radians(m_fFOVY), m_fAspectRatio < 0.f ? 1.f : m_fAspectRatio, m_fNear, m_fFar);
+	**m_ptrMatrix = glm::perspective(glm::radians(m_fFOVY), m_fAspectRatio, m_fNear, m_fFar);
 	return COMPV_ERROR_CODE_S_OK;
 }
 	
-COMPV_ERROR_CODE CompVDrawingProjectionGLM::setNearFar(float near_ /*= 0.1f*/, float far_ /*= 100.f*/)
+COMPV_ERROR_CODE CompVDrawingProjectionGLM::setNearFar(float near_ /*= COMPV_MVP_PROJ_NEAR */, float far_ /*= COMPV_MVP_PROJ_FAR*/)
 {
 	m_fNear = near_;
 	m_fFar = far_;
-	**m_ptrMatrix = glm::perspective(glm::radians(m_fFOVY), m_fAspectRatio < 0.f ? 1.f : m_fAspectRatio, m_fNear, m_fFar);
+	**m_ptrMatrix = glm::perspective(glm::radians(m_fFOVY), m_fAspectRatio, m_fNear, m_fFar);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -239,7 +216,7 @@ COMPV_ERROR_CODE CompVDrawingProjectionGLM::reset()
 	m_fAspectRatio = COMPV_MVP_PROJ_ASPECT_RATIO;
 	m_fNear = COMPV_MVP_PROJ_NEAR;
 	m_fFar = COMPV_MVP_PROJ_FAR;
-	**m_ptrMatrix = glm::perspective(glm::radians(m_fFOVY), m_fAspectRatio < 0.f ? 1.f : m_fAspectRatio, m_fNear, m_fFar);
+	**m_ptrMatrix = glm::perspective(glm::radians(m_fFOVY), m_fAspectRatio, m_fNear, m_fFar);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -249,7 +226,7 @@ COMPV_ERROR_CODE CompVDrawingProjectionGLM::newObj(CompVDrawingProjectionGLMPtrP
 	COMPV_CHECK_EXP_RETURN(!proj, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVDrawingProjectionGLMPtr proj_ = new CompVDrawingProjectionGLM();
 	COMPV_CHECK_EXP_RETURN(!proj_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	COMPV_CHECK_CODE_RETURN(CompVDrawingMat4fGLM::newObj(&proj_->m_ptrMatrix, glm::perspective(glm::radians(proj_->m_fFOVY), proj_->m_fAspectRatio < 0.f ? 1.f : proj_->m_fAspectRatio, proj_->m_fNear, proj_->m_fFar)));
+	COMPV_CHECK_CODE_RETURN(CompVDrawingMat4fGLM::newObj(&proj_->m_ptrMatrix, glm::perspective(glm::radians(proj_->m_fFOVY), proj_->m_fAspectRatio, proj_->m_fNear, proj_->m_fFar)));
 
 	*proj = proj_;
 	return COMPV_ERROR_CODE_S_OK;
@@ -274,7 +251,7 @@ CompVMVPGLM::~CompVMVPGLM()
 CompVDrawingMat4fPtr CompVMVPGLM::matrix()
 {
 	// FIXME(dmi): update only if one of the matrices is dirty
-	**m_ptrMatrix = COMPV_GLM_MAT4(m_ptrProjection) * COMPV_GLM_MAT4(m_ptrView) * COMPV_GLM_MAT4(m_ptrModel);
+	**m_ptrMatrix = COMPV_GLM_MAT4(m_ptrProjection)  *COMPV_GLM_MAT4(m_ptrView) * COMPV_GLM_MAT4(m_ptrModel);
 	return *m_ptrMatrix;
 }
 

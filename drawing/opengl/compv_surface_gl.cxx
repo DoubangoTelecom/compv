@@ -133,20 +133,38 @@ COMPV_ERROR_CODE CompVSurfaceGL::endDraw()
 		COMPV_DEBUG_INFO("SurfaceGL with id = %u is dirty, do not draw!", getId());
 		return COMPV_ERROR_CODE_S_OK;
 	}
+
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_CODE_BAIL(err = init());
+
+	// Set aspect ratio
+	if(0){
+		// FIXME
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+		float arX = static_cast<float>(CompVBlitterGL::width()) / static_cast<float>(CompVBlitterGL::height());
+		float arY = static_cast<float>(CompVBlitterGL::height()) / static_cast<float>(CompVBlitterGL::width());
+		const float focalLength = (COMPV_MVP_PROJ_FAR - COMPV_MVP_PROJ_NEAR);
+		const float fovy = 2.0f * std::atan((static_cast<float>(CompVBlitterGL::height()) * 0.5f) / focalLength);
+#define _MATH_RADIAN_TO_DEGREE(rad_)			(((rad_) * 180.0) / 3.14159265358979323846)
+		const float fovyDeg = (float)_MATH_RADIAN_TO_DEGREE(fovy);
+		COMPV_CHECK_CODE_BAIL(err = MVP()->reset());
+
+		COMPV_CHECK_CODE_BAIL(err = MVP()->projection()->setFOVY(90.f/*(float)_MATH_RADIAN_TO_DEGREE(fovy)*/));
+		COMPV_CHECK_CODE_BAIL(err = MVP()->projection()->setAspectRatio(arX));
+		//COMPV_CHECK_CODE_BAIL(err = MVP()->projection()->setNearFar(0.0001f, 10000.f));
+		//COMPV_CHECK_CODE_BAIL(err = MVP()->model()->reset());
+		//COMPV_CHECK_CODE_BAIL(err = MVP()->model()->matrix()->scale(CompVDrawingVec3f(arY, arX, 1.f)));
+	}
+
 	COMPV_CHECK_CODE_BAIL(err = CompVBlitterGL::bind()); // bind to VAO and activate the program
 	// draw to current FB
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system buffer
-	//glViewport(x_, y_, width_, height_);
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, m_ptrFBO->nameTexture());
-
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_ptrRenderer->fbo()->nameTexture());
+	glBindTexture(GL_TEXTURE_2D, m_ptrRenderer->fbo()->nameTexture()); // FIXME: we're drawing the randerer regarding is it's dirty
 
-	glViewport(0, 0, static_cast<GLsizei>(CompVBlitterGL::width()), static_cast<GLsizei>(CompVBlitterGL::height()));
+	glViewport(0, 0, static_cast<GLsizei>(706), static_cast<GLsizei>(472));
+	//glViewport(0, 0, static_cast<GLsizei>(CompVBlitterGL::width()), static_cast<GLsizei>(CompVBlitterGL::height()));
 	glDrawElements(GL_TRIANGLES, CompVBlitterGL::indicesCount(), GL_UNSIGNED_BYTE, 0);
 
 

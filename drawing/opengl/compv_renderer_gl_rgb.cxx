@@ -78,7 +78,7 @@ COMPV_ERROR_CODE CompVRendererGLRGB::drawImage(CompVMatPtr mat)
 		COMPV_CHECK_CODE_RETURN(init(mat));
 	}
 	
-	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::bind());
+	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::bind()); // Bind FBO and VAO
 
 	// Texture 0: RGBA-only format from the surface, this is the destination
 	glActiveTexture(GL_TEXTURE0);

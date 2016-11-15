@@ -12,6 +12,29 @@
 #include "compv/base/compv_common.h"
 #include "compv/drawing/compv_common.h"
 
+#if !defined(COMPV_MVP_PROJ_FOVY)
+#	define COMPV_MVP_PROJ_FOVY			90.f
+#endif
+#if !defined(COMPV_MVP_PROJ_ASPECT_RATIO)
+#	define COMPV_MVP_PROJ_ASPECT_RATIO	1.f
+#endif
+#if !defined(COMPV_MVP_PROJ_NEAR)
+#	define COMPV_MVP_PROJ_NEAR			0.1f
+#endif
+#if !defined(COMPV_MVP_PROJ_FAR)
+#	define COMPV_MVP_PROJ_FAR			100.f
+#endif
+
+#if !defined(COMPV_MVP_VIEW_EYE)
+#	define COMPV_MVP_VIEW_EYE		0, 0, 1 // Camera is at (0, 0, 0), in World Space
+#endif
+#if !defined(COMPV_MVP_VIEW_TARGET)
+#	define COMPV_MVP_VIEW_TARGET	0, 0, 0 // and looks at the origin
+#endif
+#if !defined(COMPV_MVP_VIEW_UP)
+#	define COMPV_MVP_VIEW_UP		0, 1, 0 // Head is up(set to 0, -1, 0 to look upside - down)
+#endif
+
 COMPV_NAMESPACE_BEGIN()
 
 //
@@ -86,9 +109,9 @@ public:
 	virtual ~CompVDrawingProjection();
 
 	virtual CompVDrawingMat4fPtr matrix() = 0;
-	virtual COMPV_ERROR_CODE setFOVY(float fovy = 90.f) = 0;
-	virtual COMPV_ERROR_CODE setAspectRatio(float aspect = -1.f) = 0;
-	virtual COMPV_ERROR_CODE setNearFar(float near = 0.1f, float far = 100.f) = 0;
+	virtual COMPV_ERROR_CODE setFOVY(float fovy = COMPV_MVP_PROJ_FOVY) = 0;
+	virtual COMPV_ERROR_CODE setAspectRatio(float aspect = COMPV_MVP_PROJ_ASPECT_RATIO) = 0;
+	virtual COMPV_ERROR_CODE setNearFar(float near = COMPV_MVP_PROJ_NEAR, float far = COMPV_MVP_PROJ_FAR) = 0;
 	virtual COMPV_ERROR_CODE reset() = 0;
 };
 
