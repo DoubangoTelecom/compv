@@ -32,7 +32,7 @@ public:
 	virtual ~CompVRenderer();
 	
 	COMPV_INLINE COMPV_PIXEL_FORMAT pixelFormat()const { return m_ePixelFormat; }
-	COMPV_INLINE compv_renderer_id_t getId()const { return m_nId; }
+	COMPV_INLINE compv_renderer_id_t id()const { return m_nId; }
 
 	virtual bool isGLEnabled()const = 0;
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;

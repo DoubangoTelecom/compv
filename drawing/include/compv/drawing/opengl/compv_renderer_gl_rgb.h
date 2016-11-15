@@ -27,18 +27,16 @@ typedef CompVRendererGLRGBPtr* CompVRendererGLRGBPtrPtr;
 class CompVRendererGLRGB : public CompVRendererGL
 {
 protected:
-	CompVRendererGLRGB(COMPV_PIXEL_FORMAT eRGBPixelFormat, GLuint uNameSurfaceTexture);
+	CompVRendererGLRGB(COMPV_PIXEL_FORMAT eRGBPixelFormat);
 public:
 	virtual ~CompVRendererGLRGB();
 	COMPV_GET_OBJECT_ID("CompVRendererGLRGB");
 
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
 
-	static COMPV_ERROR_CODE newObj(CompVRendererGLRGBPtrPtr glRgbRenderer, COMPV_PIXEL_FORMAT eRGBPixelFormat, GLuint uNameSurfaceTexture);
+	static COMPV_ERROR_CODE newObj(CompVRendererGLRGBPtrPtr glRgbRenderer, COMPV_PIXEL_FORMAT eRGBPixelFormat);
 
 protected:
-	virtual const std::string& programVertexData()const { return m_strPrgVertexData; }
-	virtual const std::string& programFragData()const {	return m_strPrgFragData; }
 	virtual COMPV_ERROR_CODE deInit();
 	virtual COMPV_ERROR_CODE init(CompVMatPtr mat);
 

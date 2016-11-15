@@ -45,15 +45,16 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVSurfacePtrPtr surface, const CompVWindow* window);
 
 protected:
-	COMPV_INLINE CompVCanvasPtr getCanvas() { return m_ptrCanvas; }
+	COMPV_INLINE CompVCanvasPtr getCanvas() { return m_ptrCanvas; } // FIXME(dmi): remove
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static compv_surface_id_t s_nSurfaceId;
 	compv_surface_id_t m_nId;
-	CompVCanvasPtr m_ptrCanvas;
+	CompVCanvasPtr m_ptrCanvas;  // FIXME(dmi): remove
 	int m_nWidth;
 	int m_nHeight;
+
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

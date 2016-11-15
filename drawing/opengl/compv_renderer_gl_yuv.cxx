@@ -11,8 +11,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVRendererGLYUV::CompVRendererGLYUV(COMPV_PIXEL_FORMAT eYUVPixelFormat, GLuint uNameSurfaceTexture)
-	: CompVRendererGL(eYUVPixelFormat, uNameSurfaceTexture)
+CompVRendererGLYUV::CompVRendererGLYUV(COMPV_PIXEL_FORMAT eYUVPixelFormat)
+	: CompVRendererGL(eYUVPixelFormat)
 	, m_bInit(false)
 	, m_uTexturesCount(0)
 	, m_strPrgVertexData("")
@@ -78,7 +78,7 @@ COMPV_ERROR_CODE CompVRendererGLYUV::init(CompVMatPtr mat)
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::init(mat)); // Base class implementation
+	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::init(mat, m_strPrgVertexData, m_strPrgFragData, false, false)); // Base class implementation
 
 	m_uTexturesCount = mat->compCount();
 	for (size_t compId = 0; compId < mat->compCount(); ++compId) {
@@ -127,7 +127,7 @@ COMPV_ERROR_CODE CompVRendererGLYUV::deInit()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVRendererGLYUV::newObj(CompVRendererGLYUVPtrPtr glRenderer, COMPV_PIXEL_FORMAT eYUVPixelFormat, GLuint uNameSurfaceTexture)
+COMPV_ERROR_CODE CompVRendererGLYUV::newObj(CompVRendererGLYUVPtrPtr glRenderer, COMPV_PIXEL_FORMAT eYUVPixelFormat)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
 	COMPV_CHECK_EXP_RETURN(!glRenderer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -137,7 +137,7 @@ COMPV_ERROR_CODE CompVRendererGLYUV::newObj(CompVRendererGLYUVPtrPtr glRenderer,
 		&& eYUVPixelFormat != COMPV_PIXEL_FORMAT_IYUV,
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	CompVRendererGLYUVPtr glRenderer_ = new CompVRendererGLYUV(eYUVPixelFormat, uNameSurfaceTexture);
+	CompVRendererGLYUVPtr glRenderer_ = new CompVRendererGLYUV(eYUVPixelFormat);
 	COMPV_CHECK_EXP_RETURN(!glRenderer_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
 	COMPV_CHECK_EXP_RETURN(!(*glRenderer = glRenderer_), COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);

@@ -12,12 +12,11 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
+#include "compv/drawing/compv_surface.h"
 #include "compv/drawing/opengl/compv_mvp_glm.h"
 #include "compv/drawing/opengl/compv_renderer_gl.h"
 #include "compv/drawing/opengl/compv_fbo_gl.h"
-#include "compv/drawing/compv_surface.h"
-#include "compv/drawing/compv_renderer.h"
-#include "compv/drawing/compv_program.h"
+#include "compv/drawing/opengl/compv_blitter_gl.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -31,7 +30,7 @@ class CompVSurfaceGL;
 typedef CompVPtr<CompVSurfaceGL* > CompVSurfaceGLPtr;
 typedef CompVSurfaceGLPtr* CompVSurfaceGLPtrPtr;
 
-class CompVSurfaceGL : public CompVSurface
+class CompVSurfaceGL : public CompVSurface, public CompVBlitterGL
 {
 protected:
 	CompVSurfaceGL(int width, int height);
@@ -46,32 +45,25 @@ public:
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
 	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes);
 
-	COMPV_ERROR_CODE clear();
-	COMPV_ERROR_CODE blit();
+	COMPV_ERROR_CODE beginDraw();
+	COMPV_ERROR_CODE endDraw();
 
 	static COMPV_ERROR_CODE newObj(CompVSurfaceGLPtrPtr glSurface, const CompVWindow* window);
 
-private:
-	COMPV_ERROR_CODE initFrameBuffer();
-	COMPV_ERROR_CODE deInitFrameBuffer();
-	COMPV_ERROR_CODE initProgram();
-	COMPV_ERROR_CODE deInitProgram();
+	COMPV_INLINE void makeDirty() { m_bDirty = true; }
+	COMPV_INLINE void unmakeDirty() { m_bDirty = false; }
+	COMPV_INLINE bool isDirty() { return m_bDirty; }
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	CompVFBOGLPtr m_ptrFBO;
-	GLuint m_uNameVertexBuffer;
-	GLuint m_uNameIndiceBuffer;
-	GLuint m_uNameSlotPosition;
-	GLuint m_uNameSlotTexCoord;
-	GLuint m_uNameSlotMVP;
-#if defined(HAVE_OPENGL) // FIXME
-	GLuint m_uNameVAO;
-#endif
+	COMPV_ERROR_CODE init();
+	COMPV_ERROR_CODE deInit();
+
+private:
+	bool m_bInit;
+	bool m_bDirty;
+	bool m_bBeginDraw;
 	CompVRendererGLPtr m_ptrRenderer;
 	CompVProgramPtr m_ptrProgram;
-	CompVMVPGLMPtr m_ptrMVP;
-	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

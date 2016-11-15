@@ -90,7 +90,7 @@ COMPV_ERROR_CODE CompVFBOGL::init(size_t width, size_t height)
 #if defined(GL_DEPTH24_STENCIL8)
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 #elif defined(GL_DEPTH24_STENCIL8_OES)
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, getWidth(), getHeight());
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 #else
 #	error "Not supported"
 #endif

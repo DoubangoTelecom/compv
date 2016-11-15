@@ -49,7 +49,7 @@ COMPV_ERROR_CODE CompVWindowGL::beginDraw()
 
 	// Clear surfaces
 	for (std::vector<CompVSurfaceGLPtr >::iterator it = m_vecGLSurfaces.begin(); it != m_vecGLSurfaces.end(); ++it) {
-		COMPV_CHECK_CODE_BAIL(err = (*it)->clear());
+		COMPV_CHECK_CODE_BAIL(err = (*it)->beginDraw());
 	}
 
 	m_bDrawing = true;
@@ -72,7 +72,7 @@ COMPV_ERROR_CODE CompVWindowGL::endDraw()
 
 	// Blit (aka draw surfaces to back buffer)
 	for (std::vector<CompVSurfaceGLPtr >::iterator it = m_vecGLSurfaces.begin(); it != m_vecGLSurfaces.end(); ++it) {
-		COMPV_CHECK_CODE_BAIL(err = (*it)->blit());
+		COMPV_CHECK_CODE_BAIL(err = (*it)->endDraw());
 	}
 
 	// Swap (aka 'present' the final redering to the window, means switch front/back buffers)

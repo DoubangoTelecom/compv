@@ -35,8 +35,8 @@ static const std::string& kProgramShaderDataR8G8B8A8 =
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVRendererGLRGB::CompVRendererGLRGB(COMPV_PIXEL_FORMAT ePixelFormat, GLuint uNameSurfaceTexture)
-	: CompVRendererGL(ePixelFormat, uNameSurfaceTexture)
+CompVRendererGLRGB::CompVRendererGLRGB(COMPV_PIXEL_FORMAT ePixelFormat)
+	: CompVRendererGL(ePixelFormat)
 	, m_bInit(false)
 	, m_iFormat(GL_RGB)
 	, m_uNameTexture(0)
@@ -52,9 +52,7 @@ CompVRendererGLRGB::CompVRendererGLRGB(COMPV_PIXEL_FORMAT ePixelFormat, GLuint u
 
 CompVRendererGLRGB::~CompVRendererGLRGB()
 {
-	if (m_bInit) {
-		COMPV_CHECK_CODE_ASSERT(deInit());
-	}
+	COMPV_CHECK_CODE_ASSERT(deInit());
 }
 
 COMPV_ERROR_CODE CompVRendererGLRGB::drawImage(CompVMatPtr mat)
@@ -69,7 +67,7 @@ COMPV_ERROR_CODE CompVRendererGLRGB::drawImage(CompVMatPtr mat)
 	COMPV_CHECK_EXP_RETURN(CompVRenderer::pixelFormat() != pixelFormat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	// Check if format changed
-	if (mat->cols(0) != m_uWidth || mat->rows() != m_uHeight || mat->stride() != m_uStride) {
+	if (mat->cols() != m_uWidth || mat->rows() != m_uHeight || mat->stride() != m_uStride) {
 		COMPV_DEBUG_INFO("GL renderer format changed: %d -> %d", CompVRenderer::pixelFormat(), pixelFormat);
 		COMPV_CHECK_CODE_RETURN(deInit());
 	}
@@ -79,27 +77,38 @@ COMPV_ERROR_CODE CompVRendererGLRGB::drawImage(CompVMatPtr mat)
 		COMPV_CHECK_CODE_RETURN(init(mat));
 	}
 	
-	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::program()->useBegin());
-	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::bindBuffers());
+	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::bind());
 
 	// Texture 0: RGBA-only format from the surface, this is the destination
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, CompVRendererGL::nameSurfaceTexture());
+	glBindTexture(GL_TEXTURE_2D, CompVRendererGL::fbo()->nameTexture());
 
 	// Texture 1: RGB-family format from the renderer, this is the source
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, m_iFormat, static_cast<GLsizei>(mat->stride()), static_cast<GLsizei>(mat->rows()), 0, m_iFormat, GL_UNSIGNED_BYTE, mat->ptr());
 
+	glViewport(0, 0, static_cast<GLsizei>(CompVRendererGL::width()), static_cast<GLsizei>(CompVRendererGL::height()));
 	glDrawElements(GL_TRIANGLES, CompVRendererGL::indicesCount(), GL_UNSIGNED_BYTE, 0);
 
-	m_uWidth = mat->cols(0);
+	m_uWidth = mat->cols();
 	m_uHeight = mat->rows();
 	m_uStride = mat->stride();
 
+#if 0
+	glBindFramebuffer(GL_FRAMEBUFFER, CompVRendererGL::fbo()->nameFrameBuffer());
+	uint8_t* data = (uint8_t*)malloc(m_uWidth * m_uHeight * 4);
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+	glReadPixels(0, 0, (GLsizei)m_uWidth, (GLsizei)m_uHeight, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	FILE* file = fopen("C:/Projects/image.rgba", "wb+");
+	fwrite(data, 1, (m_uWidth * m_uHeight * 4), file);
+	fclose(file);
+	free(data);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); // System's framebuffer
+#endif
+
 bail:
-	COMPV_CHECK_CODE_ASSERT(CompVRendererGL::unbindBuffers());
-	COMPV_CHECK_CODE_ASSERT(program()->useEnd());
+	COMPV_CHECK_CODE_ASSERT(CompVRendererGL::unbind());
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glActiveTexture(GL_TEXTURE0);
@@ -110,6 +119,9 @@ bail:
 
 COMPV_ERROR_CODE CompVRendererGLRGB::deInit()
 {
+	if (!m_bInit) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_CODE_RETURN(CompVRendererGL::deInit()); // Base class implementation
 	if (m_uNameTexture) {
@@ -122,11 +134,14 @@ COMPV_ERROR_CODE CompVRendererGLRGB::deInit()
 
 COMPV_ERROR_CODE CompVRendererGLRGB::init(CompVMatPtr mat)
 {
+	if (m_bInit) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	CompVProgramPtr ptrProgram;
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	COMPV_CHECK_EXP_RETURN(m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::init(mat)); // Base class implementation
+	m_bInit = true; // To make sure deInit() will be fully executed
+	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::init(mat, m_strPrgVertexData, m_strPrgFragData, false, false)); // Base class implementation
 	COMPV_CHECK_EXP_BAIL(!(ptrProgram = program()), (err = COMPV_ERROR_CODE_E_GL));
 	COMPV_CHECK_CODE_BAIL(err = ptrProgram->useBegin());
 
@@ -146,19 +161,15 @@ bail:
 	if (ptrProgram) {
 		COMPV_CHECK_CODE_ASSERT(ptrProgram->useEnd());
 	}
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
 		COMPV_CHECK_CODE_ASSERT(deInit());
-	}
-	else {
-		m_bInit = true;
-		return err;
+		m_bInit = false;
 	}
 	return err;
 }
 
-COMPV_ERROR_CODE CompVRendererGLRGB::newObj(CompVRendererGLRGBPtrPtr glRenderer, COMPV_PIXEL_FORMAT eRGBPixelFormat, GLuint uNameSurfaceTexture)
+COMPV_ERROR_CODE CompVRendererGLRGB::newObj(CompVRendererGLRGBPtrPtr glRenderer, COMPV_PIXEL_FORMAT eRGBPixelFormat)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
 	COMPV_CHECK_EXP_RETURN(!glRenderer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -171,7 +182,7 @@ COMPV_ERROR_CODE CompVRendererGLRGB::newObj(CompVRendererGLRGBPtrPtr glRenderer,
 		&& eRGBPixelFormat != COMPV_PIXEL_FORMAT_A8R8G8B8,
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	CompVRendererGLRGBPtr glRenderer_ = new CompVRendererGLRGB(eRGBPixelFormat, uNameSurfaceTexture);
+	CompVRendererGLRGBPtr glRenderer_ = new CompVRendererGLRGB(eRGBPixelFormat);
 	COMPV_CHECK_EXP_RETURN(!glRenderer_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	glRenderer_->m_iFormat = (eRGBPixelFormat == COMPV_PIXEL_FORMAT_R8G8B8A8
 		|| eRGBPixelFormat == COMPV_PIXEL_FORMAT_B8G8R8A8

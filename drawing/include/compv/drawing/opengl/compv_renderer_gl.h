@@ -11,7 +11,9 @@
 #include "compv/drawing/opengl/compv_headers_gl.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_renderer.h"
+#include "compv/drawing/opengl/compv_blitter_gl.h"
 #include "compv/drawing/opengl/compv_consts_gl.h"
+#include "compv/drawing/opengl/compv_fbo_gl.h"
 #include "compv/drawing/compv_program.h"
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
@@ -26,43 +28,30 @@ class CompVRendererGL;
 typedef CompVPtr<CompVRendererGL* > CompVRendererGLPtr;
 typedef CompVRendererGLPtr* CompVRendererGLPtrPtr;
 
-class CompVRendererGL : public CompVRenderer
+class CompVRendererGL : public CompVRenderer, public CompVBlitterGL
 {
 protected:
-	CompVRendererGL(COMPV_PIXEL_FORMAT ePixelFormat, GLuint uNameSurfaceTexture);
+	CompVRendererGL(COMPV_PIXEL_FORMAT ePixelFormat);
 public:
 	virtual ~CompVRendererGL();
 	COMPV_GET_OBJECT_ID("CompVRendererGL");
 
 	virtual bool isGLEnabled()const { return true; };
 
-	static COMPV_ERROR_CODE newObj(CompVRendererGLPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat, GLuint uNameSurfaceTexture);
+	CompVFBOGLPtr fbo() { return m_ptrFBO; }
+
+	static COMPV_ERROR_CODE newObj(CompVRendererGLPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat);
 
 protected:
-	virtual CompVProgramPtr program() { return m_ptrProgram; }
-	virtual const std::string& programVertexData()const = 0;
-	virtual const std::string& programFragData()const = 0;
-	virtual GLuint nameVertexBuffer()const { return m_uNameVertexBuffer; }
-	virtual GLuint nameIndiceBuffer()const { return m_uNameIndiceBuffer; }
-	virtual GLuint namePrgAttPosition()const { return m_uNamePrgAttPosition; }
-	virtual GLuint namePrgAttTexCoord()const { return m_uNamePrgAttTexCoord; }
-	virtual GLuint nameSurfaceTexture()const { return m_uNameSurfaceTexture;  }
-	virtual GLuint indicesCount()const { return sizeof(CompVGLTexture2DIndices) / sizeof(CompVGLTexture2DIndices[0]); }
-	virtual COMPV_ERROR_CODE bindBuffers();
-	virtual COMPV_ERROR_CODE unbindBuffers();
 	virtual COMPV_ERROR_CODE deInit();
-	virtual COMPV_ERROR_CODE init(CompVMatPtr mat);
+	virtual COMPV_ERROR_CODE init(CompVMatPtr mat, const std::string& prgVertexData, const std::string& prgFragData, bool bMVP = false, bool bToScreen = false);
+	virtual COMPV_ERROR_CODE bind();
+	virtual COMPV_ERROR_CODE unbind();
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	bool m_bInit;
-	GLuint m_uNameSurfaceTexture;
-	CompVGLVertex m_Vertices[4];
-	GLuint m_uNameVertexBuffer;
-	GLuint m_uNameIndiceBuffer;
-	GLuint m_uNamePrgAttPosition;
-	GLuint m_uNamePrgAttTexCoord;
-	CompVProgramPtr m_ptrProgram;
+	CompVFBOGLPtr m_ptrFBO;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

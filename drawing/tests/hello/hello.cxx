@@ -54,7 +54,7 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 	//COMPV_CHECK_CODE_BAIL(err = window->addSurface());
 	//COMPV_CHECK_CODE_BAIL(err = window->addSurface());
 
-	COMPV_CHECK_CODE_BAIL(err = window->surface(0)->MVP()->view()->setUpPos(CompVDrawingVec3f(0.f, 1.f, 0.f)));
+	//COMPV_CHECK_CODE_BAIL(err = window->surface(0)->MVP()->view()->setUpPos(CompVDrawingVec3f(0.f, 1.f, 0.f)));
 	// COMPV_CHECK_CODE_BAIL(err = window->surface(0)->MVP()->model()->matrix()->translate(CompVDrawingVec3f(1.0f, 0.f, 0.f)));
 
 	while (CompVDrawing::isLoopRunning()) {

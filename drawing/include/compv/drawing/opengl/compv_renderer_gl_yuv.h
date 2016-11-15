@@ -28,7 +28,7 @@ typedef CompVRendererGLYUVPtr* CompVRendererGLYUVPtrPtr;
 class CompVRendererGLYUV : public CompVRendererGL
 {
 protected:
-	CompVRendererGLYUV(COMPV_PIXEL_FORMAT eYUVPixelFormat, GLuint uNameSurfaceTexture);
+	CompVRendererGLYUV(COMPV_PIXEL_FORMAT eYUVPixelFormat);
 public:
 	virtual ~CompVRendererGLYUV();
 	COMPV_GET_OBJECT_ID("CompVRendererGLYUV");
@@ -36,11 +36,9 @@ public:
 	virtual bool isGLEnabled()const { return true; };
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
 
-	static COMPV_ERROR_CODE newObj(CompVRendererGLYUVPtrPtr glRenderer, COMPV_PIXEL_FORMAT eYUVPixelFormat, GLuint uNameSurfaceTexture);
+	static COMPV_ERROR_CODE newObj(CompVRendererGLYUVPtrPtr glRenderer, COMPV_PIXEL_FORMAT eYUVPixelFormat);
 
 protected:
-	virtual const std::string& programVertexData()const { return m_strPrgVertexData; }
-	virtual const std::string& programFragData()const { return m_strPrgFragData; }
 	virtual COMPV_ERROR_CODE deInit();
 	virtual COMPV_ERROR_CODE init(CompVMatPtr mat);
 
