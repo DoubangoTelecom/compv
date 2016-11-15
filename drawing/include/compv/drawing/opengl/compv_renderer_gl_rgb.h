@@ -32,6 +32,7 @@ public:
 	virtual ~CompVRendererGLRGB();
 	COMPV_GET_OBJECT_ID("CompVRendererGLRGB");
 
+	// Overrides(CompVRendererGL)
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
 
 	static COMPV_ERROR_CODE newObj(CompVRendererGLRGBPtrPtr glRgbRenderer, COMPV_PIXEL_FORMAT eRGBPixelFormat);

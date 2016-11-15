@@ -55,6 +55,7 @@ CompVRendererGLRGB::~CompVRendererGLRGB()
 	COMPV_CHECK_CODE_ASSERT(deInit());
 }
 
+// Overrides(CompVRendererGL)
 COMPV_ERROR_CODE CompVRendererGLRGB::drawImage(CompVMatPtr mat)
 {
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);

@@ -53,7 +53,7 @@ CompVMVPPtr CompVSurfaceGL::MVP()
 	return CompVBlitterGL::MVP();
 }
 
-COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat)
+COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat, CompVRendererPtrPtr renderer /*= NULL*/)
 {
 #if 1
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -69,6 +69,10 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat)
 		COMPV_CHECK_CODE_RETURN(CompVRendererGL::newObj(&m_ptrRenderer, pixelFormat));
 	}
 	COMPV_CHECK_CODE_RETURN(m_ptrRenderer->drawImage(mat));
+
+	if (renderer) {
+		*renderer = *m_ptrRenderer;
+	}
 
 #if 0
 	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
@@ -91,71 +95,19 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVSurfaceGL::drawText(const void* textPtr, size_t textLengthInBytes)
+// Overrides(CompVCanvas) 
+COMPV_ERROR_CODE CompVSurfaceGL::canvasBind()
 {
-#if 1
-	COMPV_CHECK_EXP_RETURN(!textPtr || !textLengthInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(!m_bBeginDraw, COMPV_ERROR_CODE_E_INVALID_STATE);
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	COMPV_CHECK_CODE_RETURN(init());
-	
-	/*glPushAttrib(
-		//GL_VIEWPORT_BIT
-		//| GL_TRANSFORM_BIT
-		// GL_TEXTURE_BIT
-		//| GL_STENCIL_BUFFER_BIT
-		//| GL_SCISSOR_BIT
-		//| GL_POLYGON_STIPPLE_BIT
-		//| GL_POLYGON_BIT
-		//| GL_POINT_BIT
-		//| GL_PIXEL_MODE_BIT
-		//| GL_MULTISAMPLE_BIT
-		//| GL_LIST_BIT
-		//| GL_LINE_BIT
-		//| GL_LIGHTING_BIT
-		//| GL_HINT_BIT
-		//| GL_FOG_BIT
-		//| GL_EVAL_BIT
-		//| GL_ENABLE_BIT
-		 GL_DEPTH_BUFFER_BIT
-		//| GL_CURRENT_BIT
-		//| GL_COLOR_BUFFER_BIT
-		//| GL_ACCUM_BUFFER_BIT
-	);*/
-	//glPushAttrib(GL_ALL_ATTRIB_BITS);
-	//glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
-	//glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT /*| GL_CLIENT_VERTEX_ARRAY_BIT*/);
-
-	//COMPV_CHECK_CODE_ASSERT(m_ptrFBO->bind()); // Draw to framebuffer
-
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system framebuffer
-
-	// FIXME:
-	static CompVCanvasPtr ptrCanvas;
-	if (!ptrCanvas) {
-		COMPV_CHECK_CODE_ASSERT(CompVCanvas::newObj(&ptrCanvas));
-	}
-	COMPV_CHECK_CODE_ASSERT(ptrCanvas->test());
-
-	//COMPV_CHECK_CODE_ASSERT(m_ptrFBO->unbind());  // Draw to system
-
-	//glBindTexture(GL_TEXTURE_2D, 0);
-
-	//glEnable(GL_DEPTH_TEST);
-	
-	//glDisable(GL_DEPTH_WRITEMASK);
-	//glDepthFunc(GL_LESS);
-	
-
-	//glPopClientAttrib();
-	//glPopAttrib();
-#endif
-
-	unmakeDirty();
-
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// Overrides(CompVCanvas) 
+COMPV_ERROR_CODE CompVSurfaceGL::canvasUnbind()
+{
+	return COMPV_ERROR_CODE_S_OK;
+}
 
 COMPV_ERROR_CODE CompVSurfaceGL::beginDraw()
 {

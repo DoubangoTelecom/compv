@@ -42,19 +42,22 @@ public:
 	// Overrides(CompVSurface)
 	virtual bool isGLEnabled()const { return true; };
 	virtual CompVMVPPtr MVP();
-	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
-	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes);
+	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat, CompVRendererPtrPtr renderer = NULL);
 
 	COMPV_ERROR_CODE beginDraw();
 	COMPV_ERROR_CODE endDraw();
 
 	static COMPV_ERROR_CODE newObj(CompVSurfaceGLPtrPtr glSurface, const CompVWindow* window);
 
+protected:
+	// Overrides(CompVCanvas) 
+	virtual COMPV_ERROR_CODE canvasBind();
+	virtual COMPV_ERROR_CODE canvasUnbind();
+
+private:
 	COMPV_INLINE void makeDirty() { m_bDirty = true; }
 	COMPV_INLINE void unmakeDirty() { m_bDirty = false; }
 	COMPV_INLINE bool isDirty() { return m_bDirty; }
-
-private:
 	COMPV_ERROR_CODE init();
 	COMPV_ERROR_CODE deInit();
 

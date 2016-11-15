@@ -33,7 +33,10 @@ public:
 	virtual ~CompVRendererGLYUV();
 	COMPV_GET_OBJECT_ID("CompVRendererGLYUV");
 
+	// Overrides(CompVRenderer)
 	virtual bool isGLEnabled()const { return true; };
+
+	// Overrides(CompVRendererGL)
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);
 
 	static COMPV_ERROR_CODE newObj(CompVRendererGLYUVPtrPtr glRenderer, COMPV_PIXEL_FORMAT eYUVPixelFormat);

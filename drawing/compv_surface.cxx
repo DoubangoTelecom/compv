@@ -15,7 +15,8 @@ COMPV_NAMESPACE_BEGIN()
 compv_surface_id_t CompVSurface::s_nSurfaceId = 0;
 
 CompVSurface::CompVSurface(int width, int height)
-	: m_nId(compv_atomic_inc(&CompVSurface::s_nSurfaceId))
+	: CompVCanvas()
+	, m_nId(compv_atomic_inc(&CompVSurface::s_nSurfaceId))
 	, m_nWidth(width)
 	, m_nHeight(height)
 {

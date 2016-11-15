@@ -31,6 +31,7 @@ CompVRendererGLYUV::~CompVRendererGLYUV()
 	}
 }
 
+// Overrides(CompVRendererGL)
 COMPV_ERROR_CODE CompVRendererGLYUV::drawImage(CompVMatPtr mat)
 {
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);

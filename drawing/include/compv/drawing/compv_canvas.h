@@ -16,6 +16,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+//
+//	CompVCanvasImpl
+//
 class CompVCanvasImpl;
 typedef CompVPtr<CompVCanvasImpl* > CompVCanvasImplPtr;
 typedef CompVCanvasImplPtr* CompVCanvasImplPtrPtr;
@@ -36,22 +39,26 @@ protected:
 private:
 };
 
-class CompVCanvas;
-typedef CompVPtr<CompVCanvas* > CompVCanvasPtr;
-typedef CompVCanvasPtr* CompVCanvasPtrPtr;
+//
+//	CompVCanvas
+//
 
-class COMPV_DRAWING_API CompVCanvas : public CompVObj
+class COMPV_DRAWING_API CompVCanvas
 {
 protected:
 	CompVCanvas();
 public:
 	virtual ~CompVCanvas();
 
-	virtual COMPV_ERROR_CODE test() = 0;
-
-	static COMPV_ERROR_CODE newObj(CompVCanvasPtrPtr canvas);
-
+	COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, size_t x, size_t y);
+	
 protected:
+	virtual COMPV_ERROR_CODE canvasBind() = 0;
+	virtual COMPV_ERROR_CODE canvasUnbind() = 0;
+
+private:
+	COMPV_ERROR_CODE init();
+	COMPV_ERROR_CODE deInit();
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

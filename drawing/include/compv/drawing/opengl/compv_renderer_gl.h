@@ -36,13 +36,20 @@ public:
 	virtual ~CompVRendererGL();
 	COMPV_GET_OBJECT_ID("CompVRendererGL");
 
+	// Overrides(CompVRenderer)
 	virtual bool isGLEnabled()const { return true; };
+
+	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
 
 	CompVFBOGLPtr fbo() { return m_ptrFBO; }
 
 	static COMPV_ERROR_CODE newObj(CompVRendererGLPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat);
-
+	
 protected:
+	// Overrides(CompVCanvas) 
+	virtual COMPV_ERROR_CODE canvasBind();
+	virtual COMPV_ERROR_CODE canvasUnbind();
+
 	virtual COMPV_ERROR_CODE deInit();
 	virtual COMPV_ERROR_CODE init(CompVMatPtr mat, const std::string& prgVertexData, const std::string& prgFragData, bool bMVP = false, bool bToScreen = false);
 	virtual COMPV_ERROR_CODE bind();

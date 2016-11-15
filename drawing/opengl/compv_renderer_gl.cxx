@@ -80,6 +80,25 @@ COMPV_ERROR_CODE CompVRendererGL::unbind()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+// Overrides(CompVCanvas) 
+COMPV_ERROR_CODE CompVRendererGL::canvasBind()
+{
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
+	COMPV_CHECK_CODE_RETURN(m_ptrFBO->bind()); // bind() to make sure all drawing will be redirected to the FBO
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVRendererGL::canvasUnbind()
+{
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
+	if (m_ptrFBO) {
+		COMPV_CHECK_CODE_RETURN(m_ptrFBO->unbind()); // unbind() to make sure all drawing will be redirected to system buffer
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVRendererGL::deInit()
 {
 	if (!m_bInit) {

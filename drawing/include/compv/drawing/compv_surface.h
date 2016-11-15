@@ -11,6 +11,7 @@
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/compv_canvas.h"
+#include "compv/drawing/compv_renderer.h"
 #include "compv/drawing/compv_mvp.h"
 #include "compv/drawing/compv_common.h"
 
@@ -26,7 +27,7 @@ class CompVSurface;
 typedef CompVPtr<CompVSurface* > CompVSurfacePtr;
 typedef CompVSurfacePtr* CompVSurfacePtrPtr;
 
-class COMPV_DRAWING_API CompVSurface : public CompVObj
+class COMPV_DRAWING_API CompVSurface : public CompVObj, public CompVCanvas
 {
 protected:
 	CompVSurface(int width, int height);
@@ -39,19 +40,14 @@ public:
 	
 	virtual CompVMVPPtr MVP() = 0;
 	virtual bool isGLEnabled()const = 0;
-	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
-	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes) = 0;
+	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat, CompVRendererPtrPtr renderer = NULL) = 0;
 
 	static COMPV_ERROR_CODE newObj(CompVSurfacePtrPtr surface, const CompVWindow* window);
-
-protected:
-	COMPV_INLINE CompVCanvasPtr getCanvas() { return m_ptrCanvas; } // FIXME(dmi): remove
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static compv_surface_id_t s_nSurfaceId;
 	compv_surface_id_t m_nId;
-	CompVCanvasPtr m_ptrCanvas;  // FIXME(dmi): remove
 	int m_nWidth;
 	int m_nHeight;
 

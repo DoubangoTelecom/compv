@@ -22,28 +22,26 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVCanvasSkia;
-typedef CompVPtr<CompVCanvasSkia* > CompVCanvasSkiaPtr;
-typedef CompVCanvasSkiaPtr* CompVCanvasSkiaPtrPtr;
+class CompVCanvasImplSkia;
+typedef CompVPtr<CompVCanvasImplSkia* > CompVCanvasImplSkiaPtr;
+typedef CompVCanvasImplSkiaPtr* CompVCanvasImplSkiaPtrPtr;
 
-class CompVCanvasSkia : public CompVCanvas
+class CompVCanvasImplSkia : public CompVCanvasImpl
 {
 protected:
-	CompVCanvasSkia();
+	CompVCanvasImplSkia();
 public:
-	virtual ~CompVCanvasSkia();
-	COMPV_GET_OBJECT_ID("CompVCanvasSkia");
+	virtual ~CompVCanvasImplSkia();
+	COMPV_GET_OBJECT_ID("CompVCanvasImplSkia");
 
-	virtual COMPV_ERROR_CODE test();
+	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, size_t x, size_t y);
 
-	static COMPV_ERROR_CODE newObj(CompVCanvasSkiaPtrPtr skiaCanvas);
+	static COMPV_ERROR_CODE newObj(CompVCanvasImplSkiaPtrPtr skiaCanvas);
 
 protected:
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 
-	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

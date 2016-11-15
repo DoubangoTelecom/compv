@@ -11,6 +11,7 @@
 #include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_mat.h"
+#include "compv/drawing/compv_canvas.h"
 
 #include <string>
 
@@ -24,7 +25,7 @@ class CompVRenderer;
 typedef CompVPtr<CompVRenderer* > CompVRendererPtr;
 typedef CompVRendererPtr* CompVRendererPtrPtr;
 
-class COMPV_DRAWING_API CompVRenderer : public CompVObj
+class COMPV_DRAWING_API CompVRenderer : public CompVObj, public CompVCanvas
 {
 protected:
 	CompVRenderer(COMPV_PIXEL_FORMAT ePixelFormat);
@@ -35,7 +36,6 @@ public:
 	COMPV_INLINE compv_renderer_id_t id()const { return m_nId; }
 
 	virtual bool isGLEnabled()const = 0;
-	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

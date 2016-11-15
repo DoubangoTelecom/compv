@@ -1,3 +1,4 @@
+#error "Must not compile"
 /* Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>
 * File author: Mamadou DIOP (Doubango Telecom, France).
 * License: GPLv3. For commercial license please contact us.
@@ -17,16 +18,30 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVCanvasImplSkia::CompVCanvasImplSkia()
-	: CompVCanvasImpl()
+CompVCanvasImplSkia::CompVCanvasImplSkia(size_t width, size_t height)
+	: CompVCanvasImpl(width, height)
+	, m_nWidth(width)
+	, m_nHeight(height)
 {
 }
 
 CompVCanvasImplSkia::~CompVCanvasImplSkia()
 {
-	
+	COMPV_CHECK_CODE_ASSERT(deInit());
 }
 
+COMPV_ERROR_CODE CompVCanvasImplSkia::init(size_t width, size_t height)
+{
+	COMPV_CHECK_EXP_RETURN(!width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	m_nWidth = width;
+	m_nHeight = height;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVCanvasImplSkia::deInit()
+{
+	return COMPV_ERROR_CODE_S_OK;
+}
 
 // https://github.com/google/skia/blob/master/example/SkiaSDLExample.cpp
 // https://github.com/google/skia/blob/master/experimental/GLFWTest/glfw_main.cpp
@@ -55,8 +70,6 @@ static SkPath create_star() {
 
 COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textLengthInBytes, size_t x, size_t y)
 {
-
-	GLint bufferWidth, bufferHeight;
 	//GrContext *sContext = NULL;
 	SkSurface *sSurface = NULL;
 
@@ -80,9 +93,6 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textL
 	//if (!sContext) {
 	//	sContext = GrContext::Create(kOpenGL_GrBackend, 0);
 	//}
-
-	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &bufferWidth);
-	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &bufferHeight);
 
 #if 0
 	GrBackendRenderTargetDesc desc;
@@ -108,9 +118,9 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textL
 	// render to it
 	GrBackendRenderTargetDesc desc;
 	static const int kStencilBits = 8;  // Skia needs 8 stencil bits
-	static const int kMsaaSampleCount = 0;
-	desc.fWidth = bufferWidth;
-	desc.fHeight = bufferHeight;
+	static const int kMsaaSampleCount = 0; //4;
+	desc.fWidth = m_nWidth;
+	desc.fHeight = m_nHeight;
 	desc.fConfig = kSkia8888_GrPixelConfig;
 	desc.fOrigin = kBottomLeft_GrSurfaceOrigin;
 	desc.fSampleCnt = kMsaaSampleCount;
@@ -285,12 +295,12 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textL
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVCanvasImplSkia::newObj(CompVCanvasImplSkiaPtrPtr skiaCanvas)
+COMPV_ERROR_CODE CompVCanvasImplSkia::newObj(CompVCanvasImplSkiaPtrPtr skiaCanvas, size_t width, size_t height)
 {
 	COMPV_CHECK_CODE_RETURN(CompVBase::init());
-	COMPV_CHECK_EXP_RETURN(!skiaCanvas, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!skiaCanvas || !width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	CompVCanvasImplSkiaPtr skiaCanvas_ = new CompVCanvasImplSkia();
+	CompVCanvasImplSkiaPtr skiaCanvas_ = new CompVCanvasImplSkia(width, height);
 	COMPV_CHECK_EXP_RETURN(!skiaCanvas_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
 	*skiaCanvas = skiaCanvas_;
