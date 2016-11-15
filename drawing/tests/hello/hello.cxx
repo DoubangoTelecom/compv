@@ -17,7 +17,7 @@ compv_main()
 	COMPV_CHECK_CODE_BAIL(err = CompVInit());
 
 	// Create "Hello world!" window
-	COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window, 640, 480, "Hello world!"));
+	COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window, 740, 680, "Hello world!"));
 
 	// Start ui runloop
 	COMPV_CHECK_CODE_BAIL(err = CompVDrawing::runLoop(WorkerThread));

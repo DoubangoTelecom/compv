@@ -14,6 +14,7 @@
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/opengl/compv_mvp_glm.h"
 #include "compv/drawing/opengl/compv_renderer_gl.h"
+#include "compv/drawing/opengl/compv_fbo_gl.h"
 #include "compv/drawing/compv_surface.h"
 #include "compv/drawing/compv_renderer.h"
 #include "compv/drawing/compv_program.h"
@@ -58,9 +59,7 @@ private:
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	GLuint m_uNameFrameBuffer;
-	GLuint m_uNameTexture;
-	GLuint m_uNameDepthStencil;
+	CompVFBOGLPtr m_ptrFBO;
 	GLuint m_uNameVertexBuffer;
 	GLuint m_uNameIndiceBuffer;
 	GLuint m_uNameSlotPosition;

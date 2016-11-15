@@ -157,7 +157,7 @@ COMPV_ERROR_CODE CompVCanvasSkia::test()
 	char buff_[33] = { 0 };
 	snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(++count));
 	std::string outString = "Hello skia " + std::string(buff_);
-	//canvas->drawText(outString.c_str(), outString.length(), SkIntToScalar(422), SkIntToScalar(102), paint);
+	canvas->drawText(outString.c_str(), outString.length(), SkIntToScalar(422), SkIntToScalar(102), paint);
 	//canvas->drawPoint();
 	canvas->drawCircle(SkIntToScalar(463), SkIntToScalar(86), SkIntToScalar(5), paint);
 #else

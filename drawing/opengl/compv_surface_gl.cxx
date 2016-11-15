@@ -49,9 +49,6 @@ COMPV_NAMESPACE_BEGIN()
 
 CompVSurfaceGL::CompVSurfaceGL(int width, int height)
 	: CompVSurface(width, height)
-	, m_uNameFrameBuffer(0)
-	, m_uNameTexture(0)
-	, m_uNameDepthStencil(0)
 	, m_uNameVertexBuffer(0)
 	, m_uNameIndiceBuffer(0)
 	, m_uNameSlotPosition(0)
@@ -68,6 +65,7 @@ CompVSurfaceGL::~CompVSurfaceGL()
 {
 	COMPV_CHECK_CODE_ASSERT(deInitProgram());
 	COMPV_CHECK_CODE_ASSERT(deInitFrameBuffer());
+	m_ptrMVP = NULL;
 }
 
 CompVMVPPtr CompVSurfaceGL::MVP()
@@ -79,15 +77,15 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat)
 {
 #if 1
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_CODE_RETURN(initFrameBuffer());
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_CODE_RETURN(initFrameBuffer());
 
 	// FIXME(dmi): remove if 'm_uNameFrameBuffer' is passed as parameter
-	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer); // Draw to framebuffer
+	COMPV_CHECK_CODE_RETURN(m_ptrFBO->bind()); // Draw to framebuffer
 
 	const COMPV_PIXEL_FORMAT pixelFormat = static_cast<COMPV_PIXEL_FORMAT>(mat->subType());
 	if (!m_ptrRenderer || m_ptrRenderer->pixelFormat() != pixelFormat) {
-		COMPV_CHECK_CODE_RETURN(CompVRendererGL::newObj(&m_ptrRenderer, pixelFormat, m_uNameTexture));
+		COMPV_CHECK_CODE_RETURN(CompVRendererGL::newObj(&m_ptrRenderer, pixelFormat, m_ptrFBO->nameTexture()));
 	}
 	COMPV_CHECK_CODE_RETURN(m_ptrRenderer->drawImage(mat));
 
@@ -104,7 +102,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat)
 #endif
 
 	// FIXME(dmi): remove if 'm_uNameFrameBuffer' is passed as parameter
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system
+	COMPV_CHECK_CODE_RETURN(m_ptrFBO->unbind()); // Draw to system
 
 #endif
 
@@ -145,7 +143,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawText(const void* textPtr, size_t textLength
 	//glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
 	//glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT /*| GL_CLIENT_VERTEX_ARRAY_BIT*/);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer); // Draw to framebuffer
+	COMPV_CHECK_CODE_ASSERT(m_ptrFBO->bind()); // Draw to framebuffer
 
 	// FIXME:
 	static CompVCanvasPtr ptrCanvas;
@@ -154,7 +152,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawText(const void* textPtr, size_t textLength
 	}
 	COMPV_CHECK_CODE_ASSERT(ptrCanvas->test());
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);  // Draw to system
+	COMPV_CHECK_CODE_ASSERT(m_ptrFBO->unbind());  // Draw to system
 
 	//glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -174,16 +172,11 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawText(const void* textPtr, size_t textLength
 
 COMPV_ERROR_CODE CompVSurfaceGL::clear()
 {
-	if (m_uNameFrameBuffer) {
-		COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-		GLint fbo;
-		glGetIntegerv(GLenum(GL_FRAMEBUFFER_BINDING), &fbo);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-	}
+	COMPV_CHECK_CODE_RETURN(initFrameBuffer());
+	COMPV_CHECK_CODE_ASSERT(m_ptrFBO->bind());
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	COMPV_CHECK_CODE_ASSERT(m_ptrFBO->unbind());
+	
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -191,13 +184,14 @@ COMPV_ERROR_CODE CompVSurfaceGL::blit()
 {
 #if 1
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_CODE_RETURN(initFrameBuffer());
 	COMPV_CHECK_CODE_RETURN(initProgram());
 	COMPV_CHECK_CODE_RETURN(m_ptrProgram->useBegin());
 	// draw to current FB
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system buffer
 	//glViewport(x_, y_, width_, height_);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
+	glBindTexture(GL_TEXTURE_2D, m_ptrFBO->nameTexture());
 
 
 #if defined(HAVE_OPENGL) // FIXME
@@ -266,105 +260,18 @@ COMPV_ERROR_CODE CompVSurfaceGL::blit()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Private funtion: up to the caller to check that the GL context is valid
 COMPV_ERROR_CODE CompVSurfaceGL::initFrameBuffer()
 {
-	if (m_uNameFrameBuffer) {
-		return COMPV_ERROR_CODE_S_OK;
+	if (!m_ptrFBO) {
+		COMPV_CHECK_CODE_RETURN(CompVFBOGL::newObj(&m_ptrFBO, getWidth(), getHeight()));
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	std::string errString_;
-	GLenum fboStatus_;
-
-	// Generate exture
-	glGenTextures(1, &m_uNameTexture);
-	if (!m_uNameTexture) {
-		COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::checkLastError());
-		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
-	}
-	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);        
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	if ((getWidth() & 3)) { // multiple of 4?
-#if defined(GL_UNPACK_ROW_LENGTH)
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)getWidth());
-#endif
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	}
-
-	// Generate a renderbuffer and use it for both for stencil and depth
-	glGenRenderbuffers(1, &m_uNameDepthStencil);
-	if (!m_uNameDepthStencil) {
-		COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::checkLastError());
-		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
-	}
-	glBindRenderbuffer(GL_RENDERBUFFER, m_uNameDepthStencil);
-#if defined(GL_DEPTH24_STENCIL8)
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, getWidth(), getHeight()); // Should match CompVDrawind::init()
-#elif defined(GL_DEPTH24_STENCIL8_OES)
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, getWidth(), getHeight()); // Should match CompVDrawind::init()
-#else
-#	error "Not supported"
-#endif
-
-	// Generate our Framebuffer object
-	glGenFramebuffers(1, &m_uNameFrameBuffer);
-	if (!m_uNameFrameBuffer) {
-		COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::checkLastError());
-		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
-	}
-
-	// Bind to the FBO for next function
-	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
-	// Attach texture to color
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_uNameTexture, 0);
-	// Attach depth buffer
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_uNameDepthStencil);
-	// Attach stencil buffer
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_uNameDepthStencil);
-	// Clear buffers
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-	// Check FBO status
-	if ((fboStatus_ = glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)) {
-		COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::checkLastError());
-		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
-	}
-
-	COMPV_DEBUG_INFO("OpenGL FBO successfully created");
-
-bail:
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
-	if (COMPV_ERROR_CODE_IS_NOK(err_)) {
-		deInitFrameBuffer();
-	}
-	return err_;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVSurfaceGL::deInitFrameBuffer()
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	m_ptrRenderer = NULL;
-	if (m_uNameTexture) {
-		glDeleteTextures(1, &m_uNameTexture);
-		m_uNameTexture = 0;
-	}
-	if (m_uNameDepthStencil) {
-		glDeleteRenderbuffers(1, &m_uNameDepthStencil);
-		m_uNameFrameBuffer = 0;
-	}
-	if (m_uNameFrameBuffer) {
-		glDeleteFramebuffers(1, &m_uNameFrameBuffer);
-		m_uNameFrameBuffer = 0;
-	}
-	return err;
+	m_ptrFBO = NULL;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVSurfaceGL::initProgram()
@@ -373,7 +280,6 @@ COMPV_ERROR_CODE CompVSurfaceGL::initProgram()
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	COMPV_CHECK_CODE_RETURN(initFrameBuffer());
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
 	// TODO(dmi): use GLUtils
@@ -429,7 +335,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::initProgram()
 	glUniformMatrix4fv(m_uNameSlotMVP, 1, GL_FALSE, MVP()->matrix()->ptr());
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
+	glBindTexture(GL_TEXTURE_2D, m_ptrFBO->nameTexture());
 	glUniform1i(glGetUniformLocation(m_ptrProgram->id(), "SamplerRGBA"), 0);
 
 bail:
