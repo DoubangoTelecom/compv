@@ -15,7 +15,77 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVWindowSDL::CompVWindowSDL(int width, int height, const char* title)
+
+//
+//	CompVContextGLSDL
+//
+
+CompVContextGLSDL::CompVContextGLSDL(SDL_Window *pSDLWindow, SDL_GLContext pSDLContext)
+	: CompVContextGL()
+	, m_pSDLWindow(pSDLWindow)
+	, m_pSDLContext(pSDLContext)
+{
+}
+
+CompVContextGLSDL::~CompVContextGLSDL()
+{
+}
+
+	
+COMPV_ERROR_CODE CompVContextGLSDL::makeCurrent()
+{
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+
+	//!\\ Order is important: call base class implementation to lock then set context then
+	COMPV_CHECK_CODE_BAIL(err = CompVContextGL::makeCurrent()); // Base class implementation
+	COMPV_CHECK_EXP_BAIL(SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) != 0, (err = COMPV_ERROR_CODE_E_SDL));
+
+bail:
+	if (COMPV_ERROR_CODE_IS_NOK(err)) {
+		COMPV_DEBUG_ERROR("SDL_GL_MakeCurrent failed: %s", SDL_GetError());
+		COMPV_CHECK_CODE_ASSERT(unmakeCurrent());
+	}
+	return err;
+}
+
+COMPV_ERROR_CODE CompVContextGLSDL::swabBuffers()
+{
+	COMPV_CHECK_CODE_RETURN(CompVContextGL::swabBuffers()); // Base class implementation
+	SDL_GL_SwapWindow(m_pSDLWindow);
+	return COMPV_ERROR_CODE_S_OK;
+}
+	
+COMPV_ERROR_CODE CompVContextGLSDL::unmakeCurrent()
+{
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+
+	//!\\ Order is important: unset context then call base class implementation to unlock
+	COMPV_CHECK_EXP_BAIL(SDL_GL_MakeCurrent(m_pSDLWindow, NULL) != 0, (err = COMPV_ERROR_CODE_E_SDL));
+	COMPV_CHECK_CODE_BAIL(err = CompVContextGL::unmakeCurrent()); // Base class implementation
+
+bail:
+	if (COMPV_ERROR_CODE_IS_NOK(err)) {
+		COMPV_DEBUG_ERROR("SDL_GL_MakeCurrent failed: %s", SDL_GetError());
+	}
+	return err;
+}
+
+COMPV_ERROR_CODE CompVContextGLSDL::newObj(CompVContextGLSDLPtrPtr context, SDL_Window *pSDLWindow, SDL_GLContext pSDLContext)
+{
+	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
+	COMPV_CHECK_EXP_RETURN(!context || !pSDLWindow || !pSDLContext, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVContextGLSDLPtr context_ = new CompVContextGLSDL(pSDLWindow, pSDLContext);
+	COMPV_CHECK_EXP_RETURN(!context_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+
+	*context = context_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+//
+//	CompVWindowSDL
+//
+
+CompVWindowSDL::CompVWindowSDL(size_t width, size_t height, const char* title)
 	: CompVWindowGL(width, height, title)
 	, m_pSDLWindow(NULL)
 	, m_pSDLContext(NULL)
@@ -37,12 +107,12 @@ CompVWindowSDL::CompVWindowSDL(int width, int height, const char* title)
 		title,
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
-		width,
-		height,
+		static_cast<int>(width),
+		static_cast<int>(height),
 		sWindowFlags
 	);
 	if (!m_pSDLWindow) {
-		COMPV_DEBUG_ERROR("SDL_CreateWindow(%d, %d, %s) failed: %s", width, height, title, SDL_GetError());
+		COMPV_DEBUG_ERROR("SDL_CreateWindow(%zd, %zd, %s) failed: %s", width, height, title, SDL_GetError());
 		return;
 	}
 	m_pSDLContext = SDL_GL_CreateContext(m_pSDLWindow);
@@ -54,7 +124,6 @@ CompVWindowSDL::CompVWindowSDL(int width, int height, const char* title)
 	if (m_pSDLContext) {
 		COMPV_ASSERT(SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) == 0);
 		SDL_GL_SetSwapInterval(1);
-		SDL_SetEventFilter(CompVWindowSDL::FilterEvents, this);
 		SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
 	}
 }
@@ -88,36 +157,16 @@ COMPV_ERROR_CODE CompVWindowSDL::close()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Overrides 'CompVWindowGL::makeGLContextCurrent'
-COMPV_ERROR_CODE CompVWindowSDL::makeGLContextCurrent()
+// Overrides(CompVWindowGL)
+CompVContextGLPtr CompVWindowSDL::context()
 {
-	CompVAutoLock<CompVWindowSDL>(this);
-	COMPV_CHECK_EXP_RETURN(!m_pSDLWindow, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_CHECK_EXP_RETURN(SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) != 0, COMPV_ERROR_CODE_E_SDL);
-	return COMPV_ERROR_CODE_S_OK;
+	return *m_ptrContext;
 }
 
-// Overrides 'CompVWindowGL::unmakeGLContextCurrent'
-COMPV_ERROR_CODE CompVWindowSDL::unmakeGLContextCurrent()
-{
-	CompVAutoLock<CompVWindowSDL>(this);
-	COMPV_CHECK_EXP_RETURN(!m_pSDLWindow, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_CHECK_EXP_RETURN(SDL_GL_MakeCurrent(m_pSDLWindow, NULL) != 0, COMPV_ERROR_CODE_E_SDL);
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVWindowSDL::swapGLBuffers()
-{
-	CompVAutoLock<CompVWindowSDL>(this);
-	COMPV_CHECK_EXP_RETURN(!m_pSDLWindow, COMPV_ERROR_CODE_E_INVALID_STATE);
-	SDL_GL_SwapWindow(m_pSDLWindow);
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVWindowSDL::newObj(CompVWindowSDLPtrPtr sdlWindow, int width, int height, const char* title)
+COMPV_ERROR_CODE CompVWindowSDL::newObj(CompVWindowSDLPtrPtr sdlWindow, size_t width, size_t height, const char* title)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
-	COMPV_CHECK_EXP_RETURN(sdlWindow == NULL || width <= 0 || height <= 0 || !title || !::strlen(title), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(sdlWindow == NULL || !width || !height || !title || !::strlen(title), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVWindowSDLPtr sdlWindow_ = new CompVWindowSDL(width, height, title);
 	COMPV_CHECK_EXP_RETURN(!sdlWindow_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	COMPV_CHECK_EXP_RETURN(!sdlWindow_->isInitialized(), COMPV_ERROR_CODE_E_SYSTEM);
@@ -125,27 +174,10 @@ COMPV_ERROR_CODE CompVWindowSDL::newObj(CompVWindowSDLPtrPtr sdlWindow, int widt
 #if 1 // OpenGL could be unavailable -> CPU drawing fallback. TODO(dmi): For now OpenGL is required.
 	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_pSDLContext, COMPV_ERROR_CODE_E_SDL);
 #endif
+	COMPV_CHECK_CODE_RETURN(CompVContextGLSDL::newObj(&sdlWindow_->m_ptrContext, sdlWindow_->m_pSDLWindow, sdlWindow_->m_pSDLContext));
+
 	*sdlWindow = sdlWindow_;
 	return COMPV_ERROR_CODE_S_OK;
-}
-
-// FIXME(dmi): remove if not used
-int CompVWindowSDL::FilterEvents(void *userdata, SDL_Event* event)
-{
-	/*if (event->type == SDL_WINDOWEVENT) {
-		CompVWindowSDLPtr This = static_cast<CompVWindowSDL*>(userdata);
-		switch (event->window.event) {
-		case SDL_WINDOWEVENT_CLOSE:
-			COMPV_CHECK_CODE_ASSERT(This->m_ptrSDLMutex->lock());
-			COMPV_CHECK_CODE_ASSERT(This->unregister());
-			COMPV_CHECK_CODE_ASSERT(This->close());
-			COMPV_CHECK_CODE_ASSERT(This->m_ptrSDLMutex->unlock());
-			return 0;
-		default:
-			break;
-		}
-	}*/
-	return (1);
 }
 
 COMPV_NAMESPACE_END()

@@ -19,6 +19,36 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+//
+//	CompVContextGLAndroidEGL
+//
+class CompVContextGLAndroidEGL;
+typedef CompVPtr<CompVContextGLAndroidEGL* > CompVContextGLAndroidEGLPtr;
+typedef CompVContextGLAndroidEGLPtr* CompVContextGLAndroidEGLPtrPtr;
+
+class CompVContextGLAndroidEGL : public CompVContextGL
+{
+protected:
+	CompVContextGLAndroidEGL(EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex);
+public:
+	virtual ~CompVContextGLAndroidEGL();
+	COMPV_GET_OBJECT_ID("CompVContextGLAndroidEGL");
+
+	virtual COMPV_ERROR_CODE makeCurrent();
+	virtual COMPV_ERROR_CODE swabBuffers();
+	virtual COMPV_ERROR_CODE unmakeCurrent();
+
+	static COMPV_ERROR_CODE newObj(CompVContextGLAndroidEGLPtrPtr context, EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex);
+
+private:
+	EGLDisplay m_pEGLDisplay;
+	EGLSurface m_pEGLSurface;
+	EGLContext m_pEGLContex;
+};
+
+//
+//	CompVWindowAndroidEGL
+//
 class CompVWindowAndroidEGL;
 typedef CompVPtr<CompVWindowAndroidEGL* > CompVWindowAndroidEGLPtr;
 typedef CompVWindowAndroidEGLPtr* CompVWindowAndroidEGLPtrPtr;
@@ -26,7 +56,7 @@ typedef CompVWindowAndroidEGLPtr* CompVWindowAndroidEGLPtrPtr;
 class CompVWindowAndroidEGL : public CompVWindowGL
 {
 protected:
-	CompVWindowAndroidEGL(int width, int height, const char* title);
+	CompVWindowAndroidEGL(size_t width, size_t height, const char* title);
 public:
 	virtual ~CompVWindowAndroidEGL();
 	virtual COMPV_INLINE const char* getObjectId() {
@@ -36,18 +66,15 @@ public:
 	/* CompVWindow overrides */
 	virtual bool isClosed()const;
 	virtual COMPV_ERROR_CODE close();
-	// Override(CompVWindow::beginDraw) -> CompVWindowGL
+	virtual COMPV_ERROR_CODE beginDraw();
 	// Override(CompVWindow::endDraw) -> CompVWindowGL
 	// Override(CompVWindow::surface) -> CompVWindowGL
 
-	static COMPV_ERROR_CODE newObj(CompVWindowAndroidEGLPtrPtr eglWindow, int width, int height, const char* title);
+	static COMPV_ERROR_CODE newObj(CompVWindowAndroidEGLPtrPtr eglWindow, size_t width, size_t height, const char* title);
 
 protected:
 	/* CompVWindowGL overrides */
-	virtual CompVGLContext getGLContext()const { return static_cast<CompVGLContext>(m_pEGLContex); } // FIXME: CompVWindow override
-	virtual COMPV_ERROR_CODE makeGLContextCurrent();
-	virtual COMPV_ERROR_CODE unmakeGLContextCurrent();
-	virtual COMPV_ERROR_CODE swapGLBuffers();
+	virtual CompVContextGLPtr context();
 
 private:
 	COMPV_ERROR_CODE init();
@@ -58,6 +85,7 @@ private:
 	EGLDisplay m_pEGLDisplay;
 	EGLSurface m_pEGLSurface;
 	EGLContext m_pEGLContex;
+	CompVContextGLAndroidEGLPtr m_ptrContext;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

@@ -13,12 +13,17 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVWindowGL::CompVWindowGL(int width, int height, const char* title)
-	: CompVWindow(width, height, title)
+
+
+//
+//	CompVWindowGL
+//
+
+CompVWindowGL::CompVWindowGL(size_t width, size_t height, const char* title)
+	: CompVWindowPriv(width, height, title)
 	, CompVLock()
 	, m_bDrawing(false)
 {
-	
 }
 
 CompVWindowGL::~CompVWindowGL()
@@ -36,15 +41,15 @@ COMPV_ERROR_CODE CompVWindowGL::beginDraw()
 {
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	COMPV_CHECK_EXP_BAIL(m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
-	COMPV_CHECK_CODE_BAIL(err = makeGLContextCurrent());
+	COMPV_CHECK_EXP_BAIL(m_bDrawing || !context(), (err = COMPV_ERROR_CODE_E_INVALID_STATE));
+	COMPV_CHECK_CODE_BAIL(err = context()->makeCurrent());
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Switch to system buffer
 	// TODO(dmi): 'GL_DEPTH_TEST' not working with skia:  we need to use 'glPushAttrib(GL_ALL_ATTRIB_BITS); glPopAttrib();' before/after canvas drawing
 	// 'GL_DEPTH_TEST' is needed for 3D projection
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
-	glViewport(0, 0, static_cast<GLsizei>(getWidth()), static_cast<GLsizei>(getHeight())); // FIXME: width and height must be dynamic
+	glViewport(0, 0, static_cast<GLsizei>(CompVWindow::width()), static_cast<GLsizei>(CompVWindow::height())); // FIXME: width and height must be dynamic
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 	glClearStencil(0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -57,7 +62,7 @@ COMPV_ERROR_CODE CompVWindowGL::beginDraw()
 	m_bDrawing = true;
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
-		unmakeGLContextCurrent();
+		COMPV_CHECK_CODE_ASSERT(context()->unmakeCurrent());
 	}
 	return err;
 }
@@ -78,11 +83,11 @@ COMPV_ERROR_CODE CompVWindowGL::endDraw()
 	}
 
 	// Swap (aka 'present' the final redering to the window, means switch front/back buffers)
-	COMPV_CHECK_CODE_BAIL(err = swapGLBuffers());
+	COMPV_CHECK_CODE_BAIL(err = context()->swabBuffers());
 
 bail:
 	m_bDrawing = false;
-	COMPV_CHECK_CODE_ASSERT(unmakeGLContextCurrent());
+	COMPV_CHECK_CODE_ASSERT(context()->unmakeCurrent());
 	return err;
 }
 
@@ -128,6 +133,32 @@ CompVSurfacePtr CompVWindowGL::surface(size_t index /*= 0*/)
 	return *m_vecGLSurfaces[index];
 bail:
 	return NULL;
+}
+
+// Overrides(CompVWindowPriv)
+COMPV_ERROR_CODE CompVWindowGL::priv_updateSize(size_t newWidth, size_t newHeight)
+{
+	CompVAutoLock<CompVWindowGL>(this);
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	
+	COMPV_CHECK_CODE_BAIL(err = context()->makeCurrent());
+
+	CompVWindow::m_nWidth = newWidth;
+	CompVWindow::m_nHeight = newHeight;
+
+	// COMPV_CHECK_CODE_BAIL(err = beginDraw()); // TODO(dmi): deadlock
+	for (std::vector<CompVSurfaceGLPtr >::iterator it = m_vecGLSurfaces.begin(); it != m_vecGLSurfaces.end(); ++it) {
+		COMPV_CHECK_CODE_BAIL(err = (*it)->updateSize(newWidth, newHeight));
+	}	
+	//COMPV_CHECK_CODE_BAIL(err = endDraw()); // blit all surfaces using up-to-data sizes
+
+	for (std::map<compv_windowlistener_id_t, CompVWindowListenerPtr>::iterator it = m_mapListeners.begin(); it != m_mapListeners.end(); ++it) {
+		COMPV_CHECK_CODE_BAIL(err = it->second->onSizeChanged(newWidth, newHeight));
+	}
+	
+bail:
+	COMPV_CHECK_CODE_ASSERT(err = context()->unmakeCurrent());
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

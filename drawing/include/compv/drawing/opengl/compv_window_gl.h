@@ -11,6 +11,7 @@
 #include "compv/drawing/opengl/compv_headers_gl.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/opengl/compv_surface_gl.h"
+#include "compv/drawing/opengl/compv_context_gl.h"
 #include "compv/drawing/compv_window.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_common.h"
@@ -25,21 +26,25 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+//
+//	CompVWindowGL
+//
 class CompVWindowGL;
 typedef CompVPtr<CompVWindowGL* > CompVWindowGLPtr;
 typedef CompVWindowGLPtr* CompVWindowGLPtrPtr;
 
-class CompVWindowGL : public CompVWindow, public CompVLock
+class CompVWindowGL : public CompVWindowPriv, public CompVLock
 {
+	friend class CompVWindowGLListener;
 protected:
-	CompVWindowGL(int width, int height, const char* title);
+	CompVWindowGL(size_t width, size_t height, const char* title);
 public:
 	virtual ~CompVWindowGL();
-	COMPV_GET_OBJECT_ID("CompVWindowGL");
 
 	bool isInitialized()const;
 
 	// Overrides(CompVWindow)
+	virtual bool isGLEnabled()const { return true; }
 	virtual bool isDrawing()const { return m_bDrawing;  }
 	virtual COMPV_ERROR_CODE beginDraw();
 	virtual COMPV_ERROR_CODE endDraw();
@@ -49,10 +54,11 @@ public:
 	virtual COMPV_ERROR_CODE removeSurface(size_t index);
 	virtual CompVSurfacePtr surface(size_t index = 0);
 
+	// Overrides(CompVWindowPriv)
+	virtual COMPV_ERROR_CODE priv_updateSize(size_t newWidth, size_t newHeight);
+
 protected:
-	virtual COMPV_ERROR_CODE makeGLContextCurrent() = 0;
-	virtual COMPV_ERROR_CODE unmakeGLContextCurrent() = 0;
-	virtual COMPV_ERROR_CODE swapGLBuffers() = 0;
+	virtual CompVContextGLPtr context() = 0;
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

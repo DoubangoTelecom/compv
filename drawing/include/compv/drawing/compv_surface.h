@@ -31,13 +31,13 @@ typedef CompVSurfacePtr* CompVSurfacePtrPtr;
 class COMPV_DRAWING_API CompVSurface : public CompVObj, public CompVCanvas
 {
 protected:
-	CompVSurface(int width, int height);
+	CompVSurface(size_t width, size_t height);
 public:
 	virtual ~CompVSurface();
 
-	COMPV_INLINE compv_surface_id_t getId()const { return m_nId; }
-	COMPV_INLINE int getWidth()const { return m_nWidth; }
-	COMPV_INLINE int getHeight()const { return m_nHeight; }
+	COMPV_INLINE compv_surface_id_t id()const { return m_nId; }
+	COMPV_INLINE size_t width()const { return m_nWidth; }
+	COMPV_INLINE size_t height()const { return m_nHeight; }
 	
 	virtual bool isGLEnabled()const = 0;
 	virtual COMPV_ERROR_CODE setMVP(CompVMVPPtr mvp) = 0;
@@ -46,14 +46,18 @@ public:
 
 	static COMPV_ERROR_CODE newObj(CompVSurfacePtrPtr surface, const CompVWindow* window);
 
+protected:
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+	size_t m_nWidth;
+	size_t m_nHeight;
+	COMPV_VS_DISABLE_WARNINGS_END()
+
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static compv_surface_id_t s_nSurfaceId;
 	compv_surface_id_t m_nId;
-	int m_nWidth;
-	int m_nHeight;
-
 	COMPV_VS_DISABLE_WARNINGS_END()
+	
 };
 
 COMPV_NAMESPACE_END()

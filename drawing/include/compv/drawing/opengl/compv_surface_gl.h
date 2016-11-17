@@ -33,7 +33,7 @@ typedef CompVSurfaceGLPtr* CompVSurfaceGLPtrPtr;
 class CompVSurfaceGL : public CompVSurface, public CompVBlitterGL
 {
 protected:
-	CompVSurfaceGL(int width, int height);
+	CompVSurfaceGL(size_t width, size_t height);
 public:
 	virtual ~CompVSurfaceGL();
 	COMPV_GET_OBJECT_ID("CompVSurfaceGL");
@@ -47,6 +47,7 @@ public:
 
 	COMPV_ERROR_CODE beginDraw();
 	COMPV_ERROR_CODE endDraw();
+	COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
 
 	static COMPV_ERROR_CODE newObj(CompVSurfaceGLPtrPtr glSurface, const CompVWindow* window);
 

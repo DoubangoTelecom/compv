@@ -277,6 +277,10 @@ bail:
 }
 
 #if defined(HAVE_SDL_H)
+#define COMPV_SDL_GET_WINDOW() \
+ CompVWindowPrivPtr windPriv = static_cast<CompVWindowPriv*>(SDL_GetWindowData(SDL_GetWindowFromID(sdlEvent.window.windowID), "This")); \
+ COMPV_CHECK_EXP_BAIL(!windPriv, err = COMPV_ERROR_CODE_E_SDL)
+
 COMPV_ERROR_CODE CompVDrawing::sdl_runLoop()
 {
 	SDL_Event sdlEvent;
@@ -293,13 +297,16 @@ COMPV_ERROR_CODE CompVDrawing::sdl_runLoop()
 				COMPV_DEBUG_INFO_EX("UI", "Quit called");
 				CompVDrawing::s_bLoopRunning = false;
 			}
-			else if (sdlEvent.type == SDL_WINDOWEVENT && sdlEvent.window.event == SDL_WINDOWEVENT_CLOSE) {
-				SDL_Window* window = SDL_GetWindowFromID(sdlEvent.window.windowID);
-				if (window) {
-					CompVWindowPtr wind = static_cast<CompVWindow*>(SDL_GetWindowData(window, "This"));
-					if (wind) {
-						COMPV_CHECK_CODE_ASSERT(err = wind->close());
-					}
+			else if (sdlEvent.type == SDL_WINDOWEVENT) {
+				if (sdlEvent.window.event == SDL_WINDOWEVENT_CLOSE) {
+					COMPV_SDL_GET_WINDOW();
+					COMPV_DEBUG_INFO("SDL_WINDOWEVENT_CLOSE");
+					COMPV_CHECK_CODE_BAIL(err = windPriv->close());
+				}
+				else if (sdlEvent.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+					COMPV_SDL_GET_WINDOW();
+					COMPV_DEBUG_INFO("SDL_WINDOWEVENT_SIZE_CHANGED");
+					COMPV_CHECK_CODE_BAIL(err = windPriv->priv_updateSize(static_cast<size_t>(sdlEvent.window.data1), static_cast<size_t>(sdlEvent.window.data2)));
 				}
 			}
 		}

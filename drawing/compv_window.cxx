@@ -15,8 +15,9 @@
 COMPV_NAMESPACE_BEGIN()
 
 compv_window_id_t CompVWindow::s_nWindowId = 0;
+compv_windowlistener_id_t CompVWindowListener::s_nWindowListenerId = 0;
 
-CompVWindow::CompVWindow(int width, int height, const char* title /*= "Unknown"*/)
+CompVWindow::CompVWindow(size_t width, size_t height, const char* title /*= "Unknown"*/)
 : m_nWidth(width)
 , m_nHeight(height)
 , m_strTitle(title)
@@ -29,6 +30,7 @@ CompVWindow::CompVWindow(int width, int height, const char* title /*= "Unknown"*
 
 CompVWindow::~CompVWindow()
 {
+	m_mapListeners.clear();
 	COMPV_CHECK_CODE_ASSERT(unregister());
 }
 
@@ -38,7 +40,21 @@ COMPV_ERROR_CODE CompVWindow::unregister()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVWindow::newObj(CompVWindowPtrPtr window, int width, int height, const char* title /*= "Unknown"*/)
+COMPV_ERROR_CODE CompVWindow::addListener(CompVWindowListenerPtr listener)
+{
+	COMPV_CHECK_EXP_RETURN(!listener, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	m_mapListeners[listener->id()] = listener;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVWindow::removeListener(CompVWindowListenerPtr listener)
+{
+	COMPV_CHECK_EXP_RETURN(!listener, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	m_mapListeners.erase(listener->id());
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVWindow::newObj(CompVWindowPtrPtr window, size_t width, size_t height, const char* title /*= "Unknown"*/)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
 	COMPV_CHECK_EXP_RETURN(!window || width <= 0 || height <= 0 || !title || !::strlen(title), COMPV_ERROR_CODE_E_INVALID_PARAMETER);

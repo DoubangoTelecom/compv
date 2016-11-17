@@ -45,6 +45,10 @@ protected:
 	virtual COMPV_ERROR_CODE deInit();
 
 private:
+	static COMPV_ERROR_CODE updateVertices(size_t width, size_t height, size_t stride, bool bToScreen, CompVGLVertex (*Vertices)[4]);
+
+
+private:
 	bool m_bInit;
 	bool m_bToScreen;
 	bool m_bMVP;

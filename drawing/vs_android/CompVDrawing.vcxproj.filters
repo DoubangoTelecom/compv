@@ -105,6 +105,9 @@
     <ClCompile Include="..\compv_viewport.cxx">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\opengl\compv_context_gl.cxx">
+      <Filter>src\opengl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\drawing\compv_canvas.h">
@@ -181,6 +184,9 @@
     </ClInclude>
     <ClInclude Include="..\include\compv\drawing\compv_viewport.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\drawing\opengl\compv_context_gl.h">
+      <Filter>include\opengl</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

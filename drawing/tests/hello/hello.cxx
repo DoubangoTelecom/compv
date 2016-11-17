@@ -77,7 +77,7 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 
 	while (CompVDrawing::isLoopRunning()) {
 		snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(count));
-		std::string text = "Hello Doubango " + std::string(buff_);
+		std::string text = "Hello doubango telecom [" + std::string(buff_) + "]";
 		COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
 		COMPV_CHECK_CODE_BAIL(err = window->surface(0)->drawImage(mat[0/*(count + 0) % 3*/], &ptrImageRenderer));
 		COMPV_CHECK_CODE_BAIL(err = ptrImageRenderer->drawText(text.c_str(), text.length(), 463, 86));

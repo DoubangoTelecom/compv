@@ -20,6 +20,36 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+//
+//	CompVContextGLSDL
+//
+class CompVContextGLSDL;
+typedef CompVPtr<CompVContextGLSDL* > CompVContextGLSDLPtr;
+typedef CompVContextGLSDLPtr* CompVContextGLSDLPtrPtr;
+
+class CompVContextGLSDL : public CompVContextGL
+{
+protected:
+	CompVContextGLSDL(SDL_Window *pSDLWindow, SDL_GLContext pSDLContext);
+public:
+	virtual ~CompVContextGLSDL();
+	COMPV_GET_OBJECT_ID("CompVContextGLSDL");
+
+	virtual COMPV_ERROR_CODE makeCurrent();
+	virtual COMPV_ERROR_CODE swabBuffers();
+	virtual COMPV_ERROR_CODE unmakeCurrent();
+
+	static COMPV_ERROR_CODE newObj(CompVContextGLSDLPtrPtr context, SDL_Window *pSDLWindow, SDL_GLContext pSDLContext);
+
+private:
+	SDL_Window *m_pSDLWindow;
+	SDL_GLContext m_pSDLContext;
+};
+
+
+//
+//	CompVWindowSDL
+//
 class CompVWindowSDL;
 typedef CompVPtr<CompVWindowSDL* > CompVWindowSDLPtr;
 typedef CompVWindowSDLPtr* CompVWindowSDLPtrPtr;
@@ -27,7 +57,7 @@ typedef CompVWindowSDLPtr* CompVWindowSDLPtrPtr;
 class CompVWindowSDL : public CompVWindowGL
 {
 protected:
-	CompVWindowSDL(int width, int height, const char* title);
+	CompVWindowSDL(size_t width, size_t height, const char* title);
 public:
 	virtual ~CompVWindowSDL();
 	COMPV_GET_OBJECT_ID("CompVWindowSDL");
@@ -39,20 +69,17 @@ public:
 	// Override(CompVWindow::endDraw) -> CompVWindowGL
 	// Override(CompVWindow::surface) -> CompVWindowGL
 
-	static COMPV_ERROR_CODE newObj(CompVWindowSDLPtrPtr sdlWindow, int width, int height, const char* title);
-	static int FilterEvents(void *userdata, SDL_Event * event);
+	static COMPV_ERROR_CODE newObj(CompVWindowSDLPtrPtr sdlWindow, size_t width, size_t height, const char* title);
 
 protected:
 	/* CompVWindowGL overrides */
-	virtual CompVGLContext getGLContext()const { return static_cast<CompVGLContext>(m_pSDLContext); } // FIXME: CompVWindow override
-	virtual COMPV_ERROR_CODE makeGLContextCurrent();
-	virtual COMPV_ERROR_CODE unmakeGLContextCurrent();
-	virtual COMPV_ERROR_CODE swapGLBuffers();
+	virtual CompVContextGLPtr context();
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	SDL_Window *m_pSDLWindow;
 	SDL_GLContext m_pSDLContext;
+	CompVContextGLSDLPtr m_ptrContext;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

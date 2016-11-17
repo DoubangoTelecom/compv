@@ -97,9 +97,18 @@ COMPV_ERROR_CODE CompVBlitterGL::setMVP(CompVMVPPtr mvp)
 
 COMPV_ERROR_CODE CompVBlitterGL::setSize(size_t width, size_t height, size_t stride)
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	CompVGLVertex newVertices[4];
+	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::updateVertices(width, height, stride, m_bToScreen, &newVertices));
 
-	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	if (m_uNameVertexBuffer) {
+		glBindBuffer(GL_ARRAY_BUFFER, m_uNameVertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(newVertices), newVertices, GL_STATIC_DRAW);
+	}
+
+	m_nWidth = width;
+	m_nHeight = height;
+	m_nStride = stride;
+	*m_Vertices = *newVertices;
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -113,7 +122,7 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 	COMPV_CHECK_EXP_RETURN(!width || !height || stride < width || prgVertexData.empty() || prgFragData.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	m_bInit = true; // Make sure deInit() will be executed if this function fails
-	GLfloat uMax, vMax;
+	CompVGLVertex newVertices[4];
 
 	// Model-View-Projection
 	if (!bMVP) {
@@ -153,25 +162,8 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 		}
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, m_uNameVertexBuffer);
-	uMax = static_cast<GLfloat>(width) / static_cast<GLfloat>(stride);
-	vMax = 1.f;	
-	if (bToScreen) {
-		COMPV_CHECK_EXP_RETURN(sizeof(m_Vertices) != sizeof(CompVGLScreenVertices), COMPV_ERROR_CODE_E_SYSTEM);
-		memcpy(&m_Vertices, CompVGLScreenVertices, sizeof(CompVGLScreenVertices));
-		m_Vertices[0].TexCoord[0] = uMax, m_Vertices[0].TexCoord[1] = 0.f;
-		m_Vertices[1].TexCoord[0] = uMax, m_Vertices[0].TexCoord[1] = vMax;
-		m_Vertices[2].TexCoord[0] = 0.f, m_Vertices[0].TexCoord[1] = vMax;
-		m_Vertices[3].TexCoord[0] = 0.f, m_Vertices[0].TexCoord[1] = 0.f;
-	}
-	else {
-		COMPV_CHECK_EXP_RETURN(sizeof(m_Vertices) != sizeof(CompVGLTexture2DVertices), COMPV_ERROR_CODE_E_SYSTEM);
-		memcpy(&m_Vertices, CompVGLTexture2DVertices, sizeof(CompVGLTexture2DVertices));
-		m_Vertices[0].TexCoord[0] = uMax, m_Vertices[0].TexCoord[1] = vMax;
-		m_Vertices[1].TexCoord[0] = uMax, m_Vertices[0].TexCoord[1] = 0.f;
-		m_Vertices[2].TexCoord[0] = 0.f, m_Vertices[0].TexCoord[1] = 0.f;
-		m_Vertices[3].TexCoord[0] = 0.f, m_Vertices[0].TexCoord[1] = vMax;
-	}
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_Vertices), m_Vertices, GL_STATIC_DRAW);
+	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::updateVertices(width, height, stride, bToScreen, &newVertices));
+	glBufferData(GL_ARRAY_BUFFER, sizeof(newVertices), newVertices, GL_STATIC_DRAW);
 
 	// Indice buffer
 	// TODO(dmi): use GLUtils
@@ -222,6 +214,7 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 	m_nHeight = height;
 	m_nStride = stride;
 	m_bToScreen = bToScreen;
+	*m_Vertices = *newVertices;
 	m_bMVP = bMVP;
 
 bail:
@@ -268,6 +261,31 @@ COMPV_ERROR_CODE CompVBlitterGL::deInit()
 	m_ptrProgram = NULL;
 
 	m_bInit = false;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVBlitterGL::updateVertices(size_t width, size_t height, size_t stride, bool bToScreen, CompVGLVertex(*Vertices)[4])
+{
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+
+	GLfloat uMax = static_cast<GLfloat>(width) / static_cast<GLfloat>(stride);
+	GLfloat vMax = 1.f;
+	if (bToScreen) {
+		COMPV_CHECK_EXP_RETURN(sizeof(m_Vertices) != sizeof(CompVGLScreenVertices), COMPV_ERROR_CODE_E_SYSTEM);
+		memcpy(&(*Vertices)[0], CompVGLScreenVertices, sizeof(CompVGLScreenVertices));
+		(*Vertices)[0].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = 0.f;
+		(*Vertices)[1].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = vMax;
+		(*Vertices)[2].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = vMax;
+		(*Vertices)[3].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = 0.f;
+	}
+	else {
+		COMPV_CHECK_EXP_RETURN(sizeof(m_Vertices) != sizeof(CompVGLTexture2DVertices), COMPV_ERROR_CODE_E_SYSTEM);
+		memcpy(&(*Vertices)[0], CompVGLTexture2DVertices, sizeof(CompVGLTexture2DVertices));
+		(*Vertices)[0].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = vMax;
+		(*Vertices)[1].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = 0.f;
+		(*Vertices)[2].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = 0.f;
+		(*Vertices)[3].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = vMax;
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 

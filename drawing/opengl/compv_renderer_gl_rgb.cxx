@@ -69,6 +69,7 @@ COMPV_ERROR_CODE CompVRendererGLRGB::drawImage(CompVMatPtr mat)
 
 	// Check if format changed
 	if (mat->cols() != m_uWidth || mat->rows() != m_uHeight || mat->stride() != m_uStride) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Update size only without deInit()
 		COMPV_DEBUG_INFO("GL renderer format changed: %d -> %d", CompVRenderer::pixelFormat(), pixelFormat);
 		COMPV_CHECK_CODE_RETURN(deInit());
 	}

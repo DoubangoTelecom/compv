@@ -34,7 +34,7 @@ static const std::string& kProgramFragData =
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVSurfaceGL::CompVSurfaceGL(int width, int height)
+CompVSurfaceGL::CompVSurfaceGL(size_t width, size_t height)
 	: CompVSurface(width, height)
 	, m_bInit(false)
 	, m_bDirty(true)
@@ -138,7 +138,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::endDraw()
 	COMPV_CHECK_EXP_RETURN(!m_bBeginDraw, COMPV_ERROR_CODE_E_INVALID_STATE);
 	m_bBeginDraw = false;
 	if (isDirty()) {
-		COMPV_DEBUG_INFO("SurfaceGL with id = %u is dirty, do not draw!", getId());
+		COMPV_DEBUG_INFO("SurfaceGL with id = %u is dirty, do not draw!", id());
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -174,13 +174,22 @@ bail:
 	return err;
 }
 
+COMPV_ERROR_CODE CompVSurfaceGL::updateSize(size_t newWidth, size_t newHeight)
+{
+	CompVSurface::m_nWidth = newWidth;
+	CompVSurface::m_nHeight = newHeight;
+	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::setSize(newWidth, newHeight, newWidth));
+	unmakeDirty();
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVSurfaceGL::init()
 {
 	if (m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT); // Make sure we have a GL context
-	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::init(getWidth(), getHeight(), getWidth(), kProgramVertexData, kProgramFragData, true/*haveMVP*/, true/*ToScreenYes*/)); // Base class implementation
+	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::init(CompVSurface::width(), CompVSurface::height(), CompVSurface::width(), kProgramVertexData, kProgramFragData, true/*haveMVP*/, true/*ToScreenYes*/)); // Base class implementation
 	
 	m_bInit = true;
 	return COMPV_ERROR_CODE_S_OK;
@@ -203,7 +212,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::newObj(CompVSurfaceGLPtrPtr glSurface, const Co
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
 	COMPV_CHECK_EXP_RETURN(!glSurface || !window, COMPV_ERROR_CODE_E_INVALID_PARAMETER); // Check input pointers validity
 
-	CompVSurfaceGLPtr glSurface_ = new CompVSurfaceGL(window->getWidth(), window->getHeight());
+	CompVSurfaceGLPtr glSurface_ = new CompVSurfaceGL(window->width(), window->height());
 	COMPV_CHECK_EXP_RETURN(!glSurface_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	COMPV_CHECK_CODE_RETURN(CompVViewport::newObj(&glSurface_->m_ptrViewport, CompViewportSizeFlags::makeDynamicAspectRatio()));
 	
