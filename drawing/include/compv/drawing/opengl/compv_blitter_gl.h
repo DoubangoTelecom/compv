@@ -34,11 +34,11 @@ public:
 	COMPV_INLINE size_t stride()const { return m_nStride; }
 	COMPV_INLINE GLuint indicesCount()const { return sizeof(CompVGLTexture2DIndices) / sizeof(CompVGLTexture2DIndices[0]); }
 	COMPV_INLINE CompVProgramPtr program() { return m_ptrProgram ? *m_ptrProgram : NULL; }
-
-	virtual CompVMVPPtr MVP();
+	
 	virtual COMPV_ERROR_CODE bind();
 	virtual COMPV_ERROR_CODE unbind();
-	virtual COMPV_ERROR_CODE updateSize(size_t width, size_t height, size_t stride);
+	virtual COMPV_ERROR_CODE setMVP(CompVMVPPtr mvp);
+	virtual COMPV_ERROR_CODE setSize(size_t width, size_t height, size_t stride);
 
 protected:
 	virtual COMPV_ERROR_CODE init(size_t width, size_t height, size_t stride, const std::string& prgVertexData, const std::string& prgFragData, bool bMVP = false, bool bToScreen = false);
@@ -59,7 +59,7 @@ private:
 	GLuint m_uNamePrgUnifMVP;
 	GLuint m_uNameVAO;
 	CompVProgramGLPtr m_ptrProgram;
-	CompVMVPGLMPtr m_ptrMVP;
+	CompVMVPPtr m_ptrMVP;
 };
 
 COMPV_NAMESPACE_END()

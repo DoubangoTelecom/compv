@@ -14,6 +14,7 @@
 #include "compv/drawing/compv_renderer.h"
 #include "compv/drawing/compv_mvp.h"
 #include "compv/drawing/compv_common.h"
+#include "compv/drawing/compv_viewport.h"
 
 #include <string>
 
@@ -38,8 +39,9 @@ public:
 	COMPV_INLINE int getWidth()const { return m_nWidth; }
 	COMPV_INLINE int getHeight()const { return m_nHeight; }
 	
-	virtual CompVMVPPtr MVP() = 0;
 	virtual bool isGLEnabled()const = 0;
+	virtual COMPV_ERROR_CODE setMVP(CompVMVPPtr mvp) = 0;
+	virtual COMPV_ERROR_CODE setViewport(CompVViewportPtr viewport) = 0;
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat, CompVRendererPtrPtr renderer = NULL) = 0;
 
 	static COMPV_ERROR_CODE newObj(CompVSurfacePtrPtr surface, const CompVWindow* window);

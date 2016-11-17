@@ -39,14 +39,6 @@ CompVBlitterGL::~CompVBlitterGL()
 	COMPV_CHECK_CODE_ASSERT(deInit());
 }
 
-CompVMVPPtr CompVBlitterGL::MVP()
-{
-	if (m_bInit) {
-		return *m_ptrMVP;
-	}
-	return NULL;
-}
-
 // Bind to VAO and activate the program
 COMPV_ERROR_CODE CompVBlitterGL::bind()
 {
@@ -92,7 +84,18 @@ COMPV_ERROR_CODE CompVBlitterGL::unbind()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVBlitterGL::updateSize(size_t width, size_t height, size_t stride)
+COMPV_ERROR_CODE CompVBlitterGL::setMVP(CompVMVPPtr mvp)
+{
+	COMPV_CHECK_EXP_RETURN(!mvp, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	m_ptrMVP = mvp;
+	if (m_bInit && m_bMVP) {
+		COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+		glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, mvp->matrix()->ptr());
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVBlitterGL::setSize(size_t width, size_t height, size_t stride)
 {
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
@@ -117,7 +120,7 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 		m_ptrMVP = NULL;
 	}
 	else if (!m_ptrMVP) {
-		COMPV_CHECK_CODE_RETURN(CompVMVPGLM::newObj(&m_ptrMVP));
+		COMPV_CHECK_CODE_RETURN(CompVMVP::newObjProjection2D(&m_ptrMVP));
 	}
 
 #if COMPV_VAO // FIXME(dmi): VAO

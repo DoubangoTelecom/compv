@@ -40,7 +40,6 @@ CompVSurfaceGL::CompVSurfaceGL(int width, int height)
 	, m_bDirty(true)
 	, m_bBeginDraw(false)
 {
-
 }
 
 CompVSurfaceGL::~CompVSurfaceGL()
@@ -48,9 +47,17 @@ CompVSurfaceGL::~CompVSurfaceGL()
 	COMPV_CHECK_CODE_ASSERT(deInit());
 }
 
-CompVMVPPtr CompVSurfaceGL::MVP()
+COMPV_ERROR_CODE CompVSurfaceGL::setMVP(CompVMVPPtr mvp)
 {
-	return CompVBlitterGL::MVP();
+	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::setMVP(mvp));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVSurfaceGL::setViewport(CompVViewportPtr viewport)
+{
+	COMPV_CHECK_EXP_RETURN(!viewport, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	m_ptrViewport = viewport;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat, CompVRendererPtrPtr renderer /*= NULL*/)
@@ -67,6 +74,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat, CompVRendererPtrPtr 
 	const COMPV_PIXEL_FORMAT pixelFormat = static_cast<COMPV_PIXEL_FORMAT>(mat->subType());
 	if (!m_ptrRenderer || m_ptrRenderer->pixelFormat() != pixelFormat) {
 		COMPV_CHECK_CODE_RETURN(CompVRendererGL::newObj(&m_ptrRenderer, pixelFormat));
+		// FIXME: setViewport
 	}
 	COMPV_CHECK_CODE_RETURN(m_ptrRenderer->drawImage(mat));
 
@@ -138,35 +146,25 @@ COMPV_ERROR_CODE CompVSurfaceGL::endDraw()
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_CODE_BAIL(err = init());
 
-	// Set aspect ratio
-	if(0){
-		// FIXME
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-		float arX = static_cast<float>(CompVBlitterGL::width()) / static_cast<float>(CompVBlitterGL::height());
-		float arY = static_cast<float>(CompVBlitterGL::height()) / static_cast<float>(CompVBlitterGL::width());
-		const float focalLength = (COMPV_MVP_PROJ_FAR - COMPV_MVP_PROJ_NEAR);
-		const float fovy = 2.0f * std::atan((static_cast<float>(CompVBlitterGL::height()) * 0.5f) / focalLength);
-#define _MATH_RADIAN_TO_DEGREE(rad_)			(((rad_) * 180.0) / 3.14159265358979323846)
-		const float fovyDeg = (float)_MATH_RADIAN_TO_DEGREE(fovy);
-		COMPV_CHECK_CODE_BAIL(err = MVP()->reset());
-
-		COMPV_CHECK_CODE_BAIL(err = MVP()->projection()->setFOVY(90.f/*(float)_MATH_RADIAN_TO_DEGREE(fovy)*/));
-		COMPV_CHECK_CODE_BAIL(err = MVP()->projection()->setAspectRatio(arX));
-		//COMPV_CHECK_CODE_BAIL(err = MVP()->projection()->setNearFar(0.0001f, 10000.f));
-		//COMPV_CHECK_CODE_BAIL(err = MVP()->model()->reset());
-		//COMPV_CHECK_CODE_BAIL(err = MVP()->model()->matrix()->scale(CompVDrawingVec3f(arY, arX, 1.f)));
-	}
-
 	COMPV_CHECK_CODE_BAIL(err = CompVBlitterGL::bind()); // bind to VAO and activate the program
 	// draw to current FB
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system buffer
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_ptrRenderer->fbo()->nameTexture()); // FIXME: we're drawing the randerer regarding is it's dirty
+	glBindTexture(GL_TEXTURE_2D, m_ptrRenderer->fbo()->nameTexture()); // FIXME: we're drawing the renderer regarding is it's dirty
 
-	glViewport(0, 0, static_cast<GLsizei>(706), static_cast<GLsizei>(472));
+	// FIXME: compute once
+	{
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // FIXME: compute once
+		CompVDrawingRect rcViewport;
+		COMPV_CHECK_CODE_BAIL(err = CompVViewport::viewport(
+			CompVDrawingRect::makeFromWidthHeight(0, 0, static_cast<int>(m_ptrRenderer->width()), static_cast<int>(m_ptrRenderer->height())),
+			CompVDrawingRect::makeFromWidthHeight(0, 0, static_cast<int>(CompVBlitterGL::width()), static_cast<int>(CompVBlitterGL::height())),
+			m_ptrViewport, &rcViewport));
+		glViewport(rcViewport.left, rcViewport.top, static_cast<GLsizei>(rcViewport.right - rcViewport.left), static_cast<GLsizei>(rcViewport.bottom - rcViewport.top));
+	}
+
 	//glViewport(0, 0, static_cast<GLsizei>(CompVBlitterGL::width()), static_cast<GLsizei>(CompVBlitterGL::height()));
 	glDrawElements(GL_TRIANGLES, CompVBlitterGL::indicesCount(), GL_UNSIGNED_BYTE, 0);
-
 
 bail:
 	makeDirty();
@@ -183,6 +181,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::init()
 	}
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT); // Make sure we have a GL context
 	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::init(getWidth(), getHeight(), getWidth(), kProgramVertexData, kProgramFragData, true/*haveMVP*/, true/*ToScreenYes*/)); // Base class implementation
+	
 	m_bInit = true;
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -206,6 +205,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::newObj(CompVSurfaceGLPtrPtr glSurface, const Co
 
 	CompVSurfaceGLPtr glSurface_ = new CompVSurfaceGL(window->getWidth(), window->getHeight());
 	COMPV_CHECK_EXP_RETURN(!glSurface_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	COMPV_CHECK_CODE_RETURN(CompVViewport::newObj(&glSurface_->m_ptrViewport, CompViewportSizeFlags::makeDynamicAspectRatio()));
 	
 	*glSurface = glSurface_;
 	return COMPV_ERROR_CODE_S_OK;

@@ -41,7 +41,8 @@ public:
 
 	// Overrides(CompVSurface)
 	virtual bool isGLEnabled()const { return true; };
-	virtual CompVMVPPtr MVP();
+	virtual COMPV_ERROR_CODE setMVP(CompVMVPPtr mvp);
+	virtual COMPV_ERROR_CODE setViewport(CompVViewportPtr viewport);
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat, CompVRendererPtrPtr renderer = NULL);
 
 	COMPV_ERROR_CODE beginDraw();
@@ -67,6 +68,7 @@ private:
 	bool m_bBeginDraw;
 	CompVRendererGLPtr m_ptrRenderer;
 	CompVProgramPtr m_ptrProgram;
+	CompVViewportPtr m_ptrViewport;
 };
 
 COMPV_NAMESPACE_END()

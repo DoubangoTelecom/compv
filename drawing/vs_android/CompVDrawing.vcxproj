@@ -43,6 +43,7 @@
     <ClCompile Include="..\compv_program.cxx" />
     <ClCompile Include="..\compv_renderer.cxx" />
     <ClCompile Include="..\compv_surface.cxx" />
+    <ClCompile Include="..\compv_viewport.cxx" />
     <ClCompile Include="..\compv_window.cxx" />
     <ClCompile Include="..\opengl\compv_blitter_gl.cxx" />
     <ClCompile Include="..\opengl\compv_fbo_gl.cxx" />
@@ -68,6 +69,7 @@
     <ClInclude Include="..\include\compv\drawing\compv_program.h" />
     <ClInclude Include="..\include\compv\drawing\compv_renderer.h" />
     <ClInclude Include="..\include\compv\drawing\compv_surface.h" />
+    <ClInclude Include="..\include\compv\drawing\compv_viewport.h" />
     <ClInclude Include="..\include\compv\drawing\compv_window.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_blitter_gl.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_fbo_gl.h" />

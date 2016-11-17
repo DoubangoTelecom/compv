@@ -37,6 +37,11 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+enum COMPV_DRAWING_PROJECTION {
+	COMPV_DRAWING_PROJECTION_2D,
+	COMPV_DRAWING_PROJECTION_3D
+};
+
 //
 //	CompVDrawingMat4f
 //
@@ -88,9 +93,7 @@ public:
 	virtual ~CompVDrawingView();
 
 	virtual CompVDrawingMat4fPtr matrix() = 0;
-	virtual COMPV_ERROR_CODE setEyePos(const CompVDrawingVec3f& vec3f) = 0;
-	virtual COMPV_ERROR_CODE setTargetPos(const CompVDrawingVec3f& vec3f) = 0;
-	virtual COMPV_ERROR_CODE setUpPos(const CompVDrawingVec3f& vec3f) = 0;
+	virtual COMPV_ERROR_CODE setCamera(const CompVDrawingVec3f& eye, const CompVDrawingVec3f& target, const CompVDrawingVec3f& up) = 0;
 	virtual COMPV_ERROR_CODE reset() = 0;
 };
 
@@ -104,15 +107,50 @@ typedef CompVDrawingProjectionPtr* CompVDrawingProjectionPtrPtr;
 class COMPV_DRAWING_API CompVDrawingProjection : public CompVObj
 {
 protected:
-	CompVDrawingProjection();
+	CompVDrawingProjection(COMPV_DRAWING_PROJECTION eType);
 public:
 	virtual ~CompVDrawingProjection();
+	COMPV_INLINE COMPV_DRAWING_PROJECTION type()const { return m_eType; }
 
 	virtual CompVDrawingMat4fPtr matrix() = 0;
-	virtual COMPV_ERROR_CODE setFOVY(float fovy = COMPV_MVP_PROJ_FOVY) = 0;
-	virtual COMPV_ERROR_CODE setAspectRatio(float aspect = COMPV_MVP_PROJ_ASPECT_RATIO) = 0;
-	virtual COMPV_ERROR_CODE setNearFar(float near = COMPV_MVP_PROJ_NEAR, float far = COMPV_MVP_PROJ_FAR) = 0;
 	virtual COMPV_ERROR_CODE reset() = 0;
+
+private:
+	COMPV_DRAWING_PROJECTION m_eType;
+};
+
+//
+//	CompVDrawingProjection2D
+//
+class CompVDrawingProjection2D;
+typedef CompVPtr<CompVDrawingProjection2D* > CompVDrawingProjection2DPtr;
+typedef CompVDrawingProjection2DPtr* CompVDrawingProjection2DPtrPtr;
+
+class COMPV_DRAWING_API CompVDrawingProjection2D : public CompVDrawingProjection
+{
+protected:
+	CompVDrawingProjection2D();
+public:
+	virtual ~CompVDrawingProjection2D();
+
+	virtual COMPV_ERROR_CODE setOrtho(float left, float right, float bottom, float top, float zNear, float zFar) = 0;
+};
+
+//
+//	CompVDrawingProjection3D
+//
+class CompVDrawingProjection3D;
+typedef CompVPtr<CompVDrawingProjection3D* > CompVDrawingProjection3DPtr;
+typedef CompVDrawingProjection3DPtr* CompVDrawingProjection3DPtrPtr;
+
+class COMPV_DRAWING_API CompVDrawingProjection3D : public CompVDrawingProjection
+{
+protected:
+	CompVDrawingProjection3D();
+public:
+	virtual ~CompVDrawingProjection3D();
+
+	virtual COMPV_ERROR_CODE setPerspective(float fovy = COMPV_MVP_PROJ_FOVY, float aspect = COMPV_MVP_PROJ_ASPECT_RATIO, float near = COMPV_MVP_PROJ_NEAR, float far = COMPV_MVP_PROJ_FAR) = 0;
 };
 
 //
@@ -131,10 +169,13 @@ public:
 	virtual CompVDrawingMat4fPtr matrix() = 0;
 	virtual CompVDrawingModelPtr model() = 0;
 	virtual CompVDrawingViewPtr view() = 0;
-	virtual CompVDrawingProjectionPtr projection() = 0;
+	virtual CompVDrawingProjection2DPtr projection2D() = 0;
+	virtual CompVDrawingProjection3DPtr projection3D() = 0;
 	virtual COMPV_ERROR_CODE reset() = 0;
-
-	static COMPV_ERROR_CODE newObj(CompVMVPPtrPtr mvp);
+	
+	static COMPV_ERROR_CODE newObj(CompVMVPPtrPtr mvp, COMPV_DRAWING_PROJECTION eProjectionType);
+	static COMPV_ERROR_CODE newObjProjection2D(CompVMVPPtrPtr mvp);
+	static COMPV_ERROR_CODE newObjProjection3D(CompVMVPPtrPtr mvp);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

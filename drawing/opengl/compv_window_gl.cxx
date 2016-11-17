@@ -40,7 +40,9 @@ COMPV_ERROR_CODE CompVWindowGL::beginDraw()
 	COMPV_CHECK_CODE_BAIL(err = makeGLContextCurrent());
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Switch to system buffer
-	glDisable(GL_DEPTH_TEST); // Required by Skia, otherwise we'll need to use 'glPushAttrib(GL_ALL_ATTRIB_BITS); glPopAttrib();' before/after canvas drawing
+	// TODO(dmi): 'GL_DEPTH_TEST' not working with skia:  we need to use 'glPushAttrib(GL_ALL_ATTRIB_BITS); glPopAttrib();' before/after canvas drawing
+	// 'GL_DEPTH_TEST' is needed for 3D projection
+	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 	glViewport(0, 0, static_cast<GLsizei>(getWidth()), static_cast<GLsizei>(getHeight())); // FIXME: width and height must be dynamic
 	glClearColor(0.f, 0.f, 0.f, 1.f);

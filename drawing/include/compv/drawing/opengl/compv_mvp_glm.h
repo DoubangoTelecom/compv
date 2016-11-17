@@ -39,12 +39,14 @@ protected:
 public:
 	virtual ~CompVDrawingMat4fGLM();
 	COMPV_GET_OBJECT_ID("CompVDrawingMat4fGLM");
+	COMPV_INLINE const glm::mat4& matrixGLM()const { return m_Matrix; }
 	CompVDrawingMat4fGLM& operator=(const glm::mat4& mat4) { m_Matrix = mat4; return *this; }
-	operator const glm::mat4&() const { return m_Matrix; }
+	operator const glm::mat4&() const { return matrixGLM(); }
 	virtual const float* ptr()const;
 	virtual COMPV_ERROR_CODE translate(const CompVDrawingVec3f& vec3f);
 	virtual COMPV_ERROR_CODE scale(const CompVDrawingVec3f& vec3f);
 	virtual COMPV_ERROR_CODE rotate(float angle, const CompVDrawingVec3f& vec3f);
+	
 
 	static COMPV_ERROR_CODE newObj(CompVDrawingMat4fGLMPtrPtr mat4f, const glm::mat4& mat4 = glm::mat4(1.0f));
 
@@ -65,7 +67,8 @@ protected:
 	CompVDrawingModelGLM();
 public:
 	virtual ~CompVDrawingModelGLM();
-	operator const glm::mat4&() const { return **m_ptrMatrix; }
+	COMPV_INLINE const CompVDrawingMat4fGLMPtr& matrixGLM()const { return m_ptrMatrix; }
+	operator const glm::mat4&() const { return **matrixGLM(); }
 	CompVDrawingModelGLM& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
 	COMPV_GET_OBJECT_ID("CompVDrawingModelGLM");
 	virtual CompVDrawingMat4fPtr matrix();
@@ -89,55 +92,74 @@ protected:
 	CompVDrawingViewGLM();
 public:
 	virtual ~CompVDrawingViewGLM();
-	operator const glm::mat4&() const { return **m_ptrMatrix; }
+	COMPV_INLINE const CompVDrawingMat4fGLMPtr& matrixGLM()const { return m_ptrMatrix; }
+	operator const glm::mat4&() const { return **matrixGLM(); }
 	CompVDrawingViewGLM& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
 	COMPV_GET_OBJECT_ID("CompVDrawingViewGLM");
 	virtual CompVDrawingMat4fPtr matrix();
-	virtual COMPV_ERROR_CODE setEyePos(const CompVDrawingVec3f& vec3f);
-	virtual COMPV_ERROR_CODE setTargetPos(const CompVDrawingVec3f& vec3f);
-	virtual COMPV_ERROR_CODE setUpPos(const CompVDrawingVec3f& vec3f);
+	virtual COMPV_ERROR_CODE setCamera(const CompVDrawingVec3f& eye, const CompVDrawingVec3f& target, const CompVDrawingVec3f& up);
 	virtual COMPV_ERROR_CODE reset();
 	
 	static COMPV_ERROR_CODE newObj(CompVDrawingViewGLMPtrPtr view);
 
 private:
-	glm::vec3 m_vec3Eye;
-	glm::vec3 m_vec3Target;
-	glm::vec3 m_vec3Up;
+	CompVDrawingMat4fGLMPtr m_ptrMatrix;
+};
+
+//
+//	CompVDrawingProjection3DGLM
+//
+class CompVDrawingProjection3DGLM;
+typedef CompVPtr<CompVDrawingProjection3DGLM* > CompVDrawingProjection3DGLMPtr;
+typedef CompVDrawingProjection3DGLMPtr* CompVDrawingProjection3DGLMPtrPtr;
+
+class CompVDrawingProjection3DGLM : public CompVDrawingProjection3D
+{
+protected:
+	CompVDrawingProjection3DGLM();
+public:
+	virtual ~CompVDrawingProjection3DGLM();
+	COMPV_INLINE const CompVDrawingMat4fGLMPtr& matrixGLM()const { return m_ptrMatrix; }
+	operator const glm::mat4&() const { return **matrixGLM(); }
+	CompVDrawingProjection3DGLM& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
+	COMPV_GET_OBJECT_ID("CompVDrawingProjection3DGLM");
+
+	virtual CompVDrawingMat4fPtr matrix();
+	virtual COMPV_ERROR_CODE reset();
+	virtual COMPV_ERROR_CODE setPerspective(float fovy = COMPV_MVP_PROJ_FOVY, float aspect = COMPV_MVP_PROJ_ASPECT_RATIO, float near = COMPV_MVP_PROJ_NEAR, float far = COMPV_MVP_PROJ_FAR);
+
+	static COMPV_ERROR_CODE newObj(CompVDrawingProjection3DGLMPtrPtr proj);
+
+private:
 	CompVDrawingMat4fGLMPtr m_ptrMatrix;
 };
 
 
 //
-//	CompVDrawingProjectionGLM
+//	CompVDrawingProjection2DGLM
 //
-class CompVDrawingProjectionGLM;
-typedef CompVPtr<CompVDrawingProjectionGLM* > CompVDrawingProjectionGLMPtr;
-typedef CompVDrawingProjectionGLMPtr* CompVDrawingProjectionGLMPtrPtr;
+class CompVDrawingProjection2DGLM;
+typedef CompVPtr<CompVDrawingProjection2DGLM* > CompVDrawingProjection2DGLMPtr;
+typedef CompVDrawingProjection2DGLMPtr* CompVDrawingProjection2DGLMPtrPtr;
 
-class CompVDrawingProjectionGLM : public CompVDrawingProjection
+class CompVDrawingProjection2DGLM : public CompVDrawingProjection2D
 {
 protected:
-	CompVDrawingProjectionGLM();
+	CompVDrawingProjection2DGLM();
 public:
-	virtual ~CompVDrawingProjectionGLM();
-	operator const glm::mat4&() const { return **m_ptrMatrix; }
-	CompVDrawingProjectionGLM& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
-	COMPV_GET_OBJECT_ID("CompVDrawingProjectionGLM");
+	virtual ~CompVDrawingProjection2DGLM();
+	COMPV_INLINE const CompVDrawingMat4fGLMPtr& matrixGLM()const { return m_ptrMatrix; }
+	operator const glm::mat4&() const { return **matrixGLM(); }
+	CompVDrawingProjection2DGLM& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
+	COMPV_GET_OBJECT_ID("CompVDrawingProjection2DGLM");
 
 	virtual CompVDrawingMat4fPtr matrix();
-	virtual COMPV_ERROR_CODE setFOVY(float fovy = COMPV_MVP_PROJ_FOVY);
-	virtual COMPV_ERROR_CODE setAspectRatio(float aspect = COMPV_MVP_PROJ_ASPECT_RATIO);
-	virtual COMPV_ERROR_CODE setNearFar(float near = COMPV_MVP_PROJ_NEAR, float far = COMPV_MVP_PROJ_FAR);
 	virtual COMPV_ERROR_CODE reset();
-	
-	static COMPV_ERROR_CODE newObj(CompVDrawingProjectionGLMPtrPtr proj);
+	virtual COMPV_ERROR_CODE setOrtho(float left = -1.f, float right = 1.f, float bottom = -1.f, float top = 1.f, float zNear = -1.f, float zFar = 1.f);
+
+	static COMPV_ERROR_CODE newObj(CompVDrawingProjection2DGLMPtrPtr proj);
 
 private:
-	float m_fFOVY;
-	float m_fAspectRatio;
-	float m_fNear;
-	float m_fFar;
 	CompVDrawingMat4fGLMPtr m_ptrMatrix;
 };
 
@@ -161,15 +183,17 @@ public:
 	virtual CompVDrawingMat4fPtr matrix();
 	virtual CompVDrawingModelPtr model();
 	virtual CompVDrawingViewPtr view();
-	virtual CompVDrawingProjectionPtr projection();
+	virtual CompVDrawingProjection2DPtr projection2D();
+	virtual CompVDrawingProjection3DPtr projection3D();
 	virtual COMPV_ERROR_CODE reset();
 
-	static COMPV_ERROR_CODE newObj(CompVMVPGLMPtrPtr mvp);
+	static COMPV_ERROR_CODE newObj(CompVMVPGLMPtrPtr mvp, COMPV_DRAWING_PROJECTION eProjectionType);
 
 private:
 	CompVDrawingModelGLMPtr m_ptrModel;
 	CompVDrawingViewGLMPtr m_ptrView;
-	CompVDrawingProjectionGLMPtr m_ptrProjection;
+	CompVDrawingProjection2DGLMPtr m_ptrProjection2D;
+	CompVDrawingProjection3DGLMPtr m_ptrProjection3D;
 	CompVDrawingMat4fGLMPtr m_ptrMatrix;
 };
 

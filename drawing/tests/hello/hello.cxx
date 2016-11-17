@@ -17,7 +17,7 @@ compv_main()
 	COMPV_CHECK_CODE_BAIL(err = CompVInit());
 
 	// Create "Hello world!" window
-	COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window, 906, 472, "Hello world!"));
+	COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window, 640, 480, "Hello world!"));
 
 	// Start ui runloop
 	COMPV_CHECK_CODE_BAIL(err = CompVDrawing::runLoop(WorkerThread));
@@ -44,6 +44,8 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 	COMPV_ERROR_CODE err;
 	CompVMatPtr mat[3];
 	CompVRendererPtr ptrImageRenderer;
+	CompVViewportPtr ptrViewPort;
+	CompVMVPPtr ptrMVP;
 	static int count = 0;
 	char buff_[33] = { 0 };
 	
@@ -54,6 +56,17 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 	COMPV_CHECK_CODE_BAIL(err = window->addSurface());
 	//COMPV_CHECK_CODE_BAIL(err = window->addSurface());
 	//COMPV_CHECK_CODE_BAIL(err = window->addSurface());
+
+	// Set viewport
+	COMPV_CHECK_CODE_BAIL(err = CompVViewport::newObj(&ptrViewPort, CompViewportSizeFlags::makeDynamicAspectRatio()));
+	COMPV_CHECK_CODE_BAIL(err = window->surface(0)->setViewport(ptrViewPort));
+
+	// Set MVP
+	COMPV_CHECK_CODE_BAIL(err = CompVMVP::newObjProjection2D(&ptrMVP));
+	COMPV_CHECK_CODE_BAIL(err = ptrMVP->model()->matrix()->scale(CompVDrawingVec3f(1.f, 1.f, 1.f)));
+	COMPV_CHECK_CODE_BAIL(err = ptrMVP->view()->setCamera(CompVDrawingVec3f(0.f, 0.f, 1.f), CompVDrawingVec3f(0.f, 0.f, 0.f), CompVDrawingVec3f(0.f, 1.f, 0.f)));
+	COMPV_CHECK_CODE_BAIL(err = ptrMVP->projection2D()->setOrtho(-1.f, 1.f, -1.f, 1.f, -1.f, 1.f));
+	COMPV_CHECK_CODE_BAIL(err = window->surface(0)->setMVP(ptrMVP));
 
 #if 0
 	COMPV_CHECK_CODE_BAIL(err = window->beginDraw());

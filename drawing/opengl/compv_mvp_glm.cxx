@@ -85,6 +85,9 @@ CompVDrawingMat4fPtr CompVDrawingModelGLM::matrix()
 
 COMPV_ERROR_CODE CompVDrawingModelGLM::reset()
 {
+	if (!m_ptrMatrix) {
+		COMPV_CHECK_CODE_RETURN(CompVDrawingMat4fGLM::newObj(&m_ptrMatrix));
+	}
 	**m_ptrMatrix = glm::mat4(1.0f); // Identity
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -95,7 +98,7 @@ COMPV_ERROR_CODE CompVDrawingModelGLM::newObj(CompVDrawingModelGLMPtrPtr model)
 	COMPV_CHECK_EXP_RETURN(!model, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVDrawingModelGLMPtr model_ = new CompVDrawingModelGLM();
 	COMPV_CHECK_EXP_RETURN(!model_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	COMPV_CHECK_CODE_RETURN(CompVDrawingMat4fGLM::newObj(&model_->m_ptrMatrix));
+	COMPV_CHECK_CODE_RETURN(model_->reset());
 
 	*model = model_;
 	return COMPV_ERROR_CODE_S_OK;
@@ -108,9 +111,7 @@ COMPV_ERROR_CODE CompVDrawingModelGLM::newObj(CompVDrawingModelGLMPtrPtr model)
 CompVDrawingViewGLM::CompVDrawingViewGLM()
 	: CompVDrawingView()
 {
-	m_vec3Eye = glm::vec3(COMPV_MVP_VIEW_EYE);
-	m_vec3Target = glm::vec3(COMPV_MVP_VIEW_TARGET);
-	m_vec3Up = glm::vec3(COMPV_MVP_VIEW_UP);
+	
 }
 
 CompVDrawingViewGLM::~CompVDrawingViewGLM()
@@ -123,33 +124,19 @@ CompVDrawingMat4fPtr CompVDrawingViewGLM::matrix()
 	return *m_ptrMatrix;
 }
 
-COMPV_ERROR_CODE CompVDrawingViewGLM::setEyePos(const CompVDrawingVec3f& vec3f)
-{
-	m_vec3Eye.x = vec3f.x,	m_vec3Eye.y = vec3f.y, m_vec3Eye.z = vec3f.z;
-	**m_ptrMatrix = glm::lookAt(m_vec3Eye, m_vec3Target, m_vec3Up);
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVDrawingViewGLM::setTargetPos(const CompVDrawingVec3f& vec3f)
-{
-	m_vec3Target.x = vec3f.x, m_vec3Target.y = vec3f.y, m_vec3Target.z = vec3f.z;
-	**m_ptrMatrix = glm::lookAt(m_vec3Eye, m_vec3Target, m_vec3Up);
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVDrawingViewGLM::setUpPos(const CompVDrawingVec3f& vec3f)
-{
-	m_vec3Up.x = vec3f.x, m_vec3Up.y = vec3f.y, m_vec3Up.z = vec3f.z;
-	**m_ptrMatrix = glm::lookAt(m_vec3Eye, m_vec3Target, m_vec3Up);
-	return COMPV_ERROR_CODE_S_OK;
-}
-
 COMPV_ERROR_CODE CompVDrawingViewGLM::reset()
 {
-	m_vec3Eye = glm::vec3(COMPV_MVP_VIEW_EYE);
-	m_vec3Target = glm::vec3(COMPV_MVP_VIEW_TARGET);
-	m_vec3Up = glm::vec3(COMPV_MVP_VIEW_UP);
-	**m_ptrMatrix = glm::lookAt(m_vec3Eye, m_vec3Target, m_vec3Up);
+	if (!m_ptrMatrix) {
+		COMPV_CHECK_CODE_RETURN(CompVDrawingMat4fGLM::newObj(&m_ptrMatrix));
+	}
+	**m_ptrMatrix = glm::lookAt(glm::vec3(COMPV_MVP_VIEW_EYE), glm::vec3(COMPV_MVP_VIEW_TARGET), glm::vec3(COMPV_MVP_VIEW_UP));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVDrawingViewGLM::setCamera(const CompVDrawingVec3f& eye, const CompVDrawingVec3f& target, const CompVDrawingVec3f& up)
+{
+	COMPV_CHECK_EXP_RETURN(!m_ptrMatrix, COMPV_ERROR_CODE_E_INVALID_STATE);
+	**m_ptrMatrix = glm::lookAt(glm::vec3(eye.x, eye.y, eye.z), glm::vec3(target.x, target.y, target.z), glm::vec3(up.x, up.y, up.z));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -159,80 +146,106 @@ COMPV_ERROR_CODE CompVDrawingViewGLM::newObj(CompVDrawingViewGLMPtrPtr view)
 	COMPV_CHECK_EXP_RETURN(!view, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVDrawingViewGLMPtr view_ = new CompVDrawingViewGLM();
 	COMPV_CHECK_EXP_RETURN(!view_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	COMPV_CHECK_CODE_RETURN(CompVDrawingMat4fGLM::newObj(&view_->m_ptrMatrix, glm::lookAt(view_->m_vec3Eye, view_->m_vec3Target, view_->m_vec3Up)));
+	COMPV_CHECK_CODE_RETURN(view_->reset());
 	
 	*view = view_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 //
-//	CompVDrawingProjectionGLM
+//	CompVDrawingProjection3DGLM
 //
-CompVDrawingProjectionGLM::CompVDrawingProjectionGLM()
-	: CompVDrawingProjection()
-	, m_fFOVY(COMPV_MVP_PROJ_FOVY)
-	, m_fAspectRatio(COMPV_MVP_PROJ_ASPECT_RATIO)
-	, m_fNear(COMPV_MVP_PROJ_NEAR)
-	, m_fFar(COMPV_MVP_PROJ_FAR)
+CompVDrawingProjection3DGLM::CompVDrawingProjection3DGLM()
+	: CompVDrawingProjection3D()
+{
+	COMPV_CHECK_CODE_ASSERT(reset());
+}
+
+CompVDrawingProjection3DGLM::~CompVDrawingProjection3DGLM()
 {
 
 }
 
-CompVDrawingProjectionGLM::~CompVDrawingProjectionGLM()
-{
-
-}
-
-CompVDrawingMat4fPtr CompVDrawingProjectionGLM::matrix()
+CompVDrawingMat4fPtr CompVDrawingProjection3DGLM::matrix()
 {
 	return *m_ptrMatrix;
 }
 
-COMPV_ERROR_CODE CompVDrawingProjectionGLM::setFOVY(float fovy /*= COMPV_MVP_PROJ_FOVY*/)
+COMPV_ERROR_CODE CompVDrawingProjection3DGLM::reset()
 {
-	m_fFOVY = fovy;
-	**m_ptrMatrix = glm::perspective(glm::radians(m_fFOVY), m_fAspectRatio, m_fNear, m_fFar);
-	return COMPV_ERROR_CODE_S_OK;
-}
-	
-COMPV_ERROR_CODE CompVDrawingProjectionGLM::setAspectRatio(float aspect /*= COMPV_MVP_PROJ_ASPECT_RATIO */)
-{
-	m_fAspectRatio = aspect;
-	**m_ptrMatrix = glm::perspective(glm::radians(m_fFOVY), m_fAspectRatio, m_fNear, m_fFar);
-	return COMPV_ERROR_CODE_S_OK;
-}
-	
-COMPV_ERROR_CODE CompVDrawingProjectionGLM::setNearFar(float near_ /*= COMPV_MVP_PROJ_NEAR */, float far_ /*= COMPV_MVP_PROJ_FAR*/)
-{
-	m_fNear = near_;
-	m_fFar = far_;
-	**m_ptrMatrix = glm::perspective(glm::radians(m_fFOVY), m_fAspectRatio, m_fNear, m_fFar);
+	if (!m_ptrMatrix) {
+		COMPV_CHECK_CODE_RETURN(CompVDrawingMat4fGLM::newObj(&m_ptrMatrix));
+	}
+	COMPV_CHECK_CODE_RETURN(setPerspective());
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVDrawingProjectionGLM::reset()
+COMPV_ERROR_CODE CompVDrawingProjection3DGLM::setPerspective(float fovy /*= COMPV_MVP_PROJ_FOVY*/, float aspect /*= COMPV_MVP_PROJ_ASPECT_RATIO*/, float near_ /*= COMPV_MVP_PROJ_NEAR*/, float far_ /*= COMPV_MVP_PROJ_FAR*/)
 {
-	m_fFOVY = COMPV_MVP_PROJ_FOVY;
-	m_fAspectRatio = COMPV_MVP_PROJ_ASPECT_RATIO;
-	m_fNear = COMPV_MVP_PROJ_NEAR;
-	m_fFar = COMPV_MVP_PROJ_FAR;
-	**m_ptrMatrix = glm::perspective(glm::radians(m_fFOVY), m_fAspectRatio, m_fNear, m_fFar);
+	COMPV_CHECK_EXP_RETURN(!m_ptrMatrix, COMPV_ERROR_CODE_E_INVALID_STATE);
+	**m_ptrMatrix = glm::perspective(glm::radians(fovy), aspect, near_, far_);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVDrawingProjectionGLM::newObj(CompVDrawingProjectionGLMPtrPtr proj)
+COMPV_ERROR_CODE CompVDrawingProjection3DGLM::newObj(CompVDrawingProjection3DGLMPtrPtr proj)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
 	COMPV_CHECK_EXP_RETURN(!proj, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVDrawingProjectionGLMPtr proj_ = new CompVDrawingProjectionGLM();
+	CompVDrawingProjection3DGLMPtr proj_ = new CompVDrawingProjection3DGLM();
 	COMPV_CHECK_EXP_RETURN(!proj_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	COMPV_CHECK_CODE_RETURN(CompVDrawingMat4fGLM::newObj(&proj_->m_ptrMatrix, glm::perspective(glm::radians(proj_->m_fFOVY), proj_->m_fAspectRatio, proj_->m_fNear, proj_->m_fFar)));
+	COMPV_CHECK_CODE_RETURN(proj_->reset());
 
 	*proj = proj_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 
+//
+//	CompVDrawingProjection2DGLM
+//
+CompVDrawingProjection2DGLM::CompVDrawingProjection2DGLM()
+	: CompVDrawingProjection2D()
+{
+	
+}
+
+CompVDrawingProjection2DGLM::~CompVDrawingProjection2DGLM()
+{
+	
+}
+
+CompVDrawingMat4fPtr CompVDrawingProjection2DGLM::matrix()
+{
+	return *m_ptrMatrix;
+}
+
+COMPV_ERROR_CODE CompVDrawingProjection2DGLM::reset()
+{
+	if (!m_ptrMatrix) {
+		COMPV_CHECK_CODE_RETURN(CompVDrawingMat4fGLM::newObj(&m_ptrMatrix));
+	}
+	COMPV_CHECK_CODE_RETURN(setOrtho());
+	return COMPV_ERROR_CODE_S_OK;
+}
+	
+COMPV_ERROR_CODE CompVDrawingProjection2DGLM::setOrtho(float left /*= -1.f*/, float right /*= 1.f*/, float bottom  /*-1.f*/, float top /*=1.f*/, float zNear /*=-1.f*/, float zFar /*= 1.f*/)
+{
+	COMPV_CHECK_EXP_RETURN(!m_ptrMatrix, COMPV_ERROR_CODE_E_INVALID_STATE);
+	**m_ptrMatrix = glm::ortho(left, right, bottom, top, zNear, zFar);
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVDrawingProjection2DGLM::newObj(CompVDrawingProjection2DGLMPtrPtr proj)
+{
+	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
+	COMPV_CHECK_EXP_RETURN(!proj, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVDrawingProjection2DGLMPtr proj_ = new CompVDrawingProjection2DGLM();
+	COMPV_CHECK_EXP_RETURN(!proj_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	COMPV_CHECK_CODE_RETURN(proj_->reset());
+
+	*proj = proj_;
+	return COMPV_ERROR_CODE_S_OK;
+}
 
 //
 //	CompVMVPGLM
@@ -251,7 +264,10 @@ CompVMVPGLM::~CompVMVPGLM()
 CompVDrawingMat4fPtr CompVMVPGLM::matrix()
 {
 	// FIXME(dmi): update only if one of the matrices is dirty
-	**m_ptrMatrix = COMPV_GLM_MAT4(m_ptrProjection)  *COMPV_GLM_MAT4(m_ptrView) * COMPV_GLM_MAT4(m_ptrModel);
+	**m_ptrMatrix = 
+		(m_ptrProjection2D ? m_ptrProjection2D->matrixGLM()->matrixGLM() : m_ptrProjection3D->matrixGLM()->matrixGLM())
+		* m_ptrView->matrixGLM()->matrixGLM()
+		* m_ptrModel->matrixGLM()->matrixGLM();
 	return *m_ptrMatrix;
 }
 
@@ -265,20 +281,38 @@ CompVDrawingViewPtr CompVMVPGLM::view()
 	return *m_ptrView;
 }
 
-CompVDrawingProjectionPtr CompVMVPGLM::projection()
+CompVDrawingProjection2DPtr CompVMVPGLM::projection2D()
 {
-	return *m_ptrProjection;
+	if (m_ptrProjection2D) {
+		return *m_ptrProjection2D;
+	}
+	COMPV_DEBUG_ERROR("Requesting 2D projection from 3D projection");
+	return NULL;
+}
+
+CompVDrawingProjection3DPtr CompVMVPGLM::projection3D()
+{
+	if (m_ptrProjection3D) {
+		return *m_ptrProjection3D;
+	}
+	COMPV_DEBUG_ERROR("Requesting 3D projection from 2D projection");
+	return NULL;
 }
 
 COMPV_ERROR_CODE CompVMVPGLM::reset()
 {
 	COMPV_CHECK_CODE_RETURN(model()->reset());
 	COMPV_CHECK_CODE_RETURN(view()->reset());
-	COMPV_CHECK_CODE_RETURN(projection()->reset());
+	if (m_ptrProjection2D) {
+		COMPV_CHECK_CODE_RETURN(m_ptrProjection2D->reset());
+	}
+	else if (m_ptrProjection3D) {
+		COMPV_CHECK_CODE_RETURN(m_ptrProjection3D->reset());
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMVPGLM::newObj(CompVMVPGLMPtrPtr mvp)
+COMPV_ERROR_CODE CompVMVPGLM::newObj(CompVMVPGLMPtrPtr mvp, COMPV_DRAWING_PROJECTION eProjectionType)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
 	COMPV_CHECK_EXP_RETURN(!mvp, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -286,8 +320,23 @@ COMPV_ERROR_CODE CompVMVPGLM::newObj(CompVMVPGLMPtrPtr mvp)
 	COMPV_CHECK_EXP_RETURN(!mvp_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	COMPV_CHECK_CODE_RETURN(CompVDrawingModelGLM::newObj(&mvp_->m_ptrModel));
 	COMPV_CHECK_CODE_RETURN(CompVDrawingViewGLM::newObj(&mvp_->m_ptrView));
-	COMPV_CHECK_CODE_RETURN(CompVDrawingProjectionGLM::newObj(&mvp_->m_ptrProjection));
-	COMPV_CHECK_CODE_RETURN(CompVDrawingMat4fGLM::newObj(&mvp_->m_ptrMatrix, COMPV_GLM_MAT4(mvp_->m_ptrProjection) * COMPV_GLM_MAT4(mvp_->m_ptrView) * COMPV_GLM_MAT4(mvp_->m_ptrModel)));
+	switch (eProjectionType)
+	{
+	case compv::COMPV_DRAWING_PROJECTION_2D:
+		COMPV_CHECK_CODE_RETURN(CompVDrawingProjection2DGLM::newObj(&mvp_->m_ptrProjection2D));
+		break;
+	case compv::COMPV_DRAWING_PROJECTION_3D:
+		COMPV_CHECK_CODE_RETURN(CompVDrawingProjection3DGLM::newObj(&mvp_->m_ptrProjection3D));
+		break;
+	default:
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+		break;
+	}
+	const glm::mat4& mvpMatrix =
+		(mvp_->m_ptrProjection2D ? mvp_->m_ptrProjection2D->matrixGLM()->matrixGLM() : mvp_->m_ptrProjection3D->matrixGLM()->matrixGLM())
+		* mvp_->m_ptrView->matrixGLM()->matrixGLM()
+		* mvp_->m_ptrModel->matrixGLM()->matrixGLM();
+	COMPV_CHECK_CODE_RETURN(CompVDrawingMat4fGLM::newObj(&mvp_->m_ptrMatrix, mvpMatrix));
 
 	*mvp = mvp_;
 	return COMPV_ERROR_CODE_S_OK;

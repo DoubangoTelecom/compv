@@ -160,6 +160,11 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textL
 	canvas->drawText(outString.c_str(), outString.length(), SkIntToScalar(422), SkIntToScalar(102), paint);
 	//canvas->drawPoint();
 	canvas->drawCircle(SkIntToScalar(x), SkIntToScalar(y), SkIntToScalar(5), paint);
+
+	canvas->drawCircle(SkIntToScalar(50), SkIntToScalar(50), SkIntToScalar(50), paint);
+	canvas->drawCircle(SkIntToScalar(bufferWidth - 50), SkIntToScalar(50), SkIntToScalar(50), paint);
+	canvas->drawCircle(SkIntToScalar(50), SkIntToScalar(bufferHeight - 50), SkIntToScalar(50), paint);
+	canvas->drawCircle(SkIntToScalar(bufferWidth - 50), SkIntToScalar(bufferHeight - 50), SkIntToScalar(50), paint);
 #else
 	std::string outString = "Hello skia";
 	canvas->drawText(outString.c_str(),outString.length(), SkIntToScalar(100), SkIntToScalar(100), paint);

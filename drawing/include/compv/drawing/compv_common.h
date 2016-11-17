@@ -22,6 +22,23 @@ public:
 	CompVDrawingVec3f(float x_, float y_, float z_) : x(x_), y(y_), z(z_) { }
 };
 
+struct CompVDrawingRect {
+public:
+	int left;
+	int top;
+	int right;
+	int bottom;
+	CompVDrawingRect(int left_ = 0, int top_ = 0, int right_ = 0, int bottom_ = 0): left(left_), top(top_), right(right_), bottom(bottom_) {  }
+	static CompVDrawingRect makeFromWidthHeight(int x, int y, int width, int height) { return CompVDrawingRect(x, y, x + width, y + height); }
+};
+
+struct CompVDrawingRatio {	
+public:
+	int numerator;
+	int denominator;
+	CompVDrawingRatio(int numerator_ = 1, int denominator_ = 1) : numerator(numerator_), denominator(denominator_) { }
+};
+
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_DRAWING_CANVAS_H_ */
