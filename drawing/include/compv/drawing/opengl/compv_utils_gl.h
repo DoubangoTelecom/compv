@@ -28,7 +28,7 @@ public:
 	static COMPV_ERROR_CODE checkLastError();
 
 	static CompVGLContext getCurrentContext();
-	static bool haveCurrentContext() { return CompVUtilsGL::getCurrentContext() != NULL; }
+	static bool isGLContextSet() { return CompVUtilsGL::getCurrentContext() != NULL; }
 
 	static COMPV_ERROR_CODE shadDelete(GLuint* uShad);
 	static COMPV_ERROR_CODE shadDelete(std::vector<GLuint >& uShads);

@@ -25,26 +25,29 @@ typedef struct {
 	GLfloat TexCoord[2];
 } CompVGLVertex;
 
-static const CompVGLVertex CompVGLTexture2DVertices[] = {
+static const GLint kCompVGLNameSystemFrameBuffer = 0;
+static const GLint kCompVGLNameSystemRenderBuffer = 0;
+
+static const CompVGLVertex kCompVGLTexture2DVertices[] = {
 	{ { 1.f, -1.f, 0.f }, { 1.f, 1.f } },
 	{ { 1.f, 1.f, 0.f }, { 1.f, 0.f } },
 	{ { -1.f, 1.f, 0.f }, { 0.f, 0.f } },
 	{ { -1.f, -1.f, 0.f }, { 0.f, 1.f } }
 };
 
-static const CompVGLVertex CompVGLScreenVertices[] = {
+static const CompVGLVertex kCompVGLScreenVertices[] = {
 	{ { 1.f, -1.f, 0.f }, { 1.f,  0.f } },
 	{ { 1.f, 1.f, 0.f }, { 1.f, 1.f } },
 	{ { -1.f, 1.f, 0.f }, { 0.f, 1.f } },
 	{ { -1.f, -1.f, 0.f }, { 0.f, 0.f } }
 };
 
-static const GLubyte CompVGLTexture2DIndices[] = {
+static const GLubyte kCompVGLTexture2DIndices[] = {
 	0, 1, 2, // 1st triangle
 	2, 3, 0 // 2nd triangle
 };
 
-static const GLsizei CompVGLTexture2DIndicesCount = sizeof(CompVGLTexture2DIndices) / sizeof(CompVGLTexture2DIndices[0]);
+static const GLsizei kCompVGLTexture2DIndicesCount = sizeof(kCompVGLTexture2DIndices) / sizeof(kCompVGLTexture2DIndices[0]);
 
 COMPV_NAMESPACE_END()
 

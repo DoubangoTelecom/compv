@@ -59,7 +59,7 @@ CompVRendererGLRGB::~CompVRendererGLRGB()
 COMPV_ERROR_CODE CompVRendererGLRGB::drawImage(CompVMatPtr mat)
 {
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
@@ -124,7 +124,7 @@ COMPV_ERROR_CODE CompVRendererGLRGB::deInit()
 	if (!m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_CODE_RETURN(CompVRendererGL::deInit()); // Base class implementation
 	if (m_uNameTexture) {
 		glDeleteTextures(1, &m_uNameTexture);
@@ -141,7 +141,7 @@ COMPV_ERROR_CODE CompVRendererGLRGB::init(CompVMatPtr mat)
 	}
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	CompVProgramPtr ptrProgram;
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	m_bInit = true; // To make sure deInit() will be fully executed
 	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::init(mat, m_strPrgVertexData, m_strPrgFragData, false, false)); // Base class implementation
 	COMPV_CHECK_EXP_BAIL(!(ptrProgram = program()), (err = COMPV_ERROR_CODE_E_GL));

@@ -9,12 +9,12 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVViewport::CompVViewport(const CompViewportSizeFlags& sizeFlags, size_t x /*= 0*/, size_t y /*= 0*/, size_t width /*= 0*/, size_t height /*= 0*/)
-	: m_nX(x)
-	, m_nY(y)
-	, m_nWidth(width)
-	, m_nHeight(height)
-	, m_SizeFlags(sizeFlags)
+CompVViewport::CompVViewport()
+	: m_nX(0)
+	, m_nY(0)
+	, m_nWidth(0)
+	, m_nHeight(0)
+	, m_SizeFlags(CompViewportSizeFlags::makeDynamicAspectRatio())
 {
 
 }
@@ -22,6 +22,19 @@ CompVViewport::CompVViewport(const CompViewportSizeFlags& sizeFlags, size_t x /*
 CompVViewport::~CompVViewport()
 {
 
+}
+
+COMPV_ERROR_CODE CompVViewport::reset(const CompViewportSizeFlags& sizeFlags, int x /*= 0*/, int y /*= 0*/, int width /*= 0*/, int height /*= 0*/)
+{
+	COMPV_CHECK_EXP_RETURN(width <= 0 && sizeFlags.width == COMPV_VIEWPORT_SIZE_FLAG_STATIC, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(height <= 0 && sizeFlags.height == COMPV_VIEWPORT_SIZE_FLAG_STATIC, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	m_nX = x;
+	m_nY = y;
+	m_nWidth = width;
+	m_nHeight = height;
+	m_SizeFlags = sizeFlags;
+	m_SizeFlags = sizeFlags;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVViewport::setPixelAspectRatio(const CompVDrawingRatio& ratio)
@@ -41,13 +54,12 @@ COMPV_ERROR_CODE CompVViewport::toRect(const CompVViewportPtr& viewport, CompVDr
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVViewport::newObj(CompVViewportPtrPtr viewport, const CompViewportSizeFlags& sizeFlags, size_t x /*= 0*/, size_t y /*= 0*/, size_t width /*= 0*/, size_t height /*= 0*/)
+COMPV_ERROR_CODE CompVViewport::newObj(CompVViewportPtrPtr viewport, const CompViewportSizeFlags& sizeFlags, int x /*= 0*/, int y /*= 0*/, int width /*= 0*/, int height /*= 0*/)
 {
 	COMPV_CHECK_EXP_RETURN(!viewport, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(!width && sizeFlags.width == COMPV_VIEWPORT_SIZE_FLAG_STATIC, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(!height && sizeFlags.height == COMPV_VIEWPORT_SIZE_FLAG_STATIC, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVViewportPtr viewport_ = new CompVViewport(sizeFlags, x, y, width, height);
+	CompVViewportPtr viewport_ = new CompVViewport();
 	COMPV_CHECK_EXP_RETURN(!viewport_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	COMPV_CHECK_CODE_RETURN(viewport_->reset(sizeFlags, x, y, width, height));
 
 	*viewport = viewport_;
 	return COMPV_ERROR_CODE_S_OK;
@@ -76,7 +88,7 @@ COMPV_ERROR_CODE CompVViewport::viewport(const CompVDrawingRect& rcSource, const
 	case COMPV_VIEWPORT_SIZE_FLAG_DYNAMIC_ASPECT_RATIO: x = rcAspectRatio.left; break;
 	case COMPV_VIEWPORT_SIZE_FLAG_DYNAMIC_MIN: x = rcDest.left; break;
 	case COMPV_VIEWPORT_SIZE_FLAG_DYNAMIC_MAX: x = rcDest.right; break;
-	case COMPV_VIEWPORT_SIZE_FLAG_STATIC: x = static_cast<int>(currViewport->x()); break;
+	case COMPV_VIEWPORT_SIZE_FLAG_STATIC: x = currViewport->x(); break;
 	default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED); break;
 	}
 	switch (sizeFlags.y) {
@@ -90,21 +102,21 @@ COMPV_ERROR_CODE CompVViewport::viewport(const CompVDrawingRect& rcSource, const
 	case COMPV_VIEWPORT_SIZE_FLAG_DYNAMIC_ASPECT_RATIO: width = (rcAspectRatio.right - rcAspectRatio.left); break;
 	case COMPV_VIEWPORT_SIZE_FLAG_DYNAMIC_MIN: width = rcDest.left; break;
 	case COMPV_VIEWPORT_SIZE_FLAG_DYNAMIC_MAX: width = rcDest.right; break;
-	case COMPV_VIEWPORT_SIZE_FLAG_STATIC: width = static_cast<int>(currViewport->width()); break;
+	case COMPV_VIEWPORT_SIZE_FLAG_STATIC: width = currViewport->width(); break;
 	default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED); break;
 	}
 	switch (sizeFlags.height) {
 	case COMPV_VIEWPORT_SIZE_FLAG_DYNAMIC_ASPECT_RATIO: height = (rcAspectRatio.bottom - rcAspectRatio.top); break;
 	case COMPV_VIEWPORT_SIZE_FLAG_DYNAMIC_MIN: height = rcDest.top; break;
 	case COMPV_VIEWPORT_SIZE_FLAG_DYNAMIC_MAX: height = rcDest.bottom; break;
-	case COMPV_VIEWPORT_SIZE_FLAG_STATIC: height = static_cast<int>(currViewport->height()); break;
+	case COMPV_VIEWPORT_SIZE_FLAG_STATIC: height = currViewport->height(); break;
 	default: COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED); break;
 	}
 
-	rcViewport->left = static_cast<int>(x);
-	rcViewport->top = static_cast<int>(y);
-	rcViewport->right = static_cast<int>(x + width);
-	rcViewport->bottom = static_cast<int>(y + height);
+	rcViewport->left = x;
+	rcViewport->top = y;
+	rcViewport->right = x + width;
+	rcViewport->bottom = y + height;
 
 	return COMPV_ERROR_CODE_S_OK;
 }

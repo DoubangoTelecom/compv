@@ -37,39 +37,38 @@ protected:
 public:
 	virtual ~CompVSurfaceGL();
 	COMPV_GET_OBJECT_ID("CompVSurfaceGL");
-	
+	COMPV_INLINE CompVViewportPtr viewport() { return m_ptrViewport; }
+	COMPV_INLINE CompVRendererGLPtr renderer() { return m_ptrRenderer; }
 
 	// Overrides(CompVSurface)
-	virtual bool isGLEnabled()const { return true; };
-	virtual COMPV_ERROR_CODE setMVP(CompVMVPPtr mvp);
-	virtual COMPV_ERROR_CODE setViewport(CompVViewportPtr viewport);
-	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat, CompVRendererPtrPtr renderer = NULL);
+	virtual bool isGLEnabled()const  override { return true; };
+	virtual COMPV_ERROR_CODE setMVP(CompVMVPPtr mvp) override;
+	virtual COMPV_ERROR_CODE setViewport(CompVViewportPtr viewport) override;
+	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat, CompVRendererPtrPtr renderer = NULL) override;
 
-	COMPV_ERROR_CODE beginDraw();
-	COMPV_ERROR_CODE endDraw();
+	COMPV_ERROR_CODE blit(const CompVFBOGLPtr ptrFboSrc, const CompVFBOGLPtr ptrFboDst);
+	COMPV_ERROR_CODE blitRenderer(const CompVFBOGLPtr ptrFboDst);
+
 	COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
+	COMPV_ERROR_CODE setCanvasFBO(CompVFBOGLPtr fbo);
 
 	static COMPV_ERROR_CODE newObj(CompVSurfaceGLPtrPtr glSurface, const CompVWindow* window);
 
 protected:
 	// Overrides(CompVCanvas) 
-	virtual COMPV_ERROR_CODE canvasBind();
-	virtual COMPV_ERROR_CODE canvasUnbind();
+	virtual COMPV_ERROR_CODE canvasBind() override;
+	virtual COMPV_ERROR_CODE canvasUnbind()override;
 
 private:
-	COMPV_INLINE void makeDirty() { m_bDirty = true; }
-	COMPV_INLINE void unmakeDirty() { m_bDirty = false; }
-	COMPV_INLINE bool isDirty() { return m_bDirty; }
 	COMPV_ERROR_CODE init();
 	COMPV_ERROR_CODE deInit();
 
 private:
 	bool m_bInit;
-	bool m_bDirty;
-	bool m_bBeginDraw;
 	CompVRendererGLPtr m_ptrRenderer;
 	CompVProgramPtr m_ptrProgram;
 	CompVViewportPtr m_ptrViewport;
+	CompVFBOGLPtr m_ptrCanvasFBO;
 };
 
 COMPV_NAMESPACE_END()

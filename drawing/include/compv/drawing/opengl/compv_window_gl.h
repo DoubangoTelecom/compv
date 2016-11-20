@@ -12,6 +12,8 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/opengl/compv_surface_gl.h"
 #include "compv/drawing/opengl/compv_context_gl.h"
+#include "compv/drawing/opengl/compv_surfacelayer_gl_matching.h"
+#include "compv/drawing/opengl/compv_surfacelayer_gl_single.h"
 #include "compv/drawing/compv_window.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_common.h"
@@ -44,15 +46,13 @@ public:
 	bool isInitialized()const;
 
 	// Overrides(CompVWindow)
-	virtual bool isGLEnabled()const { return true; }
-	virtual bool isDrawing()const { return m_bDrawing;  }
-	virtual COMPV_ERROR_CODE beginDraw();
-	virtual COMPV_ERROR_CODE endDraw();
-	virtual size_t numSurface();
-	virtual COMPV_ERROR_CODE removeAllSurfaces();
-	virtual COMPV_ERROR_CODE addSurface();
-	virtual COMPV_ERROR_CODE removeSurface(size_t index);
-	virtual CompVSurfacePtr surface(size_t index = 0);
+	virtual bool isGLEnabled()const override { return true; }
+	virtual COMPV_ERROR_CODE beginDraw()override;
+	virtual COMPV_ERROR_CODE endDraw()override;
+	virtual COMPV_ERROR_CODE addSingleLayerSurface(CompVSingleSurfaceLayerPtrPtr layer)override;
+	virtual COMPV_ERROR_CODE removeSingleLayerSurface(const CompVSingleSurfaceLayerPtr& layer)override;
+	virtual COMPV_ERROR_CODE addMatchingLayerSurface(CompVMatchingSurfaceLayerPtrPtr layer)override;
+	virtual COMPV_ERROR_CODE removeMatchingLayerSurface(const CompVMatchingSurfaceLayerPtr& layer)override;
 
 	// Overrides(CompVWindowPriv)
 	virtual COMPV_ERROR_CODE priv_updateSize(size_t newWidth, size_t newHeight);
@@ -61,10 +61,9 @@ protected:
 	virtual CompVContextGLPtr context() = 0;
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	bool m_bDrawing;
-	std::vector<CompVSurfaceGLPtr > m_vecGLSurfaces;
-	COMPV_VS_DISABLE_WARNINGS_END()
+	std::map<compv_surfacelayer_id_t, CompVSingleSurfaceLayerGLPtr> m_mapSingleSurfaceLayers;
+	std::map<compv_surfacelayer_id_t, CompVMatchingSurfaceLayerGLPtr> m_mapMatchingSurfaceLayers;
 };
 
 COMPV_NAMESPACE_END()

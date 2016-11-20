@@ -19,6 +19,7 @@ CompVSurface::CompVSurface(size_t width, size_t height)
 	, m_nId(compv_atomic_inc(&CompVSurface::s_nSurfaceId))
 	, m_nWidth(width)
 	, m_nHeight(height)
+	, m_bActive(true)
 {
 }
 

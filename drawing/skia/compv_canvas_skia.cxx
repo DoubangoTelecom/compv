@@ -15,6 +15,8 @@
 #include <SkSurface.h>
 #include <gl/GrGLInterface.h>
 
+// FIXME: create surface once and must be associated to a context
+
 COMPV_NAMESPACE_BEGIN()
 
 CompVCanvasImplSkia::CompVCanvasImplSkia()
@@ -53,12 +55,16 @@ static SkPath create_star() {
 	return concavePath;
 }
 
-COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textLengthInBytes, size_t x, size_t y)
+COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textLengthInBytes, int x, int y)
 {
-
-	GLint bufferWidth, bufferHeight;
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+	GLint bufferWidth = 0, bufferHeight = 0;
 	//GrContext *sContext = NULL;
 	SkSurface *sSurface = NULL;
+
+	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &bufferWidth);
+	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &bufferHeight);
+	COMPV_CHECK_EXP_RETURN(!bufferWidth || !bufferHeight, COMPV_ERROR_CODE_E_GL);
 
 	// setup GrContext
 	SkAutoTUnref<const GrGLInterface> interf(GrGLCreateNativeInterface());
@@ -80,9 +86,6 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textL
 	//if (!sContext) {
 	//	sContext = GrContext::Create(kOpenGL_GrBackend, 0);
 	//}
-
-	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &bufferWidth);
-	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &bufferHeight);
 
 #if 0
 	GrBackendRenderTargetDesc desc;
@@ -161,6 +164,7 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textL
 	canvas->drawCircle(SkIntToScalar(bufferWidth - 50), SkIntToScalar(50), SkIntToScalar(50), paint);
 	canvas->drawCircle(SkIntToScalar(50), SkIntToScalar(bufferHeight - 50), SkIntToScalar(50), paint);
 	canvas->drawCircle(SkIntToScalar(bufferWidth - 50), SkIntToScalar(bufferHeight - 50), SkIntToScalar(50), paint);
+	//canvas->drawLine(SkIntToScalar(0), SkIntToScalar(0), SkIntToScalar(500), SkIntToScalar(500), paint);
 #else
 	std::string outString = "Hello skia";
 	canvas->drawText(outString.c_str(),outString.length(), SkIntToScalar(100), SkIntToScalar(100), paint);
@@ -187,101 +191,95 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textL
 	canvas->drawOval(r, paint);
 
 #endif
-	//glDisable(GL_BLEND);
-	//glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-	//glDisable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-	//glDisable(GL_VERTEX_PROGRAM_POINT_SIZE_NV);
-	//glDisable(GL_VERTEX_ATTRIB_ARRAY0_NV);
-	//glDisable(GL_VERTEX_ATTRIB_ARRAY1_NV);
-	/*glBindVertexArray(0);
-	//glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-	glBindFramebuffer(GL_READ_FRAMEBUFFER_EXT, 0);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER_EXT, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
-	glUseProgram(0);
-	glUseProgramObjectARB(0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ARRAY_BUFFER_ARB, 0);*/
-	//glDrawBuffer(GL_BACK);
-	//glEnable(GL_DOUBLEBUFFER);
-	//glEnable(GL_DITHER);
-	//glEnable(GL_DEPTH_WRITEMASK);
-
-	//canvas->clear(SK_ColorBLACK);
+	
 
 	//canvas->restore();
 	canvas->flush();
-	//sContext->resetContext();
-#if 0
-	// convert.exe -depth 8 -size 640x480 image.rgba image.png
-	uint8_t* data = (uint8_t*)malloc(640 * 480 * 4);
-	glReadBuffer(GL_COLOR_ATTACHMENT0);
-	glReadPixels(0, 0, 640, 480, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	FILE* file = fopen("C:/Projects/image.rgba", "wb+");
-	fwrite(data, 1, (640 * 480 * 4), file);
-	fclose(file);
-	free(data);
-#elif 0
-	SkBitmap tmpBitmap;
-	tmpBitmap.allocPixels(SkImageInfo::MakeN32Premul(640, 480));
-	//sContext->readSurfacePixels(sSurface->, 0, 0, 640, 480, GrPixelConfig::kBGRA_8888_GrPixelConfig, tmpBitmap.getPixels());
-	//sContext->readRenderTargetPixels(fRenderTarget, 0, 0, 1000, 1000, GrPixelConfig::kBGRA_8888_GrPixelConfig, tmpBitmap.getPixels());
-	sSurface->readPixels(SkImageInfo::MakeN32Premul(640, 480), tmpBitmap.getPixels(), 640, 0, 0);
-	// SkString str;
-	//bool ret = SkImageEncoder::EncodeFile("C:/Projects/image.png", tmpBitmap, SkImageEncoder::kPNG_Type, 1);
 
-	//uint8_t* data = (uint8_t*)tmpBitmap.getPixels();
-	//for (int i = 0; i < 640 * 480 * 4; ++i)data[i] = rand();
-
-	FILE* file = fopen("C:/Projects/image.rgba", "wb+");
-	fwrite(tmpBitmap.getPixels(), 1, (640 * 480 * 4), file);
-	fclose(file);
-#elif 0
-	{
-		int width = 640;
-		int heigth = 480;
-		float linewidth = 10.0f;
-
-		SkImageInfo info = SkImageInfo::Make(
-			width,
-			heigth,
-			SkColorType::kRGBA_8888_SkColorType,
-			SkAlphaType::kOpaque_SkAlphaType
-		);
-
-		SkBitmap img;
-		img.allocPixels(info);
-		SkCanvas canvas(img);
-		canvas.drawColor(SK_ColorBLACK);
-
-		SkPaint paint;
-		paint.setColor(SK_ColorWHITE);
-		paint.setAlpha(255);
-		paint.setAntiAlias(false);
-		paint.setStrokeWidth(linewidth);
-		paint.setStyle(SkPaint::kStroke_Style);
-
-		canvas.drawCircle(500.0f, 500.0f, 100.0f, paint);
-
-		bool success = SkImageEncoder::EncodeFile("C:\\Projects\\img.png", img,
-			SkImageEncoder::kPNG_Type, 1);
-		printf("success=%s", success ? "true" : "false");
-	}
-#endif
 
 	if (sSurface) {
 		delete sSurface;
 		sSurface = NULL;
 	}
-	//if (sContext) {
-	//	delete sContext;
-	//	sContext = NULL;
-	//}
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVCanvasImplSkia::drawLine(int x0, int y0, int x1, int y1)
+{
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+	GLint bufferWidth = 0, bufferHeight = 0;
+	SkSurface *sSurface = NULL;
+
+	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &bufferWidth);
+	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &bufferHeight);
+	COMPV_CHECK_EXP_RETURN(!bufferWidth || !bufferHeight, COMPV_ERROR_CODE_E_GL);
+
+	// setup GrContext
+	SkAutoTUnref<const GrGLInterface> interf(GrGLCreateNativeInterface());
+
+	// To use NVPR, comment this out
+	interf.reset(GrGLInterfaceRemoveNVPR(interf));
+	SkASSERT(interf);
+
+	// setup contexts
+	SkAutoTUnref<GrContext> grContext(GrContext::Create(kOpenGL_GrBackend,
+		(GrBackendContext)interf.get()));
+
+
+	// Wrap the frame buffer object attached to the screen in a Skia render target so Skia can
+	// render to it
+	GrBackendRenderTargetDesc desc;
+	static const int kStencilBits = 8;  // Skia needs 8 stencil bits
+	static const int kMsaaSampleCount = 0;
+	desc.fWidth = bufferWidth;
+	desc.fHeight = bufferHeight;
+	desc.fConfig = kSkia8888_GrPixelConfig;
+	desc.fOrigin = kBottomLeft_GrSurfaceOrigin;
+	desc.fSampleCnt = kMsaaSampleCount;
+	desc.fStencilBits = kStencilBits;
+
+	GLint buffer;
+	glGetIntegerv(GLenum(GL_FRAMEBUFFER_BINDING), &buffer);
+	if (!buffer) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED_GPU();
+	}
+	// GrGLint buffer;
+	//GR_GL_GetIntegerv(interf, GR_GL_FRAMEBUFFER_BINDING, &buffer);
+	desc.fRenderTargetHandle = buffer;
+
+	// setup SkSurface
+	// To use distance field text, use commented out SkSurfaceProps instead
+	// SkSurfaceProps props(SkSurfaceProps::kUseDeviceIndependentFonts_Flag,
+	//                      SkSurfaceProps::kLegacyFontHost_InitType);
+	SkSurfaceProps props(SkSurfaceProps::kLegacyFontHost_InitType);
+
+	if (!sSurface) {
+		sSurface = SkSurface::MakeFromBackendRenderTarget(grContext, desc, &props).release();
+	}
+	SkCanvas* canvas = NULL;
+	if (sSurface) {
+		canvas = sSurface->getCanvas();   // We don't manage this pointer's lifetime.
+	}
+
+	SkPaint paint;
+	paint.setFilterQuality(kLow_SkFilterQuality);
+	paint.setColor(SK_ColorRED);
+	//SkRandom rand;
+	//paint.setColor(rand.nextU() | 0x44808080);
+	paint.setTextSize(SkIntToScalar(40));
+	paint.setAntiAlias(true);
+	paint.setStyle(SkPaint::kStroke_Style);
+	paint.setStrokeWidth(2);
+	//canvas->drawLine(SkIntToScalar(0), SkIntToScalar(0), SkIntToScalar(500), SkIntToScalar(500), paint);
+	canvas->drawLine(SkIntToScalar(x0), SkIntToScalar(y0), SkIntToScalar(x1), SkIntToScalar(y1), paint);
+
+	canvas->flush();
+
+	if (sSurface) {
+		delete sSurface;
+		sSurface = NULL;
+	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }

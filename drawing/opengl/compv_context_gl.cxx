@@ -6,13 +6,13 @@
 */
 #include "compv/drawing/opengl/compv_context_gl.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
+#include "compv/drawing/opengl/compv_utils_gl.h"
 
 COMPV_NAMESPACE_BEGIN()
 
 CompVContextGL::CompVContextGL()
 	: CompVObj()
 	, CompVLock()
-	, m_bContextSet(false)
 {
 
 }
@@ -22,10 +22,14 @@ CompVContextGL::~CompVContextGL()
 
 }
 
+bool CompVContextGL::isSet()
+{
+	return !!CompVUtilsGL::isGLContextSet();
+}
+
 COMPV_ERROR_CODE CompVContextGL::makeCurrent()
 {
 	COMPV_CHECK_CODE_RETURN(CompVLock::lock());
-	m_bContextSet = true;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -37,7 +41,6 @@ COMPV_ERROR_CODE CompVContextGL::swabBuffers()
 COMPV_ERROR_CODE CompVContextGL::unmakeCurrent()
 {
 	COMPV_CHECK_CODE_RETURN(CompVLock::unlock());
-	m_bContextSet = false;
 	return COMPV_ERROR_CODE_S_OK;
 }
 

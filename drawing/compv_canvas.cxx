@@ -56,12 +56,23 @@ CompVCanvas::~CompVCanvas()
 	COMPV_CHECK_CODE_ASSERT(deInit());
 }
 
-COMPV_ERROR_CODE CompVCanvas::drawText(const void* textPtr, size_t textLengthInBytes, size_t x, size_t y)
+COMPV_ERROR_CODE CompVCanvas::drawText(const void* textPtr, size_t textLengthInBytes, int x, int y)
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_CODE_BAIL(err = init());
 	COMPV_CHECK_CODE_BAIL(err = canvasBind());
 	COMPV_CHECK_CODE_BAIL(err = m_ptrImpl->drawText(textPtr, textLengthInBytes, x, y));
+bail:
+	COMPV_CHECK_CODE_ASSERT(canvasUnbind());
+	return err;
+}
+
+COMPV_ERROR_CODE CompVCanvas::drawLine(int x0, int y0, int x1, int y1)
+{
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	COMPV_CHECK_CODE_BAIL(err = init());
+	COMPV_CHECK_CODE_BAIL(err = canvasBind());
+	COMPV_CHECK_CODE_BAIL(err = m_ptrImpl->drawLine(x0, y0, x1, y1));
 bail:
 	COMPV_CHECK_CODE_ASSERT(canvasUnbind());
 	return err;

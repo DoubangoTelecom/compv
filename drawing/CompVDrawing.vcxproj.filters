@@ -111,6 +111,21 @@
     <ClInclude Include="include\compv\drawing\opengl\compv_context_gl.h">
       <Filter>Header Files\opengl</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\drawing\compv_surfacelayer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\opengl\compv_surfacelayer_gl_matching.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\opengl\compv_surfacelayer_gl_single.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\compv_surfacelayer_matching.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\compv_surfacelayer_single.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_canvas.cxx">
@@ -180,6 +195,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="opengl\compv_context_gl.cxx">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_surfacelayer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_surfacelayer_matching.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_surfacelayer_single.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl\compv_surfacelayer_gl_matching.cxx">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl\compv_surfacelayer_gl_single.cxx">
       <Filter>Source Files\opengl</Filter>
     </ClCompile>
   </ItemGroup>

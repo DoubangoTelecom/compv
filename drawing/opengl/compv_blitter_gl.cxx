@@ -42,7 +42,7 @@ CompVBlitterGL::~CompVBlitterGL()
 // Bind to VAO and activate the program
 COMPV_ERROR_CODE CompVBlitterGL::bind()
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
 	COMPV_CHECK_CODE_RETURN(m_ptrProgram->useBegin());
 
@@ -69,7 +69,7 @@ COMPV_ERROR_CODE CompVBlitterGL::bind()
 // Unbind the VAO and deactivate the program
 COMPV_ERROR_CODE CompVBlitterGL::unbind()
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 #if COMPV_VAO && 0 // FIXME(dmi):
 	glBindVertexArray(0);
@@ -89,9 +89,15 @@ COMPV_ERROR_CODE CompVBlitterGL::setMVP(CompVMVPPtr mvp)
 	COMPV_CHECK_EXP_RETURN(!mvp, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	m_ptrMVP = mvp;
 	if (m_bInit && m_bMVP) {
-		COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+		COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+		COMPV_ERROR_CODE err;
+		COMPV_CHECK_CODE_BAIL(err = m_ptrProgram->useBegin());
 		glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, mvp->matrix()->ptr());
+	bail:
+		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->useEnd());
+		return err;
 	}
+	
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -118,7 +124,7 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 	if (m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!width || !height || stride < width || prgVertexData.empty() || prgFragData.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	m_bInit = true; // Make sure deInit() will be executed if this function fails
@@ -178,7 +184,7 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 			}
 		}
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uNameIndiceBuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(CompVGLTexture2DIndices), CompVGLTexture2DIndices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(kCompVGLTexture2DIndices), kCompVGLTexture2DIndices, GL_STATIC_DRAW);
 	}
 
 	COMPV_CHECK_CODE_BAIL(CompVProgramGL::newObj(&m_ptrProgram));
@@ -241,7 +247,7 @@ COMPV_ERROR_CODE CompVBlitterGL::deInit()
 	if (!m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	if (m_uNameVertexBuffer) {
 		glDeleteBuffers(1, &m_uNameVertexBuffer);
 		m_uNameVertexBuffer = 0;
@@ -266,21 +272,21 @@ COMPV_ERROR_CODE CompVBlitterGL::deInit()
 
 COMPV_ERROR_CODE CompVBlitterGL::updateVertices(size_t width, size_t height, size_t stride, bool bToScreen, CompVGLVertex(*Vertices)[4])
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	GLfloat uMax = static_cast<GLfloat>(width) / static_cast<GLfloat>(stride);
 	GLfloat vMax = 1.f;
 	if (bToScreen) {
-		COMPV_CHECK_EXP_RETURN(sizeof(m_Vertices) != sizeof(CompVGLScreenVertices), COMPV_ERROR_CODE_E_SYSTEM);
-		memcpy(&(*Vertices)[0], CompVGLScreenVertices, sizeof(CompVGLScreenVertices));
+		COMPV_CHECK_EXP_RETURN(sizeof(m_Vertices) != sizeof(kCompVGLScreenVertices), COMPV_ERROR_CODE_E_SYSTEM);
+		memcpy(&(*Vertices)[0], kCompVGLScreenVertices, sizeof(kCompVGLScreenVertices));
 		(*Vertices)[0].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = 0.f;
 		(*Vertices)[1].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = vMax;
 		(*Vertices)[2].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = vMax;
 		(*Vertices)[3].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = 0.f;
 	}
 	else {
-		COMPV_CHECK_EXP_RETURN(sizeof(m_Vertices) != sizeof(CompVGLTexture2DVertices), COMPV_ERROR_CODE_E_SYSTEM);
-		memcpy(&(*Vertices)[0], CompVGLTexture2DVertices, sizeof(CompVGLTexture2DVertices));
+		COMPV_CHECK_EXP_RETURN(sizeof(m_Vertices) != sizeof(kCompVGLTexture2DVertices), COMPV_ERROR_CODE_E_SYSTEM);
+		memcpy(&(*Vertices)[0], kCompVGLTexture2DVertices, sizeof(kCompVGLTexture2DVertices));
 		(*Vertices)[0].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = vMax;
 		(*Vertices)[1].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = 0.f;
 		(*Vertices)[2].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = 0.f;

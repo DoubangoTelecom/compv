@@ -38,6 +38,9 @@ public:
 	COMPV_INLINE compv_surface_id_t id()const { return m_nId; }
 	COMPV_INLINE size_t width()const { return m_nWidth; }
 	COMPV_INLINE size_t height()const { return m_nHeight; }
+	COMPV_INLINE bool isActive()const { return m_bActive; }
+	virtual COMPV_ERROR_CODE activate() { m_bActive = true; return COMPV_ERROR_CODE_S_OK; }
+	virtual COMPV_ERROR_CODE deActivate() { m_bActive = false; return COMPV_ERROR_CODE_S_OK; }
 	
 	virtual bool isGLEnabled()const = 0;
 	virtual COMPV_ERROR_CODE setMVP(CompVMVPPtr mvp) = 0;
@@ -56,6 +59,7 @@ private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static compv_surface_id_t s_nSurfaceId;
 	compv_surface_id_t m_nId;
+	bool m_bActive;
 	COMPV_VS_DISABLE_WARNINGS_END()
 	
 };

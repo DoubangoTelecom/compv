@@ -34,7 +34,8 @@ public:
 	virtual ~CompVCanvasImplSkia();
 	COMPV_GET_OBJECT_ID("CompVCanvasImplSkia");
 
-	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, size_t x, size_t y);
+	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) override;
+	virtual COMPV_ERROR_CODE drawLine(int x0, int y0, int x1, int y1) override;
 
 	static COMPV_ERROR_CODE newObj(CompVCanvasImplSkiaPtrPtr skiaCanvas);
 

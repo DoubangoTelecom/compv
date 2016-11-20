@@ -30,14 +30,11 @@ protected:
 	CompVContextGL();
 public:
 	virtual ~CompVContextGL();
-	COMPV_INLINE bool isContextSet()const { return m_bContextSet; }
+	static bool isSet();
 
 	virtual COMPV_ERROR_CODE makeCurrent();
 	virtual COMPV_ERROR_CODE swabBuffers();
 	virtual COMPV_ERROR_CODE unmakeCurrent();
-
-private:
-	bool m_bContextSet;
 };
 
 COMPV_NAMESPACE_END()

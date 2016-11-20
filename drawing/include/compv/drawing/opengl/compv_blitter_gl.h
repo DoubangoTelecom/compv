@@ -32,8 +32,10 @@ public:
 	COMPV_INLINE size_t width()const { return m_nWidth; }
 	COMPV_INLINE size_t height()const { return m_nHeight; }
 	COMPV_INLINE size_t stride()const { return m_nStride; }
-	COMPV_INLINE GLuint indicesCount()const { return sizeof(CompVGLTexture2DIndices) / sizeof(CompVGLTexture2DIndices[0]); }
+	COMPV_INLINE bool isToScreen()const { return m_bToScreen; }
+	COMPV_INLINE GLuint indicesCount()const { return sizeof(kCompVGLTexture2DIndices) / sizeof(kCompVGLTexture2DIndices[0]); }
 	COMPV_INLINE CompVProgramPtr program() { return m_ptrProgram ? *m_ptrProgram : NULL; }
+	
 	
 	virtual COMPV_ERROR_CODE bind();
 	virtual COMPV_ERROR_CODE unbind();

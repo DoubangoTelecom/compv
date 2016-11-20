@@ -37,8 +37,6 @@ COMPV_NAMESPACE_BEGIN()
 CompVSurfaceGL::CompVSurfaceGL(size_t width, size_t height)
 	: CompVSurface(width, height)
 	, m_bInit(false)
-	, m_bDirty(true)
-	, m_bBeginDraw(false)
 {
 }
 
@@ -64,8 +62,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat, CompVRendererPtrPtr 
 {
 #if 1
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(!m_bBeginDraw, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_CODE_RETURN(init());
 
 	// FIXME(dmi): remove if 'm_uNameFrameBuffer' is passed as parameter
@@ -98,7 +95,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat, CompVRendererPtrPtr 
 	//--COMPV_CHECK_CODE_RETURN(m_ptrFBO->unbind()); // Draw to system
 
 #endif
-	unmakeDirty();
+
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -106,80 +103,98 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat, CompVRendererPtrPtr 
 // Overrides(CompVCanvas) 
 COMPV_ERROR_CODE CompVSurfaceGL::canvasBind()
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system framebuffer
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	if (m_ptrCanvasFBO) {
+		COMPV_CHECK_CODE_RETURN(m_ptrCanvasFBO->bind());
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 // Overrides(CompVCanvas) 
 COMPV_ERROR_CODE CompVSurfaceGL::canvasUnbind()
 {
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	if (m_ptrCanvasFBO) {
+		COMPV_CHECK_CODE_RETURN(m_ptrCanvasFBO->unbind());
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVSurfaceGL::beginDraw()
+COMPV_ERROR_CODE CompVSurfaceGL::blit(const CompVFBOGLPtr ptrFboSrc, const CompVFBOGLPtr ptrFboDst)
 {
-	COMPV_CHECK_EXP_RETURN(m_bBeginDraw, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	COMPV_CHECK_CODE_BAIL(err = init());
-	// glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system framebuffer
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-	m_bBeginDraw = true;
-	
-bail:
-	makeDirty();
-	return err;
-}
-
-COMPV_ERROR_CODE CompVSurfaceGL::endDraw()
-{
-	COMPV_CHECK_EXP_RETURN(!m_bBeginDraw, COMPV_ERROR_CODE_E_INVALID_STATE);
-	m_bBeginDraw = false;
-	if (isDirty()) {
-		COMPV_DEBUG_INFO("SurfaceGL with id = %u is dirty, do not draw!", id());
-		return COMPV_ERROR_CODE_S_OK;
-	}
-
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!ptrFboSrc || (!ptrFboDst && ptrFboDst != kCompVGLPtrSystemFrameBuffer), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_CODE_BAIL(err = init());
 
 	COMPV_CHECK_CODE_BAIL(err = CompVBlitterGL::bind()); // bind to VAO and activate the program
-	// draw to current FB
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Draw to system buffer
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_ptrRenderer->fbo()->nameTexture()); // FIXME: we're drawing the renderer regarding is it's dirty
+	if (ptrFboDst == kCompVGLPtrSystemFrameBuffer) {
+		glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
+		glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
+	}
+	else {
+		COMPV_CHECK_CODE_BAIL(err = ptrFboDst->bind());
+	}
 
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, ptrFboSrc->nameTexture());
 	// FIXME: compute once
+	
 	{
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // FIXME: compute once
 		CompVDrawingRect rcViewport;
+		const size_t dstWidth = ptrFboDst ? ptrFboDst->width() : CompVBlitterGL::width();
+		const size_t dstHeight = ptrFboDst ? ptrFboDst->height() : CompVBlitterGL::height();
 		COMPV_CHECK_CODE_BAIL(err = CompVViewport::viewport(
-			CompVDrawingRect::makeFromWidthHeight(0, 0, static_cast<int>(m_ptrRenderer->width()), static_cast<int>(m_ptrRenderer->height())),
-			CompVDrawingRect::makeFromWidthHeight(0, 0, static_cast<int>(CompVBlitterGL::width()), static_cast<int>(CompVBlitterGL::height())),
+			CompVDrawingRect::makeFromWidthHeight(0, 0, static_cast<int>(ptrFboSrc->width()), static_cast<int>(ptrFboSrc->height())),
+			CompVDrawingRect::makeFromWidthHeight(0, 0, static_cast<int>(dstWidth), static_cast<int>(dstHeight)),
 			m_ptrViewport, &rcViewport));
-		glViewport(rcViewport.left, rcViewport.top, static_cast<GLsizei>(rcViewport.right - rcViewport.left), static_cast<GLsizei>(rcViewport.bottom - rcViewport.top));
+		const GLsizei viewportW = static_cast<GLsizei>(rcViewport.right - rcViewport.left);
+		const GLsizei viewportH = static_cast<GLsizei>(rcViewport.bottom - rcViewport.top);
+		const GLsizei viewportX = static_cast<GLsizei>(rcViewport.left);
+		const GLsizei viewportY = (ptrFboDst == kCompVGLPtrSystemFrameBuffer) ? rcViewport.top : static_cast<GLsizei>(CompVViewport::yFromBottomLeftToTopLeft(static_cast<int>(dstHeight), static_cast<int>(ptrFboSrc->height()), rcViewport.top));
+		glViewport(viewportX, viewportY, viewportW, viewportH);
 	}
 
-	//glViewport(0, 0, static_cast<GLsizei>(CompVBlitterGL::width()), static_cast<GLsizei>(CompVBlitterGL::height()));
+	//glViewport(0, 0, static_cast<GLsizei>(dstWidth), static_cast<GLsizei>(dstHeight));
 	glDrawElements(GL_TRIANGLES, CompVBlitterGL::indicesCount(), GL_UNSIGNED_BYTE, 0);
 
 bail:
-	makeDirty();
 	COMPV_CHECK_CODE_ASSERT(CompVBlitterGL::unbind());
+	if (ptrFboDst) {
+		COMPV_CHECK_CODE_ASSERT(ptrFboDst->unbind());
+	}
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	return err;
 }
 
+COMPV_ERROR_CODE CompVSurfaceGL::blitRenderer(const CompVFBOGLPtr ptrFboDst)
+{
+	COMPV_CHECK_EXP_RETURN(!m_ptrRenderer, COMPV_ERROR_CODE_E_INVALID_STATE);
+	COMPV_CHECK_CODE_RETURN(blit(m_ptrRenderer->fbo(), ptrFboDst));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// This update the destination size for blitting not the texture size
+// FIXME: rename to something more evident
 COMPV_ERROR_CODE CompVSurfaceGL::updateSize(size_t newWidth, size_t newHeight)
 {
 	CompVSurface::m_nWidth = newWidth;
 	CompVSurface::m_nHeight = newHeight;
 	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::setSize(newWidth, newHeight, newWidth));
-	unmakeDirty();
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVSurfaceGL::setCanvasFBO(CompVFBOGLPtr fbo)
+{
+	m_ptrCanvasFBO = fbo;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -188,7 +203,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::init()
 	if (m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT); // Make sure we have a GL context
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT); // Make sure we have a GL context
 	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::init(CompVSurface::width(), CompVSurface::height(), CompVSurface::width(), kProgramVertexData, kProgramFragData, true/*haveMVP*/, true/*ToScreenYes*/)); // Base class implementation
 	
 	m_bInit = true;
@@ -200,7 +215,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::deInit()
 	if (!m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT); // Make sure we have a GL context
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT); // Make sure we have a GL context
 	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::deInit()); // Base class implementation
 	m_bInit = false;
 	return COMPV_ERROR_CODE_S_OK;

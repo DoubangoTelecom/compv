@@ -30,7 +30,8 @@ protected:
 public:
 	virtual ~CompVCanvasImpl();
 
-	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, size_t x, size_t y) = 0;
+	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) = 0;
+	virtual COMPV_ERROR_CODE drawLine(int x0, int y0, int x1, int y1) = 0;
 
 	static COMPV_ERROR_CODE newObj(CompVCanvasImplPtrPtr canvasImpl);
 
@@ -50,9 +51,11 @@ protected:
 public:
 	virtual ~CompVCanvas();
 
-	COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, size_t x, size_t y);
+	COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, int x, int y);
+	COMPV_ERROR_CODE drawLine(int x0, int y0, int x1, int y1);
 	
 protected:
+	// FIXME: ugly
 	virtual COMPV_ERROR_CODE canvasBind() = 0;
 	virtual COMPV_ERROR_CODE canvasUnbind() = 0;
 

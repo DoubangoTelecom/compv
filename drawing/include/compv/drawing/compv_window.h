@@ -13,6 +13,9 @@
 #include "compv/base/compv_mat.h"
 #include "compv/base/parallel/compv_thread.h"
 #include "compv/drawing/compv_surface.h"
+#include "compv/drawing/compv_surfacelayer.h"
+#include "compv/drawing/compv_surfacelayer_single.h"
+#include "compv/drawing/compv_surfacelayer_matching.h"
 
 #include <string>
 #include <map>
@@ -68,15 +71,15 @@ public:
     
 	virtual bool isGLEnabled()const = 0;
 	virtual bool isClosed()const = 0;
-	virtual bool isDrawing()const = 0;
     virtual COMPV_ERROR_CODE close() = 0;
 	virtual COMPV_ERROR_CODE beginDraw() = 0;
 	virtual COMPV_ERROR_CODE endDraw() = 0;
-	virtual size_t numSurface() = 0;
-	virtual COMPV_ERROR_CODE removeAllSurfaces() = 0;
-	virtual COMPV_ERROR_CODE addSurface() = 0;
-	virtual COMPV_ERROR_CODE removeSurface(size_t index) = 0;
-	virtual CompVSurfacePtr surface(size_t index = 0) = 0;
+	virtual COMPV_ERROR_CODE addSingleLayerSurface(CompVSingleSurfaceLayerPtrPtr layer) = 0;
+	virtual COMPV_ERROR_CODE removeSingleLayerSurface(const CompVSingleSurfaceLayerPtr& layer) = 0;
+	virtual COMPV_ERROR_CODE addMatchingLayerSurface(CompVMatchingSurfaceLayerPtrPtr layer) = 0;
+	virtual COMPV_ERROR_CODE removeMatchingLayerSurface(const CompVMatchingSurfaceLayerPtr& layer) = 0;
+
+
 	virtual COMPV_ERROR_CODE addListener(CompVWindowListenerPtr listener);
 	virtual COMPV_ERROR_CODE removeListener(CompVWindowListenerPtr listener);
 	static COMPV_ERROR_CODE newObj(CompVWindowPtrPtr window, size_t width, size_t height, const char* title = "Unknown");

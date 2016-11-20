@@ -131,45 +131,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\compv\base\compv_base.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_buffer.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_common.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_config.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_cpu.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_debug.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_errno.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_fileutils.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_mat.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_md5.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_mem.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_obj.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_simd_globals.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\base\image\compv_image.h">
       <Filter>include\image</Filter>
     </ClInclude>
@@ -228,6 +189,45 @@
       <Filter>include\android</Filter>
     </ClInclude>
     <ClInclude Include="..\include\compv\base\compv_autolock.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_base.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_buffer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_common.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_config.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_cpu.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_debug.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_errno.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_fileutils.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_mat.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_md5.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_mem.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_obj.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_simd_globals.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

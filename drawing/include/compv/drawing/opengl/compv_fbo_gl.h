@@ -37,9 +37,12 @@ public:
 	COMPV_INLINE GLuint nameTexture() { return m_uNameTexture; }
 	COMPV_INLINE GLuint nameDepthStencil() { return m_uNameDepthStencil; }
 	
-	virtual COMPV_ERROR_CODE bind();
-	virtual COMPV_ERROR_CODE unbind();
+	virtual COMPV_ERROR_CODE bind()const;
+	virtual COMPV_ERROR_CODE unbind()const;
 	virtual COMPV_ERROR_CODE updateSize(size_t width, size_t height);
+
+	COMPV_ERROR_CODE clear();
+
 	static COMPV_ERROR_CODE newObj(CompVFBOGLPtrPtr fbo, size_t width, size_t height);
 
 protected:
@@ -54,6 +57,8 @@ private:
 	GLuint m_uNameTexture;
 	GLuint m_uNameDepthStencil;
 };
+
+static const CompVFBOGLPtr kCompVGLPtrSystemFrameBuffer = NULL;
 
 COMPV_NAMESPACE_END()
 

@@ -13,6 +13,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+// FIXME: remove layers when window is closed
 
 
 //
@@ -45,6 +46,7 @@ COMPV_ERROR_CODE CompVWindowGL::beginDraw()
 	COMPV_CHECK_CODE_BAIL(err = context()->makeCurrent());
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Switch to system buffer
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 	// TODO(dmi): 'GL_DEPTH_TEST' not working with skia:  we need to use 'glPushAttrib(GL_ALL_ATTRIB_BITS); glPopAttrib();' before/after canvas drawing
 	// 'GL_DEPTH_TEST' is needed for 3D projection
 	glDisable(GL_DEPTH_TEST);
@@ -55,9 +57,9 @@ COMPV_ERROR_CODE CompVWindowGL::beginDraw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	// Clear surfaces
-	for (std::vector<CompVSurfaceGLPtr >::iterator it = m_vecGLSurfaces.begin(); it != m_vecGLSurfaces.end(); ++it) {
-		COMPV_CHECK_CODE_BAIL(err = (*it)->beginDraw());
-	}
+	//for (std::vector<CompVSurfaceGLPtr >::iterator it = m_vecGLSurfaces.begin(); it != m_vecGLSurfaces.end(); ++it) {
+	//	COMPV_CHECK_CODE_BAIL(err = (*it)->beginDraw());
+	//}
 
 	m_bDrawing = true;
 bail:
@@ -72,15 +74,8 @@ COMPV_ERROR_CODE CompVWindowGL::endDraw()
 {
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	COMPV_CHECK_EXP_BAIL(!m_bDrawing, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
-	
-	// Switch to system buffer
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	// Blit (aka draw surfaces to back buffer)
-	for (std::vector<CompVSurfaceGLPtr >::iterator it = m_vecGLSurfaces.begin(); it != m_vecGLSurfaces.end(); ++it) {
-		COMPV_CHECK_CODE_BAIL(err = (*it)->endDraw());
-	}
+	COMPV_CHECK_EXP_BAIL(!m_bDrawing || !context(), (err = COMPV_ERROR_CODE_E_INVALID_STATE));
+	COMPV_CHECK_EXP_BAIL(!CompVContextGL::isSet(), (err = COMPV_ERROR_CODE_E_GL_NO_CONTEXT));
 
 	// Swap (aka 'present' the final redering to the window, means switch front/back buffers)
 	COMPV_CHECK_CODE_BAIL(err = context()->swabBuffers());
@@ -91,48 +86,44 @@ bail:
 	return err;
 }
 
-// Overrides(CompVWindow::surface)
-size_t CompVWindowGL::numSurface()
+// Overrides(CompVWindow::newSingleLayerSurface)
+COMPV_ERROR_CODE CompVWindowGL::addSingleLayerSurface(CompVSingleSurfaceLayerPtrPtr layer)
 {
 	CompVAutoLock<CompVWindowGL>(this);
-	return m_vecGLSurfaces.size();
-}
-
-COMPV_ERROR_CODE CompVWindowGL::removeAllSurfaces()
-{
-	CompVAutoLock<CompVWindowGL>(this);
-	m_vecGLSurfaces.clear();
+	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVSingleSurfaceLayerGLPtr layer_;
+	COMPV_CHECK_CODE_RETURN(CompVSingleSurfaceLayerGL::newObj(&layer_, this));
+	m_mapSingleSurfaceLayers[layer_->id()] = layer_;
+	*layer = *layer_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Overrides(CompVWindow::surface)
-COMPV_ERROR_CODE CompVWindowGL::addSurface()
+// Overrides(CompVWindow::removeSingleLayerSurface)
+COMPV_ERROR_CODE CompVWindowGL::removeSingleLayerSurface(const CompVSingleSurfaceLayerPtr& layer)
 {
 	CompVAutoLock<CompVWindowGL>(this);
-	CompVSurfaceGLPtr glSurface_;
-	COMPV_CHECK_CODE_RETURN(CompVSurfaceGL::newObj(&glSurface_, this));
-	m_vecGLSurfaces.push_back(glSurface_);
+	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	m_mapSingleSurfaceLayers.erase(layer->id());
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Overrides(CompVWindow::surface)
-COMPV_ERROR_CODE CompVWindowGL::removeSurface(size_t index)
+COMPV_ERROR_CODE CompVWindowGL::addMatchingLayerSurface(CompVMatchingSurfaceLayerPtrPtr layer)
 {
 	CompVAutoLock<CompVWindowGL>(this);
-	COMPV_CHECK_EXP_RETURN(index >= m_vecGLSurfaces.size(), COMPV_ERROR_CODE_E_OUT_OF_BOUND);
-	m_vecGLSurfaces.erase(m_vecGLSurfaces.begin() + index);
+	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMatchingSurfaceLayerGLPtr layer_;
+	COMPV_CHECK_CODE_RETURN(CompVMatchingSurfaceLayerGL::newObj(&layer_, this));
+	m_mapMatchingSurfaceLayers[layer_->id()] = layer_;
+	*layer = *layer_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Overrides(CompVWindow::surface)
-CompVSurfacePtr CompVWindowGL::surface(size_t index /*= 0*/)
+COMPV_ERROR_CODE CompVWindowGL::removeMatchingLayerSurface(const CompVMatchingSurfaceLayerPtr& layer)
 {
 	CompVAutoLock<CompVWindowGL>(this);
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	COMPV_CHECK_EXP_BAIL(index >= m_vecGLSurfaces.size(), err = COMPV_ERROR_CODE_E_OUT_OF_BOUND);
-	return *m_vecGLSurfaces[index];
-bail:
-	return NULL;
+	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	m_mapMatchingSurfaceLayers.erase(layer->id());
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 // Overrides(CompVWindowPriv)
@@ -147,9 +138,17 @@ COMPV_ERROR_CODE CompVWindowGL::priv_updateSize(size_t newWidth, size_t newHeigh
 	CompVWindow::m_nHeight = newHeight;
 
 	// COMPV_CHECK_CODE_BAIL(err = beginDraw()); // TODO(dmi): deadlock
-	for (std::vector<CompVSurfaceGLPtr >::iterator it = m_vecGLSurfaces.begin(); it != m_vecGLSurfaces.end(); ++it) {
-		COMPV_CHECK_CODE_BAIL(err = (*it)->updateSize(newWidth, newHeight));
-	}	
+	//for (std::vector<CompVSurfaceGLPtr >::iterator it = m_vecGLSurfaces.begin(); it != m_vecGLSurfaces.end(); ++it) {
+	//	COMPV_CHECK_CODE_BAIL(err = (*it)->updateSize(newWidth, newHeight));
+	//}
+	for (std::map<compv_surfacelayer_id_t, CompVSingleSurfaceLayerGLPtr>::iterator it = m_mapSingleSurfaceLayers.begin(); it != m_mapSingleSurfaceLayers.end(); ++it) {
+		COMPV_CHECK_CODE_BAIL(err = it->second->updateSize(newWidth, newHeight));
+	}
+
+	for (std::map<compv_surfacelayer_id_t, CompVMatchingSurfaceLayerGLPtr>::iterator it = m_mapMatchingSurfaceLayers.begin(); it != m_mapMatchingSurfaceLayers.end(); ++it) {
+		COMPV_CHECK_CODE_BAIL(err = it->second->updateSize(newWidth, newHeight));
+	}
+
 	//COMPV_CHECK_CODE_BAIL(err = endDraw()); // blit all surfaces using up-to-data sizes
 
 	for (std::map<compv_windowlistener_id_t, CompVWindowListenerPtr>::iterator it = m_mapListeners.begin(); it != m_mapListeners.end(); ++it) {

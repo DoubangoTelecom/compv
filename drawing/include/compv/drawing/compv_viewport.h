@@ -48,25 +48,33 @@ typedef CompVViewportPtr* CompVViewportPtrPtr;
 class COMPV_DRAWING_API CompVViewport : public CompVObj
 {
 protected:
-	CompVViewport(const CompViewportSizeFlags& sizeFlags, size_t x = 0, size_t y = 0, size_t width = 0, size_t height = 0);
+	CompVViewport();
 public:
 	virtual ~CompVViewport();
 	COMPV_GET_OBJECT_ID("CompVViewport");
 
-	COMPV_INLINE size_t x()const { return m_nX; }
-	COMPV_INLINE size_t y()const { return m_nY; }
-	COMPV_INLINE size_t width()const { return m_nWidth; }
-	COMPV_INLINE size_t height()const { return m_nHeight; }
+	COMPV_INLINE int x()const { return m_nX; }
+	COMPV_INLINE int y()const { return m_nY; }
+	COMPV_INLINE int width()const { return m_nWidth; }
+	COMPV_INLINE int height()const { return m_nHeight; }
 	COMPV_INLINE const CompVDrawingRatio& aspectRatio()const { return m_PixelAspectRatio; }
 	COMPV_INLINE const CompViewportSizeFlags& sizeFlags()const { return m_SizeFlags; }
 
+	COMPV_ERROR_CODE reset(const CompViewportSizeFlags& sizeFlags, int x = 0, int y = 0, int width = 0, int height = 0);
+
 	COMPV_ERROR_CODE setPixelAspectRatio(const CompVDrawingRatio& ratio);
+
+	// Useful to convert "y" from OpenGL ([0,0] = bottom-left) to Doubango ([0,0] = top-left)
+	// To be used with glViewport(x, fromFromBottomLeftToTopLeftY(), width, height)
+	COMPV_INLINE static int yFromBottomLeftToTopLeft(int viewportHeight, int objHeight, int y) {
+		return (viewportHeight - objHeight - y);
+	}
 
 	static COMPV_ERROR_CODE toRect(const CompVViewportPtr& viewport, CompVDrawingRect* rect);
 
 	static COMPV_ERROR_CODE viewport(const CompVDrawingRect& rcSource, const CompVDrawingRect& rcDest, const CompVViewportPtr& currViewport, CompVDrawingRect* rcViewport);
 
-	static COMPV_ERROR_CODE newObj(CompVViewportPtrPtr viewport, const CompViewportSizeFlags& sizeFlags, size_t x = 0, size_t y = 0, size_t width = 0, size_t height = 0);
+	static COMPV_ERROR_CODE newObj(CompVViewportPtrPtr viewport, const CompViewportSizeFlags& sizeFlags, int x = 0, int y = 0, int width = 0, int height = 0);
 
 private:
 	static COMPV_ERROR_CODE letterBoxRect(const CompVDrawingRect& rcSrc, const CompVDrawingRect& rcDst, CompVDrawingRect& rcResult);
@@ -74,10 +82,10 @@ private:
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	size_t m_nX;
-	size_t m_nY;
-	size_t m_nWidth;
-	size_t m_nHeight;
+	int m_nX;
+	int m_nY;
+	int m_nWidth;
+	int m_nHeight;
 	CompVDrawingRatio m_PixelAspectRatio;
 	CompViewportSizeFlags m_SizeFlags;
 	COMPV_VS_DISABLE_WARNINGS_END()

@@ -35,7 +35,7 @@ CompVRendererGLYUV::~CompVRendererGLYUV()
 COMPV_ERROR_CODE CompVRendererGLYUV::drawImage(CompVMatPtr mat)
 {
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	// Get pixel format and make sure it's supported
 	COMPV_PIXEL_FORMAT pixelFormat = static_cast<COMPV_PIXEL_FORMAT>(mat->subType());
@@ -77,7 +77,7 @@ COMPV_ERROR_CODE CompVRendererGLYUV::drawImage(CompVMatPtr mat)
 COMPV_ERROR_CODE CompVRendererGLYUV::init(CompVMatPtr mat)
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
 	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::init(mat, m_strPrgVertexData, m_strPrgFragData, false, false)); // Base class implementation
 
@@ -111,7 +111,7 @@ bail:
 
 COMPV_ERROR_CODE CompVRendererGLYUV::deInit()
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_CODE_RETURN(CompVRendererGL::deInit()); // Base class implementation
 	for (size_t t = 0; t < m_uTexturesCount; ++t) {
 		if (m_uNameTextures[t]) {

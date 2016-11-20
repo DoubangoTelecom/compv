@@ -8,6 +8,7 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/opengl/compv_utils_gl.h"
+#include "compv/drawing/opengl/compv_consts_gl.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -28,27 +29,29 @@ CompVFBOGL::~CompVFBOGL()
 	COMPV_CHECK_CODE_ASSERT(deInit());
 }
 
-COMPV_ERROR_CODE CompVFBOGL::bind()
+COMPV_ERROR_CODE CompVFBOGL::bind()const
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, m_uNameDepthStencil);
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVFBOGL::unbind()
+COMPV_ERROR_CODE CompVFBOGL::unbind()const
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVFBOGL::updateSize(size_t width, size_t height)
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 
@@ -61,12 +64,13 @@ COMPV_ERROR_CODE CompVFBOGL::init(size_t width, size_t height)
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_EXP_RETURN(!width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	m_bInit = true; // Set true here to make sure deInit() will work
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	std::string errString_;
 	GLenum fboStatus_;
 
+	glActiveTexture(GL_TEXTURE0);
 	glGenTextures(1, &m_uNameTexture);
 	if (!m_uNameTexture) {
 		COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::checkLastError());
@@ -123,6 +127,9 @@ COMPV_ERROR_CODE CompVFBOGL::init(size_t width, size_t height)
 	COMPV_DEBUG_INFO("OpenGL FBO successfully created: FBO_id=%u, TEXT_id=%u, DEPTH_id=%u", m_uNameFrameBuffer, m_uNameTexture, m_uNameDepthStencil);
 
 bail:
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	if (COMPV_ERROR_CODE_IS_NOK(err_)) {
 		COMPV_CHECK_CODE_ASSERT(deInit());
 		m_bInit = false;
@@ -135,7 +142,7 @@ COMPV_ERROR_CODE CompVFBOGL::deInit()
 	if (!m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::haveCurrentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	if (m_uNameTexture) {
 		glDeleteTextures(1, &m_uNameTexture);
@@ -143,7 +150,7 @@ COMPV_ERROR_CODE CompVFBOGL::deInit()
 	}
 	if (m_uNameDepthStencil) {
 		glDeleteRenderbuffers(1, &m_uNameDepthStencil);
-		m_uNameFrameBuffer = 0;
+		m_uNameDepthStencil = 0;
 	}
 	if (m_uNameFrameBuffer) {
 		glDeleteFramebuffers(1, &m_uNameFrameBuffer);
@@ -152,6 +159,22 @@ COMPV_ERROR_CODE CompVFBOGL::deInit()
 	m_bInit = false;
 
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVFBOGL::clear()
+{
+	if (!m_bInit) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_ERROR_CODE err;
+	COMPV_CHECK_CODE_BAIL(err = bind());
+	glClearColor(0.f, 0.f, 0.f, 1.f);
+	glClearStencil(0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+bail:
+	COMPV_CHECK_CODE_ASSERT(unbind());
+	return err;
 }
 
 COMPV_ERROR_CODE CompVFBOGL::newObj(CompVFBOGLPtrPtr fbo, size_t width, size_t height)
