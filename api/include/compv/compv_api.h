@@ -30,6 +30,8 @@
 #include <compv/base/parallel/compv_threaddisp.h>
 #include <compv/base/parallel/compv_threaddisp11.h>
 
+#include <compv/base/time/compv_time.h>
+
 /* Module: Drawing */
 #include <compv/drawing/compv_canvas.h>
 #include <compv/drawing/compv_drawing.h>

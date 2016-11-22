@@ -28,6 +28,13 @@ CompVSurface::~CompVSurface()
 
 }
 
+COMPV_ERROR_CODE CompVSurface::setViewport(CompVViewportPtr viewport)
+{
+	COMPV_CHECK_EXP_RETURN(!viewport, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	m_ptrViewport = viewport;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVSurface::newObj(CompVSurfacePtrPtr surface, const CompVWindow* window)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
@@ -37,7 +44,7 @@ COMPV_ERROR_CODE CompVSurface::newObj(CompVSurfacePtrPtr surface, const CompVWin
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 	CompVSurfaceGLPtr glSurface_;
 	if (window->isGLEnabled()) {
-		COMPV_CHECK_CODE_RETURN(CompVSurfaceGL::newObj(&glSurface_, window));
+		COMPV_CHECK_CODE_RETURN(CompVSurfaceGL::newObj(&glSurface_, window->width(), window->height()));
 		surface_ = *glSurface_;
 	}
 #endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */

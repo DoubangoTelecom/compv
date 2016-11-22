@@ -152,12 +152,16 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::init()
 	// Create and initialize the surface
 	COMPV_CHECK_EXP_BAIL((m_pEGLSurface = eglCreateWindowSurface(m_pEGLDisplay, config, window, NULL)) == EGL_NO_SURFACE, (err = COMPV_ERROR_CODE_E_EGL));
 
-	// Create and initialize the context
+	// Create, initialize and make current the context
 	static const EGLint contextAttribs[] = {
 		EGL_CONTEXT_CLIENT_VERSION, 2, // FIXME(dmi): important! must retrieve
 		EGL_NONE
 	};
 	COMPV_CHECK_EXP_BAIL((m_pEGLContex = eglCreateContext(m_pEGLDisplay, config, NULL, contextAttribs)) == EGL_NO_CONTEXT, (err = COMPV_ERROR_CODE_E_EGL));
+	COMPV_CHECK_EXP_BAIL(eglMakeCurrent(m_pEGLDisplay, m_pEGLSurface, m_pEGLSurface, m_pEGLContex) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));
+
+	// Set swap interval
+	COMPV_CHECK_EXP_BAIL(eglSwapInterval(m_pEGLDisplay, 0) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));
 
 	// Create obj context
 	COMPV_CHECK_CODE_RETURN(CompVContextGLAndroidEGL::newObj(&m_ptrContext, m_pEGLDisplay, m_pEGLSurface, m_pEGLContex));

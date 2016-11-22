@@ -16,6 +16,7 @@
 #include "compv/drawing/compv_surfacelayer.h"
 #include "compv/drawing/compv_surfacelayer_single.h"
 #include "compv/drawing/compv_surfacelayer_matching.h"
+#include "compv/drawing/compv_surfacelayer_multi.h"
 
 #include <string>
 #include <map>
@@ -78,7 +79,8 @@ public:
 	virtual COMPV_ERROR_CODE removeSingleLayerSurface(const CompVSingleSurfaceLayerPtr& layer) = 0;
 	virtual COMPV_ERROR_CODE addMatchingLayerSurface(CompVMatchingSurfaceLayerPtrPtr layer) = 0;
 	virtual COMPV_ERROR_CODE removeMatchingLayerSurface(const CompVMatchingSurfaceLayerPtr& layer) = 0;
-
+	virtual COMPV_ERROR_CODE addMultiLayerSurface(CompVMultiSurfaceLayerPtrPtr layer) = 0;
+	virtual COMPV_ERROR_CODE removeMultiLayerSurface(const CompVMultiSurfaceLayerPtr& layer) = 0;
 
 	virtual COMPV_ERROR_CODE addListener(CompVWindowListenerPtr listener);
 	virtual COMPV_ERROR_CODE removeListener(CompVWindowListenerPtr listener);

@@ -33,6 +33,7 @@ COMPV_ERROR_CODE CompVMatchingSurfaceLayerGL::drawMatches(CompVMatPtr trainImage
 	size_t newWidth = trainImage->cols() + kTrainQuerySeparatorWidth + queryImage->cols();
 	size_t newHeight = COMPV_MATH_MAX(trainImage->rows(), queryImage->rows());
 
+	// FIXME: add FBO->updateSize()
 	if (!m_ptrFBO || m_ptrFBO->width() != newWidth || m_ptrFBO->height() != newHeight) {
 		COMPV_CHECK_CODE_RETURN(CompVFBOGL::newObj(&m_ptrFBO, newWidth, newHeight));
 		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->setCanvasFBO(m_ptrFBO));
@@ -84,15 +85,15 @@ COMPV_ERROR_CODE CompVMatchingSurfaceLayerGL::updateSize(size_t newWidth, size_t
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMatchingSurfaceLayerGL::newObj(CompVMatchingSurfaceLayerGLPtrPtr layer, const CompVWindowGL* window)
+COMPV_ERROR_CODE CompVMatchingSurfaceLayerGL::newObj(CompVMatchingSurfaceLayerGLPtrPtr layer, size_t width, size_t height)
 {
-	COMPV_CHECK_EXP_RETURN(!layer || !window, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!layer || !width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVMatchingSurfaceLayerGLPtr layer_;
 	layer_ = new CompVMatchingSurfaceLayerGL();
 	COMPV_CHECK_EXP_RETURN(!layer_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	COMPV_CHECK_CODE_RETURN(CompVSurfaceGL::newObj(&layer_->m_ptrTrainSurfaceGL, window));
-	COMPV_CHECK_CODE_RETURN(CompVSurfaceGL::newObj(&layer_->m_ptrQuerySurfaceGL, window));
-	COMPV_CHECK_CODE_RETURN(CompVSurfaceGL::newObj(&layer_->m_ptrCoverSurfaceGL, window));
+	COMPV_CHECK_CODE_RETURN(CompVSurfaceGL::newObj(&layer_->m_ptrTrainSurfaceGL, width, height));
+	COMPV_CHECK_CODE_RETURN(CompVSurfaceGL::newObj(&layer_->m_ptrQuerySurfaceGL, width, height));
+	COMPV_CHECK_CODE_RETURN(CompVSurfaceGL::newObj(&layer_->m_ptrCoverSurfaceGL, width, height));
 
 	*layer = layer_;
 	return COMPV_ERROR_CODE_S_OK;

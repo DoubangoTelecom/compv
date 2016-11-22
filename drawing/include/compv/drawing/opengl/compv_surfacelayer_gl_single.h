@@ -31,7 +31,7 @@ protected:
 	CompVSingleSurfaceLayerGL();
 public:
 	virtual ~CompVSingleSurfaceLayerGL();
-	COMPV_GET_OBJECT_ID("CompVSurfaceGL");
+	COMPV_GET_OBJECT_ID("CompVSingleSurfaceLayerGL");
 
 	// Overrides(CompVSingleSurfaceLayer)
 	virtual CompVSurfacePtr surface() override;
@@ -41,7 +41,7 @@ public:
 
 	COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
 
-	static COMPV_ERROR_CODE newObj(CompVSingleSurfaceLayerGLPtrPtr layer, const CompVWindowGL* window);
+	static COMPV_ERROR_CODE newObj(CompVSingleSurfaceLayerGLPtrPtr layer, size_t width, size_t height);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

@@ -39,6 +39,7 @@ public:
 	COMPV_GET_OBJECT_ID("CompVSurfaceGL");
 	COMPV_INLINE CompVViewportPtr viewport() { return m_ptrViewport; }
 	COMPV_INLINE CompVRendererGLPtr renderer() { return m_ptrRenderer; }
+	COMPV_INLINE CompVFBOGLPtr canvasFBO() { return m_ptrCanvasFBO;}
 
 	// Overrides(CompVSurface)
 	virtual bool isGLEnabled()const  override { return true; };
@@ -52,7 +53,7 @@ public:
 	COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
 	COMPV_ERROR_CODE setCanvasFBO(CompVFBOGLPtr fbo);
 
-	static COMPV_ERROR_CODE newObj(CompVSurfaceGLPtrPtr glSurface, const CompVWindow* window);
+	static COMPV_ERROR_CODE newObj(CompVSurfaceGLPtrPtr glSurface, size_t width, size_t height);
 
 protected:
 	// Overrides(CompVCanvas) 
@@ -67,7 +68,6 @@ private:
 	bool m_bInit;
 	CompVRendererGLPtr m_ptrRenderer;
 	CompVProgramPtr m_ptrProgram;
-	CompVViewportPtr m_ptrViewport;
 	CompVFBOGLPtr m_ptrCanvasFBO;
 };
 

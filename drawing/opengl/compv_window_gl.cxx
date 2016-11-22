@@ -55,7 +55,7 @@ COMPV_ERROR_CODE CompVWindowGL::beginDraw()
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 	glClearStencil(0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
+	
 	// Clear surfaces
 	//for (std::vector<CompVSurfaceGLPtr >::iterator it = m_vecGLSurfaces.begin(); it != m_vecGLSurfaces.end(); ++it) {
 	//	COMPV_CHECK_CODE_BAIL(err = (*it)->beginDraw());
@@ -78,7 +78,7 @@ COMPV_ERROR_CODE CompVWindowGL::endDraw()
 	COMPV_CHECK_EXP_BAIL(!CompVContextGL::isSet(), (err = COMPV_ERROR_CODE_E_GL_NO_CONTEXT));
 
 	// Swap (aka 'present' the final redering to the window, means switch front/back buffers)
-	COMPV_CHECK_CODE_BAIL(err = context()->swabBuffers());
+	COMPV_CHECK_CODE_BAIL(err = context()->swapBuffers());
 
 bail:
 	m_bDrawing = false;
@@ -92,7 +92,7 @@ COMPV_ERROR_CODE CompVWindowGL::addSingleLayerSurface(CompVSingleSurfaceLayerPtr
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVSingleSurfaceLayerGLPtr layer_;
-	COMPV_CHECK_CODE_RETURN(CompVSingleSurfaceLayerGL::newObj(&layer_, this));
+	COMPV_CHECK_CODE_RETURN(CompVSingleSurfaceLayerGL::newObj(&layer_, CompVWindow::width(), CompVWindow::height()));
 	m_mapSingleSurfaceLayers[layer_->id()] = layer_;
 	*layer = *layer_;
 	return COMPV_ERROR_CODE_S_OK;
@@ -112,7 +112,7 @@ COMPV_ERROR_CODE CompVWindowGL::addMatchingLayerSurface(CompVMatchingSurfaceLaye
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVMatchingSurfaceLayerGLPtr layer_;
-	COMPV_CHECK_CODE_RETURN(CompVMatchingSurfaceLayerGL::newObj(&layer_, this));
+	COMPV_CHECK_CODE_RETURN(CompVMatchingSurfaceLayerGL::newObj(&layer_, CompVWindow::width(), CompVWindow::height()));
 	m_mapMatchingSurfaceLayers[layer_->id()] = layer_;
 	*layer = *layer_;
 	return COMPV_ERROR_CODE_S_OK;
@@ -123,6 +123,25 @@ COMPV_ERROR_CODE CompVWindowGL::removeMatchingLayerSurface(const CompVMatchingSu
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	m_mapMatchingSurfaceLayers.erase(layer->id());
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVWindowGL::addMultiLayerSurface(CompVMultiSurfaceLayerPtrPtr layer)
+{
+	CompVAutoLock<CompVWindowGL>(this);
+	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMultiSurfaceLayerGLPtr layer_;
+	COMPV_CHECK_CODE_RETURN(CompVMultiSurfaceLayerGL::newObj(&layer_, CompVWindow::width(), CompVWindow::height()));
+	m_mapMultiSurfaceLayers[layer_->id()] = layer_;
+	*layer = *layer_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVWindowGL::removeMultiLayerSurface(const CompVMultiSurfaceLayerPtr& layer)
+{
+	CompVAutoLock<CompVWindowGL>(this);
+	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	m_mapMultiSurfaceLayers.erase(layer->id());
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -146,6 +165,10 @@ COMPV_ERROR_CODE CompVWindowGL::priv_updateSize(size_t newWidth, size_t newHeigh
 	}
 
 	for (std::map<compv_surfacelayer_id_t, CompVMatchingSurfaceLayerGLPtr>::iterator it = m_mapMatchingSurfaceLayers.begin(); it != m_mapMatchingSurfaceLayers.end(); ++it) {
+		COMPV_CHECK_CODE_BAIL(err = it->second->updateSize(newWidth, newHeight));
+	}
+
+	for (std::map<compv_surfacelayer_id_t, CompVMultiSurfaceLayerGLPtr>::iterator it = m_mapMultiSurfaceLayers.begin(); it != m_mapMultiSurfaceLayers.end(); ++it) {
 		COMPV_CHECK_CODE_BAIL(err = it->second->updateSize(newWidth, newHeight));
 	}
 

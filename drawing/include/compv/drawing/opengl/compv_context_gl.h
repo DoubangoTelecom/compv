@@ -33,7 +33,7 @@ public:
 	static bool isSet();
 
 	virtual COMPV_ERROR_CODE makeCurrent();
-	virtual COMPV_ERROR_CODE swabBuffers();
+	virtual COMPV_ERROR_CODE swapBuffers();
 	virtual COMPV_ERROR_CODE unmakeCurrent();
 };
 

@@ -281,6 +281,12 @@
 #	define COMPV_NAMESPACE_END() }
 #endif
 
+#define COMPV_DEFAULT(v)
+
+#define COMPV_OVERRIDE_IMPL0(base_class, method) COMPV_ERROR_CODE method
+#define COMPV_OVERRIDE_IMPL1(base_class, ret_type, method) ret_type method
+#define COMPV_OVERRIDE_DECL0(base_class, method) virtual COMPV_ERROR_CODE method
+#define COMPV_OVERRIDE_DECL1(base_class, ret_type, method) virtual ret_type method
 
 #if defined(_MSC_VER)
 #	define _CRT_SECURE_NO_WARNINGS

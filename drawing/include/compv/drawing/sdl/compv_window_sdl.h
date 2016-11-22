@@ -36,7 +36,7 @@ public:
 	COMPV_GET_OBJECT_ID("CompVContextGLSDL");
 
 	virtual COMPV_ERROR_CODE makeCurrent();
-	virtual COMPV_ERROR_CODE swabBuffers();
+	virtual COMPV_ERROR_CODE swapBuffers();
 	virtual COMPV_ERROR_CODE unmakeCurrent();
 
 	static COMPV_ERROR_CODE newObj(CompVContextGLSDLPtrPtr context, SDL_Window *pSDLWindow, SDL_GLContext pSDLContext);

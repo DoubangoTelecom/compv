@@ -16,6 +16,7 @@
 #include <gl/GrGLInterface.h>
 
 // FIXME: create surface once and must be associated to a context
+// FIXME: use 'drawPoints' for multiple points and for multiple lines
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -250,9 +251,9 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawLine(int x0, int y0, int x1, int y1)
 
 	// setup SkSurface
 	// To use distance field text, use commented out SkSurfaceProps instead
-	// SkSurfaceProps props(SkSurfaceProps::kUseDeviceIndependentFonts_Flag,
-	//                      SkSurfaceProps::kLegacyFontHost_InitType);
-	SkSurfaceProps props(SkSurfaceProps::kLegacyFontHost_InitType);
+	SkSurfaceProps props(SkSurfaceProps::kUseDeviceIndependentFonts_Flag,
+	                      SkSurfaceProps::kLegacyFontHost_InitType);
+	//SkSurfaceProps props(SkSurfaceProps::kLegacyFontHost_InitType);
 
 	if (!sSurface) {
 		sSurface = SkSurface::MakeFromBackendRenderTarget(grContext, desc, &props).release();
@@ -265,10 +266,12 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawLine(int x0, int y0, int x1, int y1)
 	SkPaint paint;
 	paint.setFilterQuality(kLow_SkFilterQuality);
 	paint.setColor(SK_ColorRED);
+	//paint.setAutohinted(true);
+	//paint.setBlendMode(SkBlendMode::kColor);
 	//SkRandom rand;
 	//paint.setColor(rand.nextU() | 0x44808080);
-	paint.setTextSize(SkIntToScalar(40));
-	paint.setAntiAlias(true);
+	//paint.setTextSize(SkIntToScalar(40));
+	paint.setAntiAlias(false);
 	paint.setStyle(SkPaint::kStroke_Style);
 	paint.setStrokeWidth(2);
 	//canvas->drawLine(SkIntToScalar(0), SkIntToScalar(0), SkIntToScalar(500), SkIntToScalar(500), paint);

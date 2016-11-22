@@ -45,12 +45,12 @@ COMPV_ERROR_CODE CompVSingleSurfaceLayerGL::updateSize(size_t newWidth, size_t n
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVSingleSurfaceLayerGL::newObj(CompVSingleSurfaceLayerGLPtrPtr layer, const CompVWindowGL* window)
+COMPV_ERROR_CODE CompVSingleSurfaceLayerGL::newObj(CompVSingleSurfaceLayerGLPtrPtr layer, size_t width, size_t height)
 {
-	COMPV_CHECK_EXP_RETURN(!layer || !window, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!layer || !width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVSingleSurfaceLayerGLPtr layer_ = new CompVSingleSurfaceLayerGL();
 	COMPV_CHECK_EXP_RETURN(!layer_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	COMPV_CHECK_CODE_RETURN(CompVSurfaceGL::newObj(&layer_->m_ptrSurfaceGL, window));
+	COMPV_CHECK_CODE_RETURN(CompVSurfaceGL::newObj(&layer_->m_ptrSurfaceGL, width, height));
 
 	*layer = layer_;
 	return COMPV_ERROR_CODE_S_OK;

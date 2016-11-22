@@ -41,13 +41,64 @@ bail:
 
 static void* COMPV_STDCALL WorkerThread(void* arg)
 {
-#if 1 // Matching
+#if 1 // Multiple
+	COMPV_ERROR_CODE err;
+	CompVMatPtr mat[3];
+	CompVMultiSurfaceLayerPtr multipleSurfaceLayer;
+	CompVSurfacePtr surfaces[3];
+	CompVViewportPtr ptrViewPort;
+	CompVMVPPtr ptrMVP;
+	static int count = 0;
+	static uint64_t timeStart;
+	char buff_[33] = { 0 };
+
+	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile(COMPV_PATH_FROM_NAME("girl.jpg"), &mat[0]));
+	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile(COMPV_PATH_FROM_NAME("valve_original.jpg"), &mat[1]));
+	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile(COMPV_PATH_FROM_NAME("mandekalou.jpg"), &mat[2]));
+
+	COMPV_CHECK_CODE_BAIL(err = window->addMultiLayerSurface(&multipleSurfaceLayer));
+	COMPV_CHECK_CODE_BAIL(err = multipleSurfaceLayer->addSurface(&surfaces[0], window->width(), window->height()));
+	COMPV_CHECK_CODE_BAIL(err = multipleSurfaceLayer->addSurface(&surfaces[1], window->width(), window->height()));
+	COMPV_CHECK_CODE_BAIL(err = multipleSurfaceLayer->addSurface(&surfaces[2], window->width(), window->height()));
+
+	COMPV_CHECK_CODE_BAIL(err = surfaces[0]->viewport()->reset(CompViewportSizeFlags::makeStatic(), 0, 0, 120, 120));
+	COMPV_CHECK_CODE_BAIL(err = surfaces[1]->viewport()->reset(CompViewportSizeFlags::makeStatic(), 120, 0, 120, 120));
+	COMPV_CHECK_CODE_BAIL(err = surfaces[2]->viewport()->reset(CompViewportSizeFlags::makeStatic(), 0, 120, 120, 120));
+
+	timeStart = CompVTime::getNowMills();
+	while (CompVDrawing::isLoopRunning()) {
+		snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(count));
+		std::string text = "Hello doubango telecom [" + std::string(buff_) + "]";
+		COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
+		//COMPV_CHECK_CODE_BAIL(err = surfaces[0]->drawText(text.c_str(), text.length(), 0, 0));
+		COMPV_CHECK_CODE_BAIL(err = surfaces[0]->drawImage(mat[0/*(count + 0) % 3*/]));
+		COMPV_CHECK_CODE_BAIL(err = surfaces[1]->drawImage(mat[1/*(count + 0) % 3*/]));
+		COMPV_CHECK_CODE_BAIL(err = surfaces[2]->drawImage(mat[2/*(count + 0) % 3*/]));
+
+		if (count == 1000) {
+			uint64_t duration = (CompVTime::getNowMills() - timeStart);
+			float fps = 1000.f / ((static_cast<float>(duration)) / 1000.f);
+			COMPV_DEBUG_INFO("Elapsed time: %llu, fps=%f", duration, fps);
+			count = 0;
+			timeStart = CompVTime::getNowMills();
+		}
+		++count;
+
+		COMPV_CHECK_CODE_BAIL(err = multipleSurfaceLayer->blit());
+		COMPV_CHECK_CODE_BAIL(err = window->endDraw());
+	}
+
+bail:
+	return NULL;
+
+#elif 1 // Matching
 	COMPV_ERROR_CODE err;
 	CompVMatPtr mat[3];
 	CompVMatchingSurfaceLayerPtr matchingSurfaceLayer;
 	CompVViewportPtr ptrViewPort;
 	CompVMVPPtr ptrMVP;
 	static int count = 0;
+	static uint64_t timeStart;
 	char buff_[33] = { 0 };
 
 	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile(COMPV_PATH_FROM_NAME("girl.jpg"), &mat[0]));
@@ -56,15 +107,24 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 
 	COMPV_CHECK_CODE_BAIL(err = window->addMatchingLayerSurface(&matchingSurfaceLayer));
 
+	timeStart = CompVTime::getNowMills();
 	while (CompVDrawing::isLoopRunning()) {
 		snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(count));
 		std::string text = "Hello doubango telecom [" + std::string(buff_) + "]";
 		COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
-		COMPV_CHECK_CODE_BAIL(matchingSurfaceLayer->drawMatches(mat[0/*(count + 0) % 3*/], mat[1/*(count + 0) % 3*/]));		
+		COMPV_CHECK_CODE_BAIL(err = matchingSurfaceLayer->drawMatches(mat[0/*(count + 0) % 3*/], mat[1/*(count + 0) % 3*/]));
+		
+		if (count == 1000) {
+			uint64_t duration = (CompVTime::getNowMills() - timeStart);
+			float fps = 1000.f / ((static_cast<float>(duration)) / 1000.f);
+			COMPV_DEBUG_INFO("Elapsed time: %llu, fps=%f", duration, fps);
+			count = 0;
+			timeStart = CompVTime::getNowMills();
+		}
+		++count;
+
 		COMPV_CHECK_CODE_BAIL(err = matchingSurfaceLayer->blit());
 		COMPV_CHECK_CODE_BAIL(err = window->endDraw());
-
-		++count;
 	}
 
 bail:

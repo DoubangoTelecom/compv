@@ -33,7 +33,7 @@ COMPV_ERROR_CODE CompVContextGL::makeCurrent()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVContextGL::swabBuffers()
+COMPV_ERROR_CODE CompVContextGL::swapBuffers()
 {
 	return COMPV_ERROR_CODE_S_OK;
 }

@@ -13,6 +13,7 @@
 #include "compv/drawing/opengl/compv_surface_gl.h"
 #include "compv/drawing/opengl/compv_context_gl.h"
 #include "compv/drawing/opengl/compv_surfacelayer_gl_matching.h"
+#include "compv/drawing/opengl/compv_surfacelayer_gl_multi.h"
 #include "compv/drawing/opengl/compv_surfacelayer_gl_single.h"
 #include "compv/drawing/compv_window.h"
 #include "compv/base/compv_obj.h"
@@ -53,6 +54,8 @@ public:
 	virtual COMPV_ERROR_CODE removeSingleLayerSurface(const CompVSingleSurfaceLayerPtr& layer)override;
 	virtual COMPV_ERROR_CODE addMatchingLayerSurface(CompVMatchingSurfaceLayerPtrPtr layer)override;
 	virtual COMPV_ERROR_CODE removeMatchingLayerSurface(const CompVMatchingSurfaceLayerPtr& layer)override;
+	virtual COMPV_ERROR_CODE addMultiLayerSurface(CompVMultiSurfaceLayerPtrPtr layer) override;
+	virtual COMPV_ERROR_CODE removeMultiLayerSurface(const CompVMultiSurfaceLayerPtr& layer) override;
 
 	// Overrides(CompVWindowPriv)
 	virtual COMPV_ERROR_CODE priv_updateSize(size_t newWidth, size_t newHeight);
@@ -64,6 +67,7 @@ private:
 	bool m_bDrawing;
 	std::map<compv_surfacelayer_id_t, CompVSingleSurfaceLayerGLPtr> m_mapSingleSurfaceLayers;
 	std::map<compv_surfacelayer_id_t, CompVMatchingSurfaceLayerGLPtr> m_mapMatchingSurfaceLayers;
+	std::map<compv_surfacelayer_id_t, CompVMultiSurfaceLayerGLPtr> m_mapMultiSurfaceLayers;
 };
 
 COMPV_NAMESPACE_END()

@@ -53,8 +53,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::setMVP(CompVMVPPtr mvp)
 
 COMPV_ERROR_CODE CompVSurfaceGL::setViewport(CompVViewportPtr viewport)
 {
-	COMPV_CHECK_EXP_RETURN(!viewport, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	m_ptrViewport = viewport;
+	COMPV_CHECK_CODE_RETURN(CompVSurface::setViewport(viewport)); // Base class implementation
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -221,13 +220,12 @@ COMPV_ERROR_CODE CompVSurfaceGL::deInit()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-
-COMPV_ERROR_CODE CompVSurfaceGL::newObj(CompVSurfaceGLPtrPtr glSurface, const CompVWindow* window)
+COMPV_ERROR_CODE CompVSurfaceGL::newObj(CompVSurfaceGLPtrPtr glSurface, size_t width, size_t height)
 {
+	COMPV_CHECK_EXP_RETURN(!glSurface || !width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
-	COMPV_CHECK_EXP_RETURN(!glSurface || !window, COMPV_ERROR_CODE_E_INVALID_PARAMETER); // Check input pointers validity
 
-	CompVSurfaceGLPtr glSurface_ = new CompVSurfaceGL(window->width(), window->height());
+	CompVSurfaceGLPtr glSurface_ = new CompVSurfaceGL(width, height);
 	COMPV_CHECK_EXP_RETURN(!glSurface_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	COMPV_CHECK_CODE_RETURN(CompVViewport::newObj(&glSurface_->m_ptrViewport, CompViewportSizeFlags::makeDynamicAspectRatio()));
 	

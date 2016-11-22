@@ -41,7 +41,7 @@ public:
 
 	COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
 
-	static COMPV_ERROR_CODE newObj(CompVMatchingSurfaceLayerGLPtrPtr layer, const CompVWindowGL* window);
+	static COMPV_ERROR_CODE newObj(CompVMatchingSurfaceLayerGLPtrPtr layer, size_t width, size_t height);
 
 private:
 	CompVSurfaceGLPtr m_ptrCoverSurfaceGL;

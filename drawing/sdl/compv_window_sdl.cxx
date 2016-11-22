@@ -48,9 +48,9 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVContextGLSDL::swabBuffers()
+COMPV_ERROR_CODE CompVContextGLSDL::swapBuffers()
 {
-	COMPV_CHECK_CODE_RETURN(CompVContextGL::swabBuffers()); // Base class implementation
+	COMPV_CHECK_CODE_RETURN(CompVContextGL::swapBuffers()); // Base class implementation
 	SDL_GL_SwapWindow(m_pSDLWindow);
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -123,7 +123,7 @@ CompVWindowSDL::CompVWindowSDL(size_t width, size_t height, const char* title)
 	SDL_SetWindowData(m_pSDLWindow, "This", this);
 	if (m_pSDLContext) {
 		COMPV_ASSERT(SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) == 0);
-		SDL_GL_SetSwapInterval(1);
+		SDL_GL_SetSwapInterval(0);
 		SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
 	}
 }
