@@ -42,6 +42,7 @@
 // OS: Android
 #if defined(__ANDROID__) || defined(ANDROID)
 #	define COMPV_OS_ANDROID				1
+#	include <android/api-level.h>
 #endif
 // OS: BSD
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__bsdi__) || defined(__DragonFly__)

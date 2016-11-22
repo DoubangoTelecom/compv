@@ -162,9 +162,15 @@
     <ClInclude Include="include\compv\gl\compv_config.h" />
     <ClInclude Include="include\compv\gl\compv_gl.h" />
     <ClInclude Include="include\compv\gl\compv_gl_headers.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_program.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_utils.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_vao.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_gl.cxx" />
+    <ClCompile Include="compv_gl_program.cxx" />
+    <ClCompile Include="compv_gl_utils.cxx" />
+    <ClCompile Include="compv_gl_vao.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -66,6 +66,11 @@ COMPV_ERROR_CODE CompVDrawing::init()
 
 	COMPV_CHECK_CODE_BAIL(err = CompVMutex::newObj(&CompVDrawing::s_WindowsMutex));
 
+	/* Print Android API version */
+#if COMPV_OS_ANDROID
+	COMPV_DEBUG_INFO("[Drawing] module: android API version: %d", __ANDROID_API__);
+#endif
+
 	/* SDL */
 #if defined(HAVE_SDL_H)
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {

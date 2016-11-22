@@ -45,8 +45,8 @@ COMPV_ERROR_CODE CompVWindowGL::beginDraw()
 	COMPV_CHECK_EXP_BAIL(m_bDrawing || !context(), (err = COMPV_ERROR_CODE_E_INVALID_STATE));
 	COMPV_CHECK_CODE_BAIL(err = context()->makeCurrent());
 	
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Switch to system buffer
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
 	// TODO(dmi): 'GL_DEPTH_TEST' not working with skia:  we need to use 'glPushAttrib(GL_ALL_ATTRIB_BITS); glPopAttrib();' before/after canvas drawing
 	// 'GL_DEPTH_TEST' is needed for 3D projection
 	glDisable(GL_DEPTH_TEST);

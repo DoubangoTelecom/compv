@@ -9,13 +9,6 @@
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/opengl/compv_utils_gl.h"
 
-// FIXME(dmi): VAO - remove
-#if defined(HAVE_OPENGL)
-#	define COMPV_VAO 1
-#else
-#	define COMPV_VAO 0
-#endif
-
 COMPV_NAMESPACE_BEGIN()
 
 CompVBlitterGL::CompVBlitterGL()
@@ -30,6 +23,7 @@ CompVBlitterGL::CompVBlitterGL()
 	, m_uNamePrgAttTexCoord(0)
 	, m_uNamePrgUnifMVP(0)
 	, m_uNameVAO(0)
+	, m_bGL_vertex_array_object(false)
 {
 
 }
@@ -52,16 +46,18 @@ COMPV_ERROR_CODE CompVBlitterGL::bind()
 		glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, m_ptrMVP->matrix()->ptr());
 	}
 
-#if COMPV_VAO && 0 // FIXME(dmi):
-	glBindVertexArray(m_uNameVAO);
-#else
-	glBindBuffer(GL_ARRAY_BUFFER, m_uNameVertexBuffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uNameIndiceBuffer);
-	glEnableVertexAttribArray(m_uNamePrgAttPosition);
-	glEnableVertexAttribArray(m_uNamePrgAttTexCoord);
-	glVertexAttribPointer(m_uNamePrgAttPosition, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), 0);
-	glVertexAttribPointer(m_uNamePrgAttTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), (GLvoid*)(sizeof(GLfloat) * 3));
-#endif
+	if (GL_vertex_array_object()) {
+		glBindVertexArray(m_uNameVAO);
+	}
+	else {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+		glBindBuffer(GL_ARRAY_BUFFER, m_uNameVertexBuffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uNameIndiceBuffer);
+		glEnableVertexAttribArray(m_uNamePrgAttPosition);
+		glEnableVertexAttribArray(m_uNamePrgAttTexCoord);
+		glVertexAttribPointer(m_uNamePrgAttPosition, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), 0);
+		glVertexAttribPointer(m_uNamePrgAttTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), (GLvoid*)(sizeof(GLfloat) * 3));
+	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -71,12 +67,15 @@ COMPV_ERROR_CODE CompVBlitterGL::unbind()
 {
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
-#if COMPV_VAO && 0 // FIXME(dmi):
-	glBindVertexArray(0);
-#else
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-#endif
+	if (GL_vertex_array_object()) {
+		glBindVertexArray(0);
+	}
+	else {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
+
 	if (m_ptrProgram) {
 		COMPV_CHECK_CODE_RETURN(m_ptrProgram->useEnd());
 	}
@@ -130,6 +129,12 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 	m_bInit = true; // Make sure deInit() will be executed if this function fails
 	CompVGLVertex newVertices[4];
 
+	// FIXME(dmi): do once
+	const char* extensions = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
+	if (extensions) {
+		m_bGL_vertex_array_object = (strstr(extensions, "ARB_vertex_array_object") != NULL || strstr(extensions, "OES_vertex_array_object") != NULL);
+	}
+
 	// Model-View-Projection
 	if (!bMVP) {
 		m_ptrMVP = NULL;
@@ -138,21 +143,21 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 		COMPV_CHECK_CODE_RETURN(CompVMVP::newObjProjection2D(&m_ptrMVP));
 	}
 
-#if COMPV_VAO // FIXME(dmi): VAO
-	// TODO(dmi): use GLUtils
-	if (!m_uNameVAO) {
-		glGenVertexArrays(1, &m_uNameVAO);
+	if (GL_vertex_array_object()) {
+		// TODO(dmi): use GLUtils
 		if (!m_uNameVAO) {
-			std::string errString;
-			COMPV_CHECK_CODE_BAIL(err = CompVUtilsGL::getLastError(&errString));
-			if (!errString.empty()) {
-				COMPV_DEBUG_ERROR("Failed to create vao: %s", errString.c_str());
-				COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_GL);
+			glGenVertexArrays(1, &m_uNameVAO);
+			if (!m_uNameVAO) {
+				std::string errString;
+				COMPV_CHECK_CODE_BAIL(err = CompVUtilsGL::getLastError(&errString));
+				if (!errString.empty()) {
+					COMPV_DEBUG_ERROR("Failed to create vao: %s", errString.c_str());
+					COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_GL);
+				}
 			}
 		}
+		glBindVertexArray(m_uNameVAO);
 	}
-	glBindVertexArray(m_uNameVAO);
-#endif
 
 	// Vertex buffer
 	// TODO(dmi): use GLUtils
@@ -227,9 +232,9 @@ bail:
 	if (m_ptrProgram) {
 		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->useEnd());
 	}
-#if COMPV_VAO // FIXME(dmi): VAO
-	glBindVertexArray(0);
-#endif
+	if (GL_vertex_array_object()) {
+		glBindVertexArray(0);
+	}
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -257,11 +262,13 @@ COMPV_ERROR_CODE CompVBlitterGL::deInit()
 		m_uNameIndiceBuffer = 0;
 	}
 	if (m_uNameVAO) {
-#if COMPV_VAO // FIXME(dmi): VAO
-		glDeleteVertexArrays(1, &m_uNameVAO);
-#else
-		COMPV_DEBUG_ERROR("WTF");
-#endif
+		if (GL_vertex_array_object()) {
+			glDeleteVertexArrays(1, &m_uNameVAO);
+		}
+		else {
+			COMPV_ASSERT(false);
+			COMPV_DEBUG_ERROR("Not expected");
+		}
 		m_uNameVAO = 0;
 	}
 	m_ptrProgram = NULL;

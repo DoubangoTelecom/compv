@@ -129,6 +129,9 @@
     <ClCompile Include="..\compv_autolock.cxx">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\compv_sharedlib.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\base\image\compv_image.h">
@@ -228,6 +231,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\compv\base\compv_simd_globals.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_sharedlib.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_HEADERS_H_)
 #define _COMPV_GL_HEADERS_H_
 
-#include "compv/base/compv_config.h"
+#include "compv/gl/compv_config.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -19,16 +19,40 @@
 #endif
 
 /* OpenGL-ES 2 */
-#if COMPV_OS_ANDROID || (defined(HAVE_GLSES2_GL2_H) && defined(HAVE_GLSES2_GL2EXT_H))
+#define GL_GLEXT_PROTOTYPES
+
+#if COMPV_OS_ANDROID
+#	define HAVE_OPENGLES	1
+#	if __ANDROID_API__ >= 18
+#		include <GLES3/gl3.h>
+#		include <GLES3/gl3ext.h>
+#	elif __ANDROID_API__ >= 8
+#		include <GLES2/gl2.h>
+#		include <GLES2/gl2ext.h>
+#		define glGenVertexArraysOES     CompVGLVAO::genVertexArraysOES
+#		define glBindVertexArrayOES		CompVGLVAO::bindVertexArrayOES
+#		define glDeleteVertexArraysOES  CompVGLVAO::deleteVertexArraysOES
+#	else
+#		include <GLES/gl.h>
+#		include <GLES/glext.h>
+#	endif
+#endif
+#if !defined(HAVE_OPENGLES) && (defined(HAVE_GLSES2_GL2_H) && defined(HAVE_GLSES2_GL2EXT_H))
 #	define HAVE_OPENGLES	1
 #	include <GLES2/gl2.h>
 #	include <GLES2/gl2ext.h>
-#endif 
+#endif
 
 #if COMPV_OS_IPHONE || COMPV_OS_IPHONE_SIMULATOR || (defined(HAVE_OPENGLES_ES2_GL_H) && defined(HAVE_OPENGLES_ES2_GLEXT_H))
 #	define HAVE_OPENGLES	1
 #	include <OpenGLES/ES2/gl.h>
 #	include <OpenGLES/ES2/glext.h>
+#endif
+
+#if defined(GL_ES_VERSION_2_0) && !defined(GL_ES_VERSION_3_0)
+#	define glGenVertexArrays     glGenVertexArraysOES
+#	define glBindVertexArray	 glBindVertexArrayOES
+#	define glDeleteVertexArrays  glDeleteVertexArraysOES
 #endif
 
 /* OpenGL */

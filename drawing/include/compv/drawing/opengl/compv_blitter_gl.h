@@ -15,6 +15,7 @@
 #include "compv/drawing/opengl/compv_mvp_glm.h"
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/compv_common.h"
+#include "compv/gl/compv_gl_vao.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -47,6 +48,7 @@ protected:
 	virtual COMPV_ERROR_CODE deInit();
 
 private:
+	COMPV_INLINE bool GL_vertex_array_object()const { return m_bGL_vertex_array_object && CompVGLVAO::haveAPI(); }
 	static COMPV_ERROR_CODE updateVertices(size_t width, size_t height, size_t stride, bool bToScreen, CompVGLVertex (*Vertices)[4]);
 
 
@@ -66,6 +68,7 @@ private:
 	GLuint m_uNameVAO;
 	CompVProgramGLPtr m_ptrProgram;
 	CompVMVPPtr m_ptrMVP;
+	bool m_bGL_vertex_array_object;
 };
 
 COMPV_NAMESPACE_END()

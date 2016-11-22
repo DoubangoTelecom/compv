@@ -41,12 +41,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_gl.cxx" />
+    <ClCompile Include="..\compv_gl_vao.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\gl\compv_common.h" />
     <ClInclude Include="..\include\compv\gl\compv_config.h" />
     <ClInclude Include="..\include\compv\gl\compv_gl.h" />
     <ClInclude Include="..\include\compv\gl\compv_gl_headers.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_vao.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{c9a86a91-d297-43f4-b31e-be1a833391bb}</ProjectGuid>

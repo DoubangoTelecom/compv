@@ -109,6 +109,11 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
 	}
 #endif
 
+	/* Print Android API version */
+#if COMPV_OS_ANDROID
+	COMPV_DEBUG_INFO("[Base] module: android API version: %d", __ANDROID_API__);
+#endif
+
 	/* Image handlers initialization */
 	COMPV_CHECK_CODE_BAIL(err_ = CompVImageDecoder::init());
 
