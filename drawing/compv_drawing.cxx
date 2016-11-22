@@ -12,6 +12,7 @@
 #include "compv/base/image/compv_image_decoder.h"
 #include "compv/base/android/compv_android_native_activity.h"
 #include "compv/gl/compv_gl.h"
+#include "compv/gl/compv_gl_info.h"
 
 #if defined(HAVE_SDL_H)
 #include <SDL.h>
@@ -21,9 +22,7 @@ COMPV_NAMESPACE_BEGIN()
 
 bool CompVDrawing::s_bInitialized = false;
 bool CompVDrawing::s_bLoopRunning = false;
-int CompVDrawing::s_iGLVersionMajor = 0;
-int CompVDrawing::s_iGLVersionMinor = 0;
-std::map<compv_window_id_t, CompVPtr<CompVWindow* > > CompVDrawing::m_sWindows;
+std::map<compv_window_id_t, CompVWindowPtr > CompVDrawing::m_sWindows;
 CompVPtr<CompVMutex* > CompVDrawing::s_WindowsMutex = NULL;
 CompVPtr<CompVThread* > CompVDrawing::s_WorkerThread = NULL;
 #if COMPV_OS_ANDROID
@@ -124,21 +123,8 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	}
 	COMPV_DEBUG_INFO_EX("GLEW", "glewInit succeeded");
 #	endif /* HAVE_GL_GLEW_H */
-	COMPV_DEBUG_INFO("OpenGL version string: %s", glGetString(GL_VERSION));
-	COMPV_DEBUG_INFO("OpenGL shading version string: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
-	GLint major, minor;
-	glGetIntegerv(GL_MAJOR_VERSION, &major), CompVDrawing::s_iGLVersionMajor = static_cast<int>(major);
-	glGetIntegerv(GL_MINOR_VERSION, &minor), CompVDrawing::s_iGLVersionMinor = static_cast<int>(minor);
-	COMPV_DEBUG_INFO("OpenGL parsed major and minor versions: %d.%d", CompVDrawing::s_iGLVersionMajor, CompVDrawing::s_iGLVersionMinor);
-	COMPV_DEBUG_INFO("OpenGL renderer string: %s", glGetString(GL_RENDERER));
-	COMPV_DEBUG_INFO("OpenGL vendor string: %s", glGetString(GL_VENDOR));
-	GLint maxColorAttachments = 0;
-	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
-	COMPV_DEBUG_INFO("GL_MAX_DRAW_BUFFERS: %d", maxColorAttachments);
-	GLint maxDrawBuffers = 0;
-	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuffers);
-	COMPV_DEBUG_INFO("GL_MAX_DRAW_BUFFERS: %d", maxDrawBuffers);
-	COMPV_DEBUG_INFO("OpenGL extensions string: %s", glGetString(GL_EXTENSIONS));
+	// Gather info (init supported extensions)
+	COMPV_CHECK_CODE_BAIL(err = CompVGLInfo::gather());
 #endif /* SDL */
 
 #if (defined(HAVE_JPEGLIB_H) || defined(HAVE_SKIA))

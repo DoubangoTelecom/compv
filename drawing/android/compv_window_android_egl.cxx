@@ -8,6 +8,7 @@
 #if COMPV_OS_ANDROID && defined(HAVE_EGL)
 #include "compv/drawing/compv_drawing.h"
 #include "compv/base/android/compv_android_native_activity.h"
+#include "compv/gl/compv_gl_info.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -160,12 +161,8 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::init()
 	COMPV_CHECK_EXP_BAIL((m_pEGLContex = eglCreateContext(m_pEGLDisplay, config, NULL, contextAttribs)) == EGL_NO_CONTEXT, (err = COMPV_ERROR_CODE_E_EGL));
 	COMPV_CHECK_EXP_BAIL(eglMakeCurrent(m_pEGLDisplay, m_pEGLSurface, m_pEGLSurface, m_pEGLContex) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));
 
-	// Print OpenGL info (FIXME: move to GLutils and use same code in Drawing::init())
-	COMPV_DEBUG_INFO("OpenGL-ES version string: %s", glGetString(GL_VERSION));
-	COMPV_DEBUG_INFO("OpenGL-ES shading version string: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
-	COMPV_DEBUG_INFO("OpenGL-ES renderer string: %s", glGetString(GL_RENDERER));
-	COMPV_DEBUG_INFO("OpenGL-ES vendor string: %s", glGetString(GL_VENDOR));
-	COMPV_DEBUG_INFO("OpenGL-ES extensions string: %s", glGetString(GL_EXTENSIONS));
+	// Gather info (init supported extensions)
+	COMPV_CHECK_CODE_BAIL(err = CompVGLInfo::gather());
 
 	// Set swap interval
 	COMPV_CHECK_EXP_BAIL(eglSwapInterval(m_pEGLDisplay, 0) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));

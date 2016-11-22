@@ -68,18 +68,6 @@ COMPV_ERROR_CODE CompVGLVAO::deInit()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-bool CompVGLVAO::haveAPI()
-{
-#if COMPV_OS_ANDROID && defined(GL_ES_VERSION_2_0) && !defined(GL_ES_VERSION_3_0)
-	return CompVGLVAO::bindVertexArrayOES &&
-	CompVGLVAO::deleteVertexArraysOES &&
-	CompVGLVAO::genVertexArraysOES &&
-	CompVGLVAO::isVertexArrayOES;
-#else
-	return true; // iOS -> ok
-#endif
-}
-
 COMPV_NAMESPACE_END()
 
 #endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */

@@ -48,7 +48,6 @@ protected:
 	virtual COMPV_ERROR_CODE deInit();
 
 private:
-	COMPV_INLINE bool GL_vertex_array_object()const { return m_bGL_vertex_array_object && CompVGLVAO::haveAPI(); }
 	static COMPV_ERROR_CODE updateVertices(size_t width, size_t height, size_t stride, bool bToScreen, CompVGLVertex (*Vertices)[4]);
 
 
@@ -68,7 +67,6 @@ private:
 	GLuint m_uNameVAO;
 	CompVProgramGLPtr m_ptrProgram;
 	CompVMVPPtr m_ptrMVP;
-	bool m_bGL_vertex_array_object;
 };
 
 COMPV_NAMESPACE_END()

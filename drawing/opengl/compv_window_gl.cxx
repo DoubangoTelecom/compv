@@ -8,6 +8,7 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/opengl/compv_utils_gl.h"
+#include "compv/gl/compv_gl_info.h"
 
 #define COMPV_THIS_CLASS_NAME "CompVWindowGL"
 
@@ -44,6 +45,7 @@ COMPV_ERROR_CODE CompVWindowGL::beginDraw()
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_EXP_BAIL(m_bDrawing || !context(), (err = COMPV_ERROR_CODE_E_INVALID_STATE));
 	COMPV_CHECK_CODE_BAIL(err = context()->makeCurrent());
+	COMPV_CHECK_CODE_BAIL(err = CompVGLInfo::gather()); // now that the context is set gather the info and set the supported extensions
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
 	glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);

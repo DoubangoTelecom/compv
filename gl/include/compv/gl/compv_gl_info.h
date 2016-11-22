@@ -4,13 +4,14 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_GL_UTILS_H_)
-#define _COMPV_GL_UTILS_H_
+#if !defined(_COMPV_GL_INFO_H_)
+#define _COMPV_GL_INFO_H_
 
 #include "compv/gl/compv_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/gl/compv_common.h"
+#include "compv/gl/compv_gl_utils.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -18,15 +19,33 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class COMPVGLUtils
+class COMPV_GL_API CompVGLInfo
 {
 public:
-	static CompVGLContext currentContext();
-	static bool isGLContextSet() { return COMPVGLUtils::currentContext() != NULL; }
+	struct COMPV_GL_API extensions {
+		friend class CompVGLInfo;
+	public:
+		static bool vertex_array_object() {
+			return s_bvertex_array_object;
+		}
+		static bool texture_float() {
+			return s_btexture_float;
+		}
+	private:
+		static bool s_bvertex_array_object;
+		static bool s_btexture_float;
+	};
+	static COMPV_ERROR_CODE gather();
+private:
+	static bool s_bGathered;
+	static GLint s_iVersionMajor;
+	static GLint s_iVersionMinor;
+	static GLint s_iMaxColorAttachments;
+	static GLint s_iMaxDrawBuffers;
 };
 
 COMPV_NAMESPACE_END()
 
 #endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
 
-#endif /* _COMPV_GL_UTILS_H_ */
+#endif /* _COMPV_GL_INFO_H_ */

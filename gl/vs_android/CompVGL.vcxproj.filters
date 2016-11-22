@@ -15,6 +15,15 @@
     <ClCompile Include="..\compv_gl_vao.cxx">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\compv_gl_info.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_gl_program.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_gl_utils.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\gl\compv_gl.h">
@@ -30,6 +39,18 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\compv\gl\compv_gl_vao.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\gl\compv_gl_extensions.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\gl\compv_gl_info.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\gl\compv_gl_program.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\gl\compv_gl_utils.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

@@ -24,7 +24,6 @@ class COMPV_GL_API CompVGLVAO
 public:
 	static COMPV_ERROR_CODE init();
 	static COMPV_ERROR_CODE deInit();
-	static bool haveAPI();
 
 #if COMPV_OS_ANDROID && defined(GL_ES_VERSION_2_0) && !defined(GL_ES_VERSION_3_0)
 	static PFNGLBINDVERTEXARRAYOESPROC bindVertexArrayOES;

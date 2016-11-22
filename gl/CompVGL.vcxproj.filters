@@ -36,6 +36,9 @@
     <ClInclude Include="include\compv\gl\compv_gl_vao.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\gl\compv_gl_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_gl.cxx">
@@ -48,6 +51,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="compv_gl_vao.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_gl_info.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

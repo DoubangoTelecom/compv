@@ -8,6 +8,7 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/opengl/compv_utils_gl.h"
+#include "compv/gl/compv_gl_info.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -23,7 +24,6 @@ CompVBlitterGL::CompVBlitterGL()
 	, m_uNamePrgAttTexCoord(0)
 	, m_uNamePrgUnifMVP(0)
 	, m_uNameVAO(0)
-	, m_bGL_vertex_array_object(false)
 {
 
 }
@@ -46,7 +46,7 @@ COMPV_ERROR_CODE CompVBlitterGL::bind()
 		glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, m_ptrMVP->matrix()->ptr());
 	}
 
-	if (GL_vertex_array_object()) {
+	if (CompVGLInfo::extensions::vertex_array_object()) {
 		glBindVertexArray(m_uNameVAO);
 	}
 	else {
@@ -67,7 +67,7 @@ COMPV_ERROR_CODE CompVBlitterGL::unbind()
 {
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
-	if (GL_vertex_array_object()) {
+	if (CompVGLInfo::extensions::vertex_array_object()) {
 		glBindVertexArray(0);
 	}
 	else {
@@ -129,12 +129,6 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 	m_bInit = true; // Make sure deInit() will be executed if this function fails
 	CompVGLVertex newVertices[4];
 
-	// FIXME(dmi): do once
-	const char* extensions = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
-	if (extensions) {
-		m_bGL_vertex_array_object = (strstr(extensions, "ARB_vertex_array_object") != NULL || strstr(extensions, "OES_vertex_array_object") != NULL);
-	}
-
 	// Model-View-Projection
 	if (!bMVP) {
 		m_ptrMVP = NULL;
@@ -143,7 +137,7 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 		COMPV_CHECK_CODE_RETURN(CompVMVP::newObjProjection2D(&m_ptrMVP));
 	}
 
-	if (GL_vertex_array_object()) {
+	if (CompVGLInfo::extensions::vertex_array_object()) {
 		// TODO(dmi): use GLUtils
 		if (!m_uNameVAO) {
 			glGenVertexArrays(1, &m_uNameVAO);
@@ -232,7 +226,7 @@ bail:
 	if (m_ptrProgram) {
 		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->useEnd());
 	}
-	if (GL_vertex_array_object()) {
+	if (CompVGLInfo::extensions::vertex_array_object()) {
 		glBindVertexArray(0);
 	}
 	glActiveTexture(GL_TEXTURE0);
@@ -262,7 +256,7 @@ COMPV_ERROR_CODE CompVBlitterGL::deInit()
 		m_uNameIndiceBuffer = 0;
 	}
 	if (m_uNameVAO) {
-		if (GL_vertex_array_object()) {
+		if (CompVGLInfo::extensions::vertex_array_object()) {
 			glDeleteVertexArrays(1, &m_uNameVAO);
 		}
 		else {

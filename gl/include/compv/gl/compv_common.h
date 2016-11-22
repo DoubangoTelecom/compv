@@ -12,6 +12,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+typedef void* CompVGLContext;
+
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_GL_COMMON_H_ */

@@ -84,9 +84,6 @@
     <ClCompile Include="..\opengl\compv_window_egl.cxx">
       <Filter>source\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="..\android\compv_window_android_egl.cxx">
-      <Filter>source\android</Filter>
-    </ClCompile>
     <ClCompile Include="..\opengl\compv_window_gl.cxx">
       <Filter>source\opengl</Filter>
     </ClCompile>
@@ -128,6 +125,9 @@
     </ClCompile>
     <ClCompile Include="..\opengl\compv_surfacelayer_gl_single.cxx">
       <Filter>source\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\android\compv_window_android_egl.cxx">
+      <Filter>include</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -8,11 +8,20 @@
 #define _COMPV_GL_PROGRAM_H_
 
 #include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_headers.h"
+#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
+#include "compv/gl/compv_gl_utils.h"
+
+#if defined(_COMPV_API_H_)
+#error("This is a private file and must not be part of the API")
+#endif
 
 COMPV_NAMESPACE_BEGIN()
 
 
 
 COMPV_NAMESPACE_END()
+
+#endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
 
 #endif /* _COMPV_GL_PROGRAM_H_ */

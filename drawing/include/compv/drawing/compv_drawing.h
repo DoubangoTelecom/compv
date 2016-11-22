@@ -47,8 +47,6 @@ public:
 	static COMPV_ERROR_CODE deInit();
 	static COMPV_INLINE bool isInitialized() { return s_bInitialized; }
 	static COMPV_INLINE bool isLoopRunning() { return s_bLoopRunning; }
-	static COMPV_INLINE int getGLVersionMajor() { return s_iGLVersionMajor; }
-	static COMPV_INLINE int getGLVersionMinor() { return s_iGLVersionMinor; }
 #if COMPV_OS_ANDROID
 	static COMPV_INLINE ANativeWindow* getAndroidNativeActivityWindow() { return s_AndroidEngine.app->window; }
 #endif
@@ -73,10 +71,8 @@ private:
 private:
 	static bool s_bInitialized;
 	static bool s_bLoopRunning;
-	static int s_iGLVersionMajor;
-	static int s_iGLVersionMinor;
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	static std::map<compv_window_id_t, CompVPtr<CompVWindow* > > m_sWindows;
+	static std::map<compv_window_id_t, CompVWindowPtr > m_sWindows;
 	static CompVMutexPtr s_WindowsMutex;
 	static CompVThreadPtr s_WorkerThread;
 #if COMPV_OS_ANDROID
