@@ -7,15 +7,15 @@
 #if !defined(_COMPV_DRAWING_RENDERER_GL_H_)
 #define _COMPV_DRAWING_RENDERER_GL_H_
 
-#include "compv/base/compv_config.h"
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/drawing/compv_config.h"
+#include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_renderer.h"
 #include "compv/drawing/opengl/compv_blitter_gl.h"
 #include "compv/drawing/opengl/compv_consts_gl.h"
 #include "compv/drawing/opengl/compv_fbo_gl.h"
 #include "compv/drawing/compv_program.h"
-#include "compv/base/compv_common.h"
+#include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
 
 #if defined(_COMPV_API_H_)
@@ -34,7 +34,7 @@ protected:
 	CompVRendererGL(COMPV_PIXEL_FORMAT ePixelFormat);
 public:
 	virtual ~CompVRendererGL();
-	COMPV_GET_OBJECT_ID("CompVRendererGL");
+	COMPV_GET_OBJECT_ID(CompVRendererGL);
 
 	// Overrides(CompVRenderer)
 	virtual bool isGLEnabled()const { return true; };

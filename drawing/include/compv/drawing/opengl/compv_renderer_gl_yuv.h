@@ -7,12 +7,12 @@
 #if !defined(_COMPV_DRAWING_RENDERER_GL_YUV_H_)
 #define _COMPV_DRAWING_RENDERER_GL_YUV_H_
 
-#include "compv/base/compv_config.h"
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/drawing/compv_config.h"
+#include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/opengl/compv_renderer_gl.h"
 #include "compv/drawing/opengl/compv_consts_gl.h"
-#include "compv/base/compv_common.h"
+#include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
 
 #if defined(_COMPV_API_H_)
@@ -31,7 +31,7 @@ protected:
 	CompVRendererGLYUV(COMPV_PIXEL_FORMAT eYUVPixelFormat);
 public:
 	virtual ~CompVRendererGLYUV();
-	COMPV_GET_OBJECT_ID("CompVRendererGLYUV");
+	COMPV_GET_OBJECT_ID(CompVRendererGLYUV);
 
 	// Overrides(CompVRenderer)
 	virtual bool isGLEnabled()const { return true; };

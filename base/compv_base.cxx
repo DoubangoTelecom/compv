@@ -44,7 +44,7 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	s_bInitializing = true;
 
-	COMPV_DEBUG_INFO("Initializing base modules (v %s)...", COMPV_VERSION_STRING);
+	COMPV_DEBUG_INFO("Initializing [base] modules (v %s)...", COMPV_VERSION_STRING);
 
 	// Make sure sizeof(compv_scalar_t) is correct
 #if defined(COMPV_ASM) || defined(COMPV_INTRINSIC)

@@ -7,8 +7,8 @@
 #if !defined(_COMPV_DRAWING_VIEWPORT_H_)
 #define _COMPV_DRAWING_VIEWPORT_H_
 
-#include "compv/base/compv_config.h"
-#include "compv/base/compv_common.h"
+#include "compv/drawing/compv_config.h"
+#include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/compv_common.h"
 
@@ -51,7 +51,7 @@ protected:
 	CompVViewport();
 public:
 	virtual ~CompVViewport();
-	COMPV_GET_OBJECT_ID("CompVViewport");
+	COMPV_GET_OBJECT_ID(CompVViewport);
 
 	COMPV_INLINE int x()const { return m_nX; }
 	COMPV_INLINE int y()const { return m_nY; }

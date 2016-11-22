@@ -110,20 +110,27 @@ template<class CompVObjType>
 CompVPtr<CompVObjType>::CompVPtr(CompVObjType obj)
 {
     wrapObject(obj), takeRef();
+	if (obj) {
+		//--COMPV_DEBUG_INFO("%s::ctor()", obj->getObjectId());
+	}
 }
 
 template<class CompVObjType>
 CompVPtr<CompVObjType>::CompVPtr(const CompVPtr<CompVObjType> &obj)
 {
-    wrapObject(obj.getWrappedObject()),
-               takeRef();
+    wrapObject(obj.getWrappedObject()), takeRef();
+	if (obj) {
+		//--COMPV_DEBUG_INFO("%s::ctor()", obj->getObjectId());
+	}
 }
 
 template<class CompVObjType>
 CompVPtr<CompVObjType>::~CompVPtr()
 {
-    releaseRef(),
-               wrapObject(NULL);
+	if (m_WrappedObject) {
+		//--COMPV_DEBUG_INFO("~%s::dtor()", m_WrappedObject->getObjectId());
+	}
+    releaseRef(), wrapObject(NULL);
 }
 
 

@@ -7,8 +7,8 @@
 #if !defined(_COMPV_DRAWING_WINDOW_H_)
 #define _COMPV_DRAWING_WINDOW_H_
 
-#include "compv/base/compv_config.h"
-#include "compv/base/compv_common.h"
+#include "compv/drawing/compv_config.h"
+#include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_mat.h"
 #include "compv/base/parallel/compv_thread.h"

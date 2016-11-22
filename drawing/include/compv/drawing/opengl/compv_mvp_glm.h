@@ -7,12 +7,12 @@
 #if !defined(_COMPV_DRAWING_OPENGL_MVP_GLM_H_)
 #define _COMPV_DRAWING_OPENGL_MVP_GLM_H_
 
-#include "compv/base/compv_config.h"
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/drawing/compv_config.h"
+#include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_mvp.h"
 #include "compv/base/compv_obj.h"
-#include "compv/base/compv_common.h"
+#include "compv/drawing/compv_common.h"
 
 #include <glm/vec3.hpp> // glm::vec3
 #include <glm/vec4.hpp> // glm::vec4
@@ -38,7 +38,7 @@ protected:
 	CompVDrawingMat4fGLM(const glm::mat4& mat4 = glm::mat4(1.0f));
 public:
 	virtual ~CompVDrawingMat4fGLM();
-	COMPV_GET_OBJECT_ID("CompVDrawingMat4fGLM");
+	COMPV_GET_OBJECT_ID(CompVDrawingMat4fGLM);
 	COMPV_INLINE const glm::mat4& matrixGLM()const { return m_Matrix; }
 	CompVDrawingMat4fGLM& operator=(const glm::mat4& mat4) { m_Matrix = mat4; return *this; }
 	operator const glm::mat4&() const { return matrixGLM(); }
@@ -70,7 +70,7 @@ public:
 	COMPV_INLINE const CompVDrawingMat4fGLMPtr& matrixGLM()const { return m_ptrMatrix; }
 	operator const glm::mat4&() const { return **matrixGLM(); }
 	CompVDrawingModelGLM& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
-	COMPV_GET_OBJECT_ID("CompVDrawingModelGLM");
+	COMPV_GET_OBJECT_ID(CompVDrawingModelGLM);
 	virtual CompVDrawingMat4fPtr matrix();
 	virtual COMPV_ERROR_CODE reset();
 	static COMPV_ERROR_CODE newObj(CompVDrawingModelGLMPtrPtr model);
@@ -95,7 +95,7 @@ public:
 	COMPV_INLINE const CompVDrawingMat4fGLMPtr& matrixGLM()const { return m_ptrMatrix; }
 	operator const glm::mat4&() const { return **matrixGLM(); }
 	CompVDrawingViewGLM& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
-	COMPV_GET_OBJECT_ID("CompVDrawingViewGLM");
+	COMPV_GET_OBJECT_ID(CompVDrawingViewGLM);
 	virtual CompVDrawingMat4fPtr matrix();
 	virtual COMPV_ERROR_CODE setCamera(const CompVDrawingVec3f& eye, const CompVDrawingVec3f& target, const CompVDrawingVec3f& up);
 	virtual COMPV_ERROR_CODE reset();
@@ -122,7 +122,7 @@ public:
 	COMPV_INLINE const CompVDrawingMat4fGLMPtr& matrixGLM()const { return m_ptrMatrix; }
 	operator const glm::mat4&() const { return **matrixGLM(); }
 	CompVDrawingProjection3DGLM& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
-	COMPV_GET_OBJECT_ID("CompVDrawingProjection3DGLM");
+	COMPV_GET_OBJECT_ID(CompVDrawingProjection3DGLM);
 
 	virtual CompVDrawingMat4fPtr matrix();
 	virtual COMPV_ERROR_CODE reset();
@@ -151,7 +151,7 @@ public:
 	COMPV_INLINE const CompVDrawingMat4fGLMPtr& matrixGLM()const { return m_ptrMatrix; }
 	operator const glm::mat4&() const { return **matrixGLM(); }
 	CompVDrawingProjection2DGLM& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
-	COMPV_GET_OBJECT_ID("CompVDrawingProjection2DGLM");
+	COMPV_GET_OBJECT_ID(CompVDrawingProjection2DGLM);
 
 	virtual CompVDrawingMat4fPtr matrix();
 	virtual COMPV_ERROR_CODE reset();
@@ -178,7 +178,7 @@ public:
 	virtual ~CompVMVPGLM();
 	operator const glm::mat4&() const { return **m_ptrMatrix; }
 	CompVMVPGLM& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
-	COMPV_GET_OBJECT_ID("CompVMVPGLM");
+	COMPV_GET_OBJECT_ID(CompVMVPGLM);
 
 	virtual CompVDrawingMat4fPtr matrix();
 	virtual CompVDrawingModelPtr model();

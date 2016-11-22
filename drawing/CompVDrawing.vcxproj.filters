@@ -42,9 +42,6 @@
     <ClInclude Include="include\compv\drawing\compv_image_libjpeg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_headers_gl.h">
-      <Filter>Header Files\opengl</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\drawing\opengl\compv_program_gl.h">
       <Filter>Header Files\opengl</Filter>
     </ClInclude>
@@ -131,6 +128,9 @@
     </ClInclude>
     <ClInclude Include="include\compv\drawing\opengl\compv_surfacelayer_gl_multi.h">
       <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\compv_config.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

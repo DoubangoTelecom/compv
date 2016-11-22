@@ -7,10 +7,10 @@
 #if !defined(_COMPV_DRAWING_SURFACE_GL_H_)
 #define _COMPV_DRAWING_SURFACE_GL_H_
 
-#include "compv/base/compv_config.h"
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/drawing/compv_config.h"
+#include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-#include "compv/base/compv_common.h"
+#include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/compv_surface.h"
 #include "compv/drawing/opengl/compv_mvp_glm.h"
@@ -36,7 +36,7 @@ protected:
 	CompVSurfaceGL(size_t width, size_t height);
 public:
 	virtual ~CompVSurfaceGL();
-	COMPV_GET_OBJECT_ID("CompVSurfaceGL");
+	COMPV_GET_OBJECT_ID(CompVSurfaceGL);
 	COMPV_INLINE CompVViewportPtr viewport() { return m_ptrViewport; }
 	COMPV_INLINE CompVRendererGLPtr renderer() { return m_ptrRenderer; }
 	COMPV_INLINE CompVFBOGLPtr canvasFBO() { return m_ptrCanvasFBO;}

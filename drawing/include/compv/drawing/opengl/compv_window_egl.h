@@ -8,7 +8,7 @@
 #define _COMPV_DRAWING_WINDOW_EGL_H_
 
 #include "compv/base/compv_config.h"
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_EGL) && 0
 #include "compv/base/compv_common.h"
 #include "compv/drawing/compv_window.h"

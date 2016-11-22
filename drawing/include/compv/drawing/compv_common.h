@@ -7,8 +7,9 @@
 #if !defined(_COMPV_DRAWING_COMMON_H_)
 #define _COMPV_DRAWING_COMMON_H_
 
-#include "compv/base/compv_config.h"
+#include "compv/drawing/compv_config.h"
 #include "compv/base/compv_common.h"
+#include "compv/gl/compv_common.h"
 
 COMPV_NAMESPACE_BEGIN()
 

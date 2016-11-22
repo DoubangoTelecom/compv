@@ -32,6 +32,9 @@
 
 #include <compv/base/time/compv_time.h>
 
+/* Module: GL */
+#include <compv/gl/compv_gl.h>
+
 /* Module: Drawing */
 #include <compv/drawing/compv_canvas.h>
 #include <compv/drawing/compv_drawing.h>
@@ -68,6 +71,7 @@ COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 static COMPV_ERROR_CODE CompVInit()
 {
 	COMPV_CHECK_CODE_RETURN(CompVBase::init());
+	COMPV_CHECK_CODE_RETURN(CompVGL::init());
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -75,6 +79,7 @@ static COMPV_ERROR_CODE CompVInit()
 static COMPV_ERROR_CODE CompVDeInit()
 {
 	COMPV_CHECK_CODE_ASSERT(CompVBase::deInit());
+	COMPV_CHECK_CODE_ASSERT(CompVGL::deInit());
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::deInit());
 	return COMPV_ERROR_CODE_S_OK;
 }

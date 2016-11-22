@@ -7,10 +7,10 @@
 #if !defined(_COMPV_DRAWING_WINDOW_SDL_H_)
 #define _COMPV_DRAWING_WINDOW_SDL_H_
 
-#include "compv/base/compv_config.h"
+#include "compv/drawing/compv_config.h"
 #if defined(HAVE_SDL_H)
 #include "compv/drawing/opengl/compv_window_gl.h"
-#include "compv/base/compv_common.h"
+#include "compv/drawing/compv_common.h"
 
 #include <SDL.h>
 
@@ -33,7 +33,7 @@ protected:
 	CompVContextGLSDL(SDL_Window *pSDLWindow, SDL_GLContext pSDLContext);
 public:
 	virtual ~CompVContextGLSDL();
-	COMPV_GET_OBJECT_ID("CompVContextGLSDL");
+	COMPV_GET_OBJECT_ID(CompVContextGLSDL);
 
 	virtual COMPV_ERROR_CODE makeCurrent();
 	virtual COMPV_ERROR_CODE swapBuffers();
@@ -60,7 +60,7 @@ protected:
 	CompVWindowSDL(size_t width, size_t height, const char* title);
 public:
 	virtual ~CompVWindowSDL();
-	COMPV_GET_OBJECT_ID("CompVWindowSDL");
+	COMPV_GET_OBJECT_ID(CompVWindowSDL);
 	
 	/* CompVWindow overrides */
 	virtual bool isClosed()const;

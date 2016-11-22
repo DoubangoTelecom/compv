@@ -6,11 +6,12 @@
 */
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/compv_image_libjpeg.h"
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/gl/compv_gl_headers.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_mat.h"
 #include "compv/base/image/compv_image_decoder.h"
 #include "compv/base/android/compv_android_native_activity.h"
+#include "compv/gl/compv_gl.h"
 
 #if defined(HAVE_SDL_H)
 #include <SDL.h>
@@ -58,21 +59,12 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	}
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
-	COMPV_DEBUG_INFO("Initializing drawing module (v %s)...", COMPV_VERSION_STRING);
+	COMPV_DEBUG_INFO("Initializing [drawing] module (v %s)...", COMPV_VERSION_STRING);
 
 	COMPV_CHECK_CODE_BAIL(err = CompVBase::init());
+	COMPV_CHECK_CODE_BAIL(err = CompVGL::init());
 
 	COMPV_CHECK_CODE_BAIL(err = CompVMutex::newObj(&CompVDrawing::s_WindowsMutex));
-
-#if defined(HAVE_GL_GLEW_H)
-	COMPV_DEBUG_INFO("GLEW version being used: %d.%d.%d", GLEW_VERSION_MAJOR, GLEW_VERSION_MINOR, GLEW_VERSION_MICRO);
-#endif /* HAVE_GL_GLEW_H */
-
-#if	defined(HAVE_OPENGLES)
-	COMPV_DEBUG_INFO("OpenGL-ES implementation enabled");
-#elif defined(HAVE_OPENGL)
-	COMPV_DEBUG_INFO("OpenGL implementation enabled");
-#endif
 
 	/* SDL */
 #if defined(HAVE_SDL_H)
@@ -164,7 +156,8 @@ bail:
 
 COMPV_ERROR_CODE CompVDrawing::deInit()
 {
-	CompVBase::deInit();
+	COMPV_CHECK_CODE_ASSERT(CompVBase::deInit());
+	COMPV_CHECK_CODE_ASSERT(CompVGL::deInit());
 
 	CompVDrawing::breakLoop();
 	CompVDrawing::s_WindowsMutex = NULL;
@@ -189,7 +182,7 @@ COMPV_ERROR_CODE CompVDrawing::deInit()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVDrawing::registerWindow(CompVPtr<CompVWindow* > window)
+COMPV_ERROR_CODE CompVDrawing::registerWindow(CompVWindowPtr window)
 {
 	COMPV_CHECK_EXP_RETURN(!CompVDrawing::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(!window, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -200,7 +193,7 @@ COMPV_ERROR_CODE CompVDrawing::registerWindow(CompVPtr<CompVWindow* > window)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVDrawing::unregisterWindow(CompVPtr<CompVWindow* > window)
+COMPV_ERROR_CODE CompVDrawing::unregisterWindow(CompVWindowPtr window)
 {
 	COMPV_CHECK_EXP_RETURN(!CompVDrawing::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::unregisterWindow(window->getId()));
@@ -445,9 +438,6 @@ COMPV_ERROR_CODE CompVDrawing::android_runLoop(struct android_app* state)
 			// is no need to do timing here.
 			//engine_draw_frame(&engine);
 		}
-
-		// FIXME(dmi):
-		CompVThread::sleep(1);
 	}
 
 bail:

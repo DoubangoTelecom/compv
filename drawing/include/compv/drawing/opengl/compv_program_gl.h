@@ -7,12 +7,12 @@
 #if !defined(_COMPV_DRAWING_OPENGL_PROGRAM_GL_H_)
 #define _COMPV_DRAWING_OPENGL_PROGRAM_GL_H_
 
-#include "compv/base/compv_config.h"
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/drawing/compv_config.h"
+#include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_program.h"
 #include "compv/base/compv_obj.h"
-#include "compv/base/compv_common.h"
+#include "compv/drawing/compv_common.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -30,7 +30,7 @@ protected:
 	CompVProgramGL();
 public:
 	virtual ~CompVProgramGL();
-	COMPV_GET_OBJECT_ID("CompVProgramGL");
+	COMPV_GET_OBJECT_ID(CompVProgramGL);
 
 	virtual COMPV_ERROR_CODE shadAttachVertexFile(const char* pcFilePath);
 	virtual COMPV_ERROR_CODE shadAttachFragmentFile(const char* pcFilePath);

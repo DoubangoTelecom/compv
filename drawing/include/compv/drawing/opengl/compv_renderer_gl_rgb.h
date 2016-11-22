@@ -7,10 +7,10 @@
 #if !defined(_COMPV_DRAWING_RENDERER_GL_RGB_H_)
 #define _COMPV_DRAWING_RENDERER_GL_RGB_H_
 
-#include "compv/base/compv_config.h"
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/drawing/compv_config.h"
+#include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-#include "compv/base/compv_common.h"
+#include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/opengl/compv_renderer_gl.h"
 
@@ -30,7 +30,7 @@ protected:
 	CompVRendererGLRGB(COMPV_PIXEL_FORMAT eRGBPixelFormat);
 public:
 	virtual ~CompVRendererGLRGB();
-	COMPV_GET_OBJECT_ID("CompVRendererGLRGB");
+	COMPV_GET_OBJECT_ID(CompVRendererGLRGB);
 
 	// Overrides(CompVRendererGL)
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat);

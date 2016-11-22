@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_DRAWING_OPENGL_HEADERS_GL_H_)
-#define _COMPV_DRAWING_OPENGL_HEADERS_GL_H_
+#if !defined(_COMPV_GL_HEADERS_H_)
+#define _COMPV_GL_HEADERS_H_
 
 #include "compv/base/compv_config.h"
 
@@ -53,4 +53,4 @@
 #	include <EGL/eglext.h>
 #endif 
 
-#endif /* _COMPV_DRAWING_OPENGL_HEADERS_GL_H_ */
+#endif /* _COMPV_GL_HEADERS_H_ */

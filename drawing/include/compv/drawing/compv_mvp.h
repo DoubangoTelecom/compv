@@ -7,9 +7,9 @@
 #if !defined(_COMPV_DRAWING_MVP_H_)
 #define _COMPV_DRAWING_MVP_H_
 
-#include "compv/base/compv_config.h"
+#include "compv/drawing/compv_config.h"
 #include "compv/base/compv_obj.h"
-#include "compv/base/compv_common.h"
+#include "compv/drawing/compv_common.h"
 #include "compv/drawing/compv_common.h"
 
 #if !defined(COMPV_MVP_PROJ_FOVY)

@@ -7,14 +7,14 @@
 #if !defined(_COMPV_DRAWING_OPENGL_BLITTER_H_)
 #define _COMPV_DRAWING_OPENGL_BLITTER_H_
 
-#include "compv/base/compv_config.h"
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/drawing/compv_config.h"
+#include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/opengl/compv_consts_gl.h"
 #include "compv/drawing/opengl/compv_program_gl.h"
 #include "compv/drawing/opengl/compv_mvp_glm.h"
 #include "compv/base/compv_obj.h"
-#include "compv/base/compv_common.h"
+#include "compv/drawing/compv_common.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")

@@ -8,7 +8,7 @@
 #if defined(HAVE_GLFW_GLFW3_H)
 #error "GLFW is deprecated and replaced with SDL"
 #include "compv/drawing/compv_drawing.h"
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/gl/compv_gl_headers.h"
 
 #include <GLFW/glfw3.h>
 

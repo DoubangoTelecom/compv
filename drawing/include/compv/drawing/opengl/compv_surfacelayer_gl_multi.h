@@ -7,8 +7,8 @@
 #if !defined(_COMPV_DRAWING_SURFACE_LAYER_GL_MULTI_H_)
 #define _COMPV_DRAWING_SURFACE_LAYER_GL_MULTI_H_
 
-#include "compv/base/compv_config.h"
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/drawing/compv_config.h"
+#include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_surfacelayer_multi.h"
 #include "compv/drawing/opengl/compv_surface_gl.h"
@@ -33,7 +33,7 @@ protected:
 	CompVMultiSurfaceLayerGL();
 public:
 	virtual ~CompVMultiSurfaceLayerGL();
-	COMPV_GET_OBJECT_ID("CompVMultiSurfaceLayerGL");
+	COMPV_GET_OBJECT_ID(CompVMultiSurfaceLayerGL);
 	
 	COMPV_OVERRIDE_DECL0("CompVMultiSurfaceLayer", addSurface)(CompVSurfacePtrPtr surface, size_t width, size_t height) override;
 	COMPV_OVERRIDE_DECL0("CompVMultiSurfaceLayer", removeSurface)(const CompVSurfacePtr surface) override;

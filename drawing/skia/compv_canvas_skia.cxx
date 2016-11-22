@@ -6,7 +6,7 @@
 */
 #include "compv/drawing/skia/compv_canvas_skia.h"
 #if HAVE_SKIA
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/gl/compv_gl_headers.h"
 #include "compv/base/compv_base.h"
 
 #include <GrContext.h>

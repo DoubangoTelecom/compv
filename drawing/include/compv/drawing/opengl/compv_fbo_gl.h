@@ -7,11 +7,11 @@
 #if !defined(_COMPV_DRAWING_OPENGL_FBO_H_)
 #define _COMPV_DRAWING_OPENGL_FBO_H_
 
-#include "compv/base/compv_config.h"
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/drawing/compv_config.h"
+#include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_obj.h"
-#include "compv/base/compv_common.h"
+#include "compv/drawing/compv_common.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -29,7 +29,7 @@ protected:
 	CompVFBOGL(size_t width, size_t height);
 public:
 	virtual ~CompVFBOGL();
-	COMPV_GET_OBJECT_ID("CompVFBOGL");
+	COMPV_GET_OBJECT_ID(CompVFBOGL);
 
 	COMPV_INLINE size_t width() { return m_nWidth; }
 	COMPV_INLINE size_t height() { return m_nHeight; }

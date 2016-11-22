@@ -7,9 +7,9 @@
 #if !defined(_COMPV_DRAWING_CANVAS_SKIA_H_)
 #define _COMPV_DRAWING_CANVAS_SKIA_H_
 
-#include "compv/base/compv_config.h"
+#include "compv/drawing/compv_config.h"
 #if HAVE_SKIA
-#include "compv/base/compv_common.h"
+#include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_mat.h"
 #include "compv/drawing/compv_canvas.h"
@@ -32,7 +32,7 @@ protected:
 	CompVCanvasImplSkia();
 public:
 	virtual ~CompVCanvasImplSkia();
-	COMPV_GET_OBJECT_ID("CompVCanvasImplSkia");
+	COMPV_GET_OBJECT_ID(CompVCanvasImplSkia);
 
 	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) override;
 	virtual COMPV_ERROR_CODE drawLine(int x0, int y0, int x1, int y1) override;

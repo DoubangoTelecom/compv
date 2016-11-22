@@ -155,9 +155,6 @@
     <ClInclude Include="..\include\compv\drawing\sdl\compv_window_sdl.h">
       <Filter>include\sdl</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\opengl\compv_headers_gl.h">
-      <Filter>include\opengl</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\drawing\opengl\compv_program_gl.h">
       <Filter>include\opengl</Filter>
     </ClInclude>
