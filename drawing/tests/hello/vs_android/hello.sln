@@ -6,6 +6,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hello.NativeActivity", "hello.NativeActivity\hello.NativeActivity.vcxproj", "{CE3C6780-3488-4A94-8695-5ADA65D178CC}"
 	ProjectSection(ProjectDependencies) = postProject
 		{68935871-4451-42BA-B9C0-C547AB282F0C} = {68935871-4451-42BA-B9C0-C547AB282F0C}
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB} = {C9A86A91-D297-43F4-B31E-BE1A833391BB}
 		{9320E994-AA59-49BA-AB64-F82AEDEC49A3} = {9320E994-AA59-49BA-AB64-F82AEDEC49A3}
 	EndProjectSection
 EndProject
@@ -17,6 +18,7 @@ Project("{39E2626F-3545-4960-A6E8-258AD8476CE5}") = "hello.Packaging", "hello.Pa
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVDrawing", "..\..\..\vs_android\CompVDrawing.vcxproj", "{68935871-4451-42BA-B9C0-C547AB282F0C}"
 	ProjectSection(ProjectDependencies) = postProject
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB} = {C9A86A91-D297-43F4-B31E-BE1A833391BB}
 		{9320E994-AA59-49BA-AB64-F82AEDEC49A3} = {9320E994-AA59-49BA-AB64-F82AEDEC49A3}
 	EndProjectSection
 EndProject
@@ -26,6 +28,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		..\..\..\..\api\include\compv\compv_api.h = ..\..\..\..\api\include\compv\compv_api.h
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVGL", "..\..\..\..\gl\vs_android\CompVGL.vcxproj", "{C9A86A91-D297-43F4-B31E-BE1A833391BB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -113,6 +117,22 @@ Global
 		{9320E994-AA59-49BA-AB64-F82AEDEC49A3}.Release|x64.Build.0 = Release|x64
 		{9320E994-AA59-49BA-AB64-F82AEDEC49A3}.Release|x86.ActiveCfg = Release|x86
 		{9320E994-AA59-49BA-AB64-F82AEDEC49A3}.Release|x86.Build.0 = Release|x86
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Debug|ARM.ActiveCfg = Debug|ARM
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Debug|ARM.Build.0 = Debug|ARM
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Debug|ARM64.Build.0 = Debug|ARM64
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Debug|x64.ActiveCfg = Debug|x64
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Debug|x64.Build.0 = Debug|x64
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Debug|x86.ActiveCfg = Debug|x86
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Debug|x86.Build.0 = Debug|x86
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Release|ARM.ActiveCfg = Release|ARM
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Release|ARM.Build.0 = Release|ARM
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Release|ARM64.ActiveCfg = Release|ARM64
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Release|ARM64.Build.0 = Release|ARM64
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Release|x64.ActiveCfg = Release|x64
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Release|x64.Build.0 = Release|x64
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Release|x86.ActiveCfg = Release|x86
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

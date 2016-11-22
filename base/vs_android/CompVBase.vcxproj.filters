@@ -4,21 +4,6 @@
     <Filter Include="include">
       <UniqueIdentifier>{dcb3ebe0-ddcf-4249-b2c2-f9a186d25e99}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src">
-      <UniqueIdentifier>{b1b4c436-82d3-4d53-945b-39869d82e3ef}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\time">
-      <UniqueIdentifier>{7ec28e57-f408-4cb1-b98f-f5c99d9ed973}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\parallel">
-      <UniqueIdentifier>{06de7fbe-8163-4ca8-8e0a-fa773bb84b5d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\math">
-      <UniqueIdentifier>{d0542094-ea16-41cc-bf07-514c0006ef5b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\image">
-      <UniqueIdentifier>{8826fe7d-d48b-478e-acec-b9268101d605}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\image">
       <UniqueIdentifier>{386d5873-1029-47e3-8210-2ffa17e21a7f}</UniqueIdentifier>
     </Filter>
@@ -34,100 +19,115 @@
     <Filter Include="include\android">
       <UniqueIdentifier>{697a84e0-3177-44cd-9705-6244d13accbe}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\android">
+    <Filter Include="source">
+      <UniqueIdentifier>{b1b4c436-82d3-4d53-945b-39869d82e3ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\time">
+      <UniqueIdentifier>{7ec28e57-f408-4cb1-b98f-f5c99d9ed973}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\parallel">
+      <UniqueIdentifier>{06de7fbe-8163-4ca8-8e0a-fa773bb84b5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\math">
+      <UniqueIdentifier>{d0542094-ea16-41cc-bf07-514c0006ef5b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\image">
+      <UniqueIdentifier>{8826fe7d-d48b-478e-acec-b9268101d605}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\android">
       <UniqueIdentifier>{e0271f58-a1ac-460f-8f04-12a03cfe1de5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
-      <Filter>src</Filter>
+      <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_buffer.cxx">
-      <Filter>src</Filter>
+      <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_common.cxx">
-      <Filter>src</Filter>
+      <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_cpu.cxx">
-      <Filter>src</Filter>
+      <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_debug.cxx">
-      <Filter>src</Filter>
+      <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_fileutils.cxx">
-      <Filter>src</Filter>
+      <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_mat.cxx">
-      <Filter>src</Filter>
+      <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_md5.cxx">
-      <Filter>src</Filter>
+      <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_mem.cxx">
-      <Filter>src</Filter>
+      <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_obj.cxx">
-      <Filter>src</Filter>
+      <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_simd_globals.cxx">
-      <Filter>src</Filter>
+      <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\image\compv_image.cxx">
-      <Filter>src\image</Filter>
+      <Filter>source\image</Filter>
     </ClCompile>
     <ClCompile Include="..\image\compv_image_decoder.cxx">
-      <Filter>src\image</Filter>
+      <Filter>source\image</Filter>
     </ClCompile>
     <ClCompile Include="..\image\compv_image_utils.cxx">
-      <Filter>src\image</Filter>
+      <Filter>source\image</Filter>
     </ClCompile>
     <ClCompile Include="..\math\compv_math.cxx">
-      <Filter>src\math</Filter>
+      <Filter>source\math</Filter>
     </ClCompile>
     <ClCompile Include="..\math\compv_math_utils.cxx">
-      <Filter>src\math</Filter>
+      <Filter>source\math</Filter>
     </ClCompile>
     <ClCompile Include="..\parallel\compv_asynctask.cxx">
-      <Filter>src\parallel</Filter>
+      <Filter>source\parallel</Filter>
     </ClCompile>
     <ClCompile Include="..\parallel\compv_asynctask11.cxx">
-      <Filter>src\parallel</Filter>
+      <Filter>source\parallel</Filter>
     </ClCompile>
     <ClCompile Include="..\parallel\compv_condvar.cxx">
-      <Filter>src\parallel</Filter>
+      <Filter>source\parallel</Filter>
     </ClCompile>
     <ClCompile Include="..\parallel\compv_mutex.cxx">
-      <Filter>src\parallel</Filter>
+      <Filter>source\parallel</Filter>
     </ClCompile>
     <ClCompile Include="..\parallel\compv_parallel.cxx">
-      <Filter>src\parallel</Filter>
+      <Filter>source\parallel</Filter>
     </ClCompile>
     <ClCompile Include="..\parallel\compv_semaphore.cxx">
-      <Filter>src\parallel</Filter>
+      <Filter>source\parallel</Filter>
     </ClCompile>
     <ClCompile Include="..\parallel\compv_thread.cxx">
-      <Filter>src\parallel</Filter>
+      <Filter>source\parallel</Filter>
     </ClCompile>
     <ClCompile Include="..\parallel\compv_threaddisp.cxx">
-      <Filter>src\parallel</Filter>
+      <Filter>source\parallel</Filter>
     </ClCompile>
     <ClCompile Include="..\parallel\compv_threaddisp11.cxx">
-      <Filter>src\parallel</Filter>
+      <Filter>source\parallel</Filter>
     </ClCompile>
     <ClCompile Include="..\time\compv_time.cxx">
-      <Filter>src\time</Filter>
+      <Filter>source\time</Filter>
     </ClCompile>
     <ClCompile Include="..\time\compv_timer.cxx">
-      <Filter>src\time</Filter>
+      <Filter>source\time</Filter>
     </ClCompile>
     <ClCompile Include="..\android\compv_android_cpu-features.cxx">
-      <Filter>src\android</Filter>
+      <Filter>source\android</Filter>
     </ClCompile>
     <ClCompile Include="..\android\compv_android_native_activity.cxx">
-      <Filter>src\android</Filter>
+      <Filter>source\android</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_autolock.cxx">
-      <Filter>src</Filter>
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

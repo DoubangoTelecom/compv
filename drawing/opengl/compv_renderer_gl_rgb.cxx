@@ -140,7 +140,7 @@ COMPV_ERROR_CODE CompVRendererGLRGB::init(CompVMatPtr mat)
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	CompVProgramPtr ptrProgram;
+	CompVProgramGLPtr ptrProgram;
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	m_bInit = true; // To make sure deInit() will be fully executed
 	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::init(mat, m_strPrgVertexData, m_strPrgFragData, false, false)); // Base class implementation

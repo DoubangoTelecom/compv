@@ -67,7 +67,7 @@ private:
 private:
 	bool m_bInit;
 	CompVRendererGLPtr m_ptrRenderer;
-	CompVProgramPtr m_ptrProgram;
+	CompVProgramGLPtr m_ptrProgram;
 	CompVFBOGLPtr m_ptrCanvasFBO;
 };
 

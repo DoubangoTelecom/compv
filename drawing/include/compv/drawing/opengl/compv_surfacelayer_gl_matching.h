@@ -19,8 +19,6 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVWindowGL;
-
 class CompVMatchingSurfaceLayerGL;
 typedef CompVPtr<CompVMatchingSurfaceLayerGL* > CompVMatchingSurfaceLayerGLPtr;
 typedef CompVMatchingSurfaceLayerGLPtr* CompVMatchingSurfaceLayerGLPtrPtr;

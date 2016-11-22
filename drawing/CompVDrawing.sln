@@ -5,11 +5,13 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVDrawing", "CompVDrawing.vcxproj", "{3B044340-C223-474B-BB77-CE2F430C0190}"
 	ProjectSection(ProjectDependencies) = postProject
+		{4A895705-E866-452D-8CFA-481C9E6B8871} = {4A895705-E866-452D-8CFA-481C9E6B8871}
 		{52028A97-E6D7-4C48-82E9-3789FD42BC56} = {52028A97-E6D7-4C48-82E9-3789FD42BC56}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hello", "tests\hello\hello.vcxproj", "{65705590-2EEC-44C9-B485-4D077D3FBACA}"
 	ProjectSection(ProjectDependencies) = postProject
+		{4A895705-E866-452D-8CFA-481C9E6B8871} = {4A895705-E866-452D-8CFA-481C9E6B8871}
 		{3B044340-C223-474B-BB77-CE2F430C0190} = {3B044340-C223-474B-BB77-CE2F430C0190}
 		{52028A97-E6D7-4C48-82E9-3789FD42BC56} = {52028A97-E6D7-4C48-82E9-3789FD42BC56}
 	EndProjectSection
@@ -19,6 +21,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0BFCCD01-44BA-4E14-AB4F-C9342D90AD50}"
 	ProjectSection(SolutionItems) = preProject
 		..\api\include\compv\compv_api.h = ..\api\include\compv\compv_api.h
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVGL", "..\gl\CompVGL.vcxproj", "{4A895705-E866-452D-8CFA-481C9E6B8871}"
+	ProjectSection(ProjectDependencies) = postProject
+		{52028A97-E6D7-4C48-82E9-3789FD42BC56} = {52028A97-E6D7-4C48-82E9-3789FD42BC56}
 	EndProjectSection
 EndProject
 Global
@@ -53,6 +60,14 @@ Global
 		{52028A97-E6D7-4C48-82E9-3789FD42BC56}.Release|x64.Build.0 = Release|x64
 		{52028A97-E6D7-4C48-82E9-3789FD42BC56}.Release|x86.ActiveCfg = Release|Win32
 		{52028A97-E6D7-4C48-82E9-3789FD42BC56}.Release|x86.Build.0 = Release|Win32
+		{4A895705-E866-452D-8CFA-481C9E6B8871}.Debug|x64.ActiveCfg = Debug|x64
+		{4A895705-E866-452D-8CFA-481C9E6B8871}.Debug|x64.Build.0 = Debug|x64
+		{4A895705-E866-452D-8CFA-481C9E6B8871}.Debug|x86.ActiveCfg = Debug|Win32
+		{4A895705-E866-452D-8CFA-481C9E6B8871}.Debug|x86.Build.0 = Debug|Win32
+		{4A895705-E866-452D-8CFA-481C9E6B8871}.Release|x64.ActiveCfg = Release|x64
+		{4A895705-E866-452D-8CFA-481C9E6B8871}.Release|x64.Build.0 = Release|x64
+		{4A895705-E866-452D-8CFA-481C9E6B8871}.Release|x86.ActiveCfg = Release|Win32
+		{4A895705-E866-452D-8CFA-481C9E6B8871}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

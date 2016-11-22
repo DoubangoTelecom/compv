@@ -41,7 +41,7 @@ bail:
 
 static void* COMPV_STDCALL WorkerThread(void* arg)
 {
-#if 1 // Multiple
+#if 0 // Multiple
 	COMPV_ERROR_CODE err;
 	CompVMatPtr mat[3];
 	CompVMultiSurfaceLayerPtr multipleSurfaceLayer;
@@ -91,7 +91,7 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 bail:
 	return NULL;
 
-#elif 1 // Matching
+#elif 0 // Matching
 	COMPV_ERROR_CODE err;
 	CompVMatPtr mat[3];
 	CompVMatchingSurfaceLayerPtr matchingSurfaceLayer;
@@ -113,7 +113,7 @@ bail:
 		std::string text = "Hello doubango telecom [" + std::string(buff_) + "]";
 		COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
 		COMPV_CHECK_CODE_BAIL(err = matchingSurfaceLayer->drawMatches(mat[0/*(count + 0) % 3*/], mat[1/*(count + 0) % 3*/]));
-		
+
 		if (count == 1000) {
 			uint64_t duration = (CompVTime::getNowMills() - timeStart);
 			float fps = 1000.f / ((static_cast<float>(duration)) / 1000.f);
@@ -137,6 +137,7 @@ bail:
 	CompVViewportPtr ptrViewPort;
 	CompVMVPPtr ptrMVP;
 	static int count = 0;
+	static uint64_t timeStart;
 	char buff_[33] = { 0 };
 	
 	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile(COMPV_PATH_FROM_NAME("girl.jpg"), &mat[0]));
@@ -144,7 +145,7 @@ bail:
 	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile(COMPV_PATH_FROM_NAME("mandekalou.jpg"), &mat[2]));
 
 	COMPV_CHECK_CODE_BAIL(err = window->addSingleLayerSurface(&singleSurfaceLayer));
-
+	/*
 	// Set viewport
 	COMPV_CHECK_CODE_BAIL(err = CompVViewport::newObj(&ptrViewPort, CompViewportSizeFlags::makeDynamicAspectRatio()));
 	COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->setViewport(ptrViewPort));
@@ -154,8 +155,9 @@ bail:
 	COMPV_CHECK_CODE_BAIL(err = ptrMVP->model()->matrix()->scale(CompVDrawingVec3f(1.f, 1.f, 1.f)));
 	COMPV_CHECK_CODE_BAIL(err = ptrMVP->view()->setCamera(CompVDrawingVec3f(0.f, 0.f, 1.f), CompVDrawingVec3f(0.f, 0.f, 0.f), CompVDrawingVec3f(0.f, 1.f, 0.f)));
 	COMPV_CHECK_CODE_BAIL(err = ptrMVP->projection2D()->setOrtho(-1.f, 1.f, -1.f, 1.f, -1.f, 1.f));
-	COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->setMVP(ptrMVP));
+	COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->setMVP(ptrMVP));*/
 
+	timeStart = CompVTime::getNowMills();
 	while (CompVDrawing::isLoopRunning()) {
 		snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(count));
 		std::string text = "Hello doubango telecom [" + std::string(buff_) + "]";
@@ -163,6 +165,16 @@ bail:
 		COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->drawImage(mat[0/*(count + 0) % 3*/], &ptrImageRenderer));
 		//COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->drawText(text.c_str(), text.length(), 463, 86));
 		COMPV_CHECK_CODE_BAIL(err = ptrImageRenderer->drawText(text.c_str(), text.length(), 463, 86));
+
+		/*if (count == 1000) {
+			uint64_t duration = (CompVTime::getNowMills() - timeStart);
+			float fps = 1000.f / ((static_cast<float>(duration)) / 1000.f);
+			COMPV_DEBUG_INFO("Elapsed time: %llu, fps=%f", duration, fps);
+			count = 0;
+			timeStart = CompVTime::getNowMills();
+		}
+		++count;*/
+
 		COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
 		COMPV_CHECK_CODE_BAIL(err = window->endDraw());
 

@@ -148,7 +148,7 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase;CompVGL</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
@@ -164,7 +164,7 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase;CompVGL</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
@@ -180,7 +180,7 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase;CompVGL</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);../../../../../thirdparties/libraries/android/skia-m55-armv7a-neon-release;../../../../../thirdparties/libraries/android/sdl-2.0.5-armv7a-neon-release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
@@ -196,7 +196,7 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase;CompVGL</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
@@ -212,7 +212,7 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase;CompVGL</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
@@ -228,7 +228,7 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase;CompVGL</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
@@ -244,7 +244,7 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase;CompVGL</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
@@ -260,7 +260,7 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVBase;CompVGL</LibraryDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
@@ -272,6 +272,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\base\vs_android\CompVBase.vcxproj">
       <Project>{9320e994-aa59-49ba-ab64-f82aedec49a3}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\gl\vs_android\CompVGL.vcxproj">
+      <Project>{c9a86a91-d297-43f4-b31e-be1a833391bb}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\vs_android\CompVDrawing.vcxproj">
       <Project>{68935871-4451-42ba-b9c0-c547ab282f0c}</Project>
