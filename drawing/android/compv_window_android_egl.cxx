@@ -45,7 +45,7 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVContextGLAndroidEGL::swabBuffers()
+COMPV_ERROR_CODE CompVContextGLAndroidEGL::swapBuffers()
 {
 	COMPV_CHECK_CODE_RETURN(CompVContextGL::swapBuffers()); // Base class implementation
 	COMPV_CHECK_EXP_RETURN(eglSwapBuffers(m_pEGLDisplay, m_pEGLSurface) != EGL_TRUE, COMPV_ERROR_CODE_E_EGL);

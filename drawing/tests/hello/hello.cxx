@@ -166,14 +166,14 @@ bail:
 		//COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->drawText(text.c_str(), text.length(), 463, 86));
 		COMPV_CHECK_CODE_BAIL(err = ptrImageRenderer->drawText(text.c_str(), text.length(), 463, 86));
 
-		/*if (count == 1000) {
+		if (count == 1000) {
 			uint64_t duration = (CompVTime::getNowMills() - timeStart);
 			float fps = 1000.f / ((static_cast<float>(duration)) / 1000.f);
 			COMPV_DEBUG_INFO("Elapsed time: %llu, fps=%f", duration, fps);
 			count = 0;
 			timeStart = CompVTime::getNowMills();
 		}
-		++count;*/
+		++count;
 
 		COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
 		COMPV_CHECK_CODE_BAIL(err = window->endDraw());

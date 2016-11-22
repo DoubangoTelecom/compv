@@ -34,9 +34,9 @@ public:
 	virtual ~CompVContextGLAndroidEGL();
 	COMPV_GET_OBJECT_ID("CompVContextGLAndroidEGL");
 
-	virtual COMPV_ERROR_CODE makeCurrent();
-	virtual COMPV_ERROR_CODE swabBuffers();
-	virtual COMPV_ERROR_CODE unmakeCurrent();
+	virtual COMPV_ERROR_CODE makeCurrent() override;
+	virtual COMPV_ERROR_CODE swapBuffers() override;
+	virtual COMPV_ERROR_CODE unmakeCurrent() override;
 
 	static COMPV_ERROR_CODE newObj(CompVContextGLAndroidEGLPtrPtr context, EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex);
 
