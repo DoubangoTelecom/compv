@@ -44,6 +44,7 @@
     <ClCompile Include="..\compv_cpu.cxx" />
     <ClCompile Include="..\compv_debug.cxx" />
     <ClCompile Include="..\compv_fileutils.cxx" />
+    <ClCompile Include="..\compv_jni.cxx" />
     <ClCompile Include="..\compv_mat.cxx" />
     <ClCompile Include="..\compv_md5.cxx" />
     <ClCompile Include="..\compv_mem.cxx" />
@@ -80,6 +81,7 @@
     <ClInclude Include="..\include\compv\base\compv_debug.h" />
     <ClInclude Include="..\include\compv\base\compv_errno.h" />
     <ClInclude Include="..\include\compv\base\compv_fileutils.h" />
+    <ClInclude Include="..\include\compv\base\compv_jni.h" />
     <ClInclude Include="..\include\compv\base\compv_mat.h" />
     <ClInclude Include="..\include\compv\base\compv_md5.h" />
     <ClInclude Include="..\include\compv\base\compv_mem.h" />

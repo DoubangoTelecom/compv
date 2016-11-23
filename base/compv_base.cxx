@@ -11,6 +11,8 @@
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/image/compv_image_decoder.h"
+#include "compv/base/android/compv_android_native_activity.h"
+#include "compv/base/compv_jni.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -42,6 +44,10 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
 	}
 
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+#if COMPV_OS_ANDROID
+	struct android_app* androidApp = AndroidApp_get();
+	JavaVM* jVM = androidApp ? (androidApp->activity ? androidApp->activity->vm : NULL) : NULL;
+#endif
 	s_bInitializing = true;
 
 	COMPV_DEBUG_INFO("Initializing [base] modules (v %s)...", COMPV_VERSION_STRING);
@@ -109,9 +115,40 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
 	}
 #endif
 
-	/* Print Android API version */
+	/* Print Android system info */
 #if COMPV_OS_ANDROID
-	COMPV_DEBUG_INFO("[Base] module: android API version: %d", __ANDROID_API__);
+	// Static API version used to buid the code
+	COMPV_DEBUG_INFO("[Base] module: android static API version: %d", __ANDROID_API__);
+	// Runtime API version used on the host device
+#	if 0 // TODO(dmi): Disabled for now because not fully tested yet
+	if (jVM) {
+		JNIEnv* jEnv = NULL;
+		if (jVM->AttachCurrentThread(&jEnv, NULL) == JNI_OK) {
+			jclass clazz_VERSION = jEnv->FindClass("android/os/Build$VERSION");
+			if (clazz_VERSION) {
+				jfieldID fieldID_SDK_INT = jEnv->GetStaticFieldID(clazz_VERSION, "SDK_INT", "I");
+				if (fieldID_SDK_INT) {
+					jint SDK_INT = jEnv->GetStaticIntField(clazz_VERSION, fieldID_SDK_INT);
+					COMPV_DEBUG_INFO("android/os/Build$VERSION.SDK_INT: %d", static_cast<int>(SDK_INT));
+				}
+			}
+			jclass clazz_Build = jEnv->FindClass("android/os/Build");
+			if (clazz_Build) {
+				jfieldID fieldID_CPU_ABI = jEnv->GetStaticFieldID(clazz_Build, "CPU_ABI", "Ljava/lang/String;");
+				if (fieldID_CPU_ABI) {
+					jstring object_CPU_ABI = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_CPU_ABI));
+					if (object_CPU_ABI) {
+						COMPV_DEBUG_INFO("android/os/Build.CPU_ABI: %s", CompVJNI::toString(jEnv, object_CPU_ABI).c_str());
+					}
+				}
+			}
+			jVM->DetachCurrentThread();
+		}
+	}
+	else {
+		COMPV_DEBUG_INFO("sdkVersion: %d", androidApp->activity->sdkVersion);
+	}
+#	endif
 #endif
 
 	/* Image handlers initialization */

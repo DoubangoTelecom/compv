@@ -23,7 +23,7 @@
 
 #if COMPV_OS_ANDROID
 #	define HAVE_OPENGLES	1
-#	if __ANDROID_API__ >= 18
+#	if __ANDROID_API__ >= 18 && 0 // TODO(dmi): for now use OpenGL-ES2 on Android
 #		include <GLES3/gl3.h>
 #		include <GLES3/gl3ext.h>
 #	elif __ANDROID_API__ >= 8
