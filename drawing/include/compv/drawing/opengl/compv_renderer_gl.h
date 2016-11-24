@@ -16,6 +16,7 @@
 #include "compv/base/compv_obj.h"
 #include "compv/gl/compv_gl_common.h"
 #include "compv/gl/compv_gl_fbo.h"
+#include "compv/gl/compv_gl_canvas.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -34,21 +35,15 @@ protected:
 public:
 	virtual ~CompVRendererGL();
 	COMPV_GET_OBJECT_ID(CompVRendererGL);
-
-	// Overrides(CompVRenderer)
-	virtual bool isGLEnabled()const { return true; };
-
-	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
+	
+	COMPV_OVERRIDE_DECL1("CompVRenderer", bool, isGLEnabled)()const override { return true; };
+	COMPV_OVERRIDE_DECL1("CompVRenderer", CompVCanvasPtr, canvas)() override;
 
 	CompVGLFboPtr fbo() { return m_ptrFBO; }
 
 	static COMPV_ERROR_CODE newObj(CompVRendererGLPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat);
 	
 protected:
-	// Overrides(CompVCanvas) 
-	virtual COMPV_ERROR_CODE canvasBind();
-	virtual COMPV_ERROR_CODE canvasUnbind();
-
 	virtual COMPV_ERROR_CODE deInit();
 	virtual COMPV_ERROR_CODE init(CompVMatPtr mat, const std::string& prgVertexData, const std::string& prgFragData, bool bMVP = false, bool bToScreen = false);
 	virtual COMPV_ERROR_CODE bind();
@@ -58,6 +53,7 @@ private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	bool m_bInit;
 	CompVGLFboPtr m_ptrFBO;
+	CompVGLCanvasPtr m_ptrCanvas;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

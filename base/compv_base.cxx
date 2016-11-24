@@ -120,7 +120,6 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
 	// Static API version used to buid the code
 	COMPV_DEBUG_INFO("[Base] module: android static API version: %d", __ANDROID_API__);
 	// Runtime API version used on the host device
-#	if 0 // TODO(dmi): Disabled for now because not fully tested yet
 	if (jVM) {
 		JNIEnv* jEnv = NULL;
 		if (jVM->AttachCurrentThread(&jEnv, NULL) == JNI_OK) {
@@ -148,7 +147,6 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
 	else {
 		COMPV_DEBUG_INFO("sdkVersion: %d", androidApp->activity->sdkVersion);
 	}
-#	endif
 #endif
 
 	/* Image handlers initialization */

@@ -11,6 +11,7 @@
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_obj.h"
+#include "compv/base/compv_bind.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -18,11 +19,13 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#define COMPV_GL_FBO_AUTOBIND(fbo) COMPV_AUTOBIND(CompVGLFbo, (fbo))
+
 class CompVGLFbo;
 typedef CompVPtr<CompVGLFbo* > CompVGLFboPtr;
 typedef CompVGLFboPtr* CompVGLFboPtrPtr;
 
-class COMPV_GL_API CompVGLFbo : public CompVObj
+class COMPV_GL_API CompVGLFbo : public CompVObj, public CompVBind
 {
 protected:
 	CompVGLFbo(size_t width, size_t height);
@@ -36,8 +39,8 @@ public:
 	COMPV_INLINE GLuint nameTexture() { return m_uNameTexture; }
 	COMPV_INLINE GLuint nameDepthStencil() { return m_uNameDepthStencil; }
 
-	virtual COMPV_ERROR_CODE bind()const;
-	virtual COMPV_ERROR_CODE unbind()const;
+	COMPV_OVERRIDE_DECL0("CompVBind", bind)() override;
+	COMPV_OVERRIDE_DECL0("CompVBind", unbind)() override;
 	virtual COMPV_ERROR_CODE updateSize(size_t width, size_t height);
 
 	COMPV_ERROR_CODE clear();

@@ -81,26 +81,27 @@ COMPV_ERROR_CODE CompVGLProgram::link()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLProgram::useBegin()
+COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLProgram::bind)()
 {
 	if (!m_bLinked) {
 		COMPV_DEBUG_ERROR_EX(kModuleNameGLProgram, "Program not linked");
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_STATE);
 	}
 	// do not check "m_bUsed", program could be used from different threads several times to make it current
-	COMPV_CHECK_CODE_RETURN(CompVGLUtils::programUseBegin(m_uNamePrg));
+	COMPV_CHECK_CODE_RETURN(CompVGLUtils::programBind(m_uNamePrg));
 	m_bUsed = true;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLProgram::useEnd()
+
+COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLProgram::unbind)()
 {
 	if (!m_bLinked) {
 		COMPV_DEBUG_ERROR_EX(kModuleNameGLProgram, "Program not linked");
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_STATE);
 	}
 	// do not check "m_bUsed", program could be used from different threads several times to make it current
-	COMPV_CHECK_CODE_RETURN(CompVGLUtils::programUseEnd(m_uNamePrg));
+	COMPV_CHECK_CODE_RETURN(CompVGLUtils::programUnbind(m_uNamePrg));
 	m_bUsed = false;
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -138,7 +139,6 @@ COMPV_ERROR_CODE CompVGLProgram::newObj(CompVGLProgramPtrPtr program)
 {
 	COMPV_CHECK_CODE_RETURN(CompVGL::init());
 	COMPV_CHECK_EXP_RETURN(!program, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	GLuint newPrg_ = 0;
 	CompVGLProgramPtr program_ = new CompVGLProgram();
 	COMPV_CHECK_EXP_RETURN(!program_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	COMPV_CHECK_CODE_RETURN(CompVGLUtils::programGen(&program_->m_uNamePrg));

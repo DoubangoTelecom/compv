@@ -136,12 +136,11 @@ COMPV_ERROR_CODE CompVGLUtils::vertexArraysDelete(GLuint* uVertexArrays)
 
 bool CompVGLUtils::isVertexArrays(GLuint uVertexArrays)
 {
-	return uVertexArrays &&
+	return uVertexArrays
 #if defined(HAVE_OPENGL)
-		glIsVertexArray(uVertexArrays);
-#else
-		1;
+		&& glIsVertexArray(uVertexArrays)
 #endif
+		;
 }
 
 COMPV_ERROR_CODE CompVGLUtils::shaderGen(GLuint* uShader, GLenum shadType)
@@ -401,7 +400,7 @@ COMPV_ERROR_CODE CompVGLUtils::programLinkGetStatus(GLuint uPrg, std::string *er
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLUtils::programUseBegin(GLuint uPrg, bool checkErr COMPV_DEFAULT(false))
+COMPV_ERROR_CODE CompVGLUtils::programBind(GLuint uPrg, bool checkErr COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isProgramValid(uPrg), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_glUseProgram(uPrg);
@@ -416,7 +415,7 @@ COMPV_ERROR_CODE CompVGLUtils::programUseBegin(GLuint uPrg, bool checkErr COMPV_
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLUtils::programUseEnd(GLuint uPrg, bool checkErr COMPV_DEFAULT(false))
+COMPV_ERROR_CODE CompVGLUtils::programUnbind(GLuint uPrg, bool checkErr COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isProgramValid(uPrg), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	if (CompVGLUtils::isProgramCurrent(uPrg)) {

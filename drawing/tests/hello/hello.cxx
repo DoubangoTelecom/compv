@@ -91,7 +91,7 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 bail:
 	return NULL;
 
-#elif 1 // Matching
+#elif 0 // Matching
 	COMPV_ERROR_CODE err;
 	CompVMatPtr mat[3];
 	CompVMatchingSurfaceLayerPtr matchingSurfaceLayer;
@@ -133,7 +133,6 @@ bail:
 	COMPV_ERROR_CODE err;
 	CompVMatPtr mat[3];
 	CompVSingleSurfaceLayerPtr singleSurfaceLayer;
-	CompVRendererPtr ptrImageRenderer;
 	CompVViewportPtr ptrViewPort;
 	CompVMVPPtr ptrMVP;
 	static int count = 0;
@@ -162,9 +161,9 @@ bail:
 		snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(count));
 		std::string text = "Hello doubango telecom [" + std::string(buff_) + "]";
 		COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
-		COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->drawImage(mat[0/*(count + 0) % 3*/], &ptrImageRenderer));
+		COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->drawImage(mat[0/*(count + 0) % 3*/]));
 		//COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->drawText(text.c_str(), text.length(), 463, 86));
-		COMPV_CHECK_CODE_BAIL(err = ptrImageRenderer->drawText(text.c_str(), text.length(), 463, 86));
+		COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->renderer()->canvas()->drawText(text.c_str(), text.length(), 463, 86));
 
 		if (count == 1000) {
 			uint64_t duration = (CompVTime::getNowMills() - timeStart);

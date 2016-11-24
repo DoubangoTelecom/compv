@@ -45,7 +45,7 @@ public:
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-		CompVSurfaceGLPtr m_ptrSurfaceGL;
+	CompVSurfaceGLPtr m_ptrSurfaceGL;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

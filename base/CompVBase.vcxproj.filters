@@ -213,13 +213,25 @@
     <ClInclude Include="include\compv\base\image\compv_image_utils.h">
       <Filter>Header Files\image</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\base\compv_autolock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\base\compv_sharedlib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\base\compv_jni.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_blitter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_canvas.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_bind.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_lock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -320,13 +332,25 @@
     <ClCompile Include="image\compv_image_utils.cxx">
       <Filter>Source Files\image</Filter>
     </ClCompile>
-    <ClCompile Include="compv_autolock.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="compv_sharedlib.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="compv_jni.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_blitter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_renderer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_canvas.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_bind.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_lock.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

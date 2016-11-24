@@ -8,12 +8,10 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/compv_window.h"
-#include "compv/drawing/compv_canvas.h"
+#include "compv/drawing/compv_drawing_canvas.h"
 #include "compv/gl/compv_gl_common.h"
 #include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_func.h"
-
-// FIXME: OpenGL error handling not ok, impossible to find which function cause the error (erros stacked)
 
 static const std::string& kProgramVertexData =
 #	if defined(HAVE_OPENGLES)
@@ -48,83 +46,55 @@ CompVSurfaceGL::~CompVSurfaceGL()
 	COMPV_CHECK_CODE_ASSERT(deInit());
 }
 
-COMPV_ERROR_CODE CompVSurfaceGL::setMVP(CompVMVPPtr mvp)
+CompVGLCanvasPtr CompVSurfaceGL::canvasGL()
+{
+	if (!m_ptrCanvas) {
+		CompVCanvasImplPtr canvasImpl;
+		COMPV_CHECK_EXP_BAIL(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+		COMPV_CHECK_CODE_BAIL(init());
+		COMPV_CHECK_EXP_BAIL(!m_ptrCanvasFBO, COMPV_ERROR_CODE_E_INVALID_STATE);
+		COMPV_CHECK_CODE_BAIL(CompVDrawingCanvasImpl::newObj(&canvasImpl));
+		COMPV_CHECK_CODE_BAIL(CompVGLCanvas::newObj(&m_ptrCanvas, m_ptrCanvasFBO, canvasImpl));
+	}
+bail:
+	return m_ptrCanvas;
+}
+
+COMPV_OVERRIDE_IMPL0("CompVSurface", CompVSurfaceGL::setMVP)(CompVMVPPtr mvp)
 {
 	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::setMVP(mvp));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVSurfaceGL::setViewport(CompVViewportPtr viewport)
+COMPV_OVERRIDE_IMPL1("CompVSurface", CompVRendererPtr, CompVSurfaceGL::renderer)()
 {
-	COMPV_CHECK_CODE_RETURN(CompVSurface::setViewport(viewport)); // Base class implementation
-	return COMPV_ERROR_CODE_S_OK;
+	if (m_ptrRenderer) {
+		return *m_ptrRenderer;
+	}
+	return NULL;
 }
 
-COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat, CompVRendererPtrPtr renderer /*= NULL*/)
+COMPV_OVERRIDE_IMPL1("CompVSurface", CompVCanvasPtr, CompVSurfaceGL::canvas)()
 {
-#if 1
+	CompVGLCanvasPtr canvas_ = canvasGL();
+	if (canvas_) {
+		return *canvas_;
+	}
+	return NULL;
+}
+
+COMPV_OVERRIDE_IMPL0("CompVSurface", CompVSurfaceGL::drawImage)(CompVMatPtr mat)
+{
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_CODE_RETURN(init());
 
-	// FIXME(dmi): remove if 'm_uNameFrameBuffer' is passed as parameter
-	//--COMPV_CHECK_CODE_RETURN(m_ptrFBO->bind()); // Draw to framebuffer
-
 	const COMPV_PIXEL_FORMAT pixelFormat = static_cast<COMPV_PIXEL_FORMAT>(mat->subType());
 	if (!m_ptrRenderer || m_ptrRenderer->pixelFormat() != pixelFormat) {
 		COMPV_CHECK_CODE_RETURN(CompVRendererGL::newObj(&m_ptrRenderer, pixelFormat));
-		// FIXME: setViewport
 	}
 	COMPV_CHECK_CODE_RETURN(m_ptrRenderer->drawImage(mat));
 
-	if (renderer) {
-		*renderer = *m_ptrRenderer;
-	}
-
-#if 0
-	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
-	uint8_t* data = (uint8_t*)malloc(640 * 480 * 4);
-	COMPV_glReadBuffer(GL_COLOR_ATTACHMENT0);
-	COMPV_glReadPixels(0, 0, 640, 480, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	FILE* file = fopen("C:/Projects/image.rgba", "wb+");
-	fwrite(data, 1, (640 * 480 * 4), file);
-	fclose(file);
-	free(data);
-	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, 0); // System's framebuffer
-#endif
-
-	// FIXME(dmi): remove if 'm_uNameFrameBuffer' is passed as parameter
-	//--COMPV_CHECK_CODE_RETURN(m_ptrFBO->unbind()); // Draw to system
-
-#endif
-
-
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-// Overrides(CompVCanvas) 
-COMPV_ERROR_CODE CompVSurfaceGL::canvasBind()
-{
-	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	if (m_ptrCanvasFBO) {
-		COMPV_CHECK_CODE_RETURN(m_ptrCanvasFBO->bind());
-		return COMPV_ERROR_CODE_S_OK;
-	}
-	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
-	COMPV_glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-// Overrides(CompVCanvas) 
-COMPV_ERROR_CODE CompVSurfaceGL::canvasUnbind()
-{
-	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	if (m_ptrCanvasFBO) {
-		COMPV_CHECK_CODE_RETURN(m_ptrCanvasFBO->unbind());
-		return COMPV_ERROR_CODE_S_OK;
-	}
-	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
-	COMPV_glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
 	return COMPV_ERROR_CODE_S_OK;
 }
 

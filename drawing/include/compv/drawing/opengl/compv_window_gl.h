@@ -18,7 +18,7 @@
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/compv_common.h"
 #include "compv/base/parallel/compv_mutex.h"
-#include "compv/base/compv_autolock.h"
+#include "compv/base/compv_lock.h"
 #include "compv/gl/compv_gl_context.h"
 
 #include <vector>
@@ -44,21 +44,20 @@ protected:
 public:
 	virtual ~CompVWindowGL();
 
-	bool isInitialized()const;
+	bool isInitialized() const;
 
 	// Overrides(CompVWindow)
-	virtual bool isGLEnabled()const override { return true; }
-	virtual COMPV_ERROR_CODE beginDraw()override;
-	virtual COMPV_ERROR_CODE endDraw()override;
-	virtual COMPV_ERROR_CODE addSingleLayerSurface(CompVSingleSurfaceLayerPtrPtr layer)override;
-	virtual COMPV_ERROR_CODE removeSingleLayerSurface(const CompVSingleSurfaceLayerPtr& layer)override;
-	virtual COMPV_ERROR_CODE addMatchingLayerSurface(CompVMatchingSurfaceLayerPtrPtr layer)override;
-	virtual COMPV_ERROR_CODE removeMatchingLayerSurface(const CompVMatchingSurfaceLayerPtr& layer)override;
-	virtual COMPV_ERROR_CODE addMultiLayerSurface(CompVMultiSurfaceLayerPtrPtr layer) override;
-	virtual COMPV_ERROR_CODE removeMultiLayerSurface(const CompVMultiSurfaceLayerPtr& layer) override;
+	COMPV_OVERRIDE_DECL1("CompVWindow", bool, isGLEnabled)() const override;
+	COMPV_OVERRIDE_DECL0("CompVWindow", beginDraw)() override;
+	COMPV_OVERRIDE_DECL0("CompVWindow", endDraw)() override;
+	COMPV_OVERRIDE_DECL0("CompVWindow", addSingleLayerSurface)(CompVSingleSurfaceLayerPtrPtr layer) override;
+	COMPV_OVERRIDE_DECL0("CompVWindow", removeSingleLayerSurface)(const CompVSingleSurfaceLayerPtr& layer) override;
+	COMPV_OVERRIDE_DECL0("CompVWindow", addMatchingLayerSurface)(CompVMatchingSurfaceLayerPtrPtr layer) override;
+	COMPV_OVERRIDE_DECL0("CompVWindow", removeMatchingLayerSurface)(const CompVMatchingSurfaceLayerPtr& layer) override;
+	COMPV_OVERRIDE_DECL0("CompVWindow", addMultiLayerSurface)(CompVMultiSurfaceLayerPtrPtr layer) override;
+	COMPV_OVERRIDE_DECL0("CompVWindow", removeMultiLayerSurface)(const CompVMultiSurfaceLayerPtr& layer) override;
 
-	// Overrides(CompVWindowPriv)
-	virtual COMPV_ERROR_CODE priv_updateSize(size_t newWidth, size_t newHeight);
+	COMPV_OVERRIDE_DECL0("CompVWindowPriv", priv_updateSize)(size_t newWidth, size_t newHeight)override;
 
 protected:
 	virtual CompVGLContextPtr context() = 0;

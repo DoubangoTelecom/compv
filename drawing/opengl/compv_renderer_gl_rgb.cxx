@@ -145,7 +145,7 @@ COMPV_ERROR_CODE CompVRendererGLRGB::init(CompVMatPtr mat)
 	m_bInit = true; // To make sure deInit() will be fully executed
 	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::init(mat, m_strPrgVertexData, m_strPrgFragData, false, false)); // Base class implementation
 	COMPV_CHECK_EXP_BAIL(!(ptrProgram = program()), (err = COMPV_ERROR_CODE_E_GL));
-	COMPV_CHECK_CODE_BAIL(err = ptrProgram->useBegin());
+	COMPV_CHECK_CODE_BAIL(err = ptrProgram->bind());
 
 	COMPV_glGenTextures(1, &m_uNameTexture);
 	COMPV_glActiveTexture(GL_TEXTURE1);
@@ -161,7 +161,7 @@ COMPV_ERROR_CODE CompVRendererGLRGB::init(CompVMatPtr mat)
 
 bail:
 	if (ptrProgram) {
-		COMPV_CHECK_CODE_ASSERT(ptrProgram->useEnd());
+		COMPV_CHECK_CODE_ASSERT(ptrProgram->unbind());
 	}
 	COMPV_glBindTexture(GL_TEXTURE_2D, 0);
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {

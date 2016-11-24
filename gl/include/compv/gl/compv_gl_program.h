@@ -11,6 +11,7 @@
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/gl/compv_gl_utils.h"
+#include "compv/base/compv_bind.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -18,11 +19,13 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#define COMPV_GL_PROGRAM_AUTOBIND(program) COMPV_AUTOBIND(CompVGLProgram, (program))
+
 class CompVGLProgram;
 typedef CompVPtr<CompVGLProgram* > CompVGLProgramPtr;
 typedef CompVGLProgramPtr* CompVGLProgramPtrPtr;
 
-class COMPV_GL_API CompVGLProgram : public CompVObj
+class COMPV_GL_API CompVGLProgram : public CompVObj, public CompVBind
 {
 protected:
 	CompVGLProgram();
@@ -36,8 +39,9 @@ public:
 	COMPV_ERROR_CODE shaderAttachVertexData(const char* dataPtr, size_t dataLength);
 	COMPV_ERROR_CODE shaderAttachFragmentData(const char* dataPtr, size_t dataLength);
 	COMPV_ERROR_CODE link();
-	COMPV_ERROR_CODE useBegin();
-	COMPV_ERROR_CODE useEnd();
+
+	COMPV_OVERRIDE_DECL0("CompVBind", bind)() override;
+	COMPV_OVERRIDE_DECL0("CompVBind", unbind)() override;
 
 	static COMPV_ERROR_CODE newObj(CompVGLProgramPtrPtr program);
 	static COMPV_ERROR_CODE newObj(CompVGLProgramPtrPtr program, const char* vertexDataPtr, size_t vertexDataLength, const char* fragmentDataPtr, size_t fragmentDataLength);

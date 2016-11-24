@@ -61,8 +61,8 @@ public:
 	static bool isProgramCurrent(GLuint uProgram);
 	static COMPV_ERROR_CODE programLink(GLuint uProgram);
 	static COMPV_ERROR_CODE programLinkGetStatus(GLuint uProgram, std::string *error);
-	static COMPV_ERROR_CODE programUseBegin(GLuint uProgram, bool checkErr = false);
-	static COMPV_ERROR_CODE programUseEnd(GLuint uProgram, bool checkErr = false);
+	static COMPV_ERROR_CODE programBind(GLuint uProgram, bool checkErr = false);
+	static COMPV_ERROR_CODE programUnbind(GLuint uProgram, bool checkErr = false);
 };
 
 COMPV_NAMESPACE_END()

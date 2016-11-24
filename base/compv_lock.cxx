@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/base/compv_autolock.h"
+#include "compv/base/compv_lock.h"
 
 COMPV_NAMESPACE_BEGIN()
 

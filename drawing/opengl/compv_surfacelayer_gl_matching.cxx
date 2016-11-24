@@ -49,19 +49,23 @@ COMPV_ERROR_CODE CompVMatchingSurfaceLayerGL::drawMatches(CompVMatPtr trainImage
 		std::string text = "Hello doubango telecom [" + std::string(buff_) + "]";
 
 		const int offsetx = static_cast<int>(kTrainQuerySeparatorWidth + trainImage->cols());
+
+		// TODO(dmi): This is too slow, maybe use two textures and program a shader
+
 		// Draw Train points
 		COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->drawImage(trainImage));
-		COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->renderer()->drawText(text.c_str(), text.length(), trainPoint[0], trainPoint[1]));
+		COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->renderer()->canvas()->drawText(text.c_str(), text.length(), trainPoint[0], trainPoint[1]));
 		COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->viewport()->reset(CompViewportSizeFlags::makeStatic(), 0, 0, static_cast<int>(trainImage->cols()), static_cast<int>(trainImage->rows())));
 		COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->blitRenderer(m_ptrFBO));
 
 		// Draw Query points
 		COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->drawImage(queryImage));
-		COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->renderer()->drawText(text.c_str(), text.length(), queryPoint[0], queryPoint[1]));
+		COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->renderer()->canvas()->drawText(text.c_str(), text.length(), queryPoint[0], queryPoint[1]));
 		COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->viewport()->reset(CompViewportSizeFlags::makeStatic(), offsetx, 0, static_cast<int>(queryImage->cols()), static_cast<int>(queryImage->rows())));
 		COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->blitRenderer(m_ptrFBO));
+		
 		// Draw lines
-		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->drawLine(trainPoint[0], trainPoint[1], queryPoint[0] + offsetx, queryPoint[1]));
+		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->canvas()->drawLine(trainPoint[0], trainPoint[1], queryPoint[0] + offsetx, queryPoint[1]));
 	}
 
 	return COMPV_ERROR_CODE_S_OK;

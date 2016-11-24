@@ -39,8 +39,12 @@ bool CompVWindowGL::isInitialized()const
 	return CompVLock::isInitialized(); // base class initialization check
 }
 
-// Overrides(CompVWindow::surface)
-COMPV_ERROR_CODE CompVWindowGL::beginDraw()
+COMPV_OVERRIDE_IMPL1("CompVWindow", bool, CompVWindowGL::isGLEnabled)() const
+{
+	return true;
+}
+
+COMPV_OVERRIDE_IMPL0("CompVWindow", CompVWindowGL::beginDraw)()
 {
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -72,8 +76,7 @@ bail:
 	return err;
 }
 
-// Overrides(CompVWindow::surface)
-COMPV_ERROR_CODE CompVWindowGL::endDraw()
+COMPV_OVERRIDE_IMPL0("CompVWindow", CompVWindowGL::endDraw)()
 {
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -89,8 +92,7 @@ bail:
 	return err;
 }
 
-// Overrides(CompVWindow::newSingleLayerSurface)
-COMPV_ERROR_CODE CompVWindowGL::addSingleLayerSurface(CompVSingleSurfaceLayerPtrPtr layer)
+COMPV_OVERRIDE_IMPL0("CompVWindow", CompVWindowGL::addSingleLayerSurface)(CompVSingleSurfaceLayerPtrPtr layer)
 {
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -101,8 +103,7 @@ COMPV_ERROR_CODE CompVWindowGL::addSingleLayerSurface(CompVSingleSurfaceLayerPtr
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Overrides(CompVWindow::removeSingleLayerSurface)
-COMPV_ERROR_CODE CompVWindowGL::removeSingleLayerSurface(const CompVSingleSurfaceLayerPtr& layer)
+COMPV_OVERRIDE_IMPL0("CompVWindow", CompVWindowGL::removeSingleLayerSurface)(const CompVSingleSurfaceLayerPtr& layer)
 {
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -110,7 +111,7 @@ COMPV_ERROR_CODE CompVWindowGL::removeSingleLayerSurface(const CompVSingleSurfac
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVWindowGL::addMatchingLayerSurface(CompVMatchingSurfaceLayerPtrPtr layer)
+COMPV_OVERRIDE_IMPL0("CompVWindow", CompVWindowGL::addMatchingLayerSurface)(CompVMatchingSurfaceLayerPtrPtr layer)
 {
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -121,7 +122,7 @@ COMPV_ERROR_CODE CompVWindowGL::addMatchingLayerSurface(CompVMatchingSurfaceLaye
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVWindowGL::removeMatchingLayerSurface(const CompVMatchingSurfaceLayerPtr& layer)
+COMPV_OVERRIDE_IMPL0("CompVWindow", CompVWindowGL::removeMatchingLayerSurface)(const CompVMatchingSurfaceLayerPtr& layer)
 {
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -129,7 +130,7 @@ COMPV_ERROR_CODE CompVWindowGL::removeMatchingLayerSurface(const CompVMatchingSu
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVWindowGL::addMultiLayerSurface(CompVMultiSurfaceLayerPtrPtr layer)
+COMPV_OVERRIDE_IMPL0("CompVWindow", CompVWindowGL::addMultiLayerSurface)(CompVMultiSurfaceLayerPtrPtr layer)
 {
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -140,7 +141,7 @@ COMPV_ERROR_CODE CompVWindowGL::addMultiLayerSurface(CompVMultiSurfaceLayerPtrPt
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVWindowGL::removeMultiLayerSurface(const CompVMultiSurfaceLayerPtr& layer)
+COMPV_OVERRIDE_IMPL0("CompVWindow", CompVWindowGL::removeMultiLayerSurface)(const CompVMultiSurfaceLayerPtr& layer)
 {
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_CHECK_EXP_RETURN(!layer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -148,8 +149,7 @@ COMPV_ERROR_CODE CompVWindowGL::removeMultiLayerSurface(const CompVMultiSurfaceL
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Overrides(CompVWindowPriv)
-COMPV_ERROR_CODE CompVWindowGL::priv_updateSize(size_t newWidth, size_t newHeight)
+COMPV_OVERRIDE_IMPL0("CompVWindowPriv", CompVWindowGL::priv_updateSize)(size_t newWidth, size_t newHeight)
 {
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;

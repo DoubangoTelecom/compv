@@ -17,14 +17,13 @@
 #include "compv/drawing/opengl/compv_renderer_gl.h"
 #include "compv/drawing/opengl/compv_blitter_gl.h"
 #include "compv/gl/compv_gl_fbo.h"
+#include "compv/gl/compv_gl_canvas.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
 #endif
 
 COMPV_NAMESPACE_BEGIN()
-
-class CompVWindow;
 
 class CompVSurfaceGL;
 typedef CompVPtr<CompVSurfaceGL* > CompVSurfaceGLPtr;
@@ -37,15 +36,14 @@ protected:
 public:
 	virtual ~CompVSurfaceGL();
 	COMPV_GET_OBJECT_ID(CompVSurfaceGL);
-	COMPV_INLINE CompVViewportPtr viewport() { return m_ptrViewport; }
-	COMPV_INLINE CompVRendererGLPtr renderer() { return m_ptrRenderer; }
-	COMPV_INLINE CompVGLFboPtr canvasFBO() { return m_ptrCanvasFBO;}
+	COMPV_INLINE CompVGLFboPtr canvasFBO() { return m_ptrCanvasFBO; }
+	CompVGLCanvasPtr canvasGL();
 
-	// Overrides(CompVSurface)
-	virtual bool isGLEnabled()const  override { return true; };
-	virtual COMPV_ERROR_CODE setMVP(CompVMVPPtr mvp) override;
-	virtual COMPV_ERROR_CODE setViewport(CompVViewportPtr viewport) override;
-	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat, CompVRendererPtrPtr renderer = NULL) override;
+	COMPV_OVERRIDE_DECL1("CompVSurface", bool, isGLEnabled)()const override { return true; };
+	COMPV_OVERRIDE_DECL0("CompVSurface", setMVP)(CompVMVPPtr mvp) override;
+	COMPV_OVERRIDE_DECL1("CompVSurface", CompVRendererPtr, renderer)() override;
+	COMPV_OVERRIDE_DECL1("CompVSurface", CompVCanvasPtr, canvas)() override;
+	COMPV_OVERRIDE_DECL0("CompVSurface", drawImage)(CompVMatPtr mat) override;
 
 	COMPV_ERROR_CODE blit(const CompVGLFboPtr ptrFboSrc, const CompVGLFboPtr ptrFboDst);
 	COMPV_ERROR_CODE blitRenderer(const CompVGLFboPtr ptrFboDst);
@@ -54,11 +52,6 @@ public:
 	COMPV_ERROR_CODE setCanvasFBO(CompVGLFboPtr fbo);
 
 	static COMPV_ERROR_CODE newObj(CompVSurfaceGLPtrPtr glSurface, size_t width, size_t height);
-
-protected:
-	// Overrides(CompVCanvas) 
-	virtual COMPV_ERROR_CODE canvasBind() override;
-	virtual COMPV_ERROR_CODE canvasUnbind()override;
 
 private:
 	COMPV_ERROR_CODE init();
@@ -69,6 +62,7 @@ private:
 	CompVRendererGLPtr m_ptrRenderer;
 	CompVGLProgramPtr m_ptrProgram;
 	CompVGLFboPtr m_ptrCanvasFBO;
+	CompVGLCanvasPtr m_ptrCanvas;
 };
 
 COMPV_NAMESPACE_END()

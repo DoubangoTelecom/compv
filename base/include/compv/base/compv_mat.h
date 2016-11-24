@@ -14,6 +14,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Warray-bounds")
+COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wc++11-extensions")
 
 class CompVMat;
 typedef CompVPtr<CompVMat* > CompVMatPtr;
@@ -269,6 +270,8 @@ private:
 };
 
 COMPV_GCC_DISABLE_WARNINGS_END()
+COMPV_GCC_DISABLE_WARNINGS_END()
+
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_BASE_MAT_H_ */

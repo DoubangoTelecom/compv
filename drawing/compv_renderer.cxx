@@ -15,7 +15,7 @@ COMPV_NAMESPACE_BEGIN()
 compv_window_id_t CompVRenderer::s_nRendererId = 0;
 
 CompVRenderer::CompVRenderer(COMPV_PIXEL_FORMAT ePixelFormat)
-	: CompVCanvas()
+	: CompVObj()
 	, m_nId(compv_atomic_inc(&CompVRenderer::s_nRendererId))
 	, m_ePixelFormat(ePixelFormat)
 {

@@ -10,9 +10,9 @@
 #include "compv/drawing/compv_config.h"
 #if HAVE_SKIA
 #include "compv/drawing/compv_common.h"
+#include "compv/base/compv_canvas.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_mat.h"
-#include "compv/drawing/compv_canvas.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")

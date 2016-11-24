@@ -7,6 +7,7 @@
 #include "compv/drawing/opengl/compv_renderer_gl.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
+#include "compv/drawing/compv_drawing_canvas.h"
 #include "compv/gl/compv_gl_utils.h"
 #include "compv/drawing/opengl/compv_renderer_gl_yuv.h"
 #include "compv/drawing/opengl/compv_renderer_gl_rgb.h"
@@ -23,6 +24,19 @@ CompVRendererGL::CompVRendererGL(COMPV_PIXEL_FORMAT ePixelFormat)
 CompVRendererGL::~CompVRendererGL()
 {
 	COMPV_CHECK_CODE_ASSERT(deInit());
+}
+
+COMPV_OVERRIDE_IMPL1("CompVRenderer", CompVCanvasPtr, CompVRendererGL::canvas)()
+{
+	if (!m_ptrCanvas) {
+		CompVCanvasImplPtr canvasImpl;
+		COMPV_CHECK_EXP_BAIL(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+		COMPV_CHECK_EXP_BAIL(!m_ptrFBO, COMPV_ERROR_CODE_E_INVALID_STATE);
+		COMPV_CHECK_CODE_BAIL(CompVDrawingCanvasImpl::newObj(&canvasImpl));
+		COMPV_CHECK_CODE_BAIL(CompVGLCanvas::newObj(&m_ptrCanvas, m_ptrFBO, canvasImpl));
+	}
+bail:
+	return *m_ptrCanvas;
 }
 
 // Private function: do not check imput parameters
@@ -80,24 +94,6 @@ COMPV_ERROR_CODE CompVRendererGL::unbind()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Overrides(CompVCanvas) 
-COMPV_ERROR_CODE CompVRendererGL::canvasBind()
-{
-	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_CHECK_CODE_RETURN(m_ptrFBO->bind()); // bind() to make sure all drawing will be redirected to the FBO
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVRendererGL::canvasUnbind()
-{
-	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
-	if (m_ptrFBO) {
-		COMPV_CHECK_CODE_RETURN(m_ptrFBO->unbind()); // unbind() to make sure all drawing will be redirected to system buffer
-	}
-	return COMPV_ERROR_CODE_S_OK;
-}
 
 COMPV_ERROR_CODE CompVRendererGL::deInit()
 {

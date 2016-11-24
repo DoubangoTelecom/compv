@@ -39,7 +39,7 @@ COMPV_ERROR_CODE CompVBlitterGL::bind()
 {
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_CHECK_CODE_RETURN(m_ptrProgram->useBegin());
+	COMPV_CHECK_CODE_RETURN(m_ptrProgram->bind());
 
 	// Because MVP could be dirty we have to send the data again
 	// FIXME(dmi): find a way to detect that MVP is dirty
@@ -78,7 +78,7 @@ COMPV_ERROR_CODE CompVBlitterGL::unbind()
 	}
 
 	if (m_ptrProgram) {
-		COMPV_CHECK_CODE_RETURN(m_ptrProgram->useEnd());
+		COMPV_CHECK_CODE_RETURN(m_ptrProgram->unbind());
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -90,12 +90,9 @@ COMPV_ERROR_CODE CompVBlitterGL::setMVP(CompVMVPPtr mvp)
 	m_ptrMVP = mvp;
 	if (m_bInit && m_bMVP) {
 		COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-		COMPV_ERROR_CODE err;
-		COMPV_CHECK_CODE_BAIL(err = m_ptrProgram->useBegin());
+		COMPV_GL_PROGRAM_AUTOBIND(*m_ptrProgram);
 		COMPV_glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, mvp->matrix()->ptr());
-	bail:
-		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->useEnd());
-		return err;
+		return COMPV_ERROR_CODE_S_OK;
 	}
 	
 	return COMPV_ERROR_CODE_S_OK;
@@ -163,7 +160,7 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 	COMPV_CHECK_EXP_BAIL(prgVertexData.empty(), err = COMPV_ERROR_CODE_E_GL);
 	COMPV_CHECK_EXP_BAIL(prgFragData.empty(), err = COMPV_ERROR_CODE_E_GL);
 	COMPV_CHECK_CODE_BAIL(CompVGLProgram::newObj(&m_ptrProgram, prgVertexData.c_str(), prgVertexData.length(), prgFragData.c_str(), prgFragData.length()));
-	COMPV_CHECK_CODE_ASSERT(err = m_ptrProgram->useBegin());
+	COMPV_CHECK_CODE_ASSERT(err = m_ptrProgram->bind());
 
 	COMPV_glGetAttribLocation(&m_uNamePrgAttPosition, m_ptrProgram->name(), "position");
 	COMPV_glGetAttribLocation(&m_uNamePrgAttTexCoord, m_ptrProgram->name(), "texCoord");
@@ -196,7 +193,7 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 
 bail:
 	if (m_ptrProgram) {
-		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->useEnd());
+		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->unbind());
 	}
 	if (CompVGLInfo::extensions::vertex_array_object()) {
 		COMPV_glBindVertexArray(0);

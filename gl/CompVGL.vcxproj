@@ -160,6 +160,7 @@
   <ItemGroup>
     <ClInclude Include="include\compv\gl\compv_config.h" />
     <ClInclude Include="include\compv\gl\compv_gl.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_canvas.h" />
     <ClInclude Include="include\compv\gl\compv_gl_common.h" />
     <ClInclude Include="include\compv\gl\compv_gl_context.h" />
     <ClInclude Include="include\compv\gl\compv_gl_fbo.h" />
@@ -172,6 +173,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_gl.cxx" />
+    <ClCompile Include="compv_gl_canvas.cxx" />
     <ClCompile Include="compv_gl_context.cxx" />
     <ClCompile Include="compv_gl_fbo.cxx" />
     <ClCompile Include="compv_gl_info.cxx" />

@@ -33,9 +33,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\compv_canvas.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\compv_drawing.cxx">
       <Filter>source</Filter>
     </ClCompile>
@@ -116,9 +113,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\compv\drawing\compv_canvas.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\drawing\compv_drawing.h">
       <Filter>include</Filter>
     </ClInclude>

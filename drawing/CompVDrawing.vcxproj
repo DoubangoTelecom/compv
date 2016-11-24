@@ -162,10 +162,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\compv\drawing\compv_canvas.h" />
     <ClInclude Include="include\compv\drawing\compv_common.h" />
     <ClInclude Include="include\compv\drawing\compv_config.h" />
     <ClInclude Include="include\compv\drawing\compv_drawing.h" />
+    <ClInclude Include="include\compv\drawing\compv_drawing_canvas.h" />
     <ClInclude Include="include\compv\drawing\compv_image_libjpeg.h" />
     <ClInclude Include="include\compv\drawing\compv_mvp.h" />
     <ClInclude Include="include\compv\drawing\compv_renderer.h" />
@@ -191,7 +191,6 @@
     <ClInclude Include="include\compv\drawing\skia\compv_canvas_skia.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="compv_canvas.cxx" />
     <ClCompile Include="compv_drawing.cxx" />
     <ClCompile Include="compv_image_libjpeg.cxx" />
     <ClCompile Include="compv_mvp.cxx" />

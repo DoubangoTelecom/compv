@@ -10,7 +10,7 @@
 #include "compv/drawing/compv_config.h"
 #include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
-#include "compv/drawing/compv_canvas.h"
+#include "compv/base/compv_canvas.h"
 #include "compv/drawing/compv_renderer.h"
 #include "compv/drawing/compv_mvp.h"
 #include "compv/drawing/compv_common.h"
@@ -28,7 +28,7 @@ class CompVSurface;
 typedef CompVPtr<CompVSurface* > CompVSurfacePtr;
 typedef CompVSurfacePtr* CompVSurfacePtrPtr;
 
-class COMPV_DRAWING_API CompVSurface : public CompVObj, public CompVCanvas
+class COMPV_DRAWING_API CompVSurface : public CompVObj
 {
 protected:
 	CompVSurface(size_t width, size_t height);
@@ -46,7 +46,9 @@ public:
 	virtual bool isGLEnabled()const = 0;
 	virtual COMPV_ERROR_CODE setMVP(CompVMVPPtr mvp) = 0;
 	virtual COMPV_ERROR_CODE setViewport(CompVViewportPtr viewport);
-	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat, CompVRendererPtrPtr renderer = NULL) = 0;
+	virtual CompVRendererPtr renderer() = 0;
+	virtual CompVCanvasPtr canvas() = 0;
+	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
 
 	static COMPV_ERROR_CODE newObj(CompVSurfacePtrPtr surface, const CompVWindow* window);
 

@@ -27,7 +27,11 @@ COMPV_NAMESPACE_BEGIN()
 #	define COMPV_SAFE_DELETE_CPP(cpp_obj) if(cpp_obj) delete (cpp_obj), (cpp_obj) = NULL;
 #endif /* COMPV_SAFE_DELETE_CPP */
 
-#define COMPV_ASSERT(x) do { bool __b_ret = (x); assert(__b_ret); } while(0)
+#if defined(NDEBUG)
+#	define COMPV_ASSERT(x) do { bool __COMPV_b_ret = (x); if (!__COMPV_b_ret) { COMPV_DEBUG_FATAL("Assertion failed!"); abort(); } } while(0)
+#else
+#	define COMPV_ASSERT(x) do { bool __COMPV_b_ret = (x); assert(__COMPV_b_ret); } while(0)
+#endif
 
 #if COMPV_INTRINSIC
 #	define COMPV_EXEC_IFDEF_INTRIN(EXPR) do { if (compv::CompVCpu::isIntrinsicsEnabled()) { (EXPR); } } while(0)
@@ -191,9 +195,11 @@ enum COMPV_ERROR_CODE {
 
 // In COMPV_CHECK_HR(errcode) When (errcode) is a function it will be executed twice when used in "COMPV_DEBUG_ERROR(errcode)" and "If(errcode)"
 extern COMPV_BASE_API const char* CompVGetErrorString(COMPV_NAMESPACE::COMPV_ERROR_CODE code);
+#define COMPV_CHECK_CODE_NOP(errcode) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", CompVGetErrorString(__code__)); } } while(0)
 #define COMPV_CHECK_CODE_BAIL(errcode) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", CompVGetErrorString(__code__)); goto bail; } } while(0)
 #define COMPV_CHECK_CODE_RETURN(errcode) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", CompVGetErrorString(__code__)); return __code__; } } while(0)
-#define COMPV_CHECK_CODE_ASSERT(errcode) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); COMPV_ASSERT(COMPV_ERROR_CODE_IS_OK(__code__)); } while(0)
+#define COMPV_CHECK_CODE_ASSERT(errcode) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s)", CompVGetErrorString(__code__)); COMPV_ASSERT(false); } } while(0)
+#define COMPV_CHECK_EXP_NOP(exp, errcode) do { if ((exp)) COMPV_CHECK_CODE_NOP(errcode); } while(0)
 #define COMPV_CHECK_EXP_RETURN(exp, errcode) do { if ((exp)) COMPV_CHECK_CODE_RETURN(errcode); } while(0)
 #define COMPV_CHECK_EXP_BAIL(exp, errcode) do { if ((exp)) COMPV_CHECK_CODE_BAIL(errcode); } while(0)
 

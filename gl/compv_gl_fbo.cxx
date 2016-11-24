@@ -15,6 +15,7 @@ COMPV_NAMESPACE_BEGIN()
 
 CompVGLFbo::CompVGLFbo(size_t width, size_t height)
 	: CompVObj()
+	, CompVBind()
 	, m_bInit(false)
 	, m_nWidth(width)
 	, m_nHeight(height)
@@ -30,7 +31,7 @@ CompVGLFbo::~CompVGLFbo()
 	COMPV_CHECK_CODE_ASSERT(deInit());
 }
 
-COMPV_ERROR_CODE CompVGLFbo::bind()const
+COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLFbo::bind)()
 {
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
@@ -41,7 +42,7 @@ COMPV_ERROR_CODE CompVGLFbo::bind()const
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLFbo::unbind()const
+COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLFbo::unbind)()
 {
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 

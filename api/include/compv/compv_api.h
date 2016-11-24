@@ -9,6 +9,7 @@
 
 /* Module: Base */
 #include <compv/base/compv_base.h>
+#include <compv/base/compv_bind.h>
 #include <compv/base/compv_buffer.h>
 #include <compv/base/compv_debug.h>
 #include <compv/base/compv_fileutils.h>
@@ -36,7 +37,6 @@
 #include <compv/gl/compv_gl.h>
 
 /* Module: Drawing */
-#include <compv/drawing/compv_canvas.h>
 #include <compv/drawing/compv_drawing.h>
 #include <compv/drawing/compv_mvp.h>
 #include <compv/drawing/compv_surface.h>

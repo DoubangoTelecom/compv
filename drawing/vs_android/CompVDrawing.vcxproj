@@ -36,7 +36,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\android\compv_window_android_egl.cxx" />
-    <ClCompile Include="..\compv_canvas.cxx" />
     <ClCompile Include="..\compv_drawing.cxx" />
     <ClCompile Include="..\compv_image_libjpeg.cxx" />
     <ClCompile Include="..\compv_mvp.cxx" />
@@ -65,7 +64,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\drawing\android\compv_window_android_egl.h" />
-    <ClInclude Include="..\include\compv\drawing\compv_canvas.h" />
     <ClInclude Include="..\include\compv\drawing\compv_common.h" />
     <ClInclude Include="..\include\compv\drawing\compv_drawing.h" />
     <ClInclude Include="..\include\compv\drawing\compv_image_libjpeg.h" />

@@ -37,18 +37,22 @@
   <ItemGroup>
     <ClCompile Include="..\android\compv_android_cpu-features.cxx" />
     <ClCompile Include="..\android\compv_android_native_activity.cxx" />
-    <ClCompile Include="..\compv_autolock.cxx" />
     <ClCompile Include="..\compv_base.cxx" />
+    <ClCompile Include="..\compv_bind.cxx" />
+    <ClCompile Include="..\compv_blitter.cxx" />
     <ClCompile Include="..\compv_buffer.cxx" />
+    <ClCompile Include="..\compv_canvas.cxx" />
     <ClCompile Include="..\compv_common.cxx" />
     <ClCompile Include="..\compv_cpu.cxx" />
     <ClCompile Include="..\compv_debug.cxx" />
     <ClCompile Include="..\compv_fileutils.cxx" />
     <ClCompile Include="..\compv_jni.cxx" />
+    <ClCompile Include="..\compv_lock.cxx" />
     <ClCompile Include="..\compv_mat.cxx" />
     <ClCompile Include="..\compv_md5.cxx" />
     <ClCompile Include="..\compv_mem.cxx" />
     <ClCompile Include="..\compv_obj.cxx" />
+    <ClCompile Include="..\compv_renderer.cxx" />
     <ClCompile Include="..\compv_sharedlib.cxx" />
     <ClCompile Include="..\compv_simd_globals.cxx" />
     <ClCompile Include="..\image\compv_image.cxx" />
@@ -72,9 +76,11 @@
     <ClInclude Include="..\include\compv\base\android\compv_android_cpu-features.h" />
     <ClInclude Include="..\include\compv\base\android\compv_android_fileutils.h" />
     <ClInclude Include="..\include\compv\base\android\compv_android_native_activity.h" />
-    <ClInclude Include="..\include\compv\base\compv_autolock.h" />
     <ClInclude Include="..\include\compv\base\compv_base.h" />
+    <ClInclude Include="..\include\compv\base\compv_bind.h" />
+    <ClInclude Include="..\include\compv\base\compv_blitter.h" />
     <ClInclude Include="..\include\compv\base\compv_buffer.h" />
+    <ClInclude Include="..\include\compv\base\compv_canvas.h" />
     <ClInclude Include="..\include\compv\base\compv_common.h" />
     <ClInclude Include="..\include\compv\base\compv_config.h" />
     <ClInclude Include="..\include\compv\base\compv_cpu.h" />
@@ -82,10 +88,12 @@
     <ClInclude Include="..\include\compv\base\compv_errno.h" />
     <ClInclude Include="..\include\compv\base\compv_fileutils.h" />
     <ClInclude Include="..\include\compv\base\compv_jni.h" />
+    <ClInclude Include="..\include\compv\base\compv_lock.h" />
     <ClInclude Include="..\include\compv\base\compv_mat.h" />
     <ClInclude Include="..\include\compv\base\compv_md5.h" />
     <ClInclude Include="..\include\compv\base\compv_mem.h" />
     <ClInclude Include="..\include\compv\base\compv_obj.h" />
+    <ClInclude Include="..\include\compv\base\compv_renderer.h" />
     <ClInclude Include="..\include\compv\base\compv_sharedlib.h" />
     <ClInclude Include="..\include\compv\base\compv_simd_globals.h" />
     <ClInclude Include="..\include\compv\base\image\compv_image.h" />
@@ -199,6 +207,7 @@
       <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -208,6 +217,7 @@
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
@@ -218,6 +228,7 @@
       <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -227,6 +238,7 @@
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -237,6 +249,7 @@
       <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -246,6 +259,7 @@
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -256,6 +270,7 @@
       <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -265,6 +280,7 @@
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
