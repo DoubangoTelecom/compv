@@ -7,7 +7,7 @@
 #include "compv/drawing/opengl/compv_window_gl.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
-#include "compv/drawing/opengl/compv_utils_gl.h"
+#include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_info.h"
 #include "compv/gl/compv_gl_func.h"
 
@@ -78,7 +78,7 @@ COMPV_ERROR_CODE CompVWindowGL::endDraw()
 	CompVAutoLock<CompVWindowGL>(this);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_EXP_BAIL(!m_bDrawing || !context(), (err = COMPV_ERROR_CODE_E_INVALID_STATE));
-	COMPV_CHECK_EXP_BAIL(!CompVContextGL::isSet(), (err = COMPV_ERROR_CODE_E_GL_NO_CONTEXT));
+	COMPV_CHECK_EXP_BAIL(!CompVGLContext::isSet(), (err = COMPV_ERROR_CODE_E_GL_NO_CONTEXT));
 
 	// Swap (aka 'present' the final redering to the window, means switch front/back buffers)
 	COMPV_CHECK_CODE_BAIL(err = context()->swapBuffers());

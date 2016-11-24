@@ -18,7 +18,41 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+class CompVGLProgram;
+typedef CompVPtr<CompVGLProgram* > CompVGLProgramPtr;
+typedef CompVGLProgramPtr* CompVGLProgramPtrPtr;
 
+class COMPV_GL_API CompVGLProgram : public CompVObj
+{
+protected:
+	CompVGLProgram();
+public:
+	virtual ~CompVGLProgram();
+	COMPV_GET_OBJECT_ID(CompVGLProgram);
+	COMPV_INLINE GLuint name() { return m_uNamePrg; };
+
+	COMPV_ERROR_CODE shaderAttachVertexFile(const char* pcFilePath);
+	COMPV_ERROR_CODE shaderAttachFragmentFile(const char* pcFilePath);
+	COMPV_ERROR_CODE shaderAttachVertexData(const char* dataPtr, size_t dataLength);
+	COMPV_ERROR_CODE shaderAttachFragmentData(const char* dataPtr, size_t dataLength);
+	COMPV_ERROR_CODE link();
+	COMPV_ERROR_CODE useBegin();
+	COMPV_ERROR_CODE useEnd();
+
+	static COMPV_ERROR_CODE newObj(CompVGLProgramPtrPtr program);
+	static COMPV_ERROR_CODE newObj(CompVGLProgramPtrPtr program, const char* vertexDataPtr, size_t vertexDataLength, const char* fragmentDataPtr, size_t fragmentDataLength);
+	static COMPV_ERROR_CODE newObj(CompVGLProgramPtrPtr program, const char* vertexFilePath, const char* fragmentFilePath);
+
+private:
+	COMPV_ERROR_CODE shaderAttachData(const char* dataPtr, size_t dataLength, bool vertexType);
+
+private:
+	GLuint m_uNameShaderVertex;
+	GLuint m_uNameShaderFragment;
+	GLuint m_uNamePrg;
+	bool m_bLinked;
+	bool m_bUsed;
+};
 
 COMPV_NAMESPACE_END()
 

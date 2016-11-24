@@ -21,25 +21,25 @@
 COMPV_NAMESPACE_BEGIN()
 
 //
-//	CompVContextGLSDL
+//	CompVGLContextSDL
 //
-class CompVContextGLSDL;
-typedef CompVPtr<CompVContextGLSDL* > CompVContextGLSDLPtr;
-typedef CompVContextGLSDLPtr* CompVContextGLSDLPtrPtr;
+class CompVGLContextSDL;
+typedef CompVPtr<CompVGLContextSDL* > CompVGLContextSDLPtr;
+typedef CompVGLContextSDLPtr* CompVGLContextSDLPtrPtr;
 
-class CompVContextGLSDL : public CompVContextGL
+class CompVGLContextSDL : public CompVGLContext
 {
 protected:
-	CompVContextGLSDL(SDL_Window *pSDLWindow, SDL_GLContext pSDLContext);
+	CompVGLContextSDL(SDL_Window *pSDLWindow, SDL_GLContext pSDLContext);
 public:
-	virtual ~CompVContextGLSDL();
-	COMPV_GET_OBJECT_ID(CompVContextGLSDL);
+	virtual ~CompVGLContextSDL();
+	COMPV_GET_OBJECT_ID(CompVGLContextSDL);
 
 	virtual COMPV_ERROR_CODE makeCurrent();
 	virtual COMPV_ERROR_CODE swapBuffers();
 	virtual COMPV_ERROR_CODE unmakeCurrent();
 
-	static COMPV_ERROR_CODE newObj(CompVContextGLSDLPtrPtr context, SDL_Window *pSDLWindow, SDL_GLContext pSDLContext);
+	static COMPV_ERROR_CODE newObj(CompVGLContextSDLPtrPtr context, SDL_Window *pSDLWindow, SDL_GLContext pSDLContext);
 
 private:
 	SDL_Window *m_pSDLWindow;
@@ -73,13 +73,13 @@ public:
 
 protected:
 	/* CompVWindowGL overrides */
-	virtual CompVContextGLPtr context();
+	virtual CompVGLContextPtr context();
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	SDL_Window *m_pSDLWindow;
 	SDL_GLContext m_pSDLContext;
-	CompVContextGLSDLPtr m_ptrContext;
+	CompVGLContextSDLPtr m_ptrContext;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

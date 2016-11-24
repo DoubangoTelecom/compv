@@ -4,16 +4,16 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/opengl/compv_fbo_gl.h"
+#include "compv/gl/compv_gl_fbo.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-#include "compv/drawing/compv_drawing.h"
-#include "compv/drawing/opengl/compv_utils_gl.h"
-#include "compv/drawing/opengl/compv_consts_gl.h"
+#include "compv/gl/compv_gl.h"
+#include "compv/gl/compv_gl_utils.h"
+#include "compv/gl/compv_gl_common.h"
 #include "compv/gl/compv_gl_func.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVFBOGL::CompVFBOGL(size_t width, size_t height)
+CompVGLFbo::CompVGLFbo(size_t width, size_t height)
 	: CompVObj()
 	, m_bInit(false)
 	, m_nWidth(width)
@@ -25,14 +25,14 @@ CompVFBOGL::CompVFBOGL(size_t width, size_t height)
 
 }
 
-CompVFBOGL::~CompVFBOGL()
+CompVGLFbo::~CompVGLFbo()
 {
 	COMPV_CHECK_CODE_ASSERT(deInit());
 }
 
-COMPV_ERROR_CODE CompVFBOGL::bind()const
+COMPV_ERROR_CODE CompVGLFbo::bind()const
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
 
 	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
@@ -41,31 +41,31 @@ COMPV_ERROR_CODE CompVFBOGL::bind()const
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVFBOGL::unbind()const
+COMPV_ERROR_CODE CompVGLFbo::unbind()const
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
 	COMPV_glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVFBOGL::updateSize(size_t width, size_t height)
+COMPV_ERROR_CODE CompVGLFbo::updateSize(size_t width, size_t height)
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVFBOGL::init(size_t width, size_t height)
+COMPV_ERROR_CODE CompVGLFbo::init(size_t width, size_t height)
 {
 	if (m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_EXP_RETURN(!width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	m_bInit = true; // Set true here to make sure deInit() will work
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	std::string errString_;
@@ -74,7 +74,7 @@ COMPV_ERROR_CODE CompVFBOGL::init(size_t width, size_t height)
 	COMPV_glActiveTexture(GL_TEXTURE0);
 	COMPV_glGenTextures(1, &m_uNameTexture);
 	if (!m_uNameTexture) {
-		COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::checkLastError());
+		COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::checkLastError());
 		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
 	}
 	COMPV_glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
@@ -88,7 +88,7 @@ COMPV_ERROR_CODE CompVFBOGL::init(size_t width, size_t height)
 	// Generate a renderbuffer and use it for both for stencil and depth
 	COMPV_glGenRenderbuffers(1, &m_uNameDepthStencil);
 	if (!m_uNameDepthStencil) {
-		COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::checkLastError());
+		COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::checkLastError());
 		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
 	}
 	COMPV_glBindRenderbuffer(GL_RENDERBUFFER, m_uNameDepthStencil);
@@ -103,7 +103,7 @@ COMPV_ERROR_CODE CompVFBOGL::init(size_t width, size_t height)
 	// Generate our Framebuffer object
 	COMPV_glGenFramebuffers(1, &m_uNameFrameBuffer);
 	if (!m_uNameFrameBuffer) {
-		COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::checkLastError());
+		COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::checkLastError());
 		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
 	}
 
@@ -117,8 +117,9 @@ COMPV_ERROR_CODE CompVFBOGL::init(size_t width, size_t height)
 	COMPV_glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_uNameDepthStencil);
 
 	// Check FBO status
-	if ((fboStatus_ = glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)) {
-		COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::checkLastError());
+	COMPV_glCheckFramebufferStatus(&fboStatus_, GL_FRAMEBUFFER);
+	if (fboStatus_ != GL_FRAMEBUFFER_COMPLETE) {
+		COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::checkLastError());
 		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
 	}
 
@@ -138,12 +139,12 @@ bail:
 	return err_;
 }
 
-COMPV_ERROR_CODE CompVFBOGL::deInit()
+COMPV_ERROR_CODE CompVGLFbo::deInit()
 {
 	if (!m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	if (m_uNameTexture) {
 		COMPV_glDeleteTextures(1, &m_uNameTexture);
@@ -162,12 +163,12 @@ COMPV_ERROR_CODE CompVFBOGL::deInit()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVFBOGL::clear()
+COMPV_ERROR_CODE CompVGLFbo::clear()
 {
 	if (!m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_ERROR_CODE err;
 	COMPV_CHECK_CODE_BAIL(err = bind());
 	COMPV_glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -178,12 +179,12 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVFBOGL::newObj(CompVFBOGLPtrPtr fbo, size_t width, size_t height)
+COMPV_ERROR_CODE CompVGLFbo::newObj(CompVGLFboPtrPtr fbo, size_t width, size_t height)
 {
-	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
+	COMPV_CHECK_CODE_RETURN(CompVGL::init());
 	COMPV_CHECK_EXP_RETURN(!fbo || !width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	CompVFBOGLPtr fbo_ = new CompVFBOGL(width, height);
+	CompVGLFboPtr fbo_ = new CompVGLFbo(width, height);
 	COMPV_CHECK_EXP_RETURN(!fbo_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	COMPV_CHECK_CODE_RETURN(fbo_->init(width, height));
 

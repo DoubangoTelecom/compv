@@ -40,7 +40,6 @@
     <ClCompile Include="..\compv_drawing.cxx" />
     <ClCompile Include="..\compv_image_libjpeg.cxx" />
     <ClCompile Include="..\compv_mvp.cxx" />
-    <ClCompile Include="..\compv_program.cxx" />
     <ClCompile Include="..\compv_renderer.cxx" />
     <ClCompile Include="..\compv_surface.cxx" />
     <ClCompile Include="..\compv_surfacelayer.cxx" />
@@ -50,10 +49,7 @@
     <ClCompile Include="..\compv_viewport.cxx" />
     <ClCompile Include="..\compv_window.cxx" />
     <ClCompile Include="..\opengl\compv_blitter_gl.cxx" />
-    <ClCompile Include="..\opengl\compv_context_gl.cxx" />
-    <ClCompile Include="..\opengl\compv_fbo_gl.cxx" />
     <ClCompile Include="..\opengl\compv_mvp_glm.cxx" />
-    <ClCompile Include="..\opengl\compv_program_gl.cxx" />
     <ClCompile Include="..\opengl\compv_renderer_gl.cxx" />
     <ClCompile Include="..\opengl\compv_renderer_gl_rgb.cxx" />
     <ClCompile Include="..\opengl\compv_renderer_gl_yuv.cxx" />
@@ -61,7 +57,6 @@
     <ClCompile Include="..\opengl\compv_surfacelayer_gl_multi.cxx" />
     <ClCompile Include="..\opengl\compv_surfacelayer_gl_single.cxx" />
     <ClCompile Include="..\opengl\compv_surface_gl.cxx" />
-    <ClCompile Include="..\opengl\compv_utils_gl.cxx" />
     <ClCompile Include="..\opengl\compv_window_egl.cxx" />
     <ClCompile Include="..\opengl\compv_window_gl.cxx" />
     <ClCompile Include="..\opengl\compv_window_glfw3.cxx" />
@@ -75,7 +70,6 @@
     <ClInclude Include="..\include\compv\drawing\compv_drawing.h" />
     <ClInclude Include="..\include\compv\drawing\compv_image_libjpeg.h" />
     <ClInclude Include="..\include\compv\drawing\compv_mvp.h" />
-    <ClInclude Include="..\include\compv\drawing\compv_program.h" />
     <ClInclude Include="..\include\compv\drawing\compv_renderer.h" />
     <ClInclude Include="..\include\compv\drawing\compv_surface.h" />
     <ClInclude Include="..\include\compv\drawing\compv_surfacelayer.h" />
@@ -85,11 +79,7 @@
     <ClInclude Include="..\include\compv\drawing\compv_viewport.h" />
     <ClInclude Include="..\include\compv\drawing\compv_window.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_blitter_gl.h" />
-    <ClInclude Include="..\include\compv\drawing\opengl\compv_consts_gl.h" />
-    <ClInclude Include="..\include\compv\drawing\opengl\compv_context_gl.h" />
-    <ClInclude Include="..\include\compv\drawing\opengl\compv_fbo_gl.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_mvp_glm.h" />
-    <ClInclude Include="..\include\compv\drawing\opengl\compv_program_gl.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_renderer_gl.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_renderer_gl_rgb.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_renderer_gl_yuv.h" />
@@ -97,7 +87,6 @@
     <ClInclude Include="..\include\compv\drawing\opengl\compv_surfacelayer_gl_multi.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_surfacelayer_gl_single.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_surface_gl.h" />
-    <ClInclude Include="..\include\compv\drawing\opengl\compv_utils_gl.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_window_egl.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_window_gl.h" />
     <ClInclude Include="..\include\compv\drawing\opengl\compv_window_glfw3.h" />

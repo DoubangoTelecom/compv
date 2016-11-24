@@ -7,8 +7,7 @@
 #include "compv/drawing/opengl/compv_renderer_gl_rgb.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
-#include "compv/drawing/compv_program.h"
-#include "compv/drawing/opengl/compv_utils_gl.h"
+#include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_func.h"
 
 static const std::string& kProgramVertexData =
@@ -60,7 +59,7 @@ CompVRendererGLRGB::~CompVRendererGLRGB()
 COMPV_ERROR_CODE CompVRendererGLRGB::drawImage(CompVMatPtr mat)
 {
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
@@ -125,7 +124,7 @@ COMPV_ERROR_CODE CompVRendererGLRGB::deInit()
 	if (!m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_CODE_RETURN(CompVRendererGL::deInit()); // Base class implementation
 	if (m_uNameTexture) {
 		COMPV_glDeleteTextures(1, &m_uNameTexture);
@@ -141,8 +140,8 @@ COMPV_ERROR_CODE CompVRendererGLRGB::init(CompVMatPtr mat)
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	CompVProgramGLPtr ptrProgram;
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	CompVGLProgramPtr ptrProgram;
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	m_bInit = true; // To make sure deInit() will be fully executed
 	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::init(mat, m_strPrgVertexData, m_strPrgFragData, false, false)); // Base class implementation
 	COMPV_CHECK_EXP_BAIL(!(ptrProgram = program()), (err = COMPV_ERROR_CODE_E_GL));
@@ -157,7 +156,7 @@ COMPV_ERROR_CODE CompVRendererGLRGB::init(CompVMatPtr mat)
 	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	COMPV_glTexImage2D(GL_TEXTURE_2D, 0, m_iFormat, static_cast<GLsizei>(mat->stride()), static_cast<GLsizei>(mat->rows()), 0, m_iFormat, GL_UNSIGNED_BYTE, NULL);
-	m_uNameSampler = glGetUniformLocation(ptrProgram->id(), "mySampler");
+	COMPV_glGetUniformLocation(&m_uNameSampler, ptrProgram->name(), "mySampler");
 	COMPV_glUniform1i(m_uNameSampler, 1);
 
 bail:

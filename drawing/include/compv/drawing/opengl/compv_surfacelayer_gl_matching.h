@@ -45,7 +45,7 @@ private:
 	CompVSurfaceGLPtr m_ptrCoverSurfaceGL;
 	CompVSurfaceGLPtr m_ptrTrainSurfaceGL;
 	CompVSurfaceGLPtr m_ptrQuerySurfaceGL;
-	CompVFBOGLPtr m_ptrFBO;
+	CompVGLFboPtr m_ptrFBO;
 };
 
 COMPV_NAMESPACE_END()

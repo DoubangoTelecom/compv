@@ -4,41 +4,41 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/opengl/compv_context_gl.h"
+#include "compv/gl/compv_gl_context.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-#include "compv/drawing/opengl/compv_utils_gl.h"
+#include "compv/gl/compv_gl_utils.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVContextGL::CompVContextGL()
+CompVGLContext::CompVGLContext()
 	: CompVObj()
 	, CompVLock()
 {
 
 }
 
-CompVContextGL::~CompVContextGL()
+CompVGLContext::~CompVGLContext()
 {
 
 }
 
-bool CompVContextGL::isSet()
+bool CompVGLContext::isSet()
 {
-	return !!CompVUtilsGL::isGLContextSet();
+	return !!CompVGLUtils::isGLContextSet();
 }
 
-COMPV_ERROR_CODE CompVContextGL::makeCurrent()
+COMPV_ERROR_CODE CompVGLContext::makeCurrent()
 {
 	COMPV_CHECK_CODE_RETURN(CompVLock::lock());
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVContextGL::swapBuffers()
+COMPV_ERROR_CODE CompVGLContext::swapBuffers()
 {
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVContextGL::unmakeCurrent()
+COMPV_ERROR_CODE CompVGLContext::unmakeCurrent()
 {
 	COMPV_CHECK_CODE_RETURN(CompVLock::unlock());
 	return COMPV_ERROR_CODE_S_OK;

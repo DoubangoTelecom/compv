@@ -7,7 +7,7 @@
 #include "compv/drawing/opengl/compv_renderer_gl.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
-#include "compv/drawing/opengl/compv_utils_gl.h"
+#include "compv/gl/compv_gl_utils.h"
 #include "compv/drawing/opengl/compv_renderer_gl_yuv.h"
 #include "compv/drawing/opengl/compv_renderer_gl_rgb.h"
 
@@ -31,14 +31,14 @@ COMPV_ERROR_CODE CompVRendererGL::init(CompVMatPtr mat, const std::string& prgVe
 	if (m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(prgFragData.empty() || prgFragData.empty(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	m_bInit = true; // To make sure deInit() will be fully executed
 
 	// Init/Create FBO
 	if (!m_ptrFBO) {
-		COMPV_CHECK_CODE_BAIL(err = CompVFBOGL::newObj(&m_ptrFBO, mat->cols(), mat->rows()));
+		COMPV_CHECK_CODE_BAIL(err = CompVGLFbo::newObj(&m_ptrFBO, mat->cols(), mat->rows()));
 	}
 	// FIXME: call FBO->updateSize
 
@@ -56,7 +56,7 @@ bail:
 // Bind to FBO and activate the program
 COMPV_ERROR_CODE CompVRendererGL::bind()
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -72,7 +72,7 @@ bail:
 
 COMPV_ERROR_CODE CompVRendererGL::unbind()
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	COMPV_CHECK_CODE_ASSERT(m_ptrFBO->unbind()); // FBO
 	COMPV_CHECK_CODE_ASSERT(CompVBlitterGL::unbind()); // Base class impl.: VAO
@@ -83,7 +83,7 @@ COMPV_ERROR_CODE CompVRendererGL::unbind()
 // Overrides(CompVCanvas) 
 COMPV_ERROR_CODE CompVRendererGL::canvasBind()
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
 	COMPV_CHECK_CODE_RETURN(m_ptrFBO->bind()); // bind() to make sure all drawing will be redirected to the FBO
 	return COMPV_ERROR_CODE_S_OK;
@@ -91,7 +91,7 @@ COMPV_ERROR_CODE CompVRendererGL::canvasBind()
 
 COMPV_ERROR_CODE CompVRendererGL::canvasUnbind()
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
 	if (m_ptrFBO) {
 		COMPV_CHECK_CODE_RETURN(m_ptrFBO->unbind()); // unbind() to make sure all drawing will be redirected to system buffer
@@ -104,7 +104,7 @@ COMPV_ERROR_CODE CompVRendererGL::deInit()
 	if (!m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_CODE_ASSERT(CompVBlitterGL::deInit()); // Base class implementation
 	m_ptrFBO = NULL;
 

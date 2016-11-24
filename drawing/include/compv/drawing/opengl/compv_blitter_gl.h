@@ -10,12 +10,12 @@
 #include "compv/drawing/compv_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-#include "compv/drawing/opengl/compv_consts_gl.h"
-#include "compv/drawing/opengl/compv_program_gl.h"
 #include "compv/drawing/opengl/compv_mvp_glm.h"
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/compv_common.h"
+#include "compv/gl/compv_gl_common.h"
 #include "compv/gl/compv_gl_vao.h"
+#include "compv/gl/compv_gl_program.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -35,7 +35,7 @@ public:
 	COMPV_INLINE size_t stride()const { return m_nStride; }
 	COMPV_INLINE bool isToScreen()const { return m_bToScreen; }
 	COMPV_INLINE GLuint indicesCount()const { return sizeof(kCompVGLTexture2DIndices) / sizeof(kCompVGLTexture2DIndices[0]); }
-	COMPV_INLINE CompVProgramGLPtr program() { return m_ptrProgram; }
+	COMPV_INLINE CompVGLProgramPtr program() { return m_ptrProgram; }
 	
 	
 	virtual COMPV_ERROR_CODE bind();
@@ -65,7 +65,7 @@ private:
 	GLuint m_uNamePrgAttTexCoord;
 	GLuint m_uNamePrgUnifMVP;
 	GLuint m_uNameVAO;
-	CompVProgramGLPtr m_ptrProgram;
+	CompVGLProgramPtr m_ptrProgram;
 	CompVMVPPtr m_ptrMVP;
 };
 

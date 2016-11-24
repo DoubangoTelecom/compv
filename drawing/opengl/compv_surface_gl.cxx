@@ -8,10 +8,9 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/compv_window.h"
-#include "compv/drawing/compv_program.h"
 #include "compv/drawing/compv_canvas.h"
-#include "compv/drawing/opengl/compv_consts_gl.h"
-#include "compv/drawing/opengl/compv_utils_gl.h"
+#include "compv/gl/compv_gl_common.h"
+#include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_func.h"
 
 // FIXME: OpenGL error handling not ok, impossible to find which function cause the error (erros stacked)
@@ -65,7 +64,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat, CompVRendererPtrPtr 
 {
 #if 1
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_CODE_RETURN(init());
 
 	// FIXME(dmi): remove if 'm_uNameFrameBuffer' is passed as parameter
@@ -106,7 +105,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat, CompVRendererPtrPtr 
 // Overrides(CompVCanvas) 
 COMPV_ERROR_CODE CompVSurfaceGL::canvasBind()
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	if (m_ptrCanvasFBO) {
 		COMPV_CHECK_CODE_RETURN(m_ptrCanvasFBO->bind());
 		return COMPV_ERROR_CODE_S_OK;
@@ -119,7 +118,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::canvasBind()
 // Overrides(CompVCanvas) 
 COMPV_ERROR_CODE CompVSurfaceGL::canvasUnbind()
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	if (m_ptrCanvasFBO) {
 		COMPV_CHECK_CODE_RETURN(m_ptrCanvasFBO->unbind());
 		return COMPV_ERROR_CODE_S_OK;
@@ -129,9 +128,9 @@ COMPV_ERROR_CODE CompVSurfaceGL::canvasUnbind()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVSurfaceGL::blit(const CompVFBOGLPtr ptrFboSrc, const CompVFBOGLPtr ptrFboDst)
+COMPV_ERROR_CODE CompVSurfaceGL::blit(const CompVGLFboPtr ptrFboSrc, const CompVGLFboPtr ptrFboDst)
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!ptrFboSrc || (!ptrFboDst && ptrFboDst != kCompVGLPtrSystemFrameBuffer), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_CODE_BAIL(err = init());
@@ -178,7 +177,7 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVSurfaceGL::blitRenderer(const CompVFBOGLPtr ptrFboDst)
+COMPV_ERROR_CODE CompVSurfaceGL::blitRenderer(const CompVGLFboPtr ptrFboDst)
 {
 	COMPV_CHECK_EXP_RETURN(!m_ptrRenderer, COMPV_ERROR_CODE_E_INVALID_STATE);
 	COMPV_CHECK_CODE_RETURN(blit(m_ptrRenderer->fbo(), ptrFboDst));
@@ -195,7 +194,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::updateSize(size_t newWidth, size_t newHeight)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVSurfaceGL::setCanvasFBO(CompVFBOGLPtr fbo)
+COMPV_ERROR_CODE CompVSurfaceGL::setCanvasFBO(CompVGLFboPtr fbo)
 {
 	m_ptrCanvasFBO = fbo;
 	return COMPV_ERROR_CODE_S_OK;
@@ -206,7 +205,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::init()
 	if (m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT); // Make sure we have a GL context
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT); // Make sure we have a GL context
 	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::init(CompVSurface::width(), CompVSurface::height(), CompVSurface::width(), kProgramVertexData, kProgramFragData, true/*haveMVP*/, true/*ToScreenYes*/)); // Base class implementation
 	
 	m_bInit = true;
@@ -218,7 +217,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::deInit()
 	if (!m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT); // Make sure we have a GL context
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT); // Make sure we have a GL context
 	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::deInit()); // Base class implementation
 	m_bInit = false;
 	return COMPV_ERROR_CODE_S_OK;

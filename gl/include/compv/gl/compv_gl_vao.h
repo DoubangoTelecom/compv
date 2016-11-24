@@ -10,7 +10,7 @@
 #include "compv/gl/compv_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-#include "compv/gl/compv_common.h"
+#include "compv/gl/compv_gl_common.h"
 #include "compv/base/compv_sharedlib.h"
 
 #if defined(_COMPV_API_H_)

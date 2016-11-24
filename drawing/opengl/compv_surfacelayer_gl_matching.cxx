@@ -35,7 +35,7 @@ COMPV_ERROR_CODE CompVMatchingSurfaceLayerGL::drawMatches(CompVMatPtr trainImage
 
 	// FIXME: add FBO->updateSize()
 	if (!m_ptrFBO || m_ptrFBO->width() != newWidth || m_ptrFBO->height() != newHeight) {
-		COMPV_CHECK_CODE_RETURN(CompVFBOGL::newObj(&m_ptrFBO, newWidth, newHeight));
+		COMPV_CHECK_CODE_RETURN(CompVGLFbo::newObj(&m_ptrFBO, newWidth, newHeight));
 		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->setCanvasFBO(m_ptrFBO));
 	}
 

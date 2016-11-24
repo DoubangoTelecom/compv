@@ -60,7 +60,7 @@ COMPV_ERROR_CODE CompVMultiSurfaceLayerGL::updateSize(size_t newWidth, size_t ne
 	COMPV_CHECK_CODE_RETURN(initFBO());
 	COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->updateSize(newWidth, newHeight));
 	// FIXME: add FBO->updateSize()
-	COMPV_CHECK_CODE_RETURN(CompVFBOGL::newObj(&m_ptrFBO, newWidth, newHeight));
+	COMPV_CHECK_CODE_RETURN(CompVGLFbo::newObj(&m_ptrFBO, newWidth, newHeight));
 	COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->setCanvasFBO(m_ptrFBO));
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -69,7 +69,7 @@ COMPV_ERROR_CODE CompVMultiSurfaceLayerGL::updateSize(size_t newWidth, size_t ne
 COMPV_ERROR_CODE CompVMultiSurfaceLayerGL::initFBO()
 {
 	if (!m_ptrFBO || !m_ptrCoverSurfaceGL->canvasFBO()) {
-		COMPV_CHECK_CODE_RETURN(CompVFBOGL::newObj(&m_ptrFBO, static_cast<CompVSurface*>(*m_ptrCoverSurfaceGL)->width(), static_cast<CompVSurface*>(*m_ptrCoverSurfaceGL)->height()));
+		COMPV_CHECK_CODE_RETURN(CompVGLFbo::newObj(&m_ptrFBO, static_cast<CompVSurface*>(*m_ptrCoverSurfaceGL)->width(), static_cast<CompVSurface*>(*m_ptrCoverSurfaceGL)->height()));
 		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->setCanvasFBO(m_ptrFBO));
 	}
 	return COMPV_ERROR_CODE_S_OK;
@@ -82,7 +82,7 @@ COMPV_ERROR_CODE CompVMultiSurfaceLayerGL::newObj(CompVMultiSurfaceLayerGLPtrPtr
 	COMPV_CHECK_EXP_RETURN(!layer_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	COMPV_CHECK_CODE_RETURN(CompVSurfaceGL::newObj(&layer_->m_ptrCoverSurfaceGL, width, height));
 #if 0 // Requires GL context
-	COMPV_CHECK_CODE_RETURN(CompVFBOGL::newObj(&layer_->m_ptrFBO, width, height));
+	COMPV_CHECK_CODE_RETURN(CompVGLFbo::newObj(&layer_->m_ptrFBO, width, height));
 	COMPV_CHECK_CODE_RETURN(layer_->m_ptrCoverSurfaceGL->setCanvasFBO(layer_->m_ptrFBO));
 #endif
 

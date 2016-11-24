@@ -51,7 +51,7 @@ private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	std::map<compv_surface_id_t, CompVSurfaceGLPtr> m_mapSurfaces;
 	CompVSurfaceGLPtr m_ptrCoverSurfaceGL;
-	CompVFBOGLPtr m_ptrFBO;
+	CompVGLFboPtr m_ptrFBO;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

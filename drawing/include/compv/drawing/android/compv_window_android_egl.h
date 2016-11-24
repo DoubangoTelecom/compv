@@ -11,6 +11,7 @@
 #include "compv/gl/compv_gl_headers.h"
 #if COMPV_OS_ANDROID && defined(HAVE_EGL)
 #include "compv/drawing/opengl/compv_window_gl.h"
+#include "compv/gl/compv_gl_context.h"
 #include "compv/base/compv_common.h"
 
 #if defined(_COMPV_API_H_)
@@ -20,25 +21,25 @@
 COMPV_NAMESPACE_BEGIN()
 
 //
-//	CompVContextGLAndroidEGL
+//	CompVGLContextAndroidEGL
 //
-class CompVContextGLAndroidEGL;
-typedef CompVPtr<CompVContextGLAndroidEGL* > CompVContextGLAndroidEGLPtr;
-typedef CompVContextGLAndroidEGLPtr* CompVContextGLAndroidEGLPtrPtr;
+class CompVGLContextAndroidEGL;
+typedef CompVPtr<CompVGLContextAndroidEGL* > CompVGLContextAndroidEGLPtr;
+typedef CompVGLContextAndroidEGLPtr* CompVGLContextAndroidEGLPtrPtr;
 
-class CompVContextGLAndroidEGL : public CompVContextGL
+class CompVGLContextAndroidEGL : public CompVGLContext
 {
 protected:
-	CompVContextGLAndroidEGL(EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex);
+	CompVGLContextAndroidEGL(EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex);
 public:
-	virtual ~CompVContextGLAndroidEGL();
-	COMPV_GET_OBJECT_ID("CompVContextGLAndroidEGL");
+	virtual ~CompVGLContextAndroidEGL();
+	COMPV_GET_OBJECT_ID("CompVGLContextAndroidEGL");
 
 	virtual COMPV_ERROR_CODE makeCurrent() override;
 	virtual COMPV_ERROR_CODE swapBuffers() override;
 	virtual COMPV_ERROR_CODE unmakeCurrent() override;
 
-	static COMPV_ERROR_CODE newObj(CompVContextGLAndroidEGLPtrPtr context, EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex);
+	static COMPV_ERROR_CODE newObj(CompVGLContextAndroidEGLPtrPtr context, EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex);
 
 private:
 	EGLDisplay m_pEGLDisplay;
@@ -74,7 +75,7 @@ public:
 
 protected:
 	/* CompVWindowGL overrides */
-	virtual CompVContextGLPtr context();
+	virtual CompVGLContextPtr context();
 
 private:
 	COMPV_ERROR_CODE init();
@@ -85,7 +86,7 @@ private:
 	EGLDisplay m_pEGLDisplay;
 	EGLSurface m_pEGLSurface;
 	EGLContext m_pEGLContex;
-	CompVContextGLAndroidEGLPtr m_ptrContext;
+	CompVGLContextAndroidEGLPtr m_ptrContext;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

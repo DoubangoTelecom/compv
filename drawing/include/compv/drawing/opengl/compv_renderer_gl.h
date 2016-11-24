@@ -12,11 +12,10 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_renderer.h"
 #include "compv/drawing/opengl/compv_blitter_gl.h"
-#include "compv/drawing/opengl/compv_consts_gl.h"
-#include "compv/drawing/opengl/compv_fbo_gl.h"
-#include "compv/drawing/compv_program.h"
 #include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
+#include "compv/gl/compv_gl_common.h"
+#include "compv/gl/compv_gl_fbo.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -41,7 +40,7 @@ public:
 
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
 
-	CompVFBOGLPtr fbo() { return m_ptrFBO; }
+	CompVGLFboPtr fbo() { return m_ptrFBO; }
 
 	static COMPV_ERROR_CODE newObj(CompVRendererGLPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat);
 	
@@ -58,7 +57,7 @@ protected:
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	bool m_bInit;
-	CompVFBOGLPtr m_ptrFBO;
+	CompVGLFboPtr m_ptrFBO;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

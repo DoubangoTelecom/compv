@@ -8,7 +8,6 @@
 #define _COMPV_GL_H_
 
 #include "compv/gl/compv_config.h"
-#include "compv/gl/compv_common.h"
 #include "compv/base/compv_sharedlib.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -18,6 +17,10 @@ class COMPV_GL_API CompVGL
 public:
 	static COMPV_ERROR_CODE init();
 	static COMPV_ERROR_CODE deInit();
+#	if defined(HAVE_GL_GLEW_H)
+	static COMPV_ERROR_CODE glewInit();
+#endif
+
 private:
 	static bool s_bInitialized;
 };

@@ -17,27 +17,27 @@ COMPV_NAMESPACE_BEGIN()
 
 
 //
-//	CompVContextGLSDL
+//	CompVGLContextSDL
 //
 
-CompVContextGLSDL::CompVContextGLSDL(SDL_Window *pSDLWindow, SDL_GLContext pSDLContext)
-	: CompVContextGL()
+CompVGLContextSDL::CompVGLContextSDL(SDL_Window *pSDLWindow, SDL_GLContext pSDLContext)
+	: CompVGLContext()
 	, m_pSDLWindow(pSDLWindow)
 	, m_pSDLContext(pSDLContext)
 {
 }
 
-CompVContextGLSDL::~CompVContextGLSDL()
+CompVGLContextSDL::~CompVGLContextSDL()
 {
 }
 
 	
-COMPV_ERROR_CODE CompVContextGLSDL::makeCurrent()
+COMPV_ERROR_CODE CompVGLContextSDL::makeCurrent()
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
 	//!\\ Order is important: call base class implementation to lock then set context then
-	COMPV_CHECK_CODE_BAIL(err = CompVContextGL::makeCurrent()); // Base class implementation
+	COMPV_CHECK_CODE_BAIL(err = CompVGLContext::makeCurrent()); // Base class implementation
 	COMPV_CHECK_EXP_BAIL(SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) != 0, (err = COMPV_ERROR_CODE_E_SDL));
 
 bail:
@@ -48,20 +48,20 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVContextGLSDL::swapBuffers()
+COMPV_ERROR_CODE CompVGLContextSDL::swapBuffers()
 {
-	COMPV_CHECK_CODE_RETURN(CompVContextGL::swapBuffers()); // Base class implementation
+	COMPV_CHECK_CODE_RETURN(CompVGLContext::swapBuffers()); // Base class implementation
 	SDL_GL_SwapWindow(m_pSDLWindow);
 	return COMPV_ERROR_CODE_S_OK;
 }
 	
-COMPV_ERROR_CODE CompVContextGLSDL::unmakeCurrent()
+COMPV_ERROR_CODE CompVGLContextSDL::unmakeCurrent()
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
 	//!\\ Order is important: unset context then call base class implementation to unlock
 	COMPV_CHECK_EXP_BAIL(SDL_GL_MakeCurrent(m_pSDLWindow, NULL) != 0, (err = COMPV_ERROR_CODE_E_SDL));
-	COMPV_CHECK_CODE_BAIL(err = CompVContextGL::unmakeCurrent()); // Base class implementation
+	COMPV_CHECK_CODE_BAIL(err = CompVGLContext::unmakeCurrent()); // Base class implementation
 
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
@@ -70,11 +70,11 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVContextGLSDL::newObj(CompVContextGLSDLPtrPtr context, SDL_Window *pSDLWindow, SDL_GLContext pSDLContext)
+COMPV_ERROR_CODE CompVGLContextSDL::newObj(CompVGLContextSDLPtrPtr context, SDL_Window *pSDLWindow, SDL_GLContext pSDLContext)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
 	COMPV_CHECK_EXP_RETURN(!context || !pSDLWindow || !pSDLContext, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVContextGLSDLPtr context_ = new CompVContextGLSDL(pSDLWindow, pSDLContext);
+	CompVGLContextSDLPtr context_ = new CompVGLContextSDL(pSDLWindow, pSDLContext);
 	COMPV_CHECK_EXP_RETURN(!context_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
 	*context = context_;
@@ -158,7 +158,7 @@ COMPV_ERROR_CODE CompVWindowSDL::close()
 }
 
 // Overrides(CompVWindowGL)
-CompVContextGLPtr CompVWindowSDL::context()
+CompVGLContextPtr CompVWindowSDL::context()
 {
 	return *m_ptrContext;
 }
@@ -174,7 +174,7 @@ COMPV_ERROR_CODE CompVWindowSDL::newObj(CompVWindowSDLPtrPtr sdlWindow, size_t w
 #if 1 // OpenGL could be unavailable -> CPU drawing fallback. TODO(dmi): For now OpenGL is required.
 	COMPV_CHECK_EXP_RETURN(!sdlWindow_->m_pSDLContext, COMPV_ERROR_CODE_E_SDL);
 #endif
-	COMPV_CHECK_CODE_RETURN(CompVContextGLSDL::newObj(&sdlWindow_->m_ptrContext, sdlWindow_->m_pSDLWindow, sdlWindow_->m_pSDLContext));
+	COMPV_CHECK_CODE_RETURN(CompVGLContextSDL::newObj(&sdlWindow_->m_ptrContext, sdlWindow_->m_pSDLWindow, sdlWindow_->m_pSDLContext));
 
 	*sdlWindow = sdlWindow_;
 	return COMPV_ERROR_CODE_S_OK;

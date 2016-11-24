@@ -7,7 +7,7 @@
 #include "compv/drawing/opengl/compv_blitter_gl.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
-#include "compv/drawing/opengl/compv_utils_gl.h"
+#include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_info.h"
 #include "compv/gl/compv_gl_func.h"
 
@@ -37,7 +37,7 @@ CompVBlitterGL::~CompVBlitterGL()
 // Bind to VAO and activate the program
 COMPV_ERROR_CODE CompVBlitterGL::bind()
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
 	COMPV_CHECK_CODE_RETURN(m_ptrProgram->useBegin());
 
@@ -66,7 +66,7 @@ COMPV_ERROR_CODE CompVBlitterGL::bind()
 // Unbind the VAO and deactivate the program
 COMPV_ERROR_CODE CompVBlitterGL::unbind()
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	if (CompVGLInfo::extensions::vertex_array_object()) {
 		COMPV_glBindVertexArray(0);
@@ -89,7 +89,7 @@ COMPV_ERROR_CODE CompVBlitterGL::setMVP(CompVMVPPtr mvp)
 	COMPV_CHECK_EXP_RETURN(!mvp, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	m_ptrMVP = mvp;
 	if (m_bInit && m_bMVP) {
-		COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+		COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 		COMPV_ERROR_CODE err;
 		COMPV_CHECK_CODE_BAIL(err = m_ptrProgram->useBegin());
 		COMPV_glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, mvp->matrix()->ptr());
@@ -124,7 +124,7 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 	if (m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!width || !height || stride < width || prgVertexData.empty() || prgFragData.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	m_bInit = true; // Make sure deInit() will be executed if this function fails
@@ -139,66 +139,37 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 	}
 
 	if (CompVGLInfo::extensions::vertex_array_object()) {
-		// TODO(dmi): use GLUtils
 		if (!m_uNameVAO) {
-			COMPV_glGenVertexArrays(1, &m_uNameVAO);
-			if (!m_uNameVAO) {
-				std::string errString;
-				COMPV_CHECK_CODE_BAIL(err = CompVUtilsGL::getLastError(&errString));
-				if (!errString.empty()) {
-					COMPV_DEBUG_ERROR("Failed to create vao: %s", errString.c_str());
-					COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_GL);
-				}
-			}
+			COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::vertexArraysGen(&m_uNameVAO));
 		}
 		COMPV_glBindVertexArray(m_uNameVAO);
 	}
 
 	// Vertex buffer
-	// TODO(dmi): use GLUtils
 	if (!m_uNameVertexBuffer) {
-		COMPV_glGenBuffers(1, &m_uNameVertexBuffer);
-		if (!m_uNameVertexBuffer) {
-			std::string errString;
-			COMPV_CHECK_CODE_BAIL(err = CompVUtilsGL::getLastError(&errString));
-			if (!errString.empty()) {
-				COMPV_DEBUG_ERROR("Failed to create vertex buffer: %s", errString.c_str());
-				COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_GL);
-			}
-		}
+		COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::bufferGen(&m_uNameVertexBuffer));
 	}
 	COMPV_glBindBuffer(GL_ARRAY_BUFFER, m_uNameVertexBuffer);
 	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::updateVertices(width, height, stride, bToScreen, &newVertices));
 	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(newVertices), newVertices, GL_STATIC_DRAW);
 
 	// Indice buffer
-	// TODO(dmi): use GLUtils
 	if (!m_uNameIndiceBuffer) {
-		COMPV_glGenBuffers(1, &m_uNameIndiceBuffer);
-		if (!m_uNameIndiceBuffer) {
-			std::string errString;
-			COMPV_CHECK_CODE_BAIL(err = CompVUtilsGL::getLastError(&errString));
-			if (!errString.empty()) {
-				COMPV_DEBUG_ERROR("Failed to create index buffer: %s", errString.c_str());
-				COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_GL);
-			}
-		}
+		COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::bufferGen(&m_uNameIndiceBuffer));
 		COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uNameIndiceBuffer);
 		COMPV_glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(kCompVGLTexture2DIndices), kCompVGLTexture2DIndices, GL_STATIC_DRAW);
 	}
 
-	COMPV_CHECK_CODE_BAIL(CompVProgramGL::newObj(&m_ptrProgram));
 	COMPV_CHECK_EXP_BAIL(prgVertexData.empty(), err = COMPV_ERROR_CODE_E_GL);
 	COMPV_CHECK_EXP_BAIL(prgFragData.empty(), err = COMPV_ERROR_CODE_E_GL);
-	COMPV_CHECK_CODE_BAIL(err = m_ptrProgram->shadAttachVertexData(prgVertexData.c_str(), prgVertexData.length()));
-	COMPV_CHECK_CODE_BAIL(err = m_ptrProgram->shadAttachFragmentData(prgFragData.c_str(), prgFragData.length()));
-	COMPV_CHECK_CODE_BAIL(err = m_ptrProgram->link());
+	COMPV_CHECK_CODE_BAIL(CompVGLProgram::newObj(&m_ptrProgram, prgVertexData.c_str(), prgVertexData.length(), prgFragData.c_str(), prgFragData.length()));
 	COMPV_CHECK_CODE_ASSERT(err = m_ptrProgram->useBegin());
 
-	m_uNamePrgAttPosition = glGetAttribLocation(m_ptrProgram->id(), "position");
-	m_uNamePrgAttTexCoord = glGetAttribLocation(m_ptrProgram->id(), "texCoord");
+	COMPV_glGetAttribLocation(&m_uNamePrgAttPosition, m_ptrProgram->name(), "position");
+	COMPV_glGetAttribLocation(&m_uNamePrgAttTexCoord, m_ptrProgram->name(), "texCoord");
+
 	if (bMVP) {
-		m_uNamePrgUnifMVP = glGetUniformLocation(m_ptrProgram->id(), "MVP");
+		COMPV_glGetUniformLocation(&m_uNamePrgUnifMVP, m_ptrProgram->name(), "MVP");
 	}
 	COMPV_glBindBuffer(GL_ARRAY_BUFFER, m_uNameVertexBuffer);
 	COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uNameIndiceBuffer);
@@ -247,25 +218,11 @@ COMPV_ERROR_CODE CompVBlitterGL::deInit()
 	if (!m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	if (m_uNameVertexBuffer) {
-		COMPV_glDeleteBuffers(1, &m_uNameVertexBuffer);
-		m_uNameVertexBuffer = 0;
-	}
-	if (m_uNameIndiceBuffer) {
-		COMPV_glDeleteBuffers(1, &m_uNameIndiceBuffer);
-		m_uNameIndiceBuffer = 0;
-	}
-	if (m_uNameVAO) {
-		if (CompVGLInfo::extensions::vertex_array_object()) {
-			COMPV_glDeleteVertexArrays(1, &m_uNameVAO);
-		}
-		else {
-			COMPV_ASSERT(false);
-			COMPV_DEBUG_ERROR("Not expected");
-		}
-		m_uNameVAO = 0;
-	}
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+
+	CompVGLUtils::bufferDelete(&m_uNameVertexBuffer);
+	CompVGLUtils::bufferDelete(&m_uNameIndiceBuffer);
+	CompVGLUtils::vertexArraysDelete(&m_uNameVAO);
 	m_ptrProgram = NULL;
 
 	m_bInit = false;
@@ -274,7 +231,7 @@ COMPV_ERROR_CODE CompVBlitterGL::deInit()
 
 COMPV_ERROR_CODE CompVBlitterGL::updateVertices(size_t width, size_t height, size_t stride, bool bToScreen, CompVGLVertex(*Vertices)[4])
 {
-	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	GLfloat uMax = static_cast<GLfloat>(width) / static_cast<GLfloat>(stride);
 	GLfloat vMax = 1.f;

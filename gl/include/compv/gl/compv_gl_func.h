@@ -8,9 +8,11 @@
 #define _COMPV_GL_FUNC_H_
 
 #include "compv/gl/compv_config.h"
-#include "compv/gl/compv_common.h"
-#include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_headers.h"
+#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
+#include "compv/gl/compv_gl_common.h"
+#include "compv/gl/compv_gl_utils.h"
+#include "compv/gl/compv_gl_vao.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -22,9 +24,9 @@ COMPV_NAMESPACE_BEGIN()
 #	define COMPV_GL_CHECK_ERROR(funcname, line) \
 	{ \
 		std::string errString_;  \
-		COMPV_CHECK_CODE_ASSERT(COMPVGLUtils::lastError(&errString_)); \
+		COMPV_CHECK_CODE_ASSERT(CompVGLUtils::lastError(&errString_)); \
 		if (!errString_.empty()) { \
-			COMPV_DEBUG_ERROR_EX("COMPV_GL_DEBUG", "%s[line %d]: error: %s", #funcname, line, errString_.c_str()); \
+			COMPV_DEBUG_ERROR_EX("COMPV_GL_DEBUG", "%s[line %d]: error: %s", funcname, line, errString_.c_str()); \
 		} \
 	}
 #else
@@ -41,6 +43,8 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_glBindTexture(...)					glBindTexture(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glBindTexture", __LINE__)
 #define COMPV_glBindVertexArray(...)				glBindVertexArray(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glBindVertexArray", __LINE__)
 #define COMPV_glBufferData(...)						glBufferData(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glBufferData", __LINE__)
+#define COMPV_glCheckFramebufferStatus(status, ...)	*(status) = glCheckFramebufferStatus(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glBufferData", __LINE__)
+#define COMPV_glCreateShader(...)					glCreateShader(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glCreateShader", __LINE__)
 #define COMPV_glClear(...)							glClear(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glClear", __LINE__)
 #define COMPV_glClearColor(...)						glClearColor(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glClearColor", __LINE__)
 #define COMPV_glClearStencil(...)					glClearStencil(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glClearStencil", __LINE__)
@@ -62,12 +66,14 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_glGenRenderbuffers(...)				glGenRenderbuffers(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glGenRenderbuffers", __LINE__)
 #define COMPV_glGenTextures(...)					glGenTextures(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glGenTextures", __LINE__)
 #define COMPV_glGenVertexArrays(...)				glGenVertexArrays(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glGenVertexArrays", __LINE__)
+#define COMPV_glGetAttribLocation(loc, ...)			*(loc) = glGetAttribLocation(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glGetAttribLocation", __LINE__)
 #define COMPV_glGetRenderbufferParameteriv(...)		glGetRenderbufferParameteriv(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glGetRenderbufferParameteriv", __LINE__)
 #define COMPV_glGetIntegerv(...)					glGetIntegerv(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glGetIntegerv", __LINE__)
 #define COMPV_glGetProgramInfoLog(...)				glGetProgramInfoLog(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glGetProgramInfoLog", __LINE__)
 #define COMPV_glGetProgramiv(...)					glGetProgramiv(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glGetProgramiv", __LINE__)
 #define COMPV_glGetShaderInfoLog(...)				glGetShaderInfoLog(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glGetShaderInfoLog", __LINE__)
 #define COMPV_glGetShaderiv(...)					glGetShaderiv(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glGetShaderiv", __LINE__)
+#define COMPV_glGetUniformLocation(loc, ...)		*(loc) = glGetUniformLocation(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glGetUniformLocation", __LINE__)
 #define COMPV_glLinkProgram(...)					glLinkProgram(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glLinkProgram", __LINE__)
 #define COMPV_glPixelStorei(...)					glPixelStorei(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glPixelStorei", __LINE__)
 #define COMPV_glRenderbufferStorage(...)			glRenderbufferStorage(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glRenderbufferStorage", __LINE__)
@@ -83,5 +89,7 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_glViewport(...)						glViewport(__VA_ARGS__); COMPV_GL_CHECK_ERROR("glViewport", __LINE__)
 
 COMPV_NAMESPACE_END()
+
+#endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
 
 #endif /* _COMPV_GL_FUNC_H_ */

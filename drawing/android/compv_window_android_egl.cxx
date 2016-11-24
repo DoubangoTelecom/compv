@@ -13,11 +13,11 @@
 COMPV_NAMESPACE_BEGIN()
 
 //
-//	CompVContextGLAndroidEGL
+//	CompVGLContextAndroidEGL
 //
 
-CompVContextGLAndroidEGL::CompVContextGLAndroidEGL(EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex)
-	: CompVContextGL()
+CompVGLContextAndroidEGL::CompVGLContextAndroidEGL(EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex)
+	: CompVGLContext()
 	, m_pEGLDisplay(pEGLDisplay)
 	, m_pEGLSurface(pEGLSurface)
 	, m_pEGLContex(pEGLContex)
@@ -25,17 +25,17 @@ CompVContextGLAndroidEGL::CompVContextGLAndroidEGL(EGLDisplay pEGLDisplay, EGLSu
 
 }
 
-CompVContextGLAndroidEGL::~CompVContextGLAndroidEGL()
+CompVGLContextAndroidEGL::~CompVGLContextAndroidEGL()
 {
 
 }
 
-COMPV_ERROR_CODE CompVContextGLAndroidEGL::makeCurrent()
+COMPV_ERROR_CODE CompVGLContextAndroidEGL::makeCurrent()
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
 	//!\\ Order is important: call base class implementation to lock then set context then
-	COMPV_CHECK_CODE_BAIL(err = CompVContextGL::makeCurrent()); // Base class implementation
+	COMPV_CHECK_CODE_BAIL(err = CompVGLContext::makeCurrent()); // Base class implementation
 	COMPV_CHECK_EXP_RETURN(eglMakeCurrent(m_pEGLDisplay, m_pEGLSurface, m_pEGLSurface, m_pEGLContex) != EGL_TRUE, COMPV_ERROR_CODE_E_GL);
 
 bail:
@@ -46,20 +46,20 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVContextGLAndroidEGL::swapBuffers()
+COMPV_ERROR_CODE CompVGLContextAndroidEGL::swapBuffers()
 {
-	COMPV_CHECK_CODE_RETURN(CompVContextGL::swapBuffers()); // Base class implementation
+	COMPV_CHECK_CODE_RETURN(CompVGLContext::swapBuffers()); // Base class implementation
 	COMPV_CHECK_EXP_RETURN(eglSwapBuffers(m_pEGLDisplay, m_pEGLSurface) != EGL_TRUE, COMPV_ERROR_CODE_E_EGL);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVContextGLAndroidEGL::unmakeCurrent()
+COMPV_ERROR_CODE CompVGLContextAndroidEGL::unmakeCurrent()
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
 	//!\\ Order is important: unset context then call base class implementation to unlock
 	COMPV_CHECK_EXP_RETURN(eglMakeCurrent(m_pEGLDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE, COMPV_ERROR_CODE_E_GL);
-	COMPV_CHECK_CODE_BAIL(err = CompVContextGL::unmakeCurrent()); // Base class implementation
+	COMPV_CHECK_CODE_BAIL(err = CompVGLContext::unmakeCurrent()); // Base class implementation
 
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
@@ -68,11 +68,11 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVContextGLAndroidEGL::newObj(CompVContextGLAndroidEGLPtrPtr context, EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex)
+COMPV_ERROR_CODE CompVGLContextAndroidEGL::newObj(CompVGLContextAndroidEGLPtrPtr context, EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
 	COMPV_CHECK_EXP_RETURN(!context || pEGLDisplay == EGL_NO_DISPLAY || pEGLSurface == EGL_NO_SURFACE || pEGLContex == EGL_NO_CONTEXT, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVContextGLAndroidEGLPtr context_ = new CompVContextGLAndroidEGL(pEGLDisplay, pEGLSurface, pEGLContex);
+	CompVGLContextAndroidEGLPtr context_ = new CompVGLContextAndroidEGL(pEGLDisplay, pEGLSurface, pEGLContex);
 	COMPV_CHECK_EXP_RETURN(!context_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
 	*context = context_;
@@ -168,7 +168,7 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::init()
 	COMPV_CHECK_EXP_BAIL(eglSwapInterval(m_pEGLDisplay, 0) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));
 
 	// Create obj context
-	COMPV_CHECK_CODE_RETURN(CompVContextGLAndroidEGL::newObj(&m_ptrContext, m_pEGLDisplay, m_pEGLSurface, m_pEGLContex));
+	COMPV_CHECK_CODE_RETURN(CompVGLContextAndroidEGL::newObj(&m_ptrContext, m_pEGLDisplay, m_pEGLSurface, m_pEGLContex));
 	
 	// Update width and height to set to fullscreen
 	COMPV_CHECK_EXP_BAIL((eglQuerySurface(m_pEGLDisplay, m_pEGLSurface, EGL_WIDTH, &width) != EGL_TRUE), (err = COMPV_ERROR_CODE_E_EGL));
@@ -226,7 +226,7 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::beginDraw()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-CompVContextGLPtr CompVWindowAndroidEGL::context()
+CompVGLContextPtr CompVWindowAndroidEGL::context()
 {
 	return *m_ptrContext;
 }
@@ -248,7 +248,7 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::newObj(CompVWindowAndroidEGLPtrPtr eglWi
 	CompVWindowAndroidEGLPtr eglWindow_ = new CompVWindowAndroidEGL(width, height, title);
 	COMPV_CHECK_EXP_RETURN(!eglWindow_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	COMPV_CHECK_EXP_RETURN(!eglWindow_->isInitialized(), COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	//COMPV_CHECK_CODE_RETURN(CompVContextGLAndroidEGL::newObj(&eglWindow_->m_ptrContext, eglWindow_->m_pEGLDisplay, eglWindow_->m_pEGLSurface, eglWindow_->m_pEGLContex));
+	//COMPV_CHECK_CODE_RETURN(CompVGLContextAndroidEGL::newObj(&eglWindow_->m_ptrContext, eglWindow_->m_pEGLDisplay, eglWindow_->m_pEGLSurface, eglWindow_->m_pEGLContex));
 	*eglWindow = eglWindow_;
 	return COMPV_ERROR_CODE_S_OK;
 }

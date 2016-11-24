@@ -4,15 +4,13 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_DRAWING_OPENGL_CONSTS_GL_H_)
-#define _COMPV_DRAWING_OPENGL_CONSTS_GL_H_
+#if !defined(_COMPV_GL_COMMON_H_)
+#define _COMPV_GL_COMMON_H_
 
-#include "compv/drawing/compv_config.h"
+#include "compv/gl/compv_config.h"
 #include "compv/gl/compv_gl_headers.h"
-#if defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES)
-#include "compv/drawing/compv_program.h"
-#include "compv/base/compv_obj.h"
-#include "compv/drawing/compv_common.h"
+#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
+#include "compv/base/compv_common.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -29,17 +27,17 @@ static const GLint kCompVGLNameSystemFrameBuffer = 0;
 static const GLint kCompVGLNameSystemRenderBuffer = 0;
 
 static const CompVGLVertex kCompVGLTexture2DVertices[] = {
-	{ { 1.f, -1.f, 0.f }, { 1.f, 1.f } },
-	{ { 1.f, 1.f, 0.f }, { 1.f, 0.f } },
-	{ { -1.f, 1.f, 0.f }, { 0.f, 0.f } },
-	{ { -1.f, -1.f, 0.f }, { 0.f, 1.f } }
+	{ { 1.f, -1.f, 0.f },{ 1.f, 1.f } },
+	{ { 1.f, 1.f, 0.f },{ 1.f, 0.f } },
+	{ { -1.f, 1.f, 0.f },{ 0.f, 0.f } },
+	{ { -1.f, -1.f, 0.f },{ 0.f, 1.f } }
 };
 
 static const CompVGLVertex kCompVGLScreenVertices[] = {
-	{ { 1.f, -1.f, 0.f }, { 1.f,  0.f } },
-	{ { 1.f, 1.f, 0.f }, { 1.f, 1.f } },
-	{ { -1.f, 1.f, 0.f }, { 0.f, 1.f } },
-	{ { -1.f, -1.f, 0.f }, { 0.f, 0.f } }
+	{ { 1.f, -1.f, 0.f },{ 1.f,  0.f } },
+	{ { 1.f, 1.f, 0.f },{ 1.f, 1.f } },
+	{ { -1.f, 1.f, 0.f },{ 0.f, 1.f } },
+	{ { -1.f, -1.f, 0.f },{ 0.f, 0.f } }
 };
 
 static const GLubyte kCompVGLTexture2DIndices[] = {
@@ -51,6 +49,6 @@ static const GLsizei kCompVGLTexture2DIndicesCount = sizeof(kCompVGLTexture2DInd
 
 COMPV_NAMESPACE_END()
 
-#endif /* defined(HAVE_OPENGL) ||defined(HAVE_OPENGLES) */
+#endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
 
-#endif /* _COMPV_DRAWING_OPENGL_CONSTS_GL_H_ */
+#endif /* _COMPV_GL_COMMON_H_ */

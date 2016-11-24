@@ -42,9 +42,6 @@
     <ClCompile Include="..\compv_image_libjpeg.cxx">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\compv_program.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\compv_renderer.cxx">
       <Filter>source</Filter>
     </ClCompile>
@@ -57,9 +54,6 @@
     <ClCompile Include="..\sdl\compv_window_sdl.cxx">
       <Filter>source\sdl</Filter>
     </ClCompile>
-    <ClCompile Include="..\opengl\compv_program_gl.cxx">
-      <Filter>source\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="..\opengl\compv_renderer_gl.cxx">
       <Filter>source\opengl</Filter>
     </ClCompile>
@@ -70,9 +64,6 @@
       <Filter>source\opengl</Filter>
     </ClCompile>
     <ClCompile Include="..\opengl\compv_surface_gl.cxx">
-      <Filter>source\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\opengl\compv_utils_gl.cxx">
       <Filter>source\opengl</Filter>
     </ClCompile>
     <ClCompile Include="..\opengl\compv_window_glfw3.cxx">
@@ -93,17 +84,11 @@
     <ClCompile Include="..\compv_mvp.cxx">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\opengl\compv_fbo_gl.cxx">
-      <Filter>source\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="..\opengl\compv_blitter_gl.cxx">
       <Filter>source\opengl</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_viewport.cxx">
       <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\opengl\compv_context_gl.cxx">
-      <Filter>source\opengl</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_surfacelayer.cxx">
       <Filter>source</Filter>
@@ -140,9 +125,6 @@
     <ClInclude Include="..\include\compv\drawing\compv_image_libjpeg.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\compv_program.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\drawing\compv_renderer.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -155,9 +137,6 @@
     <ClInclude Include="..\include\compv\drawing\sdl\compv_window_sdl.h">
       <Filter>include\sdl</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\opengl\compv_program_gl.h">
-      <Filter>include\opengl</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\drawing\opengl\compv_renderer_gl.h">
       <Filter>include\opengl</Filter>
     </ClInclude>
@@ -168,9 +147,6 @@
       <Filter>include\opengl</Filter>
     </ClInclude>
     <ClInclude Include="..\include\compv\drawing\opengl\compv_surface_gl.h">
-      <Filter>include\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\opengl\compv_utils_gl.h">
       <Filter>include\opengl</Filter>
     </ClInclude>
     <ClInclude Include="..\include\compv\drawing\opengl\compv_window_glfw3.h">
@@ -194,26 +170,17 @@
     <ClInclude Include="..\include\compv\drawing\compv_mvp.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\opengl\compv_fbo_gl.h">
-      <Filter>include\opengl</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\drawing\opengl\compv_blitter_gl.h">
       <Filter>include\opengl</Filter>
     </ClInclude>
     <ClInclude Include="..\include\compv\drawing\compv_viewport.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\opengl\compv_context_gl.h">
-      <Filter>include\opengl</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\drawing\compv_common.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\compv\drawing\compv_surfacelayer.h">
       <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\opengl\compv_consts_gl.h">
-      <Filter>include\opengl</Filter>
     </ClInclude>
     <ClInclude Include="..\include\compv\drawing\compv_surfacelayer_matching.h">
       <Filter>include</Filter>

@@ -27,7 +27,7 @@ COMPV_ERROR_CODE CompVGLInfo::gather()
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_DEBUG_INFO("Gathering GL info...");
-	COMPV_CHECK_EXP_RETURN(!COMPVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	const char* extensions = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
 	COMPV_DEBUG_INFO("OpenGL version string: %s", glGetString(GL_VERSION));

@@ -8,6 +8,8 @@
 #include "compv/gl/compv_gl.h"
 #include "compv/gl/compv_gl_headers.h"
 #include "compv/gl/compv_gl_vao.h"
+#include "compv/gl/compv_gl_utils.h"
+#include "compv/gl/compv_gl_common.h"
 #include "compv/base/compv_debug.h"
 #include "compv/base/compv_base.h"
 
@@ -79,6 +81,24 @@ COMPV_ERROR_CODE CompVGL::deInit()
 
 	return COMPV_ERROR_CODE_S_OK;
 }
+
+#if defined(HAVE_GL_GLEW_H)
+COMPV_ERROR_CODE CompVGL::glewInit()
+{
+	static bool sbGlewInitialized = false;
+	if (!sbGlewInitialized) {
+		COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+		GLenum glewErr = ::glewInit();
+		if (GLEW_OK != glewErr) {
+			COMPV_DEBUG_ERROR_EX("GLEW", "glewInit for [gl] module failed: %s", glewGetErrorString(glewErr));
+			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GLEW);
+		}
+		COMPV_DEBUG_INFO_EX("GLEW", "glewInit for [gl] module succeeded");
+		sbGlewInitialized = true;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+#endif /* HAVE_GL_GLEW_H */
 
 COMPV_NAMESPACE_END()
 

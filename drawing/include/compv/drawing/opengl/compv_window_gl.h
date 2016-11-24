@@ -11,7 +11,6 @@
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/opengl/compv_surface_gl.h"
-#include "compv/drawing/opengl/compv_context_gl.h"
 #include "compv/drawing/opengl/compv_surfacelayer_gl_matching.h"
 #include "compv/drawing/opengl/compv_surfacelayer_gl_multi.h"
 #include "compv/drawing/opengl/compv_surfacelayer_gl_single.h"
@@ -20,6 +19,7 @@
 #include "compv/drawing/compv_common.h"
 #include "compv/base/parallel/compv_mutex.h"
 #include "compv/base/compv_autolock.h"
+#include "compv/gl/compv_gl_context.h"
 
 #include <vector>
 
@@ -61,7 +61,7 @@ public:
 	virtual COMPV_ERROR_CODE priv_updateSize(size_t newWidth, size_t newHeight);
 
 protected:
-	virtual CompVContextGLPtr context() = 0;
+	virtual CompVGLContextPtr context() = 0;
 
 private:
 	bool m_bDrawing;

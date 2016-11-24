@@ -9,7 +9,6 @@
 
 #include "compv/drawing/compv_config.h"
 #include "compv/base/compv_common.h"
-#include "compv/gl/compv_common.h"
 
 COMPV_NAMESPACE_BEGIN()
 

@@ -116,15 +116,18 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	}
 	COMPV_CHECK_EXP_BAIL(SDL_GL_MakeCurrent(s_pSDLMainWindow, s_pSDLMainContext) != 0, COMPV_ERROR_CODE_E_SDL);
 #	if defined(HAVE_GL_GLEW_H)
+	COMPV_CHECK_EXP_BAIL(!CompVGLUtils::isGLContextSet(), err = COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	GLenum glewErr = glewInit();
 	if (GLEW_OK != glewErr) {
-		COMPV_DEBUG_ERROR_EX("GLEW", "glewInit failed: %s", glewGetErrorString(glewErr));
+		COMPV_DEBUG_ERROR_EX("GLEW", "glewInit for [drawing] module failed: %s", glewGetErrorString(glewErr));
 		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_GLEW);
 	}
-	COMPV_DEBUG_INFO_EX("GLEW", "glewInit succeeded");
+	COMPV_DEBUG_INFO_EX("GLEW", "glewInit for [drawing] module succeeded");
 #	endif /* HAVE_GL_GLEW_H */
 	// Gather info (init supported extensions)
 	COMPV_CHECK_CODE_BAIL(err = CompVGLInfo::gather());
+	// Init glew for gl module
+	COMPV_CHECK_CODE_BAIL(err = CompVGL::glewInit());
 #endif /* SDL */
 
 #if (defined(HAVE_JPEGLIB_H) || defined(HAVE_SKIA))
