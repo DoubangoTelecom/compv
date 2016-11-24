@@ -161,6 +161,7 @@
     <ClInclude Include="include\compv\gl\compv_common.h" />
     <ClInclude Include="include\compv\gl\compv_config.h" />
     <ClInclude Include="include\compv\gl\compv_gl.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_func.h" />
     <ClInclude Include="include\compv\gl\compv_gl_info.h" />
     <ClInclude Include="include\compv\gl\compv_gl_headers.h" />
     <ClInclude Include="include\compv\gl\compv_gl_program.h" />

@@ -12,10 +12,14 @@
 #include "compv/drawing/compv_canvas.h"
 #include "compv/drawing/opengl/compv_consts_gl.h"
 #include "compv/drawing/opengl/compv_utils_gl.h"
+#include "compv/gl/compv_gl_func.h"
 
 // FIXME: OpenGL error handling not ok, impossible to find which function cause the error (erros stacked)
 
 static const std::string& kProgramVertexData =
+#	if defined(HAVE_OPENGLES)
+"	precision mediump float;"
+#	endif
 "	attribute vec4 position;"
 "	attribute vec2 texCoord;"
 "	varying vec2 texCoordVarying;"
@@ -79,15 +83,15 @@ COMPV_ERROR_CODE CompVSurfaceGL::drawImage(CompVMatPtr mat, CompVRendererPtrPtr 
 	}
 
 #if 0
-	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
+	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
 	uint8_t* data = (uint8_t*)malloc(640 * 480 * 4);
-	glReadBuffer(GL_COLOR_ATTACHMENT0);
-	glReadPixels(0, 0, 640, 480, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	COMPV_glReadBuffer(GL_COLOR_ATTACHMENT0);
+	COMPV_glReadPixels(0, 0, 640, 480, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	FILE* file = fopen("C:/Projects/image.rgba", "wb+");
 	fwrite(data, 1, (640 * 480 * 4), file);
 	fclose(file);
 	free(data);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); // System's framebuffer
+	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, 0); // System's framebuffer
 #endif
 
 	// FIXME(dmi): remove if 'm_uNameFrameBuffer' is passed as parameter
@@ -107,8 +111,8 @@ COMPV_ERROR_CODE CompVSurfaceGL::canvasBind()
 		COMPV_CHECK_CODE_RETURN(m_ptrCanvasFBO->bind());
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
-	glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
+	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
+	COMPV_glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -120,8 +124,8 @@ COMPV_ERROR_CODE CompVSurfaceGL::canvasUnbind()
 		COMPV_CHECK_CODE_RETURN(m_ptrCanvasFBO->unbind());
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
-	glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
+	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
+	COMPV_glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -134,15 +138,15 @@ COMPV_ERROR_CODE CompVSurfaceGL::blit(const CompVFBOGLPtr ptrFboSrc, const CompV
 
 	COMPV_CHECK_CODE_BAIL(err = CompVBlitterGL::bind()); // bind to VAO and activate the program
 	if (ptrFboDst == kCompVGLPtrSystemFrameBuffer) {
-		glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
-		glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
+		COMPV_glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
+		COMPV_glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
 	}
 	else {
 		COMPV_CHECK_CODE_BAIL(err = ptrFboDst->bind());
 	}
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, ptrFboSrc->nameTexture());
+	COMPV_glActiveTexture(GL_TEXTURE0);
+	COMPV_glBindTexture(GL_TEXTURE_2D, ptrFboSrc->nameTexture());
 	// FIXME: compute once
 	
 	{
@@ -158,19 +162,19 @@ COMPV_ERROR_CODE CompVSurfaceGL::blit(const CompVFBOGLPtr ptrFboSrc, const CompV
 		const GLsizei viewportH = static_cast<GLsizei>(rcViewport.bottom - rcViewport.top);
 		const GLsizei viewportX = static_cast<GLsizei>(rcViewport.left);
 		const GLsizei viewportY = (ptrFboDst == kCompVGLPtrSystemFrameBuffer) ? rcViewport.top : static_cast<GLsizei>(CompVViewport::yFromBottomLeftToTopLeft(static_cast<int>(dstHeight), static_cast<int>(ptrFboSrc->height()), rcViewport.top));
-		glViewport(viewportX, viewportY, viewportW, viewportH);
+		COMPV_glViewport(viewportX, viewportY, viewportW, viewportH);
 	}
 
 	//glViewport(0, 0, static_cast<GLsizei>(dstWidth), static_cast<GLsizei>(dstHeight));
-	glDrawElements(GL_TRIANGLES, CompVBlitterGL::indicesCount(), GL_UNSIGNED_BYTE, 0);
+	COMPV_glDrawElements(GL_TRIANGLES, CompVBlitterGL::indicesCount(), GL_UNSIGNED_BYTE, 0);
 
 bail:
 	COMPV_CHECK_CODE_ASSERT(CompVBlitterGL::unbind());
 	if (ptrFboDst) {
 		COMPV_CHECK_CODE_ASSERT(ptrFboDst->unbind());
 	}
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	COMPV_glActiveTexture(GL_TEXTURE0);
+	COMPV_glBindTexture(GL_TEXTURE_2D, 0);
 	return err;
 }
 

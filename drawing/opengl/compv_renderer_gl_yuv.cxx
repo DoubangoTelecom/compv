@@ -8,6 +8,7 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/opengl/compv_utils_gl.h"
+#include "compv/gl/compv_gl_func.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -53,9 +54,9 @@ COMPV_ERROR_CODE CompVRendererGLYUV::drawImage(CompVMatPtr mat)
 	}
 
 	for (size_t t = 0; t < m_uTexturesCount; ++t) {
-		glActiveTexture(GLenum(GL_TEXTURE0 + t));
-		glBindTexture(GL_TEXTURE_2D, m_uNameTextures[t]);
-		glTexSubImage2D(
+		COMPV_glActiveTexture(GLenum(GL_TEXTURE0 + t));
+		COMPV_glBindTexture(GL_TEXTURE_2D, m_uNameTextures[t]);
+		COMPV_glTexSubImage2D(
 			GL_TEXTURE_2D,
 			0,
 			0,
@@ -65,7 +66,7 @@ COMPV_ERROR_CODE CompVRendererGLYUV::drawImage(CompVMatPtr mat)
 			GL_LUMINANCE,
 			GL_UNSIGNED_BYTE,
 			mat->ptr(0, 0, static_cast<int32_t>(t)));
-		glBindTexture(GL_TEXTURE_2D, 0);
+		COMPV_glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
@@ -87,15 +88,15 @@ COMPV_ERROR_CODE CompVRendererGLYUV::init(CompVMatPtr mat)
 		m_uHeights[compId] = mat->rows(compIdInt32);
 		m_uWidths[compId] = mat->cols(compIdInt32);
 		m_uStrides[compId] = mat->stride(compIdInt32);
-		glGenTextures(1, &m_uNameTextures[compIdInt32]);
-		glActiveTexture(GLenum(GL_TEXTURE0 + compId));
-		glBindTexture(GL_TEXTURE_2D, m_uNameTextures[compId]);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, static_cast<GLsizei>(mat->stride(compIdInt32)), static_cast<GLsizei>(mat->rows(compIdInt32)), 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		COMPV_glGenTextures(1, &m_uNameTextures[compIdInt32]);
+		COMPV_glActiveTexture(GLenum(GL_TEXTURE0 + compId));
+		COMPV_glBindTexture(GL_TEXTURE_2D, m_uNameTextures[compId]);
+		COMPV_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		COMPV_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		COMPV_glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, static_cast<GLsizei>(mat->stride(compIdInt32)), static_cast<GLsizei>(mat->rows(compIdInt32)), 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+		COMPV_glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 bail:
@@ -115,7 +116,7 @@ COMPV_ERROR_CODE CompVRendererGLYUV::deInit()
 	COMPV_CHECK_CODE_RETURN(CompVRendererGL::deInit()); // Base class implementation
 	for (size_t t = 0; t < m_uTexturesCount; ++t) {
 		if (m_uNameTextures[t]) {
-			glDeleteTextures(1, &m_uNameTextures[t]);
+			COMPV_glDeleteTextures(1, &m_uNameTextures[t]);
 			m_uNameTextures[t] = 0;
 		}
 		m_uWidths[t] = 0;

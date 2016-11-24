@@ -9,6 +9,7 @@
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/compv_program.h"
 #include "compv/drawing/opengl/compv_utils_gl.h"
+#include "compv/gl/compv_gl_func.h"
 
 static const std::string& kProgramVertexData =
 "	attribute vec4 position;"
@@ -82,39 +83,39 @@ COMPV_ERROR_CODE CompVRendererGLRGB::drawImage(CompVMatPtr mat)
 	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::bind()); // Bind FBO and VAO
 
 	// Texture 0: RGBA-only format from the surface, this is the destination
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, CompVRendererGL::fbo()->nameTexture());
+	COMPV_glActiveTexture(GL_TEXTURE0);
+	COMPV_glBindTexture(GL_TEXTURE_2D, CompVRendererGL::fbo()->nameTexture());
 
 	// Texture 1: RGB-family format from the renderer, this is the source
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, m_iFormat, static_cast<GLsizei>(mat->stride()), static_cast<GLsizei>(mat->rows()), 0, m_iFormat, GL_UNSIGNED_BYTE, mat->ptr());
+	COMPV_glActiveTexture(GL_TEXTURE1);
+	COMPV_glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
+	COMPV_glTexImage2D(GL_TEXTURE_2D, 0, m_iFormat, static_cast<GLsizei>(mat->stride()), static_cast<GLsizei>(mat->rows()), 0, m_iFormat, GL_UNSIGNED_BYTE, mat->ptr());
 
-	glViewport(0, 0, static_cast<GLsizei>(CompVRendererGL::width()), static_cast<GLsizei>(CompVRendererGL::height()));
-	glDrawElements(GL_TRIANGLES, CompVRendererGL::indicesCount(), GL_UNSIGNED_BYTE, 0);
+	COMPV_glViewport(0, 0, static_cast<GLsizei>(CompVRendererGL::width()), static_cast<GLsizei>(CompVRendererGL::height()));
+	COMPV_glDrawElements(GL_TRIANGLES, CompVRendererGL::indicesCount(), GL_UNSIGNED_BYTE, 0);
 
 	m_uWidth = mat->cols();
 	m_uHeight = mat->rows();
 	m_uStride = mat->stride();
 
 #if 0
-	glBindFramebuffer(GL_FRAMEBUFFER, CompVRendererGL::fbo()->nameFrameBuffer());
+	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, CompVRendererGL::fbo()->nameFrameBuffer());
 	uint8_t* data = (uint8_t*)malloc(m_uWidth * m_uHeight * 4);
-	glReadBuffer(GL_COLOR_ATTACHMENT0);
-	glReadPixels(0, 0, (GLsizei)m_uWidth, (GLsizei)m_uHeight, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	COMPV_glReadBuffer(GL_COLOR_ATTACHMENT0);
+	COMPV_glReadPixels(0, 0, (GLsizei)m_uWidth, (GLsizei)m_uHeight, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	FILE* file = fopen("C:/Projects/image.rgba", "wb+");
 	fwrite(data, 1, (m_uWidth * m_uHeight * 4), file);
 	fclose(file);
 	free(data);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); // System's framebuffer
+	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, 0); // System's framebuffer
 #endif
 
 bail:
 	COMPV_CHECK_CODE_ASSERT(CompVRendererGL::unbind());
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	COMPV_glActiveTexture(GL_TEXTURE1);
+	COMPV_glBindTexture(GL_TEXTURE_2D, 0);
+	COMPV_glActiveTexture(GL_TEXTURE0);
+	COMPV_glBindTexture(GL_TEXTURE_2D, 0);
 
 	return err;
 }
@@ -127,7 +128,7 @@ COMPV_ERROR_CODE CompVRendererGLRGB::deInit()
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_CODE_RETURN(CompVRendererGL::deInit()); // Base class implementation
 	if (m_uNameTexture) {
-		glDeleteTextures(1, &m_uNameTexture);
+		COMPV_glDeleteTextures(1, &m_uNameTexture);
 	}
 
 	m_bInit = false;
@@ -147,23 +148,23 @@ COMPV_ERROR_CODE CompVRendererGLRGB::init(CompVMatPtr mat)
 	COMPV_CHECK_EXP_BAIL(!(ptrProgram = program()), (err = COMPV_ERROR_CODE_E_GL));
 	COMPV_CHECK_CODE_BAIL(err = ptrProgram->useBegin());
 
-	glGenTextures(1, &m_uNameTexture);
-	glActiveTexture(GL_TEXTURE1);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, m_iFormat, static_cast<GLsizei>(mat->stride()), static_cast<GLsizei>(mat->rows()), 0, m_iFormat, GL_UNSIGNED_BYTE, NULL);
+	COMPV_glGenTextures(1, &m_uNameTexture);
+	COMPV_glActiveTexture(GL_TEXTURE1);
+	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	COMPV_glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
+	COMPV_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	COMPV_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	COMPV_glTexImage2D(GL_TEXTURE_2D, 0, m_iFormat, static_cast<GLsizei>(mat->stride()), static_cast<GLsizei>(mat->rows()), 0, m_iFormat, GL_UNSIGNED_BYTE, NULL);
 	m_uNameSampler = glGetUniformLocation(ptrProgram->id(), "mySampler");
-	glUniform1i(m_uNameSampler, 1);
+	COMPV_glUniform1i(m_uNameSampler, 1);
 
 bail:
 	if (ptrProgram) {
 		COMPV_CHECK_CODE_ASSERT(ptrProgram->useEnd());
 	}
-	glBindTexture(GL_TEXTURE_2D, 0);
+	COMPV_glBindTexture(GL_TEXTURE_2D, 0);
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
 		COMPV_CHECK_CODE_ASSERT(deInit());
 		m_bInit = false;

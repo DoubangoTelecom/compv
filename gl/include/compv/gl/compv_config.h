@@ -20,4 +20,8 @@
 #	define COMPV_GL_API
 #endif
 
+#if !defined(COMPV_GL_DEBUG) && (defined(DEBUG) || defined(_DEBUG))
+#	define COMPV_GL_DEBUG 1
+#endif
+
 #endif /* _COMPV_GL_CONFIG_H_ */

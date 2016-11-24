@@ -39,6 +39,9 @@
     <ClInclude Include="include\compv\gl\compv_gl_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\gl\compv_gl_func.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_gl.cxx">

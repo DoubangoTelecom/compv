@@ -25,6 +25,10 @@ COMPV_ERROR_CODE CompVGL::init()
 
 	COMPV_DEBUG_INFO("Initializing [gl] module (v %s)...", COMPV_VERSION_STRING);
 
+#if COMPV_GL_DEBUG
+	COMPV_DEBUG_INFO_CODE_ONCE("COMPV_GL_DEBUG enabled");
+#endif
+
 	COMPV_CHECK_CODE_BAIL(err = CompVBase::init());
 
 	/* Print Android API version */
@@ -59,6 +63,7 @@ bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
 		COMPV_CHECK_CODE_ASSERT(CompVGL::deInit());
 	}
+
 	return err;
 }
 	

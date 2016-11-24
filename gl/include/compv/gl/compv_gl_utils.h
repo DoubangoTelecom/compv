@@ -18,11 +18,14 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class COMPVGLUtils
+class COMPV_GL_API COMPVGLUtils
 {
 public:
 	static CompVGLContext currentContext();
 	static bool isGLContextSet() { return COMPVGLUtils::currentContext() != NULL; }
+
+	static COMPV_ERROR_CODE lastError(std::string *error);
+	static COMPV_ERROR_CODE checkLastError();
 };
 
 COMPV_NAMESPACE_END()

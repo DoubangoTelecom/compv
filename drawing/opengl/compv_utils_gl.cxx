@@ -8,6 +8,7 @@
 #include "compv/drawing/compv_drawing.h"
 #include "compv/base/compv_fileutils.h"
 #include "compv/base/compv_mem.h"
+#include "compv/gl/compv_gl_func.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -77,7 +78,7 @@ COMPV_ERROR_CODE CompVUtilsGL::shadDelete(GLuint* uShad)
 {
 	COMPV_CHECK_EXP_RETURN(!uShad, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	if (CompVUtilsGL::shadIsValid(*uShad)) {
-		glDeleteShader(*uShad);
+		COMPV_glDeleteShader(*uShad);
 	}
 	*uShad = 0;
 	return COMPV_ERROR_CODE_S_OK;
@@ -133,7 +134,7 @@ COMPV_ERROR_CODE CompVUtilsGL::shadSetSource(GLuint uShad, GLsizei count, const 
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::shadIsValid(uShad) || count <= 0 || !string || !*string, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	std::string errString_;
-	glShaderSource(uShad, count, string, length);
+	COMPV_glShaderSource(uShad, count, string, length);
 	COMPV_CHECK_CODE_RETURN(CompVUtilsGL::getLastError(&errString_));
 	if (!errString_.empty()) {
 		COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "glShaderSource failed: %s", errString_.c_str());
@@ -164,7 +165,7 @@ COMPV_ERROR_CODE CompVUtilsGL::shadCompile(GLuint uShad)
 {
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::shadIsValid(uShad), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	std::string errString_;
-	glCompileShader(uShad);
+	COMPV_glCompileShader(uShad);
 	COMPV_CHECK_CODE_RETURN(CompVUtilsGL::shadCompileGetStatus(uShad, &errString_));
 	if (!errString_.empty()) {
 		COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "glCompileShader failed: %s", errString_.c_str());
@@ -177,16 +178,16 @@ COMPV_ERROR_CODE CompVUtilsGL::shadCompileGetStatus(GLuint uShad, std::string *e
 {
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::shadIsValid(uShad) || !error, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	GLint ok_ = 0;
-	glGetShaderiv(uShad, GL_COMPILE_STATUS, &ok_);
+	COMPV_glGetShaderiv(uShad, GL_COMPILE_STATUS, &ok_);
 	if (ok_ == GL_FALSE) {
 		*error = "Unknown error";
 		GLint maxLength = 0;
-		glGetShaderiv(uShad, GL_INFO_LOG_LENGTH, &maxLength);
+		COMPV_glGetShaderiv(uShad, GL_INFO_LOG_LENGTH, &maxLength);
 		if (maxLength > 0) {
 			GLchar* infoLog = static_cast<GLchar*>(CompVMem::malloc(maxLength + 1));
 			if (infoLog) {
 				infoLog[maxLength] = '\0';
-				glGetShaderInfoLog(uShad, maxLength, &maxLength, infoLog);
+				COMPV_glGetShaderInfoLog(uShad, maxLength, &maxLength, infoLog);
 				*error = std::string((const char*)infoLog, maxLength);
 				CompVMem::free((void**)&infoLog);
 			}
@@ -202,7 +203,7 @@ COMPV_ERROR_CODE CompVUtilsGL::shadAttach(GLuint uPrg, GLuint uShad)
 {
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::prgIsValid(uPrg) || !CompVUtilsGL::shadIsValid(uShad), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	std::string errString_;
-	glAttachShader(uPrg, uShad);
+	COMPV_glAttachShader(uPrg, uShad);
 	COMPV_CHECK_CODE_RETURN(CompVUtilsGL::getLastError(&errString_));
 	if (!errString_.empty()) {
 		COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "glAttachShader failed: %s", errString_.c_str());
@@ -215,14 +216,14 @@ COMPV_ERROR_CODE CompVUtilsGL::texCreate(GLuint* uTex)
 {
 	COMPV_CHECK_EXP_RETURN(!uTex, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	*uTex = 0;
-	glGenTextures(1, uTex); // returned value not texture yet until bind() is called
+	COMPV_glGenTextures(1, uTex); // returned value not texture yet until bind() is called
 	if (!uTex) {
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
 	}
 	std::string errString_;
 	COMPV_CHECK_CODE_RETURN(CompVUtilsGL::getLastError(&errString_));
 	if (!errString_.empty()) {
-		glDeleteTextures(1, uTex);
+		COMPV_glDeleteTextures(1, uTex);
 		*uTex = 0;
 		COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "glGenTextures failed: %s", errString_.c_str());
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
@@ -234,7 +235,7 @@ COMPV_ERROR_CODE CompVUtilsGL::texDelete(GLuint* uTex)
 {
 	// A texture is really a texture only after bind() -> do not use IsValid()
 	if (uTex && *uTex) {
-		glDeleteTextures(1, uTex);
+		COMPV_glDeleteTextures(1, uTex);
 		*uTex = 0;
 	}
 	return COMPV_ERROR_CODE_S_OK;
@@ -254,7 +255,7 @@ COMPV_ERROR_CODE CompVUtilsGL::texGetCurrent(GLuint* uTex)
 {
 	COMPV_CHECK_EXP_RETURN(!uTex, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	GLint text_ = 0;
-	glGetIntegerv(GL_TEXTURE_BINDING_2D, &text_);
+	COMPV_glGetIntegerv(GL_TEXTURE_BINDING_2D, &text_);
 	*uTex = static_cast<GLuint>(text_);
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -262,7 +263,7 @@ COMPV_ERROR_CODE CompVUtilsGL::texGetCurrent(GLuint* uTex)
 COMPV_ERROR_CODE CompVUtilsGL::texSetCurrent(GLuint uTex, bool checkErr /*= false*/)
 {
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::texIsValid(uTex), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	glBindTexture(GL_TEXTURE_2D, uTex);
+	COMPV_glBindTexture(GL_TEXTURE_2D, uTex);
 	if (checkErr) {
 		std::string errString_;
 		COMPV_CHECK_CODE_RETURN(CompVUtilsGL::getLastError(&errString_));
@@ -293,7 +294,7 @@ COMPV_ERROR_CODE CompVUtilsGL::prgDelete(GLuint* uPrg)
 {
 	if (uPrg) {
 		if (CompVUtilsGL::prgIsValid(*uPrg)) {
-			glDeleteProgram(*uPrg);
+			COMPV_glDeleteProgram(*uPrg);
 		}
 		*uPrg = 0;
 	}
@@ -309,7 +310,7 @@ bool CompVUtilsGL::prgIsCurrent(GLuint uPrg)
 {
 	if (CompVUtilsGL::prgIsValid(uPrg)) {
 		GLuint prg_ = 0;
-		glGetIntegerv(GL_CURRENT_PROGRAM, (GLint*)&prg_);
+		COMPV_glGetIntegerv(GL_CURRENT_PROGRAM, (GLint*)&prg_);
 		return (prg_ == uPrg);
 	}
 	return false;
@@ -318,7 +319,7 @@ bool CompVUtilsGL::prgIsCurrent(GLuint uPrg)
 COMPV_ERROR_CODE CompVUtilsGL::prgLink(GLuint uPrg)
 {
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::prgIsValid(uPrg), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	glLinkProgram(uPrg);
+	COMPV_glLinkProgram(uPrg);
 	std::string errString_;
 	COMPV_CHECK_CODE_RETURN(CompVUtilsGL::prgLinkGetStatus(uPrg, &errString_));
 	if (!errString_.empty()) {
@@ -332,16 +333,16 @@ COMPV_ERROR_CODE CompVUtilsGL::prgLinkGetStatus(GLuint uPrg, std::string *error)
 {
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::prgIsValid(uPrg) || !error, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	GLint ok_ = 0;
-	glGetProgramiv(uPrg, GL_LINK_STATUS, (int *)&ok_);
+	COMPV_glGetProgramiv(uPrg, GL_LINK_STATUS, (int *)&ok_);
 	if (ok_ == GL_FALSE) {
 		*error = "Unknown error";
 		GLint maxLength = 0;
-		glGetProgramiv(uPrg, GL_INFO_LOG_LENGTH, &maxLength);
+		COMPV_glGetProgramiv(uPrg, GL_INFO_LOG_LENGTH, &maxLength);
 		if (maxLength > 0) {
 			GLchar* infoLog = static_cast<GLchar*>(CompVMem::malloc(maxLength + 1));
 			if (infoLog) {
 				infoLog[maxLength] = '\0';
-				glGetProgramInfoLog(uPrg, maxLength, &maxLength, infoLog);
+				COMPV_glGetProgramInfoLog(uPrg, maxLength, &maxLength, infoLog);
 				*error = std::string((const char*)infoLog, maxLength);
 			}
 			else {
@@ -355,7 +356,7 @@ COMPV_ERROR_CODE CompVUtilsGL::prgLinkGetStatus(GLuint uPrg, std::string *error)
 COMPV_ERROR_CODE CompVUtilsGL::prgUseBegin(GLuint uPrg, bool checkErr /*= false*/)
 {
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::prgIsValid(uPrg), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	glUseProgram(uPrg);
+	COMPV_glUseProgram(uPrg);
 	if (checkErr) {
 		std::string errString_;
 		COMPV_CHECK_CODE_RETURN(CompVUtilsGL::getLastError(&errString_));
@@ -371,7 +372,7 @@ COMPV_ERROR_CODE CompVUtilsGL::prgUseEnd(GLuint uPrg, bool checkErr /*= false*/)
 {
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::prgIsValid(uPrg), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	if (CompVUtilsGL::prgIsCurrent(uPrg)) {
-		glUseProgram(0);
+		COMPV_glUseProgram(0);
 	}
 	else {
 		COMPV_DEBUG_WARN("Program (%u) not in use", uPrg);

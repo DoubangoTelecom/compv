@@ -7,6 +7,7 @@
 #include "compv/drawing/skia/compv_canvas_skia.h"
 #if HAVE_SKIA
 #include "compv/gl/compv_gl_headers.h"
+#include "compv/gl/compv_gl_func.h"
 #include "compv/base/compv_base.h"
 
 #include <GrContext.h>
@@ -63,8 +64,8 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textL
 	//GrContext *sContext = NULL;
 	SkSurface *sSurface = NULL;
 
-	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &bufferWidth);
-	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &bufferHeight);
+	COMPV_glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &bufferWidth);
+	COMPV_glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &bufferHeight);
 	COMPV_CHECK_EXP_RETURN(!bufferWidth || !bufferHeight, COMPV_ERROR_CODE_E_GL);
 
 	// setup GrContext
@@ -121,7 +122,7 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textL
 	desc.fStencilBits = kStencilBits;
 	
 	GLint buffer;
-	glGetIntegerv(GLenum(GL_FRAMEBUFFER_BINDING), &buffer);
+	COMPV_glGetIntegerv(GLenum(GL_FRAMEBUFFER_BINDING), &buffer);
 	if (!buffer) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED_GPU();
 	}
@@ -212,8 +213,8 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawLine(int x0, int y0, int x1, int y1)
 	GLint bufferWidth = 0, bufferHeight = 0;
 	SkSurface *sSurface = NULL;
 
-	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &bufferWidth);
-	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &bufferHeight);
+	COMPV_glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &bufferWidth);
+	COMPV_glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &bufferHeight);
 	COMPV_CHECK_EXP_RETURN(!bufferWidth || !bufferHeight, COMPV_ERROR_CODE_E_GL);
 
 	// setup GrContext
@@ -241,7 +242,7 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawLine(int x0, int y0, int x1, int y1)
 	desc.fStencilBits = kStencilBits;
 
 	GLint buffer;
-	glGetIntegerv(GLenum(GL_FRAMEBUFFER_BINDING), &buffer);
+	COMPV_glGetIntegerv(GLenum(GL_FRAMEBUFFER_BINDING), &buffer);
 	if (!buffer) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED_GPU();
 	}

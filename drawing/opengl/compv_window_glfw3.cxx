@@ -33,11 +33,11 @@ CompVWindowGLFW3::CompVWindowGLFW3(int width, int height, const char* title)
 		return;
 	}
 	COMPV_CHECK_CODE_ASSERT(CompVMutex::newObj(&m_GLFWMutex));
-	glfwSetWindowUserPointer(m_pGLFWwindow, this);
-	glfwSetWindowCloseCallback(m_pGLFWwindow, CompVWindowGLFW3::GLFWwindowcloseCallback);
-	glfwMakeContextCurrent(m_pGLFWwindow);
-	glfwSwapInterval(1);
-	glfwMakeContextCurrent(NULL);
+	COMPV_glfwSetWindowUserPointer(m_pGLFWwindow, this);
+	COMPV_glfwSetWindowCloseCallback(m_pGLFWwindow, CompVWindowGLFW3::GLFWwindowcloseCallback);
+	COMPV_glfwMakeContextCurrent(m_pGLFWwindow);
+	COMPV_glfwSwapInterval(1);
+	COMPV_glfwMakeContextCurrent(NULL);
 }
 
 CompVWindowGLFW3::~CompVWindowGLFW3()
@@ -56,8 +56,8 @@ COMPV_ERROR_CODE CompVWindowGLFW3::close()
 {
 	COMPV_CHECK_CODE_ASSERT(m_GLFWMutex->lock());
 	if (m_pGLFWwindow) {
-		glfwSetWindowShouldClose(m_pGLFWwindow, GLFW_TRUE);
-		glfwDestroyWindow(m_pGLFWwindow);
+		COMPV_glfwSetWindowShouldClose(m_pGLFWwindow, GLFW_TRUE);
+		COMPV_glfwDestroyWindow(m_pGLFWwindow);
 		m_pGLFWwindow = NULL;
 	}
 	COMPV_CHECK_CODE_ASSERT(m_GLFWMutex->unlock());
@@ -75,10 +75,10 @@ COMPV_ERROR_CODE CompVWindowGLFW3::draw(CompVMatPtr mat)
 		return COMPV_ERROR_CODE_W_WINDOW_CLOSED;
 	}
 	if (!glfwWindowShouldClose(m_pGLFWwindow)) {
-		glfwMakeContextCurrent(m_pGLFWwindow);
+		COMPV_glfwMakeContextCurrent(m_pGLFWwindow);
 #if 0
-		glClear(GL_COLOR_BUFFER_BIT);
-		glClearColor((GLclampf)(rand() % 255) / 255.f,
+		COMPV_glClear(GL_COLOR_BUFFER_BIT);
+		COMPV_glClearColor((GLclampf)(rand() % 255) / 255.f,
 			(GLclampf)(rand() % 255) / 255.f,
 			(GLclampf)(rand() % 255) / 255.f,
 			(GLclampf)(rand() % 255) / 255.f);
@@ -92,19 +92,19 @@ COMPV_ERROR_CODE CompVWindowGLFW3::draw(CompVMatPtr mat)
 
 		static GLuint tex = 0;
 		if (!tex) {
-			glGenTextures(1, &tex);
+			COMPV_glGenTextures(1, &tex);
 			/* OpenGL-2 or later is assumed; OpenGL-2 supports NPOT textures. */
-			glBindTexture(GL_TEXTURE_2D, tex);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			COMPV_glBindTexture(GL_TEXTURE_2D, tex);
+			COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			if ((mat->stride() & 3)) { // multiple of 4?
-				glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)mat->stride());
-				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+				COMPV_glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)mat->stride());
+				COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 			}
 
-			glTexImage2D(
+			COMPV_glTexImage2D(
 				GL_TEXTURE_2D,
 				0,
 				GL_RGB,
@@ -114,18 +114,18 @@ COMPV_ERROR_CODE CompVWindowGLFW3::draw(CompVMatPtr mat)
 				GL_RGB,
 				GL_UNSIGNED_BYTE,
 				NULL);
-			glBindTexture(GL_TEXTURE_2D, 0);
+			COMPV_glBindTexture(GL_TEXTURE_2D, 0);
 		}
 
-		glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_FALSE);
-		glPixelStorei(GL_UNPACK_LSB_FIRST, GL_TRUE);
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-		glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-		glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		COMPV_glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_FALSE);
+		COMPV_glPixelStorei(GL_UNPACK_LSB_FIRST, GL_TRUE);
+		COMPV_glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+		COMPV_glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+		COMPV_glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+		COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-		glBindTexture(GL_TEXTURE_2D, tex);
-		glTexSubImage2D(
+		COMPV_glBindTexture(GL_TEXTURE_2D, tex);
+		COMPV_glTexSubImage2D(
 			GL_TEXTURE_2D,
 			0,
 			0,
@@ -138,36 +138,36 @@ COMPV_ERROR_CODE CompVWindowGLFW3::draw(CompVMatPtr mat)
 
 		COMPV_CHECK_CODE_ASSERT(m_Program->useBegin());
 
-		glClearColor(0.f, 0.f, 0.f, 1.f);
+		COMPV_glClearColor(0.f, 0.f, 0.f, 1.f);
 		int width, height;
-		glfwGetFramebufferSize(m_pGLFWwindow, &width, &height);
-		glViewport(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		gluOrtho2D((GLdouble)0, static_cast<GLdouble>(mat->stride()), static_cast<GLdouble>(mat->rows()), (GLdouble)0); // glOrtho((GLdouble)0, (GLdouble)m_nWidth, (GLdouble)m_nWidth, (GLdouble)0, (GLdouble)-1, (GLdouble)1);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
+		COMPV_glfwGetFramebufferSize(m_pGLFWwindow, &width, &height);
+		COMPV_glViewport(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
+		COMPV_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		COMPV_glEnable(GL_DEPTH_TEST);
+		COMPV_glMatrixMode(GL_PROJECTION);
+		COMPV_glLoadIdentity();
+		COMPV_gluOrtho2D((GLdouble)0, static_cast<GLdouble>(mat->stride()), static_cast<GLdouble>(mat->rows()), (GLdouble)0); // glOrtho((GLdouble)0, (GLdouble)m_nWidth, (GLdouble)m_nWidth, (GLdouble)0, (GLdouble)-1, (GLdouble)1);
+		COMPV_glMatrixMode(GL_MODELVIEW);
+		COMPV_glLoadIdentity();
 
-		glBegin(GL_QUADS);
-		glTexCoord2i(0, 0);
-		glVertex2i(0, 0);
-		glTexCoord2i(0, 1);
-		glVertex2i(0, static_cast<GLint>(mat->rows()));
-		glTexCoord2i(1, 1);
-		glVertex2i(static_cast<GLint>(mat->stride()), static_cast<GLint>(mat->rows()));
-		glTexCoord2i(1, 0);
-		glVertex2i(static_cast<GLint>(mat->stride()), 0);
-		glEnd();
+		COMPV_glBegin(GL_QUADS);
+		COMPV_glTexCoord2i(0, 0);
+		COMPV_glVertex2i(0, 0);
+		COMPV_glTexCoord2i(0, 1);
+		COMPV_glVertex2i(0, static_cast<GLint>(mat->rows()));
+		COMPV_glTexCoord2i(1, 1);
+		COMPV_glVertex2i(static_cast<GLint>(mat->stride()), static_cast<GLint>(mat->rows()));
+		COMPV_glTexCoord2i(1, 0);
+		COMPV_glVertex2i(static_cast<GLint>(mat->stride()), 0);
+		COMPV_glEnd();
 
 		COMPV_CHECK_CODE_ASSERT(m_Program->useEnd());
 
-		glBindTexture(GL_TEXTURE_2D, 0);
+		COMPV_glBindTexture(GL_TEXTURE_2D, 0);
 #endif
 
-		glfwSwapBuffers(m_pGLFWwindow);
-		glfwMakeContextCurrent(NULL);
+		COMPV_glfwSwapBuffers(m_pGLFWwindow);
+		COMPV_glfwMakeContextCurrent(NULL);
 	}
 	COMPV_CHECK_CODE_ASSERT(m_GLFWMutex->unlock());
 
@@ -193,8 +193,8 @@ void CompVWindowGLFW3::GLFWwindowcloseCallback(GLFWwindow* window)
 	COMPV_ASSERT(window == This->m_pGLFWwindow);
 	COMPV_CHECK_CODE_ASSERT(This->m_GLFWMutex->lock());
 	COMPV_CHECK_CODE_ASSERT(This->unregister());
-	glfwSetWindowUserPointer(This->m_pGLFWwindow, NULL);
-	glfwDestroyWindow(This->m_pGLFWwindow);
+	COMPV_glfwSetWindowUserPointer(This->m_pGLFWwindow, NULL);
+	COMPV_glfwDestroyWindow(This->m_pGLFWwindow);
 	This->m_pGLFWwindow = NULL;
 	COMPV_CHECK_CODE_ASSERT(This->m_GLFWMutex->unlock());
 }

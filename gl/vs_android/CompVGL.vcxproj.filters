@@ -53,5 +53,8 @@
     <ClInclude Include="..\include\compv\gl\compv_gl_utils.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\gl\compv_gl_func.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

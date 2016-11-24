@@ -9,6 +9,7 @@
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/opengl/compv_utils_gl.h"
 #include "compv/gl/compv_gl_info.h"
+#include "compv/gl/compv_gl_func.h"
 
 #define COMPV_THIS_CLASS_NAME "CompVWindowGL"
 
@@ -47,16 +48,16 @@ COMPV_ERROR_CODE CompVWindowGL::beginDraw()
 	COMPV_CHECK_CODE_BAIL(err = context()->makeCurrent());
 	COMPV_CHECK_CODE_BAIL(err = CompVGLInfo::gather()); // now that the context is set gather the info and set the supported extensions
 	
-	glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
-	glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
+	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
+	COMPV_glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
 	// TODO(dmi): 'GL_DEPTH_TEST' not working with skia:  we need to use 'glPushAttrib(GL_ALL_ATTRIB_BITS); glPopAttrib();' before/after canvas drawing
 	// 'GL_DEPTH_TEST' is needed for 3D projection
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
-	glViewport(0, 0, static_cast<GLsizei>(CompVWindow::width()), static_cast<GLsizei>(CompVWindow::height())); // FIXME: width and height must be dynamic
-	glClearColor(0.f, 0.f, 0.f, 1.f);
-	glClearStencil(0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	COMPV_glDisable(GL_DEPTH_TEST);
+	COMPV_glDisable(GL_BLEND);
+	COMPV_glViewport(0, 0, static_cast<GLsizei>(CompVWindow::width()), static_cast<GLsizei>(CompVWindow::height())); // FIXME: width and height must be dynamic
+	COMPV_glClearColor(0.f, 0.f, 0.f, 1.f);
+	COMPV_glClearStencil(0);
+	COMPV_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	
 	// Clear surfaces
 	//for (std::vector<CompVSurfaceGLPtr >::iterator it = m_vecGLSurfaces.begin(); it != m_vecGLSurfaces.end(); ++it) {

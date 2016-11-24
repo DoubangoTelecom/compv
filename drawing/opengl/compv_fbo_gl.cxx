@@ -9,6 +9,7 @@
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/opengl/compv_utils_gl.h"
 #include "compv/drawing/opengl/compv_consts_gl.h"
+#include "compv/gl/compv_gl_func.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -34,8 +35,8 @@ COMPV_ERROR_CODE CompVFBOGL::bind()const
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
-	glBindRenderbuffer(GL_RENDERBUFFER, m_uNameDepthStencil);
+	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
+	COMPV_glBindRenderbuffer(GL_RENDERBUFFER, m_uNameDepthStencil);
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -44,8 +45,8 @@ COMPV_ERROR_CODE CompVFBOGL::unbind()const
 {
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
-	glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
+	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
+	COMPV_glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -70,50 +71,50 @@ COMPV_ERROR_CODE CompVFBOGL::init(size_t width, size_t height)
 	std::string errString_;
 	GLenum fboStatus_;
 
-	glActiveTexture(GL_TEXTURE0);
-	glGenTextures(1, &m_uNameTexture);
+	COMPV_glActiveTexture(GL_TEXTURE0);
+	COMPV_glGenTextures(1, &m_uNameTexture);
 	if (!m_uNameTexture) {
 		COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::checkLastError());
 		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
 	}
-	glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	COMPV_glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
+	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	COMPV_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	COMPV_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	COMPV_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 	// Generate a renderbuffer and use it for both for stencil and depth
-	glGenRenderbuffers(1, &m_uNameDepthStencil);
+	COMPV_glGenRenderbuffers(1, &m_uNameDepthStencil);
 	if (!m_uNameDepthStencil) {
 		COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::checkLastError());
 		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
 	}
-	glBindRenderbuffer(GL_RENDERBUFFER, m_uNameDepthStencil);
+	COMPV_glBindRenderbuffer(GL_RENDERBUFFER, m_uNameDepthStencil);
 #if defined(GL_DEPTH24_STENCIL8)
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
+	COMPV_glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 #elif defined(GL_DEPTH24_STENCIL8_OES)
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
+	COMPV_glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 #else
 #	error "Not supported"
 #endif
 
 	// Generate our Framebuffer object
-	glGenFramebuffers(1, &m_uNameFrameBuffer);
+	COMPV_glGenFramebuffers(1, &m_uNameFrameBuffer);
 	if (!m_uNameFrameBuffer) {
 		COMPV_CHECK_CODE_BAIL(err_ = CompVUtilsGL::checkLastError());
 		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
 	}
 
 	// Bind to the FBO for next function
-	glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
+	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
 	// Attach texture to color
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_uNameTexture, 0);
+	COMPV_glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_uNameTexture, 0);
 	// Attach depth buffer
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_uNameDepthStencil);
+	COMPV_glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_uNameDepthStencil);
 	// Attach stencil buffer
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_uNameDepthStencil);
+	COMPV_glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_uNameDepthStencil);
 
 	// Check FBO status
 	if ((fboStatus_ = glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)) {
@@ -127,9 +128,9 @@ COMPV_ERROR_CODE CompVFBOGL::init(size_t width, size_t height)
 	COMPV_DEBUG_INFO("OpenGL FBO successfully created: FBO_id=%u, TEXT_id=%u, DEPTH_id=%u", m_uNameFrameBuffer, m_uNameTexture, m_uNameDepthStencil);
 
 bail:
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	COMPV_glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	COMPV_glBindTexture(GL_TEXTURE_2D, 0);
 	if (COMPV_ERROR_CODE_IS_NOK(err_)) {
 		COMPV_CHECK_CODE_ASSERT(deInit());
 		m_bInit = false;
@@ -145,15 +146,15 @@ COMPV_ERROR_CODE CompVFBOGL::deInit()
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	if (m_uNameTexture) {
-		glDeleteTextures(1, &m_uNameTexture);
+		COMPV_glDeleteTextures(1, &m_uNameTexture);
 		m_uNameTexture = 0;
 	}
 	if (m_uNameDepthStencil) {
-		glDeleteRenderbuffers(1, &m_uNameDepthStencil);
+		COMPV_glDeleteRenderbuffers(1, &m_uNameDepthStencil);
 		m_uNameDepthStencil = 0;
 	}
 	if (m_uNameFrameBuffer) {
-		glDeleteFramebuffers(1, &m_uNameFrameBuffer);
+		COMPV_glDeleteFramebuffers(1, &m_uNameFrameBuffer);
 		m_uNameFrameBuffer = 0;
 	}
 	m_bInit = false;
@@ -169,9 +170,9 @@ COMPV_ERROR_CODE CompVFBOGL::clear()
 	COMPV_CHECK_EXP_RETURN(!CompVUtilsGL::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_ERROR_CODE err;
 	COMPV_CHECK_CODE_BAIL(err = bind());
-	glClearColor(0.f, 0.f, 0.f, 1.f);
-	glClearStencil(0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	COMPV_glClearColor(0.f, 0.f, 0.f, 1.f);
+	COMPV_glClearStencil(0);
+	COMPV_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 bail:
 	COMPV_CHECK_CODE_ASSERT(unbind());
 	return err;
