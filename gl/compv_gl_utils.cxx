@@ -79,6 +79,7 @@ COMPV_ERROR_CODE CompVGLUtils::bufferGen(GLuint* uBuffer)
 {
 	COMPV_CHECK_EXP_RETURN(!uBuffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_glGenBuffers(1, uBuffer);
+	COMPV_DEBUG_INFO_EX(kModuleNameGLUtils, "glGenBuffers returned %u", *uBuffer);
 	if (!CompVGLUtils::isBufferValid(*uBuffer)) {
 		std::string errString;
 		COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString));
@@ -104,6 +105,70 @@ COMPV_ERROR_CODE CompVGLUtils::bufferDelete(GLuint* uBuffer)
 bool CompVGLUtils::isBufferValid(GLuint uBuffer)
 {
 	return uBuffer && glIsBuffer(uBuffer);
+}
+
+COMPV_ERROR_CODE CompVGLUtils::renderBufferGen(GLuint* uRenderBuffer)
+{
+	COMPV_CHECK_EXP_RETURN(!uRenderBuffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_glGenRenderbuffers(1, uRenderBuffer);
+	COMPV_DEBUG_INFO_EX(kModuleNameGLUtils, "glGenRenderbuffers returned %u", *uRenderBuffer);
+	if (!CompVGLUtils::isRenderBufferValid(*uRenderBuffer)) {
+		std::string errString;
+		COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString));
+		if (!errString.empty()) {
+			COMPV_DEBUG_ERROR("Failed to create render buffer: %s", errString.c_str());
+			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
+		}
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVGLUtils::renderBufferDelete(GLuint* uRenderBuffer)
+{
+	COMPV_CHECK_EXP_RETURN(!uRenderBuffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	if (*uRenderBuffer) {
+		COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isRenderBufferValid(*uRenderBuffer), COMPV_ERROR_CODE_E_GL);
+		COMPV_glDeleteRenderbuffers(1, uRenderBuffer);
+		*uRenderBuffer = 0;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+bool CompVGLUtils::isRenderBufferValid(GLuint uRenderBuffer)
+{
+	return uRenderBuffer && glIsRenderbuffer(uRenderBuffer);
+}
+
+COMPV_ERROR_CODE CompVGLUtils::frameBufferGen(GLuint* uFrameBuffer)
+{
+	COMPV_CHECK_EXP_RETURN(!uFrameBuffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_glGenFramebuffers(1, uFrameBuffer);
+	COMPV_DEBUG_INFO_EX(kModuleNameGLUtils, "glGenFramebuffers returned %u", *uFrameBuffer);
+	if (!CompVGLUtils::isFrameBufferValid(*uFrameBuffer)) {
+		std::string errString;
+		COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString));
+		if (!errString.empty()) {
+			COMPV_DEBUG_ERROR("Failed to create frame buffer: %s", errString.c_str());
+			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
+		}
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVGLUtils::frameBufferDelete(GLuint* uFrameBuffer)
+{
+	COMPV_CHECK_EXP_RETURN(!uFrameBuffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	if (*uFrameBuffer) {
+		COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isFrameBufferValid(*uFrameBuffer), COMPV_ERROR_CODE_E_GL);
+		COMPV_glDeleteFramebuffers(1, uFrameBuffer);
+		*uFrameBuffer = 0;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+bool CompVGLUtils::isFrameBufferValid(GLuint uFrameBuffer)
+{
+	return uFrameBuffer && glIsFramebuffer(uFrameBuffer);
 }
 
 COMPV_ERROR_CODE CompVGLUtils::vertexArraysGen(GLuint* uVertexArrays)
@@ -149,6 +214,7 @@ COMPV_ERROR_CODE CompVGLUtils::shaderGen(GLuint* uShader, GLenum shadType)
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	*uShader = 0;
 	GLuint shader_ = COMPV_glCreateShader(shadType);
+	COMPV_DEBUG_INFO_EX(kModuleNameGLUtils, "glCreateShader returned %u", shader_);
 	if (!CompVGLUtils::isShaderValid(shader_)) {
 		std::string errString_;
 		COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::lastError(&errString_));
@@ -267,6 +333,7 @@ COMPV_ERROR_CODE CompVGLUtils::textureGen(GLuint* uTex)
 	COMPV_CHECK_EXP_RETURN(!uTex, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	*uTex = 0;
 	COMPV_glGenTextures(1, uTex); // returned value not texture yet until bind() is called
+	COMPV_DEBUG_INFO_EX(kModuleNameGLUtils, "glGenTextures returned %u", *uTex);
 	if (!*uTex) {
 		std::string errString_;
 		COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString_));
@@ -326,6 +393,7 @@ COMPV_ERROR_CODE CompVGLUtils::programGen(GLuint* uPrg)
 {
 	COMPV_CHECK_EXP_RETURN(!uPrg, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	*uPrg = glCreateProgram();
+	COMPV_DEBUG_INFO_EX(kModuleNameGLUtils, "glCreateProgram returned %u", *uPrg);
 	if (!CompVGLUtils::isProgramValid(*uPrg)) {
 		std::string errString_;
 		COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString_));

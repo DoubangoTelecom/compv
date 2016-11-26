@@ -30,12 +30,9 @@ protected:
 public:
 	virtual ~CompVMatchingSurfaceLayerGL();
 	COMPV_GET_OBJECT_ID(CompVMatchingSurfaceLayerGL);
-
-	// Overrides(CompVMatchingSurfaceLayer)
-	virtual COMPV_ERROR_CODE drawMatches(CompVMatPtr trainImage, CompVMatPtr queryImage) override;
-
-	// Overrides(CompSurfaceLayer)
-	virtual COMPV_ERROR_CODE blit() override;
+	
+	COMPV_OVERRIDE_DECL0("CompVMatchingSurfaceLayer", drawMatches)(CompVMatPtr trainImage, CompVMatPtr queryImage) override;
+	COMPV_OVERRIDE_DECL0("CompSurfaceLayer", blit)() override;
 
 	COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
 
@@ -45,7 +42,6 @@ private:
 	CompVSurfaceGLPtr m_ptrCoverSurfaceGL;
 	CompVSurfaceGLPtr m_ptrTrainSurfaceGL;
 	CompVSurfaceGLPtr m_ptrQuerySurfaceGL;
-	CompVGLFboPtr m_ptrFBO;
 };
 
 COMPV_NAMESPACE_END()

@@ -28,18 +28,18 @@ class CompVRendererGL;
 typedef CompVPtr<CompVRendererGL* > CompVRendererGLPtr;
 typedef CompVRendererGLPtr* CompVRendererGLPtrPtr;
 
-class CompVRendererGL : public CompVRenderer, public CompVGLBlitter
+class CompVRendererGL : public CompVRenderer
 {
 protected:
 	CompVRendererGL(COMPV_PIXEL_FORMAT ePixelFormat);
 public:
 	virtual ~CompVRendererGL();
 	COMPV_GET_OBJECT_ID(CompVRendererGL);
+
+	COMPV_INLINE CompVGLBlitterPtr blitter() { return m_ptrBlitter; }
 	
 	COMPV_OVERRIDE_DECL1("CompVRenderer", bool, isGLEnabled)()const override { return true; };
 	COMPV_OVERRIDE_DECL1("CompVRenderer", CompVCanvasPtr, canvas)() override;
-
-	CompVGLFboPtr fbo() { return m_ptrFBO; }
 
 	static COMPV_ERROR_CODE newObj(CompVRendererGLPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat);
 	
@@ -52,8 +52,8 @@ protected:
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	bool m_bInit;
-	CompVGLFboPtr m_ptrFBO;
 	CompVGLCanvasPtr m_ptrCanvas;
+	CompVGLBlitterPtr m_ptrBlitter;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

@@ -54,8 +54,30 @@ COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLFbo::unbind)()
 COMPV_ERROR_CODE CompVGLFbo::updateSize(size_t width, size_t height)
 {
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-
-	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	
+	if (m_nWidth != width && m_nHeight != height) {
+		if (m_bInit) {
+			GLenum fboStatus_;
+			COMPV_glActiveTexture(GL_TEXTURE0);
+			COMPV_glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
+			COMPV_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+			COMPV_glBindRenderbuffer(GL_RENDERBUFFER, m_uNameDepthStencil);
+#if defined(GL_DEPTH24_STENCIL8)
+			COMPV_glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
+#elif defined(GL_DEPTH24_STENCIL8_OES)
+			COMPV_glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
+#else
+#	error "Not supported"
+#endif
+			COMPV_glCheckFramebufferStatus(&fboStatus_, GL_FRAMEBUFFER);
+			if (fboStatus_ != GL_FRAMEBUFFER_COMPLETE) {
+				COMPV_CHECK_CODE_ASSERT(CompVGLUtils::checkLastError());
+				COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
+			}
+			m_nWidth = width;
+			m_nHeight = height;
+		}
+	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -73,11 +95,7 @@ COMPV_ERROR_CODE CompVGLFbo::init(size_t width, size_t height)
 	GLenum fboStatus_;
 
 	COMPV_glActiveTexture(GL_TEXTURE0);
-	COMPV_glGenTextures(1, &m_uNameTexture);
-	if (!m_uNameTexture) {
-		COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::checkLastError());
-		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
-	}
+	COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::textureGen(&m_uNameTexture));
 	COMPV_glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
 	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	COMPV_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -87,11 +105,7 @@ COMPV_ERROR_CODE CompVGLFbo::init(size_t width, size_t height)
 	COMPV_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 	// Generate a renderbuffer and use it for both for stencil and depth
-	COMPV_glGenRenderbuffers(1, &m_uNameDepthStencil);
-	if (!m_uNameDepthStencil) {
-		COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::checkLastError());
-		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
-	}
+	COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::renderBufferGen(&m_uNameDepthStencil));
 	COMPV_glBindRenderbuffer(GL_RENDERBUFFER, m_uNameDepthStencil);
 #if defined(GL_DEPTH24_STENCIL8)
 	COMPV_glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
@@ -102,12 +116,7 @@ COMPV_ERROR_CODE CompVGLFbo::init(size_t width, size_t height)
 #endif
 
 	// Generate our Framebuffer object
-	COMPV_glGenFramebuffers(1, &m_uNameFrameBuffer);
-	if (!m_uNameFrameBuffer) {
-		COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::checkLastError());
-		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
-	}
-
+	COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::frameBufferGen(&m_uNameFrameBuffer));
 	// Bind to the FBO for next function
 	COMPV_glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
 	// Attach texture to color
@@ -146,19 +155,10 @@ COMPV_ERROR_CODE CompVGLFbo::deInit()
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-
-	if (m_uNameTexture) {
-		COMPV_glDeleteTextures(1, &m_uNameTexture);
-		m_uNameTexture = 0;
-	}
-	if (m_uNameDepthStencil) {
-		COMPV_glDeleteRenderbuffers(1, &m_uNameDepthStencil);
-		m_uNameDepthStencil = 0;
-	}
-	if (m_uNameFrameBuffer) {
-		COMPV_glDeleteFramebuffers(1, &m_uNameFrameBuffer);
-		m_uNameFrameBuffer = 0;
-	}
+	COMPV_CHECK_CODE_ASSERT(CompVGLUtils::textureDelete(&m_uNameTexture));
+	COMPV_CHECK_CODE_ASSERT(CompVGLUtils::renderBufferDelete(&m_uNameDepthStencil));
+	COMPV_CHECK_CODE_ASSERT(CompVGLUtils::frameBufferDelete(&m_uNameFrameBuffer));
+	
 	m_bInit = false;
 
 	return COMPV_ERROR_CODE_S_OK;

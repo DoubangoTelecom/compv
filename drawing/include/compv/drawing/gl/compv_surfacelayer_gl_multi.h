@@ -45,13 +45,9 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVMultiSurfaceLayerGLPtrPtr layer, size_t width, size_t height);
 
 private:
-	COMPV_ERROR_CODE initFBO();
-
-private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	std::map<compv_surface_id_t, CompVSurfaceGLPtr> m_mapSurfaces;
 	CompVSurfaceGLPtr m_ptrCoverSurfaceGL;
-	CompVGLFboPtr m_ptrFBO;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

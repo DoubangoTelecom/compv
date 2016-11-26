@@ -32,6 +32,14 @@ public:
 	static COMPV_ERROR_CODE bufferDelete(GLuint* uBuffer);
 	static bool isBufferValid(GLuint uBuffer);
 
+	static COMPV_ERROR_CODE renderBufferGen(GLuint* uRenderBuffer);
+	static COMPV_ERROR_CODE renderBufferDelete(GLuint* uRenderBuffer);
+	static bool isRenderBufferValid(GLuint uRenderBuffer);
+
+	static COMPV_ERROR_CODE frameBufferGen(GLuint* uFrameBuffer);
+	static COMPV_ERROR_CODE frameBufferDelete(GLuint* uFrameBuffer);
+	static bool isFrameBufferValid(GLuint uFrameBuffer);
+
 	static COMPV_ERROR_CODE vertexArraysGen(GLuint* uVertexArrays);
 	static COMPV_ERROR_CODE vertexArraysDelete(GLuint* uVertexArrays);
 	static bool isVertexArrays(GLuint uVertexArrays);

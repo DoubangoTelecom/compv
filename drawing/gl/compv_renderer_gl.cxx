@@ -16,7 +16,6 @@ COMPV_NAMESPACE_BEGIN()
 
 CompVRendererGL::CompVRendererGL(COMPV_PIXEL_FORMAT ePixelFormat)
 	: CompVRenderer(ePixelFormat)
-	, CompVGLBlitter()
 	, m_bInit(false)
 {
 }
@@ -31,9 +30,9 @@ COMPV_OVERRIDE_IMPL1("CompVRenderer", CompVCanvasPtr, CompVRendererGL::canvas)()
 	if (!m_ptrCanvas) {
 		CompVCanvasImplPtr canvasImpl;
 		COMPV_CHECK_EXP_BAIL(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-		COMPV_CHECK_EXP_BAIL(!m_ptrFBO, COMPV_ERROR_CODE_E_INVALID_STATE);
+		COMPV_CHECK_EXP_BAIL(!m_ptrBlitter->isInitialized(), COMPV_ERROR_CODE_E_INVALID_STATE);
 		COMPV_CHECK_CODE_BAIL(CompVDrawingCanvasImpl::newObj(&canvasImpl));
-		COMPV_CHECK_CODE_BAIL(CompVGLCanvas::newObj(&m_ptrCanvas, m_ptrFBO, canvasImpl));
+		COMPV_CHECK_CODE_BAIL(CompVGLCanvas::newObj(&m_ptrCanvas, m_ptrBlitter->fbo(), canvasImpl));
 	}
 bail:
 	return *m_ptrCanvas;
@@ -50,14 +49,10 @@ COMPV_ERROR_CODE CompVRendererGL::init(CompVMatPtr mat, const std::string& prgVe
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	m_bInit = true; // To make sure deInit() will be fully executed
 
-	// Init/Create FBO
-	if (!m_ptrFBO) {
-		COMPV_CHECK_CODE_BAIL(err = CompVGLFbo::newObj(&m_ptrFBO, mat->cols(), mat->rows()));
-	}
-	// FIXME: call FBO->updateSize
-
+	// Create/Update FBO for the blitter
+	COMPV_CHECK_CODE_BAIL(err = blitter()->requestFBO(mat->cols(), mat->rows()));
 	// Base class implementation
-	COMPV_CHECK_CODE_BAIL(err = CompVGLBlitter::init(mat->cols(), mat->rows(), mat->stride(), prgVertexData, prgFragData, false/*NoMVP*/, false/*NotToScreen*/));
+	COMPV_CHECK_CODE_BAIL(err = m_ptrBlitter->init(mat->cols(), mat->rows(), mat->stride(), prgVertexData, prgFragData, false/*NoMVP*/, false/*NotToScreen*/));
 
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
@@ -74,8 +69,7 @@ COMPV_ERROR_CODE CompVRendererGL::bind()
 	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	COMPV_CHECK_CODE_BAIL(err = m_ptrFBO->bind()); // FBO
-	COMPV_CHECK_CODE_BAIL(err = CompVGLBlitter::bind()); // Base class impl.: VAO
+	COMPV_CHECK_CODE_BAIL(err = m_ptrBlitter->bind()); // Base class impl.: VAO
 
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
@@ -87,9 +81,8 @@ bail:
 COMPV_ERROR_CODE CompVRendererGL::unbind()
 {
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-
-	COMPV_CHECK_CODE_ASSERT(m_ptrFBO->unbind()); // FBO
-	COMPV_CHECK_CODE_ASSERT(CompVGLBlitter::unbind()); // Base class impl.: VAO
+	
+	COMPV_CHECK_CODE_ASSERT(m_ptrBlitter->unbind()); // Base class impl.: VAO
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -101,8 +94,7 @@ COMPV_ERROR_CODE CompVRendererGL::deInit()
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	COMPV_CHECK_CODE_ASSERT(CompVGLBlitter::deInit()); // Base class implementation
-	m_ptrFBO = NULL;
+	COMPV_CHECK_CODE_ASSERT(m_ptrBlitter->deInit()); // Base class implementation
 
 	m_bInit = false;
 	return COMPV_ERROR_CODE_S_OK;
@@ -138,6 +130,7 @@ COMPV_ERROR_CODE CompVRendererGL::newObj(CompVRendererGLPtrPtr glRenderer, COMPV
 		break;
 	}
 	COMPV_CHECK_EXP_RETURN(!glRenderer_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	COMPV_CHECK_CODE_RETURN(CompVGLBlitter::newObj(&glRenderer_->m_ptrBlitter));
 
 	COMPV_CHECK_EXP_RETURN(!(*glRenderer = glRenderer_), COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 	return COMPV_ERROR_CODE_S_OK;

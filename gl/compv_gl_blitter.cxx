@@ -19,12 +19,12 @@ CompVGLBlitter::CompVGLBlitter()
 	, m_nHeight(0)
 	, m_nStride(0)
 	, m_bToScreen(false)
-	, m_uNameVertexBuffer(0)
-	, m_uNameIndiceBuffer(0)
-	, m_uNamePrgAttPosition(0)
-	, m_uNamePrgAttTexCoord(0)
-	, m_uNamePrgUnifMVP(0)
-	, m_uNameVAO(0)
+	, m_uNameVertexBuffer(kCompVGLNameInvalid)
+	, m_uNameIndiceBuffer(kCompVGLNameInvalid)
+	, m_uNamePrgAttPosition(kCompVGLNameInvalid)
+	, m_uNamePrgAttTexCoord(kCompVGLNameInvalid)
+	, m_uNamePrgUnifMVP(kCompVGLNameInvalid)
+	, m_uNameVAO(kCompVGLNameInvalid)
 {
 
 }
@@ -35,10 +35,13 @@ CompVGLBlitter::~CompVGLBlitter()
 }
 
 // Bind to VAO and activate the program
-COMPV_ERROR_CODE CompVGLBlitter::bind()
+COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLBlitter::bind)()
 {
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
+	if (m_ptrFBO) {
+		COMPV_CHECK_CODE_RETURN(m_ptrFBO->bind());
+	}
 	COMPV_CHECK_CODE_RETURN(m_ptrProgram->bind());
 
 	// Because MVP could be dirty we have to send the data again
@@ -64,21 +67,24 @@ COMPV_ERROR_CODE CompVGLBlitter::bind()
 }
 
 // Unbind the VAO and deactivate the program
-COMPV_ERROR_CODE CompVGLBlitter::unbind()
+COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLBlitter::unbind)()
 {
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	if (CompVGLInfo::extensions::vertex_array_object()) {
-		COMPV_glBindVertexArray(0);
+		COMPV_glBindVertexArray(kCompVGLNameInvalid);
 	}
 	else {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-		COMPV_glBindBuffer(GL_ARRAY_BUFFER, 0);
-		COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		COMPV_glBindBuffer(GL_ARRAY_BUFFER, kCompVGLNameInvalid);
+		COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, kCompVGLNameInvalid);
 	}
 
 	if (m_ptrProgram) {
-		COMPV_CHECK_CODE_RETURN(m_ptrProgram->unbind());
+		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->unbind());
+	}
+	if (m_ptrFBO) {
+		COMPV_CHECK_CODE_ASSERT(m_ptrFBO->bind());
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -98,25 +104,50 @@ COMPV_ERROR_CODE CompVGLBlitter::setMVP(CompVMVPPtr mvp)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLBlitter::setSize(size_t width, size_t height, size_t stride)
+COMPV_ERROR_CODE CompVGLBlitter::setFBO(CompVGLFboPtr fbo)
 {
-	CompVGLVertex newVertices[4];
-	COMPV_CHECK_CODE_RETURN(CompVGLUtils::updateVertices(width, height, stride, m_bToScreen, &newVertices));
+	m_ptrFBO = fbo;
+	return COMPV_ERROR_CODE_S_OK;
+}
 
-	if (m_uNameVertexBuffer) {
-		COMPV_glBindBuffer(GL_ARRAY_BUFFER, m_uNameVertexBuffer);
-		COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(newVertices), newVertices, GL_STATIC_DRAW);
+// Create or update FBO
+COMPV_ERROR_CODE CompVGLBlitter::requestFBO(size_t width, size_t height)
+{
+	if (!m_ptrFBO) {
+		CompVGLFboPtr ptrFBO;
+		COMPV_CHECK_CODE_RETURN(CompVGLFbo::newObj(&ptrFBO, width, height));
+		COMPV_CHECK_CODE_RETURN(setFBO(ptrFBO));
 	}
+	else {
+		COMPV_CHECK_CODE_RETURN(m_ptrFBO->updateSize(width, height));
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
 
-	m_nWidth = width;
-	m_nHeight = height;
-	m_nStride = stride;
-	*m_Vertices = *newVertices;
+COMPV_ERROR_CODE CompVGLBlitter::updateSize(size_t width, size_t height, size_t stride)
+{
+	if (m_nWidth != width || m_nHeight != height) {
+		CompVGLVertex newVertices[4];
+		COMPV_CHECK_CODE_RETURN(CompVGLUtils::updateVertices(width, height, stride, m_bToScreen, &newVertices));
+
+		if (m_ptrFBO) {
+			COMPV_CHECK_CODE_RETURN(m_ptrFBO->updateSize(width, height));
+		}
+		if (m_uNameVertexBuffer) {
+			COMPV_glBindBuffer(GL_ARRAY_BUFFER, m_uNameVertexBuffer);
+			COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(newVertices), newVertices, GL_STATIC_DRAW);
+		}
+
+		m_nWidth = width;
+		m_nHeight = height;
+		m_nStride = stride;
+		*m_Vertices = *newVertices;
+	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLBlitter::init(size_t width, size_t height, size_t stride, const std::string& prgVertexData, const std::string& prgFragData, bool bMVP /*= false*/, bool bToScreen /*= false*/)
+COMPV_ERROR_CODE CompVGLBlitter::init(size_t width, size_t height, size_t stride, const std::string& prgVertexData, const std::string& prgFragData, bool bMVP COMPV_DEFAULT(false), bool bToScreen COMPV_DEFAULT(false))
 {
 	if (m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
@@ -126,6 +157,11 @@ COMPV_ERROR_CODE CompVGLBlitter::init(size_t width, size_t height, size_t stride
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	m_bInit = true; // Make sure deInit() will be executed if this function fails
 	CompVGLVertex newVertices[4];
+
+	// FBO
+	if (m_ptrFBO) {
+		COMPV_CHECK_CODE_RETURN(m_ptrFBO->updateSize(width, height));
+	}
 
 	// Model-View-Projection
 	if (!bMVP) {
@@ -198,12 +234,12 @@ bail:
 		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->unbind());
 	}
 	if (CompVGLInfo::extensions::vertex_array_object()) {
-		COMPV_glBindVertexArray(0);
+		COMPV_glBindVertexArray(kCompVGLNameInvalid);
 	}
 	COMPV_glActiveTexture(GL_TEXTURE0);
-	COMPV_glBindTexture(GL_TEXTURE_2D, 0);
-	COMPV_glBindBuffer(GL_ARRAY_BUFFER, 0);
-	COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	COMPV_glBindTexture(GL_TEXTURE_2D, kCompVGLNameInvalid);
+	COMPV_glBindBuffer(GL_ARRAY_BUFFER, kCompVGLNameInvalid);
+	COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, kCompVGLNameInvalid);
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
 		COMPV_CHECK_CODE_ASSERT(deInit());
 		m_bInit = false;
@@ -223,8 +259,19 @@ COMPV_ERROR_CODE CompVGLBlitter::deInit()
 	CompVGLUtils::bufferDelete(&m_uNameIndiceBuffer);
 	CompVGLUtils::vertexArraysDelete(&m_uNameVAO);
 	m_ptrProgram = NULL;
+	m_ptrFBO = NULL;
 
 	m_bInit = false;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVGLBlitter::newObj(CompVGLBlitterPtrPtr blitter)
+{
+	COMPV_CHECK_EXP_RETURN(!blitter, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVGLBlitterPtr blitter_ = new CompVGLBlitter();
+	COMPV_CHECK_EXP_RETURN(!blitter_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	// Do not set FBO, up to the caller
+	*blitter = blitter_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 

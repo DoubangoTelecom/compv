@@ -12,6 +12,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+static const size_t kTrainQuerySeparatorWidth = 32;
+
 CompVMatchingSurfaceLayerGL::CompVMatchingSurfaceLayerGL()
 {
 
@@ -22,24 +24,18 @@ CompVMatchingSurfaceLayerGL::~CompVMatchingSurfaceLayerGL()
 
 }
 
-static const size_t kTrainQuerySeparatorWidth = 32;
-
-// Overrides(CompVMatchingSurfaceLayer)
-COMPV_ERROR_CODE CompVMatchingSurfaceLayerGL::drawMatches(CompVMatPtr trainImage, CompVMatPtr queryImage)
+COMPV_OVERRIDE_IMPL0("CompVMatchingSurfaceLayer", CompVMatchingSurfaceLayerGL::drawMatches)(CompVMatPtr trainImage, CompVMatPtr queryImage)
 {
 	COMPV_CHECK_EXP_RETURN(!trainImage || !queryImage || trainImage->isEmpty() || queryImage->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	// FIXME: check initialized
 
-	size_t newWidth = trainImage->cols() + kTrainQuerySeparatorWidth + queryImage->cols();
-	size_t newHeight = COMPV_MATH_MAX(trainImage->rows(), queryImage->rows());
+	size_t coverWidth = trainImage->cols() + kTrainQuerySeparatorWidth + queryImage->cols();
+	size_t coverHeight = COMPV_MATH_MAX(trainImage->rows(), queryImage->rows());
 
-	// FIXME: add FBO->updateSize()
-	if (!m_ptrFBO || m_ptrFBO->width() != newWidth || m_ptrFBO->height() != newHeight) {
-		COMPV_CHECK_CODE_RETURN(CompVGLFbo::newObj(&m_ptrFBO, newWidth, newHeight));
-		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->setCanvasFBO(m_ptrFBO));
-	}
+	// Create/FBO used in the cover surface
+	COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blitter()->requestFBO(coverWidth, coverHeight));
 
 	if (m_ptrTrainSurfaceGL->isActive() && m_ptrQuerySurfaceGL->isActive() && m_ptrCoverSurfaceGL->isActive()) {
+		CompVGLFboPtr fboCover = m_ptrCoverSurfaceGL->blitter()->fbo();
 		// FIXME
 		static const int trainPoint[] = { 463, 86 };
 		static const int queryPoint[] = { 463, 86 };
@@ -56,13 +52,13 @@ COMPV_ERROR_CODE CompVMatchingSurfaceLayerGL::drawMatches(CompVMatPtr trainImage
 		COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->drawImage(trainImage));
 		COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->renderer()->canvas()->drawText(text.c_str(), text.length(), trainPoint[0], trainPoint[1]));
 		COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->viewport()->reset(CompViewportSizeFlags::makeStatic(), 0, 0, static_cast<int>(trainImage->cols()), static_cast<int>(trainImage->rows())));
-		COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->blitRenderer(m_ptrFBO));
+		COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->blitRenderer(fboCover));
 
 		// Draw Query points
 		COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->drawImage(queryImage));
 		COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->renderer()->canvas()->drawText(text.c_str(), text.length(), queryPoint[0], queryPoint[1]));
 		COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->viewport()->reset(CompViewportSizeFlags::makeStatic(), offsetx, 0, static_cast<int>(queryImage->cols()), static_cast<int>(queryImage->rows())));
-		COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->blitRenderer(m_ptrFBO));
+		COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->blitRenderer(fboCover));
 		
 		// Draw lines
 		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->canvas()->drawLine(trainPoint[0], trainPoint[1], queryPoint[0] + offsetx, queryPoint[1]));
@@ -71,14 +67,12 @@ COMPV_ERROR_CODE CompVMatchingSurfaceLayerGL::drawMatches(CompVMatPtr trainImage
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Overrides(CompSurfaceLayer)
-COMPV_ERROR_CODE CompVMatchingSurfaceLayerGL::blit()
+COMPV_OVERRIDE_IMPL0("CompSurfaceLayer", CompVMatchingSurfaceLayerGL::blit)()
 {
-	// FIXME: check initialized
-	if (m_ptrCoverSurfaceGL->isActive()) {
-		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blit(m_ptrFBO, kCompVGLPtrSystemFrameBuffer));
+	if (m_ptrCoverSurfaceGL && m_ptrCoverSurfaceGL->isActive()) {
+		CompVGLFboPtr fboCover = m_ptrCoverSurfaceGL->blitter()->fbo();
+		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blit(fboCover, kCompVGLPtrSystemFrameBuffer));
 	}
-
 	return COMPV_ERROR_CODE_S_OK;
 }
 

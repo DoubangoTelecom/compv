@@ -42,14 +42,15 @@ COMPV_OVERRIDE_IMPL0("CompVMultiSurfaceLayer", CompVMultiSurfaceLayerGL::removeS
 COMPV_OVERRIDE_IMPL0("CompSurfaceLayer", CompVMultiSurfaceLayerGL::blit)()
 {
 	COMPV_CHECK_EXP_RETURN(!m_ptrCoverSurfaceGL, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_CHECK_CODE_RETURN(initFBO());
+	COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blitter()->requestFBO(m_ptrCoverSurfaceGL->width(), m_ptrCoverSurfaceGL->height()));
+	CompVGLFboPtr fboCover = m_ptrCoverSurfaceGL->blitter()->fbo();
 	for (std::map<compv_surface_id_t, CompVSurfaceGLPtr>::iterator it = m_mapSurfaces.begin(); it != m_mapSurfaces.end(); ++it) {
 		if (it->second->isActive()) {
-			COMPV_CHECK_CODE_RETURN(it->second->blitRenderer(m_ptrFBO));
+			COMPV_CHECK_CODE_RETURN(it->second->blitRenderer(fboCover));
 		}
 	}
 	if (m_ptrCoverSurfaceGL->isActive()) {
-		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blit(m_ptrFBO, kCompVGLPtrSystemFrameBuffer));
+		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blit(fboCover, kCompVGLPtrSystemFrameBuffer));
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -57,21 +58,8 @@ COMPV_OVERRIDE_IMPL0("CompSurfaceLayer", CompVMultiSurfaceLayerGL::blit)()
 COMPV_ERROR_CODE CompVMultiSurfaceLayerGL::updateSize(size_t newWidth, size_t newHeight)
 {
 	COMPV_CHECK_EXP_RETURN(!m_ptrCoverSurfaceGL, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_CHECK_CODE_RETURN(initFBO());
 	COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->updateSize(newWidth, newHeight));
-	// FIXME: add FBO->updateSize()
-	COMPV_CHECK_CODE_RETURN(CompVGLFbo::newObj(&m_ptrFBO, newWidth, newHeight));
-	COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->setCanvasFBO(m_ptrFBO));
 
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVMultiSurfaceLayerGL::initFBO()
-{
-	if (!m_ptrFBO || !m_ptrCoverSurfaceGL->canvasFBO()) {
-		COMPV_CHECK_CODE_RETURN(CompVGLFbo::newObj(&m_ptrFBO, static_cast<CompVSurface*>(*m_ptrCoverSurfaceGL)->width(), static_cast<CompVSurface*>(*m_ptrCoverSurfaceGL)->height()));
-		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->setCanvasFBO(m_ptrFBO));
-	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 

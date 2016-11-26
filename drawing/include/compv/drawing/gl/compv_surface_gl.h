@@ -29,14 +29,14 @@ class CompVSurfaceGL;
 typedef CompVPtr<CompVSurfaceGL* > CompVSurfaceGLPtr;
 typedef CompVSurfaceGLPtr* CompVSurfaceGLPtrPtr;
 
-class CompVSurfaceGL : public CompVSurface, public CompVGLBlitter
+class CompVSurfaceGL : public CompVSurface
 {
 protected:
 	CompVSurfaceGL(size_t width, size_t height);
 public:
 	virtual ~CompVSurfaceGL();
 	COMPV_GET_OBJECT_ID(CompVSurfaceGL);
-	COMPV_INLINE CompVGLFboPtr canvasFBO() { return m_ptrCanvasFBO; }
+	COMPV_INLINE CompVGLBlitterPtr blitter() { return m_ptrBlitter; }
 	CompVGLCanvasPtr canvasGL();
 
 	COMPV_OVERRIDE_DECL1("CompVSurface", bool, isGLEnabled)()const override { return true; };
@@ -49,7 +49,6 @@ public:
 	COMPV_ERROR_CODE blitRenderer(const CompVGLFboPtr ptrFboDst);
 
 	COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
-	COMPV_ERROR_CODE setCanvasFBO(CompVGLFboPtr fbo);
 
 	static COMPV_ERROR_CODE newObj(CompVSurfaceGLPtrPtr glSurface, size_t width, size_t height);
 
@@ -61,8 +60,8 @@ private:
 	bool m_bInit;
 	CompVRendererGLPtr m_ptrRenderer;
 	CompVGLProgramPtr m_ptrProgram;
-	CompVGLFboPtr m_ptrCanvasFBO;
 	CompVGLCanvasPtr m_ptrCanvas;
+	CompVGLBlitterPtr m_ptrBlitter;
 };
 
 COMPV_NAMESPACE_END()

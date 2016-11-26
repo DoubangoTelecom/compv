@@ -69,7 +69,6 @@ COMPV_ERROR_CODE CompVRendererGLRGB::drawImage(CompVMatPtr mat)
 
 	// Check if format changed
 	if (mat->cols() != m_uWidth || mat->rows() != m_uHeight || mat->stride() != m_uStride) {
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Update size only without deInit()
 		COMPV_DEBUG_INFO("GL renderer format changed: %d -> %d", CompVRenderer::pixelFormat(), pixelFormat);
 		COMPV_CHECK_CODE_RETURN(deInit());
 	}
@@ -81,17 +80,26 @@ COMPV_ERROR_CODE CompVRendererGLRGB::drawImage(CompVMatPtr mat)
 	
 	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::bind()); // Bind FBO and VAO
 
-	// Texture 0: RGBA-only format from the surface, this is the destination
+	// Texture 0: RGBA-only format from the blitter's fbo, this is the [destination]
 	COMPV_glActiveTexture(GL_TEXTURE0);
-	COMPV_glBindTexture(GL_TEXTURE_2D, CompVRendererGL::fbo()->nameTexture());
+	COMPV_glBindTexture(GL_TEXTURE_2D, blitter()->fbo()->nameTexture());
 
-	// Texture 1: RGB-family format from the renderer, this is the source
+	// Texture 1: RGB-family format from the renderer, this is the [source]
 	COMPV_glActiveTexture(GL_TEXTURE1);
 	COMPV_glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
-	COMPV_glTexImage2D(GL_TEXTURE_2D, 0, m_iFormat, static_cast<GLsizei>(mat->stride()), static_cast<GLsizei>(mat->rows()), 0, m_iFormat, GL_UNSIGNED_BYTE, mat->ptr());
+	COMPV_glTexSubImage2D(
+		GL_TEXTURE_2D,
+		0,
+		0,
+		0,
+		static_cast<GLsizei>(mat->stride()),
+		static_cast<GLsizei>(mat->rows()),
+		m_iFormat,
+		GL_UNSIGNED_BYTE,
+		mat->ptr());
 
-	COMPV_glViewport(0, 0, static_cast<GLsizei>(CompVRendererGL::width()), static_cast<GLsizei>(CompVRendererGL::height()));
-	COMPV_glDrawElements(GL_TRIANGLES, CompVRendererGL::indicesCount(), GL_UNSIGNED_BYTE, 0);
+	COMPV_glViewport(0, 0, static_cast<GLsizei>(blitter()->width()), static_cast<GLsizei>(blitter()->height()));
+	COMPV_glDrawElements(GL_TRIANGLES, blitter()->indicesCount(), GL_UNSIGNED_BYTE, 0);
 
 	m_uWidth = mat->cols();
 	m_uHeight = mat->rows();
@@ -144,9 +152,7 @@ COMPV_ERROR_CODE CompVRendererGLRGB::init(CompVMatPtr mat)
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	m_bInit = true; // To make sure deInit() will be fully executed
 	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::init(mat, m_strPrgVertexData, m_strPrgFragData, false, false)); // Base class implementation
-	COMPV_CHECK_EXP_BAIL(!(ptrProgram = program()), (err = COMPV_ERROR_CODE_E_GL));
-	COMPV_CHECK_CODE_BAIL(err = ptrProgram->bind());
-
+	COMPV_CHECK_CODE_BAIL(err = CompVRendererGL::bind()); // Bind to the program -> required by 'glGetUniformLocation'
 	COMPV_glGenTextures(1, &m_uNameTexture);
 	COMPV_glActiveTexture(GL_TEXTURE1);
 	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -156,13 +162,11 @@ COMPV_ERROR_CODE CompVRendererGLRGB::init(CompVMatPtr mat)
 	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	COMPV_glTexImage2D(GL_TEXTURE_2D, 0, m_iFormat, static_cast<GLsizei>(mat->stride()), static_cast<GLsizei>(mat->rows()), 0, m_iFormat, GL_UNSIGNED_BYTE, NULL);
-	COMPV_glGetUniformLocation(&m_uNameSampler, ptrProgram->name(), "mySampler");
+	COMPV_glGetUniformLocation(&m_uNameSampler, CompVRendererGL::blitter()->program()->name(), "mySampler");
 	COMPV_glUniform1i(m_uNameSampler, 1);
 
 bail:
-	if (ptrProgram) {
-		COMPV_CHECK_CODE_ASSERT(ptrProgram->unbind());
-	}
+	COMPV_CHECK_CODE_ASSERT(err = CompVRendererGL::unbind());
 	COMPV_glBindTexture(GL_TEXTURE_2D, 0);
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
 		COMPV_CHECK_CODE_ASSERT(deInit());
