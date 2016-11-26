@@ -160,6 +160,7 @@
   <ItemGroup>
     <ClInclude Include="include\compv\gl\compv_config.h" />
     <ClInclude Include="include\compv\gl\compv_gl.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_blitter.h" />
     <ClInclude Include="include\compv\gl\compv_gl_canvas.h" />
     <ClInclude Include="include\compv\gl\compv_gl_common.h" />
     <ClInclude Include="include\compv\gl\compv_gl_context.h" />
@@ -167,16 +168,19 @@
     <ClInclude Include="include\compv\gl\compv_gl_func.h" />
     <ClInclude Include="include\compv\gl\compv_gl_info.h" />
     <ClInclude Include="include\compv\gl\compv_gl_headers.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_mvp.h" />
     <ClInclude Include="include\compv\gl\compv_gl_program.h" />
     <ClInclude Include="include\compv\gl\compv_gl_utils.h" />
     <ClInclude Include="include\compv\gl\compv_gl_vao.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_gl.cxx" />
+    <ClCompile Include="compv_gl_blitter.cxx" />
     <ClCompile Include="compv_gl_canvas.cxx" />
     <ClCompile Include="compv_gl_context.cxx" />
     <ClCompile Include="compv_gl_fbo.cxx" />
     <ClCompile Include="compv_gl_info.cxx" />
+    <ClCompile Include="compv_gl_mvp.cxx" />
     <ClCompile Include="compv_gl_program.cxx" />
     <ClCompile Include="compv_gl_utils.cxx" />
     <ClCompile Include="compv_gl_vao.cxx" />

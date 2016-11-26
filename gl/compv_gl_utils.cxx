@@ -427,6 +427,29 @@ COMPV_ERROR_CODE CompVGLUtils::programUnbind(GLuint uPrg, bool checkErr COMPV_DE
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVGLUtils::updateVertices(size_t width, size_t height, size_t stride, bool bToScreen, CompVGLVertex(*Vertices)[4])
+{
+	GLfloat uMax = static_cast<GLfloat>(width) / static_cast<GLfloat>(stride);
+	GLfloat vMax = 1.f;
+	if (bToScreen) {
+		COMPV_CHECK_EXP_RETURN(sizeof(*Vertices) != sizeof(kCompVGLScreenVertices), COMPV_ERROR_CODE_E_SYSTEM);
+		memcpy(&(*Vertices)[0], kCompVGLScreenVertices, sizeof(kCompVGLScreenVertices));
+		(*Vertices)[0].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = 0.f;
+		(*Vertices)[1].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = vMax;
+		(*Vertices)[2].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = vMax;
+		(*Vertices)[3].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = 0.f;
+	}
+	else {
+		COMPV_CHECK_EXP_RETURN(sizeof(*Vertices) != sizeof(kCompVGLTexture2DVertices), COMPV_ERROR_CODE_E_SYSTEM);
+		memcpy(&(*Vertices)[0], kCompVGLTexture2DVertices, sizeof(kCompVGLTexture2DVertices));
+		(*Vertices)[0].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = vMax;
+		(*Vertices)[1].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = 0.f;
+		(*Vertices)[2].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = 0.f;
+		(*Vertices)[3].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = vMax;
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */

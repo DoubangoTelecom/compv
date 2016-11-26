@@ -75,15 +75,6 @@
     <ClInclude Include="include\compv\drawing\compv_config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\drawing\compv_drawing_canvas.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\drawing\gl\compv_blitter_gl.h">
-      <Filter>Header Files\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\drawing\gl\compv_mvp_glm.h">
-      <Filter>Header Files\gl</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\drawing\gl\compv_renderer_gl.h">
       <Filter>Header Files\gl</Filter>
     </ClInclude>
@@ -113,6 +104,9 @@
     </ClInclude>
     <ClInclude Include="include\compv\drawing\gl\compv_window_glfw3.h">
       <Filter>Header Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\compv_drawing_factory.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -152,12 +146,6 @@
     <ClCompile Include="compv_surfacelayer_multi.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gl\compv_blitter_gl.cxx">
-      <Filter>Source Files\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="gl\compv_mvp_glm.cxx">
-      <Filter>Source Files\gl</Filter>
-    </ClCompile>
     <ClCompile Include="gl\compv_renderer_gl.cxx">
       <Filter>Source Files\gl</Filter>
     </ClCompile>
@@ -187,6 +175,9 @@
     </ClCompile>
     <ClCompile Include="gl\compv_window_glfw3.cxx">
       <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_drawing_factory.cxx">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

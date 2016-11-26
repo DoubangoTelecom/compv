@@ -165,7 +165,7 @@
     <ClInclude Include="include\compv\drawing\compv_common.h" />
     <ClInclude Include="include\compv\drawing\compv_config.h" />
     <ClInclude Include="include\compv\drawing\compv_drawing.h" />
-    <ClInclude Include="include\compv\drawing\compv_drawing_canvas.h" />
+    <ClInclude Include="include\compv\drawing\compv_drawing_factory.h" />
     <ClInclude Include="include\compv\drawing\compv_image_libjpeg.h" />
     <ClInclude Include="include\compv\drawing\compv_renderer.h" />
     <ClInclude Include="include\compv\drawing\compv_surface.h" />
@@ -175,8 +175,6 @@
     <ClInclude Include="include\compv\drawing\compv_surfacelayer_single.h" />
     <ClInclude Include="include\compv\drawing\compv_viewport.h" />
     <ClInclude Include="include\compv\drawing\compv_window.h" />
-    <ClInclude Include="include\compv\drawing\gl\compv_blitter_gl.h" />
-    <ClInclude Include="include\compv\drawing\gl\compv_mvp_glm.h" />
     <ClInclude Include="include\compv\drawing\gl\compv_renderer_gl.h" />
     <ClInclude Include="include\compv\drawing\gl\compv_renderer_gl_rgb.h" />
     <ClInclude Include="include\compv\drawing\gl\compv_renderer_gl_yuv.h" />
@@ -192,6 +190,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_drawing.cxx" />
+    <ClCompile Include="compv_drawing_factory.cxx" />
     <ClCompile Include="compv_image_libjpeg.cxx" />
     <ClCompile Include="compv_renderer.cxx" />
     <ClCompile Include="compv_surface.cxx" />
@@ -201,8 +200,6 @@
     <ClCompile Include="compv_surfacelayer_single.cxx" />
     <ClCompile Include="compv_viewport.cxx" />
     <ClCompile Include="compv_window.cxx" />
-    <ClCompile Include="gl\compv_blitter_gl.cxx" />
-    <ClCompile Include="gl\compv_mvp_glm.cxx" />
     <ClCompile Include="gl\compv_renderer_gl.cxx" />
     <ClCompile Include="gl\compv_renderer_gl_rgb.cxx" />
     <ClCompile Include="gl\compv_renderer_gl_yuv.cxx" />

@@ -7,7 +7,7 @@
 #include "compv/drawing/gl/compv_renderer_gl.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
-#include "compv/drawing/compv_drawing_canvas.h"
+#include "compv/drawing/compv_drawing_factory.h"
 #include "compv/gl/compv_gl_utils.h"
 #include "compv/drawing/gl/compv_renderer_gl_yuv.h"
 #include "compv/drawing/gl/compv_renderer_gl_rgb.h"
@@ -16,7 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 
 CompVRendererGL::CompVRendererGL(COMPV_PIXEL_FORMAT ePixelFormat)
 	: CompVRenderer(ePixelFormat)
-	, CompVBlitterGL()
+	, CompVGLBlitter()
 	, m_bInit(false)
 {
 }
@@ -57,7 +57,7 @@ COMPV_ERROR_CODE CompVRendererGL::init(CompVMatPtr mat, const std::string& prgVe
 	// FIXME: call FBO->updateSize
 
 	// Base class implementation
-	COMPV_CHECK_CODE_BAIL(err = CompVBlitterGL::init(mat->cols(), mat->rows(), mat->stride(), prgVertexData, prgFragData, false/*NoMVP*/, false/*NotToScreen*/));
+	COMPV_CHECK_CODE_BAIL(err = CompVGLBlitter::init(mat->cols(), mat->rows(), mat->stride(), prgVertexData, prgFragData, false/*NoMVP*/, false/*NotToScreen*/));
 
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
@@ -75,7 +75,7 @@ COMPV_ERROR_CODE CompVRendererGL::bind()
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_CODE_BAIL(err = m_ptrFBO->bind()); // FBO
-	COMPV_CHECK_CODE_BAIL(err = CompVBlitterGL::bind()); // Base class impl.: VAO
+	COMPV_CHECK_CODE_BAIL(err = CompVGLBlitter::bind()); // Base class impl.: VAO
 
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
@@ -89,7 +89,7 @@ COMPV_ERROR_CODE CompVRendererGL::unbind()
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
 	COMPV_CHECK_CODE_ASSERT(m_ptrFBO->unbind()); // FBO
-	COMPV_CHECK_CODE_ASSERT(CompVBlitterGL::unbind()); // Base class impl.: VAO
+	COMPV_CHECK_CODE_ASSERT(CompVGLBlitter::unbind()); // Base class impl.: VAO
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -101,7 +101,7 @@ COMPV_ERROR_CODE CompVRendererGL::deInit()
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	COMPV_CHECK_CODE_ASSERT(CompVBlitterGL::deInit()); // Base class implementation
+	COMPV_CHECK_CODE_ASSERT(CompVGLBlitter::deInit()); // Base class implementation
 	m_ptrFBO = NULL;
 
 	m_bInit = false;

@@ -63,6 +63,8 @@ public:
 	static COMPV_ERROR_CODE programLinkGetStatus(GLuint uProgram, std::string *error);
 	static COMPV_ERROR_CODE programBind(GLuint uProgram, bool checkErr = false);
 	static COMPV_ERROR_CODE programUnbind(GLuint uProgram, bool checkErr = false);
+
+	static COMPV_ERROR_CODE updateVertices(size_t width, size_t height, size_t stride, bool bToScreen, CompVGLVertex(*Vertices)[4]);
 };
 
 COMPV_NAMESPACE_END()

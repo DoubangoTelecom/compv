@@ -4,16 +4,16 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/gl/compv_blitter_gl.h"
+#include "compv/gl/compv_gl_blitter.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-#include "compv/drawing/compv_drawing.h"
 #include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_info.h"
 #include "compv/gl/compv_gl_func.h"
+#include "compv/gl/compv_gl_mvp.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVBlitterGL::CompVBlitterGL()
+CompVGLBlitter::CompVGLBlitter()
 	: m_bInit(false)
 	, m_nWidth(0)
 	, m_nHeight(0)
@@ -29,13 +29,13 @@ CompVBlitterGL::CompVBlitterGL()
 
 }
 
-CompVBlitterGL::~CompVBlitterGL()
+CompVGLBlitter::~CompVGLBlitter()
 {
 	COMPV_CHECK_CODE_ASSERT(deInit());
 }
 
 // Bind to VAO and activate the program
-COMPV_ERROR_CODE CompVBlitterGL::bind()
+COMPV_ERROR_CODE CompVGLBlitter::bind()
 {
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
@@ -64,7 +64,7 @@ COMPV_ERROR_CODE CompVBlitterGL::bind()
 }
 
 // Unbind the VAO and deactivate the program
-COMPV_ERROR_CODE CompVBlitterGL::unbind()
+COMPV_ERROR_CODE CompVGLBlitter::unbind()
 {
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
@@ -84,7 +84,7 @@ COMPV_ERROR_CODE CompVBlitterGL::unbind()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVBlitterGL::setMVP(CompVMVPPtr mvp)
+COMPV_ERROR_CODE CompVGLBlitter::setMVP(CompVMVPPtr mvp)
 {
 	COMPV_CHECK_EXP_RETURN(!mvp, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	m_ptrMVP = mvp;
@@ -98,10 +98,10 @@ COMPV_ERROR_CODE CompVBlitterGL::setMVP(CompVMVPPtr mvp)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVBlitterGL::setSize(size_t width, size_t height, size_t stride)
+COMPV_ERROR_CODE CompVGLBlitter::setSize(size_t width, size_t height, size_t stride)
 {
 	CompVGLVertex newVertices[4];
-	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::updateVertices(width, height, stride, m_bToScreen, &newVertices));
+	COMPV_CHECK_CODE_RETURN(CompVGLUtils::updateVertices(width, height, stride, m_bToScreen, &newVertices));
 
 	if (m_uNameVertexBuffer) {
 		COMPV_glBindBuffer(GL_ARRAY_BUFFER, m_uNameVertexBuffer);
@@ -116,7 +116,7 @@ COMPV_ERROR_CODE CompVBlitterGL::setSize(size_t width, size_t height, size_t str
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride, const std::string& prgVertexData, const std::string& prgFragData, bool bMVP /*= false*/, bool bToScreen /*= false*/)
+COMPV_ERROR_CODE CompVGLBlitter::init(size_t width, size_t height, size_t stride, const std::string& prgVertexData, const std::string& prgFragData, bool bMVP /*= false*/, bool bToScreen /*= false*/)
 {
 	if (m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
@@ -132,7 +132,9 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 		m_ptrMVP = NULL;
 	}
 	else if (!m_ptrMVP) {
-		COMPV_CHECK_CODE_RETURN(CompVMVP::newObjProjection2D(&m_ptrMVP));
+		CompVGLMVPPtr glMVP;
+		COMPV_CHECK_CODE_RETURN(CompVGLMVP::newObj(&glMVP, COMPV_PROJECTION_2D));
+		m_ptrMVP = *glMVP;
 	}
 
 	if (CompVGLInfo::extensions::vertex_array_object()) {
@@ -147,7 +149,7 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 		COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::bufferGen(&m_uNameVertexBuffer));
 	}
 	COMPV_glBindBuffer(GL_ARRAY_BUFFER, m_uNameVertexBuffer);
-	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::updateVertices(width, height, stride, bToScreen, &newVertices));
+	COMPV_CHECK_CODE_RETURN(CompVGLUtils::updateVertices(width, height, stride, bToScreen, &newVertices));
 	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(newVertices), newVertices, GL_STATIC_DRAW);
 
 	// Indice buffer
@@ -210,7 +212,7 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVBlitterGL::deInit()
+COMPV_ERROR_CODE CompVGLBlitter::deInit()
 {
 	if (!m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
@@ -223,31 +225,6 @@ COMPV_ERROR_CODE CompVBlitterGL::deInit()
 	m_ptrProgram = NULL;
 
 	m_bInit = false;
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVBlitterGL::updateVertices(size_t width, size_t height, size_t stride, bool bToScreen, CompVGLVertex(*Vertices)[4])
-{
-	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-
-	GLfloat uMax = static_cast<GLfloat>(width) / static_cast<GLfloat>(stride);
-	GLfloat vMax = 1.f;
-	if (bToScreen) {
-		COMPV_CHECK_EXP_RETURN(sizeof(m_Vertices) != sizeof(kCompVGLScreenVertices), COMPV_ERROR_CODE_E_SYSTEM);
-		memcpy(&(*Vertices)[0], kCompVGLScreenVertices, sizeof(kCompVGLScreenVertices));
-		(*Vertices)[0].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = 0.f;
-		(*Vertices)[1].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = vMax;
-		(*Vertices)[2].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = vMax;
-		(*Vertices)[3].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = 0.f;
-	}
-	else {
-		COMPV_CHECK_EXP_RETURN(sizeof(m_Vertices) != sizeof(kCompVGLTexture2DVertices), COMPV_ERROR_CODE_E_SYSTEM);
-		memcpy(&(*Vertices)[0], kCompVGLTexture2DVertices, sizeof(kCompVGLTexture2DVertices));
-		(*Vertices)[0].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = vMax;
-		(*Vertices)[1].TexCoord[0] = uMax, (*Vertices)[0].TexCoord[1] = 0.f;
-		(*Vertices)[2].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = 0.f;
-		(*Vertices)[3].TexCoord[0] = 0.f, (*Vertices)[0].TexCoord[1] = vMax;
-	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 

@@ -11,12 +11,12 @@
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_renderer.h"
-#include "compv/drawing/gl/compv_blitter_gl.h"
 #include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/gl/compv_gl_common.h"
 #include "compv/gl/compv_gl_fbo.h"
 #include "compv/gl/compv_gl_canvas.h"
+#include "compv/gl/compv_gl_blitter.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -28,7 +28,7 @@ class CompVRendererGL;
 typedef CompVPtr<CompVRendererGL* > CompVRendererGLPtr;
 typedef CompVRendererGLPtr* CompVRendererGLPtrPtr;
 
-class CompVRendererGL : public CompVRenderer, public CompVBlitterGL
+class CompVRendererGL : public CompVRenderer, public CompVGLBlitter
 {
 protected:
 	CompVRendererGL(COMPV_PIXEL_FORMAT ePixelFormat);

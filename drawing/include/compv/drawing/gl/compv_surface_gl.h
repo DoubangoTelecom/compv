@@ -12,12 +12,12 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
+#include "compv/base/drawing/compv_mvp.h"
 #include "compv/drawing/compv_surface.h"
-#include "compv/drawing/gl/compv_mvp_glm.h"
 #include "compv/drawing/gl/compv_renderer_gl.h"
-#include "compv/drawing/gl/compv_blitter_gl.h"
 #include "compv/gl/compv_gl_fbo.h"
 #include "compv/gl/compv_gl_canvas.h"
+#include "compv/gl/compv_gl_blitter.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -29,7 +29,7 @@ class CompVSurfaceGL;
 typedef CompVPtr<CompVSurfaceGL* > CompVSurfaceGLPtr;
 typedef CompVSurfaceGLPtr* CompVSurfaceGLPtrPtr;
 
-class CompVSurfaceGL : public CompVSurface, public CompVBlitterGL
+class CompVSurfaceGL : public CompVSurface, public CompVGLBlitter
 {
 protected:
 	CompVSurfaceGL(size_t width, size_t height);

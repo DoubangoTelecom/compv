@@ -4,15 +4,14 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_DRAWING_OPENGL_BLITTER_H_)
-#define _COMPV_DRAWING_OPENGL_BLITTER_H_
+#if !defined(_COMPV_GL_BLITTER_H_)
+#define _COMPV_GL_BLITTER_H_
 
-#include "compv/drawing/compv_config.h"
+#include "compv/gl/compv_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_obj.h"
-#include "compv/drawing/compv_common.h"
-#include "compv/drawing/compv_mvp.h"
+#include "compv/base/drawing/compv_mvp.h"
 #include "compv/gl/compv_gl_common.h"
 #include "compv/gl/compv_gl_vao.h"
 #include "compv/gl/compv_gl_program.h"
@@ -23,12 +22,12 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVBlitterGL
+class COMPV_GL_API CompVGLBlitter
 {
 protected:
-	CompVBlitterGL();
+	CompVGLBlitter();
 public:
-	virtual ~CompVBlitterGL();
+	virtual ~CompVGLBlitter();
 
 	COMPV_INLINE size_t width()const { return m_nWidth; }
 	COMPV_INLINE size_t height()const { return m_nHeight; }
@@ -48,10 +47,7 @@ protected:
 	virtual COMPV_ERROR_CODE deInit();
 
 private:
-	static COMPV_ERROR_CODE updateVertices(size_t width, size_t height, size_t stride, bool bToScreen, CompVGLVertex (*Vertices)[4]);
-
-
-private:
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	bool m_bInit;
 	bool m_bToScreen;
 	bool m_bMVP;
@@ -67,10 +63,11 @@ private:
 	GLuint m_uNameVAO;
 	CompVGLProgramPtr m_ptrProgram;
 	CompVMVPPtr m_ptrMVP;
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()
 
 #endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
 
-#endif /* _COMPV_DRAWING_OPENGL_BLITTER_H_ */
+#endif /* _COMPV_GL_BLITTER_H_ */

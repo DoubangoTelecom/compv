@@ -7,8 +7,8 @@
 #include "compv/drawing/gl/compv_surface_gl.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
+#include "compv/drawing/compv_drawing_factory.h"
 #include "compv/drawing/compv_window.h"
-#include "compv/drawing/compv_drawing_canvas.h"
 #include "compv/gl/compv_gl_common.h"
 #include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_func.h"
@@ -62,7 +62,7 @@ bail:
 
 COMPV_OVERRIDE_IMPL0("CompVSurface", CompVSurfaceGL::setMVP)(CompVMVPPtr mvp)
 {
-	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::setMVP(mvp));
+	COMPV_CHECK_CODE_RETURN(CompVGLBlitter::setMVP(mvp));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -105,7 +105,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::blit(const CompVGLFboPtr ptrFboSrc, const CompV
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	COMPV_CHECK_CODE_BAIL(err = init());
 
-	COMPV_CHECK_CODE_BAIL(err = CompVBlitterGL::bind()); // bind to VAO and activate the program
+	COMPV_CHECK_CODE_BAIL(err = CompVGLBlitter::bind()); // bind to VAO and activate the program
 	if (ptrFboDst == kCompVGLPtrSystemFrameBuffer) {
 		COMPV_glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
 		COMPV_glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
@@ -121,8 +121,8 @@ COMPV_ERROR_CODE CompVSurfaceGL::blit(const CompVGLFboPtr ptrFboSrc, const CompV
 	{
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // FIXME: compute once
 		CompVRect rcViewport;
-		const size_t dstWidth = ptrFboDst ? ptrFboDst->width() : CompVBlitterGL::width();
-		const size_t dstHeight = ptrFboDst ? ptrFboDst->height() : CompVBlitterGL::height();
+		const size_t dstWidth = ptrFboDst ? ptrFboDst->width() : CompVGLBlitter::width();
+		const size_t dstHeight = ptrFboDst ? ptrFboDst->height() : CompVGLBlitter::height();
 		COMPV_CHECK_CODE_BAIL(err = CompVViewport::viewport(
 			CompVRect::makeFromWidthHeight(0, 0, static_cast<int>(ptrFboSrc->width()), static_cast<int>(ptrFboSrc->height())),
 			CompVRect::makeFromWidthHeight(0, 0, static_cast<int>(dstWidth), static_cast<int>(dstHeight)),
@@ -135,10 +135,10 @@ COMPV_ERROR_CODE CompVSurfaceGL::blit(const CompVGLFboPtr ptrFboSrc, const CompV
 	}
 
 	//glViewport(0, 0, static_cast<GLsizei>(dstWidth), static_cast<GLsizei>(dstHeight));
-	COMPV_glDrawElements(GL_TRIANGLES, CompVBlitterGL::indicesCount(), GL_UNSIGNED_BYTE, 0);
+	COMPV_glDrawElements(GL_TRIANGLES, CompVGLBlitter::indicesCount(), GL_UNSIGNED_BYTE, 0);
 
 bail:
-	COMPV_CHECK_CODE_ASSERT(CompVBlitterGL::unbind());
+	COMPV_CHECK_CODE_ASSERT(CompVGLBlitter::unbind());
 	if (ptrFboDst) {
 		COMPV_CHECK_CODE_ASSERT(ptrFboDst->unbind());
 	}
@@ -160,7 +160,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::updateSize(size_t newWidth, size_t newHeight)
 {
 	CompVSurface::m_nWidth = newWidth;
 	CompVSurface::m_nHeight = newHeight;
-	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::setSize(newWidth, newHeight, newWidth));
+	COMPV_CHECK_CODE_RETURN(CompVGLBlitter::setSize(newWidth, newHeight, newWidth));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -176,7 +176,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::init()
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT); // Make sure we have a GL context
-	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::init(CompVSurface::width(), CompVSurface::height(), CompVSurface::width(), kProgramVertexData, kProgramFragData, true/*haveMVP*/, true/*ToScreenYes*/)); // Base class implementation
+	COMPV_CHECK_CODE_RETURN(CompVGLBlitter::init(CompVSurface::width(), CompVSurface::height(), CompVSurface::width(), kProgramVertexData, kProgramFragData, true/*haveMVP*/, true/*ToScreenYes*/)); // Base class implementation
 	
 	m_bInit = true;
 	return COMPV_ERROR_CODE_S_OK;
@@ -188,7 +188,7 @@ COMPV_ERROR_CODE CompVSurfaceGL::deInit()
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT); // Make sure we have a GL context
-	COMPV_CHECK_CODE_RETURN(CompVBlitterGL::deInit()); // Base class implementation
+	COMPV_CHECK_CODE_RETURN(CompVGLBlitter::deInit()); // Base class implementation
 	m_bInit = false;
 	return COMPV_ERROR_CODE_S_OK;
 }
