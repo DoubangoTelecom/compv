@@ -10,7 +10,7 @@
 #include "compv/drawing/compv_config.h"
 #include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
-#include "compv/base/compv_canvas.h"
+#include "compv/base/drawing/compv_canvas.h"
 #include "compv/drawing/compv_renderer.h"
 #include "compv/drawing/compv_mvp.h"
 #include "compv/drawing/compv_common.h"

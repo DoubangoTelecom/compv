@@ -4,13 +4,13 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/opengl/compv_renderer_gl.h"
+#include "compv/drawing/gl/compv_renderer_gl.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/compv_drawing_canvas.h"
 #include "compv/gl/compv_gl_utils.h"
-#include "compv/drawing/opengl/compv_renderer_gl_yuv.h"
-#include "compv/drawing/opengl/compv_renderer_gl_rgb.h"
+#include "compv/drawing/gl/compv_renderer_gl_yuv.h"
+#include "compv/drawing/gl/compv_renderer_gl_rgb.h"
 
 COMPV_NAMESPACE_BEGIN()
 

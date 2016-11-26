@@ -273,6 +273,33 @@ public:
 	CompVImageInfo() : format(COMPV_IMAGE_FORMAT_RAW), pixelFormat(COMPV_PIXEL_FORMAT_NONE), width(0), stride(0), height(0) { }
 };
 
+struct CompVVec3f {
+public:
+	union {
+		struct { float x, y, z; };
+		struct { float r, g, b; };
+		struct { float s, t, p; };
+	};
+	CompVVec3f(float x_, float y_, float z_) : x(x_), y(y_), z(z_) { }
+};
+
+struct CompVRect {
+public:
+	int left;
+	int top;
+	int right;
+	int bottom;
+	CompVRect(int left_ = 0, int top_ = 0, int right_ = 0, int bottom_ = 0) : left(left_), top(top_), right(right_), bottom(bottom_) {  }
+	static CompVRect makeFromWidthHeight(int x, int y, int width, int height) { return CompVRect(x, y, x + width, y + height); }
+};
+
+struct CompVRatio {
+public:
+	int numerator;
+	int denominator;
+	CompVRatio(int numerator_ = 1, int denominator_ = 1) : numerator(numerator_), denominator(denominator_) { }
+};
+
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_BASE_COMMON_H_ */

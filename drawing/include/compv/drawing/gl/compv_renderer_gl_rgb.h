@@ -12,7 +12,7 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
-#include "compv/drawing/opengl/compv_renderer_gl.h"
+#include "compv/drawing/gl/compv_renderer_gl.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")

@@ -9,7 +9,7 @@
 
 #include "compv/drawing/compv_config.h"
 #if defined(HAVE_SDL_H)
-#include "compv/drawing/opengl/compv_window_gl.h"
+#include "compv/drawing/gl/compv_window_gl.h"
 #include "compv/drawing/compv_common.h"
 
 #include <SDL.h>

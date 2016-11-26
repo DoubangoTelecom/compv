@@ -11,7 +11,7 @@
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_surfacelayer_single.h"
-#include "compv/drawing/opengl/compv_surface_gl.h"
+#include "compv/drawing/gl/compv_surface_gl.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")

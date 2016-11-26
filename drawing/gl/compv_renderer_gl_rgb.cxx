@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/opengl/compv_renderer_gl_rgb.h"
+#include "compv/drawing/gl/compv_renderer_gl_rgb.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
 #include "compv/gl/compv_gl_utils.h"

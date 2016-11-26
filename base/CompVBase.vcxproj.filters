@@ -73,6 +73,12 @@
     <Filter Include="Source Files\image">
       <UniqueIdentifier>{3b56fa33-8872-4cf8-9497-20dd7d2d0628}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\drawing">
+      <UniqueIdentifier>{a4c99687-ba62-475c-a146-daa6bc10e8da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\drawing">
+      <UniqueIdentifier>{ca82f4af-3963-479c-b1f1-15f54c67e6f5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_config.h">
@@ -219,20 +225,23 @@
     <ClInclude Include="include\compv\base\compv_jni.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\base\compv_blitter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\base\compv_canvas.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\base\compv_renderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\base\compv_bind.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\base\compv_lock.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\drawing\compv_blitter.h">
+      <Filter>Header Files\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\drawing\compv_canvas.h">
+      <Filter>Header Files\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\drawing\compv_renderer.h">
+      <Filter>Header Files\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\drawing\compv_mvp.h">
+      <Filter>Header Files\drawing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -338,20 +347,23 @@
     <ClCompile Include="compv_jni.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="compv_blitter.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="compv_renderer.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="compv_canvas.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="compv_bind.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="compv_lock.cxx">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="drawing\compv_blitter.cxx">
+      <Filter>Source Files\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="drawing\compv_canvas.cxx">
+      <Filter>Source Files\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="drawing\compv_renderer.cxx">
+      <Filter>Source Files\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="drawing\compv_mvp.cxx">
+      <Filter>Source Files\drawing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

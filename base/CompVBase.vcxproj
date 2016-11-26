@@ -167,9 +167,7 @@
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_bind.h" />
     <ClInclude Include="include\compv\base\compv_base.h" />
-    <ClInclude Include="include\compv\base\compv_blitter.h" />
     <ClInclude Include="include\compv\base\compv_buffer.h" />
-    <ClInclude Include="include\compv\base\compv_canvas.h" />
     <ClInclude Include="include\compv\base\compv_common.h" />
     <ClInclude Include="include\compv\base\compv_config.h" />
     <ClInclude Include="include\compv\base\compv_cpu.h" />
@@ -182,9 +180,12 @@
     <ClInclude Include="include\compv\base\compv_md5.h" />
     <ClInclude Include="include\compv\base\compv_mem.h" />
     <ClInclude Include="include\compv\base\compv_obj.h" />
-    <ClInclude Include="include\compv\base\compv_renderer.h" />
     <ClInclude Include="include\compv\base\compv_sharedlib.h" />
     <ClInclude Include="include\compv\base\compv_simd_globals.h" />
+    <ClInclude Include="include\compv\base\drawing\compv_blitter.h" />
+    <ClInclude Include="include\compv\base\drawing\compv_canvas.h" />
+    <ClInclude Include="include\compv\base\drawing\compv_mvp.h" />
+    <ClInclude Include="include\compv\base\drawing\compv_renderer.h" />
     <ClInclude Include="include\compv\base\image\compv_image.h" />
     <ClInclude Include="include\compv\base\image\compv_image_decoder.h" />
     <ClInclude Include="include\compv\base\image\compv_image_utils.h" />
@@ -222,9 +223,7 @@
   <ItemGroup>
     <ClCompile Include="compv_bind.cxx" />
     <ClCompile Include="compv_base.cxx" />
-    <ClCompile Include="compv_blitter.cxx" />
     <ClCompile Include="compv_buffer.cxx" />
-    <ClCompile Include="compv_canvas.cxx" />
     <ClCompile Include="compv_common.cxx" />
     <ClCompile Include="compv_cpu.cxx" />
     <ClCompile Include="compv_debug.cxx" />
@@ -235,9 +234,12 @@
     <ClCompile Include="compv_md5.cxx" />
     <ClCompile Include="compv_mem.cxx" />
     <ClCompile Include="compv_obj.cxx" />
-    <ClCompile Include="compv_renderer.cxx" />
     <ClCompile Include="compv_sharedlib.cxx" />
     <ClCompile Include="compv_simd_globals.cxx" />
+    <ClCompile Include="drawing\compv_blitter.cxx" />
+    <ClCompile Include="drawing\compv_canvas.cxx" />
+    <ClCompile Include="drawing\compv_mvp.cxx" />
+    <ClCompile Include="drawing\compv_renderer.cxx" />
     <ClCompile Include="image\compv_image.cxx" />
     <ClCompile Include="image\compv_image_decoder.cxx" />
     <ClCompile Include="image\compv_image_utils.cxx" />

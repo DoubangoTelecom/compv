@@ -11,7 +11,7 @@
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_renderer.h"
-#include "compv/drawing/opengl/compv_blitter_gl.h"
+#include "compv/drawing/gl/compv_blitter_gl.h"
 #include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/gl/compv_gl_common.h"

@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/opengl/compv_surface_gl.h"
+#include "compv/drawing/gl/compv_surface_gl.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/compv_window.h"
@@ -120,12 +120,12 @@ COMPV_ERROR_CODE CompVSurfaceGL::blit(const CompVGLFboPtr ptrFboSrc, const CompV
 	
 	{
 		COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // FIXME: compute once
-		CompVDrawingRect rcViewport;
+		CompVRect rcViewport;
 		const size_t dstWidth = ptrFboDst ? ptrFboDst->width() : CompVBlitterGL::width();
 		const size_t dstHeight = ptrFboDst ? ptrFboDst->height() : CompVBlitterGL::height();
 		COMPV_CHECK_CODE_BAIL(err = CompVViewport::viewport(
-			CompVDrawingRect::makeFromWidthHeight(0, 0, static_cast<int>(ptrFboSrc->width()), static_cast<int>(ptrFboSrc->height())),
-			CompVDrawingRect::makeFromWidthHeight(0, 0, static_cast<int>(dstWidth), static_cast<int>(dstHeight)),
+			CompVRect::makeFromWidthHeight(0, 0, static_cast<int>(ptrFboSrc->width()), static_cast<int>(ptrFboSrc->height())),
+			CompVRect::makeFromWidthHeight(0, 0, static_cast<int>(dstWidth), static_cast<int>(dstHeight)),
 			m_ptrViewport, &rcViewport));
 		const GLsizei viewportW = static_cast<GLsizei>(rcViewport.right - rcViewport.left);
 		const GLsizei viewportH = static_cast<GLsizei>(rcViewport.bottom - rcViewport.top);

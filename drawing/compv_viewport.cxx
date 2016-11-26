@@ -37,14 +37,14 @@ COMPV_ERROR_CODE CompVViewport::reset(const CompViewportSizeFlags& sizeFlags, in
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVViewport::setPixelAspectRatio(const CompVDrawingRatio& ratio)
+COMPV_ERROR_CODE CompVViewport::setPixelAspectRatio(const CompVRatio& ratio)
 {
 	COMPV_CHECK_EXP_RETURN(ratio.numerator < 0 || ratio.denominator <= 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	m_PixelAspectRatio = ratio;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVViewport::toRect(const CompVViewportPtr& viewport, CompVDrawingRect* rect)
+COMPV_ERROR_CODE CompVViewport::toRect(const CompVViewportPtr& viewport, CompVRect* rect)
 {
 	COMPV_CHECK_EXP_RETURN(!viewport || !rect, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	rect->left = static_cast<int>(viewport->x());
@@ -65,7 +65,7 @@ COMPV_ERROR_CODE CompVViewport::newObj(CompVViewportPtrPtr viewport, const CompV
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVViewport::viewport(const CompVDrawingRect& rcSource, const CompVDrawingRect& rcDest, const CompVViewportPtr& currViewport, CompVDrawingRect* rcViewport)
+COMPV_ERROR_CODE CompVViewport::viewport(const CompVRect& rcSource, const CompVRect& rcDest, const CompVViewportPtr& currViewport, CompVRect* rcViewport)
 {
 	COMPV_CHECK_EXP_RETURN(!rcViewport || !currViewport, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -75,11 +75,11 @@ COMPV_ERROR_CODE CompVViewport::viewport(const CompVDrawingRect& rcSource, const
 	}
 
 	const CompViewportSizeFlags& sizeFlags = currViewport->sizeFlags();
-	CompVDrawingRect rcAspectRatio;
+	CompVRect rcAspectRatio;
 	int x, y, width, height;
 
 	if (sizeFlags.x == COMPV_VIEWPORT_SIZE_FLAG_DYNAMIC_ASPECT_RATIO || sizeFlags.y == COMPV_VIEWPORT_SIZE_FLAG_DYNAMIC_ASPECT_RATIO || sizeFlags.width == COMPV_VIEWPORT_SIZE_FLAG_DYNAMIC_ASPECT_RATIO || sizeFlags.height == COMPV_VIEWPORT_SIZE_FLAG_DYNAMIC_ASPECT_RATIO) {
-		CompVDrawingRect rcSrc;
+		CompVRect rcSrc;
 		COMPV_CHECK_CODE_RETURN(CompVViewport::correctAspectRatio(rcSource, currViewport->aspectRatio(), rcSrc));
 		COMPV_CHECK_CODE_RETURN(CompVViewport::letterBoxRect(rcSrc, rcDest, rcAspectRatio));
 	}
@@ -145,10 +145,10 @@ static COMPV_INLINE int COMPV_MulDiv(int number, int numerator, int denominator)
 // is stretched to 720 x 540.
 // Copyright (C) Microsoft
 //-----------------------------------------------------------------------------
-COMPV_ERROR_CODE CompVViewport::correctAspectRatio(const CompVDrawingRect& rcSrc, const CompVDrawingRatio& srcPAR, CompVDrawingRect& rcResult)
+COMPV_ERROR_CODE CompVViewport::correctAspectRatio(const CompVRect& rcSrc, const CompVRatio& srcPAR, CompVRect& rcResult)
 {
 	// Start with a rectangle the same size as src, but offset to the origin (0,0).
-	rcResult = CompVDrawingRect(0, 0, rcSrc.right - rcSrc.left, rcSrc.bottom - rcSrc.top);
+	rcResult = CompVRect(0, 0, rcSrc.right - rcSrc.left, rcSrc.bottom - rcSrc.top);
 
 	if ((srcPAR.numerator != 1) || (srcPAR.denominator != 1))
 	{
@@ -180,7 +180,7 @@ COMPV_ERROR_CODE CompVViewport::correctAspectRatio(const CompVDrawingRect& rcSrc
 // source and destination rectangles.
 // Copyright (C) Microsoft
 //-------------------------------------------------------------------
-COMPV_ERROR_CODE CompVViewport::letterBoxRect(const CompVDrawingRect& rcSrc, const CompVDrawingRect& rcDst, CompVDrawingRect& rcResult)
+COMPV_ERROR_CODE CompVViewport::letterBoxRect(const CompVRect& rcSrc, const CompVRect& rcDst, CompVRect& rcResult)
 {
 	// figure out src/dest scale ratios
 	int iSrcWidth = rcSrc.right - rcSrc.left;

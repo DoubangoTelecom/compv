@@ -7,8 +7,8 @@
 #include "compv/drawing/compv_window.h"
 #include "compv/drawing/compv_drawing.h"
 
-#include "compv/drawing/opengl/compv_window_glfw3.h"
-#include "compv/drawing/opengl/compv_window_egl.h"
+#include "compv/drawing/gl/compv_window_glfw3.h"
+#include "compv/drawing/gl/compv_window_egl.h"
 #include "compv/drawing/sdl/compv_window_sdl.h"
 #include "compv/drawing/android/compv_window_android_egl.h"
 

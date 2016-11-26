@@ -4,11 +4,11 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/opengl/compv_surfacelayer_gl_single.h"
+#include "compv/drawing/gl/compv_surfacelayer_gl_single.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/math/compv_math.h"
 #include "compv/drawing/compv_drawing.h"
-#include "compv/drawing/opengl/compv_window_gl.h"
+#include "compv/drawing/gl/compv_window_gl.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -32,7 +32,7 @@ CompVSurfacePtr CompVSingleSurfaceLayerGL::surface()
 COMPV_ERROR_CODE CompVSingleSurfaceLayerGL::blit()
 {
 	COMPV_CHECK_EXP_RETURN(!m_ptrSurfaceGL, COMPV_ERROR_CODE_E_INVALID_STATE);
-	if (m_ptrSurfaceGL->isActive()) {
+	if (m_ptrSurfaceGL->isActive() && m_ptrSurfaceGL->renderer()) {
 		COMPV_CHECK_CODE_RETURN(m_ptrSurfaceGL->blitRenderer(kCompVGLPtrSystemFrameBuffer));
 	}
 	return COMPV_ERROR_CODE_S_OK;

@@ -10,7 +10,7 @@
 #include "compv/drawing/compv_config.h"
 #if HAVE_SKIA
 #include "compv/drawing/compv_common.h"
-#include "compv/base/compv_canvas.h"
+#include "compv/base/drawing/compv_canvas.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_mat.h"
 

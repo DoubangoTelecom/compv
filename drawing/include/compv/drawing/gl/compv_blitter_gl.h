@@ -10,9 +10,9 @@
 #include "compv/drawing/compv_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-#include "compv/drawing/opengl/compv_mvp_glm.h"
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/compv_common.h"
+#include "compv/drawing/compv_mvp.h"
 #include "compv/gl/compv_gl_common.h"
 #include "compv/gl/compv_gl_vao.h"
 #include "compv/gl/compv_gl_program.h"

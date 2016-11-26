@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/opengl/compv_window_glfw3.h"
+#include "compv/drawing/gl/compv_window_glfw3.h"
 #if defined(HAVE_GLFW_GLFW3_H)
 #error "GLFW is deprecated and replaced with SDL"
 #include "compv/drawing/compv_drawing.h"

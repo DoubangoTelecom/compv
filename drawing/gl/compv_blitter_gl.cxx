@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/opengl/compv_blitter_gl.h"
+#include "compv/drawing/gl/compv_blitter_gl.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/drawing/compv_drawing.h"
 #include "compv/gl/compv_gl_utils.h"
@@ -180,7 +180,7 @@ COMPV_ERROR_CODE CompVBlitterGL::init(size_t width, size_t height, size_t stride
 		//float arX = static_cast<float>(width) / static_cast<float>(height);
 		//float arY = static_cast<float>(height) / static_cast<float>(width);
 		//COMPV_CHECK_CODE_BAIL(err = m_ptrMVP->projection()->setAspectRatio(arX));
-		//COMPV_CHECK_CODE_BAIL(err = m_ptrMVP->model()->matrix()->scale(CompVDrawingVec3f(1.f/arX, 1.f/arY, 1.f)));
+		//COMPV_CHECK_CODE_BAIL(err = m_ptrMVP->model()->matrix()->scale(CompVVec3f(1.f/arX, 1.f/arY, 1.f)));
 		COMPV_glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, m_ptrMVP->matrix()->ptr());
 	}
 

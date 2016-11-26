@@ -13,9 +13,9 @@
 #include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/drawing/compv_surface.h"
-#include "compv/drawing/opengl/compv_mvp_glm.h"
-#include "compv/drawing/opengl/compv_renderer_gl.h"
-#include "compv/drawing/opengl/compv_blitter_gl.h"
+#include "compv/drawing/gl/compv_mvp_glm.h"
+#include "compv/drawing/gl/compv_renderer_gl.h"
+#include "compv/drawing/gl/compv_blitter_gl.h"
 #include "compv/gl/compv_gl_fbo.h"
 #include "compv/gl/compv_gl_canvas.h"
 

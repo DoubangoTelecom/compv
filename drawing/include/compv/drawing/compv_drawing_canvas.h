@@ -10,7 +10,7 @@
 #include "compv/drawing/compv_config.h"
 #include "compv/drawing/compv_common.h"
 #include "compv/drawing/skia/compv_canvas_skia.h"
-#include "compv/base/compv_canvas.h"
+#include "compv/base/drawing/compv_canvas.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")

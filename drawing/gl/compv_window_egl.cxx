@@ -4,10 +4,10 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/opengl/compv_window_egl.h"
+#include "compv/drawing/gl/compv_window_egl.h"
 #if defined(HAVE_EGL) && 0
 #include "compv/drawing/compv_drawing.h"
-#include "compv/drawing/opengl/compv_headers_gl.h"
+#include "compv/drawing/gl/compv_headers_gl.h"
 
 COMPV_NAMESPACE_BEGIN()
 

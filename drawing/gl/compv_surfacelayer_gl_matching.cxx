@@ -4,11 +4,11 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/opengl/compv_surfacelayer_gl_matching.h"
+#include "compv/drawing/gl/compv_surfacelayer_gl_matching.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/math/compv_math.h"
 #include "compv/drawing/compv_drawing.h"
-#include "compv/drawing/opengl/compv_window_gl.h"
+#include "compv/drawing/gl/compv_window_gl.h"
 
 COMPV_NAMESPACE_BEGIN()
 

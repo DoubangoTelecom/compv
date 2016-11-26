@@ -151,8 +151,8 @@ bail:
 
 	// Set MVP
 	COMPV_CHECK_CODE_BAIL(err = CompVMVP::newObjProjection2D(&ptrMVP));
-	COMPV_CHECK_CODE_BAIL(err = ptrMVP->model()->matrix()->scale(CompVDrawingVec3f(1.f, 1.f, 1.f)));
-	COMPV_CHECK_CODE_BAIL(err = ptrMVP->view()->setCamera(CompVDrawingVec3f(0.f, 0.f, 1.f), CompVDrawingVec3f(0.f, 0.f, 0.f), CompVDrawingVec3f(0.f, 1.f, 0.f)));
+	COMPV_CHECK_CODE_BAIL(err = ptrMVP->model()->matrix()->scale(CompVVec3f(1.f, 1.f, 1.f)));
+	COMPV_CHECK_CODE_BAIL(err = ptrMVP->view()->setCamera(CompVVec3f(0.f, 0.f, 1.f), CompVVec3f(0.f, 0.f, 0.f), CompVVec3f(0.f, 1.f, 0.f)));
 	COMPV_CHECK_CODE_BAIL(err = ptrMVP->projection2D()->setOrtho(-1.f, 1.f, -1.f, 1.f, -1.f, 1.f));
 	COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->setMVP(ptrMVP));*/
 

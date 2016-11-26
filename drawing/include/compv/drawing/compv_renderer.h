@@ -11,7 +11,7 @@
 #include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_mat.h"
-#include "compv/base/compv_canvas.h"
+#include "compv/base/drawing/compv_canvas.h"
 
 #include <string>
 

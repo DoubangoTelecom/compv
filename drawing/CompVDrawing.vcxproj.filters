@@ -13,12 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\opengl">
-      <UniqueIdentifier>{cbea7fb1-c49a-4864-9025-eed247e4ecd8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\opengl">
-      <UniqueIdentifier>{1af8a8f4-4174-41a1-9bba-b61538c5853a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\skia">
       <UniqueIdentifier>{0727282a-65c1-4551-9cf5-96c1d76b4007}</UniqueIdentifier>
     </Filter>
@@ -31,6 +25,12 @@
     <Filter Include="Source Files\sdl">
       <UniqueIdentifier>{6bfe675a-32ac-45bb-b680-c614555241fc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\gl">
+      <UniqueIdentifier>{1af8a8f4-4174-41a1-9bba-b61538c5853a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gl">
+      <UniqueIdentifier>{cbea7fb1-c49a-4864-9025-eed247e4ecd8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\drawing\compv_drawing.h">
@@ -39,17 +39,11 @@
     <ClInclude Include="include\compv\drawing\compv_image_libjpeg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_window_glfw3.h">
-      <Filter>Header Files\opengl</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\drawing\compv_window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\drawing\compv_surface.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_surface_gl.h">
-      <Filter>Header Files\opengl</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\drawing\skia\compv_canvas_skia.h">
       <Filter>Header Files\skia</Filter>
@@ -57,44 +51,17 @@
     <ClInclude Include="include\compv\drawing\sdl\compv_window_sdl.h">
       <Filter>Header Files\sdl</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_renderer_gl.h">
-      <Filter>Header Files\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_renderer_gl_rgb.h">
-      <Filter>Header Files\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_renderer_gl_yuv.h">
-      <Filter>Header Files\opengl</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\drawing\compv_renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_window_gl.h">
-      <Filter>Header Files\opengl</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\drawing\compv_common.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\drawing\compv_mvp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_mvp_glm.h">
-      <Filter>Header Files\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_blitter_gl.h">
-      <Filter>Header Files\opengl</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\drawing\compv_viewport.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\drawing\compv_surfacelayer.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_surfacelayer_gl_matching.h">
-      <Filter>Header Files\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_surfacelayer_gl_single.h">
-      <Filter>Header Files\opengl</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\drawing\compv_surfacelayer_matching.h">
       <Filter>Header Files</Filter>
@@ -105,14 +72,47 @@
     <ClInclude Include="include\compv\drawing\compv_surfacelayer_multi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\drawing\opengl\compv_surfacelayer_gl_multi.h">
-      <Filter>Header Files\opengl</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\drawing\compv_config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\drawing\compv_drawing_canvas.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\gl\compv_blitter_gl.h">
+      <Filter>Header Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\gl\compv_mvp_glm.h">
+      <Filter>Header Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\gl\compv_renderer_gl.h">
+      <Filter>Header Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\gl\compv_renderer_gl_rgb.h">
+      <Filter>Header Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\gl\compv_renderer_gl_yuv.h">
+      <Filter>Header Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\gl\compv_surface_gl.h">
+      <Filter>Header Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\gl\compv_surfacelayer_gl_matching.h">
+      <Filter>Header Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\gl\compv_surfacelayer_gl_multi.h">
+      <Filter>Header Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\gl\compv_surfacelayer_gl_single.h">
+      <Filter>Header Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\gl\compv_window_egl.h">
+      <Filter>Header Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\gl\compv_window_gl.h">
+      <Filter>Header Files\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\gl\compv_window_glfw3.h">
+      <Filter>Header Files\gl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -122,14 +122,8 @@
     <ClCompile Include="compv_image_libjpeg.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\compv_window_glfw3.cxx">
-      <Filter>Source Files\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="compv_window.cxx">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="opengl\compv_surface_gl.cxx">
-      <Filter>Source Files\opengl</Filter>
     </ClCompile>
     <ClCompile Include="compv_surface.cxx">
       <Filter>Source Files</Filter>
@@ -140,29 +134,8 @@
     <ClCompile Include="sdl\compv_window_sdl.cxx">
       <Filter>Source Files\sdl</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\compv_renderer_gl.cxx">
-      <Filter>Source Files\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="opengl\compv_renderer_gl_rgb.cxx">
-      <Filter>Source Files\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="opengl\compv_renderer_gl_yuv.cxx">
-      <Filter>Source Files\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="compv_renderer.cxx">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="opengl\compv_window_gl.cxx">
-      <Filter>Source Files\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="compv_mvp.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="opengl\compv_mvp_glm.cxx">
-      <Filter>Source Files\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="opengl\compv_blitter_gl.cxx">
-      <Filter>Source Files\opengl</Filter>
     </ClCompile>
     <ClCompile Include="compv_viewport.cxx">
       <Filter>Source Files</Filter>
@@ -176,17 +149,44 @@
     <ClCompile Include="compv_surfacelayer_single.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\compv_surfacelayer_gl_matching.cxx">
-      <Filter>Source Files\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="opengl\compv_surfacelayer_gl_single.cxx">
-      <Filter>Source Files\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="opengl\compv_surfacelayer_gl_multi.cxx">
-      <Filter>Source Files\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="compv_surfacelayer_multi.cxx">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\compv_blitter_gl.cxx">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\compv_mvp_glm.cxx">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\compv_renderer_gl.cxx">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\compv_renderer_gl_rgb.cxx">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\compv_renderer_gl_yuv.cxx">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\compv_surface_gl.cxx">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\compv_surfacelayer_gl_matching.cxx">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\compv_surfacelayer_gl_multi.cxx">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\compv_surfacelayer_gl_single.cxx">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\compv_window_egl.cxx">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\compv_window_gl.cxx">
+      <Filter>Source Files\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\compv_window_glfw3.cxx">
+      <Filter>Source Files\gl</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

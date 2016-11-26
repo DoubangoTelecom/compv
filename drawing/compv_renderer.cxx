@@ -8,7 +8,7 @@
 #include "compv/drawing/compv_drawing.h"
 #include "compv/drawing/compv_surface.h"
 
-#include "compv/drawing/opengl/compv_renderer_gl.h"
+#include "compv/drawing/gl/compv_renderer_gl.h"
 
 COMPV_NAMESPACE_BEGIN()
 
