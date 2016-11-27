@@ -32,5 +32,10 @@ CompVCanvas::~CompVCanvas()
 {  
 }
 
+//
+//	CompVCanvasFactory
+//
+const CompVCanvasFactory* CompVCanvasFactory::instance = NULL;
+
 COMPV_NAMESPACE_END()
 

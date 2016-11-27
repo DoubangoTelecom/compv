@@ -45,6 +45,8 @@ public:
 
 	COMPV_ERROR_CODE clear();
 
+	COMPV_ERROR_CODE close();
+
 	static COMPV_ERROR_CODE newObj(CompVGLFboPtrPtr fbo, size_t width, size_t height);
 
 protected:

@@ -180,6 +180,12 @@ bail:
 	return err;
 }
 
+COMPV_ERROR_CODE CompVGLFbo::close()
+{
+	COMPV_CHECK_CODE_ASSERT(deInit());
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVGLFbo::newObj(CompVGLFboPtrPtr fbo, size_t width, size_t height)
 {
 	COMPV_CHECK_CODE_RETURN(CompVGL::init());

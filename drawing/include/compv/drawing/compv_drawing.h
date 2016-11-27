@@ -10,10 +10,9 @@
 #include "compv/drawing/compv_config.h"
 #include "compv/drawing/compv_common.h"
 #include "compv/base/compv_obj.h"
-#include "compv/base/parallel/compv_mutex.h"
 #include "compv/base/parallel/compv_thread.h"
 #include "compv/base/android/compv_android_native_activity.h"
-#include "compv/drawing/compv_window.h"
+#include "compv/base/drawing/compv_window.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -50,8 +49,7 @@ public:
 #if COMPV_OS_ANDROID
 	static COMPV_INLINE ANativeWindow* getAndroidNativeActivityWindow() { return s_AndroidEngine.app->window; }
 #endif
-
-	static size_t windowsCount();
+	
 	static COMPV_ERROR_CODE runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) = NULL, void *userData = NULL);
 	static COMPV_ERROR_CODE breakLoop();
 
@@ -64,16 +62,11 @@ private:
 	static void android_engine_handle_cmd(struct android_app* app, int32_t cmd);
 	static COMPV_ERROR_CODE android_runLoop(struct android_app* state);
 #endif
-	static COMPV_ERROR_CODE registerWindow(CompVWindowPtr window);
-	static COMPV_ERROR_CODE unregisterWindow(CompVWindowPtr window);
-	static COMPV_ERROR_CODE unregisterWindow(compv_window_id_t windowId);
 
 private:
 	static bool s_bInitialized;
 	static bool s_bLoopRunning;
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	static std::map<compv_window_id_t, CompVWindowPtr > m_sWindows;
-	static CompVMutexPtr s_WindowsMutex;
 	static CompVThreadPtr s_WorkerThread;
 #if COMPV_OS_ANDROID
 	static CompVDrawingAndroidEngine s_AndroidEngine;

@@ -54,6 +54,7 @@ public:
 	virtual COMPV_ERROR_CODE setFBO(CompVGLFboPtr fbo);
 	virtual COMPV_ERROR_CODE requestFBO(size_t width, size_t height);
 	virtual COMPV_ERROR_CODE updateSize(size_t width, size_t height, size_t stride);
+	virtual COMPV_ERROR_CODE close();
 	virtual COMPV_ERROR_CODE init(size_t width, size_t height, size_t stride, const std::string& prgVertexData, const std::string& prgFragData, bool bMVP = false, bool bToScreen = false);
 	virtual COMPV_ERROR_CODE deInit();
 

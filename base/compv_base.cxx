@@ -11,6 +11,7 @@
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/image/compv_image_decoder.h"
+#include "compv/base/drawing/compv_window_registry.h"
 #include "compv/base/android/compv_android_native_activity.h"
 #include "compv/base/compv_jni.h"
 
@@ -149,6 +150,9 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
 	}
 #endif
 
+	/* Window registery */
+	COMPV_CHECK_CODE_BAIL(err_ = CompVWindowRegistry::init());
+
 	/* Image handlers initialization */
 	COMPV_CHECK_CODE_BAIL(err_ = CompVImageDecoder::init());
 
@@ -258,6 +262,8 @@ COMPV_ERROR_CODE CompVBase::deInit()
 	s_bInitializing = false;
 
 	CompVParallel::deInit();
+
+	CompVWindowRegistry::deInit();
 
 	// TODO(dmi): deInit other modules (not an issue because there is no memory allocation)
 	CompVMem::deInit();

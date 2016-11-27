@@ -37,6 +37,12 @@
     <Filter Include="source\android">
       <UniqueIdentifier>{e0271f58-a1ac-460f-8f04-12a03cfe1de5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\drawing">
+      <UniqueIdentifier>{111097bb-29b8-4659-9d36-49d0501266e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\drawing">
+      <UniqueIdentifier>{0a303f6b-984e-432f-9a5e-836baa521a7d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -132,20 +138,23 @@
     <ClCompile Include="..\compv_jni.cxx">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\compv_blitter.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\compv_canvas.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\compv_lock.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\compv_renderer.cxx">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_bind.cxx">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_blitter.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_canvas.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_renderer.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_mvp.cxx">
+      <Filter>source\drawing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -254,17 +263,20 @@
     <ClInclude Include="..\include\compv\base\compv_bind.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_blitter.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_canvas.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\base\compv_lock.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_renderer.h">
-      <Filter>include</Filter>
+    <ClInclude Include="..\include\compv\base\drawing\compv_blitter.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\drawing\compv_canvas.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\drawing\compv_renderer.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\drawing\compv_mvp.h">
+      <Filter>include\drawing</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -10,20 +10,18 @@
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_mat.h"
 #include "compv/base/image/compv_image_decoder.h"
+#include "compv/base/drawing/compv_window_registry.h"
 #include "compv/base/android/compv_android_native_activity.h"
 #include "compv/gl/compv_gl.h"
 #include "compv/gl/compv_gl_info.h"
 
-#if defined(HAVE_SDL_H)
-#include <SDL.h>
-#endif /* HAVE_SDL_H */
+#include "compv/drawing/sdl/compv_window_sdl.h"
+#include "compv/drawing/skia/compv_canvas_skia.h"
 
 COMPV_NAMESPACE_BEGIN()
 
 bool CompVDrawing::s_bInitialized = false;
 bool CompVDrawing::s_bLoopRunning = false;
-std::map<compv_window_id_t, CompVWindowPtr > CompVDrawing::m_sWindows;
-CompVPtr<CompVMutex* > CompVDrawing::s_WindowsMutex = NULL;
 CompVPtr<CompVThread* > CompVDrawing::s_WorkerThread = NULL;
 #if COMPV_OS_ANDROID
 CompVDrawingAndroidEngine CompVDrawing::s_AndroidEngine = {
@@ -63,15 +61,22 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	COMPV_CHECK_CODE_BAIL(err = CompVBase::init());
 	COMPV_CHECK_CODE_BAIL(err = CompVGL::init());
 
-	COMPV_CHECK_CODE_BAIL(err = CompVMutex::newObj(&CompVDrawing::s_WindowsMutex));
-
 	/* Print Android API version */
 #if COMPV_OS_ANDROID
 	COMPV_DEBUG_INFO("[Drawing] module: android API version: %d", __ANDROID_API__);
 #endif
 
+	/* Skia */
+#if HAVE_SKIA
+	COMPV_CHECK_CODE_BAIL(err = CompVCanvasFactory::set(&CompVCanvasFactorySkia));
+#endif
+
 	/* SDL */
 #if defined(HAVE_SDL_H)
+	// Init SDL window factory
+	COMPV_CHECK_CODE_BAIL(err = CompVWindowFactory::set(&CompVWindowFactorySDL));
+
+	// Init SDL library
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		COMPV_DEBUG_ERROR_EX("SDL", "SDL_Init failed: %s", SDL_GetError());
 		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SDL);
@@ -154,7 +159,6 @@ COMPV_ERROR_CODE CompVDrawing::deInit()
 	COMPV_CHECK_CODE_ASSERT(CompVGL::deInit());
 
 	CompVDrawing::breakLoop();
-	CompVDrawing::s_WindowsMutex = NULL;
 	CompVDrawing::s_WorkerThread = NULL;
 
 #if defined(HAVE_SDL_H)
@@ -174,42 +178,6 @@ COMPV_ERROR_CODE CompVDrawing::deInit()
 	COMPV_DEBUG_INFO("Drawing module deinitialized");
 
 	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVDrawing::registerWindow(CompVWindowPtr window)
-{
-	COMPV_CHECK_EXP_RETURN(!CompVDrawing::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	COMPV_CHECK_EXP_RETURN(!window, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_CODE_ASSERT(CompVDrawing::s_WindowsMutex->lock());
-	CompVDrawing::m_sWindows.insert(std::pair<compv_window_id_t, CompVPtr<CompVWindow* > >(window->getId(), window));
-	COMPV_CHECK_CODE_ASSERT(CompVDrawing::s_WindowsMutex->unlock());
-
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVDrawing::unregisterWindow(CompVWindowPtr window)
-{
-	COMPV_CHECK_EXP_RETURN(!CompVDrawing::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	COMPV_CHECK_CODE_RETURN(CompVDrawing::unregisterWindow(window->getId()));
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVDrawing::unregisterWindow(compv_window_id_t windowId)
-{
-	COMPV_CHECK_EXP_RETURN(!CompVDrawing::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	COMPV_CHECK_CODE_ASSERT(CompVDrawing::s_WindowsMutex->lock());
-	CompVDrawing::m_sWindows.erase(windowId);
-	COMPV_CHECK_CODE_ASSERT(CompVDrawing::s_WindowsMutex->unlock());
-
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-size_t CompVDrawing::windowsCount()
-{
-	COMPV_CHECK_CODE_ASSERT(CompVDrawing::s_WindowsMutex->lock());
-	size_t count = CompVDrawing::m_sWindows.size();
-	COMPV_CHECK_CODE_ASSERT(CompVDrawing::s_WindowsMutex->unlock());
-	return count;
 }
 
 COMPV_ERROR_CODE CompVDrawing::runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) /*= NULL*/, void *userData /*= NULL*/)
@@ -274,7 +242,7 @@ COMPV_ERROR_CODE CompVDrawing::sdl_runLoop()
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
 	while (CompVDrawing::s_bLoopRunning) {
-		if (CompVDrawing::windowsCount() == 0) {
+		if (CompVWindowRegistry::count() == 0) {
 			COMPV_DEBUG_INFO("No active windows in the event loop... breaking the loop");
 			goto bail;
 		}
@@ -442,14 +410,7 @@ bail:
 COMPV_ERROR_CODE CompVDrawing::breakLoop()
 {
 	COMPV_CHECK_EXP_RETURN(!CompVDrawing::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	COMPV_CHECK_CODE_ASSERT(CompVDrawing::s_WindowsMutex->lock());
-	std::map<compv_window_id_t, CompVPtr<CompVWindow* > >::iterator it;
-	for (it = CompVDrawing::m_sWindows.begin(); it != CompVDrawing::m_sWindows.end(); ++it) {
-		CompVPtr<CompVWindow* > window = it->second;
-		COMPV_CHECK_CODE_ASSERT(window->close());
-	}
-	CompVDrawing::m_sWindows.clear();
-	COMPV_CHECK_CODE_ASSERT(CompVDrawing::s_WindowsMutex->unlock());
+	COMPV_CHECK_CODE_RETURN(CompVWindowRegistry::closeAll());
 
 	return COMPV_ERROR_CODE_S_OK;
 }

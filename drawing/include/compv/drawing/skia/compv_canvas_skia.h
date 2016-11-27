@@ -22,6 +22,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+extern const CompVCanvasFactory CompVCanvasFactorySkia;
+
 class CompVCanvasImplSkia;
 typedef CompVPtr<CompVCanvasImplSkia* > CompVCanvasImplSkiaPtr;
 typedef CompVCanvasImplSkiaPtr* CompVCanvasImplSkiaPtrPtr;

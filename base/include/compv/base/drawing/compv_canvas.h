@@ -56,6 +56,29 @@ public:
 	virtual ~CompVCanvas();
 };
 
+//
+//	CompVCanvasFactory
+//
+struct COMPV_BASE_API CompVCanvasFactory {
+public:
+	const char* name;
+	COMPV_ERROR_CODE(*newObjFuncPtr)(CompVCanvasImplPtrPtr canvasImpl);
+	static COMPV_ERROR_CODE set(const CompVCanvasFactory* inst) {
+		COMPV_CHECK_EXP_RETURN(!inst, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_DEBUG_INFO("Setting canvas factory: %s", inst->name);
+		instance = inst; 
+		return COMPV_ERROR_CODE_S_OK; 
+	}
+	static COMPV_ERROR_CODE newObj(CompVCanvasImplPtrPtr canvasImpl) {
+		COMPV_CHECK_EXP_RETURN(!canvasImpl, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_EXP_RETURN(!instance, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+		COMPV_CHECK_CODE_RETURN(instance->newObjFuncPtr(canvasImpl));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+private:
+	static const CompVCanvasFactory* instance;
+};
+
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_BASE_DRAWING_CANVAS_H_ */

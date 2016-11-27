@@ -147,6 +147,15 @@ COMPV_ERROR_CODE CompVGLBlitter::updateSize(size_t width, size_t height, size_t 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVGLBlitter::close()
+{
+	if (m_ptrFBO) {
+		COMPV_CHECK_CODE_ASSERT(m_ptrFBO->close());
+	}
+	COMPV_CHECK_CODE_ASSERT(deInit());
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVGLBlitter::init(size_t width, size_t height, size_t stride, const std::string& prgVertexData, const std::string& prgFragData, bool bMVP COMPV_DEFAULT(false), bool bToScreen COMPV_DEFAULT(false))
 {
 	if (m_bInit) {

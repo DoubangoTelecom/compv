@@ -54,7 +54,7 @@ class CompVWindowAndroidEGL;
 typedef CompVPtr<CompVWindowAndroidEGL* > CompVWindowAndroidEGLPtr;
 typedef CompVWindowAndroidEGLPtr* CompVWindowAndroidEGLPtrPtr;
 
-class CompVWindowAndroidEGL : public CompVWindowGL
+class CompVWindowAndroidEGL : public CompVGLWindow
 {
 protected:
 	CompVWindowAndroidEGL(size_t width, size_t height, const char* title);
@@ -68,13 +68,13 @@ public:
 	virtual bool isClosed()const;
 	virtual COMPV_ERROR_CODE close();
 	virtual COMPV_ERROR_CODE beginDraw();
-	// Override(CompVWindow::endDraw) -> CompVWindowGL
-	// Override(CompVWindow::surface) -> CompVWindowGL
+	// Override(CompVWindow::endDraw) -> CompVGLWindow
+	// Override(CompVWindow::surface) -> CompVGLWindow
 
 	static COMPV_ERROR_CODE newObj(CompVWindowAndroidEGLPtrPtr eglWindow, size_t width, size_t height, const char* title);
 
 protected:
-	/* CompVWindowGL overrides */
+	/* CompVGLWindow overrides */
 	virtual CompVGLContextPtr context();
 
 private:

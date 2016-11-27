@@ -35,6 +35,8 @@ public:
 	COMPV_OVERRIDE_DECL0("CompVCanvasInterface", drawText)(const void* textPtr, size_t textLengthInBytes, int x, int y) override;
 	COMPV_OVERRIDE_DECL0("CompVCanvasInterface", drawLine)(int x0, int y0, int x1, int y1) override;
 
+	COMPV_ERROR_CODE close();
+
 	static COMPV_ERROR_CODE newObj(CompVGLCanvasPtrPtr canvas, CompVGLFboPtr ptrFBO, CompVCanvasImplPtr ptrImpl);
 
 private:

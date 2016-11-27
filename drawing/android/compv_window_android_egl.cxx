@@ -86,7 +86,7 @@ COMPV_ERROR_CODE CompVGLContextAndroidEGL::newObj(CompVGLContextAndroidEGLPtrPtr
 // FIXME(dmi): factore this class to have an egl implementation for rasberrypi
 
 CompVWindowAndroidEGL::CompVWindowAndroidEGL(size_t width, size_t height, const char* title)
-	: CompVWindowGL(width, height, title)
+	: CompVGLWindow(width, height, title)
 	, m_pEGLDisplay(EGL_NO_DISPLAY)
 	, m_pEGLSurface(EGL_NO_SURFACE)
 	, m_pEGLContex(EGL_NO_CONTEXT)
@@ -202,6 +202,8 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::deInit()
 	m_pEGLContex = EGL_NO_CONTEXT;
 	m_pEGLSurface = EGL_NO_SURFACE;
 
+	m_ptrContext = NULL;
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -214,6 +216,7 @@ bool CompVWindowAndroidEGL::isClosed()const
 COMPV_ERROR_CODE CompVWindowAndroidEGL::close()
 {
 	CompVAutoLock<CompVWindowAndroidEGL>(this);
+	COMPV_CHECK_CODE_ASSERT(CompVGLWindow::close()); // base class implementation
 	COMPV_CHECK_CODE_RETURN(deInit());
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -222,7 +225,7 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::beginDraw()
 {
 	CompVAutoLock<CompVWindowAndroidEGL>(this);
 	COMPV_CHECK_CODE_RETURN(init());
-	COMPV_CHECK_CODE_RETURN(CompVWindowGL::beginDraw()); // Base class implementation
+	COMPV_CHECK_CODE_RETURN(CompVGLWindow::beginDraw()); // Base class implementation
 	return COMPV_ERROR_CODE_S_OK;
 }
 

@@ -25,17 +25,17 @@ struct GLFWwindow;
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVWindowGLFW3;
-typedef CompVPtr<CompVWindowGLFW3* > CompVWindowGLFW3Ptr;
-typedef CompVWindowGLFW3Ptr* CompVWindowGLFW3PtrPtr;
+class CompVGLWindowFW3;
+typedef CompVPtr<CompVGLWindowFW3* > CompVGLWindowFW3Ptr;
+typedef CompVGLWindowFW3Ptr* CompVGLWindowFW3PtrPtr;
 
-class CompVWindowGLFW3 : public CompVWindow
+class CompVGLWindowFW3 : public CompVWindow
 {
 protected:
-	CompVWindowGLFW3(int width, int height, const char* title);
+	CompVGLWindowFW3(int width, int height, const char* title);
 public:
-	virtual ~CompVWindowGLFW3();
-	COMPV_GET_OBJECT_ID(CompVWindowGLFW3);
+	virtual ~CompVGLWindowFW3();
+	COMPV_GET_OBJECT_ID(CompVGLWindowFW3);
 	
 	COMPV_INLINE struct GLFWwindow * getGLFWwindow() { return m_pGLFWwindow; }
 
@@ -43,7 +43,7 @@ public:
 	virtual COMPV_ERROR_CODE close();
 	virtual COMPV_ERROR_CODE draw(CompVMatPtr mat);
 
-	static COMPV_ERROR_CODE newObj(CompVWindowGLFW3PtrPtr glfwWindow, int width, int height, const char* title);
+	static COMPV_ERROR_CODE newObj(CompVGLWindowFW3PtrPtr glfwWindow, int width, int height, const char* title);
 	static void GLFWwindowcloseCallback(GLFWwindow* window);
 
 private:

@@ -41,6 +41,14 @@ COMPV_OVERRIDE_IMPL0("CompVCanvasInterface", CompVGLCanvas::drawLine)(int x0, in
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVGLCanvas::close()
+{
+	if (m_ptrFBO) {
+		COMPV_CHECK_CODE_ASSERT(m_ptrFBO->close());
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVGLCanvas::newObj(CompVGLCanvasPtrPtr canvas, CompVGLFboPtr ptrFBO, CompVCanvasImplPtr ptrImpl)
 {
 	COMPV_CHECK_EXP_RETURN(!canvas || !ptrFBO || !ptrImpl, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

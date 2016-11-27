@@ -57,6 +57,30 @@
     <ClInclude Include="include\compv\gl\compv_gl_blitter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\gl\compv_gl_renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\gl\compv_gl_renderer_rgb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\gl\compv_gl_renderer_yuv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\gl\compv_gl_surface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\gl\compv_gl_surfacelayer_matching.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\gl\compv_gl_surfacelayer_multi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\gl\compv_gl_surfacelayer_single.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\gl\compv_gl_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_gl.cxx">
@@ -87,6 +111,30 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="compv_gl_blitter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_gl_renderer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_gl_renderer_rgb.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_gl_renderer_yuv.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_gl_surface.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_gl_surfacelayer_matching.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_gl_surfacelayer_multi.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_gl_surfacelayer_single.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_gl_window.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

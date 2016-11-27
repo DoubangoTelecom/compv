@@ -9,8 +9,8 @@
 
 #include "compv/drawing/compv_config.h"
 #if defined(HAVE_SDL_H)
-#include "compv/drawing/gl/compv_window_gl.h"
 #include "compv/drawing/compv_common.h"
+#include "compv/gl/compv_gl_window.h"
 
 #include <SDL.h>
 
@@ -19,6 +19,8 @@
 #endif
 
 COMPV_NAMESPACE_BEGIN()
+
+extern const CompVWindowFactory CompVWindowFactorySDL;
 
 //
 //	CompVGLContextSDL
@@ -54,7 +56,7 @@ class CompVWindowSDL;
 typedef CompVPtr<CompVWindowSDL* > CompVWindowSDLPtr;
 typedef CompVWindowSDLPtr* CompVWindowSDLPtrPtr;
 
-class CompVWindowSDL : public CompVWindowGL
+class CompVWindowSDL : public CompVGLWindow
 {
 protected:
 	CompVWindowSDL(size_t width, size_t height, const char* title);
@@ -65,14 +67,14 @@ public:
 	/* CompVWindow overrides */
 	virtual bool isClosed()const;
 	virtual COMPV_ERROR_CODE close();
-	// Override(CompVWindow::beginDraw) -> CompVWindowGL
-	// Override(CompVWindow::endDraw) -> CompVWindowGL
-	// Override(CompVWindow::surface) -> CompVWindowGL
+	// Override(CompVWindow::beginDraw) -> CompVGLWindow
+	// Override(CompVWindow::endDraw) -> CompVGLWindow
+	// Override(CompVWindow::surface) -> CompVGLWindow
 
 	static COMPV_ERROR_CODE newObj(CompVWindowSDLPtrPtr sdlWindow, size_t width, size_t height, const char* title);
 
 protected:
-	/* CompVWindowGL overrides */
+	/* CompVGLWindow overrides */
 	virtual CompVGLContextPtr context();
 
 private:

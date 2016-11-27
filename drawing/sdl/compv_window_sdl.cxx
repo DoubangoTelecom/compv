@@ -15,6 +15,22 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+//
+//	CompVWindowFactorySDL
+//
+static COMPV_ERROR_CODE CompVWindowFactorySDL_newObj(CompVWindowPtrPtr window, size_t width, size_t height, const char* title)
+{
+	COMPV_CHECK_EXP_RETURN(!window || !width || !height || !title, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVWindowSDLPtr sdlWindow;
+	COMPV_CHECK_CODE_RETURN(CompVWindowSDL::newObj(&sdlWindow, width, height, title));
+	*window = *sdlWindow;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+const CompVWindowFactory CompVWindowFactorySDL = {
+	"SDL",
+	CompVWindowFactorySDL_newObj
+};
 
 //
 //	CompVGLContextSDL
@@ -86,7 +102,7 @@ COMPV_ERROR_CODE CompVGLContextSDL::newObj(CompVGLContextSDLPtrPtr context, SDL_
 //
 
 CompVWindowSDL::CompVWindowSDL(size_t width, size_t height, const char* title)
-	: CompVWindowGL(width, height, title)
+	: CompVGLWindow(width, height, title)
 	, m_pSDLWindow(NULL)
 	, m_pSDLContext(NULL)
 {
@@ -143,21 +159,25 @@ bool CompVWindowSDL::isClosed()const
 COMPV_ERROR_CODE CompVWindowSDL::close()
 {
 	CompVAutoLock<CompVWindowSDL>(this);
-	COMPV_CHECK_CODE_ASSERT(unregister());
-	if (m_pSDLContext) {
-		// Delete GL context
-		SDL_GL_DeleteContext(m_pSDLContext);
-		m_pSDLContext = NULL;
-	}
-	if (m_pSDLWindow) {
-		SDL_SetWindowData(m_pSDLWindow, "This", NULL);
-		SDL_DestroyWindow(m_pSDLWindow);
-		m_pSDLWindow = NULL;
+	if (!isClosed()) {
+		COMPV_CHECK_CODE_ASSERT(unregister());
+		COMPV_CHECK_CODE_ASSERT(CompVGLWindow::close()); // base class implementation
+		if (m_pSDLContext) {
+			// Delete GL context
+			SDL_GL_DeleteContext(m_pSDLContext);
+			m_pSDLContext = NULL;
+		}
+		if (m_pSDLWindow) {
+			SDL_SetWindowData(m_pSDLWindow, "This", NULL);
+			SDL_DestroyWindow(m_pSDLWindow);
+			m_pSDLWindow = NULL;
+		}
+		m_ptrContext = NULL;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Overrides(CompVWindowGL)
+// Overrides(CompVGLWindow)
 CompVGLContextPtr CompVWindowSDL::context()
 {
 	return *m_ptrContext;

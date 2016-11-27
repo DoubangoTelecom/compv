@@ -21,6 +21,19 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+static COMPV_ERROR_CODE CompVCanvasFactorySkia_newObj(CompVCanvasImplPtrPtr canvasImpl)
+{
+	CompVCanvasImplSkiaPtr canvasImplSkia;
+	COMPV_CHECK_CODE_RETURN(CompVCanvasImplSkia::newObj(&canvasImplSkia));
+	*canvasImpl = *canvasImplSkia;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+const CompVCanvasFactory CompVCanvasFactorySkia = {
+	"SKia",
+	CompVCanvasFactorySkia_newObj
+};
+
 CompVCanvasImplSkia::CompVCanvasImplSkia()
 	: CompVCanvasImpl()
 {

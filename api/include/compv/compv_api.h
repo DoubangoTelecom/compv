@@ -39,9 +39,6 @@
 /* Module: Drawing */
 #include <compv/drawing/compv_drawing.h>
 #include <compv/drawing/compv_drawing_factory.h>
-#include <compv/drawing/compv_surface.h>
-#include <compv/drawing/compv_surfacelayer.h>
-#include <compv/drawing/compv_viewport.h>
 
 /* Android native activity entry point */
 

@@ -11,17 +11,9 @@
 #include "compv/drawing/compv_common.h"
 #include "compv/base/drawing/compv_canvas.h"
 #include "compv/base/drawing/compv_mvp.h"
+#include "compv/base/drawing/compv_window.h"
 
 COMPV_NAMESPACE_BEGIN()
-
-//
-//	CompVDrawingCanvasImpl
-//
-class COMPV_DRAWING_API CompVDrawingCanvasImpl
-{
-public:
-	static COMPV_ERROR_CODE newObj(CompVCanvasImplPtrPtr canvasImpl);
-};
 
 //
 //	CompVDrawingMVP

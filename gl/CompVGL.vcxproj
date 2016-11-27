@@ -172,6 +172,14 @@
     <ClInclude Include="include\compv\gl\compv_gl_program.h" />
     <ClInclude Include="include\compv\gl\compv_gl_utils.h" />
     <ClInclude Include="include\compv\gl\compv_gl_vao.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_renderer.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_renderer_rgb.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_renderer_yuv.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_surfacelayer_matching.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_surfacelayer_multi.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_surfacelayer_single.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_surface.h" />
+    <ClInclude Include="include\compv\gl\compv_gl_window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_gl.cxx" />
@@ -184,6 +192,14 @@
     <ClCompile Include="compv_gl_program.cxx" />
     <ClCompile Include="compv_gl_utils.cxx" />
     <ClCompile Include="compv_gl_vao.cxx" />
+    <ClCompile Include="compv_gl_renderer.cxx" />
+    <ClCompile Include="compv_gl_renderer_rgb.cxx" />
+    <ClCompile Include="compv_gl_renderer_yuv.cxx" />
+    <ClCompile Include="compv_gl_surfacelayer_matching.cxx" />
+    <ClCompile Include="compv_gl_surfacelayer_multi.cxx" />
+    <ClCompile Include="compv_gl_surfacelayer_single.cxx" />
+    <ClCompile Include="compv_gl_surface.cxx" />
+    <ClCompile Include="compv_gl_window.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
