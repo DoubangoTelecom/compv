@@ -20,6 +20,14 @@
 #	define COMPV_GL_API
 #endif
 
+#if !defined(COMPV_GL_SWAP_INTERVAL)
+#	define COMPV_GL_SWAP_INTERVAL 0
+#endif
+
+#if !defined(COMPV_GL_EGL_CONTEXT_CLIENT_VERSION)
+#	define COMPV_GL_EGL_CONTEXT_CLIENT_VERSION 2
+#endif
+
 #if !defined(COMPV_GL_DEBUG) && (defined(DEBUG) || defined(_DEBUG))
 #	define COMPV_GL_DEBUG 1
 #endif

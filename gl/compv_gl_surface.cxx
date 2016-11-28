@@ -41,7 +41,7 @@ CompVGLSurface::CompVGLSurface(size_t width, size_t height)
 
 CompVGLSurface::~CompVGLSurface()
 {
-	COMPV_CHECK_CODE_ASSERT(deInit());
+	COMPV_CHECK_CODE_NOP(deInit());
 }
 
 CompVGLCanvasPtr CompVGLSurface::canvasGL()
@@ -136,9 +136,9 @@ COMPV_ERROR_CODE CompVGLSurface::blit(const CompVGLFboPtr ptrFboSrc, const CompV
 	COMPV_glDrawElements(GL_TRIANGLES, m_ptrBlitter->indicesCount(), GL_UNSIGNED_BYTE, 0);
 
 bail:
-	COMPV_CHECK_CODE_ASSERT(m_ptrBlitter->unbind());
+	COMPV_CHECK_CODE_NOP(m_ptrBlitter->unbind());
 	if (ptrFboDst) {
-		COMPV_CHECK_CODE_ASSERT(ptrFboDst->unbind());
+		COMPV_CHECK_CODE_NOP(ptrFboDst->unbind());
 	}
 	COMPV_glActiveTexture(GL_TEXTURE0);
 	COMPV_glBindTexture(GL_TEXTURE_2D, 0);
@@ -167,12 +167,12 @@ COMPV_ERROR_CODE CompVGLSurface::updateSize(size_t newWidth, size_t newHeight)
 COMPV_ERROR_CODE CompVGLSurface::close()
 {
 	if (m_ptrRenderer) {
-		COMPV_CHECK_CODE_ASSERT(m_ptrRenderer->close());
+		COMPV_CHECK_CODE_NOP(m_ptrRenderer->close());
 	}
 	if (m_ptrBlitter) {
-		COMPV_CHECK_CODE_ASSERT(m_ptrBlitter->close());
+		COMPV_CHECK_CODE_NOP(m_ptrBlitter->close());
 	}
-	COMPV_CHECK_CODE_ASSERT(deInit());
+	COMPV_CHECK_CODE_NOP(deInit());
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -187,7 +187,7 @@ COMPV_ERROR_CODE CompVGLSurface::init()
 	COMPV_CHECK_CODE_BAIL(err = m_ptrBlitter->init(CompVSurface::width(), CompVSurface::height(), CompVSurface::width(), kProgramVertexData, kProgramFragData, true/*haveMVP*/, true/*ToScreenYes*/));
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
-		COMPV_CHECK_CODE_ASSERT(deInit());
+		COMPV_CHECK_CODE_NOP(deInit());
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -198,7 +198,7 @@ COMPV_ERROR_CODE CompVGLSurface::deInit()
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT); // Make sure we have a GL context
-	COMPV_CHECK_CODE_ASSERT(m_ptrBlitter->deInit());
+	COMPV_CHECK_CODE_NOP(m_ptrBlitter->deInit());
 	m_bInit = false;
 	return COMPV_ERROR_CODE_S_OK;
 }

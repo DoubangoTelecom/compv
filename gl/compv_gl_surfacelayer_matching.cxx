@@ -84,13 +84,13 @@ COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::updateSize(size_t newWidth, size_t
 COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::close()
 {
 	if (m_ptrCoverSurfaceGL) {
-		COMPV_CHECK_CODE_ASSERT(m_ptrCoverSurfaceGL->close());
+		COMPV_CHECK_CODE_NOP(m_ptrCoverSurfaceGL->close());
 	}
 	if (m_ptrTrainSurfaceGL) {
-		COMPV_CHECK_CODE_ASSERT(m_ptrTrainSurfaceGL->close());
+		COMPV_CHECK_CODE_NOP(m_ptrTrainSurfaceGL->close());
 	}
 	if (m_ptrQuerySurfaceGL) {
-		COMPV_CHECK_CODE_ASSERT(m_ptrQuerySurfaceGL->close());
+		COMPV_CHECK_CODE_NOP(m_ptrQuerySurfaceGL->close());
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

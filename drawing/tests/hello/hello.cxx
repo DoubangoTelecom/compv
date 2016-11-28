@@ -91,7 +91,7 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 bail:
 	return NULL;
 
-#elif 0 // Matching
+#elif 1 // Matching
 	COMPV_ERROR_CODE err;
 	CompVMatPtr mat[3];
 	CompVMatchingSurfaceLayerPtr matchingSurfaceLayer;

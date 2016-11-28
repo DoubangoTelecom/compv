@@ -46,10 +46,6 @@ public:
 	static COMPV_ERROR_CODE deInit();
 	static COMPV_INLINE bool isInitialized() { return s_bInitialized; }
 	static COMPV_INLINE bool isLoopRunning() { return s_bLoopRunning; }
-#if COMPV_OS_ANDROID
-	static COMPV_INLINE ANativeWindow* getAndroidNativeActivityWindow() { return s_AndroidEngine.app->window; }
-#endif
-	
 	static COMPV_ERROR_CODE runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) = NULL, void *userData = NULL);
 	static COMPV_ERROR_CODE breakLoop();
 

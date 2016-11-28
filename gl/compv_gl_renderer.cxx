@@ -50,13 +50,13 @@ COMPV_ERROR_CODE CompVGLRenderer::init(CompVMatPtr mat, const std::string& prgVe
 	m_bInit = true; // To make sure deInit() will be fully executed
 
 	// Create/Update FBO for the blitter
-	COMPV_CHECK_CODE_BAIL(err = blitter()->requestFBO(mat->cols(), mat->rows()));
+	COMPV_CHECK_CODE_BAIL(err = m_ptrBlitter->requestFBO(mat->cols(), mat->rows()));
 	// Base class implementation
 	COMPV_CHECK_CODE_BAIL(err = m_ptrBlitter->init(mat->cols(), mat->rows(), mat->stride(), prgVertexData, prgFragData, false/*NoMVP*/, false/*NotToScreen*/));
 
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
-		COMPV_CHECK_CODE_ASSERT(deInit());
+		COMPV_CHECK_CODE_NOP(deInit());
 		m_bInit = false;
 	}
 	return err;
@@ -73,7 +73,7 @@ COMPV_ERROR_CODE CompVGLRenderer::bind()
 
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
-		COMPV_CHECK_CODE_ASSERT(unbind());
+		COMPV_CHECK_CODE_NOP(unbind());
 	}
 	return err;
 }
@@ -82,7 +82,7 @@ COMPV_ERROR_CODE CompVGLRenderer::unbind()
 {
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 	
-	COMPV_CHECK_CODE_ASSERT(m_ptrBlitter->unbind()); // Base class impl.: VAO
+	COMPV_CHECK_CODE_NOP(m_ptrBlitter->unbind());
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -94,7 +94,7 @@ COMPV_ERROR_CODE CompVGLRenderer::deInit()
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	COMPV_CHECK_CODE_ASSERT(m_ptrBlitter->deInit()); // Base class implementation
+	COMPV_CHECK_CODE_NOP(m_ptrBlitter->deInit());
 
 	m_bInit = false;
 	return COMPV_ERROR_CODE_S_OK;
@@ -102,10 +102,13 @@ COMPV_ERROR_CODE CompVGLRenderer::deInit()
 
 COMPV_ERROR_CODE CompVGLRenderer::close()
 {
-	COMPV_CHECK_CODE_ASSERT(deInit());
-	if (m_ptrCanvas) {
-		COMPV_CHECK_CODE_ASSERT(m_ptrCanvas->close());
+	if (m_ptrBlitter) {
+		COMPV_CHECK_CODE_NOP(m_ptrBlitter->close());
 	}
+	if (m_ptrCanvas) {
+		COMPV_CHECK_CODE_NOP(m_ptrCanvas->close());
+	}
+	COMPV_CHECK_CODE_NOP(deInit());
 	return COMPV_ERROR_CODE_S_OK;
 }
 

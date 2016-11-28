@@ -13,30 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\skia">
-      <UniqueIdentifier>{0727282a-65c1-4551-9cf5-96c1d76b4007}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\skia">
-      <UniqueIdentifier>{837924eb-9d50-4fdd-ab73-b1e2c59d182d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\sdl">
-      <UniqueIdentifier>{4a8a7427-6c30-4b6d-bafb-8399c9724e3e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\sdl">
-      <UniqueIdentifier>{6bfe675a-32ac-45bb-b680-c614555241fc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\gl">
-      <UniqueIdentifier>{1af8a8f4-4174-41a1-9bba-b61538c5853a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\gl">
-      <UniqueIdentifier>{cbea7fb1-c49a-4864-9025-eed247e4ecd8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\android">
-      <UniqueIdentifier>{2ded0a97-de51-4772-928a-96055f7fd9f4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\android">
-      <UniqueIdentifier>{1abb904f-6195-4171-9cbd-ab0b008e3ecb}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\drawing\compv_drawing.h">
@@ -45,29 +21,29 @@
     <ClInclude Include="include\compv\drawing\compv_image_libjpeg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\drawing\skia\compv_canvas_skia.h">
-      <Filter>Header Files\skia</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\drawing\sdl\compv_window_sdl.h">
-      <Filter>Header Files\sdl</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\drawing\compv_common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\drawing\compv_config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\drawing\gl\compv_window_egl.h">
-      <Filter>Header Files\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\drawing\gl\compv_window_glfw3.h">
-      <Filter>Header Files\gl</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\drawing\compv_drawing_factory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\drawing\android\compv_window_android_egl.h">
-      <Filter>Header Files\android</Filter>
+    <ClInclude Include="include\compv\drawing\compv_canvas_skia.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\compv_window_android_egl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\compv_window_egl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\compv_window_glfw3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\drawing\compv_window_sdl.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -77,23 +53,23 @@
     <ClCompile Include="compv_image_libjpeg.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="skia\compv_canvas_skia.cxx">
-      <Filter>Source Files\skia</Filter>
-    </ClCompile>
-    <ClCompile Include="sdl\compv_window_sdl.cxx">
-      <Filter>Source Files\sdl</Filter>
-    </ClCompile>
-    <ClCompile Include="gl\compv_window_egl.cxx">
-      <Filter>Source Files\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="gl\compv_window_glfw3.cxx">
-      <Filter>Source Files\gl</Filter>
-    </ClCompile>
     <ClCompile Include="compv_drawing_factory.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="android\compv_window_android_egl.cxx">
-      <Filter>Source Files\android</Filter>
+    <ClCompile Include="compv_canvas_skia.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_window_android_egl.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_window_egl.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_window_glfw3.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_window_sdl.cxx">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

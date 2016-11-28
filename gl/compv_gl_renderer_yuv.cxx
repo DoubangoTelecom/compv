@@ -28,11 +28,11 @@ CompVGLRendererYUV::CompVGLRendererYUV(COMPV_PIXEL_FORMAT eYUVPixelFormat)
 CompVGLRendererYUV::~CompVGLRendererYUV()
 {
 	if (m_bInit) {
-		COMPV_CHECK_CODE_ASSERT(deInit());
+		COMPV_CHECK_CODE_NOP(deInit());
 	}
 }
 
-COMPV_OVERRIDE_IMPL0("CompVGLRenderer", CompVGLRendererYUV::drawImage)(CompVMatPtr mat)
+COMPV_ERROR_CODE CompVGLRendererYUV::drawImage(CompVMatPtr mat) COMPV_OVERRIDE_IMPL("CompVGLRenderer")
 {
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
@@ -100,7 +100,7 @@ COMPV_ERROR_CODE CompVGLRendererYUV::init(CompVMatPtr mat)
 
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
-		COMPV_CHECK_CODE_ASSERT(deInit());
+		COMPV_CHECK_CODE_NOP(deInit());
 	}
 	else {
 		m_bInit = true;

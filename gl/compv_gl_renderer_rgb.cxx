@@ -52,10 +52,10 @@ CompVGLRendererRGB::CompVGLRendererRGB(COMPV_PIXEL_FORMAT ePixelFormat)
 
 CompVGLRendererRGB::~CompVGLRendererRGB()
 {
-	COMPV_CHECK_CODE_ASSERT(deInit());
+	COMPV_CHECK_CODE_NOP(deInit());
 }
 
-COMPV_OVERRIDE_IMPL0("CompVGLRenderer", CompVGLRendererRGB::drawImage)(CompVMatPtr mat)
+COMPV_ERROR_CODE CompVGLRendererRGB::drawImage(CompVMatPtr mat) COMPV_OVERRIDE_IMPL("CompVGLRenderer")
 {
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
@@ -117,7 +117,7 @@ COMPV_OVERRIDE_IMPL0("CompVGLRenderer", CompVGLRendererRGB::drawImage)(CompVMatP
 #endif
 
 bail:
-	COMPV_CHECK_CODE_ASSERT(CompVGLRenderer::unbind());
+	COMPV_CHECK_CODE_NOP(CompVGLRenderer::unbind());
 	COMPV_glActiveTexture(GL_TEXTURE1);
 	COMPV_glBindTexture(GL_TEXTURE_2D, 0);
 	COMPV_glActiveTexture(GL_TEXTURE0);
@@ -132,8 +132,8 @@ COMPV_ERROR_CODE CompVGLRendererRGB::deInit()
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	COMPV_CHECK_CODE_ASSERT(CompVGLRenderer::deInit()); // Base class implementation
-	COMPV_CHECK_CODE_ASSERT(CompVGLUtils::textureDelete(&m_uNameTexture));
+	COMPV_CHECK_CODE_NOP(CompVGLRenderer::deInit()); // Base class implementation
+	COMPV_CHECK_CODE_NOP(CompVGLUtils::textureDelete(&m_uNameTexture));
 
 	m_bInit = false;
 	return COMPV_ERROR_CODE_S_OK;
@@ -150,7 +150,7 @@ COMPV_ERROR_CODE CompVGLRendererRGB::init(CompVMatPtr mat)
 	m_bInit = true; // To make sure deInit() will be fully executed
 	COMPV_CHECK_CODE_BAIL(err = CompVGLRenderer::init(mat, m_strPrgVertexData, m_strPrgFragData, false, false)); // Base class implementation
 	COMPV_CHECK_CODE_BAIL(err = CompVGLRenderer::bind()); // Bind to the program -> required by 'glGetUniformLocation'
-	COMPV_glGenTextures(1, &m_uNameTexture);
+	COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::textureGen(&m_uNameTexture));
 	COMPV_glActiveTexture(GL_TEXTURE1);
 	COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	COMPV_glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
@@ -163,10 +163,10 @@ COMPV_ERROR_CODE CompVGLRendererRGB::init(CompVMatPtr mat)
 	COMPV_glUniform1i(m_uNameSampler, 1);
 
 bail:
-	COMPV_CHECK_CODE_ASSERT(err = CompVGLRenderer::unbind());
+	COMPV_CHECK_CODE_NOP(err = CompVGLRenderer::unbind());
 	COMPV_glBindTexture(GL_TEXTURE_2D, 0);
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
-		COMPV_CHECK_CODE_ASSERT(deInit());
+		COMPV_CHECK_CODE_NOP(deInit());
 		m_bInit = false;
 	}
 	return err;

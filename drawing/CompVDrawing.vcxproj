@@ -162,26 +162,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\compv\drawing\android\compv_window_android_egl.h" />
+    <ClInclude Include="include\compv\drawing\compv_canvas_skia.h" />
     <ClInclude Include="include\compv\drawing\compv_common.h" />
     <ClInclude Include="include\compv\drawing\compv_config.h" />
     <ClInclude Include="include\compv\drawing\compv_drawing.h" />
     <ClInclude Include="include\compv\drawing\compv_drawing_factory.h" />
     <ClInclude Include="include\compv\drawing\compv_image_libjpeg.h" />
-    <ClInclude Include="include\compv\drawing\gl\compv_window_egl.h" />
-    <ClInclude Include="include\compv\drawing\gl\compv_window_glfw3.h" />
-    <ClInclude Include="include\compv\drawing\sdl\compv_window_sdl.h" />
-    <ClInclude Include="include\compv\drawing\skia\compv_canvas_skia.h" />
+    <ClInclude Include="include\compv\drawing\compv_window_android_egl.h" />
+    <ClInclude Include="include\compv\drawing\compv_window_egl.h" />
+    <ClInclude Include="include\compv\drawing\compv_window_glfw3.h" />
+    <ClInclude Include="include\compv\drawing\compv_window_sdl.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="android\compv_window_android_egl.cxx" />
+    <ClCompile Include="compv_canvas_skia.cxx" />
     <ClCompile Include="compv_drawing.cxx" />
     <ClCompile Include="compv_drawing_factory.cxx" />
     <ClCompile Include="compv_image_libjpeg.cxx" />
-    <ClCompile Include="gl\compv_window_egl.cxx" />
-    <ClCompile Include="gl\compv_window_glfw3.cxx" />
-    <ClCompile Include="sdl\compv_window_sdl.cxx" />
-    <ClCompile Include="skia\compv_canvas_skia.cxx" />
+    <ClCompile Include="compv_window_android_egl.cxx" />
+    <ClCompile Include="compv_window_egl.cxx" />
+    <ClCompile Include="compv_window_glfw3.cxx" />
+    <ClCompile Include="compv_window_sdl.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

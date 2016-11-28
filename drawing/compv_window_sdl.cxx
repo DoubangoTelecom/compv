@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/sdl/compv_window_sdl.h"
+#include "compv/drawing/compv_window_sdl.h"
 #if defined(HAVE_SDL_H)
 #include "compv/drawing/compv_drawing.h"
 #include "compv/base/parallel/compv_thread.h"
@@ -139,7 +139,7 @@ CompVWindowSDL::CompVWindowSDL(size_t width, size_t height, const char* title)
 	SDL_SetWindowData(m_pSDLWindow, "This", this);
 	if (m_pSDLContext) {
 		COMPV_ASSERT(SDL_GL_MakeCurrent(m_pSDLWindow, m_pSDLContext) == 0);
-		SDL_GL_SetSwapInterval(0);
+		SDL_GL_SetSwapInterval(COMPV_GL_SWAP_INTERVAL);
 		SDL_GL_MakeCurrent(m_pSDLWindow, NULL);
 	}
 }

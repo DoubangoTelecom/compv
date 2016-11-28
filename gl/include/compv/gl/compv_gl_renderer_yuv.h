@@ -30,7 +30,7 @@ public:
 	virtual ~CompVGLRendererYUV();
 	COMPV_GET_OBJECT_ID(CompVGLRendererYUV);
 
-	COMPV_OVERRIDE_DECL0("CompVGLRenderer", drawImage)(CompVMatPtr mat) override;
+	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) COMPV_OVERRIDE_DECL("CompVGLRenderer");
 
 	static COMPV_ERROR_CODE newObj(CompVGLRendererYUVPtrPtr glRenderer, COMPV_PIXEL_FORMAT eYUVPixelFormat);
 

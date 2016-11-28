@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/gl/compv_window_glfw3.h"
+#include "compv/drawing/compv_window_glfw3.h"
 #if defined(HAVE_GLFW_GLFW3_H)
 #error "GLFW is deprecated and replaced with SDL"
 #include "compv/drawing/compv_drawing.h"
@@ -32,7 +32,7 @@ CompVGLWindowFW3::CompVGLWindowFW3(int width, int height, const char* title)
 		COMPV_DEBUG_ERROR("glfwCreateWindow(%d, %d, %s) failed", width, height, title);
 		return;
 	}
-	COMPV_CHECK_CODE_ASSERT(CompVMutex::newObj(&m_GLFWMutex));
+	COMPV_CHECK_CODE_NOP(CompVMutex::newObj(&m_GLFWMutex));
 	COMPV_glfwSetWindowUserPointer(m_pGLFWwindow, this);
 	COMPV_glfwSetWindowCloseCallback(m_pGLFWwindow, CompVGLWindowFW3::GLFWwindowcloseCallback);
 	COMPV_glfwMakeContextCurrent(m_pGLFWwindow);
@@ -42,7 +42,7 @@ CompVGLWindowFW3::CompVGLWindowFW3(int width, int height, const char* title)
 
 CompVGLWindowFW3::~CompVGLWindowFW3()
 {
-	COMPV_CHECK_CODE_ASSERT(close());
+	COMPV_CHECK_CODE_NOP(close());
 	m_GLFWMutex = NULL;
 	m_Program = NULL;
 }
@@ -54,13 +54,13 @@ bool CompVGLWindowFW3::isClosed()
 
 COMPV_ERROR_CODE CompVGLWindowFW3::close()
 {
-	COMPV_CHECK_CODE_ASSERT(m_GLFWMutex->lock());
+	COMPV_CHECK_CODE_NOP(m_GLFWMutex->lock());
 	if (m_pGLFWwindow) {
 		COMPV_glfwSetWindowShouldClose(m_pGLFWwindow, GLFW_TRUE);
 		COMPV_glfwDestroyWindow(m_pGLFWwindow);
 		m_pGLFWwindow = NULL;
 	}
-	COMPV_CHECK_CODE_ASSERT(m_GLFWMutex->unlock());
+	COMPV_CHECK_CODE_NOP(m_GLFWMutex->unlock());
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -68,9 +68,9 @@ COMPV_ERROR_CODE CompVGLWindowFW3::draw(CompVMatPtr mat)
 {
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ASSERT(mat->subType() == COMPV_MAT_SUBTYPE_PIXELS_R8G8B8);
-	COMPV_CHECK_CODE_ASSERT(m_GLFWMutex->lock());
+	COMPV_CHECK_CODE_NOP(m_GLFWMutex->lock());
 	if (!m_pGLFWwindow) {
-		COMPV_CHECK_CODE_ASSERT(m_GLFWMutex->unlock());
+		COMPV_CHECK_CODE_NOP(m_GLFWMutex->unlock());
 		// COMPV_DEBUG_INFO("Window closed. Ignoring draw() instruction");
 		return COMPV_ERROR_CODE_W_WINDOW_CLOSED;
 	}
@@ -84,10 +84,10 @@ COMPV_ERROR_CODE CompVGLWindowFW3::draw(CompVMatPtr mat)
 			(GLclampf)(rand() % 255) / 255.f);
 #else
 		if (!m_Program) {
-			COMPV_CHECK_CODE_ASSERT(CompVProgram::newObj(&m_Program));
-			COMPV_CHECK_CODE_ASSERT(m_Program->shadAttachVertexFile("C:/Projects/GitHub/compv/ui/glsl/test.vert.glsl"));
-			COMPV_CHECK_CODE_ASSERT(m_Program->shadAttachFragmentFile("C:/Projects/GitHub/compv/ui/glsl/test.frag.glsl"));
-			COMPV_CHECK_CODE_ASSERT(m_Program->link());
+			COMPV_CHECK_CODE_NOP(CompVProgram::newObj(&m_Program));
+			COMPV_CHECK_CODE_NOP(m_Program->shadAttachVertexFile("C:/Projects/GitHub/compv/ui/glsl/test.vert.glsl"));
+			COMPV_CHECK_CODE_NOP(m_Program->shadAttachFragmentFile("C:/Projects/GitHub/compv/ui/glsl/test.frag.glsl"));
+			COMPV_CHECK_CODE_NOP(m_Program->link());
 		}
 
 		static GLuint tex = 0;
@@ -136,7 +136,7 @@ COMPV_ERROR_CODE CompVGLWindowFW3::draw(CompVMatPtr mat)
 			GL_UNSIGNED_BYTE,
 			mat->ptr());
 
-		COMPV_CHECK_CODE_ASSERT(m_Program->useBegin());
+		COMPV_CHECK_CODE_NOP(m_Program->useBegin());
 
 		COMPV_glClearColor(0.f, 0.f, 0.f, 1.f);
 		int width, height;
@@ -161,7 +161,7 @@ COMPV_ERROR_CODE CompVGLWindowFW3::draw(CompVMatPtr mat)
 		COMPV_glVertex2i(static_cast<GLint>(mat->stride()), 0);
 		COMPV_glEnd();
 
-		COMPV_CHECK_CODE_ASSERT(m_Program->useEnd());
+		COMPV_CHECK_CODE_NOP(m_Program->useEnd());
 
 		COMPV_glBindTexture(GL_TEXTURE_2D, 0);
 #endif
@@ -169,7 +169,7 @@ COMPV_ERROR_CODE CompVGLWindowFW3::draw(CompVMatPtr mat)
 		COMPV_glfwSwapBuffers(m_pGLFWwindow);
 		COMPV_glfwMakeContextCurrent(NULL);
 	}
-	COMPV_CHECK_CODE_ASSERT(m_GLFWMutex->unlock());
+	COMPV_CHECK_CODE_NOP(m_GLFWMutex->unlock());
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -191,12 +191,12 @@ void CompVGLWindowFW3::GLFWwindowcloseCallback(GLFWwindow* window)
 	CompVGLWindowFW3Ptr This = static_cast<CompVGLWindowFW3*>(glfwGetWindowUserPointer(window));
 	COMPV_DEBUG_INFO("GLFWwindowcloseCallback(Id=%ld, Title=%s)", This->getId(), This->getTitle());
 	COMPV_ASSERT(window == This->m_pGLFWwindow);
-	COMPV_CHECK_CODE_ASSERT(This->m_GLFWMutex->lock());
-	COMPV_CHECK_CODE_ASSERT(This->unregister());
+	COMPV_CHECK_CODE_NOP(This->m_GLFWMutex->lock());
+	COMPV_CHECK_CODE_NOP(This->unregister());
 	COMPV_glfwSetWindowUserPointer(This->m_pGLFWwindow, NULL);
 	COMPV_glfwDestroyWindow(This->m_pGLFWwindow);
 	This->m_pGLFWwindow = NULL;
-	COMPV_CHECK_CODE_ASSERT(This->m_GLFWMutex->unlock());
+	COMPV_CHECK_CODE_NOP(This->m_GLFWMutex->unlock());
 }
 
 COMPV_NAMESPACE_END()

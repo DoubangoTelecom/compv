@@ -28,7 +28,7 @@ CompVGLFbo::CompVGLFbo(size_t width, size_t height)
 
 CompVGLFbo::~CompVGLFbo()
 {
-	COMPV_CHECK_CODE_ASSERT(deInit());
+	COMPV_CHECK_CODE_NOP(deInit());
 }
 
 COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLFbo::bind)()
@@ -71,7 +71,7 @@ COMPV_ERROR_CODE CompVGLFbo::updateSize(size_t width, size_t height)
 #endif
 			COMPV_glCheckFramebufferStatus(&fboStatus_, GL_FRAMEBUFFER);
 			if (fboStatus_ != GL_FRAMEBUFFER_COMPLETE) {
-				COMPV_CHECK_CODE_ASSERT(CompVGLUtils::checkLastError());
+				COMPV_CHECK_CODE_NOP(CompVGLUtils::checkLastError());
 				COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
 			}
 			m_nWidth = width;
@@ -143,7 +143,7 @@ bail:
 	COMPV_glBindRenderbuffer(GL_RENDERBUFFER, 0);
 	COMPV_glBindTexture(GL_TEXTURE_2D, 0);
 	if (COMPV_ERROR_CODE_IS_NOK(err_)) {
-		COMPV_CHECK_CODE_ASSERT(deInit());
+		COMPV_CHECK_CODE_NOP(deInit());
 		m_bInit = false;
 	}
 	return err_;
@@ -155,9 +155,9 @@ COMPV_ERROR_CODE CompVGLFbo::deInit()
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-	COMPV_CHECK_CODE_ASSERT(CompVGLUtils::textureDelete(&m_uNameTexture));
-	COMPV_CHECK_CODE_ASSERT(CompVGLUtils::renderBufferDelete(&m_uNameDepthStencil));
-	COMPV_CHECK_CODE_ASSERT(CompVGLUtils::frameBufferDelete(&m_uNameFrameBuffer));
+	COMPV_CHECK_CODE_NOP(CompVGLUtils::textureDelete(&m_uNameTexture));
+	COMPV_CHECK_CODE_NOP(CompVGLUtils::renderBufferDelete(&m_uNameDepthStencil));
+	COMPV_CHECK_CODE_NOP(CompVGLUtils::frameBufferDelete(&m_uNameFrameBuffer));
 	
 	m_bInit = false;
 
@@ -176,13 +176,13 @@ COMPV_ERROR_CODE CompVGLFbo::clear()
 	COMPV_glClearStencil(0);
 	COMPV_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 bail:
-	COMPV_CHECK_CODE_ASSERT(unbind());
+	COMPV_CHECK_CODE_NOP(unbind());
 	return err;
 }
 
 COMPV_ERROR_CODE CompVGLFbo::close()
 {
-	COMPV_CHECK_CODE_ASSERT(deInit());
+	COMPV_CHECK_CODE_NOP(deInit());
 	return COMPV_ERROR_CODE_S_OK;
 }
 

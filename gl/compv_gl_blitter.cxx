@@ -15,10 +15,10 @@ COMPV_NAMESPACE_BEGIN()
 
 CompVGLBlitter::CompVGLBlitter()
 	: m_bInit(false)
+	, m_bToScreen(false)
 	, m_nWidth(0)
 	, m_nHeight(0)
 	, m_nStride(0)
-	, m_bToScreen(false)
 	, m_uNameVertexBuffer(kCompVGLNameInvalid)
 	, m_uNameIndiceBuffer(kCompVGLNameInvalid)
 	, m_uNamePrgAttPosition(kCompVGLNameInvalid)
@@ -31,7 +31,7 @@ CompVGLBlitter::CompVGLBlitter()
 
 CompVGLBlitter::~CompVGLBlitter()
 {
-	COMPV_CHECK_CODE_ASSERT(deInit());
+	COMPV_CHECK_CODE_NOP(deInit());
 }
 
 // Bind to VAO and activate the program
@@ -81,10 +81,10 @@ COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLBlitter::unbind)()
 	}
 
 	if (m_ptrProgram) {
-		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->unbind());
+		COMPV_CHECK_CODE_NOP(m_ptrProgram->unbind());
 	}
 	if (m_ptrFBO) {
-		COMPV_CHECK_CODE_ASSERT(m_ptrFBO->bind());
+		COMPV_CHECK_CODE_NOP(m_ptrFBO->bind());
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -150,9 +150,9 @@ COMPV_ERROR_CODE CompVGLBlitter::updateSize(size_t width, size_t height, size_t 
 COMPV_ERROR_CODE CompVGLBlitter::close()
 {
 	if (m_ptrFBO) {
-		COMPV_CHECK_CODE_ASSERT(m_ptrFBO->close());
+		COMPV_CHECK_CODE_NOP(m_ptrFBO->close());
 	}
-	COMPV_CHECK_CODE_ASSERT(deInit());
+	COMPV_CHECK_CODE_NOP(deInit());
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -207,7 +207,7 @@ COMPV_ERROR_CODE CompVGLBlitter::init(size_t width, size_t height, size_t stride
 	COMPV_CHECK_EXP_BAIL(prgVertexData.empty(), err = COMPV_ERROR_CODE_E_GL);
 	COMPV_CHECK_EXP_BAIL(prgFragData.empty(), err = COMPV_ERROR_CODE_E_GL);
 	COMPV_CHECK_CODE_BAIL(CompVGLProgram::newObj(&m_ptrProgram, prgVertexData.c_str(), prgVertexData.length(), prgFragData.c_str(), prgFragData.length()));
-	COMPV_CHECK_CODE_ASSERT(err = m_ptrProgram->bind());
+	COMPV_CHECK_CODE_NOP(err = m_ptrProgram->bind());
 
 	COMPV_glGetAttribLocation(&m_uNamePrgAttPosition, m_ptrProgram->name(), "position");
 	COMPV_glGetAttribLocation(&m_uNamePrgAttTexCoord, m_ptrProgram->name(), "texCoord");
@@ -240,7 +240,7 @@ COMPV_ERROR_CODE CompVGLBlitter::init(size_t width, size_t height, size_t stride
 
 bail:
 	if (m_ptrProgram) {
-		COMPV_CHECK_CODE_ASSERT(m_ptrProgram->unbind());
+		COMPV_CHECK_CODE_NOP(m_ptrProgram->unbind());
 	}
 	if (CompVGLInfo::extensions::vertex_array_object()) {
 		COMPV_glBindVertexArray(kCompVGLNameInvalid);
@@ -250,7 +250,7 @@ bail:
 	COMPV_glBindBuffer(GL_ARRAY_BUFFER, kCompVGLNameInvalid);
 	COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, kCompVGLNameInvalid);
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
-		COMPV_CHECK_CODE_ASSERT(deInit());
+		COMPV_CHECK_CODE_NOP(deInit());
 		m_bInit = false;
 	}
 

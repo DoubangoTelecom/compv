@@ -15,8 +15,9 @@
 #include "compv/gl/compv_gl.h"
 #include "compv/gl/compv_gl_info.h"
 
-#include "compv/drawing/sdl/compv_window_sdl.h"
-#include "compv/drawing/skia/compv_canvas_skia.h"
+#include "compv/drawing/compv_window_sdl.h"
+#include "compv/drawing/compv_window_egl_android.h"
+#include "compv/drawing/compv_canvas_skia.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -61,9 +62,10 @@ COMPV_ERROR_CODE CompVDrawing::init()
 	COMPV_CHECK_CODE_BAIL(err = CompVBase::init());
 	COMPV_CHECK_CODE_BAIL(err = CompVGL::init());
 
-	/* Print Android API version */
+	/* Android */
 #if COMPV_OS_ANDROID
 	COMPV_DEBUG_INFO("[Drawing] module: android API version: %d", __ANDROID_API__);
+	COMPV_CHECK_CODE_BAIL(err = CompVWindowFactory::set(&CompVWindowFactoryEGLAndroid));
 #endif
 
 	/* Skia */
@@ -155,8 +157,8 @@ bail:
 
 COMPV_ERROR_CODE CompVDrawing::deInit()
 {
-	COMPV_CHECK_CODE_ASSERT(CompVBase::deInit());
-	COMPV_CHECK_CODE_ASSERT(CompVGL::deInit());
+	COMPV_CHECK_CODE_NOP(CompVBase::deInit());
+	COMPV_CHECK_CODE_NOP(CompVGL::deInit());
 
 	CompVDrawing::breakLoop();
 	CompVDrawing::s_WorkerThread = NULL;
@@ -306,7 +308,7 @@ void CompVDrawing::android_engine_handle_cmd(struct android_app* app, int32_t cm
 		// The window is being shown, get it ready.
 		if (engine->app->window != NULL) {
 			if (engine->worker_thread.run_fun) {
-				COMPV_CHECK_CODE_ASSERT(CompVThread::newObj(&CompVDrawing::s_WorkerThread, engine->worker_thread.run_fun, engine->worker_thread.user_data));
+				COMPV_CHECK_CODE_NOP(CompVThread::newObj(&CompVDrawing::s_WorkerThread, engine->worker_thread.run_fun, engine->worker_thread.user_data));
 			}
 			//engine_init_display(engine);
 			//engine_draw_frame(engine);
@@ -355,7 +357,7 @@ COMPV_ERROR_CODE CompVDrawing::android_runLoop(struct android_app* state)
 
 	CompVDrawing::s_AndroidEngine.animating = true;
 	while (CompVDrawing::s_bLoopRunning) {
-		if (CompVDrawing::windowsCount() == 0) {
+		if (CompVWindowRegistry::count() == 0) {
 			COMPV_DEBUG_INFO("No active windows in the event loop... breaking the loop");
 			goto bail;
 		}

@@ -4,189 +4,66 @@
     <Filter Include="include">
       <UniqueIdentifier>{f10fa7af-0a91-4b39-9c68-77fcbf88ce40}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\skia">
-      <UniqueIdentifier>{ceedbcea-84f5-4343-b78c-0b54b9f8d452}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\sdl">
-      <UniqueIdentifier>{ca7c8dfc-0eef-4fb4-819e-720752ce815a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\android">
-      <UniqueIdentifier>{2d619970-8517-41a3-b651-cc32969e4cca}</UniqueIdentifier>
-    </Filter>
     <Filter Include="source">
       <UniqueIdentifier>{18811a95-6965-4f2f-aa67-86103da6cb14}</UniqueIdentifier>
     </Filter>
-    <Filter Include="source\sdl">
-      <UniqueIdentifier>{2cbc47ff-7824-4ce5-a686-4e03d8ae4e54}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\skia">
-      <UniqueIdentifier>{8795a19a-ecf2-4e15-afc9-15e0179aff54}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\android">
-      <UniqueIdentifier>{bd7ae1fe-c3a5-449e-ad07-96ba749d45f3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\gl">
-      <UniqueIdentifier>{9fc81ba9-6fe9-440f-91db-b6b2a9f03769}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\gl">
-      <UniqueIdentifier>{9adb9ef6-93a9-460b-999d-724f04672d33}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\compv_drawing.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\compv_image_libjpeg.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\compv_renderer.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\compv_surface.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\compv_window.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\sdl\compv_window_sdl.cxx">
-      <Filter>source\sdl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\skia\compv_canvas_skia.cxx">
-      <Filter>source\skia</Filter>
-    </ClCompile>
-    <ClCompile Include="..\compv_viewport.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\compv_surfacelayer.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\compv_surfacelayer_matching.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\compv_surfacelayer_multi.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\compv_surfacelayer_single.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\android\compv_window_android_egl.cxx">
-      <Filter>source\android</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gl\compv_blitter_gl.cxx">
-      <Filter>source\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gl\compv_mvp_glm.cxx">
-      <Filter>source\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gl\compv_renderer_gl.cxx">
-      <Filter>source\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gl\compv_renderer_gl_rgb.cxx">
-      <Filter>source\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gl\compv_renderer_gl_yuv.cxx">
-      <Filter>source\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gl\compv_surface_gl.cxx">
-      <Filter>source\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gl\compv_surfacelayer_gl_matching.cxx">
-      <Filter>source\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gl\compv_surfacelayer_gl_multi.cxx">
-      <Filter>source\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gl\compv_surfacelayer_gl_single.cxx">
-      <Filter>source\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gl\compv_window_egl.cxx">
-      <Filter>source\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gl\compv_window_gl.cxx">
-      <Filter>source\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gl\compv_window_glfw3.cxx">
-      <Filter>source\gl</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\include\compv\drawing\compv_drawing.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\compv_image_libjpeg.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\compv_renderer.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\compv_surface.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\compv_window.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\sdl\compv_window_sdl.h">
-      <Filter>include\sdl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\skia\compv_canvas_skia.h">
-      <Filter>include\skia</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\android\compv_window_android_egl.h">
-      <Filter>include\android</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\compv_viewport.h">
+    <ClInclude Include="..\include\compv\drawing\compv_canvas_skia.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\compv\drawing\compv_common.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\compv_surfacelayer.h">
+    <ClInclude Include="..\include\compv\drawing\compv_config.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\compv_surfacelayer_matching.h">
+    <ClInclude Include="..\include\compv\drawing\compv_drawing.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\compv_surfacelayer_multi.h">
+    <ClInclude Include="..\include\compv\drawing\compv_drawing_factory.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\compv_surfacelayer_single.h">
+    <ClInclude Include="..\include\compv\drawing\compv_image_libjpeg.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\gl\compv_blitter_gl.h">
-      <Filter>include\gl</Filter>
+    <ClInclude Include="..\include\compv\drawing\compv_window_egl.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\gl\compv_mvp_glm.h">
-      <Filter>include\gl</Filter>
+    <ClInclude Include="..\include\compv\drawing\compv_window_glfw3.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\gl\compv_renderer_gl.h">
-      <Filter>include\gl</Filter>
+    <ClInclude Include="..\include\compv\drawing\compv_window_sdl.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\gl\compv_renderer_gl_rgb.h">
-      <Filter>include\gl</Filter>
+    <ClInclude Include="..\include\compv\drawing\compv_window_egl_android.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\gl\compv_renderer_gl_yuv.h">
-      <Filter>include\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\gl\compv_surface_gl.h">
-      <Filter>include\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\gl\compv_surfacelayer_gl_matching.h">
-      <Filter>include\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\gl\compv_surfacelayer_gl_multi.h">
-      <Filter>include\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\gl\compv_surfacelayer_gl_single.h">
-      <Filter>include\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\gl\compv_window_egl.h">
-      <Filter>include\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\gl\compv_window_gl.h">
-      <Filter>include\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\drawing\gl\compv_window_glfw3.h">
-      <Filter>include\gl</Filter>
-    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\compv_canvas_skia.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_drawing.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_drawing_factory.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_image_libjpeg.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_window_egl.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_window_glfw3.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_window_sdl.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_window_egl_android.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

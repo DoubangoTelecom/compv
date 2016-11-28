@@ -272,6 +272,8 @@
 
 #define COMPV_DEFAULT(v)
 
+#define COMPV_OVERRIDE_DECL(base_class) override
+#define COMPV_OVERRIDE_IMPL(base_class) 
 #define COMPV_OVERRIDE_IMPL0(base_class, method) COMPV_ERROR_CODE method
 #define COMPV_OVERRIDE_IMPL1(base_class, ret_type, method) ret_type method
 #define COMPV_OVERRIDE_DECL0(base_class, method) virtual COMPV_ERROR_CODE method
@@ -286,19 +288,15 @@
 #	define COMPV_INLINE	_inline
 #	pragma warning( disable : 4996 )
 #	if _MSC_VER >= 1700
-// Warning	3	warning C4752: found Intel(R) Advanced Vector Extensions; consider using /arch:AVX
-#	pragma warning(disable: 4752)
+		// Warning	3	warning C4752: found Intel(R) Advanced Vector Extensions; consider using /arch:AVX
+#		pragma warning(disable: 4752)
 #	endif
-#	include <intrin.h>
 #elif defined(__GNUC__)
 #	define COMPV_ALWAYS_INLINE	__inline __attribute__ ((__always_inline__))
 #	define COMPV_SHOULD_INLINE	inline
 #	define COMPV_ALIGN(x)		__attribute__((aligned(x)))
 #	define COMPV_NAKED			__attribute__((naked))
 #	define COMPV_INLINE			inline
-#	if COMPV_ARCH_X86
-#		include <x86intrin.h>
-#	endif /* HL_CPU_TYPE_X86 */
 #else
 #	define COMPV_ALWAYS_INLINE	inline
 #	define COMPV_SHOULD_INLINE	inline
@@ -359,10 +357,23 @@
 #include <string>
 
 // Must be at the bottom to make sure we can redifine all macros
-#if HAVE_CONFIG_H
+#if defined(HAVE_CONFIG_H)
 #include <config.h>
 #endif
 
-/* DO NOT ADD ANY def after this line */
+//!\\ DO NOT ADD ANY def after this line (after "include<config.h>")
+
+
+#if COMPV_INTRINSIC
+#	if COMPV_ARCH_X86
+#		if defined(_MSC_VER)
+#			include <intrin.h>
+#		elif defined(__GNUC__)
+#			include <x86intrin.h>
+#		endif
+#	elif COMPV_ARCH_ARM
+#		include <arm_neon.h>
+#	endif
+#endif
 
 #endif /* _COMPV_BASE_CONFIG_H_ */

@@ -53,18 +53,18 @@ COMPV_OVERRIDE_IMPL0("CompVWindow", CompVGLWindow::close)()
 
 	// Close all layers
 	for (std::map<compv_surfacelayer_id_t, CompVGLSingleSurfaceLayerPtr>::iterator it = m_mapSingleSurfaceLayers.begin(); it != m_mapSingleSurfaceLayers.end(); ++it) {
-		COMPV_CHECK_CODE_ASSERT(it->second->close());
+		COMPV_CHECK_CODE_NOP(it->second->close());
 	}
 	for (std::map<compv_surfacelayer_id_t, CompVGLMatchingSurfaceLayerPtr>::iterator it = m_mapMatchingSurfaceLayers.begin(); it != m_mapMatchingSurfaceLayers.end(); ++it) {
-		COMPV_CHECK_CODE_ASSERT(it->second->close());
+		COMPV_CHECK_CODE_NOP(it->second->close());
 	}
 	for (std::map<compv_surfacelayer_id_t, CompVGLMultiSurfaceLayerPtr>::iterator it = m_mapMultiSurfaceLayers.begin(); it != m_mapMultiSurfaceLayers.end(); ++it) {
-		COMPV_CHECK_CODE_ASSERT(it->second->close());
+		COMPV_CHECK_CODE_NOP(it->second->close());
 	}
 
 	// Unset context
 	if (context()) {
-		COMPV_CHECK_CODE_ASSERT(context()->unmakeCurrent());
+		COMPV_CHECK_CODE_NOP(context()->unmakeCurrent());
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -97,7 +97,7 @@ COMPV_OVERRIDE_IMPL0("CompVWindow", CompVGLWindow::beginDraw)()
 	m_bDrawing = true;
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
-		COMPV_CHECK_CODE_ASSERT(context()->unmakeCurrent());
+		COMPV_CHECK_CODE_NOP(context()->unmakeCurrent());
 	}
 	return err;
 }
@@ -115,7 +115,7 @@ COMPV_OVERRIDE_IMPL0("CompVWindow", CompVGLWindow::endDraw)()
 
 bail:
 	m_bDrawing = false;
-	COMPV_CHECK_CODE_ASSERT(context()->unmakeCurrent());
+	COMPV_CHECK_CODE_NOP(context()->unmakeCurrent());
 	return err;
 }
 
@@ -209,7 +209,7 @@ COMPV_OVERRIDE_IMPL0("CompVWindowPriv", CompVGLWindow::priv_updateSize)(size_t n
 	}
 	
 bail:
-	COMPV_CHECK_CODE_ASSERT(err = context()->unmakeCurrent());
+	COMPV_CHECK_CODE_NOP(err = context()->unmakeCurrent());
 	return COMPV_ERROR_CODE_S_OK;
 }
 

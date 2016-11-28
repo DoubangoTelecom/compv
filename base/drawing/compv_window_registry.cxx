@@ -38,9 +38,9 @@ COMPV_ERROR_CODE CompVWindowRegistry::add(CompVWindowPtr window)
 {
 	COMPV_CHECK_EXP_RETURN(!s_bInitialized, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 	COMPV_CHECK_EXP_RETURN(!window, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_CODE_ASSERT(s_WindowsMutex->lock());
+	COMPV_CHECK_CODE_NOP(s_WindowsMutex->lock());
 	m_sWindows.insert(std::pair<compv_window_id_t, CompVPtr<CompVWindow* > >(window->getId(), window));
-	COMPV_CHECK_CODE_ASSERT(s_WindowsMutex->unlock());
+	COMPV_CHECK_CODE_NOP(s_WindowsMutex->unlock());
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -55,32 +55,32 @@ COMPV_ERROR_CODE CompVWindowRegistry::remove(CompVWindowPtr window)
 COMPV_ERROR_CODE CompVWindowRegistry::remove(compv_window_id_t windowId)
 {
 	COMPV_CHECK_EXP_RETURN(!s_bInitialized, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	COMPV_CHECK_CODE_ASSERT(s_WindowsMutex->lock());
+	COMPV_CHECK_CODE_NOP(s_WindowsMutex->lock());
 	m_sWindows.erase(windowId);
-	COMPV_CHECK_CODE_ASSERT(s_WindowsMutex->unlock());
+	COMPV_CHECK_CODE_NOP(s_WindowsMutex->unlock());
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 size_t CompVWindowRegistry::count()
 {
-	COMPV_CHECK_CODE_ASSERT(s_WindowsMutex->lock());
+	COMPV_CHECK_CODE_NOP(s_WindowsMutex->lock());
 	size_t count = m_sWindows.size();
-	COMPV_CHECK_CODE_ASSERT(s_WindowsMutex->unlock());
+	COMPV_CHECK_CODE_NOP(s_WindowsMutex->unlock());
 	return count;
 }
 
 COMPV_ERROR_CODE CompVWindowRegistry::closeAll()
 {
 	COMPV_CHECK_EXP_RETURN(!s_bInitialized, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	COMPV_CHECK_CODE_ASSERT(s_WindowsMutex->lock());
+	COMPV_CHECK_CODE_NOP(s_WindowsMutex->lock());
 	std::map<compv_window_id_t, CompVPtr<CompVWindow* > >::iterator it;
 	for (it = m_sWindows.begin(); it != m_sWindows.end(); ++it) {
 		CompVPtr<CompVWindow* > window = it->second;
-		COMPV_CHECK_CODE_ASSERT(window->close());
+		COMPV_CHECK_CODE_NOP(window->close());
 	}
 	m_sWindows.clear();
-	COMPV_CHECK_CODE_ASSERT(s_WindowsMutex->unlock());
+	COMPV_CHECK_CODE_NOP(s_WindowsMutex->unlock());
 	return COMPV_ERROR_CODE_S_OK;
 }
 

@@ -4,19 +4,18 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/drawing/android/compv_window_android_egl.h"
-#if COMPV_OS_ANDROID && defined(HAVE_EGL)
+#include "compv/drawing/compv_window_egl.h"
+#if defined(HAVE_EGL)
 #include "compv/drawing/compv_drawing.h"
-#include "compv/base/android/compv_android_native_activity.h"
 #include "compv/gl/compv_gl_info.h"
 
 COMPV_NAMESPACE_BEGIN()
 
 //
-//	CompVGLContextAndroidEGL
+//	CompVGLContextEGL
 //
 
-CompVGLContextAndroidEGL::CompVGLContextAndroidEGL(EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex)
+CompVGLContextEGL::CompVGLContextEGL(EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex)
 	: CompVGLContext()
 	, m_pEGLDisplay(pEGLDisplay)
 	, m_pEGLSurface(pEGLSurface)
@@ -25,12 +24,12 @@ CompVGLContextAndroidEGL::CompVGLContextAndroidEGL(EGLDisplay pEGLDisplay, EGLSu
 
 }
 
-CompVGLContextAndroidEGL::~CompVGLContextAndroidEGL()
+CompVGLContextEGL::~CompVGLContextEGL()
 {
 
 }
 
-COMPV_ERROR_CODE CompVGLContextAndroidEGL::makeCurrent()
+COMPV_ERROR_CODE CompVGLContextEGL::makeCurrent() /* Overrides(CompVGLContext) */
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
@@ -41,19 +40,19 @@ COMPV_ERROR_CODE CompVGLContextAndroidEGL::makeCurrent()
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
 		// TODO(dmi): print error
-		COMPV_CHECK_CODE_ASSERT(unmakeCurrent());
+		COMPV_CHECK_CODE_NOP(unmakeCurrent());
 	}
 	return err;
 }
 
-COMPV_ERROR_CODE CompVGLContextAndroidEGL::swapBuffers()
+COMPV_ERROR_CODE CompVGLContextEGL::swapBuffers() /* Overrides(CompVGLContext) */
 {
 	COMPV_CHECK_CODE_RETURN(CompVGLContext::swapBuffers()); // Base class implementation
 	COMPV_CHECK_EXP_RETURN(eglSwapBuffers(m_pEGLDisplay, m_pEGLSurface) != EGL_TRUE, COMPV_ERROR_CODE_E_EGL);
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLContextAndroidEGL::unmakeCurrent()
+COMPV_ERROR_CODE CompVGLContextEGL::unmakeCurrent() /* Overrides(CompVGLContext) */
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
@@ -68,11 +67,11 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVGLContextAndroidEGL::newObj(CompVGLContextAndroidEGLPtrPtr context, EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex)
+COMPV_ERROR_CODE CompVGLContextEGL::newObj(CompVGLContextEGLPtrPtr context, EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex)
 {
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
 	COMPV_CHECK_EXP_RETURN(!context || pEGLDisplay == EGL_NO_DISPLAY || pEGLSurface == EGL_NO_SURFACE || pEGLContex == EGL_NO_CONTEXT, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVGLContextAndroidEGLPtr context_ = new CompVGLContextAndroidEGL(pEGLDisplay, pEGLSurface, pEGLContex);
+	CompVGLContextEGLPtr context_ = new CompVGLContextEGL(pEGLDisplay, pEGLSurface, pEGLContex);
 	COMPV_CHECK_EXP_RETURN(!context_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
 	*context = context_;
@@ -80,12 +79,10 @@ COMPV_ERROR_CODE CompVGLContextAndroidEGL::newObj(CompVGLContextAndroidEGLPtrPtr
 }
 
 //
-//	CompVWindowAndroidEGL
+//	CompVWindowEGL
 //	
 
-// FIXME(dmi): factore this class to have an egl implementation for rasberrypi
-
-CompVWindowAndroidEGL::CompVWindowAndroidEGL(size_t width, size_t height, const char* title)
+CompVWindowEGL::CompVWindowEGL(size_t width, size_t height, const char* title)
 	: CompVGLWindow(width, height, title)
 	, m_pEGLDisplay(EGL_NO_DISPLAY)
 	, m_pEGLSurface(EGL_NO_SURFACE)
@@ -93,20 +90,24 @@ CompVWindowAndroidEGL::CompVWindowAndroidEGL(size_t width, size_t height, const 
 {
 }
 
-CompVWindowAndroidEGL::~CompVWindowAndroidEGL()
+CompVWindowEGL::~CompVWindowEGL()
 {
-	COMPV_CHECK_CODE_ASSERT(close());
+	COMPV_CHECK_CODE_NOP(close());
 }
 
 // Private function: do not autolock, up to the caller
-COMPV_ERROR_CODE CompVWindowAndroidEGL::init()
+COMPV_ERROR_CODE CompVWindowEGL::init()
 {
 	if (m_pEGLDisplay != EGL_NO_DISPLAY) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	static const EGLint CompVEGLAttribs[] = {
+#if COMPV_GL_EGL_CONTEXT_CLIENT_VERSION == 3
+		EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
+#else
 		EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+#endif
 		EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
 		EGL_BLUE_SIZE, 8,
 		EGL_GREEN_SIZE, 8,
@@ -116,15 +117,14 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::init()
 		EGL_STENCIL_SIZE, 8,
 		EGL_NONE
 	};
-	ANativeWindow* window;
+	EGLNativeWindowType window;
 	EGLint major, minor;
 	EGLConfig config;
 	EGLint numConfigs;
 	EGLint width, height;
-	int32_t result;
 
 	// Retrieve the window associated to the native activity
-	window = CompVDrawing::getAndroidNativeActivityWindow();
+	window = nativeWindow();
 	if (!window) {
 		COMPV_DEBUG_ERROR("No window is associated to the native activity");
 		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_EGL);
@@ -136,26 +136,14 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::init()
 	COMPV_CHECK_EXP_BAIL(eglInitialize(m_pEGLDisplay, &major, &minor) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));
 	COMPV_DEBUG_INFO("Initializing EGL display with major=%d and minor=%d", major, minor);
 
-	COMPV_CHECK_EXP_BAIL(eglChooseConfig(m_pEGLDisplay, CompVEGLAttribs, &config, 1, &numConfigs) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));	
-
-	if ((result = ANativeWindow_setBuffersGeometry(window, 0, 0, WINDOW_FORMAT_RGBA_8888)) != 0) {
-		EGLint format;
-		COMPV_DEBUG_ERROR("ANativeWindow_setBuffersGeometry(WINDOW_FORMAT_RGBA_8888) failed with error code = %d", result);
-		/* EGL_NATIVE_VISUAL_ID is an attribute of the EGLConfig that is
-		* guaranteed to be accepted by ANativeWindow_setBuffersGeometry().
-		* As soon as we picked a EGLConfig, we can safely reconfigure the
-		* ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID. */
-		COMPV_CHECK_EXP_BAIL(eglGetConfigAttrib(m_pEGLDisplay, config, EGL_NATIVE_VISUAL_ID, &format) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));
-		COMPV_DEBUG_INFO("EGL_NATIVE_VISUAL_ID = %d", format);
-		COMPV_CHECK_EXP_BAIL((result = ANativeWindow_setBuffersGeometry(window, 0, 0, format)) != 0, (err = COMPV_ERROR_CODE_E_EGL));
-	}
-
+	COMPV_CHECK_EXP_BAIL(eglChooseConfig(m_pEGLDisplay, CompVEGLAttribs, &config, 1, &numConfigs) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));
+	
 	// Create and initialize the surface
 	COMPV_CHECK_EXP_BAIL((m_pEGLSurface = eglCreateWindowSurface(m_pEGLDisplay, config, window, NULL)) == EGL_NO_SURFACE, (err = COMPV_ERROR_CODE_E_EGL));
 
 	// Create, initialize and make current the context
 	static const EGLint contextAttribs[] = {
-		EGL_CONTEXT_CLIENT_VERSION, 2, // FIXME(dmi): important! must retrieve
+		EGL_CONTEXT_CLIENT_VERSION, COMPV_GL_EGL_CONTEXT_CLIENT_VERSION,
 		EGL_NONE
 	};
 	COMPV_CHECK_EXP_BAIL((m_pEGLContex = eglCreateContext(m_pEGLDisplay, config, NULL, contextAttribs)) == EGL_NO_CONTEXT, (err = COMPV_ERROR_CODE_E_EGL));
@@ -165,11 +153,11 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::init()
 	COMPV_CHECK_CODE_BAIL(err = CompVGLInfo::gather());
 
 	// Set swap interval
-	COMPV_CHECK_EXP_BAIL(eglSwapInterval(m_pEGLDisplay, 0) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));
+	COMPV_CHECK_EXP_BAIL(eglSwapInterval(m_pEGLDisplay, COMPV_GL_SWAP_INTERVAL) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));
 
 	// Create obj context
-	COMPV_CHECK_CODE_RETURN(CompVGLContextAndroidEGL::newObj(&m_ptrContext, m_pEGLDisplay, m_pEGLSurface, m_pEGLContex));
-	
+	COMPV_CHECK_CODE_RETURN(CompVGLContextEGL::newObj(&m_ptrContext, m_pEGLDisplay, m_pEGLSurface, m_pEGLContex));
+
 	// Update width and height to set to fullscreen
 	COMPV_CHECK_EXP_BAIL((eglQuerySurface(m_pEGLDisplay, m_pEGLSurface, EGL_WIDTH, &width) != EGL_TRUE), (err = COMPV_ERROR_CODE_E_EGL));
 	COMPV_CHECK_EXP_BAIL((eglQuerySurface(m_pEGLDisplay, m_pEGLSurface, EGL_HEIGHT, &height) != EGL_TRUE), (err = COMPV_ERROR_CODE_E_EGL));
@@ -179,14 +167,17 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::init()
 	}
 
 bail:
+	if (m_pEGLDisplay) {
+		eglMakeCurrent(m_pEGLDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+	}
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
-		COMPV_CHECK_CODE_ASSERT(deInit());
+		COMPV_CHECK_CODE_NOP(deInit());
 	}
 	return err;
 }
 
 // Private function: do not autolock, up to the caller
-COMPV_ERROR_CODE CompVWindowAndroidEGL::deInit()
+COMPV_ERROR_CODE CompVWindowEGL::deInit()
 {
 	if (m_pEGLDisplay != EGL_NO_DISPLAY) {
 		eglMakeCurrent(m_pEGLDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -207,53 +198,33 @@ COMPV_ERROR_CODE CompVWindowAndroidEGL::deInit()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-bool CompVWindowAndroidEGL::isClosed()const
+bool CompVWindowEGL::isClosed() const /* Overrides(CompVGLWindow) */
 {
-	COMPV_ASSERT(false);
-	return false;
+	return m_pEGLDisplay == EGL_NO_DISPLAY
+		|| m_pEGLContex == EGL_NO_CONTEXT
+		|| m_pEGLSurface == EGL_NO_SURFACE
+		|| !m_ptrContext;
 }
 
-COMPV_ERROR_CODE CompVWindowAndroidEGL::close()
+COMPV_ERROR_CODE CompVWindowEGL::close() /* Overrides(CompVGLWindow) */
 {
-	CompVAutoLock<CompVWindowAndroidEGL>(this);
-	COMPV_CHECK_CODE_ASSERT(CompVGLWindow::close()); // base class implementation
+	CompVAutoLock<CompVWindowEGL>(this);
+	COMPV_CHECK_CODE_NOP(CompVGLWindow::close()); // base class implementation
 	COMPV_CHECK_CODE_RETURN(deInit());
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVWindowAndroidEGL::beginDraw()
+COMPV_ERROR_CODE CompVWindowEGL::beginDraw() /* Overrides(CompVGLWindow) */
 {
-	CompVAutoLock<CompVWindowAndroidEGL>(this);
+	CompVAutoLock<CompVWindowEGL>(this);
 	COMPV_CHECK_CODE_RETURN(init());
 	COMPV_CHECK_CODE_RETURN(CompVGLWindow::beginDraw()); // Base class implementation
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-CompVGLContextPtr CompVWindowAndroidEGL::context()
+CompVGLContextPtr CompVWindowEGL::context() /* Overrides(CompVGLWindow) */
 {
 	return *m_ptrContext;
-}
-
-COMPV_ERROR_CODE CompVWindowAndroidEGL::newObj(CompVWindowAndroidEGLPtrPtr eglWindow, size_t width, size_t height, const char* title)
-{
-	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
-	COMPV_CHECK_EXP_RETURN(eglWindow == NULL || width <= 0 || height <= 0 || !title || !::strlen(title), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	struct android_app* app = AndroidApp_get();
-	if (app && app->window) {
-		size_t newWidth = static_cast<size_t>(ANativeWindow_getWidth(app->window));
-		size_t newheight = static_cast<size_t>(ANativeWindow_getHeight(app->window));
-		if (width && height) {
-			COMPV_DEBUG_INFO("Android, setting size to fullscreen: (%zd,%zd)->(%zd,%zd)", width, height, newWidth, newheight);
-			width = newWidth;
-			height = newheight;
-		}
-	}
-	CompVWindowAndroidEGLPtr eglWindow_ = new CompVWindowAndroidEGL(width, height, title);
-	COMPV_CHECK_EXP_RETURN(!eglWindow_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	COMPV_CHECK_EXP_RETURN(!eglWindow_->isInitialized(), COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	//COMPV_CHECK_CODE_RETURN(CompVGLContextAndroidEGL::newObj(&eglWindow_->m_ptrContext, eglWindow_->m_pEGLDisplay, eglWindow_->m_pEGLSurface, eglWindow_->m_pEGLContex));
-	*eglWindow = eglWindow_;
-	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()
