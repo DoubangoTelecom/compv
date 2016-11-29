@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_SURFACE_LAYER_GL_SINGLE_H_)
 #define _COMPV_GL_SURFACE_LAYER_GL_SINGLE_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/drawing/compv_surfacelayer_single.h"
@@ -21,9 +21,7 @@ COMPV_NAMESPACE_BEGIN()
 
 class CompVGLWindow;
 
-class CompVGLSingleSurfaceLayer;
-typedef CompVPtr<CompVGLSingleSurfaceLayer* > CompVGLSingleSurfaceLayerPtr;
-typedef CompVGLSingleSurfaceLayerPtr* CompVGLSingleSurfaceLayerPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLSingleSurfaceLayer)
 
 class CompVGLSingleSurfaceLayer : public CompVSingleSurfaceLayer
 {
@@ -31,7 +29,7 @@ protected:
 	CompVGLSingleSurfaceLayer();
 public:
 	virtual ~CompVGLSingleSurfaceLayer();
-	COMPV_GET_OBJECT_ID(CompVGLSingleSurfaceLayer);
+	COMPV_OBJECT_GET_ID(CompVGLSingleSurfaceLayer);
 
 	// Overrides(CompVSingleSurfaceLayer)
 	virtual CompVSurfacePtr surface() override;

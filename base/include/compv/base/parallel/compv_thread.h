@@ -30,9 +30,7 @@ typedef pthread_t compv_thread_id_t;
 #	define COMPV_THREAD_PRIORITY_HIGH					((COMPV_THREAD_PRIORITY_MEDIUM * 3) >> 1)
 #endif
 
-class CompVThread;
-typedef CompVPtr<CompVThread* > CompVThreadPtr;
-typedef CompVThreadPtr* CompVThreadPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(Thread)
 
 class COMPV_BASE_API CompVThread : public CompVObj
 {

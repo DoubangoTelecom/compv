@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_BLITTER_H_)
 #define _COMPV_GL_BLITTER_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_obj.h"
@@ -26,9 +26,7 @@ COMPV_NAMESPACE_BEGIN()
 
 #define COMPV_GL_BLITTER_AUTOBIND(blitter) COMPV_AUTOBIND(CompVGLBlitter, (blitter))
 
-class CompVGLBlitter;
-typedef CompVPtr<CompVGLBlitter* > CompVGLBlitterPtr;
-typedef CompVGLBlitterPtr* CompVGLBlitterPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLBlitter)
 
 class COMPV_GL_API CompVGLBlitter : public CompVObj, public CompVBind
 {
@@ -36,7 +34,7 @@ protected:
 	CompVGLBlitter();
 public:
 	virtual ~CompVGLBlitter();
-	COMPV_GET_OBJECT_ID(CompVGLBlitter);
+	COMPV_OBJECT_GET_ID(CompVGLBlitter);
 
 	COMPV_INLINE bool isInitialized()const { return m_bInit; }
 	COMPV_INLINE size_t width()const { return m_nWidth; }

@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_CONTEXT_H_)
 #define _COMPV_GL_CONTEXT_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_lock.h"
@@ -20,9 +20,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVGLContext;
-typedef CompVPtr<CompVGLContext* > CompVGLContextPtr;
-typedef CompVGLContextPtr* CompVGLContextPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLContext)
 
 class COMPV_GL_API CompVGLContext : public CompVObj, public CompVLock
 {

@@ -20,9 +20,7 @@ typedef long compv_surface_id_t;
 
 class CompVWindow;
 
-class CompVSurface;
-typedef CompVPtr<CompVSurface* > CompVSurfacePtr;
-typedef CompVSurfacePtr* CompVSurfacePtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(Surface)
 
 class COMPV_BASE_API CompVSurface : public CompVObj
 {

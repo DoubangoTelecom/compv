@@ -91,7 +91,7 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 bail:
 	return NULL;
 
-#elif 1 // Matching
+#elif 0 // Matching
 	COMPV_ERROR_CODE err;
 	CompVMatPtr mat[3];
 	CompVMatchingSurfaceLayerPtr matchingSurfaceLayer;
@@ -133,9 +133,13 @@ bail:
 	CompVSingleSurfaceLayerPtr singleSurfaceLayer;
 	CompVViewportPtr ptrViewPort;
 	CompVMVPPtr ptrMVP;
+	CompVCameraPtr camera;
 	static int count = 0;
 	static uint64_t timeStart;
 	char buff_[33] = { 0 };
+
+	//COMPV_CHECK_CODE_BAIL(err = CompVCamera::newObj(&camera));
+	//COMPV_CHECK_CODE_BAIL(err = camera->open());
 	
 	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile(COMPV_PATH_FROM_NAME("girl.jpg"), &mat[0]));
 	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile(COMPV_PATH_FROM_NAME("valve_original.jpg"), &mat[1]));

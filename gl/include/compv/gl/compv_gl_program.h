@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_PROGRAM_H_)
 #define _COMPV_GL_PROGRAM_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/gl/compv_gl_utils.h"
@@ -21,9 +21,7 @@ COMPV_NAMESPACE_BEGIN()
 
 #define COMPV_GL_PROGRAM_AUTOBIND(program) COMPV_AUTOBIND(CompVGLProgram, (program))
 
-class CompVGLProgram;
-typedef CompVPtr<CompVGLProgram* > CompVGLProgramPtr;
-typedef CompVGLProgramPtr* CompVGLProgramPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLProgram)
 
 class COMPV_GL_API CompVGLProgram : public CompVObj, public CompVBind
 {
@@ -31,7 +29,7 @@ protected:
 	CompVGLProgram();
 public:
 	virtual ~CompVGLProgram();
-	COMPV_GET_OBJECT_ID(CompVGLProgram);
+	COMPV_OBJECT_GET_ID(CompVGLProgram);
 	COMPV_INLINE GLuint name() { return m_uNamePrg; };
 
 	COMPV_ERROR_CODE shaderAttachVertexFile(const char* pcFilePath);

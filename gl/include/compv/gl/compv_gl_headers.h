@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_HEADERS_H_)
 #define _COMPV_GL_HEADERS_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")

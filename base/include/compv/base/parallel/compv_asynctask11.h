@@ -90,6 +90,8 @@ private:
 };
 #endif
 
+COMPV_OBJECT_DECLARE_PTRS(AsyncTask11)
+
 class COMPV_BASE_API CompVAsyncTask11 : public CompVObj
 {
 protected:
@@ -138,8 +140,6 @@ private:
 	bool m_bStarted;
 	compv_core_id_t m_iCoreId;
 };
-
-typedef CompVPtr<CompVAsyncTask11* > CompVAsyncTask11Ptr;
 
 COMPV_NAMESPACE_END()
 

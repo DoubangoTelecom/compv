@@ -13,9 +13,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVSingleSurfaceLayer;
-typedef CompVPtr<CompVSingleSurfaceLayer* > CompVSingleSurfaceLayerPtr;
-typedef CompVSingleSurfaceLayerPtr* CompVSingleSurfaceLayerPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(SingleSurfaceLayer)
 
 class COMPV_BASE_API CompVSingleSurfaceLayer : public CompVSurfaceLayer
 {

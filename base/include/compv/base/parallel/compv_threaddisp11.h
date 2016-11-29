@@ -15,6 +15,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+COMPV_OBJECT_DECLARE_PTRS(ThreadDispatcher11)
+
 class COMPV_BASE_API CompVThreadDispatcher11 : public CompVObj
 {
 protected:
@@ -46,8 +48,6 @@ private:
 	int32_t m_nTasksCount;
 	bool m_bValid;
 };
-
-typedef CompVPtr<CompVThreadDispatcher11* > CompVThreadDispatcher11Ptr;
 
 COMPV_NAMESPACE_END()
 

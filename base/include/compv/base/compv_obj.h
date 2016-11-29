@@ -12,7 +12,12 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-#define COMPV_GET_OBJECT_ID(objName) virtual COMPV_INLINE const char* getObjectId()override { return #objName; };
+#define COMPV_OBJECT_GET_ID(objName) virtual COMPV_INLINE const char* getObjectId()override { return #objName; };
+#define COMPV_OBJECT_DECLARE_PTRS(objName) \
+	class CompV##objName;  \
+	typedef CompVPtr<CompV##objName*> CompV##objName##Ptr;  \
+	typedef CompV##objName##Ptr* CompV##objName##PtrPtr;
+
 
 class COMPV_BASE_API CompVObj
 {

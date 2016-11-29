@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_RENDERER_YUV_H_)
 #define _COMPV_GL_RENDERER_YUV_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/gl/compv_gl_renderer.h"
@@ -18,9 +18,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVGLRendererYUV;
-typedef CompVPtr<CompVGLRendererYUV* > CompVGLRendererYUVPtr;
-typedef CompVGLRendererYUVPtr* CompVGLRendererYUVPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLRendererYUV)
 
 class CompVGLRendererYUV : public CompVGLRenderer
 {
@@ -28,7 +26,7 @@ protected:
 	CompVGLRendererYUV(COMPV_PIXEL_FORMAT eYUVPixelFormat);
 public:
 	virtual ~CompVGLRendererYUV();
-	COMPV_GET_OBJECT_ID(CompVGLRendererYUV);
+	COMPV_OBJECT_GET_ID(CompVGLRendererYUV);
 
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) COMPV_OVERRIDE_DECL("CompVGLRenderer");
 

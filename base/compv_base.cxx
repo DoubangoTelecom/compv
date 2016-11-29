@@ -19,8 +19,19 @@ COMPV_NAMESPACE_BEGIN()
 
 bool CompVBase::s_bInitialized = false;
 bool CompVBase::s_bInitializing = false;
-#if defined(COMPV_OS_WINDOWS)
+#if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_RT
 bool CompVBase::s_bBigEndian = false;
+/* https://msdn.microsoft.com/en-us/library/windows/desktop/ms724834%28v=vs.85%29.aspx
+Version Number    Description
+6.2				  Windows 8 / Windows Server 2012
+6.1               Windows 7     / Windows 2008 R2
+6.0               Windows Vista / Windows 2008
+5.2               Windows 2003
+5.1               Windows XP
+5.0               Windows 2000
+*/
+DWORD CompVBase::s_dwMajorVersion = -1;
+DWORD CompVBase::s_dwMinorVersion = -1;
 #else
 bool CompVBase::s_bBigEndian = true;
 #endif
@@ -73,7 +84,33 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
 	COMPV_DEBUG_INFO("sizeof(compv_scalar_t)= #%zu", sizeof(compv_scalar_t));
 	COMPV_DEBUG_INFO("sizeof(float)= #%zu", sizeof(float));
 
-	// endianness
+	/* Windows version */
+#if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_RT
+	// COM initialization
+#	if !COMPV_OS_WINDOWS_CE && 0 // Call 'CoUninitialize' is you remove the '& 0'
+	COMPV_CHECK_EXP_BAIL(FAILED(CoInitializeEx(NULL, COINIT_MULTITHREADED)), (err_ = COMPV_ERROR_CODE_E_SYSTEM));
+#	endif
+
+	// Timers accuracy
+	COMPV_CHECK_EXP_BAIL(timeBeginPeriod(1) != 0, (err_ = COMPV_ERROR_CODE_E_SYSTEM));
+
+	// Get OS version
+	if (s_dwMajorVersion == -1 || s_dwMinorVersion == -1) {
+		OSVERSIONINFO osvi;
+		ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+		COMPV_CHECK_EXP_BAIL(GetVersionEx(&osvi) != TRUE, (err_ = COMPV_ERROR_CODE_E_SYSTEM));
+		s_dwMajorVersion = osvi.dwMajorVersion;
+		s_dwMinorVersion = osvi.dwMinorVersion;
+#	if COMPV_OS_WINDOWS_CE
+		COMPV_DEBUG_INFO("Windows dwMajorVersion=%ld, dwMinorVersion=%ld\n", s_dwMajorVersion, s_dwMinorVersion);
+#	else
+		COMPV_DEBUG_INFO("Windows dwMajorVersion=%ld, dwMinorVersion=%ld", s_dwMajorVersion, s_dwMinorVersion);
+#	endif
+	}
+#endif
+
+	/* endianness */
 	// https://developer.apple.com/library/mac/documentation/Darwin/Conceptual/64bitPorting/MakingCode64-BitClean/MakingCode64-BitClean.html
 #if TARGET_RT_LITTLE_ENDIAN
 	s_bBigEndian = false;
@@ -82,7 +119,7 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
 #else
 	static const short kWord = 0x4321;
 	s_bBigEndian = ((*(int8_t *)&kWord) != 0x21);
-#	if defined(COMPV_OS_WINDOWS)
+#	if COMPV_OS_WINDOWS
 	if (s_bBigEndian) {
 		COMPV_DEBUG_WARN("Big endian on Windows machine. Is it right?");
 	}
@@ -327,5 +364,33 @@ bool CompVBase::isMathFixedPoint()
 {
 	return s_bMathFixedPoint;
 }
+
+#if COMPV_OS_WINDOWS
+
+bool CompVBase::isWin8OrLater()
+{
+	COMPV_CHECK_EXP_NOP(s_dwMajorVersion == -1 || s_dwMinorVersion == -1, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+	return ((s_dwMajorVersion > 6) || ((s_dwMajorVersion == 6) && (s_dwMinorVersion >= 2)));
+}
+
+bool CompVBase::isWin7OrLater()
+{
+	COMPV_CHECK_EXP_NOP(s_dwMajorVersion == -1 || s_dwMinorVersion == -1, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+	return ((s_dwMajorVersion > 6) || ((s_dwMajorVersion == 6) && (s_dwMinorVersion >= 1)));
+}
+
+bool CompVBase::isWinVistaOrLater()
+{
+	COMPV_CHECK_EXP_NOP(s_dwMajorVersion == -1 || s_dwMinorVersion == -1, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+	return (s_dwMajorVersion >= 6);
+}
+
+bool CompVBase::isWinXPOrLater()
+{
+	COMPV_CHECK_EXP_NOP(s_dwMajorVersion == -1 || s_dwMinorVersion == -1, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+	return ((s_dwMajorVersion > 5) || ((s_dwMajorVersion == 5) && (s_dwMinorVersion >= 1)));
+}
+
+#endif /* COMPV_OS_WINDOWS */
 
 COMPV_NAMESPACE_END()

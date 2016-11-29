@@ -43,26 +43,26 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\compv\drawing\compv_canvas_skia.h" />
-    <ClInclude Include="..\include\compv\drawing\compv_common.h" />
-    <ClInclude Include="..\include\compv\drawing\compv_config.h" />
     <ClInclude Include="..\include\compv\drawing\compv_drawing.h" />
+    <ClInclude Include="..\include\compv\drawing\compv_drawing_canvas_skia.h" />
+    <ClInclude Include="..\include\compv\drawing\compv_drawing_common.h" />
+    <ClInclude Include="..\include\compv\drawing\compv_drawing_config.h" />
     <ClInclude Include="..\include\compv\drawing\compv_drawing_factory.h" />
-    <ClInclude Include="..\include\compv\drawing\compv_image_libjpeg.h" />
-    <ClInclude Include="..\include\compv\drawing\compv_window_egl_android.h" />
-    <ClInclude Include="..\include\compv\drawing\compv_window_egl.h" />
-    <ClInclude Include="..\include\compv\drawing\compv_window_glfw3.h" />
-    <ClInclude Include="..\include\compv\drawing\compv_window_sdl.h" />
+    <ClInclude Include="..\include\compv\drawing\compv_drawing_image_libjpeg.h" />
+    <ClInclude Include="..\include\compv\drawing\compv_drawing_window_egl.h" />
+    <ClInclude Include="..\include\compv\drawing\compv_drawing_window_egl_android.h" />
+    <ClInclude Include="..\include\compv\drawing\compv_drawing_window_glfw3.h" />
+    <ClInclude Include="..\include\compv\drawing\compv_drawing_window_sdl.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\compv_canvas_skia.cxx" />
     <ClCompile Include="..\compv_drawing.cxx" />
+    <ClCompile Include="..\compv_drawing_canvas_skia.cxx" />
     <ClCompile Include="..\compv_drawing_factory.cxx" />
-    <ClCompile Include="..\compv_image_libjpeg.cxx" />
-    <ClCompile Include="..\compv_window_egl_android.cxx" />
-    <ClCompile Include="..\compv_window_egl.cxx" />
-    <ClCompile Include="..\compv_window_glfw3.cxx" />
-    <ClCompile Include="..\compv_window_sdl.cxx" />
+    <ClCompile Include="..\compv_drawing_image_libjpeg.cxx" />
+    <ClCompile Include="..\compv_drawing_window_egl.cxx" />
+    <ClCompile Include="..\compv_drawing_window_egl_android.cxx" />
+    <ClCompile Include="..\compv_drawing_window_glfw3.cxx" />
+    <ClCompile Include="..\compv_drawing_window_sdl.cxx" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{68935871-4451-42ba-b9c0-c547ab282f0c}</ProjectGuid>

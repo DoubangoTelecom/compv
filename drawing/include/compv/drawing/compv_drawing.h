@@ -7,8 +7,8 @@
 #if !defined(_COMPV_DRAWING_DRAWING_H_)
 #define _COMPV_DRAWING_DRAWING_H_
 
-#include "compv/drawing/compv_config.h"
-#include "compv/drawing/compv_common.h"
+#include "compv/drawing/compv_drawing_config.h"
+#include "compv/drawing/compv_drawing_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/parallel/compv_thread.h"
 #include "compv/base/android/compv_android_native_activity.h"

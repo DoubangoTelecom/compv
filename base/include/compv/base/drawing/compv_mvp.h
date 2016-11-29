@@ -44,9 +44,7 @@ enum COMPV_PROJECTION {
 //
 //	CompVMat4f
 //
-class CompVMat4f;
-typedef CompVPtr<CompVMat4f* > CompVMat4fPtr;
-typedef CompVMat4fPtr* CompVMat4fPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(Mat4f)
 
 class COMPV_BASE_API CompVMat4f : public CompVObj
 {
@@ -63,9 +61,7 @@ public:
 //
 //	CompVModel
 //
-class CompVModel;
-typedef CompVPtr<CompVModel* > CompVModelPtr;
-typedef CompVModelPtr* CompVModelPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(Model)
 
 class COMPV_BASE_API CompVModel : public CompVObj
 {
@@ -80,9 +76,7 @@ public:
 //
 //	CompVView
 //
-class CompVView;
-typedef CompVPtr<CompVView* > CompVViewPtr;
-typedef CompVViewPtr* CompVViewPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(View)
 
 class COMPV_BASE_API CompVView : public CompVObj
 {
@@ -99,9 +93,7 @@ public:
 //
 //	CompVProj
 //
-class CompVProj;
-typedef CompVPtr<CompVProj* > CompVProjPtr;
-typedef CompVProjPtr* CompVProjPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(Proj)
 
 class COMPV_BASE_API CompVProj : public CompVObj
 {
@@ -121,9 +113,7 @@ private:
 //
 //	CompVProj2D
 //
-class CompVProj2D;
-typedef CompVPtr<CompVProj2D* > CompVProj2DPtr;
-typedef CompVProj2DPtr* CompVProj2DPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(Proj2D)
 
 class COMPV_BASE_API CompVProj2D : public CompVProj
 {
@@ -138,9 +128,7 @@ public:
 //
 //	CompVProj3D
 //
-class CompVProj3D;
-typedef CompVPtr<CompVProj3D* > CompVProj3DPtr;
-typedef CompVProj3DPtr* CompVProj3DPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(Proj3D)
 
 class COMPV_BASE_API CompVProj3D : public CompVProj
 {
@@ -155,9 +143,7 @@ public:
 //
 //	CompVMVP
 //
-class CompVMVP;
-typedef CompVPtr<CompVMVP* > CompVMVPPtr;
-typedef CompVMVPPtr* CompVMVPPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(MVP)
 
 class COMPV_BASE_API CompVMVP : public CompVObj
 {

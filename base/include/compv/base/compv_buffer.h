@@ -13,9 +13,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVBuffer;
-typedef CompVPtr<CompVBuffer*> CompVBufferPtr;
-typedef CompVBufferPtr* CompVBufferPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(Buffer)
 
 class COMPV_BASE_API CompVBuffer : public CompVObj
 {

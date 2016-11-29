@@ -29,9 +29,7 @@ public:
 //
 //	CompVCanvasImpl
 //
-class CompVCanvasImpl;
-typedef CompVPtr<CompVCanvasImpl* > CompVCanvasImplPtr;
-typedef CompVCanvasImplPtr* CompVCanvasImplPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(CanvasImpl)
 
 class COMPV_BASE_API CompVCanvasImpl : public CompVObj, public CompVCanvasInterface
 {
@@ -44,9 +42,7 @@ public:
 //
 //	CompVCanvas
 //
-class CompVCanvas;
-typedef CompVPtr<CompVCanvas* > CompVCanvasPtr;
-typedef CompVCanvasPtr* CompVCanvasPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(Canvas)
 
 class COMPV_BASE_API CompVCanvas : public CompVObj, public CompVCanvasInterface
 {

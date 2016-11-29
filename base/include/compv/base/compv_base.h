@@ -29,6 +29,18 @@ public:
 	static bool isTestingMode();
 	static bool isMathTrigFast();
 	static bool isMathFixedPoint();
+#if COMPV_OS_WINDOWS
+	static DWORD winMajorVersion() {
+		return s_dwMajorVersion;
+	}
+	static DWORD winMinorVersion() {
+		return s_dwMinorVersion;
+	}
+	static bool isWin8OrLater();
+	static bool isWin7OrLater();
+	static bool isWinVistaOrLater();
+	static bool isWinXPOrLater();
+#endif
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
@@ -38,6 +50,10 @@ private:
 	static bool s_bTesting;
 	static bool s_bMathTrigFast;
 	static bool s_bMathFixedPoint;
+#if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_RT
+	static DWORD s_dwMajorVersion;
+	static DWORD s_dwMinorVersion;
+#endif
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 

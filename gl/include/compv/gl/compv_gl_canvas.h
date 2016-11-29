@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_CANVAS_H_)
 #define _COMPV_GL_CANVAS_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/drawing/compv_canvas.h"
@@ -19,9 +19,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVGLCanvas;
-typedef CompVPtr<CompVGLCanvas* > CompVGLCanvasPtr;
-typedef CompVGLCanvasPtr* CompVGLCanvasPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLCanvas)
 
 class COMPV_GL_API CompVGLCanvas : public CompVCanvas
 {
@@ -29,7 +27,7 @@ protected:
 	CompVGLCanvas(CompVGLFboPtr ptrFBO, CompVCanvasImplPtr ptrImpl);
 public:
 	virtual ~CompVGLCanvas();
-	COMPV_GET_OBJECT_ID("CompVGLCanvas");
+	COMPV_OBJECT_GET_ID("CompVGLCanvas");
 	COMPV_INLINE bool isEmpty()const { return m_bEmpty; }
 
 	COMPV_OVERRIDE_DECL0("CompVCanvasInterface", drawText)(const void* textPtr, size_t textLengthInBytes, int x, int y) override;

@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_RENDERER_GL_H_)
 #define _COMPV_GL_RENDERER_GL_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/drawing/compv_renderer.h"
@@ -22,9 +22,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVGLRenderer;
-typedef CompVPtr<CompVGLRenderer* > CompVGLRendererPtr;
-typedef CompVGLRendererPtr* CompVGLRendererPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLRenderer)
 
 class CompVGLRenderer : public CompVRenderer
 {
@@ -32,7 +30,7 @@ protected:
 	CompVGLRenderer(COMPV_PIXEL_FORMAT ePixelFormat);
 public:
 	virtual ~CompVGLRenderer();
-	COMPV_GET_OBJECT_ID(CompVGLRenderer);
+	COMPV_OBJECT_GET_ID(CompVGLRenderer);
 
 	COMPV_INLINE CompVGLBlitterPtr blitter() { return m_ptrBlitter; }
 	

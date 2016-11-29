@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_RENDERER_RGB_H_)
 #define _COMPV_GL_RENDERER_RGB_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/gl/compv_gl_renderer.h"
@@ -18,9 +18,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVGLRendererRGB;
-typedef CompVPtr<CompVGLRendererRGB* > CompVGLRendererRGBPtr;
-typedef CompVGLRendererRGBPtr* CompVGLRendererRGBPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLRendererRGB)
 
 class CompVGLRendererRGB : public CompVGLRenderer
 {
@@ -28,7 +26,7 @@ protected:
 	CompVGLRendererRGB(COMPV_PIXEL_FORMAT eRGBPixelFormat);
 public:
 	virtual ~CompVGLRendererRGB();
-	COMPV_GET_OBJECT_ID(CompVGLRendererRGB);
+	COMPV_OBJECT_GET_ID(CompVGLRendererRGB);
 	
 	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) COMPV_OVERRIDE_DECL("CompVGLRenderer");
 

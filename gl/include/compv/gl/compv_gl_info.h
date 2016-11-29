@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_INFO_H_)
 #define _COMPV_GL_INFO_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/gl/compv_gl_common.h"

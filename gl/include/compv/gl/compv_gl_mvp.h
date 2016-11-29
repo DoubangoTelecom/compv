@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_MVP_H_)
 #define _COMPV_GL_MVP_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/drawing/compv_mvp.h"
@@ -27,9 +27,7 @@ COMPV_NAMESPACE_BEGIN()
 //
 //	CompVGLMat4f
 //
-class CompVGLMat4f;
-typedef CompVPtr<CompVGLMat4f* > CompVGLMat4fPtr;
-typedef CompVGLMat4fPtr* CompVGLMat4fPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLMat4f)
 
 class CompVGLMat4f : public CompVMat4f
 {
@@ -37,7 +35,7 @@ protected:
 	CompVGLMat4f(const glm::mat4& mat4 = glm::mat4(1.0f));
 public:
 	virtual ~CompVGLMat4f();
-	COMPV_GET_OBJECT_ID(CompVGLMat4f);
+	COMPV_OBJECT_GET_ID(CompVGLMat4f);
 	COMPV_INLINE const glm::mat4& matrixGLM()const { return m_Matrix; }
 	CompVGLMat4f& operator=(const glm::mat4& mat4) { m_Matrix = mat4; return *this; }
 	operator const glm::mat4&() const { return matrixGLM(); }
@@ -56,9 +54,7 @@ private:
 //
 //	CompVGLModel
 //
-class CompVGLModel;
-typedef CompVPtr<CompVGLModel* > CompVGLModelPtr;
-typedef CompVGLModelPtr* CompVGLModelPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLModel)
 
 class CompVGLModel : public CompVModel
 {
@@ -66,7 +62,7 @@ protected:
 	CompVGLModel();
 public:
 	virtual ~CompVGLModel();
-	COMPV_GET_OBJECT_ID(CompVGLModel);
+	COMPV_OBJECT_GET_ID(CompVGLModel);
 	COMPV_INLINE const CompVGLMat4fPtr& matrixGLM()const { return m_ptrMatrix; }
 	operator const glm::mat4&() const { return **matrixGLM(); }
 	CompVGLModel& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
@@ -83,9 +79,7 @@ private:
 //
 //	CompVGLView
 //
-class CompVGLView;
-typedef CompVPtr<CompVGLView* > CompVGLViewPtr;
-typedef CompVGLViewPtr* CompVGLViewPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLView)
 
 class CompVGLView : public CompVView
 {
@@ -93,7 +87,7 @@ protected:
 	CompVGLView();
 public:
 	virtual ~CompVGLView();
-	COMPV_GET_OBJECT_ID(CompVGLView);
+	COMPV_OBJECT_GET_ID(CompVGLView);
 	COMPV_INLINE const CompVGLMat4fPtr& matrixGLM()const { return m_ptrMatrix; }
 	operator const glm::mat4&() const { return **matrixGLM(); }
 	CompVGLView& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
@@ -111,9 +105,7 @@ private:
 //
 //	CompVGLProj3D
 //
-class CompVGLProj3D;
-typedef CompVPtr<CompVGLProj3D* > CompVGLProj3DPtr;
-typedef CompVGLProj3DPtr* CompVGLProj3DPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLProj3D)
 
 class CompVGLProj3D : public CompVProj3D
 {
@@ -121,7 +113,7 @@ protected:
 	CompVGLProj3D();
 public:
 	virtual ~CompVGLProj3D();
-	COMPV_GET_OBJECT_ID(CompVGLProj3D);
+	COMPV_OBJECT_GET_ID(CompVGLProj3D);
 	COMPV_INLINE const CompVGLMat4fPtr& matrixGLM()const { return m_ptrMatrix; }
 	operator const glm::mat4&() const { return **matrixGLM(); }
 	CompVGLProj3D& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
@@ -140,9 +132,7 @@ private:
 //
 //	CompVGLProj2D
 //
-class CompVGLProj2D;
-typedef CompVPtr<CompVGLProj2D* > CompVGLProj2DPtr;
-typedef CompVGLProj2DPtr* CompVGLProj2DPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLProj2D)
 
 class CompVGLProj2D : public CompVProj2D
 {
@@ -150,7 +140,7 @@ protected:
 	CompVGLProj2D();
 public:
 	virtual ~CompVGLProj2D();
-	COMPV_GET_OBJECT_ID(CompVGLProj2D);
+	COMPV_OBJECT_GET_ID(CompVGLProj2D);
 	COMPV_INLINE const CompVGLMat4fPtr& matrixGLM()const { return m_ptrMatrix; }
 	operator const glm::mat4&() const { return **matrixGLM(); }
 	CompVGLProj2D& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
@@ -168,9 +158,7 @@ private:
 //
 //	CompVGLMVP
 //
-class CompVGLMVP;
-typedef CompVPtr<CompVGLMVP* > CompVGLMVPPtr;
-typedef CompVGLMVPPtr* CompVGLMVPPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLMVP)
 
 class COMPV_GL_API CompVGLMVP : public CompVMVP
 {
@@ -180,7 +168,7 @@ public:
 	virtual ~CompVGLMVP();
 	operator const glm::mat4&() const { return **m_ptrMatrix; }
 	CompVGLMVP& operator=(const glm::mat4& mat4) { **m_ptrMatrix = mat4; return *this; }
-	COMPV_GET_OBJECT_ID(CompVGLMVP);
+	COMPV_OBJECT_GET_ID(CompVGLMVP);
 
 	COMPV_OVERRIDE_DECL1("CompVMVP", CompVMat4fPtr, matrix)() override;
 	COMPV_OVERRIDE_DECL1("CompVMVP", CompVModelPtr, model)() override;

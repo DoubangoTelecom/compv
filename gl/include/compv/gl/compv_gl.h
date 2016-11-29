@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_H_)
 #define _COMPV_GL_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/base/compv_sharedlib.h"
 
 COMPV_NAMESPACE_BEGIN()

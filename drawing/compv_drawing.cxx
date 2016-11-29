@@ -5,7 +5,7 @@
 * WebSite: http://compv.org
 */
 #include "compv/drawing/compv_drawing.h"
-#include "compv/drawing/compv_image_libjpeg.h"
+#include "compv/drawing/compv_drawing_image_libjpeg.h"
 #include "compv/gl/compv_gl_headers.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_mat.h"
@@ -15,9 +15,9 @@
 #include "compv/gl/compv_gl.h"
 #include "compv/gl/compv_gl_info.h"
 
-#include "compv/drawing/compv_window_sdl.h"
-#include "compv/drawing/compv_window_egl_android.h"
-#include "compv/drawing/compv_canvas_skia.h"
+#include "compv/drawing/compv_drawing_window_sdl.h"
+#include "compv/drawing/compv_drawing_window_egl_android.h"
+#include "compv/drawing/compv_drawing_canvas_skia.h"
 
 COMPV_NAMESPACE_BEGIN()
 

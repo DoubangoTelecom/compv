@@ -17,9 +17,7 @@ COMPV_NAMESPACE_BEGIN()
 
 typedef long compv_renderer_id_t;
 
-class CompVRenderer;
-typedef CompVPtr<CompVRenderer* > CompVRendererPtr;
-typedef CompVRendererPtr* CompVRendererPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(Renderer)
 
 class COMPV_BASE_API CompVRenderer : public CompVObj
 {

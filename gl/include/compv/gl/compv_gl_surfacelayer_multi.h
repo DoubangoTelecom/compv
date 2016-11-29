@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_SURFACE_LAYER_MULTI_H_)
 #define _COMPV_GL_SURFACE_LAYER_MULTI_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/drawing/compv_surfacelayer_multi.h"
@@ -23,9 +23,7 @@ COMPV_NAMESPACE_BEGIN()
 
 class CompVGLWindow;
 
-class CompVGLMultiSurfaceLayer;
-typedef CompVPtr<CompVGLMultiSurfaceLayer* > CompVGLMultiSurfaceLayerPtr;
-typedef CompVGLMultiSurfaceLayerPtr* CompVGLMultiSurfaceLayerPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLMultiSurfaceLayer)
 
 class CompVGLMultiSurfaceLayer : public CompVMultiSurfaceLayer
 {
@@ -33,7 +31,7 @@ protected:
 	CompVGLMultiSurfaceLayer();
 public:
 	virtual ~CompVGLMultiSurfaceLayer();
-	COMPV_GET_OBJECT_ID(CompVGLMultiSurfaceLayer);
+	COMPV_OBJECT_GET_ID(CompVGLMultiSurfaceLayer);
 	
 	COMPV_OVERRIDE_DECL0("CompVMultiSurfaceLayer", addSurface)(CompVSurfacePtrPtr surface, size_t width, size_t height) override;
 	COMPV_OVERRIDE_DECL0("CompVMultiSurfaceLayer", removeSurface)(const CompVSurfacePtr surface) override;

@@ -16,9 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Warray-bounds")
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wc++11-extensions")
 
-class CompVMat;
-typedef CompVPtr<CompVMat* > CompVMatPtr;
-typedef CompVMatPtr* CompVMatPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(Mat)
  
 #if !defined(COMPV_MAT_MAX_COMP_COUNT)
 #	define COMPV_MAT_MAX_COMP_COUNT		4

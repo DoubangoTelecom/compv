@@ -13,9 +13,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVMultiSurfaceLayer;
-typedef CompVPtr<CompVMultiSurfaceLayer* > CompVMultiSurfaceLayerPtr;
-typedef CompVMultiSurfaceLayerPtr* CompVMultiSurfaceLayerPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(MultiSurfaceLayer)
 
 class COMPV_BASE_API CompVMultiSurfaceLayer : public CompVSurfaceLayer
 {

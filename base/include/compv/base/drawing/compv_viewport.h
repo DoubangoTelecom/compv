@@ -40,9 +40,8 @@ struct CompViewportSizeFlags {
 	bool isDynamic()const { return (x != COMPV_VIEWPORT_SIZE_FLAG_STATIC) && (y != COMPV_VIEWPORT_SIZE_FLAG_STATIC) && (width != COMPV_VIEWPORT_SIZE_FLAG_STATIC) && (height != COMPV_VIEWPORT_SIZE_FLAG_STATIC); }
 };
 
-class CompVViewport;
-typedef CompVPtr<CompVViewport* > CompVViewportPtr;
-typedef CompVViewportPtr* CompVViewportPtrPtr;
+
+COMPV_OBJECT_DECLARE_PTRS(Viewport)
 
 class COMPV_BASE_API CompVViewport : public CompVObj
 {
@@ -50,7 +49,7 @@ protected:
 	CompVViewport();
 public:
 	virtual ~CompVViewport();
-	COMPV_GET_OBJECT_ID(CompVViewport);
+	COMPV_OBJECT_GET_ID(CompVViewport);
 
 	COMPV_INLINE int x()const { return m_nX; }
 	COMPV_INLINE int y()const { return m_nY; }

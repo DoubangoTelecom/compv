@@ -60,11 +60,11 @@
     <ClCompile Include="..\compv_gl_window.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\compv\gl\compv_config.h" />
     <ClInclude Include="..\include\compv\gl\compv_gl.h" />
     <ClInclude Include="..\include\compv\gl\compv_gl_blitter.h" />
     <ClInclude Include="..\include\compv\gl\compv_gl_canvas.h" />
     <ClInclude Include="..\include\compv\gl\compv_gl_common.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_config.h" />
     <ClInclude Include="..\include\compv\gl\compv_gl_context.h" />
     <ClInclude Include="..\include\compv\gl\compv_gl_extensions.h" />
     <ClInclude Include="..\include\compv\gl\compv_gl_fbo.h" />

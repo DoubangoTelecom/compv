@@ -105,6 +105,7 @@ COMPV_ERROR_CODE CompVSharedLib::newObj(CompVSharedLibPtrPtr sharedlib, const ch
 	COMPV_CHECK_CODE_RETURN(CompVSharedLib::open(filePath, &handle_));
 	COMPV_ERROR_CODE err;
 	COMPV_CHECK_CODE_BAIL(err = CompVSharedLib::newObj(sharedlib, handle_));
+	COMPV_DEBUG_INFO("Loaded shared lib: %s", filePath);
 bail:
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
 		COMPV_CHECK_CODE_ASSERT(CompVSharedLib::close(handle_));

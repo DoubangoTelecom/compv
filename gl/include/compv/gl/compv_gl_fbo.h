@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_FBO_H_)
 #define _COMPV_GL_FBO_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/compv_obj.h"
@@ -21,9 +21,7 @@ COMPV_NAMESPACE_BEGIN()
 
 #define COMPV_GL_FBO_AUTOBIND(fbo) COMPV_AUTOBIND(CompVGLFbo, (fbo))
 
-class CompVGLFbo;
-typedef CompVPtr<CompVGLFbo* > CompVGLFboPtr;
-typedef CompVGLFboPtr* CompVGLFboPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLFbo)
 
 class COMPV_GL_API CompVGLFbo : public CompVObj, public CompVBind
 {
@@ -31,7 +29,7 @@ protected:
 	CompVGLFbo(size_t width, size_t height);
 public:
 	virtual ~CompVGLFbo();
-	COMPV_GET_OBJECT_ID(CompVGLFbo);
+	COMPV_OBJECT_GET_ID(CompVGLFbo);
 
 	COMPV_INLINE size_t width() { return m_nWidth; }
 	COMPV_INLINE size_t height() { return m_nHeight; }

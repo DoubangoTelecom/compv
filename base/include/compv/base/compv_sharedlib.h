@@ -12,9 +12,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVSharedLib;
-typedef CompVPtr<CompVSharedLib* > CompVSharedLibPtr;
-typedef CompVSharedLibPtr* CompVSharedLibPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(SharedLib)
 
 class COMPV_BASE_API CompVSharedLib : public CompVObj
 {
@@ -22,7 +20,7 @@ protected:
 	CompVSharedLib(void* pHandle = NULL);
 public:
 	virtual ~CompVSharedLib();
-	COMPV_GET_OBJECT_ID(CompVSharedLib);
+	COMPV_OBJECT_GET_ID(CompVSharedLib);
 	COMPV_INLINE void* handle()const { return m_pHandle; }
 
 	void* sym(const char* name);

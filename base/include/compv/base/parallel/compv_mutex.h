@@ -13,9 +13,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVMutex;
-typedef CompVPtr<CompVMutex* > CompVMutexPtr;
-typedef CompVMutexPtr* CompVMutexPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(Mutex)
 
 class COMPV_BASE_API CompVMutex : public CompVObj
 {

@@ -21,9 +21,6 @@
     <ClInclude Include="include\compv\gl\compv_gl_headers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\gl\compv_config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\gl\compv_gl_program.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -79,6 +76,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\gl\compv_gl_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\gl\compv_gl_config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -13,6 +13,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+COMPV_OBJECT_DECLARE_PTRS(Semaphore)
+
 class COMPV_BASE_API CompVSemaphore : public CompVObj
 {
 protected:
@@ -31,8 +33,6 @@ public:
 private:
     void* m_pHandle;
 };
-
-typedef CompVPtr<CompVSemaphore* > CompVSemaphorePtr;
 
 COMPV_NAMESPACE_END()
 

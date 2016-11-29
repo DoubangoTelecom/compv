@@ -7,8 +7,8 @@
 #if !defined(_COMPV_DRAWING_FACTORY_H_)
 #define _COMPV_DRAWING_FACTORY_H_
 
-#include "compv/drawing/compv_config.h"
-#include "compv/drawing/compv_common.h"
+#include "compv/drawing/compv_drawing_config.h"
+#include "compv/drawing/compv_drawing_common.h"
 #include "compv/base/drawing/compv_canvas.h"
 #include "compv/base/drawing/compv_mvp.h"
 #include "compv/base/drawing/compv_window.h"

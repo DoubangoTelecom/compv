@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_WINDOW_H_)
 #define _COMPV_GL_WINDOW_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/drawing/compv_window.h"
@@ -29,9 +29,7 @@ COMPV_NAMESPACE_BEGIN()
 //
 //	CompVGLWindow
 //
-class CompVGLWindow;
-typedef CompVPtr<CompVGLWindow* > CompVGLWindowPtr;
-typedef CompVGLWindowPtr* CompVGLWindowPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLWindow)
 
 class COMPV_GL_API CompVGLWindow : public CompVWindowPriv, public CompVLock
 {

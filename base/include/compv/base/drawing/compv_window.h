@@ -31,9 +31,7 @@ typedef long compv_windowlistener_id_t;
 //	CompVWindow
 //
 
-class CompVWindowListener;
-typedef CompVPtr<CompVWindowListener* > CompVWindowListenerPtr;
-typedef CompVWindowListenerPtr* CompVWindowListenerPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(WindowListener)
 
 class COMPV_BASE_API CompVWindowListener : public CompVObj
 {
@@ -52,9 +50,7 @@ private:
 //
 //	CompVWindow
 //
-class CompVWindow;
-typedef CompVPtr<CompVWindow* > CompVWindowPtr;
-typedef CompVWindowPtr* CompVWindowPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(Window)
 
 class COMPV_BASE_API CompVWindow : public CompVObj
 {
@@ -110,10 +106,7 @@ private:
 //
 //	CompVWindowPriv
 //
-
-class CompVWindowPriv;
-typedef CompVPtr<CompVWindowPriv* > CompVWindowPrivPtr;
-typedef CompVWindowPrivPtr* CompVWindowPrivPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(WindowPriv)
 
 class COMPV_BASE_API CompVWindowPriv : public CompVWindow
 {

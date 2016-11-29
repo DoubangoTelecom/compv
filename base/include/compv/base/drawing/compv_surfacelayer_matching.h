@@ -13,9 +13,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVMatchingSurfaceLayer;
-typedef CompVPtr<CompVMatchingSurfaceLayer* > CompVMatchingSurfaceLayerPtr;
-typedef CompVMatchingSurfaceLayerPtr* CompVMatchingSurfaceLayerPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(MatchingSurfaceLayer)
 
 class COMPV_BASE_API CompVMatchingSurfaceLayer : public CompVSurfaceLayer
 {

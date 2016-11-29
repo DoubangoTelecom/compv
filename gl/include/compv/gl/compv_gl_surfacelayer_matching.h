@@ -7,7 +7,7 @@
 #if !defined(_COMPV_GL_SURFACE_LAYER_MATCHING_H_)
 #define _COMPV_GL_SURFACE_LAYER_MATCHING_H_
 
-#include "compv/gl/compv_config.h"
+#include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/drawing/compv_surfacelayer_matching.h"
@@ -19,9 +19,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVGLMatchingSurfaceLayer;
-typedef CompVPtr<CompVGLMatchingSurfaceLayer* > CompVGLMatchingSurfaceLayerPtr;
-typedef CompVGLMatchingSurfaceLayerPtr* CompVGLMatchingSurfaceLayerPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(GLMatchingSurfaceLayer)
 
 class CompVGLMatchingSurfaceLayer : public CompVMatchingSurfaceLayer
 {
@@ -29,7 +27,7 @@ protected:
 	CompVGLMatchingSurfaceLayer();
 public:
 	virtual ~CompVGLMatchingSurfaceLayer();
-	COMPV_GET_OBJECT_ID(CompVGLMatchingSurfaceLayer);
+	COMPV_OBJECT_GET_ID(CompVGLMatchingSurfaceLayer);
 	
 	COMPV_OVERRIDE_DECL0("CompVMatchingSurfaceLayer", drawMatches)(CompVMatPtr trainImage, CompVMatPtr queryImage) override;
 	COMPV_OVERRIDE_DECL0("CompSurfaceLayer", blit)() override;

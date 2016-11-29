@@ -15,9 +15,7 @@ COMPV_NAMESPACE_BEGIN()
 
 typedef long compv_surfacelayer_id_t;
 
-class CompVSurfaceLayer;
-typedef CompVPtr<CompVSurfaceLayer* > CompVSurfaceLayerPtr;
-typedef CompVSurfaceLayerPtr* CompVSurfaceLayerPtrPtr;
+COMPV_OBJECT_DECLARE_PTRS(SurfaceLayer)
 
 class COMPV_BASE_API CompVSurfaceLayer : public CompVObj
 {
