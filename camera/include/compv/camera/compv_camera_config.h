@@ -17,7 +17,7 @@
 # 		define COMPV_CAMERA_API		__declspec(dllimport)
 #	endif
 #else
-#	define COMPV_GL_API
+#	define COMPV_CAMERA_API
 #endif
 
 #endif /* _COMPV_CAMERA_CONFIG_H_ */

@@ -55,6 +55,7 @@
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
+    <Import Project="CompVGL.Items.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -157,50 +158,6 @@
       <AdditionalLibraryDirectories>../thirdparties/libraries/windows/glew-2.3.4-win64</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="include\compv\gl\compv_gl.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_blitter.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_canvas.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_common.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_config.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_context.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_fbo.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_func.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_info.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_headers.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_mvp.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_program.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_utils.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_vao.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_renderer.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_renderer_rgb.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_renderer_yuv.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_surfacelayer_matching.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_surfacelayer_multi.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_surfacelayer_single.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_surface.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_window.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="compv_gl.cxx" />
-    <ClCompile Include="compv_gl_blitter.cxx" />
-    <ClCompile Include="compv_gl_canvas.cxx" />
-    <ClCompile Include="compv_gl_context.cxx" />
-    <ClCompile Include="compv_gl_fbo.cxx" />
-    <ClCompile Include="compv_gl_info.cxx" />
-    <ClCompile Include="compv_gl_mvp.cxx" />
-    <ClCompile Include="compv_gl_program.cxx" />
-    <ClCompile Include="compv_gl_utils.cxx" />
-    <ClCompile Include="compv_gl_vao.cxx" />
-    <ClCompile Include="compv_gl_renderer.cxx" />
-    <ClCompile Include="compv_gl_renderer_rgb.cxx" />
-    <ClCompile Include="compv_gl_renderer_yuv.cxx" />
-    <ClCompile Include="compv_gl_surfacelayer_matching.cxx" />
-    <ClCompile Include="compv_gl_surfacelayer_multi.cxx" />
-    <ClCompile Include="compv_gl_surfacelayer_single.cxx" />
-    <ClCompile Include="compv_gl_surface.cxx" />
-    <ClCompile Include="compv_gl_window.cxx" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

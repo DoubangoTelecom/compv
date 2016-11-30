@@ -1,0 +1,178 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{D760DEC8-8F47-4768-9EBD-9EEE22B382B8}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_base.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_bind.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_buffer.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_common.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_cpu.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_debug.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_fileutils.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_jni.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_lock.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_mat.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_md5.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_mem.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_obj.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_sharedlib.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_simd_globals.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)drawing\compv_canvas.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)drawing\compv_mvp.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)drawing\compv_renderer.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)drawing\compv_surface.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)drawing\compv_surfacelayer.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)drawing\compv_surfacelayer_matching.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)drawing\compv_surfacelayer_multi.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)drawing\compv_surfacelayer_single.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)drawing\compv_viewport.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)drawing\compv_window.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)drawing\compv_window_registry.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)image\compv_image.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)image\compv_image_decoder.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)image\compv_image_utils.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)intrin\x86\compv_mem_intrin_avx.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)intrin\x86\compv_mem_intrin_sse2.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)math\compv_math.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)math\compv_math_utils.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)math\intrin\x86\compv_math_utils_intrin_avx2.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)math\intrin\x86\compv_math_utils_intrin_sse2.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)math\intrin\x86\compv_math_utils_intrin_ssse3.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)parallel\compv_asynctask.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)parallel\compv_asynctask11.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)parallel\compv_condvar.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)parallel\compv_mutex.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)parallel\compv_parallel.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)parallel\compv_semaphore.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)parallel\compv_thread.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)parallel\compv_threaddisp.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)parallel\compv_threaddisp11.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)time\compv_time.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)time\compv_timer.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <YASM Include="$(MSBuildThisFileDirectory)asm\x86\compv_bits_macros_x86.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="$(MSBuildThisFileDirectory)asm\x86\compv_bits_x86.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="$(MSBuildThisFileDirectory)asm\x86\compv_common_x86.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="$(MSBuildThisFileDirectory)asm\x86\compv_mem_x64.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="$(MSBuildThisFileDirectory)asm\x86\compv_mem_x64_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="$(MSBuildThisFileDirectory)asm\x86\compv_mem_x64_sse.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="$(MSBuildThisFileDirectory)asm\x86\compv_mem_x86.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="$(MSBuildThisFileDirectory)asm\x86\compv_mem_x86_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="$(MSBuildThisFileDirectory)asm\x86\compv_mem_x86_sse.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="$(MSBuildThisFileDirectory)asm\x86\compv_utils_x86.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="$(MSBuildThisFileDirectory)math\asm\x86\compv_math_macros_x86.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="$(MSBuildThisFileDirectory)math\asm\x86\compv_math_utils_x86.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="$(MSBuildThisFileDirectory)math\asm\x86\compv_math_utils_x86_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="$(MSBuildThisFileDirectory)math\asm\x86\compv_math_utils_x86_sse.s">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_base.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_bind.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_buffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_common.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_config.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_cpu.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_debug.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_errno.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_fileutils.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_jni.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_lock.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_mat.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_md5.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_mem.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_obj.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_sharedlib.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_simd_globals.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\drawing\compv_canvas.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\drawing\compv_mvp.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\drawing\compv_renderer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\drawing\compv_surface.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\drawing\compv_surfacelayer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\drawing\compv_surfacelayer_matching.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\drawing\compv_surfacelayer_multi.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\drawing\compv_surfacelayer_single.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\drawing\compv_viewport.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\drawing\compv_window.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\drawing\compv_window_registry.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\image\compv_image.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\image\compv_image_decoder.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\image\compv_image_utils.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\intrin\x86\compv_intrin_avx.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\intrin\x86\compv_intrin_sse.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\intrin\x86\compv_mem_intrin_avx.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\intrin\x86\compv_mem_intrin_sse2.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\math\compv_math.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\math\compv_math_utils.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\math\intrin\x86\compv_math_utils_intrin_avx2.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\math\intrin\x86\compv_math_utils_intrin_ssse3.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\parallel\compv_asynctask.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\parallel\compv_asynctask11.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\parallel\compv_condvar.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\parallel\compv_mutex.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\parallel\compv_parallel.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\parallel\compv_semaphore.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\parallel\compv_thread.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\parallel\compv_threaddisp.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\parallel\compv_threaddisp11.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\time\compv_time.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\time\compv_timer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)asm\x86\compv_bits_macros_x86.s" />
+    <None Include="$(MSBuildThisFileDirectory)asm\x86\compv_bits_x86.s" />
+    <None Include="$(MSBuildThisFileDirectory)asm\x86\compv_common_x86.s" />
+    <None Include="$(MSBuildThisFileDirectory)asm\x86\compv_mem_x64.s" />
+    <None Include="$(MSBuildThisFileDirectory)asm\x86\compv_mem_x64_avx.s" />
+    <None Include="$(MSBuildThisFileDirectory)asm\x86\compv_mem_x64_sse.s" />
+    <None Include="$(MSBuildThisFileDirectory)asm\x86\compv_mem_x86.s" />
+    <None Include="$(MSBuildThisFileDirectory)asm\x86\compv_mem_x86_avx.s" />
+    <None Include="$(MSBuildThisFileDirectory)asm\x86\compv_mem_x86_sse.s" />
+    <None Include="$(MSBuildThisFileDirectory)asm\x86\compv_utils_x86.s" />
+    <None Include="$(MSBuildThisFileDirectory)math\asm\x86\compv_math_macros_x86.s" />
+    <None Include="$(MSBuildThisFileDirectory)math\asm\x86\compv_math_utils_x86.s" />
+    <None Include="$(MSBuildThisFileDirectory)math\asm\x86\compv_math_utils_x86_avx.s" />
+    <None Include="$(MSBuildThisFileDirectory)math\asm\x86\compv_math_utils_x86_sse.s" />
+  </ItemGroup>
+</Project>
