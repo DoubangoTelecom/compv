@@ -89,12 +89,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;COMPV_PLUGIN_DIRECTSHOW_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../camera/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../camera/include;../thirdparties/include/windows/directshow</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;strmbase.lib;dmoguids.lib;strmiids.lib;uuid.lib;Winmm.lib;comsuppw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/directshow-win32-debug</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -105,12 +106,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;COMPV_PLUGIN_DIRECTSHOW_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../camera/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../camera/include;../thirdparties/include/windows/directshow</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;strmbase.lib;dmoguids.lib;strmiids.lib;uuid.lib;Winmm.lib;comsuppw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/directshow-win64-debug</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -123,14 +125,15 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;COMPV_PLUGIN_DIRECTSHOW_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../camera/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../camera/include;../thirdparties/include/windows/directshow</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;strmbase.lib;dmoguids.lib;strmiids.lib;uuid.lib;Winmm.lib;comsuppw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/directshow-win32-release</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -143,23 +146,32 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;COMPV_PLUGIN_DIRECTSHOW_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../camera/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../camera/include;../thirdparties/include/windows/directshow</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;strmbase.lib;dmoguids.lib;strmiids.lib;uuid.lib;Winmm.lib;comsuppw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/directshow-win64-release</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="compv_ds_camera.cxx" />
     <ClCompile Include="compv_ds_dllmain.cxx" />
+    <ClCompile Include="compv_ds_framerate.cxx" />
+    <ClCompile Include="compv_ds_grabber.cxx" />
+    <ClCompile Include="compv_ds_graph_capture.cxx" />
+    <ClCompile Include="compv_ds_utils.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\ds\compv_ds_camera.h" />
     <ClInclude Include="include\compv\ds\compv_ds_config.h" />
+    <ClInclude Include="include\compv\ds\compv_ds_framerate.h" />
+    <ClInclude Include="include\compv\ds\compv_ds_grabber.h" />
+    <ClInclude Include="include\compv\ds\compv_ds_graph_capture.h" />
+    <ClInclude Include="include\compv\ds\compv_ds_utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

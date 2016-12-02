@@ -8,28 +8,34 @@
 #define _COMPV_PLUGIN_DIRECTSHOW_CAMERA_H_
 
 #include "compv/ds/compv_ds_config.h"
+#include "compv/ds/compv_ds_grabber.h"
 #include "compv/camera/compv_camera.h"
 #include "compv/base/compv_obj.h"
 
+#if defined(_COMPV_API_H_)
+#error("This is a private file and must not be part of the API")
+#endif
+
 COMPV_NAMESPACE_BEGIN()
 
-COMPV_OBJECT_DECLARE_PTRS(CameraDS)
+COMPV_OBJECT_DECLARE_PTRS(DSCamera)
 
-class COMPV_PLUGIN_DIRECTSHOW_API CompVCameraDS : public CompVCamera
+class CompVDSCamera : public CompVCamera
 {
 protected:
-	CompVCameraDS();
+	CompVDSCamera();
 public:
-	virtual ~CompVCameraDS();
-	COMPV_OBJECT_GET_ID(CompVCameraDS);
+	virtual ~CompVDSCamera();
+	COMPV_OBJECT_GET_ID(CompVDSCamera);
 
-	virtual COMPV_ERROR_CODE open(const std::string& name = "") override /* Overrides(CompVCamera) */;
-	virtual COMPV_ERROR_CODE close() override /* Overrides(CompVCamera) */;
+	virtual COMPV_ERROR_CODE devices(CompVCameraDeviceInfoList& list) override /* Overrides(CompVCamera) */;
+	virtual COMPV_ERROR_CODE start(const std::string& deviceId = "") override /* Overrides(CompVCamera) */;
+	virtual COMPV_ERROR_CODE stop() override /* Overrides(CompVCamera) */;
 
-	static COMPV_ERROR_CODE newObj(CompVCameraDSPtrPtr camera);
+	static COMPV_ERROR_CODE newObj(CompVDSCameraPtrPtr camera);
 
 private:
-	
+	CompVDSGrabber* m_pGrabber;
 };
 
 COMPV_NAMESPACE_END()

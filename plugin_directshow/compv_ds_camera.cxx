@@ -5,37 +5,54 @@
 * WebSite: http://compv.org
 */
 #include "compv/ds/compv_ds_camera.h"
+#include "compv/ds/compv_ds_utils.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVCameraDS::CompVCameraDS()
+CompVDSCamera::CompVDSCamera()
 	: CompVCamera()
+	, m_pGrabber(NULL)
 {
 
 }
 
-CompVCameraDS::~CompVCameraDS()
+CompVDSCamera::~CompVDSCamera()
 {
-
+	COMPV_CHECK_CODE_NOP(stop());
+	COMPV_DS_SAFE_RELEASE(m_pGrabber);
 }
 
-COMPV_ERROR_CODE CompVCameraDS::open(const std::string& name COMPV_DEFAULT("")) /* Overrides(CompVCamera) */
+COMPV_ERROR_CODE CompVDSCamera::devices(CompVCameraDeviceInfoList& list) /* Overrides(CompVCamera) */
 {
-	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	list.clear();
+	CompVDSCameraDeviceInfoList list_;
+	COMPV_CHECK_CODE_RETURN(CompVDSUtils:: enumerateCaptureDevices(list_));
+	for (CompVDSCameraDeviceInfoList::iterator it = list_.begin(); it != list_.end(); ++it) {
+		list.push_back(CompVCameraDeviceInfo(it->id, it->name, it->description));
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVCameraDS::close() /* Overrides(CompVCamera) */
+COMPV_ERROR_CODE CompVDSCamera::start(const std::string& deviceId COMPV_DEFAULT("")) /* Overrides(CompVCamera) */
 {
-	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	COMPV_CHECK_CODE_RETURN(m_pGrabber->start(deviceId));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVCameraDS::newObj(CompVCameraDSPtrPtr camera)
+COMPV_ERROR_CODE CompVDSCamera::stop() /* Overrides(CompVCamera) */
+{
+	COMPV_CHECK_CODE_RETURN(m_pGrabber->stop());
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVDSCamera::newObj(CompVDSCameraPtrPtr camera)
 {
 	COMPV_CHECK_EXP_RETURN(!camera, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVCameraDSPtr camera_ = new CompVCameraDS();
+	CompVDSCameraPtr camera_ = new CompVDSCamera();
 	COMPV_CHECK_EXP_RETURN(!camera_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	camera_->m_pGrabber = new CompVDSGrabber();
+	COMPV_CHECK_EXP_RETURN(!camera_->m_pGrabber, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	camera_->m_pGrabber->AddRef();
 
 	*camera = *camera_;
 	return COMPV_ERROR_CODE_S_OK;

@@ -28,9 +28,11 @@ COMPV_NAMESPACE_BEGIN()
 
 extern "C" COMPV_PLUGIN_DIRECTSHOW_API COMPV_ERROR_CODE newObjCamera(CompVCameraPtrPtr camera)
 {
+	HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+	COMPV_CHECK_EXP_RETURN(FAILED(hr) && hr != RPC_E_CHANGED_MODE, COMPV_ERROR_CODE_E_DIRECTSHOW);
 	COMPV_CHECK_EXP_RETURN(!camera, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVCameraDSPtr camera_;
-	COMPV_CHECK_CODE_RETURN(CompVCameraDS::newObj(&camera_));
+	CompVDSCameraPtr camera_;
+	COMPV_CHECK_CODE_RETURN(CompVDSCamera::newObj(&camera_));
 
 	*camera = *camera_;
 	return COMPV_ERROR_CODE_S_OK;

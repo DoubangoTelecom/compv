@@ -21,12 +21,36 @@
     <ClCompile Include="compv_ds_camera.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="compv_ds_grabber.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_ds_utils.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_ds_graph_capture.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_ds_framerate.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\ds\compv_ds_config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\ds\compv_ds_camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\ds\compv_ds_grabber.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\ds\compv_ds_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\ds\compv_ds_graph_capture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\ds\compv_ds_framerate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

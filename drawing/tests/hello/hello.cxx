@@ -41,7 +41,25 @@ bail:
 
 static void* COMPV_STDCALL WorkerThread(void* arg)
 {	
-#if 0 // Multiple
+#if 1 // Camera
+	COMPV_ERROR_CODE err;
+	CompVCameraPtr camera;
+	CompVCameraDeviceInfoList devices;
+
+	COMPV_CHECK_CODE_BAIL(err = CompVCamera::newObj(&camera));
+	COMPV_CHECK_CODE_BAIL(err = camera->devices(devices));
+	for (CompVCameraDeviceInfoList::iterator it = devices.begin(); it != devices.end(); ++it) {
+		COMPV_DEBUG_INFO("Camera device: %s -> %s, %s", it->id.c_str(), it->name.c_str(), it->description.c_str());
+	}
+	COMPV_CHECK_CODE_BAIL(err = camera->start(devices[0].id));
+
+	while (CompVDrawing::isLoopRunning()) {
+		CompVThread::sleep(1);
+	}
+
+bail:
+	return NULL;
+#elif 0 // Multiple
 	COMPV_ERROR_CODE err;
 	CompVMatPtr mat[3];
 	CompVMultiSurfaceLayerPtr multipleSurfaceLayer;
@@ -133,13 +151,9 @@ bail:
 	CompVSingleSurfaceLayerPtr singleSurfaceLayer;
 	CompVViewportPtr ptrViewPort;
 	CompVMVPPtr ptrMVP;
-	CompVCameraPtr camera;
 	static int count = 0;
 	static uint64_t timeStart;
 	char buff_[33] = { 0 };
-
-	//COMPV_CHECK_CODE_BAIL(err = CompVCamera::newObj(&camera));
-	//COMPV_CHECK_CODE_BAIL(err = camera->open());
 	
 	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile(COMPV_PATH_FROM_NAME("girl.jpg"), &mat[0]));
 	COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::decodeFile(COMPV_PATH_FROM_NAME("valve_original.jpg"), &mat[1]));

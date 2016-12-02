@@ -12,7 +12,21 @@
 #include "compv/base/compv_sharedlib.h"
 #include "compv/base/compv_obj.h"
 
+#include <vector>
+
 COMPV_NAMESPACE_BEGIN()
+
+struct CompVCameraDeviceInfo {
+	std::string id;
+	std::string name;
+	std::string description;
+	CompVCameraDeviceInfo(const std::string& id_, const std::string& name_, const std::string& description_) {
+		id = id_;
+		name = name_;
+		description = description_;
+	}
+};
+typedef std::vector<CompVCameraDeviceInfo > CompVCameraDeviceInfoList;
 
 COMPV_OBJECT_DECLARE_PTRS(Camera)
 
@@ -29,8 +43,9 @@ public:
 	static COMPV_ERROR_CODE deInit();
 	static COMPV_INLINE bool isInitialized() { return s_bInitialized; }
 
-	virtual COMPV_ERROR_CODE open(const std::string& name = "") = 0;
-	virtual COMPV_ERROR_CODE close() = 0;
+	virtual COMPV_ERROR_CODE devices(CompVCameraDeviceInfoList& list) = 0;
+	virtual COMPV_ERROR_CODE start(const std::string& deviceId = "") = 0;
+	virtual COMPV_ERROR_CODE stop() = 0;
 
 	static COMPV_ERROR_CODE newObj(CompVCameraPtrPtr camera);
 
