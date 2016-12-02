@@ -49,16 +49,20 @@ GR_STATIC_ASSERT(SkToBool(kNone_GrXferBarrierType) == false);
  * A GrXferProcessor is never installed directly into our draw state, but instead is created from a
  * GrXPFactory once we have finalized the state of our draw.
  */
-class GrXferProcessor : public GrProcessor {
+class GrXferProcessor : public GrProcessor
+{
 public:
     /**
      * A texture that contains the dst pixel values and an integer coord offset from device space
      * to the space of the texture. Depending on GPU capabilities a DstTexture may be used by a
      * GrXferProcessor for blending in the fragment shader.
      */
-    class DstTexture {
+    class DstTexture
+    {
     public:
-        DstTexture() { fOffset.set(0, 0); }
+        DstTexture() {
+            fOffset.set(0, 0);
+        }
 
         DstTexture(const DstTexture& other) {
             *this = other;
@@ -75,12 +79,20 @@ public:
             return *this;
         }
 
-        const SkIPoint& offset() const { return fOffset; }
+        const SkIPoint& offset() const {
+            return fOffset;
+        }
 
-        void setOffset(const SkIPoint& offset) { fOffset = offset; }
-        void setOffset(int ox, int oy) { fOffset.set(ox, oy); }
+        void setOffset(const SkIPoint& offset) {
+            fOffset = offset;
+        }
+        void setOffset(int ox, int oy) {
+            fOffset.set(ox, oy);
+        }
 
-        GrTexture* texture() const { return fTexture.get(); }
+        GrTexture* texture() const {
+            return fTexture.get();
+        }
 
         GrTexture* setTexture(GrTexture* texture) {
             fTexture.reset(SkSafeRef(texture));
@@ -95,7 +107,7 @@ public:
     /**
      * Sets a unique key on the GrProcessorKeyBuilder calls onGetGLSLProcessorKey(...) to get the
      * specific subclass's key.
-     */ 
+     */
     void getGLSLProcessorKey(const GrGLSLCaps& caps, GrProcessorKeyBuilder* b) const;
 
     /** Returns a new instance of the appropriate *GL* implementation class
@@ -138,7 +150,7 @@ public:
      * the draw with this xfer processor. If this function is called, the xfer processor may change
      * its state to reflected the given blend optimizations. If the XP needs to see a specific input
      * color to blend correctly, it will set the OverrideColor flag and the output parameter
-     * overrideColor will be the required value that should be passed into the XP. 
+     * overrideColor will be the required value that should be passed into the XP.
      * A caller who calls this function on a XP is required to honor the returned OptFlags
      * and color values for its draw.
      */
@@ -173,14 +185,18 @@ public:
 
     void getBlendInfo(BlendInfo* blendInfo) const;
 
-    bool willReadDstColor() const { return fWillReadDstColor; }
+    bool willReadDstColor() const {
+        return fWillReadDstColor;
+    }
 
     /**
      * Returns the texture to be used as the destination when reading the dst in the fragment
      * shader. If the returned texture is NULL then the XP is either not reading the dst or we have
      * extentions that support framebuffer fetching and thus don't need a copy of the dst texture.
      */
-    const GrTexture* getDstTexture() const { return fDstTexture.getTexture(); }
+    const GrTexture* getDstTexture() const {
+        return fDstTexture.getTexture();
+    }
 
     /**
      * Returns the offset in device coords to use when accessing the dst texture to get the dst
@@ -196,7 +212,9 @@ public:
      * antialias the shader's final output. If not doing a dst read, the subclass is responsible
      * for antialiasing and this returns false.
      */
-    bool dstReadUsesMixedSamples() const { return fDstReadUsesMixedSamples; }
+    bool dstReadUsesMixedSamples() const {
+        return fDstReadUsesMixedSamples;
+    }
 
     /**
      * Returns whether or not this xferProcossor will set a secondary output to be used with dual
@@ -211,7 +229,7 @@ public:
         A return value of true from isEqual() should not be used to test whether the processor would
         generate the same shader code. To test for identical code generation use getGLSLProcessorKey
       */
-    
+
     bool isEqual(const GrXferProcessor& that) const {
         if (this->classID() != that.classID()) {
             return false;
@@ -230,7 +248,7 @@ public:
         }
         return this->onIsEqual(that);
     }
-   
+
 protected:
     GrXferProcessor();
     GrXferProcessor(const DstTexture*, bool willReadDstColor, bool hasMixedSamples);
@@ -264,7 +282,9 @@ private:
      * output. When using dst reads, the base class controls the secondary output and this method
      * will not be called.
      */
-    virtual bool onHasSecondaryOutput() const { return false; }
+    virtual bool onHasSecondaryOutput() const {
+        return false;
+    }
 
     /**
      * If we are not performing a dst read, retrieves the fixed-function blend state required by the
@@ -298,7 +318,8 @@ GR_MAKE_BITFIELD_OPS(GrXferProcessor::OptFlags);
  * creates will have. For example, can it create an XP that supports RGB coverage or will the XP
  * blend with the destination color.
  */
-class GrXPFactory : public SkRefCnt {
+class GrXPFactory : public SkRefCnt
+{
 public:
     typedef GrXferProcessor::DstTexture DstTexture;
     GrXferProcessor* createXferProcessor(const GrPipelineOptimizations& optimizations,
@@ -314,7 +335,7 @@ public:
         GrColorComponentFlags    fKnownColorFlags;
     };
 
-    /** 
+    /**
      * Returns information about the output color, produced by XPs from this factory, that will be
      * known after blending. Note that we can conflate coverage and color, so the actual values
      * written to pixels with partial coverage may not always seem consistent with the invariant
@@ -335,25 +356,30 @@ public:
     /**
       * Helper for down-casting to a GrXPFactory subclass
       */
-    template <typename T> const T& cast() const { return *static_cast<const T*>(this); }
+    template <typename T> const T& cast() const {
+        return *static_cast<const T*>(this);
+    }
 
-    uint32_t classID() const { SkASSERT(kIllegalXPFClassID != fClassID); return fClassID; }
+    uint32_t classID() const {
+        SkASSERT(kIllegalXPFClassID != fClassID);
+        return fClassID;
+    }
 
 protected:
     GrXPFactory() : fClassID(kIllegalXPFClassID) {}
 
     template <typename XPF_SUBCLASS> void initClassID() {
-         static uint32_t kClassID = GenClassID();
-         fClassID = kClassID;
+        static uint32_t kClassID = GenClassID();
+        fClassID = kClassID;
     }
 
     uint32_t fClassID;
 
 private:
     virtual GrXferProcessor* onCreateXferProcessor(const GrCaps& caps,
-                                                   const GrPipelineOptimizations& optimizations,
-                                                   bool hasMixedSamples,
-                                                   const DstTexture*) const = 0;
+            const GrPipelineOptimizations& optimizations,
+            bool hasMixedSamples,
+            const DstTexture*) const = 0;
 
     virtual bool onIsEqual(const GrXPFactory&) const = 0;
 

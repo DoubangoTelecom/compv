@@ -14,7 +14,8 @@
 class SkCanvas;
 
 // Records small pictures, but only a limited subset of the canvas API, and may fail.
-class SkMiniRecorder : SkNoncopyable {
+class SkMiniRecorder : SkNoncopyable
+{
 public:
     SkMiniRecorder();
     ~SkMiniRecorder();
@@ -34,7 +35,8 @@ public:
     void flushAndReset(SkCanvas*);
 
 private:
-    enum class State {
+    enum class State
+    {
         kEmpty,
         kDrawPath,
         kDrawRect,
@@ -44,12 +46,14 @@ private:
     State fState;
 
     template <size_t A, size_t B>
-    struct Max { static const size_t val = A > B ? A : B; };
+    struct Max {
+        static const size_t val = A > B ? A : B;
+    };
 
     static const size_t kInlineStorage =
         Max<sizeof(SkRecords::DrawPath),
         Max<sizeof(SkRecords::DrawRect),
-            sizeof(SkRecords::DrawTextBlob)>::val>::val;
+        sizeof(SkRecords::DrawTextBlob)>::val>::val;
     SkAlignedSStorage<kInlineStorage> fBuffer;
 };
 

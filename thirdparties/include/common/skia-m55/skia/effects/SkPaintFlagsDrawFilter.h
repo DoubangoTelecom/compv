@@ -10,7 +10,8 @@
 
 #include "SkDrawFilter.h"
 
-class SK_API SkPaintFlagsDrawFilter : public SkDrawFilter {
+class SK_API SkPaintFlagsDrawFilter : public SkDrawFilter
+{
 public:
     SkPaintFlagsDrawFilter(uint32_t clearFlags, uint32_t setFlags);
 

@@ -15,7 +15,8 @@
  * following with its input color: ignore it, or multiply it by the constant color, multiply its
  * alpha by the constant color and ignore the input color's r, g, and b.
  */
-class GrConstColorProcessor : public GrFragmentProcessor {
+class GrConstColorProcessor : public GrFragmentProcessor
+{
 public:
     enum InputMode {
         kIgnore_InputMode,
@@ -30,7 +31,9 @@ public:
         return sk_sp<GrFragmentProcessor>(new GrConstColorProcessor(color, mode));
     }
 
-    const char* name() const override { return "Color"; }
+    const char* name() const override {
+        return "Color";
+    }
 
     SkString dumpInfo() const override {
         SkString str;
@@ -38,9 +41,13 @@ public:
         return str;
     }
 
-    GrColor color() const { return fColor; }
+    GrColor color() const {
+        return fColor;
+    }
 
-    InputMode inputMode() const { return fMode; }
+    InputMode inputMode() const {
+        return fMode;
+    }
 
 private:
     GrConstColorProcessor(GrColor color, InputMode mode) : fColor(color), fMode(mode) {

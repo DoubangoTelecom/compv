@@ -91,7 +91,7 @@ static COMPV_ERROR_CODE rgbToSrc(const CompVPtr<CompVImage *>& jpegImage, void**
         srcPtr_ += (stride - width) * compSize;
         rgbPtr_ += (jpegImageStride - width) * 3;
     }
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE TestConv()
@@ -114,7 +114,7 @@ COMPV_ERROR_CODE TestConv()
 
     COMPV_CHECK_CODE_RETURN(CompVImageDecoder::decodeFile(JPEG_EQUIRECTANGULAR_FILE, &jpegImage));
     COMPV_ASSERT(jpegImage->getPixelFormat() == COMPV_PIXEL_FORMAT_R8G8B8);
-	COMPV_CHECK_CODE_RETURN(rgbToSrc(jpegImage, &srcPtr, height, width, stride));
+    COMPV_CHECK_CODE_RETURN(rgbToSrc(jpegImage, &srcPtr, height, width, stride));
     COMPV_CHECK_CODE_RETURN(CompVImage::wrap((COMPV_PIXEL_FORMAT)FORMAT_SRC, srcPtr, width, height, stride, &srcImage)); // FIXME: slooow
 
     COMPV_DEBUG_INFO("Converting from %s to %s", formatExtension((COMPV_PIXEL_FORMAT)FORMAT_SRC).c_str(), formatExtension((COMPV_PIXEL_FORMAT)FORMAT_DST).c_str());
@@ -146,5 +146,5 @@ COMPV_ERROR_CODE TestConv()
     writeImgToFile(dstImage);
 
     CompVMem::free(&srcPtr);
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }

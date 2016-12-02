@@ -22,7 +22,8 @@ class SkDOMParser;
 class SkStream;
 class SkXMLParser;
 
-class SK_API SkDOM : public SkNoncopyable {
+class SK_API SkDOM : public SkNoncopyable
+{
 public:
     SkDOM();
     ~SkDOM();
@@ -66,8 +67,7 @@ public:
     bool findBool(const Node*, const char name[], bool*) const;
     int  findList(const Node*, const char name[], const char list[]) const;
 
-    bool findScalar(const Node* node, const char name[], SkScalar value[]) const
-    {
+    bool findScalar(const Node* node, const char name[], SkScalar value[]) const {
         return this->findScalars(node, name, value, 1);
     }
 
@@ -77,7 +77,8 @@ public:
     bool hasHex(const Node*, const char name[], uint32_t value) const;
     bool hasBool(const Node*, const char name[], bool value) const;
 
-    class AttrIter {
+    class AttrIter
+    {
     public:
         AttrIter(const SkDOM&, const Node*);
         const char* next(const char** value);

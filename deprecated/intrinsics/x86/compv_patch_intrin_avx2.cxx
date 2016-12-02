@@ -19,7 +19,7 @@ COMPV_NAMESPACE_BEGIN()
 void Moments0110_Intrin_AVX2(COMPV_ALIGNED(AVX2) const uint8_t* top, COMPV_ALIGNED(AVX2)const uint8_t* bottom, COMPV_ALIGNED(AVX2)const int16_t* x, COMPV_ALIGNED(AVX2) const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
-	COMPV_DEBUG_INFO_CHECK_AVX2();
+    COMPV_DEBUG_INFO_CHECK_AVX2();
 
     __m256i ymmTop, ymmBottom, ymmT, ymmB, ymm0, ymm1, ymm2, ymm3, ymm4, ymmX, ymmY, ymmZero;
 

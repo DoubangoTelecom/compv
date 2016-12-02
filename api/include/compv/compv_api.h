@@ -47,8 +47,9 @@
 
 #if COMPV_OS_ANDROID && !defined(COMPV_ANDROID_NATIVE_ACTIVITY_ENTRY_POINT)
 #	define COMPV_ANDROID_NATIVE_ACTIVITY_ENTRY_POINT
-void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t savedStateSize) { 
-	ANativeActivity_onCreatePriv(activity, savedState, savedStateSize); 
+void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t savedStateSize)
+{
+    ANativeActivity_onCreatePriv(activity, savedState, savedStateSize);
 }
 #endif // COMPV_OS_ANDROID
 
@@ -59,7 +60,7 @@ void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_
 #	define compv_main_return(code) return (code)
 #elif COMPV_OS_ANDROID
 #	define compv_main() void android_main(struct android_app* state)
-#	define compv_main_return(code) 
+#	define compv_main_return(code)
 #else
 #	define compv_main() int main(int argc, char** argv)
 #	define compv_main_return(code) return (code)
@@ -70,20 +71,20 @@ COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 
 static COMPV_ERROR_CODE CompVInit()
 {
-	COMPV_CHECK_CODE_RETURN(CompVBase::init());
-	COMPV_CHECK_CODE_RETURN(CompVGL::init());
-	COMPV_CHECK_CODE_RETURN(CompVCamera::init());
-	COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_CODE_RETURN(CompVBase::init());
+    COMPV_CHECK_CODE_RETURN(CompVGL::init());
+    COMPV_CHECK_CODE_RETURN(CompVCamera::init());
+    COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 static COMPV_ERROR_CODE CompVDeInit()
 {
-	COMPV_CHECK_CODE_ASSERT(CompVBase::deInit());
-	COMPV_CHECK_CODE_ASSERT(CompVGL::deInit());
-	COMPV_CHECK_CODE_RETURN(CompVCamera::deInit());
-	COMPV_CHECK_CODE_RETURN(CompVDrawing::deInit());
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_CODE_ASSERT(CompVBase::deInit());
+    COMPV_CHECK_CODE_ASSERT(CompVGL::deInit());
+    COMPV_CHECK_CODE_RETURN(CompVCamera::deInit());
+    COMPV_CHECK_CODE_RETURN(CompVDrawing::deInit());
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_GCC_DISABLE_WARNINGS_END()

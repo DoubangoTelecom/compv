@@ -25,7 +25,8 @@ class SkRegion;
 class SkSpecialImage;
 class GrRenderTarget;
 
-class SK_API SkBaseDevice : public SkRefCnt {
+class SK_API SkBaseDevice : public SkRefCnt
+{
 public:
     /**
      *  Construct a new device.
@@ -39,7 +40,9 @@ public:
      *  Return ImageInfo for this device. If the canvas is not backed by pixels
      *  (cpu or gpu), then the info's ColorType will be kUnknown_SkColorType.
      */
-    const SkImageInfo& imageInfo() const { return fInfo; }
+    const SkImageInfo& imageInfo() const {
+        return fInfo;
+    }
 
     /**
      *  Return SurfaceProps for this device.
@@ -110,7 +113,9 @@ public:
      *  Return the device's origin: its offset in device coordinates from
      *  the default origin in its canvas' matrix/clip
      */
-    const SkIPoint& getOrigin() const { return fOrigin; }
+    const SkIPoint& getOrigin() const {
+        return fOrigin;
+    }
 
 protected:
     enum TileUsage {
@@ -128,7 +133,9 @@ protected:
      */
     uint32_t filterTextFlags(const SkPaint&) const;
 
-    virtual bool onShouldDisableLCD(const SkPaint&) const { return false; }
+    virtual bool onShouldDisableLCD(const SkPaint&) const {
+        return false;
+    }
 
     /** These are called inside the per-device-layer loop for each draw call.
      When these are called, we have already applied any saveLayer operations,
@@ -253,11 +260,15 @@ protected:
     }
 #endif
 
-    virtual GrContext* context() const { return nullptr; }
+    virtual GrContext* context() const {
+        return nullptr;
+    }
 
 protected:
     virtual sk_sp<SkSurface> makeSurface(const SkImageInfo&, const SkSurfaceProps&);
-    virtual bool onPeekPixels(SkPixmap*) { return false; }
+    virtual bool onPeekPixels(SkPixmap*) {
+        return false;
+    }
 
     /**
      *  The caller is responsible for "pre-clipping" the dst. The impl can assume that the dst
@@ -275,7 +286,9 @@ protected:
      */
     virtual bool onWritePixels(const SkImageInfo&, const void*, size_t, int x, int y);
 
-    virtual bool onAccessPixels(SkPixmap*) { return false; }
+    virtual bool onAccessPixels(SkPixmap*) {
+        return false;
+    }
 
     struct CreateInfo {
         static SkPixelGeometry AdjustGeometry(const SkImageInfo&, TileUsage, SkPixelGeometry,
@@ -287,8 +300,8 @@ protected:
                    SkPixelGeometry geo)
             : fInfo(info)
             , fTileUsage(tileUsage)
-            , fPixelGeometry(AdjustGeometry(info, tileUsage, geo, false))
-        {}
+            , fPixelGeometry(AdjustGeometry(info, tileUsage, geo, false)) {
+        }
 
         CreateInfo(const SkImageInfo& info,
                    TileUsage tileUsage,
@@ -296,8 +309,8 @@ protected:
                    bool preserveLCDText)
             : fInfo(info)
             , fTileUsage(tileUsage)
-            , fPixelGeometry(AdjustGeometry(info, tileUsage, geo, preserveLCDText))
-        {}
+            , fPixelGeometry(AdjustGeometry(info, tileUsage, geo, preserveLCDText)) {
+        }
 
         const SkImageInfo       fInfo;
         const TileUsage         fTileUsage;
@@ -338,21 +351,29 @@ private:
     // TODO: move to SkBitmapDevice
     virtual void replaceBitmapBackendForRasterSurface(const SkBitmap&) {}
 
-    virtual bool forceConservativeRasterClip() const { return false; }
+    virtual bool forceConservativeRasterClip() const {
+        return false;
+    }
 
     /**
      * Don't call this!
      */
-    virtual GrDrawContext* accessDrawContext() { return nullptr; }
+    virtual GrDrawContext* accessDrawContext() {
+        return nullptr;
+    }
 
     // just called by SkCanvas when built as a layer
-    void setOrigin(int x, int y) { fOrigin.set(x, y); }
+    void setOrigin(int x, int y) {
+        fOrigin.set(x, y);
+    }
 
     /** Causes any deferred drawing to the device to be completed.
      */
     virtual void flush() {}
 
-    virtual SkImageFilterCache* getImageFilterCache() { return NULL; }
+    virtual SkImageFilterCache* getImageFilterCache() {
+        return NULL;
+    }
 
     friend class SkBitmapDevice;
     void privateResize(int w, int h) {

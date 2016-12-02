@@ -11,10 +11,10 @@
 #include "GrTypes.h"
 #include "SkRefCnt.h"
 
- /**
-  * Types of shader-language-specific boxed variables we can create. (Currently only GrGLShaderVars,
-  * but should be applicable to other shader languages.)
-  */
+/**
+ * Types of shader-language-specific boxed variables we can create. (Currently only GrGLShaderVars,
+ * but should be applicable to other shader languages.)
+ */
 enum GrSLType {
     kVoid_GrSLType,
     kFloat_GrSLType,
@@ -55,7 +55,8 @@ enum GrShaderFlags {
 };
 GR_MAKE_BITFIELD_OPS(GrShaderFlags);
 
-enum class GrDrawFace {
+enum class GrDrawFace
+{
     kInvalid = -1,
 
     kBoth,
@@ -85,7 +86,8 @@ static const int kGrSLPrecisionCount = kLast_GrSLPrecision + 1;
 /**
  * Gets the vector size of the SLType. Returns -1 for void, matrices, and samplers.
  */
-static inline int GrSLTypeVectorCount(GrSLType type) {
+static inline int GrSLTypeVectorCount(GrSLType type)
+{
     SkASSERT(type >= 0 && type < static_cast<GrSLType>(kGrSLTypeCount));
     static const int kCounts[] = { -1, 1, 2, 3, 4, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, -1, -1 };
     return kCounts[type];
@@ -112,7 +114,8 @@ static inline int GrSLTypeVectorCount(GrSLType type) {
 
 /** Return the type enum for a vector of floats of length n (1..4),
  e.g. 1 -> kFloat_GrSLType, 2 -> kVec2_GrSLType, ... */
-static inline GrSLType GrSLFloatVectorType(int count) {
+static inline GrSLType GrSLFloatVectorType(int count)
+{
     SkASSERT(count > 0 && count <= 4);
     return (GrSLType)(count);
 
@@ -123,7 +126,8 @@ static inline GrSLType GrSLFloatVectorType(int count) {
 }
 
 /** Is the shading language type float (including vectors/matrices)? */
-static inline bool GrSLTypeIsFloatType(GrSLType type) {
+static inline bool GrSLTypeIsFloatType(GrSLType type)
+{
     SkASSERT(type >= 0 && type < static_cast<GrSLType>(kGrSLTypeCount));
     return type >= kFloat_GrSLType && type <= kMat44f_GrSLType;
 
@@ -148,7 +152,8 @@ static inline bool GrSLTypeIsFloatType(GrSLType type) {
 }
 
 /** Is the shading language type integral (including vectors/matrices)? */
-static inline bool GrSLTypeIsIntType(GrSLType type) {
+static inline bool GrSLTypeIsIntType(GrSLType type)
+{
     SkASSERT(type >= 0 && type < static_cast<GrSLType>(kGrSLTypeCount));
     return type >= kInt_GrSLType && type <= kUint_GrSLType;
 
@@ -173,12 +178,14 @@ static inline bool GrSLTypeIsIntType(GrSLType type) {
 }
 
 /** Is the shading language type numeric (including vectors/matrices)? */
-static inline bool GrSLTypeIsNumeric(GrSLType type) {
+static inline bool GrSLTypeIsNumeric(GrSLType type)
+{
     return GrSLTypeIsFloatType(type) || GrSLTypeIsIntType(type);
 }
 
 /** Returns the size in bytes for floating point GrSLTypes. For non floating point type returns 0 */
-static inline size_t GrSLTypeSize(GrSLType type) {
+static inline size_t GrSLTypeSize(GrSLType type)
+{
     SkASSERT(GrSLTypeIsFloatType(type));
     static const size_t kSizes[] = {
         0,                        // kVoid_GrSLType
@@ -221,7 +228,8 @@ static inline size_t GrSLTypeSize(GrSLType type) {
     GR_STATIC_ASSERT(17 == kGrSLTypeCount);
 }
 
-static inline bool GrSLTypeIs2DCombinedSamplerType(GrSLType type) {
+static inline bool GrSLTypeIs2DCombinedSamplerType(GrSLType type)
+{
     SkASSERT(type >= 0 && type < static_cast<GrSLType>(kGrSLTypeCount));
     return type >= kTexture2DSampler_GrSLType && type <= kTexture2DRectSampler_GrSLType;
 
@@ -230,7 +238,8 @@ static inline bool GrSLTypeIs2DCombinedSamplerType(GrSLType type) {
     GR_STATIC_ASSERT(10 == kTexture2DRectSampler_GrSLType);
 }
 
-static inline bool GrSLTypeIsCombinedSamplerType(GrSLType type) {
+static inline bool GrSLTypeIsCombinedSamplerType(GrSLType type)
+{
     SkASSERT(type >= 0 && type < static_cast<GrSLType>(kGrSLTypeCount));
     return type >= kTexture2DSampler_GrSLType && type <= kTextureBufferSampler_GrSLType;
 
@@ -240,7 +249,8 @@ static inline bool GrSLTypeIsCombinedSamplerType(GrSLType type) {
     GR_STATIC_ASSERT(11 == kTextureBufferSampler_GrSLType);
 }
 
-static inline bool GrSLTypeAcceptsPrecision(GrSLType type) {
+static inline bool GrSLTypeAcceptsPrecision(GrSLType type)
+{
     return type != kVoid_GrSLType && type != kBool_GrSLType;
 }
 
@@ -270,7 +280,8 @@ static const int kGrVertexAttribTypeCount = kLast_GrVertexAttribType + 1;
 /**
  * Returns the vector size of the type.
  */
-static inline int GrVertexAttribTypeVectorCount(GrVertexAttribType type) {
+static inline int GrVertexAttribTypeVectorCount(GrVertexAttribType type)
+{
     SkASSERT(type >= 0 && type < kGrVertexAttribTypeCount);
     static const int kCounts[] = { 1, 2, 3, 4, 1, 4, 2, 1, 1 };
     return kCounts[type];
@@ -290,7 +301,8 @@ static inline int GrVertexAttribTypeVectorCount(GrVertexAttribType type) {
 /**
  * Returns the size of the attrib type in bytes.
  */
-static inline size_t GrVertexAttribTypeSize(GrVertexAttribType type) {
+static inline size_t GrVertexAttribTypeSize(GrVertexAttribType type)
+{
     static const size_t kSizes[] = {
         sizeof(float),          // kFloat_GrVertexAttribType
         2*sizeof(float),        // kVec2f_GrVertexAttribType
@@ -319,7 +331,8 @@ static inline size_t GrVertexAttribTypeSize(GrVertexAttribType type) {
 /**
  * Is the attrib type integral?
  */
-static inline bool GrVertexAttribTypeIsIntType(GrVertexAttribType type) {
+static inline bool GrVertexAttribTypeIsIntType(GrVertexAttribType type)
+{
     SkASSERT(type >= 0 && type < static_cast<GrVertexAttribType>(kGrVertexAttribTypeCount));
     return type >= kInt_GrVertexAttribType;
 
@@ -338,26 +351,27 @@ static inline bool GrVertexAttribTypeIsIntType(GrVertexAttribType type) {
 /**
  * converts a GrVertexAttribType to a GrSLType
  */
-static inline GrSLType GrVertexAttribTypeToSLType(GrVertexAttribType type) {
+static inline GrSLType GrVertexAttribTypeToSLType(GrVertexAttribType type)
+{
     switch (type) {
-        default:
-            SkFAIL("Unsupported type conversion");
-            return kVoid_GrSLType;
-        case kUByte_GrVertexAttribType:
-        case kFloat_GrVertexAttribType:
-            return kFloat_GrSLType;
-        case kVec2us_GrVertexAttribType:
-        case kVec2f_GrVertexAttribType:
-            return kVec2f_GrSLType;
-        case kVec3f_GrVertexAttribType:
-            return kVec3f_GrSLType;
-        case kVec4ub_GrVertexAttribType:
-        case kVec4f_GrVertexAttribType:
-            return kVec4f_GrSLType;
-        case kInt_GrVertexAttribType:
-            return kInt_GrSLType;
-        case kUint_GrVertexAttribType:
-            return kUint_GrSLType;
+    default:
+        SkFAIL("Unsupported type conversion");
+        return kVoid_GrSLType;
+    case kUByte_GrVertexAttribType:
+    case kFloat_GrVertexAttribType:
+        return kFloat_GrSLType;
+    case kVec2us_GrVertexAttribType:
+    case kVec2f_GrVertexAttribType:
+        return kVec2f_GrSLType;
+    case kVec3f_GrVertexAttribType:
+        return kVec3f_GrSLType;
+    case kVec4ub_GrVertexAttribType:
+    case kVec4f_GrVertexAttribType:
+        return kVec4f_GrSLType;
+    case kInt_GrVertexAttribType:
+        return kInt_GrSLType;
+    case kUint_GrVertexAttribType:
+        return kUint_GrSLType;
     }
 }
 
@@ -381,31 +395,35 @@ enum GrPrimitiveEdgeType {
 
 static const int kGrProcessorEdgeTypeCnt = kLast_GrProcessorEdgeType + 1;
 
-static inline bool GrProcessorEdgeTypeIsFill(const GrPrimitiveEdgeType edgeType) {
+static inline bool GrProcessorEdgeTypeIsFill(const GrPrimitiveEdgeType edgeType)
+{
     return (kFillAA_GrProcessorEdgeType == edgeType || kFillBW_GrProcessorEdgeType == edgeType);
 }
 
-static inline bool GrProcessorEdgeTypeIsInverseFill(const GrPrimitiveEdgeType edgeType) {
+static inline bool GrProcessorEdgeTypeIsInverseFill(const GrPrimitiveEdgeType edgeType)
+{
     return (kInverseFillAA_GrProcessorEdgeType == edgeType ||
             kInverseFillBW_GrProcessorEdgeType == edgeType);
 }
 
-static inline bool GrProcessorEdgeTypeIsAA(const GrPrimitiveEdgeType edgeType) {
+static inline bool GrProcessorEdgeTypeIsAA(const GrPrimitiveEdgeType edgeType)
+{
     return (kFillBW_GrProcessorEdgeType != edgeType && kInverseFillBW_GrProcessorEdgeType != edgeType);
 }
 
-static inline GrPrimitiveEdgeType GrInvertProcessorEdgeType(const GrPrimitiveEdgeType edgeType) {
+static inline GrPrimitiveEdgeType GrInvertProcessorEdgeType(const GrPrimitiveEdgeType edgeType)
+{
     switch (edgeType) {
-        case kFillBW_GrProcessorEdgeType:
-            return kInverseFillBW_GrProcessorEdgeType;
-        case kFillAA_GrProcessorEdgeType:
-            return kInverseFillAA_GrProcessorEdgeType;
-        case kInverseFillBW_GrProcessorEdgeType:
-            return kFillBW_GrProcessorEdgeType;
-        case kInverseFillAA_GrProcessorEdgeType:
-            return kFillAA_GrProcessorEdgeType;
-        case kHairlineAA_GrProcessorEdgeType:
-            SkFAIL("Hairline fill isn't invertible.");
+    case kFillBW_GrProcessorEdgeType:
+        return kInverseFillBW_GrProcessorEdgeType;
+    case kFillAA_GrProcessorEdgeType:
+        return kInverseFillAA_GrProcessorEdgeType;
+    case kInverseFillBW_GrProcessorEdgeType:
+        return kFillBW_GrProcessorEdgeType;
+    case kInverseFillAA_GrProcessorEdgeType:
+        return kFillAA_GrProcessorEdgeType;
+    case kHairlineAA_GrProcessorEdgeType:
+        SkFAIL("Hairline fill isn't invertible.");
     }
     return kFillAA_GrProcessorEdgeType; // suppress warning.
 }
@@ -434,7 +452,8 @@ enum GrBufferType {
 };
 static const int kGrBufferTypeCount = kLast_GrBufferType + 1;
 
-static inline bool GrBufferTypeIsVertexOrIndex(GrBufferType type) {
+static inline bool GrBufferTypeIsVertexOrIndex(GrBufferType type)
+{
     SkASSERT(type >= 0 && type < kGrBufferTypeCount);
     return type <= kIndex_GrBufferType;
 
@@ -470,14 +489,16 @@ enum GrAccessPattern {
 /**
  * Specifies if the holder owns the backend, OpenGL or Vulkan, object.
  */
-enum class GrBackendObjectOwnership : bool {
+enum class GrBackendObjectOwnership : bool
+{
     /** Holder does not destroy the backend object. */
     kBorrowed = false,
     /** Holder destroys the backend object. */
     kOwned = true
 };
 
-template <typename T> T * const * sk_sp_address_as_pointer_address(sk_sp<T> const * sp) {
+template <typename T> T * const * sk_sp_address_as_pointer_address(sk_sp<T> const * sp)
+{
     static_assert(sizeof(T*) == sizeof(sk_sp<T>), "sk_sp not expected size.");
     return reinterpret_cast<T * const *>(sp);
 }

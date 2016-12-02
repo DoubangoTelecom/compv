@@ -12,14 +12,15 @@
 
 class SkRRect;
 
-class SK_API SkRRectsGaussianEdgeShader {
+class SK_API SkRRectsGaussianEdgeShader
+{
 public:
     /** Returns a shader that applies a Gaussian blur depending on distance to the edge
      *  of the intersection of two round rects.
      *  Currently this is only useable with round rects that have the same radii at
      *  all the corners and for which the x & y radii are equal.
      *  Raster will draw nothing.
-     *  
+     *
      *  The coverage geometry that should be drawn should be no larger than the intersection
      *  of the bounding boxes of the two round rects. Ambitious users can omit the center
      *  area of the coverage geometry if it is known to be occluded.

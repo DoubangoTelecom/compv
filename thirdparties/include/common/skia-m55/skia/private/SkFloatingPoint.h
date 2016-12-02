@@ -16,9 +16,9 @@
 #include <float.h>
 
 #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
-    #include <xmmintrin.h>
+#include <xmmintrin.h>
 #elif defined(SK_ARM_HAS_NEON)
-    #include <arm_neon.h>
+#include <arm_neon.h>
 #endif
 
 // For _POSIX_VERSION
@@ -31,7 +31,8 @@
 // C++98 cmath std::pow seems to be the earliest portable way to get float pow.
 // However, on Linux including cmath undefines isfinite.
 // http://gcc.gnu.org/bugzilla/show_bug.cgi?id=14608
-static inline float sk_float_pow(float base, float exp) {
+static inline float sk_float_pow(float base, float exp)
+{
     return powf(base, exp);
 }
 
@@ -60,37 +61,39 @@ static inline float sk_float_pow(float base, float exp) {
 
 // can't find log2f on android, but maybe that just a tool bug?
 #ifdef SK_BUILD_FOR_ANDROID
-    static inline float sk_float_log2(float x) {
-        const double inv_ln_2 = 1.44269504088896;
-        return (float)(log(x) * inv_ln_2);
-    }
+static inline float sk_float_log2(float x)
+{
+    const double inv_ln_2 = 1.44269504088896;
+    return (float)(log(x) * inv_ln_2);
+}
 #else
-    #define sk_float_log2(x)        log2f(x)
+#define sk_float_log2(x)        log2f(x)
 #endif
 
 #ifdef SK_BUILD_FOR_WIN
-    #define sk_float_isfinite(x)    _finite(x)
-    #define sk_float_isnan(x)       _isnan(x)
-    static inline int sk_float_isinf(float x) {
-        int32_t bits = SkFloat2Bits(x);
-        return (bits << 1) == (0xFF << 24);
-    }
+#define sk_float_isfinite(x)    _finite(x)
+#define sk_float_isnan(x)       _isnan(x)
+static inline int sk_float_isinf(float x)
+{
+    int32_t bits = SkFloat2Bits(x);
+    return (bits << 1) == (0xFF << 24);
+}
 #else
-    #define sk_float_isfinite(x)    isfinite(x)
-    #define sk_float_isnan(x)       isnan(x)
-    #define sk_float_isinf(x)       isinf(x)
+#define sk_float_isfinite(x)    isfinite(x)
+#define sk_float_isnan(x)       isnan(x)
+#define sk_float_isinf(x)       isinf(x)
 #endif
 
 #define sk_double_isnan(a)          sk_float_isnan(a)
 
 #ifdef SK_USE_FLOATBITS
-    #define sk_float_floor2int(x)   SkFloatToIntFloor(x)
-    #define sk_float_round2int(x)   SkFloatToIntRound(x)
-    #define sk_float_ceil2int(x)    SkFloatToIntCeil(x)
+#define sk_float_floor2int(x)   SkFloatToIntFloor(x)
+#define sk_float_round2int(x)   SkFloatToIntRound(x)
+#define sk_float_ceil2int(x)    SkFloatToIntCeil(x)
 #else
-    #define sk_float_floor2int(x)   (int)sk_float_floor(x)
-    #define sk_float_round2int(x)   (int)sk_float_floor((x) + 0.5f)
-    #define sk_float_ceil2int(x)    (int)sk_float_ceil(x)
+#define sk_float_floor2int(x)   (int)sk_float_floor(x)
+#define sk_float_round2int(x)   (int)sk_float_floor((x) + 0.5f)
+#define sk_float_ceil2int(x)    (int)sk_float_ceil(x)
 #endif
 
 #define sk_double_floor(x)          floor(x)
@@ -105,7 +108,8 @@ static const uint32_t kIEEENotANumber = 0x7fffffff;
 #define SK_FloatInfinity            (+(float)INFINITY)
 #define SK_FloatNegativeInfinity    (-(float)INFINITY)
 
-static inline float sk_float_rsqrt_portable(float x) {
+static inline float sk_float_rsqrt_portable(float x)
+{
     // Get initial estimate.
     int i;
     memcpy(&i, &x, 4);
@@ -121,7 +125,8 @@ static inline float sk_float_rsqrt_portable(float x) {
 
 // Fast, approximate inverse square root.
 // Compare to name-brand "1.0f / sk_float_sqrt(x)".  Should be around 10x faster on SSE, 2x on NEON.
-static inline float sk_float_rsqrt(float x) {
+static inline float sk_float_rsqrt(float x)
+{
 // We want all this inlined, so we'll inline SIMD and just take the hit when we don't know we've got
 // it at compile time.  This is going to be too fast to productively hide behind a function pointer.
 //

@@ -18,7 +18,8 @@
  *  encoded image as it is being decoded.
  *  Used by SkCodec.
  */
-class SkPngChunkReader : public SkRefCnt {
+class SkPngChunkReader : public SkRefCnt
+{
 public:
     /**
      *  This will be called by the decoder when it sees an unknown chunk.

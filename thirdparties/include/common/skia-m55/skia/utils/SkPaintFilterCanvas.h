@@ -15,7 +15,8 @@
 
     A utility proxy base class for implementing draw/paint filters.
 */
-class SK_API SkPaintFilterCanvas : public SkNWayCanvas {
+class SK_API SkPaintFilterCanvas : public SkNWayCanvas
+{
 public:
     /**
      * DEPRECATED: use the variant below.
@@ -80,13 +81,13 @@ protected:
     void onDrawImageNine(const SkImage*, const SkIRect& center, const SkRect& dst,
                          const SkPaint*) override;
     void onDrawVertices(VertexMode vmode, int vertexCount,
-                              const SkPoint vertices[], const SkPoint texs[],
-                              const SkColor colors[], SkXfermode* xmode,
-                              const uint16_t indices[], int indexCount,
-                              const SkPaint&) override;
+                        const SkPoint vertices[], const SkPoint texs[],
+                        const SkColor colors[], SkXfermode* xmode,
+                        const uint16_t indices[], int indexCount,
+                        const SkPaint&) override;
     void onDrawPatch(const SkPoint cubics[12], const SkColor colors[4],
-                             const SkPoint texCoords[4], SkXfermode* xmode,
-                             const SkPaint& paint) override;
+                     const SkPoint texCoords[4], SkXfermode* xmode,
+                     const SkPaint& paint) override;
     void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;
 
     void onDrawText(const void* text, size_t byteLength, SkScalar x, SkScalar y,

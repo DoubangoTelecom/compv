@@ -12,7 +12,8 @@
 #include "SkTypes.h"
 #include <atomic>
 
-class SkBaseSemaphore {
+class SkBaseSemaphore
+{
 public:
     constexpr SkBaseSemaphore(int count = 0)
         : fCount(count), fOSSemaphore(nullptr) {}
@@ -48,13 +49,17 @@ private:
     OSSemaphore*     fOSSemaphore;
 };
 
-class SkSemaphore : public SkBaseSemaphore {
+class SkSemaphore : public SkBaseSemaphore
+{
 public:
     using SkBaseSemaphore::SkBaseSemaphore;
-    ~SkSemaphore() { this->cleanup(); }
+    ~SkSemaphore() {
+        this->cleanup();
+    }
 };
 
-inline void SkBaseSemaphore::signal(int n) {
+inline void SkBaseSemaphore::signal(int n)
+{
     int prev = fCount.fetch_add(n, std::memory_order_release);
 
     // We only want to call the OS semaphore when our logical count crosses
@@ -72,7 +77,8 @@ inline void SkBaseSemaphore::signal(int n) {
     }
 }
 
-inline void SkBaseSemaphore::wait() {
+inline void SkBaseSemaphore::wait()
+{
     // Since this fetches the value before the subtract, zero and below means that there are no
     // resources left, so the thread needs to wait.
     if (fCount.fetch_sub(1, std::memory_order_acquire) <= 0) {

@@ -20,77 +20,77 @@
 
 static bool compv_android_have_assetmgr()
 {
-	return (ANativeActivity_get() != NULL);
+    return (ANativeActivity_get() != NULL);
 }
 
 static bool compv_android_asset_fexist(const char* pcPath)
 {
-	if (pcPath) {
-		ANativeActivity* activity = ANativeActivity_get();
-		if (activity) {
-			AAsset* asset = AAssetManager_open(activity->assetManager, pcPath, 0);
-			if (asset) {
-				AAsset_close(asset);
-				return true;
-			}
-			return false;
-		}
-	}
-	return false;
+    if (pcPath) {
+        ANativeActivity* activity = ANativeActivity_get();
+        if (activity) {
+            AAsset* asset = AAssetManager_open(activity->assetManager, pcPath, 0);
+            if (asset) {
+                AAsset_close(asset);
+                return true;
+            }
+            return false;
+        }
+    }
+    return false;
 }
 
 static size_t compv_android_asset_fsize(const char* pcPath)
 {
-	if (pcPath) {
-		ANativeActivity* activity = ANativeActivity_get();
-		if (activity) {
-			AAsset* asset = AAssetManager_open(activity->assetManager, pcPath, 0);
-			if (asset) {
-				size_t size = static_cast<size_t>(AAsset_getLength(asset));
-				AAsset_close(asset);
-				return size;
-			}
-			return 0;
-		}
-	}
-	return 0;
+    if (pcPath) {
+        ANativeActivity* activity = ANativeActivity_get();
+        if (activity) {
+            AAsset* asset = AAssetManager_open(activity->assetManager, pcPath, 0);
+            if (asset) {
+                size_t size = static_cast<size_t>(AAsset_getLength(asset));
+                AAsset_close(asset);
+                return size;
+            }
+            return 0;
+        }
+    }
+    return 0;
 }
 
 static int compv_android_asset_fread(void* cookie, char* buf, int size)
 {
-	return AAsset_read((AAsset*)cookie, buf, size);
+    return AAsset_read((AAsset*)cookie, buf, size);
 }
 
 static int compv_android_asset_fwrite(void* cookie, const char* buf, int size)
 {
-	COMPV_DEBUG_ERROR("Not implemented");
-	return EACCES;
+    COMPV_DEBUG_ERROR("Not implemented");
+    return EACCES;
 }
 
 static fpos_t compv_android_asset_fseek(void* cookie, fpos_t offset, int whence)
 {
-	return AAsset_seek((AAsset*)cookie, offset, whence);
+    return AAsset_seek((AAsset*)cookie, offset, whence);
 }
 
 static int compv_android_asset_fclose(void* cookie)
 {
-	AAsset_close((AAsset*)cookie);
-	return 0;
+    AAsset_close((AAsset*)cookie);
+    return 0;
 }
 
 static FILE* compv_android_asset_fopen(const char* fname, const char* mode)
 {
-	if (fname) {
-		ANativeActivity* activity = ANativeActivity_get();
-		if (activity) {
-			AAsset* asset = AAssetManager_open(activity->assetManager, fname, 0);
-			if (!asset) {
-				return NULL;
-			}
-			return funopen(asset, compv_android_asset_fread, compv_android_asset_fwrite, compv_android_asset_fseek, compv_android_asset_fclose);
-		}
-	}
-	return NULL;
+    if (fname) {
+        ANativeActivity* activity = ANativeActivity_get();
+        if (activity) {
+            AAsset* asset = AAssetManager_open(activity->assetManager, fname, 0);
+            if (!asset) {
+                return NULL;
+            }
+            return funopen(asset, compv_android_asset_fread, compv_android_asset_fwrite, compv_android_asset_fseek, compv_android_asset_fclose);
+        }
+    }
+    return NULL;
 }
 
 #endif /* COMPV_OS_ANDROID */

@@ -15,14 +15,14 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_GL_API CompVGL
 {
 public:
-	static COMPV_ERROR_CODE init();
-	static COMPV_ERROR_CODE deInit();
+    static COMPV_ERROR_CODE init();
+    static COMPV_ERROR_CODE deInit();
 #	if defined(HAVE_GL_GLEW_H)
-	static COMPV_ERROR_CODE glewInit();
+    static COMPV_ERROR_CODE glewInit();
 #endif
 
 private:
-	static bool s_bInitialized;
+    static bool s_bInitialized;
 };
 
 COMPV_NAMESPACE_END()

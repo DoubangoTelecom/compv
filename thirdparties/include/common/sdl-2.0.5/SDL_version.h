@@ -48,8 +48,7 @@ extern "C" {
  *  \sa SDL_VERSION
  *  \sa SDL_GetVersion
  */
-typedef struct SDL_version
-{
+typedef struct SDL_version {
     Uint8 major;        /**< major version */
     Uint8 minor;        /**< minor version */
     Uint8 patch;        /**< update version */

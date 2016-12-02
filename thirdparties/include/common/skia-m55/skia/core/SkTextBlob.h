@@ -20,17 +20,22 @@ class SkWriteBuffer;
 
     SkTextBlob combines multiple text runs into an immutable, ref-counted structure.
 */
-class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
+class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob>
+{
 public:
     /**
      *  Returns a conservative blob bounding box.
      */
-    const SkRect& bounds() const { return fBounds; }
+    const SkRect& bounds() const {
+        return fBounds;
+    }
 
     /**
      *  Return a non-zero, unique value representing the text blob.
      */
-    uint32_t uniqueID() const { return fUniqueID; }
+    uint32_t uniqueID() const {
+        return fUniqueID;
+    }
 
     /**
      *  Serialize to a buffer.
@@ -66,12 +71,16 @@ private:
 
     // Memory for objects of this class is created with sk_malloc rather than operator new and must
     // be freed with sk_free.
-    void operator delete(void* p) { sk_free(p); }
+    void operator delete(void* p) {
+        sk_free(p);
+    }
     void* operator new(size_t) {
         SkFAIL("All blobs are created by placement new.");
         return sk_malloc_throw(0);
     }
-    void* operator new(size_t, void* p) { return p; }
+    void* operator new(size_t, void* p) {
+        return p;
+    }
 
     static unsigned ScalarsPerGlyph(GlyphPositioning pos);
 
@@ -94,7 +103,8 @@ private:
 
     Helper class for constructing SkTextBlobs.
  */
-class SK_API SkTextBlobBuilder {
+class SK_API SkTextBlobBuilder
+{
 public:
     SkTextBlobBuilder();
 

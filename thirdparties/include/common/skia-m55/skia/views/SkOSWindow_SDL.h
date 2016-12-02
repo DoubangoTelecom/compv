@@ -12,7 +12,8 @@
 #include "SDL_opengl.h"
 #include "SkWindow.h"
 
-class SkOSWindow : public SkWindow {
+class SkOSWindow : public SkWindow
+{
 public:
     SkOSWindow(void*);
     virtual ~SkOSWindow();

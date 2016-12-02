@@ -14,7 +14,8 @@
 
 class SkRefCnt;
 
-class SK_API SkMetaData {
+class SK_API SkMetaData
+{
 public:
     /**
      *  Used to manage the life-cycle of a ptr in the metadata. This is option
@@ -129,7 +130,8 @@ public:
     class Iter;
     friend class Iter;
 
-    class Iter {
+    class Iter
+    {
     public:
         Iter() : fRec(NULL) {}
         Iter(const SkMetaData&);
@@ -157,10 +159,18 @@ public:
         uint8_t     fDataLen;   // sizeof a single element
         uint8_t     fType;
 
-        const void* data() const { return (this + 1); }
-        void*       data() { return (this + 1); }
-        const char* name() const { return (const char*)this->data() + fDataLen * fDataCount; }
-        char*       name() { return (char*)this->data() + fDataLen * fDataCount; }
+        const void* data() const {
+            return (this + 1);
+        }
+        void*       data() {
+            return (this + 1);
+        }
+        const char* name() const {
+            return (const char*)this->data() + fDataLen * fDataCount;
+        }
+        char*       name() {
+            return (char*)this->data() + fDataLen * fDataCount;
+        }
 
         static Rec* Alloc(size_t);
         static void Free(Rec*);

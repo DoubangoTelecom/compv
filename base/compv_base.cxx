@@ -51,344 +51,344 @@ CompVBase::~CompVBase()
 
 COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
 {
-	if (s_bInitialized || s_bInitializing) {
-		return COMPV_ERROR_CODE_S_OK;
-	}
+    if (s_bInitialized || s_bInitializing) {
+        return COMPV_ERROR_CODE_S_OK;
+    }
 
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 #if COMPV_OS_ANDROID
-	struct android_app* androidApp = AndroidApp_get();
-	JavaVM* jVM = androidApp ? (androidApp->activity ? androidApp->activity->vm : NULL) : NULL;
+    struct android_app* androidApp = AndroidApp_get();
+    JavaVM* jVM = androidApp ? (androidApp->activity ? androidApp->activity->vm : NULL) : NULL;
 #endif
-	s_bInitializing = true;
+    s_bInitializing = true;
 
-	COMPV_DEBUG_INFO("Initializing [base] modules (v %s)...", COMPV_VERSION_STRING);
+    COMPV_DEBUG_INFO("Initializing [base] modules (v %s)...", COMPV_VERSION_STRING);
 
-	// Make sure sizeof(compv_scalar_t) is correct
+    // Make sure sizeof(compv_scalar_t) is correct
 #if defined(COMPV_ASM) || defined(COMPV_INTRINSIC)
-	if (sizeof(compv_scalar_t) != sizeof(void*)) {
-		COMPV_DEBUG_ERROR("sizeof(compv_scalar_t)= #%zu not equal to sizeof(void*)= #%zu", sizeof(compv_scalar_t), sizeof(void*));
-		return COMPV_ERROR_CODE_E_SYSTEM;
-	}
-	// https://en.wikipedia.org/wiki/Single-precision_floating-point_format
-	if (sizeof(compv_float32_t) != 4) {
-		COMPV_DEBUG_ERROR("sizeof(compv_float32_t)= #%zu not equal to 4", sizeof(compv_float32_t));
-		return COMPV_ERROR_CODE_E_SYSTEM;
-	}
-	// https://en.wikipedia.org/wiki/Double-precision_floating-point_format
-	if (sizeof(compv_float64_t) != 8) {
-		COMPV_DEBUG_ERROR("sizeof(compv_float64_t)= #%zu not equal to 8", sizeof(compv_float64_t));
-		return COMPV_ERROR_CODE_E_SYSTEM;
-	}
+    if (sizeof(compv_scalar_t) != sizeof(void*)) {
+        COMPV_DEBUG_ERROR("sizeof(compv_scalar_t)= #%zu not equal to sizeof(void*)= #%zu", sizeof(compv_scalar_t), sizeof(void*));
+        return COMPV_ERROR_CODE_E_SYSTEM;
+    }
+    // https://en.wikipedia.org/wiki/Single-precision_floating-point_format
+    if (sizeof(compv_float32_t) != 4) {
+        COMPV_DEBUG_ERROR("sizeof(compv_float32_t)= #%zu not equal to 4", sizeof(compv_float32_t));
+        return COMPV_ERROR_CODE_E_SYSTEM;
+    }
+    // https://en.wikipedia.org/wiki/Double-precision_floating-point_format
+    if (sizeof(compv_float64_t) != 8) {
+        COMPV_DEBUG_ERROR("sizeof(compv_float64_t)= #%zu not equal to 8", sizeof(compv_float64_t));
+        return COMPV_ERROR_CODE_E_SYSTEM;
+    }
 #endif
-	COMPV_DEBUG_INFO("sizeof(compv_scalar_t)= #%zu", sizeof(compv_scalar_t));
-	COMPV_DEBUG_INFO("sizeof(float)= #%zu", sizeof(float));
+    COMPV_DEBUG_INFO("sizeof(compv_scalar_t)= #%zu", sizeof(compv_scalar_t));
+    COMPV_DEBUG_INFO("sizeof(float)= #%zu", sizeof(float));
 
-	/* Windows version */
+    /* Windows version */
 #if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_RT
-	// COM initialization
+    // COM initialization
 #	if !COMPV_OS_WINDOWS_CE && 0 // Call 'CoUninitialize' is you remove the '& 0'
-	COMPV_CHECK_EXP_BAIL(FAILED(CoInitializeEx(NULL, COINIT_MULTITHREADED)), (err_ = COMPV_ERROR_CODE_E_SYSTEM));
+    COMPV_CHECK_EXP_BAIL(FAILED(CoInitializeEx(NULL, COINIT_MULTITHREADED)), (err_ = COMPV_ERROR_CODE_E_SYSTEM));
 #	endif
 
-	// Timers accuracy
-	COMPV_CHECK_EXP_BAIL(timeBeginPeriod(1) != 0, (err_ = COMPV_ERROR_CODE_E_SYSTEM));
+    // Timers accuracy
+    COMPV_CHECK_EXP_BAIL(timeBeginPeriod(1) != 0, (err_ = COMPV_ERROR_CODE_E_SYSTEM));
 
-	// Get OS version
-	if (s_dwMajorVersion == -1 || s_dwMinorVersion == -1) {
-		OSVERSIONINFO osvi;
-		ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
-		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-		COMPV_CHECK_EXP_BAIL(GetVersionEx(&osvi) != TRUE, (err_ = COMPV_ERROR_CODE_E_SYSTEM));
-		s_dwMajorVersion = osvi.dwMajorVersion;
-		s_dwMinorVersion = osvi.dwMinorVersion;
+    // Get OS version
+    if (s_dwMajorVersion == -1 || s_dwMinorVersion == -1) {
+        OSVERSIONINFO osvi;
+        ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+        COMPV_CHECK_EXP_BAIL(GetVersionEx(&osvi) != TRUE, (err_ = COMPV_ERROR_CODE_E_SYSTEM));
+        s_dwMajorVersion = osvi.dwMajorVersion;
+        s_dwMinorVersion = osvi.dwMinorVersion;
 #	if COMPV_OS_WINDOWS_CE
-		COMPV_DEBUG_INFO("Windows dwMajorVersion=%ld, dwMinorVersion=%ld\n", s_dwMajorVersion, s_dwMinorVersion);
+        COMPV_DEBUG_INFO("Windows dwMajorVersion=%ld, dwMinorVersion=%ld\n", s_dwMajorVersion, s_dwMinorVersion);
 #	else
-		COMPV_DEBUG_INFO("Windows dwMajorVersion=%ld, dwMinorVersion=%ld", s_dwMajorVersion, s_dwMinorVersion);
+        COMPV_DEBUG_INFO("Windows dwMajorVersion=%ld, dwMinorVersion=%ld", s_dwMajorVersion, s_dwMinorVersion);
 #	endif
-	}
+    }
 #endif
 
-	/* endianness */
-	// https://developer.apple.com/library/mac/documentation/Darwin/Conceptual/64bitPorting/MakingCode64-BitClean/MakingCode64-BitClean.html
+    /* endianness */
+    // https://developer.apple.com/library/mac/documentation/Darwin/Conceptual/64bitPorting/MakingCode64-BitClean/MakingCode64-BitClean.html
 #if TARGET_RT_LITTLE_ENDIAN
-	s_bBigEndian = false;
+    s_bBigEndian = false;
 #elif TARGET_RT_BIG_ENDIAN
-	s_bBigEndian = true;
+    s_bBigEndian = true;
 #else
-	static const short kWord = 0x4321;
-	s_bBigEndian = ((*(int8_t *)&kWord) != 0x21);
+    static const short kWord = 0x4321;
+    s_bBigEndian = ((*(int8_t *)&kWord) != 0x21);
 #	if COMPV_OS_WINDOWS
-	if (s_bBigEndian) {
-		COMPV_DEBUG_WARN("Big endian on Windows machine. Is it right?");
-	}
+    if (s_bBigEndian) {
+        COMPV_DEBUG_WARN("Big endian on Windows machine. Is it right?");
+    }
 #	endif
 #endif
 
-	// rand()
-	srand((unsigned int)CompVTime::getNowMills());
+    // rand()
+    srand((unsigned int)CompVTime::getNowMills());
 
-	/* Make sure heap debugging is disabled (release mode only) */
+    /* Make sure heap debugging is disabled (release mode only) */
 #if COMPV_OS_WINDOWS && defined(_MSC_VER) && defined(NDEBUG)
-	if (IsDebuggerPresent()) {
-		// TODO(dmi): Looks like this feature is OFF (by default) on VS2015
-		DWORD size = GetEnvironmentVariable(TEXT("_NO_DEBUG_HEAP"), NULL, 0);
-		bool bHeapDebuggingDisabled = false;
-		if (size) {
-			TCHAR* _NO_DEBUG_HEAP = (TCHAR*)CompVMem::malloc(size * sizeof(TCHAR));
-			if (_NO_DEBUG_HEAP) {
-				size = GetEnvironmentVariable(TEXT("_NO_DEBUG_HEAP"), _NO_DEBUG_HEAP, size);
-				if (size) {
-					bHeapDebuggingDisabled = (_NO_DEBUG_HEAP[0] == TEXT('1'));
-				}
-				CompVMem::free((void**)&_NO_DEBUG_HEAP);
-			}
-		}
-		if (!bHeapDebuggingDisabled) {
-			COMPV_DEBUG_INFO("/!\\ Heap debugging enabled on release mode while running your app from Visual Studio. You may experiment performance issues.\n"
-				"Consider disabling this feature: Configuration Properties->Debugging->Environment: _NO_DEBUG_HEAP=1\n"
-				"Must be set on the app (executable) itself.");
-		}
-	}
+    if (IsDebuggerPresent()) {
+        // TODO(dmi): Looks like this feature is OFF (by default) on VS2015
+        DWORD size = GetEnvironmentVariable(TEXT("_NO_DEBUG_HEAP"), NULL, 0);
+        bool bHeapDebuggingDisabled = false;
+        if (size) {
+            TCHAR* _NO_DEBUG_HEAP = (TCHAR*)CompVMem::malloc(size * sizeof(TCHAR));
+            if (_NO_DEBUG_HEAP) {
+                size = GetEnvironmentVariable(TEXT("_NO_DEBUG_HEAP"), _NO_DEBUG_HEAP, size);
+                if (size) {
+                    bHeapDebuggingDisabled = (_NO_DEBUG_HEAP[0] == TEXT('1'));
+                }
+                CompVMem::free((void**)&_NO_DEBUG_HEAP);
+            }
+        }
+        if (!bHeapDebuggingDisabled) {
+            COMPV_DEBUG_INFO("/!\\ Heap debugging enabled on release mode while running your app from Visual Studio. You may experiment performance issues.\n"
+                             "Consider disabling this feature: Configuration Properties->Debugging->Environment: _NO_DEBUG_HEAP=1\n"
+                             "Must be set on the app (executable) itself.");
+        }
+    }
 #endif
 
-	/* Print Android system info */
+    /* Print Android system info */
 #if COMPV_OS_ANDROID
-	// Static API version used to buid the code
-	COMPV_DEBUG_INFO("[Base] module: android static API version: %d", __ANDROID_API__);
-	// Runtime API version used on the host device
-	if (jVM) {
-		JNIEnv* jEnv = NULL;
-		if (jVM->AttachCurrentThread(&jEnv, NULL) == JNI_OK) {
-			jclass clazz_VERSION = jEnv->FindClass("android/os/Build$VERSION");
-			if (clazz_VERSION) {
-				jfieldID fieldID_SDK_INT = jEnv->GetStaticFieldID(clazz_VERSION, "SDK_INT", "I");
-				if (fieldID_SDK_INT) {
-					jint SDK_INT = jEnv->GetStaticIntField(clazz_VERSION, fieldID_SDK_INT);
-					COMPV_DEBUG_INFO("android/os/Build$VERSION.SDK_INT: %d", static_cast<int>(SDK_INT));
-				}
-			}
-			jclass clazz_Build = jEnv->FindClass("android/os/Build");
-			if (clazz_Build) {
-				jfieldID fieldID_CPU_ABI = jEnv->GetStaticFieldID(clazz_Build, "CPU_ABI", "Ljava/lang/String;");
-				if (fieldID_CPU_ABI) {
-					jstring object_CPU_ABI = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_CPU_ABI));
-					if (object_CPU_ABI) {
-						COMPV_DEBUG_INFO("android/os/Build.CPU_ABI: %s", CompVJNI::toString(jEnv, object_CPU_ABI).c_str());
-					}
-				}
-			}
-			jVM->DetachCurrentThread();
-		}
-	}
-	else {
-		COMPV_DEBUG_INFO("sdkVersion: %d", androidApp->activity->sdkVersion);
-	}
+    // Static API version used to buid the code
+    COMPV_DEBUG_INFO("[Base] module: android static API version: %d", __ANDROID_API__);
+    // Runtime API version used on the host device
+    if (jVM) {
+        JNIEnv* jEnv = NULL;
+        if (jVM->AttachCurrentThread(&jEnv, NULL) == JNI_OK) {
+            jclass clazz_VERSION = jEnv->FindClass("android/os/Build$VERSION");
+            if (clazz_VERSION) {
+                jfieldID fieldID_SDK_INT = jEnv->GetStaticFieldID(clazz_VERSION, "SDK_INT", "I");
+                if (fieldID_SDK_INT) {
+                    jint SDK_INT = jEnv->GetStaticIntField(clazz_VERSION, fieldID_SDK_INT);
+                    COMPV_DEBUG_INFO("android/os/Build$VERSION.SDK_INT: %d", static_cast<int>(SDK_INT));
+                }
+            }
+            jclass clazz_Build = jEnv->FindClass("android/os/Build");
+            if (clazz_Build) {
+                jfieldID fieldID_CPU_ABI = jEnv->GetStaticFieldID(clazz_Build, "CPU_ABI", "Ljava/lang/String;");
+                if (fieldID_CPU_ABI) {
+                    jstring object_CPU_ABI = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_CPU_ABI));
+                    if (object_CPU_ABI) {
+                        COMPV_DEBUG_INFO("android/os/Build.CPU_ABI: %s", CompVJNI::toString(jEnv, object_CPU_ABI).c_str());
+                    }
+                }
+            }
+            jVM->DetachCurrentThread();
+        }
+    }
+    else {
+        COMPV_DEBUG_INFO("sdkVersion: %d", androidApp->activity->sdkVersion);
+    }
 #endif
 
-	/* Window registery */
-	COMPV_CHECK_CODE_BAIL(err_ = CompVWindowRegistry::init());
+    /* Window registery */
+    COMPV_CHECK_CODE_BAIL(err_ = CompVWindowRegistry::init());
 
-	/* Image handlers initialization */
-	COMPV_CHECK_CODE_BAIL(err_ = CompVImageDecoder::init());
+    /* Image handlers initialization */
+    COMPV_CHECK_CODE_BAIL(err_ = CompVImageDecoder::init());
 
-	/* CPU features initialization */
-	COMPV_CHECK_CODE_BAIL(err_ = CompVCpu::init());
-	COMPV_DEBUG_INFO("CPU features: %s", CompVCpu::getFlagsAsString(CompVCpu::getFlags()));
-	COMPV_DEBUG_INFO("CPU cores: #%d", CompVCpu::getCoresCount());
-	COMPV_DEBUG_INFO("CPU cache1: line size: #%dB, size :#%dKB", CompVCpu::getCache1LineSize(), CompVCpu::getCache1Size() >> 10);
+    /* CPU features initialization */
+    COMPV_CHECK_CODE_BAIL(err_ = CompVCpu::init());
+    COMPV_DEBUG_INFO("CPU features: %s", CompVCpu::getFlagsAsString(CompVCpu::getFlags()));
+    COMPV_DEBUG_INFO("CPU cores: #%d", CompVCpu::getCoresCount());
+    COMPV_DEBUG_INFO("CPU cache1: line size: #%dB, size :#%dKB", CompVCpu::getCache1LineSize(), CompVCpu::getCache1Size() >> 10);
 #if defined(COMPV_ARCH_X86)
-	// even if we are on X64 CPU it's possible that we're running a 32-bit binary
+    // even if we are on X64 CPU it's possible that we're running a 32-bit binary
 #	if defined(COMPV_ARCH_X64)
-	COMPV_DEBUG_INFO("Binary type: X86_64");
+    COMPV_DEBUG_INFO("Binary type: X86_64");
 #	else
-	COMPV_DEBUG_INFO("Binary type: X86_32");
-	if (CompVCpu::isSupported(kCpuFlagX64)) {
-		COMPV_DEBUG_INFO("/!\\Using 32bits binaries on 64bits machine: optimization issues");
-	}
+    COMPV_DEBUG_INFO("Binary type: X86_32");
+    if (CompVCpu::isSupported(kCpuFlagX64)) {
+        COMPV_DEBUG_INFO("/!\\Using 32bits binaries on 64bits machine: optimization issues");
+    }
 #	endif
 #endif
 #if defined(COMPV_INTRINSIC)
-	COMPV_DEBUG_INFO("Intrinsic enabled");
+    COMPV_DEBUG_INFO("Intrinsic enabled");
 #endif
 #if defined(COMPV_ASM)
-	COMPV_DEBUG_INFO("Assembler enabled");
+    COMPV_DEBUG_INFO("Assembler enabled");
 #endif
 #if defined __INTEL_COMPILER
-	COMPV_DEBUG_INFO("Using Intel compiler");
+    COMPV_DEBUG_INFO("Using Intel compiler");
 #endif
-	// https://msdn.microsoft.com/en-us/library/jj620901.aspx
+    // https://msdn.microsoft.com/en-us/library/jj620901.aspx
 #if defined(__AVX2__)
-	COMPV_DEBUG_INFO("Code built with option /arch:AVX2");
+    COMPV_DEBUG_INFO("Code built with option /arch:AVX2");
 #endif
 #if defined(__AVX__)
-	COMPV_DEBUG_INFO("Code built with option /arch:AVX");
+    COMPV_DEBUG_INFO("Code built with option /arch:AVX");
 #endif
 #if defined(__FMA3__)
-	COMPV_DEBUG_INFO("Code built with option /arch:FMA3");
+    COMPV_DEBUG_INFO("Code built with option /arch:FMA3");
 #endif
 #if defined(__SSE__)
-	COMPV_DEBUG_INFO("Code built with option /arch:SSE");
+    COMPV_DEBUG_INFO("Code built with option /arch:SSE");
 #endif
 #if defined(__SSE2__)
-	COMPV_DEBUG_INFO("Code built with option /arch:SSE2");
+    COMPV_DEBUG_INFO("Code built with option /arch:SSE2");
 #endif
 #if defined(__SSE3__)
-	COMPV_DEBUG_INFO("Code built with option /arch:SSE3");
+    COMPV_DEBUG_INFO("Code built with option /arch:SSE3");
 #endif
 #if defined(__SSSE3__)
-	COMPV_DEBUG_INFO("Code built with option /arch:SSSE3");
+    COMPV_DEBUG_INFO("Code built with option /arch:SSSE3");
 #endif
 #if defined(__SSE4_1__)
-	COMPV_DEBUG_INFO("Code built with option /arch:SSE41");
+    COMPV_DEBUG_INFO("Code built with option /arch:SSE41");
 #endif
 #if defined(__SSE4_2__)
-	COMPV_DEBUG_INFO("Code built with option /arch:SSE42");
+    COMPV_DEBUG_INFO("Code built with option /arch:SSE42");
 #endif
 #if defined(__ARM_NEON__)
-	COMPV_DEBUG_INFO("Code built with option /arch:NEON");
+    COMPV_DEBUG_INFO("Code built with option /arch:NEON");
 #endif
 
-	/* Math functions: Must be after CPU initialization */
-	COMPV_CHECK_CODE_BAIL(err_ = CompVMathUtils::init());
-	COMPV_DEBUG_INFO("Math Fast Trig.: %s", CompVBase::isMathTrigFast() ? "true" : "fast");
-	COMPV_DEBUG_INFO("Math Fixed Point: %s", CompVBase::isMathFixedPoint() ? "true" : "fast");
+    /* Math functions: Must be after CPU initialization */
+    COMPV_CHECK_CODE_BAIL(err_ = CompVMathUtils::init());
+    COMPV_DEBUG_INFO("Math Fast Trig.: %s", CompVBase::isMathTrigFast() ? "true" : "fast");
+    COMPV_DEBUG_INFO("Math Fixed Point: %s", CompVBase::isMathFixedPoint() ? "true" : "fast");
 
-	/* Memory alignment */
-	COMPV_DEBUG_INFO("Default alignment: #%d", COMPV_SIMD_ALIGNV_DEFAULT);
-	COMPV_DEBUG_INFO("Best alignment: #%d", CompVMem::getBestAlignment());
+    /* Memory alignment */
+    COMPV_DEBUG_INFO("Default alignment: #%d", COMPV_SIMD_ALIGNV_DEFAULT);
+    COMPV_DEBUG_INFO("Best alignment: #%d", CompVMem::getBestAlignment());
 
-	/* Memory management */
-	COMPV_CHECK_CODE_BAIL(err_ = CompVMem::init());
+    /* Memory management */
+    COMPV_CHECK_CODE_BAIL(err_ = CompVMem::init());
 
 #if 0
-	/* Features */
-	COMPV_CHECK_CODE_BAIL(err_ = CompVFeature::init());
+    /* Features */
+    COMPV_CHECK_CODE_BAIL(err_ = CompVFeature::init());
 #endif
 
 #if 0
-	/* Matchers */
-	COMPV_CHECK_CODE_BAIL(err_ = CompVMatcher::init());
+    /* Matchers */
+    COMPV_CHECK_CODE_BAIL(err_ = CompVMatcher::init());
 #endif
 
 bail:
-	s_bInitialized = COMPV_ERROR_CODE_IS_OK(err_);
-	s_bInitializing = false;
-	if (s_bInitialized) {
-		// The next functions are called here because they recursively call "CompVBase::init()"
-		// We call them now because "s_bInitialized" is already set to "true" and this is the way to avoid endless loops
+    s_bInitialized = COMPV_ERROR_CODE_IS_OK(err_);
+    s_bInitializing = false;
+    if (s_bInitialized) {
+        // The next functions are called here because they recursively call "CompVBase::init()"
+        // We call them now because "s_bInitialized" is already set to "true" and this is the way to avoid endless loops
 
-		/* Parallel */
-		COMPV_CHECK_CODE_BAIL(err_ = CompVParallel::init(numThreads)); // If error will go back to bail then "s_bInitialized" wil be set to false which means deInit() will be called
-	}
-	else {
-		// cleanup if initialization failed
-		CompVParallel::deInit();
-	}
+        /* Parallel */
+        COMPV_CHECK_CODE_BAIL(err_ = CompVParallel::init(numThreads)); // If error will go back to bail then "s_bInitialized" wil be set to false which means deInit() will be called
+    }
+    else {
+        // cleanup if initialization failed
+        CompVParallel::deInit();
+    }
 
-	COMPV_DEBUG_INFO("Base modules initialized");
-	return err_;
+    COMPV_DEBUG_INFO("Base modules initialized");
+    return err_;
 }
 
 COMPV_ERROR_CODE CompVBase::deInit()
 {
-	COMPV_DEBUG_INFO("DeInitializing base modules (v %s)...", COMPV_VERSION_STRING);
+    COMPV_DEBUG_INFO("DeInitializing base modules (v %s)...", COMPV_VERSION_STRING);
 
-	s_bInitialized = false;
-	s_bInitializing = false;
+    s_bInitialized = false;
+    s_bInitializing = false;
 
-	CompVParallel::deInit();
+    CompVParallel::deInit();
 
-	CompVWindowRegistry::deInit();
+    CompVWindowRegistry::deInit();
 
-	// TODO(dmi): deInit other modules (not an issue because there is no memory allocation)
-	CompVMem::deInit();
-	
-	CompVImageDecoder::deInit();
+    // TODO(dmi): deInit other modules (not an issue because there is no memory allocation)
+    CompVMem::deInit();
 
-	COMPV_DEBUG_INFO("Base modules deinitialized");
+    CompVImageDecoder::deInit();
 
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_DEBUG_INFO("Base modules deinitialized");
+
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 
 COMPV_ERROR_CODE CompVBase::setTestingModeEnabled(bool bTesting)
 {
-	COMPV_DEBUG_INFO("Engine testing mode = %s", bTesting ? "true" : "false");
-	s_bTesting = bTesting;
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_DEBUG_INFO("Engine testing mode = %s", bTesting ? "true" : "false");
+    s_bTesting = bTesting;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVBase::setMathTrigFastEnabled(bool bMathTrigFast)
 {
-	COMPV_DEBUG_INFO("Engine math trig. fast = %s", bMathTrigFast ? "true" : "false");
-	s_bMathTrigFast = bMathTrigFast;
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_DEBUG_INFO("Engine math trig. fast = %s", bMathTrigFast ? "true" : "false");
+    s_bMathTrigFast = bMathTrigFast;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVBase::setMathFixedPointEnabled(bool bMathFixedPoint)
 {
-	COMPV_DEBUG_INFO("Engine math trig. fast = %s", bMathFixedPoint ? "true" : "false");
-	s_bMathFixedPoint = bMathFixedPoint;
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_DEBUG_INFO("Engine math trig. fast = %s", bMathFixedPoint ? "true" : "false");
+    s_bMathFixedPoint = bMathFixedPoint;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 
 bool CompVBase::isInitialized()
 {
-	return s_bInitialized;
+    return s_bInitialized;
 }
 
 bool CompVBase::isInitializing()
 {
-	return s_bInitializing;
+    return s_bInitializing;
 }
 
 bool CompVBase::isBigEndian()
 {
-	return s_bBigEndian;
+    return s_bBigEndian;
 }
 
 bool CompVBase::isTestingMode()
 {
-	return s_bTesting;
+    return s_bTesting;
 }
 
 bool CompVBase::isMathTrigFast()
 {
-	return s_bMathTrigFast;
+    return s_bMathTrigFast;
 }
 
 bool CompVBase::isMathFixedPoint()
 {
-	return s_bMathFixedPoint;
+    return s_bMathFixedPoint;
 }
 
 #if COMPV_OS_WINDOWS
 
 bool CompVBase::isWin8OrLater()
 {
-	COMPV_CHECK_EXP_NOP(s_dwMajorVersion == -1 || s_dwMinorVersion == -1, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	return ((s_dwMajorVersion > 6) || ((s_dwMajorVersion == 6) && (s_dwMinorVersion >= 2)));
+    COMPV_CHECK_EXP_NOP(s_dwMajorVersion == -1 || s_dwMinorVersion == -1, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+    return ((s_dwMajorVersion > 6) || ((s_dwMajorVersion == 6) && (s_dwMinorVersion >= 2)));
 }
 
 bool CompVBase::isWin7OrLater()
 {
-	COMPV_CHECK_EXP_NOP(s_dwMajorVersion == -1 || s_dwMinorVersion == -1, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	return ((s_dwMajorVersion > 6) || ((s_dwMajorVersion == 6) && (s_dwMinorVersion >= 1)));
+    COMPV_CHECK_EXP_NOP(s_dwMajorVersion == -1 || s_dwMinorVersion == -1, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+    return ((s_dwMajorVersion > 6) || ((s_dwMajorVersion == 6) && (s_dwMinorVersion >= 1)));
 }
 
 bool CompVBase::isWinVistaOrLater()
 {
-	COMPV_CHECK_EXP_NOP(s_dwMajorVersion == -1 || s_dwMinorVersion == -1, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	return (s_dwMajorVersion >= 6);
+    COMPV_CHECK_EXP_NOP(s_dwMajorVersion == -1 || s_dwMinorVersion == -1, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+    return (s_dwMajorVersion >= 6);
 }
 
 bool CompVBase::isWinXPOrLater()
 {
-	COMPV_CHECK_EXP_NOP(s_dwMajorVersion == -1 || s_dwMinorVersion == -1, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	return ((s_dwMajorVersion > 5) || ((s_dwMajorVersion == 5) && (s_dwMinorVersion >= 1)));
+    COMPV_CHECK_EXP_NOP(s_dwMajorVersion == -1 || s_dwMinorVersion == -1, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+    return ((s_dwMajorVersion > 5) || ((s_dwMajorVersion == 5) && (s_dwMinorVersion >= 1)));
 }
 
 #endif /* COMPV_OS_WINDOWS */

@@ -49,7 +49,8 @@ class SkTextBlob;
 /*
  * A helper object to orchestrate draws
  */
-class SK_API GrDrawContext : public SkRefCnt {
+class SK_API GrDrawContext : public SkRefCnt
+{
 public:
     ~GrDrawContext() override;
 
@@ -245,20 +246,20 @@ public:
                   const SkMatrix& viewMatrix,
                   const SkRect& oval,
                   const GrStyle& style);
-   /**
-    * Draws a partial arc of an oval.
-    *
-    * @param paint         describes how to color pixels.
-    * @param viewMatrix    transformation matrix.
-    * @param oval          the bounding rect of the oval.
-    * @param startAngle    starting angle in degrees.
-    * @param sweepAngle    angle to sweep in degrees. Must be in (-360, 360)
-    * @param useCenter     true means that the implied path begins at the oval center, connects as a
-    *                      line to the point indicated by the start contains the arc indicated by
-    *                      the sweep angle. If false the line beginning at the center point is
-    *                      omitted.
-    * @param style         style to apply to the oval.
-    */
+    /**
+     * Draws a partial arc of an oval.
+     *
+     * @param paint         describes how to color pixels.
+     * @param viewMatrix    transformation matrix.
+     * @param oval          the bounding rect of the oval.
+     * @param startAngle    starting angle in degrees.
+     * @param sweepAngle    angle to sweep in degrees. Must be in (-360, 360)
+     * @param useCenter     true means that the implied path begins at the oval center, connects as a
+     *                      line to the point indicated by the start contains the arc indicated by
+     *                      the sweep angle. If false the line beginning at the center point is
+     *                      omitted.
+     * @param style         style to apply to the oval.
+     */
     void drawArc(const GrClip&,
                  const GrPaint& paint,
                  const SkMatrix& viewMatrix,
@@ -299,7 +300,7 @@ public:
     bool readPixels(const SkImageInfo& dstInfo, void* dstBuffer, size_t dstRowBytes, int x, int y);
 
     /**
-     * Writes a rectangle of pixels [srcInfo, srcBuffer, srcRowbytes] into the 
+     * Writes a rectangle of pixels [srcInfo, srcBuffer, srcRowbytes] into the
      * drawContext at the specified position.
      * @param srcInfo       image info for the source pixels
      * @param srcBuffer     source for the write
@@ -316,48 +317,84 @@ public:
     bool isStencilBufferMultisampled() const {
         return fRenderTarget->isStencilBufferMultisampled();
     }
-    bool isUnifiedMultisampled() const { return fRenderTarget->isUnifiedMultisampled(); }
-    bool hasMixedSamples() const { return fRenderTarget->isMixedSampled(); }
+    bool isUnifiedMultisampled() const {
+        return fRenderTarget->isUnifiedMultisampled();
+    }
+    bool hasMixedSamples() const {
+        return fRenderTarget->isMixedSampled();
+    }
 
     bool mustUseHWAA(const GrPaint& paint) const {
         return paint.isAntiAlias() && fRenderTarget->isUnifiedMultisampled();
     }
 
-    const GrCaps* caps() const { return fContext->caps(); }
-    const GrSurfaceDesc& desc() const { return fRenderTarget->desc(); }
-    int width() const { return fRenderTarget->width(); }
-    int height() const { return fRenderTarget->height(); }
-    GrPixelConfig config() const { return fRenderTarget->config(); }
-    int numColorSamples() const { return fRenderTarget->numColorSamples(); }
-    bool isGammaCorrect() const { return SkToBool(fColorSpace.get()); }
+    const GrCaps* caps() const {
+        return fContext->caps();
+    }
+    const GrSurfaceDesc& desc() const {
+        return fRenderTarget->desc();
+    }
+    int width() const {
+        return fRenderTarget->width();
+    }
+    int height() const {
+        return fRenderTarget->height();
+    }
+    GrPixelConfig config() const {
+        return fRenderTarget->config();
+    }
+    int numColorSamples() const {
+        return fRenderTarget->numColorSamples();
+    }
+    bool isGammaCorrect() const {
+        return SkToBool(fColorSpace.get());
+    }
     SkSourceGammaTreatment sourceGammaTreatment() const {
         return this->isGammaCorrect() ? SkSourceGammaTreatment::kRespect
-                                      : SkSourceGammaTreatment::kIgnore;
+               : SkSourceGammaTreatment::kIgnore;
     }
-    const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
-    SkColorSpace* getColorSpace() const { return fColorSpace.get(); }
-    GrColorSpaceXform* getColorXformFromSRGB() const { return fColorXformFromSRGB.get(); }
-    GrSurfaceOrigin origin() const { return fRenderTarget->origin(); }
+    const SkSurfaceProps& surfaceProps() const {
+        return fSurfaceProps;
+    }
+    SkColorSpace* getColorSpace() const {
+        return fColorSpace.get();
+    }
+    GrColorSpaceXform* getColorXformFromSRGB() const {
+        return fColorXformFromSRGB.get();
+    }
+    GrSurfaceOrigin origin() const {
+        return fRenderTarget->origin();
+    }
 
     bool wasAbandoned() const;
 
-    GrRenderTarget* accessRenderTarget() { return fRenderTarget.get(); }
+    GrRenderTarget* accessRenderTarget() {
+        return fRenderTarget.get();
+    }
 
-    sk_sp<GrTexture> asTexture() { return sk_ref_sp(fRenderTarget->asTexture()); }
+    sk_sp<GrTexture> asTexture() {
+        return sk_ref_sp(fRenderTarget->asTexture());
+    }
 
     // Provides access to functions that aren't part of the public API.
     GrDrawContextPriv drawContextPriv();
     const GrDrawContextPriv drawContextPriv() const;
 
-    GrAuditTrail* auditTrail() { return fAuditTrail; }
+    GrAuditTrail* auditTrail() {
+        return fAuditTrail;
+    }
 
 protected:
     GrDrawContext(GrContext*, GrDrawingManager*, sk_sp<GrRenderTarget>, sk_sp<SkColorSpace>,
                   const SkSurfaceProps* surfaceProps, GrAuditTrail*, GrSingleOwner*);
 
-    GrDrawingManager* drawingManager() { return fDrawingManager; }
+    GrDrawingManager* drawingManager() {
+        return fDrawingManager;
+    }
 
-    SkDEBUGCODE(GrSingleOwner* singleOwner() { return fSingleOwner; })
+    SkDEBUGCODE(GrSingleOwner* singleOwner() {
+        return fSingleOwner;
+    })
     SkDEBUGCODE(void validate() const;)
 
 private:

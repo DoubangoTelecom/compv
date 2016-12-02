@@ -244,8 +244,8 @@ enum COMPV_SORT_TYPE {
 
 
 enum COMPV_MODELEST_TYPE {
-	COMPV_MODELEST_TYPE_NONE,
-	COMPV_MODELEST_TYPE_RANSAC
+    COMPV_MODELEST_TYPE_NONE,
+    COMPV_MODELEST_TYPE_RANSAC
 };
 
 enum {
@@ -284,21 +284,21 @@ struct CompVPixel {
     CompVPixelData data;
 };
 
-struct CompVIndex{
-	size_t row;
-	size_t col;
+struct CompVIndex {
+    size_t row;
+    size_t col;
 };
 
 struct CompVHoughEntry {
-	float theta;
-	float rho;
-	size_t count;
+    float theta;
+    float rho;
+    size_t count;
 };
 
 struct CompVCoordPolar2f {
-	float theta;
-	float rho;
-	size_t count;
+    float theta;
+    float rho;
+    size_t count;
 };
 
 /** CompVRect
@@ -315,10 +315,10 @@ public:
     CompVRect(int32_t left_, int32_t top_, int32_t right_, int32_t bottom_) {
         init(left_, top_, right_, bottom_);
     }
-	int32_t left;
-	int32_t top;
-	int32_t right;
-	int32_t bottom;
+    int32_t left;
+    int32_t top;
+    int32_t right;
+    int32_t bottom;
 };
 
 /** CompVSize
@@ -329,8 +329,8 @@ public:
         width = width_;
         height = height_;
     }
-	int32_t width;
-	int32_t height;
+    int32_t width;
+    int32_t height;
 };
 
 /** CompVInterestPoint
@@ -360,17 +360,19 @@ public:
 */
 template <typename T>
 struct CompVPoint {
-	COMPV_INLINE void init(T x_ = 0, T y_ = 0 , T z_ = 1) {
-		x = x_, y = y_, z = z_;
-	}
+    COMPV_INLINE void init(T x_ = 0, T y_ = 0 , T z_ = 1) {
+        x = x_, y = y_, z = z_;
+    }
 public:
-	CompVPoint() { 
-		init();
-	}
-	CompVPoint(T x_, T y_, T z_ = 1) {
-		init(x_, y_, z_);
-	}
-	T x; T y; T z;
+    CompVPoint() {
+        init();
+    }
+    CompVPoint(T x_, T y_, T z_ = 1) {
+        init(x_, y_, z_);
+    }
+    T x;
+    T y;
+    T z;
 };
 typedef CompVPoint<float> PointF;
 typedef CompVPoint<double> PointD;

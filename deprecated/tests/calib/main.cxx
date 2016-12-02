@@ -26,15 +26,15 @@ int main()
     COMPV_CHECK_CODE_ASSERT(CompVEngine::setMathTrigFastEnabled(mathTrigFast));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setAsmEnabled(enableAsm));
     COMPV_CHECK_CODE_ASSERT(CompVCpu::setIntrinsicsEnabled(enableIntrinsics));
-	COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));
+    COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));
 
 #if TEST_HOMOGRAPHY
-	extern COMPV_ERROR_CODE TestHomography();
-	COMPV_CHECK_CODE_ASSERT(TestHomography());
+    extern COMPV_ERROR_CODE TestHomography();
+    COMPV_CHECK_CODE_ASSERT(TestHomography());
 #endif
 #if TEST_HOMOGRAPHY_BUILD_MATRIX
-	extern COMPV_ERROR_CODE TestBuildHomographyMatrixEq();
-	COMPV_CHECK_CODE_ASSERT(TestBuildHomographyMatrixEq());
+    extern COMPV_ERROR_CODE TestBuildHomographyMatrixEq();
+    COMPV_CHECK_CODE_ASSERT(TestBuildHomographyMatrixEq());
 #endif
 
     // deInit the engine

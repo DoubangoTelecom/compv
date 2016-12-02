@@ -20,85 +20,85 @@ COMPV_NAMESPACE_BEGIN()
 // TODO(dmi): add ASM version
 void CannyNMSGatherRow_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CHECK_SSSE3();
+    COMPV_DEBUG_INFO_CHECK_SSSE3();
 
-	__m128i xmmNMS, xmmG, xmmGX, xmmAbsGX0, xmmAbsGX1, xmmGY, xmmAbsGY0, xmmAbsGY1, xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6;
-	const __m128i xmmTLow = _mm_set1_epi16(*tLow1);
-	static const __m128i xmmZero = _mm_setzero_si128();
-	static const __m128i xmmTangentPiOver8Int = _mm_set1_epi32(kTangentPiOver8Int);
-	static const __m128i xmmTangentPiTimes3Over8Int = _mm_set1_epi32(kTangentPiTimes3Over8Int);
-	compv_uscalar_t col;
-	const int stride_ = static_cast<const int>(stride);
-	const int c0 = 1 - stride_, c1 = 1 + stride_;
-	compv_uscalar_t maxColsSSE = COMPV_MATH_CLIP3(width - 7, stride - 7, width);
+    __m128i xmmNMS, xmmG, xmmGX, xmmAbsGX0, xmmAbsGX1, xmmGY, xmmAbsGY0, xmmAbsGY1, xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6;
+    const __m128i xmmTLow = _mm_set1_epi16(*tLow1);
+    static const __m128i xmmZero = _mm_setzero_si128();
+    static const __m128i xmmTangentPiOver8Int = _mm_set1_epi32(kTangentPiOver8Int);
+    static const __m128i xmmTangentPiTimes3Over8Int = _mm_set1_epi32(kTangentPiTimes3Over8Int);
+    compv_uscalar_t col;
+    const int stride_ = static_cast<const int>(stride);
+    const int c0 = 1 - stride_, c1 = 1 + stride_;
+    compv_uscalar_t maxColsSSE = COMPV_MATH_CLIP3(width - 7, stride - 7, width);
 
-	for (col = 1; col < maxColsSSE; col += 8) {
-		xmmG = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&g[col]));
-		xmm0 = _mm_cmpgt_epi16(xmmG, xmmTLow);
-		if (_mm_movemask_epi8(xmm0)) {
-			xmmNMS = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&nms[col]));
-			xmmGX = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&gx[col]));
-			xmmGY = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&gy[col]));
+    for (col = 1; col < maxColsSSE; col += 8) {
+        xmmG = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&g[col]));
+        xmm0 = _mm_cmpgt_epi16(xmmG, xmmTLow);
+        if (_mm_movemask_epi8(xmm0)) {
+            xmmNMS = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&nms[col]));
+            xmmGX = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&gx[col]));
+            xmmGY = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&gy[col]));
 
-			xmm1 = _mm_abs_epi16(xmmGY);
-			xmm2 = _mm_abs_epi16(xmmGX);
+            xmm1 = _mm_abs_epi16(xmmGY);
+            xmm2 = _mm_abs_epi16(xmmGX);
 
-			xmmAbsGY0 = _mm_unpacklo_epi16(xmmZero, xmm1);
-			xmmAbsGX0 = _mm_unpacklo_epi16(xmm2, xmmZero);
-			xmmAbsGY1 = _mm_unpackhi_epi16(xmmZero, xmm1);
-			xmmAbsGX1 = _mm_unpackhi_epi16(xmm2, xmmZero);
+            xmmAbsGY0 = _mm_unpacklo_epi16(xmmZero, xmm1);
+            xmmAbsGX0 = _mm_unpacklo_epi16(xmm2, xmmZero);
+            xmmAbsGY1 = _mm_unpackhi_epi16(xmmZero, xmm1);
+            xmmAbsGX1 = _mm_unpackhi_epi16(xmm2, xmmZero);
 
-			// angle = "0° / 180°"
-			xmm1 = _mm_cmplt_epi32(xmmAbsGY0, _mm_mullo_epi32(xmmTangentPiOver8Int, xmmAbsGX0));
-			xmm2 = _mm_cmplt_epi32(xmmAbsGY1, _mm_mullo_epi32(xmmTangentPiOver8Int, xmmAbsGX1));
-			xmm3 = _mm_and_si128(xmm0, _mm_packs_epi32(xmm1, xmm2));
-			if (_mm_movemask_epi8(xmm3)) {
-				xmm1 = _mm_cmpgt_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(&g[col - 1])), xmmG);
-				xmm2 = _mm_cmpgt_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&g[col + 1])), xmmG);
-				xmm1 = _mm_and_si128(xmm3, _mm_or_si128(xmm1, xmm2));
-				xmmNMS = _mm_or_si128(_mm_packs_epi16(xmm1, xmm1), xmmNMS);
-			}
+            // angle = "0° / 180°"
+            xmm1 = _mm_cmplt_epi32(xmmAbsGY0, _mm_mullo_epi32(xmmTangentPiOver8Int, xmmAbsGX0));
+            xmm2 = _mm_cmplt_epi32(xmmAbsGY1, _mm_mullo_epi32(xmmTangentPiOver8Int, xmmAbsGX1));
+            xmm3 = _mm_and_si128(xmm0, _mm_packs_epi32(xmm1, xmm2));
+            if (_mm_movemask_epi8(xmm3)) {
+                xmm1 = _mm_cmpgt_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(&g[col - 1])), xmmG);
+                xmm2 = _mm_cmpgt_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&g[col + 1])), xmmG);
+                xmm1 = _mm_and_si128(xmm3, _mm_or_si128(xmm1, xmm2));
+                xmmNMS = _mm_or_si128(_mm_packs_epi16(xmm1, xmm1), xmmNMS);
+            }
 
-			// angle = "45° / 225°" or "135 / 315"
-			xmm4 = _mm_andnot_si128(xmm3, xmm0);
-			if (_mm_movemask_epi8(xmm4)) {
-				xmm1 = _mm_cmplt_epi32(xmmAbsGY0, _mm_mullo_epi32(xmmTangentPiTimes3Over8Int, xmmAbsGX0));
-				xmm2 = _mm_cmplt_epi32(xmmAbsGY1, _mm_mullo_epi32(xmmTangentPiTimes3Over8Int, xmmAbsGX1));
-				xmm4 = _mm_and_si128(xmm4, _mm_packs_epi32(xmm1, xmm2));
-				if (_mm_movemask_epi8(xmm4)) {
-					xmm1 = _mm_cmplt_epi16(_mm_xor_si128(xmmGX, xmmGY), xmmZero);
-					xmm1 = _mm_and_si128(xmm4, xmm1);
-					xmm2 = _mm_andnot_si128(xmm1, xmm4);
-					if (_mm_movemask_epi8(xmm1)) {
-						xmm5 = _mm_cmpgt_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(&g[col - c0])), xmmG);
-						xmm6 = _mm_cmpgt_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&g[col + c0])), xmmG);
-						xmm1 = _mm_and_si128(xmm1, _mm_or_si128(xmm5, xmm6));
-					}
-					if (_mm_movemask_epi8(xmm2)) {
-						xmm5 = _mm_cmpgt_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(&g[col - c1])), xmmG);
-						xmm6 = _mm_cmpgt_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&g[col + c1])), xmmG);
-						xmm2 = _mm_and_si128(xmm2, _mm_or_si128(xmm5, xmm6));
-					}
-					xmm1 = _mm_or_si128(xmm1, xmm2);
-					xmmNMS = _mm_or_si128(xmmNMS, _mm_packs_epi16(xmm1, xmm1));
-				}
-			}
+            // angle = "45° / 225°" or "135 / 315"
+            xmm4 = _mm_andnot_si128(xmm3, xmm0);
+            if (_mm_movemask_epi8(xmm4)) {
+                xmm1 = _mm_cmplt_epi32(xmmAbsGY0, _mm_mullo_epi32(xmmTangentPiTimes3Over8Int, xmmAbsGX0));
+                xmm2 = _mm_cmplt_epi32(xmmAbsGY1, _mm_mullo_epi32(xmmTangentPiTimes3Over8Int, xmmAbsGX1));
+                xmm4 = _mm_and_si128(xmm4, _mm_packs_epi32(xmm1, xmm2));
+                if (_mm_movemask_epi8(xmm4)) {
+                    xmm1 = _mm_cmplt_epi16(_mm_xor_si128(xmmGX, xmmGY), xmmZero);
+                    xmm1 = _mm_and_si128(xmm4, xmm1);
+                    xmm2 = _mm_andnot_si128(xmm1, xmm4);
+                    if (_mm_movemask_epi8(xmm1)) {
+                        xmm5 = _mm_cmpgt_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(&g[col - c0])), xmmG);
+                        xmm6 = _mm_cmpgt_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&g[col + c0])), xmmG);
+                        xmm1 = _mm_and_si128(xmm1, _mm_or_si128(xmm5, xmm6));
+                    }
+                    if (_mm_movemask_epi8(xmm2)) {
+                        xmm5 = _mm_cmpgt_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(&g[col - c1])), xmmG);
+                        xmm6 = _mm_cmpgt_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&g[col + c1])), xmmG);
+                        xmm2 = _mm_and_si128(xmm2, _mm_or_si128(xmm5, xmm6));
+                    }
+                    xmm1 = _mm_or_si128(xmm1, xmm2);
+                    xmmNMS = _mm_or_si128(xmmNMS, _mm_packs_epi16(xmm1, xmm1));
+                }
+            }
 
-			// angle = "90° / 270°"
-			xmm5 = _mm_andnot_si128(xmm3, _mm_andnot_si128(xmm4, xmm0));
-			if (_mm_movemask_epi8(xmm5)) {
-				xmm1 = _mm_cmpgt_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&g[col - stride])), xmmG);
-				xmm2 = _mm_cmpgt_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&g[col + stride])), xmmG);
-				xmm1 = _mm_and_si128(xmm5, _mm_or_si128(xmm1, xmm2));
-				xmmNMS = _mm_or_si128(_mm_packs_epi16(xmm1, xmm1), xmmNMS);
-			}
+            // angle = "90° / 270°"
+            xmm5 = _mm_andnot_si128(xmm3, _mm_andnot_si128(xmm4, xmm0));
+            if (_mm_movemask_epi8(xmm5)) {
+                xmm1 = _mm_cmpgt_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&g[col - stride])), xmmG);
+                xmm2 = _mm_cmpgt_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&g[col + stride])), xmmG);
+                xmm1 = _mm_and_si128(xmm5, _mm_or_si128(xmm1, xmm2));
+                xmmNMS = _mm_or_si128(_mm_packs_epi16(xmm1, xmm1), xmmNMS);
+            }
 
-			_mm_storel_epi64(reinterpret_cast<__m128i*>(&nms[col]), xmmNMS);
-		}
-	}
-	if (col < width) {
-		CannyNmsGatherRow_C(nms, g, gx, gy, *tLow1, col, width, stride);
-	}
+            _mm_storel_epi64(reinterpret_cast<__m128i*>(&nms[col]), xmmNMS);
+        }
+    }
+    if (col < width) {
+        CannyNmsGatherRow_C(nms, g, gx, gy, *tLow1, col, width, stride);
+    }
 }
 
 COMPV_NAMESPACE_END()

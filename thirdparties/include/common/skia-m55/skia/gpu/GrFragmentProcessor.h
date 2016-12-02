@@ -22,7 +22,8 @@ class GrProcessorKeyBuilder;
     GrCoordTransforms to receive a transformation of the local coordinates that map from local space
     to the fragment being processed.
  */
-class GrFragmentProcessor : public GrProcessor {
+class GrFragmentProcessor : public GrProcessor
+{
 public:
     /**
     *  In many instances (e.g. SkShader::asFragmentProcessor() implementations) it is desirable to
@@ -80,25 +81,37 @@ public:
         }
     }
 
-    int numCoordTransforms() const { return fCoordTransforms.count(); }
+    int numCoordTransforms() const {
+        return fCoordTransforms.count();
+    }
 
     /** Returns the coordinate transformation at index. index must be valid according to
         numTransforms(). */
-    const GrCoordTransform& coordTransform(int index) const { return *fCoordTransforms[index]; }
+    const GrCoordTransform& coordTransform(int index) const {
+        return *fCoordTransforms[index];
+    }
 
     const SkTArray<const GrCoordTransform*, true>& coordTransforms() const {
         return fCoordTransforms;
     }
 
-    int numChildProcessors() const { return fChildProcessors.count(); }
+    int numChildProcessors() const {
+        return fChildProcessors.count();
+    }
 
-    const GrFragmentProcessor& childProcessor(int index) const { return *fChildProcessors[index]; }
+    const GrFragmentProcessor& childProcessor(int index) const {
+        return *fChildProcessors[index];
+    }
 
     /** Do any of the coordtransforms for this processor require local coords? */
-    bool usesLocalCoords() const { return fUsesLocalCoords; }
+    bool usesLocalCoords() const {
+        return fUsesLocalCoords;
+    }
 
     /** Does this FP need a vector to the nearest edge? */
-    bool usesDistanceVectorField() const { return fUsesDistanceVectorField; }
+    bool usesDistanceVectorField() const {
+        return fUsesDistanceVectorField;
+    }
 
     /** Returns true if this and other processor conservatively draw identically. It can only return
         true when the two processor are of the same subclass (i.e. they return the same object from
@@ -125,9 +138,12 @@ public:
      * Pre-order traversal of a FP hierarchy, or of the forest of FPs in a GrPipeline. In the latter
      * case the tree rooted at each FP in the GrPipeline is visited successively.
      */
-    class Iter : public SkNoncopyable {
+    class Iter : public SkNoncopyable
+    {
     public:
-        explicit Iter(const GrFragmentProcessor* fp) { fFPStack.push_back(fp); }
+        explicit Iter(const GrFragmentProcessor* fp) {
+            fFPStack.push_back(fp);
+        }
         explicit Iter(const GrPipeline& pipeline);
         const GrFragmentProcessor* next();
 
@@ -141,20 +157,21 @@ public:
      * order as Iter and each of an FP's Ts are visited in order.
      */
     template <typename T, typename BASE,
-              int (BASE::*COUNT)() const,
-              const T& (BASE::*GET)(int) const>
-    class FPItemIter : public SkNoncopyable {
+             int (BASE::*COUNT)() const,
+             const T& (BASE::*GET)(int) const>
+    class FPItemIter : public SkNoncopyable
+    {
     public:
         explicit FPItemIter(const GrFragmentProcessor* fp)
-                : fCurrFP(nullptr)
-                , fCTIdx(0)
-                , fFPIter(fp) {
+            : fCurrFP(nullptr)
+            , fCTIdx(0)
+            , fFPIter(fp) {
             fCurrFP = fFPIter.next();
         }
         explicit FPItemIter(const GrPipeline& pipeline)
-                : fCurrFP(nullptr)
-                , fCTIdx(0)
-                , fFPIter(pipeline) {
+            : fCurrFP(nullptr)
+            , fCTIdx(0)
+            , fFPIter(pipeline) {
             fCurrFP = fFPIter.next();
         }
 
@@ -179,14 +196,14 @@ public:
     };
 
     using CoordTransformIter = FPItemIter<GrCoordTransform,
-                                          GrFragmentProcessor,
-                                          &GrFragmentProcessor::numCoordTransforms,
-                                          &GrFragmentProcessor::coordTransform>;
+          GrFragmentProcessor,
+          &GrFragmentProcessor::numCoordTransforms,
+          &GrFragmentProcessor::coordTransform>;
 
     using TextureAccessIter = FPItemIter<GrTextureAccess,
-                                         GrProcessor,
-                                         &GrProcessor::numTextures,
-                                         &GrProcessor::textureAccess>;
+          GrProcessor,
+          &GrProcessor::numTextures,
+          &GrProcessor::textureAccess>;
 
 protected:
     void addTextureAccess(const GrTextureAccess* textureAccess) override;

@@ -21,8 +21,8 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_DRAWING_API CompVDrawingMVP
 {
 public:
-	static COMPV_ERROR_CODE newObj2D(CompVMVPPtrPtr mvp);
-	static COMPV_ERROR_CODE newObj3D(CompVMVPPtrPtr mvp);
+    static COMPV_ERROR_CODE newObj2D(CompVMVPPtrPtr mvp);
+    static COMPV_ERROR_CODE newObj3D(CompVMVPPtrPtr mvp);
 };
 
 COMPV_NAMESPACE_END()

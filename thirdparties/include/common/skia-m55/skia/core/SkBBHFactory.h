@@ -12,7 +12,8 @@
 class SkBBoxHierarchy;
 struct SkRect;
 
-class SK_API SkBBHFactory {
+class SK_API SkBBHFactory
+{
 public:
     /**
      *  Allocate a new SkBBoxHierarchy. Return NULL on failure.
@@ -21,7 +22,8 @@ public:
     virtual ~SkBBHFactory() {}
 };
 
-class SK_API SkRTreeFactory : public SkBBHFactory {
+class SK_API SkRTreeFactory : public SkBBHFactory
+{
 public:
     SkBBoxHierarchy* operator()(const SkRect& bounds) const override;
 private:

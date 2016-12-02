@@ -211,17 +211,17 @@ COMPV_ERROR_CODE CompVCornerDeteORB::process(const CompVPtr<CompVImage*>& image,
         CompVPtr<CompVCornerDeteORB* >This = this;
         // levelStart is used to make sure we won't schedule more than "threadsCount"
         int levelStart, level, levelMax;
-		CompVAsyncTaskIds taskIds;
-		taskIds.reserve(m_pyramid->getLevels());
-		auto funcPtr = [&](const CompVPtr<CompVImage* >& image, CompVPtr<CompVPatch* >& patch, CompVPtr<CompVCornerDete* >& detector, int level) -> COMPV_ERROR_CODE {
-			return processLevelAt(*image, patch, detector, level);
-		};
+        CompVAsyncTaskIds taskIds;
+        taskIds.reserve(m_pyramid->getLevels());
+        auto funcPtr = [&](const CompVPtr<CompVImage* >& image, CompVPtr<CompVPatch* >& patch, CompVPtr<CompVCornerDete* >& detector, int level) -> COMPV_ERROR_CODE {
+            return processLevelAt(*image, patch, detector, level);
+        };
         for (levelStart = 0, levelMax = threadsCount; levelStart < m_pyramid->getLevels(); levelStart += threadsCount, levelMax += threadsCount) {
             for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
-				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, image, m_pPatches[level % nPatches], m_pDetectors[level % nDetectors], level), taskIds));
+                COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, image, m_pPatches[level % nPatches], m_pDetectors[level % nDetectors], level), taskIds));
             }
             for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
-				COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[level]));
+                COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[level]));
                 COMPV_CHECK_CODE_RETURN(interestPoints->append(m_pInterestPointsAtLevelN[level]->begin(), m_pInterestPointsAtLevelN[level]->end()));
             }
         }

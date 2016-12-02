@@ -16,7 +16,8 @@
     and provides a function-pointer. This can be used to auto-register a set of
     services, e.g. a set of image codecs.
  */
-template <typename T> class SkTRegistry : SkNoncopyable {
+template <typename T> class SkTRegistry : SkNoncopyable
+{
 public:
     typedef T Factory;
 
@@ -37,10 +38,16 @@ public:
         gHead  = this;
     }
 
-    static const SkTRegistry* Head() { return gHead; }
+    static const SkTRegistry* Head() {
+        return gHead;
+    }
 
-    const SkTRegistry* next() const { return fChain; }
-    const Factory& factory() const { return fFact; }
+    const SkTRegistry* next() const {
+        return fChain;
+    }
+    const Factory& factory() const {
+        return fFact;
+    }
 
 private:
     Factory      fFact;

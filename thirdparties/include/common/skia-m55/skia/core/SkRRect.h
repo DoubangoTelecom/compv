@@ -44,9 +44,12 @@ class SkMatrix;
         Negative radii are not allowed (they are clamped to zero).
         If the corner curves overlap they will be proportionally reduced to fit.
 */
-class SK_API SkRRect {
+class SK_API SkRRect
+{
 public:
-    SkRRect() { /* unititialized */ }
+    SkRRect() {
+        /* unititialized */
+    }
     SkRRect(const SkRRect&) = default;
     SkRRect& operator=(const SkRRect&) = default;
 
@@ -93,12 +96,22 @@ public:
         return static_cast<Type>(fType);
     }
 
-    Type type() const { return this->getType(); }
+    Type type() const {
+        return this->getType();
+    }
 
-    inline bool isEmpty() const { return kEmpty_Type == this->getType(); }
-    inline bool isRect() const { return kRect_Type == this->getType(); }
-    inline bool isOval() const { return kOval_Type == this->getType(); }
-    inline bool isSimple() const { return kSimple_Type == this->getType(); }
+    inline bool isEmpty() const {
+        return kEmpty_Type == this->getType();
+    }
+    inline bool isRect() const {
+        return kRect_Type == this->getType();
+    }
+    inline bool isOval() const {
+        return kOval_Type == this->getType();
+    }
+    inline bool isSimple() const {
+        return kSimple_Type == this->getType();
+    }
     // TODO: should isSimpleCircular & isCircle take a tolerance? This could help
     // instances where the mapping to device space is noisy.
     inline bool isSimpleCircular() const {
@@ -107,13 +120,21 @@ public:
     inline bool isCircle() const {
         return this->isOval() && SkScalarNearlyEqual(fRadii[0].fX, fRadii[0].fY);
     }
-    inline bool isNinePatch() const { return kNinePatch_Type == this->getType(); }
-    inline bool isComplex() const { return kComplex_Type == this->getType(); }
+    inline bool isNinePatch() const {
+        return kNinePatch_Type == this->getType();
+    }
+    inline bool isComplex() const {
+        return kComplex_Type == this->getType();
+    }
 
     bool allCornersCircular() const;
 
-    SkScalar width() const { return fRect.width(); }
-    SkScalar height() const { return fRect.height(); }
+    SkScalar width() const {
+        return fRect.width();
+    }
+    SkScalar height() const {
+        return fRect.height();
+    }
 
     /**
      * Set this RR to the empty rectangle (0,0,0,0) with 0 x & y radii.
@@ -216,9 +237,15 @@ public:
         kLowerLeft_Corner
     };
 
-    const SkRect& rect() const { return fRect; }
-    const SkVector& radii(Corner corner) const { return fRadii[corner]; }
-    const SkRect& getBounds() const { return fRect; }
+    const SkRect& rect() const {
+        return fRect;
+    }
+    const SkVector& radii(Corner corner) const {
+        return fRadii[corner];
+    }
+    const SkRect& getBounds() const {
+        return fRect;
+    }
 
     /**
      *  When a rrect is simple, all of its radii are equal. This returns one
@@ -325,14 +352,18 @@ public:
     bool transform(const SkMatrix& matrix, SkRRect* dst) const;
 
     void dump(bool asHex) const;
-    void dump() const { this->dump(false); }
-    void dumpHex() const { this->dump(true); }
+    void dump() const {
+        this->dump(false);
+    }
+    void dumpHex() const {
+        this->dump(true);
+    }
 
 private:
     SkRRect(const SkRect& rect, const SkVector radii[4], int32_t type)
         : fRect(rect)
-        , fRadii{radii[0], radii[1], radii[2], radii[3]}
-        , fType(type) {}
+        , fRadii {radii[0], radii[1], radii[2], radii[3]}
+    , fType(type) {}
 
     SkRect fRect;
     // Radii order is UL, UR, LR, LL. Use Corner enum to index into fRadii[]

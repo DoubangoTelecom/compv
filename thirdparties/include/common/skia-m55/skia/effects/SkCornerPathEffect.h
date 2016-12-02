@@ -15,7 +15,8 @@
     SkCornerPathEffect is a subclass of SkPathEffect that can turn sharp corners
     into various treatments (e.g. rounded corners)
 */
-class SK_API SkCornerPathEffect : public SkPathEffect {
+class SK_API SkCornerPathEffect : public SkPathEffect
+{
 public:
     /** radius must be > 0 to have an effect. It specifies the distance from each corner
         that should be "rounded".
@@ -37,7 +38,9 @@ public:
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkCornerPathEffect)
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    bool exposedInAndroidJavaAPI() const override { return true; }
+    bool exposedInAndroidJavaAPI() const override {
+        return true;
+    }
 #endif
 
 protected:

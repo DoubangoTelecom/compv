@@ -307,17 +307,17 @@ COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVPtr<CompVImage*>& image,
     if (threadsCount > 1) {
         // levelStart is used to make sure we won't schedule more than "threadsCount"
         int levelStart, level, levelMax;
-		CompVAsyncTaskIds taskIds;
-		taskIds.reserve(threadsCount);
-		auto funcPtr = [&](int level) -> COMPV_ERROR_CODE {
-			return convlt(_pyramid, level);
-		};
+        CompVAsyncTaskIds taskIds;
+        taskIds.reserve(threadsCount);
+        auto funcPtr = [&](int level) -> COMPV_ERROR_CODE {
+            return convlt(_pyramid, level);
+        };
         for (levelStart = bLevelZeroBlurred ? 1 : 0, levelMax = threadsCount; levelStart < levelsCount; levelStart += threadsCount, levelMax += threadsCount) {
             for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
-				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, level), taskIds));
+                COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, level), taskIds));
             }
         }
-		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+        COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
     }
     else {
         for (int level = bLevelZeroBlurred ? 1 : 0; level < levelsCount; ++level) {
@@ -358,7 +358,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVPtr<CompVImage*>& image,
 
     // Describe the points
     int32_t threadsCountDescribe = 1;
-	CompVAsyncTaskIds describeTaskIds;
+    CompVAsyncTaskIds describeTaskIds;
     if (threadsCount > 1) {
         threadsCountDescribe = (int32_t)(interestPoints->size() / COMPV_FEATURE_DESC_ORB_DESCRIBE_MIN_SAMPLES_PER_THREAD);
         threadsCountDescribe = COMPV_MATH_MIN(threadsCountDescribe, threadsCount);
@@ -368,12 +368,12 @@ COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVPtr<CompVImage*>& image,
         int32_t total = (int32_t)interestPoints->size();
         int32_t count = total / threadsCountDescribe;
         uint8_t* desc = _descriptionsPtr;
-		describeTaskIds.reserve(threadsCountDescribe);
-		auto funcPtr = [&](const CompVInterestPoint* begin, const CompVInterestPoint* end, uint8_t* desc) -> COMPV_ERROR_CODE {
-			return describe(_pyramid, begin, end, desc);
-		};
+        describeTaskIds.reserve(threadsCountDescribe);
+        auto funcPtr = [&](const CompVInterestPoint* begin, const CompVInterestPoint* end, uint8_t* desc) -> COMPV_ERROR_CODE {
+            return describe(_pyramid, begin, end, desc);
+        };
         for (int32_t i = 0; count > 0 && i < threadsCountDescribe; ++i) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, begin, begin + count, desc), describeTaskIds));
+            COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, begin, begin + count, desc), describeTaskIds));
             begin += count;
             desc += (count * nFeaturesBytes);
             total -= count;
@@ -395,8 +395,8 @@ COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVPtr<CompVImage*>& image,
     }
 
     // Wait for the threads to finish the work
-	if (!describeTaskIds.empty()) {
-		COMPV_CHECK_CODE_RETURN(threadDisp->wait(describeTaskIds));
+    if (!describeTaskIds.empty()) {
+        COMPV_CHECK_CODE_RETURN(threadDisp->wait(describeTaskIds));
     }
 
     *descriptions = _descriptions;

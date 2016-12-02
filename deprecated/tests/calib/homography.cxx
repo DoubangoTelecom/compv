@@ -30,134 +30,134 @@ using namespace compv;
 
 COMPV_ERROR_CODE TestBuildHomographyMatrixEq()
 {
-	uint64_t timeStart, timeEnd;
-	COMPV_ALIGN_DEFAULT() TYP srcX[NUM_POINTS];
-	COMPV_ALIGN_DEFAULT() TYP srcY[NUM_POINTS];
-	COMPV_ALIGN_DEFAULT() TYP srcZ[NUM_POINTS];
-	COMPV_ALIGN_DEFAULT() TYP dstX[NUM_POINTS];
-	COMPV_ALIGN_DEFAULT() TYP dstY[NUM_POINTS];
-	CompVPtrArray(TYP) M;
-	
-	for (signed i = 0; i < NUM_POINTS; ++i) {
-		srcX[i] = (TYP)((i & 1) ? i : -i) + 0.5;
-		srcY[i] = ((TYP)(srcX[i] * 0.2)) + i + 0.7;
-		srcZ[i] = ((TYP)(srcX[i] * 0.2)) + i + 8.7;
-		dstX[i] = ((TYP)(srcX[i] * 8.2)) + i + 0.7;
-		dstY[i] = (TYP)((i & 1) ? i : -i) + 8.5;
-	}
+    uint64_t timeStart, timeEnd;
+    COMPV_ALIGN_DEFAULT() TYP srcX[NUM_POINTS];
+    COMPV_ALIGN_DEFAULT() TYP srcY[NUM_POINTS];
+    COMPV_ALIGN_DEFAULT() TYP srcZ[NUM_POINTS];
+    COMPV_ALIGN_DEFAULT() TYP dstX[NUM_POINTS];
+    COMPV_ALIGN_DEFAULT() TYP dstY[NUM_POINTS];
+    CompVPtrArray(TYP) M;
 
-	timeStart = CompVTime::getNowMills();
-	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVMatrix<TYP>::buildHomographyEqMatrix(&srcX[0], &srcY[0], &dstX[0], &dstY[0], M, NUM_POINTS));
-	}
-	timeEnd = CompVTime::getNowMills();
+    for (signed i = 0; i < NUM_POINTS; ++i) {
+        srcX[i] = (TYP)((i & 1) ? i : -i) + 0.5;
+        srcY[i] = ((TYP)(srcX[i] * 0.2)) + i + 0.7;
+        srcZ[i] = ((TYP)(srcX[i] * 0.2)) + i + 8.7;
+        dstX[i] = ((TYP)(srcX[i] * 8.2)) + i + 0.7;
+        dstY[i] = (TYP)((i & 1) ? i : -i) + 8.5;
+    }
 
-	COMPV_DEBUG_INFO("Elapsed time (TestBuildHomographyMatrixEq) = [[[ %llu millis ]]]", (timeEnd - timeStart));
+    timeStart = CompVTime::getNowMills();
+    for (size_t i = 0; i < LOOP_COUNT; ++i) {
+        COMPV_CHECK_CODE_RETURN(CompVMatrix<TYP>::buildHomographyEqMatrix(&srcX[0], &srcY[0], &dstX[0], &dstY[0], M, NUM_POINTS));
+    }
+    timeEnd = CompVTime::getNowMills();
 
-	const std::string md5 = arrayMD5<TYP>(M);
-	COMPV_CHECK_EXP_RETURN(md5 != "540181662bad9a3d001b8b8969a7cb5f", COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+    COMPV_DEBUG_INFO("Elapsed time (TestBuildHomographyMatrixEq) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-	return COMPV_ERROR_CODE_S_OK;
+    const std::string md5 = arrayMD5<TYP>(M);
+    COMPV_CHECK_EXP_RETURN(md5 != "540181662bad9a3d001b8b8969a7cb5f", COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE TestHomography()
 {
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	uint64_t timeStart, timeEnd;
-	bool colinear = false;
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    uint64_t timeStart, timeEnd;
+    bool colinear = false;
 
-	// expected H
-	const TYP H_expected[3][3] = {
-		{ COMPV_MATH_COS(ANGLE)*SCALEX, -COMPV_MATH_SIN(ANGLE), TRANSX },
-		{ COMPV_MATH_SIN(ANGLE), COMPV_MATH_COS(ANGLE)*SCALEY, TRANSY },
-		{ 0, 0, 1 },
-	};
-	CompVPtrArray(TYP) input;
-	CompVPtrArray(TYP) output;
-	CompVPtrArray(TYP) h;
-	TYP *x, *y, *z;
-	COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::newObjAligned(&input, 3, NUM_POINTS));
-	COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::newObjAligned(&output, 3, NUM_POINTS));
-	COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::copy(h, &H_expected[0][0], 3, 3));
+    // expected H
+    const TYP H_expected[3][3] = {
+        { COMPV_MATH_COS(ANGLE)*SCALEX, -COMPV_MATH_SIN(ANGLE), TRANSX },
+        { COMPV_MATH_SIN(ANGLE), COMPV_MATH_COS(ANGLE)*SCALEY, TRANSY },
+        { 0, 0, 1 },
+    };
+    CompVPtrArray(TYP) input;
+    CompVPtrArray(TYP) output;
+    CompVPtrArray(TYP) h;
+    TYP *x, *y, *z;
+    COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::newObjAligned(&input, 3, NUM_POINTS));
+    COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::newObjAligned(&output, 3, NUM_POINTS));
+    COMPV_CHECK_CODE_RETURN(CompVArray<TYP>::copy(h, &H_expected[0][0], 3, 3));
 
-	// Initialize input
-	// These points must not be colinear
-	x = const_cast<TYP*>(input->ptr(0));
-	y = const_cast<TYP*>(input->ptr(1));
-	z = const_cast<TYP*>(input->ptr(2));
-	for (signed i = 0; i < NUM_POINTS; ++i) {
-		x[i] = (TYP)((i & 1) ? i : -i) + 0.5;
-		y[i] = ((TYP)(x[i] * 0.2)) + i + 0.7;
-		z[i] = 1; // required
-	}
+    // Initialize input
+    // These points must not be colinear
+    x = const_cast<TYP*>(input->ptr(0));
+    y = const_cast<TYP*>(input->ptr(1));
+    z = const_cast<TYP*>(input->ptr(2));
+    for (signed i = 0; i < NUM_POINTS; ++i) {
+        x[i] = (TYP)((i & 1) ? i : -i) + 0.5;
+        y[i] = ((TYP)(x[i] * 0.2)) + i + 0.7;
+        z[i] = 1; // required
+    }
 
-	// Check if input points are colinear
-	COMPV_CHECK_CODE_RETURN(CompVMatrix<TYP>::isColinear2D(input, colinear));
-	COMPV_ASSERT(!colinear);
+    // Check if input points are colinear
+    COMPV_CHECK_CODE_RETURN(CompVMatrix<TYP>::isColinear2D(input, colinear));
+    COMPV_ASSERT(!colinear);
 
-	// Compute output = H:input
-	COMPV_CHECK_CODE_RETURN(CompVMatrix<TYP>::mulAB(h, input, output)); // output = mul(H, input)
-	// Add error
-	x = const_cast<TYP*>(output->ptr(0));
-	y = const_cast<TYP*>(output->ptr(1));
-	z = const_cast<TYP*>(output->ptr(2));
-	for (size_t i = 0; i < NUM_POINTS; ++i) {
-		x[i] += x[i] * ((i * ERRORPX) / NUM_POINTS);
-		y[i] += y[i] * ((i * ERRORPY) / NUM_POINTS);
-		// z[i] = 1; // required, but already set after mul(H, input)
-	}
-	
-	h = NULL;
-	timeStart = CompVTime::getNowMills();
-	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVHomography<TYP>::find(input, output, h, MODE_EST)); // NONE to make sure we'll always have the same result (ransac is nondeterministic)
-	}
-	timeEnd = CompVTime::getNowMills();
+    // Compute output = H:input
+    COMPV_CHECK_CODE_RETURN(CompVMatrix<TYP>::mulAB(h, input, output)); // output = mul(H, input)
+    // Add error
+    x = const_cast<TYP*>(output->ptr(0));
+    y = const_cast<TYP*>(output->ptr(1));
+    z = const_cast<TYP*>(output->ptr(2));
+    for (size_t i = 0; i < NUM_POINTS; ++i) {
+        x[i] += x[i] * ((i * ERRORPX) / NUM_POINTS);
+        y[i] += y[i] * ((i * ERRORPY) / NUM_POINTS);
+        // z[i] = 1; // required, but already set after mul(H, input)
+    }
 
-	// Compute MSE
-	TYP mse = (TYP)COMPV_MATH_POW(H_expected[0][0] - *h->ptr(0, 0), 2);
-	mse += (TYP)COMPV_MATH_POW(H_expected[0][1] - *h->ptr(0, 1), 2);
-	mse += (TYP)COMPV_MATH_POW(H_expected[0][2] - *h->ptr(0, 2), 2);
-	mse += (TYP)COMPV_MATH_POW(H_expected[1][0] - *h->ptr(1, 0), 2);
-	mse += (TYP)COMPV_MATH_POW(H_expected[1][1] - *h->ptr(1, 1), 2);
-	mse += (TYP)COMPV_MATH_POW(H_expected[1][2] - *h->ptr(1, 2), 2);
-	mse += (TYP)COMPV_MATH_POW(H_expected[2][0] - *h->ptr(2, 0), 2);
-	mse += (TYP)COMPV_MATH_POW(H_expected[2][1] - *h->ptr(2, 1), 2);
-	mse += (TYP)COMPV_MATH_POW(H_expected[2][2] - *h->ptr(2, 2), 2);
-	COMPV_DEBUG_INFO("MSE="TYP_SZ", expected="TYP_SZ, mse, MSE);
+    h = NULL;
+    timeStart = CompVTime::getNowMills();
+    for (size_t i = 0; i < LOOP_COUNT; ++i) {
+        COMPV_CHECK_CODE_RETURN(CompVHomography<TYP>::find(input, output, h, MODE_EST)); // NONE to make sure we'll always have the same result (ransac is nondeterministic)
+    }
+    timeEnd = CompVTime::getNowMills();
 
-	COMPV_DEBUG_INFO("H_expected:\n"
-		"{\t"TYP_SZ"\t"TYP_SZ"\t"TYP_SZ"\t}\n"
-		"{\t"TYP_SZ"\t"TYP_SZ"\t"TYP_SZ"\t}\n"
-		"{\t"TYP_SZ"\t"TYP_SZ"\t"TYP_SZ"\t}",
-		H_expected[0][0], H_expected[0][1], H_expected[0][2],
-		H_expected[1][0], H_expected[1][1], H_expected[1][2],
-		H_expected[2][0], H_expected[2][1], H_expected[2][2]);
-	COMPV_DEBUG_INFO("H_computed:\n"
-		"{\t"TYP_SZ"\t"TYP_SZ"\t"TYP_SZ"\t}\n"
-		"{\t"TYP_SZ"\t"TYP_SZ"\t"TYP_SZ"\t}\n"
-		"{\t"TYP_SZ"\t"TYP_SZ"\t"TYP_SZ"\t}",
-		*h->ptr(0, 0), *h->ptr(0, 1), *h->ptr(0, 2),
-		*h->ptr(1, 0), *h->ptr(1, 1), *h->ptr(1, 2),
-		*h->ptr(2, 0), *h->ptr(2, 1), *h->ptr(2, 2));
+    // Compute MSE
+    TYP mse = (TYP)COMPV_MATH_POW(H_expected[0][0] - *h->ptr(0, 0), 2);
+    mse += (TYP)COMPV_MATH_POW(H_expected[0][1] - *h->ptr(0, 1), 2);
+    mse += (TYP)COMPV_MATH_POW(H_expected[0][2] - *h->ptr(0, 2), 2);
+    mse += (TYP)COMPV_MATH_POW(H_expected[1][0] - *h->ptr(1, 0), 2);
+    mse += (TYP)COMPV_MATH_POW(H_expected[1][1] - *h->ptr(1, 1), 2);
+    mse += (TYP)COMPV_MATH_POW(H_expected[1][2] - *h->ptr(1, 2), 2);
+    mse += (TYP)COMPV_MATH_POW(H_expected[2][0] - *h->ptr(2, 0), 2);
+    mse += (TYP)COMPV_MATH_POW(H_expected[2][1] - *h->ptr(2, 1), 2);
+    mse += (TYP)COMPV_MATH_POW(H_expected[2][2] - *h->ptr(2, 2), 2);
+    COMPV_DEBUG_INFO("MSE="TYP_SZ", expected="TYP_SZ, mse, MSE);
 
-	COMPV_DEBUG_INFO("Elapsed time (TestHomography) = [[[ %llu millis ]]]", (timeEnd - timeStart));
-	
-	// Check MSE
-	COMPV_CHECK_EXP_RETURN(mse > (TYP)MSE, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-	
-	// Check MD5: This not accurate as it could change depending on the SIMD type (NEON, FMA, AVX, SSE, MMX...) and CPU (X64, X86, ARM...)
-	// We're using it now for regression test for asm porting
-	const std::string md5 = arrayMD5<TYP>(h);
-	if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
-		COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED_AVX, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-	}
-	else if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-		COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED_SSE2, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-	}
-	else {
-		COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-	}
+    COMPV_DEBUG_INFO("H_expected:\n"
+                     "{\t"TYP_SZ"\t"TYP_SZ"\t"TYP_SZ"\t}\n"
+                     "{\t"TYP_SZ"\t"TYP_SZ"\t"TYP_SZ"\t}\n"
+                     "{\t"TYP_SZ"\t"TYP_SZ"\t"TYP_SZ"\t}",
+                     H_expected[0][0], H_expected[0][1], H_expected[0][2],
+                     H_expected[1][0], H_expected[1][1], H_expected[1][2],
+                     H_expected[2][0], H_expected[2][1], H_expected[2][2]);
+    COMPV_DEBUG_INFO("H_computed:\n"
+                     "{\t"TYP_SZ"\t"TYP_SZ"\t"TYP_SZ"\t}\n"
+                     "{\t"TYP_SZ"\t"TYP_SZ"\t"TYP_SZ"\t}\n"
+                     "{\t"TYP_SZ"\t"TYP_SZ"\t"TYP_SZ"\t}",
+                     *h->ptr(0, 0), *h->ptr(0, 1), *h->ptr(0, 2),
+                     *h->ptr(1, 0), *h->ptr(1, 1), *h->ptr(1, 2),
+                     *h->ptr(2, 0), *h->ptr(2, 1), *h->ptr(2, 2));
 
-	return err_;
+    COMPV_DEBUG_INFO("Elapsed time (TestHomography) = [[[ %llu millis ]]]", (timeEnd - timeStart));
+
+    // Check MSE
+    COMPV_CHECK_EXP_RETURN(mse > (TYP)MSE, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+
+    // Check MD5: This not accurate as it could change depending on the SIMD type (NEON, FMA, AVX, SSE, MMX...) and CPU (X64, X86, ARM...)
+    // We're using it now for regression test for asm porting
+    const std::string md5 = arrayMD5<TYP>(h);
+    if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
+        COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED_AVX, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+    }
+    else if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+        COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED_SSE2, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+    }
+    else {
+        COMPV_CHECK_EXP_RETURN(md5 != MD5_EXPECTED, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+    }
+
+    return err_;
 }

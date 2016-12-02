@@ -10,7 +10,8 @@
 
 #include "SkShader.h"
 
-class SK_API SkGaussianEdgeShader {
+class SK_API SkGaussianEdgeShader
+{
 public:
     /** Returns a shader that applies a Gaussian blur depending on distance to the edge
     * Currently this is only useable with Circle and RRect shapes on the GPU backend.

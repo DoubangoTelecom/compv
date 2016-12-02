@@ -9,16 +9,16 @@ using namespace compv;
 
 COMPV_ERROR_CODE TestRand()
 {
-	uint64_t timeStart, timeEnd;
-	uint32_t randoms[ARRAY_COUNT] = {0} ;
+    uint64_t timeStart, timeEnd;
+    uint32_t randoms[ARRAY_COUNT] = {0} ;
 
-	timeStart = CompVTime::getNowMills();
-	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		CompVMathUtils::rand(randoms, ARRAY_COUNT);
-	}
-	timeEnd = CompVTime::getNowMills();
+    timeStart = CompVTime::getNowMills();
+    for (size_t i = 0; i < LOOP_COUNT; ++i) {
+        CompVMathUtils::rand(randoms, ARRAY_COUNT);
+    }
+    timeEnd = CompVTime::getNowMills();
 
-	COMPV_DEBUG_INFO("Elapsed time (TestRand) = [[[ %llu millis ]]]", (timeEnd - timeStart));
+    COMPV_DEBUG_INFO("Elapsed time (TestRand) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }

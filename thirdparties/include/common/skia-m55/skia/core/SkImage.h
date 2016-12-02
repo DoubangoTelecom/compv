@@ -42,7 +42,8 @@ class GrTexture;
  *  directly or via SkSurface, and either of the requested dimensions are zero, then NULL will be
  *  returned.
  */
-class SK_API SkImage : public SkRefCnt {
+class SK_API SkImage : public SkRefCnt
+{
 public:
     typedef SkImageInfo Info;
     typedef void* ReleaseContext;
@@ -66,7 +67,7 @@ public:
      *  its pixel memory is shareable, it may be shared instead of copied.
      */
     static sk_sp<SkImage> MakeFromBitmap(const SkBitmap&);
-    
+
     /**
      *  Construct a new SkImage based on the given ImageGenerator. Returns NULL on error.
      *  This function will always take ownership of the passed generator.
@@ -130,8 +131,8 @@ public:
      *  Will return NULL if the specified descriptor is unsupported.
      */
     static sk_sp<SkImage> MakeFromAdoptedTexture(GrContext*, const GrBackendTextureDesc&,
-                                                 SkAlphaType = kPremul_SkAlphaType,
-                                                 sk_sp<SkColorSpace> = nullptr);
+            SkAlphaType = kPremul_SkAlphaType,
+            sk_sp<SkColorSpace> = nullptr);
 
     /**
      *  Create a new image by copying the pixels from the specified y, u, v textures. The data
@@ -139,10 +140,10 @@ public:
      *  deleted after the function returns. The image will have the dimensions of the y texture.
      */
     static sk_sp<SkImage> MakeFromYUVTexturesCopy(GrContext*, SkYUVColorSpace,
-                                                  const GrBackendObject yuvTextureHandles[3],
-                                                  const SkISize yuvSizes[3],
-                                                  GrSurfaceOrigin,
-                                                  sk_sp<SkColorSpace> = nullptr);
+            const GrBackendObject yuvTextureHandles[3],
+            const SkISize yuvSizes[3],
+            GrSurfaceOrigin,
+            sk_sp<SkColorSpace> = nullptr);
 
     /**
      *  Create a new image by copying the pixels from the specified y and uv textures. The data
@@ -150,9 +151,9 @@ public:
      *  deleted after the function returns. The image will have the dimensions of the y texture.
      */
     static sk_sp<SkImage> MakeFromNV12TexturesCopy(GrContext*, SkYUVColorSpace,
-                                                   const GrBackendObject nv12TextureHandles[2],
-                                                   const SkISize nv12Sizes[2], GrSurfaceOrigin,
-                                                   sk_sp<SkColorSpace> = nullptr);
+            const GrBackendObject nv12TextureHandles[2],
+            const SkISize nv12Sizes[2], GrSurfaceOrigin,
+            sk_sp<SkColorSpace> = nullptr);
 
     static sk_sp<SkImage> MakeFromPicture(sk_sp<SkPicture>, const SkISize& dimensions,
                                           const SkMatrix*, const SkPaint*);
@@ -161,13 +162,25 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    int width() const { return fWidth; }
-    int height() const { return fHeight; }
-    SkISize dimensions() const { return SkISize::Make(fWidth, fHeight); }
-    SkIRect bounds() const { return SkIRect::MakeWH(fWidth, fHeight); }
-    uint32_t uniqueID() const { return fUniqueID; }
+    int width() const {
+        return fWidth;
+    }
+    int height() const {
+        return fHeight;
+    }
+    SkISize dimensions() const {
+        return SkISize::Make(fWidth, fHeight);
+    }
+    SkIRect bounds() const {
+        return SkIRect::MakeWH(fWidth, fHeight);
+    }
+    uint32_t uniqueID() const {
+        return fUniqueID;
+    }
     SkAlphaType alphaType() const;
-    bool isOpaque() const { return SkAlphaTypeIsOpaque(this->alphaType()); }
+    bool isOpaque() const {
+        return SkAlphaTypeIsOpaque(this->alphaType());
+    }
 
     /**
      * Extracts YUV planes from the SkImage and stores them in client-provided memory. The sizes
@@ -242,7 +255,7 @@ public:
      *  of decoding or a read-back from the GPU. Passing kAllow signals that the system's default
      *  behavior is fine. Passing kDisallow signals that caching should be avoided.
      */
-     enum CachingHint {
+    enum CachingHint {
         kAllow_CachingHint,
         kDisallow_CachingHint,
     };
@@ -398,7 +411,7 @@ public:
                                        int paramCnt,
                                        void* buffer,
                                        SkSourceGammaTreatment treatment =
-                                       SkSourceGammaTreatment::kIgnore) const;
+                                           SkSourceGammaTreatment::kIgnore) const;
 
     /**
      * Returns a texture-backed image from data produced in SkImage::getDeferredTextureImageData.
@@ -461,8 +474,12 @@ public:
     static SkImage* NewTextureFromPixmap(GrContext*, const SkPixmap&, SkBudgeted budgeted);
     static SkImage* NewFromDeferredTextureImageData(GrContext*, const void*, SkBudgeted);
 
-    SkImage* newSubset(const SkIRect& subset) const { return this->makeSubset(subset).release(); }
-    SkImage* newTextureImage(GrContext* ctx) const { return this->makeTextureImage(ctx).release(); }
+    SkImage* newSubset(const SkIRect& subset) const {
+        return this->makeSubset(subset).release();
+    }
+    SkImage* newTextureImage(GrContext* ctx) const {
+        return this->makeTextureImage(ctx).release();
+    }
 #endif
 
 protected:
@@ -470,8 +487,8 @@ protected:
 
 private:
     static sk_sp<SkImage> MakeTextureFromMipMap(GrContext*, const SkImageInfo&,
-                                                const GrMipLevel* texels, int mipLevelCount,
-                                                SkBudgeted, SkSourceGammaTreatment);
+            const GrMipLevel* texels, int mipLevelCount,
+            SkBudgeted, SkSourceGammaTreatment);
 
     const int       fWidth;
     const int       fHeight;

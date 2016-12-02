@@ -10,7 +10,8 @@
 
 #include "SkImageFilter.h"
 
-class SK_API SkDisplacementMapEffect : public SkImageFilter {
+class SK_API SkDisplacementMapEffect : public SkImageFilter
+{
 public:
     enum ChannelSelectorType {
         kUnknown_ChannelSelectorType,
@@ -45,7 +46,7 @@ public:
                                  SkScalar scale, SkImageFilter* displacement,
                                  SkImageFilter* color = nullptr,
                                  const CropRect* cropRect = nullptr) {
-        return Make(xChannelSelector, yChannelSelector, scale, 
+        return Make(xChannelSelector, yChannelSelector, scale,
                     sk_ref_sp<SkImageFilter>(displacement),
                     sk_ref_sp<SkImageFilter>(color),
                     cropRect).release();
@@ -67,8 +68,12 @@ private:
     ChannelSelectorType fYChannelSelector;
     SkScalar fScale;
     typedef SkImageFilter INHERITED;
-    const SkImageFilter* getDisplacementInput() const { return getInput(0); }
-    const SkImageFilter* getColorInput() const { return getInput(1); }
+    const SkImageFilter* getDisplacementInput() const {
+        return getInput(0);
+    }
+    const SkImageFilter* getColorInput() const {
+        return getInput(1);
+    }
 };
 
 #endif

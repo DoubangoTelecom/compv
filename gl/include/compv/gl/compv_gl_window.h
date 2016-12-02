@@ -33,38 +33,38 @@ COMPV_OBJECT_DECLARE_PTRS(GLWindow)
 
 class COMPV_GL_API CompVGLWindow : public CompVWindowPriv, public CompVLock
 {
-	friend class CompVGLWindowListener;
+    friend class CompVGLWindowListener;
 protected:
-	CompVGLWindow(size_t width, size_t height, const char* title);
+    CompVGLWindow(size_t width, size_t height, const char* title);
 public:
-	virtual ~CompVGLWindow();
+    virtual ~CompVGLWindow();
 
-	bool isInitialized() const;
+    bool isInitialized() const;
 
-	// Overrides(CompVWindow)
-	COMPV_OVERRIDE_DECL1("CompVWindow", bool, isGLEnabled)() const override;
-	COMPV_OVERRIDE_DECL0("CompVWindow", close)() override;
-	COMPV_OVERRIDE_DECL0("CompVWindow", beginDraw)() override;
-	COMPV_OVERRIDE_DECL0("CompVWindow", endDraw)() override;
-	COMPV_OVERRIDE_DECL0("CompVWindow", addSingleLayerSurface)(CompVSingleSurfaceLayerPtrPtr layer) override;
-	COMPV_OVERRIDE_DECL0("CompVWindow", removeSingleLayerSurface)(const CompVSingleSurfaceLayerPtr& layer) override;
-	COMPV_OVERRIDE_DECL0("CompVWindow", addMatchingLayerSurface)(CompVMatchingSurfaceLayerPtrPtr layer) override;
-	COMPV_OVERRIDE_DECL0("CompVWindow", removeMatchingLayerSurface)(const CompVMatchingSurfaceLayerPtr& layer) override;
-	COMPV_OVERRIDE_DECL0("CompVWindow", addMultiLayerSurface)(CompVMultiSurfaceLayerPtrPtr layer) override;
-	COMPV_OVERRIDE_DECL0("CompVWindow", removeMultiLayerSurface)(const CompVMultiSurfaceLayerPtr& layer) override;
+    // Overrides(CompVWindow)
+    COMPV_OVERRIDE_DECL1("CompVWindow", bool, isGLEnabled)() const override;
+    COMPV_OVERRIDE_DECL0("CompVWindow", close)() override;
+    COMPV_OVERRIDE_DECL0("CompVWindow", beginDraw)() override;
+    COMPV_OVERRIDE_DECL0("CompVWindow", endDraw)() override;
+    COMPV_OVERRIDE_DECL0("CompVWindow", addSingleLayerSurface)(CompVSingleSurfaceLayerPtrPtr layer) override;
+    COMPV_OVERRIDE_DECL0("CompVWindow", removeSingleLayerSurface)(const CompVSingleSurfaceLayerPtr& layer) override;
+    COMPV_OVERRIDE_DECL0("CompVWindow", addMatchingLayerSurface)(CompVMatchingSurfaceLayerPtrPtr layer) override;
+    COMPV_OVERRIDE_DECL0("CompVWindow", removeMatchingLayerSurface)(const CompVMatchingSurfaceLayerPtr& layer) override;
+    COMPV_OVERRIDE_DECL0("CompVWindow", addMultiLayerSurface)(CompVMultiSurfaceLayerPtrPtr layer) override;
+    COMPV_OVERRIDE_DECL0("CompVWindow", removeMultiLayerSurface)(const CompVMultiSurfaceLayerPtr& layer) override;
 
-	COMPV_OVERRIDE_DECL0("CompVWindowPriv", priv_updateSize)(size_t newWidth, size_t newHeight)override;
+    COMPV_OVERRIDE_DECL0("CompVWindowPriv", priv_updateSize)(size_t newWidth, size_t newHeight)override;
 
 protected:
-	virtual CompVGLContextPtr context() = 0;
+    virtual CompVGLContextPtr context() = 0;
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	bool m_bDrawing;
-	std::map<compv_surfacelayer_id_t, CompVGLSingleSurfaceLayerPtr> m_mapSingleSurfaceLayers;
-	std::map<compv_surfacelayer_id_t, CompVGLMatchingSurfaceLayerPtr> m_mapMatchingSurfaceLayers;
-	std::map<compv_surfacelayer_id_t, CompVGLMultiSurfaceLayerPtr> m_mapMultiSurfaceLayers;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    bool m_bDrawing;
+    std::map<compv_surfacelayer_id_t, CompVGLSingleSurfaceLayerPtr> m_mapSingleSurfaceLayers;
+    std::map<compv_surfacelayer_id_t, CompVGLMatchingSurfaceLayerPtr> m_mapMatchingSurfaceLayers;
+    std::map<compv_surfacelayer_id_t, CompVGLMultiSurfaceLayerPtr> m_mapMultiSurfaceLayers;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

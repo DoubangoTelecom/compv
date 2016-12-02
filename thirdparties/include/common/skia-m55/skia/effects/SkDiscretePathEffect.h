@@ -14,7 +14,8 @@
 
     This path effect chops a path into discrete segments, and randomly displaces them.
 */
-class SK_API SkDiscretePathEffect : public SkPathEffect {
+class SK_API SkDiscretePathEffect : public SkPathEffect
+{
 public:
     /** Break the path into segments of segLength length, and randomly move the endpoints
         away from the original path by a maximum of deviation.
@@ -44,7 +45,9 @@ public:
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkDiscretePathEffect)
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    bool exposedInAndroidJavaAPI() const override { return true; }
+    bool exposedInAndroidJavaAPI() const override {
+        return true;
+    }
 #endif
 
 protected:

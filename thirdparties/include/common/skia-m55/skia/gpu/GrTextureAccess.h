@@ -14,11 +14,12 @@
 #include "SkRefCnt.h"
 #include "SkShader.h"
 
-/** 
+/**
  * Used to represent a texture that is required by a GrProcessor. It holds a GrTexture along with
  * an associated GrTextureParams
  */
-class GrTextureAccess : public SkNoncopyable {
+class GrTextureAccess : public SkNoncopyable
+{
 public:
     /**
      * Must be initialized before adding to a GrProcessor's texture access list.
@@ -45,17 +46,27 @@ public:
                fVisibility == that.fVisibility;
     }
 
-    bool operator!=(const GrTextureAccess& other) const { return !(*this == other); }
+    bool operator!=(const GrTextureAccess& other) const {
+        return !(*this == other);
+    }
 
-    GrTexture* getTexture() const { return fTexture.get(); }
-    GrShaderFlags getVisibility() const { return fVisibility; }
+    GrTexture* getTexture() const {
+        return fTexture.get();
+    }
+    GrShaderFlags getVisibility() const {
+        return fVisibility;
+    }
 
     /**
      * For internal use by GrProcessor.
      */
-    const GrGpuResourceRef* getProgramTexture() const { return &fTexture; }
+    const GrGpuResourceRef* getProgramTexture() const {
+        return &fTexture;
+    }
 
-    const GrTextureParams& getParams() const { return fParams; }
+    const GrTextureParams& getParams() const {
+        return fParams;
+    }
 
 private:
 

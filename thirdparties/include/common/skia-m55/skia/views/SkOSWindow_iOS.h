@@ -10,11 +10,14 @@
 
 #include "SkWindow.h"
 
-class SkOSWindow : public SkWindow {
+class SkOSWindow : public SkWindow
+{
 public:
     SkOSWindow(void* hwnd);
     ~SkOSWindow();
-    void*   getHWND() const { return fHWND; }
+    void*   getHWND() const {
+        return fHWND;
+    }
 
     enum SkBackEndTypes {
         kNone_BackEndType,
@@ -26,9 +29,15 @@ public:
                    AttachmentInfo*);
     void    present();
 
-    bool makeFullscreen() { return true; }
-    void closeWindow() { /* Not impl yet */ }
-    void setVsync(bool) { /* Can't turn off vsync? */ }
+    bool makeFullscreen() {
+        return true;
+    }
+    void closeWindow() {
+        /* Not impl yet */
+    }
+    void setVsync(bool) {
+        /* Can't turn off vsync? */
+    }
 
 protected:
     // overrides from SkEventSink

@@ -19,8 +19,8 @@
 COMPV_NAMESPACE_BEGIN()
 
 typedef struct {
-	GLfloat Position[3];
-	GLfloat TexCoord[2];
+    GLfloat Position[3];
+    GLfloat TexCoord[2];
 } CompVGLVertex;
 
 static const GLint kCompVGLNameInvalid = 0;
@@ -28,22 +28,22 @@ static const GLint kCompVGLNameSystemFrameBuffer = 0;
 static const GLint kCompVGLNameSystemRenderBuffer = 0;
 
 static const CompVGLVertex kCompVGLTexture2DVertices[] = {
-	{ { 1.f, -1.f, 0.f },{ 1.f, 1.f } },
-	{ { 1.f, 1.f, 0.f },{ 1.f, 0.f } },
-	{ { -1.f, 1.f, 0.f },{ 0.f, 0.f } },
-	{ { -1.f, -1.f, 0.f },{ 0.f, 1.f } }
+    { { 1.f, -1.f, 0.f },{ 1.f, 1.f } },
+    { { 1.f, 1.f, 0.f },{ 1.f, 0.f } },
+    { { -1.f, 1.f, 0.f },{ 0.f, 0.f } },
+    { { -1.f, -1.f, 0.f },{ 0.f, 1.f } }
 };
 
 static const CompVGLVertex kCompVGLScreenVertices[] = {
-	{ { 1.f, -1.f, 0.f },{ 1.f,  0.f } },
-	{ { 1.f, 1.f, 0.f },{ 1.f, 1.f } },
-	{ { -1.f, 1.f, 0.f },{ 0.f, 1.f } },
-	{ { -1.f, -1.f, 0.f },{ 0.f, 0.f } }
+    { { 1.f, -1.f, 0.f },{ 1.f,  0.f } },
+    { { 1.f, 1.f, 0.f },{ 1.f, 1.f } },
+    { { -1.f, 1.f, 0.f },{ 0.f, 1.f } },
+    { { -1.f, -1.f, 0.f },{ 0.f, 0.f } }
 };
 
 static const GLubyte kCompVGLTexture2DIndices[] = {
-	0, 1, 2, // 1st triangle
-	2, 3, 0 // 2nd triangle
+    0, 1, 2, // 1st triangle
+    2, 3, 0 // 2nd triangle
 };
 
 static const GLsizei kCompVGLTexture2DIndicesCount = sizeof(kCompVGLTexture2DIndices) / sizeof(kCompVGLTexture2DIndices[0]);

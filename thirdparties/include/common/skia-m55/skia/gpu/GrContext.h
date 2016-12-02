@@ -45,7 +45,8 @@ class GrVertexBuffer;
 class GrSwizzle;
 class SkTraceMemoryDump;
 
-class SK_API GrContext : public SkRefCnt {
+class SK_API GrContext : public SkRefCnt
+{
 public:
     /**
      * Creates a GrContext for a backend context.
@@ -148,8 +149,12 @@ public:
      */
     void setResourceCacheLimits(int maxResources, size_t maxResourceBytes);
 
-    GrTextureProvider* textureProvider() { return fTextureProvider; }
-    const GrTextureProvider* textureProvider() const { return fTextureProvider; }
+    GrTextureProvider* textureProvider() {
+        return fTextureProvider;
+    }
+    const GrTextureProvider* textureProvider() const {
+        return fTextureProvider;
+    }
 
     /**
      * Frees GPU created by the context. Can be called to reduce GPU memory
@@ -165,7 +170,9 @@ public:
     void purgeAllUnlockedResources();
 
     /** Access the context capabilities */
-    const GrCaps* caps() const { return fCaps; }
+    const GrCaps* caps() const {
+        return fCaps;
+    }
 
     /**
      * Returns the recommended sample count for a render target when using this
@@ -185,7 +192,7 @@ public:
      * We guarantee that "asTexture" will succeed for drawContexts created
      * via this entry point.
      */
-    sk_sp<GrDrawContext> makeDrawContext(SkBackingFit fit, 
+    sk_sp<GrDrawContext> makeDrawContext(SkBackingFit fit,
                                          int width, int height,
                                          GrPixelConfig config,
                                          sk_sp<SkColorSpace> colorSpace,
@@ -201,14 +208,14 @@ public:
      * SRGB-ness will be preserved.
      */
     sk_sp<GrDrawContext> makeDrawContextWithFallback(
-                                                 SkBackingFit fit,
-                                                 int width, int height,
-                                                 GrPixelConfig config,
-                                                 sk_sp<SkColorSpace> colorSpace,
-                                                 int sampleCnt = 0,
-                                                 GrSurfaceOrigin origin = kDefault_GrSurfaceOrigin,
-                                                 const SkSurfaceProps* surfaceProps = nullptr,
-                                                 SkBudgeted budgeted = SkBudgeted::kYes);
+        SkBackingFit fit,
+        int width, int height,
+        GrPixelConfig config,
+        sk_sp<SkColorSpace> colorSpace,
+        int sampleCnt = 0,
+        GrSurfaceOrigin origin = kDefault_GrSurfaceOrigin,
+        const SkSurfaceProps* surfaceProps = nullptr,
+        SkBudgeted budgeted = SkBudgeted::kYes);
 
     ///////////////////////////////////////////////////////////////////////////
     // Misc.
@@ -219,9 +226,9 @@ public:
      */
     void flush();
 
-   /**
-    * These flags can be used with the read/write pixels functions below.
-    */
+    /**
+     * These flags can be used with the read/write pixels functions below.
+     */
     enum PixelOpsFlags {
         /** The GrContext will not be flushed before the surface read or write. This means that
             the read or write may occur before previous draws have executed. */
@@ -320,18 +327,34 @@ public:
     /**
      * An ID associated with this context, guaranteed to be unique.
      */
-    uint32_t uniqueID() { return fUniqueID; }
+    uint32_t uniqueID() {
+        return fUniqueID;
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     // Functions intended for internal use only.
-    GrGpu* getGpu() { return fGpu; }
-    const GrGpu* getGpu() const { return fGpu; }
-    GrBatchFontCache* getBatchFontCache() { return fBatchFontCache; }
-    GrTextBlobCache* getTextBlobCache() { return fTextBlobCache; }
+    GrGpu* getGpu() {
+        return fGpu;
+    }
+    const GrGpu* getGpu() const {
+        return fGpu;
+    }
+    GrBatchFontCache* getBatchFontCache() {
+        return fBatchFontCache;
+    }
+    GrTextBlobCache* getTextBlobCache() {
+        return fTextBlobCache;
+    }
     bool abandoned() const;
-    GrResourceProvider* resourceProvider() { return fResourceProvider; }
-    const GrResourceProvider* resourceProvider() const { return fResourceProvider; }
-    GrResourceCache* getResourceCache() { return fResourceCache; }
+    GrResourceProvider* resourceProvider() {
+        return fResourceProvider;
+    }
+    const GrResourceProvider* resourceProvider() const {
+        return fResourceProvider;
+    }
+    GrResourceCache* getResourceCache() {
+        return fResourceCache;
+    }
 
     // Called by tests that draw directly to the context via GrDrawContext
     void getTestTarget(GrTestTarget*, sk_sp<GrDrawContext>);
@@ -363,10 +386,14 @@ public:
     /** Get pointer to atlas texture for given mask format */
     GrTexture* getFontAtlasTexture(GrMaskFormat format);
 
-    GrAuditTrail* getAuditTrail() { return &fAuditTrail; }
+    GrAuditTrail* getAuditTrail() {
+        return &fAuditTrail;
+    }
 
     /** This is only useful for debug purposes */
-    SkDEBUGCODE(GrSingleOwner* debugSingleOwner() const { return &fSingleOwner; } )
+    SkDEBUGCODE(GrSingleOwner* debugSingleOwner() const {
+        return &fSingleOwner;
+    } )
 
     // Provides access to functions that aren't part of the public API.
     GrContextPriv contextPriv();
@@ -437,9 +464,9 @@ private:
      * return NULL. They also can perform a swizzle as part of the draw.
      */
     sk_sp<GrFragmentProcessor> createPMToUPMEffect(GrTexture*, const GrSwizzle&,
-                                                   const SkMatrix&) const;
+            const SkMatrix&) const;
     sk_sp<GrFragmentProcessor> createUPMToPMEffect(GrTexture*, const GrSwizzle&,
-                                                   const SkMatrix&) const;
+            const SkMatrix&) const;
     /** Called before either of the above two functions to determine the appropriate fragment
         processors for conversions. This must be called by readSurfacePixels before a mutex is
         taken, since testingvPM conversions itself will call readSurfacePixels */
@@ -461,7 +488,8 @@ private:
  * Can be used to perform actions related to the generating GrContext in a thread safe manner. The
  * proxy does not access the 3D API (e.g. OpenGL) that backs the generating GrContext.
  */
-class GrContextThreadSafeProxy : public SkRefCnt {
+class GrContextThreadSafeProxy : public SkRefCnt
+{
 private:
     GrContextThreadSafeProxy(const GrCaps* caps, uint32_t uniqueID)
         : fCaps(SkRef(caps))

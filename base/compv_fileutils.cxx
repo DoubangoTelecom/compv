@@ -39,63 +39,63 @@ CompVFileUtils::~CompVFileUtils()
 
 std::string CompVFileUtils::getCurrentDirectory()
 {
-	char path[COMPV_MAX_PATH] = { '\0' };
-	char* ret = getcwd(path, sizeof(path));
-	if (!ret) {
-		COMPV_DEBUG_ERROR("getcwd failed");
-		return std::string(".");
-	}
-	return std::string(ret);
+    char path[COMPV_MAX_PATH] = { '\0' };
+    char* ret = getcwd(path, sizeof(path));
+    if (!ret) {
+        COMPV_DEBUG_ERROR("getcwd failed");
+        return std::string(".");
+    }
+    return std::string(ret);
 }
 
 std::string CompVFileUtils::getFullPathFromFileName(const char* filename)
 {
-	if (!filename) {
-		COMPV_DEBUG_ERROR("Invalid parameter");
-		return std::string("");
-	}
-	
+    if (!filename) {
+        COMPV_DEBUG_ERROR("Invalid parameter");
+        return std::string("");
+    }
+
 #if COMPV_OS_WINDOWS
 #	if defined(_MSC_VER)
-	if (IsDebuggerPresent()) {
-		DWORD length;
-		char dir[COMPV_MAX_PATH] = { '\0' };
-		if ((length = GetModuleFileNameA(NULL, dir, sizeof(dir)))) {
-			if (!PathRemoveFileSpecA(dir)) {
-				COMPV_DEBUG_ERROR("PathRemoveFileSpecA(%s) failed: %d", dir, GetLastError());
-				return std::string("");
-			}
-			else {
-				char path[COMPV_MAX_PATH] = { '\0' };
-				char* ret = PathCombineA(path, dir, filename);
-				if (!ret) {
-					COMPV_DEBUG_ERROR("PathCombineA failed");
-					return std::string("");
-				}
-				return std::string(ret);
-			}
-		}
-		else {
-			COMPV_DEBUG_ERROR("GetModuleFileNameA failed: %d", GetLastError());
-			return std::string("");
-		}
-	}
+    if (IsDebuggerPresent()) {
+        DWORD length;
+        char dir[COMPV_MAX_PATH] = { '\0' };
+        if ((length = GetModuleFileNameA(NULL, dir, sizeof(dir)))) {
+            if (!PathRemoveFileSpecA(dir)) {
+                COMPV_DEBUG_ERROR("PathRemoveFileSpecA(%s) failed: %d", dir, GetLastError());
+                return std::string("");
+            }
+            else {
+                char path[COMPV_MAX_PATH] = { '\0' };
+                char* ret = PathCombineA(path, dir, filename);
+                if (!ret) {
+                    COMPV_DEBUG_ERROR("PathCombineA failed");
+                    return std::string("");
+                }
+                return std::string(ret);
+            }
+        }
+        else {
+            COMPV_DEBUG_ERROR("GetModuleFileNameA failed: %d", GetLastError());
+            return std::string("");
+        }
+    }
 #	endif /* _MSC_VER */
-	std::string currDir = CompVFileUtils::getCurrentDirectory();
-	char path[COMPV_MAX_PATH];
-	char* ret = PathCombineA(path, currDir.c_str(), filename);
-	if (!ret) {
-		COMPV_DEBUG_ERROR("PathCombineA failed");
-		return currDir + "/" + std::string(filename);
-	}
-	return std::string(ret);
+    std::string currDir = CompVFileUtils::getCurrentDirectory();
+    char path[COMPV_MAX_PATH];
+    char* ret = PathCombineA(path, currDir.c_str(), filename);
+    if (!ret) {
+        COMPV_DEBUG_ERROR("PathCombineA failed");
+        return currDir + "/" + std::string(filename);
+    }
+    return std::string(ret);
 #else
 #	if COMPV_OS_ANDROID
-	if (compv_android_have_assetmgr()) {
-		return std::string(filename);
-	}
+    if (compv_android_have_assetmgr()) {
+        return std::string(filename);
+    }
 #endif /* COMPV_OS_ANDROID */
-	return CompVFileUtils::getCurrentDirectory() + "/" + std::string(filename);
+    return CompVFileUtils::getCurrentDirectory() + "/" + std::string(filename);
 #endif
 }
 
@@ -106,10 +106,10 @@ bool CompVFileUtils::exists(const char* pcPath)
         return false;
     }
 #if COMPV_OS_ANDROID
-	if (compv_android_have_assetmgr()) {
-		return compv_android_asset_fexist(pcPath);
-	}
-	COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
+    if (compv_android_have_assetmgr()) {
+        return compv_android_asset_fexist(pcPath);
+    }
+    COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
 #endif /* COMPV_OS_ANDROID */
     struct stat st_;
     return (stat(pcPath, &st_) == 0);
@@ -127,10 +127,10 @@ size_t CompVFileUtils::getSize(const char* pcPath)
         return 0;
     }
 #if COMPV_OS_ANDROID
-	if (compv_android_have_assetmgr()) {
-		return compv_android_asset_fsize(pcPath);
-	}
-	COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
+    if (compv_android_have_assetmgr()) {
+        return compv_android_asset_fsize(pcPath);
+    }
+    COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
 #endif /* COMPV_OS_ANDROID */
     struct stat st_;
     if (stat(pcPath, &st_) != 0) {
@@ -191,19 +191,19 @@ COMPV_IMAGE_FORMAT CompVFileUtils::getImageFormat(const char* pcPath)
 
 COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buffer)
 {
-	COMPV_CHECK_EXP_RETURN(!pcPath || !buffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVBufferPtr buffer_ = NULL;
+    COMPV_CHECK_EXP_RETURN(!pcPath || !buffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    CompVBufferPtr buffer_ = NULL;
     int32_t size_ = (int32_t)CompVFileUtils::getSize(pcPath);
     if (size_ > 0) {
         FILE* file_ = NULL;
         void* mem_ = NULL;
 #if COMPV_OS_ANDROID
-		if (compv_android_have_assetmgr()) {
-			file_ = compv_android_asset_fopen(pcPath, "rb");
-		}
-		else {
-			COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
-		}
+        if (compv_android_have_assetmgr()) {
+            file_ = compv_android_asset_fopen(pcPath, "rb");
+        }
+        else {
+            COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
+        }
 #endif /* COMPV_OS_ANDROID */
         if (!file_ && (file_ = fopen(pcPath, "rb")) == NULL) {
             COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Can't open %s", pcPath);
@@ -234,19 +234,19 @@ COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buff
 
 FILE* CompVFileUtils::open(const char* fname, const char* mode)
 {
-	if (!fname || !mode) {
-		COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Invalid parameter");
-		return NULL;
-	}
+    if (!fname || !mode) {
+        COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Invalid parameter");
+        return NULL;
+    }
 #if COMPV_OS_ANDROID
-	if (compv_android_have_assetmgr()) {
-		return compv_android_asset_fopen(fname, mode);
-	}
-	else {
-		COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
-	}
+    if (compv_android_have_assetmgr()) {
+        return compv_android_asset_fopen(fname, mode);
+    }
+    else {
+        COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
+    }
 #endif /* COMPV_OS_ANDROID */
-	return fopen(fname, mode);
+    return fopen(fname, mode);
 }
 
 COMPV_NAMESPACE_END()

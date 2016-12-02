@@ -12,14 +12,14 @@ COMPV_NAMESPACE_BEGIN()
 
 std::string CompVJNI::toString(JNIEnv* jEnv, jstring jstr)
 {
-	if (!jEnv || !jstr) {
-		COMPV_DEBUG_ERROR("Invalid parameter");
-		return "";
-	}
-	const char* cstr = jEnv->GetStringUTFChars(jstr, NULL);
-	std::string str(cstr ? cstr : "");
-	jEnv->ReleaseStringUTFChars(jstr, cstr);
-	return str;
+    if (!jEnv || !jstr) {
+        COMPV_DEBUG_ERROR("Invalid parameter");
+        return "";
+    }
+    const char* cstr = jEnv->GetStringUTFChars(jstr, NULL);
+    std::string str(cstr ? cstr : "");
+    jEnv->ReleaseStringUTFChars(jstr, cstr);
+    return str;
 }
 
 COMPV_NAMESPACE_END()

@@ -16,7 +16,8 @@
     Typical use might be to dump a display list to a log file to see what is
     being drawn.
  */
-class SkDumpCanvas : public SkCanvas {
+class SkDumpCanvas : public SkCanvas
+{
 public:
     class Dumper;
 
@@ -55,9 +56,10 @@ public:
     /** Subclasses of this are installed on the DumpCanvas, and then called for
         each drawing command.
      */
-    class Dumper : public SkRefCnt {
+    class Dumper : public SkRefCnt
+    {
     public:
-        
+
 
         virtual void dump(SkDumpCanvas*, SkDumpCanvas::Verb, const char str[],
                           const SkPaint*) = 0;
@@ -66,10 +68,14 @@ public:
         typedef SkRefCnt INHERITED;
     };
 
-    Dumper* getDumper() const { return fDumper; }
+    Dumper* getDumper() const {
+        return fDumper;
+    }
     void    setDumper(Dumper*);
 
-    int getNestLevel() const { return fNestLevel; }
+    int getNestLevel() const {
+        return fNestLevel;
+    }
 
 protected:
     void willSave() override;
@@ -139,7 +145,8 @@ private:
 /** Formats the draw commands, and send them to a function-pointer provided
     by the caller.
  */
-class SkFormatDumper : public SkDumpCanvas::Dumper {
+class SkFormatDumper : public SkDumpCanvas::Dumper
+{
 public:
     SkFormatDumper(void (*)(const char text[], void* refcon), void* refcon);
 
@@ -157,7 +164,8 @@ private:
 
 /** Subclass of Dumper that dumps the drawing command to SkDebugf
  */
-class SkDebugfDumper : public SkFormatDumper {
+class SkDebugfDumper : public SkFormatDumper
+{
 public:
     SkDebugfDumper();
 

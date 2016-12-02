@@ -16,16 +16,16 @@
 COMPV_NAMESPACE_BEGIN()
 
 class CompVDSFilterFramerate : public CTransInPlaceFilter
-{	
+{
 public:
-	CompVDSFilterFramerate();
-	virtual ~CompVDSFilterFramerate();
+    CompVDSFilterFramerate();
+    virtual ~CompVDSFilterFramerate();
 
-	virtual HRESULT CheckInputType(const CMediaType* mtIn)  override /*Overrides(CTransInPlaceFilter)*/;
-	virtual HRESULT Transform(IMediaSample *pSample) override /*Overrides(CTransInPlaceFilter)*/;
+    virtual HRESULT CheckInputType(const CMediaType* mtIn)  override /*Overrides(CTransInPlaceFilter)*/;
+    virtual HRESULT Transform(IMediaSample *pSample) override /*Overrides(CTransInPlaceFilter)*/;
 
 private:
-	
+
 };
 
 COMPV_NAMESPACE_END()

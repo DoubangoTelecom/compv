@@ -16,22 +16,26 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_BASE_API CompVBind
 {
 public:
-	CompVBind();
-	virtual ~CompVBind();
-	virtual COMPV_ERROR_CODE bind() = 0;
-	virtual COMPV_ERROR_CODE unbind() = 0;
+    CompVBind();
+    virtual ~CompVBind();
+    virtual COMPV_ERROR_CODE bind() = 0;
+    virtual COMPV_ERROR_CODE unbind() = 0;
 };
 
 template <typename T>
 class CompVAutoBind
 {
 public:
-	explicit CompVAutoBind(T* objThis) : m_ptrThis(objThis) { COMPV_CHECK_CODE_ASSERT(m_ptrThis->bind()); }
-	virtual ~CompVAutoBind() { COMPV_CHECK_CODE_ASSERT(m_ptrThis->unbind()); }
+    explicit CompVAutoBind(T* objThis) : m_ptrThis(objThis) {
+        COMPV_CHECK_CODE_ASSERT(m_ptrThis->bind());
+    }
+    virtual ~CompVAutoBind() {
+        COMPV_CHECK_CODE_ASSERT(m_ptrThis->unbind());
+    }
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	T* m_ptrThis;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    T* m_ptrThis;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 #define COMPV_AUTOBIND(T, Obj) CompVAutoBind<T> __COMPV_autoBind__(Obj)

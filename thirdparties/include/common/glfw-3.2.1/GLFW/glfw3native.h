@@ -81,38 +81,38 @@ extern "C" {
  *************************************************************************/
 
 #if defined(GLFW_EXPOSE_NATIVE_WIN32)
- // This is a workaround for the fact that glfw3.h needs to export APIENTRY (for
- // example to allow applications to correctly declare a GL_ARB_debug_output
- // callback) but windows.h assumes no one will define APIENTRY before it does
- #undef APIENTRY
- #include <windows.h>
+// This is a workaround for the fact that glfw3.h needs to export APIENTRY (for
+// example to allow applications to correctly declare a GL_ARB_debug_output
+// callback) but windows.h assumes no one will define APIENTRY before it does
+#undef APIENTRY
+#include <windows.h>
 #elif defined(GLFW_EXPOSE_NATIVE_COCOA)
- #include <ApplicationServices/ApplicationServices.h>
- #if defined(__OBJC__)
-  #import <Cocoa/Cocoa.h>
- #else
-  typedef void* id;
- #endif
+#include <ApplicationServices/ApplicationServices.h>
+#if defined(__OBJC__)
+#import <Cocoa/Cocoa.h>
+#else
+typedef void* id;
+#endif
 #elif defined(GLFW_EXPOSE_NATIVE_X11)
- #include <X11/Xlib.h>
- #include <X11/extensions/Xrandr.h>
+#include <X11/Xlib.h>
+#include <X11/extensions/Xrandr.h>
 #elif defined(GLFW_EXPOSE_NATIVE_WAYLAND)
- #include <wayland-client.h>
+#include <wayland-client.h>
 #elif defined(GLFW_EXPOSE_NATIVE_MIR)
- #include <mir_toolkit/mir_client_library.h>
+#include <mir_toolkit/mir_client_library.h>
 #endif
 
 #if defined(GLFW_EXPOSE_NATIVE_WGL)
- /* WGL is declared by windows.h */
+/* WGL is declared by windows.h */
 #endif
 #if defined(GLFW_EXPOSE_NATIVE_NSGL)
- /* NSGL is declared by Cocoa.h */
+/* NSGL is declared by Cocoa.h */
 #endif
 #if defined(GLFW_EXPOSE_NATIVE_GLX)
- #include <GL/glx.h>
+#include <GL/glx.h>
 #endif
 #if defined(GLFW_EXPOSE_NATIVE_EGL)
- #include <EGL/egl.h>
+#include <EGL/egl.h>
 #endif
 
 

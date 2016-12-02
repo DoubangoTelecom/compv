@@ -19,15 +19,19 @@ class SkStreamAsset;
  *  Contains a read-only, thread-sharable block of memory. To access the memory, the caller must
  *  instantiate a local iterator, as the memory is stored in 1 or more contiguous blocks.
  */
-class SK_API SkROBuffer : public SkRefCnt {
+class SK_API SkROBuffer : public SkRefCnt
+{
 public:
     /**
      *  Return the logical length of the data owned/shared by this buffer. It may be stored in
      *  multiple contiguous blocks, accessible via the iterator.
      */
-    size_t size() const { return fAvailable; }
+    size_t size() const {
+        return fAvailable;
+    }
 
-    class SK_API Iter {
+    class SK_API Iter
+    {
     public:
         Iter(const SkROBuffer*);
 
@@ -49,7 +53,7 @@ public:
          *  block, or false if the iterator is exhausted.
          */
         bool next();
-        
+
     private:
         const SkBufferBlock* fBlock;
         size_t               fRemaining;
@@ -73,12 +77,15 @@ private:
  *  can be snapped off (and safely passed to another thread). The RBuffer/StreamAsset snapshot
  *  can see the previously stored bytes, but will be unaware of any future writes.
  */
-class SK_API SkRWBuffer {
+class SK_API SkRWBuffer
+{
 public:
     SkRWBuffer(size_t initialCapacity = 0);
     ~SkRWBuffer();
 
-    size_t size() const { return fTotalUsed; }
+    size_t size() const {
+        return fTotalUsed;
+    }
 
     /**
      *  Append |length| bytes from |buffer|.
@@ -97,7 +104,7 @@ public:
 #else
     void validate() const {}
 #endif
-    
+
 private:
     SkBufferHead*   fHead;
     SkBufferBlock*  fTail;

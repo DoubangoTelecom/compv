@@ -18,7 +18,9 @@ struct SkUnit3D {
     SkScalar fX, fY, fZ;
 
     void set(SkScalar x, SkScalar y, SkScalar z) {
-        fX = x; fY = y; fZ = z;
+        fX = x;
+        fY = y;
+        fZ = z;
     }
     static SkScalar Dot(const SkUnit3D&, const SkUnit3D&);
     static void Cross(const SkUnit3D&, const SkUnit3D&, SkUnit3D* cross);
@@ -28,7 +30,9 @@ struct SkPoint3D {
     SkScalar    fX, fY, fZ;
 
     void set(SkScalar x, SkScalar y, SkScalar z) {
-        fX = x; fY = y; fZ = z;
+        fX = x;
+        fY = y;
+        fZ = z;
     }
     SkScalar    normalize(SkUnit3D*) const;
 };
@@ -70,7 +74,8 @@ struct SkMatrix3D {
     }
 };
 
-class SkPatch3D {
+class SkPatch3D
+{
 public:
     SkPatch3D();
 
@@ -95,7 +100,8 @@ public: // make public for SkDraw3D for now
     friend class SkCamera3D;
 };
 
-class SkCamera3D {
+class SkCamera3D
+{
 public:
     SkCamera3D();
 
@@ -115,7 +121,8 @@ private:
     void doUpdate() const;
 };
 
-class Sk3DView : SkNoncopyable {
+class Sk3DView : SkNoncopyable
+{
 public:
     Sk3DView();
     ~Sk3DView();

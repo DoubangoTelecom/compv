@@ -15,9 +15,10 @@
 
 class SkStreamRewindable;
 
-class SkMovie : public SkRefCnt {
+class SkMovie : public SkRefCnt
+{
 public:
-    
+
 
     /** Try to create a movie from the stream. If the stream format is not
         supported, return NULL.

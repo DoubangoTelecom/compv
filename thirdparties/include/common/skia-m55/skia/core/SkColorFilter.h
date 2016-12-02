@@ -26,7 +26,8 @@ class SkRasterPipeline;
  *  All subclasses are required to be reentrant-safe : it must be legal to share
  *  the same instance between several threads.
  */
-class SK_API SkColorFilter : public SkFlattenable {
+class SK_API SkColorFilter : public SkFlattenable
+{
 public:
     /**
      *  If the filter can be represented by a source color plus Mode, this
@@ -81,7 +82,9 @@ public:
 
     /** Returns the flags for this filter. Override in subclasses to return custom flags.
     */
-    virtual uint32_t getFlags() const { return 0; }
+    virtual uint32_t getFlags() const {
+        return 0;
+    }
 
     /**
      *  If this subclass can optimally createa composition with the inner filter, return it as
@@ -90,7 +93,9 @@ public:
      *
      *  e.g. result(color) == this_filter(inner(color))
      */
-    virtual sk_sp<SkColorFilter> makeComposed(sk_sp<SkColorFilter>) const { return nullptr; }
+    virtual sk_sp<SkColorFilter> makeComposed(sk_sp<SkColorFilter>) const {
+        return nullptr;
+    }
 
     /**
      *  Apply this colorfilter to the specified SkColor. This routine handles
@@ -127,7 +132,7 @@ public:
      *  always check.
      */
     static sk_sp<SkColorFilter> MakeComposeFilter(sk_sp<SkColorFilter> outer,
-                                                  sk_sp<SkColorFilter> inner);
+            sk_sp<SkColorFilter> inner);
 
     /** Construct a color filter that transforms a color by a 4x5 matrix. The matrix is in row-
      *  major order and the translation column is specified in unnormalized, 0...255, space.
@@ -184,7 +189,9 @@ private:
      *
      *  e.g. compose(filter, compose(compose(filter, filter), filter)) --> 4
      */
-    virtual int privateComposedFilterCount() const { return 1; }
+    virtual int privateComposedFilterCount() const {
+        return 1;
+    }
     friend class SkComposeColorFilter;
 
     typedef SkFlattenable INHERITED;

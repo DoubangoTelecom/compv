@@ -19,18 +19,18 @@ COMPV_BASE_API COMPV_ALIGN_DEFAULT() int8_t k1_i8[] = {
 };
 
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t km1_f64[] = {
-	-1., -1., // SSE
-	-1., -1., // AVX
+    -1., -1., // SSE
+    -1., -1., // AVX
 };
 
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t km1_0_f64[] = {
-	-1., 0., // SSE
-	-1., 0. // AVX
+    -1., 0., // SSE
+    -1., 0. // AVX
 };
 
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t k1_f64[] = {
-	1., 1., // SSE
-	1., 1., // AVX
+    1., 1., // SSE
+    1., 1., // AVX
 };
 
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() int8_t k2_i8[] = {
@@ -102,8 +102,8 @@ COMPV_BASE_API COMPV_ALIGN_DEFAULT() int16_t k4400_i16[] = {
 };
 
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t ksqrt2_f64[] = {
-	COMPV_MATH_SQRT_2, COMPV_MATH_SQRT_2, // SSE
-	COMPV_MATH_SQRT_2, COMPV_MATH_SQRT_2 // AVX
+    COMPV_MATH_SQRT_2, COMPV_MATH_SQRT_2, // SSE
+    COMPV_MATH_SQRT_2, COMPV_MATH_SQRT_2 // AVX
 };
 
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint64_t kAVXMaskstore_0_u64[] = { // use with _mm256_maskload
@@ -119,15 +119,15 @@ COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint32_t kAVXMaskstore_0_u32[] = { // use w
 };
 
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint64_t kAVXMaskzero_3_u64[] = { // mask to zero the last 64bits - use with _mm256_and
-	0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0x0000000000000000,
+    0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0x0000000000000000,
 };
 
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint64_t kAVXMaskzero_2_3_u64[] = { // mask to zero the last two 64bits (128) - use with _mm256_and
-	0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0x0000000000000000,
+    0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0x0000000000000000,
 };
 
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint64_t kAVXMaskzero_1_2_3_u64[] = { // mask to zero the last three 64bits (192) - use with _mm256_and
-	0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000,
+    0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000,
 };
 
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kAVXPermutevar8x32_AEBFCGDH_i32[] = { // = k_0_4_1_5_2_6_3_7
@@ -144,11 +144,11 @@ COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kAVXPermutevar8x32_XXABBCDE_i32[] =
 };
 
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint32_t kAVXFloat64MaskAbs[] = { // Mask used for operations to compute the absolute value -> and(xmm, mask)
-	0xffffffff, 0x7fffffff, 0xffffffff, 0x7fffffff, // SSE
-	0xffffffff, 0x7fffffff, 0xffffffff, 0x7fffffff // AVX
+    0xffffffff, 0x7fffffff, 0xffffffff, 0x7fffffff, // SSE
+    0xffffffff, 0x7fffffff, 0xffffffff, 0x7fffffff // AVX
 };
 
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint32_t kAVXFloat64MaskNegate[] = { // Mask used for operations to negate values -> xor(xmm, mask)
-	0x00000000, 0x80000000, 0x00000000, 0x80000000, // SSE
-	0x00000000, 0x80000000, 0x00000000, 0x80000000 // AVX
+    0x00000000, 0x80000000, 0x00000000, 0x80000000, // SSE
+    0x00000000, 0x80000000, 0x00000000, 0x80000000 // AVX
 };

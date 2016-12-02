@@ -12,7 +12,8 @@
 
 #include "SkTypes.h"
 
-class SkChunkAlloc : SkNoncopyable {
+class SkChunkAlloc : SkNoncopyable
+{
 public:
     SkChunkAlloc(size_t minSize);
     ~SkChunkAlloc();
@@ -57,10 +58,18 @@ public:
      */
     size_t unalloc(void* ptr);
 
-    size_t totalCapacity() const { return fTotalCapacity; }
-    size_t totalUsed() const { return fTotalUsed; }
-    SkDEBUGCODE(int blockCount() const { return fBlockCount; })
-    SkDEBUGCODE(size_t totalLost() const { return fTotalLost; })
+    size_t totalCapacity() const {
+        return fTotalCapacity;
+    }
+    size_t totalUsed() const {
+        return fTotalUsed;
+    }
+    SkDEBUGCODE(int blockCount() const {
+        return fBlockCount;
+    })
+    SkDEBUGCODE(size_t totalLost() const {
+        return fTotalLost;
+    })
 
     /**
      *  Returns true if the specified address is within one of the chunks, and

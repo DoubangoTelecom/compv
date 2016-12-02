@@ -28,7 +28,8 @@
     destructor to be called explicitly (or via the object going out of scope on
     the stack or calling delete) if getRefCnt() > 1.
 */
-class SK_API SkRefCntBase : SkNoncopyable {
+class SK_API SkRefCntBase : SkNoncopyable
+{
 public:
     /** Default construct, initializing the reference count to 1.
     */
@@ -132,12 +133,15 @@ private:
 // This SkRefCnt should normally derive from SkRefCntBase.
 #include SK_REF_CNT_MIXIN_INCLUDE
 #else
-class SK_API SkRefCnt : public SkRefCntBase {
+class SK_API SkRefCnt : public SkRefCntBase
+{
     // "#include SK_REF_CNT_MIXIN_INCLUDE" doesn't work with this build system.
-    #if defined(GOOGLE3)
-    public:
-        void deref() const { this->unref(); }
-    #endif
+#if defined(GOOGLE3)
+public:
+    void deref() const {
+        this->unref();
+    }
+#endif
 };
 #endif
 
@@ -157,7 +161,8 @@ class SK_API SkRefCnt : public SkRefCntBase {
 
 /** Call obj->ref() and return obj. The obj must not be nullptr.
  */
-template <typename T> static inline T* SkRef(T* obj) {
+template <typename T> static inline T* SkRef(T* obj)
+{
     SkASSERT(obj);
     obj->ref();
     return obj;
@@ -165,7 +170,8 @@ template <typename T> static inline T* SkRef(T* obj) {
 
 /** Check if the argument is non-null, and if so, call obj->ref() and return obj.
  */
-template <typename T> static inline T* SkSafeRef(T* obj) {
+template <typename T> static inline T* SkSafeRef(T* obj)
+{
     if (obj) {
         obj->ref();
     }
@@ -174,13 +180,15 @@ template <typename T> static inline T* SkSafeRef(T* obj) {
 
 /** Check if the argument is non-null, and if so, call obj->unref()
  */
-template <typename T> static inline void SkSafeUnref(T* obj) {
+template <typename T> static inline void SkSafeUnref(T* obj)
+{
     if (obj) {
         obj->unref();
     }
 }
 
-template<typename T> static inline void SkSafeSetNull(T*& obj) {
+template<typename T> static inline void SkSafeSetNull(T*& obj)
+{
     if (obj) {
         obj->unref();
         obj = nullptr;
@@ -190,26 +198,34 @@ template<typename T> static inline void SkSafeSetNull(T*& obj) {
 ///////////////////////////////////////////////////////////////////////////////
 
 template <typename T> struct SkTUnref {
-    void operator()(T* t) { t->unref(); }
+    void operator()(T* t) {
+        t->unref();
+    }
 };
 
 /**
  *  Utility class that simply unref's its argument in the destructor.
  */
-template <typename T> class SkAutoTUnref : public std::unique_ptr<T, SkTUnref<T>> {
+template <typename T> class SkAutoTUnref : public std::unique_ptr<T, SkTUnref<T>>
+{
 public:
     explicit SkAutoTUnref(T* obj = nullptr) : std::unique_ptr<T, SkTUnref<T>>(obj) {}
 
-    operator T*() const { return this->get(); }
+    operator T*() const {
+        return this->get();
+    }
 
 #if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
     // Need to update graphics/Shader.cpp.
-    T* detach() { return this->release(); }
+    T* detach() {
+        return this->release();
+    }
 #endif
 };
 // Can't use the #define trick below to guard a bare SkAutoTUnref(...) because it's templated. :(
 
-class SkAutoUnref : public SkAutoTUnref<SkRefCnt> {
+class SkAutoUnref : public SkAutoTUnref<SkRefCnt>
+{
 public:
     SkAutoUnref(SkRefCnt* obj) : SkAutoTUnref<SkRefCnt>(obj) {}
 };
@@ -218,18 +234,25 @@ public:
 // This is a variant of SkRefCnt that's Not Virtual, so weighs 4 bytes instead of 8 or 16.
 // There's only benefit to using this if the deriving class does not otherwise need a vtable.
 template <typename Derived>
-class SkNVRefCnt : SkNoncopyable {
+class SkNVRefCnt : SkNoncopyable
+{
 public:
     SkNVRefCnt() : fRefCnt(1) {}
-    ~SkNVRefCnt() { SkASSERTF(1 == getRefCnt(), "NVRefCnt was %d", getRefCnt()); }
+    ~SkNVRefCnt() {
+        SkASSERTF(1 == getRefCnt(), "NVRefCnt was %d", getRefCnt());
+    }
 
     // Implementation is pretty much the same as SkRefCntBase. All required barriers are the same:
     //   - unique() needs acquire when it returns true, and no barrier if it returns false;
     //   - ref() doesn't need any barrier;
     //   - unref() needs a release barrier, and an acquire if it's going to call delete.
 
-    bool unique() const { return 1 == fRefCnt.load(std::memory_order_acquire); }
-    void ref() const { (void)fRefCnt.fetch_add(+1, std::memory_order_relaxed); }
+    bool unique() const {
+        return 1 == fRefCnt.load(std::memory_order_acquire);
+    }
+    void ref() const {
+        (void)fRefCnt.fetch_add(+1, std::memory_order_relaxed);
+    }
     void  unref() const {
         if (1 == fRefCnt.fetch_add(-1, std::memory_order_acq_rel)) {
             // restore the 1 for our destructor's assert
@@ -237,7 +260,9 @@ public:
             delete (const Derived*)this;
         }
     }
-    void  deref() const { this->unref(); }
+    void  deref() const {
+        this->unref();
+    }
 
 private:
     mutable std::atomic<int32_t> fRefCnt;
@@ -255,7 +280,8 @@ private:
  *  classes that match the interface, but have different internal choices: e.g. the hosted class
  *  may have its ref/unref be thread-safe, but that is not assumed/imposed by sk_sp.
  */
-template <typename T> class sk_sp {
+template <typename T> class sk_sp
+{
     /** Supports safe bool idiom. Obsolete with explicit operator bool. */
     using unspecified_bool_type = T* sk_sp::*;
 public:
@@ -295,7 +321,10 @@ public:
         SkDEBUGCODE(fPtr = nullptr);
     }
 
-    sk_sp<T>& operator=(std::nullptr_t) { this->reset(); return *this; }
+    sk_sp<T>& operator=(std::nullptr_t) {
+        this->reset();
+        return *this;
+    }
 
     /**
      *  Shares the underlying object referenced by the argument by calling ref() on it. If this
@@ -336,11 +365,19 @@ public:
     // https://chromium-cpp.appspot.com/#core-blacklist
     // When explicit operator bool can be used, remove operator! and operator unspecified_bool_type.
     //explicit operator bool() const { return this->get() != nullptr; }
-    operator unspecified_bool_type() const { return this->get() ? &sk_sp::fPtr : nullptr; }
-    bool operator!() const { return this->get() == nullptr; }
+    operator unspecified_bool_type() const {
+        return this->get() ? &sk_sp::fPtr : nullptr;
+    }
+    bool operator!() const {
+        return this->get() == nullptr;
+    }
 
-    T* get() const { return fPtr; }
-    T* operator->() const { return fPtr; }
+    T* get() const {
+        return fPtr;
+    }
+    T* operator->() const {
+        return fPtr;
+    }
 
     /**
      *  Adopt the new bare pointer, and call unref() on any previously held object (if not null).
@@ -366,7 +403,7 @@ public:
         return ptr;
     }
 
-    void swap(sk_sp<T>& that) /*noexcept*/ {
+    void swap(sk_sp<T>& that) { /*noexcept*/
         using std::swap;
         swap(fPtr, that.fPtr);
     }
@@ -375,75 +412,95 @@ private:
     T*  fPtr;
 };
 
-template <typename T> inline void swap(sk_sp<T>& a, sk_sp<T>& b) /*noexcept*/ {
+template <typename T> inline void swap(sk_sp<T>& a, sk_sp<T>& b) /*noexcept*/
+{
     a.swap(b);
 }
 
-template <typename T, typename U> inline bool operator==(const sk_sp<T>& a, const sk_sp<U>& b) {
+template <typename T, typename U> inline bool operator==(const sk_sp<T>& a, const sk_sp<U>& b)
+{
     return a.get() == b.get();
 }
-template <typename T> inline bool operator==(const sk_sp<T>& a, std::nullptr_t) /*noexcept*/ {
+template <typename T> inline bool operator==(const sk_sp<T>& a, std::nullptr_t) /*noexcept*/
+{
     return !a;
 }
-template <typename T> inline bool operator==(std::nullptr_t, const sk_sp<T>& b) /*noexcept*/ {
+template <typename T> inline bool operator==(std::nullptr_t, const sk_sp<T>& b) /*noexcept*/
+{
     return !b;
 }
 
-template <typename T, typename U> inline bool operator!=(const sk_sp<T>& a, const sk_sp<U>& b) {
+template <typename T, typename U> inline bool operator!=(const sk_sp<T>& a, const sk_sp<U>& b)
+{
     return a.get() != b.get();
 }
-template <typename T> inline bool operator!=(const sk_sp<T>& a, std::nullptr_t) /*noexcept*/ {
+template <typename T> inline bool operator!=(const sk_sp<T>& a, std::nullptr_t) /*noexcept*/
+{
     return static_cast<bool>(a);
 }
-template <typename T> inline bool operator!=(std::nullptr_t, const sk_sp<T>& b) /*noexcept*/ {
+template <typename T> inline bool operator!=(std::nullptr_t, const sk_sp<T>& b) /*noexcept*/
+{
     return static_cast<bool>(b);
 }
 
-template <typename T, typename U> inline bool operator<(const sk_sp<T>& a, const sk_sp<U>& b) {
+template <typename T, typename U> inline bool operator<(const sk_sp<T>& a, const sk_sp<U>& b)
+{
     // Provide defined total order on sk_sp.
     // http://wg21.cmeerw.net/lwg/issue1297
     // http://wg21.cmeerw.net/lwg/issue1401 .
     return std::less<skstd::common_type_t<T*, U*>>()(a.get(), b.get());
 }
-template <typename T> inline bool operator<(const sk_sp<T>& a, std::nullptr_t) {
+template <typename T> inline bool operator<(const sk_sp<T>& a, std::nullptr_t)
+{
     return std::less<T*>()(a.get(), nullptr);
 }
-template <typename T> inline bool operator<(std::nullptr_t, const sk_sp<T>& b) {
+template <typename T> inline bool operator<(std::nullptr_t, const sk_sp<T>& b)
+{
     return std::less<T*>()(nullptr, b.get());
 }
 
-template <typename T, typename U> inline bool operator<=(const sk_sp<T>& a, const sk_sp<U>& b) {
+template <typename T, typename U> inline bool operator<=(const sk_sp<T>& a, const sk_sp<U>& b)
+{
     return !(b < a);
 }
-template <typename T> inline bool operator<=(const sk_sp<T>& a, std::nullptr_t) {
+template <typename T> inline bool operator<=(const sk_sp<T>& a, std::nullptr_t)
+{
     return !(nullptr < a);
 }
-template <typename T> inline bool operator<=(std::nullptr_t, const sk_sp<T>& b) {
+template <typename T> inline bool operator<=(std::nullptr_t, const sk_sp<T>& b)
+{
     return !(b < nullptr);
 }
 
-template <typename T, typename U> inline bool operator>(const sk_sp<T>& a, const sk_sp<U>& b) {
+template <typename T, typename U> inline bool operator>(const sk_sp<T>& a, const sk_sp<U>& b)
+{
     return b < a;
 }
-template <typename T> inline bool operator>(const sk_sp<T>& a, std::nullptr_t) {
+template <typename T> inline bool operator>(const sk_sp<T>& a, std::nullptr_t)
+{
     return nullptr < a;
 }
-template <typename T> inline bool operator>(std::nullptr_t, const sk_sp<T>& b) {
+template <typename T> inline bool operator>(std::nullptr_t, const sk_sp<T>& b)
+{
     return b < nullptr;
 }
 
-template <typename T, typename U> inline bool operator>=(const sk_sp<T>& a, const sk_sp<U>& b) {
+template <typename T, typename U> inline bool operator>=(const sk_sp<T>& a, const sk_sp<U>& b)
+{
     return !(a < b);
 }
-template <typename T> inline bool operator>=(const sk_sp<T>& a, std::nullptr_t) {
+template <typename T> inline bool operator>=(const sk_sp<T>& a, std::nullptr_t)
+{
     return !(a < nullptr);
 }
-template <typename T> inline bool operator>=(std::nullptr_t, const sk_sp<T>& b) {
+template <typename T> inline bool operator>=(std::nullptr_t, const sk_sp<T>& b)
+{
     return !(nullptr < b);
 }
 
 template <typename T, typename... Args>
-sk_sp<T> sk_make_sp(Args&&... args) {
+sk_sp<T> sk_make_sp(Args&&... args)
+{
     return sk_sp<T>(new T(std::forward<Args>(args)...));
 }
 
@@ -457,7 +514,8 @@ sk_sp<T> sk_make_sp(Args&&... args) {
  *
  *  This function may be helpful while we convert callers from ptr-based to sk_sp-based parameters.
  */
-template <typename T> sk_sp<T> sk_ref_sp(T* obj) {
+template <typename T> sk_sp<T> sk_ref_sp(T* obj)
+{
     return sk_sp<T>(SkSafeRef(obj));
 }
 

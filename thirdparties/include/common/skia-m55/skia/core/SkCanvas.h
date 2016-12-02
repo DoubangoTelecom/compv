@@ -60,7 +60,8 @@ class SkTextBlob;
     color, typeface, textSize, strokeWidth, shader (e.g. gradients, patterns),
     etc.
 */
-class SK_API SkCanvas : public SkRefCnt {
+class SK_API SkCanvas : public SkRefCnt
+{
     enum PrivateSaveLayerFlags {
         kDontClipToLayer_PrivateSaveLayerFlag   = 1U << 31,
     };
@@ -174,7 +175,9 @@ public:
     /**
      *  DEPRECATED: call getBaseLayerSize
      */
-    SkISize getDeviceSize() const { return this->getBaseLayerSize(); }
+    SkISize getDeviceSize() const {
+        return this->getBaseLayerSize();
+    }
 
     /**
      *  DEPRECATED.
@@ -387,21 +390,21 @@ public:
 
     struct SaveLayerRec {
         SaveLayerRec()
-            : fBounds(nullptr), fPaint(nullptr), fBackdrop(nullptr), fSaveLayerFlags(0)
-        {}
+            : fBounds(nullptr), fPaint(nullptr), fBackdrop(nullptr), fSaveLayerFlags(0) {
+        }
         SaveLayerRec(const SkRect* bounds, const SkPaint* paint, SaveLayerFlags saveLayerFlags = 0)
             : fBounds(bounds)
             , fPaint(paint)
             , fBackdrop(nullptr)
-            , fSaveLayerFlags(saveLayerFlags)
-        {}
+            , fSaveLayerFlags(saveLayerFlags) {
+        }
         SaveLayerRec(const SkRect* bounds, const SkPaint* paint, const SkImageFilter* backdrop,
                      SaveLayerFlags saveLayerFlags)
             : fBounds(bounds)
             , fPaint(paint)
             , fBackdrop(backdrop)
-            , fSaveLayerFlags(saveLayerFlags)
-        {}
+            , fSaveLayerFlags(saveLayerFlags) {
+        }
 
         const SkRect*           fBounds;    // optional
         const SkPaint*          fPaint;     // optional
@@ -635,7 +638,9 @@ public:
      * to optimize performance on subsequent draws. Thus, if you call this and then
      * never draw to the canvas subsequently you may pay a perfomance penalty.
      */
-    void discard() { this->onDiscard(); }
+    void discard() {
+        this->onDiscard();
+    }
 
     /**
      *  Fill the entire canvas (restricted to the current clip) with the
@@ -1305,7 +1310,7 @@ public:
     //////////////////////////////////////////////////////////////////////////
 #ifdef SK_INTERNAL
 #ifndef SK_SUPPORT_LEGACY_DRAWFILTER
-    #define SK_SUPPORT_LEGACY_DRAWFILTER
+#define SK_SUPPORT_LEGACY_DRAWFILTER
 #endif
 #endif
 
@@ -1460,7 +1465,7 @@ protected:
                                 const SkPaint& paint);
 
     virtual void onDrawPatch(const SkPoint cubics[12], const SkColor colors[4],
-                           const SkPoint texCoords[4], SkXfermode* xmode, const SkPaint& paint);
+                             const SkPoint texCoords[4], SkXfermode* xmode, const SkPaint& paint);
 
     virtual void onDrawDrawable(SkDrawable*, const SkMatrix*);
 
@@ -1515,7 +1520,7 @@ protected:
                                        const SkPaint*,
                                        const SkShadowParams& params);
 #endif
-    
+
     // Returns the canvas to be used by DrawIter. Default implementation
     // returns this. Subclasses that encapsulate an indirect canvas may
     // need to overload this method. The impl must keep track of this, as it
@@ -1536,14 +1541,17 @@ private:
      call made on the canvas. Ownership of all pointers in the iterator stays
      with the canvas, so none of them should be modified or deleted.
      */
-    class LayerIter /*: SkNoncopyable*/ {
+    class LayerIter /*: SkNoncopyable*/
+    {
     public:
         /** Initialize iterator with canvas, and set values for 1st device */
         LayerIter(SkCanvas*);
         ~LayerIter();
 
         /** Return true if the iterator is done */
-        bool done() const { return fDone; }
+        bool done() const {
+            return fDone;
+        }
         /** Cycle to the next device */
         void next();
 
@@ -1567,7 +1575,7 @@ private:
         SkPaint           fDefaultPaint;
         bool              fDone;
     };
-    
+
     static bool BoundsAffectsClip(SaveLayerFlags);
     static SaveLayerFlags LegacySaveFlagsToSaveLayerFlags(uint32_t legacySaveFlags);
 
@@ -1587,7 +1595,7 @@ private:
     void predrawNotify(const SkRect* rect, const SkPaint* paint, ShaderOverrideOpacity);
     void predrawNotify(const SkRect* rect, const SkPaint* paint, bool shaderOverrideIsOpaque) {
         this->predrawNotify(rect, paint, shaderOverrideIsOpaque ? kOpaque_ShaderOverrideOpacity
-                                                                : kNotOpaque_ShaderOverrideOpacity);
+                            : kNotOpaque_ShaderOverrideOpacity);
     }
 
     class MCRec;
@@ -1612,7 +1620,9 @@ private:
     SkMetaData* fMetaData;
 
     SkSurface_Base*  fSurfaceBase;
-    SkSurface_Base* getSurfaceBase() const { return fSurfaceBase; }
+    SkSurface_Base* getSurfaceBase() const {
+        return fSurfaceBase;
+    }
     void setSurfaceBase(SkSurface_Base* sb) {
         fSurfaceBase = sb;
     }
@@ -1706,12 +1716,15 @@ private:
     bool fAllowSimplifyClip;
     const bool fConservativeRasterClip;
 
-    class AutoValidateClip : ::SkNoncopyable {
+    class AutoValidateClip : ::SkNoncopyable
+    {
     public:
         explicit AutoValidateClip(SkCanvas* canvas) : fCanvas(canvas) {
             fCanvas->validateClip();
         }
-        ~AutoValidateClip() { fCanvas->validateClip(); }
+        ~AutoValidateClip() {
+            fCanvas->validateClip();
+        }
 
     private:
         const SkCanvas* fCanvas;
@@ -1730,7 +1743,8 @@ private:
     when this object goes out of scope. Use this to guarantee that the canvas
     is restored to a known state.
 */
-class SkAutoCanvasRestore : SkNoncopyable {
+class SkAutoCanvasRestore : SkNoncopyable
+{
 public:
     SkAutoCanvasRestore(SkCanvas* canvas, bool doSave) : fCanvas(canvas), fSaveCount(0) {
         if (fCanvas) {
@@ -1763,7 +1777,8 @@ private:
 };
 #define SkAutoCanvasRestore(...) SK_REQUIRE_LOCAL_VAR(SkAutoCanvasRestore)
 
-class SkCanvasClipVisitor {
+class SkCanvasClipVisitor
+{
 public:
     virtual ~SkCanvasClipVisitor();
     virtual void clipRect(const SkRect&, SkCanvas::ClipOp, bool antialias) = 0;

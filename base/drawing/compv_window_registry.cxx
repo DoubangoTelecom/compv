@@ -15,73 +15,73 @@ bool CompVWindowRegistry::s_bInitialized = false;
 
 COMPV_ERROR_CODE CompVWindowRegistry::init()
 {
-	if (s_bInitialized) {
-		return COMPV_ERROR_CODE_S_OK;
-	}
-	COMPV_DEBUG_INFO("Initializing window registery");
-	COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&s_WindowsMutex));
-	s_bInitialized = true;
-	return COMPV_ERROR_CODE_S_OK;
- }
+    if (s_bInitialized) {
+        return COMPV_ERROR_CODE_S_OK;
+    }
+    COMPV_DEBUG_INFO("Initializing window registery");
+    COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&s_WindowsMutex));
+    s_bInitialized = true;
+    return COMPV_ERROR_CODE_S_OK;
+}
 
 COMPV_ERROR_CODE CompVWindowRegistry::deInit()
 {
-	if (!s_bInitialized) {
-		return COMPV_ERROR_CODE_S_OK;
-	}
-	s_WindowsMutex = NULL;
-	s_bInitialized = false;
-	return COMPV_ERROR_CODE_S_OK;
+    if (!s_bInitialized) {
+        return COMPV_ERROR_CODE_S_OK;
+    }
+    s_WindowsMutex = NULL;
+    s_bInitialized = false;
+    return COMPV_ERROR_CODE_S_OK;
 }
-	
+
 COMPV_ERROR_CODE CompVWindowRegistry::add(CompVWindowPtr window)
 {
-	COMPV_CHECK_EXP_RETURN(!s_bInitialized, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	COMPV_CHECK_EXP_RETURN(!window, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_CODE_NOP(s_WindowsMutex->lock());
-	m_sWindows.insert(std::pair<compv_window_id_t, CompVPtr<CompVWindow* > >(window->getId(), window));
-	COMPV_CHECK_CODE_NOP(s_WindowsMutex->unlock());
+    COMPV_CHECK_EXP_RETURN(!s_bInitialized, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+    COMPV_CHECK_EXP_RETURN(!window, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_CODE_NOP(s_WindowsMutex->lock());
+    m_sWindows.insert(std::pair<compv_window_id_t, CompVPtr<CompVWindow* > >(window->getId(), window));
+    COMPV_CHECK_CODE_NOP(s_WindowsMutex->unlock());
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVWindowRegistry::remove(CompVWindowPtr window)
 {
-	COMPV_CHECK_EXP_RETURN(!s_bInitialized, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	COMPV_CHECK_CODE_RETURN(remove(window->getId()));
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(!s_bInitialized, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+    COMPV_CHECK_CODE_RETURN(remove(window->getId()));
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVWindowRegistry::remove(compv_window_id_t windowId)
 {
-	COMPV_CHECK_EXP_RETURN(!s_bInitialized, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	COMPV_CHECK_CODE_NOP(s_WindowsMutex->lock());
-	m_sWindows.erase(windowId);
-	COMPV_CHECK_CODE_NOP(s_WindowsMutex->unlock());
+    COMPV_CHECK_EXP_RETURN(!s_bInitialized, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+    COMPV_CHECK_CODE_NOP(s_WindowsMutex->lock());
+    m_sWindows.erase(windowId);
+    COMPV_CHECK_CODE_NOP(s_WindowsMutex->unlock());
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 size_t CompVWindowRegistry::count()
 {
-	COMPV_CHECK_CODE_NOP(s_WindowsMutex->lock());
-	size_t count = m_sWindows.size();
-	COMPV_CHECK_CODE_NOP(s_WindowsMutex->unlock());
-	return count;
+    COMPV_CHECK_CODE_NOP(s_WindowsMutex->lock());
+    size_t count = m_sWindows.size();
+    COMPV_CHECK_CODE_NOP(s_WindowsMutex->unlock());
+    return count;
 }
 
 COMPV_ERROR_CODE CompVWindowRegistry::closeAll()
 {
-	COMPV_CHECK_EXP_RETURN(!s_bInitialized, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	COMPV_CHECK_CODE_NOP(s_WindowsMutex->lock());
-	std::map<compv_window_id_t, CompVPtr<CompVWindow* > >::iterator it;
-	for (it = m_sWindows.begin(); it != m_sWindows.end(); ++it) {
-		CompVPtr<CompVWindow* > window = it->second;
-		COMPV_CHECK_CODE_NOP(window->close());
-	}
-	m_sWindows.clear();
-	COMPV_CHECK_CODE_NOP(s_WindowsMutex->unlock());
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(!s_bInitialized, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+    COMPV_CHECK_CODE_NOP(s_WindowsMutex->lock());
+    std::map<compv_window_id_t, CompVPtr<CompVWindow* > >::iterator it;
+    for (it = m_sWindows.begin(); it != m_sWindows.end(); ++it) {
+        CompVPtr<CompVWindow* > window = it->second;
+        COMPV_CHECK_CODE_NOP(window->close());
+    }
+    m_sWindows.clear();
+    COMPV_CHECK_CODE_NOP(s_WindowsMutex->unlock());
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

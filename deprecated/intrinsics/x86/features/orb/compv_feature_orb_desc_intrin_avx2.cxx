@@ -27,8 +27,8 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 void Brief256_31_Intrin_AVX2(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
-	COMPV_DEBUG_INFO_CHECK_AVX2();
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
+    COMPV_DEBUG_INFO_CHECK_AVX2();
 
     _mm256_zeroupper();
     int i, u8_index;

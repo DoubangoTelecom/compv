@@ -20,7 +20,8 @@
     In all cases T will be default-initialized on allocation,
     and its destructor will be called from this object's destructor.
 */
-template <typename T, bool MEM_COPY = false> class SkTArray {
+template <typename T, bool MEM_COPY = false> class SkTArray
+{
 public:
     /**
      * Creates an empty array with no initial storage
@@ -101,7 +102,9 @@ public:
     /**
      * Resets to count() == 0
      */
-    void reset() { this->pop_back_n(fCount); }
+    void reset() {
+        this->pop_back_n(fCount);
+    }
 
     /**
      * Resets to count() = n newly constructed T objects.
@@ -155,12 +158,16 @@ public:
     /**
      * Number of elements in the array.
      */
-    int count() const { return fCount; }
+    int count() const {
+        return fCount;
+    }
 
     /**
      * Is the array empty.
      */
-    bool empty() const { return !fCount; }
+    bool empty() const {
+        return !fCount;
+    }
 
     /**
      * Adds 1 new default-initialized T value and returns it by reference. Note
@@ -282,7 +289,8 @@ public:
 
         if (newCount > fCount) {
             this->push_back_n(newCount - fCount);
-        } else if (newCount < fCount) {
+        }
+        else if (newCount < fCount) {
             this->pop_back_n(fCount - newCount);
         }
     }
@@ -294,12 +302,13 @@ public:
             return;
         }
         if (this->fPreAllocMemArray != this->fItemArray &&
-            that->fPreAllocMemArray != that->fItemArray) {
+                that->fPreAllocMemArray != that->fItemArray) {
             // If neither is using a preallocated array then just swap.
             SkTSwap(fItemArray, that->fItemArray);
             SkTSwap(fCount, that->fCount);
             SkTSwap(fAllocCount, that->fAllocCount);
-        } else {
+        }
+        else {
             // This could be more optimal...
             SkTArray copy(std::move(*that));
             *that = std::move(*this);
@@ -320,9 +329,9 @@ public:
         return fItemArray ? fItemArray + fCount : NULL;
     }
 
-   /**
-     * Get the i^th element.
-     */
+    /**
+      * Get the i^th element.
+      */
     T& operator[] (int i) {
         SkASSERT(i < fCount);
         SkASSERT(i >= 0);
@@ -338,16 +347,28 @@ public:
     /**
      * equivalent to operator[](0)
      */
-    T& front() { SkASSERT(fCount > 0); return fItemArray[0];}
+    T& front() {
+        SkASSERT(fCount > 0);
+        return fItemArray[0];
+    }
 
-    const T& front() const { SkASSERT(fCount > 0); return fItemArray[0];}
+    const T& front() const {
+        SkASSERT(fCount > 0);
+        return fItemArray[0];
+    }
 
     /**
      * equivalent to operator[](count() - 1)
      */
-    T& back() { SkASSERT(fCount); return fItemArray[fCount - 1];}
+    T& back() {
+        SkASSERT(fCount);
+        return fItemArray[fCount - 1];
+    }
 
-    const T& back() const { SkASSERT(fCount > 0); return fItemArray[fCount - 1];}
+    const T& back() const {
+        SkASSERT(fCount > 0);
+        return fItemArray[fCount - 1];
+    }
 
     /**
      * equivalent to operator[](count()-1-i)
@@ -418,14 +439,15 @@ protected:
         SkASSERT(preAllocOrReserveCount >= 0);
         fCount              = count;
         fReserveCount       = (preAllocOrReserveCount > 0) ?
-                                    preAllocOrReserveCount :
-                                    gMIN_ALLOC_COUNT;
+                              preAllocOrReserveCount :
+                              gMIN_ALLOC_COUNT;
         fPreAllocMemArray   = preAllocStorage;
         if (fReserveCount >= fCount &&
-            preAllocStorage) {
+                preAllocStorage) {
             fAllocCount = fReserveCount;
             fMemArray = preAllocStorage;
-        } else {
+        }
+        else {
             fAllocCount = SkMax32(fCount, fReserveCount);
             fMemArray = sk_malloc_throw(fAllocCount * sizeof(T));
         }
@@ -493,7 +515,8 @@ private:
 
             if (fAllocCount == fReserveCount && fPreAllocMemArray) {
                 newMemArray = fPreAllocMemArray;
-            } else {
+            }
+            else {
                 newMemArray = sk_malloc_throw(fAllocCount*sizeof(T));
             }
 
@@ -520,7 +543,8 @@ private:
  * Subclass of SkTArray that contains a preallocated memory block for the array.
  */
 template <int N, typename T, bool MEM_COPY = false>
-class SkSTArray : public SkTArray<T, MEM_COPY> {
+class SkSTArray : public SkTArray<T, MEM_COPY>
+{
 private:
     typedef SkTArray<T, MEM_COPY> INHERITED;
 

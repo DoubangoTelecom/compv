@@ -33,7 +33,8 @@ class SkXfermode;
 struct SkPoint;
 
 ///////////////////////////////////////////////////////////////////////////////
-class SK_API SkBitmapDevice : public SkBaseDevice {
+class SK_API SkBitmapDevice : public SkBaseDevice
+{
 public:
     /**
      *  Construct a new device with the specified bitmap as its backend. It is
@@ -120,7 +121,7 @@ protected:
     virtual void drawDevice(const SkDraw&, SkBaseDevice*, int x, int y, const SkPaint&) override;
 
     ///////////////////////////////////////////////////////////////////////////
-    
+
     void drawSpecial(const SkDraw&, SkSpecialImage*, int x, int y, const SkPaint&) override;
     sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&) override;
     sk_sp<SkSpecialImage> makeSpecial(const SkImage*) override;
@@ -139,7 +140,9 @@ protected:
     const SkBitmap& onAccessBitmap();
 #endif
 
-    SkPixelRef* getPixelRef() const { return fBitmap.pixelRef(); }
+    SkPixelRef* getPixelRef() const {
+        return fBitmap.pixelRef();
+    }
     // just for subclasses, to assign a custom pixelref
     SkPixelRef* setPixelRef(SkPixelRef* pr) {
         fBitmap.setPixelRef(pr);

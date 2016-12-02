@@ -273,7 +273,7 @@
 #define COMPV_DEFAULT(v)
 
 #define COMPV_OVERRIDE_DECL(base_class) override
-#define COMPV_OVERRIDE_IMPL(base_class) 
+#define COMPV_OVERRIDE_IMPL(base_class)
 #define COMPV_OVERRIDE_IMPL0(base_class, method) COMPV_ERROR_CODE method
 #define COMPV_OVERRIDE_IMPL1(base_class, ret_type, method) ret_type method
 #define COMPV_OVERRIDE_DECL0(base_class, method) virtual COMPV_ERROR_CODE method
@@ -288,7 +288,7 @@
 #	define COMPV_INLINE	_inline
 #	pragma warning( disable : 4996 )
 #	if _MSC_VER >= 1700
-		// Warning	3	warning C4752: found Intel(R) Advanced Vector Extensions; consider using /arch:AVX
+// Warning	3	warning C4752: found Intel(R) Advanced Vector Extensions; consider using /arch:AVX
 #		pragma warning(disable: 4752)
 #	endif
 #elif defined(__GNUC__)

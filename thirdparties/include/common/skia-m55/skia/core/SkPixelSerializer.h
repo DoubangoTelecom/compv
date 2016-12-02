@@ -16,7 +16,8 @@ class SkData;
 /**
  *  Interface for serializing pixels, e.g. SkBitmaps in an SkPicture.
  */
-class SkPixelSerializer : public SkRefCnt {
+class SkPixelSerializer : public SkRefCnt
+{
 public:
     virtual ~SkPixelSerializer() {}
 
@@ -32,7 +33,9 @@ public:
      *  Call to get the client's version of encoding these pixels. If it
      *  returns NULL, serialize the raw pixels.
      */
-    SkData* encode(const SkPixmap& pixmap) { return this->onEncode(pixmap); }
+    SkData* encode(const SkPixmap& pixmap) {
+        return this->onEncode(pixmap);
+    }
 
 protected:
     /**

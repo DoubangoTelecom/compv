@@ -29,42 +29,42 @@ COMPV_ERROR_CODE TestMSE2D_homogeneous()
 #	define MD5		"e5e02dbfae8d85f17441554eed8f9af5"
 #	define MSE_SUM	332.33756704321195
 #endif
-	COMPV_ALIGN_DEFAULT() TYP aX_h[POINTS_COUNT];
-	COMPV_ALIGN_DEFAULT() TYP aY_h[POINTS_COUNT];
-	COMPV_ALIGN_DEFAULT() TYP aZ_h[POINTS_COUNT];
-	COMPV_ALIGN_DEFAULT() TYP bX[POINTS_COUNT];
-	COMPV_ALIGN_DEFAULT() TYP bY[POINTS_COUNT];
-	CompVPtrArray(TYP) mse;
-	uint64_t timeStart, timeEnd;
+    COMPV_ALIGN_DEFAULT() TYP aX_h[POINTS_COUNT];
+    COMPV_ALIGN_DEFAULT() TYP aY_h[POINTS_COUNT];
+    COMPV_ALIGN_DEFAULT() TYP aZ_h[POINTS_COUNT];
+    COMPV_ALIGN_DEFAULT() TYP bX[POINTS_COUNT];
+    COMPV_ALIGN_DEFAULT() TYP bY[POINTS_COUNT];
+    CompVPtrArray(TYP) mse;
+    uint64_t timeStart, timeEnd;
 
-	for (signed i = 0; i < POINTS_COUNT; ++i) {
-		aX_h[i] = (TYP)((i & 1) ? i : (-i * 0.7)) + 0.5;
-		bX[i] = (TYP)((i & 1) ? i : (-i * 0.3)) + 5.;
-		aY_h[i] = ((TYP)(i * 0.2)) + i + 0.7;
-		bY[i] = (TYP)((i & 1) ? i : (-i * 0.8)) + 7.8;
-		aZ_h[i] = ((TYP)(i * 0.3)) + i + 0.4;
-	}
+    for (signed i = 0; i < POINTS_COUNT; ++i) {
+        aX_h[i] = (TYP)((i & 1) ? i : (-i * 0.7)) + 0.5;
+        bX[i] = (TYP)((i & 1) ? i : (-i * 0.3)) + 5.;
+        aY_h[i] = ((TYP)(i * 0.2)) + i + 0.7;
+        bY[i] = (TYP)((i & 1) ? i : (-i * 0.8)) + 7.8;
+        aZ_h[i] = ((TYP)(i * 0.3)) + i + 0.4;
+    }
 
-	timeStart = CompVTime::getNowMills();
-	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVMathStats<TYP>::mse2D_homogeneous(&aX_h[0], &aY_h[0], &aZ_h[0], &bX[0], &bY[0], mse, POINTS_COUNT));
-	}
-	timeEnd = CompVTime::getNowMills();
+    timeStart = CompVTime::getNowMills();
+    for (size_t i = 0; i < LOOP_COUNT; ++i) {
+        COMPV_CHECK_CODE_RETURN(CompVMathStats<TYP>::mse2D_homogeneous(&aX_h[0], &aY_h[0], &aZ_h[0], &bX[0], &bY[0], mse, POINTS_COUNT));
+    }
+    timeEnd = CompVTime::getNowMills();
 
-	TYP mse_sum = 0;
-	const TYP* msePtr = mse->ptr();
-	for (size_t i = 0; i < mse->cols(); ++i) {
-		mse_sum += msePtr[i];
-	}
-	COMPV_DEBUG_INFO_EX("TestMSE2D_homogeneous", "MSE_computed="TYP_SZ", MSE_expected="TYP_SZ, mse_sum, MSE_SUM);
+    TYP mse_sum = 0;
+    const TYP* msePtr = mse->ptr();
+    for (size_t i = 0; i < mse->cols(); ++i) {
+        mse_sum += msePtr[i];
+    }
+    COMPV_DEBUG_INFO_EX("TestMSE2D_homogeneous", "MSE_computed="TYP_SZ", MSE_expected="TYP_SZ, mse_sum, MSE_SUM);
 
-	COMPV_DEBUG_INFO_EX("TestMSE2D_homogeneous", "Elapsed time (TestMSE2D_homogeneous) = [[[ %llu millis ]]]", (timeEnd - timeStart));
+    COMPV_DEBUG_INFO_EX("TestMSE2D_homogeneous", "Elapsed time (TestMSE2D_homogeneous) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-	COMPV_CHECK_EXP_RETURN(mse_sum != MSE_SUM, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+    COMPV_CHECK_EXP_RETURN(mse_sum != MSE_SUM, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 
-	// Not required to have same MD5 (AVX, SSE, NEON...). Check mse_sum error only
-	const std::string md5 = arrayMD5(mse);
-	COMPV_CHECK_EXP_RETURN(md5 != MD5, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-	
-	return COMPV_ERROR_CODE_S_OK;
+    // Not required to have same MD5 (AVX, SSE, NEON...). Check mse_sum error only
+    const std::string md5 = arrayMD5(mse);
+    COMPV_CHECK_EXP_RETURN(md5 != MD5, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+
+    return COMPV_ERROR_CODE_S_OK;
 }

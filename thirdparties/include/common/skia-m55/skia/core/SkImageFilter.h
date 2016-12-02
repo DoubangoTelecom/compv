@@ -32,17 +32,21 @@ struct SkImageFilterCacheKey;
  *  then be handed to the imagefilter, who in turn creates a new bitmap which
  *  is what will finally be drawn to the device (using the original xfermode).
  */
-class SK_API SkImageFilter : public SkFlattenable {
+class SK_API SkImageFilter : public SkFlattenable
+{
 public:
     // Extra information about the output of a filter DAG. For now, this is just the color space
     // (of the original requesting device). This is used when constructing intermediate rendering
     // surfaces, so that we ensure we land in a surface that's similar/compatible to the final
     // consumer of the DAG's output.
-    class OutputProperties {
+    class OutputProperties
+    {
     public:
         explicit OutputProperties(SkColorSpace* colorSpace) : fColorSpace(colorSpace) {}
 
-        SkColorSpace* colorSpace() const { return fColorSpace; }
+        SkColorSpace* colorSpace() const {
+            return fColorSpace;
+        }
 
     private:
         // This will be a pointer to the device's color space, and our lifetime is bounded by
@@ -50,20 +54,29 @@ public:
         SkColorSpace* fColorSpace;
     };
 
-    class Context {
+    class Context
+    {
     public:
         Context(const SkMatrix& ctm, const SkIRect& clipBounds, SkImageFilterCache* cache,
                 const OutputProperties& outputProperties)
             : fCTM(ctm)
             , fClipBounds(clipBounds)
             , fCache(cache)
-            , fOutputProperties(outputProperties)
-        {}
+            , fOutputProperties(outputProperties) {
+        }
 
-        const SkMatrix& ctm() const { return fCTM; }
-        const SkIRect& clipBounds() const { return fClipBounds; }
-        SkImageFilterCache* cache() const { return fCache; }
-        const OutputProperties& outputProperties() const { return fOutputProperties; }
+        const SkMatrix& ctm() const {
+            return fCTM;
+        }
+        const SkIRect& clipBounds() const {
+            return fClipBounds;
+        }
+        SkImageFilterCache* cache() const {
+            return fCache;
+        }
+        const OutputProperties& outputProperties() const {
+            return fOutputProperties;
+        }
 
     private:
         SkMatrix               fCTM;
@@ -72,7 +85,8 @@ public:
         OutputProperties       fOutputProperties;
     };
 
-    class CropRect {
+    class CropRect
+    {
     public:
         enum CropEdge {
             kHasLeft_CropEdge   = 0x01,
@@ -84,8 +98,12 @@ public:
         CropRect() {}
         explicit CropRect(const SkRect& rect, uint32_t flags = kHasAll_CropEdge)
             : fRect(rect), fFlags(flags) {}
-        uint32_t flags() const { return fFlags; }
-        const SkRect& rect() const { return fRect; }
+        uint32_t flags() const {
+            return fFlags;
+        }
+        const SkRect& rect() const {
+            return fRect;
+        }
 #ifndef SK_IGNORE_TO_STRING
         void toString(SkString* str) const;
 #endif
@@ -94,7 +112,7 @@ public:
          *  Apply this cropRect to the imageBounds. If a given edge of the cropRect is not
          *  set, then the corresponding edge from imageBounds will be used. If "embiggen"
          *  is true, the crop rect is allowed to enlarge the size of the rect, otherwise
-         *  it may only reduce the rect. Filters that can affect transparent black should 
+         *  it may only reduce the rect. Filters that can affect transparent black should
          *  pass "true", while all other filters should pass "false".
          *
          *  Note: imageBounds is in "device" space, as the output cropped rectangle will be,
@@ -187,7 +205,9 @@ public:
      *  Returns the number of inputs this filter will accept (some inputs can
      *  be NULL).
      */
-    int countInputs() const { return fInputs.count(); }
+    int countInputs() const {
+        return fInputs.count();
+    }
 
     /**
      *  Returns the input filter at a given index, or NULL if no input is
@@ -207,9 +227,13 @@ public:
      *  should be used to offset access to the input images, and should also
      *  be added to the "offset" parameter in onFilterImage.
      */
-    bool cropRectIsSet() const { return fCropRect.flags() != 0x0; }
+    bool cropRectIsSet() const {
+        return fCropRect.flags() != 0x0;
+    }
 
-    CropRect getCropRect() const { return fCropRect; }
+    CropRect getCropRect() const {
+        return fCropRect;
+    }
 
     // Default impl returns union of all input bounds.
     virtual SkRect computeFastBounds(const SkRect&) const;
@@ -240,13 +264,13 @@ public:
      * Return an imagefilter which transforms its input by the given matrix.
      */
     static sk_sp<SkImageFilter> MakeMatrixFilter(const SkMatrix& matrix,
-                                                 SkFilterQuality quality,
-                                                 sk_sp<SkImageFilter> input);
+            SkFilterQuality quality,
+            sk_sp<SkImageFilter> input);
 
 #ifdef SK_SUPPORT_LEGACY_IMAGEFILTER_PTR
     static SkImageFilter* CreateMatrixFilter(const SkMatrix& matrix,
-                                             SkFilterQuality filterQuality,
-                                             SkImageFilter* input = nullptr) {
+            SkFilterQuality filterQuality,
+            SkImageFilter* input = nullptr) {
         return MakeMatrixFilter(matrix, filterQuality, sk_ref_sp<SkImageFilter>(input)).release();
     }
 #endif
@@ -256,7 +280,8 @@ public:
     SK_DECLARE_FLATTENABLE_REGISTRAR_GROUP()
 
 protected:
-    class Common {
+    class Common
+    {
     public:
         /**
          *  Attempt to unflatten the cropRect and the expected number of input filters.
@@ -268,11 +293,19 @@ protected:
          */
         bool unflatten(SkReadBuffer&, int expectedInputs);
 
-        const CropRect& cropRect() const { return fCropRect; }
-        int             inputCount() const { return fInputs.count(); }
-        sk_sp<SkImageFilter>* inputs() const { return fInputs.get(); }
+        const CropRect& cropRect() const {
+            return fCropRect;
+        }
+        int             inputCount() const {
+            return fInputs.count();
+        }
+        sk_sp<SkImageFilter>* inputs() const {
+            return fInputs.get();
+        }
 
-        sk_sp<SkImageFilter>  getInput(int index) const { return fInputs[index]; }
+        sk_sp<SkImageFilter>  getInput(int index) const {
+            return fInputs[index];
+        }
 
     private:
         CropRect fCropRect;
@@ -317,7 +350,7 @@ protected:
      *  If the return value is nullptr then offset should be ignored.
      */
     virtual sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* src, const Context&,
-                                                SkIPoint* offset) const = 0;
+            SkIPoint* offset) const = 0;
 
     /**
      * This function recurses into its inputs with the given rect (first
@@ -353,7 +386,7 @@ protected:
     // calls filterImage() on that input, and returns the result.
     sk_sp<SkSpecialImage> filterInput(int index,
                                       SkSpecialImage* src,
-                                      const Context&, 
+                                      const Context&,
                                       SkIPoint* offset) const;
 
     /**
@@ -368,7 +401,9 @@ protected:
      *  Override this to describe the behavior of your subclass - as a leaf node. The caller will
      *  take care of calling your inputs (and return false if any of them could not handle it).
      */
-    virtual bool onCanHandleComplexCTM() const { return false; }
+    virtual bool onCanHandleComplexCTM() const {
+        return false;
+    }
 
     /** Given a "srcBounds" rect, computes destination bounds for this filter.
      *  "dstBounds" are computed by transforming the crop rect by the context's
@@ -406,8 +441,12 @@ private:
 
     void init(sk_sp<SkImageFilter>* inputs, int inputCount, const CropRect* cropRect);
 
-    bool usesSrcInput() const { return fUsesSrcInput; }
-    virtual bool affectsTransparentBlack() const { return false; }
+    bool usesSrcInput() const {
+        return fUsesSrcInput;
+    }
+    virtual bool affectsTransparentBlack() const {
+        return false;
+    }
 
     SkAutoSTArray<2, sk_sp<SkImageFilter>> fInputs;
 

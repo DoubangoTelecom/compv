@@ -38,49 +38,72 @@
  * setXPFactory is used to control blending between the output color and dest. It also implements
  * the application of fractional coverage from the coverage pipeline.
  */
-class GrPaint {
+class GrPaint
+{
 public:
     GrPaint();
 
-    GrPaint(const GrPaint& paint) { *this = paint; }
+    GrPaint(const GrPaint& paint) {
+        *this = paint;
+    }
 
     ~GrPaint() { }
 
     /**
      * The initial color of the drawn primitive. Defaults to solid white.
      */
-    void setColor4f(const GrColor4f& color) { fColor = color; }
-    const GrColor4f& getColor4f() const { return fColor; }
+    void setColor4f(const GrColor4f& color) {
+        fColor = color;
+    }
+    const GrColor4f& getColor4f() const {
+        return fColor;
+    }
 
     /**
      * Legacy getter, until all code handles 4f directly.
      */
-    GrColor getColor() const { return fColor.toGrColor(); }
+    GrColor getColor() const {
+        return fColor.toGrColor();
+    }
 
     /**
      * Should primitives be anti-aliased or not. Defaults to false.
      */
-    void setAntiAlias(bool aa) { fAntiAlias = aa; }
-    bool isAntiAlias() const { return fAntiAlias; }
+    void setAntiAlias(bool aa) {
+        fAntiAlias = aa;
+    }
+    bool isAntiAlias() const {
+        return fAntiAlias;
+    }
 
     /**
      * Should shader output conversion from linear to sRGB be disabled.
      * Only relevant if the destination is sRGB. Defaults to false.
      */
-    void setDisableOutputConversionToSRGB(bool srgb) { fDisableOutputConversionToSRGB = srgb; }
-    bool getDisableOutputConversionToSRGB() const { return fDisableOutputConversionToSRGB; }
+    void setDisableOutputConversionToSRGB(bool srgb) {
+        fDisableOutputConversionToSRGB = srgb;
+    }
+    bool getDisableOutputConversionToSRGB() const {
+        return fDisableOutputConversionToSRGB;
+    }
 
     /**
      * Should sRGB inputs be allowed to perform sRGB to linear conversion. With this flag
      * set to false, sRGB textures will be treated as linear (including filtering).
      */
-    void setAllowSRGBInputs(bool allowSRGBInputs) { fAllowSRGBInputs = allowSRGBInputs; }
-    bool getAllowSRGBInputs() const { return fAllowSRGBInputs; }
+    void setAllowSRGBInputs(bool allowSRGBInputs) {
+        fAllowSRGBInputs = allowSRGBInputs;
+    }
+    bool getAllowSRGBInputs() const {
+        return fAllowSRGBInputs;
+    }
 
     /**
      * Does one of the fragment processors need a field of distance vectors to the nearest edge?
      */
-    bool usesDistanceVectorField() const { return fUsesDistanceVectorField; }
+    bool usesDistanceVectorField() const {
+        return fUsesDistanceVectorField;
+    }
 
     /**
      * Should rendering be gamma-correct, end-to-end. Causes sRGB render targets to behave
@@ -133,10 +156,16 @@ public:
                                   const GrTextureParams&);
     void addCoverageTextureProcessor(GrTexture*, const SkMatrix&, const GrTextureParams&);
 
-    int numColorFragmentProcessors() const { return fColorFragmentProcessors.count(); }
-    int numCoverageFragmentProcessors() const { return fCoverageFragmentProcessors.count(); }
-    int numTotalFragmentProcessors() const { return this->numColorFragmentProcessors() +
-                                              this->numCoverageFragmentProcessors(); }
+    int numColorFragmentProcessors() const {
+        return fColorFragmentProcessors.count();
+    }
+    int numCoverageFragmentProcessors() const {
+        return fCoverageFragmentProcessors.count();
+    }
+    int numTotalFragmentProcessors() const {
+        return this->numColorFragmentProcessors() +
+               this->numCoverageFragmentProcessors();
+    }
 
     GrXPFactory* getXPFactory() const {
         return fXPFactory.get();

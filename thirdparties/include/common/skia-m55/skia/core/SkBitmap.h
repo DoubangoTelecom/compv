@@ -34,7 +34,8 @@ class SkString;
     the constness is considered to apply to the bitmap's configuration, not
     its contents.
 */
-class SK_API SkBitmap {
+class SK_API SkBitmap
+{
 public:
     class SK_API Allocator;
 
@@ -78,19 +79,33 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////
 
-    const SkImageInfo& info() const { return fInfo; }
+    const SkImageInfo& info() const {
+        return fInfo;
+    }
 
-    int width() const { return fInfo.width(); }
-    int height() const { return fInfo.height(); }
-    SkColorType colorType() const { return fInfo.colorType(); }
-    SkAlphaType alphaType() const { return fInfo.alphaType(); }
-    SkColorSpace* colorSpace() const { return fInfo.colorSpace(); }
+    int width() const {
+        return fInfo.width();
+    }
+    int height() const {
+        return fInfo.height();
+    }
+    SkColorType colorType() const {
+        return fInfo.colorType();
+    }
+    SkAlphaType alphaType() const {
+        return fInfo.alphaType();
+    }
+    SkColorSpace* colorSpace() const {
+        return fInfo.colorSpace();
+    }
 
     /**
      *  Return the number of bytes per pixel based on the colortype. If the colortype is
      *  kUnknown_SkColorType, then 0 is returned.
      */
-    int bytesPerPixel() const { return fInfo.bytesPerPixel(); }
+    int bytesPerPixel() const {
+        return fInfo.bytesPerPixel();
+    }
 
     /**
      *  Return the rowbytes expressed as a number of pixels (like width and height).
@@ -104,27 +119,37 @@ public:
      *  Return the shift amount per pixel (i.e. 0 for 1-byte per pixel, 1 for 2-bytes per pixel
      *  colortypes, 2 for 4-bytes per pixel colortypes). Return 0 for kUnknown_SkColorType.
      */
-    int shiftPerPixel() const { return this->fInfo.shiftPerPixel(); }
+    int shiftPerPixel() const {
+        return this->fInfo.shiftPerPixel();
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
     /** Return true iff the bitmap has empty dimensions.
      *  Hey!  Before you use this, see if you really want to know drawsNothing() instead.
      */
-    bool empty() const { return fInfo.isEmpty(); }
+    bool empty() const {
+        return fInfo.isEmpty();
+    }
 
     /** Return true iff the bitmap has no pixelref. Note: this can return true even if the
      *  dimensions of the bitmap are > 0 (see empty()).
      *  Hey!  Before you use this, see if you really want to know drawsNothing() instead.
      */
-    bool isNull() const { return NULL == fPixelRef; }
+    bool isNull() const {
+        return NULL == fPixelRef;
+    }
 
     /** Return true iff drawing this bitmap has no effect.
      */
-    bool drawsNothing() const { return this->empty() || this->isNull(); }
+    bool drawsNothing() const {
+        return this->empty() || this->isNull();
+    }
 
     /** Return the number of bytes between subsequent rows of the bitmap. */
-    size_t rowBytes() const { return fRowBytes; }
+    size_t rowBytes() const {
+        return fRowBytes;
+    }
 
     /**
      *  Set the bitmap's alphaType, returning true on success. If false is
@@ -139,19 +164,25 @@ public:
 
     /** Return the address of the pixels for this SkBitmap.
     */
-    void* getPixels() const { return fPixels; }
+    void* getPixels() const {
+        return fPixels;
+    }
 
     /** Return the byte size of the pixels, based on the height and rowBytes.
         Note this truncates the result to 32bits. Call getSize64() to detect
         if the real size exceeds 32bits.
     */
-    size_t getSize() const { return fInfo.height() * fRowBytes; }
+    size_t getSize() const {
+        return fInfo.height() * fRowBytes;
+    }
 
     /** Return the number of bytes from the pointer returned by getPixels()
         to the end of the allocated space in the buffer. Required in
         cases where extractSubset has been called.
     */
-    size_t getSafeSize() const { return fInfo.getSafeSize(fRowBytes); }
+    size_t getSafeSize() const {
+        return fInfo.getSafeSize(fRowBytes);
+    }
 
     /**
      *  Return the full size of the bitmap, in bytes.
@@ -223,8 +254,12 @@ public:
     void getBounds(SkRect* bounds) const;
     void getBounds(SkIRect* bounds) const;
 
-    SkIRect bounds() const { return fInfo.bounds(); }
-    SkISize dimensions() const { return fInfo.dimensions(); }
+    SkIRect bounds() const {
+        return fInfo.bounds();
+    }
+    SkISize dimensions() const {
+        return fInfo.dimensions();
+    }
     // Returns the bounds of this bitmap, offset by its pixelref origin.
     SkIRect getSubset() const {
         return SkIRect::MakeXYWH(fPixelRefOrigin.x(), fPixelRefOrigin.y(),
@@ -273,13 +308,13 @@ public:
 
     bool SK_WARN_UNUSED_RESULT tryAllocN32Pixels(int width, int height, bool isOpaque = false) {
         SkImageInfo info = SkImageInfo::MakeN32(width, height,
-                                            isOpaque ? kOpaque_SkAlphaType : kPremul_SkAlphaType);
+                                                isOpaque ? kOpaque_SkAlphaType : kPremul_SkAlphaType);
         return this->tryAllocPixels(info);
     }
 
     void allocN32Pixels(int width, int height, bool isOpaque = false) {
         SkImageInfo info = SkImageInfo::MakeN32(width, height,
-                                            isOpaque ? kOpaque_SkAlphaType : kPremul_SkAlphaType);
+                                                isOpaque ? kOpaque_SkAlphaType : kPremul_SkAlphaType);
         this->allocPixels(info);
     }
 
@@ -404,7 +439,9 @@ public:
      *  Return the current pixelref object or NULL if there is none. This does
      *  not affect the refcount of the pixelref.
      */
-    SkPixelRef* pixelRef() const { return fPixelRef; }
+    SkPixelRef* pixelRef() const {
+        return fPixelRef;
+    }
 
     /**
      *  A bitmap can reference a subset of a pixelref's pixels. That means the
@@ -417,7 +454,9 @@ public:
      *
      *  pixelRefOrigin() returns this origin, or (0,0) if there is no pixelRef.
      */
-    SkIPoint pixelRefOrigin() const { return fPixelRefOrigin; }
+    SkIPoint pixelRefOrigin() const {
+        return fPixelRefOrigin;
+    }
 
     /**
      *  Assign a pixelref and origin to the bitmap. Pixelrefs are reference,
@@ -473,7 +512,9 @@ public:
         Otherwise returns NULL. Does not affect the colortable's
         reference count.
     */
-    SkColorTable* getColorTable() const { return fColorTable; }
+    SkColorTable* getColorTable() const {
+        return fColorTable;
+    }
 
     /** Returns a non-zero, unique value corresponding to the pixels in our
         pixelref. Each time the pixels are changed (and notifyPixelsChanged
@@ -648,7 +689,8 @@ public:
     void setHasHardwareMipMap(bool hasHardwareMipMap) {
         if (hasHardwareMipMap) {
             fFlags |= kHasHardwareMipMap_Flag;
-        } else {
+        }
+        else {
             fFlags &= ~kHasHardwareMipMap_Flag;
         }
     }
@@ -692,7 +734,8 @@ public:
 
     SkDEBUGCODE(void validate() const;)
 
-    class Allocator : public SkRefCnt {
+    class Allocator : public SkRefCnt
+    {
     public:
         /** Allocate the pixel memory for the bitmap, given its dimensions and
             colortype. Return true on success, where success means either setPixels
@@ -710,12 +753,14 @@ public:
         memory from the heap. This is the default Allocator invoked by
         allocPixels().
     */
-    class HeapAllocator : public Allocator {
+    class HeapAllocator : public Allocator
+    {
     public:
         bool allocPixelRef(SkBitmap*, SkColorTable*) override;
     };
 
-    class RLEPixels {
+    class RLEPixels
+    {
     public:
         RLEPixels(int width, int height);
         virtual ~RLEPixels();
@@ -775,7 +820,8 @@ private:
     friend struct SkBitmapProcState;
 };
 
-class SkAutoLockPixels : SkNoncopyable {
+class SkAutoLockPixels : SkNoncopyable
+{
 public:
     SkAutoLockPixels(const SkBitmap& bm, bool doLock = true) : fBitmap(bm) {
         fDidLock = doLock;
@@ -798,28 +844,32 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline uint32_t* SkBitmap::getAddr32(int x, int y) const {
+inline uint32_t* SkBitmap::getAddr32(int x, int y) const
+{
     SkASSERT(fPixels);
     SkASSERT(4 == this->bytesPerPixel());
     SkASSERT((unsigned)x < (unsigned)this->width() && (unsigned)y < (unsigned)this->height());
     return (uint32_t*)((char*)fPixels + y * fRowBytes + (x << 2));
 }
 
-inline uint16_t* SkBitmap::getAddr16(int x, int y) const {
+inline uint16_t* SkBitmap::getAddr16(int x, int y) const
+{
     SkASSERT(fPixels);
     SkASSERT(2 == this->bytesPerPixel());
     SkASSERT((unsigned)x < (unsigned)this->width() && (unsigned)y < (unsigned)this->height());
     return (uint16_t*)((char*)fPixels + y * fRowBytes + (x << 1));
 }
 
-inline uint8_t* SkBitmap::getAddr8(int x, int y) const {
+inline uint8_t* SkBitmap::getAddr8(int x, int y) const
+{
     SkASSERT(fPixels);
     SkASSERT(1 == this->bytesPerPixel());
     SkASSERT((unsigned)x < (unsigned)this->width() && (unsigned)y < (unsigned)this->height());
     return (uint8_t*)fPixels + y * fRowBytes + x;
 }
 
-inline SkPMColor SkBitmap::getIndex8Color(int x, int y) const {
+inline SkPMColor SkBitmap::getIndex8Color(int x, int y) const
+{
     SkASSERT(fPixels);
     SkASSERT(kIndex_8_SkColorType == this->colorType());
     SkASSERT((unsigned)x < (unsigned)this->width() && (unsigned)y < (unsigned)this->height());

@@ -14,7 +14,8 @@ struct SkIRect;
 class SkData;
 class SkImage;
 
-class SK_API SkImageDeserializer {
+class SK_API SkImageDeserializer
+{
 public:
     virtual ~SkImageDeserializer() {}
 

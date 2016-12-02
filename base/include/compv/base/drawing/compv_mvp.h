@@ -37,8 +37,8 @@
 COMPV_NAMESPACE_BEGIN()
 
 enum COMPV_PROJECTION {
-	COMPV_PROJECTION_2D,
-	COMPV_PROJECTION_3D
+    COMPV_PROJECTION_2D,
+    COMPV_PROJECTION_3D
 };
 
 //
@@ -49,13 +49,13 @@ COMPV_OBJECT_DECLARE_PTRS(Mat4f)
 class COMPV_BASE_API CompVMat4f : public CompVObj
 {
 protected:
-	CompVMat4f();
+    CompVMat4f();
 public:
-	virtual ~CompVMat4f();
-	virtual const float* ptr()const = 0;
-	virtual COMPV_ERROR_CODE translate(const CompVVec3f& vec3f) = 0;
-	virtual COMPV_ERROR_CODE scale(const CompVVec3f& vec3f) = 0;
-	virtual COMPV_ERROR_CODE rotate(float angle, const CompVVec3f& vec3f) = 0;
+    virtual ~CompVMat4f();
+    virtual const float* ptr()const = 0;
+    virtual COMPV_ERROR_CODE translate(const CompVVec3f& vec3f) = 0;
+    virtual COMPV_ERROR_CODE scale(const CompVVec3f& vec3f) = 0;
+    virtual COMPV_ERROR_CODE rotate(float angle, const CompVVec3f& vec3f) = 0;
 };
 
 //
@@ -66,11 +66,11 @@ COMPV_OBJECT_DECLARE_PTRS(Model)
 class COMPV_BASE_API CompVModel : public CompVObj
 {
 protected:
-	CompVModel();
+    CompVModel();
 public:
-	virtual ~CompVModel();
-	virtual CompVMat4fPtr matrix() = 0;
-	virtual COMPV_ERROR_CODE reset() = 0;
+    virtual ~CompVModel();
+    virtual CompVMat4fPtr matrix() = 0;
+    virtual COMPV_ERROR_CODE reset() = 0;
 };
 
 //
@@ -81,13 +81,13 @@ COMPV_OBJECT_DECLARE_PTRS(View)
 class COMPV_BASE_API CompVView : public CompVObj
 {
 protected:
-	CompVView();
+    CompVView();
 public:
-	virtual ~CompVView();
+    virtual ~CompVView();
 
-	virtual CompVMat4fPtr matrix() = 0;
-	virtual COMPV_ERROR_CODE setCamera(const CompVVec3f& eye, const CompVVec3f& target, const CompVVec3f& up) = 0;
-	virtual COMPV_ERROR_CODE reset() = 0;
+    virtual CompVMat4fPtr matrix() = 0;
+    virtual COMPV_ERROR_CODE setCamera(const CompVVec3f& eye, const CompVVec3f& target, const CompVVec3f& up) = 0;
+    virtual COMPV_ERROR_CODE reset() = 0;
 };
 
 //
@@ -98,16 +98,18 @@ COMPV_OBJECT_DECLARE_PTRS(Proj)
 class COMPV_BASE_API CompVProj : public CompVObj
 {
 protected:
-	CompVProj(COMPV_PROJECTION eType);
+    CompVProj(COMPV_PROJECTION eType);
 public:
-	virtual ~CompVProj();
-	COMPV_INLINE COMPV_PROJECTION type()const { return m_eType; }
+    virtual ~CompVProj();
+    COMPV_INLINE COMPV_PROJECTION type()const {
+        return m_eType;
+    }
 
-	virtual CompVMat4fPtr matrix() = 0;
-	virtual COMPV_ERROR_CODE reset() = 0;
+    virtual CompVMat4fPtr matrix() = 0;
+    virtual COMPV_ERROR_CODE reset() = 0;
 
 private:
-	COMPV_PROJECTION m_eType;
+    COMPV_PROJECTION m_eType;
 };
 
 //
@@ -118,11 +120,11 @@ COMPV_OBJECT_DECLARE_PTRS(Proj2D)
 class COMPV_BASE_API CompVProj2D : public CompVProj
 {
 protected:
-	CompVProj2D();
+    CompVProj2D();
 public:
-	virtual ~CompVProj2D();
+    virtual ~CompVProj2D();
 
-	virtual COMPV_ERROR_CODE setOrtho(float left, float right, float bottom, float top, float zNear, float zFar) = 0;
+    virtual COMPV_ERROR_CODE setOrtho(float left, float right, float bottom, float top, float zNear, float zFar) = 0;
 };
 
 //
@@ -133,11 +135,11 @@ COMPV_OBJECT_DECLARE_PTRS(Proj3D)
 class COMPV_BASE_API CompVProj3D : public CompVProj
 {
 protected:
-	CompVProj3D();
+    CompVProj3D();
 public:
-	virtual ~CompVProj3D();
+    virtual ~CompVProj3D();
 
-	virtual COMPV_ERROR_CODE setPerspective(float fovy = COMPV_MVP_PROJ_FOVY, float aspect = COMPV_MVP_PROJ_ASPECT_RATIO, float near = COMPV_MVP_PROJ_NEAR, float far = COMPV_MVP_PROJ_FAR) = 0;
+    virtual COMPV_ERROR_CODE setPerspective(float fovy = COMPV_MVP_PROJ_FOVY, float aspect = COMPV_MVP_PROJ_ASPECT_RATIO, float near = COMPV_MVP_PROJ_NEAR, float far = COMPV_MVP_PROJ_FAR) = 0;
 };
 
 //
@@ -148,15 +150,15 @@ COMPV_OBJECT_DECLARE_PTRS(MVP)
 class COMPV_BASE_API CompVMVP : public CompVObj
 {
 protected:
-	CompVMVP();
+    CompVMVP();
 public:
-	virtual ~CompVMVP();
-	virtual CompVMat4fPtr matrix() = 0;
-	virtual CompVModelPtr model() = 0;
-	virtual CompVViewPtr view() = 0;
-	virtual CompVProj2DPtr projection2D() = 0;
-	virtual CompVProj3DPtr projection3D() = 0;
-	virtual COMPV_ERROR_CODE reset() = 0;
+    virtual ~CompVMVP();
+    virtual CompVMat4fPtr matrix() = 0;
+    virtual CompVModelPtr model() = 0;
+    virtual CompVViewPtr view() = 0;
+    virtual CompVProj2DPtr projection2D() = 0;
+    virtual CompVProj3DPtr projection3D() = 0;
+    virtual COMPV_ERROR_CODE reset() = 0;
 };
 
 COMPV_NAMESPACE_END()

@@ -22,7 +22,8 @@
 #include "SkStream.h"
 #include "SkTypes.h"
 
-class SK_API SkWriter32 : SkNoncopyable {
+class SK_API SkWriter32 : SkNoncopyable
+{
 public:
     /**
      *  The caller can specify an initial block of storage, which the caller manages.
@@ -36,10 +37,14 @@ public:
     }
 
     // return the current offset (will always be a multiple of 4)
-    size_t bytesWritten() const { return fUsed; }
+    size_t bytesWritten() const {
+        return fUsed;
+    }
 
     SK_ATTR_DEPRECATED("use bytesWritten")
-    size_t size() const { return this->bytesWritten(); }
+    size_t size() const {
+        return this->bytesWritten();
+    }
 
     void reset(void* external = NULL, size_t externalBytes = 0) {
         SkASSERT(SkIsAlign4((uintptr_t)external));
@@ -257,11 +262,16 @@ private:
  *
  *  This wrapper ensures proper alignment rules are met for the storage.
  */
-template <size_t SIZE> class SkSWriter32 : public SkWriter32 {
+template <size_t SIZE> class SkSWriter32 : public SkWriter32
+{
 public:
-    SkSWriter32() { this->reset(); }
+    SkSWriter32() {
+        this->reset();
+    }
 
-    void reset() {this->INHERITED::reset(fData.fStorage, SIZE); }
+    void reset() {
+        this->INHERITED::reset(fData.fStorage, SIZE);
+    }
 
 private:
     union {

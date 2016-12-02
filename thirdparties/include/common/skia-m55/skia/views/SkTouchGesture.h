@@ -14,8 +14,12 @@
 struct SkFlingState {
     SkFlingState() : fActive(false) {}
 
-    bool isActive() const { return fActive; }
-    void stop() { fActive = false; }
+    bool isActive() const {
+        return fActive;
+    }
+    void stop() {
+        fActive = false;
+    }
 
     void reset(float sx, float sy);
     bool evaluateMatrix(SkMatrix* matrix);
@@ -27,7 +31,8 @@ private:
     bool        fActive;
 };
 
-class SkTouchGesture {
+class SkTouchGesture
+{
 public:
     SkTouchGesture();
     ~SkTouchGesture();
@@ -37,11 +42,17 @@ public:
     void touchEnd(void* owner);
     void reset();
 
-    bool isActive() { return fFlinger.isActive(); }
-    void stop() { fFlinger.stop(); }
+    bool isActive() {
+        return fFlinger.isActive();
+    }
+    void stop() {
+        fFlinger.stop();
+    }
 
     const SkMatrix& localM();
-    const SkMatrix& globalM() const { return fGlobalM; }
+    const SkMatrix& globalM() const {
+        return fGlobalM;
+    }
 
     void setTransLimit(const SkRect& contentRect, const SkRect& windowRect);
 

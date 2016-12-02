@@ -28,26 +28,26 @@ COMPV_OBJECT_DECLARE_PTRS(GLMultiSurfaceLayer)
 class CompVGLMultiSurfaceLayer : public CompVMultiSurfaceLayer
 {
 protected:
-	CompVGLMultiSurfaceLayer();
+    CompVGLMultiSurfaceLayer();
 public:
-	virtual ~CompVGLMultiSurfaceLayer();
-	COMPV_OBJECT_GET_ID(CompVGLMultiSurfaceLayer);
-	
-	COMPV_OVERRIDE_DECL0("CompVMultiSurfaceLayer", addSurface)(CompVSurfacePtrPtr surface, size_t width, size_t height) override;
-	COMPV_OVERRIDE_DECL0("CompVMultiSurfaceLayer", removeSurface)(const CompVSurfacePtr surface) override;
-	
-	COMPV_OVERRIDE_DECL0("CompSurfaceLayer", blit)() override;
+    virtual ~CompVGLMultiSurfaceLayer();
+    COMPV_OBJECT_GET_ID(CompVGLMultiSurfaceLayer);
 
-	COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
-	COMPV_ERROR_CODE close();
+    COMPV_OVERRIDE_DECL0("CompVMultiSurfaceLayer", addSurface)(CompVSurfacePtrPtr surface, size_t width, size_t height) override;
+    COMPV_OVERRIDE_DECL0("CompVMultiSurfaceLayer", removeSurface)(const CompVSurfacePtr surface) override;
 
-	static COMPV_ERROR_CODE newObj(CompVGLMultiSurfaceLayerPtrPtr layer, size_t width, size_t height);
+    COMPV_OVERRIDE_DECL0("CompSurfaceLayer", blit)() override;
+
+    COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
+    COMPV_ERROR_CODE close();
+
+    static COMPV_ERROR_CODE newObj(CompVGLMultiSurfaceLayerPtrPtr layer, size_t width, size_t height);
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	std::map<compv_surface_id_t, CompVGLSurfacePtr> m_mapSurfaces;
-	CompVGLSurfacePtr m_ptrCoverSurfaceGL;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    std::map<compv_surface_id_t, CompVGLSurfacePtr> m_mapSurfaces;
+    CompVGLSurfacePtr m_ptrCoverSurfaceGL;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

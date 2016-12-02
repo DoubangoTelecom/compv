@@ -48,11 +48,13 @@ enum SkAlphaType {
     kLastEnum_SkAlphaType = kUnpremul_SkAlphaType
 };
 
-static inline bool SkAlphaTypeIsOpaque(SkAlphaType at) {
+static inline bool SkAlphaTypeIsOpaque(SkAlphaType at)
+{
     return kOpaque_SkAlphaType == at;
 }
 
-static inline bool SkAlphaTypeIsValid(unsigned value) {
+static inline bool SkAlphaTypeIsValid(unsigned value)
+{
     return value <= kLastEnum_SkAlphaType;
 }
 
@@ -83,11 +85,12 @@ enum SkColorType {
 #elif SK_PMCOLOR_BYTE_ORDER(R,G,B,A)
     kN32_SkColorType = kRGBA_8888_SkColorType,
 #else
-    #error "SK_*32_SHFIT values must correspond to BGRA or RGBA byte order"
+#error "SK_*32_SHFIT values must correspond to BGRA or RGBA byte order"
 #endif
 };
 
-static int SkColorTypeBytesPerPixel(SkColorType ct) {
+static int SkColorTypeBytesPerPixel(SkColorType ct)
+{
     static const uint8_t gSize[] = {
         0,  // Unknown
         1,  // Alpha_8
@@ -106,7 +109,8 @@ static int SkColorTypeBytesPerPixel(SkColorType ct) {
     return gSize[ct];
 }
 
-static int SkColorTypeShiftPerPixel(SkColorType ct) {
+static int SkColorTypeShiftPerPixel(SkColorType ct)
+{
     static const uint8_t gShift[] = {
         0,  // Unknown
         0,  // Alpha_8
@@ -120,20 +124,23 @@ static int SkColorTypeShiftPerPixel(SkColorType ct) {
     };
     static_assert(SK_ARRAY_COUNT(gShift) == (size_t)(kLastEnum_SkColorType + 1),
                   "size_mismatch_with_SkColorType_enum");
-    
+
     SkASSERT((size_t)ct < SK_ARRAY_COUNT(gShift));
     return gShift[ct];
 }
 
-static inline size_t SkColorTypeMinRowBytes(SkColorType ct, int width) {
+static inline size_t SkColorTypeMinRowBytes(SkColorType ct, int width)
+{
     return width * SkColorTypeBytesPerPixel(ct);
 }
 
-static inline bool SkColorTypeIsValid(unsigned value) {
+static inline bool SkColorTypeIsValid(unsigned value)
+{
     return value <= kLastEnum_SkColorType;
 }
 
-static inline size_t SkColorTypeComputeOffset(SkColorType ct, int x, int y, size_t rowBytes) {
+static inline size_t SkColorTypeComputeOffset(SkColorType ct, int x, int y, size_t rowBytes)
+{
     if (kUnknown_SkColorType == ct) {
         return 0;
     }
@@ -169,7 +176,8 @@ enum SkYUVColorSpace {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-enum class SkSourceGammaTreatment {
+enum class SkSourceGammaTreatment
+{
     kRespect,
     kIgnore,
 };
@@ -185,8 +193,8 @@ public:
         , fWidth(0)
         , fHeight(0)
         , fColorType(kUnknown_SkColorType)
-        , fAlphaType(kUnknown_SkAlphaType)
-    {}
+        , fAlphaType(kUnknown_SkAlphaType) {
+    }
 
     static SkImageInfo Make(int width, int height, SkColorType ct, SkAlphaType at,
                             sk_sp<SkColorSpace> cs = nullptr) {
@@ -228,21 +236,37 @@ public:
     static SkImageInfo MakeUnknown() {
         return MakeUnknown(0, 0);
     }
-    
-    int width() const { return fWidth; }
-    int height() const { return fHeight; }
-    SkColorType colorType() const { return fColorType; }
-    SkAlphaType alphaType() const { return fAlphaType; }
-    SkColorSpace* colorSpace() const { return fColorSpace.get(); }
 
-    bool isEmpty() const { return fWidth <= 0 || fHeight <= 0; }
+    int width() const {
+        return fWidth;
+    }
+    int height() const {
+        return fHeight;
+    }
+    SkColorType colorType() const {
+        return fColorType;
+    }
+    SkAlphaType alphaType() const {
+        return fAlphaType;
+    }
+    SkColorSpace* colorSpace() const {
+        return fColorSpace.get();
+    }
+
+    bool isEmpty() const {
+        return fWidth <= 0 || fHeight <= 0;
+    }
 
     bool isOpaque() const {
         return SkAlphaTypeIsOpaque(fAlphaType);
     }
 
-    SkISize dimensions() const { return SkISize::Make(fWidth, fHeight); }
-    SkIRect bounds() const { return SkIRect::MakeWH(fWidth, fHeight); }
+    SkISize dimensions() const {
+        return SkISize::Make(fWidth, fHeight);
+    }
+    SkIRect bounds() const {
+        return SkIRect::MakeWH(fWidth, fHeight);
+    }
 
     bool gammaCloseToSRGB() const {
         return fColorSpace && fColorSpace->gammaCloseToSRGB();
@@ -259,7 +283,7 @@ public:
     SkImageInfo makeAlphaType(SkAlphaType newAlphaType) const {
         return Make(fWidth, fHeight, fColorType, newAlphaType, fColorSpace);
     }
-    
+
     SkImageInfo makeColorType(SkColorType newColorType) const {
         return Make(fWidth, fHeight, newColorType, fAlphaType, fColorSpace);
     }
@@ -268,9 +292,13 @@ public:
         return Make(fWidth, fHeight, fColorType, fAlphaType, std::move(cs));
     }
 
-    int bytesPerPixel() const { return SkColorTypeBytesPerPixel(fColorType); }
+    int bytesPerPixel() const {
+        return SkColorTypeBytesPerPixel(fColorType);
+    }
 
-    int shiftPerPixel() const { return SkColorTypeShiftPerPixel(fColorType); }
+    int shiftPerPixel() const {
+        return SkColorTypeShiftPerPixel(fColorType);
+    }
 
     uint64_t minRowBytes64() const {
         return sk_64_mul(fWidth, this->bytesPerPixel());
@@ -340,19 +368,21 @@ private:
         , fWidth(width)
         , fHeight(height)
         , fColorType(ct)
-        , fAlphaType(at)
-    {}
+        , fAlphaType(at) {
+    }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline bool SkColorAndColorSpaceAreGammaCorrect(SkColorType ct, SkColorSpace* cs) {
+static inline bool SkColorAndColorSpaceAreGammaCorrect(SkColorType ct, SkColorSpace* cs)
+{
     // Anything with a color-space attached is gamma-correct, as is F16.
     // To get legacy behavior, you need to ask for non-F16, with a nullptr color space.
     return (cs != nullptr) || kRGBA_F16_SkColorType == ct;
 }
 
-static inline bool SkImageInfoIsGammaCorrect(const SkImageInfo& info) {
+static inline bool SkImageInfoIsGammaCorrect(const SkImageInfo& info)
+{
     return SkColorAndColorSpaceAreGammaCorrect(info.colorType(), info.colorSpace());
 }
 

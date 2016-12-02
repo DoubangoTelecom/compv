@@ -79,7 +79,8 @@ enum SkFieldType {
         SkCanvas canvas(getBitmap()); // create a canvas
         animator.draw(canvas, &paint, 0); // draw the scene
 */
-class SkAnimator : public SkEventSink {
+class SkAnimator : public SkEventSink
+{
 public:
     SkAnimator();
     virtual ~SkAnimator();
@@ -434,7 +435,8 @@ public:
     Returns current time to animator. To return a custom timeline, create a child
     class and override the getMSecs method.
     */
-    class Timeline {
+    class Timeline
+    {
     public:
         virtual ~Timeline() {}
 

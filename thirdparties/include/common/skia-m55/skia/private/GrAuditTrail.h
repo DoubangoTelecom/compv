@@ -21,17 +21,19 @@ class GrBatch;
  * to json.
  *
  * Capturing this information is expensive and consumes a lot of memory, therefore it is important
- * to enable auditing only when required and disable it promptly. The AutoEnable class helps to 
+ * to enable auditing only when required and disable it promptly. The AutoEnable class helps to
  * ensure that the audit trail is disabled in a timely fashion. Once the information has been dealt
  * with, be sure to call reset(), or the log will simply keep growing.
  */
-class GrAuditTrail {
+class GrAuditTrail
+{
 public:
-    GrAuditTrail() 
-    : fClientID(kGrAuditTrailInvalidID)
-    , fEnabled(false) {}
+    GrAuditTrail()
+        : fClientID(kGrAuditTrailInvalidID)
+        , fEnabled(false) {}
 
-    class AutoEnable {
+    class AutoEnable
+    {
     public:
         AutoEnable(GrAuditTrail* auditTrail)
             : fAuditTrail(auditTrail) {
@@ -48,7 +50,8 @@ public:
         GrAuditTrail* fAuditTrail;
     };
 
-    class AutoManageBatchList {
+    class AutoManageBatchList
+    {
     public:
         AutoManageBatchList(GrAuditTrail* auditTrail)
             : fAutoEnable(auditTrail)
@@ -64,7 +67,8 @@ public:
         GrAuditTrail* fAuditTrail;
     };
 
-    class AutoCollectBatches {
+    class AutoCollectBatches
+    {
     public:
         AutoCollectBatches(GrAuditTrail* auditTrail, int clientID)
             : fAutoEnable(auditTrail)
@@ -72,7 +76,9 @@ public:
             fAuditTrail->setClientID(clientID);
         }
 
-        ~AutoCollectBatches() { fAuditTrail->setClientID(kGrAuditTrailInvalidID); }
+        ~AutoCollectBatches() {
+            fAuditTrail->setClientID(kGrAuditTrailInvalidID);
+        }
 
     private:
         AutoEnable fAutoEnable;
@@ -99,10 +105,16 @@ public:
     // returns a json string of all of the batches associated with a given client id
     SkString toJson(int clientID, bool prettyPrint = false) const;
 
-    bool isEnabled() { return fEnabled; }
-    void setEnabled(bool enabled) { fEnabled = enabled; }
+    bool isEnabled() {
+        return fEnabled;
+    }
+    void setEnabled(bool enabled) {
+        fEnabled = enabled;
+    }
 
-    void setClientID(int clientID) { fClientID = clientID; }
+    void setClientID(int clientID) {
+        fClientID = clientID;
+    }
 
     // We could just return our internal bookkeeping struct if copying the data out becomes
     // a performance issue, but until then its nice to decouple
@@ -151,7 +163,7 @@ private:
     template <typename T>
     static void JsonifyTArray(SkString* json, const char* name, const T& array,
                               bool addComma);
-    
+
     BatchPool fBatchPool;
     SkTHashMap<uint32_t, int> fIDLookup;
     SkTHashMap<int, Batches*> fClientIDLookup;

@@ -19,11 +19,21 @@ struct SK_API SkPoint3 {
         return pt;
     }
 
-    SkScalar x() const { return fX; }
-    SkScalar y() const { return fY; }
-    SkScalar z() const { return fZ; }
+    SkScalar x() const {
+        return fX;
+    }
+    SkScalar y() const {
+        return fY;
+    }
+    SkScalar z() const {
+        return fZ;
+    }
 
-    void set(SkScalar x, SkScalar y, SkScalar z) { fX = x; fY = y; fZ = z; }
+    void set(SkScalar x, SkScalar y, SkScalar z) {
+        fX = x;
+        fY = y;
+        fZ = z;
+    }
 
     friend bool operator==(const SkPoint3& a, const SkPoint3& b) {
         return a.fX == b.fX && a.fY == b.fY && a.fZ == b.fZ;
@@ -39,7 +49,9 @@ struct SK_API SkPoint3 {
 
     /** Return the Euclidian distance from (0,0,0) to the point
     */
-    SkScalar length() const { return SkPoint3::Length(fX, fY, fZ); }
+    SkScalar length() const {
+        return SkPoint3::Length(fX, fY, fZ);
+    }
 
     /** Set the point (vector) to be unit-length in the same direction as it
         already points.  If the point has a degenerate length (i.e., nearly 0)
@@ -57,7 +69,7 @@ struct SK_API SkPoint3 {
 
     /** Scale the point's coordinates by scale.
     */
-    void scale(SkScalar value) { 
+    void scale(SkScalar value) {
         fX *= value;
         fY *= value;
         fZ *= value;

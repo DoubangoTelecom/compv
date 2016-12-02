@@ -32,28 +32,28 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
 
 COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVMatPtrPtr mat)
 {
-	COMPV_CHECK_EXP_RETURN(!filePath || !mat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_EXP_RETURN(!filePath || !mat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     uint8_t* rawdata_ = NULL;
-	int32_t width_, stride_, height_;
-	COMPV_PIXEL_FORMAT pixelFormat_;
-	CompVImageInfo info = {};
+    int32_t width_, stride_, height_;
+    COMPV_PIXEL_FORMAT pixelFormat_;
+    CompVImageInfo info = {};
 
-	// Get image data without decoding
-	COMPV_CHECK_CODE_BAIL(err_ = libjpegDecodeInfo(filePath, info));
-	// Alloc image data
-	COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj8u(mat, static_cast<size_t>(info.height), static_cast<size_t>(info.width), info.pixelFormat));
-	rawdata_ = const_cast<uint8_t*>((*mat)->ptr<uint8_t>());
-	width_ = static_cast<int32_t>((*mat)->cols());
-	height_ = static_cast<int32_t>((*mat)->rows());
-	stride_ = static_cast<int32_t>((*mat)->strideInBytes());
-	pixelFormat_ = static_cast<COMPV_PIXEL_FORMAT>((*mat)->subType());
+    // Get image data without decoding
+    COMPV_CHECK_CODE_BAIL(err_ = libjpegDecodeInfo(filePath, info));
+    // Alloc image data
+    COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj8u(mat, static_cast<size_t>(info.height), static_cast<size_t>(info.width), info.pixelFormat));
+    rawdata_ = const_cast<uint8_t*>((*mat)->ptr<uint8_t>());
+    width_ = static_cast<int32_t>((*mat)->cols());
+    height_ = static_cast<int32_t>((*mat)->rows());
+    stride_ = static_cast<int32_t>((*mat)->strideInBytes());
+    pixelFormat_ = static_cast<COMPV_PIXEL_FORMAT>((*mat)->subType());
     COMPV_CHECK_CODE_BAIL(err_ = decode_jpeg(filePath, kReadDataTrue, &rawdata_, &width_, &stride_, &height_, &pixelFormat_));
 
 bail:
-	if (COMPV_ERROR_CODE_IS_NOK(err_)) {
-		*mat = NULL;
-	}
+    if (COMPV_ERROR_CODE_IS_NOK(err_)) {
+        *mat = NULL;
+    }
     return err_;
 }
 
@@ -90,9 +90,9 @@ static void my_error_exit(j_common_ptr cinfo)
     /* We could postpone this until after returning, if we chose. */
     (*cinfo->err->output_message) (cinfo);
 #else
-		char buffer[JMSG_LENGTH_MAX];
-		(*cinfo->err->format_message) (cinfo, buffer);
-		COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "error message: %s", buffer);
+    char buffer[JMSG_LENGTH_MAX];
+    (*cinfo->err->format_message) (cinfo, buffer);
+    COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "error message: %s", buffer);
 #endif
     /* Return control to the setjmp point */
     longjmp(myerr->setjmp_buffer, 1);
@@ -102,7 +102,7 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
 {
     struct jpeg_decompress_struct cinfo = { 0 };
     bool cinfo_created = false;
-	bool rawdata_allocated = false;
+    bool rawdata_allocated = false;
     /* We use our private extension JPEG error handler.
     * Note that this struct must live as long as the main JPEG parameter
     * struct, to avoid dangling-pointer problems.
@@ -158,31 +158,31 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
 
     // For now only RGB is supported
     switch (cinfo.out_color_space) {
-	case JCS_GRAYSCALE:
-		*pixelFormat = COMPV_PIXEL_FORMAT_GRAYSCALE;
-		break;
+    case JCS_GRAYSCALE:
+        *pixelFormat = COMPV_PIXEL_FORMAT_GRAYSCALE;
+        break;
     case JCS_RGB:
     case JCS_EXT_RGB:
-		*pixelFormat = COMPV_PIXEL_FORMAT_R8G8B8;
+        *pixelFormat = COMPV_PIXEL_FORMAT_R8G8B8;
         break;
     case JCS_EXT_BGR:
-		*pixelFormat = COMPV_PIXEL_FORMAT_B8G8R8;
+        *pixelFormat = COMPV_PIXEL_FORMAT_B8G8R8;
         break;
     case JCS_EXT_RGBA:
     case JCS_EXT_RGBX:
-		*pixelFormat = COMPV_PIXEL_FORMAT_R8G8B8A8;
+        *pixelFormat = COMPV_PIXEL_FORMAT_R8G8B8A8;
         break;
     case JCS_EXT_BGRA:
     case JCS_EXT_BGRX:
-		*pixelFormat = COMPV_PIXEL_FORMAT_B8G8R8A8;
+        *pixelFormat = COMPV_PIXEL_FORMAT_B8G8R8A8;
         break;
     case JCS_EXT_ABGR:
     case JCS_EXT_XBGR:
-		*pixelFormat = COMPV_PIXEL_FORMAT_A8B8G8R8;
+        *pixelFormat = COMPV_PIXEL_FORMAT_A8B8G8R8;
         break;
     case JCS_EXT_ARGB:
     case JCS_EXT_XRGB:
-		*pixelFormat = COMPV_PIXEL_FORMAT_A8R8G8B8;
+        *pixelFormat = COMPV_PIXEL_FORMAT_A8R8G8B8;
         break;
     default:
         COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "Invalid color space %d", cinfo.out_color_space);
@@ -197,17 +197,17 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
         COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_THIRD_PARTY_LIB);
     }
 
-	// When rawdata is already allocated then, we must have valid size
-	if (readData && *rawdata && (static_cast<JDIMENSION>(*width) != cinfo.output_width || static_cast<JDIMENSION>(*height) != cinfo.output_height || static_cast<JDIMENSION>(*stride) < cinfo.output_width)) {
-		COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "Data already allocated, you must define correct size");
-		COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	}
+    // When rawdata is already allocated then, we must have valid size
+    if (readData && *rawdata && (static_cast<JDIMENSION>(*width) != cinfo.output_width || static_cast<JDIMENSION>(*height) != cinfo.output_height || static_cast<JDIMENSION>(*stride) < cinfo.output_width)) {
+        COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "Data already allocated, you must define correct size");
+        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    }
 
     *width = cinfo.output_width;
     *height = cinfo.output_height;
-	if (static_cast<JDIMENSION>(*stride) < cinfo.output_width) { // do not override if data already defined
-		*stride = static_cast<int32_t>(CompVMem::alignForward((cinfo.output_width * sizeof(uint8_t)), COMPV_SIMD_ALIGNV_DEFAULT));
-	}
+    if (static_cast<JDIMENSION>(*stride) < cinfo.output_width) { // do not override if data already defined
+        *stride = static_cast<int32_t>(CompVMem::alignForward((cinfo.output_width * sizeof(uint8_t)), COMPV_SIMD_ALIGNV_DEFAULT));
+    }
 
     if (readData) {
         /* We may need to do some setup of our own at this point before reading
@@ -223,10 +223,10 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
         buffer = (*cinfo.mem->alloc_sarray)
                  ((j_common_ptr)&cinfo, JPOOL_IMAGE, row_width_bytes, 1);
 
-		if (!*rawdata) {
-			*rawdata = (uint8_t*)CompVMem::malloc(row_stride_bytes * cinfo.output_height);
-			rawdata_allocated = true;
-		}
+        if (!*rawdata) {
+            *rawdata = (uint8_t*)CompVMem::malloc(row_stride_bytes * cinfo.output_height);
+            rawdata_allocated = true;
+        }
         if (!*rawdata) {
             COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "Failed to allocate %d bytes", row_width_bytes * cinfo.output_height);
             COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -252,9 +252,9 @@ bail:
     if (cinfo_created) { // null exception in libjpeg if create is nok
         /* Step 7: Finish decompression */
 
-		if (readData) {
-			(void)jpeg_finish_decompress(&cinfo);
-		}
+        if (readData) {
+            (void)jpeg_finish_decompress(&cinfo);
+        }
         /* We can ignore the return value since suspension is not possible
         * with the stdio data source.
         */
@@ -264,7 +264,7 @@ bail:
         fclose(infile);
     }
 
-	if (COMPV_ERROR_CODE_IS_NOK(err) && rawdata_allocated) {
+    if (COMPV_ERROR_CODE_IS_NOK(err) && rawdata_allocated) {
         CompVMem::free((void**)rawdata);
     }
 

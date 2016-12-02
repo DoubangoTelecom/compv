@@ -56,8 +56,7 @@ struct _SDL_GameController;
 typedef struct _SDL_GameController SDL_GameController;
 
 
-typedef enum
-{
+typedef enum {
     SDL_CONTROLLER_BINDTYPE_NONE = 0,
     SDL_CONTROLLER_BINDTYPE_BUTTON,
     SDL_CONTROLLER_BINDTYPE_AXIS,
@@ -67,11 +66,9 @@ typedef enum
 /**
  *  Get the SDL joystick layer binding for this controller button/axis mapping
  */
-typedef struct SDL_GameControllerButtonBind
-{
+typedef struct SDL_GameControllerButtonBind {
     SDL_GameControllerBindType bindType;
-    union
-    {
+    union {
         int button;
         int axis;
         struct {
@@ -114,7 +111,7 @@ typedef struct SDL_GameControllerButtonBind
  *  A community sourced database of controllers is available at https://raw.github.com/gabomdq/SDL_GameControllerDB/master/gamecontrollerdb.txt
  *
  *  If \c freerw is non-zero, the stream will be closed after being read.
- * 
+ *
  * \return number of mappings added, -1 on error
  */
 extern DECLSPEC int SDLCALL SDL_GameControllerAddMappingsFromRW( SDL_RWops * rw, int freerw );
@@ -215,8 +212,7 @@ extern DECLSPEC void SDLCALL SDL_GameControllerUpdate(void);
 /**
  *  The list of axes available from a controller
  */
-typedef enum
-{
+typedef enum {
     SDL_CONTROLLER_AXIS_INVALID = -1,
     SDL_CONTROLLER_AXIS_LEFTX,
     SDL_CONTROLLER_AXIS_LEFTY,
@@ -259,8 +255,7 @@ SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,
 /**
  *  The list of buttons available from a controller
  */
-typedef enum
-{
+typedef enum {
     SDL_CONTROLLER_BUTTON_INVALID = -1,
     SDL_CONTROLLER_BUTTON_A,
     SDL_CONTROLLER_BUTTON_B,
@@ -304,7 +299,7 @@ SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
  *  The button indices start at index 0.
  */
 extern DECLSPEC Uint8 SDLCALL SDL_GameControllerGetButton(SDL_GameController *gamecontroller,
-                                                          SDL_GameControllerButton button);
+        SDL_GameControllerButton button);
 
 /**
  *  Close a controller previously opened with SDL_GameControllerOpen().

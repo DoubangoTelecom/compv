@@ -25,7 +25,7 @@ struct GrVkInterface;
  * Creates a GrVkInterface.
  */
 const GrVkInterface* GrVkCreateInterface(VkInstance instance, VkDevice device,
-                                         uint32_t extensionFlags);
+        uint32_t extensionFlags);
 
 
 /**
@@ -37,11 +37,17 @@ const GrVkInterface* GrVkCreateInterface(VkInstance instance, VkDevice device,
 struct SK_API GrVkInterface : public SkRefCnt {
 private:
     // simple wrapper class that exists only to initialize a pointer to NULL
-    template <typename FNPTR_TYPE> class VkPtr {
+    template <typename FNPTR_TYPE> class VkPtr
+    {
     public:
         VkPtr() : fPtr(NULL) {}
-        VkPtr operator=(FNPTR_TYPE ptr) { fPtr = ptr; return *this; }
-        operator FNPTR_TYPE() const { return fPtr; }
+        VkPtr operator=(FNPTR_TYPE ptr) {
+            fPtr = ptr;
+            return *this;
+        }
+        operator FNPTR_TYPE() const {
+            return fPtr;
+        }
     private:
         FNPTR_TYPE fPtr;
     };

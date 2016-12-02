@@ -19,7 +19,8 @@ class SkStreamAsset;
 class SkString;
 class SkTypeface;
 
-class SK_API SkFontStyleSet : public SkRefCnt {
+class SK_API SkFontStyleSet : public SkRefCnt
+{
 public:
     virtual int count() = 0;
     virtual void getStyle(int index, SkFontStyle*, SkString* style) = 0;
@@ -35,7 +36,8 @@ private:
     typedef SkRefCnt INHERITED;
 };
 
-class SK_API SkFontMgr : public SkRefCnt {
+class SK_API SkFontMgr : public SkRefCnt
+{
 public:
     int countFamilies() const;
     void getFamilyName(int index, SkString* familyName) const;
@@ -182,8 +184,8 @@ protected:
     virtual SkTypeface* onMatchFamilyStyle(const char familyName[],
                                            const SkFontStyle&) const = 0;
     virtual SkTypeface* onMatchFamilyStyleCharacter(const char familyName[], const SkFontStyle&,
-                                                    const char* bcp47[], int bcp47Count,
-                                                    SkUnichar character) const = 0;
+            const char* bcp47[], int bcp47Count,
+            SkUnichar character) const = 0;
     virtual SkTypeface* onMatchFaceStyle(const SkTypeface*,
                                          const SkFontStyle&) const = 0;
 

@@ -37,32 +37,32 @@ int main(int argc, char** argv)
     COMPV_CHECK_CODE_ASSERT(CompVCpu::flagsDisable(cpuDisable));
 
 #if TEST_CONV
-	extern COMPV_ERROR_CODE TestConv();
-	COMPV_CHECK_CODE_ASSERT(TestConv());
+    extern COMPV_ERROR_CODE TestConv();
+    COMPV_CHECK_CODE_ASSERT(TestConv());
 #endif
 #if TEST_FAST
-	extern COMPV_ERROR_CODE TestFAST();
-	COMPV_CHECK_CODE_ASSERT(TestFAST());
+    extern COMPV_ERROR_CODE TestFAST();
+    COMPV_CHECK_CODE_ASSERT(TestFAST());
 #endif
 #if TEST_ORB
-	extern COMPV_ERROR_CODE TestORB();
+    extern COMPV_ERROR_CODE TestORB();
     COMPV_CHECK_CODE_ASSERT(TestORB());
 #endif
 #if TEST_CANNY
-	extern COMPV_ERROR_CODE TestCanny();
-	COMPV_CHECK_CODE_ASSERT(TestCanny());
+    extern COMPV_ERROR_CODE TestCanny();
+    COMPV_CHECK_CODE_ASSERT(TestCanny());
 #endif
 #if TEST_HOUGHSTD
-	extern COMPV_ERROR_CODE TestHoughStd();
-	COMPV_CHECK_CODE_ASSERT(TestHoughStd());
+    extern COMPV_ERROR_CODE TestHoughStd();
+    COMPV_CHECK_CODE_ASSERT(TestHoughStd());
 #endif
 #if TEST_SCALE
-	extern COMPV_ERROR_CODE TestScale();
-	COMPV_CHECK_CODE_ASSERT(TestScale());
+    extern COMPV_ERROR_CODE TestScale();
+    COMPV_CHECK_CODE_ASSERT(TestScale());
 #endif
 #if TEST_PYRAMID
-	extern COMPV_ERROR_CODE TestPyramid();
-	COMPV_CHECK_CODE_ASSERT(TestPyramid());
+    extern COMPV_ERROR_CODE TestPyramid();
+    COMPV_CHECK_CODE_ASSERT(TestPyramid());
 #endif
 
     // deInit the engine

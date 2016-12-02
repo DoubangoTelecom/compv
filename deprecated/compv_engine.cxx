@@ -58,16 +58,16 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
         COMPV_DEBUG_ERROR("sizeof(compv_scalar_t)= #%lu not equal to sizeof(void*)= #%lu", sizeof(compv_scalar_t), sizeof(void*));
         return COMPV_ERROR_CODE_E_SYSTEM;
     }
-	// https://en.wikipedia.org/wiki/Single-precision_floating-point_format
-	if (sizeof(compv_float32_t) != 4) {
-		COMPV_DEBUG_ERROR("sizeof(compv_float32_t)= #%lu not equal to 4", sizeof(compv_float32_t));
-		return COMPV_ERROR_CODE_E_SYSTEM;
-	}
-	// https://en.wikipedia.org/wiki/Double-precision_floating-point_format
-	if (sizeof(compv_float64_t) != 8) {
-		COMPV_DEBUG_ERROR("sizeof(compv_float64_t)= #%lu not equal to 8", sizeof(compv_float64_t));
-		return COMPV_ERROR_CODE_E_SYSTEM;
-	}
+    // https://en.wikipedia.org/wiki/Single-precision_floating-point_format
+    if (sizeof(compv_float32_t) != 4) {
+        COMPV_DEBUG_ERROR("sizeof(compv_float32_t)= #%lu not equal to 4", sizeof(compv_float32_t));
+        return COMPV_ERROR_CODE_E_SYSTEM;
+    }
+    // https://en.wikipedia.org/wiki/Double-precision_floating-point_format
+    if (sizeof(compv_float64_t) != 8) {
+        COMPV_DEBUG_ERROR("sizeof(compv_float64_t)= #%lu not equal to 8", sizeof(compv_float64_t));
+        return COMPV_ERROR_CODE_E_SYSTEM;
+    }
 #endif
     COMPV_DEBUG_INFO("sizeof(compv_scalar_t)= #%lu", sizeof(compv_scalar_t));
     COMPV_DEBUG_INFO("sizeof(float)= #%lu", sizeof(float));
@@ -99,28 +99,28 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     }
 #endif
 
-	/* Make sure heap debugging is disabled (release mode only) */
+    /* Make sure heap debugging is disabled (release mode only) */
 #if COMPV_OS_WINDOWS && defined(_MSC_VER) && defined(NDEBUG)
-	if (IsDebuggerPresent()) {
-		// TODO(dmi): Looks like this feature is OFF (by default) on VS2015
-		DWORD size = GetEnvironmentVariable(TEXT("_NO_DEBUG_HEAP"), NULL, 0);
-		bool bHeapDebuggingDisabled = false;
-		if (size) {
-			TCHAR* _NO_DEBUG_HEAP = (TCHAR*)CompVMem::malloc(size * sizeof(TCHAR));
-			if (_NO_DEBUG_HEAP) {
-				size = GetEnvironmentVariable(TEXT("_NO_DEBUG_HEAP"), _NO_DEBUG_HEAP, size);
-				if (size) {
-					bHeapDebuggingDisabled = (_NO_DEBUG_HEAP[0] == TEXT('1'));
-				}
-				CompVMem::free((void**)&_NO_DEBUG_HEAP);
-			}
-		}
-		if (!bHeapDebuggingDisabled) {
-			COMPV_DEBUG_INFO("/!\\ Heap debugging enabled on release mode while running your app from Visual Studio. You may experiment performance issues.\n"
-				"Consider disabling this feature: Configuration Properties->Debugging->Environment: _NO_DEBUG_HEAP=1\n"
-				"Must be set on the app (executable) itself.");
-		}
-	}
+    if (IsDebuggerPresent()) {
+        // TODO(dmi): Looks like this feature is OFF (by default) on VS2015
+        DWORD size = GetEnvironmentVariable(TEXT("_NO_DEBUG_HEAP"), NULL, 0);
+        bool bHeapDebuggingDisabled = false;
+        if (size) {
+            TCHAR* _NO_DEBUG_HEAP = (TCHAR*)CompVMem::malloc(size * sizeof(TCHAR));
+            if (_NO_DEBUG_HEAP) {
+                size = GetEnvironmentVariable(TEXT("_NO_DEBUG_HEAP"), _NO_DEBUG_HEAP, size);
+                if (size) {
+                    bHeapDebuggingDisabled = (_NO_DEBUG_HEAP[0] == TEXT('1'));
+                }
+                CompVMem::free((void**)&_NO_DEBUG_HEAP);
+            }
+        }
+        if (!bHeapDebuggingDisabled) {
+            COMPV_DEBUG_INFO("/!\\ Heap debugging enabled on release mode while running your app from Visual Studio. You may experiment performance issues.\n"
+                             "Consider disabling this feature: Configuration Properties->Debugging->Environment: _NO_DEBUG_HEAP=1\n"
+                             "Must be set on the app (executable) itself.");
+        }
+    }
 #endif
 
     /* Image handlers initialization */
@@ -159,28 +159,28 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
     COMPV_DEBUG_INFO("Code built with option /arch:AVX");
 #endif
 #if defined(__FMA3__)
-	COMPV_DEBUG_INFO("Code built with option /arch:FMA3");
+    COMPV_DEBUG_INFO("Code built with option /arch:FMA3");
 #endif
 #if defined(__SSE__)
-	COMPV_DEBUG_INFO("Code built with option /arch:SSE");
+    COMPV_DEBUG_INFO("Code built with option /arch:SSE");
 #endif
 #if defined(__SSE2__)
-	COMPV_DEBUG_INFO("Code built with option /arch:SSE2");
+    COMPV_DEBUG_INFO("Code built with option /arch:SSE2");
 #endif
 #if defined(__SSE3__)
-	COMPV_DEBUG_INFO("Code built with option /arch:SSE3");
+    COMPV_DEBUG_INFO("Code built with option /arch:SSE3");
 #endif
 #if defined(__SSSE3__)
-	COMPV_DEBUG_INFO("Code built with option /arch:SSSE3");
+    COMPV_DEBUG_INFO("Code built with option /arch:SSSE3");
 #endif
 #if defined(__SSE4_1__)
-	COMPV_DEBUG_INFO("Code built with option /arch:SSE41");
+    COMPV_DEBUG_INFO("Code built with option /arch:SSE41");
 #endif
 #if defined(__SSE4_2__)
-	COMPV_DEBUG_INFO("Code built with option /arch:SSE42");
+    COMPV_DEBUG_INFO("Code built with option /arch:SSE42");
 #endif
 #if defined(__ARM_NEON__)
-	COMPV_DEBUG_INFO("Code built with option /arch:NEON");
+    COMPV_DEBUG_INFO("Code built with option /arch:NEON");
 #endif
 
     /* Math functions: Must be after CPU initialization */
@@ -209,7 +209,7 @@ bail:
     // cleanup if initialization failed
     if (!s_bInitialized) {
         s_ThreadDisp = NULL;
-		s_ThreadDisp11 = NULL;
+        s_ThreadDisp11 = NULL;
     }
     else {
         // The next functions are called here because they recursively call "CompVEngine::init()"
@@ -219,7 +219,7 @@ bail:
         // maxThreads: <= 0 means choose the best one, ==1 means disable, > 1 means enable
         if (numThreads > 1 || (numThreads <= 0 && CompVCpu::getCoresCount() > 1)) {
             COMPV_CHECK_CODE_BAIL(err_ = CompVThreadDispatcher::newObj(&s_ThreadDisp, numThreads));
-			COMPV_CHECK_CODE_BAIL(err_ = CompVThreadDispatcher11::newObj(&s_ThreadDisp11, numThreads));
+            COMPV_CHECK_CODE_BAIL(err_ = CompVThreadDispatcher11::newObj(&s_ThreadDisp11, numThreads));
         }
     }
     return err_;
@@ -229,7 +229,7 @@ COMPV_ERROR_CODE CompVEngine::deInit()
 {
     s_bInitialized = false;
     s_ThreadDisp = NULL;
-	s_ThreadDisp11 = NULL;
+    s_ThreadDisp11 = NULL;
 
     // TODO(dmi): deInit other modules (not an issue because there is no memory allocation)
     CompVMem::deInit();
@@ -246,15 +246,15 @@ COMPV_ERROR_CODE CompVEngine::multiThreadingEnable(CompVPtr<CompVThreadDispatche
 
 COMPV_ERROR_CODE CompVEngine::multiThreadingEnable11(CompVPtr<CompVThreadDispatcher11* > dispatcher)
 {
-	COMPV_CHECK_EXP_RETURN(!dispatcher, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	s_ThreadDisp11 = dispatcher;
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(!dispatcher, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    s_ThreadDisp11 = dispatcher;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVEngine::multiThreadingDisable()
 {
     s_ThreadDisp = NULL;
-	s_ThreadDisp11 = NULL;
+    s_ThreadDisp11 = NULL;
     return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -264,9 +264,9 @@ COMPV_ERROR_CODE CompVEngine::multiThreadingSetMaxThreads(size_t maxThreads)
     COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::newObj(&newThreadDisp));
     s_ThreadDisp = newThreadDisp;// TODO(dmi): function not optimal, we destroy all threads and create new ones
 
-	CompVPtr<CompVThreadDispatcher11 *> newThreadDisp11;
-	COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher11::newObj(&newThreadDisp11));
-	s_ThreadDisp11 = newThreadDisp11;// TODO(dmi): function not optimal, we destroy all threads and create new ones
+    CompVPtr<CompVThreadDispatcher11 *> newThreadDisp11;
+    COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher11::newObj(&newThreadDisp11));
+    s_ThreadDisp11 = newThreadDisp11;// TODO(dmi): function not optimal, we destroy all threads and create new ones
 
     return COMPV_ERROR_CODE_S_OK;
 }

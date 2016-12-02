@@ -18,7 +18,8 @@ class SkMatrix;
 class SkPath;
 struct SkIRect;
 
-class SK_API SkRasterizer : public SkFlattenable {
+class SK_API SkRasterizer : public SkFlattenable
+{
 public:
     /** Turn the path into a mask, respecting the specified local->device matrix.
     */

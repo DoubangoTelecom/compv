@@ -228,7 +228,7 @@ template <typename T>
 void CompVConvlt<T>::convlt1_verthz(const uint8_t* in_ptr, uint8_t* out_ptr, int width, int height, int stride, int pad, const T* vhkern_ptr, int kern_size)
 {
     int minpack = 0; // Minimum number of pixels the function can handle for each operation (must be pof 2)
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Not multithreaded (See FXP version)
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Not multithreaded (See FXP version)
 
     // Floating point implementation
     if (std::is_same<T, compv_float32_t>::value) {
@@ -298,37 +298,37 @@ void CompVConvlt<T>::convlt1_verthz_fxp(const uint8_t* in_ptr, uint8_t* out_ptr,
         COMPV_EXEC_IFDEF_ASM_X64((Convlt1_verthz_fxp = Convlt1_verthz_fxpq16_minpack16_Asm_X64_AVX2, minpack = 16));
     }
 
-	int threadsCount = 1;
-	CompVAsyncTaskIds taskIds;
-	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
-	if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
-		threadsCount = COMPV_MATH_MIN((width * height) / COMPV_CONVOLUTION_MIN_SAMPLES_PER_THREAD, int(threadDisp->getThreadsCount()));
-		threadsCount = COMPV_MATH_MIN(threadsCount, (int)height); // divide across rows
-	}
+    int threadsCount = 1;
+    CompVAsyncTaskIds taskIds;
+    CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
+    if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
+        threadsCount = COMPV_MATH_MIN((width * height) / COMPV_CONVOLUTION_MIN_SAMPLES_PER_THREAD, int(threadDisp->getThreadsCount()));
+        threadsCount = COMPV_MATH_MIN(threadsCount, (int)height); // divide across rows
+    }
 
     if (Convlt1_verthz_fxp) {
-		if (threadsCount > 1) {
-			taskIds.reserve(threadsCount);
-			auto funcPtr = [&](const uint8_t* blockInPtr, uint8_t* blockOutPtr, compv_scalar_t blockWidth, compv_scalar_t blockHeight, compv_scalar_t blockStride, compv_scalar_t blockPad, const uint16_t* blockHkernPtr, compv_scalar_t blockKernSize) -> COMPV_ERROR_CODE {
-				Convlt1_verthz_fxp(blockInPtr, blockOutPtr, blockWidth, blockHeight, blockStride, blockPad, blockHkernPtr, blockKernSize);
-				return COMPV_ERROR_CODE_S_OK;
-			};
-			const int heights = (height / threadsCount);
-			const int lastHeight = height - ((threadsCount - 1) * heights);
-			const int blockCount = heights * (width + pad); // stride parameter doesn't mean what you may think. Real stride = "width + pad"
-			for (int i = 0, blockStart = 0; i < threadsCount; ++i, blockStart += blockCount) {
-				COMPV_CHECK_CODE_ASSERT(threadDisp->invoke(std::bind(funcPtr, in_ptr + blockStart, out_ptr + blockStart, width, (i == threadsCount - 1) ? lastHeight : heights, stride, pad, vhkern_ptr, kern_size), taskIds));
-			}
-			// wait for threads later
-		}
-		else {
-			Convlt1_verthz_fxp(in_ptr, out_ptr, width, height, stride, pad, vhkern_ptr, kern_size);
-		}
+        if (threadsCount > 1) {
+            taskIds.reserve(threadsCount);
+            auto funcPtr = [&](const uint8_t* blockInPtr, uint8_t* blockOutPtr, compv_scalar_t blockWidth, compv_scalar_t blockHeight, compv_scalar_t blockStride, compv_scalar_t blockPad, const uint16_t* blockHkernPtr, compv_scalar_t blockKernSize) -> COMPV_ERROR_CODE {
+                Convlt1_verthz_fxp(blockInPtr, blockOutPtr, blockWidth, blockHeight, blockStride, blockPad, blockHkernPtr, blockKernSize);
+                return COMPV_ERROR_CODE_S_OK;
+            };
+            const int heights = (height / threadsCount);
+            const int lastHeight = height - ((threadsCount - 1) * heights);
+            const int blockCount = heights * (width + pad); // stride parameter doesn't mean what you may think. Real stride = "width + pad"
+            for (int i = 0, blockStart = 0; i < threadsCount; ++i, blockStart += blockCount) {
+                COMPV_CHECK_CODE_ASSERT(threadDisp->invoke(std::bind(funcPtr, in_ptr + blockStart, out_ptr + blockStart, width, (i == threadsCount - 1) ? lastHeight : heights, stride, pad, vhkern_ptr, kern_size), taskIds));
+            }
+            // wait for threads later
+        }
+        else {
+            Convlt1_verthz_fxp(in_ptr, out_ptr, width, height, stride, pad, vhkern_ptr, kern_size);
+        }
         int missed = (width & (minpack - 1));
         if (missed == 0) {
-			if (!taskIds.empty()) {
-				COMPV_CHECK_CODE_ASSERT(threadDisp->wait(taskIds));
-			}
+            if (!taskIds.empty()) {
+                COMPV_CHECK_CODE_ASSERT(threadDisp->wait(taskIds));
+            }
             return;
         }
         in_ptr += (width - missed);
@@ -342,9 +342,9 @@ void CompVConvlt<T>::convlt1_verthz_fxp(const uint8_t* in_ptr, uint8_t* out_ptr,
 
     CompVConvlt<T>::convlt1_verthz_fxp_C(in_ptr, out_ptr, width, height, stride, pad, vhkern_ptr, kern_size);
 
-	if (!taskIds.empty()) {
-		COMPV_CHECK_CODE_ASSERT(threadDisp->wait(taskIds));
-	}
+    if (!taskIds.empty()) {
+        COMPV_CHECK_CODE_ASSERT(threadDisp->wait(taskIds));
+    }
 }
 
 template <typename T>

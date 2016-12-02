@@ -15,13 +15,13 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_BASE_API CompVImageUtils
 {
 public:
-	static COMPV_ERROR_CODE getBestStride(size_t stride, size_t *bestStride);
-	static COMPV_ERROR_CODE getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, size_t width, size_t height, size_t *size);
-	static COMPV_ERROR_CODE getCompSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, size_t width, size_t height, size_t compId, size_t *size);
-	static COMPV_ERROR_CODE getCompSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, size_t compId, size_t imgWidth, size_t imgHeight, size_t *compWidth, size_t *compHeight);
-	static COMPV_ERROR_CODE getBitsCountForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, size_t* bitsCount);
-	static COMPV_ERROR_CODE getCompCount(COMPV_PIXEL_FORMAT ePixelFormat, size_t *compCount);
-	static COMPV_ERROR_CODE getCompInterleaved(COMPV_PIXEL_FORMAT ePixelFormat, bool *interleaved);
+    static COMPV_ERROR_CODE getBestStride(size_t stride, size_t *bestStride);
+    static COMPV_ERROR_CODE getSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, size_t width, size_t height, size_t *size);
+    static COMPV_ERROR_CODE getCompSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, size_t width, size_t height, size_t compId, size_t *size);
+    static COMPV_ERROR_CODE getCompSizeForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, size_t compId, size_t imgWidth, size_t imgHeight, size_t *compWidth, size_t *compHeight);
+    static COMPV_ERROR_CODE getBitsCountForPixelFormat(COMPV_PIXEL_FORMAT ePixelFormat, size_t* bitsCount);
+    static COMPV_ERROR_CODE getCompCount(COMPV_PIXEL_FORMAT ePixelFormat, size_t *compCount);
+    static COMPV_ERROR_CODE getCompInterleaved(COMPV_PIXEL_FORMAT ePixelFormat, bool *interleaved);
 
 private:
 };

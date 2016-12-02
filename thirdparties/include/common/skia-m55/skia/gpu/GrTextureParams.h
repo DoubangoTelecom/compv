@@ -14,7 +14,8 @@
 /**
  * Represents the filtering and tile modes used to access a texture.
  */
-class GrTextureParams {
+class GrTextureParams
+{
 public:
     static const GrTextureParams& ClampNoFilter() {
         static const GrTextureParams gParams;
@@ -78,22 +79,36 @@ public:
         fTileModes[0] = fTileModes[1] = SkShader::kClamp_TileMode;
     }
 
-    void setFilterMode(FilterMode filterMode) { fFilterMode = filterMode; }
+    void setFilterMode(FilterMode filterMode) {
+        fFilterMode = filterMode;
+    }
 
-    void setTileModeX(const SkShader::TileMode tm) { fTileModes[0] = tm; }
-    void setTileModeY(const SkShader::TileMode tm) { fTileModes[1] = tm; }
-    void setTileModeXAndY(const SkShader::TileMode tm) { fTileModes[0] = fTileModes[1] = tm; }
+    void setTileModeX(const SkShader::TileMode tm) {
+        fTileModes[0] = tm;
+    }
+    void setTileModeY(const SkShader::TileMode tm) {
+        fTileModes[1] = tm;
+    }
+    void setTileModeXAndY(const SkShader::TileMode tm) {
+        fTileModes[0] = fTileModes[1] = tm;
+    }
 
-    SkShader::TileMode getTileModeX() const { return fTileModes[0]; }
+    SkShader::TileMode getTileModeX() const {
+        return fTileModes[0];
+    }
 
-    SkShader::TileMode getTileModeY() const { return fTileModes[1]; }
+    SkShader::TileMode getTileModeY() const {
+        return fTileModes[1];
+    }
 
     bool isTiled() const {
         return SkShader::kClamp_TileMode != fTileModes[0] ||
                SkShader::kClamp_TileMode != fTileModes[1];
     }
 
-    FilterMode filterMode() const { return fFilterMode; }
+    FilterMode filterMode() const {
+        return fFilterMode;
+    }
 
     bool operator== (const GrTextureParams& other) const {
         return fTileModes[0] == other.fTileModes[0] &&
@@ -101,7 +116,9 @@ public:
                fFilterMode == other.fFilterMode;
     }
 
-    bool operator!= (const GrTextureParams& other) const { return !(*this == other); }
+    bool operator!= (const GrTextureParams& other) const {
+        return !(*this == other);
+    }
 
 private:
     SkShader::TileMode fTileModes[2];

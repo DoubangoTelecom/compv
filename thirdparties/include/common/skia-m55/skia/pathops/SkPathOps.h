@@ -69,19 +69,20 @@ bool SK_API TightBounds(const SkPath& path, SkRect* result);
 
 /** Perform a series of path operations, optimized for unioning many paths together.
   */
-class SK_API SkOpBuilder {
+class SK_API SkOpBuilder
+{
 public:
     /** Add one or more paths and their operand. The builder is empty before the first
         path is added, so the result of a single add is (emptyPath OP path).
 
         @param path The second operand.
         @param _operator The operator to apply to the existing and supplied paths.
-     */ 
+     */
     void add(const SkPath& path, SkPathOp _operator);
 
     /** Computes the sum of all paths and operands, and resets the builder to its
         initial state.
- 
+
         @param result The product of the operands.
         @return True if the operation succeeded.
       */

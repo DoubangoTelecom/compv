@@ -28,7 +28,8 @@ typedef uint32_t SkEventSinkID;
  *  the eventsink matching the target ID (if not 0), or the target proc is
  *  called (if not NULL).
  */
-class SkEvent {
+class SkEvent
+{
 public:
     /**
      *  Function pointer that takes an event, returns true if it "handled" it.
@@ -67,7 +68,9 @@ public:
      *  the eventsink matching the targetID (if not 0), or the target proc is
      *  called (if not NULL).
      */
-    SkEventSinkID getTargetID() const { return fTargetID; }
+    SkEventSinkID getTargetID() const {
+        return fTargetID;
+    }
 
     /**
      *  Set the target ID for this event. 0 means none. Calling this will
@@ -90,7 +93,9 @@ public:
      *  the eventsink matching the targetID (if not 0), or the target proc is
      *  called (if not NULL).
      */
-    Proc getTargetProc() const { return fTargetProc; }
+    Proc getTargetProc() const {
+        return fTargetProc;
+    }
 
     /**
      *  Set the target ID for this event. NULL means none. Calling this will
@@ -109,75 +114,119 @@ public:
     /**
      *  Return the event's unnamed 32bit field. Default value is 0
      */
-    uint32_t getFast32() const { return f32; }
+    uint32_t getFast32() const {
+        return f32;
+    }
 
     /**
      *  Set the event's unnamed 32bit field.
      */
-    void setFast32(uint32_t x) { f32 = x; }
+    void setFast32(uint32_t x) {
+        f32 = x;
+    }
 
     /** Return true if the event contains the named 32bit field, and return the field
         in value (if value is non-null). If there is no matching named field, return false
         and ignore the value parameter.
     */
-    bool findS32(const char name[], int32_t* value = NULL) const { return fMeta.findS32(name, value); }
+    bool findS32(const char name[], int32_t* value = NULL) const {
+        return fMeta.findS32(name, value);
+    }
     /** Return true if the event contains the named SkScalar field, and return the field
         in value (if value is non-null). If there is no matching named field, return false
         and ignore the value parameter.
     */
-    bool findScalar(const char name[], SkScalar* value = NULL) const { return fMeta.findScalar(name, value); }
+    bool findScalar(const char name[], SkScalar* value = NULL) const {
+        return fMeta.findScalar(name, value);
+    }
     /** Return true if the event contains the named SkScalar field, and return the fields
         in value[] (if value is non-null), and return the number of SkScalars in count (if count is non-null).
         If there is no matching named field, return false and ignore the value and count parameters.
     */
-    const SkScalar* findScalars(const char name[], int* count, SkScalar values[] = NULL) const { return fMeta.findScalars(name, count, values); }
+    const SkScalar* findScalars(const char name[], int* count, SkScalar values[] = NULL) const {
+        return fMeta.findScalars(name, count, values);
+    }
     /** Return the value of the named string field, or if no matching named field exists, return null.
     */
-    const char* findString(const char name[]) const { return fMeta.findString(name); }
+    const char* findString(const char name[]) const {
+        return fMeta.findString(name);
+    }
     /** Return true if the event contains the named pointer field, and return the field
         in value (if value is non-null). If there is no matching named field, return false
         and ignore the value parameter.
     */
-    bool findPtr(const char name[], void** value) const { return fMeta.findPtr(name, value); }
-    bool findBool(const char name[], bool* value) const { return fMeta.findBool(name, value); }
+    bool findPtr(const char name[], void** value) const {
+        return fMeta.findPtr(name, value);
+    }
+    bool findBool(const char name[], bool* value) const {
+        return fMeta.findBool(name, value);
+    }
     const void* findData(const char name[], size_t* byteCount = NULL) const {
         return fMeta.findData(name, byteCount);
     }
 
     /** Returns true if ethe event contains the named 32bit field, and if it equals the specified value */
-    bool hasS32(const char name[], int32_t value) const { return fMeta.hasS32(name, value); }
+    bool hasS32(const char name[], int32_t value) const {
+        return fMeta.hasS32(name, value);
+    }
     /** Returns true if ethe event contains the named SkScalar field, and if it equals the specified value */
-    bool hasScalar(const char name[], SkScalar value) const { return fMeta.hasScalar(name, value); }
+    bool hasScalar(const char name[], SkScalar value) const {
+        return fMeta.hasScalar(name, value);
+    }
     /** Returns true if ethe event contains the named string field, and if it equals (using strcmp) the specified value */
-    bool hasString(const char name[], const char value[]) const { return fMeta.hasString(name, value); }
+    bool hasString(const char name[], const char value[]) const {
+        return fMeta.hasString(name, value);
+    }
     /** Returns true if ethe event contains the named pointer field, and if it equals the specified value */
-    bool hasPtr(const char name[], void* value) const { return fMeta.hasPtr(name, value); }
-    bool hasBool(const char name[], bool value) const { return fMeta.hasBool(name, value); }
+    bool hasPtr(const char name[], void* value) const {
+        return fMeta.hasPtr(name, value);
+    }
+    bool hasBool(const char name[], bool value) const {
+        return fMeta.hasBool(name, value);
+    }
     bool hasData(const char name[], const void* data, size_t byteCount) const {
         return fMeta.hasData(name, data, byteCount);
     }
 
     /** Add/replace the named 32bit field to the event. In XML use the subelement <data name=... s32=... /> */
-    void setS32(const char name[], int32_t value) { fMeta.setS32(name, value); }
+    void setS32(const char name[], int32_t value) {
+        fMeta.setS32(name, value);
+    }
     /** Add/replace the named SkScalar field to the event. In XML use the subelement <data name=... scalar=... /> */
-    void setScalar(const char name[], SkScalar value) { fMeta.setScalar(name, value); }
+    void setScalar(const char name[], SkScalar value) {
+        fMeta.setScalar(name, value);
+    }
     /** Add/replace the named SkScalar[] field to the event. */
-    SkScalar* setScalars(const char name[], int count, const SkScalar values[] = NULL) { return fMeta.setScalars(name, count, values); }
+    SkScalar* setScalars(const char name[], int count, const SkScalar values[] = NULL) {
+        return fMeta.setScalars(name, count, values);
+    }
     /** Add/replace the named string field to the event. In XML use the subelement <data name=... string=... */
-    void setString(const char name[], const SkString& value) { fMeta.setString(name, value.c_str()); }
+    void setString(const char name[], const SkString& value) {
+        fMeta.setString(name, value.c_str());
+    }
     /** Add/replace the named string field to the event. In XML use the subelement <data name=... string=... */
-    void setString(const char name[], const char value[]) { fMeta.setString(name, value); }
+    void setString(const char name[], const char value[]) {
+        fMeta.setString(name, value);
+    }
     /** Add/replace the named pointer field to the event. There is no XML equivalent for this call */
-    void setPtr(const char name[], void* value) { fMeta.setPtr(name, value); }
-    void setBool(const char name[], bool value) { fMeta.setBool(name, value); }
+    void setPtr(const char name[], void* value) {
+        fMeta.setPtr(name, value);
+    }
+    void setBool(const char name[], bool value) {
+        fMeta.setBool(name, value);
+    }
     void setData(const char name[], const void* data, size_t byteCount) {
         fMeta.setData(name, data, byteCount);
     }
 
     /** Return the underlying metadata object */
-    SkMetaData& getMetaData() { return fMeta; }
+    SkMetaData& getMetaData() {
+        return fMeta;
+    }
     /** Return the underlying metadata object */
-    const SkMetaData& getMetaData() const { return fMeta; }
+    const SkMetaData& getMetaData() const {
+        return fMeta;
+    }
 
     /** Call this to initialize the event from the specified XML node */
     void inflate(const SkDOM&, const SkDOM::Node*);

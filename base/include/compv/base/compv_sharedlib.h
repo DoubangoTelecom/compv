@@ -17,25 +17,27 @@ COMPV_OBJECT_DECLARE_PTRS(SharedLib)
 class COMPV_BASE_API CompVSharedLib : public CompVObj
 {
 protected:
-	CompVSharedLib(void* pHandle = NULL);
+    CompVSharedLib(void* pHandle = NULL);
 public:
-	virtual ~CompVSharedLib();
-	COMPV_OBJECT_GET_ID(CompVSharedLib);
-	COMPV_INLINE void* handle()const { return m_pHandle; }
+    virtual ~CompVSharedLib();
+    COMPV_OBJECT_GET_ID(CompVSharedLib);
+    COMPV_INLINE void* handle()const {
+        return m_pHandle;
+    }
 
-	void* sym(const char* name);
+    void* sym(const char* name);
 
-	static COMPV_ERROR_CODE open(const char* filePath, void** handle);
-	static COMPV_ERROR_CODE close(void* handle);
-	static void* sym(void* handle, const char* name);
+    static COMPV_ERROR_CODE open(const char* filePath, void** handle);
+    static COMPV_ERROR_CODE close(void* handle);
+    static void* sym(void* handle, const char* name);
 
-	static COMPV_ERROR_CODE newObj(CompVSharedLibPtrPtr sharedlib, const char* filePath);
-	static COMPV_ERROR_CODE newObj(CompVSharedLibPtrPtr sharedlib, void* handle);
+    static COMPV_ERROR_CODE newObj(CompVSharedLibPtrPtr sharedlib, const char* filePath);
+    static COMPV_ERROR_CODE newObj(CompVSharedLibPtrPtr sharedlib, void* handle);
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	void* m_pHandle;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    void* m_pHandle;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

@@ -14,7 +14,8 @@
 class SkPathMeasure;
 
 // This class is not exported to java.
-class SK_API Sk1DPathEffect : public SkPathEffect {
+class SK_API Sk1DPathEffect : public SkPathEffect
+{
 public:
     virtual bool filterPath(SkPath* dst, const SkPath& src,
                             SkStrokeRec*, const SkRect*) const override;
@@ -32,14 +33,17 @@ protected:
     virtual SkScalar next(SkPath* dst, SkScalar dist, SkPathMeasure&) const = 0;
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    bool exposedInAndroidJavaAPI() const override { return true; }
+    bool exposedInAndroidJavaAPI() const override {
+        return true;
+    }
 #endif
 
 private:
     typedef SkPathEffect INHERITED;
 };
 
-class SK_API SkPath1DPathEffect : public Sk1DPathEffect {
+class SK_API SkPath1DPathEffect : public Sk1DPathEffect
+{
 public:
     enum Style {
         kTranslate_Style,   // translate the shape to each position

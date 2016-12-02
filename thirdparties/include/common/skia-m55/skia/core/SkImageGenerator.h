@@ -24,9 +24,9 @@ class SkPaint;
 class SkPicture;
 
 #ifdef SK_SUPPORT_LEGACY_REFENCODEDDATA_NOCTX
-    #define SK_REFENCODEDDATA_CTXPARAM
+#define SK_REFENCODEDDATA_CTXPARAM
 #else
-    #define SK_REFENCODEDDATA_CTXPARAM  GrContext* ctx
+#define SK_REFENCODEDDATA_CTXPARAM  GrContext* ctx
 #endif
 
 /**
@@ -59,7 +59,8 @@ SK_API bool SkDEPRECATED_InstallDiscardablePixelRef(SkData* encoded, SkBitmap* d
  *  An interface that allows a purgeable PixelRef (such as a
  *  SkDiscardablePixelRef) to decode and re-decode an image as needed.
  */
-class SK_API SkImageGenerator : public SkNoncopyable {
+class SK_API SkImageGenerator : public SkNoncopyable
+{
 public:
     /**
      *  The PixelRef which takes ownership of this SkImageGenerator
@@ -67,7 +68,9 @@ public:
      */
     virtual ~SkImageGenerator() { }
 
-    uint32_t uniqueID() const { return fUniqueID; }
+    uint32_t uniqueID() const {
+        return fUniqueID;
+    }
 
     /**
      *  Return a ref to the encoded (i.e. compressed) representation,
@@ -89,7 +92,9 @@ public:
     /**
      *  Return the ImageInfo associated with this generator.
      */
-    const SkImageInfo& getInfo() const { return fInfo; }
+    const SkImageInfo& getInfo() const {
+        return fInfo;
+    }
 
     /**
      *  Decode into the given pixels, a block of memory of size at
@@ -214,7 +219,7 @@ public:
 
     bool generateScaledPixels(const SkPixmap& scaledPixels) {
         return this->generateScaledPixels(SkISize::Make(scaledPixels.width(),
-                                                        scaledPixels.height()),
+                                          scaledPixels.height()),
                                           SkIPoint::Make(0, 0), scaledPixels);
     }
 

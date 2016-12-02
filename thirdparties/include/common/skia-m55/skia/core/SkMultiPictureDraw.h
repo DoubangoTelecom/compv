@@ -21,14 +21,17 @@ class SkPicture;
     then attempts to optimally draw the pictures into the canvases, sharing
     as many resources as possible.
 */
-class SK_API SkMultiPictureDraw {
+class SK_API SkMultiPictureDraw
+{
 public:
     /**
      *  Create an object to optimize the drawing of multiple pictures.
      *  @param reserve Hint for the number of add calls expected to be issued
      */
     SkMultiPictureDraw(int reserve = 0);
-    ~SkMultiPictureDraw() { this->reset(); }
+    ~SkMultiPictureDraw() {
+        this->reset();
+    }
 
     /**
      *  Add a canvas/picture pair for later rendering.

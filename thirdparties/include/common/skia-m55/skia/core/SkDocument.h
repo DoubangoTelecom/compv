@@ -33,7 +33,8 @@ class SkWStream;
  *      c. doc->endPage();
  *  3. Close the document with doc->close().
  */
-class SK_API SkDocument : public SkRefCnt {
+class SK_API SkDocument : public SkRefCnt
+{
 public:
     struct OptionalTimestamp {
         SkTime::DateTime fDateTime;
@@ -198,14 +199,18 @@ protected:
     virtual void onAbort() = 0;
 
     // Allows subclasses to write to the stream as pages are written.
-    SkWStream* getStream() { return fStream; }
+    SkWStream* getStream() {
+        return fStream;
+    }
 
     enum State {
         kBetweenPages_State,
         kInPage_State,
         kClosed_State
     };
-    State getState() const { return fState; }
+    State getState() const {
+        return fState;
+    }
 
 private:
     SkWStream* fStream;

@@ -75,6 +75,6 @@
 #	define HAVE_EGL		1
 #	include <EGL/egl.h>
 #	include <EGL/eglext.h>
-#endif 
+#endif
 
 #endif /* _COMPV_GL_HEADERS_H_ */

@@ -27,7 +27,8 @@ class SkTextBlob;
 #define SkScalarToLua(x)    SkScalarToDouble(x)
 #define SkLuaToScalar(x)    SkDoubleToScalar(x)
 
-class SkLua {
+class SkLua
+{
 public:
     static void Load(lua_State*);
 
@@ -35,9 +36,15 @@ public:
     SkLua(lua_State*);                      // uses L, will not close it
     ~SkLua();
 
-    lua_State* get() const { return fL; }
-    lua_State* operator*() const { return fL; }
-    lua_State* operator->() const { return fL; }
+    lua_State* get() const {
+        return fL;
+    }
+    lua_State* operator*() const {
+        return fL;
+    }
+    lua_State* operator->() const {
+        return fL;
+    }
 
     bool runCode(const char code[]);
     bool runCode(const void* code, size_t size);

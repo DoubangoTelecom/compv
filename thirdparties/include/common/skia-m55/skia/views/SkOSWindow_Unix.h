@@ -16,21 +16,28 @@
 class SkEvent;
 
 struct SkUnixWindow {
-  Display* fDisplay;
-  Window fWin;
-  size_t fOSWin;
-  GC fGc;
-  GLXContext fGLContext;
+    Display* fDisplay;
+    Window fWin;
+    size_t fOSWin;
+    GC fGc;
+    GLXContext fGLContext;
 };
 
-class SkOSWindow : public SkWindow {
+class SkOSWindow : public SkWindow
+{
 public:
     SkOSWindow(void*);
     ~SkOSWindow();
 
-    void* getHWND() const { return (void*)fUnixWindow.fWin; }
-    void* getDisplay() const { return (void*)fUnixWindow.fDisplay; }
-    void* getUnixWindow() const { return (void*)&fUnixWindow; }
+    void* getHWND() const {
+        return (void*)fUnixWindow.fWin;
+    }
+    void* getDisplay() const {
+        return (void*)fUnixWindow.fDisplay;
+    }
+    void* getUnixWindow() const {
+        return (void*)&fUnixWindow;
+    }
     void loop();
 
     enum SkBackEndTypes {
@@ -45,7 +52,9 @@ public:
     void release();
     void present();
 
-    int getMSAASampleCount() const { return fMSAASampleCount; }
+    int getMSAASampleCount() const {
+        return fMSAASampleCount;
+    }
 
     //static bool PostEvent(SkEvent* evt, SkEventSinkID, SkMSec delay);
 

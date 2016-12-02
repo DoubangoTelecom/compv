@@ -26,26 +26,26 @@ COMPV_OBJECT_DECLARE_PTRS(GLSingleSurfaceLayer)
 class CompVGLSingleSurfaceLayer : public CompVSingleSurfaceLayer
 {
 protected:
-	CompVGLSingleSurfaceLayer();
+    CompVGLSingleSurfaceLayer();
 public:
-	virtual ~CompVGLSingleSurfaceLayer();
-	COMPV_OBJECT_GET_ID(CompVGLSingleSurfaceLayer);
+    virtual ~CompVGLSingleSurfaceLayer();
+    COMPV_OBJECT_GET_ID(CompVGLSingleSurfaceLayer);
 
-	// Overrides(CompVSingleSurfaceLayer)
-	virtual CompVSurfacePtr surface() override;
+    // Overrides(CompVSingleSurfaceLayer)
+    virtual CompVSurfacePtr surface() override;
 
-	// Overrides(CompSurfaceLayer)
-	virtual COMPV_ERROR_CODE blit() override;
+    // Overrides(CompSurfaceLayer)
+    virtual COMPV_ERROR_CODE blit() override;
 
-	COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
-	COMPV_ERROR_CODE close();
+    COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
+    COMPV_ERROR_CODE close();
 
-	static COMPV_ERROR_CODE newObj(CompVGLSingleSurfaceLayerPtrPtr layer, size_t width, size_t height);
+    static COMPV_ERROR_CODE newObj(CompVGLSingleSurfaceLayerPtrPtr layer, size_t width, size_t height);
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	CompVGLSurfacePtr m_ptrSurfaceGL;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    CompVGLSurfacePtr m_ptrSurfaceGL;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

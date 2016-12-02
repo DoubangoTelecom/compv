@@ -14,16 +14,19 @@
 
 class SkColorSpace;
 
- /**
-  * Represents a color gamut transformation (as a 4x4 color matrix)
-  */
-class GrColorSpaceXform : public SkRefCnt {
+/**
+ * Represents a color gamut transformation (as a 4x4 color matrix)
+ */
+class GrColorSpaceXform : public SkRefCnt
+{
 public:
     GrColorSpaceXform(const SkMatrix44& srcToDst);
 
     static sk_sp<GrColorSpaceXform> Make(SkColorSpace* src, SkColorSpace* dst);
 
-    const SkMatrix44& srcToDst() const { return fSrcToDst; }
+    const SkMatrix44& srcToDst() const {
+        return fSrcToDst;
+    }
 
     /**
      * GrGLSLFragmentProcessor::GenKey() must call this and include the returned value in its

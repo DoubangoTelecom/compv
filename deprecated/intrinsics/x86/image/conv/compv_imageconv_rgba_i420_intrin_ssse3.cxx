@@ -15,7 +15,7 @@ COMPV_NAMESPACE_BEGIN()
 
 void rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outYPtr, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride, COMPV_ALIGNED(SSE) const int8_t* kXXXXToYUV_YCoeffs8)
 {
-	COMPV_DEBUG_INFO_CHECK_SSSE3();
+    COMPV_DEBUG_INFO_CHECK_SSSE3();
     __m128i xmmRgba, xmmYCoeffs, y16;
     compv_scalar_t i, j, maxI = ((width + 3) & -4), padY = (stride - maxI), padRGBA = padY << 2;
 
@@ -43,7 +43,7 @@ void rgbaToI420Kernel11_CompY_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uint
 
 void rgbaToI420Kernel41_CompY_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outYPtr, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride, COMPV_ALIGNED(SSE)const int8_t* kXXXXToYUV_YCoeffs8)
 {
-	COMPV_DEBUG_INFO_CHECK_SSSE3();
+    COMPV_DEBUG_INFO_CHECK_SSSE3();
     __m128i xmmRgba0, xmmRgba1, xmmRgba2, xmmRgba3, xmmYCoeffs, y16;
     compv_scalar_t i, j, maxI = ((width + 15) & -16), padY = (stride - maxI), padRGBA = padY << 2;
 
@@ -87,7 +87,7 @@ void rgbaToI420Kernel41_CompY_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uint
 
 void rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride, COMPV_ALIGNED(SSE)const int8_t* kXXXXToYUV_UCoeffs8, COMPV_ALIGNED(SSE)const int8_t* kXXXXToYUV_VCoeffs8)
 {
-	COMPV_DEBUG_INFO_CHECK_SSSE3();
+    COMPV_DEBUG_INFO_CHECK_SSSE3();
     __m128i xmmRgba, xmm0, xmm1, xmmUV2Coeffs, xmm128;
     compv_scalar_t i, j, maxI = ((width + 3) & -4), padUV = (stride - maxI) >> 1, padRGBA = ((stride - maxI) + stride) << 2; // +stride to skip even lines
     int32_t UUVV;
@@ -126,7 +126,7 @@ void rgbaToI420Kernel11_CompUV_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uin
 
 void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgbaPtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride, COMPV_ALIGNED(SSE)const int8_t* kXXXXToYUV_UCoeffs8, COMPV_ALIGNED(SSE)const int8_t* kXXXXToYUV_VCoeffs8)
 {
-	COMPV_DEBUG_INFO_CHECK_SSSE3();
+    COMPV_DEBUG_INFO_CHECK_SSSE3();
     __m128i xmmRgba0, xmmRgba1, xmmRgba2, xmmRgba3, xmm0, xmm1, xmmUCoeffs, xmmVCoeffs, xmm128;
     compv_scalar_t i, j, maxI = ((width + 15) & -16), padUV = (stride - maxI) >> 1, padRGBA = ((stride - maxI) + stride) << 2; // +stride to skip even lines
 
@@ -197,7 +197,7 @@ void rgbaToI420Kernel41_CompUV_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uin
 // RGB/BGR -> I420-Y
 void rgbToI420Kernel31_CompY_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgbPtr, uint8_t* outYPtr, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride, COMPV_ALIGNED(SSE) const int8_t* kXXXXToYUV_YCoeffs8)
 {
-	COMPV_DEBUG_INFO_CHECK_SSSE3();
+    COMPV_DEBUG_INFO_CHECK_SSSE3();
     __m128i rgba[4], xmm0, xmm1, xmmYCoeffs, xmmMaskRgbToRgba, xmm16;
     compv_scalar_t i, j, maxI = ((width + 15) & -16), padY = (stride - maxI), padRGB = padY * 3;
 
@@ -242,7 +242,7 @@ void rgbToI420Kernel31_CompY_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uint8
 // RGB/BGR -> I420-UV
 void rgbToI420Kernel31_CompUV_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgbPtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride, COMPV_ALIGNED(SSE) const int8_t* kXXXXToYUV_UCoeffs8, COMPV_ALIGNED(SSE) const int8_t* kXXXXToYUV_VCoeffs8)
 {
-	COMPV_DEBUG_INFO_CHECK_SSSE3();
+    COMPV_DEBUG_INFO_CHECK_SSSE3();
     __m128i rgba[4], xmm0, xmm1, xmmUCoeffs, xmmVCoeffs, xmm128, xmmMaskRgbToRgba;
     compv_scalar_t i, j, maxI = ((width + 15) & -16), padUV = (stride - maxI) >> 1, padRGB = ((stride - maxI) + stride) * 3; // +stride to skip even lines
 
@@ -312,7 +312,7 @@ void rgbToI420Kernel31_CompUV_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uint
 
 void i420ToRGBAKernel11_Intrin_Aligned_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* outRgbaPtr, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride)
 {
-	COMPV_DEBUG_INFO_CHECK_SSSE3();
+    COMPV_DEBUG_INFO_CHECK_SSSE3();
     compv_scalar_t i, j, maxI = ((width + 15) & -16), rollbackUV = -((maxI + 1) >> 1), padY = (stride - maxI), padUV = ((padY + 1) >> 1), padRGBA = (padY << 2);
     __m128i xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmmY, xmmU, xmmV, xmm16, xmmRCoeffs, xmmGCoeffs, xmmBCoeffs, xmmZeroCoeffs, xmmAlpha, xmm7120, xmm8912, xmm4400;
 

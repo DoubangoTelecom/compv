@@ -67,7 +67,8 @@ class SkPrivateEffectInitializer;
  into a data stream for either transport or as part of the key to the
  font cache.
  */
-class SK_API SkFlattenable : public SkRefCnt {
+class SK_API SkFlattenable : public SkRefCnt
+{
 public:
     enum Type {
         kSkColorFilter_Type,
@@ -102,7 +103,9 @@ public:
      *
      *  If the flattenable is registered, there is no need to override.
      */
-    virtual const char* getTypeName() const { return FactoryToName(getFactory()); }
+    virtual const char* getTypeName() const {
+        return FactoryToName(getFactory());
+    }
 
     static Factory NameToFactory(const char name[]);
     static const char* FactoryToName(Factory);
@@ -117,7 +120,8 @@ public:
     virtual void flatten(SkWriteBuffer&) const {}
 
 protected:
-    class PrivateInitializer {
+    class PrivateInitializer
+    {
     public:
         static void InitCore();
         static void InitEffects();

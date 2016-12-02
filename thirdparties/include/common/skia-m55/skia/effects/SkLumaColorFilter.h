@@ -22,12 +22,15 @@
  *    C' = [ Lum * a, 0, 0, 0 ]
  *
  */
-class SK_API SkLumaColorFilter : public SkColorFilter {
+class SK_API SkLumaColorFilter : public SkColorFilter
+{
 public:
     static sk_sp<SkColorFilter> Make();
 
 #ifdef SK_SUPPORT_LEGACY_COLORFILTER_PTR
-    static SkColorFilter* Create() { return Make().release(); }
+    static SkColorFilter* Create() {
+        return Make().release();
+    }
 #endif
 
     void filterSpan(const SkPMColor src[], int count, SkPMColor[]) const override;

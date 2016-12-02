@@ -13,7 +13,8 @@
 
 struct lua_State;
 
-class SkLuaCanvas : public SkCanvas {
+class SkLuaCanvas : public SkCanvas
+{
 public:
     void pushThis();
 

@@ -41,7 +41,8 @@ class SkRRect;
 
     Blur and emboss are implemented as subclasses of SkMaskFilter.
 */
-class SK_API SkMaskFilter : public SkFlattenable {
+class SK_API SkMaskFilter : public SkFlattenable
+{
 public:
     /** Returns the format of the resulting mask that this subclass will return
         when its filterMask() method is called.
@@ -182,7 +183,8 @@ protected:
         kUnimplemented_FilterReturn
     };
 
-    class NinePatch : ::SkNoncopyable {
+    class NinePatch : ::SkNoncopyable
+    {
     public:
         NinePatch() : fCache(nullptr) { }
         ~NinePatch();

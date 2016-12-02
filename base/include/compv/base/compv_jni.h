@@ -20,11 +20,11 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_BASE_API CompVJNI
 {
 public:
-	static std::string toString(JNIEnv* jEnv, jstring jstr);
+    static std::string toString(JNIEnv* jEnv, jstring jstr);
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

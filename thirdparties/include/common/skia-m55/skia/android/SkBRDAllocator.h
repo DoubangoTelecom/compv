@@ -16,7 +16,8 @@
  *  Allows the allocator to indicate if the memory it allocates
  *  is zero initialized.
  */
-class SkBRDAllocator : public SkBitmap::Allocator {
+class SkBRDAllocator : public SkBitmap::Allocator
+{
 public:
 
     /**

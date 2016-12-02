@@ -138,9 +138,9 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
 
     // For now only RGB is supported
     switch (cinfo.out_color_space) {
-	case JCS_GRAYSCALE:
-		*pixelFormat = COMPV_PIXEL_FORMAT_GRAYSCALE;
-		break;
+    case JCS_GRAYSCALE:
+        *pixelFormat = COMPV_PIXEL_FORMAT_GRAYSCALE;
+        break;
     case JCS_RGB:
     case JCS_EXT_RGB:
         *pixelFormat = COMPV_PIXEL_FORMAT_R8G8B8;

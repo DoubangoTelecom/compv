@@ -24,7 +24,8 @@ class SkCanvasClipVisitor;
 // (i.e., the fSaveCount in force when it was added). Restores are thus
 // implemented by removing clips from fDeque that have an fSaveCount larger
 // then the freshly decremented count.
-class SK_API SkClipStack : public SkNVRefCnt<SkClipStack> {
+class SK_API SkClipStack : public SkNVRefCnt<SkClipStack>
+{
 public:
     enum BoundsType {
         // The bounding box contains all the pixels that can be written to
@@ -37,7 +38,8 @@ public:
         kInsideOut_BoundsType
     };
 
-    class Element {
+    class Element
+    {
     public:
         enum Type {
             //!< This element makes the clip empty (regardless of previous elements).
@@ -73,19 +75,31 @@ public:
         }
 
         bool operator== (const Element& element) const;
-        bool operator!= (const Element& element) const { return !(*this == element); }
+        bool operator!= (const Element& element) const {
+            return !(*this == element);
+        }
 
         //!< Call to get the type of the clip element.
-        Type getType() const { return fType; }
+        Type getType() const {
+            return fType;
+        }
 
         //!< Call to get the save count associated with this clip element.
-        int getSaveCount() const { return fSaveCount; }
+        int getSaveCount() const {
+            return fSaveCount;
+        }
 
         //!< Call if getType() is kPath to get the path.
-        const SkPath& getPath() const { SkASSERT(kPath_Type == fType); return *fPath.get(); }
+        const SkPath& getPath() const {
+            SkASSERT(kPath_Type == fType);
+            return *fPath.get();
+        }
 
         //!< Call if getType() is kRRect to get the round-rect.
-        const SkRRect& getRRect() const { SkASSERT(kRRect_Type == fType); return fRRect; }
+        const SkRRect& getRRect() const {
+            SkASSERT(kRRect_Type == fType);
+            return fRRect;
+        }
 
         //!< Call if getType() is kRect to get the rect.
         const SkRect& getRect() const {
@@ -94,30 +108,42 @@ public:
         }
 
         //!< Call if getType() is not kEmpty to get the set operation used to combine this element.
-        SkCanvas::ClipOp getOp() const { return fOp; }
+        SkCanvas::ClipOp getOp() const {
+            return fOp;
+        }
 
         //!< Call to get the element as a path, regardless of its type.
         void asPath(SkPath* path) const;
 
         //!< Call if getType() is not kPath to get the element as a round rect.
-        const SkRRect& asRRect() const { SkASSERT(kPath_Type != fType); return fRRect; }
+        const SkRRect& asRRect() const {
+            SkASSERT(kPath_Type != fType);
+            return fRRect;
+        }
 
         /** If getType() is not kEmpty this indicates whether the clip shape should be anti-aliased
             when it is rasterized. */
-        bool isAA() const { return fDoAA; }
+        bool isAA() const {
+            return fDoAA;
+        }
 
         //!< Inverts the fill of the clip shape. Note that a kEmpty element remains kEmpty.
         void invertShapeFillType();
 
         //!< Sets the set operation represented by the element.
-        void setOp(SkCanvas::ClipOp op) { fOp = op; }
+        void setOp(SkCanvas::ClipOp op) {
+            fOp = op;
+        }
 
         /** The GenID can be used by clip stack clients to cache representations of the clip. The
             ID corresponds to the set of clip elements up to and including this element within the
             stack not to the element itself. That is the same clip path in different stacks will
             have a different ID since the elements produce different clip result in the context of
             their stacks. */
-        int32_t getGenID() const { SkASSERT(kInvalidGenID != fGenID); return fGenID; }
+        int32_t getGenID() const {
+            SkASSERT(kInvalidGenID != fGenID);
+            return fGenID;
+        }
 
         /**
          * Gets the bounds of the clip element, either the rect or path bounds. (Whether the shape
@@ -126,16 +152,16 @@ public:
         const SkRect& getBounds() const {
             static const SkRect kEmpty = { 0, 0, 0, 0 };
             switch (fType) {
-                case kRect_Type:  // fallthrough
-                case kRRect_Type:
-                    return fRRect.getBounds();
-                case kPath_Type:
-                    return fPath.get()->getBounds();
-                case kEmpty_Type:
-                    return kEmpty;
-                default:
-                    SkDEBUGFAIL("Unexpected type.");
-                    return kEmpty;
+            case kRect_Type:  // fallthrough
+            case kRRect_Type:
+                return fRRect.getBounds();
+            case kPath_Type:
+                return fPath.get()->getBounds();
+            case kEmpty_Type:
+                return kEmpty;
+            default:
+                SkDEBUGFAIL("Unexpected type.");
+                return kEmpty;
             }
         }
 
@@ -145,34 +171,34 @@ public:
          */
         bool contains(const SkRect& rect) const {
             switch (fType) {
-                case kRect_Type:
-                    return this->getRect().contains(rect);
-                case kRRect_Type:
-                    return fRRect.contains(rect);
-                case kPath_Type:
-                    return fPath.get()->conservativelyContainsRect(rect);
-                case kEmpty_Type:
-                    return false;
-                default:
-                    SkDEBUGFAIL("Unexpected type.");
-                    return false;
+            case kRect_Type:
+                return this->getRect().contains(rect);
+            case kRRect_Type:
+                return fRRect.contains(rect);
+            case kPath_Type:
+                return fPath.get()->conservativelyContainsRect(rect);
+            case kEmpty_Type:
+                return false;
+            default:
+                SkDEBUGFAIL("Unexpected type.");
+                return false;
             }
         }
 
         bool contains(const SkRRect& rrect) const {
             switch (fType) {
-                case kRect_Type:
-                    return this->getRect().contains(rrect.getBounds());
-                case kRRect_Type:
-                    // We don't currently have a generalized rrect-rrect containment.
-                    return fRRect.contains(rrect.getBounds()) || rrect == fRRect;
-                case kPath_Type:
-                    return fPath.get()->conservativelyContainsRect(rrect.getBounds());
-                case kEmpty_Type:
-                    return false;
-                default:
-                    SkDEBUGFAIL("Unexpected type.");
-                    return false;
+            case kRect_Type:
+                return this->getRect().contains(rrect.getBounds());
+            case kRRect_Type:
+                // We don't currently have a generalized rrect-rrect containment.
+                return fRRect.contains(rrect.getBounds()) || rrect == fRRect;
+            case kPath_Type:
+                return fPath.get()->conservativelyContainsRect(rrect.getBounds());
+            case kEmpty_Type:
+                return false;
+            default:
+                SkDEBUGFAIL("Unexpected type.");
+                return false;
             }
         }
 
@@ -265,7 +291,8 @@ public:
             fRRect = rrect;
             if (SkRRect::kRect_Type == type || SkRRect::kEmpty_Type == type) {
                 fType = kRect_Type;
-            } else {
+            }
+            else {
                 fType = kRRect_Type;
             }
             this->initCommon(saveCount, op, doAA);
@@ -306,11 +333,15 @@ public:
 
     SkClipStack& operator=(const SkClipStack& b);
     bool operator==(const SkClipStack& b) const;
-    bool operator!=(const SkClipStack& b) const { return !(*this == b); }
+    bool operator!=(const SkClipStack& b) const {
+        return !(*this == b);
+    }
 
     void reset();
 
-    int getSaveCount() const { return fSaveCount; }
+    int getSaveCount() const {
+        return fSaveCount;
+    }
     void save();
     void restore();
 
@@ -361,7 +392,9 @@ public:
      * isWideOpen returns true if the clip state corresponds to the infinite
      * plane (i.e., draws are not limited at all)
      */
-    bool isWideOpen() const { return this->getTopmostGenID() == kWideOpenGenID; }
+    bool isWideOpen() const {
+        return this->getTopmostGenID() == kWideOpenGenID;
+    }
 
     /**
      * This method quickly and conservatively determines whether the entire stack is equivalent to
@@ -383,8 +416,8 @@ public:
      * (potentially ignorable) cases
      */
     static const int32_t kInvalidGenID = 0;     //!< Invalid id that is never returned by
-                                                //!< SkClipStack. Useful when caching clips
-                                                //!< based on GenID.
+    //!< SkClipStack. Useful when caching clips
+    //!< based on GenID.
     static const int32_t kEmptyGenID = 1;       // no pixels writeable
     static const int32_t kWideOpenGenID = 2;    // all pixels writeable
 
@@ -399,7 +432,8 @@ public:
 #endif
 
 public:
-    class Iter {
+    class Iter
+    {
     public:
         enum IterStart {
             kBottom_IterStart = SkDeque::Iter::kFront_IterStart,
@@ -440,7 +474,8 @@ public:
      * The B2TIter iterates from the bottom of the stack to the top.
      * It inherits privately from Iter to prevent access to reverse iteration.
      */
-    class B2TIter : private Iter {
+    class B2TIter : private Iter
+    {
     public:
         B2TIter() {}
 
@@ -449,7 +484,7 @@ public:
          * beginning of the deque/bottom of the stack
          */
         B2TIter(const SkClipStack& stack)
-        : INHERITED(stack, kBottom_IterStart) {
+            : INHERITED(stack, kBottom_IterStart) {
         }
 
         using Iter::next;

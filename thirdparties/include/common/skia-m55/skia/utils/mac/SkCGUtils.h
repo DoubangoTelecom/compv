@@ -46,13 +46,14 @@ SK_API bool SkCopyPixelsFromCGImage(const SkImageInfo& info, size_t rowBytes, vo
  *  If space is NULL, then CGColorSpaceCreateDeviceRGB() is used.
  */
 SK_API CGImageRef SkCreateCGImageRefWithColorspace(const SkBitmap& bm,
-                                                   CGColorSpaceRef space);
+        CGColorSpaceRef space);
 
 /**
  *  Create an imageref from the specified bitmap using the colorspace returned
  *  by CGColorSpaceCreateDeviceRGB()
  */
-static inline CGImageRef SkCreateCGImageRef(const SkBitmap& bm) {
+static inline CGImageRef SkCreateCGImageRef(const SkBitmap& bm)
+{
     return SkCreateCGImageRefWithColorspace(bm, NULL);
 }
 

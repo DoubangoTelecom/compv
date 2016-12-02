@@ -14,11 +14,13 @@
 
 class SkPaint;
 
-class SK_API SkLayerRasterizer : public SkRasterizer {
+class SK_API SkLayerRasterizer : public SkRasterizer
+{
 public:
     virtual ~SkLayerRasterizer();
 
-    class SK_API Builder {
+    class SK_API Builder
+    {
     public:
         Builder();
         ~Builder();
@@ -57,7 +59,7 @@ public:
           *  The caller is responsible for calling unref() on the returned object, if non NULL.
           */
         sk_sp<SkLayerRasterizer> snapshot() const;
-    
+
 #ifdef SK_SUPPORT_LEGACY_MINOR_EFFECT_PTR
         SkLayerRasterizer* detachRasterizer() {
             return this->detach().release();

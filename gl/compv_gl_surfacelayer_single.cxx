@@ -23,43 +23,43 @@ CompVGLSingleSurfaceLayer::~CompVGLSingleSurfaceLayer()
 // Overrides(CompVSingleSurfaceLayer)
 CompVSurfacePtr CompVGLSingleSurfaceLayer::surface()
 {
-	return *m_ptrSurfaceGL;
+    return *m_ptrSurfaceGL;
 }
 
 // Overrides(CompVSurfaceLayer)
 COMPV_ERROR_CODE CompVGLSingleSurfaceLayer::blit()
 {
-	COMPV_CHECK_EXP_RETURN(!m_ptrSurfaceGL, COMPV_ERROR_CODE_E_INVALID_STATE);
-	if (m_ptrSurfaceGL->isActive() && m_ptrSurfaceGL->renderer()) {
-		COMPV_CHECK_CODE_RETURN(m_ptrSurfaceGL->blitRenderer(kCompVGLPtrSystemFrameBuffer));
-	}
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(!m_ptrSurfaceGL, COMPV_ERROR_CODE_E_INVALID_STATE);
+    if (m_ptrSurfaceGL->isActive() && m_ptrSurfaceGL->renderer()) {
+        COMPV_CHECK_CODE_RETURN(m_ptrSurfaceGL->blitRenderer(kCompVGLPtrSystemFrameBuffer));
+    }
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVGLSingleSurfaceLayer::updateSize(size_t newWidth, size_t newHeight)
 {
-	COMPV_CHECK_EXP_RETURN(!m_ptrSurfaceGL, COMPV_ERROR_CODE_E_INVALID_STATE);
-	COMPV_CHECK_CODE_RETURN(m_ptrSurfaceGL->updateSize(newWidth, newHeight));
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(!m_ptrSurfaceGL, COMPV_ERROR_CODE_E_INVALID_STATE);
+    COMPV_CHECK_CODE_RETURN(m_ptrSurfaceGL->updateSize(newWidth, newHeight));
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVGLSingleSurfaceLayer::close()
 {
-	if (m_ptrSurfaceGL) {
-		COMPV_CHECK_CODE_ASSERT(m_ptrSurfaceGL->close());
-	}
-	return COMPV_ERROR_CODE_S_OK;
+    if (m_ptrSurfaceGL) {
+        COMPV_CHECK_CODE_ASSERT(m_ptrSurfaceGL->close());
+    }
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVGLSingleSurfaceLayer::newObj(CompVGLSingleSurfaceLayerPtrPtr layer, size_t width, size_t height)
 {
-	COMPV_CHECK_EXP_RETURN(!layer || !width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVGLSingleSurfaceLayerPtr layer_ = new CompVGLSingleSurfaceLayer();
-	COMPV_CHECK_EXP_RETURN(!layer_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	COMPV_CHECK_CODE_RETURN(CompVGLSurface::newObj(&layer_->m_ptrSurfaceGL, width, height));
+    COMPV_CHECK_EXP_RETURN(!layer || !width || !height, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    CompVGLSingleSurfaceLayerPtr layer_ = new CompVGLSingleSurfaceLayer();
+    COMPV_CHECK_EXP_RETURN(!layer_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    COMPV_CHECK_CODE_RETURN(CompVGLSurface::newObj(&layer_->m_ptrSurfaceGL, width, height));
 
-	*layer = layer_;
-	return COMPV_ERROR_CODE_S_OK;
+    *layer = layer_;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

@@ -91,8 +91,8 @@ typedef int SDL_TimerID;
  * \return A timer ID, or 0 when an error occurs.
  */
 extern DECLSPEC SDL_TimerID SDLCALL SDL_AddTimer(Uint32 interval,
-                                                 SDL_TimerCallback callback,
-                                                 void *param);
+        SDL_TimerCallback callback,
+        void *param);
 
 /**
  * \brief Remove a timer knowing its ID.

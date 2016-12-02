@@ -25,7 +25,8 @@ class SkBitmap;
 ////////////////////////////////////////////////////////////////////////////////
 // Sk to Gr Type conversions
 
-static inline GrColor SkColorToPremulGrColor(SkColor c) {
+static inline GrColor SkColorToPremulGrColor(SkColor c)
+{
     SkPMColor pm = SkPreMultiplyColor(c);
     unsigned r = SkGetPackedR32(pm);
     unsigned g = SkGetPackedG32(pm);
@@ -34,7 +35,8 @@ static inline GrColor SkColorToPremulGrColor(SkColor c) {
     return GrColorPackRGBA(r, g, b, a);
 }
 
-static inline GrColor SkColorToUnpremulGrColor(SkColor c) {
+static inline GrColor SkColorToUnpremulGrColor(SkColor c)
+{
     unsigned r = SkColorGetR(c);
     unsigned g = SkColorGetG(c);
     unsigned b = SkColorGetB(c);
@@ -45,7 +47,8 @@ static inline GrColor SkColorToUnpremulGrColor(SkColor c) {
 GrColor4f SkColorToPremulGrColor4f(SkColor c, bool gammaCorrect, GrColorSpaceXform* gamutXform);
 GrColor4f SkColorToUnpremulGrColor4f(SkColor c, bool gammaCorrect, GrColorSpaceXform* gamutXform);
 
-static inline GrColor SkColorToOpaqueGrColor(SkColor c) {
+static inline GrColor SkColorToOpaqueGrColor(SkColor c)
+{
     unsigned r = SkColorGetR(c);
     unsigned g = SkColorGetG(c);
     unsigned b = SkColorGetB(c);
@@ -53,17 +56,20 @@ static inline GrColor SkColorToOpaqueGrColor(SkColor c) {
 }
 
 /** Replicates the SkColor's alpha to all four channels of the GrColor. */
-static inline GrColor SkColorAlphaToGrColor(SkColor c) {
+static inline GrColor SkColorAlphaToGrColor(SkColor c)
+{
     U8CPU a = SkColorGetA(c);
     return GrColorPackRGBA(a, a, a, a);
 }
 
-static inline SkPMColor GrColorToSkPMColor(GrColor c) {
+static inline SkPMColor GrColorToSkPMColor(GrColor c)
+{
     GrColorIsPMAssert(c);
     return SkPackARGB32(GrColorUnpackA(c), GrColorUnpackR(c), GrColorUnpackG(c), GrColorUnpackB(c));
 }
 
-static inline GrColor SkPMColorToGrColor(SkPMColor c) {
+static inline GrColor SkPMColorToGrColor(SkPMColor c)
+{
     return GrColorPackRGBA(SkGetPackedR32(c), SkGetPackedG32(c), SkGetPackedB32(c),
                            SkGetPackedA32(c));
 }
@@ -76,19 +82,20 @@ GrTexture* GrRefCachedBitmapTexture(GrContext*, const SkBitmap&, const GrTexture
                                     SkSourceGammaTreatment);
 
 sk_sp<GrTexture> GrMakeCachedBitmapTexture(GrContext*, const SkBitmap&, const GrTextureParams&,
-                                           SkSourceGammaTreatment);
+        SkSourceGammaTreatment);
 
 // TODO: Move SkImageInfo2GrPixelConfig to SkGrPriv.h (requires cleanup to SkWindow its subclasses).
 GrPixelConfig SkImageInfo2GrPixelConfig(SkColorType, SkAlphaType, const SkColorSpace*,
                                         const GrCaps&);
 
-static inline GrPixelConfig SkImageInfo2GrPixelConfig(const SkImageInfo& info, const GrCaps& caps) {
+static inline GrPixelConfig SkImageInfo2GrPixelConfig(const SkImageInfo& info, const GrCaps& caps)
+{
     return SkImageInfo2GrPixelConfig(info.colorType(), info.alphaType(), info.colorSpace(), caps);
 }
 
 GrTextureParams::FilterMode GrSkFilterQualityToGrFilterMode(SkFilterQuality paintFilterQuality,
-                                                            const SkMatrix& viewM,
-                                                            const SkMatrix& localM,
-                                                            bool* doBicubic);
+        const SkMatrix& viewM,
+        const SkMatrix& localM,
+        bool* doBicubic);
 
 #endif

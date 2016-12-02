@@ -9,7 +9,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 CompVSingleSurfaceLayer::CompVSingleSurfaceLayer()
-	: CompVSurfaceLayer()
+    : CompVSurfaceLayer()
 {
 
 }

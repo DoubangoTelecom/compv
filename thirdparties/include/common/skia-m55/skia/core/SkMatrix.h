@@ -23,7 +23,8 @@ class SkString;
     functions (e.g. setTranslate, setRotate, etc.).
 */
 SK_BEGIN_REQUIRE_DENSE
-class SK_API SkMatrix {
+class SK_API SkMatrix
+{
 public:
     static SkMatrix SK_WARN_UNUSED_RESULT MakeScale(SkScalar sx, SkScalar sy) {
         SkMatrix m;
@@ -59,7 +60,7 @@ public:
         false positives. For example, when kPerspective_Mask is true, all
         other bits may be set to true even in the case of a pure perspective
         transform.
-   */
+    */
     TypeMask getType() const {
         if (fTypeMask & kUnknown_Mask) {
             fTypeMask = this->computeTypeMask();
@@ -89,7 +90,9 @@ public:
         return (fTypeMask & kRectStaysRect_Mask) != 0;
     }
     // alias for rectStaysRect()
-    bool preservesAxisAlignment() const { return this->rectStaysRect(); }
+    bool preservesAxisAlignment() const {
+        return this->rectStaysRect();
+    }
 
     /**
      *  Returns true if the matrix contains perspective elements.
@@ -144,14 +147,30 @@ public:
         return fMat[index];
     }
 
-    SkScalar getScaleX() const { return fMat[kMScaleX]; }
-    SkScalar getScaleY() const { return fMat[kMScaleY]; }
-    SkScalar getSkewY() const { return fMat[kMSkewY]; }
-    SkScalar getSkewX() const { return fMat[kMSkewX]; }
-    SkScalar getTranslateX() const { return fMat[kMTransX]; }
-    SkScalar getTranslateY() const { return fMat[kMTransY]; }
-    SkScalar getPerspX() const { return fMat[kMPersp0]; }
-    SkScalar getPerspY() const { return fMat[kMPersp1]; }
+    SkScalar getScaleX() const {
+        return fMat[kMScaleX];
+    }
+    SkScalar getScaleY() const {
+        return fMat[kMScaleY];
+    }
+    SkScalar getSkewY() const {
+        return fMat[kMSkewY];
+    }
+    SkScalar getSkewX() const {
+        return fMat[kMSkewX];
+    }
+    SkScalar getTranslateX() const {
+        return fMat[kMTransX];
+    }
+    SkScalar getTranslateY() const {
+        return fMat[kMTransY];
+    }
+    SkScalar getPerspX() const {
+        return fMat[kMPersp0];
+    }
+    SkScalar getPerspY() const {
+        return fMat[kMPersp1];
+    }
 
     SkScalar& operator[](int index) {
         SkASSERT((unsigned)index < 9);
@@ -165,14 +184,30 @@ public:
         this->setTypeMask(kUnknown_Mask);
     }
 
-    void setScaleX(SkScalar v) { this->set(kMScaleX, v); }
-    void setScaleY(SkScalar v) { this->set(kMScaleY, v); }
-    void setSkewY(SkScalar v) { this->set(kMSkewY, v); }
-    void setSkewX(SkScalar v) { this->set(kMSkewX, v); }
-    void setTranslateX(SkScalar v) { this->set(kMTransX, v); }
-    void setTranslateY(SkScalar v) { this->set(kMTransY, v); }
-    void setPerspX(SkScalar v) { this->set(kMPersp0, v); }
-    void setPerspY(SkScalar v) { this->set(kMPersp1, v); }
+    void setScaleX(SkScalar v) {
+        this->set(kMScaleX, v);
+    }
+    void setScaleY(SkScalar v) {
+        this->set(kMScaleY, v);
+    }
+    void setSkewY(SkScalar v) {
+        this->set(kMSkewY, v);
+    }
+    void setSkewX(SkScalar v) {
+        this->set(kMSkewX, v);
+    }
+    void setTranslateX(SkScalar v) {
+        this->set(kMTransX, v);
+    }
+    void setTranslateY(SkScalar v) {
+        this->set(kMTransY, v);
+    }
+    void setPerspX(SkScalar v) {
+        this->set(kMPersp0, v);
+    }
+    void setPerspY(SkScalar v) {
+        this->set(kMPersp1, v);
+    }
 
     void setAll(SkScalar scaleX, SkScalar skewX,  SkScalar transX,
                 SkScalar skewY,  SkScalar scaleY, SkScalar transY,
@@ -210,12 +245,16 @@ public:
     */
     void reset();
     // alias for reset()
-    void setIdentity() { this->reset(); }
+    void setIdentity() {
+        this->reset();
+    }
 
     /** Set the matrix to translate by (dx, dy).
     */
     void setTranslate(SkScalar dx, SkScalar dy);
-    void setTranslate(const SkVector& v) { this->setTranslate(v.fX, v.fY); }
+    void setTranslate(const SkVector& v) {
+        this->setTranslate(v.fX, v.fY);
+    }
 
     /** Set the matrix to scale by sx and sy, with a pivot point at (px, py).
         The pivot point is the coordinate that should remain unchanged by the
@@ -566,7 +605,7 @@ public:
      *  scale and translate elements. If it contains other elements, the results are undefined.
      */
     void mapRectScaleTranslate(SkRect* dst, const SkRect& src) const;
-    
+
     /** Return the mean radius of a circle after it has been mapped by
         this matrix. NOTE: in perspective this value assumes the circle
         has its center at the origin.
@@ -574,7 +613,7 @@ public:
     SkScalar mapRadius(SkScalar radius) const;
 
     typedef void (*MapXYProc)(const SkMatrix& mat, SkScalar x, SkScalar y,
-                                 SkPoint* result);
+                              SkPoint* result);
 
     static MapXYProc GetMapXYProc(TypeMask mask) {
         SkASSERT((mask & ~kAllMasks) == 0);
@@ -586,7 +625,7 @@ public:
     }
 
     typedef void (*MapPtsProc)(const SkMatrix& mat, SkPoint dst[],
-                                  const SkPoint src[], int count);
+                               const SkPoint src[], int count);
 
     static MapPtsProc GetMapPtsProc(TypeMask mask) {
         SkASSERT((mask & ~kAllMasks) == 0);
@@ -717,15 +756,15 @@ public:
         fMat[kMScaleX] = sx;
         fMat[kMSkewX]  = 0;
         fMat[kMTransX] = tx;
-        
+
         fMat[kMSkewY]  = 0;
         fMat[kMScaleY] = sy;
         fMat[kMTransY] = ty;
-        
+
         fMat[kMPersp0] = 0;
         fMat[kMPersp1] = 0;
         fMat[kMPersp2] = 1;
-        
+
         unsigned mask = 0;
         if (sx != 1 || sy != 1) {
             mask |= kScale_Mask;
@@ -735,11 +774,13 @@ public:
         }
         this->setTypeMask(mask | kRectStaysRect_Mask);
     }
-    
+
     /**
      *  Are all elements of the matrix finite?
      */
-    bool isFinite() const { return SkScalarsAreFinite(fMat, 9); }
+    bool isFinite() const {
+        return SkScalarsAreFinite(fMat, 9);
+    }
 
 private:
     enum {
@@ -799,7 +840,7 @@ private:
 
     TypeMask getPerspectiveTypeMaskOnly() const {
         if ((fTypeMask & kUnknown_Mask) &&
-            !(fTypeMask & kOnlyPerspectiveValid_Mask)) {
+                !(fTypeMask & kOnlyPerspectiveValid_Mask)) {
             fTypeMask = this->computePerspectiveTypeMask();
         }
         return (TypeMask)(fTypeMask & 0xF);

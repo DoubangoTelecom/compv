@@ -13,7 +13,8 @@
 #include "../private/SkOnce.h"
 #include "../private/SkTemplates.h"
 
-class SK_API SkColorCubeFilter : public SkColorFilter {
+class SK_API SkColorCubeFilter : public SkColorFilter
+{
 public:
     /** cubeData must containt a 3D data in the form of cube of the size:
      *  cubeDimension * cubeDimension * cubeDimension * sizeof(SkColor)
@@ -43,7 +44,8 @@ protected:
 private:
     /** The cache is initialized on-demand when getProcessingLuts is called.
      */
-    class ColorCubeProcesingCache {
+    class ColorCubeProcesingCache
+    {
     public:
         ColorCubeProcesingCache(int cubeDimension);
 
@@ -51,7 +53,9 @@ private:
                                const SkScalar* (*colorToFactors)[2],
                                const SkScalar** colorToScalar);
 
-        int cubeDimension() const { return fCubeDimension; }
+        int cubeDimension() const {
+            return fCubeDimension;
+        }
 
     private:
         // Working pointers. If any of these is NULL,

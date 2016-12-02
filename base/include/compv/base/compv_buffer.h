@@ -37,11 +37,11 @@ public:
     COMPV_INLINE bool isEmpty() {
         return !(getSize() && getPtr());
     }
-	static COMPV_ERROR_CODE newObj(const void* pcPtr, int32_t size, CompVBufferPtrPtr buffer);
-	static COMPV_ERROR_CODE newObjAndNullData(CompVBufferPtrPtr buffer);
-	static COMPV_ERROR_CODE newObjAndTakeData(void** ppPtr, int32_t size, CompVBufferPtrPtr buffer);
-	static COMPV_ERROR_CODE newObjAndCopyData(const void* pcPtr, int32_t size, CompVBufferPtrPtr buffer);
-	static COMPV_ERROR_CODE newObjAndRefData(const void* pcPtr, int32_t size, CompVBufferPtrPtr buffer);
+    static COMPV_ERROR_CODE newObj(const void* pcPtr, int32_t size, CompVBufferPtrPtr buffer);
+    static COMPV_ERROR_CODE newObjAndNullData(CompVBufferPtrPtr buffer);
+    static COMPV_ERROR_CODE newObjAndTakeData(void** ppPtr, int32_t size, CompVBufferPtrPtr buffer);
+    static COMPV_ERROR_CODE newObjAndCopyData(const void* pcPtr, int32_t size, CompVBufferPtrPtr buffer);
+    static COMPV_ERROR_CODE newObjAndRefData(const void* pcPtr, int32_t size, CompVBufferPtrPtr buffer);
 
 private:
     void* m_pPtr;

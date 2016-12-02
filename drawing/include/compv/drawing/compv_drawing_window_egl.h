@@ -28,21 +28,21 @@ COMPV_OBJECT_DECLARE_PTRS(GLContextEGL)
 class CompVGLContextEGL : public CompVGLContext
 {
 protected:
-	CompVGLContextEGL(EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex);
+    CompVGLContextEGL(EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex);
 public:
-	virtual ~CompVGLContextEGL();
-	COMPV_OBJECT_GET_ID("CompVGLContextEGL");
+    virtual ~CompVGLContextEGL();
+    COMPV_OBJECT_GET_ID("CompVGLContextEGL");
 
-	virtual COMPV_ERROR_CODE makeCurrent() override /* Overrides(CompVGLContext) */;
-	virtual COMPV_ERROR_CODE swapBuffers()  override /* Overrides(CompVGLContext) */;
-	virtual COMPV_ERROR_CODE unmakeCurrent()  override /* Overrides(CompVGLContext) */;
+    virtual COMPV_ERROR_CODE makeCurrent() override /* Overrides(CompVGLContext) */;
+    virtual COMPV_ERROR_CODE swapBuffers()  override /* Overrides(CompVGLContext) */;
+    virtual COMPV_ERROR_CODE unmakeCurrent()  override /* Overrides(CompVGLContext) */;
 
-	static COMPV_ERROR_CODE newObj(CompVGLContextEGLPtrPtr context, EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex);
+    static COMPV_ERROR_CODE newObj(CompVGLContextEGLPtrPtr context, EGLDisplay pEGLDisplay, EGLSurface pEGLSurface, EGLContext pEGLContex);
 
 private:
-	EGLDisplay m_pEGLDisplay;
-	EGLSurface m_pEGLSurface;
-	EGLContext m_pEGLContex;
+    EGLDisplay m_pEGLDisplay;
+    EGLSurface m_pEGLSurface;
+    EGLContext m_pEGLContex;
 };
 
 //
@@ -53,32 +53,32 @@ COMPV_OBJECT_DECLARE_PTRS(WindowEGL)
 class CompVWindowEGL : public CompVGLWindow
 {
 protected:
-	CompVWindowEGL(size_t width, size_t height, const char* title);
+    CompVWindowEGL(size_t width, size_t height, const char* title);
 public:
-	virtual ~CompVWindowEGL();
-	
-	virtual bool isClosed() const override /* Overrides(CompVGLWindow) */;
-	virtual COMPV_ERROR_CODE close() override /* Overrides(CompVGLWindow) */;
-	virtual COMPV_ERROR_CODE beginDraw() override /* Overrides(CompVGLWindow) */;
-	// Override(CompVWindow::endDraw) -> CompVGLWindow
-	// Override(CompVWindow::surface) -> CompVGLWindow
+    virtual ~CompVWindowEGL();
 
-	virtual EGLNativeWindowType nativeWindow() = 0;
+    virtual bool isClosed() const override /* Overrides(CompVGLWindow) */;
+    virtual COMPV_ERROR_CODE close() override /* Overrides(CompVGLWindow) */;
+    virtual COMPV_ERROR_CODE beginDraw() override /* Overrides(CompVGLWindow) */;
+    // Override(CompVWindow::endDraw) -> CompVGLWindow
+    // Override(CompVWindow::surface) -> CompVGLWindow
+
+    virtual EGLNativeWindowType nativeWindow() = 0;
 
 protected:
-	virtual CompVGLContextPtr context() override /* Overrides(CompVGLWindow) */;
+    virtual CompVGLContextPtr context() override /* Overrides(CompVGLWindow) */;
 
 private:
-	COMPV_ERROR_CODE init();
-	COMPV_ERROR_CODE deInit();
+    COMPV_ERROR_CODE init();
+    COMPV_ERROR_CODE deInit();
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	EGLDisplay m_pEGLDisplay;
-	EGLSurface m_pEGLSurface;
-	EGLContext m_pEGLContex;
-	CompVGLContextEGLPtr m_ptrContext;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    EGLDisplay m_pEGLDisplay;
+    EGLSurface m_pEGLSurface;
+    EGLContext m_pEGLContex;
+    CompVGLContextEGLPtr m_ptrContext;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

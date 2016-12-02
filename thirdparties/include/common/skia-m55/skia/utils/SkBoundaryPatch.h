@@ -11,9 +11,10 @@
 #include "SkPoint.h"
 #include "SkRefCnt.h"
 
-class SkBoundary : public SkRefCnt {
+class SkBoundary : public SkRefCnt
+{
 public:
-    
+
 
     // These must be 0, 1, 2, 3 for efficiency in the subclass implementations
     enum Edge {
@@ -29,12 +30,15 @@ private:
     typedef SkRefCnt INHERITED;
 };
 
-class SkBoundaryPatch {
+class SkBoundaryPatch
+{
 public:
     SkBoundaryPatch();
     ~SkBoundaryPatch();
 
-    SkBoundary* getBoundary() const { return fBoundary; }
+    SkBoundary* getBoundary() const {
+        return fBoundary;
+    }
     SkBoundary* setBoundary(SkBoundary*);
 
     SkPoint eval(SkScalar unitU, SkScalar unitV);
@@ -46,7 +50,8 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-class SkLineBoundary : public SkBoundary {
+class SkLineBoundary : public SkBoundary
+{
 public:
     SkPoint fPts[4];
 
@@ -54,7 +59,8 @@ public:
     virtual SkPoint eval(Edge, SkScalar);
 };
 
-class SkCubicBoundary : public SkBoundary {
+class SkCubicBoundary : public SkBoundary
+{
 public:
     // the caller sets the first 12 entries. The 13th is used by the impl.
     SkPoint fPts[13];

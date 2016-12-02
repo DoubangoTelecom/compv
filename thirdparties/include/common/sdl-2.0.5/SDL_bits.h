@@ -73,10 +73,8 @@ SDL_MostSignificantBitIndex32(Uint32 x)
         return -1;
     }
 
-    for (i = 4; i >= 0; i--)
-    {
-        if (x & b[i])
-        {
+    for (i = 4; i >= 0; i--) {
+        if (x & b[i]) {
             x >>= S[i];
             msbIndex |= S[i];
         }

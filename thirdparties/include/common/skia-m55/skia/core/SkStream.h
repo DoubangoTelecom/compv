@@ -35,7 +35,8 @@ class SkStreamMemory;
  *  no more data (at EOF or hit an error). The caller should *not* call again
  *  in hopes of fulfilling more of the request.
  */
-class SK_API SkStream : public SkNoncopyable {
+class SK_API SkStream : public SkNoncopyable
+{
 public:
     virtual ~SkStream() {}
 
@@ -73,7 +74,9 @@ public:
      *  @param size Number of bytes to copy.
      *  @return The number of bytes peeked/copied.
      */
-    virtual size_t peek(void* /*buffer*/, size_t /*size*/) const { return 0; }
+    virtual size_t peek(void* /*buffer*/, size_t /*size*/) const {
+        return 0;
+    }
 
     /** Returns true when all the bytes in the stream have been read.
      *  This may return true early (when there are no more bytes to be read)
@@ -85,11 +88,19 @@ public:
     int16_t  readS16();
     int32_t  readS32();
 
-    uint8_t  readU8() { return (uint8_t)this->readS8(); }
-    uint16_t readU16() { return (uint16_t)this->readS16(); }
-    uint32_t readU32() { return (uint32_t)this->readS32(); }
+    uint8_t  readU8() {
+        return (uint8_t)this->readS8();
+    }
+    uint16_t readU16() {
+        return (uint16_t)this->readS16();
+    }
+    uint32_t readU32() {
+        return (uint32_t)this->readS32();
+    }
 
-    bool     readBool() { return this->readU8() != 0; }
+    bool     readBool() {
+        return this->readU8() != 0;
+    }
     SkScalar readScalar();
     size_t   readPackedUInt();
 
@@ -97,61 +108,85 @@ public:
     /** Rewinds to the beginning of the stream. Returns true if the stream is known
      *  to be at the beginning after this call returns.
      */
-    virtual bool rewind() { return false; }
+    virtual bool rewind() {
+        return false;
+    }
 
     /** Duplicates this stream. If this cannot be done, returns NULL.
      *  The returned stream will be positioned at the beginning of its data.
      */
-    virtual SkStreamRewindable* duplicate() const { return NULL; }
+    virtual SkStreamRewindable* duplicate() const {
+        return NULL;
+    }
 
 //SkStreamSeekable
     /** Returns true if this stream can report it's current position. */
-    virtual bool hasPosition() const { return false; }
+    virtual bool hasPosition() const {
+        return false;
+    }
     /** Returns the current position in the stream. If this cannot be done, returns 0. */
-    virtual size_t getPosition() const { return 0; }
+    virtual size_t getPosition() const {
+        return 0;
+    }
 
     /** Seeks to an absolute position in the stream. If this cannot be done, returns false.
      *  If an attempt is made to seek past the end of the stream, the position will be set
      *  to the end of the stream.
      */
-    virtual bool seek(size_t /*position*/) { return false; }
+    virtual bool seek(size_t /*position*/) {
+        return false;
+    }
 
     /** Seeks to an relative offset in the stream. If this cannot be done, returns false.
      *  If an attempt is made to move to a position outside the stream, the position will be set
      *  to the closest point within the stream (beginning or end).
      */
-    virtual bool move(long /*offset*/) { return false; }
+    virtual bool move(long /*offset*/) {
+        return false;
+    }
 
     /** Duplicates this stream. If this cannot be done, returns NULL.
      *  The returned stream will be positioned the same as this stream.
      */
-    virtual SkStreamSeekable* fork() const { return NULL; }
+    virtual SkStreamSeekable* fork() const {
+        return NULL;
+    }
 
 //SkStreamAsset
     /** Returns true if this stream can report it's total length. */
-    virtual bool hasLength() const { return false; }
+    virtual bool hasLength() const {
+        return false;
+    }
     /** Returns the total length of the stream. If this cannot be done, returns 0. */
-    virtual size_t getLength() const { return 0; }
+    virtual size_t getLength() const {
+        return 0;
+    }
 
 //SkStreamMemory
     /** Returns the starting address for the data. If this cannot be done, returns NULL. */
     //TODO: replace with virtual const SkData* getData()
-    virtual const void* getMemoryBase() { return NULL; }
+    virtual const void* getMemoryBase() {
+        return NULL;
+    }
 };
 
 /** SkStreamRewindable is a SkStream for which rewind and duplicate are required. */
-class SK_API SkStreamRewindable : public SkStream {
+class SK_API SkStreamRewindable : public SkStream
+{
 public:
     bool rewind() override = 0;
     SkStreamRewindable* duplicate() const override = 0;
 };
 
 /** SkStreamSeekable is a SkStreamRewindable for which position, seek, move, and fork are required. */
-class SK_API SkStreamSeekable : public SkStreamRewindable {
+class SK_API SkStreamSeekable : public SkStreamRewindable
+{
 public:
     SkStreamSeekable* duplicate() const override = 0;
 
-    bool hasPosition() const override { return true; }
+    bool hasPosition() const override {
+        return true;
+    }
     size_t getPosition() const override = 0;
     bool seek(size_t position) override = 0;
     bool move(long offset) override = 0;
@@ -159,17 +194,21 @@ public:
 };
 
 /** SkStreamAsset is a SkStreamSeekable for which getLength is required. */
-class SK_API SkStreamAsset : public SkStreamSeekable {
+class SK_API SkStreamAsset : public SkStreamSeekable
+{
 public:
     SkStreamAsset* duplicate() const override = 0;
     SkStreamAsset* fork() const override = 0;
 
-    bool hasLength() const override { return true; }
+    bool hasLength() const override {
+        return true;
+    }
     size_t getLength() const override = 0;
 };
 
 /** SkStreamMemory is a SkStreamAsset for which getMemoryBase is required. */
-class SK_API SkStreamMemory : public SkStreamAsset {
+class SK_API SkStreamMemory : public SkStreamAsset
+{
 public:
     SkStreamMemory* duplicate() const override = 0;
     SkStreamMemory* fork() const override = 0;
@@ -177,7 +216,8 @@ public:
     const void* getMemoryBase() override = 0;
 };
 
-class SK_API SkWStream : SkNoncopyable {
+class SK_API SkWStream : SkNoncopyable
+{
 public:
     virtual ~SkWStream();
 
@@ -207,7 +247,9 @@ public:
     bool    writeHexAsText(uint32_t, int minDigits = 0);
     bool    writeScalarAsText(SkScalar);
 
-    bool    writeBool(bool v) { return this->write8(v); }
+    bool    writeBool(bool v) {
+        return this->write8(v);
+    }
     bool    writeScalar(SkScalar);
     bool    writePackedUInt(size_t);
 
@@ -226,7 +268,8 @@ public:
 #include <stdio.h>
 
 /** A stream that wraps a C FILE* file stream. */
-class SK_API SkFILEStream : public SkStreamAsset {
+class SK_API SkFILEStream : public SkStreamAsset
+{
 public:
     /** Initialize the stream by calling sk_fopen on the specified path.
      *  This internal stream will be closed in the destructor.
@@ -247,7 +290,9 @@ public:
     virtual ~SkFILEStream();
 
     /** Returns true if the current path could be opened. */
-    bool isValid() const { return fFILE != NULL; }
+    bool isValid() const {
+        return fFILE != NULL;
+    }
 
     /** Close the current file, and open a new file with the specified path.
      *  If path is NULL, just close the current file.
@@ -279,7 +324,8 @@ private:
     typedef SkStreamAsset INHERITED;
 };
 
-class SK_API SkMemoryStream : public SkStreamMemory {
+class SK_API SkMemoryStream : public SkStreamMemory
+{
 public:
     SkMemoryStream();
 
@@ -312,13 +358,17 @@ public:
     */
     void setMemoryOwned(const void* data, size_t length);
 
-    sk_sp<SkData> asData() const { return fData; }
+    sk_sp<SkData> asData() const {
+        return fData;
+    }
     void setData(sk_sp<SkData>);
 #ifdef SK_SUPPORT_LEGACY_STREAM_DATA
     /** Return the stream's data in a SkData.
      *  The caller must call unref() when it is finished using the data.
      */
-    SkData* copyToData() const { return asData().release(); }
+    SkData* copyToData() const {
+        return asData().release();
+    }
 
     /**
      *  Use the specified data as the memory for this stream.
@@ -360,14 +410,17 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-class SK_API SkFILEWStream : public SkWStream {
+class SK_API SkFILEWStream : public SkWStream
+{
 public:
     SkFILEWStream(const char path[]);
     virtual ~SkFILEWStream();
 
     /** Returns true if the current path could be opened.
     */
-    bool isValid() const { return fFILE != NULL; }
+    bool isValid() const {
+        return fFILE != NULL;
+    }
 
     bool write(const void* buffer, size_t size) override;
     void flush() override;
@@ -380,11 +433,14 @@ private:
     typedef SkWStream INHERITED;
 };
 
-class SK_API SkMemoryWStream : public SkWStream {
+class SK_API SkMemoryWStream : public SkWStream
+{
 public:
     SkMemoryWStream(void* buffer, size_t size);
     bool write(const void* buffer, size_t size) override;
-    size_t bytesWritten() const override { return fBytesWritten; }
+    size_t bytesWritten() const override {
+        return fBytesWritten;
+    }
 
 private:
     char*   fBuffer;
@@ -394,18 +450,23 @@ private:
     typedef SkWStream INHERITED;
 };
 
-class SK_API SkDynamicMemoryWStream : public SkWStream {
+class SK_API SkDynamicMemoryWStream : public SkWStream
+{
 public:
     SkDynamicMemoryWStream();
     virtual ~SkDynamicMemoryWStream();
 
     bool write(const void* buffer, size_t size) override;
-    size_t bytesWritten() const override { return fBytesWritten; }
+    size_t bytesWritten() const override {
+        return fBytesWritten;
+    }
     // random access write
     // modifies stream and returns true if offset + size is less than or equal to getOffset()
     bool write(const void* buffer, size_t offset, size_t size);
     bool read(void* buffer, size_t offset, size_t size);
-    size_t getOffset() const { return fBytesWritten; }
+    size_t getOffset() const {
+        return fBytesWritten;
+    }
 
     // copy what has been written to the stream into dst
     void copyTo(void* dst) const;
@@ -447,14 +508,17 @@ private:
 };
 
 
-class SK_API SkDebugWStream : public SkWStream {
+class SK_API SkDebugWStream : public SkWStream
+{
 public:
     SkDebugWStream() : fBytesWritten(0) {}
 
     // overrides
     bool write(const void* buffer, size_t size) override;
     void newline() override;
-    size_t bytesWritten() const override { return fBytesWritten; }
+    size_t bytesWritten() const override {
+        return fBytesWritten;
+    }
 
 private:
     size_t fBytesWritten;

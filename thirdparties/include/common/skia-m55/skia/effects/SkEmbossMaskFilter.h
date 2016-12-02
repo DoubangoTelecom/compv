@@ -14,7 +14,8 @@
 
     This mask filter creates a 3D emboss look, by specifying a light and blur amount.
 */
-class SK_API SkEmbossMaskFilter : public SkMaskFilter {
+class SK_API SkEmbossMaskFilter : public SkMaskFilter
+{
 public:
     struct Light {
         SkScalar    fDirection[3];  // x,y,z
@@ -24,7 +25,7 @@ public:
     };
 
     static sk_sp<SkMaskFilter> Make(SkScalar blurSigma, const Light& light);
-    
+
 #ifdef SK_SUPPORT_LEGACY_MASKFILTER_PTR
     static SkMaskFilter* Create(SkScalar blurSigma, const Light& light) {
         return Make(blurSigma, light).release();

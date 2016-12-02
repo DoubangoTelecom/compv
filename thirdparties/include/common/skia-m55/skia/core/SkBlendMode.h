@@ -8,7 +8,8 @@
 #ifndef SkBlendMode_DEFINED
 #define SkBlendMode_DEFINED
 
-enum class SkBlendMode {
+enum class SkBlendMode
+{
     kClear,    //!< [0, 0]
     kSrc,      //!< [Sa, Sc]
     kDst,      //!< [Da, Dc]

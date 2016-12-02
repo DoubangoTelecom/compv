@@ -10,7 +10,8 @@
 
 #include "SkPathEffect.h"
 
-class SK_API SkArcToPathEffect : public SkPathEffect {
+class SK_API SkArcToPathEffect : public SkPathEffect
+{
 public:
     /** radius must be > 0 to have an effect. It specifies the distance from each corner
         that should be "rounded".

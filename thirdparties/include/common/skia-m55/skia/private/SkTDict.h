@@ -12,7 +12,8 @@
 #include "SkTSearch.h"
 #include "SkTDArray.h"
 
-template <typename T> class SkTDict : SkNoncopyable {
+template <typename T> class SkTDict : SkNoncopyable
+{
 public:
     SkTDict(size_t minStringAlloc) : fStrings(minStringAlloc) {}
 
@@ -21,7 +22,9 @@ public:
         fStrings.reset();
     }
 
-    int count() const { return fArray.count(); }
+    int count() const {
+        return fArray.count();
+    }
 
     bool set(const char name[], const T& value) {
         return set(name, strlen(name), value);
@@ -35,7 +38,8 @@ public:
         if (index >= 0) {
             fArray[index].fValue = value;
             return false;
-        } else {
+        }
+        else {
             Pair*   pair = fArray.insert(~index);
             char*   copy = (char*)fStrings.alloc(len + 1, SkChunkAlloc::kThrow_AllocFailType);
             memcpy(copy, name, len);
@@ -98,7 +102,8 @@ public:
     friend class Iter;
 
 public:
-    class Iter {
+    class Iter
+    {
     public:
         Iter(const SkTDict<T>& dict) {
             fIter = dict.fArray.begin();

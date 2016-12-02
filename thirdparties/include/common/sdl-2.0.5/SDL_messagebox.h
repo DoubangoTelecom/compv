@@ -39,13 +39,13 @@ typedef enum
     SDL_MESSAGEBOX_ERROR        = 0x00000010,   /**< error dialog */
     SDL_MESSAGEBOX_WARNING      = 0x00000020,   /**< warning dialog */
     SDL_MESSAGEBOX_INFORMATION  = 0x00000040    /**< informational dialog */
-} SDL_MessageBoxFlags;
+}
+SDL_MessageBoxFlags;
 
 /**
  * \brief Flags for SDL_MessageBoxButtonData.
  */
-typedef enum
-{
+typedef enum {
     SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT = 0x00000001,  /**< Marks the default button when return is hit */
     SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT = 0x00000002   /**< Marks the default button when escape is hit */
 } SDL_MessageBoxButtonFlags;
@@ -53,8 +53,7 @@ typedef enum
 /**
  *  \brief Individual button data.
  */
-typedef struct
-{
+typedef struct {
     Uint32 flags;       /**< ::SDL_MessageBoxButtonFlags */
     int buttonid;       /**< User defined button id (value returned via SDL_ShowMessageBox) */
     const char * text;  /**< The UTF-8 button text */
@@ -63,13 +62,11 @@ typedef struct
 /**
  * \brief RGB value used in a message box color scheme
  */
-typedef struct
-{
+typedef struct {
     Uint8 r, g, b;
 } SDL_MessageBoxColor;
 
-typedef enum
-{
+typedef enum {
     SDL_MESSAGEBOX_COLOR_BACKGROUND,
     SDL_MESSAGEBOX_COLOR_TEXT,
     SDL_MESSAGEBOX_COLOR_BUTTON_BORDER,
@@ -81,16 +78,14 @@ typedef enum
 /**
  * \brief A set of colors to use for message box dialogs
  */
-typedef struct
-{
+typedef struct {
     SDL_MessageBoxColor colors[SDL_MESSAGEBOX_COLOR_MAX];
 } SDL_MessageBoxColorScheme;
 
 /**
  *  \brief MessageBox structure containing title, text, window, etc.
  */
-typedef struct
-{
+typedef struct {
     Uint32 flags;                       /**< ::SDL_MessageBoxFlags */
     SDL_Window *window;                 /**< Parent window, can be NULL */
     const char *title;                  /**< UTF-8 title */

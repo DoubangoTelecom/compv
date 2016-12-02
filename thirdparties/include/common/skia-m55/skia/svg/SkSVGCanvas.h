@@ -12,7 +12,8 @@
 
 class SkXMLWriter;
 
-class SK_API SkSVGCanvas {
+class SK_API SkSVGCanvas
+{
 public:
     /**
      *  Returns a new canvas that will generate SVG commands from its draw calls, and send

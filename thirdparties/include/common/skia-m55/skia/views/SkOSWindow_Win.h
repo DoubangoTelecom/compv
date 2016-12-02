@@ -18,7 +18,8 @@
 #include "EGL/egl.h"
 #endif
 
-class SkOSWindow : public SkWindow {
+class SkOSWindow : public SkWindow
+{
 public:
     struct WindowInit {
         const TCHAR*    fClass;
@@ -71,7 +72,9 @@ public:
     }
 
 protected:
-    virtual bool quitOnDeactivate() { return true; }
+    virtual bool quitOnDeactivate() {
+        return true;
+    }
 
     // overrides from SkWindow
     virtual void onHandleInval(const SkIRect&);

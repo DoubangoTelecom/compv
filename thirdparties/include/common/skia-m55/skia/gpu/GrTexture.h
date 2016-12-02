@@ -16,11 +16,18 @@
 class GrTextureParams;
 class GrTexturePriv;
 
-class GrTexture : virtual public GrSurface {
+class GrTexture : virtual public GrSurface
+{
 public:
-    GrTexture* asTexture() override { return this; }
-    const GrTexture* asTexture() const override { return this; }
-    GrSLType samplerType() const { return fSamplerType; }
+    GrTexture* asTexture() override {
+        return this;
+    }
+    const GrTexture* asTexture() const override {
+        return this;
+    }
+    GrSLType samplerType() const {
+        return fSamplerType;
+    }
 
     /**
      *  Return the native ID or handle to the texture, depending on the

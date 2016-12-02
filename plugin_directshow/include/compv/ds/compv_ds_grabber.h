@@ -24,31 +24,31 @@ COMPV_OBJECT_DECLARE_PTRS(DSGrabber)
 class CompVDSGrabber : public ISampleGrabberCB, public CUnknown
 {
 public:
-	CompVDSGrabber();
-	virtual ~CompVDSGrabber();
+    CompVDSGrabber();
+    virtual ~CompVDSGrabber();
 
-	virtual HRESULT STDMETHODCALLTYPE SampleCB(
-		double SampleTime,
-		IMediaSample *pSample) override /* Overrides(ISampleGrabberCB)*/;
+    virtual HRESULT STDMETHODCALLTYPE SampleCB(
+        double SampleTime,
+        IMediaSample *pSample) override /* Overrides(ISampleGrabberCB)*/;
 
-	virtual HRESULT STDMETHODCALLTYPE BufferCB(
-		double SampleTime,
-		BYTE *pBuffer,
-		long BufferLen) override /* Overrides(ISampleGrabberCB)*/;
+    virtual HRESULT STDMETHODCALLTYPE BufferCB(
+        double SampleTime,
+        BYTE *pBuffer,
+        long BufferLen) override /* Overrides(ISampleGrabberCB)*/;
 
-	virtual HRESULT STDMETHODCALLTYPE QueryInterface(
-		/* [in] */ REFIID riid,
-		/* [iid_is][out] */ _COM_Outptr_ void __RPC_FAR *__RPC_FAR *ppvObject) override /*Overrides(IUnknown)*/;
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(
+        /* [in] */ REFIID riid,
+        /* [iid_is][out] */ _COM_Outptr_ void __RPC_FAR *__RPC_FAR *ppvObject) override /*Overrides(IUnknown)*/;
 
-	virtual ULONG STDMETHODCALLTYPE AddRef(void) override /*Overrides(IUnknown)*/;
+    virtual ULONG STDMETHODCALLTYPE AddRef(void) override /*Overrides(IUnknown)*/;
 
-	virtual ULONG STDMETHODCALLTYPE Release(void) override /*Overrides(IUnknown)*/;
+    virtual ULONG STDMETHODCALLTYPE Release(void) override /*Overrides(IUnknown)*/;
 
-	COMPV_ERROR_CODE start(const std::string& deviceId = "");
-	COMPV_ERROR_CODE stop();
+    COMPV_ERROR_CODE start(const std::string& deviceId = "");
+    COMPV_ERROR_CODE stop();
 
 private:
-	CompVDSGraphCapturePtr m_ptrGraphCapture;
+    CompVDSGraphCapturePtr m_ptrGraphCapture;
 };
 
 COMPV_NAMESPACE_END()

@@ -24,8 +24,12 @@ struct SkIPoint16 {
         return pt;
     }
 
-    int16_t x() const { return fX; }
-    int16_t y() const { return fY; }
+    int16_t x() const {
+        return fX;
+    }
+    int16_t y() const {
+        return fY;
+    }
 
     void set(int x, int y) {
         fX = SkToS16(x);
@@ -46,23 +50,38 @@ struct SkIPoint {
         return pt;
     }
 
-    int32_t x() const { return fX; }
-    int32_t y() const { return fY; }
-    void setX(int32_t x) { fX = x; }
-    void setY(int32_t y) { fY = y; }
+    int32_t x() const {
+        return fX;
+    }
+    int32_t y() const {
+        return fY;
+    }
+    void setX(int32_t x) {
+        fX = x;
+    }
+    void setY(int32_t y) {
+        fY = y;
+    }
 
     /**
      *  Returns true iff fX and fY are both zero.
      */
-    bool isZero() const { return (fX | fY) == 0; }
+    bool isZero() const {
+        return (fX | fY) == 0;
+    }
 
     /**
      *  Set both fX and fY to zero. Same as set(0, 0)
      */
-    void setZero() { fX = fY = 0; }
+    void setZero() {
+        fX = fY = 0;
+    }
 
     /** Set the x and y values of the point. */
-    void set(int32_t x, int32_t y) { fX = x; fY = y; }
+    void set(int32_t x, int32_t y) {
+        fX = x;
+        fY = y;
+    }
 
     /** Rotate the point clockwise, writing the new point into dst
         It is legal for dst == this
@@ -72,7 +91,9 @@ struct SkIPoint {
     /** Rotate the point clockwise, writing the new point back into the point
     */
 
-    void rotateCW() { this->rotateCW(this); }
+    void rotateCW() {
+        this->rotateCW(this);
+    }
 
     /** Rotate the point counter-clockwise, writing the new point into dst.
         It is legal for dst == this
@@ -82,11 +103,16 @@ struct SkIPoint {
     /** Rotate the point counter-clockwise, writing the new point back into
         the point
     */
-    void rotateCCW() { this->rotateCCW(this); }
+    void rotateCCW() {
+        this->rotateCCW(this);
+    }
 
     /** Negate the X and Y coordinates of the point.
     */
-    void negate() { fX = -fX; fY = -fY; }
+    void negate() {
+        fX = -fX;
+        fY = -fY;
+    }
 
     /** Return a new point whose X and Y coordinates are the negative of the
         original point's
@@ -162,16 +188,25 @@ struct SK_API SkPoint {
         return pt;
     }
 
-    SkScalar x() const { return fX; }
-    SkScalar y() const { return fY; }
+    SkScalar x() const {
+        return fX;
+    }
+    SkScalar y() const {
+        return fY;
+    }
 
     /**
      *  Returns true iff fX and fY are both zero.
      */
-    bool isZero() const { return (0 == fX) & (0 == fY); }
+    bool isZero() const {
+        return (0 == fX) & (0 == fY);
+    }
 
     /** Set the point's X and Y coordinates */
-    void set(SkScalar x, SkScalar y) { fX = x; fY = y; }
+    void set(SkScalar x, SkScalar y) {
+        fX = x;
+        fY = y;
+    }
 
     /** Set the point's X and Y coordinates by automatically promoting (x,y) to
         SkScalar values.
@@ -215,13 +250,13 @@ struct SK_API SkPoint {
 
     void setRectFan(SkScalar l, SkScalar t, SkScalar r, SkScalar b, size_t stride) {
         SkASSERT(stride >= sizeof(SkPoint));
-        
+
         ((SkPoint*)((intptr_t)this + 0 * stride))->set(l, t);
         ((SkPoint*)((intptr_t)this + 1 * stride))->set(l, b);
         ((SkPoint*)((intptr_t)this + 2 * stride))->set(r, b);
         ((SkPoint*)((intptr_t)this + 3 * stride))->set(r, t);
     }
-    
+
 
     static void Offset(SkPoint points[], int count, const SkPoint& offset) {
         Offset(points, count, offset.fX, offset.fY);
@@ -240,8 +275,12 @@ struct SK_API SkPoint {
 
     /** Return the euclidian distance from (0,0) to the point
     */
-    SkScalar length() const { return SkPoint::Length(fX, fY); }
-    SkScalar distanceToOrigin() const { return this->length(); }
+    SkScalar length() const {
+        return SkPoint::Length(fX, fY);
+    }
+    SkScalar distanceToOrigin() const {
+        return this->length();
+    }
 
     /**
      *  Return true if the computed length of the vector is >= the internal
@@ -296,7 +335,9 @@ struct SK_API SkPoint {
     /** Scale the point's coordinates by scale, writing the answer back into
         the point.
     */
-    void scale(SkScalar value) { this->scale(value, this); }
+    void scale(SkScalar value) {
+        this->scale(value, this);
+    }
 
     /** Rotate the point clockwise by 90 degrees, writing the answer into dst.
         It is legal for dst == this.
@@ -306,7 +347,9 @@ struct SK_API SkPoint {
     /** Rotate the point clockwise by 90 degrees, writing the answer back into
         the point.
     */
-    void rotateCW() { this->rotateCW(this); }
+    void rotateCW() {
+        this->rotateCW(this);
+    }
 
     /** Rotate the point counter-clockwise by 90 degrees, writing the answer
         into dst. It is legal for dst == this.
@@ -316,7 +359,9 @@ struct SK_API SkPoint {
     /** Rotate the point counter-clockwise by 90 degrees, writing the answer
         back into the point.
     */
-    void rotateCCW() { this->rotateCCW(this); }
+    void rotateCCW() {
+        this->rotateCCW(this);
+    }
 
     /** Negate the point's coordinates
     */
@@ -351,13 +396,13 @@ struct SK_API SkPoint {
     SkPoint operator*(SkScalar scale) const {
         return Make(fX * scale, fY * scale);
     }
-    
+
     SkPoint& operator*=(SkScalar scale) {
         fX *= scale;
         fY *= scale;
         return *this;
     }
-    
+
     /**
      *  Returns true if both X and Y are finite (not infinity or NaN)
      */
@@ -513,7 +558,7 @@ struct SK_API SkPoint {
      * Returns the squared distance to the line segment between pts a and b
      */
     SkScalar distanceToLineSegmentBetweenSqd(const SkPoint& a,
-                                             const SkPoint& b) const;
+            const SkPoint& b) const;
 
     /**
      * Returns the distance to the line segment between pts a and b.
@@ -534,7 +579,8 @@ struct SK_API SkPoint {
         if (kRight_Side == side) {
             fX = -vec.fY;
             fY = tmp;
-        } else {
+        }
+        else {
             SkASSERT(kLeft_Side == side);
             fX = vec.fY;
             fY = -tmp;
@@ -544,12 +590,15 @@ struct SK_API SkPoint {
     /**
      *  cast-safe way to treat the point as an array of (2) SkScalars.
      */
-    const SkScalar* asScalars() const { return &fX; }
+    const SkScalar* asScalars() const {
+        return &fX;
+    }
 };
 
 typedef SkPoint SkVector;
 
-static inline bool SkPointsAreFinite(const SkPoint array[], int count) {
+static inline bool SkPointsAreFinite(const SkPoint array[], int count)
+{
     return SkScalarsAreFinite(&array[0].fX, count << 1);
 }
 

@@ -45,16 +45,19 @@ struct GrInitInvariantOutput {
         fIsSingleComponent = true;
     }
 
-    void setUsingLCDCoverage() { fIsLCDCoverage = true; }
+    void setUsingLCDCoverage() {
+        fIsLCDCoverage = true;
+    }
 
     GrColorComponentFlags   fValidFlags;
     GrColor                 fColor;
     bool                    fIsSingleComponent;
     bool                    fIsLCDCoverage; // Temorary data member until texture pixel configs are
-                                            // updated
+    // updated
 };
 
-class GrInvariantOutput {
+class GrInvariantOutput
+{
 public:
     GrInvariantOutput(GrColor color, GrColorComponentFlags flags, bool isSingleComponent)
         : fColor(color)
@@ -84,7 +87,8 @@ public:
         if (this->isOpaque()) {
             fValidFlags = kA_GrColorComponentFlag;
             fIsSingleComponent = false;
-        } else {
+        }
+        else {
             // Since the current state is not opaque we no longer care if the color being
             // multiplied is opaque.
             this->mulByUnknownFourComponents();
@@ -96,7 +100,8 @@ public:
         SkDEBUGCODE(this->validate());
         if (this->hasZeroAlpha()) {
             this->internalSetToTransparentBlack();
-        } else {
+        }
+        else {
             this->internalSetToUnknown();
         }
         SkDEBUGCODE(this->validate());
@@ -106,7 +111,8 @@ public:
         SkDEBUGCODE(this->validate());
         if (this->hasZeroAlpha()) {
             this->internalSetToTransparentBlack();
-        } else {
+        }
+        else {
             // We don't need to change fIsSingleComponent in this case
             fValidFlags = kNone_GrColorComponentFlags;
         }
@@ -117,7 +123,8 @@ public:
         SkDEBUGCODE(this->validate());
         if (this->hasZeroAlpha() || 0 == alpha) {
             this->internalSetToTransparentBlack();
-        } else {
+        }
+        else {
             if (alpha != 255) {
                 // Multiply color by alpha
                 fColor = GrColorPackRGBA(SkMulDiv255Round(GrColorUnpackR(fColor), alpha),
@@ -135,13 +142,14 @@ public:
         uint32_t a;
         if (GetAlphaAndCheckSingleChannel(color, &a)) {
             this->mulByKnownSingleComponent(a);
-        } else {
+        }
+        else {
             if (color != 0xffffffff) {
                 fColor = GrColorPackRGBA(
-                    SkMulDiv255Round(GrColorUnpackR(fColor), GrColorUnpackR(color)),
-                    SkMulDiv255Round(GrColorUnpackG(fColor), GrColorUnpackG(color)),
-                    SkMulDiv255Round(GrColorUnpackB(fColor), GrColorUnpackB(color)),
-                    SkMulDiv255Round(GrColorUnpackA(fColor), a));
+                             SkMulDiv255Round(GrColorUnpackR(fColor), GrColorUnpackR(color)),
+                             SkMulDiv255Round(GrColorUnpackG(fColor), GrColorUnpackG(color)),
+                             SkMulDiv255Round(GrColorUnpackB(fColor), GrColorUnpackB(color)),
+                             SkMulDiv255Round(GrColorUnpackA(fColor), a));
                 if (kRGBA_GrColorComponentFlags == fValidFlags) {
                     fIsSingleComponent = GetAlphaAndCheckSingleChannel(fColor, &a);
                 }
@@ -156,21 +164,24 @@ public:
         uint32_t a;
         if (GetAlphaAndCheckSingleChannel(color, &a)) {
             this->mulAlphaByKnownSingleComponent(a);
-        } else if (fValidFlags & kA_GrColorComponentFlag) {
+        }
+        else if (fValidFlags & kA_GrColorComponentFlag) {
             GrColor preAlpha = GrColorUnpackA(fColor);
             if (0 == preAlpha) {
                 this->internalSetToTransparentBlack();
-            } else {
+            }
+            else {
                 // We know that color has different component values
                 fIsSingleComponent = false;
                 fColor = GrColorPackRGBA(
-                    SkMulDiv255Round(preAlpha, GrColorUnpackR(color)),
-                    SkMulDiv255Round(preAlpha, GrColorUnpackG(color)),
-                    SkMulDiv255Round(preAlpha, GrColorUnpackB(color)),
-                    SkMulDiv255Round(preAlpha, a));
+                             SkMulDiv255Round(preAlpha, GrColorUnpackR(color)),
+                             SkMulDiv255Round(preAlpha, GrColorUnpackG(color)),
+                             SkMulDiv255Round(preAlpha, GrColorUnpackB(color)),
+                             SkMulDiv255Round(preAlpha, a));
                 fValidFlags = kRGBA_GrColorComponentFlags;
             }
-        } else {
+        }
+        else {
             fIsSingleComponent = false;
             fValidFlags = kNone_GrColorComponentFlags;
         }
@@ -183,13 +194,15 @@ public:
         SkDEBUGCODE(this->validate());
         if (0 == alpha || this->hasZeroAlpha()) {
             this->internalSetToTransparentBlack();
-        } else {
+        }
+        else {
             if (fValidFlags & kA_GrColorComponentFlag) {
                 GrColor a = GrColorUnpackA(fColor);
                 a = SkMulDiv255Round(alpha, a);
                 fColor = GrColorPackRGBA(a, a, a, a);
                 fValidFlags = kRGBA_GrColorComponentFlags;
-            } else {
+            }
+            else {
                 fValidFlags = kNone_GrColorComponentFlags;
             }
             fIsSingleComponent = true;
@@ -203,7 +216,8 @@ public:
         fNonMulStageFound = true;
         if (!(fValidFlags & kA_GrColorComponentFlag)) {
             fValidFlags = kNone_GrColorComponentFlags;
-        } else {
+        }
+        else {
             fColor = GrPremulColor(fColor);
         }
         SkDEBUGCODE(this->validate());
@@ -254,9 +268,15 @@ public:
         fIsLCDCoverage = true;
     }
 
-    GrColor color() const { return fColor; }
-    GrColorComponentFlags validFlags() const { return fValidFlags; }
-    bool willUseInputColor() const { return fWillUseInputColor; }
+    GrColor color() const {
+        return fColor;
+    }
+    GrColorComponentFlags validFlags() const {
+        return fValidFlags;
+    }
+    bool willUseInputColor() const {
+        return fWillUseInputColor;
+    }
 
     /**
      * If isSingleComponent is true, then the flag values for r, g, b, and a must all be the
@@ -314,14 +334,24 @@ private:
         return (fValidFlags == kRGBA_GrColorComponentFlags && 0xFFFFFFFF == fColor);
     }
 
-    bool isSingleComponent() const { return fIsSingleComponent; }
+    bool isSingleComponent() const {
+        return fIsSingleComponent;
+    }
 
-    void resetWillUseInputColor() { fWillUseInputColor = true; }
+    void resetWillUseInputColor() {
+        fWillUseInputColor = true;
+    }
 
-    bool allStagesMulInput() const { return !fNonMulStageFound; }
-    void resetNonMulStageFound() { fNonMulStageFound = false; }
+    bool allStagesMulInput() const {
+        return !fNonMulStageFound;
+    }
+    void resetNonMulStageFound() {
+        fNonMulStageFound = false;
+    }
 
-    bool isLCDCoverage() const { return fIsLCDCoverage; }
+    bool isLCDCoverage() const {
+        return fIsLCDCoverage;
+    }
 
     SkDEBUGCODE(bool colorComponentsAllEqual() const;)
     /**

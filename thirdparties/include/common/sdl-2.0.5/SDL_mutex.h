@@ -235,7 +235,7 @@ extern DECLSPEC int SDLCALL SDL_CondWait(SDL_cond * cond, SDL_mutex * mutex);
  *           delay of 1 ms, and so should be avoided if possible.
  */
 extern DECLSPEC int SDLCALL SDL_CondWaitTimeout(SDL_cond * cond,
-                                                SDL_mutex * mutex, Uint32 ms);
+        SDL_mutex * mutex, Uint32 ms);
 
 /* @} *//* Condition variable functions */
 

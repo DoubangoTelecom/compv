@@ -19,7 +19,8 @@ class GrDrawContext;
  * GrClip is an abstract base class for applying a clip. It constructs a clip mask if necessary, and
  * fills out a GrAppliedClip instructing the caller on how to set up the draw state.
  */
-class GrClip {
+class GrClip
+{
 public:
     virtual bool quickContains(const SkRect&) const = 0;
     virtual bool quickContains(const SkRRect& rrect) const {
@@ -63,7 +64,7 @@ public:
      * @param queryBounds       device-space bounds of the query region.
      */
     template<typename TRect> constexpr static bool IsInsideClip(const TRect& innerClipBounds,
-                                                                const SkRect& queryBounds) {
+            const SkRect& queryBounds) {
         return innerClipBounds.fRight - innerClipBounds.fLeft > kBoundsTolerance &&
                innerClipBounds.fBottom - innerClipBounds.fTop > kBoundsTolerance &&
                innerClipBounds.fLeft < queryBounds.fLeft + kBoundsTolerance &&
@@ -79,7 +80,7 @@ public:
      * @param queryBounds       device-space bounds of the query region.
      */
     template<typename TRect> constexpr static bool IsOutsideClip(const TRect& outerClipBounds,
-                                                                 const SkRect& queryBounds) {
+            const SkRect& queryBounds) {
         return outerClipBounds.fRight - outerClipBounds.fLeft <= kBoundsTolerance ||
                outerClipBounds.fBottom - outerClipBounds.fTop <= kBoundsTolerance ||
                outerClipBounds.fLeft >= queryBounds.fRight - kBoundsTolerance ||
@@ -122,7 +123,8 @@ public:
 /**
  * Specialized implementation for no clip.
  */
-class GrNoClip final : public GrClip {
+class GrNoClip final : public GrClip
+{
 private:
     bool quickContains(const SkRect&) const final {
         return true;
@@ -137,7 +139,9 @@ private:
     bool apply(GrContext*, GrDrawContext*, bool, bool, GrAppliedClip*) const final {
         return true;
     }
-    bool isRRect(const SkRect&, SkRRect*, bool*) const override { return false; }
+    bool isRRect(const SkRect&, SkRRect*, bool*) const override {
+        return false;
+    }
 };
 
 #endif

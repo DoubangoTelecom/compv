@@ -18,9 +18,9 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 void rgbToRgbaKernel31_Intrin_Aligned_AVX2(COMPV_ALIGNED(AVX2) const uint8_t* rgb, COMPV_ALIGNED(AVX2) uint8_t* rgba, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
-	COMPV_DEBUG_INFO_CHECK_AVX2();
-	
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
+    COMPV_DEBUG_INFO_CHECK_AVX2();
+
     _mm256_zeroupper();
     __m256i ymm0, ymm1, ymmABCDDEFG, ymmCDEFFGHX, ymmMaskRgbToRgba, ymmXXABBCDE, ymmLost, ymmAlpha;
     compv_scalar_t i, j, maxI = ((width + 31) & -32), pad = (stride - maxI), padRGB = pad * 3, padRGBA = pad << 2;
@@ -71,7 +71,7 @@ void rgbToRgbaKernel31_Intrin_Aligned_AVX2(COMPV_ALIGNED(AVX2) const uint8_t* rg
 #endif
 void bgrToBgraKernel31_Intrin_Aligned_AVX2(COMPV_ALIGNED(AVX2) const uint8_t* bgr, COMPV_ALIGNED(AVX2) uint8_t* bgra, compv_scalar_t height, compv_scalar_t width, compv_scalar_t stride)
 {
-	// the alpha channel is at the same index as rgb->rgba which means we can use the same function
+    // the alpha channel is at the same index as rgb->rgba which means we can use the same function
     rgbToRgbaKernel31_Intrin_Aligned_AVX2(bgr, bgra, height, width, stride);
 }
 

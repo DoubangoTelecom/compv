@@ -9,18 +9,18 @@
 
 #if !COMPV_OS_WINDOWS_CE
 BOOL APIENTRY DllMain(HMODULE hModule,
-	DWORD  ul_reason_for_call,
-	LPVOID lpReserved
-)
+                      DWORD  ul_reason_for_call,
+                      LPVOID lpReserved
+                     )
 {
-	switch (ul_reason_for_call) {
-	case DLL_PROCESS_ATTACH:
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
-	case DLL_PROCESS_DETACH:
-		break;
-	}
-	return TRUE;
+    switch (ul_reason_for_call) {
+    case DLL_PROCESS_ATTACH:
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+    case DLL_PROCESS_DETACH:
+        break;
+    }
+    return TRUE;
 }
 #endif
 
@@ -28,14 +28,14 @@ COMPV_NAMESPACE_BEGIN()
 
 extern "C" COMPV_PLUGIN_DIRECTSHOW_API COMPV_ERROR_CODE newObjCamera(CompVCameraPtrPtr camera)
 {
-	HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-	COMPV_CHECK_EXP_RETURN(FAILED(hr) && hr != RPC_E_CHANGED_MODE, COMPV_ERROR_CODE_E_DIRECTSHOW);
-	COMPV_CHECK_EXP_RETURN(!camera, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVDSCameraPtr camera_;
-	COMPV_CHECK_CODE_RETURN(CompVDSCamera::newObj(&camera_));
+    HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    COMPV_CHECK_EXP_RETURN(FAILED(hr) && hr != RPC_E_CHANGED_MODE, COMPV_ERROR_CODE_E_DIRECTSHOW);
+    COMPV_CHECK_EXP_RETURN(!camera, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    CompVDSCameraPtr camera_;
+    COMPV_CHECK_CODE_RETURN(CompVDSCamera::newObj(&camera_));
 
-	*camera = *camera_;
-	return COMPV_ERROR_CODE_S_OK;
+    *camera = *camera_;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

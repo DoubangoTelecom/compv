@@ -28,59 +28,59 @@ struct CompVFeatureFactory {
     const char* name;
     COMPV_ERROR_CODE(*newObjCornerDete)(CompVPtr<CompVCornerDete* >* dete);
     COMPV_ERROR_CODE(*newObjCornerDesc)(CompVPtr<CompVCornerDesc* >* desc);
-	COMPV_ERROR_CODE(*newObjEdgeDete)(CompVPtr<CompVEdgeDete* >* dete, float tLow /*= 0.68f*/, float tHigh /*= 0.68f*2.f*/, int32_t kernSize /*= 3*/);
-	COMPV_ERROR_CODE(*newObjHough)(CompVPtr<CompVHough* >* hough, float rho /*= 1.f*/, float theta /*= kfMathTrigPiOver180*/, int32_t threshold /*= 1*/);
+    COMPV_ERROR_CODE(*newObjEdgeDete)(CompVPtr<CompVEdgeDete* >* dete, float tLow /*= 0.68f*/, float tHigh /*= 0.68f*2.f*/, int32_t kernSize /*= 3*/);
+    COMPV_ERROR_CODE(*newObjHough)(CompVPtr<CompVHough* >* hough, float rho /*= 1.f*/, float theta /*= kfMathTrigPiOver180*/, int32_t threshold /*= 1*/);
 };
 
 /* Feature detectors and descriptors setters and getters */
 enum {
     /* Common to all features */
-	COMPV_FEATURE_GET_PTR_PYRAMID,
+    COMPV_FEATURE_GET_PTR_PYRAMID,
 
-	/* FAST (Features from Accelerated Segment Test) */
-	COMPV_FAST_ID,
-	COMPV_FAST_SET_INT32_THRESHOLD,
-	COMPV_FAST_SET_INT32_MAX_FEATURES,
-	COMPV_FAST_SET_INT32_FAST_TYPE,
-	COMPV_FAST_SET_BOOL_NON_MAXIMA_SUPP,
-	COMPV_FAST_TYPE_9,
-	COMPV_FAST_TYPE_12,
+    /* FAST (Features from Accelerated Segment Test) */
+    COMPV_FAST_ID,
+    COMPV_FAST_SET_INT32_THRESHOLD,
+    COMPV_FAST_SET_INT32_MAX_FEATURES,
+    COMPV_FAST_SET_INT32_FAST_TYPE,
+    COMPV_FAST_SET_BOOL_NON_MAXIMA_SUPP,
+    COMPV_FAST_TYPE_9,
+    COMPV_FAST_TYPE_12,
 
-	/*  ORB (Oriented FAST and Rotated BRIEF) */
-	COMPV_ORB_ID,
-	COMPV_ORB_SET_INT32_INTERNAL_DETE_ID,
-	COMPV_ORB_SET_INT32_FAST_THRESHOLD,
-	COMPV_ORB_SET_BOOL_FAST_NON_MAXIMA_SUPP,
-	COMPV_ORB_SET_INT32_PYRAMID_LEVELS,
-	COMPV_ORB_SET_INT32_PYRAMID_SCALE_TYPE,
-	COMPV_ORB_SET_FLT32_PYRAMID_SCALE_FACTOR,
-	COMPV_ORB_SET_INT32_MAX_FEATURES,
-	COMPV_ORB_SET_INT32_STRENGTH_TYPE,
-	COMPV_ORB_SET_INT32_BRIEF_PATCH_SIZE,
-	COMPV_ORB_STRENGTH_TYPE_FAST,
-	COMPV_ORB_STRENGTH_TYPE_HARRIS,
+    /*  ORB (Oriented FAST and Rotated BRIEF) */
+    COMPV_ORB_ID,
+    COMPV_ORB_SET_INT32_INTERNAL_DETE_ID,
+    COMPV_ORB_SET_INT32_FAST_THRESHOLD,
+    COMPV_ORB_SET_BOOL_FAST_NON_MAXIMA_SUPP,
+    COMPV_ORB_SET_INT32_PYRAMID_LEVELS,
+    COMPV_ORB_SET_INT32_PYRAMID_SCALE_TYPE,
+    COMPV_ORB_SET_FLT32_PYRAMID_SCALE_FACTOR,
+    COMPV_ORB_SET_INT32_MAX_FEATURES,
+    COMPV_ORB_SET_INT32_STRENGTH_TYPE,
+    COMPV_ORB_SET_INT32_BRIEF_PATCH_SIZE,
+    COMPV_ORB_STRENGTH_TYPE_FAST,
+    COMPV_ORB_STRENGTH_TYPE_HARRIS,
 
-	/* Canny */
-	COMPV_CANNY_ID,
-	COMPV_CANNY_SET_INT32_KERNEL_SIZE,
-	COMPV_CANNY_SET_FLT32_THRESHOLD_LOW,
-	COMPV_CANNY_SET_FLT32_THRESHOLD_HIGH,
+    /* Canny */
+    COMPV_CANNY_ID,
+    COMPV_CANNY_SET_INT32_KERNEL_SIZE,
+    COMPV_CANNY_SET_FLT32_THRESHOLD_LOW,
+    COMPV_CANNY_SET_FLT32_THRESHOLD_HIGH,
 
-	/* Sobel */
-	COMPV_SOBEL_ID,
+    /* Sobel */
+    COMPV_SOBEL_ID,
 
-	/* Scharr */
-	COMPV_SCHARR_ID,
+    /* Scharr */
+    COMPV_SCHARR_ID,
 
-	/* Prewitt */
-	COMPV_PREWITT_ID,
+    /* Prewitt */
+    COMPV_PREWITT_ID,
 
-	/* Hough */
-	COMPV_HOUGH_STANDARD_ID,
-	COMPV_HOUGH_SET_FLT32_RHO,
-	COMPV_HOUGH_SET_FLT32_THETA,
-	COMPV_HOUGH_SET_INT32_THRESHOLD,
-	COMPV_HOUGH_SET_INT32_MAXLINES
+    /* Hough */
+    COMPV_HOUGH_STANDARD_ID,
+    COMPV_HOUGH_SET_FLT32_RHO,
+    COMPV_HOUGH_SET_FLT32_THETA,
+    COMPV_HOUGH_SET_INT32_THRESHOLD,
+    COMPV_HOUGH_SET_INT32_MAXLINES
 };
 
 // https://en.wikipedia.org/wiki/Sobel_operator#Alternative_operators
@@ -116,14 +116,14 @@ private:
 class COMPV_API CompVFeatureBase : public CompVObj, public CompVSettable
 {
 protected:
-	CompVFeatureBase(int id);
+    CompVFeatureBase(int id);
 public:
-	virtual ~CompVFeatureBase();
-	COMPV_INLINE int getId() {
-		return m_nId;
-	}
+    virtual ~CompVFeatureBase();
+    COMPV_INLINE int getId() {
+        return m_nId;
+    }
 private:
-	int m_nId;
+    int m_nId;
 };
 
 // Class: CompVCornerDete
@@ -144,7 +144,7 @@ protected:
     CompVCornerDesc(int id);
 public:
     virtual ~CompVCornerDesc();
-	// Detector must be attached to descriptor only if describe() use the same input as the previous detect()
+    // Detector must be attached to descriptor only if describe() use the same input as the previous detect()
     COMPV_INLINE virtual COMPV_ERROR_CODE attachDete(CompVPtr<CompVCornerDete* > dete) {
         m_AttachedDete = dete;
         return COMPV_ERROR_CODE_S_OK;
@@ -171,22 +171,22 @@ private:
 class COMPV_API CompVEdgeDete : public CompVFeatureBase
 {
 protected:
-	CompVEdgeDete(int id);
+    CompVEdgeDete(int id);
 public:
-	virtual ~CompVEdgeDete();
-	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtrArray(uint8_t)& edges) = 0;
-	static COMPV_ERROR_CODE newObj(int deteId, CompVPtr<CompVEdgeDete* >* dete, float tLow = 0.68f, float tHigh = 0.68f*2.f, int32_t kernSize = 3);
+    virtual ~CompVEdgeDete();
+    virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtrArray(uint8_t)& edges) = 0;
+    static COMPV_ERROR_CODE newObj(int deteId, CompVPtr<CompVEdgeDete* >* dete, float tLow = 0.68f, float tHigh = 0.68f*2.f, int32_t kernSize = 3);
 };
 
 // Class: CompVHough
 class COMPV_API CompVHough : public CompVFeatureBase
 {
 protected:
-	CompVHough(int id);
+    CompVHough(int id);
 public:
-	virtual ~CompVHough();
-	virtual COMPV_ERROR_CODE process(const CompVPtrArray(uint8_t)& edges, CompVPtrArray(compv_float32x2_t)& coords) = 0;
-	static COMPV_ERROR_CODE newObj(int id, CompVPtr<CompVHough* >* hough, float rho = 1.f, float theta = kfMathTrigPiOver180, int32_t threshold = 1);
+    virtual ~CompVHough();
+    virtual COMPV_ERROR_CODE process(const CompVPtrArray(uint8_t)& edges, CompVPtrArray(compv_float32x2_t)& coords) = 0;
+    static COMPV_ERROR_CODE newObj(int id, CompVPtr<CompVHough* >* hough, float rho = 1.f, float theta = kfMathTrigPiOver180, int32_t threshold = 1);
 };
 
 COMPV_NAMESPACE_END()

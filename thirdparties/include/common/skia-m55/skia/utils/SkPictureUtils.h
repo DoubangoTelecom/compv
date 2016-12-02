@@ -12,7 +12,8 @@
 
 // TODO: remove this file?
 
-class SK_API SkPictureUtils {
+class SK_API SkPictureUtils
+{
 public:
     /**
      *  How many bytes are allocated to hold the SkPicture.

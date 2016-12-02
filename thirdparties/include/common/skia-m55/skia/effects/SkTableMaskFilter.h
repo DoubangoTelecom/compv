@@ -16,7 +16,8 @@
     Applies a table lookup on each of the alpha values in the mask.
     Helper methods create some common tables (e.g. gamma, clipping)
  */
-class SK_API SkTableMaskFilter : public SkMaskFilter {
+class SK_API SkTableMaskFilter : public SkMaskFilter
+{
 public:
     /** Utility that sets the gamma table
      */

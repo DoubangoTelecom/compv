@@ -19,7 +19,7 @@ COMPV_ERROR_CODE TestMax()
     timeEnd = CompVTime::getNowMills();
     COMPV_DEBUG_INFO("Elapsed time (TestMax) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE TestMin()
@@ -37,7 +37,7 @@ COMPV_ERROR_CODE TestMin()
     timeEnd = CompVTime::getNowMills();
     COMPV_DEBUG_INFO("Elapsed time (TestMin) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE TestClip3()
@@ -61,7 +61,7 @@ COMPV_ERROR_CODE TestClip3()
     timeEnd = CompVTime::getNowMills();
     COMPV_DEBUG_INFO("Elapsed time (TestClip3) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE TestClip2()
@@ -79,5 +79,5 @@ COMPV_ERROR_CODE TestClip2()
     timeEnd = CompVTime::getNowMills();
     COMPV_DEBUG_INFO("Elapsed time (TestClip2) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }

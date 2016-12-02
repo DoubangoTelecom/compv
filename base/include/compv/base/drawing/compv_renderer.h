@@ -22,23 +22,27 @@ COMPV_OBJECT_DECLARE_PTRS(Renderer)
 class COMPV_BASE_API CompVRenderer : public CompVObj
 {
 protected:
-	CompVRenderer(COMPV_PIXEL_FORMAT ePixelFormat);
+    CompVRenderer(COMPV_PIXEL_FORMAT ePixelFormat);
 public:
-	virtual ~CompVRenderer();
+    virtual ~CompVRenderer();
 
-	COMPV_INLINE COMPV_PIXEL_FORMAT pixelFormat()const { return m_ePixelFormat; }
-	COMPV_INLINE compv_renderer_id_t id()const { return m_nId; }
+    COMPV_INLINE COMPV_PIXEL_FORMAT pixelFormat()const {
+        return m_ePixelFormat;
+    }
+    COMPV_INLINE compv_renderer_id_t id()const {
+        return m_nId;
+    }
 
-	virtual bool isGLEnabled()const = 0;
-	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
-	virtual CompVCanvasPtr canvas() = 0;
+    virtual bool isGLEnabled()const = 0;
+    virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
+    virtual CompVCanvasPtr canvas() = 0;
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	COMPV_PIXEL_FORMAT m_ePixelFormat;
-	static compv_renderer_id_t s_nRendererId;
-	compv_renderer_id_t m_nId;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    COMPV_PIXEL_FORMAT m_ePixelFormat;
+    static compv_renderer_id_t s_nRendererId;
+    compv_renderer_id_t m_nId;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

@@ -17,7 +17,8 @@ class SkDiscardableMemory;
  * This interface is meant to be passed as argument to the memory dump methods of Skia objects.
  * The implementation of this interface is provided by the embedder.
  */
-class SK_API SkTraceMemoryDump {
+class SK_API SkTraceMemoryDump
+{
 public:
     /**
      * Enum to specify the level of the requested details for the dump from the Skia objects.

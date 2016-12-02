@@ -22,7 +22,8 @@
     The algorithm used is described here :
     http://www.w3.org/TR/SVG/filters.html#feTurbulenceElement
 */
-class SK_API SkPerlinNoiseShader : public SkShader {
+class SK_API SkPerlinNoiseShader : public SkShader
+{
 public:
     struct StitchData;
     struct PaintingData;
@@ -80,7 +81,8 @@ public:
     }
 #endif
 
-    class PerlinNoiseShaderContext : public SkShader::Context {
+    class PerlinNoiseShaderContext : public SkShader::Context
+    {
     public:
         PerlinNoiseShaderContext(const SkPerlinNoiseShader& shader, const ContextRec&);
         virtual ~PerlinNoiseShaderContext();

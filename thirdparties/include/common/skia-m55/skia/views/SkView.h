@@ -25,7 +25,8 @@ class SkLayerView;
     SkView is the base class for screen management. All widgets and controls inherit
     from SkView.
 */
-class SkView : public SkEventSink {
+class SkView : public SkEventSink
+{
 public:
     enum Flag_Shift {
         kVisible_Shift,
@@ -48,22 +49,32 @@ public:
         kAllFlagMasks   = (uint32_t)(0 - 1) >> (32 - kFlagShiftCount)
     };
 
-                SkView(uint32_t flags = 0);
+    SkView(uint32_t flags = 0);
     virtual     ~SkView();
 
     /** Return the flags associated with the view
     */
-    uint32_t    getFlags() const { return fFlags; }
+    uint32_t    getFlags() const {
+        return fFlags;
+    }
     /** Set the flags associated with the view
     */
     void        setFlags(uint32_t flags);
 
     /** Helper that returns non-zero if the kVisible_Mask bit is set in the view's flags
     */
-    int         isVisible() const { return fFlags & kVisible_Mask; }
-    int         isEnabled() const { return fFlags & kEnabled_Mask; }
-    int         isFocusable() const { return fFlags & kFocusable_Mask; }
-    int         isClipToBounds() const { return !(fFlags & kNoClip_Mask); }
+    int         isVisible() const {
+        return fFlags & kVisible_Mask;
+    }
+    int         isEnabled() const {
+        return fFlags & kEnabled_Mask;
+    }
+    int         isFocusable() const {
+        return fFlags & kFocusable_Mask;
+    }
+    int         isClipToBounds() const {
+        return !(fFlags & kNoClip_Mask);
+    }
     /** Helper to set/clear the view's kVisible_Mask flag */
     void        setVisibleP(bool);
     void        setEnabledP(bool);
@@ -71,14 +82,24 @@ public:
     void        setClipToBounds(bool);
 
     /** Return the view's width */
-    SkScalar    width() const { return fWidth; }
+    SkScalar    width() const {
+        return fWidth;
+    }
     /** Return the view's height */
-    SkScalar    height() const { return fHeight; }
+    SkScalar    height() const {
+        return fHeight;
+    }
     /** Set the view's width and height. These must both be >= 0. This does not affect the view's loc */
     void        setSize(SkScalar width, SkScalar height);
-    void        setSize(const SkPoint& size) { this->setSize(size.fX, size.fY); }
-    void        setWidth(SkScalar width) { this->setSize(width, fHeight); }
-    void        setHeight(SkScalar height) { this->setSize(fWidth, height); }
+    void        setSize(const SkPoint& size) {
+        this->setSize(size.fX, size.fY);
+    }
+    void        setWidth(SkScalar width) {
+        this->setSize(width, fHeight);
+    }
+    void        setHeight(SkScalar height) {
+        this->setSize(fWidth, height);
+    }
     /** Return a rectangle set to [0, 0, width, height] */
     void        getLocalBounds(SkRect* bounds) const;
 
@@ -89,14 +110,24 @@ public:
              canvas->concat(fMatrix);
     */
     /** Return the view's left edge */
-    SkScalar    locX() const { return fLoc.fX; }
+    SkScalar    locX() const {
+        return fLoc.fX;
+    }
     /** Return the view's top edge */
-    SkScalar    locY() const { return fLoc.fY; }
+    SkScalar    locY() const {
+        return fLoc.fY;
+    }
     /** Set the view's left and top edge. This does not affect the view's size */
     void        setLoc(SkScalar x, SkScalar y);
-    void        setLoc(const SkPoint& loc) { this->setLoc(loc.fX, loc.fY); }
-    void        setLocX(SkScalar x) { this->setLoc(x, fLoc.fY); }
-    void        setLocY(SkScalar y) { this->setLoc(fLoc.fX, y); }
+    void        setLoc(const SkPoint& loc) {
+        this->setLoc(loc.fX, loc.fY);
+    }
+    void        setLocX(SkScalar x) {
+        this->setLoc(x, fLoc.fY);
+    }
+    void        setLocY(SkScalar y) {
+        this->setLoc(fLoc.fX, y);
+    }
 
     /** Local Matrix - matrix used to tranform the view with respect to its
         parent in its view hiearchy. Use setLocalMatrix to apply matrix
@@ -106,7 +137,9 @@ public:
              canvas->translate(fLoc.fX, fLoc.fY);
              canvas->concat(fMatrix);
     */
-    const SkMatrix& getLocalMatrix() const { return fMatrix; }
+    const SkMatrix& getLocalMatrix() const {
+        return fMatrix;
+    }
     void            setLocalMatrix(const SkMatrix& matrix);
 
     /** Offset (move) the view by the specified dx and dy. This does not affect the view's size */
@@ -137,12 +170,15 @@ public:
 
     //  Click handling
 
-    class Click {
+    class Click
+    {
     public:
         Click(SkView* target);
         virtual ~Click();
 
-        const char* getType() const { return fType; }
+        const char* getType() const {
+            return fType;
+        }
         bool        isType(const char type[]) const;
         void        setType(const char type[]);     // does NOT make a copy of the string
         void        copyType(const char type[]);    // makes a copy of the string
@@ -188,7 +224,9 @@ public:
     //  View hierarchy management
 
     /** Return the view's parent, or null if it has none. This does not affect the parent's reference count. */
-    SkView*     getParent() const { return fParent; }
+    SkView*     getParent() const {
+        return fParent;
+    }
     SkView*     attachChildToFront(SkView* child);
     /** Attach the child view to this view, and increment the child's reference count. The child view is added
         such that it will be drawn before all other child views.
@@ -227,7 +265,8 @@ public:
         call to next() returns the front-most child view. When
         next() returns null, there are no more child views.
     */
-    class F2BIter {
+    class F2BIter
+    {
     public:
         F2BIter(const SkView* parent);
         SkView* next();
@@ -242,7 +281,8 @@ public:
         call to next() returns the back-most child view. When
         next() returns null, there are no more child views.
     */
-    class B2FIter {
+    class B2FIter
+    {
     public:
         B2FIter(const SkView* parent);
         SkView* next();
@@ -256,9 +296,10 @@ public:
         default implementation of that view's onDraw() will invoke this object
         automatically.
     */
-    class Artist : public SkRefCnt {
+    class Artist : public SkRefCnt
+    {
     public:
-        
+
 
         void draw(SkView*, SkCanvas*);
         void inflate(const SkDOM&, const SkDOM::Node*);
@@ -284,9 +325,10 @@ public:
         default implementation of that view's onLayoutChildren() will invoke
         this object automatically.
     */
-    class Layout : public SkRefCnt {
+    class Layout : public SkRefCnt
+    {
     public:
-        
+
 
         void layoutChildren(SkView* parent);
         void inflate(const SkDOM&, const SkDOM::Node*);
@@ -335,7 +377,9 @@ protected:
     */
     virtual bool    handleInval(const SkRect*);
     //! called once before all of the children are drawn (or clipped/translated)
-    virtual SkCanvas* beforeChildren(SkCanvas* c) { return c; }
+    virtual SkCanvas* beforeChildren(SkCanvas* c) {
+        return c;
+    }
     //! called once after all of the children are drawn (or clipped/translated)
     virtual void afterChildren(SkCanvas*) {}
 
@@ -376,8 +420,12 @@ public:
 protected:
 
     // override these if you're acting as a layer/host
-    virtual bool    onGetFocusView(SkView**) const { return false; }
-    virtual bool    onSetFocusView(SkView*) { return false; }
+    virtual bool    onGetFocusView(SkView**) const {
+        return false;
+    }
+    virtual bool    onSetFocusView(SkView*) {
+        return false;
+    }
 
 private:
     SkScalar    fWidth, fHeight;

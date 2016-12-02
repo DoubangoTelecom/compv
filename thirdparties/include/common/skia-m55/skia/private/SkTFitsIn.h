@@ -12,20 +12,22 @@
 #include <limits>
 #include <type_traits>
 
-namespace sktfitsin {
-namespace Private {
+namespace sktfitsin
+{
+namespace Private
+{
 
 /** SkTMux::type = (a && b) ? Both : (a) ? A : (b) ? B : Neither; */
 template <bool a, bool b, typename Both, typename A, typename B, typename Neither>
 struct SkTMux {
     using type = skstd::conditional_t<a, skstd::conditional_t<b, Both, A>,
-                                         skstd::conditional_t<b, B, Neither>>;
+          skstd::conditional_t<b, B, Neither>>;
 };
 
 /** SkTHasMoreDigits = (digits(A) >= digits(B)) ? true_type : false_type. */
 template <typename A, typename B> struct SkTHasMoreDigits
-    : skstd::bool_constant<std::numeric_limits<A>::digits >= std::numeric_limits<B>::digits>
-{ };
+        : skstd::bool_constant<std::numeric_limits<A>::digits >= std::numeric_limits<B>::digits> {
+};
 
 /** A high or low side predicate which is used when it is statically known
  *  that source values are in the range of the Destination.
@@ -101,7 +103,7 @@ template <typename OutOfRange_Low, typename OutOfRange_High> struct SkTCombineOu
     using apply_high = typename OutOfRange_High::can_be_true;
 
     using type = typename SkTMux<apply_low::value, apply_high::value,
-                                 Both, OutOfRange_Low, OutOfRange_High, Neither>::type;
+          Both, OutOfRange_Low, OutOfRange_High, Neither>::type;
 };
 
 template <typename D, typename S, typename OutOfRange_Low, typename OutOfRange_High>
@@ -198,7 +200,7 @@ template <typename D, typename S> struct SkTFitsIn {
     using D_is_signed = skstd::bool_constant<std::numeric_limits<D>::is_signed>;
 
     using selector = typename SkTMux<S_is_signed::value, D_is_signed::value,
-                                     S2S, S2U, U2S, U2U>::type;
+          S2S, S2U, U2S, U2U>::type;
     // This type is an SkTRangeChecker.
     using type = typename selector::type;
 };
@@ -214,7 +216,8 @@ template <typename T> struct underlying_type<T, false> {
 } // namespace sktfitsin
 
 /** Returns true if the integer source value 's' will fit in the integer destination type 'D'. */
-template <typename D, typename S> inline bool SkTFitsIn(S s) {
+template <typename D, typename S> inline bool SkTFitsIn(S s)
+{
     static_assert(std::is_integral<S>::value || std::is_enum<S>::value, "S must be integral.");
     static_assert(std::is_integral<D>::value || std::is_enum<D>::value, "D must be integral.");
 

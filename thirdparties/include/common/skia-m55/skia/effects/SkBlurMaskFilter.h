@@ -13,7 +13,8 @@
 #include "SkScalar.h"
 #include "SkBlurTypes.h"
 
-class SK_API SkBlurMaskFilter {
+class SK_API SkBlurMaskFilter
+{
 public:
     /**
      *  If radius > 0, return the corresponding sigma, else return 0. Use this to convert from the
@@ -60,7 +61,7 @@ public:
                                           SkScalar ambient, SkScalar specular);
 
 #ifdef SK_SUPPORT_LEGACY_MASKFILTER_PTR
-    static SkMaskFilter* Create(SkBlurStyle style, SkScalar sigma, uint32_t flags = kNone_BlurFlag){
+    static SkMaskFilter* Create(SkBlurStyle style, SkScalar sigma, uint32_t flags = kNone_BlurFlag) {
         return Make(style, sigma, flags).release();
     }
     static SkMaskFilter* CreateEmboss(SkScalar blurSigma, const SkScalar direction[3],

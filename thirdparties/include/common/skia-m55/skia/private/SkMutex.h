@@ -14,7 +14,8 @@
 
 #define SK_DECLARE_STATIC_MUTEX(name) static SkBaseMutex name;
 
-class SkBaseMutex {
+class SkBaseMutex
+{
 public:
     constexpr SkBaseMutex() = default;
 
@@ -34,30 +35,38 @@ public:
     }
 
 protected:
-    SkBaseSemaphore fSemaphore{1};
-    SkDEBUGCODE(SkThreadID fOwner{kIllegalThreadID};)
+    SkBaseSemaphore fSemaphore {1};
+    SkDEBUGCODE(SkThreadID fOwner {kIllegalThreadID};)
 };
 
-class SkMutex : public SkBaseMutex {
+class SkMutex : public SkBaseMutex
+{
 public:
     using SkBaseMutex::SkBaseMutex;
-    ~SkMutex() { fSemaphore.cleanup(); }
+    ~SkMutex() {
+        fSemaphore.cleanup();
+    }
 };
 
-class SkAutoMutexAcquire {
+class SkAutoMutexAcquire
+{
 public:
     template <typename T>
     SkAutoMutexAcquire(T* mutex) : fMutex(mutex) {
         if (mutex) {
             mutex->acquire();
         }
-        fRelease = [](void* mutex) { ((T*)mutex)->release(); };
+        fRelease = [](void* mutex) {
+            ((T*)mutex)->release();
+        };
     }
 
     template <typename T>
     SkAutoMutexAcquire(T& mutex) : SkAutoMutexAcquire(&mutex) {}
 
-    ~SkAutoMutexAcquire() { this->release(); }
+    ~SkAutoMutexAcquire() {
+        this->release();
+    }
 
     void release() {
         if (fMutex) {
@@ -74,15 +83,20 @@ private:
 
 // SkAutoExclusive is a lighter weight version of SkAutoMutexAcquire.
 // It assumes that there is a valid mutex, obviating the null check.
-class SkAutoExclusive {
+class SkAutoExclusive
+{
 public:
     template <typename T>
     SkAutoExclusive(T& mutex) : fMutex(&mutex) {
         mutex.acquire();
 
-        fRelease = [](void* mutex) { ((T*)mutex)->release(); };
+        fRelease = [](void* mutex) {
+            ((T*)mutex)->release();
+        };
     }
-    ~SkAutoExclusive() { fRelease(fMutex); }
+    ~SkAutoExclusive() {
+        fRelease(fMutex);
+    }
 
 private:
     void* fMutex;

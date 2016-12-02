@@ -29,15 +29,15 @@ COMPV_OBJECT_DECLARE_PTRS(CanvasImplSkia)
 class CompVCanvasImplSkia : public CompVCanvasImpl
 {
 protected:
-	CompVCanvasImplSkia();
+    CompVCanvasImplSkia();
 public:
-	virtual ~CompVCanvasImplSkia();
-	COMPV_OBJECT_GET_ID(CompVCanvasImplSkia);
+    virtual ~CompVCanvasImplSkia();
+    COMPV_OBJECT_GET_ID(CompVCanvasImplSkia);
 
-	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) override;
-	virtual COMPV_ERROR_CODE drawLine(int x0, int y0, int x1, int y1) override;
+    virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) override;
+    virtual COMPV_ERROR_CODE drawLine(int x0, int y0, int x1, int y1) override;
 
-	static COMPV_ERROR_CODE newObj(CompVCanvasImplSkiaPtrPtr skiaCanvas);
+    static COMPV_ERROR_CODE newObj(CompVCanvasImplSkiaPtrPtr skiaCanvas);
 
 protected:
 

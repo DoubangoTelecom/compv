@@ -14,8 +14,9 @@
 #include "SkRefCnt.h"
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-namespace android {
-    class Picture;
+namespace android
+{
+class Picture;
 };
 #endif
 
@@ -26,7 +27,8 @@ class SkPictureRecord;
 class SkRecord;
 class SkRecorder;
 
-class SK_API SkPictureRecorder : SkNoncopyable {
+class SK_API SkPictureRecorder : SkNoncopyable
+{
 public:
     SkPictureRecorder();
     ~SkPictureRecorder();
@@ -85,7 +87,7 @@ public:
      *  @return the picture containing the recorded content.
      */
     sk_sp<SkPicture> finishRecordingAsPictureWithCull(const SkRect& cullRect,
-                                                      uint32_t endFlags = 0);
+            uint32_t endFlags = 0);
 
     /**
      *  Signal that the caller is done recording. This invalidates the canvas returned by
@@ -109,7 +111,9 @@ public:
     SkDrawable* SK_WARN_UNUSED_RESULT endRecordingAsDrawable() {
         return this->finishRecordingAsDrawable().release();
     }
-    SkPicture* SK_WARN_UNUSED_RESULT endRecording() { return this->endRecordingAsPicture(); }
+    SkPicture* SK_WARN_UNUSED_RESULT endRecording() {
+        return this->endRecordingAsPicture();
+    }
 #endif
 
 private:

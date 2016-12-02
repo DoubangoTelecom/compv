@@ -11,7 +11,8 @@
 #include "SkColorFilter.h"
 #include "SkColorMatrix.h"
 
-class SK_API SkColorMatrixFilter : public SkColorFilter {
+class SK_API SkColorMatrixFilter : public SkColorFilter
+{
 public:
     /**
      *  Create a colorfilter that multiplies the RGB channels by one color, and

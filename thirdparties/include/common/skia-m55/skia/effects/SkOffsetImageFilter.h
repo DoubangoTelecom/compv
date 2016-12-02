@@ -11,7 +11,8 @@
 #include "SkImageFilter.h"
 #include "SkPoint.h"
 
-class SK_API SkOffsetImageFilter : public SkImageFilter {
+class SK_API SkOffsetImageFilter : public SkImageFilter
+{
 public:
     static sk_sp<SkImageFilter> Make(SkScalar dx, SkScalar dy,
                                      sk_sp<SkImageFilter> input,

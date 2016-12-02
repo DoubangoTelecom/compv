@@ -19,13 +19,16 @@
  * Maintains a single large texture whose rows store many textures of a small fixed height,
  * stored in rows across the x-axis such that we can safely wrap/repeat them horizontally.
  */
-class GrTextureStripAtlas {
+class GrTextureStripAtlas
+{
 public:
     /**
      * Descriptor struct which we'll use as a hash table key
      **/
     struct Desc {
-        Desc() { sk_bzero(this, sizeof(*this)); }
+        Desc() {
+            sk_bzero(this, sizeof(*this));
+        }
         GrContext* fContext;
         GrPixelConfig fConfig;
         uint16_t fWidth, fHeight, fRowHeight;
@@ -67,11 +70,19 @@ public:
      * atlas and scaleFactor, returned by getNormalizedTexelHeight, is the normalized height of
      * one texel row.
      */
-    SkScalar getYOffset(int row) const { return SkIntToScalar(row) / fNumRows; }
-    SkScalar getNormalizedTexelHeight() const { return fNormalizedYHeight; }
+    SkScalar getYOffset(int row) const {
+        return SkIntToScalar(row) / fNumRows;
+    }
+    SkScalar getNormalizedTexelHeight() const {
+        return fNormalizedYHeight;
+    }
 
-    GrContext* getContext() const { return fDesc.fContext; }
-    GrTexture* getTexture() const { return fTexture; }
+    GrContext* getContext() const {
+        return fDesc.fContext;
+    }
+    GrTexture* getTexture() const {
+        return fTexture;
+    }
 
 private:
 
@@ -138,15 +149,22 @@ private:
     static void CleanUp(const GrContext* context, void* info);
 
     // Hash table entry for atlases
-    class AtlasEntry : public ::SkNoncopyable {
+    class AtlasEntry : public ::SkNoncopyable
+    {
     public:
         // for SkTDynamicHash
-        static const Desc& GetKey(const AtlasEntry& entry) { return entry.fDesc; }
-        static uint32_t Hash(const Desc& desc) { return SkOpts::hash(&desc, sizeof(Desc)); }
+        static const Desc& GetKey(const AtlasEntry& entry) {
+            return entry.fDesc;
+        }
+        static uint32_t Hash(const Desc& desc) {
+            return SkOpts::hash(&desc, sizeof(Desc));
+        }
 
         // AtlasEntry proper
         AtlasEntry() : fAtlas(nullptr) {}
-        ~AtlasEntry() { delete fAtlas; }
+        ~AtlasEntry() {
+            delete fAtlas;
+        }
         Desc fDesc;
         GrTextureStripAtlas* fAtlas;
     };

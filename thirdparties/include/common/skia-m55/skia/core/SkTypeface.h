@@ -39,7 +39,8 @@ typedef uint32_t SkFontTableTag;
 
     Typeface objects are immutable, and so they can be shared between threads.
 */
-class SK_API SkTypeface : public SkWeakRefCnt {
+class SK_API SkTypeface : public SkWeakRefCnt
+{
 public:
     /** Style specifies the intrinsic style attributes of a given typeface
     */
@@ -62,25 +63,33 @@ public:
      */
     Style style() const {
         return static_cast<Style>(
-            (fStyle.weight() >= SkFontStyle::kSemiBold_Weight ? kBold : kNormal) |
-            (fStyle.slant()  != SkFontStyle::kUpright_Slant ? kItalic : kNormal));
+                   (fStyle.weight() >= SkFontStyle::kSemiBold_Weight ? kBold : kNormal) |
+                   (fStyle.slant()  != SkFontStyle::kUpright_Slant ? kItalic : kNormal));
     }
 
     /** Returns true if style() has the kBold bit set. */
-    bool isBold() const { return fStyle.weight() >= SkFontStyle::kSemiBold_Weight; }
+    bool isBold() const {
+        return fStyle.weight() >= SkFontStyle::kSemiBold_Weight;
+    }
 
     /** Returns true if style() has the kItalic bit set. */
-    bool isItalic() const { return fStyle.slant() != SkFontStyle::kUpright_Slant; }
+    bool isItalic() const {
+        return fStyle.slant() != SkFontStyle::kUpright_Slant;
+    }
 
     /** Returns true if the typeface claims to be fixed-pitch.
      *  This is a style bit, advance widths may vary even if this returns true.
      */
-    bool isFixedPitch() const { return fIsFixedPitch; }
+    bool isFixedPitch() const {
+        return fIsFixedPitch;
+    }
 
     /** Return a 32bit value for this typeface, unique for the underlying font
         data. Will never return 0.
      */
-    SkFontID uniqueID() const { return fUniqueID; }
+    SkFontID uniqueID() const {
+        return fUniqueID;
+    }
 
     /** Return the uniqueID for the specified typeface. If the face is null,
         resolve it to the default font and return its uniqueID. Will never
@@ -101,16 +110,16 @@ public:
     }
 #endif
 
-  /** Creates a new reference to the typeface that most closely matches the
-      requested familyName and fontStyle. This method allows extended font
-      face specifiers as in the SkFontStyle type. Will never return null.
+    /** Creates a new reference to the typeface that most closely matches the
+        requested familyName and fontStyle. This method allows extended font
+        face specifiers as in the SkFontStyle type. Will never return null.
 
-      @param familyName  May be NULL. The name of the font family.
-      @param fontStyle   The style of the typeface.
-      @return reference to the closest-matching typeface. Call must call
-              unref() when they are done.
-    */
-  static sk_sp<SkTypeface> MakeFromName(const char familyName[], SkFontStyle fontStyle);
+        @param familyName  May be NULL. The name of the font family.
+        @param fontStyle   The style of the typeface.
+        @return reference to the closest-matching typeface. Call must call
+                unref() when they are done.
+      */
+    static sk_sp<SkTypeface> MakeFromName(const char familyName[], SkFontStyle fontStyle);
 
 #ifdef SK_SUPPORT_LEGACY_TYPEFACE_PTR
     static SkTypeface* CreateFromName(const char familyName[], Style style) {
@@ -269,11 +278,14 @@ public:
         SkString fString;
         SkString fLanguage;
     };
-    class LocalizedStrings : ::SkNoncopyable {
+    class LocalizedStrings : ::SkNoncopyable
+    {
     public:
         virtual ~LocalizedStrings() { }
         virtual bool next(LocalizedString* localizedString) = 0;
-        void unref() { delete this; }
+        void unref() {
+            delete this;
+        }
     };
     /**
      *  Returns an iterator which will attempt to enumerate all of the
@@ -333,7 +345,7 @@ protected:
         kNo_PerGlyphInfo         = 0x0, // Don't populate any per glyph info.
         kGlyphNames_PerGlyphInfo = 0x1, // Populate glyph names (Type 1 only).
         kToUnicode_PerGlyphInfo  = 0x2  // Populate ToUnicode table, ignored
-                                        // for Type 1 fonts
+                                   // for Type 1 fonts
     };
 
     /** uniqueID must be unique and non-zero
@@ -342,20 +354,24 @@ protected:
     virtual ~SkTypeface();
 
     /** Sets the fixedPitch bit. If used, must be called in the constructor. */
-    void setIsFixedPitch(bool isFixedPitch) { fIsFixedPitch = isFixedPitch; }
+    void setIsFixedPitch(bool isFixedPitch) {
+        fIsFixedPitch = isFixedPitch;
+    }
     /** Sets the font style. If used, must be called in the constructor. */
-    void setFontStyle(SkFontStyle style) { fStyle = style; }
+    void setFontStyle(SkFontStyle style) {
+        fStyle = style;
+    }
 
     friend class SkScalerContext;
     static SkTypeface* GetDefaultTypeface(Style style = SkTypeface::kNormal);
 
     virtual SkScalerContext* onCreateScalerContext(const SkScalerContextEffects&,
-                                                   const SkDescriptor*) const = 0;
+            const SkDescriptor*) const = 0;
     virtual void onFilterRec(SkScalerContextRec*) const = 0;
     virtual SkAdvancedTypefaceMetrics* onGetAdvancedTypefaceMetrics(
-                        PerGlyphInfo,
-                        const uint32_t* glyphIDs,
-                        uint32_t glyphIDsCount) const = 0;
+        PerGlyphInfo,
+        const uint32_t* glyphIDs,
+        uint32_t glyphIDsCount) const = 0;
 
     virtual SkStreamAsset* onOpenStream(int* ttcIndex) const = 0;
     // TODO: make pure virtual.
@@ -369,7 +385,7 @@ protected:
 
     virtual int onGetUPEM() const = 0;
     virtual bool onGetKerningPairAdjustments(const SkGlyphID glyphs[], int count,
-                                             int32_t adjustments[]) const;
+            int32_t adjustments[]) const;
 
     /** Returns the family name of the typeface as known by its font manager.
      *  This name may or may not be produced by the family name iterator.
@@ -403,9 +419,9 @@ private:
      @return The returned object has already been referenced.
      */
     SkAdvancedTypefaceMetrics* getAdvancedTypefaceMetrics(
-                          PerGlyphInfo,
-                          const uint32_t* glyphIDs = NULL,
-                          uint32_t glyphIDsCount = 0) const;
+        PerGlyphInfo,
+        const uint32_t* glyphIDs = NULL,
+        uint32_t glyphIDsCount = 0) const;
 
 private:
     SkFontID            fUniqueID;
@@ -420,7 +436,8 @@ private:
     typedef SkWeakRefCnt INHERITED;
 };
 
-namespace skstd {
+namespace skstd
+{
 template <> struct is_bitmask_enum<SkTypeface::PerGlyphInfo> : std::true_type {};
 }
 

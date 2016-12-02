@@ -277,11 +277,15 @@ COMPV_ERROR_CODE CompVCpu::init()
     }
 
 #elif defined(COMPV_ARCH_ARM) || defined(COMPV_ARCH_ARM64)
-	CompVCpu::s_uFlags = kCpuFlagARM;
+    CompVCpu::s_uFlags = kCpuFlagARM;
 #	if COMPV_OS_ANDROID
-	uint64_t android_flags = android_getCpuFeatures();
-	if (android_flags & ANDROID_CPU_ARM_FEATURE_NEON) CompVCpu::s_uFlags |= kCpuFlagARM_NEON;
-	if (android_flags & ANDROID_CPU_ARM_FEATURE_NEON_FMA) CompVCpu::s_uFlags |= kCpuFlagARM_NEON_FMA;
+    uint64_t android_flags = android_getCpuFeatures();
+    if (android_flags & ANDROID_CPU_ARM_FEATURE_NEON) {
+        CompVCpu::s_uFlags |= kCpuFlagARM_NEON;
+    }
+    if (android_flags & ANDROID_CPU_ARM_FEATURE_NEON_FMA) {
+        CompVCpu::s_uFlags |= kCpuFlagARM_NEON_FMA;
+    }
 #	else
     CompVCpu::s_uFlags |= CompVArmCaps("/proc/cpuinfo");
 #endif
@@ -317,7 +321,7 @@ COMPV_ERROR_CODE CompVCpu::init()
     int mib0[2] = { CTL_HW, HW_NCPU };
     sysctl(mib0, 2, &s_iCores, &len, NULL, 0);
 #elif COMPV_OS_ANDROID
-	s_iCores = static_cast<int32_t>(android_getCpuCount());
+    s_iCores = static_cast<int32_t>(android_getCpuCount());
 #elif defined(__GNUC__)
     s_iCores = static_cast<int32_t>(sysconf(_SC_NPROCESSORS_ONLN));
 #else
@@ -360,9 +364,9 @@ COMPV_ERROR_CODE CompVCpu::init()
     sysctl(mib1, 2, &s_iCache1LineSize, &sizeof_cls, NULL, 0);
     sysctl(mib2, 2, &s_iCache1Size, &sizeof_cs, NULL, 0);
 #elif COMPV_OS_ANDROID
-	COMPV_DEBUG_INFO_CODE_ONCE("_SC_LEVEL1_DCACHE_LINESIZE and _SC_LEVEL1_DCACHE_SIZE not availabe and Android");
-	s_iCache1LineSize = 64;
-	s_iCache1Size = 4096;
+    COMPV_DEBUG_INFO_CODE_ONCE("_SC_LEVEL1_DCACHE_LINESIZE and _SC_LEVEL1_DCACHE_SIZE not availabe and Android");
+    s_iCache1LineSize = 64;
+    s_iCache1Size = 4096;
 #else
     s_iCache1LineSize = (int32_t)sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
     s_iCache1Size = (int32_t)sysconf(_SC_LEVEL1_DCACHE_SIZE);
@@ -385,7 +389,7 @@ const char* CompVCpu::getFlagsAsString(uint64_t uFlags)
         { kCpuFlagARM, "[arm]" },
         { kCpuFlagARM64, "[arm64]" },
         { kCpuFlagARM_NEON, "neon" },
-		{ kCpuFlagARM_NEON_FMA, "neon-fma" },
+        { kCpuFlagARM_NEON_FMA, "neon-fma" },
         // 0x9 reserved for future ARM flag.
 
         // These flags are only valid on x86/x64 processors.

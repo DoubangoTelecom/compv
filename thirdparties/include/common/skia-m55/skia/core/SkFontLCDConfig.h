@@ -10,7 +10,8 @@
 
 #include "SkTypes.h"
 
-class SK_API SkFontLCDConfig {
+class SK_API SkFontLCDConfig
+{
 public:
     /** LCDs either have their color elements arranged horizontally or
         vertically. When rendering subpixel glyphs we need to know which way

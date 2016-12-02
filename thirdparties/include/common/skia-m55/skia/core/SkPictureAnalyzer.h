@@ -23,7 +23,8 @@ class SkPicture;
 
      Gathers GPU-related statistics for one or more SkPictures.
 */
-class SK_API SkPictureGpuAnalyzer final : public SkNoncopyable {
+class SK_API SkPictureGpuAnalyzer final : public SkNoncopyable
+{
 public:
     explicit SkPictureGpuAnalyzer(sk_sp<GrContextThreadSafeProxy> = nullptr);
     explicit SkPictureGpuAnalyzer(const sk_sp<SkPicture>& picture,
@@ -53,7 +54,9 @@ public:
      * Returns the number of commands which are slow to draw on the GPU, capped at the predicate
      * max.
      */
-    uint32_t numSlowGpuCommands() { return fNumSlowPaths; }
+    uint32_t numSlowGpuCommands() {
+        return fNumSlowPaths;
+    }
 
 private:
     uint32_t fNumSlowPaths;

@@ -13,7 +13,8 @@
 class SkPath;
 
 SK_BEGIN_REQUIRE_DENSE
-class SkStrokeRec {
+class SkStrokeRec
+{
 public:
     enum InitStyle {
         kHairline_InitStyle,
@@ -34,10 +35,18 @@ public:
     };
 
     Style getStyle() const;
-    SkScalar getWidth() const { return fWidth; }
-    SkScalar getMiter() const { return fMiterLimit; }
-    SkPaint::Cap getCap() const { return (SkPaint::Cap)fCap; }
-    SkPaint::Join getJoin() const { return (SkPaint::Join)fJoin; }
+    SkScalar getWidth() const {
+        return fWidth;
+    }
+    SkScalar getMiter() const {
+        return fMiterLimit;
+    }
+    SkPaint::Cap getCap() const {
+        return (SkPaint::Cap)fCap;
+    }
+    SkPaint::Join getJoin() const {
+        return (SkPaint::Join)fJoin;
+    }
 
     bool isHairlineStyle() const {
         return kHairline_Style == this->getStyle();

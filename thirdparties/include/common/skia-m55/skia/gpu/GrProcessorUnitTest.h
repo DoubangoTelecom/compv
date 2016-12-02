@@ -18,7 +18,8 @@ class GrContext;
 class GrDrawContext;
 struct GrProcessorTestData;
 
-namespace GrProcessorUnitTest {
+namespace GrProcessorUnitTest
+{
 
 // Used to access the dummy textures in TestCreate procs.
 enum {
@@ -64,7 +65,8 @@ struct GrProcessorTestData {
 class GrProcessor;
 class GrTexture;
 
-template <class Processor> class GrProcessorTestFactory : SkNoncopyable {
+template <class Processor> class GrProcessorTestFactory : SkNoncopyable
+{
 public:
     typedef sk_sp<Processor> (*MakeProc)(GrProcessorTestData*);
 
@@ -82,7 +84,9 @@ public:
     }
 
     /** Number of registered factory functions */
-    static int Count() { return GetFactories()->count(); }
+    static int Count() {
+        return GetFactories()->count();
+    }
 
     /** Use factory function at Index idx to create a processor. */
     static sk_sp<Processor> MakeIdx(int idx, GrProcessorTestData* data) {

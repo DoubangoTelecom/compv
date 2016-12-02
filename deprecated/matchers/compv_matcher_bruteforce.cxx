@@ -84,8 +84,8 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVPtr<CompVArray<uint8
         || !trainDescriptions
         || trainDescriptions->isEmpty()
         || queryDescriptions->cols() != trainDescriptions->cols()
-		|| queryDescriptions->strideInBytes() != queryDescriptions->rowInBytes()
-		|| trainDescriptions->strideInBytes() != trainDescriptions->rowInBytes()
+        || queryDescriptions->strideInBytes() != queryDescriptions->rowInBytes()
+        || trainDescriptions->strideInBytes() != trainDescriptions->rowInBytes()
         , COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
@@ -98,10 +98,10 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVPtr<CompVArray<uint8
     COMPV_CHECK_CODE_RETURN(err_ = CompVArray<CompVDMatch>::newObj(matches, matchesRows, matchesCols, 1));
 
     int32_t threadsCount = 1;
-	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
+    CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
     // Compute number of threads
-	if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
-		threadsCount = COMPV_MATH_CLIP3(1, threadDisp->getThreadsCount(), (int32_t)matchesCols / COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD);
+    if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
+        threadsCount = COMPV_MATH_CLIP3(1, threadDisp->getThreadsCount(), (int32_t)matchesCols / COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD);
     }
 
     // process starting at queryIdxStart
@@ -109,20 +109,20 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVPtr<CompVArray<uint8
         size_t total = matchesCols;
         size_t count = (size_t)(total / threadsCount); // must be "size_t"
         size_t queryIdxStart = 0; // must be "size_t"
-		CompVAsyncTaskIds taskIds;
-		taskIds.reserve(threadsCount);
-		auto funcPtr = [&](size_t queryIdxStart, size_t count, const CompVArray<uint8_t>* queryDescriptions, const CompVArray<uint8_t>* trainDescriptions, CompVArray<CompVDMatch>* matches) -> COMPV_ERROR_CODE {
-			return CompVMatcherBruteForce::processAt(queryIdxStart, count, queryDescriptions, trainDescriptions, matches);
-		};
+        CompVAsyncTaskIds taskIds;
+        taskIds.reserve(threadsCount);
+        auto funcPtr = [&](size_t queryIdxStart, size_t count, const CompVArray<uint8_t>* queryDescriptions, const CompVArray<uint8_t>* trainDescriptions, CompVArray<CompVDMatch>* matches) -> COMPV_ERROR_CODE {
+            return CompVMatcherBruteForce::processAt(queryIdxStart, count, queryDescriptions, trainDescriptions, matches);
+        };
         for (int32_t i = 0; i < threadsCount; ++i) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, queryIdxStart, count, *queryDescriptions, *trainDescriptions, **matches), taskIds));
+            COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, queryIdxStart, count, *queryDescriptions, *trainDescriptions, **matches), taskIds));
             queryIdxStart += count;
             total -= count;
             if (i == (threadsCount - 2)) {
                 count = (total); // the remaining
             }
         }
-		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+        COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
     }
     else {
         COMPV_CHECK_CODE_RETURN(err_ = CompVMatcherBruteForce::processAt(0, matchesCols, *queryDescriptions, *trainDescriptions, **matches));

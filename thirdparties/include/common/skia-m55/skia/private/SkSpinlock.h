@@ -11,7 +11,8 @@
 #include "SkTypes.h"
 #include <atomic>
 
-class SkSpinlock {
+class SkSpinlock
+{
 public:
     constexpr SkSpinlock() = default;
 
@@ -31,7 +32,7 @@ public:
 private:
     SK_API void contendedAcquire();
 
-    std::atomic<bool> fLocked{false};
+    std::atomic<bool> fLocked {false};
 };
 
 #endif//SkSpinlock_DEFINED

@@ -20,7 +20,8 @@ uint32_t GrResourceKeyHash(const uint32_t* data, size_t size);
  * Base class for all GrGpuResource cache keys. There are two types of cache keys. Refer to the
  * comments for each key type below.
  */
-class GrResourceKey {
+class GrResourceKey
+{
 public:
     uint32_t hash() const {
         this->validate();
@@ -36,7 +37,9 @@ public:
 protected:
     static const uint32_t kInvalidDomain = 0;
 
-    GrResourceKey() { this->reset(); }
+    GrResourceKey() {
+        this->reset();
+    }
 
     /** Reset to an invalid key. */
     void reset() {
@@ -48,9 +51,9 @@ protected:
 
     bool operator==(const GrResourceKey& that) const {
         return this->hash() == that.hash() &&
-                0 == memcmp(&fKey[kHash_MetaDataIdx + 1],
-                            &that.fKey[kHash_MetaDataIdx + 1],
-                            this->internalSize() - sizeof(uint32_t));
+               0 == memcmp(&fKey[kHash_MetaDataIdx + 1],
+                           &that.fKey[kHash_MetaDataIdx + 1],
+                           this->internalSize() - sizeof(uint32_t));
     }
 
     GrResourceKey& operator=(const GrResourceKey& that) {
@@ -65,12 +68,18 @@ protected:
         return *this;
     }
 
-    bool isValid() const { return kInvalidDomain != this->domain(); }
+    bool isValid() const {
+        return kInvalidDomain != this->domain();
+    }
 
-    uint32_t domain() const { return fKey[kDomainAndSize_MetaDataIdx] & 0xffff; }
+    uint32_t domain() const {
+        return fKey[kDomainAndSize_MetaDataIdx] & 0xffff;
+    }
 
     /** size of the key data, excluding meta-data (hash, domain, etc).  */
-    size_t dataSize() const { return this->size() - 4 * kMetaDataCnt; }
+    size_t dataSize() const {
+        return this->size() - 4 * kMetaDataCnt;
+    }
 
     /** ptr to the key data, excluding meta-data (hash, domain, etc).  */
     const uint32_t* data() const {
@@ -79,7 +88,8 @@ protected:
     }
 
     /** Used to initialize a key. */
-    class Builder {
+    class Builder
+    {
     public:
         Builder(GrResourceKey* key, uint32_t domain, int data32Count) : fKey(key) {
             SkASSERT(data32Count >= 0);
@@ -91,7 +101,9 @@ protected:
             key->fKey[kDomainAndSize_MetaDataIdx] = domain | (size << 16);
         }
 
-        ~Builder() { this->finish(); }
+        ~Builder() {
+            this->finish();
+        }
 
         void finish() {
             if (NULL == fKey) {
@@ -163,7 +175,8 @@ private:
  *  consume_blur(texture[0]);
  *  texture[0]->unref();  // texture 0 can now be recycled for the next request with scratchKey
  */
-class GrScratchKey : public GrResourceKey {
+class GrScratchKey : public GrResourceKey
+{
 private:
     typedef GrResourceKey INHERITED;
 
@@ -177,14 +190,18 @@ public:
     /** Creates an invalid scratch key. It must be initialized using a Builder object before use. */
     GrScratchKey() {}
 
-    GrScratchKey(const GrScratchKey& that) { *this = that; }
+    GrScratchKey(const GrScratchKey& that) {
+        *this = that;
+    }
 
     /** reset() returns the key to the invalid state. */
     using INHERITED::reset;
 
     using INHERITED::isValid;
 
-    ResourceType resourceType() const { return this->domain(); }
+    ResourceType resourceType() const {
+        return this->domain();
+    }
 
     GrScratchKey& operator=(const GrScratchKey& that) {
         this->INHERITED::operator=(that);
@@ -194,9 +211,12 @@ public:
     bool operator==(const GrScratchKey& that) const {
         return this->INHERITED::operator==(that);
     }
-    bool operator!=(const GrScratchKey& that) const { return !(*this == that); }
+    bool operator!=(const GrScratchKey& that) const {
+        return !(*this == that);
+    }
 
-    class Builder : public INHERITED::Builder {
+    class Builder : public INHERITED::Builder
+    {
     public:
         Builder(GrScratchKey* key, ResourceType type, int data32Count)
             : INHERITED::Builder(key, type, data32Count) {}
@@ -217,7 +237,8 @@ public:
  * Unique keys preempt scratch keys. While a resource has a unique key it is inaccessible via its
  * scratch key. It can become scratch again if the unique key is removed.
  */
-class GrUniqueKey : public GrResourceKey {
+class GrUniqueKey : public GrResourceKey
+{
 private:
     typedef GrResourceKey INHERITED;
 
@@ -229,7 +250,9 @@ public:
     /** Creates an invalid unique key. It must be initialized using a Builder object before use. */
     GrUniqueKey() {}
 
-    GrUniqueKey(const GrUniqueKey& that) { *this = that; }
+    GrUniqueKey(const GrUniqueKey& that) {
+        *this = that;
+    }
 
     /** reset() returns the key to the invalid state. */
     using INHERITED::reset;
@@ -245,7 +268,9 @@ public:
     bool operator==(const GrUniqueKey& that) const {
         return this->INHERITED::operator==(that);
     }
-    bool operator!=(const GrUniqueKey& that) const { return !(*this == that); }
+    bool operator!=(const GrUniqueKey& that) const {
+        return !(*this == that);
+    }
 
     void setCustomData(sk_sp<SkData> data) {
         fData = std::move(data);
@@ -254,7 +279,8 @@ public:
         return fData.get();
     }
 
-    class Builder : public INHERITED::Builder {
+    class Builder : public INHERITED::Builder
+    {
     public:
         Builder(GrUniqueKey* key, Domain domain, int data32Count)
             : INHERITED::Builder(key, domain, data32Count) {}
@@ -297,13 +323,15 @@ private:
     name##_once(gr_init_static_unique_key_once, &name##_storage);                               \
     static const GrUniqueKey& name = *reinterpret_cast<GrUniqueKey*>(name##_storage.get());
 
-static inline void gr_init_static_unique_key_once(SkAlignedSTStorage<1,GrUniqueKey>* keyStorage) {
+static inline void gr_init_static_unique_key_once(SkAlignedSTStorage<1,GrUniqueKey>* keyStorage)
+{
     GrUniqueKey* key = new (keyStorage->get()) GrUniqueKey;
     GrUniqueKey::Builder builder(key, GrUniqueKey::GenerateDomain(), 0);
 }
 
 // The cache listens for these messages to purge junk resources proactively.
-class GrUniqueKeyInvalidatedMessage {
+class GrUniqueKeyInvalidatedMessage
+{
 public:
     explicit GrUniqueKeyInvalidatedMessage(const GrUniqueKey& key) : fKey(key) {}
 
@@ -314,7 +342,9 @@ public:
         return *this;
     }
 
-    const GrUniqueKey& key() const { return fKey; }
+    const GrUniqueKey& key() const {
+        return fKey;
+    }
 
 private:
     GrUniqueKey fKey;

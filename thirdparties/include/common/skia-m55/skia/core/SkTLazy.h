@@ -17,14 +17,17 @@
  *  Efficient way to defer allocating/initializing a class until it is needed
  *  (if ever).
  */
-template <typename T> class SkTLazy {
+template <typename T> class SkTLazy
+{
 public:
     SkTLazy() : fPtr(nullptr) {}
 
     explicit SkTLazy(const T* src)
         : fPtr(src ? new (fStorage.get()) T(*src) : nullptr) {}
 
-    SkTLazy(const SkTLazy& src) : fPtr(nullptr) { *this = src; }
+    SkTLazy(const SkTLazy& src) : fPtr(nullptr) {
+        *this = src;
+    }
 
     ~SkTLazy() {
         if (this->isValid()) {
@@ -35,7 +38,8 @@ public:
     SkTLazy& operator=(const SkTLazy& src) {
         if (src.isValid()) {
             this->set(*src.get());
-        } else {
+        }
+        else {
             this->reset();
         }
         return *this;
@@ -64,7 +68,8 @@ public:
     T* set(const T& src) {
         if (this->isValid()) {
             *fPtr = src;
-        } else {
+        }
+        else {
             fPtr = new (SkTCast<T*>(fStorage.get())) T(src);
         }
         return fPtr;
@@ -84,19 +89,26 @@ public:
      *  Returns true if a valid object has been initialized in the SkTLazy,
      *  false otherwise.
      */
-    bool isValid() const { return SkToBool(fPtr); }
+    bool isValid() const {
+        return SkToBool(fPtr);
+    }
 
     /**
      * Returns the object. This version should only be called when the caller
      * knows that the object has been initialized.
      */
-    T* get() const { SkASSERT(this->isValid()); return fPtr; }
+    T* get() const {
+        SkASSERT(this->isValid());
+        return fPtr;
+    }
 
     /**
      * Like above but doesn't assert if object isn't initialized (in which case
      * nullptr is returned).
      */
-    T* getMaybeNull() const { return fPtr; }
+    T* getMaybeNull() const {
+        return fPtr;
+    }
 
 private:
     SkAlignedSTStorage<1, T> fStorage;
@@ -127,7 +139,8 @@ private:
  * consume_a_thing(thing); // could be constThing or a modified copy.
  */
 template <typename T>
-class SkTCopyOnFirstWrite {
+class SkTCopyOnFirstWrite
+{
 public:
     SkTCopyOnFirstWrite(const T& initial) : fObj(&initial) {}
 
@@ -159,11 +172,17 @@ public:
      * Operators for treating this as though it were a const pointer.
      */
 
-    const T *operator->() const { return fObj; }
+    const T *operator->() const {
+        return fObj;
+    }
 
-    operator const T*() const { return fObj; }
+    operator const T*() const {
+        return fObj;
+    }
 
-    const T& operator *() const { return *fObj; }
+    const T& operator *() const {
+        return *fObj;
+    }
 
 private:
     const T*    fObj;

@@ -12,13 +12,14 @@
 
 class GrGpu;
 
-class GrBuffer : public GrGpuResource {
+class GrBuffer : public GrGpuResource
+{
 public:
     /**
      * Creates a client-side buffer.
      */
     static SK_WARN_UNUSED_RESULT GrBuffer* CreateCPUBacked(GrGpu*, size_t sizeInBytes, GrBufferType,
-                                                           const void* data = nullptr);
+            const void* data = nullptr);
 
     /**
      * Computes a scratch key for a GPU-side buffer with a "dynamic" access pattern. (Buffers with
@@ -26,15 +27,23 @@ public:
      */
     static void ComputeScratchKeyForDynamicVBO(size_t size, GrBufferType, GrScratchKey*);
 
-    GrAccessPattern accessPattern() const { return fAccessPattern; }
-    size_t sizeInBytes() const { return fSizeInBytes; }
+    GrAccessPattern accessPattern() const {
+        return fAccessPattern;
+    }
+    size_t sizeInBytes() const {
+        return fSizeInBytes;
+    }
 
     /**
      * Returns true if the buffer is a wrapper around a CPU array. If true it
      * indicates that map will always succeed and will be free.
      */
-    bool isCPUBacked() const { return SkToBool(fCPUData); }
-    size_t baseOffset() const { return reinterpret_cast<size_t>(fCPUData); }
+    bool isCPUBacked() const {
+        return SkToBool(fCPUData);
+    }
+    size_t baseOffset() const {
+        return reinterpret_cast<size_t>(fCPUData);
+    }
 
     /**
      * Maps the buffer to be written by the CPU.
@@ -50,23 +59,23 @@ public:
      *
      * @return a pointer to the data or nullptr if the map fails.
      */
-     void* map() {
-         if (!fMapPtr) {
-             this->onMap();
-         }
-         return fMapPtr;
-     }
+    void* map() {
+        if (!fMapPtr) {
+            this->onMap();
+        }
+        return fMapPtr;
+    }
 
     /**
      * Unmaps the buffer.
      *
      * The pointer returned by the previous map call will no longer be valid.
      */
-     void unmap() {
-         SkASSERT(fMapPtr);
-         this->onUnmap();
-         fMapPtr = nullptr;
-     }
+    void unmap() {
+        SkASSERT(fMapPtr);
+        this->onUnmap();
+        fMapPtr = nullptr;
+    }
 
     /**
      * Returns the same ptr that map() returned at time of map or nullptr if the
@@ -74,14 +83,18 @@ public:
      *
      * @return ptr to mapped buffer data or nullptr if buffer is not mapped.
      */
-     void* mapPtr() const { return fMapPtr; }
+    void* mapPtr() const {
+        return fMapPtr;
+    }
 
     /**
      Queries whether the buffer has been mapped.
 
      @return true if the buffer is mapped, false otherwise.
      */
-     bool isMapped() const { return SkToBool(fMapPtr); }
+    bool isMapped() const {
+        return SkToBool(fMapPtr);
+    }
 
     /**
      * Updates the buffer data.
@@ -118,11 +131,18 @@ private:
      */
     GrBuffer(GrGpu*, size_t sizeInBytes, GrBufferType, void* cpuData);
 
-    virtual void onMap() { SkASSERT(this->isCPUBacked()); fMapPtr = fCPUData; }
-    virtual void onUnmap() { SkASSERT(this->isCPUBacked()); }
+    virtual void onMap() {
+        SkASSERT(this->isCPUBacked());
+        fMapPtr = fCPUData;
+    }
+    virtual void onUnmap() {
+        SkASSERT(this->isCPUBacked());
+    }
     virtual bool onUpdateData(const void* src, size_t srcSizeInBytes);
 
-    size_t onGpuMemorySize() const override { return fSizeInBytes; } // TODO: zero for cpu backed?
+    size_t onGpuMemorySize() const override {
+        return fSizeInBytes;    // TODO: zero for cpu backed?
+    }
     void computeScratchKey(GrScratchKey* key) const override;
 
     size_t            fSizeInBytes;

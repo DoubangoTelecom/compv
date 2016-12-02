@@ -18,12 +18,14 @@
 /*  Some helper functions for C strings
 */
 
-static bool SkStrStartsWith(const char string[], const char prefixStr[]) {
+static bool SkStrStartsWith(const char string[], const char prefixStr[])
+{
     SkASSERT(string);
     SkASSERT(prefixStr);
     return !strncmp(string, prefixStr, strlen(prefixStr));
 }
-static bool SkStrStartsWith(const char string[], const char prefixChar) {
+static bool SkStrStartsWith(const char string[], const char prefixChar)
+{
     SkASSERT(string);
     return (prefixChar == *string);
 }
@@ -33,24 +35,32 @@ bool SkStrEndsWith(const char string[], const char suffixChar);
 
 int SkStrStartsWithOneOf(const char string[], const char prefixes[]);
 
-static int SkStrFind(const char string[], const char substring[]) {
+static int SkStrFind(const char string[], const char substring[])
+{
     const char *first = strstr(string, substring);
-    if (NULL == first) return -1;
+    if (NULL == first) {
+        return -1;
+    }
     return SkToInt(first - &string[0]);
 }
 
-static int SkStrFindLastOf(const char string[], const char subchar) {
+static int SkStrFindLastOf(const char string[], const char subchar)
+{
     const char* last = strrchr(string, subchar);
-    if (NULL == last) return -1;
+    if (NULL == last) {
+        return -1;
+    }
     return SkToInt(last - &string[0]);
 }
 
-static bool SkStrContains(const char string[], const char substring[]) {
+static bool SkStrContains(const char string[], const char substring[])
+{
     SkASSERT(string);
     SkASSERT(substring);
     return (-1 != SkStrFind(string, substring));
 }
-static bool SkStrContains(const char string[], const char subchar) {
+static bool SkStrContains(const char string[], const char subchar)
+{
     SkASSERT(string);
     char tmp[2];
     tmp[0] = subchar;
@@ -58,7 +68,8 @@ static bool SkStrContains(const char string[], const char subchar) {
     return (-1 != SkStrFind(string, tmp));
 }
 
-static inline char *SkStrDup(const char string[]) {
+static inline char *SkStrDup(const char string[])
+{
     char *ret = (char *) sk_malloc_throw(strlen(string)+1);
     memcpy(ret,string,strlen(string)+1);
     return ret;
@@ -118,20 +129,29 @@ char* SkStrAppendFloat(char buffer[], float);
     counting to make string assignments and copies very fast
     with no extra RAM cost. Assumes UTF8 encoding.
 */
-class SK_API SkString {
+class SK_API SkString
+{
 public:
-                SkString();
+    SkString();
     explicit    SkString(size_t len);
     explicit    SkString(const char text[]);
-                SkString(const char text[], size_t len);
-                SkString(const SkString&);
-                SkString(SkString&&);
-                ~SkString();
+    SkString(const char text[], size_t len);
+    SkString(const SkString&);
+    SkString(SkString&&);
+    ~SkString();
 
-    bool        isEmpty() const { return 0 == fRec->fLength; }
-    size_t      size() const { return (size_t) fRec->fLength; }
-    const char* c_str() const { return fRec->data(); }
-    char operator[](size_t n) const { return this->c_str()[n]; }
+    bool        isEmpty() const {
+        return 0 == fRec->fLength;
+    }
+    size_t      size() const {
+        return (size_t) fRec->fLength;
+    }
+    const char* c_str() const {
+        return fRec->data();
+    }
+    char operator[](size_t n) const {
+        return this->c_str()[n];
+    }
 
     bool equals(const SkString&) const;
     bool equals(const char text[]) const;
@@ -176,18 +196,26 @@ public:
     SkString& operator=(const char text[]);
 
     char* writable_str();
-    char& operator[](size_t n) { return this->writable_str()[n]; }
+    char& operator[](size_t n) {
+        return this->writable_str()[n];
+    }
 
     void reset();
     /** Destructive resize, does not preserve contents. */
-    void resize(size_t len) { this->set(NULL, len); }
-    void set(const SkString& src) { *this = src; }
+    void resize(size_t len) {
+        this->set(NULL, len);
+    }
+    void set(const SkString& src) {
+        *this = src;
+    }
     void set(const char text[]);
     void set(const char text[], size_t len);
     void setUTF16(const uint16_t[]);
     void setUTF16(const uint16_t[], size_t len);
 
-    void insert(size_t offset, const SkString& src) { this->insert(offset, src.c_str(), src.size()); }
+    void insert(size_t offset, const SkString& src) {
+        this->insert(offset, src.c_str(), src.size());
+    }
     void insert(size_t offset, const char text[]);
     void insert(size_t offset, const char text[], size_t len);
     void insertUnichar(size_t offset, SkUnichar);
@@ -198,25 +226,61 @@ public:
     void insertHex(size_t offset, uint32_t value, int minDigits = 0);
     void insertScalar(size_t offset, SkScalar);
 
-    void append(const SkString& str) { this->insert((size_t)-1, str); }
-    void append(const char text[]) { this->insert((size_t)-1, text); }
-    void append(const char text[], size_t len) { this->insert((size_t)-1, text, len); }
-    void appendUnichar(SkUnichar uni) { this->insertUnichar((size_t)-1, uni); }
-    void appendS32(int32_t value) { this->insertS32((size_t)-1, value); }
-    void appendS64(int64_t value, int minDigits = 0) { this->insertS64((size_t)-1, value, minDigits); }
-    void appendU32(uint32_t value) { this->insertU32((size_t)-1, value); }
-    void appendU64(uint64_t value, int minDigits = 0) { this->insertU64((size_t)-1, value, minDigits); }
-    void appendHex(uint32_t value, int minDigits = 0) { this->insertHex((size_t)-1, value, minDigits); }
-    void appendScalar(SkScalar value) { this->insertScalar((size_t)-1, value); }
+    void append(const SkString& str) {
+        this->insert((size_t)-1, str);
+    }
+    void append(const char text[]) {
+        this->insert((size_t)-1, text);
+    }
+    void append(const char text[], size_t len) {
+        this->insert((size_t)-1, text, len);
+    }
+    void appendUnichar(SkUnichar uni) {
+        this->insertUnichar((size_t)-1, uni);
+    }
+    void appendS32(int32_t value) {
+        this->insertS32((size_t)-1, value);
+    }
+    void appendS64(int64_t value, int minDigits = 0) {
+        this->insertS64((size_t)-1, value, minDigits);
+    }
+    void appendU32(uint32_t value) {
+        this->insertU32((size_t)-1, value);
+    }
+    void appendU64(uint64_t value, int minDigits = 0) {
+        this->insertU64((size_t)-1, value, minDigits);
+    }
+    void appendHex(uint32_t value, int minDigits = 0) {
+        this->insertHex((size_t)-1, value, minDigits);
+    }
+    void appendScalar(SkScalar value) {
+        this->insertScalar((size_t)-1, value);
+    }
 
-    void prepend(const SkString& str) { this->insert(0, str); }
-    void prepend(const char text[]) { this->insert(0, text); }
-    void prepend(const char text[], size_t len) { this->insert(0, text, len); }
-    void prependUnichar(SkUnichar uni) { this->insertUnichar(0, uni); }
-    void prependS32(int32_t value) { this->insertS32(0, value); }
-    void prependS64(int32_t value, int minDigits = 0) { this->insertS64(0, value, minDigits); }
-    void prependHex(uint32_t value, int minDigits = 0) { this->insertHex(0, value, minDigits); }
-    void prependScalar(SkScalar value) { this->insertScalar((size_t)-1, value); }
+    void prepend(const SkString& str) {
+        this->insert(0, str);
+    }
+    void prepend(const char text[]) {
+        this->insert(0, text);
+    }
+    void prepend(const char text[], size_t len) {
+        this->insert(0, text, len);
+    }
+    void prependUnichar(SkUnichar uni) {
+        this->insertUnichar(0, uni);
+    }
+    void prependS32(int32_t value) {
+        this->insertS32(0, value);
+    }
+    void prependS64(int32_t value, int minDigits = 0) {
+        this->insertS64(0, value, minDigits);
+    }
+    void prependHex(uint32_t value, int minDigits = 0) {
+        this->insertHex(0, value, minDigits);
+    }
+    void prependScalar(SkScalar value) {
+        this->insertScalar((size_t)-1, value);
+    }
 
     void printf(const char format[], ...) SK_PRINTF_LIKE(2, 3);
     void appendf(const char format[], ...) SK_PRINTF_LIKE(2, 3);
@@ -226,9 +290,18 @@ public:
 
     void remove(size_t offset, size_t length);
 
-    SkString& operator+=(const SkString& s) { this->append(s); return *this; }
-    SkString& operator+=(const char text[]) { this->append(text); return *this; }
-    SkString& operator+=(const char c) { this->append(&c, 1); return *this; }
+    SkString& operator+=(const SkString& s) {
+        this->append(s);
+        return *this;
+    }
+    SkString& operator+=(const char text[]) {
+        this->append(text);
+        return *this;
+    }
+    SkString& operator+=(const char c) {
+        this->append(&c, 1);
+        return *this;
+    }
 
     /**
      *  Swap contents between this and other. This function is guaranteed
@@ -243,8 +316,12 @@ private:
         int32_t     fRefCnt;
         char        fBeginningOfData;
 
-        char* data() { return &fBeginningOfData; }
-        const char* data() const { return &fBeginningOfData; }
+        char* data() {
+            return &fBeginningOfData;
+        }
+        const char* data() const {
+            return &fBeginningOfData;
+        }
     };
     Rec* fRec;
 
@@ -264,7 +341,8 @@ SkString SkStringPrintf(const char* format, ...);
 
 // Specialized to take advantage of SkString's fast swap path. The unspecialized function is
 // declared in SkTypes.h and called by SkTSort.
-template <> inline void SkTSwap(SkString& a, SkString& b) {
+template <> inline void SkTSwap(SkString& a, SkString& b)
+{
     a.swap(b);
 }
 
@@ -282,7 +360,8 @@ enum SkStrSplitMode {
 // Split str on any characters in delimiters into out.  (Think, strtok with a sane API.)
 void SkStrSplit(const char* str, const char* delimiters, SkStrSplitMode splitMode,
                 SkTArray<SkString>* out);
-inline void SkStrSplit(const char* str, const char* delimiters, SkTArray<SkString>* out) {
+inline void SkStrSplit(const char* str, const char* delimiters, SkTArray<SkString>* out)
+{
     SkStrSplit(str, delimiters, kCoalesce_SkStrSplitMode, out);
 }
 

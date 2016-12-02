@@ -14,7 +14,8 @@
 
     SkDashPathEffect is a subclass of SkPathEffect that implements dashing
 */
-class SK_API SkDashPathEffect : public SkPathEffect {
+class SK_API SkDashPathEffect : public SkPathEffect
+{
 public:
     /** intervals: array containing an even number of entries (>=2), with
          the even indices specifying the length of "on" intervals, and the odd
@@ -57,7 +58,9 @@ public:
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkDashPathEffect)
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    bool exposedInAndroidJavaAPI() const override { return true; }
+    bool exposedInAndroidJavaAPI() const override {
+        return true;
+    }
 #endif
 
 protected:

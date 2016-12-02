@@ -17,7 +17,8 @@
 // There should be no particularly error-prone gotcha use cases when using SkOnce.
 // It works correctly as a class member, a local, a global, a function-scoped static, whatever.
 
-class SkOnce {
+class SkOnce
+{
 public:
     constexpr SkOnce() = default;
 
@@ -31,7 +32,7 @@ public:
 
         // If it looks like no one has started calling fn(), try to claim that job.
         if (state == NotStarted && fState.compare_exchange_strong(state, Claimed,
-                                                                  std::memory_order_relaxed)) {
+                std::memory_order_relaxed)) {
             // Great!  We'll run fn() then notify the other threads by releasing Done into fState.
             fn(std::forward<Args>(args)...);
             return fState.store(Done, std::memory_order_release);
@@ -39,12 +40,14 @@ public:
 
         // Some other thread is calling fn().
         // We'll just spin here acquiring until it releases Done into fState.
-        while (fState.load(std::memory_order_acquire) != Done) { /*spin*/ }
+        while (fState.load(std::memory_order_acquire) != Done) {
+            /*spin*/
+        }
     }
 
 private:
     enum State : uint8_t { NotStarted, Claimed, Done};
-    std::atomic<uint8_t> fState{NotStarted};
+    std::atomic<uint8_t> fState {NotStarted};
 };
 
 #endif  // SkOnce_DEFINED

@@ -18,7 +18,8 @@ class SkXfermode;
  * over the background.  If foreground or background is NULL, the input
  * bitmap (src) is used instead.
  */
-class SK_API SkXfermodeImageFilter {
+class SK_API SkXfermodeImageFilter
+{
 public:
     static sk_sp<SkImageFilter> Make(SkBlendMode, sk_sp<SkImageFilter> background,
                                      sk_sp<SkImageFilter> foreground,
@@ -28,13 +29,13 @@ public:
     }
 
     static sk_sp<SkImageFilter> MakeArithmetic(float k1, float k2, float k3, float k4,
-                                               bool enforcePMColor,
-                                               sk_sp<SkImageFilter> background,
-                                               sk_sp<SkImageFilter> foreground,
-                                               const SkImageFilter::CropRect* cropRect);
+            bool enforcePMColor,
+            sk_sp<SkImageFilter> background,
+            sk_sp<SkImageFilter> foreground,
+            const SkImageFilter::CropRect* cropRect);
     static sk_sp<SkImageFilter> MakeArithmetic(float k1, float k2, float k3, float k4,
-                                               bool enforcePMColor,
-                                               sk_sp<SkImageFilter> background) {
+            bool enforcePMColor,
+            sk_sp<SkImageFilter> background) {
         return MakeArithmetic(k1, k2, k3, k4, enforcePMColor, std::move(background),
                               nullptr, nullptr);
     }
@@ -53,7 +54,7 @@ public:
     static SkImageFilter* Create(SkXfermode* mode, SkImageFilter* background,
                                  SkImageFilter* foreground = NULL,
                                  const SkImageFilter::CropRect* cropRect = NULL) {
-        return Make(sk_ref_sp(mode), 
+        return Make(sk_ref_sp(mode),
                     sk_ref_sp(background),
                     sk_ref_sp(foreground),
                     cropRect).release();

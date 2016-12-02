@@ -12,7 +12,8 @@
 
 #include "SkXfermode.h"
 
-class SK_API SkMergeImageFilter : public SkImageFilter {
+class SK_API SkMergeImageFilter : public SkImageFilter
+{
 public:
     ~SkMergeImageFilter() override;
 
@@ -51,7 +52,9 @@ protected:
     void flatten(SkWriteBuffer&) const override;
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
                                         SkIPoint* offset) const override;
-    bool onCanHandleComplexCTM() const override { return true; }
+    bool onCanHandleComplexCTM() const override {
+        return true;
+    }
 
 private:
     SkMergeImageFilter(sk_sp<SkImageFilter> filters[], int count, const SkXfermode::Mode modes[],

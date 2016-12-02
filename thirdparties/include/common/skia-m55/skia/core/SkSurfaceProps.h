@@ -24,22 +24,26 @@ enum SkPixelGeometry {
 };
 
 // Returns true iff geo is a known geometry and is RGB.
-static inline bool SkPixelGeometryIsRGB(SkPixelGeometry geo) {
+static inline bool SkPixelGeometryIsRGB(SkPixelGeometry geo)
+{
     return kRGB_H_SkPixelGeometry == geo || kRGB_V_SkPixelGeometry == geo;
 }
 
 // Returns true iff geo is a known geometry and is BGR.
-static inline bool SkPixelGeometryIsBGR(SkPixelGeometry geo) {
+static inline bool SkPixelGeometryIsBGR(SkPixelGeometry geo)
+{
     return kBGR_H_SkPixelGeometry == geo || kBGR_V_SkPixelGeometry == geo;
 }
 
 // Returns true iff geo is a known geometry and is horizontal.
-static inline bool SkPixelGeometryIsH(SkPixelGeometry geo) {
+static inline bool SkPixelGeometryIsH(SkPixelGeometry geo)
+{
     return kRGB_H_SkPixelGeometry == geo || kBGR_H_SkPixelGeometry == geo;
 }
 
 // Returns true iff geo is a known geometry and is vertical.
-static inline bool SkPixelGeometryIsV(SkPixelGeometry geo) {
+static inline bool SkPixelGeometryIsV(SkPixelGeometry geo)
+{
     return kRGB_V_SkPixelGeometry == geo || kBGR_V_SkPixelGeometry == geo;
 }
 
@@ -48,7 +52,8 @@ static inline bool SkPixelGeometryIsV(SkPixelGeometry geo) {
  *  during drawing, and can sometimes optimize its performance (e.g. disabling an expensive
  *  feature).
  */
-class SK_API SkSurfaceProps {
+class SK_API SkSurfaceProps
+{
 public:
     enum Flags {
         kUseDeviceIndependentFonts_Flag = 1 << 0,
@@ -65,8 +70,12 @@ public:
     SkSurfaceProps(uint32_t flags, InitType);
     SkSurfaceProps(const SkSurfaceProps& other);
 
-    uint32_t flags() const { return fFlags; }
-    SkPixelGeometry pixelGeometry() const { return fPixelGeometry; }
+    uint32_t flags() const {
+        return fFlags;
+    }
+    SkPixelGeometry pixelGeometry() const {
+        return fPixelGeometry;
+    }
 
     bool isUseDeviceIndependentFonts() const {
         return SkToBool(fFlags & kUseDeviceIndependentFonts_Flag);

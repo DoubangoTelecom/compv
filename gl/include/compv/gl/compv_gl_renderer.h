@@ -27,32 +27,36 @@ COMPV_OBJECT_DECLARE_PTRS(GLRenderer)
 class CompVGLRenderer : public CompVRenderer
 {
 protected:
-	CompVGLRenderer(COMPV_PIXEL_FORMAT ePixelFormat);
+    CompVGLRenderer(COMPV_PIXEL_FORMAT ePixelFormat);
 public:
-	virtual ~CompVGLRenderer();
-	COMPV_OBJECT_GET_ID(CompVGLRenderer);
+    virtual ~CompVGLRenderer();
+    COMPV_OBJECT_GET_ID(CompVGLRenderer);
 
-	COMPV_INLINE CompVGLBlitterPtr blitter() { return m_ptrBlitter; }
-	
-	COMPV_OVERRIDE_DECL1("CompVRenderer", bool, isGLEnabled)()const override { return true; };
-	COMPV_OVERRIDE_DECL1("CompVRenderer", CompVCanvasPtr, canvas)() override;
+    COMPV_INLINE CompVGLBlitterPtr blitter() {
+        return m_ptrBlitter;
+    }
 
-	COMPV_ERROR_CODE close();
+    COMPV_OVERRIDE_DECL1("CompVRenderer", bool, isGLEnabled)()const override {
+        return true;
+    };
+    COMPV_OVERRIDE_DECL1("CompVRenderer", CompVCanvasPtr, canvas)() override;
 
-	static COMPV_ERROR_CODE newObj(CompVGLRendererPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat);
-	
+    COMPV_ERROR_CODE close();
+
+    static COMPV_ERROR_CODE newObj(CompVGLRendererPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat);
+
 protected:
-	virtual COMPV_ERROR_CODE deInit();
-	virtual COMPV_ERROR_CODE init(CompVMatPtr mat, const std::string& prgVertexData, const std::string& prgFragData, bool bMVP = false, bool bToScreen = false);
-	virtual COMPV_ERROR_CODE bind();
-	virtual COMPV_ERROR_CODE unbind();
+    virtual COMPV_ERROR_CODE deInit();
+    virtual COMPV_ERROR_CODE init(CompVMatPtr mat, const std::string& prgVertexData, const std::string& prgFragData, bool bMVP = false, bool bToScreen = false);
+    virtual COMPV_ERROR_CODE bind();
+    virtual COMPV_ERROR_CODE unbind();
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	bool m_bInit;
-	CompVGLCanvasPtr m_ptrCanvas;
-	CompVGLBlitterPtr m_ptrBlitter;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    bool m_bInit;
+    CompVGLCanvasPtr m_ptrCanvas;
+    CompVGLBlitterPtr m_ptrBlitter;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

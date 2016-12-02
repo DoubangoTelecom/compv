@@ -15,7 +15,8 @@ class SkBitmap;
 class SkCanvas;
 class SkPaint;
 
-class SkMeshIndices {
+class SkMeshIndices
+{
 public:
     SkMeshIndices();
     ~SkMeshIndices();
@@ -27,11 +28,19 @@ public:
     bool init(SkPoint tex[], uint16_t indices[],
               int texW, int texH, int rows, int cols);
 
-    int             indexCount() const { return fIndexCount; }
-    const uint16_t* indices() const { return fIndices; }
+    int             indexCount() const {
+        return fIndexCount;
+    }
+    const uint16_t* indices() const {
+        return fIndices;
+    }
 
-    size_t          texCount() const { return fTexCount; }
-    const SkPoint*  tex() const { return fTex; }
+    size_t          texCount() const {
+        return fTexCount;
+    }
+    const SkPoint*  tex() const {
+        return fTex;
+    }
 
 private:
     int         fIndexCount, fTexCount;
@@ -40,7 +49,8 @@ private:
     void*       fStorage; // may be null
 };
 
-class SkMeshUtils {
+class SkMeshUtils
+{
 public:
     static void Draw(SkCanvas*, const SkBitmap&, int rows, int cols,
                      const SkPoint verts[], const SkColor colors[],

@@ -11,8 +11,8 @@ COMPV_NAMESPACE_BEGIN()
 compv_surfacelayer_id_t CompVSurfaceLayer::s_nSurfaceLayerId = 0;
 
 CompVSurfaceLayer::CompVSurfaceLayer()
-	: CompVObj()
-	, m_nId(compv_atomic_inc(&CompVSurfaceLayer::s_nSurfaceLayerId))
+    : CompVObj()
+    , m_nId(compv_atomic_inc(&CompVSurfaceLayer::s_nSurfaceLayerId))
 {
 
 }

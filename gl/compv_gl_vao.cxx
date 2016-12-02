@@ -21,51 +21,51 @@ PFNGLISVERTEXARRAYOESPROC CompVGLVAO::isVertexArrayOES = NULL;
 
 COMPV_ERROR_CODE CompVGLVAO::init()
 {
-	if (CompVGLVAO::s_bInitialized) {
-		return COMPV_ERROR_CODE_S_OK;
-	}
+    if (CompVGLVAO::s_bInitialized) {
+        return COMPV_ERROR_CODE_S_OK;
+    }
 
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+    COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
-	// Android with OpenGL-ES 2.0 API
+    // Android with OpenGL-ES 2.0 API
 #if COMPV_OS_ANDROID && defined(GL_ES_VERSION_2_0) && !defined(GL_ES_VERSION_3_0)
-	if (COMPV_ERROR_CODE_IS_OK(CompVSharedLib::newObj(&CompVGLVAO::s_ptrGLESv2, "libGLESv2.so"))) {
-		CompVGLVAO::bindVertexArrayOES = reinterpret_cast<PFNGLBINDVERTEXARRAYOESPROC>(s_ptrGLESv2->sym("glBindVertexArrayOES"));
-		CompVGLVAO::deleteVertexArraysOES = reinterpret_cast<PFNGLDELETEVERTEXARRAYSOESPROC>(s_ptrGLESv2->sym("glDeleteVertexArraysOES"));
-		CompVGLVAO::genVertexArraysOES = reinterpret_cast<PFNGLGENVERTEXARRAYSOESPROC>(s_ptrGLESv2->sym("glGenVertexArraysOES"));
-		CompVGLVAO::isVertexArrayOES = reinterpret_cast<PFNGLISVERTEXARRAYOESPROC>(s_ptrGLESv2->sym("glIsVertexArrayOES"));
-		COMPV_DEBUG_INFO("Android with OpenGL-ES 2.0 API and 'libGLESv2.so' file loaded: bindVertexArrayOES=%s, deleteVertexArraysOES=%s, genVertexArraysOES=%s, isVertexArrayOES=%s",
-			CompVGLVAO::bindVertexArrayOES ? "YES" : "NO", CompVGLVAO::deleteVertexArraysOES ? "YES" : "NO", CompVGLVAO::genVertexArraysOES ? "YES" : "NO", CompVGLVAO::isVertexArrayOES ? "YES" : "NO");
-	}
-	else {
-		COMPV_DEBUG_WARN("Android with OpenGL-ES 2.0 API and 'libGLESv2.so' file *not* loaded");
-	}
+    if (COMPV_ERROR_CODE_IS_OK(CompVSharedLib::newObj(&CompVGLVAO::s_ptrGLESv2, "libGLESv2.so"))) {
+        CompVGLVAO::bindVertexArrayOES = reinterpret_cast<PFNGLBINDVERTEXARRAYOESPROC>(s_ptrGLESv2->sym("glBindVertexArrayOES"));
+        CompVGLVAO::deleteVertexArraysOES = reinterpret_cast<PFNGLDELETEVERTEXARRAYSOESPROC>(s_ptrGLESv2->sym("glDeleteVertexArraysOES"));
+        CompVGLVAO::genVertexArraysOES = reinterpret_cast<PFNGLGENVERTEXARRAYSOESPROC>(s_ptrGLESv2->sym("glGenVertexArraysOES"));
+        CompVGLVAO::isVertexArrayOES = reinterpret_cast<PFNGLISVERTEXARRAYOESPROC>(s_ptrGLESv2->sym("glIsVertexArrayOES"));
+        COMPV_DEBUG_INFO("Android with OpenGL-ES 2.0 API and 'libGLESv2.so' file loaded: bindVertexArrayOES=%s, deleteVertexArraysOES=%s, genVertexArraysOES=%s, isVertexArrayOES=%s",
+                         CompVGLVAO::bindVertexArrayOES ? "YES" : "NO", CompVGLVAO::deleteVertexArraysOES ? "YES" : "NO", CompVGLVAO::genVertexArraysOES ? "YES" : "NO", CompVGLVAO::isVertexArrayOES ? "YES" : "NO");
+    }
+    else {
+        COMPV_DEBUG_WARN("Android with OpenGL-ES 2.0 API and 'libGLESv2.so' file *not* loaded");
+    }
 #endif
 
-	COMPV_CHECK_CODE_BAIL(err);
+    COMPV_CHECK_CODE_BAIL(err);
 
-	CompVGLVAO::s_bInitialized = true;
+    CompVGLVAO::s_bInitialized = true;
 
 bail:
-	if (COMPV_ERROR_CODE_IS_NOK(err)) {
-		COMPV_CHECK_CODE_ASSERT(CompVGLVAO::deInit());
-	}
-	return err;
+    if (COMPV_ERROR_CODE_IS_NOK(err)) {
+        COMPV_CHECK_CODE_ASSERT(CompVGLVAO::deInit());
+    }
+    return err;
 }
 
 COMPV_ERROR_CODE CompVGLVAO::deInit()
 {
 #if COMPV_OS_ANDROID && defined(GL_ES_VERSION_2_0) && !defined(GL_ES_VERSION_3_0)
-	CompVGLVAO::s_ptrGLESv2 = NULL;
-	CompVGLVAO::bindVertexArrayOES = NULL;
-	CompVGLVAO::deleteVertexArraysOES = NULL;
-	CompVGLVAO::genVertexArraysOES = NULL;
-	CompVGLVAO::isVertexArrayOES = NULL;
+    CompVGLVAO::s_ptrGLESv2 = NULL;
+    CompVGLVAO::bindVertexArrayOES = NULL;
+    CompVGLVAO::deleteVertexArraysOES = NULL;
+    CompVGLVAO::genVertexArraysOES = NULL;
+    CompVGLVAO::isVertexArrayOES = NULL;
 #endif
 
-	CompVGLVAO::s_bInitialized = false;
+    CompVGLVAO::s_bInitialized = false;
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

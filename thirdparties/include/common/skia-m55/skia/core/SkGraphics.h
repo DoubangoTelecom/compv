@@ -14,7 +14,8 @@ class SkData;
 class SkImageGenerator;
 class SkTraceMemoryDump;
 
-class SK_API SkGraphics {
+class SK_API SkGraphics
+{
 public:
     /**
      *  Call this at process initialization time if your environment does not
@@ -167,10 +168,11 @@ public:
      *  Returns the previous factory (which could be NULL).
      */
     static ImageGeneratorFromEncodedFactory
-           SetImageGeneratorFromEncodedFactory(ImageGeneratorFromEncodedFactory);
+    SetImageGeneratorFromEncodedFactory(ImageGeneratorFromEncodedFactory);
 };
 
-class SkAutoGraphics {
+class SkAutoGraphics
+{
 public:
     SkAutoGraphics() {
         SkGraphics::Init();

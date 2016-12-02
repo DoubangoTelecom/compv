@@ -21,20 +21,20 @@ COMPV_NAMESPACE_BEGIN()
 class CompVDSUtils
 {
 public:
-	static COMPV_ERROR_CODE enumerateCaptureDevices(CompVDSCameraDeviceInfoList& list);
-	static COMPV_ERROR_CODE createSourceFilter(__out IBaseFilter **sourceFilter, __in const std::string& deviceId = "");	
+    static COMPV_ERROR_CODE enumerateCaptureDevices(CompVDSCameraDeviceInfoList& list);
+    static COMPV_ERROR_CODE createSourceFilter(__out IBaseFilter **sourceFilter, __in const std::string& deviceId = "");
 
-	static COMPV_ERROR_CODE connectFilters(IGraphBuilder* graphBuilder, IBaseFilter* source, IBaseFilter* destination, AM_MEDIA_TYPE* mediaType = NULL);
+    static COMPV_ERROR_CODE connectFilters(IGraphBuilder* graphBuilder, IBaseFilter* source, IBaseFilter* destination, AM_MEDIA_TYPE* mediaType = NULL);
 
-	static COMPV_ERROR_CODE disconnectFilters(IGraphBuilder* graphBuilder, IBaseFilter* source, IBaseFilter* destination);
+    static COMPV_ERROR_CODE disconnectFilters(IGraphBuilder* graphBuilder, IBaseFilter* source, IBaseFilter* destination);
 
-	static COMPV_ERROR_CODE disconnectAllFilters(IGraphBuilder* graphBuilder);
+    static COMPV_ERROR_CODE disconnectAllFilters(IGraphBuilder* graphBuilder);
 
-	static COMPV_ERROR_CODE removeAllFilters(IGraphBuilder* graphBuilder);
+    static COMPV_ERROR_CODE removeAllFilters(IGraphBuilder* graphBuilder);
 
 private:
-	static HRESULT getPin(IBaseFilter *pFilter, PIN_DIRECTION dir, IPin** pin);
-	static HRESULT bstrToString(__in BSTR* bstr, __out std::string& str);
+    static HRESULT getPin(IBaseFilter *pFilter, PIN_DIRECTION dir, IPin** pin);
+    static HRESULT bstrToString(__in BSTR* bstr, __out std::string& str);
 };
 
 COMPV_NAMESPACE_END()

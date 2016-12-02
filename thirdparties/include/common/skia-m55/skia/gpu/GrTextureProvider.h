@@ -13,7 +13,8 @@
 
 class GrSingleOwner;
 
-class SK_API GrTextureProvider {
+class SK_API GrTextureProvider
+{
 public:
     ///////////////////////////////////////////////////////////////////////////
     // Textures
@@ -82,7 +83,8 @@ public:
     GrTexture* refScratchTexture(const GrSurfaceDesc& desc, ScratchTexMatch match) {
         if (kApprox_ScratchTexMatch == match) {
             return this->createApproxTexture(desc);
-        } else {
+        }
+        else {
             return this->createTexture(desc, SkBudgeted::kYes);
         }
     }
@@ -110,7 +112,7 @@ public:
      *
      * @return GrRenderTarget object or NULL on failure.
      */
-     GrRenderTarget* wrapBackendRenderTarget(const GrBackendRenderTargetDesc& desc);
+    GrRenderTarget* wrapBackendRenderTarget(const GrBackendRenderTargetDesc& desc);
 
 protected:
     GrTextureProvider(GrGpu* gpu, GrResourceCache* cache, GrSingleOwner* singleOwner);
@@ -151,11 +153,19 @@ protected:
         fGpu = NULL;
     }
 
-    GrResourceCache* cache() { return fCache; }
-    const GrResourceCache* cache() const { return fCache; }
+    GrResourceCache* cache() {
+        return fCache;
+    }
+    const GrResourceCache* cache() const {
+        return fCache;
+    }
 
-    GrGpu* gpu() { return fGpu; }
-    const GrGpu* gpu() const { return fGpu; }
+    GrGpu* gpu() {
+        return fGpu;
+    }
+    const GrGpu* gpu() const {
+        return fGpu;
+    }
 
     bool isAbandoned() const {
         SkASSERT(SkToBool(fGpu) == SkToBool(fCache));

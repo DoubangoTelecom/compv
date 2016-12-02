@@ -12,7 +12,8 @@
 #include "SkRect.h"
 #include "SkImageFilter.h"
 
-class SK_API SkMagnifierImageFilter : public SkImageFilter {
+class SK_API SkMagnifierImageFilter : public SkImageFilter
+{
 public:
     static sk_sp<SkImageFilter> Make(const SkRect& src, SkScalar inset,
                                      sk_sp<SkImageFilter> input,

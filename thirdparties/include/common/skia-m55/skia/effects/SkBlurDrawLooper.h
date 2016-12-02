@@ -20,7 +20,8 @@ class SkColorFilter;
     the original object in its original position.
     should there be an option to just draw the shadow/blur layer? webkit?
 */
-class SK_API SkBlurDrawLooper : public SkDrawLooper {
+class SK_API SkBlurDrawLooper : public SkDrawLooper
+{
 public:
     enum BlurFlags {
         kNone_BlurFlag = 0x00,
@@ -48,7 +49,9 @@ public:
 
     SkDrawLooper::Context* createContext(SkCanvas*, void* storage) const override;
 
-    size_t contextSize() const override { return sizeof(BlurDrawLooperContext); }
+    size_t contextSize() const override {
+        return sizeof(BlurDrawLooperContext);
+    }
 
     SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkBlurDrawLooper)
@@ -74,7 +77,8 @@ private:
         kDone
     };
 
-    class BlurDrawLooperContext : public SkDrawLooper::Context {
+    class BlurDrawLooperContext : public SkDrawLooper::Context
+    {
     public:
         explicit BlurDrawLooperContext(const SkBlurDrawLooper* looper);
 

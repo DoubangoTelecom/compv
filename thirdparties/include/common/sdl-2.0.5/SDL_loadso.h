@@ -63,7 +63,7 @@ extern DECLSPEC void *SDLCALL SDL_LoadObject(const char *sofile);
  *  is no longer valid after calling SDL_UnloadObject().
  */
 extern DECLSPEC void *SDLCALL SDL_LoadFunction(void *handle,
-                                               const char *name);
+        const char *name);
 
 /**
  *  Unload a shared object from memory.

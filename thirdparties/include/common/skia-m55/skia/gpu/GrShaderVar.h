@@ -11,7 +11,8 @@
 #include "GrTypesPriv.h"
 #include "SkString.h"
 
-class GrShaderVar {
+class GrShaderVar
+{
 public:
     /**
      * Early versions of GLSL have Varying and Attribute; those are later
@@ -111,69 +112,103 @@ public:
     /**
      * Is the var an array.
      */
-    bool isArray() const { return kNonArray != fCount; }
+    bool isArray() const {
+        return kNonArray != fCount;
+    }
     /**
      * Is this an unsized array, (i.e. declared with []).
      */
-    bool isUnsizedArray() const { return kUnsizedArray == fCount; }
+    bool isUnsizedArray() const {
+        return kUnsizedArray == fCount;
+    }
     /**
      * Get the array length of the var.
      */
-    int getArrayCount() const { return fCount; }
+    int getArrayCount() const {
+        return fCount;
+    }
     /**
      * Set the array length of the var
      */
-    void setArrayCount(int count) { fCount = count; }
+    void setArrayCount(int count) {
+        fCount = count;
+    }
     /**
      * Set to be a non-array.
      */
-    void setNonArray() { fCount = kNonArray; }
+    void setNonArray() {
+        fCount = kNonArray;
+    }
     /**
      * Set to be an unsized array.
      */
-    void setUnsizedArray() { fCount = kUnsizedArray; }
+    void setUnsizedArray() {
+        fCount = kUnsizedArray;
+    }
 
     /**
      * Access the var name as a writable string
      */
-    SkString* accessName() { return &fName; }
+    SkString* accessName() {
+        return &fName;
+    }
     /**
      * Set the var name
      */
-    void setName(const SkString& n) { fName = n; }
-    void setName(const char* n) { fName = n; }
+    void setName(const SkString& n) {
+        fName = n;
+    }
+    void setName(const char* n) {
+        fName = n;
+    }
 
     /**
      * Get the var name.
      */
-    const SkString& getName() const { return fName; }
+    const SkString& getName() const {
+        return fName;
+    }
 
     /**
      * Shortcut for this->getName().c_str();
      */
-    const char* c_str() const { return this->getName().c_str(); }
+    const char* c_str() const {
+        return this->getName().c_str();
+    }
 
     /**
      * Get the type of the var
      */
-    GrSLType getType() const { return fType; }
+    GrSLType getType() const {
+        return fType;
+    }
     /**
      * Set the type of the var
      */
-    void setType(GrSLType type) { fType = type; }
+    void setType(GrSLType type) {
+        fType = type;
+    }
 
-    TypeModifier getTypeModifier() const { return fTypeModifier; }
-    void setTypeModifier(TypeModifier type) { fTypeModifier = type; }
+    TypeModifier getTypeModifier() const {
+        return fTypeModifier;
+    }
+    void setTypeModifier(TypeModifier type) {
+        fTypeModifier = type;
+    }
 
     /**
      * Get the precision of the var
      */
-    GrSLPrecision getPrecision() const { return fPrecision; }
+    GrSLPrecision getPrecision() const {
+        return fPrecision;
+    }
 
     /**
      * Set the precision of the var
      */
-    void setPrecision(GrSLPrecision p) { fPrecision = p; }
+    void setPrecision(GrSLPrecision p) {
+        fPrecision = p;
+    }
 
 protected:
     GrSLType        fType;

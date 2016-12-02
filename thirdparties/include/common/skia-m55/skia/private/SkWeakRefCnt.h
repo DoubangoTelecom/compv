@@ -49,7 +49,8 @@
     }
     myRef.weak_unref();
 */
-class SK_API SkWeakRefCnt : public SkRefCnt {
+class SK_API SkWeakRefCnt : public SkRefCnt
+{
 public:
     /** Default construct, initializing the reference counts to 1.
         The strong references collectively hold one weak reference. When the
@@ -89,8 +90,9 @@ private:
             if (0 == prev) {
                 break;
             }
-        } while(!fRefCnt.compare_exchange_weak(prev, prev+1, std::memory_order_acquire,
-                                                             std::memory_order_relaxed));
+        }
+        while(!fRefCnt.compare_exchange_weak(prev, prev+1, std::memory_order_acquire,
+                                             std::memory_order_relaxed));
         return prev;
     }
 

@@ -19,19 +19,26 @@ class SkStream;
  *  but the actual ptr that is returned (by data() or bytes()) is guaranteed
  *  to always be the same for the life of this instance.
  */
-class SK_API SkData final : public SkNVRefCnt<SkData> {
+class SK_API SkData final : public SkNVRefCnt<SkData>
+{
 public:
     /**
      *  Returns the number of bytes stored.
      */
-    size_t size() const { return fSize; }
+    size_t size() const {
+        return fSize;
+    }
 
-    bool isEmpty() const { return 0 == fSize; }
+    bool isEmpty() const {
+        return 0 == fSize;
+    }
 
     /**
      *  Returns the ptr to the data.
      */
-    const void* data() const { return fPtr; }
+    const void* data() const {
+        return fPtr;
+    }
 
     /**
      *  Like data(), returns a read-only ptr into the data, but in this case
@@ -173,9 +180,15 @@ private:
     // therefore must be sk_freed. We overload new to also call sk_malloc_throw so that memory
     // can be unconditionally released using sk_free in an overloaded delete. Overloading regular
     // new means we must also overload placement new.
-    void* operator new(size_t size) { return sk_malloc_throw(size); }
-    void* operator new(size_t, void* p) { return p; }
-    void operator delete(void* p) { sk_free(p); }
+    void* operator new(size_t size) {
+        return sk_malloc_throw(size);
+    }
+    void* operator new(size_t, void* p) {
+        return p;
+    }
+    void operator delete(void* p) {
+        sk_free(p);
+    }
 
     // Called the first time someone calls NewEmpty to initialize the singleton.
     friend SkData* sk_new_empty_data();

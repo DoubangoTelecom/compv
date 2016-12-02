@@ -18,7 +18,7 @@ COMPV_NAMESPACE_BEGIN()
 // size should be multiple of 16, if not the remaining will be ignored
 void MemCopy_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_ALIGNED(SSE) const void* dataSrcPtr, compv_uscalar_t size)
 {
-	COMPV_DEBUG_INFO_CHECK_SSE2();
+    COMPV_DEBUG_INFO_CHECK_SSE2();
     const __m128i* xmmSrc = (const __m128i*)dataSrcPtr;
     __m128i* xmmDst = (__m128i*)dataDstPtr;
     compv_uscalar_t count16x16 = (size >> 8);
@@ -57,7 +57,7 @@ void MemCopy_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_ALIG
 
 void MemCopyNTA_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_ALIGNED(SSE) const void* dataSrcPtr, compv_uscalar_t size)
 {
-	COMPV_DEBUG_INFO_CHECK_SSE2();
+    COMPV_DEBUG_INFO_CHECK_SSE2();
     const __m128i* xmmSrc = (const __m128i*)dataSrcPtr;
     __m128i* xmmDst = (__m128i*)dataDstPtr;
     compv_uscalar_t count16x16 = (size >> 8);
@@ -101,7 +101,7 @@ void MemCopyNTA_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dataDstPtr, COMPV_A
 
 void MemZeroNTA_Intrin_Aligned_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, compv_uscalar_t size)
 {
-	COMPV_DEBUG_INFO_CHECK_SSE2();
+    COMPV_DEBUG_INFO_CHECK_SSE2();
     __m128i *xmmDst = (__m128i*)dstPtr, xmmZero;
     compv_uscalar_t count16x16 = (size >> 8);
     compv_uscalar_t count16x1 = (size >> 4);

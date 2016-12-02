@@ -30,7 +30,7 @@ COMPV_NAMESPACE_BEGIN()
 void Brief256_31_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // SSE41, ASM
-	COMPV_DEBUG_INFO_CHECK_SSE2();
+    COMPV_DEBUG_INFO_CHECK_SSE2();
     int i, u8_index;
     COMPV_ALIGN_SSE() int32_t xmmIndex[4];
     COMPV_ALIGN_SSE() uint8_t xmmA[16];
@@ -105,7 +105,7 @@ void Brief256_31_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t img_strid
 void Brief256_31_Fxpq16_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t img_stride, const int16_t* cos1, const int16_t* sin1, COMPV_ALIGNED(SSE) void* out)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM, FMA3, SSE41
-	COMPV_DEBUG_INFO_CHECK_SSE2();
+    COMPV_DEBUG_INFO_CHECK_SSE2();
 
     int i;
     __m128i xmmCosT, xmmSinT, xmmStride, xmmR, xmm128, xmmX0, xmmY0, xmmTemp, xmmZero;
@@ -114,7 +114,7 @@ void Brief256_31_Fxpq16_Intrin_SSE2(const uint8_t* img_center, compv_scalar_t im
     COMPV_ALIGN_SSE() uint8_t xmmB[16];
     __m128i xmmX[2], xmmY[2];
     uint16_t* outPtr = (uint16_t*)out;
-	
+
     xmm128 = _mm_load_si128((__m128i*)k128_u8);
     xmmCosT = _mm_set1_epi16(*cos1);
     xmmSinT = _mm_set1_epi16(*sin1);

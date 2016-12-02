@@ -14,7 +14,8 @@
 
 #ifdef SK_SUPPORT_LEGACY_ARITHMETICMODE
 
-class SK_API SkArithmeticMode {
+class SK_API SkArithmeticMode
+{
 public:
     /**
      *  result = clamp[k1 * src * dst + k2 * src + k3 * dst + k4]

@@ -13,12 +13,15 @@
 #include "SkView.h"
 #include "SkAnimator.h"
 
-class SkAnimatorView : public SkView {
+class SkAnimatorView : public SkView
+{
 public:
-            SkAnimatorView();
+    SkAnimatorView();
     virtual ~SkAnimatorView();
 
-    SkAnimator* getAnimator() const { return fAnimator; }
+    SkAnimator* getAnimator() const {
+        return fAnimator;
+    }
 
     bool    decodeFile(const char path[]);
     bool    decodeMemory(const void* buffer, size_t size);

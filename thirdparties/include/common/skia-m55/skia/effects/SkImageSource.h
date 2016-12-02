@@ -11,7 +11,8 @@
 #include "SkImage.h"
 #include "SkImageFilter.h"
 
-class SK_API SkImageSource : public SkImageFilter {
+class SK_API SkImageSource : public SkImageFilter
+{
 public:
     static sk_sp<SkImageFilter> Make(sk_sp<SkImage> image);
     static sk_sp<SkImageFilter> Make(sk_sp<SkImage> image,
@@ -33,7 +34,7 @@ public:
                                  const SkRect& dstRect,
                                  SkFilterQuality filterQuality) {
         return Make(sk_ref_sp<SkImage>(image), srcRect, dstRect, filterQuality).release();
-   }
+    }
 #endif
 
 protected:

@@ -18,17 +18,17 @@ COMPV_OBJECT_DECLARE_PTRS(SingleSurfaceLayer)
 class COMPV_BASE_API CompVSingleSurfaceLayer : public CompVSurfaceLayer
 {
 protected:
-	CompVSingleSurfaceLayer();
+    CompVSingleSurfaceLayer();
 public:
-	virtual ~CompVSingleSurfaceLayer();
+    virtual ~CompVSingleSurfaceLayer();
 
-	// FIXME: cannot drawText to surface(), requires renderer -> rename 'CompVSingleSurfaceLayer' and create a multiSurface
-	virtual CompVSurfacePtr surface() = 0;
+    // FIXME: cannot drawText to surface(), requires renderer -> rename 'CompVSingleSurfaceLayer' and create a multiSurface
+    virtual CompVSurfacePtr surface() = 0;
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 
-		COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

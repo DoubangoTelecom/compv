@@ -11,8 +11,8 @@
 COMPV_NAMESPACE_BEGIN()
 
 CompVGLContext::CompVGLContext()
-	: CompVObj()
-	, CompVLock()
+    : CompVObj()
+    , CompVLock()
 {
 
 }
@@ -24,24 +24,24 @@ CompVGLContext::~CompVGLContext()
 
 bool CompVGLContext::isSet()
 {
-	return !!CompVGLUtils::isGLContextSet();
+    return !!CompVGLUtils::isGLContextSet();
 }
 
 COMPV_ERROR_CODE CompVGLContext::makeCurrent()
 {
-	COMPV_CHECK_CODE_RETURN(CompVLock::lock());
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_CODE_RETURN(CompVLock::lock());
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVGLContext::swapBuffers()
 {
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVGLContext::unmakeCurrent()
 {
-	COMPV_CHECK_CODE_RETURN(CompVLock::unlock());
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_CODE_RETURN(CompVLock::unlock());
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

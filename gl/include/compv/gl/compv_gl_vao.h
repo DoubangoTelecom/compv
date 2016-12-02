@@ -22,20 +22,20 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_GL_API CompVGLVAO
 {
 public:
-	static COMPV_ERROR_CODE init();
-	static COMPV_ERROR_CODE deInit();
+    static COMPV_ERROR_CODE init();
+    static COMPV_ERROR_CODE deInit();
 
 #if COMPV_OS_ANDROID && defined(GL_ES_VERSION_2_0) && !defined(GL_ES_VERSION_3_0)
-	static PFNGLBINDVERTEXARRAYOESPROC bindVertexArrayOES;
-	static PFNGLDELETEVERTEXARRAYSOESPROC deleteVertexArraysOES;
-	static PFNGLGENVERTEXARRAYSOESPROC genVertexArraysOES;
-	static PFNGLISVERTEXARRAYOESPROC isVertexArrayOES;
+    static PFNGLBINDVERTEXARRAYOESPROC bindVertexArrayOES;
+    static PFNGLDELETEVERTEXARRAYSOESPROC deleteVertexArraysOES;
+    static PFNGLGENVERTEXARRAYSOESPROC genVertexArraysOES;
+    static PFNGLISVERTEXARRAYOESPROC isVertexArrayOES;
 #endif
 
 private:
-	static bool s_bInitialized;
+    static bool s_bInitialized;
 #if COMPV_OS_ANDROID && defined(GL_ES_VERSION_2_0) && !defined(GL_ES_VERSION_3_0)
-	static CompVSharedLibPtr s_ptrGLESv2;
+    static CompVSharedLibPtr s_ptrGLESv2;
 #endif
 };
 

@@ -19,7 +19,8 @@ class GrProcOptInfo;
  * useful for rendering coverage masks using CSG. It can optionally invert the src coverage before
  * applying the set operator.
  */
-class GrCoverageSetOpXPFactory : public GrXPFactory {
+class GrCoverageSetOpXPFactory : public GrXPFactory
+{
 public:
     static sk_sp<GrXPFactory> Make(SkRegion::Op regionOp, bool invertCoverage = false);
 

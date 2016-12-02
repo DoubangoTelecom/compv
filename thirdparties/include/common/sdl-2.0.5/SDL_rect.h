@@ -45,8 +45,7 @@ extern "C" {
  *  \sa SDL_EnclosePoints
  *  \sa SDL_PointInRect
  */
-typedef struct SDL_Point
-{
+typedef struct SDL_Point {
     int x;
     int y;
 } SDL_Point;
@@ -61,8 +60,7 @@ typedef struct SDL_Point
  *  \sa SDL_UnionRect
  *  \sa SDL_EnclosePoints
  */
-typedef struct SDL_Rect
-{
+typedef struct SDL_Rect {
     int x, y;
     int w, h;
 } SDL_Rect;
@@ -99,7 +97,7 @@ SDL_FORCE_INLINE SDL_bool SDL_RectEquals(const SDL_Rect *a, const SDL_Rect *b)
  *  \return SDL_TRUE if there is an intersection, SDL_FALSE otherwise.
  */
 extern DECLSPEC SDL_bool SDLCALL SDL_HasIntersection(const SDL_Rect * A,
-                                                     const SDL_Rect * B);
+        const SDL_Rect * B);
 
 /**
  *  \brief Calculate the intersection of two rectangles.
@@ -107,15 +105,15 @@ extern DECLSPEC SDL_bool SDLCALL SDL_HasIntersection(const SDL_Rect * A,
  *  \return SDL_TRUE if there is an intersection, SDL_FALSE otherwise.
  */
 extern DECLSPEC SDL_bool SDLCALL SDL_IntersectRect(const SDL_Rect * A,
-                                                   const SDL_Rect * B,
-                                                   SDL_Rect * result);
+        const SDL_Rect * B,
+        SDL_Rect * result);
 
 /**
  *  \brief Calculate the union of two rectangles.
  */
 extern DECLSPEC void SDLCALL SDL_UnionRect(const SDL_Rect * A,
-                                           const SDL_Rect * B,
-                                           SDL_Rect * result);
+        const SDL_Rect * B,
+        SDL_Rect * result);
 
 /**
  *  \brief Calculate a minimal rectangle enclosing a set of points
@@ -123,9 +121,9 @@ extern DECLSPEC void SDLCALL SDL_UnionRect(const SDL_Rect * A,
  *  \return SDL_TRUE if any points were within the clipping rect
  */
 extern DECLSPEC SDL_bool SDLCALL SDL_EnclosePoints(const SDL_Point * points,
-                                                   int count,
-                                                   const SDL_Rect * clip,
-                                                   SDL_Rect * result);
+        int count,
+        const SDL_Rect * clip,
+        SDL_Rect * result);
 
 /**
  *  \brief Calculate the intersection of a rectangle and line segment.
@@ -133,9 +131,9 @@ extern DECLSPEC SDL_bool SDLCALL SDL_EnclosePoints(const SDL_Point * points,
  *  \return SDL_TRUE if there is an intersection, SDL_FALSE otherwise.
  */
 extern DECLSPEC SDL_bool SDLCALL SDL_IntersectRectAndLine(const SDL_Rect *
-                                                          rect, int *X1,
-                                                          int *Y1, int *X2,
-                                                          int *Y2);
+        rect, int *X1,
+        int *Y1, int *X2,
+        int *Y2);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

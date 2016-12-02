@@ -19,18 +19,21 @@ struct SkTagList;
 
     SkEventSink is the base class for all objects that receive SkEvents.
 */
-class SkEventSink : public SkRefCnt {
+class SkEventSink : public SkRefCnt
+{
 public:
-    
 
-             SkEventSink();
+
+    SkEventSink();
     virtual ~SkEventSink();
 
     /**
      *  Returns this eventsink's unique ID. Use this to post SkEvents to
      *  this eventsink.
      */
-    SkEventSinkID getSinkID() const { return fID; }
+    SkEventSinkID getSinkID() const {
+        return fID;
+    }
 
     /**
      *  Call this to pass an event to this object for processing. Returns true if the

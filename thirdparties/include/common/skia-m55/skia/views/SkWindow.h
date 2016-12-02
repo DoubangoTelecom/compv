@@ -26,9 +26,10 @@ class GrContext;
 class GrRenderTarget;
 #endif
 
-class SkWindow : public SkView {
+class SkWindow : public SkView
+{
 public:
-            SkWindow();
+    SkWindow();
     virtual ~SkWindow();
 
     struct AttachmentInfo {
@@ -42,25 +43,35 @@ public:
         int fColorBits;
     };
 
-    SkSurfaceProps getSurfaceProps() const { return fSurfaceProps; }
+    SkSurfaceProps getSurfaceProps() const {
+        return fSurfaceProps;
+    }
     void setSurfaceProps(const SkSurfaceProps& props) {
         fSurfaceProps = props;
     }
 
-    SkImageInfo info() const { return fBitmap.info(); }
-    const SkBitmap& getBitmap() const { return fBitmap; }
+    SkImageInfo info() const {
+        return fBitmap.info();
+    }
+    const SkBitmap& getBitmap() const {
+        return fBitmap;
+    }
 
     void    resize(int width, int height);
     void    resize(const SkImageInfo&);
     void    setColorType(SkColorType, sk_sp<SkColorSpace>);
 
-    bool    isDirty() const { return !fDirtyRgn.isEmpty(); }
+    bool    isDirty() const {
+        return !fDirtyRgn.isEmpty();
+    }
     bool    update(SkIRect* updateArea);
     // does not call through to onHandleInval(), but does force the fDirtyRgn
     // to be wide open. Call before update() to ensure we redraw everything.
     void    forceInvalAll();
     // return the bounds of the dirty/inval rgn, or [0,0,0,0] if none
-    const SkIRect& getDirtyBounds() const { return fDirtyRgn.getBounds(); }
+    const SkIRect& getDirtyBounds() const {
+        return fDirtyRgn.getBounds();
+    }
 
     bool    handleClick(int x, int y, Click::State, void* owner, unsigned modi = 0);
     bool    handleChar(SkUnichar);
@@ -68,12 +79,18 @@ public:
     bool    handleKeyUp(SkKey);
 
     void    addMenu(SkOSMenu*);
-    const SkTDArray<SkOSMenu*>* getMenus() { return &fMenus; }
+    const SkTDArray<SkOSMenu*>* getMenus() {
+        return &fMenus;
+    }
 
-    const char* getTitle() const { return fTitle.c_str(); }
+    const char* getTitle() const {
+        return fTitle.c_str();
+    }
     void    setTitle(const char title[]);
 
-    const SkMatrix& getMatrix() const { return fMatrix; }
+    const SkMatrix& getMatrix() const {
+        return fMatrix;
+    }
     void    setMatrix(const SkMatrix&);
     void    preConcat(const SkMatrix&);
     void    postConcat(const SkMatrix&);
@@ -123,17 +140,17 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 #if defined(SK_USE_SDL)
-    #include "SkOSWindow_SDL.h"
+#include "SkOSWindow_SDL.h"
 #elif defined(SK_BUILD_FOR_MAC)
-    #include "SkOSWindow_Mac.h"
+#include "SkOSWindow_Mac.h"
 #elif defined(SK_BUILD_FOR_WIN)
-    #include "SkOSWindow_Win.h"
+#include "SkOSWindow_Win.h"
 #elif defined(SK_BUILD_FOR_ANDROID)
-    #error Android does not support SkOSWindow and SampleApp. Please use Viewer instead.
+#error Android does not support SkOSWindow and SampleApp. Please use Viewer instead.
 #elif defined(SK_BUILD_FOR_UNIX)
-    #include "SkOSWindow_Unix.h"
+#include "SkOSWindow_Unix.h"
 #elif defined(SK_BUILD_FOR_IOS)
-    #include "SkOSWindow_iOS.h"
+#include "SkOSWindow_iOS.h"
 #endif
 
 #endif

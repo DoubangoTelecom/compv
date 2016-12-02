@@ -28,40 +28,44 @@ COMPV_OBJECT_DECLARE_PTRS(GLSurface)
 class COMPV_GL_API CompVGLSurface : public CompVSurface
 {
 protected:
-	CompVGLSurface(size_t width, size_t height);
+    CompVGLSurface(size_t width, size_t height);
 public:
-	virtual ~CompVGLSurface();
-	COMPV_OBJECT_GET_ID(CompVGLSurface);
-	COMPV_INLINE CompVGLBlitterPtr blitter() { return m_ptrBlitter; }
-	CompVGLCanvasPtr canvasGL();
+    virtual ~CompVGLSurface();
+    COMPV_OBJECT_GET_ID(CompVGLSurface);
+    COMPV_INLINE CompVGLBlitterPtr blitter() {
+        return m_ptrBlitter;
+    }
+    CompVGLCanvasPtr canvasGL();
 
-	COMPV_OVERRIDE_DECL1("CompVSurface", bool, isGLEnabled)()const override { return true; };
-	COMPV_OVERRIDE_DECL0("CompVSurface", setMVP)(CompVMVPPtr mvp) override;
-	COMPV_OVERRIDE_DECL1("CompVSurface", CompVRendererPtr, renderer)() override;
-	COMPV_OVERRIDE_DECL1("CompVSurface", CompVCanvasPtr, canvas)() override;
-	COMPV_OVERRIDE_DECL0("CompVSurface", drawImage)(CompVMatPtr mat) override;
+    COMPV_OVERRIDE_DECL1("CompVSurface", bool, isGLEnabled)()const override {
+        return true;
+    };
+    COMPV_OVERRIDE_DECL0("CompVSurface", setMVP)(CompVMVPPtr mvp) override;
+    COMPV_OVERRIDE_DECL1("CompVSurface", CompVRendererPtr, renderer)() override;
+    COMPV_OVERRIDE_DECL1("CompVSurface", CompVCanvasPtr, canvas)() override;
+    COMPV_OVERRIDE_DECL0("CompVSurface", drawImage)(CompVMatPtr mat) override;
 
-	COMPV_ERROR_CODE blit(const CompVGLFboPtr ptrFboSrc, const CompVGLFboPtr ptrFboDst);
-	COMPV_ERROR_CODE blitRenderer(const CompVGLFboPtr ptrFboDst);
+    COMPV_ERROR_CODE blit(const CompVGLFboPtr ptrFboSrc, const CompVGLFboPtr ptrFboDst);
+    COMPV_ERROR_CODE blitRenderer(const CompVGLFboPtr ptrFboDst);
 
-	COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
+    COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
 
-	COMPV_ERROR_CODE close();
+    COMPV_ERROR_CODE close();
 
-	static COMPV_ERROR_CODE newObj(CompVGLSurfacePtrPtr glSurface, size_t width, size_t height);
+    static COMPV_ERROR_CODE newObj(CompVGLSurfacePtrPtr glSurface, size_t width, size_t height);
 
 private:
-	COMPV_ERROR_CODE init();
-	COMPV_ERROR_CODE deInit();
+    COMPV_ERROR_CODE init();
+    COMPV_ERROR_CODE deInit();
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	bool m_bInit;
-	CompVGLRendererPtr m_ptrRenderer;
-	CompVGLProgramPtr m_ptrProgram;
-	CompVGLCanvasPtr m_ptrCanvas;
-	CompVGLBlitterPtr m_ptrBlitter;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    bool m_bInit;
+    CompVGLRendererPtr m_ptrRenderer;
+    CompVGLProgramPtr m_ptrProgram;
+    CompVGLCanvasPtr m_ptrCanvas;
+    CompVGLBlitterPtr m_ptrBlitter;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

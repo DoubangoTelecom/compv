@@ -35,7 +35,8 @@ class SkDiscardableMemory;
 
     This class can be shared/accessed between multiple threads.
 */
-class SK_API SkPixelRef : public SkRefCnt {
+class SK_API SkPixelRef : public SkRefCnt
+{
 public:
     explicit SkPixelRef(const SkImageInfo&);
     virtual ~SkPixelRef();
@@ -47,13 +48,19 @@ public:
     /** Return the pixel memory returned from lockPixels, or null if the
         lockCount is 0.
     */
-    void* pixels() const { return fRec.fPixels; }
+    void* pixels() const {
+        return fRec.fPixels;
+    }
 
     /** Return the current colorTable (if any) if pixels are locked, or null.
     */
-    SkColorTable* colorTable() const { return fRec.fColorTable; }
+    SkColorTable* colorTable() const {
+        return fRec.fColorTable;
+    }
 
-    size_t rowBytes() const { return fRec.fRowBytes; }
+    size_t rowBytes() const {
+        return fRec.fRowBytes;
+    }
 
     /**
      *  To access the actual pixels of a pixelref, it must be "locked".
@@ -66,15 +73,21 @@ public:
         SkColorTable*   fColorTable;
         size_t          fRowBytes;
 
-        void zero() { sk_bzero(this, sizeof(*this)); }
+        void zero() {
+            sk_bzero(this, sizeof(*this));
+        }
 
         bool isZero() const {
             return NULL == fPixels && NULL == fColorTable && 0 == fRowBytes;
         }
     };
 
-    SkDEBUGCODE(bool isLocked() const { return fLockCount > 0; })
-    SkDEBUGCODE(int getLockCount() const { return fLockCount; })
+    SkDEBUGCODE(bool isLocked() const {
+        return fLockCount > 0;
+    })
+    SkDEBUGCODE(int getLockCount() const {
+        return fLockCount;
+    })
 
     /**
      *  Call to access the pixel memory. Return true on success. Balance this
@@ -119,7 +132,9 @@ public:
         Can be used as a key which uniquely identifies this SkPixelRef
         regardless of changes to its pixels or deletion of this object.
      */
-    uint32_t getStableID() const { return fStableID; }
+    uint32_t getStableID() const {
+        return fStableID;
+    }
 #endif
 
     /**
@@ -139,7 +154,9 @@ public:
     /** Returns true if this pixelref is marked as immutable, meaning that the
         contents of its pixels will not change for the lifetime of the pixelref.
     */
-    bool isImmutable() const { return fMutability != kMutable; }
+    bool isImmutable() const {
+        return fMutability != kMutable;
+    }
 
     /** Marks this pixelref is immutable, meaning that the contents of its
         pixels will not change for the lifetime of the pixelref. This state can
@@ -150,7 +167,9 @@ public:
     /** Return the optional URI string associated with this pixelref. May be
         null.
     */
-    const char* getURI() const { return fURI.size() ? fURI.c_str() : NULL; }
+    const char* getURI() const {
+        return fURI.size() ? fURI.c_str() : NULL;
+    }
 
     /** Copy a URI string to this pixelref, or clear the URI if the uri is null
      */
@@ -166,7 +185,9 @@ public:
 
     /** Assign a URI string to this pixelref.
     */
-    void setURI(const SkString& uri) { fURI = uri; }
+    void setURI(const SkString& uri) {
+        fURI = uri;
+    }
 
     /**
      *  If the pixelRef has an encoded (i.e. compressed) representation,
@@ -256,12 +277,16 @@ public:
         fAddedToCache.store(true);
     }
 
-    virtual SkDiscardableMemory* diagnostic_only_getDiscardable() const { return NULL; }
+    virtual SkDiscardableMemory* diagnostic_only_getDiscardable() const {
+        return NULL;
+    }
 
     /**
      *  Returns true if the pixels are generated on-the-fly (when required).
      */
-    bool isLazyGenerated() const { return this->onIsLazyGenerated(); }
+    bool isLazyGenerated() const {
+        return this->onIsLazyGenerated();
+    }
 
 protected:
     /**
@@ -319,12 +344,16 @@ protected:
 
     virtual bool onRequestLock(const LockRequest&, LockResult*);
 
-    virtual bool onIsLazyGenerated() const { return false; }
+    virtual bool onIsLazyGenerated() const {
+        return false;
+    }
 
     /** Return the mutex associated with this pixelref. This value is assigned
         in the constructor, and cannot change during the lifetime of the object.
     */
-    SkBaseMutex* mutex() const { return &fMutex; }
+    SkBaseMutex* mutex() const {
+        return &fMutex;
+    }
 
     // only call from constructor. Flags this to always be locked, removing
     // the need to grab the mutex and call onLockPixels/onUnlockPixels.
@@ -344,7 +373,9 @@ private:
     bool lockPixelsInsideMutex();
 
     // Bottom bit indicates the Gen ID is unique.
-    bool genIDIsUnique() const { return SkToBool(fTaggedGenID.load() & 1); }
+    bool genIDIsUnique() const {
+        return SkToBool(fTaggedGenID.load() & 1);
+    }
     mutable SkAtomic<uint32_t> fTaggedGenID;
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
@@ -374,7 +405,9 @@ private:
     void restoreMutability();
     friend class SkSurface_Raster;   // For the two methods above.
 
-    bool isPreLocked() const { return fPreLocked; }
+    bool isPreLocked() const {
+        return fPreLocked;
+    }
     friend class SkImage_Raster;
     friend class SkSpecialImage_Raster;
 
@@ -391,7 +424,8 @@ private:
     typedef SkRefCnt INHERITED;
 };
 
-class SkPixelRefFactory : public SkRefCnt {
+class SkPixelRefFactory : public SkRefCnt
+{
 public:
     /**
      *  Allocate a new pixelref matching the specified ImageInfo, allocating

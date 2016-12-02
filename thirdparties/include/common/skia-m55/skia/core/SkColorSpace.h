@@ -13,7 +13,8 @@
 
 class SkData;
 
-class SK_API SkColorSpace : public SkRefCnt {
+class SK_API SkColorSpace : public SkRefCnt
+{
 public:
 
     /**

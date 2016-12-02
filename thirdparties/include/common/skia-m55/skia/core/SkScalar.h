@@ -111,11 +111,15 @@ typedef double SkScalar;
 
 #define SK_ScalarMin            (-SK_ScalarMax)
 
-static inline bool SkScalarIsNaN(SkScalar x) { return x != x; }
+static inline bool SkScalarIsNaN(SkScalar x)
+{
+    return x != x;
+}
 
 /** Returns true if x is not NaN and not infinite
  */
-static inline bool SkScalarIsFinite(SkScalar x) {
+static inline bool SkScalarIsFinite(SkScalar x)
+{
     // We rely on the following behavior of infinities and nans
     // 0 * finite --> 0
     // 0 * infinity --> NaN
@@ -125,7 +129,8 @@ static inline bool SkScalarIsFinite(SkScalar x) {
     return !SkScalarIsNaN(prod);
 }
 
-static inline bool SkScalarsAreFinite(SkScalar a, SkScalar b) {
+static inline bool SkScalarsAreFinite(SkScalar a, SkScalar b)
+{
     SkScalar prod = 0;
     prod *= a;
     prod *= b;
@@ -133,7 +138,8 @@ static inline bool SkScalarsAreFinite(SkScalar a, SkScalar b) {
     return !SkScalarIsNaN(prod);
 }
 
-static inline bool SkScalarsAreFinite(const SkScalar array[], int count) {
+static inline bool SkScalarsAreFinite(const SkScalar array[], int count)
+{
     SkScalar prod = 0;
     for (int i = 0; i < count; ++i) {
         prod *= array[i];
@@ -156,30 +162,37 @@ static inline bool SkScalarsAreFinite(const SkScalar array[], int count) {
  *      ix = SkDScalarRoundToInt(x);
  *      SkASSERT(0 == ix);    // <--- succeeds
  */
-static inline int SkDScalarRoundToInt(SkScalar x) {
+static inline int SkDScalarRoundToInt(SkScalar x)
+{
     double xx = x;
     xx += 0.5;
     return (int)floor(xx);
 }
 
 /** Returns the fractional part of the scalar. */
-static inline SkScalar SkScalarFraction(SkScalar x) {
+static inline SkScalar SkScalarFraction(SkScalar x)
+{
     return x - SkScalarTruncToScalar(x);
 }
 
-static inline SkScalar SkScalarClampMax(SkScalar x, SkScalar max) {
+static inline SkScalar SkScalarClampMax(SkScalar x, SkScalar max)
+{
     x = SkTMin(x, max);
     x = SkTMax<SkScalar>(x, 0);
     return x;
 }
 
-static inline SkScalar SkScalarPin(SkScalar x, SkScalar min, SkScalar max) {
+static inline SkScalar SkScalarPin(SkScalar x, SkScalar min, SkScalar max)
+{
     return SkTPin(x, min, max);
 }
 
 SkScalar SkScalarSinCos(SkScalar radians, SkScalar* cosValue);
 
-static inline SkScalar SkScalarSquare(SkScalar x) { return x * x; }
+static inline SkScalar SkScalarSquare(SkScalar x)
+{
+    return x * x;
+}
 
 #define SkScalarMul(a, b)       ((SkScalar)(a) * (b))
 #define SkScalarMulAdd(a, b, c) ((SkScalar)(a) * (b) + (c))
@@ -192,10 +205,17 @@ static inline SkScalar SkScalarSquare(SkScalar x) { return x * x; }
 #define SkDegreesToRadians(degrees) ((degrees) * (SK_ScalarPI / 180))
 #define SkRadiansToDegrees(radians) ((radians) * (180 / SK_ScalarPI))
 
-static inline SkScalar SkMaxScalar(SkScalar a, SkScalar b) { return a > b ? a : b; }
-static inline SkScalar SkMinScalar(SkScalar a, SkScalar b) { return a < b ? a : b; }
+static inline SkScalar SkMaxScalar(SkScalar a, SkScalar b)
+{
+    return a > b ? a : b;
+}
+static inline SkScalar SkMinScalar(SkScalar a, SkScalar b)
+{
+    return a < b ? a : b;
+}
 
-static inline bool SkScalarIsInt(SkScalar x) {
+static inline bool SkScalarIsInt(SkScalar x)
+{
     return x == (SkScalar)(int)x;
 }
 
@@ -205,25 +225,29 @@ static inline bool SkScalarIsInt(SkScalar x) {
  *   0 if x == 0
  *   1 if x > 0
  */
-static inline int SkScalarSignAsInt(SkScalar x) {
+static inline int SkScalarSignAsInt(SkScalar x)
+{
     return x < 0 ? -1 : (x > 0);
 }
 
 // Scalar result version of above
-static inline SkScalar SkScalarSignAsScalar(SkScalar x) {
+static inline SkScalar SkScalarSignAsScalar(SkScalar x)
+{
     return x < 0 ? -SK_Scalar1 : ((x > 0) ? SK_Scalar1 : 0);
 }
 
 #define SK_ScalarNearlyZero         (SK_Scalar1 / (1 << 12))
 
 static inline bool SkScalarNearlyZero(SkScalar x,
-                                      SkScalar tolerance = SK_ScalarNearlyZero) {
+                                      SkScalar tolerance = SK_ScalarNearlyZero)
+{
     SkASSERT(tolerance >= 0);
     return SkScalarAbs(x) <= tolerance;
 }
 
 static inline bool SkScalarNearlyEqual(SkScalar x, SkScalar y,
-                                       SkScalar tolerance = SK_ScalarNearlyZero) {
+                                       SkScalar tolerance = SK_ScalarNearlyZero)
+{
     SkASSERT(tolerance >= 0);
     return SkScalarAbs(x-y) <= tolerance;
 }
@@ -234,7 +258,8 @@ static inline bool SkScalarNearlyEqual(SkScalar x, SkScalar y,
     else interpolate.
     t must be [0..SK_Scalar1]
 */
-static inline SkScalar SkScalarInterp(SkScalar A, SkScalar B, SkScalar t) {
+static inline SkScalar SkScalarInterp(SkScalar A, SkScalar B, SkScalar t)
+{
     SkASSERT(t >= 0 && t <= SK_Scalar1);
     return A + (B - A) * t;
 }
@@ -255,7 +280,8 @@ SkScalar SkScalarInterpFunc(SkScalar searchKey, const SkScalar keys[],
 /*
  *  Helper to compare an array of scalars.
  */
-static inline bool SkScalarsEqual(const SkScalar a[], const SkScalar b[], int n) {
+static inline bool SkScalarsEqual(const SkScalar a[], const SkScalar b[], int n)
+{
     SkASSERT(n >= 0);
     for (int i = 0; i < n; ++i) {
         if (a[i] != b[i]) {

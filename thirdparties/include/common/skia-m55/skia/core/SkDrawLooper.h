@@ -28,7 +28,8 @@ class SkString;
     invoked multiple times (hence the name loop-er), allow it to perform effects
     like shadows or frame/fills, that require more than one pass.
 */
-class SK_API SkDrawLooper : public SkFlattenable {
+class SK_API SkDrawLooper : public SkFlattenable
+{
 public:
     /**
      *  Holds state during a draw. Users call next() until it returns false.
@@ -36,7 +37,8 @@ public:
      *  Subclasses of SkDrawLooper should create a subclass of this object to
      *  hold state specific to their subclass.
      */
-    class SK_API Context : ::SkNoncopyable {
+    class SK_API Context : ::SkNoncopyable
+    {
     public:
         Context() {}
         virtual ~Context() {}

@@ -17,7 +17,8 @@
  * This class aims to provide an interface to test multiple implementations of
  * SkBitmapRegionDecoder.
  */
-class SkBitmapRegionDecoder {
+class SkBitmapRegionDecoder
+{
 public:
 
     enum Strategy {
@@ -37,7 +38,7 @@ public:
      * @return         Tries to create an SkBitmapRegionDecoder, returns NULL on failure
      */
     static SkBitmapRegionDecoder* Create(
-            SkStreamRewindable* stream, Strategy strategy);
+        SkStreamRewindable* stream, Strategy strategy);
 
     /*
      * Decode a scaled region of the encoded image stream
@@ -68,8 +69,12 @@ public:
 
     virtual SkEncodedFormat getEncodedFormat() = 0;
 
-    int width() const { return fWidth; }
-    int height() const { return fHeight; }
+    int width() const {
+        return fWidth;
+    }
+    int height() const {
+        return fHeight;
+    }
 
     virtual ~SkBitmapRegionDecoder() {}
 
@@ -77,8 +82,8 @@ protected:
 
     SkBitmapRegionDecoder(int width, int height)
         : fWidth(width)
-        , fHeight(height)
-    {}
+        , fHeight(height) {
+    }
 
 private:
     const int fWidth;

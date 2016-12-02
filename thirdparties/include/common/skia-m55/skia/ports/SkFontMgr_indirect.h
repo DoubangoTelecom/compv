@@ -23,14 +23,15 @@ class SkFontStyle;
 class SkStreamAsset;
 class SkString;
 
-class SK_API SkFontMgr_Indirect : public SkFontMgr {
+class SK_API SkFontMgr_Indirect : public SkFontMgr
+{
 public:
     // TODO: The SkFontMgr is only used for createFromStream/File/Data.
     // In the future these calls should be broken out into their own interface
     // with a name like SkFontRenderer.
     SkFontMgr_Indirect(SkFontMgr* impl, SkRemotableFontMgr* proxy)
-        : fImpl(SkRef(impl)), fProxy(SkRef(proxy))
-    { }
+        : fImpl(SkRef(impl)), fProxy(SkRef(proxy)) {
+    }
 
 protected:
     int onCountFamilies() const override;
@@ -73,8 +74,7 @@ private:
         DataEntry(DataEntry&& that)
             : fDataId(that.fDataId)
             , fTtcIndex(that.fTtcIndex)
-            , fTypeface(that.fTypeface)
-        {
+            , fTypeface(that.fTypeface) {
             SkDEBUGCODE(that.fDataId = SkFontIdentity::kInvalidDataId;)
             SkDEBUGCODE(that.fTtcIndex = 0xbbadbeef;)
             that.fTypeface = NULL;

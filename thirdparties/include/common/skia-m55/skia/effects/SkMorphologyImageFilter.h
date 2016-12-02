@@ -13,7 +13,8 @@
 #include "SkSize.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-class SK_API SkMorphologyImageFilter : public SkImageFilter {
+class SK_API SkMorphologyImageFilter : public SkImageFilter
+{
 public:
     SkRect computeFastBounds(const SkRect& src) const override;
     SkIRect onFilterNodeBounds(const SkIRect& src, const SkMatrix&, MapDirection) const override;
@@ -44,7 +45,9 @@ protected:
                                         SkIPoint* offset) const override;
     void flatten(SkWriteBuffer&) const override;
 
-    SkISize radius() const { return fRadius; }
+    SkISize radius() const {
+        return fRadius;
+    }
 
 private:
     SkISize  fRadius;
@@ -53,7 +56,8 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-class SK_API SkDilateImageFilter : public SkMorphologyImageFilter {
+class SK_API SkDilateImageFilter : public SkMorphologyImageFilter
+{
 public:
     static sk_sp<SkImageFilter> Make(int radiusX, int radiusY,
                                      sk_sp<SkImageFilter> input,
@@ -73,7 +77,9 @@ public:
 #endif
 
 protected:
-    Op op() const override { return kDilate_Op; }
+    Op op() const override {
+        return kDilate_Op;
+    }
 
 private:
     SkDilateImageFilter(int radiusX, int radiusY,
@@ -85,7 +91,8 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-class SK_API SkErodeImageFilter : public SkMorphologyImageFilter {
+class SK_API SkErodeImageFilter : public SkMorphologyImageFilter
+{
 public:
     static sk_sp<SkImageFilter> Make(int radiusX, int radiusY,
                                      sk_sp<SkImageFilter> input,
@@ -105,7 +112,9 @@ public:
 #endif
 
 protected:
-    Op op() const override { return kErode_Op; }
+    Op op() const override {
+        return kErode_Op;
+    }
 
 private:
     SkErodeImageFilter(int radiusX, int radiusY,

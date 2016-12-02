@@ -21,7 +21,8 @@ class SkFontMgr;
  *  A simple interface for remotable font management.
  *  The global instance can be found with RefGlobal().
  */
-class SK_API SkFontConfigInterface : public SkRefCnt {
+class SK_API SkFontConfigInterface : public SkRefCnt
+{
 public:
 
     /**
@@ -111,7 +112,9 @@ public:
 
     // New APIS, which have default impls for now (which do nothing)
 
-    virtual sk_sp<SkDataTable> getFamilyNames() { return SkDataTable::MakeEmpty(); }
+    virtual sk_sp<SkDataTable> getFamilyNames() {
+        return SkDataTable::MakeEmpty();
+    }
     typedef SkRefCnt INHERITED;
 };
 

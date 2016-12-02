@@ -52,11 +52,11 @@ COMPV_ERROR_CODE TestScale()
         expectedMD5 = IMAGE_BILINEAR_FACTOR300_MD5_STRING;
     }
     if (!expectedMD5.empty()) {
-		COMPV_CHECK_EXP_RETURN(imageMD5(image) != expectedMD5, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+        COMPV_CHECK_EXP_RETURN(imageMD5(image) != expectedMD5, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
     }
     else {
         COMPV_DEBUG_INFO("/!\\ Not checking MD5");
     }
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }

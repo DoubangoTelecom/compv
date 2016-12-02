@@ -21,7 +21,7 @@ void ScaleBilinear_Intrin_SSE41(const uint8_t* inPtr, COMPV_ALIGNED(SSE) uint8_t
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
     COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // C++ code is faster
-	COMPV_DEBUG_INFO_CHECK_SSE41();
+    COMPV_DEBUG_INFO_CHECK_SSE41();
     compv_uscalar_t i, j, y, nearestY, maxI = ((outWidth + 3) & -4), outPad = (outStride - maxI);
     const uint8_t* inPtr_;
     COMPV_ALIGN_SSE() int32_t xmmNearestX[4];
@@ -111,7 +111,7 @@ void ScaleBilinearGrayscale_Intrin_SSE41(const uint8_t* inPtr, uint8_t* outPtr, 
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
     COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // C++ code is faster
-	COMPV_DEBUG_INFO_CHECK_SSE41();
+    COMPV_DEBUG_INFO_CHECK_SSE41();
     compv_uscalar_t i, j;
     __m128i xmm0, xmm1, xmm2, xmm3, xmm4, xmmInStride, xmmFF, xmmNeighb0, xmmNeighb1, xmmNeighb2, xmmNeighb3, xmmZeros;
     const uint8_t* inPtr_;

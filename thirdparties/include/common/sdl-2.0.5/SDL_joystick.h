@@ -71,8 +71,7 @@ typedef struct {
 
 typedef Sint32 SDL_JoystickID;
 
-typedef enum
-{
+typedef enum {
     SDL_JOYSTICK_POWER_UNKNOWN = -1,
     SDL_JOYSTICK_POWER_EMPTY,
     SDL_JOYSTICK_POWER_LOW,
@@ -198,7 +197,7 @@ extern DECLSPEC int SDLCALL SDL_JoystickEventState(int state);
  *  The axis indices start at index 0.
  */
 extern DECLSPEC Sint16 SDLCALL SDL_JoystickGetAxis(SDL_Joystick * joystick,
-                                                   int axis);
+        int axis);
 
 /**
  *  \name Hat positions
@@ -232,7 +231,7 @@ extern DECLSPEC Sint16 SDLCALL SDL_JoystickGetAxis(SDL_Joystick * joystick,
  *           - ::SDL_HAT_LEFTDOWN
  */
 extern DECLSPEC Uint8 SDLCALL SDL_JoystickGetHat(SDL_Joystick * joystick,
-                                                 int hat);
+        int hat);
 
 /**
  *  Get the ball axis change since the last poll.
@@ -242,7 +241,7 @@ extern DECLSPEC Uint8 SDLCALL SDL_JoystickGetHat(SDL_Joystick * joystick,
  *  The ball indices start at index 0.
  */
 extern DECLSPEC int SDLCALL SDL_JoystickGetBall(SDL_Joystick * joystick,
-                                                int ball, int *dx, int *dy);
+        int ball, int *dx, int *dy);
 
 /**
  *  Get the current state of a button on a joystick.
@@ -250,7 +249,7 @@ extern DECLSPEC int SDLCALL SDL_JoystickGetBall(SDL_Joystick * joystick,
  *  The button indices start at index 0.
  */
 extern DECLSPEC Uint8 SDLCALL SDL_JoystickGetButton(SDL_Joystick * joystick,
-                                                    int button);
+        int button);
 
 /**
  *  Close a joystick previously opened with SDL_JoystickOpen().

@@ -12,7 +12,8 @@
 #include "SkPathEffect.h"
 #include "SkMatrix.h"
 
-class SK_API Sk2DPathEffect : public SkPathEffect {
+class SK_API Sk2DPathEffect : public SkPathEffect
+{
 public:
     bool filterPath(SkPath*, const SkPath&, SkStrokeRec*, const SkRect*) const override;
 
@@ -33,7 +34,9 @@ protected:
     */
     virtual void nextSpan(int u, int v, int ucount, SkPath* dst) const;
 
-    const SkMatrix& getMatrix() const { return fMatrix; }
+    const SkMatrix& getMatrix() const {
+        return fMatrix;
+    }
 
     // protected so that subclasses can call this during unflattening
     explicit Sk2DPathEffect(const SkMatrix& mat);
@@ -53,7 +56,8 @@ private:
     typedef SkPathEffect INHERITED;
 };
 
-class SK_API SkLine2DPathEffect : public Sk2DPathEffect {
+class SK_API SkLine2DPathEffect : public Sk2DPathEffect
+{
 public:
     static sk_sp<SkPathEffect> Make(SkScalar width, const SkMatrix& matrix) {
         return sk_sp<SkPathEffect>(new SkLine2DPathEffect(width, matrix));
@@ -78,7 +82,8 @@ private:
     typedef Sk2DPathEffect INHERITED;
 };
 
-class SK_API SkPath2DPathEffect : public Sk2DPathEffect {
+class SK_API SkPath2DPathEffect : public Sk2DPathEffect
+{
 public:
     /**
      *  Stamp the specified path to fill the shape, using the matrix to define

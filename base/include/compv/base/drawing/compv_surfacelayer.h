@@ -20,18 +20,20 @@ COMPV_OBJECT_DECLARE_PTRS(SurfaceLayer)
 class COMPV_BASE_API CompVSurfaceLayer : public CompVObj
 {
 protected:
-	CompVSurfaceLayer();
+    CompVSurfaceLayer();
 public:
-	virtual ~CompVSurfaceLayer();
-	COMPV_INLINE compv_surfacelayer_id_t id()const { return m_nId; }
+    virtual ~CompVSurfaceLayer();
+    COMPV_INLINE compv_surfacelayer_id_t id()const {
+        return m_nId;
+    }
 
-	virtual COMPV_ERROR_CODE blit() = 0;
+    virtual COMPV_ERROR_CODE blit() = 0;
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	static compv_surfacelayer_id_t s_nSurfaceLayerId;
-	compv_surfacelayer_id_t m_nId;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    static compv_surfacelayer_id_t s_nSurfaceLayerId;
+    compv_surfacelayer_id_t m_nId;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

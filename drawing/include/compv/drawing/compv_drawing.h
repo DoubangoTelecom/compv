@@ -18,57 +18,61 @@ COMPV_NAMESPACE_BEGIN()
 
 #if COMPV_OS_ANDROID
 struct CompVDrawingAndroidSavedState {
-	float angle;
-	int32_t x;
-	int32_t y;
+    float angle;
+    int32_t x;
+    int32_t y;
 };
 struct CompVDrawingAndroidEngine {
-	bool animating;
-	struct android_app* app;
-	int32_t width;
-	int32_t height;
-	CompVDrawingAndroidSavedState state;
-	struct {
-		void *(COMPV_STDCALL *run_fun) (void *);
-		void* user_data;
-	} worker_thread;
+    bool animating;
+    struct android_app* app;
+    int32_t width;
+    int32_t height;
+    CompVDrawingAndroidSavedState state;
+    struct {
+        void *(COMPV_STDCALL *run_fun) (void *);
+        void* user_data;
+    } worker_thread;
 };
 #endif /* COMPV_OS_ANDROID */
 
 class COMPV_DRAWING_API CompVDrawing : public CompVObj
 {
-	friend class CompVWindow;
+    friend class CompVWindow;
 protected:
-	CompVDrawing();
+    CompVDrawing();
 public:
-	virtual ~CompVDrawing();
-	static COMPV_ERROR_CODE init();
-	static COMPV_ERROR_CODE deInit();
-	static COMPV_INLINE bool isInitialized() { return s_bInitialized; }
-	static COMPV_INLINE bool isLoopRunning() { return s_bLoopRunning; }
-	static COMPV_ERROR_CODE runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) = NULL, void *userData = NULL);
-	static COMPV_ERROR_CODE breakLoop();
+    virtual ~CompVDrawing();
+    static COMPV_ERROR_CODE init();
+    static COMPV_ERROR_CODE deInit();
+    static COMPV_INLINE bool isInitialized() {
+        return s_bInitialized;
+    }
+    static COMPV_INLINE bool isLoopRunning() {
+        return s_bLoopRunning;
+    }
+    static COMPV_ERROR_CODE runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) = NULL, void *userData = NULL);
+    static COMPV_ERROR_CODE breakLoop();
 
 private:
 #if defined(HAVE_SDL_H)
-	static COMPV_ERROR_CODE sdl_runLoop();
+    static COMPV_ERROR_CODE sdl_runLoop();
 #endif
 #if COMPV_OS_ANDROID
-	static int32_t android_engine_handle_input(struct android_app* app, AInputEvent* event);
-	static void android_engine_handle_cmd(struct android_app* app, int32_t cmd);
-	static COMPV_ERROR_CODE android_runLoop(struct android_app* state);
+    static int32_t android_engine_handle_input(struct android_app* app, AInputEvent* event);
+    static void android_engine_handle_cmd(struct android_app* app, int32_t cmd);
+    static COMPV_ERROR_CODE android_runLoop(struct android_app* state);
 #endif
 
 private:
-	static bool s_bInitialized;
-	static bool s_bLoopRunning;
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	static CompVThreadPtr s_WorkerThread;
+    static bool s_bInitialized;
+    static bool s_bLoopRunning;
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    static CompVThreadPtr s_WorkerThread;
 #if COMPV_OS_ANDROID
-	static CompVDrawingAndroidEngine s_AndroidEngine;
+    static CompVDrawingAndroidEngine s_AndroidEngine;
 #endif /* COMPV_OS_ANDROID */
 
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

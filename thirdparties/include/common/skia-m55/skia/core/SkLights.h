@@ -17,9 +17,11 @@ class SkReadBuffer;
 class SkWriteBuffer;
 class SkImage;
 
-class SK_API SkLights  : public SkRefCnt {
+class SK_API SkLights  : public SkRefCnt
+{
 public:
-    class Light {
+    class Light
+    {
     public:
         enum LightType {
             kDirectional_LightType,
@@ -58,8 +60,12 @@ public:
             return Light(kPoint_LightType, color, pos, intensity, isRadial);
         }
 
-        LightType type() const { return fType; }
-        const SkColor3f& color() const { return fColor; }
+        LightType type() const {
+            return fType;
+        }
+        const SkColor3f& color() const {
+            return fColor;
+        }
         const SkVector3& dir() const {
             SkASSERT(kDirectional_LightType == fType);
             return fDirOrPos;
@@ -81,7 +87,9 @@ public:
             return fShadowMap.get();
         }
 
-        bool isRadial() const { return fIsRadial; }
+        bool isRadial() const {
+            return fIsRadial;
+        }
 
         Light& operator= (const Light& b) {
             if (this == &b) {
@@ -110,22 +118,24 @@ public:
                    (fIsRadial  == b.fIsRadial);
         }
 
-        bool operator!= (const Light& b) { return !(this->operator==(b)); }
+        bool operator!= (const Light& b) {
+            return !(this->operator==(b));
+        }
 
     private:
         LightType   fType;
         SkColor3f   fColor;           // linear (unpremul) color. Range is 0..1 in each channel.
 
         SkVector3   fDirOrPos;        // For directional lights, holds the direction towards the
-                                      // light (+Z is out of the screen).
-                                      // If degenerate, it will be replaced with (0, 0, 1).
-                                      // For point lights, holds location of point light
+        // light (+Z is out of the screen).
+        // If degenerate, it will be replaced with (0, 0, 1).
+        // For point lights, holds location of point light
 
         SkScalar    fIntensity;       // For point lights, dictates the light intensity.
-                                      // Simply a multiplier to the final light output value.
+        // Simply a multiplier to the final light output value.
         sk_sp<SkImage> fShadowMap;
         bool        fIsRadial;        // Whether the light is radial or not. Radial lights will
-                                      // cast shadows and lights radially outwards.
+        // cast shadows and lights radially outwards.
 
         Light(LightType type, const SkColor3f& color, const SkVector3& dirOrPos,
               SkScalar intensity = 0.0f, bool isRadial = false) {
@@ -137,7 +147,8 @@ public:
         }
     };
 
-    class Builder {
+    class Builder
+    {
     public:
         Builder() : fLights(new SkLights) {}
 

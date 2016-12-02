@@ -21,14 +21,15 @@ class SkBitmap;
     effects such as sharpening, blurring, edge detection, etc.
  */
 
-class SK_API SkMatrixConvolutionImageFilter : public SkImageFilter {
+class SK_API SkMatrixConvolutionImageFilter : public SkImageFilter
+{
 public:
     /*! \enum TileMode */
     enum TileMode {
-      kClamp_TileMode = 0,         /*!< Clamp to the image's edge pixels. */
-      kRepeat_TileMode,        /*!< Wrap around to the image's opposite edge. */
-      kClampToBlack_TileMode,  /*!< Fill with transparent black. */
-      kMax_TileMode = kClampToBlack_TileMode
+        kClamp_TileMode = 0,         /*!< Clamp to the image's edge pixels. */
+        kRepeat_TileMode,        /*!< Wrap around to the image's opposite edge. */
+        kClampToBlack_TileMode,  /*!< Fill with transparent black. */
+        kMax_TileMode = kClampToBlack_TileMode
     };
 
     ~SkMatrixConvolutionImageFilter() override;

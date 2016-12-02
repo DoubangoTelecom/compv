@@ -12,7 +12,8 @@
 
 class SkColorFilter;
 
-class SK_API SkColorFilterImageFilter : public SkImageFilter {
+class SK_API SkColorFilterImageFilter : public SkImageFilter
+{
 public:
     static sk_sp<SkImageFilter> Make(sk_sp<SkColorFilter> cf,
                                      sk_sp<SkImageFilter> input,
@@ -36,7 +37,9 @@ protected:
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
                                         SkIPoint* offset) const override;
     bool onIsColorFilterNode(SkColorFilter**) const override;
-    bool onCanHandleComplexCTM() const override { return true; }
+    bool onCanHandleComplexCTM() const override {
+        return true;
+    }
     bool affectsTransparentBlack() const override;
 
 private:

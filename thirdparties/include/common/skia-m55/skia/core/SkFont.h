@@ -70,7 +70,8 @@ enum SkTextEncoding {
 
  */
 
-class SkFont : public SkRefCnt {
+class SkFont : public SkRefCnt
+{
 public:
     enum Flags {
         /**
@@ -131,19 +132,43 @@ public:
      */
     sk_sp<SkFont> makeWithFlags(uint32_t newFlags) const;
 
-    SkTypeface* getTypeface() const { return fTypeface.get(); }
-    SkScalar    getSize() const { return fSize; }
-    SkScalar    getScaleX() const { return fScaleX; }
-    SkScalar    getSkewX() const { return fSkewX; }
-    uint32_t    getFlags() const { return fFlags; }
-    MaskType    getMaskType() const { return (MaskType)fMaskType; }
+    SkTypeface* getTypeface() const {
+        return fTypeface.get();
+    }
+    SkScalar    getSize() const {
+        return fSize;
+    }
+    SkScalar    getScaleX() const {
+        return fScaleX;
+    }
+    SkScalar    getSkewX() const {
+        return fSkewX;
+    }
+    uint32_t    getFlags() const {
+        return fFlags;
+    }
+    MaskType    getMaskType() const {
+        return (MaskType)fMaskType;
+    }
 
-    bool isVertical() const { return SkToBool(fFlags & kVertical_Flag); }
-    bool isEmbolden() const { return SkToBool(fFlags & kEmbolden_Flag); }
-    bool isEnableAutoHints() const { return SkToBool(fFlags & kEnableAutoHints_Flag); }
-    bool isEnableByteCodeHints() const { return SkToBool(fFlags & kEnableByteCodeHints_Flag); }
-    bool isUseNonLinearMetrics() const { return SkToBool(fFlags & kUseNonlinearMetrics_Flag); }
-    bool isDevKern() const { return SkToBool(fFlags & kDevKern_Flag); }
+    bool isVertical() const {
+        return SkToBool(fFlags & kVertical_Flag);
+    }
+    bool isEmbolden() const {
+        return SkToBool(fFlags & kEmbolden_Flag);
+    }
+    bool isEnableAutoHints() const {
+        return SkToBool(fFlags & kEnableAutoHints_Flag);
+    }
+    bool isEnableByteCodeHints() const {
+        return SkToBool(fFlags & kEnableByteCodeHints_Flag);
+    }
+    bool isUseNonLinearMetrics() const {
+        return SkToBool(fFlags & kUseNonlinearMetrics_Flag);
+    }
+    bool isDevKern() const {
+        return SkToBool(fFlags & kDevKern_Flag);
+    }
 
     int textToGlyphs(const void* text, size_t byteLength, SkTextEncoding,
                      SkGlyphID glyphs[], int maxGlyphCount) const;

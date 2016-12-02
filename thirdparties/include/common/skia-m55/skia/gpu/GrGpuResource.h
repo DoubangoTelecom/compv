@@ -43,7 +43,8 @@ class SkTraceMemoryDump;
  * GrIORef and GrGpuResource are separate classes for organizational reasons and to be
  * able to give access via friendship to only the functions related to pending IO operations.
  */
-template <typename DERIVED> class GrIORef : public SkNoncopyable {
+template <typename DERIVED> class GrIORef : public SkNoncopyable
+{
 public:
     // Some of the signatures are written to mirror SkRefCnt so that GrGpuResource can work with
     // templated helper classes (e.g. SkAutoTUnref). However, we have different categories of
@@ -84,13 +85,23 @@ protected:
         kPendingWrite_CntType,
     };
 
-    bool isPurgeable() const { return !this->internalHasRef() && !this->internalHasPendingIO(); }
+    bool isPurgeable() const {
+        return !this->internalHasRef() && !this->internalHasPendingIO();
+    }
 
-    bool internalHasPendingRead() const { return SkToBool(fPendingReads); }
-    bool internalHasPendingWrite() const { return SkToBool(fPendingWrites); }
-    bool internalHasPendingIO() const { return SkToBool(fPendingWrites | fPendingReads); }
+    bool internalHasPendingRead() const {
+        return SkToBool(fPendingReads);
+    }
+    bool internalHasPendingWrite() const {
+        return SkToBool(fPendingWrites);
+    }
+    bool internalHasPendingIO() const {
+        return SkToBool(fPendingWrites | fPendingReads);
+    }
 
-    bool internalHasRef() const { return SkToBool(fRefCnt); }
+    bool internalHasRef() const {
+        return SkToBool(fRefCnt);
+    }
 
 private:
     void addPendingRead() const {
@@ -136,7 +147,8 @@ private:
 /**
  * Base class for objects that can be kept in the GrResourceCache.
  */
-class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
+class SK_API GrGpuResource : public GrIORef<GrGpuResource>
+{
 public:
 
     /**
@@ -149,7 +161,9 @@ public:
      * @return true if the object has been released or abandoned,
      *         false otherwise.
      */
-    bool wasDestroyed() const { return NULL == fGpu; }
+    bool wasDestroyed() const {
+        return NULL == fGpu;
+    }
 
     /**
      * Retrieves the context that owns the object. Note that it is possible for
@@ -180,11 +194,15 @@ public:
      * not change when the content of the GrGpuResource object changes. This will never return
      * 0.
      */
-    uint32_t uniqueID() const { return fUniqueID; }
+    uint32_t uniqueID() const {
+        return fUniqueID;
+    }
 
     /** Returns the current unique key for the resource. It will be invalid if the resource has no
         associated unique key. */
-    const GrUniqueKey& getUniqueKey() const { return fUniqueKey; }
+    const GrUniqueKey& getUniqueKey() const {
+        return fUniqueKey;
+    }
 
     /**
      * Internal-only helper class used for manipulations of the resource by the cache.
@@ -232,7 +250,9 @@ protected:
     GrGpuResource(GrGpu*);
     virtual ~GrGpuResource();
 
-    GrGpu* getGpu() const { return fGpu; }
+    GrGpu* getGpu() const {
+        return fGpu;
+    }
 
     /** Overridden to free GPU resources in the backend API. */
     virtual void onRelease() { }

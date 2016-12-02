@@ -14,7 +14,8 @@
 
 class GrProcOptInfo;
 
-class GrPorterDuffXPFactory : public GrXPFactory {
+class GrPorterDuffXPFactory : public GrXPFactory
+{
 public:
     static sk_sp<GrXPFactory> Make(SkXfermode::Mode mode);
     static sk_sp<GrXPFactory> Make(SkBlendMode mode) {
@@ -28,18 +29,18 @@ public:
     /** Because src-over is so common we special case it for performance reasons. If this returns
         null then the SimpleSrcOverXP() below should be used. */
     static GrXferProcessor* CreateSrcOverXferProcessor(const GrCaps& caps,
-                                                       const GrPipelineOptimizations& optimizations,
-                                                       bool hasMixedSamples,
-                                                       const GrXferProcessor::DstTexture*);
+            const GrPipelineOptimizations& optimizations,
+            bool hasMixedSamples,
+            const GrXferProcessor::DstTexture*);
     /** This XP implements non-LCD src-over using hw blend with no optimizations. It is returned
         by reference because it is global and its ref-cnting methods are not thread safe. */
     static const GrXferProcessor& SimpleSrcOverXP();
 
     static inline void SrcOverInvariantBlendedColor(
-                                                GrColor inputColor,
-                                                GrColorComponentFlags validColorFlags,
-                                                bool isOpaque,
-                                                GrXPFactory::InvariantBlendedColor* blendedColor) {
+        GrColor inputColor,
+        GrColorComponentFlags validColorFlags,
+        bool isOpaque,
+        GrXPFactory::InvariantBlendedColor* blendedColor) {
         if (!isOpaque) {
             blendedColor->fWillBlendWithDst = true;
             blendedColor->fKnownColorFlags = kNone_GrColorComponentFlags;

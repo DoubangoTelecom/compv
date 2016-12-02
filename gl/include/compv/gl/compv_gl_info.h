@@ -22,26 +22,26 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_GL_API CompVGLInfo
 {
 public:
-	struct COMPV_GL_API extensions {
-		friend class CompVGLInfo;
-	public:
-		static bool vertex_array_object() {
-			return s_bvertex_array_object;
-		}
-		static bool texture_float() {
-			return s_btexture_float;
-		}
-	private:
-		static bool s_bvertex_array_object;
-		static bool s_btexture_float;
-	};
-	static COMPV_ERROR_CODE gather();
+    struct COMPV_GL_API extensions {
+        friend class CompVGLInfo;
+    public:
+        static bool vertex_array_object() {
+            return s_bvertex_array_object;
+        }
+        static bool texture_float() {
+            return s_btexture_float;
+        }
+    private:
+        static bool s_bvertex_array_object;
+        static bool s_btexture_float;
+    };
+    static COMPV_ERROR_CODE gather();
 private:
-	static bool s_bGathered;
-	static GLint s_iVersionMajor;
-	static GLint s_iVersionMinor;
-	static GLint s_iMaxColorAttachments;
-	static GLint s_iMaxDrawBuffers;
+    static bool s_bGathered;
+    static GLint s_iVersionMajor;
+    static GLint s_iVersionMinor;
+    static GLint s_iMaxColorAttachments;
+    static GLint s_iMaxDrawBuffers;
 };
 
 COMPV_NAMESPACE_END()

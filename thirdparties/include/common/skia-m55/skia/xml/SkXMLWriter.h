@@ -15,9 +15,10 @@
 class SkWStream;
 class SkXMLParser;
 
-class SkXMLWriter {
+class SkXMLWriter
+{
 public:
-            SkXMLWriter(bool doEscapeMarkup = true);
+    SkXMLWriter(bool doEscapeMarkup = true);
     virtual ~SkXMLWriter();
 
     void    addS32Attribute(const char name[], int32_t value);
@@ -26,7 +27,9 @@ public:
     void    addHexAttribute(const char name[], uint32_t value, int minDigits = 0);
     void    addScalarAttribute(const char name[], SkScalar value);
     void    addText(const char text[], size_t length);
-    void    endElement() { this->onEndElement(); }
+    void    endElement() {
+        this->onEndElement();
+    }
     void    startElement(const char elem[]);
     void    startElementLen(const char elem[], size_t length);
     void    writeDOM(const SkDOM&, const SkDOM::Node*, bool skipRoot);
@@ -61,7 +64,8 @@ private:
     SkXMLWriter& operator=(const SkXMLWriter&);
 };
 
-class SkXMLStreamWriter : public SkXMLWriter {
+class SkXMLStreamWriter : public SkXMLWriter
+{
 public:
     SkXMLStreamWriter(SkWStream*);
     virtual ~SkXMLStreamWriter();
@@ -78,7 +82,8 @@ private:
     SkWStream&      fStream;
 };
 
-class SkXMLParserWriter : public SkXMLWriter {
+class SkXMLParserWriter : public SkXMLWriter
+{
 public:
     SkXMLParserWriter(SkXMLParser*);
     virtual ~SkXMLParserWriter();

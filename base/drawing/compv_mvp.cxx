@@ -54,7 +54,7 @@ CompVView::~CompVView()
 //	CompVProj
 //
 CompVProj::CompVProj(COMPV_PROJECTION eType)
-	: m_eType(eType)
+    : m_eType(eType)
 {
 
 }
@@ -68,7 +68,7 @@ CompVProj::~CompVProj()
 //
 
 CompVProj2D::CompVProj2D()
-	: CompVProj(COMPV_PROJECTION_2D)
+    : CompVProj(COMPV_PROJECTION_2D)
 {
 
 }
@@ -84,7 +84,7 @@ CompVProj2D::~CompVProj2D()
 //
 
 CompVProj3D::CompVProj3D()
-	: CompVProj(COMPV_PROJECTION_3D)
+    : CompVProj(COMPV_PROJECTION_3D)
 {
 
 }

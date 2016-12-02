@@ -56,7 +56,9 @@ struct GrVkImageInfo {
     // This gives a way for a client to update the layout of the Image if they change the layout
     // while we're still holding onto the wrapped texture. They will first need to get a handle
     // to our internal GrVkImageInfo by calling getTextureHandle on a GrVkTexture.
-    void updateImageLayout(VkImageLayout layout) { fImageLayout = layout; }
+    void updateImageLayout(VkImageLayout layout) {
+        fImageLayout = layout;
+    }
 };
 
 GR_STATIC_ASSERT(sizeof(GrBackendObject) >= sizeof(const GrVkImageInfo*));

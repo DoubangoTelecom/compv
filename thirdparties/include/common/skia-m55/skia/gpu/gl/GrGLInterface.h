@@ -62,9 +62,9 @@ const GrGLInterface* GrGLInterfaceRemoveNVPR(const GrGLInterface*);
 /** Function that returns a new interface identical to "interface" but with support for
     test version of GL_EXT_debug_marker. */
 const GrGLInterface* GrGLInterfaceAddTestDebugMarker(const GrGLInterface*,
-                                                     GrGLInsertEventMarkerProc insertEventMarkerFn,
-                                                     GrGLPushGroupMarkerProc pushGroupMarkerFn,
-                                                     GrGLPopGroupMarkerProc popGroupMarkerFn);
+        GrGLInsertEventMarkerProc insertEventMarkerFn,
+        GrGLPushGroupMarkerProc pushGroupMarkerFn,
+        GrGLPopGroupMarkerProc popGroupMarkerFn);
 
 /**
  * GrContext uses the following interface to make all calls into OpenGL. When a
@@ -99,7 +99,9 @@ public:
 
     GrGLExtensions fExtensions;
 
-    bool hasExtension(const char ext[]) const { return fExtensions.has(ext); }
+    bool hasExtension(const char ext[]) const {
+        return fExtensions.has(ext);
+    }
 
     /**
      * The function pointers are in a struct so that we can have a compiler generated assignment

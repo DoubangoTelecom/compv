@@ -19,14 +19,14 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 void TransformHomogeneousToCartesian2D_4_64f_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* srcX, const COMPV_ALIGNED(AVX) compv_float64_t* srcY, const COMPV_ALIGNED(AVX) compv_float64_t* srcZ, COMPV_ALIGNED(AVX) compv_float64_t* dstX, COMPV_ALIGNED(AVX) compv_float64_t* dstY, compv_uscalar_t numPoints)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
-	COMPV_DEBUG_INFO_CHECK_AVX();
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
+    COMPV_DEBUG_INFO_CHECK_AVX();
 
-	_mm256_zeroupper();
-	__m256d ymm0 = _mm256_div_pd(_mm256_load_pd(k1_f64), _mm256_load_pd(&srcZ[0]));
-	_mm256_store_pd(dstX, _mm256_mul_pd(_mm256_load_pd(srcX), ymm0));
-	_mm256_store_pd(dstY, _mm256_mul_pd(_mm256_load_pd(srcY), ymm0));
-	_mm256_zeroupper();
+    _mm256_zeroupper();
+    __m256d ymm0 = _mm256_div_pd(_mm256_load_pd(k1_f64), _mm256_load_pd(&srcZ[0]));
+    _mm256_store_pd(dstX, _mm256_mul_pd(_mm256_load_pd(srcX), ymm0));
+    _mm256_store_pd(dstY, _mm256_mul_pd(_mm256_load_pd(srcY), ymm0));
+    _mm256_zeroupper();
 }
 
 COMPV_NAMESPACE_END()

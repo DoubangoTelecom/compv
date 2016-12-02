@@ -22,7 +22,8 @@
 
     SkColorTable is thread-safe.
 */
-class SK_API SkColorTable : public SkRefCnt {
+class SK_API SkColorTable : public SkRefCnt
+{
 public:
     /** Copy up to 256 colors into a new SkColorTable.
      */
@@ -31,7 +32,9 @@ public:
 
     /** Returns the number of colors in the table.
      */
-    int count() const { return fCount; }
+    int count() const {
+        return fCount;
+    }
 
     /** Returns the specified color from the table. In the debug build, this asserts that
      *  the index is in range (0 <= index < count).
@@ -43,7 +46,9 @@ public:
 
     /** Return the array of colors for reading.
      */
-    const SkPMColor* readColors() const { return fColors; }
+    const SkPMColor* readColors() const {
+        return fColors;
+    }
 
     /** read16BitCache() returns the array of RGB16 colors that mirror the 32bit colors.
      */

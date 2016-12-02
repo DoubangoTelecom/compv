@@ -99,8 +99,7 @@ enum
 /**
  *  \brief The predefined log priorities
  */
-typedef enum
-{
+typedef enum {
     SDL_LOG_PRIORITY_VERBOSE = 1,
     SDL_LOG_PRIORITY_DEBUG,
     SDL_LOG_PRIORITY_INFO,
@@ -120,7 +119,7 @@ extern DECLSPEC void SDLCALL SDL_LogSetAllPriority(SDL_LogPriority priority);
  *  \brief Set the priority of a particular log category
  */
 extern DECLSPEC void SDLCALL SDL_LogSetPriority(int category,
-                                                SDL_LogPriority priority);
+        SDL_LogPriority priority);
 
 /**
  *  \brief Get the priority of a particular log category
@@ -173,15 +172,15 @@ extern DECLSPEC void SDLCALL SDL_LogCritical(int category, SDL_PRINTF_FORMAT_STR
  *  \brief Log a message with the specified category and priority.
  */
 extern DECLSPEC void SDLCALL SDL_LogMessage(int category,
-                                            SDL_LogPriority priority,
-                                            SDL_PRINTF_FORMAT_STRING const char *fmt, ...) SDL_PRINTF_VARARG_FUNC(3);
+        SDL_LogPriority priority,
+        SDL_PRINTF_FORMAT_STRING const char *fmt, ...) SDL_PRINTF_VARARG_FUNC(3);
 
 /**
  *  \brief Log a message with the specified category and priority.
  */
 extern DECLSPEC void SDLCALL SDL_LogMessageV(int category,
-                                             SDL_LogPriority priority,
-                                             const char *fmt, va_list ap);
+        SDL_LogPriority priority,
+        const char *fmt, va_list ap);
 
 /**
  *  \brief The prototype for the log output function

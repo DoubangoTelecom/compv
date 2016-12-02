@@ -25,7 +25,7 @@
 
 // hack to ensure we know what sort of Apple platform we're on
 #if defined(__APPLE_CPP__) || defined(__APPLE_CC__)
-    #include <TargetConditionals.h>
+#include <TargetConditionals.h>
 #endif
 
 /**
@@ -33,19 +33,19 @@
  */
 
 #if !defined(GR_CACHE_STATS)
-  #if defined(SK_DEBUG) || defined(SK_DUMP_STATS)
-      #define GR_CACHE_STATS  1
-  #else
-      #define GR_CACHE_STATS  0
-  #endif
+#if defined(SK_DEBUG) || defined(SK_DUMP_STATS)
+#define GR_CACHE_STATS  1
+#else
+#define GR_CACHE_STATS  0
+#endif
 #endif
 
 #if !defined(GR_GPU_STATS)
-  #if defined(SK_DEBUG) || defined(SK_DUMP_STATS)
-      #define GR_GPU_STATS    1
-  #else
-      #define GR_GPU_STATS    0
-  #endif
+#if defined(SK_DEBUG) || defined(SK_DUMP_STATS)
+#define GR_GPU_STATS    1
+#else
+#define GR_GPU_STATS    0
+#endif
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -107,41 +107,41 @@ typedef unsigned __int64 uint64_t;
  *  To insert compiler warnings use "#pragma message GR_WARN(<string>)"
  */
 #if defined(_MSC_VER)
-    #define GR_WARN(MSG) (GR_FILE_AND_LINE_STR "WARNING: " MSG)
+#define GR_WARN(MSG) (GR_FILE_AND_LINE_STR "WARNING: " MSG)
 #else//__GNUC__ - may need other defines for different compilers
-    #define GR_WARN(MSG) ("WARNING: " MSG)
+#define GR_WARN(MSG) ("WARNING: " MSG)
 #endif
 
 /**
  *  GR_ALWAYSBREAK is an unconditional break in all builds.
  */
 #if !defined(GR_ALWAYSBREAK)
-    #if     defined(SK_BUILD_FOR_WIN32)
-        #define GR_ALWAYSBREAK SkNO_RETURN_HINT(); __debugbreak()
-    #else
-        // TODO: do other platforms really not have continuable breakpoints?
-        // sign extend for 64bit architectures to be sure this is
-        // in the high address range
-        #define GR_ALWAYSBREAK SkNO_RETURN_HINT(); *((int*)(int64_t)(int32_t)0xbeefcafe) = 0;
-    #endif
+#if     defined(SK_BUILD_FOR_WIN32)
+#define GR_ALWAYSBREAK SkNO_RETURN_HINT(); __debugbreak()
+#else
+// TODO: do other platforms really not have continuable breakpoints?
+// sign extend for 64bit architectures to be sure this is
+// in the high address range
+#define GR_ALWAYSBREAK SkNO_RETURN_HINT(); *((int*)(int64_t)(int32_t)0xbeefcafe) = 0;
+#endif
 #endif
 
 /**
  *  GR_DEBUGBREAK is an unconditional break in debug builds.
  */
 #if !defined(GR_DEBUGBREAK)
-    #ifdef SK_DEBUG
-        #define GR_DEBUGBREAK GR_ALWAYSBREAK
-    #else
-        #define GR_DEBUGBREAK
-    #endif
+#ifdef SK_DEBUG
+#define GR_DEBUGBREAK GR_ALWAYSBREAK
+#else
+#define GR_DEBUGBREAK
+#endif
 #endif
 
 /**
  *  GR_ALWAYSASSERT is an assertion in all builds.
  */
 #if !defined(GR_ALWAYSASSERT)
-    #define GR_ALWAYSASSERT(COND)                                        \
+#define GR_ALWAYSASSERT(COND)                                        \
         do {                                                             \
             if (!(COND)) {                                               \
                 SkDebugf("%s %s failed\n", GR_FILE_AND_LINE_STR, #COND); \
@@ -154,11 +154,11 @@ typedef unsigned __int64 uint64_t;
  *  GR_DEBUGASSERT is an assertion in debug builds only.
  */
 #if !defined(GR_DEBUGASSERT)
-    #ifdef SK_DEBUG
-        #define GR_DEBUGASSERT(COND) GR_ALWAYSASSERT(COND)
-    #else
-        #define GR_DEBUGASSERT(COND)
-    #endif
+#ifdef SK_DEBUG
+#define GR_DEBUGASSERT(COND) GR_ALWAYSASSERT(COND)
+#else
+#define GR_DEBUGASSERT(COND)
+#endif
 #endif
 
 /**
@@ -177,7 +177,7 @@ typedef unsigned __int64 uint64_t;
  * Set to 1 to enable pixel local storage path rendering on supported devices.
  */
 #if !defined(GR_ENABLE_PLS_PATH_RENDERING)
-    #define GR_ENABLE_PLS_PATH_RENDERING 0
+#define GR_ENABLE_PLS_PATH_RENDERING 0
 #endif
 
 #endif

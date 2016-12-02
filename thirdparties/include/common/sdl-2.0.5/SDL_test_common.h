@@ -48,8 +48,7 @@
 #define VERBOSE_EVENT   0x00000008
 #define VERBOSE_AUDIO   0x00000010
 
-typedef struct
-{
+typedef struct {
     /* SDL init flags */
     char **argv;
     Uint32 flags;

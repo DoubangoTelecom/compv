@@ -18,17 +18,17 @@ COMPV_OBJECT_DECLARE_PTRS(MultiSurfaceLayer)
 class COMPV_BASE_API CompVMultiSurfaceLayer : public CompVSurfaceLayer
 {
 protected:
-	CompVMultiSurfaceLayer();
+    CompVMultiSurfaceLayer();
 public:
-	virtual ~CompVMultiSurfaceLayer();
+    virtual ~CompVMultiSurfaceLayer();
 
-	virtual COMPV_ERROR_CODE addSurface(CompVSurfacePtrPtr surface, size_t width, size_t height) = 0;
-	virtual COMPV_ERROR_CODE removeSurface(const CompVSurfacePtr surface) = 0;
+    virtual COMPV_ERROR_CODE addSurface(CompVSurfacePtrPtr surface, size_t width, size_t height) = 0;
+    virtual COMPV_ERROR_CODE removeSurface(const CompVSurfacePtr surface) = 0;
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

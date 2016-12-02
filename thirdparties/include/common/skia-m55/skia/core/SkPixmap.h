@@ -20,19 +20,20 @@ struct SkMask;
  *  Pairs SkImageInfo with actual pixels and rowbytes. This class does not try to manage the
  *  lifetime of the pixel memory (nor the colortable if provided).
  */
-class SK_API SkPixmap {
+class SK_API SkPixmap
+{
 public:
     SkPixmap()
-        : fPixels(NULL), fCTable(NULL), fRowBytes(0), fInfo(SkImageInfo::MakeUnknown(0, 0))
-    {}
+        : fPixels(NULL), fCTable(NULL), fRowBytes(0), fInfo(SkImageInfo::MakeUnknown(0, 0)) {
+    }
 
     SkPixmap(const SkImageInfo& info, const void* addr, size_t rowBytes,
              SkColorTable* ctable = NULL)
-        : fPixels(addr), fCTable(ctable), fRowBytes(rowBytes), fInfo(info)
-    {
+        : fPixels(addr), fCTable(ctable), fRowBytes(rowBytes), fInfo(info) {
         if (kIndex_8_SkColorType == info.colorType()) {
             SkASSERT(ctable);
-        } else {
+        }
+        else {
             SkASSERT(NULL == ctable);
         }
     }
@@ -61,33 +62,63 @@ public:
      */
     bool SK_WARN_UNUSED_RESULT extractSubset(SkPixmap* subset, const SkIRect& area) const;
 
-    const SkImageInfo& info() const { return fInfo; }
-    size_t rowBytes() const { return fRowBytes; }
-    const void* addr() const { return fPixels; }
-    SkColorTable* ctable() const { return fCTable; }
+    const SkImageInfo& info() const {
+        return fInfo;
+    }
+    size_t rowBytes() const {
+        return fRowBytes;
+    }
+    const void* addr() const {
+        return fPixels;
+    }
+    SkColorTable* ctable() const {
+        return fCTable;
+    }
 
-    int width() const { return fInfo.width(); }
-    int height() const { return fInfo.height(); }
-    SkColorType colorType() const { return fInfo.colorType(); }
-    SkAlphaType alphaType() const { return fInfo.alphaType(); }
-    bool isOpaque() const { return fInfo.isOpaque(); }
+    int width() const {
+        return fInfo.width();
+    }
+    int height() const {
+        return fInfo.height();
+    }
+    SkColorType colorType() const {
+        return fInfo.colorType();
+    }
+    SkAlphaType alphaType() const {
+        return fInfo.alphaType();
+    }
+    bool isOpaque() const {
+        return fInfo.isOpaque();
+    }
 
-    SkIRect bounds() const { return SkIRect::MakeWH(this->width(), this->height()); }
+    SkIRect bounds() const {
+        return SkIRect::MakeWH(this->width(), this->height());
+    }
 
     /**
      *  Return the rowbytes expressed as a number of pixels (like width and height).
      */
-    int rowBytesAsPixels() const { return int(fRowBytes >> this->shiftPerPixel()); }
+    int rowBytesAsPixels() const {
+        return int(fRowBytes >> this->shiftPerPixel());
+    }
 
     /**
      *  Return the shift amount per pixel (i.e. 0 for 1-byte per pixel, 1 for 2-bytes per pixel
      *  colortypes, 2 for 4-bytes per pixel colortypes). Return 0 for kUnknown_SkColorType.
      */
-    int shiftPerPixel() const { return fInfo.shiftPerPixel(); }
+    int shiftPerPixel() const {
+        return fInfo.shiftPerPixel();
+    }
 
-    uint64_t getSize64() const { return sk_64_mul(fInfo.height(), fRowBytes); }
-    uint64_t getSafeSize64() const { return fInfo.getSafeSize64(fRowBytes); }
-    size_t getSafeSize() const { return fInfo.getSafeSize(fRowBytes); }
+    uint64_t getSize64() const {
+        return sk_64_mul(fInfo.height(), fRowBytes);
+    }
+    uint64_t getSafeSize64() const {
+        return fInfo.getSafeSize64(fRowBytes);
+    }
+    size_t getSafeSize() const {
+        return fInfo.getSafeSize(fRowBytes);
+    }
 
     const void* addr(int x, int y) const {
         return (const char*)fPixels + fInfo.computeOffset(x, y, fRowBytes);
@@ -143,7 +174,9 @@ public:
 
     // Writable versions
 
-    void* writable_addr() const { return const_cast<void*>(fPixels); }
+    void* writable_addr() const {
+        return const_cast<void*>(fPixels);
+    }
     void* writable_addr(int x, int y) const {
         return const_cast<void*>(this->addr(x, y));
     }
@@ -192,7 +225,9 @@ public:
      */
     bool erase(SkColor, const SkIRect& subset) const;
 
-    bool erase(SkColor color) const { return this->erase(color, this->bounds()); }
+    bool erase(SkColor color) const {
+        return this->erase(color, this->bounds());
+    }
     bool erase(const SkColor4f&, const SkIRect* subset = nullptr) const;
 
 private:
@@ -206,13 +241,16 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-class SK_API SkAutoPixmapUnlock : ::SkNoncopyable {
+class SK_API SkAutoPixmapUnlock : ::SkNoncopyable
+{
 public:
     SkAutoPixmapUnlock() : fUnlockProc(NULL), fIsLocked(false) {}
     SkAutoPixmapUnlock(const SkPixmap& pm, void (*unlock)(void*), void* ctx)
-        : fUnlockProc(unlock), fUnlockContext(ctx), fPixmap(pm), fIsLocked(true)
-    {}
-    ~SkAutoPixmapUnlock() { this->unlock(); }
+        : fUnlockProc(unlock), fUnlockContext(ctx), fPixmap(pm), fIsLocked(true) {
+    }
+    ~SkAutoPixmapUnlock() {
+        this->unlock();
+    }
 
     /**
      *  Return the currently locked pixmap. Undefined if it has been unlocked.
@@ -222,7 +260,9 @@ public:
         return fPixmap;
     }
 
-    bool isLocked() const { return fIsLocked; }
+    bool isLocked() const {
+        return fIsLocked;
+    }
 
     /**
      *  Unlocks the pixmap. Can safely be called more than once as it will only call the underlying

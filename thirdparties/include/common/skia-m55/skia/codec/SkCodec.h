@@ -23,7 +23,8 @@ class SkData;
 class SkPngChunkReader;
 class SkSampler;
 
-namespace DM {
+namespace DM
+{
 class CodecSrc;
 class ColorCodecSrc;
 }
@@ -32,7 +33,8 @@ class ColorCodecBench;
 /**
  *  Abstraction layer directly on top of an image codec.
  */
-class SkCodec : SkNoncopyable {
+class SkCodec : SkNoncopyable
+{
 public:
     /**
      *  Minimum number of bytes that must be buffered in SkStream input.
@@ -106,9 +108,13 @@ public:
     /**
      *  Return the ImageInfo associated with this codec.
      */
-    const SkImageInfo& getInfo() const { return fSrcInfo; }
+    const SkImageInfo& getInfo() const {
+        return fSrcInfo;
+    }
 
-    const SkEncodedInfo& getEncodedInfo() const { return fEncodedInfo; }
+    const SkEncodedInfo& getEncodedInfo() const {
+        return fEncodedInfo;
+    }
 
     enum Origin {
         kTopLeft_Origin     = 1, // Default
@@ -127,7 +133,9 @@ public:
      *  Returns the image orientation stored in the EXIF data.
      *  If there is no EXIF data, or if we cannot read the EXIF data, returns kTopLeft.
      */
-    Origin getOrigin() const { return fOrigin; }
+    Origin getOrigin() const {
+        return fOrigin;
+    }
 
     /**
      *  Return a size that approximately supports the desired scale factor.
@@ -173,7 +181,9 @@ public:
     /**
      *  Format of the encoded data.
      */
-    SkEncodedFormat getEncodedFormat() const { return this->onGetEncodedFormat(); }
+    SkEncodedFormat getEncodedFormat() const {
+        return this->onGetEncodedFormat();
+    }
 
     /**
      *  Used to describe the result of a call to getPixels().
@@ -243,8 +253,8 @@ public:
     struct Options {
         Options()
             : fZeroInitialized(kNo_ZeroInitialized)
-            , fSubset(NULL)
-        {}
+            , fSubset(NULL) {
+        }
 
         ZeroInitialized fZeroInitialized;
         /**
@@ -375,10 +385,10 @@ public:
      *  @return Enum representing success or reason for failure.
      */
     Result startIncrementalDecode(const SkImageInfo& dstInfo, void* dst, size_t rowBytes,
-            const SkCodec::Options*, SkPMColor* ctable, int* ctableCount);
+                                  const SkCodec::Options*, SkPMColor* ctable, int* ctableCount);
 
     Result startIncrementalDecode(const SkImageInfo& dstInfo, void* dst, size_t rowBytes,
-            const SkCodec::Options* options) {
+                                  const SkCodec::Options* options) {
         return this->startIncrementalDecode(dstInfo, dst, rowBytes, options, nullptr, nullptr);
     }
 
@@ -444,7 +454,7 @@ public:
      *  @return Enum representing success or reason for failure.
      */
     Result startScanlineDecode(const SkImageInfo& dstInfo, const SkCodec::Options* options,
-            SkPMColor ctable[], int* ctableCount);
+                               SkPMColor ctable[], int* ctableCount);
 
     /**
      *  Simplified version of startScanlineDecode() that asserts that info is NOT
@@ -543,7 +553,9 @@ public:
      *
      *  This is undefined before startScanlineDecode() is called.
      */
-    SkScanlineOrder getScanlineOrder() const { return this->onGetScanlineOrder(); }
+    SkScanlineOrder getScanlineOrder() const {
+        return this->onGetScanlineOrder();
+    }
 
     /**
      *  Returns the y-coordinate of the next row to be returned by the scanline
@@ -554,7 +566,9 @@ public:
      *
      *  Results are undefined when not in scanline decoding mode.
      */
-    int nextScanline() const { return this->outputScanline(fCurrScanline); }
+    int nextScanline() const {
+        return this->outputScanline(fCurrScanline);
+    }
 
     /**
      *  Returns the output y-coordinate of the row that corresponds to an input
@@ -690,11 +704,17 @@ protected:
     /**
      *  Most images types will be kTopDown and will not need to override this function.
      */
-    virtual SkScanlineOrder onGetScanlineOrder() const { return kTopDown_SkScanlineOrder; }
+    virtual SkScanlineOrder onGetScanlineOrder() const {
+        return kTopDown_SkScanlineOrder;
+    }
 
-    const SkImageInfo& dstInfo() const { return fDstInfo; }
+    const SkImageInfo& dstInfo() const {
+        return fDstInfo;
+    }
 
-    const SkCodec::Options& options() const { return fOptions; }
+    const SkCodec::Options& options() const {
+        return fOptions;
+    }
 
     /**
      *  Returns the number of scanlines that have been decoded so far.
@@ -702,7 +722,9 @@ protected:
      *
      *  Returns -1 if we have not started a scanline decode.
      */
-    int currScanline() const { return fCurrScanline; }
+    int currScanline() const {
+        return fCurrScanline;
+    }
 
     virtual int onOutputScanline(int inputScanline) const;
 
@@ -710,7 +732,9 @@ protected:
      *  Used for testing with qcms.
      *  FIXME: Remove this when we are done comparing with qcms.
      */
-    virtual sk_sp<SkData> getICCData() const { return nullptr; }
+    virtual sk_sp<SkData> getICCData() const {
+        return nullptr;
+    }
 private:
     const SkEncodedInfo         fEncodedInfo;
     const SkImageInfo           fSrcInfo;
@@ -746,7 +770,7 @@ private:
     }
 
     virtual Result onStartIncrementalDecode(const SkImageInfo& /*dstInfo*/, void*, size_t,
-            const SkCodec::Options&, SkPMColor*, int*) {
+                                            const SkCodec::Options&, SkPMColor*, int*) {
         return kUnimplemented;
     }
 
@@ -755,9 +779,13 @@ private:
     }
 
 
-    virtual bool onSkipScanlines(int /*countLines*/) { return false; }
+    virtual bool onSkipScanlines(int /*countLines*/) {
+        return false;
+    }
 
-    virtual int onGetScanlines(void* /*dst*/, int /*countLines*/, size_t /*rowBytes*/) { return 0; }
+    virtual int onGetScanlines(void* /*dst*/, int /*countLines*/, size_t /*rowBytes*/) {
+        return 0;
+    }
 
     /**
      * On an incomplete decode, getPixels() and getScanlines() will call this function
@@ -774,7 +802,7 @@ private:
      * @param linesDecoded   Number of lines that were successfully decoded
      */
     void fillIncompleteImage(const SkImageInfo& dstInfo, void* dst, size_t rowBytes,
-            ZeroInitialized zeroInit, int linesRequested, int linesDecoded);
+                             ZeroInitialized zeroInit, int linesRequested, int linesDecoded);
 
     /**
      *  Return an object which will allow forcing scanline decodes to sample in X.
@@ -784,7 +812,9 @@ private:
      *
      *  Only valid during scanline decoding.
      */
-    virtual SkSampler* getSampler(bool /*createIfNecessary*/) { return nullptr; }
+    virtual SkSampler* getSampler(bool /*createIfNecessary*/) {
+        return nullptr;
+    }
 
     // For testing with qcms
     // FIXME: Remove these when we are done comparing with qcms.

@@ -23,7 +23,8 @@
  * on the block boundaries don't cause thrashing). This can result in the first/
  * last element not residing in the first/last block.
  */
-class SK_API SkDeque : SkNoncopyable {
+class SK_API SkDeque : SkNoncopyable
+{
 public:
     /**
      * elemSize specifies the size of each individual element in the deque
@@ -33,12 +34,22 @@ public:
     SkDeque(size_t elemSize, void* storage, size_t storageSize, int allocCount = 1);
     ~SkDeque();
 
-    bool    empty() const { return 0 == fCount; }
-    int     count() const { return fCount; }
-    size_t  elemSize() const { return fElemSize; }
+    bool    empty() const {
+        return 0 == fCount;
+    }
+    int     count() const {
+        return fCount;
+    }
+    size_t  elemSize() const {
+        return fElemSize;
+    }
 
-    const void* front() const { return fFront; }
-    const void* back() const  { return fBack; }
+    const void* front() const {
+        return fFront;
+    }
+    const void* back() const  {
+        return fBack;
+    }
 
     void* front() {
         return (void*)((const SkDeque*)this)->front();
@@ -62,7 +73,8 @@ private:
     struct Block;
 
 public:
-    class Iter {
+    class Iter
+    {
     public:
         enum IterStart {
             kFront_IterStart,
@@ -87,7 +99,8 @@ public:
     };
 
     // Inherit privately from Iter to prevent access to reverse iteration
-    class F2BIter : private Iter {
+    class F2BIter : private Iter
+    {
     public:
         F2BIter() {}
 

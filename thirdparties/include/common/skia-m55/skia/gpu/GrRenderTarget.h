@@ -23,35 +23,50 @@ class GrRenderTargetPriv;
  * Additionally, GrContext provides methods for creating GrRenderTargets
  * that wrap externally created render targets.
  */
-class GrRenderTarget : virtual public GrSurface {
+class GrRenderTarget : virtual public GrSurface
+{
 public:
     // GrSurface overrides
-    GrRenderTarget* asRenderTarget() override { return this; }
-    const GrRenderTarget* asRenderTarget() const  override { return this; }
+    GrRenderTarget* asRenderTarget() override {
+        return this;
+    }
+    const GrRenderTarget* asRenderTarget() const  override {
+        return this;
+    }
 
     // GrRenderTarget
-    bool isStencilBufferMultisampled() const { return fDesc.fSampleCnt > 0; }
+    bool isStencilBufferMultisampled() const {
+        return fDesc.fSampleCnt > 0;
+    }
 
     /**
      * For our purposes, "Mixed Sampled" means the stencil buffer is multisampled but the color
      * buffer is not.
      */
-    bool isMixedSampled() const { return fFlags & Flags::kMixedSampled; }
+    bool isMixedSampled() const {
+        return fFlags & Flags::kMixedSampled;
+    }
 
     /**
      * "Unified Sampled" means the stencil and color buffers are both multisampled.
      */
-    bool isUnifiedMultisampled() const { return fDesc.fSampleCnt > 0 && !this->isMixedSampled(); }
+    bool isUnifiedMultisampled() const {
+        return fDesc.fSampleCnt > 0 && !this->isMixedSampled();
+    }
 
     /**
      * Returns the number of samples/pixel in the stencil buffer (Zero if non-MSAA).
      */
-    int numStencilSamples() const { return fDesc.fSampleCnt; }
+    int numStencilSamples() const {
+        return fDesc.fSampleCnt;
+    }
 
     /**
      * Returns the number of samples/pixel in the color buffer (Zero if non-MSAA or mixed sampled).
      */
-    int numColorSamples() const { return this->isMixedSampled() ? 0 : fDesc.fSampleCnt; }
+    int numColorSamples() const {
+        return this->isMixedSampled() ? 0 : fDesc.fSampleCnt;
+    }
 
     /**
      * Call to indicate the multisample contents were modified such that the
@@ -74,17 +89,23 @@ public:
      * Call to indicate that GrRenderTarget was externally resolved. This may
      * allow Gr to skip a redundant resolve step.
      */
-    void flagAsResolved() { fResolveRect.setLargestInverted(); }
+    void flagAsResolved() {
+        fResolveRect.setLargestInverted();
+    }
 
     /**
      * @return true if the GrRenderTarget requires MSAA resolving
      */
-    bool needsResolve() const { return !fResolveRect.isEmpty(); }
+    bool needsResolve() const {
+        return !fResolveRect.isEmpty();
+    }
 
     /**
      * Returns a rect bounding the region needing resolving.
      */
-    const SkIRect& getResolveRect() const { return fResolveRect; }
+    const SkIRect& getResolveRect() const {
+        return fResolveRect;
+    }
 
     /**
      * Provide a performance hint that the render target's contents are allowed
@@ -116,10 +137,13 @@ public:
     const GrRenderTargetPriv renderTargetPriv() const;
 
     void setLastDrawTarget(GrDrawTarget* dt);
-    GrDrawTarget* getLastDrawTarget() { return fLastDrawTarget; }
+    GrDrawTarget* getLastDrawTarget() {
+        return fLastDrawTarget;
+    }
 
 protected:
-    enum class Flags {
+    enum class Flags
+    {
         kNone                = 0,
         kMixedSampled        = 1 << 0,
         kWindowRectsSupport  = 1 << 1

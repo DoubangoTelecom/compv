@@ -11,11 +11,11 @@ COMPV_NAMESPACE_BEGIN()
 compv_surface_id_t CompVSurface::s_nSurfaceId = 0;
 
 CompVSurface::CompVSurface(size_t width, size_t height)
-	: CompVObj()
-	, m_nId(compv_atomic_inc(&CompVSurface::s_nSurfaceId))
-	, m_nWidth(width)
-	, m_nHeight(height)
-	, m_bActive(true)
+    : CompVObj()
+    , m_nId(compv_atomic_inc(&CompVSurface::s_nSurfaceId))
+    , m_nWidth(width)
+    , m_nHeight(height)
+    , m_bActive(true)
 {
 }
 
@@ -26,9 +26,9 @@ CompVSurface::~CompVSurface()
 
 COMPV_ERROR_CODE CompVSurface::setViewport(CompVViewportPtr viewport)
 {
-	COMPV_CHECK_EXP_RETURN(!viewport, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	m_ptrViewport = viewport;
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(!viewport, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    m_ptrViewport = viewport;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 

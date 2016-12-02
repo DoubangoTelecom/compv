@@ -75,39 +75,39 @@ public:
                  16 == bitsPerComponent);
 
         switch (color) {
-            case kGray_Color:
-                SkASSERT(kOpaque_Alpha == alpha);
-                break;
-            case kGrayAlpha_Color:
-                SkASSERT(kOpaque_Alpha != alpha);
-                break;
-            case kPalette_Color:
-                SkASSERT(16 != bitsPerComponent);
-                break;
-            case kRGB_Color:
-            case kBGR_Color:
-            case kBGRX_Color:
-                SkASSERT(kOpaque_Alpha == alpha);
-                SkASSERT(bitsPerComponent >= 8);
-                break;
-            case kYUV_Color:
-            case kInvertedCMYK_Color:
-            case kYCCK_Color:
-                SkASSERT(kOpaque_Alpha == alpha);
-                SkASSERT(8 == bitsPerComponent);
-                break;
-            case kRGBA_Color:
-                SkASSERT(kOpaque_Alpha != alpha);
-                SkASSERT(bitsPerComponent >= 8);
-                break;
-            case kBGRA_Color:
-            case kYUVA_Color:
-                SkASSERT(kOpaque_Alpha != alpha);
-                SkASSERT(8 == bitsPerComponent);
-                break;
-            default:
-                SkASSERT(false);
-                break;
+        case kGray_Color:
+            SkASSERT(kOpaque_Alpha == alpha);
+            break;
+        case kGrayAlpha_Color:
+            SkASSERT(kOpaque_Alpha != alpha);
+            break;
+        case kPalette_Color:
+            SkASSERT(16 != bitsPerComponent);
+            break;
+        case kRGB_Color:
+        case kBGR_Color:
+        case kBGRX_Color:
+            SkASSERT(kOpaque_Alpha == alpha);
+            SkASSERT(bitsPerComponent >= 8);
+            break;
+        case kYUV_Color:
+        case kInvertedCMYK_Color:
+        case kYCCK_Color:
+            SkASSERT(kOpaque_Alpha == alpha);
+            SkASSERT(8 == bitsPerComponent);
+            break;
+        case kRGBA_Color:
+            SkASSERT(kOpaque_Alpha != alpha);
+            SkASSERT(bitsPerComponent >= 8);
+            break;
+        case kBGRA_Color:
+        case kYUVA_Color:
+            SkASSERT(kOpaque_Alpha != alpha);
+            SkASSERT(8 == bitsPerComponent);
+            break;
+        default:
+            SkASSERT(false);
+            break;
         }
 
         return SkEncodedInfo(color, alpha, bitsPerComponent);
@@ -119,67 +119,73 @@ public:
      */
     SkImageInfo makeImageInfo(int width, int height, sk_sp<SkColorSpace> colorSpace) const {
         switch (fColor) {
-            case kGray_Color:
-                SkASSERT(kOpaque_Alpha == fAlpha);
-                return SkImageInfo::Make(width, height, kGray_8_SkColorType,
-                                         kOpaque_SkAlphaType, colorSpace);
-            case kGrayAlpha_Color:
-                SkASSERT(kOpaque_Alpha != fAlpha);
-                return SkImageInfo::Make(width, height, kN32_SkColorType,
-                        kUnpremul_SkAlphaType, colorSpace);
-            case kPalette_Color: {
-                SkAlphaType alphaType = (kOpaque_Alpha == fAlpha) ? kOpaque_SkAlphaType :
-                        kUnpremul_SkAlphaType;
-                return SkImageInfo::Make(width, height, kIndex_8_SkColorType,
-                                         alphaType, colorSpace);
-            }
-            case kRGB_Color:
-            case kBGR_Color:
-            case kBGRX_Color:
-            case kYUV_Color:
-            case kInvertedCMYK_Color:
-            case kYCCK_Color:
-                SkASSERT(kOpaque_Alpha == fAlpha);
-                return SkImageInfo::Make(width, height, kN32_SkColorType,
-                                         kOpaque_SkAlphaType, colorSpace);
-            case kRGBA_Color:
-            case kBGRA_Color:
-            case kYUVA_Color:
-                SkASSERT(kOpaque_Alpha != fAlpha);
-                return SkImageInfo::Make(width, height, kN32_SkColorType,
-                                         kUnpremul_SkAlphaType, std::move(colorSpace));
-            default:
-                SkASSERT(false);
-                return SkImageInfo::MakeUnknown();
+        case kGray_Color:
+            SkASSERT(kOpaque_Alpha == fAlpha);
+            return SkImageInfo::Make(width, height, kGray_8_SkColorType,
+                                     kOpaque_SkAlphaType, colorSpace);
+        case kGrayAlpha_Color:
+            SkASSERT(kOpaque_Alpha != fAlpha);
+            return SkImageInfo::Make(width, height, kN32_SkColorType,
+                                     kUnpremul_SkAlphaType, colorSpace);
+        case kPalette_Color: {
+            SkAlphaType alphaType = (kOpaque_Alpha == fAlpha) ? kOpaque_SkAlphaType :
+                                    kUnpremul_SkAlphaType;
+            return SkImageInfo::Make(width, height, kIndex_8_SkColorType,
+                                     alphaType, colorSpace);
+        }
+        case kRGB_Color:
+        case kBGR_Color:
+        case kBGRX_Color:
+        case kYUV_Color:
+        case kInvertedCMYK_Color:
+        case kYCCK_Color:
+            SkASSERT(kOpaque_Alpha == fAlpha);
+            return SkImageInfo::Make(width, height, kN32_SkColorType,
+                                     kOpaque_SkAlphaType, colorSpace);
+        case kRGBA_Color:
+        case kBGRA_Color:
+        case kYUVA_Color:
+            SkASSERT(kOpaque_Alpha != fAlpha);
+            return SkImageInfo::Make(width, height, kN32_SkColorType,
+                                     kUnpremul_SkAlphaType, std::move(colorSpace));
+        default:
+            SkASSERT(false);
+            return SkImageInfo::MakeUnknown();
         }
     }
 
-    Color color() const { return fColor; }
-    Alpha alpha() const { return fAlpha; }
-    uint8_t bitsPerComponent() const { return fBitsPerComponent; }
+    Color color() const {
+        return fColor;
+    }
+    Alpha alpha() const {
+        return fAlpha;
+    }
+    uint8_t bitsPerComponent() const {
+        return fBitsPerComponent;
+    }
 
     uint8_t bitsPerPixel() const {
         switch (fColor) {
-            case kGray_Color:
-                return fBitsPerComponent;
-            case kGrayAlpha_Color:
-                return 2 * fBitsPerComponent;
-            case kPalette_Color:
-                return fBitsPerComponent;
-            case kRGB_Color:
-            case kBGR_Color:
-            case kYUV_Color:
-                return 3 * fBitsPerComponent;
-            case kRGBA_Color:
-            case kBGRA_Color:
-            case kBGRX_Color:
-            case kYUVA_Color:
-            case kInvertedCMYK_Color:
-            case kYCCK_Color:
-                return 4 * fBitsPerComponent;
-            default:
-                SkASSERT(false);
-                return 0;
+        case kGray_Color:
+            return fBitsPerComponent;
+        case kGrayAlpha_Color:
+            return 2 * fBitsPerComponent;
+        case kPalette_Color:
+            return fBitsPerComponent;
+        case kRGB_Color:
+        case kBGR_Color:
+        case kYUV_Color:
+            return 3 * fBitsPerComponent;
+        case kRGBA_Color:
+        case kBGRA_Color:
+        case kBGRX_Color:
+        case kYUVA_Color:
+        case kInvertedCMYK_Color:
+        case kYCCK_Color:
+            return 4 * fBitsPerComponent;
+        default:
+            SkASSERT(false);
+            return 0;
         }
     }
 
@@ -188,8 +194,8 @@ private:
     SkEncodedInfo(Color color, Alpha alpha, uint8_t bitsPerComponent)
         : fColor(color)
         , fAlpha(alpha)
-        , fBitsPerComponent(bitsPerComponent)
-    {}
+        , fBitsPerComponent(bitsPerComponent) {
+    }
 
     Color   fColor;
     Alpha   fAlpha;

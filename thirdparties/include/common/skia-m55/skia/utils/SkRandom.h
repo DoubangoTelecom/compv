@@ -19,10 +19,15 @@
 
  Has a large period and all bits are well-randomized.
  */
-class SkRandom {
+class SkRandom
+{
 public:
-    SkRandom() { init(0); }
-    SkRandom(uint32_t seed) { init(seed); }
+    SkRandom() {
+        init(0);
+    }
+    SkRandom(uint32_t seed) {
+        init(seed);
+    }
     SkRandom(const SkRandom& rand) : fK(rand.fK), fJ(rand.fJ) {}
 
     SkRandom& operator=(const SkRandom& rand) {
@@ -42,15 +47,21 @@ public:
 
     /** Return the next pseudo random number as a signed 32bit value.
      */
-    int32_t nextS() { return (int32_t)this->nextU(); }
+    int32_t nextS() {
+        return (int32_t)this->nextU();
+    }
 
     /** Return the next pseudo random number as an unsigned 16bit value.
      */
-    U16CPU nextU16() { return this->nextU() >> 16; }
+    U16CPU nextU16() {
+        return this->nextU() >> 16;
+    }
 
     /** Return the next pseudo random number as a signed 16bit value.
      */
-    S16CPU nextS16() { return this->nextS() >> 16; }
+    S16CPU nextS16() {
+        return this->nextS() >> 16;
+    }
 
     /**
      *  Returns value [0...1) as an IEEE float
@@ -85,7 +96,8 @@ public:
         uint32_t range = max - min + 1;
         if (0 == range) {
             return this->nextU();
-        } else {
+        }
+        else {
             return min + this->nextU() % range;
         }
     }
@@ -101,7 +113,9 @@ public:
     /** Return the next pseudo random number expressed as a SkScalar
      in the range [0..SK_Scalar1).
      */
-    SkScalar nextUScalar1() { return SkFixedToScalar(this->nextUFixed1()); }
+    SkScalar nextUScalar1() {
+        return SkFixedToScalar(this->nextUFixed1());
+    }
 
     /** Return the next pseudo random number expressed as a SkScalar
      in the range [min..max).
@@ -113,11 +127,15 @@ public:
     /** Return the next pseudo random number expressed as a SkScalar
      in the range [-SK_Scalar1..SK_Scalar1).
      */
-    SkScalar nextSScalar1() { return SkFixedToScalar(this->nextSFixed1()); }
+    SkScalar nextSScalar1() {
+        return SkFixedToScalar(this->nextSFixed1());
+    }
 
     /** Return the next pseudo random number as a bool.
      */
-    bool nextBool() { return this->nextU() >= 0x80000000; }
+    bool nextBool() {
+        return this->nextU() >= 0x80000000;
+    }
 
     /** A biased version of nextBool().
      */
@@ -136,7 +154,9 @@ public:
 
     /** Reset the random object.
      */
-    void setSeed(uint32_t seed) { init(seed); }
+    void setSeed(uint32_t seed) {
+        init(seed);
+    }
 
 private:
     // Initialize state variables with LCG.
@@ -153,17 +173,23 @@ private:
         }
         SkASSERT(0 != fK && 0 != fJ);
     }
-    static uint32_t NextLCG(uint32_t seed) { return kMul*seed + kAdd; }
+    static uint32_t NextLCG(uint32_t seed) {
+        return kMul*seed + kAdd;
+    }
 
     /** Return the next pseudo random number expressed as an unsigned SkFixed
      in the range [0..SK_Fixed1).
      */
-    SkFixed nextUFixed1() { return this->nextU() >> 16; }
+    SkFixed nextUFixed1() {
+        return this->nextU() >> 16;
+    }
 
     /** Return the next pseudo random number expressed as a signed SkFixed
      in the range [-SK_Fixed1..SK_Fixed1).
      */
-    SkFixed nextSFixed1() { return this->nextS() >> 15; }
+    SkFixed nextSFixed1() {
+        return this->nextS() >> 15;
+    }
 
     //  See "Numerical Recipes in C", 1992 page 284 for these constants
     //  For the LCG that sets the initial state from a seed

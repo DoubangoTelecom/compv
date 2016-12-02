@@ -35,7 +35,8 @@ class GrFragmentProcessor;
  *  w/o having to modify the original shader... only the paint's alpha needs
  *  to be modified.
  */
-class SK_API SkShader : public SkFlattenable {
+class SK_API SkShader : public SkFlattenable
+{
 public:
     SkShader(const SkMatrix* localMatrix = NULL);
     virtual ~SkShader();
@@ -46,7 +47,9 @@ public:
      *  FIXME: This can be incorrect for a Shader with its own local matrix
      *  that is also wrapped via CreateLocalMatrixShader.
      */
-    const SkMatrix& getLocalMatrix() const { return fLocalMatrix; }
+    const SkMatrix& getLocalMatrix() const {
+        return fLocalMatrix;
+    }
 
     enum TileMode {
         /** replicate the edge color if the shader draws outside of its
@@ -96,7 +99,9 @@ public:
      *  alpha value. Subclasses should override this to allow some
      *  optimizations.
      */
-    virtual bool isOpaque() const { return false; }
+    virtual bool isOpaque() const {
+        return false;
+    }
 
     /**
      *  ContextRec acts as a parameter bundle for creating Contexts.
@@ -120,7 +125,8 @@ public:
         const DstType   fPreferredDstType; // the "natural" client dest type
     };
 
-    class Context : public ::SkNoncopyable {
+    class Context : public ::SkNoncopyable
+    {
     public:
         Context(const SkShader& shader, const ContextRec&);
 
@@ -133,7 +139,9 @@ public:
          *  non-zero value, since that will enable various blitters to perform
          *  faster.
          */
-        virtual uint32_t getFlags() const { return 0; }
+        virtual uint32_t getFlags() const {
+            return 0;
+        }
 
         /**
          *  Called for each span of the object being drawn. Your subclass should
@@ -197,17 +205,27 @@ public:
         enum MatrixClass {
             kLinear_MatrixClass,            // no perspective
             kFixedStepInX_MatrixClass,      // fast perspective, need to call fixedStepInX() each
-                                            // scanline
+            // scanline
             kPerspective_MatrixClass        // slow perspective, need to mappoints each pixel
         };
         static MatrixClass ComputeMatrixClass(const SkMatrix&);
 
-        uint8_t         getPaintAlpha() const { return fPaintAlpha; }
-        const SkMatrix& getTotalInverse() const { return fTotalInverse; }
-        MatrixClass     getInverseClass() const { return (MatrixClass)fTotalInverseClass; }
-        const SkMatrix& getCTM() const { return fCTM; }
+        uint8_t         getPaintAlpha() const {
+            return fPaintAlpha;
+        }
+        const SkMatrix& getTotalInverse() const {
+            return fTotalInverse;
+        }
+        MatrixClass     getInverseClass() const {
+            return (MatrixClass)fTotalInverseClass;
+        }
+        const SkMatrix& getCTM() const {
+            return fCTM;
+        }
 
-        virtual bool onChooseBlitProcs(const SkImageInfo&, BlitState*) { return false; }
+        virtual bool onChooseBlitProcs(const SkImageInfo&, BlitState*) {
+            return false;
+        }
 
     private:
         SkMatrix    fCTM;
@@ -297,9 +315,9 @@ public:
 
     struct GradientInfo {
         int         fColorCount;    //!< In-out parameter, specifies passed size
-                                    //   of fColors/fColorOffsets on input, and
-                                    //   actual number of colors/offsets on
-                                    //   output.
+        //   of fColors/fColorOffsets on input, and
+        //   actual number of colors/offsets on
+        //   output.
         SkColor*    fColors;        //!< The colors in the gradient.
         SkScalar*   fColorOffsets;  //!< The unit offset for color transitions.
         SkPoint     fPoint[2];      //!< Type specific, see above.
@@ -323,7 +341,9 @@ public:
         const SkXfermode*   fMode;
     };
 
-    virtual bool asACompose(ComposeRec*) const { return false; }
+    virtual bool asACompose(ComposeRec*) const {
+        return false;
+    }
 
 #if SK_SUPPORT_GPU
     struct AsFPArgs {
@@ -379,7 +399,9 @@ public:
      *  If the shader is a custom shader which has data the caller might want, call this function
      *  to get that data.
      */
-    virtual bool asACustomShader(void** /* customData */) const { return false; }
+    virtual bool asACustomShader(void** /* customData */) const {
+        return false;
+    }
 #endif
 
     //////////////////////////////////////////////////////////////////////////
@@ -399,7 +421,7 @@ public:
 
     //////////////////////////////////////////////////////////////////////////
     //  Factory methods for stock shaders
-    
+
     /**
      *  Call this to create a new "empty" shader, that will not draw anything.
      */
@@ -420,11 +442,15 @@ public:
     static sk_sp<SkShader> MakeColorShader(const SkColor4f&, sk_sp<SkColorSpace>);
 
     static sk_sp<SkShader> MakeComposeShader(sk_sp<SkShader> dst, sk_sp<SkShader> src,
-                                             SkXfermode::Mode);
+            SkXfermode::Mode);
 
 #ifdef SK_SUPPORT_LEGACY_CREATESHADER_PTR
-    static SkShader* CreateEmptyShader() { return MakeEmptyShader().release(); }
-    static SkShader* CreateColorShader(SkColor c) { return MakeColorShader(c).release(); }
+    static SkShader* CreateEmptyShader() {
+        return MakeEmptyShader().release();
+    }
+    static SkShader* CreateColorShader(SkColor c) {
+        return MakeColorShader(c).release();
+    }
     static SkShader* CreateBitmapShader(const SkBitmap& src, TileMode tmx, TileMode tmy,
                                         const SkMatrix* localMatrix = nullptr) {
         return MakeBitmapShader(src, tmx, tmy, localMatrix).release();
@@ -448,10 +474,10 @@ public:
      *  The caller is responsible for managing its reference-count for the xfer (if not null).
      */
     static sk_sp<SkShader> MakeComposeShader(sk_sp<SkShader> dst, sk_sp<SkShader> src,
-                                             sk_sp<SkXfermode> xfer);
+            sk_sp<SkXfermode> xfer);
 #ifdef SK_SUPPORT_LEGACY_XFERMODE_PTR
     static sk_sp<SkShader> MakeComposeShader(sk_sp<SkShader> dst, sk_sp<SkShader> src,
-                                             SkXfermode* xfer);
+            SkXfermode* xfer);
 #endif
 
     /** Call this to create a new shader that will draw with the specified bitmap.
@@ -488,7 +514,7 @@ public:
      *  @return     Returns a new shader object. Note: this function never returns null.
     */
     static sk_sp<SkShader> MakePictureShader(sk_sp<SkPicture> src, TileMode tmx, TileMode tmy,
-                                             const SkMatrix* localMatrix, const SkRect* tile);
+            const SkMatrix* localMatrix, const SkRect* tile);
 
     /**
      *  If this shader can be represented by another shader + a localMatrix, return that shader

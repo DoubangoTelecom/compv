@@ -16,9 +16,10 @@ class GrTexture;
  * Custom Xfer modes are used for blending when the blend mode cannot be represented using blend
  * coefficients.
  */
-namespace GrCustomXfermode {
-    bool IsSupportedMode(SkXfermode::Mode mode);
-    sk_sp<GrXPFactory> MakeXPFactory(SkXfermode::Mode mode);
+namespace GrCustomXfermode
+{
+bool IsSupportedMode(SkXfermode::Mode mode);
+sk_sp<GrXPFactory> MakeXPFactory(SkXfermode::Mode mode);
 };
 
 #endif

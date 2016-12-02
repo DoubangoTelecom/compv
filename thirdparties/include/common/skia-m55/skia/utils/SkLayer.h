@@ -20,31 +20,56 @@
 
 class SkCanvas;
 
-class SkLayer : public SkRefCnt {
+class SkLayer : public SkRefCnt
+{
 
 public:
-    
+
 
     SkLayer();
     SkLayer(const SkLayer&);
     virtual ~SkLayer();
 
     bool isInheritFromRootTransform() const;
-    SkScalar getOpacity() const { return m_opacity; }
-    const SkSize& getSize() const { return m_size; }
-    const SkPoint& getPosition() const { return m_position; }
-    const SkPoint& getAnchorPoint() const { return m_anchorPoint; }
-    const SkMatrix& getMatrix() const { return fMatrix; }
-    const SkMatrix& getChildrenMatrix() const { return fChildrenMatrix; }
+    SkScalar getOpacity() const {
+        return m_opacity;
+    }
+    const SkSize& getSize() const {
+        return m_size;
+    }
+    const SkPoint& getPosition() const {
+        return m_position;
+    }
+    const SkPoint& getAnchorPoint() const {
+        return m_anchorPoint;
+    }
+    const SkMatrix& getMatrix() const {
+        return fMatrix;
+    }
+    const SkMatrix& getChildrenMatrix() const {
+        return fChildrenMatrix;
+    }
 
-    SkScalar getWidth() const { return m_size.width(); }
-    SkScalar getHeight() const { return m_size.height(); }
+    SkScalar getWidth() const {
+        return m_size.width();
+    }
+    SkScalar getHeight() const {
+        return m_size.height();
+    }
 
     void setInheritFromRootTransform(bool);
-    void setOpacity(SkScalar opacity) { m_opacity = opacity; }
-    void setSize(SkScalar w, SkScalar h) { m_size.set(w, h); }
-    void setPosition(SkScalar x, SkScalar y) { m_position.set(x, y); }
-    void setAnchorPoint(SkScalar x, SkScalar y) { m_anchorPoint.set(x, y); }
+    void setOpacity(SkScalar opacity) {
+        m_opacity = opacity;
+    }
+    void setSize(SkScalar w, SkScalar h) {
+        m_size.set(w, h);
+    }
+    void setPosition(SkScalar x, SkScalar y) {
+        m_position.set(x, y);
+    }
+    void setAnchorPoint(SkScalar x, SkScalar y) {
+        m_anchorPoint.set(x, y);
+    }
     void setMatrix(const SkMatrix&);
     void setChildrenMatrix(const SkMatrix&);
 
@@ -76,7 +101,9 @@ public:
 
     /** Return our parent layer, or NULL if we have none.
      */
-    SkLayer* getParent() const { return fParent; }
+    SkLayer* getParent() const {
+        return fParent;
+    }
 
     /** Return the root layer in this hiearchy. If this layer is the root
         (i.e. has no parent), then this returns itself.

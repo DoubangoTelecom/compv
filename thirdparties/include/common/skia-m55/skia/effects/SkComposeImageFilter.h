@@ -10,7 +10,8 @@
 
 #include "SkImageFilter.h"
 
-class SK_API SkComposeImageFilter : public SkImageFilter {
+class SK_API SkComposeImageFilter : public SkImageFilter
+{
 public:
     static sk_sp<SkImageFilter> Make(sk_sp<SkImageFilter> outer, sk_sp<SkImageFilter> inner);
 
@@ -34,7 +35,9 @@ protected:
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
                                         SkIPoint* offset) const override;
     SkIRect onFilterBounds(const SkIRect&, const SkMatrix&, MapDirection) const override;
-    bool onCanHandleComplexCTM() const override { return true; }
+    bool onCanHandleComplexCTM() const override {
+        return true;
+    }
 
 private:
     typedef SkImageFilter INHERITED;

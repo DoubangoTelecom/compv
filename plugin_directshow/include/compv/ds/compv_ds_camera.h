@@ -23,19 +23,19 @@ COMPV_OBJECT_DECLARE_PTRS(DSCamera)
 class CompVDSCamera : public CompVCamera
 {
 protected:
-	CompVDSCamera();
+    CompVDSCamera();
 public:
-	virtual ~CompVDSCamera();
-	COMPV_OBJECT_GET_ID(CompVDSCamera);
+    virtual ~CompVDSCamera();
+    COMPV_OBJECT_GET_ID(CompVDSCamera);
 
-	virtual COMPV_ERROR_CODE devices(CompVCameraDeviceInfoList& list) override /* Overrides(CompVCamera) */;
-	virtual COMPV_ERROR_CODE start(const std::string& deviceId = "") override /* Overrides(CompVCamera) */;
-	virtual COMPV_ERROR_CODE stop() override /* Overrides(CompVCamera) */;
+    virtual COMPV_ERROR_CODE devices(CompVCameraDeviceInfoList& list) override /* Overrides(CompVCamera) */;
+    virtual COMPV_ERROR_CODE start(const std::string& deviceId = "") override /* Overrides(CompVCamera) */;
+    virtual COMPV_ERROR_CODE stop() override /* Overrides(CompVCamera) */;
 
-	static COMPV_ERROR_CODE newObj(CompVDSCameraPtrPtr camera);
+    static COMPV_ERROR_CODE newObj(CompVDSCameraPtrPtr camera);
 
 private:
-	CompVDSGrabber* m_pGrabber;
+    CompVDSGrabber* m_pGrabber;
 };
 
 COMPV_NAMESPACE_END()

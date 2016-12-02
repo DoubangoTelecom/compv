@@ -15,7 +15,8 @@
     SkGradientShader hosts factories for creating subclasses of SkShader that
     render linear and radial gradients.
 */
-class SK_API SkGradientShader {
+class SK_API SkGradientShader
+{
 public:
     enum Flags {
         /** By default gradients will interpolate their colors in unpremul space
@@ -123,14 +124,14 @@ public:
      *  http://dev.w3.org/html5/2dcontext/#dom-context-2d-createradialgradient
      */
     static sk_sp<SkShader> MakeTwoPointConical(const SkPoint& start, SkScalar startRadius,
-                                               const SkPoint& end, SkScalar endRadius,
-                                               const SkColor colors[], const SkScalar pos[],
-                                               int count, SkShader::TileMode mode,
-                                               uint32_t flags, const SkMatrix* localMatrix);
+            const SkPoint& end, SkScalar endRadius,
+            const SkColor colors[], const SkScalar pos[],
+            int count, SkShader::TileMode mode,
+            uint32_t flags, const SkMatrix* localMatrix);
     static sk_sp<SkShader> MakeTwoPointConical(const SkPoint& start, SkScalar startRadius,
-                                               const SkPoint& end, SkScalar endRadius,
-                                               const SkColor colors[], const SkScalar pos[],
-                                               int count, SkShader::TileMode mode) {
+            const SkPoint& end, SkScalar endRadius,
+            const SkColor colors[], const SkScalar pos[],
+            int count, SkShader::TileMode mode) {
         return MakeTwoPointConical(start, startRadius, end, endRadius, colors, pos, count, mode,
                                    0, NULL);
     }
@@ -142,16 +143,16 @@ public:
      *  http://dev.w3.org/html5/2dcontext/#dom-context-2d-createradialgradient
      */
     static sk_sp<SkShader> MakeTwoPointConical(const SkPoint& start, SkScalar startRadius,
-                                               const SkPoint& end, SkScalar endRadius,
-                                               const SkColor4f colors[],
-                                               sk_sp<SkColorSpace> colorSpace, const SkScalar pos[],
-                                               int count, SkShader::TileMode mode,
-                                               uint32_t flags, const SkMatrix* localMatrix);
+            const SkPoint& end, SkScalar endRadius,
+            const SkColor4f colors[],
+            sk_sp<SkColorSpace> colorSpace, const SkScalar pos[],
+            int count, SkShader::TileMode mode,
+            uint32_t flags, const SkMatrix* localMatrix);
     static sk_sp<SkShader> MakeTwoPointConical(const SkPoint& start, SkScalar startRadius,
-                                               const SkPoint& end, SkScalar endRadius,
-                                               const SkColor4f colors[],
-                                               sk_sp<SkColorSpace> colorSpace, const SkScalar pos[],
-                                               int count, SkShader::TileMode mode) {
+            const SkPoint& end, SkScalar endRadius,
+            const SkColor4f colors[],
+            sk_sp<SkColorSpace> colorSpace, const SkScalar pos[],
+            int count, SkShader::TileMode mode) {
         return MakeTwoPointConical(start, startRadius, end, endRadius, colors,
                                    std::move(colorSpace), pos, count, mode, 0, NULL);
     }
@@ -217,7 +218,7 @@ public:
                                   uint32_t flags, const SkMatrix* localMatrix) {
         return MakeRadial(center, radius, colors, pos, count, mode, flags, localMatrix).release();
     }
-    
+
     static SkShader* CreateRadial(const SkPoint& center, SkScalar radius,
                                   const SkColor colors[], const SkScalar pos[], int count,
                                   SkShader::TileMode mode) {
@@ -239,7 +240,7 @@ public:
         return CreateTwoPointConical(start, startRadius, end, endRadius, colors, pos, count, mode,
                                      0, NULL);
     }
-    
+
     static SkShader* CreateSweep(SkScalar cx, SkScalar cy,
                                  const SkColor colors[], const SkScalar pos[], int count,
                                  uint32_t flags, const SkMatrix* localMatrix) {
@@ -250,7 +251,7 @@ public:
         return CreateSweep(cx, cy, colors, pos, count, 0, NULL);
     }
 #endif
-    
+
 
     SK_DECLARE_FLATTENABLE_REGISTRAR_GROUP()
 };

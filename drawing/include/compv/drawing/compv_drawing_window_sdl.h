@@ -30,20 +30,20 @@ COMPV_OBJECT_DECLARE_PTRS(GLContextSDL)
 class CompVGLContextSDL : public CompVGLContext
 {
 protected:
-	CompVGLContextSDL(SDL_Window *pSDLWindow, SDL_GLContext pSDLContext);
+    CompVGLContextSDL(SDL_Window *pSDLWindow, SDL_GLContext pSDLContext);
 public:
-	virtual ~CompVGLContextSDL();
-	COMPV_OBJECT_GET_ID(CompVGLContextSDL);
+    virtual ~CompVGLContextSDL();
+    COMPV_OBJECT_GET_ID(CompVGLContextSDL);
 
-	virtual COMPV_ERROR_CODE makeCurrent();
-	virtual COMPV_ERROR_CODE swapBuffers();
-	virtual COMPV_ERROR_CODE unmakeCurrent();
+    virtual COMPV_ERROR_CODE makeCurrent();
+    virtual COMPV_ERROR_CODE swapBuffers();
+    virtual COMPV_ERROR_CODE unmakeCurrent();
 
-	static COMPV_ERROR_CODE newObj(CompVGLContextSDLPtrPtr context, SDL_Window *pSDLWindow, SDL_GLContext pSDLContext);
+    static COMPV_ERROR_CODE newObj(CompVGLContextSDLPtrPtr context, SDL_Window *pSDLWindow, SDL_GLContext pSDLContext);
 
 private:
-	SDL_Window *m_pSDLWindow;
-	SDL_GLContext m_pSDLContext;
+    SDL_Window *m_pSDLWindow;
+    SDL_GLContext m_pSDLContext;
 };
 
 
@@ -55,30 +55,30 @@ COMPV_OBJECT_DECLARE_PTRS(WindowSDL)
 class CompVWindowSDL : public CompVGLWindow
 {
 protected:
-	CompVWindowSDL(size_t width, size_t height, const char* title);
+    CompVWindowSDL(size_t width, size_t height, const char* title);
 public:
-	virtual ~CompVWindowSDL();
-	COMPV_OBJECT_GET_ID(CompVWindowSDL);
-	
-	/* CompVWindow overrides */
-	virtual bool isClosed()const;
-	virtual COMPV_ERROR_CODE close();
-	// Override(CompVWindow::beginDraw) -> CompVGLWindow
-	// Override(CompVWindow::endDraw) -> CompVGLWindow
-	// Override(CompVWindow::surface) -> CompVGLWindow
+    virtual ~CompVWindowSDL();
+    COMPV_OBJECT_GET_ID(CompVWindowSDL);
 
-	static COMPV_ERROR_CODE newObj(CompVWindowSDLPtrPtr sdlWindow, size_t width, size_t height, const char* title);
+    /* CompVWindow overrides */
+    virtual bool isClosed()const;
+    virtual COMPV_ERROR_CODE close();
+    // Override(CompVWindow::beginDraw) -> CompVGLWindow
+    // Override(CompVWindow::endDraw) -> CompVGLWindow
+    // Override(CompVWindow::surface) -> CompVGLWindow
+
+    static COMPV_ERROR_CODE newObj(CompVWindowSDLPtrPtr sdlWindow, size_t width, size_t height, const char* title);
 
 protected:
-	/* CompVGLWindow overrides */
-	virtual CompVGLContextPtr context();
+    /* CompVGLWindow overrides */
+    virtual CompVGLContextPtr context();
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	SDL_Window *m_pSDLWindow;
-	SDL_GLContext m_pSDLContext;
-	CompVGLContextSDLPtr m_ptrContext;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    SDL_Window *m_pSDLWindow;
+    SDL_GLContext m_pSDLContext;
+    CompVGLContextSDLPtr m_ptrContext;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

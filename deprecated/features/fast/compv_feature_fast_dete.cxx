@@ -354,12 +354,12 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVPtr<CompVImage*>& image
     if (threadsCountRange > 1) {
         int32_t rowStart = 0, threadHeight, totalHeight = 0;
         RangeFAST* pRange;
-		CompVAsyncTaskIds taskIds;
-		taskIds.reserve(threadsCountRange);
-		auto funcPtr = [&](RangeFAST* pRange) -> COMPV_ERROR_CODE {
-			FastProcessRange(pRange);
-			return COMPV_ERROR_CODE_S_OK;
-		};
+        CompVAsyncTaskIds taskIds;
+        taskIds.reserve(threadsCountRange);
+        auto funcPtr = [&](RangeFAST* pRange) -> COMPV_ERROR_CODE {
+            FastProcessRange(pRange);
+            return COMPV_ERROR_CODE_S_OK;
+        };
         for (int i = 0; i < threadsCountRange; ++i) {
             threadHeight = ((height - totalHeight) / (threadsCountRange - i)) & -2; // the & -2 is to make sure we'll deal with odd heights
             pRange = &m_pRanges[i];
@@ -374,11 +374,11 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVPtr<CompVImage*>& image
             pRange->N = m_iNumContinuous;
             pRange->pixels16 = &pixels16;
             pRange->strengths = m_pStrengthsMap;
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, pRange), taskIds));
+            COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, pRange), taskIds));
             rowStart += threadHeight;
             totalHeight += threadHeight;
         }
-		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+        COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
     }
     else {
         RangeFAST* pRange = &m_pRanges[0];
@@ -448,19 +448,19 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVPtr<CompVImage*>& image
         if (threadsCountNMS > 1) {
             int32_t total = 0, count, size = (int32_t)interestPoints->size();
             CompVInterestPoint * begin = interestPoints->begin();
-			CompVAsyncTaskIds taskIds;
-			taskIds.reserve(threadsCountNMS);
-			auto funcPtr = [&](int32_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end) -> COMPV_ERROR_CODE {
-				FastNMS(stride, pcStrengthsMap, begin, end);
-				return COMPV_ERROR_CODE_S_OK;
-			};
+            CompVAsyncTaskIds taskIds;
+            taskIds.reserve(threadsCountNMS);
+            auto funcPtr = [&](int32_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end) -> COMPV_ERROR_CODE {
+                FastNMS(stride, pcStrengthsMap, begin, end);
+                return COMPV_ERROR_CODE_S_OK;
+            };
             for (int32_t i = 0; i < threadsCountNMS; ++i) {
                 count = ((size - total) / (threadsCountNMS - i)) & -2;
-				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, stride, m_pStrengthsMap, begin, begin + count), taskIds));
+                COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, stride, m_pStrengthsMap, begin, begin + count), taskIds));
                 begin += count;
                 total += count;
             }
-			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+            COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
         }
         else {
             FastNMS(stride, m_pStrengthsMap, interestPoints->begin(), interestPoints->end());

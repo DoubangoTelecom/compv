@@ -14,7 +14,8 @@
 class GrTextureProvider;
 
 // This class delays the acquisition of textures until they are actually required
-class GrTextureProxy : public GrSurfaceProxy {
+class GrTextureProxy : public GrSurfaceProxy
+{
 public:
     // TODO: need to refine ownership semantics of 'srcData' if we're in completely
     // deferred mode
@@ -23,8 +24,12 @@ public:
     static sk_sp<GrTextureProxy> Make(sk_sp<GrTexture>);
 
     // TODO: add asRenderTargetProxy variants
-    GrTextureProxy* asTextureProxy() override { return this; }
-    const GrTextureProxy* asTextureProxy() const override { return this; }
+    GrTextureProxy* asTextureProxy() override {
+        return this;
+    }
+    const GrTextureProxy* asTextureProxy() const override {
+        return this;
+    }
 
     // Actually instantiate the backing texture, if necessary
     GrTexture* instantiate(GrTextureProvider* texProvider);

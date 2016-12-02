@@ -14,7 +14,8 @@
 /** We explicitly use the same allocator for our pixels that SkMask does,
     so that we can freely assign memory allocated by one class to the other.
 */
-class SK_API SkMallocPixelRef : public SkPixelRef {
+class SK_API SkMallocPixelRef : public SkPixelRef
+{
 public:
     /**
      *  Return a new SkMallocPixelRef with the provided pixel storage, rowBytes,
@@ -83,14 +84,18 @@ public:
                                          SkColorTable* ctable,
                                          SkData* data);
 
-    void* getAddr() const { return fStorage; }
+    void* getAddr() const {
+        return fStorage;
+    }
 
-    class PRFactory : public SkPixelRefFactory {
+    class PRFactory : public SkPixelRefFactory
+    {
     public:
         SkPixelRef* create(const SkImageInfo&, size_t rowBytes, SkColorTable*) override;
     };
 
-    class ZeroedPRFactory : public SkPixelRefFactory {
+    class ZeroedPRFactory : public SkPixelRefFactory
+    {
     public:
         SkPixelRef* create(const SkImageInfo&, size_t rowBytes, SkColorTable*) override;
     };

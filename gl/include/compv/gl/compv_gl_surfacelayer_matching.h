@@ -24,23 +24,23 @@ COMPV_OBJECT_DECLARE_PTRS(GLMatchingSurfaceLayer)
 class CompVGLMatchingSurfaceLayer : public CompVMatchingSurfaceLayer
 {
 protected:
-	CompVGLMatchingSurfaceLayer();
+    CompVGLMatchingSurfaceLayer();
 public:
-	virtual ~CompVGLMatchingSurfaceLayer();
-	COMPV_OBJECT_GET_ID(CompVGLMatchingSurfaceLayer);
-	
-	COMPV_OVERRIDE_DECL0("CompVMatchingSurfaceLayer", drawMatches)(CompVMatPtr trainImage, CompVMatPtr queryImage) override;
-	COMPV_OVERRIDE_DECL0("CompSurfaceLayer", blit)() override;
+    virtual ~CompVGLMatchingSurfaceLayer();
+    COMPV_OBJECT_GET_ID(CompVGLMatchingSurfaceLayer);
 
-	COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
-	COMPV_ERROR_CODE close();
+    COMPV_OVERRIDE_DECL0("CompVMatchingSurfaceLayer", drawMatches)(CompVMatPtr trainImage, CompVMatPtr queryImage) override;
+    COMPV_OVERRIDE_DECL0("CompSurfaceLayer", blit)() override;
 
-	static COMPV_ERROR_CODE newObj(CompVGLMatchingSurfaceLayerPtrPtr layer, size_t width, size_t height);
+    COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
+    COMPV_ERROR_CODE close();
+
+    static COMPV_ERROR_CODE newObj(CompVGLMatchingSurfaceLayerPtrPtr layer, size_t width, size_t height);
 
 private:
-	CompVGLSurfacePtr m_ptrCoverSurfaceGL;
-	CompVGLSurfacePtr m_ptrTrainSurfaceGL;
-	CompVGLSurfacePtr m_ptrQuerySurfaceGL;
+    CompVGLSurfacePtr m_ptrCoverSurfaceGL;
+    CompVGLSurfacePtr m_ptrTrainSurfaceGL;
+    CompVGLSurfacePtr m_ptrQuerySurfaceGL;
 };
 
 COMPV_NAMESPACE_END()

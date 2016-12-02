@@ -42,7 +42,7 @@ extern "C" {
 
 /* Platform specific functions for Windows */
 #ifdef __WIN32__
-	
+
 /**
    \brief Set a function that is called for every windows message, before TranslateMessage()
 */
@@ -148,8 +148,7 @@ extern DECLSPEC const char * SDLCALL SDL_AndroidGetExternalStoragePath();
 /**
  *  \brief WinRT / Windows Phone path types
  */
-typedef enum
-{
+typedef enum {
     /** \brief The installed app's root directory.
         Files here are likely to be read-only. */
     SDL_WINRT_PATH_INSTALLED_LOCATION,

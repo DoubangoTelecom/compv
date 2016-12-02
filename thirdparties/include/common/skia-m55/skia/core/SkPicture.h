@@ -35,7 +35,8 @@ struct SkPictInfo;
     An SkPicture records drawing commands made to a canvas to be played back at a later time.
     This base class handles serialization and a few other miscellany.
 */
-class SK_API SkPicture : public SkRefCnt {
+class SK_API SkPicture : public SkRefCnt
+{
 public:
     virtual ~SkPicture();
 
@@ -99,7 +100,8 @@ public:
     *  calls to save(), restore will automatically be called to return the state
     *  to the same level it was before the playback call was made.
     */
-    class SK_API AbortCallback {
+    class SK_API AbortCallback
+    {
     public:
         AbortCallback() {}
         virtual ~AbortCallback() {}
@@ -173,10 +175,14 @@ public:
 #endif
 
     // Sent via SkMessageBus from destructor.
-    struct DeletionMessage { int32_t fUniqueID; };  // TODO: -> uint32_t?
+    struct DeletionMessage {
+        int32_t fUniqueID;
+    };  // TODO: -> uint32_t?
 
     // Returns NULL if this is not an SkBigPicture.
-    virtual const SkBigPicture* asSkBigPicture() const { return NULL; }
+    virtual const SkBigPicture* asSkBigPicture() const {
+        return NULL;
+    }
 
     // Global setting to enable or disable security precautions for serialization.
     static void SetPictureIOSecurityPrecautionsEnabled_Dangerous(bool set);

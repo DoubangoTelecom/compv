@@ -16,7 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 void Moments0110_Intrin_SSE41(COMPV_ALIGNED(SSE) const uint8_t* top, COMPV_ALIGNED(SSE)const uint8_t* bottom, COMPV_ALIGNED(SSE)const int16_t* x, COMPV_ALIGNED(SSE) const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM, FMA3
-	COMPV_DEBUG_INFO_CHECK_SSE41();
+    COMPV_DEBUG_INFO_CHECK_SSE41();
 
     __m128i xmmTop, xmmBottom, xmmT, xmmB, xmm0, xmm1, xmm2, xmm3, xmm4, xmmX, xmmY, xmmZero;
 

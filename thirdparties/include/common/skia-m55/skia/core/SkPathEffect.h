@@ -26,7 +26,8 @@ class SkStrokeRec;
 
     Dashing is implemented as a subclass of SkPathEffect.
 */
-class SK_API SkPathEffect : public SkFlattenable {
+class SK_API SkPathEffect : public SkFlattenable
+{
 public:
     /**
      *  Given a src path (input) and a stroke-rec (input and output), apply
@@ -57,7 +58,8 @@ public:
         PointData aggregates all the information needed to draw the point
         primitives returned by an 'asPoints' call.
     */
-    class PointData {
+    class PointData
+    {
     public:
         PointData()
             : fFlags(0)
@@ -122,10 +124,10 @@ public:
             : fIntervals(intervals), fCount(count), fPhase(phase) {}
 
         SkScalar*   fIntervals;         //!< Length of on/off intervals for dashed lines
-                                        //   Even values represent ons, and odds offs
+        //   Even values represent ons, and odds offs
         int32_t     fCount;             //!< Number of intervals in the dash. Should be even number
         SkScalar    fPhase;             //!< Offset into the dashed interval pattern
-                                        //   mod the sum of all intervals
+        //   mod the sum of all intervals
     };
 
     virtual DashType asADash(DashInfo* info) const;
@@ -135,7 +137,9 @@ public:
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
     /// Override for subclasses as appropriate.
-    virtual bool exposedInAndroidJavaAPI() const { return false; }
+    virtual bool exposedInAndroidJavaAPI() const {
+        return false;
+    }
 #endif
 
 protected:
@@ -155,7 +159,8 @@ private:
     including flattening them. It does nothing in filterPath, and is only useful
     for managing the lifetimes of its two arguments.
 */
-class SK_API SkPairPathEffect : public SkPathEffect {
+class SK_API SkPairPathEffect : public SkPathEffect
+{
 protected:
     SkPairPathEffect(sk_sp<SkPathEffect> pe0, sk_sp<SkPathEffect> pe1);
 
@@ -176,7 +181,8 @@ private:
     This subclass of SkPathEffect composes its two arguments, to create
     a compound pathEffect.
 */
-class SK_API SkComposePathEffect : public SkPairPathEffect {
+class SK_API SkComposePathEffect : public SkPairPathEffect
+{
 public:
     /** Construct a pathEffect whose effect is to apply first the inner pathEffect
         and the the outer pathEffect (e.g. outer(inner(path)))
@@ -206,7 +212,9 @@ public:
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkComposePathEffect)
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    bool exposedInAndroidJavaAPI() const override { return true; }
+    bool exposedInAndroidJavaAPI() const override {
+        return true;
+    }
 #endif
 
 protected:
@@ -226,7 +234,8 @@ private:
     This subclass of SkPathEffect applies two pathEffects, one after the other.
     Its filterPath() returns true if either of the effects succeeded.
 */
-class SK_API SkSumPathEffect : public SkPairPathEffect {
+class SK_API SkSumPathEffect : public SkPairPathEffect
+{
 public:
     /** Construct a pathEffect whose effect is to apply two effects, in sequence.
         (e.g. first(path) + second(path))
@@ -255,7 +264,9 @@ public:
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkSumPathEffect)
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    bool exposedInAndroidJavaAPI() const override { return true; }
+    bool exposedInAndroidJavaAPI() const override {
+        return true;
+    }
 #endif
 
 protected:

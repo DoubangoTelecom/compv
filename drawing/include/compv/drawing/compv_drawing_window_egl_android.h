@@ -28,19 +28,19 @@ COMPV_OBJECT_DECLARE_PTRS(WindowEGLAndroid)
 class CompVWindowEGLAndroid : public CompVWindowEGL
 {
 protected:
-	CompVWindowEGLAndroid(size_t width, size_t height, const char* title);
+    CompVWindowEGLAndroid(size_t width, size_t height, const char* title);
 public:
-	virtual ~CompVWindowEGLAndroid();
-	COMPV_OBJECT_GET_ID(CompVWindowEGLAndroid);
-	
-	virtual EGLNativeWindowType nativeWindow() override /* Overrides(CompVWindowEGL) */;
+    virtual ~CompVWindowEGLAndroid();
+    COMPV_OBJECT_GET_ID(CompVWindowEGLAndroid);
 
-	static COMPV_ERROR_CODE newObj(CompVWindowEGLAndroidPtrPtr eglWindow, size_t width, size_t height, const char* title);
-	
+    virtual EGLNativeWindowType nativeWindow() override /* Overrides(CompVWindowEGL) */;
+
+    static COMPV_ERROR_CODE newObj(CompVWindowEGLAndroidPtrPtr eglWindow, size_t width, size_t height, const char* title);
+
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	EGLNativeWindowType m_pNativeWindow;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    EGLNativeWindowType m_pNativeWindow;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

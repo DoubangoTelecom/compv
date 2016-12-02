@@ -33,12 +33,17 @@ struct SK_API SkFontIdentity {
     SkFontStyle fFontStyle;
 };
 
-class SK_API SkRemotableFontIdentitySet : public SkRefCnt {
+class SK_API SkRemotableFontIdentitySet : public SkRefCnt
+{
 public:
     SkRemotableFontIdentitySet(int count, SkFontIdentity** data);
 
-    int count() const { return fCount; }
-    const SkFontIdentity& at(int index) const { return fData[index]; }
+    int count() const {
+        return fCount;
+    }
+    const SkFontIdentity& at(int index) const {
+        return fData[index];
+    }
 
     static SkRemotableFontIdentitySet* NewEmpty();
 
@@ -53,7 +58,8 @@ private:
     typedef SkRefCnt INHERITED;
 };
 
-class SK_API SkRemotableFontMgr : public SkRefCnt {
+class SK_API SkRemotableFontMgr : public SkRefCnt
+{
 public:
     /**
      *  Returns the names of the known fonts on the system.
@@ -129,8 +135,8 @@ public:
      *  so it is fine to just pass a ISO 639 here.
      */
     virtual SkFontIdentity matchNameStyleCharacter(const char familyName[], const SkFontStyle&,
-                                                   const char* bcp47[], int bcp47Count,
-                                                   SkUnichar character) const=0;
+            const char* bcp47[], int bcp47Count,
+            SkUnichar character) const=0;
 
     /**
      *  Returns the data for the given data id.

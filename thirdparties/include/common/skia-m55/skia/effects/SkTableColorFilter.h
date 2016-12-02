@@ -10,7 +10,8 @@
 
 #include "SkColorFilter.h"
 
-class SK_API SkTableColorFilter {
+class SK_API SkTableColorFilter
+{
 public:
     /**
      *  Create a table colorfilter, copying the table into the filter, and
@@ -47,7 +48,7 @@ public:
         return MakeARGB(tableA, tableR, tableG, tableB).release();
     }
 #endif
-    
+
     SK_DECLARE_FLATTENABLE_REGISTRAR_GROUP()
 };
 

@@ -29,7 +29,8 @@
 #undef DrawText
 #endif
 
-namespace SkRecords {
+namespace SkRecords
+{
 
 // A list of all the types of canvas calls we can record.
 // Each of these is reified into a struct below.
@@ -92,14 +93,19 @@ enum Type { SK_RECORD_TYPES(ENUM) };
 
 // An Optional doesn't own the pointer's memory, but may need to destroy non-POD data.
 template <typename T>
-class Optional : SkNoncopyable {
+class Optional : SkNoncopyable
+{
 public:
     Optional() : fPtr(nullptr) {}
     Optional(T* ptr) : fPtr(ptr) {}
     Optional(Optional&& o) : fPtr(o.fPtr) {
         o.fPtr = nullptr;
     }
-    ~Optional() { if (fPtr) fPtr->~T(); }
+    ~Optional() {
+        if (fPtr) {
+            fPtr->~T();
+        }
+    }
 
     ACT_AS_PTR(fPtr)
 private:
@@ -108,15 +114,22 @@ private:
 
 // Like Optional, but ptr must not be NULL.
 template <typename T>
-class Adopted : SkNoncopyable {
+class Adopted : SkNoncopyable
+{
 public:
-    Adopted(T* ptr) : fPtr(ptr) { SkASSERT(fPtr); }
+    Adopted(T* ptr) : fPtr(ptr) {
+        SkASSERT(fPtr);
+    }
     Adopted(Adopted* source) {
         // Transfer ownership from source to this.
         fPtr = source->fPtr;
         source->fPtr = NULL;
     }
-    ~Adopted() { if (fPtr) fPtr->~T(); }
+    ~Adopted() {
+        if (fPtr) {
+            fPtr->~T();
+        }
+    }
 
     ACT_AS_PTR(fPtr)
 private:
@@ -125,7 +138,8 @@ private:
 
 // PODArray doesn't own the pointer's memory, and we assume the data is POD.
 template <typename T>
-class PODArray {
+class PODArray
+{
 public:
     PODArray() {}
     PODArray(T* ptr) : fPtr(ptr) {}
@@ -170,8 +184,8 @@ struct T {                              \
 
 RECORD(NoOp, 0);
 RECORD(Restore, 0,
-        SkIRect devBounds;
-        TypedMatrix matrix);
+       SkIRect devBounds;
+       TypedMatrix matrix);
 RECORD(Save, 0);
 
 RECORD(SaveLayer, kHasPaint_Tag,
@@ -181,13 +195,13 @@ RECORD(SaveLayer, kHasPaint_Tag,
        SkCanvas::SaveLayerFlags saveLayerFlags);
 
 RECORD(SetMatrix, 0,
-        TypedMatrix matrix);
+       TypedMatrix matrix);
 RECORD(Concat, 0,
-        TypedMatrix matrix);
+       TypedMatrix matrix);
 
 RECORD(Translate, 0,
-        SkScalar dx;
-        SkScalar dy);
+       SkScalar dx;
+       SkScalar dy);
 RECORD(TranslateZ, 0, SkScalar z);
 
 struct ClipOpAndAA {
@@ -199,21 +213,21 @@ struct ClipOpAndAA {
 static_assert(sizeof(ClipOpAndAA) == 4, "ClipOpAndAASize");
 
 RECORD(ClipPath, 0,
-        SkIRect devBounds;
-        PreCachedPath path;
-        ClipOpAndAA opAA);
+       SkIRect devBounds;
+       PreCachedPath path;
+       ClipOpAndAA opAA);
 RECORD(ClipRRect, 0,
-        SkIRect devBounds;
-        SkRRect rrect;
-        ClipOpAndAA opAA);
+       SkIRect devBounds;
+       SkRRect rrect;
+       ClipOpAndAA opAA);
 RECORD(ClipRect, 0,
-        SkIRect devBounds;
-        SkRect rect;
-        ClipOpAndAA opAA);
+       SkIRect devBounds;
+       SkRect rect;
+       ClipOpAndAA opAA);
 RECORD(ClipRegion, 0,
-        SkIRect devBounds;
-        SkRegion region;
-        SkCanvas::ClipOp op);
+       SkIRect devBounds;
+       SkRegion region;
+       SkCanvas::ClipOp op);
 
 // While not strictly required, if you have an SkPaint, it's fastest to put it first.
 RECORD(DrawArc, kDraw_Tag|kHasPaint_Tag,
@@ -223,130 +237,130 @@ RECORD(DrawArc, kDraw_Tag|kHasPaint_Tag,
        SkScalar sweepAngle;
        unsigned useCenter);
 RECORD(DrawDRRect, kDraw_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        SkRRect outer;
-        SkRRect inner);
+       SkPaint paint;
+       SkRRect outer;
+       SkRRect inner);
 RECORD(DrawDrawable, kDraw_Tag,
-        Optional<SkMatrix> matrix;
-        SkRect worstCaseBounds;
-        int32_t index);
+       Optional<SkMatrix> matrix;
+       SkRect worstCaseBounds;
+       int32_t index);
 RECORD(DrawImage, kDraw_Tag|kHasImage_Tag|kHasPaint_Tag,
-        Optional<SkPaint> paint;
-        sk_sp<const SkImage> image;
-        SkScalar left;
-        SkScalar top);
+       Optional<SkPaint> paint;
+       sk_sp<const SkImage> image;
+       SkScalar left;
+       SkScalar top);
 RECORD(DrawImageLattice, kDraw_Tag|kHasImage_Tag|kHasPaint_Tag,
-        Optional<SkPaint> paint;
-        sk_sp<const SkImage> image;
-        int xCount;
-        PODArray<int> xDivs;
-        int yCount;
-        PODArray<int> yDivs;
-        int flagCount;
-        PODArray<SkCanvas::Lattice::Flags> flags;
-        SkIRect src;
-        SkRect dst);
+       Optional<SkPaint> paint;
+       sk_sp<const SkImage> image;
+       int xCount;
+       PODArray<int> xDivs;
+       int yCount;
+       PODArray<int> yDivs;
+       int flagCount;
+       PODArray<SkCanvas::Lattice::Flags> flags;
+       SkIRect src;
+       SkRect dst);
 RECORD(DrawImageRect, kDraw_Tag|kHasImage_Tag|kHasPaint_Tag,
-        Optional<SkPaint> paint;
-        sk_sp<const SkImage> image;
-        Optional<SkRect> src;
-        SkRect dst;
-        SkCanvas::SrcRectConstraint constraint);
+       Optional<SkPaint> paint;
+       sk_sp<const SkImage> image;
+       Optional<SkRect> src;
+       SkRect dst;
+       SkCanvas::SrcRectConstraint constraint);
 RECORD(DrawImageNine, kDraw_Tag|kHasImage_Tag|kHasPaint_Tag,
-        Optional<SkPaint> paint;
-        sk_sp<const SkImage> image;
-        SkIRect center;
-        SkRect dst);
+       Optional<SkPaint> paint;
+       sk_sp<const SkImage> image;
+       SkIRect center;
+       SkRect dst);
 RECORD(DrawOval, kDraw_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        SkRect oval);
+       SkPaint paint;
+       SkRect oval);
 RECORD(DrawPaint, kDraw_Tag|kHasPaint_Tag,
-        SkPaint paint);
+       SkPaint paint);
 RECORD(DrawPath, kDraw_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        PreCachedPath path);
+       SkPaint paint;
+       PreCachedPath path);
 RECORD(DrawPicture, kDraw_Tag|kHasPaint_Tag,
-        Optional<SkPaint> paint;
-        sk_sp<const SkPicture> picture;
-        TypedMatrix matrix);
+       Optional<SkPaint> paint;
+       sk_sp<const SkPicture> picture;
+       TypedMatrix matrix);
 RECORD(DrawShadowedPicture, kDraw_Tag|kHasPaint_Tag,
-        Optional<SkPaint> paint;
-        sk_sp<const SkPicture> picture;
-        TypedMatrix matrix;
-        const SkShadowParams& params);
+       Optional<SkPaint> paint;
+       sk_sp<const SkPicture> picture;
+       TypedMatrix matrix;
+       const SkShadowParams& params);
 RECORD(DrawPoints, kDraw_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        SkCanvas::PointMode mode;
-        unsigned count;
-        SkPoint* pts);
+       SkPaint paint;
+       SkCanvas::PointMode mode;
+       unsigned count;
+       SkPoint* pts);
 RECORD(DrawPosText, kDraw_Tag|kHasText_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        PODArray<char> text;
-        size_t byteLength;
-        PODArray<SkPoint> pos);
+       SkPaint paint;
+       PODArray<char> text;
+       size_t byteLength;
+       PODArray<SkPoint> pos);
 RECORD(DrawPosTextH, kDraw_Tag|kHasText_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        PODArray<char> text;
-        unsigned byteLength;
-        SkScalar y;
-        PODArray<SkScalar> xpos);
+       SkPaint paint;
+       PODArray<char> text;
+       unsigned byteLength;
+       SkScalar y;
+       PODArray<SkScalar> xpos);
 RECORD(DrawRRect, kDraw_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        SkRRect rrect);
+       SkPaint paint;
+       SkRRect rrect);
 RECORD(DrawRect, kDraw_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        SkRect rect);
+       SkPaint paint;
+       SkRect rect);
 RECORD(DrawRegion, kDraw_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        SkRegion region);
+       SkPaint paint;
+       SkRegion region);
 RECORD(DrawText, kDraw_Tag|kHasText_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        PODArray<char> text;
-        size_t byteLength;
-        SkScalar x;
-        SkScalar y);
+       SkPaint paint;
+       PODArray<char> text;
+       size_t byteLength;
+       SkScalar x;
+       SkScalar y);
 RECORD(DrawTextBlob, kDraw_Tag|kHasText_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        sk_sp<const SkTextBlob> blob;
-        SkScalar x;
-        SkScalar y);
+       SkPaint paint;
+       sk_sp<const SkTextBlob> blob;
+       SkScalar x;
+       SkScalar y);
 RECORD(DrawTextOnPath, kDraw_Tag|kHasText_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        PODArray<char> text;
-        size_t byteLength;
-        PreCachedPath path;
-        TypedMatrix matrix);
+       SkPaint paint;
+       PODArray<char> text;
+       size_t byteLength;
+       PreCachedPath path;
+       TypedMatrix matrix);
 RECORD(DrawTextRSXform, kDraw_Tag|kHasText_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        PODArray<char> text;
-        size_t byteLength;
-        PODArray<SkRSXform> xforms;
-        Optional<SkRect> cull);
+       SkPaint paint;
+       PODArray<char> text;
+       size_t byteLength;
+       PODArray<SkRSXform> xforms;
+       Optional<SkRect> cull);
 RECORD(DrawPatch, kDraw_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        PODArray<SkPoint> cubics;
-        PODArray<SkColor> colors;
-        PODArray<SkPoint> texCoords;
-        sk_sp<SkXfermode> xmode);
+       SkPaint paint;
+       PODArray<SkPoint> cubics;
+       PODArray<SkColor> colors;
+       PODArray<SkPoint> texCoords;
+       sk_sp<SkXfermode> xmode);
 RECORD(DrawAtlas, kDraw_Tag|kHasImage_Tag|kHasPaint_Tag,
-        Optional<SkPaint> paint;
-        sk_sp<const SkImage> atlas;
-        PODArray<SkRSXform> xforms;
-        PODArray<SkRect> texs;
-        PODArray<SkColor> colors;
-        int count;
-        SkXfermode::Mode mode;
-        Optional<SkRect> cull);
+       Optional<SkPaint> paint;
+       sk_sp<const SkImage> atlas;
+       PODArray<SkRSXform> xforms;
+       PODArray<SkRect> texs;
+       PODArray<SkColor> colors;
+       int count;
+       SkXfermode::Mode mode;
+       Optional<SkRect> cull);
 RECORD(DrawVertices, kDraw_Tag|kHasPaint_Tag,
-        SkPaint paint;
-        SkCanvas::VertexMode vmode;
-        int vertexCount;
-        PODArray<SkPoint> vertices;
-        PODArray<SkPoint> texs;
-        PODArray<SkColor> colors;
-        sk_sp<SkXfermode> xmode;
-        PODArray<uint16_t> indices;
-        int indexCount);
+       SkPaint paint;
+       SkCanvas::VertexMode vmode;
+       int vertexCount;
+       PODArray<SkPoint> vertices;
+       PODArray<SkPoint> texs;
+       PODArray<SkColor> colors;
+       sk_sp<SkXfermode> xmode;
+       PODArray<uint16_t> indices;
+       int indexCount);
 RECORD(DrawAnnotation, 0,  // TODO: kDraw_Tag, skia:5548
        SkRect rect;
        SkString key;

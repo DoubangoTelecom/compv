@@ -10,7 +10,8 @@
 
 #include "SkTypes.h"
 
-class SK_API SkFontStyle {
+class SK_API SkFontStyle
+{
 public:
     enum Weight {
         kInvisible_Weight   =    0,
@@ -53,9 +54,15 @@ public:
         return fUnion.fU32 == rhs.fUnion.fU32;
     }
 
-    int weight() const { return fUnion.fR.fWeight; }
-    int width() const { return fUnion.fR.fWidth; }
-    Slant slant() const { return (Slant)fUnion.fR.fSlant; }
+    int weight() const {
+        return fUnion.fR.fWeight;
+    }
+    int width() const {
+        return fUnion.fR.fWidth;
+    }
+    Slant slant() const {
+        return (Slant)fUnion.fR.fSlant;
+    }
 
 private:
     union {

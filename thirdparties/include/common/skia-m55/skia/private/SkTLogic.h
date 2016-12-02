@@ -19,7 +19,8 @@
 #include <type_traits>
 #include <utility>
 
-namespace skstd {
+namespace skstd
+{
 
 template <bool B> using bool_constant = std::integral_constant<bool, B>;
 
@@ -65,7 +66,8 @@ template <typename T> using underlying_type_t = typename skstd::underlying_type<
 }  // namespace skstd
 
 // The sknonstd namespace contains things we would like to be proposed and feel std-ish.
-namespace sknonstd {
+namespace sknonstd
+{
 
 // The name 'copy' here is fraught with peril. In this case it means 'append', not 'overwrite'.
 // Alternate proposed names are 'propagate', 'augment', or 'append' (and 'add', but already taken).

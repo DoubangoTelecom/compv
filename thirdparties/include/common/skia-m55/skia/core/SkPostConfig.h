@@ -15,11 +15,11 @@
 #endif
 
 #if !defined(SK_DEBUG) && !defined(SK_RELEASE)
-    #ifdef NDEBUG
-        #define SK_RELEASE
-    #else
-        #define SK_DEBUG
-    #endif
+#ifdef NDEBUG
+#define SK_RELEASE
+#else
+#define SK_DEBUG
+#endif
 #endif
 
 #if defined(SK_DEBUG) && defined(SK_RELEASE)
@@ -79,19 +79,19 @@
 
 // As usual, there are two ways to increase alignment... the MSVC way and the everyone-else way.
 #ifndef SK_STRUCT_ALIGN
-    #ifdef _MSC_VER
-        #define SK_STRUCT_ALIGN(N) __declspec(align(N))
-    #else
-        #define SK_STRUCT_ALIGN(N) __attribute__((aligned(N)))
-    #endif
+#ifdef _MSC_VER
+#define SK_STRUCT_ALIGN(N) __declspec(align(N))
+#else
+#define SK_STRUCT_ALIGN(N) __attribute__((aligned(N)))
+#endif
 #endif
 
 #if defined(_MSC_VER) && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-    #define SK_VECTORCALL __vectorcall
+#define SK_VECTORCALL __vectorcall
 #elif defined(SK_CPU_ARM32) && defined(SK_ARM_HAS_NEON)
-    #define SK_VECTORCALL __attribute__((pcs("aapcs-vfp")))
+#define SK_VECTORCALL __attribute__((pcs("aapcs-vfp")))
 #else
-    #define SK_VECTORCALL
+#define SK_VECTORCALL
 #endif
 
 #if !defined(SK_SUPPORT_GPU)
@@ -107,8 +107,8 @@
  */
 #if !defined(SkNO_RETURN_HINT)
 #  if SK_HAS_COMPILER_FEATURE(attribute_analyzer_noreturn)
-     static inline void SkNO_RETURN_HINT() __attribute__((analyzer_noreturn));
-     static inline void SkNO_RETURN_HINT() {}
+static inline void SkNO_RETURN_HINT() __attribute__((analyzer_noreturn));
+static inline void SkNO_RETURN_HINT() {}
 #  else
 #    define SkNO_RETURN_HINT() do {} while (false)
 #  endif
@@ -133,8 +133,8 @@
 #endif
 
 #if defined(GOOGLE3)
-    void SkDebugfForDumpStackTrace(const char* data, void* unused);
-    void DumpStackTrace(int skip_count, void w(const char*, void*), void* arg);
+void SkDebugfForDumpStackTrace(const char* data, void* unused);
+void DumpStackTrace(int skip_count, void w(const char*, void*), void* arg);
 #  define SK_DUMP_GOOGLE3_STACK() DumpStackTrace(0, SkDebugfForDumpStackTrace, nullptr)
 #else
 #  define SK_DUMP_GOOGLE3_STACK()
@@ -210,28 +210,28 @@
 #
 #  ifdef SK_DEBUGx
 #    if defined(SK_SIMULATE_FAILED_MALLOC) && defined(__cplusplus)
-       void * operator new(
-           size_t cb,
-           int nBlockUse,
-           const char * szFileName,
-           int nLine,
-           int foo
-           );
-       void * operator new[](
-           size_t cb,
-           int nBlockUse,
-           const char * szFileName,
-           int nLine,
-           int foo
-           );
-       void operator delete(
-           void *pUserData,
-           int, const char*, int, int
-           );
-       void operator delete(
-           void *pUserData
-           );
-       void operator delete[]( void * p );
+void * operator new(
+    size_t cb,
+    int nBlockUse,
+    const char * szFileName,
+    int nLine,
+    int foo
+);
+void * operator new[](
+    size_t cb,
+    int nBlockUse,
+    const char * szFileName,
+    int nLine,
+    int foo
+);
+void operator delete(
+    void *pUserData,
+    int, const char*, int, int
+);
+void operator delete(
+    void *pUserData
+);
+void operator delete[]( void * p );
 #      define DEBUG_CLIENTBLOCK   new( _CLIENT_BLOCK, __FILE__, __LINE__, 0)
 #    else
 #      define DEBUG_CLIENTBLOCK   new( _CLIENT_BLOCK, __FILE__, __LINE__)
@@ -253,7 +253,7 @@
 #endif
 
 #if !defined(SK_ATTR_DEPRECATED)
-   // FIXME: we ignore msg for now...
+// FIXME: we ignore msg for now...
 #  define SK_ATTR_DEPRECATED(msg) SK_ATTRIBUTE(deprecated)
 #endif
 
@@ -294,14 +294,14 @@
 //////////////////////////////////////////////////////////////////////
 
 #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
-    #define SK_PREFETCH(ptr)       _mm_prefetch(reinterpret_cast<const char*>(ptr), _MM_HINT_T0)
-    #define SK_WRITE_PREFETCH(ptr) _mm_prefetch(reinterpret_cast<const char*>(ptr), _MM_HINT_T0)
+#define SK_PREFETCH(ptr)       _mm_prefetch(reinterpret_cast<const char*>(ptr), _MM_HINT_T0)
+#define SK_WRITE_PREFETCH(ptr) _mm_prefetch(reinterpret_cast<const char*>(ptr), _MM_HINT_T0)
 #elif defined(__GNUC__)
-    #define SK_PREFETCH(ptr)       __builtin_prefetch(ptr)
-    #define SK_WRITE_PREFETCH(ptr) __builtin_prefetch(ptr, 1)
+#define SK_PREFETCH(ptr)       __builtin_prefetch(ptr)
+#define SK_WRITE_PREFETCH(ptr) __builtin_prefetch(ptr, 1)
 #else
-    #define SK_PREFETCH(ptr)
-    #define SK_WRITE_PREFETCH(ptr)
+#define SK_PREFETCH(ptr)
+#define SK_WRITE_PREFETCH(ptr)
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -343,7 +343,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #if !defined(SK_GAMMA_EXPONENT)
-    #define SK_GAMMA_EXPONENT (0.0f)  // SRGB
+#define SK_GAMMA_EXPONENT (0.0f)  // SRGB
 #endif
 
 //////////////////////////////////////////////////////////////////////

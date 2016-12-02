@@ -23,7 +23,8 @@
     of text. Spacing consists of two scalars: mul and add, and the spacing
     between lines is computed as: spacing = paint.getTextSize() * mul + add
 */
-class SkTextBox {
+class SkTextBox
+{
 public:
     SkTextBox();
 
@@ -33,7 +34,9 @@ public:
 
         kModeCount
     };
-    Mode    getMode() const { return (Mode)fMode; }
+    Mode    getMode() const {
+        return (Mode)fMode;
+    }
     void    setMode(Mode);
 
     enum SpacingAlign {
@@ -43,7 +46,9 @@ public:
 
         kSpacingAlignCount
     };
-    SpacingAlign    getSpacingAlign() const { return (SpacingAlign)fSpacingAlign; }
+    SpacingAlign    getSpacingAlign() const {
+        return (SpacingAlign)fSpacingAlign;
+    }
     void            setSpacingAlign(SpacingAlign);
 
     void    getBox(SkRect*) const;
@@ -62,12 +67,13 @@ public:
 
     sk_sp<SkTextBlob> snapshotTextBlob(SkScalar* computedBottom) const;
 
-    class Visitor {
+    class Visitor
+    {
     public:
         virtual ~Visitor() {}
         virtual void operator()(const char*, size_t, SkScalar x, SkScalar y, const SkPaint&) = 0;
     };
-    
+
 private:
     SkRect      fBox;
     SkScalar    fSpacingMul, fSpacingAdd;
@@ -79,7 +85,8 @@ private:
     SkScalar visit(Visitor&, const char text[], size_t len, const SkPaint&) const;
 };
 
-class SkTextLineBreaker {
+class SkTextLineBreaker
+{
 public:
     static int CountLines(const char text[], size_t len, const SkPaint&, SkScalar width);
 };

@@ -30,34 +30,34 @@ COMPV_ERROR_CODE TestORB()
     uint64_t timeStart, timeEnd;
 
     // Decode the jpeg image
-	COMPV_CHECK_CODE_RETURN(CompVImageDecoder::decodeFile(JPEG_IMG, &image));
+    COMPV_CHECK_CODE_RETURN(CompVImageDecoder::decodeFile(JPEG_IMG, &image));
     // Convert the image to grayscal (required by feture detectors)
-	COMPV_CHECK_CODE_RETURN(image->convert(COMPV_PIXEL_FORMAT_GRAYSCALE, &image));
+    COMPV_CHECK_CODE_RETURN(image->convert(COMPV_PIXEL_FORMAT_GRAYSCALE, &image));
 
     // Create the ORB feature detector
-	COMPV_CHECK_CODE_RETURN(CompVCornerDete::newObj(COMPV_ORB_ID, &dete));
+    COMPV_CHECK_CODE_RETURN(CompVCornerDete::newObj(COMPV_ORB_ID, &dete));
     // Create the ORB feature descriptor
-	COMPV_CHECK_CODE_RETURN(CompVCornerDesc::newObj(COMPV_ORB_ID, &desc));
-	COMPV_CHECK_CODE_RETURN(desc->attachDete(dete)); // attach detector to make sure we'll share context
+    COMPV_CHECK_CODE_RETURN(CompVCornerDesc::newObj(COMPV_ORB_ID, &desc));
+    COMPV_CHECK_CODE_RETURN(desc->attachDete(dete)); // attach detector to make sure we'll share context
 
     // Set the default values for the detector
     val32 = FAST_THRESHOLD;
-	COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_INT32_FAST_THRESHOLD, &val32, sizeof(val32)));
+    COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_INT32_FAST_THRESHOLD, &val32, sizeof(val32)));
     valBool = FAST_NONMAXIMA;
-	COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_BOOL_FAST_NON_MAXIMA_SUPP, &valBool, sizeof(valBool)));
+    COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_BOOL_FAST_NON_MAXIMA_SUPP, &valBool, sizeof(valBool)));
     val32 = ORB_PYRAMID_LEVELS;
-	COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_INT32_PYRAMID_LEVELS, &val32, sizeof(val32)));
+    COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_INT32_PYRAMID_LEVELS, &val32, sizeof(val32)));
     val32 = ORB_PYRAMID_SCALE_TYPE;
-	COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_INT32_PYRAMID_SCALE_TYPE, &val32, sizeof(val32)));
+    COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_INT32_PYRAMID_SCALE_TYPE, &val32, sizeof(val32)));
     valFloat = ORB_PYRAMID_SCALEFACTOR;
-	COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_FLT32_PYRAMID_SCALE_FACTOR, &valFloat, sizeof(valFloat)));
+    COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_FLT32_PYRAMID_SCALE_FACTOR, &valFloat, sizeof(valFloat)));
     val32 = ORB_MAX_FEATURES;
-	COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_INT32_MAX_FEATURES, &val32, sizeof(val32)));
+    COMPV_CHECK_CODE_RETURN(dete->set(COMPV_ORB_SET_INT32_MAX_FEATURES, &val32, sizeof(val32)));
 
     timeStart = CompVTime::getNowMills();
     for (int i = 0; i < ORB_LOOOP_COUNT; ++i) {
         // Detect keypoints
-		COMPV_CHECK_CODE_RETURN(dete->process(image, interestPoints));
+        COMPV_CHECK_CODE_RETURN(dete->process(image, interestPoints));
 
         // Describe keypoints
         COMPV_CHECK_CODE_RETURN(desc->process(image, interestPoints, &descriptions));
@@ -74,7 +74,7 @@ COMPV_ERROR_CODE TestORB()
     else {
         ok = (md5 == (CompVEngine::isMultiThreadingEnabled() ? ORB_DESC_MD5_FLOAT_MT : ORB_DESC_MD5_FLOAT));
     }
-	COMPV_CHECK_EXP_RETURN(!ok, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+    COMPV_CHECK_EXP_RETURN(!ok, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }

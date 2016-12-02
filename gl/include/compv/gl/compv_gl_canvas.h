@@ -24,29 +24,35 @@ COMPV_OBJECT_DECLARE_PTRS(GLCanvas)
 class COMPV_GL_API CompVGLCanvas : public CompVCanvas
 {
 protected:
-	CompVGLCanvas(CompVGLFboPtr ptrFBO, CompVCanvasImplPtr ptrImpl);
+    CompVGLCanvas(CompVGLFboPtr ptrFBO, CompVCanvasImplPtr ptrImpl);
 public:
-	virtual ~CompVGLCanvas();
-	COMPV_OBJECT_GET_ID("CompVGLCanvas");
-	COMPV_INLINE bool isEmpty()const { return m_bEmpty; }
+    virtual ~CompVGLCanvas();
+    COMPV_OBJECT_GET_ID("CompVGLCanvas");
+    COMPV_INLINE bool isEmpty()const {
+        return m_bEmpty;
+    }
 
-	COMPV_OVERRIDE_DECL0("CompVCanvasInterface", drawText)(const void* textPtr, size_t textLengthInBytes, int x, int y) override;
-	COMPV_OVERRIDE_DECL0("CompVCanvasInterface", drawLine)(int x0, int y0, int x1, int y1) override;
+    COMPV_OVERRIDE_DECL0("CompVCanvasInterface", drawText)(const void* textPtr, size_t textLengthInBytes, int x, int y) override;
+    COMPV_OVERRIDE_DECL0("CompVCanvasInterface", drawLine)(int x0, int y0, int x1, int y1) override;
 
-	COMPV_ERROR_CODE close();
+    COMPV_ERROR_CODE close();
 
-	static COMPV_ERROR_CODE newObj(CompVGLCanvasPtrPtr canvas, CompVGLFboPtr ptrFBO, CompVCanvasImplPtr ptrImpl);
-
-private:
-	COMPV_INLINE void makeEmpty() { m_bEmpty = true; }
-	COMPV_INLINE void unMakeEmpty() { m_bEmpty = false; }
+    static COMPV_ERROR_CODE newObj(CompVGLCanvasPtrPtr canvas, CompVGLFboPtr ptrFBO, CompVCanvasImplPtr ptrImpl);
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	bool m_bEmpty;
-	CompVGLFboPtr m_ptrFBO;
-	CompVCanvasImplPtr m_ptrImpl;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_INLINE void makeEmpty() {
+        m_bEmpty = true;
+    }
+    COMPV_INLINE void unMakeEmpty() {
+        m_bEmpty = false;
+    }
+
+private:
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    bool m_bEmpty;
+    CompVGLFboPtr m_ptrFBO;
+    CompVCanvasImplPtr m_ptrImpl;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

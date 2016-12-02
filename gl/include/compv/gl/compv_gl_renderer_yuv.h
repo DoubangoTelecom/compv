@@ -23,30 +23,30 @@ COMPV_OBJECT_DECLARE_PTRS(GLRendererYUV)
 class CompVGLRendererYUV : public CompVGLRenderer
 {
 protected:
-	CompVGLRendererYUV(COMPV_PIXEL_FORMAT eYUVPixelFormat);
+    CompVGLRendererYUV(COMPV_PIXEL_FORMAT eYUVPixelFormat);
 public:
-	virtual ~CompVGLRendererYUV();
-	COMPV_OBJECT_GET_ID(CompVGLRendererYUV);
+    virtual ~CompVGLRendererYUV();
+    COMPV_OBJECT_GET_ID(CompVGLRendererYUV);
 
-	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) COMPV_OVERRIDE_DECL("CompVGLRenderer");
+    virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) COMPV_OVERRIDE_DECL("CompVGLRenderer");
 
-	static COMPV_ERROR_CODE newObj(CompVGLRendererYUVPtrPtr glRenderer, COMPV_PIXEL_FORMAT eYUVPixelFormat);
+    static COMPV_ERROR_CODE newObj(CompVGLRendererYUVPtrPtr glRenderer, COMPV_PIXEL_FORMAT eYUVPixelFormat);
 
 protected:
-	virtual COMPV_ERROR_CODE deInit();
-	virtual COMPV_ERROR_CODE init(CompVMatPtr mat);
+    virtual COMPV_ERROR_CODE deInit();
+    virtual COMPV_ERROR_CODE init(CompVMatPtr mat);
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	bool m_bInit;
-	GLuint m_uNameTextures[4];
-	size_t m_uWidths[4];
-	size_t m_uHeights[4];
-	size_t m_uStrides[4];
-	size_t m_uTexturesCount;
-	std::string m_strPrgVertexData;
-	std::string m_strPrgFragData;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    bool m_bInit;
+    GLuint m_uNameTextures[4];
+    size_t m_uWidths[4];
+    size_t m_uHeights[4];
+    size_t m_uStrides[4];
+    size_t m_uTexturesCount;
+    std::string m_strPrgVertexData;
+    std::string m_strPrgFragData;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

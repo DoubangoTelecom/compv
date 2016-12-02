@@ -13,7 +13,8 @@
 #include "SkPoint.h"
 #include "SkXfermode.h"
 
-class SK_API SkLayerDrawLooper : public SkDrawLooper {
+class SK_API SkLayerDrawLooper : public SkDrawLooper
+{
 public:
     virtual ~SkLayerDrawLooper();
 
@@ -73,13 +74,17 @@ public:
 
     SkDrawLooper::Context* createContext(SkCanvas*, void* storage) const override;
 
-    size_t contextSize() const override { return sizeof(LayerDrawLooperContext); }
+    size_t contextSize() const override {
+        return sizeof(LayerDrawLooperContext);
+    }
 
     bool asABlurShadow(BlurShadowRec* rec) const override;
 
     SK_TO_STRING_OVERRIDE()
 
-    Factory getFactory() const override { return CreateProc; }
+    Factory getFactory() const override {
+        return CreateProc;
+    }
     static sk_sp<SkFlattenable> CreateProc(SkReadBuffer& buffer);
 
 protected:
@@ -97,7 +102,8 @@ private:
     int     fCount;
 
     // state-machine during the init/next cycle
-    class LayerDrawLooperContext : public SkDrawLooper::Context {
+    class LayerDrawLooperContext : public SkDrawLooper::Context
+    {
     public:
         explicit LayerDrawLooperContext(const SkLayerDrawLooper* looper);
 
@@ -113,7 +119,8 @@ private:
     typedef SkDrawLooper INHERITED;
 
 public:
-    class SK_API Builder {
+    class SK_API Builder
+    {
     public:
         Builder();
         ~Builder();
@@ -133,7 +140,9 @@ public:
         /**
          *  This layer will with the original paint and no offset.
          */
-        void addLayer() { this->addLayer(0, 0); }
+        void addLayer() {
+            this->addLayer(0, 0);
+        }
 
         /// Similar to addLayer, but adds a layer to the top.
         SkPaint* addLayerOnTop(const LayerInfo&);

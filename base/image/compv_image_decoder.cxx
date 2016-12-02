@@ -23,118 +23,118 @@ CompVDecodeInfoFuncPtr CompVImageDecoder::s_funcptrDecodeInfoJpeg = NULL;
 
 COMPV_ERROR_CODE CompVImageDecoder::init()
 {
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
-	if (!CompVImageDecoder::s_bInitialize) {
-		COMPV_DEBUG_INFO_EX(kModuleNameImageDecoder, "Initializing image decoder...");
+    if (!CompVImageDecoder::s_bInitialize) {
+        COMPV_DEBUG_INFO_EX(kModuleNameImageDecoder, "Initializing image decoder...");
 
-		/* Setting decoders function pointers in CompVBase is deprecated (to avoid linking against 3rd-party libraries in base). *Must* use CompVDrawing.*/
+        /* Setting decoders function pointers in CompVBase is deprecated (to avoid linking against 3rd-party libraries in base). *Must* use CompVDrawing.*/
 #if defined(HAVE_LIBJPEG)
-		CompVImageDecoder::s_funcptrDecodeFileJpeg = libjpegDecodeFile;
-		CompVImageDecoder::s_funcptrDecodeInfoJpeg = libjpegDecodeInfo;
+        CompVImageDecoder::s_funcptrDecodeFileJpeg = libjpegDecodeFile;
+        CompVImageDecoder::s_funcptrDecodeInfoJpeg = libjpegDecodeInfo;
 #endif /* HAVE_LIBJPEG */
 
-		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
+        COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
 
-		CompVImageDecoder::s_bInitialize = true;
-	}
+        CompVImageDecoder::s_bInitialize = true;
+    }
 
 bail:
-	return err_;
+    return err_;
 }
 
 COMPV_ERROR_CODE CompVImageDecoder::deInit()
 {
-	if (CompVImageDecoder::s_bInitialize) {
-		CompVImageDecoder::s_funcptrDecodeFileJpeg = NULL;
-		CompVImageDecoder::s_funcptrDecodeInfoJpeg = NULL;
+    if (CompVImageDecoder::s_bInitialize) {
+        CompVImageDecoder::s_funcptrDecodeFileJpeg = NULL;
+        CompVImageDecoder::s_funcptrDecodeInfoJpeg = NULL;
 
-		CompVImageDecoder::s_bInitialize = false;
-	}
-	return COMPV_ERROR_CODE_S_OK;
+        CompVImageDecoder::s_bInitialize = false;
+    }
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVImageDecoder::setFuncPtrs(COMPV_IMAGE_FORMAT format, CompVDecodeFileFuncPtr funcptrDecodeFile, CompVDecodeInfoFuncPtr funcptrDecodeInfo)
 {
-	COMPV_DEBUG_INFO_EX(kModuleNameImageDecoder, "Setting decode function pointers for JPEG");
-	COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-	switch (format) {
-	case COMPV_IMAGE_FORMAT_JPEG:
-		CompVImageDecoder::s_funcptrDecodeFileJpeg = funcptrDecodeFile;
-		CompVImageDecoder::s_funcptrDecodeInfoJpeg = funcptrDecodeInfo;
-		break;
-	case COMPV_IMAGE_FORMAT_RAW:
-	case COMPV_IMAGE_FORMAT_BITMAP:
-	case COMPV_IMAGE_FORMAT_PNG:
-	default:
-		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT);
-		break;
-	}
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_DEBUG_INFO_EX(kModuleNameImageDecoder, "Setting decode function pointers for JPEG");
+    COMPV_CHECK_EXP_RETURN(!CompVBase::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+    switch (format) {
+    case COMPV_IMAGE_FORMAT_JPEG:
+        CompVImageDecoder::s_funcptrDecodeFileJpeg = funcptrDecodeFile;
+        CompVImageDecoder::s_funcptrDecodeInfoJpeg = funcptrDecodeInfo;
+        break;
+    case COMPV_IMAGE_FORMAT_RAW:
+    case COMPV_IMAGE_FORMAT_BITMAP:
+    case COMPV_IMAGE_FORMAT_PNG:
+    default:
+        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT);
+        break;
+    }
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVImageDecoder::decodeFile(const char* filePath, CompVMatPtrPtr mat)
 {
-	COMPV_CHECK_CODE_RETURN(CompVBase::init());
-	if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
-		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
-		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
-	COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	switch (format_) {
-	case COMPV_IMAGE_FORMAT_JPEG:
-		if (CompVImageDecoder::s_funcptrDecodeFileJpeg) {
-			return CompVImageDecoder::s_funcptrDecodeFileJpeg(filePath, mat);
-		}
-		else {
-			COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find jpeg decoder for file: %s", filePath);
-			COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
-		}
-		break;
-	case COMPV_IMAGE_FORMAT_RAW:
-	case COMPV_IMAGE_FORMAT_BITMAP:
-	case COMPV_IMAGE_FORMAT_PNG:
-	default:
-		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find decoder for file: %s, format: %d", filePath, format_);
-		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
-		break;
-	}
+    COMPV_CHECK_CODE_RETURN(CompVBase::init());
+    if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
+        COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
+    COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    switch (format_) {
+    case COMPV_IMAGE_FORMAT_JPEG:
+        if (CompVImageDecoder::s_funcptrDecodeFileJpeg) {
+            return CompVImageDecoder::s_funcptrDecodeFileJpeg(filePath, mat);
+        }
+        else {
+            COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find jpeg decoder for file: %s", filePath);
+            COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
+        }
+        break;
+    case COMPV_IMAGE_FORMAT_RAW:
+    case COMPV_IMAGE_FORMAT_BITMAP:
+    case COMPV_IMAGE_FORMAT_PNG:
+    default:
+        COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find decoder for file: %s, format: %d", filePath, format_);
+        COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
+        break;
+    }
 
 bail:
-	return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+    return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 }
 
 COMPV_ERROR_CODE  CompVImageDecoder::decodeInfo(const char* filePath, CompVImageInfo& info)
 {
-	COMPV_CHECK_CODE_RETURN(CompVBase::init());
-	if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
-		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
-		return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-	}
-	COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
-	switch (format_) {
-	case COMPV_IMAGE_FORMAT_JPEG:
-		if (CompVImageDecoder::s_funcptrDecodeInfoJpeg) {
-			return CompVImageDecoder::s_funcptrDecodeInfoJpeg(filePath, info);
-		}
-		else {
-			COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find jpeg decoder for file: %s", filePath);
-			COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
-		}
-		break;
-	case COMPV_IMAGE_FORMAT_RAW:
-	case COMPV_IMAGE_FORMAT_BITMAP:
-	case COMPV_IMAGE_FORMAT_PNG:
-	default:
-		COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find decoder for file: %s, format: %d", filePath, format_);
-		COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
-		break;
-	}
+    COMPV_CHECK_CODE_RETURN(CompVBase::init());
+    if (CompVFileUtils::empty(filePath) || !CompVFileUtils::exists(filePath)) {
+        COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "File is empty or doesn't exist: %s", filePath);
+        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
+    }
+    COMPV_IMAGE_FORMAT format_ = CompVFileUtils::getImageFormat(filePath);
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+    switch (format_) {
+    case COMPV_IMAGE_FORMAT_JPEG:
+        if (CompVImageDecoder::s_funcptrDecodeInfoJpeg) {
+            return CompVImageDecoder::s_funcptrDecodeInfoJpeg(filePath, info);
+        }
+        else {
+            COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find jpeg decoder for file: %s", filePath);
+            COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
+        }
+        break;
+    case COMPV_IMAGE_FORMAT_RAW:
+    case COMPV_IMAGE_FORMAT_BITMAP:
+    case COMPV_IMAGE_FORMAT_PNG:
+    default:
+        COMPV_DEBUG_ERROR_EX(kModuleNameImageDecoder, "Cannot find decoder for file: %s, format: %d", filePath, format_);
+        COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_DECODER_NOT_FOUND);
+        break;
+    }
 
 bail:
-	return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+    return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 }
 
 COMPV_NAMESPACE_END()

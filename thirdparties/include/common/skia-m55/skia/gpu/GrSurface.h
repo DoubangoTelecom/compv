@@ -18,22 +18,29 @@ class GrRenderTarget;
 class GrSurfacePriv;
 class GrTexture;
 
-class SK_API GrSurface : public GrGpuResource {
+class SK_API GrSurface : public GrGpuResource
+{
 public:
     /**
      * Retrieves the width of the surface.
      */
-    int width() const { return fDesc.fWidth; }
+    int width() const {
+        return fDesc.fWidth;
+    }
 
     /**
      * Retrieves the height of the surface.
      */
-    int height() const { return fDesc.fHeight; }
+    int height() const {
+        return fDesc.fHeight;
+    }
 
     /**
      * Helper that gets the width and height of the surface as a bounding rectangle.
      */
-    SkRect getBoundsRect() const { return SkRect::MakeIWH(this->width(), this->height()); }
+    SkRect getBoundsRect() const {
+        return SkRect::MakeIWH(this->width(), this->height());
+    }
 
     GrSurfaceOrigin origin() const {
         SkASSERT(kTopLeft_GrSurfaceOrigin == fDesc.fOrigin || kBottomLeft_GrSurfaceOrigin == fDesc.fOrigin);
@@ -46,24 +53,36 @@ public:
      * if client asked us to render to a target that has a pixel
      * config that isn't equivalent with one of our configs.
      */
-    GrPixelConfig config() const { return fDesc.fConfig; }
+    GrPixelConfig config() const {
+        return fDesc.fConfig;
+    }
 
     /**
      * Return the descriptor describing the surface
      */
-    const GrSurfaceDesc& desc() const { return fDesc; }
+    const GrSurfaceDesc& desc() const {
+        return fDesc;
+    }
 
     /**
      * @return the texture associated with the surface, may be NULL.
      */
-    virtual GrTexture* asTexture() { return NULL; }
-    virtual const GrTexture* asTexture() const { return NULL; }
+    virtual GrTexture* asTexture() {
+        return NULL;
+    }
+    virtual const GrTexture* asTexture() const {
+        return NULL;
+    }
 
     /**
      * @return the render target underlying this surface, may be NULL.
      */
-    virtual GrRenderTarget* asRenderTarget() { return NULL; }
-    virtual const GrRenderTarget* asRenderTarget() const { return NULL; }
+    virtual GrRenderTarget* asRenderTarget() {
+        return NULL;
+    }
+    virtual const GrRenderTarget* asRenderTarget() const {
+        return NULL;
+    }
 
     /**
      * Reads a rectangle of pixels from the surface.
@@ -141,8 +160,8 @@ protected:
         : INHERITED(gpu)
         , fDesc(desc)
         , fReleaseProc(NULL)
-        , fReleaseCtx(NULL)
-    {}
+        , fReleaseCtx(NULL) {
+    }
 
     ~GrSurface() override {
         // check that invokeReleaseProc has been called (if needed)

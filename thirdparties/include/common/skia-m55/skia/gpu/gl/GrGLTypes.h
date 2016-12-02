@@ -83,12 +83,12 @@ GR_STATIC_ASSERT(20 == sizeof(GrGLDrawElementsIndirectCommand));
  * KHR_debug
  */
 typedef void (GR_GL_FUNCTION_TYPE* GRGLDEBUGPROC)(GrGLenum source,
-                                                  GrGLenum type,
-                                                  GrGLuint id,
-                                                  GrGLenum severity,
-                                                  GrGLsizei length,
-                                                  const GrGLchar* message,
-                                                  const void* userParam);
+        GrGLenum type,
+        GrGLuint id,
+        GrGLenum severity,
+        GrGLsizei length,
+        const GrGLchar* message,
+        const void* userParam);
 
 /**
  * EGL types.

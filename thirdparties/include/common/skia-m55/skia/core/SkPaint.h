@@ -46,7 +46,8 @@ class SkTypeface;
     The SkPaint class holds the style and color information about how to draw
     geometries, text and bitmaps.
 */
-class SK_API SkPaint {
+class SK_API SkPaint
+{
 public:
     SkPaint();
     SkPaint(const SkPaint& paint);
@@ -125,7 +126,9 @@ public:
     /** Return the paint's flags. Use the Flag enum to test flag values.
         @return the paint's flags (see enums ending in _Flag for bit masks)
     */
-    uint32_t getFlags() const { return fBitfields.fFlags; }
+    uint32_t getFlags() const {
+        return fBitfields.fFlags;
+    }
 
     /** Set the paint's flags. Use the Flag enum to specific flag values.
         @param flags    The new flag bits for the paint (see Flags enum)
@@ -319,7 +322,9 @@ public:
         kFill_Style).
         @return the paint's Style
     */
-    Style getStyle() const { return (Style)fBitfields.fStyle; }
+    Style getStyle() const {
+        return (Style)fBitfields.fStyle;
+    }
 
     /** Set the paint's style, used for controlling how primitives'
         geometries are interpreted (except for drawBitmap, which always assumes
@@ -334,7 +339,9 @@ public:
         the values of r,g,b.
         @return the paint's color (and alpha).
     */
-    SkColor getColor() const { return fColor; }
+    SkColor getColor() const {
+        return fColor;
+    }
 
     /** Set the paint's color. Note that the color is a 32bit value containing
         alpha as well as r,g,b. This 32bit value is not premultiplied, meaning
@@ -346,7 +353,9 @@ public:
     /** Helper to getColor() that just returns the color's alpha value.
         @return the alpha component of the paint's color.
         */
-    uint8_t getAlpha() const { return SkToU8(SkColorGetA(fColor)); }
+    uint8_t getAlpha() const {
+        return SkToU8(SkColorGetA(fColor));
+    }
 
     /** Helper to setColor(), that only assigns the color's alpha value,
         leaving its r,g,b values unchanged.
@@ -370,7 +379,9 @@ public:
         @return the paint's stroke width, used whenever the paint's style is
                 Stroke or StrokeAndFill.
     */
-    SkScalar getStrokeWidth() const { return fWidth; }
+    SkScalar getStrokeWidth() const {
+        return fWidth;
+    }
 
     /** Set the width for stroking.
         Pass 0 to stroke in hairline mode.
@@ -385,7 +396,9 @@ public:
         @return the paint's miter limit, used whenever the paint's style is
                 Stroke or StrokeAndFill.
     */
-    SkScalar getStrokeMiter() const { return fMiterLimit; }
+    SkScalar getStrokeMiter() const {
+        return fMiterLimit;
+    }
 
     /** Set the paint's stroke miter value. This is used to control the
         behavior of miter joins when the joins angle is sharp. This value must
@@ -436,7 +449,9 @@ public:
         @return the line cap style for the paint, used whenever the paint's
                 style is Stroke or StrokeAndFill.
     */
-    Cap getStrokeCap() const { return (Cap)fBitfields.fCapType; }
+    Cap getStrokeCap() const {
+        return (Cap)fBitfields.fCapType;
+    }
 
     /** Set the paint's stroke cap type.
         @param cap  set the paint's line cap style, used whenever the paint's
@@ -448,7 +463,9 @@ public:
         @return the paint's line join style, used whenever the paint's style is
                 Stroke or StrokeAndFill.
     */
-    Join getStrokeJoin() const { return (Join)fBitfields.fJoinType; }
+    Join getStrokeJoin() const {
+        return (Join)fBitfields.fJoinType;
+    }
 
     /** Set the paint's stroke join type.
         @param join set the paint's line join style, used whenever the paint's
@@ -482,7 +499,9 @@ public:
       The shader's reference count is not affected.
         @return the paint's shader (or NULL)
     */
-    SkShader* getShader() const { return fShader.get(); }
+    SkShader* getShader() const {
+        return fShader.get();
+    }
 
     /** Set or clear the shader object.
      *  Shaders specify the source color(s) for what is being drawn. If a paint
@@ -514,7 +533,9 @@ public:
         count is not changed.
         @return the paint's colorfilter (or NULL)
     */
-    SkColorFilter* getColorFilter() const { return fColorFilter.get(); }
+    SkColorFilter* getColorFilter() const {
+        return fColorFilter.get();
+    }
 
     /** Set or clear the paint's colorfilter, returning the parameter.
         <p />
@@ -558,16 +579,24 @@ public:
     SkXfermode* setXfermodeMode(SkXfermode::Mode);
 #endif
 
-    SkBlendMode getBlendMode() const { return (SkBlendMode)fBlendMode; }
-    bool isSrcOver() const { return (SkBlendMode)fBlendMode == SkBlendMode::kSrcOver; }
-    void setBlendMode(SkBlendMode mode) { fBlendMode = (unsigned)mode; }
+    SkBlendMode getBlendMode() const {
+        return (SkBlendMode)fBlendMode;
+    }
+    bool isSrcOver() const {
+        return (SkBlendMode)fBlendMode == SkBlendMode::kSrcOver;
+    }
+    void setBlendMode(SkBlendMode mode) {
+        fBlendMode = (unsigned)mode;
+    }
 
     /** Get the paint's patheffect object.
         <p />
       The patheffect reference count is not affected.
         @return the paint's patheffect (or NULL)
     */
-    SkPathEffect* getPathEffect() const { return fPathEffect.get(); }
+    SkPathEffect* getPathEffect() const {
+        return fPathEffect.get();
+    }
 
     /** Set or clear the patheffect object.
         <p />
@@ -589,7 +618,9 @@ public:
       The maskfilter reference count is not affected.
         @return the paint's maskfilter (or NULL)
     */
-    SkMaskFilter* getMaskFilter() const { return fMaskFilter.get(); }
+    SkMaskFilter* getMaskFilter() const {
+        return fMaskFilter.get();
+    }
 
     /** Set or clear the maskfilter object.
         <p />
@@ -614,7 +645,9 @@ public:
         measuring text. The typeface reference count is not affected.
         @return the paint's typeface (or NULL)
     */
-    SkTypeface* getTypeface() const { return fTypeface.get(); }
+    SkTypeface* getTypeface() const {
+        return fTypeface.get();
+    }
 
     /** Set or clear the typeface object.
         <p />
@@ -636,7 +669,9 @@ public:
         The raster controls how paths/text are turned into alpha masks.
         @return the paint's rasterizer (or NULL)
     */
-    SkRasterizer* getRasterizer() const { return fRasterizer.get(); }
+    SkRasterizer* getRasterizer() const {
+        return fRasterizer.get();
+    }
 
     /** Set or clear the rasterizer object.
         <p />
@@ -654,7 +689,9 @@ public:
 #endif
     void setRasterizer(sk_sp<SkRasterizer>);
 
-    SkImageFilter* getImageFilter() const { return fImageFilter.get(); }
+    SkImageFilter* getImageFilter() const {
+        return fImageFilter.get();
+    }
     SkImageFilter* setImageFilter(SkImageFilter*);
     void setImageFilter(sk_sp<SkImageFilter>);
 
@@ -662,8 +699,12 @@ public:
      *  Return the paint's SkDrawLooper (if any). Does not affect the looper's
      *  reference count.
      */
-    SkDrawLooper* getDrawLooper() const { return fDrawLooper.get(); }
-    SkDrawLooper* getLooper() const { return fDrawLooper.get(); }
+    SkDrawLooper* getDrawLooper() const {
+        return fDrawLooper.get();
+    }
+    SkDrawLooper* getLooper() const {
+        return fDrawLooper.get();
+    }
     /**
      *  Set or clear the looper object.
      *  <p />
@@ -691,7 +732,9 @@ public:
     /** Return the paint's Align value for drawing text.
         @return the paint's Align value for drawing text.
     */
-    Align   getTextAlign() const { return (Align)fBitfields.fTextAlign; }
+    Align   getTextAlign() const {
+        return (Align)fBitfields.fTextAlign;
+    }
 
     /** Set the paint's text alignment.
         @param align set the paint's Align value for drawing text.
@@ -701,7 +744,9 @@ public:
     /** Return the paint's text size.
         @return the paint's text size.
     */
-    SkScalar getTextSize() const { return fTextSize; }
+    SkScalar getTextSize() const {
+        return fTextSize;
+    }
 
     /** Set the paint's text size. This value must be > 0
         @param textSize set the paint's text size.
@@ -712,7 +757,9 @@ public:
         is 1.0.
         @return the paint's scale factor in X for drawing/measuring text
     */
-    SkScalar getTextScaleX() const { return fTextScaleX; }
+    SkScalar getTextScaleX() const {
+        return fTextScaleX;
+    }
 
     /** Set the paint's horizontal scale factor for text. The default value
         is 1.0. Values > 1.0 will stretch the text wider. Values < 1.0 will
@@ -726,7 +773,9 @@ public:
         is 0.
         @return the paint's skew factor in X for drawing text.
     */
-    SkScalar getTextSkewX() const { return fTextSkewX; }
+    SkScalar getTextSkewX() const {
+        return fTextSkewX;
+    }
 
     /** Set the paint's horizontal skew factor for text. The default value
         is 0. For approximating oblique text, use values around -0.25.
@@ -745,7 +794,7 @@ public:
     };
 
     TextEncoding getTextEncoding() const {
-      return (TextEncoding)fBitfields.fTextEncoding;
+        return (TextEncoding)fBitfields.fTextEncoding;
     }
 
     void setTextEncoding(TextEncoding encoding);
@@ -823,7 +872,9 @@ public:
     /** Return the recommend line spacing. This will be
         fDescent - fAscent + fLeading
     */
-    SkScalar getFontSpacing() const { return this->getFontMetrics(NULL, 0); }
+    SkScalar getFontSpacing() const {
+        return this->getFontMetrics(NULL, 0);
+    }
 
     /** Convert the specified text into glyph IDs, returning the number of
         glyphs ID written. If glyphs is NULL, it is ignore and only the count
@@ -941,7 +992,7 @@ public:
      *  the string. The caller may pass nullptr for intervals to determine the size of the interval
      *  array, or may conservatively pre-allocate an array with length * 2 entries. The computed
      *  intervals are cached by glyph to improve performance for multiple calls.
-     *  This permits constructing an underline that skips the descenders. 
+     *  This permits constructing an underline that skips the descenders.
      *
      *  @param text         the text
      *  @param length       number of bytes of text
@@ -960,7 +1011,7 @@ public:
      *  string. The caller may pass nullptr for intervals to determine the size of the interval
      *  array, or may conservatively pre-allocate an array with length * 2 entries. The computed
      *  intervals are cached by glyph to improve performance for multiple calls.
-     *  This permits constructing an underline that skips the descenders. 
+     *  This permits constructing an underline that skips the descenders.
      *
      *  @param text         the text
      *  @param length       number of bytes of text

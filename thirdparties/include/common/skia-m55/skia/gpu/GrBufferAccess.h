@@ -15,7 +15,8 @@
  * Used to represent a texel buffer that will be read in a GrProcessor. It holds a GrBuffer along
  * with an associated offset and texel config.
  */
-class GrBufferAccess : public SkNoncopyable {
+class GrBufferAccess : public SkNoncopyable
+{
 public:
     /**
      * Must be initialized before adding to a GrProcessor's buffer access list.
@@ -33,16 +34,26 @@ public:
                fVisibility == that.fVisibility;
     }
 
-    bool operator!=(const GrBufferAccess& that) const { return !(*this == that); }
+    bool operator!=(const GrBufferAccess& that) const {
+        return !(*this == that);
+    }
 
-    GrPixelConfig texelConfig() const { return fTexelConfig; }
-    GrBuffer* buffer() const { return fBuffer.get(); }
-    GrShaderFlags visibility() const { return fVisibility; }
+    GrPixelConfig texelConfig() const {
+        return fTexelConfig;
+    }
+    GrBuffer* buffer() const {
+        return fBuffer.get();
+    }
+    GrShaderFlags visibility() const {
+        return fVisibility;
+    }
 
     /**
      * For internal use by GrProcessor.
      */
-    const GrGpuResourceRef* getProgramBuffer() const { return &fBuffer;}
+    const GrGpuResourceRef* getProgramBuffer() const {
+        return &fBuffer;
+    }
 
 private:
     GrPixelConfig                 fTexelConfig;

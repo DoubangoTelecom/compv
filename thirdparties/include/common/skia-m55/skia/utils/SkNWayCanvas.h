@@ -12,7 +12,8 @@
 #include "../private/SkTDArray.h"
 #include "SkCanvas.h"
 
-class SK_API SkNWayCanvas : public SkCanvas {
+class SK_API SkNWayCanvas : public SkCanvas
+{
 public:
     SkNWayCanvas(int width, int height);
     virtual ~SkNWayCanvas();
@@ -71,10 +72,10 @@ protected:
     void onDrawBitmapNine(const SkBitmap&, const SkIRect& center, const SkRect& dst,
                           const SkPaint*) override;
     void onDrawVertices(VertexMode vmode, int vertexCount,
-                              const SkPoint vertices[], const SkPoint texs[],
-                              const SkColor colors[], SkXfermode* xmode,
-                              const uint16_t indices[], int indexCount,
-                              const SkPaint&) override;
+                        const SkPoint vertices[], const SkPoint texs[],
+                        const SkColor colors[], SkXfermode* xmode,
+                        const uint16_t indices[], int indexCount,
+                        const SkPaint&) override;
 
     void onClipRect(const SkRect&, ClipOp, ClipEdgeStyle) override;
     void onClipRRect(const SkRRect&, ClipOp, ClipEdgeStyle) override;

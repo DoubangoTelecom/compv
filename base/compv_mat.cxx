@@ -11,36 +11,36 @@
 COMPV_NAMESPACE_BEGIN()
 
 CompVMat::CompVMat()
-: m_pDataPtr(NULL)
-, m_nCompCount(0)
-, m_bCompInterleaved(false)
-, m_nCols(0)
-, m_nRows(0)
-, m_nStrideInBytes(0)
-, m_nStrideInElts(0)
-, m_nElmtInBytes(0)
-, m_nAlignV(0)
-, m_nDataSize(0)
-, m_nDataCapacity(0)
-, m_bOweMem(true)
-, m_eType(COMPV_MAT_TYPE_RAW)
-, m_eSubType(COMPV_MAT_SUBTYPE_RAW)
+    : m_pDataPtr(NULL)
+    , m_nCompCount(0)
+    , m_bCompInterleaved(false)
+    , m_nCols(0)
+    , m_nRows(0)
+    , m_nStrideInBytes(0)
+    , m_nStrideInElts(0)
+    , m_nElmtInBytes(0)
+    , m_nAlignV(0)
+    , m_nDataSize(0)
+    , m_nDataCapacity(0)
+    , m_bOweMem(true)
+    , m_eType(COMPV_MAT_TYPE_RAW)
+    , m_eSubType(COMPV_MAT_SUBTYPE_RAW)
 {
-	for (size_t compId = 0; compId < COMPV_MAT_MAX_COMP_COUNT; ++compId) {
-		m_nCompCols[compId] = 0;
-		m_nCompRows[compId] = 0;
-		m_pCompPtr[compId] = NULL;
-		m_nCompSizeInBytes[compId] = 0;
-		m_nCompStrideInBytes[compId] = 0;
-		m_nCompStrideInElts[compId] = 0;
-		m_bCompStrideInEltsIsIntegral[compId] = true;
-	}
+    for (size_t compId = 0; compId < COMPV_MAT_MAX_COMP_COUNT; ++compId) {
+        m_nCompCols[compId] = 0;
+        m_nCompRows[compId] = 0;
+        m_pCompPtr[compId] = NULL;
+        m_nCompSizeInBytes[compId] = 0;
+        m_nCompStrideInBytes[compId] = 0;
+        m_nCompStrideInElts[compId] = 0;
+        m_bCompStrideInEltsIsIntegral[compId] = true;
+    }
 }
 CompVMat::~CompVMat()
 {
-	if (m_bOweMem) {
-		CompVMem::free((void**)&m_pDataPtr);
-	}
+    if (m_bOweMem) {
+        CompVMem::free((void**)&m_pDataPtr);
+    }
 }
 
 COMPV_NAMESPACE_END()

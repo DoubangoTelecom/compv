@@ -11,7 +11,8 @@
 #include "SkImageFilter.h"
 #include "SkPicture.h"
 
-class SK_API SkPictureImageFilter : public SkImageFilter {
+class SK_API SkPictureImageFilter : public SkImageFilter
+{
 public:
     /**
      *  Refs the passed-in picture.
@@ -32,8 +33,8 @@ public:
      *  dest rect; only the CTM is applied.)
      */
     static sk_sp<SkImageFilter> MakeForLocalSpace(sk_sp<SkPicture> picture,
-                                                  const SkRect& cropRect,
-                                                  SkFilterQuality filterQuality);
+            const SkRect& cropRect,
+            SkFilterQuality filterQuality);
 
 #ifdef SK_SUPPORT_LEGACY_IMAGEFILTER_PTR
     static SkImageFilter* Create(const SkPicture* picture) {
@@ -43,11 +44,11 @@ public:
         return Make(sk_ref_sp(const_cast<SkPicture*>(picture)), cropRect).release();
     }
     static SkImageFilter* CreateForLocalSpace(const SkPicture* picture,
-                                              const SkRect& cropRect,
-                                              SkFilterQuality filterQuality) {
+            const SkRect& cropRect,
+            SkFilterQuality filterQuality) {
         return MakeForLocalSpace(sk_ref_sp(const_cast<SkPicture*>(picture)),
-                                           cropRect,
-                                           filterQuality).release();
+                                 cropRect,
+                                 filterQuality).release();
     }
 #endif
 

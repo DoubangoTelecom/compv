@@ -89,9 +89,11 @@ int sk_feof(FILE *);
 // Description of the error, if any, will be written to stderr.
 bool    sk_mkdir(const char* path);
 
-class SkOSFile {
+class SkOSFile
+{
 public:
-    class Iter {
+    class Iter
+    {
     public:
         Iter();
         Iter(const char path[], const char suffix[] = NULL);
@@ -113,7 +115,8 @@ public:
 /**
  *  Functions for modifying SkStrings which represent paths on the filesystem.
  */
-class SkOSPath   {
+class SkOSPath
+{
 public:
     /**
      * Assembles rootPath and relativePath into a single path, like this:

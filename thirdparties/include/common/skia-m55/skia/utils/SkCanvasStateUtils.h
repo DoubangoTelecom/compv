@@ -27,7 +27,8 @@ class SkCanvasState;
  * ReleaseCanvasState(...)      |||
  *
  */
-class SK_API SkCanvasStateUtils {
+class SK_API SkCanvasStateUtils
+{
 public:
     /**
      * Captures the current state of the canvas into an opaque ptr that is safe

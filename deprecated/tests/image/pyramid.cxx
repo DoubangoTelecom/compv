@@ -46,12 +46,12 @@ COMPV_ERROR_CODE TestPyramid()
     for (int i = 0; i < pyramid->getLevels(); ++i) {
         COMPV_CHECK_CODE_RETURN(pyramid->getImage(i, &image));
         //COMPV_DEBUG_INFO("%s", imageMD5(image).c_str());
-		COMPV_CHECK_EXP_RETURN(imageMD5(image) != expectedMD5[i], COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+        COMPV_CHECK_EXP_RETURN(imageMD5(image) != expectedMD5[i], COMPV_ERROR_CODE_E_UNITTEST_FAILED);
     }
 
     // dump latest image to file
     COMPV_CHECK_CODE_RETURN(pyramid->getImage(pyramid->getLevels() - 1, &image));
     writeImgToFile(image);
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 }

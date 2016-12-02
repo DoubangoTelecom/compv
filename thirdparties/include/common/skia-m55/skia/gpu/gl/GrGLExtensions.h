@@ -20,7 +20,8 @@ struct GrGLInterface;
  * use the latter if it is available. It also will query for EGL extensions if a eglQueryString
  * implementation is provided.
  */
-class SK_API GrGLExtensions {
+class SK_API GrGLExtensions
+{
 public:
     GrGLExtensions() : fInitialized(false), fStrings(new SkTArray<SkString>) {}
 
@@ -45,7 +46,9 @@ public:
               GrGLFunction<GrEGLQueryStringProc> queryString = nullptr,
               GrEGLDisplay eglDisplay = nullptr);
 
-    bool isInitialized() const { return fInitialized; }
+    bool isInitialized() const {
+        return fInitialized;
+    }
 
     /**
      * Queries whether an extension is present. This will fail if init() has not been called.
@@ -62,7 +65,9 @@ public:
      */
     void add(const char[]);
 
-    void reset() { fStrings->reset(); }
+    void reset() {
+        fStrings->reset();
+    }
 
     void print(const char* sep = "\n") const;
 

@@ -11,7 +11,8 @@
 #include "SkImageFilter.h"
 #include "SkPaint.h"
 
-class SK_API SkPaintImageFilter : public SkImageFilter {
+class SK_API SkPaintImageFilter : public SkImageFilter
+{
 public:
     /** Create a new image filter which fills the given rectangle using the
      *  given paint. If no rectangle is specified, an output is produced with

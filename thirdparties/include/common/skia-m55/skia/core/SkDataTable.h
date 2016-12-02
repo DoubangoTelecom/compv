@@ -18,17 +18,22 @@
  *  organized into a table of entries, each with a length, so the entries are
  *  not required to all be the same size.
  */
-class SK_API SkDataTable : public SkRefCnt {
+class SK_API SkDataTable : public SkRefCnt
+{
 public:
     /**
      *  Returns true if the table is empty (i.e. has no entries).
      */
-    bool isEmpty() const { return 0 == fCount; }
+    bool isEmpty() const {
+        return 0 == fCount;
+    }
 
     /**
      *  Return the number of entries in the table. 0 for an empty table
      */
-    int count() const { return fCount; }
+    int count() const {
+        return fCount;
+    }
 
     /**
      *  Return the size of the index'th entry in the table. The caller must
@@ -75,7 +80,7 @@ public:
      *  @param count the number of array elements in ptrs[] and sizes[] to copy.
      */
     static sk_sp<SkDataTable> MakeCopyArrays(const void * const * ptrs,
-                                             const size_t sizes[], int count);
+            const size_t sizes[], int count);
 
     /**
      *  Return a new table that contains a copy of the data in array.
@@ -121,13 +126,18 @@ private:
  *  Helper class that allows for incrementally building up the data needed to
  *  create a SkDataTable.
  */
-class SK_API SkDataTableBuilder : SkNoncopyable {
+class SK_API SkDataTableBuilder : SkNoncopyable
+{
 public:
     SkDataTableBuilder(size_t minChunkSize);
     ~SkDataTableBuilder();
 
-    int  count() const { return fDir.count(); }
-    size_t minChunkSize() const { return fMinChunkSize; }
+    int  count() const {
+        return fDir.count();
+    }
+    size_t minChunkSize() const {
+        return fMinChunkSize;
+    }
 
     /**
      *  Forget any previously appended entries, setting count() back to 0.

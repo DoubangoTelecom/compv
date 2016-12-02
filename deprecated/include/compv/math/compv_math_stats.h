@@ -18,10 +18,10 @@ template <class T>
 class COMPV_API CompVMathStats
 {
 public:
-	static COMPV_ERROR_CODE normalize2D_hartley(const T* x, const T* y, size_t numPoints, T* tx1, T* ty1, T* s1);
-	static COMPV_ERROR_CODE mse2D_homogeneous(const T* aX_h, const T* aY_h, const T* aZ_h, const T* bX, const T* bY, CompVPtrArray(T)& mse, size_t numPoints);
-	static COMPV_ERROR_CODE variance(const T* data, size_t count, const T* mean1, T* var1);
-	static COMPV_ERROR_CODE stdev(const T* data, size_t count, const T* mean1, T* std1);
+    static COMPV_ERROR_CODE normalize2D_hartley(const T* x, const T* y, size_t numPoints, T* tx1, T* ty1, T* s1);
+    static COMPV_ERROR_CODE mse2D_homogeneous(const T* aX_h, const T* aY_h, const T* aZ_h, const T* bX, const T* bY, CompVPtrArray(T)& mse, size_t numPoints);
+    static COMPV_ERROR_CODE variance(const T* data, size_t count, const T* mean1, T* var1);
+    static COMPV_ERROR_CODE stdev(const T* data, size_t count, const T* mean1, T* std1);
 };
 
 COMPV_NAMESPACE_END()

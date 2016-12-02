@@ -24,10 +24,14 @@ public:
     virtual ~CompVEngine();
     static COMPV_ERROR_CODE init(int32_t numThreads = -1);
     static COMPV_ERROR_CODE deInit();
-	static COMPV_INLINE CompVPtr<CompVThreadDispatcher* > getThreadDispatcher() { return CompVEngine::s_ThreadDisp; }
+    static COMPV_INLINE CompVPtr<CompVThreadDispatcher* > getThreadDispatcher() {
+        return CompVEngine::s_ThreadDisp;
+    }
     static COMPV_ERROR_CODE multiThreadingEnable(CompVPtr<CompVThreadDispatcher* > dispatcher);
-	static COMPV_INLINE CompVPtr<CompVThreadDispatcher11* > getThreadDispatcher11() { return CompVEngine::s_ThreadDisp11; }
-	static COMPV_ERROR_CODE multiThreadingEnable11(CompVPtr<CompVThreadDispatcher11* > dispatcher);
+    static COMPV_INLINE CompVPtr<CompVThreadDispatcher11* > getThreadDispatcher11() {
+        return CompVEngine::s_ThreadDisp11;
+    }
+    static COMPV_ERROR_CODE multiThreadingEnable11(CompVPtr<CompVThreadDispatcher11* > dispatcher);
     static COMPV_ERROR_CODE multiThreadingDisable();
     static COMPV_ERROR_CODE multiThreadingSetMaxThreads(size_t maxThreads);
     static COMPV_ERROR_CODE setTestingModeEnabled(bool bTesting);
@@ -44,7 +48,7 @@ public:
 private:
     COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
     static CompVPtr<CompVThreadDispatcher *> s_ThreadDisp;
-	static CompVPtr<CompVThreadDispatcher11 *> s_ThreadDisp11;
+    static CompVPtr<CompVThreadDispatcher11 *> s_ThreadDisp11;
     static bool s_bInitialized;
     static bool s_bInitializing;
     static bool s_bBigEndian;

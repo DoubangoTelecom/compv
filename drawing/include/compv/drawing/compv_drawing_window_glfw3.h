@@ -30,26 +30,28 @@ COMPV_OBJECT_DECLARE_PTRS(GLWindowFW3)
 class CompVGLWindowFW3 : public CompVWindow
 {
 protected:
-	CompVGLWindowFW3(int width, int height, const char* title);
+    CompVGLWindowFW3(int width, int height, const char* title);
 public:
-	virtual ~CompVGLWindowFW3();
-	COMPV_OBJECT_GET_ID(CompVGLWindowFW3);
-	
-	COMPV_INLINE struct GLFWwindow * getGLFWwindow() { return m_pGLFWwindow; }
+    virtual ~CompVGLWindowFW3();
+    COMPV_OBJECT_GET_ID(CompVGLWindowFW3);
 
-	virtual bool isClosed()const;
-	virtual COMPV_ERROR_CODE close();
-	virtual COMPV_ERROR_CODE draw(CompVMatPtr mat);
+    COMPV_INLINE struct GLFWwindow * getGLFWwindow() {
+        return m_pGLFWwindow;
+    }
 
-	static COMPV_ERROR_CODE newObj(CompVGLWindowFW3PtrPtr glfwWindow, int width, int height, const char* title);
-	static void GLFWwindowcloseCallback(GLFWwindow* window);
+    virtual bool isClosed()const;
+    virtual COMPV_ERROR_CODE close();
+    virtual COMPV_ERROR_CODE draw(CompVMatPtr mat);
+
+    static COMPV_ERROR_CODE newObj(CompVGLWindowFW3PtrPtr glfwWindow, int width, int height, const char* title);
+    static void GLFWwindowcloseCallback(GLFWwindow* window);
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	struct GLFWwindow *m_pGLFWwindow;
-	CompVMutexPtr m_GLFWMutex;
-	CompVProgramPtr m_Program;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    struct GLFWwindow *m_pGLFWwindow;
+    CompVMutexPtr m_GLFWMutex;
+    CompVProgramPtr m_Program;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

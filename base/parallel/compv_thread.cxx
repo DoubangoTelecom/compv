@@ -227,11 +227,11 @@ compv_core_id_t CompVThread::getCoreId()
 #elif COMPV_ARCH_X86 && COMPV_ASM
     return compv_utils_thread_get_core_id_x86_asm();
 #elif COMPV_OS_APPLE
-	COMPV_DEBUG_INFO_CODE_ONCE("sched_getcpu not supported always returning zero");
+    COMPV_DEBUG_INFO_CODE_ONCE("sched_getcpu not supported always returning zero");
     return 0;
 #elif COMPV_OS_ANDROID
-	COMPV_DEBUG_INFO_CODE_ONCE("sched_getcpu not supported always returning zero");
-	return 0;
+    COMPV_DEBUG_INFO_CODE_ONCE("sched_getcpu not supported always returning zero");
+    return 0;
 #else
     int cpuId = sched_getcpu();
     if (cpuId < 0) {

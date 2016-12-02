@@ -13,7 +13,7 @@ using namespace compv;
 #if TYPE == TYPE_DOUBLE
 #	define TYP		double
 #	define TYP_SZ	"%e"
-#	define ERR_MAX	2.8421709430404007e-014	
+#	define ERR_MAX	2.8421709430404007e-014
 #else
 #	define TYP		float
 #	define TYP_SZ	"%f"
@@ -23,10 +23,10 @@ using namespace compv;
 COMPV_ERROR_CODE TestNormalize2DHartley()
 {
 #define POINTS_COUNT 2015 // #2015 (odd number) or #4 (is very common -Homography-)
-	COMPV_ALIGN_DEFAULT() TYP x[POINTS_COUNT];
-	COMPV_ALIGN_DEFAULT() TYP y[POINTS_COUNT];
-	TYP tx, ty, scale;
-	uint64_t timeStart, timeEnd;
+    COMPV_ALIGN_DEFAULT() TYP x[POINTS_COUNT];
+    COMPV_ALIGN_DEFAULT() TYP y[POINTS_COUNT];
+    TYP tx, ty, scale;
+    uint64_t timeStart, timeEnd;
 
 #if POINTS_COUNT == 2015
 #	define TX		151.12521091811413 // c++
@@ -40,7 +40,7 @@ COMPV_ERROR_CODE TestNormalize2DHartley()
 #		define TY_AVX		1209.0999999999999
 #		define SCALE_AVX	0.0012386495368348523
 #	else
-	// No guarantee, this could change from one run to another -> be careful
+    // No guarantee, this could change from one run to another -> be careful
 #		define TX_SSE2		151.12521091811413
 #		define TY_SSE2		1209.0999999999999
 #		define SCALE_SSE2	0.0012386495368348494
@@ -52,40 +52,40 @@ COMPV_ERROR_CODE TestNormalize2DHartley()
 #endif
 
 
-	for (signed i = 0; i < POINTS_COUNT; ++i) {
-		x[i] = (TYP)((i & 1) ? i : (-i * 0.7)) + 0.5;
-		y[i] = ((TYP)(i * 0.2)) + i + 0.7;
-	}
+    for (signed i = 0; i < POINTS_COUNT; ++i) {
+        x[i] = (TYP)((i & 1) ? i : (-i * 0.7)) + 0.5;
+        y[i] = ((TYP)(i * 0.2)) + i + 0.7;
+    }
 
-	timeStart = CompVTime::getNowMills();
-	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(CompVMathStats<TYP>::normalize2D_hartley(&x[0], &y[0], POINTS_COUNT, &tx, &ty, &scale));
-	}
-	timeEnd = CompVTime::getNowMills();
-	
-	TYP err_tx = COMPV_MATH_ABS(TX - tx);
-	TYP err_ty = COMPV_MATH_ABS(TY - ty);
-	TYP err_scale = COMPV_MATH_ABS(SCALE - scale);
-	COMPV_DEBUG_INFO_EX("TestNormalize2DHartley", "tx="TYP_SZ", ty="TYP_SZ", scale="TYP_SZ", err_tx="TYP_SZ", err_ty="TYP_SZ", err_scale="TYP_SZ, tx, ty, scale, err_tx, err_ty, err_scale);
+    timeStart = CompVTime::getNowMills();
+    for (size_t i = 0; i < LOOP_COUNT; ++i) {
+        COMPV_CHECK_CODE_RETURN(CompVMathStats<TYP>::normalize2D_hartley(&x[0], &y[0], POINTS_COUNT, &tx, &ty, &scale));
+    }
+    timeEnd = CompVTime::getNowMills();
 
-	COMPV_DEBUG_INFO_EX("TestNormalize2DHartley", "Elapsed time (TestNormalize2DHartley) = [[[ %llu millis ]]]", (timeEnd - timeStart));
+    TYP err_tx = COMPV_MATH_ABS(TX - tx);
+    TYP err_ty = COMPV_MATH_ABS(TY - ty);
+    TYP err_scale = COMPV_MATH_ABS(SCALE - scale);
+    COMPV_DEBUG_INFO_EX("TestNormalize2DHartley", "tx="TYP_SZ", ty="TYP_SZ", scale="TYP_SZ", err_tx="TYP_SZ", err_ty="TYP_SZ", err_scale="TYP_SZ, tx, ty, scale, err_tx, err_ty, err_scale);
 
-	// Normale test (*must*)
-	COMPV_CHECK_EXP_RETURN(err_tx > ERR_MAX || err_ty > ERR_MAX || err_scale > ERR_MAX, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+    COMPV_DEBUG_INFO_EX("TestNormalize2DHartley", "Elapsed time (TestNormalize2DHartley) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-	// To enforce testing (*optionale*)
+    // Normale test (*must*)
+    COMPV_CHECK_EXP_RETURN(err_tx > ERR_MAX || err_ty > ERR_MAX || err_scale > ERR_MAX, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+
+    // To enforce testing (*optionale*)
 #if COMPV_ARCH_X64 && POINTS_COUNT == 2015
-	if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
-		COMPV_CHECK_EXP_RETURN(tx != TX_AVX || ty != TY_AVX || scale != SCALE_AVX, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-	}
-	else if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-		COMPV_CHECK_EXP_RETURN(tx != TX_SSE2 || ty != TY_SSE2 || scale != SCALE_SSE2, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-	}
+    if (CompVCpu::isEnabled(compv::kCpuFlagAVX)) {
+        COMPV_CHECK_EXP_RETURN(tx != TX_AVX || ty != TY_AVX || scale != SCALE_AVX, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+    }
+    else if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+        COMPV_CHECK_EXP_RETURN(tx != TX_SSE2 || ty != TY_SSE2 || scale != SCALE_SSE2, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+    }
 #elif POINTS_COUNT == 4
-	COMPV_CHECK_EXP_RETURN(err_tx != 0 || err_ty != 0 || err_scale != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+    COMPV_CHECK_EXP_RETURN(err_tx != 0 || err_ty != 0 || err_scale != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 #endif
 
-	return COMPV_ERROR_CODE_S_OK;
+    return COMPV_ERROR_CODE_S_OK;
 #undef TX
 #undef TY
 #undef SCALE

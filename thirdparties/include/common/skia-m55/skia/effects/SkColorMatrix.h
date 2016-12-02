@@ -10,7 +10,8 @@
 
 #include "SkScalar.h"
 
-class SK_API SkColorMatrix {
+class SK_API SkColorMatrix
+{
 public:
     enum {
         kCount = 20
@@ -50,8 +51,12 @@ public:
     void postRotate(Axis, SkScalar degrees);
 
     void setConcat(const SkColorMatrix& a, const SkColorMatrix& b);
-    void preConcat(const SkColorMatrix& mat) { this->setConcat(*this, mat); }
-    void postConcat(const SkColorMatrix& mat) { this->setConcat(mat, *this); }
+    void preConcat(const SkColorMatrix& mat) {
+        this->setConcat(*this, mat);
+    }
+    void postConcat(const SkColorMatrix& mat) {
+        this->setConcat(mat, *this);
+    }
 
     void setSaturation(SkScalar sat);
     void setRGB2YUV();
@@ -61,7 +66,9 @@ public:
         return 0 == memcmp(fMat, other.fMat, sizeof(fMat));
     }
 
-    bool operator!=(const SkColorMatrix& other) const { return !((*this) == other); }
+    bool operator!=(const SkColorMatrix& other) const {
+        return !((*this) == other);
+    }
 
     static bool NeedsClamping(const SkScalar[20]);
     static void SetConcat(SkScalar result[20], const SkScalar outer[20], const SkScalar inner[20]);

@@ -34,7 +34,8 @@ typedef SkPM4f (*SkXfermodeProc4f)(const SkPM4f& src, const SkPM4f& dst);
  *  All subclasses are required to be reentrant-safe : it must be legal to share
  *  the same instance between several threads.
  */
-class SK_API SkXfermode : public SkFlattenable {
+class SK_API SkXfermode : public SkFlattenable
+{
 public:
     virtual void xfer32(SkPMColor dst[], const SkPMColor src[], int count,
                         const SkAlpha aa[]) const;
@@ -256,7 +257,7 @@ public:
         the output of the blend is simply the src color.
      */
     virtual sk_sp<GrFragmentProcessor> makeFragmentProcessorForImageFilter(
-                                                            sk_sp<GrFragmentProcessor> dst) const;
+        sk_sp<GrFragmentProcessor> dst) const;
 
     /** A subclass must implement this factory function to work with the GPU backend.
         The xfermode will return a factory for which the caller will get a ref. It is up
@@ -300,9 +301,13 @@ public:
     typedef void (*LCD32Proc)(uint32_t* dst, const SkPM4f* src, int count, const uint16_t lcd[]);
     typedef void (*LCDF16Proc)(uint64_t* dst, const SkPM4f* src, int count, const uint16_t lcd[]);
     static LCD32Proc GetLCD32Proc(uint32_t flags);
-    static LCDF16Proc GetLCDF16Proc(uint32_t) { return nullptr; }
+    static LCDF16Proc GetLCDF16Proc(uint32_t) {
+        return nullptr;
+    }
 
-    virtual bool isArithmetic(SkArithmeticParams*) const { return false; }
+    virtual bool isArithmetic(SkArithmeticParams*) const {
+        return false;
+    }
 
 protected:
     SkXfermode() {}

@@ -46,99 +46,100 @@ COMPV_NAMESPACE_BEGIN()
 #endif /* COMPV_ASYNCTASK11_MAX_TOKEN_COUNT */
 
 struct CompVAsyncTaskId {
-	uint64_t uTaskId;
-	uint64_t uTokenId;
+    uint64_t uTaskId;
+    uint64_t uTokenId;
 public:
-	CompVAsyncTaskId() : uTaskId(0), uTokenId(0) { }
-	CompVAsyncTaskId(uint64_t taskId, uint64_t tokenId) : uTaskId(taskId), uTokenId(tokenId) { }
+    CompVAsyncTaskId() : uTaskId(0), uTokenId(0) { }
+    CompVAsyncTaskId(uint64_t taskId, uint64_t tokenId) : uTaskId(taskId), uTokenId(tokenId) { }
 };
 typedef std::vector<CompVAsyncTaskId> CompVAsyncTaskIds;
 
 struct CompVAsyncToken {
-	bool bExecute;
-	std::function<COMPV_ERROR_CODE()> fFunc;
+    bool bExecute;
+    std::function<COMPV_ERROR_CODE()> fFunc;
 public:
-	void init() {
-		fFunc = nullptr;
-		bExecute = false;
-	}
+    void init() {
+        fFunc = nullptr;
+        bExecute = false;
+    }
 };
 
 #if COMPV_SEMAPHORE11
-class CompVSemaphore11 {
+class CompVSemaphore11
+{
 public:
-	CompVSemaphore11(int count_ = 0)
-		: count(count_) {}
+    CompVSemaphore11(int count_ = 0)
+        : count(count_) {}
 
-	COMPV_INLINE COMPV_ERROR_CODE increment(){
-		std::unique_lock<std::mutex> lock(mtx);
-		count++;
-		cv.notify_one();
-		return COMPV_ERROR_CODE_S_OK;
-	}
+    COMPV_INLINE COMPV_ERROR_CODE increment() {
+        std::unique_lock<std::mutex> lock(mtx);
+        count++;
+        cv.notify_one();
+        return COMPV_ERROR_CODE_S_OK;
+    }
 
-	COMPV_INLINE COMPV_ERROR_CODE decrement() {
-		std::unique_lock<std::mutex> lock(mtx);
-		while (count == 0){
-			cv.wait(lock);
-		}
-		count--;
-		return COMPV_ERROR_CODE_S_OK;
-	}
+    COMPV_INLINE COMPV_ERROR_CODE decrement() {
+        std::unique_lock<std::mutex> lock(mtx);
+        while (count == 0) {
+            cv.wait(lock);
+        }
+        count--;
+        return COMPV_ERROR_CODE_S_OK;
+    }
 private:
-	std::mutex mtx;
-	std::condition_variable cv;
-	int count;
+    std::mutex mtx;
+    std::condition_variable cv;
+    int count;
 };
 #endif
 
 class COMPV_API CompVAsyncTask11 : public CompVObj
 {
 protected:
-	CompVAsyncTask11();
+    CompVAsyncTask11();
 public:
-	virtual ~CompVAsyncTask11();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVAsyncTask11";
-	};
+    virtual ~CompVAsyncTask11();
+    virtual COMPV_INLINE const char* getObjectId() {
+        return "CompVAsyncTask11";
+    };
 
-	COMPV_ERROR_CODE start();
-	COMPV_ERROR_CODE setAffinity(compv_core_id_t core_id);
-	COMPV_ERROR_CODE invoke(std::function<COMPV_ERROR_CODE()> fFunc, uint64_t *tokenId = NULL);
-	COMPV_ERROR_CODE waitAll(uint64_t u_timeout = 86400000/* 1 day */);
-	COMPV_ERROR_CODE waitOne(uint64_t tokenId, uint64_t u_timeout = 86400000/* 1 day */);
-	COMPV_ERROR_CODE stop();
-	COMPV_INLINE CompVPtr<CompVThread* > getThread() {
-		return m_Thread;
-	}
-	COMPV_INLINE compv_core_id_t getCoreId() {
-		return m_iCoreId;
-	}
+    COMPV_ERROR_CODE start();
+    COMPV_ERROR_CODE setAffinity(compv_core_id_t core_id);
+    COMPV_ERROR_CODE invoke(std::function<COMPV_ERROR_CODE()> fFunc, uint64_t *tokenId = NULL);
+    COMPV_ERROR_CODE waitAll(uint64_t u_timeout = 86400000/* 1 day */);
+    COMPV_ERROR_CODE waitOne(uint64_t tokenId, uint64_t u_timeout = 86400000/* 1 day */);
+    COMPV_ERROR_CODE stop();
+    COMPV_INLINE CompVPtr<CompVThread* > getThread() {
+        return m_Thread;
+    }
+    COMPV_INLINE compv_core_id_t getCoreId() {
+        return m_iCoreId;
+    }
 
-	static uint64_t getUniqueTokenId();
-	static COMPV_ERROR_CODE newObj(CompVPtr<CompVAsyncTask11*>* asyncTask);
-
-private:
-	static void* COMPV_STDCALL run(void *pcArg);
+    static uint64_t getUniqueTokenId();
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVAsyncTask11*>* asyncTask);
 
 private:
-	COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
-	CompVPtr<CompVThread* >m_Thread;
+    static void* COMPV_STDCALL run(void *pcArg);
+
+private:
+    COMPV_DISABLE_WARNINGS_BEGIN(4251 4267)
+    CompVPtr<CompVThread* >m_Thread;
 #if COMPV_SEMAPHORE11
-	std::shared_ptr<CompVSemaphore11> m_SemRun;
-	std::shared_ptr<CompVSemaphore11> m_SemExec;
+    std::shared_ptr<CompVSemaphore11> m_SemRun;
+    std::shared_ptr<CompVSemaphore11> m_SemExec;
 #else
-	CompVPtr<CompVSemaphore* >m_SemRun;
-	CompVPtr<CompVSemaphore* >m_SemExec;
+    CompVPtr<CompVSemaphore* >m_SemRun;
+    CompVPtr<CompVSemaphore* >m_SemExec;
 #endif
 #if COMPV_ASYNCTASK11_CHAIN_ENABLED
-	CompVPtr<CompVMutex* >m_MutexTokens;
+    CompVPtr<CompVMutex* >m_MutexTokens;
 #endif
-	CompVAsyncToken m_Tokens[COMPV_ASYNCTASK11_MAX_TOKEN_COUNT];
-	COMPV_DISABLE_WARNINGS_END()
+    CompVAsyncToken m_Tokens[COMPV_ASYNCTASK11_MAX_TOKEN_COUNT];
+    COMPV_DISABLE_WARNINGS_END()
 
-	bool m_bStarted;
-	compv_core_id_t m_iCoreId;
+    bool m_bStarted;
+    compv_core_id_t m_iCoreId;
 };
 
 COMPV_NAMESPACE_END()

@@ -27,7 +27,8 @@ struct SkDrawProcs;
 struct SkRect;
 class SkRRect;
 
-class SkDraw {
+class SkDraw
+{
 public:
     SkDraw();
 

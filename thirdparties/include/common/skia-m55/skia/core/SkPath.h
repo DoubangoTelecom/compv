@@ -24,7 +24,8 @@ class SkWStream;
     The SkPath class encapsulates compound (multiple contour) geometric paths
     consisting of straight line segments, quadratic curves, and cubic curves.
 */
-class SK_API SkPath {
+class SK_API SkPath
+{
 public:
     enum Direction {
         /** clockwise direction for adding closed contours */
@@ -55,7 +56,7 @@ public:
 
     /** Interpolate between two paths with same-sized point arrays.
      *  The out path contains the verbs and weights of this path.
-     *  The out points are a weighted average of this path and the ending path. 
+     *  The out points are a weighted average of this path and the ending path.
      *
      *  @param ending  The path to interpolate between.
      *  @param weight  The weight, from 0 to 1. The output points are set to
@@ -66,7 +67,9 @@ public:
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
     /** Returns true if the caller is the only owner of the underlying path data */
-    bool unique() const { return fPathRef->unique(); }
+    bool unique() const {
+        return fPathRef->unique();
+    }
 #endif
 
     enum FillType {
@@ -91,7 +94,9 @@ public:
 
         @return the path's fill type
     */
-    FillType getFillType() const { return (FillType)fFillType; }
+    FillType getFillType() const {
+        return (FillType)fFillType;
+    }
 
     /** Set the path's fill type. This is used to define how "inside" is
         computed. The default value is kWinding_FillType.
@@ -103,7 +108,9 @@ public:
     }
 
     /** Returns true if the filltype is one of the Inverse variants */
-    bool isInverseFillType() const { return IsInverseFillType((FillType)fFillType); }
+    bool isInverseFillType() const {
+        return IsInverseFillType((FillType)fFillType);
+    }
 
     /**
      *  Toggle between inverse and normal filltypes. This reverse the return
@@ -126,7 +133,8 @@ public:
     Convexity getConvexity() const {
         if (kUnknown_Convexity != fConvexity) {
             return static_cast<Convexity>(fConvexity);
-        } else {
+        }
+        else {
             return this->internalGetConvexity();
         }
     }
@@ -137,7 +145,9 @@ public:
      *  ComputeConvexity and cache its return value if the current setting is
      *  kUnknown.
      */
-    Convexity getConvexityOrUnknown() const { return (Convexity)fConvexity; }
+    Convexity getConvexityOrUnknown() const {
+        return (Convexity)fConvexity;
+    }
 
     /**
      *  Store a convexity setting in the path. There is no automatic check to
@@ -936,7 +946,9 @@ public:
      *  set if the path contains 1 or more segments of that type.
      *  Returns 0 for an empty path (no segments).
      */
-    uint32_t getSegmentMasks() const { return fPathRef->getSegmentMasks(); }
+    uint32_t getSegmentMasks() const {
+        return fPathRef->getSegmentMasks();
+    }
 
     enum Verb {
         kMove_Verb,     //!< iter.next returns 1 point
@@ -957,7 +969,8 @@ public:
         move command) will be completed with a close verb regardless of the
         contour's contents.
     */
-    class SK_API Iter {
+    class SK_API Iter
+    {
     public:
         Iter();
         Iter(const SkPath&, bool forceClose);
@@ -987,7 +1000,9 @@ public:
          *  Return the weight for the current conic. Only valid if the current
          *  segment return by next() was a conic.
          */
-        SkScalar conicWeight() const { return *fConicWeights; }
+        SkScalar conicWeight() const {
+            return *fConicWeights;
+        }
 
         /** If next() returns kLine_Verb, then this query returns true if the
             line was the result of a close() command (i.e. the end point is the
@@ -997,7 +1012,9 @@ public:
             @return If the last call to next() returned kLine_Verb, return true
                     if it was the result of an explicit close command.
         */
-        bool isCloseLine() const { return SkToBool(fCloseLine); }
+        bool isCloseLine() const {
+            return SkToBool(fCloseLine);
+        }
 
         /** Returns true if the current contour is closed (has a kClose_Verb)
             @return true if the current contour is closed (has a kClose_Verb)
@@ -1024,7 +1041,8 @@ public:
 
     /** Iterate through the verbs in the path, providing the associated points.
     */
-    class SK_API RawIter {
+    class SK_API RawIter
+    {
     public:
         RawIter() {}
         RawIter(const SkPath& path) {
@@ -1101,7 +1119,9 @@ public:
 #endif
 
     SkDEBUGCODE(void validate() const;)
-    SkDEBUGCODE(void experimentalValidateRef() const { fPathRef->validate(); } )
+    SkDEBUGCODE(void experimentalValidateRef() const {
+        fPathRef->validate();
+    } )
 
 private:
     enum SerializationOffsets {
@@ -1166,7 +1186,7 @@ private:
                        bool* isClosed, Direction* direction) const;
 
     // called by stroker to see if all points are equal and worthy of a cap
-    // equivalent to a short-circuit version of getBounds().isEmpty() 
+    // equivalent to a short-circuit version of getBounds().isEmpty()
     bool isZeroLength() const;
 
     /** Returns if the path can return a bound at no cost (true) or will have to

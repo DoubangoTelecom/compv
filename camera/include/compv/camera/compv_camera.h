@@ -17,14 +17,14 @@
 COMPV_NAMESPACE_BEGIN()
 
 struct CompVCameraDeviceInfo {
-	std::string id;
-	std::string name;
-	std::string description;
-	CompVCameraDeviceInfo(const std::string& id_, const std::string& name_, const std::string& description_) {
-		id = id_;
-		name = name_;
-		description = description_;
-	}
+    std::string id;
+    std::string name;
+    std::string description;
+    CompVCameraDeviceInfo(const std::string& id_, const std::string& name_, const std::string& description_) {
+        id = id_;
+        name = name_;
+        description = description_;
+    }
 };
 typedef std::vector<CompVCameraDeviceInfo > CompVCameraDeviceInfoList;
 
@@ -35,35 +35,37 @@ typedef COMPV_ERROR_CODE(*CompVCameraNewFunc)(CompVCameraPtrPtr camera);
 class COMPV_CAMERA_API CompVCamera : public CompVObj
 {
 protected:
-	CompVCamera();
+    CompVCamera();
 public:
-	virtual ~CompVCamera();
+    virtual ~CompVCamera();
 
-	static COMPV_ERROR_CODE init();
-	static COMPV_ERROR_CODE deInit();
-	static COMPV_INLINE bool isInitialized() { return s_bInitialized; }
+    static COMPV_ERROR_CODE init();
+    static COMPV_ERROR_CODE deInit();
+    static COMPV_INLINE bool isInitialized() {
+        return s_bInitialized;
+    }
 
-	virtual COMPV_ERROR_CODE devices(CompVCameraDeviceInfoList& list) = 0;
-	virtual COMPV_ERROR_CODE start(const std::string& deviceId = "") = 0;
-	virtual COMPV_ERROR_CODE stop() = 0;
+    virtual COMPV_ERROR_CODE devices(CompVCameraDeviceInfoList& list) = 0;
+    virtual COMPV_ERROR_CODE start(const std::string& deviceId = "") = 0;
+    virtual COMPV_ERROR_CODE stop() = 0;
 
-	static COMPV_ERROR_CODE newObj(CompVCameraPtrPtr camera);
+    static COMPV_ERROR_CODE newObj(CompVCameraPtrPtr camera);
 
-	struct CameraFactory {
-		CompVCameraNewFunc funcNew;
-		CompVSharedLibPtr lib;
-		bool isValid() {
-			return funcNew && lib;
-		}
-		void deinit() {
-			funcNew = NULL;
-			lib = NULL;
-		}
-	};
+    struct CameraFactory {
+        CompVCameraNewFunc funcNew;
+        CompVSharedLibPtr lib;
+        bool isValid() {
+            return funcNew && lib;
+        }
+        void deinit() {
+            funcNew = NULL;
+            lib = NULL;
+        }
+    };
 
 private:
-	static bool s_bInitialized;
-	static CameraFactory s_CameraFactory;
+    static bool s_bInitialized;
+    static CameraFactory s_CameraFactory;
 };
 
 COMPV_NAMESPACE_END()

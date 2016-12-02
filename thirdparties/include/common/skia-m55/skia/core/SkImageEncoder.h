@@ -17,7 +17,8 @@ class SkPixmap;
 class SkData;
 class SkWStream;
 
-class SkImageEncoder {
+class SkImageEncoder
+{
 public:
     // TODO (scroggo): Merge with SkEncodedFormat.
     enum Type {
@@ -71,7 +72,7 @@ public:
     static bool EncodeFile(const char file[], const SkBitmap&, Type,
                            int quality);
     static bool EncodeStream(SkWStream*, const SkBitmap&, Type,
-                           int quality);
+                             int quality);
 
     /** Uses SkImageEncoder to serialize images that are not already
         encoded as SkImageEncoder::kPNG_Type images. */

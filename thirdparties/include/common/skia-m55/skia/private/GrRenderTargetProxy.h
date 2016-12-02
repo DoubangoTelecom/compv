@@ -19,7 +19,8 @@ class GrTextureProvider;
 // required
 // Beware: the uniqueID of the RenderTargetProxy will usually be different than
 // the uniqueID of the RenderTarget it represents!
-class GrRenderTargetProxy : public GrSurfaceProxy {
+class GrRenderTargetProxy : public GrSurfaceProxy
+{
 public:
     /**
      * The caller gets the creation ref.
@@ -31,37 +32,53 @@ public:
     ~GrRenderTargetProxy() override;
 
     // TODO: add asTextureProxy variants
-    GrRenderTargetProxy* asRenderTargetProxy() override { return this; }
-    const GrRenderTargetProxy* asRenderTargetProxy() const override { return this; }
+    GrRenderTargetProxy* asRenderTargetProxy() override {
+        return this;
+    }
+    const GrRenderTargetProxy* asRenderTargetProxy() const override {
+        return this;
+    }
 
     // Actually instantiate the backing rendertarget, if necessary.
     GrRenderTarget* instantiate(GrTextureProvider* texProvider);
 
-    bool isStencilBufferMultisampled() const { return fDesc.fSampleCnt > 0; }
+    bool isStencilBufferMultisampled() const {
+        return fDesc.fSampleCnt > 0;
+    }
 
     /**
      * For our purposes, "Mixed Sampled" means the stencil buffer is multisampled but the color
      * buffer is not.
      */
-    bool isMixedSampled() const { return fFlags & GrRenderTargetPriv::Flags::kMixedSampled; }
+    bool isMixedSampled() const {
+        return fFlags & GrRenderTargetPriv::Flags::kMixedSampled;
+    }
 
     /**
      * "Unified Sampled" means the stencil and color buffers are both multisampled.
      */
-    bool isUnifiedMultisampled() const { return fDesc.fSampleCnt > 0 && !this->isMixedSampled(); }
+    bool isUnifiedMultisampled() const {
+        return fDesc.fSampleCnt > 0 && !this->isMixedSampled();
+    }
 
     /**
      * Returns the number of samples/pixel in the stencil buffer (Zero if non-MSAA).
      */
-    int numStencilSamples() const { return fDesc.fSampleCnt; }
+    int numStencilSamples() const {
+        return fDesc.fSampleCnt;
+    }
 
     /**
      * Returns the number of samples/pixel in the color buffer (Zero if non-MSAA or mixed sampled).
      */
-    int numColorSamples() const { return this->isMixedSampled() ? 0 : fDesc.fSampleCnt; }
+    int numColorSamples() const {
+        return this->isMixedSampled() ? 0 : fDesc.fSampleCnt;
+    }
 
     void setLastDrawTarget(GrDrawTarget* dt);
-    GrDrawTarget* getLastDrawTarget() { return fLastDrawTarget; }
+    GrDrawTarget* getLastDrawTarget() {
+        return fLastDrawTarget;
+    }
 
     GrRenderTargetPriv::Flags testingOnly_getFlags() const;
 

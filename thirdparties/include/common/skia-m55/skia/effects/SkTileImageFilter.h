@@ -10,7 +10,8 @@
 
 #include "SkImageFilter.h"
 
-class SK_API SkTileImageFilter : public SkImageFilter {
+class SK_API SkTileImageFilter : public SkImageFilter
+{
 public:
     /** Create a tile image filter
         @param src  Defines the pixels to tile

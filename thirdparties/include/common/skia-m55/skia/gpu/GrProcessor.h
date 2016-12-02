@@ -25,7 +25,8 @@ class GrInvariantOutput;
  * Used by processors to build their keys. It incorporates each per-processor key into a larger
  * shader key.
  */
-class GrProcessorKeyBuilder {
+class GrProcessorKeyBuilder
+{
 public:
     GrProcessorKeyBuilder(SkTArray<unsigned char, true>* data) : fData(data), fCount(0) {
         SkASSERT(0 == fData->count() % sizeof(uint32_t));
@@ -44,7 +45,9 @@ public:
         return reinterpret_cast<uint32_t*>(fData->push_back_n(4 * count));
     }
 
-    size_t size() const { return sizeof(uint32_t) * fCount; }
+    size_t size() const {
+        return sizeof(uint32_t) * fCount;
+    }
 
 private:
     SkTArray<uint8_t, true>* fData; // unowned ptr to the larger key.
@@ -57,7 +60,8 @@ private:
     Dynamically allocated GrProcessors are managed by a per-thread memory pool. The ref count of an
     processor must reach 0 before the thread terminates and the pool is destroyed.
  */
-class GrProcessor : public GrProgramElement {
+class GrProcessor : public GrProgramElement
+{
 public:
     virtual ~GrProcessor();
 
@@ -65,23 +69,31 @@ public:
         in generated shader code. */
     virtual const char* name() const = 0;
 
-    // Human-readable dump of all information 
+    // Human-readable dump of all information
     virtual SkString dumpInfo() const {
         SkString str;
         str.appendf("Missing data");
         return str;
     }
 
-    int numTextures() const { return fTextureAccesses.count(); }
+    int numTextures() const {
+        return fTextureAccesses.count();
+    }
 
     /** Returns the access pattern for the texture at index. index must be valid according to
         numTextures(). */
-    const GrTextureAccess& textureAccess(int index) const { return *fTextureAccesses[index]; }
+    const GrTextureAccess& textureAccess(int index) const {
+        return *fTextureAccesses[index];
+    }
 
     /** Shortcut for textureAccess(index).texture(); */
-    GrTexture* texture(int index) const { return this->textureAccess(index).getTexture(); }
+    GrTexture* texture(int index) const {
+        return this->textureAccess(index).getTexture();
+    }
 
-    int numBuffers() const { return fBufferAccesses.count(); }
+    int numBuffers() const {
+        return fBufferAccesses.count();
+    }
 
     /** Returns the access pattern for the buffer at index. index must be valid according to
         numBuffers(). */
@@ -100,7 +112,9 @@ public:
 
     GR_DECL_BITFIELD_OPS_FRIENDS(RequiredFeatures);
 
-    RequiredFeatures requiredFeatures() const { return fRequiredFeatures; }
+    RequiredFeatures requiredFeatures() const {
+        return fRequiredFeatures;
+    }
 
     void* operator new(size_t size);
     void operator delete(void* target);
@@ -115,9 +129,14 @@ public:
     /**
       * Helper for down-casting to a GrProcessor subclass
       */
-    template <typename T> const T& cast() const { return *static_cast<const T*>(this); }
+    template <typename T> const T& cast() const {
+        return *static_cast<const T*>(this);
+    }
 
-    uint32_t classID() const { SkASSERT(kIllegalProcessorClassID != fClassID); return fClassID; }
+    uint32_t classID() const {
+        SkASSERT(kIllegalProcessorClassID != fClassID);
+        return fClassID;
+    }
 
 protected:
     GrProcessor() : fClassID(kIllegalProcessorClassID), fRequiredFeatures(kNone_RequiredFeatures) {}
@@ -139,16 +158,20 @@ protected:
      * must call these methods from its constructor. Otherwise, requests to use these features will
      * be denied.
      */
-    void setWillReadFragmentPosition() { fRequiredFeatures |= kFragmentPosition_RequiredFeature; }
-    void setWillUseSampleLocations() { fRequiredFeatures |= kSampleLocations_RequiredFeature; }
+    void setWillReadFragmentPosition() {
+        fRequiredFeatures |= kFragmentPosition_RequiredFeature;
+    }
+    void setWillUseSampleLocations() {
+        fRequiredFeatures |= kSampleLocations_RequiredFeature;
+    }
 
     void combineRequiredFeatures(const GrProcessor& other) {
         fRequiredFeatures |= other.fRequiredFeatures;
     }
 
     template <typename PROC_SUBCLASS> void initClassID() {
-         static uint32_t kClassID = GenClassID();
-         fClassID = kClassID;
+        static uint32_t kClassID = GenClassID();
+        fClassID = kClassID;
     }
 
     uint32_t fClassID;

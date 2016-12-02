@@ -13,7 +13,8 @@
 
 struct SkConic;
 
-class SK_API SkPathMeasure : SkNoncopyable {
+class SK_API SkPathMeasure : SkNoncopyable
+{
 public:
     SkPathMeasure();
     /** Initialize the pathmeasure with the specified path. The path must remain valid
@@ -59,7 +60,7 @@ public:
         matrix is unchanged.
     */
     bool SK_WARN_UNUSED_RESULT getMatrix(SkScalar distance, SkMatrix* matrix,
-                                  MatrixFlags flags = kGetPosAndTan_MatrixFlag);
+                                         MatrixFlags flags = kGetPosAndTan_MatrixFlag);
 
     /** Given a start and stop distance, return in dst the intervening segment(s).
         If the segment is zero-length, return false, else return true.
@@ -96,7 +97,7 @@ private:
         unsigned    fPtIndex; // index into the fPts array
         unsigned    fTValue : 30;
         unsigned    fType : 2;  // actually the enum SkSegType
-                                // See SkPathMeasurePriv.h
+        // See SkPathMeasurePriv.h
 
         SkScalar getScalarT() const;
     };
@@ -107,7 +108,7 @@ private:
 
     void     buildSegments();
     SkScalar compute_quad_segs(const SkPoint pts[3], SkScalar distance,
-                                int mint, int maxt, int ptIndex);
+                               int mint, int maxt, int ptIndex);
     SkScalar compute_conic_segs(const SkConic&, SkScalar distance,
                                 int mint, const SkPoint& minPt,
                                 int maxt, const SkPoint& maxPt, int ptIndex);

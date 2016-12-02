@@ -24,7 +24,7 @@ enum IOS_launch_type {
 };
 
 extern IOS_launch_type set_cmd_line_args(int argc, char *argv[],
-                                         const char* resourceDir);
+        const char* resourceDir);
 #endif
 
 #endif // SkApplication_DEFINED

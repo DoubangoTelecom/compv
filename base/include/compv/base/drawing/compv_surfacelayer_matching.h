@@ -18,16 +18,16 @@ COMPV_OBJECT_DECLARE_PTRS(MatchingSurfaceLayer)
 class COMPV_BASE_API CompVMatchingSurfaceLayer : public CompVSurfaceLayer
 {
 protected:
-	CompVMatchingSurfaceLayer();
+    CompVMatchingSurfaceLayer();
 public:
-	virtual ~CompVMatchingSurfaceLayer();
+    virtual ~CompVMatchingSurfaceLayer();
 
-	virtual COMPV_ERROR_CODE drawMatches(CompVMatPtr trainImage, CompVMatPtr queryImage) = 0;
+    virtual COMPV_ERROR_CODE drawMatches(CompVMatPtr trainImage, CompVMatPtr queryImage) = 0;
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

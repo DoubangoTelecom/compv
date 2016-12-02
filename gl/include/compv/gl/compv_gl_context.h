@@ -25,14 +25,14 @@ COMPV_OBJECT_DECLARE_PTRS(GLContext)
 class COMPV_GL_API CompVGLContext : public CompVObj, public CompVLock
 {
 protected:
-	CompVGLContext();
+    CompVGLContext();
 public:
-	virtual ~CompVGLContext();
-	static bool isSet();
+    virtual ~CompVGLContext();
+    static bool isSet();
 
-	virtual COMPV_ERROR_CODE makeCurrent();
-	virtual COMPV_ERROR_CODE swapBuffers();
-	virtual COMPV_ERROR_CODE unmakeCurrent();
+    virtual COMPV_ERROR_CODE makeCurrent();
+    virtual COMPV_ERROR_CODE swapBuffers();
+    virtual COMPV_ERROR_CODE unmakeCurrent();
 };
 
 COMPV_NAMESPACE_END()

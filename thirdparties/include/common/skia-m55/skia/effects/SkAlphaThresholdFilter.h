@@ -12,7 +12,8 @@
 
 class SkRegion;
 
-class SK_API SkAlphaThresholdFilter {
+class SK_API SkAlphaThresholdFilter
+{
 public:
     /**
      * Creates an image filter that samples a region. If the sample is inside the

@@ -12,24 +12,24 @@ COMPV_NAMESPACE_BEGIN()
 //	CompVCanvasImpl
 //
 
-CompVCanvasImpl::CompVCanvasImpl() 
-{ 
+CompVCanvasImpl::CompVCanvasImpl()
+{
 }
 
 CompVCanvasImpl::~CompVCanvasImpl()
-{ 
+{
 }
 
 //
 //	CompVCanvas
 //
 
-CompVCanvas::CompVCanvas() 
-{  
+CompVCanvas::CompVCanvas()
+{
 }
 
-CompVCanvas::~CompVCanvas() 
-{  
+CompVCanvas::~CompVCanvas()
+{
 }
 
 //

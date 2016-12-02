@@ -23,31 +23,31 @@ COMPV_OBJECT_DECLARE_PTRS(GLRendererRGB)
 class CompVGLRendererRGB : public CompVGLRenderer
 {
 protected:
-	CompVGLRendererRGB(COMPV_PIXEL_FORMAT eRGBPixelFormat);
+    CompVGLRendererRGB(COMPV_PIXEL_FORMAT eRGBPixelFormat);
 public:
-	virtual ~CompVGLRendererRGB();
-	COMPV_OBJECT_GET_ID(CompVGLRendererRGB);
-	
-	virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) COMPV_OVERRIDE_DECL("CompVGLRenderer");
+    virtual ~CompVGLRendererRGB();
+    COMPV_OBJECT_GET_ID(CompVGLRendererRGB);
 
-	static COMPV_ERROR_CODE newObj(CompVGLRendererRGBPtrPtr glRgbRenderer, COMPV_PIXEL_FORMAT eRGBPixelFormat);
+    virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) COMPV_OVERRIDE_DECL("CompVGLRenderer");
+
+    static COMPV_ERROR_CODE newObj(CompVGLRendererRGBPtrPtr glRgbRenderer, COMPV_PIXEL_FORMAT eRGBPixelFormat);
 
 protected:
-	virtual COMPV_ERROR_CODE deInit();
-	virtual COMPV_ERROR_CODE init(CompVMatPtr mat);
+    virtual COMPV_ERROR_CODE deInit();
+    virtual COMPV_ERROR_CODE init(CompVMatPtr mat);
 
 private:
-	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	bool m_bInit;
-	GLint m_iFormat;
-	GLuint m_uNameTexture;
-	GLuint m_uNameSampler;
-	size_t m_uWidth;
-	size_t m_uHeight;
-	size_t m_uStride;
-	std::string m_strPrgVertexData;
-	std::string m_strPrgFragData;
-	COMPV_VS_DISABLE_WARNINGS_END()
+    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+    bool m_bInit;
+    GLint m_iFormat;
+    GLuint m_uNameTexture;
+    GLuint m_uNameSampler;
+    size_t m_uWidth;
+    size_t m_uHeight;
+    size_t m_uStride;
+    std::string m_strPrgVertexData;
+    std::string m_strPrgFragData;
+    COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

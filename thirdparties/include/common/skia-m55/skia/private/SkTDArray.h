@@ -12,7 +12,8 @@
 
 #include "SkTypes.h"
 
-template <typename T> class SkTDArray {
+template <typename T> class SkTDArray
+{
 public:
     SkTDArray() : fArray(nullptr), fReserve(0), fCount(0) {}
     SkTDArray(const T src[], int count) {
@@ -42,7 +43,8 @@ public:
             if (src.fCount > fReserve) {
                 SkTDArray<T> tmp(src.fArray, src.fCount);
                 this->swap(tmp);
-            } else {
+            }
+            else {
                 sk_careful_memcpy(fArray, src.fArray, sizeof(T) * src.fCount);
                 fCount = src.fCount;
             }
@@ -82,29 +84,45 @@ public:
         return array;
     }
 
-    bool isEmpty() const { return fCount == 0; }
+    bool isEmpty() const {
+        return fCount == 0;
+    }
 
     /**
      *  Return the number of elements in the array
      */
-    int count() const { return fCount; }
+    int count() const {
+        return fCount;
+    }
 
     /**
      *  Return the total number of elements allocated.
      *  reserved() - count() gives you the number of elements you can add
      *  without causing an allocation.
      */
-    int reserved() const { return fReserve; }
+    int reserved() const {
+        return fReserve;
+    }
 
     /**
      *  return the number of bytes in the array: count * sizeof(T)
      */
-    size_t bytes() const { return fCount * sizeof(T); }
+    size_t bytes() const {
+        return fCount * sizeof(T);
+    }
 
-    T*  begin() { return fArray; }
-    const T*  begin() const { return fArray; }
-    T*  end() { return fArray ? fArray + fCount : NULL; }
-    const T*  end() const { return fArray ? fArray + fCount : NULL; }
+    T*  begin() {
+        return fArray;
+    }
+    const T*  begin() const {
+        return fArray;
+    }
+    T*  end() {
+        return fArray ? fArray + fCount : NULL;
+    }
+    const T*  end() const {
+        return fArray ? fArray + fCount : NULL;
+    }
 
     T&  operator[](int index) {
         SkASSERT(index < fCount);
@@ -127,7 +145,8 @@ public:
             sk_free(fArray);
             fArray = NULL;
             fReserve = fCount = 0;
-        } else {
+        }
+        else {
             SkASSERT(fReserve == 0 && fCount == 0);
         }
     }
@@ -170,7 +189,7 @@ public:
         int oldCount = fCount;
         if (count)  {
             SkASSERT(src == NULL || fArray == NULL ||
-                    src + count <= fArray || fArray + oldCount <= src);
+                     src + count <= fArray || fArray + oldCount <= src);
 
             this->adjustCount(count);
             if (src) {
@@ -228,7 +247,7 @@ public:
         }
         return -1;
     }
-    
+
     int find(const T& elem) const {
         const T* iter = fArray;
         const T* stop = fArray + fCount;
@@ -280,12 +299,28 @@ public:
     }
 
     // routines to treat the array like a stack
-    T*       push() { return this->append(); }
-    void     push(const T& elem) { *this->append() = elem; }
-    const T& top() const { return (*this)[fCount - 1]; }
-    T&       top() { return (*this)[fCount - 1]; }
-    void     pop(T* elem) { SkASSERT(fCount > 0); if (elem) *elem = (*this)[fCount - 1]; --fCount; }
-    void     pop() { SkASSERT(fCount > 0); --fCount; }
+    T*       push() {
+        return this->append();
+    }
+    void     push(const T& elem) {
+        *this->append() = elem;
+    }
+    const T& top() const {
+        return (*this)[fCount - 1];
+    }
+    T&       top() {
+        return (*this)[fCount - 1];
+    }
+    void     pop(T* elem) {
+        SkASSERT(fCount > 0);
+        if (elem) {
+            *elem = (*this)[fCount - 1];
+        } --fCount;
+    }
+    void     pop() {
+        SkASSERT(fCount > 0);
+        --fCount;
+    }
 
     void deleteAll() {
         T*  iter = fArray;

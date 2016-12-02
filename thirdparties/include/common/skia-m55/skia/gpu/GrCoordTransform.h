@@ -18,9 +18,12 @@
  * A class representing a linear transformation of local coordinates. GrFragnentProcessors
  * these transformations, and the GrGeometryProcessor implements the transformation.
  */
-class GrCoordTransform : SkNoncopyable {
+class GrCoordTransform : SkNoncopyable
+{
 public:
-    GrCoordTransform() { SkDEBUGCODE(fInProcessor = false); }
+    GrCoordTransform() {
+        SkDEBUGCODE(fInProcessor = false);
+    }
 
     /**
      * Create a transformation that maps [0, 1] to a texture's boundaries. The precision is inferred
@@ -84,11 +87,19 @@ public:
                fPrecision == that.fPrecision;
     }
 
-    bool operator!=(const GrCoordTransform& that) const { return !(*this == that); }
+    bool operator!=(const GrCoordTransform& that) const {
+        return !(*this == that);
+    }
 
-    const SkMatrix& getMatrix() const { return fMatrix; }
-    bool reverseY() const { return fReverseY; }
-    GrSLPrecision precision() const { return fPrecision; }
+    const SkMatrix& getMatrix() const {
+        return fMatrix;
+    }
+    bool reverseY() const {
+        return fReverseY;
+    }
+    GrSLPrecision precision() const {
+        return fPrecision;
+    }
 
     /** Useful for effects that want to insert a texture matrix that is implied by the texture
         dimensions */
@@ -107,7 +118,9 @@ private:
 
 #ifdef SK_DEBUG
 public:
-    void setInProcessor() const { fInProcessor = true; }
+    void setInProcessor() const {
+        fInProcessor = true;
+    }
 private:
     mutable bool fInProcessor;
 #endif

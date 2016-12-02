@@ -56,28 +56,46 @@ struct SK_API SkIRect {
         return r;
     }
 
-    int left() const { return fLeft; }
-    int top() const { return fTop; }
-    int right() const { return fRight; }
-    int bottom() const { return fBottom; }
+    int left() const {
+        return fLeft;
+    }
+    int top() const {
+        return fTop;
+    }
+    int right() const {
+        return fRight;
+    }
+    int bottom() const {
+        return fBottom;
+    }
 
     /** return the left edge of the rect */
-    int x() const { return fLeft; }
+    int x() const {
+        return fLeft;
+    }
     /** return the top edge of the rect */
-    int y() const { return fTop; }
+    int y() const {
+        return fTop;
+    }
     /**
      *  Returns the rectangle's width. This does not check for a valid rect
      *  (i.e. left <= right) so the result may be negative.
      */
-    int width() const { return fRight - fLeft; }
+    int width() const {
+        return fRight - fLeft;
+    }
 
     /**
      *  Returns the rectangle's height. This does not check for a valid rect
      *  (i.e. top <= bottom) so the result may be negative.
      */
-    int height() const { return fBottom - fTop; }
+    int height() const {
+        return fBottom - fTop;
+    }
 
-    SkISize size() const { return SkISize::Make(this->width(), this->height()); }
+    SkISize size() const {
+        return SkISize::Make(this->width(), this->height());
+    }
 
     /**
      *  Since the center of an integer rect may fall on a factional value, this
@@ -86,7 +104,9 @@ struct SK_API SkIRect {
      *  This is a specific "truncation" of the average, which is different than
      *  (right + left) / 2 when the sum is negative.
      */
-    int centerX() const { return (fRight + fLeft) >> 1; }
+    int centerX() const {
+        return (fRight + fLeft) >> 1;
+    }
 
     /**
      *  Since the center of an integer rect may fall on a factional value, this
@@ -95,17 +115,23 @@ struct SK_API SkIRect {
      *  This is a specific "truncation" of the average, which is different than
      *  (bottom + top) / 2 when the sum is negative.
      */
-    int centerY() const { return (fBottom + fTop) >> 1; }
+    int centerY() const {
+        return (fBottom + fTop) >> 1;
+    }
 
     /**
      *  Return true if the rectangle's width or height are <= 0
      */
-    bool isEmpty() const { return fLeft >= fRight || fTop >= fBottom; }
+    bool isEmpty() const {
+        return fLeft >= fRight || fTop >= fBottom;
+    }
 
-    bool isLargest() const { return SK_MinS32 == fLeft &&
-                                    SK_MinS32 == fTop &&
-                                    SK_MaxS32 == fRight &&
-                                    SK_MaxS32 == fBottom; }
+    bool isLargest() const {
+        return SK_MinS32 == fLeft &&
+               SK_MinS32 == fTop &&
+               SK_MaxS32 == fRight &&
+               SK_MaxS32 == fBottom;
+    }
 
     friend bool operator==(const SkIRect& a, const SkIRect& b) {
         return !memcmp(&a, &b, sizeof(a));
@@ -122,7 +148,9 @@ struct SK_API SkIRect {
 
     /** Set the rectangle to (0,0,0,0)
     */
-    void setEmpty() { memset(this, 0, sizeof(*this)); }
+    void setEmpty() {
+        memset(this, 0, sizeof(*this));
+    }
 
     void set(int32_t left, int32_t top, int32_t right, int32_t bottom) {
         fLeft   = left;
@@ -215,12 +243,14 @@ struct SK_API SkIRect {
         fBottom -= dy;
     }
 
-   /** Outset the rectangle by (dx,dy). If dx is positive, then the sides are
-       moved outwards, making the rectangle wider. If dx is negative, then the
-       sides are moved inwards, making the rectangle narrower. The same holds
-       true for dy and the top and bottom.
-    */
-    void outset(int32_t dx, int32_t dy)  { this->inset(-dx, -dy); }
+    /** Outset the rectangle by (dx,dy). If dx is positive, then the sides are
+        moved outwards, making the rectangle wider. If dx is negative, then the
+        sides are moved inwards, making the rectangle narrower. The same holds
+        true for dy and the top and bottom.
+     */
+    void outset(int32_t dx, int32_t dy)  {
+        this->inset(-dx, -dy);
+    }
 
     bool quickReject(int l, int t, int r, int b) const {
         return l >= fRight || fLeft >= r || t >= fBottom || fTop >= b;
@@ -327,14 +357,22 @@ struct SK_API SkIRect {
         otherwise return false and do not change this rectangle.
         If either rectangle is empty, do nothing and return false.
     */
-    bool SK_WARN_UNUSED_RESULT intersect(int32_t left, int32_t top, 
+    bool SK_WARN_UNUSED_RESULT intersect(int32_t left, int32_t top,
                                          int32_t right, int32_t bottom) {
         if (left < right && top < bottom && !this->isEmpty() &&
                 fLeft < right && left < fRight && fTop < bottom && top < fBottom) {
-            if (fLeft < left) fLeft = left;
-            if (fTop < top) fTop = top;
-            if (fRight > right) fRight = right;
-            if (fBottom > bottom) fBottom = bottom;
+            if (fLeft < left) {
+                fLeft = left;
+            }
+            if (fTop < top) {
+                fTop = top;
+            }
+            if (fRight > right) {
+                fRight = right;
+            }
+            if (fBottom > bottom) {
+                fBottom = bottom;
+            }
             return true;
         }
         return false;
@@ -391,7 +429,7 @@ struct SK_API SkRect {
     SkScalar    fLeft, fTop, fRight, fBottom;
 
     static constexpr SkRect SK_WARN_UNUSED_RESULT MakeEmpty() {
-        return SkRect{0, 0, 0, 0};
+        return SkRect {0, 0, 0, 0};
     }
 
     static SkRect SK_WARN_UNUSED_RESULT MakeLargest() {
@@ -419,7 +457,7 @@ struct SK_API SkRect {
     }
 
     static constexpr SkRect SK_WARN_UNUSED_RESULT MakeLTRB(SkScalar l, SkScalar t, SkScalar r,
-                                                           SkScalar b) {
+            SkScalar b) {
         return SkRect {l, t, r, b};
     }
 
@@ -442,7 +480,7 @@ struct SK_API SkRect {
     static SkRect Make(const SkISize& size) {
         return MakeIWH(size.width(), size.height());
     }
-    
+
     static SkRect SK_WARN_UNUSED_RESULT Make(const SkIRect& irect) {
         SkRect r;
         r.set(SkIntToScalar(irect.fLeft),
@@ -455,12 +493,16 @@ struct SK_API SkRect {
     /**
      *  Return true if the rectangle's width or height are <= 0
      */
-    bool isEmpty() const { return fLeft >= fRight || fTop >= fBottom; }
+    bool isEmpty() const {
+        return fLeft >= fRight || fTop >= fBottom;
+    }
 
-    bool isLargest() const { return SK_ScalarMin == fLeft &&
-                                    SK_ScalarMin == fTop &&
-                                    SK_ScalarMax == fRight &&
-                                    SK_ScalarMax == fBottom; }
+    bool isLargest() const {
+        return SK_ScalarMin == fLeft &&
+               SK_ScalarMin == fTop &&
+               SK_ScalarMax == fRight &&
+               SK_ScalarMax == fBottom;
+    }
 
     /**
      *  Returns true iff all values in the rect are finite. If any are
@@ -481,16 +523,36 @@ struct SK_API SkRect {
         return !SkScalarIsNaN(accum);
     }
 
-    SkScalar    x() const { return fLeft; }
-    SkScalar    y() const { return fTop; }
-    SkScalar    left() const { return fLeft; }
-    SkScalar    top() const { return fTop; }
-    SkScalar    right() const { return fRight; }
-    SkScalar    bottom() const { return fBottom; }
-    SkScalar    width() const { return fRight - fLeft; }
-    SkScalar    height() const { return fBottom - fTop; }
-    SkScalar    centerX() const { return SkScalarHalf(fLeft + fRight); }
-    SkScalar    centerY() const { return SkScalarHalf(fTop + fBottom); }
+    SkScalar    x() const {
+        return fLeft;
+    }
+    SkScalar    y() const {
+        return fTop;
+    }
+    SkScalar    left() const {
+        return fLeft;
+    }
+    SkScalar    top() const {
+        return fTop;
+    }
+    SkScalar    right() const {
+        return fRight;
+    }
+    SkScalar    bottom() const {
+        return fBottom;
+    }
+    SkScalar    width() const {
+        return fRight - fLeft;
+    }
+    SkScalar    height() const {
+        return fBottom - fTop;
+    }
+    SkScalar    centerX() const {
+        return SkScalarHalf(fLeft + fRight);
+    }
+    SkScalar    centerY() const {
+        return SkScalarHalf(fTop + fBottom);
+    }
 
     friend bool operator==(const SkRect& a, const SkRect& b) {
         return SkScalarsEqual((SkScalar*)&a, (SkScalar*)&b, 4);
@@ -507,7 +569,9 @@ struct SK_API SkRect {
 
     /** Set this rectangle to the empty rectangle (0,0,0,0)
     */
-    void setEmpty() { *this = MakeEmpty(); }
+    void setEmpty() {
+        *this = MakeEmpty();
+    }
 
     void set(const SkIRect& src) {
         fLeft   = SkIntToScalar(src.fLeft);
@@ -614,7 +678,7 @@ struct SK_API SkRect {
     SkRect makeOffset(SkScalar dx, SkScalar dy) const {
         return MakeLTRB(fLeft + dx, fTop + dy, fRight + dx, fBottom + dy);
     }
-    
+
     /**
      *  Return a new Rect, built as an inset of this rect.
      */
@@ -665,12 +729,14 @@ struct SK_API SkRect {
         fBottom -= dy;
     }
 
-   /** Outset the rectangle by (dx,dy). If dx is positive, then the sides are
-       moved outwards, making the rectangle wider. If dx is negative, then the
-       sides are moved inwards, making the rectangle narrower. The same holds
-       true for dy and the top and bottom.
-    */
-    void outset(SkScalar dx, SkScalar dy)  { this->inset(-dx, -dy); }
+    /** Outset the rectangle by (dx,dy). If dx is positive, then the sides are
+        moved outwards, making the rectangle wider. If dx is negative, then the
+        sides are moved inwards, making the rectangle narrower. The same holds
+        true for dy and the top and bottom.
+     */
+    void outset(SkScalar dx, SkScalar dy)  {
+        this->inset(-dx, -dy);
+    }
 
     /** If this rectangle intersects r, return true and set this rectangle to that
         intersection, otherwise return false and do not change this rectangle.
@@ -683,7 +749,7 @@ struct SK_API SkRect {
         and do not change this rectangle.
         If either rectangle is empty, do nothing and return false.
     */
-    bool SK_WARN_UNUSED_RESULT intersect(SkScalar left, SkScalar top, 
+    bool SK_WARN_UNUSED_RESULT intersect(SkScalar left, SkScalar top,
                                          SkScalar right, SkScalar bottom);
 
     /**
@@ -746,7 +812,8 @@ public:
         // if we are empty, just assign
         if (fLeft >= fRight || fTop >= fBottom) {
             *this = r;
-        } else {
+        }
+        else {
             this->joinPossiblyEmptyRect(r);
         }
     }
@@ -865,14 +932,14 @@ public:
         this->round(&ir);
         return ir;
     }
-    
+
     //! Returns the result of calling roundOut(&dst)
     SkIRect roundOut() const {
         SkIRect ir;
         this->roundOut(&ir);
         return ir;
     }
-    
+
     /**
      *  Swap top/bottom or left/right if there are flipped (i.e. if width()
      *  or height() would have returned a negative value.) This should be called
@@ -892,14 +959,21 @@ public:
     /**
      *  cast-safe way to treat the rect as an array of (4) SkScalars.
      */
-    const SkScalar* asScalars() const { return &fLeft; }
+    const SkScalar* asScalars() const {
+        return &fLeft;
+    }
 
     void dump(bool asHex) const;
-    void dump() const { this->dump(false); }
-    void dumpHex() const { this->dump(true); }
+    void dump() const {
+        this->dump(false);
+    }
+    void dumpHex() const {
+        this->dump(true);
+    }
 };
 
-inline bool SkIRect::contains(const SkRect& r) const {
+inline bool SkIRect::contains(const SkRect& r) const
+{
     return  !r.isEmpty() && !this->isEmpty() &&     // check for empties
             (SkScalar)fLeft <= r.fLeft && (SkScalar)fTop <= r.fTop &&
             (SkScalar)fRight >= r.fRight && (SkScalar)fBottom >= r.fBottom;

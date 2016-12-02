@@ -13,7 +13,8 @@
 #include "../private/SkTDArray.h"
 #include "SkEvent.h"
 
-class SkOSMenu {
+class SkOSMenu
+{
 public:
     explicit SkOSMenu(const char title[] = "");
     ~SkOSMenu();
@@ -47,7 +48,8 @@ public:
         kOnState = 1
     };
 
-    class Item {
+    class Item
+    {
     public:
         /**
          * Auto increments a global to generate an unique ID for each new item
@@ -55,15 +57,31 @@ public:
          */
         Item(const char label[], SkOSMenu::Type type, const char slotName[],
              SkEvent* evt);
-        ~Item() { delete fEvent; }
+        ~Item() {
+            delete fEvent;
+        }
 
-        SkEvent*    getEvent() const { return fEvent; }
-        int         getID() const { return fID; }
-        const char* getLabel() const { return fLabel.c_str(); }
-        const char* getSlotName() const { return fSlotName.c_str(); }
-        Type        getType() const { return fType; }
-        void        setKeyEquivalent(SkUnichar key) { fKey = key; }
-        SkUnichar   getKeyEquivalent() const { return fKey; }
+        SkEvent*    getEvent() const {
+            return fEvent;
+        }
+        int         getID() const {
+            return fID;
+        }
+        const char* getLabel() const {
+            return fLabel.c_str();
+        }
+        const char* getSlotName() const {
+            return fSlotName.c_str();
+        }
+        Type        getType() const {
+            return fType;
+        }
+        void        setKeyEquivalent(SkUnichar key) {
+            fKey = key;
+        }
+        SkUnichar   getKeyEquivalent() const {
+            return fKey;
+        }
 
         /**
          * Helper functions for predefined types
@@ -78,7 +96,9 @@ public:
          * Post event associated with the menu item to target, any changes to
          * the associated event must be made prior to calling this method
          */
-        void postEvent() const { (new SkEvent(*(fEvent)))->post(); }
+        void postEvent() const {
+            (new SkEvent(*(fEvent)))->post();
+        }
 
     private:
         int             fID;
@@ -90,9 +110,15 @@ public:
     };
 
     void        reset();
-    const char* getTitle() const { return fTitle.c_str(); }
-    void        setTitle (const char title[]) { fTitle.set(title); }
-    int         getCount() const { return fItems.count(); }
+    const char* getTitle() const {
+        return fTitle.c_str();
+    }
+    void        setTitle (const char title[]) {
+        fTitle.set(title);
+    }
+    int         getCount() const {
+        return fItems.count();
+    }
     const Item* getItemByID(int itemID) const;
     void        getItems(const Item* items[]) const;
 

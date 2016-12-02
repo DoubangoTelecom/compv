@@ -17,7 +17,8 @@
  *  Abstract interface defining image codec functionality that is necessary for
  *  Android.
  */
-class SkAndroidCodec : SkNoncopyable {
+class SkAndroidCodec : SkNoncopyable
+{
 public:
     /**
      *  If this stream represents an encoded image that we know how to decode,
@@ -46,12 +47,16 @@ public:
     virtual ~SkAndroidCodec() {}
 
 
-    const SkImageInfo& getInfo() const { return fInfo; }
+    const SkImageInfo& getInfo() const {
+        return fInfo;
+    }
 
     /**
      *  Format of the encoded data.
      */
-    SkEncodedFormat getEncodedFormat() const { return fCodec->getEncodedFormat(); }
+    SkEncodedFormat getEncodedFormat() const {
+        return fCodec->getEncodedFormat();
+    }
 
     /**
      *  @param requestedColorType Color type requested by the client
@@ -139,8 +144,8 @@ public:
             , fSubset(nullptr)
             , fColorPtr(nullptr)
             , fColorCount(nullptr)
-            , fSampleSize(1)
-        {}
+            , fSampleSize(1) {
+        }
 
         /**
          *  Indicates is destination pixel memory is zero initialized.
@@ -226,7 +231,7 @@ public:
     //        this getPixels() when it is a slightly different API than SkCodec's getPixels().
     //        Maybe this should be decode() or decodeSubset()?
     SkCodec::Result getAndroidPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
-            const AndroidOptions* options);
+                                     const AndroidOptions* options);
 
     /**
      *  Simplified version of getAndroidPixels() where we supply the default AndroidOptions as
@@ -245,7 +250,9 @@ protected:
 
     SkAndroidCodec(SkCodec*);
 
-    SkCodec* codec() const { return fCodec.get(); }
+    SkCodec* codec() const {
+        return fCodec.get();
+    }
 
     virtual SkISize onGetSampledDimensions(int sampleSize) const = 0;
 

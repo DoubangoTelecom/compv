@@ -42,8 +42,12 @@ template <typename T> struct SkTSize {
         fWidth = fHeight = 0;
     }
 
-    T width() const { return fWidth; }
-    T height() const { return fHeight; }
+    T width() const {
+        return fWidth;
+    }
+    T height() const {
+        return fHeight;
+    }
 
     /** If width or height is < 0, it is set to 0 */
     void clampNegToZero() {
@@ -61,12 +65,14 @@ template <typename T> struct SkTSize {
 };
 
 template <typename T>
-static inline bool operator==(const SkTSize<T>& a, const SkTSize<T>& b) {
+static inline bool operator==(const SkTSize<T>& a, const SkTSize<T>& b)
+{
     return a.fWidth == b.fWidth && a.fHeight == b.fHeight;
 }
 
 template <typename T>
-static inline bool operator!=(const SkTSize<T>& a, const SkTSize<T>& b) {
+static inline bool operator!=(const SkTSize<T>& a, const SkTSize<T>& b)
+{
     return !(a == b);
 }
 

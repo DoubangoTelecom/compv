@@ -26,38 +26,48 @@ COMPV_OBJECT_DECLARE_PTRS(GLFbo)
 class COMPV_GL_API CompVGLFbo : public CompVObj, public CompVBind
 {
 protected:
-	CompVGLFbo(size_t width, size_t height);
+    CompVGLFbo(size_t width, size_t height);
 public:
-	virtual ~CompVGLFbo();
-	COMPV_OBJECT_GET_ID(CompVGLFbo);
+    virtual ~CompVGLFbo();
+    COMPV_OBJECT_GET_ID(CompVGLFbo);
 
-	COMPV_INLINE size_t width() { return m_nWidth; }
-	COMPV_INLINE size_t height() { return m_nHeight; }
-	COMPV_INLINE GLuint nameFrameBuffer() { return m_uNameFrameBuffer; }
-	COMPV_INLINE GLuint nameTexture() { return m_uNameTexture; }
-	COMPV_INLINE GLuint nameDepthStencil() { return m_uNameDepthStencil; }
+    COMPV_INLINE size_t width() {
+        return m_nWidth;
+    }
+    COMPV_INLINE size_t height() {
+        return m_nHeight;
+    }
+    COMPV_INLINE GLuint nameFrameBuffer() {
+        return m_uNameFrameBuffer;
+    }
+    COMPV_INLINE GLuint nameTexture() {
+        return m_uNameTexture;
+    }
+    COMPV_INLINE GLuint nameDepthStencil() {
+        return m_uNameDepthStencil;
+    }
 
-	COMPV_OVERRIDE_DECL0("CompVBind", bind)() override;
-	COMPV_OVERRIDE_DECL0("CompVBind", unbind)() override;
-	virtual COMPV_ERROR_CODE updateSize(size_t width, size_t height);
+    COMPV_OVERRIDE_DECL0("CompVBind", bind)() override;
+    COMPV_OVERRIDE_DECL0("CompVBind", unbind)() override;
+    virtual COMPV_ERROR_CODE updateSize(size_t width, size_t height);
 
-	COMPV_ERROR_CODE clear();
+    COMPV_ERROR_CODE clear();
 
-	COMPV_ERROR_CODE close();
+    COMPV_ERROR_CODE close();
 
-	static COMPV_ERROR_CODE newObj(CompVGLFboPtrPtr fbo, size_t width, size_t height);
+    static COMPV_ERROR_CODE newObj(CompVGLFboPtrPtr fbo, size_t width, size_t height);
 
 protected:
-	virtual COMPV_ERROR_CODE init(size_t width, size_t height);
-	virtual COMPV_ERROR_CODE deInit();
+    virtual COMPV_ERROR_CODE init(size_t width, size_t height);
+    virtual COMPV_ERROR_CODE deInit();
 
 private:
-	bool m_bInit;
-	size_t m_nWidth;
-	size_t m_nHeight;
-	GLuint m_uNameFrameBuffer;
-	GLuint m_uNameTexture;
-	GLuint m_uNameDepthStencil;
+    bool m_bInit;
+    size_t m_nWidth;
+    size_t m_nHeight;
+    GLuint m_uNameFrameBuffer;
+    GLuint m_uNameTexture;
+    GLuint m_uNameDepthStencil;
 };
 
 static const CompVGLFboPtr kCompVGLPtrSystemFrameBuffer = NULL;

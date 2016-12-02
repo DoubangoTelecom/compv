@@ -11,7 +11,8 @@
 #include "SkBitmap.h"
 #include "SkColor.h"
 
-class SkBlitRow {
+class SkBlitRow
+{
 public:
     enum Flags16 {
         //! If set, the alpha parameter will be != 255

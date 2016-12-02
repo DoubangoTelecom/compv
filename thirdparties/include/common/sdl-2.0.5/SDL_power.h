@@ -46,7 +46,8 @@ typedef enum
     SDL_POWERSTATE_NO_BATTERY,   /**< Plugged in, no battery available */
     SDL_POWERSTATE_CHARGING,     /**< Plugged in, charging battery */
     SDL_POWERSTATE_CHARGED       /**< Plugged in, battery charged */
-} SDL_PowerState;
+}
+SDL_PowerState;
 
 
 /**

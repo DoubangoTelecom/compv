@@ -36,21 +36,29 @@ class SkWBuffer;
  * logical verb or the last verb in memory).
  */
 
-class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
+class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef>
+{
 public:
-    class Editor {
+    class Editor
+    {
     public:
         Editor(SkAutoTUnref<SkPathRef>* pathRef,
                int incReserveVerbs = 0,
                int incReservePoints = 0);
 
-        ~Editor() { SkDEBUGCODE(sk_atomic_dec(&fPathRef->fEditorsAttached);) }
+        ~Editor() {
+            SkDEBUGCODE(sk_atomic_dec(&fPathRef->fEditorsAttached);)
+        }
 
         /**
          * Returns the array of points.
          */
-        SkPoint* points() { return fPathRef->getPoints(); }
-        const SkPoint* points() const { return fPathRef->points(); }
+        SkPoint* points() {
+            return fPathRef->getPoints();
+        }
+        const SkPoint* points() const {
+            return fPathRef->points();
+        }
 
         /**
          * Gets the ith point. Shortcut for this->points() + i
@@ -98,7 +106,9 @@ public:
         /**
          * Gets the path ref that is wrapped in the Editor.
          */
-        SkPathRef* pathRef() { return fPathRef; }
+        SkPathRef* pathRef() {
+            return fPathRef;
+        }
 
         void setIsOval(bool isOval, bool isCCW, unsigned start) {
             fPathRef->setIsOval(isOval, isCCW, start);
@@ -108,13 +118,16 @@ public:
             fPathRef->setIsRRect(isRRect, isCCW, start);
         }
 
-        void setBounds(const SkRect& rect) { fPathRef->setBounds(rect); }
+        void setBounds(const SkRect& rect) {
+            fPathRef->setBounds(rect);
+        }
 
     private:
         SkPathRef* fPathRef;
     };
 
-    class SK_API Iter {
+    class SK_API Iter
+    {
     public:
         Iter();
         Iter(const SkPathRef&);
@@ -131,7 +144,9 @@ public:
         uint8_t next(SkPoint pts[4]);
         uint8_t peek() const;
 
-        SkScalar conicWeight() const { return *fConicWeights; }
+        SkScalar conicWeight() const {
+            return *fConicWeights;
+        }
 
     private:
         const SkPoint*  fPts;
@@ -162,7 +177,9 @@ public:
      *  set if the path contains 1 or more segments of that type.
      *  Returns 0 for an empty path (no segments).
      */
-    uint32_t getSegmentMasks() const { return fSegmentMask; }
+    uint32_t getSegmentMasks() const {
+        return fSegmentMask;
+    }
 
     /** Returns true if the path is an oval.
      *
@@ -244,32 +261,50 @@ public:
     static void Rewind(SkAutoTUnref<SkPathRef>* pathRef);
 
     ~SkPathRef();
-    int countPoints() const { SkDEBUGCODE(this->validate();) return fPointCnt; }
-    int countVerbs() const { SkDEBUGCODE(this->validate();) return fVerbCnt; }
-    int countWeights() const { SkDEBUGCODE(this->validate();) return fConicWeights.count(); }
+    int countPoints() const {
+        SkDEBUGCODE(this->validate();) return fPointCnt;
+    }
+    int countVerbs() const {
+        SkDEBUGCODE(this->validate();) return fVerbCnt;
+    }
+    int countWeights() const {
+        SkDEBUGCODE(this->validate();) return fConicWeights.count();
+    }
 
     /**
      * Returns a pointer one beyond the first logical verb (last verb in memory order).
      */
-    const uint8_t* verbs() const { SkDEBUGCODE(this->validate();) return fVerbs; }
+    const uint8_t* verbs() const {
+        SkDEBUGCODE(this->validate();) return fVerbs;
+    }
 
     /**
      * Returns a const pointer to the first verb in memory (which is the last logical verb).
      */
-    const uint8_t* verbsMemBegin() const { return this->verbs() - fVerbCnt; }
+    const uint8_t* verbsMemBegin() const {
+        return this->verbs() - fVerbCnt;
+    }
 
     /**
      * Returns a const pointer to the first point.
      */
-    const SkPoint* points() const { SkDEBUGCODE(this->validate();) return fPoints; }
+    const SkPoint* points() const {
+        SkDEBUGCODE(this->validate();) return fPoints;
+    }
 
     /**
      * Shortcut for this->points() + this->countPoints()
      */
-    const SkPoint* pointsEnd() const { return this->points() + this->countPoints(); }
+    const SkPoint* pointsEnd() const {
+        return this->points() + this->countPoints();
+    }
 
-    const SkScalar* conicWeights() const { SkDEBUGCODE(this->validate();) return fConicWeights.begin(); }
-    const SkScalar* conicWeightsEnd() const { SkDEBUGCODE(this->validate();) return fConicWeights.end(); }
+    const SkScalar* conicWeights() const {
+        SkDEBUGCODE(this->validate();) return fConicWeights.begin();
+    }
+    const SkScalar* conicWeightsEnd() const {
+        SkDEBUGCODE(this->validate();) return fConicWeights.end();
+    }
 
     /**
      * Convenience methods for getting to a verb or point by index.
@@ -403,7 +438,8 @@ private:
             fVerbCnt = verbCount;
             fPointCnt = pointCount;
             fFreeSpace -= newSize;
-        } else {
+        }
+        else {
             fPointCnt = pointCount;
             fVerbCnt = verbCount;
             fFreeSpace = this->currSize() - minSize;

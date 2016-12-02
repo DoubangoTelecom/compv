@@ -81,7 +81,7 @@ COMPV_ERROR_CODE CompVBuffer::takeData(void** ppPtr, int32_t size)
 COMPV_ERROR_CODE CompVBuffer::newObj(const void* pcPtr, int32_t size, CompVBufferPtrPtr buffer)
 {
     COMPV_CHECK_EXP_RETURN(!buffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVBufferPtr buffer_;
+    CompVBufferPtr buffer_;
 
     buffer_ = new CompVBuffer(pcPtr, size);
     if (!buffer_ || buffer_->m_nSize != size) {
@@ -100,7 +100,7 @@ COMPV_ERROR_CODE CompVBuffer::newObjAndTakeData(void** ppPtr, int32_t size, Comp
 {
     COMPV_CHECK_EXP_RETURN(!buffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	CompVBufferPtr buffer_;
+    CompVBufferPtr buffer_;
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
     COMPV_CHECK_CODE_BAIL(err = CompVBuffer::newObjAndNullData(&buffer_));
@@ -115,7 +115,7 @@ COMPV_ERROR_CODE CompVBuffer::newObjAndCopyData(const void* pcPtr, int32_t size,
 {
     COMPV_CHECK_EXP_RETURN(!buffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	CompVBufferPtr buffer_;
+    CompVBufferPtr buffer_;
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
     COMPV_CHECK_CODE_BAIL(err = CompVBuffer::newObjAndNullData(&buffer_));
@@ -129,7 +129,7 @@ bail:
 COMPV_ERROR_CODE CompVBuffer::newObjAndRefData(const void* pcPtr, int32_t size, CompVBufferPtrPtr buffer)
 {
     COMPV_CHECK_EXP_RETURN(!buffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVBufferPtr buffer_;
+    CompVBufferPtr buffer_;
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
     COMPV_CHECK_CODE_BAIL(err = CompVBuffer::newObjAndNullData(&buffer_));

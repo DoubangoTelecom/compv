@@ -15,8 +15,9 @@
 class SkPath;
 class SkRgnBuilder;
 
-namespace android {
-    class Region;
+namespace android
+{
+class Region;
 }
 
 #define SkRegion_gEmptyRunHeadPtr   ((SkRegion::RunHead*)-1)
@@ -27,7 +28,8 @@ namespace android {
     The SkRegion class encapsulates the geometric region used to specify
     clipping areas for drawing.
 */
-class SK_API SkRegion {
+class SK_API SkRegion
+{
 public:
     typedef int32_t RunType;
     enum {
@@ -70,19 +72,27 @@ public:
     void swap(SkRegion&);
 
     /** Return true if this region is empty */
-    bool isEmpty() const { return fRunHead == SkRegion_gEmptyRunHeadPtr; }
+    bool isEmpty() const {
+        return fRunHead == SkRegion_gEmptyRunHeadPtr;
+    }
 
     /** Return true if this region is a single, non-empty rectangle */
-    bool isRect() const { return fRunHead == SkRegion_gRectRunHeadPtr; }
+    bool isRect() const {
+        return fRunHead == SkRegion_gRectRunHeadPtr;
+    }
 
     /** Return true if this region consists of more than 1 rectangular area */
-    bool isComplex() const { return !this->isEmpty() && !this->isRect(); }
+    bool isComplex() const {
+        return !this->isEmpty() && !this->isRect();
+    }
 
     /**
      *  Return the bounds of this region. If the region is empty, returns an
      *  empty rectangle.
      */
-    const SkIRect& getBounds() const { return fBounds; }
+    const SkIRect& getBounds() const {
+        return fBounds;
+    }
 
     /**
      *  Returns a value that grows approximately linearly with the number of
@@ -209,7 +219,7 @@ public:
      */
     bool quickReject(const SkIRect& rect) const {
         return this->isEmpty() || rect.isEmpty() ||
-                !SkIRect::Intersects(fBounds, rect);
+               !SkIRect::Intersects(fBounds, rect);
     }
 
     /**
@@ -223,7 +233,9 @@ public:
     }
 
     /** Translate the region by the specified (dx, dy) amount. */
-    void translate(int dx, int dy) { this->translate(dx, dy, this); }
+    void translate(int dx, int dy) {
+        this->translate(dx, dy, this);
+    }
 
     /**
      *  Translate the region by the specified (dx, dy) amount, writing the
@@ -281,7 +293,9 @@ public:
      *  specified region: this = (this op rgn).
      *  Return true if the resulting region is non-empty.
      */
-    bool op(const SkRegion& rgn, Op op) { return this->op(*this, rgn, op); }
+    bool op(const SkRegion& rgn, Op op) {
+        return this->op(*this, rgn, op);
+    }
 
     /**
      *  Set this region to the result of applying the Op to the specified
@@ -314,7 +328,8 @@ public:
      *  Returns the sequence of rectangles, sorted in Y and X, that make up
      *  this region.
      */
-    class SK_API Iterator {
+    class SK_API Iterator
+    {
     public:
         Iterator() : fRgn(NULL), fDone(true) {}
         Iterator(const SkRegion&);
@@ -322,11 +337,17 @@ public:
         bool rewind();
         // reset the iterator, using the new region
         void reset(const SkRegion&);
-        bool done() const { return fDone; }
+        bool done() const {
+            return fDone;
+        }
         void next();
-        const SkIRect& rect() const { return fRect; }
+        const SkIRect& rect() const {
+            return fRect;
+        }
         // may return null
-        const SkRegion* rgn() const { return fRgn; }
+        const SkRegion* rgn() const {
+            return fRgn;
+        }
 
     private:
         const SkRegion* fRgn;
@@ -339,12 +360,17 @@ public:
      *  Returns the sequence of rectangles, sorted in Y and X, that make up
      *  this region intersected with the specified clip rectangle.
      */
-    class SK_API Cliperator {
+    class SK_API Cliperator
+    {
     public:
         Cliperator(const SkRegion&, const SkIRect& clip);
-        bool done() { return fDone; }
+        bool done() {
+            return fDone;
+        }
         void  next();
-        const SkIRect& rect() const { return fRect; }
+        const SkIRect& rect() const {
+            return fRect;
+        }
 
     private:
         Iterator    fIter;
@@ -357,7 +383,8 @@ public:
      *  Returns the sequence of runs that make up this region for the specified
      *  Y scanline, clipped to the specified left and right X values.
      */
-    class Spanerator {
+    class Spanerator
+    {
     public:
         Spanerator(const SkRegion&, int y, int left, int right);
         bool next(int* left, int* right);

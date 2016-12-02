@@ -13,66 +13,76 @@
 
 #ifdef SK_MSCALAR_IS_DOUBLE
 #ifdef SK_MSCALAR_IS_FLOAT
-    #error "can't define MSCALAR both as DOUBLE and FLOAT"
+#error "can't define MSCALAR both as DOUBLE and FLOAT"
 #endif
-    typedef double SkMScalar;
+typedef double SkMScalar;
 
-    static inline double SkFloatToMScalar(float x) {
-        return static_cast<double>(x);
-    }
-    static inline float SkMScalarToFloat(double x) {
-        return static_cast<float>(x);
-    }
-    static inline double SkDoubleToMScalar(double x) {
-        return x;
-    }
-    static inline double SkMScalarToDouble(double x) {
-        return x;
-    }
-    static inline double SkMScalarAbs(double x) {
-        return fabs(x);
-    }
-    static const SkMScalar SK_MScalarPI = 3.141592653589793;
+static inline double SkFloatToMScalar(float x)
+{
+    return static_cast<double>(x);
+}
+static inline float SkMScalarToFloat(double x)
+{
+    return static_cast<float>(x);
+}
+static inline double SkDoubleToMScalar(double x)
+{
+    return x;
+}
+static inline double SkMScalarToDouble(double x)
+{
+    return x;
+}
+static inline double SkMScalarAbs(double x)
+{
+    return fabs(x);
+}
+static const SkMScalar SK_MScalarPI = 3.141592653589793;
 
-    #define SkMScalarFloor(x)           sk_double_floor(x)
-    #define SkMScalarCeil(x)            sk_double_ceil(x)
-    #define SkMScalarRound(x)           sk_double_round(x)
+#define SkMScalarFloor(x)           sk_double_floor(x)
+#define SkMScalarCeil(x)            sk_double_ceil(x)
+#define SkMScalarRound(x)           sk_double_round(x)
 
-    #define SkMScalarFloorToInt(x)      sk_double_floor2int(x)
-    #define SkMScalarCeilToInt(x)       sk_double_ceil2int(x)
-    #define SkMScalarRoundToInt(x)      sk_double_round2int(x)
+#define SkMScalarFloorToInt(x)      sk_double_floor2int(x)
+#define SkMScalarCeilToInt(x)       sk_double_ceil2int(x)
+#define SkMScalarRoundToInt(x)      sk_double_round2int(x)
 
 
 #elif defined SK_MSCALAR_IS_FLOAT
 #ifdef SK_MSCALAR_IS_DOUBLE
-    #error "can't define MSCALAR both as DOUBLE and FLOAT"
+#error "can't define MSCALAR both as DOUBLE and FLOAT"
 #endif
-    typedef float SkMScalar;
+typedef float SkMScalar;
 
-    static inline float SkFloatToMScalar(float x) {
-        return x;
-    }
-    static inline float SkMScalarToFloat(float x) {
-        return x;
-    }
-    static inline float SkDoubleToMScalar(double x) {
-        return static_cast<float>(x);
-    }
-    static inline double SkMScalarToDouble(float x) {
-        return static_cast<double>(x);
-    }
-    static inline float SkMScalarAbs(float x) {
-        return sk_float_abs(x);
-    }
-    static const SkMScalar SK_MScalarPI = 3.14159265f;
+static inline float SkFloatToMScalar(float x)
+{
+    return x;
+}
+static inline float SkMScalarToFloat(float x)
+{
+    return x;
+}
+static inline float SkDoubleToMScalar(double x)
+{
+    return static_cast<float>(x);
+}
+static inline double SkMScalarToDouble(float x)
+{
+    return static_cast<double>(x);
+}
+static inline float SkMScalarAbs(float x)
+{
+    return sk_float_abs(x);
+}
+static const SkMScalar SK_MScalarPI = 3.14159265f;
 
-    #define SkMScalarFloor(x)           sk_float_floor(x)
-    #define SkMScalarCeil(x)            sk_float_ceil(x)
-    #define SkMScalarRound(x)           sk_float_round(x)
+#define SkMScalarFloor(x)           sk_float_floor(x)
+#define SkMScalarCeil(x)            sk_float_ceil(x)
+#define SkMScalarRound(x)           sk_float_round(x)
 
-    #define SkMScalarFloorToInt(x)      sk_float_floor2int(x)
-    #define SkMScalarCeilToInt(x)       sk_float_ceil2int(x)
-    #define SkMScalarRoundToInt(x)      sk_float_round2int(x)
+#define SkMScalarFloorToInt(x)      sk_float_floor2int(x)
+#define SkMScalarCeilToInt(x)       sk_float_ceil2int(x)
+#define SkMScalarRoundToInt(x)      sk_float_round2int(x)
 
 #endif
 
@@ -126,7 +136,8 @@ struct SkVector4 {
     }
 };
 
-class SK_API SkMatrix44 {
+class SK_API SkMatrix44
+{
 public:
 
     enum Uninitialized_Constructor {
@@ -139,15 +150,18 @@ public:
     SkMatrix44(Uninitialized_Constructor) {}
 
     constexpr SkMatrix44(Identity_Constructor)
-        : fMat{{ 1, 0, 0, 0, },
-               { 0, 1, 0, 0, },
-               { 0, 0, 1, 0, },
-               { 0, 0, 0, 1, }}
-        , fTypeMask(kIdentity_Mask)
-    {}
+        : fMat {{ 1, 0, 0, 0, },
+        { 0, 1, 0, 0, },
+        { 0, 0, 1, 0, },
+        { 0, 0, 0, 1, }
+    }
+    , fTypeMask(kIdentity_Mask) {
+    }
 
     SK_ATTR_DEPRECATED("use the constructors that take an enum")
-    SkMatrix44() { this->setIdentity(); }
+    SkMatrix44() {
+        this->setIdentity();
+    }
 
     SkMatrix44(const SkMatrix44& src) {
         memcpy(fMat, src.fMat, sizeof(fMat));
@@ -236,7 +250,7 @@ public:
      *  Returns true if the matrix only contains scale or is identity.
      */
     inline bool isScale() const {
-            return !(this->getType() & ~kScale_Mask);
+        return !(this->getType() & ~kScale_Mask);
     }
 
     inline bool hasPerspective() const {
@@ -244,7 +258,9 @@ public:
     }
 
     void setIdentity();
-    inline void reset() { this->setIdentity();}
+    inline void reset() {
+        this->setIdentity();
+    }
 
     /**
      *  get a value from the matrix. The row,col parameters work as follows:
@@ -314,11 +330,19 @@ public:
     void setRowMajord(const double[]);
 
 #ifdef SK_MSCALAR_IS_FLOAT
-    void setColMajor(const SkMScalar data[]) { this->setColMajorf(data); }
-    void setRowMajor(const SkMScalar data[]) { this->setRowMajorf(data); }
+    void setColMajor(const SkMScalar data[]) {
+        this->setColMajorf(data);
+    }
+    void setRowMajor(const SkMScalar data[]) {
+        this->setRowMajorf(data);
+    }
 #else
-    void setColMajor(const SkMScalar data[]) { this->setColMajord(data); }
-    void setRowMajor(const SkMScalar data[]) { this->setRowMajord(data); }
+    void setColMajor(const SkMScalar data[]) {
+        this->setColMajord(data);
+    }
+    void setRowMajor(const SkMScalar data[]) {
+        this->setRowMajord(data);
+    }
 #endif
 
     /* This sets the top-left of the matrix and clears the translation and
@@ -460,17 +484,35 @@ private:
     void as3x4RowMajorf(float[]) const;
     void set3x4RowMajorf(const float[]);
 
-    SkMScalar transX() const { return fMat[3][0]; }
-    SkMScalar transY() const { return fMat[3][1]; }
-    SkMScalar transZ() const { return fMat[3][2]; }
+    SkMScalar transX() const {
+        return fMat[3][0];
+    }
+    SkMScalar transY() const {
+        return fMat[3][1];
+    }
+    SkMScalar transZ() const {
+        return fMat[3][2];
+    }
 
-    SkMScalar scaleX() const { return fMat[0][0]; }
-    SkMScalar scaleY() const { return fMat[1][1]; }
-    SkMScalar scaleZ() const { return fMat[2][2]; }
+    SkMScalar scaleX() const {
+        return fMat[0][0];
+    }
+    SkMScalar scaleY() const {
+        return fMat[1][1];
+    }
+    SkMScalar scaleZ() const {
+        return fMat[2][2];
+    }
 
-    SkMScalar perspX() const { return fMat[0][3]; }
-    SkMScalar perspY() const { return fMat[1][3]; }
-    SkMScalar perspZ() const { return fMat[2][3]; }
+    SkMScalar perspX() const {
+        return fMat[0][3];
+    }
+    SkMScalar perspY() const {
+        return fMat[1][3];
+    }
+    SkMScalar perspZ() const {
+        return fMat[2][3];
+    }
 
     int computeTypeMask() const;
 

@@ -98,52 +98,52 @@ private:
 #if !defined(__AVX__)
 #	define COMPV_DEBUG_INFO_CHECK_AVX() COMPV_DEBUG_INFO_CODE_ONCE("May be slow because of AVX/SSE transition issues")
 #else
-#	define COMPV_DEBUG_INFO_CHECK_AVX() 
+#	define COMPV_DEBUG_INFO_CHECK_AVX()
 #endif
 #if !defined(__AVX2__)
 #	define COMPV_DEBUG_INFO_CHECK_AVX2() COMPV_DEBUG_INFO_CODE_ONCE("May be slow because of AVX/SSE transition issues")
 #else
-#	define COMPV_DEBUG_INFO_CHECK_AVX2() 
+#	define COMPV_DEBUG_INFO_CHECK_AVX2()
 #endif
 #if !defined(__FMA3__)
 #	define COMPV_DEBUG_INFO_CHECK_FMA3() COMPV_DEBUG_INFO_CODE_ONCE("May be slow because of AVX/SSE transition issues")
 #else
-#	define COMPV_DEBUG_INFO_CHECK_FMA3() 
+#	define COMPV_DEBUG_INFO_CHECK_FMA3()
 #endif
 #if !defined(__SSE__)
 #	define COMPV_DEBUG_INFO_CHECK_SSE() COMPV_DEBUG_INFO_CODE_ONCE("Not built with SSE support")
 #else
-#	define COMPV_DEBUG_INFO_CHECK_SSE() 
+#	define COMPV_DEBUG_INFO_CHECK_SSE()
 #endif
 #if !defined(__SSE2__) && !(COMPV_ARCH_X64 && defined(_MSC_VER)) // SSE2 enabled on all x64 (Visual Studio)
 #	define COMPV_DEBUG_INFO_CHECK_SSE2() COMPV_DEBUG_INFO_CODE_ONCE("Not built with SSE2 support")
 #else
-#	define COMPV_DEBUG_INFO_CHECK_SSE2() 
+#	define COMPV_DEBUG_INFO_CHECK_SSE2()
 #endif
 #if !defined(__SSE3__)
 #	define COMPV_DEBUG_INFO_CHECK_SSE3() COMPV_DEBUG_INFO_CODE_ONCE("Not built with SSE3 support")
 #else
-#	define COMPV_DEBUG_INFO_CHECK_SSE3() 
+#	define COMPV_DEBUG_INFO_CHECK_SSE3()
 #endif
 #if !defined(__SSSE3__)
 #	define COMPV_DEBUG_INFO_CHECK_SSSE3() COMPV_DEBUG_INFO_CODE_ONCE("Not built with SSSE3 support")
 #else
-#	define COMPV_DEBUG_INFO_CHECK_SSSE3() 
+#	define COMPV_DEBUG_INFO_CHECK_SSSE3()
 #endif
 #if !defined(__SSE4_1__)
 #	define COMPV_DEBUG_INFO_CHECK_SSE41() COMPV_DEBUG_INFO_CODE_ONCE("Not built with SSE41 support")
 #else
-#	define COMPV_DEBUG_INFO_CHECK_SSE41() 
+#	define COMPV_DEBUG_INFO_CHECK_SSE41()
 #endif
 #if !defined(__SSE4_2__)
 #	define COMPV_DEBUG_INFO_CHECK_SSE42() COMPV_DEBUG_INFO_CODE_ONCE("Not built with SSE42 support")
 #else
-#	define COMPV_DEBUG_INFO_CHECK_SSE42() 
+#	define COMPV_DEBUG_INFO_CHECK_SSE42()
 #endif
 #if !defined(__ARM_NEON__)
 #	define COMPV_DEBUG_INFO_CHECK_NEON() COMPV_DEBUG_INFO_CODE_ONCE("Not built with NEON support")
 #else
-#	define COMPV_DEBUG_INFO_CHECK_NEON() 
+#	define COMPV_DEBUG_INFO_CHECK_NEON()
 #endif
 
 

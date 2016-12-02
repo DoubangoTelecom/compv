@@ -13,46 +13,46 @@ compv_window_id_t CompVWindow::s_nWindowId = 0;
 compv_windowlistener_id_t CompVWindowListener::s_nWindowListenerId = 0;
 
 CompVWindow::CompVWindow(size_t width, size_t height, const char* title /*= "Unknown"*/)
-: m_nWidth(width)
-, m_nHeight(height)
-, m_strTitle(title)
-, m_nId(compv_atomic_inc(&CompVWindow::s_nWindowId))
+    : m_nWidth(width)
+    , m_nHeight(height)
+    , m_strTitle(title)
+    , m_nId(compv_atomic_inc(&CompVWindow::s_nWindowId))
 {
-	m_WindowCreationThreadId = CompVThread::getIdCurrent();
-	COMPV_DEBUG_INFO("Creating window (%s) on thread with id = %ld", title, (long)m_WindowCreationThreadId);
+    m_WindowCreationThreadId = CompVThread::getIdCurrent();
+    COMPV_DEBUG_INFO("Creating window (%s) on thread with id = %ld", title, (long)m_WindowCreationThreadId);
 }
 
 CompVWindow::~CompVWindow()
 {
-	m_mapListeners.clear();
-	COMPV_CHECK_CODE_ASSERT(unregister());
+    m_mapListeners.clear();
+    COMPV_CHECK_CODE_ASSERT(unregister());
 }
 
 COMPV_ERROR_CODE CompVWindow::unregister()
 {
-	COMPV_CHECK_CODE_RETURN(CompVWindowRegistry::remove(m_nId));
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_CODE_RETURN(CompVWindowRegistry::remove(m_nId));
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVWindow::addListener(CompVWindowListenerPtr listener)
 {
-	COMPV_CHECK_EXP_RETURN(!listener, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	m_mapListeners[listener->id()] = listener;
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(!listener, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    m_mapListeners[listener->id()] = listener;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVWindow::removeListener(CompVWindowListenerPtr listener)
 {
-	COMPV_CHECK_EXP_RETURN(!listener, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	m_mapListeners.erase(listener->id());
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(!listener, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    m_mapListeners.erase(listener->id());
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVWindow::newObj(CompVWindowPtrPtr window, size_t width, size_t height, const char* title COMPV_DEFAULT("Unknown"))
 {
-	COMPV_CHECK_CODE_RETURN(CompVWindowFactory::newObj(window, width, height, title));
-	COMPV_CHECK_CODE_RETURN(CompVWindowRegistry::add(*window));
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_CODE_RETURN(CompVWindowFactory::newObj(window, width, height, title));
+    COMPV_CHECK_CODE_RETURN(CompVWindowRegistry::add(*window));
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 //

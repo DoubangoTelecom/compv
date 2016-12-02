@@ -15,7 +15,8 @@
 
 #include "SkColor.h"
 
-class SK_API SkUnPreMultiply {
+class SK_API SkUnPreMultiply
+{
 public:
     typedef uint32_t Scale;
 

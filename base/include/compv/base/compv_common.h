@@ -154,7 +154,7 @@ enum COMPV_ERROR_CODE {
     COMPV_ERROR_CODE_S_OK = kErrorCodeSuccessStart,
 
     COMPV_ERROR_CODE_W = kErrorCodeWarnStart,
-	COMPV_ERROR_CODE_W_WINDOW_CLOSED,
+    COMPV_ERROR_CODE_W_WINDOW_CLOSED,
 
     COMPV_ERROR_CODE_E = kErrorCodeErrorStart,
     COMPV_ERROR_CODE_E_NOT_IMPLEMENTED,
@@ -175,14 +175,14 @@ enum COMPV_ERROR_CODE {
     COMPV_ERROR_CODE_E_UNITTEST_FAILED,
     COMPV_ERROR_CODE_E_SYSTEM,
     COMPV_ERROR_CODE_E_THIRD_PARTY_LIB,
-	COMPV_ERROR_CODE_E_DIRECTSHOW,
-	COMPV_ERROR_CODE_E_MFOUNDATION,
-	COMPV_ERROR_CODE_E_EGL,
+    COMPV_ERROR_CODE_E_DIRECTSHOW,
+    COMPV_ERROR_CODE_E_MFOUNDATION,
+    COMPV_ERROR_CODE_E_EGL,
     COMPV_ERROR_CODE_E_GL,
-	COMPV_ERROR_CODE_E_GL_NO_CONTEXT,
+    COMPV_ERROR_CODE_E_GL_NO_CONTEXT,
     COMPV_ERROR_CODE_E_GLEW,
     COMPV_ERROR_CODE_E_GLFW,
-	COMPV_ERROR_CODE_E_SDL,
+    COMPV_ERROR_CODE_E_SDL,
 
     COMPV_ERROR_CODE_F = kErrorCodeFatalStart,
 };
@@ -222,84 +222,92 @@ enum {
 };
 
 enum COMPV_MAT_TYPE {
-	COMPV_MAT_TYPE_RAW,
-	COMPV_MAT_TYPE_PIXELS
+    COMPV_MAT_TYPE_RAW,
+    COMPV_MAT_TYPE_PIXELS
 };
 
 enum COMPV_MAT_SUBTYPE { // 'COMPV_MAT_SUBTYPE_PIXELS_XXX' are same as 'COMPV_PIXEL_FORMAT'
-	COMPV_MAT_SUBTYPE_RAW,
+    COMPV_MAT_SUBTYPE_RAW,
 
-	COMPV_MAT_SUBTYPE_PIXELS_R8G8B8, // RGB24
-	COMPV_MAT_SUBTYPE_PIXELS_B8G8R8, // BGR8
-	COMPV_MAT_SUBTYPE_PIXELS_R8G8B8A8, // RGB32
-	COMPV_MAT_SUBTYPE_PIXELS_B8G8R8A8, // BGRA32
-	COMPV_MAT_SUBTYPE_PIXELS_A8B8G8R8, // ABGR32
-	COMPV_MAT_SUBTYPE_PIXELS_A8R8G8B8, // ARGB32
-	COMPV_MAT_SUBTYPE_PIXELS_GRAYSCALE, // Y-only
-	COMPV_MAT_SUBTYPE_PIXELS_I420, // http://www.fourcc.org/yuv.php#IYUV
-	COMPV_MAT_SUBTYPE_PIXELS_IYUV = COMPV_MAT_SUBTYPE_PIXELS_I420
-	//!\\ Update 'COMPV_PIXEL_FORMAT' if you add new values to COMPV_MAT_SUBTYPE_PIXELS_XXX
+    COMPV_MAT_SUBTYPE_PIXELS_R8G8B8, // RGB24
+    COMPV_MAT_SUBTYPE_PIXELS_B8G8R8, // BGR8
+    COMPV_MAT_SUBTYPE_PIXELS_R8G8B8A8, // RGB32
+    COMPV_MAT_SUBTYPE_PIXELS_B8G8R8A8, // BGRA32
+    COMPV_MAT_SUBTYPE_PIXELS_A8B8G8R8, // ABGR32
+    COMPV_MAT_SUBTYPE_PIXELS_A8R8G8B8, // ARGB32
+    COMPV_MAT_SUBTYPE_PIXELS_GRAYSCALE, // Y-only
+    COMPV_MAT_SUBTYPE_PIXELS_I420, // http://www.fourcc.org/yuv.php#IYUV
+    COMPV_MAT_SUBTYPE_PIXELS_IYUV = COMPV_MAT_SUBTYPE_PIXELS_I420
+                                    //!\\ Update 'COMPV_PIXEL_FORMAT' if you add new values to COMPV_MAT_SUBTYPE_PIXELS_XXX
 };
 
 enum COMPV_PIXEL_FORMAT { // Same as 'COMPV_MAT_SUBTYPE'
-	COMPV_PIXEL_FORMAT_NONE = COMPV_MAT_SUBTYPE_RAW,
-	COMPV_PIXEL_FORMAT_R8G8B8 = COMPV_MAT_SUBTYPE_PIXELS_R8G8B8, // RGB24
-	COMPV_PIXEL_FORMAT_B8G8R8 = COMPV_MAT_SUBTYPE_PIXELS_B8G8R8, // BGR8
-	COMPV_PIXEL_FORMAT_R8G8B8A8 = COMPV_MAT_SUBTYPE_PIXELS_R8G8B8A8, // RGB32
-	COMPV_PIXEL_FORMAT_B8G8R8A8 = COMPV_MAT_SUBTYPE_PIXELS_B8G8R8A8, // BGRA32
-	COMPV_PIXEL_FORMAT_A8B8G8R8 = COMPV_MAT_SUBTYPE_PIXELS_A8B8G8R8, // ABGR32
-	COMPV_PIXEL_FORMAT_A8R8G8B8 = COMPV_MAT_SUBTYPE_PIXELS_A8R8G8B8, // ARGB32
-	COMPV_PIXEL_FORMAT_GRAYSCALE = COMPV_MAT_SUBTYPE_PIXELS_GRAYSCALE, // Y-only
-	COMPV_PIXEL_FORMAT_I420 = COMPV_MAT_SUBTYPE_PIXELS_I420, // http://www.fourcc.org/yuv.php#IYUV
-	COMPV_PIXEL_FORMAT_IYUV = COMPV_MAT_SUBTYPE_PIXELS_IYUV
-	//!\\ Update 'COMPV_MAT_SUBTYPE_PIXELS_XXX' if you add new values here
+    COMPV_PIXEL_FORMAT_NONE = COMPV_MAT_SUBTYPE_RAW,
+    COMPV_PIXEL_FORMAT_R8G8B8 = COMPV_MAT_SUBTYPE_PIXELS_R8G8B8, // RGB24
+    COMPV_PIXEL_FORMAT_B8G8R8 = COMPV_MAT_SUBTYPE_PIXELS_B8G8R8, // BGR8
+    COMPV_PIXEL_FORMAT_R8G8B8A8 = COMPV_MAT_SUBTYPE_PIXELS_R8G8B8A8, // RGB32
+    COMPV_PIXEL_FORMAT_B8G8R8A8 = COMPV_MAT_SUBTYPE_PIXELS_B8G8R8A8, // BGRA32
+    COMPV_PIXEL_FORMAT_A8B8G8R8 = COMPV_MAT_SUBTYPE_PIXELS_A8B8G8R8, // ABGR32
+    COMPV_PIXEL_FORMAT_A8R8G8B8 = COMPV_MAT_SUBTYPE_PIXELS_A8R8G8B8, // ARGB32
+    COMPV_PIXEL_FORMAT_GRAYSCALE = COMPV_MAT_SUBTYPE_PIXELS_GRAYSCALE, // Y-only
+    COMPV_PIXEL_FORMAT_I420 = COMPV_MAT_SUBTYPE_PIXELS_I420, // http://www.fourcc.org/yuv.php#IYUV
+    COMPV_PIXEL_FORMAT_IYUV = COMPV_MAT_SUBTYPE_PIXELS_IYUV
+                              //!\\ Update 'COMPV_MAT_SUBTYPE_PIXELS_XXX' if you add new values here
 };
 
 enum COMPV_IMAGE_FORMAT {
-	COMPV_IMAGE_FORMAT_NONE,
-	COMPV_IMAGE_FORMAT_RAW,
-	COMPV_IMAGE_FORMAT_JPEG,
-	COMPV_IMAGE_FORMAT_JPG = COMPV_IMAGE_FORMAT_JPEG,
-	COMPV_IMAGE_FORMAT_BMP,
-	COMPV_IMAGE_FORMAT_BITMAP = COMPV_IMAGE_FORMAT_BMP,
-	COMPV_IMAGE_FORMAT_PNG
+    COMPV_IMAGE_FORMAT_NONE,
+    COMPV_IMAGE_FORMAT_RAW,
+    COMPV_IMAGE_FORMAT_JPEG,
+    COMPV_IMAGE_FORMAT_JPG = COMPV_IMAGE_FORMAT_JPEG,
+    COMPV_IMAGE_FORMAT_BMP,
+    COMPV_IMAGE_FORMAT_BITMAP = COMPV_IMAGE_FORMAT_BMP,
+    COMPV_IMAGE_FORMAT_PNG
 };
 
 struct CompVImageInfo {
-	COMPV_IMAGE_FORMAT format;
-	COMPV_PIXEL_FORMAT pixelFormat;
-	int32_t width;
-	int32_t stride;
-	int32_t height;
+    COMPV_IMAGE_FORMAT format;
+    COMPV_PIXEL_FORMAT pixelFormat;
+    int32_t width;
+    int32_t stride;
+    int32_t height;
 public:
-	CompVImageInfo() : format(COMPV_IMAGE_FORMAT_RAW), pixelFormat(COMPV_PIXEL_FORMAT_NONE), width(0), stride(0), height(0) { }
+    CompVImageInfo() : format(COMPV_IMAGE_FORMAT_RAW), pixelFormat(COMPV_PIXEL_FORMAT_NONE), width(0), stride(0), height(0) { }
 };
 
 struct CompVVec3f {
 public:
-	union {
-		struct { float x, y, z; };
-		struct { float r, g, b; };
-		struct { float s, t, p; };
-	};
-	CompVVec3f(float x_, float y_, float z_) : x(x_), y(y_), z(z_) { }
+    union {
+        struct {
+            float x, y, z;
+        };
+        struct {
+            float r, g, b;
+        };
+        struct {
+            float s, t, p;
+        };
+    };
+    CompVVec3f(float x_, float y_, float z_) : x(x_), y(y_), z(z_) { }
 };
 
 struct CompVRect {
 public:
-	int left;
-	int top;
-	int right;
-	int bottom;
-	CompVRect(int left_ = 0, int top_ = 0, int right_ = 0, int bottom_ = 0) : left(left_), top(top_), right(right_), bottom(bottom_) {  }
-	static CompVRect makeFromWidthHeight(int x, int y, int width, int height) { return CompVRect(x, y, x + width, y + height); }
+    int left;
+    int top;
+    int right;
+    int bottom;
+    CompVRect(int left_ = 0, int top_ = 0, int right_ = 0, int bottom_ = 0) : left(left_), top(top_), right(right_), bottom(bottom_) {  }
+    static CompVRect makeFromWidthHeight(int x, int y, int width, int height) {
+        return CompVRect(x, y, x + width, y + height);
+    }
 };
 
 struct CompVRatio {
 public:
-	int numerator;
-	int denominator;
-	CompVRatio(int numerator_ = 1, int denominator_ = 1) : numerator(numerator_), denominator(denominator_) { }
+    int numerator;
+    int denominator;
+    CompVRatio(int numerator_ = 1, int denominator_ = 1) : numerator(numerator_), denominator(denominator_) { }
 };
 
 COMPV_NAMESPACE_END()

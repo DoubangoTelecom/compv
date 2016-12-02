@@ -27,21 +27,22 @@ typedef uint32_t GrColor;
 // ES doesn't allow BGRA vertex attrib order so if they were not in this order
 // we'd have to swizzle in shaders.
 #ifdef SK_CPU_BENDIAN
-    #define GrColor_SHIFT_R     24
-    #define GrColor_SHIFT_G     16
-    #define GrColor_SHIFT_B     8
-    #define GrColor_SHIFT_A     0
+#define GrColor_SHIFT_R     24
+#define GrColor_SHIFT_G     16
+#define GrColor_SHIFT_B     8
+#define GrColor_SHIFT_A     0
 #else
-    #define GrColor_SHIFT_R     0
-    #define GrColor_SHIFT_G     8
-    #define GrColor_SHIFT_B     16
-    #define GrColor_SHIFT_A     24
+#define GrColor_SHIFT_R     0
+#define GrColor_SHIFT_G     8
+#define GrColor_SHIFT_B     16
+#define GrColor_SHIFT_A     24
 #endif
 
 /**
  *  Pack 4 components (RGBA) into a GrColor int
  */
-static inline GrColor GrColorPackRGBA(unsigned r, unsigned g, unsigned b, unsigned a) {
+static inline GrColor GrColorPackRGBA(unsigned r, unsigned g, unsigned b, unsigned a)
+{
     SkASSERT((uint8_t)r == r);
     SkASSERT((uint8_t)g == g);
     SkASSERT((uint8_t)b == b);
@@ -55,7 +56,8 @@ static inline GrColor GrColorPackRGBA(unsigned r, unsigned g, unsigned b, unsign
 /**
  *  Packs a color with an alpha channel replicated across all four channels.
  */
-static inline GrColor GrColorPackA4(unsigned a) {
+static inline GrColor GrColorPackA4(unsigned a)
+{
     SkASSERT((uint8_t)a == a);
     return  (a << GrColor_SHIFT_R) |
             (a << GrColor_SHIFT_G) |
@@ -82,7 +84,8 @@ static inline GrColor GrColorPackA4(unsigned a) {
 /**
  * Assert in debug builds that a GrColor is premultiplied.
  */
-static inline void GrColorIsPMAssert(GrColor SkDEBUGCODE(c)) {
+static inline void GrColorIsPMAssert(GrColor SkDEBUGCODE(c))
+{
 #ifdef SK_DEBUG
     unsigned a = GrColorUnpackA(c);
     unsigned r = GrColorUnpackR(c);
@@ -96,7 +99,8 @@ static inline void GrColorIsPMAssert(GrColor SkDEBUGCODE(c)) {
 }
 
 /** Inverts each color channel. */
-static inline GrColor GrInvertColor(GrColor c) {
+static inline GrColor GrInvertColor(GrColor c)
+{
     U8CPU a = GrColorUnpackA(c);
     U8CPU r = GrColorUnpackR(c);
     U8CPU g = GrColorUnpackG(c);
@@ -104,7 +108,8 @@ static inline GrColor GrInvertColor(GrColor c) {
     return GrColorPackRGBA(0xff - r, 0xff - g, 0xff - b, 0xff - a);
 }
 
-static inline GrColor GrColorMul(GrColor c0, GrColor c1) {
+static inline GrColor GrColorMul(GrColor c0, GrColor c1)
+{
     U8CPU r = SkMulDiv255Round(GrColorUnpackR(c0), GrColorUnpackR(c1));
     U8CPU g = SkMulDiv255Round(GrColorUnpackG(c0), GrColorUnpackG(c1));
     U8CPU b = SkMulDiv255Round(GrColorUnpackB(c0), GrColorUnpackB(c1));
@@ -112,7 +117,8 @@ static inline GrColor GrColorMul(GrColor c0, GrColor c1) {
     return GrColorPackRGBA(r, g, b, a);
 }
 
-static inline GrColor GrColorSatAdd(GrColor c0, GrColor c1) {
+static inline GrColor GrColorSatAdd(GrColor c0, GrColor c1)
+{
     unsigned r = SkTMin<unsigned>(GrColorUnpackR(c0) + GrColorUnpackR(c1), 0xff);
     unsigned g = SkTMin<unsigned>(GrColorUnpackG(c0) + GrColorUnpackG(c1), 0xff);
     unsigned b = SkTMin<unsigned>(GrColorUnpackB(c0) + GrColorUnpackB(c1), 0xff);
@@ -121,7 +127,8 @@ static inline GrColor GrColorSatAdd(GrColor c0, GrColor c1) {
 }
 
 /** Converts a GrColor to an rgba array of GrGLfloat */
-static inline void GrColorToRGBAFloat(GrColor color, float rgba[4]) {
+static inline void GrColorToRGBAFloat(GrColor color, float rgba[4])
+{
     static const float ONE_OVER_255 = 1.f / 255.f;
     rgba[0] = GrColorUnpackR(color) * ONE_OVER_255;
     rgba[1] = GrColorUnpackG(color) * ONE_OVER_255;
@@ -130,17 +137,20 @@ static inline void GrColorToRGBAFloat(GrColor color, float rgba[4]) {
 }
 
 /** Normalizes and coverts an uint8_t to a float. [0, 255] -> [0.0, 1.0] */
-static inline float GrNormalizeByteToFloat(uint8_t value) {
+static inline float GrNormalizeByteToFloat(uint8_t value)
+{
     static const float ONE_OVER_255 = 1.f / 255.f;
     return value * ONE_OVER_255;
 }
 
 /** Determines whether the color is opaque or not. */
-static inline bool GrColorIsOpaque(GrColor color) {
+static inline bool GrColorIsOpaque(GrColor color)
+{
     return (color & (0xFFU << GrColor_SHIFT_A)) == (0xFFU << GrColor_SHIFT_A);
 }
 
-static inline GrColor GrPremulColor(GrColor color) {
+static inline GrColor GrPremulColor(GrColor color)
+{
     unsigned r = GrColorUnpackR(color);
     unsigned g = GrColorUnpackG(color);
     unsigned b = GrColorUnpackB(color);
@@ -152,10 +162,11 @@ static inline GrColor GrPremulColor(GrColor color) {
 }
 
 /** Returns an unpremuled version of the GrColor. */
-static inline GrColor GrUnpremulColor(GrColor color) {
+static inline GrColor GrUnpremulColor(GrColor color)
+{
     GrColorIsPMAssert(color);
     unsigned r = GrColorUnpackR(color);
-    unsigned g = GrColorUnpackG(color); 
+    unsigned g = GrColorUnpackG(color);
     unsigned b = GrColorUnpackB(color);
     unsigned a = GrColorUnpackA(color);
     SkPMColor colorPM = SkPackARGB32(a, r, g, b);
@@ -208,10 +219,10 @@ struct GrColor4f {
 
     GrColor toGrColor() const {
         return GrColorPackRGBA(
-            SkTPin<unsigned>(static_cast<unsigned>(fRGBA[0] * 255.0f + 0.5f), 0, 255),
-            SkTPin<unsigned>(static_cast<unsigned>(fRGBA[1] * 255.0f + 0.5f), 0, 255),
-            SkTPin<unsigned>(static_cast<unsigned>(fRGBA[2] * 255.0f + 0.5f), 0, 255),
-            SkTPin<unsigned>(static_cast<unsigned>(fRGBA[3] * 255.0f + 0.5f), 0, 255));
+                   SkTPin<unsigned>(static_cast<unsigned>(fRGBA[0] * 255.0f + 0.5f), 0, 255),
+                   SkTPin<unsigned>(static_cast<unsigned>(fRGBA[1] * 255.0f + 0.5f), 0, 255),
+                   SkTPin<unsigned>(static_cast<unsigned>(fRGBA[2] * 255.0f + 0.5f), 0, 255),
+                   SkTPin<unsigned>(static_cast<unsigned>(fRGBA[3] * 255.0f + 0.5f), 0, 255));
     }
 
     SkColor4f toSkColor4f() const {
@@ -249,24 +260,26 @@ enum GrColorComponentFlags {
 
 GR_MAKE_BITFIELD_OPS(GrColorComponentFlags)
 
-static inline char GrColorComponentFlagToChar(GrColorComponentFlags component) {
+static inline char GrColorComponentFlagToChar(GrColorComponentFlags component)
+{
     SkASSERT(SkIsPow2(component));
     switch (component) {
-        case kR_GrColorComponentFlag:
-            return 'r';
-        case kG_GrColorComponentFlag:
-            return 'g';
-        case kB_GrColorComponentFlag:
-            return 'b';
-        case kA_GrColorComponentFlag:
-            return 'a';
-        default:
-            SkFAIL("Invalid color component flag.");
-            return '\0';
+    case kR_GrColorComponentFlag:
+        return 'r';
+    case kG_GrColorComponentFlag:
+        return 'g';
+    case kB_GrColorComponentFlag:
+        return 'b';
+    case kA_GrColorComponentFlag:
+        return 'a';
+    default:
+        SkFAIL("Invalid color component flag.");
+        return '\0';
     }
 }
 
-static inline uint32_t GrPixelConfigComponentMask(GrPixelConfig config) {
+static inline uint32_t GrPixelConfigComponentMask(GrPixelConfig config)
+{
     static const uint32_t kFlags[] = {
         0,                              // kUnknown_GrPixelConfig
         kA_GrColorComponentFlag,        // kAlpha_8_GrPixelConfig

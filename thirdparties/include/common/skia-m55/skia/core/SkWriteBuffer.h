@@ -24,7 +24,8 @@ class SkFactorySet;
 class SkFlattenable;
 class SkRefCntSet;
 
-class SkWriteBuffer {
+class SkWriteBuffer
+{
 public:
     SkWriteBuffer() {}
     virtual ~SkWriteBuffer() {}
@@ -64,7 +65,9 @@ public:
     virtual void writeTypeface(SkTypeface* typeface) = 0;
     virtual void writePaint(const SkPaint& paint) = 0;
 
-    void setDeduper(SkDeduper* deduper) { fDeduper = deduper; }
+    void setDeduper(SkDeduper* deduper) {
+        fDeduper = deduper;
+    }
 
 protected:
     SkDeduper* fDeduper = nullptr;
@@ -73,7 +76,8 @@ protected:
 /**
  * Concrete implementation that serializes to a flat binary blob.
  */
-class SkBinaryWriteBuffer : public SkWriteBuffer {
+class SkBinaryWriteBuffer : public SkWriteBuffer
+{
 public:
     enum Flags {
         kCrossProcess_Flag = 1 << 0,
@@ -95,7 +99,9 @@ public:
         fWriter.reset(storage, storageSize);
     }
 
-    size_t bytesWritten() const { return fWriter.bytesWritten(); }
+    size_t bytesWritten() const {
+        return fWriter.bytesWritten();
+    }
 
     void writeByteArray(const void* data, size_t size) override;
     void writeBool(bool value) override;
@@ -125,7 +131,9 @@ public:
     void writePaint(const SkPaint& paint) override;
 
     bool writeToStream(SkWStream*);
-    void writeToMemory(void* dst) { fWriter.flatten(dst); }
+    void writeToMemory(void* dst) {
+        fWriter.flatten(dst);
+    }
 
     SkFactorySet* setFactoryRecorder(SkFactorySet*);
     SkRefCntSet* setTypefaceRecorder(SkRefCntSet*);
@@ -139,7 +147,9 @@ public:
      * TODO: Encode SkImage pixels as well.
      */
     void setPixelSerializer(SkPixelSerializer*);
-    SkPixelSerializer* getPixelSerializer() const { return fPixelSerializer; }
+    SkPixelSerializer* getPixelSerializer() const {
+        return fPixelSerializer;
+    }
 
 private:
     const uint32_t fFlags;

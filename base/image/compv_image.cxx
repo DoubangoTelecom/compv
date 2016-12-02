@@ -32,14 +32,14 @@ COMPV_NAMESPACE_BEGIN()
 
 COMPV_ERROR_CODE CompVImage::newObj8u(CompVMatPtrPtr mat, size_t rows, size_t cols, COMPV_PIXEL_FORMAT subType)
 {
-	COMPV_IMAGE_NEWOBJ_SWITCH(uint8_t, subType);
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_IMAGE_NEWOBJ_SWITCH(uint8_t, subType);
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVImage::newObj16u(CompVMatPtrPtr mat, size_t rows, size_t cols, COMPV_PIXEL_FORMAT subType)
 {
-	COMPV_IMAGE_NEWOBJ_SWITCH(uint16_t, subType);
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_IMAGE_NEWOBJ_SWITCH(uint16_t, subType);
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 

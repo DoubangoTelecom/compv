@@ -12,7 +12,8 @@
 
 #include "SkScalar.h"
 
-class SkInterpolatorBase : SkNoncopyable {
+class SkInterpolatorBase : SkNoncopyable
+{
 public:
     enum Result {
         kNormal_Result,
@@ -49,7 +50,9 @@ public:
     /** Set the repeat count. The repeat count may be fractional.
         @param repeatCount Multiplies the total time by this scalar.
     */
-    void    setRepeatCount(SkScalar repeatCount) { fRepeat = repeatCount; }
+    void    setRepeatCount(SkScalar repeatCount) {
+        fRepeat = repeatCount;
+    }
 
     /** Set the whether the repeat is mirrored.
         @param reset If true, the odd repeats interpolate from the last key
@@ -68,7 +71,7 @@ protected:
         kHasBlend = 4
     };
     static SkScalar ComputeRelativeT(SkMSec time, SkMSec prevTime,
-                             SkMSec nextTime, const SkScalar blend[4] = NULL);
+                                     SkMSec nextTime, const SkScalar blend[4] = NULL);
     int16_t fFrameCount;
     uint8_t fElemCount;
     uint8_t fFlags;
@@ -84,7 +87,8 @@ protected:
 #endif
 };
 
-class SkInterpolator : public SkInterpolatorBase {
+class SkInterpolator : public SkInterpolatorBase
+{
 public:
     SkInterpolator();
     SkInterpolator(int elemCount, int frameCount);

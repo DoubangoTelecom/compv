@@ -10,7 +10,8 @@
 
 #include "SkImageFilter.h"
 
-class SK_API SkBlurImageFilter {
+class SK_API SkBlurImageFilter
+{
 public:
     static sk_sp<SkImageFilter> Make(SkScalar sigmaX, SkScalar sigmaY,
                                      sk_sp<SkImageFilter> input,

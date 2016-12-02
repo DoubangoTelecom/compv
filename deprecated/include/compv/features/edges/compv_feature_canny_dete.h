@@ -24,38 +24,38 @@ COMPV_NAMESPACE_BEGIN()
 class CompVEdgeDeteCanny : public CompVEdgeDete
 {
 protected:
-	CompVEdgeDeteCanny(float tLow = COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW, float tHigh = COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH, int32_t kernSize = 3);
+    CompVEdgeDeteCanny(float tLow = COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW, float tHigh = COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH, int32_t kernSize = 3);
 public:
-	virtual ~CompVEdgeDeteCanny();
-	virtual COMPV_INLINE const char* getObjectId() {
-		return "CompVEdgeDeteCanny";
-	};
+    virtual ~CompVEdgeDeteCanny();
+    virtual COMPV_INLINE const char* getObjectId() {
+        return "CompVEdgeDeteCanny";
+    };
 
-	// override CompVSettable::set
-	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
-	// override CompVEdgeDete::process
-	virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtrArray(uint8_t)& edges);
+    // override CompVSettable::set
+    virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
+    // override CompVEdgeDete::process
+    virtual COMPV_ERROR_CODE process(const CompVPtr<CompVImage*>& image, CompVPtrArray(uint8_t)& edges);
 
-	static COMPV_ERROR_CODE newObj(CompVPtr<CompVEdgeDete* >* dete, float tLow = COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW, float tHigh = COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH, int32_t kernSize = 3);
-
-private:
-	COMPV_ERROR_CODE nms_gather(CompVPtrArray(uint8_t)& edges, uint16_t tLow, size_t rowStart, size_t rowCount);
-	void nms_apply();
-	COMPV_ERROR_CODE hysteresis(CompVPtrArray(uint8_t)& edges, uint16_t tLow, uint16_t tHigh, size_t rowStart, size_t rowCount);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVEdgeDete* >* dete, float tLow = COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW, float tHigh = COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH, int32_t kernSize = 3);
 
 private:
-	size_t m_nImageWidth;
-	size_t m_nImageHeight;
-	size_t m_nImageStride;
-	int16_t* m_pGx;
-	int16_t* m_pGy;
-	uint16_t* m_pG;
-	const int16_t* m_pcKernelVt;
-	const int16_t* m_pcKernelHz;
-	size_t m_nKernelSize;
-	float m_fThresholdLow;
-	float m_fThresholdHigh;
-	uint8_t* m_pNms;
+    COMPV_ERROR_CODE nms_gather(CompVPtrArray(uint8_t)& edges, uint16_t tLow, size_t rowStart, size_t rowCount);
+    void nms_apply();
+    COMPV_ERROR_CODE hysteresis(CompVPtrArray(uint8_t)& edges, uint16_t tLow, uint16_t tHigh, size_t rowStart, size_t rowCount);
+
+private:
+    size_t m_nImageWidth;
+    size_t m_nImageHeight;
+    size_t m_nImageStride;
+    int16_t* m_pGx;
+    int16_t* m_pGy;
+    uint16_t* m_pG;
+    const int16_t* m_pcKernelVt;
+    const int16_t* m_pcKernelHz;
+    size_t m_nKernelSize;
+    float m_fThresholdLow;
+    float m_fThresholdHigh;
+    uint8_t* m_pNms;
 };
 
 #define COMPV_CANNY_PUSH_CANDIDATE(box, r, c) (box)->new_item(&ne), ne->row = (r), ne->col = (c)

@@ -41,7 +41,8 @@ class GrGpuResourceRef;
  * ownership by pending IO. Any GrProgramElement hierarchy is managed by subclasses which must
  * implement notifyRefCntIsZero() in order to convert refs of children to pending executions.
  */
-class GrProgramElement : public SkNoncopyable {
+class GrProgramElement : public SkNoncopyable
+{
 public:
     virtual ~GrProgramElement() {
         // fRefCnt can be one when an effect is created statically using GR_CREATE_STATIC_EFFECT
@@ -66,7 +67,8 @@ public:
             if (0 == fPendingExecutions) {
                 delete this;
                 return;
-            } else {
+            }
+            else {
                 this->removeRefs();
             }
         }
@@ -76,7 +78,9 @@ public:
     /**
      * Gets an id that is unique for this GrProgramElement object. This will never return 0.
      */
-    uint32_t getUniqueID() const { return fUniqueID; }
+    uint32_t getUniqueID() const {
+        return fUniqueID;
+    }
 
     void validate() const {
 #ifdef SK_DEBUG
@@ -114,7 +118,8 @@ protected:
             if (0 == fRefCnt) {
                 delete this;
                 return;
-            } else {
+            }
+            else {
                 this->pendingIOComplete();
             }
         }

@@ -17,11 +17,12 @@ class SkString;
 /** \class SkTime
     Platform-implemented utilities to return time of day, and millisecond counter.
 */
-class SK_API SkTime {
+class SK_API SkTime
+{
 public:
     struct DateTime {
         int16_t  fTimeZoneMinutes;  // The number of minutes that GetDateTime()
-                                    // is ahead of or behind UTC.
+        // is ahead of or behind UTC.
         uint16_t fYear;          //!< e.g. 2005
         uint8_t  fMonth;         //!< 1..12
         uint8_t  fDayOfWeek;     //!< 0..6, 0==Sunday
@@ -34,14 +35,19 @@ public:
     };
     static void GetDateTime(DateTime*);
 
-    static double GetSecs() { return GetNSecs() * 1e-9; }
-    static double GetMSecs() { return GetNSecs() * 1e-6; }
+    static double GetSecs() {
+        return GetNSecs() * 1e-9;
+    }
+    static double GetMSecs() {
+        return GetNSecs() * 1e-6;
+    }
     static double GetNSecs();
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class SkAutoTime {
+class SkAutoTime
+{
 public:
     // The label is not deep-copied, so its address must remain valid for the
     // lifetime of this object

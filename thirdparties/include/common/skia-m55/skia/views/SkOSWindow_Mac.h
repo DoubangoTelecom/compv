@@ -11,11 +11,14 @@
 
 #include "SkWindow.h"
 
-class SkOSWindow : public SkWindow {
+class SkOSWindow : public SkWindow
+{
 public:
     SkOSWindow(void* hwnd);
     ~SkOSWindow();
-    void*   getHWND() const { return fHWND; }
+    void*   getHWND() const {
+        return fHWND;
+    }
 
     virtual bool onDispatchClick(int x, int y, Click::State state,
                                  void* owner, unsigned modi);

@@ -38,7 +38,9 @@ struct SkMask {
 
     /** Returns true if the mask is empty: i.e. it has an empty bounds.
      */
-    bool isEmpty() const { return fBounds.isEmpty(); }
+    bool isEmpty() const {
+        return fBounds.isEmpty();
+    }
 
     /** Return the byte size of the mask, assuming only 1 plane.
         Does not account for k3D_Format. For that, use computeTotalImageSize().
@@ -132,7 +134,8 @@ struct SkMask {
  *  Stack class used to manage the fImage buffer in a SkMask.
  *  When this object loses scope, the buffer is freed with SkMask::FreeImage().
  */
-class SkAutoMaskFreeImage {
+class SkAutoMaskFreeImage
+{
 public:
     SkAutoMaskFreeImage(uint8_t* maskImage) {
         fImage = maskImage;

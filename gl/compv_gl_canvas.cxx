@@ -11,10 +11,10 @@
 COMPV_NAMESPACE_BEGIN()
 
 CompVGLCanvas::CompVGLCanvas(CompVGLFboPtr ptrFBO, CompVCanvasImplPtr ptrImpl)
-	: CompVCanvas()
-	, m_bEmpty(true)
-	, m_ptrFBO(ptrFBO)
-	, m_ptrImpl(ptrImpl)
+    : CompVCanvas()
+    , m_bEmpty(true)
+    , m_ptrFBO(ptrFBO)
+    , m_ptrImpl(ptrImpl)
 {
 
 }
@@ -26,36 +26,36 @@ CompVGLCanvas::~CompVGLCanvas()
 
 COMPV_OVERRIDE_IMPL0("CompVCanvasInterface", CompVGLCanvas::drawText)(const void* textPtr, size_t textLengthInBytes, int x, int y)
 {
-	COMPV_CHECK_EXP_RETURN(!textPtr || !textLengthInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_GL_FBO_AUTOBIND(*m_ptrFBO);
-	COMPV_CHECK_CODE_RETURN(m_ptrImpl->drawText(textPtr, textLengthInBytes, x, y));
-	unMakeEmpty();
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(!textPtr || !textLengthInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_GL_FBO_AUTOBIND(*m_ptrFBO);
+    COMPV_CHECK_CODE_RETURN(m_ptrImpl->drawText(textPtr, textLengthInBytes, x, y));
+    unMakeEmpty();
+    return COMPV_ERROR_CODE_S_OK;
 }
-	
+
 COMPV_OVERRIDE_IMPL0("CompVCanvasInterface", CompVGLCanvas::drawLine)(int x0, int y0, int x1, int y1)
 {
-	COMPV_GL_FBO_AUTOBIND(*m_ptrFBO);
-	COMPV_CHECK_CODE_RETURN(m_ptrImpl->drawLine(x0, y0, x1, y1));
-	unMakeEmpty();
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_GL_FBO_AUTOBIND(*m_ptrFBO);
+    COMPV_CHECK_CODE_RETURN(m_ptrImpl->drawLine(x0, y0, x1, y1));
+    unMakeEmpty();
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVGLCanvas::close()
 {
-	if (m_ptrFBO) {
-		COMPV_CHECK_CODE_ASSERT(m_ptrFBO->close());
-	}
-	return COMPV_ERROR_CODE_S_OK;
+    if (m_ptrFBO) {
+        COMPV_CHECK_CODE_ASSERT(m_ptrFBO->close());
+    }
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVGLCanvas::newObj(CompVGLCanvasPtrPtr canvas, CompVGLFboPtr ptrFBO, CompVCanvasImplPtr ptrImpl)
 {
-	COMPV_CHECK_EXP_RETURN(!canvas || !ptrFBO || !ptrImpl, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVGLCanvasPtr canvas_ = new CompVGLCanvas(ptrFBO, ptrImpl);
-	COMPV_CHECK_EXP_RETURN(!canvas_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	*canvas = canvas_;
-	return COMPV_ERROR_CODE_S_OK;
+    COMPV_CHECK_EXP_RETURN(!canvas || !ptrFBO || !ptrImpl, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    CompVGLCanvasPtr canvas_ = new CompVGLCanvas(ptrFBO, ptrImpl);
+    COMPV_CHECK_EXP_RETURN(!canvas_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    *canvas = canvas_;
+    return COMPV_ERROR_CODE_S_OK;
 }
 
 
