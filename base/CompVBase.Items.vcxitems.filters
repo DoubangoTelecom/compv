@@ -73,6 +73,12 @@
     <Filter Include="include\math\intrin\x86">
       <UniqueIdentifier>{31c07c08-b20a-441b-8bd2-dbbd77d42372}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\android">
+      <UniqueIdentifier>{9fce1944-e3a9-4dbb-bb7c-d5f436fcdd9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\android">
+      <UniqueIdentifier>{95ef86dc-bc6a-4bc4-9930-665140ef0e02}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_base.cxx">
@@ -215,6 +221,12 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)drawing\compv_window_registry.cxx">
       <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)android\compv_android_cpu-features.cxx">
+      <Filter>source\android</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)android\compv_android_native_activity.cxx">
+      <Filter>source\android</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -370,6 +382,15 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\time\compv_timer.h">
       <Filter>include\time</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\android\compv_android_cpu-features.h">
+      <Filter>include\android</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\android\compv_android_fileutils.h">
+      <Filter>include\android</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\android\compv_android_native_activity.h">
+      <Filter>include\android</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

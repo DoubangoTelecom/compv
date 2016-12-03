@@ -36,6 +36,12 @@ public:
         static bool s_btexture_float;
     };
     static COMPV_ERROR_CODE gather();
+	static GLint versionMajor() {
+		return s_iVersionMajor;
+	}
+	static GLint versionMinor() {
+		return s_iVersionMinor;
+	}
 private:
     static bool s_bGathered;
     static GLint s_iVersionMajor;

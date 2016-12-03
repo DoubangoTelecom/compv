@@ -87,7 +87,7 @@ COMPV_OVERRIDE_IMPL0("CompVSurface", CompVGLSurface::drawImage)(CompVMatPtr mat)
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
     COMPV_CHECK_CODE_RETURN(init());
 
-    const COMPV_PIXEL_FORMAT pixelFormat = static_cast<COMPV_PIXEL_FORMAT>(mat->subType());
+    const COMPV_SUBTYPE pixelFormat = static_cast<COMPV_SUBTYPE>(mat->subType());
     if (!m_ptrRenderer || m_ptrRenderer->pixelFormat() != pixelFormat) {
         COMPV_CHECK_CODE_RETURN(CompVGLRenderer::newObj(&m_ptrRenderer, pixelFormat));
     }

@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_GL_RENDERER_YUV_H_)
-#define _COMPV_GL_RENDERER_YUV_H_
+#if !defined(_COMPV_GL_RENDERER_PACKED_H_)
+#define _COMPV_GL_RENDERER_PACKED_H_
 
 #include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
@@ -18,19 +18,19 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-COMPV_OBJECT_DECLARE_PTRS(GLRendererYUV)
+COMPV_OBJECT_DECLARE_PTRS(GLRendererPacked)
 
-class CompVGLRendererYUV : public CompVGLRenderer
+class CompVGLRendererPacked : public CompVGLRenderer
 {
 protected:
-    CompVGLRendererYUV(COMPV_PIXEL_FORMAT eYUVPixelFormat);
+    CompVGLRendererPacked(COMPV_SUBTYPE eRGBPixelFormat);
 public:
-    virtual ~CompVGLRendererYUV();
-    COMPV_OBJECT_GET_ID(CompVGLRendererYUV);
+    virtual ~CompVGLRendererPacked();
+    COMPV_OBJECT_GET_ID(CompVGLRendererPacked);
 
     virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) COMPV_OVERRIDE_DECL("CompVGLRenderer");
 
-    static COMPV_ERROR_CODE newObj(CompVGLRendererYUVPtrPtr glRenderer, COMPV_PIXEL_FORMAT eYUVPixelFormat);
+    static COMPV_ERROR_CODE newObj(CompVGLRendererPackedPtrPtr glRgbRenderer, COMPV_SUBTYPE ePackedPixelFormat);
 
 protected:
     virtual COMPV_ERROR_CODE deInit();
@@ -39,11 +39,12 @@ protected:
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     bool m_bInit;
-    GLuint m_uNameTextures[4];
-    size_t m_uWidths[4];
-    size_t m_uHeights[4];
-    size_t m_uStrides[4];
-    size_t m_uTexturesCount;
+	GLenum m_iFormat;
+    GLuint m_uNameTexture;
+    GLuint m_uNameSampler;
+    size_t m_uWidth;
+    size_t m_uHeight;
+    size_t m_uStride;
     std::string m_strPrgVertexData;
     std::string m_strPrgFragData;
     COMPV_VS_DISABLE_WARNINGS_END()
@@ -53,4 +54,4 @@ COMPV_NAMESPACE_END()
 
 #endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
 
-#endif /* _COMPV_GL_RENDERER_YUV_H_ */
+#endif /* _COMPV_GL_RENDERER_PACKED_H_ */

@@ -15,8 +15,8 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_BASE_API CompVImage
 {
 public:
-    static COMPV_ERROR_CODE newObj8u(CompVMatPtrPtr mat, size_t rows, size_t cols, COMPV_PIXEL_FORMAT pixelFormat);
-    static COMPV_ERROR_CODE newObj16u(CompVMatPtrPtr mat, size_t rows, size_t cols, COMPV_PIXEL_FORMAT pixelFormat);
+    static COMPV_ERROR_CODE newObj8u(CompVMatPtrPtr mat, size_t rows, size_t cols, COMPV_SUBTYPE pixelFormat);
+    static COMPV_ERROR_CODE newObj16u(CompVMatPtrPtr mat, size_t rows, size_t cols, COMPV_SUBTYPE pixelFormat);
 
 private:
 };

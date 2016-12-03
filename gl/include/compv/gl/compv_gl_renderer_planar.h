@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_GL_RENDERER_RGB_H_)
-#define _COMPV_GL_RENDERER_RGB_H_
+#if !defined(_COMPV_GL_RENDERER_PLANAR_H_)
+#define _COMPV_GL_RENDERER_PLANAR_H_
 
 #include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
@@ -18,19 +18,19 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-COMPV_OBJECT_DECLARE_PTRS(GLRendererRGB)
+COMPV_OBJECT_DECLARE_PTRS(GLRendererPlanar)
 
-class CompVGLRendererRGB : public CompVGLRenderer
+class CompVGLRendererPlanar : public CompVGLRenderer
 {
 protected:
-    CompVGLRendererRGB(COMPV_PIXEL_FORMAT eRGBPixelFormat);
+    CompVGLRendererPlanar(COMPV_SUBTYPE ePixelFormat);
 public:
-    virtual ~CompVGLRendererRGB();
-    COMPV_OBJECT_GET_ID(CompVGLRendererRGB);
+    virtual ~CompVGLRendererPlanar();
+    COMPV_OBJECT_GET_ID(CompVGLRendererPlanar);
 
     virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) COMPV_OVERRIDE_DECL("CompVGLRenderer");
 
-    static COMPV_ERROR_CODE newObj(CompVGLRendererRGBPtrPtr glRgbRenderer, COMPV_PIXEL_FORMAT eRGBPixelFormat);
+    static COMPV_ERROR_CODE newObj(CompVGLRendererPlanarPtrPtr glRenderer, COMPV_SUBTYPE ePixelFormat);
 
 protected:
     virtual COMPV_ERROR_CODE deInit();
@@ -39,12 +39,13 @@ protected:
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     bool m_bInit;
-    GLint m_iFormat;
-    GLuint m_uNameTexture;
-    GLuint m_uNameSampler;
-    size_t m_uWidth;
-    size_t m_uHeight;
-    size_t m_uStride;
+	GLenum m_eFormats[COMPV_MAX_COMP_COUNT];
+	const char* m_pSamplerNames[COMPV_MAX_COMP_COUNT];
+    GLuint m_uNameTextures[COMPV_MAX_COMP_COUNT];
+    size_t m_uWidths[COMPV_MAX_COMP_COUNT];
+    size_t m_uHeights[COMPV_MAX_COMP_COUNT];
+    size_t m_uStrides[COMPV_MAX_COMP_COUNT];
+    size_t m_uTexturesCount;
     std::string m_strPrgVertexData;
     std::string m_strPrgFragData;
     COMPV_VS_DISABLE_WARNINGS_END()
@@ -54,4 +55,4 @@ COMPV_NAMESPACE_END()
 
 #endif /* defined(HAVE_OPENGL) || defined(HAVE_OPENGLES) */
 
-#endif /* _COMPV_GL_RENDERER_RGB_H_ */
+#endif /* _COMPV_GL_RENDERER_PLANAR_H_ */

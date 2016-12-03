@@ -18,35 +18,41 @@ COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wc++11-extensions")
 
 COMPV_OBJECT_DECLARE_PTRS(Mat)
 
-#if !defined(COMPV_MAT_MAX_COMP_COUNT)
-#	define COMPV_MAT_MAX_COMP_COUNT		4
-#endif /* COMPV_MAT_MAX_COMP_COUNT */
-
 class COMPV_BASE_API CompVMat : public CompVObj
 {
 protected:
     CompVMat();
 public:
     virtual ~CompVMat();
-    virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVMat";
-    };
+	COMPV_OBJECT_GET_ID(CompVMat);
 
-    COMPV_INLINE COMPV_MAT_TYPE type() {
+    COMPV_INLINE COMPV_MAT_TYPE type()const {
         return m_eType;
     }
 
-    COMPV_INLINE COMPV_MAT_SUBTYPE subType() {
+    COMPV_INLINE COMPV_SUBTYPE subType()const {
         return m_eSubType;
     }
 
-    COMPV_INLINE bool isEmpty() {
+    COMPV_INLINE bool isEmpty()const {
         return !ptr() || !rows() || !cols();
     }
 
-    COMPV_INLINE size_t compCount() {
+	COMPV_INLINE bool isPacked()const {
+		return m_bCompPacked;
+	}
+
+	COMPV_INLINE bool isPlanar()const {
+		return !m_bCompPacked;
+	}
+
+    COMPV_INLINE size_t compCount()const {
         return static_cast<size_t>(m_nCompCount);
     }
+
+	COMPV_INLINE size_t dataSizeInBytes()const {
+		return m_nDataSize;
+	}
 
     template<class ptrType = void>
     COMPV_INLINE const ptrType* ptr(size_t row = 0, size_t col = 0, int32_t compId = 0)const {
@@ -116,7 +122,7 @@ public:
         return 0;
     }
 
-    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_MAT_SUBTYPE dataSubType = COMPV_MAT_SUBTYPE_RAW>
+    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
     static COMPV_ERROR_CODE newObj(CompVMatPtrPtr mat, size_t rows, size_t cols, size_t alignv, size_t stride = 0) {
         COMPV_CHECK_EXP_RETURN(!mat || !alignv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         CompVMatPtr mat_ = *mat;
@@ -129,31 +135,31 @@ public:
         return COMPV_ERROR_CODE_S_OK;
     }
 
-    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_MAT_SUBTYPE dataSubType = COMPV_MAT_SUBTYPE_RAW>
+    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
     static COMPV_ERROR_CODE newObjStrideless(CompVMatPtrPtr mat, size_t rows, size_t cols) {
         return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, 1);
     }
 
-    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_MAT_SUBTYPE dataSubType = COMPV_MAT_SUBTYPE_RAW>
+    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
     static COMPV_ERROR_CODE newObjAligned(CompVMatPtrPtr mat, size_t rows, size_t cols) {
         return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, COMPV_SIMD_ALIGNV_DEFAULT);
     }
 
 protected:
-    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_MAT_SUBTYPE dataSubType = COMPV_MAT_SUBTYPE_RAW>
+    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
     COMPV_ERROR_CODE alloc(size_t rows, size_t cols, size_t alignv = 1, size_t stride = 0) {
         COMPV_CHECK_EXP_RETURN(!alignv || (stride && stride < cols), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
         size_t nNewDataSize;
         size_t nElmtInBytes;
-        bool bCompInterleaved;
+        bool bCompPacked;
         size_t nCompCount;
         size_t nBestStrideInBytes;
-        size_t nCompStrideInBytes[COMPV_MAT_MAX_COMP_COUNT];
-        size_t nCompCols[COMPV_MAT_MAX_COMP_COUNT];
-        size_t nCompRows[COMPV_MAT_MAX_COMP_COUNT];
-        size_t nCompSizeInBytes[COMPV_MAT_MAX_COMP_COUNT];
+        size_t nCompStrideInBytes[COMPV_MAX_COMP_COUNT];
+        size_t nCompCols[COMPV_MAX_COMP_COUNT];
+        size_t nCompRows[COMPV_MAX_COMP_COUNT];
+        size_t nCompSizeInBytes[COMPV_MAX_COMP_COUNT];
         void* pMem = NULL;
 
         nElmtInBytes = sizeof(elmType);
@@ -161,7 +167,7 @@ protected:
 
         if (dataType == COMPV_MAT_TYPE_RAW) {
             nCompCount = 1;
-            bCompInterleaved = false;
+            bCompPacked = false;
             nNewDataSize = nBestStrideInBytes * rows;
             nCompCols[0] = cols;
             nCompRows[0] = rows;
@@ -169,19 +175,19 @@ protected:
             nCompSizeInBytes[0] = nNewDataSize;
         }
         else if (dataType == COMPV_MAT_TYPE_PIXELS) {
-            COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompCount(static_cast<COMPV_PIXEL_FORMAT>(dataSubType), &nCompCount)); // get number of comps
-            COMPV_CHECK_EXP_RETURN(!nCompCount || nCompCount > COMPV_MAT_MAX_COMP_COUNT, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT); // check the number of comps
-            COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompInterleaved(static_cast<COMPV_PIXEL_FORMAT>(dataSubType), &bCompInterleaved)); // check whether the comps are interleaved
-            COMPV_CHECK_CODE_RETURN(CompVImageUtils::getSizeForPixelFormat(static_cast<COMPV_PIXEL_FORMAT>(dataSubType), nBestStrideInBytes, rows, &nNewDataSize)); // get overal size in bytes
+            COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompCount(dataSubType, &nCompCount)); // get number of comps
+            COMPV_CHECK_EXP_RETURN(!nCompCount || nCompCount > COMPV_MAX_COMP_COUNT, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT); // check the number of comps
+            COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompPacked(dataSubType, &bCompPacked)); // check whether the comps are packed
+            COMPV_CHECK_CODE_RETURN(CompVImageUtils::getSizeForPixelFormat(dataSubType, nBestStrideInBytes, rows, &nNewDataSize)); // get overal size in bytes
             size_t nSumCompSizeInBytes = 0;
             for (size_t compId = 0; compId < nCompCount; ++compId) {
-                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompSizeForPixelFormat(static_cast<COMPV_PIXEL_FORMAT>(dataSubType), compId, cols, rows, &nCompCols[compId], &nCompRows[compId])); // get 'cols' and 'rows' for the comp
-                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompSizeForPixelFormat(static_cast<COMPV_PIXEL_FORMAT>(dataSubType), compId, nBestStrideInBytes, rows, &nCompStrideInBytes[compId], &nCompRows[compId])); // get 'stride' and 'rows' for the comp
-                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompSizeForPixelFormat(static_cast<COMPV_PIXEL_FORMAT>(dataSubType), nCompStrideInBytes[compId], rows, compId, &nCompSizeInBytes[compId])); // get comp size in bytes
+                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompSizeForPixelFormat(dataSubType, compId, cols, rows, &nCompCols[compId], &nCompRows[compId])); // get 'cols' and 'rows' for the comp
+                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompSizeForPixelFormat(dataSubType, compId, nBestStrideInBytes, rows, &nCompStrideInBytes[compId], &nCompRows[compId])); // get 'stride' and 'rows' for the comp
+                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompSizeForPixelFormat(dataSubType, nBestStrideInBytes, rows, compId, &nCompSizeInBytes[compId])); // get comp size in bytes
                 nSumCompSizeInBytes += nCompSizeInBytes[compId];
             }
             // Make sure that sum(comp sizes) = data size
-            COMPV_CHECK_EXP_BAIL(nSumCompSizeInBytes != nNewDataSize, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+            COMPV_CHECK_EXP_BAIL(nSumCompSizeInBytes != nNewDataSize, err_ = COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
         }
         else {
             COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
@@ -210,7 +216,7 @@ protected:
         m_nDataSize = nNewDataSize;
         m_nAlignV = alignv;
         m_nElmtInBytes = nElmtInBytes;
-        m_bCompInterleaved = bCompInterleaved;
+        m_bCompPacked = bCompPacked;
         m_nCompCount = static_cast<int32_t>(nCompCount);
         m_pCompPtr[0] = m_pDataPtr;
         m_nCompSizeInBytes[0] = nCompSizeInBytes[0];
@@ -220,7 +226,7 @@ protected:
         m_nCompStrideInElts[0] = (nCompStrideInBytes[0] / nElmtInBytes);
         m_bCompStrideInEltsIsIntegral[0] = !(nCompStrideInBytes[0] % nElmtInBytes);
         for (size_t compId = 1; compId < nCompCount; ++compId) {
-            if (bCompInterleaved) {
+            if (bCompPacked) {
                 m_pCompPtr[compId] = m_pCompPtr[0]; // use byte-0
             }
             else {
@@ -244,25 +250,25 @@ bail:
 private:
     void* m_pDataPtr;
     int32_t m_nCompCount;
-    bool m_bCompInterleaved;
+    bool m_bCompPacked;
     size_t m_nCols;
     size_t m_nRows;
     size_t m_nStrideInBytes;
     size_t m_nStrideInElts;
-    size_t m_nCompCols[COMPV_MAT_MAX_COMP_COUNT];
-    size_t m_nCompRows[COMPV_MAT_MAX_COMP_COUNT];
-    const void* m_pCompPtr[COMPV_MAT_MAX_COMP_COUNT];
-    size_t m_nCompSizeInBytes[COMPV_MAT_MAX_COMP_COUNT];
-    size_t m_nCompStrideInBytes[COMPV_MAT_MAX_COMP_COUNT];
-    size_t m_nCompStrideInElts[COMPV_MAT_MAX_COMP_COUNT];
-    bool m_bCompStrideInEltsIsIntegral[COMPV_MAT_MAX_COMP_COUNT];
+    size_t m_nCompCols[COMPV_MAX_COMP_COUNT];
+    size_t m_nCompRows[COMPV_MAX_COMP_COUNT];
+    const void* m_pCompPtr[COMPV_MAX_COMP_COUNT];
+    size_t m_nCompSizeInBytes[COMPV_MAX_COMP_COUNT];
+    size_t m_nCompStrideInBytes[COMPV_MAX_COMP_COUNT];
+    size_t m_nCompStrideInElts[COMPV_MAX_COMP_COUNT];
+    bool m_bCompStrideInEltsIsIntegral[COMPV_MAX_COMP_COUNT];
     size_t m_nElmtInBytes;
     size_t m_nAlignV;
     size_t m_nDataSize;
     size_t m_nDataCapacity;
     bool m_bOweMem;
     COMPV_MAT_TYPE m_eType;
-    COMPV_MAT_SUBTYPE m_eSubType;
+    COMPV_SUBTYPE m_eSubType;
 };
 
 COMPV_GCC_DISABLE_WARNINGS_END()

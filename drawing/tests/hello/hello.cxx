@@ -41,7 +41,77 @@ bail:
 
 static void* COMPV_STDCALL WorkerThread(void* arg)
 {
-#if 1 // Camera
+#if 1 // Chroma conversion
+	CompVMatPtr image;
+	CompVBufferPtr buffer;
+	COMPV_ERROR_CODE err;
+	CompVSingleSurfaceLayerPtr singleSurfaceLayer;
+	static int count = 0;
+	static uint64_t timeStart;
+	
+	// FIXME: not aligned and no stride
+
+	// FIXME: merge planar and packed renderers
+
+	// FIXME: NV12.compCount == 2 -> not correct, 2 is the number of planars
+
+	// DirectShow
+	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_YUYV422>(&image, 472, 704)));
+	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_yuyv422.yuv", &buffer));
+
+	COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_NV12>(&image, 472, 704)));
+	COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_nv12.yuv", &buffer));
+
+	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_NV21>(&image, 472, 704)));
+	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_nv21.yuv", &buffer));
+
+	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_YUV420P>(&image, 472, 704)));
+	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_yuv420p.yuv", &buffer));
+
+	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_Y>(&image, 472, 704)));
+	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_gray.yuv", &buffer));
+
+	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_RGBA32>(&image, 472, 704)));
+	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_rgba.rgb", &buffer));
+
+	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_ARGB32>(&image, 472, 704)));
+	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_argb.rgb", &buffer));
+
+	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_BGRA32>(&image, 472, 704)));
+	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_bgra.rgb", &buffer));
+
+	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_BGR24>(&image, 472, 704)));
+	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_bgr.rgb", &buffer));
+
+	memcpy(const_cast<void*>(image->ptr()), buffer->getPtr(), buffer->getSize());
+
+	//FILE* file = fopen("test_yuv420p.yuv", "w+");
+	//fwrite(image->ptr(), 1, image->dataSizeInBytes(), file);
+	//fclose(file);
+
+	COMPV_CHECK_CODE_BAIL(err = window->addSingleLayerSurface(&singleSurfaceLayer));
+	timeStart = CompVTime::getNowMills();
+	while (CompVDrawing::isLoopRunning()) {
+		COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
+		COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->drawImage(image));
+		
+		if (count == 1000) {
+			uint64_t duration = (CompVTime::getNowMills() - timeStart);
+			float fps = 1000.f / ((static_cast<float>(duration)) / 1000.f);
+			COMPV_DEBUG_INFO("Elapsed time: %llu, fps=%f", duration, fps);
+			count = 0;
+			timeStart = CompVTime::getNowMills();
+		}
+		++count;
+
+		COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->blit());
+		COMPV_CHECK_CODE_BAIL(err = window->endDraw());
+	}
+
+bail:
+	return NULL;
+
+#elif 0 // Camera
     COMPV_ERROR_CODE err;
     CompVCameraPtr camera;
     CompVCameraDeviceInfoList devices;
@@ -109,7 +179,7 @@ bail:
 bail:
     return NULL;
 
-#elif 0 // Matching
+#elif 1 // Matching
     COMPV_ERROR_CODE err;
     CompVMatPtr mat[3];
     CompVMatchingSurfaceLayerPtr matchingSurfaceLayer;

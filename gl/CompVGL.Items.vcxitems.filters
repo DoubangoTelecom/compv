@@ -36,12 +36,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_renderer.cxx">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_renderer_rgb.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_renderer_yuv.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_surface.cxx">
       <Filter>source</Filter>
     </ClCompile>
@@ -61,6 +55,12 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_window.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_renderer_packed.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_renderer_planar.cxx">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -104,12 +104,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_renderer.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_renderer_rgb.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_renderer_yuv.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_surface.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -129,6 +123,12 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_window.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_renderer_packed.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_renderer_planar.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

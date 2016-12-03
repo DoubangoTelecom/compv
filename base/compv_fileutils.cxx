@@ -194,7 +194,8 @@ COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buff
     COMPV_CHECK_EXP_RETURN(!pcPath || !buffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVBufferPtr buffer_ = NULL;
     int32_t size_ = (int32_t)CompVFileUtils::getSize(pcPath);
-    if (size_ > 0) {
+	COMPV_CHECK_EXP_RETURN(size_ <= 0, COMPV_ERROR_CODE_E_FAILED_TO_READ_FILE);
+    /*if (size_ > 0)*/ {
         FILE* file_ = NULL;
         void* mem_ = NULL;
 #if COMPV_OS_ANDROID

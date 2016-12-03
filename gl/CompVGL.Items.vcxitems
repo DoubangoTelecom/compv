@@ -23,8 +23,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_mvp.cxx" />
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_program.cxx" />
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_renderer.cxx" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_renderer_rgb.cxx" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_renderer_yuv.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_renderer_packed.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_renderer_planar.cxx" />
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_surface.cxx" />
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_surfacelayer_matching.cxx" />
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_surfacelayer_multi.cxx" />
@@ -47,8 +47,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_mvp.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_program.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_renderer.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_renderer_rgb.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_renderer_yuv.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_renderer_packed.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_renderer_planar.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_surface.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_surfacelayer_matching.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_surfacelayer_multi.h" />

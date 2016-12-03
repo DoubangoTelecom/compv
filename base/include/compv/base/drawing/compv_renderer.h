@@ -22,11 +22,11 @@ COMPV_OBJECT_DECLARE_PTRS(Renderer)
 class COMPV_BASE_API CompVRenderer : public CompVObj
 {
 protected:
-    CompVRenderer(COMPV_PIXEL_FORMAT ePixelFormat);
+    CompVRenderer(COMPV_SUBTYPE ePixelFormat);
 public:
     virtual ~CompVRenderer();
 
-    COMPV_INLINE COMPV_PIXEL_FORMAT pixelFormat()const {
+    COMPV_INLINE COMPV_SUBTYPE pixelFormat()const {
         return m_ePixelFormat;
     }
     COMPV_INLINE compv_renderer_id_t id()const {
@@ -39,7 +39,7 @@ public:
 
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-    COMPV_PIXEL_FORMAT m_ePixelFormat;
+    COMPV_SUBTYPE m_ePixelFormat;
     static compv_renderer_id_t s_nRendererId;
     compv_renderer_id_t m_nId;
     COMPV_VS_DISABLE_WARNINGS_END()

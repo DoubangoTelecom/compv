@@ -13,7 +13,9 @@ EndProject
 Project("{39E2626F-3545-4960-A6E8-258AD8476CE5}") = "hello.Packaging", "hello.Packaging\hello.Packaging.androidproj", "{15347D24-6222-4F29-B25C-9A498149D960}"
 	ProjectSection(ProjectDependencies) = postProject
 		{68935871-4451-42BA-B9C0-C547AB282F0C} = {68935871-4451-42BA-B9C0-C547AB282F0C}
+		{C9A86A91-D297-43F4-B31E-BE1A833391BB} = {C9A86A91-D297-43F4-B31E-BE1A833391BB}
 		{9320E994-AA59-49BA-AB64-F82AEDEC49A3} = {9320E994-AA59-49BA-AB64-F82AEDEC49A3}
+		{64AC0599-632D-483E-AED0-D355BC22C805} = {64AC0599-632D-483E-AED0-D355BC22C805}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVDrawing", "..\..\..\vs_android\CompVDrawing.vcxproj", "{68935871-4451-42BA-B9C0-C547AB282F0C}"
@@ -47,6 +49,7 @@ Global
 		..\..\..\..\camera\CompVCamera.Items.vcxitems*{45d41acc-2c3c-43d2-bc10-02aa73ffc7c7}*SharedItemsImports = 9
 		..\..\..\..\camera\CompVCamera.Items.vcxitems*{64ac0599-632d-483e-aed0-d355bc22c805}*SharedItemsImports = 4
 		..\..\..\CompVDrawing.Items.vcxitems*{68935871-4451-42ba-b9c0-c547ab282f0c}*SharedItemsImports = 4
+		..\..\..\..\base\CompVBase.Items.vcxitems*{9320e994-aa59-49ba-ab64-f82aedec49a3}*SharedItemsImports = 4
 		..\..\..\..\gl\CompVGL.Items.vcxitems*{c9a86a91-d297-43f4-b31e-be1a833391bb}*SharedItemsImports = 4
 		..\..\..\..\base\CompVBase.Items.vcxitems*{d760dec8-8f47-4768-9ebd-9eee22b382b8}*SharedItemsImports = 9
 		..\..\..\CompVDrawing.Items.vcxitems*{f3d65e8b-f635-40dc-ba85-e20ed9bd2a27}*SharedItemsImports = 9

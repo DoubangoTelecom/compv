@@ -9,12 +9,12 @@
 #include "compv/gl/compv_gl.h"
 #include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_canvas.h"
-#include "compv/gl/compv_gl_renderer_yuv.h"
-#include "compv/gl/compv_gl_renderer_rgb.h"
+#include "compv/gl/compv_gl_renderer_planar.h"
+#include "compv/gl/compv_gl_renderer_packed.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVGLRenderer::CompVGLRenderer(COMPV_PIXEL_FORMAT ePixelFormat)
+CompVGLRenderer::CompVGLRenderer(COMPV_SUBTYPE ePixelFormat)
     : CompVRenderer(ePixelFormat)
     , m_bInit(false)
 {
@@ -112,28 +112,31 @@ COMPV_ERROR_CODE CompVGLRenderer::close()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat)
+COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV_SUBTYPE ePixelFormat)
 {
     COMPV_CHECK_CODE_RETURN(CompVGL::init());
     COMPV_CHECK_EXP_RETURN(!glRenderer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     CompVGLRendererPtr glRenderer_;
     switch (ePixelFormat) {
-    case COMPV_PIXEL_FORMAT_R8G8B8:
-    case COMPV_PIXEL_FORMAT_B8G8R8:
-    case COMPV_PIXEL_FORMAT_R8G8B8A8:
-    case COMPV_PIXEL_FORMAT_B8G8R8A8:
-    case COMPV_PIXEL_FORMAT_A8B8G8R8:
-    case COMPV_PIXEL_FORMAT_A8R8G8B8: {
-        CompVGLRendererRGBPtr rgbGLRenderer_;
-        COMPV_CHECK_CODE_RETURN(CompVGLRendererRGB::newObj(&rgbGLRenderer_, ePixelFormat));
+    case COMPV_SUBTYPE_PIXELS_RGB24:
+    case COMPV_SUBTYPE_PIXELS_BGR24:
+    case COMPV_SUBTYPE_PIXELS_RGBA32:
+    case COMPV_SUBTYPE_PIXELS_BGRA32:
+    case COMPV_SUBTYPE_PIXELS_ABGR32:
+    case COMPV_SUBTYPE_PIXELS_ARGB32:
+	case COMPV_SUBTYPE_PIXELS_YUYV422: {
+        CompVGLRendererPackedPtr rgbGLRenderer_;
+        COMPV_CHECK_CODE_RETURN(CompVGLRendererPacked::newObj(&rgbGLRenderer_, ePixelFormat));
         glRenderer_ = *rgbGLRenderer_;
         break;
     }
-    case COMPV_PIXEL_FORMAT_GRAYSCALE:
-    case COMPV_PIXEL_FORMAT_I420: {
-        CompVGLRendererYUVPtr yuvGLRenderer_;
-        COMPV_CHECK_CODE_RETURN(CompVGLRendererYUV::newObj(&yuvGLRenderer_, ePixelFormat));
+    case COMPV_SUBTYPE_PIXELS_Y:
+    case COMPV_SUBTYPE_PIXELS_YUV420P:
+	case COMPV_SUBTYPE_PIXELS_NV12:
+	case COMPV_SUBTYPE_PIXELS_NV21: {
+        CompVGLRendererPlanarPtr yuvGLRenderer_;
+        COMPV_CHECK_CODE_RETURN(CompVGLRendererPlanar::newObj(&yuvGLRenderer_, ePixelFormat));
         glRenderer_ = *yuvGLRenderer_;
         break;
     }

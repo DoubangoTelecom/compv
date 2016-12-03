@@ -67,7 +67,7 @@ COMPV_ERROR_CODE CompVGLWindowFW3::close()
 COMPV_ERROR_CODE CompVGLWindowFW3::draw(CompVMatPtr mat)
 {
     COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    COMPV_ASSERT(mat->subType() == COMPV_MAT_SUBTYPE_PIXELS_R8G8B8);
+    COMPV_ASSERT(mat->subType() == COMPV_SUBTYPE_PIXELS_RGB24);
     COMPV_CHECK_CODE_NOP(m_GLFWMutex->lock());
     if (!m_pGLFWwindow) {
         COMPV_CHECK_CODE_NOP(m_GLFWMutex->unlock());

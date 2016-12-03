@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/gl/compv_gl_renderer_rgb.h"
+#include "compv/gl/compv_gl_renderer_packed.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/gl/compv_gl.h"
 #include "compv/gl/compv_gl_utils.h"
@@ -19,23 +19,44 @@ static const std::string& kProgramVertexData =
     "		texCoordVarying = texCoord;"
     "	}";
 
-static const std::string& kProgramShaderDataR8G8B8 =
+static const std::string& kProgramShaderDataRGB24 =
     "	varying vec2 texCoordVarying;"
     "	uniform sampler2D mySampler;"
     "	void main() {"
-    "		gl_FragColor = vec4(texture2D(mySampler, texCoordVarying).rgb, 1.0); /* RGB -> RGBA */"
+    "		gl_FragColor = vec4(texture2D(mySampler, texCoordVarying).xyz, 1.0); /* RGB -> RGBA */"
     "	}";
 
-static const std::string& kProgramShaderDataR8G8B8A8 =
+static const std::string& kProgramShaderDataBGR24 =
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D mySampler;"
+"	void main() {"
+"		gl_FragColor = vec4(texture2D(mySampler, texCoordVarying).zyx, 1.0); /* BGR -> RGBA */"
+"	}";
+
+static const std::string& kProgramShaderDataBGRA32 =
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D mySampler;"
+"	void main() {"
+"		gl_FragColor = texture2D(mySampler, texCoordVarying).zyxw; /* BGRA -> RGBA */"
+"	}";
+
+static const std::string& kProgramShaderDataRGBA32 =
     "	varying vec2 texCoordVarying;"
     "	uniform sampler2D mySampler;"
     "	void main() {"
-    "		gl_FragColor = texture2D(mySampler, texCoordVarying).rgba; /* RGBA -> RGBA */"
+    "		gl_FragColor = texture2D(mySampler, texCoordVarying).xyzw; /* RGBA -> RGBA */"
     "	}";
+
+static const std::string& kProgramShaderDataARGB32 =
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D mySampler;"
+"	void main() {"
+"		gl_FragColor = texture2D(mySampler, texCoordVarying).yzwx; /* ARGB -> RGBA */"
+"	}";
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVGLRendererRGB::CompVGLRendererRGB(COMPV_PIXEL_FORMAT ePixelFormat)
+CompVGLRendererPacked::CompVGLRendererPacked(COMPV_SUBTYPE ePixelFormat)
     : CompVGLRenderer(ePixelFormat)
     , m_bInit(false)
     , m_iFormat(GL_RGB)
@@ -50,12 +71,12 @@ CompVGLRendererRGB::CompVGLRendererRGB(COMPV_PIXEL_FORMAT ePixelFormat)
 
 }
 
-CompVGLRendererRGB::~CompVGLRendererRGB()
+CompVGLRendererPacked::~CompVGLRendererPacked()
 {
     COMPV_CHECK_CODE_NOP(deInit());
 }
 
-COMPV_ERROR_CODE CompVGLRendererRGB::drawImage(CompVMatPtr mat) COMPV_OVERRIDE_IMPL("CompVGLRenderer")
+COMPV_ERROR_CODE CompVGLRendererPacked::drawImage(CompVMatPtr mat) COMPV_OVERRIDE_IMPL("CompVGLRenderer")
 {
     COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
@@ -63,7 +84,7 @@ COMPV_ERROR_CODE CompVGLRendererRGB::drawImage(CompVMatPtr mat) COMPV_OVERRIDE_I
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
     // Get pixel format and make sure it's supported
-    COMPV_PIXEL_FORMAT pixelFormat = static_cast<COMPV_PIXEL_FORMAT>(mat->subType());
+    COMPV_SUBTYPE pixelFormat = static_cast<COMPV_SUBTYPE>(mat->subType());
     COMPV_CHECK_EXP_RETURN(CompVRenderer::pixelFormat() != pixelFormat, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     // Check if format changed
@@ -73,9 +94,7 @@ COMPV_ERROR_CODE CompVGLRendererRGB::drawImage(CompVMatPtr mat) COMPV_OVERRIDE_I
     }
 
     // Init if not already done
-    if (!m_bInit) {
-        COMPV_CHECK_CODE_RETURN(init(mat));
-    }
+    COMPV_CHECK_CODE_RETURN(init(mat));
 
     COMPV_CHECK_CODE_BAIL(err = CompVGLRenderer::bind()); // Bind FBO and VAO
 
@@ -104,29 +123,12 @@ COMPV_ERROR_CODE CompVGLRendererRGB::drawImage(CompVMatPtr mat) COMPV_OVERRIDE_I
     m_uHeight = mat->rows();
     m_uStride = mat->stride();
 
-#if 0
-    COMPV_glBindFramebuffer(GL_FRAMEBUFFER, CompVGLRenderer::fbo()->nameFrameBuffer());
-    uint8_t* data = (uint8_t*)malloc(m_uWidth * m_uHeight * 4);
-    COMPV_glReadBuffer(GL_COLOR_ATTACHMENT0);
-    COMPV_glReadPixels(0, 0, (GLsizei)m_uWidth, (GLsizei)m_uHeight, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    FILE* file = fopen("C:/Projects/image.rgba", "wb+");
-    fwrite(data, 1, (m_uWidth * m_uHeight * 4), file);
-    fclose(file);
-    free(data);
-    COMPV_glBindFramebuffer(GL_FRAMEBUFFER, 0); // System's framebuffer
-#endif
-
 bail:
     COMPV_CHECK_CODE_NOP(CompVGLRenderer::unbind());
-    COMPV_glActiveTexture(GL_TEXTURE1);
-    COMPV_glBindTexture(GL_TEXTURE_2D, 0);
-    COMPV_glActiveTexture(GL_TEXTURE0);
-    COMPV_glBindTexture(GL_TEXTURE_2D, 0);
-
     return err;
 }
 
-COMPV_ERROR_CODE CompVGLRendererRGB::deInit()
+COMPV_ERROR_CODE CompVGLRendererPacked::deInit()
 {
     if (!m_bInit) {
         return COMPV_ERROR_CODE_S_OK;
@@ -139,7 +141,7 @@ COMPV_ERROR_CODE CompVGLRendererRGB::deInit()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLRendererRGB::init(CompVMatPtr mat)
+COMPV_ERROR_CODE CompVGLRendererPacked::init(CompVMatPtr mat)
 {
     if (m_bInit) {
         return COMPV_ERROR_CODE_S_OK;
@@ -151,7 +153,7 @@ COMPV_ERROR_CODE CompVGLRendererRGB::init(CompVMatPtr mat)
     COMPV_CHECK_CODE_BAIL(err = CompVGLRenderer::init(mat, m_strPrgVertexData, m_strPrgFragData, false, false)); // Base class implementation
     COMPV_CHECK_CODE_BAIL(err = CompVGLRenderer::bind()); // Bind to the program -> required by 'glGetUniformLocation'
     COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::textureGen(&m_uNameTexture));
-    COMPV_glActiveTexture(GL_TEXTURE1);
+    COMPV_glActiveTexture(GL_TEXTURE1); // "GL_TEXTURE0" is for the RGBA destitation (from the blitter)
     COMPV_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     COMPV_glBindTexture(GL_TEXTURE_2D, m_uNameTexture);
     COMPV_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -172,40 +174,61 @@ bail:
     return err;
 }
 
-COMPV_ERROR_CODE CompVGLRendererRGB::newObj(CompVGLRendererRGBPtrPtr glRenderer, COMPV_PIXEL_FORMAT eRGBPixelFormat)
+COMPV_ERROR_CODE CompVGLRendererPacked::newObj(CompVGLRendererPackedPtrPtr glRenderer, COMPV_SUBTYPE ePackedPixelFormat)
 {
     COMPV_CHECK_CODE_RETURN(CompVGL::init());
     COMPV_CHECK_EXP_RETURN(!glRenderer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_CHECK_EXP_RETURN(
-        eRGBPixelFormat != COMPV_PIXEL_FORMAT_R8G8B8
-        && eRGBPixelFormat != COMPV_PIXEL_FORMAT_B8G8R8
-        && eRGBPixelFormat != COMPV_PIXEL_FORMAT_R8G8B8A8
-        && eRGBPixelFormat != COMPV_PIXEL_FORMAT_B8G8R8A8
-        && eRGBPixelFormat != COMPV_PIXEL_FORMAT_A8B8G8R8
-        && eRGBPixelFormat != COMPV_PIXEL_FORMAT_A8R8G8B8,
+        ePackedPixelFormat != COMPV_SUBTYPE_PIXELS_RGB24
+        && ePackedPixelFormat != COMPV_SUBTYPE_PIXELS_BGR24
+        && ePackedPixelFormat != COMPV_SUBTYPE_PIXELS_RGBA32
+        && ePackedPixelFormat != COMPV_SUBTYPE_PIXELS_BGRA32
+        && ePackedPixelFormat != COMPV_SUBTYPE_PIXELS_ABGR32
+        && ePackedPixelFormat != COMPV_SUBTYPE_PIXELS_ARGB32
+		&& ePackedPixelFormat != COMPV_SUBTYPE_PIXELS_YUYV422,
         COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-    CompVGLRendererRGBPtr glRenderer_ = new CompVGLRendererRGB(eRGBPixelFormat);
+    CompVGLRendererPackedPtr glRenderer_ = new CompVGLRendererPacked(ePackedPixelFormat);
     COMPV_CHECK_EXP_RETURN(!glRenderer_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    glRenderer_->m_iFormat = (eRGBPixelFormat == COMPV_PIXEL_FORMAT_R8G8B8A8
-                              || eRGBPixelFormat == COMPV_PIXEL_FORMAT_B8G8R8A8
-                              || eRGBPixelFormat == COMPV_PIXEL_FORMAT_A8B8G8R8
-                              || eRGBPixelFormat == COMPV_PIXEL_FORMAT_A8R8G8B8)
-                             ? GL_RGBA : GL_RGB;
+	switch (ePackedPixelFormat)
+	{
+	case COMPV_SUBTYPE_PIXELS_RGBA32:
+	case COMPV_SUBTYPE_PIXELS_BGRA32:
+	case COMPV_SUBTYPE_PIXELS_ABGR32:
+	case COMPV_SUBTYPE_PIXELS_ARGB32:
+		glRenderer_->m_iFormat = GL_RGBA; // 32bits
+		break;
+	case COMPV_SUBTYPE_PIXELS_RGB24:
+	case COMPV_SUBTYPE_PIXELS_BGR24:
+		glRenderer_->m_iFormat = GL_RGB; // 24bits
+		break;
+	default:
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+		break;
+	}
 
-    switch (eRGBPixelFormat) {
-    case COMPV_PIXEL_FORMAT_R8G8B8:
-        glRenderer_->m_strPrgFragData = kProgramShaderDataR8G8B8;
+    switch (ePackedPixelFormat) {
+    case COMPV_SUBTYPE_PIXELS_RGB24:
+        glRenderer_->m_strPrgFragData = kProgramShaderDataRGB24;
         break;
-    case COMPV_PIXEL_FORMAT_R8G8B8A8:
-        glRenderer_->m_strPrgFragData = kProgramShaderDataR8G8B8A8;
+	case COMPV_SUBTYPE_PIXELS_BGR24:
+		glRenderer_->m_strPrgFragData = kProgramShaderDataBGR24;
+		break;
+	case COMPV_SUBTYPE_PIXELS_BGRA32:
+		glRenderer_->m_strPrgFragData = kProgramShaderDataBGRA32;
+		break;
+    case COMPV_SUBTYPE_PIXELS_RGBA32:
+        glRenderer_->m_strPrgFragData = kProgramShaderDataRGBA32;
         break;
+	case COMPV_SUBTYPE_PIXELS_ARGB32:
+		glRenderer_->m_strPrgFragData = kProgramShaderDataARGB32;
+		break;
     default:
-        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
         break;
     }
 
-    COMPV_CHECK_EXP_RETURN(!(*glRenderer = glRenderer_), COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	*glRenderer = glRenderer_;
     return COMPV_ERROR_CODE_S_OK;
 }
 

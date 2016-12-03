@@ -43,6 +43,7 @@ COMPV_ERROR_CODE CompVGLInfo::gather()
     COMPV_DEBUG_INFO("GL_MAX_DRAW_BUFFERS: %d", s_iMaxColorAttachments);
     glGetIntegerv(GL_MAX_DRAW_BUFFERS, &s_iMaxDrawBuffers);
     COMPV_DEBUG_INFO("GL_MAX_DRAW_BUFFERS: %d", s_iMaxDrawBuffers);
+	COMPV_CHECK_EXP_NOP(s_iVersionMajor < 3, COMPV_ERROR_CODE_E_GL); // Do not exit but alert the user that OpenGL 3.0+ is required
 #endif
     if (extensions) {
         CompVGLInfo::extensions::s_bvertex_array_object = (strstr(extensions, "ARB_vertex_array_object") != NULL || strstr(extensions, "OES_vertex_array_object") != NULL);

@@ -27,7 +27,7 @@ COMPV_OBJECT_DECLARE_PTRS(GLRenderer)
 class CompVGLRenderer : public CompVRenderer
 {
 protected:
-    CompVGLRenderer(COMPV_PIXEL_FORMAT ePixelFormat);
+    CompVGLRenderer(COMPV_SUBTYPE ePixelFormat);
 public:
     virtual ~CompVGLRenderer();
     COMPV_OBJECT_GET_ID(CompVGLRenderer);
@@ -43,7 +43,7 @@ public:
 
     COMPV_ERROR_CODE close();
 
-    static COMPV_ERROR_CODE newObj(CompVGLRendererPtrPtr glRenderer, COMPV_PIXEL_FORMAT ePixelFormat);
+    static COMPV_ERROR_CODE newObj(CompVGLRendererPtrPtr glRenderer, COMPV_SUBTYPE ePixelFormat);
 
 protected:
     virtual COMPV_ERROR_CODE deInit();

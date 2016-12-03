@@ -1,8 +1,9 @@
 #include <compv/compv_api.h>
 #include "../common.h"
 
-#define JPEG_EQUIRECTANGULAR_FILE "C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
+//#define JPEG_EQUIRECTANGULAR_FILE "C:/Projects/GitHub/pan360/tests/sphere_mapping/7019363969_a80a5d6acc_o.jpg" // voiture
 //#define JPEG_EQUIRECTANGULAR_FILE	"C:/Projects/GitHub/pan360/tests/sphere_mapping/3867257549_6ca855e08d_o.jpg" //paris (BIIIIG)
+#define JPEG_EQUIRECTANGULAR_FILE	"C:/Projects/GitHub/compv/deprecated/tests/girl.jpg"
 
 using namespace compv;
 
@@ -21,7 +22,7 @@ using namespace compv;
 
 #define loopCount			1
 #define MD5_PRINT			1
-#define FORMAT_SRC			FORMAT_BGR // must be rgb or rgba family
+#define FORMAT_SRC			FORMAT_RGBA // must be rgb or rgba family
 #define FORMAT_DST			FORMAT_I420 // any format
 #define STRIDE_ALIGN		true // false to test CompVImage::wrap and CompVImage::copy
 

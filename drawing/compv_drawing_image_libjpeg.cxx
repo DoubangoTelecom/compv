@@ -28,7 +28,7 @@ extern "C" {
 COMPV_NAMESPACE_BEGIN()
 
 // Private function
-static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, int32_t *width, int32_t *stride, int32_t *height, COMPV_PIXEL_FORMAT* pixelFormat);
+static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, int32_t *width, int32_t *stride, int32_t *height, COMPV_SUBTYPE* pixelFormat);
 
 COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVMatPtrPtr mat)
 {
@@ -36,7 +36,7 @@ COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVMatPtrPtr mat)
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     uint8_t* rawdata_ = NULL;
     int32_t width_, stride_, height_;
-    COMPV_PIXEL_FORMAT pixelFormat_;
+    COMPV_SUBTYPE pixelFormat_;
     CompVImageInfo info = {};
 
     // Get image data without decoding
@@ -47,7 +47,7 @@ COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVMatPtrPtr mat)
     width_ = static_cast<int32_t>((*mat)->cols());
     height_ = static_cast<int32_t>((*mat)->rows());
     stride_ = static_cast<int32_t>((*mat)->strideInBytes());
-    pixelFormat_ = static_cast<COMPV_PIXEL_FORMAT>((*mat)->subType());
+    pixelFormat_ = static_cast<COMPV_SUBTYPE>((*mat)->subType());
     COMPV_CHECK_CODE_BAIL(err_ = decode_jpeg(filePath, kReadDataTrue, &rawdata_, &width_, &stride_, &height_, &pixelFormat_));
 
 bail:
@@ -98,7 +98,7 @@ static void my_error_exit(j_common_ptr cinfo)
     longjmp(myerr->setjmp_buffer, 1);
 }
 
-static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, int32_t *width, int32_t *stride, int32_t *height, COMPV_PIXEL_FORMAT* pixelFormat)
+static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t** rawdata, int32_t *width, int32_t *stride, int32_t *height, COMPV_SUBTYPE* pixelFormat)
 {
     struct jpeg_decompress_struct cinfo = { 0 };
     bool cinfo_created = false;
@@ -159,30 +159,30 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
     // For now only RGB is supported
     switch (cinfo.out_color_space) {
     case JCS_GRAYSCALE:
-        *pixelFormat = COMPV_PIXEL_FORMAT_GRAYSCALE;
+        *pixelFormat = COMPV_SUBTYPE_PIXELS_Y;
         break;
     case JCS_RGB:
     case JCS_EXT_RGB:
-        *pixelFormat = COMPV_PIXEL_FORMAT_R8G8B8;
+        *pixelFormat = COMPV_SUBTYPE_PIXELS_RGB24;
         break;
     case JCS_EXT_BGR:
-        *pixelFormat = COMPV_PIXEL_FORMAT_B8G8R8;
+        *pixelFormat = COMPV_SUBTYPE_PIXELS_BGR24;
         break;
     case JCS_EXT_RGBA:
     case JCS_EXT_RGBX:
-        *pixelFormat = COMPV_PIXEL_FORMAT_R8G8B8A8;
+        *pixelFormat = COMPV_SUBTYPE_PIXELS_RGBA32;
         break;
     case JCS_EXT_BGRA:
     case JCS_EXT_BGRX:
-        *pixelFormat = COMPV_PIXEL_FORMAT_B8G8R8A8;
+        *pixelFormat = COMPV_SUBTYPE_PIXELS_BGRA32;
         break;
     case JCS_EXT_ABGR:
     case JCS_EXT_XBGR:
-        *pixelFormat = COMPV_PIXEL_FORMAT_A8B8G8R8;
+        *pixelFormat = COMPV_SUBTYPE_PIXELS_ABGR32;
         break;
     case JCS_EXT_ARGB:
     case JCS_EXT_XRGB:
-        *pixelFormat = COMPV_PIXEL_FORMAT_A8R8G8B8;
+        *pixelFormat = COMPV_SUBTYPE_PIXELS_ARGB32;
         break;
     default:
         COMPV_DEBUG_ERROR_EX(kModuleNameLibjpeg, "Invalid color space %d", cinfo.out_color_space);

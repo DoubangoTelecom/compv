@@ -14,6 +14,8 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)android\compv_android_cpu-features.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)android\compv_android_native_activity.cxx" />
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_base.cxx" />
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_bind.cxx" />
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_buffer.cxx" />
@@ -107,6 +109,9 @@
     </YASM>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\android\compv_android_cpu-features.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\android\compv_android_fileutils.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\android\compv_android_native_activity.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_base.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_bind.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_buffer.h" />

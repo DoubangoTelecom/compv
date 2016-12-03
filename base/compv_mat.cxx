@@ -13,7 +13,7 @@ COMPV_NAMESPACE_BEGIN()
 CompVMat::CompVMat()
     : m_pDataPtr(NULL)
     , m_nCompCount(0)
-    , m_bCompInterleaved(false)
+    , m_bCompPacked(false)
     , m_nCols(0)
     , m_nRows(0)
     , m_nStrideInBytes(0)
@@ -24,9 +24,9 @@ CompVMat::CompVMat()
     , m_nDataCapacity(0)
     , m_bOweMem(true)
     , m_eType(COMPV_MAT_TYPE_RAW)
-    , m_eSubType(COMPV_MAT_SUBTYPE_RAW)
+    , m_eSubType(COMPV_SUBTYPE_RAW)
 {
-    for (size_t compId = 0; compId < COMPV_MAT_MAX_COMP_COUNT; ++compId) {
+    for (size_t compId = 0; compId < COMPV_MAX_COMP_COUNT; ++compId) {
         m_nCompCols[compId] = 0;
         m_nCompRows[compId] = 0;
         m_pCompPtr[compId] = NULL;
