@@ -17,11 +17,11 @@ class COMPV_BASE_API CompVImageUtils
 public:
     static COMPV_ERROR_CODE getBestStride(size_t stride, size_t *bestStride);
     static COMPV_ERROR_CODE getSizeForPixelFormat(COMPV_SUBTYPE ePixelFormat, size_t width, size_t height, size_t *size);
-    static COMPV_ERROR_CODE getCompSizeForPixelFormat(COMPV_SUBTYPE ePixelFormat, size_t width, size_t height, size_t compId, size_t *size);
-    static COMPV_ERROR_CODE getCompSizeForPixelFormat(COMPV_SUBTYPE ePixelFormat, size_t compId, size_t imgWidth, size_t imgHeight, size_t *compWidth, size_t *compHeight);
+    static COMPV_ERROR_CODE getPlaneSizeForPixelFormat(COMPV_SUBTYPE ePixelFormat, size_t width, size_t height, size_t planeId, size_t *size);
+    static COMPV_ERROR_CODE getPlaneSizeForPixelFormat(COMPV_SUBTYPE ePixelFormat, size_t planeId, size_t imgWidth, size_t imgHeight, size_t *compWidth, size_t *compHeight);
     static COMPV_ERROR_CODE getBitsCountForPixelFormat(COMPV_SUBTYPE ePixelFormat, size_t* bitsCount);
-    static COMPV_ERROR_CODE getCompCount(COMPV_SUBTYPE ePixelFormat, size_t *compCount);
-    static COMPV_ERROR_CODE getCompPacked(COMPV_SUBTYPE ePixelFormat, bool *packed);
+    static COMPV_ERROR_CODE getPlaneCount(COMPV_SUBTYPE ePixelFormat, size_t *planeCount);
+    static COMPV_ERROR_CODE getPlanePacked(COMPV_SUBTYPE ePixelFormat, bool *packed);
 
 private:
 };

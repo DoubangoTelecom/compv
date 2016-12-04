@@ -28,7 +28,13 @@ public:
     virtual ~CompVGLRendererPlanar();
     COMPV_OBJECT_GET_ID(CompVGLRendererPlanar);
 
+	virtual bool isGLEnabled()const override /*Overrides(CompVGLRenderer)*/ {
+		return true;
+	};
+	virtual CompVCanvasPtr canvas() override /*Overrides(CompVGLRenderer)*/;
     virtual COMPV_ERROR_CODE drawImage(const CompVMatPtr mat) override /*Overrides(CompVGLRenderer)*/;
+
+	COMPV_ERROR_CODE close();
 
     static COMPV_ERROR_CODE newObj(CompVGLRendererPlanarPtrPtr glRenderer, COMPV_SUBTYPE ePixelFormat);
 
@@ -39,15 +45,20 @@ protected:
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     bool m_bInit;
-	GLenum m_eFormats[COMPV_MAX_COMP_COUNT];
-	const char* m_pSamplerNames[COMPV_MAX_COMP_COUNT];
-    GLuint m_uNameTextures[COMPV_MAX_COMP_COUNT];
-    size_t m_uWidths[COMPV_MAX_COMP_COUNT];
-    size_t m_uHeights[COMPV_MAX_COMP_COUNT];
-    size_t m_uStrides[COMPV_MAX_COMP_COUNT];
+	GLenum m_eFormats[COMPV_MAX_PLANE_COUNT];
+	const char* m_pSamplerNames[COMPV_MAX_PLANE_COUNT];
+    GLuint m_uNameTextures[COMPV_MAX_PLANE_COUNT];
+    size_t m_uWidths[COMPV_MAX_PLANE_COUNT];
+    size_t m_uHeights[COMPV_MAX_PLANE_COUNT];
+    size_t m_uStrides[COMPV_MAX_PLANE_COUNT];
+	GLsizei m_uWidthsTexture[COMPV_MAX_PLANE_COUNT];
+	GLsizei m_uHeightsTexture[COMPV_MAX_PLANE_COUNT];
+	GLsizei m_uStridesTexture[COMPV_MAX_PLANE_COUNT];
     size_t m_uTexturesCount;
     std::string m_strPrgVertexData;
     std::string m_strPrgFragData;
+	CompVGLCanvasPtr m_ptrCanvas;
+	CompVGLBlitterPtr m_ptrBlitter;
     COMPV_VS_DISABLE_WARNINGS_END()
 };
 

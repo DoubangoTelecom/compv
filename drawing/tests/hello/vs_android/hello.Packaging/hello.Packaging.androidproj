@@ -119,6 +119,9 @@
     </AntPackage>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Content Include="..\..\..\..\..\..\data\colorspace\girl_704x472x472_yuyv422.yuv">
+      <Link>assets\girl_704x472x472_yuyv422.yuv</Link>
+    </Content>
     <Content Include="..\..\..\..\..\deprecated\tests\girl.jpg">
       <Link>assets\girl.jpg</Link>
     </Content>

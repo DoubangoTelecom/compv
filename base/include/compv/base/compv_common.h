@@ -62,9 +62,9 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_NUM_THREADS_SINGLE	1
 #define COMPV_NUM_THREADS_BEST		-1
 
-#if !defined(COMPV_MAX_COMP_COUNT)
-#	define COMPV_MAX_COMP_COUNT		4
-#endif /* COMPV_MAX_COMP_COUNT */
+#if !defined(COMPV_MAX_PLANE_COUNT)
+#	define COMPV_MAX_PLANE_COUNT		4
+#endif /* COMPV_MAX_PLANE_COUNT */
 
 // Fixed point Q value
 #if COMPV_ARCH_ARM
@@ -242,8 +242,8 @@ enum COMPV_SUBTYPE {
     COMPV_SUBTYPE_PIXELS_ABGR32,		// ABGR32
     COMPV_SUBTYPE_PIXELS_ARGB32,		// ARGB32
     COMPV_SUBTYPE_PIXELS_Y,				// Y-only
-	COMPV_SUBTYPE_PIXELS_NV12,			// Microsoft: NV12, iOS camera, Android camera, Semi-Planar
-	COMPV_SUBTYPE_PIXELS_NV21,			// Microsoft: NV21, Android camera, Semi-Planar
+	COMPV_SUBTYPE_PIXELS_NV12,			// Microsoft: NV12, iOS camera, Android camera, Semi-Planar, Info: https://www.fourcc.org/pixel-format/yuv-nv12/
+	COMPV_SUBTYPE_PIXELS_NV21,			// Microsoft: NV21, Android camera, Semi-Planar, Info: https://www.fourcc.org/pixel-format/yuv-nv21/
     COMPV_SUBTYPE_PIXELS_YUV420P,		// Microsoft: I420, Planar
 	COMPV_SUBTYPE_PIXELS_YUV422P,		// Microsoft: YUV422, Planar
 	COMPV_SUBTYPE_PIXELS_YUYV422,		// Microsoft: YUY2, V4L2/DirectShow preferred format, Packed, Info: https://www.fourcc.org/pixel-format/yuv-yuy2/
@@ -253,6 +253,7 @@ enum COMPV_SUBTYPE {
 
 	// Aliases
     COMPV_SUBTYPE_PIXELS_I420 = COMPV_SUBTYPE_PIXELS_YUV420P,
+	COMPV_SUBTYPE_PIXELS_IYUV = COMPV_SUBTYPE_PIXELS_YUV420P,
 	COMPV_SUBTYPE_PIXELS_YUV422 = COMPV_SUBTYPE_PIXELS_YUV422P,
 	COMPV_SUBTYPE_PIXELS_YUV444 = COMPV_SUBTYPE_PIXELS_YUV444P,
 	COMPV_SUBTYPE_PIXELS_YUY2 = COMPV_SUBTYPE_PIXELS_YUYV422,

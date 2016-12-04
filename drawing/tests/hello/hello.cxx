@@ -53,7 +53,7 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 
 	// FIXME: merge planar and packed renderers
 
-	// FIXME: NV12.compCount == 2 -> not correct, 2 is the number of planars
+	// FIXME: NV12.planeCount == 2 -> not correct, 2 is the number of planars
 
 	// DirectShow
 	COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_YUYV422>(&image, 472, 704)));

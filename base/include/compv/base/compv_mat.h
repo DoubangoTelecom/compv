@@ -39,15 +39,15 @@ public:
     }
 
 	COMPV_INLINE bool isPacked()const {
-		return m_bCompPacked;
+		return m_bPlanePacked;
 	}
 
 	COMPV_INLINE bool isPlanar()const {
-		return !m_bCompPacked;
+		return !m_bPlanePacked;
 	}
 
-    COMPV_INLINE size_t compCount()const {
-        return static_cast<size_t>(m_nCompCount);
+    COMPV_INLINE size_t planeCount()const {
+        return static_cast<size_t>(m_nPlaneCount);
     }
 
 	COMPV_INLINE size_t dataSizeInBytes()const {
@@ -55,31 +55,31 @@ public:
 	}
 
     template<class ptrType = void>
-    COMPV_INLINE const ptrType* ptr(size_t row = 0, size_t col = 0, int32_t compId = 0)const {
-        if (compId >= 0 && compId < m_nCompCount) {
-            return (row > m_nCompRows[compId] || col > m_nCompCols[compId]) ? NULL : static_cast<const ptrType*>(static_cast<const uint8_t*>(m_pCompPtr[compId]) + (row * m_nCompStrideInBytes[compId]) + (col * m_nElmtInBytes));
+    COMPV_INLINE const ptrType* ptr(size_t row = 0, size_t col = 0, int32_t planeId = 0)const {
+        if (planeId >= 0 && planeId < m_nPlaneCount) {
+            return (row > m_nPlaneRows[planeId] || col > m_nPlaneCols[planeId]) ? NULL : static_cast<const ptrType*>(static_cast<const uint8_t*>(m_pCompPtr[planeId]) + (row * m_nPlaneStrideInBytes[planeId]) + (col * m_nElmtInBytes));
         }
         COMPV_DEBUG_ERROR("Invalid parameter");
         return NULL;
     }
 
-    COMPV_INLINE size_t rows(int32_t compId = -1)const { // In samples
-        if (compId < 0) {
+    COMPV_INLINE size_t rows(int32_t planeId = -1)const { // In samples
+        if (planeId < 0) {
             return m_nRows;
         }
-        else if (compId < m_nCompCount) {
-            return m_nCompRows[compId];
+        else if (planeId < m_nPlaneCount) {
+            return m_nPlaneRows[planeId];
         }
         COMPV_DEBUG_ERROR("Invalid parameter");
         return 0;
     }
 
-    COMPV_INLINE size_t cols(int32_t compId = -1)const { // In samples
-        if (compId < 0) {
+    COMPV_INLINE size_t cols(int32_t planeId = -1)const { // In samples
+        if (planeId < 0) {
             return m_nCols;
         }
-        else if (compId < m_nCompCount) {
-            return m_nCompCols[compId];
+        else if (planeId < m_nPlaneCount) {
+            return m_nPlaneCols[planeId];
         }
         COMPV_DEBUG_ERROR("Invalid parameter");
         return 0;
@@ -89,34 +89,34 @@ public:
         return m_nElmtInBytes;
     }
 
-    COMPV_INLINE size_t rowInBytes(int32_t compId = -1)const { // in bytes
-        if (compId < 0) {
+    COMPV_INLINE size_t rowInBytes(int32_t planeId = -1)const { // in bytes
+        if (planeId < 0) {
             return m_nCols * m_nElmtInBytes;
         }
-        else if (compId < m_nCompCount) {
-            return m_nCompCols[compId] * m_nElmtInBytes;
+        else if (planeId < m_nPlaneCount) {
+            return m_nPlaneCols[planeId] * m_nElmtInBytes;
         }
         COMPV_DEBUG_ERROR("Invalid parameter");
         return 0;
     }
 
-    COMPV_INLINE size_t strideInBytes(int32_t compId = -1)const { // in bytes
-        if (compId < 0) {
+    COMPV_INLINE size_t strideInBytes(int32_t planeId = -1)const { // in bytes
+        if (planeId < 0) {
             return m_nStrideInBytes;
         }
-        else if (compId < m_nCompCount) {
-            return m_nCompStrideInBytes[compId];
+        else if (planeId < m_nPlaneCount) {
+            return m_nPlaneStrideInBytes[planeId];
         }
         COMPV_DEBUG_ERROR("Invalid parameter");
         return 0;
     }
 
-    COMPV_INLINE size_t stride(int32_t compId = -1)const { // in samples
-        if (compId < 0) {
+    COMPV_INLINE size_t stride(int32_t planeId = -1)const { // in samples
+        if (planeId < 0) {
             return m_nStrideInElts;
         }
-        else if (compId < m_nCompCount) {
-            return m_nCompStrideInElts[compId];
+        else if (planeId < m_nPlaneCount) {
+            return m_nPlaneStrideInElts[planeId];
         }
         COMPV_DEBUG_ERROR("Invalid parameter");
         return 0;
@@ -153,41 +153,41 @@ protected:
 
         size_t nNewDataSize;
         size_t nElmtInBytes;
-        bool bCompPacked;
-        size_t nCompCount;
+        bool bPlanePacked;
+        size_t nPlaneCount;
         size_t nBestStrideInBytes;
-        size_t nCompStrideInBytes[COMPV_MAX_COMP_COUNT];
-        size_t nCompCols[COMPV_MAX_COMP_COUNT];
-        size_t nCompRows[COMPV_MAX_COMP_COUNT];
-        size_t nCompSizeInBytes[COMPV_MAX_COMP_COUNT];
+        size_t nPlaneStrideInBytes[COMPV_MAX_PLANE_COUNT];
+        size_t nPlaneCols[COMPV_MAX_PLANE_COUNT];
+        size_t nPlaneRows[COMPV_MAX_PLANE_COUNT];
+        size_t nPlaneSizeInBytes[COMPV_MAX_PLANE_COUNT];
         void* pMem = NULL;
 
         nElmtInBytes = sizeof(elmType);
         nBestStrideInBytes = stride ? (stride * nElmtInBytes) : static_cast<size_t>(CompVMem::alignForward((cols * nElmtInBytes), (int)alignv));
 
         if (dataType == COMPV_MAT_TYPE_RAW) {
-            nCompCount = 1;
-            bCompPacked = false;
+            nPlaneCount = 1;
+            bPlanePacked = false;
             nNewDataSize = nBestStrideInBytes * rows;
-            nCompCols[0] = cols;
-            nCompRows[0] = rows;
-            nCompStrideInBytes[0] = nBestStrideInBytes;
-            nCompSizeInBytes[0] = nNewDataSize;
+            nPlaneCols[0] = cols;
+            nPlaneRows[0] = rows;
+            nPlaneStrideInBytes[0] = nBestStrideInBytes;
+            nPlaneSizeInBytes[0] = nNewDataSize;
         }
         else if (dataType == COMPV_MAT_TYPE_PIXELS) {
-            COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompCount(dataSubType, &nCompCount)); // get number of comps
-            COMPV_CHECK_EXP_RETURN(!nCompCount || nCompCount > COMPV_MAX_COMP_COUNT, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT); // check the number of comps
-            COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompPacked(dataSubType, &bCompPacked)); // check whether the comps are packed
+            COMPV_CHECK_CODE_RETURN(CompVImageUtils::getPlaneCount(dataSubType, &nPlaneCount)); // get number of comps
+            COMPV_CHECK_EXP_RETURN(!nPlaneCount || nPlaneCount > COMPV_MAX_PLANE_COUNT, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT); // check the number of comps
+            COMPV_CHECK_CODE_RETURN(CompVImageUtils::getPlanePacked(dataSubType, &bPlanePacked)); // check whether the comps are packed
             COMPV_CHECK_CODE_RETURN(CompVImageUtils::getSizeForPixelFormat(dataSubType, nBestStrideInBytes, rows, &nNewDataSize)); // get overal size in bytes
-            size_t nSumCompSizeInBytes = 0;
-            for (size_t compId = 0; compId < nCompCount; ++compId) {
-                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompSizeForPixelFormat(dataSubType, compId, cols, rows, &nCompCols[compId], &nCompRows[compId])); // get 'cols' and 'rows' for the comp
-                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompSizeForPixelFormat(dataSubType, compId, nBestStrideInBytes, rows, &nCompStrideInBytes[compId], &nCompRows[compId])); // get 'stride' and 'rows' for the comp
-                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getCompSizeForPixelFormat(dataSubType, nBestStrideInBytes, rows, compId, &nCompSizeInBytes[compId])); // get comp size in bytes
-                nSumCompSizeInBytes += nCompSizeInBytes[compId];
+            size_t nSumPlaneSizeInBytes = 0;
+            for (size_t planeId = 0; planeId < nPlaneCount; ++planeId) {
+                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getPlaneSizeForPixelFormat(dataSubType, planeId, cols, rows, &nPlaneCols[planeId], &nPlaneRows[planeId])); // get 'cols' and 'rows' for the comp
+                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getPlaneSizeForPixelFormat(dataSubType, planeId, nBestStrideInBytes, rows, &nPlaneStrideInBytes[planeId], &nPlaneRows[planeId])); // get 'stride' and 'rows' for the comp
+                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getPlaneSizeForPixelFormat(dataSubType, nBestStrideInBytes, rows, planeId, &nPlaneSizeInBytes[planeId])); // get comp size in bytes
+                nSumPlaneSizeInBytes += nPlaneSizeInBytes[planeId];
             }
             // Make sure that sum(comp sizes) = data size
-            COMPV_CHECK_EXP_BAIL(nSumCompSizeInBytes != nNewDataSize, err_ = COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+            COMPV_CHECK_EXP_BAIL(nSumPlaneSizeInBytes != nNewDataSize, err_ = COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
         }
         else {
             COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
@@ -216,28 +216,23 @@ protected:
         m_nDataSize = nNewDataSize;
         m_nAlignV = alignv;
         m_nElmtInBytes = nElmtInBytes;
-        m_bCompPacked = bCompPacked;
-        m_nCompCount = static_cast<int32_t>(nCompCount);
+        m_bPlanePacked = bPlanePacked;
+        m_nPlaneCount = static_cast<int32_t>(nPlaneCount);
         m_pCompPtr[0] = m_pDataPtr;
-        m_nCompSizeInBytes[0] = nCompSizeInBytes[0];
-        m_nCompCols[0] = nCompCols[0];
-        m_nCompRows[0] = nCompRows[0];
-        m_nCompStrideInBytes[0] = nCompStrideInBytes[0];
-        m_nCompStrideInElts[0] = (nCompStrideInBytes[0] / nElmtInBytes);
-        m_bCompStrideInEltsIsIntegral[0] = !(nCompStrideInBytes[0] % nElmtInBytes);
-        for (size_t compId = 1; compId < nCompCount; ++compId) {
-            if (bCompPacked) {
-                m_pCompPtr[compId] = m_pCompPtr[0]; // use byte-0
-            }
-            else {
-                m_pCompPtr[compId] = static_cast<const uint8_t*>(m_pCompPtr[compId - 1]) + nCompSizeInBytes[compId - 1];
-            }
-            m_nCompSizeInBytes[compId] = nCompSizeInBytes[compId];
-            m_nCompCols[compId] = nCompCols[compId];
-            m_nCompRows[compId] = nCompRows[compId];
-            m_nCompStrideInBytes[compId] = nCompStrideInBytes[compId];
-            m_nCompStrideInElts[compId] = (nCompStrideInBytes[compId] / nElmtInBytes);
-            m_bCompStrideInEltsIsIntegral[compId] = !(nCompStrideInBytes[compId] % nElmtInBytes);
+        m_nPlaneSizeInBytes[0] = nPlaneSizeInBytes[0];
+        m_nPlaneCols[0] = nPlaneCols[0];
+        m_nPlaneRows[0] = nPlaneRows[0];
+        m_nPlaneStrideInBytes[0] = nPlaneStrideInBytes[0];
+        m_nPlaneStrideInElts[0] = (nPlaneStrideInBytes[0] / nElmtInBytes);
+        m_bPlaneStrideInEltsIsIntegral[0] = !(nPlaneStrideInBytes[0] % nElmtInBytes);
+        for (size_t planeId = 1; planeId < nPlaneCount; ++planeId) {
+            m_pCompPtr[planeId] = static_cast<const uint8_t*>(m_pCompPtr[planeId - 1]) + nPlaneSizeInBytes[planeId - 1];
+            m_nPlaneSizeInBytes[planeId] = nPlaneSizeInBytes[planeId];
+            m_nPlaneCols[planeId] = nPlaneCols[planeId];
+            m_nPlaneRows[planeId] = nPlaneRows[planeId];
+            m_nPlaneStrideInBytes[planeId] = nPlaneStrideInBytes[planeId];
+            m_nPlaneStrideInElts[planeId] = (nPlaneStrideInBytes[planeId] / nElmtInBytes);
+            m_bPlaneStrideInEltsIsIntegral[planeId] = !(nPlaneStrideInBytes[planeId] % nElmtInBytes);
         }
 
 bail:
@@ -249,19 +244,19 @@ bail:
 
 private:
     void* m_pDataPtr;
-    int32_t m_nCompCount;
-    bool m_bCompPacked;
+    int32_t m_nPlaneCount;
+    bool m_bPlanePacked;
     size_t m_nCols;
     size_t m_nRows;
     size_t m_nStrideInBytes;
     size_t m_nStrideInElts;
-    size_t m_nCompCols[COMPV_MAX_COMP_COUNT];
-    size_t m_nCompRows[COMPV_MAX_COMP_COUNT];
-    const void* m_pCompPtr[COMPV_MAX_COMP_COUNT];
-    size_t m_nCompSizeInBytes[COMPV_MAX_COMP_COUNT];
-    size_t m_nCompStrideInBytes[COMPV_MAX_COMP_COUNT];
-    size_t m_nCompStrideInElts[COMPV_MAX_COMP_COUNT];
-    bool m_bCompStrideInEltsIsIntegral[COMPV_MAX_COMP_COUNT];
+    size_t m_nPlaneCols[COMPV_MAX_PLANE_COUNT];
+    size_t m_nPlaneRows[COMPV_MAX_PLANE_COUNT];
+    const void* m_pCompPtr[COMPV_MAX_PLANE_COUNT];
+    size_t m_nPlaneSizeInBytes[COMPV_MAX_PLANE_COUNT];
+    size_t m_nPlaneStrideInBytes[COMPV_MAX_PLANE_COUNT];
+    size_t m_nPlaneStrideInElts[COMPV_MAX_PLANE_COUNT];
+    bool m_bPlaneStrideInEltsIsIntegral[COMPV_MAX_PLANE_COUNT];
     size_t m_nElmtInBytes;
     size_t m_nAlignV;
     size_t m_nDataSize;

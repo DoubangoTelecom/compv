@@ -12,8 +12,8 @@ COMPV_NAMESPACE_BEGIN()
 
 CompVMat::CompVMat()
     : m_pDataPtr(NULL)
-    , m_nCompCount(0)
-    , m_bCompPacked(false)
+    , m_nPlaneCount(0)
+    , m_bPlanePacked(false)
     , m_nCols(0)
     , m_nRows(0)
     , m_nStrideInBytes(0)
@@ -26,14 +26,14 @@ CompVMat::CompVMat()
     , m_eType(COMPV_MAT_TYPE_RAW)
     , m_eSubType(COMPV_SUBTYPE_RAW)
 {
-    for (size_t compId = 0; compId < COMPV_MAX_COMP_COUNT; ++compId) {
-        m_nCompCols[compId] = 0;
-        m_nCompRows[compId] = 0;
-        m_pCompPtr[compId] = NULL;
-        m_nCompSizeInBytes[compId] = 0;
-        m_nCompStrideInBytes[compId] = 0;
-        m_nCompStrideInElts[compId] = 0;
-        m_bCompStrideInEltsIsIntegral[compId] = true;
+    for (size_t planeId = 0; planeId < COMPV_MAX_PLANE_COUNT; ++planeId) {
+        m_nPlaneCols[planeId] = 0;
+        m_nPlaneRows[planeId] = 0;
+        m_pCompPtr[planeId] = NULL;
+        m_nPlaneSizeInBytes[planeId] = 0;
+        m_nPlaneStrideInBytes[planeId] = 0;
+        m_nPlaneStrideInElts[planeId] = 0;
+        m_bPlaneStrideInEltsIsIntegral[planeId] = true;
     }
 }
 CompVMat::~CompVMat()
