@@ -76,7 +76,7 @@ CompVGLRendererPacked::~CompVGLRendererPacked()
     COMPV_CHECK_CODE_NOP(deInit());
 }
 
-COMPV_ERROR_CODE CompVGLRendererPacked::drawImage(CompVMatPtr mat) COMPV_OVERRIDE_IMPL("CompVGLRenderer")
+COMPV_ERROR_CODE CompVGLRendererPacked::drawImage(const CompVMatPtr mat) /*Overrides(CompVGLRenderer)*/
 {
     COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
@@ -141,7 +141,7 @@ COMPV_ERROR_CODE CompVGLRendererPacked::deInit()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLRendererPacked::init(CompVMatPtr mat)
+COMPV_ERROR_CODE CompVGLRendererPacked::init(const CompVMatPtr mat)
 {
     if (m_bInit) {
         return COMPV_ERROR_CODE_S_OK;
@@ -196,6 +196,7 @@ COMPV_ERROR_CODE CompVGLRendererPacked::newObj(CompVGLRendererPackedPtrPtr glRen
 	case COMPV_SUBTYPE_PIXELS_BGRA32:
 	case COMPV_SUBTYPE_PIXELS_ABGR32:
 	case COMPV_SUBTYPE_PIXELS_ARGB32:
+	case COMPV_SUBTYPE_PIXELS_YUYV422:
 		glRenderer_->m_iFormat = GL_RGBA; // 32bits
 		break;
 	case COMPV_SUBTYPE_PIXELS_RGB24:

@@ -58,13 +58,13 @@ bail:
     return m_ptrCanvas;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVSurface", CompVGLSurface::setMVP)(CompVMVPPtr mvp)
+COMPV_ERROR_CODE CompVGLSurface::setMVP(CompVMVPPtr mvp) /*Overrides(CompVSurface)*/
 {
     COMPV_CHECK_CODE_RETURN(m_ptrBlitter->setMVP(mvp));
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_OVERRIDE_IMPL1("CompVSurface", CompVRendererPtr, CompVGLSurface::renderer)()
+CompVRendererPtr CompVGLSurface::renderer() /*Overrides(CompVSurface)*/
 {
     if (m_ptrRenderer) {
         return *m_ptrRenderer;
@@ -72,7 +72,7 @@ COMPV_OVERRIDE_IMPL1("CompVSurface", CompVRendererPtr, CompVGLSurface::renderer)
     return NULL;
 }
 
-COMPV_OVERRIDE_IMPL1("CompVSurface", CompVCanvasPtr, CompVGLSurface::canvas)()
+CompVCanvasPtr CompVGLSurface::canvas() /*Overrides(CompVSurface)*/
 {
     CompVGLCanvasPtr canvas_ = canvasGL();
     if (canvas_) {
@@ -81,7 +81,7 @@ COMPV_OVERRIDE_IMPL1("CompVSurface", CompVCanvasPtr, CompVGLSurface::canvas)()
     return NULL;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVSurface", CompVGLSurface::drawImage)(CompVMatPtr mat)
+COMPV_ERROR_CODE CompVGLSurface::drawImage(const CompVMatPtr mat) /*Overrides(CompVSurface)*/
 {
     COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);

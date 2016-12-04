@@ -37,13 +37,13 @@ public:
     }
     CompVGLCanvasPtr canvasGL();
 
-    COMPV_OVERRIDE_DECL1("CompVSurface", bool, isGLEnabled)()const override {
+	virtual bool isGLEnabled()const override /*Overrides(CompVSurface)*/ {
         return true;
     };
-    COMPV_OVERRIDE_DECL0("CompVSurface", setMVP)(CompVMVPPtr mvp) override;
-    COMPV_OVERRIDE_DECL1("CompVSurface", CompVRendererPtr, renderer)() override;
-    COMPV_OVERRIDE_DECL1("CompVSurface", CompVCanvasPtr, canvas)() override;
-    COMPV_OVERRIDE_DECL0("CompVSurface", drawImage)(CompVMatPtr mat) override;
+	virtual COMPV_ERROR_CODE setMVP(CompVMVPPtr mvp) override /*Overrides(CompVSurface)*/;
+	CompVRendererPtr renderer() override /*Overrides(CompVSurface)*/;
+	virtual CompVCanvasPtr canvas() override /*Overrides(CompVSurface)*/;
+	virtual COMPV_ERROR_CODE drawImage(const CompVMatPtr mat) override /*Overrides(CompVSurface)*/;
 
     COMPV_ERROR_CODE blit(const CompVGLFboPtr ptrFboSrc, const CompVGLFboPtr ptrFboDst);
     COMPV_ERROR_CODE blitRenderer(const CompVGLFboPtr ptrFboDst);

@@ -34,7 +34,7 @@ public:
     }
 
     virtual bool isGLEnabled()const = 0;
-    virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
+    virtual COMPV_ERROR_CODE drawImage(const CompVMatPtr mat) = 0;
     virtual CompVCanvasPtr canvas() = 0;
 
 private:

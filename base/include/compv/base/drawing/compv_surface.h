@@ -58,7 +58,7 @@ public:
     virtual COMPV_ERROR_CODE setViewport(CompVViewportPtr viewport);
     virtual CompVRendererPtr renderer() = 0;
     virtual CompVCanvasPtr canvas() = 0;
-    virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) = 0;
+    virtual COMPV_ERROR_CODE drawImage(const CompVMatPtr mat) = 0;
 
     static COMPV_ERROR_CODE newObj(CompVSurfacePtrPtr surface, const CompVWindow* window);
 

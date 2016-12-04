@@ -148,7 +148,7 @@ CompVGLRendererPlanar::~CompVGLRendererPlanar()
     }
 }
 
-COMPV_ERROR_CODE CompVGLRendererPlanar::drawImage(CompVMatPtr mat) COMPV_OVERRIDE_IMPL("CompVGLRenderer")
+COMPV_ERROR_CODE CompVGLRendererPlanar::drawImage(const CompVMatPtr mat) /*Overrides(CompVGLRenderer)*/
 {
     COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
@@ -208,7 +208,7 @@ bail:
 }
 
 // Private function: do not check imput parameters
-COMPV_ERROR_CODE CompVGLRendererPlanar::init(CompVMatPtr mat)
+COMPV_ERROR_CODE CompVGLRendererPlanar::init(const CompVMatPtr mat)
 {
 	if (m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;

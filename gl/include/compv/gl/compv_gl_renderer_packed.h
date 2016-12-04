@@ -28,13 +28,13 @@ public:
     virtual ~CompVGLRendererPacked();
     COMPV_OBJECT_GET_ID(CompVGLRendererPacked);
 
-    virtual COMPV_ERROR_CODE drawImage(CompVMatPtr mat) COMPV_OVERRIDE_DECL("CompVGLRenderer");
+    virtual COMPV_ERROR_CODE drawImage(const CompVMatPtr mat) override /*Overrides(CompVGLRenderer)*/;
 
     static COMPV_ERROR_CODE newObj(CompVGLRendererPackedPtrPtr glRgbRenderer, COMPV_SUBTYPE ePackedPixelFormat);
 
 protected:
     virtual COMPV_ERROR_CODE deInit();
-    virtual COMPV_ERROR_CODE init(CompVMatPtr mat);
+    virtual COMPV_ERROR_CODE init(const CompVMatPtr mat);
 
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
