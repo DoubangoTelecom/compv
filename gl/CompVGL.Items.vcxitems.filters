@@ -33,9 +33,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_program.cxx">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_renderer.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_surface.cxx">
       <Filter>source</Filter>
     </ClCompile>
@@ -57,7 +54,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_window.cxx">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_renderer_planar.cxx">
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_gl_renderer.cxx">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -98,9 +95,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_program.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_renderer.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_surface.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -122,7 +116,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_window.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_renderer_planar.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\gl\compv_gl_renderer.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

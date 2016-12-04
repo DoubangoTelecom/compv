@@ -10,7 +10,9 @@
 #include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-#include "compv/gl/compv_gl_renderer.h"
+#include "compv/base/drawing/compv_renderer.h"
+#include "compv/gl/compv_gl_canvas.h"
+#include "compv/gl/compv_gl_blitter.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -18,15 +20,19 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-COMPV_OBJECT_DECLARE_PTRS(GLRendererPlanar)
+COMPV_OBJECT_DECLARE_PTRS(GLRenderer)
 
-class CompVGLRendererPlanar : public CompVGLRenderer
+class CompVGLRenderer : public CompVRenderer
 {
 protected:
-    CompVGLRendererPlanar(COMPV_SUBTYPE ePixelFormat);
+    CompVGLRenderer(COMPV_SUBTYPE ePixelFormat);
 public:
-    virtual ~CompVGLRendererPlanar();
-    COMPV_OBJECT_GET_ID(CompVGLRendererPlanar);
+    virtual ~CompVGLRenderer();
+    COMPV_OBJECT_GET_ID(CompVGLRenderer);
+
+	COMPV_INLINE CompVGLBlitterPtr blitter() {
+		return m_ptrBlitter;
+	}
 
 	virtual bool isGLEnabled()const override /*Overrides(CompVGLRenderer)*/ {
 		return true;
@@ -36,11 +42,11 @@ public:
 
 	COMPV_ERROR_CODE close();
 
-    static COMPV_ERROR_CODE newObj(CompVGLRendererPlanarPtrPtr glRenderer, COMPV_SUBTYPE ePixelFormat);
+    static COMPV_ERROR_CODE newObj(CompVGLRendererPtrPtr glRenderer, COMPV_SUBTYPE ePixelFormat);
 
-protected:
-    virtual COMPV_ERROR_CODE deInit();
-    virtual COMPV_ERROR_CODE init(const CompVMatPtr mat);
+private:
+    COMPV_ERROR_CODE deInit();
+    COMPV_ERROR_CODE init(const CompVMatPtr mat);
 
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

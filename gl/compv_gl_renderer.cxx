@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/gl/compv_gl_renderer_planar.h"
+#include "compv/gl/compv_gl_renderer.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/gl/compv_gl.h"
 #include "compv/gl/compv_gl_utils.h"
@@ -186,8 +186,8 @@ static const std::string& kProgramFragmentDataARGB32 =
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVGLRendererPlanar::CompVGLRendererPlanar(COMPV_SUBTYPE ePixelFormat)
-    : CompVGLRenderer(ePixelFormat)
+CompVGLRenderer::CompVGLRenderer(COMPV_SUBTYPE ePixelFormat)
+    : CompVRenderer(ePixelFormat)
     , m_bInit(false)
     , m_uTexturesCount(0)
     , m_strPrgVertexData("")
@@ -202,14 +202,14 @@ CompVGLRendererPlanar::CompVGLRendererPlanar(COMPV_SUBTYPE ePixelFormat)
 	memset(&m_uStridesTexture, 0, sizeof(m_uStrides));
 }
 
-CompVGLRendererPlanar::~CompVGLRendererPlanar()
+CompVGLRenderer::~CompVGLRenderer()
 {
     if (m_bInit) {
         COMPV_CHECK_CODE_NOP(deInit());
     }
 }
 
-CompVCanvasPtr CompVGLRendererPlanar::canvas() /*Overrides(CompVGLRenderer)*/
+CompVCanvasPtr CompVGLRenderer::canvas() /*Overrides(CompVGLRenderer)*/
 {
 	if (!m_ptrCanvas) {
 		CompVCanvasImplPtr canvasImpl;
@@ -222,7 +222,7 @@ bail:
 	return *m_ptrCanvas;
 }
 
-COMPV_ERROR_CODE CompVGLRendererPlanar::drawImage(const CompVMatPtr mat) /*Overrides(CompVGLRenderer)*/
+COMPV_ERROR_CODE CompVGLRenderer::drawImage(const CompVMatPtr mat) /*Overrides(CompVGLRenderer)*/
 {
     COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
@@ -286,7 +286,7 @@ bail:
     return err;
 }
 
-COMPV_ERROR_CODE CompVGLRendererPlanar::close()
+COMPV_ERROR_CODE CompVGLRenderer::close()
 {
 	if (m_ptrBlitter) {
 		COMPV_CHECK_CODE_NOP(m_ptrBlitter->close());
@@ -299,7 +299,7 @@ COMPV_ERROR_CODE CompVGLRendererPlanar::close()
 }
 
 // Private function: do not check imput parameters
-COMPV_ERROR_CODE CompVGLRendererPlanar::init(const CompVMatPtr mat)
+COMPV_ERROR_CODE CompVGLRenderer::init(const CompVMatPtr mat)
 {
 	if (m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
@@ -369,7 +369,7 @@ bail:
     return err;
 }
 
-COMPV_ERROR_CODE CompVGLRendererPlanar::deInit()
+COMPV_ERROR_CODE CompVGLRenderer::deInit()
 {
 	if (!m_bInit) {
 		return COMPV_ERROR_CODE_S_OK;
@@ -391,7 +391,7 @@ COMPV_ERROR_CODE CompVGLRendererPlanar::deInit()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLRendererPlanar::newObj(CompVGLRendererPlanarPtrPtr glRenderer, COMPV_SUBTYPE ePixelFormat)
+COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV_SUBTYPE ePixelFormat)
 {
     COMPV_CHECK_CODE_RETURN(CompVGL::init());
     COMPV_CHECK_EXP_RETURN(!glRenderer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -409,7 +409,7 @@ COMPV_ERROR_CODE CompVGLRendererPlanar::newObj(CompVGLRendererPlanarPtrPtr glRen
 		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_ARGB32,
         COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-    CompVGLRendererPlanarPtr glRenderer_ = new CompVGLRendererPlanar(ePixelFormat);
+    CompVGLRendererPtr glRenderer_ = new CompVGLRenderer(ePixelFormat);
     COMPV_CHECK_EXP_RETURN(!glRenderer_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	COMPV_CHECK_CODE_RETURN(CompVGLBlitter::newObj(&glRenderer_->m_ptrBlitter));
 
