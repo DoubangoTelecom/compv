@@ -49,7 +49,7 @@ static const std::string& kProgramVertexData =
 "		texCoordVarying = texCoord;"
 "	}";
 
-static const std::string& kProgramFragmentDataYUV420 =
+static const std::string& kProgramFragmentDataYUVPlanar = /* Used for YUV420P, YVU420P YUV422P */
 #if defined(HAVE_OPENGLES)
 "	precision mediump float;"
 #endif
@@ -68,6 +68,10 @@ static const std::string& kProgramFragmentDataYUV420 =
 "		vec3 rgb = yuv * yuv2rgb;"
 "		gl_FragColor = vec4(rgb, 1.0);"
 "	}";
+
+static const std::string& kProgramFragmentDataYUV420P = kProgramFragmentDataYUVPlanar; /* YUV420 aka I420 aka IYUV */
+
+static const std::string& kProgramFragmentDataYVU420P = kProgramFragmentDataYUVPlanar; /* YVU420 aka YV12 */
 
 static const std::string& kProgramFragmentDataNV12 =
 #if defined(HAVE_OPENGLES)
@@ -141,6 +145,33 @@ static const std::string& kProgramFragmentDataYUYV422 = /* YUY2: https://www.fou
 "		vec3 rgb = yuv * yuv2rgb; "
 "		gl_FragColor = vec4(rgb, 1.0);"
 "	}";
+
+static const std::string& kProgramFragmentDataUYVY422 = /* UYVY: https://www.fourcc.org/pixel-format/yuv-uyvy/ */
+#if defined(HAVE_OPENGLES)
+"	precision mediump float;"
+#endif
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D SamplerRGBA;"
+"	uniform vec2 TextureSize;"
+"	const mat3 yuv2rgb = mat3(1.164, 0, 1.596,\n 1.164, -0.391, -0.813,\n 1.164, 2.018, 0);"
+"	void main() {"
+"		float texCoordX = texCoordVarying.x * TextureSize.x; /* real texture coord (in pixels) */"
+"		vec3 yuv;"
+"		vec4 u0y0v0y1 = texture2D(SamplerRGBA, texCoordVarying);"
+"		"
+"		if (fract(texCoordX) < 0.5) {"
+"			yuv = vec3(u0y0v0y1.g - 0.06274, u0y0v0y1.r - 0.5019, u0y0v0y1.b - 0.5019); /* y0u0v0 */"
+"		}"
+"		else {"
+"			yuv = vec3(u0y0v0y1.a - 0.06274,  u0y0v0y1.r - 0.5019, u0y0v0y1.b - 0.5019); /* y1u0v0 */ "
+"		}"
+"		vec3 rgb = yuv * yuv2rgb; "
+"		gl_FragColor = vec4(rgb, 1.0);"
+"	}";
+
+static const std::string& kProgramFragmentDataYUV422P = kProgramFragmentDataYUVPlanar;
+
+static const std::string& kProgramFragmentDataYUV444P = kProgramFragmentDataYUVPlanar;
 
 static const std::string& kProgramFragmentDataRGB24 =
 "	varying vec2 texCoordVarying;"
@@ -305,7 +336,6 @@ COMPV_ERROR_CODE CompVGLRenderer::init(const CompVMatPtr mat)
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	GLuint uNameLocation;
-	const char* idSampler = NULL;
 	const COMPV_SUBTYPE pixelFormat = mat->subType();
 	GLint textureFilter;
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -318,20 +348,21 @@ COMPV_ERROR_CODE CompVGLRenderer::init(const CompVMatPtr mat)
 	COMPV_CHECK_CODE_BAIL(err = m_ptrBlitter->bind());
 	m_bInit = true;
     m_uTexturesCount = mat->planeCount();
-	textureFilter = (pixelFormat == COMPV_SUBTYPE_PIXELS_YUYV422) ? GL_NEAREST : GL_LINEAR;
     for (size_t planeId = 0; planeId < mat->planeCount(); ++planeId) {
         const int32_t planeIdInt32 = static_cast<int32_t>(planeId);
         m_uHeights[planeId] = mat->rows(planeIdInt32);
         m_uWidths[planeId] = mat->cols(planeIdInt32);
         m_uStrides[planeId] = mat->stride(planeIdInt32);
 		switch (pixelFormat) {
-		case COMPV_SUBTYPE_PIXELS_YUYV422:
-			// YUY2: https://www.fourcc.org/pixel-format/yuv-yuy2/
-			// Each [YUYV] uint32 value is packed as a single RGBA sample which means 2Y for each. The width will be /2.
+		case COMPV_SUBTYPE_PIXELS_YUYV422: // YUY2: https://www.fourcc.org/pixel-format/yuv-yuy2/
+		case COMPV_SUBTYPE_PIXELS_UYVY422: // UYVY: https://www.fourcc.org/pixel-format/yuv-uyvy/
+			// Each [YUYV] or [UYVY] uint32 value is packed as a single RGBA sample which means 2Y for each. The width will be /2.
 			m_uWidthsTexture[planeId] = static_cast<GLsizei>((m_uWidths[planeId] + 1) >> 1), m_uHeightsTexture[planeId] = static_cast<GLsizei>(m_uHeights[planeId]), m_uStridesTexture[planeId] = static_cast<GLsizei>((m_uStrides[planeId] + 1) >> 1);
+			textureFilter = GL_NEAREST;
 			break;
 		default:
 			m_uWidthsTexture[planeId] = static_cast<GLsizei>(m_uWidths[planeId]), m_uHeightsTexture[planeId] = static_cast<GLsizei>(m_uHeights[planeId]), m_uStridesTexture[planeId] = static_cast<GLsizei>(m_uStrides[planeId]);
+			textureFilter = GL_LINEAR;
 			break;
 		}
 		COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::textureGen(&m_uNameTextures[planeId]));
@@ -346,7 +377,8 @@ COMPV_ERROR_CODE CompVGLRenderer::init(const CompVMatPtr mat)
 		COMPV_glUniform1i(uNameLocation, static_cast<GLint>(1 + planeId));
 		// Set TextureSize = (stride, height)
 		switch (pixelFormat) {
-		case COMPV_SUBTYPE_PIXELS_YUYV422: {
+		case COMPV_SUBTYPE_PIXELS_YUYV422:
+		case COMPV_SUBTYPE_PIXELS_UYVY422: {
 			const GLfloat TextureSize[2] = { static_cast<GLfloat>(m_uStridesTexture[planeId]), static_cast<GLfloat>(m_uHeightsTexture[planeId]) };
 			COMPV_glGetUniformLocation(&uNameLocation, CompVGLRenderer::m_ptrBlitter->program()->name(), "TextureSize");
 			COMPV_glUniform2fv(uNameLocation, 1, TextureSize);
@@ -398,9 +430,13 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
     COMPV_CHECK_EXP_RETURN(
         ePixelFormat != COMPV_SUBTYPE_PIXELS_Y
         && ePixelFormat != COMPV_SUBTYPE_PIXELS_YUV420P
+		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_YVU420P
 		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_NV12
 		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_NV21
 		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_YUYV422
+		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_UYVY422
+		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_YUV422P
+		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_YUV444P
 		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_RGB24
 		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_BGR24
 		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_RGBA32
@@ -417,7 +453,10 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 	glRenderer_->m_strPrgVertexData = kProgramVertexData;
 	switch (ePixelFormat) {
 	case COMPV_SUBTYPE_PIXELS_YUV420P:
-		glRenderer_->m_strPrgFragData = kProgramFragmentDataYUV420;
+		glRenderer_->m_strPrgFragData = kProgramFragmentDataYUV420P;
+		break;
+	case COMPV_SUBTYPE_PIXELS_YVU420P:
+		glRenderer_->m_strPrgFragData = kProgramFragmentDataYVU420P;
 		break;
 	case COMPV_SUBTYPE_PIXELS_Y:
 		glRenderer_->m_strPrgFragData = kProgramFragmentDataY;
@@ -430,6 +469,15 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 		break;
 	case COMPV_SUBTYPE_PIXELS_YUYV422:
 		glRenderer_->m_strPrgFragData = kProgramFragmentDataYUYV422;
+		break;
+	case COMPV_SUBTYPE_PIXELS_UYVY422:
+		glRenderer_->m_strPrgFragData = kProgramFragmentDataUYVY422;
+		break;
+	case COMPV_SUBTYPE_PIXELS_YUV422P:
+		glRenderer_->m_strPrgFragData = kProgramFragmentDataYUV422P;
+		break;
+	case COMPV_SUBTYPE_PIXELS_YUV444P:
+		glRenderer_->m_strPrgFragData = kProgramFragmentDataYUV444P;
 		break;
 	case COMPV_SUBTYPE_PIXELS_RGB24:
 		glRenderer_->m_strPrgFragData = kProgramFragmentDataRGB24;
@@ -457,10 +505,17 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 	// Samplers and and formats
 	switch (ePixelFormat) {
 	case COMPV_SUBTYPE_PIXELS_YUV420P:
+	case COMPV_SUBTYPE_PIXELS_YUV422P:
+	case COMPV_SUBTYPE_PIXELS_YUV444P:
 	case COMPV_SUBTYPE_PIXELS_Y:
 		glRenderer_->m_pSamplerNames[0] = "SamplerY", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_Y;
 		glRenderer_->m_pSamplerNames[1] = "SamplerU", glRenderer_->m_eFormats[1] = COMPV_GL_FORMAT_U;
 		glRenderer_->m_pSamplerNames[2] = "SamplerV", glRenderer_->m_eFormats[2] = COMPV_GL_FORMAT_V;
+		break;
+	case COMPV_SUBTYPE_PIXELS_YVU420P: // YUV420  but V plane first
+		glRenderer_->m_pSamplerNames[0] = "SamplerY", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_Y;
+		glRenderer_->m_pSamplerNames[1] = "SamplerV", glRenderer_->m_eFormats[1] = COMPV_GL_FORMAT_V;
+		glRenderer_->m_pSamplerNames[2] = "SamplerU", glRenderer_->m_eFormats[2] = COMPV_GL_FORMAT_U;
 		break;
 	case COMPV_SUBTYPE_PIXELS_NV12:
 	case COMPV_SUBTYPE_PIXELS_NV21:
@@ -472,6 +527,7 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 		glRenderer_->m_pSamplerNames[0] = "SamplerRGB", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_RGB;
 		break;
 	case COMPV_SUBTYPE_PIXELS_YUYV422:
+	case COMPV_SUBTYPE_PIXELS_UYVY422:
 	case COMPV_SUBTYPE_PIXELS_RGBA32:
 	case COMPV_SUBTYPE_PIXELS_BGRA32:
 	case COMPV_SUBTYPE_PIXELS_ABGR32:

@@ -50,13 +50,17 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 	static uint64_t timeStart;
 	
 	// FIXME: not aligned and no stride
+	
+	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_YUV444P>(&image, 472, 704)));
+	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_yuv444p.yuv", &buffer));
+	
+	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_YUV422P>(&image, 472, 704)));
+	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_yuv422p.yuv", &buffer));
 
-	// FIXME: merge planar and packed renderers
-
-	// FIXME: NV12.planeCount == 2 -> not correct, 2 is the number of planars
-
-	// DirectShow
-	COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_YUYV422>(&image, 472, 704)));
+	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_UYVY422>(&image, 472, 704)));
+	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_uyvy422.yuv", &buffer));
+	
+	COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_YUYV422>(&image, 472, 704))); // DirectShow
 	COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_yuyv422.yuv", &buffer));
 
 	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_NV12>(&image, 472, 704)));

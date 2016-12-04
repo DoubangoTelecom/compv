@@ -59,6 +59,7 @@ COMPV_ERROR_CODE CompVImageUtils::getPlaneSizeForPixelFormat(COMPV_SUBTYPE ePixe
 		*size = width * height;
 		return COMPV_ERROR_CODE_S_OK;
     case COMPV_SUBTYPE_PIXELS_YUV420P: // 'Y', 'U', 'V' planes: uint8, uint8, uint8
+	case COMPV_SUBTYPE_PIXELS_YVU420P: // 'Y', 'V', 'U' planes: uint8, uint8, uint8
         COMPV_CHECK_EXP_RETURN(planeId >= 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         if (planeId == 0) *size = (width * height);
         else  *size = ((width * height) >> 2); // subsampled : 2x2
@@ -70,8 +71,19 @@ COMPV_ERROR_CODE CompVImageUtils::getPlaneSizeForPixelFormat(COMPV_SUBTYPE ePixe
 		else  *size = ((width * height) >> 1); // subsampled : 2x2 but UV is packed
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_YUYV422: // Single packed plane: [Y0U0Y1V0], uint32
+	case COMPV_SUBTYPE_PIXELS_UYVY422: // Single packed plane: [U0Y0V0Y1], uint32
 		COMPV_CHECK_EXP_RETURN(planeId >= 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		*size = ((width * height) << 1); // subsampled : 2x1, 16 pixels
+		*size = ((width * height) << 1); // subsampled : 2x1, 16 pixels, YUV is packed
+		return COMPV_ERROR_CODE_S_OK;
+	case COMPV_SUBTYPE_PIXELS_YUV422P: // 'Y', 'U', 'V' planes: uint8, uint8, uint8
+		COMPV_CHECK_EXP_RETURN(planeId >= 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		if (planeId == 0) *size = (width * height);
+		else  *size = ((width * height) >> 1); // subsampled : 2x1
+		return COMPV_ERROR_CODE_S_OK;
+	case COMPV_SUBTYPE_PIXELS_YUV444P: // 'Y', 'U', 'V' planes: uint8, uint8, uint8
+		COMPV_CHECK_EXP_RETURN(planeId >= 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		if (planeId == 0) *size = (width * height);
+		else  *size = (width * height); // subsampled : 1x1
 		return COMPV_ERROR_CODE_S_OK;
     default:
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
@@ -94,9 +106,10 @@ COMPV_ERROR_CODE CompVImageUtils::getPlaneSizeForPixelFormat(COMPV_SUBTYPE ePixe
         *compHeight = imgHeight;
         return COMPV_ERROR_CODE_S_OK;
     case COMPV_SUBTYPE_PIXELS_YUV420P: // 'Y', 'U', 'V' planes: uint8, uint8, uint8
+	case COMPV_SUBTYPE_PIXELS_YVU420P: // 'Y', 'V', 'U' planes: uint8, uint8, uint8
         COMPV_CHECK_EXP_RETURN(planeId >= 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         if (planeId == 0)  *compWidth = imgWidth, *compHeight = imgHeight;
-        else  *compWidth = imgWidth >> 1, *compHeight = imgHeight >> 1; // Width and Height and subsampled : 2x2
+        else  *compWidth = imgWidth >> 1, *compHeight = imgHeight >> 1; // subsampled : 2x2
         return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_NV12: // 'Y', 'UV' planes, uint8, uint16
 	case COMPV_SUBTYPE_PIXELS_NV21: // 'Y', 'VU' planes, uint8, uint16
@@ -105,8 +118,19 @@ COMPV_ERROR_CODE CompVImageUtils::getPlaneSizeForPixelFormat(COMPV_SUBTYPE ePixe
 		else  *compWidth = imgWidth >> 1, *compHeight = imgHeight >> 1; // Width and Height and subsampled : 2x2, UV packed
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_YUYV422: // Single packed plane: [Y0U0Y1V0], uint32
+	case COMPV_SUBTYPE_PIXELS_UYVY422: // Single packed plane: [U0Y0V0Y1], uint32
 		COMPV_CHECK_EXP_RETURN(planeId >= 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		if (planeId == 0) *compWidth = imgWidth, *compHeight = imgHeight;
+		if (planeId == 0) *compWidth = imgWidth, *compHeight = imgHeight; // subsampled 2x1, YUV packed
+		return COMPV_ERROR_CODE_S_OK;
+	case COMPV_SUBTYPE_PIXELS_YUV422P: // 'Y', 'U', 'V' planes: uint8, uint8, uint8
+		COMPV_CHECK_EXP_RETURN(planeId >= 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		if (planeId == 0)  *compWidth = imgWidth, *compHeight = imgHeight;
+		else  *compWidth = imgWidth >> 1, *compHeight = imgHeight; // subsampled 2x1, YUV planes
+		return COMPV_ERROR_CODE_S_OK;
+	case COMPV_SUBTYPE_PIXELS_YUV444P: // 'Y', 'U', 'V' planes: uint8, uint8, uint8
+		COMPV_CHECK_EXP_RETURN(planeId >= 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		if (planeId == 0)  *compWidth = imgWidth, *compHeight = imgHeight;
+		else  *compWidth = imgWidth, *compHeight = imgHeight; // subsampled : 1x1
 		return COMPV_ERROR_CODE_S_OK;
     default:
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
@@ -120,6 +144,7 @@ COMPV_ERROR_CODE CompVImageUtils::getBitsCountForPixelFormat(COMPV_SUBTYPE ePixe
     switch (ePixelFormat) {
     case COMPV_SUBTYPE_PIXELS_RGB24:
     case COMPV_SUBTYPE_PIXELS_BGR24:
+	case COMPV_SUBTYPE_PIXELS_YUV444P:
         *bitsCount = 3 << 3;
         return COMPV_ERROR_CODE_S_OK;
 
@@ -129,12 +154,15 @@ COMPV_ERROR_CODE CompVImageUtils::getBitsCountForPixelFormat(COMPV_SUBTYPE ePixe
     case COMPV_SUBTYPE_PIXELS_ARGB32:
         *bitsCount = 4 << 3;
         return COMPV_ERROR_CODE_S_OK;
-    case COMPV_SUBTYPE_PIXELS_YUV420P:
+    case COMPV_SUBTYPE_PIXELS_YUV420P: /* https://www.fourcc.org/pixel-format/yuv-i420/ */
+	case COMPV_SUBTYPE_PIXELS_YVU420P: /* https://www.fourcc.org/pixel-format/yuv-yv12/ */
 	case COMPV_SUBTYPE_PIXELS_NV12: /* https://www.fourcc.org/pixel-format/yuv-nv12/ */
 	case COMPV_SUBTYPE_PIXELS_NV21: /* https://www.fourcc.org/pixel-format/yuv-nv21/ */
         *bitsCount = 12; 
         return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_YUYV422: /* https://www.fourcc.org/pixel-format/yuv-yuy2/ */
+	case COMPV_SUBTYPE_PIXELS_UYVY422: /* https://www.fourcc.org/pixel-format/yuv-uyvy/ */
+	case COMPV_SUBTYPE_PIXELS_YUV422P:
 		*bitsCount = 16;
 		return COMPV_ERROR_CODE_S_OK;
     case COMPV_SUBTYPE_PIXELS_Y:
@@ -157,9 +185,13 @@ COMPV_ERROR_CODE CompVImageUtils::getPlaneCount(COMPV_SUBTYPE ePixelFormat, size
     case COMPV_SUBTYPE_PIXELS_ABGR32:
     case COMPV_SUBTYPE_PIXELS_ARGB32:
 	case COMPV_SUBTYPE_PIXELS_YUYV422:
+	case COMPV_SUBTYPE_PIXELS_UYVY422:
         *planeCount = 1; // Packed
         return COMPV_ERROR_CODE_S_OK;
     case COMPV_SUBTYPE_PIXELS_YUV420P:
+	case COMPV_SUBTYPE_PIXELS_YVU420P:
+	case COMPV_SUBTYPE_PIXELS_YUV422P:
+	case COMPV_SUBTYPE_PIXELS_YUV444P:
         *planeCount = 3; // Planar
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_NV12:
@@ -186,9 +218,13 @@ COMPV_ERROR_CODE CompVImageUtils::getPlanePacked(COMPV_SUBTYPE ePixelFormat, boo
     case COMPV_SUBTYPE_PIXELS_ABGR32:
     case COMPV_SUBTYPE_PIXELS_ARGB32:
 	case COMPV_SUBTYPE_PIXELS_YUYV422:
+	case COMPV_SUBTYPE_PIXELS_UYVY422:
         *packed = true;
         return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_YUV420P:
+	case COMPV_SUBTYPE_PIXELS_YVU420P:
+	case COMPV_SUBTYPE_PIXELS_YUV422P:
+	case COMPV_SUBTYPE_PIXELS_YUV444P:
 	case COMPV_SUBTYPE_PIXELS_Y:
 	case COMPV_SUBTYPE_PIXELS_NV12: // Semi-Planar
 	case COMPV_SUBTYPE_PIXELS_NV21: // Semi-Planar
