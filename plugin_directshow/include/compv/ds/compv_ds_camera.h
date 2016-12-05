@@ -11,6 +11,7 @@
 #include "compv/ds/compv_ds_grabber.h"
 #include "compv/camera/compv_camera.h"
 #include "compv/base/compv_obj.h"
+#include "compv/base/compv_lock.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -20,7 +21,7 @@ COMPV_NAMESPACE_BEGIN()
 
 COMPV_OBJECT_DECLARE_PTRS(DSCamera)
 
-class CompVDSCamera : public CompVCamera
+class CompVDSCamera : public CompVCamera, public CompVLock
 {
 protected:
     CompVDSCamera();
@@ -33,6 +34,9 @@ public:
     virtual COMPV_ERROR_CODE stop() override /* Overrides(CompVCamera) */;
 
     static COMPV_ERROR_CODE newObj(CompVDSCameraPtrPtr camera);
+
+private:
+	static HRESULT STDMETHODCALLTYPE DSBufferCB(const CompVMatPtr image, const void *pcUserData);
 
 private:
     CompVDSGrabber* m_pGrabber;

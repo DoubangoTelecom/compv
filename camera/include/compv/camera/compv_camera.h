@@ -11,11 +11,15 @@
 #include "compv/camera/compv_camera_common.h"
 #include "compv/base/compv_sharedlib.h"
 #include "compv/base/compv_obj.h"
+#include "compv/base/compv_mat.h"
 
 #include <vector>
 
 COMPV_NAMESPACE_BEGIN()
 
+//
+//	CompVCameraDeviceInfo
+//
 struct CompVCameraDeviceInfo {
     std::string id;
     std::string name;
@@ -28,6 +32,26 @@ struct CompVCameraDeviceInfo {
 };
 typedef std::vector<CompVCameraDeviceInfo > CompVCameraDeviceInfoList;
 
+
+//
+//	CompVCameraListener
+//
+COMPV_OBJECT_DECLARE_PTRS(CameraListener)
+
+class COMPV_CAMERA_API CompVCameraListener : public CompVObj
+{
+protected:
+	CompVCameraListener() { }
+public:
+	virtual ~CompVCameraListener() {  }
+	COMPV_OBJECT_GET_ID(CompVCameraListener);
+
+	virtual COMPV_ERROR_CODE onNewFrame(const CompVMatPtr& image) = 0;
+};
+
+//
+//	CompVCamera
+//
 COMPV_OBJECT_DECLARE_PTRS(Camera)
 
 typedef COMPV_ERROR_CODE(*CompVCameraNewFunc)(CompVCameraPtrPtr camera);
@@ -49,6 +73,8 @@ public:
     virtual COMPV_ERROR_CODE start(const std::string& deviceId = "") = 0;
     virtual COMPV_ERROR_CODE stop() = 0;
 
+	virtual COMPV_ERROR_CODE setListener(CompVCameraListenerPtr listener);
+
     static COMPV_ERROR_CODE newObj(CompVCameraPtrPtr camera);
 
     struct CameraFactory {
@@ -63,9 +89,17 @@ public:
         }
     };
 
+protected:
+	COMPV_INLINE CompVCameraListenerPtr listener()const {
+		return m_ptrListener;
+	}
+
 private:
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     static bool s_bInitialized;
     static CameraFactory s_CameraFactory;
+	CompVCameraListenerPtr m_ptrListener;
+	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 COMPV_NAMESPACE_END()

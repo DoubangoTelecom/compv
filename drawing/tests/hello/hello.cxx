@@ -3,6 +3,7 @@
 using namespace compv;
 
 CompVWindowPtr window;
+CompVCameraPtr camera;
 
 static void* COMPV_STDCALL WorkerThread(void* arg);
 
@@ -27,6 +28,7 @@ bail:
         COMPV_DEBUG_ERROR("Something went wrong!!");
     }
 
+	camera = NULL;
     window = NULL;
 
     // DeInit the modules
@@ -39,9 +41,55 @@ bail:
     compv_main_return(0);
 }
 
+class MyCameraListener;
+typedef CompVPtr<MyCameraListener*> MyCameraListenerPtr;
+typedef MyCameraListenerPtr* MyCameraListenerPtrPtr;
+class MyCameraListener : public CompVCameraListener
+{
+protected:
+	MyCameraListener(CompVSingleSurfaceLayerPtr ptrSingleSurfaceLayer)
+		: m_ptrSingleSurfaceLayer(ptrSingleSurfaceLayer)
+	{ 
+	}
+public:
+	virtual ~MyCameraListener()
+	{  
+	}
+	virtual COMPV_ERROR_CODE onNewFrame(const CompVMatPtr& image) override
+	{
+		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+		//static char buff_[33];
+		//static int count;
+		if (CompVDrawing::isLoopRunning()) {
+			//snprintf(buff_, sizeof(buff_), "%d", ++count);
+			//std::string text = "Hello doubango telecom [" + std::string(buff_) + "]";
+			COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(image));
+			//COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->renderer()->canvas()->drawText(text.c_str(), text.length(), 463, 86));
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->blit());
+			COMPV_CHECK_CODE_BAIL(err = window->endDraw());
+		}
+	bail:
+		return err;
+	}
+
+	static COMPV_ERROR_CODE newObj(MyCameraListenerPtrPtr listener, CompVSingleSurfaceLayerPtr ptrSingleSurfaceLayer)
+	{
+		COMPV_CHECK_EXP_RETURN(!listener || !ptrSingleSurfaceLayer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		MyCameraListenerPtr listener_ = new MyCameraListener(ptrSingleSurfaceLayer);
+		COMPV_CHECK_EXP_RETURN(!listener_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+
+		*listener = listener_;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+private:
+	CompVSingleSurfaceLayerPtr m_ptrSingleSurfaceLayer;
+};
+
 static void* COMPV_STDCALL WorkerThread(void* arg)
 {
-#if 1 // Chroma conversion
+#if 0 // Chroma conversion
 	CompVMatPtr image;
 	CompVBufferPtr buffer;
 	COMPV_ERROR_CODE err;
@@ -115,21 +163,25 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 bail:
 	return NULL;
 
-#elif 0 // Camera
+#elif 1 // Camera
     COMPV_ERROR_CODE err;
-    CompVCameraPtr camera;
     CompVCameraDeviceInfoList devices;
-
+	CompVSingleSurfaceLayerPtr singleSurfaceLayer;
+	MyCameraListenerPtr listener;
+	
+	COMPV_CHECK_CODE_BAIL(err = window->addSingleLayerSurface(&singleSurfaceLayer));
+	COMPV_CHECK_CODE_BAIL(err = MyCameraListener::newObj(&listener, *singleSurfaceLayer));
     COMPV_CHECK_CODE_BAIL(err = CompVCamera::newObj(&camera));
+	COMPV_CHECK_CODE_BAIL(err = camera->setListener(*listener));
     COMPV_CHECK_CODE_BAIL(err = camera->devices(devices));
     for (CompVCameraDeviceInfoList::iterator it = devices.begin(); it != devices.end(); ++it) {
         COMPV_DEBUG_INFO("Camera device: %s -> %s, %s", it->id.c_str(), it->name.c_str(), it->description.c_str());
     }
     COMPV_CHECK_CODE_BAIL(err = camera->start(devices[0].id));
 
-    while (CompVDrawing::isLoopRunning()) {
-        CompVThread::sleep(1);
-    }
+    //while (CompVDrawing::isLoopRunning()) {
+        //CompVThread::sleep(1); // FIXME
+    //}
 
 bail:
     return NULL;

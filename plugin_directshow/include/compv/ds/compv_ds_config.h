@@ -8,6 +8,7 @@
 #define _COMPV_PLUGIN_DIRECTSHOW_CONFIG_H_
 
 #include "compv/camera/compv_camera_config.h"
+#include "compv/base/compv_mat.h"
 
 #include <vector>
 
@@ -101,6 +102,8 @@ static const CLSID CLSID_NullRenderer = { 0xC1F400A4, 0x3F08, 0x11d3,{ 0x9F, 0x0
 #endif /* defined(HAVE_QEDIT) */
 
 COMPV_NAMESPACE_BEGIN()
+
+typedef HRESULT (STDMETHODCALLTYPE *CompVDSBufferCBFunc)(const CompVMatPtr image, const void *pcUserData);
 
 struct CompVDSCameraDeviceInfo {
     std::string id;

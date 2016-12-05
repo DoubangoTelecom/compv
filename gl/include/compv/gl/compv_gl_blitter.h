@@ -61,8 +61,8 @@ public:
         return m_ptrFBO;
     }
 
-    COMPV_OVERRIDE_DECL0("CompVBind", bind)() override;
-    COMPV_OVERRIDE_DECL0("CompVBind", unbind)() override;
+	virtual COMPV_ERROR_CODE bind() override /*Overrides(CompVBind)*/;
+	virtual COMPV_ERROR_CODE unbind() override /*Overrides(CompVBind)*/;
 
     virtual COMPV_ERROR_CODE setMVP(CompVMVPPtr mvp);
     virtual COMPV_ERROR_CODE setFBO(CompVGLFboPtr fbo);

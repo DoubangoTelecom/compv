@@ -340,13 +340,14 @@ COMPV_ERROR_CODE CompVGLRenderer::init(const CompVMatPtr mat)
 	GLint textureFilter;
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	// Set "m_bInit" to true to make sure deInit() will be fully executed
+	m_bInit = true;
 	// Create/Update FBO for the blitter
 	COMPV_CHECK_CODE_BAIL(err = m_ptrBlitter->requestFBO(mat->cols(), mat->rows()));
 	// Init blitter
 	COMPV_CHECK_CODE_BAIL(err = m_ptrBlitter->init(mat->cols(), mat->rows(), mat->stride(), m_strPrgVertexData, m_strPrgFragData, false/*NoMVP*/, false/*NotToScreen*/));
 	// Bind to the program -> required by 'glGetUniformLocation'
 	COMPV_CHECK_CODE_BAIL(err = m_ptrBlitter->bind());
-	m_bInit = true;
     m_uTexturesCount = mat->planeCount();
     for (size_t planeId = 0; planeId < mat->planeCount(); ++planeId) {
         const int32_t planeIdInt32 = static_cast<int32_t>(planeId);
@@ -394,7 +395,7 @@ bail:
 		COMPV_glActiveTexture(GLenum(GL_TEXTURE1 + planeId));
 		COMPV_glBindTexture(GL_TEXTURE_2D, kCompVGLNameInvalid);
 	}
-	COMPV_CHECK_CODE_NOP(err = m_ptrBlitter->unbind());
+	COMPV_CHECK_CODE_NOP(m_ptrBlitter->unbind());
     if (COMPV_ERROR_CODE_IS_NOK(err)) {
         COMPV_CHECK_CODE_NOP(deInit());
     }

@@ -12,10 +12,11 @@ COMPV_NAMESPACE_BEGIN()
 //	CompVDSGrabber
 //
 
-CompVDSGrabber::CompVDSGrabber()
+CompVDSGrabber::CompVDSGrabber(CompVDSBufferCBFunc func COMPV_DEFAULT(NULL), const void* pcUserData COMPV_DEFAULT(NULL))
     : CUnknown(TEXT("CompVDSGrabber"), static_cast<LPUNKNOWN>(NULL))
 {
-
+	m_BufferCB.func = func;
+	m_BufferCB.pcUserData = pcUserData;
 }
 
 CompVDSGrabber::~CompVDSGrabber()
@@ -35,10 +36,23 @@ HRESULT STDMETHODCALLTYPE CompVDSGrabber::BufferCB(
     BYTE *pBuffer,
     long BufferLen) /* Overrides(ISampleGrabberCB)*/
 {
-#if 0
+	COMPV_CHECK_HRESULT_EXP_RETURN(!pBuffer || !BufferLen, E_POINTER);
+
+	CompVDSBufferCBFunc BufferCB_func = m_BufferCB.func;
+	const void* BufferCB_pcUserData = m_BufferCB.pcUserData;
+	if (!BufferCB_func) {
+		return S_OK;
+	}
+	
+	// FIXME: nothing is correct here
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+
     const AM_MEDIA_TYPE& mediaType = m_ptrGraphCapture->connectedMediaType();
     VIDEOINFOHEADER *pVih = NULL;
     BITMAPINFOHEADER* bih = NULL;
+	HRESULT hr = S_OK;
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	CompVMatPtr image;
 
     // Examine the format block.
     if ((mediaType.formattype == FORMAT_VideoInfo) && (mediaType.cbFormat >= sizeof(VIDEOINFOHEADER)) && (mediaType.pbFormat != NULL)) {
@@ -46,12 +60,22 @@ HRESULT STDMETHODCALLTYPE CompVDSGrabber::BufferCB(
         bih = &pVih->bmiHeader;
     }
 
-    if (mediaType.subtype == MEDIASUBTYPE_YUY2) {
-        COMPV_DEBUG_INFO("MEDIASUBTYPE_YUY2");
-    }
-#endif
+	//if (mediaType.subtype == MEDIASUBTYPE_YUY2) {
+	//    COMPV_DEBUG_INFO("MEDIASUBTYPE_YUY2");
+	//}
 
-    return S_OK;
+	// FIXME: chroma fixed
+	COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_YUY2>(&image, bih->biHeight, bih->biWidth))); // FIXME: strideless
+	COMPV_CHECK_EXP_BAIL(BufferLen != image->dataSizeInBytes(), err = COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT);
+	memcpy(const_cast<void*>(image->ptr()), pBuffer, BufferLen);
+
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = BufferCB_func(image, BufferCB_pcUserData));
+
+bail:
+	if (FAILED(hr) || COMPV_ERROR_CODE_IS_NOK(err)) {
+		return E_FAIL;
+	}
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CompVDSGrabber::QueryInterface(

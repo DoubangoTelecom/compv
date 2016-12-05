@@ -35,7 +35,7 @@ CompVGLBlitter::~CompVGLBlitter()
 }
 
 // Bind to VAO and activate the program
-COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLBlitter::bind)()
+COMPV_ERROR_CODE CompVGLBlitter::bind()  /*Overrides(CompVBind)*/
 {
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
     COMPV_CHECK_EXP_RETURN(!m_bInit || !m_ptrProgram, COMPV_ERROR_CODE_E_INVALID_STATE);
@@ -67,7 +67,7 @@ COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLBlitter::bind)()
 }
 
 // Unbind the VAO and deactivate the program
-COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLBlitter::unbind)()
+COMPV_ERROR_CODE CompVGLBlitter::unbind()  /*Overrides(CompVBind)*/
 {
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 

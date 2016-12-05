@@ -24,7 +24,7 @@ COMPV_OBJECT_DECLARE_PTRS(DSGrabber)
 class CompVDSGrabber : public ISampleGrabberCB, public CUnknown
 {
 public:
-    CompVDSGrabber();
+    CompVDSGrabber(CompVDSBufferCBFunc func = NULL, const void* pcUserData = NULL);
     virtual ~CompVDSGrabber();
 
     virtual HRESULT STDMETHODCALLTYPE SampleCB(
@@ -49,6 +49,10 @@ public:
 
 private:
     CompVDSGraphCapturePtr m_ptrGraphCapture;
+	struct {
+		CompVDSBufferCBFunc func;
+		const void* pcUserData;
+	} m_BufferCB;
 };
 
 COMPV_NAMESPACE_END()
