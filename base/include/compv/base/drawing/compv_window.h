@@ -20,6 +20,9 @@
 
 #include <string>
 #include <map>
+#if COMPV_OS_ANDROID
+#include <jni.h>
+#endif /*COMPV_OS_ANDROID*/
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -96,6 +99,10 @@ public:
 
     virtual COMPV_ERROR_CODE addListener(CompVWindowListenerPtr listener);
     virtual COMPV_ERROR_CODE removeListener(CompVWindowListenerPtr listener);
+
+#if COMPV_OS_ANDROID
+	virtual COMPV_ERROR_CODE attachToSurface(JNIEnv* jniEnv, jobject javaSurface) = 0;
+#endif /*COMPV_OS_ANDROID*/
 
     static COMPV_ERROR_CODE newObj(CompVWindowPtrPtr window, size_t width, size_t height, const char* title = "Unknown");
 

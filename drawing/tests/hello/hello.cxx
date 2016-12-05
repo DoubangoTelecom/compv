@@ -164,7 +164,7 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 bail:
 	return NULL;
 
-#elif 1 // Camera
+#elif 0 // Camera
     COMPV_ERROR_CODE err;
     CompVCameraDeviceInfoList devices;
 	CompVSingleSurfaceLayerPtr singleSurfaceLayer;

@@ -9,6 +9,7 @@
 #include "compv/drawing/compv_drawing.h"
 #include "compv/base/android/compv_android_native_activity.h"
 
+#include <android/native_window_jni.h>
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -41,7 +42,10 @@ CompVWindowEGLAndroid::CompVWindowEGLAndroid(size_t width, size_t height, const 
 
 CompVWindowEGLAndroid::~CompVWindowEGLAndroid()
 {
-
+	if (m_pNativeWindow) {
+		ANativeWindow_release(m_pNativeWindow);
+		m_pNativeWindow = NULL;
+	}
 }
 
 EGLNativeWindowType CompVWindowEGLAndroid::nativeWindow() /* Overrides(CompVWindowEGL) */
@@ -49,10 +53,34 @@ EGLNativeWindowType CompVWindowEGLAndroid::nativeWindow() /* Overrides(CompVWind
     if (!m_pNativeWindow) {
         struct android_app* app = AndroidApp_get();
         if (app && app->window) {
+			COMPV_CHECK_EXP_NOP(ANativeWindow_getFormat(app->window) != WINDOW_FORMAT_RGBA_8888, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
             m_pNativeWindow = app->window;
+			ANativeWindow_acquire(m_pNativeWindow);
         }
     }
     return m_pNativeWindow;
+}
+
+COMPV_ERROR_CODE CompVWindowEGLAndroid::attachToSurface(JNIEnv* jniEnv, jobject javaSurface) /* Overrides(CompVWindow) */
+{
+	COMPV_CHECK_EXP_RETURN(!jniEnv || !javaSurface, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	// 'ANativeWindow_fromSurface' returns the ANativeWindow associated with a Java Surface object, for interacting with it through native code.
+	// This acquires a reference on the ANativeWindow that is returned; be sure to use ANativeWindow_release() when done with it so that it doesn't leak.
+	// https://developer.android.com/ndk/reference/group___native_activity.html#ga774d0a87ec496b3940fcddccbc31fd9d
+	ANativeWindow* nativeNindow = ANativeWindow_fromSurface(jniEnv, javaSurface);
+	COMPV_CHECK_EXP_RETURN(!nativeNindow, COMPV_ERROR_CODE_E_SYSTEM);
+	// Set window format to RGBA, required by OpenGL surface
+	if (ANativeWindow_setBuffersGeometry(nativeNindow, width(), height(), WINDOW_FORMAT_RGBA_8888) != 0) {
+		ANativeWindow_release(nativeNindow);
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+	}
+	// Release the previous native window
+	if (m_pNativeWindow) {
+		ANativeWindow_release(m_pNativeWindow);
+	}
+	// Set the native window
+	m_pNativeWindow = nativeNindow; //!\\ no 'ANativeWindow_acquire(nativeNindow)' needed: see above
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVWindowEGLAndroid::newObj(CompVWindowEGLAndroidPtrPtr eglWindow, size_t width, size_t height, const char* title)
