@@ -125,6 +125,7 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
     }
 #	endif
 #endif
+	COMPV_DEBUG_INFO("Bit endianness: %s", s_bBigEndian ? "BIG" : "LITTLE");
 
     // rand()
     srand((unsigned int)CompVTime::getNowMills());
@@ -347,7 +348,14 @@ bool CompVBase::isInitializing()
 
 bool CompVBase::isBigEndian()
 {
+	COMPV_CHECK_EXP_NOP(!isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
     return s_bBigEndian;
+}
+
+bool CompVBase::isLittleEndian()
+{
+	COMPV_CHECK_EXP_NOP(!isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+	return !s_bBigEndian;
 }
 
 bool CompVBase::isTestingMode()

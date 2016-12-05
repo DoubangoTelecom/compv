@@ -98,6 +98,7 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 	static uint64_t timeStart;
 	
 	// FIXME: not aligned and no stride
+	// FIXME: add support for RGB565, RGB555, BGR565 and BGR555, both LE and BE, LE being the default ones (ARM and X86 devices are LE by default)
 	
 	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_YUV444P>(&image, 472, 704)));
 	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_yuv444p.yuv", &buffer));

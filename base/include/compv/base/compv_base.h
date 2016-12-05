@@ -26,6 +26,7 @@ public:
     static bool isInitialized();
     static bool isInitializing();
     static bool isBigEndian();
+	static bool isLittleEndian();
     static bool isTestingMode();
     static bool isMathTrigFast();
     static bool isMathFixedPoint();
