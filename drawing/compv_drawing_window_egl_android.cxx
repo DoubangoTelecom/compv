@@ -70,6 +70,7 @@ COMPV_ERROR_CODE CompVWindowEGLAndroid::attachToSurface(JNIEnv* jniEnv, jobject 
 	ANativeWindow* nativeNindow = ANativeWindow_fromSurface(jniEnv, javaSurface);
 	COMPV_CHECK_EXP_RETURN(!nativeNindow, COMPV_ERROR_CODE_E_SYSTEM);
 	// Set window format to RGBA, required by OpenGL surface
+	// If 'ANativeWindow_setBuffersGeometry' fails we can call 'eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format)' to retrieve the default supported format. 
 	if (ANativeWindow_setBuffersGeometry(nativeNindow, width(), height(), WINDOW_FORMAT_RGBA_8888) != 0) {
 		ANativeWindow_release(nativeNindow);
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);

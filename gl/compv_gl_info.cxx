@@ -30,7 +30,8 @@ COMPV_ERROR_CODE CompVGLInfo::gather()
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
     const char* extensions = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
-    COMPV_DEBUG_INFO("OpenGL version string: %s", glGetString(GL_VERSION));
+	const GLubyte* version = glGetString(GL_VERSION);
+    COMPV_DEBUG_INFO("OpenGL version string: %s", version);
     COMPV_DEBUG_INFO("OpenGL shading version string: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
     COMPV_DEBUG_INFO("OpenGL renderer string: %s", glGetString(GL_RENDERER));
     COMPV_DEBUG_INFO("OpenGL vendor string: %s", glGetString(GL_VENDOR));
@@ -44,6 +45,8 @@ COMPV_ERROR_CODE CompVGLInfo::gather()
     glGetIntegerv(GL_MAX_DRAW_BUFFERS, &s_iMaxDrawBuffers);
     COMPV_DEBUG_INFO("GL_MAX_DRAW_BUFFERS: %d", s_iMaxDrawBuffers);
 	COMPV_CHECK_EXP_NOP(s_iVersionMajor < 3, COMPV_ERROR_CODE_E_GL); // Do not exit but alert the user that OpenGL 3.0+ is required
+#else
+	COMPV_CHECK_EXP_NOP(sscanf(reinterpret_cast<const char*>(version), "OpenGL ES %d.%d ", &s_iVersionMajor, &s_iVersionMinor) == EOF, COMPV_ERROR_CODE_E_GL);
 #endif
     if (extensions) {
         CompVGLInfo::extensions::s_bvertex_array_object = (strstr(extensions, "ARB_vertex_array_object") != NULL || strstr(extensions, "OES_vertex_array_object") != NULL);

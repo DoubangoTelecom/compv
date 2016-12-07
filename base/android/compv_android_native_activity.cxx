@@ -116,6 +116,7 @@ void android_app_pre_exec_cmd(struct android_app* android_app, int8_t cmd)
         pthread_mutex_lock(&android_app->mutex);
         android_app->window = android_app->pendingWindow;
         // TODO(dmi): move to Drawing::Init()
+		// If 'ANativeWindow_setBuffersGeometry' fails we can call 'eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format)' to retrieve the default supported format.
         COMPV_CHECK_EXP_NOP(ANativeWindow_setBuffersGeometry(android_app->window, 0, 0, WINDOW_FORMAT_RGBA_8888) != 0, COMPV_NAMESPACE::COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
         pthread_cond_broadcast(&android_app->cond);
         pthread_mutex_unlock(&android_app->mutex);

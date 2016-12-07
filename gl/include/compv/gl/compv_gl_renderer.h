@@ -52,6 +52,7 @@ private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     bool m_bInit;
 	GLenum m_eFormats[COMPV_MAX_PLANE_COUNT];
+	GLenum m_ePixelDataType;
 	const char* m_pSamplerNames[COMPV_MAX_PLANE_COUNT];
     GLuint m_uNameTextures[COMPV_MAX_PLANE_COUNT];
     size_t m_uWidths[COMPV_MAX_PLANE_COUNT];

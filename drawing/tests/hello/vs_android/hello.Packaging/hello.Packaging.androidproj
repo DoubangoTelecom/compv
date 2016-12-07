@@ -119,6 +119,15 @@
     </AntPackage>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Content Include="..\..\..\..\..\..\data\colorspace\girl_704x472x472_bgr565le.rgb">
+      <Link>assets\girl_704x472x472_bgr565le.rgb</Link>
+    </Content>
+    <Content Include="..\..\..\..\..\..\data\colorspace\girl_704x472x472_rgb565be.rgb">
+      <Link>assets\girl_704x472x472_rgb565be.rgb</Link>
+    </Content>
+    <Content Include="..\..\..\..\..\..\data\colorspace\girl_704x472x472_rgb565le.rgb">
+      <Link>assets\girl_704x472x472_rgb565le.rgb</Link>
+    </Content>
     <Content Include="..\..\..\..\..\..\data\colorspace\girl_704x472x472_yuyv422.yuv">
       <Link>assets\girl_704x472x472_yuyv422.yuv</Link>
     </Content>

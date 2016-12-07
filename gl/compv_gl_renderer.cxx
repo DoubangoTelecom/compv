@@ -6,9 +6,11 @@
 */
 #include "compv/gl/compv_gl_renderer.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
+#include "compv/base/compv_base.h"
 #include "compv/gl/compv_gl.h"
 #include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_func.h"
+#include "compv/gl/compv_gl_info.h"
 
 // GL_LUMINANCE_ALPHA and GL_LUMINANCE are both deprecated in OpenGL 3.0 but available up to OpenGL - ES 3.2
 // https://www.opengl.org/wiki/Image_Format#Legacy_Image_Formats
@@ -17,18 +19,20 @@
 #	define COMPV_GL_FORMAT_U	GL_LUMINANCE
 #	define COMPV_GL_FORMAT_V	GL_LUMINANCE
 #	define COMPV_GL_FORMAT_UV	GL_LUMINANCE_ALPHA
-#	define COMPV_GL_YUV0		"r" // GL_LUMINANCE.r, GL_LUMINANCE_ALPHA.r
-#	define COMPV_GL_YUV1		"a" // GL_LUMINANCE_ALPHA.a
+#	define COMPV_GL_BYTE0		"r" // GL_LUMINANCE.r, GL_LUMINANCE_ALPHA.r
+#	define COMPV_GL_BYTE1		"a" // GL_LUMINANCE_ALPHA.a
 #else
 #	define COMPV_GL_FORMAT_Y	GL_RED
 #	define COMPV_GL_FORMAT_U	GL_RED
 #	define COMPV_GL_FORMAT_V	GL_RED
 #	define COMPV_GL_FORMAT_UV	GL_RG
-#	define COMPV_GL_YUV0		"r" // GL_RED.r, GL_RG.r
-#	define COMPV_GL_YUV1		"g" // GL_RG.g
+#	define COMPV_GL_BYTE0		"r" // GL_RED.r, GL_RG.r
+#	define COMPV_GL_BYTE1		"g" // GL_RG.g
 #endif
-#	define COMPV_GL_FORMAT_RGB	GL_RGB
-#	define COMPV_GL_FORMAT_RGBA	GL_RGBA
+#	define COMPV_GL_FORMAT_RGB		GL_RGB
+#	define COMPV_GL_FORMAT_RGBA		GL_RGBA
+#	define COMPV_GL_FORMAT_R		COMPV_GL_FORMAT_U
+#	define COMPV_GL_FORMAT_RG		COMPV_GL_FORMAT_UV
 
 /*
 *** YUV to RGB conversion: http://www.fourcc.org/fccyvrgb.php ***
@@ -62,9 +66,9 @@ static const std::string& kProgramFragmentDataYUVPlanar = /* Used for YUV420P, Y
 "	const mat3 yuv2rgb = mat3(1.164, 0, 1.596,\n 1.164, -0.391, -0.813,\n 1.164, 2.018, 0);"
 "	"
 "	void main() {"
-"		vec3 yuv = vec3(texture2D(SamplerY, texCoordVarying)." COMPV_GL_YUV0 " - 0.06274, "
-"                    texture2D(SamplerU, texCoordVarying)." COMPV_GL_YUV0 " - 0.5019, "
-"                    texture2D(SamplerV, texCoordVarying)." COMPV_GL_YUV0 " - 0.5019); "
+"		vec3 yuv = vec3(texture2D(SamplerY, texCoordVarying)." COMPV_GL_BYTE0 " - 0.06274, "
+"                    texture2D(SamplerU, texCoordVarying)." COMPV_GL_BYTE0 " - 0.5019, "
+"                    texture2D(SamplerV, texCoordVarying)." COMPV_GL_BYTE0 " - 0.5019); "
 "		vec3 rgb = yuv * yuv2rgb;"
 "		gl_FragColor = vec4(rgb, 1.0);"
 "	}";
@@ -85,9 +89,9 @@ static const std::string& kProgramFragmentDataNV12 =
 "	const mat3 yuv2rgb = mat3(1.164, 0, 1.596,\n 1.164, -0.391, -0.813,\n 1.164, 2.018, 0);"
 "	"
 "	void main() {"
-"		vec3 yuv = vec3(texture2D(SamplerY, texCoordVarying)." COMPV_GL_YUV0 " - 0.06274, "
-"                    texture2D(SamplerUV, texCoordVarying)." COMPV_GL_YUV0 " - 0.5019, "
-"                    texture2D(SamplerUV, texCoordVarying)." COMPV_GL_YUV1 " - 0.5019); "
+"		vec3 yuv = vec3(texture2D(SamplerY, texCoordVarying)." COMPV_GL_BYTE0 " - 0.06274, "
+"                    texture2D(SamplerUV, texCoordVarying)." COMPV_GL_BYTE0 " - 0.5019, "
+"                    texture2D(SamplerUV, texCoordVarying)." COMPV_GL_BYTE1 " - 0.5019); "
 "		vec3 rgb = yuv * yuv2rgb;"
 "		gl_FragColor = vec4(rgb, 1.0);"
 "	}";
@@ -104,9 +108,9 @@ static const std::string& kProgramFragmentDataNV21 =
 "	const mat3 yuv2rgb = mat3(1.164, 0, 1.596,\n 1.164, -0.391, -0.813,\n 1.164, 2.018, 0);"
 "	"
 "	void main() {"
-"		vec3 yuv = vec3(texture2D(SamplerY, texCoordVarying)." COMPV_GL_YUV0 " - 0.06274, "
-"                    texture2D(SamplerUV, texCoordVarying)." COMPV_GL_YUV1 " - 0.5019, "
-"                    texture2D(SamplerUV, texCoordVarying)." COMPV_GL_YUV0 " - 0.5019); "
+"		vec3 yuv = vec3(texture2D(SamplerY, texCoordVarying)." COMPV_GL_BYTE0 " - 0.06274, "
+"                    texture2D(SamplerUV, texCoordVarying)." COMPV_GL_BYTE1 " - 0.5019, "
+"                    texture2D(SamplerUV, texCoordVarying)." COMPV_GL_BYTE0 " - 0.5019); "
 "		vec3 rgb = yuv * yuv2rgb;"
 "		gl_FragColor = vec4(rgb, 1.0);"
 "	}";
@@ -120,7 +124,7 @@ static const std::string& kProgramFragmentDataY =
 "	uniform sampler2D SamplerY;"
 "	"
 "	void main() {"
-"		gl_FragColor = vec4(texture2D(SamplerY, texCoordVarying)." COMPV_GL_YUV0 COMPV_GL_YUV0 COMPV_GL_YUV0 ", 1.0); /* Grayscale -> [R = G = B = Gray] */"
+"		gl_FragColor = vec4(texture2D(SamplerY, texCoordVarying)." COMPV_GL_BYTE0 COMPV_GL_BYTE0 COMPV_GL_BYTE0 ", 1.0); /* Grayscale -> [R = G = B = Gray] */"
 "	}";
 
 static const std::string& kProgramFragmentDataYUYV422 = /* YUY2: https://www.fourcc.org/pixel-format/yuv-yuy2/ */
@@ -215,6 +219,56 @@ static const std::string& kProgramFragmentDataARGB32 =
 "		gl_FragColor = texture2D(SamplerRGBA, texCoordVarying).yzwx; /* ARGB -> RGBA */"
 "	}";
 
+static const std::string& kProgramFragmentDataRGB565Native =
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D SamplerRG565;"
+"	void main() {"
+"		gl_FragColor = vec4(texture2D(SamplerRG565, texCoordVarying).xyz, 1.0); /* RGB565LE -> RGBA */"
+"	}";
+
+static const std::string& kProgramFragmentDataBGR565Native =
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D SamplerRG565;"
+"	void main() {"
+"		gl_FragColor = vec4(texture2D(SamplerRG565, texCoordVarying).zyx, 1.0); /* BGR565LE -> RGBA */"
+"	}";
+
+static const std::string& kProgramFragmentDataRGB565LE = /* Not optimized, called only on endianness mismatch. Requires OpenGL ES 3.0 */
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D SamplerRG565;"
+"	void main() {"
+"		vec4 rgb565le = texture2D(SamplerRG565, texCoordVarying);"
+"		uint pixel = (uint(rgb565le." COMPV_GL_BYTE1 " * 255.0) << 8) | uint(rgb565le." COMPV_GL_BYTE0 " * 255.0);"
+"		gl_FragColor = vec4(float((pixel >> 11) & 0x1f) / 31.0, float((pixel >> 5) & 0x3f) / 63.0, float(pixel & 0x1f) / 31.0, 1.0); /* RGB565LE -> RGBA */"
+"	}";
+
+static const std::string& kProgramFragmentDataRGB565BE = /* Not optimized, called only on endianness mismatch. Requires OpenGL ES 3.0 */
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D SamplerRG565;"
+"	void main() {"
+"		vec4 rgb565be = texture2D(SamplerRG565, texCoordVarying);"
+"		uint pixel = (uint(rgb565be." COMPV_GL_BYTE0 " * 255.0) << 8) | uint(rgb565be." COMPV_GL_BYTE1 " * 255.0);"
+"		gl_FragColor = vec4(float((pixel >> 11) & 0x1f) / 31.0, float((pixel >> 5) & 0x3f) / 63.0, float(pixel & 0x1f) / 31.0, 1.0); /* RGB565BE -> RGBA */"
+"	}";
+
+static const std::string& kProgramFragmentDataBGR565LE = /* Not optimized, called only on endianness mismatch. Requires OpenGL ES 3.0 */
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D SamplerRG565;"
+"	void main() {"
+"		vec4 rgb565le = texture2D(SamplerRG565, texCoordVarying);"
+"		uint pixel = (uint(rgb565le." COMPV_GL_BYTE1 " * 255.0) << 8) | uint(rgb565le." COMPV_GL_BYTE0 " * 255.0);"
+"		gl_FragColor = vec4(float(pixel & 0x1f) / 31.0, float((pixel >> 5) & 0x3f) / 63.0, float((pixel >> 11) & 0x1f) / 31.0, 1.0); /* BGR565LE -> RGBA */"
+"	}";
+
+static const std::string& kProgramFragmentDataBGR565BE = /* Not optimized, called only on endianness mismatch. Requires OpenGL ES 3.0 */
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D SamplerRG565;"
+"	void main() {"
+"		vec4 rgb565be = texture2D(SamplerRG565, texCoordVarying);"
+"		uint pixel = (uint(rgb565be." COMPV_GL_BYTE0 " * 255.0) << 8) | uint(rgb565be." COMPV_GL_BYTE1 " * 255.0);"
+"		gl_FragColor = vec4(float(pixel & 0x1f) / 31.0, float((pixel >> 5) & 0x3f) / 63.0, float((pixel >> 11) & 0x1f) / 31.0, 1.0); /* RGB565BE -> RGBA */"
+"	}";
+
 COMPV_NAMESPACE_BEGIN()
 
 CompVGLRenderer::CompVGLRenderer(COMPV_SUBTYPE ePixelFormat)
@@ -299,7 +353,7 @@ COMPV_ERROR_CODE CompVGLRenderer::drawImage(const CompVMatPtr mat) /*Overrides(C
             static_cast<GLsizei>(m_uStridesTexture[t]),
             static_cast<GLsizei>(m_uHeightsTexture[t]),
 			m_eFormats[t],
-			GL_UNSIGNED_BYTE,
+			m_ePixelDataType,
             mat->ptr(0, 0, static_cast<int32_t>(t)));
     }
 
@@ -359,11 +413,11 @@ COMPV_ERROR_CODE CompVGLRenderer::init(const CompVMatPtr mat)
 		case COMPV_SUBTYPE_PIXELS_UYVY422: // UYVY: https://www.fourcc.org/pixel-format/yuv-uyvy/
 			// Each [YUYV] or [UYVY] uint32 value is packed as a single RGBA sample which means 2Y for each. The width will be /2.
 			m_uWidthsTexture[planeId] = static_cast<GLsizei>((m_uWidths[planeId] + 1) >> 1), m_uHeightsTexture[planeId] = static_cast<GLsizei>(m_uHeights[planeId]), m_uStridesTexture[planeId] = static_cast<GLsizei>((m_uStrides[planeId] + 1) >> 1);
-			textureFilter = GL_NEAREST;
+			textureFilter = GL_NEAREST; // *must*
 			break;
 		default:
 			m_uWidthsTexture[planeId] = static_cast<GLsizei>(m_uWidths[planeId]), m_uHeightsTexture[planeId] = static_cast<GLsizei>(m_uHeights[planeId]), m_uStridesTexture[planeId] = static_cast<GLsizei>(m_uStrides[planeId]);
-			textureFilter = GL_LINEAR;
+			textureFilter = GL_LINEAR; // any
 			break;
 		}
 		COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::textureGen(&m_uNameTextures[planeId]));
@@ -373,7 +427,7 @@ COMPV_ERROR_CODE CompVGLRenderer::init(const CompVMatPtr mat)
         COMPV_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, textureFilter);
         COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, textureFilter);
-        COMPV_glTexImage2D(GL_TEXTURE_2D, 0, m_eFormats[planeId], static_cast<GLsizei>(m_uStridesTexture[planeId]), static_cast<GLsizei>(m_uHeightsTexture[planeId]), 0, m_eFormats[planeId], GL_UNSIGNED_BYTE, NULL);
+        COMPV_glTexImage2D(GL_TEXTURE_2D, 0, m_eFormats[planeId], static_cast<GLsizei>(m_uStridesTexture[planeId]), static_cast<GLsizei>(m_uHeightsTexture[planeId]), 0, m_eFormats[planeId], m_ePixelDataType, NULL);
 		COMPV_glGetUniformLocation(&uNameLocation, m_ptrBlitter->program()->name(), m_pSamplerNames[planeId]);
 		COMPV_glUniform1i(uNameLocation, static_cast<GLint>(1 + planeId));
 		// Set TextureSize = (stride, height)
@@ -443,7 +497,11 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_RGBA32
 		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_BGRA32
 		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_ABGR32
-		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_ARGB32,
+		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_ARGB32
+		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_RGB565LE
+		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_RGB565BE
+		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_BGR565LE
+		&& ePixelFormat != COMPV_SUBTYPE_PIXELS_BGR565BE,
         COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     CompVGLRendererPtr glRenderer_ = new CompVGLRenderer(ePixelFormat);
@@ -498,6 +556,30 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 	case COMPV_SUBTYPE_PIXELS_ARGB32:
 		glRenderer_->m_strPrgFragData = kProgramFragmentDataARGB32;
 		break;
+	case COMPV_SUBTYPE_PIXELS_RGB565LE:
+#if defined(HAVE_OPENGLES)
+		COMPV_CHECK_EXP_RETURN(CompVBase::isBigEndian(), COMPV_ERROR_CODE_E_GL);
+#endif
+		glRenderer_->m_strPrgFragData = CompVBase::isLittleEndian() ? kProgramFragmentDataRGB565Native : kProgramFragmentDataRGB565LE;
+		break;
+	case COMPV_SUBTYPE_PIXELS_RGB565BE:
+#if defined(HAVE_OPENGLES)
+		COMPV_CHECK_EXP_RETURN(CompVBase::isLittleEndian(), COMPV_ERROR_CODE_E_GL);
+#endif
+		glRenderer_->m_strPrgFragData = CompVBase::isBigEndian() ? kProgramFragmentDataRGB565Native : kProgramFragmentDataRGB565BE;
+		break;
+	case COMPV_SUBTYPE_PIXELS_BGR565LE:
+#if defined(HAVE_OPENGLES)
+		COMPV_CHECK_EXP_RETURN(CompVBase::isBigEndian(), COMPV_ERROR_CODE_E_GL);
+#endif
+		glRenderer_->m_strPrgFragData = CompVBase::isLittleEndian() ? kProgramFragmentDataBGR565Native : kProgramFragmentDataBGR565LE;
+		break;
+	case COMPV_SUBTYPE_PIXELS_BGR565BE:
+#if defined(HAVE_OPENGLES)
+		COMPV_CHECK_EXP_RETURN(CompVBase::isLittleEndian(), COMPV_ERROR_CODE_E_GL);
+#endif
+		glRenderer_->m_strPrgFragData = CompVBase::isBigEndian() ? kProgramFragmentDataBGR565Native : kProgramFragmentDataBGR565BE;
+		break;
 	default:
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
 		break;
@@ -512,20 +594,46 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 		glRenderer_->m_pSamplerNames[0] = "SamplerY", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_Y;
 		glRenderer_->m_pSamplerNames[1] = "SamplerU", glRenderer_->m_eFormats[1] = COMPV_GL_FORMAT_U;
 		glRenderer_->m_pSamplerNames[2] = "SamplerV", glRenderer_->m_eFormats[2] = COMPV_GL_FORMAT_V;
+		glRenderer_->m_ePixelDataType = GL_UNSIGNED_BYTE;
 		break;
 	case COMPV_SUBTYPE_PIXELS_YVU420P: // YUV420  but V plane first
 		glRenderer_->m_pSamplerNames[0] = "SamplerY", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_Y;
 		glRenderer_->m_pSamplerNames[1] = "SamplerV", glRenderer_->m_eFormats[1] = COMPV_GL_FORMAT_V;
 		glRenderer_->m_pSamplerNames[2] = "SamplerU", glRenderer_->m_eFormats[2] = COMPV_GL_FORMAT_U;
+		glRenderer_->m_ePixelDataType = GL_UNSIGNED_BYTE;
 		break;
 	case COMPV_SUBTYPE_PIXELS_NV12:
 	case COMPV_SUBTYPE_PIXELS_NV21:
 		glRenderer_->m_pSamplerNames[0] = "SamplerY", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_Y;
 		glRenderer_->m_pSamplerNames[1] = "SamplerUV", glRenderer_->m_eFormats[1] = COMPV_GL_FORMAT_UV;
+		glRenderer_->m_ePixelDataType = GL_UNSIGNED_BYTE;
 		break;
 	case COMPV_SUBTYPE_PIXELS_RGB24:
 	case COMPV_SUBTYPE_PIXELS_BGR24:
 		glRenderer_->m_pSamplerNames[0] = "SamplerRGB", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_RGB;
+		glRenderer_->m_ePixelDataType = GL_UNSIGNED_BYTE;
+		break;
+	case COMPV_SUBTYPE_PIXELS_RGB565LE:
+	case COMPV_SUBTYPE_PIXELS_BGR565LE:
+		if (CompVBase::isLittleEndian()) {
+			glRenderer_->m_pSamplerNames[0] = "SamplerRG565", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_RGB;
+			glRenderer_->m_ePixelDataType = GL_UNSIGNED_SHORT_5_6_5;
+		}
+		else {
+			glRenderer_->m_pSamplerNames[0] = "SamplerRG565", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_RG;
+			glRenderer_->m_ePixelDataType = GL_UNSIGNED_BYTE;
+		}
+		break;
+	case COMPV_SUBTYPE_PIXELS_RGB565BE:
+	case COMPV_SUBTYPE_PIXELS_BGR565BE:
+		if (CompVBase::isBigEndian()) {
+			glRenderer_->m_pSamplerNames[0] = "SamplerRG565", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_RGB;
+			glRenderer_->m_ePixelDataType = GL_UNSIGNED_SHORT_5_6_5;
+		}
+		else {
+			glRenderer_->m_pSamplerNames[0] = "SamplerRG565", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_RG;
+			glRenderer_->m_ePixelDataType = GL_UNSIGNED_BYTE;
+		}
 		break;
 	case COMPV_SUBTYPE_PIXELS_YUYV422:
 	case COMPV_SUBTYPE_PIXELS_UYVY422:
@@ -534,6 +642,7 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 	case COMPV_SUBTYPE_PIXELS_ABGR32:
 	case COMPV_SUBTYPE_PIXELS_ARGB32:
 		glRenderer_->m_pSamplerNames[0] = "SamplerRGBA", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_RGBA;
+		glRenderer_->m_ePixelDataType = GL_UNSIGNED_BYTE;
 		break;
 	default:
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);

@@ -184,7 +184,7 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
         }
     }
     else {
-        COMPV_DEBUG_INFO("sdkVersion: %d", androidApp->activity->sdkVersion);
+        COMPV_DEBUG_INFO("sdkVersion: %d", androidApp->activity->sdkVersion); // can also use 'AConfiguration_getSdkVersion'
     }
 #endif
 
