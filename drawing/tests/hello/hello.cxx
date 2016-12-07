@@ -142,6 +142,12 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_RGB565BE>(&image, 472, 704)));
 	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read(("C:/Projects/GitHub/data/colorspace/girl_704x472x472_rgb565be.rgb"), &buffer));
 
+	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_BGR565LE>(&image, 472, 704)));
+	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read("C:/Projects/GitHub/data/colorspace/girl_704x472x472_bgr565le.rgb", &buffer));
+
+	//COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_BGR565BE>(&image, 472, 704)));
+	//COMPV_CHECK_CODE_BAIL(err = CompVFileUtils::read(("C:/Projects/GitHub/data/colorspace/girl_704x472x472_bgr565be.rgb"), &buffer));
+
 	memcpy(const_cast<void*>(image->ptr()), buffer->getPtr(), buffer->getSize());
 
 	//FILE* file = fopen("test_yuv420p.yuv", "w+");
@@ -170,7 +176,7 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 bail:
 	return NULL;
 
-#elif 0 // Camera
+#elif 1 // Camera
     COMPV_ERROR_CODE err;
     CompVCameraDeviceInfoList devices;
 	CompVSingleSurfaceLayerPtr singleSurfaceLayer;

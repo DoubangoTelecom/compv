@@ -226,13 +226,9 @@ static const std::string& kProgramFragmentDataRGB565Native =
 "		gl_FragColor = vec4(texture2D(SamplerRG565, texCoordVarying).xyz, 1.0); /* RGB565LE -> RGBA */"
 "	}";
 
-static const std::string& kProgramFragmentDataBGR565Native =
-"	varying vec2 texCoordVarying;"
-"	uniform sampler2D SamplerRG565;"
-"	void main() {"
-"		gl_FragColor = vec4(texture2D(SamplerRG565, texCoordVarying).zyx, 1.0); /* BGR565LE -> RGBA */"
-"	}";
-
+#if defined(HAVE_OPENGL)
+// OpenGL ES 2.0 doesn't support bitwise operations
+// 0x1f = 31(5 bits set to 1), 0x3f = 63(6 bits set to 1)
 static const std::string& kProgramFragmentDataRGB565LE = /* Not optimized, called only on endianness mismatch. Requires OpenGL ES 3.0 */
 "	varying vec2 texCoordVarying;"
 "	uniform sampler2D SamplerRG565;"
@@ -241,7 +237,22 @@ static const std::string& kProgramFragmentDataRGB565LE = /* Not optimized, calle
 "		uint pixel = (uint(rgb565le." COMPV_GL_BYTE1 " * 255.0) << 8) | uint(rgb565le." COMPV_GL_BYTE0 " * 255.0);"
 "		gl_FragColor = vec4(float((pixel >> 11) & 0x1f) / 31.0, float((pixel >> 5) & 0x3f) / 63.0, float(pixel & 0x1f) / 31.0, 1.0); /* RGB565LE -> RGBA */"
 "	}";
+#else // TODO(dmi): precision issue on OpenGL-ES, hopefully we should always fallback using 'kProgramFragmentDataRGB565Native'
+// when n is pow 2 then, (x % n) = (x & (n - 1)) -> (pixel & 0x1f) = (pixel % 0x20) = (pixel % 32.0)
+// 0x3f = 0b00111111 -> (a & 3f) = (((a << 2) & 0xff) >> 2) = (((a * 4) & 255) / 4) = (((a * 4) % 256) / 4)
+// -> ((pixel >> 5) & 0x3f) / 63.0) = ((pixel / 32.0) & 3f) = ((((pixel / 32.0) * 4) & 255) / 4) / 63.0 = ((((pixel / 32.0) * 4) % 256) / 4) / 63.0 = (((pixel / 32.0) * 4) % 256) / 252.0
+static const std::string& kProgramFragmentDataRGB565LE = /* Not optimized, called only on endianness mismatch. Requires OpenGL ES 3.0 */
+	"	precision highp float;"
+	"	varying vec2 texCoordVarying;"
+	"	uniform sampler2D SamplerRG565;"
+	"	void main() {"
+	"		vec4 rgb565le = texture2D(SamplerRG565, texCoordVarying);"
+	"		float pixel = (rgb565le." COMPV_GL_BYTE1 " * 2040.0) + (rgb565le." COMPV_GL_BYTE0 " * 8.0);"
+	"		gl_FragColor = vec4(mod((pixel / 64.0), 32.0) / 31.0, mod(pixel * 4.0, 256.0) / 252.0, mod(pixel * 32.0, 32.0) / 31.0, 1.0); /* RGB565LE -> RGBA */"
+	"	}";
+#endif
 
+#if defined(HAVE_OPENGL)
 static const std::string& kProgramFragmentDataRGB565BE = /* Not optimized, called only on endianness mismatch. Requires OpenGL ES 3.0 */
 "	varying vec2 texCoordVarying;"
 "	uniform sampler2D SamplerRG565;"
@@ -250,7 +261,26 @@ static const std::string& kProgramFragmentDataRGB565BE = /* Not optimized, calle
 "		uint pixel = (uint(rgb565be." COMPV_GL_BYTE0 " * 255.0) << 8) | uint(rgb565be." COMPV_GL_BYTE1 " * 255.0);"
 "		gl_FragColor = vec4(float((pixel >> 11) & 0x1f) / 31.0, float((pixel >> 5) & 0x3f) / 63.0, float(pixel & 0x1f) / 31.0, 1.0); /* RGB565BE -> RGBA */"
 "	}";
+#else
+static const std::string& kProgramFragmentDataRGB565BE = /* Not optimized, called only on endianness mismatch. Requires OpenGL ES 2.0 */
+"	precision highp float;"
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D SamplerRG565;"
+"	void main() {"
+"		vec4 rgb565be = texture2D(SamplerRG565, texCoordVarying);"
+"		float pixel = (rgb565be." COMPV_GL_BYTE0 " * 2040.0) + (rgb565be." COMPV_GL_BYTE1 " * 8.0);"
+"		gl_FragColor = vec4(mod((pixel / 64.0), 32.0) / 31.0, mod(pixel * 4.0, 256.0) / 252.0, mod(pixel * 32.0, 32.0) / 31.0, 1.0); /* RGB565BE -> RGBA */"
+"	}";
+#endif
 
+static const std::string& kProgramFragmentDataBGR565Native =
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D SamplerRG565;"
+"	void main() {"
+"		gl_FragColor = vec4(texture2D(SamplerRG565, texCoordVarying).zyx, 1.0); /* BGR565LE -> RGBA */"
+"	}";
+
+#if defined(HAVE_OPENGL)
 static const std::string& kProgramFragmentDataBGR565LE = /* Not optimized, called only on endianness mismatch. Requires OpenGL ES 3.0 */
 "	varying vec2 texCoordVarying;"
 "	uniform sampler2D SamplerRG565;"
@@ -259,7 +289,19 @@ static const std::string& kProgramFragmentDataBGR565LE = /* Not optimized, calle
 "		uint pixel = (uint(rgb565le." COMPV_GL_BYTE1 " * 255.0) << 8) | uint(rgb565le." COMPV_GL_BYTE0 " * 255.0);"
 "		gl_FragColor = vec4(float(pixel & 0x1f) / 31.0, float((pixel >> 5) & 0x3f) / 63.0, float((pixel >> 11) & 0x1f) / 31.0, 1.0); /* BGR565LE -> RGBA */"
 "	}";
+#else
+static const std::string& kProgramFragmentDataBGR565LE = /* Not optimized, called only on endianness mismatch. Requires OpenGL ES 2.0 */
+"	precision highp float;"
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D SamplerRG565;"
+"	void main() {"
+"		vec4 rgb565le = texture2D(SamplerRG565, texCoordVarying);"
+"		float pixel = (rgb565le." COMPV_GL_BYTE1 " * 2040.0) + (rgb565le." COMPV_GL_BYTE0 " * 8.0);"
+"		gl_FragColor = vec4(mod(pixel * 32.0, 32.0) / 31.0, mod(pixel * 4.0, 256.0) / 252.0, mod((pixel / 64.0), 32.0) / 31.0, 1.0); /* BGR565LE -> RGBA */"
+"	}";
+#endif
 
+#if defined(HAVE_OPENGL)
 static const std::string& kProgramFragmentDataBGR565BE = /* Not optimized, called only on endianness mismatch. Requires OpenGL ES 3.0 */
 "	varying vec2 texCoordVarying;"
 "	uniform sampler2D SamplerRG565;"
@@ -268,6 +310,17 @@ static const std::string& kProgramFragmentDataBGR565BE = /* Not optimized, calle
 "		uint pixel = (uint(rgb565be." COMPV_GL_BYTE0 " * 255.0) << 8) | uint(rgb565be." COMPV_GL_BYTE1 " * 255.0);"
 "		gl_FragColor = vec4(float(pixel & 0x1f) / 31.0, float((pixel >> 5) & 0x3f) / 63.0, float((pixel >> 11) & 0x1f) / 31.0, 1.0); /* RGB565BE -> RGBA */"
 "	}";
+#else
+static const std::string& kProgramFragmentDataBGR565BE = /* Not optimized, called only on endianness mismatch. Requires OpenGL ES 2.0 */
+"	precision highp float;"
+"	varying vec2 texCoordVarying;"
+"	uniform sampler2D SamplerRG565;"
+"	void main() {"
+"		vec4 rgb565be = texture2D(SamplerRG565, texCoordVarying);"
+"		float pixel = (rgb565be." COMPV_GL_BYTE0 " * 2040.0) + (rgb565be." COMPV_GL_BYTE1 " * 8.0);"
+"		gl_FragColor = vec4(mod(pixel * 32.0, 32.0) / 31.0, mod(pixel * 4.0, 256.0) / 252.0, mod((pixel / 64.0), 32.0) / 31.0, 1.0); /* RGB565BE -> RGBA */"
+"	}";
+#endif
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -557,27 +610,15 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 		glRenderer_->m_strPrgFragData = kProgramFragmentDataARGB32;
 		break;
 	case COMPV_SUBTYPE_PIXELS_RGB565LE:
-#if defined(HAVE_OPENGLES)
-		COMPV_CHECK_EXP_RETURN(CompVBase::isBigEndian(), COMPV_ERROR_CODE_E_GL);
-#endif
 		glRenderer_->m_strPrgFragData = CompVBase::isLittleEndian() ? kProgramFragmentDataRGB565Native : kProgramFragmentDataRGB565LE;
 		break;
 	case COMPV_SUBTYPE_PIXELS_RGB565BE:
-#if defined(HAVE_OPENGLES)
-		COMPV_CHECK_EXP_RETURN(CompVBase::isLittleEndian(), COMPV_ERROR_CODE_E_GL);
-#endif
 		glRenderer_->m_strPrgFragData = CompVBase::isBigEndian() ? kProgramFragmentDataRGB565Native : kProgramFragmentDataRGB565BE;
 		break;
 	case COMPV_SUBTYPE_PIXELS_BGR565LE:
-#if defined(HAVE_OPENGLES)
-		COMPV_CHECK_EXP_RETURN(CompVBase::isBigEndian(), COMPV_ERROR_CODE_E_GL);
-#endif
 		glRenderer_->m_strPrgFragData = CompVBase::isLittleEndian() ? kProgramFragmentDataBGR565Native : kProgramFragmentDataBGR565LE;
 		break;
 	case COMPV_SUBTYPE_PIXELS_BGR565BE:
-#if defined(HAVE_OPENGLES)
-		COMPV_CHECK_EXP_RETURN(CompVBase::isLittleEndian(), COMPV_ERROR_CODE_E_GL);
-#endif
 		glRenderer_->m_strPrgFragData = CompVBase::isBigEndian() ? kProgramFragmentDataBGR565Native : kProgramFragmentDataBGR565BE;
 		break;
 	default:
@@ -620,6 +661,10 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 			glRenderer_->m_ePixelDataType = GL_UNSIGNED_SHORT_5_6_5;
 		}
 		else {
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // CPU ARCH mismatch
+#if defined(HAVE_OPENGLES)
+			COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // float presision issue
+#endif
 			glRenderer_->m_pSamplerNames[0] = "SamplerRG565", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_RG;
 			glRenderer_->m_ePixelDataType = GL_UNSIGNED_BYTE;
 		}
@@ -631,6 +676,10 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 			glRenderer_->m_ePixelDataType = GL_UNSIGNED_SHORT_5_6_5;
 		}
 		else {
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // CPU ARCH mismatch
+#if defined(HAVE_OPENGLES)
+			COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // float presision issue
+#endif
 			glRenderer_->m_pSamplerNames[0] = "SamplerRG565", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_RG;
 			glRenderer_->m_ePixelDataType = GL_UNSIGNED_BYTE;
 		}
