@@ -268,8 +268,8 @@ COMPV_ERROR_CODE CompVGLUtils::shaderSetSource(GLuint uShader, GLsizei count, co
 COMPV_ERROR_CODE CompVGLUtils::shaderSetSource(GLuint uShader, const CompVBufferPtr& buff)
 {
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isShaderValid(uShader) || !buff || buff->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    const char* source_ = static_cast<const char*>(buff->getPtr());
-    const GLint length_ = static_cast<GLint>(buff->getSize());
+    const char* source_ = static_cast<const char*>(buff->ptr());
+    const GLint length_ = static_cast<GLint>(buff->size());
     COMPV_CHECK_CODE_RETURN(CompVGLUtils::shaderSetSource(uShader, 1, &source_, &length_));
     return COMPV_ERROR_CODE_S_OK;
 }

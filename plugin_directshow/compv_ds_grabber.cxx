@@ -5,6 +5,7 @@
 * WebSite: http://compv.org
 */
 #include "compv/ds/compv_ds_grabber.h"
+#include "compv/base/image/compv_image.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -52,7 +53,6 @@ HRESULT STDMETHODCALLTYPE CompVDSGrabber::BufferCB(
     BITMAPINFOHEADER* bih = NULL;
 	HRESULT hr = S_OK;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	CompVMatPtr image;
 
     // Examine the format block.
     if ((mediaType.formattype == FORMAT_VideoInfo) && (mediaType.cbFormat >= sizeof(VIDEOINFOHEADER)) && (mediaType.pbFormat != NULL)) {
@@ -65,11 +65,8 @@ HRESULT STDMETHODCALLTYPE CompVDSGrabber::BufferCB(
 	//}
 
 	// FIXME: chroma fixed
-	COMPV_CHECK_CODE_BAIL((err = CompVMat::newObjStrideless<uint8_t, COMPV_MAT_TYPE_PIXELS, COMPV_SUBTYPE_PIXELS_YUY2>(&image, bih->biHeight, bih->biWidth))); // FIXME: strideless
-	COMPV_CHECK_EXP_BAIL(BufferLen != image->dataSizeInBytes(), err = COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT);
-	memcpy(const_cast<void*>(image->ptr()), pBuffer, BufferLen);
-
-	COMPV_CHECK_HRESULT_CODE_BAIL(hr = BufferCB_func(image, BufferCB_pcUserData));
+	COMPV_CHECK_CODE_BAIL(err = CompVImage::wrap(COMPV_SUBTYPE_PIXELS_YUY2, static_cast<const void*>(pBuffer), static_cast<size_t>(bih->biWidth), static_cast<size_t>(bih->biHeight), static_cast<size_t>(bih->biWidth), &m_ptrImageCB));
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = BufferCB_func(m_ptrImageCB, BufferCB_pcUserData));
 
 bail:
 	if (FAILED(hr) || COMPV_ERROR_CODE_IS_NOK(err)) {

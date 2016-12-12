@@ -38,7 +38,7 @@ COMPV_ERROR_CODE CompVGLProgram::shaderAttachVertexFile(const char* pcFilePath)
 {
     CompVBufferPtr buff_;
     COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(pcFilePath, &buff_));
-    COMPV_CHECK_CODE_RETURN(CompVGLProgram::shaderAttachData(reinterpret_cast<const char*>(buff_->getPtr()), buff_->getSize(), kShadTypeIsVertexTrue));
+    COMPV_CHECK_CODE_RETURN(CompVGLProgram::shaderAttachData(reinterpret_cast<const char*>(buff_->ptr()), buff_->size(), kShadTypeIsVertexTrue));
     return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -46,7 +46,7 @@ COMPV_ERROR_CODE CompVGLProgram::shaderAttachFragmentFile(const char* pcFilePath
 {
     CompVBufferPtr buff_;
     COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(pcFilePath, &buff_));
-    COMPV_CHECK_CODE_RETURN(CompVGLProgram::shaderAttachData(reinterpret_cast<const char*>(buff_->getPtr()), buff_->getSize(), kShadTypeIsVertexFalse));
+    COMPV_CHECK_CODE_RETURN(CompVGLProgram::shaderAttachData(reinterpret_cast<const char*>(buff_->ptr()), buff_->size(), kShadTypeIsVertexFalse));
     return COMPV_ERROR_CODE_S_OK;
 }
 

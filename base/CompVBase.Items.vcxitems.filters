@@ -186,9 +186,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)image\compv_image_decoder.cxx">
       <Filter>source\image</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)image\compv_image_utils.cxx">
-      <Filter>source\image</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)drawing\compv_canvas.cxx">
       <Filter>source\drawing</Filter>
     </ClCompile>
@@ -227,6 +224,9 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)android\compv_android_native_activity.cxx">
       <Filter>source\android</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)image\compv_image_utils.cxx">
+      <Filter>source\image</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -347,9 +347,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\image\compv_image_decoder.h">
       <Filter>include\image</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\image\compv_image_utils.h">
-      <Filter>include\image</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\parallel\compv_asynctask.h">
       <Filter>include\parallel</Filter>
     </ClInclude>
@@ -391,6 +388,9 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\android\compv_android_native_activity.h">
       <Filter>include\android</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\image\compv_image_utils.h">
+      <Filter>include\image</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

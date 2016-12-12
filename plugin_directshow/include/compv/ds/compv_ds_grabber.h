@@ -9,6 +9,7 @@
 
 #include "compv/ds/compv_ds_config.h"
 #include "compv/ds/compv_ds_graph_capture.h"
+#include "compv/base/compv_mat.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -49,6 +50,7 @@ public:
 
 private:
     CompVDSGraphCapturePtr m_ptrGraphCapture;
+	CompVMatPtr m_ptrImageCB;
 	struct {
 		CompVDSBufferCBFunc func;
 		const void* pcUserData;

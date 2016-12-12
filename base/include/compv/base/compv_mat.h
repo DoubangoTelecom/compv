@@ -175,15 +175,15 @@ protected:
             nPlaneSizeInBytes[0] = nNewDataSize;
         }
         else if (dataType == COMPV_MAT_TYPE_PIXELS) {
-            COMPV_CHECK_CODE_RETURN(CompVImageUtils::getPlaneCount(dataSubType, &nPlaneCount)); // get number of comps
+            COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeCount(dataSubType, &nPlaneCount)); // get number of comps
             COMPV_CHECK_EXP_RETURN(!nPlaneCount || nPlaneCount > COMPV_MAX_PLANE_COUNT, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT); // check the number of comps
-            COMPV_CHECK_CODE_RETURN(CompVImageUtils::getPlanePacked(dataSubType, &bPlanePacked)); // check whether the comps are packed
-            COMPV_CHECK_CODE_RETURN(CompVImageUtils::getSizeForPixelFormat(dataSubType, nBestStrideInBytes, rows, &nNewDataSize)); // get overal size in bytes
+            COMPV_CHECK_CODE_RETURN(CompVImageUtils::isPlanePacked(dataSubType, &bPlanePacked)); // check whether the comps are packed
+            COMPV_CHECK_CODE_RETURN(CompVImageUtils::sizeForPixelFormat(dataSubType, nBestStrideInBytes, rows, &nNewDataSize)); // get overal size in bytes
             size_t nSumPlaneSizeInBytes = 0;
             for (size_t planeId = 0; planeId < nPlaneCount; ++planeId) {
-                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getPlaneSizeForPixelFormat(dataSubType, planeId, cols, rows, &nPlaneCols[planeId], &nPlaneRows[planeId])); // get 'cols' and 'rows' for the comp
-                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getPlaneSizeForPixelFormat(dataSubType, planeId, nBestStrideInBytes, rows, &nPlaneStrideInBytes[planeId], &nPlaneRows[planeId])); // get 'stride' and 'rows' for the comp
-                COMPV_CHECK_CODE_RETURN(CompVImageUtils::getPlaneSizeForPixelFormat(dataSubType, nBestStrideInBytes, rows, planeId, &nPlaneSizeInBytes[planeId])); // get comp size in bytes
+                COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(dataSubType, planeId, cols, rows, &nPlaneCols[planeId], &nPlaneRows[planeId])); // get 'cols' and 'rows' for the comp
+                COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(dataSubType, planeId, nBestStrideInBytes, rows, &nPlaneStrideInBytes[planeId], &nPlaneRows[planeId])); // get 'stride' and 'rows' for the comp
+                COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(dataSubType, planeId, nBestStrideInBytes, rows, &nPlaneSizeInBytes[planeId])); // get comp size in bytes
                 nSumPlaneSizeInBytes += nPlaneSizeInBytes[planeId];
             }
             // Make sure that sum(comp sizes) = data size

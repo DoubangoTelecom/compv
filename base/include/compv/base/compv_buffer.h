@@ -28,14 +28,14 @@ public:
     COMPV_ERROR_CODE copyData(const void* pcPtr, int32_t size);
     COMPV_ERROR_CODE refData(const void* pcPtr, int32_t size);
     COMPV_ERROR_CODE takeData(void** ppPtr, int32_t size);
-    COMPV_INLINE const void* getPtr() {
+    COMPV_INLINE const void* ptr() {
         return m_pPtr;
     }
-    COMPV_INLINE int32_t getSize() {
+    COMPV_INLINE int32_t size() {
         return m_nSize;
     }
     COMPV_INLINE bool isEmpty() {
-        return !(getSize() && getPtr());
+        return !size() || !ptr();
     }
     static COMPV_ERROR_CODE newObj(const void* pcPtr, int32_t size, CompVBufferPtrPtr buffer);
     static COMPV_ERROR_CODE newObjAndNullData(CompVBufferPtrPtr buffer);

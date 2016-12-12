@@ -42,7 +42,7 @@ COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVMatPtrPtr mat)
     // Get image data without decoding
     COMPV_CHECK_CODE_BAIL(err_ = libjpegDecodeInfo(filePath, info));
     // Alloc image data
-    COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj8u(mat, static_cast<size_t>(info.height), static_cast<size_t>(info.width), info.pixelFormat));
+    COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj8u(mat, static_cast<size_t>(info.width), static_cast<size_t>(info.height), info.pixelFormat));
     rawdata_ = const_cast<uint8_t*>((*mat)->ptr<uint8_t>());
     width_ = static_cast<int32_t>((*mat)->cols());
     height_ = static_cast<int32_t>((*mat)->rows());
