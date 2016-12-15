@@ -428,18 +428,6 @@ namespace Swig {
 extern "C" {
 #endif
 
-SWIGEXPORT jstring JNICALL Java_org_doubango_jni_androidcameraJNI_COMPV_1CAMERA_1ANDROID_1LOG_1TAG_1get(JNIEnv *jenv, jclass jcls) {
-  jstring jresult = 0 ;
-  char *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  result = (char *)("org.doubango.compv.androidcamera.proxy");
-  if (result) jresult = jenv->NewStringUTF((const char *)result);
-  return jresult;
-}
-
-
 SWIGEXPORT jlong JNICALL Java_org_doubango_jni_androidcameraJNI_new_1CompVCameraAndroidProxy(JNIEnv *jenv, jclass jcls) {
   jlong jresult = 0 ;
   CompVCameraAndroidProxy *result = 0 ;

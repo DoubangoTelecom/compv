@@ -8,5 +8,5 @@
 
 package org.doubango.jni;
 
-public class androidcamera implements androidcameraConstants {
+public class androidcamera {
 }

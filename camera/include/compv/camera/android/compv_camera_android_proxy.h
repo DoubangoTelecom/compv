@@ -19,9 +19,8 @@
 #include <android/api-level.h>
 #include <android/log.h>
 
-#define COMPV_CAMERA_ANDROID_LOG_TAG "org.doubango.compv.androidcamera.proxy"
-
 #if !defined(SWIG)
+#define COMPV_CAMERA_ANDROID_LOG_TAG "org.doubango.compv.androidcamera.proxy"
 typedef bool(*CompVCameraAndroidProxyOnPreviewFrameFunc)(const void* dataPtr, size_t dataSize, const void* userData);
 #endif
 

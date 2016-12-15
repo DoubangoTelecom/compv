@@ -18,9 +18,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_camera.cxx">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)android\compv_camera_android.cxx">
-      <Filter>source\android</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\camera\compv_camera.h">
@@ -31,12 +28,6 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\camera\compv_camera_config.h">
       <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\camera\android\compv_camera_android_proxy.h">
-      <Filter>include\android</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\camera\android\compv_camera_android.h">
-      <Filter>include\android</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

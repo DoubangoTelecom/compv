@@ -122,10 +122,6 @@
     <Content Include="..\..\..\..\..\..\data\colorspace\girl_750x501x750_yuv422p.yuv">
       <Link>assets\girl_750x501x750_yuv422p.yuv</Link>
     </Content>
-    <Content Include="..\..\..\..\..\camera\vs_android\CameraCallback\CameraCallback.Packaging\ARM\Debug\CameraCallback.apk">
-      <Link>assets\CameraCallback.apk</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="..\..\..\..\..\deprecated\tests\girl.jpg">
       <Link>assets\girl.jpg</Link>
     </Content>

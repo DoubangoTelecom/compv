@@ -9,7 +9,6 @@
 package org.doubango.jni;
 
 public class androidcameraJNI {
-  public final static native String COMPV_CAMERA_ANDROID_LOG_TAG_get();
   public final static native long new_CompVCameraAndroidProxy();
   public final static native void delete_CompVCameraAndroidProxy(long jarg1);
   public final static native void CompVCameraAndroidProxy_setCallbackFunc(long jarg1, CompVCameraAndroidProxy jarg1_, long jarg2, long jarg3);
