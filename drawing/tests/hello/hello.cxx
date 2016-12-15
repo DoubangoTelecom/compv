@@ -138,6 +138,109 @@ bail:
 	return NULL;
 
 #elif 1 // Camera
+
+#if COMPV_OS_ANDROID && 0
+	{
+		static JNINativeMethod android_hardware_Camera_NativeMethods[] =
+		{
+			{ "getNumberOfCameras", "()I", NULL/*FIXME: function pointer*/ }
+		};
+
+		// FIXME: DeleteLocalRef for all
+
+		struct android_app* androidApp = AndroidApp_get();
+		JavaVM* jVM = androidApp ? (androidApp->activity ? androidApp->activity->vm : NULL) : NULL;
+		JNIEnv* jEnv = NULL;
+		jthrowable exc;
+		if (jVM->AttachCurrentThread(&jEnv, NULL) == JNI_OK) {
+			jclass class_Camera = jEnv->FindClass("android/hardware/Camera");
+			jclass class_Camera_PreviewCallback = jEnv->FindClass("android/hardware/Camera$PreviewCallback");
+
+			jobject parent = NULL;
+			jclass klass = jEnv->FindClass("java/lang/Class");
+			jmethodID get_class_loader = jEnv->GetMethodID(klass, "getClassLoader", "()Ljava/lang/ClassLoader;");
+			if (get_class_loader) {
+				parent = jEnv->CallObjectMethod(klass, get_class_loader);
+			}
+
+			jclass class_dex_loader = jEnv->FindClass("dalvik/system/DexClassLoader");
+			jmethodID constructor = jEnv->GetMethodID(class_dex_loader, "<init>", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V");
+			jmethodID load_class = jEnv->GetMethodID(class_dex_loader, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+
+			jstring optimized_directory = jEnv->NewStringUTF(androidApp->activity->internalDataPath); // FIXME: free
+			jstring dexPathJ = jEnv->NewStringUTF("/data/user/0/com.hello/files/CameraCallback.apk"); // FIXME: free
+			jobject dexloader = jEnv->NewObject(class_dex_loader, constructor, dexPathJ, optimized_directory, NULL, parent);
+			exc = jEnv->ExceptionOccurred();
+			if (exc) {
+				jEnv->ExceptionDescribe();
+				jEnv->ExceptionClear();
+			}
+
+			jstring callback_class_name = jEnv->NewStringUTF("org/doubango/camera/Callback");
+			jobject temp = jEnv->CallObjectMethod(dexloader, load_class, callback_class_name);
+			exc = jEnv->ExceptionOccurred();
+			if (exc) {
+				jEnv->ExceptionDescribe();
+				jboolean isCopy = false;
+				jclass class_object = jEnv->FindClass("java/lang/Object");
+				jmethodID toString = jEnv->GetMethodID(class_object, "toString", "()Ljava/lang/String;");
+				jstring s = (jstring)jEnv->CallObjectMethod(exc, toString);
+				const char* utf = jEnv->GetStringUTFChars(s, &isCopy);
+				
+				jEnv->ExceptionClear();
+			}
+
+			COMPV_DEBUG_INFO("created dex loader = %p", dexloader);
+			
+			jEnv->DeleteLocalRef(klass);
+
+			//jmethodID testClassCtor = jEnv->GetMethodID(class_Camera_PreviewCallback, "<init>", "(Landroid/hardware/Camera;)V");
+
+			//jobject testClassInstance = jEnv->NewObject(class_Camera_PreviewCallback, testClassCtor);
+			
+
+			// FIXME: use RegisterNatives
+			// jEnv->RegisterNatives(class_Camera, android_hardware_Camera_NativeMethods, sizeof(android_hardware_Camera_NativeMethods) / sizeof(android_hardware_Camera_NativeMethods[0]));
+
+			jmethodID methodID_static_Camera_getNumberOfCameras = jEnv->GetStaticMethodID(class_Camera, "getNumberOfCameras", "()I");
+			jmethodID methodID_static_Camera_open0 = jEnv->GetStaticMethodID(class_Camera, "open", "()Landroid/hardware/Camera;"); // Camera = Camera.open() -> https://developer.android.com/reference/android/hardware/Camera.html#open()
+			jmethodID methodID_static_Camera_open1 = jEnv->GetStaticMethodID(class_Camera, "open", "(I)Landroid/hardware/Camera;"); // Camera = Camera.open(int cameraId) -> https://developer.android.com/reference/android/hardware/Camera.html#open(int)
+			jmethodID methodID_member_Camera_release = jEnv->GetMethodID(class_Camera, "release", "()V"); // void = mCamera.release() -> https://developer.android.com/reference/android/hardware/Camera.html#release()
+			jmethodID methodID_member_Camera_lock = jEnv->GetMethodID(class_Camera, "lock", "()V"); // void = mCamera.lock() -> https://developer.android.com/reference/android/hardware/Camera.html#lock()
+			jmethodID methodID_member_Camera_unlock = jEnv->GetMethodID(class_Camera, "release", "()V"); // void = mCamera.unlock() -> https://developer.android.com/reference/android/hardware/Camera.html#unlock()
+			jmethodID methodID_member_Camera_addCallbackBuffer = jEnv->GetMethodID(class_Camera, "addCallbackBuffer", "([B)V"); // void = mCamera.addCallbackBuffer(byte[]) -> https://developer.android.com/reference/android/hardware/Camera.html#addCallbackBuffer(byte[])
+			jmethodID methodID_member_Camera_setPreviewCallbackWithBuffer = jEnv->GetMethodID(class_Camera, "setPreviewCallbackWithBuffer", "(Landroid/hardware/Camera$PreviewCallback;)V"); // void = mCamera.setPreviewCallbackWithBuffer(Camera.PreviewCallback cb) -> https://developer.android.com/reference/android/hardware/Camera.html#setPreviewCallbackWithBuffer(android.hardware.Camera.PreviewCallback)
+			jmethodID methodID_member_Camera_getParameters = jEnv->GetMethodID(class_Camera, "getParameters", "()Landroid/hardware/Camera$Parameters;"); // Parameters = mCamera.getParameters() -> https://developer.android.com/reference/android/hardware/Camera.html#getParameters()
+
+			
+
+			int numberOfCameras = jEnv->CallStaticIntMethod(class_Camera, methodID_static_Camera_getNumberOfCameras);
+			if (numberOfCameras > 0) {
+				// Default camera -> use methodID_static_Camera_open0()
+				// Front camera -> use methodID_static_Camera_open1(numberOfCameras - 1)
+				jobject object_Camera = jEnv->CallStaticObjectMethod(class_Camera, methodID_static_Camera_open1, (numberOfCameras - 1));
+				if (!object_Camera) {
+					jobject object_parameters = jEnv->CallObjectMethod(object_Camera, methodID_member_Camera_getParameters);
+					//parameters.setPreviewFormat(PixelFormat.YCbCr_420_SP);
+					//parameters.setPreviewFrameRate(framerate);
+					//parameters.setPictureSize(width, height);
+					//mCamera.setParameters(parameters);
+					
+					
+
+					jEnv->CallVoidMethod(object_Camera, methodID_member_Camera_release);
+				}
+			}
+
+
+			jVM->DetachCurrentThread();
+		}
+
+	}
+#endif
+
+
+
     COMPV_ERROR_CODE err;
     CompVCameraDeviceInfoList devices;
 	CompVSingleSurfaceLayerPtr singleSurfaceLayer;

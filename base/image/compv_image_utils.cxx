@@ -150,6 +150,7 @@ COMPV_ERROR_CODE CompVImageUtils::planeSizeForPixelFormat(COMPV_SUBTYPE ePixelFo
     }
 }
 
+// Bits count for #1 pixel and all planes
 COMPV_ERROR_CODE CompVImageUtils::bitsCountForPixelFormat(COMPV_SUBTYPE ePixelFormat, size_t* bitsCount)
 {
 	COMPV_CHECK_EXP_RETURN(!bitsCount, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -190,6 +191,7 @@ COMPV_ERROR_CODE CompVImageUtils::bitsCountForPixelFormat(COMPV_SUBTYPE ePixelFo
 	}
 }
 
+// Bits count for #1 pixel and #1 plane
 COMPV_ERROR_CODE CompVImageUtils::planeBitsCountForPixelFormat(COMPV_SUBTYPE ePixelFormat, size_t planeId, size_t* bitsCount)
 {
 	COMPV_CHECK_EXP_RETURN(!bitsCount, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

@@ -7,10 +7,19 @@
     <Filter Include="include">
       <UniqueIdentifier>{13fb3b6c-3f28-4bf9-ba7d-dc263f8bfe2a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\android">
+      <UniqueIdentifier>{a0b0edfe-9579-4e6b-bbfd-48e4aa851f03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\android">
+      <UniqueIdentifier>{12273c13-e599-4c29-8a7a-6a215e4504ea}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_camera.cxx">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)android\compv_camera_android.cxx">
+      <Filter>source\android</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -22,6 +31,12 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\camera\compv_camera_config.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\camera\android\compv_camera_android_proxy.h">
+      <Filter>include\android</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\camera\android\compv_camera_android.h">
+      <Filter>include\android</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

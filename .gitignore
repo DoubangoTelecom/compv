@@ -15,3 +15,17 @@ Debug
 *.ipch
 *.opendb
 *.db
+*.iws
+.idea/tasks.xml
+.idea/vcs.xml
+.idea/workspace.xml
+workspace.xml
+local.properties
+.gradle
+gradle
+gradlew
+gradlew.bat
+build
+gen
+out
+.externalNativeBuild

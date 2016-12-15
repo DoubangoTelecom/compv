@@ -14,9 +14,12 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)android\compv_camera_android.cxx" />
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_camera.cxx" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\camera\android\compv_camera_android.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\camera\android\compv_camera_android_proxy.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\camera\compv_camera.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\camera\compv_camera_common.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\camera\compv_camera_config.h" />
