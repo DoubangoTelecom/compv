@@ -239,8 +239,6 @@ bail:
 	}
 #endif
 
-
-
     COMPV_ERROR_CODE err;
     CompVCameraDeviceInfoList devices;
 	CompVSingleSurfaceLayerPtr singleSurfaceLayer;

@@ -10,9 +10,11 @@
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_obj.h"
 
+#include <string>
+
 COMPV_NAMESPACE_BEGIN()
 
-class COMPV_BASE_API CompVBase : public CompVObj
+class COMPV_BASE_API CompVBase
 {
 protected:
     CompVBase();
@@ -42,6 +44,11 @@ public:
     static bool isWinVistaOrLater();
     static bool isWinXPOrLater();
 #endif
+#if COMPV_OS_ANDROID
+	static std::string CPU_ABI() {
+		return s_strCPU_ABI;
+	}
+#endif
 
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
@@ -51,6 +58,9 @@ private:
     static bool s_bTesting;
     static bool s_bMathTrigFast;
     static bool s_bMathFixedPoint;
+#if COMPV_OS_ANDROID
+	static std::string s_strCPU_ABI;
+#endif
 #if COMPV_OS_WINDOWS && !COMPV_OS_WINDOWS_RT
     static DWORD s_dwMajorVersion;
     static DWORD s_dwMinorVersion;

@@ -228,6 +228,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)image\compv_image_utils.cxx">
       <Filter>source\image</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)android\compv_android_dexclassloader.cxx">
+      <Filter>source\android</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_base.h">
@@ -391,6 +394,9 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\image\compv_image_utils.h">
       <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\android\compv_android_dexclassloader.h">
+      <Filter>include\android</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

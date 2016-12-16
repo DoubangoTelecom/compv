@@ -25,6 +25,7 @@ CompVDSCamera::~CompVDSCamera()
 
 COMPV_ERROR_CODE CompVDSCamera::devices(CompVCameraDeviceInfoList& list) /* Overrides(CompVCamera) */
 {
+	CompVAutoLock<CompVDSCamera>(this);
     list.clear();
     CompVDSCameraDeviceInfoList list_;
     COMPV_CHECK_CODE_RETURN(CompVDSUtils:: enumerateCaptureDevices(list_));

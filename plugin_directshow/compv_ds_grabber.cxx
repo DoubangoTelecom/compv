@@ -64,7 +64,8 @@ HRESULT STDMETHODCALLTYPE CompVDSGrabber::BufferCB(
 	//    COMPV_DEBUG_INFO("MEDIASUBTYPE_YUY2");
 	//}
 
-	// FIXME: chroma fixed
+	// FIXME(dmi): chroma fixed
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 	COMPV_CHECK_CODE_BAIL(err = CompVImage::wrap(COMPV_SUBTYPE_PIXELS_YUY2, static_cast<const void*>(pBuffer), static_cast<size_t>(bih->biWidth), static_cast<size_t>(bih->biHeight), static_cast<size_t>(bih->biWidth), &m_ptrImageCB));
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = BufferCB_func(m_ptrImageCB, BufferCB_pcUserData));
 

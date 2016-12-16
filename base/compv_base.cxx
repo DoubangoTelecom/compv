@@ -35,6 +35,9 @@ DWORD CompVBase::s_dwMinorVersion = -1;
 #else
 bool CompVBase::s_bBigEndian = true;
 #endif
+#if COMPV_OS_ANDROID
+std::string CompVBase::s_strCPU_ABI = "";
+#endif
 bool CompVBase::s_bTesting = false;
 bool CompVBase::s_bMathTrigFast = true;
 bool CompVBase::s_bMathFixedPoint = true;
@@ -176,7 +179,8 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads /*= -1*/)
                 if (fieldID_CPU_ABI) {
                     jstring object_CPU_ABI = reinterpret_cast<jstring>(jEnv->GetStaticObjectField(clazz_Build, fieldID_CPU_ABI));
                     if (object_CPU_ABI) {
-                        COMPV_DEBUG_INFO("android/os/Build.CPU_ABI: %s", CompVJNI::toString(jEnv, object_CPU_ABI).c_str());
+						s_strCPU_ABI = CompVJNI::toString(jEnv, object_CPU_ABI);
+                        COMPV_DEBUG_INFO("android/os/Build.CPU_ABI: %s", s_strCPU_ABI.c_str());
                     }
                 }
             }

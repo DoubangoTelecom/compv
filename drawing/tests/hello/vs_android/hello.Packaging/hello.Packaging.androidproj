@@ -131,6 +131,10 @@
     <Content Include="..\..\..\..\..\deprecated\tests\valve_original.jpg">
       <Link>assets\valve_original.jpg</Link>
     </Content>
+    <Content Include="..\..\..\..\..\plugin_androidcamera\app\build\outputs\apk\app-debug.apk">
+      <Link>assets\app-debug.apk</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="res\values\strings.xml" />
     <AntBuildXml Include="build.xml" />
     <AndroidManifest Include="AndroidManifest.xml">

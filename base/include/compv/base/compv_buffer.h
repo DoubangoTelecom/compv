@@ -21,9 +21,7 @@ protected:
     CompVBuffer(const void* pcPtr = NULL, int32_t size = 0);
 public:
     virtual ~CompVBuffer();
-    virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVBuffer";
-    };
+	COMPV_OBJECT_GET_ID(CompVBuffer);
 
     COMPV_ERROR_CODE copyData(const void* pcPtr, int32_t size);
     COMPV_ERROR_CODE refData(const void* pcPtr, int32_t size);

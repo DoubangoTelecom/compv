@@ -21,11 +21,30 @@ class COMPV_BASE_API CompVJNI
 {
 public:
     static std::string toString(JNIEnv* jEnv, jstring jstr);
+	static std::string toString(JNIEnv* jEnv, jthrowable exc);
 
 private:
-    COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-    COMPV_VS_DISABLE_WARNINGS_END()
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+		COMPV_VS_DISABLE_WARNINGS_END()
 };
+
+#define COMPV_jni_checkException(env, occurred) \
+	*occurred = false; \
+	if ((env)) { \
+		jthrowable exc = (env)->ExceptionOccurred(); \
+		if (exc) { \
+			*occurred = true; \
+			(env)->ExceptionDescribe(); \
+			(env)->ExceptionClear(); \
+			const std::string jniError = CompVJNI::toString(jEnv, exc); \
+			COMPV_DEBUG_ERROR("JNI error: %s", jniError.c_str()); \
+		} \
+	}
+#define COMPV_jni_checkException1(env) { static bool __COMPV_occurred; COMPV_jni_checkException((env), &__COMPV_occurred) }
+	
+
+#define COMPV_jni_DeleteLocalRef(env, localRef) if (localRef) { env->DeleteLocalRef(localRef); localRef = NULL; }
+#define COMPV_jni_DeleteGlobalRef(env, globalRef) if (globalRef) { env->DeleteGlobalRef(globalRef); globalRef = NULL; }
 
 COMPV_NAMESPACE_END()
 

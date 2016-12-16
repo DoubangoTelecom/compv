@@ -9,6 +9,10 @@
 #include "compv/base/compv_debug.h"
 #include "compv/base/compv_base.h"
 
+#include "compv/camera/android/compv_camera_android.h"
+#include "compv/base/android/compv_android_dexclassloader.h"
+#include "compv/base/android/compv_android_native_activity.h"
+
 COMPV_NAMESPACE_BEGIN()
 
 bool CompVCamera::s_bInitialized = false;
@@ -51,7 +55,7 @@ COMPV_ERROR_CODE CompVCamera::init()
             COMPV_CHECK_EXP_NOP(!s_CameraFactory.funcNew, COMPV_ERROR_CODE_E_SYSTEM);
         }
     }
-#endif /* COMPV_OS_WINDOWS */
+#endif
 
     s_bInitialized = true;
 
@@ -87,6 +91,9 @@ COMPV_ERROR_CODE CompVCamera::newObj(CompVCameraPtrPtr camera)
     // Create camera using static implementations
     if (!camera_) {
 #if COMPV_OS_ANDROID
+		CompVAndroidCameraPtr androidCamera;
+		COMPV_CHECK_CODE_RETURN(CompVAndroidCamera::newObj(&androidCamera));
+		camera_ = *androidCamera;
 #endif
     }
 

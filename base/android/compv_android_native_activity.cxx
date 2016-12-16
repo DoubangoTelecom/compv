@@ -25,6 +25,7 @@
 #if COMPV_OS_ANDROID
 #include "compv/base/compv_debug.h"
 #include "compv/base/compv_mem.h"
+#include "compv/base/android/compv_android_dexclassloader.h"
 
 #include <android/log.h>
 #include <errno.h>
@@ -357,18 +358,21 @@ static void android_app_free(struct android_app* android_app)
 static void onDestroy(ANativeActivity* activity)
 {
     COMPV_DEBUG_INFO_EX(kModuleNameAndroidNativeActivity, "Destroy: %p", activity);
+	COMPV_CHECK_CODE_NOP(compv::CompVAndroidDexClassLoader::deInit(activity->env)); // Important: "activity->env" valid on MainThread only
     android_app_free((struct android_app*)activity->instance);
 }
 
 static void onStart(ANativeActivity* activity)
 {
     COMPV_DEBUG_INFO_EX(kModuleNameAndroidNativeActivity, "Start: %p", activity);
+	COMPV_CHECK_CODE_NOP(compv::CompVAndroidDexClassLoader::init(activity->env)); // Important: "activity->env" valid on MainThread only
     android_app_set_activity_state((struct android_app*)activity->instance, APP_CMD_START);
 }
 
 static void onResume(ANativeActivity* activity)
 {
     COMPV_DEBUG_INFO_EX(kModuleNameAndroidNativeActivity, "Resume: %p", activity);
+	COMPV_CHECK_CODE_NOP(compv::CompVAndroidDexClassLoader::init(activity->env)); // Important: "activity->env" valid on MainThread only
     android_app_set_activity_state((struct android_app*)activity->instance, APP_CMD_RESUME);
 }
 

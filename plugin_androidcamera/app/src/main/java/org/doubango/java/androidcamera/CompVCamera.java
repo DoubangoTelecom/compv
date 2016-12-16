@@ -1,4 +1,4 @@
-package org.doubango.androidcamera;
+package org.doubango.java.androidcamera;
 
 import android.graphics.PixelFormat;
 import android.graphics.SurfaceTexture;
@@ -42,9 +42,15 @@ public class CompVCamera {
         mPreviewCallback = new PreviewCallback() {
             @Override
             public void onPreviewFrame(byte[] _data, Camera _camera) {
-                Log.d(TAG, "onPreviewFrame");
                 if (mStarted) {
+                    if (mVideoFrameSize != _data.length) {
+                        Log.e(TAG, "Video frame size mismatch: " + mVideoFrameSize + "<>" + _data.length);
+                        return;
+                    }
+                    mVideoFrame.put(_data);
                     mProxy.pushFrame(mVideoFrame, mVideoFrameSize);
+                    mVideoFrame.rewind();
+
                     // do not use "_data" which could be null (e.g. on GSII)
                     mCamera.addCallbackBuffer(_data == null ? mVideoCallbackBytes : _data);
                 }
@@ -239,7 +245,7 @@ public class CompVCamera {
     }
 
     public boolean setSurfaceTexture(SurfaceTexture surfaceTexture) {
-        Log.d(TAG, "setUseFront("+surfaceTexture+")");
+        Log.d(TAG, "setSurfaceTexture("+surfaceTexture+")");
         if (mCamera != null) {
             try {
                 mCamera.setPreviewTexture(surfaceTexture);
@@ -259,6 +265,10 @@ public class CompVCamera {
 
     public CompVCameraAndroidProxy getProxy() {
         return mProxy;
+    }
+
+    public void setCallbackFunc(long funcptr, long userData) {
+        mProxy.setCallbackFunc(funcptr, userData);
     }
 
     private Camera.Size getBestPreviewSize(){
