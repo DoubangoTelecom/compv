@@ -60,13 +60,13 @@ HRESULT STDMETHODCALLTYPE CompVDSGrabber::BufferCB(
 
 	// Check if the foramt changed
 	if (!InlineIsEqualGUID(m_guidSubTypeNeg, capsNeg->subType)) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Camera media type [%s] changed (%s -> %s), updating the format", capsNeg->toString().c_str(), GuidNames[m_guidSubTypeNeg], GuidNames[capsNeg->subType]);
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Camera media type [%s] changed (%s -> %s), updating the format", capsNeg->toString().c_str(), CompVDSUtils::guidName(m_guidSubTypeNeg), CompVDSUtils::guidName(capsNeg->subType));
 		COMPV_CHECK_CODE_BAIL(err = CompVDSUtils::convertSubType(capsNeg->subType, m_eSubTypeNeg));
 		m_guidSubTypeNeg = capsNeg->subType;
 	}
 	
 	// Forward the image data to the listeners
-	COMPV_CHECK_CODE_BAIL(err = CompVImage::wrap(m_eSubTypeNeg, static_cast<const void*>(pBuffer), capsNeg->width, capsNeg->height, capsNeg->width, &m_ptrImageCB));
+	COMPV_CHECK_CODE_BAIL(err = CompVImage::wrap(m_eSubTypeNeg, static_cast<const void*>(pBuffer), static_cast<size_t>(capsNeg->width), static_cast<size_t>(capsNeg->height), static_cast<size_t>(capsNeg->width), &m_ptrImageCB));
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = BufferCB_func(m_ptrImageCB, BufferCB_pcUserData));
 
 bail:

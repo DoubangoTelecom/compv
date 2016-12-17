@@ -8,26 +8,32 @@
 #include "compv/base/compv_debug.h"
 
 #include <comutil.h>
+#include <initguid.h>
 
 #define COMPV_THIS_CLASSNAME "CompVDSUtils"
 
 COMPV_NAMESPACE_BEGIN()
 
+// MEDIASUBTYPE_I420 is defined in 'wmcodecdsp.h' (MediaFoundation)
+DEFINE_GUID(MEDIASUBTYPE_I420, 0x30323449, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
 struct {
 	COMPV_SUBTYPE subType;
 	const GUID& guid;
 } static const kCompVSubTypeGuidPairs[] = {
 	// Most computer vision features require grayscale image as input.
 	// YUV formats first because it's easier to convert to grayscal compared to RGB.
-	{ COMPV_SUBTYPE_PIXELS_YV12, MEDIASUBTYPE_YV12 }, // YUV420P, IYUV, I420: used by MPEG codecs
+	// FIXME(dmi)
+	{ COMPV_SUBTYPE_PIXELS_YUV420P, MEDIASUBTYPE_I420 }, // YUV420P, IYUV, I420: used by MPEG codecs
 	{ COMPV_SUBTYPE_PIXELS_NV12, MEDIASUBTYPE_NV12 }, // Used by NVIDIA CUDA
 	{ COMPV_SUBTYPE_PIXELS_UYVY, MEDIASUBTYPE_UYVY },
 	{ COMPV_SUBTYPE_PIXELS_YUY2, MEDIASUBTYPE_YUY2 },
+	{ COMPV_SUBTYPE_PIXELS_YV12, MEDIASUBTYPE_YV12 },
+
 	// RGB formats as fallback
-	{ COMPV_SUBTYPE_PIXELS_RGB24, MEDIASUBTYPE_RGB24 },
-	{ COMPV_SUBTYPE_PIXELS_RGBA32, MEDIASUBTYPE_RGB32 },
-	{ COMPV_SUBTYPE_PIXELS_ARGB32, MEDIASUBTYPE_ARGB32 },
-	{ COMPV_SUBTYPE_PIXELS_RGB565, MEDIASUBTYPE_RGB565 },
+	{ COMPV_SUBTYPE_PIXELS_BGR24, MEDIASUBTYPE_RGB24 },
+	{ COMPV_SUBTYPE_PIXELS_BGRA32, MEDIASUBTYPE_RGB32 },
+	{ COMPV_SUBTYPE_PIXELS_ABGR32, MEDIASUBTYPE_ARGB32 },
+	{ COMPV_SUBTYPE_PIXELS_RGB565LE, MEDIASUBTYPE_RGB565 },
 };
 static const size_t kCompVSubTypeGuidPairsCount = sizeof(kCompVSubTypeGuidPairs) / sizeof(kCompVSubTypeGuidPairs[0]);
 
@@ -39,6 +45,16 @@ static const size_t kCompVSubTypeGuidPairsCount = sizeof(kCompVSubTypeGuidPairs)
 		} \
 	} \
 }
+
+
+const char* CompVDSUtils::guidName(const GUID& guid)
+{
+	if (InlineIsEqualGUID(guid, MEDIASUBTYPE_I420)) {
+		return "MEDIASUBTYPE_I420";
+	}
+	return GuidNames[guid];
+}
+const char* CompVDSUtilsGuidName(const GUID& guid) { return CompVDSUtils::guidName(guid); } // Used in 'ds_config.h' to avoid including 'ds_utils.h'(recurssive include)
 
 COMPV_ERROR_CODE CompVDSUtils::enumerateCaptureDevices(CompVDSCameraDeviceInfoList& list)
 {
@@ -312,7 +328,7 @@ COMPV_ERROR_CODE CompVDSUtils::convertSubType(const GUID &subTypeIn, COMPV_SUBTY
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
-	COMPV_DEBUG_ERROR("CompV doesn't support subType %s", GuidNames[subTypeIn]);
+	COMPV_DEBUG_ERROR("CompV doesn't support subType %s", CompVDSUtils::guidName(subTypeIn));
 	return COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT;
 }
 
@@ -337,8 +353,8 @@ COMPV_ERROR_CODE CompVDSUtils::capsToMediaType(IAMStreamConfig* streamConfig, co
 	bih = &vih->bmiHeader;
 	COMPV_CHECK_HRESULT_EXP_BAIL(!bih, hr = E_POINTER);
 	bih->biSize = sizeof(BITMAPINFOHEADER);
-	bih->biWidth = static_cast<LONG>(caps.width);
-	bih->biHeight = static_cast<LONG>(caps.height);
+	bih->biWidth = caps.width;
+	bih->biHeight = caps.height;
 	bih->biSizeImage = GetBitmapSize(bih);
 
 	mediaType->cbFormat = sizeof(VIDEOINFOHEADER);
@@ -369,8 +385,8 @@ COMPV_ERROR_CODE CompVDSUtils::mediaTypeToCaps(const AM_MEDIA_TYPE* mediaType, C
 
 	bih = &vih->bmiHeader;
 	COMPV_CHECK_EXP_BAIL(!bih, err = COMPV_ERROR_CODE_E_INVALID_IMAGE_FORMAT);
-	caps.width = static_cast<size_t>(bih->biWidth);
-	caps.height = static_cast<size_t>(bih->biHeight);
+	caps.width = bih->biWidth;
+	caps.height = bih->biHeight;
 	
 	caps.subType = mediaType->subtype;
 bail:
@@ -404,8 +420,8 @@ HRESULT CompVDSUtils::supportedCaps(IBaseFilter *sourceFilter, std::vector<CompV
 			bih = &vih->bmiHeader;
 			COMPV_CHECK_HRESULT_EXP_BAIL(!vih, hr = E_POINTER);
 			caps_.push_back(CompVDSCameraCaps(
-					static_cast<size_t>(abs(bih->biWidth)),
-					static_cast<size_t>(abs(bih->biHeight)),
+					bih->biWidth,
+					bih->biHeight,
 					static_cast<int>(COMPV_DS_100NS_TO_SEC(vih->AvgTimePerFrame)),
 					mediaType->subtype)
 			);
@@ -444,8 +460,8 @@ COMPV_ERROR_CODE CompVDSUtils::bestCap(const std::vector<CompVDSCameraCaps>& sup
 				? kSubTypeMismatchPad // Not a must but important: If(!VideoProcess) then CLSID_CColorConvertDMO
 				: (kSubTypeMismatchPad >> (kCompVSubTypeGuidPairsCount - index));
 		}
-		score += static_cast<UINT32>(abs(static_cast<int>(it->width) - static_cast<int>(requested.width))); // Not a must: If (!VideoProcess) then CLSID_CResizerDMO
-		score += static_cast<UINT32>(abs(static_cast<int>(it->height) - static_cast<int>(requested.height))); // Not a must: If (!VideoProcess) then CLSID_CResizerDMO
+		score += static_cast<UINT32>(abs(it->width - requested.width)); // Not a must: If (!VideoProcess) then CLSID_CResizerDMO
+		score += static_cast<UINT32>(abs(it->height - requested.height)); // Not a must: If (!VideoProcess) then CLSID_CResizerDMO
 		if (!ignoreFPS) {
 			score += (it->fps == requested.fps) ? 0 : kFpsMismatchPad; // Fps is a must because without video processor no alternative exist (CLSID_CFrameRateConvertDmo doesn't support I420)
 		}

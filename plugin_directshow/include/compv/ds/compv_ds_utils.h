@@ -21,6 +21,8 @@ COMPV_NAMESPACE_BEGIN()
 class CompVDSUtils
 {
 public:
+	static const char* guidName(const GUID& guid);
+
     static COMPV_ERROR_CODE enumerateCaptureDevices(CompVDSCameraDeviceInfoList& list);
 
     static COMPV_ERROR_CODE createSourceFilter(__out IBaseFilter **sourceFilter, __in const std::string& deviceId = "");

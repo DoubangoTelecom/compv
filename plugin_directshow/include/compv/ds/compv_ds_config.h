@@ -106,6 +106,8 @@ static const CLSID CLSID_NullRenderer = { 0xC1F400A4, 0x3F08, 0x11d3,{ 0x9F, 0x0
 
 COMPV_NAMESPACE_BEGIN()
 
+extern const char* CompVDSUtilsGuidName(const GUID& guid);
+
 typedef HRESULT (STDMETHODCALLTYPE *CompVDSBufferCBFunc)(const CompVMatPtr image, const void *pcUserData);
 
 struct CompVDSCameraDeviceInfo {
@@ -120,13 +122,13 @@ struct CompVDSCameraDeviceInfo {
 };
 
 struct CompVDSCameraCaps {
-	size_t width;
-	size_t height;
+	LONG width;
+	LONG height;
 	int fps;
 	GUID subType;
 	// Important: update 'isEquals' and 'toString' functions if you add new field
 
-	CompVDSCameraCaps(size_t width_ = 640, size_t height_ = 480, int fps_ = 25, GUID subType_ = MEDIASUBTYPE_YUY2) {
+	CompVDSCameraCaps(LONG width_ = 640, LONG height_ = 480, int fps_ = 25, GUID subType_ = MEDIASUBTYPE_YUY2) {
 		width = width_;
 		height = height_;
 		fps = fps_;
@@ -142,7 +144,7 @@ struct CompVDSCameraCaps {
 			std::string("width=") + std::to_string(width) + std::string(", ")
 			+ std::string("height=") + std::to_string(height) + std::string(", ")
 			+ std::string("fps=") + std::to_string(fps) + std::string(", ")
-			+ std::string("subType=") + std::string(GuidNames[subType]);
+			+ std::string("subType=") + std::string(CompVDSUtilsGuidName(subType));
 	}
 };
 

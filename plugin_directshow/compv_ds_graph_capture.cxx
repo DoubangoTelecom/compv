@@ -15,6 +15,7 @@ CompVDSGraphCapture::CompVDSGraphCapture(const ISampleGrabberCB* pcSampleGrabber
     : m_bInit(false)
     , m_bConnected(false)
     , m_bStarted(false)
+	, m_strDeviceId("")
     , m_pCaptureGraphBuilder(NULL)
     , m_pGraphBuilder(NULL)
     , m_pGrabber(NULL)
@@ -38,10 +39,16 @@ COMPV_ERROR_CODE CompVDSGraphCapture::start(const std::string& deviceId, const C
 {
 	m_CapsPref = caps;
     if (m_bStarted) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "already started");
         return COMPV_ERROR_CODE_S_OK;
     }
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "start(%s)", deviceId.c_str());
     HRESULT hr = S_OK;
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	if (m_bConnected && m_strDeviceId.compare(deviceId) != 0) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Device id changed: '%s' -> '%s', reconnect", m_strDeviceId.c_str(), deviceId.c_str());
+		COMPV_CHECK_CODE_BAIL(err = changeSource(deviceId, m_bConnected));
+	}
     COMPV_CHECK_CODE_BAIL(err = connect(deviceId));
 	COMPV_CHECK_EXP_BAIL(!m_pMediaController, (err = COMPV_ERROR_CODE_E_INVALID_STATE));
 	COMPV_CHECK_CODE_BAIL(err = applyCaps());
@@ -59,20 +66,23 @@ bail:
 
 COMPV_ERROR_CODE CompVDSGraphCapture::stop()
 {
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "stop(%s)", m_strDeviceId.c_str());
     if (m_pGrabber) {
         COMPV_CHECK_HRESULT_CODE_NOP(m_pGrabber->SetCallback(NULL, 1)); // Dec(m_pcSampleGrabberCB.refCount)
     }
     if (m_pMediaController) {
         COMPV_CHECK_HRESULT_CODE_NOP(m_pMediaController->Stop());
     }
+	m_bStarted = false;
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVDSGraphCapture::init(const std::string& deviceId COMPV_DEFAULT(""))
+COMPV_ERROR_CODE CompVDSGraphCapture::init(const std::string& deviceId)
 {
     if (m_bInit) {
         return COMPV_ERROR_CODE_S_OK;
     }
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "init(%s)", deviceId.c_str());
     HRESULT hr = S_OK;
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
@@ -93,14 +103,7 @@ COMPV_ERROR_CODE CompVDSGraphCapture::init(const std::string& deviceId COMPV_DEF
     COMPV_CHECK_HRESULT_CODE_BAIL(hr = m_pGraphBuilder->AddFilter(m_pFilterNullRenderer, TEXT("NullRenderer")));
 
     // Source / Camera
-    COMPV_CHECK_CODE_BAIL(err = CompVDSUtils::createSourceFilter(&m_pFilterSource, deviceId));
-    COMPV_CHECK_HRESULT_CODE_BAIL(hr = m_pGraphBuilder->AddFilter(m_pFilterSource, TEXT("Source")));
-	COMPV_CHECK_HRESULT_CODE_BAIL(hr = m_pCaptureGraphBuilder->FindInterface(
-		&PIN_CATEGORY_CAPTURE,
-		&MEDIATYPE_Video,
-		m_pFilterSource,
-		IID_IAMStreamConfig,
-		reinterpret_cast<void**>(&m_pStreamConfig)));
+    COMPV_CHECK_CODE_BAIL(err = addSource(deviceId));
 
     // Media controller
     COMPV_CHECK_HRESULT_CODE_BAIL(hr = COMPV_DS_QUERY(m_pGraphBuilder, IID_IMediaControl, m_pMediaController));
@@ -117,6 +120,7 @@ bail:
 
 COMPV_ERROR_CODE CompVDSGraphCapture::deInit()
 {
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "deInit");
     COMPV_CHECK_CODE_NOP(stop());
     COMPV_CHECK_CODE_NOP(disconnect());
 
@@ -138,11 +142,12 @@ COMPV_ERROR_CODE CompVDSGraphCapture::deInit()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVDSGraphCapture::connect(const std::string& deviceId COMPV_DEFAULT(""))
+COMPV_ERROR_CODE CompVDSGraphCapture::connect(const std::string& deviceId)
 {
     if (m_bConnected) {
         return COMPV_ERROR_CODE_S_OK;
     }
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "connect(%s)", deviceId.c_str());
     COMPV_CHECK_CODE_RETURN(init(deviceId));
 
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -163,6 +168,7 @@ bail:
 
 COMPV_ERROR_CODE CompVDSGraphCapture::disconnect()
 {
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "disconnect(%s)", m_strDeviceId.c_str());
     if (m_pGraphBuilder && m_pFilterSource && m_pFilterSampleGrabber) {
         COMPV_CHECK_CODE_NOP(CompVDSUtils::disconnectFilters(m_pGraphBuilder, m_pFilterSource, m_pFilterSampleGrabber));
     }
@@ -173,10 +179,11 @@ COMPV_ERROR_CODE CompVDSGraphCapture::disconnect()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVDSGraphCapture::addSource(const std::string& deviceId COMPV_DEFAULT(""))
+COMPV_ERROR_CODE CompVDSGraphCapture::addSource(const std::string& deviceId)
 {
 	// We can only add source before the end of the initialization
-	COMPV_CHECK_EXP_RETURN(m_bInit || m_bStarted || m_pFilterSource || m_pStreamConfig || !m_pGraphBuilder || !m_pCaptureGraphBuilder, COMPV_ERROR_CODE_E_INVALID_STATE);
+	COMPV_CHECK_EXP_RETURN(m_bStarted || m_pFilterSource || m_pStreamConfig || !m_pGraphBuilder || !m_pCaptureGraphBuilder, COMPV_ERROR_CODE_E_INVALID_STATE);
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "addSource(%s)", deviceId.c_str());
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	HRESULT hr = S_OK;
 	bool filterAdded = false;
@@ -197,6 +204,21 @@ bail:
 		COMPV_DS_SAFE_RELEASE(m_pFilterSource);
 		COMPV_DS_SAFE_RELEASE(m_pStreamConfig);
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_DIRECTSHOW);
+	}
+	m_strDeviceId = deviceId;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVDSGraphCapture::changeSource(const std::string& deviceId, bool connect)
+{
+	COMPV_CHECK_EXP_RETURN(m_bStarted || !m_pFilterSource || !m_pStreamConfig || !m_pGraphBuilder || !m_pCaptureGraphBuilder, COMPV_ERROR_CODE_E_INVALID_STATE);
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "changeSource(%s)", deviceId.c_str());
+	COMPV_CHECK_CODE_RETURN(CompVDSUtils::disconnectFilters(m_pGraphBuilder, m_pFilterSource, m_pFilterSampleGrabber));
+	COMPV_DS_SAFE_RELEASE(m_pFilterSource);
+	COMPV_DS_SAFE_RELEASE(m_pStreamConfig);
+	COMPV_CHECK_CODE_RETURN(addSource(deviceId));
+	if (connect) {
+		COMPV_CHECK_CODE_RETURN(CompVDSUtils::connectFilters(m_pGraphBuilder, m_pFilterSource, m_pFilterSampleGrabber));
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

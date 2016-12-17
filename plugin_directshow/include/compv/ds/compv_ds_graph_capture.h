@@ -47,11 +47,12 @@ public:
     static COMPV_ERROR_CODE newObj(CompVDSGraphCapturePtrPtr graph, const ISampleGrabberCB* pcSampleGrabberCB);
 
 private:
-    COMPV_ERROR_CODE init(const std::string& deviceId = "");
+    COMPV_ERROR_CODE init(const std::string& deviceId);
     COMPV_ERROR_CODE deInit();
-    COMPV_ERROR_CODE connect(const std::string& deviceId = "");
+    COMPV_ERROR_CODE connect(const std::string& deviceId);
     COMPV_ERROR_CODE disconnect();
-	COMPV_ERROR_CODE addSource(const std::string& deviceId = "");
+	COMPV_ERROR_CODE addSource(const std::string& deviceId);
+	COMPV_ERROR_CODE changeSource(const std::string& deviceId, bool connect);
 	COMPV_ERROR_CODE queryCapNeg();
 	COMPV_ERROR_CODE applyCaps();
 
@@ -59,6 +60,7 @@ private:
     bool m_bInit;
     bool m_bConnected;
     bool m_bStarted;
+	std::string m_strDeviceId;
 	CompVDSCameraCaps m_CapsPref;
 	CompVDSCameraCaps m_CapsNeg;
     ICaptureGraphBuilder2* m_pCaptureGraphBuilder;

@@ -4,6 +4,7 @@ using namespace compv;
 
 CompVWindowPtr window;
 CompVCameraPtr camera;
+CompVCameraDeviceInfoList devices;
 
 #define CAMERA_WIDTH		1280 //640
 #define CAMERA_HEIGHT		720 //480
@@ -92,6 +93,16 @@ private:
 	CompVSingleSurfaceLayerPtr m_ptrSingleSurfaceLayer;
 };
 
+// FIXME
+static void *COMPV_STDCALL cameraRestart(void * arg)
+{
+	camera->stop();
+	COMPV_CHECK_CODE_ASSERT(camera->setInt(COMPV_CAMERA_CAP_INT_WIDTH, 1));
+	COMPV_CHECK_CODE_ASSERT(camera->setInt(COMPV_CAMERA_CAP_INT_HEIGHT, 1));
+	COMPV_CHECK_CODE_ASSERT(camera->start(devices[1].id));
+	return NULL;
+}
+
 static void* COMPV_STDCALL WorkerThread(void* arg)
 {
 #if 0 // Chroma conversion
@@ -144,9 +155,9 @@ bail:
 
 #elif 1 // Camera
     COMPV_ERROR_CODE err;
-    CompVCameraDeviceInfoList devices;
 	CompVSingleSurfaceLayerPtr singleSurfaceLayer;
 	MyCameraListenerPtr listener;
+	CompVThreadPtr thread;
 	
 	COMPV_CHECK_CODE_BAIL(err = window->addSingleLayerSurface(&singleSurfaceLayer));
 	COMPV_CHECK_CODE_BAIL(err = MyCameraListener::newObj(&listener, *singleSurfaceLayer));
@@ -161,6 +172,10 @@ bail:
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_FPS, CAMERA_FPS));
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_SUBTYPE, CAMERA_SUBTYPE));
     COMPV_CHECK_CODE_BAIL(err = camera->start(devices[0].id));
+
+	//if (devices.size() > 1) {
+	//	CompVThread::newObj(&thread, cameraRestart);
+	//}
 
     //while (CompVDrawing::isLoopRunning()) {
         //CompVThread::sleep(1); // FIXME
