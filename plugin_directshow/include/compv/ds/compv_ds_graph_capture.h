@@ -26,16 +26,22 @@ public:
     virtual ~CompVDSGraphCapture();
     COMPV_OBJECT_GET_ID(CompVDSGraphCapture);
     COMPV_INLINE bool isConnected()const {
-        return m_bConnect;
+        return m_bConnected;
     }
     COMPV_INLINE bool isStarted()const {
-        return m_bStart;
+        return m_bStarted;
     }
-    COMPV_INLINE const AM_MEDIA_TYPE& connectedMediaType()const {
-        return m_ConnectedMediaType;
+    COMPV_INLINE const AM_MEDIA_TYPE* connectedMediaType()const {
+        return &m_ConnectedMediaType;
     }
+	COMPV_INLINE const CompVDSCameraCaps* capsNeg()const {
+		return &m_CapsNeg;
+	}
+	COMPV_INLINE const CompVDSCameraCaps* capsPref()const {
+		return &m_CapsPref;
+	}
 
-    COMPV_ERROR_CODE start(const std::string& deviceId = "");
+    COMPV_ERROR_CODE start(const std::string& deviceId, const CompVDSCameraCaps& caps);
     COMPV_ERROR_CODE stop();
 
     static COMPV_ERROR_CODE newObj(CompVDSGraphCapturePtrPtr graph, const ISampleGrabberCB* pcSampleGrabberCB);
@@ -45,11 +51,16 @@ private:
     COMPV_ERROR_CODE deInit();
     COMPV_ERROR_CODE connect(const std::string& deviceId = "");
     COMPV_ERROR_CODE disconnect();
+	COMPV_ERROR_CODE addSource(const std::string& deviceId = "");
+	COMPV_ERROR_CODE queryCapNeg();
+	COMPV_ERROR_CODE applyCaps();
 
 private:
     bool m_bInit;
-    bool m_bConnect;
-    bool m_bStart;
+    bool m_bConnected;
+    bool m_bStarted;
+	CompVDSCameraCaps m_CapsPref;
+	CompVDSCameraCaps m_CapsNeg;
     ICaptureGraphBuilder2* m_pCaptureGraphBuilder;
     IGraphBuilder* m_pGraphBuilder;
 
@@ -61,6 +72,8 @@ private:
     IBaseFilter* m_pFilterSampleGrabber;
     IBaseFilter* m_pFilterNullRenderer;
     IBaseFilter* m_pFilterSource;
+
+	IAMStreamConfig* m_pStreamConfig;
 
     const ISampleGrabberCB* m_pcSampleGrabberCB;
 

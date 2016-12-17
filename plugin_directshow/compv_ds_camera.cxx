@@ -38,7 +38,7 @@ COMPV_ERROR_CODE CompVDSCamera::devices(CompVCameraDeviceInfoList& list) /* Over
 COMPV_ERROR_CODE CompVDSCamera::start(const std::string& deviceId COMPV_DEFAULT("")) /* Overrides(CompVCamera) */
 {
 	CompVAutoLock<CompVDSCamera>(this);
-    COMPV_CHECK_CODE_RETURN(m_pGrabber->start(deviceId));
+    COMPV_CHECK_CODE_RETURN(m_pGrabber->start(deviceId, m_Caps));
     return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -47,6 +47,42 @@ COMPV_ERROR_CODE CompVDSCamera::stop() /* Overrides(CompVCamera) */
 	CompVAutoLock<CompVDSCamera>(this);
     COMPV_CHECK_CODE_RETURN(m_pGrabber->stop());
     return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVDSCamera::set(int id, const void* valuePtr, size_t valueSize) /* Overrides(CompVCaps) */
+{
+	COMPV_CHECK_EXP_RETURN(!valuePtr || !valueSize, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	switch (id) {
+		case COMPV_CAMERA_CAP_INT_WIDTH: {
+			COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+			m_Caps.width = *reinterpret_cast<const int*>(valuePtr);
+			return COMPV_ERROR_CODE_S_OK;
+		}
+		case COMPV_CAMERA_CAP_INT_HEIGHT: {
+			COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+			m_Caps.height = *reinterpret_cast<const int*>(valuePtr);
+			return COMPV_ERROR_CODE_S_OK;
+		}
+		case COMPV_CAMERA_CAP_INT_FPS: {
+			COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+			m_Caps.fps = *reinterpret_cast<const int*>(valuePtr);
+			return COMPV_ERROR_CODE_S_OK;
+		}
+		case COMPV_CAMERA_CAP_INT_SUBTYPE: {
+			COMPV_CHECK_CODE_RETURN(CompVDSUtils::convertSubType(static_cast<COMPV_SUBTYPE>(*reinterpret_cast<const int*>(valuePtr)), m_Caps.subType));
+			return COMPV_ERROR_CODE_S_OK;
+		}
+		default: {
+			COMPV_DEBUG_ERROR("DirectShow camera implementation doesn't support capability id %d", id);
+			return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+		}
+	}
+}
+
+COMPV_ERROR_CODE CompVDSCamera::get(int id, const void*& valuePtr, size_t valueSize) /* Overrides(CompVCaps) */
+{
+	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVDSCamera::newObj(CompVDSCameraPtrPtr camera)

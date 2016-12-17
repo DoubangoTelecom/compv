@@ -31,6 +31,9 @@
 #define COMPV_DS_QUERY(source, iid, target) \
 	source->QueryInterface(iid, reinterpret_cast<void**>(&target))
 
+#define COMPV_DS_SEC_TO_100NS(SEC)  static_cast<REFERENCE_TIME>(10000000ui64) / static_cast<REFERENCE_TIME>((SEC))
+#define COMPV_DS_100NS_TO_SEC(_100NS)  static_cast<REFERENCE_TIME>(10000000ui64) / static_cast<REFERENCE_TIME>((_100NS))
+
 #define COMPV_CHECK_HRESULT_CODE_NOP(hr) do { HRESULT __hr__ = (hr); if (FAILED(__hr__)) { COMPV_DEBUG_ERROR("Operation Failed (%08x)", __hr__); } } while(0)
 #define COMPV_CHECK_HRESULT_CODE_BAIL(hr) do { HRESULT __hr__ = (hr); if (FAILED(__hr__)) { COMPV_DEBUG_ERROR("Operation Failed (%08x)", __hr__); goto bail; } } while(0)
 #define COMPV_CHECK_HRESULT_CODE_RETURN(hr) do { HRESULT __hr__ = (hr); if (FAILED(__hr__)) { COMPV_DEBUG_ERROR("Operation Failed (%08x)", __hr__); return __hr__; } } while(0)
@@ -114,6 +117,33 @@ struct CompVDSCameraDeviceInfo {
         name = name_;
         description = description_;
     }
+};
+
+struct CompVDSCameraCaps {
+	size_t width;
+	size_t height;
+	int fps;
+	GUID subType;
+	// Important: update 'isEquals' and 'toString' functions if you add new field
+
+	CompVDSCameraCaps(size_t width_ = 640, size_t height_ = 480, int fps_ = 25, GUID subType_ = MEDIASUBTYPE_YUY2) {
+		width = width_;
+		height = height_;
+		fps = fps_;
+		subType = subType_;
+	}
+
+	COMPV_INLINE bool isEquals(const CompVDSCameraCaps& caps)const {
+		return width == caps.width && height == caps.height && fps == caps.fps && InlineIsEqualGUID(subType, caps.subType);
+	}
+
+	COMPV_INLINE const std::string toString()const {
+		return
+			std::string("width=") + std::to_string(width) + std::string(", ")
+			+ std::string("height=") + std::to_string(height) + std::string(", ")
+			+ std::string("fps=") + std::to_string(fps) + std::string(", ")
+			+ std::string("subType=") + std::string(GuidNames[subType]);
+	}
 };
 
 typedef std::vector<CompVDSCameraDeviceInfo > CompVDSCameraDeviceInfoList;

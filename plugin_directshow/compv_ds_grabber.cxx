@@ -5,7 +5,10 @@
 * WebSite: http://compv.org
 */
 #include "compv/ds/compv_ds_grabber.h"
+#include "compv/ds/compv_ds_utils.h"
 #include "compv/base/image/compv_image.h"
+
+#define COMPV_THIS_CLASSNAME "CompVDSGrabber"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -15,6 +18,8 @@ COMPV_NAMESPACE_BEGIN()
 
 CompVDSGrabber::CompVDSGrabber(CompVDSBufferCBFunc func COMPV_DEFAULT(NULL), const void* pcUserData COMPV_DEFAULT(NULL))
     : CUnknown(TEXT("CompVDSGrabber"), static_cast<LPUNKNOWN>(NULL))
+	, m_eSubTypeNeg(COMPV_SUBTYPE_NONE)
+	, m_guidSubTypeNeg(GUID_NULL)
 {
 	m_BufferCB.func = func;
 	m_BufferCB.pcUserData = pcUserData;
@@ -44,29 +49,24 @@ HRESULT STDMETHODCALLTYPE CompVDSGrabber::BufferCB(
 	if (!BufferCB_func) {
 		return S_OK;
 	}
-	
-	// FIXME: nothing is correct here
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 
-    const AM_MEDIA_TYPE& mediaType = m_ptrGraphCapture->connectedMediaType();
-    VIDEOINFOHEADER *pVih = NULL;
-    BITMAPINFOHEADER* bih = NULL;
 	HRESULT hr = S_OK;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	const CompVDSCameraCaps* capsNeg;
 
-    // Examine the format block.
-    if ((mediaType.formattype == FORMAT_VideoInfo) && (mediaType.cbFormat >= sizeof(VIDEOINFOHEADER)) && (mediaType.pbFormat != NULL)) {
-        pVih = reinterpret_cast<VIDEOINFOHEADER *>(mediaType.pbFormat);
-        bih = &pVih->bmiHeader;
-    }
+	// Get the negociated caps (camera connected MediaType)
+	capsNeg = m_ptrGraphCapture->capsNeg();
+	COMPV_CHECK_HRESULT_EXP_BAIL(!capsNeg, hr = E_POINTER);
 
-	//if (mediaType.subtype == MEDIASUBTYPE_YUY2) {
-	//    COMPV_DEBUG_INFO("MEDIASUBTYPE_YUY2");
-	//}
-
-	// FIXME(dmi): chroma fixed
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-	COMPV_CHECK_CODE_BAIL(err = CompVImage::wrap(COMPV_SUBTYPE_PIXELS_YUY2, static_cast<const void*>(pBuffer), static_cast<size_t>(bih->biWidth), static_cast<size_t>(bih->biHeight), static_cast<size_t>(bih->biWidth), &m_ptrImageCB));
+	// Check if the foramt changed
+	if (!InlineIsEqualGUID(m_guidSubTypeNeg, capsNeg->subType)) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Camera media type [%s] changed (%s -> %s), updating the format", capsNeg->toString().c_str(), GuidNames[m_guidSubTypeNeg], GuidNames[capsNeg->subType]);
+		COMPV_CHECK_CODE_BAIL(err = CompVDSUtils::convertSubType(capsNeg->subType, m_eSubTypeNeg));
+		m_guidSubTypeNeg = capsNeg->subType;
+	}
+	
+	// Forward the image data to the listeners
+	COMPV_CHECK_CODE_BAIL(err = CompVImage::wrap(m_eSubTypeNeg, static_cast<const void*>(pBuffer), capsNeg->width, capsNeg->height, capsNeg->width, &m_ptrImageCB));
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = BufferCB_func(m_ptrImageCB, BufferCB_pcUserData));
 
 bail:
@@ -94,12 +94,12 @@ ULONG STDMETHODCALLTYPE CompVDSGrabber::Release(void) /*Overrides(IUnknown)*/
     return CUnknown::NonDelegatingRelease(); // base implementation
 }
 
-COMPV_ERROR_CODE CompVDSGrabber::start(const std::string& deviceId COMPV_DEFAULT(""))
+COMPV_ERROR_CODE CompVDSGrabber::start(const std::string& deviceId, const CompVDSCameraCaps& caps)
 {
     if (!m_ptrGraphCapture) {
         COMPV_CHECK_CODE_RETURN(CompVDSGraphCapture::newObj(&m_ptrGraphCapture, this));
     }
-    COMPV_CHECK_CODE_RETURN(m_ptrGraphCapture->start(deviceId));
+    COMPV_CHECK_CODE_RETURN(m_ptrGraphCapture->start(deviceId, caps));
     return COMPV_ERROR_CODE_S_OK;
 }
 

@@ -12,10 +12,21 @@
 #include "compv/base/compv_sharedlib.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_mat.h"
+#include "compv/base/compv_caps.h"
 
 #include <vector>
 
 COMPV_NAMESPACE_BEGIN()
+
+//
+//	Capabilities
+//
+enum {
+	COMPV_CAMERA_CAP_INT_WIDTH,
+	COMPV_CAMERA_CAP_INT_HEIGHT,
+	COMPV_CAMERA_CAP_INT_FPS,
+	COMPV_CAMERA_CAP_INT_SUBTYPE, // COMPV_SUBTYPE pixel format (e.g. COMPV_SUBTYPE_PIXELS_YUV420P)
+};
 
 //
 //	CompVCameraDeviceInfo
@@ -56,7 +67,7 @@ COMPV_OBJECT_DECLARE_PTRS(Camera)
 
 typedef COMPV_ERROR_CODE(*CompVCameraNewFunc)(CompVCameraPtrPtr camera);
 
-class COMPV_CAMERA_API CompVCamera : public CompVObj
+class COMPV_CAMERA_API CompVCamera : public CompVObj, public CompVCaps
 {
 protected:
     CompVCamera();

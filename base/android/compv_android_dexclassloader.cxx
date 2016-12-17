@@ -1,5 +1,5 @@
 /* Copyright(C) 2016 - 2017 Doubango Telecom <https://www.doubango.org>
-*File author : Mamadou DIOP(Doubango Telecom, France).
+* File author : Mamadou DIOP (Doubango Telecom, France).
 * License : GPLv3.For commercial license please contact us.
 * Source code : https://github.com/DoubangoTelecom/compv
 *WebSite : http ://compv.org
@@ -421,7 +421,7 @@ COMPV_ERROR_CODE CompVAndroidDexClassLoader::moveDexFileFromAssetsToData(JNIEnv*
 	if (!nativeLibFileName.empty()) {
 		bool bNativeLibFound = false;
 		
-		COMPV_CHECK_EXP_RETURN(CompVBase::CPU_ABI().empty(), COMPV_ERROR_CODE_E_SYSTEM);
+		COMPV_CHECK_EXP_RETURN(CompVBase::CPU_ABI().empty(), (err = COMPV_ERROR_CODE_E_SYSTEM));
 		const std::string nativeLibSourceFilePath = std::string("lib/") + CompVBase::CPU_ABI() + std::string("/") + nativeLibFileName;
 		COMPV_DEBUG_INFO("DexClassLoader trying to extract native lib from '%s'", nativeLibSourceFilePath.c_str());
 		// jobjectBufferInputStream.reset()
@@ -550,6 +550,7 @@ bail:
 	COMPV_jni_DeleteLocalRef(jEnv, jstringDexPath);
 	COMPV_jni_DeleteLocalRef(jEnv, jstringOptimizedDirectory);
 	COMPV_jni_DeleteLocalRef(jEnv, jstringLibrarySearchPath);
+	COMPV_jni_DeleteLocalRef(jEnv, jobjectInstance);
 	
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
 		if (*instance) {

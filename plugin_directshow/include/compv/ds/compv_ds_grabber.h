@@ -45,12 +45,14 @@ public:
 
     virtual ULONG STDMETHODCALLTYPE Release(void) override /*Overrides(IUnknown)*/;
 
-    COMPV_ERROR_CODE start(const std::string& deviceId = "");
+    COMPV_ERROR_CODE start(const std::string& deviceId, const CompVDSCameraCaps& caps);
     COMPV_ERROR_CODE stop();
 
 private:
     CompVDSGraphCapturePtr m_ptrGraphCapture;
 	CompVMatPtr m_ptrImageCB;
+	GUID m_guidSubTypeNeg;
+	COMPV_SUBTYPE m_eSubTypeNeg;
 	struct {
 		CompVDSBufferCBFunc func;
 		const void* pcUserData;

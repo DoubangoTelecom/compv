@@ -22,18 +22,25 @@ class CompVDSUtils
 {
 public:
     static COMPV_ERROR_CODE enumerateCaptureDevices(CompVDSCameraDeviceInfoList& list);
+
     static COMPV_ERROR_CODE createSourceFilter(__out IBaseFilter **sourceFilter, __in const std::string& deviceId = "");
 
     static COMPV_ERROR_CODE connectFilters(IGraphBuilder* graphBuilder, IBaseFilter* source, IBaseFilter* destination, AM_MEDIA_TYPE* mediaType = NULL);
-
     static COMPV_ERROR_CODE disconnectFilters(IGraphBuilder* graphBuilder, IBaseFilter* source, IBaseFilter* destination);
-
     static COMPV_ERROR_CODE disconnectAllFilters(IGraphBuilder* graphBuilder);
-
     static COMPV_ERROR_CODE removeAllFilters(IGraphBuilder* graphBuilder);
 
+	static COMPV_ERROR_CODE convertSubType(const COMPV_SUBTYPE& subTypeIn, GUID &subTypeOut);
+	static COMPV_ERROR_CODE convertSubType(const GUID &subTypeIn, COMPV_SUBTYPE &subTypeOut);
+
+	static COMPV_ERROR_CODE capsToMediaType(IAMStreamConfig* streamConfig, const CompVDSCameraCaps &caps, AM_MEDIA_TYPE*& mediaType);
+	static COMPV_ERROR_CODE mediaTypeToCaps(const AM_MEDIA_TYPE* mediaType, CompVDSCameraCaps &caps);
+
+	static HRESULT supportedCaps(IBaseFilter *sourceFilter, std::vector<CompVDSCameraCaps>& caps);
+	static COMPV_ERROR_CODE bestCap(const std::vector<CompVDSCameraCaps>& supported, const CompVDSCameraCaps& requested, CompVDSCameraCaps& best, bool ignoreFPS = false);
+
 private:
-    static HRESULT getPin(IBaseFilter *pFilter, PIN_DIRECTION dir, IPin** pin);
+    static HRESULT pin(IBaseFilter *pFilter, PIN_DIRECTION dir, IPin** pin);
     static HRESULT bstrToString(__in BSTR* bstr, __out std::string& str);
 };
 

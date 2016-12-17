@@ -20,6 +20,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_base.cxx" />
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_bind.cxx" />
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_buffer.cxx" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)compv_caps.cxx" />
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_common.cxx" />
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_cpu.cxx" />
     <ClCompile Include="$(MSBuildThisFileDirectory)compv_debug.cxx" />
@@ -117,6 +118,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_base.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_bind.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_buffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_caps.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_common.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_config.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\compv\base\compv_cpu.h" />
