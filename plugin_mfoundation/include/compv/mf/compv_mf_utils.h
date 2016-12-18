@@ -137,6 +137,10 @@ public:
 		IMFMediaSession *pSession, // The Session
 		IMFMediaSource *pSource = NULL // Source to shutdown (optional)
 	);
+	static HRESULT stopSession(
+		IMFMediaSession *pSession, // The Session
+		IMFMediaSource *pSource = NULL // Source to shutdown (optional)
+	);
 	static HRESULT pauseSession(
 		IMFMediaSession *pSession, // The session
 		IMFMediaSource *pSource = NULL// Source to pause (optional)

@@ -12,6 +12,7 @@
 #include "compv/camera/compv_camera.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_lock.h"
+#include "compv/base/parallel/compv_thread.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -39,17 +40,24 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVMFCameraPtrPtr camera);
 
 private:
+	COMPV_ERROR_CODE shutdown();
 	COMPV_ERROR_CODE init(const std::string& deviceId);
 	COMPV_ERROR_CODE deInit();
+	HRESULT queryCapNeg(IMFTopology *pTopology);
 	static HRESULT STDMETHODCALLTYPE BufferCB(REFGUID guidMajorMediaType, DWORD dwSampleFlags,
 		LONGLONG llSampleTime, LONGLONG llSampleDuration, const BYTE * pSampleBuffer,
 		DWORD dwSampleSiz, const void *pcUserData);
+	static void *COMPV_STDCALL RunSessionThread(void * arg);
+	
 
 private:
 	bool m_bInitialized;
 	bool m_bStarted;
 	CompVMFCameraCaps m_CapsPref;
 	CompVMFCameraCaps m_CapsNeg;
+	COMPV_SUBTYPE m_eSubTypeNeg;
+	CompVThreadPtr m_ptrThread;
+	CompVMatPtr m_ptrImageCB;
 
 	HWND m_hWndPreview;
 	IMFMediaSession* m_pSession;

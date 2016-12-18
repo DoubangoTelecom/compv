@@ -16,8 +16,11 @@
 #define COMPV_THIS_CLASSNAME "CompVMFUtils"
 
 // Video Processor
+// https://msdn.microsoft.com/en-us/library/windows/desktop/hh162913(v=vs.85).aspx
 DEFINE_GUID(CLSID_VideoProcessorMFT,
 	0x88753b26, 0x5b24, 0x49bd, 0xb2, 0xe7, 0xc, 0x44, 0x5c, 0x78, 0xc9, 0x82);
+
+const char* CompVMFUtilsGuidName(const GUID& guid) { return compv::CompVMFUtils::guidName(guid); } // Used in 'mf_config.h' to avoid including 'mf_utils.h'(recurssive include)
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -64,7 +67,6 @@ const char* CompVMFUtils::guidName(__in const GUID& guid)
 	}
 	return GuidNames[guid];
 }
-const char* CompVMFUtilsGuidName(const GUID& guid) { return CompVMFUtils::guidName(guid); } // Used in 'mf_config.h' to avoid including 'mf_utils.h'(recurssive include)
 
 
 HRESULT CompVMFUtils::startup()
@@ -686,9 +688,9 @@ HRESULT CompVMFUtils::createTopology(
 	HRESULT hr = S_OK;
 	DWORD cStreams = 0;
 	BOOL bSourceFound = FALSE;
-	BOOL bSupportedSize = TRUE;
-	BOOL bSupportedFps = TRUE;
-	BOOL bSupportedFormat = TRUE;
+	BOOL bSupportedSize = FALSE;
+	BOOL bSupportedFps = FALSE;
+	BOOL bSupportedFormat = FALSE;
 	BOOL bVideoProcessorSupported = FALSE;
 	GUID inputMajorType, inputSubType;
 
@@ -1162,7 +1164,7 @@ bail:
 	return hr;
 }
 
-// Stop session
+// Shutdown session
 HRESULT CompVMFUtils::shutdownSession(
 	IMFMediaSession *pSession, // The Session
 	IMFMediaSource *pSource // Source to shutdown (optional)
@@ -1174,7 +1176,23 @@ HRESULT CompVMFUtils::shutdownSession(
 		pSource->Shutdown();
 	}
 	if (pSession) {
+		pSession->Stop();
 		pSession->Shutdown();
+	}
+	return S_OK;
+}
+
+HRESULT CompVMFUtils::stopSession(
+	IMFMediaSession *pSession, // The Session
+	IMFMediaSource *pSource COMPV_DEFAULT(NULL) // Source to shutdown (optional)
+)
+{
+	// MUST be source then session
+	if (pSource) {
+		pSource->Stop();
+	}
+	if (pSession) {
+		pSession->Stop();
 	}
 	return S_OK;
 }

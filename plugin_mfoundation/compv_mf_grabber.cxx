@@ -47,9 +47,7 @@ STDMETHODIMP CompVMFGrabberCB::QueryInterface(REFIID riid, void** ppv)
 		{ 0 }
 	};
 	COMPV_VS_DISABLE_WARNINGS_END()
-	HRESULT hr;
-	COMPV_CHECK_HRESULT_CODE_RETURN(hr = QISearch(this, qit, riid, ppv));
-	return hr;
+	return QISearch(this, qit, riid, ppv); // Do not check the return, expected to fail when interface doesn't exist
 }
 
 STDMETHODIMP_(ULONG) CompVMFGrabberCB::AddRef()

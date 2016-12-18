@@ -9,7 +9,7 @@ CompVCameraDeviceInfoList devices;
 #define CAMERA_WIDTH		1280 //640
 #define CAMERA_HEIGHT		720 //480
 #define CAMERA_FPS			25
-#define CAMERA_SUBTYPE		COMPV_SUBTYPE_PIXELS_YUY2
+#define CAMERA_SUBTYPE		COMPV_SUBTYPE_PIXELS_NV12
 
 static void* COMPV_STDCALL WorkerThread(void* arg);
 
@@ -171,7 +171,7 @@ bail:
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_HEIGHT, CAMERA_HEIGHT));
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_FPS, CAMERA_FPS));
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_SUBTYPE, CAMERA_SUBTYPE));
-    COMPV_CHECK_CODE_BAIL(err = camera->start(devices[0].id));
+    COMPV_CHECK_CODE_BAIL(err = camera->start(devices[1].id));
 
 	//if (devices.size() > 1) {
 	//	CompVThread::newObj(&thread, cameraRestart);

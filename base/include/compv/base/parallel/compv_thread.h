@@ -15,7 +15,7 @@ COMPV_NAMESPACE_BEGIN()
 
 typedef void comp_thread_handle_t;
 #if COMPV_OS_WINDOWS
-typedef unsigned long compv_thread_id_t;
+typedef uintptr_t compv_thread_id_t;
 #	define COMPV_THREAD_PRIORITY_LOW					THREAD_PRIORITY_LOWEST
 #	define COMPV_THREAD_PRIORITY_MEDIUM					THREAD_PRIORITY_NORMAL
 #	define COMPV_THREAD_PRIORITY_HIGH					THREAD_PRIORITY_HIGHEST
