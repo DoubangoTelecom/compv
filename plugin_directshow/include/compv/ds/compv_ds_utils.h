@@ -21,28 +21,28 @@ COMPV_NAMESPACE_BEGIN()
 class CompVDSUtils
 {
 public:
-	static const char* guidName(const GUID& guid);
+	static const char* guidName(__in const GUID& guid);
 
-    static COMPV_ERROR_CODE enumerateCaptureDevices(CompVDSCameraDeviceInfoList& list);
+    static COMPV_ERROR_CODE enumerateCaptureDevices(__out CompVDSCameraDeviceInfoList& list);
 
     static COMPV_ERROR_CODE createSourceFilter(__out IBaseFilter **sourceFilter, __in const std::string& deviceId = "");
 
-    static COMPV_ERROR_CODE connectFilters(IGraphBuilder* graphBuilder, IBaseFilter* source, IBaseFilter* destination, AM_MEDIA_TYPE* mediaType = NULL);
-    static COMPV_ERROR_CODE disconnectFilters(IGraphBuilder* graphBuilder, IBaseFilter* source, IBaseFilter* destination);
-    static COMPV_ERROR_CODE disconnectAllFilters(IGraphBuilder* graphBuilder);
-    static COMPV_ERROR_CODE removeAllFilters(IGraphBuilder* graphBuilder);
+    static COMPV_ERROR_CODE connectFilters(__in IGraphBuilder* graphBuilder, __in IBaseFilter* source, __in IBaseFilter* destination, __in AM_MEDIA_TYPE* mediaType = NULL);
+    static COMPV_ERROR_CODE disconnectFilters(__in IGraphBuilder* graphBuilder, __in IBaseFilter* source, __in IBaseFilter* destination);
+    static COMPV_ERROR_CODE disconnectAllFilters(__in IGraphBuilder* graphBuilder);
+    static COMPV_ERROR_CODE removeAllFilters(__in IGraphBuilder* graphBuilder);
 
-	static COMPV_ERROR_CODE convertSubType(const COMPV_SUBTYPE& subTypeIn, GUID &subTypeOut);
-	static COMPV_ERROR_CODE convertSubType(const GUID &subTypeIn, COMPV_SUBTYPE &subTypeOut);
+	static COMPV_ERROR_CODE convertSubType(__in const COMPV_SUBTYPE& subTypeIn, __out GUID &subTypeOut);
+	static COMPV_ERROR_CODE convertSubType(__in const GUID &subTypeIn, __out COMPV_SUBTYPE &subTypeOut);
 
 	static COMPV_ERROR_CODE capsToMediaType(IAMStreamConfig* streamConfig, const CompVDSCameraCaps &caps, AM_MEDIA_TYPE*& mediaType);
 	static COMPV_ERROR_CODE mediaTypeToCaps(const AM_MEDIA_TYPE* mediaType, CompVDSCameraCaps &caps);
 
-	static HRESULT supportedCaps(IBaseFilter *sourceFilter, std::vector<CompVDSCameraCaps>& caps);
-	static COMPV_ERROR_CODE bestCap(const std::vector<CompVDSCameraCaps>& supported, const CompVDSCameraCaps& requested, CompVDSCameraCaps& best, bool ignoreFPS = false);
+	static HRESULT supportedCaps(__in IBaseFilter *sourceFilter, __out std::vector<CompVDSCameraCaps>& caps);
+	static COMPV_ERROR_CODE bestCap(__in const std::vector<CompVDSCameraCaps>& supported, __in const CompVDSCameraCaps& requested, __out CompVDSCameraCaps& best, __in bool ignoreFPS = false);
 
 private:
-    static HRESULT pin(IBaseFilter *pFilter, PIN_DIRECTION dir, IPin** pin);
+    static HRESULT pin(__in IBaseFilter *pFilter, __in PIN_DIRECTION dir, __out IPin** pin);
     static HRESULT bstrToString(__in BSTR* bstr, __out std::string& str);
 };
 

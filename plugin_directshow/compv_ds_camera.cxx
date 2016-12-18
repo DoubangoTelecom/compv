@@ -58,7 +58,7 @@ COMPV_ERROR_CODE CompVDSCamera::set(int id, const void* valuePtr, size_t valueSi
 {
 	CompVAutoLock<CompVDSCamera>(this);
 	COMPV_CHECK_EXP_RETURN(!valuePtr || !valueSize, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "set(%d, %p, %zu)", id, valuePtr, valueSize);
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(%d, %p, %zu)", __FUNCTION__, id, valuePtr, valueSize);
 	switch (id) {
 		case COMPV_CAMERA_CAP_INT_WIDTH: {
 			COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);

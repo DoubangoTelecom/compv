@@ -258,7 +258,7 @@ COMPV_ERROR_CODE CompVDSGraphCapture::applyCaps()
 		COMPV_CHECK_CODE_BAIL(err = CompVDSUtils::capsToMediaType(m_pStreamConfig, best, mediaType));
 		hr = m_pStreamConfig->SetFormat(mediaType);
 		if (FAILED(hr)) {
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Failed to apply caps (%s) without, trying to use best cap *with* fps", m_CapsPref.toString().c_str());
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Failed to apply caps (%s) without fps, trying to use best cap *with* fps", m_CapsPref.toString().c_str());
 			COMPV_CHECK_CODE_BAIL(err = CompVDSUtils::bestCap(capsSupported, m_CapsPref, best, false)); // do not ignore fps
 			COMPV_CHECK_CODE_BAIL(err = CompVDSUtils::capsToMediaType(m_pStreamConfig, best, mediaType));
 			COMPV_CHECK_HRESULT_CODE_BAIL(hr = m_pStreamConfig->SetFormat(mediaType));

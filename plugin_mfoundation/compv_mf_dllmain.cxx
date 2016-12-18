@@ -5,6 +5,8 @@
 * WebSite: http://compv.org
 */
 #include "compv/mf/compv_mf_config.h"
+#include "compv/mf/compv_mf_camera.h"
+#include "compv/mf/compv_mf_utils.h"
 
 #if !COMPV_OS_WINDOWS_CE
 BOOL APIENTRY DllMain(HMODULE hModule,
@@ -22,3 +24,19 @@ BOOL APIENTRY DllMain(HMODULE hModule,
     return TRUE;
 }
 #endif
+
+COMPV_NAMESPACE_BEGIN()
+
+extern "C" COMPV_PLUGIN_MFOUNDATION_API COMPV_ERROR_CODE newObjCamera(CompVCameraPtrPtr camera)
+{
+	COMPV_CHECK_EXP_RETURN(!camera, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(FAILED(CompVMFUtils::startup()), COMPV_ERROR_CODE_E_MFOUNDATION);
+
+	CompVMFCameraPtr camera_;
+	COMPV_CHECK_CODE_RETURN(CompVMFCamera::newObj(&camera_));
+
+	*camera = *camera_;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_NAMESPACE_END()

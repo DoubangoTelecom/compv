@@ -47,6 +47,11 @@ COMPV_ERROR_CODE CompVCamera::init()
 
 #if COMPV_OS_WINDOWS
     if (!s_CameraFactory.isValid() && CompVBase::isWin7OrLater()) {
+		COMPV_CHECK_CODE_NOP(err = CompVSharedLib::newObj(&s_CameraFactory.lib, "CompVPluginMFoundation.dll"));
+		if (s_CameraFactory.lib) {
+			s_CameraFactory.funcNew = reinterpret_cast<CompVCameraNewFunc>(s_CameraFactory.lib->sym("newObjCamera"));
+			COMPV_CHECK_EXP_NOP(!s_CameraFactory.funcNew, COMPV_ERROR_CODE_E_SYSTEM);
+		}
     }
     if (!s_CameraFactory.isValid() && CompVBase::isWinXPOrLater()) {
         COMPV_CHECK_CODE_NOP(err = CompVSharedLib::newObj(&s_CameraFactory.lib, "CompVPluginDirectShow.dll"));

@@ -22,8 +22,7 @@ struct {
 } static const kCompVSubTypeGuidPairs[] = {
 	// Most computer vision features require grayscale image as input.
 	// YUV formats first because it's easier to convert to grayscal compared to RGB.
-	// FIXME(dmi)
-	{ COMPV_SUBTYPE_PIXELS_YUV420P, MEDIASUBTYPE_I420 }, // YUV420P, IYUV, I420: used by MPEG codecs
+	{ COMPV_SUBTYPE_PIXELS_YUV420P, MEDIASUBTYPE_I420 }, // YUV420P, IYUV, I420: used by MPEG codecs. Planar and easy to convert to grayscale.
 	{ COMPV_SUBTYPE_PIXELS_NV12, MEDIASUBTYPE_NV12 }, // Used by NVIDIA CUDA
 	{ COMPV_SUBTYPE_PIXELS_UYVY, MEDIASUBTYPE_UYVY },
 	{ COMPV_SUBTYPE_PIXELS_YUY2, MEDIASUBTYPE_YUY2 },
@@ -47,7 +46,7 @@ static const size_t kCompVSubTypeGuidPairsCount = sizeof(kCompVSubTypeGuidPairs)
 }
 
 
-const char* CompVDSUtils::guidName(const GUID& guid)
+const char* CompVDSUtils::guidName(__in const GUID& guid)
 {
 	if (InlineIsEqualGUID(guid, MEDIASUBTYPE_I420)) {
 		return "MEDIASUBTYPE_I420";
@@ -56,7 +55,7 @@ const char* CompVDSUtils::guidName(const GUID& guid)
 }
 const char* CompVDSUtilsGuidName(const GUID& guid) { return CompVDSUtils::guidName(guid); } // Used in 'ds_config.h' to avoid including 'ds_utils.h'(recurssive include)
 
-COMPV_ERROR_CODE CompVDSUtils::enumerateCaptureDevices(CompVDSCameraDeviceInfoList& list)
+COMPV_ERROR_CODE CompVDSUtils::enumerateCaptureDevices(__out CompVDSCameraDeviceInfoList& list)
 {
     list.clear();
     HRESULT hr = S_OK;
@@ -178,7 +177,7 @@ bail:
     return COMPV_ERROR_CODE_S_OK;
 }
 
-HRESULT CompVDSUtils::pin(IBaseFilter *pFilter, PIN_DIRECTION dir, IPin** pin)
+HRESULT CompVDSUtils::pin(__in IBaseFilter *pFilter, __in PIN_DIRECTION dir, __out IPin** pin)
 {
     COMPV_CHECK_EXP_RETURN(!pin, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     *pin = NULL;
@@ -211,7 +210,7 @@ bail:
     return hr;
 }
 
-COMPV_ERROR_CODE CompVDSUtils::connectFilters(IGraphBuilder* graphBuilder, IBaseFilter* source, IBaseFilter* destination, AM_MEDIA_TYPE* mediaType COMPV_DEFAULT(NULL))
+COMPV_ERROR_CODE CompVDSUtils::connectFilters(__in IGraphBuilder* graphBuilder, __in IBaseFilter* source, __in IBaseFilter* destination, __in AM_MEDIA_TYPE* mediaType COMPV_DEFAULT(NULL))
 {
     COMPV_CHECK_EXP_RETURN(!graphBuilder || !source || !destination, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     HRESULT hr = S_OK;
@@ -236,7 +235,7 @@ bail:
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVDSUtils::disconnectFilters(IGraphBuilder* graphBuilder, IBaseFilter* source, IBaseFilter* destination)
+COMPV_ERROR_CODE CompVDSUtils::disconnectFilters(__in IGraphBuilder* graphBuilder, __in IBaseFilter* source, __in IBaseFilter* destination)
 {
     COMPV_CHECK_EXP_RETURN(!graphBuilder || !source || !destination, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     HRESULT hr = S_OK;
@@ -257,7 +256,7 @@ bail:
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVDSUtils::disconnectAllFilters(IGraphBuilder* graphBuilder)
+COMPV_ERROR_CODE CompVDSUtils::disconnectAllFilters(__in IGraphBuilder* graphBuilder)
 {
     COMPV_CHECK_EXP_RETURN(!graphBuilder, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     IEnumFilters* filterEnum = NULL;
@@ -282,7 +281,7 @@ bail:
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVDSUtils::removeAllFilters(IGraphBuilder* graphBuilder)
+COMPV_ERROR_CODE CompVDSUtils::removeAllFilters(__in IGraphBuilder* graphBuilder)
 {
     COMPV_CHECK_EXP_RETURN(!graphBuilder, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     IEnumFilters* filterEnum = NULL;
@@ -308,7 +307,7 @@ bail:
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVDSUtils::convertSubType(const COMPV_SUBTYPE& subTypeIn, GUID &subTypeOut)
+COMPV_ERROR_CODE CompVDSUtils::convertSubType(__in const COMPV_SUBTYPE& subTypeIn, __out GUID &subTypeOut)
 {
 	for (size_t i = 0; i < kCompVSubTypeGuidPairsCount; ++i) {
 		if (kCompVSubTypeGuidPairs[i].subType == subTypeIn) {
@@ -320,7 +319,7 @@ COMPV_ERROR_CODE CompVDSUtils::convertSubType(const COMPV_SUBTYPE& subTypeIn, GU
 	return COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT;
 }
 
-COMPV_ERROR_CODE CompVDSUtils::convertSubType(const GUID &subTypeIn, COMPV_SUBTYPE &subTypeOut)
+COMPV_ERROR_CODE CompVDSUtils::convertSubType(__in const GUID &subTypeIn, __out COMPV_SUBTYPE &subTypeOut)
 {
 	for (size_t i = 0; i < kCompVSubTypeGuidPairsCount; ++i) {
 		if (InlineIsEqualGUID(kCompVSubTypeGuidPairs[i].guid, subTypeIn)) {
@@ -333,7 +332,7 @@ COMPV_ERROR_CODE CompVDSUtils::convertSubType(const GUID &subTypeIn, COMPV_SUBTY
 }
 
 // Returned 'mediaType' must be freed using 'DeleteMediaType'
-COMPV_ERROR_CODE CompVDSUtils::capsToMediaType(IAMStreamConfig* streamConfig, const CompVDSCameraCaps &caps, AM_MEDIA_TYPE*& mediaType)
+COMPV_ERROR_CODE CompVDSUtils::capsToMediaType(__in IAMStreamConfig* streamConfig, __in const CompVDSCameraCaps &caps, __out AM_MEDIA_TYPE*& mediaType)
 {
 	COMPV_CHECK_EXP_RETURN(!streamConfig, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	if (mediaType) {
@@ -371,7 +370,7 @@ bail:
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVDSUtils::mediaTypeToCaps(const AM_MEDIA_TYPE* mediaType, CompVDSCameraCaps &caps)
+COMPV_ERROR_CODE CompVDSUtils::mediaTypeToCaps(__in const AM_MEDIA_TYPE* mediaType, __out CompVDSCameraCaps &caps)
 {
 	COMPV_CHECK_EXP_RETURN(!mediaType, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -393,7 +392,7 @@ bail:
 	return err;
 }
 
-HRESULT CompVDSUtils::supportedCaps(IBaseFilter *sourceFilter, std::vector<CompVDSCameraCaps>& caps)
+HRESULT CompVDSUtils::supportedCaps(__in IBaseFilter *sourceFilter, __out std::vector<CompVDSCameraCaps>& caps)
 {
 	COMPV_CHECK_HRESULT_EXP_RETURN(!sourceFilter, E_INVALIDARG);
 	HRESULT hr = S_OK;
@@ -441,7 +440,7 @@ bail:
 	return hr;
 }
 
-COMPV_ERROR_CODE CompVDSUtils::bestCap(const std::vector<CompVDSCameraCaps>& supported, const CompVDSCameraCaps& requested, CompVDSCameraCaps& best, bool ignoreFPS COMPV_DEFAULT(false))
+COMPV_ERROR_CODE CompVDSUtils::bestCap(__in const std::vector<CompVDSCameraCaps>& supported, __in const CompVDSCameraCaps& requested, __out CompVDSCameraCaps& best, __in bool ignoreFPS COMPV_DEFAULT(false))
 {
 	COMPV_CHECK_EXP_RETURN(supported.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -486,11 +485,8 @@ HRESULT CompVDSUtils::bstrToString(__in BSTR* bstr, __out std::string& str)
 {
     COMPV_CHECK_HRESULT_EXP_RETURN(!bstr || !*bstr, E_INVALIDARG);
     char* lpszStr = _com_util::ConvertBSTRToString(*bstr);
-    if (!lpszStr) {
-        COMPV_CHECK_HRESULT_CODE_RETURN(E_OUTOFMEMORY);
-    }
+	COMPV_CHECK_HRESULT_EXP_RETURN(!lpszStr, E_OUTOFMEMORY);
     str = std::string(lpszStr);
-
     delete[]lpszStr;
     return S_OK;
 }
