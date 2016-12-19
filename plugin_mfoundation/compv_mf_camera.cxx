@@ -45,7 +45,58 @@ COMPV_ERROR_CODE CompVMFCamera::devices(CompVCameraDeviceInfoList& list) /* Over
 {
 	CompVAutoLock<CompVMFCamera>(this);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s", __FUNCTION__);
-	COMPV_CHECK_CODE_RETURN(CompVMFUtils::devices(list));
+	CompVCameraDeviceInfoList list_;
+	HRESULT hr = S_OK;
+	UINT32 count;
+	WCHAR *_pszName = NULL;
+	WCHAR *_pszId = NULL;
+	char pczString[MAX_PATH] = { 0 };
+	int length;
+	std::string name, id;
+
+	if (!m_ptrDeviceListVideo) {
+		COMPV_CHECK_CODE_RETURN(CompVMFDeviceListVideo::newObj(&m_ptrDeviceListVideo));
+	}
+
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = m_ptrDeviceListVideo->enumerateDevices());
+	count = m_ptrDeviceListVideo->count();
+
+	for (UINT32 i = 0; i < count; ++i) {
+		if (SUCCEEDED(m_ptrDeviceListVideo->deviceName(i, &_pszName)) && SUCCEEDED(m_ptrDeviceListVideo->deviceId(i, &_pszId))) {
+			// Unique Id
+			if ((length = static_cast<int>(wcstombs(pczString, _pszId, MAX_PATH))) <= 0) {
+				COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "wcstombs(%ls) failed: %d", _pszId, length);
+				goto next;
+			}
+			id = std::string(pczString, length);
+			// Friendly name
+			if ((length = static_cast<int>(wcstombs(pczString, _pszName, MAX_PATH))) <= 0) {
+				COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "wcstombs(%ls) failed: %d", _pszName, length);
+				goto next;
+			}
+			name = std::string(pczString, length);
+			// Add to the list
+			list_.push_back(CompVCameraDeviceInfo(id, name, name));
+		}
+	next:
+		if (_pszName) {
+			CoTaskMemFree(_pszName), _pszName = NULL;
+		}
+		if (_pszId) {
+			CoTaskMemFree(_pszId), _pszId = NULL;
+		}
+	}
+
+	list = list_;
+
+bail:
+	if (_pszName) {
+		CoTaskMemFree(_pszName);
+	}
+	if (_pszId) {
+		CoTaskMemFree(_pszId);
+	}
+	COMPV_CHECK_EXP_RETURN(FAILED(hr), COMPV_ERROR_CODE_E_MFOUNDATION);
 	return COMPV_ERROR_CODE_S_OK;
 }
 	
@@ -78,6 +129,7 @@ COMPV_ERROR_CODE CompVMFCamera::stop() /* Overrides(CompVCamera) */
 	CompVAutoLock<CompVMFCamera>(this);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s", __FUNCTION__);
 	
+#if 0 // TODO(dmi): MF_E_MULTIPLE_SUBSCRIBERS
 	// for the thread
 	m_bStarted = false;
 	if (m_pSession) {
@@ -90,8 +142,11 @@ COMPV_ERROR_CODE CompVMFCamera::stop() /* Overrides(CompVCamera) */
 	if (m_pSource) {
 		COMPV_CHECK_HRESULT_CODE_NOP(CompVMFUtils::stopSession(NULL, m_pSource)); // stop source to release the camera
 	}
-
 	return COMPV_ERROR_CODE_S_OK;
+#else
+	COMPV_CHECK_CODE_NOP(deInit());
+	return COMPV_ERROR_CODE_S_OK;
+#endif
 }
 	
 COMPV_ERROR_CODE CompVMFCamera::set(int id, const void* valuePtr, size_t valueSize) /* Overrides(CompVCaps) */
@@ -102,17 +157,18 @@ COMPV_ERROR_CODE CompVMFCamera::set(int id, const void* valuePtr, size_t valueSi
 	switch (id) {
 		case COMPV_CAMERA_CAP_INT_WIDTH: {
 			COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-			m_CapsPref.width = *reinterpret_cast<const int*>(valuePtr);
+			m_CapsPref.width = (*reinterpret_cast<const int*>(valuePtr) + 1) & ~1; // odd numbers not supported by media foundation
 			return COMPV_ERROR_CODE_S_OK;
 		}
 		case COMPV_CAMERA_CAP_INT_HEIGHT: {
 			COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-			m_CapsPref.height = *reinterpret_cast<const int*>(valuePtr);
+			m_CapsPref.height = (*reinterpret_cast<const int*>(valuePtr) + 1) & ~1; // odd numbers not supported by media foundation
 			return COMPV_ERROR_CODE_S_OK;
 		}
 		case COMPV_CAMERA_CAP_INT_FPS: {
 			COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-			m_CapsPref.fps = *reinterpret_cast<const int*>(valuePtr);
+			m_CapsPref.numFps = *reinterpret_cast<const int*>(valuePtr);
+			m_CapsPref.denFps = 1;
 			return COMPV_ERROR_CODE_S_OK;
 		}
 		case COMPV_CAMERA_CAP_INT_SUBTYPE: {
@@ -134,6 +190,21 @@ COMPV_ERROR_CODE CompVMFCamera::get(int id, const void*& valuePtr, size_t valueS
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVMFCamera::device(__in const char* pszId, __out IMFActivate **ppActivate)
+{
+	CompVAutoLock<CompVMFCamera>(this);
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(%s)", __FUNCTION__, pszId);
+	COMPV_CHECK_EXP_RETURN(!ppActivate, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!m_ptrDeviceListVideo, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	wchar_t pczwSrcUniqueId[MAX_PATH] = { 0 };
+	int length;
+
+	length = static_cast<int>(mbstowcs(pczwSrcUniqueId, pszId, sizeof(pczwSrcUniqueId) / sizeof(pczwSrcUniqueId[0])));
+	COMPV_CHECK_EXP_RETURN(length <= 0, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	COMPV_CHECK_EXP_RETURN(FAILED(m_ptrDeviceListVideo->deviceWithId(pczwSrcUniqueId, ppActivate)), COMPV_ERROR_CODE_E_MFOUNDATION);
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVMFCamera::shutdown()
 {
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s", __FUNCTION__);
@@ -149,6 +220,9 @@ COMPV_ERROR_CODE CompVMFCamera::shutdown()
 	if (m_pSource) {
 		COMPV_CHECK_HRESULT_CODE_NOP(CompVMFUtils::shutdownSession(NULL, m_pSource)); // stop source to release the camera
 	}
+	if (m_ptrDeviceListVideo) {
+		m_ptrDeviceListVideo->clear(); // Not allowed to reuse a device after shutdown
+	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -161,6 +235,9 @@ COMPV_ERROR_CODE CompVMFCamera::init(const std::string& deviceId)
 	}
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	HRESULT hr = S_OK;
+	CompVMFCameraCaps capsGrabber = m_CapsPref;
+	CompVMFCameraCaps capsSource;
+	std::vector<CompVMFCameraCaps> supportedCapsList;
 	BOOL bVideoProcessorSupported = FALSE;
 	IMFMediaSource* pSource = NULL;
 	IMFAttributes* pSessionAttributes = NULL;
@@ -171,28 +248,80 @@ COMPV_ERROR_CODE CompVMFCamera::init(const std::string& deviceId)
 	IMFMediaType* pGrabberNegotiatedInputMedia = NULL;
 	IMFActivate* pActivate = NULL;
 	IMFMediaType* pGrabberInputType = NULL;
+	IMFMediaType* pSourceOutputType = NULL;
 	IMFActivate* pSinkGrabber = NULL;
 	IMFMediaSession* pSession = NULL;
 	IMFActivate* pSinkActivatePreview = NULL;
-	
-	COMPV_CHECK_CODE_BAIL(err = CompVMFUtils::device(deviceId.c_str(), &pActivate));
+
+	// Enumerate the devices
+	if (!m_ptrDeviceListVideo) {
+		COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFDeviceListVideo::newObj(&m_ptrDeviceListVideo));
+	}
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = m_ptrDeviceListVideo->enumerateDevices());
 
 	// Create the media source for the device.
+	COMPV_CHECK_CODE_BAIL(err = device(deviceId.c_str(), &pActivate));
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pActivate->ActivateObject(
 		__uuidof(IMFMediaSource),
 		(void**)&pSource
 	));
 
+#if COMPV_MF_USE_PROCESSOR_IN_TOPO
 	// Check whether video processor (http://msdn.microsoft.com/en-us/library/windows/desktop/hh162913(v=vs.85).aspx) is supported
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::isVideoProcessorSupported(&bVideoProcessorSupported));
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "bVideoProcessorSupported = %s", bVideoProcessorSupported ? "YES" : "NO");
+#endif
 
-	// Must not be set because not supported by Frame Rate Converter DSP (http://msdn.microsoft.com/en-us/library/windows/desktop/ff819100(v=vs.85).aspx).aspx) because of color (neither I420 nor NV12)
-	// Video Processor (http://msdn.microsoft.com/en-us/library/windows/desktop/hh162913(v=vs.85).aspx) supports both NV12 and I420
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Implement '!bVideoProcessorSupported'
+	// Get the list of supported caps
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::supportedCaps(pSource, supportedCapsList));
+
+	// Get caps for the source. Must match all configs (width, height, fps, subtype...)
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::bestCap(supportedCapsList, m_CapsPref, capsSource, FALSE, FALSE, FALSE));
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::capsToMediaType(capsSource, &pSourceOutputType));
+
+	// When video processor not supported then, we have to choose best cap supported by the
+	// resizer (https://msdn.microsoft.com/en-us/library/windows/desktop/ff819491(v=vs.85).aspx),
+	// frame rate converter (https://msdn.microsoft.com/en-us/library/windows/desktop/ff819100(v=vs.85).aspx) and 
+	// color converter (https://msdn.microsoft.com/en-us/library/windows/desktop/ff819079(v=vs.85).aspx)
 	if (!bVideoProcessorSupported) {
-		// FIXME(dmi): implement and update 'm_CapsPref'
-		COMPV_DEBUG_INFO_CODE_NOT_TESTED();
+		BOOL supportResizeDSP = FALSE;
+		BOOL supportFpsDSP = FALSE;
+		BOOL supportColorDSP = FALSE;
+		CompVMFCameraCaps capsPref = m_CapsPref;
+		// Check if we can ignore the subType (thanks to the color converter DSP)
+		// The filters will be chained in this order: source -> [framerate -> resizer -> color] -> grabber.
+		if (capsGrabber.subType != capsSource.subType) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "The requested subtype(%s) is different than the source subtype(%s). Trying to add a color convertor dsp if possible",
+				CompVMFUtils::guidName(capsGrabber.subType), CompVMFUtils::guidName(capsSource.subType));
+			COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::isSupportedByColorConverter(capsSource.subType, capsGrabber.subType, &supportColorDSP));
+			if (supportColorDSP) {
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "/!\\Forcing the topology to add a color converter(%s -> %s) dsp: performance issue. You should not use 'COMPV_CAMERA_CAP_INT_SUBTYPE' to force the subType.",
+					CompVMFUtils::guidName(capsGrabber.subType), CompVMFUtils::guidName(capsSource.subType));
+			}
+			else {
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Color convertor doesn't support requested conversion(%s -> %s), using %s as default and best subtype",
+					CompVMFUtils::guidName(capsGrabber.subType), CompVMFUtils::guidName(capsSource.subType), CompVMFUtils::guidName(capsSource.subType));
+			}
+		}
+		COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::isSupportedByFrameRateConvert(capsSource.subType, &supportFpsDSP));
+		COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::isSupportedByVideoResizer(capsSource.subType, &supportResizeDSP));
+		if (!supportColorDSP) {
+			capsPref.subType = capsSource.subType;
+		}
+		if (!supportFpsDSP) {
+			capsPref.numFps = capsSource.numFps, capsPref.denFps = capsSource.denFps;
+		}
+		if (!supportResizeDSP) {
+			capsPref.width = capsSource.width, capsPref.height = capsSource.height;
+		}
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "supportColorDSP=%d, supportFpsDSP=%d, supportResizeDSP=%d", supportColorDSP, supportFpsDSP, supportResizeDSP);
+		COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::bestCap(supportedCapsList, capsPref, capsGrabber, supportColorDSP, supportResizeDSP, supportFpsDSP));
+		if ((capsGrabber.numFps / capsGrabber.denFps) > (capsSource.numFps / capsSource.denFps)) {
+			// Do not duplicate frames when 'requested fps' > 'supported fps'
+			// ..but drop frames when 'requested fps' > 'supported fps'
+			capsGrabber.numFps = capsSource.numFps;
+			capsGrabber.denFps = capsSource.denFps;
+		}
 	}
 
 	// Set session attributes
@@ -203,18 +332,7 @@ COMPV_ERROR_CODE CompVMFCamera::init(const std::string& deviceId)
 	// Setting the major and subtype is usually enough for the topology loader
 	// to resolve the topology.
 
-	COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFCreateMediaType(&pGrabberInputType));
-	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pGrabberInputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video));
-	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pGrabberInputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive));
-
-	COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFSetAttributeSize(pGrabberInputType, MF_MT_FRAME_SIZE, static_cast<UINT32>(m_CapsPref.width), static_cast<UINT32>(m_CapsPref.height)));
-	COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFSetAttributeRatio(pGrabberInputType, MF_MT_FRAME_RATE, static_cast<UINT32>(m_CapsPref.fps), 1));
-
-	COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFSetAttributeRatio(pGrabberInputType, MF_MT_PIXEL_ASPECT_RATIO, 1, 1));
-	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pGrabberInputType->SetUINT32(MF_MT_ALL_SAMPLES_INDEPENDENT, TRUE));
-	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pGrabberInputType->SetUINT32(MF_MT_FIXED_SIZE_SAMPLES, TRUE));
-
-	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pGrabberInputType->SetGUID(MF_MT_SUBTYPE, m_CapsPref.subType));
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::createVideoType(&capsGrabber.subType, &pGrabberInputType, capsGrabber.width, capsGrabber.height, capsGrabber.numFps, capsGrabber.denFps));
 
 	// Create the sample grabber sink.
 	if (!m_pCallback) {
@@ -234,11 +352,13 @@ COMPV_ERROR_CODE CompVMFCamera::init(const std::string& deviceId)
 	}
 
 	// Create the topology.
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Create topology: source(%s) -> grabber(%s), pref = %s", capsGrabber.toString().c_str(), capsGrabber.toString().c_str(), m_CapsPref.toString().c_str());
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::createTopology(
 		pSource,
 		NULL,
 		pSinkGrabber,
 		pSinkActivatePreview,
+		pSourceOutputType,
 		pGrabberInputType,
 		&pTopology));
 	// Resolve topology (adds video processors if needed).
@@ -269,6 +389,7 @@ bail:
 	COMPV_MF_SAFE_RELEASE(&pGrabberNegotiatedInputMedia);
 	COMPV_MF_SAFE_RELEASE(&pActivate);
 	COMPV_MF_SAFE_RELEASE(&pGrabberInputType);
+	COMPV_MF_SAFE_RELEASE(&pSourceOutputType);
 	COMPV_MF_SAFE_RELEASE(&pSinkGrabber);
 	COMPV_MF_SAFE_RELEASE(&pSession);
 	COMPV_MF_SAFE_RELEASE(&pSinkActivatePreview);
@@ -300,10 +421,10 @@ COMPV_ERROR_CODE CompVMFCamera::deInit()
 HRESULT CompVMFCamera::queryCapNeg(IMFTopology *pTopology)
 {
 	COMPV_CHECK_HRESULT_EXP_RETURN(!pTopology, E_INVALIDARG);
-	UINT32 nNegWidth = static_cast<UINT32>(m_CapsNeg.width);
-	UINT32 nNegHeight = static_cast<UINT32>(m_CapsNeg.height);
-	UINT32 nNegNumeratorFps = static_cast<UINT32>(m_CapsNeg.fps);
-	UINT32 nNegDenominatorFps = 1;
+	UINT32 nNegWidth = m_CapsNeg.width;
+	UINT32 nNegHeight = m_CapsNeg.height;
+	UINT32 nNegNumeratorFps = m_CapsNeg.numFps;
+	UINT32 nNegDenominatorFps = m_CapsNeg.denFps;
 	HRESULT hr = S_OK;
 	CompVMFCameraCaps capsNeg = m_CapsNeg;
 	COMPV_SUBTYPE subTypeNeg = m_eSubTypeNeg;
@@ -314,15 +435,16 @@ HRESULT CompVMFCamera::queryCapNeg(IMFTopology *pTopology)
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pMediaTypeNeg->GetGUID(MF_MT_SUBTYPE, &capsNeg.subType));
 	hr = MFGetAttributeSize(pMediaTypeNeg, MF_MT_FRAME_SIZE, &nNegWidth, &nNegHeight);
 	if (SUCCEEDED(hr)) {
-		capsNeg.width = static_cast<LONG>(nNegWidth);
-		capsNeg.height = static_cast<LONG>(nNegHeight);
+		capsNeg.width = nNegWidth;
+		capsNeg.height = nNegHeight;
 	}
 	else {
 		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "MFGetAttributeSize failed: %08x", hr);
 	}
 	hr = MFGetAttributeRatio(pMediaTypeNeg, MF_MT_FRAME_RATE, &nNegNumeratorFps, &nNegDenominatorFps);
 	if (SUCCEEDED(hr) && nNegDenominatorFps) {
-		capsNeg.fps = static_cast<int>(nNegNumeratorFps / nNegDenominatorFps);
+		capsNeg.numFps = nNegNumeratorFps;
+		capsNeg.denFps = nNegDenominatorFps;
 	}
 	else {
 		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "MFGetAttributeRatio failed(%08x) or nNegDenominatorFps(%u) is equal to zero", hr, nNegDenominatorFps);
@@ -357,17 +479,13 @@ HRESULT STDMETHODCALLTYPE CompVMFCamera::BufferCB(REFGUID guidMajorMediaType, DW
 	DWORD dwSampleSiz, const void *pcUserData)
 {
 	COMPV_CHECK_HRESULT_EXP_RETURN(!pSampleBuffer || !dwSampleSiz, E_POINTER);
-
 	CompVMFCameraPtr camera = const_cast<CompVMFCamera*>(static_cast<const CompVMFCamera*>(pcUserData));
 	CompVAutoLock<CompVMFCamera> autoLock(*camera);
 	CompVCameraListenerPtr listener = camera->listener();
 	if (!listener) {
 		return S_OK;
 	}
-
-	// FIXME(dmi)
-	//memset((void*)pSampleBuffer, 0, dwSampleSiz);
-
+	
 	COMPV_ERROR_CODE err;
 	// Forward the image data to the listeners
 	COMPV_CHECK_CODE_BAIL(err = CompVImage::wrap(camera->m_eSubTypeNeg, static_cast<const void*>(pSampleBuffer), static_cast<size_t>(camera->m_CapsNeg.width), static_cast<size_t>(camera->m_CapsNeg.height), static_cast<size_t>(camera->m_CapsNeg.width), &camera->m_ptrImageCB));
@@ -398,7 +516,11 @@ void *COMPV_STDCALL CompVMFCamera::RunSessionThread(void * arg)
 		}
 		COMPV_CHECK_HRESULT_CODE_BAIL(hr = pEvent->GetStatus(&hrStatus));
 		COMPV_CHECK_HRESULT_CODE_BAIL(hr = pEvent->GetType(&met));
-		COMPV_CHECK_HRESULT_CODE_BAIL(hrStatus);
+#if 0
+		COMPV_CHECK_HRESULT_EXP_BAIL(FAILED(hrStatus) && hrStatus != MF_E_MULTIPLE_SUBSCRIBERS, hrStatus);
+#else
+		COMPV_CHECK_HRESULT_CODE_BAIL(hr = hrStatus);
+#endif
 		if (met == MESessionEnded) {
 			break;
 		}
@@ -406,6 +528,13 @@ void *COMPV_STDCALL CompVMFCamera::RunSessionThread(void * arg)
 	}
 
 bail:
+	if (FAILED(hr) && ptrCamera->m_bStarted) {
+		CompVAutoLock<CompVMFCamera> autoLock(*ptrCamera);
+		CompVCameraListenerPtr listener = ptrCamera->listener();
+		if (listener) {
+			listener->onError(std::string("Media foundation error:") + std::to_string(hr)); // TODO(dmi): set the correct error message
+		}
+	}
 	COMPV_MF_SAFE_RELEASE(&pEvent);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s (MF video producer) - EXIT", __FUNCTION__);
 

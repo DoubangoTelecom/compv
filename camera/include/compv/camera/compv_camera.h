@@ -57,7 +57,12 @@ public:
 	virtual ~CompVCameraListener() {  }
 	COMPV_OBJECT_GET_ID(CompVCameraListener);
 
-	virtual COMPV_ERROR_CODE onNewFrame(const CompVMatPtr& image) = 0;
+	virtual COMPV_ERROR_CODE onNewFrame(const CompVMatPtr& image) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	virtual COMPV_ERROR_CODE onError(const std::string& message) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
 };
 
 //

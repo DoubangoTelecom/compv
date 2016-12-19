@@ -9,6 +9,7 @@
 
 #include "compv/mf/compv_mf_config.h"
 #include "compv/mf/compv_mf_grabber.h"
+#include "compv/mf/compv_mf_devices.h"
 #include "compv/camera/compv_camera.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_lock.h"
@@ -40,6 +41,7 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVMFCameraPtrPtr camera);
 
 private:
+	COMPV_ERROR_CODE device(__in const char* pszId, __out IMFActivate **ppActivate);
 	COMPV_ERROR_CODE shutdown();
 	COMPV_ERROR_CODE init(const std::string& deviceId);
 	COMPV_ERROR_CODE deInit();
@@ -58,6 +60,7 @@ private:
 	COMPV_SUBTYPE m_eSubTypeNeg;
 	CompVThreadPtr m_ptrThread;
 	CompVMatPtr m_ptrImageCB;
+	CompVMFDeviceListVideoPtr m_ptrDeviceListVideo;
 
 	HWND m_hWndPreview;
 	IMFMediaSession* m_pSession;

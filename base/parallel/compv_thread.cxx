@@ -34,28 +34,36 @@ using namespace ThreadEmulation;
 static compv_thread_id_t CompVWindowsGetThreadId(HANDLE handle)
 {
 	// GetThreadId: https://msdn.microsoft.com/en-us/library/windows/desktop/ms683233(v=vs.85).aspx
-#if _WIN32_WINNT >= 0x0602
+#if _WIN32_WINNT >= 0x0502
 	return GetThreadId(handle);
 #else
-	static HMODULE hKernel32 = NULL;
-	static bool bTriedToLoadKernel32 = false;
-	static DWORD (WINAPI *GetThreadIdFunc)(_In_ HANDLE Thread) = NULL;
-	if (!bTriedToLoadKernel32) {
-		// TODO(dmi): If another part of the code loads 'Kernel32.dll' then, make sure to reuse the HMODULE.
-		COMPV_DEBUG_INFO("Loading Kernel32.dll to extract Kernel32.dll");
-		bTriedToLoadKernel32 = true;
-		hKernel32 = LoadLibrary(TEXT("Kernel32.dll"));
-		if (hKernel32) {
-			GetThreadIdFunc = reinterpret_cast<DWORD(WINAPI *)(_In_ HANDLE Thread)>(GetProcAddress(hKernel32, "GetThreadId"));
+	if (CompVBase::isWinVistaOrLater()) {
+		static HMODULE hKernel32 = NULL;
+		static bool bTriedToLoadKernel32 = false;
+		static DWORD(WINAPI *GetThreadIdFunc)(_In_ HANDLE Thread) = NULL;
+		if (!bTriedToLoadKernel32) {
+			// TODO(dmi): If another part of the code loads 'Kernel32.dll' then, make sure to reuse the HMODULE.
+			COMPV_DEBUG_INFO("Loading Kernel32.dll to extract Kernel32.dll");
+			bTriedToLoadKernel32 = true;
+			hKernel32 = LoadLibrary(TEXT("Kernel32.dll"));
+			if (hKernel32) {
+				GetThreadIdFunc = reinterpret_cast<DWORD(WINAPI *)(_In_ HANDLE Thread)>(GetProcAddress(hKernel32, "GetThreadId"));
+				if (!GetThreadIdFunc) {
+					COMPV_DEBUG_ERROR("Failed to find GetThreadId from Kernel32.dll");
+				}
+			}
+			else {
+				COMPV_DEBUG_ERROR("Failed to load Kernel32.dll");
+			}
+		}
+		if (GetThreadIdFunc) {
+			return GetThreadIdFunc(handle);
 		}
 	}
-	if (GetThreadIdFunc) {
-		return GetThreadIdFunc(handle);
-	}
-	else {
-		COMPV_DEBUG_INFO("GetThreadId not found, using dummy implementation");
-		return reinterpret_cast<compv_thread_id_t>(handle); // we just want a unique Id
-	}
+	
+	COMPV_DEBUG_INFO("GetThreadId not found, using dummy implementation");
+	return reinterpret_cast<compv_thread_id_t>(handle); // we just want a unique Id
+	
 #endif
 }
 #endif

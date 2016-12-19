@@ -8,6 +8,7 @@
 #include "compv/mf/compv_mf_guidname.h"
 #include "compv/base/compv_debug.h"
 
+#include <algorithm>
 #include <KS.h>/*  KS.H must be included before codecapi.H */
 #include <Codecapi.h>
 #include <initguid.h>
@@ -27,20 +28,21 @@ COMPV_NAMESPACE_BEGIN()
 struct {
 	COMPV_SUBTYPE subType;
 	const GUID& guid;
+	BOOL haveFpsConv; // Frame Rate Converter DSP: https://msdn.microsoft.com/en-us/library/windows/desktop/ff819100(v=vs.85).aspx
+	BOOL haveResizer; // Video Resizer DSP: https://msdn.microsoft.com/en-us/library/windows/desktop/ff819491(v=vs.85).aspx
 } static const kCompVSubTypeGuidPairs[] = {
 	// Most computer vision features require grayscale image as input.
 	// YUV formats first because it's easier to convert to grayscal compared to RGB.
-	{ COMPV_SUBTYPE_PIXELS_YUV420P, MFVideoFormat_I420 }, // YUV420P, IYUV, I420: used by MPEG codecs. Planar and easy to convert to grayscale.
-	{ COMPV_SUBTYPE_PIXELS_NV12, MFVideoFormat_NV12 }, // Used by NVIDIA CUDA
-	{ COMPV_SUBTYPE_PIXELS_UYVY, MFVideoFormat_UYVY },
-	{ COMPV_SUBTYPE_PIXELS_YUY2, MFVideoFormat_YUY2 },
-	{ COMPV_SUBTYPE_PIXELS_YV12, MFVideoFormat_YV12 },
+	{ COMPV_SUBTYPE_PIXELS_YUV420P, MFVideoFormat_I420, FALSE, TRUE }, // YUV420P, IYUV, I420: used by MPEG codecs. Planar and easy to convert to grayscale.
+	{ COMPV_SUBTYPE_PIXELS_NV12, MFVideoFormat_NV12, FALSE, FALSE }, // Used by NVIDIA CUDA
+	{ COMPV_SUBTYPE_PIXELS_UYVY, MFVideoFormat_UYVY, TRUE, FALSE },
+	{ COMPV_SUBTYPE_PIXELS_YUY2, MFVideoFormat_YUY2, TRUE, TRUE },
 
 	// RGB formats as fallback
-	{ COMPV_SUBTYPE_PIXELS_BGR24, MFVideoFormat_RGB24 },
-	{ COMPV_SUBTYPE_PIXELS_BGRA32, MFVideoFormat_RGB32 },
-	{ COMPV_SUBTYPE_PIXELS_ABGR32, MFVideoFormat_ARGB32 },
-	{ COMPV_SUBTYPE_PIXELS_RGB565LE, MFVideoFormat_RGB565 },
+	{ COMPV_SUBTYPE_PIXELS_BGR24, MFVideoFormat_RGB24, TRUE, TRUE },
+	{ COMPV_SUBTYPE_PIXELS_BGRA32, MFVideoFormat_RGB32, TRUE, TRUE },
+	{ COMPV_SUBTYPE_PIXELS_ABGR32, MFVideoFormat_ARGB32, TRUE, FALSE },
+	{ COMPV_SUBTYPE_PIXELS_RGB565LE, MFVideoFormat_RGB565, TRUE, TRUE },
 };
 static const size_t kCompVSubTypeGuidPairsCount = sizeof(kCompVSubTypeGuidPairs) / sizeof(kCompVSubTypeGuidPairs[0]);
 
@@ -58,7 +60,6 @@ const TOPOID CompVMFUtils::s_ullTopoIdSinkMain = 111111111;
 const TOPOID CompVMFUtils::s_ullTopoIdSinkPreview = 222222222;
 const TOPOID CompVMFUtils::s_ullTopoIdSource = 333333333;
 const TOPOID CompVMFUtils::s_ullTopoIdVideoProcessor = 444444444;
-CompVMFDeviceListVideo* CompVMFUtils::s_DeviceListVideo = NULL;
 
 const char* CompVMFUtils::guidName(__in const GUID& guid)
 {
@@ -72,16 +73,13 @@ const char* CompVMFUtils::guidName(__in const GUID& guid)
 HRESULT CompVMFUtils::startup()
 {
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s", __FUNCTION__);
-	HRESULT hr = S_OK;
-	if (!s_bStarted) {
-		s_bStarted = true; // required by shutdown for full execution
-		HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-		COMPV_CHECK_HRESULT_EXP_BAIL(FAILED(hr) && hr != 0x80010106, hr); // 0x80010106 when called from managed code (e.g. ADAS or VR C# systems) - More info: http://support.microsoft.com/kb/824480
-		COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFStartup(MF_VERSION));
-		s_DeviceListVideo = new CompVMFDeviceListVideo();
-		COMPV_CHECK_HRESULT_EXP_BAIL(!s_DeviceListVideo, hr = E_OUTOFMEMORY);
-		s_bStarted = true;
+	if (s_bStarted) {
+		return S_OK;
 	}
+	s_bStarted = true; // required by shutdown for full execution
+	HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+	COMPV_CHECK_HRESULT_EXP_BAIL(FAILED(hr) && hr != 0x80010106, hr); // 0x80010106 when called from managed code (e.g. ADAS or VR C# systems) - More info: http://support.microsoft.com/kb/824480
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFStartup(MF_VERSION));
 
 bail:
 	if (FAILED(hr)) {
@@ -96,79 +94,9 @@ HRESULT CompVMFUtils::shutdown()
 	if (s_bStarted) {
 		COMPV_CHECK_HRESULT_CODE_NOP(MFShutdown());
 		CoUninitialize();
-		if (s_DeviceListVideo) {
-			delete s_DeviceListVideo;
-			s_DeviceListVideo = NULL;
-		}
 		s_bStarted = false;
 	}
 	return S_OK;
-}
-
-COMPV_ERROR_CODE CompVMFUtils::devices(__out CompVCameraDeviceInfoList& list)
-{
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s", __FUNCTION__);
-	CompVCameraDeviceInfoList list_;
-	HRESULT hr = S_OK;
-	UINT32 count;
-	WCHAR *_pszName = NULL;
-	WCHAR *_pszId = NULL;
-	char pczString[MAX_PATH] = { 0 };
-	int length;
-	std::string name, id;
-
-	COMPV_CHECK_HRESULT_CODE_BAIL(hr = s_DeviceListVideo->enumerateDevices());
-	count = s_DeviceListVideo->count();
-
-	for (UINT32 i = 0; i < count; ++i) {
-		if (SUCCEEDED(s_DeviceListVideo->deviceName(i, &_pszName)) && SUCCEEDED(s_DeviceListVideo->deviceId(i, &_pszId))) {
-			// Unique Id
-			if ((length = static_cast<int>(wcstombs(pczString, _pszId, MAX_PATH))) <= 0) {
-				COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "wcstombs(%ls) failed: %d", _pszId, length);
-				goto next;
-			}
-			id = std::string(pczString, length);
-			// Friendly name
-			if ((length = static_cast<int>(wcstombs(pczString, _pszName, MAX_PATH))) <= 0) {
-				COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "wcstombs(%ls) failed: %d", _pszName, length);
-				goto next;
-			}
-			name = std::string(pczString, length);
-			// Add to the list
-			list_.push_back(CompVCameraDeviceInfo(id, name, name));
-		}
-next:
-		if (_pszName) {
-			CoTaskMemFree(_pszName), _pszName = NULL;
-		}
-		if (_pszId) {
-			CoTaskMemFree(_pszId), _pszId = NULL;
-		}
-	}
-
-	list = list_;
-
-bail:
-	if (_pszName) {
-		CoTaskMemFree(_pszName);
-	}
-	if (_pszId) {
-		CoTaskMemFree(_pszId);
-	}
-	COMPV_CHECK_EXP_RETURN(FAILED(hr), COMPV_ERROR_CODE_E_MFOUNDATION);
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVMFUtils::device(__in const char* pszId, __out IMFActivate **ppActivate)
-{
-	COMPV_CHECK_EXP_RETURN(!ppActivate, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	wchar_t pczwSrcUniqueId[MAX_PATH] = { 0 };
-	int length;
-
-	length = static_cast<int>(mbstowcs(pczwSrcUniqueId, pszId, sizeof(pczwSrcUniqueId) / sizeof(pczwSrcUniqueId[0])));
-	COMPV_CHECK_EXP_RETURN(length <= 0, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	COMPV_CHECK_EXP_RETURN(FAILED(s_DeviceListVideo->deviceWithId(pczwSrcUniqueId, ppActivate)), COMPV_ERROR_CODE_E_MFOUNDATION);
-	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVMFUtils::convertSubType(__in const COMPV_SUBTYPE& subTypeIn, __out GUID &subTypeOut)
@@ -179,7 +107,7 @@ COMPV_ERROR_CODE CompVMFUtils::convertSubType(__in const COMPV_SUBTYPE& subTypeI
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
-	COMPV_DEBUG_ERROR("Media Foundation camera implementation doesn't support subType %d", subTypeIn);
+	COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Media Foundation camera implementation doesn't support subType %d", subTypeIn);
 	return COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT;
 }
 
@@ -191,7 +119,7 @@ COMPV_ERROR_CODE CompVMFUtils::convertSubType(__in const GUID &subTypeIn, __out 
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
-	COMPV_DEBUG_ERROR("CompV doesn't support subType %s", CompVMFUtils::guidName(subTypeIn));
+	COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "CompV doesn't support subType %s", CompVMFUtils::guidName(subTypeIn));
 	return COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT;
 }
 
@@ -290,8 +218,10 @@ bail:
 HRESULT CompVMFUtils::createVideoType(
 	const GUID* subType, // video subType
 	IMFMediaType **ppType,     // Receives a pointer to the media type.
-	UINT32 unWidth, // Video width (0 to ignore)
-	UINT32 unHeight // Video height (0 to ignore)
+	UINT32 unWidth COMPV_DEFAULT(0), // Video width (0 to ignore)
+	UINT32 unHeight COMPV_DEFAULT(0), // Video height (0 to ignore)
+	UINT32 unFpsNum COMPV_DEFAULT(0), // 0 to ignore
+	UINT32 unFpsDen COMPV_DEFAULT(0) // 0 to ignore
 )
 {
 	HRESULT hr = S_OK;
@@ -304,8 +234,12 @@ HRESULT CompVMFUtils::createVideoType(
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pType->SetUINT32(MF_MT_ALL_SAMPLES_INDEPENDENT, TRUE)); // UnCompressed
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pType->SetUINT32(MF_MT_FIXED_SIZE_SAMPLES, TRUE)); // UnCompressed
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive));
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFSetAttributeRatio(pType, MF_MT_PIXEL_ASPECT_RATIO, 1, 1));
 	if (unWidth > 0 && unHeight > 0) {
 		COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFSetAttributeSize(pType, MF_MT_FRAME_SIZE, unWidth, unHeight));
+	}
+	if (unFpsNum && unFpsDen) {
+		COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFSetAttributeRatio(pType, MF_MT_FRAME_RATE, unFpsNum, unFpsDen));
 	}
 	*ppType = pType;
 	(*ppType)->AddRef();
@@ -443,10 +377,16 @@ bail:
 HRESULT CompVMFUtils::isVideoProcessorSupported(__out BOOL* pbSupported)
 {
 	COMPV_CHECK_HRESULT_EXP_RETURN(!pbSupported, E_INVALIDARG);
-	IMFTransform *pTransform = NULL;
-	*pbSupported = SUCCEEDED(CoCreateInstance(CLSID_VideoProcessorMFT, NULL,
-		CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pTransform)));
-	COMPV_MF_SAFE_RELEASE(&pTransform);
+	static BOOL checked = FALSE;
+	static BOOL supported = FALSE;
+	if (!checked) {
+		checked = TRUE;
+		IMFTransform *pTransform = NULL;
+		supported = SUCCEEDED(CoCreateInstance(CLSID_VideoProcessorMFT, NULL,
+			CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pTransform)));
+		COMPV_MF_SAFE_RELEASE(&pTransform);
+	}
+	*pbSupported = supported;
 	return S_OK;
 }
 
@@ -659,10 +599,12 @@ HRESULT CompVMFUtils::createTopology(
 	IMFTransform *pTransform, // Transform filter (e.g. encoder or decoder) to insert between the source and Sink. NULL is valid.
 	IMFActivate *pSinkActivateMain, // Main sink (e.g. sample grabber or EVR).
 	IMFActivate *pSinkActivatePreview, // Preview sink. Optional. Could be NULL.
-	IMFMediaType *pIputTypeMain, // Main sink input MediaType
+	IMFMediaType *pTypeSource, // Source output MediaType
+	IMFMediaType *pTypeSink, // Main sink input MediaType
 	IMFTopology **ppTopo // Receives the newly created topology
 )
 {
+	COMPV_CHECK_HRESULT_EXP_RETURN(!pSource || !pSinkActivateMain || !pTypeSource || !pTypeSink || !ppTopo, E_INVALIDARG);
 	IMFTopology *pTopology = NULL;
 	IMFPresentationDescriptor *pPD = NULL;
 	IMFStreamDescriptor *pSD = NULL;
@@ -681,21 +623,37 @@ HRESULT CompVMFUtils::createTopology(
 	IMFTopologyNode *pNodeConvFrameRate = NULL;
 	IMFTopologyNode *pNodeConvSize = NULL;
 	IMFTopologyNode *pNodeConvColor = NULL;
-	IMFMediaType *pTransformInputType = NULL;
-	IMFMediaType *pSinkMainInputType = NULL;
+	IMFMediaType *pTypeThroughTopo = NULL;
 	const IMFTopologyNode *pcNodeBeforeSinkMain = NULL;
 
 	HRESULT hr = S_OK;
 	DWORD cStreams = 0;
 	BOOL bSourceFound = FALSE;
-	BOOL bSupportedSize = FALSE;
-	BOOL bSupportedFps = FALSE;
-	BOOL bSupportedFormat = FALSE;
+	BOOL bSupportedSize;
+	BOOL bSupportedFps;
+	BOOL bSupportedFormat;
 	BOOL bVideoProcessorSupported = FALSE;
-	GUID inputMajorType, inputSubType;
+	GUID inputMajorType;
+	CompVMFCameraCaps capsSource;
+	CompVMFCameraCaps capsSink;
+	CompVMFCameraCaps capsThroughTopo;
+	std::string toppCapsDescription;
 
-	COMPV_CHECK_HRESULT_CODE_BAIL(hr = isVideoProcessorSupported(&bVideoProcessorSupported));
-	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pIputTypeMain->GetMajorType(&inputMajorType));
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::mediaTypeToCaps(pTypeSource, capsSource));
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::mediaTypeToCaps(pTypeSink, capsSink));
+	bSupportedSize = (capsSink.width == capsSource.width && capsSink.height == capsSource.height) ? TRUE : FALSE;
+	bSupportedFps = ((capsSink.numFps / capsSink.denFps) == (capsSource.numFps / capsSource.denFps)) ? TRUE : FALSE;
+	bSupportedFormat = (capsSink.subType == capsSource.subType) ? TRUE : FALSE;
+	toppCapsDescription = std::string("topo: [(") + capsSource.toString() + ") -> (" + capsSink.toString() + std::string(")]");
+
+	// Capabilities used through the topology and updated each time we add a node to match the output
+	capsThroughTopo = capsSource; // start with source output up to sink input (pTypeSource -> pTypeSink)
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::capsToMediaType(capsThroughTopo, &pTypeThroughTopo));
+
+#if COMPV_MF_USE_PROCESSOR_IN_TOPO
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::isVideoProcessorSupported(&bVideoProcessorSupported));
+#endif
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pTypeSink->GetMajorType(&inputMajorType));
 
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFCreateTopology(&pTopology));
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pSource->CreatePresentationDescriptor(&pPD));
@@ -728,48 +686,35 @@ HRESULT CompVMFUtils::createTopology(
 			
 			/* Create converters */
 			if (majorType == MFMediaType_Video) {
-				// Even when size matches the topology could add a resizer which doesn't keep ratio when resizing while video processor does.
-				if (!bVideoProcessorSupported) {
-					hr = CompVMFUtils::isSupported(
-						pPD,
-						i,
-						pIputTypeMain,
-						&bSupportedSize,
-						&bSupportedFps,
-						&bSupportedFormat);
-				}
-
-				COMPV_CHECK_HRESULT_CODE_BAIL(hr = pIputTypeMain->GetGUID(MF_MT_SUBTYPE, &inputSubType));
+				// Set media type on the source
+				COMPV_CHECK_HRESULT_CODE_BAIL(hr = pHandler->SetCurrentMediaType(pTypeSource));
 
 				if (!bSupportedSize || !bSupportedFps || !bSupportedFormat) {
 					// Use video processor single MFT or 3 different MFTs
-					if (!pVideoProcessor) {
-						hr = CoCreateInstance(CLSID_VideoProcessorMFT, NULL,
-							CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pVideoProcessor));
+					if (bVideoProcessorSupported && !pVideoProcessor) {
+						COMPV_CHECK_HRESULT_CODE_BAIL(hr = CoCreateInstance(CLSID_VideoProcessorMFT, NULL,
+							CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pVideoProcessor)));
 					}
 					if (!pVideoProcessor) {
 						// Video Resizer DSP(http://msdn.microsoft.com/en-us/library/windows/desktop/ff819491(v=vs.85).aspx) supports I420 only
-						if (!bSupportedSize && !pConvSize && inputSubType == MFVideoFormat_I420) {
+						if (!bSupportedSize && !pConvSize) {
+							COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Adding 'Video Resizer DSP' to the topology, %s", toppCapsDescription.c_str());
 							hr = CoCreateInstance(CLSID_CResizerDMO, NULL,
 								CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pConvSize));
 						}
-#if 0
 						// Frame Rate Converter DSP(http://msdn.microsoft.com/en-us/library/windows/desktop/ff819100(v=vs.85).aspx) supports neither NV12 nor I420
 						if (!bSupportedFps && !pConvFrameRate) {
+							COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Adding 'Frame Rate Converter DSP' to the topology, %s", toppCapsDescription.c_str());
 							hr = CoCreateInstance(CLSID_CFrameRateConvertDmo, NULL,
 							CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pConvFrameRate));
 						}
-#endif
 						// Color Converter DSP (http://msdn.microsoft.com/en-us/library/windows/desktop/ff819079(v=vs.85).aspx) supports both NV12 and I420
 						if (!bSupportedFormat && !pConvColor) {
+							COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Adding 'Color Converter DSP' to the topology, %s", toppCapsDescription.c_str());
 							hr = CoCreateInstance(CLSID_CColorConvertDMO, NULL,
 								CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pConvColor));
 						}
 					}
-				}
-				else {
-					// MediaType supported
-					COMPV_CHECK_HRESULT_CODE_BAIL(hr = pHandler->SetCurrentMediaType(pIputTypeMain));
 				}
 
 				if (pVideoProcessor && !pNodeVideoProcessor) {
@@ -789,56 +734,54 @@ HRESULT CompVMFUtils::createTopology(
 
 			/* Set media type */
 			if (pTransform) {
+				COMPV_DEBUG_INFO_CODE_NOT_TESTED(); // TODO(dmi): use 'capsThroughTopo'
 				COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::addTransformNode(pTopology, pTransform, 0, &pNodeTransform));
-				hr = pTransform->GetInputCurrentType(0, &pTransformInputType);
-				if (FAILED(hr)) {
-					pTransformInputType = pIputTypeMain;
-					pTransformInputType->AddRef();
-					hr = S_OK;
-				}
 				if (pVideoProcessor) {
-					COMPV_CHECK_HRESULT_CODE_BAIL(hr = pVideoProcessor->SetOutputType(0, pTransformInputType, 0));
+					COMPV_CHECK_HRESULT_CODE_BAIL(hr = pVideoProcessor->SetOutputType(0, pTypeSink, 0));
 				}
 				else {
 					if (pConvColor) {
-						/*CHECK_HR*/(hr = pConvColor->SetOutputType(0, pTransformInputType, 0));
+						COMPV_CHECK_HRESULT_CODE_BAIL(hr = pConvColor->SetOutputType(0, pTypeSink, 0));
 					}
 					if (pConvFrameRate) {
-						/*CHECK_HR*/(hr = pConvFrameRate->SetOutputType(0, pTransformInputType, 0));
+						COMPV_CHECK_HRESULT_CODE_BAIL(hr = pConvFrameRate->SetOutputType(0, pTypeSink, 0));
 					}
-#if 0
 					if (pConvSize) {
-						// Transform requires NV12
-						//Video Resizer DSP(http://msdn.microsoft.com/en-us/library/windows/desktop/ff819491(v=vs.85).aspx) doesn't support NV12
-						//*CHECK_HR*/(hr = pConvSize->SetOutputType(0, pTransformInputType, 0));
+						COMPV_CHECK_HRESULT_CODE_BAIL(hr = pConvSize->SetOutputType(0, pTypeSink, 0));
 					}
-#endif
 				}
 			}
 			else {
-				hr = pNodeSinkMain->GetInputPrefType(0, &pSinkMainInputType);
-				if (FAILED(hr)) {
-					pSinkMainInputType = pIputTypeMain;
-					pSinkMainInputType->AddRef();
-					hr = S_OK;
+				if (pVideoProcessor) {
+					COMPV_CHECK_HRESULT_CODE_BAIL(hr = pVideoProcessor->SetOutputType(0, pTypeSink, 0));
 				}
-				if (SUCCEEDED(hr)) {
-					if (pVideoProcessor) {
-						COMPV_CHECK_HRESULT_CODE_BAIL(hr = pVideoProcessor->SetOutputType(0, pSinkMainInputType, 0));
+				else {
+					if (pConvFrameRate) {
+						COMPV_CHECK_HRESULT_CODE_BAIL(hr = pConvFrameRate->SetInputType(0, pTypeThroughTopo, 0));
+						COMPV_MF_SAFE_RELEASE(&pTypeThroughTopo);
+						capsThroughTopo.numFps = capsSink.numFps, capsThroughTopo.denFps = capsSink.denFps; // update fps to match 'pConvFrameRate' output
+						COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::capsToMediaType(capsThroughTopo, &pTypeThroughTopo));
+						COMPV_CHECK_HRESULT_CODE_BAIL(hr = pConvFrameRate->SetOutputType(0, pTypeThroughTopo, 0));
 					}
-					else {
-#if 0
-						//!\ MUST NOT SET OUTPUT TYPE
-						if (pConvColor) {
-							/*CHECK_HR*/(hr = pConvColor->SetOutputType(0, pSinkMainInputType, 0));
+					if (pConvSize) {
+						if (!pTypeThroughTopo) {
+							COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::capsToMediaType(capsThroughTopo, &pTypeThroughTopo));
 						}
-						if (pConvFrameRate) {
-							/*CHECK_HR*/(hr = pConvFrameRate->SetOutputType(0, pSinkMainInputType, 0));
+						COMPV_CHECK_HRESULT_CODE_BAIL(hr = pConvSize->SetInputType(0, pTypeThroughTopo, 0));
+						COMPV_MF_SAFE_RELEASE(&pTypeThroughTopo);
+						capsThroughTopo.width = capsSink.width, capsThroughTopo.height = capsSink.height; // update size to match 'pConvSize' output
+						COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::capsToMediaType(capsThroughTopo, &pTypeThroughTopo));
+						COMPV_CHECK_HRESULT_CODE_BAIL(hr = pConvSize->SetOutputType(0, pTypeThroughTopo, 0));
+					}
+					if (pConvColor) {
+						if (!pTypeThroughTopo) {
+							COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::capsToMediaType(capsThroughTopo, &pTypeThroughTopo));
 						}
-						if (pConvSize) {
-							/*CHECK_HR*/(hr = pConvSize->SetOutputType(0, pSinkMainInputType, 0));
-						}
-#endif
+						COMPV_CHECK_HRESULT_CODE_BAIL(hr = pConvColor->SetInputType(0, pTypeThroughTopo, 0));
+						COMPV_MF_SAFE_RELEASE(&pTypeThroughTopo);
+						capsThroughTopo.subType = capsSink.subType; // update subtype to match 'pConvColor' output
+						COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::capsToMediaType(capsThroughTopo, &pTypeThroughTopo));
+						COMPV_CHECK_HRESULT_CODE_BAIL(hr = pConvColor->SetOutputType(0, pTypeThroughTopo, 0));
 					}
 				}
 			} // if (pTransform)
@@ -857,14 +800,17 @@ HRESULT CompVMFUtils::createTopology(
 					pcNodeBeforeSinkMain = pNodeVideoProcessor;
 				}
 				else if (pNodeConvFrameRate || pNodeConvSize || pNodeConvColor) {
+					IMFTopologyNode* converters[] = { pNodeConvFrameRate, pNodeConvSize, pNodeConvColor };
 					COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::connectConverters(
 						pNodeTee,
 						0,
-						pNodeConvFrameRate,
-						pNodeConvColor,
-						pNodeConvSize
+						converters, sizeof(converters) / sizeof(converters[0])
 					));
-					pcNodeBeforeSinkMain = pNodeConvSize ? pNodeConvSize : (pNodeConvColor ? pNodeConvColor : pNodeConvFrameRate);
+					for (size_t i = 0; i < sizeof(converters) / sizeof(converters[0]); ++i) {
+						if (converters[i]) {
+							pcNodeBeforeSinkMain = converters[i];
+						}
+					}
 				}
 				else {
 					pcNodeBeforeSinkMain = pNodeTee;
@@ -876,15 +822,18 @@ HRESULT CompVMFUtils::createTopology(
 					COMPV_CHECK_HRESULT_CODE_BAIL(hr = pNodeSource->ConnectOutput(0, pNodeVideoProcessor, 0));
 					pcNodeBeforeSinkMain = pNodeVideoProcessor;
 				}
-				else if (pNodeConvFrameRate || pNodeConvFrameRate || pNodeConvColor) {
+				else if (pNodeConvFrameRate || pNodeConvSize || pNodeConvColor) {
+					IMFTopologyNode* converters[] = { pNodeConvFrameRate, pNodeConvSize, pNodeConvColor };
 					COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::connectConverters(
 						pNodeSource,
 						0,
-						pNodeConvFrameRate,
-						pNodeConvSize,
-						pNodeConvColor
+						converters, sizeof(converters) / sizeof(converters[0])
 					));
-					pcNodeBeforeSinkMain = pNodeConvSize ? pNodeConvSize : (pNodeConvColor ? pNodeConvColor : pNodeConvFrameRate);
+					for (size_t i = 0; i < sizeof(converters) / sizeof(converters[0]); ++i) {
+						if (converters[i]) {
+							pcNodeBeforeSinkMain = converters[i];
+						}
+					}
 				}
 				else {
 					pcNodeBeforeSinkMain = pNodeSource;
@@ -894,12 +843,12 @@ HRESULT CompVMFUtils::createTopology(
 
 			if (pNodeTransform) {
 				// Connect(X->Transform)
-				COMPV_CHECK_HRESULT_CODE_BAIL(hr = ((IMFTopologyNode *)pcNodeBeforeSinkMain)->ConnectOutput(0, pNodeTransform, 0));
+				COMPV_CHECK_HRESULT_CODE_BAIL(hr = const_cast<IMFTopologyNode *>(pcNodeBeforeSinkMain)->ConnectOutput(0, pNodeTransform, 0));
 				pcNodeBeforeSinkMain = pNodeTransform;
 			}
 
 			// Connect(X -> SinkMain)
-			COMPV_CHECK_HRESULT_CODE_BAIL(hr = ((IMFTopologyNode *)pcNodeBeforeSinkMain)->ConnectOutput(0, pNodeSinkMain, 0));
+			COMPV_CHECK_HRESULT_CODE_BAIL(hr = const_cast<IMFTopologyNode *>(pcNodeBeforeSinkMain)->ConnectOutput(0, pNodeSinkMain, 0));
 
 			bSourceFound = TRUE;
 			break;
@@ -925,8 +874,7 @@ bail:
 	COMPV_MF_SAFE_RELEASE(&pSD);
 	COMPV_MF_SAFE_RELEASE(&pHandler);
 	COMPV_MF_SAFE_RELEASE(&pMediaType);
-	COMPV_MF_SAFE_RELEASE(&pTransformInputType);
-	COMPV_MF_SAFE_RELEASE(&pSinkMainInputType);
+	COMPV_MF_SAFE_RELEASE(&pTypeThroughTopo);
 
 	COMPV_MF_SAFE_RELEASE(&pVideoProcessor);
 	COMPV_MF_SAFE_RELEASE(&pNodeVideoProcessor);
@@ -1249,9 +1197,10 @@ HRESULT CompVMFUtils::supportedCaps(
 					COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFGetAttributeSize(pMediaType, MF_MT_FRAME_SIZE, &width, &height));
 					COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFGetAttributeRatio(pMediaType, MF_MT_FRAME_RATE, &numeratorFps, &denominatorFps));
 					caps_.push_back(CompVMFCameraCaps(
-						static_cast<LONG>(width),
-						static_cast<LONG>(height),
-						static_cast<int>(numeratorFps / denominatorFps),
+						width,
+						height,
+						numeratorFps,
+						denominatorFps,
 						subType)
 					);
 					COMPV_MF_SAFE_RELEASE(&pMediaType);
@@ -1274,12 +1223,126 @@ bail:
 	return hr;
 }
 
+HRESULT CompVMFUtils::outputCaps(
+	__in IMFTransform *pTransform,
+	__out std::vector<CompVMFCameraCaps>& caps
+)
+{
+	COMPV_CHECK_HRESULT_EXP_RETURN(!pTransform, E_INVALIDARG);
+
+	COMPV_MF_SUBTYPE subType;
+	HRESULT hr = S_OK;
+	std::vector<CompVMFCameraCaps> caps_;
+	IMFMediaType *pMediaType = NULL;
+	UINT32 width, height, numeratorFps, denominatorFps = 1;
+
+	for (DWORD dwTypeIndex = 0; hr != MF_E_NO_MORE_TYPES; ++dwTypeIndex) {
+		hr = pTransform->GetOutputAvailableType(0, dwTypeIndex, &pMediaType);
+		if (SUCCEEDED(hr)) {
+			COMPV_CHECK_HRESULT_CODE_BAIL(hr = pMediaType->GetGUID(MF_MT_SUBTYPE, &subType));
+			hr = MFGetAttributeSize(pMediaType, MF_MT_FRAME_SIZE, &width, &height);
+			hr = MFGetAttributeRatio(pMediaType, MF_MT_FRAME_RATE, &numeratorFps, &denominatorFps);
+			caps_.push_back(CompVMFCameraCaps(
+				width,
+				height,
+				numeratorFps,
+				denominatorFps,
+				subType)
+			);
+			COMPV_MF_SAFE_RELEASE(&pMediaType);
+		}
+		else {
+			COMPV_CHECK_HRESULT_EXP_BAIL(FAILED(hr) && hr != MF_E_NO_MORE_TYPES, hr);
+		}
+	}
+
+	caps = caps_;
+	hr = S_OK;
+
+bail:
+	COMPV_MF_SAFE_RELEASE(&pMediaType);
+	return hr;
+}
+
+HRESULT CompVMFUtils::bestCap(
+	__in const std::vector<CompVMFCameraCaps>& supported,
+	__in const CompVMFCameraCaps& requested,
+	__out CompVMFCameraCaps& best,
+	__in BOOL ignoreSubType COMPV_DEFAULT(FALSE),
+	__in BOOL ignoreSize COMPV_DEFAULT(FALSE),
+	__in BOOL ignoreFPS COMPV_DEFAULT(FALSE))
+{
+	COMPV_CHECK_HRESULT_EXP_RETURN(supported.empty(), E_INVALIDARG);
+
+	static const UINT32 kSubTypeMismatchPad = _UI32_MAX >> 4;
+	static const UINT32 kFpsMismatchPad = _UI32_MAX >> 2;
+	UINT32 score, bestScore = _UI32_MAX;
+	int index, besti = 0, i = 0;
+
+	for (std::vector<CompVMFCameraCaps>::const_iterator it = supported.begin(); it != supported.end(); ++it, ++i) {
+		if (ignoreSubType || InlineIsEqualGUID(it->subType, requested.subType)) {
+			score = 0;
+		}
+		else {
+			CompVFindSubTypePairByGuid(it->subType, &index);
+			score = (index == -1)
+				? kSubTypeMismatchPad // Not a must but important: If(!VideoProcess) then CLSID_CColorConvertDMO
+				: (kSubTypeMismatchPad >> (kCompVSubTypeGuidPairsCount - index));
+		}
+		if (!ignoreSize) {
+			score += static_cast<UINT32>(abs(static_cast<INT>(it->width - requested.width))); // Not a must: If (!VideoProcess) then CLSID_CResizerDMO
+			score += static_cast<UINT32>(abs(static_cast<INT>(it->height - requested.height))); // Not a must: If (!VideoProcess) then CLSID_CResizerDMO
+		}
+		if (!ignoreFPS) {
+#if 0
+			score += (it->fps == requested.fps) ? 0 : kFpsMismatchPad; // Fps is a must because without video processor no alternative exist (CLSID_CFrameRateConvertDmo doesn't support I420)
+#else
+			score += static_cast<UINT32>(abs(static_cast<INT>((it->numFps / it->denFps) - (requested.numFps / requested.denFps)))) << 1; // Know using Frame Rate Converter DSP (https://msdn.microsoft.com/en-us/library/windows/desktop/ff819100(v=vs.85).aspx)
+#endif
+		}
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "score([%s,%s,%s], [%s], [%s]) = %u", ignoreSubType ? "true" : "false", ignoreSize ? "true" : "false", ignoreFPS ? "true" : "false",
+			it->toString().c_str(), requested.toString().c_str(), score);
+
+		if (score <= bestScore) {
+			besti = i;
+			bestScore = score;
+		}
+	}
+
+	CompVMFCameraCaps best_ = best = supported[besti];
+	if (ignoreSubType) {
+		best.subType = requested.subType;
+	}
+	if (ignoreSize) {
+		best.width = requested.width;
+		best.height = requested.height;
+	}
+	if (ignoreFPS) {
+		best.numFps = requested.numFps;
+		best.denFps = requested.denFps;
+	}
+	// 'Frame Rate Converter DSP' will duplicate the frames to match the rate, not needed
+	// For example, if we request 15fps but only 30fps is supported then, we use 15fps as best to avoid duplicating some frames.
+	// For example, if we request 30fps but only 15fps is supported then, we use 15fps as best to ask the filter to drop some frames.
+	// best.fps = std::min(best.fps, requested.fps);
+	if ((best.numFps / best.denFps) > (best_.numFps / best_.denFps)) {
+		best.numFps = best_.numFps;
+		best.denFps = best_.denFps;
+	}
+
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "bestCap([%s,%s,%s], %s) = %s", ignoreSubType ? "true" : "false", ignoreSize ? "true" : "false", ignoreFPS ? "true" : "false",
+		requested.toString().c_str(), best.toString().c_str());
+
+	return S_OK;
+}
+
 HRESULT CompVMFUtils::isSupported(
 	IMFPresentationDescriptor *pPD,
 	DWORD cStreamIndex,
 	UINT32 nWidth,
 	UINT32 nHeight,
-	UINT32 nFps,
+	UINT32 nFpsNum,
+	UINT32 nFpsDen,
 	const GUID& guidFormat,
 	BOOL* pbSupportedSize,
 	BOOL* pbSupportedFps,
@@ -1311,12 +1374,11 @@ HRESULT CompVMFUtils::isSupported(
 			COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFGetAttributeSize(pMediaType, MF_MT_FRAME_SIZE, &_nWidth, &_nHeight));
 			COMPV_CHECK_HRESULT_CODE_BAIL(hr = pMediaType->GetGUID(MF_MT_SUBTYPE, &subType));
 			if (FAILED(hr = MFGetAttributeRatio(pMediaType, MF_MT_FRAME_RATE, &numeratorFps, &denominatorFps))) {
-				numeratorFps = 30;
-				denominatorFps = 1;
+				continue;
 			}
 
 			// all must match for the same stream
-			if (_nWidth == nWidth && _nHeight == nHeight && subType == guidFormat && (numeratorFps / denominatorFps) == nFps) {
+			if (_nWidth == nWidth && _nHeight == nHeight && subType == guidFormat && numeratorFps == nFpsNum && denominatorFps == nFpsDen) {
 				*pbSupportedSize = TRUE;
 				*pbSupportedFormat = TRUE;
 				*pbSupportedFps = TRUE;
@@ -1355,8 +1417,8 @@ HRESULT CompVMFUtils::isSupported(
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFGetAttributeSize(pMediaType, MF_MT_FRAME_SIZE, &nWidth, &nHeight));
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pMediaType->GetGUID(MF_MT_SUBTYPE, &subType));
 	if (FAILED(hr = MFGetAttributeRatio(pMediaType, MF_MT_FRAME_RATE, &numeratorFps, &denominatorFps))) {
-		numeratorFps = 30;
-		denominatorFps = 1;
+		numeratorFps = 30000;
+		denominatorFps = 1001;
 	}
 
 	COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::isSupported(
@@ -1364,7 +1426,8 @@ HRESULT CompVMFUtils::isSupported(
 		cStreamIndex,
 		nWidth,
 		nHeight,
-		(numeratorFps / denominatorFps),
+		numeratorFps,
+		denominatorFps,
 		subType,
 		pbSupportedSize,
 		pbSupportedFps,
@@ -1445,48 +1508,191 @@ bail:
 	return hr;
 }
 
+// Check whether the subType is supported by 'Frame Rate Converter DSP' (https://msdn.microsoft.com/en-us/library/windows/desktop/ff819100(v=vs.85).aspx)
+HRESULT CompVMFUtils::isSupportedByFrameRateConvert(
+	__in const COMPV_MF_SUBTYPE& subType,
+	__out BOOL *pbSupported)
+{
+	COMPV_CHECK_HRESULT_EXP_RETURN(!pbSupported, E_INVALIDARG);
+	*pbSupported = (subType == MFVideoFormat_ARGB32
+		|| subType == MFVideoFormat_RGB24
+		|| subType == MFVideoFormat_RGB32
+		|| subType == MFVideoFormat_RGB555
+		|| subType == MFVideoFormat_RGB565
+		|| subType == MFVideoFormat_AYUV
+		|| subType == MFVideoFormat_IYUV
+		|| subType == MFVideoFormat_UYVY
+		|| subType == MFVideoFormat_Y41P
+		|| subType == MFVideoFormat_YUY2
+#if 0
+		|| subType == MFVideoFormat_Y211
+		|| subType == MFVideoFormat_Y411
+		|| subType == MFVideoFormat_YUYV
+#endif
+		|| subType == MFVideoFormat_YV12
+		|| subType == MFVideoFormat_YVYU) ? TRUE : FALSE;
+	return S_OK;
+}
+
+// Check whether the subType is supported by 'Video Resizer DSP' (https://msdn.microsoft.com/en-us/library/windows/desktop/ff819491(v=vs.85).aspx)
+HRESULT CompVMFUtils::isSupportedByVideoResizer(
+	__in const COMPV_MF_SUBTYPE& subType,
+	__out BOOL *pbSupported)
+{
+	COMPV_CHECK_HRESULT_EXP_RETURN(!pbSupported, E_INVALIDARG);
+	*pbSupported = (subType == MFVideoFormat_IYUV
+		|| subType == MFVideoFormat_YUY2
+		|| subType == MFVideoFormat_UYVY
+		|| subType == MFVideoFormat_I420
+		|| subType == MFVideoFormat_RGB32
+		|| subType == MFVideoFormat_RGB24
+		|| subType == MFVideoFormat_RGB565
+		|| subType == MFVideoFormat_RGB8
+		|| subType == MFVideoFormat_RGB555
+		|| subType == MFVideoFormat_AYUV
+#if 0
+		|| subType == MFVideoFormat_V216
+#endif
+		|| subType == MFVideoFormat_YV12) ? TRUE : FALSE;
+	return S_OK;
+}
+
+// Check whether the subType is supported by 'Video Processor MFT' (https://msdn.microsoft.com/en-us/library/windows/desktop/hh162913(v=vs.85).aspx)
+HRESULT CompVMFUtils::isSupportedByColorConverter(
+	__in const COMPV_MF_SUBTYPE& subTypeIn,
+	__in const COMPV_MF_SUBTYPE& subTypeOut,
+	__out BOOL *pbSupported)
+{
+	COMPV_CHECK_HRESULT_EXP_RETURN(!pbSupported, E_INVALIDARG);
+
+	HRESULT hr = S_OK;
+	IMFTransform *pColorConv = NULL;
+	IMFMediaType *pMediaTypeIn = NULL;
+	IMFMediaType *pMediaTypeOut = NULL;
+	COMPV_MF_SUBTYPE subtypeOut;
+	// Check input is supported
+	*pbSupported = (subTypeIn == MFVideoFormat_ARGB32
+		|| subTypeIn == MFVideoFormat_AYUV
+		|| subTypeIn == MFVideoFormat_I420
+		|| subTypeIn == MFVideoFormat_IYUV
+		|| subTypeIn == MFVideoFormat_NV11
+		|| subTypeIn == MFVideoFormat_NV12
+		|| subTypeIn == MFVideoFormat_RGB24
+		|| subTypeIn == MFVideoFormat_RGB32
+		|| subTypeIn == MFVideoFormat_RGB555
+		|| subTypeIn == MFVideoFormat_RGB565
+		|| subTypeIn == MFVideoFormat_RGB8
+		|| subTypeIn == MFVideoFormat_UYVY
+		|| subTypeIn == MFVideoFormat_v410
+		|| subTypeIn == MFVideoFormat_Y216
+		|| subTypeIn == MFVideoFormat_Y41P
+		|| subTypeIn == MFVideoFormat_Y41T
+		|| subTypeIn == MFVideoFormat_Y42T
+		|| subTypeIn == MFVideoFormat_YUY2
+		|| subTypeIn == MFVideoFormat_YV12
+		|| subTypeIn == MFVideoFormat_YVYU) ? TRUE : FALSE;
+	// Check out is supported
+	if (*pbSupported) {
+		*pbSupported = FALSE;
+		COMPV_CHECK_HRESULT_CODE_BAIL(hr = CoCreateInstance(CLSID_CColorConvertDMO, NULL,
+			CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pColorConv)));
+		COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::createVideoType(&subTypeIn, &pMediaTypeIn, 1280, 720));
+		COMPV_CHECK_HRESULT_CODE_BAIL(hr = pColorConv->SetInputType(0, pMediaTypeIn, 0));
+		for (DWORD dwTypeIndex = 0; hr != MF_E_NO_MORE_TYPES && !*pbSupported; ++dwTypeIndex) {
+			hr = pColorConv->GetOutputAvailableType(0, dwTypeIndex, &pMediaTypeOut);
+			if (SUCCEEDED(hr)) {
+				COMPV_CHECK_HRESULT_CODE_BAIL(hr = pMediaTypeOut->GetGUID(MF_MT_SUBTYPE, &subtypeOut));
+				*pbSupported = (subtypeOut == subTypeOut);
+				COMPV_MF_SAFE_RELEASE(&pMediaTypeOut);
+			}
+			else {
+				COMPV_CHECK_HRESULT_EXP_BAIL(FAILED(hr) && hr != MF_E_NO_MORE_TYPES, hr);
+			}
+		}
+	}
+	hr = S_OK; // clear 'MF_E_NO_MORE_TYPES'
+
+bail:
+	COMPV_MF_SAFE_RELEASE(&pMediaTypeIn);
+	COMPV_MF_SAFE_RELEASE(&pMediaTypeOut);
+	COMPV_MF_SAFE_RELEASE(&pColorConv);
+	return hr;
+}
+
 HRESULT CompVMFUtils::connectConverters(
 	IMFTopologyNode *pNode,
 	DWORD dwOutputIndex,
-	IMFTopologyNode *pNodeConvFrameRate,
-	IMFTopologyNode *pNodeConvColor,
-	IMFTopologyNode *pNodeConvSize
+	IMFTopologyNode **ppNodes,
+	DWORD nNodesCount
 )
 {
-	COMPV_CHECK_HRESULT_EXP_RETURN(!pNode, E_INVALIDARG);
-
+	COMPV_CHECK_HRESULT_EXP_RETURN(!pNode || !ppNodes || nNodesCount <= 0, E_INVALIDARG);
 	HRESULT hr = S_OK;
+	IMFTopologyNode* pNode_ = pNode;
+	for (DWORD i = 0; i < nNodesCount; ++i) {
+		if (ppNodes[i]) {
+			COMPV_CHECK_HRESULT_CODE_BAIL(hr = pNode_->ConnectOutput(dwOutputIndex, ppNodes[i], 0));
+			pNode_ = ppNodes[i];
+		}
+	}
+bail:
+	return hr;
+}
 
-	if (pNodeConvFrameRate) {
-		COMPV_CHECK_HRESULT_CODE_BAIL(hr = pNode->ConnectOutput(dwOutputIndex, pNodeConvFrameRate, 0));
-		if (pNodeConvSize) {
-			COMPV_CHECK_HRESULT_CODE_BAIL(hr = pNodeConvFrameRate->ConnectOutput(0, pNodeConvSize, 0));
-			if (pNodeConvColor) {
-				COMPV_CHECK_HRESULT_CODE_BAIL(hr = pNodeConvSize->ConnectOutput(0, pNodeConvColor, 0));
-			}
-		}
-		else {
-			if (pNodeConvColor) {
-				COMPV_CHECK_HRESULT_CODE_BAIL(hr = pNodeConvFrameRate->ConnectOutput(0, pNodeConvColor, 0));
-			}
-		}
-	}
-	else {
-		if (pNodeConvSize) {
-			COMPV_CHECK_HRESULT_CODE_BAIL(hr = pNode->ConnectOutput(dwOutputIndex, pNodeConvSize, 0));
-			if (pNodeConvColor) {
-				COMPV_CHECK_HRESULT_CODE_BAIL(hr = pNodeConvSize->ConnectOutput(0, pNodeConvColor, 0));
-			}
-		}
-		else {
-			if (pNodeConvColor) {
-				COMPV_CHECK_HRESULT_CODE_BAIL(hr = pNode->ConnectOutput(dwOutputIndex, pNodeConvColor, 0));
-			}
-		}
-	}
+HRESULT CompVMFUtils::mediaTypeToCaps(
+	__in IMFMediaType* pMediaType,
+	__out CompVMFCameraCaps &caps)
+{
+	COMPV_CHECK_HRESULT_EXP_RETURN(!pMediaType, E_INVALIDARG);
+	UINT32 width, height, numeratorFps, denominatorFps;
+	HRESULT hr;
+	GUID subType;
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pMediaType->GetGUID(MF_MT_SUBTYPE, &subType));
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFGetAttributeSize(pMediaType, MF_MT_FRAME_SIZE, &width, &height));
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFGetAttributeRatio(pMediaType, MF_MT_FRAME_RATE, &numeratorFps, &denominatorFps));
+	caps.width = width;
+	caps.height = height;
+	caps.numFps = numeratorFps;
+	caps.denFps = denominatorFps;
+	caps.subType = subType;
+bail:
+	return hr;
+}
+
+// The caller must release the returned 'ppMediaType'
+HRESULT CompVMFUtils::capsToMediaType(
+	__in const CompVMFCameraCaps &caps,
+	__out IMFMediaType** ppMediaType)
+{
+	COMPV_CHECK_HRESULT_EXP_RETURN(!ppMediaType, E_INVALIDARG);
+
+	HRESULT hr;
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = CompVMFUtils::createVideoType(&caps.subType, ppMediaType, caps.width, caps.height, caps.numFps, caps.denFps));
 
 bail:
 	return hr;
 }
+
+#if _WIN32_WINNT >= 0x0602
+HRESULT CompVMFUtils::videoProcessorSetRectangles(
+	IMFTransform *pVideoProcessor,
+	const RECT& source,
+	const RECT& dst)
+{
+	COMPV_CHECK_HRESULT_EXP_RETURN(!pVideoProcessor, E_INVALIDARG);
+
+	IMFVideoProcessorControl* pVPC = NULL;
+	HRESULT hr = S_OK;
+
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pVideoProcessor->QueryInterface(IID_PPV_ARGS(&pVPC)));
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pVPC->SetSourceRectangle(const_cast<RECT*>(&source)));
+	COMPV_CHECK_HRESULT_CODE_BAIL(hr = pVPC->SetDestinationRectangle(const_cast<RECT*>(&dst)));
+
+bail:
+	COMPV_MF_SAFE_RELEASE(&pVPC);
+	return hr;
+}
+#endif
+
 
 COMPV_NAMESPACE_END()

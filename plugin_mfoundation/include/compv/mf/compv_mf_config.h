@@ -40,6 +40,18 @@
 #define COMPV_CHECK_HRESULT_EXP_RETURN(exp, hr) do { if ((exp)) COMPV_CHECK_HRESULT_CODE_RETURN(hr); } while(0)
 #define COMPV_CHECK_HRESULT_EXP_BAIL(exp, hr) do { if ((exp)) COMPV_CHECK_HRESULT_CODE_BAIL(hr); } while(0)
 
+// Video processor (https://msdn.microsoft.com/en-us/library/windows/desktop/hh162913(v=vs.85).aspx) not whanted for several reasons
+// - Not supportted on Win7 (but this is not a real issue as the code can detect it)
+// - Resize the video to match the aspect ratio. Not wanted as we already use OpenGL for this.
+// - Duplicate frames to match the requested framerate when requested fps > supported fps
+// Because of all these reasons, we'll use separate resizer (https://msdn.microsoft.com/en-us/library/windows/desktop/ff819491(v=vs.85).aspx),
+// frame rate converter (https://msdn.microsoft.com/en-us/library/windows/desktop/ff819100(v=vs.85).aspx) and color converter (https://msdn.microsoft.com/en-us/library/windows/desktop/ff819079(v=vs.85).aspx)
+#if !defined COMPV_MF_USE_PROCESSOR_IN_TOPO
+#	define COMPV_MF_USE_PROCESSOR_IN_TOPO 0
+#endif
+
+typedef GUID COMPV_MF_SUBTYPE;
+
 extern const char* CompVMFUtilsGuidName(const GUID& guid);
 
 typedef HRESULT(STDMETHODCALLTYPE *CompVMFBufferCBFunc)(REFGUID guidMajorMediaType, DWORD dwSampleFlags,
@@ -47,28 +59,32 @@ typedef HRESULT(STDMETHODCALLTYPE *CompVMFBufferCBFunc)(REFGUID guidMajorMediaTy
 	DWORD dwSampleSiz, const void *pcUserData);
 
 struct CompVMFCameraCaps {
-	LONG width;
-	LONG height;
-	int fps;
-	GUID subType;
+	UINT32 width;
+	UINT32 height;
+	UINT32 numFps;
+	UINT32 denFps;
+	COMPV_MF_SUBTYPE subType;
 	// Important: update 'isEquals' and 'toString' functions if you add new field
 
-	CompVMFCameraCaps(LONG width_ = 640, LONG height_ = 480, int fps_ = 25, GUID subType_ = MFVideoFormat_YUY2) {
+	CompVMFCameraCaps(UINT32 width_ = 640, UINT32 height_ = 480, UINT32 numFps_ = 25000, UINT32 denFps_ = 1000, COMPV_MF_SUBTYPE subType_ = MFVideoFormat_YUY2) {
 		width = width_;
 		height = height_;
-		fps = fps_;
+		numFps = numFps_;
+		denFps = denFps_;
 		subType = subType_;
+	}
+	virtual ~CompVMFCameraCaps() {
 	}
 
 	COMPV_INLINE bool isEquals(const CompVMFCameraCaps& caps)const {
-		return width == caps.width && height == caps.height && fps == caps.fps && InlineIsEqualGUID(subType, caps.subType);
+		return width == caps.width && height == caps.height && numFps == caps.numFps && denFps == caps.denFps && InlineIsEqualGUID(subType, caps.subType);
 	}
 
 	COMPV_INLINE const std::string toString()const {
 		return
 			std::string("width=") + std::to_string(width) + std::string(", ")
 			+ std::string("height=") + std::to_string(height) + std::string(", ")
-			+ std::string("fps=") + std::to_string(fps) + std::string(", ")
+			+ std::string("fps=") + std::to_string(numFps) + std::string("/") + std::to_string(denFps) + std::string(", ")
 			+ std::string("subType=") + std::string(CompVMFUtilsGuidName(subType));
 	}
 };

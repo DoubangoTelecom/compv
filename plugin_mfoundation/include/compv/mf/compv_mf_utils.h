@@ -8,9 +8,10 @@
 #define _COMPV_PLUGIN_MFOUNDATION_UTILS_H_
 
 #include "compv/mf/compv_mf_config.h"
-#include "compv/mf/compv_mf_devices.h"
 #include "compv/camera/compv_camera.h" /* CompVCameraDeviceInfoList */
 
+#include <map>
+#include <vector>
 #include <new>
 #include <mfapi.h>
 #include <mfidl.h>
@@ -30,9 +31,6 @@ public:
 
 	static HRESULT startup();
 	static HRESULT shutdown();
-
-	static COMPV_ERROR_CODE devices(__out CompVCameraDeviceInfoList& list);
-	static COMPV_ERROR_CODE device(__in const char* pszId, __out IMFActivate **ppActivate);
 
 	static COMPV_ERROR_CODE convertSubType(__in const COMPV_SUBTYPE& subTypeIn, __out GUID &subTypeOut);
 	static COMPV_ERROR_CODE convertSubType(__in const GUID &subTypeIn, __out COMPV_SUBTYPE &subTypeOut);
@@ -55,7 +53,9 @@ public:
 		const GUID* subType, // video subType
 		IMFMediaType **ppType,     // Receives a pointer to the media type.
 		UINT32 unWidth = 0, // Video width (0 to ignore)
-		UINT32 unHeight = 0 // Video height (0 to ignore)
+		UINT32 unHeight = 0, // Video height (0 to ignore)
+		UINT32 unFpsNum = 0, // 0 to ignore
+		UINT32 unFpsDen = 0 // 0 to ignore
 	);
 	static HRESULT convertVideoTypeToUncompressedType(
 		IMFMediaType *pType,    // Pointer to an encoded video type.
@@ -102,7 +102,8 @@ public:
 		IMFTransform *pTransform, // Transform filter (e.g. encoder or decoder) to insert between the source and Sink. NULL is valid.
 		IMFActivate *pSinkActivateMain, // Main sink (e.g. sample grabber or EVR).
 		IMFActivate *pSinkActivatePreview, // Preview sink. Optional. Could be NULL.
-		IMFMediaType *pIputTypeMain, // Main sink input MediaType
+		IMFMediaType *pTypeSource, // Source output MediaType
+		IMFMediaType *pTypeSink, // Main sink input MediaType
 		IMFTopology **ppTopo // Receives the newly created topology
 	);
 	static HRESULT resolveTopology(
@@ -150,12 +151,24 @@ public:
 		__out std::vector<CompVMFCameraCaps>& caps,
 		__in const GUID& majorType = MFMediaType_Video // The MediaType
 	);
+	static HRESULT outputCaps(
+		__in IMFTransform *pTransform,
+		__out std::vector<CompVMFCameraCaps>& caps
+	);
+	static HRESULT bestCap(
+		__in const std::vector<CompVMFCameraCaps>& supported,
+		__in const CompVMFCameraCaps& requested,
+		__out CompVMFCameraCaps& best,
+		__in BOOL ignoreSubType = FALSE,
+		__in BOOL ignoreSize = FALSE,
+		__in BOOL ignoreFPS = FALSE);
 	static HRESULT isSupported(
 		IMFPresentationDescriptor *pPD,
 		DWORD cStreamIndex,
 		UINT32 nWidth,
 		UINT32 nHeight,
-		UINT32 nFps,
+		UINT32 nFpsNum,
+		UINT32 nFpsDen,
 		const GUID& guidFormat,
 		BOOL* pbSupportedSize,
 		BOOL* pbSupportedFps,
@@ -177,13 +190,35 @@ public:
 		BOOL* pbSupportedFps,
 		BOOL* pbSupportedFormat
 	);
+	static HRESULT isSupportedByFrameRateConvert(
+		__in const COMPV_MF_SUBTYPE& subType,
+		__out BOOL *pbSupported);
+	static HRESULT isSupportedByVideoResizer(
+		__in const COMPV_MF_SUBTYPE& subType,
+		__out BOOL *pbSupported);
+	static HRESULT isSupportedByColorConverter(
+		__in const COMPV_MF_SUBTYPE& subTypeIn,
+		__in const COMPV_MF_SUBTYPE& subTypeOut,
+		__out BOOL *pbSupported);
 	static HRESULT connectConverters(
 		IMFTopologyNode *pNode,
 		DWORD dwOutputIndex,
-		IMFTopologyNode *pNodeConvFrameRate,
-		IMFTopologyNode *pNodeConvColor,
-		IMFTopologyNode *pNodeConvSize
+		IMFTopologyNode **ppNodes,
+		DWORD nNodesCount
 	);
+	static HRESULT mediaTypeToCaps(
+		__in IMFMediaType* pMediaType,
+		__out CompVMFCameraCaps &caps);
+	static HRESULT capsToMediaType(
+		__in const CompVMFCameraCaps &caps,
+		__out IMFMediaType** ppMediaType);
+#if _WIN32_WINNT >= 0x0602
+	static HRESULT videoProcessorSetRectangles(
+		IMFTransform *pVideoProcessor,
+		const RECT& source,
+		const RECT& dst);
+#endif
+	
 
 	template <class Q>
 	static HRESULT GetTopoNodeObject(IMFTopologyNode *pNode, Q **ppObject) {
@@ -205,7 +240,6 @@ public:
 
 private:
 	static bool s_bStarted;
-	static CompVMFDeviceListVideo* s_DeviceListVideo;
 };
 
 COMPV_NAMESPACE_END()

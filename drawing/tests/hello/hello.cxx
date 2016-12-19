@@ -9,7 +9,7 @@ CompVCameraDeviceInfoList devices;
 #define CAMERA_WIDTH		1280 //640
 #define CAMERA_HEIGHT		720 //480
 #define CAMERA_FPS			25
-#define CAMERA_SUBTYPE		COMPV_SUBTYPE_PIXELS_NV12
+#define CAMERA_SUBTYPE		COMPV_SUBTYPE_PIXELS_YUY2
 
 static void* COMPV_STDCALL WorkerThread(void* arg);
 
@@ -78,6 +78,11 @@ public:
 	bail:
 		return err;
 	}
+	virtual COMPV_ERROR_CODE onError(const std::string& message) override
+	{
+		COMPV_DEBUG_ERROR("Camera error: %s", message.c_str()); // probably a disconnect
+		return COMPV_ERROR_CODE_S_OK;
+	}
 
 	static COMPV_ERROR_CODE newObj(MyCameraListenerPtrPtr listener, CompVSingleSurfaceLayerPtr ptrSingleSurfaceLayer)
 	{
@@ -97,9 +102,9 @@ private:
 static void *COMPV_STDCALL cameraRestart(void * arg)
 {
 	camera->stop();
-	COMPV_CHECK_CODE_ASSERT(camera->setInt(COMPV_CAMERA_CAP_INT_WIDTH, 1));
-	COMPV_CHECK_CODE_ASSERT(camera->setInt(COMPV_CAMERA_CAP_INT_HEIGHT, 1));
-	COMPV_CHECK_CODE_ASSERT(camera->start(devices[1].id));
+	COMPV_CHECK_CODE_ASSERT(camera->setInt(COMPV_CAMERA_CAP_INT_WIDTH, 100));
+	COMPV_CHECK_CODE_ASSERT(camera->setInt(COMPV_CAMERA_CAP_INT_HEIGHT, 100));
+	COMPV_CHECK_CODE_ASSERT(camera->start(devices[0].id));
 	return NULL;
 }
 
@@ -171,10 +176,18 @@ bail:
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_HEIGHT, CAMERA_HEIGHT));
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_FPS, CAMERA_FPS));
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_SUBTYPE, CAMERA_SUBTYPE));
-    COMPV_CHECK_CODE_BAIL(err = camera->start(devices[1].id));
+    COMPV_CHECK_CODE_BAIL(err = camera->start(devices[0].id));
+
+	// FIXME
+	//for (int i = 0; i < 100; ++i) {
+	//	CompVThread::sleep(0);
+	//	COMPV_CHECK_CODE_BAIL(err = camera->stop());
+	//	CompVThread::sleep(0);
+	//	COMPV_CHECK_CODE_BAIL(err = camera->start(devices[0].id));
+	//}
 
 	//if (devices.size() > 1) {
-	//	CompVThread::newObj(&thread, cameraRestart);
+		//CompVThread::newObj(&thread, cameraRestart);
 	//}
 
     //while (CompVDrawing::isLoopRunning()) {

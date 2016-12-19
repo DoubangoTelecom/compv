@@ -8,6 +8,7 @@
 #define _COMPV_PLUGIN_MFOUNDATION_DEVICES_H_
 
 #include "compv/mf/compv_mf_config.h"
+#include "compv/base/compv_obj.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -17,13 +18,16 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVMFDeviceList
+COMPV_OBJECT_DECLARE_PTRS(MFDeviceList)
+COMPV_OBJECT_DECLARE_PTRS(MFDeviceListAudio)
+COMPV_OBJECT_DECLARE_PTRS(MFDeviceListVideo)
+
+class CompVMFDeviceList : public CompVObj
 {
 protected:
 	CompVMFDeviceList(bool bVideo);
 public:
 	virtual  ~CompVMFDeviceList();
-
 	UINT32  count()const;
 	void clear();
 	HRESULT deviceAtIndex(__in UINT32 index, __out IMFActivate **ppActivate);
@@ -42,18 +46,24 @@ private:
 
 class CompVMFDeviceListAudio : public CompVMFDeviceList
 {
-public:
+protected:
 	CompVMFDeviceListAudio();
+public:
 	virtual  ~CompVMFDeviceListAudio();
+	COMPV_OBJECT_GET_ID(CompVMFDeviceListAudio);
 	HRESULT enumerateDevices();
+	static COMPV_ERROR_CODE newObj(CompVMFDeviceListAudioPtrPtr list);
 };
 
 class CompVMFDeviceListVideo : public CompVMFDeviceList
 {
-public:
+protected:
 	CompVMFDeviceListVideo();
+public:
 	virtual  ~CompVMFDeviceListVideo();
+	COMPV_OBJECT_GET_ID(CompVMFDeviceListAudio);
 	HRESULT enumerateDevices();
+	static COMPV_ERROR_CODE newObj(CompVMFDeviceListVideoPtrPtr list);
 };
 
 COMPV_NAMESPACE_END()

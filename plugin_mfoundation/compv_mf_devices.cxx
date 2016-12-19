@@ -150,11 +150,18 @@ HRESULT CompVMFDeviceList::deviceId(__in UINT32 index, __out WCHAR **ppszId)
 }
 
 CompVMFDeviceListAudio::CompVMFDeviceListAudio() : CompVMFDeviceList(false){ }
-CompVMFDeviceListAudio::~CompVMFDeviceListAudio() {}
+CompVMFDeviceListAudio::~CompVMFDeviceListAudio() { }
 HRESULT CompVMFDeviceListAudio::enumerateDevices()
 {
 	// call base class function
 	return CompVMFDeviceList::enumerateDevices(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_GUID);
+}
+COMPV_ERROR_CODE CompVMFDeviceListAudio::newObj(CompVMFDeviceListAudioPtrPtr list) {
+	COMPV_CHECK_EXP_RETURN(!list, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMFDeviceListAudioPtr list_ = new CompVMFDeviceListAudio();
+	COMPV_CHECK_EXP_RETURN(!list_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	*list = list_;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 CompVMFDeviceListVideo::CompVMFDeviceListVideo() : CompVMFDeviceList(true) { }
@@ -163,6 +170,13 @@ HRESULT CompVMFDeviceListVideo::enumerateDevices()
 {
 	// call base class function
 	return CompVMFDeviceList::enumerateDevices(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
+}
+COMPV_ERROR_CODE CompVMFDeviceListVideo::newObj(CompVMFDeviceListVideoPtrPtr list) {
+	COMPV_CHECK_EXP_RETURN(!list, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMFDeviceListVideoPtr list_ = new CompVMFDeviceListVideo();
+	COMPV_CHECK_EXP_RETURN(!list_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	*list = list_;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

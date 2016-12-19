@@ -26,7 +26,6 @@ struct {
 	{ COMPV_SUBTYPE_PIXELS_NV12, MEDIASUBTYPE_NV12 }, // Used by NVIDIA CUDA
 	{ COMPV_SUBTYPE_PIXELS_UYVY, MEDIASUBTYPE_UYVY },
 	{ COMPV_SUBTYPE_PIXELS_YUY2, MEDIASUBTYPE_YUY2 },
-	{ COMPV_SUBTYPE_PIXELS_YV12, MEDIASUBTYPE_YV12 },
 
 	// RGB formats as fallback
 	{ COMPV_SUBTYPE_PIXELS_BGR24, MEDIASUBTYPE_RGB24 },
@@ -315,7 +314,7 @@ COMPV_ERROR_CODE CompVDSUtils::convertSubType(__in const COMPV_SUBTYPE& subTypeI
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
-	COMPV_DEBUG_ERROR("Directshow camera implementation doesn't support subType %d", subTypeIn);
+	COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Directshow camera implementation doesn't support subType %d", subTypeIn);
 	return COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT;
 }
 
@@ -327,7 +326,7 @@ COMPV_ERROR_CODE CompVDSUtils::convertSubType(__in const GUID &subTypeIn, __out 
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
-	COMPV_DEBUG_ERROR("CompV doesn't support subType %s", CompVDSUtils::guidName(subTypeIn));
+	COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "CompV doesn't support subType %s", CompVDSUtils::guidName(subTypeIn));
 	return COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT;
 }
 
@@ -456,13 +455,13 @@ COMPV_ERROR_CODE CompVDSUtils::bestCap(__in const std::vector<CompVDSCameraCaps>
 		else {
 			CompVFindSubTypePairByGuid(it->subType, &index);
 			score = (index == -1)
-				? kSubTypeMismatchPad // Not a must but important: If(!VideoProcess) then CLSID_CColorConvertDMO
+				? kSubTypeMismatchPad
 				: (kSubTypeMismatchPad >> (kCompVSubTypeGuidPairsCount - index));
 		}
-		score += static_cast<UINT32>(abs(it->width - requested.width)); // Not a must: If (!VideoProcess) then CLSID_CResizerDMO
-		score += static_cast<UINT32>(abs(it->height - requested.height)); // Not a must: If (!VideoProcess) then CLSID_CResizerDMO
+		score += static_cast<UINT32>(abs(it->width - requested.width));
+		score += static_cast<UINT32>(abs(it->height - requested.height));
 		if (!ignoreFPS) {
-			score += (it->fps == requested.fps) ? 0 : kFpsMismatchPad; // Fps is a must because without video processor no alternative exist (CLSID_CFrameRateConvertDmo doesn't support I420)
+			score += (it->fps == requested.fps) ? 0 : kFpsMismatchPad;
 		}
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "score(%s, [%s], [%s]) = %u", ignoreFPS ? "true" : "false", it->toString().c_str(), requested.toString().c_str(), score);
 
