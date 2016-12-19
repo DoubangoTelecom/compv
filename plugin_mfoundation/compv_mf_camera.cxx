@@ -197,10 +197,11 @@ COMPV_ERROR_CODE CompVMFCamera::device(__in const char* pszId, __out IMFActivate
 	COMPV_CHECK_EXP_RETURN(!ppActivate, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(!m_ptrDeviceListVideo, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	wchar_t pczwSrcUniqueId[MAX_PATH] = { 0 };
-	int length;
-
-	length = static_cast<int>(mbstowcs(pczwSrcUniqueId, pszId, sizeof(pczwSrcUniqueId) / sizeof(pczwSrcUniqueId[0])));
-	COMPV_CHECK_EXP_RETURN(length <= 0, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	if (pszId) {
+		int length;
+		length = static_cast<int>(mbstowcs(pczwSrcUniqueId, pszId, sizeof(pczwSrcUniqueId) / sizeof(pczwSrcUniqueId[0])));
+		COMPV_CHECK_EXP_RETURN(length < 0, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
 	COMPV_CHECK_EXP_RETURN(FAILED(m_ptrDeviceListVideo->deviceWithId(pczwSrcUniqueId, ppActivate)), COMPV_ERROR_CODE_E_MFOUNDATION);
 	return COMPV_ERROR_CODE_S_OK;
 }
