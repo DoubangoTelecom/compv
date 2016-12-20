@@ -15,7 +15,7 @@
 %}
 
 %{
-#include "../../../../../camera/include/compv/camera/android/compv_camera_android_proxy.h"
+#include "compv/camera/android/compv_camera_android_proxy.h"
 %}
 %nodefaultctor;
 %include "../camera/include/compv/camera/android/compv_camera_android_proxy.h"

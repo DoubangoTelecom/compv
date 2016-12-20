@@ -413,7 +413,7 @@ namespace Swig {
 #include <stdint.h>		// Use the C99 official header
 
 
-#include "../../../../../camera/include/compv/camera/android/compv_camera_android_proxy.h"
+#include "compv/camera/android/compv_camera_android_proxy.h"
 
 
 

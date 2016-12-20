@@ -108,9 +108,12 @@ static void *COMPV_STDCALL cameraRestart(void * arg)
 	return NULL;
 }
 
+// FIXME
+//#define SALUT_CHECK_CODE_BAIL(errcode, ...) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s) -> " ##__VA_ARGS__, CompVGetErrorString(__code__)); goto bail; } } while(0)
+
 static void* COMPV_STDCALL WorkerThread(void* arg)
 {
-#if 0 // Chroma conversion
+#if 1 // Chroma conversion
 	CompVMatPtr image;
 	COMPV_ERROR_CODE err;
 	CompVSingleSurfaceLayerPtr singleSurfaceLayer;
@@ -119,22 +122,23 @@ static void* COMPV_STDCALL WorkerThread(void* arg)
 	
 	// FIXME: add support for RGB565 and BGR565, both LE and BE, LE being the default ones (ARM and X86 devices are LE by default)
 	
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUV444P, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_yuv444p.yuv", &image));
-	COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUV422P, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_yuv422p.yuv", &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUV420P, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_yuv420p.yuv", &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_gray.yuv", &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_UYVY422, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_uyvy422.yuv", &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUYV422, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_yuyv422.yuv", &image)); // DirectShow / MediaFoundation
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_NV12, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_nv12.yuv", &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_NV21, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_nv21.yuv", &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGBA32, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_rgba.rgb", &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_ARGB32, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_argb.rgb", &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGRA32, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_bgra.rgb", &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGR24, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_bgr.rgb", &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB565LE, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_rgb565le.rgb", &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB565BE, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_rgb565be.rgb", &image));
-	// COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGR565LE, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_bgr565le.rgb", &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGR565BE, 750, 472, 750, "C:/Projects/GitHub/data/colorspace/girl_750x501x750_bgr565be.rgb", &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUV444P, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_yuv444p.yuv", &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUV422P, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_yuv422p.yuv", &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUV420P, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_yuv420p.yuv", &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_gray.yuv", &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_UYVY422, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_uyvy422.yuv", &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUYV422, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_yuyv422.yuv", &image)); // DirectShow / MediaFoundation
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_NV12, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_nv12.yuv", &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_NV21, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_nv21.yuv", &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGBA32, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_rgba.rgb", &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_ARGB32, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_argb.rgb", &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGRA32, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_bgra.rgb", &image));
+	COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB24, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_rgb.rgb", &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGR24, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_bgr.rgb", &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB565LE, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_rgb565le.rgb", &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB565BE, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_rgb565be.rgb", &image));
+	// COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGR565LE, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_bgr565le.rgb", &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGR565BE, 706, 472, 706, "C:/Projects/GitHub/data/colorspace/girl_706x472x706_bgr565be.rgb", &image));
 
 	COMPV_CHECK_CODE_BAIL(err = window->addSingleLayerSurface(&singleSurfaceLayer));
 	timeStart = CompVTime::getNowMills();
@@ -163,6 +167,9 @@ bail:
 	CompVSingleSurfaceLayerPtr singleSurfaceLayer;
 	MyCameraListenerPtr listener;
 	CompVThreadPtr thread;
+
+	//COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+	//SALUT_CHECK_CODE_BAIL(COMPV_ERROR_CODE_E_INVALID_CALL, "Invalid call");
 	
 	COMPV_CHECK_CODE_BAIL(err = window->addSingleLayerSurface(&singleSurfaceLayer));
 	COMPV_CHECK_CODE_BAIL(err = MyCameraListener::newObj(&listener, *singleSurfaceLayer));

@@ -8,29 +8,32 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.List;
 
 import org.doubango.jni.CompVCameraAndroidProxy;
 
 public class CompVCamera {
     private static final String TAG = CompVCamera.class.getCanonicalName();
     private static final int CALLABACK_BUFFERS_COUNT = 3;
-    private static final int PREF_PIXEL_FORMAT = PixelFormat.YCbCr_420_SP;
     private final CompVCameraAndroidProxy mProxy;
     private final PreviewCallback mPreviewCallback;
+    private CompVCameraCaps mCapsPref;
+    private CompVCameraCaps mCapsNeg;
     private boolean mStarted = false;
     private ByteBuffer mVideoFrame;
     private int mVideoFrameSize;
     private byte[] mVideoCallbackBytes;
     private Camera mCamera;
-    private int mWidthPref = 640;
-    private int mHeightPref = 480;
-    private int mWidthFrame = mWidthPref;
-    private int mHeightFrame = mHeightPref;
-    private int mPixelFormat = PREF_PIXEL_FORMAT; // NV21, supported by all Android devices
+    private int mCameraId;
     private SurfaceTexture mSurfaceTexture;
     private SurfaceTexture mSurfaceTextureDummy; // to avoid garbage collection
-    private int mCameraFacingPref = Camera.CameraInfo.CAMERA_FACING_FRONT;
+
+    // Next fields are used in C++ code using reflexion
+    public static final int PIXEL_FORMAT_NV21 = PixelFormat.YCbCr_420_SP; // all android devices are required to support this format
+    public static final int PIXEL_FORMAT_YUY2 = PixelFormat.YCbCr_422_I;
+    public static final int PIXEL_FORMAT_NV16 = PixelFormat.YCbCr_422_SP; // TODO(dmi): add support for NV16
+    public static final int PIXEL_FORMAT_RGB565 = PixelFormat.RGB_565;
+    public static final int PIXEL_FORMAT_RGBA = PixelFormat.RGBA_8888;
+    public static final int PIXEL_FORMAT_RGB = PixelFormat.RGB_888;
 
     static {
         System.loadLibrary("androidcamera");
@@ -38,23 +41,26 @@ public class CompVCamera {
 
     public CompVCamera() {
         mProxy = new CompVCameraAndroidProxy();
+        mCapsPref = new CompVCameraCaps();
+        mCapsNeg = new CompVCameraCaps();
+        mCameraId = 0;
 
         mPreviewCallback = new PreviewCallback() {
             @Override
             public void onPreviewFrame(byte[] _data, Camera _camera) {
                 if (mStarted) {
-                    if (mVideoFrameSize != _data.length) {
-                        Log.e(TAG, "Video frame size mismatch: " + mVideoFrameSize + "<>" + _data.length);
-                        return;
+                    final int _dataLength = _data == null ? 0 : _data.length;
+                    if (mVideoFrameSize != _dataLength) {
+                        Log.e(TAG, "Video frame size mismatch: " + mVideoFrameSize + "<>" + _dataLength);
                     }
-                    mVideoFrame.put(_data);
-                    mProxy.pushFrame(mVideoFrame, mVideoFrameSize);
-                    mVideoFrame.rewind();
-
+                    else {
+                        mVideoFrame.put(_data);
+                        mProxy.pushFrame(mVideoFrame, mVideoFrameSize);
+                        mVideoFrame.rewind();
+                    }
                     // do not use "_data" which could be null (e.g. on GSII)
                     mCamera.addCallbackBuffer(_data == null ? mVideoCallbackBytes : _data);
-                }
-                else {
+                } else {
                     Log.w(TAG, "onPreviewFrame called while the camera is stopped");
                 }
             }
@@ -68,31 +74,37 @@ public class CompVCamera {
         super.finalize();
     }
 
-    public boolean open() {
-        Log.d(TAG, "open()");
+    public static int getNumberOfCameras() {
+        return Camera.getNumberOfCameras();
+    }
+
+    public String getCameraInfo(int cameraId) {
+        if (cameraId < 0 || cameraId >= getNumberOfCameras()) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        final int numCamera = getNumberOfCameras();
+        final Camera.CameraInfo info = new Camera.CameraInfo();
+        for (int id = 0; id < numCamera; ++id) {
+            if (id == cameraId) {
+                Camera.getCameraInfo(cameraId, info);
+                return String.format("%d %d %d", cameraId, info.orientation, info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT ? 1 : 0);
+            }
+        }
+        throw new ArrayIndexOutOfBoundsException();
+    }
+
+    public boolean open(int cameraId) {
+        Log.d(TAG, "open("+cameraId+")");
+        if (mCameraId != cameraId) {
+            close();
+        }
         if (mCamera == null) {
-            int numCamera = Camera.getNumberOfCameras();
-            if (numCamera <= 0) {
-                Log.e(TAG, "numCamera="+numCamera);
-                return false;
-            }
-            // Open preferred camera
-            Camera.CameraInfo info = new Camera.CameraInfo();
-            for (int c = 0; c < numCamera; ++c) {
-                Camera.getCameraInfo(c, info);
-                if (info.facing == mCameraFacingPref) {
-                    mCamera = Camera.open(c);
-                    break;
-                }
-            }
-            // Open default camera
-            if (mCamera == null) {
-                mCamera = Camera.open(numCamera - 1);
-            }
+            mCamera = Camera.open(cameraId);
             if (mCamera == null) {
                 Log.e(TAG, "Camera.open() failed");
                 return false;
             }
+            mCameraId = cameraId;
         }
         return (mCamera != null);
     }
@@ -107,74 +119,63 @@ public class CompVCamera {
         return true;
     }
 
-    public boolean start() {
-        Log.d(TAG, "start");
+    public boolean start(int cameraId) {
+        Log.d(TAG, "start(" + cameraId + ")");
         if (mStarted) {
             Log.d(TAG, "camera already started");
             return true;
         }
-        if (!open()) {
+        if (!open(cameraId)) {
             Log.e(TAG, "Failed to open the camera for start");
             return false;
         }
 
-        final Camera.Parameters parameters = mCamera.getParameters();
-
-        /* Set pixel format */
-        mPixelFormat = PREF_PIXEL_FORMAT;
-        try {
-            parameters.setPreviewFormat(mPixelFormat);
+        /* apply caps */
+        Log.d(TAG, "Trying to apply preferred caps: " + mCapsPref);
+        boolean retBool = CompVCameraUtils.applyCaps(mCamera, mCapsPref);
+        if (!retBool) {
+            Log.w(TAG, "Failed to apply preferred caps: " + mCapsPref);
+            final CompVCameraCaps capsBest = CompVCameraUtils.getBestCaps(mCamera, mCapsPref);
+            if (capsBest == null) {
+                Log.e(TAG, "Failed to get best caps");
+                close();
+                return false;
+            }
+            Log.d(TAG, "Trying to apply best caps: " + capsBest);
+            retBool = CompVCameraUtils.applyCaps(mCamera, capsBest);
+            if (!retBool) {
+                Log.e(TAG, "Failed to apply best caps:" + capsBest);
+                close();
+                return false;
+            }
         }
-        catch (Exception e) {
-            e.printStackTrace();
-            Log.e(TAG, "setPreviewFormat(" + mPixelFormat + ") failed" + e);
-        }
-        mPixelFormat = parameters.getPreviewFormat();
-        Log.d(TAG, "mPixelFormat=" + mPixelFormat);
-
-        /* Set preview size */
-        final Camera.Size sizePref = getBestPreviewSize();
-        try {
-            parameters.setPreviewSize(sizePref.width, sizePref.height);
-            mCamera.setParameters(parameters);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            Log.e(TAG, "setPreviewSize(" + sizePref.width + ", sizePref.height) failed" + e);
-        }
-        mWidthFrame = parameters.getPreviewSize().width;
-        mHeightFrame = parameters.getPreviewSize().height;
-        Log.d(TAG, "mWidthPref=" + mWidthPref + ", mHeightPref=" + mHeightPref + ", mWidthFrame=" + mWidthFrame + ", mHeightFrame=" + mHeightFrame);
-
-        /* Set framerate */
-        // parameters.setPreviewFrameRate(NgnCameraProducer.fps);
+        mCapsNeg = CompVCameraUtils.getNegCaps(mCamera);
+        Log.d(TAG, "Negotiated caps: " + mCapsNeg);
 
         /* Compute buffer size */
-        switch (mPixelFormat) {
-            case PixelFormat.YCbCr_420_SP: // NV21
-                mVideoFrameSize = ((mWidthFrame * mHeightFrame) * 3) >> 1;
+        switch (mCapsNeg.mFormat) {
+            case PIXEL_FORMAT_NV21:
+                mVideoFrameSize = ((mCapsNeg.mWidth * mCapsNeg.mHeight) * 3) >> 1;
                 break;
-            case PixelFormat.YCbCr_422_SP:
-            case PixelFormat.YCbCr_422_I: // YUY2
-            case PixelFormat.RGB_565:
-                mVideoFrameSize = (mWidthFrame * mHeightFrame) << 1;
+            case PIXEL_FORMAT_YUY2:
+            case PIXEL_FORMAT_RGB565:
+                mVideoFrameSize = (mCapsNeg.mWidth * mCapsNeg.mHeight) << 1;
                 break;
-            case PixelFormat.RGBA_8888:
-            case PixelFormat.RGBX_8888:
-                mVideoFrameSize = (mWidthFrame * mHeightFrame) << 2;
+            case PIXEL_FORMAT_RGBA:
+                mVideoFrameSize = (mCapsNeg.mWidth * mCapsNeg.mHeight) << 2;
                 break;
-            case PixelFormat.RGB_888:
-                mVideoFrameSize = (mWidthFrame * mHeightFrame) * 3;
+            case PIXEL_FORMAT_RGB:
+                mVideoFrameSize = (mCapsNeg.mWidth * mCapsNeg.mHeight) * 3;
                 break;
             default:
-                Log.e(TAG, "Invalid pixel format: " + mPixelFormat);
+                Log.e(TAG, "Invalid pixel format: " + mCapsNeg.mFormat);
                 close();
                 return false;
         }
         Log.d(TAG, "Frame buffer size = " + mVideoFrameSize);
         try {
             mVideoFrame = ByteBuffer.allocateDirect(mVideoFrameSize);
-        } catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             Log.e(TAG, "Failed to allocate buffer: " + mVideoFrameSize);
             close();
@@ -184,7 +185,7 @@ public class CompVCamera {
         mCamera.setPreviewCallbackWithBuffer(mPreviewCallback);
 
         mVideoCallbackBytes = new byte[mVideoFrame.capacity()];
-        for (int i = 0; i< CALLABACK_BUFFERS_COUNT; ++i) {
+        for (int i = 0; i < CALLABACK_BUFFERS_COUNT; ++i) {
             mCamera.addCallbackBuffer(new byte[mVideoFrame.capacity()]);
         }
 
@@ -196,7 +197,7 @@ public class CompVCamera {
                     mSurfaceTextureDummy = new SurfaceTexture(0);
                 }
             }
-            final SurfaceTexture surfaceTexture = (mSurfaceTexture == null ?  mSurfaceTextureDummy : mSurfaceTexture);
+            final SurfaceTexture surfaceTexture = (mSurfaceTexture == null ? mSurfaceTextureDummy : mSurfaceTexture);
             Log.d(TAG, "setPreviewTexture(" + surfaceTexture + ")");
             mCamera.setPreviewTexture(surfaceTexture);
         } catch (IOException e) {
@@ -212,6 +213,10 @@ public class CompVCamera {
         return true;
     }
 
+    public boolean start() {
+        return start(Math.max(getNumberOfCameras() - 1, 0));
+    }
+
     public boolean stop() {
         Log.d(TAG, "stop()");
         if (mCamera != null) {
@@ -222,14 +227,8 @@ public class CompVCamera {
         return true;
     }
 
-    public boolean setUseFront(boolean useFront) {
-        Log.d(TAG, "setUseFront("+useFront+")");
-        mCameraFacingPref = useFront ? Camera.CameraInfo.CAMERA_FACING_FRONT : Camera.CameraInfo.CAMERA_FACING_BACK;
-        return true;
-    }
-
     public boolean setSurfaceTextureName(int textureName) {
-        Log.d(TAG, "setUseFront("+textureName+")");
+        Log.d(TAG, "setUseFront(" + textureName + ")");
         final SurfaceTexture surfaceTexture = new SurfaceTexture(textureName);
         if (mCamera != null) {
             try {
@@ -245,7 +244,7 @@ public class CompVCamera {
     }
 
     public boolean setSurfaceTexture(SurfaceTexture surfaceTexture) {
-        Log.d(TAG, "setSurfaceTexture("+surfaceTexture+")");
+        Log.d(TAG, "setSurfaceTexture(" + surfaceTexture + ")");
         if (mCamera != null) {
             try {
                 mCamera.setPreviewTexture(surfaceTexture);
@@ -259,9 +258,8 @@ public class CompVCamera {
         return true;
     }
 
-    public int getPixelFormat() {
-        return mPixelFormat;
-    }
+    public void setCaps(CompVCameraCaps caps) { mCapsPref = caps; }
+    public CompVCameraCaps getCapsNeg() { return mCapsNeg; }
 
     public CompVCameraAndroidProxy getProxy() {
         return mProxy;
@@ -271,17 +269,4 @@ public class CompVCamera {
         mProxy.setCallbackFunc(funcptr, userData);
     }
 
-    private Camera.Size getBestPreviewSize(){
-        final List<Camera.Size> prevSizes = mCamera.getParameters().getSupportedPreviewSizes();
-        Camera.Size minSize = null;
-        int minScore = Integer.MAX_VALUE;
-        for (Camera.Size size : prevSizes){
-            final int score = Math.abs(size.width - mWidthPref) + Math.abs(size.height - mHeightPref);
-            if (minScore > score){
-                minScore = score;
-                minSize = size;
-            }
-        }
-        return minSize;
-    }
 }

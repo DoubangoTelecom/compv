@@ -34,13 +34,13 @@
 #define COMPV_DS_SEC_TO_100NS(SEC)  static_cast<REFERENCE_TIME>(10000000ui64) / static_cast<REFERENCE_TIME>((SEC))
 #define COMPV_DS_100NS_TO_SEC(_100NS)  static_cast<REFERENCE_TIME>(10000000ui64) / static_cast<REFERENCE_TIME>((_100NS))
 
-#define COMPV_CHECK_HRESULT_CODE_NOP(hr) do { HRESULT __hr__ = (hr); if (FAILED(__hr__)) { COMPV_DEBUG_ERROR("Operation Failed (%08x)", __hr__); } } while(0)
-#define COMPV_CHECK_HRESULT_CODE_BAIL(hr) do { HRESULT __hr__ = (hr); if (FAILED(__hr__)) { COMPV_DEBUG_ERROR("Operation Failed (%08x)", __hr__); goto bail; } } while(0)
-#define COMPV_CHECK_HRESULT_CODE_RETURN(hr) do { HRESULT __hr__ = (hr); if (FAILED(__hr__)) { COMPV_DEBUG_ERROR("Operation Failed (%08x)", __hr__); return __hr__; } } while(0)
-#define COMPV_CHECK_HRESULT_CODE_ASSERT(hr) do { HRESULT __hr__ = (hr); if (FAILED(__hr__)) { COMPV_DEBUG_ERROR("Operation Failed (%08x)", __hr__); COMPV_ASSERT(false); } } while(0)
-#define COMPV_CHECK_HRESULT_EXP_NOP(exp, hr) do { if ((exp)) COMPV_CHECK_HRESULT_CODE_NOP(hr); } while(0)
-#define COMPV_CHECK_HRESULT_EXP_RETURN(exp, hr) do { if ((exp)) COMPV_CHECK_HRESULT_CODE_RETURN(hr); } while(0)
-#define COMPV_CHECK_HRESULT_EXP_BAIL(exp, hr) do { if ((exp)) COMPV_CHECK_HRESULT_CODE_BAIL(hr); } while(0)
+#define COMPV_CHECK_HRESULT_CODE_NOP(hr, ...) do { HRESULT __hr__ = (hr); if (FAILED(__hr__)) { COMPV_DEBUG_ERROR("Operation Failed (%08x) -> " ##__VA_ARGS__, __hr__); } } while(0)
+#define COMPV_CHECK_HRESULT_CODE_BAIL(hr, ...) do { HRESULT __hr__ = (hr); if (FAILED(__hr__)) { COMPV_DEBUG_ERROR("Operation Failed (%08x) -> " ##__VA_ARGS__, __hr__); goto bail; } } while(0)
+#define COMPV_CHECK_HRESULT_CODE_RETURN(hr, ...) do { HRESULT __hr__ = (hr); if (FAILED(__hr__)) { COMPV_DEBUG_ERROR("Operation Failed (%08x) -> " ##__VA_ARGS__, __hr__); return __hr__; } } while(0)
+#define COMPV_CHECK_HRESULT_CODE_ASSERT(hr, ...) do { HRESULT __hr__ = (hr); if (FAILED(__hr__)) { COMPV_DEBUG_ERROR("Operation Failed (%08x) -> " ##__VA_ARGS__, __hr__); COMPV_ASSERT(false); } } while(0)
+#define COMPV_CHECK_HRESULT_EXP_NOP(exp, hr, ...) do { if ((exp)) COMPV_CHECK_HRESULT_CODE_NOP(hr,  ##__VA_ARGS__); } while(0)
+#define COMPV_CHECK_HRESULT_EXP_RETURN(exp, hr, ...) do { if ((exp)) COMPV_CHECK_HRESULT_CODE_RETURN(hr,  ##__VA_ARGS__); } while(0)
+#define COMPV_CHECK_HRESULT_EXP_BAIL(exp, hr, ...) do { if ((exp)) COMPV_CHECK_HRESULT_CODE_BAIL(hr,  ##__VA_ARGS__); } while(0)
 
 #include <streams.h>
 

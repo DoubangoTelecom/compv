@@ -16,7 +16,9 @@ public class TestActivity extends Activity  implements TextureView.SurfaceTextur
         Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
+        CompVCameraCaps caps = new CompVCameraCaps(6400, 48, 100, CompVCamera.PIXEL_FORMAT_NV16);
         mCamera = new CompVCamera();
+        mCamera.setCaps(caps);
 
         TextureView tv = new TextureView(this);
         tv.setSurfaceTextureListener(this);

@@ -30,7 +30,7 @@ COMPV_NAMESPACE_BEGIN()
 extern "C" COMPV_PLUGIN_MFOUNDATION_API COMPV_ERROR_CODE newObjCamera(CompVCameraPtrPtr camera)
 {
 	COMPV_CHECK_EXP_RETURN(!camera, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(FAILED(CompVMFUtils::startup()), COMPV_ERROR_CODE_E_MFOUNDATION);
+	COMPV_CHECK_EXP_RETURN(FAILED(CompVMFUtils::startup()), COMPV_ERROR_CODE_E_MFOUNDATION, "Failed to start Microsoft Media Foundation engine");
 
 	CompVMFCameraPtr camera_;
 	COMPV_CHECK_CODE_RETURN(CompVMFCamera::newObj(&camera_));
