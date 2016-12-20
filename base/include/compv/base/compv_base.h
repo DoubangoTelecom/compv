@@ -11,6 +11,7 @@
 #include "compv/base/compv_obj.h"
 
 #include <string>
+#include <sstream>
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -49,6 +50,12 @@ public:
 		return s_strCPU_ABI;
 	}
 #endif
+	template <typename T>
+	static std::string to_string(T value) {
+		std::ostringstream os;
+		os << value;
+		return os.str();
+	}
 
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

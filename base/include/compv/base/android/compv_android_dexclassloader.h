@@ -29,7 +29,9 @@ public:
 	static COMPV_ERROR_CODE init(JNIEnv* jEnv);
 	static COMPV_ERROR_CODE deInit(JNIEnv* jEnv);
 	static COMPV_ERROR_CODE moveDexFileFromAssetsToData(JNIEnv* jEnv, jobject activity, const std::string& dexFileName, const std::string& nativeLibFileName, std::string& dexPath, std::string& optimizedDirectory, std::string& librarySearchPath);
+	static COMPV_ERROR_CODE loadClass(JNIEnv* jEnv, const std::string& className, const std::string& dexPath, const std::string& optimizedDirectory, const std::string& librarySearchPath, jclass *clazz);
 	static COMPV_ERROR_CODE newInstance(JNIEnv* jEnv, const std::string& className, const std::string& dexPath, const std::string& optimizedDirectory, const std::string& librarySearchPath, jobject *instance);
+	static COMPV_ERROR_CODE newInstance(JNIEnv* jEnv, jclass clazz, jobject *instance);
 
 	static bool isInitialized() {
 		return s_bInitialized;

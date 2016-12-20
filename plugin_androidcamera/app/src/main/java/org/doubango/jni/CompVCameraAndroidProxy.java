@@ -43,8 +43,8 @@ public class CompVCameraAndroidProxy {
     androidcameraJNI.CompVCameraAndroidProxy_setCallbackFunc(swigCPtr, this, funcptr, userData);
   }
 
-  public boolean pushFrame(java.nio.ByteBuffer dataPtr, long dataSize) {
-    return androidcameraJNI.CompVCameraAndroidProxy_pushFrame(swigCPtr, this, dataPtr, dataSize);
+  public boolean pushFrame(java.nio.ByteBuffer frameDataPtr, long frameDataSize, long frameWidth, long frameHeight, int frameFps, int framePixelFormat) {
+    return androidcameraJNI.CompVCameraAndroidProxy_pushFrame(swigCPtr, this, frameDataPtr, frameDataSize, frameWidth, frameHeight, frameFps, framePixelFormat);
   }
 
 }

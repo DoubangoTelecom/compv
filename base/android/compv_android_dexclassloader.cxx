@@ -493,25 +493,22 @@ bail:
 	return err;
 }
 
-// 'instance' must be freed using DeleteGlobalRef()
-// Important: The instance's constructor *must* be parameterless
-COMPV_ERROR_CODE CompVAndroidDexClassLoader::newInstance(JNIEnv* jEnv, const std::string& className, const std::string& dexPath, const std::string& optimizedDirectory, const std::string& librarySearchPath, jobject *instance)
+// 'clazz' must be freed using DeleteGlobalRef()
+COMPV_ERROR_CODE CompVAndroidDexClassLoader::loadClass(JNIEnv* jEnv, const std::string& className, const std::string& dexPath, const std::string& optimizedDirectory, const std::string& librarySearchPath, jclass *clazz)
 {
-	COMPV_CHECK_EXP_RETURN(!jEnv || className.empty() || dexPath.empty() || optimizedDirectory.empty() || librarySearchPath.empty() || !instance, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!jEnv || className.empty() || dexPath.empty() || optimizedDirectory.empty() || librarySearchPath.empty() || !clazz, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(!CompVAndroidDexClassLoader::isInitialized(), COMPV_ERROR_CODE_E_INVALID_STATE);
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	jobject jobjectClassLoader = NULL;
 	jobject jobjectClass = NULL;
-	jobject jobjectInstance = NULL;
-	jmethodID jmethodIDConstructor = NULL;
 	jstring jstringClassName = NULL;
 	jstring jstringDexPath = NULL;
 	jstring jstringOptimizedDirectory = NULL;
 	jstring jstringLibrarySearchPath = NULL;
 
-	*instance = NULL;
-	
+	*clazz = NULL;
+
 	jstringClassName = jEnv->NewStringUTF(className.c_str());
 	COMPV_CHECK_EXP_BAIL(!jstringClassName, (err = COMPV_ERROR_CODE_E_JNI));
 	jstringDexPath = jEnv->NewStringUTF(dexPath.c_str());
@@ -531,12 +528,64 @@ COMPV_ERROR_CODE CompVAndroidDexClassLoader::newInstance(JNIEnv* jEnv, const std
 	// https://developer.android.com/reference/java/lang/ClassLoader.html#loadClass(java.lang.String)
 	COMPV_DEBUG_INFO("loadClass(%s)", className.c_str());
 	jobjectClass = jEnv->CallObjectMethod(jobjectClassLoader, s_MethodLoadClass, jstringClassName);
-	COMPV_CHECK_EXP_BAIL(!jstringLibrarySearchPath, (err = COMPV_ERROR_CODE_E_JNI));
+	COMPV_CHECK_EXP_BAIL(!jobjectClass, (err = COMPV_ERROR_CODE_E_JNI));
+	*clazz = reinterpret_cast<jclass>(jEnv->NewGlobalRef(jobjectClass));
+	COMPV_CHECK_EXP_BAIL(!*clazz, (err = COMPV_ERROR_CODE_E_JNI));
 
-	// newInstance
-	jmethodIDConstructor = jEnv->GetMethodID(reinterpret_cast<jclass>(jobjectClass), "<init>", "()V");
+bail:
+	// Goto bail probably called because of an exception (such as NoSuchMethodException when method GetMethodID called) -> clear exception
+	COMPV_jni_checkException1(jEnv);
+	COMPV_jni_DeleteLocalRef(jEnv, jobjectClassLoader);
+	COMPV_jni_DeleteLocalRef(jEnv, jobjectClass);
+	COMPV_jni_DeleteLocalRef(jEnv, jstringClassName);
+	COMPV_jni_DeleteLocalRef(jEnv, jstringDexPath);
+	COMPV_jni_DeleteLocalRef(jEnv, jstringOptimizedDirectory);
+	COMPV_jni_DeleteLocalRef(jEnv, jstringLibrarySearchPath);
+	if (COMPV_ERROR_CODE_IS_NOK(err)) {
+		COMPV_jni_DeleteGlobalRef(jEnv, *clazz);
+	}
+	return err;
+}
+
+// 'instance' must be freed using DeleteGlobalRef()
+// Important: The instance's constructor *must* be parameterless
+COMPV_ERROR_CODE CompVAndroidDexClassLoader::newInstance(JNIEnv* jEnv, const std::string& className, const std::string& dexPath, const std::string& optimizedDirectory, const std::string& librarySearchPath, jobject *instance)
+{
+	jclass clazz = NULL; // global ref
+	COMPV_ERROR_CODE err;
+	jmethodID jmethodIDConstructor = NULL;
+	jobject jobjectInstance = NULL;
+
+	COMPV_CHECK_CODE_BAIL(err = CompVAndroidDexClassLoader::loadClass(jEnv, className, dexPath, optimizedDirectory, librarySearchPath, &clazz));
+	
+	jmethodIDConstructor = jEnv->GetMethodID(clazz, "<init>", "()V");
 	COMPV_CHECK_EXP_BAIL(!jmethodIDConstructor, (err = COMPV_ERROR_CODE_E_JNI));
-	jobjectInstance = jEnv->NewObject(reinterpret_cast<jclass>(jobjectClass), jmethodIDConstructor);
+	jobjectInstance = jEnv->NewObject(clazz, jmethodIDConstructor);
+	COMPV_CHECK_EXP_BAIL(!jobjectInstance, (err = COMPV_ERROR_CODE_E_JNI));
+	*instance = jEnv->NewGlobalRef(jobjectInstance);
+	COMPV_CHECK_EXP_BAIL(!*instance, (err = COMPV_ERROR_CODE_E_JNI));	
+
+bail:
+	// Goto bail probably called because of an exception (such as NoSuchMethodException when method GetMethodID called) -> clear exception
+	COMPV_jni_checkException1(jEnv);
+	COMPV_jni_DeleteLocalRef(jEnv, jobjectInstance);
+	COMPV_jni_DeleteGlobalRef(jEnv, clazz);
+	if (COMPV_ERROR_CODE_IS_NOK(err)) {
+		COMPV_jni_DeleteGlobalRef(jEnv, *instance);
+	}
+	return err;
+}
+
+COMPV_ERROR_CODE CompVAndroidDexClassLoader::newInstance(JNIEnv* jEnv, jclass clazz, jobject *instance)
+{
+	COMPV_CHECK_EXP_RETURN(!jEnv || !clazz || !instance, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_ERROR_CODE err;
+	jmethodID jmethodIDConstructor = NULL;
+	jobject jobjectInstance = NULL;
+
+	jmethodIDConstructor = jEnv->GetMethodID(clazz, "<init>", "()V");
+	COMPV_CHECK_EXP_BAIL(!jmethodIDConstructor, (err = COMPV_ERROR_CODE_E_JNI));
+	jobjectInstance = jEnv->NewObject(clazz, jmethodIDConstructor);
 	COMPV_CHECK_EXP_BAIL(!jobjectInstance, (err = COMPV_ERROR_CODE_E_JNI));
 	*instance = jEnv->NewGlobalRef(jobjectInstance);
 	COMPV_CHECK_EXP_BAIL(!*instance, (err = COMPV_ERROR_CODE_E_JNI));
@@ -544,18 +593,9 @@ COMPV_ERROR_CODE CompVAndroidDexClassLoader::newInstance(JNIEnv* jEnv, const std
 bail:
 	// Goto bail probably called because of an exception (such as NoSuchMethodException when method GetMethodID called) -> clear exception
 	COMPV_jni_checkException1(jEnv);
-	COMPV_jni_DeleteLocalRef(jEnv, jobjectClassLoader);
-	COMPV_jni_DeleteLocalRef(jEnv, jobjectClass)
-	COMPV_jni_DeleteLocalRef(jEnv, jstringClassName);
-	COMPV_jni_DeleteLocalRef(jEnv, jstringDexPath);
-	COMPV_jni_DeleteLocalRef(jEnv, jstringOptimizedDirectory);
-	COMPV_jni_DeleteLocalRef(jEnv, jstringLibrarySearchPath);
 	COMPV_jni_DeleteLocalRef(jEnv, jobjectInstance);
-	
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
-		if (*instance) {
-			COMPV_jni_DeleteGlobalRef(jEnv, *instance);
-		}
+		COMPV_jni_DeleteGlobalRef(jEnv, *instance);
 	}
 	return err;
 }

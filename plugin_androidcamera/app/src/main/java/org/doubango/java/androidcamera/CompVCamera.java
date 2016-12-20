@@ -55,7 +55,7 @@ public class CompVCamera {
                     }
                     else {
                         mVideoFrame.put(_data);
-                        mProxy.pushFrame(mVideoFrame, mVideoFrameSize);
+                        mProxy.pushFrame(mVideoFrame, mVideoFrameSize, mCapsNeg.mWidth, mCapsNeg.mHeight, mCapsNeg.mFps, mCapsNeg.mFormat);
                         mVideoFrame.rewind();
                     }
                     // do not use "_data" which could be null (e.g. on GSII)
@@ -78,7 +78,7 @@ public class CompVCamera {
         return Camera.getNumberOfCameras();
     }
 
-    public String getCameraInfo(int cameraId) {
+    public static String getCameraInfo(int cameraId) {
         if (cameraId < 0 || cameraId >= getNumberOfCameras()) {
             throw new ArrayIndexOutOfBoundsException();
         }
@@ -259,7 +259,9 @@ public class CompVCamera {
     }
 
     public void setCaps(CompVCameraCaps caps) { mCapsPref = caps; }
+    public void setCaps(int width, int height, int fps, int format) { mCapsPref = new CompVCameraCaps(width, height, fps, format); }
     public CompVCameraCaps getCapsNeg() { return mCapsNeg; }
+    public CompVCameraCaps getCapsPref() { return mCapsPref; }
 
     public CompVCameraAndroidProxy getProxy() {
         return mProxy;
@@ -268,5 +270,4 @@ public class CompVCamera {
     public void setCallbackFunc(long funcptr, long userData) {
         mProxy.setCallbackFunc(funcptr, userData);
     }
-
 }

@@ -21,7 +21,7 @@
 
 #if !defined(SWIG)
 #define COMPV_CAMERA_ANDROID_LOG_TAG "org.doubango.compv.androidcamera.proxy"
-typedef bool(*CompVCameraAndroidProxyOnPreviewFrameFunc)(const void* dataPtr, size_t dataSize, const void* userData);
+typedef bool(*CompVCameraAndroidProxyOnPreviewFrameFunc)(const void* frameDataPtr, size_t frameDataSize, size_t frameWidth, size_t frameHeight, int frameFps, int framePixelFormat, const void* userData);
 #endif
 
 class CompVCameraAndroidProxy
@@ -43,9 +43,9 @@ public:
 		__android_log_print(ANDROID_LOG_INFO, COMPV_CAMERA_ANDROID_LOG_TAG, "setCallbackFunc(%p, %p)", m_funcOnPreviewFrame, m_ptrUserData);
 	}
 
-	virtual bool pushFrame(const void* dataPtr, size_t dataSize) {
+	virtual bool pushFrame(const void* frameDataPtr, size_t frameDataSize, size_t frameWidth, size_t frameHeight, int frameFps, int framePixelFormat) {
 		if (m_funcOnPreviewFrame) {
-			return m_funcOnPreviewFrame(dataPtr, dataSize, m_ptrUserData);
+			return m_funcOnPreviewFrame(frameDataPtr, frameDataSize, frameWidth, frameHeight, frameFps, framePixelFormat, m_ptrUserData);
 		}
 		__android_log_print(ANDROID_LOG_ERROR, COMPV_CAMERA_ANDROID_LOG_TAG, "m_funcOnPreviewFrame not defined");
 		return false;

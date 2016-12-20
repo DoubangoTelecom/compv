@@ -27,7 +27,7 @@ compv_main()
     COMPV_CHECK_CODE_BAIL(err = CompVWindow::newObj(&window, 670, 580, "Hello world!"));
 
     // Start ui runloop
-    COMPV_CHECK_CODE_BAIL(err = CompVDrawing::runLoop(WorkerThread));
+    COMPV_CHECK_CODE_BAIL(err = CompVDrawing::runLoop(WorkerThread)); // FIXME(dmi): CompVRunLoopListener
 
 bail:
     if (COMPV_ERROR_CODE_IS_NOK(err)) {
@@ -64,11 +64,9 @@ public:
 	virtual COMPV_ERROR_CODE onNewFrame(const CompVMatPtr& image) override
 	{
 		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-		//static char buff_[33];
 		//static int count;
 		if (CompVDrawing::isLoopRunning()) {
-			//snprintf(buff_, sizeof(buff_), "%d", ++count);
-			//std::string text = "Hello doubango telecom [" + std::string(buff_) + "]";
+			//std::string text = "Hello doubango telecom [" + CompVBase::to_string(count) + "]";
 			COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(image));
 			//COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->renderer()->canvas()->drawText(text.c_str(), text.length(), 463, 86));
@@ -113,7 +111,7 @@ static void *COMPV_STDCALL cameraRestart(void * arg)
 
 static void* COMPV_STDCALL WorkerThread(void* arg)
 {
-#if 1 // Chroma conversion
+#if 0 // Chroma conversion
 	CompVMatPtr image;
 	COMPV_ERROR_CODE err;
 	CompVSingleSurfaceLayerPtr singleSurfaceLayer;
@@ -183,7 +181,13 @@ bail:
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_HEIGHT, CAMERA_HEIGHT));
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_FPS, CAMERA_FPS));
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_SUBTYPE, CAMERA_SUBTYPE));
-    COMPV_CHECK_CODE_BAIL(err = camera->start(devices[0].id));
+    COMPV_CHECK_CODE_BAIL(err = camera->start(devices[devices.size() - 1].id));
+
+	//CompVThread::sleep(5000);
+	//COMPV_CHECK_CODE_BAIL(err = camera->stop());
+	//COMPV_CHECK_CODE_BAIL(err = camera->stop());
+	//CompVThread::sleep(1000);
+	//COMPV_CHECK_CODE_BAIL(err = camera->start(devices[0].id));
 
 	// FIXME
 	//for (int i = 0; i < 100; ++i) {
@@ -194,7 +198,7 @@ bail:
 	//}
 
 	//if (devices.size() > 1) {
-		//CompVThread::newObj(&thread, cameraRestart);
+	//	CompVThread::newObj(&thread, cameraRestart);
 	//}
 
     //while (CompVDrawing::isLoopRunning()) {

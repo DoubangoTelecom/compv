@@ -19,6 +19,8 @@
 #include "compv/drawing/compv_drawing_window_egl_android.h"
 #include "compv/drawing/compv_drawing_canvas_skia.h"
 
+#define COMPV_THIS_CLASSNAME "CompVDrawing"
+
 COMPV_NAMESPACE_BEGIN()
 
 bool CompVDrawing::s_bInitialized = false;
@@ -190,7 +192,7 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(void *(COMPV_STDCALL *WorkerThread) (void
     }
 #   if COMPV_OS_APPLE
     if (!pthread_main_np()) {
-        COMPV_DEBUG_WARN("MacOS: Runnin even loop outside main thread");
+        COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "MacOS: Runnin even loop outside main thread");
     }
 #   endif /* COMPV_OS_APPLE */
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -245,24 +247,24 @@ COMPV_ERROR_CODE CompVDrawing::sdl_runLoop()
 
     while (CompVDrawing::s_bLoopRunning) {
         if (CompVWindowRegistry::count() == 0) {
-            COMPV_DEBUG_INFO("No active windows in the event loop... breaking the loop");
+            COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No active windows in the event loop... breaking the loop");
             goto bail;
         }
 
         if (SDL_WaitEvent(&sdlEvent)) {
             if (sdlEvent.type == SDL_QUIT) {
-                COMPV_DEBUG_INFO_EX("UI", "Quit called");
+                COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Quit called");
                 CompVDrawing::s_bLoopRunning = false;
             }
             else if (sdlEvent.type == SDL_WINDOWEVENT) {
                 if (sdlEvent.window.event == SDL_WINDOWEVENT_CLOSE) {
                     COMPV_SDL_GET_WINDOW();
-                    COMPV_DEBUG_INFO("SDL_WINDOWEVENT_CLOSE");
+                    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "SDL_WINDOWEVENT_CLOSE");
                     COMPV_CHECK_CODE_BAIL(err = windPriv->close());
                 }
                 else if (sdlEvent.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
                     COMPV_SDL_GET_WINDOW();
-                    COMPV_DEBUG_INFO("SDL_WINDOWEVENT_SIZE_CHANGED");
+                    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "SDL_WINDOWEVENT_SIZE_CHANGED");
                     COMPV_CHECK_CODE_BAIL(err = windPriv->priv_updateSize(static_cast<size_t>(sdlEvent.window.data1), static_cast<size_t>(sdlEvent.window.data2)));
                 }
             }
@@ -297,6 +299,7 @@ void CompVDrawing::android_engine_handle_cmd(struct android_app* app, int32_t cm
     CompVDrawingAndroidEngine* engine = static_cast<CompVDrawingAndroidEngine*>(app->userData);
     switch (cmd) {
     case APP_CMD_SAVE_STATE:
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_SAVE_STATE");
         // The system has asked us to save our current state.  Do so.
         if (!engine->app->savedState) {
             engine->app->savedState = CompVMem::malloc(sizeof(CompVDrawingAndroidSavedState));
@@ -305,6 +308,7 @@ void CompVDrawing::android_engine_handle_cmd(struct android_app* app, int32_t cm
         engine->app->savedStateSize = sizeof(CompVDrawingAndroidSavedState);
         break;
     case APP_CMD_INIT_WINDOW:
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_INIT_WINDOW");
         // The window is being shown, get it ready.
         if (engine->app->window != NULL) {
             if (engine->worker_thread.run_fun) {
@@ -315,10 +319,13 @@ void CompVDrawing::android_engine_handle_cmd(struct android_app* app, int32_t cm
         }
         break;
     case APP_CMD_TERM_WINDOW:
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_TERM_WINDOW");
         // The window is being hidden or closed, clean it up.
+		engine->animating = false;
         //engine_term_display(engine);
         break;
     case APP_CMD_GAINED_FOCUS:
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_GAINED_FOCUS");
         // When our app gains focus, we start monitoring the accelerometer.
         //if (engine->accelerometerSensor != NULL) {
         //	ASensorEventQueue_enableSensor(engine->sensorEventQueue,
@@ -358,14 +365,16 @@ COMPV_ERROR_CODE CompVDrawing::android_runLoop(struct android_app* state)
     CompVDrawing::s_AndroidEngine.animating = true;
     while (CompVDrawing::s_bLoopRunning) {
         if (CompVWindowRegistry::count() == 0) {
-            COMPV_DEBUG_INFO("No active windows in the event loop... breaking the loop");
+            COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No active windows in the event loop... breaking the loop");
             goto bail;
         }
         // Read all pending events.
         // If not animating, we will block forever waiting for events.
         // If animating, we loop until all events are read, then continue
         // to draw the next frame of animation.
-        while ((ident = ALooper_pollAll(CompVDrawing::s_AndroidEngine.animating ? 0 : -1, NULL, &events, (void**)&source)) >= 0) { // FIXME(dmi): always wait forever?
+		// FIXME(dmi): always wait forever?
+		// FIXME(dmi): High CPU usage when timeout value is equal to zero
+        while ((ident = ALooper_pollAll(-1/*CompVDrawing::s_AndroidEngine.animating ? 0 : -1*/, NULL, &events, (void**)&source)) >= 0) {
             // Process this event.
             if (source != NULL) {
                 source->process(state, source);
@@ -387,11 +396,12 @@ COMPV_ERROR_CODE CompVDrawing::android_runLoop(struct android_app* state)
             // Check if we are exiting.
             if (state->destroyRequested != 0) {
                 //engine_term_display(&engine);
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "state->destroyRequested");
                 goto bail;
             }
         }
 
-        if (CompVDrawing::s_AndroidEngine.animating) {
+        if (CompVDrawing::s_AndroidEngine.animating) { // FIXME: 'animating' not considered
             // Done with events; draw next animation frame.
             //CompVDrawing::s_AndroidEngine.state.angle += .01f;
             //if (CompVDrawing::s_AndroidEngine.state.angle > 1) {

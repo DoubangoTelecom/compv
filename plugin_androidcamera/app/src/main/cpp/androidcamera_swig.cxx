@@ -465,11 +465,15 @@ SWIGEXPORT void JNICALL Java_org_doubango_jni_androidcameraJNI_CompVCameraAndroi
 }
 
 
-SWIGEXPORT jboolean JNICALL Java_org_doubango_jni_androidcameraJNI_CompVCameraAndroidProxy_1pushFrame(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jbyteArray jarg2, jlong jarg3) {
+SWIGEXPORT jboolean JNICALL Java_org_doubango_jni_androidcameraJNI_CompVCameraAndroidProxy_1pushFrame(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jbyteArray jarg2, jlong jarg3, jlong jarg4, jlong jarg5, jint jarg6, jint jarg7) {
   jboolean jresult = 0 ;
   CompVCameraAndroidProxy *arg1 = (CompVCameraAndroidProxy *) 0 ;
   void *arg2 = (void *) 0 ;
   size_t arg3 ;
+  size_t arg4 ;
+  size_t arg5 ;
+  int arg6 ;
+  int arg7 ;
   bool result;
   
   (void)jenv;
@@ -480,7 +484,11 @@ SWIGEXPORT jboolean JNICALL Java_org_doubango_jni_androidcameraJNI_CompVCameraAn
   arg2 = jenv->GetDirectBufferAddress(jarg2); 
   
   arg3 = (size_t)jarg3; 
-  result = (bool)(arg1)->pushFrame((void const *)arg2,arg3);
+  arg4 = (size_t)jarg4; 
+  arg5 = (size_t)jarg5; 
+  arg6 = (int)jarg6; 
+  arg7 = (int)jarg7; 
+  result = (bool)(arg1)->pushFrame((void const *)arg2,arg3,arg4,arg5,arg6,arg7);
   jresult = (jboolean)result; 
   return jresult;
 }

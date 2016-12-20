@@ -57,7 +57,7 @@ COMPV_ERROR_CODE CompVGLContextEGL::unmakeCurrent() /* Overrides(CompVGLContext)
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
     //!\\ Order is important: unset context then call base class implementation to unlock
-    COMPV_CHECK_EXP_RETURN(eglMakeCurrent(m_pEGLDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE, COMPV_ERROR_CODE_E_GL);
+    COMPV_CHECK_EXP_RETURN(eglMakeCurrent(m_pEGLDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE, COMPV_ERROR_CODE_E_GL, "Failed to make the GL-ES context current.");
     COMPV_CHECK_CODE_BAIL(err = CompVGLContext::unmakeCurrent()); // Base class implementation
 
 bail:
