@@ -37,7 +37,7 @@ private:
 			(env)->ExceptionDescribe(); \
 			(env)->ExceptionClear(); \
 			const std::string jniError = CompVJNI::toString(jEnv, exc); \
-			COMPV_DEBUG_ERROR("JNI error: %s", jniError.c_str()); \
+			COMPV_DEBUG_ERROR("JNI exception: %s", jniError.c_str()); \
 		} \
 	}
 #define COMPV_jni_checkException1(env) { static bool __COMPV_occurred; COMPV_jni_checkException((env), &__COMPV_occurred) }

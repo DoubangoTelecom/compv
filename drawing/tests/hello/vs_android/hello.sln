@@ -33,27 +33,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVGL", "..\..\..\..\gl\vs_android\CompVGL.vcxproj", "{C9A86A91-D297-43F4-B31E-BE1A833391BB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVBase.Items", "..\..\..\..\base\CompVBase.Items.vcxitems", "{D760DEC8-8F47-4768-9EBD-9EEE22B382B8}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVCamera.Items", "..\..\..\..\camera\CompVCamera.Items.vcxitems", "{45D41ACC-2C3C-43D2-BC10-02AA73FFC7C7}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVDrawing.Items", "..\..\..\CompVDrawing.Items.vcxitems", "{F3D65E8B-F635-40DC-BA85-E20ED9BD2A27}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVGL.Items", "..\..\..\..\gl\CompVGL.Items.vcxitems", "{3E9AA80E-FE13-4B9C-A4FA-559074F3A4D0}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVCamera", "..\..\..\..\camera\vs_android\CompVCamera.vcxproj", "{64AC0599-632D-483E-AED0-D355BC22C805}"
 EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		..\..\..\..\gl\CompVGL.Items.vcxitems*{3e9aa80e-fe13-4b9c-a4fa-559074f3a4d0}*SharedItemsImports = 9
-		..\..\..\..\camera\CompVCamera.Items.vcxitems*{45d41acc-2c3c-43d2-bc10-02aa73ffc7c7}*SharedItemsImports = 9
-		..\..\..\..\camera\CompVCamera.Items.vcxitems*{64ac0599-632d-483e-aed0-d355bc22c805}*SharedItemsImports = 4
-		..\..\..\CompVDrawing.Items.vcxitems*{68935871-4451-42ba-b9c0-c547ab282f0c}*SharedItemsImports = 4
-		..\..\..\..\base\CompVBase.Items.vcxitems*{9320e994-aa59-49ba-ab64-f82aedec49a3}*SharedItemsImports = 4
-		..\..\..\..\gl\CompVGL.Items.vcxitems*{c9a86a91-d297-43f4-b31e-be1a833391bb}*SharedItemsImports = 4
-		..\..\..\..\base\CompVBase.Items.vcxitems*{d760dec8-8f47-4768-9ebd-9eee22b382b8}*SharedItemsImports = 9
-		..\..\..\CompVDrawing.Items.vcxitems*{f3d65e8b-f635-40dc-ba85-e20ed9bd2a27}*SharedItemsImports = 9
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
 		Debug|ARM64 = Debug|ARM64
@@ -174,11 +156,5 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{D760DEC8-8F47-4768-9EBD-9EEE22B382B8} = {3CBD37D1-E778-4C7A-B537-1E2F7176E6B0}
-		{45D41ACC-2C3C-43D2-BC10-02AA73FFC7C7} = {3CBD37D1-E778-4C7A-B537-1E2F7176E6B0}
-		{F3D65E8B-F635-40DC-BA85-E20ED9BD2A27} = {3CBD37D1-E778-4C7A-B537-1E2F7176E6B0}
-		{3E9AA80E-FE13-4B9C-A4FA-559074F3A4D0} = {3CBD37D1-E778-4C7A-B537-1E2F7176E6B0}
 	EndGlobalSection
 EndGlobal

@@ -1,2 +1,452 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" />
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{31e70e70-cdb6-4dbe-97f0-301bf8ef9f36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\drawing">
+      <UniqueIdentifier>{0ecf8a87-1285-4250-8f9e-351b156b8370}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\intrin">
+      <UniqueIdentifier>{6a9194ea-c990-44d2-80f6-0a53bf73a2d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\intrin\x86">
+      <UniqueIdentifier>{93b87ea0-f52c-4247-8adb-efc70c87435b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\math">
+      <UniqueIdentifier>{967e5d61-59d2-46c4-8bfa-ffb471ffbb04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\math\intrin">
+      <UniqueIdentifier>{efdacf92-a5f9-408c-bb87-fa0ec8c138f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\math\intrin\x86">
+      <UniqueIdentifier>{2cea4d18-9862-40cc-9ac6-f3cf2d68fcb4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\time">
+      <UniqueIdentifier>{8e6f0658-1fa2-4443-b0db-e06e731a27f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\parallel">
+      <UniqueIdentifier>{bbe8300d-cd69-4913-9ded-458b4d4b26c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\image">
+      <UniqueIdentifier>{9729ad43-e46c-48cc-9860-e000c1400dd8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\android">
+      <UniqueIdentifier>{9cd9df41-564d-4f3b-b9ae-3d3a53d03b3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{d83b8f49-3b35-426f-81a9-d066e832860a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\asm">
+      <UniqueIdentifier>{b5effa69-b2c0-4ef3-90eb-fd8d1a930a74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\asm\x86">
+      <UniqueIdentifier>{0e8f960b-9f3f-47b1-b283-3bd85822cf53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\drawing">
+      <UniqueIdentifier>{a26933b6-593a-4e9a-895b-c5447fab42fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\intrin">
+      <UniqueIdentifier>{b643c77c-824f-41e6-8e3f-249e6cd722b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\intrin\x86">
+      <UniqueIdentifier>{56ffa517-9b07-4b37-bf97-71f5ea73f571}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\math">
+      <UniqueIdentifier>{379f0726-65bc-4b93-b0f0-4ac22b28b2cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\math\asm">
+      <UniqueIdentifier>{7395ee60-5b2d-4107-8485-7d9491260d1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\math\asm\x86">
+      <UniqueIdentifier>{53269de6-2a31-4ab4-ab40-2a3b625505d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\math\intrin">
+      <UniqueIdentifier>{708797e4-0342-45bc-943e-4f9fa56edc91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\math\intrin\x86">
+      <UniqueIdentifier>{85adb11b-520c-4a4f-829a-7126b8052456}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\parallel">
+      <UniqueIdentifier>{b16c7a4e-cf49-43ad-942b-77032d803085}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\time">
+      <UniqueIdentifier>{2162a638-c0de-401d-aea6-90b8f0afc685}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\image">
+      <UniqueIdentifier>{f29f46fe-b0eb-42c8-91d7-74a0625b60e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\android">
+      <UniqueIdentifier>{25645cdd-36e9-45f3-845f-b32ca80fb437}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\compv\base\compv_base.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_bind.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_buffer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_caps.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_common.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_config.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_cpu.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_debug.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_errno.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_fileutils.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_jni.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_lock.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_mat.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_md5.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_mem.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_obj.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_sharedlib.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\compv_simd_globals.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\drawing\compv_canvas.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\drawing\compv_mvp.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\drawing\compv_renderer.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\drawing\compv_surface.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\drawing\compv_surfacelayer.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\drawing\compv_surfacelayer_matching.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\drawing\compv_surfacelayer_multi.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\drawing\compv_surfacelayer_single.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\drawing\compv_viewport.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\drawing\compv_window.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\drawing\compv_window_registry.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\intrin\x86\compv_intrin_avx.h">
+      <Filter>include\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\intrin\x86\compv_intrin_sse.h">
+      <Filter>include\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\intrin\x86\compv_mem_intrin_avx.h">
+      <Filter>include\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\intrin\x86\compv_mem_intrin_sse2.h">
+      <Filter>include\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math_utils.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_avx2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_ssse3.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\time\compv_time.h">
+      <Filter>include\time</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\time\compv_timer.h">
+      <Filter>include\time</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_asynctask.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_asynctask11.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_condvar.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_mutex.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_parallel.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_semaphore.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_thread.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_threaddisp.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_threaddisp11.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\compv_image.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\compv_image_decoder.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\compv_image_utils.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\android\compv_android_cpu-features.h">
+      <Filter>include\android</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\android\compv_android_dexclassloader.h">
+      <Filter>include\android</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\android\compv_android_fileutils.h">
+      <Filter>include\android</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\android\compv_android_native_activity.h">
+      <Filter>include\android</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\compv_base.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_bind.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_buffer.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_caps.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_common.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_cpu.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_debug.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_fileutils.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_jni.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_lock.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_mat.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_md5.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_mem.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_obj.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_sharedlib.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\compv_simd_globals.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_canvas.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_mvp.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_renderer.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_surface.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_surfacelayer.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_surfacelayer_matching.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_surfacelayer_multi.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_surfacelayer_single.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_viewport.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_window.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\drawing\compv_window_registry.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\intrin\x86\compv_mem_intrin_avx.cxx">
+      <Filter>source\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\intrin\x86\compv_mem_intrin_sse2.cxx">
+      <Filter>source\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math_utils.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_avx2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_sse2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_ssse3.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_asynctask.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_asynctask11.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_condvar.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_mutex.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_parallel.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_semaphore.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_thread.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_threaddisp.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_threaddisp11.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\time\compv_time.cxx">
+      <Filter>source\time</Filter>
+    </ClCompile>
+    <ClCompile Include="..\time\compv_timer.cxx">
+      <Filter>source\time</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\compv_image.cxx">
+      <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\compv_image_decoder.cxx">
+      <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\compv_image_utils.cxx">
+      <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\android\compv_android_cpu-features.cxx">
+      <Filter>source\android</Filter>
+    </ClCompile>
+    <ClCompile Include="..\android\compv_android_dexclassloader.cxx">
+      <Filter>source\android</Filter>
+    </ClCompile>
+    <ClCompile Include="..\android\compv_android_native_activity.cxx">
+      <Filter>source\android</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\asm\x86\compv_bits_macros_x86.s">
+      <Filter>source\asm\x86</Filter>
+    </None>
+    <None Include="..\asm\x86\compv_bits_x86.s">
+      <Filter>source\asm\x86</Filter>
+    </None>
+    <None Include="..\asm\x86\compv_common_x86.s">
+      <Filter>source\asm\x86</Filter>
+    </None>
+    <None Include="..\asm\x86\compv_mem_x64.s">
+      <Filter>source\asm\x86</Filter>
+    </None>
+    <None Include="..\asm\x86\compv_mem_x64_avx.s">
+      <Filter>source\asm\x86</Filter>
+    </None>
+    <None Include="..\asm\x86\compv_mem_x64_sse.s">
+      <Filter>source\asm\x86</Filter>
+    </None>
+    <None Include="..\asm\x86\compv_mem_x86.s">
+      <Filter>source\asm\x86</Filter>
+    </None>
+    <None Include="..\asm\x86\compv_mem_x86_avx.s">
+      <Filter>source\asm\x86</Filter>
+    </None>
+    <None Include="..\asm\x86\compv_mem_x86_sse.s">
+      <Filter>source\asm\x86</Filter>
+    </None>
+    <None Include="..\asm\x86\compv_utils_x86.s">
+      <Filter>source\asm\x86</Filter>
+    </None>
+    <None Include="..\math\asm\x86\compv_math_macros_x86.s">
+      <Filter>source\math\asm\x86</Filter>
+    </None>
+    <None Include="..\math\asm\x86\compv_math_utils_x86.s">
+      <Filter>source\math\asm\x86</Filter>
+    </None>
+    <None Include="..\math\asm\x86\compv_math_utils_x86_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </None>
+    <None Include="..\math\asm\x86\compv_math_utils_x86_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </None>
+  </ItemGroup>
+</Project>

@@ -13,6 +13,28 @@ CompVCameraDeviceInfoList devices;
 
 static void* COMPV_STDCALL WorkerThread(void* arg);
 
+COMPV_OBJECT_DECLARE_PTRS(MyDrawingListener)
+class CompVMyDrawingListener : public CompVDrawingListener
+{
+protected:
+	CompVMyDrawingListener() { }
+public:
+	virtual ~CompVMyDrawingListener() { }
+
+	virtual COMPV_ERROR_CODE onStart() override {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	virtual COMPV_ERROR_CODE onStop() override {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	static COMPV_ERROR_CODE newObj(CompVMyDrawingListenerPtrPtr listener) {
+		COMPV_CHECK_EXP_RETURN(!listener, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		*listener = new CompVMyDrawingListener();
+		COMPV_CHECK_EXP_RETURN(!*listener, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		return COMPV_ERROR_CODE_S_OK;
+	}
+};
+
 compv_main()
 {
     COMPV_ERROR_CODE err;
@@ -165,6 +187,7 @@ bail:
 	CompVSingleSurfaceLayerPtr singleSurfaceLayer;
 	MyCameraListenerPtr listener;
 	CompVThreadPtr thread;
+	int deviceIndex;
 
 	//COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 	//SALUT_CHECK_CODE_BAIL(COMPV_ERROR_CODE_E_INVALID_CALL, "Invalid call");
@@ -177,11 +200,12 @@ bail:
     for (CompVCameraDeviceInfoList::iterator it = devices.begin(); it != devices.end(); ++it) {
         COMPV_DEBUG_INFO("Camera device: %s -> %s, %s", it->id.c_str(), it->name.c_str(), it->description.c_str());
     }
+	deviceIndex = COMPV_MATH_MAX(static_cast<int>(devices.size() - 1), 0);
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_WIDTH, CAMERA_WIDTH));
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_HEIGHT, CAMERA_HEIGHT));
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_FPS, CAMERA_FPS));
 	COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_SUBTYPE, CAMERA_SUBTYPE));
-    COMPV_CHECK_CODE_BAIL(err = camera->start(devices[devices.size() - 1].id));
+    COMPV_CHECK_CODE_BAIL(err = camera->start(devices[deviceIndex].id));
 
 	//CompVThread::sleep(5000);
 	//COMPV_CHECK_CODE_BAIL(err = camera->stop());

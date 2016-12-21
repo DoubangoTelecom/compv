@@ -39,6 +39,17 @@
       <Project>{9320e994-aa59-49ba-ab64-f82aedec49a3}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\compv\camera\android\compv_camera_android.h" />
+    <ClInclude Include="..\include\compv\camera\android\compv_camera_android_proxy.h" />
+    <ClInclude Include="..\include\compv\camera\compv_camera.h" />
+    <ClInclude Include="..\include\compv\camera\compv_camera_common.h" />
+    <ClInclude Include="..\include\compv\camera\compv_camera_config.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\android\compv_camera_android.cxx" />
+    <ClCompile Include="..\compv_camera.cxx" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{64ac0599-632d-483e-aed0-d355bc22c805}</ProjectGuid>
     <Keyword>Android</Keyword>
@@ -98,9 +109,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings" />
-  <ImportGroup Label="Shared">
-    <Import Project="..\CompVCamera.Items.vcxitems" Label="Shared" />
-  </ImportGroup>
+  <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

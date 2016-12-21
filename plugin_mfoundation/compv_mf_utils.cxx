@@ -1196,6 +1196,10 @@ HRESULT CompVMFUtils::supportedCaps(
 					COMPV_CHECK_HRESULT_CODE_BAIL(hr = pMediaType->GetGUID(MF_MT_SUBTYPE, &subType));
 					COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFGetAttributeSize(pMediaType, MF_MT_FRAME_SIZE, &width, &height));
 					COMPV_CHECK_HRESULT_CODE_BAIL(hr = MFGetAttributeRatio(pMediaType, MF_MT_FRAME_RATE, &numeratorFps, &denominatorFps));
+#if 0 // TODO(dmi): we always get fixed range, useless code
+					hr = MFGetAttributeRatio(pMediaType, MF_MT_FRAME_RATE_RANGE_MIN, &numeratorFps, &denominatorFps);
+					hr = MFGetAttributeRatio(pMediaType, MF_MT_FRAME_RATE_RANGE_MAX, &numeratorFps, &denominatorFps);
+#endif
 					caps_.push_back(CompVMFCameraCaps(
 						width,
 						height,

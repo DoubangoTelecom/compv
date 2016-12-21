@@ -22,6 +22,8 @@
 #include <compv/base/image/compv_image.h>
 #include <compv/base/image/compv_image_decoder.h>
 
+#include <compv/base/math/compv_math.h>
+
 #include <compv/base/parallel/compv_asynctask.h>
 #include <compv/base/parallel/compv_asynctask11.h>
 #include <compv/base/parallel/compv_condvar.h>

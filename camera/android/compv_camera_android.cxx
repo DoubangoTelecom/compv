@@ -136,7 +136,7 @@ COMPV_ERROR_CODE CompVAndroidCamera::start(const std::string& deviceId COMPV_DEF
 	
 	// Start the camera
 	bSucceed = jEnv->CallBooleanMethod(m_jobjectCamera, s_methodCameraStart, static_cast<jint>(cameraId));
-	COMPV_jni_checkException(jEnv, &bExcOccured);
+	COMPV_jni_checkException(jEnv, &bExcOccured); // Camera permission issues: 'java.lang.RuntimeException: Fail to connect to camera service'
 	COMPV_CHECK_EXP_BAIL(bExcOccured, (err = COMPV_ERROR_CODE_E_JNI), "JNI: exception occured on camera 'start' function");
 	COMPV_CHECK_EXP_BAIL(!bSucceed, (err = COMPV_ERROR_CODE_E_SYSTEM), "JNI: failed to start the camera. Java function returned false.");
 	m_bStarted = true;

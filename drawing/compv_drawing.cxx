@@ -26,6 +26,7 @@ COMPV_NAMESPACE_BEGIN()
 bool CompVDrawing::s_bInitialized = false;
 bool CompVDrawing::s_bLoopRunning = false;
 CompVPtr<CompVThread* > CompVDrawing::s_WorkerThread = NULL;
+CompVRunLoopListenerPtr CompVDrawing::s_ptrListener = NULL;
 #if COMPV_OS_ANDROID
 CompVDrawingAndroidEngine CompVDrawing::s_AndroidEngine = {
     .animating = false,
@@ -33,7 +34,6 @@ CompVDrawingAndroidEngine CompVDrawing::s_AndroidEngine = {
     .width = 0,
     .height = 0,
     .state = {.angle = 0.f,.x = 0, .y = 0 },
-    .worker_thread = { .run_fun  = NULL, .user_data  = NULL }
 };
 #endif /* COMPV_OS_ANDROID */
 
@@ -184,12 +184,14 @@ COMPV_ERROR_CODE CompVDrawing::deInit()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVDrawing::runLoop(void *(COMPV_STDCALL *WorkerThread) (void *) /*= NULL*/, void *userData /*= NULL*/)
+COMPV_ERROR_CODE CompVDrawing::runLoop(CompVRunLoopListenerPtr listener COMPV_DEFAULT(NULL))
 {
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(%p)", __FUNCTION__, *listener);
     COMPV_CHECK_EXP_RETURN(!CompVDrawing::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
     if (CompVDrawing::isLoopRunning()) {
         return COMPV_ERROR_CODE_S_OK;
     }
+	CompVDrawing::s_ptrListener = listener;
 #   if COMPV_OS_APPLE
     if (!pthread_main_np()) {
         COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "MacOS: Runnin even loop outside main thread");
@@ -208,12 +210,10 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(void *(COMPV_STDCALL *WorkerThread) (void
     COMPV_DEBUG_INFO("Running event loop on thread with id = %ld", (long)eventLoopThreadId);
 
 #if COMPV_OS_ANDROID
-    CompVDrawing::s_AndroidEngine.worker_thread.run_fun = WorkerThread;
-    CompVDrawing::s_AndroidEngine.worker_thread.user_data = userData;
     COMPV_CHECK_CODE_BAIL(err = CompVDrawing::android_runLoop(AndroidApp_get()));
 #elif defined(HAVE_SDL_H)
-    if (WorkerThread) {
-        COMPV_CHECK_CODE_BAIL(err = CompVThread::newObj(&CompVDrawing::s_WorkerThread, WorkerThread, userData));
+    if (CompVDrawing::s_ptrListener) {
+        COMPV_CHECK_CODE_BAIL(err = CompVThread::newObj(&CompVDrawing::s_WorkerThread, CompVDrawing::workerThread, NULL));
     }
     COMPV_CHECK_CODE_BAIL(err = CompVDrawing::sdl_runLoop());
 #else
@@ -231,6 +231,9 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(void *(COMPV_STDCALL *WorkerThread) (void
 
 bail:
     CompVDrawing::s_bLoopRunning = false;
+	if (CompVDrawing::s_ptrListener) {
+		CompVDrawing::s_ptrListener->onStop();
+	}
     CompVDrawing::s_WorkerThread = NULL;
     return err;
 }
@@ -311,8 +314,8 @@ void CompVDrawing::android_engine_handle_cmd(struct android_app* app, int32_t cm
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_INIT_WINDOW");
         // The window is being shown, get it ready.
         if (engine->app->window != NULL) {
-            if (engine->worker_thread.run_fun) {
-                COMPV_CHECK_CODE_NOP(CompVThread::newObj(&CompVDrawing::s_WorkerThread, engine->worker_thread.run_fun, engine->worker_thread.user_data));
+            if (CompVDrawing::s_ptrListener) {
+                COMPV_CHECK_CODE_NOP(CompVThread::newObj(&CompVDrawing::s_WorkerThread, CompVDrawing::workerThread, NULL));
             }
             //engine_init_display(engine);
             //engine_draw_frame(engine);
@@ -425,6 +428,12 @@ COMPV_ERROR_CODE CompVDrawing::breakLoop()
     COMPV_CHECK_CODE_RETURN(CompVWindowRegistry::closeAll());
 
     return COMPV_ERROR_CODE_S_OK;
+}
+
+void* COMPV_STDCALL CompVDrawing::workerThread(void* arg)
+{
+	CompVDrawing::s_ptrListener->onStart();
+	return NULL;
 }
 
 COMPV_NAMESPACE_END()

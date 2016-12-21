@@ -57,7 +57,7 @@ COMPV_ERROR_CODE CompVAsyncTask11::start()
     err_ = CompVThread::newObj(&m_Thread, CompVAsyncTask11::run, this);
     if (COMPV_ERROR_CODE_IS_NOK(err_)) {
         m_bStarted = false;
-        COMPV_CHECK_CODE_RETURN(err_);
+        COMPV_CHECK_CODE_RETURN(err_, "Failed to create async thread for the task");
     }
     if (m_iCoreId >= 0) {
 #if COMPV_PARALLEL_THREAD_SET_AFFINITY

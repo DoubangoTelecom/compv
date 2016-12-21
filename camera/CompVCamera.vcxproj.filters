@@ -1,2 +1,42 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" />
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{f69eb89c-e727-4094-b15f-e3411b07465e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\android">
+      <UniqueIdentifier>{55a32cac-0bf3-497b-ae5a-7c0a3c33c4a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{bd2cba04-42f1-4df7-bec3-2cd5163dfe79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\android">
+      <UniqueIdentifier>{0083255e-d5d4-448c-9b57-98a1d9d347ef}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\compv\camera\compv_camera.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\camera\compv_camera_common.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\camera\compv_camera_config.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\camera\android\compv_camera_android.h">
+      <Filter>include\android</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\camera\android\compv_camera_android_proxy.h">
+      <Filter>include\android</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="compv_camera.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="android\compv_camera_android.cxx">
+      <Filter>source\android</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

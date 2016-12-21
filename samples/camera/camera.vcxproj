@@ -18,74 +18,34 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="include\compv\gl\compv_gl.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_blitter.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_canvas.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_common.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_config.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_context.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_fbo.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_func.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_headers.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_info.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_mvp.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_program.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_renderer.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_surface.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_surfacelayer_matching.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_surfacelayer_multi.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_surfacelayer_single.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_utils.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_vao.h" />
-    <ClInclude Include="include\compv\gl\compv_gl_window.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="compv_gl.cxx" />
-    <ClCompile Include="compv_gl_blitter.cxx" />
-    <ClCompile Include="compv_gl_canvas.cxx" />
-    <ClCompile Include="compv_gl_context.cxx" />
-    <ClCompile Include="compv_gl_fbo.cxx" />
-    <ClCompile Include="compv_gl_info.cxx" />
-    <ClCompile Include="compv_gl_mvp.cxx" />
-    <ClCompile Include="compv_gl_program.cxx" />
-    <ClCompile Include="compv_gl_renderer.cxx" />
-    <ClCompile Include="compv_gl_surface.cxx" />
-    <ClCompile Include="compv_gl_surfacelayer_matching.cxx" />
-    <ClCompile Include="compv_gl_surfacelayer_multi.cxx" />
-    <ClCompile Include="compv_gl_surfacelayer_single.cxx" />
-    <ClCompile Include="compv_gl_utils.cxx" />
-    <ClCompile Include="compv_gl_vao.cxx" />
-    <ClCompile Include="compv_gl_window.cxx" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{4A895705-E866-452D-8CFA-481C9E6B8871}</ProjectGuid>
+    <ProjectGuid>{41420282-3043-4650-8A68-3DFF73E1A3B7}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>CompVGL</RootNamespace>
+    <RootNamespace>camera</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -94,7 +54,8 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="Shared" />
+  <ImportGroup Label="Shared">
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -126,15 +87,14 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../api/include;../../base/include;../../camera/include;../../gl/include;../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;OpenGL32.lib;Glu32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/glew-2.3.4-win32</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(OutDir)CompVDrawing.lib;$(OutDir)CompVGL.lib;$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -143,15 +103,14 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../api/include;../../base/include;../../camera/include;../../gl/include;../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;OpenGL32.lib;Glu32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/glew-2.3.4-win64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(OutDir)CompVDrawing.lib;$(OutDir)CompVGL.lib;$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -162,17 +121,16 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../api/include;../../base/include;../../camera/include;../../gl/include;../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;OpenGL32.lib;Glu32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/glew-2.3.4-win32</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(OutDir)CompVDrawing.lib;$(OutDir)CompVGL.lib;$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -183,19 +141,21 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../api/include;../../base/include;../../camera/include;../../gl/include;../../drawing/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;OpenGL32.lib;Glu32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/glew-2.3.4-win64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(OutDir)CompVDrawing.lib;$(OutDir)CompVGL.lib;$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cxx" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

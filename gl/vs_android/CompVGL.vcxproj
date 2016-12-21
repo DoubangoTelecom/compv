@@ -39,6 +39,46 @@
       <Project>{9320e994-aa59-49ba-ab64-f82aedec49a3}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\compv\gl\compv_gl.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_blitter.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_canvas.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_common.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_config.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_context.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_fbo.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_func.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_headers.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_info.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_mvp.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_program.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_renderer.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_surface.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_surfacelayer_matching.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_surfacelayer_multi.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_surfacelayer_single.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_utils.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_vao.h" />
+    <ClInclude Include="..\include\compv\gl\compv_gl_window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\compv_gl.cxx" />
+    <ClCompile Include="..\compv_gl_blitter.cxx" />
+    <ClCompile Include="..\compv_gl_canvas.cxx" />
+    <ClCompile Include="..\compv_gl_context.cxx" />
+    <ClCompile Include="..\compv_gl_fbo.cxx" />
+    <ClCompile Include="..\compv_gl_info.cxx" />
+    <ClCompile Include="..\compv_gl_mvp.cxx" />
+    <ClCompile Include="..\compv_gl_program.cxx" />
+    <ClCompile Include="..\compv_gl_renderer.cxx" />
+    <ClCompile Include="..\compv_gl_surface.cxx" />
+    <ClCompile Include="..\compv_gl_surfacelayer_matching.cxx" />
+    <ClCompile Include="..\compv_gl_surfacelayer_multi.cxx" />
+    <ClCompile Include="..\compv_gl_surfacelayer_single.cxx" />
+    <ClCompile Include="..\compv_gl_utils.cxx" />
+    <ClCompile Include="..\compv_gl_vao.cxx" />
+    <ClCompile Include="..\compv_gl_window.cxx" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{c9a86a91-d297-43f4-b31e-be1a833391bb}</ProjectGuid>
     <Keyword>Android</Keyword>
@@ -98,9 +138,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings" />
-  <ImportGroup Label="Shared">
-    <Import Project="..\CompVGL.Items.vcxitems" Label="Shared" />
-  </ImportGroup>
+  <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

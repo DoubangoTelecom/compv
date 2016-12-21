@@ -54,9 +54,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="Shared">
-    <Import Project="CompVCamera.Items.vcxitems" Label="Shared" />
-  </ImportGroup>
+  <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -158,6 +156,17 @@
     <ProjectReference Include="..\base\CompVBase.vcxproj">
       <Project>{52028a97-e6d7-4c48-82e9-3789fd42bc56}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\compv\camera\android\compv_camera_android.h" />
+    <ClInclude Include="include\compv\camera\android\compv_camera_android_proxy.h" />
+    <ClInclude Include="include\compv\camera\compv_camera.h" />
+    <ClInclude Include="include\compv\camera\compv_camera_common.h" />
+    <ClInclude Include="include\compv\camera\compv_camera_config.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="android\compv_camera_android.cxx" />
+    <ClCompile Include="compv_camera.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

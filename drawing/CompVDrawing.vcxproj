@@ -18,6 +18,28 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\compv\drawing\compv_drawing.h" />
+    <ClInclude Include="include\compv\drawing\compv_drawing_canvas_skia.h" />
+    <ClInclude Include="include\compv\drawing\compv_drawing_common.h" />
+    <ClInclude Include="include\compv\drawing\compv_drawing_config.h" />
+    <ClInclude Include="include\compv\drawing\compv_drawing_factory.h" />
+    <ClInclude Include="include\compv\drawing\compv_drawing_image_libjpeg.h" />
+    <ClInclude Include="include\compv\drawing\compv_drawing_window_egl.h" />
+    <ClInclude Include="include\compv\drawing\compv_drawing_window_egl_android.h" />
+    <ClInclude Include="include\compv\drawing\compv_drawing_window_glfw3.h" />
+    <ClInclude Include="include\compv\drawing\compv_drawing_window_sdl.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="compv_drawing.cxx" />
+    <ClCompile Include="compv_drawing_canvas_skia.cxx" />
+    <ClCompile Include="compv_drawing_factory.cxx" />
+    <ClCompile Include="compv_drawing_image_libjpeg.cxx" />
+    <ClCompile Include="compv_drawing_window_egl.cxx" />
+    <ClCompile Include="compv_drawing_window_egl_android.cxx" />
+    <ClCompile Include="compv_drawing_window_glfw3.cxx" />
+    <ClCompile Include="compv_drawing_window_sdl.cxx" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3B044340-C223-474B-BB77-CE2F430C0190}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -54,9 +76,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="Shared">
-    <Import Project="CompVDrawing.Items.vcxitems" Label="Shared" />
-  </ImportGroup>
+  <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>

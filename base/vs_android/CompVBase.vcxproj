@@ -34,6 +34,133 @@
       <Platform>x86</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\compv\base\android\compv_android_cpu-features.h" />
+    <ClInclude Include="..\include\compv\base\android\compv_android_dexclassloader.h" />
+    <ClInclude Include="..\include\compv\base\android\compv_android_fileutils.h" />
+    <ClInclude Include="..\include\compv\base\android\compv_android_native_activity.h" />
+    <ClInclude Include="..\include\compv\base\compv_base.h" />
+    <ClInclude Include="..\include\compv\base\compv_bind.h" />
+    <ClInclude Include="..\include\compv\base\compv_buffer.h" />
+    <ClInclude Include="..\include\compv\base\compv_caps.h" />
+    <ClInclude Include="..\include\compv\base\compv_common.h" />
+    <ClInclude Include="..\include\compv\base\compv_config.h" />
+    <ClInclude Include="..\include\compv\base\compv_cpu.h" />
+    <ClInclude Include="..\include\compv\base\compv_debug.h" />
+    <ClInclude Include="..\include\compv\base\compv_errno.h" />
+    <ClInclude Include="..\include\compv\base\compv_fileutils.h" />
+    <ClInclude Include="..\include\compv\base\compv_jni.h" />
+    <ClInclude Include="..\include\compv\base\compv_lock.h" />
+    <ClInclude Include="..\include\compv\base\compv_mat.h" />
+    <ClInclude Include="..\include\compv\base\compv_md5.h" />
+    <ClInclude Include="..\include\compv\base\compv_mem.h" />
+    <ClInclude Include="..\include\compv\base\compv_obj.h" />
+    <ClInclude Include="..\include\compv\base\compv_sharedlib.h" />
+    <ClInclude Include="..\include\compv\base\compv_simd_globals.h" />
+    <ClInclude Include="..\include\compv\base\drawing\compv_canvas.h" />
+    <ClInclude Include="..\include\compv\base\drawing\compv_mvp.h" />
+    <ClInclude Include="..\include\compv\base\drawing\compv_renderer.h" />
+    <ClInclude Include="..\include\compv\base\drawing\compv_surface.h" />
+    <ClInclude Include="..\include\compv\base\drawing\compv_surfacelayer.h" />
+    <ClInclude Include="..\include\compv\base\drawing\compv_surfacelayer_matching.h" />
+    <ClInclude Include="..\include\compv\base\drawing\compv_surfacelayer_multi.h" />
+    <ClInclude Include="..\include\compv\base\drawing\compv_surfacelayer_single.h" />
+    <ClInclude Include="..\include\compv\base\drawing\compv_viewport.h" />
+    <ClInclude Include="..\include\compv\base\drawing\compv_window.h" />
+    <ClInclude Include="..\include\compv\base\drawing\compv_window_registry.h" />
+    <ClInclude Include="..\include\compv\base\image\compv_image.h" />
+    <ClInclude Include="..\include\compv\base\image\compv_image_decoder.h" />
+    <ClInclude Include="..\include\compv\base\image\compv_image_utils.h" />
+    <ClInclude Include="..\include\compv\base\intrin\x86\compv_intrin_avx.h" />
+    <ClInclude Include="..\include\compv\base\intrin\x86\compv_intrin_sse.h" />
+    <ClInclude Include="..\include\compv\base\intrin\x86\compv_mem_intrin_avx.h" />
+    <ClInclude Include="..\include\compv\base\intrin\x86\compv_mem_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_utils.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_avx2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_ssse3.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_asynctask.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_asynctask11.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_condvar.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_mutex.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_parallel.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_semaphore.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_thread.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_threaddisp.h" />
+    <ClInclude Include="..\include\compv\base\parallel\compv_threaddisp11.h" />
+    <ClInclude Include="..\include\compv\base\time\compv_time.h" />
+    <ClInclude Include="..\include\compv\base\time\compv_timer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\android\compv_android_cpu-features.cxx" />
+    <ClCompile Include="..\android\compv_android_dexclassloader.cxx" />
+    <ClCompile Include="..\android\compv_android_native_activity.cxx" />
+    <ClCompile Include="..\compv_base.cxx" />
+    <ClCompile Include="..\compv_bind.cxx" />
+    <ClCompile Include="..\compv_buffer.cxx" />
+    <ClCompile Include="..\compv_caps.cxx" />
+    <ClCompile Include="..\compv_common.cxx" />
+    <ClCompile Include="..\compv_cpu.cxx" />
+    <ClCompile Include="..\compv_debug.cxx" />
+    <ClCompile Include="..\compv_fileutils.cxx" />
+    <ClCompile Include="..\compv_jni.cxx" />
+    <ClCompile Include="..\compv_lock.cxx" />
+    <ClCompile Include="..\compv_mat.cxx" />
+    <ClCompile Include="..\compv_md5.cxx" />
+    <ClCompile Include="..\compv_mem.cxx" />
+    <ClCompile Include="..\compv_obj.cxx" />
+    <ClCompile Include="..\compv_sharedlib.cxx" />
+    <ClCompile Include="..\compv_simd_globals.cxx" />
+    <ClCompile Include="..\drawing\compv_canvas.cxx" />
+    <ClCompile Include="..\drawing\compv_mvp.cxx" />
+    <ClCompile Include="..\drawing\compv_renderer.cxx" />
+    <ClCompile Include="..\drawing\compv_surface.cxx" />
+    <ClCompile Include="..\drawing\compv_surfacelayer.cxx" />
+    <ClCompile Include="..\drawing\compv_surfacelayer_matching.cxx" />
+    <ClCompile Include="..\drawing\compv_surfacelayer_multi.cxx" />
+    <ClCompile Include="..\drawing\compv_surfacelayer_single.cxx" />
+    <ClCompile Include="..\drawing\compv_viewport.cxx" />
+    <ClCompile Include="..\drawing\compv_window.cxx" />
+    <ClCompile Include="..\drawing\compv_window_registry.cxx" />
+    <ClCompile Include="..\image\compv_image.cxx" />
+    <ClCompile Include="..\image\compv_image_decoder.cxx" />
+    <ClCompile Include="..\image\compv_image_utils.cxx" />
+    <ClCompile Include="..\intrin\x86\compv_mem_intrin_avx.cxx" />
+    <ClCompile Include="..\intrin\x86\compv_mem_intrin_sse2.cxx" />
+    <ClCompile Include="..\math\compv_math.cxx" />
+    <ClCompile Include="..\math\compv_math_utils.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_avx2.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_sse2.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_ssse3.cxx" />
+    <ClCompile Include="..\parallel\compv_asynctask.cxx" />
+    <ClCompile Include="..\parallel\compv_asynctask11.cxx" />
+    <ClCompile Include="..\parallel\compv_condvar.cxx" />
+    <ClCompile Include="..\parallel\compv_mutex.cxx" />
+    <ClCompile Include="..\parallel\compv_parallel.cxx" />
+    <ClCompile Include="..\parallel\compv_semaphore.cxx" />
+    <ClCompile Include="..\parallel\compv_thread.cxx" />
+    <ClCompile Include="..\parallel\compv_threaddisp.cxx" />
+    <ClCompile Include="..\parallel\compv_threaddisp11.cxx" />
+    <ClCompile Include="..\time\compv_time.cxx" />
+    <ClCompile Include="..\time\compv_timer.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\asm\x86\compv_bits_macros_x86.s" />
+    <None Include="..\asm\x86\compv_bits_x86.s" />
+    <None Include="..\asm\x86\compv_common_x86.s" />
+    <None Include="..\asm\x86\compv_mem_x64.s" />
+    <None Include="..\asm\x86\compv_mem_x64_avx.s" />
+    <None Include="..\asm\x86\compv_mem_x64_sse.s" />
+    <None Include="..\asm\x86\compv_mem_x86.s" />
+    <None Include="..\asm\x86\compv_mem_x86_avx.s" />
+    <None Include="..\asm\x86\compv_mem_x86_sse.s" />
+    <None Include="..\asm\x86\compv_utils_x86.s" />
+    <None Include="..\math\asm\x86\compv_math_macros_x86.s" />
+    <None Include="..\math\asm\x86\compv_math_utils_x86.s" />
+    <None Include="..\math\asm\x86\compv_math_utils_x86_avx.s" />
+    <None Include="..\math\asm\x86\compv_math_utils_x86_sse.s" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9320e994-aa59-49ba-ab64-f82aedec49a3}</ProjectGuid>
     <Keyword>Android</Keyword>
@@ -101,9 +228,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings" />
-  <ImportGroup Label="Shared">
-    <Import Project="..\CompVBase.Items.vcxitems" Label="Shared" />
-  </ImportGroup>
+  <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
