@@ -42,18 +42,19 @@ public:
     bool isInitialized() const;
 
     // Overrides(CompVWindow)
-    COMPV_OVERRIDE_DECL1("CompVWindow", bool, isGLEnabled)() const override;
-    COMPV_OVERRIDE_DECL0("CompVWindow", close)() override;
-    COMPV_OVERRIDE_DECL0("CompVWindow", beginDraw)() override;
-    COMPV_OVERRIDE_DECL0("CompVWindow", endDraw)() override;
-    COMPV_OVERRIDE_DECL0("CompVWindow", addSingleLayerSurface)(CompVSingleSurfaceLayerPtrPtr layer) override;
-    COMPV_OVERRIDE_DECL0("CompVWindow", removeSingleLayerSurface)(const CompVSingleSurfaceLayerPtr& layer) override;
-    COMPV_OVERRIDE_DECL0("CompVWindow", addMatchingLayerSurface)(CompVMatchingSurfaceLayerPtrPtr layer) override;
-    COMPV_OVERRIDE_DECL0("CompVWindow", removeMatchingLayerSurface)(const CompVMatchingSurfaceLayerPtr& layer) override;
-    COMPV_OVERRIDE_DECL0("CompVWindow", addMultiLayerSurface)(CompVMultiSurfaceLayerPtrPtr layer) override;
-    COMPV_OVERRIDE_DECL0("CompVWindow", removeMultiLayerSurface)(const CompVMultiSurfaceLayerPtr& layer) override;
+	virtual bool isGLEnabled() const override /*Overrides(CompVWindow)*/;
+	virtual COMPV_ERROR_CODE close() override /*Overrides(CompVWindow)*/;
+	virtual COMPV_ERROR_CODE beginDraw() override /*Overrides(CompVWindow)*/;
+	virtual COMPV_ERROR_CODE endDraw() override /*Overrides(CompVWindow)*/;
+	virtual COMPV_ERROR_CODE addSingleLayerSurface(CompVSingleSurfaceLayerPtrPtr layer) override /*Overrides(CompVWindow)*/;
+	virtual COMPV_ERROR_CODE removeSingleLayerSurface(const CompVSingleSurfaceLayerPtr& layer) override /*Overrides(CompVWindow)*/;
+	virtual COMPV_ERROR_CODE addMatchingLayerSurface(CompVMatchingSurfaceLayerPtrPtr layer) override /*Overrides(CompVWindow)*/;
+	virtual COMPV_ERROR_CODE removeMatchingLayerSurface(const CompVMatchingSurfaceLayerPtr& layer) override /*Overrides(CompVWindow)*/;
+	virtual COMPV_ERROR_CODE addMultiLayerSurface(CompVMultiSurfaceLayerPtrPtr layer) override /*Overrides(CompVWindow)*/;
+	virtual COMPV_ERROR_CODE removeMultiLayerSurface(const CompVMultiSurfaceLayerPtr& layer) override /*Overrides(CompVWindow)*/;
 
-    COMPV_OVERRIDE_DECL0("CompVWindowPriv", priv_updateSize)(size_t newWidth, size_t newHeight)override;
+	virtual COMPV_ERROR_CODE priv_updateSize(size_t newWidth, size_t newHeight) override /*Overrides(CompVWindowPriv)*/;
+	virtual COMPV_ERROR_CODE priv_updateState(COMPV_WINDOW_STATE newState) override /*Overrides(CompVWindowPriv)*/;
 
 protected:
     virtual CompVGLContextPtr context() = 0;

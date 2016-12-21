@@ -1,5 +1,10 @@
+/* Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>
+* File author: Mamadou DIOP (Doubango Telecom, France).
+* License: GPLv3. For commercial license please contact us.
+* Source code: https://github.com/DoubangoTelecom/compv
+* WebSite: http://compv.org
+*/
 package org.doubango.java.androidcamera;
-
 
 import android.app.Activity;
 import android.graphics.SurfaceTexture;
@@ -16,7 +21,7 @@ public class TestActivity extends Activity  implements TextureView.SurfaceTextur
         Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
-        CompVCameraCaps caps = new CompVCameraCaps(6400, 48, 100, CompVCamera.PIXEL_FORMAT_NV16);
+        CompVCameraCaps caps = new CompVCameraCaps(1280, 720, 25, CompVCamera.PIXEL_FORMAT_NV16);
         mCamera = new CompVCamera();
         mCamera.setCaps(caps);
 
@@ -61,6 +66,6 @@ public class TestActivity extends Activity  implements TextureView.SurfaceTextur
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-        Log.d(TAG, "onSurfaceTextureUpdated");
+        //Log.d(TAG, "onSurfaceTextureUpdated");
     }
 }

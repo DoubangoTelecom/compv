@@ -28,15 +28,18 @@ public:
     static COMPV_ERROR_CODE deInit();
     static size_t count();
     static COMPV_ERROR_CODE closeAll();
+#if COMPV_OS_ANDROID
+	static COMPV_ERROR_CODE android_handle_cmd(int cmd);
+#endif
 
 private:
-    static COMPV_ERROR_CODE add(CompVWindowPtr window);
-    static COMPV_ERROR_CODE remove(CompVWindowPtr window);
+    static COMPV_ERROR_CODE add(CompVWindowPrivPtr window);
+    static COMPV_ERROR_CODE remove(CompVWindowPrivPtr window);
     static COMPV_ERROR_CODE remove(compv_window_id_t windowId);
 
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-    static std::map<compv_window_id_t, CompVWindowPtr > m_sWindows;
+    static std::map<compv_window_id_t, CompVWindowPrivPtr > m_sWindows;
     static CompVMutexPtr s_WindowsMutex;
     static bool s_bInitialized;
     COMPV_VS_DISABLE_WARNINGS_END()

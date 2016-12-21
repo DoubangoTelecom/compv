@@ -163,7 +163,13 @@ COMPV_ERROR_CODE CompVDrawing::deInit()
     COMPV_CHECK_CODE_NOP(CompVGL::deInit());
 
     CompVDrawing::breakLoop();
-    CompVDrawing::s_WorkerThread = NULL;
+	CompVDrawing::s_ptrListener = NULL;
+	if (CompVDrawing::s_WorkerThread) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Joining the worker thread...");
+		COMPV_CHECK_CODE_NOP(CompVDrawing::s_WorkerThread->join(), "Failed to join the worker thread");
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Worker thread joined");
+		CompVDrawing::s_WorkerThread = NULL;
+	}
 
 #if defined(HAVE_SDL_H)
     if (s_pSDLMainContext) {
@@ -231,8 +237,15 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(CompVRunLoopListenerPtr listener COMPV_DE
 
 bail:
     CompVDrawing::s_bLoopRunning = false;
+	// Alter the listener that the runloop stopped
 	if (CompVDrawing::s_ptrListener) {
-		CompVDrawing::s_ptrListener->onStop();
+		CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_LOOP_STOPPED);
+	}
+	// Join the worker thread
+	if (CompVDrawing::s_WorkerThread) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Joining the worker thread...");
+		COMPV_CHECK_CODE_NOP(CompVDrawing::s_WorkerThread->join(), "Failed to join the worker thread");
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Worker thread joined");
 	}
     CompVDrawing::s_WorkerThread = NULL;
     return err;
@@ -245,40 +258,56 @@ bail:
 
 COMPV_ERROR_CODE CompVDrawing::sdl_runLoop()
 {
-    SDL_Event sdlEvent;
-    COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	SDL_Event sdlEvent;
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
-    while (CompVDrawing::s_bLoopRunning) {
-        if (CompVWindowRegistry::count() == 0) {
-            COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No active windows in the event loop... breaking the loop");
-            goto bail;
-        }
+	while (CompVDrawing::s_bLoopRunning) {
+		if (CompVWindowRegistry::count() == 0) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "No active windows in the event loop... breaking the loop");
+			goto bail;
+		}
 
-        if (SDL_WaitEvent(&sdlEvent)) {
-            if (sdlEvent.type == SDL_QUIT) {
-                COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Quit called");
-                CompVDrawing::s_bLoopRunning = false;
-            }
-            else if (sdlEvent.type == SDL_WINDOWEVENT) {
-                if (sdlEvent.window.event == SDL_WINDOWEVENT_CLOSE) {
-                    COMPV_SDL_GET_WINDOW();
-                    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "SDL_WINDOWEVENT_CLOSE");
-                    COMPV_CHECK_CODE_BAIL(err = windPriv->close());
-                }
-                else if (sdlEvent.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                    COMPV_SDL_GET_WINDOW();
-                    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "SDL_WINDOWEVENT_SIZE_CHANGED");
-                    COMPV_CHECK_CODE_BAIL(err = windPriv->priv_updateSize(static_cast<size_t>(sdlEvent.window.data1), static_cast<size_t>(sdlEvent.window.data2)));
-                }
-            }
-        }
-        else {
-            CompVDrawing::s_bLoopRunning = false;
-        }
-    }
+		if (SDL_WaitEvent(&sdlEvent)) {
+			if (sdlEvent.type == SDL_QUIT) {
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Quit called");
+				CompVDrawing::s_bLoopRunning = false;
+			}
+			else if (sdlEvent.type == SDL_WINDOWEVENT) {
+				switch (sdlEvent.window.event) {
+					case SDL_WINDOWEVENT_CLOSE: {
+						COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "SDL_WINDOWEVENT_CLOSE");
+						COMPV_SDL_GET_WINDOW();
+						COMPV_CHECK_CODE_BAIL(err = windPriv->priv_updateState(COMPV_WINDOW_STATE_CLOSED));
+						break;
+					}
+					case SDL_WINDOWEVENT_SIZE_CHANGED: {
+						COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "SDL_WINDOWEVENT_SIZE_CHANGED");
+						COMPV_SDL_GET_WINDOW();
+						COMPV_CHECK_CODE_BAIL(err = windPriv->priv_updateSize(static_cast<size_t>(sdlEvent.window.data1), static_cast<size_t>(sdlEvent.window.data2)));
+						break;
+					}
+					case SDL_WINDOWEVENT_FOCUS_GAINED: {
+						COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "SDL_WINDOWEVENT_SIZE_CHANGED");
+						COMPV_SDL_GET_WINDOW();
+						COMPV_CHECK_CODE_BAIL(err = windPriv->priv_updateState(COMPV_WINDOW_STATE_FOCUS_GAINED));
+						break;
+					}
+					case SDL_WINDOWEVENT_FOCUS_LOST: {
+						COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "SDL_WINDOWEVENT_SIZE_CHANGED");
+						COMPV_SDL_GET_WINDOW();
+						COMPV_CHECK_CODE_BAIL(err = windPriv->priv_updateState(COMPV_WINDOW_STATE_FOCUS_GAINED));
+						break;
+					}
+				}
+			}
+		}
+		else {
+			COMPV_CHECK_CODE_BAIL(err = CompVDrawing::breakLoop());
+		}
+	}
 
 bail:
-    return err;
+	return err;
 }
 #endif /* HAVE_SDL_H */
 
@@ -301,55 +330,63 @@ void CompVDrawing::android_engine_handle_cmd(struct android_app* app, int32_t cm
 {
     CompVDrawingAndroidEngine* engine = static_cast<CompVDrawingAndroidEngine*>(app->userData);
     switch (cmd) {
-    case APP_CMD_SAVE_STATE:
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_SAVE_STATE");
-        // The system has asked us to save our current state.  Do so.
-        if (!engine->app->savedState) {
-            engine->app->savedState = CompVMem::malloc(sizeof(CompVDrawingAndroidSavedState));
-        }
-        *static_cast<CompVDrawingAndroidSavedState*>(engine->app->savedState) = engine->state;
-        engine->app->savedStateSize = sizeof(CompVDrawingAndroidSavedState);
-        break;
-    case APP_CMD_INIT_WINDOW:
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_INIT_WINDOW");
-        // The window is being shown, get it ready.
-        if (engine->app->window != NULL) {
-            if (CompVDrawing::s_ptrListener) {
-                COMPV_CHECK_CODE_NOP(CompVThread::newObj(&CompVDrawing::s_WorkerThread, CompVDrawing::workerThread, NULL));
-            }
-            //engine_init_display(engine);
-            //engine_draw_frame(engine);
-        }
-        break;
-    case APP_CMD_TERM_WINDOW:
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_TERM_WINDOW");
-        // The window is being hidden or closed, clean it up.
-		engine->animating = false;
-        //engine_term_display(engine);
-        break;
-    case APP_CMD_GAINED_FOCUS:
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_GAINED_FOCUS");
-        // When our app gains focus, we start monitoring the accelerometer.
-        //if (engine->accelerometerSensor != NULL) {
-        //	ASensorEventQueue_enableSensor(engine->sensorEventQueue,
-        //		engine->accelerometerSensor);
-        //	// We'd like to get 60 events per second (in us).
-        //	ASensorEventQueue_setEventRate(engine->sensorEventQueue,
-        //		engine->accelerometerSensor, (1000L / 60) * 1000);
-        //}
-        break;
-    case APP_CMD_LOST_FOCUS:
-        // When our app loses focus, we stop monitoring the accelerometer.
-        // This is to avoid consuming battery while not being used.
-        //if (engine->accelerometerSensor != NULL) {
-        //	ASensorEventQueue_disableSensor(engine->sensorEventQueue,
-        //		engine->accelerometerSensor);
-        //}
-        // Also stop animating.
-        engine->animating = false;
-        //engine_draw_frame(engine);
-        break;
+		case APP_CMD_SAVE_STATE:
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_SAVE_STATE");
+			// The system has asked us to save our current state.  Do so.
+			if (!engine->app->savedState) {
+				engine->app->savedState = malloc(sizeof(CompVDrawingAndroidSavedState)); // must not use CompVMem::malloc because
+			}
+			*static_cast<CompVDrawingAndroidSavedState*>(engine->app->savedState) = engine->state;
+			engine->app->savedStateSize = sizeof(CompVDrawingAndroidSavedState);
+			break;
+		case APP_CMD_INIT_WINDOW:
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_INIT_WINDOW");
+			// The window is being shown, get it ready.
+			if (engine->app->window != NULL) {
+				if (CompVDrawing::s_ptrListener) {
+					COMPV_CHECK_CODE_NOP(CompVThread::newObj(&CompVDrawing::s_WorkerThread, CompVDrawing::workerThread, app));
+				}
+			}
+			break;
+		case APP_CMD_TERM_WINDOW:
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_TERM_WINDOW");
+			// The window is being hidden or closed, clean it up.
+			engine->animating = false;
+			break;
+		case APP_CMD_GAINED_FOCUS:
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_GAINED_FOCUS");
+			break;
+		case APP_CMD_LOST_FOCUS:
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_LOST_FOCUS");
+			engine->animating = false;
+			break;
+
+		case APP_CMD_RESUME:
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_RESUME -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_RESUMED)");
+			if (CompVDrawing::s_ptrListener) {
+				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_RESUMED);
+			}
+			break;
+		case APP_CMD_START:
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_START -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED)");
+			if (CompVDrawing::s_ptrListener) {
+				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED);
+			}
+			break;
+		case APP_CMD_PAUSE:
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_PAUSE -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_PAUSED)");
+			if (CompVDrawing::s_ptrListener) {
+				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_PAUSED);
+			}
+			break;
+		case APP_CMD_STOP:
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_STOP -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STOPPED)");
+			if (CompVDrawing::s_ptrListener) {
+				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STOPPED);
+			}
+			break;
     }
+	COMPV_CHECK_CODE_NOP(CompVWindowRegistry::android_handle_cmd(cmd));
 }
 
 COMPV_ERROR_CODE CompVDrawing::android_runLoop(struct android_app* state)
@@ -398,8 +435,9 @@ COMPV_ERROR_CODE CompVDrawing::android_runLoop(struct android_app* state)
 
             // Check if we are exiting.
             if (state->destroyRequested != 0) {
-                //engine_term_display(&engine);
-				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "state->destroyRequested");
+				// This code is called when the application is about to exit or the display mode is switching (portrait <-> landscape)
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Destroy requested");
+				COMPV_CHECK_CODE_BAIL(err = CompVDrawing::breakLoop());
                 goto bail;
             }
         }
@@ -424,15 +462,49 @@ bail:
 
 COMPV_ERROR_CODE CompVDrawing::breakLoop()
 {
-    COMPV_CHECK_EXP_RETURN(!CompVDrawing::isInitialized(), COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-    COMPV_CHECK_CODE_RETURN(CompVWindowRegistry::closeAll());
-
+	if (CompVDrawing::isInitialized()) {
+		COMPV_CHECK_CODE_RETURN(CompVWindowRegistry::closeAll());
+	}
     return COMPV_ERROR_CODE_S_OK;
 }
 
 void* COMPV_STDCALL CompVDrawing::workerThread(void* arg)
 {
-	CompVDrawing::s_ptrListener->onStart();
+	if (CompVDrawing::isLoopRunning()) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "-> onStateChanged(COMPV_RUNLOOP_STATE_LOOP_STARTED)");
+		CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_LOOP_STARTED);
+#if COMPV_OS_ANDROID
+		struct android_app* app = reinterpret_cast<struct android_app*>(arg);
+		if (app) {
+			switch (app->activityState) {
+			case APP_CMD_RESUME: 
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_RESUME -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_RESUMED)");
+				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_RESUMED); 
+				break;
+			case APP_CMD_START: 
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_START -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED)");
+				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED); 
+				break;
+			case APP_CMD_PAUSE: 
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_PAUSE -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_PAUSED)");
+				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_PAUSED); 
+				break;
+			case APP_CMD_STOP:
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_STOP -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STOPPED)");
+				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STOPPED); 
+				break;
+			default: break;
+			}
+		}
+		else {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "-> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED)");
+			CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED);
+		}
+#else
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "-> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED)");
+		CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED);
+#endif
+	}
 	return NULL;
 }
 

@@ -324,10 +324,10 @@ COMPV_ERROR_CODE CompVGLMVP::newObj(CompVGLMVPPtrPtr mvp, COMPV_PROJECTION eProj
     COMPV_CHECK_CODE_RETURN(CompVGLModel::newObj(&mvp_->m_ptrModel));
     COMPV_CHECK_CODE_RETURN(CompVGLView::newObj(&mvp_->m_ptrView));
     switch (eProjectionType) {
-    case compv::COMPV_PROJECTION_2D:
+    case COMPV_NAMESPACE::COMPV_PROJECTION_2D:
         COMPV_CHECK_CODE_RETURN(CompVGLProj2D::newObj(&mvp_->m_ptrProjection2D));
         break;
-    case compv::COMPV_PROJECTION_3D:
+    case COMPV_NAMESPACE::COMPV_PROJECTION_3D:
         COMPV_CHECK_CODE_RETURN(CompVGLProj3D::newObj(&mvp_->m_ptrProjection3D));
         break;
     default:

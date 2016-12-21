@@ -50,8 +50,11 @@ COMPV_ERROR_CODE CompVWindow::removeListener(CompVWindowListenerPtr listener)
 
 COMPV_ERROR_CODE CompVWindow::newObj(CompVWindowPtrPtr window, size_t width, size_t height, const char* title COMPV_DEFAULT("Unknown"))
 {
-    COMPV_CHECK_CODE_RETURN(CompVWindowFactory::newObj(window, width, height, title));
-    COMPV_CHECK_CODE_RETURN(CompVWindowRegistry::add(*window));
+	COMPV_CHECK_EXP_RETURN(!window, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVWindowPrivPtr window_;
+    COMPV_CHECK_CODE_RETURN(CompVWindowFactory::newObj(&window_, width, height, title));
+    COMPV_CHECK_CODE_RETURN(CompVWindowRegistry::add(window_));
+	*window = *window_;
     return COMPV_ERROR_CODE_S_OK;
 }
 

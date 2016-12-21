@@ -34,27 +34,27 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 
 #if COMPV_INTRINSIC
-#	define COMPV_EXEC_IFDEF_INTRIN(EXPR) do { if (compv::CompVCpu::isIntrinsicsEnabled()) { (EXPR); } } while(0)
+#	define COMPV_EXEC_IFDEF_INTRIN(EXPR) do { if (COMPV_NAMESPACE::CompVCpu::isIntrinsicsEnabled()) { (EXPR); } } while(0)
 #else
 #	define COMPV_EXEC_IFDEF_INTRIN(EXPR)
 #endif
 #if COMPV_INTRINSIC && COMPV_ARCH_X86
-#	define COMPV_EXEC_IFDEF_INTRIN_X86(EXPR) do { if (compv::CompVCpu::isIntrinsicsEnabled()) { (EXPR); } } while(0)
+#	define COMPV_EXEC_IFDEF_INTRIN_X86(EXPR) do { if (COMPV_NAMESPACE::CompVCpu::isIntrinsicsEnabled()) { (EXPR); } } while(0)
 #else
 #	define COMPV_EXEC_IFDEF_INTRIN_X86(EXPR)
 #endif
 #if COMPV_ASM
-#	define COMPV_EXEC_IFDEF_ASM(EXPR) do { if (compv::CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
+#	define COMPV_EXEC_IFDEF_ASM(EXPR) do { if (COMPV_NAMESPACE::CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
 #else
 #	define COMPV_EXEC_IFDEF_ASM(EXPR)
 #endif
 #if COMPV_ASM && COMPV_ARCH_X64
-#	define COMPV_EXEC_IFDEF_ASM_X64(EXPR) do { if (compv::CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
+#	define COMPV_EXEC_IFDEF_ASM_X64(EXPR) do { if (COMPV_NAMESPACE::CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
 #else
 #	define COMPV_EXEC_IFDEF_ASM_X64(EXPR)
 #endif
 #if COMPV_ASM && COMPV_ARCH_X86
-#	define COMPV_EXEC_IFDEF_ASM_X86(EXPR) do { if (compv::CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
+#	define COMPV_EXEC_IFDEF_ASM_X86(EXPR) do { if (COMPV_NAMESPACE::CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
 #else
 #	define COMPV_EXEC_IFDEF_ASM_X86(EXPR)
 #endif
@@ -178,6 +178,7 @@ enum COMPV_ERROR_CODE {
     COMPV_ERROR_CODE_E_TIMEDOUT,
     COMPV_ERROR_CODE_E_UNITTEST_FAILED,
     COMPV_ERROR_CODE_E_SYSTEM,
+	COMPV_ERROR_CODE_E_MEMORY_LEAK,
     COMPV_ERROR_CODE_E_THIRD_PARTY_LIB,
 	COMPV_ERROR_CODE_E_JNI,
     COMPV_ERROR_CODE_E_DIRECTSHOW,
@@ -207,8 +208,9 @@ extern COMPV_BASE_API const char* CompVGetErrorString(COMPV_NAMESPACE::COMPV_ERR
 #define COMPV_CHECK_CODE_RETURN(errcode, ...) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s) -> "  __VA_ARGS__, CompVGetErrorString(__code__)); return __code__; } } while(0)
 #define COMPV_CHECK_CODE_ASSERT(errcode, ...) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s) -> "  __VA_ARGS__, CompVGetErrorString(__code__)); COMPV_ASSERT(false); } } while(0)
 #define COMPV_CHECK_EXP_NOP(exp, errcode, ...) do { if ((exp)) COMPV_CHECK_CODE_NOP(errcode,  __VA_ARGS__); } while(0)
-#define COMPV_CHECK_EXP_RETURN(exp, errcode, ...) do { if ((exp)) COMPV_CHECK_CODE_RETURN(errcode,  __VA_ARGS__); } while(0)
 #define COMPV_CHECK_EXP_BAIL(exp, errcode, ...) do { if ((exp)) COMPV_CHECK_CODE_BAIL(errcode,  __VA_ARGS__); } while(0)
+#define COMPV_CHECK_EXP_RETURN(exp, errcode, ...) do { if ((exp)) COMPV_CHECK_CODE_RETURN(errcode,  __VA_ARGS__); } while(0)
+#define COMPV_CHECK_EXP_ASSERT(exp, errcode, ...) do { if ((exp)) COMPV_CHECK_CODE_ASSERT(errcode,  __VA_ARGS__); } while(0)
 
 enum COMPV_SORT_TYPE {
     COMPV_SORT_TYPE_BUBBLE, /**< https://en.wikipedia.org/wiki/Bubble_sort */

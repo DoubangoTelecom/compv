@@ -125,10 +125,7 @@ COMPV_ERROR_CODE CompVWindowEGL::init()
 
     // Retrieve the window associated to the native activity
     window = nativeWindow();
-    if (!window) {
-        COMPV_DEBUG_ERROR("No window is associated to the native activity");
-        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_EGL);
-    }
+    COMPV_CHECK_EXP_BAIL(!window, (err = COMPV_ERROR_CODE_E_EGL), "No window is associated to the native activity");
 
     // Create and initialize the display
     m_pEGLDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
@@ -220,6 +217,21 @@ COMPV_ERROR_CODE CompVWindowEGL::beginDraw() /* Overrides(CompVGLWindow) */
     COMPV_CHECK_CODE_RETURN(init());
     COMPV_CHECK_CODE_RETURN(CompVGLWindow::beginDraw()); // Base class implementation
     return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVWindowEGL::priv_updateState(COMPV_WINDOW_STATE newState) /*Overrides(CompVWindowPriv)*/
+{
+	CompVAutoLock<CompVWindowEGL>(this);
+	COMPV_CHECK_CODE_NOP(CompVGLWindow::priv_updateState(newState)); // call base class implementation (*must* be call first)
+	switch (newState){
+	case COMPV_WINDOW_STATE_CONTEXT_DESTROYED:
+	case COMPV_WINDOW_STATE_CLOSED:
+		COMPV_CHECK_CODE_NOP(close());
+		break;
+	default:
+		break;
+	}
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 CompVGLContextPtr CompVWindowEGL::context() /* Overrides(CompVGLWindow) */

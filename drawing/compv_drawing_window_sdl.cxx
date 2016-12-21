@@ -18,7 +18,7 @@ COMPV_NAMESPACE_BEGIN()
 //
 //	CompVWindowFactorySDL
 //
-static COMPV_ERROR_CODE CompVWindowFactorySDL_newObj(CompVWindowPtrPtr window, size_t width, size_t height, const char* title)
+static COMPV_ERROR_CODE CompVWindowFactorySDL_newObj(CompVWindowPrivPtrPtr window, size_t width, size_t height, const char* title)
 {
     COMPV_CHECK_EXP_RETURN(!window || !width || !height || !title, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVWindowSDLPtr sdlWindow;

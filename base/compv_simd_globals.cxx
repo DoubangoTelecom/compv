@@ -18,17 +18,17 @@ COMPV_BASE_API COMPV_ALIGN_DEFAULT() int8_t k1_i8[] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };
 
-COMPV_BASE_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t km1_f64[] = {
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() COMPV_NAMESPACE::compv_float64_t km1_f64[] = {
     -1., -1., // SSE
     -1., -1., // AVX
 };
 
-COMPV_BASE_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t km1_0_f64[] = {
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() COMPV_NAMESPACE::compv_float64_t km1_0_f64[] = {
     -1., 0., // SSE
     -1., 0. // AVX
 };
 
-COMPV_BASE_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t k1_f64[] = {
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() COMPV_NAMESPACE::compv_float64_t k1_f64[] = {
     1., 1., // SSE
     1., 1., // AVX
 };
@@ -101,7 +101,7 @@ COMPV_BASE_API COMPV_ALIGN_DEFAULT() int16_t k4400_i16[] = {
     4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400, 4400,
 };
 
-COMPV_BASE_API COMPV_ALIGN_DEFAULT() compv::compv_float64_t ksqrt2_f64[] = {
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() COMPV_NAMESPACE::compv_float64_t ksqrt2_f64[] = {
     COMPV_MATH_SQRT_2, COMPV_MATH_SQRT_2, // SSE
     COMPV_MATH_SQRT_2, COMPV_MATH_SQRT_2 // AVX
 };

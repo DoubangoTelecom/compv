@@ -29,6 +29,15 @@ COMPV_NAMESPACE_BEGIN()
 typedef long compv_window_id_t;
 typedef long compv_windowlistener_id_t;
 
+enum COMPV_WINDOW_STATE {
+	COMPV_WINDOW_STATE_NONE,
+	COMPV_WINDOW_STATE_FOCUS_LOST,
+	COMPV_WINDOW_STATE_FOCUS_GAINED,
+	COMPV_WINDOW_STATE_CONTEXT_CREATED,
+	COMPV_WINDOW_STATE_CONTEXT_DESTROYED,
+	COMPV_WINDOW_STATE_CLOSED,
+};
+
 
 //
 //	CompVWindow
@@ -48,6 +57,9 @@ public:
     virtual COMPV_ERROR_CODE onSizeChanged(size_t newWidth, size_t newHeight) {
         return COMPV_ERROR_CODE_S_OK;
     };
+	virtual COMPV_ERROR_CODE onStateChanged(COMPV_WINDOW_STATE newState) {
+		return COMPV_ERROR_CODE_S_OK;
+	};
 
 private:
     compv_windowlistener_id_t m_nId;
@@ -138,6 +150,7 @@ protected:
 public:
     virtual ~CompVWindowPriv() {  }
     virtual COMPV_ERROR_CODE priv_updateSize(size_t newWidth, size_t newHeight) = 0;
+	virtual COMPV_ERROR_CODE priv_updateState(COMPV_WINDOW_STATE newState) = 0;
 };
 
 //
@@ -146,14 +159,14 @@ public:
 struct COMPV_BASE_API CompVWindowFactory {
 public:
     const char* name;
-    COMPV_ERROR_CODE(*newObjFuncPtr)(CompVWindowPtrPtr window, size_t width, size_t height, const char* title);
+    COMPV_ERROR_CODE(*newObjFuncPtr)(CompVWindowPrivPtrPtr window, size_t width, size_t height, const char* title);
     static COMPV_ERROR_CODE set(const CompVWindowFactory* inst) {
         COMPV_CHECK_EXP_RETURN(!inst, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         COMPV_DEBUG_INFO("Setting window factory: %s", inst->name);
         instance = inst;
         return COMPV_ERROR_CODE_S_OK;
     }
-    static COMPV_ERROR_CODE newObj(CompVWindowPtrPtr window, size_t width, size_t height, const char* title = "Unknown") {
+    static COMPV_ERROR_CODE newObj(CompVWindowPrivPtrPtr window, size_t width, size_t height, const char* title = "Unknown") {
         COMPV_CHECK_EXP_RETURN(!instance, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
         COMPV_CHECK_CODE_RETURN(instance->newObjFuncPtr(window, width, height, title));
         return COMPV_ERROR_CODE_S_OK;

@@ -16,7 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 //
 //	CompVWindowFactoryEGLAndroid
 //
-static COMPV_ERROR_CODE CompVWindowFactoryEGLAndroid_newObj(CompVWindowPtrPtr window, size_t width, size_t height, const char* title)
+static COMPV_ERROR_CODE CompVWindowFactoryEGLAndroid_newObj(CompVWindowPrivPtrPtr window, size_t width, size_t height, const char* title)
 {
     COMPV_CHECK_EXP_RETURN(!window || width <= 0 || height <= 0 || !title || !::strlen(title), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVWindowEGLAndroidPtr eglWindow_;
@@ -81,6 +81,28 @@ COMPV_ERROR_CODE CompVWindowEGLAndroid::attachToSurface(JNIEnv* jniEnv, jobject 
 	}
 	// Set the native window
 	m_pNativeWindow = nativeNindow; //!\\ no 'ANativeWindow_acquire(nativeNindow)' needed: see above
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVWindowEGLAndroid::priv_updateState(COMPV_WINDOW_STATE newState) /*Overrides(CompVWindowPriv)*/
+{
+	CompVAutoLock<CompVWindowEGLAndroid>(this);
+	// The base class implementation will close the context handlers and free the GL context. It must
+	// be called before releasing the window handler as the context is based on it.
+	COMPV_CHECK_CODE_NOP(CompVWindowEGL::priv_updateState(newState)); // call base class implementation
+	switch (newState) {
+		// Android native activity returned 'APP_CMD_TERM_WINDOW' which means the window is no longer valid.
+		// This even is raised by the system when the app is put on background
+		case COMPV_WINDOW_STATE_CONTEXT_DESTROYED:
+		case COMPV_WINDOW_STATE_CLOSED:
+			if (m_pNativeWindow) {
+				ANativeWindow_release(m_pNativeWindow);
+				m_pNativeWindow = NULL;
+			}
+			break;
+		default:
+			break;
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 

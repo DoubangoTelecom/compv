@@ -260,12 +260,9 @@ COMPV_ERROR_CODE CompVAndroidCamera::initJNI(JNIEnv* jEnv)
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(%p)", __FUNCTION__, jEnv);
 	COMPV_CHECK_EXP_RETURN(!jEnv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	// FIXME(dmi): change the file name (app-debug.apk -> plugin_androidcamera.apk) and sign the package
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	static const std::string kPluginFileName = "app-debug.apk";
-	static const std::string kNativeLibFileName = "libandroidcamera.so";
+	static const std::string kPluginFileName = "plugin_androidcamera.apk"; // the plugin apk should be part of the source code at "compv/thirdparties/apks/plugin_androidcamera.apk"
+	static const std::string kNativeLibFileName = "libandroidcamera.so"; // shared library packed in the apk, supported archs: mips64, mips, x86_64, x86, arm64-v8a, armeabi-v7a, armeabi
 	static const std::string kClassNameCamera = "org/doubango/java/androidcamera/CompVCamera"; // org.doubango.java.androidcamera.CompVCamera
 	jclass classCompVCamera = NULL; // global ref
 	jmethodID methodConstructor;

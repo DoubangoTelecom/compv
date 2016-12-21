@@ -104,6 +104,9 @@ COMPV_ERROR_CODE CompVMFCamera::start(const std::string& deviceId COMPV_DEFAULT(
 {
 	CompVAutoLock<CompVMFCamera>(this);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(%s)", __FUNCTION__, deviceId.c_str());
+	if (m_bStarted) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	HRESULT hr = S_OK;
 	

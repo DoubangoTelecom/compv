@@ -8,6 +8,8 @@ using namespace compv;
 #define CAMERA_FPS			25
 #define CAMERA_SUBTYPE		COMPV_SUBTYPE_PIXELS_YUY2
 
+#define TAG_SAMPLE_CAMERA	"Camera Sample App"
+
 /*
 My runloop listener (optional)
 */
@@ -15,24 +17,33 @@ COMPV_OBJECT_DECLARE_PTRS(MyRunLoopListener)
 class CompVMyRunLoopListener : public CompVRunLoopListener
 {
 protected:
-	CompVMyRunLoopListener() { }
+	CompVMyRunLoopListener(CompVCameraPtr camera, const std::string& cameraId) : m_ptrCamera(camera), m_strCameraId(cameraId) { }
 public:
 	virtual ~CompVMyRunLoopListener() { }
-
-	virtual COMPV_ERROR_CODE onStart() override {
-		COMPV_DEBUG_INFO("RunLoop started");
-		return COMPV_ERROR_CODE_S_OK;
+	virtual COMPV_ERROR_CODE onStateChanged(COMPV_RUNLOOP_STATE newState) override {
+		COMPV_DEBUG_INFO_EX(TAG_SAMPLE_CAMERA, "RunLoop onStateChanged(%d)", newState);
+		switch (newState) {
+			case COMPV_RUNLOOP_STATE_LOOP_STARTED:
+			default:
+				return COMPV_ERROR_CODE_S_OK;
+			case COMPV_RUNLOOP_STATE_ANIMATION_STARTED:
+			case COMPV_RUNLOOP_STATE_ANIMATION_RESUMED:
+				return m_ptrCamera->start(m_strCameraId);
+			case COMPV_RUNLOOP_STATE_ANIMATION_PAUSED:
+			case COMPV_RUNLOOP_STATE_LOOP_STOPPED:
+			case COMPV_RUNLOOP_STATE_ANIMATION_STOPPED:
+				return m_ptrCamera->stop();
+		}
 	}
-	virtual COMPV_ERROR_CODE onStop() override {
-		COMPV_DEBUG_INFO("RunLoop stopped");
-		return COMPV_ERROR_CODE_S_OK;
-	}
-	static COMPV_ERROR_CODE newObj(CompVMyRunLoopListenerPtrPtr listener) {
-		COMPV_CHECK_EXP_RETURN(!listener, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		*listener = new CompVMyRunLoopListener();
+	static COMPV_ERROR_CODE newObj(CompVMyRunLoopListenerPtrPtr listener, CompVCameraPtr camera, const std::string& cameraId) {
+		COMPV_CHECK_EXP_RETURN(!listener || !camera, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		*listener = new CompVMyRunLoopListener(camera, cameraId);
 		COMPV_CHECK_EXP_RETURN(!*listener, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 		return COMPV_ERROR_CODE_S_OK;
 	}
+private:
+	CompVCameraPtr m_ptrCamera;
+	const std::string m_strCameraId;
 };
 
 /*
@@ -53,9 +64,9 @@ public:
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(image));
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->blit());
-			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->endDraw());
+		bail:
+			COMPV_CHECK_CODE_NOP(err = m_ptrWindow->endDraw()); // Make sure 'endDraw()' will be called regardless the result
 		}
-	bail:
 		return err;
 	}
 
@@ -89,7 +100,7 @@ compv_main()
 		CompVCameraPtr camera;
 		CompVMyCameraListenerPtr cameraListener;
 		CompVCameraDeviceInfoList devices;
-		size_t cameraIndex;
+		std::string cameraId = ""; // empty string means default
 
 		// Change debug level to INFO before starting
 		CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
@@ -103,38 +114,35 @@ compv_main()
 
 		// Create my camera and add a listener to it 
 		COMPV_CHECK_CODE_BAIL(err = CompVCamera::newObj(&camera));
+
 		COMPV_CHECK_CODE_BAIL(err = CompVMyCameraListener::newObj(&cameraListener, window, *singleSurfaceLayer));
 		COMPV_CHECK_CODE_BAIL(err = camera->setListener(*cameraListener));
 		// Get list of devices/cameras and print them to the screen (optional)
 		COMPV_CHECK_CODE_BAIL(err = camera->devices(devices));
 		COMPV_CHECK_EXP_BAIL(devices.empty(), err = COMPV_ERROR_CODE_E_NOT_FOUND, "No camera device found");
 		for (CompVCameraDeviceInfoList::iterator it = devices.begin(); it != devices.end(); ++it) {
-			COMPV_DEBUG_INFO("Camera device: %s -> %s, %s", it->id.c_str(), it->name.c_str(), it->description.c_str());
+			COMPV_DEBUG_INFO_EX(TAG_SAMPLE_CAMERA, "Camera device: %s -> %s, %s", it->id.c_str(), it->name.c_str(), it->description.c_str());
 		}
 		// Set camera parameters (optional)
-		cameraIndex = COMPV_MATH_MIN(CAMERA_IDX, (devices.size() - 1));
+		cameraId = devices[COMPV_MATH_MIN(CAMERA_IDX, (devices.size() - 1))].id;
 		COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_WIDTH, CAMERA_WIDTH));
 		COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_HEIGHT, CAMERA_HEIGHT));
 		COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_FPS, CAMERA_FPS));
 		COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_SUBTYPE, CAMERA_SUBTYPE));
-		COMPV_CHECK_CODE_BAIL(err = camera->start(devices[cameraIndex].id)); // use no parameter ('star()') to use default camera device
+		COMPV_CHECK_CODE_BAIL(err = camera->start(cameraId)); // use no parameter ('star()') to use default camera device
 
-		// Start ui runloop and set a listener (optional)
-		COMPV_CHECK_CODE_BAIL(err = CompVMyRunLoopListener::newObj(&runloopListener));
+		// Start ui runloop
+		// Setting a listener is optional but used here to show how to handle Android onStart, onPause, onResume.... activity states
+		COMPV_CHECK_CODE_BAIL(err = CompVMyRunLoopListener::newObj(&runloopListener, camera, cameraId));
 		COMPV_CHECK_CODE_BAIL(err = CompVDrawing::runLoop(*runloopListener));
 
 	bail:
 		if (COMPV_ERROR_CODE_IS_NOK(err)) {
-			COMPV_DEBUG_ERROR("Something went wrong!!");
+			COMPV_DEBUG_ERROR_EX(TAG_SAMPLE_CAMERA, "Something went wrong!!");
 		}
 	}
-
-	// DeInit the modules
-	COMPV_CHECK_CODE_ASSERT(err = CompVDeInit());
-	// Make sure we freed all allocated memory
-	COMPV_ASSERT(CompVMem::isEmpty());
-	// Make sure we freed all allocated objects
-	COMPV_ASSERT(CompVObj::isEmpty());
+	
+	COMP_DEBUG_CHECK_FOR_MEMORY_LEAKS();
 
 	compv_main_return(0);
 }

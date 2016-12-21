@@ -24,7 +24,6 @@
 #include "compv/base/android/compv_android_native_activity.h"
 #if COMPV_OS_ANDROID
 #include "compv/base/compv_debug.h"
-#include "compv/base/compv_mem.h"
 #include "compv/base/android/compv_android_dexclassloader.h"
 
 #include <android/log.h>
@@ -42,7 +41,7 @@ static void free_saved_state(struct android_app* android_app)
 {
     pthread_mutex_lock(&android_app->mutex);
     if (android_app->savedState != NULL) {
-        compv::CompVMem::free(&android_app->savedState);
+        free(android_app->savedState), android_app->savedState = NULL;
         android_app->savedState = NULL;
         android_app->savedStateSize = 0;
     }
@@ -118,7 +117,7 @@ void android_app_pre_exec_cmd(struct android_app* android_app, int8_t cmd)
         android_app->window = android_app->pendingWindow;
         // TODO(dmi): move to Drawing::Init()
 		// If 'ANativeWindow_setBuffersGeometry' fails we can call 'eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format)' to retrieve the default supported format.
-        COMPV_CHECK_EXP_NOP(ANativeWindow_setBuffersGeometry(android_app->window, 0, 0, WINDOW_FORMAT_RGBA_8888) != 0, COMPV_NAMESPACE::COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+        COMPV_CHECK_EXP_NOP(ANativeWindow_setBuffersGeometry(android_app->window, 0, 0, WINDOW_FORMAT_RGBA_8888) != 0, COMPV_NAMESPACE::COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT, "Cannot set the window format to RGBA_8888");
         pthread_cond_broadcast(&android_app->cond);
         pthread_mutex_unlock(&android_app->mutex);
         break;
@@ -258,7 +257,8 @@ static void* android_app_entry(void* param)
 static struct android_app* android_app_create(ANativeActivity* activity,
         void* savedState, size_t savedStateSize)
 {
-    androidApp = static_cast<struct android_app*>(compv::CompVMem::malloc(sizeof(struct android_app)));
+	// Important: do not use CompVMem::malloc to make sure CompVMem::isEmpty check will be ok before exiting the app. No memory leak, free will be call by onDestroy
+    androidApp = static_cast<struct android_app*>(malloc(sizeof(struct android_app)));
     memset(androidApp, 0, sizeof(struct android_app));
     androidApp->activity = activity;
 
@@ -266,7 +266,7 @@ static struct android_app* android_app_create(ANativeActivity* activity,
     pthread_cond_init(&androidApp->cond, NULL);
 
     if (savedState != NULL) {
-        androidApp->savedState = compv::CompVMem::malloc(savedStateSize);
+        androidApp->savedState = malloc(savedStateSize);
         androidApp->savedStateSize = savedStateSize;
         memcpy(androidApp->savedState, savedState, savedStateSize);
     }
@@ -351,28 +351,28 @@ static void android_app_free(struct android_app* android_app)
     close(android_app->msgwrite);
     pthread_cond_destroy(&android_app->cond);
     pthread_mutex_destroy(&android_app->mutex);
-    compv::CompVMem::free((void**)&android_app);
+    if (android_app) free(android_app), android_app = NULL;
     androidApp = NULL;
 }
 
 static void onDestroy(ANativeActivity* activity)
 {
     COMPV_DEBUG_INFO_EX(kModuleNameAndroidNativeActivity, "Destroy: %p", activity);
-	COMPV_CHECK_CODE_NOP(compv::CompVAndroidDexClassLoader::deInit(activity->env)); // Important: "activity->env" valid on MainThread only
+	COMPV_CHECK_CODE_NOP(COMPV_NAMESPACE::CompVAndroidDexClassLoader::deInit(activity->env)); // Important: "activity->env" valid on MainThread only
     android_app_free((struct android_app*)activity->instance);
 }
 
 static void onStart(ANativeActivity* activity)
 {
     COMPV_DEBUG_INFO_EX(kModuleNameAndroidNativeActivity, "Start: %p", activity);
-	COMPV_CHECK_CODE_NOP(compv::CompVAndroidDexClassLoader::init(activity->env)); // Important: "activity->env" valid on MainThread only
+	COMPV_CHECK_CODE_NOP(COMPV_NAMESPACE::CompVAndroidDexClassLoader::init(activity->env)); // Important: "activity->env" valid on MainThread only
     android_app_set_activity_state((struct android_app*)activity->instance, APP_CMD_START);
 }
 
 static void onResume(ANativeActivity* activity)
 {
     COMPV_DEBUG_INFO_EX(kModuleNameAndroidNativeActivity, "Resume: %p", activity);
-	COMPV_CHECK_CODE_NOP(compv::CompVAndroidDexClassLoader::init(activity->env)); // Important: "activity->env" valid on MainThread only
+	COMPV_CHECK_CODE_NOP(COMPV_NAMESPACE::CompVAndroidDexClassLoader::init(activity->env)); // Important: "activity->env" valid on MainThread only
     android_app_set_activity_state((struct android_app*)activity->instance, APP_CMD_RESUME);
 }
 

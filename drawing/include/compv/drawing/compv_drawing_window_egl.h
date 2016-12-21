@@ -63,6 +63,8 @@ public:
     // Override(CompVWindow::endDraw) -> CompVGLWindow
     // Override(CompVWindow::surface) -> CompVGLWindow
 
+	virtual COMPV_ERROR_CODE priv_updateState(COMPV_WINDOW_STATE newState) override /*Overrides(CompVWindowPriv)*/;
+
     virtual EGLNativeWindowType nativeWindow() = 0;
 
 protected:

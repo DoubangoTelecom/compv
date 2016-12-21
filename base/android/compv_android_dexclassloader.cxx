@@ -8,6 +8,8 @@
 #include "compv/base/compv_jni.h"
 #include "compv/base/compv_base.h"
 
+#define COMPV_THIS_CLASSNAME "CompVAndroidDexClassLoader"
+
 #if COMPV_OS_ANDROID
 
 /*
@@ -72,7 +74,7 @@ COMPV_ERROR_CODE CompVAndroidDexClassLoader::init(JNIEnv* jEnv)
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	COMPV_CHECK_EXP_RETURN(!jEnv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO("CompVAndroidDexClassLoader::init(%p)", jEnv);
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CompVAndroidDexClassLoader::init(%p)", jEnv);
 
 	// According to [2]: The implementation is only required to reserve slots for 16 local references, so if you need more than that you should either delete as you go or use 
 	// EnsureLocalCapacity/PushLocalFrame to reserve more.
@@ -259,7 +261,7 @@ COMPV_ERROR_CODE CompVAndroidDexClassLoader::init(JNIEnv* jEnv)
 
 	s_bInitialized = true;
 	compv_atomic_inc(&s_lInitializationID);
-	COMPV_DEBUG_INFO("Android DexClassLoader successfully initialized");
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Android DexClassLoader successfully initialized");
 
 bail:
 	// Goto bail probably called because of an exception (such as NoSuchMethodException when method GetMethodID called) -> clear exception
@@ -287,7 +289,7 @@ bail:
 COMPV_ERROR_CODE CompVAndroidDexClassLoader::deInit(JNIEnv* jEnv)
 {
 	COMPV_CHECK_EXP_RETURN(!jEnv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_DEBUG_INFO("CompVAndroidDexClassLoader::deInit(%p)", jEnv);
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CompVAndroidDexClassLoader::deInit(%p)", jEnv);
 
 	// Android uses a single JVM (see [2]) which means we're sure the one used for init() will be used for deInit()
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -383,7 +385,7 @@ COMPV_ERROR_CODE CompVAndroidDexClassLoader::moveDexFileFromAssetsToData(JNIEnv*
 	}
 	COMPV_jni_checkException(jEnv, &bExcOccured);
 	COMPV_CHECK_EXP_BAIL(bExcOccured, (err = COMPV_ERROR_CODE_E_JNI));
-	COMPV_DEBUG_INFO("DexClassLoader copied %d bytes for file '%s'", total, dexFileName.c_str());
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "DexClassLoader copied %d bytes for file '%s'", total, dexFileName.c_str());
 
 	// jobjectOutputStream.close();
 	jEnv->CallVoidMethod(jobjectOutputStream, s_MethodBufferedOutputStreamClose);
@@ -396,7 +398,7 @@ COMPV_ERROR_CODE CompVAndroidDexClassLoader::moveDexFileFromAssetsToData(JNIEnv*
 	COMPV_CHECK_EXP_BAIL(!jobjectTemp, (err = COMPV_ERROR_CODE_E_JNI));
 	dexPath = CompVJNI::toString(jEnv, reinterpret_cast<jstring>(jobjectTemp));
 	COMPV_CHECK_EXP_BAIL(dexPath.empty(), (err = COMPV_ERROR_CODE_E_JNI));
-	COMPV_DEBUG_INFO("DexClassLoader for file name '%s' absolutePath = '%s'", dexFileName.c_str(), dexPath.c_str());
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "DexClassLoader for file name '%s' absolutePath = '%s'", dexFileName.c_str(), dexPath.c_str());
 	COMPV_jni_DeleteLocalRef(jEnv, jobjectTemp);
 
 	// optimizedDexOutputPath = context.getDir(kDexOptimizDirName, Context.MODE_PRIVATE).getAbsolutePath();
@@ -410,12 +412,12 @@ COMPV_ERROR_CODE CompVAndroidDexClassLoader::moveDexFileFromAssetsToData(JNIEnv*
 	COMPV_CHECK_EXP_BAIL(!jobjectTemp, (err = COMPV_ERROR_CODE_E_JNI));
 	optimizedDirectory = CompVJNI::toString(jEnv, reinterpret_cast<jstring>(jobjectTemp));
 	COMPV_CHECK_EXP_BAIL(optimizedDirectory.empty(), (err = COMPV_ERROR_CODE_E_JNI));
-	COMPV_DEBUG_INFO("DexClassLoader for file name '%s' optimizedDirectory = '%s'", dexFileName.c_str(), optimizedDirectory.c_str());
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "DexClassLoader for file name '%s' optimizedDirectory = '%s'", dexFileName.c_str(), optimizedDirectory.c_str());
 	COMPV_jni_DeleteLocalRef(jEnv, jobjectTemp);
 
 	//librarySearchPath = optimizedDexOutputPath;
 	librarySearchPath = optimizedDirectory;
-	COMPV_DEBUG_INFO("DexClassLoader for file name '%s' librarySearchPath = '%s'", dexFileName.c_str(), librarySearchPath.c_str());
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "DexClassLoader for file name '%s' librarySearchPath = '%s'", dexFileName.c_str(), librarySearchPath.c_str());
 
 	/* Unzip the apk, extract the native lib and copy it to a readable folder */
 	if (!nativeLibFileName.empty()) {
@@ -423,7 +425,7 @@ COMPV_ERROR_CODE CompVAndroidDexClassLoader::moveDexFileFromAssetsToData(JNIEnv*
 		
 		COMPV_CHECK_EXP_RETURN(CompVBase::CPU_ABI().empty(), (err = COMPV_ERROR_CODE_E_SYSTEM));
 		const std::string nativeLibSourceFilePath = std::string("lib/") + CompVBase::CPU_ABI() + std::string("/") + nativeLibFileName;
-		COMPV_DEBUG_INFO("DexClassLoader trying to extract native lib from '%s'", nativeLibSourceFilePath.c_str());
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "DexClassLoader trying to extract native lib from '%s'", nativeLibSourceFilePath.c_str());
 		// jobjectBufferInputStream.reset()
 		jEnv->CallVoidMethod(jobjectBufferInputStream, s_MethodBufferedInputStreamReset);
 		COMPV_jni_checkException(jEnv, &bExcOccured);
@@ -444,7 +446,7 @@ COMPV_ERROR_CODE CompVAndroidDexClassLoader::moveDexFileFromAssetsToData(JNIEnv*
 				jobjectOutputStream = jEnv->NewObject(s_ClassFileOutputStream, s_MethodFileOutputStreamConstructor2, jobjectTemp);
 				COMPV_CHECK_EXP_BAIL(!jobjectOutputStream, (err = COMPV_ERROR_CODE_E_JNI));
 				COMPV_jni_DeleteLocalRef(jEnv, jobjectTemp);
-				COMPV_DEBUG_INFO("DexClassLoader trying to unzip native lib to '%s'", nativeLibDestFilePath.c_str());
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "DexClassLoader trying to unzip native lib to '%s'", nativeLibDestFilePath.c_str());
 				bNativeLibFound = true;
 				// while ((len = jobjectZipInputStream.read(buffer, 0, kMaxBufferSize)) > 0)
 				total = 0;
@@ -457,7 +459,7 @@ COMPV_ERROR_CODE CompVAndroidDexClassLoader::moveDexFileFromAssetsToData(JNIEnv*
 				}
 				COMPV_jni_checkException(jEnv, &bExcOccured);
 				COMPV_CHECK_EXP_BAIL(bExcOccured, (err = COMPV_ERROR_CODE_E_JNI));
-				COMPV_DEBUG_INFO("DexClassLoader copied %d bytes for file '%s'", total, nativeLibSourceFilePath.c_str());
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "DexClassLoader copied %d bytes for file '%s'", total, nativeLibSourceFilePath.c_str());
 			}
 			COMPV_jni_DeleteLocalRef(jEnv, jobjectZipEntry);
 			COMPV_jni_DeleteLocalRef(jEnv, jstringZipEntryName);
@@ -520,13 +522,13 @@ COMPV_ERROR_CODE CompVAndroidDexClassLoader::loadClass(JNIEnv* jEnv, const std::
 
 	// Create the dex class loader object
 	// https://developer.android.com/reference/dalvik/system/DexClassLoader.html#DexClassLoader(java.lang.String, java.lang.String, java.lang.String, java.lang.ClassLoader)
-	COMPV_DEBUG_INFO("new DexClassLoader(%s, %s, %s, %p)", dexPath.c_str(), optimizedDirectory.c_str(), librarySearchPath.c_str(), s_ObjectLoaderParent);
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "new DexClassLoader(%s, %s, %s, %p)", dexPath.c_str(), optimizedDirectory.c_str(), librarySearchPath.c_str(), s_ObjectLoaderParent);
 	jobjectClassLoader = jEnv->NewObject(s_ClassDexLoader, s_MethodDexLoaderConstructor, jstringDexPath, jstringOptimizedDirectory, jstringLibrarySearchPath, s_ObjectLoaderParent);
 	COMPV_CHECK_EXP_BAIL(!jstringLibrarySearchPath, (err = COMPV_ERROR_CODE_E_JNI));
 
 	// load the class
 	// https://developer.android.com/reference/java/lang/ClassLoader.html#loadClass(java.lang.String)
-	COMPV_DEBUG_INFO("loadClass(%s)", className.c_str());
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "loadClass(%s)", className.c_str());
 	jobjectClass = jEnv->CallObjectMethod(jobjectClassLoader, s_MethodLoadClass, jstringClassName);
 	COMPV_CHECK_EXP_BAIL(!jobjectClass, (err = COMPV_ERROR_CODE_E_JNI));
 	*clazz = reinterpret_cast<jclass>(jEnv->NewGlobalRef(jobjectClass));

@@ -81,7 +81,7 @@ COMPV_ERROR_CODE CompVGLProgram::link()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLProgram::bind)()
+COMPV_ERROR_CODE CompVGLProgram::bind() /*Overrides(CompVBind)*/
 {
     if (!m_bLinked) {
         COMPV_DEBUG_ERROR_EX(kModuleNameGLProgram, "Program not linked");
@@ -94,7 +94,7 @@ COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLProgram::bind)()
 }
 
 
-COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLProgram::unbind)()
+COMPV_ERROR_CODE CompVGLProgram::unbind() /*Overrides(CompVBind)*/
 {
     if (!m_bLinked) {
         COMPV_DEBUG_ERROR_EX(kModuleNameGLProgram, "Program not linked");

@@ -37,6 +37,8 @@ public:
 
 	virtual COMPV_ERROR_CODE attachToSurface(JNIEnv* jniEnv, jobject javaSurface) override /* Overrides(CompVWindow) */;
 
+	virtual COMPV_ERROR_CODE priv_updateState(COMPV_WINDOW_STATE newState) override /*Overrides(CompVWindowPriv)*/;
+
     static COMPV_ERROR_CODE newObj(CompVWindowEGLAndroidPtrPtr eglWindow, size_t width, size_t height, const char* title);
 
 private:

@@ -71,6 +71,7 @@ void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_
 COMPV_NAMESPACE_BEGIN()
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 
+// Optional
 static COMPV_ERROR_CODE CompVInit()
 {
     COMPV_CHECK_CODE_RETURN(CompVBase::init());
@@ -80,14 +81,24 @@ static COMPV_ERROR_CODE CompVInit()
     return COMPV_ERROR_CODE_S_OK;
 }
 
+// Optional (used for debugging to make sure all memory will be freed)
 static COMPV_ERROR_CODE CompVDeInit()
 {
-    COMPV_CHECK_CODE_ASSERT(CompVBase::deInit());
-    COMPV_CHECK_CODE_ASSERT(CompVGL::deInit());
-    COMPV_CHECK_CODE_RETURN(CompVCamera::deInit());
-    COMPV_CHECK_CODE_RETURN(CompVDrawing::deInit());
+	COMPV_CHECK_CODE_RETURN(CompVDrawing::deInit());
+	COMPV_CHECK_CODE_RETURN(CompVCamera::deInit());
+	COMPV_CHECK_CODE_ASSERT(CompVGL::deInit());
+    COMPV_CHECK_CODE_ASSERT(CompVBase::deInit()); 
     return COMPV_ERROR_CODE_S_OK;
 }
+
+#define COMP_DEBUG_CHECK_FOR_MEMORY_LEAKS() \
+	/* All allocated objects and ptrs will be freed when they go out of scoop and the reference counting value reach zero.*/ \
+	/* To check for memory leak we explicitly call CompVDeInit (not required) for checking. */ \
+	COMPV_CHECK_CODE_ASSERT(err = CompVDeInit()); \
+	/* Make sure we freed all allocated memory */ \
+	COMPV_CHECK_EXP_ASSERT(!CompVMem::isEmpty(), COMPV_ERROR_CODE_E_MEMORY_LEAK, "Memory leak: you missed some pointers allocated using CompVMem::malloc"); \
+	/* Make sure we freed all allocated objects */  \
+	COMPV_CHECK_EXP_ASSERT(!CompVObj::isEmpty(), COMPV_ERROR_CODE_E_MEMORY_LEAK, "Memory leak: you missed some object allocated using CompVObj::newObj");
 
 COMPV_GCC_DISABLE_WARNINGS_END()
 COMPV_NAMESPACE_END()

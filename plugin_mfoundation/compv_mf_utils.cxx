@@ -21,7 +21,7 @@
 DEFINE_GUID(CLSID_VideoProcessorMFT,
 	0x88753b26, 0x5b24, 0x49bd, 0xb2, 0xe7, 0xc, 0x44, 0x5c, 0x78, 0xc9, 0x82);
 
-const char* CompVMFUtilsGuidName(const GUID& guid) { return compv::CompVMFUtils::guidName(guid); } // Used in 'mf_config.h' to avoid including 'mf_utils.h'(recurssive include)
+const char* CompVMFUtilsGuidName(const GUID& guid) { return COMPV_NAMESPACE::CompVMFUtils::guidName(guid); } // Used in 'mf_config.h' to avoid including 'mf_utils.h'(recurssive include)
 
 COMPV_NAMESPACE_BEGIN()
 

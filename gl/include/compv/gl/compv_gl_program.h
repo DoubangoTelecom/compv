@@ -40,8 +40,8 @@ public:
     COMPV_ERROR_CODE shaderAttachFragmentData(const char* dataPtr, size_t dataLength);
     COMPV_ERROR_CODE link();
 
-    COMPV_OVERRIDE_DECL0("CompVBind", bind)() override;
-    COMPV_OVERRIDE_DECL0("CompVBind", unbind)() override;
+    virtual COMPV_ERROR_CODE bind() override /*Overrides(CompVBind)*/;
+	virtual COMPV_ERROR_CODE unbind() override /*Overrides(CompVBind)*/;
 
     static COMPV_ERROR_CODE newObj(CompVGLProgramPtrPtr program);
     static COMPV_ERROR_CODE newObj(CompVGLProgramPtrPtr program, const char* vertexDataPtr, size_t vertexDataLength, const char* fragmentDataPtr, size_t fragmentDataLength);
