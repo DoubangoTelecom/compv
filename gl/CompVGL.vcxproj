@@ -58,6 +58,11 @@
     <ClCompile Include="compv_gl_vao.cxx" />
     <ClCompile Include="compv_gl_window.cxx" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\base\CompVBase.vcxproj">
+      <Project>{52028a97-e6d7-4c48-82e9-3789fd42bc56}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4A895705-E866-452D-8CFA-481C9E6B8871}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

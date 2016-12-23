@@ -40,6 +40,14 @@
     <ClCompile Include="compv_drawing_window_glfw3.cxx" />
     <ClCompile Include="compv_drawing_window_sdl.cxx" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\base\CompVBase.vcxproj">
+      <Project>{52028a97-e6d7-4c48-82e9-3789fd42bc56}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\gl\CompVGL.vcxproj">
+      <Project>{4a895705-e866-452d-8cfa-481c9e6b8871}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3B044340-C223-474B-BB77-CE2F430C0190}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

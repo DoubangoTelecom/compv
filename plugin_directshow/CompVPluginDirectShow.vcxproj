@@ -173,6 +173,11 @@
     <ClInclude Include="include\compv\ds\compv_ds_graph_capture.h" />
     <ClInclude Include="include\compv\ds\compv_ds_utils.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\base\CompVBase.vcxproj">
+      <Project>{52028a97-e6d7-4c48-82e9-3789fd42bc56}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

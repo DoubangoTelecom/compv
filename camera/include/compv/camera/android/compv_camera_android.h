@@ -30,25 +30,25 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class CompVAndroidCamera;
+class CompVCameraAndroid;
 
-static const std::string COMPV_CompVAndroidCamera_formatName(int format);
+static const std::string COMPV_CompVCameraAndroid_formatName(int format);
 
-struct CompVAndroidCameraCaps {
+struct CompVCameraAndroidCaps {
 	int width;
 	int height;
 	int fps;
 	int format;
 	// Important: update 'isEquals' and 'toString' functions if you add new field
 
-	CompVAndroidCameraCaps(int width_ = 640, int height_ = 480, int fps_ = 25, int format_ = COMPV_PixelFormat_YCbCr_420_SP) {
+	CompVCameraAndroidCaps(int width_ = 640, int height_ = 480, int fps_ = 25, int format_ = COMPV_PixelFormat_YCbCr_420_SP) {
 		width = width_;
 		height = height_;
 		fps = fps_;
 		format = format_;
 	}
 
-	COMPV_INLINE bool isEquals(const CompVAndroidCameraCaps& caps)const {
+	COMPV_INLINE bool isEquals(const CompVCameraAndroidCaps& caps)const {
 		return width == caps.width && height == caps.height && fps == caps.fps && format == caps.format;
 	}
 
@@ -57,20 +57,20 @@ struct CompVAndroidCameraCaps {
 			std::string("width=") + CompVBase::to_string(width) + std::string(", ")
 			+ std::string("height=") + CompVBase::to_string(height) + std::string(", ")
 			+ std::string("fps=") + CompVBase::to_string(fps) + std::string(", ")
-			+ std::string("format=") + COMPV_CompVAndroidCamera_formatName(format);
+			+ std::string("format=") + COMPV_CompVCameraAndroid_formatName(format);
 	}
 };
 
-COMPV_OBJECT_DECLARE_PTRS(AndroidCamera)
+COMPV_OBJECT_DECLARE_PTRS(CameraAndroid)
 
-class CompVAndroidCamera : public CompVCamera, public CompVLock
+class CompVCameraAndroid : public CompVCamera, public CompVLock
 {
-	friend struct CompVAndroidCameraCaps;
+	friend struct CompVCameraAndroidCaps;
 protected:
-	CompVAndroidCamera();
+	CompVCameraAndroid();
 public:
-	virtual ~CompVAndroidCamera();
-	COMPV_OBJECT_GET_ID(CompVAndroidCamera);
+	virtual ~CompVCameraAndroid();
+	COMPV_OBJECT_GET_ID(CompVCameraAndroid);
 
 	virtual COMPV_ERROR_CODE devices(CompVCameraDeviceInfoList& list) override /* Overrides(CompVCamera) */;
 	virtual COMPV_ERROR_CODE start(const std::string& deviceId = "") override /* Overrides(CompVCamera) */;
@@ -79,7 +79,7 @@ public:
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /* Overrides(CompVCaps) */;
 	virtual COMPV_ERROR_CODE get(int id, const void*& valuePtr, size_t valueSize) override /* Overrides(CompVCaps) */;
 
-	static COMPV_ERROR_CODE newObj(CompVAndroidCameraPtrPtr camera);
+	static COMPV_ERROR_CODE newObj(CompVCameraAndroidPtrPtr camera);
 	
 	static const std::string formatName(int format);
 
@@ -94,7 +94,7 @@ private:
 
 private:	
 	bool m_bStarted;
-	CompVAndroidCameraCaps m_CapsPref;
+	CompVCameraAndroidCaps m_CapsPref;
 	COMPV_SUBTYPE m_eSubTypeNeg;
 	jobject m_jobjectCamera;
 	CompVMatPtr m_ptrImageCB;
@@ -117,8 +117,8 @@ private:
 	static int PixelFormat_RGB;
 };
 
-static const std::string COMPV_CompVAndroidCamera_formatName(int format) {
-	return CompVAndroidCamera::formatName(format);
+static const std::string COMPV_CompVCameraAndroid_formatName(int format) {
+	return CompVCameraAndroid::formatName(format);
 }
 
 COMPV_NAMESPACE_END()

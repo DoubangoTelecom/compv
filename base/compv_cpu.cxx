@@ -11,6 +11,8 @@
 #include "compv/base/compv_debug.h"
 #include "compv/base/android/compv_android_cpu-features.h"
 
+#define COMPV_THIS_CLASSNAME	"CompVCpu"
+
 #if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC long long compv_utils_rdtsc_x86_asm();
 #endif
@@ -168,8 +170,18 @@ uint64_t CompVCpu::s_uFlagsEnabled = 0;
 int32_t CompVCpu::s_iCores = 0;
 int32_t CompVCpu::s_iCache1LineSize = 0;
 int32_t CompVCpu::s_iCache1Size = 0;
+bool CompVCpu::s_bInitialized = false;
 bool CompVCpu::s_bAsmEnabled = true;
 bool CompVCpu::s_bIntrinsicsEnabled = true;
+bool CompVCpu::s_bMathTrigFast = true;
+bool CompVCpu::s_bMathFixedPoint = true;
+#if TARGET_RT_LITTLE_ENDIAN
+bool CompVCpu::s_bBigEndian = false;
+#elif TARGET_RT_BIG_ENDIAN
+bool CompVCpu::s_bBigEndian = true;
+#else
+bool CompVCpu::s_bBigEndian = false;
+#endif
 
 CompVCpu::CompVCpu()
 {
@@ -183,6 +195,28 @@ CompVCpu::~CompVCpu()
 
 COMPV_ERROR_CODE CompVCpu::init()
 {
+	if (s_bInitialized) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	//
+	// endianness
+	//
+	// https://developer.apple.com/library/mac/documentation/Darwin/Conceptual/64bitPorting/MakingCode64-BitClean/MakingCode64-BitClean.html
+#if TARGET_RT_LITTLE_ENDIAN
+	s_bBigEndian = false;
+#elif TARGET_RT_BIG_ENDIAN
+	s_bBigEndian = true;
+#else
+	static const short kWord = 0x4321;
+	s_bBigEndian = ((*(int8_t *)&kWord) != 0x21);
+#	if COMPV_OS_WINDOWS
+	if (s_bBigEndian) {
+		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Big endian on Windows machine. Is it right?");
+	}
+#	endif
+#endif
+
     //
     // CPUID
     //
@@ -325,7 +359,7 @@ COMPV_ERROR_CODE CompVCpu::init()
 #elif defined(__GNUC__)
     s_iCores = static_cast<int32_t>(sysconf(_SC_NPROCESSORS_ONLN));
 #else
-    COMPV_DEBUG_ERROR("getCoresCount function not implemented ...using 1 as default value");
+    COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "coresCount function not implemented ...using 1 as default value");
     s_iCores = 1;
 #endif
 
@@ -350,7 +384,7 @@ COMPV_ERROR_CODE CompVCpu::init()
         }
     }
     else {
-        COMPV_DEBUG_ERROR("GetLogicalProcessorInformation() failed with error code = %08x", GetLastError());
+        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "GetLogicalProcessorInformation() failed with error code = %08x", GetLastError());
         s_iCache1LineSize = 64;
         s_iCache1Size = 4096;
     }
@@ -372,10 +406,12 @@ COMPV_ERROR_CODE CompVCpu::init()
     s_iCache1Size = (int32_t)sysconf(_SC_LEVEL1_DCACHE_SIZE);
 #endif
 
+	s_bInitialized = true;
+
     return COMPV_ERROR_CODE_S_OK;
 }
 
-const char* CompVCpu::getFlagsAsString(uint64_t uFlags)
+const char* CompVCpu::flagsAsString(uint64_t uFlags)
 {
     static std::string _flags;
     struct {
@@ -442,24 +478,24 @@ const char* CompVCpu::getFlagsAsString(uint64_t uFlags)
 
 
 
-compv_core_id_t CompVCpu::getValidCoreId(compv_core_id_t coreId)
+compv_core_id_t CompVCpu::validCoreId(compv_core_id_t coreId)
 {
     if (coreId < 0) {
         return 0;
     }
     else {
-        return coreId % CompVCpu::getCoresCount();
+        return coreId % CompVCpu::coresCount();
     }
 }
 
-uint64_t CompVCpu::getCyclesCountGlobal()
+uint64_t CompVCpu::cyclesCountGlobal()
 {
 #if COMPV_OS_WINDOWS
     return __rdtsc();
 #elif COMPV_ARCH_X86_ASM
     return compv_utils_rdtsc_x86_asm();
 #endif
-    COMPV_DEBUG_ERROR("getCyclesCountGlobal function not implemented ...returning zero");
+    COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "cyclesCountGlobal function not implemented ...returning zero");
     return 0;
 }
 
@@ -467,7 +503,7 @@ uint64_t CompVCpu::getCyclesCountGlobal()
 Gets CPU time.
 Returned value is in milliseconds
 */
-uint64_t CompVCpu::getTimeProcess()
+uint64_t CompVCpu::timeProcess()
 {
 #if COMPV_OS_WINDOWS
     FILETIME creationTime;
@@ -480,34 +516,34 @@ uint64_t CompVCpu::getTimeProcess()
             return (uint64_t)(((systemTime.wHour * 3600) + (systemTime.wMinute * 60) + systemTime.wSecond) * 1000 + systemTime.wMilliseconds);
         }
         else {
-            COMPV_DEBUG_ERROR("FileTimeToSystemTime() failed with error code = %08x", GetLastError());
+            COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "FileTimeToSystemTime() failed with error code = %08x", GetLastError());
         }
     }
     else {
-        COMPV_DEBUG_ERROR("GetProcessTimes() failed with error code = %08x", GetLastError());
+        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "GetProcessTimes() failed with error code = %08x", GetLastError());
     }
     return 0;
 #else
-    COMPV_DEBUG_ERROR("getTimeProcess not implemented: use CLOCK_PROCESS_CPUTIME_ID");
+    COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "timeProcess not implemented: use CLOCK_PROCESS_CPUTIME_ID");
     return 0;
 #endif
 }
 
 COMPV_ERROR_CODE CompVCpu::flagsDisable(uint64_t flags)
 {
-    COMPV_DEBUG_INFO("Disabled CPU flags: %s", getFlagsAsString(flags));
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Disabled CPU flags: %s", flagsAsString(flags));
     CompVCpu::s_uFlagsDisabled = flags;
     CompVCpu::s_uFlagsEnabled = (CompVCpu::s_uFlags & ~CompVCpu::s_uFlagsDisabled);
-    COMPV_DEBUG_INFO("Enabled CPU flags: %s", getFlagsAsString(CompVCpu::s_uFlagsEnabled));
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabled CPU flags: %s", flagsAsString(CompVCpu::s_uFlagsEnabled));
     return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVCpu::flagsEnable(uint64_t flags)
 {
-    COMPV_DEBUG_INFO("Enabled CPU flags: %s", getFlagsAsString(flags));
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabled CPU flags: %s", flagsAsString(flags));
     s_uFlagsDisabled &= ~flags;
     CompVCpu::s_uFlagsEnabled = (CompVCpu::s_uFlags & ~CompVCpu::s_uFlagsDisabled);
-    COMPV_DEBUG_INFO("Enabled CPU flags: %s", getFlagsAsString(CompVCpu::s_uFlagsEnabled));
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabled CPU flags: %s", flagsAsString(CompVCpu::s_uFlagsEnabled));
     return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -515,15 +551,15 @@ COMPV_ERROR_CODE CompVCpu::setAsmEnabled(bool bEnabled)
 {
     if (bEnabled) {
 #if !defined(COMPV_ASM)
-        COMPV_DEBUG_ERROR("Code source was not build with ASM. You can't enable ASM at runtime");
+        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Code source was not build with ASM. You can't enable ASM at runtime");
         return COMPV_ERROR_CODE_E_INVALID_CALL;
 #else
-        COMPV_DEBUG_INFO("Enabling asm code");
+        COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabling asm code");
         CompVCpu::s_bAsmEnabled = true;
 #endif
     }
     else {
-        COMPV_DEBUG_INFO("Disabling asm code");
+        COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Disabling asm code");
         CompVCpu::s_bAsmEnabled = false;
     }
     return COMPV_ERROR_CODE_S_OK;
@@ -533,18 +569,32 @@ COMPV_ERROR_CODE CompVCpu::setIntrinsicsEnabled(bool bEnabled)
 {
     if (bEnabled) {
 #if !defined(COMPV_INTRINSIC)
-        COMPV_DEBUG_ERROR("Code source was not build with intrinsics. You can't enable intrinsics at runtime");
+        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Code source was not build with intrinsics. You can't enable intrinsics at runtime");
         return COMPV_ERROR_CODE_E_INVALID_CALL;
 #else
-        COMPV_DEBUG_INFO("Enabling intrinsic code");
+        COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabling intrinsic code");
         CompVCpu::s_bIntrinsicsEnabled = true;
 #endif
     }
     else {
-        COMPV_DEBUG_INFO("Disabling intrinsic code");
+        COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Disabling intrinsic code");
         CompVCpu::s_bIntrinsicsEnabled = false;
     }
     return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVCpu::setMathTrigFastEnabled(bool bMathTrigFast)
+{
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU math trig. fast = %s", bMathTrigFast ? "true" : "false");
+	s_bMathTrigFast = bMathTrigFast;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVCpu::setMathFixedPointEnabled(bool bMathFixedPoint)
+{
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU math trig. fast = %s", bMathFixedPoint ? "true" : "false");
+	s_bMathFixedPoint = bMathFixedPoint;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

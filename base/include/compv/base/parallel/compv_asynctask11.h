@@ -91,16 +91,16 @@ private:
 };
 #endif
 
-COMPV_OBJECT_DECLARE_PTRS(AsyncTask11)
+COMPV_OBJECT_DECLARE_PTRS(AsyncTask)
 
-class COMPV_BASE_API CompVAsyncTask11 : public CompVObj
+class COMPV_BASE_API CompVAsyncTask : public CompVObj
 {
 protected:
-    CompVAsyncTask11();
+    CompVAsyncTask();
 public:
-    virtual ~CompVAsyncTask11();
+    virtual ~CompVAsyncTask();
     virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVAsyncTask11";
+        return "CompVAsyncTask";
     };
 
     COMPV_ERROR_CODE start();
@@ -117,7 +117,7 @@ public:
     }
 
     static uint64_t getUniqueTokenId();
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVAsyncTask11*>* asyncTask);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVAsyncTask*>* asyncTask);
 
 private:
     static void* COMPV_STDCALL run(void *pcArg);

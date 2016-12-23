@@ -12,6 +12,8 @@ Release
 *.orig
 Debug
 *.gray
+*.yuv
+*.rgb
 *.ipch
 *.opendb
 *.db

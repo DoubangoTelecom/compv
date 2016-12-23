@@ -96,9 +96,9 @@ COMPV_ERROR_CODE CompVCamera::newObj(CompVCameraPtrPtr camera)
     // Create camera using static implementations
     if (!camera_) {
 #if COMPV_OS_ANDROID
-		CompVAndroidCameraPtr androidCamera;
-		COMPV_CHECK_CODE_RETURN(CompVAndroidCamera::newObj(&androidCamera));
-		camera_ = *androidCamera;
+		CompVCameraAndroidPtr cameraAndroid;
+		COMPV_CHECK_CODE_RETURN(CompVCameraAndroid::newObj(&cameraAndroid));
+		camera_ = *cameraAndroid;
 #endif
     }
 

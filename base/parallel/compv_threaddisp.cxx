@@ -24,14 +24,14 @@ CompVThreadDispatcher::CompVThreadDispatcher(int32_t numThreads)
         COMPV_DEBUG_ERROR("Failed to allocate the asynctasks");
         return;
     }
-    compv_core_id_t coreId = CompVCpu::getValidCoreId(0);
+    compv_core_id_t coreId = CompVCpu::validCoreId(0);
     for (int32_t i = 0; i < m_nTasksCount; ++i) {
         if (COMPV_ERROR_CODE_IS_NOK(CompVAsyncTask::newObj(&m_pTasks[i]))) {
             COMPV_DEBUG_ERROR("Failed to allocate the asynctask at index %d", i);
             return;
         }
         // Calling setAffinity is required to identify the thread even if affinity setting is disabled
-        if (COMPV_ERROR_CODE_IS_NOK(m_pTasks[i]->setAffinity(CompVCpu::getValidCoreId(coreId++)))) {
+        if (COMPV_ERROR_CODE_IS_NOK(m_pTasks[i]->setAffinity(CompVCpu::validCoreId(coreId++)))) {
             COMPV_DEBUG_ERROR("Failed to set affinity %d", i);
         }
         if (COMPV_ERROR_CODE_IS_NOK(m_pTasks[i]->start())) {
@@ -126,7 +126,7 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVPtr<CompVThreadDispatcher*>*
     COMPV_CHECK_CODE_RETURN(CompVBase::init());
     COMPV_CHECK_EXP_RETURN(disp == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-    int32_t numCores = CompVCpu::getCoresCount();
+    int32_t numCores = CompVCpu::coresCount();
 #if COMPV_PARALLEL_THREAD_SET_AFFINITY
     int32_t maxCores = numCores > 0 ? (numCores - 1) : 0; // To avoid overusing all cores
 #else

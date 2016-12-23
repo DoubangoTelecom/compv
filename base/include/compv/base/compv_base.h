@@ -24,15 +24,9 @@ public:
     static COMPV_ERROR_CODE init(int32_t numThreads = -1);
     static COMPV_ERROR_CODE deInit();
     static COMPV_ERROR_CODE setTestingModeEnabled(bool bTesting);
-    static COMPV_ERROR_CODE setMathTrigFastEnabled(bool bMathTrigFast);
-    static COMPV_ERROR_CODE setMathFixedPointEnabled(bool bMathFixedPoint);
     static bool isInitialized();
     static bool isInitializing();
-    static bool isBigEndian();
-	static bool isLittleEndian();
     static bool isTestingMode();
-    static bool isMathTrigFast();
-    static bool isMathFixedPoint();
 #if COMPV_OS_WINDOWS
     static DWORD winMajorVersion() {
         return s_dwMajorVersion;
@@ -61,10 +55,7 @@ private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     static bool s_bInitialized;
     static bool s_bInitializing;
-    static bool s_bBigEndian;
     static bool s_bTesting;
-    static bool s_bMathTrigFast;
-    static bool s_bMathFixedPoint;
 #if COMPV_OS_ANDROID
 	static std::string s_strCPU_ABI;
 #endif

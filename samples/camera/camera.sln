@@ -40,6 +40,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVDrawing", "..\..\drawi
 		{52028A97-E6D7-4C48-82E9-3789FD42BC56} = {52028A97-E6D7-4C48-82E9-3789FD42BC56}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EF4C87BF-F2DC-4C7F-9CB0-2FDF74683F7A}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\api\include\compv\compv_api.h = ..\..\api\include\compv\compv_api.h
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

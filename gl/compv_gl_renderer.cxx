@@ -6,7 +6,7 @@
 */
 #include "compv/gl/compv_gl_renderer.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-#include "compv/base/compv_base.h"
+#include "compv/base/compv_cpu.h"
 #include "compv/gl/compv_gl.h"
 #include "compv/gl/compv_gl_utils.h"
 #include "compv/gl/compv_gl_func.h"
@@ -610,16 +610,16 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 		glRenderer_->m_strPrgFragData = kProgramFragmentDataARGB32;
 		break;
 	case COMPV_SUBTYPE_PIXELS_RGB565LE:
-		glRenderer_->m_strPrgFragData = CompVBase::isLittleEndian() ? kProgramFragmentDataRGB565Native : kProgramFragmentDataRGB565LE;
+		glRenderer_->m_strPrgFragData = CompVCpu::isLittleEndian() ? kProgramFragmentDataRGB565Native : kProgramFragmentDataRGB565LE;
 		break;
 	case COMPV_SUBTYPE_PIXELS_RGB565BE:
-		glRenderer_->m_strPrgFragData = CompVBase::isBigEndian() ? kProgramFragmentDataRGB565Native : kProgramFragmentDataRGB565BE;
+		glRenderer_->m_strPrgFragData = CompVCpu::isBigEndian() ? kProgramFragmentDataRGB565Native : kProgramFragmentDataRGB565BE;
 		break;
 	case COMPV_SUBTYPE_PIXELS_BGR565LE:
-		glRenderer_->m_strPrgFragData = CompVBase::isLittleEndian() ? kProgramFragmentDataBGR565Native : kProgramFragmentDataBGR565LE;
+		glRenderer_->m_strPrgFragData = CompVCpu::isLittleEndian() ? kProgramFragmentDataBGR565Native : kProgramFragmentDataBGR565LE;
 		break;
 	case COMPV_SUBTYPE_PIXELS_BGR565BE:
-		glRenderer_->m_strPrgFragData = CompVBase::isBigEndian() ? kProgramFragmentDataBGR565Native : kProgramFragmentDataBGR565BE;
+		glRenderer_->m_strPrgFragData = CompVCpu::isBigEndian() ? kProgramFragmentDataBGR565Native : kProgramFragmentDataBGR565BE;
 		break;
 	default:
 		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
@@ -656,12 +656,12 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 		break;
 	case COMPV_SUBTYPE_PIXELS_RGB565LE:
 	case COMPV_SUBTYPE_PIXELS_BGR565LE:
-		if (CompVBase::isLittleEndian()) {
+		if (CompVCpu::isLittleEndian()) {
 			glRenderer_->m_pSamplerNames[0] = "SamplerRG565", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_RGB;
 			glRenderer_->m_ePixelDataType = GL_UNSIGNED_SHORT_5_6_5;
 		}
 		else {
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // CPU ARCH mismatch
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("CPU ARCH mismatch");
 #if defined(HAVE_OPENGLES)
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // float presision issue
 #endif
@@ -671,12 +671,12 @@ COMPV_ERROR_CODE CompVGLRenderer::newObj(CompVGLRendererPtrPtr glRenderer, COMPV
 		break;
 	case COMPV_SUBTYPE_PIXELS_RGB565BE:
 	case COMPV_SUBTYPE_PIXELS_BGR565BE:
-		if (CompVBase::isBigEndian()) {
+		if (CompVCpu::isBigEndian()) {
 			glRenderer_->m_pSamplerNames[0] = "SamplerRG565", glRenderer_->m_eFormats[0] = COMPV_GL_FORMAT_RGB;
 			glRenderer_->m_ePixelDataType = GL_UNSIGNED_SHORT_5_6_5;
 		}
 		else {
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // CPU ARCH mismatch
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("CPU ARCH mismatch");
 #if defined(HAVE_OPENGLES)
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // float presision issue
 #endif

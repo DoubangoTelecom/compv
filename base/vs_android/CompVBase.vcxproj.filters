@@ -249,6 +249,18 @@
     <ClInclude Include="..\include\compv\base\android\compv_android_native_activity.h">
       <Filter>include\android</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\compv_image_conv_common.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\compv_image_conv_rgbfamily.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\compv_image_conv_to_grayscale.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\compv_image_conv_to_yuv444p.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -403,6 +415,18 @@
     </ClCompile>
     <ClCompile Include="..\android\compv_android_native_activity.cxx">
       <Filter>source\android</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\compv_image_conv_common.cxx">
+      <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\compv_image_conv_rgbfamily.cxx">
+      <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\compv_image_conv_to_grayscale.cxx">
+      <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\compv_image_conv_to_yuv444p.cxx">
+      <Filter>source\image</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

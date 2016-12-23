@@ -54,10 +54,10 @@ public:
 		return m_nDataSize;
 	}
 
-    template<class ptrType = void>
-    COMPV_INLINE const ptrType* ptr(size_t row = 0, size_t col = 0, int32_t planeId = 0)const {
+    template<class ptrType = const void>
+    COMPV_INLINE ptrType* ptr(size_t row = 0, size_t col = 0, int32_t planeId = 0)const {
         if (planeId >= 0 && planeId < m_nPlaneCount) {
-            return (row > m_nPlaneRows[planeId] || col > m_nPlaneCols[planeId]) ? NULL : static_cast<const ptrType*>(static_cast<const uint8_t*>(m_pCompPtr[planeId]) + (row * m_nPlaneStrideInBytes[planeId]) + (col * m_nElmtInBytes));
+            return (row > m_nPlaneRows[planeId] || col > m_nPlaneCols[planeId]) ? NULL : (ptrType*)(static_cast<const uint8_t*>(m_pCompPtr[planeId]) + (row * m_nPlaneStrideInBytes[planeId]) + (col * m_nElmtInBytes));
         }
         COMPV_DEBUG_ERROR("Invalid parameter");
         return NULL;
@@ -145,6 +145,11 @@ public:
         return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, COMPV_SIMD_ALIGNV_DEFAULT);
     }
 
+	template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
+	static COMPV_ERROR_CODE newObjAligned(CompVMatPtrPtr mat, size_t rows, size_t cols, size_t stride) {
+		return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, COMPV_SIMD_ALIGNV_DEFAULT, stride);
+	}
+
 protected:
     template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
     COMPV_ERROR_CODE alloc(size_t rows, size_t cols, size_t alignv = 1, size_t stride = 0) {
@@ -156,14 +161,15 @@ protected:
         bool bPlanePacked;
         size_t nPlaneCount;
         size_t nBestStrideInBytes;
-        size_t nPlaneStrideInBytes[COMPV_MAX_PLANE_COUNT];
-        size_t nPlaneCols[COMPV_MAX_PLANE_COUNT];
-        size_t nPlaneRows[COMPV_MAX_PLANE_COUNT];
-        size_t nPlaneSizeInBytes[COMPV_MAX_PLANE_COUNT];
+        size_t nPlaneStrideInBytes[COMPV_PLANE_MAX_COUNT];
+        size_t nPlaneCols[COMPV_PLANE_MAX_COUNT];
+        size_t nPlaneRows[COMPV_PLANE_MAX_COUNT];
+        size_t nPlaneSizeInBytes[COMPV_PLANE_MAX_COUNT];
         void* pMem = NULL;
 
         nElmtInBytes = sizeof(elmType);
-        nBestStrideInBytes = stride ? (stride * nElmtInBytes) : static_cast<size_t>(CompVMem::alignForward((cols * nElmtInBytes), (int)alignv));
+        nBestStrideInBytes = (stride >= cols) ? (stride * nElmtInBytes) : static_cast<size_t>(CompVMem::alignForward((cols * nElmtInBytes), (int)alignv));
+		COMPV_CHECK_EXP_BAIL(!COMPV_IS_ALIGNED(nBestStrideInBytes, alignv), (err_ = COMPV_ERROR_CODE_E_MEMORY_NOT_ALIGNED), "Stride not aligned with request alignment value");
 
         if (dataType == COMPV_MAT_TYPE_RAW) {
             nPlaneCount = 1;
@@ -176,7 +182,7 @@ protected:
         }
         else if (dataType == COMPV_MAT_TYPE_PIXELS) {
             COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeCount(dataSubType, &nPlaneCount)); // get number of comps
-            COMPV_CHECK_EXP_RETURN(!nPlaneCount || nPlaneCount > COMPV_MAX_PLANE_COUNT, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT); // check the number of comps
+            COMPV_CHECK_EXP_RETURN(!nPlaneCount || nPlaneCount > COMPV_PLANE_MAX_COUNT, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT); // check the number of comps
             COMPV_CHECK_CODE_RETURN(CompVImageUtils::isPlanePacked(dataSubType, &bPlanePacked)); // check whether the comps are packed
             COMPV_CHECK_CODE_RETURN(CompVImageUtils::sizeForPixelFormat(dataSubType, nBestStrideInBytes, rows, &nNewDataSize)); // get overal size in bytes
             size_t nSumPlaneSizeInBytes = 0;
@@ -194,12 +200,12 @@ protected:
         }
 
         if (nNewDataSize > m_nDataCapacity) {
-            pMem = CompVMem::malloc(nNewDataSize);
-            COMPV_CHECK_EXP_BAIL(!pMem, (err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
+            pMem = CompVMem::mallocAligned(nNewDataSize, static_cast<int>(alignv));
+            COMPV_CHECK_EXP_BAIL(!pMem, (err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to allocate memory");
             m_nDataCapacity = nNewDataSize;
             // realloc()
             if (m_bOweMem) {
-                CompVMem::free((void**)&m_pDataPtr);
+                CompVMem::freeAligned((void**)&m_pDataPtr);
             }
             m_pDataPtr = pMem;
             m_bOweMem = true;
@@ -243,20 +249,20 @@ bail:
     }
 
 private:
-    void* m_pDataPtr;
+    void* m_pDataPtr; // must be freed using 'freeAligned'
     int32_t m_nPlaneCount;
     bool m_bPlanePacked;
     size_t m_nCols;
     size_t m_nRows;
     size_t m_nStrideInBytes;
     size_t m_nStrideInElts;
-    size_t m_nPlaneCols[COMPV_MAX_PLANE_COUNT];
-    size_t m_nPlaneRows[COMPV_MAX_PLANE_COUNT];
-    const void* m_pCompPtr[COMPV_MAX_PLANE_COUNT];
-    size_t m_nPlaneSizeInBytes[COMPV_MAX_PLANE_COUNT];
-    size_t m_nPlaneStrideInBytes[COMPV_MAX_PLANE_COUNT];
-    size_t m_nPlaneStrideInElts[COMPV_MAX_PLANE_COUNT];
-    bool m_bPlaneStrideInEltsIsIntegral[COMPV_MAX_PLANE_COUNT];
+    size_t m_nPlaneCols[COMPV_PLANE_MAX_COUNT];
+    size_t m_nPlaneRows[COMPV_PLANE_MAX_COUNT];
+    const void* m_pCompPtr[COMPV_PLANE_MAX_COUNT];
+    size_t m_nPlaneSizeInBytes[COMPV_PLANE_MAX_COUNT];
+    size_t m_nPlaneStrideInBytes[COMPV_PLANE_MAX_COUNT];
+    size_t m_nPlaneStrideInElts[COMPV_PLANE_MAX_COUNT];
+    bool m_bPlaneStrideInEltsIsIntegral[COMPV_PLANE_MAX_COUNT];
     size_t m_nElmtInBytes;
     size_t m_nAlignV;
     size_t m_nDataSize;

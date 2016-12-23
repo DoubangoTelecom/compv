@@ -26,7 +26,7 @@ CompVMat::CompVMat()
     , m_eType(COMPV_MAT_TYPE_RAW)
     , m_eSubType(COMPV_SUBTYPE_RAW)
 {
-    for (size_t planeId = 0; planeId < COMPV_MAX_PLANE_COUNT; ++planeId) {
+    for (size_t planeId = 0; planeId < COMPV_PLANE_MAX_COUNT; ++planeId) {
         m_nPlaneCols[planeId] = 0;
         m_nPlaneRows[planeId] = 0;
         m_pCompPtr[planeId] = NULL;
@@ -39,7 +39,7 @@ CompVMat::CompVMat()
 CompVMat::~CompVMat()
 {
     if (m_bOweMem) {
-        CompVMem::free((void**)&m_pDataPtr);
+        CompVMem::freeAligned((void**)&m_pDataPtr); // alloc'ed using mallocAligned(alignv)
     }
 }
 

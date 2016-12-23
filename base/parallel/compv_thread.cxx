@@ -156,7 +156,7 @@ COMPV_ERROR_CODE CompVThread::setAffinity(compv_core_id_t coreId)
 {
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
-    if (!m_pHandle || coreId < 0 || coreId > CompVCpu::getCoresCount()) {
+    if (!m_pHandle || coreId < 0 || coreId > CompVCpu::coresCount()) {
         COMPV_DEBUG_ERROR("Invalid parameter");
         COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     }

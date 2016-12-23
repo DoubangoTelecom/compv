@@ -40,7 +40,7 @@ COMPV_ERROR_CODE CompVImageUtils::sizeForPixelFormat(COMPV_SUBTYPE ePixelFormat,
 
 COMPV_ERROR_CODE CompVImageUtils::planeSizeForPixelFormat(COMPV_SUBTYPE ePixelFormat, size_t planeId, size_t width, size_t height, size_t *size)
 {
-    COMPV_CHECK_EXP_RETURN(!size || planeId >= COMPV_MAX_PLANE_COUNT, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_EXP_RETURN(!size || planeId >= COMPV_PLANE_MAX_COUNT, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     switch (ePixelFormat) {
     case COMPV_SUBTYPE_PIXELS_RGB24:
     case COMPV_SUBTYPE_PIXELS_BGR24:
@@ -100,7 +100,7 @@ COMPV_ERROR_CODE CompVImageUtils::planeSizeForPixelFormat(COMPV_SUBTYPE ePixelFo
 
 COMPV_ERROR_CODE CompVImageUtils::planeSizeForPixelFormat(COMPV_SUBTYPE ePixelFormat, size_t planeId, size_t imgWidth, size_t imgHeight, size_t *compWidth, size_t *compHeight)
 {
-    COMPV_CHECK_EXP_RETURN(!imgWidth || !imgHeight || !compWidth || !compHeight || planeId >= COMPV_MAX_PLANE_COUNT, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_EXP_RETURN(!imgWidth || !imgHeight || !compWidth || !compHeight || planeId >= COMPV_PLANE_MAX_COUNT, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     switch (ePixelFormat) {
     case COMPV_SUBTYPE_PIXELS_RGB24:
     case COMPV_SUBTYPE_PIXELS_BGR24:

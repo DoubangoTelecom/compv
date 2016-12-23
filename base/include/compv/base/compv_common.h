@@ -60,11 +60,15 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 
 #define COMPV_NUM_THREADS_SINGLE	1
-#define COMPV_NUM_THREADS_BEST		-1
+#define COMPV_NUM_THREADS_MULTI		-1
 
-#if !defined(COMPV_MAX_PLANE_COUNT)
-#	define COMPV_MAX_PLANE_COUNT		4
-#endif /* COMPV_MAX_PLANE_COUNT */
+#if !defined(COMPV_PLANE_MAX_COUNT)
+#	define COMPV_PLANE_MAX_COUNT		4
+#endif /* COMPV_PLANE_MAX_COUNT */
+#define COMPV_PLANE_Y		0
+#define COMPV_PLANE_U		1
+#define COMPV_PLANE_V		2
+#define COMPV_PLANE_UV		1
 
 // Fixed point Q value
 #if COMPV_ARCH_ARM
@@ -179,6 +183,7 @@ enum COMPV_ERROR_CODE {
     COMPV_ERROR_CODE_E_UNITTEST_FAILED,
     COMPV_ERROR_CODE_E_SYSTEM,
 	COMPV_ERROR_CODE_E_MEMORY_LEAK,
+	COMPV_ERROR_CODE_E_MEMORY_NOT_ALIGNED,
     COMPV_ERROR_CODE_E_THIRD_PARTY_LIB,
 	COMPV_ERROR_CODE_E_JNI,
     COMPV_ERROR_CODE_E_DIRECTSHOW,
@@ -192,6 +197,7 @@ enum COMPV_ERROR_CODE {
 
     COMPV_ERROR_CODE_F = kErrorCodeFatalStart,
 };
+extern COMPV_BASE_API const char* CompVGetErrorString(COMPV_NAMESPACE::COMPV_ERROR_CODE code);
 
 #define COMPV_ERROR_CODE_IS_SUCCESS(code_) ((code_) < kErrorCodeWarnStart)
 #define COMPV_ERROR_CODE_IS_OK(code_) COMPV_ERROR_CODE_IS_SUCCESS((code_))
@@ -202,7 +208,6 @@ enum COMPV_ERROR_CODE {
 #define COMPV_ERROR_CODE_IS_FATAL(code_) ((code_) >= kErrorCodeFatalStart)
 
 // In COMPV_CHECK_HR(errcode) When (errcode) is a function it will be executed twice when used in "COMPV_DEBUG_ERROR(errcode)" and "If(errcode)"
-extern COMPV_BASE_API const char* CompVGetErrorString(COMPV_NAMESPACE::COMPV_ERROR_CODE code);
 #define COMPV_CHECK_CODE_NOP(errcode, ...) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s) -> "  __VA_ARGS__, CompVGetErrorString(__code__)); } } while(0)
 #define COMPV_CHECK_CODE_BAIL(errcode, ...) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s) -> "  __VA_ARGS__, CompVGetErrorString(__code__)); goto bail; } } while(0)
 #define COMPV_CHECK_CODE_RETURN(errcode, ...) do { COMPV_NAMESPACE::COMPV_ERROR_CODE __code__ = (errcode); if (COMPV_ERROR_CODE_IS_NOK(__code__)) { COMPV_DEBUG_ERROR("Operation Failed (%s) -> "  __VA_ARGS__, CompVGetErrorString(__code__)); return __code__; } } while(0)
@@ -271,6 +276,7 @@ enum COMPV_SUBTYPE {
 	COMPV_SUBTYPE_PIXELS_Y422 = COMPV_SUBTYPE_PIXELS_UYVY,
 	COMPV_SUBTYPE_PIXELS_Y420SP = COMPV_SUBTYPE_PIXELS_NV21,
 };
+extern COMPV_BASE_API const char* CompVGetSubtypeString(COMPV_NAMESPACE::COMPV_SUBTYPE subtype);
 
 enum COMPV_IMAGE_FORMAT {
     COMPV_IMAGE_FORMAT_NONE,

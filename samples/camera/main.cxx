@@ -10,9 +10,7 @@ using namespace compv;
 
 #define TAG_SAMPLE_CAMERA	"Camera Sample App"
 
-/*
-My runloop listener (optional)
-*/
+/* My runloop listener (optional) */
 COMPV_OBJECT_DECLARE_PTRS(MyRunLoopListener)
 class CompVMyRunLoopListener : public CompVRunLoopListener
 {
@@ -46,9 +44,7 @@ private:
 	const std::string m_strCameraId;
 };
 
-/*
-My camera listener
-*/
+/* My camera listener */
 COMPV_OBJECT_DECLARE_PTRS(MyCameraListener)
 class CompVMyCameraListener : public CompVCameraListener
 {
@@ -87,13 +83,11 @@ private:
 	CompVSingleSurfaceLayerPtr m_ptrSingleSurfaceLayer;
 };
 
-/*
-Entry point function
-*/
+/* Entry point function */
 compv_main()
 {
-	COMPV_ERROR_CODE err;
 	{
+		COMPV_ERROR_CODE err;
 		CompVWindowPtr window;
 		CompVMyRunLoopListenerPtr runloopListener;
 		CompVSingleSurfaceLayerPtr singleSurfaceLayer;
@@ -142,7 +136,7 @@ compv_main()
 		}
 	}
 	
-	COMP_DEBUG_CHECK_FOR_MEMORY_LEAKS();
+	COMPV_DEBUG_CHECK_FOR_MEMORY_LEAKS();
 
 	compv_main_return(0);
 }

@@ -51,16 +51,16 @@ private:
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     bool m_bInit;
-	GLenum m_eFormats[COMPV_MAX_PLANE_COUNT];
+	GLenum m_eFormats[COMPV_PLANE_MAX_COUNT];
 	GLenum m_ePixelDataType;
-	const char* m_pSamplerNames[COMPV_MAX_PLANE_COUNT];
-    GLuint m_uNameTextures[COMPV_MAX_PLANE_COUNT];
-    size_t m_uWidths[COMPV_MAX_PLANE_COUNT];
-    size_t m_uHeights[COMPV_MAX_PLANE_COUNT];
-    size_t m_uStrides[COMPV_MAX_PLANE_COUNT];
-	GLsizei m_uWidthsTexture[COMPV_MAX_PLANE_COUNT];
-	GLsizei m_uHeightsTexture[COMPV_MAX_PLANE_COUNT];
-	GLsizei m_uStridesTexture[COMPV_MAX_PLANE_COUNT];
+	const char* m_pSamplerNames[COMPV_PLANE_MAX_COUNT];
+    GLuint m_uNameTextures[COMPV_PLANE_MAX_COUNT];
+    size_t m_uWidths[COMPV_PLANE_MAX_COUNT];
+    size_t m_uHeights[COMPV_PLANE_MAX_COUNT];
+    size_t m_uStrides[COMPV_PLANE_MAX_COUNT];
+	GLsizei m_uWidthsTexture[COMPV_PLANE_MAX_COUNT];
+	GLsizei m_uHeightsTexture[COMPV_PLANE_MAX_COUNT];
+	GLsizei m_uStridesTexture[COMPV_PLANE_MAX_COUNT];
     size_t m_uTexturesCount;
     std::string m_strPrgVertexData;
     std::string m_strPrgFragData;

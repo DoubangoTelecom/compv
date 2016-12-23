@@ -11,9 +11,11 @@
 #include <compv/base/compv_base.h>
 #include <compv/base/compv_bind.h>
 #include <compv/base/compv_buffer.h>
+#include <compv/base/compv_cpu.h>
 #include <compv/base/compv_debug.h>
 #include <compv/base/compv_fileutils.h>
 #include <compv/base/compv_mat.h>
+#include <compv/base/compv_md5.h>
 #include <compv/base/compv_mem.h>
 #include <compv/base/compv_obj.h>
 
@@ -47,22 +49,16 @@
 
 /* Android native activity entry point */
 
-#if COMPV_OS_ANDROID && !defined(COMPV_ANDROID_NATIVE_ACTIVITY_ENTRY_POINT)
-#	define COMPV_ANDROID_NATIVE_ACTIVITY_ENTRY_POINT
-void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t savedStateSize)
-{
-    ANativeActivity_onCreatePriv(activity, savedState, savedStateSize);
-}
-#endif // COMPV_OS_ANDROID
-
 /* main definition */
 #if COMPV_OS_WINDOWS
 #	include <tchar.h>
 #	define compv_main() int _tmain(int argc, _TCHAR* argv[])
 #	define compv_main_return(code) return (code)
 #elif COMPV_OS_ANDROID
-#	define compv_main() void android_main(struct android_app* state)
-#	define compv_main_return(code)
+#	define compv_main() \
+		void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t savedStateSize) { ANativeActivity_onCreatePriv(activity, savedState, savedStateSize); } \
+		void android_main(struct android_app* state) 
+#	define compv_main_return(code)	exit(code)
 #else
 #	define compv_main() int main(int argc, char** argv)
 #	define compv_main_return(code) return (code)
@@ -72,9 +68,11 @@ COMPV_NAMESPACE_BEGIN()
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 
 // Optional
-static COMPV_ERROR_CODE CompVInit()
+// TODO(dmi): add a param defining which modules to initialize. For example, chroma conversion
+// testing requires 'COMPV_MODULE_BASE' only
+static COMPV_ERROR_CODE CompVInit(int32_t numThreads = -1)
 {
-    COMPV_CHECK_CODE_RETURN(CompVBase::init());
+    COMPV_CHECK_CODE_RETURN(CompVBase::init(numThreads));
     COMPV_CHECK_CODE_RETURN(CompVGL::init());
     COMPV_CHECK_CODE_RETURN(CompVCamera::init());
     COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
@@ -91,10 +89,10 @@ static COMPV_ERROR_CODE CompVDeInit()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-#define COMP_DEBUG_CHECK_FOR_MEMORY_LEAKS() \
+#define COMPV_DEBUG_CHECK_FOR_MEMORY_LEAKS() \
 	/* All allocated objects and ptrs will be freed when they go out of scoop and the reference counting value reach zero.*/ \
 	/* To check for memory leak we explicitly call CompVDeInit (not required) for checking. */ \
-	COMPV_CHECK_CODE_ASSERT(err = CompVDeInit()); \
+	COMPV_CHECK_CODE_ASSERT(CompVDeInit()); \
 	/* Make sure we freed all allocated memory */ \
 	COMPV_CHECK_EXP_ASSERT(!CompVMem::isEmpty(), COMPV_ERROR_CODE_E_MEMORY_LEAK, "Memory leak: you missed some pointers allocated using CompVMem::malloc"); \
 	/* Make sure we freed all allocated objects */  \

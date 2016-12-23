@@ -7,6 +7,7 @@
 */
 #include "compv/base/compv_md5.h"
 #include "compv/base/compv_base.h"
+#include "compv/base/compv_cpu.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_debug.h"
 
@@ -15,7 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 // TODO(dmi): use intrinsics
 static void __byteReverse(uint32_t *buf, unsigned words)
 {
-    if (CompVBase::isBigEndian()) {
+    if (CompVCpu::isBigEndian()) {
         COMPV_DEBUG_INFO_CODE_NOT_TESTED();
         COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
         uint8_t *p = (uint8_t *)buf;

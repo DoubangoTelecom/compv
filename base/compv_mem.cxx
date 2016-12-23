@@ -60,7 +60,7 @@ typedef void(*CompVMemCopy)(void* dstPtr, const void*srcPtr, compv_uscalar_t siz
 
 static void CompVMemCopy_C(void* dstPtr, const void*srcPtr, compv_uscalar_t size)
 {
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
     memcpy(dstPtr, srcPtr, (size_t)size);
 }
 
@@ -467,7 +467,7 @@ int CompVMem::getBestAlignment()
     static int _bestAlignment = 0;
     if (_bestAlignment == 0) {
         _bestAlignment = COMPV_SIMD_ALIGNV_DEFAULT;
-        const int L1CacheLineSize = CompVCpu::getCache1LineSize(); // probably #64 or #128
+        const int L1CacheLineSize = CompVCpu::cache1LineSize(); // probably #64 or #128
         if (L1CacheLineSize > _bestAlignment && L1CacheLineSize <= 128 && (L1CacheLineSize & (_bestAlignment - 1)) == 0) {
             _bestAlignment = L1CacheLineSize;
         }

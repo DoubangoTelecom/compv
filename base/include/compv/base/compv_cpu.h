@@ -74,28 +74,28 @@ protected:
 public:
     virtual ~CompVCpu();
     static COMPV_ERROR_CODE init();
-    static int32_t getCoresCount() {
+    static int32_t coresCount() {
         return s_iCores;
     }
-    static compv_core_id_t getValidCoreId(compv_core_id_t coreId);
-    static uint64_t getCyclesCountGlobal();
-    static int32_t getCache1LineSize() {
+    static compv_core_id_t validCoreId(compv_core_id_t coreId);
+    static uint64_t cyclesCountGlobal();
+    static int32_t cache1LineSize() {
         return s_iCache1LineSize;
     }
-    static int32_t getCache1Size() {
+    static int32_t cache1Size() {
         return s_iCache1Size;
     }
-    static uint64_t getTimeProcess();
+    static uint64_t timeProcess();
     static uint64_t getFlags() {
         return s_uFlags;
     }
-    static uint64_t getFlagsDisabled() {
+    static uint64_t flagsDisabled() {
         return s_uFlagsDisabled;
     }
-    static uint64_t getFlagsEnabled() {
+    static uint64_t flagsEnabled() {
         return s_uFlagsEnabled;
     }
-    static const char* getFlagsAsString(uint64_t uFlags);
+    static const char* flagsAsString(uint64_t uFlags);
     static bool isEnabled(uint64_t flag) {
         return (s_uFlagsEnabled & flag) == flag;
     }
@@ -106,19 +106,28 @@ public:
     static COMPV_ERROR_CODE flagsEnable(uint64_t flags);
     static COMPV_ERROR_CODE setAsmEnabled(bool bEnabled);
     static COMPV_ERROR_CODE setIntrinsicsEnabled(bool bEnabled);
-    static bool isAsmEnabled() {
-        return CompVCpu::s_bAsmEnabled;
-    }
-    static bool isIntrinsicsEnabled() {
-        return CompVCpu::s_bIntrinsicsEnabled;
-    }
+	static COMPV_ERROR_CODE setMathTrigFastEnabled(bool bMathTrigFast);
+	static COMPV_ERROR_CODE setMathFixedPointEnabled(bool bMathFixedPoint);
+	static bool isBigEndian() {
+		COMPV_CHECK_EXP_NOP(!s_bInitialized, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
+		return s_bBigEndian;
+	}
+	static bool isLittleEndian() { return !isBigEndian(); }
+    static bool isAsmEnabled() { return CompVCpu::s_bAsmEnabled; }
+    static bool isIntrinsicsEnabled() { return CompVCpu::s_bIntrinsicsEnabled; }
+	static bool isMathTrigFast() { return s_bMathTrigFast; }
+	static bool isMathFixedPoint() { return s_bMathFixedPoint; }
 
 private:
+	static bool s_bInitialized;
     static uint64_t s_uFlags;
     static uint64_t s_uFlagsDisabled;
     static uint64_t s_uFlagsEnabled;
+	static bool s_bBigEndian;
     static bool s_bAsmEnabled;
     static bool s_bIntrinsicsEnabled;
+	static bool s_bMathTrigFast;
+	static bool s_bMathFixedPoint;
     static int32_t s_iCores;
     static int32_t s_iCache1LineSize;
     static int32_t s_iCache1Size;

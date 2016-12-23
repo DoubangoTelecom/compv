@@ -9,16 +9,13 @@
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_debug.h"
 
+#define COMPV_THIS_CLASSNAME	"CompVParallel"
 
 COMPV_NAMESPACE_BEGIN()
 
 bool CompVParallel::s_bInitialized = false;
 bool CompVParallel::s_bInitializing = false;
-#if COMPV_PARALLEL_THREADDISP11
-CompVPtr<CompVThreadDispatcher11 *> CompVParallel::s_ThreadDisp11 = NULL;
-#else
-CompVPtr<CompVThreadDispatcher *> CompVParallel::s_ThreadDisp = NULL;
-#endif
+CompVThreadDispatcherPtr CompVParallel::s_ThreadDisp = NULL;
 
 CompVParallel::CompVParallel()
 {
@@ -40,20 +37,16 @@ COMPV_ERROR_CODE CompVParallel::init(int32_t numThreads /*= -1*/)
 
     s_bInitializing = true;
 
-    COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK);
+    COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK, "To avoid 'bail unreference' warning");
 
-    COMPV_DEBUG_INFO("Initializing parallel module...");
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Initializing parallel module...");
 
 bail:
     s_bInitialized = COMPV_ERROR_CODE_IS_OK(err_);
     s_bInitializing = false;
     // cleanup if initialization failed
     if (!s_bInitialized) {
-#if COMPV_PARALLEL_THREADDISP11
-        s_ThreadDisp11 = NULL;
-#else
         s_ThreadDisp = NULL;
-#endif
     }
     else {
         // The next functions are called here because they recursively call "CompVParallel::init()"
@@ -61,26 +54,18 @@ bail:
 
         // ThreadDispatcher
         // maxThreads: <= 0 means choose the best one, ==1 means disable, > 1 means enable
-        if (numThreads > 1 || (numThreads <= 0 && CompVCpu::getCoresCount() > 1)) {
-#if COMPV_PARALLEL_THREADDISP11
-            COMPV_CHECK_CODE_BAIL(err_ = CompVThreadDispatcher11::newObj(&s_ThreadDisp11, numThreads));
-#else
-            COMPV_CHECK_CODE_BAIL(err_ = CompVThreadDispatcher::newObj(&s_ThreadDisp, numThreads));
-#endif
+        if (numThreads > 1 || (numThreads <= 0 && CompVCpu::coresCount() > 1)) {
+            COMPV_CHECK_CODE_BAIL(err_ = CompVThreadDispatcher::newObj(&s_ThreadDisp, numThreads), "Failed to create thread dispatcher");
         }
     }
-    COMPV_DEBUG_INFO("Parallel module initialized");
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Parallel module initialized");
     return err_;
 }
 
 COMPV_ERROR_CODE CompVParallel::deInit()
 {
     s_bInitialized = false;
-#if COMPV_PARALLEL_THREADDISP11
-    s_ThreadDisp11 = NULL;
-#else
     s_ThreadDisp = NULL;
-#endif
 
     // TODO(dmi): deInit other modules (not an issue because there is no memory allocation)
     CompVMem::deInit();
@@ -88,55 +73,31 @@ COMPV_ERROR_CODE CompVParallel::deInit()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-#if COMPV_PARALLEL_THREADDISP11
-COMPV_ERROR_CODE CompVParallel::multiThreadingEnable11(CompVPtr<CompVThreadDispatcher11* > dispatcher)
-{
-    COMPV_CHECK_EXP_RETURN(!dispatcher, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    s_ThreadDisp11 = dispatcher;
-    return COMPV_ERROR_CODE_S_OK;
-}
-#else
-COMPV_ERROR_CODE CompVParallel::multiThreadingEnable(CompVPtr<CompVThreadDispatcher* > dispatcher)
+COMPV_ERROR_CODE CompVParallel::multiThreadingEnable(CompVThreadDispatcherPtr dispatcher)
 {
     COMPV_CHECK_EXP_RETURN(!dispatcher, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     s_ThreadDisp = dispatcher;
     return COMPV_ERROR_CODE_S_OK;
 }
-#endif /* COMPV_PARALLEL_THREADDISP11 */
-
 
 COMPV_ERROR_CODE CompVParallel::multiThreadingDisable()
 {
-#if COMPV_PARALLEL_THREADDISP11
-    s_ThreadDisp11 = NULL;
-#else
     s_ThreadDisp = NULL;
-#endif
     return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVParallel::multiThreadingSetMaxThreads(size_t maxThreads)
 {
-#if COMPV_PARALLEL_THREADDISP11
-    CompVPtr<CompVThreadDispatcher11 *> newThreadDisp11;
-    COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher11::newObj(&newThreadDisp11));
-    s_ThreadDisp11 = newThreadDisp11;// TODO(dmi): function not optimal, we destroy all threads and create new ones
-#else
     CompVPtr<CompVThreadDispatcher *> newThreadDisp;
-    COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::newObj(&newThreadDisp));
+    COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::newObj(&newThreadDisp), "Failed to create thread dispatcher");
     s_ThreadDisp = newThreadDisp;// TODO(dmi): function not optimal, we destroy all threads and create new ones
-#endif
 
     return COMPV_ERROR_CODE_S_OK;
 }
 
 bool CompVParallel::isMultiThreadingEnabled()
 {
-#if COMPV_PARALLEL_THREADDISP11
-    return !!s_ThreadDisp11;
-#else
     return !!s_ThreadDisp;
-#endif
 }
 
 bool CompVParallel::isInitialized()

@@ -15,36 +15,34 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-COMPV_OBJECT_DECLARE_PTRS(ThreadDispatcher11)
+COMPV_OBJECT_DECLARE_PTRS(ThreadDispatcher)
 
-class COMPV_BASE_API CompVThreadDispatcher11 : public CompVObj
+class COMPV_BASE_API CompVThreadDispatcher : public CompVObj
 {
 protected:
-    CompVThreadDispatcher11(int32_t numThreads);
+    CompVThreadDispatcher(int32_t numThreads);
 public:
-    virtual ~CompVThreadDispatcher11();
+    virtual ~CompVThreadDispatcher();
     virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVThreadDispatcher11";
+        return "CompVThreadDispatcher";
     };
-    COMPV_INLINE int32_t getThreadsCount() {
-        return m_nTasksCount;
-    }
+    COMPV_INLINE int32_t threadsCount() { return m_nTasksCount; }
 
     COMPV_ERROR_CODE invoke(std::function<COMPV_ERROR_CODE()> fFunc, CompVAsyncTaskIds& taskIds);
     COMPV_ERROR_CODE wait(const CompVAsyncTaskIds& taskIds, uint64_t u_timeout = 86400000/* 1 day */);
     COMPV_ERROR_CODE waitOne(const CompVAsyncTaskId& taskId, uint64_t u_timeout = 86400000/* 1 day */);
     COMPV_ERROR_CODE waitAll(uint64_t u_timeout = 86400000/* 1 day */);
-    uint32_t getThreadIdxCurrent();
+    uint32_t threadIdxCurrent();
     bool isMotherOfTheCurrentThread();
-    int32_t guessNumThreadsDividingAcrossY(int xcount, int ycount, int minSamplesPerThread);
+	size_t guessNumThreadsDividingAcrossY(size_t xcount, size_t ycount, size_t maxThreads, size_t minSamplesPerThread);
 
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVThreadDispatcher11*>* disp, int32_t numThreads = -1);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVThreadDispatcher*>* disp, int32_t numThreads = -1);
 
 private:
     long nextTaskIdx();
 
 private:
-    CompVPtr<CompVAsyncTask11 *>* m_pTasks;
+    CompVPtr<CompVAsyncTask *>* m_pTasks;
     int32_t m_nTasksCount;
     bool m_bValid;
 };
