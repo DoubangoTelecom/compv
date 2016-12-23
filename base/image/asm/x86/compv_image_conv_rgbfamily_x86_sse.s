@@ -62,6 +62,9 @@ sym(CompVImageConvRgb24family_to_y_Asm_X86_SSSE3)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopHeight:
 		xor rdi, rdi
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < width; i += 16)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopWidth:
 			; Convert RGB -> RGBA
 			; This macro modify [xmm4 - xmm7]
@@ -79,29 +82,31 @@ sym(CompVImageConvRgb24family_to_y_Asm_X86_SSSE3)
 
 			phaddw xmm2, xmm3
 			phaddw xmm4, xmm5
+
+			lea rdi, [rdi + 16] ; i += 16
+			cmp rdi, arg(2) ; (i < width)?
 			
 			psraw xmm2, 7
 			psraw xmm4, 7
 			
 			paddw xmm2, xmm1
 			paddw xmm4, xmm1
+
+			lea rax, [rax + 48] ; rgbPtr += 48
 						
 			packuswb xmm2, xmm4
 			movdqa [rbx], xmm2
 
-			add rbx, 16
-			add rax, 48
+			lea rbx, [rbx + 16] ; outYPtr += 16
 
 			; end-of-LoopWidth
-			add rdi, 16
-			cmp rdi, arg(2)
 			jl .LoopWidth
-	add rbx, rcx
-	add rax, rdx
-	; end-of-LoopHeight
-	sub rsi, 1
-	cmp rsi, 0
-	jg .LoopHeight
+
+		add rbx, rcx
+		add rax, rdx
+		; end-of-LoopHeight
+		dec rsi
+		jnz .LoopHeight
 
 	; unalign stack and alloc memory
 	add rsp, 16+16+16+16
