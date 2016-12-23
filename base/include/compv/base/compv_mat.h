@@ -122,6 +122,26 @@ public:
         return 0;
     }
 
+	COMPV_INLINE size_t alignment()const {
+		return m_nAlignV;
+	}
+
+	COMPV_INLINE bool isAligned(int alignv)const {
+		return COMPV_IS_ALIGNED(m_pDataPtr, alignv) && COMPV_IS_ALIGNED(m_nStrideInBytes, alignv);
+	}
+	COMPV_INLINE bool isAlignedSSE()const {
+		return isAligned(COMPV_SIMD_ALIGNV_SSE);
+	};
+	COMPV_INLINE bool isAlignedAVX()const {
+		return isAligned(COMPV_SIMD_ALIGNV_AVX);
+	};
+	COMPV_INLINE bool isAlignedAVX512()const {
+		return isAligned(COMPV_SIMD_ALIGNV_AVX512);
+	};
+	COMPV_INLINE bool isAlignedNEON()const {
+		return isAligned(COMPV_SIMD_ALIGNV_NEON);
+	};
+
     template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
     static COMPV_ERROR_CODE newObj(CompVMatPtrPtr mat, size_t rows, size_t cols, size_t alignv, size_t stride = 0) {
         COMPV_CHECK_EXP_RETURN(!mat || !alignv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

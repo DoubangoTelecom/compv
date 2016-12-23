@@ -79,6 +79,24 @@
     <Filter Include="source\android">
       <UniqueIdentifier>{2a10aff8-17b6-4d06-8b52-52af7985cedc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\image\intrin">
+      <UniqueIdentifier>{b2fd6b8b-8b76-447a-890c-9dadd758e3e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\image\intrin\x86">
+      <UniqueIdentifier>{c99943ee-4c02-400b-ae53-da5761089fb7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\image\intrin">
+      <UniqueIdentifier>{e3f054ae-70c9-4d75-8e56-01042c9b3cfc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\image\intrin\x86">
+      <UniqueIdentifier>{be870a4d-2b8b-4869-aa31-976a38137004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\image\asm">
+      <UniqueIdentifier>{58af1e86-23a2-43e5-bf8c-9b78ff909c35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\image\asm\x86">
+      <UniqueIdentifier>{efd8fbe7-a1dd-46e8-9247-5d4ac137b056}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -261,6 +279,9 @@
     <ClInclude Include="include\compv\base\image\compv_image_conv_rgbfamily.h">
       <Filter>include\image</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -428,6 +449,9 @@
     <ClCompile Include="image\compv_image_conv_rgbfamily.cxx">
       <Filter>source\image</Filter>
     </ClCompile>
+    <ClCompile Include="image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="asm\x86\compv_bits_macros_x86.s">
@@ -472,5 +496,13 @@
     <YASM Include="math\asm\x86\compv_math_utils_x86_avx.s">
       <Filter>source\math\asm\x86</Filter>
     </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="image\asm\x86\compv_image_conv_rgbfamily_x86_sse.s">
+      <Filter>source\image\asm\x86</Filter>
+    </None>
+    <None Include="image\asm\x86\compv_image_conv_macros.s">
+      <Filter>source\image\asm\x86</Filter>
+    </None>
   </ItemGroup>
 </Project>

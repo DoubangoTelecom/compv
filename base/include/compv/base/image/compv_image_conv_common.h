@@ -18,7 +18,7 @@
 #define COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD		(200 * 200) // minimum number of samples to consider per thread when multi-threading
 #endif
 
-COMPV_NAMESPACE_BEGIN()
+COMPV_EXTERNC_BEGIN()
 
 // Read "documentation/yuv_rgb_conv.txt" for more info on how we computed these coeffs
 // RGBA -> YUV
@@ -56,6 +56,6 @@ extern COMPV_BASE_API COMPV_ALIGN_DEFAULT() int8_t kYUVToRGBA_BCoeffs8[];
 
 extern COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_RgbToRgba_i32[];
 
-COMPV_NAMESPACE_END()
+COMPV_EXTERNC_END()
 
 #endif /* _COMPV_BASE_IMAGE_CONV_COMMON_H_ */

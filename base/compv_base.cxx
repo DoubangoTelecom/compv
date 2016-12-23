@@ -247,7 +247,7 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
 
     /* Memory alignment */
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Default alignment: #%d", COMPV_SIMD_ALIGNV_DEFAULT);
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Best alignment: #%d", CompVMem::getBestAlignment());
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Best alignment: #%d", CompVMem::bestAlignment());
 
     /* Memory management */
     COMPV_CHECK_CODE_BAIL(err_ = CompVMem::init());

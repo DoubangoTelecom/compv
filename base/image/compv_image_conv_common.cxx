@@ -6,8 +6,6 @@
 */
 #include "compv/base/image/compv_image_conv_common.h"
 
-COMPV_NAMESPACE_BEGIN()
-
 
 /* RGB to YUV conversion : http ://www.fourcc.org/fccyvrgb.php
 Y = (0.257 * R) + (0.504 * G) + (0.098 * B) + 16
@@ -217,4 +215,3 @@ COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_RgbToRgba_i32[] = {
 	COMPV_MM_SHUFFLE_EPI8(0xff, 2, 1, 0), COMPV_MM_SHUFFLE_EPI8(0xff, 5, 4, 3), COMPV_MM_SHUFFLE_EPI8(0xff, 8, 7, 6), COMPV_MM_SHUFFLE_EPI8(0xff, 11, 10, 9), // 256bits SSE register
 };
 
-COMPV_NAMESPACE_END()

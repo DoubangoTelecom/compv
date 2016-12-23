@@ -341,7 +341,7 @@ void CompVMem::free(void** ptr)
     }
 }
 
-void* CompVMem::mallocAligned(size_t size, int alignment/*= CompVMem::getBestAlignment()*/)
+void* CompVMem::mallocAligned(size_t size, int alignment/*= CompVMem::bestAlignment()*/)
 {
     void* pMem;
 #if COMPV_OS_WINDOWS && !COMPV_UNDER_OS_CE && !COMPV_OS_WINDOWS_RT
@@ -370,7 +370,7 @@ void* CompVMem::mallocAligned(size_t size, int alignment/*= CompVMem::getBestAli
     return pMem;
 }
 
-void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem::getBestAlignment()*/)
+void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem::bestAlignment()*/)
 {
 #if COMPV_MEM_CHECK
     if (ptr && !isSpecial(ptr)) {
@@ -409,7 +409,7 @@ void* CompVMem::reallocAligned(void* ptr, size_t size, int alignment/*= CompVMem
     return pMem;
 }
 
-void* CompVMem::callocAligned(size_t num, size_t size, int alignment/*= CompVMem::getBestAlignment()*/)
+void* CompVMem::callocAligned(size_t num, size_t size, int alignment/*= CompVMem::bestAlignment()*/)
 {
     void* pMem = CompVMem::mallocAligned((size * num), alignment);
     if (pMem) {
@@ -450,19 +450,19 @@ void CompVMem::freeAligned(void** ptr)
 }
 
 // alignment must be power of two
-uintptr_t CompVMem::alignBackward(uintptr_t ptr, int alignment /*= CompVMem::getBestAlignment()*/)
+uintptr_t CompVMem::alignBackward(uintptr_t ptr, int alignment /*= CompVMem::bestAlignment()*/)
 {
     COMPV_ASSERT(COMPV_IS_POW2(alignment));
     return (ptr & -alignment);
 }
 
-uintptr_t CompVMem::alignForward(uintptr_t ptr, int alignment /*= CompVMem::getBestAlignment()*/)
+uintptr_t CompVMem::alignForward(uintptr_t ptr, int alignment /*= CompVMem::bestAlignment()*/)
 {
     COMPV_ASSERT(COMPV_IS_POW2(alignment));
     return (ptr + (alignment - 1)) & -alignment;
 }
 
-int CompVMem::getBestAlignment()
+int CompVMem::bestAlignment()
 {
     static int _bestAlignment = 0;
     if (_bestAlignment == 0) {
@@ -479,7 +479,7 @@ int CompVMem::getBestAlignment()
 // This also make sure we'll have the right alignment required by the active SIMD implementation (e.g. AVX or NEON)
 size_t CompVMem::alignSizeOnCacheLineAndSIMD(size_t size)
 {
-    return CompVMem::alignForward((uintptr_t)size, CompVMem::getBestAlignment());
+    return CompVMem::alignForward((uintptr_t)size, CompVMem::bestAlignment());
 }
 
 // Allocated using mallocAligned, callocAligned or reallocAligned
@@ -496,7 +496,7 @@ bool CompVMem::isSpecial(void* ptr)
 #endif
 }
 
-size_t CompVMem::getSpecialTotalMemSize()
+size_t CompVMem::specialTotalMemSize()
 {
 #	if COMPV_MEM_CHECK
     size_t total = 0;
@@ -508,12 +508,12 @@ size_t CompVMem::getSpecialTotalMemSize()
     CompVMem::specialsUnLock();
     return total;
 #else
-    COMPV_DEBUG_INFO("Memory check disabled. Returning 0 for CompVMem::getSpecialTotalMemSize() function");
+    COMPV_DEBUG_INFO("Memory check disabled. Returning 0 for CompVMem::specialTotalMemSize() function");
     return 0;
 #endif
 }
 
-size_t CompVMem::getSpecialsCount()
+size_t CompVMem::specialsCount()
 {
 #	if COMPV_MEM_CHECK
     CompVMem::specialsLock();
@@ -521,14 +521,14 @@ size_t CompVMem::getSpecialsCount()
     CompVMem::specialsUnLock();
     return ret;
 #else
-    COMPV_DEBUG_INFO("Memory check disabled. Returning 0 for CompVMem::getSpecialsCount() function");
+    COMPV_DEBUG_INFO("Memory check disabled. Returning 0 for CompVMem::specialsCount() function");
     return 0;
 #endif
 }
 
 bool CompVMem::isEmpty()
 {
-    return CompVMem::getSpecialsCount() == 0;
+    return CompVMem::specialsCount() == 0;
 }
 
 void CompVMem::specialsLock()
