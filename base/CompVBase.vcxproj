@@ -206,6 +206,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="image\asm\x86\compv_image_conv_macros.s" />
+    <YASM Include="image\asm\x86\compv_image_conv_rgbfamily_x64_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
     <YASM Include="image\asm\x86\compv_image_conv_rgbfamily_x86_avx.s">
       <FileType>Document</FileType>
     </YASM>

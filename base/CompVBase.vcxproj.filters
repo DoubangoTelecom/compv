@@ -513,5 +513,8 @@
     <None Include="image\asm\x86\compv_image_conv_rgbfamily_x86_avx.s">
       <Filter>source\image\asm\x86</Filter>
     </None>
+    <None Include="image\asm\x86\compv_image_conv_rgbfamily_x64_avx.s">
+      <Filter>source\image\asm\x86</Filter>
+    </None>
   </ItemGroup>
 </Project>

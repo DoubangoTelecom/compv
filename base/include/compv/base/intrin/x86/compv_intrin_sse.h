@@ -33,23 +33,25 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 #define _mm_cvtepi16_epi32_hi_SSE2(a) _mm_srai_epi32(_mm_unpackhi_epi16(a, a), 16)
 
 /*
-Macro used to convert 16 RGB to 16 RGBA samples
-16 RGB samples requires 48 Bytes(3 XMM registers), will be converted to 16 RGBA samples
-requiring 64 Bytes (4 XMM registers).
+; Macro used to convert 16 RGB to 16 RGBA samples
+; 16 RGB samples requires 48 Bytes(3 XMM registers), will be converted to 16 RGBA samples
+; requiring 64 Bytes (4 XMM registers)
+; The aplha channel will contain garbage instead of 0xff because this macro is used to fetch samples in place
 */
-#define COMPV_16xRGB_TO_16xRGBA_SSSE3(rgbaPtr_, rgbPtr_, xmm0_, xmm1_, xmmMaskRgbToRgba_) \
-	/* RGBA0 = Convert(RGB0) -> 4RGBAs which means we used 4RGBs = 12bytes and lost 4bytes from RGB0 */ \
-	/* RGBA1 = Convert(ALIGN(RGB0, RGB1, 12)) -> we used 4bytes from RGB0 and 8bytes from RGB1 = 12bytes RGB = 16bytes RGBA -> lost 12bytes from RGB1 */ \
-	/* RGBA2 = Convert(ALIGN(RGB1, RGB2, 8)) -> we used 8bytes from RGB1 and 4bytes from RGB2 = 12bytes RGB = 16bytes RGBA -> lost 12bytes from RGB2 */ \
-	/* RGBA3 = Convert(ALIGN(RGB2, RGB2, 4)) -> used 12bytes from RGB2 = 12bytes RGB = 16bytes RGBA */ \
-	_mm_store_si128(&xmm0_, _mm_load_si128((__m128i*)rgbPtr_)); /* load first 16 samples */ \
-	_mm_store_si128(&xmm1_, _mm_load_si128((__m128i*)(rgbPtr_ + 16))); /* load next 16 samples */ \
-	_mm_store_si128(&((__m128i*)rgbaPtr_)[0], _mm_shuffle_epi8(xmm0_, xmmMaskRgbToRgba_)); \
-	_mm_store_si128(&((__m128i*)rgbaPtr_)[1], _mm_shuffle_epi8(_mm_alignr_epi8(xmm1_, xmm0_, 12), xmmMaskRgbToRgba_)); \
-	_mm_store_si128(&xmm0_, _mm_load_si128((__m128i*)(rgbPtr_ + 32))); /* load next 16 samples */ \
-	_mm_store_si128(&((__m128i*)rgbaPtr_)[2], _mm_shuffle_epi8(_mm_alignr_epi8(xmm0_, xmm1_, 8), xmmMaskRgbToRgba_)); \
-	_mm_store_si128(&((__m128i*)rgbaPtr_)[3], _mm_shuffle_epi8(_mm_alignr_epi8(xmm0_, xmm0_, 4), xmmMaskRgbToRgba_)); \
- 
+#define COMPV_16xRGB_TO_16xRGBA_SSSE3_FAST(rgbPtr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_, ymmMaskRgbToRgba_) \
+	_mm_store_si128(&ymmRGBA3_, _mm_load_si128(reinterpret_cast<const __m128i*>(rgbPtr + 32))); \
+	_mm_store_si128(&ymmRGBA0_, _mm_shuffle_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(rgbPtr_ + 0)), ymmMaskRgbToRgba_)); \
+	_mm_store_si128(&ymmRGBA1_, _mm_alignr_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(rgbPtr_ + 16)), _mm_load_si128(reinterpret_cast<const __m128i*>(rgbPtr_ + 0)), 12)); \
+	_mm_store_si128(&ymmRGBA1_, _mm_shuffle_epi8(ymmRGBA1_, ymmMaskRgbToRgba_)); \
+	_mm_store_si128(&ymmRGBA2_, _mm_alignr_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(rgbPtr_ + 32)), _mm_load_si128(reinterpret_cast<const __m128i*>(rgbPtr_ + 16)), 8)); \
+	_mm_store_si128(&ymmRGBA2_, _mm_shuffle_epi8(ymmRGBA2_, ymmMaskRgbToRgba_)); \
+	_mm_store_si128(&ymmRGBA3_, _mm_alignr_epi8(ymmRGBA3_, ymmRGBA3_, 4)); \
+	_mm_store_si128(&ymmRGBA3_, _mm_shuffle_epi8(ymmRGBA3_, ymmMaskRgbToRgba_));
+// Next version not optimized as we load the masks for each call, use above version and load masks once
+#define COMPV_16xRGB_TO_16xRGBA_SSSE3_SLOW(rgbPtr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_) \
+	COMPV_16xRGB_TO_16xRGBA_SSSE3_FAST(rgbPtr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_, _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_RgbToRgba_i32)))
+
+
 /*
 Interleaves two 128bits vectors.
 From:

@@ -48,44 +48,35 @@ Index for the 64bit packed values
 #define COMPV_AVX_H64 7
 
 /*
-Macro used to convert 3x32RGB to 4x32RGBA samples
-/!\ Not optimized (and NOT maintened) at all, use ASM code instead
+Macro used to convert 32 RGB to 32 RGBA samples
+32 RGB samples requires 96 Bytes(3 YMM registers), will be converted to 32 RGBA samples
+requiring 128 Bytes (4 YMM registers)
+The aplha channel will contain garbage instead of 0xff because this macro is used to fetch samples in place
 */
-#define COMPV_32xRGB_TO_32xRGBA_AVX2(rgbaPtr_, rgbPtr_, ymm0_, ymm1_, ymmLost_, ymmMaskRgbToRgba_, ymmABCDDEFG_, ymmXXABBCDE_, ymmCDEFFGHX_) \
-	/* TODO(dmi): */ \
-	/* This section is marked as not optimized because VS2013 generate SSE code which produce AVX/SSE transition penalities issue unless the file is build with '/arch:AVX2' flag. */ \
-	/* Intrin code:*/ \
-	/* 		_mm256_store_si256(&ymmLost_, _mm256_broadcastsi128_si256(_mm256_extractf128_si256(ymm1_, 1)));*/ \
-	/* VS2013 ASM:*/ \
-	/* 		vextractf128 xmm0,ymm0,1*/ \
-	/* 		movdqa xmmword ptr [rbp+5A0h],xmm0*/ \
-	/* 		movdqa xmm0,xmmword ptr [rbp+5A0h]*/ \
-	/* 		movdqa xmmword ptr [rbp+9D0h],xmm0*/ \
-	/* 		lea rax,[rbp+9D0h]*/ \
-	/* 		vbroadcasti128 ymm0,oword ptr [rax]*/ \
-	/* DOUBANGO ASM (file: compv_imageconv_macros_avx.s):*/ \
-	/* 		vextractf128 [%3 + 0], ymm6, 0x1*/ \
-	/* 		vbroadcasti128 ymm5, [%3 + 0] */ \
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); \
-	/************ Line-0 ***********/ \
-	_mm256_store_si256(&ymm0_, _mm256_load_si256((__m256i*)(rgbPtr + 0))); /* load first 32 samples */  \
-	_mm256_store_si256(&ymm1_, _mm256_permutevar8x32_epi32(ymm0_, ymmABCDDEFG_)); /* move the last 4bytes in the first 128-lane to the second 128-lane */ \
-	_mm256_store_si256(&((__m256i*)rgbaPtr_)[0], _mm256_shuffle_epi8(ymm1, ymmMaskRgbToRgba_)); /* RGB -> RGBA */ \
-	/************ Line-1 ***********/ \
-	_mm256_store_si256(&ymm1_, _mm256_load_si256((__m256i*)(rgbPtr + 32))); /* load next 32 samples */ \
-	_mm256_store_si256(&ymm0_, _mm256_permute4x64_epi64(ymm0_, COMPV_MM_SHUFFLE(3, 3, 3, 3))); /* duplicate lost0 */ \
-	_mm256_store_si256(&ymmLost_, _mm256_broadcastsi128_si256(_mm256_extractf128_si256(ymm1_, 1))); /* high-128 = low-lost = lost0 || lost1 */ \
-	_mm256_store_si256(&ymm1_, _mm256_permutevar8x32_epi32(ymm1_, ymmXXABBCDE_)); \
-	_mm256_store_si256(&ymm1_, _mm256_blend_epi32(ymm1_, ymm0_, 0x03)); /* ymm0(64bits)||ymm1(192bits) */ \
-	_mm256_store_si256(&((__m256i*)rgbaPtr_)[1], _mm256_shuffle_epi8(ymm1_, ymmMaskRgbToRgba_)); /* RGB -> RGBA	*/ \
-	/************ Line-2 ***********/ \
-	_mm256_store_si256(&ymm0_, _mm256_load_si256((__m256i*)(rgbPtr + 64))); /* load next 32 samples */ \
-	_mm256_store_si256(&ymm1_, _mm256_permutevar8x32_epi32(ymm0_, ymmCDEFFGHX_)); /* lost0 || lost1 || lost2 || garbage */ \
-	_mm256_store_si256(&ymmLost_, _mm256_inserti128_si256(ymmLost_, _mm256_extractf128_si256(ymm0_, 0), 1)); /* lost0 || lost1 || 0 || 1 */ \
-	_mm256_store_si256(&ymm0_, _mm256_permutevar8x32_epi32(ymmLost_, ymmABCDDEFG_)); \
-	_mm256_store_si256(&((__m256i*)rgbaPtr_)[2], _mm256_shuffle_epi8(ymm0_, ymmMaskRgbToRgba_)); /* RGB -> RGBA */ \
-	/************ Line-3 ***********/ \
-	_mm256_store_si256(&((__m256i*)rgbaPtr_)[3], _mm256_shuffle_epi8(ymm1_, ymmMaskRgbToRgba_)); \
+#define COMPV_32xRGB_TO_32xRGBA_AVX2_FAST(rgbPtr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_, ymmABCDDEFG_, ymmCDEFFGHX_, ymmXXABBCDE_, ymmMaskRgbToRgba_) \
+	_mm256_store_si256(&ymmRGBA3_, _mm256_load_si256(reinterpret_cast<const __m256i*>(rgbPtr_ + 32))); \
+	_mm256_store_si256(&ymmRGBA1_, _mm256_permute2x128_si256(ymmRGBA3_, ymmRGBA3_, 0x11)); \
+	_mm256_store_si256(&ymmRGBA3_, _mm256_permutevar8x32_epi32(_mm256_load_si256(reinterpret_cast<const __m256i*>(rgbPtr_ + 64)), ymmCDEFFGHX_)); \
+	_mm256_store_si256(&ymmRGBA1_, _mm256_permute2x128_si256(ymmRGBA1_, _mm256_load_si256(reinterpret_cast<const __m256i*>(rgbPtr_ + 64)), 0x20)); \
+	_mm256_store_si256(&ymmRGBA2_, _mm256_permutevar8x32_epi32(ymmRGBA1_, ymmABCDDEFG_)); \
+	_mm256_store_si256(&ymmRGBA2_, _mm256_shuffle_epi8(ymmRGBA2_, ymmMaskRgbToRgba_)); \
+	_mm256_store_si256(&ymmRGBA3_, _mm256_shuffle_epi8(ymmRGBA3_, ymmMaskRgbToRgba_)); \
+	_mm256_store_si256(&ymmRGBA0_, _mm256_permute4x64_epi64(_mm256_load_si256(reinterpret_cast<const __m256i*>(rgbPtr_ + 0)), 0xff)); \
+	_mm256_store_si256(&ymmRGBA1_, _mm256_permutevar8x32_epi32(_mm256_load_si256(reinterpret_cast<const __m256i*>(rgbPtr_ + 32)), ymmXXABBCDE_)); \
+	_mm256_store_si256(&ymmRGBA1_, _mm256_blend_epi32(ymmRGBA1_, ymmRGBA0_, 0x03)); \
+	_mm256_store_si256(&ymmRGBA1_, _mm256_shuffle_epi8(ymmRGBA1_, ymmMaskRgbToRgba_)); \
+	_mm256_store_si256(&ymmRGBA0_, _mm256_permutevar8x32_epi32(_mm256_load_si256(reinterpret_cast<const __m256i*>(rgbPtr_ + 0)), ymmABCDDEFG_)); \
+	_mm256_store_si256(&ymmRGBA0_, _mm256_shuffle_epi8(ymmRGBA0_, ymmMaskRgbToRgba_));
+// Next version not optimized as we load the masks for each call, use above version and load masks once
+#define COMPV_32xRGB_TO_32xRGBA_AVX2_SLOW(rgbPtr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_) \
+	COMPV_32xRGB_TO_32xRGBA_AVX2_FAST(rgbPtr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_, \
+		_mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_ABCDDEFG_i32)), \
+		_mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_CDEFFGHX_i32)), \
+		_mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_XXABBCDE_i32)), \
+		_mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_RgbToRgba_i32)) \
+	)
+
+
  
 
 /*

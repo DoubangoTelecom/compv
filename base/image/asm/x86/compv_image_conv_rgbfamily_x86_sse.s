@@ -64,31 +64,22 @@ sym(CompVImageConvRgb24family_to_y_Asm_X86_SSSE3)
 		.LoopWidth:
 			; Convert RGB -> RGBA, alpha channel contains garbage (later multiplied with zero coeff)
 			COMPV_16xRGB_TO_16xRGBA_SSSE3 rax, xmm2, xmm3, xmm4, xmm5 ; COMPV_16xRGB_TO_16xRGBA_SSSE3(rgbPtr, rgbaPtr[0], rgbaPtr[1], rgbaPtr[2], rgbaPtr[3])
-
 			pmaddubsw xmm2, xmm0
 			pmaddubsw xmm3, xmm0
 			pmaddubsw xmm4, xmm0
 			pmaddubsw xmm5, xmm0
-
 			phaddw xmm2, xmm3
 			phaddw xmm4, xmm5
-
 			lea rdi, [rdi + 16] ; i += 16
 			cmp rdi, arg(2) ; (i < width)?
-			
 			psraw xmm2, 7
 			psraw xmm4, 7
-			
 			paddw xmm2, xmm1
 			paddw xmm4, xmm1
-
 			lea rax, [rax + 48] ; rgbPtr += 48
-						
 			packuswb xmm2, xmm4
 			movdqa [rbx], xmm2
-
 			lea rbx, [rbx + 16] ; outYPtr += 16
-
 			; end-of-LoopWidth
 			jl .LoopWidth
 
@@ -160,9 +151,7 @@ sym(CompVImageConvRgb24family_to_uv_planar_11_Asm_X86_SSSE3)
 		.LoopWidth:
 			; Convert RGB -> RGBA, alpha channel contains garbage (later multiplied with zero coeff)
 			COMPV_16xRGB_TO_16xRGBA_SSSE3 rax, xmm0, xmm1, xmm2, xmm3 ; COMPV_16xRGB_TO_16xRGBA_SSSE3(rgbPtr, rgbaPtr[0], rgbaPtr[1], rgbaPtr[2], rgbaPtr[3])
-
 			lea rdi, [rdi + 16] ; i += 16
-
 			movdqa xmm4, xmm0
 			movdqa xmm5, xmm1
 			pmaddubsw xmm0, xmm7
@@ -177,9 +166,7 @@ sym(CompVImageConvRgb24family_to_uv_planar_11_Asm_X86_SSSE3)
 			psraw xmm4, 8
 			paddw xmm0, [sym(k128_i16)]
 			paddw xmm4, [sym(k128_i16)]
-			
 			cmp rdi, arg(3) ; (i < width)?		
-
 			pmaddubsw xmm2, xmm7
 			pmaddubsw xmm3, xmm7
 			pmaddubsw xmm1, xmm6
@@ -190,16 +177,13 @@ sym(CompVImageConvRgb24family_to_uv_planar_11_Asm_X86_SSSE3)
 			psraw xmm1, 8
 			paddw xmm2, [sym(k128_i16)]
 			paddw xmm1, [sym(k128_i16)]
-
 			packuswb xmm0, xmm2
 			packuswb xmm4, xmm1
 			movdqa [rbx], xmm0
 			movdqa [rdx], xmm4
-			
 			lea rax, [rax + 48] ; rgbPtr += 48
 			lea rbx, [rbx + 16] ; outUPtr += 16
 			lea rdx, [rdx + 16] ; outVPtr += 16
-
 			; end-of-LoopWidth
 			jl .LoopWidth
 

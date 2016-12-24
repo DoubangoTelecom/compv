@@ -21,10 +21,9 @@ COMPV_NAMESPACE_BEGIN()
 void CompVImageConvRgb24family_to_y_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgbPtr, COMPV_ALIGNED(AVX) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride,
 	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Use ASM code instead");
 	COMPV_DEBUG_INFO_CHECK_AVX2();
 	_mm256_zeroupper();
-	__m256i rgba[4], ymmYCoeffs, ymm16, ymm0, ymm1, ymmAEBFCGDH, ymmABCDDEFG, ymmCDEFFGHX, ymmMaskRgbToRgba, ymmXXABBCDE, ymmLost;
+	__m256i ymmRGBA0, ymmRGBA1, ymmRGBA2, ymmRGBA3, ymmYCoeffs, ymm16, ymmAEBFCGDH, ymmABCDDEFG, ymmCDEFFGHX, ymmMaskRgbToRgba, ymmXXABBCDE;
 	compv_uscalar_t i, j, maxI = ((width + 31) & -32), padY = (stride - maxI), padRGB = padY * 3;
 
 	_mm256_store_si256(&ymmMaskRgbToRgba, _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_RgbToRgba_i32)));
@@ -39,31 +38,31 @@ void CompVImageConvRgb24family_to_y_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 32) {
 			/**  convert from RGB to RGBA, alpha channel contains garbage (later multiplied with zero coeff) **/
-			COMPV_32xRGB_TO_32xRGBA_AVX2(&rgba, rgbPtr, ymm0, ymm1, ymmLost, ymmMaskRgbToRgba, ymmABCDDEFG, ymmXXABBCDE, ymmCDEFFGHX);
+			COMPV_32xRGB_TO_32xRGBA_AVX2_FAST(rgbPtr, ymmRGBA0, ymmRGBA1, ymmRGBA2, ymmRGBA3, ymmABCDDEFG, ymmCDEFFGHX, ymmXXABBCDE, ymmMaskRgbToRgba);
+			
+			// starting here we're using the same code as rgba -> y
 
-			// starting here we're using the same code as rgba -> i420 (Y)
+			_mm256_store_si256(&ymmRGBA0, _mm256_maddubs_epi16(ymmRGBA0, ymmYCoeffs));
+			_mm256_store_si256(&ymmRGBA1, _mm256_maddubs_epi16(ymmRGBA1, ymmYCoeffs));
+			_mm256_store_si256(&ymmRGBA2, _mm256_maddubs_epi16(ymmRGBA2, ymmYCoeffs));
+			_mm256_store_si256(&ymmRGBA3, _mm256_maddubs_epi16(ymmRGBA3, ymmYCoeffs));
 
-			_mm256_store_si256(&rgba[0], _mm256_maddubs_epi16(rgba[0], ymmYCoeffs));
-			_mm256_store_si256(&rgba[1], _mm256_maddubs_epi16(rgba[1], ymmYCoeffs));
-			_mm256_store_si256(&rgba[2], _mm256_maddubs_epi16(rgba[2], ymmYCoeffs));
-			_mm256_store_si256(&rgba[3], _mm256_maddubs_epi16(rgba[3], ymmYCoeffs));
+			_mm256_store_si256(&ymmRGBA0, _mm256_hadd_epi16(ymmRGBA0, ymmRGBA1)); // hadd(ABCD) -> ACBD
+			_mm256_store_si256(&ymmRGBA2, _mm256_hadd_epi16(ymmRGBA2, ymmRGBA3)); // hadd(EFGH) -> EGFH
 
-			_mm256_store_si256(&rgba[0], _mm256_hadd_epi16(rgba[0], rgba[1])); // hadd(ABCD) -> ACBD
-			_mm256_store_si256(&rgba[2], _mm256_hadd_epi16(rgba[2], rgba[3])); // hadd(EFGH) -> EGFH
+			_mm256_store_si256(&ymmRGBA0, _mm256_srai_epi16(ymmRGBA0, 7)); // >> 7
+			_mm256_store_si256(&ymmRGBA2, _mm256_srai_epi16(ymmRGBA2, 7)); // >> 7
 
-			_mm256_store_si256(&rgba[0], _mm256_srai_epi16(rgba[0], 7)); // >> 7
-			_mm256_store_si256(&rgba[2], _mm256_srai_epi16(rgba[2], 7)); // >> 7
-
-			_mm256_store_si256(&rgba[0], _mm256_add_epi16(rgba[0], ymm16)); // + 16
-			_mm256_store_si256(&rgba[2], _mm256_add_epi16(rgba[2], ymm16)); // + 16
+			_mm256_store_si256(&ymmRGBA0, _mm256_add_epi16(ymmRGBA0, ymm16)); // + 16
+			_mm256_store_si256(&ymmRGBA2, _mm256_add_epi16(ymmRGBA2, ymm16)); // + 16
 
 			// Saturate(I16 -> U8)
-			_mm256_store_si256(&rgba[0], _mm256_packus_epi16(rgba[0], rgba[2])); // packus(ACBD, EGFH) -> AEBFCGDH
+			_mm256_store_si256(&ymmRGBA0, _mm256_packus_epi16(ymmRGBA0, ymmRGBA2)); // packus(ACBD, EGFH) -> AEBFCGDH
 
 			// Final Permute
-			_mm256_store_si256(&rgba[0], _mm256_permutevar8x32_epi32(rgba[0], ymmAEBFCGDH));
+			_mm256_store_si256(&ymmRGBA0, _mm256_permutevar8x32_epi32(ymmRGBA0, ymmAEBFCGDH));
 
-			_mm256_store_si256(reinterpret_cast<__m256i*>(outYPtr), rgba[0]);
+			_mm256_store_si256(reinterpret_cast<__m256i*>(outYPtr), ymmRGBA0);
 
 			outYPtr += 32;
 			rgbPtr += 96;
@@ -80,9 +79,74 @@ void CompVImageConvRgb24family_to_y_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 void CompVImageConvRgb24family_to_uv_planar_11_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgbPtr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride,
 	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8)
 {
-	COMPV_ASSERT(0);
 	COMPV_DEBUG_INFO_CHECK_AVX2();
-	
+
+	_mm256_zeroupper();
+	__m256i ymmRGBA0, ymmRGBA1, ymmRGBA2, ymmRGBA3, ymmU0, ymmU1, ymmU2, ymmU3, ymmUCoeffs, ymmVCoeffs, ymm128, ymmAEBFCGDH, ymmABCDDEFG, ymmCDEFFGHX, ymmMaskRgbToRgba, ymmXXABBCDE;
+	compv_uscalar_t i, j, maxI = ((width + 31) & -32), padUV = (stride - maxI), padRGB = padUV * 3;
+
+	_mm256_store_si256(&ymmUCoeffs, _mm256_load_si256(reinterpret_cast<const __m256i*>(kRGBfamilyToYUV_UCoeffs8)));
+	_mm256_store_si256(&ymmVCoeffs, _mm256_load_si256(reinterpret_cast<const __m256i*>(kRGBfamilyToYUV_VCoeffs8)));
+	_mm256_store_si256(&ymm128, _mm256_load_si256(reinterpret_cast<const __m256i*>(k128_i16)));
+	_mm256_store_si256(&ymmMaskRgbToRgba, _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_RgbToRgba_i32)));
+	_mm256_store_si256(&ymmAEBFCGDH, _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_AEBFCGDH_i32)));
+	_mm256_store_si256(&ymmABCDDEFG, _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_ABCDDEFG_i32)));
+	_mm256_store_si256(&ymmCDEFFGHX, _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_CDEFFGHX_i32)));
+	_mm256_store_si256(&ymmXXABBCDE, _mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_XXABBCDE_i32)));
+
+	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
+	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
+	for (j = 0; j < height; ++j) {
+		for (i = 0; i < width; i += 32) {
+			/**  convert from RGB to RGBA, alpha channel contains garbage (later multiplied with zero coeff) **/
+			COMPV_32xRGB_TO_32xRGBA_AVX2_FAST(rgbPtr, ymmRGBA0, ymmRGBA1, ymmRGBA2, ymmRGBA3, ymmABCDDEFG, ymmCDEFFGHX, ymmXXABBCDE, ymmMaskRgbToRgba);
+
+			// starting here we're using the same code as rgba -> uv
+
+			_mm256_store_si256(&ymmU0, _mm256_maddubs_epi16(ymmRGBA0, ymmUCoeffs));
+			_mm256_store_si256(&ymmU1, _mm256_maddubs_epi16(ymmRGBA1, ymmUCoeffs));
+			_mm256_store_si256(&ymmU2, _mm256_maddubs_epi16(ymmRGBA2, ymmUCoeffs));
+			_mm256_store_si256(&ymmU3, _mm256_maddubs_epi16(ymmRGBA3, ymmUCoeffs));
+			_mm256_store_si256(&ymmRGBA0, _mm256_maddubs_epi16(ymmRGBA0, ymmVCoeffs));
+			_mm256_store_si256(&ymmRGBA1, _mm256_maddubs_epi16(ymmRGBA1, ymmVCoeffs));
+			_mm256_store_si256(&ymmRGBA2, _mm256_maddubs_epi16(ymmRGBA2, ymmVCoeffs));
+			_mm256_store_si256(&ymmRGBA3, _mm256_maddubs_epi16(ymmRGBA3, ymmVCoeffs));
+
+			_mm256_store_si256(&ymmU0, _mm256_hadd_epi16(ymmU0, ymmU1));
+			_mm256_store_si256(&ymmU2, _mm256_hadd_epi16(ymmU2, ymmU3));
+			_mm256_store_si256(&ymmRGBA0, _mm256_hadd_epi16(ymmRGBA0, ymmRGBA1));
+			_mm256_store_si256(&ymmRGBA2, _mm256_hadd_epi16(ymmRGBA2, ymmRGBA3));
+
+			_mm256_store_si256(&ymmU0, _mm256_srai_epi16(ymmU0, 8)); // >> 8
+			_mm256_store_si256(&ymmU2, _mm256_srai_epi16(ymmU2, 8)); // >> 8
+			_mm256_store_si256(&ymmRGBA0, _mm256_srai_epi16(ymmRGBA0, 8)); // >> 8
+			_mm256_store_si256(&ymmRGBA2, _mm256_srai_epi16(ymmRGBA2, 8)); // >> 8
+
+			_mm256_store_si256(&ymmU0, _mm256_add_epi16(ymmU0, ymm128)); // + 128
+			_mm256_store_si256(&ymmU2, _mm256_add_epi16(ymmU2, ymm128)); // + 128
+			_mm256_store_si256(&ymmRGBA0, _mm256_add_epi16(ymmRGBA0, ymm128)); // + 128
+			_mm256_store_si256(&ymmRGBA2, _mm256_add_epi16(ymmRGBA2, ymm128)); // + 128
+
+			// packus(ACBD, EGFH) -> AEBFCGDH
+			_mm256_store_si256(&ymmU0, _mm256_packus_epi16(ymmU0, ymmU2));
+			_mm256_store_si256(&ymmRGBA0, _mm256_packus_epi16(ymmRGBA0, ymmRGBA2)); 
+
+			// Final Permute
+			_mm256_store_si256(&ymmU0, _mm256_permutevar8x32_epi32(ymmU0, ymmAEBFCGDH));
+			_mm256_store_si256(&ymmRGBA0, _mm256_permutevar8x32_epi32(ymmRGBA0, ymmAEBFCGDH));
+
+			_mm256_store_si256(reinterpret_cast<__m256i*>(outUPtr), ymmU0);
+			_mm256_store_si256(reinterpret_cast<__m256i*>(outVPtr), ymmRGBA0);
+
+			outUPtr += 32;
+			outVPtr += 32;
+			rgbPtr += 96;
+		}
+		rgbPtr += padRGB;
+		outUPtr += padUV;
+		outVPtr += padUV;
+	}
+	_mm256_zeroupper();
 }
 
 COMPV_NAMESPACE_END()
