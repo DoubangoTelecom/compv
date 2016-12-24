@@ -27,7 +27,7 @@ section .text
 ; arg(2) -> compv_uscalar_t width
 ; arg(3) -> compv_uscalar_t height
 ; arg(4) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
-; arg(5) -> COMPV_ALIGNED(SSE) const int8_t* kRGBfamilyToYUV_YCoeffs8
+; arg(5) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8
 sym(CompVImageConvRgb24family_to_y_Asm_X86_SSSE3)
 	push rbp
 	mov rbp, rsp
@@ -62,8 +62,8 @@ sym(CompVImageConvRgb24family_to_y_Asm_X86_SSSE3)
 		; for (i = 0; i < width; i += 16)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopWidth:
-			; Convert RGB -> RGBA
-			COMPV_3RGB_TO_4RGBA_SSSE3 rax, xmm2, xmm3, xmm4, xmm5 ; COMPV_3RGB_TO_4RGBA_SSSE3(rgbPtr, rgbaPtr[0], rgbaPtr[1], rgbaPtr[2], rgbaPtr[3])
+			; Convert RGB -> RGBA, alpha channel contains garbage (later multiplied with zero coeff)
+			COMPV_16xRGB_TO_16xRGBA_SSSE3 rax, xmm2, xmm3, xmm4, xmm5 ; COMPV_16xRGB_TO_16xRGBA_SSSE3(rgbPtr, rgbaPtr[0], rgbaPtr[1], rgbaPtr[2], rgbaPtr[3])
 
 			pmaddubsw xmm2, xmm0
 			pmaddubsw xmm3, xmm0
@@ -158,8 +158,8 @@ sym(CompVImageConvRgb24family_to_uv_planar_11_Asm_X86_SSSE3)
 		; for (i = 0; i < width; i += 16)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopWidth:
-			; Convert RGB -> RGBA
-			COMPV_3RGB_TO_4RGBA_SSSE3 rax, xmm0, xmm1, xmm2, xmm3 ; COMPV_3RGB_TO_4RGBA_SSSE3(rgbPtr, rgbaPtr[0], rgbaPtr[1], rgbaPtr[2], rgbaPtr[3])
+			; Convert RGB -> RGBA, alpha channel contains garbage (later multiplied with zero coeff)
+			COMPV_16xRGB_TO_16xRGBA_SSSE3 rax, xmm0, xmm1, xmm2, xmm3 ; COMPV_16xRGB_TO_16xRGBA_SSSE3(rgbPtr, rgbaPtr[0], rgbaPtr[1], rgbaPtr[2], rgbaPtr[3])
 
 			lea rdi, [rdi + 16] ; i += 16
 

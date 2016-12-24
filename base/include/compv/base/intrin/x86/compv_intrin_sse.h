@@ -33,9 +33,11 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 #define _mm_cvtepi16_epi32_hi_SSE2(a) _mm_srai_epi32(_mm_unpackhi_epi16(a, a), 16)
 
 /*
-Macro used to convert 3x16RGB to 4x16RGBA samples
+Macro used to convert 16 RGB to 16 RGBA samples
+16 RGB samples requires 48 Bytes(3 XMM registers), will be converted to 16 RGBA samples
+requiring 64 Bytes (4 XMM registers).
 */
-#define COMPV_3RGB_TO_4RGBA_SSSE3(rgbaPtr_, rgbPtr_, xmm0_, xmm1_, xmmMaskRgbToRgba_) \
+#define COMPV_16xRGB_TO_16xRGBA_SSSE3(rgbaPtr_, rgbPtr_, xmm0_, xmm1_, xmmMaskRgbToRgba_) \
 	/* RGBA0 = Convert(RGB0) -> 4RGBAs which means we used 4RGBs = 12bytes and lost 4bytes from RGB0 */ \
 	/* RGBA1 = Convert(ALIGN(RGB0, RGB1, 12)) -> we used 4bytes from RGB0 and 8bytes from RGB1 = 12bytes RGB = 16bytes RGBA -> lost 12bytes from RGB1 */ \
 	/* RGBA2 = Convert(ALIGN(RGB1, RGB2, 8)) -> we used 8bytes from RGB1 and 4bytes from RGB2 = 12bytes RGB = 16bytes RGBA -> lost 12bytes from RGB2 */ \

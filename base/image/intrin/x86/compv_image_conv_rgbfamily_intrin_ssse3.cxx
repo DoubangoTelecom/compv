@@ -16,7 +16,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 void CompVImageConvRgb24family_to_y_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgbPtr, COMPV_ALIGNED(SSE) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride,
-	COMPV_ALIGNED(SSE) const int8_t* kRGBfamilyToYUV_YCoeffs8)
+	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8)
 {
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
 	__m128i rgba[4], xmm0, xmm1, xmmYCoeffs, xmmMaskRgbToRgba, xmm16;
@@ -29,8 +29,8 @@ void CompVImageConvRgb24family_to_y_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			/**  convert from RGB to RGBA **/
-			COMPV_3RGB_TO_4RGBA_SSSE3(&rgba, rgbPtr, xmm0, xmm1, xmmMaskRgbToRgba);
+			/**  convert from RGB to RGBA, alpha channel contains garbage (later multiplied with zero coeff) **/
+			COMPV_16xRGB_TO_16xRGBA_SSSE3(&rgba, rgbPtr, xmm0, xmm1, xmmMaskRgbToRgba);
 
 			// starting here we're using the same code as rgba -> y
 
@@ -74,8 +74,8 @@ void CompVImageConvRgb24family_to_uv_planar_11_Intrin_SSSE3(COMPV_ALIGNED(SSE) c
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			/**  convert from RGB to RGBA **/
-			COMPV_3RGB_TO_4RGBA_SSSE3(&rgba, rgbPtr, xmm0, xmm1, xmmMaskRgbToRgba);
+			/**  convert from RGB to RGBA, alpha channel contains garbage (later multiplied with zero coeff) **/
+			COMPV_16xRGB_TO_16xRGBA_SSSE3(&rgba, rgbPtr, xmm0, xmm1, xmmMaskRgbToRgba);
 
 			// starting here we're using the same code as rgba -> uv
 

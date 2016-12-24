@@ -49,10 +49,11 @@ Index for the 64bit packed values
 
 /*
 Macro used to convert 3x32RGB to 4x32RGBA samples
+/!\ Not optimized (and NOT maintened) at all, use ASM code instead
 */
-#define COMPV_3RGB_TO_4RGBA_AVX2(rgbaPtr_, rgbPtr_, ymm0_, ymm1_, ymmLost_, ymmMaskRgbToRgba_, ymmABCDDEFG_, ymmXXABBCDE_, ymmCDEFFGHX_) \
+#define COMPV_32xRGB_TO_32xRGBA_AVX2(rgbaPtr_, rgbPtr_, ymm0_, ymm1_, ymmLost_, ymmMaskRgbToRgba_, ymmABCDDEFG_, ymmXXABBCDE_, ymmCDEFFGHX_) \
 	/* TODO(dmi): */ \
-	/* This section is marked as not optimized because VS2013 generate SSE code which produce AVX/SSE transition penalities issue. */ \
+	/* This section is marked as not optimized because VS2013 generate SSE code which produce AVX/SSE transition penalities issue unless the file is build with '/arch:AVX2' flag. */ \
 	/* Intrin code:*/ \
 	/* 		_mm256_store_si256(&ymmLost_, _mm256_broadcastsi128_si256(_mm256_extractf128_si256(ymm1_, 1)));*/ \
 	/* VS2013 ASM:*/ \

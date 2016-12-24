@@ -282,6 +282,9 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.h">
       <Filter>include\image\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -452,6 +455,9 @@
     <ClCompile Include="image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.cxx">
       <Filter>source\image\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="asm\x86\compv_bits_macros_x86.s">
@@ -496,12 +502,15 @@
     <YASM Include="math\asm\x86\compv_math_utils_x86_avx.s">
       <Filter>source\math\asm\x86</Filter>
     </YASM>
+    <YASM Include="image\asm\x86\compv_image_conv_rgbfamily_x86_sse.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
   </ItemGroup>
   <ItemGroup>
-    <None Include="image\asm\x86\compv_image_conv_rgbfamily_x86_sse.s">
+    <None Include="image\asm\x86\compv_image_conv_macros.s">
       <Filter>source\image\asm\x86</Filter>
     </None>
-    <None Include="image\asm\x86\compv_image_conv_macros.s">
+    <None Include="image\asm\x86\compv_image_conv_rgbfamily_x86_avx.s">
       <Filter>source\image\asm\x86</Filter>
     </None>
   </ItemGroup>

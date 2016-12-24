@@ -59,6 +59,7 @@
     <ClInclude Include="include\compv\base\image\compv_image_conv_to_yuv444p.h" />
     <ClInclude Include="include\compv\base\image\compv_image_decoder.h" />
     <ClInclude Include="include\compv\base\image\compv_image_utils.h" />
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_avx.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_sse.h" />
@@ -119,6 +120,12 @@
     <ClCompile Include="image\compv_image_conv_to_yuv444p.cxx" />
     <ClCompile Include="image\compv_image_decoder.cxx" />
     <ClCompile Include="image\compv_image_utils.cxx" />
+    <ClCompile Include="image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.cxx">
       <IntrinsicFunctions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</IntrinsicFunctions>
       <IntrinsicFunctions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</IntrinsicFunctions>
@@ -199,6 +206,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="image\asm\x86\compv_image_conv_macros.s" />
+    <YASM Include="image\asm\x86\compv_image_conv_rgbfamily_x86_avx.s">
+      <FileType>Document</FileType>
+    </YASM>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{52028A97-E6D7-4C48-82E9-3789FD42BC56}</ProjectGuid>
