@@ -10,61 +10,72 @@
 #endif
 #define COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE(filename)		tests_path_from_file(filename, COMPV_TEST_IMAGE_CHROMA_CONV_IMAGE_FOLDER)
 
-#define COMPV_TEST_IMAGE_CHROMA_CONV_RGB24_TO_YUV444			1
+#define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC				COMPV_SUBTYPE_PIXELS_RGBA32
+#define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_DST				COMPV_SUBTYPE_PIXELS_YUV444P
 
 #define COMPV_loopCount											1
 
-// To avoid timing 'readPixels' when loopCount is > 1
-static CompVMatPtr imageRGB24, imageYUV444P;
-
-static COMPV_ERROR_CODE chroma_conv_rgb24_to_yuv444p();
+static const struct compv_test_image_chroma_conv_test {
+	COMPV_SUBTYPE srcPixelFormat;
+	const char* srcFilename;
+	size_t width;
+	size_t height;
+	size_t stride;
+	COMPV_SUBTYPE dstPixelFormat;
+	const char* dstFilename;
+	const char* dstMD5;
+}
+COMPV_TEST_IMAGE_CHROMA_CONV_TESTS[] =
+{
+	/* to YUV444P */
+	{ COMPV_SUBTYPE_PIXELS_RGBA32, "girl_706x472x706_rgba.rgb", 706, 472, 706, COMPV_SUBTYPE_PIXELS_YUV444P, "yuv444p.yuv", "d0fcdce097c1368e9f741777984fe797" },
+	{ COMPV_SUBTYPE_PIXELS_ARGB32, "girl_706x472x706_argb.rgb", 706, 472, 706, COMPV_SUBTYPE_PIXELS_YUV444P, "yuv444p.yuv", "dbc3115b10c38f1a4799570a4ada7d59" },
+	{ COMPV_SUBTYPE_PIXELS_BGRA32, "girl_706x472x706_bgra.rgb", 706, 472, 706, COMPV_SUBTYPE_PIXELS_YUV444P, "yuv444p.yuv", "d0fcdce097c1368e9f741777984fe797" },
+	{ COMPV_SUBTYPE_PIXELS_RGB24, "girl_706x472x706_rgb.rgb", 706, 472, 706, COMPV_SUBTYPE_PIXELS_YUV444P, "yuv444p.yuv", "d0fcdce097c1368e9f741777984fe797" },
+	{ COMPV_SUBTYPE_PIXELS_BGR24, "girl_706x472x706_bgr.rgb", 706, 472, 706, COMPV_SUBTYPE_PIXELS_YUV444P, "yuv444p.yuv", "d0fcdce097c1368e9f741777984fe797" },
+};
+static size_t COMPV_TEST_IMAGE_CHROMA_CONV_TESTS_COUNT = sizeof(COMPV_TEST_IMAGE_CHROMA_CONV_TESTS) / sizeof(COMPV_TEST_IMAGE_CHROMA_CONV_TESTS[0]);
 
 COMPV_ERROR_CODE chroma_conv()
 {
-	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE_CHROMA_CONV, "%s", __FUNCTION__);
+#	define COMPV_TEST_WRITE_OUTPUT	COMPV_loopCount == 1 && !COMPV_OS_ANDROID
+#	define COMPV_TEST_CHECK_MD5	COMPV_loopCount == 1
+	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE_CHROMA_CONV, "%s(%s -> %s)", __FUNCTION__, CompVGetSubtypeString(COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC), CompVGetSubtypeString(COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_DST));
 	COMPV_ERROR_CODE err;
 	uint64_t timeStart, timeEnd;
+	CompVMatPtr srcImage, dstImage;
+	const compv_test_image_chroma_conv_test* test = NULL;
 
 	COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_S_OK, "Just to avoid 'bail not referenced warning'");
 
+	// Find test
+	for (size_t i = 0; i < COMPV_TEST_IMAGE_CHROMA_CONV_TESTS_COUNT; ++i) {
+		if (COMPV_TEST_IMAGE_CHROMA_CONV_TESTS[i].srcPixelFormat == COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC && COMPV_TEST_IMAGE_CHROMA_CONV_TESTS[i].dstPixelFormat == COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_DST) {
+			test = &COMPV_TEST_IMAGE_CHROMA_CONV_TESTS[i];
+			break;
+		}
+	}
+	if (!test) {
+		COMPV_DEBUG_ERROR_EX(TAG_TEST_IMAGE_CHROMA_CONV, "Failed to find test: %s -> %s", CompVGetSubtypeString(COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC), CompVGetSubtypeString(COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_DST));
+		return COMPV_ERROR_CODE_E_NOT_FOUND;
+	}
+
+	// Read source file
+	COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(test->srcPixelFormat, test->width, test->height, test->stride, COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE(test->srcFilename).c_str(), &srcImage));
+
+	// Perform test
 	timeStart = CompVTime::getNowMills();
 	for (size_t i = 0; i < COMPV_loopCount; ++i) {
-		// RGB -> YUV444P
-#		if COMPV_TEST_IMAGE_CHROMA_CONV_RGB24_TO_YUV444
-		COMPV_CHECK_CODE_BAIL(err = chroma_conv_rgb24_to_yuv444p(), "[" TAG_TEST_IMAGE_CHROMA_CONV "]" "Failed test: RGB24 -> YUV444P");
-#		endif
+		COMPV_CHECK_CODE_BAIL(err = CompVImage::convert(srcImage, test->dstPixelFormat, &dstImage));
 	}
 	timeEnd = CompVTime::getNowMills();
 	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE_CHROMA_CONV, "Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-	// To make sure 'COMPV_DEBUG_CHECK_FOR_MEMORY_LEAKS' will be correct
-	imageRGB24 = imageYUV444P = NULL;
-
-bail:
-	return err;
-}
-
-#define COMPV_TEST_WRITE_OUTPUT									COMPV_loopCount == 1 && !COMPV_OS_ANDROID
-#define COMPV_TEST_CHECK_MD5									COMPV_loopCount == 1
-
-/* RGB24 -> YUV444P */
-static COMPV_ERROR_CODE chroma_conv_rgb24_to_yuv444p()
-{
-#if COMPV_loopCount == 1
-	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE_CHROMA_CONV, "%s", __FUNCTION__);
-#endif
-	static COMPV_ERROR_CODE err;
-	static std::string md5;
-	static const std::string kExpectedMD5 = "d0fcdce097c1368e9f741777984fe797";
-	if (!imageRGB24) { // To avoid timing 'readPixels' when loopCount is > 1
-		COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB24, 706, 472, 706, COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE("girl_706x472x706_rgb.rgb").c_str(), &imageRGB24));
-	}
-	COMPV_CHECK_CODE_BAIL(err = CompVImage::convert(imageRGB24, COMPV_SUBTYPE_PIXELS_YUV444P, &imageYUV444P));
 #if COMPV_TEST_WRITE_OUTPUT
-	COMPV_CHECK_CODE_BAIL(err = tests_write_to_file(imageYUV444P, "yuv444p.yuv"));
+	COMPV_CHECK_CODE_BAIL(err = tests_write_to_file(dstImage, test->dstFilename));
 #endif
 #if COMPV_TEST_CHECK_MD5
-	COMPV_CHECK_EXP_BAIL(kExpectedMD5.compare(tests_md5(imageYUV444P)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "RGB24 -> YUV444P: MD5 mismatch");
+	COMPV_CHECK_EXP_BAIL(std::string(test->dstMD5).compare(tests_md5(dstImage)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "RGB24 -> YUV444P: MD5 mismatch");
 #endif
 
 bail:

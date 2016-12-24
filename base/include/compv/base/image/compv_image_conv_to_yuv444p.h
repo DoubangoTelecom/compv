@@ -22,7 +22,7 @@ public:
 	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageYUV444P);
 
 private:
-	static COMPV_ERROR_CODE rgb24family(const CompVMatPtr& imageRGB24family, CompVMatPtrPtr imageYUV444P);
+	static COMPV_ERROR_CODE rgbfamily(const CompVMatPtr& imageRGBfamily, CompVMatPtrPtr imageYUV444P);
 };
 
 COMPV_NAMESPACE_END()
