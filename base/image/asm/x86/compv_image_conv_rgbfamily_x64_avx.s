@@ -13,8 +13,13 @@
 
 COMPV_YASM_DEFAULT_REL
 
+%define rgb24Family		0
+%define rgb32Family		1
+
 global sym(CompVImageConvRgb24family_to_y_Asm_X64_AVX2)
+global sym(CompVImageConvRgb32family_to_y_Asm_X64_AVX2)
 global sym(CompVImageConvRgb24family_to_uv_planar_11_Asm_X64_AVX2)
+global sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X64_AVX2)
 
 section .data
 	extern sym(k16_i16)
@@ -34,12 +39,13 @@ section .text
 ; arg(3) -> compv_uscalar_t height
 ; arg(4) -> COMPV_ALIGNED(AVX) compv_uscalar_t stride,
 ; arg(5) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8
-sym(CompVImageConvRgb24family_to_y_Asm_X64_AVX2)
+; %1 -> family: rgb24Family or rgb32Family
+%macro CompVImageConvRgbfamily_to_y_Macro_X64_AVX2 1
 	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
-	COMPV_YASM_SAVE_YMM 10 ;XMM[6-n]
+	COMPV_YASM_SAVE_YMM 10 ;YMM[6-n]
 	; end prolog
 
 	mov rax, arg(2)
@@ -48,7 +54,13 @@ sym(CompVImageConvRgb24family_to_y_Asm_X64_AVX2)
 	mov rcx, arg(4)
 	sub rcx, rax ; rcx = padY
 	mov rdx, rcx
-	imul rdx, 3 ; rdx = padRGB
+	%if %1 == rgb32Family
+		shl rdx, 2 ; rdx = padRGBA
+	%elif %1 == rgb24Family
+		imul rdx, 3 ; rdx = padRGB
+	%else
+		%error 'Not implemented'
+	%endif
 
 	mov rax, arg(5)
 	vmovdqa ymm0, [rax] ; ymmYCoeffs
@@ -67,9 +79,20 @@ sym(CompVImageConvRgb24family_to_y_Asm_X64_AVX2)
 	.LoopHeight:
 		xor r9, r9
 		.LoopWidth:
-			; Convert RGB -> RGBA, alpha channel contains garbage (later multiplied with zero coeff)
-			; COMPV_32xRGB_TO_32xRGBA_X64_AVX2(rgbPtr, rgbaPtr[0], gbaPtr[1], gbaPtr[2], gbaPtr[3], ymmABCDDEFG, ymmCDEFFGHX, ymmXXABBCDE, ymmMaskRgbToRgba)		
-			COMPV_32xRGB_TO_32xRGBA_X64_AVX2 rax, ymm2, ymm3, ymm4, ymm5, ymm8, ymm9, ymm10, ymm7
+			%if %1 == rgb32Family
+				vmovdqa ymm2, [rax + 0]
+				vmovdqa ymm3, [rax + 32]
+				vmovdqa ymm4, [rax + 64]
+				vmovdqa ymm5, [rax + 96]
+				lea rax, [rax + 128] ; rgb32Ptr += 128
+			%elif %1 == rgb24Family
+				; Convert RGB24 -> RGBA32, alpha channel contains garbage (later multiplied with zero coeff)
+				; COMPV_32xRGB_TO_32xRGBA_X64_AVX2(rgbPtr, rgbaPtr[0], gbaPtr[1], gbaPtr[2], gbaPtr[3], ymmABCDDEFG, ymmCDEFFGHX, ymmXXABBCDE, ymmMaskRgbToRgba)		
+				COMPV_32xRGB_TO_32xRGBA_X64_AVX2 rax, ymm2, ymm3, ymm4, ymm5, ymm8, ymm9, ymm10, ymm7
+				lea rax, [rax + 96] ; rgb24Ptr += 128
+			%else
+				%error 'Not implemented'
+			%endif
 			vpmaddubsw ymm2, ymm2, ymm0
 			vpmaddubsw ymm3, ymm3, ymm0
 			vpmaddubsw ymm4, ymm4, ymm0
@@ -86,7 +109,6 @@ sym(CompVImageConvRgb24family_to_y_Asm_X64_AVX2)
 			vpermd ymm2, ymm6, ymm2
 			vmovdqa [r10], ymm2
 			lea r10, [r10 + 32]
-			lea rax, [rax + 96]
 			; end-of-LoopWidth
 			jl .LoopWidth
 	lea r10, [r10 + rcx]
@@ -102,7 +124,15 @@ sym(CompVImageConvRgb24family_to_y_Asm_X64_AVX2)
 	pop rbp
 	vzeroupper
 	ret
+%endmacro
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvRgb24family_to_y_Asm_X64_AVX2)
+	CompVImageConvRgbfamily_to_y_Macro_X64_AVX2 rgb24Family
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvRgb32family_to_y_Asm_X64_AVX2)
+	CompVImageConvRgbfamily_to_y_Macro_X64_AVX2 rgb32Family
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> COMPV_ALIGNED(AVX) const uint8_t* rgbPtr
@@ -113,7 +143,8 @@ sym(CompVImageConvRgb24family_to_y_Asm_X64_AVX2)
 ; arg(5) -> COMPV_ALIGNED(AVX) compv_uscalar_t stride
 ; arg(6) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8
 ; arg(7) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8
-sym(CompVImageConvRgb24family_to_uv_planar_11_Asm_X64_AVX2)
+; %1 -> family: rgb24Family or rgb32Family
+%macro CompVImageConvRgbfamily_to_uv_planar_11_Macro_X64_AVX2 1
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -128,7 +159,13 @@ sym(CompVImageConvRgb24family_to_uv_planar_11_Asm_X64_AVX2)
 	mov rcx, arg(5)
 	sub rcx, rdx
 	mov r11, rcx ; r11 = padUV
-	imul rcx, 3 ; rcx = padRGB
+	%if %1 == rgb32Family
+		shl rcx, 2 ; rcx = padRGBA
+	%elif %1 == rgb24Family
+		imul rcx, 3 ; rcx = padRGB
+	%else
+		%error 'Not implemented'
+	%endif
 
 	mov rax, arg(6)
 	vmovdqa ymm7, [rax] ; ymm7 = ymmUCoeffs
@@ -157,9 +194,20 @@ sym(CompVImageConvRgb24family_to_uv_planar_11_Asm_X64_AVX2)
 		; for (i = 0; i < width; i += 32)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopWidth:
-			; Convert RGB -> RGBA, alpha channel contains garbage (later multiplied with zero coeff)
-			; COMPV_32xRGB_TO_32xRGBA_X64_AVX2(rgbPtr, rgbaPtr[0], gbaPtr[1], gbaPtr[2], gbaPtr[3], ymmABCDDEFG, ymmCDEFFGHX, ymmXXABBCDE, ymmMaskRgbToRgba)		
-			COMPV_32xRGB_TO_32xRGBA_X64_AVX2 rax, ymm0, ymm1, ymm2, ymm3, ymm10, ymm11, ymm12, ymm9
+			%if %1 == rgb32Family
+				vmovdqa ymm0, [rax + 0]
+				vmovdqa ymm1, [rax + 32]
+				vmovdqa ymm2, [rax + 64]
+				vmovdqa ymm3, [rax + 96]
+				lea rax, [rax + 128] ; rgb32Ptr += 128
+			%elif %1 == rgb24Family
+				; Convert RGB -> RGBA, alpha channel contains garbage (later multiplied with zero coeff)
+				; COMPV_32xRGB_TO_32xRGBA_X64_AVX2(rgbPtr, rgbaPtr[0], gbaPtr[1], gbaPtr[2], gbaPtr[3], ymmABCDDEFG, ymmCDEFFGHX, ymmXXABBCDE, ymmMaskRgbToRgba)		
+				COMPV_32xRGB_TO_32xRGBA_X64_AVX2 rax, ymm0, ymm1, ymm2, ymm3, ymm10, ymm11, ymm12, ymm9
+				lea rax, [rax + 96] ; rgb24Ptr += 96
+			%else
+				%error 'Not implemented'
+			%endif
 			lea r9, [r9 + 32] ; i += 32
 			vpmaddubsw ymm4, ymm0, ymm6
 			vpmaddubsw ymm5, ymm1, ymm6
@@ -188,7 +236,6 @@ sym(CompVImageConvRgb24family_to_uv_planar_11_Asm_X64_AVX2)
 			vpermd ymm4, ymm8, ymm4
 			vmovdqa [r10], ymm0
 			vmovdqa [rdx], ymm4
-			lea rax, [rax + 96] ; rgbPtr += 96
 			lea r10, [r10 + 32] ; outUPtr += 32
 			lea rdx, [rdx + 32] ; outVPtr += 32
 			; end-of-LoopWidth
@@ -209,5 +256,19 @@ sym(CompVImageConvRgb24family_to_uv_planar_11_Asm_X64_AVX2)
 	pop rbp
 	vzeroupper
 	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvRgb24family_to_uv_planar_11_Asm_X64_AVX2)
+	CompVImageConvRgbfamily_to_uv_planar_11_Macro_X64_AVX2 rgb24Family
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X64_AVX2)
+	CompVImageConvRgbfamily_to_uv_planar_11_Macro_X64_AVX2 rgb32Family
+
+
+
+%undef rgb24Family
+%undef rgb32Family
 
 %endif ; COMPV_YASM_ABI_IS_64BIT

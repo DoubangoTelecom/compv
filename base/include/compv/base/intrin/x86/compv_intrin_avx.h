@@ -48,38 +48,6 @@ Index for the 64bit packed values
 #define COMPV_AVX_H64 7
 
 /*
-Macro used to convert 32 RGB to 32 RGBA samples
-32 RGB samples requires 96 Bytes(3 YMM registers), will be converted to 32 RGBA samples
-requiring 128 Bytes (4 YMM registers)
-The aplha channel will contain garbage instead of 0xff because this macro is used to fetch samples in place
-*/
-#define COMPV_32xRGB_TO_32xRGBA_AVX2_FAST(rgbPtr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_, ymmABCDDEFG_, ymmCDEFFGHX_, ymmXXABBCDE_, ymmMaskRgbToRgba_) \
-	_mm256_store_si256(&ymmRGBA3_, _mm256_load_si256(reinterpret_cast<const __m256i*>(rgbPtr_ + 32))); \
-	_mm256_store_si256(&ymmRGBA1_, _mm256_permute2x128_si256(ymmRGBA3_, ymmRGBA3_, 0x11)); \
-	_mm256_store_si256(&ymmRGBA3_, _mm256_permutevar8x32_epi32(_mm256_load_si256(reinterpret_cast<const __m256i*>(rgbPtr_ + 64)), ymmCDEFFGHX_)); \
-	_mm256_store_si256(&ymmRGBA1_, _mm256_permute2x128_si256(ymmRGBA1_, _mm256_load_si256(reinterpret_cast<const __m256i*>(rgbPtr_ + 64)), 0x20)); \
-	_mm256_store_si256(&ymmRGBA2_, _mm256_permutevar8x32_epi32(ymmRGBA1_, ymmABCDDEFG_)); \
-	_mm256_store_si256(&ymmRGBA2_, _mm256_shuffle_epi8(ymmRGBA2_, ymmMaskRgbToRgba_)); \
-	_mm256_store_si256(&ymmRGBA3_, _mm256_shuffle_epi8(ymmRGBA3_, ymmMaskRgbToRgba_)); \
-	_mm256_store_si256(&ymmRGBA0_, _mm256_permute4x64_epi64(_mm256_load_si256(reinterpret_cast<const __m256i*>(rgbPtr_ + 0)), 0xff)); \
-	_mm256_store_si256(&ymmRGBA1_, _mm256_permutevar8x32_epi32(_mm256_load_si256(reinterpret_cast<const __m256i*>(rgbPtr_ + 32)), ymmXXABBCDE_)); \
-	_mm256_store_si256(&ymmRGBA1_, _mm256_blend_epi32(ymmRGBA1_, ymmRGBA0_, 0x03)); \
-	_mm256_store_si256(&ymmRGBA1_, _mm256_shuffle_epi8(ymmRGBA1_, ymmMaskRgbToRgba_)); \
-	_mm256_store_si256(&ymmRGBA0_, _mm256_permutevar8x32_epi32(_mm256_load_si256(reinterpret_cast<const __m256i*>(rgbPtr_ + 0)), ymmABCDDEFG_)); \
-	_mm256_store_si256(&ymmRGBA0_, _mm256_shuffle_epi8(ymmRGBA0_, ymmMaskRgbToRgba_));
-// Next version not optimized as we load the masks for each call, use above version and load masks once
-#define COMPV_32xRGB_TO_32xRGBA_AVX2_SLOW(rgbPtr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_) \
-	COMPV_32xRGB_TO_32xRGBA_AVX2_FAST(rgbPtr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_, \
-		_mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_ABCDDEFG_i32)), \
-		_mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_CDEFFGHX_i32)), \
-		_mm256_load_si256(reinterpret_cast<const __m256i*>(kAVXPermutevar8x32_XXABBCDE_i32)), \
-		_mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_RgbToRgba_i32)) \
-	)
-
-
- 
-
-/*
 Interleaves two 256bits vectors without crossing the 128-lane.
 From:
 0 0 0 0 0 0 . . . .
