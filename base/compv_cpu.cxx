@@ -220,7 +220,7 @@ COMPV_ERROR_CODE CompVCpu::init()
     //
     // CPUID
     //
-#if !defined(__CLR_VER) && defined(COMPV_ARCH_X86)
+#if !defined(__CLR_VER) && COMPV_ARCH_X86
     // https://en.wikipedia.org/wiki/CPUID
     CompVCpu::s_uFlags = kCpuFlagX86;
     char vname[13] = { '\0' };

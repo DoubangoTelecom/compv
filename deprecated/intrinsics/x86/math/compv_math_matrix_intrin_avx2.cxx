@@ -13,7 +13,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-#if defined __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx
 #endif
 // A and B must have same rows, cols and alignment

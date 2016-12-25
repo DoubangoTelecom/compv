@@ -22,7 +22,7 @@ COMPV_NAMESPACE_BEGIN()
 
 
 // TODO(dmi): add ASM version
-#if defined __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx
 #endif
 void Brief256_31_Intrin_AVX2(const uint8_t* img_center, compv_scalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(SSE) void* out)

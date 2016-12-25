@@ -15,7 +15,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-#if defined __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx
 #endif
 void CompVImageConvRgb24family_to_y_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgbPtr, COMPV_ALIGNED(AVX) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride,
@@ -73,7 +73,7 @@ void CompVImageConvRgb24family_to_y_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 	_mm256_zeroupper();
 }
 
-#if defined __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx
 #endif
 void CompVImageConvRgb24family_to_uv_planar_11_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgbPtr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride,

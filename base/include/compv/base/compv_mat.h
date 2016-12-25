@@ -188,7 +188,16 @@ protected:
         void* pMem = NULL;
 
         nElmtInBytes = sizeof(elmType);
-        nBestStrideInBytes = (stride >= cols) ? (stride * nElmtInBytes) : static_cast<size_t>(CompVMem::alignForward((cols * nElmtInBytes), (int)alignv));
+		if (stride >= cols) {
+			// stride is already valid
+			nBestStrideInBytes = stride * nElmtInBytes;
+		}
+		else {
+			// stride not valid or not provided
+			nBestStrideInBytes = (dataType == COMPV_MAT_TYPE_PIXELS)
+				? static_cast<size_t>(CompVMem::alignForward(cols, static_cast<int>(alignv))) * nElmtInBytes // make sure both stride and strideInBytes are aligned
+				: static_cast<size_t>(CompVMem::alignForward((cols * nElmtInBytes), static_cast<int>(alignv))); // make sure strideInBytes is aligned
+		}
 		COMPV_CHECK_EXP_BAIL(!COMPV_IS_ALIGNED(nBestStrideInBytes, alignv), (err_ = COMPV_ERROR_CODE_E_MEMORY_NOT_ALIGNED), "Stride not aligned with request alignment value");
 
         if (dataType == COMPV_MAT_TYPE_RAW) {

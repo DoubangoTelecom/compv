@@ -76,7 +76,8 @@ COMPV_ERROR_CODE CompVImage::wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPt
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
 	// Compute best stride
-	size_t bestStride = static_cast<size_t>(CompVMem::alignForward(width, COMPV_SIMD_ALIGNV_DEFAULT)); 
+	size_t bestStride = width;
+	COMPV_CHECK_CODE_RETURN(CompVImageUtils::bestStride(width, &bestStride));
 
 #if 1
 	bool bAllocNewImage = !(*image) ||

@@ -15,7 +15,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 // "strideInBytes" must be AVX-aligned
-#if defined __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx
 #endif
 void MathUtilsSumAbs_16i16u_Intrin_AVX2(const COMPV_ALIGNED(AVX) int16_t* a, const COMPV_ALIGNED(AVX) int16_t* b, COMPV_ALIGNED(AVX) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)

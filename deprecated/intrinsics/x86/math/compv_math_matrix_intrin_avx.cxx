@@ -14,7 +14,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-#if defined __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx
 #endif
 // We'll read beyond the end of the data which means ri and rj must be strided and IS_ALIGNED_AVX(strideInBytes)
@@ -53,7 +53,7 @@ void MatrixMulGA_64f_Intrin_AVX(COMPV_ALIGNED(AVX2) compv_float64_t* ri, COMPV_A
     _mm256_zeroupper();
 }
 
-#if defined __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx
 #endif
 // We'll read beyond the end of the data which means ri and rj must be strided
@@ -85,7 +85,7 @@ void MatrixMulGA_32f_Intrin_AVX(COMPV_ALIGNED(AVX) compv_float32_t* ri, COMPV_AL
     _mm256_zeroupper();
 }
 
-#if defined __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx
 #endif
 void MatrixMulABt_64f_minpack1_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, compv_uscalar_t rStrideInBytes)
@@ -140,7 +140,7 @@ void MatrixMulABt_64f_minpack1_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64
     _mm256_zeroupper();
 }
 
-#if defined __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx
 #endif
 void MatrixMulABt_64f_minpack1_Intrin_FMA3_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t aRows, compv_uscalar_t bRows, compv_uscalar_t bCols, compv_uscalar_t aStrideInBytes, compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, compv_uscalar_t rStrideInBytes)

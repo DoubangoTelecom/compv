@@ -184,14 +184,15 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU cores: #%d", CompVCpu::coresCount());
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU cache1: line size: #%dB, size :#%dKB", CompVCpu::cache1LineSize(), CompVCpu::cache1Size() >> 10);
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU endianness: %s", CompVCpu::isBigEndian() ? "BIG" : "LITTLE");
-#if defined(COMPV_ARCH_X86)
+#if COMPV_ARCH_X86
     // even if we are on X64 CPU it's possible that we're running a 32-bit binary
-#	if defined(COMPV_ARCH_X64)
+#	if COMPV_ARCH_X64
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Binary type: X86_64");
 #	else
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Binary type: X86_32");
     if (CompVCpu::isSupported(kCpuFlagX64)) {
-        COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "/!\\Using 32bits binaries on 64bits machine: optimization issues");
+		// TODO(dmi): show same message for ARM code running on ARM64 device
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Using X86_32 binaries on X86_64 machine, you're missing many optimizations. Sad!!");
     }
 #	endif
 #endif
@@ -201,7 +202,7 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
 #if defined(COMPV_ASM)
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Assembler enabled");
 #endif
-#if defined __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Using Intel compiler");
 #endif
     // https://msdn.microsoft.com/en-us/library/jj620901.aspx

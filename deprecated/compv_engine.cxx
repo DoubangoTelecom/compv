@@ -148,7 +148,7 @@ COMPV_ERROR_CODE CompVEngine::init(int32_t numThreads /*= -1*/)
 #if defined(COMPV_ASM)
     COMPV_DEBUG_INFO("Assembler enabled");
 #endif
-#if defined __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
     COMPV_DEBUG_INFO("Using Intel compiler");
 #endif
     // https://msdn.microsoft.com/en-us/library/jj620901.aspx

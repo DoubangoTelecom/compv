@@ -22,7 +22,7 @@ COMPV_EXTERNC void FastStrengths32(compv::compv_scalar_t rbrighters, compv::comp
 
 COMPV_NAMESPACE_BEGIN()
 
-#if defined __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx
 #endif
 void FastData32Row_Intrin_AVX2(
@@ -353,7 +353,7 @@ next:
 
 // Code Not used yet: AVX/SSE transition issue
 // Use VPHMINPOSUW in ASM (no intrinsic)
-#if defined __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx
 #endif
 void FastStrengths32_Intrin_AVX2(compv_scalar_t rbrighters, compv_scalar_t rdarkers, COMPV_ALIGNED(AVX) const uint8_t* dbrighters16x32, COMPV_ALIGNED(AVX) const uint8_t* ddarkers16x32, const compv_scalar_t(*fbrighters16)[16], const compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv_scalar_t N)

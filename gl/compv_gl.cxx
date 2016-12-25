@@ -28,7 +28,7 @@ COMPV_ERROR_CODE CompVGL::init()
     COMPV_DEBUG_INFO("Initializing [gl] module (v %s)...", COMPV_VERSION_STRING);
 
 #if COMPV_GL_DEBUG
-    COMPV_DEBUG_INFO_CODE_ONCE("Perf issues: COMPV_GL_DEBUG enabled");
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("COMPV_GL_DEBUG enabled, OpenGL operations will be very slooooow. Sad!!");
 #endif
 
     COMPV_CHECK_CODE_BAIL(err = CompVBase::init());
