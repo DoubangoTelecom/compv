@@ -10,7 +10,7 @@
 #include "compv/base/android/compv_android_fileutils.h"
 #include "compv/base/compv_errno.h"
 
-#if defined(COMPV_OS_WINDOWS)
+#if COMPV_OS_WINDOWS
 #	include <Shlwapi.h>
 #	include <direct.h> // _getcwd
 #	define getcwd _getcwd

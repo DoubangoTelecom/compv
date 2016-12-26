@@ -15,6 +15,10 @@
 #include "compv/base/android/compv_android_native_activity.h"
 #include "compv/base/compv_jni.h"
 
+#if COMPV_HAVE_INTEL_IPP
+#	include <ipp.h>
+#endif
+
 #define COMPV_THIS_CLASSNAME	"CompVBase"
 
 COMPV_NAMESPACE_BEGIN()
@@ -65,7 +69,7 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Initializing [base] modules (v %s, nt %d)...", COMPV_VERSION_STRING, numThreads);
 
     // Make sure sizeof(compv_scalar_t) is correct
-#if defined(COMPV_ASM) || defined(COMPV_INTRINSIC)
+#if COMPV_ASM || COMPV_INTRINSIC
     if (sizeof(compv_scalar_t) != sizeof(void*)) {
         COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "sizeof(compv_scalar_t)= #%zu not equal to sizeof(void*)= #%zu", sizeof(compv_scalar_t), sizeof(void*));
         return COMPV_ERROR_CODE_E_SYSTEM;
@@ -95,6 +99,7 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
     COMPV_CHECK_EXP_BAIL(timeBeginPeriod(1) != 0, (err_ = COMPV_ERROR_CODE_E_SYSTEM));
 
     // Get OS version
+	COMPV_VS_DISABLE_WARNINGS_BEGIN(1478) // GetVersionEx is deprecated
     if (s_dwMajorVersion == -1 || s_dwMinorVersion == -1) {
         OSVERSIONINFO osvi;
         ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
@@ -109,6 +114,7 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
 #	endif
     }
 #endif
+	COMPV_VS_DISABLE_WARNINGS_END()
 
     // rand()
     srand((unsigned int)CompVTime::getNowMills());
@@ -196,10 +202,10 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
     }
 #	endif
 #endif
-#if defined(COMPV_INTRINSIC)
+#if COMPV_INTRINSIC
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intrinsic enabled");
 #endif
-#if defined(COMPV_ASM)
+#if COMPV_ASM
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Assembler enabled");
 #endif
 #if defined(__INTEL_COMPILER)
@@ -252,6 +258,23 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
 
     /* Memory management */
     COMPV_CHECK_CODE_BAIL(err_ = CompVMem::init());
+
+	/* Intel IPP */
+#if COMPV_HAVE_INTEL_IPP
+	{
+		IppStatus status = ippInit();
+		const IppLibraryVersion *lib;
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intel IPP enabled");
+		if (status != ippStsNoErr) {
+			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "ippInit failed with error code: %d", status);
+			COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_INTEL_IPP);
+		}
+		lib = ippGetLibVersion();
+		if (lib) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "IPP lib version: %s %s", lib->Name, lib->Version);
+		}
+	}
+#endif
 
 #if 0
     /* Features */

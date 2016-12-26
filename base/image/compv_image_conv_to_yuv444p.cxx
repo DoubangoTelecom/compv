@@ -11,6 +11,10 @@
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/math/compv_math.h"
 
+#if COMPV_HAVE_INTEL_IPP
+#	include <ipp.h>
+#endif
+
 #define COMPV_THIS_CLASSNAME	"CompVImageConvToYUV444P"
 
 COMPV_NAMESPACE_BEGIN()
@@ -24,7 +28,8 @@ COMPV_ERROR_CODE CompVImageConvToYUV444P::process(const CompVMatPtr& imageIn, Co
 	case COMPV_SUBTYPE_PIXELS_BGRA32:
 	case COMPV_SUBTYPE_PIXELS_RGB24:
 	case COMPV_SUBTYPE_PIXELS_BGR24:
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToYUV444P::rgbfamily(imageIn, imageYUV444P), "Conversion (RGB24 -> YUV444P) failed");
+	case COMPV_SUBTYPE_PIXELS_RGB565LE:
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToYUV444P::rgbfamily(imageIn, imageYUV444P), "Conversion (RGBFamily -> YUV444P) failed");
 		return COMPV_ERROR_CODE_S_OK;
 	default:
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Chroma conversion not supported: %s -> COMPV_SUBTYPE_PIXELS_YUV444P", CompVGetSubtypeString(imageIn->subType()));
@@ -34,6 +39,8 @@ COMPV_ERROR_CODE CompVImageConvToYUV444P::process(const CompVMatPtr& imageIn, Co
 
 COMPV_ERROR_CODE CompVImageConvToYUV444P::rgbfamily(const CompVMatPtr& imageRGBfamily, CompVMatPtrPtr imageYUV444P)
 {
+	// TODO(dmi): Before converting to Y or UV we unpack RGBfamily samples to RGBAfamily and this is done
+	// twice, once for luma and once for chroma. Performance issues. Sad !!
 	// Private function, do not check input parameters (already done)
 	void(*rgbfamily_to_y)(const uint8_t* rgbPtr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) = NULL;
 	void (*rgbfamily_to_uv_planar_11)(const uint8_t* rgbPtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) = NULL;
@@ -58,6 +65,10 @@ COMPV_ERROR_CODE CompVImageConvToYUV444P::rgbfamily(const CompVMatPtr& imageRGBf
 		case COMPV_SUBTYPE_PIXELS_BGR24:
 			rgbfamily_to_y = CompVImageConvRGBfamily::bgr24_to_y;
 			rgbfamily_to_uv_planar_11 = CompVImageConvRGBfamily::bgr24_to_uv_planar_11;
+			break;
+		case COMPV_SUBTYPE_PIXELS_RGB565LE:
+			rgbfamily_to_y = CompVImageConvRGBfamily::rgb565le_to_y;
+			rgbfamily_to_uv_planar_11 = CompVImageConvRGBfamily::rgb565le_to_uv_planar_11;
 			break;
 		default:
 			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to find RGBfamily conversion: %s -> COMPV_SUBTYPE_PIXELS_YUV444P", CompVGetSubtypeString(imageRGBfamily->subType()));

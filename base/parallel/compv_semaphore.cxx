@@ -14,7 +14,7 @@
 
 /* Apple claims that they fully support POSIX semaphore but ...
 */
-#if defined(COMPV_OS_APPLE) /* Mac OSX/Darwin/Iphone/Ipod Touch */
+#if COMPV_OS_APPLE /* Mac OSX/Darwin/Iphone/Ipod Touch */
 #	define COMPV_USE_NAMED_SEM	1
 #else
 #	define COMPV_USE_NAMED_SEM	0

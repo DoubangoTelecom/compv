@@ -35,7 +35,7 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_MEM_SIZE_MIN_SIMD 32*16 // no real gain on small sizes
 
 // X86
-#if defined(COMPV_ARCH_X86) && defined(COMPV_ASM)
+#if COMPV_ARCH_X86 && COMPV_ASM
 COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X86_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
 COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X86_AVX(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
 COMPV_EXTERNC void MemSetDword_Asm_X86(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
@@ -44,7 +44,7 @@ COMPV_EXTERNC void MemSetQword_Asm_X86_SSE2(void* dstPtr, compv_scalar_t val, co
 COMPV_EXTERNC void MemSetDQword_Asm_X86_SSE2(void* dstPtr, compv_scalar_t val, compv_uscalar_t count);
 #endif
 // X64
-#if defined(COMPV_ARCH_X64) && defined(COMPV_ASM)
+#if COMPV_ARCH_X64 && COMPV_ASM
 COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X64_SSE2(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
 COMPV_EXTERNC void MemCopyNTA_Asm_Aligned11_X64_AVX(COMPV_ALIGNED(SSE) void* dstPtr, COMPV_ALIGNED(SSE) const void*srcPtr, compv_uscalar_t size);
 #endif

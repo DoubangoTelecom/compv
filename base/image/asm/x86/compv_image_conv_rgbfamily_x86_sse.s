@@ -38,6 +38,9 @@ section .text
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+	%if %1 == rgb24Family
+		COMPV_YASM_SAVE_XMM 6
+	%endif
 	push rsi
 	push rdi
 	push rbx
@@ -59,6 +62,9 @@ section .text
 	mov rax, arg(5)
 	movdqa xmm0, [rax] ; xmm0 = xmmYCoeffs
 	movdqa xmm1, [sym(k16_i16)] ; xmm1 = xmm16
+	%if %1 == rgb24Family
+		movdqa xmm6, [sym(kShuffleEpi8_RgbToRgba_i32)] ; xmm6 = xmmRgbToRgbaMask
+	%endif
 		
 	mov rax, arg(0) ; rax = rgb24Ptr or rgb32Ptr
 	mov rsi, arg(3) ; rsi = height
@@ -81,7 +87,7 @@ section .text
 				lea rax, [rax + 64] ; rgb32Ptr += 64
 			%elif %1 == rgb24Family
 				; Convert RGB24 -> RGB32, alpha channel contains garbage (later multiplied with zero coeff)
-				COMPV_16xRGB_TO_16xRGBA_SSSE3 rax, xmm2, xmm3, xmm4, xmm5 ; COMPV_16xRGB_TO_16xRGBA_SSSE3(rgbPtr, rgbaPtr[0], rgbaPtr[1], rgbaPtr[2], rgbaPtr[3])
+				COMPV_16xRGB_TO_16xRGBA_SSSE3 rax, xmm2, xmm3, xmm4, xmm5, xmm6
 				lea rax, [rax + 48] ; rgb24Ptr += 48
 			%else
 				%error 'Not implemented'
@@ -114,6 +120,9 @@ section .text
 	pop rbx
 	pop rdi
 	pop rsi
+	%if %1 == rgb24Family
+		COMPV_YASM_RESTORE_XMM
+	%endif
     COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
@@ -193,7 +202,8 @@ sym(CompVImageConvRgb32family_to_y_Asm_X86_SSSE3)
 				lea rax, [rax + 64] ; rgb32Ptr += 64
 			%elif %1 == rgb24Family
 				; Convert RGB -> RGBA, alpha channel contains garbage (later multiplied with zero coeff)
-				COMPV_16xRGB_TO_16xRGBA_SSSE3 rax, xmm0, xmm1, xmm2, xmm3 ; COMPV_16xRGB_TO_16xRGBA_SSSE3(rgbPtr, rgbaPtr[0], rgbaPtr[1], rgbaPtr[2], rgbaPtr[3])
+				movdqa xmm4, [sym(kShuffleEpi8_RgbToRgba_i32)]
+				COMPV_16xRGB_TO_16xRGBA_SSSE3 rax, xmm0, xmm1, xmm2, xmm3, xmm4
 				lea rax, [rax + 48] ; rgb24Ptr += 48
 			%else
 				%error 'Not implemented'

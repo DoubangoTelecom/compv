@@ -182,6 +182,11 @@ bool CompVCpu::s_bBigEndian = true;
 #else
 bool CompVCpu::s_bBigEndian = false;
 #endif
+#if COMPV_HAVE_INTEL_IPP
+bool CompVCpu::s_bIntelIpp = true;
+#else
+bool CompVCpu::s_bIntelIpp = false;
+#endif
 
 CompVCpu::CompVCpu()
 {
@@ -310,7 +315,7 @@ COMPV_ERROR_CODE CompVCpu::init()
         //}
     }
 
-#elif defined(COMPV_ARCH_ARM) || defined(COMPV_ARCH_ARM64)
+#elif COMPV_ARCH_ARM || COMPV_ARCH_ARM64
     CompVCpu::s_uFlags = kCpuFlagARM;
 #	if COMPV_OS_ANDROID
     uint64_t android_flags = android_getCpuFeatures();
@@ -323,7 +328,7 @@ COMPV_ERROR_CODE CompVCpu::init()
 #	else
     CompVCpu::s_uFlags |= CompVArmCaps("/proc/cpuinfo");
 #endif
-#elif defined(COMPV_ARCH_MIPS) && defined(__linux__)
+#elif COMPV_ARCH_MIPS && defined(__linux__)
     CompVCpu::s_uFlags = kCpuFlagMIPS;
     // Linux mips parse text file for dsp detect.
     CompVCpu::s_uFlags |= CompVMipsCaps("dsp");  // set kCpuFlagMIPS_DSP.
@@ -594,6 +599,16 @@ COMPV_ERROR_CODE CompVCpu::setMathFixedPointEnabled(bool bMathFixedPoint)
 {
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "CPU math trig. fast = %s", bMathFixedPoint ? "true" : "false");
 	s_bMathFixedPoint = bMathFixedPoint;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVCpu::setIntelIppEnabled(bool bIntelIpp)
+{
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intel IPP = %s", bIntelIpp ? "true" : "false");
+#if !COMPV_HAVE_INTEL_IPP
+	COMPV_CHECK_EXP_RETURN(bIntelIpp, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Trying to enable Intel IPP but the code not built with support for this feature");
+#endif /* COMPV_HAVE_INTEL_IPP */
+	s_bIntelIpp = bIntelIpp;
 	return COMPV_ERROR_CODE_S_OK;
 }
 

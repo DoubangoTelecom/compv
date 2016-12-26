@@ -13,6 +13,8 @@
 #include "compv/base/math/compv_math.h"
 #include "compv/base/compv_debug.h"
 
+// TODO(dmi): RGB -> RGBA conversion is done twice (Y plane then UV plane)
+
 /*
 Macro used to convert 32 RGB to 32 RGBA samples
 32 RGB samples requires 96 Bytes(3 YMM registers), will be converted to 32 RGBA samples

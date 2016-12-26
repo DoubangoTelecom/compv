@@ -38,8 +38,12 @@
 #define __MMX__
 #define __3dNOW__
 #endif
+#if !defined(__SSE__)
 #define __SSE__
+#endif
+#if !defined(__SSE2__)
 #define __SSE2__
+#endif
 #elif defined(__MINGW64_VERSION_MAJOR)
 #include <intrin.h>
 #else

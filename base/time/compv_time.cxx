@@ -13,7 +13,7 @@
 #	if COMPV_OS_WINDOWS_CE && HAVE_WCECOMPAT
 #		include <sys/time.h>
 #	endif
-#elif defined(COMPV_OS_SYMBIAN32)
+#elif COMPV_OS_SYMBIAN32
 #	include <_timeval.h>
 #else
 #	include <sys/time.h>

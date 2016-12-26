@@ -108,6 +108,7 @@ public:
     static COMPV_ERROR_CODE setIntrinsicsEnabled(bool bEnabled);
 	static COMPV_ERROR_CODE setMathTrigFastEnabled(bool bMathTrigFast);
 	static COMPV_ERROR_CODE setMathFixedPointEnabled(bool bMathFixedPoint);
+	static COMPV_ERROR_CODE setIntelIppEnabled(bool bIntelIpp);
 	static bool isBigEndian() {
 		COMPV_CHECK_EXP_NOP(!s_bInitialized, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
 		return s_bBigEndian;
@@ -117,6 +118,7 @@ public:
     static bool isIntrinsicsEnabled() { return CompVCpu::s_bIntrinsicsEnabled; }
 	static bool isMathTrigFast() { return s_bMathTrigFast; }
 	static bool isMathFixedPoint() { return s_bMathFixedPoint; }
+	static bool isIntelIppEnabled() { return s_bIntelIpp; }
 
 private:
 	static bool s_bInitialized;
@@ -128,6 +130,7 @@ private:
     static bool s_bIntrinsicsEnabled;
 	static bool s_bMathTrigFast;
 	static bool s_bMathFixedPoint;
+	static bool s_bIntelIpp;
     static int32_t s_iCores;
     static int32_t s_iCache1LineSize;
     static int32_t s_iCache1Size;

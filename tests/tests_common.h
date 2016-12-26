@@ -18,6 +18,8 @@ using namespace compv;
 #define COMPV_enableAsm				true
 #define COMPV_enableMathFixedPoint	true
 #define COMPV_enableTestingMode		true
+#define COMPV_enableIntelIpp		false
+#define COMPV_enableIntelTbb		true
 #define COMPV_cpuDisable			kCpuFlagNone
 
 COMPV_NAMESPACE_BEGIN()
@@ -33,6 +35,9 @@ static const COMPV_ERROR_CODE tests_init()
 	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::setMathFixedPointEnabled(COMPV_enableMathFixedPoint));
 	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::setAsmEnabled(COMPV_enableAsm));
 	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::setIntrinsicsEnabled(COMPV_enableIntrinsics));
+#if COMPV_HAVE_INTEL_IPP
+	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::setIntelIppEnabled(COMPV_enableIntelIpp));
+#endif
 	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::flagsDisable(COMPV_cpuDisable));
 	return err;
 }
@@ -47,7 +52,7 @@ static const COMPV_ERROR_CODE tests_deInit()
 static const std::string tests_path_from_file(const char* filename, const char* optional_folder = NULL)
 {
 	std::string path = COMPV_PATH_FROM_NAME(filename); // path from android's assets, iOS' bundle....
-	// The path is correct when the binary is loaded from another process(e.g. when Intel VTune is used)
+	// The path isn't correct when the binary is loaded from another process(e.g. when Intel VTune is used)
 	if (optional_folder && !CompVFileUtils::exists(path.c_str())) {
 		path = std::string(optional_folder) + std::string("/") + std::string(filename);
 	}

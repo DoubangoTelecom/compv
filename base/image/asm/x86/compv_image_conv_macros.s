@@ -16,19 +16,20 @@
 ; %3 -> @rgba[1], e.g. xmm1
 ; %4 -> @rgba[2], e.g. xmm2
 ; %5 -> @rgba[3], e.g. xmm3
-; example: COMPV_16xRGB_TO_16xRGBA_SSSE3 rax, xmm0, xmm1, xmm2, xmm3
-%macro COMPV_16xRGB_TO_16xRGBA_SSSE3  5
+; %6 -> @RgbToRgba mask, e.g. xmm4 or [sym(kShuffleEpi8_RgbToRgba_i32)]
+; example: COMPV_16xRGB_TO_16xRGBA_SSSE3 rax, xmm0, xmm1, xmm2, xmm3, xmm4
+%macro COMPV_16xRGB_TO_16xRGBA_SSSE3  6
 	movdqa %2, [%1 + 0]
 	movdqa %3, [%1 + 16]
 	movdqa %4, [%1 + 32]
 	movdqa %5, [%1 + 32]
-	pshufb %2, [sym(kShuffleEpi8_RgbToRgba_i32)]
+	pshufb %2, %6
 	palignr %3, [%1 + 0], 12
-	pshufb %3, [sym(kShuffleEpi8_RgbToRgba_i32)]
 	palignr %4, [%1 + 16], 8
-	pshufb %4, [sym(kShuffleEpi8_RgbToRgba_i32)]
 	palignr %5, %5, 4
-	pshufb %5, [sym(kShuffleEpi8_RgbToRgba_i32)]
+	pshufb %3, %6
+	pshufb %4, %6
+	pshufb %5, %6	
 %endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

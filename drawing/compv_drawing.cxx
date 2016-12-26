@@ -58,6 +58,9 @@ COMPV_ERROR_CODE CompVDrawing::init()
         return COMPV_ERROR_CODE_S_OK;
     }
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+#if defined(HAVE_GL_GLEW_H)
+	GLenum glewErr;
+#endif
 
     COMPV_DEBUG_INFO("Initializing [drawing] module (v %s)...", COMPV_VERSION_STRING);
 
@@ -126,7 +129,7 @@ COMPV_ERROR_CODE CompVDrawing::init()
     COMPV_CHECK_EXP_BAIL(SDL_GL_MakeCurrent(s_pSDLMainWindow, s_pSDLMainContext) != 0, COMPV_ERROR_CODE_E_SDL);
 #	if defined(HAVE_GL_GLEW_H)
     COMPV_CHECK_EXP_BAIL(!CompVGLUtils::isGLContextSet(), err = COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-    GLenum glewErr = glewInit();
+    glewErr = glewInit();
     if (GLEW_OK != glewErr) {
         COMPV_DEBUG_ERROR_EX("GLEW", "glewInit for [drawing] module failed: %s", glewGetErrorString(glewErr));
         COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_GLEW);

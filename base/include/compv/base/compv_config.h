@@ -176,11 +176,11 @@
 
 
 // ARCH: All X86
-#if defined(COMPV_ARCH_X64_AMD64) || defined(COMPV_ARCH_X64_INTEL_IA64) || defined(COMPV_ARCH_X86_INTEL) || defined(__i386__)
+#if COMPV_ARCH_X64_AMD64 || COMPV_ARCH_X64_INTEL_IA64 || COMPV_ARCH_X86_INTEL || defined(__i386__)
 #	define COMPV_ARCH_X86					1
 #endif
 // ARCH: All X64
-#if defined(COMPV_ARCH_X64_AMD64) || defined(COMPV_ARCH_X64_INTEL_IA64) || defined (__X86_64__)
+#if COMPV_ARCH_X64_AMD64 || COMPV_ARCH_X64_INTEL_IA64 || defined (__X86_64__)
 #	define COMPV_ARCH_X64					1
 #endif
 
@@ -249,7 +249,7 @@
 #endif
 
 
-/* define "TNET_DEPRECATED(func)" macro */
+/* define "COMPV_DEPRECATED(func)" macro */
 #if defined(__GNUC__)
 #	define COMPV_DEPRECATED(func) __attribute__ ((deprecated)) func
 #elif defined(_MSC_VER)
@@ -340,6 +340,14 @@
 #	define COMPV_PARALLEL_THREAD_SET_AFFINITY 0 // set thread affinity after starting?
 #endif
 
+// Intel libraries
+#if defined(__INTEL_COMPILER) || defined(HAVE_IPP) // TODO(dmi): not correct, having Intel compiler doesn't means we have IPP
+#	define COMPV_HAVE_INTEL_IPP		1
+#endif
+#if defined(__INTEL_COMPILER) || defined(HAVE_TBB) // TODO(dmi): not correct, having Intel compiler doesn't means we have TBB
+#	define COMPV_HAVE_INTEL_TBB		1
+#endif
+
 #if COMPV_OS_WINDOWS
 #	define _WINSOCKAPI_
 #	define NOMINMAX
@@ -356,7 +364,7 @@
 
 #include <string>
 
-// Must be at the bottom to make sure we can redifine all macros
+// Must be at the bottom to make sure we can redefine all macros
 #if defined(HAVE_CONFIG_H)
 #include <config.h>
 #endif
