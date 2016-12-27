@@ -79,6 +79,30 @@
     <Filter Include="source\android">
       <UniqueIdentifier>{25645cdd-36e9-45f3-845f-b32ca80fb437}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\intrin\arm">
+      <UniqueIdentifier>{3741274f-fa22-4072-bfa9-e17c32406e96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\intrin\arm">
+      <UniqueIdentifier>{94826a49-082a-4e70-9ca0-31c96240ad14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\image\intrin">
+      <UniqueIdentifier>{a8b4d828-bbe2-4242-984b-7bffe0f81761}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\image\intrin\x86">
+      <UniqueIdentifier>{12230ccc-3762-416a-ac23-2d8e2e7431de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\image\intrin\arm">
+      <UniqueIdentifier>{b1058791-bf06-4a50-a8d8-bbc4af5b34f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\image\intrin">
+      <UniqueIdentifier>{51bd2021-ee14-47a7-af41-4f1af0e9ec2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\image\intrin\x86">
+      <UniqueIdentifier>{02633b9a-f3f6-4399-b03e-32a421022297}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\image\intrin\arm">
+      <UniqueIdentifier>{bda4efb0-4217-430c-a004-d289aea46da5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\base\compv_base.h">
@@ -267,6 +291,18 @@
     <ClInclude Include="..\include\compv\base\parallel\compv_threaddisptbb.h">
       <Filter>include\parallel</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\intrin\arm\compv_intrin_neon.h">
+      <Filter>include\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.h">
+      <Filter>include\image\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -439,6 +475,15 @@
     </ClCompile>
     <ClCompile Include="..\parallel\compv_threaddisptbb.cxx">
       <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.cxx">
+      <Filter>source\image\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

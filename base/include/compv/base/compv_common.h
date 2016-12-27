@@ -43,6 +43,16 @@ COMPV_NAMESPACE_BEGIN()
 #else
 #	define COMPV_EXEC_IFDEF_INTRIN_X86(EXPR)
 #endif
+#if COMPV_INTRINSIC && COMPV_ARCH_ARM
+#	define COMPV_EXEC_IFDEF_INTRIN_ARM(EXPR) do { if (COMPV_NAMESPACE::CompVCpu::isIntrinsicsEnabled()) { (EXPR); } } while(0)
+#else
+#	define COMPV_EXEC_IFDEF_INTRIN_ARM(EXPR)
+#endif
+#if COMPV_INTRINSIC && COMPV_ARCH_ARM64
+#	define COMPV_EXEC_IFDEF_INTRIN_ARM64(EXPR) do { if (COMPV_NAMESPACE::CompVCpu::isIntrinsicsEnabled()) { (EXPR); } } while(0)
+#else
+#	define COMPV_EXEC_IFDEF_INTRIN_ARM64(EXPR)
+#endif
 #if COMPV_ASM
 #	define COMPV_EXEC_IFDEF_ASM(EXPR) do { if (COMPV_NAMESPACE::CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
 #else

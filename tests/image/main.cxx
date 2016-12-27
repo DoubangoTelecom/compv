@@ -15,15 +15,17 @@ compv_main()
 
 #if TEST_CHROMA_CONV
 		extern COMPV_ERROR_CODE chroma_conv();
-		COMPV_CHECK_CODE_BAIL(err = chroma_conv(), "Chroma conversion test failed");
+		COMPV_CHECK_CODE_BAIL(err = chroma_conv(), TAG_TEST_IMAGE "Chroma conversion test failed");
 #endif
 
 	bail:
-		COMPV_CHECK_CODE_ASSERT(err, "Something went wrong!!");
+		COMPV_CHECK_CODE_ASSERT(err, TAG_TEST_IMAGE "Something went wrong!!");
 		COMPV_CHECK_CODE_ASSERT(err = tests_deInit());
 	}
 
 	COMPV_DEBUG_CHECK_FOR_MEMORY_LEAKS();
+
+	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE, "************* Program ended!!! *************");
 
 	compv_main_return(0);
 }

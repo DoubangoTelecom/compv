@@ -8,13 +8,12 @@
 #define _COMPV_BASE_MEM_INTRIN_SSE2_H_
 
 #include "compv/base/compv_config.h"
+#if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/compv_common.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
 #endif
-
-#if COMPV_ARCH_X86 && COMPV_INTRINSIC
 
 COMPV_NAMESPACE_BEGIN()
 

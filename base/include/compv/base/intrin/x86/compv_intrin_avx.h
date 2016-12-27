@@ -8,6 +8,7 @@
 #define _COMPV_BASE_INTRIN_AVX_H_
 
 #include "compv/base/compv_config.h"
+#if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/compv_common.h"
 
 #if defined(_COMPV_API_H_)
@@ -121,5 +122,7 @@ To:
 
 
 COMPV_NAMESPACE_END()
+
+#endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
 
 #endif /* _COMPV_BASE_INTRIN_AVX_H_ */

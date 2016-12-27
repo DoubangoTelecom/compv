@@ -97,6 +97,9 @@
     <Filter Include="source\image\asm\x86">
       <UniqueIdentifier>{efd8fbe7-a1dd-46e8-9247-5d4ac137b056}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\image\intrin\arm">
+      <UniqueIdentifier>{25a48808-7a94-47be-816c-35fd2189eb64}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -469,6 +472,9 @@
     </ClCompile>
     <ClCompile Include="parallel\compv_threaddisptbb.cxx">
       <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.cxx">
+      <Filter>source\image\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

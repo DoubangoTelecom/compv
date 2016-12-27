@@ -22,14 +22,14 @@
 ; The aplha channel will contain garbage instead of 0xff because this macro is used to fetch samples in place
 */
 #define COMPV_16xRGB_TO_16xRGBA_SSSE3_FAST(rgb24Ptr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_, ymmMaskRgbToRgba_) \
-	_mm_store_si128(&ymmRGBA3_, _mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr + 32))); \
-	_mm_store_si128(&ymmRGBA0_, _mm_shuffle_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 0)), ymmMaskRgbToRgba_)); \
-	_mm_store_si128(&ymmRGBA1_, _mm_alignr_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 16)), _mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 0)), 12)); \
-	_mm_store_si128(&ymmRGBA1_, _mm_shuffle_epi8(ymmRGBA1_, ymmMaskRgbToRgba_)); \
-	_mm_store_si128(&ymmRGBA2_, _mm_alignr_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 32)), _mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 16)), 8)); \
-	_mm_store_si128(&ymmRGBA2_, _mm_shuffle_epi8(ymmRGBA2_, ymmMaskRgbToRgba_)); \
-	_mm_store_si128(&ymmRGBA3_, _mm_alignr_epi8(ymmRGBA3_, ymmRGBA3_, 4)); \
-	_mm_store_si128(&ymmRGBA3_, _mm_shuffle_epi8(ymmRGBA3_, ymmMaskRgbToRgba_));
+	ymmRGBA3_ = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr + 32)); \
+	ymmRGBA0_ = _mm_shuffle_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 0)), ymmMaskRgbToRgba_); \
+	ymmRGBA1_ = _mm_alignr_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 16)), _mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 0)), 12); \
+	ymmRGBA1_ = _mm_shuffle_epi8(ymmRGBA1_, ymmMaskRgbToRgba_); \
+	ymmRGBA2_ = _mm_alignr_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 32)), _mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 16)), 8); \
+	ymmRGBA2_ = _mm_shuffle_epi8(ymmRGBA2_, ymmMaskRgbToRgba_); \
+	ymmRGBA3_ = _mm_alignr_epi8(ymmRGBA3_, ymmRGBA3_, 4); \
+	ymmRGBA3_ = _mm_shuffle_epi8(ymmRGBA3_, ymmMaskRgbToRgba_);
 // Next version not optimized as we load the masks for each call, use above version and load masks once
 #define COMPV_16xRGB_TO_16xRGBA_SSSE3_SLOW(rgb24Ptr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_) \
 	COMPV_16xRGB_TO_16xRGBA_SSSE3_FAST(rgb24Ptr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_, _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_RgbToRgba_i32)))
@@ -38,24 +38,24 @@
 Convert 16 RGBA samples to 16 Y samples
 */
 #define COMPV_16xRGBA_TO_16xLUMA_SSSE3(xmm0RGBA_, xmm1RGBA_, xmm2RGBA_, xmm3RGBA_, xmmYCoeffs_, xmm16_, outYPtr_) \
-	_mm_store_si128(&xmm0RGBA_, _mm_hadd_epi16(_mm_maddubs_epi16(xmm0RGBA_, xmmYCoeffs_), _mm_maddubs_epi16(xmm1RGBA_, xmmYCoeffs_))); \
-	_mm_store_si128(&xmm2RGBA_, _mm_hadd_epi16(_mm_maddubs_epi16(xmm2RGBA_, xmmYCoeffs_), _mm_maddubs_epi16(xmm3RGBA_, xmmYCoeffs_))); \
-	_mm_store_si128(&xmm0RGBA_, _mm_srai_epi16(xmm0RGBA_, 7)); /* >> 7 */ \
-	_mm_store_si128(&xmm2RGBA_, _mm_srai_epi16(xmm2RGBA_, 7)); /* >> 7 */  \
-	_mm_store_si128(&xmm0RGBA_, _mm_add_epi16(xmm0RGBA_, xmm16_)); /* + 16 */  \
-	_mm_store_si128(&xmm2RGBA_, _mm_add_epi16(xmm2RGBA_, xmm16_)); /* + 16 */  \
+	xmm0RGBA_ = _mm_hadd_epi16(_mm_maddubs_epi16(xmm0RGBA_, xmmYCoeffs_), _mm_maddubs_epi16(xmm1RGBA_, xmmYCoeffs_)); \
+	xmm2RGBA_ = _mm_hadd_epi16(_mm_maddubs_epi16(xmm2RGBA_, xmmYCoeffs_), _mm_maddubs_epi16(xmm3RGBA_, xmmYCoeffs_)); \
+	xmm0RGBA_ = _mm_srai_epi16(xmm0RGBA_, 7); /* >> 7 */ \
+	xmm2RGBA_ = _mm_srai_epi16(xmm2RGBA_, 7); /* >> 7 */  \
+	xmm0RGBA_ = _mm_add_epi16(xmm0RGBA_, xmm16_); /* + 16 */  \
+	xmm2RGBA_ = _mm_add_epi16(xmm2RGBA_, xmm16_); /* + 16 */  \
 	_mm_store_si128(reinterpret_cast<__m128i*>(outYPtr_), _mm_packus_epi16(xmm0RGBA_, xmm2RGBA_)); /* Saturate(I16 -> U8) */
 
 /*
 Convert 16 RGBA samples to 16 chroma (U or V samples) samples. Chroma subsampled x1
 */
 #define COMPV_16xRGBA_TO_16xCHROMA1_SSSE3(xmm0RGBA_, xmm1RGBA_, xmm2RGBA_, xmm3RGBA_, xmm0C_, xmm1C_, xmmCCoeffs_, xmm128_, outCPtr_) \
-	_mm_store_si128(&xmm0C_, _mm_hadd_epi16(_mm_maddubs_epi16(xmm0RGBA_, xmmCCoeffs_), _mm_maddubs_epi16(xmm1RGBA_, xmmCCoeffs_))); \
-	_mm_store_si128(&xmm1C_, _mm_hadd_epi16(_mm_maddubs_epi16(xmm2RGBA_, xmmCCoeffs_), _mm_maddubs_epi16(xmm3RGBA_, xmmCCoeffs_))); \
-	_mm_store_si128(&xmm0C_, _mm_srai_epi16(xmm0C_, 8)); /* >> 8 */ \
-	_mm_store_si128(&xmm1C_, _mm_srai_epi16(xmm1C_, 8)); /* >> 8 */ \
-	_mm_store_si128(&xmm0C_, _mm_add_epi16(xmm0C_, xmm128_)); /* + 128 */ \
-	_mm_store_si128(&xmm1C_, _mm_add_epi16(xmm1C_, xmm128_)); /* + 128 */ \
+	xmm0C_ = _mm_hadd_epi16(_mm_maddubs_epi16(xmm0RGBA_, xmmCCoeffs_), _mm_maddubs_epi16(xmm1RGBA_, xmmCCoeffs_)); \
+	xmm1C_ = _mm_hadd_epi16(_mm_maddubs_epi16(xmm2RGBA_, xmmCCoeffs_), _mm_maddubs_epi16(xmm3RGBA_, xmmCCoeffs_)); \
+	xmm0C_ = _mm_srai_epi16(xmm0C_, 8); /* >> 8 */ \
+	xmm1C_ = _mm_srai_epi16(xmm1C_, 8); /* >> 8 */ \
+	xmm0C_ = _mm_add_epi16(xmm0C_, xmm128_); /* + 128 */ \
+	xmm1C_ = _mm_add_epi16(xmm1C_, xmm128_); /* + 128 */ \
 	_mm_store_si128(reinterpret_cast<__m128i*>(outCPtr_), _mm_packus_epi16(xmm0C_, xmm1C_)); /* Saturate(I16 -> U8) */
 
 COMPV_NAMESPACE_BEGIN()
@@ -67,9 +67,9 @@ void CompVImageConvRgb24family_to_y_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_
 	__m128i xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmmYCoeffs, xmmMaskRgbToRgba, xmm16;
 	compv_uscalar_t i, j, maxI = ((width + 15) & -16), padY = (stride - maxI), padRGB = padY * 3;
 
-	_mm_store_si128(&xmmMaskRgbToRgba, _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_RgbToRgba_i32)));
-	_mm_store_si128(&xmm16, _mm_load_si128(reinterpret_cast<const __m128i*>(k16_i16)));
-	_mm_store_si128(&xmmYCoeffs, _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBfamilyToYUV_YCoeffs8))); // RGBA coeffs
+	xmmMaskRgbToRgba = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_RgbToRgba_i32));
+	xmm16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_i16));
+	xmmYCoeffs = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBfamilyToYUV_YCoeffs8)); // RGBA coeffs
 
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (j = 0; j < height; ++j) {
@@ -93,16 +93,16 @@ void CompVImageConvRgb32family_to_y_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_
 	__m128i xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmmYCoeffs, xmm16;
 	compv_uscalar_t i, j, maxI = ((width + 15) & -16), padY = (stride - maxI), padRGBA = padY << 2;
 
-	_mm_store_si128(&xmm16, _mm_load_si128(reinterpret_cast<const __m128i*>(k16_i16)));
-	_mm_store_si128(&xmmYCoeffs, _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBAfamilyToYUV_YCoeffs8))); // RGBA coeffs
+	xmm16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_i16));
+	xmmYCoeffs = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBAfamilyToYUV_YCoeffs8)); // RGBA coeffs
 
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			_mm_store_si128(&xmm0RGBA, _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 0)));
-			_mm_store_si128(&xmm1RGBA, _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 16)));
-			_mm_store_si128(&xmm2RGBA, _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 32)));
-			_mm_store_si128(&xmm3RGBA, _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 48)));
+			xmm0RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 0));
+			xmm1RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 16));
+			xmm2RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 32));
+			xmm3RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 48));
 			COMPV_16xRGBA_TO_16xLUMA_SSSE3(xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmmYCoeffs, xmm16, outYPtr);
 			outYPtr += 16;
 			rgb32Ptr += 64;
@@ -119,10 +119,10 @@ void CompVImageConvRgb24family_to_uv_planar_11_Intrin_SSSE3(COMPV_ALIGNED(SSE) c
 	__m128i xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmm0C, xmm1C, xmmUCoeffs, xmmVCoeffs, xmm128, xmmMaskRgbToRgba;
 	compv_uscalar_t i, j, maxI = ((width + 15) & -16), padUV = (stride - maxI), padRGB = padUV * 3;
 
-	_mm_store_si128(&xmmMaskRgbToRgba, _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_RgbToRgba_i32)));
-	_mm_store_si128(&xmmUCoeffs, _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBfamilyToYUV_UCoeffs8)));
-	_mm_store_si128(&xmmVCoeffs, _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBfamilyToYUV_VCoeffs8)));
-	_mm_store_si128(&xmm128, _mm_load_si128(reinterpret_cast<const __m128i*>(k128_i16)));
+	xmmMaskRgbToRgba = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_RgbToRgba_i32));
+	xmmUCoeffs = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBfamilyToYUV_UCoeffs8));
+	xmmVCoeffs = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBfamilyToYUV_VCoeffs8));
+	xmm128 = _mm_load_si128(reinterpret_cast<const __m128i*>(k128_i16));
 
 	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
@@ -150,18 +150,18 @@ void CompVImageConvRgb32family_to_uv_planar_11_Intrin_SSSE3(COMPV_ALIGNED(SSE) c
 	__m128i xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmm0C, xmm1C, xmmUCoeffs, xmmVCoeffs, xmm128;
 	compv_uscalar_t i, j, maxI = ((width + 15) & -16), padUV = (stride - maxI), padRGBA = padUV << 2;
 
-	_mm_store_si128(&xmmUCoeffs, _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBAfamilyToYUV_UCoeffs8)));
-	_mm_store_si128(&xmmVCoeffs, _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBAfamilyToYUV_VCoeffs8)));
-	_mm_store_si128(&xmm128, _mm_load_si128(reinterpret_cast<const __m128i*>(k128_i16)));
+	xmmUCoeffs = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBAfamilyToYUV_UCoeffs8));
+	xmmVCoeffs = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBAfamilyToYUV_VCoeffs8));
+	xmm128 = _mm_load_si128(reinterpret_cast<const __m128i*>(k128_i16));
 
 	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			_mm_store_si128(&xmm0RGBA, _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 0)));
-			_mm_store_si128(&xmm1RGBA, _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 16)));
-			_mm_store_si128(&xmm2RGBA, _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 32)));
-			_mm_store_si128(&xmm3RGBA, _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 48)));
+			xmm0RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 0));
+			xmm1RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 16));
+			xmm2RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 32));
+			xmm3RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb32Ptr + 48));
 			COMPV_16xRGBA_TO_16xCHROMA1_SSSE3(xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmm0C, xmm1C, xmmUCoeffs, xmm128, outUPtr);
 			COMPV_16xRGBA_TO_16xCHROMA1_SSSE3(xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmm0C, xmm1C, xmmVCoeffs, xmm128, outVPtr);
 			outUPtr += 16;

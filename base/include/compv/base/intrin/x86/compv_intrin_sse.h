@@ -8,6 +8,7 @@
 #define _COMPV_BASE_INTRIN_SSE_H_
 
 #include "compv/base/compv_config.h"
+#if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/compv_common.h"
 
 #if defined(_COMPV_API_H_)
@@ -106,5 +107,7 @@ To:
 	COMPV_INTERLEAVE_I8_SSE2(_x14, _x15, _tmp);
 
 COMPV_NAMESPACE_END()
+
+#endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
 
 #endif /* _COMPV_BASE_INTRIN_SSE_H_ */
