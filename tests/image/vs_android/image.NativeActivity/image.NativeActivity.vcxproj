@@ -186,6 +186,7 @@
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVBase</LibraryDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir);../../../../thirdparties/libraries/android/skia-m55-armv7a-neon-release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">

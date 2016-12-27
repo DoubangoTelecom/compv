@@ -140,7 +140,9 @@
     <ClCompile Include="..\image\compv_image_conv_to_yuv444p.cxx" />
     <ClCompile Include="..\image\compv_image_decoder.cxx" />
     <ClCompile Include="..\image\compv_image_utils.cxx" />
-    <ClCompile Include="..\image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.cxx" />
+    <ClCompile Include="..\image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.cxx">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="..\image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.cxx" />
     <ClCompile Include="..\image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.cxx" />
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_avx.cxx" />
@@ -165,6 +167,18 @@
     <ClCompile Include="..\time\compv_timer.cxx" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\asm\arm\compv_common_arm.i" />
+    <GAS Include="..\asm\arm\compv_test_arm.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+    </GAS>
     <None Include="..\asm\x86\compv_bits_macros_x86.s" />
     <None Include="..\asm\x86\compv_bits_x86.s" />
     <None Include="..\asm\x86\compv_common_x86.s" />
@@ -175,6 +189,42 @@
     <None Include="..\asm\x86\compv_mem_x86_avx.s" />
     <None Include="..\asm\x86\compv_mem_x86_sse.s" />
     <None Include="..\asm\x86\compv_utils_x86.s" />
+    <GAS Include="..\image\asm\arm\compv_image_conv_rgbfamily_arm32_neon.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ToolchainPrefix)gcc -c %(FullPath) -o $(IntDir)%(filename).obj</Command>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">Default</CompileAs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)%(filename).obj</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ToolchainPrefix)gcc -c %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ToolchainPrefix)gcc -c %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ToolchainPrefix)gcc -c %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ToolchainPrefix)gcc -c %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ToolchainPrefix)gcc -c %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ToolchainPrefix)gcc -c %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ToolchainPrefix)gcc -c %(FullPath)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(IntermediateOutputPath)\\%(Filename).o</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(IntermediateOutputPath)\\%(Filename).o</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(IntermediateOutputPath)\\%(Filename).o</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(IntermediateOutputPath)\\%(Filename).o</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(IntermediateOutputPath)\\%(Filename).o</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntermediateOutputPath)\\%(Filename).o</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntermediateOutputPath)\\%(Filename).o</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</LinkObjects>
+      <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</EnableNeonCodegen>
+      <CppLanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">Default</CppLanguageStandard>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+    </GAS>
+    <None Include="..\image\asm\x86\compv_image_conv_macros.s" />
+    <None Include="..\image\asm\x86\compv_image_conv_rgbfamily_x64_avx.s" />
+    <None Include="..\image\asm\x86\compv_image_conv_rgbfamily_x64_sse.s" />
+    <None Include="..\image\asm\x86\compv_image_conv_rgbfamily_x86_avx.s" />
+    <None Include="..\image\asm\x86\compv_image_conv_rgbfamily_x86_sse.s" />
     <None Include="..\math\asm\x86\compv_math_macros_x86.s" />
     <None Include="..\math\asm\x86\compv_math_utils_x86.s" />
     <None Include="..\math\asm\x86\compv_math_utils_x86_avx.s" />
@@ -246,7 +296,9 @@
     <AndroidAPILevel>android-18</AndroidAPILevel>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\gas.props" />
+  </ImportGroup>
   <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
@@ -271,7 +323,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Disabled</ExceptionHandling>
@@ -282,7 +334,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
@@ -292,7 +344,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Disabled</ExceptionHandling>
@@ -303,7 +355,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
@@ -313,7 +365,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Disabled</ExceptionHandling>
@@ -324,7 +376,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
@@ -334,10 +386,11 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
+      <EnableNeonCodegen>false</EnableNeonCodegen>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -345,11 +398,13 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\gas.targets" />
+  </ImportGroup>
 </Project>

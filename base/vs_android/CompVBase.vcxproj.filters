@@ -103,6 +103,18 @@
     <Filter Include="include\image\intrin\arm">
       <UniqueIdentifier>{bda4efb0-4217-430c-a004-d289aea46da5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\image\asm">
+      <UniqueIdentifier>{53388a35-5a5f-4054-aca1-ceff61848d35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\image\asm\x86">
+      <UniqueIdentifier>{e0922600-5ad3-49fe-8b47-3988fe28d1ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\image\asm\arm">
+      <UniqueIdentifier>{8f9d3859-ba84-4eeb-b03f-226560afb790}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\asm\arm">
+      <UniqueIdentifier>{1cb01f57-9a3e-4e31-95a6-7d46cfd95d9e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\base\compv_base.h">
@@ -529,5 +541,31 @@
     <None Include="..\math\asm\x86\compv_math_utils_x86_sse.s">
       <Filter>source\math\asm\x86</Filter>
     </None>
+    <None Include="..\image\asm\x86\compv_image_conv_macros.s">
+      <Filter>source\image\asm\x86</Filter>
+    </None>
+    <None Include="..\image\asm\x86\compv_image_conv_rgbfamily_x64_avx.s">
+      <Filter>source\image\asm\x86</Filter>
+    </None>
+    <None Include="..\image\asm\x86\compv_image_conv_rgbfamily_x64_sse.s">
+      <Filter>source\image\asm\x86</Filter>
+    </None>
+    <None Include="..\image\asm\x86\compv_image_conv_rgbfamily_x86_avx.s">
+      <Filter>source\image\asm\x86</Filter>
+    </None>
+    <None Include="..\image\asm\x86\compv_image_conv_rgbfamily_x86_sse.s">
+      <Filter>source\image\asm\x86</Filter>
+    </None>
+    <None Include="..\asm\arm\compv_common_arm.i">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="..\asm\arm\compv_test_arm.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <GAS Include="..\image\asm\arm\compv_image_conv_rgbfamily_arm32_neon.S">
+      <Filter>source\image\asm\arm</Filter>
+    </GAS>
   </ItemGroup>
 </Project>

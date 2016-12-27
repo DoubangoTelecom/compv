@@ -13,6 +13,9 @@
 #include "compv/base/math/compv_math.h"
 #include "compv/base/compv_debug.h"
 
+// FIXME
+#include <arm_neon.h>
+
 // TODO(dmi): RGB -> RGBA conversion is done twice (Y plane then UV plane)
 // Neon intrinsics: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0491h/BABDFJCI.html
 

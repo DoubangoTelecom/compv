@@ -59,8 +59,10 @@
     <ClInclude Include="include\compv\base\image\compv_image_conv_to_yuv444p.h" />
     <ClInclude Include="include\compv\base\image\compv_image_decoder.h" />
     <ClInclude Include="include\compv\base\image\compv_image_utils.h" />
+    <ClInclude Include="include\compv\base\image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.h" />
+    <ClInclude Include="include\compv\base\intrin\arm\compv_intrin_neon.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_avx.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_sse.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_mem_intrin_avx.h" />

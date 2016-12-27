@@ -100,6 +100,12 @@
     <Filter Include="source\image\intrin\arm">
       <UniqueIdentifier>{25a48808-7a94-47be-816c-35fd2189eb64}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\image\intrin\arm">
+      <UniqueIdentifier>{46f2e2b2-bd53-4b7c-9ef6-c1b0e5a5e2d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\intrin\arm">
+      <UniqueIdentifier>{0998673b-97f5-4a48-bbb2-4be610342994}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -293,6 +299,12 @@
     </ClInclude>
     <ClInclude Include="include\compv\base\parallel\compv_threaddisptbb.h">
       <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.h">
+      <Filter>include\image\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\intrin\arm\compv_intrin_neon.h">
+      <Filter>include\intrin\arm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
