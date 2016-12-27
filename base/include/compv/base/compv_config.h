@@ -226,6 +226,11 @@
 #   define COMPV_EXTERNC
 #endif
 
+#if (defined(_MSC_VER) && (_MSC_VER >= 1800)) || (__cplusplus > 199711L)
+#	define COMPV_CPP11		1
+#endif
+
+
 // Windows's symbols export
 #if COMPV_OS_WINDOWS
 #	if defined(COMPV_BASE_EXPORTS)
@@ -323,11 +328,6 @@
 
 #if defined(COMPV_OS_ANDROID)
 #	define HAVE_CLOCK_GETTIME				1
-#endif
-
-// Multi-threading dispatcher type: CPP11 or CPPstd
-#if !defined(COMPV_PARALLEL_THREADDISP11)
-#	define COMPV_PARALLEL_THREADDISP11	1  // use C++11 thread dispatcher ?
 #endif
 
 // Semaphore type: CPP11 or CPPstd

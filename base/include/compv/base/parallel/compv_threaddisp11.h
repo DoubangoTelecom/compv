@@ -8,7 +8,7 @@
 #define _COMPV_BASE_PRALLEL_THREADDISP11_H_
 
 #include "compv/base/compv_config.h"
-#if COMPV_PARALLEL_THREADDISP11
+#if COMPV_CPP11
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_common.h"
 #include "compv/base/parallel/compv_asynctask11.h"
@@ -17,38 +17,38 @@ COMPV_NAMESPACE_BEGIN()
 
 COMPV_OBJECT_DECLARE_PTRS(ThreadDispatcher)
 
-class COMPV_BASE_API CompVThreadDispatcher : public CompVObj
+class COMPV_BASE_API CompVThreadDispatcher11 : public CompVObj
 {
 protected:
-    CompVThreadDispatcher(int32_t numThreads);
+    CompVThreadDispatcher11(int32_t numThreads);
 public:
-    virtual ~CompVThreadDispatcher();
+    virtual ~CompVThreadDispatcher11();
     virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVThreadDispatcher";
+        return "CompVThreadDispatcher11";
     };
     COMPV_INLINE int32_t threadsCount() { return m_nTasksCount; }
 
-    COMPV_ERROR_CODE invoke(std::function<COMPV_ERROR_CODE()> fFunc, CompVAsyncTaskIds& taskIds);
-    COMPV_ERROR_CODE wait(const CompVAsyncTaskIds& taskIds, uint64_t u_timeout = 86400000/* 1 day */);
-    COMPV_ERROR_CODE waitOne(const CompVAsyncTaskId& taskId, uint64_t u_timeout = 86400000/* 1 day */);
+    COMPV_ERROR_CODE invoke(std::function<COMPV_ERROR_CODE()> fFunc, CompVAsyncTask11Ids& taskIds);
+    COMPV_ERROR_CODE wait(const CompVAsyncTask11Ids& taskIds, uint64_t u_timeout = 86400000/* 1 day */);
+    COMPV_ERROR_CODE waitOne(const CompVAsyncTask11Id& taskId, uint64_t u_timeout = 86400000/* 1 day */);
     COMPV_ERROR_CODE waitAll(uint64_t u_timeout = 86400000/* 1 day */);
     uint32_t threadIdxCurrent();
     bool isMotherOfTheCurrentThread();
 	size_t guessNumThreadsDividingAcrossY(size_t xcount, size_t ycount, size_t maxThreads, size_t minSamplesPerThread);
 
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVThreadDispatcher*>* disp, int32_t numThreads = -1);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVThreadDispatcher11*>* disp, int32_t numThreads = -1);
 
 private:
     long nextTaskIdx();
 
 private:
-    CompVPtr<CompVAsyncTask *>* m_pTasks;
+    CompVAsyncTask11Ptr *m_pTasks;
     int32_t m_nTasksCount;
     bool m_bValid;
 };
 
 COMPV_NAMESPACE_END()
 
-#endif /* COMPV_PARALLEL_THREADDISP11 */
+#endif /* COMPV_CPP11 */
 
 #endif /* _COMPV_BASE_PRALLEL_THREADDISP11_H_ */

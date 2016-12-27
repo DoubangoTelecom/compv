@@ -70,7 +70,7 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_ssse3.h" />
-    <ClInclude Include="include\compv\base\parallel\compv_asynctask.h" />
+    <ClInclude Include="include\compv\base\parallel\compv_asynctask10.h" />
     <ClInclude Include="include\compv\base\parallel\compv_asynctask11.h" />
     <ClInclude Include="include\compv\base\parallel\compv_condvar.h" />
     <ClInclude Include="include\compv\base\parallel\compv_mutex.h" />
@@ -78,7 +78,9 @@
     <ClInclude Include="include\compv\base\parallel\compv_semaphore.h" />
     <ClInclude Include="include\compv\base\parallel\compv_thread.h" />
     <ClInclude Include="include\compv\base\parallel\compv_threaddisp.h" />
+    <ClInclude Include="include\compv\base\parallel\compv_threaddisp10.h" />
     <ClInclude Include="include\compv\base\parallel\compv_threaddisp11.h" />
+    <ClInclude Include="include\compv\base\parallel\compv_threaddisptbb.h" />
     <ClInclude Include="include\compv\base\time\compv_time.h" />
     <ClInclude Include="include\compv\base\time\compv_timer.h" />
   </ItemGroup>
@@ -143,7 +145,7 @@
     <ClCompile Include="math\intrin\x86\compv_math_utils_intrin_avx2.cxx" />
     <ClCompile Include="math\intrin\x86\compv_math_utils_intrin_sse2.cxx" />
     <ClCompile Include="math\intrin\x86\compv_math_utils_intrin_ssse3.cxx" />
-    <ClCompile Include="parallel\compv_asynctask.cxx" />
+    <ClCompile Include="parallel\compv_asynctask10.cxx" />
     <ClCompile Include="parallel\compv_asynctask11.cxx" />
     <ClCompile Include="parallel\compv_condvar.cxx" />
     <ClCompile Include="parallel\compv_mutex.cxx" />
@@ -151,7 +153,9 @@
     <ClCompile Include="parallel\compv_semaphore.cxx" />
     <ClCompile Include="parallel\compv_thread.cxx" />
     <ClCompile Include="parallel\compv_threaddisp.cxx" />
+    <ClCompile Include="parallel\compv_threaddisp10.cxx" />
     <ClCompile Include="parallel\compv_threaddisp11.cxx" />
+    <ClCompile Include="parallel\compv_threaddisptbb.cxx" />
     <ClCompile Include="time\compv_time.cxx" />
     <ClCompile Include="time\compv_timer.cxx" />
   </ItemGroup>

@@ -4,11 +4,10 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_BASE_PRALLEL_ASYNCTASK_H_)
-#define _COMPV_BASE_PRALLEL_ASYNCTASK_H_
+#if !defined(_COMPV_BASE_PRALLEL_ASYNCTASK10_H_)
+#define _COMPV_BASE_PRALLEL_ASYNCTASK10_H_
 
 #include "compv/base/compv_config.h"
-#if !COMPV_PARALLEL_THREADDISP11
 #include "compv/base/parallel/compv_thread.h"
 #include "compv/base/parallel/compv_semaphore.h"
 #include "compv/base/compv_obj.h"
@@ -73,14 +72,16 @@ compv_asynctoken_xt;
 
 #define COMPV_ASYNCTASK_SET_PARAM_NULL()									COMPV_ASYNCTASK_PARAM_PTR_INVALID
 
-class COMPV_BASE_API CompVAsyncTask : public CompVObj
+COMPV_OBJECT_DECLARE_PTRS(AsyncTask10)
+
+class COMPV_BASE_API CompVAsyncTask10 : public CompVObj
 {
 protected:
-    CompVAsyncTask();
+    CompVAsyncTask10();
 public:
-    virtual ~CompVAsyncTask();
+    virtual ~CompVAsyncTask10();
     virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVAsyncTask";
+        return "CompVAsyncTask10";
     };
 
     COMPV_ERROR_CODE start();
@@ -106,16 +107,16 @@ public:
     }
 
     static compv_asynctoken_id_t getUniqueTokenId();
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVAsyncTask*>* asyncTask);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVAsyncTask10*>* asyncTask);
 
 private:
     static void* COMPV_STDCALL run(void *pcArg);
 
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-    CompVPtr<CompVThread* >m_Thread;
-    CompVPtr<CompVSemaphore* >m_SemRun;
-    CompVPtr<CompVSemaphore* >m_SemExec;
+    CompVThreadPtr m_Thread;
+    CompVSemaphorePtr m_SemRun;
+    CompVSemaphorePtr m_SemExec;
     struct compv_asynctoken_xs tokens[COMPV_ASYNCTASK_MAX_TOKEN_COUNT];
     COMPV_VS_DISABLE_WARNINGS_END()
 
@@ -127,6 +128,4 @@ private:
 
 COMPV_NAMESPACE_END()
 
-#endif /* COMPV_PARALLEL_THREADDISP11 */
-
-#endif /* _COMPV_BASE_PRALLEL_ASYNCTASK_H_ */
+#endif /* _COMPV_BASE_PRALLEL_ASYNCTASK10_H_ */

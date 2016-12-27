@@ -4,14 +4,13 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_BASE_PRALLEL_THREADDISP_H_)
-#define _COMPV_BASE_PRALLEL_THREADDISP_H_
+#if !defined(_COMPV_BASE_PRALLEL_THREADDISP10_H_)
+#define _COMPV_BASE_PRALLEL_THREADDISP10_H_
 
 #include "compv/base/compv_config.h"
-#if !COMPV_PARALLEL_THREADDISP11
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_common.h"
-#include "compv/base/parallel/compv_asynctask.h"
+#include "compv/base/parallel/compv_asynctask10.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -39,13 +38,11 @@ public:
     static COMPV_ERROR_CODE newObj(CompVPtr<CompVThreadDispatcher10*>* disp, int32_t numThreads = -1);
 
 private:
-    CompVPtr<CompVAsyncTask *>* m_pTasks;
+    CompVAsyncTask10Ptr *m_pTasks;
     int32_t m_nTasksCount;
     bool m_bValid;
 };
 
 COMPV_NAMESPACE_END()
 
-#endif /* COMPV_PARALLEL_THREADDISP11 */
-
-#endif /* _COMPV_BASE_PRALLEL_THREADDISP_H_ */
+#endif /* _COMPV_BASE_PRALLEL_THREADDISP10_H_ */

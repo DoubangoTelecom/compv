@@ -8,7 +8,7 @@
 #define _COMPV_BASE_PRALLEL_ASYNCTASK11_H_
 
 #include "compv/base/compv_config.h"
-#if COMPV_PARALLEL_THREADDISP11
+#if COMPV_CPP11
 #include "compv/base/parallel/compv_thread.h"
 #include "compv/base/parallel/compv_mutex.h"
 #include "compv/base/parallel/compv_semaphore.h"
@@ -43,14 +43,14 @@ COMPV_NAMESPACE_BEGIN()
 #	endif
 #endif /* COMPV_ASYNCTASK11_MAX_TOKEN_COUNT */
 
-struct CompVAsyncTaskId {
+struct CompVAsyncTask11Id {
     uint64_t uTaskId;
     uint64_t uTokenId;
 public:
-    CompVAsyncTaskId() : uTaskId(0), uTokenId(0) { }
-    CompVAsyncTaskId(uint64_t taskId, uint64_t tokenId) : uTaskId(taskId), uTokenId(tokenId) { }
+    CompVAsyncTask11Id() : uTaskId(0), uTokenId(0) { }
+    CompVAsyncTask11Id(uint64_t taskId, uint64_t tokenId) : uTaskId(taskId), uTokenId(tokenId) { }
 };
-typedef std::vector<CompVAsyncTaskId> CompVAsyncTaskIds;
+typedef std::vector<CompVAsyncTask11Id> CompVAsyncTask11Ids;
 
 struct CompVAsyncToken {
     bool bExecute;
@@ -91,16 +91,16 @@ private:
 };
 #endif
 
-COMPV_OBJECT_DECLARE_PTRS(AsyncTask)
+COMPV_OBJECT_DECLARE_PTRS(AsyncTask11)
 
-class COMPV_BASE_API CompVAsyncTask : public CompVObj
+class COMPV_BASE_API CompVAsyncTask11 : public CompVObj
 {
 protected:
-    CompVAsyncTask();
+    CompVAsyncTask11();
 public:
-    virtual ~CompVAsyncTask();
+    virtual ~CompVAsyncTask11();
     virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVAsyncTask";
+        return "CompVAsyncTask11";
     };
 
     COMPV_ERROR_CODE start();
@@ -117,7 +117,7 @@ public:
     }
 
     static uint64_t getUniqueTokenId();
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVAsyncTask*>* asyncTask);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVAsyncTask11*>* asyncTask);
 
 private:
     static void* COMPV_STDCALL run(void *pcArg);
@@ -144,6 +144,6 @@ private:
 
 COMPV_NAMESPACE_END()
 
-#endif /* COMPV_PARALLEL_THREADDISP11 */
+#endif /* COMPV_CPP11 */
 
 #endif /* _COMPV_BASE_PRALLEL_ASYNCTASK11_H_ */
