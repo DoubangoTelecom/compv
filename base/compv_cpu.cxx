@@ -182,11 +182,7 @@ bool CompVCpu::s_bBigEndian = true;
 #else
 bool CompVCpu::s_bBigEndian = false;
 #endif
-#if COMPV_HAVE_INTEL_IPP
-bool CompVCpu::s_bIntelIpp = true;
-#else
 bool CompVCpu::s_bIntelIpp = false;
-#endif
 
 CompVCpu::CompVCpu()
 {

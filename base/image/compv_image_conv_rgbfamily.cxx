@@ -126,10 +126,12 @@ void __rgb24family_to_y(const uint8_t* rgbPtr, uint8_t* outYPtr, compv_uscalar_t
 		COMPV_EXEC_IFDEF_ASM_X86(funcptr = CompVImageConvRgb24family_to_y_Asm_X86_AVX2);
 		COMPV_EXEC_IFDEF_ASM_X64(funcptr = CompVImageConvRgb24family_to_y_Asm_X64_AVX2);
 	}
+#	if COMPV_HAVE_INTEL_IPP
 	if (kRGBfamilyToYUV_YCoeffs8 == kRGBAToYUV_YCoeffs8) { // For now BGR not supported by IPP
 		COMPV_EXEC_IFDEF_INTEL_IPP(funcptr = rgb_to_y_IPP);
 	}
-#endif
+#	endif /* COMPV_HAVE_INTEL_IPP */
+#endif /* COMPV_ARCH_X86 */
 	funcptr(rgbPtr, outYPtr, width, height, stride, kRGBfamilyToYUV_YCoeffs8);
 
 }
