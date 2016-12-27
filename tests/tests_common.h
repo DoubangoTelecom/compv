@@ -19,7 +19,7 @@ using namespace compv;
 #define COMPV_enableMathFixedPoint	true
 #define COMPV_enableTestingMode		true
 #define COMPV_enableIntelIpp		false
-#define COMPV_enableIntelTbb		true
+#define COMPV_enableIntelTbb		false
 #define COMPV_cpuDisable			kCpuFlagNone
 
 COMPV_NAMESPACE_BEGIN()
@@ -29,16 +29,16 @@ static const COMPV_ERROR_CODE tests_init()
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
-
+	CompVParallel::setIntelTbbEnabled(COMPV_enableIntelTbb); // before initializing
+	
 	COMPV_CHECK_CODE_ASSERT(err = CompVInit(COMPV_numThreads));
 	COMPV_CHECK_CODE_ASSERT(err = CompVBase::setTestingModeEnabled(COMPV_enableTestingMode));
 	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::setMathFixedPointEnabled(COMPV_enableMathFixedPoint));
 	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::setAsmEnabled(COMPV_enableAsm));
 	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::setIntrinsicsEnabled(COMPV_enableIntrinsics));
-#if COMPV_HAVE_INTEL_IPP
 	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::setIntelIppEnabled(COMPV_enableIntelIpp));
-#endif
 	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::flagsDisable(COMPV_cpuDisable));
+	
 	return err;
 }
 

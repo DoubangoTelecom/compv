@@ -5,8 +5,9 @@
 * WebSite: http://compv.org
 */
 #include "compv/base/parallel/compv_threaddisp.h"
-#include "compv/base/parallel/compv_threaddisp_native.h"
-#include "compv/base/parallel/compv_threaddisp_tbb.h"
+#include "compv/base/parallel/compv_threaddisp10.h"
+#include "compv/base/parallel/compv_threaddisp11.h"
+#include "compv/base/parallel/compv_threaddisptbb.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_mem.h"
@@ -69,7 +70,7 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVThreadDispatcherPtrPtr disp,
 	CompVThreadDispatcherPtr _disp;
 
 	// Create thread dispatcher using Intel TBB implementation
-#if COMPV_HAVE_INTEL_TBB && 0
+#if COMPV_HAVE_INTEL_TBB
 	if (!_disp && CompVParallel::isIntelTbbEnabled()) {
 		CompVThreadDispatcherTbbPtr _dispTbb;
 		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcherTbb::newObj(&_dispTbb, numThreads), "Failed to create TBB thread dispatcher");
@@ -80,8 +81,8 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVThreadDispatcherPtrPtr disp,
 	// Create thread dispacher using native implementation
 	if (!_disp) {
 #if COMPV_CPP11
-		CompVThreadDispatcherNativePtr _dispNative;
-		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcherNative::newObj(&_dispNative, numThreads), "Failed to create native thread dispatcher");
+		CompVThreadDispatcher11Ptr _dispNative;
+		COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher11::newObj(&_dispNative, numThreads), "Failed to create native thread dispatcher");
 		_disp = *_dispNative;
 #else
 		CompVThreadDispatcher10Ptr _disp10;

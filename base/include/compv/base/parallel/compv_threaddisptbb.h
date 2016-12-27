@@ -4,15 +4,17 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_BASE_PRALLEL_THREADDISP_NATIVE_H_)
-#define _COMPV_BASE_PRALLEL_THREADDISP_NATIVE_H_
+#if !defined(_COMPV_BASE_PRALLEL_THREADDISP_TBB_H_)
+#define _COMPV_BASE_PRALLEL_THREADDISP_TBB_H_
 
 #include "compv/base/compv_config.h"
-#if COMPV_CPP11
+#if COMPV_CPP11 && COMPV_HAVE_INTEL_TBB
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_common.h"
 #include "compv/base/parallel/compv_threaddisp.h"
 #include "compv/base/parallel/compv_asynctask11.h"
+
+#include <tbb/task_group.h>
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -20,35 +22,29 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-COMPV_OBJECT_DECLARE_PTRS(ThreadDispatcherNative)
+COMPV_OBJECT_DECLARE_PTRS(ThreadDispatcherTbb)
 
-class CompVThreadDispatcherNative : public CompVThreadDispatcher
+class CompVThreadDispatcherTbb : public CompVThreadDispatcher
 {
 protected:
-	CompVThreadDispatcherNative(int32_t numThreads);
+	CompVThreadDispatcherTbb(int32_t numThreads);
 public:
-	virtual ~CompVThreadDispatcherNative();
-	COMPV_OBJECT_GET_ID(CompVThreadDispatcherNative);
+	COMPV_OBJECT_GET_ID(CompVThreadDispatcherTbb);
 
-	virtual COMPV_ERROR_CODE invoke(std::function<COMPV_ERROR_CODE()> fFunc, CompVAsyncTask11Ids& taskIds) override /*Overrides(CompVThreadDispatcher)*/;
-	virtual COMPV_ERROR_CODE wait(const CompVAsyncTask11Ids& taskIds, uint64_t u_timeout = 86400000/* 1 day */) override /*Overrides(CompVThreadDispatcher)*/;
+	virtual COMPV_ERROR_CODE invoke(std::function<void()> fFunc, CompVAsyncTaskIds& taskIds) override /*Overrides(CompVThreadDispatcher)*/;
+	virtual COMPV_ERROR_CODE wait(const CompVAsyncTaskIds& taskIds, uint64_t u_timeout = 86400000/* 1 day */) override /*Overrides(CompVThreadDispatcher)*/;
 	virtual COMPV_ERROR_CODE waitOne(const CompVAsyncTask11Id& taskId, uint64_t u_timeout = 86400000/* 1 day */) override /*Overrides(CompVThreadDispatcher)*/;
 	virtual COMPV_ERROR_CODE waitAll(uint64_t u_timeout = 86400000/* 1 day */);
-	virtual uint32_t threadIdxCurrent();
 	virtual bool isMotherOfTheCurrentThread() override /*Overrides(CompVThreadDispatcher)*/;
 
-	static COMPV_ERROR_CODE newObj(CompVThreadDispatcherNativePtrPtr disp, int32_t numThreads);
+	static COMPV_ERROR_CODE newObj(CompVThreadDispatcherTbbPtrPtr disp, int32_t numThreads);
 
 private:
-	long nextTaskIdx();
-
-private:
-	CompVAsyncTask11PtrPtr m_pTasks;
-	bool m_bValid;
+	tbb::task_group m_Group;
 };
 
 COMPV_NAMESPACE_END()
 
-#endif /* COMPV_CPP11 */
+#endif /* COMPV_CPP11 && COMPV_HAVE_INTEL_TBB */
 
-#endif /* _COMPV_BASE_PRALLEL_THREADDISP_NATIVE_H_ */
+#endif /* _COMPV_BASE_PRALLEL_THREADDISP_TBB_H_ */

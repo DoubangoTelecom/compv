@@ -25,10 +25,11 @@ public:
 	virtual ~CompVThreadDispatcher();
 	COMPV_OBJECT_GET_ID(CompVThreadDispatcher);
 	COMPV_INLINE int32_t threadsCount() { return m_nTasksCount; }
+	COMPV_INLINE int32_t tasksCount() { return m_nTasksCount; }
 
 #if COMPV_CPP11
-	virtual COMPV_ERROR_CODE invoke(std::function<COMPV_ERROR_CODE()> fFunc, CompVAsyncTask11Ids& taskIds) = 0;
-	virtual COMPV_ERROR_CODE wait(const CompVAsyncTask11Ids& taskIds, uint64_t u_timeout = 86400000/* 1 day */) = 0;
+	virtual COMPV_ERROR_CODE invoke(std::function<void()> fFunc, CompVAsyncTaskIds& taskIds) = 0;
+	virtual COMPV_ERROR_CODE wait(const CompVAsyncTaskIds& taskIds, uint64_t u_timeout = 86400000/* 1 day */) = 0;
 	virtual COMPV_ERROR_CODE waitOne(const CompVAsyncTask11Id& taskId, uint64_t u_timeout = 86400000/* 1 day */) = 0;
 #else
 	virtual COMPV_ERROR_CODE execute(uint32_t threadIdx, compv_asynctoken_id_t tokenId, compv_asynctoken_f f_func, ...) = 0;

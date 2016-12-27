@@ -282,13 +282,13 @@
     <ClInclude Include="include\compv\base\parallel\compv_threaddisp.h">
       <Filter>include\parallel</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\base\parallel\compv_threaddisp_native.h">
-      <Filter>include\parallel</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\base\parallel\compv_threaddisp_tbb.h">
-      <Filter>include\parallel</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\base\parallel\compv_threaddisp10.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\parallel\compv_threaddisp11.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\parallel\compv_threaddisptbb.h">
       <Filter>include\parallel</Filter>
     </ClInclude>
   </ItemGroup>
@@ -461,13 +461,13 @@
     <ClCompile Include="parallel\compv_threaddisp.cxx">
       <Filter>source\parallel</Filter>
     </ClCompile>
-    <ClCompile Include="parallel\compv_threaddisp_native.cxx">
-      <Filter>source\parallel</Filter>
-    </ClCompile>
-    <ClCompile Include="parallel\compv_threaddisp_tbb.cxx">
-      <Filter>source\parallel</Filter>
-    </ClCompile>
     <ClCompile Include="parallel\compv_threaddisp10.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="parallel\compv_threaddisp11.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="parallel\compv_threaddisptbb.cxx">
       <Filter>source\parallel</Filter>
     </ClCompile>
   </ItemGroup>

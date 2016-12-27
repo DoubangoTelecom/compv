@@ -50,11 +50,11 @@ public:
     CompVAsyncTask11Id() : uTaskId(0), uTokenId(0) { }
     CompVAsyncTask11Id(uint64_t taskId, uint64_t tokenId) : uTaskId(taskId), uTokenId(tokenId) { }
 };
-typedef std::vector<CompVAsyncTask11Id> CompVAsyncTask11Ids;
+typedef std::vector<CompVAsyncTask11Id> CompVAsyncTaskIds;
 
 struct CompVAsyncToken {
     bool bExecute;
-    std::function<COMPV_ERROR_CODE()> fFunc;
+    std::function<void()> fFunc;
 public:
     void init() {
         fFunc = nullptr;
@@ -103,7 +103,7 @@ public:
 
     COMPV_ERROR_CODE start();
     COMPV_ERROR_CODE setAffinity(compv_core_id_t core_id);
-    COMPV_ERROR_CODE invoke(std::function<COMPV_ERROR_CODE()> fFunc, uint64_t *tokenId = NULL);
+    COMPV_ERROR_CODE invoke(std::function<void()> fFunc, uint64_t *tokenId = NULL);
     COMPV_ERROR_CODE waitAll(uint64_t u_timeout = 86400000/* 1 day */);
     COMPV_ERROR_CODE waitOne(uint64_t tokenId, uint64_t u_timeout = 86400000/* 1 day */);
     COMPV_ERROR_CODE stop();

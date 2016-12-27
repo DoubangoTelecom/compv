@@ -201,33 +201,6 @@
     <ClInclude Include="..\include\compv\base\time\compv_timer.h">
       <Filter>include\time</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\base\parallel\compv_asynctask.h">
-      <Filter>include\parallel</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\parallel\compv_asynctask11.h">
-      <Filter>include\parallel</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\parallel\compv_condvar.h">
-      <Filter>include\parallel</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\parallel\compv_mutex.h">
-      <Filter>include\parallel</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\parallel\compv_parallel.h">
-      <Filter>include\parallel</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\parallel\compv_semaphore.h">
-      <Filter>include\parallel</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\parallel\compv_thread.h">
-      <Filter>include\parallel</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\parallel\compv_threaddisp.h">
-      <Filter>include\parallel</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\base\parallel\compv_threaddisp11.h">
-      <Filter>include\parallel</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\base\image\compv_image.h">
       <Filter>include\image</Filter>
     </ClInclude>
@@ -260,6 +233,39 @@
     </ClInclude>
     <ClInclude Include="..\include\compv\base\image\compv_image_conv_to_yuv444p.h">
       <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_asynctask10.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_asynctask11.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_condvar.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_mutex.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_parallel.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_semaphore.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_thread.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_threaddisp.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_threaddisp10.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_threaddisp11.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_threaddisptbb.h">
+      <Filter>include\parallel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -365,33 +371,6 @@
     <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_ssse3.cxx">
       <Filter>source\math\intrin\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\parallel\compv_asynctask.cxx">
-      <Filter>source\parallel</Filter>
-    </ClCompile>
-    <ClCompile Include="..\parallel\compv_asynctask11.cxx">
-      <Filter>source\parallel</Filter>
-    </ClCompile>
-    <ClCompile Include="..\parallel\compv_condvar.cxx">
-      <Filter>source\parallel</Filter>
-    </ClCompile>
-    <ClCompile Include="..\parallel\compv_mutex.cxx">
-      <Filter>source\parallel</Filter>
-    </ClCompile>
-    <ClCompile Include="..\parallel\compv_parallel.cxx">
-      <Filter>source\parallel</Filter>
-    </ClCompile>
-    <ClCompile Include="..\parallel\compv_semaphore.cxx">
-      <Filter>source\parallel</Filter>
-    </ClCompile>
-    <ClCompile Include="..\parallel\compv_thread.cxx">
-      <Filter>source\parallel</Filter>
-    </ClCompile>
-    <ClCompile Include="..\parallel\compv_threaddisp.cxx">
-      <Filter>source\parallel</Filter>
-    </ClCompile>
-    <ClCompile Include="..\parallel\compv_threaddisp11.cxx">
-      <Filter>source\parallel</Filter>
-    </ClCompile>
     <ClCompile Include="..\time\compv_time.cxx">
       <Filter>source\time</Filter>
     </ClCompile>
@@ -427,6 +406,39 @@
     </ClCompile>
     <ClCompile Include="..\image\compv_image_conv_to_yuv444p.cxx">
       <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_asynctask10.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_asynctask11.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_condvar.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_mutex.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_parallel.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_semaphore.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_thread.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_threaddisp.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_threaddisp10.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_threaddisp11.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_threaddisptbb.cxx">
+      <Filter>source\parallel</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

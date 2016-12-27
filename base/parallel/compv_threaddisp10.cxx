@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/base/parallel/compv_threaddisp.h"
+#include "compv/base/parallel/compv_threaddisp10.h"
 #if !COMPV_CPP11
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_mem.h"
@@ -13,28 +13,28 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVThreadDispatcher::CompVThreadDispatcher(int32_t numThreads)
-    : m_pTasks(NULL)
-    , m_nTasksCount(numThreads)
+CompVThreadDispatcher10::CompVThreadDispatcher10(int32_t numThreads)
+    : CompVThreadDispatcher(numThreads)
+	, m_ppTasks(NULL)
     , m_bValid(false)
 {
     COMPV_ASSERT(numThreads > 1); // never happen, we already checked it in newObj()
-    m_pTasks = (CompVPtr<CompVAsyncTask *>*)CompVMem::calloc(numThreads, sizeof(CompVPtr<CompVAsyncTask *>));
-    if (!m_pTasks) {
+    m_ppTasks = (CompVAsyncTask10PtrPtr)CompVMem::calloc(numThreads, sizeof(CompVAsyncTask10Ptr));
+    if (!m_ppTasks) {
         COMPV_DEBUG_ERROR("Failed to allocate the asynctasks");
         return;
     }
     compv_core_id_t coreId = CompVCpu::validCoreId(0);
-    for (int32_t i = 0; i < m_nTasksCount; ++i) {
-        if (COMPV_ERROR_CODE_IS_NOK(CompVAsyncTask::newObj(&m_pTasks[i]))) {
+    for (int32_t i = 0; i < tasksCount(); ++i) {
+        if (COMPV_ERROR_CODE_IS_NOK(CompVAsyncTask10::newObj(&m_ppTasks[i]))) {
             COMPV_DEBUG_ERROR("Failed to allocate the asynctask at index %d", i);
             return;
         }
         // Calling setAffinity is required to identify the thread even if affinity setting is disabled
-        if (COMPV_ERROR_CODE_IS_NOK(m_pTasks[i]->setAffinity(CompVCpu::validCoreId(coreId++)))) {
+        if (COMPV_ERROR_CODE_IS_NOK(m_ppTasks[i]->setAffinity(CompVCpu::validCoreId(coreId++)))) {
             COMPV_DEBUG_ERROR("Failed to set affinity %d", i);
         }
-        if (COMPV_ERROR_CODE_IS_NOK(m_pTasks[i]->start())) {
+        if (COMPV_ERROR_CODE_IS_NOK(m_ppTasks[i]->start())) {
             COMPV_DEBUG_ERROR("Failed to start the asynctask at index %d", i);
             return;
         }
@@ -42,19 +42,20 @@ CompVThreadDispatcher::CompVThreadDispatcher(int32_t numThreads)
     m_bValid = true;
 }
 
-CompVThreadDispatcher::~CompVThreadDispatcher()
+CompVThreadDispatcher10::~CompVThreadDispatcher10()
 {
-    if (m_pTasks) {
-        for (int32_t i = 0; i < m_nTasksCount; ++i) {
-            m_pTasks[i] = NULL;
+    if (m_ppTasks) {
+		int32_t tasks = tasksCount();
+        for (int32_t i = 0; i < tasks; ++i) {
+            m_ppTasks[i] = NULL;
         }
-        CompVMem::free((void**)&m_pTasks);
+        CompVMem::free((void**)&m_ppTasks);
     }
 }
 
-COMPV_ERROR_CODE CompVThreadDispatcher::execute(uint32_t threadIdx, compv_asynctoken_id_t tokenId, compv_asynctoken_f f_func, ...)
+COMPV_ERROR_CODE CompVThreadDispatcher10::execute(uint32_t threadIdx, compv_asynctoken_id_t tokenId, compv_asynctoken_f f_func, ...)  /*Overrides(CompVThreadDispatcher)*/
 {
-    CompVPtr<CompVAsyncTask *> asyncTask = m_pTasks[threadIdx % m_nTasksCount];
+    CompVAsyncTask10Ptr  asyncTask = m_ppTasks[threadIdx % tasksCount()];
     COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -66,78 +67,61 @@ bail:
     return err;
 }
 
-COMPV_ERROR_CODE CompVThreadDispatcher::wait(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t u_timeout /*= 86400000*//* 1 day */)
+COMPV_ERROR_CODE CompVThreadDispatcher10::wait(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t u_timeout /*= 86400000*//* 1 day */)  /*Overrides(CompVThreadDispatcher)*/
 {
-    CompVPtr<CompVAsyncTask *> asyncTask = m_pTasks[threadIdx % m_nTasksCount];
+    CompVAsyncTask10Ptr asyncTask = m_ppTasks[threadIdx % tasksCount()];
     COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_CHECK_CODE_RETURN(asyncTask->wait(tokenId, u_timeout));
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVThreadDispatcher::getIdleTime(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t* timeIdle)
+COMPV_ERROR_CODE CompVThreadDispatcher10::getIdleTime(uint32_t threadIdx, compv_asynctoken_id_t tokenId, uint64_t* timeIdle)
 {
-    CompVPtr<CompVAsyncTask *> asyncTask = m_pTasks[threadIdx % m_nTasksCount];
+    CompVAsyncTask10Ptr asyncTask = m_ppTasks[threadIdx % tasksCount()];
     COMPV_CHECK_EXP_RETURN(!asyncTask, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     return asyncTask->tokenGetIdleTime(tokenId, timeIdle);
 }
 
-uint32_t CompVThreadDispatcher::getThreadIdxForNextToCurrentCore()
+uint32_t CompVThreadDispatcher10::getThreadIdxForNextToCurrentCore()
 {
-    return (getThreadIdxCurrent() + 1) % m_nTasksCount;
+    return (getThreadIdxCurrent() + 1) % tasksCount();
 }
 
-uint32_t CompVThreadDispatcher::getThreadIdxCurrent()
+uint32_t CompVThreadDispatcher10::getThreadIdxCurrent()
 {
     compv_thread_id_t currentThreadId = CompVThread::getIdCurrent();
-    for (int32_t i = 0; i < m_nTasksCount; ++i) {
-        if (m_pTasks[i]->getThread()->getId() == currentThreadId) {
+	int32_t tasks = tasksCount();
+    for (int32_t i = 0; i < tasks; ++i) {
+        if (m_ppTasks[i]->getThread()->getId() == currentThreadId) {
             return (uint32_t)i;
         }
     }
     return 0;
 }
 
-bool CompVThreadDispatcher::isMotherOfTheCurrentThread()
+bool CompVThreadDispatcher10::isMotherOfTheCurrentThread()  /*Overrides(CompVThreadDispatcher)*/
 {
     compv_thread_id_t currentThreadId = CompVThread::getIdCurrent();
-    for (int32_t i = 0; i < m_nTasksCount; ++i) {
-        if (m_pTasks[i]->getThread()->getId() == currentThreadId) {
+	int32_t tasks = tasksCount();
+    for (int32_t i = 0; i < tasks; ++i) {
+        if (m_ppTasks[i]->getThread()->getId() == currentThreadId) {
             return true;
         }
     }
     return false;
 }
 
-int32_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(int32_t xcount, int32_t ycount, int32_t minSamplesPerThread)
+COMPV_ERROR_CODE CompVThreadDispatcher10::newObj(CompVThreadDispatcher10PtrPtr disp, int32_t numThreads)
 {
-    int32_t divCount = 1;
-    int32_t maxThreads = getThreadsCount();
-    for (int32_t div = 2; div <= maxThreads; ++div) {
-        divCount = div;
-        if ((xcount * (ycount / divCount)) <= minSamplesPerThread) { // we started with the smallest div, which mean largest number of pixs and break the loop when we're below the threshold
-            break;
-        }
-    }
-    return divCount;
-}
-
-COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVPtr<CompVThreadDispatcher*>* disp, int32_t numThreads)
-{
-    COMPV_CHECK_CODE_RETURN(CompVBase::init());
-    COMPV_CHECK_EXP_RETURN(disp == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	// numThreads must be > 1
+	COMPV_CHECK_EXP_RETURN(!disp || numThreads <= 1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     
-    CompVPtr<CompVThreadDispatcher*>_disp = new CompVThreadDispatcher(numThreads);
-    if (!_disp || !_disp->m_bValid) {
-        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
-    *disp = _disp;
-
-    COMPV_DEBUG_INFO("Thread dispatcher created with #%d threads/#%d cores", numThreads, numCores);
-
+    CompVThreadDispatcher10Ptr disp_ = new CompVThreadDispatcher10(numThreads);
+	COMPV_CHECK_EXP_RETURN(!disp_ || !disp_->m_bValid, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    *disp = disp_;
     return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()
 
-#endif /* COMPV_PARALLEL_THREADDISP11 */
+#endif /* !COMPV_CPP11 */
+

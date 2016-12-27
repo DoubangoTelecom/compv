@@ -40,7 +40,7 @@ public:
     static COMPV_ERROR_CODE newObj(CompVThreadDispatcher10PtrPtr disp, int32_t numThreads);
 
 private:
-    CompVAsyncTask10Ptr *m_pTasks;
+    CompVAsyncTask10PtrPtr m_ppTasks;
     bool m_bValid;
 };
 

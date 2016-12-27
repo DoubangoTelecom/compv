@@ -99,16 +99,15 @@ COMPV_ERROR_CODE CompVImageConvToYUV444P::rgbfamily(const CompVMatPtr& imageRGBf
 
 	// Compute number of threads
 	threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
-		? threadDisp->guessNumThreadsDividingAcrossY(stride, height, maxThreads, COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD)
+		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(stride, height, maxThreads, COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD)
 		: 1;
 
 	if (threadsCount > 1) {
 		size_t rgbIdx = 0, YIdx = 0, UVIdx = 0;
 		taskIds.reserve(threadsCount);
-		auto funcPtr = [&](const uint8_t* rgbPtr, uint8_t* outYPtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t height) -> COMPV_ERROR_CODE {
+		auto funcPtr = [&](const uint8_t* rgbPtr, uint8_t* outYPtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t height) -> void {
 			rgbfamily_to_y(rgbPtr, outYPtr, width, height, strideY);
 			rgbfamily_to_uv_planar_11(rgbPtr, outUPtr, outVPtr, width, height, strideUV);
-			return COMPV_ERROR_CODE_S_OK;
 		};
 		size_t heights = (height / threadsCount);
 		size_t lastHeight = height - ((threadsCount - 1) * heights);

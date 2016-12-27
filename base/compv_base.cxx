@@ -99,7 +99,9 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
     COMPV_CHECK_EXP_BAIL(timeBeginPeriod(1) != 0, (err_ = COMPV_ERROR_CODE_E_SYSTEM));
 
     // Get OS version
+#if defined(__INTEL_COMPILER)
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(1478) // GetVersionEx is deprecated
+#endif
     if (s_dwMajorVersion == -1 || s_dwMinorVersion == -1) {
         OSVERSIONINFO osvi;
         ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
@@ -114,7 +116,9 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
 #	endif
     }
 #endif
+#if defined(__INTEL_COMPILER)
 	COMPV_VS_DISABLE_WARNINGS_END()
+#endif
 
     // rand()
     srand((unsigned int)CompVTime::getNowMills());

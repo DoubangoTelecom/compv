@@ -5,7 +5,7 @@
 * WebSite: http://compv.org
 */
 #include "compv/base/parallel/compv_asynctask11.h"
-#if COMPV_PARALLEL_THREADDISP11
+#if COMPV_CPP11
 #include "compv/base/time/compv_time.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_cpu.h"
@@ -14,19 +14,19 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVAsyncTask::CompVAsyncTask()
+CompVAsyncTask11::CompVAsyncTask11()
     : m_bStarted(false)
     , m_iCoreId(-1)
 {
 
 }
 
-CompVAsyncTask::~CompVAsyncTask()
+CompVAsyncTask11::~CompVAsyncTask11()
 {
     stop(); // stop(), join(), free() "thread"
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::start()
+COMPV_ERROR_CODE CompVAsyncTask11::start()
 {
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     if (m_bStarted) {
@@ -54,7 +54,7 @@ COMPV_ERROR_CODE CompVAsyncTask::start()
 #endif
     m_Thread = NULL; // join the thread
     m_bStarted = true; // must be here to make sure the run thread will have it equal to true
-    err_ = CompVThread::newObj(&m_Thread, CompVAsyncTask::run, this);
+    err_ = CompVThread::newObj(&m_Thread, CompVAsyncTask11::run, this);
     if (COMPV_ERROR_CODE_IS_NOK(err_)) {
         m_bStarted = false;
         COMPV_CHECK_CODE_RETURN(err_, "Failed to create async thread for the task");
@@ -84,7 +84,7 @@ COMPV_ERROR_CODE CompVAsyncTask::start()
     return err_;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::setAffinity(compv_core_id_t coreId)
+COMPV_ERROR_CODE CompVAsyncTask11::setAffinity(compv_core_id_t coreId)
 {
     if (m_Thread) {
 #if COMPV_PARALLEL_THREAD_SET_AFFINITY
@@ -95,7 +95,7 @@ COMPV_ERROR_CODE CompVAsyncTask::setAffinity(compv_core_id_t coreId)
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::invoke(std::function<COMPV_ERROR_CODE()> fFunc, uint64_t *tokenId /*= NULL*/)
+COMPV_ERROR_CODE CompVAsyncTask11::invoke(std::function<void()> fFunc, uint64_t *tokenId /*= NULL*/)
 {
     COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
     COMPV_CHECK_EXP_RETURN(!fFunc, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -136,7 +136,7 @@ COMPV_ERROR_CODE CompVAsyncTask::invoke(std::function<COMPV_ERROR_CODE()> fFunc,
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::waitAll(uint64_t u_timeout /* = 86400000 -> 1 day */)
+COMPV_ERROR_CODE CompVAsyncTask11::waitAll(uint64_t u_timeout /* = 86400000 -> 1 day */)
 {
     COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Deadlock when mt functions are chained
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // We check all tokens
@@ -157,7 +157,7 @@ COMPV_ERROR_CODE CompVAsyncTask::waitAll(uint64_t u_timeout /* = 86400000 -> 1 d
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::waitOne(uint64_t tokenId, uint64_t u_timeout /* = 86400000 -> 1 day */)
+COMPV_ERROR_CODE CompVAsyncTask11::waitOne(uint64_t tokenId, uint64_t u_timeout /* = 86400000 -> 1 day */)
 {
     COMPV_CHECK_EXP_RETURN(!m_bStarted || tokenId >= COMPV_ASYNCTASK11_MAX_TOKEN_COUNT, COMPV_ERROR_CODE_E_INVALID_STATE);
     CompVAsyncToken* token = &m_Tokens[tokenId];
@@ -172,7 +172,7 @@ COMPV_ERROR_CODE CompVAsyncTask::waitOne(uint64_t tokenId, uint64_t u_timeout /*
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::stop()
+COMPV_ERROR_CODE CompVAsyncTask11::stop()
 {
     m_bStarted = false;
 
@@ -186,30 +186,30 @@ COMPV_ERROR_CODE CompVAsyncTask::stop()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-uint64_t CompVAsyncTask::getUniqueTokenId()
+uint64_t CompVAsyncTask11::getUniqueTokenId()
 {
     static long uniqueId = 0;
     return compv_atomic_inc(&uniqueId);
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::newObj(CompVPtr<CompVAsyncTask*>* asyncTask)
+COMPV_ERROR_CODE CompVAsyncTask11::newObj(CompVPtr<CompVAsyncTask11*>* asyncTask)
 {
     COMPV_CHECK_CODE_RETURN(CompVBase::init());
     COMPV_CHECK_EXP_RETURN(asyncTask == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVPtr<CompVAsyncTask*> asyncTask_ = new CompVAsyncTask();
+    CompVPtr<CompVAsyncTask11*> asyncTask_ = new CompVAsyncTask11();
     COMPV_CHECK_EXP_RETURN(*asyncTask_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     *asyncTask = asyncTask_;
     return COMPV_ERROR_CODE_S_OK;
 }
 
-void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
+void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
 {
-    // "Self_" must not be "CompVPtr<CompVAsyncTask *>" to avoid incrementing the refCount
+    // "Self_" must not be "CompVPtr<CompVAsyncTask11 *>" to avoid incrementing the refCount
     // It the refCount is incremented here this means it's value will be equal to #2 after newObj() followed by start()
     // Now let's imagine you call "obj = NULL;", this will decrease the refCount to 1 but won't destroy it. This means you have to call stop() first (followed by = NULL if you want to destroy it).
-    // This is why we use "CompVAsyncTask*" instead of "CompVPtr<CompVAsyncTask *>". We're sure that the object cannot be destroyed while
+    // This is why we use "CompVAsyncTask11*" instead of "CompVPtr<CompVAsyncTask11 *>". We're sure that the object cannot be destroyed while
     // we're running the below code because the destructor() calls stop() and wait the exit
-    CompVAsyncTask* Self_ = static_cast<CompVAsyncTask*>(pcArg);
+    CompVAsyncTask11* Self_ = static_cast<CompVAsyncTask11*>(pcArg);
     CompVAsyncToken* pToken_;
     COMPV_ERROR_CODE err_;
     size_t size_;
@@ -219,9 +219,9 @@ void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
     if (Self_->m_iCoreId >= 0) {
         COMPV_CHECK_CODE_BAIL(err_ = Self_->m_Thread->setAffinity(Self_->m_iCoreId));
     }
-    COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=%d, threadId:%llu, kThreadSetAffinity:true) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), (unsigned long)CompVThread::getIdCurrent());
+    COMPV_DEBUG_INFO("CompVAsyncTask11::run(coreId:requested=%d,set=%d, threadId:%llu, kThreadSetAffinity:true) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), (unsigned long)CompVThread::getIdCurrent());
 #else
-    COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=useless, threadId:%lu, kThreadSetAffinity:false) - ENTER", Self_->m_iCoreId, (unsigned long)CompVThread::getIdCurrent());
+    COMPV_DEBUG_INFO("CompVAsyncTask11::run(coreId:requested=%d,set=useless, threadId:%lu, kThreadSetAffinity:false) - ENTER", Self_->m_iCoreId, (unsigned long)CompVThread::getIdCurrent());
 #endif
 
     while (Self_->m_bStarted) {
@@ -240,7 +240,7 @@ void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
     }
 
 bail:
-    COMPV_DEBUG_INFO("CompVAsyncTask::run(threadId:%ld) - EXIT", (long)CompVThread::getIdCurrent());
+    COMPV_DEBUG_INFO("CompVAsyncTask11::run(threadId:%ld) - EXIT", static_cast<long>(CompVThread::getIdCurrent()));
     return NULL;
 }
 

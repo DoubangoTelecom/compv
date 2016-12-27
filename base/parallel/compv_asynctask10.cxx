@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/base/parallel/compv_asynctask.h"
-#if !COMPV_PARALLEL_THREADDISP11
+#include "compv/base/parallel/compv_asynctask10.h"
+#if !COMPV_CPP11
 #include "compv/base/time/compv_time.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_cpu.h"
@@ -14,7 +14,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVAsyncTask::CompVAsyncTask()
+CompVAsyncTask10::CompVAsyncTask10()
     : m_iCoreId(-1)
     , m_iTokensCount(0)
     , m_bStarted(false)
@@ -22,12 +22,12 @@ CompVAsyncTask::CompVAsyncTask()
 
 }
 
-CompVAsyncTask::~CompVAsyncTask()
+CompVAsyncTask10::~CompVAsyncTask10()
 {
     stop(); // stop(), join(), free() "thread"
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::start()
+COMPV_ERROR_CODE CompVAsyncTask10::start()
 {
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     if (m_bStarted) {
@@ -41,7 +41,7 @@ COMPV_ERROR_CODE CompVAsyncTask::start()
     }
     m_Thread = NULL; // join the thread
     m_bStarted = true; // must be here to make sure the run thread will have it equal to true
-    err_ = CompVThread::newObj(&m_Thread, CompVAsyncTask::run, this);
+    err_ = CompVThread::newObj(&m_Thread, CompVAsyncTask10::run, this);
     if (COMPV_ERROR_CODE_IS_NOK(err_)) {
         m_bStarted = false;
         COMPV_CHECK_CODE_RETURN(err_);
@@ -65,7 +65,7 @@ COMPV_ERROR_CODE CompVAsyncTask::start()
     return err_;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::setAffinity(compv_core_id_t coreId)
+COMPV_ERROR_CODE CompVAsyncTask10::setAffinity(compv_core_id_t coreId)
 {
     if (m_Thread) {
 #if COMPV_PARALLEL_THREAD_SET_AFFINITY
@@ -76,7 +76,7 @@ COMPV_ERROR_CODE CompVAsyncTask::setAffinity(compv_core_id_t coreId)
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::tokenTake(compv_asynctoken_id_t* piToken)
+COMPV_ERROR_CODE CompVAsyncTask10::tokenTake(compv_asynctoken_id_t* piToken)
 {
     COMPV_CHECK_EXP_RETURN(!piToken, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_CHECK_EXP_RETURN(m_iTokensCount >= COMPV_ASYNCTASK_MAX_TOKEN_COUNT, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
@@ -94,7 +94,7 @@ COMPV_ERROR_CODE CompVAsyncTask::tokenTake(compv_asynctoken_id_t* piToken)
 
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::tokenRelease(compv_asynctoken_id_t* piToken)
+COMPV_ERROR_CODE CompVAsyncTask10::tokenRelease(compv_asynctoken_id_t* piToken)
 {
     compv_asynctoken_xt* pToken;
     COMPV_CHECK_EXP_RETURN(!piToken, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -110,7 +110,7 @@ COMPV_ERROR_CODE CompVAsyncTask::tokenRelease(compv_asynctoken_id_t* piToken)
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::tokenSetParam(compv_asynctoken_id_t token_id, int param_index, uintptr_t param_ptr, size_t param_size)
+COMPV_ERROR_CODE CompVAsyncTask10::tokenSetParam(compv_asynctoken_id_t token_id, int param_index, uintptr_t param_ptr, size_t param_size)
 {
     COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(token_id) || !COMPV_ASYNCTASK_PARAM_INDEX_IS_VALID(param_index), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -121,7 +121,7 @@ COMPV_ERROR_CODE CompVAsyncTask::tokenSetParam(compv_asynctoken_id_t token_id, i
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::tokenSetParams(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, ...)
+COMPV_ERROR_CODE CompVAsyncTask10::tokenSetParams(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, ...)
 {
     COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(token_id) || !f_func, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -135,7 +135,7 @@ bail:
     return err;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::tokenSetParams2(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, va_list* ap)
+COMPV_ERROR_CODE CompVAsyncTask10::tokenSetParams2(compv_asynctoken_id_t token_id, compv_asynctoken_f f_func, va_list* ap)
 {
     COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(token_id) || !f_func || !ap, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -159,7 +159,7 @@ COMPV_ERROR_CODE CompVAsyncTask::tokenSetParams2(compv_asynctoken_id_t token_id,
     return err;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::tokenGetIdleTime(compv_asynctoken_id_t token_id, uint64_t* timeIdle)
+COMPV_ERROR_CODE CompVAsyncTask10::tokenGetIdleTime(compv_asynctoken_id_t token_id, uint64_t* timeIdle)
 {
     COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
     COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(token_id) || !timeIdle, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -169,7 +169,7 @@ COMPV_ERROR_CODE CompVAsyncTask::tokenGetIdleTime(compv_asynctoken_id_t token_id
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::execute(compv_asynctoken_id_t i_token, compv_asynctoken_f f_func, ...)
+COMPV_ERROR_CODE CompVAsyncTask10::execute(compv_asynctoken_id_t i_token, compv_asynctoken_f f_func, ...)
 {
     COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
     COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(i_token) || !f_func, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -183,7 +183,7 @@ bail:
     return err;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::execute2(compv_asynctoken_id_t i_token, compv_asynctoken_f f_func, va_list* ap)
+COMPV_ERROR_CODE CompVAsyncTask10::execute2(compv_asynctoken_id_t i_token, compv_asynctoken_f f_func, va_list* ap)
 {
     COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
     COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(i_token) || !f_func || !ap, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -223,7 +223,7 @@ COMPV_ERROR_CODE CompVAsyncTask::execute2(compv_asynctoken_id_t i_token, compv_a
     return err;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::wait(compv_asynctoken_id_t token_id, uint64_t u_timeout /*= 86400000*//* 1 day */)
+COMPV_ERROR_CODE CompVAsyncTask10::wait(compv_asynctoken_id_t token_id, uint64_t u_timeout /*= 86400000*//* 1 day */)
 {
     COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
     COMPV_CHECK_EXP_RETURN(!COMPV_ASYNCTOKEN_ID_IS_VALID(token_id), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -252,7 +252,7 @@ COMPV_ERROR_CODE CompVAsyncTask::wait(compv_asynctoken_id_t token_id, uint64_t u
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::stop()
+COMPV_ERROR_CODE CompVAsyncTask10::stop()
 {
     m_bStarted = false;
 
@@ -266,30 +266,30 @@ COMPV_ERROR_CODE CompVAsyncTask::stop()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-compv_asynctoken_id_t CompVAsyncTask::getUniqueTokenId()
+compv_asynctoken_id_t CompVAsyncTask10::getUniqueTokenId()
 {
     static long uniqueId = 0;
     return compv_atomic_inc(&uniqueId);
 }
 
-COMPV_ERROR_CODE CompVAsyncTask::newObj(CompVPtr<CompVAsyncTask*>* asyncTask)
+COMPV_ERROR_CODE CompVAsyncTask10::newObj(CompVPtr<CompVAsyncTask10*>* asyncTask)
 {
     COMPV_CHECK_CODE_RETURN(CompVBase::init());
     COMPV_CHECK_EXP_RETURN(asyncTask == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVPtr<CompVAsyncTask*> asyncTask_ = new CompVAsyncTask();
+    CompVPtr<CompVAsyncTask10*> asyncTask_ = new CompVAsyncTask10();
     COMPV_CHECK_EXP_RETURN(*asyncTask_ == NULL, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     *asyncTask = asyncTask_;
     return COMPV_ERROR_CODE_S_OK;
 }
 
-void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
+void* COMPV_STDCALL CompVAsyncTask10::run(void *pcArg)
 {
-    // "Self_" must not be "CompVPtr<CompVAsyncTask *>" to avoid incrementing the refCount
+    // "Self_" must not be "CompVPtr<CompVAsyncTask10 *>" to avoid incrementing the refCount
     // It the refCount is incremented here this means it's value will be equal to #2 after newObj() followed by start()
     // Now let's imagine you call "obj = NULL;", this will decrease the refCount to 1 but won't destroy it. This means you have to call stop() first (followed by = NULL if you want to destroy it).
-    // This is why we use "CompVAsyncTask*" instead of "CompVPtr<CompVAsyncTask *>". We're sure that the object cannot be destroyed while
+    // This is why we use "CompVAsyncTask10*" instead of "CompVPtr<CompVAsyncTask10 *>". We're sure that the object cannot be destroyed while
     // we're running the below code because the destructor() calls stop() and wait the exit
-    CompVAsyncTask* Self_ = (CompVAsyncTask*)pcArg;
+    CompVAsyncTask10* Self_ = (CompVAsyncTask10*)pcArg;
     compv_asynctoken_xt* pToken_;
     COMPV_ERROR_CODE err_;
     size_t size_;
@@ -299,9 +299,9 @@ void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
     if (Self_->m_iCoreId >= 0) {
         COMPV_CHECK_CODE_BAIL(err_ = Self_->m_Thread->setAffinity(Self_->m_iCoreId));
     }
-    COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=%d, threadId:%ld, kThreadSetAffinity:true) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), (long)CompVThread::getIdCurrent());
+    COMPV_DEBUG_INFO("CompVAsyncTask10::run(coreId:requested=%d,set=%d, threadId:%ld, kThreadSetAffinity:true) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), (long)CompVThread::getIdCurrent());
 #else
-    COMPV_DEBUG_INFO("CompVAsyncTask::run(coreId:requested=%d,set=useless, threadId:%ld, kThreadSetAffinity:false) - ENTER", Self_->m_iCoreId, (long)CompVThread::getIdCurrent());
+    COMPV_DEBUG_INFO("CompVAsyncTask10::run(coreId:requested=%d,set=useless, threadId:%ld, kThreadSetAffinity:false) - ENTER", Self_->m_iCoreId, (long)CompVThread::getIdCurrent());
 #endif
 
     while (Self_->m_bStarted) {
@@ -325,10 +325,11 @@ void* COMPV_STDCALL CompVAsyncTask::run(void *pcArg)
     }
 
 bail:
-    COMPV_DEBUG_INFO("CompVAsyncTask::run(threadId:%ld) - EXIT", (long)CompVThread::getIdCurrent());
+    COMPV_DEBUG_INFO("CompVAsyncTask10::run(threadId:%ld) - EXIT", (long)CompVThread::getIdCurrent());
     return NULL;
 }
 
 COMPV_NAMESPACE_END()
 
-#endif /* COMPV_PARALLEL_THREADDISP11 */
+#endif /* !COMPV_CPP11 */
+

@@ -79,8 +79,8 @@
     <ClInclude Include="include\compv\base\parallel\compv_thread.h" />
     <ClInclude Include="include\compv\base\parallel\compv_threaddisp.h" />
     <ClInclude Include="include\compv\base\parallel\compv_threaddisp10.h" />
-    <ClInclude Include="include\compv\base\parallel\compv_threaddisp_native.h" />
-    <ClInclude Include="include\compv\base\parallel\compv_threaddisp_tbb.h" />
+    <ClInclude Include="include\compv\base\parallel\compv_threaddisp11.h" />
+    <ClInclude Include="include\compv\base\parallel\compv_threaddisptbb.h" />
     <ClInclude Include="include\compv\base\time\compv_time.h" />
     <ClInclude Include="include\compv\base\time\compv_timer.h" />
   </ItemGroup>
@@ -154,8 +154,8 @@
     <ClCompile Include="parallel\compv_thread.cxx" />
     <ClCompile Include="parallel\compv_threaddisp.cxx" />
     <ClCompile Include="parallel\compv_threaddisp10.cxx" />
-    <ClCompile Include="parallel\compv_threaddisp_native.cxx" />
-    <ClCompile Include="parallel\compv_threaddisp_tbb.cxx" />
+    <ClCompile Include="parallel\compv_threaddisp11.cxx" />
+    <ClCompile Include="parallel\compv_threaddisptbb.cxx" />
     <ClCompile Include="time\compv_time.cxx" />
     <ClCompile Include="time\compv_timer.cxx" />
   </ItemGroup>
@@ -229,7 +229,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>Intel C++ Compiler 17.0</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseIntelIPP>Sequential</UseIntelIPP>
     <UseIntelTBB>true</UseIntelTBB>
@@ -239,7 +239,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>Intel C++ Compiler 17.0</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseIntelIPP>Sequential</UseIntelIPP>
     <UseIntelTBB>true</UseIntelTBB>
@@ -249,7 +249,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>Intel C++ Compiler 17.0</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseIntelIPP>Sequential</UseIntelIPP>
@@ -260,7 +260,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>Intel C++ Compiler 17.0</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseIntelIPP>Sequential</UseIntelIPP>
