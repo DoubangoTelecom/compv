@@ -99,9 +99,7 @@ protected:
     CompVAsyncTask11();
 public:
     virtual ~CompVAsyncTask11();
-    virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVAsyncTask11";
-    };
+	COMPV_OBJECT_GET_ID(CompVAsyncTask11);
 
     COMPV_ERROR_CODE start();
     COMPV_ERROR_CODE setAffinity(compv_core_id_t core_id);

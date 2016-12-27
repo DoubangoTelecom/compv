@@ -258,6 +258,9 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.h">
       <Filter>include\image\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\parallel\compv_asynctask10.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
     <ClInclude Include="include\compv\base\parallel\compv_asynctask11.h">
       <Filter>include\parallel</Filter>
     </ClInclude>
@@ -279,16 +282,13 @@
     <ClInclude Include="include\compv\base\parallel\compv_threaddisp.h">
       <Filter>include\parallel</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\parallel\compv_threaddisp_native.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\parallel\compv_threaddisp_tbb.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
     <ClInclude Include="include\compv\base\parallel\compv_threaddisp10.h">
-      <Filter>include\parallel</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\base\parallel\compv_threaddisp11.h">
-      <Filter>include\parallel</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\base\parallel\compv_threaddisptbb.h">
-      <Filter>include\parallel</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\base\parallel\compv_asynctask10.h">
       <Filter>include\parallel</Filter>
     </ClInclude>
   </ItemGroup>
@@ -437,6 +437,9 @@
     <ClCompile Include="image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.cxx">
       <Filter>source\image\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="parallel\compv_asynctask10.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
     <ClCompile Include="parallel\compv_asynctask11.cxx">
       <Filter>source\parallel</Filter>
     </ClCompile>
@@ -458,16 +461,13 @@
     <ClCompile Include="parallel\compv_threaddisp.cxx">
       <Filter>source\parallel</Filter>
     </ClCompile>
+    <ClCompile Include="parallel\compv_threaddisp_native.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
+    <ClCompile Include="parallel\compv_threaddisp_tbb.cxx">
+      <Filter>source\parallel</Filter>
+    </ClCompile>
     <ClCompile Include="parallel\compv_threaddisp10.cxx">
-      <Filter>source\parallel</Filter>
-    </ClCompile>
-    <ClCompile Include="parallel\compv_threaddisp11.cxx">
-      <Filter>source\parallel</Filter>
-    </ClCompile>
-    <ClCompile Include="parallel\compv_threaddisptbb.cxx">
-      <Filter>source\parallel</Filter>
-    </ClCompile>
-    <ClCompile Include="parallel\compv_asynctask10.cxx">
       <Filter>source\parallel</Filter>
     </ClCompile>
   </ItemGroup>

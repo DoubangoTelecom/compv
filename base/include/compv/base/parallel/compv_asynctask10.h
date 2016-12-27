@@ -8,6 +8,7 @@
 #define _COMPV_BASE_PRALLEL_ASYNCTASK10_H_
 
 #include "compv/base/compv_config.h"
+#if !COMPV_CPP11
 #include "compv/base/parallel/compv_thread.h"
 #include "compv/base/parallel/compv_semaphore.h"
 #include "compv/base/compv_obj.h"
@@ -80,9 +81,7 @@ protected:
     CompVAsyncTask10();
 public:
     virtual ~CompVAsyncTask10();
-    virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVAsyncTask10";
-    };
+	COMPV_OBJECT_GET_ID(CompVAsyncTask10);
 
     COMPV_ERROR_CODE start();
     COMPV_ERROR_CODE setAffinity(compv_core_id_t core_id);
@@ -127,5 +126,7 @@ private:
 };
 
 COMPV_NAMESPACE_END()
+
+#endif /* !COMPV_CPP11 */
 
 #endif /* _COMPV_BASE_PRALLEL_ASYNCTASK10_H_ */

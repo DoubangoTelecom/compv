@@ -15,6 +15,7 @@ COMPV_NAMESPACE_BEGIN()
 
 bool CompVParallel::s_bInitialized = false;
 bool CompVParallel::s_bInitializing = false;
+bool CompVParallel::s_bIntelTbbEnabled = false;
 CompVThreadDispatcherPtr CompVParallel::s_ThreadDisp = NULL;
 
 CompVParallel::CompVParallel()
@@ -93,6 +94,16 @@ COMPV_ERROR_CODE CompVParallel::multiThreadingSetMaxThreads(size_t maxThreads)
     s_ThreadDisp = newThreadDisp;// TODO(dmi): function not optimal, we destroy all threads and create new ones
 
     return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVParallel::setIntelTbbEnabled(bool enabled)
+{
+#if !COMPV_HAVE_INTEL_TBB
+	COMPV_CHECK_EXP_RETURN(enabled, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Requesting Intel TBB but code not built with support for this feature");
+#endif
+	s_bIntelTbbEnabled = enabled;
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Intel TBB enabled: %s", enabled ? "YES" : "NO");
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 bool CompVParallel::isMultiThreadingEnabled()

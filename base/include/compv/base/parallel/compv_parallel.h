@@ -12,7 +12,6 @@
 #include "compv/base/compv_common.h"
 
 #include "compv/base/parallel/compv_threaddisp.h"
-#include "compv/base/parallel/compv_threaddisp11.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -30,7 +29,9 @@ public:
     static COMPV_ERROR_CODE multiThreadingEnable(CompVThreadDispatcherPtr dispatcher);
     static COMPV_ERROR_CODE multiThreadingDisable();
     static COMPV_ERROR_CODE multiThreadingSetMaxThreads(size_t maxThreads);
+	static COMPV_ERROR_CODE setIntelTbbEnabled(bool enabled);
     static bool isMultiThreadingEnabled();
+	static bool isIntelTbbEnabled() { return s_bIntelTbbEnabled; }
     static bool isInitialized();
     static bool isInitializing();
 
@@ -39,6 +40,7 @@ private:
     static CompVThreadDispatcherPtr s_ThreadDisp;
     static bool s_bInitialized;
     static bool s_bInitializing;
+	static bool s_bIntelTbbEnabled;
     COMPV_VS_DISABLE_WARNINGS_END()
 };
 

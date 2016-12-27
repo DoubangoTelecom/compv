@@ -5,7 +5,7 @@
 * WebSite: http://compv.org
 */
 #include "compv/base/parallel/compv_threaddisp.h"
-#if !COMPV_PARALLEL_THREADDISP11
+#if !COMPV_CPP11
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_base.h"
@@ -18,7 +18,7 @@ CompVThreadDispatcher::CompVThreadDispatcher(int32_t numThreads)
     , m_nTasksCount(numThreads)
     , m_bValid(false)
 {
-    COMPV_ASSERT(m_nTasksCount > 1); // never happen, we already checked it in newObj()
+    COMPV_ASSERT(numThreads > 1); // never happen, we already checked it in newObj()
     m_pTasks = (CompVPtr<CompVAsyncTask *>*)CompVMem::calloc(numThreads, sizeof(CompVPtr<CompVAsyncTask *>));
     if (!m_pTasks) {
         COMPV_DEBUG_ERROR("Failed to allocate the asynctasks");
@@ -121,30 +121,12 @@ int32_t CompVThreadDispatcher::guessNumThreadsDividingAcrossY(int32_t xcount, in
     return divCount;
 }
 
-COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVPtr<CompVThreadDispatcher*>* disp, int32_t numThreads /*= -1*/)
+COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVPtr<CompVThreadDispatcher*>* disp, int32_t numThreads)
 {
     COMPV_CHECK_CODE_RETURN(CompVBase::init());
     COMPV_CHECK_EXP_RETURN(disp == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-
-    int32_t numCores = CompVCpu::coresCount();
-#if COMPV_PARALLEL_THREAD_SET_AFFINITY
-    int32_t maxCores = numCores > 0 ? (numCores - 1) : 0; // To avoid overusing all cores
-#else
-    int32_t maxCores = numCores; // Up to the system to dispatch the work and avoid overusing all cores
-#endif /* COMPV_PARALLEL_THREAD_SET_AFFINITY */
-
-    if (numThreads <= 0) {
-        numThreads = maxCores;
-    }
-    if (numThreads < 2) {
-        COMPV_DEBUG_ERROR("Multi-threading requires at least #2 threads but you're requesting #%d", numThreads);
-#if COMPV_PARALLEL_THREAD_SET_AFFINITY
-        return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
-#endif /* COMPV_PARALLEL_THREAD_SET_AFFINITY */
-    }
-    if (numThreads > maxCores) {
-        COMPV_DEBUG_WARN("You're requesting to use #%d threads but you only have #%d CPU cores, we recommend using %d instead", numThreads, numCores, maxCores);
-    }
+	// numThreads must be > 1
+    
     CompVPtr<CompVThreadDispatcher*>_disp = new CompVThreadDispatcher(numThreads);
     if (!_disp || !_disp->m_bValid) {
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
