@@ -13,7 +13,7 @@
 #define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC				COMPV_SUBTYPE_PIXELS_RGB24
 #define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_DST				COMPV_SUBTYPE_PIXELS_YUV444P
 
-#define COMPV_loopCount											100000
+#define COMPV_loopCount											1
 
 static const struct compv_test_image_chroma_conv_test {
 	COMPV_SUBTYPE srcPixelFormat;

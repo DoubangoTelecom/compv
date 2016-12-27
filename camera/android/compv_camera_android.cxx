@@ -282,6 +282,9 @@ COMPV_ERROR_CODE CompVCameraAndroid::initJNI(JNIEnv* jEnv)
 	static std::string dexPath;
 	static std::string optimizedDirectory;
 	static std::string librarySearchPath;
+	
+	// TODO(dmi): Add version number to Android plugins (apk) to avoid unpacking every startup
+	// https://github.com/DoubangoTelecom/compv/issues/112
 
 	// Copy the plugin from the assets to a readable folder and unzip the ".dex" and ".so"
 	if (!CompVCameraAndroid::s_bPluginCopied) {
