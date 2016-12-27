@@ -15,14 +15,14 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-class COMPV_BASE_API CompVThreadDispatcher : public CompVObj
+class COMPV_BASE_API CompVThreadDispatcher10 : public CompVObj
 {
 protected:
-    CompVThreadDispatcher(int32_t numThreads);
+    CompVThreadDispatcher10(int32_t numThreads);
 public:
-    virtual ~CompVThreadDispatcher();
+    virtual ~CompVThreadDispatcher10();
     virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVThreadDispatcher";
+        return "CompVThreadDispatcher10";
     };
     COMPV_INLINE int32_t getThreadsCount() {
         return m_nTasksCount;
@@ -36,7 +36,7 @@ public:
     bool isMotherOfTheCurrentThread();
     int32_t guessNumThreadsDividingAcrossY(int xcount, int ycount, int minSamplesPerThread);
 
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVThreadDispatcher*>* disp, int32_t numThreads = -1);
+    static COMPV_ERROR_CODE newObj(CompVPtr<CompVThreadDispatcher10*>* disp, int32_t numThreads = -1);
 
 private:
     CompVPtr<CompVAsyncTask *>* m_pTasks;
