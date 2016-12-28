@@ -1,14 +1,16 @@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>	@
-@ File author: Mamadou DIOP (Doubango Telecom, France).					@
-@ License: GPLv3. For commercial license please contact us.				@
-@ Source code: https://github.com/DoubangoTelecom/compv					@
-@ WebSite: http://compv.org												@
+@ Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   @
+@ File author: Mamadou DIOP (Doubango Telecom, France).                 @
+@ License: GPLv3. For commercial license please contact us.             @
+@ Source code: https://github.com/DoubangoTelecom/compv                 @
+@ WebSite: http://compv.org                                             @
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 @ ARM32 calling convention: https://blogs.msdn.microsoft.com/ntdebugging/2014/05/29/understanding-arm-assembly-part-3/
 @ ARMv7 calling convention: https://developer.apple.com/library/content/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARMv7FunctionCallingConventions.html#//apple_ref/doc/uid/TP40009022-SW1
 @ ARM64 calling convention: https://developer.apple.com/library/content/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARM64FunctionCallingConventions.html#//apple_ref/doc/uid/TP40013702-SW1
+
+@ Load and store alignent: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0344b/ch16s06s07.html
 
 .equ prolog_bytes, 36
 
@@ -116,6 +118,13 @@
 @ requires COMPV_GAS_SHADOW_ARGS_TO_STACK
 .macro ldr_arg nn rx
 	ldr \rx, [r11, #(\nn * 4)]
+.endm
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ requires COMPV_GAS_SHADOW_ARGS_TO_STACK
+@ Example: ldmia_args r0-r7
+.macro ldmia_args registers
+	ldmia r11, {\registers}
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
