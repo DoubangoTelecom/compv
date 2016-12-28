@@ -60,7 +60,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_y_Asm_NEON32
 			vadd.u16 q7, q7, q0
 			vqmovun.s16 d5, q6
 			vqmovun.s16 d6, q7
-			vstmia r1!, {d5, d6}
+			vst1.u8 {d5, d6}, [r1 : 128]! @ vstmia r1!, {d5, d6}
 			cmp r9, r2
 			blt LoopWidth_CompVImageConvRgb24family_to_y_Asm_NEON32
 			@End_of_LoopWidth
@@ -159,8 +159,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32
 			vqmovun.s16 d24, q14
 			vqmovun.s16 d25, q1
 			cmp r6, r3
-			vstmia r1!, {d22, d23}
-			vstmia r2!, {d24, d25}
+			vst1.u8 {d22, d23}, [r1 : 128]! @ vstmia r1!, {d22, d23}
+			vst1.u8 {d24, d25}, [r2 : 128]! @ vstmia r2!, {d24, d25}			
 			blt LoopWidth_CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32
 			@End_of_LoopWidth
 
