@@ -65,7 +65,16 @@ COMPV_ERROR_CODE CompVImage::readPixels(COMPV_SUBTYPE ePixelFormat, size_t width
 	COMPV_CHECK_CODE_RETURN(CompVFileUtils::read(filePath, &buffer));
 	size_t expectedFileSize;
 	COMPV_CHECK_CODE_RETURN(CompVImageUtils::sizeForPixelFormat(ePixelFormat, stride, height, &expectedFileSize));
-	COMPV_CHECK_EXP_RETURN(expectedFileSize != buffer->size(), COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT);
+	if (expectedFileSize != buffer->size()) {
+		// FFmpeg requires outputs with even width when converting from RGB to YUV
+		if (stride & 1) {
+			COMPV_CHECK_CODE_RETURN(CompVImageUtils::sizeForPixelFormat(ePixelFormat, (stride + 1), height, &expectedFileSize));
+			COMPV_CHECK_EXP_RETURN(expectedFileSize != buffer->size(), COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT, "Size mismatch");
+		}
+		else {
+			COMPV_CHECK_EXP_RETURN(expectedFileSize != buffer->size(), COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT, "Size mismatch");
+		}
+	}
 	COMPV_CHECK_CODE_RETURN(CompVImage::wrap(ePixelFormat, buffer->ptr(), width, height, stride, image));
 	return COMPV_ERROR_CODE_S_OK;
 }

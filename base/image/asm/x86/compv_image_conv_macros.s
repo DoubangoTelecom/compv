@@ -85,12 +85,12 @@
 	vpermd %5, %7, [%1 + 64]
 	vperm2i128 %3, %3, [%1 + 64], 0x20
 	vpermd %4, %6, %3
-	vpshufb %4, %4, %9
 	vpshufb %5, %5, %9
 	vpermq %2, [%1 + 0], 0xff
 	vpermd %3, %8, [%1 + 32]
+	vpshufb %4, %4, %9
 	vpblendd %3, %3, %2, 0x03
-	vpshufb %3, %3, %9
 	vpermd %2, %6, [%1 + 0]
+	vpshufb %3, %3, %9
 	vpshufb %2, %2, %9
 %endmacro

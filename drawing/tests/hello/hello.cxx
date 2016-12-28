@@ -158,23 +158,23 @@ static void* WorkerThread(void* arg)
 	
 	// FIXME: add support for RGB565 and BGR565, both LE and BE, LE being the default ones (ARM and X86 devices are LE by default)
 	
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUV444P, 706, 472, 706, hello_path_from_file("girl_706x472x706_yuv444p.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUV422P, 706, 472, 706, hello_path_from_file("girl_706x472x706_yuv422p.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUV420P, 706, 472, 706, hello_path_from_file("girl_706x472x706_yuv420p.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 706, 472, 706, hello_path_from_file("girl_706x472x706_gray.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_UYVY422, 706, 472, 706, hello_path_from_file("girl_706x472x706_uyvy422.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUYV422, 706, 472, 706, hello_path_from_file("girl_706x472x706_yuyv422.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image)); // DirectShow / MediaFoundation
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_NV12, 706, 472, 706, hello_path_from_file("girl_706x472x706_nv12.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_NV21, 706, 472, 706, hello_path_from_file("girl_706x472x706_nv21.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGBA32, 706, 472, 706, hello_path_from_file("girl_706x472x706_rgba.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_ARGB32, 706, 472, 706, hello_path_from_file("girl_706x472x706_argb.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGRA32, 706, 472, 706, hello_path_from_file("girl_706x472x706_bgra.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB24, 706, 472, 706, hello_path_from_file("girl_706x472x706_rgb.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGR24, 706, 472, 706, hello_path_from_file("girl_706x472x706_bgr.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB565LE, 706, 472, 706, hello_path_from_file("girl_706x472x706_rgb565le.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB565BE, 706, 472, 706, hello_path_from_file("girl_706x472x706_rgb565be.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGR565LE, 706, 472, 706, hello_path_from_file("girl_706x472x706_bgr565le.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGR565BE, 706, 472, 706, hello_path_from_file("girl_706x472x706_bgr565be.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUV444P, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_yuv444p.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUV422P, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_yuv422p.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUV420P, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_yuv420p.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_gray.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_UYVY422, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_uyvy422.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUYV422, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_yuyv422.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image)); // DirectShow / MediaFoundation
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_NV12, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_nv12.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_NV21, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_nv21.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGBA32, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_rgba.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_ARGB32, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_argb.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGRA32, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_bgra.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB24, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_rgb.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGR24, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_bgr.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB565LE, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_rgb565le.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGB565BE, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_rgb565be.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGR565LE, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_bgr565le.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGR565BE, 1282, 721, 1282, hello_path_from_file("equirectangular_1282x721_bgr565be.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
 
 	COMPV_CHECK_CODE_BAIL(err = window->addSingleLayerSurface(&singleSurfaceLayer));
 	timeStart = CompVTime::getNowMills();

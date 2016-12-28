@@ -556,16 +556,16 @@
     <None Include="..\image\asm\x86\compv_image_conv_rgbfamily_x86_sse.s">
       <Filter>source\image\asm\x86</Filter>
     </None>
-    <None Include="..\asm\arm\compv_common_arm.i">
-      <Filter>source\asm\arm</Filter>
-    </None>
-    <None Include="..\asm\arm\compv_test_arm.S">
-      <Filter>source\asm\arm</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <GAS Include="..\image\asm\arm\compv_image_conv_rgbfamily_arm32_neon.S">
       <Filter>source\image\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\asm\arm\compv_test_arm.S">
+      <Filter>source\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\asm\arm\compv_common_arm.S">
+      <Filter>source\asm\arm</Filter>
     </GAS>
   </ItemGroup>
 </Project>

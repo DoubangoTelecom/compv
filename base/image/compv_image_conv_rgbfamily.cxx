@@ -40,6 +40,7 @@ COMPV_NAMESPACE_BEGIN()
 #	endif /* COMPV_ARCH_X64 */
 #if COMPV_ARCH_ARM
 		COMPV_EXTERNC void CompVImageConvRgb24family_to_y_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* rgb24Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
+		COMPV_EXTERNC void CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* rgb24Ptr, COMPV_ALIGNED(NEON) uint8_t* outUPtr, COMPV_ALIGNED(NEON) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
 #endif
 #endif /* COMPV_ASM */
 
@@ -138,8 +139,8 @@ void __rgb24family_to_y(const uint8_t* rgbPtr, uint8_t* outYPtr, compv_uscalar_t
 		COMPV_EXEC_IFDEF_ASM_ARM(funcptr = CompVImageConvRgb24family_to_y_Asm_NEON32);
 	}
 #endif /* COMPV_ARCH_X86 */
+	
 	funcptr(rgbPtr, outYPtr, width, height, stride, kRGBfamilyToYUV_YCoeffs8);
-
 }
 void CompVImageConvRGBfamily::rgb24_to_y(const uint8_t* rgb24Ptr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
 	__rgb24family_to_y(rgb24Ptr, outYPtr, width, height, stride, kRGBAToYUV_YCoeffs8);
@@ -169,6 +170,7 @@ static void __rgb24family_to_uv_planar_11(const uint8_t* rgbPtr, uint8_t* outUPt
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(rgbPtr) && COMPV_IS_ALIGNED_NEON(outUPtr) && COMPV_IS_ALIGNED_NEON(outVPtr) && COMPV_IS_ALIGNED_NEON(stride)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(funcptr = CompVImageConvRgb24family_to_uv_planar_11_Intrin_NEON);
+		COMPV_EXEC_IFDEF_ASM_ARM(funcptr = CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32);
 	}
 #endif
 	funcptr(rgbPtr, outUPtr, outVPtr, width, height, stride, kRGBfamilyToYUV_UCoeffs8, kRGBfamilyToYUV_VCoeffs8);

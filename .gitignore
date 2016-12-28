@@ -10,6 +10,7 @@
 /Debug
 Release
 *.orig
+*.tlog
 Debug
 *.gray
 *.yuv

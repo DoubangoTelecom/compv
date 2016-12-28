@@ -13,11 +13,9 @@
 #include "compv/base/math/compv_math.h"
 #include "compv/base/compv_debug.h"
 
-// FIXME
-#include <arm_neon.h>
-
 // TODO(dmi): RGB -> RGBA conversion is done twice (Y plane then UV plane)
 // Neon intrinsics: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0491h/BABDFJCI.html
+// Neon instructions: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0489c/CJAJIIGG.html
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -31,10 +29,11 @@ void CompVImageConvRgb24family_to_y_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_
 	uint16x8_t xmm0, xmm1;
 
 	const uint16x8_t xmm16 = vld1q_u16(reinterpret_cast<const uint16_t*>(k16_i16));
-	const uint8_t* coeffs = reinterpret_cast<const uint8_t*>(kRGBfamilyToYUV_YCoeffs8);
-	const uint8x8_t xmmCoeff0 = vdup_n_u8(coeffs[0]); // should be 33
-	const uint8x8_t xmmCoeff1 = vdup_n_u8(coeffs[1]); // should be 65
-	const uint8x8_t xmmCoeff2 = vdup_n_u8(coeffs[2]); // should be 13
+	// The order in which the coeffs appears depends on the format (RGB, BGR, GRB...)
+	const uint8x8x4_t xmmCoeffs = vld4_u8(reinterpret_cast<uint8_t const *>(kRGBfamilyToYUV_YCoeffs8));
+	const uint8x8_t xmmCoeff0 = xmmCoeffs.val[0]; // should be 33
+	const uint8x8_t xmmCoeff1 = xmmCoeffs.val[1]; // should be 65
+	const uint8x8_t xmmCoeff2 = xmmCoeffs.val[2]; // should be 13
 
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (j = 0; j < height; ++j) {
@@ -70,10 +69,11 @@ void CompVImageConvRgb32family_to_y_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_
 	uint16x8_t xmm0, xmm1;
 
 	const uint16x8_t xmm16 = vld1q_u16(reinterpret_cast<const uint16_t*>(k16_i16));
-	const uint8_t* coeffs = reinterpret_cast<const uint8_t*>(kRGBAfamilyToYUV_YCoeffs8);
-	const uint8x8_t xmmCoeff0 = vdup_n_u8(coeffs[0]); // should be 33
-	const uint8x8_t xmmCoeff1 = vdup_n_u8(coeffs[1]); // should be 65
-	const uint8x8_t xmmCoeff2 = vdup_n_u8(coeffs[2]); // should be 13
+	// The order in which the coeffs appears depends on the format (RGBA, BGRA, ARGB...)
+	const uint8x8x4_t xmmCoeffs = vld4_u8(reinterpret_cast<uint8_t const *>(kRGBAfamilyToYUV_YCoeffs8));
+	const uint8x8_t xmmCoeff0 = xmmCoeffs.val[0]; // should be 33
+	const uint8x8_t xmmCoeff1 = xmmCoeffs.val[1]; // should be 65
+	const uint8x8_t xmmCoeff2 = xmmCoeffs.val[2]; // should be 13
 
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (j = 0; j < height; ++j) {
@@ -109,12 +109,15 @@ void CompVImageConvRgb24family_to_uv_planar_11_Intrin_NEON(COMPV_ALIGNED(NEON) c
 	int16x8_t xmm0, xmm1, xmm0U, xmm1U, xmm0V, xmm1V;
 
 	const uint16x8_t xmm128 = vld1q_u16(reinterpret_cast<const uint16_t*>(k128_i16));
-	const int16x8_t xmmCoeffU0 = vdupq_n_s16(static_cast<int16_t>(kRGBfamilyToYUV_UCoeffs8[0])); // should be -38
-	const int16x8_t xmmCoeffU1 = vdupq_n_s16(static_cast<int16_t>(kRGBfamilyToYUV_UCoeffs8[1])); // should be -74
-	const int16x8_t xmmCoeffU2 = vdupq_n_s16(static_cast<int16_t>(kRGBfamilyToYUV_UCoeffs8[2])); // should be 112
-	const int16x8_t xmmCoeffV0 = vdupq_n_s16(static_cast<int16_t>(kRGBfamilyToYUV_VCoeffs8[0])); // should be 112
-	const int16x8_t xmmCoeffV1 = vdupq_n_s16(static_cast<int16_t>(kRGBfamilyToYUV_VCoeffs8[1])); // should be -94
-	const int16x8_t xmmCoeffV2 = vdupq_n_s16(static_cast<int16_t>(kRGBfamilyToYUV_VCoeffs8[2])); // should be -18
+	// The order in which the coeffs appears depends on the format (RGB, BGR, GRB...)
+	const int8x8x4_t xmmCoeffsU = vld4_s8(reinterpret_cast<int8_t const *>(kRGBfamilyToYUV_UCoeffs8));
+	const int8x8x4_t xmmCoeffsV = vld4_s8(reinterpret_cast<int8_t const *>(kRGBfamilyToYUV_VCoeffs8));
+	const int16x8_t xmmCoeffU0 = vmovl_s8(xmmCoeffsU.val[0]); // should be -38
+	const int16x8_t xmmCoeffU1 = vmovl_s8(xmmCoeffsU.val[1]); // should be -74
+	const int16x8_t xmmCoeffU2 = vmovl_s8(xmmCoeffsU.val[2]); // should be 112
+	const int16x8_t xmmCoeffV0 = vmovl_s8(xmmCoeffsV.val[0]); // should be 112
+	const int16x8_t xmmCoeffV1 = vmovl_s8(xmmCoeffsV.val[1]); // should be -94
+	const int16x8_t xmmCoeffV2 = vmovl_s8(xmmCoeffsV.val[2]); // should be -18
 
 	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
@@ -180,12 +183,15 @@ void CompVImageConvRgb32family_to_uv_planar_11_Intrin_NEON(COMPV_ALIGNED(NEON) c
 	int16x8_t xmm0, xmm1, xmm0U, xmm1U, xmm0V, xmm1V;
 
 	const uint16x8_t xmm128 = vld1q_u16(reinterpret_cast<const uint16_t*>(k128_i16));
-	const int16x8_t xmmCoeffU0 = vdupq_n_s16(static_cast<int16_t>(kRGBAfamilyToYUV_UCoeffs8[0])); // should be -38
-	const int16x8_t xmmCoeffU1 = vdupq_n_s16(static_cast<int16_t>(kRGBAfamilyToYUV_UCoeffs8[1])); // should be -74
-	const int16x8_t xmmCoeffU2 = vdupq_n_s16(static_cast<int16_t>(kRGBAfamilyToYUV_UCoeffs8[2])); // should be 112
-	const int16x8_t xmmCoeffV0 = vdupq_n_s16(static_cast<int16_t>(kRGBAfamilyToYUV_VCoeffs8[0])); // should be 112
-	const int16x8_t xmmCoeffV1 = vdupq_n_s16(static_cast<int16_t>(kRGBAfamilyToYUV_VCoeffs8[1])); // should be -94
-	const int16x8_t xmmCoeffV2 = vdupq_n_s16(static_cast<int16_t>(kRGBAfamilyToYUV_VCoeffs8[2])); // should be -18
+	// The order in which the coeffs appears depends on the format (RGBA, BGRA, ARGB...)
+	const int8x8x4_t xmmCoeffsU = vld4_s8(reinterpret_cast<int8_t const *>(kRGBAfamilyToYUV_UCoeffs8));
+	const int8x8x4_t xmmCoeffsV = vld4_s8(reinterpret_cast<int8_t const *>(kRGBAfamilyToYUV_VCoeffs8));
+	const int16x8_t xmmCoeffU0 = vmovl_s8(xmmCoeffsU.val[0]); // should be -38
+	const int16x8_t xmmCoeffU1 = vmovl_s8(xmmCoeffsU.val[1]); // should be -74
+	const int16x8_t xmmCoeffU2 = vmovl_s8(xmmCoeffsU.val[2]); // should be 112
+	const int16x8_t xmmCoeffV0 = vmovl_s8(xmmCoeffsV.val[0]); // should be 112
+	const int16x8_t xmmCoeffV1 = vmovl_s8(xmmCoeffsV.val[1]); // should be -94
+	const int16x8_t xmmCoeffV2 = vmovl_s8(xmmCoeffsV.val[2]); // should be -18
 
 	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
