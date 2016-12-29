@@ -29,6 +29,7 @@ COMPV_ERROR_CODE CompVImageConvToYUV444P::process(const CompVMatPtr& imageIn, Co
 	case COMPV_SUBTYPE_PIXELS_RGB24:
 	case COMPV_SUBTYPE_PIXELS_BGR24:
 	case COMPV_SUBTYPE_PIXELS_RGB565LE:
+	case COMPV_SUBTYPE_PIXELS_RGB565BE:
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToYUV444P::rgbfamily(imageIn, imageYUV444P), "Conversion (RGBFamily -> YUV444P) failed");
 		return COMPV_ERROR_CODE_S_OK;
 	default:
@@ -69,6 +70,10 @@ COMPV_ERROR_CODE CompVImageConvToYUV444P::rgbfamily(const CompVMatPtr& imageRGBf
 		case COMPV_SUBTYPE_PIXELS_RGB565LE:
 			rgbfamily_to_y = CompVImageConvRGBfamily::rgb565le_to_y;
 			rgbfamily_to_uv_planar_11 = CompVImageConvRGBfamily::rgb565le_to_uv_planar_11;
+			break;
+		case COMPV_SUBTYPE_PIXELS_RGB565BE:
+			rgbfamily_to_y = CompVImageConvRGBfamily::rgb565be_to_y;
+			rgbfamily_to_uv_planar_11 = CompVImageConvRGBfamily::rgb565be_to_uv_planar_11;
 			break;
 		default:
 			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to find RGBfamily conversion: %s -> COMPV_SUBTYPE_PIXELS_YUV444P", CompVGetSubtypeString(imageRGBfamily->subType()));

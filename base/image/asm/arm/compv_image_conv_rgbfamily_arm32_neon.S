@@ -102,7 +102,7 @@
 			vadd.u16 q7, q7, xmm2048
 			vqshrn.u16 d5, q6, #7
 			vqshrn.u16 d6, q7, #7
-			vst1.u8 {d5, d6}, [outYPtr : 128]! @ vstmia r1!, {d5, d6}
+			vst1.u8 {d5, d6}, [outYPtr :128]! @ vstmia r1!, {d5, d6}
 			cmp r9, width
 			blt LoopWidth\@
 			@End_of_LoopWidth
@@ -213,7 +213,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON32
 	xmmCoeffV3 .req q7
 
 	ldr r10, =k128_i16
-	vld1.u16 {q15x, q15y}, [r10 : 128]
+	vld1.u16 {q15x, q15y}, [r10 :128]
 	xmm128 .req q15
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -277,8 +277,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON32
 			vqmovun.s16 q11y, q8
 			vqmovun.s16 q12x, q14
 			vqmovun.s16 q12y, q9
-			vst1.u8 {q11x, q11y}, [outUPtr : 128]! @ vstmia outUPtr!, {q11x, q11y}
-			vst1.u8 {q12x, q12y}, [outVPtr : 128]! @ vstmia outVPtr!, {q12x, q12y}
+			vst1.u8 {q11x, q11y}, [outUPtr :128]! @ vstmia outUPtr!, {q11x, q11y}
+			vst1.u8 {q12x, q12y}, [outVPtr :128]! @ vstmia outVPtr!, {q12x, q12y}
 			cmp r6, width		
 			blt LoopWidth\@
 			@End_of_LoopWidth

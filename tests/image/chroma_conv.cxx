@@ -10,10 +10,10 @@
 #endif
 #define COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE(filename)		tests_path_from_file(filename, COMPV_TEST_IMAGE_CHROMA_CONV_IMAGE_FOLDER)
 
-#define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC				COMPV_SUBTYPE_PIXELS_RGBA32
+#define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC				COMPV_SUBTYPE_PIXELS_RGB565BE
 #define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_DST				COMPV_SUBTYPE_PIXELS_YUV444P
 
-#define COMPV_loopCount											1000
+#define COMPV_loopCount											1
 
 static const struct compv_test_image_chroma_conv_test {
 	COMPV_SUBTYPE srcPixelFormat;
@@ -33,7 +33,7 @@ COMPV_TEST_IMAGE_CHROMA_CONV_TESTS[] =
 	{ COMPV_SUBTYPE_PIXELS_BGRA32, "equirectangular_1282x721_bgra.rgb", 1282, 721, 1282, COMPV_SUBTYPE_PIXELS_YUV444P, "yuv444p.yuv", "7a4b77c457678ff5614e842c4268a5bf" },
 	{ COMPV_SUBTYPE_PIXELS_RGB24, "equirectangular_1282x721_rgb.rgb", 1282, 721, 1282, COMPV_SUBTYPE_PIXELS_YUV444P, "yuv444p.yuv", "4a3fe1dd6d0d619e79809961834ad33e" },
 	{ COMPV_SUBTYPE_PIXELS_BGR24, "equirectangular_1282x721_bgr.rgb", 1282, 721, 1282, COMPV_SUBTYPE_PIXELS_YUV444P, "yuv444p.yuv", "7a4b77c457678ff5614e842c4268a5bf" },
-	{ COMPV_SUBTYPE_PIXELS_RGB565LE, "equirectangular_1282x721_rgb565le.rgb", 1282, 721, 1282, COMPV_SUBTYPE_PIXELS_YUV444P, "yuv444p.yuv", "" },
+	{ COMPV_SUBTYPE_PIXELS_RGB565LE, "equirectangular_1282x721_rgb565le.rgb", 1282, 721, 1282, COMPV_SUBTYPE_PIXELS_YUV444P, "yuv444p.yuv", "4e9a7453268b9416f4bd2320572d0163" },
 	{ COMPV_SUBTYPE_PIXELS_RGB565BE, "equirectangular_1282x721_rgb565be.rgb", 1282, 721, 1282, COMPV_SUBTYPE_PIXELS_YUV444P, "yuv444p.yuv", "" },
 };
 static size_t COMPV_TEST_IMAGE_CHROMA_CONV_TESTS_COUNT = sizeof(COMPV_TEST_IMAGE_CHROMA_CONV_TESTS) / sizeof(COMPV_TEST_IMAGE_CHROMA_CONV_TESTS[0]);
@@ -72,6 +72,11 @@ COMPV_ERROR_CODE chroma_conv()
 	}
 	timeEnd = CompVTime::getNowMills();
 	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE_CHROMA_CONV, "Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
+
+	{
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+		COMPV_DEBUG_INFO("md5: %s", tests_md5(dstImage).c_str());
+	}
 
 #if COMPV_TEST_WRITE_OUTPUT
 	COMPV_CHECK_CODE_BAIL(err = tests_write_to_file(dstImage, test->dstFilename));

@@ -348,16 +348,9 @@ static void rgb565lefamily_to_y_C(const uint8_t* rgb565lePtr, uint8_t* outYPtr, 
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; ++i) {
-			// FIXME: do not use variables r, g, b
-			//r = (*rgb565lePtrSamples) >> 11;
-			//g = (*rgb565lePtrSamples >> 5) & 0x3f;
-			//b = *rgb565lePtrSamples & 0x1f;
-			//r = (r * 255 + 15) / 31;
-			//g = (g * 255 + 31) / 63;
-			//b = (b * 255 + 15) / 31;
-			r = ((*rgb565lePtrSamples & 0xF800) >> 8);
-			g = ((*rgb565lePtrSamples & 0x07E0) >> 3);
-			b = ((*rgb565lePtrSamples & 0x001F) << 3);
+			r = ((*rgb565lePtrSamples & 0xF800) >> 8), r |= (r >> 5);
+			g = ((*rgb565lePtrSamples & 0x07E0) >> 3), g |= (g >> 6);
+			b = ((*rgb565lePtrSamples & 0x001F) << 3), b |= (b >> 5);
 			*outYPtr++ = CompVMathUtils::clampPixel8((((c0 * r) + (c1 * g) + (c2 * b)) >> 7) + 16);
 			++rgb565lePtrSamples;
 		}
@@ -386,13 +379,9 @@ static void rgb565lefamily_to_uv_planar_11_C(const uint8_t* rgb565lePtr, uint8_t
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; ++i) {
-			// FIXME: do not use variables r, g, b
-			//r = *rgb565lePtrSamples >> 11;
-			//g = (*rgb565lePtrSamples >> 5) & 0x3f;
-			//b = *rgb565lePtrSamples & 0x1f;
-			r = ((*rgb565lePtrSamples & 0xF800) >> 8);
-			g = ((*rgb565lePtrSamples & 0x07E0) >> 3);
-			b = ((*rgb565lePtrSamples & 0x001F) << 3);
+			r = ((*rgb565lePtrSamples & 0xF800) >> 8), r |= (r >> 5);
+			g = ((*rgb565lePtrSamples & 0x07E0) >> 3), g |= (g >> 6);
+			b = ((*rgb565lePtrSamples & 0x001F) << 3), b |= (b >> 5);
 			*outUPtr++ = CompVMathUtils::clampPixel8((((c0u* r) + (c1u * g) + (c2u * b)) >> 8) + 128);
 			*outVPtr++ = CompVMathUtils::clampPixel8(((((c0v * r) + (c1v* g) + (c2v * b))) >> 8) + 128);
 			++rgb565lePtrSamples;
@@ -425,6 +414,9 @@ void __rgb565lefamily_to_y(const uint8_t* rgbPtr, uint8_t* outYPtr, compv_uscala
 void CompVImageConvRGBfamily::rgb565le_to_y(const uint8_t* rgb565lePtr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
 	__rgb565lefamily_to_y(rgb565lePtr, outYPtr, width, height, stride, kRGBAToYUV_YCoeffs8);
 }
+void CompVImageConvRGBfamily::rgb565be_to_y(const uint8_t* rgb565lePtr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
+	__rgb565lefamily_to_y(rgb565lePtr, outYPtr, width, height, stride, kRGBAToYUV_YCoeffs8);
+}
 
 static void __rgb565lefamily_to_uv_planar_11(const uint8_t* rgbPtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride,
 	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8)
@@ -447,6 +439,9 @@ static void __rgb565lefamily_to_uv_planar_11(const uint8_t* rgbPtr, uint8_t* out
 	funcptr(rgbPtr, outUPtr, outVPtr, width, height, stride, kRGBfamilyToYUV_UCoeffs8, kRGBfamilyToYUV_VCoeffs8);
 }
 void CompVImageConvRGBfamily::rgb565le_to_uv_planar_11(const uint8_t* rgbPtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
+	__rgb565lefamily_to_uv_planar_11(rgbPtr, outUPtr, outVPtr, width, height, stride, kRGBAToYUV_UCoeffs8, kRGBAToYUV_VCoeffs8);
+}
+void CompVImageConvRGBfamily::rgb565be_to_uv_planar_11(const uint8_t* rgbPtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
 	__rgb565lefamily_to_uv_planar_11(rgbPtr, outUPtr, outVPtr, width, height, stride, kRGBAToYUV_UCoeffs8, kRGBAToYUV_VCoeffs8);
 }
 
