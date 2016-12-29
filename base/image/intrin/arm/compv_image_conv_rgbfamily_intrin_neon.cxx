@@ -73,6 +73,7 @@ void CompVImageConvRgb32family_to_y_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_
 	const uint8x8_t xmmCoeff0 = xmmCoeffs.val[0]; // should be 33
 	const uint8x8_t xmmCoeff1 = xmmCoeffs.val[1]; // should be 65
 	const uint8x8_t xmmCoeff2 = xmmCoeffs.val[2]; // should be 13
+	const uint8x8_t xmmCoeff3 = xmmCoeffs.val[3]; // should be 0
 
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (j = 0; j < height; ++j) {
@@ -85,6 +86,8 @@ void CompVImageConvRgb32family_to_y_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_
 			xmm1 = vmlal_u8(xmm1, xmmCoeff1, xmm1RGBA.val[1]); // xmm1 += (65 * G)
 			xmm0 = vmlal_u8(xmm0, xmmCoeff2, xmm0RGBA.val[2]); // xmm0 += (13 * B)			
 			xmm1 = vmlal_u8(xmm1, xmmCoeff2, xmm1RGBA.val[2]); // xmm1 += (13 * B)
+			xmm0 = vmlal_u8(xmm0, xmmCoeff3, xmm0RGBA.val[3]); // xmm0 += (0 * A)			
+			xmm1 = vmlal_u8(xmm1, xmmCoeff3, xmm1RGBA.val[3]); // xmm1 += (0 * A)
 			// ((r >> 7) + 16) = (r + 2048) >> 7
 			xmm0 = vaddq_u16(xmm0, xmm2048);
 			xmm1 = vaddq_u16(xmm1, xmm2048);
@@ -187,9 +190,11 @@ void CompVImageConvRgb32family_to_uv_planar_11_Intrin_NEON(COMPV_ALIGNED(NEON) c
 	const int16x8_t xmmCoeffU0 = vmovl_s8(xmmCoeffsU.val[0]); // should be -38
 	const int16x8_t xmmCoeffU1 = vmovl_s8(xmmCoeffsU.val[1]); // should be -74
 	const int16x8_t xmmCoeffU2 = vmovl_s8(xmmCoeffsU.val[2]); // should be 112
+	const int16x8_t xmmCoeffU3 = vmovl_s8(xmmCoeffsU.val[3]); // should be 0
 	const int16x8_t xmmCoeffV0 = vmovl_s8(xmmCoeffsV.val[0]); // should be 112
 	const int16x8_t xmmCoeffV1 = vmovl_s8(xmmCoeffsV.val[1]); // should be -94
 	const int16x8_t xmmCoeffV2 = vmovl_s8(xmmCoeffsV.val[2]); // should be -18
+	const int16x8_t xmmCoeffV3 = vmovl_s8(xmmCoeffsV.val[3]); // should be 0
 
 	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
@@ -222,6 +227,13 @@ void CompVImageConvRgb32family_to_uv_planar_11_Intrin_NEON(COMPV_ALIGNED(NEON) c
 			xmm0V = vmlaq_s16(xmm0V, xmmCoeffV2, xmm0); // xmm0V += (-18 * G)
 			xmm1U = vmlaq_s16(xmm1U, xmmCoeffU2, xmm1); // xmm1U += (112 * G)
 			xmm1V = vmlaq_s16(xmm1V, xmmCoeffV2, xmm1); // xmm1V += (-18 * G)
+			// Fourth part(B)
+			xmm0 = vreinterpretq_s16_u16(vmovl_u8(xmm0RGBA.val[3]));
+			xmm1 = vreinterpretq_s16_u16(vmovl_u8(xmm1RGBA.val[3]));
+			xmm0U = vmlaq_s16(xmm0U, xmmCoeffU3, xmm0); // xmm0U += (0 * A)
+			xmm0V = vmlaq_s16(xmm0V, xmmCoeffV3, xmm0); // xmm0V += (0 * A)
+			xmm1U = vmlaq_s16(xmm1U, xmmCoeffU3, xmm1); // xmm1U += (0 * A)
+			xmm1V = vmlaq_s16(xmm1V, xmmCoeffV3, xmm1); // xmm1V += (0 * A)
 			// >> 8
 			xmm0U = vshrq_n_s16(xmm0U, 8); // xmm0U >>= 8
 			xmm0V = vshrq_n_s16(xmm0V, 8); // xmm0V >>= 8

@@ -12,7 +12,11 @@
 .extern k16_i16, k128_i16
  
 .section .text
-  
+
+.equ familyRGB24, 0
+.equ familyRGB32, 1
+.equ familyRGB565, 2
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* rgb24Ptr
 @ arg(1) -> COMPV_ALIGNED(NEON) uint8_t* outYPtr
@@ -20,8 +24,8 @@
 @ arg(3) -> compv_uscalar_t height
 @ arg(4) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
 @ arg(5) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8
-COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_y_Asm_NEON32
-    COMPV_GAS_FUNCTION_PROLOG
+.macro CompVImageConvRgbfamily_to_y_Macro_NEON32 family
+	COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
 	COMPV_GAS_SAVE_NEON_REGS
 	
@@ -42,49 +46,68 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_y_Asm_NEON32
 	and r6, r6, #-16
 	sub r7, stride, r6
 	padY .req r7
-	add r8, r7, r7, LSL #1
+	.if \family == familyRGB24
+		add r8, padY, padY, LSL #1
+	.elseif \family == familyRGB32
+		mov r8, padY, LSL #2
+	.elseif
+		.error
+	.endif
 	padRGB .req r8
 
 	mov r9, #2048
 	vdup.u16 q0, r9
 	xmm2048 .req q0
-	vld4.8 {d2, d3, d4, d5}, [kRGBfamilyToYUV_YCoeffs8 : 128]
-	xmmCoeff0 .req d2
-	xmmCoeff1 .req d3
-	xmmCoeff2 .req d4
+
+	vld4.8 {d20, d21, d22, d23}, [kRGBfamilyToYUV_YCoeffs8 : 128]
+	xmmCoeff0 .req d20
+	xmmCoeff1 .req d21
+	xmmCoeff2 .req d22
+	xmmCoeff3 .req d23
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (j = 0; j < height; ++j)
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	LoopHeight_CompVImageConvRgb24family_to_y_Asm_NEON32:
+	LoopHeight\@:
 		mov r9, #0
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (i = 0; i < width; i += 16)
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-		LoopWidth_CompVImageConvRgb24family_to_y_Asm_NEON32:
+		LoopWidth\@:
 			add r9, r9, #16
 			pld [rgb24Ptr, #64*3]
-			vld3.8 {d5, d6, d7}, [rgb24Ptr : 64]! @ FIXME For RGB32: add alignment
-			vld3.8 {d8, d9, d10}, [rgb24Ptr]! @ FIXME For RGB32: add alignment
+			.if \family == familyRGB24
+				vld3.u8 {d5, d6, d7}, [rgb24Ptr :64]!
+				vld3.u8 {d16, d17, d18}, [rgb24Ptr]!
+			.elseif \family == familyRGB32
+				vld4.u8 {d5, d6, d7, d8}, [rgb24Ptr :128]!
+				vld4.u8 {d16, d17, d18, d19}, [rgb24Ptr :128]!
+			.elseif
+				.error not implemented
+			.endif
 			vmull.u8 q6, xmmCoeff0, d5
-			vmull.u8 q7, xmmCoeff0, d8
+			vmull.u8 q7, xmmCoeff0, d16
 			vmlal.u8 q6, xmmCoeff1, d6
-			vmlal.u8 q7, xmmCoeff1, d9
+			vmlal.u8 q7, xmmCoeff1, d17
 			vmlal.u8 q6, xmmCoeff2, d7
-			vmlal.u8 q7, xmmCoeff2, d10
-			vadd.u16 q8, q6, xmm2048
-			vadd.u16 q9, q7, xmm2048
-			vqshrn.u16 d5, q8, #7
-			vqshrn.u16 d6, q9, #7
+			vmlal.u8 q7, xmmCoeff2, d18
+			.if \family == familyRGB32
+				vmlal.u8 q6, xmmCoeff3, d8
+				vmlal.u8 q7, xmmCoeff3, d19
+			.endif
+			vadd.u16 q6, q6, xmm2048
+			vadd.u16 q7, q7, xmm2048
+			vqshrn.u16 d5, q6, #7
+			vqshrn.u16 d6, q7, #7
 			vst1.u8 {d5, d6}, [outYPtr : 128]! @ vstmia r1!, {d5, d6}
 			cmp r9, width
-			blt LoopWidth_CompVImageConvRgb24family_to_y_Asm_NEON32
+			blt LoopWidth\@
 			@End_of_LoopWidth
 
 		add outYPtr, outYPtr, padY
 		add rgb24Ptr, rgb24Ptr, padRGB
 		subs height, height, #1
-		bne LoopHeight_CompVImageConvRgb24family_to_y_Asm_NEON32	
+		bne LoopHeight\@	
 		@End_of_LoopHeight
 
 	@undef aliases
@@ -99,11 +122,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_y_Asm_NEON32
 	.unreq xmmCoeff0
 	.unreq xmmCoeff1
 	.unreq xmmCoeff2
+	.unreq xmmCoeff3
 	
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS 6
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
+  
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_y_Asm_NEON32
+    CompVImageConvRgbfamily_to_y_Macro_NEON32 familyRGB24
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb32family_to_y_Asm_NEON32
+    CompVImageConvRgbfamily_to_y_Macro_NEON32 familyRGB32
 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -115,7 +148,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_y_Asm_NEON32
 @ arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
 @ arg(6) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8
 @ arg(7) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8
-COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32
+.macro CompVImageConvRgbfamily_to_uv_planar_11_Macro_NEON32 family
 	COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 8
 	COMPV_GAS_SAVE_NEON_REGS
@@ -158,17 +191,18 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32
 	xmmCoeffV2 .req q7
 
 	ldr r10, =k128_i16
-	vld1.u16 {q0low, q0high}, [r10 : 128] @ {q0low, q0high} = q0 = xmm128
+	vld1.u16 {q0low, q0high}, [r10 : 128]
+	xmm128 .req q0
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (j = 0; j < height; ++j)
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	LoopHeight_CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32:
+	LoopHeight\@:
 		mov r6, #0
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (i = 0; i < width; i += 16)
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-		LoopWidth_CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32:
+		LoopWidth\@:
 			xmm0 .req q11
 			xmm1 .req q12
 			add r6, r6, #16
@@ -202,10 +236,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32
 			vshr.s16 q15, q15, #8
 			vshr.s16 q1, q1, #8
 			@ + 128
-			vadd.s16 q13, q13, q0
-			vadd.s16 q14, q14, q0
-			vadd.s16 q15, q15, q0
-			vadd.s16 q1, q1, q0
+			vadd.s16 q13, q13, xmm128
+			vadd.s16 q14, q14, xmm128
+			vadd.s16 q15, q15, xmm128
+			vadd.s16 q1, q1, xmm128
 			@ outPtr = concat(saturate(xmm0), saturate(xmm1))
 			vqmovun.s16 d22, q13
 			vqmovun.s16 d23, q15
@@ -214,14 +248,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32
 			cmp r6, width
 			vst1.u8 {d22, d23}, [outUPtr : 128]! @ vstmia outUPtr!, {d22, d23}
 			vst1.u8 {d24, d25}, [outVPtr : 128]! @ vstmia outVPtr!, {d24, d25}			
-			blt LoopWidth_CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32
+			blt LoopWidth\@
 			@End_of_LoopWidth
 
 		add rgb24Ptr, rgb24Ptr, padRGB
 		add outUPtr, outUPtr, padUV
 		add outVPtr, outVPtr, padUV
 		subs height, height, #1
-		bne LoopHeight_CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32
+		bne LoopHeight\@
 		@End_of_LoopHeight
 
 	@undef aliases
@@ -243,11 +277,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32
 	.unreq xmmCoeffV0
 	.unreq xmmCoeffV1
 	.unreq xmmCoeffV2
+	.unreq xmm128
 	
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS 8
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32
+	CompVImageConvRgbfamily_to_uv_planar_11_Macro_NEON32 familyRGB24
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb32family_to_uv_planar_11_Asm_NEON32
+	CompVImageConvRgbfamily_to_uv_planar_11_Macro_NEON32 familyRGB32
 
 
 	
