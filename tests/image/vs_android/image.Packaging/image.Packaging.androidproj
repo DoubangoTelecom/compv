@@ -135,6 +135,14 @@
       <Link>assets\equirectangular_1282x721_rgb.rgb</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\..\..\..\data\colorspace\equirectangular_1282x721_rgb565be.rgb">
+      <Link>assets\equirectangular_1282x721_rgb565be.rgb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\..\..\data\colorspace\equirectangular_1282x721_rgb565le.rgb">
+      <Link>assets\equirectangular_1282x721_rgb565le.rgb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\..\..\..\..\data\colorspace\equirectangular_1282x721_rgba.rgb">
       <Link>assets\equirectangular_1282x721_rgba.rgb</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
