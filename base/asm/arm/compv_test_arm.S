@@ -52,6 +52,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVTest_Asm_NEON32
 	@@ OPTION 2 @@
 	@ Or load all arguments once (faster)
 	@ldmia_args r0-r7
+	@name0 .req r0
+	@name1 .req r1
+	@name2 .req r2
+	@name3 .req r3
+	@name4 .req r4
+	@name5 .req r5
+	@name6 .req r6
+	@name7 .req r7
+	@ use .unreq to undef
 
 	@COMPV_GAS_MEMFREE 128
 	COMPV_GAS_RESTORE_NEON_REGS

@@ -14,7 +14,44 @@
 
 @ ARM cycles count: http://pulsar.webshaker.net/ccc/index.php?lng=us
 
+@ GNU ARM AS directives: https://www.sourceware.org/binutils/docs/as/ARM-Directives.html#ARM-Directives
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 .equ prolog_bytes, 36
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+q0low .dn d0
+q0high .dn d1
+q1low .dn d2
+q1high .dn d3
+q2low .dn d4
+q2high .dn d5
+q3low .dn d6
+q3high .dn d7
+q4low .dn d8
+q4high .dn d9
+q5low .dn d10
+q5high .dn d11
+q6low .dn d12
+q6high .dn d13
+q7low .dn d14
+q7high .dn d15
+q8low .dn d16
+q8high .dn d17
+q9low .dn d16
+q9high .dn d19
+q10low .dn d20
+q10high .dn d21
+q11low .dn d22
+q11high .dn d23
+q12low .dn d24
+q12high .dn d25
+q13low .dn d26
+q13high .dn d27
+q14low .dn d28
+q14high .dn d29
+q15low .dn d30
+q15high .dn d31
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ Macro to export and declare a function
