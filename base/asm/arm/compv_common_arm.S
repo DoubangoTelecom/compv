@@ -17,41 +17,43 @@
 @ GNU ARM AS directives: https://www.sourceware.org/binutils/docs/as/ARM-Directives.html#ARM-Directives
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+.equ NO, 0
+.equ YES, 1
 .equ prolog_bytes, 36
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-q0low .dn d0
-q0high .dn d1
-q1low .dn d2
-q1high .dn d3
-q2low .dn d4
-q2high .dn d5
-q3low .dn d6
-q3high .dn d7
-q4low .dn d8
-q4high .dn d9
-q5low .dn d10
-q5high .dn d11
-q6low .dn d12
-q6high .dn d13
-q7low .dn d14
-q7high .dn d15
-q8low .dn d16
-q8high .dn d17
-q9low .dn d16
-q9high .dn d19
-q10low .dn d20
-q10high .dn d21
-q11low .dn d22
-q11high .dn d23
-q12low .dn d24
-q12high .dn d25
-q13low .dn d26
-q13high .dn d27
-q14low .dn d28
-q14high .dn d29
-q15low .dn d30
-q15high .dn d31
+q0x .dn d0
+q0y .dn d1
+q1x .dn d2
+q1y .dn d3
+q2x .dn d4
+q2y .dn d5
+q3x .dn d6
+q3y .dn d7
+q4x .dn d8
+q4y .dn d9
+q5x .dn d10
+q5y .dn d11
+q6x .dn d12
+q6y .dn d13
+q7x .dn d14
+q7y .dn d15
+q8x .dn d16
+q8y .dn d17
+q9x .dn d18
+q9y .dn d19
+q10x .dn d20
+q10y .dn d21
+q11x .dn d22
+q11y .dn d23
+q12x .dn d24
+q12y .dn d25
+q13x .dn d26
+q13y .dn d27
+q14x .dn d28
+q14y .dn d29
+q15x .dn d30
+q15y .dn d31
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ Macro to export and declare a function
