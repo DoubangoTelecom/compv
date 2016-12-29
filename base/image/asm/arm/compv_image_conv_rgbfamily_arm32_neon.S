@@ -60,13 +60,13 @@
 
 	mov r9, #2048
 	vdup.u16 q0, r9
-	xmm2048 .req q0
+	vec2048 .req q0
 
 	vld4.8 {d20, d21, d22, d23}, [kRGBfamilyToYUV_YCoeffs8 : 128]
-	xmmCoeff0 .req d20
-	xmmCoeff1 .req d21
-	xmmCoeff2 .req d22
-	xmmCoeff3 .req d23
+	vecCoeff0 .req d20
+	vecCoeff1 .req d21
+	vecCoeff2 .req d22
+	vecCoeff3 .req d23
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (j = 0; j < height; ++j)
@@ -88,18 +88,18 @@
 			.elseif
 				.error not implemented
 			.endif
-			vmull.u8 q6, xmmCoeff0, d5
-			vmull.u8 q7, xmmCoeff0, d16
-			vmlal.u8 q6, xmmCoeff1, d6
-			vmlal.u8 q7, xmmCoeff1, d17
-			vmlal.u8 q6, xmmCoeff2, d7
-			vmlal.u8 q7, xmmCoeff2, d18
+			vmull.u8 q6, vecCoeff0, d5
+			vmull.u8 q7, vecCoeff0, d16
+			vmlal.u8 q6, vecCoeff1, d6
+			vmlal.u8 q7, vecCoeff1, d17
+			vmlal.u8 q6, vecCoeff2, d7
+			vmlal.u8 q7, vecCoeff2, d18
 			.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
-				vmlal.u8 q6, xmmCoeff3, d8
-				vmlal.u8 q7, xmmCoeff3, d19
+				vmlal.u8 q6, vecCoeff3, d8
+				vmlal.u8 q7, vecCoeff3, d19
 			.endif
-			vadd.u16 q6, q6, xmm2048
-			vadd.u16 q7, q7, xmm2048
+			vadd.u16 q6, q6, vec2048
+			vadd.u16 q7, q7, vec2048
 			vqshrn.u16 d5, q6, #7
 			vqshrn.u16 d6, q7, #7
 			vst1.u8 {d5, d6}, [outYPtr :128]! @ vstmia r1!, {d5, d6}
@@ -121,11 +121,11 @@
 	.unreq stride
 	.unreq kRGBfamilyToYUV_YCoeffs8
 	.unreq padY
-	.unreq xmm2048
-	.unreq xmmCoeff0
-	.unreq xmmCoeff1
-	.unreq xmmCoeff2
-	.unreq xmmCoeff3
+	.unreq vec2048
+	.unreq vecCoeff0
+	.unreq vecCoeff1
+	.unreq vecCoeff2
+	.unreq vecCoeff3
 	
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS 6
@@ -195,10 +195,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON32
 	.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
 		vmovl.s8 q3, q11y
 	.endif
-	xmmCoeffU0 .req q0
-	xmmCoeffU1 .req q1
-	xmmCoeffU2 .req q2
-	xmmCoeffU3 .req q3
+	vecCoeffU0 .req q0
+	vecCoeffU1 .req q1
+	vecCoeffU2 .req q2
+	vecCoeffU3 .req q3
 	
 	vld4.s8 {q10x, q10y, q11x, q11y}, [kRGBfamilyToYUV_VCoeffs8 : 128]
 	vmovl.s8 q4, q10x
@@ -207,14 +207,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON32
 	.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
 		vmovl.s8 q7, q11y
 	.endif
-	xmmCoeffV0 .req q4
-	xmmCoeffV1 .req q5
-	xmmCoeffV2 .req q6
-	xmmCoeffV3 .req q7
+	vecCoeffV0 .req q4
+	vecCoeffV1 .req q5
+	vecCoeffV2 .req q6
+	vecCoeffV3 .req q7
 
 	ldr r10, =k128_i16
 	vld1.u16 {q15x, q15y}, [r10 :128]
-	xmm128 .req q15
+	vec128 .req q15
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (j = 0; j < height; ++j)
@@ -225,7 +225,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON32
 		@ for (i = 0; i < width; i += 16)
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		LoopWidth\@:
-			xmm0 .req q12
+			vec0 .req q12
 			add r6, r6, #16
 			pld [rgbPtr, #64*3]
 			.if \family == familyRGB24
@@ -237,42 +237,42 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON32
 			.elseif
 				.error not implemented
 			.endif
-			vmovl.u8 xmm0, q8x
-			vmul.i16 q13, xmmCoeffU0, xmm0
-			vmul.s16 q14, xmmCoeffV0, xmm0
-			vmovl.u8 xmm0, q8y
-			vmla.s16 q13, xmmCoeffU1, xmm0
-			vmla.s16 q14, xmmCoeffV1, xmm0
-			vmovl.u8 xmm0, q9x
-			vmla.s16 q13, xmmCoeffU2, xmm0
-			vmla.s16 q14, xmmCoeffV2, xmm0
+			vmovl.u8 vec0, q8x
+			vmul.i16 q13, vecCoeffU0, vec0
+			vmul.s16 q14, vecCoeffV0, vec0
+			vmovl.u8 vec0, q8y
+			vmla.s16 q13, vecCoeffU1, vec0
+			vmla.s16 q14, vecCoeffV1, vec0
+			vmovl.u8 vec0, q9x
+			vmla.s16 q13, vecCoeffU2, vec0
+			vmla.s16 q14, vecCoeffV2, vec0
 			.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
-				vmovl.u8 xmm0, q9y
-				vmla.s16 q13, xmmCoeffU3, xmm0
-				vmla.s16 q14, xmmCoeffV3, xmm0
+				vmovl.u8 vec0, q9y
+				vmla.s16 q13, vecCoeffU3, vec0
+				vmla.s16 q14, vecCoeffV3, vec0
 			.endif
-			vmovl.u8 xmm0, q10x
-			vmul.s16 q8, xmmCoeffU0, xmm0
-			vmul.s16 q9, xmmCoeffV0, xmm0
-			vmovl.u8 xmm0, q10y
-			vmla.s16 q8, xmmCoeffU1, xmm0
-			vmla.s16 q9, xmmCoeffV1, xmm0
-			vmovl.u8 xmm0, q11x
-			vmla.s16 q8, xmmCoeffU2, xmm0
-			vmla.s16 q9, xmmCoeffV2, xmm0
+			vmovl.u8 vec0, q10x
+			vmul.s16 q8, vecCoeffU0, vec0
+			vmul.s16 q9, vecCoeffV0, vec0
+			vmovl.u8 vec0, q10y
+			vmla.s16 q8, vecCoeffU1, vec0
+			vmla.s16 q9, vecCoeffV1, vec0
+			vmovl.u8 vec0, q11x
+			vmla.s16 q8, vecCoeffU2, vec0
+			vmla.s16 q9, vecCoeffV2, vec0
 			.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
-				vmovl.u8 xmm0, q11y
-				vmla.s16 q8, xmmCoeffU3, xmm0
-				vmla.s16 q9, xmmCoeffV3, xmm0
+				vmovl.u8 vec0, q11y
+				vmla.s16 q8, vecCoeffU3, vec0
+				vmla.s16 q9, vecCoeffV3, vec0
 			.endif
 			vshr.s16 q13, q13, #8
 			vshr.s16 q14, q14, #8
 			vshr.s16 q8, q8, #8
 			vshr.s16 q9, q9, #8
-			vadd.s16 q13, q13, xmm128
-			vadd.s16 q14, q14, xmm128
-			vadd.s16 q8, q8, xmm128
-			vadd.s16 q9, q9, xmm128
+			vadd.s16 q13, q13, vec128
+			vadd.s16 q14, q14, vec128
+			vadd.s16 q8, q8, vec128
+			vadd.s16 q9, q9, vec128
 			vqmovun.s16 q11x, q13
 			vqmovun.s16 q11y, q8
 			vqmovun.s16 q12x, q14
@@ -301,16 +301,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON32
 	.unreq kRGBfamilyToYUV_VCoeffs8
 	.unreq padUV
 	.unreq padRGB
-	.unreq xmm0
-	.unreq xmmCoeffU0
-	.unreq xmmCoeffU1
-	.unreq xmmCoeffU2
-	.unreq xmmCoeffU3
-	.unreq xmmCoeffV0
-	.unreq xmmCoeffV1
-	.unreq xmmCoeffV2
-	.unreq xmmCoeffV3
-	.unreq xmm128
+	.unreq vec0
+	.unreq vecCoeffU0
+	.unreq vecCoeffU1
+	.unreq vecCoeffU2
+	.unreq vecCoeffU3
+	.unreq vecCoeffV0
+	.unreq vecCoeffV1
+	.unreq vecCoeffV2
+	.unreq vecCoeffV3
+	.unreq vec128
 	
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS 8
