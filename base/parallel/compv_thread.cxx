@@ -28,7 +28,22 @@ using namespace ThreadEmulation;
 
 #if defined(HAVE_SCHED_H) || COMPV_OS_ANDROID || COMPV_OS_LINUX
 #	include <sched.h>
+#	include <sys/syscall.h>
 #endif
+
+#if COMPV_OS_ANDROID
+#define CPU_SETSIZE 1024
+#define __NCPUBITS  (8 * sizeof (unsigned long))
+typedef struct
+{
+	unsigned long __bits[CPU_SETSIZE / __NCPUBITS];
+} cpu_set_t;
+
+#define CPU_SET(cpu, cpusetp) \
+  ((cpusetp)->__bits[(cpu)/__NCPUBITS] |= (1UL << ((cpu) % __NCPUBITS)))
+#define CPU_ZERO(cpusetp) \
+  memset((cpusetp), 0, sizeof(cpu_set_t))
+#endif /* COMPV_OS_ANDROID */
 
 #if COMPV_OS_WINDOWS
 static compv_thread_id_t CompVWindowsGetThreadId(HANDLE handle)
@@ -170,9 +185,13 @@ COMPV_ERROR_CODE CompVThread::setAffinity(compv_core_id_t coreId)
     }
 #elif COMPV_OS_ANDROID
     {
-        // syscall(__NR_sched_setaffinity, pid, sizeof(mask), &mask);
-        // TODO(dmi): not implemented
-        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+		cpu_set_t cpuset;
+		CPU_ZERO(&cpuset);
+		CPU_SET(coreId, &cpuset);
+		COMPV_CHECK_EXP_RETURN(
+			syscall(__NR_sched_setaffinity, *reinterpret_cast<pthread_t*>(m_pHandle), sizeof(cpuset), &cpuset) != 0,
+			err = COMPV_ERROR_CODE_E_SYSTEM,
+			"Failed to set thread affinity");
     }
 #elif COMPV_OS_APPLE
     {

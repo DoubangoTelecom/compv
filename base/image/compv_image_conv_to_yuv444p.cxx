@@ -39,8 +39,8 @@ COMPV_ERROR_CODE CompVImageConvToYUV444P::process(const CompVMatPtr& imageIn, Co
 
 COMPV_ERROR_CODE CompVImageConvToYUV444P::rgbfamily(const CompVMatPtr& imageRGBfamily, CompVMatPtrPtr imageYUV444P)
 {
-	// TODO(dmi): Before converting to Y or UV we unpack RGBfamily samples to RGBAfamily and this is done
-	// twice, once for luma and once for chroma. Performance issues. Sad !!
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Before converting to Y or UV we unpack RGBfamily samples to RGBAfamily and this is done"
+		"twice, once for luma and once for chroma. Performance issues. Sad !!");
 	// Private function, do not check input parameters (already done)
 	void(*rgbfamily_to_y)(const uint8_t* rgbPtr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) = NULL;
 	void (*rgbfamily_to_uv_planar_11)(const uint8_t* rgbPtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) = NULL;
