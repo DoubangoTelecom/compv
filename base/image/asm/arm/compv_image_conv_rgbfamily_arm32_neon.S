@@ -32,8 +32,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_y_Asm_NEON32
 	sub r7, r4, r6 @r7 = padY
 	add r8, r7, r7, LSL #1 @r8 = padRGB
 
-	ldr r9, =k16_i16
-	vld1.16 {d0, d1}, [r9 : 128] @ {d0, d1} = q0 = xmm16
+	mov r9, #2048
+	vdup.u16 q0, r9 @ q0 = xmm2048
 	vld4.8 {d2, d3, d4, d5}, [r5 : 128] @ d2 = xmmCoeff0, d3 = xmmCoeff1, d4, xmmCoeff2
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -54,12 +54,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_y_Asm_NEON32
 			vmlal.u8 q7, d3, d9
 			vmlal.u8 q6, d4, d7
 			vmlal.u8 q7, d4, d10
-			vshr.u16 q6, q6, #7
-			vshr.u16 q7, q7, #7
 			vadd.u16 q6, q6, q0
 			vadd.u16 q7, q7, q0
-			vqmovun.s16 d5, q6
-			vqmovun.s16 d6, q7
+			vqshrn.U16 d5, q6, #7
+			vqshrn.U16 d6, q7, #7
 			vst1.u8 {d5, d6}, [r1 : 128]! @ vstmia r1!, {d5, d6}
 			cmp r9, r2
 			blt LoopWidth_CompVImageConvRgb24family_to_y_Asm_NEON32

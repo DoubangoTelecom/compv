@@ -67,7 +67,7 @@ void CompVImageConvRgb32family_to_y_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_
 	uint8x8x4_t xmm0RGBA, xmm1RGBA; // contains [R, G, B and A] samples each component on its own lane
 	uint16x8_t xmm0, xmm1;
 
-	const uint16x8_t xmm16 = vld1q_u16(reinterpret_cast<const uint16_t*>(k16_i16));
+	const uint16x8_t xmm2048 = vdupq_n_u16(2048);
 	// The order in which the coeffs appears depends on the format (RGBA, BGRA, ARGB...)
 	const uint8x8x4_t xmmCoeffs = vld4_u8(reinterpret_cast<uint8_t const *>(kRGBAfamilyToYUV_YCoeffs8));
 	const uint8x8_t xmmCoeff0 = xmmCoeffs.val[0]; // should be 33
@@ -85,11 +85,10 @@ void CompVImageConvRgb32family_to_y_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_
 			xmm1 = vmlal_u8(xmm1, xmmCoeff1, xmm1RGBA.val[1]); // xmm1 += (65 * G)
 			xmm0 = vmlal_u8(xmm0, xmmCoeff2, xmm0RGBA.val[2]); // xmm0 += (13 * B)			
 			xmm1 = vmlal_u8(xmm1, xmmCoeff2, xmm1RGBA.val[2]); // xmm1 += (13 * B)
-			xmm0 = vshrq_n_u16(xmm0, 7); // xmm0 >>= 7
-			xmm1 = vshrq_n_u16(xmm1, 7); // xmm1 >>= 7
-			xmm0 = vaddq_u16(xmm0, xmm16); // xmm0 += 16
-			xmm1 = vaddq_u16(xmm1, xmm16); // xmm1 += 16
-			vst1q_u8(outYPtr, vcombine_u8(vqmovun_s16(xmm0), vqmovun_s16(xmm1))); // outYPtr = concat(saturate(xmm0), saturate(xmm1))
+			// ((r >> 7) + 16) = (r + 2048) >> 7
+			xmm0 = vaddq_u16(xmm0, xmm2048);
+			xmm1 = vaddq_u16(xmm1, xmm2048);
+			vst1q_u8(outYPtr, vcombine_u8(vqshrn_n_u16(xmm0, 7), vqshrn_n_u16(xmm1, 7))); // shift, saturate, narrow, concat	
 			outYPtr += 16;
 			rgb32Ptr += 64;
 		}
