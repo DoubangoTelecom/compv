@@ -12,6 +12,8 @@
 
 @ Load and store alignent: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0344b/ch16s06s07.html
 
+@ ARM cycles count: http://pulsar.webshaker.net/ccc/index.php?lng=us
+
 .equ prolog_bytes, 36
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

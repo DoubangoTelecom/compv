@@ -27,6 +27,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_y_Asm_NEON32
 	
 	ldmia_args r0-r5
 
+	pld [r0]
+	pld [r0, #64*1]
+	pld [r0, #64*2]
+	pld [r0, #64*3]
+
 	add r6, r2, #15
 	and r6, r6, #-16
 	sub r7, r4, r6 @r7 = padY
@@ -46,6 +51,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_y_Asm_NEON32
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		LoopWidth_CompVImageConvRgb24family_to_y_Asm_NEON32:
 			add r9, r9, #16
+			pld [r0, #64*3]
 			vld3.8 {d5, d6, d7}, [r0 : 64]! @ FIXME For RGB32: add alignment
 			vld3.8 {d8, d9, d10}, [r0]! @ FIXME For RGB32: add alignment
 			vmull.u8 q6, d2, d5
@@ -54,10 +60,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_y_Asm_NEON32
 			vmlal.u8 q7, d3, d9
 			vmlal.u8 q6, d4, d7
 			vmlal.u8 q7, d4, d10
-			vadd.u16 q6, q6, q0
-			vadd.u16 q7, q7, q0
-			vqshrn.U16 d5, q6, #7
-			vqshrn.U16 d6, q7, #7
+			vadd.u16 q8, q6, q0
+			vadd.u16 q9, q7, q0
+			vqshrn.u16 d5, q8, #7
+			vqshrn.u16 d6, q9, #7
 			vst1.u8 {d5, d6}, [r1 : 128]! @ vstmia r1!, {d5, d6}
 			cmp r9, r2
 			blt LoopWidth_CompVImageConvRgb24family_to_y_Asm_NEON32
@@ -91,6 +97,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32
 
 	ldmia_args r0-r7
 
+	pld [r0]
+	pld [r0, #64*1]
+	pld [r0, #64*2]
+	pld [r0, #64*3]
+
 	add r8, r3, #15
 	and r8, r8, #-16
 	sub r9, r5, r8 @r9 = padUV
@@ -118,6 +129,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		LoopWidth_CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32:
 			add r6, r6, #16
+			pld [r0, #64*3]
 			vld3.8 {d16, d17, d18}, [r0 : 64]! @ FIXME For RGB32: add alignment
 			vld3.8 {d19, d20, d21}, [r0]! @ FIXME For RGB24: add alignment
 			@ First part(R)
@@ -130,17 +142,17 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON32
 			vmul.s16 q1, q5, q12
 			vmovl.u8 q12, d20 @q12 = xmm1
 			@ Second part(G)
-			vmlaq.s16 q13, q3, q11
-			vmlaq.s16 q14, q6, q11
+			vmla.s16 q13, q3, q11
+			vmla.s16 q14, q6, q11
 			vmovl.u8 q11, d18 @q11 = xmm0
-			vmlaq.s16 q15, q3, q12
-			vmlaq.s16 q1, q6, q12
+			vmla.s16 q15, q3, q12
+			vmla.s16 q1, q6, q12
 			vmovl.u8 q12, d21 @q12 = xmm1
 			@ Third part(B)
-			vmlaq.s16 q13, q4, q11
-			vmlaq.s16 q14, q7, q11
-			vmlaq.s16 q15, q4, q12
-			vmlaq.s16 q1, q7, q12
+			vmla.s16 q13, q4, q11
+			vmla.s16 q14, q7, q11
+			vmla.s16 q15, q4, q12
+			vmla.s16 q1, q7, q12
 			@ >> 8
 			vshr.s16 q13, q13, #8
 			vshr.s16 q14, q14, #8
