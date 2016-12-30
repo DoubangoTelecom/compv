@@ -40,10 +40,9 @@
 	stride .req r4
 	kRGBfamilyToYUV_YCoeffs8 .req r5
 
-	pld [rgbPtr]
-	pld [rgbPtr, #64*1]
-	pld [rgbPtr, #64*2]
-	pld [rgbPtr, #64*3]
+	pld [rgbPtr, #(CACHE_LINE_SIZE*0)]
+	pld [rgbPtr, #(CACHE_LINE_SIZE*1)]
+	pld [rgbPtr, #(CACHE_LINE_SIZE*2)]
 
 	add r6, width, #15
 	and r6, r6, #-16
@@ -78,7 +77,7 @@
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		LoopWidth\@:
 			add r9, r9, #16
-			pld [rgbPtr, #64*3]
+			pld [rgbPtr, #(CACHE_LINE_SIZE*3)]
 			.if \family == familyRGB24
 				vld3.u8 {d5, d6, d7}, [rgbPtr :64]!
 				vld3.u8 {d16, d17, d18}, [rgbPtr]!
@@ -170,10 +169,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON32
 	kRGBfamilyToYUV_UCoeffs8 .req r6
 	kRGBfamilyToYUV_VCoeffs8 .req r7
 
-	pld [rgbPtr]
-	pld [rgbPtr, #64*1]
-	pld [rgbPtr, #64*2]
-	pld [rgbPtr, #64*3]
+	pld [rgbPtr, #(CACHE_LINE_SIZE*0)]
+	pld [rgbPtr, #(CACHE_LINE_SIZE*1)]
+	pld [rgbPtr, #(CACHE_LINE_SIZE*2)]
 
 	add r8, width, #15
 	and r8, r8, #-16
@@ -227,7 +225,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON32
 		LoopWidth\@:
 			vec0 .req q12
 			add r6, r6, #16
-			pld [rgbPtr, #64*3]
+			pld [rgbPtr, #(CACHE_LINE_SIZE*3)]
 			.if \family == familyRGB24
 				vld3.u8 {q8x, q8y, q9x}, [rgbPtr :64]!
 				vld3.u8 {q10x, q10y, q11x}, [rgbPtr]!

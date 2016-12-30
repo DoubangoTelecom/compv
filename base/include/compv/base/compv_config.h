@@ -316,7 +316,7 @@
 #define COMPV_SIMD_ALIGNV_AVX2		COMPV_SIMD_ALIGNV_AVX
 #define COMPV_SIMD_ALIGNV_AVX512	64
 #define COMPV_SIMD_ALIGNV_NEON		16 // ARM NEON
-#define COMPV_SIMD_ALIGNV_DEFAULT	32 // This is max to make sure all requirements will work
+#define COMPV_SIMD_ALIGNV_DEFAULT	64 // This is max to make sure all requirements will work (also equal to expected cache line)
 
 #if !defined (HAVE_GETTIMEOFDAY)
 #if COMPV_OS_WINDOWS

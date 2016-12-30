@@ -20,6 +20,8 @@
 .equ NO, 0
 .equ YES, 1
 .equ prolog_bytes, 40
+.equ CACHE_LINE_SIZE, 64
+.equ PREFETCH_DISTANCE, (CACHE_LINE_SIZE << 2)
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 q0x .dn d0

@@ -60,7 +60,7 @@ typedef void(*CompVMemCopy)(void* dstPtr, const void*srcPtr, compv_uscalar_t siz
 
 static void CompVMemCopy_C(void* dstPtr, const void*srcPtr, compv_uscalar_t size)
 {
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found. On ARM consider http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka13544.html");
     memcpy(dstPtr, srcPtr, (size_t)size);
 }
 
