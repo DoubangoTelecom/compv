@@ -19,7 +19,7 @@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 .equ NO, 0
 .equ YES, 1
-.equ prolog_bytes, 36
+.equ prolog_bytes, 40
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 q0x .dn d0
@@ -72,18 +72,13 @@ q15y .dn d31
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ Function Prolog.
 .macro COMPV_GAS_FUNCTION_PROLOG
-	@push {r4-r7, lr}        @ save LR, R7, R4-R6, R7 = FP
-	@add r7, sp, #12			@ adjust R7 to point to saved R7
-	@push {r8, r10, r11}		@ save remaining GPRs (R8, R10, R11)
-	push {r4-r11, lr}        @ 9 * 4 = 36 bytes = prolog_bytes
+	push {r4-r12, lr}        @ 10 * 4 = 40 bytes = prolog_bytes
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ Function Epilog. More info:
 .macro COMPV_GAS_FUNCTION_EPILOG
-	@pop {r8, r10, r11}      @ restore R8-R11
-	@pop {r4-r7, pc}         @ restore R4-R6, saved R7, return to saved LR
-	pop {r4-r11, lr}
+	pop {r4-r12, lr}
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -97,10 +92,10 @@ q15y .dn d31
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ 'r11' is reserved to address the arguments
+@ 'r12' is reserved to address the arguments
 .macro COMPV_GAS_SHADOW_ARGS_TO_STACK nn
 	sub sp, sp, #(\nn * 4)
-	mov r11, sp
+	mov r12, sp
 	.if \nn >= 1
 		str r0, [sp, #(4 * 0)]
 	.endif
@@ -158,14 +153,14 @@ q15y .dn d31
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ requires COMPV_GAS_SHADOW_ARGS_TO_STACK
 .macro ldr_arg nn rx
-	ldr \rx, [r11, #(\nn * 4)]
+	ldr \rx, [r12, #(\nn * 4)]
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ requires COMPV_GAS_SHADOW_ARGS_TO_STACK
 @ Example: ldmia_args r0-r7
 .macro ldmia_args registers
-	ldmia r11, {\registers}
+	ldmia r12, {\registers}
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

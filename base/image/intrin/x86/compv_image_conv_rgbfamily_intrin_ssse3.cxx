@@ -108,6 +108,46 @@ void CompVImageConvRgb32family_to_y_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_
 	}
 }
 
+void CompVImageConvRgb565le_to_y_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb565lePtr, COMPV_ALIGNED(SSE) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride,
+	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8)
+{
+#if 0
+	COMPV_DEBUG_INFO_CHECK_SSSE3();
+	__m128i xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA;
+	compv_uscalar_t i, j, maxI = ((width + 15) & -16), padY = (stride - maxI), padRGB = padY << 1;
+
+	const __m128i xmmMaskRgbToRgba = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_RgbToRgba_i32));
+	const __m128i xmm16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_i16));
+	const __m128i xmmYCoeffs = _mm_load_si128(reinterpret_cast<const __m128i*>(kRGBfamilyToYUV_YCoeffs8)); // RGBA coeffs
+	const __m128i xmmMask0 = _mm_set1_epi16(0xF800);
+	const __m128i xmmMask1 = _mm_set1_epi16(0x07E0);
+	const __m128i xmmMask2 = _mm_set1_epi16(0x001F);
+	const __m128i xmmZero = _mm_setzero_si128();
+
+	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
+	for (j = 0; j < height; ++j) {
+		for (i = 0; i < width; i += 16) {
+			//  convert from RGB565 to RGBA, alpha channel contains zeros
+			xmm0RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb565lePtr + 0));
+			xmm2RGBA = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb565lePtr + 16));
+			xmm1RGBA = _mm_unpackhi_epi16(xmm0RGBA, xmmZero);
+			xmm3RGBA = _mm_unpackhi_epi16(xmm2RGBA, xmmZero);
+			xmm0RGBA = _mm_unpacklo_epi16(xmm0RGBA, xmmZero);
+			xmm2RGBA = _mm_unpacklo_epi16(xmm2RGBA, xmmZero);
+			//_mm_and_si128(__m128i a, __m128i b)
+
+			//COMPV_16xRGB_TO_16xRGBA_SSSE3_FAST(rgb24Ptr, xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmmMaskRgbToRgba);
+			// convert from RGBA to Luma(Y)
+			COMPV_16xRGBA_TO_16xLUMA_SSSE3(xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmmYCoeffs, xmm16, outYPtr);
+			outYPtr += 16;
+			rgb565lePtr += 32;
+		}
+		outYPtr += padY;
+		rgb565lePtr += padRGB;
+	}
+#endif
+}
+
 void CompVImageConvRgb24family_to_uv_planar_11_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* outUPtr, COMPV_ALIGNED(SSE) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride,
 	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8)
 {
