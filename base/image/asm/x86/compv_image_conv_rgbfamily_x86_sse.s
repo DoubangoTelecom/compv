@@ -86,7 +86,7 @@ section .text
 				movdqa xmm5, [rax + 48]
 				lea rax, [rax + 64] ; rgb32Ptr += 64
 			%elif %1 == rgb24Family
-				; Convert RGB24 -> RGB32, alpha channel contains garbage (later multiplied with zero coeff)
+				; Convert RGB24 -> RGB32, alpha channel contains zeros
 				COMPV_16xRGB_TO_16xRGBA_SSSE3 rax, xmm2, xmm3, xmm4, xmm5, xmm6
 				lea rax, [rax + 48] ; rgb24Ptr += 48
 			%else
@@ -201,7 +201,7 @@ sym(CompVImageConvRgb32family_to_y_Asm_X86_SSSE3)
 				movdqa xmm3, [rax + 48]
 				lea rax, [rax + 64] ; rgb32Ptr += 64
 			%elif %1 == rgb24Family
-				; Convert RGB -> RGBA, alpha channel contains garbage (later multiplied with zero coeff)
+				; Convert RGB -> RGBA, alpha channel contains zeros
 				movdqa xmm4, [sym(kShuffleEpi8_RgbToRgba_i32)]
 				COMPV_16xRGB_TO_16xRGBA_SSSE3 rax, xmm0, xmm1, xmm2, xmm3, xmm4
 				lea rax, [rax + 48] ; rgb24Ptr += 48

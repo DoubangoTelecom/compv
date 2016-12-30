@@ -25,8 +25,6 @@ section .data
 	extern sym(k16_i16)
 	extern sym(k128_i16)
 	extern sym(kAVXPermutevar8x32_ABCDDEFG_i32)
-	extern sym(kAVXPermutevar8x32_XXABBCDE_i32)
-	extern sym(kAVXPermutevar8x32_CDEFFGHX_i32)
 	extern sym(kAVXPermutevar8x32_AEBFCGDH_i32)
 	extern sym(kShuffleEpi8_RgbToRgba_i32)
 
@@ -68,8 +66,8 @@ section .text
 	vmovdqa ymm6, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)] ; ymmAEBFCGDH
 	vmovdqa ymm7, [sym(kShuffleEpi8_RgbToRgba_i32)] ; ymmMaskRgbToRgba
 	vmovdqa ymm8, [sym(kAVXPermutevar8x32_ABCDDEFG_i32)] ; ymmABCDDEFG
-	vmovdqa ymm9, [sym(kAVXPermutevar8x32_CDEFFGHX_i32)] ; ymmCDEFFGHX
-	vmovdqa ymm10, [sym(kAVXPermutevar8x32_XXABBCDE_i32)] ; ymmXXABBCDE
+	;vmovdqa ymm9, [sym(kAVXPermutevar8x32_CDEFFGHX_i32)] ; ymmCDEFFGHX
+	;vmovdqa ymm10, [sym(kAVXPermutevar8x32_XXABBCDE_i32)] ; ymmXXABBCDE
 
 	mov rax, arg(0) ; rgbPtr
 	mov r8, arg(3) ; height
@@ -86,9 +84,8 @@ section .text
 				vmovdqa ymm5, [rax + 96]
 				lea rax, [rax + 128] ; rgb32Ptr += 128
 			%elif %1 == rgb24Family
-				; Convert RGB24 -> RGBA32, alpha channel contains garbage (later multiplied with zero coeff)
-				; COMPV_32xRGB_TO_32xRGBA_X64_AVX2(rgbPtr, rgbaPtr[0], gbaPtr[1], gbaPtr[2], gbaPtr[3], ymmABCDDEFG, ymmCDEFFGHX, ymmXXABBCDE, ymmMaskRgbToRgba)		
-				COMPV_32xRGB_TO_32xRGBA_X64_AVX2 rax, ymm2, ymm3, ymm4, ymm5, ymm8, ymm9, ymm10, ymm7
+				; Convert RGB24 -> RGBA32, alpha channel contains zeros	
+				COMPV_32xRGB_TO_32xRGBA_AVX2 rax, ymm2, ymm3, ymm4, ymm5, ymm8, ymm7
 				lea rax, [rax + 96] ; rgb24Ptr += 128
 			%else
 				%error 'Not implemented'
@@ -168,15 +165,13 @@ sym(CompVImageConvRgb32family_to_y_Asm_X64_AVX2)
 	%endif
 
 	mov rax, arg(6)
-	vmovdqa ymm7, [rax] ; ymm7 = ymmUCoeffs
+	vmovdqa ymm8, [rax] ; ymm8 = ymmUCoeffs
 	mov rax, arg(7)
-	vmovdqa ymm6, [rax] ; ymm6 = ymmVCoeffs
+	vmovdqa ymm9, [rax] ; ymm9 = ymmVCoeffs
 
-	vmovdqa ymm8, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)] ; ymmAEBFCGDH
-	vmovdqa ymm9, [sym(kShuffleEpi8_RgbToRgba_i32)] ; ymmMaskRgbToRgba
-	vmovdqa ymm10, [sym(kAVXPermutevar8x32_ABCDDEFG_i32)] ; ymmABCDDEFG
-	vmovdqa ymm11, [sym(kAVXPermutevar8x32_CDEFFGHX_i32)] ; ymmCDEFFGHX
-	vmovdqa ymm12, [sym(kAVXPermutevar8x32_XXABBCDE_i32)] ; ymmXXABBCDE
+	vmovdqa ymm10, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)] ; ymmAEBFCGDH
+	vmovdqa ymm11, [sym(kShuffleEpi8_RgbToRgba_i32)] ; ymmMaskRgbToRgba
+	vmovdqa ymm12, [sym(kAVXPermutevar8x32_ABCDDEFG_i32)] ; ymmABCDDEFG
 	vmovdqa ymm13, [sym(k128_i16)] ; ymm128
 		
 	mov rax, arg(0) ; rax = rgbPtr
@@ -201,43 +196,42 @@ sym(CompVImageConvRgb32family_to_y_Asm_X64_AVX2)
 				vmovdqa ymm3, [rax + 96]
 				lea rax, [rax + 128] ; rgb32Ptr += 128
 			%elif %1 == rgb24Family
-				; Convert RGB -> RGBA, alpha channel contains garbage (later multiplied with zero coeff)
-				; COMPV_32xRGB_TO_32xRGBA_X64_AVX2(rgbPtr, rgbaPtr[0], gbaPtr[1], gbaPtr[2], gbaPtr[3], ymmABCDDEFG, ymmCDEFFGHX, ymmXXABBCDE, ymmMaskRgbToRgba)		
-				COMPV_32xRGB_TO_32xRGBA_X64_AVX2 rax, ymm0, ymm1, ymm2, ymm3, ymm10, ymm11, ymm12, ymm9
+				; Convert RGB -> RGBA, alpha channel contains zeros	
+				COMPV_32xRGB_TO_32xRGBA_AVX2 rax, ymm0, ymm1, ymm2, ymm3, ymm12, ymm11
 				lea rax, [rax + 96] ; rgb24Ptr += 96
 			%else
 				%error 'Not implemented'
 			%endif
 			lea r9, [r9 + 32] ; i += 32
-			vpmaddubsw ymm4, ymm0, ymm6
-			vpmaddubsw ymm5, ymm1, ymm6
-			vpmaddubsw ymm0, ymm0, ymm7
-			vpmaddubsw ymm1, ymm1, ymm7
-			vphaddw ymm4, ymm4, ymm5
-			vphaddw ymm0, ymm0, ymm1
-			vpsraw ymm4, ymm4, 8
-			vpsraw ymm0, ymm0, 8
-			vpaddw ymm4, ymm4, ymm13
-			vpaddw ymm0, ymm0, ymm13
+			vpmaddubsw ymm4, ymm0, ymm9
+			vpmaddubsw ymm5, ymm1, ymm9
+			vpmaddubsw ymm6, ymm2, ymm9
+			vpmaddubsw ymm7, ymm3, ymm9
+			vpmaddubsw ymm0, ymm0, ymm8
+			vpmaddubsw ymm1, ymm1, ymm8
+			vpmaddubsw ymm2, ymm2, ymm8
+			vpmaddubsw ymm3, ymm3, ymm8
 			cmp r9, r12 ; (i < width)?
-			vpmaddubsw ymm1, ymm2, ymm6
-			vpmaddubsw ymm5, ymm3, ymm6
-			vpmaddubsw ymm2, ymm2, ymm7
-			vpmaddubsw ymm3, ymm3, ymm7
-			vphaddw ymm1, ymm1, ymm5
+			vphaddw ymm4, ymm4, ymm5
+			vphaddw ymm6, ymm6, ymm7
+			vphaddw ymm0, ymm0, ymm1
 			vphaddw ymm2, ymm2, ymm3
-			vpsraw ymm1, ymm1, 8
+			vpsraw ymm4, ymm4, 8
+			vpsraw ymm6, ymm6, 8
+			vpsraw ymm0, ymm0, 8
 			vpsraw ymm2, ymm2, 8
-			vpaddw ymm1, ymm1, ymm13
+			vpaddw ymm4, ymm4, ymm13
+			vpaddw ymm6, ymm6, ymm13
+			vpaddw ymm0, ymm0, ymm13
 			vpaddw ymm2, ymm2, ymm13
-			vpackuswb ymm4, ymm4, ymm1
+			vpackuswb ymm4, ymm4, ymm6
 			vpackuswb ymm0, ymm0, ymm2
-			vpermd ymm0, ymm8, ymm0
-			vpermd ymm4, ymm8, ymm4
-			vmovdqa [r10], ymm0
+			vpermd ymm4, ymm10, ymm4
+			vpermd ymm0, ymm10, ymm0
 			vmovdqa [rdx], ymm4
-			lea r10, [r10 + 32] ; outUPtr += 32
 			lea rdx, [rdx + 32] ; outVPtr += 32
+			vmovdqa [r10], ymm0
+			lea r10, [r10 + 32] ; outUPtr += 32
 			; end-of-LoopWidth
 			jl .LoopWidth
 
@@ -251,7 +245,7 @@ sym(CompVImageConvRgb32family_to_y_Asm_X64_AVX2)
 	; begin epilog
 	pop r12
 	COMPV_YASM_RESTORE_YMM
-    COMPV_YASM_UNSHADOW_ARGS
+	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
 	vzeroupper

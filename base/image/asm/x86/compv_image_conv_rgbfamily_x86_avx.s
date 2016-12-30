@@ -23,8 +23,6 @@ section .data
 	extern sym(k16_i16)
 	extern sym(k128_i16)
 	extern sym(kAVXPermutevar8x32_ABCDDEFG_i32)
-	extern sym(kAVXPermutevar8x32_XXABBCDE_i32)
-	extern sym(kAVXPermutevar8x32_CDEFFGHX_i32)
 	extern sym(kAVXPermutevar8x32_AEBFCGDH_i32)
 	extern sym(kShuffleEpi8_RgbToRgba_i32)
 
@@ -43,7 +41,7 @@ section .text
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
-	COMPV_YASM_SAVE_YMM 6 ;YMM[6-n]
+	COMPV_YASM_SAVE_YMM 7 ;YMM[6-n]
 	push rsi
 	push rdi
 	push rbx
@@ -67,6 +65,7 @@ section .text
 	vmovdqa ymm0, [rax] ; ymmYCoeffs
 	vmovdqa ymm1, [sym(k16_i16)] ; ymm16
 	vmovdqa ymm6, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)] ; ymmAEBFCGDH
+	vmovdqa ymm7, [sym(kAVXPermutevar8x32_ABCDDEFG_i32)] ; ymmABCDDEFG
 
 	mov rax, arg(0) ; rgbPtr
 	mov rsi, arg(3) ; height
@@ -82,8 +81,8 @@ section .text
 				vmovdqa ymm5, [rax + 96]
 				lea rax, [rax + 128] ; rgb32Ptr += 128
 			%elif %1 == rgb24Family
-				; Convert RGB -> RGBA, alpha channel contains garbage (later multiplied with zero coeff)
-				COMPV_32xRGB_TO_32xRGBA_X86_AVX2 rax, ymm2, ymm3, ymm4, ymm5 ;  COMPV_32xRGB_TO_32xRGBA_X86_AVX2(rgbPtr, rgbaPtr[0], rgbaPtr[1], rgbaPtr[2], rgbaPtr[3])
+				; Convert RGB -> RGBA, alpha channel contains zeros
+				COMPV_32xRGB_TO_32xRGBA_AVX2 rax, ymm2, ymm3, ymm4, ymm5, ymm7, [sym(kShuffleEpi8_RgbToRgba_i32)]
 				lea rax, [rax + 96] ; rgb24Ptr += 128
 			%else
 				%error 'Not implemented'
@@ -198,8 +197,9 @@ sym(CompVImageConvRgb32family_to_y_Asm_X86_AVX2)
 				vmovdqa ymm3, [rax + 96]
 				lea rax, [rax + 128] ; rgb32Ptr += 128
 			%elif %1 == rgb24Family
-				; Convert RGB24 -> RGBA32, alpha channel contains garbage (later multiplied with zero coeff)
-				COMPV_32xRGB_TO_32xRGBA_X86_AVX2 rax, ymm0, ymm1, ymm2, ymm3 ; COMPV_32xRGB_TO_32xRGBA_X86_AVX2(rgbPtr, rgbaPtr[0], rgbaPtr[1], rgbaPtr[2], rgbaPtr[3])
+				; Convert RGB24 -> RGBA32, alpha channel contains zeros
+				vmovdqa ymm4, [sym(kAVXPermutevar8x32_ABCDDEFG_i32)] ; ymmABCDDEFG
+				COMPV_32xRGB_TO_32xRGBA_AVX2 rax, ymm0, ymm1, ymm2, ymm3, ymm4, [sym(kShuffleEpi8_RgbToRgba_i32)]
 				lea rax, [rax + 96] ; rgb24Ptr += 96
 			%else
 				%error 'Not implemented'

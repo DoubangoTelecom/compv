@@ -11,7 +11,7 @@ compv_main()
 {
 	{
 		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-		COMPV_CHECK_CODE_BAIL(err = tests_init());
+		COMPV_CHECK_CODE_BAIL(err = compv_tests_init());
 
 #if TEST_CHROMA_CONV
 		extern COMPV_ERROR_CODE chroma_conv();
@@ -20,7 +20,7 @@ compv_main()
 
 	bail:
 		COMPV_CHECK_CODE_ASSERT(err, TAG_TEST_IMAGE "Something went wrong!!");
-		COMPV_CHECK_CODE_ASSERT(err = tests_deInit());
+		COMPV_CHECK_CODE_ASSERT(err = compv_tests_deInit());
 	}
 
 	COMPV_DEBUG_CHECK_FOR_MEMORY_LEAKS();

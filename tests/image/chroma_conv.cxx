@@ -8,9 +8,9 @@
 #else
 #	define COMPV_TEST_IMAGE_CHROMA_CONV_IMAGE_FOLDER			NULL
 #endif
-#define COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE(filename)		tests_path_from_file(filename, COMPV_TEST_IMAGE_CHROMA_CONV_IMAGE_FOLDER)
+#define COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE(filename)		compv_tests_path_from_file(filename, COMPV_TEST_IMAGE_CHROMA_CONV_IMAGE_FOLDER)
 
-#define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC				COMPV_SUBTYPE_PIXELS_RGB565LE
+#define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC				COMPV_SUBTYPE_PIXELS_RGB24
 #define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_DST				COMPV_SUBTYPE_PIXELS_YUV444P
 
 #define COMPV_loopCount											1
@@ -74,10 +74,10 @@ COMPV_ERROR_CODE chroma_conv()
 	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE_CHROMA_CONV, "Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
 #if COMPV_TEST_WRITE_OUTPUT
-	COMPV_CHECK_CODE_BAIL(err = tests_write_to_file(dstImage, test->dstFilename));
+	COMPV_CHECK_CODE_BAIL(err = compv_tests_write_to_file(dstImage, test->dstFilename));
 #endif
 #if COMPV_TEST_CHECK_MD5
-	COMPV_CHECK_EXP_BAIL(std::string(test->dstMD5).compare(tests_md5(dstImage)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "RGB24 -> YUV444P: MD5 mismatch");
+	COMPV_CHECK_EXP_BAIL(std::string(test->dstMD5).compare(compv_tests_md5(dstImage)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "RGB24 -> YUV444P: MD5 mismatch");
 #endif
 
 bail:

@@ -19,20 +19,16 @@
 ; Macro used to convert 16 RGB to 16 RGBA samples
 ; 16 RGB samples requires 48 Bytes(3 XMM registers), will be converted to 16 RGBA samples
 ; requiring 64 Bytes (4 XMM registers)
-; The aplha channel will contain garbage instead of 0xff because this macro is used to fetch samples in place
+; The aplha channel will contain zeros instead of 0xff because this macro is used to fetch samples in place
 */
-#define COMPV_16xRGB_TO_16xRGBA_SSSE3_FAST(rgb24Ptr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_, ymmMaskRgbToRgba_) \
-	ymmRGBA3_ = _mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr + 32)); \
-	ymmRGBA0_ = _mm_shuffle_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 0)), ymmMaskRgbToRgba_); \
-	ymmRGBA1_ = _mm_alignr_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 16)), _mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 0)), 12); \
-	ymmRGBA1_ = _mm_shuffle_epi8(ymmRGBA1_, ymmMaskRgbToRgba_); \
-	ymmRGBA2_ = _mm_alignr_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 32)), _mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 16)), 8); \
-	ymmRGBA2_ = _mm_shuffle_epi8(ymmRGBA2_, ymmMaskRgbToRgba_); \
-	ymmRGBA3_ = _mm_alignr_epi8(ymmRGBA3_, ymmRGBA3_, 4); \
-	ymmRGBA3_ = _mm_shuffle_epi8(ymmRGBA3_, ymmMaskRgbToRgba_);
+#define COMPV_16xRGB_TO_16xRGBA_SSSE3_FAST(rgb24Ptr_, xmm0RGBA_, xmm1RGBA_, xmm2RGBA_, xmm3RGBA_, xmmMaskRgbToRgba_) \
+	xmm0RGBA_ = _mm_shuffle_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 0)), xmmMaskRgbToRgba_); \
+	xmm1RGBA_ = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 12)), xmmMaskRgbToRgba_); \
+	xmm2RGBA_ = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 24)), xmmMaskRgbToRgba_); \
+	xmm3RGBA_ = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb24Ptr_ + 36)), xmmMaskRgbToRgba_); 
 // Next version not optimized as we load the masks for each call, use above version and load masks once
-#define COMPV_16xRGB_TO_16xRGBA_SSSE3_SLOW(rgb24Ptr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_) \
-	COMPV_16xRGB_TO_16xRGBA_SSSE3_FAST(rgb24Ptr_, ymmRGBA0_, ymmRGBA1_, ymmRGBA2_, ymmRGBA3_, _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_RgbToRgba_i32)))
+#define COMPV_16xRGB_TO_16xRGBA_SSSE3_SLOW(rgb24Ptr_, xmmRGBA0_, xmmRGBA1_, xmmRGBA2_, xmmRGBA3_) \
+	COMPV_16xRGB_TO_16xRGBA_SSSE3_FAST(rgb24Ptr_, xmmRGBA0_, xmmRGBA1_, xmmRGBA2_, xmmRGBA3_, _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_RgbToRgba_i32)))
 
 /*
 Convert 16 RGBA samples to 16 Y samples
@@ -74,7 +70,7 @@ void CompVImageConvRgb24family_to_y_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_
 	// Y = (((33 * R) + (65 * G) + (13 * B))) >> 7 + 16
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			//  convert from RGB to RGBA, alpha channel contains garbage (later multiplied with zero coeff)
+			//  convert from RGB to RGBA, alpha channel contains zeros
 			COMPV_16xRGB_TO_16xRGBA_SSSE3_FAST(rgb24Ptr, xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmmMaskRgbToRgba);
 			// convert from RGBA to Luma(Y)
 			COMPV_16xRGBA_TO_16xLUMA_SSSE3(xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmmYCoeffs, xmm16, outYPtr);
@@ -128,7 +124,7 @@ void CompVImageConvRgb24family_to_uv_planar_11_Intrin_SSSE3(COMPV_ALIGNED(SSE) c
 	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 16) {
-			//  convert from RGB to RGBA, alpha channel contains garbage (later multiplied with zero coeff)
+			//  convert from RGB to RGBA, alpha channel contains zeros
 			COMPV_16xRGB_TO_16xRGBA_SSSE3_FAST(rgb24Ptr, xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmmMaskRgbToRgba);
 			// convert from RGBA to chroma (U and V)
 			COMPV_16xRGBA_TO_16xCHROMA1_SSSE3(xmm0RGBA, xmm1RGBA, xmm2RGBA, xmm3RGBA, xmm0C, xmm1C, xmmUCoeffs, xmm128, outUPtr);

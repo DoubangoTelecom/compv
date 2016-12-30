@@ -13,7 +13,7 @@ using namespace compv;
 
 #define TAG_TESTS_COMMON	"TESTS_COMMON"
 
-#define COMPV_numThreads			COMPV_NUM_THREADS_SINGLE
+#define COMPV_numThreads			COMPV_NUM_THREADS_MULTI
 #define COMPV_enableIntrinsics		true
 #define COMPV_enableAsm				true
 #define COMPV_enableMathFixedPoint	true
@@ -25,7 +25,7 @@ using namespace compv;
 COMPV_NAMESPACE_BEGIN()
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 
-static const COMPV_ERROR_CODE tests_init()
+static const COMPV_ERROR_CODE compv_tests_init()
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
@@ -42,14 +42,14 @@ static const COMPV_ERROR_CODE tests_init()
 	return err;
 }
 
-static const COMPV_ERROR_CODE tests_deInit()
+static const COMPV_ERROR_CODE compv_tests_deInit()
 {
 	COMPV_ERROR_CODE err;
 	COMPV_CHECK_CODE_ASSERT(err = CompVDeInit());
 	return err;
 }
 
-static const std::string tests_path_from_file(const char* filename, const char* optional_folder = NULL)
+static const std::string compv_tests_path_from_file(const char* filename, const char* optional_folder = NULL)
 {
 	std::string path = COMPV_PATH_FROM_NAME(filename); // path from android's assets, iOS' bundle....
 	// The path isn't correct when the binary is loaded from another process(e.g. when Intel VTune is used)
@@ -59,7 +59,7 @@ static const std::string tests_path_from_file(const char* filename, const char* 
 	return path;
 }
 
-static COMPV_ERROR_CODE tests_write_to_file(const CompVMatPtr& mat, const char* filename)
+static COMPV_ERROR_CODE compv_tests_write_to_file(const CompVMatPtr& mat, const char* filename)
 {
 	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty() || !filename, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	FILE* file = fopen(filename, "wb+");
@@ -83,7 +83,7 @@ static COMPV_ERROR_CODE tests_write_to_file(const CompVMatPtr& mat, const char* 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static const std::string tests_md5(const CompVMatPtr& mat)
+static const std::string compv_tests_md5(const CompVMatPtr& mat)
 {
 	if (mat && !mat->isEmpty()) {
 		CompVPtr<CompVMd5*> md5;

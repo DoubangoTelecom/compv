@@ -84,7 +84,7 @@ section .text
 				movdqa xmm3, [rax + 48]
 				lea rax, [rax + 64] ; rgb32Ptr += 64
 			%elif %1 == rgb24Family
-				; Convert RGB -> RGBA, alpha channel contains garbage (later multiplied with zero coeff)
+				; Convert RGB -> RGBA, alpha channel contains zeros
 				COMPV_16xRGB_TO_16xRGBA_SSSE3 rax, xmm0, xmm1, xmm2, xmm3, xmm8
 				lea rax, [rax + 48] ; rgb24Ptr += 48
 			%else
