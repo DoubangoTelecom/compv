@@ -10,10 +10,10 @@
 #endif
 #define COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE(filename)		compv_tests_path_from_file(filename, COMPV_TEST_IMAGE_CHROMA_CONV_IMAGE_FOLDER)
 
-#define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC				COMPV_SUBTYPE_PIXELS_RGB24
+#define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_SRC				COMPV_SUBTYPE_PIXELS_RGB565LE
 #define COMPV_TEST_IMAGE_CHROMA_CONV_SUBTYPE_DST				COMPV_SUBTYPE_PIXELS_YUV444P
 
-#define COMPV_loopCount											1000
+#define COMPV_loopCount											1
 
 static const struct compv_test_image_chroma_conv_test {
 	COMPV_SUBTYPE srcPixelFormat;

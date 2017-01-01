@@ -212,7 +212,7 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
     CompVAsyncTask11* Self_ = static_cast<CompVAsyncTask11*>(pcArg);
     CompVAsyncToken* pToken_;
     COMPV_ERROR_CODE err_;
-    size_t size_;
+    size_t size_;	
 
     // Make sure the affinity is defined. This function is called in start() but after thread creation which means we could miss it if this function is called very fast
 #if COMPV_PARALLEL_THREAD_SET_AFFINITY
@@ -226,7 +226,7 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
 
     while (Self_->m_bStarted) {
         COMPV_CHECK_CODE_BAIL(err_ = Self_->m_SemRun->decrement());
-        if (COMPV_ERROR_CODE_IS_NOK(err_) || !Self_->m_bStarted) {
+        if (!Self_->m_bStarted) {
             break;
         }
         for (size_ = 0; size_ < COMPV_ASYNCTASK11_MAX_TOKEN_COUNT; ++size_) {

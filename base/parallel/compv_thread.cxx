@@ -31,11 +31,11 @@ using namespace ThreadEmulation;
 #	include <sys/syscall.h>
 #endif
 
-#if COMPV_OS_ANDROID
+#if COMPV_OS_ANDROID && __ANDROID_API__ < 20
+// https://android.googlesource.com/platform/development/+/73a5a3b/ndk/platforms/android-20/include/sched.h
 #define CPU_SETSIZE 1024
 #define __NCPUBITS  (8 * sizeof (unsigned long))
-typedef struct
-{
+typedef struct{
 	unsigned long __bits[CPU_SETSIZE / __NCPUBITS];
 } cpu_set_t;
 
@@ -92,16 +92,17 @@ CompVThread::CompVThread(void *(COMPV_STDCALL *start) (void *), void *arg_ /*= N
     m_pHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start, arg, 0, NULL);
 #else
     m_pHandle = CompVMem::calloc(1, sizeof(pthread_t));
-    COMPV_ASSERT(pthread_create((pthread_t*)m_pHandle, 0, start, arg) == 0);
+    COMPV_ASSERT(pthread_create(reinterpret_cast<pthread_t*>(m_pHandle), 0, start, arg) == 0);
 #endif
     COMPV_ASSERT(m_pHandle != NULL);
 
     if (m_pHandle) {
 #if COMPV_OS_WINDOWS
         m_Id = CompVWindowsGetThreadId(reinterpret_cast<HANDLE>(m_pHandle));
-#else
-        pthread_t* self = ((pthread_t*)m_pHandle);
-        m_Id = *self;
+#elif 0
+		pthread_getunique_np(reinterpret_cast<pthread_t*>(m_pHandle), &m_Id);
+#elif 1
+        m_Id = *reinterpret_cast<pthread_t*>(m_pHandle);
 #endif
     }
 }
@@ -185,11 +186,12 @@ COMPV_ERROR_CODE CompVThread::setAffinity(compv_core_id_t coreId)
     }
 #elif COMPV_OS_ANDROID
     {
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("__NR_sched_setaffinity accept a pid_t --retrieved using gettid() instead of getId()");
 		cpu_set_t cpuset;
 		CPU_ZERO(&cpuset);
 		CPU_SET(coreId, &cpuset);
 		COMPV_CHECK_EXP_RETURN(
-			syscall(__NR_sched_setaffinity, *reinterpret_cast<pthread_t*>(m_pHandle), sizeof(cpuset), &cpuset) != 0,
+			syscall(__NR_sched_setaffinity, getId(), sizeof(cpuset), &cpuset) != 0,
 			err = COMPV_ERROR_CODE_E_SYSTEM,
 			"Failed to set thread affinity");
     }

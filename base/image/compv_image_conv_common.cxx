@@ -215,3 +215,17 @@ COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_RgbToRgba_i32[] = {
 	COMPV_MM_SHUFFLE_EPI8(0xff, 2, 1, 0), COMPV_MM_SHUFFLE_EPI8(0xff, 5, 4, 3), COMPV_MM_SHUFFLE_EPI8(0xff, 8, 7, 6), COMPV_MM_SHUFFLE_EPI8(0xff, 11, 10, 9), // 256bits SSE register
 };
 
+// Masks used to extract R5, G6 and B5 bytes from packed 16 bytes
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint16_t kRGB565ToYUV_RMask_u16[] = {
+	0xF800, 0xF800, 0xF800, 0xF800, 0xF800, 0xF800, 0xF800, 0xF800, // 128bits SSE register
+	0xF800, 0xF800, 0xF800, 0xF800, 0xF800, 0xF800, 0xF800, 0xF800, // 256bits AVX register
+};
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint16_t kRGB565ToYUV_GMask_u16[] = {
+	0x07E0, 0x07E0, 0x07E0, 0x07E0, 0x07E0, 0x07E0, 0x07E0, 0x07E0, // 128bits SSE register
+	0x07E0, 0x07E0, 0x07E0, 0x07E0, 0x07E0, 0x07E0, 0x07E0, 0x07E0, // 256bits AVX register
+};
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint16_t kRGB565ToYUV_BMask_u16[] = {
+	0x001F, 0x001F, 0x001F, 0x001F, 0x001F, 0x001F, 0x001F, 0x001F, // 128bits SSE register
+	0x001F, 0x001F, 0x001F, 0x001F, 0x001F, 0x001F, 0x001F, 0x001F, // 256bits AVX register
+};
+

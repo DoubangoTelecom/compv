@@ -61,6 +61,7 @@
     <ClInclude Include="include\compv\base\image\compv_image_utils.h" />
     <ClInclude Include="include\compv\base\image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.h" />
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.h" />
     <ClInclude Include="include\compv\base\intrin\arm\compv_intrin_neon.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_avx.h" />
@@ -131,6 +132,7 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="image\intrin\x86\compv_image_conv_rgbfamily_intrin_sse2.cxx" />
     <ClCompile Include="image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.cxx">
       <IntrinsicFunctions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</IntrinsicFunctions>
       <IntrinsicFunctions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</IntrinsicFunctions>

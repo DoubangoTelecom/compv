@@ -16,13 +16,18 @@ COMPV_YASM_DEFAULT_REL
 
 global sym(CompVImageConvRgb24family_to_y_Asm_X86_SSSE3)
 global sym(CompVImageConvRgb32family_to_y_Asm_X86_SSSE3)
+global sym(CompVImageConvRgb565lefamily_to_y_Asm_X86_SSE2)
 global sym(CompVImageConvRgb24family_to_uv_planar_11_Asm_X86_SSSE3)
 global sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X86_SSSE3)
+global sym(CompVImageConvRgb565lefamily_to_uv_Asm_X86_SSE2)
 
 section .data
 	extern sym(k16_i16)
 	extern sym(k128_i16)
 	extern sym(kShuffleEpi8_RgbToRgba_i32)
+	extern sym(kRGB565ToYUV_RMask_u16)
+	extern sym(kRGB565ToYUV_GMask_u16)
+	extern sym(kRGB565ToYUV_BMask_u16)
 
 section .text
 
@@ -136,6 +141,147 @@ sym(CompVImageConvRgb24family_to_y_Asm_X86_SSSE3)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 sym(CompVImageConvRgb32family_to_y_Asm_X86_SSSE3)
 	CompVImageConvRgbfamily_to_y_Macro_X86_SSSE3 rgb32Family
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* rgb565lePtr
+; arg(1) -> COMPV_ALIGNED(SSE) uint8_t* outYPtr
+; arg(2) -> compv_uscalar_t width
+; arg(3) -> compv_uscalar_t height
+; arg(4) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
+; arg(5) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8
+sym(CompVImageConvRgb565lefamily_to_y_Asm_X86_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+	COMPV_YASM_SAVE_XMM 7
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	; align stack and alloc memory
+	COMPV_YASM_ALIGN_STACK 16, rax
+	sub rsp, 16+16+16
+	; [rsp + 0] = xmmCoeffR
+	; [rsp + 16] = xmmCoeffG
+	; [rsp + 32] = xmmCoeffB
+
+	mov rdx, arg(2)
+	lea rdx, [rdx + 15]
+	and rdx, -16
+	mov rcx, arg(4)
+	sub rcx, rdx ; rcx = padUV
+	mov rdx, rcx
+	shl rdx, 1 ; rdx = padRGB565
+
+	mov rax, arg(5)
+	movzx rbx, byte [rax + 0]
+	movd xmm0, ebx
+	punpcklwd xmm0, xmm0
+	pshufd xmm0, xmm0, 0
+	movdqa [rsp + 0], xmm0
+	movzx rbx, byte [rax + 1]
+	movd xmm0, ebx
+	punpcklwd xmm0, xmm0
+	pshufd xmm0, xmm0, 0
+	movdqa [rsp + 16], xmm0
+	movzx rbx, byte [rax + 2]
+	movd xmm0, ebx
+	punpcklwd xmm0, xmm0
+	pshufd xmm0, xmm0, 0
+	movdqa [rsp + 32], xmm0
+		
+	mov rax, arg(0) ; rax = rgb565lePtr
+	mov rsi, arg(3) ; rsi = height
+	mov rbx, arg(1) ; rbx = outYPtr
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		xor rdi, rdi
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < width; i += 16)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		.LoopWidth:
+			movdqa xmm0, [rax + 0]
+			movdqa xmm1, [rax + 16]
+			lea rax, [rax + 32] ; rgb565lePtr += 32
+			lea rdi, [rdi + 16] ; i += 16
+			movdqa xmm2, xmm0
+			movdqa xmm3, xmm1
+			movdqa xmm4, xmm0
+			movdqa xmm5, xmm1
+			cmp rdi, arg(2) ; (i < width)?
+			pand xmm0, [sym(kRGB565ToYUV_RMask_u16)]
+			pand xmm1, [sym(kRGB565ToYUV_RMask_u16)]
+			pand xmm2, [sym(kRGB565ToYUV_GMask_u16)]
+			pand xmm3, [sym(kRGB565ToYUV_GMask_u16)]
+			pand xmm4, [sym(kRGB565ToYUV_BMask_u16)]
+			pand xmm5, [sym(kRGB565ToYUV_BMask_u16)]
+			psrlw xmm0, 8
+			psrlw xmm1, 8
+			psrlw xmm2, 3
+			psrlw xmm3, 3
+			psllw xmm4, 3
+			psllw xmm5, 3
+			movdqa xmm6, xmm0
+			movdqa xmm7, xmm1
+			psrlw xmm6, 5
+			psrlw xmm7, 5
+			por xmm0, xmm6
+			por xmm1, xmm7
+			movdqa xmm6, xmm2
+			movdqa xmm7, xmm3
+			psrlw xmm6, 6
+			psrlw xmm7, 6
+			por xmm2, xmm6
+			por xmm3, xmm7
+			movdqa xmm6, xmm4
+			movdqa xmm7, xmm5
+			psrlw xmm6, 5
+			psrlw xmm7, 5
+			por xmm4, xmm6
+			por xmm5, xmm7
+			pmullw xmm0, [rsp + 0]
+			pmullw xmm1, [rsp + 0]
+			pmullw xmm2, [rsp + 16]
+			pmullw xmm3, [rsp + 16]
+			pmullw xmm4, [rsp + 32]
+			pmullw xmm5, [rsp + 32]
+			paddw xmm0, xmm2
+			paddw xmm1, xmm3
+			paddw xmm0, xmm4
+			paddw xmm1, xmm5
+			psrlw xmm0, 7
+			psrlw xmm1, 7
+			paddw xmm0, [sym(k16_i16)]			
+			paddw xmm1, [sym(k16_i16)]
+			packuswb xmm0, xmm1
+			movdqa [rbx], xmm0
+			lea rbx, [rbx + 16] ; outYPtr += 16
+			; end-of-LoopWidth
+			jl .LoopWidth
+
+		lea rbx, [rbx + rcx]
+		lea rax, [rax + rdx]
+		; end-of-LoopHeight
+		dec rsi
+		jnz .LoopHeight
+
+	; free memory and unalign stack 
+	add rsp, 16+16+16
+	COMPV_YASM_UNALIGN_STACK
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* rgbPtr
@@ -272,6 +418,218 @@ sym(CompVImageConvRgb24family_to_uv_planar_11_Asm_X86_SSSE3)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X86_SSSE3)
 	CompVImageConvRgbfamily_to_uv_planar_11_Macro_X86_SSSE3 rgb32Family
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* rgbPtr
+; arg(1) -> COMPV_ALIGNED(SSE) uint8_t* outUPtr
+; arg(2) -> COMPV_ALIGNED(SSE) uint8_t* outVPtr
+; arg(3) -> compv_uscalar_t width
+; arg(4) -> compv_uscalar_t height
+; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
+; arg(6) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8
+; arg(7) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8
+sym(CompVImageConvRgb565lefamily_to_uv_Asm_X86_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
+	COMPV_YASM_SAVE_XMM 7
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	; align stack and alloc memory
+	COMPV_YASM_ALIGN_STACK 16, rax
+	sub rsp, COMPV_YASM_REG_SZ_BYTES + (16+16+16) + (16+16+16) + (16+16+16+16)
+	%define padUV [rsp + 0]
+	%define xmmCoeffRU [rsp + COMPV_YASM_REG_SZ_BYTES + 0]
+	%define xmmCoeffGU [rsp + COMPV_YASM_REG_SZ_BYTES + 16]
+	%define xmmCoeffBU [rsp + COMPV_YASM_REG_SZ_BYTES + 32]
+	%define xmmCoeffRV [rsp + COMPV_YASM_REG_SZ_BYTES + 48]
+	%define xmmCoeffGV [rsp + COMPV_YASM_REG_SZ_BYTES + 64]
+	%define xmmCoeffBV [rsp + COMPV_YASM_REG_SZ_BYTES + 80]
+	%define xmm0Saved [rsp + COMPV_YASM_REG_SZ_BYTES + 96]
+	%define xmm1Saved [rsp + COMPV_YASM_REG_SZ_BYTES + 112]
+	%define xmm2Saved [rsp + COMPV_YASM_REG_SZ_BYTES + 128]
+	%define xmm3Saved [rsp + COMPV_YASM_REG_SZ_BYTES + 144]
+
+	mov rdx, arg(3)
+	lea rdx, [rdx + 15]
+	and rdx, -16
+	mov rcx, arg(5)
+	sub rcx, rdx 
+	mov padUV, rcx
+	shl rcx, 1
+	%define padRGB565 rcx
+
+	mov rax, arg(6)
+	movsx rbx, byte [rax + 0]
+	movd xmm0, ebx
+	punpcklwd xmm0, xmm0
+	pshufd xmm0, xmm0, 0
+	movdqa xmmCoeffRU, xmm0
+	movsx rbx, byte [rax + 1]
+	movd xmm0, ebx
+	punpcklwd xmm0, xmm0
+	pshufd xmm0, xmm0, 0
+	movdqa xmmCoeffGU, xmm0
+	movsx rbx, byte [rax + 2]
+	movd xmm0, ebx
+	punpcklwd xmm0, xmm0
+	pshufd xmm0, xmm0, 0
+	movdqa xmmCoeffBU, xmm0
+	mov rax, arg(7)
+	movsx rbx, byte [rax + 0]
+	movd xmm0, ebx
+	punpcklwd xmm0, xmm0
+	pshufd xmm0, xmm0, 0
+	movdqa xmmCoeffRV, xmm0
+	movsx rbx, byte [rax + 1]
+	movd xmm0, ebx
+	punpcklwd xmm0, xmm0
+	pshufd xmm0, xmm0, 0
+	movdqa xmmCoeffGV, xmm0
+	movsx rbx, byte [rax + 2]
+	movd xmm0, ebx
+	punpcklwd xmm0, xmm0
+	pshufd xmm0, xmm0, 0
+	movdqa xmmCoeffBV, xmm0
+		
+	mov rax, arg(0) ; rax = rgb565lePtr
+	mov rsi, arg(4) ; rsi = height
+	mov rbx, arg(1) ; rbx = outUPtr
+	mov rdx, arg(2) ; rdx = outVPtr
+	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		xor rdi, rdi
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < width; i += 16)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		.LoopWidth:
+			movdqa xmm0, [rax + 0]
+			movdqa xmm1, [rax + 16]
+			lea rax, [rax + 32] ; rgb565lePtr += 32
+			lea rdi, [rdi + 16] ; i += 16
+			movdqa xmm2, xmm0
+			movdqa xmm3, xmm1
+			movdqa xmm4, xmm0
+			movdqa xmm5, xmm1
+			cmp rdi, arg(3) ; (i < width)?
+			pand xmm0, [sym(kRGB565ToYUV_RMask_u16)]
+			pand xmm1, [sym(kRGB565ToYUV_RMask_u16)]
+			pand xmm2, [sym(kRGB565ToYUV_GMask_u16)]
+			pand xmm3, [sym(kRGB565ToYUV_GMask_u16)]
+			pand xmm4, [sym(kRGB565ToYUV_BMask_u16)]
+			pand xmm5, [sym(kRGB565ToYUV_BMask_u16)]
+			psrlw xmm0, 8
+			psrlw xmm1, 8
+			psrlw xmm2, 3
+			psrlw xmm3, 3
+			psllw xmm4, 3
+			psllw xmm5, 3
+			movdqa xmm6, xmm0
+			movdqa xmm7, xmm1
+			psrlw xmm6, 5
+			psrlw xmm7, 5
+			por xmm0, xmm6
+			por xmm1, xmm7
+			movdqa xmm6, xmm2
+			movdqa xmm7, xmm3
+			psrlw xmm6, 6
+			psrlw xmm7, 6
+			por xmm2, xmm6
+			por xmm3, xmm7
+			movdqa xmm6, xmm4
+			movdqa xmm7, xmm5
+			psrlw xmm6, 5
+			psrlw xmm7, 5
+			por xmm4, xmm6
+			por xmm5, xmm7
+			movdqa xmm0Saved, xmm0
+			movdqa xmm1Saved, xmm1
+			movdqa xmm2Saved, xmm2
+			movdqa xmm3Saved, xmm3
+			movdqa xmm6, xmm4
+			movdqa xmm7, xmm5
+			pmullw xmm0, xmmCoeffRU
+			pmullw xmm1, xmmCoeffRU
+			pmullw xmm2, xmmCoeffGU
+			pmullw xmm3, xmmCoeffGU
+			pmullw xmm4, xmmCoeffBU
+			pmullw xmm5, xmmCoeffBU
+			paddw xmm0, xmm2
+			paddw xmm1, xmm3
+			paddw xmm0, xmm4
+			paddw xmm1, xmm5
+			psraw xmm0, 8
+			psraw xmm1, 8
+			paddw xmm0, [sym(k128_i16)]			
+			paddw xmm1, [sym(k128_i16)]
+			packuswb xmm0, xmm1
+			movdqa [rbx], xmm0
+			lea rbx, [rbx + 16] ; outUPtr += 16
+			movdqa xmm0, xmm0Saved
+			movdqa xmm1, xmm1Saved
+			movdqa xmm2, xmm2Saved
+			movdqa xmm3, xmm3Saved
+			pmullw xmm0, xmmCoeffRV
+			pmullw xmm1, xmmCoeffRV
+			pmullw xmm2, xmmCoeffGV
+			pmullw xmm3, xmmCoeffGV
+			pmullw xmm6, xmmCoeffBV
+			pmullw xmm7, xmmCoeffBV
+			paddw xmm0, xmm2
+			paddw xmm1, xmm3
+			paddw xmm0, xmm6
+			paddw xmm1, xmm7
+			psraw xmm0, 8
+			psraw xmm1, 8
+			paddw xmm0, [sym(k128_i16)]			
+			paddw xmm1, [sym(k128_i16)]
+			packuswb xmm0, xmm1
+			movdqa [rdx], xmm0
+			lea rdx, [rdx + 16] ; outVPtr += 16
+			; end-of-LoopWidth
+			jl .LoopWidth
+
+		add rbx, padUV
+		add rdx, padUV
+		lea rax, [rax + padRGB565]
+		; end-of-LoopHeight
+		dec rsi
+		jnz .LoopHeight
+
+	; free memory and unalign stack 
+	add rsp, COMPV_YASM_REG_SZ_BYTES + (16+16+16) + (16+16+16) + (16+16+16+16)
+	COMPV_YASM_UNALIGN_STACK
+
+	%undef padUV
+	%undef xmmCoeffRU
+	%undef xmmCoeffGU
+	%undef xmmCoeffBU
+	%undef xmmCoeffRV
+	%undef xmmCoeffGV
+	%undef xmmCoeffBV
+	%undef xmm0Saved
+	%undef xmm1Saved
+	%undef xmm2Saved
+	%undef xmm3Saved
+	%undef padRGB565
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+	
 
 
 %undef rgb24Family
