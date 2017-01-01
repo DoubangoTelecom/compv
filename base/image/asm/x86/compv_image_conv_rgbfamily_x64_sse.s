@@ -37,7 +37,7 @@ section .text
 ; arg(3) -> compv_uscalar_t height
 ; arg(4) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
 ; arg(5) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8
-CompVImageConvRgb565lefamily_to_y_Asm_X64_SSE2:
+sym(CompVImageConvRgb565lefamily_to_y_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -290,11 +290,12 @@ sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X64_SSSE3)
 ; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
 ; arg(6) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8
 ; arg(7) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8
-CompVImageConvRgb565lefamily_to_uv_Asm_X64_SSE2:
+sym(CompVImageConvRgb565lefamily_to_uv_Asm_X64_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
 	COMPV_YASM_SAVE_XMM 15
+	push r12
 	;; end prolog ;;
 
 	; align stack and alloc memory
@@ -351,6 +352,7 @@ CompVImageConvRgb565lefamily_to_uv_Asm_X64_SSE2:
 	mov r8, arg(4) ; r8 = height
 	mov r10, arg(1) ; r10 = outUPtr
 	mov rdx, arg(2) ; rdx = outVPtr
+	mov r12, arg(3) ; r12 = width
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
@@ -369,7 +371,7 @@ CompVImageConvRgb565lefamily_to_uv_Asm_X64_SSE2:
 			movdqa xmm3, xmm1
 			movdqa xmm4, xmm0
 			movdqa xmm5, xmm1
-			cmp r9, arg(3) ; (i < width)?
+			cmp r9, r12 ; (i < width)?
 			pand xmm0, [sym(kRGB565ToYUV_RMask_u16)]
 			pand xmm1, [sym(kRGB565ToYUV_RMask_u16)]
 			pand xmm2, [sym(kRGB565ToYUV_GMask_u16)]
@@ -463,6 +465,7 @@ CompVImageConvRgb565lefamily_to_uv_Asm_X64_SSE2:
 	%undef padRGB565
 
 	;; begin epilog ;;
+	pop r12
 	COMPV_YASM_RESTORE_XMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp

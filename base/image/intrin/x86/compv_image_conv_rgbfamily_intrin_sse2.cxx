@@ -57,7 +57,7 @@ void CompVImageConvRgb565lefamily_to_y_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint
 			xmmB1 = _mm_mullo_epi16(xmmB1, xmmCoeffB);
 			xmm0 = _mm_add_epi16(_mm_srli_epi16(_mm_add_epi16(_mm_add_epi16(xmmR0, xmmG0), xmmB0), 7), xmm16);
 			xmm1 = _mm_add_epi16(_mm_srli_epi16(_mm_add_epi16(_mm_add_epi16(xmmR1, xmmG1), xmmB1), 7), xmm16);
-
+			
 			_mm_store_si128(reinterpret_cast<__m128i*>(outYPtr), _mm_packus_epi16(xmm0, xmm1));
 			outYPtr += 16;
 			rgb565lePtr += 32;
