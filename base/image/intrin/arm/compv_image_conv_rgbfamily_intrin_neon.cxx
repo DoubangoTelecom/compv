@@ -237,9 +237,11 @@ void CompVImageConvRgb565lefamily_to_uv_planar_11_Intrin_NEON(COMPV_ALIGNED(NEON
 	int16x8_t vec0, vec1, vec0U, vec1U, vec0V, vec1V;
 
 	const uint16x8_t vec128 = vld1q_u16(reinterpret_cast<const uint16_t*>(k128_i16));
+#if 0
 	const int16x8_t vecMaskR = vreinterpretq_s16_u16(vdupq_n_u16(0xF800));
 	const int16x8_t vecMaskG = vreinterpretq_s16_u16(vdupq_n_u16(0x07E0));
 	const int16x8_t vecMaskB = vreinterpretq_s16_u16(vdupq_n_u16(0x001F));
+#endif
 	// The order in which the coeffs appears depends on the format (RGB, BGR, GRB...)
 	const int8x8x4_t vecCoeffsU = vld4_s8(reinterpret_cast<int8_t const *>(kRGBfamilyToYUV_UCoeffs8));
 	const int8x8x4_t vecCoeffsV = vld4_s8(reinterpret_cast<int8_t const *>(kRGBfamilyToYUV_VCoeffs8));
@@ -256,6 +258,7 @@ void CompVImageConvRgb565lefamily_to_uv_planar_11_Intrin_NEON(COMPV_ALIGNED(NEON
 		for (i = 0; i < width; i += 16) {
 			vec0 = vld1q_u16(reinterpret_cast<uint16_t const *>(rgb565Ptr + 0));
 			vec1 = vld1q_u16(reinterpret_cast<uint16_t const *>(rgb565Ptr + 16));
+#if 0
 			vec0R = vshrq_n_u16(vandq_u16(vec0, vecMaskR), 8);
 			vec1R = vshrq_n_u16(vandq_u16(vec1, vecMaskR), 8);
 			vec0G = vshrq_n_u16(vandq_u16(vec0, vecMaskG), 3);
@@ -268,7 +271,20 @@ void CompVImageConvRgb565lefamily_to_uv_planar_11_Intrin_NEON(COMPV_ALIGNED(NEON
 			vec1G = vsraq_n_u16(vec1G, vec1G, 6);
 			vec0B = vsraq_n_u16(vec0B, vec0B, 5);
 			vec1B = vsraq_n_u16(vec1B, vec1B, 5);
-
+#else
+			vec0R = vshlq_n_u16(vshrq_n_u16(vec0, 11), 3);
+			vec1R = vshlq_n_u16(vshrq_n_u16(vec1, 11), 3);
+			vec0G = vshlq_n_u16(vshrq_n_u16(vshlq_n_u16(vec0, 5), 10), 2);
+			vec1G = vshlq_n_u16(vshrq_n_u16(vshlq_n_u16(vec1, 5), 10), 2);
+			vec0B = vshrq_n_u16(vshlq_n_u16(vec0, 11), 8);
+			vec1B = vshrq_n_u16(vshlq_n_u16(vec1, 11), 8);			
+			vec0R = vsraq_n_u16(vec0R, vec0R, 5);
+			vec1R = vsraq_n_u16(vec1R, vec1R, 5);
+			vec0G = vsraq_n_u16(vec0G, vec0G, 6);
+			vec1G = vsraq_n_u16(vec1G, vec1G, 6);
+			vec0B = vsraq_n_u16(vec0B, vec0B, 5);
+			vec1B = vsraq_n_u16(vec1B, vec1B, 5);
+#endif
 			// First part(R)
 			vec0U = vmulq_s16(vecCoeffU0, vec0R); // vec0U = (-38 * R)
 			vec0V = vmulq_s16(vecCoeffV0, vec0R); // vec0V = (112 * R)

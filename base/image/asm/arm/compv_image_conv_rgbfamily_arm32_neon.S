@@ -16,6 +16,8 @@
 .equ familyRGB24, 0
 .equ familyRGB32, 1
 .equ familyRGB565, 2
+.equ endiannessBIG, 3
+.equ endiannessLITTLE, 4
 .equ isAlphaLastYES, YES @ alpha at the last position and R,G,B at in order: BGRA, RGBA...
 .equ isAlphaLastNO, NO @ alpha at the first position and R,G,B at in order: ARGB, ABGR...
 
@@ -61,11 +63,11 @@
 	vdup.u16 q0, r9
 	vec2048 .req q0
 
-	vld4.8 {d20, d21, d22, d23}, [kRGBfamilyToYUV_YCoeffs8 : 128]
-	vecCoeff0 .req d20
-	vecCoeff1 .req d21
-	vecCoeff2 .req d22
-	vecCoeff3 .req d23
+	vld4.8 {q10x, q10y, q11x, q11y}, [kRGBfamilyToYUV_YCoeffs8 : 128]
+	vecCoeff0 .req q10x
+	vecCoeff1 .req q10y
+	vecCoeff2 .req q11x
+	vecCoeff3 .req q11y
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (j = 0; j < height; ++j)
@@ -79,29 +81,29 @@
 			add r9, r9, #16
 			pld [rgbPtr, #(CACHE_LINE_SIZE*3)]
 			.if \family == familyRGB24
-				vld3.u8 {d5, d6, d7}, [rgbPtr :64]!
-				vld3.u8 {d16, d17, d18}, [rgbPtr]!
+				vld3.u8 {q2y, q3x, q3y}, [rgbPtr :64]!
+				vld3.u8 {q8x, q8y, q9x}, [rgbPtr]!
 			.elseif \family == familyRGB32
-				vld4.u8 {d5, d6, d7, d8}, [rgbPtr :128]!
-				vld4.u8 {d16, d17, d18, d19}, [rgbPtr :128]!
+				vld4.u8 {q2y, q3x, q3y, q4x}, [rgbPtr :128]!
+				vld4.u8 {q8x, q8y, q9x, q9y}, [rgbPtr :128]!
 			.elseif
 				.error not implemented
 			.endif
-			vmull.u8 q6, vecCoeff0, d5
-			vmull.u8 q7, vecCoeff0, d16
-			vmlal.u8 q6, vecCoeff1, d6
-			vmlal.u8 q7, vecCoeff1, d17
-			vmlal.u8 q6, vecCoeff2, d7
-			vmlal.u8 q7, vecCoeff2, d18
+			vmull.u8 q6, vecCoeff0, q2y
+			vmull.u8 q7, vecCoeff0, q8x
+			vmlal.u8 q6, vecCoeff1, q3x
+			vmlal.u8 q7, vecCoeff1, q8y
+			vmlal.u8 q6, vecCoeff2, q3y
+			vmlal.u8 q7, vecCoeff2, q9x
 			.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
-				vmlal.u8 q6, vecCoeff3, d8
-				vmlal.u8 q7, vecCoeff3, d19
+				vmlal.u8 q6, vecCoeff3, q4x
+				vmlal.u8 q7, vecCoeff3, q9y
 			.endif
 			vadd.u16 q6, q6, vec2048
 			vadd.u16 q7, q7, vec2048
-			vqshrn.u16 d5, q6, #7
-			vqshrn.u16 d6, q7, #7
-			vst1.u8 {d5, d6}, [outYPtr :128]! @ vstmia r1!, {d5, d6}
+			vqshrn.u16 q2y, q6, #7
+			vqshrn.u16 q3x, q7, #7
+			vst1.u8 {q2y, q3x}, [outYPtr :128]! @ vstmia r1!, {q2y, q3x}
 			cmp r9, width
 			blt LoopWidth\@
 			@End_of_LoopWidth
@@ -328,4 +330,130 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvArgb32family_to_uv_planar_11_Asm_NEON32
 COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON32
 	CompVImageConvRgbfamily_to_uv_planar_11_Macro_NEON32 familyRGB32, isAlphaLastYES
 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* rgbPtr
+@ arg(1) -> COMPV_ALIGNED(NEON) uint8_t* outYPtr
+@ arg(2) -> compv_uscalar_t width
+@ arg(3) -> compv_uscalar_t height
+@ arg(4) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+@ arg(5) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565lefamily_to_y_Asm_NEON32
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
+	COMPV_GAS_SAVE_NEON_REGS
 	
+	ldmia_args r0-r5
+	rgbPtr .req r0
+	outYPtr .req r1
+	width .req r2
+	height .req r3
+	stride .req r4
+	kRGBfamilyToYUV_YCoeffs8 .req r5
+
+	pld [rgbPtr, #(CACHE_LINE_SIZE*0)]
+	pld [rgbPtr, #(CACHE_LINE_SIZE*1)]
+	pld [rgbPtr, #(CACHE_LINE_SIZE*2)]
+
+	add r6, width, #15
+	and r6, r6, #-16
+	sub r7, stride, r6
+	padY .req r7
+	mov r8, padY, LSL #1
+	padRGB .req r8
+
+	mov r9, #2048
+	vdup.u16 q12, r9
+	vec2048 .req q12
+	mov r9, #0xF800
+	vdup.u16 q11, r9
+	vecMaskR .req q11
+	mov r9, #0x07E0
+	vdup.u16 q10, r9
+	vecMaskG .req q10
+	mov r9, #0x001F
+	vdup.u16 q9, r9
+	vecMaskB .req q9
+
+	vld4.s8 {q0x, q0y, q1x, q1y}, [kRGBfamilyToYUV_YCoeffs8 : 128]
+	vmovl.s8 q13, q0x
+	vmovl.s8 q14, q0y
+	vmovl.s8 q15, q1x
+	vecCoeff0 .req q13
+	vecCoeff1 .req q14
+	vecCoeff2 .req q15
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (j = 0; j < height; ++j)
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	LoopHeight_CompVImageConvRgb565lefamily_to_y_Asm_NEON32:
+		mov r9, #0
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		@ for (i = 0; i < width; i += 16)
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		LoopWidth_CompVImageConvRgb565lefamily_to_y_Asm_NEON32:
+			add r9, r9, #16
+			pld [rgbPtr, #(CACHE_LINE_SIZE*3)]
+			vld1.u8 {q0x, q0y, q1x, q1y}, [rgbPtr :128]!
+			vec0 .req q0
+			vec1 .req q1
+			vand.u16 q2, vec0, vecMaskR
+			vand.u16 q3, vec1, vecMaskR
+			vand.u16 q4, vec0, vecMaskG
+			vand.u16 q5, vec1, vecMaskG
+			vand.u16 q6, vec0, vecMaskB
+			vand.u16 q7, vec1, vecMaskB
+			vshr.u16 q2, q2, #8
+			vshr.u16 q3, q3, #8
+			vshr.u16 q4, q4, #3
+			vshr.u16 q5, q5, #3
+			vshl.i16 q6, q6, #3
+			vshl.i16 q7, q7, #3
+			vsra.u16 q2, q2, #5
+			vsra.u16 q3, q3, #5
+			vsra.u16 q4, q4, #6
+			vsra.u16 q5, q5, #6
+			vsra.u16 q6, q6, #5
+			vsra.u16 q7, q7, #5
+			vmul.u16 q0, vecCoeff0, q2
+			vmul.u16 q1, vecCoeff0, q3
+			vmla.i16 q0, vecCoeff1, q4
+			vmla.i16 q1, vecCoeff1, q5
+			vmla.i16 q0, vecCoeff2, q6
+			vmla.i16 q1, vecCoeff2, q7
+			vadd.u16 q0, q0, vec2048
+			vadd.u16 q1, q1, vec2048
+			vqshrn.u16 q0x, q0, #7
+			vqshrn.u16 q0y, q1, #7
+			vst1.u8 {q0x, q0y}, [outYPtr :128]! @ vstmia r1!, {q0x, q0y}
+			cmp r9, width
+			blt LoopWidth_CompVImageConvRgb565lefamily_to_y_Asm_NEON32
+			@End_of_LoopWidth
+
+		add outYPtr, outYPtr, padY
+		add rgbPtr, rgbPtr, padRGB
+		subs height, height, #1
+		bne LoopHeight_CompVImageConvRgb565lefamily_to_y_Asm_NEON32
+		@End_of_LoopHeight
+
+	@undef aliases
+	.unreq rgbPtr
+	.unreq outYPtr
+	.unreq width
+	.unreq height
+	.unreq stride
+	.unreq kRGBfamilyToYUV_YCoeffs8
+	.unreq padY
+	.unreq vec0
+	.unreq vec1
+	.unreq vec2048
+	.unreq vecCoeff0
+	.unreq vecCoeff1
+	.unreq vecCoeff2
+	.unreq vecMaskR
+	.unreq vecMaskG
+	.unreq vecMaskB
+	
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS 6
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
