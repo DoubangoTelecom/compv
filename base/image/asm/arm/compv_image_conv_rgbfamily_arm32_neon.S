@@ -146,6 +146,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvArgb32family_to_y_Asm_NEON32
 COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON32
     CompVImageConvRgbfamily_to_y_Macro_NEON32 familyRGB32, isAlphaLastYES
 
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* rgbPtr
 @ arg(1) -> COMPV_ALIGNED(NEON) uint8_t* outYPtr
@@ -153,7 +154,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON32
 @ arg(3) -> compv_uscalar_t height
 @ arg(4) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
 @ arg(5) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8
-COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565lefamily_to_y_Asm_NEON32
+.macro CompVImageConvRgb565family_to_y_Macro_NEON32 endianness
 	COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
 	COMPV_GAS_SAVE_NEON_REGS
@@ -201,17 +202,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565lefamily_to_y_Asm_NEON32
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (j = 0; j < height; ++j)
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	LoopHeight_CompVImageConvRgb565lefamily_to_y_Asm_NEON32:
+	LoopHeight\@:
 		mov r9, #0
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (i = 0; i < width; i += 16)
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-		LoopWidth_CompVImageConvRgb565lefamily_to_y_Asm_NEON32:
+		LoopWidth\@:
 			add r9, r9, #16
 			pld [rgbPtr, #(CACHE_LINE_SIZE*3)]
 			vld1.u8 {q0x, q0y, q1x, q1y}, [rgbPtr :128]!
 			vec0 .req q0
 			vec1 .req q1
+			.if \endianness == endiannessBIG
+				vrev16.8 vec0, vec0
+				vrev16.8 vec1, vec1
+			.endif
 			vand.u16 q2, vec0, vecMaskR
 			vand.u16 q3, vec1, vecMaskR
 			vand.u16 q4, vec0, vecMaskG
@@ -242,13 +247,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565lefamily_to_y_Asm_NEON32
 			vqshrn.u16 q0y, q1, #7
 			vst1.u8 {q0x, q0y}, [outYPtr :128]! @ vstmia r1!, {q0x, q0y}
 			cmp r9, width
-			blt LoopWidth_CompVImageConvRgb565lefamily_to_y_Asm_NEON32
+			blt LoopWidth\@
 			@End_of_LoopWidth
 
 		add outYPtr, outYPtr, padY
 		add rgbPtr, rgbPtr, padRGB
 		subs height, height, #1
-		bne LoopHeight_CompVImageConvRgb565lefamily_to_y_Asm_NEON32
+		bne LoopHeight\@
 		@End_of_LoopHeight
 
 	@undef aliases
@@ -273,6 +278,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565lefamily_to_y_Asm_NEON32
 	COMPV_GAS_UNSHADOW_ARGS 6
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565lefamily_to_y_Asm_NEON32
+	CompVImageConvRgb565family_to_y_Macro_NEON32 endiannessLITTLE
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON32
+	CompVImageConvRgb565family_to_y_Macro_NEON32 endiannessBIG
 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -459,6 +473,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON32
 	CompVImageConvRgbfamily_to_uv_planar_11_Macro_NEON32 familyRGB32, isAlphaLastYES
 
 
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* rgbPtr
 @ arg(1) -> COMPV_ALIGNED(NEON) uint8_t* outUPtr
@@ -468,7 +483,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON32
 @ arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
 @ arg(6) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8
 @ arg(7) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8
-COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565lefamily_to_uv_planar_11_Asm_NEON32
+.macro CompVImageConvRgb565family_to_uv_planar_11_Macro_NEON32 endianness
 	COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 8
 	COMPV_GAS_SAVE_NEON_REGS
@@ -517,17 +532,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565lefamily_to_uv_planar_11_Asm_NEON
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (j = 0; j < height; ++j)
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	LoopHeight_CompVImageConvRgb565lefamily_to_uv_planar_11_Asm_NEON32:
+	LoopHeight\@:
 		mov r6, #0
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (i = 0; i < width; i += 16)
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-		LoopWidth_CompVImageConvRgb565lefamily_to_uv_planar_11_Asm_NEON32:
+		LoopWidth\@:
 			add r6, r6, #16
 			pld [rgbPtr, #(CACHE_LINE_SIZE*3)]
 			vld1.u8 {q7x, q7y, q8x, q8y}, [rgbPtr :128]!
 			vec0 .req q7
 			vec1 .req q8
+			.if \endianness == endiannessBIG
+				vrev16.8 vec0, vec0
+				vrev16.8 vec1, vec1
+			.endif
 			vshr.u16 q9, vec0, #11
 			vshr.u16 q10, vec1, #11
 			vshl.u16 q11, vec0, #5
@@ -575,14 +594,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565lefamily_to_uv_planar_11_Asm_NEON
 			vst1.u8 {q11x, q11y}, [outUPtr :128]! @ vstmia outUPtr!, {q11x, q11y}
 			vst1.u8 {q12x, q12y}, [outVPtr :128]! @ vstmia outVPtr!, {q12x, q12y}
 			cmp r6, width		
-			blt LoopWidth_CompVImageConvRgb565lefamily_to_uv_planar_11_Asm_NEON32
+			blt LoopWidth\@
 			@End_of_LoopWidth
 
 		add rgbPtr, rgbPtr, padRGB
 		add outUPtr, outUPtr, padUV
 		add outVPtr, outVPtr, padUV
 		subs height, height, #1
-		bne LoopHeight_CompVImageConvRgb565lefamily_to_uv_planar_11_Asm_NEON32
+		bne LoopHeight\@
 		@End_of_LoopHeight
 
 	@undef aliases
@@ -610,3 +629,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565lefamily_to_uv_planar_11_Asm_NEON
 	COMPV_GAS_UNSHADOW_ARGS 8
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565lefamily_to_uv_planar_11_Asm_NEON32
+	CompVImageConvRgb565family_to_uv_planar_11_Macro_NEON32 endiannessLITTLE
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_uv_planar_11_Asm_NEON32
+	CompVImageConvRgb565family_to_uv_planar_11_Macro_NEON32 endiannessBIG

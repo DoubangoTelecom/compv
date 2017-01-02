@@ -211,6 +211,8 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
 #endif
 #if COMPV_ASM
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Assembler enabled");
+#else
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Assembler disabled, you're missing many optimizations. Sad!!");
 #endif
 #if defined(__INTEL_COMPILER)
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Using Intel compiler");
