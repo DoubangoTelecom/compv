@@ -70,19 +70,25 @@ section .text
 		%error 'Not implemented'
 	%endif
 
-	mov rax, arg(5)
-	vmovdqa ymm0, [rax] ; ymmYCoeffs
+	mov rax, arg(0) ; rgbPtr
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*0]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*1]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*2]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
+
+	mov rsi, arg(5)
+	vmovdqa ymm0, [rsi] ; ymmYCoeffs
 	vmovdqa ymm1, [sym(k16_i16)] ; ymm16
 	vmovdqa ymm6, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)] ; ymmAEBFCGDH
 	vmovdqa ymm7, [sym(kAVXPermutevar8x32_ABCDDEFG_i32)] ; ymmABCDDEFG
-
-	mov rax, arg(0) ; rgbPtr
+	
 	mov rsi, arg(3) ; height
 	mov rbx, arg(1) ; outYPtr
 
 	.LoopHeight:
 		xor rdi, rdi
 		.LoopWidth:
+			prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
 			%if %1 == rgb32Family
 				vmovdqa ymm2, [rax + 0]
 				vmovdqa ymm3, [rax + 32]
@@ -174,21 +180,26 @@ sym(CompVImageConvRgb32family_to_y_Asm_X86_AVX2)
 	mov rdx, rcx
 	shl rdx, 1 ; rdx = padRGB565
 
-	mov rax, arg(5)
-	movzx rbx, byte [rax + 0]
+	mov rax, arg(0) ; rax = rgb565lePtr
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*0]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*1]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*2]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
+
+	mov rsi, arg(5)
+	movzx rbx, byte [rsi + 0]
 	vmovd xmm0, ebx
 	vpbroadcastw ymm0, xmm0
 	vmovdqa [rsp + 0], ymm0
-	movzx rbx, byte [rax + 1]
+	movzx rbx, byte [rsi + 1]
 	vmovd xmm0, ebx
 	vpbroadcastw ymm0, xmm0
 	vmovdqa [rsp + 32], ymm0
-	movzx rbx, byte [rax + 2]
+	movzx rbx, byte [rsi + 2]
 	vmovd xmm0, ebx
 	vpbroadcastw ymm0, xmm0
 	vmovdqa [rsp + 64], ymm0
-		
-	mov rax, arg(0) ; rax = rgb565lePtr
+	
 	mov rsi, arg(3) ; rsi = height
 	mov rbx, arg(1) ; rbx = outYPtr
 	
@@ -201,6 +212,7 @@ sym(CompVImageConvRgb32family_to_y_Asm_X86_AVX2)
 		; for (i = 0; i < width; i += 32)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopWidth:
+			prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
 			vmovdqa ymm6, [rax + 0]
 			vmovdqa ymm7, [rax + 32]
 			lea rax, [rax + 64] ; rgb565lePtr += 64
@@ -329,12 +341,17 @@ sym(CompVImageConvRgb565befamily_to_y_Asm_X86_AVX2):
 		%error 'Not implemented'
 	%endif
 
-	mov rax, arg(6)
-	vmovdqa ymm7, [rax] ; ymm7 = ymmUCoeffs
-	mov rax, arg(7)
-	vmovdqa ymm6, [rax] ; ymm6 = ymmVCoeffs
-		
 	mov rax, arg(0) ; rax = rgbPtr
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*0]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*1]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*2]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
+
+	mov rsi, arg(6)
+	vmovdqa ymm7, [rsi] ; ymm7 = ymmUCoeffs
+	mov rsi, arg(7)
+	vmovdqa ymm6, [rsi] ; ymm6 = ymmVCoeffs
+	
 	mov rsi, arg(4) ; rsi = height
 	mov rbx, arg(1) ; rbx = outUPtr
 	mov rdx, arg(2) ; rdx = outVPtr
@@ -347,7 +364,8 @@ sym(CompVImageConvRgb565befamily_to_y_Asm_X86_AVX2):
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (i = 0; i < width; i += 32)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		.LoopWidth:			
+		.LoopWidth:
+			prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]	
 			%if %1 == rgb32Family
 				vmovdqa ymm0, [rax + 0]
 				vmovdqa ymm1, [rax + 32]
@@ -473,34 +491,39 @@ sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X86_AVX2)
 	shl rcx, 1
 	%define padRGB565 rcx
 
-	mov rax, arg(6)
-	movsx rbx, byte [rax + 0]
+	mov rax, arg(0) ; rax = rgb565lePtr
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*0]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*1]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*2]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
+
+	mov rsi, arg(6)
+	movsx rbx, byte [rsi + 0]
 	vmovd xmm0, ebx
 	vpbroadcastw ymm0, xmm0
 	vmovdqa ymmCoeffRU, ymm0
-	movsx rbx, byte [rax + 1]
+	movsx rbx, byte [rsi + 1]
 	vmovd xmm0, ebx
 	vpbroadcastw ymm0, xmm0
 	vmovdqa ymmCoeffGU, ymm0
-	movsx rbx, byte [rax + 2]
+	movsx rbx, byte [rsi + 2]
 	vmovd xmm0, ebx
 	vpbroadcastw ymm0, xmm0
 	vmovdqa ymmCoeffBU, ymm0
-	mov rax, arg(7)
-	movsx rbx, byte [rax + 0]
+	mov rsi, arg(7)
+	movsx rbx, byte [rsi + 0]
 	vmovd xmm0, ebx
 	vpbroadcastw ymm0, xmm0
 	vmovdqa ymmCoeffRV, ymm0
-	movsx rbx, byte [rax + 1]
+	movsx rbx, byte [rsi + 1]
 	vmovd xmm0, ebx
 	vpbroadcastw ymm0, xmm0
 	vmovdqa ymmCoeffGV, ymm0
-	movsx rbx, byte [rax + 2]
+	movsx rbx, byte [rsi + 2]
 	vmovd xmm0, ebx
 	vpbroadcastw ymm0, xmm0
 	vmovdqa ymmCoeffBV, ymm0
-		
-	mov rax, arg(0) ; rax = rgb565lePtr
+	
 	mov rsi, arg(4) ; rsi = height
 	mov rbx, arg(1) ; rbx = outUPtr
 	mov rdx, arg(2) ; rdx = outVPtr
@@ -514,6 +537,7 @@ sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X86_AVX2)
 		; for (i = 0; i < width; i += 32)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopWidth:
+			prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
 			vmovdqa ymm6, [rax + 0]
 			vmovdqa ymm7, [rax + 32]
 			lea rax, [rax + 64] ; rgb565lePtr += 64

@@ -16,6 +16,10 @@
 ;  be found in the AUTHORS file in the root of the source tree.
 ;
 
+; Default cache line size
+%define COMPV_YASM_CACHE_LINE_SIZE		64
+%define COMPV_YASM_PREFETCH_DISTANCE	(COMPV_YASM_CACHE_LINE_SIZE << 2)
+
 ; Guess the ABI
 %ifidn __OUTPUT_FORMAT__,elf32
 %define COMPV_YASM_ABI_IS_32BIT		1

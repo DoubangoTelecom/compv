@@ -69,16 +69,19 @@ section .text
 		%error 'Not implemented'
 	%endif
 
-	mov rax, arg(5)
-	vmovdqa ymm0, [rax] ; ymmYCoeffs
+	mov rax, arg(0) ; rgbPtr
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*0]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*1]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*2]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
+
+	mov r8, arg(5)
+	vmovdqa ymm0, [r8] ; ymmYCoeffs
 	vmovdqa ymm1, [sym(k16_i16)] ; ymm16
 	vmovdqa ymm6, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)] ; ymmAEBFCGDH
 	vmovdqa ymm7, [sym(kShuffleEpi8_RgbToRgba_i32)] ; ymmMaskRgbToRgba
 	vmovdqa ymm8, [sym(kAVXPermutevar8x32_ABCDDEFG_i32)] ; ymmABCDDEFG
-	;vmovdqa ymm9, [sym(kAVXPermutevar8x32_CDEFFGHX_i32)] ; ymmCDEFFGHX
-	;vmovdqa ymm10, [sym(kAVXPermutevar8x32_XXABBCDE_i32)] ; ymmXXABBCDE
-
-	mov rax, arg(0) ; rgbPtr
+	
 	mov r8, arg(3) ; height
 	mov r10, arg(1) ; outYPtr
 	mov r11, arg(2) ; width
@@ -86,6 +89,7 @@ section .text
 	.LoopHeight:
 		xor r9, r9
 		.LoopWidth:
+			prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
 			%if %1 == rgb32Family
 				vmovdqa ymm2, [rax + 0]
 				vmovdqa ymm3, [rax + 32]
@@ -142,7 +146,7 @@ sym(CompVImageConvRgb32family_to_y_Asm_X64_AVX2)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; arg(0) -> COMPV_ALIGNED(AVX) const uint8_t* rgb565lePtr
+; arg(0) -> COMPV_ALIGNED(AVX) const uint8_t* rgb565Ptr
 ; arg(1) -> COMPV_ALIGNED(AVX) uint8_t* outYPtr
 ; arg(2) -> compv_uscalar_t width
 ; arg(3) -> compv_uscalar_t height
@@ -165,18 +169,23 @@ sym(CompVImageConvRgb32family_to_y_Asm_X64_AVX2)
 	mov rdx, rcx
 	shl rdx, 1 ; rdx = padRGB565
 
-	mov rax, arg(5)
-	movzx r10, byte [rax + 0]
+	mov rax, arg(0) ; rax = rgb565Ptr
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*0]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*1]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*2]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
+
+	mov r8, arg(5)
+	movzx r10, byte [r8 + 0]
 	vmovd xmm12, r10d
 	vpbroadcastw ymm12, xmm12
-	movzx r10, byte [rax + 1]
+	movzx r10, byte [r8 + 1]
 	vmovd xmm13, r10d
 	vpbroadcastw ymm13, xmm13
-	movzx r10, byte [rax + 2]
+	movzx r10, byte [r8 + 2]
 	vmovd xmm14, r10d
 	vpbroadcastw ymm14, xmm14
-		
-	mov rax, arg(0) ; rax = rgb565lePtr
+	
 	mov r8, arg(3) ; r8 = height
 	mov r10, arg(1) ; r10 = outYPtr
 	mov r11, arg(2) ; r11 = width
@@ -192,9 +201,10 @@ sym(CompVImageConvRgb32family_to_y_Asm_X64_AVX2)
 		; for (i = 0; i < width; i += 32)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopWidth:
+			prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
 			vmovdqa ymm4, [rax + 0]
 			vmovdqa ymm5, [rax + 32]
-			lea rax, [rax + 64] ; rgb565lePtr += 64
+			lea rax, [rax + 64] ; rgb565Ptr += 64
 			lea r9, [r9 + 32] ; i += 32
 			cmp r9, r11 ; (i < width)?
 			%if %1 == bigEndian
@@ -306,17 +316,22 @@ sym(CompVImageConvRgb565befamily_to_y_Asm_X64_AVX2):
 		%error 'Not implemented'
 	%endif
 
-	mov rax, arg(6)
-	vmovdqa ymm8, [rax] ; ymm8 = ymmUCoeffs
-	mov rax, arg(7)
-	vmovdqa ymm9, [rax] ; ymm9 = ymmVCoeffs
+	mov rax, arg(0) ; rax = rgbPtr
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*0]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*1]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*2]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
+
+	mov r8, arg(6)
+	vmovdqa ymm8, [r8] ; ymm8 = ymmUCoeffs
+	mov r8, arg(7)
+	vmovdqa ymm9, [r8] ; ymm9 = ymmVCoeffs
 
 	vmovdqa ymm10, [sym(kAVXPermutevar8x32_AEBFCGDH_i32)] ; ymmAEBFCGDH
 	vmovdqa ymm11, [sym(kShuffleEpi8_RgbToRgba_i32)] ; ymmMaskRgbToRgba
 	vmovdqa ymm12, [sym(kAVXPermutevar8x32_ABCDDEFG_i32)] ; ymmABCDDEFG
 	vmovdqa ymm13, [sym(k128_i16)] ; ymm128
-		
-	mov rax, arg(0) ; rax = rgbPtr
+	
 	mov r8, arg(4) ; r8 = height
 	mov r10, arg(1) ; r10 = outUPtr
 	mov rdx, arg(2) ; rdx = outVPtr
@@ -331,6 +346,7 @@ sym(CompVImageConvRgb565befamily_to_y_Asm_X64_AVX2):
 		; for (i = 0; i < width; i += 32)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopWidth:
+			prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
 			%if %1 == rgb32Family
 				vmovdqa ymm0, [rax + 0]
 				vmovdqa ymm1, [rax + 32]
@@ -431,7 +447,6 @@ sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X64_AVX2)
 	%define ymmCoeffGV ymm13
 	%define ymmCoeffBV ymm12
 
-
 	mov rdx, arg(3)
 	lea rdx, [rdx + 31]
 	and rdx, -32
@@ -442,30 +457,35 @@ sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X64_AVX2)
 	shl rcx, 1
 	%define padRGB565 rcx
 
-	mov rax, arg(6)
-	movsx r10, byte [rax + 0]
+	mov rax, arg(0) ; rax = rgb565Ptr
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*0]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*1]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*2]
+	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
+
+	mov r8, arg(6)
+	movsx r10, byte [r8 + 0]
 	vmovd xmm0, r10d
 	vpbroadcastw ymm0, xmm0
 	vmovdqa ymmCoeffRU, ymm0
-	movsx r10, byte [rax + 1]
+	movsx r10, byte [r8 + 1]
 	vmovd xmm0, r10d
 	vpbroadcastw ymm0, xmm0
 	vmovdqa ymmCoeffGU, ymm0
-	movsx r10, byte [rax + 2]
+	movsx r10, byte [r8 + 2]
 	vmovd xmm0, r10d
 	vpbroadcastw ymmCoeffBU, xmm0
-	mov rax, arg(7)
-	movsx r10, byte [rax + 0]
+	mov r8, arg(7)
+	movsx r10, byte [r8 + 0]
 	vmovd xmm0, r10d
 	vpbroadcastw ymmCoeffRV, xmm0
-	movsx r10, byte [rax + 1]
+	movsx r10, byte [r8 + 1]
 	vmovd xmm0, r10d
 	vpbroadcastw ymmCoeffGV, xmm0
-	movsx r10, byte [rax + 2]
+	movsx r10, byte [r8 + 2]
 	vmovd xmm0, r10d
 	vpbroadcastw ymmCoeffBV, xmm0
-		
-	mov rax, arg(0) ; rax = rgb565lePtr
+	
 	mov r8, arg(4) ; r8 = height
 	mov r10, arg(1) ; r10 = outUPtr
 	mov rdx, arg(2) ; rdx = outVPtr
@@ -480,9 +500,10 @@ sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X64_AVX2)
 		; for (i = 0; i < width; i += 32)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopWidth:
+			prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
 			vmovdqa ymm4, [rax + 0]
 			vmovdqa ymm5, [rax + 32]
-			lea rax, [rax + 64] ; rgb565lePtr += 64
+			lea rax, [rax + 64] ; rgb565Ptr += 64
 			lea r9, [r9 + 32] ; i += 32
 			cmp r9, r12 ; (i < width)?
 			%if %1 == bigEndian

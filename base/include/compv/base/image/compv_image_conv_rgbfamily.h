@@ -34,8 +34,12 @@ public:
 
 	static void rgb565le_to_y(const uint8_t* rgb565lePtr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 	static void rgb565be_to_y(const uint8_t* rgb565bePtr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+	static void bgr565le_to_y(const uint8_t* rgb565lePtr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+	static void bgr565be_to_y(const uint8_t* rgb565bePtr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 	static void rgb565le_to_uv_planar_11(const uint8_t* rgb565lePtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 	static void rgb565be_to_uv_planar_11(const uint8_t* rgb565bePtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+	static void bgr565le_to_uv_planar_11(const uint8_t* rgb565lePtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+	static void bgr565be_to_uv_planar_11(const uint8_t* rgb565bePtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 };
 
 COMPV_NAMESPACE_END()

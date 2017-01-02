@@ -446,6 +446,12 @@ void CompVImageConvRGBfamily::rgb565le_to_y(const uint8_t* rgb565lePtr, uint8_t*
 void CompVImageConvRGBfamily::rgb565be_to_y(const uint8_t* rgb565bePtr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
 	__rgb565family_to_y(rgb565bePtr, outYPtr, width, height, stride, kRGBAToYUV_YCoeffs8, false);
 }
+void CompVImageConvRGBfamily::bgr565le_to_y(const uint8_t* bgr565ePtr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
+	__rgb565family_to_y(bgr565ePtr, outYPtr, width, height, stride, kBGRAToYUV_YCoeffs8, true);
+}
+void CompVImageConvRGBfamily::bgr565be_to_y(const uint8_t* bgr565bePtr, uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
+	__rgb565family_to_y(bgr565bePtr, outYPtr, width, height, stride, kBGRAToYUV_YCoeffs8, false);
+}
 
 static void __rgb565family_to_uv_planar_11(const uint8_t* rgb565Ptr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride,
 	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8, bool le)
@@ -473,6 +479,12 @@ void CompVImageConvRGBfamily::rgb565le_to_uv_planar_11(const uint8_t* rgb565lePt
 }
 void CompVImageConvRGBfamily::rgb565be_to_uv_planar_11(const uint8_t* rgb565bePtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
 	__rgb565family_to_uv_planar_11(rgb565bePtr, outUPtr, outVPtr, width, height, stride, kRGBAToYUV_UCoeffs8, kRGBAToYUV_VCoeffs8, false);
+}
+void CompVImageConvRGBfamily::bgr565le_to_uv_planar_11(const uint8_t* bgr565lePtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
+	__rgb565family_to_uv_planar_11(bgr565lePtr, outUPtr, outVPtr, width, height, stride, kBGRAToYUV_UCoeffs8, kBGRAToYUV_VCoeffs8, true);
+}
+void CompVImageConvRGBfamily::bgr565be_to_uv_planar_11(const uint8_t* bgr565bePtr, uint8_t* outUPtr, uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride) {
+	__rgb565family_to_uv_planar_11(bgr565bePtr, outUPtr, outVPtr, width, height, stride, kBGRAToYUV_UCoeffs8, kBGRAToYUV_VCoeffs8, false);
 }
 
 COMPV_NAMESPACE_END()
