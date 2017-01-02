@@ -475,6 +475,10 @@ static void __rgb565family_to_uv_planar_11(const uint8_t* rgb565Ptr, uint8_t* ou
 		COMPV_EXEC_IFDEF_ASM_X86(funcptr = le ? CompVImageConvRgb565lefamily_to_uv_Asm_X86_AVX2 : CompVImageConvRgb565befamily_to_uv_Asm_X86_AVX2);
 		COMPV_EXEC_IFDEF_ASM_X64(funcptr = le ? CompVImageConvRgb565lefamily_to_uv_Asm_X64_AVX2 : CompVImageConvRgb565befamily_to_uv_Asm_X64_AVX2);
 	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(rgb565Ptr) && COMPV_IS_ALIGNED_NEON(outUPtr) && COMPV_IS_ALIGNED_NEON(outVPtr) && COMPV_IS_ALIGNED_NEON(stride)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(funcptr = CompVImageConvRgb565lefamily_to_uv_planar_11_Intrin_NEON);
+	}
 #endif
 	funcptr(rgb565Ptr, outUPtr, outVPtr, width, height, stride, kRGBfamilyToYUV_UCoeffs8, kRGBfamilyToYUV_VCoeffs8);
 }

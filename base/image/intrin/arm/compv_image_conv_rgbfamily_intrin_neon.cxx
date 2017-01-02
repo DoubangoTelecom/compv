@@ -227,6 +227,86 @@ void CompVImageConvRgb24family_to_uv_planar_11_Intrin_NEON(COMPV_ALIGNED(NEON) c
 	}
 }
 
+void CompVImageConvRgb565lefamily_to_uv_planar_11_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb565Ptr, COMPV_ALIGNED(NEON) uint8_t* outUPtr, COMPV_ALIGNED(NEON) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride,
+	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	compv_uscalar_t i, j, maxI = ((width + 15) & -16), padUV = (stride - maxI), padRGB = padUV << 1;
+
+	int16x8_t vec0R, vec1R, vec0G, vec1G, vec0B, vec1B;
+	int16x8_t vec0, vec1, vec0U, vec1U, vec0V, vec1V;
+
+	const uint16x8_t vec128 = vld1q_u16(reinterpret_cast<const uint16_t*>(k128_i16));
+	const int16x8_t vecMaskR = vreinterpretq_s16_u16(vdupq_n_u16(0xF800));
+	const int16x8_t vecMaskG = vreinterpretq_s16_u16(vdupq_n_u16(0x07E0));
+	const int16x8_t vecMaskB = vreinterpretq_s16_u16(vdupq_n_u16(0x001F));
+	// The order in which the coeffs appears depends on the format (RGB, BGR, GRB...)
+	const int8x8x4_t vecCoeffsU = vld4_s8(reinterpret_cast<int8_t const *>(kRGBfamilyToYUV_UCoeffs8));
+	const int8x8x4_t vecCoeffsV = vld4_s8(reinterpret_cast<int8_t const *>(kRGBfamilyToYUV_VCoeffs8));
+	const int16x8_t vecCoeffU0 = vmovl_s8(vecCoeffsU.val[0]); // should be -38
+	const int16x8_t vecCoeffU1 = vmovl_s8(vecCoeffsU.val[1]); // should be -74
+	const int16x8_t vecCoeffU2 = vmovl_s8(vecCoeffsU.val[2]); // should be 112
+	const int16x8_t vecCoeffV0 = vmovl_s8(vecCoeffsV.val[0]); // should be 112
+	const int16x8_t vecCoeffV1 = vmovl_s8(vecCoeffsV.val[1]); // should be -94
+	const int16x8_t vecCoeffV2 = vmovl_s8(vecCoeffsV.val[2]); // should be -18
+
+	// U = (((-38 * R) + (-74 * G) + (112 * B))) >> 8 + 128
+	// V = (((112 * R) + (-94 * G) + (-18 * B))) >> 8 + 128
+	for (j = 0; j < height; ++j) {
+		for (i = 0; i < width; i += 16) {
+			vec0 = vld1q_u16(reinterpret_cast<uint16_t const *>(rgb565Ptr + 0));
+			vec1 = vld1q_u16(reinterpret_cast<uint16_t const *>(rgb565Ptr + 16));
+			vec0R = vshrq_n_u16(vandq_u16(vec0, vecMaskR), 8);
+			vec1R = vshrq_n_u16(vandq_u16(vec1, vecMaskR), 8);
+			vec0G = vshrq_n_u16(vandq_u16(vec0, vecMaskG), 3);
+			vec1G = vshrq_n_u16(vandq_u16(vec1, vecMaskG), 3);
+			vec0B = vshlq_n_u16(vandq_u16(vec0, vecMaskB), 3);
+			vec1B = vshlq_n_u16(vandq_u16(vec1, vecMaskB), 3);
+			vec0R = vsraq_n_u16(vec0R, vec0R, 5);
+			vec1R = vsraq_n_u16(vec1R, vec1R, 5);
+			vec0G = vsraq_n_u16(vec0G, vec0G, 6);
+			vec1G = vsraq_n_u16(vec1G, vec1G, 6);
+			vec0B = vsraq_n_u16(vec0B, vec0B, 5);
+			vec1B = vsraq_n_u16(vec1B, vec1B, 5);
+
+			// First part(R)
+			vec0U = vmulq_s16(vecCoeffU0, vec0R); // vec0U = (-38 * R)
+			vec0V = vmulq_s16(vecCoeffV0, vec0R); // vec0V = (112 * R)
+			vec1U = vmulq_s16(vecCoeffU0, vec1R); // vec1U = (-38 * R)
+			vec1V = vmulq_s16(vecCoeffV0, vec1R); // vec1V = (112 * R)
+			// Second part(G)
+			vec0U = vmlaq_s16(vec0U, vecCoeffU1, vec0G); // vec0U += (-74 * G)
+			vec0V = vmlaq_s16(vec0V, vecCoeffV1, vec0G); // vec0V += (-94 * G)
+			vec1U = vmlaq_s16(vec1U, vecCoeffU1, vec1G); // vec1U += (-74 * G)
+			vec1V = vmlaq_s16(vec1V, vecCoeffV1, vec1G); // vec1V += (-94 * G)
+			// Third part(B)
+			vec0U = vmlaq_s16(vec0U, vecCoeffU2, vec0B); // vec0U += (112 * G)
+			vec0V = vmlaq_s16(vec0V, vecCoeffV2, vec0B); // vec0V += (-18 * G)
+			vec1U = vmlaq_s16(vec1U, vecCoeffU2, vec1B); // vec1U += (112 * G)
+			vec1V = vmlaq_s16(vec1V, vecCoeffV2, vec1B); // vec1V += (-18 * G)
+			// >> 8
+			vec0U = vshrq_n_s16(vec0U, 8); // vec0U >>= 8
+			vec0V = vshrq_n_s16(vec0V, 8); // vec0V >>= 8
+			vec1U = vshrq_n_s16(vec1U, 8); // vec1U >>= 8
+			vec1V = vshrq_n_s16(vec1V, 8); // vec1V >>= 8
+			// + 128
+			vec0U = vaddq_s16(vec0U, vec128); // vec0U += 128
+			vec0V = vaddq_s16(vec0V, vec128); // vec0V += 128
+			vec1U = vaddq_s16(vec1U, vec128); // vec1U += 128
+			vec1V = vaddq_s16(vec1V, vec128); // vec1V += 128
+			// outPtr = concat(saturate(vec0), saturate(vec1))
+			vst1q_u8(outUPtr, vcombine_u8(vqmovun_s16(vec0U), vqmovun_s16(vec1U)));
+			vst1q_u8(outVPtr, vcombine_u8(vqmovun_s16(vec0V), vqmovun_s16(vec1V)));
+			outUPtr += 16;
+			outVPtr += 16;
+			rgb565Ptr += 32;
+		}
+		rgb565Ptr += padRGB;
+		outUPtr += padUV;
+		outVPtr += padUV;
+	}
+}
+
 void CompVImageConvRgb32family_to_uv_planar_11_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* rgb32Ptr, COMPV_ALIGNED(NEON) uint8_t* outUPtr, COMPV_ALIGNED(NEON) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride,
 	COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_VCoeffs8)
 {
