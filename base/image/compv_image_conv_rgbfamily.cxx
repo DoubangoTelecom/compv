@@ -25,27 +25,35 @@ COMPV_NAMESPACE_BEGIN()
 		COMPV_EXTERNC void CompVImageConvRgb24family_to_y_Asm_X86_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb32family_to_y_Asm_X86_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb32Ptr, COMPV_ALIGNED(SSE) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb565lefamily_to_y_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
+		COMPV_EXTERNC void CompVImageConvRgb565befamily_to_y_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb24family_to_uv_planar_11_Asm_X86_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* outUPtr, COMPV_ALIGNED(SSE) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb32family_to_uv_planar_11_Asm_X86_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb32Ptr, COMPV_ALIGNED(SSE) uint8_t* outUPtr, COMPV_ALIGNED(SSE) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb565lefamily_to_uv_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const uint8_t* rgb32Ptr, COMPV_ALIGNED(SSE) uint8_t* outUPtr, COMPV_ALIGNED(SSE) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
+		COMPV_EXTERNC void CompVImageConvRgb565befamily_to_uv_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const uint8_t* rgb32Ptr, COMPV_ALIGNED(SSE) uint8_t* outUPtr, COMPV_ALIGNED(SSE) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb24family_to_y_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb24Ptr, COMPV_ALIGNED(AVX) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb32family_to_y_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb565lefamily_to_y_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
+		COMPV_EXTERNC void CompVImageConvRgb565befamily_to_y_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb24family_to_uv_planar_11_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb24Ptr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb32family_to_uv_planar_11_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb565lefamily_to_uv_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);		
+		COMPV_EXTERNC void CompVImageConvRgb565befamily_to_uv_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
 		COMPV_EXTERNC void CompVImageConvRgb565lefamily_to_y_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
+		COMPV_EXTERNC void CompVImageConvRgb565befamily_to_y_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb24family_to_uv_planar_11_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* outUPtr, COMPV_ALIGNED(SSE) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb32family_to_uv_planar_11_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb32Ptr, COMPV_ALIGNED(SSE) uint8_t* outUPtr, COMPV_ALIGNED(SSE) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb565lefamily_to_uv_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* rgb32Ptr, COMPV_ALIGNED(SSE) uint8_t* outUPtr, COMPV_ALIGNED(SSE) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
+		COMPV_EXTERNC void CompVImageConvRgb565befamily_to_uv_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* rgb32Ptr, COMPV_ALIGNED(SSE) uint8_t* outUPtr, COMPV_ALIGNED(SSE) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb24family_to_y_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb24Ptr, COMPV_ALIGNED(AVX) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb32family_to_y_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);		
 		COMPV_EXTERNC void CompVImageConvRgb565lefamily_to_y_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);		
+		COMPV_EXTERNC void CompVImageConvRgb565befamily_to_y_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb24family_to_uv_planar_11_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb24Ptr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb32family_to_uv_planar_11_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_VCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb565lefamily_to_uv_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_VCoeffs8);		
+		COMPV_EXTERNC void CompVImageConvRgb565befamily_to_uv_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_VCoeffs8);
 #	endif /* COMPV_ARCH_X64 */
 #if COMPV_ARCH_ARM
 		COMPV_EXTERNC void CompVImageConvRgb24family_to_y_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* rgb24Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
@@ -420,14 +428,14 @@ static void __rgb565family_to_y(const uint8_t* rgb565Ptr, uint8_t* outYPtr, comp
 		= le ? rgb565le_to_y_C : rgb565be_to_y_C;
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(rgb565Ptr) && COMPV_IS_ALIGNED_SSE(outYPtr) && COMPV_IS_ALIGNED_SSE(stride)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(funcptr = CompVImageConvRgb565lefamily_to_y_Intrin_SSE2);
-		COMPV_EXEC_IFDEF_ASM_X86(funcptr = CompVImageConvRgb565lefamily_to_y_Asm_X86_SSE2);
-		COMPV_EXEC_IFDEF_ASM_X64(funcptr = CompVImageConvRgb565lefamily_to_y_Asm_X64_SSE2);
+		COMPV_EXEC_IFDEF_INTRIN_X86(funcptr = le ? CompVImageConvRgb565lefamily_to_y_Intrin_SSE2 : CompVImageConvRgb565befamily_to_y_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X86(funcptr = le ? CompVImageConvRgb565lefamily_to_y_Asm_X86_SSE2 : CompVImageConvRgb565befamily_to_y_Asm_X86_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X64(funcptr = le ? CompVImageConvRgb565lefamily_to_y_Asm_X64_SSE2 : CompVImageConvRgb565befamily_to_y_Asm_X64_SSE2);
 	}
 	if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(rgb565Ptr) && COMPV_IS_ALIGNED_AVX2(outYPtr) && COMPV_IS_ALIGNED_AVX2(stride)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(funcptr = CompVImageConvRgb565family_to_y_Intrin_AVX2);
-		COMPV_EXEC_IFDEF_ASM_X86(funcptr = CompVImageConvRgb565lefamily_to_y_Asm_X86_AVX2);
-		COMPV_EXEC_IFDEF_ASM_X64(funcptr = CompVImageConvRgb565lefamily_to_y_Asm_X64_AVX2);
+		COMPV_EXEC_IFDEF_INTRIN_X86(funcptr = le ? CompVImageConvRgb565lefamily_to_y_Intrin_AVX2 : CompVImageConvRgb565befamily_to_y_Intrin_AVX2);
+		COMPV_EXEC_IFDEF_ASM_X86(funcptr = le ? CompVImageConvRgb565lefamily_to_y_Asm_X86_AVX2 : CompVImageConvRgb565befamily_to_y_Asm_X86_AVX2);
+		COMPV_EXEC_IFDEF_ASM_X64(funcptr = le ? CompVImageConvRgb565lefamily_to_y_Asm_X64_AVX2 : CompVImageConvRgb565befamily_to_y_Asm_X64_AVX2);
 	}
 #endif
 	funcptr(rgb565Ptr, outYPtr, width, height, stride, kRGBfamilyToYUV_YCoeffs8);
@@ -448,14 +456,14 @@ static void __rgb565family_to_uv_planar_11(const uint8_t* rgb565Ptr, uint8_t* ou
 		= le ? rgb565le_to_uv_planar_11_C : rgb565be_to_uv_planar_11_C;
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(rgb565Ptr) && COMPV_IS_ALIGNED_SSE(outUPtr) && COMPV_IS_ALIGNED_SSE(outVPtr) && COMPV_IS_ALIGNED_SSE(stride)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(funcptr = CompVImageConvRgb565family_to_uv_planar_11_Intrin_SSE2);
-		COMPV_EXEC_IFDEF_ASM_X86(funcptr = CompVImageConvRgb565lefamily_to_uv_Asm_X86_SSE2);
-		COMPV_EXEC_IFDEF_ASM_X64(funcptr = CompVImageConvRgb565lefamily_to_uv_Asm_X64_SSE2);
+		COMPV_EXEC_IFDEF_INTRIN_X86(funcptr = le ? CompVImageConvRgb565lefamily_to_uv_planar_11_Intrin_SSE2 : CompVImageConvRgb565befamily_to_uv_planar_11_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X86(funcptr = le ? CompVImageConvRgb565lefamily_to_uv_Asm_X86_SSE2 : CompVImageConvRgb565befamily_to_uv_Asm_X86_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X64(funcptr = le ? CompVImageConvRgb565lefamily_to_uv_Asm_X64_SSE2 : CompVImageConvRgb565befamily_to_uv_Asm_X64_SSE2);
 	}
 	if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(rgb565Ptr) && COMPV_IS_ALIGNED_AVX2(outUPtr) && COMPV_IS_ALIGNED_AVX2(outVPtr) && COMPV_IS_ALIGNED_AVX2(stride)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(funcptr = CompVImageConvRgb565family_to_uv_planar_11_Intrin_AVX2);
-		COMPV_EXEC_IFDEF_ASM_X86(funcptr = CompVImageConvRgb565lefamily_to_uv_Asm_X86_AVX2);
-		COMPV_EXEC_IFDEF_ASM_X64(funcptr = CompVImageConvRgb565lefamily_to_uv_Asm_X64_AVX2);
+		COMPV_EXEC_IFDEF_INTRIN_X86(funcptr = le ? CompVImageConvRgb565lefamily_to_uv_planar_11_Intrin_AVX2 : CompVImageConvRgb565befamily_to_uv_planar_11_Intrin_AVX2);
+		COMPV_EXEC_IFDEF_ASM_X86(funcptr = le ? CompVImageConvRgb565lefamily_to_uv_Asm_X86_AVX2 : CompVImageConvRgb565befamily_to_uv_Asm_X86_AVX2);
+		COMPV_EXEC_IFDEF_ASM_X64(funcptr = le ? CompVImageConvRgb565lefamily_to_uv_Asm_X64_AVX2 : CompVImageConvRgb565befamily_to_uv_Asm_X64_AVX2);
 	}
 #endif
 	funcptr(rgb565Ptr, outUPtr, outVPtr, width, height, stride, kRGBfamilyToYUV_UCoeffs8, kRGBfamilyToYUV_VCoeffs8);

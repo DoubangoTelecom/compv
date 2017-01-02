@@ -13,13 +13,17 @@ COMPV_YASM_DEFAULT_REL
 
 %define rgb24Family		0
 %define rgb32Family		1
+%define bigEndian		2
+%define littleEndian	3
 
 global sym(CompVImageConvRgb24family_to_y_Asm_X86_SSSE3)
 global sym(CompVImageConvRgb32family_to_y_Asm_X86_SSSE3)
 global sym(CompVImageConvRgb565lefamily_to_y_Asm_X86_SSE2)
+global sym(CompVImageConvRgb565befamily_to_y_Asm_X86_SSE2)
 global sym(CompVImageConvRgb24family_to_uv_planar_11_Asm_X86_SSSE3)
 global sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X86_SSSE3)
 global sym(CompVImageConvRgb565lefamily_to_uv_Asm_X86_SSE2)
+global sym(CompVImageConvRgb565befamily_to_uv_Asm_X86_SSE2)
 
 section .data
 	extern sym(k16_i16)
@@ -142,6 +146,7 @@ sym(CompVImageConvRgb24family_to_y_Asm_X86_SSSE3)
 sym(CompVImageConvRgb32family_to_y_Asm_X86_SSSE3)
 	CompVImageConvRgbfamily_to_y_Macro_X86_SSSE3 rgb32Family
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* rgb565lePtr
 ; arg(1) -> COMPV_ALIGNED(SSE) uint8_t* outYPtr
@@ -149,7 +154,8 @@ sym(CompVImageConvRgb32family_to_y_Asm_X86_SSSE3)
 ; arg(3) -> compv_uscalar_t height
 ; arg(4) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
 ; arg(5) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8
-sym(CompVImageConvRgb565lefamily_to_y_Asm_X86_SSE2):
+; %1 -> endianness: bigEndian or littleEndian
+%macro CompVImageConvRgb565family_to_y_Macro_X86_SSE2 1
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -208,6 +214,16 @@ sym(CompVImageConvRgb565lefamily_to_y_Asm_X86_SSE2):
 			movdqa xmm1, [rax + 16]
 			lea rax, [rax + 32] ; rgb565lePtr += 32
 			lea rdi, [rdi + 16] ; i += 16
+			%if %1 == bigEndian
+				movdqa xmm2, xmm0
+				movdqa xmm3, xmm1
+				psrlw xmm0, 8
+				psrlw xmm1, 8
+				psllw xmm2, 8
+				psllw xmm3, 8
+				por xmm0, xmm2
+				por xmm1, xmm3
+			%endif
 			movdqa xmm2, xmm0
 			movdqa xmm3, xmm1
 			movdqa xmm4, xmm0
@@ -282,6 +298,15 @@ sym(CompVImageConvRgb565lefamily_to_y_Asm_X86_SSE2):
 	mov rsp, rbp
 	pop rbp
 	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvRgb565lefamily_to_y_Asm_X86_SSE2):
+	CompVImageConvRgb565family_to_y_Macro_X86_SSE2 littleEndian
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvRgb565befamily_to_y_Asm_X86_SSE2):
+	CompVImageConvRgb565family_to_y_Macro_X86_SSE2 bigEndian
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* rgbPtr
@@ -429,7 +454,8 @@ sym(CompVImageConvRgb32family_to_uv_planar_11_Asm_X86_SSSE3)
 ; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
 ; arg(6) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8
 ; arg(7) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8
-sym(CompVImageConvRgb565lefamily_to_uv_Asm_X86_SSE2):
+; %1 -> endianness: bigEndian or littleEndian
+%macro CompVImageConvRgb565family_to_uv_Macro_X86_SSE2 1
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
@@ -514,6 +540,16 @@ sym(CompVImageConvRgb565lefamily_to_uv_Asm_X86_SSE2):
 			movdqa xmm1, [rax + 16]
 			lea rax, [rax + 32] ; rgb565lePtr += 32
 			lea rdi, [rdi + 16] ; i += 16
+			%if %1 == bigEndian
+				movdqa xmm2, xmm0
+				movdqa xmm3, xmm1
+				psrlw xmm0, 8
+				psrlw xmm1, 8
+				psllw xmm2, 8
+				psllw xmm3, 8
+				por xmm0, xmm2
+				por xmm1, xmm3
+			%endif
 			movdqa xmm2, xmm0
 			movdqa xmm3, xmm1
 			movdqa xmm4, xmm0
@@ -629,8 +665,18 @@ sym(CompVImageConvRgb565lefamily_to_uv_Asm_X86_SSE2):
 	mov rsp, rbp
 	pop rbp
 	ret
-	
+%endmacro
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvRgb565lefamily_to_uv_Asm_X86_SSE2):
+	CompVImageConvRgb565family_to_uv_Macro_X86_SSE2 littleEndian
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVImageConvRgb565befamily_to_uv_Asm_X86_SSE2):
+	CompVImageConvRgb565family_to_uv_Macro_X86_SSE2 bigEndian
 
 %undef rgb24Family
 %undef rgb32Family
+%undef bigEndian
+%undef littleEndian
