@@ -21,7 +21,7 @@ COMPV_NAMESPACE_BEGIN()
 
 COMPV_ERROR_CODE CompVImageConvToYUV444P::process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageYUV444P)
 {
-	CompVMatPtr imageOut = (imageIn == *imageYUV444P) ? NULL : *imageYUV444P; // Input must not be equal to output
+	CompVMatPtr imageOut = (imageIn == *imageYUV444P) ? nullptr : *imageYUV444P; // Input must not be equal to output
 	// Internal function, do not check input parameters (already done)
 	switch (imageIn->subType()) {
 	case COMPV_SUBTYPE_PIXELS_RGBA32:

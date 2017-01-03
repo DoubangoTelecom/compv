@@ -55,7 +55,7 @@
 	.elseif \family == familyRGB32
 		mov r8, padY, LSL #2
 	.elseif
-		.error
+		.error Not implemented
 	.endif
 	padRGB .req r8
 
