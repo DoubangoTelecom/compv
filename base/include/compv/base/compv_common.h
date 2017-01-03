@@ -275,14 +275,13 @@ enum COMPV_SUBTYPE {
 	COMPV_SUBTYPE_PIXELS_RGB565BE,		// RGB565BE
 	COMPV_SUBTYPE_PIXELS_BGR565LE,		// BGR565LE
 	COMPV_SUBTYPE_PIXELS_BGR565BE,		// BGR565BE
-    COMPV_SUBTYPE_PIXELS_Y,				// Y-only
+    COMPV_SUBTYPE_PIXELS_Y,				// Y-only: Grayscale
 	COMPV_SUBTYPE_PIXELS_NV12,			// Microsoft: NV12, iOS camera, Android camera, Semi-Planar, Info: https://www.fourcc.org/pixel-format/yuv-nv12/
 	COMPV_SUBTYPE_PIXELS_NV21,			// Microsoft: NV21, Android camera, Semi-Planar, Info: https://www.fourcc.org/pixel-format/yuv-nv21/
     COMPV_SUBTYPE_PIXELS_YUV420P,		// Microsoft: I420, Planar, Info: https://www.fourcc.org/pixel-format/yuv-i420/
 	COMPV_SUBTYPE_PIXELS_YVU420P,		// Microsoft YV12, Planar, Info: https://www.fourcc.org/pixel-format/yuv-yv12/
 	COMPV_SUBTYPE_PIXELS_YUV422P,		// Microsoft: YUV422, Planar
 	COMPV_SUBTYPE_PIXELS_YUYV422,		// Microsoft: YUY2, V4L2/DirectShow preferred format, Packed, Info: https://www.fourcc.org/pixel-format/yuv-yuy2/
-	COMPV_SUBTYPE_PIXELS_YVYU422,		// Microsoft: ?
 	COMPV_SUBTYPE_PIXELS_UYVY422,		// Microsoft: UYVY, iOS camera, Info: https://www.fourcc.org/pixel-format/yuv-uyvy/
 	COMPV_SUBTYPE_PIXELS_YUV444P,		// Microsoft: YUV444, Planar
 

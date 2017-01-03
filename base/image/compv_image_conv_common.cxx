@@ -212,7 +212,19 @@ COMPV_BASE_API COMPV_ALIGN_DEFAULT() int8_t kYUVToRGBA_BCoeffs8[] = { // Extende
 // The index-3 must be 0xff to produce zeros used later to generate the alpha channel
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_RgbToRgba_i32[] = {
 	COMPV_MM_SHUFFLE_EPI8(0xff, 2, 1, 0), COMPV_MM_SHUFFLE_EPI8(0xff, 5, 4, 3), COMPV_MM_SHUFFLE_EPI8(0xff, 8, 7, 6), COMPV_MM_SHUFFLE_EPI8(0xff, 11, 10, 9), // 128bits SSE register
-	COMPV_MM_SHUFFLE_EPI8(0xff, 2, 1, 0), COMPV_MM_SHUFFLE_EPI8(0xff, 5, 4, 3), COMPV_MM_SHUFFLE_EPI8(0xff, 8, 7, 6), COMPV_MM_SHUFFLE_EPI8(0xff, 11, 10, 9), // 256bits SSE register
+	COMPV_MM_SHUFFLE_EPI8(0xff, 2, 1, 0), COMPV_MM_SHUFFLE_EPI8(0xff, 5, 4, 3), COMPV_MM_SHUFFLE_EPI8(0xff, 8, 7, 6), COMPV_MM_SHUFFLE_EPI8(0xff, 11, 10, 9), // 256bits AVX register
+};
+
+// Packed yuyv422 -> planar Y(8 samples), U(4 samples), V(4 samples)
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_Yuyv422ToYuv_i32[] = {
+	COMPV_MM_SHUFFLE_EPI8(6, 4, 2, 0), COMPV_MM_SHUFFLE_EPI8(14, 12, 10, 8), COMPV_MM_SHUFFLE_EPI8(13, 9, 5, 1), COMPV_MM_SHUFFLE_EPI8(15, 11, 7, 3), // 128bits SSE register
+	COMPV_MM_SHUFFLE_EPI8(6, 4, 2, 0), COMPV_MM_SHUFFLE_EPI8(14, 12, 10, 8), COMPV_MM_SHUFFLE_EPI8(13, 9, 5, 1), COMPV_MM_SHUFFLE_EPI8(15, 11, 7, 3), // 256bits AVX register
+};
+
+// Packed uyvy422 -> planar Y(8 samples), U(4 samples), V(4 samples)
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_Uyvy422ToYuv_i32[]{
+	COMPV_MM_SHUFFLE_EPI8(7, 5, 3, 1), COMPV_MM_SHUFFLE_EPI8(15, 13, 11, 9), COMPV_MM_SHUFFLE_EPI8(0, 4, 8, 12), COMPV_MM_SHUFFLE_EPI8(2, 6, 10, 14), // 128bits SSE register
+	COMPV_MM_SHUFFLE_EPI8(7, 5, 3, 1), COMPV_MM_SHUFFLE_EPI8(15, 13, 11, 9), COMPV_MM_SHUFFLE_EPI8(0, 4, 8, 12), COMPV_MM_SHUFFLE_EPI8(2, 6, 10, 14), // 256bits AVX register
 };
 
 // Masks used to extract R5, G6 and B5 bytes from packed 16 bytes

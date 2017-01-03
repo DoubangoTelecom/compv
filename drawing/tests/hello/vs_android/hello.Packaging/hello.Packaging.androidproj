@@ -119,35 +119,6 @@
     </AntPackage>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Content Include="..\..\..\..\..\..\data\colorspace\equirectangular_1282x721_gray.yuv">
-      <Link>assets\equirectangular_1282x721_gray.yuv</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\..\..\..\..\data\colorspace\equirectangular_1282x721_rgb565be.rgb">
-      <Link>assets\equirectangular_1282x721_rgb565be.rgb</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\..\..\..\..\data\colorspace\equirectangular_1282x721_rgba.rgb">
-      <Link>assets\equirectangular_1282x721_rgba.rgb</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\..\..\..\deprecated\tests\girl.jpg">
-      <Link>assets\girl.jpg</Link>
-    </Content>
-    <Content Include="..\..\..\..\..\deprecated\tests\mandekalou.jpg">
-      <Link>assets\mandekalou.jpg</Link>
-    </Content>
-    <Content Include="..\..\..\..\..\deprecated\tests\valve_original.jpg">
-      <Link>assets\valve_original.jpg</Link>
-    </Content>
-    <Content Include="..\..\..\..\..\plugin_androidcamera\app\build\outputs\apk\app-debug.apk">
-      <Link>assets\app-debug.apk</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\..\..\..\tests\image\yuv444p.yuv">
-      <Link>assets\yuv444p.yuv</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="res\values\strings.xml" />
     <AntBuildXml Include="build.xml" />
     <AndroidManifest Include="AndroidManifest.xml">

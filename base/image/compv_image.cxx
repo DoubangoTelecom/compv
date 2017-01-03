@@ -7,6 +7,7 @@
 #include "compv/base/image/compv_image.h"
 #include "compv/base/image/compv_image_utils.h"
 #include "compv/base/image/compv_image_conv_to_yuv444p.h"
+#include "compv/base/image/compv_image_conv_to_grayscale.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_fileutils.h"
@@ -36,7 +37,6 @@
 		COMPV_IMAGE_NEWOBJ_CASE(elmType, YVU420P); \
 		COMPV_IMAGE_NEWOBJ_CASE(elmType, YUV422P); \
 		COMPV_IMAGE_NEWOBJ_CASE(elmType, YUYV422); \
-		COMPV_IMAGE_NEWOBJ_CASE(elmType, YVYU422); \
 		COMPV_IMAGE_NEWOBJ_CASE(elmType, UYVY422); \
 		COMPV_IMAGE_NEWOBJ_CASE(elmType, YUV444P); \
 	default: \
@@ -67,8 +67,8 @@ COMPV_ERROR_CODE CompVImage::readPixels(COMPV_SUBTYPE ePixelFormat, size_t width
 	COMPV_CHECK_CODE_RETURN(CompVImageUtils::sizeForPixelFormat(ePixelFormat, stride, height, &expectedFileSize));
 	if (expectedFileSize != buffer->size()) {
 		// FFmpeg requires outputs with even width when converting from RGB to YUV
-		if (stride & 1) {
-			COMPV_CHECK_CODE_RETURN(CompVImageUtils::sizeForPixelFormat(ePixelFormat, (stride + 1), height, &expectedFileSize));
+		if ((stride & 1) || (height & 1)) {
+			COMPV_CHECK_CODE_RETURN(CompVImageUtils::sizeForPixelFormat(ePixelFormat, (stride + 1) & ~1, (height + 1) & ~1, &expectedFileSize));
 			COMPV_CHECK_EXP_RETURN(expectedFileSize != buffer->size(), COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT, "Size mismatch");
 		}
 		else {
@@ -129,10 +129,29 @@ COMPV_ERROR_CODE CompVImage::convert(const CompVMatPtr& imageIn, COMPV_SUBTYPE p
 	case COMPV_SUBTYPE_PIXELS_YUV444P:
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToYUV444P::process(imageIn, imageOut));
 		return COMPV_ERROR_CODE_S_OK;
+	case COMPV_SUBTYPE_PIXELS_Y:
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToGrayscale::process(imageIn, imageOut));
+		return COMPV_ERROR_CODE_S_OK;
 	default:
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Chroma conversion not supported: %s -> %s", CompVGetSubtypeString(imageIn->subType()), CompVGetSubtypeString(pixelFormatOut));
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
+}
+
+COMPV_ERROR_CODE CompVImage::convertGrayscale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageGray)
+{
+	// Input parameters will be checked in 'convert'
+	COMPV_CHECK_CODE_RETURN(CompVImage::convert(imageIn, COMPV_SUBTYPE_PIXELS_Y, imageGray));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// This function is faster when the input data is planar (or semi-planar) YUV as we'll just reshape the data.
+// It requires the input to be equal to the output to avoid copying, this is whay we require a single parameter
+COMPV_ERROR_CODE CompVImage::convertGrayscaleFast(CompVMatPtr& imageInOut)
+{
+	// Input parameters will be checked in 'convert'
+	COMPV_CHECK_CODE_RETURN(CompVImage::convert(imageInOut, COMPV_SUBTYPE_PIXELS_Y, &imageInOut));
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

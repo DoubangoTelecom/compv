@@ -60,6 +60,7 @@
     <ClInclude Include="include\compv\base\image\compv_image_decoder.h" />
     <ClInclude Include="include\compv\base\image\compv_image_utils.h" />
     <ClInclude Include="include\compv\base\image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.h" />
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_grayscale_intrin_ssse3.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.h" />
@@ -126,6 +127,16 @@
     <ClCompile Include="image\compv_image_decoder.cxx" />
     <ClCompile Include="image\compv_image_utils.cxx" />
     <ClCompile Include="image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.cxx" />
+    <ClCompile Include="image\intrin\x86\compv_image_conv_grayscale_intrin_ssse3.cxx">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+        _IPP_SEQUENTIAL_STATIC;%(PreprocessorDefinitions)
+      ;__SSSE3__</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TBB_USE_THREADING_TOOLS;%(PreprocessorDefinitions);__SSSE3__</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+        _IPP_SEQUENTIAL_STATIC;%(PreprocessorDefinitions)
+      ;__SSSE3__</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TBB_USE_THREADING_TOOLS;%(PreprocessorDefinitions);__SSSE3__</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -214,6 +225,9 @@
     </YASM>
   </ItemGroup>
   <ItemGroup>
+    <YASM Include="image\asm\x86\compv_image_conv_grayscale_x86_sse.s">
+      <FileType>Document</FileType>
+    </YASM>
     <None Include="image\asm\x86\compv_image_conv_macros.s" />
     <YASM Include="image\asm\x86\compv_image_conv_rgbfamily_x64_sse.s">
       <FileType>Document</FileType>

@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/base/image/compv_image.h"
 #include "compv/base/image/compv_image_conv_to_yuv444p.h"
+#include "compv/base/image/compv_image.h"
 #include "compv/base/image/compv_image_conv_rgbfamily.h"
 #include "compv/base/image/compv_image_conv_common.h"
 #include "compv/base/parallel/compv_parallel.h"
@@ -21,6 +21,7 @@ COMPV_NAMESPACE_BEGIN()
 
 COMPV_ERROR_CODE CompVImageConvToYUV444P::process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageYUV444P)
 {
+	CompVMatPtr imageOut = (imageIn == *imageYUV444P) ? NULL : *imageYUV444P; // Input must not be equal to output
 	// Internal function, do not check input parameters (already done)
 	switch (imageIn->subType()) {
 	case COMPV_SUBTYPE_PIXELS_RGBA32:
@@ -32,12 +33,14 @@ COMPV_ERROR_CODE CompVImageConvToYUV444P::process(const CompVMatPtr& imageIn, Co
 	case COMPV_SUBTYPE_PIXELS_RGB565BE:
 	case COMPV_SUBTYPE_PIXELS_BGR565LE:
 	case COMPV_SUBTYPE_PIXELS_BGR565BE:
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToYUV444P::rgbfamily(imageIn, imageYUV444P), "Conversion (RGBFamily -> YUV444P) failed");
-		return COMPV_ERROR_CODE_S_OK;
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToYUV444P::rgbfamily(imageIn, &imageOut), "Conversion (RGBFamily -> YUV444P) failed");
+		break;
 	default:
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Chroma conversion not supported: %s -> COMPV_SUBTYPE_PIXELS_YUV444P", CompVGetSubtypeString(imageIn->subType()));
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
+	*imageYUV444P = imageOut;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVImageConvToYUV444P::rgbfamily(const CompVMatPtr& imageRGBfamily, CompVMatPtrPtr imageYUV444P)

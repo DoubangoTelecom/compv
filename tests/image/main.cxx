@@ -9,8 +9,8 @@ using namespace compv;
 /* Entry point function */
 compv_main()
 {
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	{
-		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 		COMPV_CHECK_CODE_BAIL(err = compv_tests_init());
 
 #if TEST_CHROMA_CONV
@@ -27,5 +27,5 @@ compv_main()
 
 	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE, "************* Program ended!!! *************");
 
-	compv_main_return(0);
+	compv_main_return(static_cast<int>(err));
 }
