@@ -224,7 +224,7 @@ COMPV_ERROR_CODE CompVThread::join()
         return COMPV_ERROR_CODE_S_OK;
     }
 
-    COMPV_DEBUG_INFO("Thread with id=%ld will join", (long)m_Id); // debug message to track deadlocks
+    COMPV_DEBUG_INFO("Thread with id=%ld will join", static_cast<long>(m_Id)); // debug message to track deadlocks
 
 #if COMPV_OS_WINDOWS
 #	if COMPV_OS_WINDOWS_RT
@@ -246,7 +246,7 @@ COMPV_ERROR_CODE CompVThread::join()
 #endif
 
 bail:
-    COMPV_DEBUG_INFO("Thread with id=%ld joined", (long)m_Id);
+    COMPV_DEBUG_INFO("Thread with id=%ld joined", static_cast<long>(m_Id));
     return err;
 }
 

@@ -10,6 +10,7 @@
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_debug.h"
 #include "compv/base/android/compv_android_cpu-features.h"
+#include "compv/base/compv_fileutils.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVCpu"
 
@@ -115,29 +116,35 @@ static void CompVX86CpuId(uint32_t eax, uint32_t ecx, uint32_t* cpu_info)
 static uint64_t CompVArmCaps(const char* cpuinfo_name)
 {
     char cpuinfo_line[1024];
+#if COMPV_ARCH_ARM64
+	uint64_t flags = kCpuFlagARM64;
+#else
+	uint64_t flags = kCpuFlagARM;
+#endif
     FILE* f = fopen(cpuinfo_name, "r");
     if (!f) {
-        // Assume Neon if /proc/cpuinfo is unavailable.
-        // This will occur for Chrome sandbox for Pepper or Render process.
-        return kCpuFlagARM_NEON;
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Failed to open '/proc/cpuinfo'");
+        return flags;
     }
     while (fgets(cpuinfo_line, sizeof(cpuinfo_line) - 1, f)) {
         if (memcmp(cpuinfo_line, "Features", 8) == 0) {
             char* p = strstr(cpuinfo_line, " neon");
-            if (p && (p[5] == ' ' || p[5] == '\n')) {
-                fclose(f);
-                return kCpuFlagARM_NEON;
-            }
-            // aarch64 uses asimd for Neon.
+			flags |= (p && (p[5] == ' ' || p[5] == '\n')) ? kCpuFlagARM_NEON : kCpuFlagNone;
+			p = strstr(cpuinfo_line, " vfpv3");
+			flags |= (p && (p[6] == ' ' || p[6] == '\n')) ? kCpuFlagARM_VFPv3 : kCpuFlagNone;
+			p = strstr(cpuinfo_line, " vfpv4");
+			flags |= (p && (p[6] == ' ' || p[6] == '\n')) ? kCpuFlagARM_VFPv4 : kCpuFlagNone;
+            
+            // aarch64 uses asimd for Neon
             p = strstr(cpuinfo_line, " asimd");
-            if (p && (p[6] == ' ' || p[6] == '\n')) {
-                fclose(f);
-                return kCpuFlagARM_NEON;
-            }
+			flags |= (p && (p[6] == ' ' || p[6] == '\n')) ? kCpuFlagARM_NEON : kCpuFlagNone;
+
+			fclose(f);
+			return flags;
         }
     }
     fclose(f);
-    return 0;
+    return flags;
 }
 #endif
 
@@ -199,6 +206,23 @@ COMPV_ERROR_CODE CompVCpu::init()
 	if (s_bInitialized) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
+
+	//
+	// /proc/cpuinfo
+	//
+#if COMPV_OS_LINUX || COMPV_OS_BSD || COMPV_OS_ANDROID
+	if (CompVDebugMgr::getLevel() >= COMPV_DEBUG_LEVEL_INFO) {
+		FILE* fcpuinfo = fopen("/proc/cpuinfo", "r");
+		if (fcpuinfo) {
+			char cpuinfo_line[1024];
+			size_t count;
+			while ((count = fread(cpuinfo_line, 1, sizeof(cpuinfo_line), fcpuinfo)) > 0) {
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME "/proc/cpuinfo", "%.*s", count, cpuinfo_line);
+			}
+			fclose(fcpuinfo);
+		}
+	}
+#endif
 
 	//
 	// endianness
@@ -318,9 +342,12 @@ COMPV_ERROR_CODE CompVCpu::init()
     if (android_flags & ANDROID_CPU_ARM_FEATURE_NEON) {
         CompVCpu::s_uFlags |= kCpuFlagARM_NEON;
     }
-    if (android_flags & ANDROID_CPU_ARM_FEATURE_NEON_FMA) {
-        CompVCpu::s_uFlags |= kCpuFlagARM_NEON_FMA;
+    if (android_flags & ANDROID_CPU_ARM_FEATURE_NEON_FMA || android_flags & ANDROID_CPU_ARM_FEATURE_VFP_FMA) {
+        CompVCpu::s_uFlags |= kCpuFlagARM_VFPv4 | kCpuFlagARM_VFPv3;
     }
+	if (android_flags & ANDROID_CPU_ARM_FEATURE_VFPv3) {
+		CompVCpu::s_uFlags |= kCpuFlagARM_VFPv3;
+	}
 #	else
     CompVCpu::s_uFlags |= CompVArmCaps("/proc/cpuinfo");
 #endif
@@ -426,8 +453,9 @@ const char* CompVCpu::flagsAsString(uint64_t uFlags)
         { kCpuFlagARM, "[arm]" },
         { kCpuFlagARM64, "[arm64]" },
         { kCpuFlagARM_NEON, "neon" },
-        { kCpuFlagARM_NEON_FMA, "neon-fma" },
-        // 0x9 reserved for future ARM flag.
+        { kCpuFlagARM_VFPv3, "vfpv3" },
+		{ kCpuFlagARM_VFPv4, "vfpv4" },
+        // -- reserved for future ARM flag.
 
         // These flags are only valid on x86/x64 processors.
         { kCpuFlagX86, "[x86]" },

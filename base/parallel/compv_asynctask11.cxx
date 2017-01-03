@@ -213,15 +213,16 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
     CompVAsyncToken* pToken_;
     COMPV_ERROR_CODE err_;
     size_t size_;	
+	long threadId = static_cast<long>(CompVThread::getIdCurrent());
 
     // Make sure the affinity is defined. This function is called in start() but after thread creation which means we could miss it if this function is called very fast
 #if COMPV_PARALLEL_THREAD_SET_AFFINITY
     if (Self_->m_iCoreId >= 0) {
         COMPV_CHECK_CODE_BAIL(err_ = Self_->m_Thread->setAffinity(Self_->m_iCoreId));
     }
-    COMPV_DEBUG_INFO("CompVAsyncTask11::run(coreId:requested=%d,set=%d, threadId:%llu, kThreadSetAffinity:true) - ENTER", Self_->m_iCoreId, CompVThread::getCoreId(), (unsigned long)CompVThread::getIdCurrent());
+    COMPV_DEBUG_INFO("%s(coreId:requested=%d,set=%d, threadId:%ld, kThreadSetAffinity:true) - ENTER", __FUNCTION__, Self_->m_iCoreId, CompVThread::getCoreId(), threadId);
 #else
-    COMPV_DEBUG_INFO("CompVAsyncTask11::run(coreId:requested=%d,set=useless, threadId:%lu, kThreadSetAffinity:false) - ENTER", Self_->m_iCoreId, (unsigned long)CompVThread::getIdCurrent());
+    COMPV_DEBUG_INFO("%s(coreId:requested=%d,set=useless, threadId:%ld, kThreadSetAffinity:false) - ENTER", __FUNCTION__, Self_->m_iCoreId, threadId);
 #endif
 
     while (Self_->m_bStarted) {
@@ -240,7 +241,7 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
     }
 
 bail:
-    COMPV_DEBUG_INFO("CompVAsyncTask11::run(threadId:%ld) - EXIT", static_cast<long>(CompVThread::getIdCurrent()));
+    COMPV_DEBUG_INFO("%s(threadId:%ld) - EXIT", __FUNCTION__, threadId);
     return NULL;
 }
 

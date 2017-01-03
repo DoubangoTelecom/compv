@@ -16,6 +16,7 @@
 // TODO(dmi): RGB -> RGBA conversion is done twice (Y plane then UV plane)
 // Neon intrinsics: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0491h/BABDFJCI.html
 // Neon instructions: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0489c/CJAJIIGG.html
+// VFP instructions : http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0489e/CJAGFGEE.html
 
 COMPV_NAMESPACE_BEGIN()
 
