@@ -21,6 +21,9 @@
     <ClCompile Include="chroma_conv.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="feature_fast.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tests_common.h">

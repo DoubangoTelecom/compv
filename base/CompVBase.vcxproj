@@ -25,6 +25,8 @@
     <ClInclude Include="include\compv\base\android\compv_android_native_activity.h" />
     <ClInclude Include="include\compv\base\compv_base.h" />
     <ClInclude Include="include\compv\base\compv_bind.h" />
+    <ClInclude Include="include\compv\base\compv_box.h" />
+    <ClInclude Include="include\compv\base\compv_box_interestpoint.h" />
     <ClInclude Include="include\compv\base\compv_buffer.h" />
     <ClInclude Include="include\compv\base\compv_caps.h" />
     <ClInclude Include="include\compv\base\compv_common.h" />
@@ -94,6 +96,8 @@
     <ClCompile Include="android\compv_android_native_activity.cxx" />
     <ClCompile Include="compv_base.cxx" />
     <ClCompile Include="compv_bind.cxx" />
+    <ClCompile Include="compv_box.cxx" />
+    <ClCompile Include="compv_box_interestpoint.cxx" />
     <ClCompile Include="compv_buffer.cxx" />
     <ClCompile Include="compv_caps.cxx" />
     <ClCompile Include="compv_common.cxx" />

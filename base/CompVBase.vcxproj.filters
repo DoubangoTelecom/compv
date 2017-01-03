@@ -312,6 +312,12 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_grayscale_intrin_ssse3.h">
       <Filter>include\image\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\compv_box.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_box_interestpoint.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -499,6 +505,12 @@
     </ClCompile>
     <ClCompile Include="image\intrin\x86\compv_image_conv_grayscale_intrin_ssse3.cxx">
       <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_box.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_box_interestpoint.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

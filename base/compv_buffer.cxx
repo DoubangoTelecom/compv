@@ -8,9 +8,11 @@
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_debug.h"
 
+#define COMPV_THIS_CLASSNAME	"CompVBuffer"
+
 COMPV_NAMESPACE_BEGIN()
 
-CompVBuffer::CompVBuffer(const void* pcPtr /*= NULL*/, int32_t size /*= 0*/)
+CompVBuffer::CompVBuffer(const void* pcPtr COMPV_DEFAULT(NULL), int32_t size COMPV_DEFAULT(0))
     : CompVObj()
     , m_pPtr(NULL)
     , m_nSize(0)
@@ -46,7 +48,7 @@ COMPV_ERROR_CODE CompVBuffer::copyData(const void* pcPtr, int32_t size)
         }
     }
     else {
-        COMPV_DEBUG_FATAL("Failed to allocate buffer with size = %u", (unsigned)size);
+        COMPV_DEBUG_FATAL_EX(COMPV_THIS_CLASSNAME, "Failed to allocate buffer with size = %u", (unsigned)size);
         return COMPV_ERROR_CODE_E_OUT_OF_MEMORY;
     }
     return COMPV_ERROR_CODE_S_OK;

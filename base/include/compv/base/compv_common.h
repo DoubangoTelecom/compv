@@ -244,15 +244,8 @@ enum COMPV_SORT_TYPE {
     COMPV_SORT_TYPE_QUICK, /**< https://en.wikipedia.org/wiki/Quicksort */
 };
 
-enum {
-    // These are per function-scope
-    COMPV_TOKENIDX0,
-    COMPV_TOKENIDX1,
-    COMPV_TOKENIDX2,
-    COMPV_TOKENIDX3,
-
-    COMPV_TOKENIDX_MAX
-    // no limitation but alloc memory -> do not abuse
+enum COMPV_SCALE_TYPE {
+	COMPV_SCALE_TYPE_BILINEAR
 };
 
 enum COMPV_MAT_TYPE {
@@ -323,16 +316,16 @@ struct CompVVec3f {
 public:
     union {
         struct {
-            float x, y, z;
+			compv_float32_t x, y, z;
         };
         struct {
-            float r, g, b;
+			compv_float32_t r, g, b;
         };
         struct {
-            float s, t, p;
+			compv_float32_t s, t, p;
         };
     };
-    CompVVec3f(float x_, float y_, float z_) : x(x_), y(y_), z(z_) { }
+    CompVVec3f(compv_float32_t x_, compv_float32_t y_, compv_float32_t z_) : x(x_), y(y_), z(z_) { }
 };
 
 struct CompVRect {
@@ -353,6 +346,64 @@ public:
     int denominator;
     CompVRatio(int numerator_ = 1, int denominator_ = 1) : numerator(numerator_), denominator(denominator_) { }
 };
+
+struct CompVInterestPoint {
+	compv_float32_t x; /**< Point.x */
+	compv_float32_t y; /**< Point.y */
+	compv_float32_t strength; /**< Corner/edge strength/response (e.g. FAST response or Harris response) */
+	compv_float32_t orient; /**< angle in degree ([0-360]) */
+	int32_t level; /**< pyramid level (when image is scaled, level0 is the first one) */
+	compv_float32_t size; /**< patch size (e.g. BRIEF patch size-circle diameter-) */
+
+protected:
+	COMPV_INLINE void init(compv_float32_t x_, compv_float32_t y_, compv_float32_t strength_ = -1.f, compv_float32_t orient_ = -1.f, int32_t level_ = 0, compv_float32_t size_ = 0.f) {
+		x = x_, y = y_, strength = strength_, orient = orient_, level = level_, size = size_;
+	}
+public:
+	CompVInterestPoint() {
+		init(0, 0);
+	}
+	CompVInterestPoint(compv_float32_t x_, compv_float32_t y_, compv_float32_t strength_ = -1.f, compv_float32_t orient_ = -1.f, int32_t level_ = 0, compv_float32_t size_ = 0.f) {
+		init(x_, y_, strength_, orient_, level_, size_);
+	}
+};
+
+struct CompVDMatch {
+	int32_t queryIdx;
+	int32_t trainIdx;
+	int32_t imageIdx;
+	int32_t distance;
+protected:
+	COMPV_INLINE void init(int32_t queryIdx_, int32_t trainIdx_, int32_t distance_, int32_t imageIdx_ = 0) {
+		queryIdx = queryIdx_, trainIdx = trainIdx_, distance = distance_, imageIdx = imageIdx_;
+	}
+public:
+	CompVDMatch() {
+		init(0, 0, 0, 0);
+	}
+	CompVDMatch(int32_t queryIdx_, int32_t trainIdx_, int32_t distance_, int32_t imageIdx_ = 0) {
+		init(queryIdx_, trainIdx_, distance_, imageIdx_);
+	}
+};
+
+template <typename T>
+struct CompVPoint {
+	COMPV_INLINE void init(T x_ = 0, T y_ = 0, T z_ = 1) {
+		x = x_, y = y_, z = z_;
+	}
+public:
+	CompVPoint() {
+		init();
+	}
+	CompVPoint(T x_, T y_, T z_ = 1) {
+		init(x_, y_, z_);
+	}
+	T x, y, z;
+};
+typedef CompVPoint<compv_float32_t> CompVPointFloat32;
+typedef CompVPoint<compv_float64_t> CompVPointFloat64;
+typedef CompVPoint<int32_t> CompVPointInt32;
+typedef CompVPoint<int> CompVPointInt;
 
 COMPV_NAMESPACE_END()
 

@@ -22,6 +22,7 @@
 #include "compv/compv_md5.h"
 #include "compv/compv_mem.h"
 #include "compv/compv_obj.h"
+#include "compv/compv_fileutils.h"
 
 #include "compv/calib/compv_calib_homography.h"
 

@@ -5,6 +5,7 @@ using namespace compv;
 #define TAG_TEST_IMAGE "TestImage"
 
 #define TEST_CHROMA_CONV			1
+#define TEST_FEATURE_FAST			0
 
 /* Entry point function */
 compv_main()
@@ -16,6 +17,10 @@ compv_main()
 #if TEST_CHROMA_CONV
 		extern COMPV_ERROR_CODE chroma_conv();
 		COMPV_CHECK_CODE_BAIL(err = chroma_conv(), TAG_TEST_IMAGE "Chroma conversion test failed");
+#endif
+#if TEST_FEATURE_FAST
+		extern COMPV_ERROR_CODE feature_fast();
+		COMPV_CHECK_CODE_BAIL(err = feature_fast(), TAG_TEST_IMAGE "FAST feature detection test failed");
 #endif
 
 	bail:

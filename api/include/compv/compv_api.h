@@ -10,6 +10,7 @@
 /* Module: Base */
 #include <compv/base/compv_base.h>
 #include <compv/base/compv_bind.h>
+#include <compv/base/compv_box.h>
 #include <compv/base/compv_buffer.h>
 #include <compv/base/compv_cpu.h>
 #include <compv/base/compv_debug.h>
