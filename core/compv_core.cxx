@@ -6,8 +6,11 @@
 */
 #include "compv/core/compv_core.h"
 #include "compv/core/compv_core_common.h"
+#include "compv/core/features/compv_feature.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/parallel/compv_mutex.h"
+
+#define COMPV_THIS_CLASSNAME "CompVCore"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -21,9 +24,11 @@ COMPV_ERROR_CODE CompVCore::init()
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
-	COMPV_DEBUG_INFO("Initializing [core] module (v %s)...", COMPV_VERSION_STRING);
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Initializing [core] module (v %s)...", COMPV_VERSION_STRING);
 
 	COMPV_CHECK_CODE_BAIL(err = CompVBase::init());
+
+	COMPV_CHECK_CODE_BAIL(err = CompVFeature::init());
 
 	s_bInitialized = true;
 

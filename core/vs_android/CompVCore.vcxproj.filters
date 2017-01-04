@@ -7,6 +7,48 @@
     <Filter Include="source">
       <UniqueIdentifier>{7e18a987-88b7-4845-ab2e-86a7c81b15c0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\calib">
+      <UniqueIdentifier>{b5b7b240-17b7-4909-8e40-28ca2982f4be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\features">
+      <UniqueIdentifier>{f785e66d-6c01-4d07-81c4-574836e4ca6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\features\edges">
+      <UniqueIdentifier>{350374e2-4847-4453-b69a-4a98c45230cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\features\fast">
+      <UniqueIdentifier>{ec0f609f-39eb-4235-99dc-1193c39638cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\features\hough">
+      <UniqueIdentifier>{629fa9a6-b164-4c3d-91e9-c43cefee1cc0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\features\orb">
+      <UniqueIdentifier>{337c0c07-7d80-479b-8734-335868076003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\matchers">
+      <UniqueIdentifier>{73fe15aa-a2a7-4d15-a842-58a8cdd3c399}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\calib">
+      <UniqueIdentifier>{0bb8805a-e0ac-4e2a-ba93-99922996f501}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features">
+      <UniqueIdentifier>{2556fd58-e243-4945-8705-dbe0f7d01ec0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\edges">
+      <UniqueIdentifier>{1d6931d9-b341-4852-8ee4-10b1a484e8e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\fast">
+      <UniqueIdentifier>{052c9404-d7d6-40c5-9f42-fc3bf6ac1f14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\hough">
+      <UniqueIdentifier>{fe817f46-aae8-4989-8d01-31cd48095b11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\orb">
+      <UniqueIdentifier>{5592add5-3a14-4f19-b167-da163e57de66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\matchers">
+      <UniqueIdentifier>{c7ce739e-93e8-443f-89ef-d789df45ce5d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\core\compv_core.h">
@@ -18,10 +60,16 @@
     <ClInclude Include="..\include\compv\core\compv_core_config.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\compv_feature.h">
+      <Filter>include\features</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\compv_feature.cxx">
+      <Filter>source\features</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -43,9 +43,11 @@
     <ClInclude Include="..\include\compv\core\compv_core.h" />
     <ClInclude Include="..\include\compv\core\compv_core_common.h" />
     <ClInclude Include="..\include\compv\core\compv_core_config.h" />
+    <ClInclude Include="..\include\compv\core\features\compv_feature.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx" />
+    <ClCompile Include="..\features\compv_feature.cxx" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{bf9edb99-ba3a-4083-a6b5-d52067e235a4}</ProjectGuid>

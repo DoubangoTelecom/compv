@@ -25,7 +25,7 @@ public:
 
 	// Next functions are convenient implementation for the above two
 	COMPV_ERROR_CODE setInt(int id, int value) { return set(id, &value, sizeof(int)); }
-	COMPV_ERROR_CODE setFloat(int id, float value) { return set(id, &value, sizeof(float)); }
+	COMPV_ERROR_CODE setFloat32(int id, compv_float32_t value) { return set(id, &value, sizeof(compv_float32_t)); }
 };
 
 COMPV_NAMESPACE_END()

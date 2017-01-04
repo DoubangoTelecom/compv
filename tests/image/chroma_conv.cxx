@@ -70,9 +70,6 @@ COMPV_ERROR_CODE chroma_conv()
 	CompVMatPtr srcImage, dstImage;
 	const compv_test_image_chroma_conv_test* test = NULL;
 
-	CompVBoxInterestPointPtr box;
-	CompVBoxInterestPoint::newObj(&box);
-
 	COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_S_OK, "Just to avoid 'bail not referenced warning'");
 
 	// Find test
