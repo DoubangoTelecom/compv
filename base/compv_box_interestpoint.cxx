@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/core/compv_core_box_interestpoint.h"
+#include "compv/base/compv_box_interestpoint.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_debug.h"
 #include "compv/base/parallel/compv_parallel.h"
@@ -13,8 +13,6 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-template class CompVBox<CompVInterestPoint >;
-
 #define COMPV_QUICKSORT_MIN_SAMPLES_PER_THREAD 200*100
 
 static void sortByStrengthRange(CompVBoxInterestPoint* self, intptr_t left, intptr_t right);
@@ -22,6 +20,11 @@ static void scaleAndRoundAndGetAngleSinCos_C(COMPV_ALIGNED(x) const float* xf, C
 
 CompVBoxInterestPoint::CompVBoxInterestPoint(size_t nCapacity COMPV_DEFAULT(0), bool bLockable COMPV_DEFAULT(false))
 	: CompVBox<CompVInterestPoint >(nCapacity, bLockable)
+{
+
+}
+
+CompVBoxInterestPoint::~CompVBoxInterestPoint()
 {
 
 }

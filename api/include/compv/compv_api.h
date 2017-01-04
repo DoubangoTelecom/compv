@@ -11,6 +11,7 @@
 #include <compv/base/compv_base.h>
 #include <compv/base/compv_bind.h>
 #include <compv/base/compv_box.h>
+#include "compv/base/compv_box_interestpoint.h"
 #include <compv/base/compv_buffer.h>
 #include <compv/base/compv_cpu.h>
 #include <compv/base/compv_debug.h>
@@ -37,7 +38,6 @@
 
 /* Module: Core */
 #include <compv/core/compv_core.h>
-#include "compv/core/compv_core_box_interestpoint.h"
 
 /* Module: Camera */
 #include <compv/camera/compv_camera.h>

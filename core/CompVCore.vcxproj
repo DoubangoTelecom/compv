@@ -160,10 +160,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx" />
-    <ClCompile Include="compv_core_box_interestpoint.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\compv\core\compv_core_box_interestpoint.h" />
     <ClInclude Include="include\compv\core\compv_core.h" />
     <ClInclude Include="include\compv\core\compv_core_common.h" />
     <ClInclude Include="include\compv\core\compv_core_config.h" />

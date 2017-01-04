@@ -12,9 +12,6 @@
     <ClInclude Include="..\include\compv\core\compv_core.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\core\compv_core_box_interestpoint.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\core\compv_core_common.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -24,9 +21,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\compv_core_box_interestpoint.cxx">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

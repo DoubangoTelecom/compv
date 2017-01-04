@@ -4,16 +4,11 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_CORE_COMMON_H_)
-#define _COMPV_CORE_COMMON_H_
-
-#include "compv/core/compv_core_config.h"
-#include "compv/base/compv_common.h"
+#include "compv/base/compv_box.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-
+template class CompVBox<CompVInterestPoint >;
+template class CompVBox<CompVDMatch >;
 
 COMPV_NAMESPACE_END()
-
-#endif /* _COMPV_CORE_COMMON_H_ */

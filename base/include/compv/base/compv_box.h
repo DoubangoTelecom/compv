@@ -294,6 +294,11 @@ protected:
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
+typedef CompVBox<CompVDMatch > CompVBoxDMatch;
+typedef CompVPtr<CompVBoxDMatch *> CompVBoxDMatchPtr;
+typedef CompVBoxDMatchPtr* CompVBoxDMatchPtrPtr;
+
+COMPV_OBJECT_DECLARE_PTRS(BoxInterestPoint)
 
 COMPV_NAMESPACE_END()
 
