@@ -1,0 +1,7 @@
+=== RGB24 -> Grayscale (#1000 times, 720p) ===
+CompV: 169.ms (sta), 54.ms (mta)
+OpenCV: 341.ms
+
+=== FAST9_16, Nonmax (#1000 times, 720p) ===
+CompV: 16239.ms
+OpenCV: 1891.ms

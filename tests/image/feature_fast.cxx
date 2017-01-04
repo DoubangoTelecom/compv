@@ -10,77 +10,52 @@
 #define COMPV_TEST_PATH_TO_FILE(filename)		compv_tests_path_from_file(filename, COMPV_TEST_IMAGE_FOLDER)
 
 #define THRESHOLD			10
-#define NONMAXIMA			1
-#define FASTTYPE			COMPV_FAST_TYPE_12
-#define MAXFEATURES			-1
 
-#define JPEG_IMG_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
-#define JPEG_IMG_GRIOTS				"mandekalou_480x640_gray.yuv"
-#define JPEG_IMG_EQUIRECTANGULAR	"equirectangular_1282x720_gray.yuv"
+#define TEST_TYPE_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
+#define TEST_TYPE_GRIOTS				"mandekalou_480x640_gray.yuv"
+#define TEST_TYPE_EQUIRECTANGULAR		"equirectangular_1282x720_gray.yuv"
 
-#define TEST_TYPE_OPENGLBOOK			0
-#define TEST_TYPE_GRIOTS				1
-#define TEST_TYPE_EQUIRECTANGULAR		2
+// Reference implementation for FAST12, nonmax, #1000 times -> ellapsed: 6159 millis, CPU time: 6.427s
+// OpenCV time for FAST9, nonmax, #1000 times -> 1889 millis
 
-#define TEST_TYPE						TEST_TYPE_EQUIRECTANGULAR
+static const struct compv_unittest_feature_fast {
+	int threshold;
+	bool nonmax;
+	int fasdId;
+	int maxFeatures;
+	const char* filename;
+	size_t width;
+	size_t height;
+	size_t stride;
+	size_t corners;
+	compv_float32_t scores;
+	compv_float32_t xf;
+	compv_float32_t yf;
+}
+COMPV_UNITTESTS_FEATURE_FAST[] =
+{
+	{ 10, false, COMPV_FAST_TYPE_9, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 5540, 173438.f, 501490.f, 708067.f },
+	{ 10, true, COMPV_FAST_TYPE_9, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 1282, 52936.f, 117722.f, 160696.f },
+	{ 10, false, COMPV_FAST_TYPE_12, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 2930, 79671.f, 260098.f, 368964.f },
+	{ 10, true, COMPV_FAST_TYPE_12, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 978, 31952.f, 88469.f, 121621.f },
 
-#if TEST_TYPE == TEST_TYPE_OPENGLBOOK
-#	define JPEG_IMG						JPEG_IMG_OPENGLBOOK
-#	define FAST9_T10_CORNERS_COUNT		5540
-#	define FAST9_T10_CORNERS_SCORES		173438.000
-#	define FAST9_T10_XF					501490.000
-#	define FAST9_T10_YF					708067.000
-#	define FAST9_T10_NONMAX_COUNT		1282
-#	define FAST9_T10_NONMAX_SCORES		52936.0000
-#	define FAST9_T10_NONMAX_XF			117722.000
-#	define FAST9_T10_NONMAX_YF			160696.000
-#	define FAST12_T10_CORNERS_COUNT		2930
-#	define FAST12_T10_CORNERS_SCORES	79671.f
-#	define FAST12_T10_XF				260098.f
-#	define FAST12_T10_YF				368964.f
-#	define FAST12_T10_NONMAX_COUNT		978
-#	define FAST12_T10_NONMAX_SCORES		31952.f
-#	define FAST12_T10_NONMAX_XF			88469.f
-#	define FAST12_T10_NONMAX_YF			121621.f
-#elif TEST_TYPE == TEST_TYPE_GRIOTS
-#	define JPEG_IMG						JPEG_IMG_GRIOTS
-#	define FAST9_T10_CORNERS_COUNT		27208
-#	define FAST9_T10_CORNERS_SCORES		720203.f
-#	define FAST9_T10_XF					5722419.f
-#	define FAST9_T10_YF					9740405.f
-#	define FAST9_T10_NONMAX_COUNT		5405
-#	define FAST9_T10_NONMAX_SCORES		176389.f
-#	define FAST9_T10_NONMAX_XF			1166708.f
-#	define FAST9_T10_NONMAX_YF			1973623.f
-#	define FAST12_T10_CORNERS_COUNT		12113
-#	define FAST12_T10_CORNERS_SCORES	295977.f
-#	define FAST12_T10_XF				2646636.f
-#	define FAST12_T10_YF				4152440.f
-#	define FAST12_T10_NONMAX_COUNT		3425
-#	define FAST12_T10_NONMAX_SCORES		95590.0000
-#	define FAST12_T10_NONMAX_XF			750394.000
-#	define FAST12_T10_NONMAX_YF			1198537.00
-#elif TEST_TYPE == TEST_TYPE_EQUIRECTANGULAR
-#	define JPEG_IMG						JPEG_IMG_EQUIRECTANGULAR
-#	define FAST9_T10_CORNERS_COUNT		24105
-#	define FAST9_T10_CORNERS_SCORES		574969.f
-#	define FAST9_T10_XF					15148142.f
-#	define FAST9_T10_YF					9577924.f
-#	define FAST9_T10_NONMAX_COUNT		6598
-#	define FAST9_T10_NONMAX_SCORES		167156.f
-#	define FAST9_T10_NONMAX_XF			4326974.f
-#	define FAST9_T10_NONMAX_YF			2669475.f
-#	define FAST12_T10_CORNERS_COUNT		10812
-#	define FAST12_T10_CORNERS_SCORES	239835.f
-#	define FAST12_T10_XF				6885661.f
-#	define FAST12_T10_YF				4326231.f
-#	define FAST12_T10_NONMAX_COUNT		3920
-#	define FAST12_T10_NONMAX_SCORES		89172.f
-#	define FAST12_T10_NONMAX_XF			2584280.f
-#	define FAST12_T10_NONMAX_YF			1576105.f
-#endif
+	{ 10, false, COMPV_FAST_TYPE_9, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480, 27208, 720203.f, 5722419.f, 9740405.f },
+	{ 10, true, COMPV_FAST_TYPE_9, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480, 5405, 176389.f, 1166708.f, 1973623.f },
+	{ 10, false, COMPV_FAST_TYPE_12, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480, 12113, 295977.f, 2646636.f, 4152440.f },
+	{ 10, true, COMPV_FAST_TYPE_12, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480, 3425, 95590.f, 750394.f, 1198537.f },
 
-#define FAST_LOOP_COUNT	1
+	{ 10, false, COMPV_FAST_TYPE_9, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 24105, 574969.f, 15148142.f, 9577924.f },
+	{ 10, true, COMPV_FAST_TYPE_9, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 6598, 167156.f, 4326974.f, 2669475.f },
+	{ 10, false, COMPV_FAST_TYPE_12, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 10812, 239835.f, 6885661.f, 4326231.f },
+	{ 10, true, COMPV_FAST_TYPE_12, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 3920, 89172, 2584280.f, 1576105.f },
+};
+size_t COMPV_UNITTESTS_FEATURE_FAST_COUNT = sizeof(COMPV_UNITTESTS_FEATURE_FAST) / sizeof(COMPV_UNITTESTS_FEATURE_FAST[0]);
+
+#define LOOP_COUNT		1000
+#define TEST_TYPE		TEST_TYPE_EQUIRECTANGULAR
+#define NONMAXIMA		true
+#define FASTID			COMPV_FAST_TYPE_9
+#define MAXFEATURES		-1
 
 COMPV_ERROR_CODE feature_fast()
 {
@@ -88,60 +63,52 @@ COMPV_ERROR_CODE feature_fast()
 	CompVMatPtr image;
 	CompVBoxInterestPointPtr interestPoints;
 	uint64_t timeStart, timeEnd;
+	const compv_unittest_feature_fast* test = NULL;
+	float sum_scores;
+	float xf;
+	float yf;
 
-#if TEST_TYPE == TEST_TYPE_OPENGLBOOK
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 200, 258, 200, COMPV_TEST_PATH_TO_FILE(JPEG_IMG).c_str(), &image));
-#elif TEST_TYPE == TEST_TYPE_GRIOTS
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 480, 640, 480, COMPV_TEST_PATH_TO_FILE(JPEG_IMG).c_str(), &image));
-#elif TEST_TYPE == TEST_TYPE_EQUIRECTANGULAR
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1282, 720, 1282, COMPV_TEST_PATH_TO_FILE(JPEG_IMG).c_str(), &image));
-#else
-#error "Unexpected"
-#endif
+	for (size_t i = 0; i < COMPV_UNITTESTS_FEATURE_FAST_COUNT; ++i) {
+		test = &COMPV_UNITTESTS_FEATURE_FAST[i];
+		if (test->threshold == THRESHOLD && test->fasdId == FASTID && test->nonmax == NONMAXIMA && std::string(test->filename).compare(TEST_TYPE) == 0) {
+			break;
+		}
+		test = NULL;
+	}
+	COMPV_CHECK_EXP_RETURN(!test, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Failed to find test");
+
+	// Read file
+	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
 
 	// Create the FAST feature detector
-	COMPV_CHECK_CODE_RETURN(CompVCornerDete::newObj(&fast,COMPV_FAST_ID));
+	COMPV_CHECK_CODE_RETURN(CompVCornerDete::newObj(&fast, COMPV_FAST_ID));
 
 	// Set the default values
-	COMPV_CHECK_CODE_RETURN(fast->setInt(COMPV_FAST_SET_INT_THRESHOLD, THRESHOLD));
-	COMPV_CHECK_CODE_RETURN(fast->setInt(COMPV_FAST_SET_INT_FAST_TYPE, FASTTYPE));
-	COMPV_CHECK_CODE_RETURN(fast->setInt(COMPV_FAST_SET_INT_MAX_FEATURES, MAXFEATURES));
-	COMPV_CHECK_CODE_RETURN(fast->setBool(COMPV_FAST_SET_BOOL_NON_MAXIMA_SUPP, !!NONMAXIMA));
-
-	// Reference time for FAST12, nonmax, 1000 times -> ellapsed: 6159 millis, CPU time: 6.427s
+	COMPV_CHECK_CODE_RETURN(fast->setInt(COMPV_FAST_SET_INT_THRESHOLD, test->threshold));
+	COMPV_CHECK_CODE_RETURN(fast->setInt(COMPV_FAST_SET_INT_FAST_TYPE, test->fasdId));
+	COMPV_CHECK_CODE_RETURN(fast->setInt(COMPV_FAST_SET_INT_MAX_FEATURES, test->maxFeatures));
+	COMPV_CHECK_CODE_RETURN(fast->setBool(COMPV_FAST_SET_BOOL_NON_MAXIMA_SUPP, test->nonmax));
 
 	// Detect keypoints
 	timeStart = CompVTime::nowMillis();
-
-	COMPV_CHECK_CODE_RETURN(CompVBoxInterestPoint::newObj(&interestPoints)); // FIXME: remove
-	for (size_t i = 0; i < FAST_LOOP_COUNT; ++i) {
+	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(fast->process(image, &interestPoints));
 	}
-
 	timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO("Elapsed time (TestFAST) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-	// Regression test
-#if THRESHOLD == 10
-	float sum_scores = 0.f;
-	float xf = 0.f;
-	float yf = 0.f;
+	// Check result
+	sum_scores = 0.f;
+	xf = 0.f;
+	yf = 0.f;
 	for (size_t i = 0; i < interestPoints->size(); ++i) {
 		sum_scores += interestPoints->ptr(i)->strength;
 		xf += interestPoints->ptr(i)->x;
 		yf += interestPoints->ptr(i)->y;
 	}
-#	if NONMAXIMA == 1
-	COMPV_CHECK_EXP_RETURN(interestPoints->size() != ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_COUNT : FAST12_T10_NONMAX_COUNT), COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-	COMPV_CHECK_EXP_RETURN(sum_scores != ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_SCORES : FAST12_T10_NONMAX_SCORES), COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-	COMPV_CHECK_EXP_RETURN(xf != ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_XF : FAST12_T10_NONMAX_XF), COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-	COMPV_CHECK_EXP_RETURN(yf != ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_NONMAX_YF : FAST12_T10_NONMAX_YF), COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-#	else
-	COMPV_CHECK_EXP_RETURN(interestPoints->size() != ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_CORNERS_COUNT : FAST12_T10_CORNERS_COUNT), COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-	COMPV_CHECK_EXP_RETURN(sum_scores != ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_CORNERS_SCORES : FAST12_T10_CORNERS_SCORES), COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-	COMPV_CHECK_EXP_RETURN(xf != ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_XF : FAST12_T10_XF), COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-	COMPV_CHECK_EXP_RETURN(yf != ((FASTTYPE == COMPV_FAST_TYPE_9) ? FAST9_T10_YF : FAST12_T10_YF), COMPV_ERROR_CODE_E_UNITTEST_FAILED);
-#	endif
-#endif
+	COMPV_CHECK_EXP_RETURN(sum_scores != test->scores, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Sum of scores mismatch");
+	COMPV_CHECK_EXP_RETURN(xf != test->xf, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Sum of xf mismatch");
+	COMPV_CHECK_EXP_RETURN(yf != test->yf, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Sum of yf mismatch");
+	
 	return COMPV_ERROR_CODE_S_OK;
 }

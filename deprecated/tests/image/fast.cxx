@@ -7,7 +7,7 @@ using namespace compv;
 
 #define THRESHOLD			10
 #define NONMAXIMA			1
-#define FASTTYPE			COMPV_FAST_TYPE_12
+#define FASTTYPE			COMPV_FAST_TYPE_9
 #define MAXFEATURES			-1
 
 #define JPEG_IMG_OPENGLBOOK	"C:/Projects/GitHub/data/test_images/opengl_programming_guide_8th_edition_200x258_gray.yuv" // OpenGL book

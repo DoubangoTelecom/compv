@@ -5,7 +5,7 @@ using namespace compv;
 #define TAG_UNITTESTS "UnitTests"
 
 #define UNITTEST_FEATURE_FAST	1
-#define UNITTEST_CHROMA_CONV	1
+#define UNITTEST_CHROMA_CONV	0
 
 #define kAsmTrue true
 #define kAsmFalse false
@@ -80,11 +80,11 @@ compv_main()
 				COMPV_CHECK_CODE_BAIL(err = CompVParallel::multiThreadingSetMaxThreads(COMPV_NUM_THREADS_SINGLE));
 			}
 			
-#if UNITTEST_FEATURE_FAST
+#if UNITTEST_FEATURE_FAST || !defined(COMPV_TEST_LOCAL)
 			extern COMPV_ERROR_CODE unittest_feature_fast();
 			COMPV_CHECK_CODE_BAIL(err = unittest_feature_fast(), "FAST detection unittest failed");
 #endif
-#if UNITTEST_CHROMA_CONV
+#if UNITTEST_CHROMA_CONV || !defined(COMPV_TEST_LOCAL)
 			extern COMPV_ERROR_CODE unittest_chroma_conv();
 			COMPV_CHECK_CODE_BAIL(err = unittest_chroma_conv(), "Chroma conversion unittest failed");
 #endif

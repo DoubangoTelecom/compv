@@ -478,7 +478,7 @@ static void FastStrengths1_C(COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x
 static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths1, compv_scalar_t* me)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
-    int32_t sum, s;
+    int32_t sumb, sumd, sb, sd;
     int16_t temp0, temp1, ddarkers16x1[16], dbrighters16x1[16], threshold_ = static_cast<int16_t>(threshold); // using int16_t to avoid clipping
     uint8_t ddarkers16[16], dbrighters16[16];
     compv_scalar_t fbrighters1, fdarkers1;
@@ -507,8 +507,9 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 			ddarkers16x1[8] = (darker - temp1);
 			dbrighters16x1[0] = (temp0 - brighter);
 			dbrighters16x1[8] = (temp1 - brighter);
-			sum = ((dbrighters16x1[0] > 0 || ddarkers16x1[0] > 0) ? 1 : 0) + ((dbrighters16x1[8] > 0 || ddarkers16x1[8] > 0) ? 1 : 0);
-			if (!sum) {
+			sumb = (dbrighters16x1[0] > 0) + (dbrighters16x1[8] > 0);
+			sumd = (ddarkers16x1[0] > 0) + (ddarkers16x1[8] > 0);
+			if (!sumb && !sumd) {
 				continue;
 			}
 			// compare I5 and I13 aka 4 and 12
@@ -518,12 +519,14 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 			ddarkers16x1[12] = (darker - temp1); // I13-darkness
 			dbrighters16x1[4] = (temp0 - brighter); // I5-brightness
 			dbrighters16x1[12] = (temp1 - brighter); // I13-brightness
-			s = ((dbrighters16x1[4] > 0 || ddarkers16x1[4] > 0) ? 1 : 0) + ((dbrighters16x1[12] > 0 || ddarkers16x1[12] > 0) ? 1 : 0);
-			if (!s) {
+			sb = (dbrighters16x1[4] > 0) + (dbrighters16x1[12] > 0);
+			sd = (ddarkers16x1[4] > 0) + (ddarkers16x1[12] > 0);
+			if (!sb && !sd) {
 				continue;
 			}
-			sum += s;
-			if (sum < minsum) {
+			sumb += sb;
+			sumd += sd;
+			if (sumb < minsum && sumd < sd) {
 				continue;
 			}
 		}
@@ -537,10 +540,12 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 			dbrighters16x1[1] = (temp0 - brighter);
 			ddarkers16x1[9] = (darker - temp1);
 			dbrighters16x1[9] = (temp1 - brighter);
-			sum = ((dbrighters16x1[1] > 0 || ddarkers16x1[1] > 0) ? 1 : 0) + ((dbrighters16x1[9] > 0 || ddarkers16x1[9] > 0) ? 1 : 0);
-			if (!sum) {
+			sumb = (dbrighters16x1[1] > 0) + (dbrighters16x1[9] > 0);
+			sumd = (ddarkers16x1[1] > 0) + (ddarkers16x1[9] > 0);
+			if (!sumb && !sumd) {
 				continue;
 			}
+
 			// I6 and I14 aka 5 and 13
 			temp0 = IP[pixels16[5]];
 			temp1 = IP[pixels16[13]];
@@ -548,12 +553,14 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 			dbrighters16x1[5] = (temp0 - brighter);
 			ddarkers16x1[13] = (darker - temp1);
 			dbrighters16x1[13] = (temp1 - brighter);
-			s = ((dbrighters16x1[5] > 0 || ddarkers16x1[5] > 0) ? 1 : 0) + ((dbrighters16x1[13] > 0 || ddarkers16x1[13] > 0) ? 1 : 0);
-			if (!s) {
+			sb = (dbrighters16x1[5] > 0) + (dbrighters16x1[13] > 0);
+			sd = (ddarkers16x1[5] > 0) + (ddarkers16x1[13] > 0);
+			if (!sb && !sd) {
 				continue;
 			}
-			sum += s;
-			if (sum < minsum) {
+			sumb += sb;
+			sumd += sd;
+			if (sumb < minsum && sumd < sd) {
 				continue;
 			}
 		}
@@ -567,8 +574,9 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 			dbrighters16x1[2] = (temp0 - brighter);
 			ddarkers16x1[10] = (darker - temp1);
 			dbrighters16x1[10] = (temp1 - brighter);
-			sum = ((dbrighters16x1[2] > 0 || ddarkers16x1[2] > 0) ? 1 : 0) + ((dbrighters16x1[10] > 0 || ddarkers16x1[10] > 0) ? 1 : 0);
-			if (!sum) {
+			sumb = (dbrighters16x1[2] > 0) + (dbrighters16x1[10] > 0);
+			sumd = (ddarkers16x1[2] > 0) + (ddarkers16x1[10] > 0);
+			if (!sumb && !sumd) {
 				continue;
 			}
 			// I7 and I15 aka 6 and 14
@@ -578,12 +586,14 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 			dbrighters16x1[6] = (temp0 - brighter);
 			ddarkers16x1[14] = (darker - temp1);
 			dbrighters16x1[14] = (temp1 - brighter);
-			s = ((dbrighters16x1[6] > 0 || ddarkers16x1[6] > 0) ? 1 : 0) + ((dbrighters16x1[14] > 0 || ddarkers16x1[14] > 0) ? 1 : 0);
-			if (!s) {
+			sb = (dbrighters16x1[6] > 0) + (dbrighters16x1[14] > 0);
+			sd = (ddarkers16x1[6] > 0) + (ddarkers16x1[14] > 0);
+			if (!sb && !sd) {
 				continue;
 			}
-			sum += s;
-			if (sum < minsum) {
+			sumb += sb;
+			sumd += sd;
+			if (sumb < minsum && sumd < sd) {
 				continue;
 			}
 		}
@@ -597,8 +607,9 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 			dbrighters16x1[3] = (temp0 - brighter);
 			ddarkers16x1[11] = (darker - temp1);
 			dbrighters16x1[11] = (temp1 - brighter);
-			sum = ((dbrighters16x1[3] > 0 || ddarkers16x1[3] > 0) ? 1 : 0) + ((dbrighters16x1[11] > 0 || ddarkers16x1[11] > 0) ? 1 : 0);
-			if (!sum) {
+			sumb = (dbrighters16x1[3] > 0) + (dbrighters16x1[11] > 0);
+			sumd = (ddarkers16x1[3] > 0) + (ddarkers16x1[11] > 0);
+			if (!sumb && !sumd) {
 				continue;
 			}
 			// I8 and I16 aka 7 and 15
@@ -608,12 +619,14 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 			dbrighters16x1[7] = (temp0 - brighter);
 			ddarkers16x1[15] = (darker - temp1);
 			dbrighters16x1[15] = (temp1 - brighter);
-			s = ((dbrighters16x1[7] > 0 || ddarkers16x1[7] > 0) ? 1 : 0) + ((dbrighters16x1[15] > 0 || ddarkers16x1[15] > 0) ? 1 : 0);
-			if (!s) {
+			sb = (dbrighters16x1[7] > 0) + (dbrighters16x1[15] > 0);
+			sd = (ddarkers16x1[7] > 0) + (ddarkers16x1[15] > 0);
+			if (!sb && !sd) {
 				continue;
 			}
-			sum += s;
-			if (sum < minsum) {
+			sumb += sb;
+			sumd += sd;
+			if (sumb < minsum && sumd < sd) {
 				continue;
 			}
 		}
