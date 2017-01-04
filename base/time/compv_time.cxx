@@ -100,15 +100,15 @@ COMPV_NAMESPACE_BEGIN()
 * @param tz The timezone.
 * @retval The function shall return 0 and no value shall be reserved to indicate an error.
 */
-int CompVTime::getTimeOfDay(struct timeval *tv, struct timezone *tz)
+int CompVTime::timeOfDay(struct timeval *tv, struct timezone *tz)
 {
     return gettimeofday(tv, tz);
 }
 
-uint64_t CompVTime::getTimeOfDayMillis()
+uint64_t CompVTime::timeOfDayMillis()
 {
     struct timeval tv;
-    CompVTime::getTimeOfDay(&tv, NULL);
+    CompVTime::timeOfDay(&tv, NULL);
     return (((uint64_t)tv.tv_sec)*(uint64_t)1000) + (((uint64_t)tv.tv_usec) / (uint64_t)1000);
 }
 
@@ -116,7 +116,7 @@ uint64_t CompVTime::getTimeOfDayMillis()
 * Gets the number of milliseconds in @a tv
 * @retval The number of milliseconds
 */
-uint64_t CompVTime::getMillis(const struct timeval *tv)
+uint64_t CompVTime::millis(const struct timeval *tv)
 {
     if (!tv) {
         COMPV_DEBUG_ERROR("Invalid parameter");
@@ -129,7 +129,7 @@ uint64_t CompVTime::getMillis(const struct timeval *tv)
 * Gets the number of milliseconds since the EPOCH.
 * @retval The number of milliseconds since EPOCH.
 */
-uint64_t CompVTime::getEpochMillis()
+uint64_t CompVTime::epochMillis()
 {
     struct timeval tv;
     gettimeofday(&tv, (struct timezone *)NULL);
@@ -138,7 +138,7 @@ uint64_t CompVTime::getEpochMillis()
 
 // /!\ NOT CURRENT TIME
 // only make sense when comparing two values (e.g. for duration)
-uint64_t CompVTime::getNowMills()
+uint64_t CompVTime::nowMillis()
 {
 #if COMPV_OS_WINDOWS
     static int __cpu_count = 0;
@@ -162,7 +162,7 @@ uint64_t CompVTime::getNowMills()
     }
     else {
 #	if COMPV_OS_WINDOWS_RT
-        return getEpochMillis();
+        return epochMillis();
 #	else
         return timeGetTime();
 #	endif
@@ -185,14 +185,14 @@ uint64_t CompVTime::getNowMills()
 }
 
 // http://en.wikipedia.org/wiki/Network_Time_Protocol
-uint64_t CompVTime::getNtpMillis()
+uint64_t CompVTime::ntpMillis()
 {
     struct timeval tv;
     gettimeofday(&tv, (struct timezone *)NULL);
-    return getNtpMillis(&tv);
+    return ntpMillis(&tv);
 }
 
-uint64_t CompVTime::getNtpMillis(const struct timeval *tv)
+uint64_t CompVTime::ntpMillis(const struct timeval *tv)
 {
     static const unsigned long __epoch = 2208988800UL;
     static const double __ntp_scale_frac = 4294967295.0;

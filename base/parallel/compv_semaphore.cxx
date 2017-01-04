@@ -74,7 +74,7 @@ CompVSemaphore::CompVSemaphore(int initialVal /*= 0*/)
 #if COMPV_USE_NAMED_SEM
     static long nsemi = 0;
     named_sem_t * nsem = (named_sem_t*)m_pHandle;
-    snprintf(nsem->name, (sizeof(nsem->name) / sizeof(nsem->name[0])) - 1, "/sem/%llu/%ld.", CompVTime::getEpochMillis(), compv_atomic_inc(&nsemi));
+    snprintf(nsem->name, (sizeof(nsem->name) / sizeof(nsem->name[0])) - 1, "/sem/%llu/%ld.", CompVTime::epochMillis(), compv_atomic_inc(&nsemi));
     if ((nsem->sem = sem_open(nsem->name, O_CREAT /*| O_EXCL*/, S_IRUSR | S_IWUSR, initialVal)) == SEM_FAILED) {
 #else
     if (sem_init((SEMAPHORE_T)m_pHandle, 0, initialVal)) {

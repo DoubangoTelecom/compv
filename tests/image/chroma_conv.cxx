@@ -88,11 +88,11 @@ COMPV_ERROR_CODE chroma_conv()
 	COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(test->srcPixelFormat, test->width, test->height, test->stride, COMPV_TEST_IMAGE_CHROMA_CONV_PATH_TO_FILE(test->srcFilename).c_str(), &srcImage));
 
 	// Perform test
-	timeStart = CompVTime::getNowMills();
+	timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < COMPV_loopCount; ++i) {
 		COMPV_CHECK_CODE_BAIL(err = CompVImage::convert(srcImage, test->dstPixelFormat, &dstImage));
 	}
-	timeEnd = CompVTime::getNowMills();
+	timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE_CHROMA_CONV, "Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
 #if COMPV_TEST_WRITE_OUTPUT

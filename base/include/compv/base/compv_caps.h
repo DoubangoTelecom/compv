@@ -24,6 +24,7 @@ public:
 	virtual COMPV_ERROR_CODE get(int id, const void*& valuePtr, size_t valueSize);
 
 	// Next functions are convenient implementation for the above two
+	COMPV_ERROR_CODE setBool(int id, bool value) { return set(id, &value, sizeof(bool)); }
 	COMPV_ERROR_CODE setInt(int id, int value) { return set(id, &value, sizeof(int)); }
 	COMPV_ERROR_CODE setFloat32(int id, compv_float32_t value) { return set(id, &value, sizeof(compv_float32_t)); }
 };

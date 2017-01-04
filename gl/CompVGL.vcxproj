@@ -134,6 +134,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -151,6 +152,7 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -170,6 +172,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -191,6 +194,7 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;GLEW_STATIC;HAVE_GL_GLEW_H;COMPV_GL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

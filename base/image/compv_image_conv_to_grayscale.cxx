@@ -124,7 +124,7 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::yuv422family(const CompVMatPtr& imag
 	}
 	size_t threadsCount;
 	CompVAsyncTaskIds taskIds;
-	CompVThreadDispatcherPtr threadDisp = CompVParallel::getThreadDispatcher();
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
 	const size_t width = imageYUV422family->cols();
 	const size_t height = imageYUV422family->rows();
@@ -209,7 +209,7 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::rgbfamily(const CompVMatPtr& imageRG
 	uint8_t *yPtr;
 	size_t threadsCount;
 	CompVAsyncTaskIds taskIds;
-	CompVThreadDispatcherPtr threadDisp = CompVParallel::getThreadDispatcher();
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
 	COMPV_ERROR_CODE err;
 

@@ -77,7 +77,7 @@ COMPV_ERROR_CODE CompVBoxInterestPoint::newObj(CompVBoxInterestPointPtrPtr box, 
 
 static void sortByStrengthRange(CompVBoxInterestPoint* self, intptr_t left, intptr_t right)
 {
-	CompVThreadDispatcherPtr threadDisp = CompVParallel::getThreadDispatcher();
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	size_t threadsCount = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
 	CompVAsyncTaskIds taskIds;
 	const CompVInterestPoint pivot = *self->ptr((left + right) >> 1);

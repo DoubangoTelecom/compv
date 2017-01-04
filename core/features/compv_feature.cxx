@@ -5,6 +5,7 @@
 * WebSite: http://compv.org
 */
 #include "compv/core/features/compv_feature.h"
+#include "compv/core/features/fast/compv_feature_fast_dete.h"
 #include "compv/core/compv_core.h"
 
 #define COMPV_THIS_CLASSNAME "CompVFeature"
@@ -14,14 +15,14 @@ COMPV_NAMESPACE_BEGIN()
 std::map<int, const CompVFeatureFactory*> CompVFeature::s_Factories;
 
 // Declare built-in factories
-//static const CompVFeatureFactory fastFactory = {
-//	COMPV_FAST_ID,
-//	"FAST (Features from Accelerated Segment Test)",
-//	CompVCornerDeteFAST::newObj,
-//	NULL,
-//	NULL,
-//	NULL,
-//};
+static const CompVFeatureFactory fastFactory = {
+	COMPV_FAST_ID,
+	"FAST (Features from Accelerated Segment Test)",
+	CompVCornerDeteFAST::newObj,
+	NULL,
+	NULL,
+	NULL,
+};
 //static const CompVFeatureFactory orbFactory = {
 //	COMPV_ORB_ID,
 //	"ORB (Oriented FAST and Rotated BRIEF)",
@@ -98,8 +99,8 @@ COMPV_ERROR_CODE CompVFeature::init()
 
 	/* Register built-in factories */
 
-	//// FAST (Features from Accelerated Segment Test)
-	//COMPV_CHECK_CODE_RETURN(addFactory(&fastFactory));
+	// FAST (Features from Accelerated Segment Test)
+	COMPV_CHECK_CODE_RETURN(addFactory(&fastFactory));
 	//// ORB(ORiented BRIEF)
 	//COMPV_CHECK_CODE_RETURN(addFactory(&orbFactory));
 	//// Canny edge detector

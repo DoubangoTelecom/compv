@@ -121,7 +121,7 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
 #endif
 
     // rand()
-    srand((unsigned int)CompVTime::getNowMills());
+    srand((unsigned int)CompVTime::nowMillis());
 
     /* Make sure heap debugging is disabled (release mode only) */
 #if COMPV_OS_WINDOWS && defined(_MSC_VER) && defined(NDEBUG)

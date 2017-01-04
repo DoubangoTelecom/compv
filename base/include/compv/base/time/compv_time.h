@@ -23,13 +23,13 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_BASE_API CompVTime : public CompVObj
 {
 public:
-    static int getTimeOfDay(struct timeval *tv, struct timezone *tz);
-    static uint64_t getTimeOfDayMillis();
-    static uint64_t getMillis(const struct timeval *tv);
-    static uint64_t getEpochMillis();
-    static uint64_t getNowMills();
-    static uint64_t getNtpMillis();
-    static uint64_t getNtpMillis(const struct timeval *tv);
+    static int timeOfDay(struct timeval *tv, struct timezone *tz);
+    static uint64_t timeOfDayMillis();
+    static uint64_t millis(const struct timeval *tv);
+    static uint64_t epochMillis();
+    static uint64_t nowMillis();
+    static uint64_t ntpMillis();
+    static uint64_t ntpMillis(const struct timeval *tv);
 };
 
 COMPV_NAMESPACE_END()

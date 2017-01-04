@@ -141,13 +141,13 @@ COMPV_ERROR_CODE CompVAsyncTask11::waitAll(uint64_t u_timeout /* = 86400000 -> 1
     COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // Deadlock when mt functions are chained
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // We check all tokens
     COMPV_CHECK_EXP_RETURN(!m_bStarted, COMPV_ERROR_CODE_E_INVALID_STATE);
-    uint64_t u_end = (CompVTime::getNowMills() + u_timeout);
+    uint64_t u_end = (CompVTime::nowMillis() + u_timeout);
     bool empty;
     do {
         empty = true;
         for (int i = 0; i < COMPV_ASYNCTASK11_MAX_TOKEN_COUNT; ++i) {
             const CompVAsyncToken* token = &m_Tokens[i];
-            if (token->bExecute && u_end > CompVTime::getNowMills()) {
+            if (token->bExecute && u_end > CompVTime::nowMillis()) {
                 m_SemExec->decrement();
                 empty &= !token->bExecute;
             }
@@ -161,8 +161,8 @@ COMPV_ERROR_CODE CompVAsyncTask11::waitOne(uint64_t tokenId, uint64_t u_timeout 
 {
     COMPV_CHECK_EXP_RETURN(!m_bStarted || tokenId >= COMPV_ASYNCTASK11_MAX_TOKEN_COUNT, COMPV_ERROR_CODE_E_INVALID_STATE);
     CompVAsyncToken* token = &m_Tokens[tokenId];
-    uint64_t u_end = (CompVTime::getNowMills() + u_timeout);
-    while (token->bExecute && u_end > CompVTime::getNowMills()) {
+    uint64_t u_end = (CompVTime::nowMillis() + u_timeout);
+    while (token->bExecute && u_end > CompVTime::nowMillis()) {
         m_SemExec->decrement();
     }
     if (token->bExecute) {

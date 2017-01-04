@@ -23,7 +23,7 @@ public:
     virtual ~CompVParallel();
     static COMPV_ERROR_CODE init(int32_t numThreads = -1);
     static COMPV_ERROR_CODE deInit();
-    static COMPV_INLINE CompVThreadDispatcherPtr getThreadDispatcher() {
+    static COMPV_INLINE CompVThreadDispatcherPtr threadDispatcher() {
         return CompVParallel::s_ThreadDisp;
     }
     static COMPV_ERROR_CODE multiThreadingEnable(CompVThreadDispatcherPtr dispatcher);

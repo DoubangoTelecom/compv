@@ -11,7 +11,7 @@ using namespace compv;
 #define enableMathFixedPoint	true
 #define enableTestingMode		true
 
-#define cpuDisable				kCpuFlagNone
+#define cpuDisable				kCpuFlagAll
 
 #define TEST_CONV				0
 #define TEST_FAST				1

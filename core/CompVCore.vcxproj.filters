@@ -59,6 +59,9 @@
     <ClCompile Include="features\compv_feature.cxx">
       <Filter>Source Files\features</Filter>
     </ClCompile>
+    <ClCompile Include="features\fast\compv_feature_fast_dete.cxx">
+      <Filter>Source Files\features\fast</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -72,6 +75,15 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\features\compv_feature.h">
       <Filter>Header Files\features</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\fast\compv_feature_fast_dete.h">
+      <Filter>Header Files\features\fast</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\fast\compv_feature_fast9_dete.h">
+      <Filter>Header Files\features\fast</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\fast\compv_feature_fast12_dete.h">
+      <Filter>Header Files\features\fast</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

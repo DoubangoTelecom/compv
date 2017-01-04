@@ -51,25 +51,25 @@ CompVCanvasImplSkia::~CompVCanvasImplSkia()
 // http://stackoverflow.com/questions/12157646/how-to-render-offscreen-on-opengl
 // https://developer.apple.com/library/content/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_offscreen/opengl_offscreen.html
 
-static SkPath create_star()
-{
-    static const int kNumPoints = 5;
-    SkPath concavePath;
-    SkPoint points[kNumPoints] = { { 0, SkIntToScalar(-50) } };
-    SkMatrix rot;
-    rot.setRotate(SkIntToScalar(360) / kNumPoints);
-    for (int i = 1; i < kNumPoints; ++i) {
-        rot.mapPoints(points + i, points + i - 1, 1);
-    }
-    concavePath.moveTo(points[0]);
-    for (int i = 0; i < kNumPoints; ++i) {
-        concavePath.lineTo(points[(2 * i) % kNumPoints]);
-    }
-    concavePath.setFillType(SkPath::kEvenOdd_FillType);
-    SkASSERT(!concavePath.isConvex());
-    concavePath.close();
-    return concavePath;
-}
+//static SkPath create_star()
+//{
+//    static const int kNumPoints = 5;
+//    SkPath concavePath;
+//    SkPoint points[kNumPoints] = { { 0, SkIntToScalar(-50) } };
+//    SkMatrix rot;
+//    rot.setRotate(SkIntToScalar(360) / kNumPoints);
+//    for (int i = 1; i < kNumPoints; ++i) {
+//        rot.mapPoints(points + i, points + i - 1, 1);
+//    }
+//    concavePath.moveTo(points[0]);
+//    for (int i = 0; i < kNumPoints; ++i) {
+//        concavePath.lineTo(points[(2 * i) % kNumPoints]);
+//    }
+//    concavePath.setFillType(SkPath::kEvenOdd_FillType);
+//    SkASSERT(!concavePath.isConvex());
+//    concavePath.close();
+//    return concavePath;
+//}
 
 COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textLengthInBytes, int x, int y)
 {

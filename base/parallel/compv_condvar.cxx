@@ -219,7 +219,7 @@ COMPV_ERROR_CODE CompVCondvar::waitWithTimeout(uint64_t millis)
     if (condwait && condwait->mutex) {
         struct timespec   ts = { 0, 0 };
         struct timeval    tv = { 0, 0 };
-        /*int rc =*/  CompVTime::getTimeOfDay(&tv, 0);
+        /*int rc =*/  CompVTime::timeOfDay(&tv, 0);
 
         ts.tv_sec = (tv.tv_sec + ((long)millis / 1000));
         ts.tv_nsec += ((tv.tv_usec * 1000) + ((long)millis % 1000 * 1000000));

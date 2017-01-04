@@ -39,6 +39,8 @@
 /* Module: Core */
 #include <compv/core/compv_core.h>
 
+#include "compv/core/features/compv_feature.h"
+
 /* Module: Camera */
 #include <compv/camera/compv_camera.h>
 

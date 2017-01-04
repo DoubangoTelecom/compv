@@ -103,7 +103,7 @@ COMPV_ERROR_CODE CompVImageConvToYUV444P::rgbfamily(const CompVMatPtr& imageRGBf
 	uint8_t *yPtr, *uPtr, *vPtr;
 	size_t threadsCount;
 	CompVAsyncTaskIds taskIds;
-	CompVThreadDispatcherPtr threadDisp = CompVParallel::getThreadDispatcher();
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
 	COMPV_ERROR_CODE err;
 
