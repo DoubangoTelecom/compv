@@ -4,10 +4,11 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_BASE_BOX_INTERESTPOINT_H_)
-#define _COMPV_BASE_BOX_INTERESTPOINT_H_
+#if !defined(_COMPV_CORE_BOX_INTERESTPOINT_H_)
+#define _COMPV_CORE_BOX_INTERESTPOINT_H_
 
-#include "compv/base/compv_config.h"
+#include "compv/core/compv_core_config.h"
+#include "compv/core/compv_core_common.h"
 #include "compv/base/compv_box.h"
 #include "compv/base/compv_debug.h"
 
@@ -15,7 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 
 COMPV_OBJECT_DECLARE_PTRS(BoxInterestPoint)
 
-class COMPV_BASE_API CompVBoxInterestPoint : public CompVBox<CompVInterestPoint >
+class COMPV_CORE_API CompVBoxInterestPoint : public CompVBox<CompVInterestPoint >
 {
 protected:
 	CompVBoxInterestPoint(size_t nCapacity = 0, bool bLockable = false);
@@ -32,4 +33,4 @@ void CompVInterestPointScaleAndRoundAndGetAngleSinCos(COMPV_ALIGNED(x) const flo
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_BASE_BOX_INTERESTPOINT_H_ */
+#endif /* _COMPV_CORE_BOX_INTERESTPOINT_H_ */

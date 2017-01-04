@@ -40,7 +40,7 @@ COMPV_ERROR_CODE CompVParallel::init(int32_t numThreads /*= -1*/)
 
     COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_S_OK, "To avoid 'bail unreference' warning");
 
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Initializing parallel module...");
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Initializing [parallel] module...");
 
 bail:
     s_bInitialized = COMPV_ERROR_CODE_IS_OK(err_);
@@ -59,7 +59,7 @@ bail:
             COMPV_CHECK_CODE_BAIL(err_ = CompVThreadDispatcher::newObj(&s_ThreadDisp, numThreads), "Failed to create thread dispatcher");
         }
     }
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Parallel module initialized");
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "[Parallel] module initialized");
     return err_;
 }
 

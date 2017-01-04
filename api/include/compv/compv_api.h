@@ -35,6 +35,10 @@
 
 #include <compv/base/time/compv_time.h>
 
+/* Module: Core */
+#include <compv/core/compv_core.h>
+#include "compv/core/compv_core_box_interestpoint.h"
+
 /* Module: Camera */
 #include <compv/camera/compv_camera.h>
 
@@ -71,6 +75,7 @@ COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
 static COMPV_ERROR_CODE CompVInit(int32_t numThreads = -1)
 {
     COMPV_CHECK_CODE_RETURN(CompVBase::init(numThreads));
+	COMPV_CHECK_CODE_RETURN(CompVCore::init());
     COMPV_CHECK_CODE_RETURN(CompVGL::init());
     COMPV_CHECK_CODE_RETURN(CompVCamera::init());
     COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
@@ -83,6 +88,7 @@ static COMPV_ERROR_CODE CompVDeInit()
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::deInit());
 	COMPV_CHECK_CODE_RETURN(CompVCamera::deInit());
 	COMPV_CHECK_CODE_ASSERT(CompVGL::deInit());
+	COMPV_CHECK_CODE_RETURN(CompVCore::deInit());
     COMPV_CHECK_CODE_ASSERT(CompVBase::deInit()); 
     return COMPV_ERROR_CODE_S_OK;
 }

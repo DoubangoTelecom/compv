@@ -85,7 +85,7 @@ COMPV_ERROR_CODE CompVCamera::deInit()
 COMPV_ERROR_CODE CompVCamera::newObj(CompVCameraPtrPtr camera)
 {
     COMPV_CHECK_EXP_RETURN(!camera, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    COMPV_CHECK_CODE_RETURN(init());
+    COMPV_CHECK_CODE_RETURN(CompVCamera::init());
     CompVCameraPtr camera_;
 
     // Create camera using the factory (dynamic plugins)

@@ -307,7 +307,7 @@ bail:
         CompVParallel::deInit();
     }
 
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Base modules initialized");
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "[Base] modules initialized");
     return err_;
 }
 

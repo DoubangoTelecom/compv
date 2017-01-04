@@ -315,9 +315,6 @@
     <ClInclude Include="include\compv\base\compv_box.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\base\compv_box_interestpoint.h">
-      <Filter>include</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -507,9 +504,6 @@
       <Filter>source\image\intrin\x86</Filter>
     </ClCompile>
     <ClCompile Include="compv_box.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="compv_box_interestpoint.cxx">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

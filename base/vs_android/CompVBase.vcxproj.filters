@@ -321,9 +321,6 @@
     <ClInclude Include="..\include\compv\base\compv_box.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\base\compv_box_interestpoint.h">
-      <Filter>include</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -509,12 +506,6 @@
     <ClCompile Include="..\image\intrin\arm\compv_image_conv_grayscale_intrin_neon.cxx">
       <Filter>source\image\intrin\arm</Filter>
     </ClCompile>
-    <ClCompile Include="..\compv_box.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\compv_box_interestpoint.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\asm\x86\compv_bits_macros_x86.s">
@@ -574,9 +565,6 @@
     <None Include="..\image\asm\x86\compv_image_conv_rgbfamily_x86_sse.s">
       <Filter>source\image\asm\x86</Filter>
     </None>
-    <None Include="..\image\asm\arm\compv_image_conv_grayscale_arm32_neon.S">
-      <Filter>source\image\asm\arm</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <GAS Include="..\image\asm\arm\compv_image_conv_rgbfamily_arm32_neon.S">
@@ -587,6 +575,9 @@
     </GAS>
     <GAS Include="..\asm\arm\compv_common_arm.S">
       <Filter>source\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\image\asm\arm\compv_image_conv_grayscale_arm32_neon.S">
+      <Filter>source\image\asm\arm</Filter>
     </GAS>
   </ItemGroup>
 </Project>
