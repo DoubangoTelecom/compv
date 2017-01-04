@@ -108,11 +108,16 @@ COMPV_ERROR_CODE feature_fast()
 	COMPV_CHECK_CODE_RETURN(fast->setInt(COMPV_FAST_SET_INT_MAX_FEATURES, MAXFEATURES));
 	COMPV_CHECK_CODE_RETURN(fast->setBool(COMPV_FAST_SET_BOOL_NON_MAXIMA_SUPP, !!NONMAXIMA));
 
+	// Reference time for FAST12, nonmax, 1000 times -> ellapsed: 6159 millis, CPU time: 6.427s
+
 	// Detect keypoints
 	timeStart = CompVTime::nowMillis();
+
+	COMPV_CHECK_CODE_RETURN(CompVBoxInterestPoint::newObj(&interestPoints)); // FIXME: remove
 	for (size_t i = 0; i < FAST_LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(fast->process(image, &interestPoints));
 	}
+
 	timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO("Elapsed time (TestFAST) = [[[ %llu millis ]]]", (timeEnd - timeStart));
 

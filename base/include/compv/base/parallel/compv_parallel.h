@@ -28,7 +28,7 @@ public:
     }
     static COMPV_ERROR_CODE multiThreadingEnable(CompVThreadDispatcherPtr dispatcher);
     static COMPV_ERROR_CODE multiThreadingDisable();
-    static COMPV_ERROR_CODE multiThreadingSetMaxThreads(size_t maxThreads);
+    static COMPV_ERROR_CODE multiThreadingSetMaxThreads(int32_t maxThreads = -1);
 	static COMPV_ERROR_CODE setIntelTbbEnabled(bool enabled);
     static bool isMultiThreadingEnabled();
 	static bool isIntelTbbEnabled() { return s_bIntelTbbEnabled; }

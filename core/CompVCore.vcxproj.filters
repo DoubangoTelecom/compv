@@ -79,11 +79,5 @@
     <ClInclude Include="include\compv\core\features\fast\compv_feature_fast_dete.h">
       <Filter>Header Files\features\fast</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\core\features\fast\compv_feature_fast9_dete.h">
-      <Filter>Header Files\features\fast</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\core\features\fast\compv_feature_fast12_dete.h">
-      <Filter>Header Files\features\fast</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

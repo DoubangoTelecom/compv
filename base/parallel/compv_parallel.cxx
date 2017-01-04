@@ -87,12 +87,15 @@ COMPV_ERROR_CODE CompVParallel::multiThreadingDisable()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVParallel::multiThreadingSetMaxThreads(size_t maxThreads)
+COMPV_ERROR_CODE CompVParallel::multiThreadingSetMaxThreads(int32_t maxThreads COMPV_DEFAULT(-1))
 {
-    CompVPtr<CompVThreadDispatcher *> newThreadDisp;
-    COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::newObj(&newThreadDisp), "Failed to create thread dispatcher");
+	if (maxThreads == 1) { // <= 0 means best, =1 means disable, > 1 means use provided number
+		COMPV_CHECK_CODE_RETURN(multiThreadingDisable());
+		return COMPV_ERROR_CODE_S_OK;
+	}
+    CompVThreadDispatcherPtr newThreadDisp;
+    COMPV_CHECK_CODE_RETURN(CompVThreadDispatcher::newObj(&newThreadDisp, maxThreads), "Failed to create thread dispatcher");
     s_ThreadDisp = newThreadDisp;// TODO(dmi): function not optimal, we destroy all threads and create new ones
-
     return COMPV_ERROR_CODE_S_OK;
 }
 
