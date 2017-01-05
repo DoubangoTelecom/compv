@@ -36,14 +36,17 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 	const __m128i vecZero = _mm_setzero_si128();
 	const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
 	__m128i vec0, vec1, vecStrengths, vecBrighter1, vecDarker1, vecDarkers16[16], vecBrighters16[16];
-	
-	// FIXME: "flagsXXXX" useless
-	// Ad notion of loadB and loadD (based on sumb/sb and sumB/sb)
+	const uint8_t* circle[16] = { // FIXME: use same circle with C++ code
+		&IP[pixels16[0]], &IP[pixels16[1]], &IP[pixels16[2]], &IP[pixels16[3]],
+		&IP[pixels16[4]], &IP[pixels16[5]], &IP[pixels16[6]], &IP[pixels16[7]],
+		&IP[pixels16[8]], &IP[pixels16[9]], &IP[pixels16[10]], &IP[pixels16[11]],
+		&IP[pixels16[12]], &IP[pixels16[13]], &IP[pixels16[14]], &IP[pixels16[15]]
+	};
 
 #define _mm_cmpgtz_epu8(vec, mask) _mm_andnot_si128(_mm_cmpeq_epi8(vec, vecZero), mask) // no '_mm_cmpgt_epu8', mask should be '0xff'
 #define _mm_fast_masks(a, b) \
-	vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&IP[pixels16[a]])); \
-	vec1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&IP[pixels16[b]])); \
+	vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[a] + i))); \
+	vec1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[b] + i))); \
 	vecDarkers16[a] = _mm_subs_epu8(vecDarker1, vec0); \
 	vecDarkers16[b] = _mm_subs_epu8(vecDarker1, vec1); \
 	vecBrighters16[a] = _mm_subs_epu8(vec0, vecBrighter1); \
@@ -53,8 +56,8 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 	mask0B = _mm_movemask_epi8(_mm_cmpgtz_epu8(vecBrighters16[a], vec0xFF)); \
 	mask1B = _mm_movemask_epi8(_mm_cmpgtz_epu8(vecBrighters16[b], vec0xFF))
 
-	for (i = 0; i < width; i += 16, IP += 16, strengths += 16) {
-		vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(IP)); // neon: must not increment IP now, (used by _mm_fast_masks)
+	for (i = 0; i < width; i += 16, strengths += 16) {
+		vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(IP + i));
 		vecBrighter1 = _mm_adds_epu8(vec0, vecThreshold);
 		vecDarker1 = _mm_subs_epu8(vec0, vecThreshold);
 		load0B = load0D = false;
