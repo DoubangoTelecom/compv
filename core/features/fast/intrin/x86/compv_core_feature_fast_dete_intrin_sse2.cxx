@@ -28,6 +28,7 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 	const uint16_t *FastXFlags = N == 9 ? kCompVFast9Flags : kCompVFast12Flags;
 	compv_scalar_t i, j, k, arcStart, sumb, sumd, sb, sd;
 	int mask0B, mask1B, mask1D, mask0D;
+	bool load0B, load1B, load0D, load1D;
 	const __m128i vecThreshold = _mm_set1_epi8(static_cast<int8_t>(threshold));
 	const __m128i vecN = _mm_set1_epi8(static_cast<int8_t>(N));
 	const __m128i vecOne = _mm_load_si128(reinterpret_cast<const __m128i*>(k1_i8));
@@ -55,6 +56,7 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 		vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(IP)); // neon: must not increment IP now, (used by _mm_fast_masks)
 		vecBrighter1 = _mm_adds_epu8(vec0, vecThreshold);
 		vecDarker1 = _mm_subs_epu8(vec0, vecThreshold);
+		load0B = load0D = false;
 
 		/* reset strength to zero */
 		_mm_storeu_si128(reinterpret_cast<__m128i*>(strengths), vecZero); // neon: must not increment strengths now, use later
@@ -77,14 +79,15 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 			_mm_fast_masks(4, 12);
 			sd = (mask0D ? 1 : 0) + (mask1D ? 1 : 0);
 			sb = (mask0B ? 1 : 0) + (mask1B ? 1 : 0);
-			if (!sb && !sd) {
+			if (!(sb || sd)) {
 				continue;
 			}
-			sumb += sb;
-			sumd += sd;
-			if (sumb < minsum && sumd < sd) {
+			sumb += sb, sumd += sd;
+			load1B = (sumb >= minsum), load1D = (sumd >= minsum);
+			if (!(load1B || load1D)) {
 				continue;
 			}
+			load0B |= load1B, load0D |= load1D;
 		}
 
 		/***** Cross: 2, 10, 6, 14 *****/
@@ -101,14 +104,15 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 			_mm_fast_masks(5, 13);
 			sd = (mask0D ? 1 : 0) + (mask1D ? 1 : 0);
 			sb = (mask0B ? 1 : 0) + (mask1B ? 1 : 0);
-			if (!sb && !sd) {
+			if (!(sb || sd)) {
 				continue;
 			}
-			sumb += sb;
-			sumd += sd;
-			if (sumb < minsum && sumd < sd) {
+			sumb += sb, sumd += sd;
+			load1B = (sumb >= minsum), load1D = (sumd >= minsum);
+			if (!(load1B || load1D)) {
 				continue;
 			}
+			load0B |= load1B, load0D |= load1D;
 		}
 
 		/***** Cross: 3, 11, 7, 15 *****/
@@ -124,14 +128,15 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 			_mm_fast_masks(6, 14);
 			sd = (mask0D ? 1 : 0) + (mask1D ? 1 : 0);
 			sb = (mask0B ? 1 : 0) + (mask1B ? 1 : 0);
-			if (!sb && !sd) {
+			if (!(sb || sd)) {
 				continue;
 			}
-			sumb += sb;
-			sumd += sd;
-			if (sumb < minsum && sumd < sd) {
+			sumb += sb, sumd += sd;
+			load1B = (sumb >= minsum), load1D = (sumd >= minsum);
+			if (!(load1B || load1D)) {
 				continue;
 			}
+			load0B |= load1B, load0D |= load1D;
 		}
 
 		/***** Cross: 4, 12, 8, 16 *****/
@@ -147,14 +152,19 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 			_mm_fast_masks(7, 15);
 			sd = (mask0D ? 1 : 0) + (mask1D ? 1 : 0);
 			sb = (mask0B ? 1 : 0) + (mask1B ? 1 : 0);
-			if (!sb && !sd) {
+			if (!(sb || sd)) {
 				continue;
 			}
-			sumd += sd;
-			sumb += sb;
-			if (sumb < minsum && sumd < sd) {
+			sumb += sb, sumd += sd;
+			load1B = (sumb >= minsum), load1D = (sumd >= minsum);
+			if (!(load1B || load1D)) {
 				continue;
 			}
+			load0B |= load1B, load0D |= load1D;
+		}
+
+		if (load0B) {
+
 		}
 
 		// Convert darkers and brighters to 0,1
@@ -194,18 +204,14 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 					vecMinD1 = _mm_min_epu8(vecDarkers16[j & 15], vecMinD1);
 					// FIXME: if 'vecMinD1' contains zeros then break the loop -> use mask
 				}
-				//vecMinD1 = _mm_or_si128(vecMinD1, vec0); // FIXME: needed?
 			}
 			if (mask0B) {
 				for (j = arcStart, k = 0; k < N; ++j, ++k) {
 					vecMinB1 = _mm_min_epu8(vecBrighters16[j & 15], vecMinB1);
 					// FIXME: if 'vecMinB1' contains zeros then break the loop -> use mask
 				}
-				//vecMinB1 = _mm_or_si128(vecMinB1, vec1); // FIXME: needed?
 			}
-			if (mask0B || mask0D) {
-				vecStrengths = _mm_max_epu8(vecStrengths, _mm_max_epu8(vecMinD1, vecMinB1));
-			}
+			vecStrengths = _mm_max_epu8(vecStrengths, _mm_max_epu8(vecMinD1, vecMinB1));
 		}
 		_mm_storeu_si128(reinterpret_cast<__m128i*>(strengths), vecStrengths);
 	}
