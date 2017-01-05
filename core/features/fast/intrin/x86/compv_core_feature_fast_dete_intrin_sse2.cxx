@@ -30,11 +30,12 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 	int mask0B, mask1B, mask1D, mask0D;
 	bool load0B, load1B, load0D, load1D;
 	const __m128i vecThreshold = _mm_set1_epi8(static_cast<int8_t>(threshold));
-	const __m128i vecN = _mm_set1_epi8(static_cast<int8_t>(N));
+	const __m128i vecN = _mm_set1_epi8(static_cast<int8_t>(N)); // FIXME: remove
+	const __m128i vecNMinusOne = _mm_set1_epi8(static_cast<int8_t>(N - 1)); // no '_mm_cmpge_epu8'
 	const __m128i vecOne = _mm_load_si128(reinterpret_cast<const __m128i*>(k1_i8));
 	const __m128i vecZero = _mm_setzero_si128();
 	const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
-	__m128i vec0, vec1, vecMinD1, vecMinB1, vecStrengths, vecOnesDSum1, vecOnesBSum1, vecBrighter1, vecDarker1, vecDarkers16[16], vecBrighters16[16], vecOnesD16[16], vecOnesB16[16];
+	__m128i vec0, vec1, vecStrengths, vecBrighter1, vecDarker1, vecDarkers16[16], vecBrighters16[16];
 	
 	// FIXME: "flagsXXXX" useless
 	// Ad notion of loadB and loadD (based on sumb/sb and sumB/sb)
@@ -163,20 +164,6 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 			load0B |= load1B, load0D |= load1D;
 		}
 
-		if (load0B) {
-
-		}
-
-		// Convert darkers and brighters to 0,1
-		for (j = 0; j < 16; ++j) {
-			vecOnesD16[j] = _mm_cmpgtz_epu8(vecDarkers16[j], vecOne);
-			vecOnesB16[j] = _mm_cmpgtz_epu8(vecBrighters16[j], vecOne);
-		}
-
-		if (i == 1040) { // looking for 1050
-			COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME");
-		}
-
 		// FIXME: remove
 		//vec0 = _mm_cmpgt_epi8(vecDarkers16[0], vecZero);
 		//vec1 = _mm_and_si128(vec0, vecOne);
@@ -185,34 +172,51 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 		// instead of for (arcStart....
 		// FIXME: same for computing min
 		// FIXME: rotate(vecOnesD16) and rotate(vecOnesB16) instead of using "& 15"
+
 		vecStrengths = _mm_setzero_si128();
-		for (arcStart = 0; arcStart < 16; ++arcStart) {
-			// Add first N's
-			vecOnesDSum1 = _mm_setzero_si128();
-			vecOnesBSum1 = _mm_setzero_si128();
-			for (j = arcStart, k = 0; k < N; ++j, ++k) {
-				vecOnesDSum1 = _mm_add_epi8(vecOnesDSum1, vecOnesD16[j & 15]);
-				vecOnesBSum1 = _mm_add_epi8(vecOnesBSum1, vecOnesB16[j & 15]);
-			}
-			// Check if we have an arc (sum of 1's > (N-1))
-			vecMinD1 = _mm_cmpeq_epi8(vecOnesDSum1, vecN); // 0xFF when N non-zero diffs found
-			vecMinB1 = _mm_cmpeq_epi8(vecOnesBSum1, vecN); // 0xFF when N non-zero diffs found
-			mask0D = _mm_movemask_epi8(vecMinD1);
-			mask0B = _mm_movemask_epi8(vecMinB1);
-			if (mask0D) {
-				for (j = arcStart, k = 0; k < N; ++j, ++k) {
-					vecMinD1 = _mm_min_epu8(vecDarkers16[j & 15], vecMinD1);
-					// FIXME: if 'vecMinD1' contains zeros then break the loop -> use mask
-				}
-			}
-			if (mask0B) {
-				for (j = arcStart, k = 0; k < N; ++j, ++k) {
-					vecMinB1 = _mm_min_epu8(vecBrighters16[j & 15], vecMinB1);
-					// FIXME: if 'vecMinB1' contains zeros then break the loop -> use mask
-				}
-			}
-			vecStrengths = _mm_max_epu8(vecStrengths, _mm_max_epu8(vecMinD1, vecMinB1));
+
+		if (i == 1040) { // looking for 1050
+			COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME");
 		}
+
+		if (load0B) {
+			vec0 = _mm_cmpgtz_epu8(vecBrighters16[0], vecOne);
+			for (j = 1; j < 16; ++j) { // FIXME: unroll
+				vec0 = _mm_add_epi8(_mm_cmpgtz_epu8(vecBrighters16[j], vecOne), vec0);
+			}
+			vec0 = _mm_cmpgt_epi8(vec0, vecNMinusOne); // 0xFF when N-nonzero diffs found, initial value for minb
+			mask0B = _mm_movemask_epi8(vec0);
+			if (mask0B) {
+				for (arcStart = 0; arcStart < 16; ++arcStart) {
+					vec1 = vec0;
+					for (j = arcStart, k = 0; k < N; ++j, ++k) {
+						vec1 = _mm_min_epu8(vecBrighters16[j & 15], vec1);
+						// FIXME: if 'vecMinB1' contains zeros then break the loop -> use mask
+					}
+					vecStrengths = _mm_max_epu8(vecStrengths, vec1);
+				}
+			}
+		}
+
+		if (load0D) {
+			vec0 = _mm_cmpgtz_epu8(vecDarkers16[0], vecOne);
+			for (j = 1; j < 16; ++j) { // FIXME: unroll
+				vec0 = _mm_add_epi8(_mm_cmpgtz_epu8(vecDarkers16[j], vecOne), vec0);
+			}
+			vec0 = _mm_cmpgt_epi8(vec0, vecNMinusOne); // 0xFF when N-nonzero diffs found, initial value for minb
+			mask0D = _mm_movemask_epi8(vec0);
+			if (mask0D) {
+				for (arcStart = 0; arcStart < 16; ++arcStart) {
+					vec1 = vec0;
+					for (j = arcStart, k = 0; k < N; ++j, ++k) {
+						vec1 = _mm_min_epu8(vecDarkers16[j & 15], vec1);
+						// FIXME: if 'vecMinB1' contains zeros then break the loop -> use mask
+					}
+					vecStrengths = _mm_max_epu8(vecStrengths, vec1);
+				}
+			}
+		}
+		
 		_mm_storeu_si128(reinterpret_cast<__m128i*>(strengths), vecStrengths);
 	}
 }

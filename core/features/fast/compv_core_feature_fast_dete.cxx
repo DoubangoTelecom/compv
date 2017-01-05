@@ -485,7 +485,7 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const c
 			}
 			sumb += sb;
 			sumd += sd;
-			if (sumb < minsum && sumd < sd) {
+			if (sumb < minsum && sumd < minsum) {
 				continue;
 			}
 		}
@@ -519,7 +519,7 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const c
 			}
 			sumb += sb;
 			sumd += sd;
-			if (sumb < minsum && sumd < sd) {
+			if (sumb < minsum && sumd < minsum) {
 				continue;
 			}
 		}
@@ -552,7 +552,7 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const c
 			}
 			sumb += sb;
 			sumd += sd;
-			if (sumb < minsum && sumd < sd) {
+			if (sumb < minsum && sumd < minsum) {
 				continue;
 			}
 		}
@@ -585,7 +585,7 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const c
 			}
 			sumd += sd;
 			sumb += sb;
-			if (sumb < minsum && sumd < sd) {
+			if (sumb < minsum && sumd < minsum) {
 				continue;
 			}
 		}
