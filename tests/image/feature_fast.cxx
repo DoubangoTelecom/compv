@@ -106,6 +106,7 @@ COMPV_ERROR_CODE feature_fast()
 		xf += interestPoints->ptr(i)->x;
 		yf += interestPoints->ptr(i)->y;
 	}
+	COMPV_CHECK_EXP_RETURN(interestPoints->size() != test->corners, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Num corners mismatch");
 	COMPV_CHECK_EXP_RETURN(sum_scores != test->scores, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Sum of scores mismatch");
 	COMPV_CHECK_EXP_RETURN(xf != test->xf, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Sum of xf mismatch");
 	COMPV_CHECK_EXP_RETURN(yf != test->yf, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Sum of yf mismatch");

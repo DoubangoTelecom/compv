@@ -14,15 +14,13 @@ Some literature about FAST:
 - http://web.eecs.umich.edu/~silvio/teaching/EECS598_2010/slides/11_16_Hao.pdf
 */
 
-// TODO(dmi):
-// Allow setting max number of features to retain
-// CPP version doesn't work
-
 #include "compv/core/features/fast/compv_core_feature_fast_dete.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_cpu.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/math/compv_math_utils.h"
+
+#include "compv/core/features/fast/intrin/x86/compv_core_feature_fast_dete_intrin_sse2.h"
 
 #include <algorithm>
 
@@ -31,7 +29,7 @@ Some literature about FAST:
 // Defines here outside the namespace to allow referencing in ASM code
 #if COMPV_ARCH_X86 && (COMPV_INTRINSIC || COMPV_ASM)
 // Values generated using FastShufflesArc() in "tests/fast.cxx"
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint8_t kFast9Arcs[16/*ArcStartIdx*/][16] = { // SHUFFLE_EPI8 values to select an arc
+COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint8_t kCompVFast9Arcs[16/*ArcStartIdx*/][16] = { // SHUFFLE_EPI8 values to select an arc
     { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, },
     { 0x1, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, },
     { 0x2, 0x2, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0x2, 0x2, 0x2, 0x2, 0x2, },
@@ -49,7 +47,7 @@ COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint8_t kFast9Arcs[16/*
     { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0xe, 0xe, 0xe, 0xe, 0xe, 0xe, 0xe, 0xe, 0xf, },
     { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, },
 };
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint8_t kFast12Arcs[16/*ArcStartIdx*/][16] = { // SHUFFLE_EPI8 values to select an arc
+COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint8_t kCompVFast12Arcs[16/*ArcStartIdx*/][16] = { // SHUFFLE_EPI8 values to select an arc
     { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0x0, 0x0, 0x0, 0x0, },
     { 0x1, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0x1, 0x1, 0x1, },
     { 0x2, 0x2, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0x2, 0x2, },
@@ -70,8 +68,8 @@ COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint8_t kFast12Arcs[16/
 #endif // (COMPV_ARCH_X86) && ((COMPV_INTRINSIC) || (COMPV_ASM))
 
 // Flags generated using FastFlags() in "tests/fast.cxx"
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint16_t Fast9Flags[16] = { 0x1ff, 0x3fe, 0x7fc, 0xff8, 0x1ff0, 0x3fe0, 0x7fc0, 0xff80, 0xff01, 0xfe03, 0xfc07, 0xf80f, 0xf01f, 0xe03f, 0xc07f, 0x80ff };
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint16_t Fast12Flags[16] = { 0xfff, 0x1ffe, 0x3ffc, 0x7ff8, 0xfff0, 0xffe1, 0xffc3, 0xff87, 0xff0f, 0xfe1f, 0xfc3f, 0xf87f, 0xf0ff, 0xe1ff, 0xc3ff, 0x87ff };
+COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint16_t kCompVFast9Flags[16] = { 0x1ff, 0x3fe, 0x7fc, 0xff8, 0x1ff0, 0x3fe0, 0x7fc0, 0xff80, 0xff01, 0xfe03, 0xfc07, 0xf80f, 0xf01f, 0xe03f, 0xc07f, 0x80ff };
+COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint16_t kCompVFast12Flags[16] = { 0xfff, 0x1ffe, 0x3ffc, 0x7ff8, 0xfff0, 0xffe1, 0xffc3, 0xff87, 0xff0f, 0xfe1f, 0xfc3f, 0xf87f, 0xf0ff, 0xe1ff, 0xc3ff, 0x87ff };
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -378,24 +376,86 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::newObj(CompVCornerDetePtrPtr fast)
     return COMPV_ERROR_CODE_S_OK;
 }
 
+static void CompVFastProcessRange(RangeFAST* range)
+{
+    const uint8_t* IP;
+    int32_t j, kalign, kextra, align = 1, minj, maxj, rowstart, k;
+    uint8_t *strengths, *extra;
+    void(*FastDataRow)(
+        const uint8_t* IP,
+        compv_scalar_t width,
+        const compv_scalar_t *pixels16,
+        compv_scalar_t N,
+        compv_scalar_t threshold,
+        uint8_t* strengths) = CompVFastDataRow1_C;
+
+    if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(range->pixels16)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = CompVFastDataRow16_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+        //COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+        //COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+    }
+    if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
+        /*COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
+        COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = FastData32Row_Asm_X86_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
+        COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = FastData32Row_Asm_X64_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));*/
+    }
+
+    // Number of pixels to process (multiple of align)
+    kalign = static_cast<int32_t>(CompVMem::alignForward((-3 + range->width - 3), align));
+    if (kalign > (range->stride - 3)) { // must never happen as the image always contains a border(default 7) aligned on 64B
+        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Unexpected code called. k16=%d, stride=%zu", kalign, range->stride);
+        COMPV_ASSERT(false);
+        return;
+    }
+    // Number of pixels to ignore
+    kextra = kalign - (-3 + static_cast<int32_t>(range->width) - 3);
+
+    rowstart = static_cast<int32_t>(range->rowStart);
+    minj = (rowstart == 0 ? 3 : 0);
+    maxj = static_cast<int32_t>((range->rowEnd - rowstart) - ((range->rowCount - range->rowEnd) <= 3 ? 3 - (range->rowCount - range->rowEnd) : 0));
+    IP = range->IP + ((rowstart + minj) * range->stride) + 3;
+    strengths = range->strengths + ((rowstart + minj) * range->stride) + 3;
+
+    // For testing with image "equirectangular", the first (i,j) to produce an interesting point is (1620, 279)
+    // We should have 64586 non-zero results for SSE and 66958 for AVX2
+
+    for (j = minj; j < maxj; ++j) {
+		if (j == 151 /*|| j == 141*/) {
+			COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME");
+		}
+        FastDataRow(IP, kalign, range->pixels16, range->N, range->threshold, strengths);
+        // remove extra samples
+        extra = &strengths[kalign - 1];
+        for (k = 0; k < kextra; ++k) {
+            *extra-- = 0;
+        }
+        IP += range->stride;
+        strengths += range->stride;
+    } // for (j)
+}
+
 static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const compv_scalar_t *pixels16, compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths)
 {
 	// Code not intended to be fast but just readable, real code is implemented in SSE, AVX and NEON.
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
-    int32_t sumb, sumd, sb, sd;
-    int16_t threshold_ = static_cast<int16_t>(threshold); // using int16_t to avoid clipping
-    uint8_t ddarkers16[16], dbrighters16[16], strength, t0, t1;
-	const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
-    compv_scalar_t fbrighters1, fdarkers1;
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	int32_t sumb, sumd, sb, sd;
+	int16_t threshold_ = static_cast<int16_t>(threshold); // using int16_t to avoid clipping (useless for SIMD with support for saturated sub and add)
+	uint8_t ddarkers16[16], dbrighters16[16], strength, t0, t1;
+	const uint16_t(&FastXFlags)[16] = N == 9 ? kCompVFast9Flags : kCompVFast12Flags;
+	compv_scalar_t fbrighters1, fdarkers1;
 	const int32_t minsum = (N == 12 ? 3 : 2);
-	compv_scalar_t i, j, k, l;
+	compv_scalar_t i, j, k, arcStart;
 
-    for (i = 0; i < width; ++i, ++IP, ++strengths) {
-        uint8_t brighter = CompVMathUtils::clampPixel8(IP[0] + threshold_); // SSE: paddusb
+	for (i = 0; i < width; ++i, ++IP, ++strengths) {
+		uint8_t brighter = CompVMathUtils::clampPixel8(IP[0] + threshold_); // SSE: paddusb
 		uint8_t darker = CompVMathUtils::clampPixel8(IP[0] - threshold_); // SSE: psubusb
 
-        // reset strength to zero
-        *strengths = 0;
+		if (i == 1050) {
+			COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME");
+		}
+
+		// reset strength to zero
+		*strengths = 0;
 
 		/***** Cross: 1, 9, 5, 13 *****/
 		{
@@ -548,7 +608,7 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const c
 			| (ddarkers16[13] ? (1 << 13) : 0)
 			| (ddarkers16[14] ? (1 << 14) : 0)
 			| (ddarkers16[15] ? (1 << 15) : 0);
-		fbrighters1 = 
+		fbrighters1 =
 			(dbrighters16[0] ? (1 << 0) : 0)
 			| (dbrighters16[1] ? (1 << 1) : 0)
 			| (dbrighters16[2] ? (1 << 2) : 0)
@@ -570,15 +630,15 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const c
 		{
 			strength = 0;
 			// SIMD: vector rotations to map arcs
-			for (l = 0; l < 16; ++l) {
+			for (arcStart = 0; arcStart < 16; ++arcStart) {
 				t0 = t1 = 0xff;
-				if ((fbrighters1 & FastXFlags[l]) == FastXFlags[l]) {
-					for (j = l, k = 0; k < N; ++j, ++k) { // SIMD: vector rotation
+				if ((fbrighters1 & FastXFlags[arcStart]) == FastXFlags[arcStart]) {
+					for (j = arcStart, k = 0; k < N; ++j, ++k) { // SIMD: vector rotation
 						t1 = std::min(dbrighters16[j & 15], t1); // hz(pairwise) min (lowest diff)
 					}
 				}
-				if ((fdarkers1 & FastXFlags[l]) == FastXFlags[l]) {
-					for (j = l, k = 0; k < N; ++j, ++k) { // SIMD: vector rotation
+				if ((fdarkers1 & FastXFlags[arcStart]) == FastXFlags[arcStart]) {
+					for (j = arcStart, k = 0; k < N; ++j, ++k) { // SIMD: vector rotation
 						t0 = std::min(ddarkers16[j & 15], t0); // hz(pairwise) min (lowest diff)
 					}
 				}
@@ -588,62 +648,10 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const c
 			}
 			*strengths = strength;
 		}
-    } // for (i ....width)
-}
-
-static void CompVFastProcessRange(RangeFAST* range)
-{
-    const uint8_t* IP;
-    int32_t j, kalign, kextra, align = 1, minj, maxj, rowstart, k;
-    uint8_t *strengths, *extra;
-    void(*FastDataRow)(
-        const uint8_t* IP,
-        compv_scalar_t width,
-        const compv_scalar_t *pixels16,
-        compv_scalar_t N,
-        compv_scalar_t threshold,
-        uint8_t* strengths) = CompVFastDataRow1_C;
-
-    if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
-        /*COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData16Row_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-        COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-        COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));*/
-    }
-    if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
-        /*COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
-        COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = FastData32Row_Asm_X86_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
-        COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = FastData32Row_Asm_X64_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));*/
-    }
-
-    // Number of pixels to process (multiple of align)
-    kalign = static_cast<int32_t>(CompVMem::alignForward((-3 + range->width - 3), align));
-    if (kalign > (range->stride - 3)) { // must never happen as the image always contains a border(default 7) aligned on 64B
-        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Unexpected code called. k16=%d, stride=%zu", kalign, range->stride);
-        COMPV_ASSERT(false);
-        return;
-    }
-    // Number of pixels to ignore
-    kextra = kalign - (-3 + static_cast<int32_t>(range->width) - 3);
-
-    rowstart = static_cast<int32_t>(range->rowStart);
-    minj = (rowstart == 0 ? 3 : 0);
-    maxj = static_cast<int32_t>((range->rowEnd - rowstart) - ((range->rowCount - range->rowEnd) <= 3 ? 3 - (range->rowCount - range->rowEnd) : 0));
-    IP = range->IP + ((rowstart + minj) * range->stride) + 3;
-    strengths = range->strengths + ((rowstart + minj) * range->stride) + 3;
-
-    // For testing with image "equirectangular", the first (i,j) to produce an interesting point is (1620, 279)
-    // We should have 64586 non-zero results for SSE and 66958 for AVX2
-
-    for (j = minj; j < maxj; ++j) {
-        FastDataRow(IP, kalign, range->pixels16, range->N, range->threshold, strengths);
-        // remove extra samples
-        extra = &strengths[kalign - 1];
-        for (k = 0; k < kextra; ++k) {
-            *extra-- = 0;
-        }
-        IP += range->stride;
-        strengths += range->stride;
-    } // for (j)
+		if (*strengths) {
+			COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME");
+		}
+	} // for (i ....width)	
 }
 
 static void FastNMS(size_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end)

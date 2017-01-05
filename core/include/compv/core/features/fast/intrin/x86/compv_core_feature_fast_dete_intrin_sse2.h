@@ -17,7 +17,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_scalar_t width, COMPV_ALIGNED(SSE) const compv_scalar_t *pixels16, compv_scalar_t N, compv_scalar_t threshold, COMPV_ALIGNED(SSE) uint8_t* strengths);
+void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_scalar_t width, COMPV_ALIGNED(SSE) const compv_scalar_t *pixels16, compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths);
 
 COMPV_NAMESPACE_END()
 
