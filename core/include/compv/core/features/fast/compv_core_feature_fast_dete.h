@@ -9,7 +9,7 @@
 
 #include "compv/core/compv_core_config.h"
 #include "compv/core/compv_core_common.h"
-#include "compv/core/features/compv_feature.h"
+#include "compv/core/features/compv_core_feature.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -19,7 +19,6 @@ COMPV_NAMESPACE_BEGIN()
 
 struct RangeFAST {
     const uint8_t* IP;
-    const uint8_t* IPprev;
     uint8_t* strengths;
     size_t rowStart;
 	size_t rowEnd;
@@ -28,8 +27,10 @@ struct RangeFAST {
 	size_t stride;
     int32_t threshold;
     int32_t N;
-    const compv_scalar_t(*pixels16)[16];
+    const compv_scalar_t *pixels16;
 };
+
+COMPV_OBJECT_DECLARE_PTRS(CornerDeteFAST);
 
 class CompVCornerDeteFAST : public CompVCornerDete
 {

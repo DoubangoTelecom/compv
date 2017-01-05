@@ -18,7 +18,7 @@ Some literature about FAST:
 // Allow setting max number of features to retain
 // CPP version doesn't work
 
-#include "compv/core/features/fast/compv_feature_fast_dete.h"
+#include "compv/core/features/fast/compv_core_feature_fast_dete.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_cpu.h"
 #include "compv/base/parallel/compv_parallel.h"
@@ -73,51 +73,6 @@ COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint8_t kFast12Arcs[16/
 COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint16_t Fast9Flags[16] = { 0x1ff, 0x3fe, 0x7fc, 0xff8, 0x1ff0, 0x3fe0, 0x7fc0, 0xff80, 0xff01, 0xfe03, 0xfc07, 0xf80f, 0xf01f, 0xe03f, 0xc07f, 0x80ff };
 COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint16_t Fast12Flags[16] = { 0xfff, 0x1ffe, 0x3ffc, 0x7ff8, 0xfff0, 0xffe1, 0xffc3, 0xff87, 0xff0f, 0xfe1f, 0xfc3f, 0xf87f, 0xf0ff, 0xe1ff, 0xc3ff, 0x87ff };
 
-
-COMPV_EXTERNC COMPV_CORE_API void FastStrengths16(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x16, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x16, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
-{
-    void(*FastStrengths)(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
-        = NULL; // This function is called from FastData16Row(Intrin/Asm) which means we don't need C++ version
-    if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-       // COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths16_Intrin_SSE2);
-    }
-    if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
-        /*COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths16_Intrin_SSE41);
-        COMPV_EXEC_IFDEF_ASM_X86(FastStrengths = (N == 9)
-                                 ? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths16_Asm_CMOV_X86_SSE41 : Fast9Strengths16_Asm_X86_SSE41)
-                                     : (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths16_Asm_CMOV_X86_SSE41 : Fast12Strengths16_Asm_X86_SSE41));
-        COMPV_EXEC_IFDEF_ASM_X64(FastStrengths = (N == 9)
-                                 ? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths16_Asm_CMOV_X64_SSE41 : Fast9Strengths16_Asm_X64_SSE41)
-                                     : (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths16_Asm_CMOV_X64_SSE41 : Fast12Strengths16_Asm_X64_SSE41));*/
-    }
-    FastStrengths(rbrighters, rdarkers, dbrighters16x16, ddarkers16x16, fbrighters16, fdarkers16, strengths16, N);
-}
-
-COMPV_EXTERNC COMPV_CORE_API void FastStrengths32(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x32, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x32, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths32, compv::compv_scalar_t N)
-{
-    void(*FastStrengths)(compv::compv_scalar_t rbrighters, compv::compv_scalar_t rdarkers, COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16xAlign, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16xAlign, const compv::compv_scalar_t(*fbrighters16)[16], const compv::compv_scalar_t(*fdarkers16)[16], uint8_t* strengths16, compv::compv_scalar_t N)
-        = NULL;  // This function is called from FastData32Row(Intrin/Asm) which means we don't need C++ version
-    if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
-        /*COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths32_Intrin_SSE41);
-        COMPV_EXEC_IFDEF_ASM_X86(FastStrengths = (N == 9)
-                                 ? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths32_Asm_CMOV_X86_SSE41 : Fast9Strengths32_Asm_X86_SSE41)
-                                     : (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths32_Asm_CMOV_X86_SSE41 : Fast12Strengths32_Asm_X86_SSE41));
-        COMPV_EXEC_IFDEF_ASM_X64(FastStrengths = (N == 9)
-                                 ? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths32_Asm_CMOV_X64_SSE41 : Fast9Strengths32_Asm_X64_SSE41)
-                                     : (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths32_Asm_CMOV_X64_SSE41 : Fast12Strengths32_Asm_X64_SSE41));*/
-    }
-    if (compv::CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
-        /*COMPV_EXEC_IFDEF_INTRIN_X86(FastStrengths = compv::FastStrengths32_Intrin_AVX2);
-        COMPV_EXEC_IFDEF_ASM_X86(FastStrengths = (N == 9)
-                                 ? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths32_Asm_CMOV_X86_AVX2 : Fast9Strengths32_Asm_X86_AVX2)
-                                     : (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths32_Asm_CMOV_X86_AVX2 : Fast12Strengths32_Asm_X86_AVX2));
-        COMPV_EXEC_IFDEF_ASM_X64(FastStrengths = (N == 9)
-                                 ? (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast9Strengths32_Asm_CMOV_X64_AVX2 : Fast9Strengths32_Asm_X64_AVX2)
-                                     : (compv::CompVCpu::isEnabled(compv::kCpuFlagCMOV) ? Fast12Strengths32_Asm_CMOV_X64_AVX2 : Fast12Strengths32_Asm_X64_AVX2));*/
-    }
-    FastStrengths(rbrighters, rdarkers, dbrighters16x32, ddarkers16x32, fbrighters16, fdarkers16, strengths32, N);
-}
-
 COMPV_NAMESPACE_BEGIN()
 
 // Default threshold (pixel intensity: [0-255])
@@ -144,10 +99,9 @@ static bool COMPV_INLINE __isNonMaximal(const CompVInterestPoint* point)
     return point->x < 0;
 }
 
-static void FastProcessRange(RangeFAST* range);
+static void CompVFastProcessRange(RangeFAST* range);
 static void FastNMS(size_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end);
-static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths1, compv_scalar_t* me);
-static void FastStrengths1_C(COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x1, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x1, const compv::compv_scalar_t fbrighters1, const compv::compv_scalar_t fdarkers1, uint8_t* strengths1, compv::compv_scalar_t N);
+static void CompVFastDataRow1_C(const uint8_t* IP,  compv_scalar_t width, const compv_scalar_t *pixels16, compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths);
 static COMPV_ERROR_CODE FastRangesAlloc(size_t nRanges, RangeFAST** ppRanges, size_t stride);
 static COMPV_ERROR_CODE FastRangesFree(size_t nRanges, RangeFAST** ppRanges);
 
@@ -292,40 +246,36 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
         m_nRanges = threadsCountRange;
     }
 
-    //if (threadsCountRange > 1) {
-    //    int32_t rowStart = 0, threadHeight, totalHeight = 0;
-    //    RangeFAST* pRange;
-    //    CompVAsyncTaskIds taskIds;
-    //    taskIds.reserve(threadsCountRange);
-    //    auto funcPtr = [&](RangeFAST* pRange) -> COMPV_ERROR_CODE {
-    //        FastProcessRange(pRange);
-    //        return COMPV_ERROR_CODE_S_OK;
-    //    };
-    //    for (int i = 0; i < threadsCountRange; ++i) {
-    //        threadHeight = ((height - totalHeight) / (threadsCountRange - i)) & -2; // the & -2 is to make sure we'll deal with odd heights
-    //        pRange = &m_pRanges[i];
-    //        pRange->IP = dataPtr;
-    //        pRange->IPprev = NULL;
-    //        pRange->rowStart = rowStart;
-    //        pRange->rowEnd = (rowStart + threadHeight);
-    //        pRange->rowCount = height;
-    //        pRange->width = width;
-    //        pRange->stride = stride;
-    //        pRange->threshold = m_iThreshold;
-    //        pRange->N = m_iNumContinuous;
-    //        pRange->pixels16 = &pixels16;
-    //        pRange->strengths = m_pStrengthsMap;
-    //        COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, pRange), taskIds));
-    //        rowStart += threadHeight;
-    //        totalHeight += threadHeight;
-    //    }
-    //    COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
-    //}
-    //else 
-	{
+    if (threadsCountRange > 1) {
+		size_t rowStart = 0;
+		size_t heights = (height / threadsCountRange);
+		size_t lastHeight = height - ((threadsCountRange - 1) * heights);
+        RangeFAST* pRange;
+        CompVAsyncTaskIds taskIds;
+        taskIds.reserve(threadsCountRange);
+        auto funcPtr = [&](RangeFAST* pRange) -> void {
+            CompVFastProcessRange(pRange);
+        };
+        for (size_t i = 0; i < threadsCountRange; ++i) {
+            pRange = &m_pRanges[i];
+            pRange->IP = dataPtr;
+            pRange->rowStart = rowStart;
+            pRange->rowEnd = (rowStart + (i == (threadsCountRange - 1) ? lastHeight : heights));
+            pRange->rowCount = height;
+            pRange->width = width;
+            pRange->stride = stride;
+            pRange->threshold = m_iThreshold;
+            pRange->N = m_iNumContinuous;
+            pRange->pixels16 = pixels16;
+            pRange->strengths = m_pStrengthsMap;
+            COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, pRange), taskIds));
+            rowStart = pRange->rowEnd;
+        }
+        COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+    } 
+	else {
         RangeFAST* pRange = &m_pRanges[0];
         pRange->IP = dataPtr;
-        pRange->IPprev = NULL;
         pRange->rowStart = 0;
         pRange->rowEnd = height;
         pRange->rowCount = height;
@@ -333,9 +283,9 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
         pRange->stride = stride;
         pRange->threshold = m_iThreshold;
         pRange->N = m_iNumContinuous;
-        pRange->pixels16 = &pixels16;
+        pRange->pixels16 = pixels16;
         pRange->strengths = m_pStrengthsMap;
-        FastProcessRange(pRange);
+        CompVFastProcessRange(pRange);
     }
 
     // Build interest points
@@ -381,31 +331,28 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
 
     // Non Maximal Suppression for removing adjacent corners
     if (m_bNonMaximaSupp && interestPoints_->size() > 0) {
-        //size_t threadsCountNMS = 1;
-        // NMS
-        /*if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
-            threadsCountNMS = (int32_t)(interestPoints->size() / COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD);
-            threadsCountNMS = COMPV_MATH_CLIP3(0, threadDisp->getThreadsCount(), threadsCountNMS);
+        size_t threadsCountNMS = 1;
+        if (threadDisp && threadDisp->threadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
+            threadsCountNMS = (interestPoints_->size() / COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD);
+            threadsCountNMS = COMPV_MATH_CLIP3(0, threadDisp->threadsCount(), threadsCountNMS);
         }
         if (threadsCountNMS > 1) {
-            int32_t total = 0, count, size = (int32_t)interestPoints->size();
-            CompVInterestPoint * begin = interestPoints->begin();
+			size_t size = interestPoints_->size(), sizes = (size / threadsCountNMS);
+			size_t lastSize = size - ((threadsCountNMS - 1) * sizes);
+            CompVInterestPoint *begin = interestPoints_->begin(), *end;
             CompVAsyncTaskIds taskIds;
             taskIds.reserve(threadsCountNMS);
-            auto funcPtr = [&](int32_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end) -> COMPV_ERROR_CODE {
+            auto funcPtr = [&](size_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end) -> void {
                 FastNMS(stride, pcStrengthsMap, begin, end);
-                return COMPV_ERROR_CODE_S_OK;
             };
-            for (int32_t i = 0; i < threadsCountNMS; ++i) {
-                count = ((size - total) / (threadsCountNMS - i)) & -2;
-                COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, stride, m_pStrengthsMap, begin, begin + count), taskIds));
-                begin += count;
-                total += count;
+            for (size_t i = 0; i < threadsCountNMS; ++i) {
+				end = begin + (i == (threadsCountNMS - 1) ? lastSize : sizes);
+                COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, stride, m_pStrengthsMap, begin, end), taskIds));
+                begin = end;
             }
             COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
         }
-        else*/
-		{
+        else {
             FastNMS(stride, m_pStrengthsMap, interestPoints_->begin(), interestPoints_->end());
         }
 
@@ -422,18 +369,16 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
     return err_;
 }
 
-COMPV_ERROR_CODE CompVCornerDeteFAST::newObj(CompVPtr<CompVCornerDete* >* fast)
+COMPV_ERROR_CODE CompVCornerDeteFAST::newObj(CompVCornerDetePtrPtr fast)
 {
     COMPV_CHECK_EXP_RETURN(fast == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVPtr<CompVCornerDeteFAST* >_fast = new CompVCornerDeteFAST();
-    if (!_fast) {
-        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
+    CompVCornerDeteFASTPtr _fast = new CompVCornerDeteFAST();
+	COMPV_CHECK_EXP_RETURN(!_fast, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     *fast = *_fast;
     return COMPV_ERROR_CODE_S_OK;
 }
 
-static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths1, compv_scalar_t* me)
+static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const compv_scalar_t *pixels16, compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths)
 {
 	// Code not intended to be fast but just readable, real code is implemented in SSE, AVX and NEON.
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
@@ -445,12 +390,12 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 	const int32_t minsum = (N == 12 ? 3 : 2);
 	compv_scalar_t i, j, k, l;
 
-    for (i = 0; i < width; ++i, ++IP, ++strengths1) {
+    for (i = 0; i < width; ++i, ++IP, ++strengths) {
         uint8_t brighter = CompVMathUtils::clampPixel8(IP[0] + threshold_); // SSE: paddusb
 		uint8_t darker = CompVMathUtils::clampPixel8(IP[0] - threshold_); // SSE: psubusb
 
         // reset strength to zero
-        *strengths1 = 0;
+        *strengths = 0;
 
 		/***** Cross: 1, 9, 5, 13 *****/
 		{
@@ -641,25 +586,23 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 					strength = std::max(strength, std::min(t0, t1));
 				}
 			}
-			*strengths1 = strength;
+			*strengths = strength;
 		}
     } // for (i ....width)
 }
 
-static void FastProcessRange(RangeFAST* range)
+static void CompVFastProcessRange(RangeFAST* range)
 {
-    const uint8_t* IP, *IPprev;
+    const uint8_t* IP;
     int32_t j, kalign, kextra, align = 1, minj, maxj, rowstart, k;
     uint8_t *strengths, *extra;
     void(*FastDataRow)(
         const uint8_t* IP,
-        const uint8_t* IPprev,
         compv_scalar_t width,
-        const compv_scalar_t(&pixels16)[16],
+        const compv_scalar_t *pixels16,
         compv_scalar_t N,
         compv_scalar_t threshold,
-        uint8_t* strengths,
-        compv_scalar_t* me) = FastDataRow1_C;
+        uint8_t* strengths) = CompVFastDataRow1_C;
 
     if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
         /*COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData16Row_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
@@ -673,7 +616,7 @@ static void FastProcessRange(RangeFAST* range)
     }
 
     // Number of pixels to process (multiple of align)
-    kalign = (int32_t)CompVMem::alignForward((-3 + range->width - 3), align);
+    kalign = static_cast<int32_t>(CompVMem::alignForward((-3 + range->width - 3), align));
     if (kalign > (range->stride - 3)) { // must never happen as the image always contains a border(default 7) aligned on 64B
         COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Unexpected code called. k16=%d, stride=%zu", kalign, range->stride);
         COMPV_ASSERT(false);
@@ -687,15 +630,12 @@ static void FastProcessRange(RangeFAST* range)
     maxj = static_cast<int32_t>((range->rowEnd - rowstart) - ((range->rowCount - range->rowEnd) <= 3 ? 3 - (range->rowCount - range->rowEnd) : 0));
     IP = range->IP + ((rowstart + minj) * range->stride) + 3;
     strengths = range->strengths + ((rowstart + minj) * range->stride) + 3;
-    IPprev = range->IPprev ? (range->IPprev + ((rowstart + minj) * range->stride) + 3) : NULL;
 
-
-    // For testing with image "voiture", the first (i,j) to produce an interesting point is (1620, 279)
+    // For testing with image "equirectangular", the first (i,j) to produce an interesting point is (1620, 279)
     // We should have 64586 non-zero results for SSE and 66958 for AVX2
 
     for (j = minj; j < maxj; ++j) {
-        FastDataRow(IP, IPprev, kalign, (*range->pixels16), range->N, range->threshold, strengths, NULL);
-
+        FastDataRow(IP, kalign, range->pixels16, range->N, range->threshold, strengths);
         // remove extra samples
         extra = &strengths[kalign - 1];
         for (k = 0; k < kextra; ++k) {

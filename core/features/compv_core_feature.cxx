@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/core/features/compv_feature.h"
-#include "compv/core/features/fast/compv_feature_fast_dete.h"
+#include "compv/core/features/compv_core_feature.h"
+#include "compv/core/features/fast/compv_core_feature_fast_dete.h"
 #include "compv/core/compv_core.h"
 
 #define COMPV_THIS_CLASSNAME "CompVFeature"

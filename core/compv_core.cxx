@@ -6,7 +6,7 @@
 */
 #include "compv/core/compv_core.h"
 #include "compv/core/compv_core_common.h"
-#include "compv/core/features/compv_feature.h"
+#include "compv/core/features/compv_core_feature.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/parallel/compv_mutex.h"
 

@@ -51,15 +51,36 @@
     <Filter Include="Source Files\matchers">
       <UniqueIdentifier>{3240114d-521e-48c2-8c77-e3a63e490950}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\features\fast\intrin">
+      <UniqueIdentifier>{38795c7d-985c-44b1-91c1-2e8da530c896}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\features\fast\intrin\arm">
+      <UniqueIdentifier>{92980b14-e6b6-4559-8fb2-f2fc70af44ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\features\fast\intrin\x86">
+      <UniqueIdentifier>{2c4b4666-86cb-4f07-b002-ecb138428a08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\fast\intrin">
+      <UniqueIdentifier>{8b424df9-86c4-495e-94c6-dd3ebada2e92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\fast\intrin\arm">
+      <UniqueIdentifier>{340a0097-81af-4039-8bed-6640e631068f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\fast\intrin\x86">
+      <UniqueIdentifier>{b9f1e436-9d2d-4999-9ba9-61799aabf780}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="features\compv_feature.cxx">
+    <ClCompile Include="features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.cxx">
+      <Filter>Source Files\features\fast\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="features\compv_core_feature.cxx">
       <Filter>Source Files\features</Filter>
     </ClCompile>
-    <ClCompile Include="features\fast\compv_feature_fast_dete.cxx">
+    <ClCompile Include="features\fast\compv_core_feature_fast_dete.cxx">
       <Filter>Source Files\features\fast</Filter>
     </ClCompile>
   </ItemGroup>
@@ -73,10 +94,13 @@
     <ClInclude Include="include\compv\core\compv_core_config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\core\features\compv_feature.h">
+    <ClInclude Include="include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.h">
+      <Filter>Header Files\features\fast\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\compv_core_feature.h">
       <Filter>Header Files\features</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\core\features\fast\compv_feature_fast_dete.h">
+    <ClInclude Include="include\compv\core\features\fast\compv_core_feature_fast_dete.h">
       <Filter>Header Files\features\fast</Filter>
     </ClInclude>
   </ItemGroup>
