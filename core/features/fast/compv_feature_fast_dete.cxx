@@ -433,67 +433,21 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::newObj(CompVPtr<CompVCornerDete* >* fast)
     return COMPV_ERROR_CODE_S_OK;
 }
 
-// FastXFlags = Fast9Flags or Fast16Flags
-static void FastStrengths1_C(COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x1, COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x1, const compv::compv_scalar_t fbrighters1, const compv::compv_scalar_t fdarkers1, uint8_t* strengths1, compv::compv_scalar_t N)
-{
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
-
-    uint8_t ndarker, nbrighter;
-    unsigned i, j, k;
-    int strength = 0;
-    const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
-
-    for (i = 0; i < 16; ++i) {
-        ndarker = 255;
-        nbrighter = 255;
-        if ((fbrighters1 & FastXFlags[i]) == FastXFlags[i]) {
-            // lowest diff
-            k = unsigned(i + N);
-            for (j = i; j < k; ++j) {
-                if (dbrighters16x1[j & 15] < nbrighter) {
-                    nbrighter = dbrighters16x1[j & 15];
-                }
-            }
-        }
-        if ((fdarkers1 & FastXFlags[i]) == FastXFlags[i]) {
-            // lowest diff
-            k = unsigned(i + N);
-            for (j = i; j < k; ++j) {
-                if (ddarkers16x1[j & 15] < ndarker) {
-                    ndarker = ddarkers16x1[j & 15];
-                }
-            }
-        }
-        else if (nbrighter == 255) {
-            // (nbrighter == 255 and ndarker == 255) -> nothing to do
-            continue;
-        }
-
-        strength = (std::max(strength, std::min((int)ndarker, (int)nbrighter)));
-    }
-
-    *strengths1 = (uint8_t)strength;
-}
-
 static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scalar_t width, const compv_scalar_t(&pixels16)[16], compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths1, compv_scalar_t* me)
 {
+	// Code not intended to be fast but just readable, real code is implemented in SSE, AVX and NEON.
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
     int32_t sumb, sumd, sb, sd;
-    int16_t temp[16], ddarkers16x1[16], dbrighters16x1[16], threshold_ = static_cast<int16_t>(threshold); // using int16_t to avoid clipping
-    uint8_t ddarkers16[16], dbrighters16[16];
+    int16_t threshold_ = static_cast<int16_t>(threshold); // using int16_t to avoid clipping
+    uint8_t ddarkers16[16], dbrighters16[16], strength, t0, t1;
+	const uint16_t(&FastXFlags)[16] = N == 9 ? Fast9Flags : Fast12Flags;
     compv_scalar_t fbrighters1, fdarkers1;
 	const int32_t minsum = (N == 12 ? 3 : 2);
-    void(*FastStrengths1)(
-        COMPV_ALIGNED(DEFAULT) const uint8_t* dbrighters16x1,
-        COMPV_ALIGNED(DEFAULT) const uint8_t* ddarkers16x1,
-        const compv::compv_scalar_t fbrighters1,
-        const compv::compv_scalar_t fdarkers1,
-        uint8_t* strengths1,
-        compv::compv_scalar_t N) = FastStrengths1_C;
+	compv_scalar_t i, j, k, l;
 
-    for (compv_scalar_t i = 0; i < width; ++i, ++IP, ++strengths1) {
-        uint8_t brighter = CompVMathUtils::clampPixel8(IP[0] + threshold_);
-        uint8_t darker = CompVMathUtils::clampPixel8(IP[0] - threshold_);
+    for (i = 0; i < width; ++i, ++IP, ++strengths1) {
+        uint8_t brighter = CompVMathUtils::clampPixel8(IP[0] + threshold_); // SSE: paddusb
+		uint8_t darker = CompVMathUtils::clampPixel8(IP[0] - threshold_); // SSE: psubusb
 
         // reset strength to zero
         *strengths1 = 0;
@@ -501,18 +455,26 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 		/***** Cross: 1, 9, 5, 13 *****/
 		{
 			// compare I1 and I9 aka 0 and 8
-			temp[0] = IP[pixels16[0]];
-			temp[1] = IP[pixels16[8]];
-			sumd = ((darker > temp[0]) ? 1 : 0) + ((darker > temp[1]) ? 1 : 0);
-			sumb = ((temp[0] > brighter) ? 1 : 0) + ((temp[1] > brighter) ? 1 : 0);
+			t0 = IP[pixels16[0]];
+			t1 = IP[pixels16[8]];
+			ddarkers16[0] = (darker > t0) ? (darker - t0) : 0; // SSE: psubusb
+			ddarkers16[8] = (darker > t1) ? (darker - t1) : 0;
+			dbrighters16[0] = (t0 > brighter) ? (t0 - brighter) : 0;
+			dbrighters16[8] = (t1 > brighter) ? (t1 - brighter) : 0;
+			sumd = (ddarkers16[0] ? 1 : 0) + (ddarkers16[8] ? 1 : 0);
+			sumb = (dbrighters16[0] ? 1 : 0) + (dbrighters16[8] ? 1 : 0);
 			if (!sumb && !sumd) {
 				continue;
 			}
 			// compare I5 and I13 aka 4 and 12
-			temp[2] = IP[pixels16[4]];
-			temp[3] = IP[pixels16[12]];
-			sd = ((darker > temp[2]) ? 1 : 0) + ((darker > temp[3]) ? 1 : 0);
-			sb = ((temp[2] > brighter) ? 1 : 0) + ((temp[3] > brighter) ? 1 : 0);
+			t0 = IP[pixels16[4]];
+			t1 = IP[pixels16[12]];
+			ddarkers16[4] = (darker > t0) ? (darker - t0) : 0;
+			ddarkers16[12] = (darker > t1) ? (darker - t1) : 0;
+			dbrighters16[4] = (t0 > brighter) ? (t0 - brighter) : 0;
+			dbrighters16[12] = (t1 > brighter) ? (t1 - brighter) : 0;
+			sd = (ddarkers16[4] ? 1 : 0) + (ddarkers16[12] ? 1 : 0);
+			sb = (dbrighters16[4] ? 1 : 0) + (dbrighters16[12] ? 1 : 0);
 			if (!sb && !sd) {
 				continue;
 			}
@@ -526,19 +488,27 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 		/***** Cross: 2, 10, 6, 14 *****/
 		{
 			// I2 and I10 aka 1 and 9
-			temp[4] = IP[pixels16[1]];
-			temp[5] = IP[pixels16[9]];
-			sumd = ((darker > temp[4]) ? 1 : 0) + ((darker > temp[5]) ? 1 : 0);
-			sumb = ((temp[4] > brighter) ? 1 : 0) + ((temp[5] > brighter) ? 1 : 0);
+			t0 = IP[pixels16[1]];
+			t1 = IP[pixels16[9]];
+			ddarkers16[1] = (darker > t0) ? (darker - t0) : 0;
+			ddarkers16[9] = (darker > t1) ? (darker - t1) : 0;
+			dbrighters16[1] = (t0 > brighter) ? (t0 - brighter) : 0;
+			dbrighters16[9] = (t1 > brighter) ? (t1 - brighter) : 0;
+			sumd = (ddarkers16[1] ? 1 : 0) + (ddarkers16[9] ? 1 : 0);
+			sumb = (dbrighters16[1] ? 1 : 0) + (dbrighters16[9] ? 1 : 0);
 			if (!sumb && !sumd) {
 				continue;
 			}
 
 			// I6 and I14 aka 5 and 13
-			temp[6] = IP[pixels16[5]];
-			temp[7] = IP[pixels16[13]];
-			sd = ((darker > temp[6]) ? 1 : 0) + ((darker > temp[7]) ? 1 : 0);
-			sb = ((temp[6] > brighter) ? 1 : 0) + ((temp[7] > brighter) ? 1 : 0);
+			t0 = IP[pixels16[5]];
+			t1 = IP[pixels16[13]];
+			ddarkers16[5] = (darker > t0) ? (darker - t0) : 0;
+			ddarkers16[13] = (darker > t1) ? (darker - t1) : 0;
+			dbrighters16[5] = (t0 > brighter) ? (t0 - brighter) : 0;
+			dbrighters16[13] = (t1 > brighter) ? (t1 - brighter) : 0;
+			sd = (ddarkers16[5] ? 1 : 0) + (ddarkers16[13] ? 1 : 0);
+			sb = (dbrighters16[5] ? 1 : 0) + (dbrighters16[13] ? 1 : 0);
 			if (!sb && !sd) {
 				continue;
 			}
@@ -552,18 +522,26 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 		/***** Cross: 3, 11, 7, 15 *****/
 		{
 			// I3 and I11 aka 2 and 10
-			temp[8] = IP[pixels16[2]];
-			temp[9] = IP[pixels16[10]];
-			sumd = ((darker > temp[8]) ? 1 : 0) + ((darker > temp[9]) ? 1 : 0);
-			sumb = ((temp[8] > brighter) ? 1 : 0) + ((temp[9] > brighter) ? 1 : 0);
+			t0 = IP[pixels16[2]];
+			t1 = IP[pixels16[10]];
+			ddarkers16[2] = (darker > t0) ? (darker - t0) : 0;
+			ddarkers16[10] = (darker > t1) ? (darker - t1) : 0;
+			dbrighters16[2] = (t0 > brighter) ? (t0 - brighter) : 0;
+			dbrighters16[10] = (t1 > brighter) ? (t1 - brighter) : 0;
+			sumd = (ddarkers16[2] ? 1 : 0) + (ddarkers16[10] ? 1 : 0);
+			sumb = (dbrighters16[2] ? 1 : 0) + (dbrighters16[10] ? 1 : 0);
 			if (!sumb && !sumd) {
 				continue;
 			}
 			// I7 and I15 aka 6 and 14
-			temp[10] = IP[pixels16[6]];
-			temp[11] = IP[pixels16[14]];
-			sd = ((darker > temp[10]) ? 1 : 0) + ((darker > temp[11]) ? 1 : 0);
-			sb = ((temp[10] > brighter) ? 1 : 0) + ((temp[11] > brighter) ? 1 : 0);
+			t0 = IP[pixels16[6]];
+			t1 = IP[pixels16[14]];
+			ddarkers16[6] = (darker > t0) ? (darker - t0) : 0;
+			ddarkers16[14] = (darker > t1) ? (darker - t1) : 0;
+			dbrighters16[6] = (t0 > brighter) ? (t0 - brighter) : 0;
+			dbrighters16[14] = (t1 > brighter) ? (t1 - brighter) : 0;
+			sd = (ddarkers16[6] ? 1 : 0) + (ddarkers16[14] ? 1 : 0);
+			sb = (dbrighters16[6] ? 1 : 0) + (dbrighters16[14] ? 1 : 0);
 			if (!sb && !sd) {
 				continue;
 			}
@@ -577,18 +555,26 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 		/***** Cross: 4, 12, 8, 16 *****/
 		{
 			// I4 and I12 aka 3 and 11
-			temp[12] = IP[pixels16[3]];
-			temp[13] = IP[pixels16[11]];
-			sumd = ((darker > temp[12]) ? 1 : 0) + ((darker > temp[13]) ? 1 : 0);
-			sumb = ((temp[12] > brighter) ? 1 : 0) + ((temp[13] > brighter) ? 1 : 0);
+			t0 = IP[pixels16[3]];
+			t1 = IP[pixels16[11]];
+			ddarkers16[3] = (darker > t0) ? (darker - t0) : 0;
+			ddarkers16[11] = (darker > t1) ? (darker - t1) : 0;
+			dbrighters16[3] = (t0 > brighter) ? (t0 - brighter) : 0;
+			dbrighters16[11] = (t1 > brighter) ? (t1 - brighter) : 0;
+			sumd = (ddarkers16[3] ? 1 : 0) + (ddarkers16[11] ? 1 : 0);
+			sumb = (dbrighters16[3] ? 1 : 0) + (dbrighters16[11] ? 1 : 0);
 			if (!sumb && !sumd) {
 				continue;
 			}
 			// I8 and I16 aka 7 and 15
-			temp[14] = IP[pixels16[7]];
-			temp[15] = IP[pixels16[15]];
-			sd = ((darker > temp[14]) ? 1 : 0) + ((darker > temp[15]) ? 1 : 0);
-			sb = ((temp[14] > brighter) ? 1 : 0) + ((temp[15] > brighter) ? 1 : 0);
+			t0 = IP[pixels16[7]];
+			t1 = IP[pixels16[15]];
+			ddarkers16[7] = (darker > t0) ? (darker - t0) : 0;
+			ddarkers16[15] = (darker > t1) ? (darker - t1) : 0;
+			dbrighters16[7] = (t0 > brighter) ? (t0 - brighter) : 0;
+			dbrighters16[15] = (t1 > brighter) ? (t1 - brighter) : 0;
+			sd = (ddarkers16[7] ? 1 : 0) + (ddarkers16[15] ? 1 : 0);
+			sb = (dbrighters16[7] ? 1 : 0) + (dbrighters16[15] ? 1 : 0);
 			if (!sb && !sd) {
 				continue;
 			}
@@ -599,80 +585,64 @@ static void FastDataRow1_C(const uint8_t* IP, const uint8_t* IPprev, compv_scala
 			}
 		}
 
-		ddarkers16x1[0] = (darker - temp[0]);
-		ddarkers16x1[1] = (darker - temp[4]);
-		ddarkers16x1[2] = (darker - temp[8]);
-		ddarkers16x1[3] = (darker - temp[12]);
-		ddarkers16x1[4] = (darker - temp[2]);
-		ddarkers16x1[5] = (darker - temp[6]);
-		ddarkers16x1[6] = (darker - temp[10]);
-		ddarkers16x1[7] = (darker - temp[14]);
-		ddarkers16x1[8] = (darker - temp[1]);
-		ddarkers16x1[9] = (darker - temp[5]);
-		ddarkers16x1[10] = (darker - temp[9]);
-		ddarkers16x1[11] = (darker - temp[13]);
-		ddarkers16x1[12] = (darker - temp[3]);
-		ddarkers16x1[13] = (darker - temp[7]);
-		ddarkers16x1[14] = (darker - temp[11]);
-		ddarkers16x1[15] = (darker - temp[15]);
+		// SSE: pmovmskb
+		fdarkers1 =
+			(ddarkers16[0] ? (1 << 0) : 0)
+			| (ddarkers16[1] ? (1 << 1) : 0)
+			| (ddarkers16[2] ? (1 << 2) : 0)
+			| (ddarkers16[3] ? (1 << 3) : 0)
+			| (ddarkers16[4] ? (1 << 4) : 0)
+			| (ddarkers16[5] ? (1 << 5) : 0)
+			| (ddarkers16[6] ? (1 << 6) : 0)
+			| (ddarkers16[7] ? (1 << 7) : 0)
+			| (ddarkers16[8] ? (1 << 8) : 0)
+			| (ddarkers16[9] ? (1 << 9) : 0)
+			| (ddarkers16[10] ? (1 << 10) : 0)
+			| (ddarkers16[11] ? (1 << 11) : 0)
+			| (ddarkers16[12] ? (1 << 12) : 0)
+			| (ddarkers16[13] ? (1 << 13) : 0)
+			| (ddarkers16[14] ? (1 << 14) : 0)
+			| (ddarkers16[15] ? (1 << 15) : 0);
+		fbrighters1 = 
+			(dbrighters16[0] ? (1 << 0) : 0)
+			| (dbrighters16[1] ? (1 << 1) : 0)
+			| (dbrighters16[2] ? (1 << 2) : 0)
+			| (dbrighters16[3] ? (1 << 3) : 0)
+			| (dbrighters16[4] ? (1 << 4) : 0)
+			| (dbrighters16[5] ? (1 << 5) : 0)
+			| (dbrighters16[6] ? (1 << 6) : 0)
+			| (dbrighters16[7] ? (1 << 7) : 0)
+			| (dbrighters16[8] ? (1 << 8) : 0)
+			| (dbrighters16[9] ? (1 << 9) : 0)
+			| (dbrighters16[10] ? (1 << 10) : 0)
+			| (dbrighters16[11] ? (1 << 11) : 0)
+			| (dbrighters16[12] ? (1 << 12) : 0)
+			| (dbrighters16[13] ? (1 << 13) : 0)
+			| (dbrighters16[14] ? (1 << 14) : 0)
+			| (dbrighters16[15] ? (1 << 15) : 0);
 
-		dbrighters16x1[0] = (temp[0] - brighter);
-		dbrighters16x1[1] = (temp[4] - brighter);
-		dbrighters16x1[2] = (temp[8] - brighter);
-		dbrighters16x1[3] = (temp[12] - brighter);
-		dbrighters16x1[4] = (temp[2] - brighter);
-		dbrighters16x1[5] = (temp[6] - brighter);
-		dbrighters16x1[6] = (temp[10] - brighter);
-		dbrighters16x1[7] = (temp[14] - brighter);
-		dbrighters16x1[8] = (temp[1] - brighter);
-		dbrighters16x1[9] = (temp[5] - brighter);
-		dbrighters16x1[10] = (temp[9] - brighter);
-		dbrighters16x1[11] = (temp[13] - brighter);
-		dbrighters16x1[12] = (temp[3] - brighter);
-		dbrighters16x1[13] = (temp[7] - brighter);
-		dbrighters16x1[14] = (temp[11] - brighter);
-		dbrighters16x1[15] = (temp[15] - brighter);
-
-#define DARKERS_SET_AND_CLIP(k) if (ddarkers16x1[k] > 0) fdarkers1 |= (1 << k), ddarkers16[k] = static_cast<uint8_t>(ddarkers16x1[k]); else ddarkers16[k] = 0;
-        fdarkers1 = 0;
-        DARKERS_SET_AND_CLIP(0);
-        DARKERS_SET_AND_CLIP(1);
-        DARKERS_SET_AND_CLIP(2);
-        DARKERS_SET_AND_CLIP(3);
-        DARKERS_SET_AND_CLIP(4);
-        DARKERS_SET_AND_CLIP(5);
-        DARKERS_SET_AND_CLIP(6);
-        DARKERS_SET_AND_CLIP(7);
-        DARKERS_SET_AND_CLIP(8);
-        DARKERS_SET_AND_CLIP(9);
-        DARKERS_SET_AND_CLIP(10);
-        DARKERS_SET_AND_CLIP(11);
-        DARKERS_SET_AND_CLIP(12);
-        DARKERS_SET_AND_CLIP(13);
-        DARKERS_SET_AND_CLIP(14);
-        DARKERS_SET_AND_CLIP(15);
-
-#define BRIGHTERS_SET_AND_CLIP(k) if (dbrighters16x1[k] > 0) fbrighters1 |= (1 << k), dbrighters16[k] = static_cast<uint8_t>(dbrighters16x1[k]); else dbrighters16[k] = 0;
-        fbrighters1 = 0;
-        BRIGHTERS_SET_AND_CLIP(0);
-        BRIGHTERS_SET_AND_CLIP(1);
-        BRIGHTERS_SET_AND_CLIP(2);
-        BRIGHTERS_SET_AND_CLIP(3);
-        BRIGHTERS_SET_AND_CLIP(4);
-        BRIGHTERS_SET_AND_CLIP(5);
-        BRIGHTERS_SET_AND_CLIP(6);
-        BRIGHTERS_SET_AND_CLIP(7);
-        BRIGHTERS_SET_AND_CLIP(8);
-        BRIGHTERS_SET_AND_CLIP(9);
-        BRIGHTERS_SET_AND_CLIP(10);
-        BRIGHTERS_SET_AND_CLIP(11);
-        BRIGHTERS_SET_AND_CLIP(12);
-        BRIGHTERS_SET_AND_CLIP(13);
-        BRIGHTERS_SET_AND_CLIP(14);
-        BRIGHTERS_SET_AND_CLIP(15);
-
-        FastStrengths1(dbrighters16, ddarkers16, fbrighters1, fdarkers1, strengths1, N);
-
+		/* Compute strength */
+		{
+			strength = 0;
+			// SIMD: vector rotations to map arcs
+			for (l = 0; l < 16; ++l) {
+				t0 = t1 = 0xff;
+				if ((fbrighters1 & FastXFlags[l]) == FastXFlags[l]) {
+					for (j = l, k = 0; k < N; ++j, ++k) { // SIMD: vector rotation
+						t1 = std::min(dbrighters16[j & 15], t1); // hz(pairwise) min (lowest diff)
+					}
+				}
+				if ((fdarkers1 & FastXFlags[l]) == FastXFlags[l]) {
+					for (j = l, k = 0; k < N; ++j, ++k) { // SIMD: vector rotation
+						t0 = std::min(ddarkers16[j & 15], t0); // hz(pairwise) min (lowest diff)
+					}
+				}
+				if (t1 != 0xff || t0 != 0xff) {
+					strength = std::max(strength, std::min(t0, t1));
+				}
+			}
+			*strengths1 = strength;
+		}
     } // for (i ....width)
 }
 

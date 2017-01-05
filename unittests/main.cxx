@@ -73,12 +73,7 @@ compv_main()
 			COMPV_CHECK_CODE_BAIL(err = CompVCpu::setAsmEnabled(option->enableAsm));
 			COMPV_CHECK_CODE_BAIL(err = CompVCpu::setIntrinsicsEnabled(option->enableIntrin));
 			COMPV_CHECK_CODE_BAIL(err = CompVCpu::flagsDisable(option->disabledCpuFlags));
-			if (option->enabledMultithreading) {
-				COMPV_CHECK_CODE_BAIL(err = CompVParallel::multiThreadingSetMaxThreads(COMPV_NUM_THREADS_MULTI));
-			}
-			else {
-				COMPV_CHECK_CODE_BAIL(err = CompVParallel::multiThreadingSetMaxThreads(COMPV_NUM_THREADS_SINGLE));
-			}
+			COMPV_CHECK_CODE_BAIL(err = CompVParallel::multiThreadingSetMaxThreads(option->enabledMultithreading ? COMPV_NUM_THREADS_MULTI : COMPV_NUM_THREADS_SINGLE));
 			
 #if UNITTEST_FEATURE_FAST || !defined(COMPV_TEST_LOCAL)
 			extern COMPV_ERROR_CODE unittest_feature_fast();
