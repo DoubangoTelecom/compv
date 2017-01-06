@@ -42,9 +42,9 @@ To:
 0 1 0 1 0 1 . . . .
 */
 #define COMPV_INTERLEAVE_I8_SSE2(_m0, _m1, _tmp) \
-	_mm_store_si128(&_tmp, _mm_unpackhi_epi8(_m0, _m1)); \
-	_mm_store_si128(&_m0, _mm_unpacklo_epi8(_m0, _m1)); \
-	_mm_store_si128(&_m1, _tmp);
+	_tmp = _mm_unpackhi_epi8(_m0, _m1); \
+	_m0 = _mm_unpacklo_epi8(_m0, _m1); \
+	_m1 = _tmp;
 
 /*
 Transpose a 4x16 matrix containing u8/i8 values.

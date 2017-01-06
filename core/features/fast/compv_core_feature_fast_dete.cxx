@@ -445,6 +445,7 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const c
 	compv_scalar_t fbrighters1, fdarkers1;
 	const int32_t minsum = (N == 12 ? 3 : 2);
 	compv_scalar_t i, j, k, arcStart;
+	//static int FIXME = 0;
 
 	for (i = 0; i < width; ++i, ++IP, ++strengths) {
 		uint8_t brighter = CompVMathUtils::clampPixel8(IP[0] + threshold_); // SSE: paddusb
@@ -589,6 +590,8 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const c
 				continue;
 			}
 		}
+
+		//COMPV_DEBUG_INFO("Passed:%d", ++FIXME);
 
 		// SSE: pmovmskb
 		fdarkers1 =

@@ -25,17 +25,16 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	const compv_scalar_t minsum = (N == 12 ? 3 : 2);
-	const uint16_t *FastXFlags = N == 9 ? kCompVFast9Flags : kCompVFast12Flags;
 	compv_scalar_t i, j, k, arcStart, sumb, sumd, sb, sd;
 	int mask0B, mask1B, mask1D, mask0D;
 	bool load0B, load1B, load0D, load1D;
+	compv_scalar_t NminusOne = N - 1;
 	const __m128i vecThreshold = _mm_set1_epi8(static_cast<int8_t>(threshold));
-	const __m128i vecN = _mm_set1_epi8(static_cast<int8_t>(N)); // FIXME: remove
-	const __m128i vecNMinusOne = _mm_set1_epi8(static_cast<int8_t>(N - 1)); // no '_mm_cmpge_epu8'
+	const __m128i vecNMinusOne = _mm_set1_epi8(static_cast<int8_t>(NminusOne)); // no '_mm_cmpge_epu8'
 	const __m128i vecOne = _mm_load_si128(reinterpret_cast<const __m128i*>(k1_i8));
 	const __m128i vecZero = _mm_setzero_si128();
 	const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
-	__m128i vec0, vec1, vecStrengths, vecBrighter1, vecDarker1, vecDarkers16[16], vecBrighters16[16];
+	__m128i vec0, vec1, vecStrengths, vecBrighter1, vecDarker1, vecMask16[16], vecDarkers16[16], vecBrighters16[16];
 	const uint8_t* circle[16] = { // FIXME: use same circle with C++ code
 		&IP[pixels16[0]], &IP[pixels16[1]], &IP[pixels16[2]], &IP[pixels16[3]],
 		&IP[pixels16[4]], &IP[pixels16[5]], &IP[pixels16[6]], &IP[pixels16[7]],
@@ -182,40 +181,120 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME");
 		}
 
-		if (load0B) {
-			vec0 = _mm_cmpgtz_epu8(vecBrighters16[0], vecOne);
-			for (j = 1; j < 16; ++j) { // FIXME: unroll
-				vec0 = _mm_add_epi8(_mm_cmpgtz_epu8(vecBrighters16[j], vecOne), vec0);
+		if (load0D) {
+			vecMask16[0] = _mm_cmpgtz_epu8(vecDarkers16[0], vecOne);
+			vecMask16[1] = _mm_cmpgtz_epu8(vecDarkers16[1], vecOne);
+			vecMask16[2] = _mm_cmpgtz_epu8(vecDarkers16[2], vecOne);
+			vecMask16[3] = _mm_cmpgtz_epu8(vecDarkers16[3], vecOne);
+			vecMask16[4] = _mm_cmpgtz_epu8(vecDarkers16[4], vecOne);
+			vecMask16[5] = _mm_cmpgtz_epu8(vecDarkers16[5], vecOne);
+			vecMask16[6] = _mm_cmpgtz_epu8(vecDarkers16[6], vecOne);
+			vecMask16[7] = _mm_cmpgtz_epu8(vecDarkers16[7], vecOne);
+			vecMask16[8] = _mm_cmpgtz_epu8(vecDarkers16[8], vecOne);
+			vecMask16[9] = _mm_cmpgtz_epu8(vecDarkers16[9], vecOne);
+			vecMask16[10] = _mm_cmpgtz_epu8(vecDarkers16[10], vecOne);
+			vecMask16[11] = _mm_cmpgtz_epu8(vecDarkers16[11], vecOne);
+			vecMask16[12] = _mm_cmpgtz_epu8(vecDarkers16[12], vecOne);
+			vecMask16[13] = _mm_cmpgtz_epu8(vecDarkers16[13], vecOne);
+			vecMask16[14] = _mm_cmpgtz_epu8(vecDarkers16[14], vecOne);
+			vecMask16[15] = _mm_cmpgtz_epu8(vecDarkers16[15], vecOne);
+
+			// Sum arc #0 without the tail (#NminusOne lines)
+			vec0 = vecMask16[0];
+			vec0 = _mm_add_epi8(vec0, vecMask16[1]);
+			vec0 = _mm_add_epi8(vec0, vecMask16[2]);
+			vec0 = _mm_add_epi8(vec0, vecMask16[3]);
+			vec0 = _mm_add_epi8(vec0, vecMask16[4]);
+			vec0 = _mm_add_epi8(vec0, vecMask16[5]);
+			vec0 = _mm_add_epi8(vec0, vecMask16[6]);
+			vec0 = _mm_add_epi8(vec0, vecMask16[7]);
+			if (N == 12) {
+				vec0 = _mm_add_epi8(vec0, vecMask16[8]);
+				vec0 = _mm_add_epi8(vec0, vecMask16[9]);
+				vec0 = _mm_add_epi8(vec0, vecMask16[10]);
 			}
-			vec0 = _mm_cmpgt_epi8(vec0, vecNMinusOne); // 0xFF when N-nonzero diffs found, initial value for minb
-			mask0B = _mm_movemask_epi8(vec0);
-			if (mask0B) {
-				for (arcStart = 0; arcStart < 16; ++arcStart) {
-					vec1 = vec0;
-					for (j = arcStart, k = 0; k < N; ++j, ++k) {
-						vec1 = _mm_min_epu8(vecBrighters16[j & 15], vec1);
-						// FIXME: if 'vecMinB1' contains zeros then break the loop -> use mask
+			// Sum the #16 lines
+			vec1 = vec0;
+			if (N == 9) {
+				vec1 = _mm_add_epi8(vec1, vecMask16[8]);
+				vec1 = _mm_add_epi8(vec1, vecMask16[9]);
+				vec1 = _mm_add_epi8(vec1, vecMask16[10]);
+			}
+			vec1 = _mm_add_epi8(vec1, vecMask16[11]);
+			vec1 = _mm_add_epi8(vec1, vecMask16[12]);
+			vec1 = _mm_add_epi8(vec1, vecMask16[13]);
+			vec1 = _mm_add_epi8(vec1, vecMask16[14]);
+			vec1 = _mm_add_epi8(vec1, vecMask16[15]);
+			if (_mm_movemask_epi8(_mm_cmpgt_epi8(vec1, vecNMinusOne))) {
+				for (j = 0; j < 16; ++j) {
+					vec0 = _mm_add_epi8(vec0, vecMask16[(NminusOne + j) & 15]); // add tail
+					if (_mm_movemask_epi8(_mm_cmpgt_epi8(vec0, vecNMinusOne))) {
+						vec1 = _mm_cmpeq_epi8(vec1, vec1); // 0xff
+						for (arcStart = j, k = 0; k < N; ++arcStart, ++k) { // FIXME: unroll
+							vec1 = _mm_min_epu8(vecDarkers16[arcStart & 15], vec1);
+						}
+						vecStrengths = _mm_max_epu8(vecStrengths, vec1);
 					}
-					vecStrengths = _mm_max_epu8(vecStrengths, vec1);
+					vec0 = _mm_sub_epi8(vec0, vecMask16[j & 15]); // sub head
 				}
 			}
 		}
 
-		if (load0D) {
-			vec0 = _mm_cmpgtz_epu8(vecDarkers16[0], vecOne);
-			for (j = 1; j < 16; ++j) { // FIXME: unroll
-				vec0 = _mm_add_epi8(_mm_cmpgtz_epu8(vecDarkers16[j], vecOne), vec0);
+		if (load0B) {
+			vecMask16[0] = _mm_cmpgtz_epu8(vecBrighters16[0], vecOne);
+			vecMask16[1] = _mm_cmpgtz_epu8(vecBrighters16[1], vecOne);
+			vecMask16[2] = _mm_cmpgtz_epu8(vecBrighters16[2], vecOne);
+			vecMask16[3] = _mm_cmpgtz_epu8(vecBrighters16[3], vecOne);
+			vecMask16[4] = _mm_cmpgtz_epu8(vecBrighters16[4], vecOne);
+			vecMask16[5] = _mm_cmpgtz_epu8(vecBrighters16[5], vecOne);
+			vecMask16[6] = _mm_cmpgtz_epu8(vecBrighters16[6], vecOne);
+			vecMask16[7] = _mm_cmpgtz_epu8(vecBrighters16[7], vecOne);
+			vecMask16[8] = _mm_cmpgtz_epu8(vecBrighters16[8], vecOne);
+			vecMask16[9] = _mm_cmpgtz_epu8(vecBrighters16[9], vecOne);
+			vecMask16[10] = _mm_cmpgtz_epu8(vecBrighters16[10], vecOne);
+			vecMask16[11] = _mm_cmpgtz_epu8(vecBrighters16[11], vecOne);
+			vecMask16[12] = _mm_cmpgtz_epu8(vecBrighters16[12], vecOne);
+			vecMask16[13] = _mm_cmpgtz_epu8(vecBrighters16[13], vecOne);
+			vecMask16[14] = _mm_cmpgtz_epu8(vecBrighters16[14], vecOne);
+			vecMask16[15] = _mm_cmpgtz_epu8(vecBrighters16[15], vecOne);
+
+			// Sum arc #0 without the tail (#NminusOne lines)
+			vec0 = vecMask16[0];
+			vec0 = _mm_add_epi8(vec0, vecMask16[1]);
+			vec0 = _mm_add_epi8(vec0, vecMask16[2]);
+			vec0 = _mm_add_epi8(vec0, vecMask16[3]);
+			vec0 = _mm_add_epi8(vec0, vecMask16[4]);
+			vec0 = _mm_add_epi8(vec0, vecMask16[5]);
+			vec0 = _mm_add_epi8(vec0, vecMask16[6]);
+			vec0 = _mm_add_epi8(vec0, vecMask16[7]);
+			if (N == 12) {
+				vec0 = _mm_add_epi8(vec0, vecMask16[8]);
+				vec0 = _mm_add_epi8(vec0, vecMask16[9]);
+				vec0 = _mm_add_epi8(vec0, vecMask16[10]);
 			}
-			vec0 = _mm_cmpgt_epi8(vec0, vecNMinusOne); // 0xFF when N-nonzero diffs found, initial value for minb
-			mask0D = _mm_movemask_epi8(vec0);
-			if (mask0D) {
-				for (arcStart = 0; arcStart < 16; ++arcStart) {
-					vec1 = vec0;
-					for (j = arcStart, k = 0; k < N; ++j, ++k) {
-						vec1 = _mm_min_epu8(vecDarkers16[j & 15], vec1);
-						// FIXME: if 'vecMinB1' contains zeros then break the loop -> use mask
+			// Sum the #16 lines
+			vec1 = vec0;
+			if (N == 9) {
+				vec1 = _mm_add_epi8(vec1, vecMask16[8]);
+				vec1 = _mm_add_epi8(vec1, vecMask16[9]);
+				vec1 = _mm_add_epi8(vec1, vecMask16[10]);
+			}
+			vec1 = _mm_add_epi8(vec1, vecMask16[11]);
+			vec1 = _mm_add_epi8(vec1, vecMask16[12]);
+			vec1 = _mm_add_epi8(vec1, vecMask16[13]);
+			vec1 = _mm_add_epi8(vec1, vecMask16[14]);
+			vec1 = _mm_add_epi8(vec1, vecMask16[15]);
+			if (_mm_movemask_epi8(_mm_cmpgt_epi8(vec1, vecNMinusOne))) {
+				for (j = 0; j < 16; ++j) {
+					vec0 = _mm_add_epi8(vec0, vecMask16[(NminusOne + j) & 15]); // add tail
+					if (_mm_movemask_epi8(_mm_cmpgt_epi8(vec0, vecNMinusOne))) {
+						vec1 = _mm_cmpeq_epi8(vec1, vec1); // 0xff
+						for (arcStart = j, k = 0; k < N; ++arcStart, ++k) { // FIXME: unroll
+							vec1 = _mm_min_epu8(vecBrighters16[arcStart & 15], vec1);
+						}
+						vecStrengths = _mm_max_epu8(vecStrengths, vec1);
 					}
-					vecStrengths = _mm_max_epu8(vecStrengths, vec1);
+					vec0 = _mm_sub_epi8(vec0, vecMask16[j & 15]); // sub head
 				}
 			}
 		}

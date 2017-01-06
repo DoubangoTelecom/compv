@@ -7,11 +7,11 @@ using namespace compv;
 
 #define numThreads				COMPV_NUM_THREADS_SINGLE
 #define enableIntrinsics		true
-#define enableAsm				true
+#define enableAsm				false
 #define enableMathFixedPoint	true
 #define enableTestingMode		true
 
-#define cpuDisable				kCpuFlagNone
+#define cpuDisable				kCpuFlagAVX2 | kCpuFlagSSE41
 
 #define TEST_CONV				0
 #define TEST_FAST				1

@@ -100,7 +100,7 @@ using namespace compv;
 #	define FAST12_T10_NONMAX_YF			1576105.f
 #endif
 
-#define FAST_LOOP_COUNT	1
+#define FAST_LOOP_COUNT	1000
 
 COMPV_ERROR_CODE TestFAST()
 {
