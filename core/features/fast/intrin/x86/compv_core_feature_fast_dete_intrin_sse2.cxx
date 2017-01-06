@@ -43,17 +43,6 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 	};
 
 #define _mm_cmpgtz_epu8(vec, mask) _mm_andnot_si128(_mm_cmpeq_epi8(vec, vecZero), mask) // no '_mm_cmpgt_epu8', mask should be '0xff'
-#define _mm_fast_masks(a, b) \
-	vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[a] + i))); \
-	vec1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[b] + i))); \
-	vecDarkers16[a] = _mm_subs_epu8(vecDarker1, vec0); \
-	vecDarkers16[b] = _mm_subs_epu8(vecDarker1, vec1); \
-	vecBrighters16[a] = _mm_subs_epu8(vec0, vecBrighter1); \
-	vecBrighters16[b] = _mm_subs_epu8(vec1, vecBrighter1); \
-	vecS1 = _mm_add_epi8(_mm_cmpgtz_epu8(vecDarkers16[a], vecOne), _mm_cmpgtz_epu8(vecDarkers16[b], vecOne)); \
-	vecS1 = _mm_add_epi8(_mm_cmpgtz_epu8(vecBrighters16[a], vecOne), _mm_cmpgtz_epu8(vecBrighters16[b], vecOne))
-
-	/* FIXME: remove _mm_fast_masks */
 
 	for (i = 0; i < width; i += 16, strengths += 16) {
 		vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(IP + i));
@@ -68,7 +57,6 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 		}
 
 		// FIXME: loadu_circle done several times
-		// FIXME: vecMask16 already computed in _mm_fast_check
 
 #define _mm_fast_compute_Darkers(a, b) \
 	vecDarkers16[a] = _mm_subs_epu8(vecDarker1, vec0); \
@@ -77,75 +65,67 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 	vecBrighters16[a] = _mm_subs_epu8(vec0, vecBrighter1); \
 	vecBrighters16[b] = _mm_subs_epu8(vec1, vecBrighter1)
 
-#define _mm_fast_check(a, b, tt) \
+#define _mm_fast_check(a, b, tt, next) \
 		vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[a] + i))); \
 		vec1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[b] + i))); \
 		_mm_fast_compute_##tt##s(a, b); \
 		vecMask16[a] = _mm_cmpgtz_epu8(vec##tt##s16[a], vecOne); \
 		vecMask16[b] = _mm_cmpgtz_epu8(vec##tt##s16[b], vecOne); \
 		vecS1 = _mm_add_epi8(vecMask16[a], vecMask16[b]); \
-		mask = _mm_movemask_epi8(_mm_cmpgt_epi8(vecS1, vecZero))
+		mask = _mm_movemask_epi8(_mm_cmpgt_epi8(vecS1, vecZero)); \
+		if (!mask) goto next;
 
 		/****************************** Darkers ******************************/
 		{
 			/* 1, 9, 5, 13 */ {
 				// compare I1 and I9 aka 0 and 8
-				_mm_fast_check(0, 8, Darker);
-				if (!mask) goto Brighters;
+				_mm_fast_check(0, 8, Darker, EndOfDarkers);
 				vecSum1 = vecS1; // initial -> equal
 
 				// compare I5 and I13 aka 4 and 12
-				_mm_fast_check(4, 12, Darker);
-				if (!mask) goto Brighters;
+				_mm_fast_check(4, 12, Darker, EndOfDarkers);
 				vecSum1 = _mm_add_epi8(vecSum1, vecS1); // not initial -> add
 				mask = _mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinSumMinusOne));
-				if (!mask) goto Brighters;
+				if (!mask) goto EndOfDarkers;
 			}
 			/* 2, 10, 6, 14 */ {
 				// I2 and I10 aka 1 and 9
-				_mm_fast_check(1, 9, Darker);
-				if (!mask) goto Brighters;
+				_mm_fast_check(1, 9, Darker, EndOfDarkers);
 				vecSum1 = _mm_add_epi8(vecSum1, vecS1);
 
 				// I6 and I14 aka 5 and 13
-				_mm_fast_check(5, 13, Darker);
-				if (!mask) goto Brighters;
+				_mm_fast_check(5, 13, Darker, EndOfDarkers);
 				vecSum1 = _mm_add_epi8(vecSum1, vecS1);
 				mask = _mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinSumMinusOne));
-				if (!mask) goto Brighters;
+				if (!mask) goto EndOfDarkers;
 			}
 			/* 3, 11, 7, 15 */ {
 				// I3 and I11 aka 2 and 10
-				_mm_fast_check(2, 10, Darker);
-				if (!mask) goto Brighters;
+				_mm_fast_check(2, 10, Darker, EndOfDarkers);
 				vecSum1 = _mm_add_epi8(vecSum1, vecS1);
 
 				// I7 and I15 aka 6 and 14
-				_mm_fast_check(6, 14, Darker);
-				if (!mask) goto Brighters;
+				_mm_fast_check(6, 14, Darker, EndOfDarkers);
 				vecSum1 = _mm_add_epi8(vecSum1, vecS1);
 				mask = _mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinSumMinusOne));
-				if (!mask) goto Brighters;
+				if (!mask) goto EndOfDarkers;
 			}
 			/* 4, 12, 8, 16 */ {
 				// I4 and I12 aka 3 and 11
-				_mm_fast_check(3, 11, Darker);
-				if (!mask) goto Brighters;
+				_mm_fast_check(3, 11, Darker, EndOfDarkers);
 				vecSum1 = _mm_add_epi8(vecSum1, vecS1);
 
 				// I8 and I16 aka 7 and 15
-				_mm_fast_check(7, 15, Darker);
-				if (!mask) goto Brighters;
+				_mm_fast_check(7, 15, Darker, EndOfDarkers);
 				vecSum1 = _mm_add_epi8(vecSum1, vecS1);
 				mask = _mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinusOne)); // last pair -> not 'vecNMinSumMinusOne' but 'vecNMinusOne'
-				if (!mask) goto Brighters;
+				if (!mask) goto EndOfDarkers;
 			}
 
 			////// Strengths /////
 
 			// Sum arc #0 without the tail (#NminusOne lines)
-			vec0 = vecMask16[0];
-			vec0 = _mm_add_epi8(vec0, vecMask16[1]);
+			vec0 = _mm_add_epi8(vecMask16[0], vecMask16[1]);
 			vec0 = _mm_add_epi8(vec0, vecMask16[2]);
 			vec0 = _mm_add_epi8(vec0, vecMask16[3]);
 			vec0 = _mm_add_epi8(vec0, vecMask16[4]);
@@ -169,68 +149,59 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 				vec0 = _mm_sub_epi8(vec0, vecMask16[j & 15]); // sub head
 			}
 		}
+	EndOfDarkers:
 
 		/****************************** Brighters ******************************/
-	Brighters:
 		{
 			/* 1, 9, 5, 13 */ {
 				// compare I1 and I9 aka 0 and 8
-				_mm_fast_check(0, 8, Brighter);
-				if (!mask) goto Next;
+				_mm_fast_check(0, 8, Brighter, EndOfBrighters);
 				vecSum1 = vecS1; // initial -> equal
 
-								   // compare I5 and I13 aka 4 and 12
-				_mm_fast_check(4, 12, Brighter);
-				if (!mask) goto Next;
+				// compare I5 and I13 aka 4 and 12
+				_mm_fast_check(4, 12, Brighter, EndOfBrighters);
 				vecSum1 = _mm_add_epi8(vecSum1, vecS1); // not initial -> add
 				mask = _mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinSumMinusOne));
-				if (!mask) goto Next;
+				if (!mask) goto EndOfBrighters;
 			}
 			/* 2, 10, 6, 14 */ {
 				// I2 and I10 aka 1 and 9
-				_mm_fast_check(1, 9, Brighter);
-				if (!mask) goto Next;
+				_mm_fast_check(1, 9, Brighter, EndOfBrighters);
 				vecSum1 = _mm_add_epi8(vecSum1, vecS1);
 
 				// I6 and I14 aka 5 and 13
-				_mm_fast_check(5, 13, Brighter);
-				if (!mask) goto Next;
+				_mm_fast_check(5, 13, Brighter, EndOfBrighters);
 				vecSum1 = _mm_add_epi8(vecSum1, vecS1);
 				mask = _mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinSumMinusOne));
-				if (!mask) goto Next;
+				if (!mask) goto EndOfBrighters;
 			}
 			/* 3, 11, 7, 15 */ {
 				// I3 and I11 aka 2 and 10
-				_mm_fast_check(2, 10, Brighter);
-				if (!mask) goto Next;
+				_mm_fast_check(2, 10, Brighter, EndOfBrighters);
 				vecSum1 = _mm_add_epi8(vecSum1, vecS1);
 
 				// I7 and I15 aka 6 and 14
-				_mm_fast_check(6, 14, Brighter);
-				if (!mask) goto Next;
+				_mm_fast_check(6, 14, Brighter, EndOfBrighters);
 				vecSum1 = _mm_add_epi8(vecSum1, vecS1);
 				mask = _mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinSumMinusOne));
-				if (!mask) goto Next;
+				if (!mask) goto EndOfBrighters;
 			}
 			/* 4, 12, 8, 16 */ {
 				// I4 and I12 aka 3 and 11
-				_mm_fast_check(3, 11, Brighter);
-				if (!mask) goto Next;
+				_mm_fast_check(3, 11, Brighter, EndOfBrighters);
 				vecSum1 = _mm_add_epi8(vecSum1, vecS1);
 
 				// I8 and I16 aka 7 and 15
-				_mm_fast_check(7, 15, Brighter);
-				if (!mask) goto Next;
+				_mm_fast_check(7, 15, Brighter, EndOfBrighters);
 				vecSum1 = _mm_add_epi8(vecSum1, vecS1);
 				mask = _mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinusOne)); // last pair -> not 'vecNMinSumMinusOne' but 'vecNMinusOne'
-				if (!mask) goto Next;
+				if (!mask) goto EndOfBrighters;
 			}
 
 			////// Strengths /////
 
 			// Sum arc #0 without the tail (#NminusOne lines)
-			vec0 = vecMask16[0];
-			vec0 = _mm_add_epi8(vec0, vecMask16[1]);
+			vec0 = _mm_add_epi8(vecMask16[0], vecMask16[1]);
 			vec0 = _mm_add_epi8(vec0, vecMask16[2]);
 			vec0 = _mm_add_epi8(vec0, vecMask16[3]);
 			vec0 = _mm_add_epi8(vec0, vecMask16[4]);
@@ -254,9 +225,8 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 				vec0 = _mm_sub_epi8(vec0, vecMask16[j & 15]); // sub head
 			}
 		}
-
-		/****************************** Next ******************************/
-	Next:
+	EndOfBrighters:
+		
 		_mm_storeu_si128(reinterpret_cast<__m128i*>(strengths), vecStrengths);
 
 	}
