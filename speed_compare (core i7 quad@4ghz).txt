@@ -3,5 +3,5 @@ CompV: 169.ms(st), 54.ms(mt)
 OpenCV: 341.ms
 
 === FAST9_16, Nonmax (#1000 times, 720p) ===
-CompV: 16239.ms(st) -> 13795.ms(st) -> 3630.ms(st), 1820.ms(mt)
+CompV: 16239.ms(st) -> 13795.ms(st) -> 3630.ms(st), 1820.ms(mt) -> 3126.ms(st) -> 2737.ms(st)
 OpenCV: 1891.ms
