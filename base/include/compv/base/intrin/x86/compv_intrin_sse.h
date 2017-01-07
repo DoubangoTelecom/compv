@@ -33,6 +33,15 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 #define _mm_cvtepi16_epi32_low_SSE2(a) _mm_srai_epi32(_mm_unpacklo_epi16(a, a), 16)
 #define _mm_cvtepi16_epi32_hi_SSE2(a) _mm_srai_epi32(_mm_unpackhi_epi16(a, a), 16)
 
+#define _mm_cmpgtz_epu8_SSE2(vec, mask) _mm_andnot_si128(_mm_cmpeq_epi8(vec, vecZero), mask) // no '_mm_cmpgt_epu8', mask should be '0xff'
+
+// Compute the minimum, set the min a the first position and clear all other values
+#define _mm_minhz_epu8_SSE2(vec) /*SSE2 use _mm_minpos_epu16 on SSE41 */\
+	vec = _mm_min_epu8(vec, _mm_srli_si128(vec, 8)); /* >> 64b */ \
+	vec = _mm_min_epu8(vec, _mm_srli_si128(vec, 4)); /* >> 32b */ \
+	vec = _mm_min_epu8(vec, _mm_srli_si128(vec, 2)); /* >> 16b */ \
+	vec = _mm_min_epu8(vec, _mm_srli_si128(vec, 1)) /* >> 1b */
+
 /*
 Interleaves two 128bits vectors.
 From:

@@ -13,7 +13,7 @@ using namespace compv;
 
 #define TAG_TESTS_COMMON	"TESTS_COMMON"
 
-#define COMPV_numThreads			COMPV_NUM_THREADS_SINGLE
+#define COMPV_numThreads			COMPV_NUM_THREADS_MULTI
 #define COMPV_enableIntrinsics		true
 #define COMPV_enableAsm				true
 #define COMPV_enableMathFixedPoint	true

@@ -169,8 +169,6 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Multi-threaded version commented");
-
 	const uint8_t* dataPtr = image->ptr<const uint8_t>();
     size_t width = image->cols();
 	size_t height = image->rows();
@@ -287,7 +285,6 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
         pRange->strengths = m_pStrengthsMap;
         CompVFastProcessRange(pRange);
     }
-
     // Build interest points
 #define COMPV_PUSH1() if (*begin1) { *begin1 += thresholdMinus1; interestPoints_->push(CompVInterestPoint(static_cast<compv_float32_t>(begin1 - strengths), static_cast<compv_float32_t>(j), static_cast<compv_float32_t>(*begin1))); } ++begin1;
 #define COMPV_PUSH4() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1()
@@ -328,13 +325,12 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
         }
     }
 
-
     // Non Maximal Suppression for removing adjacent corners
     if (m_bNonMaximaSupp && interestPoints_->size() > 0) {
         size_t threadsCountNMS = 1;
         if (threadDisp && threadDisp->threadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
             threadsCountNMS = (interestPoints_->size() / COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD);
-            threadsCountNMS = COMPV_MATH_CLIP3(0, threadDisp->threadsCount(), threadsCountNMS);
+            threadsCountNMS = COMPV_MATH_CLIP3(0, static_cast<size_t>(threadDisp->threadsCount()), threadsCountNMS);
         }
         if (threadsCountNMS > 1) {
 			size_t size = interestPoints_->size(), sizes = (size / threadsCountNMS);
@@ -404,7 +400,7 @@ static void CompVFastProcessRange(RangeFAST* range)
 
     // Number of pixels to process (multiple of align)
     kalign = static_cast<int32_t>(CompVMem::alignForward((-3 + range->width - 3), align));
-    if (kalign > (range->stride - 3)) { // must never happen as the image always contains a border(default 7) aligned on 64B
+    if (kalign > static_cast<int32_t>(range->stride - 3)) { // must never happen as the image always contains a border(default 7) aligned on 64B
         COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Unexpected code called. k16=%d, stride=%zu", kalign, range->stride);
         COMPV_ASSERT(false);
         return;
@@ -422,9 +418,6 @@ static void CompVFastProcessRange(RangeFAST* range)
     // We should have 64586 non-zero results for SSE and 66958 for AVX2
 
     for (j = minj; j < maxj; ++j) {
-		if (j == 151 /*|| j == 141*/) {
-			COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME");
-		}
         FastDataRow(IP, kalign, range->pixels16, range->N, range->threshold, strengths);
         // remove extra samples
         extra = &strengths[kalign - 1];
@@ -447,15 +440,10 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const c
 	compv_scalar_t fbrighters1, fdarkers1;
 	const int32_t minsum = (N == 12 ? 3 : 2);
 	compv_scalar_t i, j, k, arcStart;
-	//static int FIXME = 0;
 
 	for (i = 0; i < width; ++i, ++IP, ++strengths) {
 		uint8_t brighter = CompVMathUtils::clampPixel8(IP[0] + threshold_); // SSE: paddusb
 		uint8_t darker = CompVMathUtils::clampPixel8(IP[0] - threshold_); // SSE: psubusb
-
-		if (i == 1050) {
-			COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME");
-		}
 
 		// reset strength to zero
 		*strengths = 0;
@@ -652,9 +640,6 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const c
 				}
 			}
 			*strengths = strength;
-		}
-		if (*strengths) {
-			COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME");
 		}
 	} // for (i ....width)	
 }
