@@ -26,12 +26,6 @@ Some literature about FAST:
 
 #define COMPV_THIS_CLASSNAME	"CompVCornerDeteFAST"
 
-// Flags generated using FastFlags() in "tests/fast.cxx"
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint16_t kCompVFast9Flags[16] = { 0x1ff, 0x3fe, 0x7fc, 0xff8, 0x1ff0, 0x3fe0, 0x7fc0, 0xff80, 0xff01, 0xfe03, 0xfc07, 0xf80f, 0xf01f, 0xe03f, 0xc07f, 0x80ff };
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint16_t kCompVFast12Flags[16] = { 0xfff, 0x1ffe, 0x3ffc, 0x7ff8, 0xfff0, 0xffe1, 0xffc3, 0xff87, 0xff0f, 0xfe1f, 0xfc3f, 0xf87f, 0xf0ff, 0xe1ff, 0xc3ff, 0x87ff };
-
-// FIXME: kCompVFast9Arcs and kCompVFast9Flags non longer used
-
 COMPV_NAMESPACE_BEGIN()
 
 // Default threshold (pixel intensity: [0-255])
@@ -471,215 +465,113 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_uscalar_t width, const 
 {
 	// Code not intended to be fast but just readable, real code is implemented in SSE, AVX and NEON.
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Must be reviewed: see your remainders");
+	static const uint16_t kCompVFast9Flags[16] = { 0x1ff, 0x3fe, 0x7fc, 0xff8, 0x1ff0, 0x3fe0, 0x7fc0, 0xff80, 0xff01, 0xfe03, 0xfc07, 0xf80f, 0xf01f, 0xe03f, 0xc07f, 0x80ff };
+	static const uint16_t kCompVFast12Flags[16] = { 0xfff, 0x1ffe, 0x3ffc, 0x7ff8, 0xfff0, 0xffe1, 0xffc3, 0xff87, 0xff0f, 0xfe1f, 0xfc3f, 0xf87f, 0xf0ff, 0xe1ff, 0xc3ff, 0x87ff };
 	int32_t sumb, sumd, sb, sd;
-	int16_t threshold_ = static_cast<int16_t>(threshold); // using int16_t to avoid clipping (useless for SIMD with support for saturated sub and add)
-	uint8_t ddarkers16[16], dbrighters16[16], strength, t0, t1;
+	uint8_t threshold_ = static_cast<uint8_t>(threshold); // using int16_t to avoid clipping (useless for SIMD with support for saturated sub and add)
+	uint8_t neighborhoods16[16], strength, t0, t1, brighter, darker;
 	const uint16_t(&FastXFlags)[16] = N == 9 ? kCompVFast9Flags : kCompVFast12Flags;
-	compv_uscalar_t fbrighters1, fdarkers1;
+	compv_uscalar_t flags;
 	const int32_t minsum = (N == 12 ? 3 : 2);
 	compv_uscalar_t i, j, k, arcStart;
+	const uint8_t* circle[16] = {
+		&IP[pixels16[0]], &IP[pixels16[1]], &IP[pixels16[2]], &IP[pixels16[3]],
+		&IP[pixels16[4]], &IP[pixels16[5]], &IP[pixels16[6]], &IP[pixels16[7]],
+		&IP[pixels16[8]], &IP[pixels16[9]], &IP[pixels16[10]], &IP[pixels16[11]],
+		&IP[pixels16[12]], &IP[pixels16[13]], &IP[pixels16[14]], &IP[pixels16[15]]
+	};
+
+#define _cpp_fast_check(a, b, c, d) \
+		t0 = circle[a][i], t1 = circle[b][i]; \
+		sd = (t0 < darker) + (t1 < darker), sb = (t0 > brighter) + (t1 > brighter); \
+		if (!(sd || sb)) goto Next; \
+		sumd += sd, sumb += sb; \
+		t0 = circle[c][i], t1 = circle[d][i]; \
+		sd = (t0 < darker) + (t1 < darker), sb = (t0 > brighter) + (t1 > brighter); \
+		if (!(sd || sb)) goto Next; \
+		sumd += sd, sumb += sb; \
+		if (sumd < minsum && sumb < minsum) goto Next
+
+#define _cpp_fast_strenght() \
+	flags = \
+		(neighborhoods16[0] ? (1 << 0) : 0) \
+		| (neighborhoods16[1] ? (1 << 1) : 0) \
+		| (neighborhoods16[2] ? (1 << 2) : 0) \
+		| (neighborhoods16[3] ? (1 << 3) : 0) \
+		| (neighborhoods16[4] ? (1 << 4) : 0) \
+		| (neighborhoods16[5] ? (1 << 5) : 0) \
+		| (neighborhoods16[6] ? (1 << 6) : 0) \
+		| (neighborhoods16[7] ? (1 << 7) : 0) \
+		| (neighborhoods16[8] ? (1 << 8) : 0) \
+		| (neighborhoods16[9] ? (1 << 9) : 0) \
+		| (neighborhoods16[10] ? (1 << 10) : 0) \
+		| (neighborhoods16[11] ? (1 << 11) : 0) \
+		| (neighborhoods16[12] ? (1 << 12) : 0) \
+		| (neighborhoods16[13] ? (1 << 13) : 0) \
+		| (neighborhoods16[14] ? (1 << 14) : 0) \
+		| (neighborhoods16[15] ? (1 << 15) : 0); \
+		for (arcStart = 0; arcStart < 16; ++arcStart) { \
+			if ((flags & FastXFlags[arcStart]) == FastXFlags[arcStart]) { \
+				t0 = 0xff; \
+				for (j = arcStart, k = 0; k < N; ++j, ++k) { \
+					t0 = std::min(neighborhoods16[j & 15], t0); \
+				} \
+				strength = std::max(strength, t0); \
+			} \
+		}
+
 
 	for (i = 0; i < width; ++i, ++IP, ++strengths) {
-		uint8_t brighter = CompVMathUtils::clampPixel8(IP[0] + threshold_); // SSE: paddusb
-		uint8_t darker = CompVMathUtils::clampPixel8(IP[0] - threshold_); // SSE: psubusb
-
-		// reset strength to zero
-		*strengths = 0;
-
-		/***** Cross: 1, 9, 5, 13 *****/
-		{
-			// compare I1 and I9 aka 0 and 8
-			t0 = IP[pixels16[0]];
-			t1 = IP[pixels16[8]];
-			ddarkers16[0] = (darker > t0) ? (darker - t0) : 0; // SSE: psubusb
-			ddarkers16[8] = (darker > t1) ? (darker - t1) : 0;
-			dbrighters16[0] = (t0 > brighter) ? (t0 - brighter) : 0;
-			dbrighters16[8] = (t1 > brighter) ? (t1 - brighter) : 0;
-			sumd = (ddarkers16[0] ? 1 : 0) + (ddarkers16[8] ? 1 : 0);
-			sumb = (dbrighters16[0] ? 1 : 0) + (dbrighters16[8] ? 1 : 0);
-			if (!sumb && !sumd) {
-				continue;
-			}
-			// compare I5 and I13 aka 4 and 12
-			t0 = IP[pixels16[4]];
-			t1 = IP[pixels16[12]];
-			ddarkers16[4] = (darker > t0) ? (darker - t0) : 0;
-			ddarkers16[12] = (darker > t1) ? (darker - t1) : 0;
-			dbrighters16[4] = (t0 > brighter) ? (t0 - brighter) : 0;
-			dbrighters16[12] = (t1 > brighter) ? (t1 - brighter) : 0;
-			sd = (ddarkers16[4] ? 1 : 0) + (ddarkers16[12] ? 1 : 0);
-			sb = (dbrighters16[4] ? 1 : 0) + (dbrighters16[12] ? 1 : 0);
-			if (!sb && !sd) {
-				continue;
-			}
-			sumb += sb;
-			sumd += sd;
-			if (sumb < minsum && sumd < minsum) {
-				continue;
-			}
+		brighter = CompVMathUtils::clampPixel8(IP[0] + threshold_); // SSE: paddusb
+		darker = CompVMathUtils::clampPixel8(IP[0] - threshold_); // SSE: psubusb
+		strength = sumb = sumd = 0;
+		
+		_cpp_fast_check(0, 8, 4, 12);
+		_cpp_fast_check(1, 9, 5, 13);
+		_cpp_fast_check(2, 10, 6, 14);
+		_cpp_fast_check(3, 11, 7, 15);
+		
+		if (sumd >= N) {
+			t0 = circle[0][i], neighborhoods16[0] = (darker > t0) ? (darker - t0) : 0; // SSE: psubusb
+			t0 = circle[1][i], neighborhoods16[1] = (darker > t0) ? (darker - t0) : 0;
+			t0 = circle[2][i], neighborhoods16[2] = (darker > t0) ? (darker - t0) : 0;
+			t0 = circle[3][i], neighborhoods16[3] = (darker > t0) ? (darker - t0) : 0;
+			t0 = circle[4][i], neighborhoods16[4] = (darker > t0) ? (darker - t0) : 0;
+			t0 = circle[5][i], neighborhoods16[5] = (darker > t0) ? (darker - t0) : 0;
+			t0 = circle[6][i], neighborhoods16[6] = (darker > t0) ? (darker - t0) : 0;
+			t0 = circle[7][i], neighborhoods16[7] = (darker > t0) ? (darker - t0) : 0;
+			t0 = circle[8][i], neighborhoods16[8] = (darker > t0) ? (darker - t0) : 0;
+			t0 = circle[9][i], neighborhoods16[9] = (darker > t0) ? (darker - t0) : 0;
+			t0 = circle[10][i], neighborhoods16[10] = (darker > t0) ? (darker - t0) : 0;
+			t0 = circle[11][i], neighborhoods16[11] = (darker > t0) ? (darker - t0) : 0;
+			t0 = circle[12][i], neighborhoods16[12] = (darker > t0) ? (darker - t0) : 0;
+			t0 = circle[13][i], neighborhoods16[13] = (darker > t0) ? (darker - t0) : 0;
+			t0 = circle[14][i], neighborhoods16[14] = (darker > t0) ? (darker - t0) : 0;
+			t0 = circle[15][i], neighborhoods16[15] = (darker > t0) ? (darker - t0) : 0;
+			_cpp_fast_strenght();
 		}
-
-		/***** Cross: 2, 10, 6, 14 *****/
-		{
-			// I2 and I10 aka 1 and 9
-			t0 = IP[pixels16[1]];
-			t1 = IP[pixels16[9]];
-			ddarkers16[1] = (darker > t0) ? (darker - t0) : 0;
-			ddarkers16[9] = (darker > t1) ? (darker - t1) : 0;
-			dbrighters16[1] = (t0 > brighter) ? (t0 - brighter) : 0;
-			dbrighters16[9] = (t1 > brighter) ? (t1 - brighter) : 0;
-			sumd = (ddarkers16[1] ? 1 : 0) + (ddarkers16[9] ? 1 : 0);
-			sumb = (dbrighters16[1] ? 1 : 0) + (dbrighters16[9] ? 1 : 0);
-			if (!sumb && !sumd) {
-				continue;
-			}
-
-			// I6 and I14 aka 5 and 13
-			t0 = IP[pixels16[5]];
-			t1 = IP[pixels16[13]];
-			ddarkers16[5] = (darker > t0) ? (darker - t0) : 0;
-			ddarkers16[13] = (darker > t1) ? (darker - t1) : 0;
-			dbrighters16[5] = (t0 > brighter) ? (t0 - brighter) : 0;
-			dbrighters16[13] = (t1 > brighter) ? (t1 - brighter) : 0;
-			sd = (ddarkers16[5] ? 1 : 0) + (ddarkers16[13] ? 1 : 0);
-			sb = (dbrighters16[5] ? 1 : 0) + (dbrighters16[13] ? 1 : 0);
-			if (!sb && !sd) {
-				continue;
-			}
-			sumb += sb;
-			sumd += sd;
-			if (sumb < minsum && sumd < minsum) {
-				continue;
-			}
+		else if (sumb >= N) { // else -> cannot be both darker and brighter and and (16 - N) < N, for N = 9, 12...
+			t0 = circle[0][i], neighborhoods16[0] = (t0 > brighter) ? (t0 - brighter) : 0; // SSE: psubusb
+			t0 = circle[1][i], neighborhoods16[1] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = circle[2][i], neighborhoods16[2] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = circle[3][i], neighborhoods16[3] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = circle[4][i], neighborhoods16[4] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = circle[5][i], neighborhoods16[5] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = circle[6][i], neighborhoods16[6] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = circle[7][i], neighborhoods16[7] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = circle[8][i], neighborhoods16[8] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = circle[9][i], neighborhoods16[9] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = circle[10][i], neighborhoods16[10] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = circle[11][i], neighborhoods16[11] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = circle[12][i], neighborhoods16[12] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = circle[13][i], neighborhoods16[13] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = circle[14][i], neighborhoods16[14] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = circle[15][i], neighborhoods16[15] = (t0 > brighter) ? (t0 - brighter) : 0;
+			_cpp_fast_strenght();
 		}
-
-		/***** Cross: 3, 11, 7, 15 *****/
-		{
-			// I3 and I11 aka 2 and 10
-			t0 = IP[pixels16[2]];
-			t1 = IP[pixels16[10]];
-			ddarkers16[2] = (darker > t0) ? (darker - t0) : 0;
-			ddarkers16[10] = (darker > t1) ? (darker - t1) : 0;
-			dbrighters16[2] = (t0 > brighter) ? (t0 - brighter) : 0;
-			dbrighters16[10] = (t1 > brighter) ? (t1 - brighter) : 0;
-			sumd = (ddarkers16[2] ? 1 : 0) + (ddarkers16[10] ? 1 : 0);
-			sumb = (dbrighters16[2] ? 1 : 0) + (dbrighters16[10] ? 1 : 0);
-			if (!sumb && !sumd) {
-				continue;
-			}
-			// I7 and I15 aka 6 and 14
-			t0 = IP[pixels16[6]];
-			t1 = IP[pixels16[14]];
-			ddarkers16[6] = (darker > t0) ? (darker - t0) : 0;
-			ddarkers16[14] = (darker > t1) ? (darker - t1) : 0;
-			dbrighters16[6] = (t0 > brighter) ? (t0 - brighter) : 0;
-			dbrighters16[14] = (t1 > brighter) ? (t1 - brighter) : 0;
-			sd = (ddarkers16[6] ? 1 : 0) + (ddarkers16[14] ? 1 : 0);
-			sb = (dbrighters16[6] ? 1 : 0) + (dbrighters16[14] ? 1 : 0);
-			if (!sb && !sd) {
-				continue;
-			}
-			sumb += sb;
-			sumd += sd;
-			if (sumb < minsum && sumd < minsum) {
-				continue;
-			}
-		}
-
-		/***** Cross: 4, 12, 8, 16 *****/
-		{
-			// I4 and I12 aka 3 and 11
-			t0 = IP[pixels16[3]];
-			t1 = IP[pixels16[11]];
-			ddarkers16[3] = (darker > t0) ? (darker - t0) : 0;
-			ddarkers16[11] = (darker > t1) ? (darker - t1) : 0;
-			dbrighters16[3] = (t0 > brighter) ? (t0 - brighter) : 0;
-			dbrighters16[11] = (t1 > brighter) ? (t1 - brighter) : 0;
-			sumd = (ddarkers16[3] ? 1 : 0) + (ddarkers16[11] ? 1 : 0);
-			sumb = (dbrighters16[3] ? 1 : 0) + (dbrighters16[11] ? 1 : 0);
-			if (!sumb && !sumd) {
-				continue;
-			}
-			// I8 and I16 aka 7 and 15
-			t0 = IP[pixels16[7]];
-			t1 = IP[pixels16[15]];
-			ddarkers16[7] = (darker > t0) ? (darker - t0) : 0;
-			ddarkers16[15] = (darker > t1) ? (darker - t1) : 0;
-			dbrighters16[7] = (t0 > brighter) ? (t0 - brighter) : 0;
-			dbrighters16[15] = (t1 > brighter) ? (t1 - brighter) : 0;
-			sd = (ddarkers16[7] ? 1 : 0) + (ddarkers16[15] ? 1 : 0);
-			sb = (dbrighters16[7] ? 1 : 0) + (dbrighters16[15] ? 1 : 0);
-			if (!sb && !sd) {
-				continue;
-			}
-			sumd += sd;
-			sumb += sb;
-			if (sumb < minsum && sumd < minsum) {
-				continue;
-			}
-		}
-
-		//COMPV_DEBUG_INFO("Passed:%d", ++FIXME);
-
-		// SSE: pmovmskb
-		fdarkers1 =
-			(ddarkers16[0] ? (1 << 0) : 0)
-			| (ddarkers16[1] ? (1 << 1) : 0)
-			| (ddarkers16[2] ? (1 << 2) : 0)
-			| (ddarkers16[3] ? (1 << 3) : 0)
-			| (ddarkers16[4] ? (1 << 4) : 0)
-			| (ddarkers16[5] ? (1 << 5) : 0)
-			| (ddarkers16[6] ? (1 << 6) : 0)
-			| (ddarkers16[7] ? (1 << 7) : 0)
-			| (ddarkers16[8] ? (1 << 8) : 0)
-			| (ddarkers16[9] ? (1 << 9) : 0)
-			| (ddarkers16[10] ? (1 << 10) : 0)
-			| (ddarkers16[11] ? (1 << 11) : 0)
-			| (ddarkers16[12] ? (1 << 12) : 0)
-			| (ddarkers16[13] ? (1 << 13) : 0)
-			| (ddarkers16[14] ? (1 << 14) : 0)
-			| (ddarkers16[15] ? (1 << 15) : 0);
-		fbrighters1 =
-			(dbrighters16[0] ? (1 << 0) : 0)
-			| (dbrighters16[1] ? (1 << 1) : 0)
-			| (dbrighters16[2] ? (1 << 2) : 0)
-			| (dbrighters16[3] ? (1 << 3) : 0)
-			| (dbrighters16[4] ? (1 << 4) : 0)
-			| (dbrighters16[5] ? (1 << 5) : 0)
-			| (dbrighters16[6] ? (1 << 6) : 0)
-			| (dbrighters16[7] ? (1 << 7) : 0)
-			| (dbrighters16[8] ? (1 << 8) : 0)
-			| (dbrighters16[9] ? (1 << 9) : 0)
-			| (dbrighters16[10] ? (1 << 10) : 0)
-			| (dbrighters16[11] ? (1 << 11) : 0)
-			| (dbrighters16[12] ? (1 << 12) : 0)
-			| (dbrighters16[13] ? (1 << 13) : 0)
-			| (dbrighters16[14] ? (1 << 14) : 0)
-			| (dbrighters16[15] ? (1 << 15) : 0);
-
-		/* Compute strength */
-		{
-			strength = 0;
-			// SIMD: vector rotations to map arcs
-			for (arcStart = 0; arcStart < 16; ++arcStart) {
-				t0 = t1 = 0xff;
-				if ((fbrighters1 & FastXFlags[arcStart]) == FastXFlags[arcStart]) {
-					for (j = arcStart, k = 0; k < N; ++j, ++k) { // SIMD: vector rotation
-						t1 = std::min(dbrighters16[j & 15], t1); // hz(pairwise) min (lowest diff)
-					}
-				}
-				if ((fdarkers1 & FastXFlags[arcStart]) == FastXFlags[arcStart]) {
-					for (j = arcStart, k = 0; k < N; ++j, ++k) { // SIMD: vector rotation
-						t0 = std::min(ddarkers16[j & 15], t0); // hz(pairwise) min (lowest diff)
-					}
-				}
-				if (t1 != 0xff || t0 != 0xff) {
-					strength = std::max(strength, std::min(t0, t1));
-				}
-			}
-			*strengths = strength;
-		}
+		
+Next:
+		*strengths = strength;
 	} // for (i ....width)	
 }
 

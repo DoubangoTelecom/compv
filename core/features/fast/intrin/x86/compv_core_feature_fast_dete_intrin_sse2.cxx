@@ -12,8 +12,8 @@
 #include "compv/base/compv_debug.h"
 
 #define _mm_fast_check(a, b) \
-	vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[a] + i))); \
-	vec1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[b] + i))); \
+	vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&circle[a][i])); \
+	vec1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&circle[b][i])); \
 	if (!_mm_movemask_epi8(_mm_or_si128( \
 		_mm_or_si128(_mm_cmplt_epu8_SSE2(vec0, vecDarker1, vecZero, vec0xFF), _mm_cmplt_epu8_SSE2(vec1, vecDarker1, vecZero, vec0xFF)), \
 		_mm_or_si128(_mm_cmpgt_epu8_SSE2(vec0, vecBrighter1, vecZero, vec0xFF), _mm_cmpgt_epu8_SSE2(vec1, vecBrighter1, vecZero, vec0xFF)) \
@@ -92,7 +92,7 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 	const __m128i vecZero = _mm_setzero_si128();
 	const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
 	__m128i vec0, vec1, vecSum1, vecStrengths, vecBrighter1, vecDarker1, vecDiffBinary16[16], vecDiff16[16], vecCircle16[16];
-	const uint8_t* circle[16] = { // FIXME: use same circle with C++ code
+	const uint8_t* circle[16] = {
 		&IP[pixels16[0]], &IP[pixels16[1]], &IP[pixels16[2]], &IP[pixels16[3]],
 		&IP[pixels16[4]], &IP[pixels16[5]], &IP[pixels16[6]], &IP[pixels16[7]],
 		&IP[pixels16[8]], &IP[pixels16[9]], &IP[pixels16[10]], &IP[pixels16[11]],
@@ -103,8 +103,6 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 		vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&IP[i]));
 		vecDarker1 = _mm_subs_epu8(vec0, vecThreshold); // IP < (Ix - t)
 		vecBrighter1 = _mm_adds_epu8(vec0, vecThreshold); // Ip > (Ix + t)
-
-		/* reset strength to zero */
 		vecStrengths = _mm_setzero_si128();
 
 		/* Check */ {
@@ -157,7 +155,6 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 			_mm_fast_strength(14, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(15, vecSum1, vecDiff16, vecStrengths, vec0);
 		} EndOfBrighters:
 		
-
 Next:
 		_mm_storeu_si128(reinterpret_cast<__m128i*>(&strengths[i]), vecStrengths);
 	}
