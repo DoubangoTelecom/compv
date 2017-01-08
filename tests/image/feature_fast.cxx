@@ -11,9 +11,9 @@
 
 #define THRESHOLD			10
 
+#define TEST_TYPE_EQUIRECTANGULAR		"equirectangular_1282x720_gray.yuv"
 #define TEST_TYPE_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define TEST_TYPE_GRIOTS				"mandekalou_480x640_gray.yuv"
-#define TEST_TYPE_EQUIRECTANGULAR		"equirectangular_1282x720_gray.yuv"
 
 // Reference implementation for FAST12, nonmax, #1000 times -> ellapsed: 6159 millis, CPU time: 6.427s
 // OpenCV time for FAST9, nonmax, #1000 times -> 1889 millis
@@ -34,6 +34,11 @@ static const struct compv_unittest_feature_fast {
 }
 COMPV_UNITTESTS_FEATURE_FAST[] =
 {
+	{ 10, false, COMPV_FAST_TYPE_9, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 24105, 574969.f, 15148142.f, 9577924.f },
+	{ 10, true, COMPV_FAST_TYPE_9, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 6598, 167156.f, 4326974.f, 2669475.f },
+	{ 10, false, COMPV_FAST_TYPE_12, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 10812, 239835.f, 6885661.f, 4326231.f },
+	{ 10, true, COMPV_FAST_TYPE_12, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 3920, 89172, 2584280.f, 1576105.f },
+
 	{ 10, false, COMPV_FAST_TYPE_9, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 5540, 173438.f, 501490.f, 708067.f },
 	{ 10, true, COMPV_FAST_TYPE_9, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 1282, 52936.f, 117722.f, 160696.f },
 	{ 10, false, COMPV_FAST_TYPE_12, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 2930, 79671.f, 260098.f, 368964.f },
@@ -43,11 +48,6 @@ COMPV_UNITTESTS_FEATURE_FAST[] =
 	{ 10, true, COMPV_FAST_TYPE_9, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480, 5405, 176389.f, 1166708.f, 1973623.f },
 	{ 10, false, COMPV_FAST_TYPE_12, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480, 12113, 295977.f, 2646636.f, 4152440.f },
 	{ 10, true, COMPV_FAST_TYPE_12, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480, 3425, 95590.f, 750394.f, 1198537.f },
-
-	{ 10, false, COMPV_FAST_TYPE_9, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 24105, 574969.f, 15148142.f, 9577924.f },
-	{ 10, true, COMPV_FAST_TYPE_9, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 6598, 167156.f, 4326974.f, 2669475.f },
-	{ 10, false, COMPV_FAST_TYPE_12, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 10812, 239835.f, 6885661.f, 4326231.f },
-	{ 10, true, COMPV_FAST_TYPE_12, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 3920, 89172, 2584280.f, 1576105.f },
 };
 size_t COMPV_UNITTESTS_FEATURE_FAST_COUNT = sizeof(COMPV_UNITTESTS_FEATURE_FAST) / sizeof(COMPV_UNITTESTS_FEATURE_FAST[0]);
 

@@ -20,6 +20,7 @@ COMPV_NAMESPACE_BEGIN()
 struct RangeFAST {
     const uint8_t* IP;
     uint8_t* strengths;
+	uint8_t* nms;
     size_t rowStart;
 	size_t rowEnd;
 	size_t rowCount;
@@ -57,6 +58,7 @@ private:
     RangeFAST* m_pRanges;
     size_t m_nRanges;
     uint8_t* m_pStrengthsMap;
+	uint8_t* m_pNmsMap;
 };
 
 COMPV_NAMESPACE_END()

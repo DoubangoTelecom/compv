@@ -26,47 +26,6 @@ Some literature about FAST:
 
 #define COMPV_THIS_CLASSNAME	"CompVCornerDeteFAST"
 
-// Defines here outside the namespace to allow referencing in ASM code
-#if COMPV_ARCH_X86 && (COMPV_INTRINSIC || COMPV_ASM)
-// Values generated using FastShufflesArc() in "tests/fast.cxx"
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint8_t kCompVFast9Arcs[16/*ArcStartIdx*/][16] = { // SHUFFLE_EPI8 values to select an arc
-    { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, },
-    { 0x1, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, },
-    { 0x2, 0x2, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0x2, 0x2, 0x2, 0x2, 0x2, },
-    { 0x3, 0x3, 0x3, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0x3, 0x3, 0x3, 0x3, },
-    { 0x4, 0x4, 0x4, 0x4, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0x4, 0x4, 0x4, },
-    { 0x5, 0x5, 0x5, 0x5, 0x5, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0x5, 0x5, },
-    { 0x6, 0x6, 0x6, 0x6, 0x6, 0x6, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0x6, },
-    { 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x9, 0x9, 0x9, 0x9, 0x9, 0x9, 0x9, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0xa, 0xa, 0xa, 0xa, 0xa, 0xa, 0xa, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0x3, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0x3, 0x4, 0xc, 0xc, 0xc, 0xc, 0xc, 0xc, 0xc, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0xd, 0xd, 0xd, 0xd, 0xd, 0xd, 0xd, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0xe, 0xe, 0xe, 0xe, 0xe, 0xe, 0xe, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, },
-};
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint8_t kCompVFast12Arcs[16/*ArcStartIdx*/][16] = { // SHUFFLE_EPI8 values to select an arc
-    { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0x0, 0x0, 0x0, 0x0, },
-    { 0x1, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0x1, 0x1, 0x1, },
-    { 0x2, 0x2, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0x2, 0x2, },
-    { 0x3, 0x3, 0x3, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0x3, },
-    { 0x4, 0x4, 0x4, 0x4, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x5, 0x5, 0x5, 0x5, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x6, 0x6, 0x6, 0x6, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0x7, 0x7, 0x7, 0x7, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0x3, 0x8, 0x8, 0x8, 0x8, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0x3, 0x4, 0x9, 0x9, 0x9, 0x9, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0xa, 0xa, 0xa, 0xa, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0xb, 0xb, 0xb, 0xb, 0xb, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0xc, 0xc, 0xc, 0xc, 0xc, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0xd, 0xd, 0xd, 0xd, 0xd, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xe, 0xe, 0xe, 0xe, 0xe, 0xf, },
-    { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xf, 0xf, 0xf, 0xf, 0xf, },
-};
-#endif // (COMPV_ARCH_X86) && ((COMPV_INTRINSIC) || (COMPV_ASM))
-
 // Flags generated using FastFlags() in "tests/fast.cxx"
 COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint16_t kCompVFast9Flags[16] = { 0x1ff, 0x3fe, 0x7fc, 0xff8, 0x1ff0, 0x3fe0, 0x7fc0, 0xff80, 0xff01, 0xfe03, 0xfc07, 0xf80f, 0xf01f, 0xe03f, 0xc07f, 0x80ff };
 COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() uint16_t kCompVFast12Flags[16] = { 0xfff, 0x1ffe, 0x3ffc, 0x7ff8, 0xfff0, 0xffe1, 0xffc3, 0xff87, 0xff0f, 0xfe1f, 0xfc3f, 0xf87f, 0xf0ff, 0xe1ff, 0xc3ff, 0x87ff };
@@ -83,8 +42,7 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_FEATURE_DETE_FAST_MIN_SAMPLES_PER_THREAD		(200*250) // number of pixels
 #define COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD	(80*80) // number of interestPoints
 
-static int32_t COMPV_INLINE __continuousCount(int32_t fasType)
-{
+static int32_t COMPV_INLINE __continuousCount(int32_t fasType) {
     switch (fasType) {
     case COMPV_FAST_TYPE_9: return 9;
     case COMPV_FAST_TYPE_12: return 12;
@@ -94,14 +52,12 @@ static int32_t COMPV_INLINE __continuousCount(int32_t fasType)
     }
 }
 
-static bool COMPV_INLINE __isNonMaximal(const CompVInterestPoint* point)
-{
-    return point->x < 0;
-}
-
-static void CompVFastProcessRange(RangeFAST* range);
-static void FastNMS(size_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end);
-static void CompVFastDataRow1_C(const uint8_t* IP,  compv_scalar_t width, const compv_scalar_t *pixels16, compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths);
+static void CompVFastDataRange(RangeFAST* range);
+static void CompVFastNmsGatherRange(RangeFAST* range);
+static void CompVFastNmsApplyRange(RangeFAST* range);
+static void CompVFastDataRow1_C(const uint8_t* IP,  compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
+static void CompVFastNmsGather_C(const uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride);
+static void CompVFastNmsApply_C(uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride);
 static COMPV_ERROR_CODE FastRangesAlloc(size_t nRanges, RangeFAST** ppRanges, size_t stride);
 static COMPV_ERROR_CODE FastRangesFree(size_t nRanges, RangeFAST** ppRanges);
 
@@ -118,6 +74,7 @@ CompVCornerDeteFAST::CompVCornerDeteFAST()
     , m_pRanges(NULL)
     , m_nRanges(0)
     , m_pStrengthsMap(NULL)
+	, m_pNmsMap(NULL)
 {
 
 }
@@ -125,7 +82,8 @@ CompVCornerDeteFAST::CompVCornerDeteFAST()
 CompVCornerDeteFAST::~CompVCornerDeteFAST()
 {
     FastRangesFree(m_nRanges, &m_pRanges);
-    CompVMem::free((void**)&m_pStrengthsMap);
+    CompVMem::free(reinterpret_cast<void**>(&m_pStrengthsMap));
+	CompVMem::free(reinterpret_cast<void**>(&m_pNmsMap));
 }
 
 COMPV_ERROR_CODE CompVCornerDeteFAST::set(int id, const void* valuePtr, size_t valueSize) /*Overrides(CompVCaps)*/
@@ -189,13 +147,21 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
     // FastData() function will cleanup only new matching positions.
     if (m_nStride != stride) {
         CompVMem::free(reinterpret_cast<void**>(&m_pStrengthsMap));
+		CompVMem::free(reinterpret_cast<void**>(&m_pNmsMap));
     }
 
     // Alloc strenghts map if not already done
-    if (!m_pStrengthsMap) {
-        size_t nStrengthMapSize = CompVMem::alignForward((3 + stride + 3) * (3 + height + 3)); // +3 for the borders, alignForward() for the SIMD functions
-        m_pStrengthsMap = reinterpret_cast<uint8_t*>(CompVMem::calloc(nStrengthMapSize, sizeof(uint8_t))); // Must use calloc to fill the strengths with null values
-        COMPV_CHECK_EXP_RETURN(!m_pStrengthsMap, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    if (!m_pStrengthsMap || !m_pNmsMap) {
+        size_t nMapSize = CompVMem::alignForward((3 + stride + 3) * (3 + height + 3)); // +3 for the borders, alignForward() for the SIMD functions
+		// Must use calloc to fill the strengths with null values
+		if (!m_pStrengthsMap) {
+			m_pStrengthsMap = reinterpret_cast<uint8_t*>(CompVMem::calloc(nMapSize, sizeof(uint8_t)));
+			COMPV_CHECK_EXP_RETURN(!m_pStrengthsMap, COMPV_ERROR_CODE_E_OUT_OF_MEMORY, "Failed to allocate strengths map");
+		}
+		if (!m_pNmsMap) {
+			m_pNmsMap = reinterpret_cast<uint8_t*>(CompVMem::calloc(nMapSize, sizeof(uint8_t)));
+			COMPV_CHECK_EXP_RETURN(!m_pNmsMap, COMPV_ERROR_CODE_E_OUT_OF_MEMORY, "Failed to allocate nms map");
+		}
     }
 
     // Update width and height
@@ -252,7 +218,7 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
         CompVAsyncTaskIds taskIds;
         taskIds.reserve(threadsCountRange);
         auto funcPtr = [&](RangeFAST* pRange) -> void {
-            CompVFastProcessRange(pRange);
+            CompVFastDataRange(pRange);
         };
         for (size_t i = 0; i < threadsCountRange; ++i) {
             pRange = &m_pRanges[i];
@@ -266,6 +232,7 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
             pRange->N = m_iNumContinuous;
             pRange->pixels16 = pixels16;
             pRange->strengths = m_pStrengthsMap;
+			pRange->nms = m_pNmsMap;
             COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, pRange), taskIds));
             rowStart = pRange->rowEnd;
         }
@@ -283,8 +250,75 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
         pRange->N = m_iNumContinuous;
         pRange->pixels16 = pixels16;
         pRange->strengths = m_pStrengthsMap;
-        CompVFastProcessRange(pRange);
+		pRange->nms = m_pNmsMap;
+        CompVFastDataRange(pRange);
     }
+
+	// Non Maximal Suppression for removing adjacent corners
+	if (m_bNonMaximaSupp) {
+		size_t threadsCountNMS = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+			? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(stride, height, maxThreads, COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD)
+			: 1;
+		threadsCountNMS = COMPV_MATH_MIN(threadsCountRange, threadsCountNMS); // only 'threadsCountRange' values were allocated
+
+		if (threadsCountNMS > 1) {
+			size_t threadIdx, rowStart;
+			size_t heights = (height / threadsCountNMS);
+			size_t lastHeight = height - ((threadsCountNMS - 1) * heights);
+			RangeFAST* pRange;
+			CompVAsyncTaskIds taskIds;
+			taskIds.reserve(threadsCountNMS);
+			auto funcPtrNmsGather = [&](RangeFAST* pRange) -> void {
+				CompVFastNmsGatherRange(pRange);
+			};
+			auto funcPtrNmsApply = [&](RangeFAST* pRange) -> void {
+				CompVFastNmsApplyRange(pRange);
+			};
+			// NMS gathering
+			for (threadIdx = 0, rowStart = 0; threadIdx < threadsCountNMS; ++threadIdx) {
+				pRange = &m_pRanges[threadIdx];
+				pRange->rowStart = rowStart;
+				pRange->rowEnd = (rowStart + (threadIdx == (threadsCountNMS - 1) ? lastHeight : heights));
+				pRange->rowCount = height;
+				pRange->width = width;
+				pRange->stride = stride;
+				pRange->strengths = m_pStrengthsMap;
+				pRange->nms = m_pNmsMap;
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNmsGather, pRange), taskIds));
+				rowStart = pRange->rowEnd;
+			}
+			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+			// NMS-apply
+			taskIds.clear();
+			for (threadIdx = 0, rowStart = 0; threadIdx < threadsCountNMS; ++threadIdx) {
+				pRange = &m_pRanges[threadIdx];
+				pRange->rowStart = rowStart;
+				pRange->rowEnd = (rowStart + (threadIdx == (threadsCountNMS - 1) ? lastHeight : heights));
+				pRange->rowCount = height;
+				pRange->width = width;
+				pRange->stride = stride;
+				pRange->strengths = m_pStrengthsMap;
+				pRange->nms = m_pNmsMap;
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNmsApply, pRange), taskIds));
+				rowStart = pRange->rowEnd;
+			}
+			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+		}
+		else {
+			RangeFAST* pRange = &m_pRanges[0];
+			pRange->rowStart = 0;
+			pRange->rowEnd = height;
+			pRange->rowCount = height;
+			pRange->width = width;
+			pRange->stride = stride;
+			pRange->strengths = m_pStrengthsMap;
+			pRange->nms = m_pNmsMap;
+
+			CompVFastNmsGatherRange(pRange);
+			CompVFastNmsApplyRange(pRange);
+		}
+	}
+
     // Build interest points
 #define COMPV_PUSH1() if (*begin1) { *begin1 += thresholdMinus1; interestPoints_->push(CompVInterestPoint(static_cast<compv_float32_t>(begin1 - strengths), static_cast<compv_float32_t>(j), static_cast<compv_float32_t>(*begin1))); } ++begin1;
 #define COMPV_PUSH4() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1()
@@ -325,37 +359,6 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
         }
     }
 
-    // Non Maximal Suppression for removing adjacent corners
-    if (m_bNonMaximaSupp && interestPoints_->size() > 0) {
-        size_t threadsCountNMS = 1;
-        if (threadDisp && threadDisp->threadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
-            threadsCountNMS = (interestPoints_->size() / COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD);
-            threadsCountNMS = COMPV_MATH_CLIP3(0, static_cast<size_t>(threadDisp->threadsCount()), threadsCountNMS);
-        }
-        if (threadsCountNMS > 1) {
-			size_t size = interestPoints_->size(), sizes = (size / threadsCountNMS);
-			size_t lastSize = size - ((threadsCountNMS - 1) * sizes);
-            CompVInterestPoint *begin = interestPoints_->begin(), *end;
-            CompVAsyncTaskIds taskIds;
-            taskIds.reserve(threadsCountNMS);
-            auto funcPtr = [&](size_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end) -> void {
-                FastNMS(stride, pcStrengthsMap, begin, end);
-            };
-            for (size_t i = 0; i < threadsCountNMS; ++i) {
-				end = begin + (i == (threadsCountNMS - 1) ? lastSize : sizes);
-                COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, stride, m_pStrengthsMap, begin, end), taskIds));
-                begin = end;
-            }
-            COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
-        }
-        else {
-            FastNMS(stride, m_pStrengthsMap, interestPoints_->begin(), interestPoints_->end());
-        }
-
-        // Remove non maximal points
-        interestPoints_->erase(__isNonMaximal);
-    }
-
     // Retain best "m_iMaxFeatures" features
     if (m_iMaxFeatures > 0 && static_cast<int32_t>(interestPoints_->size()) > m_iMaxFeatures) {
         interestPoints_->retainBest(m_iMaxFeatures);
@@ -374,18 +377,13 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::newObj(CompVCornerDetePtrPtr fast)
     return COMPV_ERROR_CODE_S_OK;
 }
 
-static void CompVFastProcessRange(RangeFAST* range)
+static void CompVFastDataRange(RangeFAST* range)
 {
     const uint8_t* IP;
     int32_t j, kalign, kextra, align = 1, minj, maxj, rowstart, k;
     uint8_t *strengths, *extra;
-    void(*FastDataRow)(
-        const uint8_t* IP,
-        compv_scalar_t width,
-        const compv_scalar_t *pixels16,
-        compv_scalar_t N,
-        compv_scalar_t threshold,
-        uint8_t* strengths) = CompVFastDataRow1_C;
+    void(*FastDataRow)(const uint8_t* IP, compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths) 
+		= CompVFastDataRow1_C;
 
     if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(range->pixels16)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = CompVFastDataRow16_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
@@ -429,17 +427,52 @@ static void CompVFastProcessRange(RangeFAST* range)
     } // for (j)
 }
 
-static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const compv_scalar_t *pixels16, compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths)
+void CompVFastNmsGatherRange(RangeFAST* range)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
+	void(*CompVFastNmsGather)(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)
+		= CompVFastNmsGather_C;
+
+	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
+	size_t rowEnd = COMPV_MATH_CLIP3(0, range->rowCount, (range->rowEnd + 3));
+	CompVFastNmsGather(
+		range->strengths + (range->stride * rowStart),
+		range->nms + (range->stride * rowStart),
+		range->width,
+		(rowEnd - rowStart),
+		range->stride
+	);
+}
+
+void CompVFastNmsApplyRange(RangeFAST* range)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
+	void(*CompVFastNmsApply)(uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)
+		= CompVFastNmsApply_C;
+
+	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
+	size_t rowEnd = COMPV_MATH_CLIP3(0, range->rowCount, (range->rowEnd + 3));
+	CompVFastNmsApply(
+		range->strengths + (range->stride * rowStart),
+		range->nms + (range->stride * rowStart),
+		range->width,
+		(rowEnd - rowStart),
+		range->stride
+	);
+}
+
+static void CompVFastDataRow1_C(const uint8_t* IP, compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths)
 {
 	// Code not intended to be fast but just readable, real code is implemented in SSE, AVX and NEON.
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Must be reviewed: see your remainders");
 	int32_t sumb, sumd, sb, sd;
 	int16_t threshold_ = static_cast<int16_t>(threshold); // using int16_t to avoid clipping (useless for SIMD with support for saturated sub and add)
 	uint8_t ddarkers16[16], dbrighters16[16], strength, t0, t1;
 	const uint16_t(&FastXFlags)[16] = N == 9 ? kCompVFast9Flags : kCompVFast12Flags;
-	compv_scalar_t fbrighters1, fdarkers1;
+	compv_uscalar_t fbrighters1, fdarkers1;
 	const int32_t minsum = (N == 12 ? 3 : 2);
-	compv_scalar_t i, j, k, arcStart;
+	compv_uscalar_t i, j, k, arcStart;
 
 	for (i = 0; i < width; ++i, ++IP, ++strengths) {
 		uint8_t brighter = CompVMathUtils::clampPixel8(IP[0] + threshold_); // SSE: paddusb
@@ -644,40 +677,64 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_scalar_t width, const c
 	} // for (i ....width)	
 }
 
-static void FastNMS(size_t stride, const uint8_t* pcStrengthsMap, CompVInterestPoint* begin, CompVInterestPoint* end)
+static void CompVFastNmsGather_C(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)
 {
-    uint8_t strength;
-    int32_t currentIdx;
-    for (; begin < end; ++begin) {
-        strength = static_cast<uint8_t>(begin->strength);
-        currentIdx = static_cast<int32_t>((begin->y * stride) + begin->x);
-        // No need to chech index as the point always has coords in (x+3, y+3)
-        // If-Else faster than a single if(|||||||)
-        if (pcStrengthsMap[currentIdx - 1] >= strength) { // left
-            begin->x = -1;
-        }
-        else if (pcStrengthsMap[currentIdx + 1] >= strength) { // right
-            begin->x = -1;
-        }
-        else if (pcStrengthsMap[currentIdx - stride - 1] >= strength) { // left-top
-            begin->x = -1;
-        }
-        else if (pcStrengthsMap[currentIdx - stride] >= strength) { // top
-            begin->x = -1;
-        }
-        else if (pcStrengthsMap[currentIdx - stride + 1] >= strength) { // right-top
-            begin->x = -1;
-        }
-        else if (pcStrengthsMap[currentIdx + stride - 1] >= strength) { // left-bottom
-            begin->x = -1;
-        }
-        else if (pcStrengthsMap[currentIdx + stride] >= strength) { // bottom
-            begin->x = -1;
-        }
-        else if (pcStrengthsMap[currentIdx + stride + 1] >= strength) { // right-bottom
-            begin->x = -1;
-        }
-    }
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	compv_uscalar_t i, j;
+	uint8_t strength;
+	pcStrengthsMap += (stride * 3);
+	pNMS += (stride * 3);
+	for (j = 3; j < heigth - 3; ++j) {
+		for (i = 3; i < width - 3; ++i) { // TODO(dmi): process 3...16/32 to align memory then use SIMD
+			if ((strength = pcStrengthsMap[i])) { 
+				// If-Else faster than a single if(|||||||)
+				if (pcStrengthsMap[i - 1] >= strength) { // left
+					pNMS[i] = 0xff;
+				}
+				else if (pcStrengthsMap[i + 1] >= strength) { // right
+					pNMS[i] = 0xff;
+				}
+				else if (pcStrengthsMap[i - stride - 1] >= strength) { // left-top
+					pNMS[i] = 0xff;
+				}
+				else if (pcStrengthsMap[i - stride] >= strength) { // top
+					pNMS[i] = 0xff;
+				}
+				else if (pcStrengthsMap[i - stride + 1] >= strength) { // right-top
+					pNMS[i] = 0xff;
+				}
+				else if (pcStrengthsMap[i + stride - 1] >= strength) { // left-bottom
+					pNMS[i] = 0xff;
+				}
+				else if (pcStrengthsMap[i + stride] >= strength) { // bottom
+					pNMS[i] = 0xff;
+				}
+				else if (pcStrengthsMap[i + stride + 1] >= strength) { // right-bottom
+					pNMS[i] = 0xff;
+				}
+			}
+		}
+		pcStrengthsMap += stride;
+		pNMS += stride;
+	}
+}
+
+static void CompVFastNmsApply_C(uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	compv_uscalar_t i, j;
+	pcStrengthsMap += (stride * 3);
+	pNMS += (stride * 3);
+	for (j = 3; j < heigth - 3; ++j) {
+		for (i = 3; i < width - 3; ++i) { // TODO(dmi): process 3...16/32 to align memory then use SIMD
+			if (pNMS[i]) {
+				pNMS[i] = 0; // must, for next frame
+				pcStrengthsMap[i] = 0; // suppress
+			}
+		}
+		pcStrengthsMap += stride;
+		pNMS += stride;
+	}
 }
 
 static COMPV_ERROR_CODE FastRangesAlloc(size_t nRanges, RangeFAST** ppRanges, size_t stride)
@@ -694,7 +751,7 @@ static COMPV_ERROR_CODE FastRangesAlloc(size_t nRanges, RangeFAST** ppRanges, si
     RangeFAST* pRanges = *ppRanges;
     for (int32_t i = 0; i < nRanges; ++i) {
 
-        pRanges[i].me = (compv_scalar_t*)CompVMem::malloc(stride * 1 * sizeof(compv_scalar_t));
+        pRanges[i].me = (compv_uscalar_t*)CompVMem::malloc(stride * 1 * sizeof(compv_uscalar_t));
         COMPV_CHECK_EXP_RETURN(!pRanges[i].me, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }
 #endif

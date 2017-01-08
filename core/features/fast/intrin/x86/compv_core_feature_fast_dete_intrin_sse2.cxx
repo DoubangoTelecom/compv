@@ -79,12 +79,12 @@
 COMPV_NAMESPACE_BEGIN()
 
 // No need to check for 'width'. The caller ('CompVFastProcessRange' function) already checked and prepared it for SSE.
-void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_scalar_t width, COMPV_ALIGNED(DEFAULT) const compv_scalar_t *pixels16, compv_scalar_t N, compv_scalar_t threshold, uint8_t* strengths)
+void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_uscalar_t width, COMPV_ALIGNED(DEFAULT) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
-	compv_scalar_t i;
-	compv_scalar_t NminusOne = N - 1;
-	const compv_scalar_t minsum = (N == 12 ? 3 : 2);
+	compv_uscalar_t i;
+	compv_uscalar_t NminusOne = N - 1;
+	const compv_uscalar_t minsum = (N == 12 ? 3 : 2);
 	const __m128i vecThreshold = _mm_set1_epi8(static_cast<int8_t>(threshold));
 	const __m128i vecNMinSumMinusOne = _mm_set1_epi8(static_cast<int8_t>(minsum - 1)); // no '_mm_cmpge_epu8'
 	const __m128i vecNMinusOne = _mm_set1_epi8(static_cast<int8_t>(NminusOne)); // no '_mm_cmpge_epu8'
