@@ -11,64 +11,70 @@
 #include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
 
-#define _mm_fast_compute_Darkers(a, b) \
+#define _mm_fast_check(a, b) \
+	vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[a] + i))); \
+	vec1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[b] + i))); \
+	if (!_mm_movemask_epi8(_mm_or_si128( \
+		_mm_or_si128(_mm_cmplt_epu8_SSE2(vec0, vecDarker1, vecZero, vec0xFF), _mm_cmplt_epu8_SSE2(vec1, vecDarker1, vecZero, vec0xFF)), \
+		_mm_or_si128(_mm_cmpgt_epu8_SSE2(vec0, vecBrighter1, vecZero, vec0xFF), _mm_cmpgt_epu8_SSE2(vec1, vecBrighter1, vecZero, vec0xFF)) \
+	))) goto Next; \
+	vecCircle16[a] = vec0, vecCircle16[b] = vec1
+	
+
+#define _mm_fast_compute_Darkers(a, b, c, d) \
 	vecDiff16[a] = _mm_subs_epu8(vecDarker1, vecCircle16[a]); \
-	vecDiff16[b] = _mm_subs_epu8(vecDarker1, vecCircle16[b])
-#define _mm_fast_compute_Brighters(a, b) \
+	vecDiff16[b] = _mm_subs_epu8(vecDarker1, vecCircle16[b]); \
+	vecDiff16[c] = _mm_subs_epu8(vecDarker1, vecCircle16[c]); \
+	vecDiff16[d] = _mm_subs_epu8(vecDarker1, vecCircle16[d])
+#define _mm_fast_compute_Brighters(a, b, c, d) \
 	vecDiff16[a] = _mm_subs_epu8(vecCircle16[a], vecBrighter1); \
-	vecDiff16[b] = _mm_subs_epu8(vecCircle16[b], vecBrighter1)
+	vecDiff16[b] = _mm_subs_epu8(vecCircle16[b], vecBrighter1); \
+	vecDiff16[c] = _mm_subs_epu8(vecCircle16[c], vecBrighter1); \
+	vecDiff16[d] = _mm_subs_epu8(vecCircle16[d], vecBrighter1)
 
-#define _mm_fast_check(a, b, type) \
-		_mm_fast_compute_##type##s(a, b); \
-		vecDiffBinary16[a] = _mm_cmpgtz_epu8_SSE2(vecDiff16[a], vecOne); \
-		vecDiffBinary16[b] = _mm_cmpgtz_epu8_SSE2(vecDiff16[b], vecOne); \
-		vecS1 = _mm_add_epi8(vecDiffBinary16[a], vecDiffBinary16[b]); \
-		mask = _mm_movemask_epi8(_mm_cmpgt_epi8(vecS1, vecZero)); \
-		if (!mask) goto EndOf##type##s
-
-// vecMinSum: 'vecNMinusOne' for last check, 'vecNMinSumMinusOne' otherwise
-#define _mm_fast_check_x_x_x_x(a, b, c, d, type, vecMinSum) \
-		_mm_fast_check(a, b, type); \
-		vecSum1 = _mm_add_epi8(vecSum1, vecS1); \
-		_mm_fast_check(c, d, type); \
-		vecSum1 = _mm_add_epi8(vecSum1, vecS1); \
-		mask = _mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecMinSum)); \
-		if (!mask) goto EndOf##type##s
+#define _mm_fast_load(a, b, c, d, type) \
+	_mm_fast_compute_##type##s(a, b, c, d); \
+	vecDiffBinary16[a] = _mm_cmpnot_epu8_SSE2(vecDiff16[a], vecZero, vecOne); \
+	vecDiffBinary16[b] = _mm_cmpnot_epu8_SSE2(vecDiff16[b], vecZero, vecOne); \
+	vecDiffBinary16[c] = _mm_cmpnot_epu8_SSE2(vecDiff16[c], vecZero, vecOne); \
+	vecDiffBinary16[d] = _mm_cmpnot_epu8_SSE2(vecDiff16[d], vecZero, vecOne); \
+	vecSum1 = _mm_add_epi8(vecSum1, _mm_add_epi8(vecDiffBinary16[a], vecDiffBinary16[b])); \
+	vecSum1 = _mm_add_epi8(vecSum1, _mm_add_epi8(vecDiffBinary16[c], vecDiffBinary16[d]))
 
 // Sum arc #0 without the tail (#NminusOne lines)
 #define _mm_fast_int_diffbinarysum(vecSum1, vecBinary16) \
-		vecSum1 = _mm_add_epi8(vecBinary16[0], vecBinary16[1]); \
-		vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[2]); \
-		vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[3]); \
-		vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[4]); \
-		vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[5]); \
-		vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[6]); \
-		vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[7]); \
-		if (N == 12) { \
-			vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[8]); \
-			vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[9]); \
-			vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[10]); \
-		}
+	vecSum1 = _mm_add_epi8(vecBinary16[0], vecBinary16[1]); \
+	vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[2]); \
+	vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[3]); \
+	vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[4]); \
+	vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[5]); \
+	vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[6]); \
+	vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[7]); \
+	if (N == 12) { \
+		vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[8]); \
+		vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[9]); \
+		vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[10]); \
+	}
 #define _mm_fast_strength(ii, vecSum1, vecDiff16, vecStrengths, vecTemp) \
-		vecSum1 = _mm_add_epi8(vecSum1, vecDiffBinary16[(NminusOne + ii) & 15]); /* add tail */ \
-		if (_mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinusOne))) { \
-			vecTemp = vecDiff16[(ii + 0) & 15]; \
-			vecTemp = _mm_min_epu8(vecDiff16[(ii + 1) & 15], vecTemp); \
-			vecTemp = _mm_min_epu8(vecDiff16[(ii + 2) & 15], vecTemp); \
-			vecTemp = _mm_min_epu8(vecDiff16[(ii + 3) & 15], vecTemp); \
-			vecTemp = _mm_min_epu8(vecDiff16[(ii + 4) & 15], vecTemp); \
-			vecTemp = _mm_min_epu8(vecDiff16[(ii + 5) & 15], vecTemp); \
-			vecTemp = _mm_min_epu8(vecDiff16[(ii + 6) & 15], vecTemp); \
-			vecTemp = _mm_min_epu8(vecDiff16[(ii + 7) & 15], vecTemp); \
-			vecTemp = _mm_min_epu8(vecDiff16[(ii + 8) & 15], vecTemp); \
-			if (N == 12) { \
-				vecTemp = _mm_min_epu8(vecDiff16[(ii + 9) & 15], vecTemp); \
-				vecTemp = _mm_min_epu8(vecDiff16[(ii + 10) & 15], vecTemp); \
-				vecTemp = _mm_min_epu8(vecDiff16[(ii + 11) & 15], vecTemp); \
-			} \
-			vecStrengths = _mm_max_epu8(vecStrengths, vecTemp); \
+	vecSum1 = _mm_add_epi8(vecSum1, vecDiffBinary16[(NminusOne + ii) & 15]); /* add tail */ \
+	if (_mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinusOne))) { \
+		vecTemp = vecDiff16[(ii + 0) & 15]; \
+		vecTemp = _mm_min_epu8(vecDiff16[(ii + 1) & 15], vecTemp); \
+		vecTemp = _mm_min_epu8(vecDiff16[(ii + 2) & 15], vecTemp); \
+		vecTemp = _mm_min_epu8(vecDiff16[(ii + 3) & 15], vecTemp); \
+		vecTemp = _mm_min_epu8(vecDiff16[(ii + 4) & 15], vecTemp); \
+		vecTemp = _mm_min_epu8(vecDiff16[(ii + 5) & 15], vecTemp); \
+		vecTemp = _mm_min_epu8(vecDiff16[(ii + 6) & 15], vecTemp); \
+		vecTemp = _mm_min_epu8(vecDiff16[(ii + 7) & 15], vecTemp); \
+		vecTemp = _mm_min_epu8(vecDiff16[(ii + 8) & 15], vecTemp); \
+		if (N == 12) { \
+			vecTemp = _mm_min_epu8(vecDiff16[(ii + 9) & 15], vecTemp); \
+			vecTemp = _mm_min_epu8(vecDiff16[(ii + 10) & 15], vecTemp); \
+			vecTemp = _mm_min_epu8(vecDiff16[(ii + 11) & 15], vecTemp); \
 		} \
-		vecSum1 = _mm_sub_epi8(vecSum1, vecDiffBinary16[ii & 15]) /* sub head */
+		vecStrengths = _mm_max_epu8(vecStrengths, vecTemp); \
+	} \
+	vecSum1 = _mm_sub_epi8(vecSum1, vecDiffBinary16[ii & 15]) /* sub head */
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -77,7 +83,6 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_scalar_t i;
-	int mask;
 	compv_scalar_t NminusOne = N - 1;
 	const compv_scalar_t minsum = (N == 12 ? 3 : 2);
 	const __m128i vecThreshold = _mm_set1_epi8(static_cast<int8_t>(threshold));
@@ -86,7 +91,7 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 	const __m128i vecOne = _mm_load_si128(reinterpret_cast<const __m128i*>(k1_i8));
 	const __m128i vecZero = _mm_setzero_si128();
 	const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
-	__m128i vec0, vecSum1, vecS1, vecStrengths, vecBrighter1, vecDarker1, vecDiffBinary16[16], vecDiff16[16], vecCircle16[16];
+	__m128i vec0, vec1, vecSum1, vecStrengths, vecBrighter1, vecDarker1, vecDiffBinary16[16], vecDiff16[16], vecCircle16[16];
 	const uint8_t* circle[16] = { // FIXME: use same circle with C++ code
 		&IP[pixels16[0]], &IP[pixels16[1]], &IP[pixels16[2]], &IP[pixels16[3]],
 		&IP[pixels16[4]], &IP[pixels16[5]], &IP[pixels16[6]], &IP[pixels16[7]],
@@ -96,35 +101,31 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 
 	for (i = 0; i < width; i += 16, strengths += 16) {
 		vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(IP + i));
-		vecBrighter1 = _mm_adds_epu8(vec0, vecThreshold);
-		vecDarker1 = _mm_subs_epu8(vec0, vecThreshold);
+		vecDarker1 = _mm_subs_epu8(vec0, vecThreshold); // IP < (Ix - t)
+		vecBrighter1 = _mm_adds_epu8(vec0, vecThreshold); // Ip > (Ix + t)
 
 		/* reset strength to zero */
 		vecStrengths = _mm_setzero_si128();
 
-		vecCircle16[0] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[0] + i)));
-		vecCircle16[1] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[1] + i)));
-		vecCircle16[2] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[2] + i)));
-		vecCircle16[3] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[3] + i)));
-		vecCircle16[4] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[4] + i)));
-		vecCircle16[5] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[5] + i)));
-		vecCircle16[6] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[6] + i)));
-		vecCircle16[7] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[7] + i)));
-		vecCircle16[8] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[8] + i)));
-		vecCircle16[9] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[9] + i)));
-		vecCircle16[10] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[10] + i)));
-		vecCircle16[11] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[11] + i)));
-		vecCircle16[12] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[12] + i)));
-		vecCircle16[13] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[13] + i)));
-		vecCircle16[14] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[14] + i)));
-		vecCircle16[15] = _mm_loadu_si128(reinterpret_cast<const __m128i*>((circle[15] + i)));
+		/* Check */ {
+			// Order is important for performance: When (a, b) is a candidate pair then the points close to 
+			// it are also probable candidates. This is what we check farrest neighborhoods. For example,
+			// (4, 12) is the farrestneighborhood for (0, 8)
+			_mm_fast_check(0, 8); _mm_fast_check(4, 12);
+			_mm_fast_check(1, 9); _mm_fast_check(5, 13);
+			_mm_fast_check(2, 10); _mm_fast_check(6, 14);
+			_mm_fast_check(3, 11); _mm_fast_check(7, 15);
+		}
 		
 		/* Darkers */ {
 			vecSum1 = _mm_setzero_si128();
-			_mm_fast_check_x_x_x_x(0, 8, 4, 12, Darker, vecNMinSumMinusOne);
-			_mm_fast_check_x_x_x_x(1, 9, 5, 13, Darker, vecNMinSumMinusOne);
-			_mm_fast_check_x_x_x_x(2, 10, 6, 14, Darker, vecNMinSumMinusOne);
-			_mm_fast_check_x_x_x_x(3, 11, 7, 15, Darker, vecNMinusOne);
+			_mm_fast_load(0, 8, 4, 12, Darker);
+			if (!_mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinSumMinusOne))) goto EndOfDarkers; // at least #3 for FAST12 and #2 for FAST9
+			_mm_fast_load(1, 9, 5, 13, Darker);
+			_mm_fast_load(2, 10, 6, 14, Darker);
+			_mm_fast_load(3, 11, 7, 15, Darker);
+			if (!_mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinusOne))) goto EndOfDarkers; // at least #12 for FAST12 and #9 for FAST9
+			
 			_mm_fast_int_diffbinarysum(vecSum1, vecDiffBinary16);
 			_mm_fast_strength(0, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(1, vecSum1, vecDiff16, vecStrengths, vec0); 
 			_mm_fast_strength(2, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(3, vecSum1, vecDiff16, vecStrengths, vec0);
@@ -138,10 +139,13 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 
 		/* Brighters */ {
 			vecSum1 = _mm_setzero_si128();
-			_mm_fast_check_x_x_x_x(0, 8, 4, 12, Brighter, vecNMinSumMinusOne);
-			_mm_fast_check_x_x_x_x(1, 9, 5, 13, Brighter, vecNMinSumMinusOne);
-			_mm_fast_check_x_x_x_x(2, 10, 6, 14, Brighter, vecNMinSumMinusOne);
-			_mm_fast_check_x_x_x_x(3, 11, 7, 15, Brighter, vecNMinusOne);
+			_mm_fast_load(0, 8, 4, 12, Brighter);
+			if (!_mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinSumMinusOne))) goto EndOfBrighters; // at least #3 for FAST12 and #2 for FAST9
+			_mm_fast_load(1, 9, 5, 13, Brighter);
+			_mm_fast_load(2, 10, 6, 14, Brighter);
+			_mm_fast_load(3, 11, 7, 15, Brighter);
+			if (!_mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinusOne))) goto EndOfBrighters; // at least #12 for FAST12 and #9 for FAST9
+			
 			_mm_fast_int_diffbinarysum(vecSum1, vecDiffBinary16);
 			_mm_fast_strength(0, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(1, vecSum1, vecDiff16, vecStrengths, vec0);
 			_mm_fast_strength(2, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(3, vecSum1, vecDiff16, vecStrengths, vec0);
@@ -153,6 +157,8 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 			_mm_fast_strength(14, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(15, vecSum1, vecDiff16, vecStrengths, vec0);
 		} EndOfBrighters:
 		
+
+Next:
 		_mm_storeu_si128(reinterpret_cast<__m128i*>(strengths), vecStrengths);
 	}
 }
