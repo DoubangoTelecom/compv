@@ -27,6 +27,17 @@ Some literature about FAST:
 #define COMPV_THIS_CLASSNAME	"CompVCornerDeteFAST"
 
 COMPV_NAMESPACE_BEGIN()
+#if COMPV_ASM
+#	if COMPV_ARCH_X86
+	COMPV_EXTERNC void CompVFastNmsGather_Asm_X86_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVFastNmsApply_Asm_X86_SSE2(COMPV_ALIGNED(SSE) uint8_t* pcStrengthsMap, COMPV_ALIGNED(SSE) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+#	endif /* COMPV_ARCH_X86 */
+#	if COMPV_ARCH_X64
+	COMPV_EXTERNC void CompVFastNmsGather_Asm_X64_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+#	endif /* COMPV_ARCH_X64 */
+#	if COMPV_ARCH_ARM
+#	endif
+#endif /* COMPV_ASM */
 
 // Default threshold (pixel intensity: [0-255])
 #define COMPV_FEATURE_DETE_FAST_THRESHOLD_DEFAULT			20
@@ -428,6 +439,8 @@ void CompVFastNmsGatherRange(RangeFAST* range)
 
 	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(range->stride)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVFastNmsGather = CompVFastNmsGather_Intrin_SSE2));
+		COMPV_EXEC_IFDEF_ASM_X86((CompVFastNmsGather = CompVFastNmsGather_Asm_X86_SSE2));
+		COMPV_EXEC_IFDEF_ASM_X64((CompVFastNmsGather = CompVFastNmsGather_Asm_X64_SSE2));
 	}
 
 	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
@@ -448,6 +461,7 @@ void CompVFastNmsApplyRange(RangeFAST* range)
 
 	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(range->stride) && COMPV_IS_ALIGNED_SSE(range->strengths) && COMPV_IS_ALIGNED_SSE(range->nms)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVFastNmsApply = CompVFastNmsApply_Intrin_SSE2));
+		COMPV_EXEC_IFDEF_ASM_X86((CompVFastNmsApply = CompVFastNmsApply_Asm_X86_SSE2));
 	}
 
 	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
@@ -467,12 +481,13 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_uscalar_t width, const 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
 	static const uint16_t kCompVFast9Flags[16] = { 0x1ff, 0x3fe, 0x7fc, 0xff8, 0x1ff0, 0x3fe0, 0x7fc0, 0xff80, 0xff01, 0xfe03, 0xfc07, 0xf80f, 0xf01f, 0xe03f, 0xc07f, 0x80ff };
 	static const uint16_t kCompVFast12Flags[16] = { 0xfff, 0x1ffe, 0x3ffc, 0x7ff8, 0xfff0, 0xffe1, 0xffc3, 0xff87, 0xff0f, 0xfe1f, 0xfc3f, 0xf87f, 0xf0ff, 0xe1ff, 0xc3ff, 0x87ff };
-	int32_t sumb, sumd, sb, sd;
+	int sumb, sumd, sb, sd;
 	uint8_t threshold_ = static_cast<uint8_t>(threshold); // using int16_t to avoid clipping (useless for SIMD with support for saturated sub and add)
 	uint8_t neighborhoods16[16], strength, t0, t1, brighter, darker;
 	const uint16_t(&FastXFlags)[16] = N == 9 ? kCompVFast9Flags : kCompVFast12Flags;
 	compv_uscalar_t flags;
-	const int32_t minsum = (N == 12 ? 3 : 2);
+	const int minsum = (N == 12 ? 3 : 2);
+	int n = static_cast<int>(N);
 	compv_uscalar_t i, j, k, arcStart;
 	const uint8_t* circle[16] = {
 		&IP[pixels16[0]], &IP[pixels16[1]], &IP[pixels16[2]], &IP[pixels16[3]],
@@ -531,7 +546,7 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_uscalar_t width, const 
 		_cpp_fast_check(2, 10, 6, 14);
 		_cpp_fast_check(3, 11, 7, 15);
 		
-		if (sumd >= N) {
+		if (sumd >= n) {
 			t0 = circle[0][i], neighborhoods16[0] = (darker > t0) ? (darker - t0) : 0; // SSE: psubusb
 			t0 = circle[1][i], neighborhoods16[1] = (darker > t0) ? (darker - t0) : 0;
 			t0 = circle[2][i], neighborhoods16[2] = (darker > t0) ? (darker - t0) : 0;
@@ -550,7 +565,7 @@ static void CompVFastDataRow1_C(const uint8_t* IP, compv_uscalar_t width, const 
 			t0 = circle[15][i], neighborhoods16[15] = (darker > t0) ? (darker - t0) : 0;
 			_cpp_fast_strenght();
 		}
-		else if (sumb >= N) { // else -> cannot be both darker and brighter and and (16 - N) < N, for N = 9, 12...
+		else if (sumb >= n) { // else -> cannot be both darker and brighter and and (16 - N) < N, for N = 9, 12...
 			t0 = circle[0][i], neighborhoods16[0] = (t0 > brighter) ? (t0 - brighter) : 0; // SSE: psubusb
 			t0 = circle[1][i], neighborhoods16[1] = (t0 > brighter) ? (t0 - brighter) : 0;
 			t0 = circle[2][i], neighborhoods16[2] = (t0 > brighter) ? (t0 - brighter) : 0;

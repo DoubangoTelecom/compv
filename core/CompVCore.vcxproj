@@ -53,6 +53,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\vsyasm.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -176,7 +177,26 @@
     <ClInclude Include="include\compv\core\features\fast\compv_core_feature_fast_dete.h" />
     <ClInclude Include="include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.h" />
   </ItemGroup>
+  <ItemGroup>
+    <YASM Include="features\fast\asm\x86\compv_core_feature_fast_dete_x86_sse.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <YASM Include="features\fast\asm\x86\compv_core_feature_fast_dete_x64_sse.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\vsyasm.targets" />
   </ImportGroup>
 </Project>

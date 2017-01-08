@@ -55,7 +55,7 @@ COMPV_NAMESPACE_BEGIN()
 		COMPV_EXTERNC void CompVImageConvRgb565lefamily_to_uv_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_VCoeffs8);		
 		COMPV_EXTERNC void CompVImageConvRgb565befamily_to_uv_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb32Ptr, COMPV_ALIGNED(AVX) uint8_t* outUPtr, COMPV_ALIGNED(AVX) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBAfamilyToYUV_VCoeffs8);
 #	endif /* COMPV_ARCH_X64 */
-#if COMPV_ARCH_ARM
+#	if COMPV_ARCH_ARM
 		COMPV_EXTERNC void CompVImageConvRgb24family_to_y_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* rgb24Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgba32family_to_y_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* rgb32Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
 		COMPV_EXTERNC void CompVImageConvArgb32family_to_y_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* rgb32Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8);
@@ -66,7 +66,7 @@ COMPV_NAMESPACE_BEGIN()
 		COMPV_EXTERNC void CompVImageConvArgb32family_to_uv_planar_11_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* rgb32Ptr, COMPV_ALIGNED(NEON) uint8_t* outUPtr, COMPV_ALIGNED(NEON) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb565lefamily_to_uv_planar_11_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* rgb565Ptr, COMPV_ALIGNED(NEON) uint8_t* outUPtr, COMPV_ALIGNED(NEON) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
 		COMPV_EXTERNC void CompVImageConvRgb565befamily_to_uv_planar_11_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* rgb565Ptr, COMPV_ALIGNED(NEON) uint8_t* outUPtr, COMPV_ALIGNED(NEON) uint8_t* outVPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8, COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8);
-#endif
+#	endif
 #endif /* COMPV_ASM */
 
 /******************************************

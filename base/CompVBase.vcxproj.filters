@@ -571,10 +571,8 @@
     <YASM Include="image\asm\x86\compv_image_conv_grayscale_x86_sse.s">
       <Filter>source\image\asm\x86</Filter>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="image\asm\x86\compv_image_conv_macros.s">
+    <YASM Include="image\asm\x86\compv_image_conv_macros.s">
       <Filter>source\image\asm\x86</Filter>
-    </None>
+    </YASM>
   </ItemGroup>
 </Project>

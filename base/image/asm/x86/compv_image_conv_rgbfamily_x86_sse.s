@@ -5,8 +5,7 @@
 ; Source code: https://github.com/DoubangoTelecom/compv                 ;
 ; WebSite: http://compv.org                                             ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-%include "../../../asm/x86/compv_common_x86.s"
+%include "compv_common_x86.s"
 %include "compv_image_conv_macros.s"
 
 COMPV_YASM_DEFAULT_REL

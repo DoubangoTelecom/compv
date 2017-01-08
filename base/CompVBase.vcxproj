@@ -226,21 +226,47 @@
   <ItemGroup>
     <YASM Include="image\asm\x86\compv_image_conv_rgbfamily_x86_sse.s">
       <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
     </YASM>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="image\asm\x86\compv_image_conv_grayscale_x86_sse.s">
       <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
     </YASM>
-    <None Include="image\asm\x86\compv_image_conv_macros.s" />
+    <YASM Include="image\asm\x86\compv_image_conv_macros.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
     <YASM Include="image\asm\x86\compv_image_conv_rgbfamily_x64_sse.s">
       <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
     </YASM>
     <YASM Include="image\asm\x86\compv_image_conv_rgbfamily_x64_avx.s">
       <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
     </YASM>
     <YASM Include="image\asm\x86\compv_image_conv_rgbfamily_x86_avx.s">
       <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
     </YASM>
   </ItemGroup>
   <PropertyGroup Label="Globals">
