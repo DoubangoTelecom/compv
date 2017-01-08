@@ -429,9 +429,12 @@ static void CompVFastDataRange(RangeFAST* range)
 
 void CompVFastNmsGatherRange(RangeFAST* range)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	void(*CompVFastNmsGather)(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)
 		= CompVFastNmsGather_C;
+
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(range->stride)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVFastNmsGather = CompVFastNmsGather_Intrin_SSE2));
+	}
 
 	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
 	size_t rowEnd = COMPV_MATH_CLIP3(0, range->rowCount, (range->rowEnd + 3));
@@ -446,7 +449,6 @@ void CompVFastNmsGatherRange(RangeFAST* range)
 
 void CompVFastNmsApplyRange(RangeFAST* range)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	void(*CompVFastNmsApply)(uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)
 		= CompVFastNmsApply_C;
 
@@ -685,32 +687,32 @@ static void CompVFastNmsGather_C(const uint8_t* pcStrengthsMap, uint8_t* pNMS, c
 	pcStrengthsMap += (stride * 3);
 	pNMS += (stride * 3);
 	for (j = 3; j < heigth - 3; ++j) {
-		for (i = 3; i < width - 3; ++i) { // TODO(dmi): process 3...16/32 to align memory then use SIMD
+		for (i = 3; i < width - 3; ++i) {
 			if ((strength = pcStrengthsMap[i])) { 
 				// If-Else faster than a single if(|||||||)
 				if (pcStrengthsMap[i - 1] >= strength) { // left
-					pNMS[i] = 0xff;
+					pNMS[i] = 0xff; continue;
 				}
-				else if (pcStrengthsMap[i + 1] >= strength) { // right
-					pNMS[i] = 0xff;
+				if (pcStrengthsMap[i + 1] >= strength) { // right
+					pNMS[i] = 0xff; continue;
 				}
-				else if (pcStrengthsMap[i - stride - 1] >= strength) { // left-top
-					pNMS[i] = 0xff;
+				if (pcStrengthsMap[i - stride - 1] >= strength) { // left-top
+					pNMS[i] = 0xff; continue;
 				}
-				else if (pcStrengthsMap[i - stride] >= strength) { // top
-					pNMS[i] = 0xff;
+				if (pcStrengthsMap[i - stride] >= strength) { // top
+					pNMS[i] = 0xff; continue;
 				}
-				else if (pcStrengthsMap[i - stride + 1] >= strength) { // right-top
-					pNMS[i] = 0xff;
+				if (pcStrengthsMap[i - stride + 1] >= strength) { // right-top
+					pNMS[i] = 0xff; continue;
 				}
-				else if (pcStrengthsMap[i + stride - 1] >= strength) { // left-bottom
-					pNMS[i] = 0xff;
+				if (pcStrengthsMap[i + stride - 1] >= strength) { // left-bottom
+					pNMS[i] = 0xff; continue;
 				}
-				else if (pcStrengthsMap[i + stride] >= strength) { // bottom
-					pNMS[i] = 0xff;
+				if (pcStrengthsMap[i + stride] >= strength) { // bottom
+					pNMS[i] = 0xff; continue;
 				}
-				else if (pcStrengthsMap[i + stride + 1] >= strength) { // right-bottom
-					pNMS[i] = 0xff;
+				if (pcStrengthsMap[i + stride + 1] >= strength) { // right-bottom
+					pNMS[i] = 0xff; continue;
 				}
 			}
 		}
@@ -726,7 +728,7 @@ static void CompVFastNmsApply_C(uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_us
 	pcStrengthsMap += (stride * 3);
 	pNMS += (stride * 3);
 	for (j = 3; j < heigth - 3; ++j) {
-		for (i = 3; i < width - 3; ++i) { // TODO(dmi): process 3...16/32 to align memory then use SIMD
+		for (i = 3; i < width - 3; ++i) { // SIMD: start at #zero index to have aligned memory
 			if (pNMS[i]) {
 				pNMS[i] = 0; // must, for next frame
 				pcStrengthsMap[i] = 0; // suppress

@@ -99,8 +99,8 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 		&IP[pixels16[12]], &IP[pixels16[13]], &IP[pixels16[14]], &IP[pixels16[15]]
 	};
 
-	for (i = 0; i < width; i += 16, strengths += 16) {
-		vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(IP + i));
+	for (i = 0; i < width; i += 16) {
+		vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&IP[i]));
 		vecDarker1 = _mm_subs_epu8(vec0, vecThreshold); // IP < (Ix - t)
 		vecBrighter1 = _mm_adds_epu8(vec0, vecThreshold); // Ip > (Ix + t)
 
@@ -159,7 +159,46 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 		
 
 Next:
-		_mm_storeu_si128(reinterpret_cast<__m128i*>(strengths), vecStrengths);
+		_mm_storeu_si128(reinterpret_cast<__m128i*>(&strengths[i]), vecStrengths);
+	}
+}
+
+void CompVFastNmsGather_Intrin_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+	compv_uscalar_t i, j;
+	__m128i vecStrength, vec0, vec1;
+	pcStrengthsMap += (stride * 3);
+	pNMS += (stride * 3);
+	const __m128i vecZero = _mm_setzero_si128();
+	const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
+	for (j = 3; j < heigth - 3; ++j) {
+		for (i = 3; i < width - 3; i += 16) {
+			vecStrength = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i]));
+			vec1 = _mm_cmpnot_epu8_SSE2(vecStrength, vecZero, vec0xFF);
+			if (_mm_movemask_epi8(vec1)) {
+				vec0 = _mm_or_si128(
+					_mm_cmpge_epu8_SSE2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i - 1])), vecStrength), // left
+					_mm_cmpge_epu8_SSE2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i + 1])), vecStrength) // right
+				);
+				vec0 = _mm_or_si128(vec0,
+					_mm_cmpge_epu8_SSE2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i - stride - 1])), vecStrength)); // left-top
+				vec0 = _mm_or_si128(vec0,
+					_mm_cmpge_epu8_SSE2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i - stride])), vecStrength)); // top
+				vec0 = _mm_or_si128(vec0,
+					_mm_cmpge_epu8_SSE2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i - stride + 1])), vecStrength)); // right-top
+				vec0 = _mm_or_si128(vec0,
+					_mm_cmpge_epu8_SSE2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i + stride - 1])), vecStrength)); // left-bottom
+				vec0 = _mm_or_si128(vec0,
+					_mm_cmpge_epu8_SSE2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i + stride])), vecStrength)); // bottom
+				vec0 = _mm_or_si128(vec0,
+					_mm_cmpge_epu8_SSE2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i + stride + 1])), vecStrength)); // right-bottom
+
+				// 'and' used to ignore nonzero coeffs. Zero-coeffs are always suppressed (0# >= strength) which means too much work for the nmsApply() function
+				_mm_storeu_si128(reinterpret_cast<__m128i*>(&pNMS[i]), _mm_and_si128(vec0, vec1));
+			}
+		}
+		pcStrengthsMap += stride;
+		pNMS += stride;
 	}
 }
 
