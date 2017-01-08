@@ -3,7 +3,7 @@ CompV: 169.ms(st), 54.ms(mt)
 OpenCV: 341.ms
 
 === FAST9_16, Nonmax (#1000 times, 720p) ===
-CompV: 2257.ms(st,sse2,intrin), 1277.ms(mt,sse2,intrin)
+CompV: 1937.ms(st,sse2,intrin), 846.ms(mt,sse2,intrin)
 OpenCV: 1891.ms
 Remarque: The way we write to the shared strengths buffer is slow but required to have best support for multithreading.
 This is why we are better than OpenCV by faaaaar.

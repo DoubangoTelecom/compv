@@ -176,10 +176,9 @@ void CompVFastNmsGather_Intrin_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS
 			vecStrength = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i]));
 			vec1 = _mm_cmpnot_epu8_SSE2(vecStrength, vecZero, vec0xFF);
 			if (_mm_movemask_epi8(vec1)) {
-				vec0 = _mm_or_si128(
-					_mm_cmpge_epu8_SSE2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i - 1])), vecStrength), // left
-					_mm_cmpge_epu8_SSE2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i + 1])), vecStrength) // right
-				);
+				vec0 = _mm_cmpge_epu8_SSE2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i - 1])), vecStrength);  // left
+				vec0 = _mm_or_si128(vec0,
+					_mm_cmpge_epu8_SSE2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i + 1])), vecStrength)); // right
 				vec0 = _mm_or_si128(vec0,
 					_mm_cmpge_epu8_SSE2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i - stride - 1])), vecStrength)); // left-top
 				vec0 = _mm_or_si128(vec0,
@@ -195,6 +194,27 @@ void CompVFastNmsGather_Intrin_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS
 
 				// 'and' used to ignore nonzero coeffs. Zero-coeffs are always suppressed (0# >= strength) which means too much work for the nmsApply() function
 				_mm_storeu_si128(reinterpret_cast<__m128i*>(&pNMS[i]), _mm_and_si128(vec0, vec1));
+			}
+		}
+		pcStrengthsMap += stride;
+		pNMS += stride;
+	}
+}
+
+void CompVFastNmsApply_Intrin_SSE2(COMPV_ALIGNED(SSE) uint8_t* pcStrengthsMap, COMPV_ALIGNED(SSE) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+	compv_uscalar_t i, j;
+	__m128i vec0;
+	pcStrengthsMap += (stride * 3);
+	pNMS += (stride * 3);
+	const __m128i vecZero = _mm_setzero_si128();
+	const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
+	for (j = 3; j < heigth - 3; ++j) {
+		for (i = 0; i < width; i += 16) { // SIMD: start at #zero index to have aligned memory
+			vec0 = _mm_cmpnot_epu8_SSE2(_mm_load_si128(reinterpret_cast<const __m128i*>(&pNMS[i])), vecZero, vec0xFF);
+			if (_mm_movemask_epi8(vec0)) {
+				_mm_store_si128(reinterpret_cast<__m128i*>(&pNMS[i]), vecZero); // must, for next frame
+				_mm_store_si128(reinterpret_cast<__m128i*>(&pcStrengthsMap[i]), _mm_andnot_si128(vec0, _mm_load_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i])))); // suppress
 			}
 		}
 		pcStrengthsMap += stride;

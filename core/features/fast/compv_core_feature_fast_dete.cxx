@@ -452,6 +452,10 @@ void CompVFastNmsApplyRange(RangeFAST* range)
 	void(*CompVFastNmsApply)(uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)
 		= CompVFastNmsApply_C;
 
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(range->stride) && COMPV_IS_ALIGNED_SSE(range->strengths) && COMPV_IS_ALIGNED_SSE(range->nms)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVFastNmsApply = CompVFastNmsApply_Intrin_SSE2));
+	}
+
 	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
 	size_t rowEnd = COMPV_MATH_CLIP3(0, range->rowCount, (range->rowEnd + 3));
 	CompVFastNmsApply(
