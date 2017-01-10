@@ -363,11 +363,6 @@ sym(CompVFastNmsApply_Asm_X86_AVX2):
 	lea rax, [rax + rcx]
 	lea rdx, [rdx + rcx]
 
-	prefetcht0 [rdx + COMPV_YASM_CACHE_LINE_SIZE*0]
-	prefetcht0 [rdx + COMPV_YASM_CACHE_LINE_SIZE*1]
-	prefetcht0 [rdx + COMPV_YASM_CACHE_LINE_SIZE*2]
-	prefetcht0 [rdx + COMPV_YASM_CACHE_LINE_SIZE*3]
-
 	mov rsi, arg(3)
 	lea rsi, [rsi - 3] ; rsi = j
 	mov rbx, arg(2) ; rbx = width
@@ -383,7 +378,6 @@ sym(CompVFastNmsApply_Asm_X86_AVX2):
 		; for (i = 0; i < width; i += 16)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopWidth
-			prefetcht0 [rdx + COMPV_YASM_CACHE_LINE_SIZE*4]
 			vpcmpeqb ymm2, ymm0, [rdx + rdi]
 			vpandn ymm2, ymm1
 			vpmovmskb rcx, ymm2

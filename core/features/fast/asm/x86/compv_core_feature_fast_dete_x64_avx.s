@@ -248,11 +248,6 @@ sym(CompVFastNmsGather_Asm_X64_AVX2):
 	lea rax, [rax + rcx]
 	lea rdx, [rdx + rcx]
 
-	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*0]
-	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*1]
-	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*2]
-	prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
-
 	mov r15, arg(2) ; r15 = width
 	mov r8, arg(3)
 	lea r8, [r8 - 3] ; r8 = j
@@ -275,7 +270,6 @@ sym(CompVFastNmsGather_Asm_X64_AVX2):
 		; for (i = 3; i < width - 3; i += 32) ; stride aligned on (width + 3) which means we can ignore the '-3' guard
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopWidth
-			prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
 			vmovdqu ymm2, [rax + r9]
 			vpcmpeqb ymm3, ymm2, ymm0
 			vpandn ymm3, ymm1
