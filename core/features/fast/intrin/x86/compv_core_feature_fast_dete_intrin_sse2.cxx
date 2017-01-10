@@ -42,7 +42,7 @@
 	vecSum1 = _mm_add_epi8(vecSum1, _mm_add_epi8(vecDiffBinary16[c], vecDiffBinary16[d]))
 
 // Sum arc #0 without the tail (#NminusOne lines)
-#define _mm_fast_int_diffbinarysum(vecSum1, vecBinary16) \
+#define _mm_fast_init_diffbinarysum(vecSum1, vecBinary16) \
 	vecSum1 = _mm_add_epi8(vecBinary16[0], vecBinary16[1]); \
 	vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[2]); \
 	vecSum1 = _mm_add_epi8(vecSum1, vecBinary16[3]); \
@@ -79,7 +79,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 // No need to check for 'width'. The caller ('CompVFastProcessRange' function) already checked and prepared it for SSE.
-void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_uscalar_t width, COMPV_ALIGNED(DEFAULT) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths)
+void CompVFastDataRow_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_uscalar_t width, COMPV_ALIGNED(DEFAULT) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_uscalar_t i;
@@ -124,7 +124,7 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 			_mm_fast_load(3, 11, 7, 15, Darker);
 			if (!_mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinusOne))) goto EndOfDarkers; // at least #12 for FAST12 and #9 for FAST9
 			
-			_mm_fast_int_diffbinarysum(vecSum1, vecDiffBinary16);
+			_mm_fast_init_diffbinarysum(vecSum1, vecDiffBinary16);
 			_mm_fast_strength(0, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(1, vecSum1, vecDiff16, vecStrengths, vec0); 
 			_mm_fast_strength(2, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(3, vecSum1, vecDiff16, vecStrengths, vec0);
 			_mm_fast_strength(4, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(5, vecSum1, vecDiff16, vecStrengths, vec0);
@@ -144,7 +144,7 @@ void CompVFastDataRow16_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_
 			_mm_fast_load(3, 11, 7, 15, Brighter);
 			if (!_mm_movemask_epi8(_mm_cmpgt_epi8(vecSum1, vecNMinusOne))) goto EndOfBrighters; // at least #12 for FAST12 and #9 for FAST9
 			
-			_mm_fast_int_diffbinarysum(vecSum1, vecDiffBinary16);
+			_mm_fast_init_diffbinarysum(vecSum1, vecDiffBinary16);
 			_mm_fast_strength(0, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(1, vecSum1, vecDiff16, vecStrengths, vec0);
 			_mm_fast_strength(2, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(3, vecSum1, vecDiff16, vecStrengths, vec0);
 			_mm_fast_strength(4, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(5, vecSum1, vecDiff16, vecStrengths, vec0);

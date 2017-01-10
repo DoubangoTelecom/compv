@@ -16,6 +16,13 @@ movd xmm1, edx
 punpcklwd xmm1, xmm1
 pshufd xmm1, xmm1, 0
 
+*** _mm_set1_epi8(int8_t a) ****
+movsx       eax, byte ptr [mem]  
+movd        xmm0, eax  
+punpcklbw   xmm0, xmm0  
+punpcklwd   xmm0, xmm0  
+pshufd      xmm0, xmm0, 0
+
 **** _mm_set1_ps(float a) ****
 movss xmm0, [rax]
 shufps xmm0, xmm0, 0x0

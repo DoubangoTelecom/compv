@@ -9,6 +9,7 @@
 #include "compv/core/features/compv_core_feature.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/parallel/compv_mutex.h"
+#include "compv/base/compv_simd_globals.h"
 
 #define COMPV_THIS_CLASSNAME "CompVCore"
 

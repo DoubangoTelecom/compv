@@ -16,7 +16,7 @@
 ;  be found in the AUTHORS file in the root of the source tree.
 ;
 
-; Default cache line size
+; Default cache line size (Added by Doubango Telecom)
 %define COMPV_YASM_CACHE_LINE_SIZE		64
 %define COMPV_YASM_PREFETCH_DISTANCE	(COMPV_YASM_CACHE_LINE_SIZE << 2)
 
@@ -99,6 +99,25 @@
 %define COMPV_YASM_WIN64 0
 %endif
 
+; Added by Doubango Telecom
+; COMPV_YASM_WIN32
+; Set COMPV_YASM_WIN32 if output is Windows 32bit so the code will work if win32
+; is defined on the Yasm command line.
+%ifidn __OUTPUT_FORMAT__,win32
+%define COMPV_YASM_WIN32 1
+%else
+%define COMPV_YASM_WIN32 0
+%endif
+
+; Shared Lib?
+%ifdef COMPV_STATIC
+ %define COMPV_YASM_DLL 0
+ %define COMPV_DLL 0
+%else
+ %define COMPV_YASM_DLL 1
+ %define COMPV_DLL 1
+%endif
+
 ; sym()
 ; Return the proper symbol name for the target ABI.
 ;
@@ -132,7 +151,7 @@
   %endif
 %endif
 
-; Enable relative addressing on x64 (added by dmi)
+; Enable relative addressing on x64 (added by Doubango Telecom)
 %if COMPV_YASM_ABI_IS_32BIT
 %define COMPV_YASM_DEFAULT_REL 
 %else
@@ -320,14 +339,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Macros added by Doubango Telecom to support function calling in ASM code
 ; Please note that System V requires the stack to be aligned on 16byte
-; before calling the function. We can unconditionally (Windows or SytemV) align the stack as it won't hurt.
+; before calling the function. We can unconditionally (Windows or SytemV) align the stack as it won''t hurt.
 ; All parameters must be pointers or scalars (same size as the registers)
 ; https://en.wikipedia.org/wiki/X86_calling_conventions#List_of_x86_calling_conventions
 ; https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/LowLevelABI/130-IA-32_Function_Calling_Conventions/IA32.html
 ; https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/LowLevelABI/140-x86-64_Function_Calling_Conventions/x86_64.html#//apple_ref/doc/uid/TP40005035-SW1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 %if COMPV_YASM_ABI_IS_32BIT
-	; arg(0) -> temp register to use to align the stack on 16bytes. E.g. 'rax', this register isn't preserved
+	; arg(0) -> temp register to use to align the stack on 16bytes. E.g. ''rax'', this register isn''t preserved
 	; arg(1) -> number of parameters to reserve
 	%macro COMPV_YASM_RESERVE_PARAMS 2
 		%ifdef reserved_params_count
@@ -348,7 +367,7 @@
 	%endm
 %else ; X64
 	%if COMPV_YASM_WIN64
-		; %1 -> temp register to use to align the stack on 16bytes. E.g. 'rax', this register isn't preserved
+		; %1 -> temp register to use to align the stack on 16bytes. E.g. ''rax'', this register isn''t preserved
 		; %2 -> number of parameters to reserve
 		%macro COMPV_YASM_RESERVE_PARAMS 2
 			%ifdef reserved_params_count
@@ -373,7 +392,7 @@
 			%undef reserved_params_count
 		%endm
 	%else ; SystemV
-        ; %1 -> temp register to use to align the stack on 16bytes. E.g. 'rax', this register isn't preserved
+        ; %1 -> temp register to use to align the stack on 16bytes. E.g. ''rax'', this register isn''t preserved
 		; %2 -> number of parameters to reserve
 		%macro COMPV_YASM_RESERVE_PARAMS 2
 			%ifdef reserved_params_count
@@ -401,6 +420,7 @@
 	%endif
 %endif
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Added by Doubango Telecom
 ; %1 -> parameter index. Zero-based [0-n].
 ; %2 -> parameter value
 %macro set_param 2
@@ -491,6 +511,7 @@
 %endmacro
 %endif
 
+; Added by Doubango Telecom
 ; Win64 ABI requires that XMM6:XMM15 are callee saved
 ; COMPV_YASM_SAVE_YMM n, [u]
 ; store registers 6-n on the stack
@@ -535,6 +556,37 @@
 %macro COMPV_YASM_RESTORE_YMM 0
 %endmacro
 %endif
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Added by Doubango Telecom
+; This macro is the same as using '__declspec(dllimport)' to import
+; global data exported using '__declspec(dllexport)' from linked DLL. This is not required for functions.
+%if (COMPV_YASM_WIN64 || COMPV_YASM_WIN32) && (COMPV_YASM_DLL || COMPV_DLL)
+ %define COMPV_YASM_DLLIMPORT_DECL(name)  __imp_ %+ sym(name)
+%else
+ %define COMPV_YASM_DLLIMPORT_DECL(name)  sym(name)
+%endif
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Added by Doubango Telecom
+; This macro is used to load global data imported from a DLL into SSE register.
+; First you must use 'COMPV_YASM_DLLIMPORT_DECL' to declare the data.
+; %1 The instruction used to load the data. e.g. movdqa for SSE and vmovdqa for AVX.
+; %2 The register where to load the data. e.g. xmm0 or ymm0
+; %3 The data name. e.g. myData
+; %4 A temporary register used to load a reference to the data, the content will be lost. e.g. rax
+; example: COMPV_YASM_DLLIMPORT_LOAD movdqa, xmm0, myData, rax
+%macro COMPV_YASM_DLLIMPORT_LOAD 4
+%if COMPV_YASM_WIN64  && (COMPV_YASM_DLL || COMPV_DLL)
+ mov %4, [COMPV_YASM_DLLIMPORT_DECL(%3) wrt rip] ; SS segment registers are ignored in x64.
+ %1 %2, [%4]
+%elif COMPV_YASM_WIN32  && (COMPV_YASM_DLL || COMPV_DLL)
+ mov %4, [ss:COMPV_YASM_DLLIMPORT_DECL(%3)]
+ %1 %2, [%4]
+%else
+ %1 %2, [COMPV_YASM_DLLIMPORT_DECL(%3)]
+%endif
+%endmacro
 
 ; Name of the rodata section
 ;

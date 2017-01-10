@@ -11,6 +11,9 @@
 global sym(compv_utils_thread_get_core_id_x86_asm)
 global sym(compv_utils_rdtsc_x86_asm)
 
+section .data
+
+section .text
 
 ;;; void _compv_utils_rdtsc_x86_asm()
 sym(compv_utils_rdtsc_x86_asm):	
@@ -46,7 +49,7 @@ sym(testPrologEpilog):
 	; COMPV_YASM_ALIGN_STACK 32, rax
 	; sub rsp, xxx
 
-	; unalign stack and free memory
+	; free memory and unalign stack
 	; add rsp, xxx
 	; COMPV_YASM_UNALIGN_STACK
 

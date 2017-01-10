@@ -269,10 +269,15 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
     </YASM>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="asm\arm\compv_common_arm.S" />
+    <None Include="asm\arm\compv_test_arm.S" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{52028A97-E6D7-4C48-82E9-3789FD42BC56}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>CompVBase</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

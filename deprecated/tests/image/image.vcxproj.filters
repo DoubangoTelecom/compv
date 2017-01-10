@@ -42,6 +42,9 @@
     <ClCompile Include="hough.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="fixme.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common.h">

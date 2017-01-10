@@ -97,7 +97,16 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(OutDir)CompVBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+      <ForceSymbolReferences>
+      </ForceSymbolReferences>
     </Link>
+    <YASM>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib</AdditionalDependencies>
+      <IncludePaths>
+      </IncludePaths>
+    </YASM>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -114,7 +123,16 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(OutDir)CompVBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+      <ForceSymbolReferences>
+      </ForceSymbolReferences>
     </Link>
+    <YASM>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib</AdditionalDependencies>
+      <IncludePaths>
+      </IncludePaths>
+    </YASM>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -135,7 +153,16 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>$(OutDir)CompVBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+      <ForceSymbolReferences>
+      </ForceSymbolReferences>
     </Link>
+    <YASM>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib</AdditionalDependencies>
+      <IncludePaths>
+      </IncludePaths>
+    </YASM>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -156,13 +183,17 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>$(OutDir)CompVBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+      <ForceSymbolReferences>
+      </ForceSymbolReferences>
     </Link>
+    <YASM>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib</AdditionalDependencies>
+      <IncludePaths>
+      </IncludePaths>
+    </YASM>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\base\CompVBase.vcxproj">
-      <Project>{52028a97-e6d7-4c48-82e9-3789fd42bc56}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx" />
     <ClCompile Include="features\compv_core_feature.cxx" />
@@ -184,6 +215,38 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </Defines>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </Defines>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Defines>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Defines>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)CompVBase.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)CompVBase.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)CompVBase.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)CompVBase.lib</AdditionalDependencies>
+      <SymbolPrefix Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </SymbolPrefix>
+      <SymbolPrefix Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </SymbolPrefix>
+      <SymbolPrefix Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </SymbolPrefix>
+      <SymbolPrefix Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </SymbolPrefix>
+      <PreProc Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">0</PreProc>
+      <PreProc Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">0</PreProc>
+      <PreProc Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">0</PreProc>
+      <PreProc Condition="'$(Configuration)|$(Platform)'=='Release|x64'">0</PreProc>
+      <Debug Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</Debug>
+      <Debug Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</Debug>
+      <Debug Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</Debug>
+      <Debug Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</Debug>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">0</Parser>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">0</Parser>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">0</Parser>
+      <Parser Condition="'$(Configuration)|$(Platform)'=='Release|x64'">0</Parser>
     </YASM>
   </ItemGroup>
   <ItemGroup>
@@ -194,6 +257,11 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
     </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\base\CompVBase.vcxproj">
+      <Project>{52028a97-e6d7-4c48-82e9-3789fd42bc56}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

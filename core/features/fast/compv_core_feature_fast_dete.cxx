@@ -31,6 +31,8 @@ COMPV_NAMESPACE_BEGIN()
 #	if COMPV_ARCH_X86
 	COMPV_EXTERNC void CompVFastNmsGather_Asm_X86_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVFastNmsApply_Asm_X86_SSE2(COMPV_ALIGNED(SSE) uint8_t* pcStrengthsMap, COMPV_ALIGNED(SSE) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVFast9DataRow_Asm_X86_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_uscalar_t width, COMPV_ALIGNED(SSE) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
+	COMPV_EXTERNC void CompVFast12DataRow_Asm_X86_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_uscalar_t width, COMPV_ALIGNED(SSE) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVFastNmsGather_Asm_X64_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
@@ -60,7 +62,7 @@ static int32_t COMPV_INLINE __continuousCount(int32_t fasType) {
 static void CompVFastDataRange(RangeFAST* range);
 static void CompVFastNmsGatherRange(RangeFAST* range);
 static void CompVFastNmsApplyRange(RangeFAST* range);
-static void CompVFastDataRow1_C(const uint8_t* IP,  compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
+static void CompVFastDataRow_C(const uint8_t* IP,  compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 static void CompVFastNmsGather_C(const uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride);
 static void CompVFastNmsApply_C(uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride);
 static COMPV_ERROR_CODE FastRangesAlloc(size_t nRanges, RangeFAST** ppRanges, size_t stride);
@@ -388,11 +390,11 @@ static void CompVFastDataRange(RangeFAST* range)
     int32_t j, kalign, kextra, align = 1, minj, maxj, rowstart, k;
     uint8_t *strengths, *extra;
     void(*FastDataRow)(const uint8_t* IP, compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths) 
-		= CompVFastDataRow1_C;
+		= CompVFastDataRow_C;
 
     if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(range->pixels16)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = CompVFastDataRow16_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-        //COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = FastData16Row_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = CompVFastDataRow_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X86_SSE2 : CompVFast12DataRow_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
         //COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
     }
     if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
@@ -417,11 +419,8 @@ static void CompVFastDataRange(RangeFAST* range)
     IP = range->IP + ((rowstart + minj) * range->stride) + 3;
     strengths = range->strengths + ((rowstart + minj) * range->stride) + 3;
 
-    // For testing with image "equirectangular", the first (i,j) to produce an interesting point is (1620, 279)
-    // We should have 64586 non-zero results for SSE and 66958 for AVX2
-
     for (j = minj; j < maxj; ++j) {
-        FastDataRow(IP, kalign, range->pixels16, range->N, range->threshold, strengths);
+		FastDataRow(IP, kalign, range->pixels16, range->N, range->threshold, strengths);
         // remove extra samples
         extra = &strengths[kalign - 1];
         for (k = 0; k < kextra; ++k) {
@@ -475,7 +474,7 @@ void CompVFastNmsApplyRange(RangeFAST* range)
 	);
 }
 
-static void CompVFastDataRow1_C(const uint8_t* IP, compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths)
+static void CompVFastDataRow_C(const uint8_t* IP, compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths)
 {
 	// Code not intended to be fast but just readable, real code is implemented in SSE, AVX and NEON.
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");

@@ -106,6 +106,9 @@
     <Filter Include="include\intrin\arm">
       <UniqueIdentifier>{0998673b-97f5-4a48-bbb2-4be610342994}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\asm\arm">
+      <UniqueIdentifier>{fecb7492-c695-4e87-bdd6-660902132fff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -574,5 +577,13 @@
     <YASM Include="image\asm\x86\compv_image_conv_macros.s">
       <Filter>source\image\asm\x86</Filter>
     </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="asm\arm\compv_common_arm.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="asm\arm\compv_test_arm.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
   </ItemGroup>
 </Project>
