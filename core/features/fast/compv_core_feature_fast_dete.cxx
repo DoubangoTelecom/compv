@@ -29,12 +29,14 @@ Some literature about FAST:
 COMPV_NAMESPACE_BEGIN()
 #if COMPV_ASM
 #	if COMPV_ARCH_X86
-	COMPV_EXTERNC void CompVFastNmsGather_Asm_X86_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
-	COMPV_EXTERNC void CompVFastNmsApply_Asm_X86_SSE2(COMPV_ALIGNED(SSE) uint8_t* pcStrengthsMap, COMPV_ALIGNED(SSE) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVFast9DataRow_Asm_X86_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_uscalar_t width, COMPV_ALIGNED(SSE) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 	COMPV_EXTERNC void CompVFast12DataRow_Asm_X86_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_uscalar_t width, COMPV_ALIGNED(SSE) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
+	COMPV_EXTERNC void CompVFastNmsGather_Asm_X86_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVFastNmsApply_Asm_X86_SSE2(COMPV_ALIGNED(SSE) uint8_t* pcStrengthsMap, COMPV_ALIGNED(SSE) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
+	COMPV_EXTERNC void CompVFast9DataRow_Asm_X64_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_uscalar_t width, COMPV_ALIGNED(SSE) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
+	COMPV_EXTERNC void CompVFast12DataRow_Asm_X64_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_uscalar_t width, COMPV_ALIGNED(SSE) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 	COMPV_EXTERNC void CompVFastNmsGather_Asm_X64_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM
@@ -395,7 +397,7 @@ static void CompVFastDataRange(RangeFAST* range)
     if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(range->pixels16)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = CompVFastDataRow_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
 		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X86_SSE2 : CompVFast12DataRow_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-        //COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = FastData16Row_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+        COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X64_SSE2 : CompVFast12DataRow_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
     }
     if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
         /*COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));

@@ -121,4 +121,9 @@
       <Filter>Source Files\features\fast\asm\x86</Filter>
     </YASM>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86.s">
+      <Filter>Source Files\features\fast\asm\x86</Filter>
+    </None>
+  </ItemGroup>
 </Project>

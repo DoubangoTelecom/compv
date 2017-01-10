@@ -263,6 +263,11 @@
       <Project>{52028a97-e6d7-4c48-82e9-3789fd42bc56}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <YASM Include="features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86.s">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\vsyasm.targets" />
