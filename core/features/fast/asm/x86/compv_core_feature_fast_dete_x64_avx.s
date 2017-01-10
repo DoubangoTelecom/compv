@@ -8,13 +8,13 @@
 
 %include "compv_common_x86.s"
 %if COMPV_YASM_ABI_IS_64BIT
-%include "compv_core_feature_fast_dete_macros_x86_sse.s"
+%include "compv_core_feature_fast_dete_macros_x86_avx.s"
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(CompVFast9DataRow_Asm_X64_SSE2)
-global sym(CompVFast12DataRow_Asm_X64_SSE2)
-global sym(CompVFastNmsGather_Asm_X64_SSE2)
+global sym(CompVFast9DataRow_Asm_X64_AVX2)
+global sym(CompVFast12DataRow_Asm_X64_AVX2)
+global sym(CompVFastNmsGather_Asm_X64_AVX2)
 
 section .data
 	extern COMPV_YASM_DLLIMPORT_DECL(k1_i8)
@@ -23,35 +23,36 @@ section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> const uint8_t* IP
-; arg(1) -> COMPV_ALIGNED(SSE) compv_uscalar_t width
-; arg(2) -> COMPV_ALIGNED(SSE) const compv_scalar_t *pixels16
+; arg(1) -> COMPV_ALIGNED(AVX) compv_uscalar_t width
+; arg(2) -> COMPV_ALIGNED(AVX) const compv_scalar_t *pixels16
 ; arg(3) -> compv_uscalar_t N
 ; arg(4) -> compv_uscalar_t threshold
 ; arg(5) -> uint8_t* strengths
 ; %1 -> fastType 9 or 12
-%macro CompVFastDataRow_Macro_X64_SSE2 1
+%macro CompVFastDataRow_Macro_X64_AVX2 1
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
-	COMPV_YASM_SAVE_XMM 13
+	COMPV_YASM_SAVE_YMM 15 ; ymm14 and ymm15 used in '_mm_fast_check' macro
 	push rsi
 	push rdi
 	push rbx
 	;; end prolog ;;
 
 	; align stack and alloc memory
-	COMPV_YASM_ALIGN_STACK 16, rax
-	sub rsp, (8*16) + (16*16) + (16*16) + (16*16)
-	%define vecThreshold			xmm8
-	%define vecNMinSumMinusOne		xmm9
-	%define vecNMinusOne			xmm10
-	%define vecOne					xmm11
-	%define vec0xFF					xmm12
-	%define vecZero					xmm13
+	COMPV_YASM_ALIGN_STACK 32, rax
+	sub rsp, (8*16) + (32*16) + (32*16) + (32*16)
+	%define vecThreshold			ymm8
+	%define vecNMinSumMinusOne		ymm9
+	%define vecNMinusOne			ymm10
+	%define vecOne					ymm11
+	%define vec0xFF					ymm12
+	%define vecZero					ymm13
 	%define circle					rsp + 0   ; +128
-	%define vecDiffBinary16			rsp + 128 ; +256
-	%define vecDiff16				rsp + 384 ; +256
-	%define vecCircle16				rsp + 640 ; +256
+	%define vecDiffBinary16			rsp + 128 ; +512
+	%define vecDiff16				rsp + 640 ; +512
+	%define vecCircle16				rsp + 1152 ; +512
 
 	%define IP			arg(0)
 	%define width		arg(1)
@@ -68,21 +69,15 @@ section .text
 	dec rdx
 	dec rcx ; minsum - 1
 
-	movd vecThreshold, rax
-	movd vecNMinSumMinusOne, rcx
-	movd vecNMinusOne, rdx
-	punpcklbw vecThreshold, vecThreshold
-	punpcklbw vecNMinSumMinusOne, vecNMinSumMinusOne
-	punpcklbw vecNMinusOne, vecNMinusOne
-	punpcklwd vecThreshold, vecThreshold
-	punpcklwd vecNMinSumMinusOne, vecNMinSumMinusOne
-	punpcklwd vecNMinusOne, vecNMinusOne
-	pshufd vecThreshold, vecThreshold, 0
-	pshufd vecNMinSumMinusOne, vecNMinSumMinusOne, 0
-	pshufd vecNMinusOne, vecNMinusOne, 0
-	COMPV_YASM_DLLIMPORT_LOAD movdqa, vecOne, k1_i8, rax
-	pcmpeqb vec0xFF, vec0xFF
-	pxor vecZero, vecZero
+	vmovd xmm8, eax
+	vmovd xmm9, ecx
+	vmovd xmm10, edx
+	vpbroadcastb ymm8, xmm8
+	vpbroadcastb ymm9, xmm9
+	vpbroadcastb ymm10, xmm10
+	COMPV_YASM_DLLIMPORT_LOAD vmovdqa, vecOne, k1_i8, rax
+	vpcmpeqb vec0xFF, vec0xFF
+	vpxor vecZero, vecZero
 
 	; Load circle
 	; TODO(dmi): load circle indexes only when neeeded
@@ -99,19 +94,18 @@ section .text
 	mov rbx, strengths ; rbx = strengths
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	; for (i = 0; i < width; i += 16)
+	; for (i = 0; i < width; i += 32)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	xor rcx, rcx ; rcx = i
 	.LoopWidth
-		%define vecDarker1 xmm0
-		%define vecBrighter1 xmm1
-		%define vecStrengths xmm2
-		%define vecSum1 xmm3
-		movdqu vecDarker1, [rdx + i] ; Do not prefetcht0 unaligned memory (tests show it''s very sloow)
-		pxor vecStrengths, vecStrengths
-		movdqa vecBrighter1, vecDarker1
-		psubusb vecDarker1, vecThreshold
-		paddusb vecBrighter1, vecThreshold
+		%define vecDarker1 ymm0
+		%define vecBrighter1 ymm1
+		%define vecStrengths ymm2
+		%define vecSum1 ymm3
+		vmovdqu vecDarker1, [rdx + i] ; Do not prefetcht0 unaligned memory (tests show it''s very sloow)
+		vpxor vecStrengths, vecStrengths
+		vpaddusb vecBrighter1, vecDarker1, vecThreshold
+		vpsubusb vecDarker1, vecDarker1, vecThreshold
 		
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; Check
@@ -128,19 +122,17 @@ section .text
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; Darkers
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		pxor vecSum1, vecSum1
+		vpxor vecSum1, vecSum1
 		_mm_fast_load_Darkers 0, 8, 4, 12
-		movdqa xmm4, vecSum1
-		pcmpgtb xmm4, vecNMinSumMinusOne
-		pmovmskb rax, xmm4
+		vpcmpgtb ymm4, vecSum1, vecNMinSumMinusOne
+		vpmovmskb rax, ymm4
 		test rax, rax
 		jz .EndOfDarkers
 		_mm_fast_load_Darkers 1, 9, 5, 13
 		_mm_fast_load_Darkers 2, 10, 6, 14
 		_mm_fast_load_Darkers 3, 11, 7, 15
-		movdqa xmm4, vecSum1
-		pcmpgtb xmm4, vecNMinusOne
-		pmovmskb rax, xmm4
+		vpcmpgtb ymm4, vecSum1, vecNMinusOne
+		vpmovmskb rax, ymm4
 		test rax, rax
 		jz .EndOfDarkers
 		_mm_fast_init_diffbinarysum %1
@@ -155,19 +147,17 @@ section .text
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; Brighters
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		pxor vecSum1, vecSum1
+		vpxor vecSum1, vecSum1
 		_mm_fast_load_Brighters 0, 8, 4, 12
-		movdqa xmm4, vecSum1
-		pcmpgtb xmm4, vecNMinSumMinusOne
-		pmovmskb rax, xmm4
+		vpcmpgtb ymm4, vecSum1, vecNMinSumMinusOne
+		vpmovmskb rax, ymm4
 		test rax, rax
 		jz .EndOfBrighters
 		_mm_fast_load_Brighters 1, 9, 5, 13
 		_mm_fast_load_Brighters 2, 10, 6, 14
 		_mm_fast_load_Brighters 3, 11, 7, 15
-		movdqa xmm4, vecSum1
-		pcmpgtb xmm4, vecNMinusOne
-		pmovmskb rax, xmm4
+		vpcmpgtb ymm4, vecSum1, vecNMinusOne
+		vpmovmskb rax, ymm4
 		test rax, rax
 		jz .EndOfBrighters
 		_mm_fast_init_diffbinarysum %1
@@ -180,15 +170,15 @@ section .text
 		; end of brighters
 
 		.Next
-		movdqu [rbx + i], vecStrengths
-
-		lea i, [i + 16]
+		lea i, [i + 32]
 		cmp i, width
+		vmovdqu [rbx + i - 32], vecStrengths
+		
 		jl .LoopWidth
 		; end-of-LoopWidth 
 
 	; free memory and unalign stack
-	add rsp, (8*16) + (16*16) + (16*16) + (16*16)
+	add rsp, (8*16) + (32*16) + (32*16) + (32*16)
 	COMPV_YASM_UNALIGN_STACK
 
 	%undef vecThreshold
@@ -217,32 +207,34 @@ section .text
 	pop rbx
 	pop rdi
 	pop rsi
-	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_RESTORE_YMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 %endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(CompVFast9DataRow_Asm_X64_SSE2):
-	CompVFastDataRow_Macro_X64_SSE2 9
+sym(CompVFast9DataRow_Asm_X64_AVX2):
+	CompVFastDataRow_Macro_X64_AVX2 9
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(CompVFast12DataRow_Asm_X64_SSE2):
-	CompVFastDataRow_Macro_X64_SSE2 12
+sym(CompVFast12DataRow_Asm_X64_AVX2):
+	CompVFastDataRow_Macro_X64_AVX2 12
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> const uint8_t* pcStrengthsMap
 ; arg(1) -> uint8_t* pNMS
 ; arg(2) -> const compv_uscalar_t width
 ; arg(3) -> compv_uscalar_t heigth
-; arg(4) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
-sym(CompVFastNmsGather_Asm_X64_SSE2):
+; arg(4) -> COMPV_ALIGNED(AVX) compv_uscalar_t stride
+sym(CompVFastNmsGather_Asm_X64_AVX2):
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
-	COMPV_YASM_SAVE_XMM 11
+	COMPV_YASM_SAVE_YMM 11
 	push r12
 	push r13
 	push r14
@@ -269,8 +261,8 @@ sym(CompVFastNmsGather_Asm_X64_SSE2):
 	mov r14, 3
 	sub r13, r11 ; r13 = (i - stride)
 	add r14, r11 ; r14 = (i + stride)
-	pxor xmm0, xmm0
-	pcmpeqb xmm1, xmm1
+	vpxor ymm0, ymm0
+	vpcmpeqb ymm1, ymm1
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 3; j < heigth - 3; ++j)
@@ -280,56 +272,55 @@ sym(CompVFastNmsGather_Asm_X64_SSE2):
 		mov r10, r13 ; r10 = (i - stride)
 		mov r12, r14 ; r12 = (i + stride)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (i = 3; i < width - 3; i += 16) ; stride aligned on (width + 3) which means we can ignore the '-3' guard
+		; for (i = 3; i < width - 3; i += 32) ; stride aligned on (width + 3) which means we can ignore the '-3' guard
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopWidth
 			prefetcht0 [rax + COMPV_YASM_CACHE_LINE_SIZE*3]
-			movdqu xmm2, [rax + r9]
-			movdqa xmm3, xmm2
-			pcmpeqb xmm3, xmm0
-			pandn xmm3, xmm1
-			pmovmskb rcx, xmm3
+			vmovdqu ymm2, [rax + r9]
+			vpcmpeqb ymm3, ymm2, ymm0
+			vpandn ymm3, ymm1
+			vpmovmskb rcx, ymm3
 			test rcx, rcx
 			jz .Next
-			movdqu xmm4, [rax + r9 - 1] ; left
-			movdqu xmm5, [rax + r9 + 1] ; right
-			movdqu xmm6, [rax + r10 - 1] ; left-top
-			movdqu xmm7, [rax + r10] ; top
-			movdqu xmm8, [rax + r10 + 1] ; right-top
-			movdqu xmm9, [rax + r12 - 1] ; left-bottom
-			movdqu xmm10, [rax + r12] ; bottom
-			movdqu xmm11, [rax + r12 + 1] ; right-bottom
-			pminub xmm4, xmm2
-			pminub xmm5, xmm2
-			pminub xmm6, xmm2
-			pminub xmm7, xmm2
-			pminub xmm8, xmm2
-			pminub xmm9, xmm2
-			pminub xmm10, xmm2
-			pminub xmm11, xmm2
-			pcmpeqb xmm4, xmm2
-			pcmpeqb xmm5, xmm2
-			pcmpeqb xmm6, xmm2
-			pcmpeqb xmm7, xmm2
-			pcmpeqb xmm8, xmm2
-			pcmpeqb xmm9, xmm2
-			pcmpeqb xmm10, xmm2
-			pcmpeqb xmm11, xmm2
-			por xmm4, xmm5
-			por xmm4, xmm6
-			por xmm4, xmm7
-			por xmm4, xmm8
-			por xmm4, xmm9
-			por xmm4, xmm10
-			por xmm4, xmm11
-			pand xmm4, xmm2
-			movdqu [rdx + r9], xmm4
+			vmovdqu ymm4, [rax + r9 - 1] ; left
+			vmovdqu ymm5, [rax + r9 + 1] ; right
+			vmovdqu ymm6, [rax + r10 - 1] ; left-top
+			vmovdqu ymm7, [rax + r10] ; top
+			vmovdqu ymm8, [rax + r10 + 1] ; right-top
+			vmovdqu ymm9, [rax + r12 - 1] ; left-bottom
+			vmovdqu ymm10, [rax + r12] ; bottom
+			vmovdqu ymm11, [rax + r12 + 1] ; right-bottom
+			vpminub ymm4, ymm2
+			vpminub ymm5, ymm2
+			vpminub ymm6, ymm2
+			vpminub ymm7, ymm2
+			vpminub ymm8, ymm2
+			vpminub ymm9, ymm2
+			vpminub ymm10, ymm2
+			vpminub ymm11, ymm2
+			vpcmpeqb ymm4, ymm2
+			vpcmpeqb ymm5, ymm2
+			vpcmpeqb ymm6, ymm2
+			vpcmpeqb ymm7, ymm2
+			vpcmpeqb ymm8, ymm2
+			vpcmpeqb ymm9, ymm2
+			vpcmpeqb ymm10, ymm2
+			vpcmpeqb ymm11, ymm2
+			vpor ymm4, ymm5
+			vpor ymm4, ymm6
+			vpor ymm4, ymm7
+			vpor ymm4, ymm8
+			vpor ymm4, ymm9
+			vpor ymm4, ymm10
+			vpor ymm4, ymm11
+			vpand ymm4, ymm2
+			vmovdqu [rdx + r9], ymm4
 			.Next
 			
-			lea r9, [r9 + 16]
+			lea r9, [r9 + 32]
 			cmp r9, r15
-			lea r10, [r10 + 16]
-			lea r12, [r12 + 16]
+			lea r10, [r10 + 32]
+			lea r12, [r12 + 32]
 			jl .LoopWidth
 			; end-of-LoopWidth
 
@@ -344,10 +335,11 @@ sym(CompVFastNmsGather_Asm_X64_SSE2):
 	pop r14
 	pop r13
 	pop r12
-	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_RESTORE_YMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 
 %endif ; COMPV_YASM_ABI_IS_64BIT

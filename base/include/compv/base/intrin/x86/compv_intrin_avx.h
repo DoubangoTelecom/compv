@@ -37,6 +37,17 @@ The next macros change the behavior to consider the AVX registers as a single 25
 #define compv_avx2_unpackhi_epi16(ymm0_, ymm1_)		_mm256_unpackhi_epi16(_mm256_permute4x64_epi64(ymm0_, COMPV_MM_SHUFFLE(3, 1, 2, 0)), _mm256_permute4x64_epi64(ymm1_, COMPV_MM_SHUFFLE(3, 1, 2, 0)))
 #define compv_avx2_shuffle_epi8(ymm0_, ymm1_)		_mm256_shuffle_epi8(_mm256_permutevar8x32_epi32(ymm0_, kAVXPermutevar8x32_ABCDDEFG_i32), ymm1_) // Intentionally not correct to avoid performance issues, load 'kAVXPermutevar8x32_ABCDDEFG_i32' yourself *once*
 
+
+// algorithm: return (vecX[i] != vecY[i]) ? vecPlaceholder[i] : 0x00; 
+// e.g. to test vec not zero: _mm_cmpnot_epu8_SSE2(vec, 0x00, 0xff) - mask is used to set value
+#define _mm256_cmpnot_epu8_AVX2(vecX, vecY, vecPlaceholder) _mm256_andnot_si256(_mm256_cmpeq_epi8(vecX, vecY), vecPlaceholder)
+// algorithm: return (vecX[i] > vecY[i]) ? vecPlaceholder[i] : 0x00; 
+#define _mm256_cmpgt_epu8_AVX2(vecX, vecY, vecZero, vecPlaceholder) _mm256_cmpnot_epu8_AVX2(_mm256_subs_epu8(vecX, vecY), vecZero, vecPlaceholder)
+#define _mm256_cmplt_epu8_AVX2(vecX, vecY, vecZero, vecPlaceholder) _mm256_cmpgt_epu8_AVX2(vecY, vecX, vecZero, vecPlaceholder)
+
+#define _mm256_cmple_epu8_AVX2(x, y) _mm256_cmpeq_epi8(_mm256_min_epu8(x, y), x)
+#define _mm256_cmpge_epu8_AVX2(x, y) _mm256_cmple_epu8_AVX2(y, x)
+
 /*
 Index for the 64bit packed values
 */

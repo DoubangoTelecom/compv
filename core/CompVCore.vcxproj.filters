@@ -92,6 +92,9 @@
     <ClCompile Include="features\fast\compv_core_feature_fast_dete.cxx">
       <Filter>Source Files\features\fast</Filter>
     </ClCompile>
+    <ClCompile Include="features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.cxx">
+      <Filter>Source Files\features\fast\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -112,6 +115,9 @@
     <ClInclude Include="include\compv\core\features\fast\compv_core_feature_fast_dete.h">
       <Filter>Header Files\features\fast</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.h">
+      <Filter>Header Files\features\fast\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="features\fast\asm\x86\compv_core_feature_fast_dete_x64_sse.s">
@@ -122,7 +128,16 @@
     </YASM>
   </ItemGroup>
   <ItemGroup>
-    <None Include="features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86.s">
+    <None Include="features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_sse.s">
+      <Filter>Source Files\features\fast\asm\x86</Filter>
+    </None>
+    <None Include="features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_avx.s">
+      <Filter>Source Files\features\fast\asm\x86</Filter>
+    </None>
+    <None Include="features\fast\asm\x86\compv_core_feature_fast_dete_x64_avx.s">
+      <Filter>Source Files\features\fast\asm\x86</Filter>
+    </None>
+    <None Include="features\fast\asm\x86\compv_core_feature_fast_dete_x86_avx.s">
       <Filter>Source Files\features\fast\asm\x86</Filter>
     </None>
   </ItemGroup>

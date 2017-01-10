@@ -162,6 +162,7 @@ Next:
 
 void CompVFastNmsGather_Intrin_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_uscalar_t i, j;
 	__m128i vecStrength, vec0, vec1;
 	pcStrengthsMap += (stride * 3);
@@ -200,6 +201,7 @@ void CompVFastNmsGather_Intrin_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS
 
 void CompVFastNmsApply_Intrin_SSE2(COMPV_ALIGNED(SSE) uint8_t* pcStrengthsMap, COMPV_ALIGNED(SSE) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_uscalar_t i, j;
 	__m128i vec0;
 	pcStrengthsMap += (stride * 3);

@@ -21,6 +21,7 @@ Some literature about FAST:
 #include "compv/base/math/compv_math_utils.h"
 
 #include "compv/core/features/fast/intrin/x86/compv_core_feature_fast_dete_intrin_sse2.h"
+#include "compv/core/features/fast/intrin/x86/compv_core_feature_fast_dete_intrin_avx2.h"
 
 #include <algorithm>
 
@@ -33,11 +34,18 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVFast12DataRow_Asm_X86_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_uscalar_t width, COMPV_ALIGNED(SSE) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 	COMPV_EXTERNC void CompVFastNmsGather_Asm_X86_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVFastNmsApply_Asm_X86_SSE2(COMPV_ALIGNED(SSE) uint8_t* pcStrengthsMap, COMPV_ALIGNED(SSE) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVFast9DataRow_Asm_X86_AVX2(const uint8_t* IP, COMPV_ALIGNED(AVX) compv_uscalar_t width, COMPV_ALIGNED(AVX) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
+	COMPV_EXTERNC void CompVFast12DataRow_Asm_X86_AVX2(const uint8_t* IP, COMPV_ALIGNED(AVX) compv_uscalar_t width, COMPV_ALIGNED(AVX) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
+	COMPV_EXTERNC void CompVFastNmsGather_Asm_X86_AVX2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVFastNmsApply_Asm_X86_AVX2(COMPV_ALIGNED(AVX) uint8_t* pcStrengthsMap, COMPV_ALIGNED(AVX) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVFast9DataRow_Asm_X64_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_uscalar_t width, COMPV_ALIGNED(SSE) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 	COMPV_EXTERNC void CompVFast12DataRow_Asm_X64_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_uscalar_t width, COMPV_ALIGNED(SSE) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 	COMPV_EXTERNC void CompVFastNmsGather_Asm_X64_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVFast9DataRow_Asm_X64_AVX2(const uint8_t* IP, COMPV_ALIGNED(AVX) compv_uscalar_t width, COMPV_ALIGNED(AVX) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
+	COMPV_EXTERNC void CompVFast12DataRow_Asm_X64_AVX2(const uint8_t* IP, COMPV_ALIGNED(AVX) compv_uscalar_t width, COMPV_ALIGNED(AVX) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
+	COMPV_EXTERNC void CompVFastNmsGather_Asm_X64_AVX2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM
 #	endif
@@ -399,10 +407,10 @@ static void CompVFastDataRange(RangeFAST* range)
 		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X86_SSE2 : CompVFast12DataRow_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
         COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X64_SSE2 : CompVFast12DataRow_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
     }
-    if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
-        /*COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = FastData32Row_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
-        COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = FastData32Row_Asm_X86_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
-        COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = FastData32Row_Asm_X64_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));*/
+    if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(range->pixels16)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = CompVFastDataRow_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
+		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X86_AVX2 : CompVFast12DataRow_Asm_X86_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
+		COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X64_AVX2 : CompVFast12DataRow_Asm_X64_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
     }
 
     // Number of pixels to process (multiple of align)
@@ -443,6 +451,11 @@ void CompVFastNmsGatherRange(RangeFAST* range)
 		COMPV_EXEC_IFDEF_ASM_X86((CompVFastNmsGather = CompVFastNmsGather_Asm_X86_SSE2));
 		COMPV_EXEC_IFDEF_ASM_X64((CompVFastNmsGather = CompVFastNmsGather_Asm_X64_SSE2));
 	}
+	if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(range->stride)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVFastNmsGather = CompVFastNmsGather_Intrin_AVX2));
+		COMPV_EXEC_IFDEF_ASM_X86((CompVFastNmsGather = CompVFastNmsGather_Asm_X86_AVX2));
+		COMPV_EXEC_IFDEF_ASM_X64((CompVFastNmsGather = CompVFastNmsGather_Asm_X64_AVX2));
+	}
 
 	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
 	size_t rowEnd = COMPV_MATH_CLIP3(0, range->rowCount, (range->rowEnd + 3));
@@ -463,6 +476,10 @@ void CompVFastNmsApplyRange(RangeFAST* range)
 	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(range->stride) && COMPV_IS_ALIGNED_SSE(range->strengths) && COMPV_IS_ALIGNED_SSE(range->nms)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVFastNmsApply = CompVFastNmsApply_Intrin_SSE2));
 		COMPV_EXEC_IFDEF_ASM_X86((CompVFastNmsApply = CompVFastNmsApply_Asm_X86_SSE2));
+	}
+	if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(range->stride) && COMPV_IS_ALIGNED_AVX2(range->strengths) && COMPV_IS_ALIGNED_AVX2(range->nms)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVFastNmsApply = CompVFastNmsApply_Intrin_AVX2));
+		COMPV_EXEC_IFDEF_ASM_X86((CompVFastNmsApply = CompVFastNmsApply_Asm_X86_AVX2));
 	}
 
 	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
