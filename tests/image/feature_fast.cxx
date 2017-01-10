@@ -36,16 +36,16 @@ COMPV_UNITTESTS_FEATURE_FAST[] =
 	{ 20, true, COMPV_FAST_TYPE_9, -1, TEST_TYPE_EQUIRECTANGULAR, 1282, 720, 1282, 2757, 115673.f, 1749686.f, 1065867.f },
 	{ 20, false, COMPV_FAST_TYPE_12, -1, TEST_TYPE_EQUIRECTANGULAR, 1282,720, 1282, 3953, 148518.f, 2431991.f, 1549595.f },
 	{ 20, true, COMPV_FAST_TYPE_12, -1, TEST_TYPE_EQUIRECTANGULAR, 1282, 720, 1282, 1456, 56445.f, 938167.f, 561473.f },
-	{ 20, false, COMPV_FAST_TYPE_9, 2000, TEST_TYPE_EQUIRECTANGULAR, 1282,720, 1282, 2000, 158611.f, 1187679.f, 782137.f },
-	{ 20, true, COMPV_FAST_TYPE_9, 2000, TEST_TYPE_EQUIRECTANGULAR, 1282,720, 1282, 2000, 99205.f, 1252153.f, 766739.f },
-	{ 20, false, COMPV_FAST_TYPE_12, 2000, TEST_TYPE_EQUIRECTANGULAR, 1282, 720, 1282, 2000, 102310.f, 1205833.f, 783399.f },
+	{ 20, false, COMPV_FAST_TYPE_9, 2000, TEST_TYPE_EQUIRECTANGULAR, 1282,720, 1282, 2001, 158661.f, 1187708.f, 782604.f },
+	{ 20, true, COMPV_FAST_TYPE_9, 2000, TEST_TYPE_EQUIRECTANGULAR, 1282,720, 1282, 2118, 102037.f, 1327795.f, 813533.f },
+	{ 20, false, COMPV_FAST_TYPE_12, 2000, TEST_TYPE_EQUIRECTANGULAR, 1282, 720, 1282, 2118, 105732.f, 1280332.f, 829835.f },
 	{ 20, true, COMPV_FAST_TYPE_12, 2000, TEST_TYPE_EQUIRECTANGULAR, 1282,720, 1282, 1456, 56445.f, 938167.f, 561473.f },
 
 	{ 20, false, COMPV_FAST_TYPE_9, -1, TEST_TYPE_OPENGLBOOK, 200, 258, 200, 3493, 144778.f, 310525.f, 435337.f },
 	{ 20, true, COMPV_FAST_TYPE_9, -1, TEST_TYPE_OPENGLBOOK, 200, 258, 200, 1011, 49064.f, 90965.f, 122555.f },
 	{ 20, false, COMPV_FAST_TYPE_12, -1, TEST_TYPE_OPENGLBOOK, 200, 258, 200, 1673, 62092.f, 147160.f, 202160.f },
 	{ 20, true, COMPV_FAST_TYPE_12, -1, TEST_TYPE_OPENGLBOOK, 200, 258, 200, 672, 27580.f, 59806.f, 79401.f },
-	{ 20, false, COMPV_FAST_TYPE_9, 2000, TEST_TYPE_OPENGLBOOK, 200, 258, 200, 2000, 106676.f, 175436.f, 234176.f},
+	{ 20, false, COMPV_FAST_TYPE_9, 2000, TEST_TYPE_OPENGLBOOK, 200, 258, 200, 2024, 107468.f, 176872.f, 237262.f},
 	{ 20, true, COMPV_FAST_TYPE_9, 2000, TEST_TYPE_OPENGLBOOK, 200, 258, 200, 1011, 49064.f, 90965.f, 122555.f },
 	{ 20, false, COMPV_FAST_TYPE_12, 2000, TEST_TYPE_OPENGLBOOK, 200, 258, 200, 1673, 62092.f, 147160.f, 202160.f},
 	{ 20, true, COMPV_FAST_TYPE_12, 2000, TEST_TYPE_OPENGLBOOK, 200, 258, 200, 672, 27580.f, 59806.f, 79401.f },
@@ -54,9 +54,9 @@ COMPV_UNITTESTS_FEATURE_FAST[] =
 	{ 20, true, COMPV_FAST_TYPE_9, -1, TEST_TYPE_GRIOTS, 480, 640, 480,3096, 144996.f, 650016.f, 1057869.f },
 	{ 20, false, COMPV_FAST_TYPE_12, -1, TEST_TYPE_GRIOTS, 480, 640, 480, 5536, 207029.f, 1215982.f, 1696520.f },
 	{ 20, true, COMPV_FAST_TYPE_12, -1, TEST_TYPE_GRIOTS, 480, 640, 480, 1700, 72175.f, 368078.f, 532697.f },
-	{ 20, false, COMPV_FAST_TYPE_9, 2000, TEST_TYPE_GRIOTS, 480, 640, 480, 2000, 155490.f, 457457.f, 554480.f },
-	{ 20, true, COMPV_FAST_TYPE_9, 2000, TEST_TYPE_GRIOTS, 480, 640, 480, 2000, 117822.f, 428745.f, 628554.f },
-	{ 20, false, COMPV_FAST_TYPE_12, 2000, TEST_TYPE_GRIOTS, 480, 640,480, 2000, 111486.f, 455286.f, 537950.f },
+	{ 20, false, COMPV_FAST_TYPE_9, 2000, TEST_TYPE_GRIOTS, 480, 640, 480, 2097, 161213.f, 479470.f, 583577.f },
+	{ 20, true, COMPV_FAST_TYPE_9, 2000, TEST_TYPE_GRIOTS, 480, 640, 480, 2055, 119527.f, 439634.f, 649044.f },
+	{ 20, false, COMPV_FAST_TYPE_12, 2000, TEST_TYPE_GRIOTS, 480, 640,480, 2073, 114260.f, 471587.f, 555306.f },
 	{ 20, true, COMPV_FAST_TYPE_12, 2000, TEST_TYPE_GRIOTS, 480, 640, 480, 1700, 72175.f, 368078.f, 532697.f },
 };
 size_t COMPV_UNITTESTS_FEATURE_FAST_COUNT = sizeof(COMPV_UNITTESTS_FEATURE_FAST) / sizeof(COMPV_UNITTESTS_FEATURE_FAST[0]);
@@ -66,13 +66,13 @@ size_t COMPV_UNITTESTS_FEATURE_FAST_COUNT = sizeof(COMPV_UNITTESTS_FEATURE_FAST)
 #define NONMAXIMA		true
 #define THRESHOLD		20
 #define FASTID			COMPV_FAST_TYPE_9
-#define MAXFEATURES		2000
+#define MAXFEATURES		-1
 
 COMPV_ERROR_CODE feature_fast()
 {
 	CompVCornerDetePtr fast;
 	CompVMatPtr image;
-	CompVBoxInterestPointPtr interestPoints;
+	std::vector<CompVInterestPoint> interestPoints;
 	uint64_t timeStart, timeEnd;
 	const compv_unittest_feature_fast* test = NULL;
 	float sum_scores;
@@ -103,7 +103,7 @@ COMPV_ERROR_CODE feature_fast()
 	// Detect keypoints
 	timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(fast->process(image, &interestPoints));
+		COMPV_CHECK_CODE_RETURN(fast->process(image, interestPoints));
 	}
 	timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO("Elapsed time (TestFAST) = [[[ %llu millis ]]]", (timeEnd - timeStart));
@@ -112,13 +112,12 @@ COMPV_ERROR_CODE feature_fast()
 	sum_scores = 0.f;
 	xf = 0.f;
 	yf = 0.f;
-	for (size_t i = 0; i < interestPoints->size(); ++i) {
-		sum_scores += interestPoints->ptr(i)->strength;
-		xf += interestPoints->ptr(i)->x;
-		yf += interestPoints->ptr(i)->y;
+	for (std::vector<CompVInterestPoint>::iterator i = interestPoints.begin(); i != interestPoints.end(); ++i) {
+		sum_scores += (*i).strength;
+		xf += (*i).x;
+		yf += (*i).y;
 	}
-
-	COMPV_CHECK_EXP_RETURN(interestPoints->size() != test->corners, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Num corners mismatch");
+	COMPV_CHECK_EXP_RETURN(interestPoints.size() != test->corners, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Num corners mismatch");
 	COMPV_CHECK_EXP_RETURN(sum_scores != test->scores, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Sum of scores mismatch");
 	COMPV_CHECK_EXP_RETURN(xf != test->xf, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Sum of xf mismatch");
 	COMPV_CHECK_EXP_RETURN(yf != test->yf, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Sum of yf mismatch");

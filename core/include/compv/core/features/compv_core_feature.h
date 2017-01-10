@@ -15,6 +15,7 @@
 #include "compv/base/compv_box_interestpoint.h"
 
 #include <map>
+#include <vector>
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -134,7 +135,7 @@ protected:
 	CompVCornerDete(int id);
 public:
 	virtual ~CompVCornerDete();
-	virtual COMPV_ERROR_CODE process(const CompVMatPtr& image, CompVBoxInterestPointPtrPtr interestPoints) = 0;
+	virtual COMPV_ERROR_CODE process(const CompVMatPtr& image, std::vector<CompVInterestPoint>& interestPoints) = 0;
 	static COMPV_ERROR_CODE newObj(CompVCornerDetePtrPtr dete, int deteId);
 };
 

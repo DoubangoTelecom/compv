@@ -23,8 +23,6 @@ Some literature about FAST:
 #include "compv/core/features/fast/intrin/x86/compv_core_feature_fast_dete_intrin_sse2.h"
 #include "compv/core/features/fast/intrin/x86/compv_core_feature_fast_dete_intrin_avx2.h"
 
-#include <algorithm>
-
 #define COMPV_THIS_CLASSNAME	"CompVCornerDeteFAST"
 
 COMPV_NAMESPACE_BEGIN()
@@ -138,9 +136,9 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::set(int id, const void* valuePtr, size_t v
 }
 
 // overrides CompVCornerDete::process
-COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBoxInterestPointPtrPtr interestPoints) /*Overrides(CompVCornerDete)*/
+COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, std::vector<CompVInterestPoint>& interestPoints) /*Overrides(CompVCornerDete)*/
 {
-    COMPV_CHECK_EXP_RETURN(!image || image->isEmpty() || image->subType() != COMPV_SUBTYPE_PIXELS_Y || !interestPoints,
+    COMPV_CHECK_EXP_RETURN(!image || image->isEmpty() || image->subType() != COMPV_SUBTYPE_PIXELS_Y,
                            COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
@@ -186,14 +184,7 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
     m_nHeight = height;
     m_nStride = stride;
 
-    // create or reset points
-	CompVBoxInterestPointPtr interestPoints_ = *interestPoints;
-    if (!interestPoints_) {
-        COMPV_CHECK_CODE_RETURN(CompVBoxInterestPoint::newObj(&interestPoints_));
-    }
-    else {
-		interestPoints_->reset();
-    }
+	interestPoints.clear();
 
 	const compv_scalar_t strideScalarSigned = static_cast<compv_scalar_t>(stride);
     COMPV_ALIGN_DEFAULT() const compv_scalar_t pixels16[16] = {
@@ -337,7 +328,7 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
 	}
 
     // Build interest points
-#define COMPV_PUSH1() if (*begin1) { *begin1 += thresholdMinus1; interestPoints_->push(CompVInterestPoint(static_cast<compv_float32_t>(begin1 - strengths), static_cast<compv_float32_t>(j), static_cast<compv_float32_t>(*begin1))); } ++begin1;
+#define COMPV_PUSH1() if (*begin1) { *begin1 += thresholdMinus1; interestPoints.push_back(CompVInterestPoint(static_cast<compv_float32_t>(begin1 - strengths), static_cast<compv_float32_t>(j), static_cast<compv_float32_t>(*begin1))); } ++begin1;
 #define COMPV_PUSH4() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1()
 #define COMPV_PUSH8() COMPV_PUSH4() COMPV_PUSH4()
     uint8_t *strengths = m_pStrengthsMap + (3 * stride), *begin1;
@@ -377,11 +368,9 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, CompVBox
     }
 
     // Retain best "m_iMaxFeatures" features
-    if (m_iMaxFeatures > 0 && static_cast<int32_t>(interestPoints_->size()) > m_iMaxFeatures) {
-        interestPoints_->retainBest(m_iMaxFeatures);
+    if (m_iMaxFeatures > 1 && static_cast<int32_t>(interestPoints.size()) > m_iMaxFeatures) {
+		CompVInterestPoint::selectBest(interestPoints, static_cast<size_t>(m_iMaxFeatures));
     }
-
-	*interestPoints = interestPoints_;
     return err_;
 }
 

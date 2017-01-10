@@ -9,6 +9,9 @@
 
 #include "compv/base/compv_config.h"
 
+#include <vector>
+#include <algorithm>
+
 COMPV_NAMESPACE_BEGIN()
 
 #define COMPV_CAT_(A, B) A ## B
@@ -385,6 +388,22 @@ public:
 	}
 	CompVInterestPoint(compv_float32_t x_, compv_float32_t y_, compv_float32_t strength_ = -1.f, compv_float32_t orient_ = -1.f, int32_t level_ = 0, compv_float32_t size_ = 0.f) {
 		init(x_, y_, strength_, orient_, level_, size_);
+	}
+	static void selectBest(std::vector<CompVInterestPoint>& interestPoints, size_t max) {
+		if (max > 1) {
+#if 0
+			COMPV_DEBUG_INFO_CODE_FOR_TESTING("Slow and worst matches");
+			std::sort(interestPoints.begin(), interestPoints.end(), InterestPointStrengthGreater());
+			interestPoints.resize(static_cast<size_t>(m_iMaxFeatures));
+#else
+			// This code gives better matches (tested with object recognition sample)
+			std::nth_element(interestPoints.begin(), interestPoints.begin() + max, interestPoints.end(),
+				[](const CompVInterestPoint& i, const CompVInterestPoint& j) {return i.strength > j.strength; });
+			const float pivot = interestPoints.at(max - 1).strength;
+			interestPoints.resize(std::partition(interestPoints.begin() + max, interestPoints.end(),
+				[pivot](CompVInterestPoint i) { return i.strength >= pivot; }) - interestPoints.begin());
+#endif
+		}
 	}
 };
 

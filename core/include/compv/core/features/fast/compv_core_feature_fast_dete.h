@@ -42,7 +42,7 @@ public:
 	COMPV_OBJECT_GET_ID(CompVCornerDeteFAST);
 
     virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
-    virtual COMPV_ERROR_CODE process(const CompVMatPtr& image, CompVBoxInterestPointPtrPtr interestPoints) override /*Overrides(CompVCornerDete)*/;
+    virtual COMPV_ERROR_CODE process(const CompVMatPtr& image, std::vector<CompVInterestPoint>& interestPoints) override /*Overrides(CompVCornerDete)*/;
 
     static COMPV_ERROR_CODE newObj(CompVCornerDetePtrPtr fast);
 
