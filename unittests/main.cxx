@@ -19,6 +19,8 @@ using namespace compv;
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
 #define disableAVX() (kCpuFlagAVX | kCpuFlagAVX2)
 #define disableNEON() (kCpuFlagARM_NEON | kCpuFlagARM_VFPv4)
+#define disableALL() kCpuFlagAll
+#define enableALL() kCpuFlagNone
 
 static const struct compv_unittest_option {
 	uint64_t disabledCpuFlags;
@@ -29,22 +31,40 @@ static const struct compv_unittest_option {
 }
 COMPV_UNITTEST_OPTIONS[] =
 {
-	kCpuFlagAll, kAsmFalse, kIntrinFalse, kMtFalse, kFpTrue, // Pure C++, single-threaded, fxp
-	kCpuFlagAll, kAsmFalse, kIntrinFalse, kMtTrue, kFpTrue, // Pure C++, multi-threaded, fxp
+	{ disableALL(), kAsmFalse, kIntrinFalse, kMtFalse, kFpTrue }, // Pure C++, single-threaded, fxp
+	{ disableALL(), kAsmFalse, kIntrinFalse, kMtFalse, kFpFalse }, // Pure C++, single-threaded, flp
+	{ disableALL(), kAsmFalse, kIntrinFalse, kMtTrue, kFpTrue }, // Pure C++, multi-threaded, fxp
+	{ disableALL(), kAsmFalse, kIntrinFalse, kMtTrue, kFpFalse }, // Pure C++, multi-threaded, flp
 #if COMPV_ARCH_X86
-	disableAVX(), kAsmTrue, kIntrinFalse, kMtFalse, kFpTrue, // SSE-asm, single-threaded, fxp
-	disableAVX(), kAsmTrue, kIntrinFalse, kMtTrue, kFpTrue, // SSE-asm, multi-threaded, fxp
-	disableAVX(), kAsmFalse, kIntrinTrue, kMtFalse, kFpTrue, // SSE-intrin, single-threaded, fxp
-	disableAVX(), kAsmFalse, kIntrinTrue, kMtTrue, kFpTrue, // SSE-intrin, multi-threaded, fxp
-	disableSSE(), kAsmTrue, kIntrinFalse, kMtFalse, kFpTrue, // AVX-asm, single-threaded, fxp
-	disableSSE(), kAsmTrue, kIntrinFalse, kMtTrue, kFpTrue, // AVX-asm, multi-threaded, fxp
-	disableSSE(), kAsmFalse, kIntrinTrue, kMtFalse, kFpTrue, // AVX-intrin, single-threaded, fxp
-	disableSSE(), kAsmFalse, kIntrinTrue, kMtTrue, kFpTrue, // AVX-intrin, multi-threaded, fxp
+	/* Fixed-point math */
+	{ disableAVX(), kAsmTrue, kIntrinFalse, kMtFalse, kFpTrue }, // SSE-asm, single-threaded, fxp
+	{ disableAVX(), kAsmTrue, kIntrinFalse, kMtTrue, kFpTrue }, // SSE-asm, multi-threaded, fxp
+	{ disableAVX(), kAsmFalse, kIntrinTrue, kMtFalse, kFpTrue }, // SSE-intrin, single-threaded, fxp
+	{ disableAVX(), kAsmFalse, kIntrinTrue, kMtTrue, kFpTrue }, // SSE-intrin, multi-threaded, fxp
+	{ disableSSE(), kAsmTrue, kIntrinFalse, kMtFalse, kFpTrue }, // AVX-asm, single-threaded, fxp
+	{ disableSSE(), kAsmTrue, kIntrinFalse, kMtTrue, kFpTrue }, // AVX-asm, multi-threaded, fxp
+	{ disableSSE(), kAsmFalse, kIntrinTrue, kMtFalse, kFpTrue }, // AVX-intrin, single-threaded, fxp
+	{ disableSSE(), kAsmFalse, kIntrinTrue, kMtTrue, kFpTrue }, // AVX-intrin, multi-threaded, fxp
+	/* Floating-point math */
+	{ disableAVX(), kAsmTrue, kIntrinFalse, kMtFalse, kFpFalse }, // SSE-asm, single-threaded, flp
+	{ disableAVX(), kAsmTrue, kIntrinFalse, kMtTrue, kFpFalse }, // SSE-asm, multi-threaded, flp
+	{ disableAVX(), kAsmFalse, kIntrinTrue, kMtFalse, kFpFalse }, // SSE-intrin, single-threaded, flp
+	{ disableAVX(), kAsmFalse, kIntrinTrue, kMtTrue, kFpFalse }, // SSE-intrin, multi-threaded, flp
+	{ disableSSE(), kAsmTrue, kIntrinFalse, kMtFalse, kFpFalse }, // AVX-asm, single-threaded, flp
+	{ disableSSE(), kAsmTrue, kIntrinFalse, kMtTrue, kFpFalse }, // AVX-asm, multi-threaded, flp
+	{ disableSSE(), kAsmFalse, kIntrinTrue, kMtFalse, kFpFalse }, // AVX-intrin, single-threaded, flp
+	{ disableSSE(), kAsmFalse, kIntrinTrue, kMtTrue, kFpFalse }, // AVX-intrin, multi-threaded, flp
 #elif COMPV_ARCH_ARM
-	kCpuFlagNone, kAsmTrue, kIntrinFalse, kMtFalse, kFpTrue, // NEON-asm, single-threaded, fxp
-	kCpuFlagNone, kAsmTrue, kIntrinFalse, kMtTrue, kFpTrue, // NEON-asm, multi-threaded, fxp
-	kCpuFlagNone, kAsmFalse, kIntrinTrue, kMtFalse, kFpTrue, // NEON-intrin, single-threaded, fxp
-	kCpuFlagNone, kAsmFalse, kIntrinTrue, kMtTrue, kFpTrue, // NEON-intrin, multi-threaded, fxp
+	/* Fixed-point math */
+	{ enableALL(), kAsmTrue, kIntrinFalse, kMtFalse, kFpTrue }, // NEON-asm, single-threaded, fxp
+	{ enableALL(), kAsmTrue, kIntrinFalse, kMtTrue, kFpTrue }, // NEON-asm, multi-threaded, fxp
+	{ enableALL(), kAsmFalse, kIntrinTrue, kMtFalse, kFpTrue }, // NEON-intrin, single-threaded, fxp
+	{ enableALL(), kAsmFalse, kIntrinTrue, kMtTrue, kFpTrue }, // NEON-intrin, multi-threaded, fxp
+	/* Floating-point math */
+	{ enableALL(), kAsmTrue, kIntrinFalse, kMtFalse, kFpFalse }, // NEON-asm, single-threaded, flp
+	{ enableALL(), kAsmTrue, kIntrinFalse, kMtTrue, kFpFalse }, // NEON-asm, multi-threaded, flp
+	{ enableALL(), kAsmFalse, kIntrinTrue, kMtFalse, kFpFalse }, // NEON-intrin, single-threaded, flp
+	{ enableALL(), kAsmFalse, kIntrinTrue, kMtTrue, kFpFalse }, // NEON-intrin, multi-threaded, flp
 #endif
 };
 size_t COMPV_UNITTEST_OPTIONS_COUNT = sizeof(COMPV_UNITTEST_OPTIONS) / sizeof(COMPV_UNITTEST_OPTIONS[0]);

@@ -67,6 +67,15 @@
     <Filter Include="include\features\fast\intrin\arm">
       <UniqueIdentifier>{74803e83-54d6-442f-82fa-ed4b597a82f3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\features\fast\asm">
+      <UniqueIdentifier>{d084059d-3331-4a43-b5c3-f869f69bf60e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\fast\asm\x86">
+      <UniqueIdentifier>{c355eb18-ada0-4a51-b533-f8187ad174b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\fast\asm\arm">
+      <UniqueIdentifier>{15cbd72b-43b5-459d-b09c-247cad4a792c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\core\compv_core.h">
@@ -101,5 +110,28 @@
     <ClCompile Include="..\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.cxx">
       <Filter>source\features\fast\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="..\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.cxx">
+      <Filter>source\features\fast\intrin\x86</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_avx.s">
+      <Filter>source\features\fast\asm\x86</Filter>
+    </None>
+    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_sse.s">
+      <Filter>source\features\fast\asm\x86</Filter>
+    </None>
+    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x64_avx.s">
+      <Filter>source\features\fast\asm\x86</Filter>
+    </None>
+    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x64_sse.s">
+      <Filter>source\features\fast\asm\x86</Filter>
+    </None>
+    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x86_avx.s">
+      <Filter>source\features\fast\asm\x86</Filter>
+    </None>
+    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x86_sse.s">
+      <Filter>source\features\fast\asm\x86</Filter>
+    </None>
   </ItemGroup>
 </Project>
