@@ -27,20 +27,32 @@ static const struct compv_unittest_feature_fast {
 }
 COMPV_UNITTESTS_FEATURE_FAST[] =
 {
-	{ 10, false, COMPV_FAST_TYPE_9, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 24105, 574969.f, 15148142.f, 9577924.f },
-	{ 10, true, COMPV_FAST_TYPE_9, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 6598, 167156.f, 4326974.f, 2669475.f },
-	{ 10, false, COMPV_FAST_TYPE_12, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 10812, 239835.f, 6885661.f, 4326231.f },
-	{ 10, true, COMPV_FAST_TYPE_12, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 3920, 89172, 2584280.f, 1576105.f },
+	{ 20, false, COMPV_FAST_TYPE_9, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 9583, 381080.f, 5826908.f, 3722280.f },
+	{ 20, true, COMPV_FAST_TYPE_9, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 2757, 115673.f, 1749686.f, 1065867.f },
+	{ 20, false, COMPV_FAST_TYPE_12, -1, "equirectangular_1282x720_gray.yuv", 1282,720, 1282, 3953, 148518.f, 2431991.f, 1549595.f },
+	{ 20, true, COMPV_FAST_TYPE_12, -1, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 1456, 56445.f, 938167.f, 561473.f },
+	{ 20, false, COMPV_FAST_TYPE_9, 2000, "equirectangular_1282x720_gray.yuv", 1282,720, 1282, 2000, 158611.f, 1187679.f, 782137.f },
+	{ 20, true, COMPV_FAST_TYPE_9, 2000, "equirectangular_1282x720_gray.yuv", 1282,720, 1282, 2000, 99205.f, 1252153.f, 766739.f },
+	{ 20, false, COMPV_FAST_TYPE_12, 2000, "equirectangular_1282x720_gray.yuv", 1282, 720, 1282, 2000, 102310.f, 1205833.f, 783399.f },
+	{ 20, true, COMPV_FAST_TYPE_12, 2000, "equirectangular_1282x720_gray.yuv", 1282,720, 1282, 1456, 56445.f, 938167.f, 561473.f },
 
-	{ 10, false, COMPV_FAST_TYPE_9, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 5540, 173438.f, 501490.f, 708067.f },
-	{ 10, true, COMPV_FAST_TYPE_9, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 1282, 52936.f, 117722.f, 160696.f },
-	{ 10, false, COMPV_FAST_TYPE_12, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 2930, 79671.f, 260098.f, 368964.f },
-	{ 10, true, COMPV_FAST_TYPE_12, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 978, 31952.f, 88469.f, 121621.f },
+	{ 20, false, COMPV_FAST_TYPE_9, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 3493, 144778.f, 310525.f, 435337.f },
+	{ 20, true, COMPV_FAST_TYPE_9, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 1011, 49064.f, 90965.f, 122555.f },
+	{ 20, false, COMPV_FAST_TYPE_12, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 1673, 62092.f, 147160.f, 202160.f },
+	{ 20, true, COMPV_FAST_TYPE_12, -1, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 672, 27580.f, 59806.f, 79401.f },
+	{ 20, false, COMPV_FAST_TYPE_9, 2000, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 2000, 106676.f, 175436.f, 234176.f },
+	{ 20, true, COMPV_FAST_TYPE_9, 2000, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 1011, 49064.f, 90965.f, 122555.f },
+	{ 20, false, COMPV_FAST_TYPE_12, 2000, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 1673, 62092.f, 147160.f, 202160.f },
+	{ 20, true, COMPV_FAST_TYPE_12, 2000, "opengl_programming_guide_8th_edition_200x258_gray.yuv", 200, 258, 200, 672, 27580.f, 59806.f, 79401.f },
 
-	{ 10, false, COMPV_FAST_TYPE_9, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480, 27208, 720203.f, 5722419.f, 9740405.f },
-	{ 10, true, COMPV_FAST_TYPE_9, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480, 5405, 176389.f, 1166708.f, 1973623.f  },
-	{ 10, false, COMPV_FAST_TYPE_12, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480, 12113, 295977.f, 2646636.f, 4152440.f },
-	{ 10, true, COMPV_FAST_TYPE_12, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480, 3425, 95590.f, 750394.f, 1198537.f },
+	{ 20, false, COMPV_FAST_TYPE_9, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480, 13625, 535125.f, 2868526.f, 4554394.f },
+	{ 20, true, COMPV_FAST_TYPE_9, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480,3096, 144996.f, 650016.f, 1057869.f },
+	{ 20, false, COMPV_FAST_TYPE_12, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480, 5536, 207029.f, 1215982.f, 1696520.f },
+	{ 20, true, COMPV_FAST_TYPE_12, -1, "mandekalou_480x640_gray.yuv", 480, 640, 480, 1700, 72175.f, 368078.f, 532697.f },
+	{ 20, false, COMPV_FAST_TYPE_9, 2000, "mandekalou_480x640_gray.yuv", 480, 640, 480, 2000, 155490.f, 457457.f, 554480.f },
+	{ 20, true, COMPV_FAST_TYPE_9, 2000, "mandekalou_480x640_gray.yuv", 480, 640, 480, 2000, 117822.f, 428745.f, 628554.f },
+	{ 20, false, COMPV_FAST_TYPE_12, 2000, "mandekalou_480x640_gray.yuv", 480, 640,480, 2000, 111486.f, 455286.f, 537950.f },
+	{ 20, true, COMPV_FAST_TYPE_12, 2000, "mandekalou_480x640_gray.yuv", 480, 640, 480, 1700, 72175.f, 368078.f, 532697.f },
 };
 size_t COMPV_UNITTESTS_FEATURE_FAST_COUNT = sizeof(COMPV_UNITTESTS_FEATURE_FAST) / sizeof(COMPV_UNITTESTS_FEATURE_FAST[0]);
 

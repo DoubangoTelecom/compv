@@ -126,19 +126,17 @@
     <YASM Include="features\fast\asm\x86\compv_core_feature_fast_dete_x86_sse.s">
       <Filter>Source Files\features\fast\asm\x86</Filter>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_sse.s">
+    <YASM Include="features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_avx.s">
       <Filter>Source Files\features\fast\asm\x86</Filter>
-    </None>
-    <None Include="features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_avx.s">
+    </YASM>
+    <YASM Include="features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_sse.s">
       <Filter>Source Files\features\fast\asm\x86</Filter>
-    </None>
-    <None Include="features\fast\asm\x86\compv_core_feature_fast_dete_x64_avx.s">
+    </YASM>
+    <YASM Include="features\fast\asm\x86\compv_core_feature_fast_dete_x64_avx.s">
       <Filter>Source Files\features\fast\asm\x86</Filter>
-    </None>
-    <None Include="features\fast\asm\x86\compv_core_feature_fast_dete_x86_avx.s">
+    </YASM>
+    <YASM Include="features\fast\asm\x86\compv_core_feature_fast_dete_x86_avx.s">
       <Filter>Source Files\features\fast\asm\x86</Filter>
-    </None>
+    </YASM>
   </ItemGroup>
 </Project>
