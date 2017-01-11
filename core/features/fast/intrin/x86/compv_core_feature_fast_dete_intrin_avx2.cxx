@@ -79,7 +79,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 // No need to check for 'width'. The caller ('CompVFastProcessRange' function) already checked and prepared it for AVX.
-void CompVFastDataRow_Intrin_AVX2(const uint8_t* IP, COMPV_ALIGNED(AVX) compv_uscalar_t width, COMPV_ALIGNED(DEFAULT) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths)
+void CompVFastDataRow_Intrin_AVX2(const uint8_t* IP, COMPV_ALIGNED(AVX) compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
 	_mm256_zeroupper();

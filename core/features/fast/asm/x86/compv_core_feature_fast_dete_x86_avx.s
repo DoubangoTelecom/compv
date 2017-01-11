@@ -24,7 +24,7 @@ section .text
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> const uint8_t* IP
 ; arg(1) -> COMPV_ALIGNED(AVX) compv_uscalar_t width
-; arg(2) -> COMPV_ALIGNED(AVX) const compv_scalar_t *pixels16
+; arg(2) -> const compv_scalar_t *pixels16
 ; arg(3) -> compv_uscalar_t N
 ; arg(4) -> compv_uscalar_t threshold
 ; arg(5) -> uint8_t* strengths
