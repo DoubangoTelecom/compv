@@ -69,8 +69,9 @@ static int32_t COMPV_INLINE __continuousCount(int32_t fasType) {
 }
 
 static void CompVFastDataRange(RangeFAST* range);
+static void CompVFastBuildInterestPoints(RangeFAST* range, std::vector<CompVInterestPoint>& interestPoints);
 static void CompVFastNmsGatherRange(RangeFAST* range);
-static void CompVFastNmsApplyRange(RangeFAST* range);
+static void CompVFastNmsApplyRangeAndBuildInterestPoints(RangeFAST* range, std::vector<CompVInterestPoint>& interestPoints);
 static void CompVFastDataRow_C(const uint8_t* IP,  compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 static void CompVFastNmsGather_C(const uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride);
 static void CompVFastNmsApply_C(uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride);
@@ -225,9 +226,16 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, std::vec
 		size_t lastHeight = height - ((threadsCountRange - 1) * heights);
         RangeFAST* pRange;
         CompVAsyncTaskIds taskIds;
+		std::vector<std::vector<CompVInterestPoint> >interestPointsList;
+		if (!m_bNonMaximaSupp) {
+			interestPointsList.resize(threadsCountRange);
+		}
         taskIds.reserve(threadsCountRange);
-        auto funcPtr = [&](RangeFAST* pRange) -> void {
+        auto funcPtr = [&](RangeFAST* pRange, size_t idx) -> void {
             CompVFastDataRange(pRange);
+			if (interestPointsList.size() > idx) { // when nomax is enabled then, building the points is done while applying the nomax (mt-friendly)
+				CompVFastBuildInterestPoints(pRange, interestPointsList[idx]);
+			}
         };
         for (size_t i = 0; i < threadsCountRange; ++i) {
             pRange = &m_pRanges[i];
@@ -242,10 +250,18 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, std::vec
             pRange->pixels16 = pixels16;
             pRange->strengths = m_pStrengthsMap;
 			pRange->nms = m_pNmsMap;
-            COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, pRange), taskIds));
+            COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, pRange, i), taskIds));
             rowStart = pRange->rowEnd;
         }
-        COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+		if (interestPointsList.empty()) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+		}
+		else {
+			for (size_t i = 0; i < threadsCountRange; ++i) {
+				COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[i]));
+				interestPoints.insert(interestPoints.end(), interestPointsList[i].begin(), interestPointsList[i].end());
+			}
+		}
     } 
 	else {
         RangeFAST* pRange = &m_pRanges[0];
@@ -261,6 +277,9 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, std::vec
         pRange->strengths = m_pStrengthsMap;
 		pRange->nms = m_pNmsMap;
         CompVFastDataRange(pRange);
+		if (!m_bNonMaximaSupp) { // when nomax is enabled then, building the points is done while applying the nomax (mt-friendly)
+			CompVFastBuildInterestPoints(pRange, interestPoints);
+		}
     }
 
 	// Non Maximal Suppression for removing adjacent corners
@@ -274,14 +293,16 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, std::vec
 			size_t threadIdx, rowStart;
 			size_t heights = (height / threadsCountNMS);
 			size_t lastHeight = height - ((threadsCountNMS - 1) * heights);
+			std::vector<std::vector<CompVInterestPoint> >interestPointsList;
 			RangeFAST* pRange;
 			CompVAsyncTaskIds taskIds;
 			taskIds.reserve(threadsCountNMS);
+			interestPointsList.resize(threadsCountNMS);
 			auto funcPtrNmsGather = [&](RangeFAST* pRange) -> void {
 				CompVFastNmsGatherRange(pRange);
 			};
-			auto funcPtrNmsApply = [&](RangeFAST* pRange) -> void {
-				CompVFastNmsApplyRange(pRange);
+			auto funcPtrNmsApplyRangeAndBuildInterestPoints = [&](RangeFAST* pRange, size_t idx) -> void {
+				CompVFastNmsApplyRangeAndBuildInterestPoints(pRange, interestPointsList[idx]);
 			};
 			// NMS gathering
 			for (threadIdx = 0, rowStart = 0; threadIdx < threadsCountNMS; ++threadIdx) {
@@ -308,10 +329,13 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, std::vec
 				pRange->stride = stride;
 				pRange->strengths = m_pStrengthsMap;
 				pRange->nms = m_pNmsMap;
-				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNmsApply, pRange), taskIds));
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNmsApplyRangeAndBuildInterestPoints, pRange, threadIdx), taskIds));
 				rowStart = pRange->rowEnd;
 			}
-			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+			for (threadIdx = 0; threadIdx < threadsCountNMS; ++threadIdx) {
+				COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
+				interestPoints.insert(interestPoints.end(), interestPointsList[threadIdx].begin(), interestPointsList[threadIdx].end());
+			}
 		}
 		else {
 			RangeFAST* pRange = &m_pRanges[0];
@@ -324,49 +348,9 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, std::vec
 			pRange->nms = m_pNmsMap;
 
 			CompVFastNmsGatherRange(pRange);
-			CompVFastNmsApplyRange(pRange);
+			CompVFastNmsApplyRangeAndBuildInterestPoints(pRange, interestPoints);
 		}
 	}
-
-    // Build interest points
-#define COMPV_PUSH1() if (*begin1) { *begin1 += thresholdMinus1; interestPoints.push_back(CompVInterestPoint(static_cast<compv_float32_t>(begin1 - strengths), static_cast<compv_float32_t>(j), static_cast<compv_float32_t>(*begin1))); } ++begin1;
-#define COMPV_PUSH4() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1()
-#define COMPV_PUSH8() COMPV_PUSH4() COMPV_PUSH4()
-    uint8_t *strengths = m_pStrengthsMap + (3 * stride), *begin1;
-    if (COMPV_IS_ALIGNED(stride, 64) && COMPV_IS_ALIGNED(CompVCpu::cache1LineSize(), 64)) {
-        uint64_t *begin8, *end8;
-        size_t width_div8 = width >> 3;
-        const uint8_t thresholdMinus1 = static_cast<uint8_t>(m_iThreshold - 1);
-        for (size_t j = 3; j < height - 3; ++j) {
-            begin8 = reinterpret_cast<uint64_t*>(strengths + 0); // i can start at +3 but we prefer +0 because strengths[0] is cacheline-aligned
-            end8 = (begin8 + width_div8);
-            do {
-                if (*begin8) {
-                    begin1 = reinterpret_cast<uint8_t*>(begin8);
-                    COMPV_PUSH8();
-                }
-            }
-            while (begin8++ < end8);
-            strengths += stride;
-        }
-    }
-    else {
-        uint32_t *begin4, *end4;
-		size_t width_div4 = width >> 2;
-        const uint8_t thresholdMinus1 = static_cast<uint8_t>(m_iThreshold - 1);
-        for (size_t j = 3; j < height - 3; ++j) {
-            begin4 = reinterpret_cast<uint32_t*>(strengths + 0); // i can start at +3 but we prefer +0 because strengths[0] is cacheline-aligned
-            end4 = (begin4 + width_div4);
-            do {
-                if (*begin4) {
-                    begin1 = reinterpret_cast<uint8_t*>(begin4);
-                    COMPV_PUSH4();
-                }
-            }
-            while (begin4++ < end4);
-            strengths += stride;
-        }
-    }
 
     // Retain best "m_iMaxFeatures" features
     if (m_iMaxFeatures > 1 && static_cast<int32_t>(interestPoints.size()) > m_iMaxFeatures) {
@@ -436,6 +420,52 @@ static void CompVFastDataRange(RangeFAST* range)
     } // for (j)
 }
 
+static void CompVFastBuildInterestPoints(RangeFAST* range, std::vector<CompVInterestPoint>& interestPoints)
+{
+	// TODO(dmi): Performance isssues! Not cache-friendly
+	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
+	size_t rowEnd = COMPV_MATH_CLIP3(0, range->rowCount, (range->rowEnd + 3));
+	size_t rowSride = range->stride;
+
+	// Build interest points
+#define COMPV_PUSH1() if (*begin1) { *begin1 += thresholdMinus1; interestPoints.push_back(CompVInterestPoint(static_cast<compv_float32_t>(begin1 - strengths), static_cast<compv_float32_t>(j), static_cast<compv_float32_t>(*begin1))); } ++begin1;
+#define COMPV_PUSH4() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1()
+#define COMPV_PUSH8() COMPV_PUSH4() COMPV_PUSH4()
+	uint8_t *strengths = range->strengths + ((rowStart + 3) * rowSride), *begin1;
+	if (COMPV_IS_ALIGNED(rowSride, 64) && COMPV_IS_ALIGNED(CompVCpu::cache1LineSize(), 64)) {
+		uint64_t *begin8, *end8;
+		size_t width_div8 = range->width >> 3;
+		const uint8_t thresholdMinus1 = static_cast<uint8_t>(range->threshold - 1);
+		for (size_t j = (rowStart + 3); j < rowEnd - 3; ++j) {
+			begin8 = reinterpret_cast<uint64_t*>(strengths + 0); // i can start at +3 but we prefer +0 because strengths[0] is cacheline-aligned
+			end8 = (begin8 + width_div8);
+			do {
+				if (*begin8) {
+					begin1 = reinterpret_cast<uint8_t*>(begin8);
+					COMPV_PUSH8();
+				}
+			} while (begin8++ < end8);
+			strengths += rowSride;
+		}
+	}
+	else {
+		uint32_t *begin4, *end4;
+		size_t width_div4 = range->width >> 2;
+		const uint8_t thresholdMinus1 = static_cast<uint8_t>(range->threshold - 1);
+		for (size_t j = (rowStart + 3); j < rowEnd - 3; ++j) {
+			begin4 = reinterpret_cast<uint32_t*>(strengths + 0); // i can start at +3 but we prefer +0 because strengths[0] is cacheline-aligned
+			end4 = (begin4 + width_div4);
+			do {
+				if (*begin4) {
+					begin1 = reinterpret_cast<uint8_t*>(begin4);
+					COMPV_PUSH4();
+				}
+			} while (begin4++ < end4);
+			strengths += rowSride;
+		}
+	}
+}
+
 void CompVFastNmsGatherRange(RangeFAST* range)
 {
 	void(*CompVFastNmsGather)(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)
@@ -469,7 +499,7 @@ void CompVFastNmsGatherRange(RangeFAST* range)
 	);
 }
 
-void CompVFastNmsApplyRange(RangeFAST* range)
+void CompVFastNmsApplyRangeAndBuildInterestPoints(RangeFAST* range, std::vector<CompVInterestPoint>& interestPoints)
 {
 	void(*CompVFastNmsApply)(uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)
 		= CompVFastNmsApply_C;
@@ -489,6 +519,8 @@ void CompVFastNmsApplyRange(RangeFAST* range)
 #endif
 	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
 	size_t rowEnd = COMPV_MATH_CLIP3(0, range->rowCount, (range->rowEnd + 3));
+
+	// Apply nms (suppress the nonmax points)
 	CompVFastNmsApply(
 		range->strengths + (range->stride * rowStart),
 		range->nms + (range->stride * rowStart),
@@ -496,6 +528,9 @@ void CompVFastNmsApplyRange(RangeFAST* range)
 		(rowEnd - rowStart),
 		range->stride
 	);
+
+	// Build interest points
+	CompVFastBuildInterestPoints(range, interestPoints);
 }
 
 static void CompVFastDataRow_C(const uint8_t* IP, compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths)

@@ -318,6 +318,18 @@
 #define COMPV_SIMD_ALIGNV_NEON		16 // ARM NEON
 #define COMPV_SIMD_ALIGNV_DEFAULT	64 // This is max to make sure all requirements will work (also equal to expected cache line)
 
+// Defaul cache line
+#if !defined(COMPV_CACHE1_LINE_SIZE)
+#	define COMPV_CACHE1_LINE_SIZE	64
+#endif
+#if !defined(COMPV_PREFETCH_DISTANCE)
+#	if COMPV_ARCH_ARM
+#		define COMPV_PREFETCH_DISTANCE (COMPV_CACHE1_LINE_SIZE * 3)
+#	else
+#		define COMPV_PREFETCH_DISTANCE (COMPV_CACHE1_LINE_SIZE << 2)
+#	endif
+#endif
+
 #if !defined (HAVE_GETTIMEOFDAY)
 #if COMPV_OS_WINDOWS
 #	define HAVE_GETTIMEOFDAY				0

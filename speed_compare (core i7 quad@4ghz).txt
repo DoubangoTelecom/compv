@@ -3,9 +3,9 @@ CompV: 169.ms(st), 54.ms(mt)
 OpenCV: 341.ms
 
 === FAST9_16, Nonmax=true, threshold=20, maxfeatures=-1 (#10000 times, 720p) ===
-CompV: 4273.ms(mt,avx2), 5563.ms(mt,sse2), 8447(st,avx2), 11561.ms(st,sse2)
+CompV: 3358.ms(mt,avx2), 4730.ms(mt,sse2), 8447(st,avx2), 11261.ms(st,sse2)
 OpenCV: 10270.ms(full optiz)
 Remarque: The way we write to the shared strengths buffer is slow but required to have best support for multithreading.
 This is why we are better than OpenCV by faaaaar.
-The above numbers means we can run feature detection on HD image at 2340fps while opencv runs at 973fps.
-We're using 8 threads and with more threads we can go as low as 3000.ms which means 3333fps
+The above numbers means we can run feature detection on HD image at 2977fps while opencv runs at 973fps.
+We're using #8 threads and with more threads (e.g. #16) we can go as high as 5000fps

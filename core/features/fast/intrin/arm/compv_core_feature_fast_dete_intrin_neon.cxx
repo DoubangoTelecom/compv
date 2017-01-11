@@ -9,6 +9,7 @@
 #if COMPV_ARCH_ARM && COMPV_INTRINSIC
 #include "compv/base/intrin/arm/compv_intrin_neon.h"
 #include "compv/base/compv_simd_globals.h"
+#include "compv/base/compv_cpu.h"
 #include "compv/base/compv_debug.h"
 
 #define _mm_fast_check(a, b) \
@@ -168,6 +169,7 @@ void CompVFastNmsGather_Intrin_NEON(const uint8_t* pcStrengthsMap, uint8_t* pNMS
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	compv_uscalar_t i, j;
 	uint8x16_t vecStrength, vec0, vec1;
+	
 	pcStrengthsMap += (stride * 3);
 	pNMS += (stride * 3);
 	const uint8x16_t vecZero = vdupq_n_u8(0);

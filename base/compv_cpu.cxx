@@ -427,7 +427,7 @@ COMPV_ERROR_CODE CompVCpu::init()
     sysctl(mib2, 2, &s_iCache1Size, &sizeof_cs, NULL, 0);
 #elif COMPV_OS_ANDROID
     COMPV_DEBUG_INFO_CODE_ONCE("_SC_LEVEL1_DCACHE_LINESIZE and _SC_LEVEL1_DCACHE_SIZE not availabe and Android");
-    s_iCache1LineSize = 64;
+    s_iCache1LineSize = COMPV_CACHE1_LINE_SIZE;
     s_iCache1Size = 4096;
 #else
     s_iCache1LineSize = (int32_t)sysconf(_SC_LEVEL1_DCACHE_LINESIZE);

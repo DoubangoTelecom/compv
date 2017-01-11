@@ -13,6 +13,14 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if defined(__GNUC__)
+#define __builtin_prefetch_read(ptr) __builtin_prefetch(ptr, 0, 0)
+#define __builtin_prefetch_write(ptr) __builtin_prefetch(ptr, 1, 0)
+#else
+#define __builtin_prefetch_read(ptr) 
+#define __builtin_prefetch_write(ptr) 
+#endif
+
 #define COMPV_CPU_FLAG_BIT(b_) (((uint64_t)1) << (b_))
 #define COMPV_CPU_FLAG_IS_SET(flags_, b_) (((uint64_t)(flags_) & COMPV_CPU_FLAG_BIT(b_)) != 0)
 // Vendor
