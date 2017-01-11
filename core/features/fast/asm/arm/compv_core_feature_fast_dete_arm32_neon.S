@@ -31,69 +31,69 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON32
 
 	i .req r5
 	strengths .req r6
+	minusStrideMinusOne .req r7
+	one .req r8
+	minusTwo .req r9
 	vec0 .req q0
 	vec1 .req q1
 	vecStrength .req q2
 	vecZero .req q3
 
+	mov minusStrideMinusOne, #-1
+	mov one, #1
+	mov minusTwo, #-2
 	mov i, #0
 	vdup.8 vecZero, i
 	sub width, width, #3
 	sub heigth, heigth, #6 @ [j start at #3 and end at heigth - #3] -> loop executed (heigth - #6) times
+	sub minusStrideMinusOne, minusStrideMinusOne, stride
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (j = 3; j < heigth - 3; ++j)
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	LoopHeight_CompVFastNmsGather_Asm_NEON32:
-		mov i, #3
-		mov strengths, pcStrengthsMap
-
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (i = 3; i < width - 3; i += 16)
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		mov i, #3
+		add strengths, pcStrengthsMap, #3
 		LoopWidth_CompVFastNmsGather_Asm_NEON32:
 			add i, i, #16
-			pld [pcStrengthsMap, #(CACHE_LINE_SIZE*3)]
-			vld1.u8 { vecStrength }, [strengths]!
+			pld [strengths, #(CACHE_LINE_SIZE*3)]
+			vld1.u8 { vecStrength }, [strengths]!                     @ indexOf(strengths) = i
 			vcgt.u8 vec1, vecStrength, vecZero
-			vorr q1x, q1x, q1y
-			vmov.32	r10, q1x[0] 
-			vmov.32	r11, q1x[1]
+			vorr q15x, q1x, q1y
+			vmov.32	r10, q15x[0] 
+			vmov.32	r11, q15x[1]
 			orrs r11, r11, r10
 			beq AllZeros_CompVFastNmsGather_Asm_NEON32
-			sub r8, i, #1 @ r8 = (i - 1) = left
-			add r9, i, #1 @ r9 = (i + 1) = right
-			sub r10, r8, stride @ r10 = (r8 - stride) = (i - 1 - stride) = lef-top
-			sub r11, i, stride @ r11 = (i - stride) = top
-			vld1.u8 { vec0 }, [r8]
-			vld1.u8 { q13 }, [r9]
-			vld1.u8 { q14 }, [r10]
-			vld1.u8 { q15 }, [r11]
+			vld1.u8 { vec0 }, [strengths], minusStrideMinusOne        @ indexOf(strengths) = i - stride - 1
+			vld1.u8 { q15 }, [strengths], one                         @ indexOf(strengths) = i - stride
+			vld1.u8 { q14 }, [strengths], one                         @ indexOf(strengths) = i - stride + 1
+			vld1.u8 { q13 }, [strengths], stride                      @ indexOf(strengths) = i + 1
+			vld1.u8 { q12 }, [strengths], minusTwo                    @ indexOf(strengths) = i - 1
+			vld1.u8 { q11 }, [strengths], stride                      @ indexOf(strengths) = i + stride - 1
+			vld1.u8 { q10 }, [strengths], one                         @ indexOf(strengths) = i + stride
+			vld1.u8 { q9 }, [strengths], one                          @ indexOf(strengths) = i + stride + 1
+			add strengths, strengths, minusStrideMinusOne             @ indexOf(strengths) = i
+			add r10, pNMS, i
 			vcge.u8 vec0, vec0, vecStrength
-			vcge.u8 q13, q13, vecStrength
-			vcge.u8 q14, q14, vecStrength
 			vcge.u8 q15, q15, vecStrength
-			vorr vec0, vec0, q13
-			vorr q14, q14, q15
-			vorr vec0, vec0, q14 @ FIXME: too close to previous line defining q14, hide latency
-			add r8, r11, #1 @ r8 = (r11 + 1) = (i - stride + 1) = right-top
-			add r9, i, stride @ r9 = (i + stride) = bottom
-			sub r10, r9, #1 @ r10 = (r9 - 1) = (i + stride - 1) = left-bottom
-			add r11, r9, #1 @ r11 = (r9 + 1) = (i + stride + 1) = right-bottom
-			vld1.u8 { q12 }, [r8]
-			vld1.u8 { q13 }, [r9]
-			vld1.u8 { q14 }, [r10]
-			vld1.u8 { q15 }, [r11]
+			vcge.u8 q14, q14, vecStrength
+			vcge.u8 q13, q13, vecStrength
 			vcge.u8 q12, q12, vecStrength
-			vcge.u8 q13, q13, vecStrength
-			vcge.u8 q14, q14, vecStrength
-			vcge.u8 q15, q15, vecStrength
-			vorr q12, q12, q13
-			vorr q14, q14, q15
-			vorr vec0, vec0, q12
-			vorr vec0, vec0, q14
-			add r7, pNMS, i
-			vst1.u8 { vec0 }, [r7]
+			vcge.u8 q11, q11, vecStrength
+			vcge.u8 q10, q10, vecStrength
+			vcge.u8 q9, q9, vecStrength
+			vorr q15, q15, q14
+			vorr q13, q13, q12
+			vorr q11, q11, q10
+			vorr vec0, vec0, q9
+			vorr q15, q13, q15
+			vorr vec0, vec0, q11
+			vorr vec0, vec0, q15
+			vand q0, vec0, vec1
+			vst1.u8 { vec0 }, [r10]
 			AllZeros_CompVFastNmsGather_Asm_NEON32:
 
 			cmp i, width
@@ -113,6 +113,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON32
 	.unreq stride
 	.unreq i
 	.unreq strengths
+	.unreq minusStrideMinusOne
+	.unreq one
+	.unreq minusTwo
 	.unreq vec0
 	.unreq vec1
 	.unreq vecStrength
