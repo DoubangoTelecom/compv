@@ -85,9 +85,8 @@ void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_u
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	compv_uscalar_t i;
 	const compv_uscalar_t NminusOne = N - 1;
-	const compv_uscalar_t minsum = (N == 12 ? 3 : 2);
 	const uint8x16_t vecThreshold = vdupq_n_u8(static_cast<uint8_t>(threshold));
-	const uint8x16_t vecMinSum = vdupq_n_u8(static_cast<uint8_t>(minsum));
+	const uint8x16_t vecMinSum = vdupq_n_u8(static_cast<uint8_t>((N == 12 ? 3 : 2))); // asm: N >> 2
 	const uint8x16_t vecN = vdupq_n_u8(static_cast<uint8_t>(N));
 	const uint8x16_t vecOne = vdupq_n_u8(1);
 	const uint8x16_t vecZero = vdupq_n_u8(0);
