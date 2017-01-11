@@ -89,8 +89,8 @@ void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_u
 	const uint8x16_t vecThreshold = vdupq_n_u8(static_cast<uint8_t>(threshold));
 	const uint8x16_t vecMinSum = vdupq_n_u8(static_cast<uint8_t>((N == 12 ? 3 : 2))); // asm: N >> 2
 	const uint8x16_t vecN = vdupq_n_u8(static_cast<uint8_t>(N));
-	const uint8x16_t vecOne = vdupq_n_u8(1);
-	const uint8x16_t vecZero = vdupq_n_u8(0);
+	static const uint8x16_t vecOne = vdupq_n_u8(1);
+	static const uint8x16_t vecZero = vdupq_n_u8(0);
 	uint8x16_t vec0, vec1, vec2, vecSum1, vecStrengths, vecBrighter1, vecDarker1, vecDiffBinary16[16], vecDiff16[16], vecCircle16[16];
 	const uint8_t* circle[16] = {
 		&IP[pixels16[0]], &IP[pixels16[1]], &IP[pixels16[2]], &IP[pixels16[3]],
@@ -166,13 +166,14 @@ void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_u
 
 void CompVFastNmsGather_Intrin_NEON(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("COMPV_ARM_NEON_NEQ_ZERO is for ARM64, chance GCC generate ARM32 code, asm -> illegal instruction")
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	compv_uscalar_t i, j;
 	uint8x16_t vecStrength, vec0, vec1;
 	
 	pcStrengthsMap += (stride * 3);
 	pNMS += (stride * 3);
-	const uint8x16_t vecZero = vdupq_n_u8(0);
+	static const uint8x16_t vecZero = vdupq_n_u8(0);
 	// TODO(dmi): asm code -> comparison with zero is implicit?
 	for (j = 3; j < heigth - 3; ++j) {
 		for (i = 3; i < width - 3; i += 16) {
@@ -212,7 +213,7 @@ void CompVFastNmsApply_Intrin_NEON(COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap, 
 	uint8x16_t vec0;
 	pcStrengthsMap += (stride * 3);
 	pNMS += (stride * 3);
-	const uint8x16_t vecZero = vdupq_n_u8(0);
+	static const uint8x16_t vecZero = vdupq_n_u8(0);
 	for (j = 3; j < heigth - 3; ++j) {
 		for (i = 0; i < width; i += 16) { // SIMD: start at #zero index to have aligned memory
 			vec0 = vcgtq_u8(vld1q_u8(&pNMS[i]), vecZero); // pNMS is unsigned which means checking it's not eq to #0 is same as checking it's > #0	
@@ -224,6 +225,31 @@ void CompVFastNmsApply_Intrin_NEON(COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap, 
 		pcStrengthsMap += stride;
 		pNMS += stride;
 	}
+}
+
+void CompVFastBuildInterestPoints_Intrin_NEON(COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap, std::vector<CompVInterestPoint>& interestPoints, compv_uscalar_t thresholdMinus1, const compv_uscalar_t jstart, compv_uscalar_t jend, compv_uscalar_t width, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("C++ code faster");
+#define COMPV_PUSH1_NEON(ii) \
+	if (vgetq_lane_u8(vec0, ii)) { \
+		interestPoints.push_back(CompVInterestPoint( \
+			static_cast<compv_float32_t>(i + ii), \
+			static_cast<compv_float32_t>(j), \
+			static_cast<compv_float32_t>(pcStrengthsMap[i + ii] + thresholdMinus1))); \
+	}
+	static const uint8x16_t vecZero = vdupq_n_u8(0);
+	uint8x16_t vec0;
+	for (compv_uscalar_t j = jstart; j < jend; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 16) {
+			vec0 = vcgtq_u8(vld1q_u8(&pcStrengthsMap[i]), vecZero);
+			if (COMPV_ARM_NEON_NEQ_ZERO(vec0)) {
+				COMPV_PUSH1_NEON(0); COMPV_PUSH1_NEON(1); COMPV_PUSH1_NEON(2); COMPV_PUSH1_NEON(3); COMPV_PUSH1_NEON(4); COMPV_PUSH1_NEON(5); COMPV_PUSH1_NEON(6); COMPV_PUSH1_NEON(7);
+				COMPV_PUSH1_NEON(8); COMPV_PUSH1_NEON(9); COMPV_PUSH1_NEON(10); COMPV_PUSH1_NEON(11); COMPV_PUSH1_NEON(12); COMPV_PUSH1_NEON(13); COMPV_PUSH1_NEON(14); COMPV_PUSH1_NEON(15);
+			}
+		}
+		pcStrengthsMap += stride;
+	}
+#undef COMPV_PUSH1_NEON
 }
 
 COMPV_NAMESPACE_END()

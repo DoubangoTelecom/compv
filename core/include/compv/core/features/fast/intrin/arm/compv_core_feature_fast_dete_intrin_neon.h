@@ -20,6 +20,7 @@ COMPV_NAMESPACE_BEGIN()
 void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_uscalar_t width, COMPV_ALIGNED(NEON) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 void CompVFastNmsGather_Intrin_NEON(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 void CompVFastNmsApply_Intrin_NEON(COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap, COMPV_ALIGNED(NEON) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+void CompVFastBuildInterestPoints_Intrin_NEON(COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap, std::vector<CompVInterestPoint>& interestPoints, compv_uscalar_t thresholdMinus1, const compv_uscalar_t jstart, compv_uscalar_t jend, compv_uscalar_t width, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 
 COMPV_NAMESPACE_END()
 

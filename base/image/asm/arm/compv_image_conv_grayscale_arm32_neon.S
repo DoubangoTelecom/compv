@@ -72,13 +72,13 @@
 			vst1.u8 {q3x, q3y}, [outYPtr :128]! @ vstmia outYPtr!, {q3x, q3y}
 			cmp r9, width
 			blt LoopWidth\@
-			@End_of_LoopWidth
+			@End_of_LoopWidth@
 
 		add outYPtr, outYPtr, padY
 		add yuv422Ptr, yuv422Ptr, padYUV
 		subs height, height, #1
 		bne LoopHeight\@
-		@End_of_LoopHeight
+		@End_of_LoopHeight@
 
 	.unreq yuv422Ptr
 	.unreq outYPtr

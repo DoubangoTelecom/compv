@@ -56,6 +56,7 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVFastNmsGather_Asm_X64_AVX2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM
+	COMPV_EXTERNC void CompVFastNmsGather_Asm_NEON32(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #	endif
 #endif /* COMPV_ASM */
 
@@ -477,10 +478,18 @@ static void CompVFastBuildInterestPoints(RangeFAST* range, std::vector<CompVInte
 		return;
 	}
 #	endif /* COMPV_ARCH_X64 || defined(__SSE2__) */
+#elif COMPV_ARCH_ARM && 0 // C++ code faster
+#	if COMPV_INTRINSIC
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(strengths)) {
+		CompVFastBuildInterestPoints_Intrin_NEON(strengths, interestPoints, thresholdMinus1, (rowStart + 3), (rowEnd - 3), rowWidth, rowSride);
+		return;
+	}
+#endif
 #endif /* COMPV_ARCH_X86 */
 
-
+#if 0 // Not a big deal
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+#endif
 
 #define COMPV_PUSH1() if (*begin1) { *begin1 += thresholdMinus1; interestPoints.push_back(CompVInterestPoint(static_cast<compv_float32_t>(begin1 - strengths), static_cast<compv_float32_t>(j), static_cast<compv_float32_t>(*begin1))); } ++begin1;
 #define COMPV_PUSH4() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1()
@@ -537,6 +546,7 @@ void CompVFastNmsGatherRange(RangeFAST* range)
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(range->stride)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVFastNmsGather = CompVFastNmsGather_Intrin_NEON));
+		COMPV_EXEC_IFDEF_ASM_ARM((CompVFastNmsGather = CompVFastNmsGather_Asm_NEON32));
 	}
 #endif
 
