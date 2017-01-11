@@ -18,6 +18,8 @@
 
 @ VFP instructions: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0489e/CJAGFGEE.html
 
+@ SSE -> NEON: http://codesuppository.blogspot.fr/2015/02/sse2neonh-porting-guide-and-header-file.html
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 .equ NO, 0
 .equ YES, 1

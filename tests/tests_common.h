@@ -15,12 +15,12 @@ using namespace compv;
 
 #define COMPV_numThreads			COMPV_NUM_THREADS_SINGLE
 #define COMPV_enableIntrinsics		true
-#define COMPV_enableAsm				true
+#define COMPV_enableAsm				false
 #define COMPV_enableMathFixedPoint	true
 #define COMPV_enableTestingMode		true
 #define COMPV_enableIntelIpp		false
 #define COMPV_enableIntelTbb		false
-#define COMPV_cpuDisable			kCpuFlagNone
+#define COMPV_cpuDisable			kCpuFlagAVX2
 
 COMPV_NAMESPACE_BEGIN()
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")

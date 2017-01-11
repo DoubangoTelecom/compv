@@ -22,6 +22,7 @@ Some literature about FAST:
 
 #include "compv/core/features/fast/intrin/x86/compv_core_feature_fast_dete_intrin_sse2.h"
 #include "compv/core/features/fast/intrin/x86/compv_core_feature_fast_dete_intrin_avx2.h"
+#include "compv/core/features/fast/intrin/arm/compv_core_feature_fast_dete_intrin_neon.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVCornerDeteFAST"
 
@@ -435,6 +436,7 @@ void CompVFastNmsGatherRange(RangeFAST* range)
 	void(*CompVFastNmsGather)(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)
 		= CompVFastNmsGather_C;
 
+#if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(range->stride)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVFastNmsGather = CompVFastNmsGather_Intrin_SSE2));
 		COMPV_EXEC_IFDEF_ASM_X86((CompVFastNmsGather = CompVFastNmsGather_Asm_X86_SSE2));
@@ -445,6 +447,11 @@ void CompVFastNmsGatherRange(RangeFAST* range)
 		COMPV_EXEC_IFDEF_ASM_X86((CompVFastNmsGather = CompVFastNmsGather_Asm_X86_AVX2));
 		COMPV_EXEC_IFDEF_ASM_X64((CompVFastNmsGather = CompVFastNmsGather_Asm_X64_AVX2));
 	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(range->stride)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVFastNmsGather = CompVFastNmsGather_Intrin_NEON));
+	}
+#endif
 
 	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
 	size_t rowEnd = COMPV_MATH_CLIP3(0, range->rowCount, (range->rowEnd + 3));
@@ -461,7 +468,7 @@ void CompVFastNmsApplyRange(RangeFAST* range)
 {
 	void(*CompVFastNmsApply)(uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)
 		= CompVFastNmsApply_C;
-
+#if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(range->stride) && COMPV_IS_ALIGNED_SSE(range->strengths) && COMPV_IS_ALIGNED_SSE(range->nms)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVFastNmsApply = CompVFastNmsApply_Intrin_SSE2));
 		COMPV_EXEC_IFDEF_ASM_X86((CompVFastNmsApply = CompVFastNmsApply_Asm_X86_SSE2));
@@ -470,7 +477,11 @@ void CompVFastNmsApplyRange(RangeFAST* range)
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVFastNmsApply = CompVFastNmsApply_Intrin_AVX2));
 		COMPV_EXEC_IFDEF_ASM_X86((CompVFastNmsApply = CompVFastNmsApply_Asm_X86_AVX2));
 	}
-
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(range->stride)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVFastNmsApply = CompVFastNmsApply_Intrin_NEON));
+	}
+#endif
 	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
 	size_t rowEnd = COMPV_MATH_CLIP3(0, range->rowCount, (range->rowEnd + 3));
 	CompVFastNmsApply(
