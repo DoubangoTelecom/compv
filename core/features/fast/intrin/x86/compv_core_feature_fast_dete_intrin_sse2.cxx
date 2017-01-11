@@ -88,9 +88,9 @@ void CompVFastDataRow_Intrin_SSE2(const uint8_t* IP, COMPV_ALIGNED(SSE) compv_us
 	const __m128i vecThreshold = _mm_set1_epi8(static_cast<int8_t>(threshold));
 	const __m128i vecNMinSumMinusOne = _mm_set1_epi8(static_cast<int8_t>(minsum - 1)); // no '_mm_cmpge_epu8'
 	const __m128i vecNMinusOne = _mm_set1_epi8(static_cast<int8_t>(NminusOne)); // no '_mm_cmpge_epu8'
-	const __m128i vecOne = _mm_load_si128(reinterpret_cast<const __m128i*>(k1_i8));
-	const __m128i vecZero = _mm_setzero_si128();
-	const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
+	static const __m128i vecOne = _mm_load_si128(reinterpret_cast<const __m128i*>(k1_i8));
+	static const __m128i vecZero = _mm_setzero_si128();
+	static const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
 	__m128i vec0, vec1, vecSum1, vecStrengths, vecBrighter1, vecDarker1, vecDiffBinary16[16], vecDiff16[16], vecCircle16[16];
 	const uint8_t* circle[16] = {
 		&IP[pixels16[0]], &IP[pixels16[1]], &IP[pixels16[2]], &IP[pixels16[3]],
@@ -167,8 +167,8 @@ void CompVFastNmsGather_Intrin_SSE2(const uint8_t* pcStrengthsMap, uint8_t* pNMS
 	__m128i vecStrength, vec0, vec1;
 	pcStrengthsMap += (stride * 3);
 	pNMS += (stride * 3);
-	const __m128i vecZero = _mm_setzero_si128();
-	const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
+	static const __m128i vecZero = _mm_setzero_si128();
+	static const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
 	for (j = 3; j < heigth - 3; ++j) {
 		for (i = 3; i < width - 3; i += 16) {
 			vecStrength = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i]));
@@ -206,8 +206,8 @@ void CompVFastNmsApply_Intrin_SSE2(COMPV_ALIGNED(SSE) uint8_t* pcStrengthsMap, C
 	__m128i vec0;
 	pcStrengthsMap += (stride * 3);
 	pNMS += (stride * 3);
-	const __m128i vecZero = _mm_setzero_si128();
-	const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
+	static const __m128i vecZero = _mm_setzero_si128();
+	static const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
 	for (j = 3; j < heigth - 3; ++j) {
 		for (i = 0; i < width; i += 16) { // SIMD: start at #zero index to have aligned memory
 			vec0 = _mm_cmpnot_epu8_SSE2(_mm_load_si128(reinterpret_cast<const __m128i*>(&pNMS[i])), vecZero, vec0xFF);
@@ -219,6 +219,30 @@ void CompVFastNmsApply_Intrin_SSE2(COMPV_ALIGNED(SSE) uint8_t* pcStrengthsMap, C
 		pcStrengthsMap += stride;
 		pNMS += stride;
 	}
+}
+
+void CompVFastBuildInterestPoints_Intrin_SSE2(COMPV_ALIGNED(SSE) uint8_t* pcStrengthsMap, std::vector<CompVInterestPoint>& interestPoints, compv_uscalar_t thresholdMinus1, const compv_uscalar_t jstart, compv_uscalar_t jend, compv_uscalar_t width, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+#define COMPV_PUSH1_SSE2(ii) \
+	if (mask & (1 << ii)) { \
+		interestPoints.push_back(CompVInterestPoint( \
+			static_cast<compv_float32_t>(i + ii), \
+			static_cast<compv_float32_t>(j), \
+			static_cast<compv_float32_t>(pcStrengthsMap[i + ii] + thresholdMinus1))); \
+	}
+	int mask;
+	static const __m128i vecZero = _mm_setzero_si128();
+	static const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
+	for (compv_uscalar_t j = jstart; j < jend; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 16) {
+			if ((mask = _mm_movemask_epi8(_mm_cmpnot_epu8_SSE2(_mm_load_si128(reinterpret_cast<const __m128i*>(&pcStrengthsMap[i])), vecZero, vec0xFF)))) {
+				COMPV_PUSH1_SSE2(0); COMPV_PUSH1_SSE2(1); COMPV_PUSH1_SSE2(2); COMPV_PUSH1_SSE2(3); COMPV_PUSH1_SSE2(4); COMPV_PUSH1_SSE2(5); COMPV_PUSH1_SSE2(6); COMPV_PUSH1_SSE2(7);
+				COMPV_PUSH1_SSE2(8); COMPV_PUSH1_SSE2(9); COMPV_PUSH1_SSE2(10); COMPV_PUSH1_SSE2(11); COMPV_PUSH1_SSE2(12); COMPV_PUSH1_SSE2(13); COMPV_PUSH1_SSE2(14); COMPV_PUSH1_SSE2(15);
+			}
+		}
+		pcStrengthsMap += stride;
+	}
+#undef COMPV_PUSH1_SSE2
 }
 
 COMPV_NAMESPACE_END()

@@ -89,9 +89,9 @@ void CompVFastDataRow_Intrin_AVX2(const uint8_t* IP, COMPV_ALIGNED(AVX) compv_us
 	const __m256i vecThreshold = _mm256_set1_epi8(static_cast<int8_t>(threshold));
 	const __m256i vecNMinSumMinusOne = _mm256_set1_epi8(static_cast<int8_t>(minsum - 1)); // no '_mm256_cmpge_epu8'
 	const __m256i vecNMinusOne = _mm256_set1_epi8(static_cast<int8_t>(NminusOne)); // no '_mm256_cmpge_epu8'
-	const __m256i vecOne = _mm256_load_si256(reinterpret_cast<const __m256i*>(k1_i8));
-	const __m256i vecZero = _mm256_setzero_si256();
-	const __m256i vec0xFF = _mm256_cmpeq_epi8(vecZero, vecZero); // 0xFF
+	static const __m256i vecOne = _mm256_load_si256(reinterpret_cast<const __m256i*>(k1_i8));
+	static const __m256i vecZero = _mm256_setzero_si256();
+	static const __m256i vec0xFF = _mm256_cmpeq_epi8(vecZero, vecZero); // 0xFF
 	__m256i vec0, vec1, vecSum1, vecStrengths, vecBrighter1, vecDarker1, vecDiffBinary16[16], vecDiff16[16], vecCircle16[16];
 	const uint8_t* circle[16] = {
 		&IP[pixels16[0]], &IP[pixels16[1]], &IP[pixels16[2]], &IP[pixels16[3]],
@@ -170,8 +170,8 @@ void CompVFastNmsGather_Intrin_AVX2(const uint8_t* pcStrengthsMap, uint8_t* pNMS
 	__m256i vecStrength, vec0, vec1;
 	pcStrengthsMap += (stride * 3);
 	pNMS += (stride * 3);
-	const __m256i vecZero = _mm256_setzero_si256();
-	const __m256i vec0xFF = _mm256_cmpeq_epi8(vecZero, vecZero); // 0xFF
+	static const __m256i vecZero = _mm256_setzero_si256();
+	static const __m256i vec0xFF = _mm256_cmpeq_epi8(vecZero, vecZero); // 0xFF
 	for (j = 3; j < heigth - 3; ++j) {
 		for (i = 3; i < width - 3; i += 32) {
 			vecStrength = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&pcStrengthsMap[i]));
@@ -211,8 +211,8 @@ void CompVFastNmsApply_Intrin_AVX2(COMPV_ALIGNED(AVX) uint8_t* pcStrengthsMap, C
 	__m256i vec0;
 	pcStrengthsMap += (stride * 3);
 	pNMS += (stride * 3);
-	const __m256i vecZero = _mm256_setzero_si256();
-	const __m256i vec0xFF = _mm256_cmpeq_epi8(vecZero, vecZero); // 0xFF
+	static const __m256i vecZero = _mm256_setzero_si256();
+	static const __m256i vec0xFF = _mm256_cmpeq_epi8(vecZero, vecZero); // 0xFF
 	for (j = 3; j < heigth - 3; ++j) {
 		for (i = 0; i < width; i += 32) { // SIMD: start at #zero index to have aligned memory
 			vec0 = _mm256_cmpnot_epu8_AVX2(_mm256_load_si256(reinterpret_cast<const __m256i*>(&pNMS[i])), vecZero, vec0xFF);
@@ -225,6 +225,32 @@ void CompVFastNmsApply_Intrin_AVX2(COMPV_ALIGNED(AVX) uint8_t* pcStrengthsMap, C
 		pNMS += stride;
 	}
 	_mm256_zeroupper();
+}
+
+void CompVFastBuildInterestPoints_Intrin_AVX2(COMPV_ALIGNED(AVX) uint8_t* pcStrengthsMap, std::vector<CompVInterestPoint>& interestPoints, compv_uscalar_t thresholdMinus1, const compv_uscalar_t jstart, compv_uscalar_t jend, compv_uscalar_t width, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+{
+#define COMPV_PUSH_AVX2(ii) \
+	if (mask & (1 << ii)) { \
+		interestPoints.push_back(CompVInterestPoint( \
+			static_cast<compv_float32_t>(i + ii), \
+			static_cast<compv_float32_t>(j), \
+			static_cast<compv_float32_t>(pcStrengthsMap[i + ii] + thresholdMinus1))); \
+	}
+	int mask;
+	static const __m256i vecZero = _mm256_setzero_si256();
+	static const __m256i vec0xFF = _mm256_cmpeq_epi8(vecZero, vecZero); // 0xFF
+	for (compv_uscalar_t j = jstart; j < jend; ++j) {
+		for (compv_uscalar_t i = 0; i < width; i += 32) {
+			if ((mask = _mm256_movemask_epi8(_mm256_cmpnot_epu8_AVX2(_mm256_load_si256(reinterpret_cast<const __m256i*>(&pcStrengthsMap[i])), vecZero, vec0xFF)))) {
+				COMPV_PUSH_AVX2(0); COMPV_PUSH_AVX2(1); COMPV_PUSH_AVX2(2); COMPV_PUSH_AVX2(3); COMPV_PUSH_AVX2(4); COMPV_PUSH_AVX2(5); COMPV_PUSH_AVX2(6); COMPV_PUSH_AVX2(7); 
+				COMPV_PUSH_AVX2(8); COMPV_PUSH_AVX2(9); COMPV_PUSH_AVX2(10); COMPV_PUSH_AVX2(11); COMPV_PUSH_AVX2(12); COMPV_PUSH_AVX2(13); COMPV_PUSH_AVX2(14); COMPV_PUSH_AVX2(15);
+				COMPV_PUSH_AVX2(16); COMPV_PUSH_AVX2(17); COMPV_PUSH_AVX2(18); COMPV_PUSH_AVX2(19); COMPV_PUSH_AVX2(20); COMPV_PUSH_AVX2(21); COMPV_PUSH_AVX2(22); COMPV_PUSH_AVX2(23); 
+				COMPV_PUSH_AVX2(24); COMPV_PUSH_AVX2(25); COMPV_PUSH_AVX2(26); COMPV_PUSH_AVX2(27); COMPV_PUSH_AVX2(28); COMPV_PUSH_AVX2(29); COMPV_PUSH_AVX2(30); COMPV_PUSH_AVX2(31);
+			}
+		}
+		pcStrengthsMap += stride;
+	}
+#undef COMPV_PUSH_AVX2
 }
 
 COMPV_NAMESPACE_END()

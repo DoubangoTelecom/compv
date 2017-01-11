@@ -24,6 +24,15 @@ Some literature about FAST:
 #include "compv/core/features/fast/intrin/x86/compv_core_feature_fast_dete_intrin_avx2.h"
 #include "compv/core/features/fast/intrin/arm/compv_core_feature_fast_dete_intrin_neon.h"
 
+// This is the only file where we include plein intrinsic because there are no asm implementations 'CompVFastBuildInterestPoints'
+#if COMPV_ARCH_X64 || defined(__SSE2__) // SSE2 is mandatory on x64
+#	if defined(_MSC_VER)
+#		include <intrin.h>
+#	elif defined(__GNUC__)
+#		include <x86intrin.h>
+#	endif
+#endif
+
 #define COMPV_THIS_CLASSNAME	"CompVCornerDeteFAST"
 
 COMPV_NAMESPACE_BEGIN()
@@ -426,16 +435,60 @@ static void CompVFastBuildInterestPoints(RangeFAST* range, std::vector<CompVInte
 	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
 	size_t rowEnd = COMPV_MATH_CLIP3(0, range->rowCount, (range->rowEnd + 3));
 	size_t rowSride = range->stride;
+	size_t rowWidth = range->width;
+	uint8_t *strengths = range->strengths + ((rowStart + 3) * rowSride);
+	const uint8_t thresholdMinus1 = static_cast<uint8_t>(range->threshold - 1);
 
-	// Build interest points
+	// There is no asm implementation for this function and this is why we use intrinsics regardless 'COMPV_INTRINSIC'
+
+#if COMPV_ARCH_X86
+#	if COMPV_INTRINSIC
+	if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(strengths)) {
+		CompVFastBuildInterestPoints_Intrin_AVX2(strengths, interestPoints, thresholdMinus1, (rowStart + 3), (rowEnd - 3), rowWidth, rowSride);
+		return;
+	}
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(strengths)) {
+		CompVFastBuildInterestPoints_Intrin_SSE2(strengths, interestPoints, thresholdMinus1, (rowStart + 3), (rowEnd - 3), rowWidth, rowSride);
+		return;
+	}
+#endif
+#	if COMPV_ARCH_X64 || defined(__SSE2__) // SSE2 is mandatory on x64
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(strengths)) {
+		int mask;
+#define COMPV_PUSH_SSE2(ii) \
+		if (mask & (1 << ii)) { \
+			interestPoints.push_back(CompVInterestPoint( \
+				static_cast<compv_float32_t>(i + ii), \
+				static_cast<compv_float32_t>(j), \
+				static_cast<compv_float32_t>(strengths[i + ii] + thresholdMinus1))); \
+		}
+		static const __m128i vecZero = _mm_setzero_si128();
+		static const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
+		for (size_t j = (rowStart + 3); j < (rowEnd - 3); ++j) {
+			for (size_t i = 0; i < rowWidth; i += 16) {
+				if ((mask = _mm_movemask_epi8(_mm_andnot_si128(_mm_cmpeq_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(&strengths[i])), vecZero), vec0xFF)))) {
+					COMPV_PUSH_SSE2(0); COMPV_PUSH_SSE2(1); COMPV_PUSH_SSE2(2); COMPV_PUSH_SSE2(3); COMPV_PUSH_SSE2(4); COMPV_PUSH_SSE2(5); COMPV_PUSH_SSE2(6); COMPV_PUSH_SSE2(7);
+					COMPV_PUSH_SSE2(8); COMPV_PUSH_SSE2(9); COMPV_PUSH_SSE2(10); COMPV_PUSH_SSE2(11); COMPV_PUSH_SSE2(12); COMPV_PUSH_SSE2(13); COMPV_PUSH_SSE2(14); COMPV_PUSH_SSE2(15);
+				}
+			}
+			strengths += rowSride;
+		}
+#undef COMPV_PUSH_SSE2
+		return;
+	}
+#	endif /* COMPV_ARCH_X64 || defined(__SSE2__) */
+#endif /* COMPV_ARCH_X86 */
+
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+
 #define COMPV_PUSH1() if (*begin1) { *begin1 += thresholdMinus1; interestPoints.push_back(CompVInterestPoint(static_cast<compv_float32_t>(begin1 - strengths), static_cast<compv_float32_t>(j), static_cast<compv_float32_t>(*begin1))); } ++begin1;
 #define COMPV_PUSH4() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1() COMPV_PUSH1()
 #define COMPV_PUSH8() COMPV_PUSH4() COMPV_PUSH4()
-	uint8_t *strengths = range->strengths + ((rowStart + 3) * rowSride), *begin1;
+	uint8_t *begin1;
 	if (COMPV_IS_ALIGNED(rowSride, 64) && COMPV_IS_ALIGNED(CompVCpu::cache1LineSize(), 64)) {
 		uint64_t *begin8, *end8;
-		size_t width_div8 = range->width >> 3;
-		const uint8_t thresholdMinus1 = static_cast<uint8_t>(range->threshold - 1);
+		size_t width_div8 = rowWidth >> 3;
 		for (size_t j = (rowStart + 3); j < rowEnd - 3; ++j) {
 			begin8 = reinterpret_cast<uint64_t*>(strengths + 0); // i can start at +3 but we prefer +0 because strengths[0] is cacheline-aligned
 			end8 = (begin8 + width_div8);
@@ -450,8 +503,7 @@ static void CompVFastBuildInterestPoints(RangeFAST* range, std::vector<CompVInte
 	}
 	else {
 		uint32_t *begin4, *end4;
-		size_t width_div4 = range->width >> 2;
-		const uint8_t thresholdMinus1 = static_cast<uint8_t>(range->threshold - 1);
+		size_t width_div4 = rowWidth >> 2;
 		for (size_t j = (rowStart + 3); j < rowEnd - 3; ++j) {
 			begin4 = reinterpret_cast<uint32_t*>(strengths + 0); // i can start at +3 but we prefer +0 because strengths[0] is cacheline-aligned
 			end4 = (begin4 + width_div4);
