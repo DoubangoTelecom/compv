@@ -31,7 +31,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON32
 
 	i .req r5
 	strengths .req r6
-	minusStrideMinusOne .req r7
+	minusStrideMinusSeventeen .req r7
 	one .req r8
 	minusTwo .req r9
 	vec0 .req q0
@@ -39,7 +39,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON32
 	vecStrength .req q2
 	vecZero .req q3
 
-	mov minusStrideMinusOne, #-1
+	mov minusStrideMinusSeventeen, #-17
 	mov one, #1
 	mov minusTwo, #-2
 	mov i, #0
@@ -47,7 +47,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON32
 	vdup.8 vecZero, i
 	sub width, width, #3
 	sub heigth, heigth, #6 @ [j starts at #3 and end at heigth - #3] -> loop executed (heigth - #6) times
-	sub minusStrideMinusOne, minusStrideMinusOne, stride
+	sub minusStrideMinusSeventeen, minusStrideMinusSeventeen, stride
 	add pcStrengthsMap, pcStrengthsMap, r11
 	add pNMS, pNMS, r11
 
@@ -61,24 +61,23 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON32
 		mov i, #3
 		add strengths, pcStrengthsMap, #3
 		LoopWidth_CompVFastNmsGather_Asm_NEON32:
-			add i, i, #16
 			pld [strengths, #(CACHE_LINE_SIZE*3)]
-			vld1.u8 { vecStrength }, [strengths]!                     @ indexOf(strengths) = i
+			vld1.u8 { vecStrength }, [strengths]!                     @ indexOf(strengths) = i + 16
 			vcgt.u8 vec1, vecStrength, vecZero
 			vorr q15x, q1x, q1y
-			vmov.32	r10, q15x[0] 
+			vmov.32	r10, q15x[0]
 			vmov.32	r11, q15x[1]
 			orrs r11, r11, r10
 			beq AllZeros_CompVFastNmsGather_Asm_NEON32
-			vld1.u8 { vec0 }, [strengths], minusStrideMinusOne        @ indexOf(strengths) = i - stride - 1
-			vld1.u8 { q15 }, [strengths], one                         @ indexOf(strengths) = i - stride
-			vld1.u8 { q14 }, [strengths], one                         @ indexOf(strengths) = i - stride + 1
-			vld1.u8 { q13 }, [strengths], stride                      @ indexOf(strengths) = i + 1
-			vld1.u8 { q12 }, [strengths], minusTwo                    @ indexOf(strengths) = i - 1
-			vld1.u8 { q11 }, [strengths], stride                      @ indexOf(strengths) = i + stride - 1
-			vld1.u8 { q10 }, [strengths], one                         @ indexOf(strengths) = i + stride
-			vld1.u8 { q9 }, [strengths], one                          @ indexOf(strengths) = i + stride + 1
-			add strengths, strengths, minusStrideMinusOne             @ indexOf(strengths) = i
+			add r11, strengths, minusStrideMinusSeventeen             
+			vld1.u8 { vec0 }, [r11], one                              @ r11 = i - stride - 1
+			vld1.u8 { q15 }, [r11], one                               @ r11 = i - stride
+			vld1.u8 { q14 }, [r11], stride                            @ r11 = i - stride + 1
+			vld1.u8 { q13 }, [r11], minusTwo                          @ r11 = i + 1
+			vld1.u8 { q12 }, [r11], stride                            @ r11 = i - 1
+			vld1.u8 { q11 }, [r11], one                               @ r11 = i + stride - 1
+			vld1.u8 { q10 }, [r11], one                               @ r11 = i + stride
+			vld1.u8 { q9 }, [r11]                                     @ r11 = i + stride + 1
 			add r10, pNMS, i
 			vcge.u8 vec0, vec0, vecStrength
 			vcge.u8 q15, q15, vecStrength
@@ -99,6 +98,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON32
 			vst1.u8 { vec0 }, [r10]
 			AllZeros_CompVFastNmsGather_Asm_NEON32:
 
+			add i, i, #16
 			cmp i, width
 			blt LoopWidth_CompVFastNmsGather_Asm_NEON32
 			@End_of_LoopWidth@
@@ -116,7 +116,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON32
 	.unreq stride
 	.unreq i
 	.unreq strengths
-	.unreq minusStrideMinusOne
+	.unreq minusStrideMinusSeventeen
 	.unreq one
 	.unreq minusTwo
 	.unreq vec0
