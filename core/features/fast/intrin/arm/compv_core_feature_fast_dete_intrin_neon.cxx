@@ -166,7 +166,6 @@ void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_u
 
 void CompVFastNmsGather_Intrin_NEON(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("COMPV_ARM_NEON_NEQ_ZERO is for ARM64, chance GCC generate ARM32 code, asm -> illegal instruction")
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	compv_uscalar_t i, j;
 	uint8x16_t vecStrength, vec0, vec1;

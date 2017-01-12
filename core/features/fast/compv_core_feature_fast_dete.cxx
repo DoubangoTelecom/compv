@@ -57,6 +57,7 @@ COMPV_NAMESPACE_BEGIN()
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM
 	COMPV_EXTERNC void CompVFastNmsGather_Asm_NEON32(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVFastNmsApply_Asm_NEON32(COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap, COMPV_ALIGNED(NEON) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #	endif
 #endif /* COMPV_ASM */
 
@@ -575,8 +576,9 @@ void CompVFastNmsApplyRangeAndBuildInterestPoints(RangeFAST* range, std::vector<
 		COMPV_EXEC_IFDEF_ASM_X86((CompVFastNmsApply = CompVFastNmsApply_Asm_X86_AVX2));
 	}
 #elif COMPV_ARCH_ARM
-	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(range->stride)) {
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(range->stride) && COMPV_IS_ALIGNED_NEON(range->strengths) && COMPV_IS_ALIGNED_NEON(range->nms)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVFastNmsApply = CompVFastNmsApply_Intrin_NEON));
+		COMPV_EXEC_IFDEF_ASM_ARM((CompVFastNmsApply = CompVFastNmsApply_Asm_NEON32));
 	}
 #endif
 	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;

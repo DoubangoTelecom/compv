@@ -25,13 +25,64 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsApply_Asm_NEON32
 	heigth .req r3
 	stride .req r4
 
+	nms .req r5
+	i .req r6
+	vec0 .req q0	
+	vecZero .req q1
 
+	mov r11, #0
+	vdup.8 vecZero, r11
+	add r11, stride, stride, LSL #1 @ r11 = stride * 3
+	sub heigth, heigth, #6 @ [j starts at #3 and end at heigth - #3] -> loop executed (heigth - #6) times
+	add pcStrengthsMap, pcStrengthsMap, r11
+	add pNMS, pNMS, r11
+
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	@ for (j = 3; j < heigth - 3; ++j)
+	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	LoopHeight_CompVFastNmsApply_Asm_NEON32:
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		@ for (i = 0; i < width; i += 16)
+		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		mov i, #0
+		mov nms, pNMS
+		LoopWidth_CompVFastNmsApply_Asm_NEON32:
+			pld [nms, #(CACHE_LINE_SIZE*3)]
+			vld1.u8 { vec0 }, [nms :128]!
+			vcgt.u8 vec0, vec0, vecZero
+			vorr.u8 q15x, q0x, q0y
+			vmov.32	r10, q15x[0]
+			vmov.32	r11, q15x[1]
+			orrs r11, r11, r10
+			beq AllZeros_CompVFastNmsApply_Asm_NEON32
+			add r10, pNMS, i
+			add r11, pcStrengthsMap, i
+			vld1.u8 { q15 }, [r11 :128]
+			vst1.u8 { vecZero }, [r10 :128]
+			vbic.u8 q15, q15, vec0
+			vst1.u8 { q15 }, [r11 : 128]
+			AllZeros_CompVFastNmsApply_Asm_NEON32:
+
+			add i, i, #16
+			cmp i, width
+			blt LoopWidth_CompVFastNmsApply_Asm_NEON32
+			@End_of_LoopWidth@
+
+		add pcStrengthsMap, pcStrengthsMap, stride
+		add pNMS, pNMS, stride
+		subs heigth, heigth, #1
+		bne LoopHeight_CompVFastNmsApply_Asm_NEON32
+		@End_of_LoopHeight@
 
 	.unreq pcStrengthsMap
 	.unreq pNMS
 	.unreq width
 	.unreq heigth
 	.unreq stride
+	.unreq nms
+	.unreq i
+	.unreq vec0
+	.unreq vecZero
 
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS 5
