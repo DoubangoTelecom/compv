@@ -43,10 +43,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON32
 	mov one, #1
 	mov minusTwo, #-2
 	mov i, #0
+	add r11, stride, stride, LSL #1 @ r11 = stride * 3
 	vdup.8 vecZero, i
 	sub width, width, #3
-	sub heigth, heigth, #6 @ [j start at #3 and end at heigth - #3] -> loop executed (heigth - #6) times
+	sub heigth, heigth, #6 @ [j starts at #3 and end at heigth - #3] -> loop executed (heigth - #6) times
 	sub minusStrideMinusOne, minusStrideMinusOne, stride
+	add pcStrengthsMap, pcStrengthsMap, r11
+	add pNMS, pNMS, r11
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (j = 3; j < heigth - 3; ++j)
@@ -85,14 +88,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON32
 			vcge.u8 q11, q11, vecStrength
 			vcge.u8 q10, q10, vecStrength
 			vcge.u8 q9, q9, vecStrength
-			vorr q15, q15, q14
-			vorr q13, q13, q12
-			vorr q11, q11, q10
-			vorr vec0, vec0, q9
-			vorr q15, q13, q15
-			vorr vec0, vec0, q11
-			vorr vec0, vec0, q15
-			vand q0, vec0, vec1
+			vorr.u8 q15, q15, q14
+			vorr.u8 q13, q13, q12
+			vorr.u8 q11, q11, q10
+			vorr.u8 vec0, vec0, q9
+			vorr.u8 q15, q13, q15
+			vorr.u8 vec0, vec0, q11
+			vorr.u8 vec0, vec0, q15
+			vand.u8 vec0, vec0, vec1
 			vst1.u8 { vec0 }, [r10]
 			AllZeros_CompVFastNmsGather_Asm_NEON32:
 
