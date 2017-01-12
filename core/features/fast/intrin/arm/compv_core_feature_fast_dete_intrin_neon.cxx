@@ -12,7 +12,7 @@
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_debug.h"
 
-#define _mm_fast_check(a, b) \
+#define _neon_fast_check(a, b) \
 	vec0 = vld1q_u8(&circle[a][i]); \
 	vec1 = vld1q_u8(&circle[b][i]); \
 	vec2 = vorrq_u8( \
@@ -23,19 +23,19 @@
 	vecCircle16[a] = vec0, vecCircle16[b] = vec1
 
 
-#define _mm_fast_compute_Darkers(a, b, c, d) \
+#define _neon_fast_compute_Darkers(a, b, c, d) \
 	vecDiff16[a] = vqsubq_u8(vecDarker1, vecCircle16[a]); \
 	vecDiff16[b] = vqsubq_u8(vecDarker1, vecCircle16[b]); \
 	vecDiff16[c] = vqsubq_u8(vecDarker1, vecCircle16[c]); \
 	vecDiff16[d] = vqsubq_u8(vecDarker1, vecCircle16[d])
-#define _mm_fast_compute_Brighters(a, b, c, d) \
+#define _neon_fast_compute_Brighters(a, b, c, d) \
 	vecDiff16[a] = vqsubq_u8(vecCircle16[a], vecBrighter1); \
 	vecDiff16[b] = vqsubq_u8(vecCircle16[b], vecBrighter1); \
 	vecDiff16[c] = vqsubq_u8(vecCircle16[c], vecBrighter1); \
 	vecDiff16[d] = vqsubq_u8(vecCircle16[d], vecBrighter1)
 
-#define _mm_fast_load(a, b, c, d, type) \
-	_mm_fast_compute_##type##s(a, b, c, d); \
+#define _neon_fast_load(a, b, c, d, type) \
+	_neon_fast_compute_##type##s(a, b, c, d); \
 	vecDiffBinary16[a] = vandq_u8(vcgtq_u8(vecDiff16[a], vecZero), vecOne); \
 	vecDiffBinary16[b] = vandq_u8(vcgtq_u8(vecDiff16[b], vecZero), vecOne); \
 	vecDiffBinary16[c] = vandq_u8(vcgtq_u8(vecDiff16[c], vecZero), vecOne); \
@@ -44,7 +44,7 @@
 	vecSum1 = vaddq_u8(vecSum1, vaddq_u8(vecDiffBinary16[c], vecDiffBinary16[d]))
 
 // Sum arc #0 without the tail (#NminusOne lines)
-#define _mm_fast_init_diffbinarysum(vecSum1, vecBinary16) \
+#define _neon_fast_init_diffbinarysum(vecSum1, vecBinary16) \
 	vecSum1 = vaddq_u8(vecBinary16[0], vecBinary16[1]); \
 	vecSum1 = vaddq_u8(vecSum1, vecBinary16[2]); \
 	vecSum1 = vaddq_u8(vecSum1, vecBinary16[3]); \
@@ -57,7 +57,7 @@
 		vecSum1 = vaddq_u8(vecSum1, vecBinary16[9]); \
 		vecSum1 = vaddq_u8(vecSum1, vecBinary16[10]); \
 	}
-#define _mm_fast_strength(ii, vecSum1, vecDiff16, vecStrengths, vecTemp) \
+#define _neon_fast_strength(ii, vecSum1, vecDiff16, vecStrengths, vecTemp) \
 	vecSum1 = vaddq_u8(vecSum1, vecDiffBinary16[(NminusOne + ii) & 15]); /* add tail */ \
 	vecTemp = vcgeq_u8(vecSum1, vecN); \
 	if (COMPV_ARM_NEON_NEQ_ZERO(vecTemp)) { \
@@ -81,7 +81,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_uscalar_t width, COMPV_ALIGNED(NEON) const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths)
+void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	compv_uscalar_t i;
@@ -109,54 +109,54 @@ void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_u
 			// Order is important for performance: When (a, b) is a candidate pair then the points close to 
 			// it are also probable candidates. This is what we check farrest neighborhoods. For example,
 			// (4, 12) is the farrestneighborhood for (0, 8)
-			_mm_fast_check(0, 8); _mm_fast_check(4, 12);
-			_mm_fast_check(1, 9); _mm_fast_check(5, 13);
-			_mm_fast_check(2, 10); _mm_fast_check(6, 14);
-			_mm_fast_check(3, 11); _mm_fast_check(7, 15);
+			_neon_fast_check(0, 8); _neon_fast_check(4, 12);
+			_neon_fast_check(1, 9); _neon_fast_check(5, 13);
+			_neon_fast_check(2, 10); _neon_fast_check(6, 14);
+			_neon_fast_check(3, 11); _neon_fast_check(7, 15);
 		}
 
 		/* Darkers */ {
 			vecSum1 = vdupq_n_u8(0);
-			_mm_fast_load(0, 8, 4, 12, Darker);
+			_neon_fast_load(0, 8, 4, 12, Darker);
 			vec0 = vcgeq_u8(vecSum1, vecMinSum);
 			if (COMPV_ARM_NEON_EQ_ZERO(vec0)) goto EndOfDarkers; // at least #3 for FAST12 and #2 for FAST9
-			_mm_fast_load(1, 9, 5, 13, Darker);
-			_mm_fast_load(2, 10, 6, 14, Darker);
-			_mm_fast_load(3, 11, 7, 15, Darker);
+			_neon_fast_load(1, 9, 5, 13, Darker);
+			_neon_fast_load(2, 10, 6, 14, Darker);
+			_neon_fast_load(3, 11, 7, 15, Darker);
 			vec0 = vcgeq_u8(vecSum1, vecN);
 			if (COMPV_ARM_NEON_EQ_ZERO(vec0)) goto EndOfDarkers; // at least #12 for FAST12 and #9 for FAST9
 
-			_mm_fast_init_diffbinarysum(vecSum1, vecDiffBinary16);
-			_mm_fast_strength(0, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(1, vecSum1, vecDiff16, vecStrengths, vec0);
-			_mm_fast_strength(2, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(3, vecSum1, vecDiff16, vecStrengths, vec0);
-			_mm_fast_strength(4, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(5, vecSum1, vecDiff16, vecStrengths, vec0);
-			_mm_fast_strength(6, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(7, vecSum1, vecDiff16, vecStrengths, vec0);
-			_mm_fast_strength(8, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(9, vecSum1, vecDiff16, vecStrengths, vec0);
-			_mm_fast_strength(10, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(11, vecSum1, vecDiff16, vecStrengths, vec0);
-			_mm_fast_strength(12, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(13, vecSum1, vecDiff16, vecStrengths, vec0);
-			_mm_fast_strength(14, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(15, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_init_diffbinarysum(vecSum1, vecDiffBinary16);
+			_neon_fast_strength(0, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(1, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_strength(2, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(3, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_strength(4, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(5, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_strength(6, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(7, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_strength(8, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(9, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_strength(10, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(11, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_strength(12, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(13, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_strength(14, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(15, vecSum1, vecDiff16, vecStrengths, vec0);
 		} EndOfDarkers:
 
 		/* Brighters */ {
 			vecSum1 = vdupq_n_u8(0);
-			_mm_fast_load(0, 8, 4, 12, Brighter);
+			_neon_fast_load(0, 8, 4, 12, Brighter);
 			vec0 = vcgeq_u8(vecSum1, vecMinSum);
 			if (COMPV_ARM_NEON_EQ_ZERO(vec0)) goto EndOfBrighters; // at least #3 for FAST12 and #2 for FAST9
-			_mm_fast_load(1, 9, 5, 13, Brighter);
-			_mm_fast_load(2, 10, 6, 14, Brighter);
-			_mm_fast_load(3, 11, 7, 15, Brighter);
+			_neon_fast_load(1, 9, 5, 13, Brighter);
+			_neon_fast_load(2, 10, 6, 14, Brighter);
+			_neon_fast_load(3, 11, 7, 15, Brighter);
 			vec0 = vcgeq_u8(vecSum1, vecN);
 			if (COMPV_ARM_NEON_EQ_ZERO(vec0)) goto EndOfBrighters; // at least #12 for FAST12 and #9 for FAST9
 
-			_mm_fast_init_diffbinarysum(vecSum1, vecDiffBinary16);
-			_mm_fast_strength(0, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(1, vecSum1, vecDiff16, vecStrengths, vec0);
-			_mm_fast_strength(2, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(3, vecSum1, vecDiff16, vecStrengths, vec0);
-			_mm_fast_strength(4, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(5, vecSum1, vecDiff16, vecStrengths, vec0);
-			_mm_fast_strength(6, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(7, vecSum1, vecDiff16, vecStrengths, vec0);
-			_mm_fast_strength(8, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(9, vecSum1, vecDiff16, vecStrengths, vec0);
-			_mm_fast_strength(10, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(11, vecSum1, vecDiff16, vecStrengths, vec0);
-			_mm_fast_strength(12, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(13, vecSum1, vecDiff16, vecStrengths, vec0);
-			_mm_fast_strength(14, vecSum1, vecDiff16, vecStrengths, vec0); _mm_fast_strength(15, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_init_diffbinarysum(vecSum1, vecDiffBinary16);
+			_neon_fast_strength(0, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(1, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_strength(2, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(3, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_strength(4, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(5, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_strength(6, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(7, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_strength(8, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(9, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_strength(10, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(11, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_strength(12, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(13, vecSum1, vecDiff16, vecStrengths, vec0);
+			_neon_fast_strength(14, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(15, vecSum1, vecDiff16, vecStrengths, vec0);
 		} EndOfBrighters:
 	
 	Next:

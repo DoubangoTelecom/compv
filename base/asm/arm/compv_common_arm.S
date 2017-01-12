@@ -23,9 +23,16 @@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 .equ NO, 0
 .equ YES, 1
-.equ prolog_bytes, 40
 .equ CACHE_LINE_SIZE, 64
 .equ PREFETCH_DISTANCE, (CACHE_LINE_SIZE << 2)
+#if defined(__aarch64__)
+	.equ COMPV_GAS_REG_SZ_BYTES, 8
+#elif defined(__arm__)
+	.equ COMPV_GAS_REG_SZ_BYTES, 4
+@#else
+	@.error Unknown cpu architecture
+#endif
+.equ prolog_bytes, (10 * COMPV_GAS_REG_SZ_BYTES) @ push {r4-r12, lr}
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 q0x .dn d0
@@ -78,7 +85,7 @@ q15y .dn d31
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ Function Prolog.
 .macro COMPV_GAS_FUNCTION_PROLOG
-	push {r4-r12, lr}        @ 10 * 4 = 40 bytes = prolog_bytes
+	push {r4-r12, lr}        @ (10 * COMPV_GAS_REG_SZ_BYTES) -> prolog_bytes
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -95,6 +102,30 @@ q15y .dn d31
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 .macro COMPV_GAS_RESTORE_NEON_REGS
 	vldmia sp!, {d8-d15}    @ restore VFP/Advanced SIMD registers
+.endm
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ COMPV_GAS_ALIGN_STACK <alignment> <register>
+@ This macro aligns the stack to the given alignment (in bytes). The stack
+@ is left such that the previous value of the stack pointer is the first
+@ argument on the stack (ie, the inverse of this macro is 'pop sp.')
+@ This macro uses one temporary register, which is not preserved, and thus
+@ must be specified as an argument.
+.macro COMPV_GAS_ALIGN_STACK alignment register
+    mov         \register, sp
+    and         sp, #-\alignment
+    sub         sp, #(\alignment - COMPV_GAS_REG_SZ_BYTES)
+    push        { \register }
+.endm
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ COMPV_GAS_UNALIGN_STACK
+@ Undo COMPV_GAS_ALIGN_STACK. This function will a temporary register, 
+@ which is not preserved, and thus must be specified as an argument.
+@ The temporary could be different than the one provide with COMPV_GAS_ALIGN_STACK.
+.macro COMPV_GAS_UNALIGN_STACK register
+	pop { \register } @ pop { sp } is illegal instruction
+	mov sp, \register
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
