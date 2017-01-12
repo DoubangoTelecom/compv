@@ -79,9 +79,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastDataRow_Asm_NEON32
 		vqadd.u8 vecBrighter1, vecDarker1, vecThreshold 
 		vqsub.u8 vecDarker1, vecDarker1, vecThreshold
 
-		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-		@ Macros for FastDataRow
-		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		
 		.macro _neon32_fast_check a b
 			ldr r10, [sp, #(circle + \a*COMPV_GAS_REG_SZ_BYTES)]
 			ldr r11, [sp, #(circle + \b*COMPV_GAS_REG_SZ_BYTES)]
@@ -190,7 +188,18 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastDataRow_Asm_NEON32
 			add r8, sp, #(vecDiffBinary16 + 0*16)
 			add r9, sp, #(vecDiffBinary16 + 1*16)
 			add r10, sp, #(vecDiffBinary16 + 2*16)
-			add r11, sp, #(vecDiffBinary16 + 4*16)
+			add r11, sp, #(vecDiffBinary16 + 3*16)
+			vld1.u8 {q12}, [r8 :128]
+			vld1.u8 {q13}, [r9 :128]
+			vld1.u8 {q14}, [r10 :128]
+			vld1.u8 {q15}, [r11 :128]
+			vadd.u8 q12, q12, q13
+			vadd.u8 q14, q14, q15
+			vadd.u8 vecSum1, q12, q14 @ setting vecSum1 for the first time
+			add r8, sp, #(vecDiffBinary16 + 4*16)
+			add r9, sp, #(vecDiffBinary16 + 5*16)
+			add r10, sp, #(vecDiffBinary16 + 6*16)
+			add r11, sp, #(vecDiffBinary16 + 7*16)
 			vld1.u8 {q12}, [r8 :128]
 			vld1.u8 {q13}, [r9 :128]
 			vld1.u8 {q14}, [r10 :128]
@@ -199,15 +208,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastDataRow_Asm_NEON32
 			vadd.u8 q14, q14, q15
 			vadd.u8 vecSum1, vecSum1, q12
 			vadd.u8 vecSum1, vecSum1, q14
-			add r8, sp, #(vecDiffBinary16 + 5*16)
-			add r9, sp, #(vecDiffBinary16 + 6*16)
-			add r10, sp, #(vecDiffBinary16 + 7*16)
-			vld1.u8 {q12}, [r8 :128]
-			vld1.u8 {q13}, [r9 :128]
-			vld1.u8 {q14}, [r10 :128]
-			vadd.u8 q12, q12, q13
-			vadd.u8 vecSum1, vecSum1, q14
-			vadd.u8 vecSum1, vecSum1, q12
 			@FIXME: 3 more adds for FAST12
 		.endm
 		.macro _neon32_fast_strength ii
