@@ -8,6 +8,38 @@
 .include "compv_common_arm.S"
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap
+@ arg(1) -> COMPV_ALIGNED(NEON) uint8_t* pNMS
+@ arg(2) -> compv_uscalar_t width
+@ arg(3) -> compv_uscalar_t heigth
+@ arg(4) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+COMPV_GAS_FUNCTION_DECLARE CompVFastNmsApply_Asm_NEON32
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 5
+	COMPV_GAS_SAVE_NEON_REGS
+	
+	ldmia_args r0-r4
+	pcStrengthsMap .req r0
+	pNMS .req r1
+	width .req r2
+	heigth .req r3
+	stride .req r4
+
+
+
+	.unreq pcStrengthsMap
+	.unreq pNMS
+	.unreq width
+	.unreq heigth
+	.unreq stride
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS 5
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> const uint8_t* pcStrengthsMap
 @ arg(1) -> uint8_t* pNMS
 @ arg(2) -> const compv_uscalar_t width
