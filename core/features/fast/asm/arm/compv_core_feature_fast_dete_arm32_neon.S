@@ -15,7 +15,7 @@
 @ arg(3) -> compv_uscalar_t N
 @ arg(4) -> compv_uscalar_t threshold
 @ arg(5) -> uint8_t* strengths
-COMPV_GAS_FUNCTION_DECLARE CompVFastDataRow_Asm_NEON32
+.macro CompVFastDataRow_Macro_NEON32 FastType
 	COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
 	COMPV_GAS_SAVE_NEON_REGS
@@ -52,11 +52,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastDataRow_Asm_NEON32
 	mov r11, #0
 	vdup.8 vecZero, r11
 
-	mov r11, #2 @ FIXME: 3 for FAST12
+	.if  \FastType == 9
+		mov r10, #9
+		mov r11, #2
+	.else
+		mov r10, #12
+		mov r11, #3
+	.endif
+	vdup.8 vecN, r10
 	vdup.8 vecMinSum, r11
-
-	mov r11, #9 @FIXME: 12 for FAST12
-	vdup.8 vecN, r11
 
 	mov r11, #1
 	vdup.8 vecOne, r11
@@ -80,7 +84,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastDataRow_Asm_NEON32
 	@ for (i = 0; i < width; i += 16)
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	mov i, #0
-	LoopWidth_CompVFastDataRow_Asm_NEON32:
+	LoopWidth_CompVFastDataRow_Asm_NEON32\@:
 		vld1.u8 { vecDarker1 }, [Iptr]!
 		vmov.u8 vecStrengths, vecZero
 		vqadd.u8 vecBrighter1, vecDarker1, vecThreshold 
@@ -89,14 +93,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastDataRow_Asm_NEON32
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ Check
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-		_neon32_fast_check 0 8
-		_neon32_fast_check 4 12
-		_neon32_fast_check 1 9
-		_neon32_fast_check 5 13
-		_neon32_fast_check 2 10
-		_neon32_fast_check 6 14
-		_neon32_fast_check 3 11
-		_neon32_fast_check 7 15
+		_neon32_fast_check 0 8 \FastType
+		_neon32_fast_check 4 12 \FastType
+		_neon32_fast_check 1 9 \FastType
+		_neon32_fast_check 5 13 \FastType
+		_neon32_fast_check 2 10 \FastType
+		_neon32_fast_check 6 14 \FastType
+		_neon32_fast_check 3 11 \FastType
+		_neon32_fast_check 7 15 \FastType
 
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ Darkers
@@ -108,7 +112,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastDataRow_Asm_NEON32
 			vmov.32	r10, q15x[0]
 			vmov.32	r11, q15x[1]
 			orrs r11, r11, r10
-			beq EndOfDarkers_CompVFastDataRow_Asm_NEON32
+			beq EndOfDarkers_CompVFastDataRow_Asm_NEON32\@
 			_neon32_fast_load 1 9 5 13 darkers
 			_neon32_fast_load 2 10 6 14 darkers
 			_neon32_fast_load 3 11 7 15 darkers
@@ -117,13 +121,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastDataRow_Asm_NEON32
 			vmov.32	r10, q15x[0]
 			vmov.32	r11, q15x[1]
 			orrs r11, r11, r10
-			beq EndOfDarkers_CompVFastDataRow_Asm_NEON32
+			beq EndOfDarkers_CompVFastDataRow_Asm_NEON32\@
 
-			_neon32_fast_init_diffbinarysum
+			_neon32_fast_init_diffbinarysum \FastType
 			.irp ii, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
-				_neon32_fast_strength \ii
+				_neon32_fast_strength \ii \FastType
 			.endr
-			EndOfDarkers_CompVFastDataRow_Asm_NEON32:
+			EndOfDarkers_CompVFastDataRow_Asm_NEON32\@:
 
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ Brighters
@@ -135,7 +139,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastDataRow_Asm_NEON32
 			vmov.32	r10, q15x[0]
 			vmov.32	r11, q15x[1]
 			orrs r11, r11, r10
-			beq EndOfBrighters_CompVFastDataRow_Asm_NEON32
+			beq EndOfBrighters_CompVFastDataRow_Asm_NEON32\@
 			_neon32_fast_load 1 9 5 13 brighters
 			_neon32_fast_load 2 10 6 14 brighters
 			_neon32_fast_load 3 11 7 15 brighters
@@ -144,20 +148,20 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastDataRow_Asm_NEON32
 			vmov.32	r10, q15x[0]
 			vmov.32	r11, q15x[1]
 			orrs r11, r11, r10
-			beq EndOfBrighters_CompVFastDataRow_Asm_NEON32
+			beq EndOfBrighters_CompVFastDataRow_Asm_NEON32\@
 
-			_neon32_fast_init_diffbinarysum
+			_neon32_fast_init_diffbinarysum \FastType
 			.irp ii, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
-				_neon32_fast_strength \ii
+				_neon32_fast_strength \ii \FastType
 			.endr
-			EndOfBrighters_CompVFastDataRow_Asm_NEON32:
+			EndOfBrighters_CompVFastDataRow_Asm_NEON32\@:
 
-		Next_CompVFastDataRow_Asm_NEON32:
+		Next_CompVFastDataRow_Asm_NEON32\FastType:
 		vst1.u8 {vecStrengths}, [strengths]!
 
 		add i, i, #16
 		cmp i, width
-		blt LoopWidth_CompVFastDataRow_Asm_NEON32
+		blt LoopWidth_CompVFastDataRow_Asm_NEON32\@
 		@End_of_LoopWidth@
 	
 	
@@ -187,6 +191,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastDataRow_Asm_NEON32
 	COMPV_GAS_UNSHADOW_ARGS 6
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+COMPV_GAS_FUNCTION_DECLARE CompVFast9DataRow_Asm_NEON32
+	CompVFastDataRow_Macro_NEON32 9
+
+COMPV_GAS_FUNCTION_DECLARE CompVFast12DataRow_Asm_NEON32
+	CompVFastDataRow_Macro_NEON32 12
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap

@@ -56,7 +56,8 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVFastNmsGather_Asm_X64_AVX2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM
-	COMPV_EXTERNC void CompVFastDataRow_Asm_NEON32(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
+	COMPV_EXTERNC void CompVFast9DataRow_Asm_NEON32(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
+	COMPV_EXTERNC void CompVFast12DataRow_Asm_NEON32(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 	COMPV_EXTERNC void CompVFastNmsGather_Asm_NEON32(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVFastNmsApply_Asm_NEON32(COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap, COMPV_ALIGNED(NEON) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #	endif
@@ -401,7 +402,7 @@ static void CompVFastDataRange(RangeFAST* range)
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagNone)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM((FastDataRow = CompVFastDataRow_Intrin_NEON, align = COMPV_SIMD_ALIGNV_NEON));
-		COMPV_EXEC_IFDEF_ASM_ARM((FastDataRow = CompVFastDataRow_Asm_NEON32, align = COMPV_SIMD_ALIGNV_NEON));
+		COMPV_EXEC_IFDEF_ASM_ARM((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_NEON32 : CompVFast12DataRow_Asm_NEON32, align = COMPV_SIMD_ALIGNV_NEON));
 	}
 #endif
 

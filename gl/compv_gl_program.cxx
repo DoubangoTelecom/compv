@@ -64,18 +64,9 @@ COMPV_ERROR_CODE CompVGLProgram::shaderAttachFragmentData(const char* dataPtr, s
 
 COMPV_ERROR_CODE CompVGLProgram::link()
 {
-    if (m_bUsed || m_bLinked) {
-        COMPV_DEBUG_ERROR_EX(kModuleNameGLProgram, "Program in use or already linked");
-        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_STATE);
-    }
-    if (!CompVGLUtils::isShaderValid(m_uNameShaderVertex)) {
-        COMPV_DEBUG_ERROR_EX(kModuleNameGLProgram, "No vertex shaders");
-        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_STATE);
-    }
-    if (!CompVGLUtils::isShaderValid(m_uNameShaderFragment)) {
-        COMPV_DEBUG_ERROR_EX(kModuleNameGLProgram, "No fragment shaders");
-        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_STATE);
-    }
+	COMPV_CHECK_EXP_RETURN((m_bUsed || m_bLinked), COMPV_ERROR_CODE_E_INVALID_STATE, "Program in use or already linked");
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isShaderValid(m_uNameShaderVertex), COMPV_ERROR_CODE_E_INVALID_STATE, "No vertex shaders");
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isShaderValid(m_uNameShaderFragment), COMPV_ERROR_CODE_E_INVALID_STATE, "No fragment shaders");
     COMPV_CHECK_CODE_RETURN(CompVGLUtils::programLink(m_uNamePrg));
     m_bLinked = true;
     return COMPV_ERROR_CODE_S_OK;
@@ -83,10 +74,7 @@ COMPV_ERROR_CODE CompVGLProgram::link()
 
 COMPV_ERROR_CODE CompVGLProgram::bind() /*Overrides(CompVBind)*/
 {
-    if (!m_bLinked) {
-        COMPV_DEBUG_ERROR_EX(kModuleNameGLProgram, "Program not linked");
-        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_STATE);
-    }
+	COMPV_CHECK_EXP_RETURN(!m_bLinked, COMPV_ERROR_CODE_E_INVALID_STATE, "Program not linked");
     // do not check "m_bUsed", program could be used from different threads several times to make it current
     COMPV_CHECK_CODE_RETURN(CompVGLUtils::programBind(m_uNamePrg));
     m_bUsed = true;
@@ -96,10 +84,7 @@ COMPV_ERROR_CODE CompVGLProgram::bind() /*Overrides(CompVBind)*/
 
 COMPV_ERROR_CODE CompVGLProgram::unbind() /*Overrides(CompVBind)*/
 {
-    if (!m_bLinked) {
-        COMPV_DEBUG_ERROR_EX(kModuleNameGLProgram, "Program not linked");
-        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_STATE);
-    }
+	COMPV_CHECK_EXP_RETURN(!m_bLinked, COMPV_ERROR_CODE_E_INVALID_STATE, "Program not linked");
     // do not check "m_bUsed", program could be used from different threads several times to make it current
     COMPV_CHECK_CODE_RETURN(CompVGLUtils::programUnbind(m_uNamePrg));
     m_bUsed = false;

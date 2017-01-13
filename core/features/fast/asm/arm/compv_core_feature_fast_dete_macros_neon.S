@@ -7,7 +7,7 @@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-.macro _neon32_fast_check a b
+.macro _neon32_fast_check a b FastType
 	ldr r10, [sp, #(circle + \a*COMPV_GAS_REG_SZ_BYTES)]
 	ldr r11, [sp, #(circle + \b*COMPV_GAS_REG_SZ_BYTES)]
 	add r10, r10, i
@@ -25,7 +25,7 @@
 	vmov.32	r10, q11x[0]
 	vmov.32	r11, q11x[1]
 	orrs r11, r11, r10
-	beq Next_CompVFastDataRow_Asm_NEON32
+	beq Next_CompVFastDataRow_Asm_NEON32\FastType
 	add r10, sp, #(vecCircle16 + \a*16)
 	vst1.u8 { q14 }, [r10 :128], eightTimesSixteen
 	vst1.u8 { q15 }, [r10 :128]
@@ -93,7 +93,7 @@
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-.macro _neon32_fast_init_diffbinarysum
+.macro _neon32_fast_init_diffbinarysum FastType
 	add r8, sp, #(vecDiffBinary16 + 0*16)
 	vld1.u8 {q12}, [r8 :128], sixteen
 	vld1.u8 {q13}, [r8 :128], sixteen
@@ -110,12 +110,23 @@
 	vadd.u8 q14, q14, q15
 	vadd.u8 vecSum1, vecSum1, q12
 	vadd.u8 vecSum1, vecSum1, q14
-	@FIXME: 3 more adds for FAST12
+	.if \FastType == 12
+		vld1.u8 {q12}, [r8 :128], sixteen
+		vld1.u8 {q13}, [r8 :128], sixteen
+		vld1.u8 {q14}, [r8 :128], sixteen
+		vadd.u8 q12, q12, q13
+		vadd.u8 vecSum1, vecSum1, q14
+		vadd.u8 vecSum1, vecSum1, q12
+	.endif
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-.macro _neon32_fast_strength ii
-	add r11, sp, #(vecDiffBinary16 + (((8 + \ii)&15)*16)) @FIXME: NminusOne = 11 for FAST12 and 8 for FAST9
+.macro _neon32_fast_strength ii FastType
+	.if \FastType == 12
+		add r11, sp, #(vecDiffBinary16 + (((11 + \ii)&15)*16)) @ 11 = NminusOne
+	.else
+		add r11, sp, #(vecDiffBinary16 + (((8 + \ii)&15)*16)) @ 8 = NminusOne
+	.endif
 	vld1.u8 {q15}, [r11 :128]
 	vadd.u8 vecSum1, vecSum1, q15 @ add tail
 	vcge.u8 q11, vecSum1, vecN
@@ -150,7 +161,17 @@
 	vmin.u8 q12, q12, q13
 	vmin.u8 q11, q11, q14
 	vmin.u8 q11, q11, q12
-	@ FIXME: for FAST12 there are three more loads
+	.if \FastType == 12
+		add r8, sp, #(vecDiff16 + (((9 + \ii)&15)*16))
+		add r9, sp, #(vecDiff16 + (((10 + \ii)&15)*16))
+		add r10, sp, #(vecDiff16 + (((11 + \ii)&15)*16))
+		vld1.u8 {q12}, [r8 :128]
+		vld1.u8 {q13}, [r9 :128]
+		vld1.u8 {q14}, [r10 :128]
+		vmin.u8 q12, q12, q13
+		vmin.u8 q11, q11, q14
+		vmin.u8 q11, q11, q12
+	.endif
 	vmax.u8 vecStrengths, vecStrengths, q11
 	FastStrength_AllZeros_CompVFastDataRow_Asm_NEON32\@:
 	add r8, sp, #(vecDiffBinary16 + ((\ii&15)*16))
