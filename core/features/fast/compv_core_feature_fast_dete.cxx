@@ -401,7 +401,7 @@ static void CompVFastDataRange(RangeFAST* range)
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagNone)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM((FastDataRow = CompVFastDataRow_Intrin_NEON, align = COMPV_SIMD_ALIGNV_NEON));
-		//COMPV_EXEC_IFDEF_ASM_ARM((FastDataRow = CompVFastDataRow_Asm_NEON32, align = COMPV_SIMD_ALIGNV_NEON));
+		COMPV_EXEC_IFDEF_ASM_ARM((FastDataRow = CompVFastDataRow_Asm_NEON32, align = COMPV_SIMD_ALIGNV_NEON));
 	}
 #endif
 

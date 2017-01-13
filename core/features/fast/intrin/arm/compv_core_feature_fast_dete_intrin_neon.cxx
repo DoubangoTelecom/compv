@@ -99,6 +99,8 @@ void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_u
 		&IP[pixels16[12]], &IP[pixels16[13]], &IP[pixels16[14]], &IP[pixels16[15]]
 	};
 
+	// TODO(dmi): ASM code faster by far. Why?
+
 	for (i = 0; i < width; i += 16) {
 		vec0 = vld1q_u8(&IP[i]);
 		vecDarker1 = vqsubq_u8(vec0, vecThreshold); // IP < (Ix - t)
