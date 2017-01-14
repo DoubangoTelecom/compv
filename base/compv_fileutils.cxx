@@ -210,7 +210,7 @@ COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buff
             COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Can't open %s", pcPath);
             return COMPV_ERROR_CODE_E_FILE_NOT_FOUND;
         }
-        mem_ = CompVMem::malloc(size_);
+        mem_ = CompVMem::malloc(size_ + 1);
         if (!mem_) {
             COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Failed to alloc mem with size = %u", (unsigned)size_);
             fclose(file_);
@@ -223,6 +223,7 @@ COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buff
             CompVMem::free(&mem_);
             return COMPV_ERROR_CODE_E_FAILED_TO_READ_FILE;
         }
+		*(reinterpret_cast<char*>(mem_) + size_) = '\0'; //!\ required when reading sources to avoid garbage (e.g OpenCL source *.cl) 
         if (COMPV_ERROR_CODE_IS_NOK(CompVBuffer::newObjAndTakeData(&mem_, size_, &buffer_))) {
             COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Failed to create new CompVBuffer object");
         }

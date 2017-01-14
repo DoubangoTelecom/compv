@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\core">
+      <UniqueIdentifier>{e814a891-ba33-4379-a7d5-1adeeda9defa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\core\features">
+      <UniqueIdentifier>{bb4ee4ce-7055-4b1e-a4ce-f8b32c307edd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\core\features\fast">
+      <UniqueIdentifier>{bb12392e-4c20-4534-8eba-8c35729a783d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core">
+      <UniqueIdentifier>{ab050c1a-bdaa-474e-97ee-8b3810c76c79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\features">
+      <UniqueIdentifier>{93df06b3-c87d-450d-b0e4-f3c4a7897895}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\features\fast">
+      <UniqueIdentifier>{9c3b531c-1751-4aa1-9738-015f62a5a3a0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="compv_cl.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_cl_utils.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_cl_dllmain.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="core\features\fast\compv_cl_feature_fast_dete.cxx">
+      <Filter>Source Files\core\features\fast</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\compv\cl\compv_cl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\cl\compv_cl_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\cl\compv_cl_config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\cl\compv_cl_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\cl\core\features\fast\compv_cl_feature_fast_dete.h">
+      <Filter>Header Files\core\features\fast</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="core\features\fast\compv_cl_feature_fast_dete.cl">
+      <Filter>Source Files\core\features\fast</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

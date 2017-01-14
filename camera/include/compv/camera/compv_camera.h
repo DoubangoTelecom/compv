@@ -99,9 +99,9 @@ public:
         bool isValid() {
             return funcNew && lib;
         }
-        void deinit() {
+        void deInit() {
             funcNew = NULL;
-            lib = NULL;
+            lib = NULL; // calls the destructor -> will close the DLL and free the handle
         }
     };
 

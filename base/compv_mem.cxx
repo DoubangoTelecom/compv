@@ -106,16 +106,16 @@ COMPV_ERROR_CODE CompVMem::copyNTA(void* dstPtr, const void*srcPtr, size_t size)
     if (size > COMPV_MEM_SIZE_MIN_SIMD) {
         if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
             if (COMPV_IS_ALIGNED_SSE(dstPtr) && COMPV_IS_ALIGNED_SSE(srcPtr)) {
-                COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopyNTA_Intrin_Aligned_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-                COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopyNTA_Asm_Aligned11_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-                COMPV_EXEC_IFDEF_ASM_X64((cpy = MemCopyNTA_Asm_Aligned11_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+                COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopyNTA_Intrin_Aligned_SSE2, align = COMPV_ALIGNV_SIMD_SSE));
+                COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopyNTA_Asm_Aligned11_X86_SSE2, align = COMPV_ALIGNV_SIMD_SSE));
+                COMPV_EXEC_IFDEF_ASM_X64((cpy = MemCopyNTA_Asm_Aligned11_X64_SSE2, align = COMPV_ALIGNV_SIMD_SSE));
             }
         }
         if (CompVCpu::isEnabled(kCpuFlagAVX)) {
             if (COMPV_IS_ALIGNED_AVX(dstPtr) && COMPV_IS_ALIGNED_AVX(srcPtr)) {
-                COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopyNTA_Intrin_Aligned_AVX, align = COMPV_SIMD_ALIGNV_AVX));
-                COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopyNTA_Asm_Aligned11_X86_AVX, align = COMPV_SIMD_ALIGNV_AVX));
-                COMPV_EXEC_IFDEF_ASM_X64((cpy = MemCopyNTA_Asm_Aligned11_X64_AVX, align = COMPV_SIMD_ALIGNV_AVX));
+                COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopyNTA_Intrin_Aligned_AVX, align = COMPV_ALIGNV_SIMD_AVX));
+                COMPV_EXEC_IFDEF_ASM_X86((cpy = MemCopyNTA_Asm_Aligned11_X86_AVX, align = COMPV_ALIGNV_SIMD_AVX));
+                COMPV_EXEC_IFDEF_ASM_X64((cpy = MemCopyNTA_Asm_Aligned11_X64_AVX, align = COMPV_ALIGNV_SIMD_AVX));
             }
         }
     }
@@ -205,7 +205,7 @@ COMPV_ERROR_CODE CompVMem::zeroNTA(void* dstPtr, size_t size)
     if (size > COMPV_MEM_SIZE_MIN_SIMD) {
         if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
             if (COMPV_IS_ALIGNED_SSE(dstPtr)) {
-                COMPV_EXEC_IFDEF_INTRIN_X86((setz = MemZeroNTA_Intrin_Aligned_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+                COMPV_EXEC_IFDEF_INTRIN_X86((setz = MemZeroNTA_Intrin_Aligned_SSE2, align = COMPV_ALIGNV_SIMD_SSE));
             }
         }
         if (CompVCpu::isEnabled(kCpuFlagAVX)) {
@@ -466,7 +466,7 @@ int CompVMem::bestAlignment()
 {
     static int _bestAlignment = 0;
     if (_bestAlignment == 0) {
-        _bestAlignment = COMPV_SIMD_ALIGNV_DEFAULT;
+        _bestAlignment = COMPV_ALIGNV_SIMD_DEFAULT;
         const int L1CacheLineSize = CompVCpu::cache1LineSize(); // probably #64 or #128
         if (L1CacheLineSize > _bestAlignment && L1CacheLineSize <= 128 && (L1CacheLineSize & (_bestAlignment - 1)) == 0) {
             _bestAlignment = L1CacheLineSize;
@@ -479,7 +479,14 @@ int CompVMem::bestAlignment()
 // This also make sure we'll have the right alignment required by the active SIMD implementation (e.g. AVX or NEON)
 size_t CompVMem::alignSizeOnCacheLineAndSIMD(size_t size)
 {
-    return CompVMem::alignForward((uintptr_t)size, CompVMem::bestAlignment());
+    return CompVMem::alignForward(static_cast<uintptr_t>(size), CompVMem::bestAlignment());
+}
+
+// https://software.intel.com/en-us/articles/getting-the-most-from-opencl-12-how-to-increase-performance-by-minimizing-buffer-copies-on-intel-processor-graphics
+bool CompVMem::isGpuFriendly(const void* mem, size_t size)
+{
+	return COMPV_IS_ALIGNED(reinterpret_cast<uintptr_t>(mem), COMPV_ALIGNV_GPU_PAGE)
+		&& COMPV_IS_ALIGNED(size, COMPV_ALIGNV_GPU_LINE);
 }
 
 // Allocated using mallocAligned, callocAligned or reallocAligned
@@ -487,7 +494,7 @@ bool CompVMem::isSpecial(void* ptr)
 {
 #	if COMPV_MEM_CHECK
     CompVMem::specialsLock();
-    bool ret = CompVMem::s_Specials.find((uintptr_t)ptr) != CompVMem::s_Specials.end();
+    bool ret = CompVMem::s_Specials.find(reinterpret_cast<uintptr_t>(ptr)) != CompVMem::s_Specials.end();
     CompVMem::specialsUnLock();
     return ret;
 #else

@@ -86,9 +86,6 @@
     <ClCompile Include="features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.cxx">
       <Filter>Source Files\features\fast\intrin\x86</Filter>
     </ClCompile>
-    <ClCompile Include="features\compv_core_feature.cxx">
-      <Filter>Source Files\features</Filter>
-    </ClCompile>
     <ClCompile Include="features\fast\compv_core_feature_fast_dete.cxx">
       <Filter>Source Files\features\fast</Filter>
     </ClCompile>
@@ -108,9 +105,6 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.h">
       <Filter>Header Files\features\fast\intrin\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\core\features\compv_core_feature.h">
-      <Filter>Header Files\features</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\core\features\fast\compv_core_feature_fast_dete.h">
       <Filter>Header Files\features\fast</Filter>

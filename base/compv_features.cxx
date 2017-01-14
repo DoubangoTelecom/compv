@@ -4,9 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/core/features/compv_core_feature.h"
-#include "compv/core/features/fast/compv_core_feature_fast_dete.h"
-#include "compv/core/compv_core.h"
+#include "compv/base/compv_features.h"
+#include "compv/base/compv_base.h"
 
 #define COMPV_THIS_CLASSNAME "CompVFeature"
 
@@ -14,71 +13,9 @@ COMPV_NAMESPACE_BEGIN()
 
 std::map<int, const CompVFeatureFactory*> CompVFeature::s_Factories;
 
-// Declare built-in factories
-static const CompVFeatureFactory fastFactory = {
-	COMPV_FAST_ID,
-	"FAST (Features from Accelerated Segment Test)",
-	CompVCornerDeteFAST::newObj,
-	NULL,
-	NULL,
-	NULL,
-};
-//static const CompVFeatureFactory orbFactory = {
-//	COMPV_ORB_ID,
-//	"ORB (Oriented FAST and Rotated BRIEF)",
-//	CompVCornerDeteORB::newObj,
-//	CompVCornerDescORB::newObj,
-//	NULL,
-//	NULL,
-//};
-//static const CompVFeatureFactory cannyFactory = {
-//	COMPV_CANNY_ID,
-//	"Canny edge detector",
-//	NULL,
-//	NULL,
-//	CompVEdgeDeteCanny::newObj,
-//	NULL,
-//};
-//static const CompVFeatureFactory sobelFactory = {
-//	COMPV_SOBEL_ID,
-//	"Sobel edge detector",
-//	NULL,
-//	NULL,
-//	CompVEdgeDeteBASE::newObjSobel,
-//	NULL,
-//};
-//static const CompVFeatureFactory scharrFactory = {
-//	COMPV_SCHARR_ID,
-//	"Scharr edge detector",
-//	NULL,
-//	NULL,
-//	CompVEdgeDeteBASE::newObjScharr,
-//	NULL,
-//};
-//static const CompVFeatureFactory prewittFactory = {
-//	COMPV_PREWITT_ID,
-//	"Prewitt edge detector",
-//	NULL,
-//	NULL,
-//	CompVEdgeDeteBASE::newObjPrewitt,
-//	NULL,
-//};
-//static const CompVFeatureFactory houghStdFactory = {
-//	COMPV_HOUGH_STANDARD_ID,
-//	"Hough standard",
-//	NULL,
-//	NULL,
-//	NULL,
-//	CompVHoughStd::newObj,
-//};
-
-
-
 //
 //	CompVFeature
 //
-
-bool CompVFeature::s_bInitialized = false;
 
 CompVFeature::CompVFeature()
 {
@@ -88,35 +25,6 @@ CompVFeature::CompVFeature()
 CompVFeature::~CompVFeature()
 {
 
-}
-
-COMPV_ERROR_CODE CompVFeature::init()
-{
-	if (s_bInitialized) {
-		return COMPV_ERROR_CODE_S_OK;
-	}
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Features initialization");
-
-	/* Register built-in factories */
-
-	// FAST (Features from Accelerated Segment Test)
-	COMPV_CHECK_CODE_RETURN(addFactory(&fastFactory));
-	//// ORB(ORiented BRIEF)
-	//COMPV_CHECK_CODE_RETURN(addFactory(&orbFactory));
-	//// Canny edge detector
-	//COMPV_CHECK_CODE_RETURN(addFactory(&cannyFactory));
-	//// Sobel edge detector
-	//COMPV_CHECK_CODE_RETURN(addFactory(&sobelFactory));
-	//// Scharr edge detector
-	//COMPV_CHECK_CODE_RETURN(addFactory(&scharrFactory));
-	//// Prewitt edge detector
-	//COMPV_CHECK_CODE_RETURN(addFactory(&prewittFactory));
-	//// Hough standard
-	//COMPV_CHECK_CODE_RETURN(addFactory(&houghStdFactory));
-
-	s_bInitialized = true;
-
-	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVFeature::addFactory(const CompVFeatureFactory* factory)
@@ -171,7 +79,7 @@ CompVCornerDete::~CompVCornerDete()
 
 COMPV_ERROR_CODE CompVCornerDete::newObj(CompVCornerDetePtrPtr dete, int deteId)
 {
-	COMPV_CHECK_CODE_RETURN(CompVCore::init());
+	COMPV_CHECK_CODE_RETURN(CompVBase::init());
 	COMPV_CHECK_EXP_RETURN(!dete, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	const CompVFeatureFactory* factory_ = CompVFeature::findFactory(deteId);
 	if (!factory_) {
@@ -203,7 +111,7 @@ CompVCornerDesc::~CompVCornerDesc()
 
 COMPV_ERROR_CODE CompVCornerDesc::newObj(CompVCornerDescPtrPtr desc, int descId)
 {
-	COMPV_CHECK_CODE_RETURN(CompVCore::init());
+	COMPV_CHECK_CODE_RETURN(CompVBase::init());
 	COMPV_CHECK_EXP_RETURN(!desc, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	const CompVFeatureFactory* factory_ = CompVFeature::findFactory(descId);
 	if (!factory_) {
@@ -236,7 +144,7 @@ CompVEdgeDete::~CompVEdgeDete()
 
 COMPV_ERROR_CODE CompVEdgeDete::newObj(CompVEdgeDetePtrPtr dete, int deteId, float tLow COMPV_DEFAULT(0.68f), float tHigh COMPV_DEFAULT(0.68f*2.f), int32_t kernSize COMPV_DEFAULT(3))
 {
-	COMPV_CHECK_CODE_RETURN(CompVCore::init());
+	COMPV_CHECK_CODE_RETURN(CompVBase::init());
 	COMPV_CHECK_EXP_RETURN(!dete, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	const CompVFeatureFactory* factory_ = CompVFeature::findFactory(deteId);
 	if (!factory_) {
@@ -266,7 +174,7 @@ CompVHough::~CompVHough()
 
 COMPV_ERROR_CODE CompVHough::newObj(CompVHoughPtrPtr hough, int id, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), int32_t threshold COMPV_DEFAULT(1))
 {
-	COMPV_CHECK_CODE_RETURN(CompVCore::init());
+	COMPV_CHECK_CODE_RETURN(CompVBase::init());
 	COMPV_CHECK_EXP_RETURN(!hough, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	const CompVFeatureFactory* factory_ = CompVFeature::findFactory(id);
 	if (!factory_) {

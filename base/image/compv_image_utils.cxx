@@ -13,7 +13,7 @@ COMPV_NAMESPACE_BEGIN()
 COMPV_ERROR_CODE CompVImageUtils::bestStride(size_t stride, size_t *bestStride)
 {
     COMPV_CHECK_EXP_RETURN(!bestStride, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    *bestStride = static_cast<size_t>(CompVMem::alignForward(stride, COMPV_SIMD_ALIGNV_DEFAULT));
+    *bestStride = static_cast<size_t>(CompVMem::alignForward(stride, COMPV_ALIGNV_SIMD_DEFAULT));
     return COMPV_ERROR_CODE_S_OK;
 }
 

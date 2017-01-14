@@ -7,102 +7,61 @@ using namespace compv;
 #define UNITTEST_FEATURE_FAST	1
 #define UNITTEST_CHROMA_CONV	0
 
-#define kAsmTrue true
-#define kAsmFalse false
-#define kIntrinTrue true
-#define kIntrinFalse false
-#define kMtTrue true
-#define kMtFalse false
-#define kFpTrue true
-#define kFpFalse false
-
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
 #define disableAVX() (kCpuFlagAVX | kCpuFlagAVX2)
 #define disableNEON() (kCpuFlagARM_NEON | kCpuFlagARM_VFPv4)
 #define disableALL() kCpuFlagAll
-#define enableALL() kCpuFlagNone
+#define disableNONE() kCpuFlagNone
+#define enableALL() disableNONE()
 
-static const struct compv_unittest_option {
-	uint64_t disabledCpuFlags;
-	bool enableAsm;
-	bool enableIntrin;
-	bool enabledMultithreading;
-	bool enableFixedPointMath;
-}
-COMPV_UNITTEST_OPTIONS[] =
-{
-	{ disableALL(), kAsmFalse, kIntrinFalse, kMtFalse, kFpTrue }, // Pure C++, single-threaded, fxp
-	{ disableALL(), kAsmFalse, kIntrinFalse, kMtFalse, kFpFalse }, // Pure C++, single-threaded, flp
-	{ disableALL(), kAsmFalse, kIntrinFalse, kMtTrue, kFpTrue }, // Pure C++, multi-threaded, fxp
-	{ disableALL(), kAsmFalse, kIntrinFalse, kMtTrue, kFpFalse }, // Pure C++, multi-threaded, flp
+
+static const bool UNITTESTS_ASM[] = { true, false };
+static const bool UNITTESTS_INTRIN[] = { true, false };
+static const bool UNITTESTS_FIXEDPOINT[] = { true, false };
+static const int32_t UNITTESTS_MAXTHREADS[] = { COMPV_NUM_THREADS_MULTI, COMPV_NUM_THREADS_SINGLE };
+static const uint64_t UNITTESTS_CPUFLAGS[] = {
+	disableALL(), // cpp only
+	enableALL(), // neon, avx, sse
 #if COMPV_ARCH_X86
-	/* Fixed-point math */
-	{ disableAVX(), kAsmTrue, kIntrinFalse, kMtFalse, kFpTrue }, // SSE-asm, single-threaded, fxp
-	{ disableAVX(), kAsmTrue, kIntrinFalse, kMtTrue, kFpTrue }, // SSE-asm, multi-threaded, fxp
-	{ disableAVX(), kAsmFalse, kIntrinTrue, kMtFalse, kFpTrue }, // SSE-intrin, single-threaded, fxp
-	{ disableAVX(), kAsmFalse, kIntrinTrue, kMtTrue, kFpTrue }, // SSE-intrin, multi-threaded, fxp
-	{ disableSSE(), kAsmTrue, kIntrinFalse, kMtFalse, kFpTrue }, // AVX-asm, single-threaded, fxp
-	{ disableSSE(), kAsmTrue, kIntrinFalse, kMtTrue, kFpTrue }, // AVX-asm, multi-threaded, fxp
-	{ disableSSE(), kAsmFalse, kIntrinTrue, kMtFalse, kFpTrue }, // AVX-intrin, single-threaded, fxp
-	{ disableSSE(), kAsmFalse, kIntrinTrue, kMtTrue, kFpTrue }, // AVX-intrin, multi-threaded, fxp
-	/* Floating-point math */
-	{ disableAVX(), kAsmTrue, kIntrinFalse, kMtFalse, kFpFalse }, // SSE-asm, single-threaded, flp
-	{ disableAVX(), kAsmTrue, kIntrinFalse, kMtTrue, kFpFalse }, // SSE-asm, multi-threaded, flp
-	{ disableAVX(), kAsmFalse, kIntrinTrue, kMtFalse, kFpFalse }, // SSE-intrin, single-threaded, flp
-	{ disableAVX(), kAsmFalse, kIntrinTrue, kMtTrue, kFpFalse }, // SSE-intrin, multi-threaded, flp
-	{ disableSSE(), kAsmTrue, kIntrinFalse, kMtFalse, kFpFalse }, // AVX-asm, single-threaded, flp
-	{ disableSSE(), kAsmTrue, kIntrinFalse, kMtTrue, kFpFalse }, // AVX-asm, multi-threaded, flp
-	{ disableSSE(), kAsmFalse, kIntrinTrue, kMtFalse, kFpFalse }, // AVX-intrin, single-threaded, flp
-	{ disableSSE(), kAsmFalse, kIntrinTrue, kMtTrue, kFpFalse }, // AVX-intrin, multi-threaded, flp
-#elif COMPV_ARCH_ARM
-	/* Fixed-point math */
-	{ enableALL(), kAsmTrue, kIntrinFalse, kMtFalse, kFpTrue }, // NEON-asm, single-threaded, fxp
-	{ enableALL(), kAsmTrue, kIntrinFalse, kMtTrue, kFpTrue }, // NEON-asm, multi-threaded, fxp
-	{ enableALL(), kAsmFalse, kIntrinTrue, kMtFalse, kFpTrue }, // NEON-intrin, single-threaded, fxp
-	{ enableALL(), kAsmFalse, kIntrinTrue, kMtTrue, kFpTrue }, // NEON-intrin, multi-threaded, fxp
-	/* Floating-point math */
-	{ enableALL(), kAsmTrue, kIntrinFalse, kMtFalse, kFpFalse }, // NEON-asm, single-threaded, flp
-	{ enableALL(), kAsmTrue, kIntrinFalse, kMtTrue, kFpFalse }, // NEON-asm, multi-threaded, flp
-	{ enableALL(), kAsmFalse, kIntrinTrue, kMtFalse, kFpFalse }, // NEON-intrin, single-threaded, flp
-	{ enableALL(), kAsmFalse, kIntrinTrue, kMtTrue, kFpFalse }, // NEON-intrin, multi-threaded, flp
+	disableSSE(), // avx only
+	disableAVX(), // sse only
 #endif
 };
-size_t COMPV_UNITTEST_OPTIONS_COUNT = sizeof(COMPV_UNITTEST_OPTIONS) / sizeof(COMPV_UNITTEST_OPTIONS[0]);
-
-static std::string unittest_option_tostring(const compv_unittest_option* option)
-{
-	return
-		std::string("disabledCpuFlags:") + std::string(CompVCpu::flagsAsString(option->disabledCpuFlags)) + std::string(", ")
-		+ std::string("enableAsm:") + CompVBase::to_string(option->enableAsm) + std::string(", ")
-		+ std::string("enableIntrin:") + CompVBase::to_string(option->enableIntrin) + std::string(", ")
-		+ std::string("enabledMultithreading:") + CompVBase::to_string(option->enabledMultithreading) + std::string(", ")
-		+ std::string("enableFixedPointMath:") + CompVBase::to_string(option->enableFixedPointMath) + std::string(", ");
-}
 
 compv_main()
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	{
-		const compv_unittest_option* option;
 		COMPV_CHECK_CODE_BAIL(err = compv_tests_init());
 
-		for (size_t i = 0; i < COMPV_UNITTEST_OPTIONS_COUNT; ++i) {
-			option = &COMPV_UNITTEST_OPTIONS[i];
-			COMPV_DEBUG_INFO_EX(TAG_UNITTESTS, "** Unittest options: %s **\n", unittest_option_tostring(option).c_str());
-			COMPV_CHECK_CODE_BAIL(err = CompVCpu::setMathFixedPointEnabled(option->enableFixedPointMath));
-			COMPV_CHECK_CODE_BAIL(err = CompVCpu::setAsmEnabled(option->enableAsm));
-			COMPV_CHECK_CODE_BAIL(err = CompVCpu::setIntrinsicsEnabled(option->enableIntrin));
-			COMPV_CHECK_CODE_BAIL(err = CompVCpu::flagsDisable(option->disabledCpuFlags));
-			COMPV_CHECK_CODE_BAIL(err = CompVParallel::multiThreadingSetMaxThreads(option->enabledMultithreading ? COMPV_NUM_THREADS_MULTI : COMPV_NUM_THREADS_SINGLE));
-			
+		for (size_t a = 0; a < sizeof(UNITTESTS_ASM) / sizeof(UNITTESTS_ASM[0]); ++a) {
+			for (size_t b = 0; b < sizeof(UNITTESTS_INTRIN) / sizeof(UNITTESTS_INTRIN[0]); ++b) {
+				for (size_t c = 0; c < sizeof(UNITTESTS_FIXEDPOINT) / sizeof(UNITTESTS_FIXEDPOINT[0]); ++c) {
+					for (size_t d = 0; d < sizeof(UNITTESTS_MAXTHREADS) / sizeof(UNITTESTS_MAXTHREADS[0]); ++d) {
+						for (size_t e = 0; e < sizeof(UNITTESTS_CPUFLAGS) / sizeof(UNITTESTS_CPUFLAGS[0]); ++e) {
+							std::string unitest = std::string("asm=") + CompVBase::to_string(UNITTESTS_ASM[a])
+								+ std::string(", intrin=") + CompVBase::to_string(UNITTESTS_INTRIN[b])
+								+ std::string(", disabled cpuflags=") + std::string(CompVCpu::flagsAsString(UNITTESTS_CPUFLAGS[e]))
+								+ std::string(", fixedpoint=") + CompVBase::to_string(UNITTESTS_FIXEDPOINT[c])
+								+ std::string(", maxthreads=") + (UNITTESTS_MAXTHREADS[d] == COMPV_NUM_THREADS_MULTI ? std::string("multi") : (UNITTESTS_MAXTHREADS[d] == COMPV_NUM_THREADS_SINGLE ? std::string("single") : CompVBase::to_string(UNITTESTS_MAXTHREADS[d])));
+							COMPV_DEBUG_INFO_EX(TAG_UNITTESTS, "\n******************\nUnittest options: %s\n******************\n", unitest.c_str());
+							COMPV_CHECK_CODE_BAIL(err = CompVCpu::setMathFixedPointEnabled(UNITTESTS_FIXEDPOINT[c]));
+							COMPV_CHECK_CODE_BAIL(err = CompVCpu::setAsmEnabled(UNITTESTS_ASM[a]));
+							COMPV_CHECK_CODE_BAIL(err = CompVCpu::setIntrinsicsEnabled(UNITTESTS_INTRIN[b]));
+							COMPV_CHECK_CODE_BAIL(err = CompVCpu::flagsDisable(UNITTESTS_CPUFLAGS[e]));
+							COMPV_CHECK_CODE_BAIL(err = CompVParallel::multiThreadingSetMaxThreads(UNITTESTS_MAXTHREADS[d]));
 #if UNITTEST_FEATURE_FAST || !defined(COMPV_TEST_LOCAL)
-			extern COMPV_ERROR_CODE unittest_feature_fast();
-			COMPV_CHECK_CODE_BAIL(err = unittest_feature_fast(), "FAST detection unittest failed");
+							extern COMPV_ERROR_CODE unittest_feature_fast();
+							COMPV_CHECK_CODE_BAIL(err = unittest_feature_fast(), "FAST detection unittest failed");
 #endif
 #if UNITTEST_CHROMA_CONV || !defined(COMPV_TEST_LOCAL)
-			extern COMPV_ERROR_CODE unittest_chroma_conv();
-			COMPV_CHECK_CODE_BAIL(err = unittest_chroma_conv(), "Chroma conversion unittest failed");
+							extern COMPV_ERROR_CODE unittest_chroma_conv();
+							COMPV_CHECK_CODE_BAIL(err = unittest_chroma_conv(), "Chroma conversion unittest failed");
 #endif
+						}
+					}
+				}
+			}
 		}
 
 	bail:

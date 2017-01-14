@@ -4,11 +4,11 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_CORE_FEATURES_FEATURE_H_)
-#define _COMPV_CORE_FEATURES_FEATURE_H_
+#if !defined(_COMPV_BASE_FEATURES_H_)
+#define _COMPV_BASE_FEATURES_H_
 
-#include "compv/core/compv_core_config.h"
-#include "compv/core/compv_core_common.h"
+#include "compv/base/compv_config.h"
+#include "compv/base/compv_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/compv_caps.h"
 #include "compv/base/compv_mat.h"
@@ -16,6 +16,7 @@
 
 #include <map>
 #include <vector>
+
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -97,25 +98,23 @@ static const int16_t CompVPrewittGx_vt[3] = { 1, 1, 1 };
 static const int16_t CompVPrewittGx_hz[3] = { -1, 0, 1 };
 
 // Class: CompVFeature
-class COMPV_CORE_API CompVFeature : public CompVObj, public CompVCaps
+class COMPV_BASE_API CompVFeature : public CompVObj, public CompVCaps
 {
 protected:
 	CompVFeature();
 public:
 	virtual ~CompVFeature();
-	static COMPV_ERROR_CODE init();
 	static COMPV_ERROR_CODE addFactory(const CompVFeatureFactory* factory);
 	static const CompVFeatureFactory* findFactory(int deteId);
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
 	static std::map<int, const CompVFeatureFactory*> s_Factories;
-	static bool s_bInitialized;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 // Class: CompVFeatureBase
-class COMPV_CORE_API CompVFeatureBase : public CompVObj, public CompVCaps
+class COMPV_BASE_API CompVFeatureBase : public CompVObj, public CompVCaps
 {
 protected:
 	CompVFeatureBase(int id);
@@ -129,7 +128,7 @@ private:
 };
 
 // Class: CompVCornerDete
-class COMPV_CORE_API CompVCornerDete : public CompVFeatureBase
+class COMPV_BASE_API CompVCornerDete : public CompVFeatureBase
 {
 protected:
 	CompVCornerDete(int id);
@@ -140,7 +139,7 @@ public:
 };
 
 // Class: CompVCornerDesc
-class COMPV_CORE_API CompVCornerDesc : public CompVFeatureBase
+class COMPV_BASE_API CompVCornerDesc : public CompVFeatureBase
 {
 protected:
 	CompVCornerDesc(int id);
@@ -165,12 +164,12 @@ protected:
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
-	CompVCornerDetePtr m_ptrAttachedDete;
+		CompVCornerDetePtr m_ptrAttachedDete;
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
 // Class: CompVEdgeDete
-class COMPV_CORE_API CompVEdgeDete : public CompVFeatureBase
+class COMPV_BASE_API CompVEdgeDete : public CompVFeatureBase
 {
 protected:
 	CompVEdgeDete(int id);
@@ -181,7 +180,7 @@ public:
 };
 
 // Class: CompVHough
-class COMPV_CORE_API CompVHough : public CompVFeatureBase
+class COMPV_BASE_API CompVHough : public CompVFeatureBase
 {
 protected:
 	CompVHough(int id);
@@ -191,6 +190,7 @@ public:
 	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, int id, float rho = 1.f, float theta = kfMathTrigPiOver180, int32_t threshold = 1);
 };
 
+
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_CORE_FEATURES_FEATURE_H_ */
+#endif /* _COMPV_BASE_FEATURES_H_ */

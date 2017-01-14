@@ -16,11 +16,12 @@ using namespace compv;
 #define COMPV_numThreads			COMPV_NUM_THREADS_SINGLE
 #define COMPV_enableIntrinsics		true
 #define COMPV_enableAsm				true
+#define COMPV_enableGPU				true
 #define COMPV_enableMathFixedPoint	true
 #define COMPV_enableTestingMode		true
 #define COMPV_enableIntelIpp		false
 #define COMPV_enableIntelTbb		false
-#define COMPV_cpuDisable			kCpuFlagNone
+#define COMPV_cpuDisable			kCpuFlagAll
 
 COMPV_NAMESPACE_BEGIN()
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
@@ -38,6 +39,7 @@ static const COMPV_ERROR_CODE compv_tests_init()
 	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::setIntrinsicsEnabled(COMPV_enableIntrinsics));
 	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::setIntelIppEnabled(COMPV_enableIntelIpp));
 	COMPV_CHECK_CODE_ASSERT(err = CompVCpu::flagsDisable(COMPV_cpuDisable));
+	COMPV_CHECK_CODE_ASSERT(err = CompVGpu::setEnabled(COMPV_enableGPU));
 	
 	return err;
 }

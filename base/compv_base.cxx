@@ -259,7 +259,7 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Math Fixed Point: %s", CompVCpu::isMathFixedPoint() ? "true" : "fast");
 
     /* Memory alignment */
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Default alignment: #%d", COMPV_SIMD_ALIGNV_DEFAULT);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Default alignment: #%d", COMPV_ALIGNV_SIMD_DEFAULT);
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Best alignment: #%d", CompVMem::bestAlignment());
 
     /* Memory management */

@@ -310,13 +310,17 @@
 #endif
 
 // SIMD Alignment
-#define COMPV_SIMD_ALIGNV_MMX		8
-#define COMPV_SIMD_ALIGNV_SSE		16
-#define COMPV_SIMD_ALIGNV_AVX		32
-#define COMPV_SIMD_ALIGNV_AVX2		COMPV_SIMD_ALIGNV_AVX
-#define COMPV_SIMD_ALIGNV_AVX512	64
-#define COMPV_SIMD_ALIGNV_NEON		16 // ARM NEON
-#define COMPV_SIMD_ALIGNV_DEFAULT	64 // This is max to make sure all requirements will work (also equal to expected cache line)
+#define COMPV_ALIGNV_SIMD_MMX		8
+#define COMPV_ALIGNV_SIMD_SSE		16
+#define COMPV_ALIGNV_SIMD_AVX		32
+#define COMPV_ALIGNV_SIMD_AVX2		COMPV_ALIGNV_SIMD_AVX
+#define COMPV_ALIGNV_SIMD_AVX512	64
+#define COMPV_ALIGNV_SIMD_NEON		16 // ARM NEON
+#define COMPV_ALIGNV_SIMD_DEFAULT	64 // This is max to make sure all requirements will work (also equal to expected cache line)
+
+// GPU Alignment
+#define COMPV_ALIGNV_GPU_PAGE		4096
+#define COMPV_ALIGNV_GPU_LINE		64
 
 // Defaul cache line
 #if !defined(COMPV_CACHE1_LINE_SIZE)

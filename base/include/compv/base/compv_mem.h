@@ -57,6 +57,8 @@ public:
     static uintptr_t alignForward(uintptr_t ptr, int alignment = CompVMem::bestAlignment());
     static size_t alignSizeOnCacheLineAndSIMD(size_t size);
 
+	static bool isGpuFriendly(const void* mem, size_t size);
+
     static int bestAlignment();
     static bool isSpecial(void* ptr);
     static size_t specialTotalMemSize();

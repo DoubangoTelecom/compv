@@ -15,10 +15,12 @@ Some literature about FAST:
 */
 
 #include "compv/core/features/fast/compv_core_feature_fast_dete.h"
+#include "compv/core/compv_core.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_cpu.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/math/compv_math_utils.h"
+#include "compv/gpu/compv_gpu.h"
 
 #include "compv/core/features/fast/intrin/x86/compv_core_feature_fast_dete_intrin_sse2.h"
 #include "compv/core/features/fast/intrin/x86/compv_core_feature_fast_dete_intrin_avx2.h"
@@ -233,6 +235,37 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, std::vec
         m_nRanges = threadsCountRange;
     }
 
+	// FIXME: makes more elegant
+	// FIXME: makes sure both memory and stride aligned on 64B
+	// Compute GPU instance
+	if (CompVGpu::isActiveAndEnabled()) {
+		if (!m_ptrGpuFAST) {
+			COMPV_CHECK_CODE_RETURN(CompVGpuCornerDeteFAST::newObj(&m_ptrGpuFAST));
+		}
+		COMPV_CHECK_CODE_RETURN(m_ptrGpuFAST->processData(
+			dataPtr,
+			width,
+			height,
+			stride,
+			m_iNumContinuous,
+			m_iThreshold,
+			m_pStrengthsMap));
+		RangeFAST* pRange = &m_pRanges[0];
+		pRange->IP = dataPtr;
+		pRange->rowStart = 0;
+		pRange->rowEnd = height;
+		pRange->rowCount = height;
+		pRange->width = width;
+		pRange->stride = stride;
+		pRange->threshold = m_iThreshold;
+		pRange->N = m_iNumContinuous;
+		pRange->pixels16 = pixels16;
+		pRange->strengths = m_pStrengthsMap;
+		pRange->nms = m_pNmsMap;
+		CompVFastBuildInterestPoints(pRange, interestPoints);
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
     if (threadsCountRange > 1) {
 		size_t rowStart = 0;
 		size_t heights = (height / threadsCountRange);
@@ -374,6 +407,7 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, std::vec
 
 COMPV_ERROR_CODE CompVCornerDeteFAST::newObj(CompVCornerDetePtrPtr fast)
 {
+	COMPV_CHECK_CODE_RETURN(CompVCore::init());
     COMPV_CHECK_EXP_RETURN(fast == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVCornerDeteFASTPtr _fast = new CompVCornerDeteFAST();
 	COMPV_CHECK_EXP_RETURN(!_fast, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
@@ -390,19 +424,19 @@ static void CompVFastDataRange(RangeFAST* range)
 		= CompVFastDataRow_C;
 #if COMPV_ARCH_X86
     if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = CompVFastDataRow_Intrin_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X86_SSE2 : CompVFast12DataRow_Asm_X86_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
-        COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X64_SSE2 : CompVFast12DataRow_Asm_X64_SSE2, align = COMPV_SIMD_ALIGNV_SSE));
+		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = CompVFastDataRow_Intrin_SSE2, align = COMPV_ALIGNV_SIMD_SSE));
+		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X86_SSE2 : CompVFast12DataRow_Asm_X86_SSE2, align = COMPV_ALIGNV_SIMD_SSE));
+        COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X64_SSE2 : CompVFast12DataRow_Asm_X64_SSE2, align = COMPV_ALIGNV_SIMD_SSE));
     }
     if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = CompVFastDataRow_Intrin_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
-		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X86_AVX2 : CompVFast12DataRow_Asm_X86_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
-		COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X64_AVX2 : CompVFast12DataRow_Asm_X64_AVX2, align = COMPV_SIMD_ALIGNV_AVX2));
+		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = CompVFastDataRow_Intrin_AVX2, align = COMPV_ALIGNV_SIMD_AVX2));
+		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X86_AVX2 : CompVFast12DataRow_Asm_X86_AVX2, align = COMPV_ALIGNV_SIMD_AVX2));
+		COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X64_AVX2 : CompVFast12DataRow_Asm_X64_AVX2, align = COMPV_ALIGNV_SIMD_AVX2));
     }
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagNone)) {
-		COMPV_EXEC_IFDEF_INTRIN_ARM((FastDataRow = CompVFastDataRow_Intrin_NEON, align = COMPV_SIMD_ALIGNV_NEON));
-		COMPV_EXEC_IFDEF_ASM_ARM((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_NEON32 : CompVFast12DataRow_Asm_NEON32, align = COMPV_SIMD_ALIGNV_NEON));
+		COMPV_EXEC_IFDEF_INTRIN_ARM((FastDataRow = CompVFastDataRow_Intrin_NEON, align = COMPV_ALIGNV_SIMD_NEON));
+		COMPV_EXEC_IFDEF_ASM_ARM((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_NEON32 : CompVFast12DataRow_Asm_NEON32, align = COMPV_ALIGNV_SIMD_NEON));
 	}
 #endif
 
@@ -602,6 +636,116 @@ void CompVFastNmsApplyRangeAndBuildInterestPoints(RangeFAST* range, std::vector<
 
 static void CompVFastDataRow_C(const uint8_t* IP, compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths)
 {
+#if 1 // FIXME
+	// Code not intended to be fast but just readable, real code is implemented in SSE, AVX and NEON.
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	static const uint16_t kCompVFast9Flags[16] = { 0x1ff, 0x3fe, 0x7fc, 0xff8, 0x1ff0, 0x3fe0, 0x7fc0, 0xff80, 0xff01, 0xfe03, 0xfc07, 0xf80f, 0xf01f, 0xe03f, 0xc07f, 0x80ff };
+	static const uint16_t kCompVFast12Flags[16] = { 0xfff, 0x1ffe, 0x3ffc, 0x7ff8, 0xfff0, 0xffe1, 0xffc3, 0xff87, 0xff0f, 0xfe1f, 0xfc3f, 0xf87f, 0xf0ff, 0xe1ff, 0xc3ff, 0x87ff };
+	int sumb, sumd, sb, sd;
+	uint8_t threshold_ = static_cast<uint8_t>(threshold); // using int16_t to avoid clipping (useless for SIMD with support for saturated sub and add)
+	uint8_t neighborhoods16[16], strength, t0, t1, brighter, darker;
+	const uint16_t(&FastXFlags)[16] = N == 9 ? kCompVFast9Flags : kCompVFast12Flags;
+	compv_uscalar_t flags;
+	const int minsum = (N == 12 ? 3 : 2);
+	int n = static_cast<int>(N);
+	compv_uscalar_t i, j, k, arcStart;
+	const uint8_t* IP_base = IP;
+
+#define _cpp_fast_check(a, b, c, d) \
+		t0 = IP_base[pixels16[a] + i], t1 = IP_base[pixels16[b] + i]; \
+		sd = (t0 < darker) + (t1 < darker), sb = (t0 > brighter) + (t1 > brighter); \
+		if (!(sd || sb)) goto Next; \
+		sumd += sd, sumb += sb; \
+		t0 = IP_base[pixels16[c] + i], t1 = IP_base[pixels16[d] + i]; \
+		sd = (t0 < darker) + (t1 < darker), sb = (t0 > brighter) + (t1 > brighter); \
+		if (!(sd || sb)) goto Next; \
+		sumd += sd, sumb += sb; \
+		if (sumd < minsum && sumb < minsum) goto Next
+
+#define _cpp_fast_strenght() \
+	flags = \
+		(neighborhoods16[0] ? (1 << 0) : 0) \
+		| (neighborhoods16[1] ? (1 << 1) : 0) \
+		| (neighborhoods16[2] ? (1 << 2) : 0) \
+		| (neighborhoods16[3] ? (1 << 3) : 0) \
+		| (neighborhoods16[4] ? (1 << 4) : 0) \
+		| (neighborhoods16[5] ? (1 << 5) : 0) \
+		| (neighborhoods16[6] ? (1 << 6) : 0) \
+		| (neighborhoods16[7] ? (1 << 7) : 0) \
+		| (neighborhoods16[8] ? (1 << 8) : 0) \
+		| (neighborhoods16[9] ? (1 << 9) : 0) \
+		| (neighborhoods16[10] ? (1 << 10) : 0) \
+		| (neighborhoods16[11] ? (1 << 11) : 0) \
+		| (neighborhoods16[12] ? (1 << 12) : 0) \
+		| (neighborhoods16[13] ? (1 << 13) : 0) \
+		| (neighborhoods16[14] ? (1 << 14) : 0) \
+		| (neighborhoods16[15] ? (1 << 15) : 0); \
+		for (arcStart = 0; arcStart < 16; ++arcStart) { \
+			if ((flags & FastXFlags[arcStart]) == FastXFlags[arcStart]) { \
+				t0 = 0xff; \
+				for (j = arcStart, k = 0; k < N; ++j, ++k) { \
+					t0 = std::min(neighborhoods16[j & 15], t0); \
+				} \
+				strength = std::max(strength, t0); \
+			} \
+		}
+
+
+	for (i = 0; i < width; ++i, ++IP, ++strengths) {
+		brighter = CompVMathUtils::clampPixel8(IP[0] + threshold_); // SSE: paddusb
+		darker = CompVMathUtils::clampPixel8(IP[0] - threshold_); // SSE: psubusb
+		strength = sumb = sumd = 0;
+
+		_cpp_fast_check(0, 8, 4, 12);
+		_cpp_fast_check(1, 9, 5, 13);
+		_cpp_fast_check(2, 10, 6, 14);
+		_cpp_fast_check(3, 11, 7, 15);
+
+		if (sumd >= n) {
+			t0 = IP_base[pixels16[0] + i], neighborhoods16[0] = (darker > t0) ? (darker - t0) : 0; // SSE: psubusb
+			t0 = IP_base[pixels16[1] + i], neighborhoods16[1] = (darker > t0) ? (darker - t0) : 0;
+			t0 = IP_base[pixels16[2] + i], neighborhoods16[2] = (darker > t0) ? (darker - t0) : 0;
+			t0 = IP_base[pixels16[3] + i], neighborhoods16[3] = (darker > t0) ? (darker - t0) : 0;
+			t0 = IP_base[pixels16[4] + i], neighborhoods16[4] = (darker > t0) ? (darker - t0) : 0;
+			t0 = IP_base[pixels16[5] + i], neighborhoods16[5] = (darker > t0) ? (darker - t0) : 0;
+			t0 = IP_base[pixels16[6] + i], neighborhoods16[6] = (darker > t0) ? (darker - t0) : 0;
+			t0 = IP_base[pixels16[7] + i], neighborhoods16[7] = (darker > t0) ? (darker - t0) : 0;
+			t0 = IP_base[pixels16[8] + i], neighborhoods16[8] = (darker > t0) ? (darker - t0) : 0;
+			t0 = IP_base[pixels16[9] + i], neighborhoods16[9] = (darker > t0) ? (darker - t0) : 0;
+			t0 = IP_base[pixels16[10] + i], neighborhoods16[10] = (darker > t0) ? (darker - t0) : 0;
+			t0 = IP_base[pixels16[11] + i], neighborhoods16[11] = (darker > t0) ? (darker - t0) : 0;
+			t0 = IP_base[pixels16[12] + i], neighborhoods16[12] = (darker > t0) ? (darker - t0) : 0;
+			t0 = IP_base[pixels16[13] + i], neighborhoods16[13] = (darker > t0) ? (darker - t0) : 0;
+			t0 = IP_base[pixels16[14] + i], neighborhoods16[14] = (darker > t0) ? (darker - t0) : 0;
+			t0 = IP_base[pixels16[15] + i], neighborhoods16[15] = (darker > t0) ? (darker - t0) : 0;
+			_cpp_fast_strenght();
+		}
+		else if (sumb >= n) { // else -> cannot be both darker and brighter and and (16 - N) < N, for N = 9, 12...
+			t0 = IP_base[pixels16[0] + i], neighborhoods16[0] = (t0 > brighter) ? (t0 - brighter) : 0; // SSE: psubusb
+			t0 = IP_base[pixels16[1] + i], neighborhoods16[1] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = IP_base[pixels16[2] + i], neighborhoods16[2] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = IP_base[pixels16[3] + i], neighborhoods16[3] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = IP_base[pixels16[4] + i], neighborhoods16[4] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = IP_base[pixels16[5] + i], neighborhoods16[5] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = IP_base[pixels16[6] + i], neighborhoods16[6] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = IP_base[pixels16[7] + i], neighborhoods16[7] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = IP_base[pixels16[8] + i], neighborhoods16[8] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = IP_base[pixels16[9] + i], neighborhoods16[9] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = IP_base[pixels16[10] + i], neighborhoods16[10] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = IP_base[pixels16[11] + i], neighborhoods16[11] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = IP_base[pixels16[12] + i], neighborhoods16[12] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = IP_base[pixels16[13] + i], neighborhoods16[13] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = IP_base[pixels16[14] + i], neighborhoods16[14] = (t0 > brighter) ? (t0 - brighter) : 0;
+			t0 = IP_base[pixels16[15] + i], neighborhoods16[15] = (t0 > brighter) ? (t0 - brighter) : 0;
+			_cpp_fast_strenght();
+		}
+
+	Next:
+
+		*strengths = sumb;
+
+	} // for (i ....width)	
+#else
 	// Code not intended to be fast but just readable, real code is implemented in SSE, AVX and NEON.
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
 	static const uint16_t kCompVFast9Flags[16] = { 0x1ff, 0x3fe, 0x7fc, 0xff8, 0x1ff0, 0x3fe0, 0x7fc0, 0xff80, 0xff01, 0xfe03, 0xfc07, 0xf80f, 0xf01f, 0xe03f, 0xc07f, 0x80ff };
@@ -713,6 +857,7 @@ static void CompVFastDataRow_C(const uint8_t* IP, compv_uscalar_t width, const c
 Next:
 		*strengths = strength;
 	} // for (i ....width)	
+#endif
 }
 
 static void CompVFastNmsGather_C(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)

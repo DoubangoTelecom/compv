@@ -89,13 +89,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../api/include;../../base/include;../../camera/include;../../gl/include;../../drawing/include;../../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../api/include;../../base/include;../../camera/include;../../gl/include;../../drawing/include;../../core/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVDrawing.lib;$(OutDir)CompVGL.lib;$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;$(OutDir)CompVCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVDrawing.lib;$(OutDir)CompVGL.lib;$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;$(OutDir)CompVCore.lib;$(OutDir)CompVGPU.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -106,13 +106,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../api/include;../../base/include;../../camera/include;../../gl/include;../../drawing/include;../../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../api/include;../../base/include;../../camera/include;../../gl/include;../../drawing/include;../../core/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVDrawing.lib;$(OutDir)CompVGL.lib;$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;$(OutDir)CompVCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVDrawing.lib;$(OutDir)CompVGL.lib;$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;$(OutDir)CompVCore.lib;$(OutDir)CompVGPU.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -125,7 +125,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../api/include;../../base/include;../../camera/include;../../gl/include;../../drawing/include;../../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../api/include;../../base/include;../../camera/include;../../gl/include;../../drawing/include;../../core/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -133,7 +133,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(OutDir)CompVDrawing.lib;$(OutDir)CompVGL.lib;$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;$(OutDir)CompVCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVDrawing.lib;$(OutDir)CompVGL.lib;$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;$(OutDir)CompVCore.lib;$(OutDir)CompVGPU.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -146,7 +146,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../api/include;../../base/include;../../camera/include;../../gl/include;../../drawing/include;../../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../api/include;../../base/include;../../camera/include;../../gl/include;../../drawing/include;../../core/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -154,7 +154,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(OutDir)CompVDrawing.lib;$(OutDir)CompVGL.lib;$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;$(OutDir)CompVCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVDrawing.lib;$(OutDir)CompVGL.lib;$(OutDir)CompVCamera.lib;$(OutDir)CompVBase.lib;$(OutDir)CompVCore.lib;$(OutDir)CompVGPU.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -177,6 +177,18 @@
     </ProjectReference>
     <ProjectReference Include="..\..\gl\CompVGL.vcxproj">
       <Project>{4a895705-e866-452d-8cfa-481c9e6b8871}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\gpu\CompVGPU.vcxproj">
+      <Project>{f3fdf15a-8ae4-4d9d-aa7b-0b7f6e940146}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\plugin_directshow\CompVPluginDirectShow.vcxproj">
+      <Project>{09f89651-7ca8-4382-9e8b-272c3eb1291c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\plugin_mfoundation\CompVPluginMFoundation.vcxproj">
+      <Project>{f9006758-f433-4f8a-a12d-6f0ff4131a74}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\plugin_opencl\CompVPluginOpenCL.vcxproj">
+      <Project>{8dffe598-89e4-4dc0-af73-8e879d7d4530}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

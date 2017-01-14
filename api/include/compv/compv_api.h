@@ -15,6 +15,7 @@
 #include <compv/base/compv_buffer.h>
 #include <compv/base/compv_cpu.h>
 #include <compv/base/compv_debug.h>
+#include <compv/base/compv_features.h>
 #include <compv/base/compv_fileutils.h>
 #include <compv/base/compv_mat.h>
 #include <compv/base/compv_md5.h>
@@ -39,7 +40,8 @@
 /* Module: Core */
 #include <compv/core/compv_core.h>
 
-#include "compv/core/features/compv_core_feature.h"
+/* Module: GPU */
+#include <compv/gpu/compv_gpu.h>
 
 /* Module: Camera */
 #include <compv/camera/compv_camera.h>
@@ -79,6 +81,7 @@ static COMPV_ERROR_CODE CompVInit(int32_t numThreads = -1)
     COMPV_CHECK_CODE_RETURN(CompVBase::init(numThreads));
 	COMPV_CHECK_CODE_RETURN(CompVCore::init());
     COMPV_CHECK_CODE_RETURN(CompVGL::init());
+	COMPV_CHECK_CODE_RETURN(CompVGpu::init());
     COMPV_CHECK_CODE_RETURN(CompVCamera::init());
     COMPV_CHECK_CODE_RETURN(CompVDrawing::init());
     return COMPV_ERROR_CODE_S_OK;
@@ -90,6 +93,7 @@ static COMPV_ERROR_CODE CompVDeInit()
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::deInit());
 	COMPV_CHECK_CODE_RETURN(CompVCamera::deInit());
 	COMPV_CHECK_CODE_ASSERT(CompVGL::deInit());
+	COMPV_CHECK_CODE_ASSERT(CompVGpu::deInit());
 	COMPV_CHECK_CODE_RETURN(CompVCore::deInit());
     COMPV_CHECK_CODE_ASSERT(CompVBase::deInit()); 
     return COMPV_ERROR_CODE_S_OK;

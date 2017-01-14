@@ -155,7 +155,7 @@ COMPV_ERROR_CODE CompVDrawing::init()
 
 bail:
     if (COMPV_ERROR_CODE_IS_NOK(err)) {
-        CompVDrawing::deInit();
+		COMPV_CHECK_CODE_NOP(CompVDrawing::deInit());
     }
     return err;
 }

@@ -206,7 +206,7 @@ static COMPV_ERROR_CODE decode_jpeg(const char* filename, bool readData, uint8_t
     *width = cinfo.output_width;
     *height = cinfo.output_height;
     if (static_cast<JDIMENSION>(*stride) < cinfo.output_width) { // do not override if data already defined
-        *stride = static_cast<int32_t>(CompVMem::alignForward((cinfo.output_width * sizeof(uint8_t)), COMPV_SIMD_ALIGNV_DEFAULT));
+        *stride = static_cast<int32_t>(CompVMem::alignForward((cinfo.output_width * sizeof(uint8_t)), COMPV_ALIGNV_SIMD_DEFAULT));
     }
 
     if (readData) {

@@ -9,7 +9,8 @@
 
 #include "compv/core/compv_core_config.h"
 #include "compv/core/compv_core_common.h"
-#include "compv/core/features/compv_core_feature.h"
+#include "compv/gpu/core/features/fast/compv_gpu_feature_fast_dete.h"
+#include "compv/base/compv_features.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -59,6 +60,7 @@ private:
     size_t m_nRanges;
     uint8_t* m_pStrengthsMap;
 	uint8_t* m_pNmsMap;
+	CompVGpuCornerDeteFASTPtr m_ptrGpuFAST;
 };
 
 COMPV_NAMESPACE_END()

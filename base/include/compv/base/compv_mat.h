@@ -130,16 +130,16 @@ public:
 		return COMPV_IS_ALIGNED(m_pDataPtr, alignv) && COMPV_IS_ALIGNED(m_nStrideInBytes, alignv);
 	}
 	COMPV_INLINE bool isAlignedSSE()const {
-		return isAligned(COMPV_SIMD_ALIGNV_SSE);
+		return isAligned(COMPV_ALIGNV_SIMD_SSE);
 	};
 	COMPV_INLINE bool isAlignedAVX()const {
-		return isAligned(COMPV_SIMD_ALIGNV_AVX);
+		return isAligned(COMPV_ALIGNV_SIMD_AVX);
 	};
 	COMPV_INLINE bool isAlignedAVX512()const {
-		return isAligned(COMPV_SIMD_ALIGNV_AVX512);
+		return isAligned(COMPV_ALIGNV_SIMD_AVX512);
 	};
 	COMPV_INLINE bool isAlignedNEON()const {
-		return isAligned(COMPV_SIMD_ALIGNV_NEON);
+		return isAligned(COMPV_ALIGNV_SIMD_NEON);
 	};
 
     template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
@@ -162,12 +162,12 @@ public:
 
     template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
     static COMPV_ERROR_CODE newObjAligned(CompVMatPtrPtr mat, size_t rows, size_t cols) {
-        return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, COMPV_SIMD_ALIGNV_DEFAULT);
+        return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, COMPV_ALIGNV_SIMD_DEFAULT);
     }
 
 	template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
 	static COMPV_ERROR_CODE newObjAligned(CompVMatPtrPtr mat, size_t rows, size_t cols, size_t stride) {
-		return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, COMPV_SIMD_ALIGNV_DEFAULT, stride);
+		return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, COMPV_ALIGNV_SIMD_DEFAULT, stride);
 	}
 
 protected:

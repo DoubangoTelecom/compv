@@ -7,7 +7,7 @@
 #include "compv/ds/compv_ds_config.h"
 #include "compv/ds/compv_ds_camera.h"
 
-#if !COMPV_OS_WINDOWS_CE
+#if !COMPV_OS_WINDOWS_CE && COMPV_OS_WINDOWS
 BOOL APIENTRY DllMain(HMODULE hModule,
                       DWORD  ul_reason_for_call,
                       LPVOID lpReserved
@@ -26,7 +26,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
 COMPV_NAMESPACE_BEGIN()
 
-extern "C" COMPV_PLUGIN_DIRECTSHOW_API COMPV_ERROR_CODE newObjCamera(CompVCameraPtrPtr camera)
+COMPV_EXTERNC COMPV_PLUGIN_DIRECTSHOW_API COMPV_ERROR_CODE newObjCamera(CompVCameraPtrPtr camera)
 {
     HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     COMPV_CHECK_EXP_RETURN(FAILED(hr) && hr != RPC_E_CHANGED_MODE, COMPV_ERROR_CODE_E_DIRECTSHOW);

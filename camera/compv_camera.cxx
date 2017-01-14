@@ -13,6 +13,8 @@
 #include "compv/base/android/compv_android_dexclassloader.h"
 #include "compv/base/android/compv_android_native_activity.h"
 
+#define COMPV_THIS_CLASS_NAME "CompVCamera"
+
 COMPV_NAMESPACE_BEGIN()
 
 bool CompVCamera::s_bInitialized = false;
@@ -41,25 +43,29 @@ COMPV_ERROR_CODE CompVCamera::init()
     }
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
-    COMPV_DEBUG_INFO("Initializing [camera] module (v %s)...", COMPV_VERSION_STRING);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "Initializing [camera] module (v %s)...", COMPV_VERSION_STRING);
 
     COMPV_CHECK_CODE_BAIL(err = CompVBase::init());
 
 #if COMPV_OS_WINDOWS
-    if (!s_CameraFactory.isValid() && CompVBase::isWin7OrLater() && CompVFileUtils::exists("CompVPluginMFoundation.dll")) {
-		COMPV_CHECK_CODE_NOP(err = CompVSharedLib::newObj(&s_CameraFactory.lib, "CompVPluginMFoundation.dll"));
-		if (s_CameraFactory.lib) {
-			s_CameraFactory.funcNew = reinterpret_cast<CompVCameraNewFunc>(s_CameraFactory.lib->sym("newObjCamera"));
-			COMPV_CHECK_EXP_NOP(!s_CameraFactory.funcNew, COMPV_ERROR_CODE_E_SYSTEM);
+	{
+		static const std::string pluginPath = CompVFileUtils::getFullPathFromFileName(CompVBase::isWin7OrLater() ? "CompVPluginMFoundation.dll" : "CompVPluginDirectShow.dll");
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASS_NAME, "Camera plugin path: %s", pluginPath.c_str());
+		if (!s_CameraFactory.isValid() && CompVBase::isWin7OrLater() && CompVFileUtils::exists(pluginPath.c_str())) {
+			COMPV_CHECK_CODE_NOP(err = CompVSharedLib::newObj(&s_CameraFactory.lib, pluginPath.c_str()));
+			if (s_CameraFactory.lib) {
+				s_CameraFactory.funcNew = reinterpret_cast<CompVCameraNewFunc>(s_CameraFactory.lib->sym("newObjCamera"));
+				COMPV_CHECK_EXP_NOP(!s_CameraFactory.funcNew, COMPV_ERROR_CODE_E_SYSTEM, "Failed to found 'newObjCamera' function");
+			}
 		}
-    }
-    if (!s_CameraFactory.isValid() && CompVBase::isWinXPOrLater() && CompVFileUtils::exists("CompVPluginDirectShow.dll")) {
-        COMPV_CHECK_CODE_NOP(err = CompVSharedLib::newObj(&s_CameraFactory.lib, "CompVPluginDirectShow.dll"));
-        if (s_CameraFactory.lib) {
-            s_CameraFactory.funcNew = reinterpret_cast<CompVCameraNewFunc>(s_CameraFactory.lib->sym("newObjCamera"));
-            COMPV_CHECK_EXP_NOP(!s_CameraFactory.funcNew, COMPV_ERROR_CODE_E_SYSTEM);
-        }
-    }
+		if (!s_CameraFactory.isValid() && CompVBase::isWinXPOrLater() && CompVFileUtils::exists(pluginPath.c_str())) {
+			COMPV_CHECK_CODE_NOP(err = CompVSharedLib::newObj(&s_CameraFactory.lib, pluginPath.c_str()));
+			if (s_CameraFactory.lib) {
+				s_CameraFactory.funcNew = reinterpret_cast<CompVCameraNewFunc>(s_CameraFactory.lib->sym("newObjCamera"));
+				COMPV_CHECK_EXP_NOP(!s_CameraFactory.funcNew, COMPV_ERROR_CODE_E_SYSTEM, "Failed to find 'newObjCamera' function");
+			}
+		}
+	}
 #endif
 
     s_bInitialized = true;
@@ -75,7 +81,7 @@ COMPV_ERROR_CODE CompVCamera::deInit()
 {
     COMPV_CHECK_CODE_NOP(CompVBase::deInit());
 
-    s_CameraFactory.deinit();
+    s_CameraFactory.deInit();
 
     s_bInitialized = false;
 
@@ -102,7 +108,7 @@ COMPV_ERROR_CODE CompVCamera::newObj(CompVCameraPtrPtr camera)
 #endif
     }
 
-    COMPV_CHECK_EXP_RETURN(!camera_, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+    COMPV_CHECK_EXP_RETURN(!camera_, COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "No camera implementation found (maybe you haven't included the plugins)");
 
     *camera = camera_;
     return COMPV_ERROR_CODE_S_OK;

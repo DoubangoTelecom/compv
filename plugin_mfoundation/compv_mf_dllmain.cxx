@@ -8,7 +8,7 @@
 #include "compv/mf/compv_mf_camera.h"
 #include "compv/mf/compv_mf_utils.h"
 
-#if !COMPV_OS_WINDOWS_CE
+#if !COMPV_OS_WINDOWS_CE && COMPV_OS_WINDOWS
 BOOL APIENTRY DllMain(HMODULE hModule,
                       DWORD  ul_reason_for_call,
                       LPVOID lpReserved
@@ -27,7 +27,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
 COMPV_NAMESPACE_BEGIN()
 
-extern "C" COMPV_PLUGIN_MFOUNDATION_API COMPV_ERROR_CODE newObjCamera(CompVCameraPtrPtr camera)
+COMPV_EXTERNC COMPV_PLUGIN_MFOUNDATION_API COMPV_ERROR_CODE newObjCamera(CompVCameraPtrPtr camera)
 {
 	COMPV_CHECK_EXP_RETURN(!camera, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_CHECK_EXP_RETURN(FAILED(CompVMFUtils::startup()), COMPV_ERROR_CODE_E_MFOUNDATION, "Failed to start Microsoft Media Foundation engine");

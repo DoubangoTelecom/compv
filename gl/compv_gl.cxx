@@ -63,7 +63,7 @@ COMPV_ERROR_CODE CompVGL::init()
 
 bail:
     if (COMPV_ERROR_CODE_IS_NOK(err)) {
-        COMPV_CHECK_CODE_ASSERT(CompVGL::deInit());
+        COMPV_CHECK_CODE_NOP(CompVGL::deInit());
     }
 
     return err;

@@ -1,3 +1,19 @@
+*****************************************************
+Processor: Intel(R) Core(TM) i7-4790K CPU @ 4.00GHz (8 CPUs)
+System Manufacturer: Apple Inc.
+System Model: iMac15,1
+Operating System: Windows 8 Pro 64-bit (6.2, Build 9200) (9200.win8_gdr.151230-0600)
+Card name: AMD RADEON R9 M290X
+Manufacturer: Advanced Micro Devices, Inc.
+Chip type: AMD Radeon Graphics Processor (0x6810)
+DAC type: Internal DAC(400MHz)
+Device Type: Full Device
+Display Memory: 5840 MB
+Dedicated Memory: 2030 MB
+Shared Memory: 3810 MB
+*****************************************************
+
+
 === RGB24 -> Grayscale (#1000 times, 720p) ===
 CompV: 169.ms(st), 54.ms(mt)
 OpenCV: 341.ms
