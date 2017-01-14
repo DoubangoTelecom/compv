@@ -60,41 +60,6 @@ __kernel void clFAST(
 	__global unsigned char* strengths
 )
 {
-	// FIXME: We can use a vector of 64 (localsize)
-
-#if 0
-	int x = get_global_id(0);
-	int y = get_global_id(1);
-	int idx = x + (y*stride);
-	if (x < width) {
-		if (x >= 3 && x < width - 3 && y >= 3 && y < height - 3) {
-			const unsigned char minsum = (N == 12 ? 3 : 2); // FIXME: make param
-			unsigned char strength, sumb, sumd, sb, sd, brighter, darker, t0, t1;
-			strength = sumb = sumd = 0;
-			brighter = add_sat(IP[idx], threshold);
-			darker = sub_sat(IP[idx], threshold);
-
-			_opencl_fast_check(0, 8, 4, 12);
-			_opencl_fast_check(1, 9, 5, 13);
-			_opencl_fast_check(2, 10, 6, 14);
-			_opencl_fast_check(3, 11, 7, 15);
-
-			//_opencl_fast_check(0, 8, 4, 12);
-			int ii = pixels16[0];
-			t0 = IP[idx + ii], t1 = IP[idx + pixels16[8]];
-			sd = ((t0 < darker) ? 1 : 0) + ((t1 < darker) ? 1 : 0);
-			sb = ((t0 > brighter) ? 1 : 0) + ((t1 > brighter) ? 1 : 0);
-			//if (!(sd || sb)) { strengths[idx] = 0; return; } 
-			if (t0 < darker) {
-				strengths[idx] = 1;
-			}
-			else {
-				strengths[idx] = 0;
-			}
-		}
-	}
-#endif
-	
 	int x = get_global_id(0);
 	if (x < width) {
 

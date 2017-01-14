@@ -38,7 +38,7 @@ bail:
 COMPV_ERROR_CODE CompVCLUtils::buildProgram(cl_program program, cl_device_id deviceId)
 {
 	COMPV_CHECK_EXP_RETURN(!program, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	std::string options = "-Werror"; // FIXME: set to -Werror
+	std::string options = ""; // FIXME: set to -Werror
 #if DEBUG || _DEBUG
 	options += std::string(" -g");
 #endif

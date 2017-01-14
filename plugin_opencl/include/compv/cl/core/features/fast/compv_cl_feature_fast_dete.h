@@ -43,7 +43,7 @@ public:
 
 private:
 	COMPV_ERROR_CODE deInit();
-	COMPV_ERROR_CODE init(unsigned int width, unsigned int height, unsigned int stride, unsigned char N, unsigned char threshold);
+	COMPV_ERROR_CODE init(const uint8_t* IP, uint8_t* strengths, unsigned int width, unsigned int height, unsigned int stride, unsigned char N, unsigned char threshold);
 
 private:
 	bool m_bInitialized;
