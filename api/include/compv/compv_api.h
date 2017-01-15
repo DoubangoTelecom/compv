@@ -31,9 +31,10 @@
 
 #include <compv/base/parallel/compv_condvar.h>
 #include <compv/base/parallel/compv_mutex.h>
+#include <compv/base/parallel/compv_parallel.h>
+#include <compv/base/parallel/compv_runnable.h>
 #include <compv/base/parallel/compv_semaphore.h>
 #include <compv/base/parallel/compv_thread.h>
-#include <compv/base/parallel/compv_parallel.h>
 
 #include <compv/base/time/compv_time.h>
 
