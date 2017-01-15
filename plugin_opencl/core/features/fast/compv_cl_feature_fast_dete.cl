@@ -9,11 +9,11 @@ __local static const unsigned short kCompVFast9Flags[16] = { 0x1ff, 0x3fe, 0x7fc
 __local static const unsigned short kCompVFast12Flags[16] = { 0xfff, 0x1ffe, 0x3ffc, 0x7ff8, 0xfff0, 0xffe1, 0xffc3, 0xff87, 0xff0f, 0xfe1f, 0xfc3f, 0xf87f, 0xf0ff, 0xe1ff, 0xc3ff, 0x87ff };
 
 #define _opencl_fast_check(a, b, c, d) \
-		t0 = IP[idx + pixels16[a]], t1 = IP[idx + pixels16[b]]; \
+		t0 = circle[a][idx], t1 = circle[b][idx]; \
 		sd = (t0 < darker) + (t1 < darker), sb = (t0 > brighter) + (t1 > brighter); \
 		if (!(sd || sb)) { strengths[idx] = 0; return; } \
 		sumd += sd, sumb += sb; \
-		t0 = IP[idx + pixels16[c]], t1 = IP[idx + pixels16[d]]; \
+		t0 = circle[c][idx], t1 = circle[d][idx]; \
 		sd = (t0 < darker) + (t1 < darker), sb = (t0 > brighter) + (t1 > brighter); \
 		if (!(sd || sb)) { strengths[idx] = 0; return; } \
 		sumd += sd, sumb += sb; \
@@ -60,13 +60,17 @@ __kernel void clFAST(
 	__global unsigned char* strengths
 )
 {
+	__global const unsigned char* circle[16] = {
+		&IP[pixels16[0]], &IP[pixels16[1]], &IP[pixels16[2]], &IP[pixels16[3]],
+		&IP[pixels16[4]], &IP[pixels16[5]], &IP[pixels16[6]], &IP[pixels16[7]],
+		&IP[pixels16[8]], &IP[pixels16[9]], &IP[pixels16[10]], &IP[pixels16[11]],
+		&IP[pixels16[12]], &IP[pixels16[13]], &IP[pixels16[14]], &IP[pixels16[15]]
+	};
 	int x = get_global_id(0);
-	if (x < width) {
-
+	if (x >= 3 && x < width - 3) {
 		int y = get_global_id(1);
-		int idx = x + (y*stride);
-		strengths[x+(y * stride)] = x;
-		if (x >= 3 && x < width - 3 && y >= 3 && y < height - 3) {
+		if (y >= 3 && y < height - 3) {
+			int idx = x + (y*stride);
 			const unsigned char minsum = (N == 12 ? 3 : 2); // FIXME: make param
 			unsigned char strength, sumb, sumd, sb, sd, brighter, darker, t0, t1;
 			strength = sumb = sumd = 0;
@@ -82,48 +86,50 @@ __kernel void clFAST(
 			const unsigned short *FastXFlags = N == 9 ? kCompVFast9Flags : kCompVFast12Flags;
 
 			if (sumd >= N) {
-				neighborhoods16[0] = sub_sat(darker, IP[idx + pixels16[0]]);
-				neighborhoods16[1] = sub_sat(darker, IP[idx + pixels16[1]]);
-				neighborhoods16[2] = sub_sat(darker, IP[idx + pixels16[2]]);
-				neighborhoods16[3] = sub_sat(darker, IP[idx + pixels16[3]]);
-				neighborhoods16[4] = sub_sat(darker, IP[idx + pixels16[4]]);
-				neighborhoods16[5] = sub_sat(darker, IP[idx + pixels16[5]]);
-				neighborhoods16[6] = sub_sat(darker, IP[idx + pixels16[6]]);
-				neighborhoods16[7] = sub_sat(darker, IP[idx + pixels16[7]]);
-				neighborhoods16[8] = sub_sat(darker, IP[idx + pixels16[8]]);
-				neighborhoods16[9] = sub_sat(darker, IP[idx + pixels16[9]]);
-				neighborhoods16[10] = sub_sat(darker, IP[idx + pixels16[10]]);
-				neighborhoods16[11] = sub_sat(darker, IP[idx + pixels16[11]]);
-				neighborhoods16[12] = sub_sat(darker, IP[idx + pixels16[12]]);
-				neighborhoods16[13] = sub_sat(darker, IP[idx + pixels16[13]]);
-				neighborhoods16[14] = sub_sat(darker, IP[idx + pixels16[14]]);
-				neighborhoods16[15] = sub_sat(darker, IP[idx + pixels16[15]]);
+				neighborhoods16[0] = sub_sat(darker, circle[0][idx]);
+				neighborhoods16[1] = sub_sat(darker, circle[1][idx]);
+				neighborhoods16[2] = sub_sat(darker, circle[2][idx]);
+				neighborhoods16[3] = sub_sat(darker, circle[3][idx]);
+				neighborhoods16[4] = sub_sat(darker, circle[4][idx]);
+				neighborhoods16[5] = sub_sat(darker, circle[5][idx]);
+				neighborhoods16[6] = sub_sat(darker, circle[6][idx]);
+				neighborhoods16[7] = sub_sat(darker, circle[7][idx]);
+				neighborhoods16[8] = sub_sat(darker, circle[8][idx]);
+				neighborhoods16[9] = sub_sat(darker, circle[9][idx]);
+				neighborhoods16[10] = sub_sat(darker, circle[10][idx]);
+				neighborhoods16[11] = sub_sat(darker, circle[11][idx]);
+				neighborhoods16[12] = sub_sat(darker, circle[12][idx]);
+				neighborhoods16[13] = sub_sat(darker, circle[13][idx]);
+				neighborhoods16[14] = sub_sat(darker, circle[14][idx]);
+				neighborhoods16[15] = sub_sat(darker, circle[15][idx]);
 				_opencl_fast_strenght();
 			}
 			else if (sumb >= N) {
-				neighborhoods16[0] = sub_sat(IP[idx + pixels16[0]], brighter);
-				neighborhoods16[1] = sub_sat(IP[idx + pixels16[1]], brighter);
-				neighborhoods16[2] = sub_sat(IP[idx + pixels16[2]], brighter);
-				neighborhoods16[3] = sub_sat(IP[idx + pixels16[3]], brighter);
-				neighborhoods16[4] = sub_sat(IP[idx + pixels16[4]], brighter);
-				neighborhoods16[5] = sub_sat(IP[idx + pixels16[5]], brighter);
-				neighborhoods16[6] = sub_sat(IP[idx + pixels16[6]], brighter);
-				neighborhoods16[7] = sub_sat(IP[idx + pixels16[7]], brighter);
-				neighborhoods16[8] = sub_sat(IP[idx + pixels16[8]], brighter);
-				neighborhoods16[9] = sub_sat(IP[idx + pixels16[9]], brighter);
-				neighborhoods16[10] = sub_sat(IP[idx + pixels16[10]], brighter);
-				neighborhoods16[11] = sub_sat(IP[idx + pixels16[11]], brighter);
-				neighborhoods16[12] = sub_sat(IP[idx + pixels16[12]], brighter);
-				neighborhoods16[13] = sub_sat(IP[idx + pixels16[13]], brighter);
-				neighborhoods16[14] = sub_sat(IP[idx + pixels16[14]], brighter);
-				neighborhoods16[15] = sub_sat(IP[idx + pixels16[15]], brighter);
+				neighborhoods16[0] = sub_sat(circle[0][idx], brighter);
+				neighborhoods16[1] = sub_sat(circle[1][idx], brighter);
+				neighborhoods16[2] = sub_sat(circle[2][idx], brighter);
+				neighborhoods16[3] = sub_sat(circle[3][idx], brighter);
+				neighborhoods16[4] = sub_sat(circle[4][idx], brighter);
+				neighborhoods16[5] = sub_sat(circle[5][idx], brighter);
+				neighborhoods16[6] = sub_sat(circle[6][idx], brighter);
+				neighborhoods16[7] = sub_sat(circle[7][idx], brighter);
+				neighborhoods16[8] = sub_sat(circle[8][idx], brighter);
+				neighborhoods16[9] = sub_sat(circle[9][idx], brighter);
+				neighborhoods16[10] = sub_sat(circle[10][idx], brighter);
+				neighborhoods16[11] = sub_sat(circle[11][idx], brighter);
+				neighborhoods16[12] = sub_sat(circle[12][idx], brighter);
+				neighborhoods16[13] = sub_sat(circle[13][idx], brighter);
+				neighborhoods16[14] = sub_sat(circle[14][idx], brighter);
+				neighborhoods16[15] = sub_sat(circle[15][idx], brighter);
 				_opencl_fast_strenght();
 			}
-			
 			strengths[idx] = strength;
 		}
 		else {
-			strengths[idx] = 0;
+			strengths[x + (y*stride)] = 0;
 		}
+	}
+	else {
+		strengths[x + (get_global_id(1)*stride)] = 0;
 	}
 }
