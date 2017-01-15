@@ -60,12 +60,25 @@ __kernel void clFAST(
 	__global unsigned char* strengths
 )
 {
+	/* Initializes local memory shared by group items */
+#if 0 // FIXME: why local mem not working?
+	__local const unsigned char* circle[16];
+	if (get_local_id(0) == 0) {
+		for (int i = 0; i < 16; ++i) {
+			circle[i] = &IP[pixels16[i]];
+		}
+	}
+	barrier(CLK_LOCAL_MEM_FENCE);
+#else
 	__global const unsigned char* circle[16] = {
 		&IP[pixels16[0]], &IP[pixels16[1]], &IP[pixels16[2]], &IP[pixels16[3]],
 		&IP[pixels16[4]], &IP[pixels16[5]], &IP[pixels16[6]], &IP[pixels16[7]],
 		&IP[pixels16[8]], &IP[pixels16[9]], &IP[pixels16[10]], &IP[pixels16[11]],
 		&IP[pixels16[12]], &IP[pixels16[13]], &IP[pixels16[14]], &IP[pixels16[15]]
 	};
+#endif
+
+	/* Performs FAST feature detection */
 	int x = get_global_id(0);
 	if (x >= 3 && x < width - 3) {
 		int y = get_global_id(1);

@@ -138,38 +138,19 @@ COMPV_ERROR_CODE CompVCLCornerDeteFAST::processData(
 		static_cast<unsigned char>(N),
 		static_cast<unsigned char>(threshold)
 	));
-
-	static const int localSize = 64;
+	
 	cl_int clerr = CL_SUCCESS;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	void* mappedBuff = NULL;
 
 	size_t global[2] = { 
-		static_cast<size_t>(CompVMem::alignForward(stride, localSize)), // FIXME: should already be aligned
+		static_cast<size_t>(CompVMem::alignForward(stride, COMPV_ALIGNV_GPU_LINE)), // FIXME: should already be aligned
 		height
 	};
 	size_t local[2] = { // FIXME: max = 256 for AMD, must be retrieve at runtime. This means (local[0] * local[1]) must be <= 256
-		static_cast<size_t>(localSize), 
+		COMPV_ALIGNV_GPU_LINE,
 		1
 	};
-
-#if 0
-	
-	// Write data
-	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueWriteBuffer(CompVCL::clCommandQueue(), m_clMemIP, CL_TRUE, 0,
-		static_cast<size_t>((stride * height) * sizeof(uint8_t)), IP, 0, NULL, NULL),
-		"clEnqueueWriteBuffer failed");
-
-	// Execute
-	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueNDRangeKernel(CompVCL::clCommandQueue(), m_clKernel, 2, NULL, global, local, 0, NULL, NULL),
-		"clEnqueueNDRangeKernel failed");
-	COMPV_CHECK_CL_CODE_BAIL(clerr = clFinish(CompVCL::clCommandQueue()),
-		"clFinish failed");
-
-	// Read result
-	COMPV_CHECK_CL_CODE_BAIL(clerr = clEnqueueReadBuffer(CompVCL::clCommandQueue(), m_clMemStrengths, CL_TRUE, 0,
-		static_cast<size_t>((stride * height) * sizeof(uint8_t)), strengths, 0, NULL, NULL), "clEnqueueReadBuffer failed");
-#endif
 
 	// Write
 	mappedBuff = clEnqueueMapBuffer(CompVCL::clCommandQueue(), m_clMemIP, CL_TRUE,
