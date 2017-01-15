@@ -235,8 +235,9 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, std::vec
         m_nRanges = threadsCountRange;
     }
 
-	// FIXME: makes more elegant
-	// FIXME: makes sure both memory and stride aligned on 64B
+#if 0 // Disable GPGPU as FAST feature detection dosen't use math ops (intense memory access instead)
+	// TODO(dmi): makes more elegant
+	// TODO(dmi): makes sure both memory and stride aligned on 64B
 	// Compute GPU instance
 	if (CompVGpu::isActiveAndEnabled()) {
 		if (!m_ptrGpuFAST) {
@@ -265,6 +266,7 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, std::vec
 		CompVFastBuildInterestPoints(pRange, interestPoints);
 		return COMPV_ERROR_CODE_S_OK;
 	}
+#endif
 
     if (threadsCountRange > 1) {
 		size_t rowStart = 0;

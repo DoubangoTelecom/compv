@@ -60,6 +60,7 @@ COMPV_ERROR_CODE CompVCLCornerDeteFAST::init(const uint8_t* IP, uint8_t* strengt
 	}
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	cl_int clerr = CL_SUCCESS;
+	cl_mem_flags addFlags = 0;
 
 	const int strideSigned = static_cast<int>(stride);
 	m_arrayPixels16[0] = -(strideSigned * 3) + 0;
@@ -79,13 +80,17 @@ COMPV_ERROR_CODE CompVCLCornerDeteFAST::init(const uint8_t* IP, uint8_t* strengt
 	m_arrayPixels16[14] = -(strideSigned * 2) - 2;
 	m_arrayPixels16[15] = -(strideSigned * 3) - 1;
 
+#if defined(CL_MEM_USE_PERSISTENT_MEM_AMD) && 0 // FIXME: must also check it's AMD device at runtime
+	addFlags |= CL_MEM_USE_PERSISTENT_MEM_AMD;
+#endif
+
 	// FIXME: using 'CL_MEM_USE_HOST_PTR' means m_clMemIP and m_clMemStrengths no longer valid when host memory is reallocated -> deInit if change
 
-	m_clMemPixels16 = clCreateBuffer(CompVCL::clContext(), CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, sizeof(m_arrayPixels16), reinterpret_cast<void*>(m_arrayPixels16), &clerr);
+	m_clMemPixels16 = clCreateBuffer(CompVCL::clContext(), CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR | addFlags, sizeof(m_arrayPixels16), reinterpret_cast<void*>(m_arrayPixels16), &clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateBuffer failed");
-	m_clMemIP = clCreateBuffer(CompVCL::clContext(), CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, static_cast<size_t>((stride * height) * sizeof(uint8_t)), (void*)IP, &clerr);
+	m_clMemIP = clCreateBuffer(CompVCL::clContext(), CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR | addFlags, static_cast<size_t>((stride * height) * sizeof(uint8_t)), (void*)IP, &clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateBuffer failed");
-	m_clMemStrengths = clCreateBuffer(CompVCL::clContext(), CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, static_cast<size_t>((stride * height) * sizeof(uint8_t)), (void*)strengths, &clerr);
+	m_clMemStrengths = clCreateBuffer(CompVCL::clContext(), CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR | addFlags, static_cast<size_t>((stride * height) * sizeof(uint8_t)), (void*)strengths, &clerr);
 	COMPV_CHECK_CL_CODE_BAIL(clerr, "clCreateBuffer failed");
 
 	COMPV_CHECK_CL_CODE_BAIL(clerr = clSetKernelArg(m_clKernel, 0, sizeof(cl_mem), &m_clMemIP));

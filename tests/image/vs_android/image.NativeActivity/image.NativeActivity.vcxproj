@@ -160,12 +160,12 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -173,12 +173,12 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -186,12 +186,12 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir);../../../../thirdparties/libraries/android/skia-m55-armv7a-neon-release</AdditionalLibraryDirectories>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -201,12 +201,12 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir);../../../../thirdparties/libraries/android/skia-m55-armv7a-neon-release</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -215,12 +215,12 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -228,12 +228,12 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
@@ -241,12 +241,12 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -254,12 +254,12 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

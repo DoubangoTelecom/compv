@@ -74,7 +74,7 @@ COMPV_ERROR_CODE CompVGpu::init()
 		}
 	}
 
-	s_bActive = s_ptrImpl && (openclIntialized || openclIntialized);
+	s_bActive = s_ptrImpl && (openclIntialized || cudaIntialized);
 	s_bInitialized = true;
 
 bail:

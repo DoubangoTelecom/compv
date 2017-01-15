@@ -64,8 +64,8 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="core\features\fast\compv_cl_feature_fast_dete.cl">
+    <CustomBuild Include="core\features\fast\compv_cl_feature_fast_dete.cl">
       <Filter>Source Files\core\features\fast</Filter>
-    </Text>
+    </CustomBuild>
   </ItemGroup>
 </Project>

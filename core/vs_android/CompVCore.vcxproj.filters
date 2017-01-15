@@ -87,9 +87,6 @@
     <ClInclude Include="..\include\compv\core\compv_core_config.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\core\features\compv_core_feature.h">
-      <Filter>include\features</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\core\features\fast\compv_core_feature_fast_dete.h">
       <Filter>include\features\fast</Filter>
     </ClInclude>
@@ -106,9 +103,6 @@
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
       <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\features\compv_core_feature.cxx">
-      <Filter>source\features</Filter>
     </ClCompile>
     <ClCompile Include="..\features\fast\compv_core_feature_fast_dete.cxx">
       <Filter>source\features\fast</Filter>

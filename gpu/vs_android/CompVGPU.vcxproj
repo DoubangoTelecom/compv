@@ -35,77 +35,24 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\compv\gpu\compv_gpu.h" />
+    <ClInclude Include="..\include\compv\gpu\compv_gpu_common.h" />
+    <ClInclude Include="..\include\compv\gpu\compv_gpu_config.h" />
+    <ClInclude Include="..\include\compv\gpu\core\features\fast\compv_gpu_feature_fast_dete.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\compv_gpu.cxx" />
+    <ClCompile Include="..\core\features\fast\compv_gpu_feature_fast_dete.cxx" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\base\vs_android\CompVBase.vcxproj">
       <Project>{9320e994-aa59-49ba-ab64-f82aedec49a3}</Project>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\include\compv\core\compv_core.h" />
-    <ClInclude Include="..\include\compv\core\compv_core_common.h" />
-    <ClInclude Include="..\include\compv\core\compv_core_config.h" />
-    <ClInclude Include="..\include\compv\core\features\fast\compv_core_feature_fast_dete.h" />
-    <ClInclude Include="..\include\compv\core\features\fast\intrin\arm\compv_core_feature_fast_dete_intrin_neon.h" />
-    <ClInclude Include="..\include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.h" />
-    <ClInclude Include="..\include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\compv_core.cxx" />
-    <ClCompile Include="..\features\fast\compv_core_feature_fast_dete.cxx" />
-    <ClCompile Include="..\features\fast\intrin\arm\compv_core_feature_fast_dete_intrin_neon.cxx">
-      <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</EnableNeonCodegen>
-      <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</EnableNeonCodegen>
-      <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</EnableNeonCodegen>
-      <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</EnableNeonCodegen>
-      <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</EnableNeonCodegen>
-      <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Release|x86'">true</EnableNeonCodegen>
-      <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableNeonCodegen>
-      <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableNeonCodegen>
-    </ClCompile>
-    <ClCompile Include="..\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.cxx" />
-    <ClCompile Include="..\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.cxx" />
-  </ItemGroup>
-  <ItemGroup>
-    <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_arm32_neon.S">
-      <FileType>Document</FileType>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ArmNeon>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ArmNeon>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeon>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeon>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</ArmNeon>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|x86'">true</ArmNeon>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ArmNeon>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ArmNeon>
-    </GAS>
-    <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
-      <FileType>Document</FileType>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../features/fast/asm/arm</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../features/fast/asm/arm</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../features/fast/asm/arm</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../features/fast/asm/arm</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">$(ProjectDir)../features/fast/asm/arm</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../features/fast/asm/arm</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../features/fast/asm/arm</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../features/fast/asm/arm</IncludePaths>
-    </GAS>
-    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_avx.s" />
-    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_sse.s" />
-    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x64_avx.s" />
-    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x64_sse.s" />
-    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x86_avx.s" />
-    <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x86_sse.s" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{bf9edb99-ba3a-4083-a6b5-d52067e235a4}</ProjectGuid>
+    <ProjectGuid>{766db7bd-6b40-44bc-be41-bf78111a8ac5}</ProjectGuid>
     <Keyword>Android</Keyword>
-    <RootNamespace>CompVCore</RootNamespace>
+    <RootNamespace>CompVGPU</RootNamespace>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <ApplicationType>Android</ApplicationType>
     <ApplicationTypeRevision>2.0</ApplicationTypeRevision>
@@ -160,9 +107,7 @@
     <AndroidAPILevel>android-18</AndroidAPILevel>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\gas.props" />
-  </ImportGroup>
+  <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
@@ -186,7 +131,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -195,7 +140,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -204,7 +149,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -213,7 +158,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -222,7 +167,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -231,7 +176,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -240,7 +185,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -249,13 +194,11 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../include;../../base/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\gas.targets" />
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

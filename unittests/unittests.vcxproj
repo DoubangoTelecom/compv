@@ -89,7 +89,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../api/include;../base/include;../camera/include;../gl/include;../drawing/include;../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../api/include;../base/include;../camera/include;../gl/include;../drawing/include;../core/include;../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -106,7 +106,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;COMPV_TEST_LOCAL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../api/include;../base/include;../camera/include;../gl/include;../drawing/include;../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../api/include;../base/include;../camera/include;../gl/include;../drawing/include;../core/include;../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -125,7 +125,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../api/include;../base/include;../camera/include;../gl/include;../drawing/include;../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../api/include;../base/include;../camera/include;../gl/include;../drawing/include;../core/include;../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -146,7 +146,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../api/include;../base/include;../camera/include;../gl/include;../drawing/include;../core/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../api/include;../base/include;../camera/include;../gl/include;../drawing/include;../core/include;../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -177,6 +177,12 @@
     </ProjectReference>
     <ProjectReference Include="..\gl\CompVGL.vcxproj">
       <Project>{4a895705-e866-452d-8cfa-481c9e6b8871}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\gpu\CompVGPU.vcxproj">
+      <Project>{f3fdf15a-8ae4-4d9d-aa7b-0b7f6e940146}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\plugin_opencl\CompVPluginOpenCL.vcxproj">
+      <Project>{8dffe598-89e4-4dc0-af73-8e879d7d4530}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
