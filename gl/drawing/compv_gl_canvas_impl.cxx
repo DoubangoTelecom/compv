@@ -65,8 +65,8 @@ COMPV_ERROR_CODE CompVGLCanvasImpl::drawInterestPoints(const std::vector<CompVIn
 	glMemPoint_ = glMemPoints_;
 	for (std::vector<CompVInterestPoint >::const_iterator it = interestPoints.begin(); it != interestPoints.end(); ++it, ++glMemPoint_) {
 		// x, y
-		glMemPoint_->xy[0] = static_cast<GLfloat>((*it).x);
-		glMemPoint_->xy[1] = static_cast<GLfloat>((*it).y);
+		glMemPoint_->position[0] = static_cast<GLfloat>((*it).x);
+		glMemPoint_->position[1] = static_cast<GLfloat>((*it).y);
 		// r, g, b
 		color = &kCompVGLRandomColors[rand() % kCompVGLRandomColorsCount];
 		glMemPoint_->color[0] = (*color)[0];

@@ -62,13 +62,6 @@ COMPV_ERROR_CODE CompVGLDraw::bind() /*Overrides(CompVBind)*/
 		if (m_ptrMVP && m_uNamePrgUnifMVP != kCompVGLNameInvalid) {
 			COMPV_glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, m_ptrMVP->matrix()->ptr());
 		}
-#if 0
-		COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uNameIndiceBuffer);
-		COMPV_glEnableVertexAttribArray(m_uNamePrgAttPosition);
-		COMPV_glEnableVertexAttribArray(m_uNamePrgAttTexCoord);
-		COMPV_glVertexAttribPointer(m_uNamePrgAttPosition, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), 0);
-		COMPV_glVertexAttribPointer(m_uNamePrgAttTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), (GLvoid*)(sizeof(GLfloat) * 3));
-#endif
 	}
 
 bail:
@@ -111,7 +104,7 @@ COMPV_ERROR_CODE CompVGLDraw::init()
 	// VAO
 	if (CompVGLInfo::extensions::vertex_array_object()) {
 		COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::vertexArraysGen(&m_uNameVAO));
-		COMPV_glBindBuffer(GL_ARRAY_BUFFER, m_uNameVBO); // required to have next VBO part of the VAO
+		COMPV_glBindVertexArray(m_uNameVAO); // required to have next VBO part of the VAO
 	}
 
 	// VBO

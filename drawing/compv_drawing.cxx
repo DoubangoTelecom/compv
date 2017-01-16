@@ -487,34 +487,7 @@ void* COMPV_STDCALL CompVDrawing::workerThread(void* arg)
 		/* First time */ {
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "-> onStateChanged(COMPV_RUNLOOP_STATE_LOOP_STARTED)");
 			CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_LOOP_STARTED);
-#if COMPV_OS_ANDROID
-			struct android_app* app = reinterpret_cast<struct android_app*>(arg);
-			if (app) {
-				switch (app->activityState) {
-				case APP_CMD_RESUME:
-					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_RESUME -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_RESUMED)");
-					CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_RESUMED);
-					break;
-				case APP_CMD_START:
-					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_START -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED)");
-					CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED);
-					break;
-				case APP_CMD_PAUSE:
-					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_PAUSE -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_PAUSED)");
-					CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_PAUSED);
-					break;
-				case APP_CMD_STOP:
-					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_STOP -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STOPPED)");
-					CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STOPPED);
-					break;
-				default: break;
-				}
-			}
-			else {
-				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "-> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED)");
-				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED);
-			}
-#else
+#if !COMPV_OS_ANDROID // Android: wait for Activity::onResume() or Activity::onStart
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "-> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED)");
 			CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED);
 #endif

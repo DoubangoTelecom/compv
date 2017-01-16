@@ -24,6 +24,13 @@ public:
     static COMPV_ERROR_CODE init(int32_t numThreads = -1);
     static COMPV_ERROR_CODE deInit();
     static COMPV_INLINE CompVThreadDispatcherPtr threadDispatcher() {
+#if defined(_COMPV_API_H_)
+		// If you use this dispatcher to run internal tasks then, 'isMotherOfTheCurrentThread' will return true which
+		// means these tasks won't be multithreaded (because they are already multithreded). It'll be up to you
+		// to choose how to dispatch the tasks.
+		// Please create your own thread dispatcher.
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You must not use this thread dispatcher in your app. This will disable internal multithreading and give you the power to decide how to dispatch the tasks.");
+#endif
         return CompVParallel::s_ThreadDisp;
     }
     static COMPV_ERROR_CODE multiThreadingEnable(CompVThreadDispatcherPtr dispatcher);

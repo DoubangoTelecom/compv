@@ -19,7 +19,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 typedef struct {
-	GLfloat xy[2];
+	GLfloat position[2]; // x, y
 	GLfloat color[3];
 } CompVGLPoints;
 

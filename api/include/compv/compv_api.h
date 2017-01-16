@@ -5,7 +5,7 @@
 * WebSite: http://compv.org
 */
 #if !defined(_COMPV_API_H_)
-#define _COMPV_API_H_ //!\\ Must not change this name, used as guard in private header files
+#define _COMPV_API_H_ //!\\ Must not change this name, used as guard in private header files and many other places
 
 /* Module: Base */
 #include <compv/base/compv_base.h>

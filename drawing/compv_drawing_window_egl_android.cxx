@@ -128,7 +128,6 @@ COMPV_ERROR_CODE CompVWindowEGLAndroid::newObj(CompVWindowEGLAndroidPtrPtr eglWi
     COMPV_CHECK_EXP_RETURN(!eglWindow_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     COMPV_CHECK_EXP_RETURN(!eglWindow_->isInitialized(), COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     eglWindow_->m_pNativeWindow = app->window;
-    //COMPV_CHECK_CODE_RETURN(CompVGLContextAndroidEGL::newObj(&eglWindow_->m_ptrContext, eglWindow_->m_pEGLDisplay, eglWindow_->m_pEGLSurface, eglWindow_->m_pEGLContex));
     *eglWindow = eglWindow_;
     return COMPV_ERROR_CODE_S_OK;
 }

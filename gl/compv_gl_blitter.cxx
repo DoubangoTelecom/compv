@@ -59,8 +59,8 @@ COMPV_ERROR_CODE CompVGLBlitter::bind()  /*Overrides(CompVBind)*/
         COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uNameIndiceBuffer);
         COMPV_glEnableVertexAttribArray(m_uNamePrgAttPosition);
         COMPV_glEnableVertexAttribArray(m_uNamePrgAttTexCoord);
-        COMPV_glVertexAttribPointer(m_uNamePrgAttPosition, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), 0);
-        COMPV_glVertexAttribPointer(m_uNamePrgAttTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), (GLvoid*)(sizeof(GLfloat) * 3));
+        COMPV_glVertexAttribPointer(m_uNamePrgAttPosition, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), reinterpret_cast<const GLvoid *>(offsetof(CompVGLVertex, Position)));
+        COMPV_glVertexAttribPointer(m_uNamePrgAttTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), reinterpret_cast<const GLvoid *>(offsetof(CompVGLVertex, TexCoord)));
     }
 
     return COMPV_ERROR_CODE_S_OK;
@@ -219,8 +219,8 @@ COMPV_ERROR_CODE CompVGLBlitter::init(size_t width, size_t height, size_t stride
     COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uNameIndiceBuffer);
     COMPV_glEnableVertexAttribArray(m_uNamePrgAttPosition);
     COMPV_glEnableVertexAttribArray(m_uNamePrgAttTexCoord);
-    COMPV_glVertexAttribPointer(m_uNamePrgAttPosition, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), 0);
-    COMPV_glVertexAttribPointer(m_uNamePrgAttTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), (GLvoid*)(sizeof(GLfloat) * 3));
+    COMPV_glVertexAttribPointer(m_uNamePrgAttPosition, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), reinterpret_cast<const GLvoid *>(offsetof(CompVGLVertex, Position)));
+    COMPV_glVertexAttribPointer(m_uNamePrgAttTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLVertex), reinterpret_cast<const GLvoid *>(offsetof(CompVGLVertex, TexCoord)));
     if (bMVP) {
         COMPV_DEBUG_INFO_CODE_FOR_TESTING();
         // Set aspect ratio

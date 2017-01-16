@@ -64,6 +64,7 @@ public:
 
 	virtual COMPV_ERROR_CODE onNewFrame(const CompVMatPtr& image) override {
 		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+		// TODO(dmi): 'drawImage' is a pure GPU function while 'FAST->process' is a pure CPU function -> can be done on parallel
 		if (CompVDrawing::isLoopRunning()) {
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(image));
@@ -114,7 +115,7 @@ compv_main()
 		CompVCameraDeviceInfoList devices;
 		std::string cameraId = ""; // empty string means default
 
-								   // Change debug level to INFO before starting
+		// Change debug level to INFO before starting
 		CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
 
 		// Init the modules

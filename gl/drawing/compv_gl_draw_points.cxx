@@ -70,12 +70,12 @@ COMPV_ERROR_CODE CompVGLDrawPoints::process(const CompVGLPoints* points, GLsizei
 		// Set position attribute
 		GLuint uNamePosition = COMPV_glGetAttribLocation(program()->name(), "position");
 		COMPV_glEnableVertexAttribArray(uNamePosition);
-		COMPV_glVertexAttribPointer(uNamePosition, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoints), 0);
+		COMPV_glVertexAttribPointer(uNamePosition, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoints), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoints, position)));
 
 		// Set color attribute
 		GLuint uNameColor = COMPV_glGetAttribLocation(program()->name(), "color");
 		COMPV_glEnableVertexAttribArray(uNameColor);
-		COMPV_glVertexAttribPointer(uNameColor, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoints), (GLvoid*)(sizeof(GLfloat) * 2));
+		COMPV_glVertexAttribPointer(uNameColor, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoints), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoints, color)));
 
 		// Set projection
 		COMPV_CHECK_CODE_BAIL(err = CompVGLDraw::setOrtho(0, static_cast<GLfloat>(fboWidth), static_cast<GLfloat>(fboHeight), 0, -1, 1));
