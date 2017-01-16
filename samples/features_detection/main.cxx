@@ -11,8 +11,12 @@ using namespace compv;
 #define WINDOW_WIDTH		1280
 #define WINDOW_HEIGHT		720
 
+#define FAST_NONMAXIMA		true
+#define FAST_THRESHOLD		20
+#define FAST_TYPE			COMPV_FAST_TYPE_9
+#define FAST_MAXFEATURES	-1 // <= 0 means all points (do not retain best)
 
-#define TAG_SAMPLE	"Camera Sample App"
+#define TAG_SAMPLE			"Features Detection App"
 
 /* My runloop listener (optional) */
 COMPV_OBJECT_DECLARE_PTRS(MyRunLoopListener)
@@ -25,16 +29,16 @@ public:
 	virtual COMPV_ERROR_CODE onStateChanged(COMPV_RUNLOOP_STATE newState) override {
 		COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "RunLoop onStateChanged(%d)", newState);
 		switch (newState) {
-			case COMPV_RUNLOOP_STATE_LOOP_STARTED:
-			default:
-				return COMPV_ERROR_CODE_S_OK;
-			case COMPV_RUNLOOP_STATE_ANIMATION_STARTED:
-			case COMPV_RUNLOOP_STATE_ANIMATION_RESUMED:
-				return m_ptrCamera->start(m_strCameraId);
-			case COMPV_RUNLOOP_STATE_ANIMATION_PAUSED:
-			case COMPV_RUNLOOP_STATE_LOOP_STOPPED:
-			case COMPV_RUNLOOP_STATE_ANIMATION_STOPPED:
-				return m_ptrCamera->stop();
+		case COMPV_RUNLOOP_STATE_LOOP_STARTED:
+		default:
+			return COMPV_ERROR_CODE_S_OK;
+		case COMPV_RUNLOOP_STATE_ANIMATION_STARTED:
+		case COMPV_RUNLOOP_STATE_ANIMATION_RESUMED:
+			return m_ptrCamera->start(m_strCameraId);
+		case COMPV_RUNLOOP_STATE_ANIMATION_PAUSED:
+		case COMPV_RUNLOOP_STATE_LOOP_STOPPED:
+		case COMPV_RUNLOOP_STATE_ANIMATION_STOPPED:
+			return m_ptrCamera->stop();
 		}
 	}
 	static COMPV_ERROR_CODE newObj(CompVMyRunLoopListenerPtrPtr listener, CompVCameraPtr camera, const std::string& cameraId) {
@@ -63,6 +67,8 @@ public:
 		if (CompVDrawing::isLoopRunning()) {
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(image));
+			COMPV_CHECK_CODE_BAIL(err = m_ptrFAST->process(image, m_vecInterestPoints));
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->renderer()->canvas()->drawInterestPoints(m_vecInterestPoints)); // FIXME: canvas should be at surface()
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->blit());
 		bail:
 			COMPV_CHECK_CODE_NOP(err = m_ptrWindow->endDraw()); // Make sure 'endDraw()' will be called regardless the result
@@ -76,15 +82,23 @@ public:
 	}
 
 	static COMPV_ERROR_CODE newObj(CompVMyCameraListenerPtrPtr listener, CompVWindowPtr ptrWindow, CompVSingleSurfaceLayerPtr ptrSingleSurfaceLayer) {
-		COMPV_CHECK_EXP_RETURN(!listener ||!ptrWindow || !ptrSingleSurfaceLayer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_EXP_RETURN(!listener || !ptrWindow || !ptrSingleSurfaceLayer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		*listener = new CompVMyCameraListener(ptrWindow, ptrSingleSurfaceLayer);
 		COMPV_CHECK_EXP_RETURN(!*listener, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+
+		COMPV_CHECK_CODE_RETURN(CompVCornerDete::newObj(&(*listener)->m_ptrFAST, COMPV_FAST_ID));
+		COMPV_CHECK_CODE_RETURN((*listener)->m_ptrFAST->setInt(COMPV_FAST_SET_INT_THRESHOLD, FAST_THRESHOLD));
+		COMPV_CHECK_CODE_RETURN((*listener)->m_ptrFAST->setInt(COMPV_FAST_SET_INT_FAST_TYPE, FAST_TYPE));
+		COMPV_CHECK_CODE_RETURN((*listener)->m_ptrFAST->setInt(COMPV_FAST_SET_INT_MAX_FEATURES, FAST_MAXFEATURES));
+		COMPV_CHECK_CODE_RETURN((*listener)->m_ptrFAST->setBool(COMPV_FAST_SET_BOOL_NON_MAXIMA_SUPP, FAST_NONMAXIMA));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
 private:
 	CompVWindowPtr m_ptrWindow;
 	CompVSingleSurfaceLayerPtr m_ptrSingleSurfaceLayer;
+	CompVCornerDetePtr m_ptrFAST;
+	std::vector<CompVInterestPoint> m_vecInterestPoints;
 };
 
 /* Entry point function */
@@ -100,7 +114,7 @@ compv_main()
 		CompVCameraDeviceInfoList devices;
 		std::string cameraId = ""; // empty string means default
 
-		// Change debug level to INFO before starting
+								   // Change debug level to INFO before starting
 		CompVDebugMgr::setLevel(COMPV_DEBUG_LEVEL_INFO);
 
 		// Init the modules
@@ -139,7 +153,7 @@ compv_main()
 			COMPV_DEBUG_ERROR_EX(TAG_SAMPLE, "Something went wrong!!");
 		}
 	}
-	
+
 	COMPV_DEBUG_CHECK_FOR_MEMORY_LEAKS();
 
 	compv_main_return(0);

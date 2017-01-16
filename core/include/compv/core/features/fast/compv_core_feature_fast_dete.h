@@ -61,6 +61,7 @@ private:
     uint8_t* m_pStrengthsMap;
 	uint8_t* m_pNmsMap;
 	CompVGpuCornerDeteFASTPtr m_ptrGpuFAST;
+	CompVMatPtr m_ptrImageGray;
 };
 
 COMPV_NAMESPACE_END()

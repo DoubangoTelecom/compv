@@ -37,82 +37,42 @@ CompVGLCanvasImpl::~CompVGLCanvasImpl()
 
 COMPV_ERROR_CODE CompVGLCanvasImpl::drawText(const void* textPtr, size_t textLengthInBytes, int x, int y)  /*Overrides(CompVCanvasInterface)*/
 {
-	if (!m_ptrDrawPoints) {
-		COMPV_CHECK_CODE_RETURN(CompVGLDrawPoints::newObj(&m_ptrDrawPoints));
-	}
-	static const size_t points = 100;
-	GLfloat tests[points * 2];
-	for (size_t i = 0; i < points; i+=2) {
-		tests[i] = float(rand() % 1000) / 1000.f;
-		tests[i+1] = float(rand() % 1000) / 1000.f;
-	}
-
-	COMPV_CHECK_CODE_RETURN(m_ptrDrawPoints->process(tests, points));
+	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 	return COMPV_ERROR_CODE_S_OK;
-
-#if 0 // FIXME: remove
-	GLuint vao = kCompVGLNameInvalid;
-	GLuint vbo = kCompVGLNameInvalid;
-	GLint position_attribute;
-	CompVGLProgramPtr program;
-	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-
-	static GLfloat vertices_position[24] = {
-		 	0.0, 0.0,
-		 	0.5, 0.0,
-		 	0.5, 0.5,
-		
-		 	0.0, 0.0,
-		 	0.0, 0.5,
-			- 0.5, 0.5,
-		
-		 	0.0, 0.0,
-			- 0.5, 0.0,
-			- 0.5, -0.5,
-		
-		 	0.0, 0.0,
-			0.0, -0.5,
-			0.5, -0.5,
-	};
-
-	// VAO
-	if (CompVGLInfo::extensions::vertex_array_object()) {
-		COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::vertexArraysGen(&vao));
-		COMPV_glBindVertexArray(vao);
-	}
-	// FIXME: what else?
-
-	// VBO
-	COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::bufferGen(&vbo));
-	COMPV_glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_position), vertices_position, GL_STATIC_DRAW);
-
-	// Program
-	COMPV_CHECK_CODE_BAIL(CompVGLProgram::newObj(&program, kProgramVertexData.c_str(), kProgramVertexData.length(), kProgramFragmentData.c_str(), kProgramFragmentData.length()));
-	COMPV_CHECK_CODE_BAIL(err = program->bind());
-	position_attribute = COMPV_glGetAttribLocation(program->name(), "position");
-	COMPV_glEnableVertexAttribArray(position_attribute);
-	COMPV_glVertexAttribPointer(position_attribute, 2, GL_FLOAT, GL_FALSE, 0, 0);	
-	
-	// Draw
-	//COMPV_glDrawArrays(GL_TRIANGLES, 0, 12);
-	COMPV_glDrawArrays(GL_POINTS, 0, 12);
-
-bail:
-	if (program) {
-		COMPV_CHECK_CODE_NOP(program->unbind());
-	}
-	COMPV_glBindBuffer(GL_ARRAY_BUFFER, kCompVGLNameInvalid);
-	COMPV_glBindVertexArray(kCompVGLNameInvalid);
-	CompVGLUtils::bufferDelete(&vbo);
-	CompVGLUtils::vertexArraysDelete(&vao);
-	return COMPV_ERROR_CODE_S_OK;
-#endif
 }
 	
 COMPV_ERROR_CODE CompVGLCanvasImpl::drawLine(int x0, int y0, int x1, int y1)  /*Overrides(CompVCanvasInterface)*/
 {
+	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVGLCanvasImpl::drawInterestPoints(const std::vector<CompVInterestPoint >& interestPoints) /*Overrides(CompVCanvasInterface)*/
+{
+	if (interestPoints.empty()) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	if (!m_ptrDrawPoints) {
+		COMPV_CHECK_CODE_RETURN(CompVGLDrawPoints::newObj(&m_ptrDrawPoints));
+	}
+	GLfloat* glMemPints_ = NULL;
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	static const size_t numComps = 2; // x and y comps (later will add color comp)
+	size_t i = 0;
+
+	glMemPints_ = reinterpret_cast<GLfloat*>(CompVMem::malloc(interestPoints.size() * numComps * sizeof(GLfloat)));
+	COMPV_CHECK_EXP_RETURN(!glMemPints_, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to allocation GL points");
+
+	for (std::vector<CompVInterestPoint >::const_iterator it = interestPoints.begin(); it != interestPoints.end(); ++it, i += numComps) {
+		glMemPints_[i] = 0;// static_cast<GLfloat>((*it).x);
+		glMemPints_[i + 1] = 0;// static_cast<GLfloat>((*it).y);
+	}
+
+	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawPoints->process(glMemPints_, static_cast<GLsizei>(interestPoints.size())));
+
+bail:
+	CompVMem::free(reinterpret_cast<void**>(&glMemPints_));
+	return err;
 }
 
 COMPV_ERROR_CODE CompVGLCanvasImpl::close() /*Overrides(CompVCanvasImpl)*/

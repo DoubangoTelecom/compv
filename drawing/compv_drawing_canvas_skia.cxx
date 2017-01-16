@@ -371,6 +371,11 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawLine(int x0, int y0, int x1, int y1) /
     return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVCanvasImplSkia::drawInterestPoints(const std::vector<CompVInterestPoint >& interestPoints) /*Overrides(CompVCanvasInterface)*/
+{
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVCanvasImplSkia::close() /*Overrides(CompVCanvasImpl)*/
 {
 	return COMPV_ERROR_CODE_S_OK;

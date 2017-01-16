@@ -41,6 +41,14 @@ COMPV_ERROR_CODE CompVGLCanvas::drawLine(int x0, int y0, int x1, int y1) /*Overr
     return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVGLCanvas::drawInterestPoints(const std::vector<CompVInterestPoint >& interestPoints) /*Overrides(CompVCanvasInterface)*/
+{
+	COMPV_GL_FBO_AUTOBIND(*m_ptrFBO);
+	COMPV_CHECK_CODE_RETURN(m_ptrImpl->drawInterestPoints(interestPoints));
+	unMakeEmpty();
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVGLCanvas::close()
 {
 	if (m_ptrImpl) {

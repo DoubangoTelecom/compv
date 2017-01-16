@@ -20,6 +20,7 @@ Some literature about FAST:
 #include "compv/base/compv_cpu.h"
 #include "compv/base/parallel/compv_parallel.h"
 #include "compv/base/math/compv_math_utils.h"
+#include "compv/base/image/compv_image.h"
 #include "compv/gpu/compv_gpu.h"
 
 #include "compv/core/features/fast/intrin/x86/compv_core_feature_fast_dete_intrin_sse2.h"
@@ -153,11 +154,17 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::set(int id, const void* valuePtr, size_t v
 }
 
 // overrides CompVCornerDete::process
-COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image, std::vector<CompVInterestPoint>& interestPoints) /*Overrides(CompVCornerDete)*/
+COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image_, std::vector<CompVInterestPoint>& interestPoints) /*Overrides(CompVCornerDete)*/
 {
-    COMPV_CHECK_EXP_RETURN(!image || image->isEmpty() || image->subType() != COMPV_SUBTYPE_PIXELS_Y,
-                           COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_EXP_RETURN(!image_ || image_->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Image empty");
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
+
+	// Convert the image to grayscale if not already the case
+	CompVMatPtr image = image_;
+	if (image->subType() != COMPV_SUBTYPE_PIXELS_Y) {
+		COMPV_CHECK_CODE_RETURN(err_ = CompVImage::convertGrayscale(image_, &m_ptrImageGray), "Failed to convert the image to grayscale");
+		image = m_ptrImageGray;
+	}
 
 	const uint8_t* dataPtr = image->ptr<const uint8_t>();
     size_t width = image->cols();
@@ -419,22 +426,22 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::newObj(CompVCornerDetePtrPtr fast)
 
 static void CompVFastDataRange(RangeFAST* range)
 {
-    const uint8_t* IP;
-    int32_t j, kalign, kextra, align = 1, minj, maxj, rowstart, k;
-    uint8_t *strengths, *extra;
-    void(*FastDataRow)(const uint8_t* IP, compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths) 
+	const uint8_t* IP;
+	int32_t j, kalign, kextra, align = 1, minj, maxj, rowstart, k;
+	uint8_t *strengths, *extra;
+	void(*FastDataRow)(const uint8_t* IP, compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths)
 		= CompVFastDataRow_C;
 #if COMPV_ARCH_X86
-    if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = CompVFastDataRow_Intrin_SSE2, align = COMPV_ALIGNV_SIMD_SSE));
 		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X86_SSE2 : CompVFast12DataRow_Asm_X86_SSE2, align = COMPV_ALIGNV_SIMD_SSE));
-        COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X64_SSE2 : CompVFast12DataRow_Asm_X64_SSE2, align = COMPV_ALIGNV_SIMD_SSE));
-    }
-    if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
+		COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X64_SSE2 : CompVFast12DataRow_Asm_X64_SSE2, align = COMPV_ALIGNV_SIMD_SSE));
+	}
+	if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((FastDataRow = CompVFastDataRow_Intrin_AVX2, align = COMPV_ALIGNV_SIMD_AVX2));
 		COMPV_EXEC_IFDEF_ASM_X86((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X86_AVX2 : CompVFast12DataRow_Asm_X86_AVX2, align = COMPV_ALIGNV_SIMD_AVX2));
 		COMPV_EXEC_IFDEF_ASM_X64((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_X64_AVX2 : CompVFast12DataRow_Asm_X64_AVX2, align = COMPV_ALIGNV_SIMD_AVX2));
-    }
+	}
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagNone)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM((FastDataRow = CompVFastDataRow_Intrin_NEON, align = COMPV_ALIGNV_SIMD_NEON));
@@ -442,32 +449,34 @@ static void CompVFastDataRange(RangeFAST* range)
 	}
 #endif
 
-    // Number of pixels to process (multiple of align)
-    kalign = static_cast<int32_t>(CompVMem::alignForward((-3 + range->width - 3), align));
-    if (kalign > static_cast<int32_t>(range->stride - 3)) { // must never happen
-        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Unexpected code called. k16=%d, stride=%zu", kalign, range->stride);
-        COMPV_ASSERT(false);
-        return;
-    }
-    // Number of pixels to ignore
-    kextra = kalign - (-3 + static_cast<int32_t>(range->width) - 3);
+	// Number of pixels to process (multiple of align)
+	kalign = static_cast<int32_t>(CompVMem::alignForward((-3 + range->width - 3), align));
+#if 0 // (minj = 3 and maxj height - 3) -> we can read more than 'align' bytes on a row without issues
+	if (kalign > static_cast<int32_t>(range->stride - 3)) { // must never happen
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Unexpected code called. k16=%d, stride=%zu", kalign, range->stride);
+		COMPV_ASSERT(false);
+		return;
+	}
+#endif
+	// Number of pixels to ignore
+	kextra = kalign - (-3 + static_cast<int32_t>(range->width) - 3);
 
-    rowstart = static_cast<int32_t>(range->rowStart);
-    minj = (rowstart == 0 ? 3 : 0);
-    maxj = static_cast<int32_t>((range->rowEnd - rowstart) - ((range->rowCount - range->rowEnd) <= 3 ? 3 - (range->rowCount - range->rowEnd) : 0));
-    IP = range->IP + ((rowstart + minj) * range->stride) + 3;
-    strengths = range->strengths + ((rowstart + minj) * range->stride) + 3;
+	rowstart = static_cast<int32_t>(range->rowStart);
+	minj = (rowstart == 0 ? 3 : 0);
+	maxj = static_cast<int32_t>((range->rowEnd - rowstart) - ((range->rowCount - range->rowEnd) <= 3 ? 3 - (range->rowCount - range->rowEnd) : 0));
+	IP = range->IP + ((rowstart + minj) * range->stride) + 3;
+	strengths = range->strengths + ((rowstart + minj) * range->stride) + 3;
 
-    for (j = minj; j < maxj; ++j) {
+	for (j = minj; j < maxj; ++j) {
 		FastDataRow(IP, kalign, range->pixels16, range->N, range->threshold, strengths);
-        // remove extra samples
-        extra = &strengths[kalign - 1];
-        for (k = 0; k < kextra; ++k) {
-            *extra-- = 0;
-        }
-        IP += range->stride;
-        strengths += range->stride;
-    } // for (j)
+		// remove extra samples
+		extra = &strengths[kalign - 1];
+		for (k = 0; k < kextra; ++k) {
+			*extra-- = 0;
+		}
+		IP += range->stride;
+		strengths += range->stride;
+	} // for (j)
 }
 
 static void CompVFastBuildInterestPoints(RangeFAST* range, std::vector<CompVInterestPoint>& interestPoints)

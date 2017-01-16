@@ -14,9 +14,10 @@ COMPV_NAMESPACE_BEGIN()
 
 static const std::string& kProgramVertexData =
 "	attribute vec4 position;"
+"	uniform vec2 TextureSize;"
 "	void main() {"
-"		gl_PointSize = 10.0;"
-"		gl_Position = position;"
+"		gl_PointSize = 5.0;"
+"		gl_Position = vec4(position.x/TextureSize.x, position.y/TextureSize.y, 1.0, 1.0);"
 "	}";
 
 static const std::string& kProgramFragmentData =
@@ -38,18 +39,29 @@ CompVGLDrawPoints::~CompVGLDrawPoints()
 COMPV_ERROR_CODE CompVGLDrawPoints::process(const GLfloat* xy, GLsizei count)
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	GLuint position_attribute;
+	GLuint uNamePosition, uNameLocation;
+	GLint fboWidth = 0, fboHeight = 0;
 	
 	// Bind to VAO, VBO, Program
 	COMPV_CHECK_CODE_BAIL(err = CompVGLDraw::bind());
 
+	// Get FBO width
+	COMPV_glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &fboWidth);
+	COMPV_glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &fboHeight);
+	COMPV_CHECK_EXP_BAIL(!fboWidth || !fboHeight, (err = COMPV_ERROR_CODE_E_GL), "fboWidth or fboHeight is equal to zero");
+
 	// Submit vertices data
 	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * count, xy, GL_STATIC_DRAW);
 
+	// Set TextureSize (FIXME: do only if textureSize change for VAO)
+	const GLfloat TextureSize[2] = { static_cast<GLfloat>(fboWidth), static_cast<GLfloat>(fboHeight) };
+	uNameLocation = COMPV_glGetUniformLocation(program()->name(), "TextureSize");
+	COMPV_glUniform2fv(uNameLocation, 1, TextureSize);
+
 	// Set position attribute (FIXME: do onces if VAO supported)
-	position_attribute = COMPV_glGetAttribLocation(program()->name(), "position");
-	COMPV_glEnableVertexAttribArray(position_attribute);
-	COMPV_glVertexAttribPointer(position_attribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	uNamePosition = COMPV_glGetAttribLocation(program()->name(), "position");
+	COMPV_glEnableVertexAttribArray(uNamePosition);
+	COMPV_glVertexAttribPointer(uNamePosition, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	// Draw points
 	COMPV_glDrawArrays(GL_POINTS, 0, count);
