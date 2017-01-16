@@ -15,9 +15,11 @@
 #include "compv/gl/compv_gl.h"
 #include "compv/gl/compv_gl_info.h"
 
+
 #include "compv/drawing/compv_drawing_window_sdl.h"
 #include "compv/drawing/compv_drawing_window_egl_android.h"
 #include "compv/drawing/compv_drawing_canvas_skia.h"
+#include "compv/gl/drawing/compv_gl_canvas_impl.h"
 
 #define COMPV_THIS_CLASSNAME "CompVDrawing"
 
@@ -25,8 +27,10 @@ COMPV_NAMESPACE_BEGIN()
 
 bool CompVDrawing::s_bInitialized = false;
 bool CompVDrawing::s_bLoopRunning = false;
-CompVPtr<CompVThread* > CompVDrawing::s_WorkerThread = NULL;
+CompVThreadPtr CompVDrawing::s_WorkerThread = NULL;
+CompVSemaphorePtr CompVDrawing::s_WorkerSemaphore = NULL;
 CompVRunLoopListenerPtr CompVDrawing::s_ptrListener = NULL;
+std::vector<COMPV_RUNLOOP_STATE> CompVDrawing::s_vecStates;
 #if COMPV_OS_ANDROID
 CompVDrawingAndroidEngine CompVDrawing::s_AndroidEngine = {
     .animating = false,
@@ -73,8 +77,10 @@ COMPV_ERROR_CODE CompVDrawing::init()
     COMPV_CHECK_CODE_BAIL(err = CompVWindowFactory::set(&CompVWindowFactoryEGLAndroid));
 #endif
 
-    /* Skia */
-#if HAVE_SKIA
+    /* Canvas */
+#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
+	COMPV_CHECK_CODE_BAIL(err = CompVCanvasFactory::set(&CompVCanvasFactoryGL));
+#elif HAVE_SKIA
     COMPV_CHECK_CODE_BAIL(err = CompVCanvasFactory::set(&CompVCanvasFactorySkia));
 #endif
 
@@ -173,6 +179,7 @@ COMPV_ERROR_CODE CompVDrawing::deInit()
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Worker thread joined");
 		CompVDrawing::s_WorkerThread = NULL;
 	}
+	CompVDrawing::s_WorkerSemaphore = NULL;
 
 #if defined(HAVE_SDL_H)
     if (s_pSDLMainContext) {
@@ -222,11 +229,13 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(CompVRunLoopListenerPtr listener COMPV_DE
     COMPV_CHECK_CODE_BAIL(err = CompVDrawing::android_runLoop(AndroidApp_get()));
 #elif defined(HAVE_SDL_H)
     if (CompVDrawing::s_ptrListener) {
+		COMPV_CHECK_CODE_BAIL(err = CompVSemaphore::newObj(&CompVDrawing::s_WorkerSemaphore));
         COMPV_CHECK_CODE_BAIL(err = CompVThread::newObj(&CompVDrawing::s_WorkerThread, CompVDrawing::workerThread, NULL));
     }
     COMPV_CHECK_CODE_BAIL(err = CompVDrawing::sdl_runLoop());
 #else
-    if (WorkerThread) {
+	if (CompVDrawing::s_ptrListener) {
+		COMPV_CHECK_CODE_BAIL(err = CompVSemaphore::newObj(&CompVDrawing::s_WorkerSemaphore));
         COMPV_CHECK_CODE_BAIL(err = CompVThread::newObj(&CompVDrawing::s_WorkerThread, WorkerThread, userData));
     }
     while (CompVDrawing::s_bLoopRunning) {
@@ -240,10 +249,8 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(CompVRunLoopListenerPtr listener COMPV_DE
 
 bail:
     CompVDrawing::s_bLoopRunning = false;
-	// Alter the listener that the runloop stopped
-	if (CompVDrawing::s_ptrListener) {
-		CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_LOOP_STOPPED);
-	}
+	COMPV_CHECK_CODE_NOP(CompVDrawing::signalState(COMPV_RUNLOOP_STATE_LOOP_STOPPED)); // will increment the semaphore
+	
 	// Join the worker thread
 	if (CompVDrawing::s_WorkerThread) {
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Joining the worker thread...");
@@ -347,6 +354,7 @@ void CompVDrawing::android_engine_handle_cmd(struct android_app* app, int32_t cm
 			// The window is being shown, get it ready.
 			if (engine->app->window != NULL) {
 				if (CompVDrawing::s_ptrListener) {
+					COMPV_CHECK_CODE_NOP(CompVSemaphore::newObj(&CompVDrawing::s_WorkerSemaphore));
 					COMPV_CHECK_CODE_NOP(CompVThread::newObj(&CompVDrawing::s_WorkerThread, CompVDrawing::workerThread, app));
 				}
 			}
@@ -366,27 +374,19 @@ void CompVDrawing::android_engine_handle_cmd(struct android_app* app, int32_t cm
 
 		case APP_CMD_RESUME:
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_RESUME -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_RESUMED)");
-			if (CompVDrawing::s_ptrListener) {
-				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_RESUMED);
-			}
+			COMPV_CHECK_CODE_NOP(CompVDrawing::signalState(COMPV_RUNLOOP_STATE_ANIMATION_RESUMED));
 			break;
 		case APP_CMD_START:
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_START -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED)");
-			if (CompVDrawing::s_ptrListener) {
-				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED);
-			}
+			COMPV_CHECK_CODE_NOP(CompVDrawing::signalState(COMPV_RUNLOOP_STATE_ANIMATION_STARTED));
 			break;
 		case APP_CMD_PAUSE:
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_PAUSE -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_PAUSED)");
-			if (CompVDrawing::s_ptrListener) {
-				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_PAUSED);
-			}
+			COMPV_CHECK_CODE_NOP(CompVDrawing::signalState(COMPV_RUNLOOP_STATE_ANIMATION_PAUSED));
 			break;
 		case APP_CMD_STOP:
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_STOP -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STOPPED)");
-			if (CompVDrawing::s_ptrListener) {
-				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STOPPED);
-			}
+			COMPV_CHECK_CODE_NOP(CompVDrawing::signalState(COMPV_RUNLOOP_STATE_ANIMATION_STOPPED));
 			break;
     }
 	COMPV_CHECK_CODE_NOP(CompVWindowRegistry::android_handle_cmd(cmd));
@@ -471,43 +471,66 @@ COMPV_ERROR_CODE CompVDrawing::breakLoop()
     return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVDrawing::signalState(COMPV_RUNLOOP_STATE state)
+{
+	if (CompVDrawing::s_ptrListener && CompVDrawing::s_WorkerSemaphore) {
+		s_vecStates.push_back(state);
+		COMPV_CHECK_CODE_RETURN(CompVDrawing::s_WorkerSemaphore->increment());
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 void* COMPV_STDCALL CompVDrawing::workerThread(void* arg)
 {
+	COMPV_RUNLOOP_STATE state;
 	if (CompVDrawing::isLoopRunning()) {
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "-> onStateChanged(COMPV_RUNLOOP_STATE_LOOP_STARTED)");
-		CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_LOOP_STARTED);
+		/* First time */ {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "-> onStateChanged(COMPV_RUNLOOP_STATE_LOOP_STARTED)");
+			CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_LOOP_STARTED);
 #if COMPV_OS_ANDROID
-		struct android_app* app = reinterpret_cast<struct android_app*>(arg);
-		if (app) {
-			switch (app->activityState) {
-			case APP_CMD_RESUME: 
-				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_RESUME -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_RESUMED)");
-				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_RESUMED); 
-				break;
-			case APP_CMD_START: 
-				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_START -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED)");
-				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED); 
-				break;
-			case APP_CMD_PAUSE: 
-				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_PAUSE -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_PAUSED)");
-				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_PAUSED); 
-				break;
-			case APP_CMD_STOP:
-				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_STOP -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STOPPED)");
-				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STOPPED); 
-				break;
-			default: break;
+			struct android_app* app = reinterpret_cast<struct android_app*>(arg);
+			if (app) {
+				switch (app->activityState) {
+				case APP_CMD_RESUME:
+					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_RESUME -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_RESUMED)");
+					CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_RESUMED);
+					break;
+				case APP_CMD_START:
+					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_START -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED)");
+					CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED);
+					break;
+				case APP_CMD_PAUSE:
+					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_PAUSE -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_PAUSED)");
+					CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_PAUSED);
+					break;
+				case APP_CMD_STOP:
+					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "APP_CMD_STOP -> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STOPPED)");
+					CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STOPPED);
+					break;
+				default: break;
+				}
 			}
-		}
-		else {
+			else {
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "-> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED)");
+				CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED);
+			}
+#else
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "-> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED)");
 			CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED);
-		}
-#else
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "-> onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED)");
-		CompVDrawing::s_ptrListener->onStateChanged(COMPV_RUNLOOP_STATE_ANIMATION_STARTED);
 #endif
+		} /* EndOf-FirstTime */
+
+		while (CompVDrawing::isLoopRunning()) {
+			COMPV_CHECK_CODE_BAIL(CompVDrawing::s_WorkerSemaphore->decrement());
+			while (!s_vecStates.empty()) {
+				state = *s_vecStates.begin();
+				s_vecStates.erase(s_vecStates.begin());
+				COMPV_CHECK_CODE_BAIL(CompVDrawing::s_ptrListener->onStateChanged(state));
+			}
+		}
 	}
+
+bail:
 	return NULL;
 }
 

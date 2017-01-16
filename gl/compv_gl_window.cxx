@@ -87,6 +87,9 @@ COMPV_ERROR_CODE CompVGLWindow::beginDraw() /*Overrides(CompVWindow)*/
     // 'GL_DEPTH_TEST' is needed for 3D projection
     COMPV_glDisable(GL_DEPTH_TEST);
     COMPV_glDisable(GL_BLEND);
+#if defined(GL_PROGRAM_POINT_SIZE)
+	COMPV_glEnable(GL_PROGRAM_POINT_SIZE);
+#endif
     COMPV_glViewport(0, 0, static_cast<GLsizei>(CompVWindow::width()), static_cast<GLsizei>(CompVWindow::height())); // FIXME: width and height must be dynamic
     COMPV_glClearColor(0.f, 0.f, 0.f, 1.f);
     COMPV_glClearStencil(0);

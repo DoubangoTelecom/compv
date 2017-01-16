@@ -8,16 +8,21 @@
 #if HAVE_SKIA
 #include "compv/gl/compv_gl_headers.h"
 #include "compv/gl/compv_gl_func.h"
+#include "compv/gl/compv_gl_utils.h"
 #include "compv/base/compv_base.h"
 
-#include <GrContext.h>
-#include <SkCanvas.h>
-#include <SkGraphics.h>
-#include <SkSurface.h>
-#include <gl/GrGLInterface.h>
+// Link input: $(OutDir)CompVBase.lib;$(OutDir)CompVGL.lib;skia_core.lib;skia_effects.lib;skia_images.lib;skia_opts.lib;skia_opts_hsw.lib;skia_opts_sse41.lib;skia_opts_sse42.lib;skia_opts_ssse3.lib;skia_opts_avx.lib;skia_ports.lib;skia_sfnt.lib;skia_utils.lib;skia_skgpu.lib;skia_codec.lib;libjpeg-turbo.lib;libpng_static.lib;libwebp_dec.lib;libwebp_dsp.lib;libwebp_demux.lib;libwebp_utils.lib;raw_codec.lib;dng_sdk.lib;piex.lib;giflib.lib;zlib.lib;libSkKTX.lib;libetc1.lib;glew32s.lib;OpenGL32.lib;Glu32.lib;SDL2.lib;Winmm.lib;imm32.lib;version.lib;%(AdditionalDependencies)
 
 // FIXME: create surface once and must be associated to a context
 // FIXME: use 'drawPoints' for multiple points and for multiple lines
+
+// https://github.com/google/skia/blob/master/example/SkiaSDLExample.cpp
+// https://github.com/google/skia/blob/master/experimental/GLFWTest/glfw_main.cpp
+// https://groups.google.com/forum/#!topic/skia-discuss/P4GO92rxIaM
+// http://stackoverflow.com/questions/12157646/how-to-render-offscreen-on-opengl
+// https://developer.apple.com/library/content/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_offscreen/opengl_offscreen.html
+
+#define COMPV_THIS_CLASSNAME	"CompVCanvasImplSkia"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -36,43 +41,106 @@ const CompVCanvasFactory CompVCanvasFactorySkia = {
 
 CompVCanvasImplSkia::CompVCanvasImplSkia()
     : CompVCanvasImpl()
+	, m_pContextSkia(NULL)
+	, m_pSurfaceSkia(NULL)
+	, m_pcContextGL(NULL)
+	, m_bInitialized(false)
 {
 }
 
 CompVCanvasImplSkia::~CompVCanvasImplSkia()
 {
-
+	COMPV_CHECK_CODE_NOP(deInit());
 }
 
-
-// https://github.com/google/skia/blob/master/example/SkiaSDLExample.cpp
-// https://github.com/google/skia/blob/master/experimental/GLFWTest/glfw_main.cpp
-// https://groups.google.com/forum/#!topic/skia-discuss/P4GO92rxIaM
-// http://stackoverflow.com/questions/12157646/how-to-render-offscreen-on-opengl
-// https://developer.apple.com/library/content/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_offscreen/opengl_offscreen.html
-
-//static SkPath create_star()
-//{
-//    static const int kNumPoints = 5;
-//    SkPath concavePath;
-//    SkPoint points[kNumPoints] = { { 0, SkIntToScalar(-50) } };
-//    SkMatrix rot;
-//    rot.setRotate(SkIntToScalar(360) / kNumPoints);
-//    for (int i = 1; i < kNumPoints; ++i) {
-//        rot.mapPoints(points + i, points + i - 1, 1);
-//    }
-//    concavePath.moveTo(points[0]);
-//    for (int i = 0; i < kNumPoints; ++i) {
-//        concavePath.lineTo(points[(2 * i) % kNumPoints]);
-//    }
-//    concavePath.setFillType(SkPath::kEvenOdd_FillType);
-//    SkASSERT(!concavePath.isConvex());
-//    concavePath.close();
-//    return concavePath;
-//}
-
-COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textLengthInBytes, int x, int y)
+bool CompVCanvasImplSkia::isContextGLChanged()const
 {
+	return CompVGLUtils::currentContext() != m_pcContextGL;
+}
+
+COMPV_ERROR_CODE CompVCanvasImplSkia::init()
+{
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	COMPV_CHECK_EXP_BAIL(!CompVGLUtils::currentContext(), (err = COMPV_ERROR_CODE_E_GL_NO_CONTEXT), "No OpenGL context");
+	if (isContextGLChanged()) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "GL Context changed");
+		COMPV_CHECK_CODE_BAIL(err = deInit());
+	}
+	if (!m_bInitialized) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Initializing...");
+
+		GLint bufferWidth = 0, bufferHeight = 0, bufferName = 0;
+		GrBackendRenderTargetDesc desc;
+
+		COMPV_glGetIntegerv(GLenum(GL_FRAMEBUFFER_BINDING), &bufferName);
+		COMPV_CHECK_EXP_BAIL((bufferName == kCompVGLNameInvalid), (err = COMPV_ERROR_CODE_E_SKIA), "bufferName is invalid");
+		COMPV_glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &bufferWidth);
+		COMPV_glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &bufferHeight);
+		COMPV_CHECK_EXP_BAIL(!bufferWidth || !bufferHeight, (err = COMPV_ERROR_CODE_E_SKIA), "bufferWidth or bufferHeight is equal to zero");
+
+		SkAutoTUnref<const GrGLInterface> interf(GrGLCreateNativeInterface());
+		SkASSERT(interf);
+		//interf.reset(GrGLInterfaceRemoveNVPR(interf)); // remove GL_NV_path_rendering ?
+		
+		m_pContextSkia = GrContext::Create(kOpenGL_GrBackend, (GrBackendContext)interf.get());
+		COMPV_CHECK_EXP_BAIL(!m_pContextSkia, (err = COMPV_ERROR_CODE_E_SKIA), "GrContext::Create(kOpenGL_GrBackend) failed");
+
+		SkSurfaceProps props(SkSurfaceProps::kLegacyFontHost_InitType);
+		desc.fWidth = bufferWidth;
+		desc.fHeight = bufferHeight;
+		desc.fConfig = kSkia8888_GrPixelConfig;
+		desc.fOrigin = kBottomLeft_GrSurfaceOrigin;
+		desc.fSampleCnt = 0;
+		desc.fStencilBits = 8; // required
+		desc.fRenderTargetHandle = bufferName;
+		m_pSurfaceSkia = SkSurface::MakeFromBackendRenderTarget(m_pContextSkia, desc, &props).release();
+		COMPV_CHECK_EXP_BAIL(!m_pSurfaceSkia, (err = COMPV_ERROR_CODE_E_SKIA), "SkSurface::MakeFromBackendRenderTarget failed");
+		
+		// update context associated to this surface
+		m_pcContextGL = CompVGLUtils::currentContext();
+
+		m_bInitialized = true;
+	}
+
+bail:
+	if (COMPV_ERROR_CODE_IS_NOK(err)) {
+		COMPV_CHECK_CODE_NOP(deInit());
+	}
+	return err;
+}
+
+COMPV_ERROR_CODE CompVCanvasImplSkia::deInit()
+{
+	if (m_pSurfaceSkia) {
+		delete m_pSurfaceSkia;
+		m_pSurfaceSkia = NULL;
+	}
+	if (m_pContextSkia) {
+		delete m_pContextSkia;
+		m_pContextSkia = NULL;
+	}
+	m_bInitialized = false;
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) /*Overrides(CompVCanvasInterface)*/
+{
+#if 1
+	// Only first call works
+	//deInit();
+	COMPV_CHECK_CODE_RETURN(init());
+	SkCanvas* canvas = m_pSurfaceSkia->getCanvas(); // We don't manage this pointer's lifetime
+	SkPaint paint;
+	paint.setFilterQuality(kLow_SkFilterQuality);
+	paint.setColor(SK_ColorRED);
+	//SkRandom rand;
+	//paint.setColor(rand.nextU() | 0x44808080);
+	paint.setTextSize(15.0f);
+	paint.setAntiAlias(true);
+	canvas->drawText(textPtr, textLengthInBytes, SkIntToScalar(x), SkIntToScalar(y), paint);
+	canvas->flush();
+	return COMPV_ERROR_CODE_S_OK;
+#else
     COMPV_DEBUG_INFO_CODE_FOR_TESTING();
     GLint bufferWidth = 0, bufferHeight = 0;
     //GrContext *sContext = NULL;
@@ -219,9 +287,10 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textL
     }
 
     return COMPV_ERROR_CODE_S_OK;
+#endif
 }
 
-COMPV_ERROR_CODE CompVCanvasImplSkia::drawLine(int x0, int y0, int x1, int y1)
+COMPV_ERROR_CODE CompVCanvasImplSkia::drawLine(int x0, int y0, int x1, int y1) /*Overrides(CompVCanvasInterface)*/
 {
     COMPV_DEBUG_INFO_CODE_FOR_TESTING();
     GLint bufferWidth = 0, bufferHeight = 0;
@@ -300,6 +369,11 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawLine(int x0, int y0, int x1, int y1)
     }
 
     return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVCanvasImplSkia::close() /*Overrides(CompVCanvasImpl)*/
+{
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVCanvasImplSkia::newObj(CompVCanvasImplSkiaPtrPtr skiaCanvas)

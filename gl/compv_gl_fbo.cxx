@@ -31,10 +31,10 @@ CompVGLFbo::~CompVGLFbo()
     COMPV_CHECK_CODE_NOP(deInit());
 }
 
-COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLFbo::bind)()
+COMPV_ERROR_CODE CompVGLFbo::bind() /*Overrides(CompVBind)*/
 {
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-    COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE);
+    COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE, "Not initialized");
 
     COMPV_glBindFramebuffer(GL_FRAMEBUFFER, m_uNameFrameBuffer);
     COMPV_glBindRenderbuffer(GL_RENDERBUFFER, m_uNameDepthStencil);
@@ -42,9 +42,10 @@ COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLFbo::bind)()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVBind", CompVGLFbo::unbind)()
+COMPV_ERROR_CODE CompVGLFbo::unbind() /*Overrides(CompVBind)*/
 {
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_EXP_RETURN(!m_bInit, COMPV_ERROR_CODE_E_INVALID_STATE, "Not initialized");
 
     COMPV_glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
     COMPV_glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
@@ -69,7 +70,7 @@ COMPV_ERROR_CODE CompVGLFbo::updateSize(size_t width, size_t height)
 #else
 #	error "Not supported"
 #endif
-            COMPV_glCheckFramebufferStatus(&fboStatus_, GL_FRAMEBUFFER);
+			fboStatus_ = COMPV_glCheckFramebufferStatus(GL_FRAMEBUFFER);
             if (fboStatus_ != GL_FRAMEBUFFER_COMPLETE) {
                 COMPV_CHECK_CODE_NOP(CompVGLUtils::checkLastError());
                 COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
@@ -127,7 +128,7 @@ COMPV_ERROR_CODE CompVGLFbo::init(size_t width, size_t height)
     COMPV_glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_uNameDepthStencil);
 
     // Check FBO status
-    COMPV_glCheckFramebufferStatus(&fboStatus_, GL_FRAMEBUFFER);
+	fboStatus_ = COMPV_glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (fboStatus_ != GL_FRAMEBUFFER_COMPLETE) {
         COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::checkLastError());
         COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);

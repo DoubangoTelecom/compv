@@ -449,14 +449,14 @@ COMPV_ERROR_CODE CompVGLRenderer::init(const CompVMatPtr mat)
         COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, textureFilter);
         COMPV_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, textureFilter);
         COMPV_glTexImage2D(GL_TEXTURE_2D, 0, m_eFormats[planeId], static_cast<GLsizei>(m_uStridesTexture[planeId]), static_cast<GLsizei>(m_uHeightsTexture[planeId]), 0, m_eFormats[planeId], m_ePixelDataType, NULL);
-		COMPV_glGetUniformLocation(&uNameLocation, m_ptrBlitter->program()->name(), m_pSamplerNames[planeId]);
+		uNameLocation = COMPV_glGetUniformLocation(m_ptrBlitter->program()->name(), m_pSamplerNames[planeId]);
 		COMPV_glUniform1i(uNameLocation, static_cast<GLint>(1 + planeId));
 		// Set TextureSize = (stride, height)
 		switch (pixelFormat) {
 		case COMPV_SUBTYPE_PIXELS_YUYV422:
 		case COMPV_SUBTYPE_PIXELS_UYVY422: {
 			const GLfloat TextureSize[2] = { static_cast<GLfloat>(m_uStridesTexture[planeId]), static_cast<GLfloat>(m_uHeightsTexture[planeId]) };
-			COMPV_glGetUniformLocation(&uNameLocation, CompVGLRenderer::m_ptrBlitter->program()->name(), "TextureSize");
+			uNameLocation = COMPV_glGetUniformLocation(CompVGLRenderer::m_ptrBlitter->program()->name(), "TextureSize");
 			COMPV_glUniform2fv(uNameLocation, 1, TextureSize);
 			break;
 		}

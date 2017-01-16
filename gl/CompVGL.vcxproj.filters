@@ -7,6 +7,12 @@
     <Filter Include="source">
       <UniqueIdentifier>{d1f60060-2120-4cbe-bcc8-6d03d0ac7c2d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\drawing">
+      <UniqueIdentifier>{56cbabeb-ae0a-4684-b341-e5e41332ce28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\drawing">
+      <UniqueIdentifier>{9a6b8bd6-865e-4974-ac94-2974739dd1a9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\gl\compv_gl.h">
@@ -69,6 +75,15 @@
     <ClInclude Include="include\compv\gl\compv_gl_window.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\gl\drawing\compv_gl_canvas_impl.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\gl\drawing\compv_gl_draw.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\gl\drawing\compv_gl_draw_points.h">
+      <Filter>include\drawing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_gl.cxx">
@@ -118,6 +133,15 @@
     </ClCompile>
     <ClCompile Include="compv_gl_window.cxx">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="drawing\compv_gl_canvas_impl.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="drawing\compv_gl_draw.cxx">
+      <Filter>source\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="drawing\compv_gl_draw_points.cxx">
+      <Filter>source\drawing</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

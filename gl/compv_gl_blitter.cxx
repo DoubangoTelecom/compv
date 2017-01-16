@@ -54,7 +54,7 @@ COMPV_ERROR_CODE CompVGLBlitter::bind()  /*Overrides(CompVBind)*/
         COMPV_glBindVertexArray(m_uNameVAO);
     }
     else {
-        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("OpenGL: VAO not suported");
         COMPV_glBindBuffer(GL_ARRAY_BUFFER, m_uNameVertexBuffer);
         COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uNameIndiceBuffer);
         COMPV_glEnableVertexAttribArray(m_uNamePrgAttPosition);
@@ -75,7 +75,7 @@ COMPV_ERROR_CODE CompVGLBlitter::unbind()  /*Overrides(CompVBind)*/
         COMPV_glBindVertexArray(kCompVGLNameInvalid);
     }
     else {
-        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("OpenGL: VAO not suported");
         COMPV_glBindBuffer(GL_ARRAY_BUFFER, kCompVGLNameInvalid);
         COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, kCompVGLNameInvalid);
     }
@@ -209,11 +209,11 @@ COMPV_ERROR_CODE CompVGLBlitter::init(size_t width, size_t height, size_t stride
     COMPV_CHECK_CODE_BAIL(CompVGLProgram::newObj(&m_ptrProgram, prgVertexData.c_str(), prgVertexData.length(), prgFragData.c_str(), prgFragData.length()));
     COMPV_CHECK_CODE_NOP(err = m_ptrProgram->bind());
 
-    COMPV_glGetAttribLocation(&m_uNamePrgAttPosition, m_ptrProgram->name(), "position");
-    COMPV_glGetAttribLocation(&m_uNamePrgAttTexCoord, m_ptrProgram->name(), "texCoord");
+	m_uNamePrgAttPosition = COMPV_glGetAttribLocation(m_ptrProgram->name(), "position");
+	m_uNamePrgAttTexCoord = COMPV_glGetAttribLocation(m_ptrProgram->name(), "texCoord");
 
     if (bMVP) {
-        COMPV_glGetUniformLocation(&m_uNamePrgUnifMVP, m_ptrProgram->name(), "MVP");
+		m_uNamePrgUnifMVP = COMPV_glGetUniformLocation(m_ptrProgram->name(), "MVP");
     }
     COMPV_glBindBuffer(GL_ARRAY_BUFFER, m_uNameVertexBuffer);
     COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uNameIndiceBuffer);

@@ -4,6 +4,8 @@
     <ClCompile Include="..\..\main.cxx" />
     <ClCompile Include="..\..\chroma_conv.cxx" />
     <ClCompile Include="..\..\feature_fast.cxx" />
+    <ClCompile Include="..\..\draw_image.cxx" />
+    <ClCompile Include="..\..\draw_points.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />

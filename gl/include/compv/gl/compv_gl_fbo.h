@@ -47,8 +47,8 @@ public:
         return m_uNameDepthStencil;
     }
 
-    COMPV_OVERRIDE_DECL0("CompVBind", bind)() override;
-    COMPV_OVERRIDE_DECL0("CompVBind", unbind)() override;
+	virtual COMPV_ERROR_CODE bind() override /*Overrides(CompVBind)*/;
+	virtual COMPV_ERROR_CODE unbind() override /*Overrides(CompVBind)*/;
     virtual COMPV_ERROR_CODE updateSize(size_t width, size_t height);
 
     COMPV_ERROR_CODE clear();

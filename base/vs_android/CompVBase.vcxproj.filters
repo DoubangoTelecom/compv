@@ -327,6 +327,9 @@
     <ClInclude Include="..\include\compv\base\compv_features.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\parallel\compv_runnable.h">
+      <Filter>include\parallel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -519,6 +522,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\compv_features.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parallel\compv_runnable.cxx">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

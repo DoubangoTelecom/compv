@@ -11,6 +11,7 @@
 #include "compv/drawing/compv_drawing_common.h"
 #include "compv/base/compv_obj.h"
 #include "compv/base/parallel/compv_thread.h"
+#include "compv/base/parallel/compv_semaphore.h"
 #include "compv/base/android/compv_android_native_activity.h"
 #include "compv/base/drawing/compv_window.h"
 
@@ -82,6 +83,7 @@ private:
     static void android_engine_handle_cmd(struct android_app* app, int32_t cmd);
     static COMPV_ERROR_CODE android_runLoop(struct android_app* state);
 #endif
+	static COMPV_ERROR_CODE signalState(COMPV_RUNLOOP_STATE state);
 	static void* COMPV_STDCALL workerThread(void* arg);
 
 private:
@@ -89,7 +91,9 @@ private:
     static bool s_bLoopRunning;
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     static CompVThreadPtr s_WorkerThread;
+	static CompVSemaphorePtr s_WorkerSemaphore;
 	static CompVRunLoopListenerPtr s_ptrListener;
+	static std::vector<COMPV_RUNLOOP_STATE> s_vecStates;
 #if COMPV_OS_ANDROID
     static CompVDrawingAndroidEngine s_AndroidEngine;
 #endif /* COMPV_OS_ANDROID */

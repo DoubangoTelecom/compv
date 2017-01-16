@@ -32,7 +32,7 @@ COMPV_ERROR_CODE CompVFeature::addFactory(const CompVFeatureFactory* factory)
 	COMPV_CHECK_EXP_RETURN(factory == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	if (s_Factories.find(factory->id) != s_Factories.end()) {
 		const CompVFeatureFactory* old = s_Factories.find(factory->id)->second;
-		COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Feature factory with id = %d already exist and will be replaced old name=%s, new name=%s", factory->id, old->name, factory->name);
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Feature factory with id = %d already exist and will be replaced old name=%s, new name=%s", factory->id, old->name, factory->name);
 	}
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Registering feature factory with id = %d and name = '%s'...", factory->id, factory->name);
 	s_Factories[factory->id] = factory;

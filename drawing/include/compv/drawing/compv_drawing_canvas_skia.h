@@ -20,6 +20,12 @@
 
 #include <string>
 
+#include <GrContext.h>
+#include <SkCanvas.h>
+#include <SkGraphics.h>
+#include <SkSurface.h>
+#include <gl/GrGLInterface.h>
+
 COMPV_NAMESPACE_BEGIN()
 
 extern const CompVCanvasFactory CompVCanvasFactorySkia;
@@ -34,15 +40,23 @@ public:
     virtual ~CompVCanvasImplSkia();
     COMPV_OBJECT_GET_ID(CompVCanvasImplSkia);
 
-    virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) override;
-    virtual COMPV_ERROR_CODE drawLine(int x0, int y0, int x1, int y1) override;
+    virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) override /*Overrides(CompVCanvasInterface)*/;
+    virtual COMPV_ERROR_CODE drawLine(int x0, int y0, int x1, int y1) override /*Overrides(CompVCanvasInterface)*/;
+
+	virtual COMPV_ERROR_CODE close() override /*Overrides(CompVCanvasImpl)*/;
 
     static COMPV_ERROR_CODE newObj(CompVCanvasImplSkiaPtrPtr skiaCanvas);
 
-protected:
+private:
+	bool isContextGLChanged()const;
+	COMPV_ERROR_CODE init();
+	COMPV_ERROR_CODE deInit();
 
 private:
-
+	GrContext* m_pContextSkia;
+	SkSurface* m_pSurfaceSkia;
+	const void* m_pcContextGL;
+	bool m_bInitialized;
 };
 
 COMPV_NAMESPACE_END()

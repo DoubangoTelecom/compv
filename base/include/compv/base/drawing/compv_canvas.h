@@ -37,6 +37,7 @@ protected:
     CompVCanvasImpl();
 public:
     virtual ~CompVCanvasImpl();
+	virtual COMPV_ERROR_CODE close() = 0;
 };
 
 //

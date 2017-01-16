@@ -32,8 +32,8 @@ public:
         return m_bEmpty;
     }
 
-    COMPV_OVERRIDE_DECL0("CompVCanvasInterface", drawText)(const void* textPtr, size_t textLengthInBytes, int x, int y) override;
-    COMPV_OVERRIDE_DECL0("CompVCanvasInterface", drawLine)(int x0, int y0, int x1, int y1) override;
+    virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) override /*Overrides(CompVCanvasInterface)*/;
+	virtual COMPV_ERROR_CODE drawLine(int x0, int y0, int x1, int y1) override /*Overrides(CompVCanvasInterface)*/;
 
     COMPV_ERROR_CODE close();
 

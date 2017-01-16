@@ -19,16 +19,16 @@
 #define COMPV_TEST_IMAGE_WINDOW_WIDTH				1280
 #define COMPV_TEST_IMAGE_WINDOW_HEIGHT				720
 
-COMPV_OBJECT_DECLARE_PTRS(MyRunLoopListener1)
-class CompVMyRunLoopListener1 : public CompVRunLoopListener
+COMPV_OBJECT_DECLARE_PTRS(MyRunLoopListener2)
+class CompVMyRunLoopListener2 : public CompVRunLoopListener
 {
 protected:
-	CompVMyRunLoopListener1(CompVWindowPtr window, CompVMatPtr image) : m_ptrWindow(window), m_ptrImage(image) { }
+	CompVMyRunLoopListener2(CompVWindowPtr window, CompVMatPtr image) : m_ptrWindow(window), m_ptrImage(image) { }
 public:
-	virtual ~CompVMyRunLoopListener1() {}
+	virtual ~CompVMyRunLoopListener2() {}
 	virtual COMPV_ERROR_CODE onStateChanged(COMPV_RUNLOOP_STATE newState) override /*Overrides(CompVRunLoopListener)*/;
 	static void* COMPV_STDCALL threadDrawingGPU(void* arg);
-	static COMPV_ERROR_CODE newObj(CompVMyRunLoopListener1PtrPtr listener, CompVWindowPtr window, CompVMatPtr image); 
+	static COMPV_ERROR_CODE newObj(CompVMyRunLoopListener2PtrPtr listener, CompVWindowPtr window, CompVMatPtr image);
 private:
 	CompVWindowPtr m_ptrWindow;
 	CompVMatPtr m_ptrImage;
@@ -37,19 +37,19 @@ private:
 	bool m_bAnimating;
 };
 
-COMPV_ERROR_CODE draw_image()
+COMPV_ERROR_CODE draw_points()
 {
 	CompVWindowPtr window;
 	CompVMatPtr image;
-	CompVMyRunLoopListener1Ptr listener;
+	CompVMyRunLoopListener2Ptr listener;
 	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_TEST_IMAGE_SUBTYPE, COMPV_TEST_IMAGE_WIDTH, COMPV_TEST_IMAGE_HEIGHT, COMPV_TEST_IMAGE_STRIDE, COMPV_TEST_IMAGE_PATH_TO_FILE(COMPV_TEST_IMAGE_FILENAME).c_str(), &image));
-	COMPV_CHECK_CODE_RETURN(CompVWindow::newObj(&window, COMPV_TEST_IMAGE_WINDOW_WIDTH, COMPV_TEST_IMAGE_WINDOW_HEIGHT, "Test draw image!"));
-	COMPV_CHECK_CODE_RETURN(CompVMyRunLoopListener1::newObj(&listener, window, image));
+	COMPV_CHECK_CODE_RETURN(CompVWindow::newObj(&window, COMPV_TEST_IMAGE_WINDOW_WIDTH, COMPV_TEST_IMAGE_WINDOW_HEIGHT, "Test draw points!"));
+	COMPV_CHECK_CODE_RETURN(CompVMyRunLoopListener2::newObj(&listener, window, image));
 	COMPV_CHECK_CODE_RETURN(CompVDrawing::runLoop(*listener));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMyRunLoopListener1::onStateChanged(COMPV_RUNLOOP_STATE newState) /*Overrides(CompVRunLoopListener)*/
+COMPV_ERROR_CODE CompVMyRunLoopListener2::onStateChanged(COMPV_RUNLOOP_STATE newState) /*Overrides(CompVRunLoopListener)*/
 {
 	switch (newState) {
 	case COMPV_RUNLOOP_STATE_LOOP_STARTED:
@@ -81,12 +81,15 @@ COMPV_ERROR_CODE CompVMyRunLoopListener1::onStateChanged(COMPV_RUNLOOP_STATE new
 	}
 }
 
-void* COMPV_STDCALL CompVMyRunLoopListener1::threadDrawingGPU(void* arg)
+void* COMPV_STDCALL CompVMyRunLoopListener2::threadDrawingGPU(void* arg)
 {
-	CompVMyRunLoopListener1Ptr ptrThis = reinterpret_cast<CompVMyRunLoopListener1*>(arg);
+	CompVMyRunLoopListener2Ptr ptrThis = reinterpret_cast<CompVMyRunLoopListener2*>(arg);
+	size_t count = 0;
 	while (ptrThis->m_bAnimating && CompVDrawing::isLoopRunning() /*&& !ptrWindow->isClosed()*/) { // EGL: window is created with closed state then, opened with beginDraw
 		COMPV_CHECK_CODE_BAIL(ptrThis->m_ptrWindow->beginDraw());
 		COMPV_CHECK_CODE_BAIL(ptrThis->m_ptrSingleSurfaceLayer->surface()->drawImage(ptrThis->m_ptrImage));
+		std::string text = "Hello doubango telecom [" + CompVBase::to_string(count++) + "]";
+		COMPV_CHECK_CODE_BAIL(ptrThis->m_ptrSingleSurfaceLayer->surface()->renderer()->canvas()->drawText(text.c_str(), text.length(), 463, 86)); // FIXME: canvas should be at surface()
 		COMPV_CHECK_CODE_BAIL(ptrThis->m_ptrSingleSurfaceLayer->blit());
 		COMPV_CHECK_CODE_BAIL(ptrThis->m_ptrWindow->endDraw());
 	}
@@ -95,10 +98,10 @@ bail:
 	return NULL;
 }
 
-COMPV_ERROR_CODE CompVMyRunLoopListener1::newObj(CompVMyRunLoopListener1PtrPtr listener, CompVWindowPtr window, CompVMatPtr image)
+COMPV_ERROR_CODE CompVMyRunLoopListener2::newObj(CompVMyRunLoopListener2PtrPtr listener, CompVWindowPtr window, CompVMatPtr image)
 {
 	COMPV_CHECK_EXP_RETURN(!listener || !window || !image, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_CHECK_EXP_RETURN(!(*listener = new CompVMyRunLoopListener1(window, image)), COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	COMPV_CHECK_EXP_RETURN(!(*listener = new CompVMyRunLoopListener2(window, image)), COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	return COMPV_ERROR_CODE_S_OK;
 }
 

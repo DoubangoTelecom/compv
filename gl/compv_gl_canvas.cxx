@@ -24,7 +24,7 @@ CompVGLCanvas::~CompVGLCanvas()
 
 }
 
-COMPV_OVERRIDE_IMPL0("CompVCanvasInterface", CompVGLCanvas::drawText)(const void* textPtr, size_t textLengthInBytes, int x, int y)
+COMPV_ERROR_CODE CompVGLCanvas::drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) /*Overrides(CompVCanvasInterface)*/
 {
     COMPV_CHECK_EXP_RETURN(!textPtr || !textLengthInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_GL_FBO_AUTOBIND(*m_ptrFBO);
@@ -33,7 +33,7 @@ COMPV_OVERRIDE_IMPL0("CompVCanvasInterface", CompVGLCanvas::drawText)(const void
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVCanvasInterface", CompVGLCanvas::drawLine)(int x0, int y0, int x1, int y1)
+COMPV_ERROR_CODE CompVGLCanvas::drawLine(int x0, int y0, int x1, int y1) /*Overrides(CompVCanvasInterface)*/
 {
     COMPV_GL_FBO_AUTOBIND(*m_ptrFBO);
     COMPV_CHECK_CODE_RETURN(m_ptrImpl->drawLine(x0, y0, x1, y1));
@@ -43,8 +43,11 @@ COMPV_OVERRIDE_IMPL0("CompVCanvasInterface", CompVGLCanvas::drawLine)(int x0, in
 
 COMPV_ERROR_CODE CompVGLCanvas::close()
 {
+	if (m_ptrImpl) {
+		COMPV_CHECK_CODE_NOP(m_ptrImpl->close());
+	}
     if (m_ptrFBO) {
-        COMPV_CHECK_CODE_ASSERT(m_ptrFBO->close());
+		COMPV_CHECK_CODE_NOP(m_ptrFBO->close());
     }
     return COMPV_ERROR_CODE_S_OK;
 }
@@ -57,7 +60,6 @@ COMPV_ERROR_CODE CompVGLCanvas::newObj(CompVGLCanvasPtrPtr canvas, CompVGLFboPtr
     *canvas = canvas_;
     return COMPV_ERROR_CODE_S_OK;
 }
-
 
 COMPV_NAMESPACE_END()
 
