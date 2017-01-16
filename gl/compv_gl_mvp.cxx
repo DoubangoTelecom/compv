@@ -28,24 +28,24 @@ CompVGLMat4f::~CompVGLMat4f()
 
 }
 
-COMPV_OVERRIDE_IMPL1("CompVMat4f", const float*, CompVGLMat4f::ptr)() const
+const float* CompVGLMat4f::ptr() const /*Overrides(CompVMat4f)*/
 {
     return &m_Matrix[0][0];
 }
 
-COMPV_OVERRIDE_IMPL0("CompVMat4f", CompVGLMat4f::translate)(const CompVVec3f& vec3f)
+COMPV_ERROR_CODE CompVGLMat4f::translate(const CompVVec3f& vec3f) /*Overrides(CompVMat4f)*/
 {
     m_Matrix = glm::translate(m_Matrix, glm::vec3(vec3f.x, vec3f.y, vec3f.z));
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVMat4f", CompVGLMat4f::scale)(const CompVVec3f& vec3f)
+COMPV_ERROR_CODE CompVGLMat4f::scale(const CompVVec3f& vec3f) /*Overrides(CompVMat4f)*/
 {
     m_Matrix = glm::scale(m_Matrix, glm::vec3(vec3f.x, vec3f.y, vec3f.z));
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVMat4f", CompVGLMat4f::rotate)(float angle, const CompVVec3f& vec3f)
+COMPV_ERROR_CODE CompVGLMat4f::rotate(float angle, const CompVVec3f& vec3f) /*Overrides(CompVMat4f)*/
 {
     m_Matrix = glm::rotate(m_Matrix, angle, glm::vec3(vec3f.x, vec3f.y, vec3f.z));
     return COMPV_ERROR_CODE_S_OK;
@@ -78,12 +78,12 @@ CompVGLModel::~CompVGLModel()
 
 }
 
-COMPV_OVERRIDE_IMPL1("CompVModel", CompVMat4fPtr, CompVGLModel::matrix)()
+ CompVMat4fPtr CompVGLModel::matrix() /*Overrides(CompVModel)*/
 {
     return *m_ptrMatrix;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVModel", CompVGLModel::reset)()
+COMPV_ERROR_CODE CompVGLModel::reset() /*Overrides(CompVModel)*/
 {
     if (!m_ptrMatrix) {
         COMPV_CHECK_CODE_RETURN(CompVGLMat4f::newObj(&m_ptrMatrix));
@@ -119,19 +119,19 @@ CompVGLView::~CompVGLView()
 
 }
 
-COMPV_OVERRIDE_IMPL1("CompVView", CompVMat4fPtr, CompVGLView::matrix)()
+CompVMat4fPtr CompVGLView::matrix() /*Overrides(CompVView)*/
 {
     return *m_ptrMatrix;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVView", CompVGLView::setCamera)(const CompVVec3f& eye, const CompVVec3f& target, const CompVVec3f& up)
+COMPV_ERROR_CODE CompVGLView::setCamera(const CompVVec3f& eye, const CompVVec3f& target, const CompVVec3f& up) /*Overrides(CompVView)*/
 {
     COMPV_CHECK_EXP_RETURN(!m_ptrMatrix, COMPV_ERROR_CODE_E_INVALID_STATE);
     **m_ptrMatrix = glm::lookAt(glm::vec3(eye.x, eye.y, eye.z), glm::vec3(target.x, target.y, target.z), glm::vec3(up.x, up.y, up.z));
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVView", CompVGLView::reset)()
+COMPV_ERROR_CODE CompVGLView::reset() /*Overrides(CompVView)*/
 {
     if (!m_ptrMatrix) {
         COMPV_CHECK_CODE_RETURN(CompVGLMat4f::newObj(&m_ptrMatrix));
@@ -166,19 +166,19 @@ CompVGLProj3D::~CompVGLProj3D()
 
 }
 
-COMPV_OVERRIDE_IMPL1("CompVProj3D", CompVMat4fPtr, CompVGLProj3D::matrix)()
+CompVMat4fPtr CompVGLProj3D::matrix() /*Overrides(CompVProj3D)*/
 {
     return *m_ptrMatrix;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVProj3D", CompVGLProj3D::setPerspective)(float fovy COMPV_DEFAULT(COMPV_MVP_PROJ_FOVY), float aspect COMPV_DEFAULT(COMPV_MVP_PROJ_ASPECT_RATIO), float near_ COMPV_DEFAULT(OMPV_MVP_PROJ_NEAR), float far_ COMPV_DEFAULT(COMPV_MVP_PROJ_FAR))
+COMPV_ERROR_CODE CompVGLProj3D::setPerspective(float fovy COMPV_DEFAULT(COMPV_MVP_PROJ_FOVY), float aspect COMPV_DEFAULT(COMPV_MVP_PROJ_ASPECT_RATIO), float near_ COMPV_DEFAULT(OMPV_MVP_PROJ_NEAR), float far_ COMPV_DEFAULT(COMPV_MVP_PROJ_FAR)) /*Overrides(CompVProj3D)*/
 {
     COMPV_CHECK_EXP_RETURN(!m_ptrMatrix, COMPV_ERROR_CODE_E_INVALID_STATE);
     **m_ptrMatrix = glm::perspective(glm::radians(fovy), aspect, near_, far_);
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVProj3D", CompVGLProj3D::reset)()
+COMPV_ERROR_CODE CompVGLProj3D::reset() /*Overrides(CompVProj3D)*/
 {
     if (!m_ptrMatrix) {
         COMPV_CHECK_CODE_RETURN(CompVGLMat4f::newObj(&m_ptrMatrix));
@@ -216,19 +216,19 @@ CompVGLProj2D::~CompVGLProj2D()
 
 }
 
-COMPV_OVERRIDE_IMPL1("CompVProj2D", CompVMat4fPtr, CompVGLProj2D::matrix)()
+CompVMat4fPtr CompVGLProj2D::matrix() /*Overrides(CompVProj2D)*/
 {
     return *m_ptrMatrix;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVProj2D", CompVGLProj2D::setOrtho)(float left COMPV_DEFAULT(-1.f), float right COMPV_DEFAULT(1.f), float bottom COMPV_DEFAULT(-1.f), float top COMPV_DEFAULT(1.f), float zNear COMPV_DEFAULT(-1.f), float zFar COMPV_DEFAULT(1.f))
+COMPV_ERROR_CODE CompVGLProj2D::setOrtho(float left COMPV_DEFAULT(-1.f), float right COMPV_DEFAULT(1.f), float bottom COMPV_DEFAULT(-1.f), float top COMPV_DEFAULT(1.f), float zNear COMPV_DEFAULT(-1.f), float zFar COMPV_DEFAULT(1.f)) /*Overrides(CompVProj2D)*/
 {
     COMPV_CHECK_EXP_RETURN(!m_ptrMatrix, COMPV_ERROR_CODE_E_INVALID_STATE);
     **m_ptrMatrix = glm::ortho(left, right, bottom, top, zNear, zFar);
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVProj2D", CompVGLProj2D::reset)()
+COMPV_ERROR_CODE CompVGLProj2D::reset() /*Overrides(CompVProj2D)*/
 {
     if (!m_ptrMatrix) {
         COMPV_CHECK_CODE_RETURN(CompVGLMat4f::newObj(&m_ptrMatrix));
@@ -263,10 +263,9 @@ CompVGLMVP::~CompVGLMVP()
 
 }
 
-COMPV_OVERRIDE_IMPL1("CompVMVP", CompVMat4fPtr, CompVGLMVP::matrix)()
+CompVMat4fPtr CompVGLMVP::matrix() /*Overrides(CompVMVP)*/
 {
-    // FIXME(dmi): update only if one of the matrices is dirty
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("update only if one of the matrices is dirty");
     **m_ptrMatrix =
         (m_ptrProjection2D ? m_ptrProjection2D->matrixGLM()->matrixGLM() : m_ptrProjection3D->matrixGLM()->matrixGLM())
         * m_ptrView->matrixGLM()->matrixGLM()
@@ -274,17 +273,17 @@ COMPV_OVERRIDE_IMPL1("CompVMVP", CompVMat4fPtr, CompVGLMVP::matrix)()
     return *m_ptrMatrix;
 }
 
-COMPV_OVERRIDE_IMPL1("CompVMVP", CompVModelPtr, CompVGLMVP::model)()
+CompVModelPtr CompVGLMVP::model() /*Overrides(CompVMVP)*/
 {
     return *m_ptrModel;
 }
 
-COMPV_OVERRIDE_IMPL1("CompVMVP", CompVViewPtr, CompVGLMVP::view)()
+CompVViewPtr CompVGLMVP::view() /*Overrides(CompVMVP)*/
 {
     return *m_ptrView;
 }
 
-COMPV_OVERRIDE_IMPL1("CompVMVP", CompVProj2DPtr, CompVGLMVP::projection2D)()
+CompVProj2DPtr CompVGLMVP::projection2D() /*Overrides(CompVMVP)*/
 {
     if (m_ptrProjection2D) {
         return *m_ptrProjection2D;
@@ -293,7 +292,7 @@ COMPV_OVERRIDE_IMPL1("CompVMVP", CompVProj2DPtr, CompVGLMVP::projection2D)()
     return NULL;
 }
 
-COMPV_OVERRIDE_IMPL1("CompVMVP", CompVProj3DPtr, CompVGLMVP::projection3D)()
+CompVProj3DPtr CompVGLMVP::projection3D() /*Overrides(CompVMVP)*/
 {
     if (m_ptrProjection3D) {
         return *m_ptrProjection3D;
@@ -302,7 +301,7 @@ COMPV_OVERRIDE_IMPL1("CompVMVP", CompVProj3DPtr, CompVGLMVP::projection3D)()
     return NULL;
 }
 
-COMPV_OVERRIDE_IMPL0("CompVMVP", CompVGLMVP::reset)()
+COMPV_ERROR_CODE CompVGLMVP::reset() /*Overrides(CompVMVP)*/
 {
     COMPV_CHECK_CODE_RETURN(model()->reset());
     COMPV_CHECK_CODE_RETURN(view()->reset());

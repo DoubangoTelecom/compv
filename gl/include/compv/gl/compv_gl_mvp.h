@@ -47,10 +47,10 @@ public:
         return matrixGLM();
     }
 
-    COMPV_OVERRIDE_DECL1("CompVMat4f", const float*, ptr)() const override;
-    COMPV_OVERRIDE_DECL0("CompVMat4f", translate)(const CompVVec3f& vec3f) override;
-    COMPV_OVERRIDE_DECL0("CompVMat4f", scale)(const CompVVec3f& vec3f) override;
-    COMPV_OVERRIDE_DECL0("CompVMat4f", rotate)(float angle, const CompVVec3f& vec3f) override;
+    virtual const float* ptr() const override /* Overrides(CompVMat4f) */;
+	virtual COMPV_ERROR_CODE translate(const CompVVec3f& vec3f) override /* Overrides(CompVMat4f) */;
+	virtual COMPV_ERROR_CODE scale(const CompVVec3f& vec3f) override /* Overrides(CompVMat4f) */;
+	virtual COMPV_ERROR_CODE rotate(float angle, const CompVVec3f& vec3f) override /* Overrides(CompVMat4f) */;
 
     static COMPV_ERROR_CODE newObj(CompVGLMat4fPtrPtr mat4f, const glm::mat4& mat4 = glm::mat4(1.0f));
 
@@ -81,8 +81,8 @@ public:
         return *this;
     }
 
-    COMPV_OVERRIDE_DECL1("CompVModel", CompVMat4fPtr, matrix)() override;
-    COMPV_OVERRIDE_DECL0("CompVModel", reset)() override;
+    virtual CompVMat4fPtr matrix() override /* Overrides(CompVModel) */;
+	virtual COMPV_ERROR_CODE reset() override /* Overrides(CompVModel) */;
 
     static COMPV_ERROR_CODE newObj(CompVGLModelPtrPtr model);
 private:
@@ -113,9 +113,9 @@ public:
         return *this;
     }
 
-    COMPV_OVERRIDE_DECL1("CompVView", CompVMat4fPtr, matrix)() override;
-    COMPV_OVERRIDE_DECL0("CompVView", setCamera)(const CompVVec3f& eye, const CompVVec3f& target, const CompVVec3f& up) override;
-    COMPV_OVERRIDE_DECL0("CompVView", reset)() override;
+	virtual CompVMat4fPtr matrix() override /*Overrides(CompVView)*/;
+	virtual COMPV_ERROR_CODE setCamera(const CompVVec3f& eye, const CompVVec3f& target, const CompVVec3f& up) override /*Overrides(CompVView)*/;
+	virtual COMPV_ERROR_CODE reset() override /*Overrides(CompVView)*/;
 
     static COMPV_ERROR_CODE newObj(CompVGLViewPtrPtr view);
 
@@ -146,9 +146,9 @@ public:
         return *this;
     }
 
-    COMPV_OVERRIDE_DECL1("CompVProj3D", CompVMat4fPtr, matrix)() override;
-    COMPV_OVERRIDE_DECL0("CompVProj3D", setPerspective)(float fovy = COMPV_MVP_PROJ_FOVY, float aspect = COMPV_MVP_PROJ_ASPECT_RATIO, float near = COMPV_MVP_PROJ_NEAR, float far = COMPV_MVP_PROJ_FAR) override;
-    COMPV_OVERRIDE_DECL0("CompVProj3D", reset)() override;
+    virtual CompVMat4fPtr matrix() override /*Overrides(CompVProj3D)*/;
+	virtual COMPV_ERROR_CODE setPerspective(float fovy = COMPV_MVP_PROJ_FOVY, float aspect = COMPV_MVP_PROJ_ASPECT_RATIO, float near = COMPV_MVP_PROJ_NEAR, float far = COMPV_MVP_PROJ_FAR) override /*Overrides(CompVProj3D)*/;
+	virtual COMPV_ERROR_CODE reset() override /*Overrides(CompVProj3D)*/;
 
     static COMPV_ERROR_CODE newObj(CompVGLProj3DPtrPtr proj);
 
@@ -180,9 +180,9 @@ public:
         return *this;
     }
 
-    COMPV_OVERRIDE_DECL1("CompVProj2D", CompVMat4fPtr, matrix)() override;
-    COMPV_OVERRIDE_DECL0("CompVProj2D", setOrtho)(float left = -1.f, float right = 1.f, float bottom = -1.f, float top = 1.f, float zNear = -1.f, float zFar = 1.f) override;
-    COMPV_OVERRIDE_DECL0("CompVProj2D", reset)() override;
+    virtual CompVMat4fPtr matrix() override /*Overrides(CompVProj2D)*/;
+	virtual COMPV_ERROR_CODE setOrtho(float left = -1.f, float right = 1.f, float bottom = -1.f, float top = 1.f, float zNear = -1.f, float zFar = 1.f) override /*Overrides(CompVProj2D)*/;
+	virtual COMPV_ERROR_CODE reset() override /*Overrides(CompVProj2D)*/;
 
     static COMPV_ERROR_CODE newObj(CompVGLProj2DPtrPtr proj);
 
@@ -201,6 +201,7 @@ protected:
     CompVGLMVP();
 public:
     virtual ~CompVGLMVP();
+	COMPV_OBJECT_GET_ID(CompVGLMVP);
     operator const glm::mat4&() const {
         return **m_ptrMatrix;
     }
@@ -208,14 +209,13 @@ public:
         **m_ptrMatrix = mat4;
         return *this;
     }
-    COMPV_OBJECT_GET_ID(CompVGLMVP);
 
-    COMPV_OVERRIDE_DECL1("CompVMVP", CompVMat4fPtr, matrix)() override;
-    COMPV_OVERRIDE_DECL1("CompVMVP", CompVModelPtr, model)() override;
-    COMPV_OVERRIDE_DECL1("CompVMVP", CompVViewPtr, view)() override;
-    COMPV_OVERRIDE_DECL1("CompVMVP", CompVProj2DPtr, projection2D)() override;
-    COMPV_OVERRIDE_DECL1("CompVMVP", CompVProj3DPtr, projection3D)() override;
-    COMPV_OVERRIDE_DECL0("CompVMVP", reset)() override;
+	virtual CompVMat4fPtr matrix() override /*Overrides(CompVMVP)*/;
+	virtual CompVModelPtr model() override /*Overrides(CompVMVP)*/;
+	virtual CompVViewPtr view() override /*Overrides(CompVMVP)*/;
+	virtual CompVProj2DPtr projection2D() override /*Overrides(CompVMVP)*/;
+	virtual CompVProj3DPtr projection3D() override /*Overrides(CompVMVP)*/;
+    virtual COMPV_ERROR_CODE reset() override /*Overrides(CompVMVP)*/;
 
     static COMPV_ERROR_CODE newObj(CompVGLMVPPtrPtr mvp, COMPV_PROJECTION eProjectionType);
 

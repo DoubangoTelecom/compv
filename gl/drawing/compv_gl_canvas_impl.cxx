@@ -64,8 +64,8 @@ COMPV_ERROR_CODE CompVGLCanvasImpl::drawInterestPoints(const std::vector<CompVIn
 	COMPV_CHECK_EXP_RETURN(!glMemPints_, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to allocation GL points");
 
 	for (std::vector<CompVInterestPoint >::const_iterator it = interestPoints.begin(); it != interestPoints.end(); ++it, i += numComps) {
-		glMemPints_[i] = 0;// static_cast<GLfloat>((*it).x);
-		glMemPints_[i + 1] = 0;// static_cast<GLfloat>((*it).y);
+		glMemPints_[i] = static_cast<GLfloat>((*it).x);
+		glMemPints_[i + 1] = static_cast<GLfloat>((*it).y);
 	}
 
 	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawPoints->process(glMemPints_, static_cast<GLsizei>(interestPoints.size())));

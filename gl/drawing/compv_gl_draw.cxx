@@ -13,10 +13,12 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-CompVGLDraw::CompVGLDraw(const std::string& strProgramVertexData, const std::string& strProgramFragmentData)
+CompVGLDraw::CompVGLDraw(const std::string& strProgramVertexData, const std::string& strProgramFragmentData, bool bMVP COMPV_DEFAULT(false))
 	: m_bInitialized(false)
+	, m_bMVP(bMVP)
 	, m_uNameVAO(kCompVGLNameInvalid)
 	, m_uNameVBO(kCompVGLNameInvalid)
+	, m_uNamePrgUnifMVP(kCompVGLNameInvalid)
 	, m_strProgramVertexData(strProgramVertexData)
 	, m_strProgramFragmentData(strProgramFragmentData)
 {
@@ -28,6 +30,16 @@ CompVGLDraw::~CompVGLDraw()
 	COMPV_CHECK_CODE_NOP(deInit());
 }
 
+COMPV_ERROR_CODE CompVGLDraw::setOrtho(float left, float right, float bottom, float top, float zNear, float zFar)
+{
+	COMPV_CHECK_EXP_RETURN(!m_ptrMVP, COMPV_ERROR_CODE_E_INVALID_CALL, "No MVP");
+	COMPV_CHECK_CODE_RETURN(m_ptrMVP->projection2D()->setOrtho(left, right, bottom, top, zNear, zFar));
+	if (m_ptrProgram && m_ptrProgram->isBound()) {
+		m_uNamePrgUnifMVP = COMPV_glGetUniformLocation(m_ptrProgram->name(), "MVP");
+		COMPV_glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, m_ptrMVP->matrix()->ptr());
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
 
 COMPV_ERROR_CODE CompVGLDraw::bind() /*Overrides(CompVBind)*/
 {
@@ -47,6 +59,9 @@ COMPV_ERROR_CODE CompVGLDraw::bind() /*Overrides(CompVBind)*/
 	else {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("OpenGL: VAO not suported");
 		COMPV_glBindBuffer(GL_ARRAY_BUFFER, m_uNameVBO);
+		if (m_ptrMVP && m_uNamePrgUnifMVP != kCompVGLNameInvalid) {
+			COMPV_glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, m_ptrMVP->matrix()->ptr());
+		}
 #if 0
 		COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uNameIndiceBuffer);
 		COMPV_glEnableVertexAttribArray(m_uNamePrgAttPosition);
@@ -98,6 +113,7 @@ COMPV_ERROR_CODE CompVGLDraw::init()
 		COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::vertexArraysGen(&m_uNameVAO));
 		COMPV_glBindBuffer(GL_ARRAY_BUFFER, m_uNameVBO); // required to have next VBO part of the VAO
 	}
+
 	// VBO
 	COMPV_CHECK_CODE_BAIL(err = CompVGLUtils::bufferGen(&m_uNameVBO));
 	COMPV_glBindBuffer(GL_ARRAY_BUFFER, m_uNameVBO); // not required
@@ -105,12 +121,23 @@ COMPV_ERROR_CODE CompVGLDraw::init()
 
 	// PROGRAM
 	COMPV_CHECK_CODE_BAIL(err = CompVGLProgram::newObj(&m_ptrProgram, m_strProgramVertexData.c_str(), m_strProgramVertexData.length(), m_strProgramFragmentData.c_str(), m_strProgramFragmentData.length()));
+	COMPV_CHECK_CODE_BAIL(err = m_ptrProgram->bind());
+
+	// MVP
+	if (m_bMVP) {
+		COMPV_CHECK_CODE_BAIL(err = CompVGLMVP::newObj(&m_ptrMVP, COMPV_PROJECTION_2D));
+		m_uNamePrgUnifMVP = COMPV_glGetUniformLocation(m_ptrProgram->name(), "MVP");
+		COMPV_glUniformMatrix4fv(m_uNamePrgUnifMVP, 1, GL_FALSE, m_ptrMVP->matrix()->ptr());
+	}
 
 	m_bInitialized = true;
 
 bail:
 	COMPV_glBindBuffer(GL_ARRAY_BUFFER, kCompVGLNameInvalid);
 	COMPV_glBindVertexArray(kCompVGLNameInvalid);
+	if (m_ptrProgram && m_ptrProgram->isBound()) {
+		COMPV_CHECK_CODE_NOP(m_ptrProgram->unbind());
+	}
 	if (COMPV_ERROR_CODE_IS_NOK(err)) {
 		COMPV_CHECK_CODE_NOP(deInit());
 	}
@@ -126,6 +153,7 @@ COMPV_ERROR_CODE CompVGLDraw::deInit()
 	COMPV_CHECK_EXP_BAIL(!CompVGLUtils::currentContext(), (err = COMPV_ERROR_CODE_E_GL_NO_CONTEXT), "No OpenGL context");
 	COMPV_CHECK_CODE_NOP(err = CompVGLUtils::bufferDelete(&m_uNameVBO));
 	COMPV_CHECK_CODE_NOP(err = CompVGLUtils::vertexArraysDelete(&m_uNameVAO));
+	m_ptrMVP = NULL;
 
 bail:
 	return err;

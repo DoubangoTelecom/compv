@@ -30,9 +30,12 @@ protected:
 public:
     virtual ~CompVGLProgram();
     COMPV_OBJECT_GET_ID(CompVGLProgram);
-    COMPV_INLINE GLuint name() {
+    COMPV_INLINE GLuint name() const{
         return m_uNamePrg;
     };
+	COMPV_INLINE bool isBound() const {
+		return m_bUsed;
+	}
 
     COMPV_ERROR_CODE shaderAttachVertexFile(const char* pcFilePath);
     COMPV_ERROR_CODE shaderAttachFragmentFile(const char* pcFilePath);

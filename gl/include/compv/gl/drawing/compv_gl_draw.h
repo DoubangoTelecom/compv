@@ -11,6 +11,7 @@
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/gl/compv_gl_program.h"
+#include "compv/gl/compv_gl_mvp.h"
 #include "compv/base/compv_bind.h"
 
 #if defined(_COMPV_API_H_)
@@ -26,7 +27,7 @@ COMPV_OBJECT_DECLARE_PTRS(GLDraw)
 class CompVGLDraw : public CompVObj, public CompVBind
 {
 protected:
-	CompVGLDraw(const std::string& strProgramVertexData, const std::string& strProgramFragmentData);
+	CompVGLDraw(const std::string& strProgramVertexData, const std::string& strProgramFragmentData, bool bMVP = false);
 public:
 	virtual ~CompVGLDraw();
 
@@ -39,9 +40,14 @@ public:
 	COMPV_INLINE CompVGLProgramPtr program() {
 		return m_ptrProgram;
 	}
+	COMPV_INLINE CompVGLMVPPtr mvp() {
+		return m_ptrMVP;
+	}
 	
-	COMPV_ERROR_CODE bind() override /*Overrides(CompVBind)*/;
-	COMPV_ERROR_CODE unbind() override /*Overrides(CompVBind)*/;
+protected:
+	virtual COMPV_ERROR_CODE setOrtho(float left, float right, float bottom, float top, float zNear, float zFar);
+	virtual COMPV_ERROR_CODE bind() override /*Overrides(CompVBind)*/;
+	virtual COMPV_ERROR_CODE unbind() override /*Overrides(CompVBind)*/;
 
 private:
 	COMPV_ERROR_CODE init();
@@ -49,9 +55,12 @@ private:
 
 private:
 	bool m_bInitialized;
+	bool m_bMVP;
 	GLuint m_uNameVAO;
 	GLuint m_uNameVBO;
+	GLuint m_uNamePrgUnifMVP;
 	CompVGLProgramPtr m_ptrProgram;
+	CompVGLMVPPtr m_ptrMVP;
 	std::string m_strProgramVertexData;
 	std::string m_strProgramFragmentData;
 };

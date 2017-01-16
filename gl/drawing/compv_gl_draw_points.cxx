@@ -10,14 +10,15 @@
 #include "compv/gl/compv_gl_info.h"
 #include "compv/gl/compv_gl_func.h"
 
-COMPV_NAMESPACE_BEGIN()
-
 static const std::string& kProgramVertexData =
+#	if defined(HAVE_OPENGLES)
+"	precision mediump float;"
+#	endif
 "	attribute vec4 position;"
-"	uniform vec2 TextureSize;"
+"	uniform mat4 MVP;"
 "	void main() {"
 "		gl_PointSize = 5.0;"
-"		gl_Position = vec4(position.x/TextureSize.x, position.y/TextureSize.y, 1.0, 1.0);"
+"		gl_Position = MVP * position;"
 "	}";
 
 static const std::string& kProgramFragmentData =
@@ -25,8 +26,13 @@ static const std::string& kProgramFragmentData =
 "		gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);"
 "	}";
 
+#define kVertexDataWithMVP_Yes	true
+#define kVertexDataWithMVP_No	false
+
+COMPV_NAMESPACE_BEGIN()
+
 CompVGLDrawPoints::CompVGLDrawPoints()
-	: CompVGLDraw(kProgramVertexData, kProgramFragmentData)
+	: CompVGLDraw(kProgramVertexData, kProgramFragmentData, kVertexDataWithMVP_Yes)
 {
 
 }
@@ -39,7 +45,7 @@ CompVGLDrawPoints::~CompVGLDrawPoints()
 COMPV_ERROR_CODE CompVGLDrawPoints::process(const GLfloat* xy, GLsizei count)
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	GLuint uNamePosition, uNameLocation;
+	GLuint uNamePosition;
 	GLint fboWidth = 0, fboHeight = 0;
 	
 	// Bind to VAO, VBO, Program
@@ -53,10 +59,8 @@ COMPV_ERROR_CODE CompVGLDrawPoints::process(const GLfloat* xy, GLsizei count)
 	// Submit vertices data
 	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * count, xy, GL_STATIC_DRAW);
 
-	// Set TextureSize (FIXME: do only if textureSize change for VAO)
-	const GLfloat TextureSize[2] = { static_cast<GLfloat>(fboWidth), static_cast<GLfloat>(fboHeight) };
-	uNameLocation = COMPV_glGetUniformLocation(program()->name(), "TextureSize");
-	COMPV_glUniform2fv(uNameLocation, 1, TextureSize);
+	// FIXME: do only when size change
+	COMPV_CHECK_CODE_BAIL(err = CompVGLDraw::setOrtho(0, static_cast<GLfloat>(fboWidth), static_cast<GLfloat>(fboHeight), 0, -1, 1));
 
 	// Set position attribute (FIXME: do onces if VAO supported)
 	uNamePosition = COMPV_glGetAttribLocation(program()->name(), "position");
