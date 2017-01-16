@@ -4,8 +4,9 @@ using namespace compv;
 
 #define TAG_TEST_IMAGE "TestImage"
 
+#define TEST_SCALE					1
 #define TEST_CHROMA_CONV			0
-#define TEST_FEATURE_FAST			1
+#define TEST_FEATURE_FAST			0
 #define TEST_DRAW_IMAGE				0
 #define TEST_DRAW_POINTS			0
 
@@ -15,7 +16,10 @@ compv_main()
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	{
 		COMPV_CHECK_CODE_BAIL(err = compv_tests_init());
-
+#if TEST_SCALE
+		extern COMPV_ERROR_CODE scale();
+		COMPV_CHECK_CODE_BAIL(err = scale(), TAG_TEST_IMAGE "Image scaling test failed");
+#endif
 #if TEST_CHROMA_CONV
 		extern COMPV_ERROR_CODE chroma_conv();
 		COMPV_CHECK_CODE_BAIL(err = chroma_conv(), TAG_TEST_IMAGE "Chroma conversion test failed");

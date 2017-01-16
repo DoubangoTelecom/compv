@@ -4,7 +4,8 @@ using namespace compv;
 
 #define TAG_UNITTESTS "UnitTests"
 
-#define UNITTEST_FEATURE_FAST	1
+#define UNITTEST_SCALE			1
+#define UNITTEST_FEATURE_FAST	0
 #define UNITTEST_CHROMA_CONV	0
 
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
@@ -56,6 +57,10 @@ compv_main()
 								COMPV_CHECK_CODE_BAIL(err = CompVCpu::flagsDisable(UNITTESTS_CPUFLAGS[e]));
 								COMPV_CHECK_CODE_BAIL(err = CompVParallel::multiThreadingSetMaxThreads(UNITTESTS_MAXTHREADS[d]));
 								COMPV_CHECK_CODE_BAIL(err = CompVGpu::setEnabled(f == 1));
+#if UNITTEST_SCALE || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_scale();
+								COMPV_CHECK_CODE_BAIL(err = unittest_scale(), "Image scale unittest failed");
+#endif
 #if UNITTEST_FEATURE_FAST || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_feature_fast();
 								COMPV_CHECK_CODE_BAIL(err = unittest_feature_fast(), "FAST detection unittest failed");

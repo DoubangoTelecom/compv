@@ -25,16 +25,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVPluginDirectShow", "..
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVPluginMFoundation", "..\..\plugin_mfoundation\CompVPluginMFoundation.vcxproj", "{F9006758-F433-4F8A-A12D-6F0FF4131A74}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{76801349-AFAA-4472-98E5-247E6429BADE}"
-	ProjectSection(SolutionItems) = preProject
-		..\..\api\include\compv\compv_api.h = ..\..\api\include\compv\compv_api.h
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVCore", "..\..\core\CompVCore.vcxproj", "{8BA49971-9B73-4717-AB9C-78204716AA00}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVGPU", "..\..\gpu\CompVGPU.vcxproj", "{F3FDF15A-8AE4-4D9D-AA7B-0B7F6E940146}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompVPluginOpenCL", "..\..\plugin_opencl\CompVPluginOpenCL.vcxproj", "{8DFFE598-89E4-4DC0-AF73-8E879D7D4530}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{43E06C0A-D56E-4C67-9B27-60E4722DC4A0}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\api\include\compv\compv_api.h = ..\..\api\include\compv\compv_api.h
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

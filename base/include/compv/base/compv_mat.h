@@ -55,7 +55,7 @@ public:
 	}
 
     template<class ptrType = const void>
-    COMPV_INLINE ptrType* ptr(size_t row = 0, size_t col = 0, int32_t planeId = 0)const {
+    COMPV_INLINE ptrType* ptr(size_t row = 0, size_t col = 0, int planeId = 0)const {
         if (planeId >= 0 && planeId < m_nPlaneCount) {
             return (row > m_nPlaneRows[planeId] || col > m_nPlaneCols[planeId]) ? NULL : (ptrType*)(static_cast<const uint8_t*>(m_pCompPtr[planeId]) + (row * m_nPlaneStrideInBytes[planeId]) + (col * m_nElmtInBytes));
         }
@@ -63,7 +63,7 @@ public:
         return NULL;
     }
 
-    COMPV_INLINE size_t rows(int32_t planeId = -1)const { // In samples
+    COMPV_INLINE size_t rows(int planeId = -1)const { // In samples
         if (planeId < 0) {
             return m_nRows;
         }
@@ -74,7 +74,7 @@ public:
         return 0;
     }
 
-    COMPV_INLINE size_t cols(int32_t planeId = -1)const { // In samples
+    COMPV_INLINE size_t cols(int planeId = -1)const { // In samples
         if (planeId < 0) {
             return m_nCols;
         }
@@ -89,7 +89,7 @@ public:
         return m_nElmtInBytes;
     }
 
-    COMPV_INLINE size_t rowInBytes(int32_t planeId = -1)const { // in bytes
+    COMPV_INLINE size_t rowInBytes(int planeId = -1)const { // in bytes
         if (planeId < 0) {
             return m_nCols * m_nElmtInBytes;
         }
@@ -100,7 +100,7 @@ public:
         return 0;
     }
 
-    COMPV_INLINE size_t strideInBytes(int32_t planeId = -1)const { // in bytes
+    COMPV_INLINE size_t strideInBytes(int planeId = -1)const { // in bytes
         if (planeId < 0) {
             return m_nStrideInBytes;
         }
@@ -111,7 +111,7 @@ public:
         return 0;
     }
 
-    COMPV_INLINE size_t stride(int32_t planeId = -1)const { // in samples
+    COMPV_INLINE size_t stride(int planeId = -1)const { // in samples
         if (planeId < 0) {
             return m_nStrideInElts;
         }
@@ -252,7 +252,7 @@ protected:
         m_nAlignV = alignv;
         m_nElmtInBytes = nElmtInBytes;
         m_bPlanePacked = bPlanePacked;
-        m_nPlaneCount = static_cast<int32_t>(nPlaneCount);
+        m_nPlaneCount = static_cast<int>(nPlaneCount);
         m_pCompPtr[0] = m_pDataPtr;
         m_nPlaneSizeInBytes[0] = nPlaneSizeInBytes[0];
         m_nPlaneCols[0] = nPlaneCols[0];
@@ -279,7 +279,7 @@ bail:
 
 private:
     void* m_pDataPtr; // must be freed using 'freeAligned'
-    int32_t m_nPlaneCount;
+    int m_nPlaneCount;
     bool m_bPlanePacked;
     size_t m_nCols;
     size_t m_nRows;

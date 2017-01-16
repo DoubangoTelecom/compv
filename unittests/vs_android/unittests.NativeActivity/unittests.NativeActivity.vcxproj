@@ -38,6 +38,7 @@
     <ClCompile Include="..\..\chroma_conv.cxx" />
     <ClCompile Include="..\..\feature_fast.cxx" />
     <ClCompile Include="..\..\main.cxx" />
+    <ClCompile Include="..\..\scale.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\base\vs_android\CompVBase.vcxproj">

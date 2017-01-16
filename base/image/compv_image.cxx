@@ -8,7 +8,9 @@
 #include "compv/base/image/compv_image_utils.h"
 #include "compv/base/image/compv_image_conv_to_yuv444p.h"
 #include "compv/base/image/compv_image_conv_to_grayscale.h"
+#include "compv/base/image/compv_image_scale_bilinear.h"
 #include "compv/base/math/compv_math_utils.h"
+#include "compv/base/compv_base.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_fileutils.h"
 
@@ -151,6 +153,49 @@ COMPV_ERROR_CODE CompVImage::convertGrayscaleFast(CompVMatPtr& imageInOut)
 {
 	// Input parameters will be checked in 'convert'
 	COMPV_CHECK_CODE_RETURN(CompVImage::convert(imageInOut, COMPV_SUBTYPE_PIXELS_Y, &imageInOut));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVImage::scale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, size_t widthOut, size_t heightOut, COMPV_SCALE_TYPE scaleType COMPV_DEFAULT(COMPV_SCALE_TYPE_BILINEAR))
+{
+	COMPV_CHECK_EXP_RETURN(!imageIn || !imageOut || imageIn->isEmpty() || !widthOut || !heightOut, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	bool bSelfTransfer = imageIn == (*imageOut);
+	bool bScaleFactor1 = widthOut == imageIn->cols() && heightOut == imageIn->rows();
+
+	if (bSelfTransfer && bScaleFactor1) {
+		// No scaling and output is equal to input
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	CompVMatPtr imageOut_ = (imageIn == *imageOut) ? nullptr : *imageOut; // When (imageIn == imageOut) we have to save imageIn
+	size_t strideOut = widthOut;
+	COMPV_CHECK_CODE_RETURN(CompVImageUtils::bestStride(strideOut, &strideOut));
+	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut_, imageIn->subType(), widthOut, heightOut, strideOut));
+
+	if (bScaleFactor1 & !CompVBase::isTestingMode()) { // In testing mode we may want to encode the same image several times to check CPU, Memory, Latency...
+		if (bSelfTransfer) {
+			// *outImage = This is enought
+			return COMPV_ERROR_CODE_S_OK;
+		}
+		COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
+			imageIn->subType(), imageIn->ptr(), imageIn->cols(), imageIn->rows(), imageIn->stride(),
+			imageOut_->ptr<void>(), imageOut_->cols(), imageOut_->rows(), imageOut_->stride()
+		));
+		*imageOut = imageOut_;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	switch (scaleType) {
+	case COMPV_SCALE_TYPE_BILINEAR:
+		COMPV_CHECK_CODE_RETURN(CompVImageScaleBilinear::process(imageIn, imageOut_));
+		break;
+	default:
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%d not supported as scaling type", scaleType);
+		COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "Invalid scaling type");
+		break;
+	}
+	*imageOut = imageOut_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 

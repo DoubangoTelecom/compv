@@ -23,6 +23,8 @@ public:
 	static COMPV_ERROR_CODE convert(const CompVMatPtr& imageIn, COMPV_SUBTYPE pixelFormatOut, CompVMatPtrPtr imageOut);
 	static COMPV_ERROR_CODE convertGrayscale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageGray);
 	static COMPV_ERROR_CODE convertGrayscaleFast(CompVMatPtr& imageInOut);
+
+	static COMPV_ERROR_CODE scale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut, size_t widthOut, size_t heightOut, COMPV_SCALE_TYPE scaleType = COMPV_SCALE_TYPE_BILINEAR);
 private:
 };
 

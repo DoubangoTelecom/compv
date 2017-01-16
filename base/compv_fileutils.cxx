@@ -193,9 +193,12 @@ COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buff
 {
     COMPV_CHECK_EXP_RETURN(!pcPath || !buffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVBufferPtr buffer_ = NULL;
-    int32_t size_ = (int32_t)CompVFileUtils::getSize(pcPath);
-	COMPV_CHECK_EXP_RETURN(size_ <= 0, COMPV_ERROR_CODE_E_FAILED_TO_READ_FILE);
-    /*if (size_ > 0)*/ {
+    size_t size_ = CompVFileUtils::getSize(pcPath);
+	if (!size_) {
+		COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "File at %s is empty or doesn't exist", pcPath);
+		return COMPV_ERROR_CODE_E_FAILED_TO_READ_FILE;
+	}
+	else {
         FILE* file_ = NULL;
         void* mem_ = NULL;
 #if COMPV_OS_ANDROID
@@ -218,7 +221,7 @@ COMPV_ERROR_CODE CompVFileUtils::read(const char* pcPath, CompVBufferPtrPtr buff
         }
         size_t read_;
         if (size_ != (read_ = fread(mem_, 1, size_, file_))) {
-            COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "fread(%s) returned %zu instead of %d", pcPath, read_, size_);
+            COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "fread(%s) returned %zu instead of %zu", pcPath, read_, size_);
             fclose(file_);
             CompVMem::free(&mem_);
             return COMPV_ERROR_CODE_E_FAILED_TO_READ_FILE;

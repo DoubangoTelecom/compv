@@ -26,6 +26,9 @@
     <ClCompile Include="draw_points.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="scale.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tests_common.h">
