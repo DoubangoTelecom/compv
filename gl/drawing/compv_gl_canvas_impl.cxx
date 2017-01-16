@@ -55,23 +55,29 @@ COMPV_ERROR_CODE CompVGLCanvasImpl::drawInterestPoints(const std::vector<CompVIn
 	if (!m_ptrDrawPoints) {
 		COMPV_CHECK_CODE_RETURN(CompVGLDrawPoints::newObj(&m_ptrDrawPoints));
 	}
-	GLfloat* glMemPints_ = NULL;
+	CompVGLPoints* glMemPoints_ = NULL, *glMemPoint_;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	static const size_t numComps = 2; // x and y comps (later will add color comp)
-	size_t i = 0;
+	const GLfloat(*color)[3];
 
-	glMemPints_ = reinterpret_cast<GLfloat*>(CompVMem::malloc(interestPoints.size() * numComps * sizeof(GLfloat)));
-	COMPV_CHECK_EXP_RETURN(!glMemPints_, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to allocation GL points");
+	glMemPoints_ = reinterpret_cast<CompVGLPoints*>(CompVMem::malloc(interestPoints.size() * sizeof(CompVGLPoints)));
+	COMPV_CHECK_EXP_RETURN(!glMemPoints_, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to allocation GL points");
 
-	for (std::vector<CompVInterestPoint >::const_iterator it = interestPoints.begin(); it != interestPoints.end(); ++it, i += numComps) {
-		glMemPints_[i] = static_cast<GLfloat>((*it).x);
-		glMemPints_[i + 1] = static_cast<GLfloat>((*it).y);
+	glMemPoint_ = glMemPoints_;
+	for (std::vector<CompVInterestPoint >::const_iterator it = interestPoints.begin(); it != interestPoints.end(); ++it, ++glMemPoint_) {
+		// x, y
+		glMemPoint_->xy[0] = static_cast<GLfloat>((*it).x);
+		glMemPoint_->xy[1] = static_cast<GLfloat>((*it).y);
+		// r, g, b
+		color = &kCompVGLRandomColors[rand() % kCompVGLRandomColorsCount];
+		glMemPoint_->color[0] = (*color)[0];
+		glMemPoint_->color[1] = (*color)[1];
+		glMemPoint_->color[2] = (*color)[2];
 	}
 
-	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawPoints->process(glMemPints_, static_cast<GLsizei>(interestPoints.size())));
+	COMPV_CHECK_CODE_BAIL(err = m_ptrDrawPoints->process(glMemPoints_, static_cast<GLsizei>(interestPoints.size())));
 
 bail:
-	CompVMem::free(reinterpret_cast<void**>(&glMemPints_));
+	CompVMem::free(reinterpret_cast<void**>(&glMemPoints_));
 	return err;
 }
 

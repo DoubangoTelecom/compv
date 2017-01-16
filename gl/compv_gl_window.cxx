@@ -90,6 +90,12 @@ COMPV_ERROR_CODE CompVGLWindow::beginDraw() /*Overrides(CompVWindow)*/
 #if defined(GL_PROGRAM_POINT_SIZE)
 	COMPV_glEnable(GL_PROGRAM_POINT_SIZE);
 #endif
+#if defined(GL_POINT_SMOOTH)
+	COMPV_glEnable(GL_POINT_SMOOTH); // Circular points
+#endif
+#if defined(GL_POINT_SMOOTH_HINT)
+	COMPV_glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+#endif
     COMPV_glViewport(0, 0, static_cast<GLsizei>(CompVWindow::width()), static_cast<GLsizei>(CompVWindow::height())); // FIXME: width and height must be dynamic
     COMPV_glClearColor(0.f, 0.f, 0.f, 1.f);
     COMPV_glClearStencil(0);

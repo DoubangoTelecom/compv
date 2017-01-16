@@ -2,7 +2,7 @@
 
 using namespace compv;
 
-#define CAMERA_IDX			1
+#define CAMERA_IDX			0
 #define CAMERA_WIDTH		1280
 #define CAMERA_HEIGHT		720
 #define CAMERA_FPS			25

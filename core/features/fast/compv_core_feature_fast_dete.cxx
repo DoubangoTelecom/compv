@@ -451,7 +451,7 @@ static void CompVFastDataRange(RangeFAST* range)
 
 	// Number of pixels to process (multiple of align)
 	kalign = static_cast<int32_t>(CompVMem::alignForward((-3 + range->width - 3), align));
-#if 0 // (minj = 3 and maxj height - 3) -> we can read more than 'align' bytes on a row without issues
+#if 0 // (minj = 3 and maxj = height - 3) -> we can read more than 'align' bytes on a row without issues
 	if (kalign > static_cast<int32_t>(range->stride - 3)) { // must never happen
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Unexpected code called. k16=%d, stride=%zu", kalign, range->stride);
 		COMPV_ASSERT(false);

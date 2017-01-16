@@ -35,9 +35,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\main.cxx" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\..\..\base\vs_android\CompVBase.vcxproj">
       <Project>{9320e994-aa59-49ba-ab64-f82aedec49a3}</Project>
     </ProjectReference>
@@ -57,10 +54,13 @@
       <Project>{766db7bd-6b40-44bc-be41-bf78111a8ac5}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\main.cxx" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{23d6712d-b138-4866-b362-e8c8e8374788}</ProjectGuid>
+    <ProjectGuid>{6c92f6dd-6d55-46d0-b4e3-32f2ce046167}</ProjectGuid>
     <Keyword>Android</Keyword>
-    <RootNamespace>camera</RootNamespace>
+    <RootNamespace>features_detection</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <ApplicationType>Android</ApplicationType>
