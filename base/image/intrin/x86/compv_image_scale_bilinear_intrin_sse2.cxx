@@ -24,7 +24,7 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("This code is for testing only");
 
 #if 1
-	compv_uscalar_t i, j, y;
+	compv_uscalar_t i, j, y, y0, y1;
 	const uint8_t* inPtr_;
 	int sf_x_ = static_cast<int>(sf_x);
 	COMPV_ALIGN_SSE() const int32_t SFX[4][4] = {
@@ -33,18 +33,26 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 		{ sf_x_ * 8, sf_x_ * 9, sf_x_ * 10, sf_x_ * 11 },
 		{ sf_x_ * 12, sf_x_ * 13, sf_x_ * 14, sf_x_ * 15 }
 	};
-	__m128i vecX0, vecX1, vecX2, vecX3, vecY0, vecNeighb0, vecNeighb1, vecNeighb2, vecNeighb3, vec0, vec1, vec2, vec3, vecYand0xff;
-	__m128i vecret0, vecret1, vecret2, vecret3;
-	const __m128i vec0xff = _mm_set1_epi32(0xff);
-	const __m128i vec0x1 = _mm_set1_epi32(0x1);
-	const __m128i vecInStride = _mm_set1_epi32(static_cast<int>(inStride));
-	const __m128i vecInStridePlusOne = _mm_add_epi32(vecInStride, vec0x1);
+	// FIXME: move to simd_globals
+	// Deinterleaves bytes [a,b,a,b,b,a,b,a,b] to [a,a,a,a,a,b,b,b,b,b]
+	COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_Deinterleave_i32[] = {  // To be used with _mm_shuffle_epi8
+		COMPV_MM_SHUFFLE_EPI8(6, 4, 2, 0), COMPV_MM_SHUFFLE_EPI8(14, 12, 10, 8), COMPV_MM_SHUFFLE_EPI8(7, 5, 3, 1), COMPV_MM_SHUFFLE_EPI8(15, 13, 11, 9), // 128bits SSE register
+		COMPV_MM_SHUFFLE_EPI8(6, 4, 2, 0), COMPV_MM_SHUFFLE_EPI8(14, 12, 10, 8), COMPV_MM_SHUFFLE_EPI8(7, 5, 3, 1), COMPV_MM_SHUFFLE_EPI8(15, 13, 11, 9), // 256bits AVX register
+	};
+	__m128i vecX0, vecX1, vecX2, vecX3, vecY0, vecNeighb0, vecNeighb1, vecNeighb2, vecNeighb3, vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vecy0, vecy1;
+	const __m128i vec0xff_epi32 = _mm_set1_epi32(0xff);
+	const __m128i vec0xff_epi16 = _mm_set1_epi16(0xff);
+	const __m128i vec0x1 = _mm_set1_epi32(0x1); // FIXME: not used
+	const __m128i vecInStride = _mm_set1_epi32(static_cast<int>(inStride)); // FIXME: not used
+	const __m128i vecInStridePlusOne = _mm_add_epi32(vecInStride, vec0x1); // FIXME: not used
 	const __m128i vecSfxTimes16 = _mm_set1_epi32(sf_x_ * 16);
 	const __m128i vecSFX0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[0]));
 	const __m128i vecSFX1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[1]));
 	const __m128i vecSFX2 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[2]));
 	const __m128i vecSFX3 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[3]));
 	const __m128i vecSFY = _mm_set1_epi32(static_cast<int>(sf_y));
+	const __m128i vecDeinterleave = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave_i32));	
+	const __m128i vecZero = _mm_setzero_si128();
 
 	int nearestX;
 
@@ -53,12 +61,17 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 	vecNeighb0 = vecNeighb1 = vecNeighb2 = vecNeighb3 = _mm_setzero_si128();
 
 	// TODO(dmi): SS41 have _mm_insert_epi8 
+	// TODO(dmi): _mm_shuffle_epi8 is SSSE3
 	// FIXME: you can use 'vecSFX0' only and add 'vecSFX'
 
 	vecY0 = _mm_setzero_si128();
 	for (j = 0, y = 0; j < outHeight; ++j, y += sf_y) { // FIXME: use for (y ... (sf_y*outHeight) and remove j
 		inPtr_ = (inPtr + ((y >> 8) * inStride)); // FIXME: use SIMD (vecY0) and remove y += sf_y
-		vecYand0xff = _mm_set1_epi8((y & 0xff)); // FIXME: use SIMD (vecY0)
+		y0 = y & 0xff;
+		y1 = 0xff - y0;
+		// FIXME: use SIMD (vecY0) and vecY1 and avoid _mm_set1_epi8
+		vecy0 = _mm_set1_epi32(static_cast<int>(y0));
+		vecy1 = _mm_set1_epi32(static_cast<int>(y1)); // FIXME: use SIMD sub(0xff, vecy0)
 		vecX0 = vecSFX0, vecX1 = vecSFX1, vecX2 = vecSFX2, vecX3 = vecSFX3;
 		for (i = 0; i < outWidth; i += 16) {
 
@@ -66,6 +79,7 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 			// FIXME: indices are packed as epi16 which means inWidth must  be < 0xffff
 			// FIXME: "_mm_extract_epi32" and "_mm_insert_epi32" are SSE41
 
+			// Part #0
 			vec0 = _mm_srli_epi32(vecX0, 8);
 			nearestX = _mm_extract_epi32(vec0, 0);
 			vecNeighb0 = _mm_insert_epi16(vecNeighb0, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX]), 0); // (vecNeighb0, vecNeighb1) -> 0,1,0,1,0,1,0,1,0,1,0,1
@@ -79,7 +93,7 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 			nearestX = _mm_extract_epi32(vec0, 3);
 			vecNeighb0 = _mm_insert_epi16(vecNeighb0, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX]), 3);
 			vecNeighb2 = _mm_insert_epi16(vecNeighb2, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX + inStride]), 3);
-
+			// Part #1
 			vec0 = _mm_srli_epi32(vecX1, 8);
 			nearestX = _mm_extract_epi32(vec0, 0);
 			vecNeighb0 = _mm_insert_epi16(vecNeighb0, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX]), 4); // (vecNeighb0, vecNeighb1)
@@ -94,154 +108,116 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 			vecNeighb0 = _mm_insert_epi16(vecNeighb0, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX]), 7);
 			vecNeighb2 = _mm_insert_epi16(vecNeighb2, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX + inStride]), 7);
 
-			// FIXME: '_mm_set1_epi8(0xff)' -> const and declare once
-
-			vec0 = _mm_unpacklo_epi16(vecNeighb0, vecNeighb2); // 0,1,2,3,0,1,2,3
-			vec1 = _mm_unpackhi_epi16(vecNeighb0, vecNeighb2); // 0,1,2,3,0,1,2,3
-			vec0 = _mm_and_si128(vecX1, vec0xff);
-			vec1 = _mm_and_si128(vecY0, vec0xff);
-			
-
-
-			/**** Part - #0 ****/
-			vec0 = _mm_srli_epi32(vecX0, 8);
-			nearestX = _mm_extract_epi32(vec0, 0);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 0);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 0);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 0);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 0);
-			nearestX = _mm_extract_epi32(vec0, 1);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 1);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 1);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 1);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 1);
-			nearestX = _mm_extract_epi32(vec0, 2);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 2);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 2);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 2);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 2);
-			nearestX = _mm_extract_epi32(vec0, 3);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 3);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 3);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 3);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 3);
-			// compute x0, y0, x1, y1
-			vec0 = _mm_and_si128(vecX0, vec0xff);
-			vec1 = _mm_and_si128(vecY0, vec0xff);
-			vec2 = _mm_sub_epi32(vec0xff, vec0);
-			vec3 = _mm_sub_epi32(vec0xff, vec1);
-			// compute ret0
-			vecNeighb0 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb0, vec2), _mm_mullo_epi32(vecNeighb1, vec0)), vec3);
-			vecNeighb1 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb2, vec2), _mm_mullo_epi32(vecNeighb3, vec0)), vec1);
-			vecret0 = _mm_srli_epi32(_mm_add_epi32(vecNeighb0, vecNeighb1), 16);
-
-			/**** Part - #1 ****/
-			// compute indices
-			vec0 = _mm_srli_epi32(vecX1, 8);
-			nearestX = _mm_extract_epi32(vec0, 0);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 0);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 0);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 0);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 0);
-			nearestX = _mm_extract_epi32(vec0, 1);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 1);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 1);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 1);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 1);
-			nearestX = _mm_extract_epi32(vec0, 2);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 2);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 2);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 2);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 2);
-			nearestX = _mm_extract_epi32(vec0, 3);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 3);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 3);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 3);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 3);
-			// compute x0, y0, x1, y1
-			vec0 = _mm_and_si128(vecX1, vec0xff);
-			vec1 = _mm_and_si128(vecY0, vec0xff);
-			vec2 = _mm_sub_epi32(vec0xff, vec0);
-			vec3 = _mm_sub_epi32(vec0xff, vec1);
-			// compute ret0
-			vecNeighb0 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb0, vec2), _mm_mullo_epi32(vecNeighb1, vec0)), vec3);
-			vecNeighb1 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb2, vec2), _mm_mullo_epi32(vecNeighb3, vec0)), vec1);
-			vecret1 = _mm_srli_epi32(_mm_add_epi32(vecNeighb0, vecNeighb1), 16);
-
-			/**** Part - #2 ****/
+			// Part #2
 			vec0 = _mm_srli_epi32(vecX2, 8);
 			nearestX = _mm_extract_epi32(vec0, 0);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 0);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 0);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 0);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 0);
+			vecNeighb1 = _mm_insert_epi16(vecNeighb1, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX]), 0); // (vecNeighb0, vecNeighb1) -> 0,1,0,1,0,1,0,1,0,1,0,1
+			vecNeighb3 = _mm_insert_epi16(vecNeighb3, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX + inStride]), 0); // (vecNeighb2, vecNeighb3) -> 2,3,2,3,2,3,2,3
 			nearestX = _mm_extract_epi32(vec0, 1);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 1);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 1);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 1);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 1);
+			vecNeighb1 = _mm_insert_epi16(vecNeighb1, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX]), 1);
+			vecNeighb3 = _mm_insert_epi16(vecNeighb3, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX + inStride]), 1);
 			nearestX = _mm_extract_epi32(vec0, 2);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 2);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 2);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 2);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 2);
+			vecNeighb1 = _mm_insert_epi16(vecNeighb1, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX]), 2);
+			vecNeighb3 = _mm_insert_epi16(vecNeighb3, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX + inStride]), 2);
 			nearestX = _mm_extract_epi32(vec0, 3);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 3);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 3);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 3);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 3);
-			// compute x0, y0, x1, y1
-			vec0 = _mm_and_si128(vecX2, vec0xff);
-			vec1 = _mm_and_si128(vecY0, vec0xff);
-			vec2 = _mm_sub_epi32(vec0xff, vec0);
-			vec3 = _mm_sub_epi32(vec0xff, vec1);
-			// compute ret0
-			vecNeighb0 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb0, vec2), _mm_mullo_epi32(vecNeighb1, vec0)), vec3);
-			vecNeighb1 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb2, vec2), _mm_mullo_epi32(vecNeighb3, vec0)), vec1);
-			vecret2 = _mm_srli_epi32(_mm_add_epi32(vecNeighb0, vecNeighb1), 16);
-
-			/**** Part - #3 ****/
+			vecNeighb1 = _mm_insert_epi16(vecNeighb1, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX]), 3);
+			vecNeighb3 = _mm_insert_epi16(vecNeighb3, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX + inStride]), 3);
+			// Part #3
 			vec0 = _mm_srli_epi32(vecX3, 8);
 			nearestX = _mm_extract_epi32(vec0, 0);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 0);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 0);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 0);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 0);
+			vecNeighb1 = _mm_insert_epi16(vecNeighb1, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX]), 4); // (vecNeighb1, vecNeighb1)
+			vecNeighb3 = _mm_insert_epi16(vecNeighb3, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX + inStride]), 4); // (vecNeighb3, vecNeighb3)
 			nearestX = _mm_extract_epi32(vec0, 1);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 1);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 1);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 1);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 1);
+			vecNeighb1 = _mm_insert_epi16(vecNeighb1, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX]), 5);
+			vecNeighb3 = _mm_insert_epi16(vecNeighb3, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX + inStride]), 5);
 			nearestX = _mm_extract_epi32(vec0, 2);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 2);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 2);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 2);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 2);
+			vecNeighb1 = _mm_insert_epi16(vecNeighb1, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX]), 6);
+			vecNeighb3 = _mm_insert_epi16(vecNeighb3, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX + inStride]), 6);
 			nearestX = _mm_extract_epi32(vec0, 3);
-			vecNeighb0 = _mm_insert_epi32(vecNeighb0, inPtr_[nearestX], 3);
-			vecNeighb1 = _mm_insert_epi32(vecNeighb1, inPtr_[nearestX + 1], 3);
-			vecNeighb2 = _mm_insert_epi32(vecNeighb2, inPtr_[nearestX + inStride], 3);
-			vecNeighb3 = _mm_insert_epi32(vecNeighb3, inPtr_[nearestX + inStride + 1], 3);
-			// compute x0, y0, x1, y1
-			vec0 = _mm_and_si128(vecX3, vec0xff);
-			vec1 = _mm_and_si128(vecY0, vec0xff);
-			vec2 = _mm_sub_epi32(vec0xff, vec0);
-			vec3 = _mm_sub_epi32(vec0xff, vec1);
-			// compute ret0
-			vecNeighb0 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb0, vec2), _mm_mullo_epi32(vecNeighb1, vec0)), vec3);
-			vecNeighb1 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb2, vec2), _mm_mullo_epi32(vecNeighb3, vec0)), vec1);
-			vecret3 = _mm_srli_epi32(_mm_add_epi32(vecNeighb0, vecNeighb1), 16);
+			vecNeighb1 = _mm_insert_epi16(vecNeighb1, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX]), 7);
+			vecNeighb3 = _mm_insert_epi16(vecNeighb3, *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX + inStride]), 7);
 
-			/**** move to next indices ****/
+			// FIXME: precompute interleave(x1, x0)
+
+			// Deinterleave neighbs
+			vec0 = _mm_shuffle_epi8(vecNeighb0, vecDeinterleave); // 0,0,0,0,1,1,1,1
+			vec1 = _mm_shuffle_epi8(vecNeighb1, vecDeinterleave); // 0,0,0,0,1,1,1,1
+			vec2 = _mm_shuffle_epi8(vecNeighb2, vecDeinterleave); // 2,2,2,2,3,3,3,3
+			vec3 = _mm_shuffle_epi8(vecNeighb3, vecDeinterleave); // 2,2,2,2,3,3,3,3
+			vecNeighb0 = _mm_unpacklo_epi64(vec0, vec1); // 0,0,0,0,0,0
+			vecNeighb1 = _mm_unpackhi_epi64(vec0, vec1); // 1,1,1,1,1,1
+			vecNeighb2 = _mm_unpacklo_epi64(vec2, vec3); // 2,2,2,2,2,2
+			vecNeighb3 = _mm_unpackhi_epi64(vec2, vec3); // 3,3,3,3,3,3
+
+			// compute x0 and x1 (first #8) and convert from epi32 and epi16
+			vec0 = _mm_packus_epi32(_mm_and_si128(vecX0, vec0xff_epi32), _mm_and_si128(vecX1, vec0xff_epi32)); // epi16
+			vec1 = _mm_sub_epi16(vec0xff_epi16, vec0);			
+			// compute (neighb0 * x1) + (neighb1 * x0) - #8 epi16 and produce 2 x (#4 epi32)
+			vec2 = _mm_unpacklo_epi8(vecNeighb0, vecZero); // epi8 -> epi16
+			vec3 = _mm_unpacklo_epi8(vecNeighb1, vecZero); // epi8 -> epi16
+			vec4 = _mm_madd_epi16(_mm_unpacklo_epi16(vec2, vec3), _mm_unpacklo_epi16(vec1, vec0)); // _mm_unpacklo_epi16(vec1, vec0) fixme: computed twice
+			vec5 = _mm_madd_epi16(_mm_unpackhi_epi16(vec2, vec3), _mm_unpackhi_epi16(vec1, vec0)); // fixme: _mm_unpackhi_epi16(vec1, vec0)computed twice
+			// compute (neighb2 * x1) + (neighb3 * x0) - #8 epi16 and produce 2 x (#4 epi32)
+			vec2 = _mm_unpacklo_epi8(vecNeighb2, vecZero); // epi8 -> epi16
+			vec3 = _mm_unpacklo_epi8(vecNeighb3, vecZero); // epi8 -> epi16
+			vec6 = _mm_madd_epi16(_mm_unpacklo_epi16(vec2, vec3), _mm_unpacklo_epi16(vec1, vec0)); // _mm_unpacklo_epi16(vec1, vec0) fixme: computed twice
+			vec7 = _mm_madd_epi16(_mm_unpackhi_epi16(vec2, vec3), _mm_unpackhi_epi16(vec1, vec0)); // fixme: _mm_unpackhi_epi16(vec1, vec0)computed twice
+
+			// compute x0 and x1 (second #8) and convert from epi32 and epi16
+			vec0 = _mm_packus_epi32(_mm_and_si128(vecX2, vec0xff_epi32), _mm_and_si128(vecX3, vec0xff_epi32)); // epi16
+			vec1 = _mm_sub_epi16(vec0xff_epi16, vec0);
+			// compute (neighb0 * x1) + (neighb1 * x0) - #8 epi16 and produce 2 x (#4 epi32)
+			vec2 = _mm_unpackhi_epi8(vecNeighb0, vecZero);
+			vec3 = _mm_unpackhi_epi8(vecNeighb1, vecZero);
+			vecNeighb0 = _mm_madd_epi16(_mm_unpacklo_epi16(vec2, vec3), _mm_unpacklo_epi16(vec1, vec0));// _mm_unpacklo_epi16(vec1, vec0) fixme: computed twice
+			vecNeighb1 = _mm_madd_epi16(_mm_unpackhi_epi16(vec2, vec3), _mm_unpackhi_epi16(vec1, vec0));// fixme: _mm_unpackhi_epi16(vec1, vec0)computed twice
+			// compute (neighb2 * x1) + (neighb3 * x0) - #8 epi16 and produce 2 x (#4 epi32)
+			vec2 = _mm_unpackhi_epi8(vecNeighb2, vecZero); // epi8 -> epi16
+			vec3 = _mm_unpackhi_epi8(vecNeighb3, vecZero); // epi8 -> epi16
+			vecNeighb2 = _mm_madd_epi16(_mm_unpacklo_epi16(vec2, vec3), _mm_unpacklo_epi16(vec1, vec0));// _mm_unpacklo_epi16(vec1, vec0) fixme: computed twice
+			vecNeighb3 = _mm_madd_epi16(_mm_unpackhi_epi16(vec2, vec3), _mm_unpackhi_epi16(vec1, vec0));// fixme: _mm_unpackhi_epi16(vec1, vec0)computed twice
+
+			// Let's say:
+			//		A = ((neighb0 * x1) + (neighb1 * x0))
+			//		B = ((neighb2 * x1) + (neighb3 * x0))
+			// Then:
+			//		A = vec4, vec5, neighb0, neighb1 (epi32)
+			//		B = vec6, vec7, neighb2, neighb3 (epi32)
+
+			// compute C = (y1 * A)
+			vec4 = _mm_mullo_epi32(vecy1, vec4);
+			vec5 = _mm_mullo_epi32(vecy1, vec5);
+			vecNeighb0 = _mm_mullo_epi32(vecy1, vecNeighb0);
+			vecNeighb1 = _mm_mullo_epi32(vecy1, vecNeighb1);
+
+			// compute D = (y0 * B)
+			vec6 = _mm_mullo_epi32(vecy0, vec6);
+			vec7 = _mm_mullo_epi32(vecy0, vec7);
+			vecNeighb2 = _mm_mullo_epi32(vecy0, vecNeighb2);
+			vecNeighb3 = _mm_mullo_epi32(vecy0, vecNeighb3);
+
+			// compute R = (C + D)
+			vec0 = _mm_add_epi32(vec4, vec6);
+			vec1 = _mm_add_epi32(vec5, vec7);
+			vec2 = _mm_add_epi32(vecNeighb0, vecNeighb2);
+			vec3 = _mm_add_epi32(vecNeighb1, vecNeighb3);
+
+			// Compute R >>= 16
+			vec0 = _mm_srli_epi32(vec0, 16);
+			vec1 = _mm_srli_epi32(vec1, 16);
+			vec2 = _mm_srli_epi32(vec2, 16);
+			vec3 = _mm_srli_epi32(vec3, 16);
+
+			// compute Convert_Epi32_To_Epi8(R)
+			vec0 = _mm_packus_epi32(vec0, vec1);
+			vec1 = _mm_packus_epi32(vec2, vec3);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&outPtr[i]), _mm_packus_epi16(vec0, vec1));
+
+			// move to next indices
 			vecX0 = _mm_add_epi32(vecX0, vecSfxTimes16);
 			vecX1 = _mm_add_epi32(vecX1, vecSfxTimes16);
 			vecX2 = _mm_add_epi32(vecX2, vecSfxTimes16);
 			vecX3 = _mm_add_epi32(vecX3, vecSfxTimes16);
-
-			/**** Packs result and write to outPtr ****/
-			vecret0 = _mm_packus_epi32(vecret0, vecret1);
-			vecret1 = _mm_packus_epi32(vecret2, vecret3);
-			_mm_store_si128(reinterpret_cast<__m128i*>(&outPtr[i]), _mm_packus_epi16(vecret0, vecret1));
 		}
 		outPtr += outStride;
 		vecY0 = _mm_add_epi32(vecY0, vecSFY);
