@@ -85,6 +85,10 @@ COMPV_ERROR_CODE scale()
 	timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
+#if COMPV_OS_WINDOWS && 0
+	COMPV_CHECK_CODE_BAIL(err = compv_tests_write_to_file(dstImage, "out.gray"));
+#endif
+
 	COMPV_CHECK_EXP_BAIL(std::string(test->md5).compare(compv_tests_md5(dstImage)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Image scaling MD5 mismatch");
 
 bail:

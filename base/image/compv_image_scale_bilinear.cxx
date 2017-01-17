@@ -6,6 +6,8 @@
 */
 #include "compv/base/image/compv_image_scale_bilinear.h"
 
+#include "compv/base/image/intrin/x86/compv_image_scale_bilinear_intrin_sse2.h"
+
 #define COMPV_THIS_CLASSNAME	"CompVImageScaleBilinear"
 
 COMPV_NAMESPACE_BEGIN()
@@ -15,6 +17,15 @@ static void scaleBilinearKernel11_C(const uint8_t* inPtr, compv_uscalar_t inWidt
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 
+	if (1) {
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME");
+		CompVImageScaleBilinear_Intrin_SSE2(
+			inPtr, inWidth, inHeight, inStride,
+			outPtr, outWidth, outHeight, outStride,
+			sf_x, sf_y);
+		return;
+	}
+
 	compv_uscalar_t i, j, x, y, nearestX, nearestY;
 	unsigned neighb0, neighb1, neighb2, neighb3, x0, y0, x1, y1;
 	const uint8_t* inPtr_;
@@ -23,7 +34,7 @@ static void scaleBilinearKernel11_C(const uint8_t* inPtr, compv_uscalar_t inWidt
 		nearestY = (y >> 8); // nearest y-point
 		inPtr_ = (inPtr + (nearestY * inStride));
 		for (i = 0, x = 0; i < outWidth; ++i, x += sf_x) {
-			nearestX = (x >> 8); // nearest x-point
+			nearestX = (x >> 8); // nearest x-point (compute for each row but this is faster than storing the values then reading from mem)
 
 			neighb0 = *(inPtr_ + nearestX);
 			neighb1 = *(inPtr_ + nearestX + 1);
