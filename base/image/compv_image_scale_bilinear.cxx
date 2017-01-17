@@ -5,84 +5,94 @@
 * WebSite: http://compv.org
 */
 #include "compv/base/image/compv_image_scale_bilinear.h"
+#include "compv/base/compv_cpu.h"
+#include "compv/base/parallel/compv_parallel.h"
 
 #include "compv/base/image/intrin/x86/compv_image_scale_bilinear_intrin_sse2.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVImageScaleBilinear"
 
+#define COMPV_IMAGE_SCALE_SAMPLES_PER_THREAD (100 * 100)
+
 COMPV_NAMESPACE_BEGIN()
 
-static void scaleBilinearKernel11_C(const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, compv_uscalar_t inStride, uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outHeight, compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y)
+static void scaleBilinear_C(const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, compv_uscalar_t inStride, uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outHeight, compv_uscalar_t outYStart, compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
-
-	if (1) {
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME");
-		CompVImageScaleBilinear_Intrin_SSE2(
-			inPtr, inWidth, inHeight, inStride,
-			outPtr, outWidth, outHeight, outStride,
-			sf_x, sf_y);
-		return;
-	}
-
-	compv_uscalar_t i, j, x, y, nearestX, nearestY;
-	unsigned neighb0, neighb1, neighb2, neighb3, x0, y0, x1, y1;
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+	compv_uscalar_t i, x, y, ymax, nearestX, nearestY;
+	unsigned int neighb0, neighb1, neighb2, neighb3, x0, y0, x1, y1;
 	const uint8_t* inPtr_;
 
-	for (j = 0, y = 0; j < outHeight; ++j) {
+	outPtr += (outYStart * outStride);
+	y = (sf_y * outYStart);
+	ymax = y + (outHeight * sf_y);
+
+	while (y < ymax) {
 		nearestY = (y >> 8); // nearest y-point
 		inPtr_ = (inPtr + (nearestY * inStride));
 		for (i = 0, x = 0; i < outWidth; ++i, x += sf_x) {
-			nearestX = (x >> 8); // nearest x-point (compute for each row but this is faster than storing the values then reading from mem)
+			nearestX = (x >> 8); // nearest x-point
 
-			neighb0 = *(inPtr_ + nearestX);
-			neighb1 = *(inPtr_ + nearestX + 1);
-			neighb2 = *(inPtr_ + nearestX + inStride);
-			neighb3 = *(inPtr_ + nearestX + inStride + 1);
+			neighb0 = inPtr_[nearestX];
+			neighb1 = inPtr_[nearestX + 1];
+			neighb2 = inPtr_[nearestX + inStride];
+			neighb3 = inPtr_[nearestX + inStride + 1];
 
 			x0 = x & 0xff;
 			y0 = y & 0xff;
 			x1 = 0xff - x0;
 			y1 = 0xff - y0;
-#if 1
-			// weight0 = x1 * y1;
-			// weight1 = x0 * y1;
-			// weight2 = x1 * y0;
-			// weight3 = x0 * y0;
-			// S = neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3
-			// S = neighb0 * (x1 * y1) + neighb1 * (x0 * y1) + neighb2 * (x1 * y0) + neighb3 * (x0 * y0)
-			// S = y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1 ) + (neighb3 * x0))
-			outPtr[i] = (uint8_t)((y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))) >> 16);
-#else
-			// x0 = x & 0xff;
-			// y0 = y & 0xff;
-			// x1 = 0xff - x0;
-			// y1 = 0xff - y0;
-			// weight0 = x1 * y1;
-			// weight1 = x0 * y1;
-			// weight2 = x1 * y0;
-			// weight3 = x0 * y0;
-			// S = neighb0 * weight0 + neighb1 * weight1 + neighb2 * weight2 + neighb3 * weight3
-			// S = neighb0 * (x1 * y1) + neighb1 * (x0 * y1) + neighb2 * (x1 * y0) + neighb3 * (x0 * y0)
-			// S = y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))
-			// S = y1 * ((neighb0 * (0xff - x0)) + (neighb1 * x0)) + y0 * ((neighb2 * (0xff - x0)) + (neighb3 * x0))
-			// S = y1 * (neighb0 * 0xff - neighb0 * x0 + neighb1 * x0) + y0 * (neighb2 * 0xff - neighb2 * x0 + neighb3 * x0)
-			// S = y1 * (neighb0 * 0xff - (neighb0 + neighb1) * x0) + y0 * (neighb2 * 0xff - (neighb2 + neighb3) * x0)
-			// S = y1 * ((neighb0 << 8) - neighb0 - x0 * (neighb0 - neighb1)) + y0 * ((neighb2 << 8) - neighb2 - x0 * (neighb2 - neighb3)
-			// S = (0xff - y0) * S0 + y0 * S1
-			// S = S0 * 0xff - y0 * S0 + y0 * S1
-			// S = (S0 << 8) - S0 - y0 * (S0 - S1)
-			S0 = ((neighb0 << 8) - neighb0 - x0 * (neighb0 - neighb1));
-			S1 = ((neighb2 << 8) - neighb2 - x0 * (neighb2 - neighb3));
-			S = (S0 << 8) - S0 - y0 * (S0 - S1);
-			outPtr[i] = (uint8_t)(S >> 16);
-#endif
-		}
 
-		y += sf_y;
+			outPtr[i] = static_cast<uint8_t>((y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))) >> 16); // no need for saturation after >> 16
+		}
 		outPtr += outStride;
+		y += sf_y;
 	}
+}
+
+static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, compv_uscalar_t inStride, uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outHeight, compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y)
+{
+	void(*scale)(const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, compv_uscalar_t inStride, uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outHeight, compv_uscalar_t outYStart, compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y)
+		= scaleBilinear_C;
+
+	size_t threadsCount;
+	CompVAsyncTaskIds taskIds;
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
+
+	// Compute number of threads
+	threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(outStride, outHeight, maxThreads, COMPV_IMAGE_SCALE_SAMPLES_PER_THREAD)
+		: 1;
+
+#if COMPV_ARCH_X86
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && !(outStride & 0x1)) {
+		// COMPV_EXEC_IFDEF_INTRIN_X86((funcptr = CompVImageScaleBilinear_Intrin_SSE2));
+	}
+#elif COMPV_ARCH_ARM
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+	}
+#endif
+
+	if (threadsCount > 1) {
+		size_t YStart = 0;
+		taskIds.reserve(threadsCount);
+		auto funcPtr = [&](size_t ystart, size_t height) -> void {
+			scale(inPtr, inWidth, inHeight, inStride, outPtr, outWidth, height, ystart, outStride, sf_x, sf_y);
+		};
+		size_t heights = (outHeight / threadsCount);
+		size_t lastHeight = outHeight - ((threadsCount - 1) * heights);
+		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, YStart, (threadIdx == (threadsCount - 1) ? lastHeight : heights)), taskIds), "Dispatching task failed");
+			YStart += (threadIdx == (threadsCount - 1) ? lastHeight : heights);
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
+	}
+	else {
+		scale(inPtr, inWidth, inHeight, inStride, outPtr, outWidth, outHeight, 0, outStride, sf_x, sf_y);
+	}
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVMatPtr& imageIn, CompVMatPtr& imageOut)
@@ -109,18 +119,11 @@ COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVMatPtr& imageIn, Co
 			COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Invalid scaling factor: (%f, %f)", float_sx, float_sy);
 			// We'll have a small distortion but do not break the conversion
 		}
-#if 0
-		if (scale_SIMD && COMPV_IS_ALIGNED(outPtrs[k], alignv) && COMPV_IS_ALIGNED(outStrides[k], alignv)) {
-			scale_SIMD(inPtrs[k], (uint8_t*)outPtrs[k], inHeights[k], inWidths[k], inStrides[k], outHeights[k], outWidths[k], outStrides[k], int_sx, int_sy);
-		}
-		else
-#endif
-		{
-			scaleBilinearKernel11_C(
-				imageIn->ptr<const uint8_t>(0, 0, planeId), widthIn, heightIn, strideIn,
-				imageOut->ptr<uint8_t>(0, 0, planeId), widthOut, heightOut, strideOut,
-				int_sx, int_sy);
-		}
+		COMPV_CHECK_CODE_RETURN(scaleBilinear(
+			imageIn->ptr<const uint8_t>(0, 0, planeId), widthIn, heightIn, strideIn, 
+			imageOut->ptr<uint8_t>(0, 0, planeId), widthOut, heightOut, strideOut, 
+			int_sx, int_sy
+		));
 	}
 
 	return COMPV_ERROR_CODE_S_OK;

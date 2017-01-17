@@ -6,7 +6,7 @@
 #elif COMPV_OS_OSX
 #	define COMPV_TEST_IMAGE_FOLDER				"/Users/mamadou/Projects/GitHub/data/test_images"
 #else
-#	define COMPV_TEST__IMAGE_FOLDER				NULL
+#	define COMPV_TEST_IMAGE_FOLDER				NULL
 #endif
 #define COMPV_TEST_PATH_TO_FILE(filename)		compv_tests_path_from_file(filename, COMPV_TEST_IMAGE_FOLDER)
 
@@ -42,7 +42,7 @@ COMPV_UNITTEST_SCALE[] =
 };
 static const size_t COMPV_UNITTEST_SCALE_COUNT = sizeof(COMPV_UNITTEST_SCALE) / sizeof(COMPV_UNITTEST_SCALE[0]);
 
-#define LOOP_COUNT		1
+#define LOOP_COUNT		1000
 #define SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
 #define FILE_NAME		FILE_NAME_EQUIRECTANGULAR
 #define FACTOR			0.83f

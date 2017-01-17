@@ -14,22 +14,19 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-// This function requires outWidth < 0xffff (65k)
+// This function requires outHeight and outStride to be multiple of #2
 void CompVImageScaleBilinear_Intrin_SSE2(
 	const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, COMPV_ALIGNED(SSE) compv_uscalar_t inStride,
 	COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outHeight, COMPV_ALIGNED(SSE) compv_uscalar_t outStride,
 	compv_uscalar_t sf_x, compv_uscalar_t sf_y)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("This code is for testing only");
 
-#if 1
-	compv_uscalar_t i, j, k, x, y, nearestX, nearestY;
+#if 0
+	compv_uscalar_t i, j, x, y, nearestX, nearestY;
 	int sf_x_ = static_cast<int>(sf_x);
 	const uint8_t* inPtr_;
-	COMPV_ALIGN_SSE() int32_t neighb0[16];
-	COMPV_ALIGN_SSE() int32_t neighb1[16];
-	COMPV_ALIGN_SSE() int32_t neighb2[16];
-	COMPV_ALIGN_SSE() int32_t neighb3[16];
 	COMPV_ALIGN_SSE() const int32_t SFX[4][4] = {
 		{ sf_x_ * 0, sf_x_ * 1, sf_x_ * 2, sf_x_ * 3 },
 		{ sf_x_ * 4, sf_x_ * 5, sf_x_ * 6, sf_x_ * 7 },
@@ -47,24 +44,33 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 	const __m128i vecSFX3 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[3]));
 	const __m128i vecSFY = _mm_set1_epi32(static_cast<int>(sf_y));
 
+	// TODO(dmi): next code is used to avoid "uninitialized local variable 'vecNeighbx' used" error message
+	// must not use in ASM
+	vecNeighb0 = vecNeighb1 = vecNeighb2 = vecNeighb3 = _mm_setzero_si128();
+
 	vecY0 = _mm_setzero_si128();
 	for (j = 0, y = 0; j < outHeight; ++j, y += sf_y) {
 		nearestY = (y >> 8); // nearest y-point
 		inPtr_ = (inPtr + (nearestY * inStride));
 		vecX0 = vecSFX0, vecX1 = vecSFX1, vecX2 = vecSFX2, vecX3 = vecSFX3;
 		for (i = 0, x = 0; i < outWidth; i += 16) {
-			for (k = 0; k < 16; ++k, x += sf_x) {
-				nearestX = (x >> 8); // nearest x-point (compute for each row but this is faster than storing the values then reading from mem)
-				neighb0[k] = static_cast<int32_t>(*(inPtr_ + nearestX));
-				neighb1[k] = static_cast<int32_t>(*(inPtr_ + nearestX + 1));
-				neighb2[k] = static_cast<int32_t>(*(inPtr_ + nearestX + inStride));
-				neighb3[k] = static_cast<int32_t>(*(inPtr_ + nearestX + inStride + 1));
-			}
+
+			// FIXME: check if shufle indexes can be > 16
+			nearestX = (x >> 8);
+			vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&SFX[3]));
+
+
+#define INSERT_EPI32_SSE41(ii) \
+			vecNeighb0 = _mm_insert_epi32(vecNeighb0, static_cast<int32_t>(*(inPtr_ + nearestX)), ii); \
+			vecNeighb1 = _mm_insert_epi32(vecNeighb1, static_cast<int32_t>(*(inPtr_ + nearestX + 1)), ii); \
+			vecNeighb2 = _mm_insert_epi32(vecNeighb2, static_cast<int32_t>(*(inPtr_ + nearestX + inStride)), ii); \
+			vecNeighb3 = _mm_insert_epi32(vecNeighb3, static_cast<int32_t>(*(inPtr_ + nearestX + inStride + 1)), ii)		
+
 			/* Part #0 */
-			vecNeighb0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb0[0]));
-			vecNeighb1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb1[0]));
-			vecNeighb2 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb2[0]));	
-			vecNeighb3 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb3[0]));
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(0), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(1), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(2), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(3), x += sf_x;
 			vec0 = _mm_and_si128(vecX0, vec0xff);
 			vec1 = _mm_and_si128(vecY0, vec0xff);
 			vec2 = _mm_sub_epi32(vec0xff, vec0);
@@ -74,10 +80,10 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 			vecret0 = _mm_srli_epi32(_mm_add_epi32(vecNeighb0, vecNeighb1), 16);
 
 			/* Part #1 */
-			vecNeighb0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb0[4]));
-			vecNeighb1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb1[4]));
-			vecNeighb2 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb2[4]));
-			vecNeighb3 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb3[4]));
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(0), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(1), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(2), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(3), x += sf_x;
 			vec0 = _mm_and_si128(vecX1, vec0xff);
 			vec1 = _mm_and_si128(vecY0, vec0xff);
 			vec2 = _mm_sub_epi32(vec0xff, vec0);
@@ -87,10 +93,10 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 			vecret1 = _mm_srli_epi32(_mm_add_epi32(vecNeighb0, vecNeighb1), 16);
 
 			/* Part #2 */
-			vecNeighb0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb0[8]));
-			vecNeighb1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb1[8]));
-			vecNeighb2 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb2[8]));
-			vecNeighb3 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb3[8]));
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(0), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(1), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(2), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(3), x += sf_x;
 			vec0 = _mm_and_si128(vecX2, vec0xff);
 			vec1 = _mm_and_si128(vecY0, vec0xff);
 			vec2 = _mm_sub_epi32(vec0xff, vec0);
@@ -100,10 +106,255 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 			vecret2 = _mm_srli_epi32(_mm_add_epi32(vecNeighb0, vecNeighb1), 16);
 
 			/* Part #3 */
-			vecNeighb0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb0[12]));
-			vecNeighb1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb1[12]));
-			vecNeighb2 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb2[12]));
-			vecNeighb3 = _mm_load_si128(reinterpret_cast<const __m128i*>(&neighb3[12]));
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(0), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(1), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(2), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(3), x += sf_x;
+			vec0 = _mm_and_si128(vecX3, vec0xff);
+			vec1 = _mm_and_si128(vecY0, vec0xff);
+			vec2 = _mm_sub_epi32(vec0xff, vec0);
+			vec3 = _mm_sub_epi32(vec0xff, vec1);
+			vecNeighb0 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb0, vec2), _mm_mullo_epi32(vecNeighb1, vec0)), vec3);
+			vecNeighb1 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb2, vec2), _mm_mullo_epi32(vecNeighb3, vec0)), vec1);
+			vecret3 = _mm_srli_epi32(_mm_add_epi32(vecNeighb0, vecNeighb1), 16);
+
+			/**** Packs result and write to outPtr ****/
+			vecret0 = _mm_packus_epi32(vecret0, vecret1);
+			vecret1 = _mm_packus_epi32(vecret2, vecret3);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&outPtr[i]), _mm_packus_epi16(vecret0, vecret1));
+
+			/**** move to next indices ****/
+			vecX0 = _mm_add_epi32(vecX0, vecSfxTimes16);
+			vecX1 = _mm_add_epi32(vecX1, vecSfxTimes16);
+			vecX2 = _mm_add_epi32(vecX2, vecSfxTimes16);
+			vecX3 = _mm_add_epi32(vecX3, vecSfxTimes16);
+}
+		vecY0 = _mm_add_epi32(vecY0, vecSFY);
+		outPtr += outStride;
+	}
+#endif
+
+	// FIXME: requiring height to be multiple of #2
+#if 0
+	compv_uscalar_t i, j, x, y, nearestX, nearestY;
+	int sf_x_ = static_cast<int>(sf_x);
+	const uint8_t* inPtr_;
+	__m128i vecX, vecY, vec0, vec1, vec2, vec3;
+	__m128i vecNeighb0, vecNeighb1, vecNeighb2, vecNeighb3;
+	const __m128i vec0xff = _mm_set1_epi32(0xff);
+	const __m128i vecSfxTimes4 = _mm_set1_epi32(sf_x_ * 4);
+	const __m128i vecSFX = _mm_set_epi32(sf_x_ * 3, sf_x_ * 2, sf_x_ * 1, sf_x_ * 0);
+	const __m128i vecSFY = _mm_set1_epi32(static_cast<int>(sf_y));
+	const __m128i vecZero = _mm_setzero_si128();
+
+	// TODO(dmi): next code is used to avoid "uninitialized local variable 'vecNeighbx' used" error message
+	// must not use in ASM
+	vecNeighb0 = vecNeighb1 = vecNeighb2 = vecNeighb3 = _mm_setzero_si128();
+
+	vecY = _mm_setzero_si128();
+	for (j = 0, y = 0; j < outHeight; ++j, y += sf_y) {
+		nearestY = (y >> 8); // nearest y-point
+		inPtr_ = (inPtr + (nearestY * inStride));
+		vecX = vecSFX;
+		for (i = 0, x = 0; i < outWidth; i += 4) { // outStride is SSE aligned
+
+		// FIXME: use _mm_insert_epi32 for SSE41
+
+#define INSERT_EPI16_SSE2(ii) \
+			vecNeighb0 = _mm_insert_epi16(vecNeighb0, static_cast<int16_t>(*(inPtr_ + nearestX)), ii); \
+			vecNeighb1 = _mm_insert_epi16(vecNeighb1, static_cast<int16_t>(*(inPtr_ + nearestX + 1)), ii); \
+			vecNeighb2 = _mm_insert_epi16(vecNeighb2, static_cast<int16_t>(*(inPtr_ + nearestX + inStride)), ii); \
+			vecNeighb3 = _mm_insert_epi16(vecNeighb3, static_cast<int16_t>(*(inPtr_ + nearestX + inStride + 1)), ii)		
+
+			
+			nearestX = (x >> 8), INSERT_EPI16_SSE2(0), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI16_SSE2(1), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI16_SSE2(2), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI16_SSE2(3), x += sf_x;
+
+			vecNeighb0 = _mm_unpacklo_epi16(vecNeighb0, vecZero);
+			vecNeighb1 = _mm_unpacklo_epi16(vecNeighb1, vecZero);
+			vecNeighb2 = _mm_unpacklo_epi16(vecNeighb2, vecZero);
+			vecNeighb3 = _mm_unpacklo_epi16(vecNeighb3, vecZero);
+			
+			vec0 = _mm_and_si128(vecX, vec0xff);
+			vec1 = _mm_and_si128(vecY, vec0xff);
+			vec2 = _mm_sub_epi32(vec0xff, vec0);
+			vec3 = _mm_sub_epi32(vec0xff, vec1);
+			vecNeighb0 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb0, vec2), _mm_mullo_epi32(vecNeighb1, vec0)), vec3);
+			vecNeighb1 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb2, vec2), _mm_mullo_epi32(vecNeighb3, vec0)), vec1);
+			vec0 = _mm_srli_epi32(_mm_add_epi32(vecNeighb0, vecNeighb1), 16);
+
+			/**** Packs result and write to outPtr ****/
+			vec0 = _mm_packus_epi32(vec0, vec0);
+			*reinterpret_cast<uint32_t*>(&outPtr[i]) = _mm_cvtsi128_si32(_mm_packus_epi16(vec0, vec0));
+
+			/**** move to next indices ****/
+			vecX = _mm_add_epi32(vecX, vecSfxTimes4);
+		}
+		vecY = _mm_add_epi32(vecY, vecSFY);
+		outPtr += outStride;
+	}
+#endif
+
+#if 0
+	compv_uscalar_t i, j, x, y, nearestX0, nearestX1;
+	unsigned neighb0, neighb1, neighb2, neighb3, x0, y0, x1, y1;
+	compv_uscalar_t sf_x2 = sf_x << 1, sf_y2 = sf_y << 1, outStride2 = outStride << 1;
+	const uint8_t *inPtr0, *inPtr1;
+	__m128i vecNeighb0, vecNeighb1, vecNeighb2, vecNeighb3;
+
+	outHeight &= -2; // height_mod = 0x1 (outHeight multiple of #2)
+
+	// TODO(dmi): next code is used to avoid "uninitialized local variable 'vecNeighbx' used" error message
+	// must not use in ASM
+	vecNeighb0 = vecNeighb1 = vecNeighb2 = vecNeighb3 = _mm_setzero_si128();
+
+	for (j = 0, y = 0; j < outHeight; j += 2, y += sf_y2) { // FIXME: -1 -> realy
+		inPtr0 = (inPtr + ((y >> 8) * inStride));
+		inPtr1 = (inPtr + (((y + sf_y) >> 8) * inStride));
+		for (i = 0, x = 0; i < outWidth; i += 2, x += sf_x2) { // Do not check outofbound, caller checked 'outStride' is multiple of #2
+			nearestX0 = (x >> 8);
+			nearestX1 = (x >> 8);
+			vecNeighb0 = _mm_insert_epi16(vecNeighb0, inPtr0[nearestX] | (inPtr1[nearestX] << 8), 0);
+			vecNeighb1 = _mm_insert_epi16(vecNeighb1, inPtr0[nearestX + 1] | (inPtr1[nearestX + 1] << 8), 0);
+			vecNeighb2 = _mm_insert_epi16(vecNeighb2, inPtr0[nearestX + inStride] | (inPtr1[nearestX + inStride] << 8), 0);
+			vecNeighb3 = _mm_insert_epi16(vecNeighb3, inPtr0[nearestX + inStride + 1] | (inPtr1[nearestX + inStride + 1] << 8), 0);
+			
+#if 0
+			// x = 0, y = 0
+			nearestX = (x >> 8);
+			neighb0 = *(inPtr0 + nearestX);
+			neighb1 = *(inPtr0 + nearestX + 1);
+			neighb2 = *(inPtr0 + nearestX + inStride);
+			neighb3 = *(inPtr0 + nearestX + inStride + 1);
+			x0 = x & 0xff;
+			y0 = y & 0xff;
+			x1 = 0xff - x0;
+			y1 = 0xff - y0;
+			outPtr[i] = (uint8_t)((y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))) >> 16);
+
+			// x = 0, y = 1
+			neighb0 = *(inPtr1 + nearestX);
+			neighb1 = *(inPtr1 + nearestX + 1);
+			neighb2 = *(inPtr1 + nearestX + inStride);
+			neighb3 = *(inPtr1 + nearestX + inStride + 1);
+			x0 = x & 0xff;
+			y0 = (y + sf_y) & 0xff;
+			x1 = 0xff - x0;
+			y1 = 0xff - y0;
+			outPtr[i + outStride] = (uint8_t)((y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))) >> 16);
+
+			// x = 1, y = 0
+			nearestX = ((x + sf_x) >> 8);
+			neighb0 = *(inPtr0 + nearestX);
+			neighb1 = *(inPtr0 + nearestX + 1);
+			neighb2 = *(inPtr0 + nearestX + inStride);
+			neighb3 = *(inPtr0 + nearestX + inStride + 1);
+			x0 = (x + sf_x) & 0xff;
+			y0 = y & 0xff;
+			x1 = 0xff - x0;
+			y1 = 0xff - y0;
+			outPtr[i + 1] = (uint8_t)((y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))) >> 16);
+
+			// x = 1, y = 1
+			neighb0 = *(inPtr1 + nearestX);
+			neighb1 = *(inPtr1 + nearestX + 1);
+			neighb2 = *(inPtr1 + nearestX + inStride);
+			neighb3 = *(inPtr1 + nearestX + inStride + 1);
+			x0 = (x + sf_x) & 0xff;
+			y0 = (y + sf_y ) & 0xff;
+			x1 = 0xff - x0;
+			y1 = 0xff - y0;
+			outPtr[i + outStride + 1] = (uint8_t)((y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))) >> 16);
+#endif
+		}		
+		outPtr += outStride2;
+	}
+#endif
+
+#if 0
+	compv_uscalar_t i, j, x, y, nearestX, nearestY;
+	int sf_x_ = static_cast<int>(sf_x);
+	const uint8_t* inPtr_;
+	COMPV_ALIGN_SSE() const int32_t SFX[4][4] = {
+		{ sf_x_ * 0, sf_x_ * 1, sf_x_ * 2, sf_x_ * 3 },
+		{ sf_x_ * 4, sf_x_ * 5, sf_x_ * 6, sf_x_ * 7 },
+		{ sf_x_ * 8, sf_x_ * 9, sf_x_ * 10, sf_x_ * 11 },
+		{ sf_x_ * 12, sf_x_ * 13, sf_x_ * 14, sf_x_ * 15 }
+	};
+	__m128i vecX0, vecX1, vecX2, vecX3, vecY0, vec0, vec1, vec2, vec3;
+	__m128i vecret0, vecret1, vecret2, vecret3;
+	__m128i vecNeighb0, vecNeighb1, vecNeighb2, vecNeighb3;
+	const __m128i vec0xff = _mm_set1_epi32(0xff);
+	const __m128i vecSfxTimes16 = _mm_set1_epi32(sf_x_ * 16);
+	const __m128i vecSFX0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[0]));
+	const __m128i vecSFX1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[1]));
+	const __m128i vecSFX2 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[2]));
+	const __m128i vecSFX3 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[3]));
+	const __m128i vecSFY = _mm_set1_epi32(static_cast<int>(sf_y));
+
+	// TODO(dmi): next code is used to avoid "uninitialized local variable 'vecNeighbx' used" error message
+	// must not use in ASM
+	vecNeighb0 = vecNeighb1 = vecNeighb2 = vecNeighb3 = _mm_setzero_si128();
+
+	vecY0 = _mm_setzero_si128();
+	for (j = 0, y = 0; j < outHeight; ++j, y += sf_y) {
+		nearestY = (y >> 8); // nearest y-point
+		inPtr_ = (inPtr + (nearestY * inStride));
+		vecX0 = vecSFX0, vecX1 = vecSFX1, vecX2 = vecSFX2, vecX3 = vecSFX3;
+		for (i = 0, x = 0; i < outWidth; i += 16) {
+
+#define INSERT_EPI32_SSE41(ii) \
+			vecNeighb0 = _mm_insert_epi32(vecNeighb0, static_cast<int32_t>(*(inPtr_ + nearestX)), ii); \
+			vecNeighb1 = _mm_insert_epi32(vecNeighb1, static_cast<int32_t>(*(inPtr_ + nearestX + 1)), ii); \
+			vecNeighb2 = _mm_insert_epi32(vecNeighb2, static_cast<int32_t>(*(inPtr_ + nearestX + inStride)), ii); \
+			vecNeighb3 = _mm_insert_epi32(vecNeighb3, static_cast<int32_t>(*(inPtr_ + nearestX + inStride + 1)), ii)		
+
+			/* Part #0 */
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(0), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(1), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(2), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(3), x += sf_x;
+			vec0 = _mm_and_si128(vecX0, vec0xff);
+			vec1 = _mm_and_si128(vecY0, vec0xff);
+			vec2 = _mm_sub_epi32(vec0xff, vec0);
+			vec3 = _mm_sub_epi32(vec0xff, vec1);
+			vecNeighb0 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb0, vec2), _mm_mullo_epi32(vecNeighb1, vec0)), vec3);
+			vecNeighb1 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb2, vec2), _mm_mullo_epi32(vecNeighb3, vec0)), vec1);
+			vecret0 = _mm_srli_epi32(_mm_add_epi32(vecNeighb0, vecNeighb1), 16);
+
+			/* Part #1 */
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(0), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(1), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(2), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(3), x += sf_x;
+			vec0 = _mm_and_si128(vecX1, vec0xff);
+			vec1 = _mm_and_si128(vecY0, vec0xff);
+			vec2 = _mm_sub_epi32(vec0xff, vec0);
+			vec3 = _mm_sub_epi32(vec0xff, vec1);
+			vecNeighb0 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb0, vec2), _mm_mullo_epi32(vecNeighb1, vec0)), vec3);
+			vecNeighb1 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb2, vec2), _mm_mullo_epi32(vecNeighb3, vec0)), vec1);
+			vecret1 = _mm_srli_epi32(_mm_add_epi32(vecNeighb0, vecNeighb1), 16);
+
+			/* Part #2 */
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(0), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(1), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(2), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(3), x += sf_x;
+			vec0 = _mm_and_si128(vecX2, vec0xff);
+			vec1 = _mm_and_si128(vecY0, vec0xff);
+			vec2 = _mm_sub_epi32(vec0xff, vec0);
+			vec3 = _mm_sub_epi32(vec0xff, vec1);
+			vecNeighb0 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb0, vec2), _mm_mullo_epi32(vecNeighb1, vec0)), vec3);
+			vecNeighb1 = _mm_mullo_epi32(_mm_add_epi32(_mm_mullo_epi32(vecNeighb2, vec2), _mm_mullo_epi32(vecNeighb3, vec0)), vec1);
+			vecret2 = _mm_srli_epi32(_mm_add_epi32(vecNeighb0, vecNeighb1), 16);
+
+			/* Part #3 */
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(0), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(1), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(2), x += sf_x;
+			nearestX = (x >> 8), INSERT_EPI32_SSE41(3), x += sf_x;
 			vec0 = _mm_and_si128(vecX3, vec0xff);
 			vec1 = _mm_and_si128(vecY0, vec0xff);
 			vec2 = _mm_sub_epi32(vec0xff, vec0);
@@ -128,7 +379,7 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 	}
 #endif
 
-#if 0
+#if 1
 	compv_uscalar_t i, j, y;
 	const uint8_t* inPtr_;
 	int sf_x_ = static_cast<int>(sf_x);

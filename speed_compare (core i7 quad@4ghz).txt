@@ -16,7 +16,7 @@ Shared Memory: 3810 MB
 
 === RGB24 -> Grayscale (#1000 times, 720p) ===
 CompV: 169.ms(st), 54.ms(mt)
-OpenCV: 341.ms
+OpenCV: 341.ms(full optiz)
 
 === FAST9_16, Nonmax=true, threshold=20, maxfeatures=-1 (#10000 times, 720p) ===
 CompV: 3358.ms(mt,avx2), 4730.ms(mt,sse2), 8447(st,avx2), 11261.ms(st,sse2)
@@ -25,3 +25,8 @@ Remarque: The way we write to the shared strengths buffer is slow but required t
 This is why we are better than OpenCV by faaaaar.
 The above numbers means we can run feature detection on HD image at 2977fps while opencv runs at 973fps.
 We're using #8 threads and with more threads (e.g. #16) we can go as high as 5000fps
+
+=== Image scaling from (1282, 720) to (1064, 597), (#10000 times) ===
+CompV: 2806.ms(mt,c++)
+OpenCV: 4148.ms(full optiz)
+Remarque: OpenCV uses SSE2 and multithreading while CompV uses pure C++ code.

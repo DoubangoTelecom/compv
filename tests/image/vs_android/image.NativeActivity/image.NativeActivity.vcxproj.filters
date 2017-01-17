@@ -6,6 +6,7 @@
     <ClCompile Include="..\..\feature_fast.cxx" />
     <ClCompile Include="..\..\draw_image.cxx" />
     <ClCompile Include="..\..\draw_points.cxx" />
+    <ClCompile Include="..\..\scale.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />
