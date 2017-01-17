@@ -30,6 +30,8 @@ static void scaleBilinear_C(const uint8_t* inPtr, compv_uscalar_t inWidth, compv
 	while (y < ymax) {
 		nearestY = (y >> 8); // nearest y-point
 		inPtr_ = (inPtr + (nearestY * inStride));
+		y0 = y & 0xff;
+		y1 = 0xff - y0;
 		for (i = 0, x = 0; i < outWidth; ++i, x += sf_x) {
 			nearestX = (x >> 8); // nearest x-point
 
@@ -39,9 +41,7 @@ static void scaleBilinear_C(const uint8_t* inPtr, compv_uscalar_t inWidth, compv
 			neighb3 = inPtr_[nearestX + inStride + 1];
 
 			x0 = x & 0xff;
-			y0 = y & 0xff;
 			x1 = 0xff - x0;
-			y1 = 0xff - y0;
 
 			outPtr[i] = static_cast<uint8_t>((y1 * ((neighb0 * x1) + (neighb1 * x0)) + y0 * ((neighb2 * x1) + (neighb3 * x0))) >> 16); // no need for saturation after >> 16
 		}
@@ -66,8 +66,8 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 		: 1;
 
 #if COMPV_ARCH_X86
-	if (CompVCpu::isEnabled(kCpuFlagSSE2) && !(outStride & 0x1)) {
-		// COMPV_EXEC_IFDEF_INTRIN_X86((funcptr = CompVImageScaleBilinear_Intrin_SSE2));
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(outPtr) && COMPV_IS_ALIGNED_SSE(outStride)) {
+		//COMPV_EXEC_IFDEF_INTRIN_X86((scale = CompVImageScaleBilinear_Intrin_SSE2));
 	}
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
@@ -98,6 +98,12 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 COMPV_ERROR_CODE CompVImageScaleBilinear::process(const CompVMatPtr& imageIn, CompVMatPtr& imageOut)
 {
 	// Internal function, no need to check for input parameters
+	// For now only grascale images are fully tested
+	COMPV_CHECK_EXP_RETURN(
+		imageIn->subType() != COMPV_SUBTYPE_PIXELS_Y, 
+		COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, 
+		"Only grayscale subtypes are supported using bilinear scaling"
+	);
 	float float_sx, float_sy;
 	compv_uscalar_t int_sx, int_sy, strideIn, strideOut, widthIn, widthOut, heightIn, heightOut;
 	for (int planeId = 0; planeId < static_cast<int>(imageOut->planeCount()); ++planeId) {
