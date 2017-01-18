@@ -14,7 +14,6 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-// This function requires outHeight and outStride to be multiple of #2
 void CompVImageScaleBilinear_Intrin_SSE2(
 	const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, compv_uscalar_t inStride,
 	COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(SSE) compv_uscalar_t outStride,
@@ -22,7 +21,7 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2(); // FIXME: may be SSE41
 
-	compv_uscalar_t i, y0, y1, nearestY;
+	compv_uscalar_t i, nearestY;
 	const uint8_t* inPtr_;
 	int sf_x_ = static_cast<int>(sf_x);
 	COMPV_ALIGN_SSE() const int32_t SFX[4][4] = {
@@ -37,7 +36,7 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 		COMPV_MM_SHUFFLE_EPI8(6, 4, 2, 0), COMPV_MM_SHUFFLE_EPI8(14, 12, 10, 8), COMPV_MM_SHUFFLE_EPI8(7, 5, 3, 1), COMPV_MM_SHUFFLE_EPI8(15, 13, 11, 9), // 128bits SSE register
 		COMPV_MM_SHUFFLE_EPI8(6, 4, 2, 0), COMPV_MM_SHUFFLE_EPI8(14, 12, 10, 8), COMPV_MM_SHUFFLE_EPI8(7, 5, 3, 1), COMPV_MM_SHUFFLE_EPI8(15, 13, 11, 9), // 256bits AVX register
 	};
-	__m128i vecX0, vecX1, vecX2, vecX3, vecY0, vecNeighb0, vecNeighb1, vecNeighb2, vecNeighb3, vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vecy0, vecy1;
+	__m128i vecYStart, vecX0, vecX1, vecX2, vecX3, vecNeighb0, vecNeighb1, vecNeighb2, vecNeighb3, vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vecy0, vecy1;
 	const __m128i vec0xff_epi32 = _mm_set1_epi32(0xff);
 	const __m128i vec0xff_epi16 = _mm_set1_epi16(0xff);
 	const __m128i vec0x1 = _mm_set1_epi32(0x1); // FIXME: not used
@@ -51,32 +50,27 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 	const __m128i vecSFY = _mm_set1_epi32(static_cast<int>(sf_y));
 	const __m128i vecDeinterleave = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave_i32));	
 	const __m128i vecZero = _mm_setzero_si128();
-	int i32;
-
-	int nearestX0, nearestX1;
-
-	// TODO(dmi): next code is used to avoid "uninitialized local variable 'vecNeighbx' used" error message
-	// must not use in ASM
-	vecNeighb0 = vecNeighb1 = vecNeighb2 = vecNeighb3 = _mm_setzero_si128();
+	int i32, nearestX0, nearestX1;
 
 	// TODO(dmi): SS41 have _mm_insert_epi8 
 	// TODO(dmi): _mm_shuffle_epi8 is SSSE3
 	// FIXME: you can use 'vecSFX0' only and add 'vecSFX'
 
-	vecY0 = _mm_setzero_si128();
+	vecYStart = _mm_set1_epi32(static_cast<int>(outYStart));
 	while (outYStart < outYEnd) {
 		nearestY = (outYStart >> 8); // nearest y-point
 		inPtr_ = (inPtr + (nearestY * inStride)); // FIXME: use SIMD (vecY0) and remove y += sf_y
-		y0 = outYStart & 0xff;
-		y1 = 0xff - y0;
-		// FIXME: use SIMD (vecY0) and vecY1 and avoid _mm_set1_epi8
-		vecy0 = _mm_set1_epi16(static_cast<int>(y0));
-		vecy1 = _mm_set1_epi16(static_cast<int>(y1)); // FIXME: use SIMD sub(0xff, vecy0)
-		vecX0 = vecSFX0, vecX1 = vecSFX1, vecX2 = vecSFX2, vecX3 = vecSFX3;
+		vecy0 = _mm_and_si128(vecYStart, vec0xff_epi32);
+		vecy1 = _mm_sub_epi32(vec0xff_epi32, vecy0);
+		vecy0 = _mm_packs_epi32(vecy0, vecy0); // epi32 -> epi16
+		vecy1 = _mm_packs_epi32(vecy1, vecy1); // epi32 -> epi16
+		vecX0 = vecSFX0;
+		vecX1 = vecSFX1;
+		vecX2 = vecSFX2;
+		vecX3 = vecSFX3;
 		for (i = 0; i < outWidth; i += 16) {
 
-			// FIXME: when we have #4 low or #4 high we dont need the rest, just add 1 -> do not convert to epi16
-			// FIXME: indices are packed as epi16 which means inWidth must  be < 0xffff
+
 			// FIXME: "_mm_extract_epi32" and "_mm_insert_epi32" are SSE41
 			// FIXME: add support for insert_epi64 for x64
 
@@ -216,8 +210,8 @@ void CompVImageScaleBilinear_Intrin_SSE2(
 			vecX3 = _mm_add_epi32(vecX3, vecSfxTimes16);			
 		}
 		outPtr += outStride;
-		outYStart += sf_y;
-		vecY0 = _mm_add_epi32(vecY0, vecSFY);
+		vecYStart = _mm_add_epi32(vecYStart, vecSFY);
+		outYStart = _mm_extract_epi32(vecYStart, 0);
 	}
 }
 
