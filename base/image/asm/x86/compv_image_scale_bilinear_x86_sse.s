@@ -98,7 +98,7 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 
 	; compute vecSFX0, vecSFX1, vecSFX2 and vecSFX3
 	mov rsi, arg_sf_x
-	xor rax, rcx ; sf_x_ * 0
+	xor rax, rax ; sf_x_ * 0
 	lea rbx, [rsi * 4] ; sf_x_ * 4
 	lea rcx, [rsi * 8] ; sf_x_ * 8
 	lea rdx, [rbx + rcx] ; sf_x_ * 12
@@ -357,9 +357,10 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 			; end-of-LoopWidth
 
 		;;
-		mov rax, arg_outPtr
-		add rax, arg_outStride
-		mov arg_outPtr, rax
+		mov rcx, arg_outPtr
+		add rcx, arg_outStride
+		mov arg_outPtr, rcx
+
 		mov rax, arg_outYStart
 		add rax, arg_sf_y
 		mov arg_outYStart, rax
