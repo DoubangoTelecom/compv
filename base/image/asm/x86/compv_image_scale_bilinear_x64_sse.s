@@ -6,11 +6,12 @@
 ; WebSite: http://compv.org                                             ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 %include "compv_common_x86.s"
+%if COMPV_YASM_ABI_IS_64BIT
 %include "compv_image_scale_bilinear_macros.s"
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(CompVImageScaleBilinear_Asm_X86_SSE41)
+global sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 
 section .data
 	extern sym(kShuffleEpi8_Deinterleave_i32)
@@ -29,28 +30,24 @@ section .text
 ; arg(8) -> COMPV_ALIGNED(SSE) compv_uscalar_t outStride
 ; arg(9) -> compv_uscalar_t sf_x
 ; arg(10) -> compv_uscalar_t sf_y
-sym(CompVImageScaleBilinear_Asm_X86_SSE41)
+sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 11
-	COMPV_YASM_SAVE_XMM 7
+	COMPV_YASM_SAVE_XMM 15
 	push rsi
 	push rdi
 	push rbx
+	push r12
+	push r13
+	;push r14
+	;push r15
 	;; end prolog ;;
 
 	; align stack and alloc memory
 	COMPV_YASM_ALIGN_STACK 16, rax
-	sub rsp, (18*16)
-	%define vecX0                   rsp + 0
-	%define vecX1                   vecX0 + 16
-	%define vecX2                   vecX1 + 16
-	%define vecX3                   vecX2 + 16 
-	%define vec4                    vecX3 + 16
-	%define vec5                    vec4 + 16
-	%define vec6                    vec5 + 16
-	%define vec7                    vec6 + 16
-	%define vecy0                   vec7 + 16 
+	sub rsp, (10*16)
+	%define vecy0                   rsp + 0
 	%define vecy1                   vecy0 + 16
 	%define vecZero                 vecy1 + 16
 	%define vec0xff_epi32           vecZero + 16
@@ -65,6 +62,14 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 	%define vecNeighb1              xmm5
 	%define vecNeighb2              xmm6
 	%define vecNeighb3              xmm7
+	%define vecX0                   xmm8
+	%define vecX1                   xmm9
+	%define vecX2                   xmm10
+	%define vecX3                   xmm11
+	%define vec4                    xmm12
+	%define vec5                    xmm13
+	%define vec6                    xmm14
+	%define vec7                    xmm15
 	%define vecDeinterleave         sym(kShuffleEpi8_Deinterleave_i32)
 
 	%define arg_inPtr               arg(0)
@@ -77,7 +82,21 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 	%define arg_outYEnd             arg(7)
 	%define arg_outStride           arg(8)
 	%define arg_sf_x                arg(9)
-	%define arg_sf_y               arg(10)
+	%define arg_sf_y                arg(10)
+
+	%define outWidth                r8
+	%define outYStart               r9
+	%define outPtr                  r10
+	%define outStride               r11
+	%define sf_y                    r12
+	%define inPtr                   r13
+
+	mov outWidth, arg_outWidth
+	mov outYStart, arg_outYStart
+	mov outPtr, arg_outPtr
+	mov outStride, arg_outStride
+	mov sf_y, arg_sf_y
+	mov inPtr, arg_inPtr
 
 	; compute vecZero, vec0xff_epi32 and vec0xff_epi16
 	pxor xmm0, xmm0
@@ -135,13 +154,12 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 	; do
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.DoWhile
-		mov rax, arg_outYStart ; rax = outYStart
-		mov rbx, arg_inPtr ; rbx = inPtr
+		mov rax, outYStart
 		movd xmm0, rax
 		pshufd xmm0, xmm0, 0x0 ; xmm0 = vecYStart
 		shr rax, 8 ; rax = (outYStart >> 8) = nearestY 
 		imul rax, arg_inStride ; rax = (nearestY * inStride)
-		lea rbx, [rbx + rax] ; rbx = inPtr_
+		lea rbx, [inPtr + rax] ; rbx = inPtr_
 		movdqa xmm1, [vec0xff_epi32]
 		pand xmm0, xmm1 ; xmm0 = vecy0
 		psubd xmm1, xmm0 ; xmm1 = vecy1
@@ -149,14 +167,10 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 		packssdw xmm1, xmm1
 		movdqa [vecy0], xmm0
 		movdqa [vecy1], xmm1
-		movdqa xmm0, [vecSFX0]
-		movdqa xmm1, [vecSFX1]
-		movdqa xmm2, [vecSFX2]
-		movdqa xmm3, [vecSFX3]
-		movdqa [vecX0], xmm0
-		movdqa [vecX1], xmm1
-		movdqa [vecX2], xmm2
-		movdqa [vecX3], xmm3
+		movdqa vecX0, [vecSFX0]
+		movdqa vecX1, [vecSFX1]
+		movdqa vecX2, [vecSFX2]
+		movdqa vecX3, [vecSFX3]
 
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (i = 0; i < outWidth; i += 16)
@@ -164,10 +178,10 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 		xor rsi, rsi ; rsi = i = 0x0
 		.LoopWidth
 			;;; set neighbs ;;;
-			movdqa xmm0, [vecX0]
-			movdqa xmm1, [vecX1]
-			movdqa xmm2, [vecX2]
-			movdqa xmm3, [vecX3]
+			movdqa xmm0, vecX0
+			movdqa xmm1, vecX1
+			movdqa xmm2, vecX2
+			movdqa xmm3, vecX3
 			psrld xmm0, 8
 			psrld xmm1, 8
 			psrld xmm2, 8
@@ -191,59 +205,57 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 			movdqa vecNeighb1, xmm0
 			movdqa vecNeighb3, xmm2
 
+			; FIXME(dmi): starting here xmm2 = vecZero
+
 			; compute x0 and x1 (first 8) and convert from epi32 and epi16
-			movdqa xmm0, [vecX0]
-			movdqa xmm3, [vecX1]
+			movdqa xmm0, [vec0xff_epi32]
+			movdqa xmm3, [vec0xff_epi32]
 			movdqa xmm1, [vec0xff_epi16]
-			pand xmm0, [vec0xff_epi32]
-			pand xmm3, [vec0xff_epi32]
+			pand xmm0, vecX0
+			pand xmm3, vecX1
 			packusdw xmm0, xmm3 ; xmm0 = vec0
 			psubw xmm1, xmm0 ; xmm1 = vec1
 			; compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16
-			movdqa xmm2, vecNeighb0
+			movdqa vec4, vecNeighb0
 			movdqa xmm3, vecNeighb1
-			punpcklbw xmm2, [vecZero]
+			punpcklbw vec4, [vecZero]
 			punpcklbw xmm3, [vecZero]
-			pmullw xmm2, xmm1
+			pmullw vec4, xmm1
 			pmullw xmm3, xmm0
-			paddusw xmm2, xmm3
-			movdqa [vec4], xmm2
+			paddusw vec4, xmm3
 			; compute vec5 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16
-			movdqa xmm2, vecNeighb2
+			movdqa vec5, vecNeighb2
 			movdqa xmm3, vecNeighb3
-			punpcklbw xmm2, [vecZero]
+			punpcklbw vec5, [vecZero]
 			punpcklbw xmm3, [vecZero]
-			pmullw xmm2, xmm1
+			pmullw vec5, xmm1
 			pmullw xmm3, xmm0
-			paddusw xmm2, xmm3
-			movdqa [vec5], xmm2
+			paddusw vec5, xmm3
 
 			; compute x0 and x1 (second 8) and convert from epi32 and epi16
-			movdqa xmm0, [vecX2]
-			movdqa xmm3, [vecX3]
+			movdqa xmm0, [vec0xff_epi32]
+			movdqa xmm3, [vec0xff_epi32]
 			movdqa xmm1, [vec0xff_epi16]
-			pand xmm0, [vec0xff_epi32]
-			pand xmm3, [vec0xff_epi32]
+			pand xmm0, vecX2
+			pand xmm3, vecX3
 			packusdw xmm0, xmm3 ; xmm0 = vec0
 			psubw xmm1, xmm0 ; xmm1 = vec1
 			; compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16
-			movdqa xmm2, vecNeighb0
+			movdqa vec6, vecNeighb0
 			movdqa xmm3, vecNeighb1
-			punpckhbw xmm2, [vecZero]
+			punpckhbw vec6, [vecZero]
 			punpckhbw xmm3, [vecZero]
-			pmullw xmm2, xmm1
+			pmullw vec6, xmm1
 			pmullw xmm3, xmm0
-			paddusw xmm2, xmm3
-			movdqa [vec6], xmm2
+			paddusw vec6, xmm3
 			; compute vec7 = (neighb2 * x1) + (neighb3 * x0) -> #8 epi16
-			movdqa xmm2, vecNeighb2
+			movdqa vec7, vecNeighb2
 			movdqa xmm3, vecNeighb3
-			punpckhbw xmm2, [vecZero]
+			punpckhbw vec7, [vecZero]
 			punpckhbw xmm3, [vecZero]
-			pmullw xmm2, xmm1
+			pmullw vec7, xmm1
 			pmullw xmm3, xmm0
-			paddusw xmm2, xmm3
-			movdqa [vec7], xmm2
+			paddusw vec7, xmm3
 
 			; Let''s say:
 			;		A = ((neighb0 * x1) + (neighb1 * x0))
@@ -260,58 +272,42 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 			movdqa xmm3, xmm2     ; xmm3 = vecy0
 
 			; compute C = (y1 * A) >> 16
-			pmulhuw xmm0, [vec4]
-			pmulhuw xmm1, [vec6]
+			pmulhuw xmm0, vec4
+			pmulhuw xmm1, vec6
 
 			; compute D = (y0 * B) >> 16
-			pmulhuw xmm2, [vec5]
-			pmulhuw xmm3, [vec7]
+			pmulhuw xmm2, vec5
+			pmulhuw xmm3, vec7
 
 			; Compute R = (C + D)
 			paddusw xmm0, xmm2
 			paddusw xmm1, xmm3
 
 			; Store the result
-			mov rax, arg_outPtr
 			packuswb xmm0, xmm1
-			movdqa [rax + rsi], xmm0
+			movdqa [outPtr + rsi], xmm0
+
 
 			; move to next indices
-			movdqa xmm0, [vecX0]
-			movdqa xmm1, [vecX1]
-			movdqa xmm2, [vecX2]
-			movdqa xmm3, [vecX3]
-			paddd xmm0, [vecSfxTimes16]
-			paddd xmm1, [vecSfxTimes16]
-			paddd xmm2, [vecSfxTimes16]
-			paddd xmm3, [vecSfxTimes16]
-			movdqa [vecX0], xmm0
-			movdqa [vecX1], xmm1
-			movdqa [vecX2], xmm2
-			movdqa [vecX3], xmm3
+			lea rsi, [rsi + 16]
+			cmp rsi, outWidth
+			paddd vecX0, [vecSfxTimes16]
+			paddd vecX1, [vecSfxTimes16]
+			paddd vecX2, [vecSfxTimes16]
+			paddd vecX3, [vecSfxTimes16]
 			
 			;;
-			lea rsi, [rsi + 16]
-			cmp rsi, arg_outWidth
 			jl .LoopWidth
 			; end-of-LoopWidth
 
 		;;
-		mov rcx, arg_outPtr
-		mov rax, arg_outYStart
-		add rcx, arg_outStride
-		add rax, arg_sf_y
-		mov arg_outPtr, rcx		
-		mov arg_outYStart, rax
-		cmp rax, arg_outYEnd
+		lea outYStart, [outYStart + sf_y]
+		cmp outYStart, arg_outYEnd
+		lea outPtr, [outPtr + outStride]
 		jl .DoWhile
 		; end-of-DoWhile
 
 
-	%undef vecX0
-	%undef vecX1
-	%undef vecX2
-	%undef vecX3
 	%undef vec4
 	%undef vec5
 	%undef vec6
@@ -331,6 +327,14 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 	%undef vecNeighb1
 	%undef vecNeighb2
 	%undef vecNeighb3
+	%undef vecX0
+	%undef vecX1
+	%undef vecX2
+	%undef vecX3
+	%undef vec4                    
+	%undef vec5                    
+	%undef vec6                    
+	%undef vec7                    
 	%undef vecDeinterleave
 
 	%undef arg_inPtr
@@ -345,11 +349,22 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 	%undef arg_sf_x
 	%undef arg_sf_y
 
+	%undef outWidth
+	%undef outYStart
+	%undef outPtr
+	%undef outStride
+	%undef sf_y
+	%undef inPtr
+
 	; free memory and unalign stack
-	add rsp, (18*16)
+	add rsp, (10*16)
 	COMPV_YASM_UNALIGN_STACK
 
 	;; begin epilog ;;
+	;pop r15
+	;pop r14
+	pop r13
+	pop r12
 	pop rbx
 	pop rdi
 	pop rsi
@@ -358,3 +373,5 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 	mov rsp, rbp
 	pop rbp
 	ret
+
+%endif ; COMPV_YASM_ABI_IS_64BIT
