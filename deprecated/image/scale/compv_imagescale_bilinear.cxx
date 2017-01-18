@@ -43,6 +43,8 @@ static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, compv
     for (j = 0, y = 0; j < outHeight; ++j) {
         nearestY = (y >> 8); // nearest y-point
         inPtr_ = (inPtr + (nearestY * inStride));
+		y0 = y & 0xff;
+		y1 = 0xff - y0;
         for (i = 0, x = 0; i < outWidth; ++i, x += sf_x) {
             nearestX = (x >> 8); // nearest x-point
 
@@ -52,9 +54,8 @@ static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, compv
             neighb3 = *(inPtr_ + nearestX + inStride + 1);
 
             x0 = x & 0xff;
-            y0 = y & 0xff;
             x1 = 0xff - x0;
-            y1 = 0xff - y0;
+            
 #if 1
 			outPtr[i] = static_cast<uint8_t>( // no need for saturation
 				(y1 * ((neighb0 * x1) + (neighb1 * x0)) >> 16) + // y1 * A

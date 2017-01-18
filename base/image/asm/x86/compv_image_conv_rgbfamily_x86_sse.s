@@ -122,14 +122,14 @@ section .text
 			packuswb xmm2, xmm4
 			movdqa [rbx], xmm2
 			lea rbx, [rbx + 16] ; outYPtr += 16
-			; end-of-LoopWidth
 			jl .LoopWidth
+			; end-of-LoopWidth
 
 		lea rbx, [rbx + rcx]
 		lea rax, [rax + rdx]
-		; end-of-LoopHeight
 		dec rsi
 		jnz .LoopHeight
+		; end-of-LoopHeight
 
 	; begin epilog
 	pop rbx

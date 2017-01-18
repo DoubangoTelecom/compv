@@ -17,6 +17,16 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if COMPV_ASM
+#	if COMPV_ARCH_X86
+	COMPV_EXTERNC void CompVImageScaleBilinear_Asm_X86_SSE41(const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, compv_uscalar_t inStride, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(SSE) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
+#	endif /* COMPV_ARCH_X86 */
+#	if COMPV_ARCH_X64
+#	endif /* COMPV_ARCH_X64 */
+#	if COMPV_ARCH_ARM
+#	endif
+#endif /* COMPV_ASM */
+
 static void scaleBilinear_C(const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, compv_uscalar_t inStride, uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
@@ -73,7 +83,8 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE41) && COMPV_IS_ALIGNED_SSE(outPtr) && COMPV_IS_ALIGNED_SSE(outStride)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86((scale = CompVImageScaleBilinear_Intrin_SSE41));
+		COMPV_EXEC_IFDEF_INTRIN_X86(scale = CompVImageScaleBilinear_Intrin_SSE41);
+		COMPV_EXEC_IFDEF_ASM_X86(scale = CompVImageScaleBilinear_Asm_X86_SSE41);
 	}
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {

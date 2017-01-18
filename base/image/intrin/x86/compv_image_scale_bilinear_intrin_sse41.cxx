@@ -19,16 +19,22 @@
 #define _mm_bilinear_insert_at_2_x86(vecDst, val32) _mm_bilinear_insert_x86(vecDst, val32, 2)
 #define _mm_bilinear_insert_at_3_x86(vecDst, val32) _mm_bilinear_insert_x86(vecDst, val32, 3)
 #define _mm_bilinear_set_neighbs_x86(vecNeareastX, vecNeighbA, vecNeighbB, index0, index1, tmp32) \
+			/* Extract indices(0, 1) */ \
 			nearestX0 = _mm_extract_epi32(vecNeareastX, 0); \
 			nearestX1 = _mm_extract_epi32(vecNeareastX, 1); \
+			/* Insert in vecNeighbA(index0) */ \
 			tmp32 = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1]) << 16); /* vecNeighbA  -> 0,1,0,1,0,1,0,1,0,1,0,1 */ \
 			_mm_bilinear_insert_at_##index0##_x86(vecNeighbA, tmp32); \
+			/* Insert in vecNeighbB(index0) */ \
 			tmp32 = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0 + inStride]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1 + inStride]) << 16); /* vecNeighbB -> 2,3,2,3,2,3,2,3 */ \
 			_mm_bilinear_insert_at_##index0##_x86(vecNeighbB, tmp32); \
+			/* Extract indices(2, 3) */ \
 			nearestX0 = _mm_extract_epi32(vecNeareastX, 2); \
 			nearestX1 = _mm_extract_epi32(vecNeareastX, 3); \
+			/* Insert in vecNeighbA(index1) */ \
 			tmp32 = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1]) << 16); /* vecNeighbA -> 0,1,0,1,0,1,0,1,0,1,0,1 */ \
 			_mm_bilinear_insert_at_##index1##_x86(vecNeighbA, tmp32); \
+			/* Insert in vecNeighbA(index1) */ \
 			tmp32 = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0 + inStride]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1 + inStride]) << 16); /* vecNeighbB -> 2,3,2,3,2,3,2,3 */ \
 			_mm_bilinear_insert_at_##index1##_x86(vecNeighbB, tmp32)
 
@@ -67,17 +73,16 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 		{ sf_x_ * 8, sf_x_ * 9, sf_x_ * 10, sf_x_ * 11 },
 		{ sf_x_ * 12, sf_x_ * 13, sf_x_ * 14, sf_x_ * 15 }
 	};
-	__m128i vecYStart, vecX0, vecX1, vecX2, vecX3, vecNeighb0, vecNeighb1, vecNeighb2, vecNeighb3, vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vecy0, vecy1;
-	static const __m128i vec0xff_epi32 = _mm_set1_epi32(0xff);
-	static const __m128i vec0xff_epi16 = _mm_set1_epi16(0xff);
-	static const __m128i vecDeinterleave = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave_i32));
+	__m128i vecX0, vecX1, vecX2, vecX3, vecNeighb0, vecNeighb1, vecNeighb2, vecNeighb3, vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vecy0, vecy1;
 	static const __m128i vecZero = _mm_setzero_si128();
-	const __m128i vecSfxTimes16 = _mm_set1_epi32(sf_x_ * 16);
+	static const __m128i vec0xff_epi32 = _mm_srli_epi32(_mm_cmpeq_epi32(vecZero, vecZero), 24); // 0x000000ff (faster than set1_epi32(0xff))
+	static const __m128i vec0xff_epi16 = _mm_srli_epi16(_mm_cmpeq_epi16(vecZero, vecZero), 8); // 0x00ff (faster than set1_epi16(0xff))
+	static const __m128i vecDeinterleave = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave_i32));
+	const __m128i vecSfxTimes16 = _mm_set1_epi32(sf_x_ << 4);
 	const __m128i vecSFX0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[0]));
 	const __m128i vecSFX1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[1]));
 	const __m128i vecSFX2 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[2]));
 	const __m128i vecSFX3 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[3]));
-	const __m128i vecSFY = _mm_set1_epi32(static_cast<int>(sf_y));
 	int nearestX0, nearestX1;
 #if COMPV_ARCH_X64 && 0
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("32 bits code is faster");
@@ -85,12 +90,11 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 #else
 	int32_t i32;
 #endif
-
-	vecYStart = _mm_set1_epi32(static_cast<int>(outYStart));
-	while (outYStart < outYEnd) {
+	
+	do {
 		nearestY = (outYStart >> 8); // nearest y-point
 		inPtr_ = (inPtr + (nearestY * inStride));
-		vecy0 = _mm_and_si128(vecYStart, vec0xff_epi32);
+		vecy0 = _mm_and_si128(_mm_set1_epi32(static_cast<int>(outYStart)), vec0xff_epi32);
 		vecy1 = _mm_sub_epi32(vec0xff_epi32, vecy0);
 		vecy0 = _mm_packs_epi32(vecy0, vecy0); // epi32 -> epi16
 		vecy1 = _mm_packs_epi32(vecy1, vecy1); // epi32 -> epi16
@@ -99,8 +103,6 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 		vecX2 = vecSFX2;
 		vecX3 = vecSFX3;
 		for (i = 0; i < outWidth; i += 16) {
-			// FIXME: add support for insert_epi64 for x64
-
 			// nearest x-point
 			vec0 = _mm_srli_epi32(vecX0, 8);
 			vec1 = _mm_srli_epi32(vecX1, 8);
@@ -137,20 +139,20 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 			// compute x0 and x1 (first #8) and convert from epi32 and epi16
 			vec0 = _mm_packus_epi32(_mm_and_si128(vecX0, vec0xff_epi32), _mm_and_si128(vecX1, vec0xff_epi32)); // epi16
 			vec1 = _mm_sub_epi16(vec0xff_epi16, vec0);			
-			// compute vec4 = (neighb0 * x1) + (neighb1 * x0) - #8 epi16
+			// compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> #8 epi16
 			vec4 = _mm_adds_epu16(_mm_mullo_epi16(_mm_unpacklo_epi8(vecNeighb0, vecZero), vec1),
 				_mm_mullo_epi16(_mm_unpacklo_epi8(vecNeighb1, vecZero), vec0));
-			// compute vec5 = (neighb2 * x1) + (neighb3 * x0) - #8 epi16
+			// compute vec5 = (neighb2 * x1) + (neighb3 * x0) -> #8 epi16
 			vec5 = _mm_adds_epu16(_mm_mullo_epi16(_mm_unpacklo_epi8(vecNeighb2, vecZero), vec1),
 				_mm_mullo_epi16(_mm_unpacklo_epi8(vecNeighb3, vecZero), vec0));
 
 			// compute x0 and x1 (second #8) and convert from epi32 and epi16
 			vec0 = _mm_packus_epi32(_mm_and_si128(vecX2, vec0xff_epi32), _mm_and_si128(vecX3, vec0xff_epi32)); // epi16
 			vec1 = _mm_sub_epi16(vec0xff_epi16, vec0);
-			// compute vec6 = (neighb0 * x1) + (neighb1 * x0) - #8 epi16
+			// compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> #8 epi16
 			vec6 = _mm_adds_epu16(_mm_mullo_epi16(_mm_unpackhi_epi8(vecNeighb0, vecZero), vec1),
 				_mm_mullo_epi16(_mm_unpackhi_epi8(vecNeighb1, vecZero), vec0));
-			// compute vec7 = (neighb2 * x1) + (neighb3 * x0) - #8 epi16
+			// compute vec7 = (neighb2 * x1) + (neighb3 * x0) -> #8 epi16
 			vec7 = _mm_adds_epu16(_mm_mullo_epi16(_mm_unpackhi_epi8(vecNeighb2, vecZero), vec1),
 				_mm_mullo_epi16(_mm_unpackhi_epi8(vecNeighb3, vecZero), vec0));
 
@@ -160,7 +162,7 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 			// Then:
 			//		A = vec4, vec6
 			//		B = vec5, vec7
-
+			//
 			// We cannot use _mm_madd_epi16 to compute C and D because it operates on epi16 while A and B contain epu16 values
 
 			// compute C = (y1 * A) >> 16
@@ -185,9 +187,8 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 			vecX3 = _mm_add_epi32(vecX3, vecSfxTimes16);			
 		}
 		outPtr += outStride;
-		vecYStart = _mm_add_epi32(vecYStart, vecSFY);
-		outYStart = _mm_extract_epi32(vecYStart, 0);
-	}
+		outYStart += sf_y;
+	} while (outYStart < outYEnd);
 }
 
 COMPV_NAMESPACE_END()
