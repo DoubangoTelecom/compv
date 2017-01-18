@@ -46,11 +46,10 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 
 	; align stack and alloc memory
 	COMPV_YASM_ALIGN_STACK 16, rax
-	sub rsp, (10*16)
+	sub rsp, (9*16)
 	%define vecy0                   rsp + 0
 	%define vecy1                   vecy0 + 16
-	%define vecZero                 vecy1 + 16
-	%define vec0xff_epi32           vecZero + 16
+	%define vec0xff_epi32           vecy1 + 16
 	%define vec0xff_epi16           vec0xff_epi32 + 16
 	%define vecSfxTimes16           vec0xff_epi16 + 16
 	%define vecSFX0                 vecSfxTimes16 + 16
@@ -98,13 +97,11 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 	mov sf_y, arg_sf_y
 	mov inPtr, arg_inPtr
 
-	; compute vecZero, vec0xff_epi32 and vec0xff_epi16
-	pxor xmm0, xmm0
+	; compute , vec0xff_epi32 and vec0xff_epi16
 	pcmpeqd xmm1, xmm1
 	pcmpeqw xmm2, xmm2
 	psrld xmm1, 24
 	psrlw xmm2, 8
-	movdqa [vecZero], xmm0
 	movdqa [vec0xff_epi32], xmm1
 	movdqa [vec0xff_epi16], xmm2
 
@@ -205,7 +202,9 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 			movdqa vecNeighb1, xmm0
 			movdqa vecNeighb3, xmm2
 
-			; FIXME(dmi): starting here xmm2 = vecZero
+			; starting here xmm2 = vecZero
+			%define vecZero xmm2
+			pxor vecZero, vecZero
 
 			; compute x0 and x1 (first 8) and convert from epi32 and epi16
 			movdqa xmm0, [vec0xff_epi32]
@@ -218,18 +217,20 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 			; compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16
 			movdqa vec4, vecNeighb0
 			movdqa xmm3, vecNeighb1
-			punpcklbw vec4, [vecZero]
-			punpcklbw xmm3, [vecZero]
+			punpcklbw vec4, vecZero
+			punpcklbw xmm3, vecZero
 			pmullw vec4, xmm1
 			pmullw xmm3, xmm0
-			paddusw vec4, xmm3
+			paddd vecX0, [vecSfxTimes16]
 			; compute vec5 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16
 			movdqa vec5, vecNeighb2
+			punpcklbw vec5, vecZero
+			paddusw vec4, xmm3
 			movdqa xmm3, vecNeighb3
-			punpcklbw vec5, [vecZero]
-			punpcklbw xmm3, [vecZero]
+			punpcklbw xmm3, vecZero
 			pmullw vec5, xmm1
 			pmullw xmm3, xmm0
+			paddd vecX1, [vecSfxTimes16]
 			paddusw vec5, xmm3
 
 			; compute x0 and x1 (second 8) and convert from epi32 and epi16
@@ -243,19 +244,24 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 			; compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16
 			movdqa vec6, vecNeighb0
 			movdqa xmm3, vecNeighb1
-			punpckhbw vec6, [vecZero]
-			punpckhbw xmm3, [vecZero]
+			punpckhbw vec6, vecZero
+			punpckhbw xmm3, vecZero
 			pmullw vec6, xmm1
 			pmullw xmm3, xmm0
-			paddusw vec6, xmm3
+			paddd vecX2, [vecSfxTimes16]
 			; compute vec7 = (neighb2 * x1) + (neighb3 * x0) -> #8 epi16
 			movdqa vec7, vecNeighb2
+			punpckhbw vec7, vecZero
+			paddusw vec6, xmm3
 			movdqa xmm3, vecNeighb3
-			punpckhbw vec7, [vecZero]
-			punpckhbw xmm3, [vecZero]
+			punpckhbw xmm3, vecZero
 			pmullw vec7, xmm1
 			pmullw xmm3, xmm0
+			paddd vecX3, [vecSfxTimes16]
 			paddusw vec7, xmm3
+
+			; after this line xmm2 is no longer equal to zero
+			%undef vecZero
 
 			; Let''s say:
 			;		A = ((neighb0 * x1) + (neighb1 * x0))
@@ -264,7 +270,7 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 			;		A = vec4, vec6
 			;		B = vec5, vec7
 			;
-			; We cannot use _mm_madd_epi16 to compute C and D because it operates on epi16 while A and B contain epu16 values
+			; We cannot use pmaddwd to compute C and D because it operates on epi16 while A and B contain epu16 values
 
 			movdqa xmm0, [vecy1]  ; xmm0 = vecy1
 			movdqa xmm2, [vecy0]  ; xmm2 = vecy0
@@ -283,18 +289,12 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 			paddusw xmm0, xmm2
 			paddusw xmm1, xmm3
 
-			; Store the result
-			packuswb xmm0, xmm1
-			movdqa [outPtr + rsi], xmm0
-
-
-			; move to next indices
 			lea rsi, [rsi + 16]
 			cmp rsi, outWidth
-			paddd vecX0, [vecSfxTimes16]
-			paddd vecX1, [vecSfxTimes16]
-			paddd vecX2, [vecSfxTimes16]
-			paddd vecX3, [vecSfxTimes16]
+
+			; Store the result
+			packuswb xmm0, xmm1
+			movdqa [outPtr + rsi - 16], xmm0
 			
 			;;
 			jl .LoopWidth
@@ -314,7 +314,6 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 	%undef vec7
 	%undef vecy0
 	%undef vecy1
-	%undef vecZero
 	%undef vec0xff_epi32
 	%undef vec0xff_epi16
 	%undef vecSfxTimes16
@@ -357,7 +356,7 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 	%undef inPtr
 
 	; free memory and unalign stack
-	add rsp, (10*16)
+	add rsp, (9*16)
 	COMPV_YASM_UNALIGN_STACK
 
 	;; begin epilog ;;

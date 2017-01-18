@@ -27,6 +27,6 @@ The above numbers means we can run feature detection on HD image at 2977fps whil
 We're using #8 threads and with more threads (e.g. #16) we can go as high as 5000fps
 
 === Image scaling from (1282, 720) to (1064, 597), (#10000 times) ===
-CompV: 1875.ms(mt,sse41), 2645.ms(mt,c++), 7147.ms(st,sse41), 9470.ms(st,c++)
+CompV: 1866.ms(mt,sse41), 2645.ms(mt,c++), 6708.st(st,sse41), 9470.ms(st,c++)
 OpenCV: 4148.ms(full optiz)
 Remarque: OpenCV uses SSE2 and multithreading and we're faster even without using sse41.
