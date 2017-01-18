@@ -333,6 +333,9 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_sse2.h">
       <Filter>include\image\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -536,7 +539,7 @@
     <ClCompile Include="image\compv_image_scale_bilinear.cxx">
       <Filter>source\image</Filter>
     </ClCompile>
-    <ClCompile Include="image\intrin\x86\compv_image_scale_bilinear_intrin_sse2.cxx">
+    <ClCompile Include="image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.cxx">
       <Filter>source\image\intrin\x86</Filter>
     </ClCompile>
   </ItemGroup>

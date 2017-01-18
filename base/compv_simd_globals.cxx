@@ -158,3 +158,9 @@ COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint32_t kAVXFloat64MaskNegate[] = { // Mas
     0x00000000, 0x80000000, 0x00000000, 0x80000000, // SSE
     0x00000000, 0x80000000, 0x00000000, 0x80000000 // AVX
 };
+
+// Deinterleaves bytes [a,b,a,b,b,a,b,a,b] to [a,a,a,a,a,b,b,b,b,b]
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int32_t kShuffleEpi8_Deinterleave_i32[] = { // To be used with _mm_shuffle_epi8
+	COMPV_MM_SHUFFLE_EPI8(6, 4, 2, 0), COMPV_MM_SHUFFLE_EPI8(14, 12, 10, 8), COMPV_MM_SHUFFLE_EPI8(7, 5, 3, 1), COMPV_MM_SHUFFLE_EPI8(15, 13, 11, 9), // 128bits SSE register
+	COMPV_MM_SHUFFLE_EPI8(6, 4, 2, 0), COMPV_MM_SHUFFLE_EPI8(14, 12, 10, 8), COMPV_MM_SHUFFLE_EPI8(7, 5, 3, 1), COMPV_MM_SHUFFLE_EPI8(15, 13, 11, 9), // 256bits AVX register
+};

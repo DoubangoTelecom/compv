@@ -69,6 +69,7 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_sse2.h" />
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.h" />
     <ClInclude Include="include\compv\base\intrin\arm\compv_intrin_neon.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_avx.h" />
     <ClInclude Include="include\compv\base\intrin\x86\compv_intrin_sse.h" />
@@ -164,7 +165,16 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WIN32;__SSSE3__;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;COMPV_BASE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WIN32;__SSSE3__;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;COMPV_BASE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="image\intrin\x86\compv_image_scale_bilinear_intrin_sse2.cxx" />
+    <ClCompile Include="image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.cxx">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+        _IPP_SEQUENTIAL_STATIC;%(PreprocessorDefinitions)
+      ;__SSE4_1__</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TBB_USE_THREADING_TOOLS;%(PreprocessorDefinitions);__SSE4_1__</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+        _IPP_SEQUENTIAL_STATIC;%(PreprocessorDefinitions)
+      ;__SSE4_1__</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TBB_USE_THREADING_TOOLS;%(PreprocessorDefinitions);__SSE4_1__</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="intrin\x86\compv_mem_intrin_avx.cxx" />
     <ClCompile Include="intrin\x86\compv_mem_intrin_sse2.cxx" />
     <ClCompile Include="math\compv_math.cxx" />
