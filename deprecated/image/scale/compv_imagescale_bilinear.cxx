@@ -56,6 +56,11 @@ static void scaleBilinearKernel11_C(const uint8_t* inPtr, uint8_t* outPtr, compv
             x1 = 0xff - x0;
             y1 = 0xff - y0;
 #if 1
+			outPtr[i] = static_cast<uint8_t>( // no need for saturation
+				(y1 * ((neighb0 * x1) + (neighb1 * x0)) >> 16) + // y1 * A
+				(y0 * ((neighb2 * x1) + (neighb3 * x0)) >> 16)   // y0 * B
+				);
+#elif 1
             // weight0 = x1 * y1;
             // weight1 = x0 * y1;
             // weight2 = x1 * y0;
