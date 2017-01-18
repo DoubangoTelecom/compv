@@ -42,7 +42,7 @@ COMPV_UNITTEST_SCALE[] =
 };
 static const size_t COMPV_UNITTEST_SCALE_COUNT = sizeof(COMPV_UNITTEST_SCALE) / sizeof(COMPV_UNITTEST_SCALE[0]);
 
-#define LOOP_COUNT		1
+#define LOOP_COUNT		10000
 #define SCALE_TYPE		COMPV_SCALE_TYPE_BILINEAR
 #define FILE_NAME		FILE_NAME_EQUIRECTANGULAR
 #define FACTOR			0.83f
@@ -85,8 +85,8 @@ COMPV_ERROR_CODE scale()
 	timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-#if COMPV_OS_WINDOWS && 0
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+#if COMPV_OS_WINDOWS && 1
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
 	COMPV_CHECK_CODE_BAIL(err = compv_tests_write_to_file(dstImage, "out.gray"));
 #endif
 

@@ -12,12 +12,12 @@
 #include "compv/base/math/compv_math.h"
 #include "compv/base/compv_debug.h"
 
+/****** x86_32 ******/
 #define _mm_bilinear_insert_x86(vecDst, val32, index) vecDst = _mm_insert_epi32(vecDst, val32, index)
 #define _mm_bilinear_insert_at_0_x86(vecDst, val32) vecDst = _mm_cvtsi32_si128(val32)
 #define _mm_bilinear_insert_at_1_x86(vecDst, val32) _mm_bilinear_insert_x86(vecDst, val32, 1)
 #define _mm_bilinear_insert_at_2_x86(vecDst, val32) _mm_bilinear_insert_x86(vecDst, val32, 2)
 #define _mm_bilinear_insert_at_3_x86(vecDst, val32) _mm_bilinear_insert_x86(vecDst, val32, 3)
-
 #define _mm_bilinear_set_neighbs_x86(vecNeareastX, vecNeighbA, vecNeighbB, index0, index1, tmp32) \
 			nearestX0 = _mm_extract_epi32(vecNeareastX, 0); \
 			nearestX1 = _mm_extract_epi32(vecNeareastX, 1); \
@@ -31,6 +31,23 @@
 			_mm_bilinear_insert_at_##index1##_x86(vecNeighbA, tmp32); \
 			tmp32 = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0 + inStride]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1 + inStride]) << 16); /* vecNeighbB -> 2,3,2,3,2,3,2,3 */ \
 			_mm_bilinear_insert_at_##index1##_x86(vecNeighbB, tmp32)
+
+/****** x86_64 ******/
+#define _mm_bilinear_insert_x64(vecDst, val64, index) vecDst = _mm_insert_epi64(vecDst, val64, index)
+#define _mm_bilinear_insert_at_0_x64(vecDst, val64) vecDst = _mm_cvtsi64_si128(val64)
+#define _mm_bilinear_insert_at_1_x64(vecDst, val64) _mm_bilinear_insert_x64(vecDst, val64, 1)
+#define _mm_bilinear_set_neighbs_x64(vecNeareastX, vecNeighbA, vecNeighbB, index, tmp64_0, tmp64_1) \
+			nearestX0 = _mm_extract_epi32(vecNeareastX, 0); \
+			nearestX1 = _mm_extract_epi32(vecNeareastX, 1); \
+			tmp64_0 = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1]) << 16); /* vecNeighbA  -> 0,1,0,1,0,1,0,1,0,1,0,1 */ \
+			tmp64_1 = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0 + inStride]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1 + inStride]) << 16); /* vecNeighbB -> 2,3,2,3,2,3,2,3 */ \
+			nearestX0 = _mm_extract_epi32(vecNeareastX, 2); \
+			nearestX1 = _mm_extract_epi32(vecNeareastX, 3); \
+			tmp64_0 |= static_cast<int64_t>(*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1]) << 16)) << 32; /* vecNeighbA -> 0,1,0,1,0,1,0,1,0,1,0,1 */ \
+			tmp64_1 |= static_cast<int64_t>(*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0 + inStride]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1 + inStride]) << 16)) << 32; /* vecNeighbB -> 2,3,2,3,2,3,2,3 */ \
+			_mm_bilinear_insert_at_##index##_x64(vecNeighbA, tmp64_0); \
+			_mm_bilinear_insert_at_##index##_x64(vecNeighbB, tmp64_1)
+
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -51,20 +68,23 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 		{ sf_x_ * 12, sf_x_ * 13, sf_x_ * 14, sf_x_ * 15 }
 	};
 	__m128i vecYStart, vecX0, vecX1, vecX2, vecX3, vecNeighb0, vecNeighb1, vecNeighb2, vecNeighb3, vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vecy0, vecy1;
-	const __m128i vec0xff_epi32 = _mm_set1_epi32(0xff);
-	const __m128i vec0xff_epi16 = _mm_set1_epi16(0xff);
-	const __m128i vec0x1 = _mm_set1_epi32(0x1); // FIXME: not used
-	const __m128i vecInStride = _mm_set1_epi32(static_cast<int>(inStride)); // FIXME: not used
-	const __m128i vecInStridePlusOne = _mm_add_epi32(vecInStride, vec0x1); // FIXME: not used
+	static const __m128i vec0xff_epi32 = _mm_set1_epi32(0xff);
+	static const __m128i vec0xff_epi16 = _mm_set1_epi16(0xff);
+	static const __m128i vecDeinterleave = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave_i32));
+	static const __m128i vecZero = _mm_setzero_si128();
 	const __m128i vecSfxTimes16 = _mm_set1_epi32(sf_x_ * 16);
 	const __m128i vecSFX0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[0]));
 	const __m128i vecSFX1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[1]));
 	const __m128i vecSFX2 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[2]));
 	const __m128i vecSFX3 = _mm_load_si128(reinterpret_cast<const __m128i*>(&SFX[3]));
 	const __m128i vecSFY = _mm_set1_epi32(static_cast<int>(sf_y));
-	const __m128i vecDeinterleave = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_Deinterleave_i32));	
-	const __m128i vecZero = _mm_setzero_si128();
-	int i32, nearestX0, nearestX1;
+	int nearestX0, nearestX1;
+#if COMPV_ARCH_X64 && 0
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("32 bits code is faster");
+	int64_t i64_0, i64_1;
+#else
+	int32_t i32;
+#endif
 
 	vecYStart = _mm_set1_epi32(static_cast<int>(outYStart));
 	while (outYStart < outYEnd) {
@@ -88,10 +108,18 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 			vec3 = _mm_srli_epi32(vecX3, 8);
 
 			// set neighbs
+#if COMPV_ARCH_X64 && 0
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("32 bits code is faster");
+			_mm_bilinear_set_neighbs_x64(vec0, vecNeighb0, vecNeighb2, 0, i64_0, i64_1);
+			_mm_bilinear_set_neighbs_x64(vec1, vecNeighb0, vecNeighb2, 1, i64_0, i64_1);
+			_mm_bilinear_set_neighbs_x64(vec2, vecNeighb1, vecNeighb3, 0, i64_0, i64_1);
+			_mm_bilinear_set_neighbs_x64(vec3, vecNeighb1, vecNeighb3, 1, i64_0, i64_1);
+#else
 			_mm_bilinear_set_neighbs_x86(vec0, vecNeighb0, vecNeighb2, 0, 1, i32);
 			_mm_bilinear_set_neighbs_x86(vec1, vecNeighb0, vecNeighb2, 2, 3, i32);
 			_mm_bilinear_set_neighbs_x86(vec2, vecNeighb1, vecNeighb3, 0, 1, i32);
 			_mm_bilinear_set_neighbs_x86(vec3, vecNeighb1, vecNeighb3, 2, 3, i32);
+#endif
 
 			// Deinterleave neighbs
 			vec0 = _mm_shuffle_epi8(vecNeighb0, vecDeinterleave); // 0,0,0,0,1,1,1,1
