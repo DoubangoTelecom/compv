@@ -336,6 +336,12 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_avx2.h">
       <Filter>include\image\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\image\intrin\arm\compv_image_conv_grayscale_intrin_neon.h">
+      <Filter>include\image\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\image\intrin\arm\compv_image_scale_bilinear_intrin_neon.h">
+      <Filter>include\image\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -544,6 +550,9 @@
     </ClCompile>
     <ClCompile Include="image\intrin\x86\compv_image_scale_bilinear_intrin_avx2.cxx">
       <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="image\intrin\arm\compv_image_scale_bilinear_intrin_neon.cxx">
+      <Filter>source\image\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

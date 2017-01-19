@@ -11,6 +11,7 @@
 
 #include "compv/base/image/intrin/x86/compv_image_scale_bilinear_intrin_sse41.h"
 #include "compv/base/image/intrin/x86/compv_image_scale_bilinear_intrin_avx2.h"
+#include "compv/base/image/intrin/arm/compv_image_scale_bilinear_intrin_neon.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVImageScaleBilinear"
 
@@ -42,7 +43,7 @@ static void scaleBilinear_C(const uint8_t* inPtr, compv_uscalar_t inWidth, compv
 		nearestY = (outYStart >> 8); // nearest y-point
 		inPtr_ = (inPtr + (nearestY * inStride));
 		y0 = outYStart & 0xff;
-		y1 = 0xff - y0;
+		y1 = 0xff - y0; // equal tp ~y0. See remark on x1
 		for (i = 0, x = 0; i < outWidth; ++i, x += sf_x) {
 			nearestX = (x >> 8); // nearest x-point
 
@@ -100,7 +101,8 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 		COMPV_EXEC_IFDEF_ASM_X64(scale = CompVImageScaleBilinear_Asm_X64_AVX2);
 	}
 #elif COMPV_ARCH_ARM
-	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(outPtr) && COMPV_IS_ALIGNED_NEON(outStride)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(scale = CompVImageScaleBilinear_Intrin_NEON);
 	}
 #endif
 

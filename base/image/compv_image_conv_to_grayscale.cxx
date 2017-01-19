@@ -251,7 +251,7 @@ bail:
 #define yuyv422_sample_to_y() *outYPtr++ = *yuv422Ptr
 #define uyvy422_sample_to_y() *outYPtr++ = *(yuv422Ptr + 1)
 #define yuv422family_to_y(family) \
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found"); \
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found"); \
 	compv_uscalar_t i, j, padY = (stride - width), padYuv422 = padY << 1; \
 	for (j = 0; j < height; ++j) { \
 		for (i = 0; i < width; ++i) { \

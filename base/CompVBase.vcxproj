@@ -63,7 +63,9 @@
     <ClInclude Include="include\compv\base\image\compv_image_decoder.h" />
     <ClInclude Include="include\compv\base\image\compv_image_scale_bilinear.h" />
     <ClInclude Include="include\compv\base\image\compv_image_utils.h" />
+    <ClInclude Include="include\compv\base\image\intrin\arm\compv_image_conv_grayscale_intrin_neon.h" />
     <ClInclude Include="include\compv\base\image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.h" />
+    <ClInclude Include="include\compv\base\image\intrin\arm\compv_image_scale_bilinear_intrin_neon.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_grayscale_intrin_ssse3.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_sse2.h" />
@@ -138,6 +140,7 @@
     <ClCompile Include="image\compv_image_scale_bilinear.cxx" />
     <ClCompile Include="image\compv_image_utils.cxx" />
     <ClCompile Include="image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.cxx" />
+    <ClCompile Include="image\intrin\arm\compv_image_scale_bilinear_intrin_neon.cxx" />
     <ClCompile Include="image\intrin\x86\compv_image_conv_grayscale_intrin_ssse3.cxx">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
         _IPP_SEQUENTIAL_STATIC;%(PreprocessorDefinitions)

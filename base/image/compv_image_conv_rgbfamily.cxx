@@ -80,7 +80,7 @@ static void rgb24family_to_y_C(const uint8_t* rgbPtr, uint8_t* outYPtr, compv_us
 	// up to the caller to use multi-threading
 	// single-threaded code
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	compv_uscalar_t padSample = (stride - width);
 	compv_uscalar_t padRGB = padSample * 3;
 	compv_uscalar_t padY = padSample;
@@ -117,7 +117,7 @@ static void rgb24family_to_uv_planar_11_C(const uint8_t* rgbPtr, uint8_t* outUPt
 	// 11 -> uv subsampling(1x1)
 	// single-threaded code
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	compv_uscalar_t i, j, padUV = (stride - width), padRGB = (padUV * 3);
 	// Convert coeffs from int8 to int16 to avoid math ops overflow
 	const int16_t c0u = kRGBfamilyToYUV_UCoeffs8[0], c0v = kRGBfamilyToYUV_VCoeffs8[0];
@@ -218,7 +218,7 @@ static void rgb32family_to_y_C(const uint8_t* rgbaPtr, uint8_t* outYPtr, compv_u
 	// up to the caller to use multi-threading
 	// single-threaded code
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	compv_uscalar_t padSample = (stride - width);
 	compv_uscalar_t padRGB = padSample << 2;
 	compv_uscalar_t padY = padSample;
@@ -246,7 +246,7 @@ static void rgb32family_to_uv_planar_11_C(const uint8_t* rgbaPtr, uint8_t* outUP
 	// 11 -> uv subsampling(1x1)
 	// single-threaded code
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	compv_uscalar_t i, j, padUV = (stride - width), padRGB = (padUV << 2);
 	// Convert coeffs from int8 to int16 to avoid math ops overflow
 	const int16_t c0u = kRGBAfamilyToYUV_UCoeffs8[0], c0v = kRGBAfamilyToYUV_VCoeffs8[0];
@@ -354,7 +354,7 @@ void CompVImageConvRGBfamily::bgra32_to_uv_planar_11(const uint8_t* bgra32Ptr, u
 #define rgb565family_sample_big_to_little() k = (*rgb565PtrSamples << 8) | (*rgb565PtrSamples >> 8)
 #define rgb565family_sample_little_to_little() k = *rgb565PtrSamples
 #define rgb565family_to_y(endianness) \
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found"); \
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found"); \
 	compv_uscalar_t i, j, padSample = (stride - width); /* pad in samples */ \
 	/* Convert coeffs from int8 to int16 to avoid math ops overflow */ \
 	const int16_t c0 = static_cast<int16_t>(kRGBfamilyToYUV_YCoeffs8[0]); \
@@ -388,7 +388,7 @@ static void rgb565be_to_y_C(const uint8_t* rgb565lePtr, uint8_t* outYPtr, compv_
 }
 
 #define rgb565family_to_uv_planar_11(endianness) \
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");\
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");\
 	compv_uscalar_t i, j, padSample = (stride - width); /* pad in samples */ \
 	/* Convert coeffs from int8 to int16 to avoid math ops overflow */ \
 	const int16_t c0u = kRGBfamilyToYUV_UCoeffs8[0], c0v = kRGBfamilyToYUV_VCoeffs8[0]; \

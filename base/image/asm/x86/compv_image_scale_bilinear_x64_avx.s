@@ -101,10 +101,9 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 	mov inPtr, arg_inPtr
 
 	; compute vec0xff_epi32 and vec0xff_epi16
-	vpcmpeqd ymm1, ymm1
 	vpcmpeqw ymm2, ymm2
-	vpsrld ymm1, 24
-	vpsrlw ymm2, 8
+	vpsrld ymm1, ymm2, 24
+	vpsrlw ymm2, ymm2, 8
 	vmovdqa [vec0xff_epi32], ymm1
 	vmovdqa [vec0xff_epi16], ymm2
 

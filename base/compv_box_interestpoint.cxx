@@ -139,7 +139,7 @@ void CompVInterestPointScaleAndRoundAndGetAngleSinCos(COMPV_ALIGNED(x) const flo
 
 static void scaleAndRoundAndGetAngleSinCos_C(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found"); // TODO: SIMD
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found"); // TODO: SIMD
 	float fx, fy, angleInRad;
 	for (compv_scalar_t i = 0; i < count; ++i) {
 		// Scale

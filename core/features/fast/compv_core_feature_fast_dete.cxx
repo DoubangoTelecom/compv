@@ -537,7 +537,7 @@ static void CompVFastBuildInterestPoints(RangeFAST* range, std::vector<CompVInte
 #endif /* COMPV_ARCH_X86 */
 
 #if 0 // Not a big deal
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 #endif
 
 #define COMPV_PUSH1() if (*begin1) { *begin1 += thresholdMinus1; interestPoints.push_back(CompVInterestPoint(static_cast<compv_float32_t>(begin1 - strengths), static_cast<compv_float32_t>(j), static_cast<compv_float32_t>(*begin1))); } ++begin1;
@@ -648,7 +648,7 @@ void CompVFastNmsApplyRangeAndBuildInterestPoints(RangeFAST* range, std::vector<
 static void CompVFastDataRow_C(const uint8_t* IP, compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths)
 {
 	// Code not intended to be fast but just readable, real code is implemented in SSE, AVX and NEON.
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	static const uint16_t kCompVFast9Flags[16] = { 0x1ff, 0x3fe, 0x7fc, 0xff8, 0x1ff0, 0x3fe0, 0x7fc0, 0xff80, 0xff01, 0xfe03, 0xfc07, 0xf80f, 0xf01f, 0xe03f, 0xc07f, 0x80ff };
 	static const uint16_t kCompVFast12Flags[16] = { 0xfff, 0x1ffe, 0x3ffc, 0x7ff8, 0xfff0, 0xffe1, 0xffc3, 0xff87, 0xff0f, 0xfe1f, 0xfc3f, 0xf87f, 0xf0ff, 0xe1ff, 0xc3ff, 0x87ff };
 	int sumb, sumd, sb, sd;
@@ -762,7 +762,7 @@ Next:
 
 static void CompVFastNmsGather_C(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	compv_uscalar_t i, j;
 	uint8_t strength;
 	pcStrengthsMap += (stride * 3);
@@ -804,7 +804,7 @@ static void CompVFastNmsGather_C(const uint8_t* pcStrengthsMap, uint8_t* pNMS, c
 
 static void CompVFastNmsApply_C(uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	compv_uscalar_t i, j;
 	pcStrengthsMap += (stride * 3);
 	pNMS += (stride * 3);
