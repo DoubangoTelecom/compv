@@ -18,25 +18,20 @@
 #define _mm_bilinear_insert_at_1_x86_sse41(vecDst, val32) _mm_bilinear_insert_x86_sse41(vecDst, val32, 1)
 #define _mm_bilinear_insert_at_2_x86_sse41(vecDst, val32) _mm_bilinear_insert_x86_sse41(vecDst, val32, 2)
 #define _mm_bilinear_insert_at_3_x86_sse41(vecDst, val32) _mm_bilinear_insert_x86_sse41(vecDst, val32, 3)
-#define _mm_bilinear_set_neighbs_x86_sse41(vecNeareastX, vecNeighbA, vecNeighbB, index0, index1, tmp32) \
-			/* Extract indices(0, 1) */ \
-			nearestX0 = _mm_extract_epi32(vecNeareastX, 0); \
-			nearestX1 = _mm_extract_epi32(vecNeareastX, 1); \
-			/* Insert in vecNeighbA(index0) */ \
+#define _mm_bilinear_extract_then_insert_x86_sse41(vecNeareastX, neareastIndex0, neareastIndex1, vecNeighbA, vecNeighbB, neighbIndex, tmp32) \
+			/* Extract indices(neareastIndex0, neareastIndex1) */ \
+			nearestX0 = _mm_extract_epi32(vecNeareastX, neareastIndex0); \
+			nearestX1 = _mm_extract_epi32(vecNeareastX, neareastIndex1); \
+			/* Insert in vecNeighbA(neighbIndex) */ \
 			tmp32 = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1]) << 16); /* vecNeighbA  -> 0,1,0,1,0,1,0,1,0,1,0,1 */ \
-			_mm_bilinear_insert_at_##index0##_x86_sse41(vecNeighbA, tmp32); \
-			/* Insert in vecNeighbB(index0) */ \
+			_mm_bilinear_insert_at_##neighbIndex##_x86_sse41(vecNeighbA, tmp32); \
+			/* Insert in vecNeighbB(neighbIndex) */ \
 			tmp32 = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0 + inStride]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1 + inStride]) << 16); /* vecNeighbB -> 2,3,2,3,2,3,2,3 */ \
-			_mm_bilinear_insert_at_##index0##_x86_sse41(vecNeighbB, tmp32); \
-			/* Extract indices(2, 3) */ \
-			nearestX0 = _mm_extract_epi32(vecNeareastX, 2); \
-			nearestX1 = _mm_extract_epi32(vecNeareastX, 3); \
-			/* Insert in vecNeighbA(index1) */ \
-			tmp32 = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1]) << 16); /* vecNeighbA -> 0,1,0,1,0,1,0,1,0,1,0,1 */ \
-			_mm_bilinear_insert_at_##index1##_x86_sse41(vecNeighbA, tmp32); \
-			/* Insert in vecNeighbA(index1) */ \
-			tmp32 = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0 + inStride]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1 + inStride]) << 16); /* vecNeighbB -> 2,3,2,3,2,3,2,3 */ \
-			_mm_bilinear_insert_at_##index1##_x86_sse41(vecNeighbB, tmp32)
+			_mm_bilinear_insert_at_##neighbIndex##_x86_sse41(vecNeighbB, tmp32)
+
+#define _mm_bilinear_set_neighbs_x86_sse41(vecNeareastX, vecNeighbA, vecNeighbB, neighbIndex0, neighbIndex1, tmp32) \
+			_mm_bilinear_extract_then_insert_x86_sse41(vecNeareastX, 0, 1, vecNeighbA, vecNeighbB, neighbIndex0, tmp32); \
+			_mm_bilinear_extract_then_insert_x86_sse41(vecNeareastX, 2, 3, vecNeighbA, vecNeighbB, neighbIndex1, tmp32)
 
 /****** x86_64 ******/
 #define _mm_bilinear_insert_x64_sse41(vecDst, val64, index) vecDst = _mm_insert_epi64(vecDst, val64, index)
@@ -128,6 +123,7 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 			vecNeighb2 = _mm_unpacklo_epi64(vec2, vec3); // 2,2,2,2,2,2
 			vecNeighb3 = _mm_unpackhi_epi64(vec2, vec3); // 3,3,3,3,3,3
 
+
 			// x0 = (x & 0xff) and x1 = (0xff - x0)
 			// This means max((u8 * x1) + (u8 * x0)) = #65282 -> no overflow for Epi16 arith (saturation using (_mm_adds_epu16) not required)
 
@@ -151,6 +147,9 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 			vec7 = _mm_adds_epu16(_mm_mullo_epi16(_mm_unpackhi_epi8(vecNeighb2, vecZero), vec1),
 				_mm_mullo_epi16(_mm_unpackhi_epi8(vecNeighb3, vecZero), vec0));
 
+			// FIXME: remove
+			//for (int i = 0; i < 8; ++i) printf("%u, ", vec1.m128i_u16[i]);
+
 			// Let's say:
 			//		A = ((neighb0 * x1) + (neighb1 * x0))
 			//		B = ((neighb2 * x1) + (neighb3 * x0))
@@ -171,6 +170,9 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 			// Compute R = (C + D)
 			vec0 = _mm_adds_epu16(vec0, vec2);
 			vec1 = _mm_adds_epu16(vec1, vec3);
+
+			// FIXME: remove
+			//for (int i = 0; i < 8; ++i) printf("%u, ", vec1.m128i_u16[i]);
 
 			// Store the result
 			_mm_store_si128(reinterpret_cast<__m128i*>(&outPtr[i]), _mm_packus_epi16(vec0, vec1));

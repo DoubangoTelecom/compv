@@ -85,7 +85,7 @@ COMPV_ERROR_CODE scale()
 	timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
 
-#if COMPV_OS_WINDOWS && 0
+#if COMPV_OS_WINDOWS && 1
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
 	COMPV_CHECK_CODE_BAIL(err = compv_tests_write_to_file(dstImage, "out.gray"));
 #endif

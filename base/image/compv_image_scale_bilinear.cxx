@@ -10,6 +10,7 @@
 #include "compv/base/math/compv_math_utils.h"
 
 #include "compv/base/image/intrin/x86/compv_image_scale_bilinear_intrin_sse41.h"
+#include "compv/base/image/intrin/x86/compv_image_scale_bilinear_intrin_avx2.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVImageScaleBilinear"
 
@@ -84,10 +85,12 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE41) && COMPV_IS_ALIGNED_SSE(outPtr) && COMPV_IS_ALIGNED_SSE(outStride)) {
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Code commented");
 		COMPV_EXEC_IFDEF_INTRIN_X86(scale = CompVImageScaleBilinear_Intrin_SSE41);
 		COMPV_EXEC_IFDEF_ASM_X86(scale = CompVImageScaleBilinear_Asm_X86_SSE41);
 		COMPV_EXEC_IFDEF_ASM_X64(scale = CompVImageScaleBilinear_Asm_X64_SSE41);
+	}
+	if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(outPtr) && COMPV_IS_ALIGNED_AVX2(outStride)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(scale = CompVImageScaleBilinear_Intrin_AVX2);
 	}
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
