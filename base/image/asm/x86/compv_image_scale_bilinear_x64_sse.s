@@ -40,8 +40,6 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 	push rbx
 	push r12
 	push r13
-	;push r14
-	;push r15
 	;; end prolog ;;
 
 	; align stack and alloc memory
@@ -345,8 +343,6 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 	COMPV_YASM_UNALIGN_STACK
 
 	;; begin epilog ;;
-	;pop r15
-	;pop r14
 	pop r13
 	pop r12
 	pop rbx
