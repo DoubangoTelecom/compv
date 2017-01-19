@@ -84,6 +84,7 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE41) && COMPV_IS_ALIGNED_SSE(outPtr) && COMPV_IS_ALIGNED_SSE(outStride)) {
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Code commented");
 		COMPV_EXEC_IFDEF_INTRIN_X86(scale = CompVImageScaleBilinear_Intrin_SSE41);
 		COMPV_EXEC_IFDEF_ASM_X86(scale = CompVImageScaleBilinear_Asm_X86_SSE41);
 		COMPV_EXEC_IFDEF_ASM_X64(scale = CompVImageScaleBilinear_Asm_X64_SSE41);

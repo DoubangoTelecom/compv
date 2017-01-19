@@ -113,39 +113,24 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 	movdqa [vecSfxTimes16], xmm0
 
 	; compute vecSFX0, vecSFX1, vecSFX2 and vecSFX3
-	mov rsi, arg_sf_x
+	mov rsi, arg_sf_x ; sf_x_
 	xor rax, rax ; sf_x_ * 0
-	lea rbx, [rsi * 4] ; sf_x_ * 4
-	lea rcx, [rsi * 8] ; sf_x_ * 8
-	lea rdx, [rbx + rcx] ; sf_x_ * 12
-	mov [vecSFX0 + 0], dword eax
-	mov [vecSFX1 + 0], dword ebx
-	mov [vecSFX2 + 0], dword ecx
-	mov [vecSFX3 + 0], dword edx
-	lea rax, [rax + rsi]
-	lea rbx, [rbx + rsi]
-	lea rcx, [rcx + rsi]
-	lea rdx, [rdx + rsi]
-	mov [vecSFX0 + 4], dword eax
-	mov [vecSFX1 + 4], dword ebx
-	mov [vecSFX2 + 4], dword ecx
-	mov [vecSFX3 + 4], dword edx
-	lea rax, [rax + rsi]
-	lea rbx, [rbx + rsi]
-	lea rcx, [rcx + rsi]
-	lea rdx, [rdx + rsi]
-	mov [vecSFX0 + 8], dword eax
-	mov [vecSFX1 + 8], dword ebx
-	mov [vecSFX2 + 8], dword ecx
-	mov [vecSFX3 + 8], dword edx
-	lea rax, [rax + rsi]
-	lea rbx, [rbx + rsi]
-	lea rcx, [rcx + rsi]
-	lea rdx, [rdx + rsi]
-	mov [vecSFX0 + 12], dword eax
-	mov [vecSFX1 + 12], dword ebx
-	mov [vecSFX2 + 12], dword ecx
-	mov [vecSFX3 + 12], dword edx
+	lea rbx, [rsi * 2] ; sf_x_ * 2
+	lea rcx, [rbx + rsi] ; sf_x_ * 3
+	lea rdx, [rsi * 4] ; sf_x_ * 4
+	mov [vecSFX0 + 0], dword eax ; sf_x_ * 0
+	mov [vecSFX0 + 4], dword esi ; sf_x_ * 1
+	mov [vecSFX0 + 8], dword ebx ; sf_x_ * 2
+	mov [vecSFX0 + 12], dword ecx ; sf_x_ * 3
+	movdqa xmm0, [vecSFX0] ; xmm0 = vecSFX0
+	movd xmm1, rdx 
+	pshufd xmm1, xmm1, 0x0 ; xmm1 = vecSfxTimes4
+	%assign sfxIndex 1
+	%rep 3
+		paddd xmm0, xmm1 ; xmm0 = vecSFXn = (vecSFX0 + vecSfxTimes4)
+		movdqa [vecSFX %+ sfxIndex], xmm0
+		%assign sfxIndex sfxIndex+1
+	%endrep	
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; do
@@ -183,10 +168,10 @@ sym(CompVImageScaleBilinear_Asm_X64_SSE41)
 			psrld xmm1, 8
 			psrld xmm2, 8
 			psrld xmm3, 8
-			_mm_bilinear_set_neighbs_x86 xmm0, vecNeighb0, vecNeighb2, 0, 1, rbx ; overrides rdx, rdi, rax and rcx
-			_mm_bilinear_set_neighbs_x86 xmm1, vecNeighb0, vecNeighb2, 2, 3, rbx ; overrides rdx, rdi, rax and rcx
-			_mm_bilinear_set_neighbs_x86 xmm2, vecNeighb1, vecNeighb3, 0, 1, rbx ; overrides rdx, rdi, rax and rcx
-			_mm_bilinear_set_neighbs_x86 xmm3, vecNeighb1, vecNeighb3, 2, 3, rbx ; overrides rdx, rdi, rax and rcx
+			_mm_bilinear_set_neighbs_x86_sse41 xmm0, vecNeighb0, vecNeighb2, 0, 1, rbx ; overrides rdx, rdi, rax and rcx
+			_mm_bilinear_set_neighbs_x86_sse41 xmm1, vecNeighb0, vecNeighb2, 2, 3, rbx ; overrides rdx, rdi, rax and rcx
+			_mm_bilinear_set_neighbs_x86_sse41 xmm2, vecNeighb1, vecNeighb3, 0, 1, rbx ; overrides rdx, rdi, rax and rcx
+			_mm_bilinear_set_neighbs_x86_sse41 xmm3, vecNeighb1, vecNeighb3, 2, 3, rbx ; overrides rdx, rdi, rax and rcx
 
 			;;; Deinterleave neighbs ;;;
 			pshufb vecNeighb0, [vecDeinterleave] ; 0,0,0,0,1,1,1,1

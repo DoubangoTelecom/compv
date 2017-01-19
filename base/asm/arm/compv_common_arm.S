@@ -29,8 +29,8 @@
 	.equ COMPV_GAS_REG_SZ_BYTES, 8
 #elif defined(__arm__)
 	.equ COMPV_GAS_REG_SZ_BYTES, 4
-@#else
-	@.error Unknown cpu architecture
+#else
+	#error "Unknown cpu architecture"
 #endif
 .equ prolog_bytes, (10 * COMPV_GAS_REG_SZ_BYTES) @ push {r4-r12, lr}
 
