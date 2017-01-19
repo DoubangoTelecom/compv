@@ -59,8 +59,7 @@ void CompVImageScaleBilinear_Intrin_NEON(
 		nearestY = (outYStart >> 8); // nearest y-point
 		inPtr_ = (inPtr + (nearestY * inStride));
 		vecy0 = vdupq_n_u16(static_cast<uint16_t>(outYStart & 0xff));
-		vecy1 = vbicq_u32(vec0xff_epi16, vecy0);
-		//vecy1 = vsubq_u16(vec0xff_epi16, vecy0); // FIXME: use complement or notand -> vbicq_u32
+		vecy1 = vbicq_u16(vec0xff_epi16, vecy0);
 		vecX0 = vecSFX0;
 		vecX1 = vecSFX1;
 		vecX2 = vecSFX2;
@@ -100,7 +99,7 @@ void CompVImageScaleBilinear_Intrin_NEON(
 
 			/* compute x0 and x1 (first #8) and convert from epi32 and epi16 */
 			vec0 = vcombine_u16(vmovn_u32(vandq_u32(vecX0, vec0xff_epi32)), vmovn_u32(vandq_u32(vecX1, vec0xff_epi32))); // epi16
-			vec1 = vsubq_u16(vec0xff_epi16, vec0); // FIXME: use complement or notand -> vbicq_u16
+			vec1 = vbicq_u16(vec0xff_epi16, vec0);
 			// compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> #8 epi16
 			vec4 = vmulq_u16(vmovl_u8(vget_low_u8(vecNeighb0)), vec1);
 			vec4 = vmlaq_u16(vec4, vmovl_u8(vget_low_u8(vecNeighb1)), vec0);
@@ -110,7 +109,7 @@ void CompVImageScaleBilinear_Intrin_NEON(
 
 			/* compute x0 and x1 (second #8) and convert from epi32 and epi16 */
 			vec0 = vcombine_u16(vmovn_u32(vandq_u32(vecX2, vec0xff_epi32)), vmovn_u32(vandq_u32(vecX3, vec0xff_epi32))); // epi16
-			vec1 = vsubq_u16(vec0xff_epi16, vec0); // FIXME: use complement or notand -> vbicq_u16
+			vec1 = vbicq_u16(vec0xff_epi16, vec0);
 			// compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> #8 epi16
 			vec6 = vmulq_u16(vmovl_u8(vget_high_u8(vecNeighb0)), vec1);
 			vec6 = vmlaq_u16(vec6, vmovl_u8(vget_high_u8(vecNeighb1)), vec0);
@@ -138,8 +137,6 @@ void CompVImageScaleBilinear_Intrin_NEON(
 				vshrn_n_u32(vmull_u16(vget_high_u16(vecy0), vget_high_u16(vec5)), 16));
 			vec3 = vcombine_u16(vshrn_n_u32(vmull_u16(vget_low_u16(vecy0), vget_low_u16(vec7)), 16),
 				vshrn_n_u32(vmull_u16(vget_high_u16(vecy0), vget_high_u16(vec7)), 16));
-
-			// FIXME: use vraddhn_u16 to compute R and narrow
 
 			/* Compute R = (C + D) */
 			vec0 = vqaddq_u16(vec0, vec2);
