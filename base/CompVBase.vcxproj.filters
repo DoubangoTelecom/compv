@@ -613,6 +613,12 @@
     <YASM Include="image\asm\x86\compv_image_scale_bilinear_x64_sse.s">
       <Filter>source\image\asm\x86</Filter>
     </YASM>
+    <YASM Include="image\asm\x86\compv_image_scale_bilinear_x64_avx.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
+    <YASM Include="image\asm\x86\compv_image_scale_bilinear_x86_avx.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
   </ItemGroup>
   <ItemGroup>
     <None Include="asm\arm\compv_common_arm.S">

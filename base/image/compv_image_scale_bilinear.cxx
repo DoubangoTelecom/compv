@@ -21,9 +21,11 @@ COMPV_NAMESPACE_BEGIN()
 #if COMPV_ASM
 #	if COMPV_ARCH_X86
 	COMPV_EXTERNC void CompVImageScaleBilinear_Asm_X86_SSE41(const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, compv_uscalar_t inStride, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(SSE) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
+	COMPV_EXTERNC void CompVImageScaleBilinear_Asm_X86_AVX2(const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, compv_uscalar_t inStride, COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(AVX) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVImageScaleBilinear_Asm_X64_SSE41(const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, compv_uscalar_t inStride, COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(SSE) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
+	COMPV_EXTERNC void CompVImageScaleBilinear_Asm_X64_AVX2(const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, compv_uscalar_t inStride, COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(AVX) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM
 #	endif
@@ -50,8 +52,11 @@ static void scaleBilinear_C(const uint8_t* inPtr, compv_uscalar_t inWidth, compv
 			neighb3 = inPtr_[nearestX + inStride + 1];
 
 			x0 = x & 0xff;
+			// x1 is equal to ~x0 but in c++ we're using uint32_t numbers (for x0 and x1) which means 
+			// we'll need to use a mask (0xff) to remove the upper 24 bytes.
+			// The code could be x1 = ~x0 & 0xff; This is slow.
+			// !! Using SIMD (SSE, AVX, NEON) code use "not" operand. !!
 			x1 = 0xff - x0;
-
 #if 1
 			outPtr[i] = static_cast<uint8_t>( // no need for saturation
 					(y1 * ((neighb0 * x1) + (neighb1 * x0)) >> 16) + // y1 * A
@@ -91,6 +96,8 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 	}
 	if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(outPtr) && COMPV_IS_ALIGNED_AVX2(outStride)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(scale = CompVImageScaleBilinear_Intrin_AVX2);
+		COMPV_EXEC_IFDEF_ASM_X86(scale = CompVImageScaleBilinear_Asm_X86_AVX2);
+		COMPV_EXEC_IFDEF_ASM_X64(scale = CompVImageScaleBilinear_Asm_X64_AVX2);
 	}
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {

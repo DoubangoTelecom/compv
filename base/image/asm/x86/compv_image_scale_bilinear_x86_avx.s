@@ -206,12 +206,11 @@ sym(CompVImageScaleBilinear_Asm_X86_AVX2)
 			; compute x0 and x1 (first 8) and convert from epi32 and epi16
 			vmovdqa ymm0, [vecX0]
 			vmovdqa ymm3, [vecX1]
-			vmovdqa ymm1, [vec0xff_epi16]
-			vpand ymm0, [vec0xff_epi32]
-			vpand ymm3, [vec0xff_epi32]
+			vpand ymm0, ymm0, [vec0xff_epi32]
+			vpand ymm3, ymm3, [vec0xff_epi32]
 			vpackusdw ymm0, ymm0, ymm3
 			vpermq ymm0, ymm0, 0xD8 ; ymm0 = vec0
-			vpsubw ymm1, ymm1, ymm0 ; ymm1 = vec1
+			vpandn ymm1, ymm0, [vec0xff_epi16] ; ymm1 = vec1
 			; compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16
 			vpunpcklbw ymm2, vecNeighb0, [vecZero]
 			vpunpcklbw ymm3, vecNeighb1, [vecZero]
@@ -230,12 +229,11 @@ sym(CompVImageScaleBilinear_Asm_X86_AVX2)
 			; compute x0 and x1 (second 8) and convert from epi32 and epi16
 			vmovdqa ymm0, [vecX2]
 			vmovdqa ymm3, [vecX3]
-			vmovdqa ymm1, [vec0xff_epi16]
 			vpand ymm0, ymm0, [vec0xff_epi32]
 			vpand ymm3, ymm3, [vec0xff_epi32]
 			vpackusdw ymm0, ymm0, ymm3
 			vpermq ymm0, ymm0, 0xD8 ; ymm0 = vec0
-			vpsubw ymm1, ymm0 ; ymm1 = vec1
+			vpandn ymm1, ymm0, [vec0xff_epi16] ; ymm1 = vec1
 			; compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16
 			vpunpckhbw ymm2, vecNeighb0, [vecZero]
 			vpunpckhbw ymm3, vecNeighb1, [vecZero]

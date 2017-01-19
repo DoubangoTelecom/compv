@@ -129,7 +129,7 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 
 			// compute x0 and x1 (first #8) and convert from epi32 and epi16
 			vec0 = _mm_packus_epi32(_mm_and_si128(vecX0, vec0xff_epi32), _mm_and_si128(vecX1, vec0xff_epi32)); // epi16
-			vec1 = _mm_sub_epi16(vec0xff_epi16, vec0);			
+			vec1 = _mm_andnot_si128(vec0, vec0xff_epi16);
 			// compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> #8 epi16
 			vec4 = _mm_adds_epu16(_mm_mullo_epi16(_mm_unpacklo_epi8(vecNeighb0, vecZero), vec1),
 				_mm_mullo_epi16(_mm_unpacklo_epi8(vecNeighb1, vecZero), vec0));
@@ -139,7 +139,7 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 
 			// compute x0 and x1 (second #8) and convert from epi32 and epi16
 			vec0 = _mm_packus_epi32(_mm_and_si128(vecX2, vec0xff_epi32), _mm_and_si128(vecX3, vec0xff_epi32)); // epi16
-			vec1 = _mm_sub_epi16(vec0xff_epi16, vec0);
+			vec1 = _mm_andnot_si128(vec0, vec0xff_epi16);
 			// compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> #8 epi16
 			vec6 = _mm_adds_epu16(_mm_mullo_epi16(_mm_unpackhi_epi8(vecNeighb0, vecZero), vec1),
 				_mm_mullo_epi16(_mm_unpackhi_epi8(vecNeighb1, vecZero), vec0));
@@ -170,9 +170,6 @@ void CompVImageScaleBilinear_Intrin_SSE41(
 			// Compute R = (C + D)
 			vec0 = _mm_adds_epu16(vec0, vec2);
 			vec1 = _mm_adds_epu16(vec1, vec3);
-
-			// FIXME: remove
-			//for (int i = 0; i < 8; ++i) printf("%u, ", vec1.m128i_u16[i]);
 
 			// Store the result
 			_mm_store_si128(reinterpret_cast<__m128i*>(&outPtr[i]), _mm_packus_epi16(vec0, vec1));

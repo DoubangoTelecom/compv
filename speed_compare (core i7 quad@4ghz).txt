@@ -13,6 +13,10 @@ Dedicated Memory: 2030 MB
 Shared Memory: 3810 MB
 *****************************************************
 
+!!!
+!!! IMPORTANT: All the results from CompV use assembler code (no intrinsics).
+!!!
+
 
 === RGB24 -> Grayscale (#1000 times, 720p) ===
 CompV: 169.ms(st), 54.ms(mt)
@@ -27,6 +31,6 @@ The above numbers means we can run feature detection on HD image at 2977fps whil
 We're using #8 threads and with more threads (e.g. #16) we can go as high as 5000fps
 
 === Image scaling from (1282, 720) to (1064, 597), (#10000 times) ===
-CompV: 1866.ms(mt,sse41), 2645.ms(mt,c++), 6708.st(st,sse41), 9470.ms(st,c++)
+CompV: 1474.ms(mt,avx2), 1866.ms(mt,sse41), 2645.ms(mt,c++), 5435.ms(st,avx2), 6708.ms(st,sse41), 9470.ms(st,c++)
 OpenCV: 4148.ms(full optiz)
 Remarque: OpenCV uses SSE2 and multithreading and we're faster even without using sse41.

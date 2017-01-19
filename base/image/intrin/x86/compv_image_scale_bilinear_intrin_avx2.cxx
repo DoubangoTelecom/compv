@@ -114,7 +114,7 @@ void CompVImageScaleBilinear_Intrin_AVX2(
 
 			// compute x0 and x1 (first #8) and convert from epi32 and epi16
 			vec0 = compv_avx2_packus_epi32(_mm256_and_si256(vecX0, vec0xff_epi32), _mm256_and_si256(vecX1, vec0xff_epi32)); // epi16
-			vec1 = _mm256_sub_epi16(vec0xff_epi16, vec0);
+			vec1 = _mm256_andnot_si256(vec0, vec0xff_epi16);
 			// compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> #8 epi16
 			vec4 = _mm256_adds_epu16(_mm256_mullo_epi16(_mm256_unpacklo_epi8(vecNeighb0, vecZero), vec1),
 				_mm256_mullo_epi16(_mm256_unpacklo_epi8(vecNeighb1, vecZero), vec0));
@@ -124,7 +124,7 @@ void CompVImageScaleBilinear_Intrin_AVX2(
 
 			// compute x0 and x1 (second #8) and convert from epi32 and epi16
 			vec0 = compv_avx2_packus_epi32(_mm256_and_si256(vecX2, vec0xff_epi32), _mm256_and_si256(vecX3, vec0xff_epi32)); // epi16
-			vec1 = _mm256_sub_epi16(vec0xff_epi16, vec0);
+			vec1 = _mm256_andnot_si256(vec0, vec0xff_epi16);
 			// compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> #8 epi16
 			vec6 = _mm256_adds_epu16(_mm256_mullo_epi16(_mm256_unpackhi_epi8(vecNeighb0, vecZero), vec1),
 				_mm256_mullo_epi16(_mm256_unpackhi_epi8(vecNeighb1, vecZero), vec0));

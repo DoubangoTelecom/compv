@@ -171,14 +171,10 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 		xor rsi, rsi ; rsi = i = 0x0
 		.LoopWidth
 			;;; nearest x-point ;;;
-			vmovdqa ymm0, vecX0
-			vmovdqa ymm1, vecX1
-			vmovdqa ymm2, vecX2
-			vmovdqa ymm3, vecX3
-			vpsrld ymm0, ymm0, 8
-			vpsrld ymm1, ymm1, 8
-			vpsrld ymm2, ymm2, 8
-			vpsrld ymm3, ymm3, 8
+			vpsrld ymm0, vecX0, 8
+			vpsrld ymm1, vecX1, 8
+			vpsrld ymm2, vecX2, 8
+			vpsrld ymm3, vecX3, 8
 			
 			;;; write memNeighbs ;;;
 			_mm_bilinear_set_neighbs_x86_avx2 xmm0, memNeighb0, memNeighb2, 0, 1, rbx ; overrides rdx, rdi, rax and rcx
@@ -201,16 +197,14 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 			vmovdqa vecNeighb3, [memNeighb3]
 
 			;;; Deinterleave neighbs ;;;
-			vpshufb vecNeighb0, [vecDeinterleave] ; 0,0,0,0,1,1,1,1
-			vpshufb vecNeighb1, [vecDeinterleave] ; 0,0,0,0,1,1,1,1
-			vpshufb vecNeighb2, [vecDeinterleave] ; 2,2,2,2,3,3,3,3
-			vpshufb vecNeighb3, [vecDeinterleave] ; 2,2,2,2,3,3,3,3
-			vmovdqa ymm0, vecNeighb0
-			vmovdqa ymm2, vecNeighb2
-			vpunpcklqdq vecNeighb0, vecNeighb1    ; 0,0,0,0,0,0
-			vpunpckhqdq ymm0, vecNeighb1          ; 1,1,1,1,1,1
-			vpunpcklqdq vecNeighb2, vecNeighb3    ; 2,2,2,2,2,2
-			vpunpckhqdq ymm2, vecNeighb3          ; 3,3,3,3,3,3
+			vpshufb vecNeighb0, vecNeighb0, [vecDeinterleave] ; 0,0,0,0,1,1,1,1
+			vpshufb vecNeighb1, vecNeighb1, [vecDeinterleave] ; 0,0,0,0,1,1,1,1
+			vpshufb vecNeighb2, vecNeighb2, [vecDeinterleave] ; 2,2,2,2,3,3,3,3
+			vpshufb vecNeighb3, vecNeighb3, [vecDeinterleave] ; 2,2,2,2,3,3,3,3			
+			vpunpckhqdq ymm0, vecNeighb0, vecNeighb1          ; 1,1,1,1,1,1
+			vpunpckhqdq ymm2, vecNeighb2, vecNeighb3          ; 3,3,3,3,3,3
+			vpunpcklqdq vecNeighb0, vecNeighb0, vecNeighb1    ; 0,0,0,0,0,0
+			vpunpcklqdq vecNeighb2, vecNeighb2, vecNeighb3    ; 2,2,2,2,2,2
 			vmovdqa vecNeighb1, ymm0
 			vmovdqa vecNeighb3, ymm2
 
@@ -219,60 +213,46 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 			vpxor vecZero, vecZero
 
 			; compute x0 and x1 (first 8) and convert from epi32 and epi16
-			vmovdqa ymm0, [vec0xff_epi32]
-			vmovdqa ymm3, [vec0xff_epi32]
-			vmovdqa ymm1, [vec0xff_epi16]
-			vpand ymm0, vecX0
-			vpand ymm3, vecX1
-			vpackusdw ymm0, ymm3
+			vpand ymm0, vecX0, [vec0xff_epi32]
+			vpand ymm3, vecX1, [vec0xff_epi32]
+			vpackusdw ymm0, ymm0, ymm3
 			vpermq ymm0, ymm0, 0xD8 ; ymm0 = vec0
-			vpsubw ymm1, ymm0 ; ymm1 = vec1
+			vpandn ymm1, ymm0, [vec0xff_epi16] ; ymm1 = vec1
 			; compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16
-			vmovdqa vec4, vecNeighb0
-			vmovdqa ymm3, vecNeighb1
-			vpunpcklbw vec4, vecZero
-			vpunpcklbw ymm3, vecZero
-			vpmullw vec4, ymm1
-			vpmullw ymm3, ymm0
-			vpaddd vecX0, [vecSfxTimes32]
+			vpunpcklbw vec4, vecNeighb0, vecZero
+			vpunpcklbw ymm3, vecNeighb1, vecZero
+			vpmullw vec4, vec4, ymm1
+			vpmullw ymm3, ymm3, ymm0
+			vpaddd vecX0, vecX0, [vecSfxTimes32]
 			; compute vec5 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16
-			vmovdqa vec5, vecNeighb2
-			vpunpcklbw vec5, vecZero
-			vpaddusw vec4, ymm3
-			vmovdqa ymm3, vecNeighb3
-			vpunpcklbw ymm3, vecZero
-			vpmullw vec5, ymm1
-			vpmullw ymm3, ymm0
-			vpaddd vecX1, [vecSfxTimes32]
-			vpaddusw vec5, ymm3
+			vpunpcklbw vec5, vecNeighb2, vecZero
+			vpaddusw vec4, vec4, ymm3
+			vpunpcklbw ymm3, vecNeighb3, vecZero
+			vpmullw vec5, vec5, ymm1
+			vpmullw ymm3, ymm3, ymm0
+			vpaddd vecX1, vecX1, [vecSfxTimes32]
+			vpaddusw vec5, vec5, ymm3
 
 			; compute x0 and x1 (second 8) and convert from epi32 and epi16
-			vmovdqa ymm0, [vec0xff_epi32]
-			vmovdqa ymm3, [vec0xff_epi32]
-			vmovdqa ymm1, [vec0xff_epi16]
-			vpand ymm0, vecX2
-			vpand ymm3, vecX3
-			vpackusdw ymm0, ymm3
+			vpand ymm0, vecX2, [vec0xff_epi32]
+			vpand ymm3, vecX3, [vec0xff_epi32]
+			vpackusdw ymm0, ymm0, ymm3
 			vpermq ymm0, ymm0, 0xD8 ; ymm0 = vec0
-			vpsubw ymm1, ymm0 ; ymm1 = vec1
+			vpandn ymm1, ymm0, [vec0xff_epi16] ; ymm1 = vec1
 			; compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16
-			vmovdqa vec6, vecNeighb0
-			vmovdqa ymm3, vecNeighb1
-			vpunpckhbw vec6, vecZero
-			vpunpckhbw ymm3, vecZero
-			vpmullw vec6, ymm1
-			vpmullw ymm3, ymm0
-			vpaddd vecX2, [vecSfxTimes32]
+			vpunpckhbw vec6, vecNeighb0, vecZero
+			vpunpckhbw ymm3, vecNeighb1, vecZero
+			vpmullw vec6, vec6, ymm1
+			vpmullw ymm3, ymm3, ymm0
+			vpaddd vecX2, vecX2, [vecSfxTimes32]
 			; compute vec7 = (neighb2 * x1) + (neighb3 * x0) -> #8 epi16
-			vmovdqa vec7, vecNeighb2
-			vpunpckhbw vec7, vecZero
-			vpaddusw vec6, ymm3
-			vmovdqa ymm3, vecNeighb3
-			vpunpckhbw ymm3, vecZero
-			vpmullw vec7, ymm1
-			vpmullw ymm3, ymm0
-			vpaddd vecX3, [vecSfxTimes32]
-			vpaddusw vec7, ymm3
+			vpunpckhbw vec7, vecNeighb2, vecZero
+			vpaddusw vec6, vec6, ymm3
+			vpunpckhbw ymm3, vecNeighb3, vecZero
+			vpmullw vec7, vec7, ymm1
+			vpmullw ymm3, ymm3, ymm0
+			vpaddd vecX3, vecX3, [vecSfxTimes32]
+			vpaddusw vec7, vec7, ymm3
 
 			; after this line ymm2 is no longer equal to zero
 			%undef vecZero
@@ -286,22 +266,17 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 			;
 			; We cannot use pmaddwd to compute C and D because it operates on epi16 while A and B contain epu16 values
 
-			vmovdqa ymm0, [vecy1]  ; ymm0 = vecy1
-			vmovdqa ymm2, [vecy0]  ; ymm2 = vecy0
-			vmovdqa ymm1, ymm0     ; ymm1 = vecy1
-			vmovdqa ymm3, ymm2     ; ymm3 = vecy0
-
 			; compute C = (y1 * A) >> 16
-			vpmulhuw ymm0, vec4
-			vpmulhuw ymm1, vec6
+			vpmulhuw ymm0, vec4, [vecy1]
+			vpmulhuw ymm1, vec6, [vecy1]
 
 			; compute D = (y0 * B) >> 16
-			vpmulhuw ymm2, vec5
-			vpmulhuw ymm3, vec7
+			vpmulhuw ymm2, vec5, [vecy0]
+			vpmulhuw ymm3, vec7, [vecy0]
 
 			; Compute R = (C + D)
-			vpaddusw ymm0, ymm2
-			vpaddusw ymm1, ymm3
+			vpaddusw ymm0, ymm0, ymm2
+			vpaddusw ymm1, ymm1, ymm3
 
 			lea rsi, [rsi + 32]
 			cmp rsi, outWidth
