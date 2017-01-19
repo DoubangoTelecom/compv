@@ -70,3 +70,62 @@
 	;%undef neighbIndex1
 	;%undef inPtr_
 %endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; This macro overrides rdx, rdi, rax and rcx
+%macro _mm_bilinear_extract_then_insert_x86_avx2 7
+	%define vecNeareastX       %1
+	%define neareastIndex0     %2
+	%define neareastIndex1     %3
+	%define memNeighbA         %4
+	%define memNeighbB         %5
+	%define neighbIndex        %6
+	%define inPtr_             %7
+
+	;;; Extract indices(neareastIndex0, neareastIndex1) ;;;
+	vpextrd eax, vecNeareastX, neareastIndex0 ; rax = nearestX0
+	vpextrd ecx, vecNeareastX, neareastIndex1 ; rcx = nearestX1
+	;; Insert in memNeighbA(neighbIndex)
+	movzx rdx, word [inPtr_ + rax] ; rdx = inPtr_[nearestX0]
+	movzx rdi, word [inPtr_ + rcx] ; rdi = inPtr_[nearestX1]
+	shl rdi, 16 ; rdi = (inPtr_[nearestX1] << 16)
+	or rdx, rdi ; rdx = inPtr_[nearestX0] | (inPtr_[nearestX1] << 16)
+	mov [memNeighbA + neighbIndex*4], dword edx
+	;; Insert in memNeighbB(neighbIndex)
+	add rax, arg_inStride ; rax = (nearestX0 + inStride)
+	add rcx, arg_inStride ; rcx = (nearestX1 + inStride)
+	movzx rdx, word [inPtr_ + rax] ; rdx = inPtr_[nearestX0 + inStride]
+	movzx rdi, word [inPtr_ + rcx] ; rdi = inPtr_[nearestX1 + inStride]
+	shl rdi, 16 ; rdi = (inPtr_[nearestX1 + inStride] << 16)
+	or rdx, rdi ; rdx = inPtr_[nearestX0 + inStride] | (inPtr_[nearestX1 + inStride] << 16)
+	mov [memNeighbB + neighbIndex*4], dword edx
+
+	%undef vecNeareastX       
+	%undef neareastIndex0     
+	%undef neareastIndex1     
+	%undef memNeighbA
+	%undef memNeighbB         
+	%undef neighbIndex       
+	%undef inPtr_             
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; This macro overrides rdx, rdi, rax and rcx
+%macro _mm_bilinear_set_neighbs_x86_avx2 6
+	;%define vecNeareastX     %1
+	;%define memNeighbA       %2
+	;%define memNeighbB       %3
+	;%define neighbIndex0     %4
+	;%define neighbIndex1     %5
+	;%define inPtr_           %6
+
+	_mm_bilinear_extract_then_insert_x86_avx2 %1, 0, 1, %2, %3, %4, %6
+	_mm_bilinear_extract_then_insert_x86_avx2 %1, 2, 3, %2, %3, %5, %6
+
+	;%undef vecNeareastX 
+	;%undef memNeighbA       
+	;%undef memNeighbB        
+	;%undef neighbIndex0     
+	;%undef neighbIndex1     
+	;%undef inPtr_           
+%endmacro
