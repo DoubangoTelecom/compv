@@ -136,33 +136,34 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	@ do
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	DoWhile:
+		ldr_arg argi_inPtr, tmp0 @ tmp0 = inPtr @ FIXME replace direct with inPtr_
+		mov tmp1, outYStart, LSR #8 @ tmp1 = nearestY
+		mov tmp3, #0xff @ tmp3 = 0xff
+		mul tmp2, tmp1, inStride @ tmp2 = nearestY * inStride
+		add inPtr_, tmp0, tmp2 @ inPtr_ = &inPtr[nearestY * inStride]			
+		and tmp0, outYStart, tmp3
+		vdup.u16 q1, tmp3 @ q1 = vec0xff_epi16
+		vdup.u16 q0, tmp0 @ q0 = vecy0
+		vbic.u16 q1, q1, q0 @ q1 = vecy1
+		@ FIXME(dmi): vecy0 and vecy1 are consecutive -> load first then auto increment
+		add tmp0, sp, #vecy0
+		add tmp1, sp, #vecy1
+		vst1.u32 {q0}, [tmp0 :128]
+		vst1.u32 {q1}, [tmp1 :128]
+		@ FIXME(dmi): vecSFX0...vecSFX3 are consecutive -> load first then auto increment
+		add tmp0, sp, #vecSFX0
+		add tmp1, sp, #vecSFX1
+		vld1.u32 {vecX0}, [tmp0 :128]
+		vld1.u32 {vecX1}, [tmp1 :128]
+		add tmp0, sp, #vecSFX2
+		add tmp1, sp, #vecSFX3
+		vld1.u32 {vecX2}, [tmp0 :128]
+		vld1.u32 {vecX3}, [tmp1 :128]
+		mov i, #0
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (i = 0; i < outWidth; i += 16)
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-		mov i, #0
 		LoopWidth:
-			ldr_arg argi_inPtr, tmp0 @ tmp0 = inPtr
-			mov tmp1, outYStart, LSR #8 @ tmp1 = nearestY
-			mov tmp3, #0xff @ tmp3 = 0xff
-			mul tmp2, tmp1, inStride @ tmp2 = nearestY * inStride
-			add inPtr_, tmp0, tmp2 @ inPtr_ = &inPtr[nearestY * inStride]
-			and tmp0, outYStart, tmp3
-			vdup.u16 q1, tmp3 @ q1 = vec0xff_epi16
-			vdup.u16 q0, tmp0 @ q0 = vecy0
-			vbic.u16 q1, q1, q0 @ q1 = vecy1
-			add tmp0, sp, #vecy0
-			add tmp1, sp, #vecy1
-			vst1.u32 {q0}, [tmp0 :128]
-			vst1.u32 {q1}, [tmp1 :128]
-			add tmp0, sp, #vecSFX0
-			add tmp1, sp, #vecSFX1
-			vst1.u32 {vecX0}, [tmp0 :128]
-			vst1.u32 {vecX1}, [tmp1 :128]
-			add tmp0, sp, #vecSFX2
-			add tmp1, sp, #vecSFX3
-			vst1.u32 {vecX2}, [tmp0 :128]
-			vst1.u32 {vecX3}, [tmp1 :128]
-
 			@@ nearest x-point @@
 			vshr.u32 q0, vecX0, #8
 			vshr.u32 q1, vecX1, #8
@@ -203,13 +204,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vld1.u8 {q3}, [tmp0 :128] @ q3 = vecMask
 			vtbx.u8 q0x, {vecNeighb0}, q3x @ q0x = low(vec0)
 			vtbx.u8 q1x, {vecNeighb0}, q3y @ q1x = high(vec0)
-			vtbx.u8 q0y, {vecNeighb1}, q0y @ q0y = low(vec1)
+			vtbx.u8 q0y, {vecNeighb1}, q3x @ q0y = low(vec1)
 			vtbx.u8 q1y, {vecNeighb1}, q3y @ q1y = high(vec1)
 			vswp vecNeighb0, q0 @ vecNeighb0 = q0 = [low(vec0), low(vec1)]
 			vswp vecNeighb1, q1 @ vecNeighb1 = q1 = [high(vec0), high(vec1)]
 			vtbx.u8 q0x, {vecNeighb2}, q3x @ q0x = low(vec2)
 			vtbx.u8 q1x, {vecNeighb2}, q3y @ q1x = high(vec2)
-			vtbx.u8 q0y, {vecNeighb3}, q0y @ q0y = low(vec3)
+			vtbx.u8 q0y, {vecNeighb3}, q3x @ q0y = low(vec3)
 			vtbx.u8 q1y, {vecNeighb3}, q3y @ q1y = high(vec3)
 			vswp vecNeighb2, q0 @ vecNeighb2 = q0 = [low(vec2), low(vec3)]
 			vswp vecNeighb3, q1 @ vecNeighb3 = q1 = [high(vec2), high(vec3)]
@@ -224,8 +225,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			@@ compute x0 and x1 (first 8) and convert from epi32 and epi16 @@
 			vand.u32 q2, vecX0, vec0xff_epi32
 			vand.u32 q3, vecX1, vec0xff_epi32
-			vmovn.i32 q2x, q2
-			vmovn.i32 q2y, q3 @ q2 = vec0
+			vmovn.u32 q2x, q2
+			vmovn.u32 q2y, q3 @ q2 = vec0
 			vbic q3, vec0xff_epi16, q2 @ q3 = vec1
 			@ compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16 @
 			vmovl.u8 vec5, vecNeighb0x
@@ -241,8 +242,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			@@ compute x0 and x1 (second 8) and convert from epi32 and epi16 @@
 			vand.u32 q2, vecX2, vec0xff_epi32
 			vand.u32 q3, vecX3, vec0xff_epi32
-			vmovn.i32 q2x, q2
-			vmovn.i32 q2y, q3 @ q2 = vec0
+			vmovn.u32 q2x, q2
+			vmovn.u32 q2y, q3 @ q2 = vec0
 			vbic q3, vec0xff_epi16, q2 @ q3 = vec1
 			.unreq vec0xff_epi32 @ q0 no longer vec0xff_epi32
 			.unreq vec0xff_epi16 @ q1 no longer vec0xff_epi16
@@ -252,8 +253,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vmul.u16 vec6, q0, q3
 			vmla.u16 vec6, q1, q2
 			@ compute vec7 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16 @
-			vmovl.u8 q0, vecNeighb2x
-			vmovl.u8 q1, vecNeighb3x
+			vmovl.u8 q0, vecNeighb2y
+			vmovl.u8 q1, vecNeighb3y
 			vmul.u16 vec7, q0, q3
 			vmla.u16 vec7, q1, q2
 
@@ -294,12 +295,18 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vqadd.u16 vecNeighb0, vecNeighb0, vecNeighb2
 			vqadd.u16 vecNeighb1, vecNeighb1, vecNeighb3
 
+			@ FIXME(dmi): remove
+			@add tmp0, outPtr, i @ FIXME(dmi): remove
+			@vst1.u8 {vecNeighb0}, [tmp0 :128] @ FIXME(dmi): increment
+#if 1
+
 			@@ Store the result @@
-			@ FIXME(dmi): use padOutPtr to write then, increment
+			@ FIXME(dmi): use sf_y to store outPtr_ for autoincrement
 			add tmp0, outPtr, i @ FIXME(dmi): remove
-			vmovn.u16 q0x, vecneighb0
+			vmovn.u16 q0x, vecNeighb0
 			vmovn.u16 q0y, vecNeighb1
 			vst1.u8 {q0}, [tmp0 :128] @ FIXME(dmi): increment
+#endif
 
 			@@ move to next indices @@
 			add tmp0, sp, #vecSfxTimes16
