@@ -133,71 +133,45 @@ q15y .dn d31
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ 'r12' is reserved to address the arguments
 .macro COMPV_GAS_SHADOW_ARGS_TO_STACK nn
-	sub sp, sp, #(\nn * 4)
+	sub sp, sp, #(COMPV_GAS_REG_SZ_BYTES * \nn)
 	mov r12, sp
 	.if \nn >= 1
-		str r0, [sp, #(4 * 0)]
+		str r0, [sp, #(COMPV_GAS_REG_SZ_BYTES * 0)]
 	.endif
 	.if \nn >= 2
-		str r1, [sp, #(4 * 1)]
+		str r1, [sp, #(COMPV_GAS_REG_SZ_BYTES * 1)]
 	.endif
 	.if \nn >= 3
-		str r2, [sp, #(4 * 2)]
+		str r2, [sp, #(COMPV_GAS_REG_SZ_BYTES * 2)]
 	.endif
 	.if \nn >= 4
-		str r3, [sp, #(4 * 3)]
+		str r3, [sp, #(COMPV_GAS_REG_SZ_BYTES * 3)]
 	.endif
-	@@TODO(dmi): use rept ... endr@@
-	.if \nn >= 5
-		add r4, sp, #(prolog_bytes + (\nn * 4) + (0 * 4))
-		ldr r4, [r4]
-		str r4, [sp, #(4 * 4)]
-	.endif
-	.if \nn >= 6
-		add r4, sp, #(prolog_bytes + (\nn * 4) + (1 * 4))
-		ldr r4, [r4]
-		str r4, [sp, #(4 * 5)]
-	.endif
-	.if \nn >= 7
-		add r4, sp, #(prolog_bytes + (\nn * 4) + (2 * 4))
-		ldr r4, [r4]
-		str r4, [sp, #(4 * 6)]
-	.endif
-	.if \nn >= 8
-		add r4, sp, #(prolog_bytes + (\nn * 4) + (3 * 4))
-		ldr r4, [r4]
-		str r4, [sp, #(4 * 7)]
-	.endif
-	.if \nn >= 9
-		add r4, sp, #(prolog_bytes + (\nn * 4) + (4 * 4))
-		ldr r4, [r4]
-		str r4, [sp, #(4 * 8)]
-	.endif
-	.if \nn >= 10
-		add r4, sp, #(prolog_bytes + (\nn * 4) + (5 * 4))
-		ldr r4, [r4]
-		str r4, [sp, #(4 * 9)]
-	.endif	
-	.if \nn >= 11
-		add r4, sp, #(prolog_bytes + (\nn * 4) + (6 * 4))
-		ldr r4, [r4]
-		str r4, [sp, #(4 * 10)]
-	.endif
-	.if \nn >= 12
-		.err Not implemented
-	.endif
+	add r8, sp, #(prolog_bytes + (COMPV_GAS_REG_SZ_BYTES * \nn))
+	add r9, sp, #(COMPV_GAS_REG_SZ_BYTES * 4)
+	.rept \nn - 4
+		ldr r10, [r8], #COMPV_GAS_REG_SZ_BYTES
+		str r10, [r9], #COMPV_GAS_REG_SZ_BYTES
+	.endr
+	@.set counter, 0
+	@.rept \nn - 4
+	@	add r4, sp, #(prolog_bytes + (COMPV_GAS_REG_SZ_BYTES * \nn) + (COMPV_GAS_REG_SZ_BYTES * counter))
+	@	ldr r4, [r4]
+	@	str r4, [sp, #(COMPV_GAS_REG_SZ_BYTES * (counter + 4))]
+	@	.set counter, counter+1
+	@.endr
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ requires COMPV_GAS_SHADOW_ARGS_TO_STACK
 .macro COMPV_GAS_UNSHADOW_ARGS nn
-	add sp, sp, #(\nn * 4)
+	add sp, sp, #(\nn * COMPV_GAS_REG_SZ_BYTES)
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ requires COMPV_GAS_SHADOW_ARGS_TO_STACK
 .macro ldr_arg nn rx
-	ldr \rx, [r12, #(\nn * 4)]
+	ldr \rx, [r12, #(\nn * COMPV_GAS_REG_SZ_BYTES)]
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

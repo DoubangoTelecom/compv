@@ -130,15 +130,6 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 	else {
 		scale(inPtr, inWidth, inHeight, inStride, outPtr, outWidth, 0, (outHeight * sf_y), outStride, sf_x, sf_y);
 	}
-	{
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("FIXME: result check");
-		//const uint16_t* a = (const uint16_t*)outPtr;
-		
-		for (size_t i = 0; i < 32; ++i) {
-			//COMPV_DEBUG_INFO("%zu -> %u", i, a[i]);
-			COMPV_DEBUG_INFO("%zu -> %u", i, outPtr[0 + i]);
-		}
-	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }

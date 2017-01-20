@@ -73,6 +73,7 @@ void CompVImageScaleBilinear_Intrin_NEON(
 			_neon_bilinear_set_neighbs(vec2, vecNeighb1, vecNeighb3, 0, 1);
 			_neon_bilinear_set_neighbs(vec3, vecNeighb1, vecNeighb3, 2, 3);
 
+
 			/* Deinterleave neighbs	*/
 			vec0 = vcombine_u8(vtbx2_u8(vget_low_u8(vecNeighb0), (uint8x8x2_t&)vecNeighb0, vget_low_u8(vecMask)),
 				vtbx2_u8(vget_high_u8(vecNeighb0), (uint8x8x2_t&)vecNeighb0, vget_high_u8(vecMask))); // 0,0,0,0,1,1,1,1
@@ -86,7 +87,7 @@ void CompVImageScaleBilinear_Intrin_NEON(
 			vecNeighb1 = vcombine_u8(vget_high_u8(vec0), vget_high_u8(vec1)); // 1,1,1,1,1,1
 			vecNeighb2 = vcombine_u8(vget_low_u8(vec2), vget_low_u8(vec3));   // 2,2,2,2,2,2
 			vecNeighb3 = vcombine_u8(vget_high_u8(vec2), vget_high_u8(vec3)); // 3,3,3,3,3,3
-
+			
 			/* compute x0 and x1 (first #8) and convert from epi32 and epi16 */
 			vec0 = vcombine_u16(vmovn_u32(vandq_u32(vecX0, vec0xff_epi32)), vmovn_u32(vandq_u32(vecX1, vec0xff_epi32))); // epi16
 			vec1 = vbicq_u16(vec0xff_epi16, vec0);
@@ -121,7 +122,7 @@ void CompVImageScaleBilinear_Intrin_NEON(
 				vshrn_n_u32(vmull_u16(vget_high_u16(vecy1), vget_high_u16(vec4)), 16));
 			vec1 = vcombine_u16(vshrn_n_u32(vmull_u16(vget_low_u16(vecy1), vget_low_u16(vec6)), 16),
 				vshrn_n_u32(vmull_u16(vget_high_u16(vecy1), vget_high_u16(vec6)), 16));
-			
+
 			/* compute D = (y0 * B) >> 16 */
 			vec2 = vcombine_u16(vshrn_n_u32(vmull_u16(vget_low_u16(vecy0), vget_low_u16(vec5)), 16),
 				vshrn_n_u32(vmull_u16(vget_high_u16(vecy0), vget_high_u16(vec5)), 16));
@@ -130,7 +131,7 @@ void CompVImageScaleBilinear_Intrin_NEON(
 
 			/* Compute R = (C + D) */
 			vec0 = vqaddq_u16(vec0, vec2);
-			vec1 = vqaddq_u16(vec1, vec3);			
+			vec1 = vqaddq_u16(vec1, vec3);
 
 			/* Store the result */
 			vst1q_u8(&outPtr[i], vcombine_u8(vmovn_u16(vec0), vmovn_u16(vec1)));
