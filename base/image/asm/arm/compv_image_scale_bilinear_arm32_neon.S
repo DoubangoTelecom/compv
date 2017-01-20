@@ -89,6 +89,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 
 	@@ Declare input arguments indexes @@
 	.equ argi_inPtr, 0
+	.equ argi_outYEnd, 7
 	.equ argi_outStride, 8
 	.equ argi_sf_y, 10
 
@@ -97,8 +98,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	.unreq inHeight @ inHeight is useless, we can use r2 as temp reg
 	.unreq outStride @ inStride will be loaded on demand, we can use r8 as temp reg
 	.unreq sf_y      @sf_y will be loaded on demand, we can use r10 as temp reg
+	.unreq outYEnd  @outYEnd will be loaded on demand, we can use r7 as temp reg
 
-	@@ r0, r10 r11, r1, r2, r8 can be used as temp regs @@
+	@@ r0, r10 r11, r1, r2, r8, r7 can be used as temp regs @@
 
 	@@ compute vecSfxTimes16 @@
 	mov r11, sf_x, LSL #4
@@ -126,38 +128,38 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	vst1.u32 {q3}, [r2 :128]
 
 	@@ sf_x (r9) no longer needed @@
-	@@ r0, r1, r2, r8, r9, r10, r11 can be used as temp regs @@
+	@@ r0, r1, r2, r8, r9, r10, r11, r7 can be used as temp regs @@
 	i .req r0
 	inPtr_ .req r1
-	outPtr_ .req r10
-	tmp0 .req r2
-	tmp1 .req r9
-	tmp2 .req r11
-	tmp3 .req r8
+	tmp0 .req r10
+	tmp1 .req r2
+	tmp2 .req r9
+	tmp3 .req r11
+	tmp4 .req r8
+	tmp5 .req r7
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ do
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	DoWhile:
-		ldr_arg argi_inPtr, tmp0 @ tmp0 = inPtr @ FIXME replace direct with inPtr_
+		ldr_arg argi_inPtr, inPtr_
 		mov tmp1, outYStart, LSR #8 @ tmp1 = nearestY
 		mov tmp3, #0xff @ tmp3 = 0xff
-		mul tmp2, tmp1, inStride @ tmp2 = nearestY * inStride
-		add inPtr_, tmp0, tmp2 @ inPtr_ = &inPtr[nearestY * inStride]			
+		mul tmp2, tmp1, inStride @ tmp2 = nearestY * inStride	
 		and tmp0, outYStart, tmp3
+		add tmp1, sp, #vecSFX0
 		vdup.u16 q1, tmp3 @ q1 = vec0xff_epi16
 		vdup.u16 q0, tmp0 @ q0 = vecy0
 		vbic.u16 q1, q1, q0 @ q1 = vecy1
 		add tmp0, sp, #vecy0
-		add tmp1, sp, #vecSFX0
 		vst1.u32 {q0}, [tmp0 :128]!
 		vst1.u32 {q1}, [tmp0 :128]		
 		vld1.u32 {vecX0}, [tmp1 :128]!
 		vld1.u32 {vecX1}, [tmp1 :128]!
 		vld1.u32 {vecX2}, [tmp1 :128]!
 		vld1.u32 {vecX3}, [tmp1 :128]
-		mov outPtr_, outPtr
 		mov i, #0
+		add inPtr_, inPtr_, tmp2 @ inPtr_ = &inPtr[nearestY * inStride]	
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (i = 0; i < outWidth; i += 16)
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -170,92 +172,178 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 
 			@@  write memNeighbs @@
 			.macro _neon32_bilinear_extract_then_insert vecNeareastX, vecNeighbA, vecNeighbB, neighbIndex
-				@ Extract indices(neareastIndex0, neareastIndex1)
 				vmov.u32 tmp0, \vecNeareastX[0] @ tmp0 = nearestX0
 				vmov.u32 tmp1, \vecNeareastX[1] @ tmp1 = nearestX1
-				add tmp0, inPtr_, tmp0 @ tmp0 = &inPtr_[nearestX0]
-				add tmp1, inPtr_, tmp1 @ tmp1 = &inPtr_[nearestX1]
-				@ Insert in vecNeighbA and increment tmp0 and tmp1 by inStride
-				ldrh tmp2, [tmp0], inStride @ suffix H -> for unsigned Halfword
-				ldrh tmp3, [tmp1], inStride
+				add tmp4, tmp0, inStride
+				add tmp5, tmp1, inStride
+				ldrh tmp2, [inPtr_, tmp0]
+				ldrh tmp3, [inPtr_, tmp1]
+				ldrh tmp4, [inPtr_, tmp4]
+				ldrh tmp5, [inPtr_, tmp5]
 				orr tmp2, tmp3, LSL #16
+				orr tmp4, tmp5, LSL #16
 				vmov.u32 \vecNeighbA[\neighbIndex], tmp2
-				@ Insert in vecNeighbB
-				ldrh tmp2, [tmp0]
-				ldrh tmp3, [tmp1]
-				orr tmp2, tmp3, LSL #16
-				vmov.u32 \vecNeighbB[\neighbIndex], tmp2
+				vmov.u32 \vecNeighbB[\neighbIndex], tmp4
 			.endm
 
 			@@ write memNeighbs @@
-			_neon32_bilinear_extract_then_insert q0x, vecNeighb0x, vecNeighb2x, 0
-			_neon32_bilinear_extract_then_insert q2x, vecNeighb1x, vecNeighb3x, 0
-			_neon32_bilinear_extract_then_insert q0y, vecNeighb0x, vecNeighb2x, 1
-			_neon32_bilinear_extract_then_insert q2y, vecNeighb1x, vecNeighb3x, 1
-			_neon32_bilinear_extract_then_insert q1x, vecNeighb0y, vecNeighb2y, 0
-			_neon32_bilinear_extract_then_insert q3x, vecNeighb1y, vecNeighb3y, 0
-			_neon32_bilinear_extract_then_insert q1y, vecNeighb0y, vecNeighb2y, 1
-			_neon32_bilinear_extract_then_insert q3y, vecNeighb1y, vecNeighb3y, 1
+
+
+			@_neon32_bilinear_extract_then_insert q0x, vecNeighb0x, vecNeighb2x, 0
+			@_neon32_bilinear_extract_then_insert q2x, vecNeighb1x, vecNeighb3x, 0
+			vmov.u32 tmp0, q0x[0] @ tmp0 = nearestX0
+			vmov.u32 tmp1, q0x[1] @ tmp1 = nearestX1
+			vmov.u32 tmp2, q2x[0] @ tmp2 = nearestX0
+			vmov.u32 tmp3, q2x[1] @ tmp3 = nearestX1
+			ldrh tmp4, [inPtr_, tmp0]
+			ldrh tmp5, [inPtr_, tmp1]
+			add tmp0, tmp0, inStride
+			add tmp1, tmp1, inStride
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 vecNeighb0x[0], tmp4
+			ldrh tmp4, [inPtr_, tmp2]
+			ldrh tmp5, [inPtr_, tmp3]
+			add tmp2, tmp2, inStride
+			add tmp3, tmp3, inStride
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 vecNeighb1x[0], tmp4
+			ldrh tmp4, [inPtr_, tmp0]
+			ldrh tmp5, [inPtr_, tmp1]
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 tmp0, q0y[0] @ tmp0 = nearestX0
+			vmov.u32 tmp1, q0y[1] @ tmp1 = nearestX1
+			vmov.u32 vecNeighb2x[0], tmp4
+			ldrh tmp4, [inPtr_, tmp2]
+			ldrh tmp5, [inPtr_, tmp3]
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 tmp2, q2y[0] @ tmp2 = nearestX0
+			vmov.u32 tmp3, q2y[1] @ tmp3 = nearestX1
+			vmov.u32 vecNeighb3x[0], tmp4
+
+			@_neon32_bilinear_extract_then_insert q0y, vecNeighb0x, vecNeighb2x, 1
+			@_neon32_bilinear_extract_then_insert q2y, vecNeighb1x, vecNeighb3x, 1
+			
+			ldrh tmp4, [inPtr_, tmp0]
+			ldrh tmp5, [inPtr_, tmp1]
+			add tmp0, tmp0, inStride
+			add tmp1, tmp1, inStride
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 vecNeighb0x[1], tmp4
+			ldrh tmp4, [inPtr_, tmp2]
+			ldrh tmp5, [inPtr_, tmp3]
+			add tmp2, tmp2, inStride
+			add tmp3, tmp3, inStride
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 vecNeighb1x[1], tmp4
+			ldrh tmp4, [inPtr_, tmp0]
+			ldrh tmp5, [inPtr_, tmp1]
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 tmp0, q1x[0] @ tmp0 = nearestX0
+			vmov.u32 tmp1, q1x[1] @ tmp1 = nearestX1
+			vmov.u32 vecNeighb2x[1], tmp4
+			ldrh tmp4, [inPtr_, tmp2]
+			ldrh tmp5, [inPtr_, tmp3]
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 tmp2, q3x[0] @ tmp2 = nearestX0
+			vmov.u32 tmp3, q3x[1] @ tmp3 = nearestX1
+			vmov.u32 vecNeighb3x[1], tmp4
+
+
+			@_neon32_bilinear_extract_then_insert q1x, vecNeighb0y, vecNeighb2y, 0
+			@_neon32_bilinear_extract_then_insert q3x, vecNeighb1y, vecNeighb3y, 0
+			
+			
+			ldrh tmp4, [inPtr_, tmp0]
+			ldrh tmp5, [inPtr_, tmp1]
+			add tmp0, tmp0, inStride
+			add tmp1, tmp1, inStride
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 vecNeighb0y[0], tmp4
+			ldrh tmp4, [inPtr_, tmp2]
+			ldrh tmp5, [inPtr_, tmp3]
+			add tmp2, tmp2, inStride
+			add tmp3, tmp3, inStride
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 vecNeighb1y[0], tmp4
+			ldrh tmp4, [inPtr_, tmp0]
+			ldrh tmp5, [inPtr_, tmp1]
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 tmp0, q1y[0] @ tmp0 = nearestX0
+			vmov.u32 tmp1, q1y[1] @ tmp1 = nearestX1
+			vmov.u32 vecNeighb2y[0], tmp4
+			ldrh tmp4, [inPtr_, tmp2]
+			ldrh tmp5, [inPtr_, tmp3]
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 tmp2, q3y[0] @ tmp2 = nearestX0
+			vmov.u32 tmp3, q3y[1] @ tmp3 = nearestX1
+			vmov.u32 vecNeighb3y[0], tmp4
+						
+			@_neon32_bilinear_extract_then_insert q1y, vecNeighb0y, vecNeighb2y, 1
+			@_neon32_bilinear_extract_then_insert q3y, vecNeighb1y, vecNeighb3y, 1
+			
+			
+			ldrh tmp4, [inPtr_, tmp0]
+			ldrh tmp5, [inPtr_, tmp1]
+			add tmp0, tmp0, inStride
+			add tmp1, tmp1, inStride
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 vecNeighb0y[1], tmp4
+			ldrh tmp4, [inPtr_, tmp2]
+			ldrh tmp5, [inPtr_, tmp3]
+			add tmp2, tmp2, inStride
+			add tmp3, tmp3, inStride
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 vecNeighb1y[1], tmp4
+			ldrh tmp4, [inPtr_, tmp0]
+			ldrh tmp5, [inPtr_, tmp1]
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 vecNeighb2y[1], tmp4
+			ldrh tmp4, [inPtr_, tmp2]
+			ldrh tmp5, [inPtr_, tmp3]
+			orr tmp4, tmp5, LSL #16
+			vmov.u32 vecNeighb3y[1], tmp4
+
+
+
+			ldr tmp0, =kShuffleEpi8_Deinterleave_i32
+			add tmp1, sp, #vecy1
+			add tmp2, sp, #vecSfxTimes16
+			mov tmp3, #0xff
+			add tmp4, sp, #vecy0
+			add tmp5, outPtr, i
+			
+
 
 			@@ Deinterleave neighbs @@
-			ldr tmp0, =kShuffleEpi8_Deinterleave_i32
 			vld1.u8 {q3}, [tmp0 :128] @ q3 = vecMask
 			vtbx.u8 q0x, {vecNeighb0}, q3x @ q0x = low(vec0)
 			vtbx.u8 q1x, {vecNeighb0}, q3y @ q1x = high(vec0)
+			vtbx.u8 vec4x, {vecNeighb2}, q3x @ vec4x = low(vec2)
+			vtbx.u8 vec5x, {vecNeighb2}, q3y @ vec5x = high(vec2)
 			vtbx.u8 q0y, {vecNeighb1}, q3x @ q0y = low(vec1)
-			vtbx.u8 q1y, {vecNeighb1}, q3y @ q1y = high(vec1)
+			vtbx.u8 q1y, {vecNeighb1}, q3y @ q1y = high(vec1)		
+			vtbx.u8 vec4y, {vecNeighb3}, q3x @ vec4y = low(vec3)
+			vtbx.u8 vec5y, {vecNeighb3}, q3y @ vec5y = high(vec3)
 			vswp vecNeighb0, q0 @ vecNeighb0 = q0 = [low(vec0), low(vec1)]
 			vswp vecNeighb1, q1 @ vecNeighb1 = q1 = [high(vec0), high(vec1)]
-			vtbx.u8 q0x, {vecNeighb2}, q3x @ q0x = low(vec2)
-			vtbx.u8 q1x, {vecNeighb2}, q3y @ q1x = high(vec2)
-			vtbx.u8 q0y, {vecNeighb3}, q3x @ q0y = low(vec3)
-			vtbx.u8 q1y, {vecNeighb3}, q3y @ q1y = high(vec3)
-			vswp vecNeighb2, q0 @ vecNeighb2 = q0 = [low(vec2), low(vec3)]
-			vswp vecNeighb3, q1 @ vecNeighb3 = q1 = [high(vec2), high(vec3)]
-			
+			vswp vecNeighb2, vec4 @ vecNeighb2 = vec4 = [low(vec2), low(vec3)]
+			vswp vecNeighb3, vec5 @ vecNeighb3 = vec5 = [high(vec2), high(vec3)]
+
+#if 1
 			@@ Starting is line q0 equal vec0xff_epi32 and q1 equal vec0xff_epi16
 			vec0xff_epi32 .req q0
 			vec0xff_epi16 .req q1
-			mov tmp0, #0xff
-			vdup.u32 vec0xff_epi32, tmp0
-			vdup.u16 vec0xff_epi16, tmp0
+			
+			
+			vdup.u32 vec0xff_epi32, tmp3
+			vdup.u16 vec0xff_epi16, tmp3
 
 			@@ compute x0 and x1 (first 8) and convert from epi32 and epi16 @@
-			vand.u32 q2, vecX0, vec0xff_epi32
-			vand.u32 q3, vecX1, vec0xff_epi32
-			vmovn.u32 q2x, q2
-			vmovn.u32 q2y, q3 @ q2 = vec0
-			vbic q3, vec0xff_epi16, q2 @ q3 = vec1
 			@ compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16 @
-			vmovl.u8 vec5, vecNeighb0x
-			vmovl.u8 vec6, vecNeighb1x
-			vmul.u16 vec4, vec5, q3
-			vmla.u16 vec4, vec6, q2
 			@ compute vec5 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16 @
-			vmovl.u8 vec6, vecNeighb2x
-			vmovl.u8 vec7, vecNeighb3x
-			vmul.u16 vec5, vec6, q3
-			vmla.u16 vec5, vec7, q2
-			
 			@@ compute x0 and x1 (second 8) and convert from epi32 and epi16 @@
-			vand.u32 q2, vecX2, vec0xff_epi32
-			vand.u32 q3, vecX3, vec0xff_epi32
-			vmovn.u32 q2x, q2
-			vmovn.u32 q2y, q3 @ q2 = vec0
-			vbic q3, vec0xff_epi16, q2 @ q3 = vec1
-			.unreq vec0xff_epi32 @ q0 no longer vec0xff_epi32
-			.unreq vec0xff_epi16 @ q1 no longer vec0xff_epi16
 			@ compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16 @
-			vmovl.u8 q0, vecNeighb0y
-			vmovl.u8 q1, vecNeighb1y
-			vmul.u16 vec6, q0, q3
-			vmla.u16 vec6, q1, q2
 			@ compute vec7 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16 @
-			vmovl.u8 q0, vecNeighb2y
-			vmovl.u8 q1, vecNeighb3y
-			vmul.u16 vec7, q0, q3
-			vmla.u16 vec7, q1, q2
-
 			@ Let''s say:
 			@		A = ((neighb0 * x1) + (neighb1 * x0))
 			@		B = ((neighb2 * x1) + (neighb3 * x0))
@@ -264,48 +352,94 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			@		B = vec5, vec7
 			@
 			@ We cannot use vshrq_n_s16(vqdmulhq_s16(a, b), 1) to compute C and D because it operates on epi16 while A and B contain epu16 values
-
-			@@ preload vecy0 and vecy1 @@
-			add tmp0, sp, #vecy0
-			add tmp1, sp, #vecSfxTimes16
-			vld1.u8 {q3}, [tmp0 : 128]! @ q3 = vecy0
-			vld1.u8 {q0}, [tmp0 : 128] @ q0 = vecy1
-
-			@@ compute C = (y1 * A) >> 16 @@			
+			@@ compute C = (y1 * A) >> 16 @@
+			@@ compute D = (y0 * B) >> 16 @@	
+			@@ Compute R = (C + D) @@
+			@@ Store the result @@
+			@@ move to next indices @@
+			vand.u32 q2, vecX0, vec0xff_epi32
+			vand.u32 q3, vecX1, vec0xff_epi32
+			vmovn.u32 q2x, q2
+			vmovn.u32 q2y, q3 @ q2 = vec0
+			vbic q3, vec0xff_epi16, q2 @ q3 = vec1
+			
+			vmovl.u8 vec4, vecNeighb0x
+			vmul.u16 vec4, vec4, q3
+			vmovl.u8 vec5, vecNeighb2x
+			vmul.u16 vec5, vec5, q3
+			vand.u32 q3, vecX3, vec0xff_epi32
+			vmovl.u8 vec6, vecNeighb1x
+			vmovl.u8 vec7, vecNeighb3x
+			vmla.u16 vec4, vec6, q2
+			vmla.u16 vec5, vec7, q2
+			
+			vand.u32 q2, vecX2, vec0xff_epi32
+			
+			vmovn.u32 q2x, q2
+			vmovn.u32 q2y, q3 @ q2 = vec0
+			vbic q3, vec0xff_epi16, q2 @ q3 = vec1
+			.unreq vec0xff_epi32 @ q0 no longer vec0xff_epi32
+			.unreq vec0xff_epi16 @ q1 no longer vec0xff_epi16
+			
+			vmovl.u8 vecNeighb0, vecNeighb0y
+			vmul.u16 vec6, vecNeighb0, q3
+			vmovl.u8 vecNeighb2, vecNeighb2y
+			vmul.u16 vec7, vecNeighb2, q3
+			vmovl.u8 vecNeighb1, vecNeighb1y
+			vmovl.u8 vecNeighb3, vecNeighb3y
+			
+			
+			vld1.u8 {q0}, [tmp1 : 128] @ q0 = vecy1
 			vmull.u16 q1, q0x, vec4x
-			vmull.u16 q2, q0y, vec4y
-			vshrn.u32 vecNeighb0x, q1, #16
-			vshrn.u32 vecNeighb0y, q2, #16
-			vmull.u16 q1, q0x, vec6x
-			vmull.u16 q2, q0y, vec6y
-			vshrn.u32 vecNeighb1x, q1, #16
-			vshrn.u32 vecNeighb1y, q2, #16
+			vmull.u16 q3, q0y, vec4y
+			vmla.u16 vec6, vecNeighb1, q2		
+			vmla.u16 vec7, vecNeighb3, q2
 
-			@@ compute D = (y0 * B) >> 16 @@			
-			vmull.u16 q1, q3x, vec5x
-			vmull.u16 q2, q3y, vec5y
-			vshrn.u32 vecNeighb2x, q1, #16
+				
+			
+			
+			vshrn.u32 vecNeighb0x, q1, #16
+			vshrn.u32 vecNeighb0y, q3, #16
+			vmull.u16 q1, q0x, vec6x
+			vmull.u16 q3, q0y, vec6y
+			vld1.u8 {vec4}, [tmp4 : 128] @ vec4 = vecy0
+			vmull.u16 q2, vec4y, vec5y
+			vshrn.u32 vecNeighb1x, q1, #16
+			vshrn.u32 vecNeighb1y, q3, #16
+			vld1.u8 {q3}, [tmp2 : 128] @ q3 = vecSfxTimes16
+			vadd.u32 vecX0, vecX0, q3
+				
+			vmull.u16 q1, vec4x, vec5x
 			vshrn.u32 vecNeighb2y, q2, #16
-			vmull.u16 q1, q3x, vec7x
-			vmull.u16 q2, q3y, vec7y
-			vshrn.u32 vecNeighb3x, q1, #16
+			vmull.u16 q2, vec4y, vec7y
+			vadd.u32 vecX1, vecX1, q3
+			vadd.u32 vecX2, vecX2, q3
+			vshrn.u32 vecNeighb2x, q1, #16
+			
+			vmull.u16 q1, vec4x, vec7x
+			vqadd.u16 vecNeighb0, vecNeighb0, vecNeighb2
+			vadd.u32 vecX3, vecX3, q3
+			
 			vshrn.u32 vecNeighb3y, q2, #16
 
-			@@ Compute R = (C + D) @@
-			vqadd.u16 vecNeighb0, vecNeighb0, vecNeighb2
+			vmovn.u16 q0x, vecNeighb0
+			vshrn.u32 vecNeighb3x, q1, #16
+			
+
+			
+			
 			vqadd.u16 vecNeighb1, vecNeighb1, vecNeighb3
 
-			@@ Store the result @@
-			vmovn.u16 q0x, vecNeighb0
+			
+			
 			vmovn.u16 q0y, vecNeighb1
-			vld1.u8 {q1}, [tmp1 : 128] @ q1 = vecSfxTimes16
-			vst1.u8 {q0}, [outPtr_ :128]!
+			
+			vst1.u8 {q0}, [tmp5 :128]
 
-			@@ move to next indices @@
-			vadd.u32 vecX0, vecX0, q1
-			vadd.u32 vecX1, vecX1, q1
-			vadd.u32 vecX2, vecX2, q1
-			vadd.u32 vecX3, vecX3, q1
+			
+#endif
+			
+			
 
 			@@
 			add i, i, #16
@@ -316,16 +450,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 		@@
 		ldr_arg argi_sf_y, tmp1 @ tmp1 = sf_y
 		ldr_arg argi_outStride, tmp0 @ tmp0 = outStride
+		ldr_arg argi_outYEnd, tmp2 @ tmp2 = outYEnd
 		add outYStart, outYStart, tmp1
 		add outPtr, outPtr, tmp0
-		cmp outYStart, outYEnd
+		cmp outYStart, tmp2
 		blt DoWhile
 		@ end-of-DoWhile @
 	
 	.unreq outPtr
 	.unreq outWidth
 	.unreq outYStart
-	.unreq outYEnd
 	.unreq inStride
 	.unreq sf_x
 
