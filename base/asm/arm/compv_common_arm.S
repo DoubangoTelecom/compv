@@ -179,6 +179,11 @@ q15y .dn d31
 		str r4, [sp, #(4 * 9)]
 	.endif	
 	.if \nn >= 11
+		add r4, sp, #(prolog_bytes + (\nn * 4) + (6 * 4))
+		ldr r4, [r4]
+		str r4, [sp, #(4 * 10)]
+	.endif
+	.if \nn >= 12
 		.err Not implemented
 	.endif
 .endm
