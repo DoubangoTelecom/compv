@@ -291,19 +291,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			add t5, outPtr, i
 
 			@@ Deinterleave neighbs @@
-			vld1.u8 {q3}, [t0 :128] @ q3 = vecMask
-			vtbx.u8 q0x, {vecNeighb0}, q3x @ q0x = low(vec0)
-			vtbx.u8 q1x, {vecNeighb0}, q3y @ q1x = high(vec0)
-			vtbx.u8 vec4x, {vecNeighb2}, q3x @ vec4x = low(vec2)
-			vtbx.u8 vec5x, {vecNeighb2}, q3y @ vec5x = high(vec2)
-			vtbx.u8 q0y, {vecNeighb1}, q3x @ q0y = low(vec1)
-			vtbx.u8 q1y, {vecNeighb1}, q3y @ q1y = high(vec1)		
-			vtbx.u8 vec4y, {vecNeighb3}, q3x @ vec4y = low(vec3)
-			vtbx.u8 vec5y, {vecNeighb3}, q3y @ vec5y = high(vec3)
-			vswp vecNeighb0, q0 @ vecNeighb0 = q0 = [low(vec0), low(vec1)]
-			vswp vecNeighb1, q1 @ vecNeighb1 = q1 = [high(vec0), high(vec1)]
-			vswp vecNeighb2, vec4 @ vecNeighb2 = vec4 = [low(vec2), low(vec3)]
-			vswp vecNeighb3, vec5 @ vecNeighb3 = vec5 = [high(vec2), high(vec3)]
+			vuzp.u8 vecNeighb0x, vecNeighb0y  @ 0,0,0,0,1,1,1,1
+			vuzp.u8 vecNeighb1x, vecNeighb1y  @ 0,0,0,0,1,1,1,1
+			vuzp.u8 vecNeighb2x, vecNeighb2y  @ 2,2,2,2,3,3,3,3
+			vuzp.u8 vecNeighb3x, vecNeighb3y  @ 2,2,2,2,3,3,3,3
+			@ after swapping heads with tails we''ll have
+			@  vecNeighb0 = 0,0,0,...1 / vecNeighb1 = 1,1,1,...1 guess for vecNeighb2 and vecNeighb3 :)
+			vswp vecNeighb1x, vecNeighb0y
+			vswp vecNeighb3x, vecNeighb2y
 
 			@@ Starting is line q0 equal vec0xff_epi32 and q1 equal vec0xff_epi16
 			vec0xff_epi32 .req q0

@@ -48,7 +48,7 @@ void CompVImageScaleBilinear_Intrin_NEON(
 	const uint32x4_t vecSFX3 = vaddq_u32(vecSFX2, vecSfxTimes4);
 	static const uint32x4_t vec0xff_epi32 = vdupq_n_u32(0xff);
 	static const uint16x8_t vec0xff_epi16 = vdupq_n_u16(0xff);
-	static const uint8x16_t vecMask = vld1q_u8(reinterpret_cast<const uint8_t*>(kShuffleEpi8_Deinterleave_i32));
+	static const uint8x16_t vecMask = vld1q_u8(reinterpret_cast<const uint8_t*>(kShuffleEpi8_Deinterleave_i32)); // FIXME: remove
 	uint32_t nearestX0, nearestX1;
 
 	do {
@@ -73,8 +73,9 @@ void CompVImageScaleBilinear_Intrin_NEON(
 			_neon_bilinear_set_neighbs(vec2, vecNeighb1, vecNeighb3, 0, 1);
 			_neon_bilinear_set_neighbs(vec3, vecNeighb1, vecNeighb3, 2, 3);
 
-
 			/* Deinterleave neighbs	*/
+			// Assembler code uses vuzp and vswp and the result is very faaast. Same code in intrinsic is very slooow (GCC 4.1). So, we keep using
+			// vtables in intrin.
 			vec0 = vcombine_u8(vtbx2_u8(vget_low_u8(vecNeighb0), (uint8x8x2_t&)vecNeighb0, vget_low_u8(vecMask)),
 				vtbx2_u8(vget_high_u8(vecNeighb0), (uint8x8x2_t&)vecNeighb0, vget_high_u8(vecMask))); // 0,0,0,0,1,1,1,1
 			vec1 = vcombine_u8(vtbx2_u8(vget_low_u8(vecNeighb1), (uint8x8x2_t&)vecNeighb1, vget_low_u8(vecMask)),
