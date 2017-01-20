@@ -90,13 +90,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	@@ Declare input arguments indexes @@
 	.equ argi_inPtr, 0
 	.equ argi_outStride, 8
+	.equ argi_sf_y, 10
 
-	.unreq inPtr    @ inPtr will be loaded on demanded, we can use r0 as temp reg
+	.unreq inPtr    @ inPtr will be loaded on demand, we can use r0 as temp reg
 	.unreq inWidth  @ inWidth is useless, we can use r1 as temp reg
 	.unreq inHeight @ inHeight is useless, we can use r2 as temp reg
-	.unreq outStride @ inStride will be loaded on demanded, we can use r8 as temp reg
+	.unreq outStride @ inStride will be loaded on demand, we can use r8 as temp reg
+	.unreq sf_y      @sf_y will be loaded on demand, we can use r10 as temp reg
 
-	@@ r0, r11, r1, r2, r8 can be used as temp regs @@
+	@@ r0, r10 r11, r1, r2, r8 can be used as temp regs @@
 
 	@@ compute vecSfxTimes16 @@
 	mov r11, sf_x, LSL #4
@@ -124,9 +126,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	vst1.u32 {q3}, [r2 :128]
 
 	@@ sf_x (r9) no longer needed @@
-	@@ r0, r1, r2, r8, r9, r11 can be used as temp regs @@
+	@@ r0, r1, r2, r8, r9, r10, r11 can be used as temp regs @@
 	i .req r0
 	inPtr_ .req r1
+	outPtr_ .req r10
 	tmp0 .req r2
 	tmp1 .req r9
 	tmp2 .req r11
@@ -145,20 +148,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 		vdup.u16 q1, tmp3 @ q1 = vec0xff_epi16
 		vdup.u16 q0, tmp0 @ q0 = vecy0
 		vbic.u16 q1, q1, q0 @ q1 = vecy1
-		@ FIXME(dmi): vecy0 and vecy1 are consecutive -> load first then auto increment
 		add tmp0, sp, #vecy0
-		add tmp1, sp, #vecy1
-		vst1.u32 {q0}, [tmp0 :128]
-		vst1.u32 {q1}, [tmp1 :128]
-		@ FIXME(dmi): vecSFX0...vecSFX3 are consecutive -> load first then auto increment
-		add tmp0, sp, #vecSFX0
-		add tmp1, sp, #vecSFX1
-		vld1.u32 {vecX0}, [tmp0 :128]
-		vld1.u32 {vecX1}, [tmp1 :128]
-		add tmp0, sp, #vecSFX2
-		add tmp1, sp, #vecSFX3
-		vld1.u32 {vecX2}, [tmp0 :128]
+		add tmp1, sp, #vecSFX0
+		vst1.u32 {q0}, [tmp0 :128]!
+		vst1.u32 {q1}, [tmp0 :128]		
+		vld1.u32 {vecX0}, [tmp1 :128]!
+		vld1.u32 {vecX1}, [tmp1 :128]!
+		vld1.u32 {vecX2}, [tmp1 :128]!
 		vld1.u32 {vecX3}, [tmp1 :128]
+		mov outPtr_, outPtr
 		mov i, #0
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ for (i = 0; i < outWidth; i += 16)
@@ -267,12 +265,23 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			@
 			@ We cannot use vshrq_n_s16(vqdmulhq_s16(a, b), 1) to compute C and D because it operates on epi16 while A and B contain epu16 values
 
-			@FIXME load tmp0, tmp1, tmp2... with vecy1, vecy0
-			@FIXME q0 <- vecy1, q1 <- vecy0
-
-			@@ compute C = (y1 * A) >> 16 @@
-			add tmp0, sp, #vecy1
+			@@ preload vecy0 and vecy1 @@
+			add tmp0, sp, #vecy0
+			add tmp1, sp, #vecSfxTimes16
+			vld1.u8 {q3}, [tmp0 : 128]! @ q3 = vecy0
 			vld1.u8 {q0}, [tmp0 : 128] @ q0 = vecy1
+
+			@@ compute D = (y0 * B) >> 16 @@			
+			vmull.u16 q1, q3x, vec5x
+			vmull.u16 q2, q3y, vec5y
+			vshrn.u32 vecNeighb2x, q1, #16
+			vshrn.u32 vecNeighb2y, q2, #16
+			vmull.u16 q1, q3x, vec7x
+			vmull.u16 q2, q3y, vec7y
+			vshrn.u32 vecNeighb3x, q1, #16
+			vshrn.u32 vecNeighb3y, q2, #16
+
+			@@ compute C = (y1 * A) >> 16 @@			
 			vmull.u16 q1, q0x, vec4x
 			vmull.u16 q2, q0y, vec4y
 			vshrn.u32 vecNeighb0x, q1, #16
@@ -282,36 +291,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vshrn.u32 vecNeighb1x, q1, #16
 			vshrn.u32 vecNeighb1y, q2, #16
 
-			@@ compute D = (y0 * B) >> 16 @@
-			add tmp0, sp, #vecy0
-			vld1.u8 {q0}, [tmp0 : 128] @ q0 = vecy0
-			vmull.u16 q1, q0x, vec5x
-			vmull.u16 q2, q0y, vec5y
-			vshrn.u32 vecNeighb2x, q1, #16
-			vshrn.u32 vecNeighb2y, q2, #16
-			vmull.u16 q1, q0x, vec7x
-			vmull.u16 q2, q0y, vec7y
-			vshrn.u32 vecNeighb3x, q1, #16
-			vshrn.u32 vecNeighb3y, q2, #16
-
 			@@ Compute R = (C + D) @@
 			vqadd.u16 vecNeighb0, vecNeighb0, vecNeighb2
 			vqadd.u16 vecNeighb1, vecNeighb1, vecNeighb3
 
 			@@ Store the result @@
-			@ FIXME(dmi): use sf_y to store outPtr_ for autoincrement
-			add tmp0, outPtr, i @ FIXME(dmi): remove
 			vmovn.u16 q0x, vecNeighb0
 			vmovn.u16 q0y, vecNeighb1
-			vst1.u8 {q0}, [tmp0 :128] @ FIXME(dmi): increment
+			vld1.u8 {q1}, [tmp1 : 128] @ q1 = vecSfxTimes16
+			vst1.u8 {q0}, [outPtr_ :128]!
 
 			@@ move to next indices @@
-			add tmp0, sp, #vecSfxTimes16
-			vld1.u8 {q0}, [tmp0 : 128] @ q0 = vecSfxTimes16
-			vadd.u32 vecX0, vecX0, q0
-			vadd.u32 vecX1, vecX1, q0
-			vadd.u32 vecX2, vecX2, q0
-			vadd.u32 vecX3, vecX3, q0
+			vadd.u32 vecX0, vecX0, q1
+			vadd.u32 vecX1, vecX1, q1
+			vadd.u32 vecX2, vecX2, q1
+			vadd.u32 vecX3, vecX3, q1
 
 			@@
 			add i, i, #16
@@ -320,8 +314,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			@ end-of-LoopWidth @
 
 		@@
+		ldr_arg argi_sf_y, tmp1 @ tmp1 = sf_y
 		ldr_arg argi_outStride, tmp0 @ tmp0 = outStride
-		add outYStart, outYStart, sf_y
+		add outYStart, outYStart, tmp1
 		add outPtr, outPtr, tmp0
 		cmp outYStart, outYEnd
 		blt DoWhile
@@ -333,7 +328,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	.unreq outYEnd
 	.unreq inStride
 	.unreq sf_x
-	.unreq sf_y	
 
 	.unreq vecNeighb0
 	.unreq vecNeighb1
