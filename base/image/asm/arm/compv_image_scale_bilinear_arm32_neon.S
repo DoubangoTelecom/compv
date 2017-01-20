@@ -169,33 +169,33 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vshr.u32 q3, vecX3, #8
 
 			@@  write memNeighbs @@
-			.macro _neon32_bilinear_extract_then_insert vecNeareastX, vecNeighbA, vecNeighbB, neighbIndex0, neighbIndex1
+			.macro _neon32_bilinear_extract_then_insert vecNeareastX, vecNeighbA, vecNeighbB, neighbIndex
 				@ Extract indices(neareastIndex0, neareastIndex1)
 				vmov.u32 tmp0, \vecNeareastX[0] @ tmp0 = nearestX0
 				vmov.u32 tmp1, \vecNeareastX[1] @ tmp1 = nearestX1
 				add tmp0, inPtr_, tmp0 @ tmp0 = &inPtr_[nearestX0]
 				add tmp1, inPtr_, tmp1 @ tmp1 = &inPtr_[nearestX1]
-				@ Insert in vecNeighbA andincrement tmp0 and tmp1 by inStride
+				@ Insert in vecNeighbA and increment tmp0 and tmp1 by inStride
 				ldrh tmp2, [tmp0], inStride @ suffix H -> for unsigned Halfword
 				ldrh tmp3, [tmp1], inStride
-				vmov.u16 \vecNeighbA[\neighbIndex0], tmp2
-				vmov.u16 \vecNeighbA[\neighbIndex1], tmp3
-				@ Insert in vecNeighbA
+				orr tmp2, tmp3, LSL #16
+				vmov.u32 \vecNeighbA[\neighbIndex], tmp2
+				@ Insert in vecNeighbB
 				ldrh tmp2, [tmp0]
 				ldrh tmp3, [tmp1]
-				vmov.u16 \vecNeighbB[\neighbIndex0], tmp2
-				vmov.u16 \vecNeighbB[\neighbIndex1], tmp3
+				orr tmp2, tmp3, LSL #16
+				vmov.u32 \vecNeighbB[\neighbIndex], tmp2
 			.endm
 
 			@@ write memNeighbs @@
-			_neon32_bilinear_extract_then_insert q0x, vecNeighb0x, vecNeighb2x, 0, 1
-			_neon32_bilinear_extract_then_insert q0y, vecNeighb0x, vecNeighb2x, 2, 3
-			_neon32_bilinear_extract_then_insert q1x, vecNeighb0y, vecNeighb2y, 0, 1
-			_neon32_bilinear_extract_then_insert q1y, vecNeighb0y, vecNeighb2y, 2, 3
-			_neon32_bilinear_extract_then_insert q2x, vecNeighb1x, vecNeighb3x, 0, 1
-			_neon32_bilinear_extract_then_insert q2y, vecNeighb1x, vecNeighb3x, 2, 3
-			_neon32_bilinear_extract_then_insert q3x, vecNeighb1y, vecNeighb3y, 0, 1
-			_neon32_bilinear_extract_then_insert q3y, vecNeighb1y, vecNeighb3y, 2, 3
+			_neon32_bilinear_extract_then_insert q0x, vecNeighb0x, vecNeighb2x, 0
+			_neon32_bilinear_extract_then_insert q2x, vecNeighb1x, vecNeighb3x, 0
+			_neon32_bilinear_extract_then_insert q0y, vecNeighb0x, vecNeighb2x, 1
+			_neon32_bilinear_extract_then_insert q2y, vecNeighb1x, vecNeighb3x, 1
+			_neon32_bilinear_extract_then_insert q1x, vecNeighb0y, vecNeighb2y, 0
+			_neon32_bilinear_extract_then_insert q3x, vecNeighb1y, vecNeighb3y, 0
+			_neon32_bilinear_extract_then_insert q1y, vecNeighb0y, vecNeighb2y, 1
+			_neon32_bilinear_extract_then_insert q3y, vecNeighb1y, vecNeighb3y, 1
 
 			@@ Deinterleave neighbs @@
 			ldr tmp0, =kShuffleEpi8_Deinterleave_i32
@@ -221,65 +221,45 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vdup.u16 vec0xff_epi16, tmp0
 
 			@@ compute x0 and x1 (first 8) and convert from epi32 and epi16 @@
+			@ compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16 @
+			@ compute vec5 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16 @
+			@@ compute x0 and x1 (second 8) and convert from epi32 and epi16 @@
+			@ compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16 @
+			@ compute vec7 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16 @
+
 			vand.u32 q2, vecX0, vec0xff_epi32
 			vand.u32 q3, vecX1, vec0xff_epi32
 			vmovn.u32 q2x, q2
 			vmovn.u32 q2y, q3 @ q2 = vec0
 			vbic q3, vec0xff_epi16, q2 @ q3 = vec1
-			@ compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16 @
 			vmovl.u8 vec5, vecNeighb0x
-			vmovl.u8 vec6, vecNeighb1x
 			vmul.u16 vec4, vec5, q3
-			vmla.u16 vec4, vec6, q2
-			@ compute vec5 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16 @
-			vmovl.u8 vec6, vecNeighb2x
 			vmovl.u8 vec7, vecNeighb3x
-			vmul.u16 vec5, vec6, q3
-			vmla.u16 vec5, vec7, q2
-			
-			@@ compute x0 and x1 (second 8) and convert from epi32 and epi16 @@
+			vmul.u16 vec5, vec7, q2
+			vmovl.u8 vec6, vecNeighb1x
+			vmla.u16 vec4, vec6, q2
+			vmovl.u8 vec6, vecNeighb2x		
 			vand.u32 q2, vecX2, vec0xff_epi32
-			vand.u32 q3, vecX3, vec0xff_epi32
 			vmovn.u32 q2x, q2
+			vmla.u16 vec5, vec6, q3
+			vand.u32 q3, vecX3, vec0xff_epi32
+			.unreq vec0xff_epi32 @ q0 no longer vec0xff_epi32
+			vmovl.u8 q0, vecNeighb0y
 			vmovn.u32 q2y, q3 @ q2 = vec0
 			vbic q3, vec0xff_epi16, q2 @ q3 = vec1
-			.unreq vec0xff_epi32 @ q0 no longer vec0xff_epi32
 			.unreq vec0xff_epi16 @ q1 no longer vec0xff_epi16
-			@ compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16 @
-			vmovl.u8 q0, vecNeighb0y
-			vmovl.u8 q1, vecNeighb1y
-			vmul.u16 vec6, q0, q3
-			vmla.u16 vec6, q1, q2
-			@ compute vec7 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16 @
-			vmovl.u8 q0, vecNeighb2y
-			vmovl.u8 q1, vecNeighb3y
-			vmul.u16 vec7, q0, q3
-			vmla.u16 vec7, q1, q2
-
-			@ Let''s say:
-			@		A = ((neighb0 * x1) + (neighb1 * x0))
-			@		B = ((neighb2 * x1) + (neighb3 * x0))
-			@ Then:
-			@		A = vec4, vec6
-			@		B = vec5, vec7
-			@
-			@ We cannot use vshrq_n_s16(vqdmulhq_s16(a, b), 1) to compute C and D because it operates on epi16 while A and B contain epu16 values
-
-			@@ preload vecy0 and vecy1 @@
 			add tmp0, sp, #vecy0
 			add tmp1, sp, #vecSfxTimes16
+			vmul.u16 vec6, q0, q3
+			vmovl.u8 q1, vecNeighb2y
+			vmul.u16 vec7, q1, q3
 			vld1.u8 {q3}, [tmp0 : 128]! @ q3 = vecy0
-			vld1.u8 {q0}, [tmp0 : 128] @ q0 = vecy1
-
-			@@ compute D = (y0 * B) >> 16 @@			
-			vmull.u16 q1, q3x, vec5x
-			vmull.u16 q2, q3y, vec5y
-			vshrn.u32 vecNeighb2x, q1, #16
-			vshrn.u32 vecNeighb2y, q2, #16
-			vmull.u16 q1, q3x, vec7x
-			vmull.u16 q2, q3y, vec7y
-			vshrn.u32 vecNeighb3x, q1, #16
-			vshrn.u32 vecNeighb3y, q2, #16
+			vmovl.u8 q0, vecNeighb1y
+			vmovl.u8 q1, vecNeighb3y
+			vmla.u16 vec6, q0, q2
+			vld1.u8 {q0}, [tmp0 : 128] @ q0 = vecy1	
+			vmla.u16 vec7, q1, q2			
+			
 
 			@@ compute C = (y1 * A) >> 16 @@			
 			vmull.u16 q1, q0x, vec4x
@@ -290,6 +270,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vmull.u16 q2, q0y, vec6y
 			vshrn.u32 vecNeighb1x, q1, #16
 			vshrn.u32 vecNeighb1y, q2, #16
+
+			@@ compute D = (y0 * B) >> 16 @@			
+			vmull.u16 q1, q3x, vec5x
+			vmull.u16 q2, q3y, vec5y
+			vshrn.u32 vecNeighb2x, q1, #16
+			vshrn.u32 vecNeighb2y, q2, #16
+			vmull.u16 q1, q3x, vec7x
+			vmull.u16 q2, q3y, vec7y
+			vshrn.u32 vecNeighb3x, q1, #16
+			vshrn.u32 vecNeighb3y, q2, #16
 
 			@@ Compute R = (C + D) @@
 			vqadd.u16 vecNeighb0, vecNeighb0, vecNeighb2
