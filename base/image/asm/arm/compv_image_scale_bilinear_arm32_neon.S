@@ -170,7 +170,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vshr.u32 q2, vecX2, #8
 			vshr.u32 q3, vecX3, #8
 
-			@@  write memNeighbs @@
+			@@  deprecated macro function @@
 			.macro _neon32_bilinear_extract_then_insert vecNeareastX, vecNeighbA, vecNeighbB, neighbIndex
 				vmov.u32 t0, \vecNeareastX[0] @ t0 = nearestX0
 				vmov.u32 t1, \vecNeareastX[1] @ t1 = nearestX1
@@ -187,10 +187,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			.endm
 
 			@@ write memNeighbs @@
-
-
-			@_neon32_bilinear_extract_then_insert q0x, vecNeighb0x, vecNeighb2x, 0
-			@_neon32_bilinear_extract_then_insert q2x, vecNeighb1x, vecNeighb3x, 0
 			vmov.u32 t0, q0x[0] @ t0 = nearestX0
 			vmov.u32 t1, q0x[1] @ t1 = nearestX1
 			vmov.u32 t2, q2x[0] @ t2 = nearestX0
@@ -198,45 +194,41 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			ldrh t4, [inPtr_, t0]
 			ldrh t5, [inPtr_, t1]
 			add t0, t0, inStride
-			add t1, t1, inStride
 			orr t4, t5, LSL #16
+			ldrh t5, [inPtr_, t3]
+			add t1, t1, inStride
 			vmov.u32 vecNeighb0x[0], t4
 			ldrh t4, [inPtr_, t2]
-			ldrh t5, [inPtr_, t3]
 			add t2, t2, inStride
-			add t3, t3, inStride
 			orr t4, t5, LSL #16
+			add t3, t3, inStride
 			vmov.u32 vecNeighb1x[0], t4
 			ldrh t4, [inPtr_, t0]
 			ldrh t5, [inPtr_, t1]
 			orr t4, t5, LSL #16
+			ldrh t5, [inPtr_, t3]
 			vmov.u32 t0, q0y[0] @ t0 = nearestX0
 			vmov.u32 t1, q0y[1] @ t1 = nearestX1
 			vmov.u32 vecNeighb2x[0], t4
 			ldrh t4, [inPtr_, t2]
-			ldrh t5, [inPtr_, t3]
 			orr t4, t5, LSL #16
 			vmov.u32 t2, q2y[0] @ t2 = nearestX0
 			vmov.u32 t3, q2y[1] @ t3 = nearestX1
 			vmov.u32 vecNeighb3x[0], t4
-
-			@_neon32_bilinear_extract_then_insert q0y, vecNeighb0x, vecNeighb2x, 1
-			@_neon32_bilinear_extract_then_insert q2y, vecNeighb1x, vecNeighb3x, 1
-			
 			ldrh t4, [inPtr_, t0]
 			ldrh t5, [inPtr_, t1]
-			add t0, t0, inStride
-			add t1, t1, inStride
 			orr t4, t5, LSL #16
+			add t0, t0, inStride
 			vmov.u32 vecNeighb0x[1], t4
 			ldrh t4, [inPtr_, t2]
 			ldrh t5, [inPtr_, t3]
+			add t1, t1, inStride
+			orr t4, t5, LSL #16
 			add t2, t2, inStride
 			add t3, t3, inStride
-			orr t4, t5, LSL #16
+			ldrh t5, [inPtr_, t1]
 			vmov.u32 vecNeighb1x[1], t4
 			ldrh t4, [inPtr_, t0]
-			ldrh t5, [inPtr_, t1]
 			orr t4, t5, LSL #16
 			vmov.u32 t0, q1x[0] @ t0 = nearestX0
 			vmov.u32 t1, q1x[1] @ t1 = nearestX1
@@ -244,29 +236,23 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			ldrh t4, [inPtr_, t2]
 			ldrh t5, [inPtr_, t3]
 			orr t4, t5, LSL #16
+			ldrh t5, [inPtr_, t1]
 			vmov.u32 t2, q3x[0] @ t2 = nearestX0
 			vmov.u32 t3, q3x[1] @ t3 = nearestX1
 			vmov.u32 vecNeighb3x[1], t4
-
-
-			@_neon32_bilinear_extract_then_insert q1x, vecNeighb0y, vecNeighb2y, 0
-			@_neon32_bilinear_extract_then_insert q3x, vecNeighb1y, vecNeighb3y, 0
-			
-			
 			ldrh t4, [inPtr_, t0]
-			ldrh t5, [inPtr_, t1]
 			add t0, t0, inStride
-			add t1, t1, inStride
 			orr t4, t5, LSL #16
+			add t1, t1, inStride
 			vmov.u32 vecNeighb0y[0], t4
 			ldrh t4, [inPtr_, t2]
 			ldrh t5, [inPtr_, t3]
 			add t2, t2, inStride
-			add t3, t3, inStride
 			orr t4, t5, LSL #16
+			add t3, t3, inStride
+			ldrh t5, [inPtr_, t1]
 			vmov.u32 vecNeighb1y[0], t4
 			ldrh t4, [inPtr_, t0]
-			ldrh t5, [inPtr_, t1]
 			orr t4, t5, LSL #16
 			vmov.u32 t0, q1y[0] @ t0 = nearestX0
 			vmov.u32 t1, q1y[1] @ t1 = nearestX1
@@ -274,45 +260,35 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			ldrh t4, [inPtr_, t2]
 			ldrh t5, [inPtr_, t3]
 			orr t4, t5, LSL #16
+			ldrh t5, [inPtr_, t1]
 			vmov.u32 t2, q3y[0] @ t2 = nearestX0
 			vmov.u32 t3, q3y[1] @ t3 = nearestX1
 			vmov.u32 vecNeighb3y[0], t4
-						
-			@_neon32_bilinear_extract_then_insert q1y, vecNeighb0y, vecNeighb2y, 1
-			@_neon32_bilinear_extract_then_insert q3y, vecNeighb1y, vecNeighb3y, 1
-			
-			
 			ldrh t4, [inPtr_, t0]
-			ldrh t5, [inPtr_, t1]
 			add t0, t0, inStride
-			add t1, t1, inStride
 			orr t4, t5, LSL #16
+			add t1, t1, inStride
 			vmov.u32 vecNeighb0y[1], t4
 			ldrh t4, [inPtr_, t2]
 			ldrh t5, [inPtr_, t3]
 			add t2, t2, inStride
-			add t3, t3, inStride
 			orr t4, t5, LSL #16
+			add t3, t3, inStride
+			ldrh t5, [inPtr_, t1]
 			vmov.u32 vecNeighb1y[1], t4
 			ldrh t4, [inPtr_, t0]
-			ldrh t5, [inPtr_, t1]
 			orr t4, t5, LSL #16
 			vmov.u32 vecNeighb2y[1], t4
 			ldrh t4, [inPtr_, t2]
 			ldrh t5, [inPtr_, t3]
 			orr t4, t5, LSL #16
-			vmov.u32 vecNeighb3y[1], t4
-
-
-
 			ldr t0, =kShuffleEpi8_Deinterleave_i32
 			add t1, sp, #vecy1
 			add t2, sp, #vecSfxTimes16
 			mov t3, #0xff
+			vmov.u32 vecNeighb3y[1], t4			
 			add t4, sp, #vecy0
 			add t5, outPtr, i
-			
-
 
 			@@ Deinterleave neighbs @@
 			vld1.u8 {q3}, [t0 :128] @ q3 = vecMask
@@ -329,12 +305,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vswp vecNeighb2, vec4 @ vecNeighb2 = vec4 = [low(vec2), low(vec3)]
 			vswp vecNeighb3, vec5 @ vecNeighb3 = vec5 = [high(vec2), high(vec3)]
 
-#if 1
 			@@ Starting is line q0 equal vec0xff_epi32 and q1 equal vec0xff_epi16
 			vec0xff_epi32 .req q0
-			vec0xff_epi16 .req q1
-			
-			
+			vec0xff_epi16 .req q1			
 			vdup.u32 vec0xff_epi32, t3
 			vdup.u16 vec0xff_epi16, t3
 
@@ -357,12 +330,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			@@ Compute R = (C + D) @@
 			@@ Store the result @@
 			@@ move to next indices @@
+
 			vand.u32 q2, vecX0, vec0xff_epi32
 			vand.u32 q3, vecX1, vec0xff_epi32
 			vmovn.u32 q2x, q2
 			vmovn.u32 q2y, q3 @ q2 = vec0
 			vbic q3, vec0xff_epi16, q2 @ q3 = vec1
-			
 			vmovl.u8 vec4, vecNeighb0x
 			vmul.u16 vec4, vec4, q3
 			vmovl.u8 vec5, vecNeighb2x
@@ -372,32 +345,23 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vmovl.u8 vec7, vecNeighb3x
 			vmla.u16 vec4, vec6, q2
 			vmla.u16 vec5, vec7, q2
-			
 			vand.u32 q2, vecX2, vec0xff_epi32
-			
 			vmovn.u32 q2x, q2
 			vmovn.u32 q2y, q3 @ q2 = vec0
 			vbic q3, vec0xff_epi16, q2 @ q3 = vec1
 			.unreq vec0xff_epi32 @ q0 no longer vec0xff_epi32
 			.unreq vec0xff_epi16 @ q1 no longer vec0xff_epi16
-			
 			vmovl.u8 vecNeighb0, vecNeighb0y
 			vmul.u16 vec6, vecNeighb0, q3
 			vmovl.u8 vecNeighb2, vecNeighb2y
 			vmul.u16 vec7, vecNeighb2, q3
 			vmovl.u8 vecNeighb1, vecNeighb1y
-			vmovl.u8 vecNeighb3, vecNeighb3y
-			
-			
+			vmovl.u8 vecNeighb3, vecNeighb3y			
 			vld1.u8 {q0}, [t1 : 128] @ q0 = vecy1
 			vmull.u16 q1, q0x, vec4x
 			vmull.u16 q3, q0y, vec4y
 			vmla.u16 vec6, vecNeighb1, q2		
-			vmla.u16 vec7, vecNeighb3, q2
-
-				
-			
-			
+			vmla.u16 vec7, vecNeighb3, q2			
 			vshrn.u32 vecNeighb0x, q1, #16
 			vshrn.u32 vecNeighb0y, q3, #16
 			vmull.u16 q1, q0x, vec6x
@@ -408,38 +372,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vshrn.u32 vecNeighb1y, q3, #16
 			vld1.u8 {q3}, [t2 : 128] @ q3 = vecSfxTimes16
 			vadd.u32 vecX0, vecX0, q3
-				
 			vmull.u16 q1, vec4x, vec5x
 			vshrn.u32 vecNeighb2y, q2, #16
 			vmull.u16 q2, vec4y, vec7y
 			vadd.u32 vecX1, vecX1, q3
 			vadd.u32 vecX2, vecX2, q3
 			vshrn.u32 vecNeighb2x, q1, #16
-			
 			vmull.u16 q1, vec4x, vec7x
 			vqadd.u16 vecNeighb0, vecNeighb0, vecNeighb2
 			vadd.u32 vecX3, vecX3, q3
-			
 			vshrn.u32 vecNeighb3y, q2, #16
-
 			vmovn.u16 q0x, vecNeighb0
 			vshrn.u32 vecNeighb3x, q1, #16
-			
-
-			
-			
 			vqadd.u16 vecNeighb1, vecNeighb1, vecNeighb3
-
-			
-			
 			vmovn.u16 q0y, vecNeighb1
-			
 			vst1.u8 {q0}, [t5 :128]
-
-			
-#endif
-			
-			
 
 			@@
 			add i, i, #16
