@@ -216,9 +216,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vswp vecNeighb3, q1 @ vecNeighb3 = q1 = [high(vec2), high(vec3)]
 
 			@ FIXME(dmi): remove
-			add tmp0, outPtr, i @ FIXME(dmi): remove
-			vst1.u8 {vecNeighb1}, [tmp0 :128] @ FIXME(dmi): increment
-#if 0
+			@add tmp0, outPtr, i @ FIXME(dmi): remove
+			@vst1.u8 {vecNeighb3}, [tmp0 :128] @ FIXME(dmi): increment
+#if 1
 			
 			@@ Starting is line q0 equal vec0xff_epi32 and q1 equal vec0xff_epi16
 			vec0xff_epi32 .req q0
