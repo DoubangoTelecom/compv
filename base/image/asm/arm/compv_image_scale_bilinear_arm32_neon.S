@@ -214,6 +214,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vtbx.u8 q1y, {vecNeighb3}, q3y @ q1y = high(vec3)
 			vswp vecNeighb2, q0 @ vecNeighb2 = q0 = [low(vec2), low(vec3)]
 			vswp vecNeighb3, q1 @ vecNeighb3 = q1 = [high(vec2), high(vec3)]
+
+			@ FIXME(dmi): remove
+			add tmp0, outPtr, i @ FIXME(dmi): remove
+			vst1.u8 {vecNeighb1}, [tmp0 :128] @ FIXME(dmi): increment
+#if 0
 			
 			@@ Starting is line q0 equal vec0xff_epi32 and q1 equal vec0xff_epi16
 			vec0xff_epi32 .req q0
@@ -267,6 +272,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			@
 			@ We cannot use vshrq_n_s16(vqdmulhq_s16(a, b), 1) to compute C and D because it operates on epi16 while A and B contain epu16 values
 
+			@FIXME load tmp0, tmp1, tmp2... with vecy1, vecy0
+			@FIXME q0 <- vecy1, q1 <- vecy0
+
 			@@ compute C = (y1 * A) >> 16 @@
 			add tmp0, sp, #vecy1
 			vld1.u8 {q0}, [tmp0 : 128] @ q0 = vecy1
@@ -294,11 +302,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			@@ Compute R = (C + D) @@
 			vqadd.u16 vecNeighb0, vecNeighb0, vecNeighb2
 			vqadd.u16 vecNeighb1, vecNeighb1, vecNeighb3
-
-			@ FIXME(dmi): remove
-			@add tmp0, outPtr, i @ FIXME(dmi): remove
-			@vst1.u8 {vecNeighb0}, [tmp0 :128] @ FIXME(dmi): increment
-#if 1
 
 			@@ Store the result @@
 			@ FIXME(dmi): use sf_y to store outPtr_ for autoincrement
