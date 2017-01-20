@@ -11,18 +11,18 @@
 #include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
 
-#define _neon_bilinear_extract_then_insert(vecNeareastX, neareastIndex0, neareastIndex1, memNeighbA, memNeighbB, neighbIndex) \
+#define _neon_bilinear_extract_then_insert(vecNeareastX, neareastIndex0, neareastIndex1, vecNeighbA, vecNeighbB, neighbIndex) \
 			/* Extract indices(neareastIndex0, neareastIndex1) */ \
 			nearestX0 = vgetq_lane_u32(vecNeareastX, neareastIndex0); \
 			nearestX1 = vgetq_lane_u32(vecNeareastX, neareastIndex1); \
 			/* Insert in memNeighbA(neighbIndex) */ \
-			memNeighbA[neighbIndex] = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1]) << 16); /* vecNeighbA  -> 0,1,0,1,0,1,0,1,0,1,0,1 */ \
+			vecNeighbA = vsetq_lane_u32(*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1]) << 16), vecNeighbA, neighbIndex); /* vecNeighbA  -> 0,1,0,1,0,1,0,1,0,1,0,1 */ \
 			/* Insert in memNeighbB(neighbIndex) */ \
-			memNeighbB[neighbIndex] = *reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0 + inStride]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1 + inStride]) << 16); /* vecNeighbB -> 2,3,2,3,2,3,2,3 */
+			vecNeighbB = vsetq_lane_u32(*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0 + inStride]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1 + inStride]) << 16), vecNeighbB, neighbIndex); /* vecNeighbB -> 2,3,2,3,2,3,2,3 */
 
-#define _neon_bilinear_set_neighbs(vecNeareastX, memNeighbA, memNeighbB, neighbIndex0, neighbIndex1) \
-			_neon_bilinear_extract_then_insert(vecNeareastX, 0, 1, memNeighbA, memNeighbB, neighbIndex0); \
-			_neon_bilinear_extract_then_insert(vecNeareastX, 2, 3, memNeighbA, memNeighbB, neighbIndex1)
+#define _neon_bilinear_set_neighbs(vecNeareastX, vecNeighbA, vecNeighbB, neighbIndex0, neighbIndex1) \
+			_neon_bilinear_extract_then_insert(vecNeareastX, 0, 1, vecNeighbA, vecNeighbB, neighbIndex0); \
+			_neon_bilinear_extract_then_insert(vecNeareastX, 2, 3, vecNeighbA, vecNeighbB, neighbIndex1)
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -39,10 +39,6 @@ void CompVImageScaleBilinear_Intrin_NEON(
 	uint16x8_t vecy0, vecy1, vec4, vec5, vec6, vec7;
 	uint8x16_t vecNeighb0, vecNeighb1, vecNeighb2, vecNeighb3;
 	uint32_t sf_x_ = static_cast<uint32_t>(sf_x);
-	COMPV_ALIGN_NEON() uint32_t memNeighb0[4];
-	COMPV_ALIGN_NEON() uint32_t memNeighb1[4];
-	COMPV_ALIGN_NEON() uint32_t memNeighb2[4];
-	COMPV_ALIGN_NEON() uint32_t memNeighb3[4];
 	const uint32x4_t vecSfxTimes16 = vdupq_n_u32(sf_x_ << 4);
 	const uint32x4_t vecSfxTimes4 = vdupq_n_u32(sf_x_ << 2);
 	COMPV_ALIGN_NEON() const uint32_t SFX0[4] = { sf_x_ * 0, sf_x_ * 1, sf_x_ * 2, sf_x_ * 3 };
@@ -57,7 +53,7 @@ void CompVImageScaleBilinear_Intrin_NEON(
 
 	do {
 		nearestY = (outYStart >> 8); // nearest y-point
-		inPtr_ = (inPtr + (nearestY * inStride));
+		inPtr_ = &inPtr[nearestY * inStride];
 		vecy0 = vdupq_n_u16(static_cast<uint16_t>(outYStart & 0xff));
 		vecy1 = vbicq_u16(vec0xff_epi16, vecy0);
 		vecX0 = vecSFX0;
@@ -72,16 +68,10 @@ void CompVImageScaleBilinear_Intrin_NEON(
 			vec3 = vshrq_n_u32(vecX3, 8);
 
 			/* write memNeighbs */
-			_neon_bilinear_set_neighbs(vec0, memNeighb0, memNeighb2, 0, 1);
-			_neon_bilinear_set_neighbs(vec1, memNeighb0, memNeighb2, 2, 3);
-			_neon_bilinear_set_neighbs(vec2, memNeighb1, memNeighb3, 0, 1);
-			_neon_bilinear_set_neighbs(vec3, memNeighb1, memNeighb3, 2, 3);
-
-			/* read memNeighbs */
-			vecNeighb0 = vld1q_u8(reinterpret_cast<const uint8_t*>(memNeighb0));
-			vecNeighb1 = vld1q_u8(reinterpret_cast<const uint8_t*>(memNeighb1));
-			vecNeighb2 = vld1q_u8(reinterpret_cast<const uint8_t*>(memNeighb2));
-			vecNeighb3 = vld1q_u8(reinterpret_cast<const uint8_t*>(memNeighb3));
+			_neon_bilinear_set_neighbs(vec0, vecNeighb0, vecNeighb2, 0, 1);
+			_neon_bilinear_set_neighbs(vec1, vecNeighb0, vecNeighb2, 2, 3);
+			_neon_bilinear_set_neighbs(vec2, vecNeighb1, vecNeighb3, 0, 1);
+			_neon_bilinear_set_neighbs(vec3, vecNeighb1, vecNeighb3, 2, 3);
 
 			/* Deinterleave neighbs	*/
 			vec0 = vcombine_u8(vtbx2_u8(vget_low_u8(vecNeighb0), (uint8x8x2_t&)vecNeighb0, vget_low_u8(vecMask)),
