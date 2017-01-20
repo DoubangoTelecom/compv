@@ -642,5 +642,8 @@
     <GAS Include="..\image\asm\arm\compv_image_conv_grayscale_arm32_neon.S">
       <Filter>source\image\asm\arm</Filter>
     </GAS>
+    <GAS Include="..\image\asm\arm\compv_image_scale_bilinear_arm32_neon.S">
+      <Filter>source\image\asm\arm</Filter>
+    </GAS>
   </ItemGroup>
 </Project>

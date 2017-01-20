@@ -15,9 +15,9 @@
 			/* Extract indices(neareastIndex0, neareastIndex1) */ \
 			nearestX0 = vgetq_lane_u32(vecNeareastX, neareastIndex0); \
 			nearestX1 = vgetq_lane_u32(vecNeareastX, neareastIndex1); \
-			/* Insert in memNeighbA(neighbIndex) */ \
+			/* Insert in vecNeighbA(neighbIndex) */ \
 			vecNeighbA = vsetq_lane_u32(*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1]) << 16), vecNeighbA, neighbIndex); /* vecNeighbA  -> 0,1,0,1,0,1,0,1,0,1,0,1 */ \
-			/* Insert in memNeighbB(neighbIndex) */ \
+			/* Insert in vecNeighbB(neighbIndex) */ \
 			vecNeighbB = vsetq_lane_u32(*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX0 + inStride]) | (*reinterpret_cast<const uint16_t*>(&inPtr_[nearestX1 + inStride]) << 16), vecNeighbB, neighbIndex); /* vecNeighbB -> 2,3,2,3,2,3,2,3 */
 
 #define _neon_bilinear_set_neighbs(vecNeareastX, vecNeighbA, vecNeighbB, neighbIndex0, neighbIndex1) \

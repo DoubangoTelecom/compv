@@ -131,7 +131,7 @@ sym(CompVImageScaleBilinear_Asm_X86_AVX2)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; do
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	.DoWhile
+	.DoWhile:
 		mov rax, arg_outYStart ; rax = outYStart
 		mov rbx, arg_inPtr ; rbx = inPtr
 		vmovd xmm0, eax
@@ -159,7 +159,7 @@ sym(CompVImageScaleBilinear_Asm_X86_AVX2)
 		; for (i = 0; i < outWidth; i += 32)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor rsi, rsi ; rsi = i = 0x0
-		.LoopWidth
+		.LoopWidth:
 			;;; nearest x-point ;;;
 			vmovdqa ymm0, [vecX0]
 			vmovdqa ymm1, [vecX1]

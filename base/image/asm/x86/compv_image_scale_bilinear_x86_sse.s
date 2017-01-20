@@ -119,7 +119,7 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; do
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	.DoWhile
+	.DoWhile:
 		mov rax, arg_outYStart ; rax = outYStart
 		mov rbx, arg_inPtr ; rbx = inPtr
 		movd xmm0, rax
@@ -147,7 +147,7 @@ sym(CompVImageScaleBilinear_Asm_X86_SSE41)
 		; for (i = 0; i < outWidth; i += 16)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor rsi, rsi ; rsi = i = 0x0
-		.LoopWidth
+		.LoopWidth:
 			;;; set neighbs ;;;
 			movdqa xmm0, [vecX0]
 			movdqa xmm1, [vecX1]
