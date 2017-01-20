@@ -214,11 +214,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vtbx.u8 q1y, {vecNeighb3}, q3y @ q1y = high(vec3)
 			vswp vecNeighb2, q0 @ vecNeighb2 = q0 = [low(vec2), low(vec3)]
 			vswp vecNeighb3, q1 @ vecNeighb3 = q1 = [high(vec2), high(vec3)]
-
-			@ FIXME(dmi): remove
-			@add tmp0, outPtr, i @ FIXME(dmi): remove
-			@vst1.u8 {vecNeighb3}, [tmp0 :128] @ FIXME(dmi): increment
-#if 1
 			
 			@@ Starting is line q0 equal vec0xff_epi32 and q1 equal vec0xff_epi16
 			vec0xff_epi32 .req q0
@@ -309,7 +304,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vmovn.u16 q0x, vecNeighb0
 			vmovn.u16 q0y, vecNeighb1
 			vst1.u8 {q0}, [tmp0 :128] @ FIXME(dmi): increment
-#endif
 
 			@@ move to next indices @@
 			add tmp0, sp, #vecSfxTimes16
