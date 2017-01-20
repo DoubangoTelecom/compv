@@ -221,45 +221,55 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vdup.u16 vec0xff_epi16, tmp0
 
 			@@ compute x0 and x1 (first 8) and convert from epi32 and epi16 @@
-			@ compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16 @
-			@ compute vec5 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16 @
-			@@ compute x0 and x1 (second 8) and convert from epi32 and epi16 @@
-			@ compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16 @
-			@ compute vec7 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16 @
-
 			vand.u32 q2, vecX0, vec0xff_epi32
 			vand.u32 q3, vecX1, vec0xff_epi32
 			vmovn.u32 q2x, q2
 			vmovn.u32 q2y, q3 @ q2 = vec0
 			vbic q3, vec0xff_epi16, q2 @ q3 = vec1
+			@ compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16 @
 			vmovl.u8 vec5, vecNeighb0x
-			vmul.u16 vec4, vec5, q3
-			vmovl.u8 vec7, vecNeighb3x
-			vmul.u16 vec5, vec7, q2
 			vmovl.u8 vec6, vecNeighb1x
+			vmul.u16 vec4, vec5, q3
 			vmla.u16 vec4, vec6, q2
-			vmovl.u8 vec6, vecNeighb2x		
+			@ compute vec5 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16 @
+			vmovl.u8 vec6, vecNeighb2x
+			vmovl.u8 vec7, vecNeighb3x
+			vmul.u16 vec5, vec6, q3
+			vmla.u16 vec5, vec7, q2
+			
+			@@ compute x0 and x1 (second 8) and convert from epi32 and epi16 @@
 			vand.u32 q2, vecX2, vec0xff_epi32
-			vmovn.u32 q2x, q2
-			vmla.u16 vec5, vec6, q3
 			vand.u32 q3, vecX3, vec0xff_epi32
-			.unreq vec0xff_epi32 @ q0 no longer vec0xff_epi32
-			vmovl.u8 q0, vecNeighb0y
+			vmovn.u32 q2x, q2
 			vmovn.u32 q2y, q3 @ q2 = vec0
 			vbic q3, vec0xff_epi16, q2 @ q3 = vec1
+			.unreq vec0xff_epi32 @ q0 no longer vec0xff_epi32
 			.unreq vec0xff_epi16 @ q1 no longer vec0xff_epi16
+			@ compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> 8 epi16 @
+			vmovl.u8 q0, vecNeighb0y
+			vmovl.u8 q1, vecNeighb1y
+			vmul.u16 vec6, q0, q3
+			vmla.u16 vec6, q1, q2
+			@ compute vec7 = (neighb2 * x1) + (neighb3 * x0) -> 8 epi16 @
+			vmovl.u8 q0, vecNeighb2y
+			vmovl.u8 q1, vecNeighb3y
+			vmul.u16 vec7, q0, q3
+			vmla.u16 vec7, q1, q2
+
+			@ Let''s say:
+			@		A = ((neighb0 * x1) + (neighb1 * x0))
+			@		B = ((neighb2 * x1) + (neighb3 * x0))
+			@ Then:
+			@		A = vec4, vec6
+			@		B = vec5, vec7
+			@
+			@ We cannot use vshrq_n_s16(vqdmulhq_s16(a, b), 1) to compute C and D because it operates on epi16 while A and B contain epu16 values
+
+			@@ preload vecy0 and vecy1 @@
 			add tmp0, sp, #vecy0
 			add tmp1, sp, #vecSfxTimes16
-			vmul.u16 vec6, q0, q3
-			vmovl.u8 q1, vecNeighb2y
-			vmul.u16 vec7, q1, q3
 			vld1.u8 {q3}, [tmp0 : 128]! @ q3 = vecy0
-			vmovl.u8 q0, vecNeighb1y
-			vmovl.u8 q1, vecNeighb3y
-			vmla.u16 vec6, q0, q2
-			vld1.u8 {q0}, [tmp0 : 128] @ q0 = vecy1	
-			vmla.u16 vec7, q1, q2			
-			
+			vld1.u8 {q0}, [tmp0 : 128] @ q0 = vecy1
 
 			@@ compute C = (y1 * A) >> 16 @@			
 			vmull.u16 q1, q0x, vec4x
