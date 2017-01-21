@@ -25,6 +25,9 @@ static const std::string& kProgramVertexData =
 "	}";
 
 static const std::string& kProgramFragmentData =
+#	if defined(HAVE_OPENGLES)
+"	precision mediump float;"
+#	endif
 "	varying vec4 colorVarying;"
 "	void main() {"
 "		gl_FragColor = colorVarying;"

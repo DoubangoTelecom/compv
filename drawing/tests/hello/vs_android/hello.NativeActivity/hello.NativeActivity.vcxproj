@@ -177,7 +177,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
-      <AdditionalIncludeDirectories>../../../../../api/include;../../../../../base/include;../../../../../gl/include;../../../../../drawing/include;../../../../../camera/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../../api/include;../../../../../base/include;../../../../../gl/include;../../../../../drawing/include;../../../../../camera/include;../../../../../core/include;../../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -280,8 +280,14 @@
     <ProjectReference Include="..\..\..\..\..\camera\vs_android\CompVCamera.vcxproj">
       <Project>{64ac0599-632d-483e-aed0-d355bc22c805}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\core\vs_android\CompVCore.vcxproj">
+      <Project>{bf9edb99-ba3a-4083-a6b5-d52067e235a4}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\..\..\gl\vs_android\CompVGL.vcxproj">
       <Project>{c9a86a91-d297-43f4-b31e-be1a833391bb}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\gpu\vs_android\CompVGPU.vcxproj">
+      <Project>{766db7bd-6b40-44bc-be41-bf78111a8ac5}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\vs_android\CompVDrawing.vcxproj">
       <Project>{68935871-4451-42ba-b9c0-c547ab282f0c}</Project>

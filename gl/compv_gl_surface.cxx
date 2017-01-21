@@ -13,7 +13,7 @@
 
 static const std::string& kProgramVertexData =
 #	if defined(HAVE_OPENGLES)
-    "	precision mediump float;"
+	"precision mediump float;"
 #	endif
     "	attribute vec4 position;"
     "	attribute vec2 texCoord;"
@@ -25,6 +25,9 @@ static const std::string& kProgramVertexData =
     "	}";
 
 static const std::string& kProgramFragData =
+#	if defined(HAVE_OPENGLES)
+	"precision mediump float;"
+#	endif
     "	varying vec2 texCoordVarying;"
     "	uniform sampler2D SamplerRGBA;"
     "	void main() {"

@@ -164,8 +164,8 @@ static void* WorkerThread(void* arg)
 	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1282, 720, 1282, hello_path_from_file("equirectangular_1282x720_gray.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
 	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_UYVY422, 1282, 720, 1282, hello_path_from_file("equirectangular_1282x720_uyvy422.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
 	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_YUYV422, 1282, 720, 1282, hello_path_from_file("equirectangular_1282x720_yuyv422.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image)); // DirectShow / MediaFoundation
-	COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_NV12, 1282, 720, 1282, hello_path_from_file("equirectangular_1282x720_nv12.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
-	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_NV21, 1282, 720, 1282, hello_path_from_file("equirectangular_1282x720_nv21.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_NV12, 1282, 720, 1282, hello_path_from_file("equirectangular_1282x720_nv12.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
+	COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_NV21, 1282, 720, 1282, hello_path_from_file("equirectangular_1282x720_nv21.yuv", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
 	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_RGBA32, 1282, 720, 1282, hello_path_from_file("equirectangular_1282x720_rgba.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
 	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_ARGB32, 1282, 720, 1282, hello_path_from_file("equirectangular_1282x720_argb.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
 	//COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_BGRA32, 1282, 720, 1282, hello_path_from_file("equirectangular_1282x720_bgra.rgb", "C:/Projects/GitHub/data/colorspace").c_str(), &image));
@@ -180,17 +180,17 @@ static void* WorkerThread(void* arg)
 
 
 	COMPV_CHECK_CODE_BAIL(err = window->addSingleLayerSurface(&singleSurfaceLayer));
-	timeStart = CompVTime::getNowMills();
+	timeStart = CompVTime::nowMillis();
 	while (CompVDrawing::isLoopRunning()) {
 		COMPV_CHECK_CODE_BAIL(err = window->beginDraw());
 		COMPV_CHECK_CODE_BAIL(err = singleSurfaceLayer->surface()->drawImage(image));
 		
 		if (count == 1000) {
-			uint64_t duration = (CompVTime::getNowMills() - timeStart);
+			uint64_t duration = (CompVTime::nowMillis() - timeStart);
 			float fps = 1000.f / ((static_cast<float>(duration)) / 1000.f);
 			COMPV_DEBUG_INFO("Elapsed time: %llu, fps=%f", duration, fps);
 			count = 0;
-			timeStart = CompVTime::getNowMills();
+			timeStart = CompVTime::nowMillis();
 		}
 		++count;
 

@@ -265,7 +265,15 @@ public class CompVCamera {
     }
 
     public void setCaps(CompVCameraCaps caps) { mCapsPref = caps; }
-    public void setCaps(int width, int height, int fps, int format) { mCapsPref = new CompVCameraCaps(width, height, fps, format); }
+    public void setCaps(int width, int height, int fps, int format) {
+        // Some Android devices (at least my Galaxy Tab A6 10.1) accept YUY2 format and falsely advertise
+        // supporting it (getNegCaps) but produce NV21 frames.
+        if (format == PIXEL_FORMAT_YUY2) {
+            Log.d(TAG, "Ignoring YUY2 format: saving your soul");
+            format = PIXEL_FORMAT_NV21;
+        }
+        mCapsPref = new CompVCameraCaps(width, height, fps, format);
+    }
     public CompVCameraCaps getCapsNeg() { return mCapsNeg; }
     public CompVCameraCaps getCapsPref() { return mCapsPref; }
 

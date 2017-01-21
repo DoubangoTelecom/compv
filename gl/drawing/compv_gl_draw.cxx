@@ -76,7 +76,7 @@ COMPV_ERROR_CODE CompVGLDraw::unbind() /*Overrides(CompVBind)*/
 	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::currentContext(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT, "No OpenGL context");
 	COMPV_CHECK_EXP_RETURN(!m_bInitialized, COMPV_ERROR_CODE_E_INVALID_STATE, "Not initialized");
 
-	COMPV_ERROR_CODE err;
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
 	if (CompVGLInfo::extensions::vertex_array_object()) {
 		COMPV_glBindVertexArray(kCompVGLNameInvalid);
@@ -87,7 +87,9 @@ COMPV_ERROR_CODE CompVGLDraw::unbind() /*Overrides(CompVBind)*/
 		COMPV_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, kCompVGLNameInvalid);
 	}
 
-	COMPV_CHECK_CODE_NOP(err = m_ptrProgram->unbind());
+	if (m_ptrProgram) {
+		COMPV_CHECK_CODE_NOP(err = m_ptrProgram->unbind());
+	}
 
 	return err;
 }
@@ -149,6 +151,7 @@ COMPV_ERROR_CODE CompVGLDraw::deInit()
 	m_ptrMVP = NULL;
 
 bail:
+	m_bInitialized = false;
 	return err;
 }
 
