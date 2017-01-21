@@ -15,19 +15,17 @@
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> const uint8_t* inPtr
-@ arg(1) -> compv_uscalar_t inWidth
-@ arg(2) -> compv_uscalar_t inHeight
-@ arg(3) -> compv_uscalar_t inStride,
-@ arg(4) -> COMPV_ALIGNED(NEON) uint8_t* outPtr
-@ arg(5) -> compv_uscalar_t outWidth
-@ arg(6) -> compv_uscalar_t outYStart
-@ arg(7) -> compv_uscalar_t outYEnd
-@ arg(8) -> COMPV_ALIGNED(NEON) compv_uscalar_t outStride
-@ arg(9) -> compv_uscalar_t sf_x
-@ arg(10) -> compv_uscalar_t sf_y
+@ arg(1) -> compv_uscalar_t inStride
+@ arg(2) -> COMPV_ALIGNED(NEON) uint8_t* outPtr
+@ arg(3) -> compv_uscalar_t outWidth
+@ arg(4) -> compv_uscalar_t outYStart
+@ arg(5) -> compv_uscalar_t outYEnd
+@ arg(6) -> COMPV_ALIGNED(NEON) compv_uscalar_t outStride
+@ arg(7) -> compv_uscalar_t sf_x
+@ arg(8) -> compv_uscalar_t sf_y
 COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 11
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 9
 	COMPV_GAS_SAVE_NEON_REGS
 	COMPV_GAS_ALIGN_STACK 16, r11
 	COMPV_GAS_MEMALLOC (7*16)
@@ -42,18 +40,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	.equ vecSFX3                 , vecSFX2 + 16
 
 	@@ Declare input arguments @@
-	ldmia_args r0-r10
+	ldmia_args r0-r8
 	inPtr .req r0 
-	inWidth .req r1 
-	inHeight .req r2 
-	inStride .req r3
-	outPtr .req r4
-	outWidth .req r5
-	outYStart .req r6
-	outYEnd .req r7
-	outStride .req r8
-	sf_x .req r9
-	sf_y .req r10
+	inStride .req r1
+	outPtr .req r2
+	outWidth .req r3
+	outYStart .req r4
+	outYEnd .req r5
+	outStride .req r6
+	sf_x .req r7
+	sf_y .req r8
 
 	@@ Declare local vectors @@
 	vecNeighb0 .req q4
@@ -89,54 +85,53 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 
 	@@ Declare input arguments indexes @@
 	.equ argi_inPtr, 0
-	.equ argi_outYEnd, 7
-	.equ argi_outStride, 8
-	.equ argi_sf_y, 10
+	.equ argi_outYEnd, 5
+	.equ argi_outStride, 6
+	.equ argi_sf_y, 8
 
 	.unreq inPtr    @ inPtr will be loaded on demand, we can use r0 as temp reg
-	.unreq inWidth  @ inWidth is useless, we can use r1 as temp reg
-	.unreq inHeight @ inHeight is useless, we can use r2 as temp reg
-	.unreq outStride @ inStride will be loaded on demand, we can use r8 as temp reg
-	.unreq sf_y      @sf_y will be loaded on demand, we can use r10 as temp reg
-	.unreq outYEnd  @outYEnd will be loaded on demand, we can use r7 as temp reg
+	.unreq outYEnd  @outYEnd will be loaded on demand, we can use r5 as temp reg
+	.unreq outStride @ outStride will be loaded on demand, we can use r6 as temp reg
+	.unreq sf_y      @sf_y will be loaded on demand, we can use r8 as temp reg
 
-	@@ r0, r10 r11, r1, r2, r8, r7 can be used as temp regs @@
+	@@ r0, r5, r6, r8, r9, r10, r11 can be used as temp regs @@
 
 	@@ compute vecSfxTimes16 @@
 	mov r11, sf_x, LSL #4
-	add r2, sp, #vecSfxTimes16
+	add r10, sp, #vecSfxTimes16
 	vdup.u32 q0, r11
-	vst1.u32 {q0}, [r2 :128]
+	vst1.u32 {q0}, [r10 :128]
 
 	@@ compute vecSFX0, vecSFX1, vecSFX2 and vecSFX3 @@
 	mov r11, #0 
-	mov r2, sf_x, LSL #1
+	mov r10, sf_x, LSL #1
 	vmov.u32 q0x[0], r11 @ sf_x * 0
-	add r11, r2, sf_x
+	add r11, r10, sf_x
 	vmov.u32 q0x[1], sf_x @ sf_x * 1
-	vmov.u32 q0y[0], r2   @ sf_x * 2
-	add r2, sp, #vecSFX0
+	vmov.u32 q0y[0], r10   @ sf_x * 2
+	add r10, sp, #vecSFX0
 	vmov.u32 q0y[1], r11  @ sfx * 3
 	mov r11, sf_x, LSL #2
-	vst1.u32 {q0}, [r2 :128]! @ post-increment -> after write r2 will contain vecSFX1
+	vst1.u32 {q0}, [r10 :128]! @ post-increment -> after write r10 will contain vecSFX1
 	vdup.u32 q4, r11 @ q4 = vecSfxTimes4
 	vadd.u32 q1, q0, q4 @ q1 = vecSFX1
 	vadd.u32 q2, q1, q4 @ q2 = vecSFX2
 	vadd.u32 q3, q2, q4 @ q2 = vecSFX2
-	vst1.u32 {q1}, [r2 :128]! @ post-increment -> after write r2 will contain vecSFX2
-	vst1.u32 {q2}, [r2 :128]! @ post-increment -> after write r2 will contain vecSFX3
-	vst1.u32 {q3}, [r2 :128]
+	vst1.u32 {q1}, [r10 :128]! @ post-increment -> after write r10 will contain vecSFX2
+	vst1.u32 {q2}, [r10 :128]! @ post-increment -> after write r10 will contain vecSFX3
+	vst1.u32 {q3}, [r10 :128]
+	.unreq sf_x
 
-	@@ sf_x (r9) no longer needed @@
-	@@ r0, r1, r2, r8, r9, r10, r11, r7 can be used as temp regs @@
+	@@ sf_x (r7) no longer needed @@
+	@@ r0, r5, r6, r7, r8, r9, r10, r11 can be used as temp regs @@
 	i .req r0
-	inPtr_ .req r1
-	t0 .req r10
-	t1 .req r2
-	t2 .req r9
-	t3 .req r11
-	t4 .req r8
-	t5 .req r7
+	inPtr_ .req r5
+	t0 .req r6
+	t1 .req r7
+	t2 .req r8
+	t3 .req r9
+	t4 .req r10
+	t5 .req r11
 
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ do
@@ -296,7 +291,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 			vuzp.u8 vecNeighb2x, vecNeighb2y  @ 2,2,2,2,3,3,3,3
 			vuzp.u8 vecNeighb3x, vecNeighb3y  @ 2,2,2,2,3,3,3,3
 			@ after swapping heads with tails we''ll have
-			@  vecNeighb0 = 0,0,0,...1 / vecNeighb1 = 1,1,1,...1 guess for vecNeighb2 and vecNeighb3 :)
+			@  vecNeighb0 = 0,0,0,...0 / vecNeighb1 = 1,1,1,...1 guess for vecNeighb2 and vecNeighb3 :)
 			vswp vecNeighb1x, vecNeighb0y
 			vswp vecNeighb3x, vecNeighb2y
 
@@ -403,7 +398,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	.unreq outWidth
 	.unreq outYStart
 	.unreq inStride
-	.unreq sf_x
 
 	.unreq vecNeighb0
 	.unreq vecNeighb1
@@ -444,7 +438,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	COMPV_GAS_MEMFREE (7*16)
 	COMPV_GAS_UNALIGN_STACK r11
 	COMPV_GAS_RESTORE_NEON_REGS
-	COMPV_GAS_UNSHADOW_ARGS 11
+	COMPV_GAS_UNSHADOW_ARGS 9
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 	

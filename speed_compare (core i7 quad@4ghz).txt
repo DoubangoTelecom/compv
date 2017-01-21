@@ -33,4 +33,4 @@ We're using #8 threads and with more threads (e.g. #16) we can go as high as 500
 === Image scaling from (1282, 720) to (1064, 597), (#10000 times) ===
 CompV: 1474.ms(mt,avx2), 1866.ms(mt,sse41), 2645.ms(mt,c++), 5435.ms(st,avx2), 6708.ms(st,sse41), 9470.ms(st,c++)
 OpenCV: 4148.ms(full optiz)
-Remarque: OpenCV uses SSE2 and multithreading and we're faster even without using sse41.
+Remarque: OpenCV uses SSE2 and multithreading and we're faster even with plain c++ (without sse or avx).

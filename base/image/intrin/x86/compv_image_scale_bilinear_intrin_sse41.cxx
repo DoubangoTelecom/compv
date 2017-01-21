@@ -53,7 +53,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 void CompVImageScaleBilinear_Intrin_SSE41(
-	const uint8_t* inPtr, compv_uscalar_t inWidth, compv_uscalar_t inHeight, compv_uscalar_t inStride,
+	const uint8_t* inPtr, compv_uscalar_t inStride,
 	COMPV_ALIGNED(SSE) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(SSE) compv_uscalar_t outStride,
 	compv_uscalar_t sf_x, compv_uscalar_t sf_y)
 {

@@ -20,21 +20,19 @@ section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> const uint8_t* inPtr
-; arg(1) -> compv_uscalar_t inWidth
-; arg(2) -> compv_uscalar_t inHeight
-; arg(3) -> compv_uscalar_t inStride,
-; arg(4) -> COMPV_ALIGNED(AVX) uint8_t* outPtr
-; arg(5) -> compv_uscalar_t outWidth
-; arg(6) -> compv_uscalar_t outYStart
-; arg(7) -> compv_uscalar_t outYEnd
-; arg(8) -> COMPV_ALIGNED(AVX) compv_uscalar_t outStride
-; arg(9) -> compv_uscalar_t sf_x
-; arg(10) -> compv_uscalar_t sf_y
+; arg(1) -> compv_uscalar_t inStride,
+; arg(2) -> COMPV_ALIGNED(SSE) uint8_t* outPtr
+; arg(3) -> compv_uscalar_t outWidth
+; arg(4) -> compv_uscalar_t outYStart
+; arg(5) -> compv_uscalar_t outYEnd
+; arg(6) -> COMPV_ALIGNED(SSE) compv_uscalar_t outStride
+; arg(7) -> compv_uscalar_t sf_x
+; arg(8) -> compv_uscalar_t sf_y
 sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 	vzeroupper
 	push rbp
 	mov rbp, rsp
-	COMPV_YASM_SHADOW_ARGS_TO_STACK 11
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 9
 	COMPV_YASM_SAVE_YMM 15
 	push rsi
 	push rdi
@@ -75,16 +73,14 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 	%define vecDeinterleave         sym(kShuffleEpi8_Deinterleave_i32)
 
 	%define arg_inPtr               arg(0)
-	%define arg_inWidth             arg(1)
-	%define arg_inHeight            arg(2)
-	%define arg_inStride            arg(3)
-	%define arg_outPtr              arg(4)
-	%define arg_outWidth            arg(5)
-	%define arg_outYStart           arg(6)
-	%define arg_outYEnd             arg(7)
-	%define arg_outStride           arg(8)
-	%define arg_sf_x                arg(9)
-	%define arg_sf_y                arg(10)
+	%define arg_inStride            arg(1)
+	%define arg_outPtr              arg(2)
+	%define arg_outWidth            arg(3)
+	%define arg_outYStart           arg(4)
+	%define arg_outYEnd             arg(5)
+	%define arg_outStride           arg(6)
+	%define arg_sf_x                arg(7)
+	%define arg_sf_y                arg(8)
 
 	%define outWidth                r8
 	%define outYStart               r9
@@ -329,8 +325,6 @@ sym(CompVImageScaleBilinear_Asm_X64_AVX2)
 	%undef vecDeinterleave
 
 	%undef arg_inPtr
-	%undef arg_inWidth
-	%undef arg_inHeight
 	%undef arg_inStride
 	%undef arg_outPtr
 	%undef arg_outWidth

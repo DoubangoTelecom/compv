@@ -13,11 +13,7 @@ CompVDebugFuncPtr CompVDebugMgr::s_pfInfo = NULL;
 CompVDebugFuncPtr CompVDebugMgr::s_pfWarn = NULL;
 CompVDebugFuncPtr CompVDebugMgr::s_pfError = NULL;
 CompVDebugFuncPtr CompVDebugMgr::s_pfFatal = NULL;
-#if defined(DEBUG) || defined(_DEBUG) || !defined(NDEBUG)
 COMPV_DEBUG_LEVEL CompVDebugMgr::s_eLevel = COMPV_DEBUG_LEVEL_INFO;
-#else
-COMPV_DEBUG_LEVEL CompVDebugMgr::s_eLevel = COMPV_DEBUG_LEVEL_WARN;
-#endif
 
 CompVDebugMgr::CompVDebugMgr()
 {
