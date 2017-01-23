@@ -18,6 +18,7 @@ Debug
 *.ipch
 *.opendb
 *.db
+*.o
 *.iws
 .idea/tasks.xml
 .idea/vcs.xml
