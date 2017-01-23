@@ -37,7 +37,7 @@ void CompVImageScaleBilinear_Intrin_NEON(
 	const uint8_t* inPtr_;
 	uint32x4_t vec0, vec1, vec2, vec3, vecX0, vecX1, vecX2, vecX3;
 	uint16x8_t vecy0, vecy1, vec4, vec5, vec6, vec7;
-	uint8x16_t vecNeighb0, vecNeighb1, vecNeighb2, vecNeighb3;
+    uint8x16_t vecNeighb0 = {}, vecNeighb1= {}, vecNeighb2 = {}, vecNeighb3 = {};
 	uint32_t sf_x_ = static_cast<uint32_t>(sf_x);
 	const uint32x4_t vecSfxTimes16 = vdupq_n_u32(sf_x_ << 4);
 	const uint32x4_t vecSfxTimes4 = vdupq_n_u32(sf_x_ << 2);
@@ -67,11 +67,13 @@ void CompVImageScaleBilinear_Intrin_NEON(
 			vec2 = vshrq_n_u32(vecX2, 8);
 			vec3 = vshrq_n_u32(vecX3, 8);
 
+
 			/* write memNeighbs */
 			_neon_bilinear_set_neighbs(vec0, vecNeighb0, vecNeighb2, 0, 1);
 			_neon_bilinear_set_neighbs(vec1, vecNeighb0, vecNeighb2, 2, 3);
 			_neon_bilinear_set_neighbs(vec2, vecNeighb1, vecNeighb3, 0, 1);
 			_neon_bilinear_set_neighbs(vec3, vecNeighb1, vecNeighb3, 2, 3);
+            
 
 			/* Deinterleave neighbs	*/
 			// Assembler code uses vuzp and vswp and the result is very faaast. Same code in intrinsic is very slooow (GCC 4.1). So, we keep using

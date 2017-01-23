@@ -108,9 +108,8 @@ CompVSemaphore::~CompVSemaphore()
 
 /**
 * Increments a semaphore.
-* @param handle The semaphore to increment.
 * @retval Zero if succeed and otherwise the function returns -1 and sets errno to indicate the error.
-* @sa @ref decrement.
+* @sa Decrement: @ref decrement.
 */
 COMPV_ERROR_CODE CompVSemaphore::increment()
 {
@@ -132,9 +131,8 @@ COMPV_ERROR_CODE CompVSemaphore::increment()
 
 /**
 * Decrements a semaphore.
-* @param handle The semaphore to decrement.
 * @retval Zero if succeed and otherwise the function returns -1 and sets errno to indicate the error.
-* @sa @ref increment.
+* @sa Increment: @ref increment.
 */
 COMPV_ERROR_CODE CompVSemaphore::decrement()
 {

@@ -1,17 +1,18 @@
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   @
-@ File author: Mamadou DIOP (Doubango Telecom, France).                 @
-@ License: GPLv3. For commercial license please contact us.             @
-@ Source code: https://github.com/DoubangoTelecom/compv                 @
-@ WebSite: http://compv.org                                             @
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#########################################################################
+# Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   #
+# File author: Mamadou DIOP (Doubango Telecom, France).                 #
+# License: GPLv3. For commercial license please contact us.             #
+# Source code: https://github.com/DoubangoTelecom/compv                 #
+# WebSite: http://compv.org                                             #
+#########################################################################
+#if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm.S"
 
-.section .data
+.data
 
 .extern kShuffleEpi8_Deinterleave_i32
  
-.section .text
+.text
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> const uint8_t* inPtr
@@ -65,22 +66,22 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	vec6 .req q14
 	vec7 .req q15
 
-	vecNeighb0x .dn q4x
-	vecNeighb0y .dn q4y
-	vecNeighb1x .dn q5x
-	vecNeighb1y .dn q5y
-	vecNeighb2x .dn q6x
-	vecNeighb2y .dn q6y
-	vecNeighb3x .dn q7x
-	vecNeighb3y .dn q7y	
-	vec4x .dn q12x	
-	vec4y .dn q12y
-	vec5x .dn q13x	
-	vec5y .dn q13y
-	vec6x .dn q14x	
-	vec6y .dn q14y
-	vec7x .dn q15x	
-	vec7y .dn q15y 
+	vecNeighb0x .req q4x
+	vecNeighb0y .req q4y
+	vecNeighb1x .req q5x
+	vecNeighb1y .req q5y
+	vecNeighb2x .req q6x
+	vecNeighb2y .req q6y
+	vecNeighb3x .req q7x
+	vecNeighb3y .req q7y
+	vec4x .req q12x	
+	vec4y .req q12y
+	vec5x .req q13x
+	vec5y .req q13y
+	vec6x .req q14x
+	vec6y .req q14y
+	vec7x .req q15x
+	vec7y .req q15y
  
 
 	@@ Declare input arguments indexes @@
@@ -441,4 +442,5 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	COMPV_GAS_UNSHADOW_ARGS 9
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
-	
+
+#endif /* defined(__arm__) && !defined(__aarch64__) */

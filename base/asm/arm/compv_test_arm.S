@@ -1,20 +1,24 @@
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   @
-@ File author: Mamadou DIOP (Doubango Telecom, France).                 @
-@ License: GPLv3. For commercial license please contact us.             @
-@ Source code: https://github.com/DoubangoTelecom/compv                 @
-@ WebSite: http://compv.org                                             @
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#########################################################################
+# Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   #
+# File author: Mamadou DIOP (Doubango Telecom, France).                 #
+# License: GPLv3. For commercial license please contact us.             #
+# Source code: https://github.com/DoubangoTelecom/compv                 #
+# WebSite: http://compv.org                                             #
+#########################################################################
+#if defined(__arm__)
+
 .include "compv_common_arm.S"
 
-.section .data
+.data
 
 .extern k16_i16
 
-.section .text
+.text
 
 @ BreakPoint BKPT
-  
+
+#if !defined(__aarch64__)
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ r0 -> arg0
 @ r1 -> arg1
@@ -70,3 +74,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVTest_Asm_NEON32
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
+#endif /* !defined(__aarch64__) */
+
+#endif /* defined(__arm__) */

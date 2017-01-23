@@ -107,7 +107,7 @@
 #endif
 // ARCH: ARM64
 #if defined(__aarch64__)
-#	defined COMPV_ARCH_ARM64				1
+#	define COMPV_ARCH_ARM64				1
 #endif
 // ARCH: Blackfin
 #if defined(__bfin) || defined(__BFIN__)

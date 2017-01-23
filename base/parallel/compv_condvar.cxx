@@ -92,10 +92,9 @@ CompVCondvar::~CompVCondvar()
 
 /**
 * Block the current thread until the condition is opened or until @a ms milliseconds have passed.
-* @param handle condwait handle created using @ref tsk_condwait_create.
-* @param ms The number of milliseconds to wait for a given condition. Default value is zero which means forever.
+* @param millis The number of milliseconds to wait for a given condition. Default value is zero which means forever.
 * @retval Zero if succeed and non-zero error code otherwise.
-* @sa @ref tsk_condwait_wait.
+* @sa Wait: @ref tsk_condwait_wait.
 */
 COMPV_ERROR_CODE CompVCondvar::wait(uint64_t millis /*= 0*/)
 {
@@ -135,9 +134,8 @@ COMPV_ERROR_CODE CompVCondvar::signal()
 
 /**
 * Wakes up all threads that are currently waiting for the condition.
-* @param handle CondWait handle created using @ref tsk_condwait_create.
 * @retval Zero if succeed and non-zero otherwise.
-* @sa @ref tsk_condwait_signal.
+* @sa Signal: @ref tsk_condwait_signal.
 */
 COMPV_ERROR_CODE CompVCondvar::broadcast()
 {

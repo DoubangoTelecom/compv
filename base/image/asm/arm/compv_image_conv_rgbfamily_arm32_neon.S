@@ -1,17 +1,18 @@
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   @
-@ File author: Mamadou DIOP (Doubango Telecom, France).                 @
-@ License: GPLv3. For commercial license please contact us.             @
-@ Source code: https://github.com/DoubangoTelecom/compv                 @
-@ WebSite: http://compv.org                                             @
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#########################################################################
+# Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   #
+# File author: Mamadou DIOP (Doubango Telecom, France).                 #
+# License: GPLv3. For commercial license please contact us.             #
+# Source code: https://github.com/DoubangoTelecom/compv                 #
+# WebSite: http://compv.org                                             #
+#########################################################################
+#if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm.S"
 
-.section .data
+.data
 
 .extern k16_i16, k128_i16
  
-.section .text
+.text
 
 .equ familyRGB24, 0
 .equ familyRGB32, 1
@@ -639,3 +640,5 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565lefamily_to_uv_planar_11_Asm_NEON
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_uv_planar_11_Asm_NEON32
 	CompVImageConvRgb565family_to_uv_planar_11_Macro_NEON32 endiannessBIG
+
+#endif /* defined(__arm__) && !defined(__aarch64__) */

@@ -31,6 +31,12 @@ using namespace ThreadEmulation;
 #	include <sys/syscall.h>
 #endif
 
+#if COMPV_OS_WINDOWS
+#   define THREAD_HANDLE_TYPE HANDLE
+#else
+#   define THREAD_HANDLE_TYPE pthread_t*
+#endif
+
 #if COMPV_OS_ANDROID && __ANDROID_API__ < 20
 // https://android.googlesource.com/platform/development/+/73a5a3b/ndk/platforms/android-20/include/sched.h
 #define CPU_SETSIZE 1024
@@ -58,17 +64,17 @@ static compv_thread_id_t CompVWindowsGetThreadId(HANDLE handle)
 		static DWORD(WINAPI *GetThreadIdFunc)(_In_ HANDLE Thread) = NULL;
 		if (!bTriedToLoadKernel32) {
 			// TODO(dmi): If another part of the code loads 'Kernel32.dll' then, make sure to reuse the HMODULE.
-			COMPV_DEBUG_INFO("Loading Kernel32.dll to extract Kernel32.dll");
+			COMPV_DEBUG_INFO_EX(kModuleNameThread, "Loading Kernel32.dll to extract Kernel32.dll");
 			bTriedToLoadKernel32 = true;
 			hKernel32 = LoadLibrary(TEXT("Kernel32.dll"));
 			if (hKernel32) {
 				GetThreadIdFunc = reinterpret_cast<DWORD(WINAPI *)(_In_ HANDLE Thread)>(GetProcAddress(hKernel32, "GetThreadId"));
 				if (!GetThreadIdFunc) {
-					COMPV_DEBUG_ERROR("Failed to find GetThreadId from Kernel32.dll");
+					COMPV_DEBUG_ERROR_EX(kModuleNameThread, "Failed to find GetThreadId from Kernel32.dll");
 				}
 			}
 			else {
-				COMPV_DEBUG_ERROR("Failed to load Kernel32.dll");
+				COMPV_DEBUG_ERROR_EX(kModuleNameThread, "Failed to load Kernel32.dll");
 			}
 		}
 		if (GetThreadIdFunc) {
@@ -76,7 +82,7 @@ static compv_thread_id_t CompVWindowsGetThreadId(HANDLE handle)
 		}
 	}
 	
-	COMPV_DEBUG_INFO("GetThreadId not found, using dummy implementation");
+	COMPV_DEBUG_INFO_EX(kModuleNameThread, "GetThreadId not found, using dummy implementation");
 	return reinterpret_cast<compv_thread_id_t>(handle); // we just want a unique Id
 	
 #endif
@@ -110,7 +116,7 @@ CompVThread::CompVThread(void *(COMPV_STDCALL *start) (void *), void *arg_ /*= N
 CompVThread::~CompVThread()
 {
     join();
-    COMPV_DEBUG_INFO("***Thread with id=%ld destroyed***", (long)m_Id);
+    COMPV_DEBUG_INFO_EX(kModuleNameThread, "***Thread with id=%p destroyed***", m_Id);
 }
 
 void CompVThread::sleep(uint64_t ms)
@@ -131,8 +137,8 @@ COMPV_ERROR_CODE CompVThread::setPriority(int32_t priority)
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
     if (!m_pHandle) {
-        COMPV_DEBUG_ERROR("Invalid parameter");
-        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+        COMPV_DEBUG_ERROR_EX(kModuleNameThread, "Invalid parameter");
+        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_INVALID_STATE, "Wrapped handle is null");
     }
 #if COMPV_OS_WINDOWS
     {
@@ -142,7 +148,7 @@ COMPV_ERROR_CODE CompVThread::setPriority(int32_t priority)
 #if COMPV_OS_WINDOWS_RT
         // It's not possible to set priority on WP8 when thread is not in suspended state -> do nothing and don't bother us
         if (COMPV_ERROR_CODE_IS_NOK(err)) {
-            COMPV_DEBUG_INFO("SetThreadPriority() failed but nothing to worry about");
+            COMPV_DEBUG_INFO_EX(kModuleNameThread, "SetThreadPriority() failed but nothing to worry about");
             err = COMPV_ERROR_CODE_S_OK;
         }
 #endif
@@ -154,8 +160,8 @@ COMPV_ERROR_CODE CompVThread::setPriority(int32_t priority)
     memset(&sp, 0, sizeof(struct sched_param));
     sp.sched_priority = priority;
     if ((ret = pthread_setschedparam(*((pthread_t*)m_pHandle), SCHED_OTHER, &sp))) {
-        COMPV_DEBUG_ERROR("Failed to change priority to %d with error code=%d", priority, ret);
-        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SYSTEM);
+        COMPV_DEBUG_ERROR_EX(kModuleNameThread, "Failed to change priority to %d with error code=%d", priority, ret);
+        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_PTHREAD, "pthread_setschedparam failed");
     }
 #endif
 
@@ -163,7 +169,7 @@ bail:
     return err;
 }
 
-compv_thread_id_t CompVThread::getId()
+compv_thread_id_t CompVThread::getId() const
 {
     return m_Id;
 }
@@ -173,15 +179,15 @@ COMPV_ERROR_CODE CompVThread::setAffinity(compv_core_id_t coreId)
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
     if (!m_pHandle || coreId < 0 || coreId > CompVCpu::coresCount()) {
-        COMPV_DEBUG_ERROR("Invalid parameter");
-        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+        COMPV_DEBUG_ERROR_EX(kModuleNameThread, "Invalid parameter");
+        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_INVALID_PARAMETER, "CoreId parameter of of bound");
     }
 #if COMPV_OS_WINDOWS
     {
         const DWORD_PTR mask = (((DWORD_PTR)1) << coreId);
-        if (!SetThreadAffinityMask((HANDLE)m_pHandle, mask)) {
-            COMPV_DEBUG_ERROR("SetThreadAffinityMask() failed");
-            COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SYSTEM);
+        if (!SetThreadAffinityMask(reinterpret_cast<HANDLE>(m_pHandle), mask)) {
+            COMPV_DEBUG_ERROR_EX(kModuleNameThread, "SetThreadAffinityMask() failed");
+            COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SYSTEM, "SetThreadAffinityMask failed");
         }
     }
 #elif COMPV_OS_ANDROID
@@ -199,7 +205,7 @@ COMPV_ERROR_CODE CompVThread::setAffinity(compv_core_id_t coreId)
     {
         /* /usr/include/mach/thread_policy.h: thread_policy_set and mach_thread_self() */
         // TODO(dmi): not implemented
-        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
+        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "setAffinity not implemented on Apple's devices");
     }
 #else
     {
@@ -207,7 +213,7 @@ COMPV_ERROR_CODE CompVThread::setAffinity(compv_core_id_t coreId)
         CPU_ZERO(&cpuset);
         CPU_SET(coreId, &cpuset);
         if (pthread_setaffinity_np((pthread_t*)m_pHandle, sizeof(cpu_set_t), &cpuset) != 0) {
-            COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SYSTEM);
+            COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_PTHREAD, "pthread_setaffinity_np failed");
         }
     }
 #endif
@@ -223,38 +229,36 @@ COMPV_ERROR_CODE CompVThread::join()
     if (!m_pHandle) {
         return COMPV_ERROR_CODE_S_OK;
     }
-
-    COMPV_DEBUG_INFO("Thread with id=%ld will join", static_cast<long>(m_Id)); // debug message to track deadlocks
+    COMPV_DEBUG_INFO_EX(kModuleNameThread, "Thread with id=%p will join", m_Id); // debug message to track deadlocks
 
 #if COMPV_OS_WINDOWS
 #	if COMPV_OS_WINDOWS_RT
     if (WaitForSingleObjectEx((HANDLE)m_pHandle, INFINITE, TRUE) == WAIT_FAILED) {
-        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SYSTEM);
+        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SYSTEM, "WaitForSingleObjectEx failed");
     }
 #	else
-    if (WaitForSingleObject((HANDLE)m_pHandle, INFINITE) == WAIT_FAILED) {
-        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SYSTEM);
+    if (WaitForSingleObject(reinterpret_cast<HANDLE>(m_pHandle), INFINITE) == WAIT_FAILED) {
+        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SYSTEM, "WaitForSingleObject failed");
     }
 #endif
-    CloseHandle((HANDLE)m_pHandle);
+    CloseHandle(reinterpret_cast<HANDLE>(m_pHandle));
     m_pHandle = NULL;
 #else
-    if ((pthread_join(*((pthread_t*)m_pHandle), 0)) != 0) {
-        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SYSTEM);
+    if ((pthread_join(*(reinterpret_cast<pthread_t*>(m_pHandle)), 0)) != 0) {
+        COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_PTHREAD, "pthread_join failed");
     }
-    CompVMem::free((void**)&m_pHandle);
+    CompVMem::free(reinterpret_cast<void**>(&m_pHandle));
 #endif
 
 bail:
-    COMPV_DEBUG_INFO("Thread with id=%ld joined", static_cast<long>(m_Id));
+    COMPV_DEBUG_INFO("Thread with id=%p will join", m_Id);
     return err;
 }
 
 COMPV_ERROR_CODE CompVThread::setPriorityCurrent(int32_t priority)
 {
-    COMPV_DEBUG_ERROR("Not implemented");
-    COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
-    return COMPV_ERROR_CODE_S_OK;
+    COMPV_DEBUG_ERROR_EX(kModuleNameThread, "setPriorityCurrent not implemented");
+    return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 }
 
 compv_thread_id_t CompVThread::getIdCurrent()

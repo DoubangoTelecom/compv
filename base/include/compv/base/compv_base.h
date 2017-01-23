@@ -11,7 +11,9 @@
 #include "compv/base/compv_obj.h"
 
 #include <string>
-#include <sstream>
+#if COMPV_OS_ANDROID
+#include <sstream> /* std::ostringstream */
+#endif
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -46,9 +48,13 @@ public:
 #endif
 	template <typename T>
 	static std::string to_string(T value) {
+#if COMPV_OS_ANDROID
 		std::ostringstream os;
 		os << value;
 		return os.str();
+#else
+        std::to_string(value);
+#endif
 	}
 
 private:

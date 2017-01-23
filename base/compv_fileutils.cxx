@@ -136,7 +136,7 @@ size_t CompVFileUtils::getSize(const char* pcPath)
     if (stat(pcPath, &st_) != 0) {
         return 0;
     }
-    return st_.st_size;
+    return static_cast<size_t>(st_.st_size);
 }
 
 /*

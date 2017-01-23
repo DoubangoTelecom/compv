@@ -1,17 +1,18 @@
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   @
-@ File author: Mamadou DIOP (Doubango Telecom, France).                 @
-@ License: GPLv3. For commercial license please contact us.             @
-@ Source code: https://github.com/DoubangoTelecom/compv                 @
-@ WebSite: http://compv.org                                             @
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#########################################################################
+# Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   #
+# File author: Mamadou DIOP (Doubango Telecom, France).                 #
+# License: GPLv3. For commercial license please contact us.             #
+# Source code: https://github.com/DoubangoTelecom/compv                 #
+# WebSite: http://compv.org                                             #
+#########################################################################
+#if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm.S"
 
-.section .data
+.data
 
 .extern kShuffleEpi8_Yuyv422ToYuv_i32, kShuffleEpi8_Uyvy422ToYuv_i32
  
-.section .text
+.text
 
 .equ yuyv422Family, 0
 .equ uyvy422Family, 1
@@ -102,3 +103,5 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvYuyv422_to_y_Asm_NEON32
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 COMPV_GAS_FUNCTION_DECLARE CompVImageConvUyvy422_to_y_Asm_NEON32
 	CompVImageConvYuv422family_to_y_Macro_NEON32 uyvy422Family
+
+#endif /* defined(__arm__) && !defined(__aarch64__) */

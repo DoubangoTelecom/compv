@@ -83,9 +83,8 @@ CompVMutex::~CompVMutex()
 
 /**
 * Lock a mutex. You must use @ref unlock() to unlock the mutex.
-* @param handle The handle of the mutex to lock.
 * @retval Zero if succeed and non-zero error code otherwise.
-* @sa @ref unlock().
+* @sa Unlock: @ref unlock().
 */
 COMPV_ERROR_CODE CompVMutex::lock()
 {
@@ -111,9 +110,8 @@ COMPV_ERROR_CODE CompVMutex::lock()
 
 /**
 * Unlock a mutex previously locked using @ref lock().
-* @param handle The handle of the mutex to unlock.
 * @retval Zero if succeed and non-zero otherwise.
-* @sa @ref lock().
+* @sa Lock: @ref lock().
 */
 COMPV_ERROR_CODE CompVMutex::unlock()
 {

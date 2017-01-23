@@ -43,7 +43,7 @@ public:
 
     static void sleep(uint64_t ms);
     COMPV_ERROR_CODE setPriority(int priority);
-    compv_thread_id_t getId();
+    compv_thread_id_t getId() const;
     COMPV_ERROR_CODE setAffinity(compv_core_id_t coreId);
 
     COMPV_ERROR_CODE join();

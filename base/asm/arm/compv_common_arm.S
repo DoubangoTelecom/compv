@@ -1,10 +1,11 @@
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   @
-@ File author: Mamadou DIOP (Doubango Telecom, France).                 @
-@ License: GPLv3. For commercial license please contact us.             @
-@ Source code: https://github.com/DoubangoTelecom/compv                 @
-@ WebSite: http://compv.org                                             @
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#########################################################################
+# Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   #
+# File author: Mamadou DIOP (Doubango Telecom, France).                 #
+# License: GPLv3. For commercial license please contact us.             #
+# Source code: https://github.com/DoubangoTelecom/compv                 #
+# WebSite: http://compv.org                                             #
+#########################################################################
+#if defined(__arm__)
 
 @ ARM32 calling convention: https://blogs.msdn.microsoft.com/ntdebugging/2014/05/29/understanding-arm-assembly-part-3/
 @ ARMv7 calling convention: https://developer.apple.com/library/content/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARMv7FunctionCallingConventions.html#//apple_ref/doc/uid/TP40009022-SW1
@@ -34,41 +35,46 @@
 #else
 	#error "Unknown cpu architecture"
 #endif
+#if defined(__llvm__)
+    .equ COMPV_GAS_LLVM, 1
+#endif
 .equ prolog_bytes, (10 * COMPV_GAS_REG_SZ_BYTES) @ push {r4-r12, lr}
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-q0x .dn d0
-q0y .dn d1
-q1x .dn d2
-q1y .dn d3
-q2x .dn d4
-q2y .dn d5
-q3x .dn d6
-q3y .dn d7
-q4x .dn d8
-q4y .dn d9
-q5x .dn d10
-q5y .dn d11
-q6x .dn d12
-q6y .dn d13
-q7x .dn d14
-q7y .dn d15
-q8x .dn d16
-q8y .dn d17
-q9x .dn d18
-q9y .dn d19
-q10x .dn d20
-q10y .dn d21
-q11x .dn d22
-q11y .dn d23
-q12x .dn d24
-q12y .dn d25
-q13x .dn d26
-q13y .dn d27
-q14x .dn d28
-q14y .dn d29
-q15x .dn d30
-q15y .dn d31
+@ .dn to define neon registers aliases not supported by llvm.
+q0x .req d0
+q0y .req d1
+q1x .req d2
+q1y .req d3
+q2x .req d4
+q2y .req d5
+q3x .req d6
+q3y .req d7
+q4x .req d8
+q4y .req d9
+q5x .req d10
+q5y .req d11
+q6x .req d12
+q6y .req d13
+q7x .req d14
+q7y .req d15
+q8x .req d16
+q8y .req d17
+q9x .req d18
+q9y .req d19
+q10x .req d20
+q10y .req d21
+q11x .req d22
+q11y .req d23
+q12x .req d24
+q12y .req d25
+q13x .req d26
+q13y .req d27
+q14x .req d28
+q14y .req d29
+q15x .req d30
+q15y .req d31
+
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ Macro to export and declare a function
@@ -191,3 +197,4 @@ q15y .dn d31
 	add sp, sp, #\nn
 .endm
 
+#endif /* defined(__arm__) */
