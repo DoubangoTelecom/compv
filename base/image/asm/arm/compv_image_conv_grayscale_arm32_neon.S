@@ -8,9 +8,13 @@
 #if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm.S"
 
+#if defined(__APPLE__) && defined(__llvm__)
+#   define sym(funcname) _##funcname
+#endif
+
 .data
 
-.extern kShuffleEpi8_Yuyv422ToYuv_i32, kShuffleEpi8_Uyvy422ToYuv_i32
+.extern sym(kShuffleEpi8_Yuyv422ToYuv_i32), sym(kShuffleEpi8_Uyvy422ToYuv_i32)
  
 .text
 
@@ -47,9 +51,9 @@
 	padYUV .req r6
 
 	.if \yuv422Family == yuyv422Family
-		ldr r7, =kShuffleEpi8_Yuyv422ToYuv_i32
+		ldr r7, =sym(kShuffleEpi8_Yuyv422ToYuv_i32)
 	.elseif \yuv422Family == uyvy422Family
-		ldr r7, =kShuffleEpi8_Uyvy422ToYuv_i32
+		ldr r7, =sym(kShuffleEpi8_Uyvy422ToYuv_i32)
 	.elseif
 		.error Not implemented
 	.endif

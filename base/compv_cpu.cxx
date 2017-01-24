@@ -32,6 +32,12 @@ COMPV_EXTERNC long long compv_utils_rdtsc_x86_asm();
 #	include <omp.h>
 #endif
 
+#if COMPV_OS_APPLE
+#   include <sys/types.h>
+#   include <sys/sysctl.h>
+#   include <mach/machine.h>
+#endif
+
 #if defined(_MSC_VER)
 #	pragma intrinsic(__rdtsc, __cpuid)
 #endif
@@ -112,7 +118,7 @@ static void CompVX86CpuId(uint32_t eax, uint32_t ecx, uint32_t* cpu_info)
 }
 #endif
 
-#if COMPV_ARCH_ARM && !COMPV_OS_ANDROID
+#if COMPV_ARCH_ARM && !COMPV_OS_ANDROID && !COMPV_OS_IPHONE
 static uint64_t CompVArmCaps(const char* cpuinfo_name)
 {
     char cpuinfo_line[1024];
@@ -337,6 +343,10 @@ COMPV_ERROR_CODE CompVCpu::init()
 
 #elif COMPV_ARCH_ARM || COMPV_ARCH_ARM64
     CompVCpu::s_uFlags = kCpuFlagARM;
+#   if COMPV_ARCH_ARM64
+    CompVCpu::s_uFlags |= kCpuFlagARM64;
+#   endif
+    
 #	if COMPV_OS_ANDROID
     uint64_t android_flags = android_getCpuFeatures();
     if (android_flags & ANDROID_CPU_ARM_FEATURE_NEON) {
@@ -348,6 +358,36 @@ COMPV_ERROR_CODE CompVCpu::init()
 	if (android_flags & ANDROID_CPU_ARM_FEATURE_VFPv3) {
 		CompVCpu::s_uFlags |= kCpuFlagARM_VFPv3;
 	}
+#   elif COMPV_OS_APPLE
+    int aret;
+    size_t size;
+    cpu_type_t type;
+    cpu_subtype_t subtype;
+    size = sizeof(type);
+    if ((aret = sysctlbyname("hw.cputype", &type, &size, NULL, 0)) == 0) {
+        COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "sysctlbyname(hw.cpusubtype): %d", static_cast<int>(type));
+        if ((type & CPU_TYPE_ARM64) == CPU_TYPE_ARM64) {
+            // All ARM64 (v7, v8 and upcomming v9) devices support neon and vfpv4
+            // Later we check the cpu subtype but it could mistach when apple adds when major version (e.g. CPU_SUBTYPE_ARM64_V9)
+            CompVCpu::s_uFlags |= kCpuFlagARM64 | kCpuFlagARM_NEON | kCpuFlagARM_VFPv4 | kCpuFlagARM_VFPv3;
+        }
+        if ((type & CPU_TYPE_ARM) == CPU_TYPE_ARM) {
+            CompVCpu::s_uFlags |= kCpuFlagARM;
+        }
+    }
+    else {
+        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "sysctlbyname(hw.cputype) failed: %d", aret);
+    }
+    size = sizeof(subtype);
+    if (sysctlbyname("hw.cpusubtype", &subtype, &size, NULL, 0) == 0) {
+        COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "sysctlbyname(hw.cpusubtype): %d", static_cast<int>(subtype));
+        if ((subtype & CPU_SUBTYPE_ARM_V7) == CPU_SUBTYPE_ARM_V7 || (subtype & CPU_SUBTYPE_ARM_V8) == CPU_SUBTYPE_ARM_V8 || (subtype & CPU_SUBTYPE_ARM64_V8) == CPU_SUBTYPE_ARM64_V8) {
+            CompVCpu::s_uFlags |= kCpuFlagARM_NEON | kCpuFlagARM_VFPv4 | kCpuFlagARM_VFPv3;
+        }
+    }
+    else {
+        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "sysctlbyname(hw.cpusubtype) failed: %d", aret);
+    }
 #	else
     CompVCpu::s_uFlags |= CompVArmCaps("/proc/cpuinfo");
 #endif

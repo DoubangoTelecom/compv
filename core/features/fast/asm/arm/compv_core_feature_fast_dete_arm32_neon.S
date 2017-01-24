@@ -1,10 +1,11 @@
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   @
-@ File author: Mamadou DIOP (Doubango Telecom, France).                 @
-@ License: GPLv3. For commercial license please contact us.             @
-@ Source code: https://github.com/DoubangoTelecom/compv                 @
-@ WebSite: http://compv.org                                             @
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#########################################################################
+# Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   #
+# File author: Mamadou DIOP (Doubango Telecom, France).                 #
+# License: GPLv3. For commercial license please contact us.             #
+# Source code: https://github.com/DoubangoTelecom/compv                 #
+# WebSite: http://compv.org                                             #
+#########################################################################
+#if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm.S"
 .include "compv_core_feature_fast_dete_macros_neon.S"
 
@@ -93,29 +94,29 @@
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ Check
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-		_neon32_fast_check 0 8 \FastType
-		_neon32_fast_check 4 12 \FastType
-		_neon32_fast_check 1 9 \FastType
-		_neon32_fast_check 5 13 \FastType
-		_neon32_fast_check 2 10 \FastType
-		_neon32_fast_check 6 14 \FastType
-		_neon32_fast_check 3 11 \FastType
-		_neon32_fast_check 7 15 \FastType
+		_neon32_fast_check 0, 8, \FastType
+		_neon32_fast_check 4, 12, \FastType
+		_neon32_fast_check 1, 9, \FastType
+		_neon32_fast_check 5, 13, \FastType
+		_neon32_fast_check 2, 10, \FastType
+		_neon32_fast_check 6, 14, \FastType
+		_neon32_fast_check 3, 11, \FastType
+		_neon32_fast_check 7, 15, \FastType
 
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		@ Darkers
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			vmov.u8 vecSum1, vecZero
-			_neon32_fast_load 0 8 4 12 darkers
+			_neon32_fast_load 0, 8, 4, 12, darkers
 			vcge.u8 q14, vecSum1, vecMinSum
 			vorr q15x, q14x, q14y
 			vmov.32	r10, q15x[0]
 			vmov.32	r11, q15x[1]
 			orrs r11, r11, r10
 			beq EndOfDarkers_CompVFastDataRow_Asm_NEON32\@
-			_neon32_fast_load 1 9 5 13 darkers
-			_neon32_fast_load 2 10 6 14 darkers
-			_neon32_fast_load 3 11 7 15 darkers
+			_neon32_fast_load 1, 9, 5, 13, darkers
+			_neon32_fast_load 2, 10, 6, 14, darkers
+			_neon32_fast_load 3, 11, 7, 15, darkers
 			vcge.u8 q14, vecSum1, vecN
 			vorr q15x, q14x, q14y
 			vmov.32	r10, q15x[0]
@@ -125,7 +126,7 @@
 
 			_neon32_fast_init_diffbinarysum \FastType
 			.irp ii, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
-				_neon32_fast_strength \ii \FastType
+				_neon32_fast_strength \ii, \FastType
 			.endr
 			EndOfDarkers_CompVFastDataRow_Asm_NEON32\@:
 
@@ -133,16 +134,16 @@
 		@ Brighters
 		@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			vmov.u8 vecSum1, vecZero
-			_neon32_fast_load 0 8 4 12 brighters
+			_neon32_fast_load 0, 8, 4, 12, brighters
 			vcge.u8 q14, vecSum1, vecMinSum
 			vorr q15x, q14x, q14y
 			vmov.32	r10, q15x[0]
 			vmov.32	r11, q15x[1]
 			orrs r11, r11, r10
 			beq EndOfBrighters_CompVFastDataRow_Asm_NEON32\@
-			_neon32_fast_load 1 9 5 13 brighters
-			_neon32_fast_load 2 10 6 14 brighters
-			_neon32_fast_load 3 11 7 15 brighters
+			_neon32_fast_load 1, 9, 5, 13, brighters
+			_neon32_fast_load 2, 10, 6, 14, brighters
+			_neon32_fast_load 3, 11, 7, 15, brighters
 			vcge.u8 q14, vecSum1, vecN
 			vorr q15x, q14x, q14y
 			vmov.32	r10, q15x[0]
@@ -152,7 +153,7 @@
 
 			_neon32_fast_init_diffbinarysum \FastType
 			.irp ii, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
-				_neon32_fast_strength \ii \FastType
+				_neon32_fast_strength \ii, \FastType
 			.endr
 			EndOfBrighters_CompVFastDataRow_Asm_NEON32\@:
 
@@ -195,6 +196,7 @@
 
 COMPV_GAS_FUNCTION_DECLARE CompVFast9DataRow_Asm_NEON32
 	CompVFastDataRow_Macro_NEON32 9
+
 
 COMPV_GAS_FUNCTION_DECLARE CompVFast12DataRow_Asm_NEON32
 	CompVFastDataRow_Macro_NEON32 12
@@ -403,3 +405,5 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON32
 	COMPV_GAS_UNSHADOW_ARGS 5
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+
+#endif /* defined(__arm__) && !defined(__aarch64__) */

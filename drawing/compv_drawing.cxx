@@ -234,17 +234,7 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(CompVRunLoopListenerPtr listener COMPV_DE
     }
     COMPV_CHECK_CODE_BAIL(err = CompVDrawing::sdl_runLoop());
 #else
-	if (CompVDrawing::s_ptrListener) {
-		COMPV_CHECK_CODE_BAIL(err = CompVSemaphore::newObj(&CompVDrawing::s_WorkerSemaphore));
-        COMPV_CHECK_CODE_BAIL(err = CompVThread::newObj(&CompVDrawing::s_WorkerThread, WorkerThread, userData));
-    }
-    while (CompVDrawing::s_bLoopRunning) {
-        if (CompVDrawing::windowsCount() == 0) {
-            COMPV_DEBUG_INFO("No active windows in the event loop... breaking the loop");
-            goto bail;
-        }
-        CompVThread::sleep(1);
-    }
+	COMPV_DEBUG_FATAL_EX(COMPV_THIS_CLASSNAME, "No windowing system implementation found. Die!");
 #endif
 
 bail:

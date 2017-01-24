@@ -27,8 +27,11 @@ void* CompVGLUtils::currentContext()
 #else
 #	if COMPV_OS_WINDOWS
     return static_cast<void*>(wglGetCurrentContext());
+#	elif COMPV_OS_IPHONE
+    COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "EAGL not implemented yet");
+    return NULL;
 #	elif COMPV_OS_APPLE
-    return static_cast<void*>(aglGetCurrentContext());
+    return static_cast<void*>(eglGetCurrentContext());
 #	else
     return static_cast<void*>(glXGetCurrentContext());
 #	endif

@@ -8,9 +8,13 @@
 #if defined(__arm__) && !defined(__aarch64__)
 .include "compv_common_arm.S"
 
+#if defined(__APPLE__) && defined(__llvm__)
+#   define sym(funcname) _##funcname
+#endif
+
 .data
 
-.extern k16_i16, k128_i16
+.extern sym(k16_i16), sym(k128_i16)
  
 .text
 
@@ -355,7 +359,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON32
 	vecCoeffV2 .req q6
 	vecCoeffV3 .req q7
 
-	ldr r10, =k128_i16
+	ldr r10, =sym(k128_i16)
 	vld1.u16 {q15x, q15y}, [r10 :128]
 	vec128 .req q15
 
@@ -526,7 +530,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON32
 	vecCoeffV1 .req q4
 	vecCoeffV2 .req q5
 
-	ldr r10, =k128_i16
+	ldr r10, =sym(k128_i16)
 	vld1.u16 {q6x, q6y}, [r10 :128]
 	vec128 .req q6
 

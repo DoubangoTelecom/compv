@@ -53,7 +53,7 @@ public:
 		os << value;
 		return os.str();
 #else
-        std::to_string(value);
+        return std::to_string(value);
 #endif
 	}
 

@@ -58,7 +58,7 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVFast12DataRow_Asm_X64_AVX2(const uint8_t* IP, COMPV_ALIGNED(AVX) compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 	COMPV_EXTERNC void CompVFastNmsGather_Asm_X64_AVX2(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X64 */
-#	if COMPV_ARCH_ARM
+#	if COMPV_ARCH_ARM32
 	COMPV_EXTERNC void CompVFast9DataRow_Asm_NEON32(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 	COMPV_EXTERNC void CompVFast12DataRow_Asm_NEON32(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 	COMPV_EXTERNC void CompVFastNmsGather_Asm_NEON32(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
@@ -445,7 +445,7 @@ static void CompVFastDataRange(RangeFAST* range)
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagNone)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM((FastDataRow = CompVFastDataRow_Intrin_NEON, align = COMPV_ALIGNV_SIMD_NEON));
-		COMPV_EXEC_IFDEF_ASM_ARM((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_NEON32 : CompVFast12DataRow_Asm_NEON32, align = COMPV_ALIGNV_SIMD_NEON));
+		COMPV_EXEC_IFDEF_ASM_ARM32((FastDataRow = range->N == 9 ? CompVFast9DataRow_Asm_NEON32 : CompVFast12DataRow_Asm_NEON32, align = COMPV_ALIGNV_SIMD_NEON));
 	}
 #endif
 
@@ -595,7 +595,7 @@ void CompVFastNmsGatherRange(RangeFAST* range)
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(range->stride)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVFastNmsGather = CompVFastNmsGather_Intrin_NEON));
-		COMPV_EXEC_IFDEF_ASM_ARM((CompVFastNmsGather = CompVFastNmsGather_Asm_NEON32));
+		COMPV_EXEC_IFDEF_ASM_ARM32((CompVFastNmsGather = CompVFastNmsGather_Asm_NEON32));
 	}
 #endif
 
@@ -626,7 +626,7 @@ void CompVFastNmsApplyRangeAndBuildInterestPoints(RangeFAST* range, std::vector<
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(range->stride) && COMPV_IS_ALIGNED_NEON(range->strengths) && COMPV_IS_ALIGNED_NEON(range->nms)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVFastNmsApply = CompVFastNmsApply_Intrin_NEON));
-		COMPV_EXEC_IFDEF_ASM_ARM((CompVFastNmsApply = CompVFastNmsApply_Asm_NEON32));
+		COMPV_EXEC_IFDEF_ASM_ARM32((CompVFastNmsApply = CompVFastNmsApply_Asm_NEON32));
 	}
 #endif
 	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;

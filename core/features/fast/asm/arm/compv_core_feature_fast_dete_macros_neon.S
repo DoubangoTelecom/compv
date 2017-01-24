@@ -1,12 +1,13 @@
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   @
-@ File author: Mamadou DIOP (Doubango Telecom, France).                 @
-@ License: GPLv3. For commercial license please contact us.             @
-@ Source code: https://github.com/DoubangoTelecom/compv                 @
-@ WebSite: http://compv.org                                             @
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#########################################################################
+# Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   #
+# File author: Mamadou DIOP (Doubango Telecom, France).                 #
+# License: GPLv3. For commercial license please contact us.             #
+# Source code: https://github.com/DoubangoTelecom/compv                 #
+# WebSite: http://compv.org                                             #
+#########################################################################
+#if defined(__arm__)
 
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#########################################################################
 .macro _neon32_fast_check a b FastType
 	ldr r10, [sp, #(circle + \a*COMPV_GAS_REG_SZ_BYTES)]
 	ldr r11, [sp, #(circle + \b*COMPV_GAS_REG_SZ_BYTES)]
@@ -31,10 +32,10 @@
 	vst1.u8 { q15 }, [r10 :128]
 .endm
 
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#########################################################################
 .macro _neon32_fast_compute_darkers a b c d
 	add r8, sp, #(vecCircle16 + \a*16)
-	@ r9 is equal to (c - b) and initialized in _neon32_fast_load
+	# r9 is equal to (c - b) and initialized in _neon32_fast_load
 	add r10, sp, #(vecDiff16 + \a*16)
 	vld1.u8 {q12}, [r8 :128], eightTimesSixteen
 	vld1.u8 {q13}, [r8 :128], r9
@@ -50,10 +51,10 @@
 	vst1.u8 { q15 }, [r10 :128]
 .endm
 
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#########################################################################
 .macro _neon32_fast_compute_brighters a b c d
 	add r8, sp, #(vecCircle16 + \a*16)
-	@ r9 is equal to (c - b) and initialized in _neon32_fast_load
+	# r9 is equal to (c - b) and initialized in _neon32_fast_load
 	add r10, sp, #(vecDiff16 + \a*16)
 	vld1.u8 {q12}, [r8 :128], eightTimesSixteen
 	vld1.u8 {q13}, [r8 :128], r9
@@ -69,10 +70,10 @@
 	vst1.u8 { q15 }, [r10 :128]
 .endm
 
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#########################################################################
 .macro _neon32_fast_load a b c d type
 	mov r9, #(\c-\b)*16
-	_neon32_fast_compute_\type \a \b \c \d
+	_neon32_fast_compute_\type \a, \b, \c, \d
 	add r8, sp, #(vecDiffBinary16 + \a*16)
 	vcgt.u8 q12, q12, vecZero
 	vcgt.u8 q13, q13, vecZero
@@ -92,7 +93,7 @@
 	vadd.u8 vecSum1, vecSum1, q14
 .endm
 
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#########################################################################
 .macro _neon32_fast_init_diffbinarysum FastType
 	add r8, sp, #(vecDiffBinary16 + 0*16)
 	vld1.u8 {q12}, [r8 :128], sixteen
@@ -120,7 +121,7 @@
 	.endif
 .endm
 
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#########################################################################
 .macro _neon32_fast_strength ii FastType
 	.if \FastType == 12
 		add r11, sp, #(vecDiffBinary16 + (((11 + \ii)&15)*16)) @ 11 = NminusOne
@@ -178,3 +179,5 @@
 	vld1.u8 {q15}, [r8 :128]
 	vsub.u8 vecSum1, vecSum1, q15 @ sub head
 .endm
+
+#endif /* defined(__arm__) */

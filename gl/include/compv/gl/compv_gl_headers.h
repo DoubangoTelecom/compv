@@ -60,7 +60,7 @@
 #	define HAVE_OPENGL	1
 #	include <GL/GL.h>
 #	include <GL/GLU.h>
-#elif TARGET_OS_MAC || (defined(HAVE_OPENGL_GL_H) && defined(HAVE_OPENGL_GLU_H))
+#elif (COMPV_OS_OSX && !COMPV_OS_IPHONE) || (defined(HAVE_OPENGL_GL_H) && defined(HAVE_OPENGL_GLU_H)) // TARGET_OS_MAC is 1 on iOS
 #	define HAVE_OPENGL	1
 #	include <OpenGL/gl.h>
 #	include <OpenGL/glu.h>
@@ -76,5 +76,10 @@
 #	include <EGL/egl.h>
 #	include <EGL/eglext.h>
 #endif
+
+/* EAGL (objc-code) */
+//#if COMPV_OS_IPHONE || defined(HAVE_OPENGLES_EAGL_H)
+//#  include <OpenGLES/EAGL.h>
+//#endif
 
 #endif /* _COMPV_GL_HEADERS_H_ */

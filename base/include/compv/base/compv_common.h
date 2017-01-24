@@ -71,10 +71,15 @@ COMPV_NAMESPACE_BEGIN()
 #else
 #	define COMPV_EXEC_IFDEF_ASM_X86(EXPR)
 #endif
-#if COMPV_ASM && COMPV_ARCH_ARM
-#	define COMPV_EXEC_IFDEF_ASM_ARM(EXPR) do { if (COMPV_NAMESPACE::CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
+#if COMPV_ASM && COMPV_ARCH_ARM32
+#	define COMPV_EXEC_IFDEF_ASM_ARM32(EXPR) do { if (COMPV_NAMESPACE::CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
 #else
-#	define COMPV_EXEC_IFDEF_ASM_ARM(EXPR)
+#	define COMPV_EXEC_IFDEF_ASM_ARM32(EXPR)
+#endif
+#if COMPV_ASM && COMPV_ARCH_ARM64
+#	define COMPV_EXEC_IFDEF_ASM_ARM64(EXPR) do { if (COMPV_NAMESPACE::CompVCpu::isAsmEnabled()) { (EXPR); } } while(0)
+#else
+#	define COMPV_EXEC_IFDEF_ASM_ARM64(EXPR)
 #endif
 #if COMPV_HAVE_INTEL_IPP
 #	define COMPV_EXEC_IFDEF_INTEL_IPP(EXPR) do { if (COMPV_NAMESPACE::CompVCpu::isIntelIppEnabled()) { (EXPR); } } while(0)

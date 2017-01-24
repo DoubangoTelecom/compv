@@ -20,6 +20,10 @@
 #	define COMPV_MAX_PATH	PATH_MAX
 #endif /* COMPV_OS_WINDOWS */
 
+#if COMPV_OS_IPHONE
+#   import <Foundation/Foundation.h>
+#endif /* COMPV_OS_IPHONE */
+
 #include <algorithm> // std::transform(), ...
 #include <sys/stat.h>
 
@@ -94,7 +98,14 @@ std::string CompVFileUtils::getFullPathFromFileName(const char* filename)
     if (compv_android_have_assetmgr()) {
         return std::string(filename);
     }
-#endif /* COMPV_OS_ANDROID */
+#   endif /* COMPV_OS_ANDROID */
+#	if COMPV_OS_IPHONE
+    NSString* nsPath = [NSString stringWithUTF8String:filename];
+    NSString* nsPathWithoutExt = [nsPath stringByDeletingPathExtension];
+    NSString* nsPathExt = [nsPath pathExtension];
+    NSString* nsResource = [[NSBundle mainBundle] pathForResource:nsPathWithoutExt ofType:nsPathExt];
+    return nsResource ? std::string([nsResource cStringUsingEncoding:NSASCIIStringEncoding]) : std::string(filename); // using bundle
+#   endif /* COMPV_OS_IPHONE */
     return CompVFileUtils::getCurrentDirectory() + "/" + std::string(filename);
 #endif
 }
@@ -111,6 +122,9 @@ bool CompVFileUtils::exists(const char* pcPath)
     }
     COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
 #endif /* COMPV_OS_ANDROID */
+#if COMPV_OS_IPHONE
+    return [[NSFileManager defaultManager] fileExistsAtPath:[NSString stringWithUTF8String:pcPath]];
+#endif /* COMPV_OS_IPHONE */
     struct stat st_;
     return (stat(pcPath, &st_) == 0);
 }
@@ -126,12 +140,19 @@ size_t CompVFileUtils::getSize(const char* pcPath)
         COMPV_DEBUG_ERROR_EX(kModuleNameFileUtils, "Invalid parameter");
         return 0;
     }
+    
 #if COMPV_OS_ANDROID
     if (compv_android_have_assetmgr()) {
         return compv_android_asset_fsize(pcPath);
     }
     COMPV_DEBUG_INFO_CODE_ONCE("Not using asset manager");
 #endif /* COMPV_OS_ANDROID */
+    
+#if COMPV_OS_IPHONE
+    NSData* nsData = [NSData dataWithContentsOfFile: [NSString stringWithUTF8String:pcPath]];
+    return nsData ? static_cast<size_t>(nsData.length) : 0;
+#endif /* COMPV_OS_IPHONE */
+
     struct stat st_;
     if (stat(pcPath, &st_) != 0) {
         return 0;
@@ -154,6 +175,9 @@ std::string CompVFileUtils::getExt(const char* pcPath)
         if (strExt_ && strlen(strExt_) > 1) {
             ext_ = std::string(strExt_ + 1);
         }
+#elif COMPV_OS_IPHONE
+        NSString* nsPathExt = [[NSString stringWithUTF8String:pcPath] pathExtension];
+        return std::string([nsPathExt cStringUsingEncoding:NSASCIIStringEncoding]);
 #else
         std::string path_ = std::string(pcPath);
         size_t index_ = path_.find_last_of(".");

@@ -66,6 +66,9 @@
 		void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t savedStateSize) { ANativeActivity_onCreatePriv(activity, savedState, savedStateSize); } \
 		void android_main(struct android_app* state) 
 #	define compv_main_return(code)	/* exit(code) - must not, after return the app must not exit, could be restarted (swithing orientation, put on background....) */
+#elif COMPV_OS_IPHONE
+#	define compv_main() int ios_main()
+#	define compv_main_return(code) return (code)
 #else
 #	define compv_main() int main(int argc, char** argv)
 #	define compv_main_return(code) return (code)

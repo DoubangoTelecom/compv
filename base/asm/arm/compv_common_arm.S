@@ -11,9 +11,13 @@
 @ ARMv7 calling convention: https://developer.apple.com/library/content/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARMv7FunctionCallingConventions.html#//apple_ref/doc/uid/TP40009022-SW1
 @ ARM64 calling convention: https://developer.apple.com/library/content/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARM64FunctionCallingConventions.html#//apple_ref/doc/uid/TP40013702-SW1
 
+@ GDB / LLDB commands: https://developer.apple.com/library/content/documentation/IDEs/Conceptual/gdb_to_lldb_transition_guide/document/lldb-command-examples.html
+
 @ Load and store alignent: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0344b/ch16s06s07.html
 
 @ ARM cycles count: http://pulsar.webshaker.net/ccc/index.php?lng=us
+
+@ ARM assembly to Visual Code: https://marketplace.visualstudio.com/items?itemName=dan-c-underwood.arm
 
 @ GNU ARM AS directives: https://www.sourceware.org/binutils/docs/as/ARM-Directives.html#ARM-Directives
 
@@ -37,6 +41,16 @@
 #endif
 #if defined(__llvm__)
     .equ COMPV_GAS_LLVM, 1
+#endif
+#if defined(__APPLE__)
+    .equ COMPV_GAS_APPLE, 1
+#endif
+#if defined(__APPLE__) && defined(__llvm__)
+    .equ COMPV_GAS_MANGLE, 1
+    #define sym(funcname) _##funcname
+#else
+    .equ COMPV_GAS_MANGLE, 0
+    #define sym(funcname) funcname
 #endif
 .equ prolog_bytes, (10 * COMPV_GAS_REG_SZ_BYTES) @ push {r4-r12, lr}
 
@@ -75,13 +89,27 @@ q14y .req d29
 q15x .req d30
 q15y .req d31
 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ Macro to mangle function names
+.macro COMPV_GAS_FUNCTION_MANGLE funcname
+    sym(\funcname)
+.endmacro
+
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ Macro to export and declare a function
 @ Example: COMPV_GAS_FUNCTION_DECLARE myFunction
 .macro COMPV_GAS_FUNCTION_DECLARE funcname
-	.global \funcname
-\funcname:
+    .align 4
+    @.global sym(\funcname)
+    @sym(\funcname):
+#if defined(__APPLE__) && defined(__llvm__)
+        .global _\funcname
+        _\funcname:
+#else
+        .global \funcname
+        \funcname:
+#endif
 .endm
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
