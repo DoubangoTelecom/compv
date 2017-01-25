@@ -26,6 +26,9 @@ COMPV_NAMESPACE_BEGIN()
 #	elif COMPV_ARCH_ARM32
 	COMPV_EXTERNC void CompVImageConvYuyv422_to_y_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* yuv422Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVImageConvUyvy422_to_y_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* yuv422Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+    
+#   elif COMPV_ARCH_ARM64
+
 #	endif /* COMPV_ARCH_XXX */
 #endif /* COMPV_ASM */
 

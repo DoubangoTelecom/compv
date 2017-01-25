@@ -6,10 +6,12 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__arm__) && !defined(__aarch64__)
-.include "compv_common_arm.S"
+.include "compv_common_arm32.S"
 
-#if defined(__APPLE__) && defined(__llvm__)
+#if defined(__APPLE__)
 #   define sym(funcname) _##funcname
+#else
+#   define sym(funcname) funcname
 #endif
 
 .data
@@ -39,7 +41,7 @@
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
 	COMPV_GAS_SAVE_NEON_REGS
 	
-	ldmia_args r0-r5
+	ldm_args r0-r5
 	rgbPtr .req r0
 	outYPtr .req r1
 	width .req r2
@@ -164,7 +166,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON32
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
 	COMPV_GAS_SAVE_NEON_REGS
 	
-	ldmia_args r0-r5
+	ldm_args r0-r5
 	rgbPtr .req r0
 	outYPtr .req r1
 	width .req r2
@@ -308,7 +310,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON32
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 8
 	COMPV_GAS_SAVE_NEON_REGS
 
-	ldmia_args r0-r7
+	ldm_args r0-r7
 	rgbPtr .req r0
 	outUPtr .req r1
 	outVPtr .req r2
@@ -493,7 +495,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON32
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 8
 	COMPV_GAS_SAVE_NEON_REGS
 
-	ldmia_args r0-r7
+	ldm_args r0-r7
 	rgbPtr .req r0
 	outUPtr .req r1
 	outVPtr .req r2

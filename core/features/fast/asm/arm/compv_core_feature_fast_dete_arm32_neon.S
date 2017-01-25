@@ -6,7 +6,7 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__arm__) && !defined(__aarch64__)
-.include "compv_common_arm.S"
+.include "compv_common_arm32.S"
 .include "compv_core_feature_fast_dete_macros_neon.S"
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -23,7 +23,7 @@
 	COMPV_GAS_ALIGN_STACK 16, r11
 	COMPV_GAS_MEMALLOC (COMPV_GAS_REG_SZ_BYTES*16) + (16*16) + (16*16) + (16*16)
 	
-	ldmia_args r0-r5
+	ldm_args r0-r5
 	Iptr .req r0
 	width .req r1
 	pixels16 .req r2
@@ -212,7 +212,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsApply_Asm_NEON32
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 5
 	COMPV_GAS_SAVE_NEON_REGS
 	
-	ldmia_args r0-r4
+	ldm_args r0-r4
 	pcStrengthsMap .req r0
 	pNMS .req r1
 	width .req r2
@@ -295,7 +295,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON32
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 5
 	COMPV_GAS_SAVE_NEON_REGS
 
-	ldmia_args r0-r4
+	ldm_args r0-r4
 	pcStrengthsMap .req r0
 	pNMS .req r1
 	width .req r2

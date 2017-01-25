@@ -6,7 +6,7 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__arm__) && !defined(__aarch64__)
-.include "compv_common_arm.S"
+.include "compv_common_arm32.S"
 
 .data
  
@@ -39,7 +39,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	.equ vecSFX3                 , vecSFX2 + 16
 
 	@@ Declare input arguments @@
-	ldmia_args r0-r8
+	ldm_args r0-r8
 	inPtr .req r0 
 	inStride .req r1
 	outPtr .req r2

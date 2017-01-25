@@ -105,8 +105,9 @@ std::string CompVFileUtils::getFullPathFromFileName(const char* filename)
     NSString* nsPathExt = [nsPath pathExtension];
     NSString* nsResource = [[NSBundle mainBundle] pathForResource:nsPathWithoutExt ofType:nsPathExt];
     return nsResource ? std::string([nsResource cStringUsingEncoding:NSASCIIStringEncoding]) : std::string(filename); // using bundle
-#   endif /* COMPV_OS_IPHONE */
+#   else
     return CompVFileUtils::getCurrentDirectory() + "/" + std::string(filename);
+#   endif /* !COMPV_OS_IPHONE */
 #endif
 }
 
@@ -124,9 +125,10 @@ bool CompVFileUtils::exists(const char* pcPath)
 #endif /* COMPV_OS_ANDROID */
 #if COMPV_OS_IPHONE
     return [[NSFileManager defaultManager] fileExistsAtPath:[NSString stringWithUTF8String:pcPath]];
-#endif /* COMPV_OS_IPHONE */
+#else
     struct stat st_;
     return (stat(pcPath, &st_) == 0);
+#endif /* !COMPV_OS_IPHONE */
 }
 
 bool CompVFileUtils::empty(const char* pcPath)
@@ -151,13 +153,13 @@ size_t CompVFileUtils::getSize(const char* pcPath)
 #if COMPV_OS_IPHONE
     NSData* nsData = [NSData dataWithContentsOfFile: [NSString stringWithUTF8String:pcPath]];
     return nsData ? static_cast<size_t>(nsData.length) : 0;
-#endif /* COMPV_OS_IPHONE */
-
+#else
     struct stat st_;
     if (stat(pcPath, &st_) != 0) {
         return 0;
     }
     return static_cast<size_t>(st_.st_size);
+#endif /* !COMPV_OS_IPHONE */
 }
 
 /*

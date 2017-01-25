@@ -13,10 +13,12 @@
 #include "compv/base/drawing/compv_mvp.h"
 #include "compv/base/compv_obj.h"
 
+COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wdocumentation") // xcode warnings about the documentation in GLM
 #include <glm/vec3.hpp> // glm::vec3
 #include <glm/vec4.hpp> // glm::vec4
 #include <glm/mat4x4.hpp> // glm::mat4
 #include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
+COMPV_GCC_DISABLE_WARNINGS_END()
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")

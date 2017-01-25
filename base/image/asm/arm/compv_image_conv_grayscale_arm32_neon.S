@@ -6,10 +6,12 @@
 # WebSite: http://compv.org                                             #
 #########################################################################
 #if defined(__arm__) && !defined(__aarch64__)
-.include "compv_common_arm.S"
+.include "compv_common_arm32.S"
 
-#if defined(__APPLE__) && defined(__llvm__)
+#if defined(__APPLE__)
 #   define sym(funcname) _##funcname
+#else
+#   define sym(funcname) funcname
 #endif
 
 .data
@@ -32,7 +34,7 @@
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 5
 	COMPV_GAS_SAVE_NEON_REGS
 	
-	ldmia_args r0-r4
+	ldm_args r0-r4
 	yuv422Ptr .req r0
 	outYPtr .req r1
 	width .req r2

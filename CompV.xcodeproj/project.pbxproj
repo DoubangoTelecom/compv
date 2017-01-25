@@ -140,6 +140,10 @@
 		15A3E8F21E3599D900303F7C /* compv_threaddisptbb.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15A3E86D1E3599D800303F7C /* compv_threaddisptbb.cxx */; };
 		15A3E8F31E3599D900303F7C /* compv_time.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15A3E86F1E3599D800303F7C /* compv_time.cxx */; };
 		15A3E8F41E3599D900303F7C /* compv_timer.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15A3E8701E3599D800303F7C /* compv_timer.cxx */; };
+		15AA06D71E3834320058D1F1 /* compv_image_scale_bilinear_arm64_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 15AA06D61E3834320058D1F1 /* compv_image_scale_bilinear_arm64_neon.S */; };
+		15AA06DB1E38377E0058D1F1 /* compv_image_conv_grayscale_arm64_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 15AA06DA1E38377E0058D1F1 /* compv_image_conv_grayscale_arm64_neon.S */; };
+		15AA06DD1E3844790058D1F1 /* compv_common_arm32.S in Sources */ = {isa = PBXBuildFile; fileRef = 15AA06DC1E3844790058D1F1 /* compv_common_arm32.S */; };
+		15AA06DF1E3844840058D1F1 /* compv_common_arm64.S in Sources */ = {isa = PBXBuildFile; fileRef = 15AA06DE1E3844840058D1F1 /* compv_common_arm64.S */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -504,6 +508,10 @@
 		15A3E86D1E3599D800303F7C /* compv_threaddisptbb.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_threaddisptbb.cxx; sourceTree = "<group>"; };
 		15A3E86F1E3599D800303F7C /* compv_time.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_time.cxx; sourceTree = "<group>"; };
 		15A3E8701E3599D800303F7C /* compv_timer.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_timer.cxx; sourceTree = "<group>"; };
+		15AA06D61E3834320058D1F1 /* compv_image_scale_bilinear_arm64_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_image_scale_bilinear_arm64_neon.S; sourceTree = "<group>"; };
+		15AA06DA1E38377E0058D1F1 /* compv_image_conv_grayscale_arm64_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_image_conv_grayscale_arm64_neon.S; sourceTree = "<group>"; };
+		15AA06DC1E3844790058D1F1 /* compv_common_arm32.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_common_arm32.S; sourceTree = "<group>"; };
+		15AA06DE1E3844840058D1F1 /* compv_common_arm64.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_common_arm64.S; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1082,6 +1090,8 @@
 			children = (
 				15A3E7761E3599D800303F7C /* compv_common_arm.S */,
 				15A3E7771E3599D800303F7C /* compv_test_arm.S */,
+				15AA06DC1E3844790058D1F1 /* compv_common_arm32.S */,
+				15AA06DE1E3844840058D1F1 /* compv_common_arm64.S */,
 			);
 			path = arm;
 			sourceTree = "<group>";
@@ -1137,6 +1147,8 @@
 				15A3E7B11E3599D800303F7C /* compv_image_conv_grayscale_arm32_neon.S */,
 				15A3E7B21E3599D800303F7C /* compv_image_conv_rgbfamily_arm32_neon.S */,
 				15A3E7B31E3599D800303F7C /* compv_image_scale_bilinear_arm32_neon.S */,
+				15AA06D61E3834320058D1F1 /* compv_image_scale_bilinear_arm64_neon.S */,
+				15AA06DA1E38377E0058D1F1 /* compv_image_conv_grayscale_arm64_neon.S */,
 			);
 			path = arm;
 			sourceTree = "<group>";
@@ -1771,10 +1783,12 @@
 				15A3E88D1E3599D900303F7C /* compv_bind.cxx in Sources */,
 				15A3E89E1E3599D900303F7C /* compv_simd_globals.cxx in Sources */,
 				15A3E8EE1E3599D900303F7C /* compv_thread.cxx in Sources */,
+				15AA06DF1E3844840058D1F1 /* compv_common_arm64.S in Sources */,
 				15A3E8C51E3599D900303F7C /* compv_image_conv_rgbfamily_intrin_sse2.cxx in Sources */,
 				15A3E8C71E3599D900303F7C /* compv_image_scale_bilinear_intrin_avx2.cxx in Sources */,
 				15A3E8E41E3599D900303F7C /* compv_math_utils_intrin_avx2.cxx in Sources */,
 				15A3E8971E3599D900303F7C /* compv_jni.cxx in Sources */,
+				15AA06DD1E3844790058D1F1 /* compv_common_arm32.S in Sources */,
 				15A3E8C31E3599D900303F7C /* compv_image_conv_grayscale_intrin_ssse3.cxx in Sources */,
 				15A3E8EA1E3599D900303F7C /* compv_mutex.cxx in Sources */,
 				15A3E8E81E3599D900303F7C /* compv_asynctask11.cxx in Sources */,
@@ -1809,6 +1823,7 @@
 				15A3E8A91E3599D900303F7C /* compv_window_registry.cxx in Sources */,
 				15A3E8C21E3599D900303F7C /* compv_image_scale_bilinear_intrin_neon.cxx in Sources */,
 				15A3E8D81E3599D900303F7C /* compv_math.cxx in Sources */,
+				15AA06D71E3834320058D1F1 /* compv_image_scale_bilinear_arm64_neon.S in Sources */,
 				15A3E8A31E3599D900303F7C /* compv_surfacelayer.cxx in Sources */,
 				15A3E8F11E3599D900303F7C /* compv_threaddisp11.cxx in Sources */,
 				15A3E8991E3599D900303F7C /* compv_mat.cxx in Sources */,
@@ -1827,6 +1842,7 @@
 				15A3E8C81E3599D900303F7C /* compv_image_scale_bilinear_intrin_sse41.cxx in Sources */,
 				15A3E8911E3599D900303F7C /* compv_caps.cxx in Sources */,
 				15A3E8AA1E3599D900303F7C /* compv_image_conv_grayscale_arm32_neon.S in Sources */,
+				15AA06DB1E38377E0058D1F1 /* compv_image_conv_grayscale_arm64_neon.S in Sources */,
 				15A3E8F41E3599D900303F7C /* compv_timer.cxx in Sources */,
 				15A3E89B1E3599D900303F7C /* compv_mem.cxx in Sources */,
 				15A3E8731E3599D900303F7C /* compv_android_native_activity.cxx in Sources */,
@@ -1902,7 +1918,6 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1915,7 +1930,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-ObjC";
@@ -1958,7 +1972,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1994,7 +2007,6 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2007,7 +2019,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-ObjC";
@@ -2050,7 +2061,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2086,7 +2096,6 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2099,7 +2108,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-ObjC";
@@ -2142,7 +2150,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2178,7 +2185,6 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2191,7 +2197,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-ObjC";
@@ -2234,7 +2239,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2270,7 +2274,6 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2283,7 +2286,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-ObjC";
@@ -2326,7 +2328,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2352,6 +2353,7 @@
 		15A3E7601E35987600303F7C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
 					"thirdparties/include/common/glm-0.9.8.2",
 					base/include,
@@ -2365,6 +2367,7 @@
 					camera/include,
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				OTHER_LDFLAGS = "-Wl,-no_pie";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -2372,6 +2375,7 @@
 		15A3E7611E35987600303F7C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
 					"thirdparties/include/common/glm-0.9.8.2",
 					base/include,
@@ -2385,6 +2389,7 @@
 					camera/include,
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				OTHER_LDFLAGS = "-Wl,-no_pie";
 				SDKROOT = iphoneos;
 			};
 			name = Release;
@@ -2416,7 +2421,6 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
