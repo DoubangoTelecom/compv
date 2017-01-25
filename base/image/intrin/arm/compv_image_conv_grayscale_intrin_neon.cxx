@@ -15,6 +15,15 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if 0 // deprecated code using vtbx2
+// ldr r7, =sym(kShuffleEpi8_Yuyv422ToYuv_i32)
+// vld1.u8 {q0x}, [r7 :64]
+// vecMask .req q0x
+//
+// vld1.u8 {q1x, q1y, q2x, q2y}, [yuv422Ptr :128]!
+// vtbx.u8 q3x, {q1x, q1y}, vecMask
+// vtbx.u8 q3y, {q2x, q2y}, vecMask
+
 #define yuv422family_to_y_NEON(vecMask) \
 	compv_uscalar_t i, j, maxI = ((width + 15) & -16), padY = (stride - maxI), padYUV = padY << 1; \
 	uint8x8x2_t vec0, vec1; \
@@ -29,19 +38,36 @@ COMPV_NAMESPACE_BEGIN()
 		outYPtr += padY; \
 		yuv422Ptr += padYUV; \
 	}
+#else
+#define yuv422family_to_y_NEON(comp) \
+    COMPV_DEBUG_INFO_CHECK_NEON(); \
+    compv_uscalar_t i, j, maxI = ((width + 15) & -16), padY = (stride - maxI), padYUV = padY << 1; \
+    uint8x8x2_t vec0, vec1, vec2, vec3; \
+    for (j = 0; j < height; ++j) { \
+        for (i = 0; i < width; i += 16) { \
+            vec0 = { { vld1_u8(&yuv422Ptr[0]), vld1_u8(&yuv422Ptr[8]) } }; \
+            vec1 = { { vld1_u8(&yuv422Ptr[16]), vld1_u8(&yuv422Ptr[24]) } }; \
+            vec2 = vuzp_u8(vec0.val[0], vec0.val[1]); /* vec2.val[0] -> first comp(Y), vec2.val[1] -> second comp(U/V) */ \
+            vec3 = vuzp_u8(vec1.val[0], vec1.val[1]); /* vec3.val[0] -> first comp(Y), vec3.val[1] -> second comp(U/V) */ \
+            vst1q_u8(outYPtr, vcombine_u8(vec2.val[comp], vec3.val[comp])); \
+            outYPtr += 16; \
+            yuv422Ptr += 32; \
+        } \
+        outYPtr += padY; \
+        yuv422Ptr += padYUV; \
+    }
+#endif
 
-	void CompVImageConvYuyv422_to_y_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yuv422Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
+void CompVImageConvYuyv422_to_y_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yuv422Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CHECK_NEON();
-	const uint8x8_t vecMask = vld1_u8(reinterpret_cast<const uint8_t*>(kShuffleEpi8_Yuyv422ToYuv_i32)); // indexes for the Y planar only (8 first)
-	yuv422family_to_y_NEON(vecMask);
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code #5 times faster");
+    yuv422family_to_y_NEON(0);
 }
 
 void CompVImageConvUyvy422_to_y_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yuv422Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CHECK_NEON();
-	const uint8x8_t vecMask = vld1_u8(reinterpret_cast<const uint8_t*>(kShuffleEpi8_Uyvy422ToYuv_i32)); // indexes for the Y planar only (8 first)
-	yuv422family_to_y_NEON(vecMask);
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code #5 times faster");
+	yuv422family_to_y_NEON(1);
 }
 
 COMPV_NAMESPACE_END()

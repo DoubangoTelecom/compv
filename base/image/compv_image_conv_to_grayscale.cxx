@@ -26,9 +26,9 @@ COMPV_NAMESPACE_BEGIN()
 #	elif COMPV_ARCH_ARM32
 	COMPV_EXTERNC void CompVImageConvYuyv422_to_y_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* yuv422Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVImageConvUyvy422_to_y_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* yuv422Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
-    
 #   elif COMPV_ARCH_ARM64
-
+    COMPV_EXTERNC void CompVImageConvYuyv422_to_y_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* yuv422Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+    COMPV_EXTERNC void CompVImageConvUyvy422_to_y_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* yuv422Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_XXX */
 #endif /* COMPV_ASM */
 
@@ -104,6 +104,7 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::yuv422family(const CompVMatPtr& imag
 		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && imageYUV422family->isAlignedNEON()) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM(yuv422family_to_y = CompVImageConvYuyv422_to_y_Intrin_NEON);
 			COMPV_EXEC_IFDEF_ASM_ARM32(yuv422family_to_y = CompVImageConvYuyv422_to_y_Asm_NEON32);
+            COMPV_EXEC_IFDEF_ASM_ARM64(yuv422family_to_y = CompVImageConvYuyv422_to_y_Asm_NEON64);
 		}
 #endif
 		break;
@@ -118,6 +119,7 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::yuv422family(const CompVMatPtr& imag
 		if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && imageYUV422family->isAlignedNEON()) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM(yuv422family_to_y = CompVImageConvUyvy422_to_y_Intrin_NEON);
 			COMPV_EXEC_IFDEF_ASM_ARM32(yuv422family_to_y = CompVImageConvUyvy422_to_y_Asm_NEON32);
+            COMPV_EXEC_IFDEF_ASM_ARM64(yuv422family_to_y = CompVImageConvUyvy422_to_y_Asm_NEON64);
 		}
 #endif
 		break;

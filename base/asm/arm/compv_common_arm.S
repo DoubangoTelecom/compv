@@ -48,41 +48,6 @@
 #endif
 
 #########################################################################
-# .dn to define neon registers aliases not supported by llvm.
-q0x .req d0
-q0y .req d1
-q1x .req d2
-q1y .req d3
-q2x .req d4
-q2y .req d5
-q3x .req d6
-q3y .req d7
-q4x .req d8
-q4y .req d9
-q5x .req d10
-q5y .req d11
-q6x .req d12
-q6y .req d13
-q7x .req d14
-q7y .req d15
-q8x .req d16
-q8y .req d17
-q9x .req d18
-q9y .req d19
-q10x .req d20
-q10y .req d21
-q11x .req d22
-q11y .req d23
-q12x .req d24
-q12y .req d25
-q13x .req d26
-q13y .req d27
-q14x .req d28
-q14y .req d29
-q15x .req d30
-q15y .req d31
-
-#########################################################################
 # Macro to mangle function names
 .macro COMPV_GAS_FUNCTION_MANGLE funcname
     sym(\funcname)
@@ -93,7 +58,7 @@ q15y .req d31
 # Macro to export and declare a function
 # Example: COMPV_GAS_FUNCTION_DECLARE myFunction
 .macro COMPV_GAS_FUNCTION_DECLARE funcname
-    .align 2
+    .align 4
     #.global sym(\funcname)
     #sym(\funcname):
 #if defined(__APPLE__) && defined(__llvm__)

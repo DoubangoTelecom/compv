@@ -15,6 +15,39 @@
 # Stack Base Pointer register (defined when the function is declared)
 bp .req x30
 
+# Registers aliases to ease ARM32 <-> ARM64 interop 
+r0 .req x0
+r1 .req x1
+r2 .req x2
+r3 .req x3
+r4 .req x4
+r5 .req x5
+r6 .req x6
+r7 .req x7
+r8 .req x8
+r9 .req x9
+r10 .req x10
+r11 .req x11
+r12 .req x12
+r13 .req x13
+r14 .req x14
+r15 .req x15
+r16 .req x16
+r17 .req x17
+r18 .req x18
+r19 .req x19
+r20 .req x20
+r21 .req x21
+r22 .req x22
+r23 .req x23
+r24 .req x24
+r25 .req x25
+r26 .req x26
+r27 .req x27
+r28 .req x28
+r29 .req x29
+r30 .req x30
+
 #########################################################################
 # Macro to exit from the function (x86 'ret' equiv.)
 .macro COMPV_GAS_FUNCTION_RETURN

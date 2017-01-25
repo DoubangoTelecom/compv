@@ -2367,7 +2367,7 @@
 					camera/include,
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				OTHER_LDFLAGS = "-Wl,-no_pie";
+				OTHER_CFLAGS = "-fPIC";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -2389,7 +2389,7 @@
 					camera/include,
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				OTHER_LDFLAGS = "-Wl,-no_pie";
+				OTHER_CFLAGS = "-fPIC";
 				SDKROOT = iphoneos;
 			};
 			name = Release;

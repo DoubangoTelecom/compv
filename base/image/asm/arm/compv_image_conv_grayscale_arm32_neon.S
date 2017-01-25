@@ -16,7 +16,7 @@
 
 .data
 
-.extern sym(kShuffleEpi8_Yuyv422ToYuv_i32), sym(kShuffleEpi8_Uyvy422ToYuv_i32)
+.extern
  
 .text
 
@@ -52,15 +52,6 @@
 	mov r6, padY, LSL #1
 	padYUV .req r6
 
-	.if \yuv422Family == yuyv422Family
-		ldr r7, =sym(kShuffleEpi8_Yuyv422ToYuv_i32)
-	.elseif \yuv422Family == uyvy422Family
-		ldr r7, =sym(kShuffleEpi8_Uyvy422ToYuv_i32)
-	.elseif
-		.error Not implemented
-	.endif
-	vld1.u8 {q0x}, [r7 :64]
-	vecMask .req q0x
 	
 	@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	@ for (j = 0; j < height; ++j)
@@ -74,9 +65,22 @@
 			add r9, r9, #16
 			pld [yuv422Ptr, #(CACHE_LINE_SIZE*3)]
 			vld1.u8 {q1x, q1y, q2x, q2y}, [yuv422Ptr :128]!
-			vtbx.u8 q3x, {q1x, q1y}, vecMask
-			vtbx.u8 q3y, {q2x, q2y}, vecMask
-			vst1.u8 {q3x, q3y}, [outYPtr :128]! @ vstmia outYPtr!, {q3x, q3y}
+
+            .if \yuv422Family == yuyv422Family
+                @ldr r7, =sym(kShuffleEpi8_Yuyv422ToYuv_i32)
+                vuzp.u8 q1x, q1y
+                vuzp.u8 q2x, q2y
+                vswp q1y, q2x
+                vst1.u8 {q1}, [outYPtr :128]! @ vstmia outYPtr!, {q1x, q1y}
+            .elseif \yuv422Family == uyvy422Family
+                vuzp.u8 q1x, q1y
+                vuzp.u8 q2x, q2y
+                vswp q1y, q2x
+                vst1.u8 {q2}, [outYPtr :128]! @ vstmia outYPtr!, {q2x, q2y}
+            .elseif
+                .error Not implemented
+            .endif
+
 			cmp r9, width
 			blt LoopWidth\@
 			@End_of_LoopWidth@
@@ -94,7 +98,7 @@
 	.unreq stride
 	.unreq padY
 	.unreq padYUV
-	.unreq vecMask
+
 	
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS 5
