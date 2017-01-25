@@ -15,6 +15,7 @@
 # Stack Base Pointer register (defined when the function is declared)
 bp .req x30
 
+#########################################################################
 # Registers aliases to ease ARM32 <-> ARM64 interop 
 r0 .req x0
 r1 .req x1
@@ -47,6 +48,39 @@ r27 .req x27
 r28 .req x28
 r29 .req x29
 r30 .req x30
+
+#########################################################################
+r0w .req w0
+r1w .req w1
+r2w .req w2
+r3w .req w3
+r4w .req w4
+r5w .req w5
+r6w .req w6
+r7w .req w7
+r8w .req w8
+r9w .req w9
+r10w .req w10
+r11w .req w11
+r12w .req w12
+r13w .req w13
+r14w .req w14
+r15w .req w15
+r16w .req w16
+r17w .req w17
+r18w .req w18
+r19w .req w19
+r20w .req w20
+r21w .req w21
+r22w .req w22
+r23w .req w23
+r24w .req w24
+r25w .req w25
+r26w .req w26
+r27w .req w27
+r28w .req w28
+r29w .req w29
+r30w .req w30
 
 #########################################################################
 # Macro to exit from the function (x86 'ret' equiv.)

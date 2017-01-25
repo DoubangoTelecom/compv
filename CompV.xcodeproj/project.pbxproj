@@ -144,6 +144,7 @@
 		15AA06DB1E38377E0058D1F1 /* compv_image_conv_grayscale_arm64_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 15AA06DA1E38377E0058D1F1 /* compv_image_conv_grayscale_arm64_neon.S */; };
 		15AA06DD1E3844790058D1F1 /* compv_common_arm32.S in Sources */ = {isa = PBXBuildFile; fileRef = 15AA06DC1E3844790058D1F1 /* compv_common_arm32.S */; };
 		15AA06DF1E3844840058D1F1 /* compv_common_arm64.S in Sources */ = {isa = PBXBuildFile; fileRef = 15AA06DE1E3844840058D1F1 /* compv_common_arm64.S */; };
+		15AA06E71E38D8100058D1F1 /* compv_image_conv_rgbfamily_arm64_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 15AA06E61E38D8100058D1F1 /* compv_image_conv_rgbfamily_arm64_neon.S */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -512,6 +513,7 @@
 		15AA06DA1E38377E0058D1F1 /* compv_image_conv_grayscale_arm64_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_image_conv_grayscale_arm64_neon.S; sourceTree = "<group>"; };
 		15AA06DC1E3844790058D1F1 /* compv_common_arm32.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_common_arm32.S; sourceTree = "<group>"; };
 		15AA06DE1E3844840058D1F1 /* compv_common_arm64.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_common_arm64.S; sourceTree = "<group>"; };
+		15AA06E61E38D8100058D1F1 /* compv_image_conv_rgbfamily_arm64_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_image_conv_rgbfamily_arm64_neon.S; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1149,6 +1151,7 @@
 				15A3E7B31E3599D800303F7C /* compv_image_scale_bilinear_arm32_neon.S */,
 				15AA06D61E3834320058D1F1 /* compv_image_scale_bilinear_arm64_neon.S */,
 				15AA06DA1E38377E0058D1F1 /* compv_image_conv_grayscale_arm64_neon.S */,
+				15AA06E61E38D8100058D1F1 /* compv_image_conv_rgbfamily_arm64_neon.S */,
 			);
 			path = arm;
 			sourceTree = "<group>";
@@ -1825,6 +1828,7 @@
 				15A3E8D81E3599D900303F7C /* compv_math.cxx in Sources */,
 				15AA06D71E3834320058D1F1 /* compv_image_scale_bilinear_arm64_neon.S in Sources */,
 				15A3E8A31E3599D900303F7C /* compv_surfacelayer.cxx in Sources */,
+				15AA06E71E38D8100058D1F1 /* compv_image_conv_rgbfamily_arm64_neon.S in Sources */,
 				15A3E8F11E3599D900303F7C /* compv_threaddisp11.cxx in Sources */,
 				15A3E8991E3599D900303F7C /* compv_mat.cxx in Sources */,
 				15A3E8961E3599D900303F7C /* compv_fileutils.cxx in Sources */,

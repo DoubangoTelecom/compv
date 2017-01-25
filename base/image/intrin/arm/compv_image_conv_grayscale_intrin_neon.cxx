@@ -60,13 +60,13 @@ COMPV_NAMESPACE_BEGIN()
 
 void CompVImageConvYuyv422_to_y_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yuv422Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code #5 times faster");
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM32 code #5 times faster (Apple LLVM)");
     yuv422family_to_y_NEON(0);
 }
 
 void CompVImageConvUyvy422_to_y_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* yuv422Ptr, COMPV_ALIGNED(NEON) uint8_t* outYPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code #5 times faster");
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM32 code #5 times faster (Apple LLVM)");
 	yuv422family_to_y_NEON(1);
 }
 

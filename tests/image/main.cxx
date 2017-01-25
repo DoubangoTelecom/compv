@@ -15,6 +15,7 @@ compv_main()
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	{
+        
 		COMPV_CHECK_CODE_BAIL(err = compv_tests_init());
 #if TEST_SCALE
 		extern COMPV_ERROR_CODE scale();
