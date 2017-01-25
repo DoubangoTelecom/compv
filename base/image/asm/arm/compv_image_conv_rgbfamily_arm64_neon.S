@@ -349,11 +349,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 	padRGB .req r8
 	
 	ld4.8b {v10, v11, v12, v13}, [kRGBfamilyToYUV_UCoeffs8]
-    uxtl v0.8h, v10.8b
-	uxtl v1.8h, v11.8b
-	uxtl v2.8h, v12.8b
+    sxtl v0.8h, v10.8b
+	sxtl v1.8h, v11.8b
+	sxtl v2.8h, v12.8b
 	.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
-		uxtl v3.8h, v13.8b
+		sxtl v3.8h, v13.8b
 	.endif
 	#define vecCoeffU0 v0
 	#define vecCoeffU1 v1
@@ -361,11 +361,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 	#define vecCoeffU3 v3
 	
 	ld4.8b {v10, v11, v12, v13}, [kRGBfamilyToYUV_VCoeffs8]
-	uxtl v4.8h, v10.8b
-	uxtl v5.8h, v11.8b
-	uxtl v6.8h, v12.8b
+	sxtl v4.8h, v10.8b
+	sxtl v5.8h, v11.8b
+	sxtl v6.8h, v12.8b
 	.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
-		uxtl v7.8h, v13.8b
+		sxtl v7.8h, v13.8b
 	.endif
 	#define vecCoeffV0 v4
 	#define vecCoeffV1 v5
@@ -373,8 +373,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 	#define vecCoeffV3 v7
 
     mov r10, #128
-	dup.8h v15, r10w
-	#define vec128 v15
+	dup.8h v30, r10w
+	#define vec128 v30
 
 	########################################
 	# for (j = 0; j < height; ++j)
@@ -413,30 +413,30 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 			.endif
 			uxtl2 vec0.8h, v8.16b
 			mul v8.8h, vecCoeffU0.8h, vec0.8h
-			mul v9.8h, vecCoeffV0.8h, vec0.8h
+			mul v15.8h, vecCoeffV0.8h, vec0.8h
 			uxtl2 vec0.8h, v9.16b
 			mla v8.8h, vecCoeffU1.8h, vec0.8h
-			mla v9.8h, vecCoeffV1.8h, vec0.8h
+			mla v15.8h, vecCoeffV1.8h, vec0.8h
 			uxtl2 vec0.8h, v10.16b
 			mla v8.8h, vecCoeffU2.8h, vec0.8h
-			mla v9.8h, vecCoeffV2.8h, vec0.8h
+			mla v15.8h, vecCoeffV2.8h, vec0.8h
 			.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
 				uxtl2 vec0.8h, v11.16b
 				mla v8.8h, vecCoeffU3.8h, vec0.8h
-				mla v9.8h, vecCoeffV3.8h, vec0.8h
+				mla v15.8h, vecCoeffV3.8h, vec0.8h
 			.endif
 			sshr v13.8h, v13.8h, #8
 			sshr v14.8h, v14.8h, #8
 			sshr v8.8h, v8.8h, #8
-			sshr v9.8h, v9.8h, #8
+			sshr v15.8h, v15.8h, #8
 			add v13.8h, v13.8h, vec128.8h
 			add v14.8h, v14.8h, vec128.8h
 			add v8.8h, v8.8h, vec128.8h
-			add v9.8h, v9.8h, vec128.8h
+			add v15.8h, v15.8h, vec128.8h
 			sqxtun v13.8b, v13.8h
 			sqxtun2 v13.16b, v8.8h
 			sqxtun v8.8b, v14.8h
-			sqxtun2 v8.16b, v9.8h
+			sqxtun2 v8.16b, v15.8h
 			st1 {v13.16b}, [outUPtr], #16
 			st1 {v8.16b}, [outVPtr], #16
 			cmp r6, width		
@@ -480,169 +480,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 
 #############################################################################
 COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb24family_to_uv_planar_11_Asm_NEON64
-	//CompVImageConvRgbfamily_to_uv_planar_11_Macro_NEON64 familyRGB24, isAlphaLastNO
-    COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 8
-	COMPV_GAS_SAVE_NEON_REGS
-
-    ldp_arg 0, r0, r1
-    ldp_arg 2, r2, r3
-    ldp_arg 4, r4, r5
-    ldp_arg 6, r6, r7
-	rgbPtr .req r0
-	outUPtr .req r1
-	outVPtr .req r2
-	width .req r3
-	height .req r4
-	stride .req r5
-	kRGBfamilyToYUV_UCoeffs8 .req r6
-	kRGBfamilyToYUV_VCoeffs8 .req r7
-
-	prfm pldl1keep, [rgbPtr, #(CACHE_LINE_SIZE*0)]
-	prfm pldl1keep, [rgbPtr, #(CACHE_LINE_SIZE*1)]
-	prfm pldl1keep, [rgbPtr, #(CACHE_LINE_SIZE*2)]
-
-	add r8, width, #15
-	and r8, r8, #-16
-	sub r9, stride, r8
-	padUV .req r9
-	//.if \family == familyRGB24
-		add r8, padUV, padUV, LSL #1
-	//.elseif \family == familyRGB32
-		//lsl r8, padUV, #2
-	//.elseif
-	//	.error
-	//.endif
-	padRGB .req r8
-	
-	ld4.8b {v10, v11, v12, v13}, [kRGBfamilyToYUV_UCoeffs8]
-    sxtl v0.8h, v10.8b
-	sxtl v1.8h, v11.8b
-	sxtl v2.8h, v12.8b
-	//.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
-	//	uxtl v3.8h, v13.8b
-	//.endif
-	#define vecCoeffU0 v0
-	#define vecCoeffU1 v1
-	#define vecCoeffU2 v2
-	#define vecCoeffU3 v3
-	
-	ld4.8b {v10, v11, v12, v13}, [kRGBfamilyToYUV_VCoeffs8]
-	sxtl v4.8h, v10.8b
-	sxtl v5.8h, v11.8b
-	sxtl v6.8h, v12.8b
-	//.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
-	//	uxtl v7.8h, v13.8b
-	//.endif
-	#define vecCoeffV0 v4
-	#define vecCoeffV1 v5
-	#define vecCoeffV2 v6
-	#define vecCoeffV3 v7
-
-    mov r10, #128
-	dup.8h v30, r10w
-	#define vec128 v30
-
-	########################################
-	# for (j = 0; j < height; ++j)
-	########################################
-	LoopHeight:
-		mov r6, #0
-		########################################
-		# for (i = 0; i < width; i += 16)
-		########################################
-		LoopWidth:
-			#define vec0 v12
-			add r6, r6, #16
-			prfm pldl1keep, [rgbPtr, #(CACHE_LINE_SIZE*3)]
-            prfm pstl1keep, [outUPtr, #(CACHE_LINE_SIZE*3)]
-            prfm pstl1keep, [outVPtr, #(CACHE_LINE_SIZE*3)]
-			//.if \family == familyRGB24
-				ld3.16b {v8, v9, v10}, [rgbPtr], #3*16
-			//.elseif \family == familyRGB32
-			//	ld4.16b {v8, v9, v10, v11}, [rgbPtr], #4*16
-			//.elseif
-			//	.error not implemented
-			//.endif
-            sxtl vec0.8h, v8.8b
-			mul v13.8h, vecCoeffU0.8h, vec0.8h
-			mul v14.8h, vecCoeffV0.8h, vec0.8h
-			sxtl vec0.8h, v9.8b
-			mla v13.8h, vecCoeffU1.8h, vec0.8h
-			mla v14.8h, vecCoeffV1.8h, vec0.8h
-			sxtl vec0.8h, v10.8b
-			mla v13.8h, vecCoeffU2.8h, vec0.8h
-			mla v14.8h, vecCoeffV2.8h, vec0.8h
-			//.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
-			//	sxtl vec0.8h, v11.8b
-			//	mla v13.8h, vecCoeffU3.8h, vec0.8h
-			//	mla v14.8h, vecCoeffV3.8h, vec0.8h
-			//.endif
-			sxtl2 vec0.8h, v8.16b
-			mul v8.8h, vecCoeffU0.8h, vec0.8h
-			mul v15.8h, vecCoeffV0.8h, vec0.8h
-			sxtl2 vec0.8h, v9.16b
-			mla v8.8h, vecCoeffU1.8h, vec0.8h
-			mla v15.8h, vecCoeffV1.8h, vec0.8h
-			sxtl2 vec0.8h, v10.16b
-			mla v8.8h, vecCoeffU2.8h, vec0.8h
-			mla v15.8h, vecCoeffV2.8h, vec0.8h
-			//.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
-			//	uxtl2 vec0.8h, v11.16b
-			//	mla v8.8h, vecCoeffU3.8h, vec0.8h
-			//	mla v15.8h, vecCoeffV3.8h, vec0.8h
-			//.endif
-			sshr v13.8h, v13.8h, #8
-			sshr v14.8h, v14.8h, #8
-			sshr v8.8h, v8.8h, #8
-			sshr v15.8h, v15.8h, #8
-			add v13.8h, v13.8h, vec128.8h
-			add v14.8h, v14.8h, vec128.8h
-			add v8.8h, v8.8h, vec128.8h
-			add v15.8h, v15.8h, vec128.8h
-			sqxtun v13.8b, v13.8h
-			sqxtun2 v13.16b, v8.8h
-			sqxtun v8.8b, v14.8h
-			sqxtun2 v8.16b, v15.8h
-			st1 {v13.16b}, [outUPtr], #16
-			st1 {v8.16b}, [outVPtr], #16
-			cmp r6, width		
-			blt LoopWidth
-			#End_of_LoopWidth#
-
-		add rgbPtr, rgbPtr, padRGB
-		add outUPtr, outUPtr, padUV
-		add outVPtr, outVPtr, padUV
-		subs height, height, #1
-		bne LoopHeight
-		#End_of_LoopHeight#
-
-	//undef aliases
-	.unreq rgbPtr
-	.unreq outUPtr
-	.unreq outVPtr
-	.unreq width
-	.unreq height
-	.unreq stride
-	.unreq kRGBfamilyToYUV_UCoeffs8
-	.unreq kRGBfamilyToYUV_VCoeffs8
-	.unreq padUV
-	.unreq padRGB
-	#undef vec0
-	#undef vecCoeffU0
-	#undef vecCoeffU1
-	#undef vecCoeffU2
-	#undef vecCoeffU3
-	#undef vecCoeffV0
-	#undef vecCoeffV1
-	#undef vecCoeffV2
-	#undef vecCoeffV3
-	#undef vec128
-	
-	COMPV_GAS_RESTORE_NEON_REGS
-	COMPV_GAS_UNSHADOW_ARGS
-	COMPV_GAS_FUNCTION_EPILOG
-	COMPV_GAS_FUNCTION_RETURN
+	CompVImageConvRgbfamily_to_uv_planar_11_Macro_NEON64 familyRGB24, isAlphaLastNO
 
 #############################################################################
 COMPV_GAS_FUNCTION_DECLARE CompVImageConvArgb32family_to_uv_planar_11_Asm_NEON64 
