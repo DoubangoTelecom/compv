@@ -385,7 +385,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 		# for (i = 0; i < width; i += 16)
 		########################################
 		LoopWidth\@:
-			#define vec0 v12
 			add r6, r6, #16
 			prfm pldl1keep, [rgbPtr, #(CACHE_LINE_SIZE*3)]
             prfm pstl1keep, [outUPtr, #(CACHE_LINE_SIZE*3)]
@@ -397,34 +396,39 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 			.elseif
 				.error not implemented
 			.endif
-            uxtl vec0.8h, v8.8b
-			mul v13.8h, vecCoeffU0.8h, vec0.8h
-			mul v14.8h, vecCoeffV0.8h, vec0.8h
-			uxtl vec0.8h, v9.8b
-			mla v13.8h, vecCoeffU1.8h, vec0.8h
-			mla v14.8h, vecCoeffV1.8h, vec0.8h
-			uxtl vec0.8h, v10.8b
-			mla v13.8h, vecCoeffU2.8h, vec0.8h
-			mla v14.8h, vecCoeffV2.8h, vec0.8h
-			.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
-				uxtl vec0.8h, v11.8b
-				mla v13.8h, vecCoeffU3.8h, vec0.8h
-				mla v14.8h, vecCoeffV3.8h, vec0.8h
+
+            uxtl v16.8h, v8.8b
+            uxtl v17.8h, v9.8b
+            uxtl v18.8h, v10.8b
+            .if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
+				uxtl v19.8h, v11.8b
 			.endif
-			uxtl2 vec0.8h, v8.16b
-			mul v8.8h, vecCoeffU0.8h, vec0.8h
-			mul v15.8h, vecCoeffV0.8h, vec0.8h
-			uxtl2 vec0.8h, v9.16b
-			mla v8.8h, vecCoeffU1.8h, vec0.8h
-			mla v15.8h, vecCoeffV1.8h, vec0.8h
-			uxtl2 vec0.8h, v10.16b
-			mla v8.8h, vecCoeffU2.8h, vec0.8h
-			mla v15.8h, vecCoeffV2.8h, vec0.8h
-			.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
-				uxtl2 vec0.8h, v11.16b
-				mla v8.8h, vecCoeffU3.8h, vec0.8h
-				mla v15.8h, vecCoeffV3.8h, vec0.8h
+            uxtl2 v20.8h, v8.16b
+            uxtl2 v21.8h, v9.16b
+            uxtl2 v22.8h, v10.16b
+            .if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
+				uxtl2 v23.8h, v11.16b
 			.endif
+
+			mul v13.8h, vecCoeffU0.8h, v16.8h
+			mul v14.8h, vecCoeffV0.8h, v16.8h
+            mul v8.8h, vecCoeffU0.8h, v20.8h
+			mul v15.8h, vecCoeffV0.8h, v20.8h
+			mla v13.8h, vecCoeffU1.8h, v17.8h
+			mla v14.8h, vecCoeffV1.8h, v17.8h
+            mla v8.8h, vecCoeffU1.8h, v21.8h
+			mla v15.8h, vecCoeffV1.8h, v21.8h
+			mla v13.8h, vecCoeffU2.8h, v18.8h
+			mla v14.8h, vecCoeffV2.8h, v18.8h
+            mla v8.8h, vecCoeffU2.8h, v22.8h
+			mla v15.8h, vecCoeffV2.8h, v22.8h
+			.if \family == familyRGB32 && \isAlphaLast == isAlphaLastNO
+				mla v13.8h, vecCoeffU3.8h, v19.8h
+				mla v14.8h, vecCoeffV3.8h, v19.8h
+                mla v8.8h, vecCoeffU3.8h, v23.8h
+				mla v15.8h, vecCoeffV3.8h, v23.8h
+			.endif
+
 			sshr v13.8h, v13.8h, #8
 			sshr v14.8h, v14.8h, #8
 			sshr v8.8h, v8.8h, #8
@@ -433,12 +437,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 			add v14.8h, v14.8h, vec128.8h
 			add v8.8h, v8.8h, vec128.8h
 			add v15.8h, v15.8h, vec128.8h
-			sqxtun v13.8b, v13.8h
-			sqxtun2 v13.16b, v8.8h
-			sqxtun v8.8b, v14.8h
-			sqxtun2 v8.16b, v15.8h
-			st1 {v13.16b}, [outUPtr], #16
-			st1 {v8.16b}, [outVPtr], #16
+			sqxtun v16.8b, v13.8h
+            sqxtun v17.8b, v14.8h
+			sqxtun2 v16.16b, v8.8h
+			sqxtun2 v17.16b, v15.8h
+			st1 {v16.16b}, [outUPtr], #16
+			st1 {v17.16b}, [outVPtr], #16
 			cmp r6, width		
 			blt LoopWidth\@
 			#End_of_LoopWidth#
@@ -461,7 +465,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 	.unreq kRGBfamilyToYUV_VCoeffs8
 	.unreq padUV
 	.unreq padRGB
-	#undef vec0
 	#undef vecCoeffU0
 	#undef vecCoeffU1
 	#undef vecCoeffU2
