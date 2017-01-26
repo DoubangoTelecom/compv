@@ -493,4 +493,176 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvArgb32family_to_uv_planar_11_Asm_NEON64
 COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON64
 	CompVImageConvRgbfamily_to_uv_planar_11_Macro_NEON64 familyRGB32, isAlphaLastYES
 
+
+#############################################################################
+# arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* rgbPtr
+# arg(1) -> COMPV_ALIGNED(NEON) uint8_t* outUPtr
+# arg(2) -> COMPV_ALIGNED(NEON) uint8_t* outVPtr
+# arg(3) -> compv_uscalar_t width
+# arg(4) -> compv_uscalar_t height
+# arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+# arg(6) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_UCoeffs8
+# arg(7) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8
+.macro CompVImageConvRgb565family_to_uv_planar_11_Macro_NEON64 endianness
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 8
+	COMPV_GAS_SAVE_NEON_REGS
+
+	ldp_arg 0, r0, r1
+    ldp_arg 2, r2, r3
+    ldp_arg 4, r4, r5
+    ldp_arg 6, r6, r7
+	rgbPtr .req r0
+	outUPtr .req r1
+	outVPtr .req r2
+	width .req r3
+	height .req r4
+	stride .req r5
+	kRGBfamilyToYUV_UCoeffs8 .req r6
+	kRGBfamilyToYUV_VCoeffs8 .req r7
+
+	prfm pldl1keep, [rgbPtr, #(CACHE_LINE_SIZE*0)]
+	prfm pldl1keep, [rgbPtr, #(CACHE_LINE_SIZE*1)]
+	prfm pldl1keep, [rgbPtr, #(CACHE_LINE_SIZE*2)]
+
+	add r8, width, #15
+	and r8, r8, #-16
+	sub r9, stride, r8
+	padUV .req r9
+	lsl r8, padUV, #1
+	padRGB .req r8
+	
+	ld4.8b {v10, v11, v12, v13}, [kRGBfamilyToYUV_UCoeffs8]
+	sxtl v0.8h, v10.8b
+	sxtl v1.8h, v11.8b
+	sxtl v2.8h, v12.8b
+	#define vecCoeffU0 v0
+	#define vecCoeffU1 v1
+	#define vecCoeffU2 v2
+	
+	ld4.8b {v10, v11, v12, v13}, [kRGBfamilyToYUV_VCoeffs8]
+	sxtl v3.8h, v10.8b
+	sxtl v4.8h, v11.8b
+	sxtl v5.8h, v12.8b
+	#define vecCoeffV0 v3
+	#define vecCoeffV1 v4
+	#define vecCoeffV2 v5
+
+	mov r10, #128
+	dup.8h v6, r10w
+	#define vec128 v6
+
+	########################################
+	# for (j = 0; j < height; ++j)
+	########################################
+	LoopHeight\@:
+		mov r6, #0
+		########################################
+		# for (i = 0; i < width; i += 16)
+		########################################
+		LoopWidth\@:
+			add r6, r6, #16
+			prfm pldl1keep, [rgbPtr, #(CACHE_LINE_SIZE*3)]
+            prfm pstl1keep, [outUPtr, #(CACHE_LINE_SIZE*3)]
+            prfm pstl1keep, [outVPtr, #(CACHE_LINE_SIZE*3)]
+			ld1.16b {v7, v8}, [rgbPtr], #2*16
+			#define vec0 v7
+			#define vec1 v8
+			.if \endianness == endiannessBIG
+				rev16 vec0.16b, vec0.16b
+				rev16 vec1.16b, vec1.16b
+			.endif
+			ushr v9.8h, vec0.8h, #11
+			ushr v10.8h, vec1.8h, #11
+			shl v11.8h, vec0.8h, #5
+			shl v12.8h, vec1.8h, #5
+			shl v13.8h, vec0.8h, #11
+			shl v14.8h, vec1.8h, #11
+			shl v9.8h, v9.8h, #3
+			shl v10.8h, v10.8h, #3
+			ushr v11.8h, v11.8h, #10
+			ushr v12.8h, v12.8h, #10
+			ushr v13.8h, v13.8h, #8
+			ushr v14.8h, v14.8h, #8
+			shl v11.8h, v11.8h, #2
+			shl v12.8h, v12.8h, #2
+			usra v9.8h, v9.8h, #5
+			usra v10.8h, v10.8h, #5
+			usra v11.8h, v11.8h, #6
+			usra v12.8h, v12.8h, #6
+			usra v13.8h, v13.8h, #5
+			usra v14.8h, v14.8h, #5
+			mul v7.8h, vecCoeffU0.8h, v9.8h
+			mul v8.8h, vecCoeffV0.8h, v9.8h
+			mul v9.8h, vecCoeffU0.8h, v10.8h
+			mul v10.8h, vecCoeffV0.8h, v10.8h
+			mla v7.8h, vecCoeffU1.8h, v11.8h
+			mla v8.8h, vecCoeffV1.8h, v11.8h
+			mla v9.8h, vecCoeffU1.8h, v12.8h
+			mla v10.8h, vecCoeffV1.8h, v12.8h
+			mla v7.8h, vecCoeffU2.8h, v13.8h
+			mla v8.8h, vecCoeffV2.8h, v13.8h
+			mla v9.8h, vecCoeffU2.8h, v14.8h
+			mla v10.8h, vecCoeffV2.8h, v14.8h
+			sshr v7.8h, v7.8h, #8
+			sshr v8.8h, v8.8h, #8
+			sshr v9.8h, v9.8h, #8
+			sshr v10.8h, v10.8h, #8
+			add v7.8h, v7.8h, vec128.8h
+			add v8.8h, v8.8h, vec128.8h
+			add v9.8h, v9.8h, vec128.8h
+			add v10.8h, v10.8h, vec128.8h
+			sqxtun v11.8b, v7.8h
+            sqxtun v12.8b, v8.8h
+			sqxtun2 v11.16b, v9.8h
+			sqxtun2 v12.16b, v10.8h
+			st1 {v11.16b}, [outUPtr], #16
+			st1 {v12.16b}, [outVPtr], #16
+			cmp r6, width		
+			blt LoopWidth\@
+			#End_of_LoopWidth#
+
+		add rgbPtr, rgbPtr, padRGB
+		add outUPtr, outUPtr, padUV
+		add outVPtr, outVPtr, padUV
+		subs height, height, #1
+		bne LoopHeight\@
+		#End_of_LoopHeight#
+
+	//undef aliases
+	.unreq rgbPtr
+	.unreq outUPtr
+	.unreq outVPtr
+	.unreq width
+	.unreq height
+	.unreq stride
+	.unreq kRGBfamilyToYUV_UCoeffs8
+	.unreq kRGBfamilyToYUV_VCoeffs8
+	.unreq padUV
+	.unreq padRGB
+	#undef vec0
+	#undef vec1
+	#undef vecCoeffU0
+	#undef vecCoeffU1
+	#undef vecCoeffU2
+	#undef vecCoeffV0
+	#undef vecCoeffV1
+	#undef vecCoeffV2
+	#undef vec128
+	
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+
+#############################################################################
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565lefamily_to_uv_planar_11_Asm_NEON64
+	CompVImageConvRgb565family_to_uv_planar_11_Macro_NEON64 endiannessLITTLE
+
+#############################################################################
+COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_uv_planar_11_Asm_NEON64
+	CompVImageConvRgb565family_to_uv_planar_11_Macro_NEON64 endiannessBIG
+
 #endif /* defined(__aarch64__) */
