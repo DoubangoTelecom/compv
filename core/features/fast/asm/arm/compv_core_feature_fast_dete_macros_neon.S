@@ -8,6 +8,188 @@
 #if defined(__arm__)
 
 #########################################################################
+.macro _neon64_fast_check a b FastType vecDarker1 vecBrighter1
+	ldr r10, [sp, #(circle + \a*COMPV_GAS_REG_SZ_BYTES)]
+	ldr r11, [sp, #(circle + \b*COMPV_GAS_REG_SZ_BYTES)]
+	add r10, r10, i
+	add r11, r11, i
+	ld1 {v14.16b}, [r10]
+	ld1 {v15.16b}, [r11]
+	cmlo v10.16b, v14.16b, \vecDarker1
+	cmlo v11.16b, v15.16b, \vecDarker1
+	cmhi v12.16b, v14.16b, \vecBrighter1
+	cmhi v13.16b, v15.16b, \vecBrighter1
+	orr v10.16b, v10.16b, v11.16b
+	orr v12.16b, v12.16b, v13.16b
+	orr v10.16b, v10.16b, v12.16b
+	mov r10, v10.d[0]
+    mov r11, v10.d[1]
+	orr r10, r10, r11 // orrs not avail on Aarch64
+    tst r10, r10
+	beq Next_CompVFastDataRow_Asm_NEON64\FastType
+	add r10, sp, #(vecCircle16 + \a*16)
+	st1 { v14.16b }, [r10], eightTimesSixteen
+	st1 { v15.16b }, [r10]
+.endm
+
+#########################################################################
+.macro _neon64_fast_compute_darkers a b c d vecDarker1
+	add r8, sp, #(vecCircle16 + \a*16)
+	# r9 is equal to (c - b) and initialized in _neon64_fast_load
+	add r10, sp, #(vecDiff16 + \a*16)
+	ld1 {v12.16b}, [r8], eightTimesSixteen
+	ld1 {v13.16b}, [r8], r9
+	ld1 {v14.16b}, [r8], eightTimesSixteen
+	ld1 {v15.16b}, [r8]
+	uqsub v12.16b, \vecDarker1, v12.16b
+	uqsub v13.16b, \vecDarker1, v13.16b
+	uqsub v14.16b, \vecDarker1, v14.16b
+	uqsub v15.16b, \vecDarker1, v15.16b
+	st1 { v12.16b }, [r10], eightTimesSixteen
+	st1 { v13.16b }, [r10], r9
+	st1 { v14.16b }, [r10], eightTimesSixteen
+	st1 { v15.16b }, [r10]
+.endm
+
+#########################################################################
+.macro _neon64_fast_compute_brighters a b c d vecBrighter1
+	add r8, sp, #(vecCircle16 + \a*16)
+	# r9 is equal to (c - b) and initialized in _neon64_fast_load
+	add r10, sp, #(vecDiff16 + \a*16)
+	ld1 {v12.16b}, [r8], eightTimesSixteen
+	ld1 {v13.16b}, [r8], r9
+	ld1 {v14.16b}, [r8], eightTimesSixteen
+	ld1 {v15.16b}, [r8]
+	uqsub v12.16b, v12.16b, \vecBrighter1
+	uqsub v13.16b, v13.16b, \vecBrighter1
+	uqsub v14.16b, v14.16b, \vecBrighter1
+	uqsub v15.16b, v15.16b, \vecBrighter1
+	st1 { v12.16b }, [r10], eightTimesSixteen
+	st1 { v13.16b }, [r10], r9
+	st1 { v14.16b }, [r10], eightTimesSixteen
+	st1 { v15.16b }, [r10]
+.endm
+
+#########################################################################
+.macro _neon64_fast_load a b c d type vecDarkerOrvecBrighter1 vecZero vecOne  vecSum1
+	mov r9, #(\c-\b)*16
+	_neon64_fast_compute_\type \a, \b, \c, \d, \vecDarkerOrvecBrighter1
+	add r8, sp, #(vecDiffBinary16 + \a*16)
+	cmhi v12.16b, v12.16b, \vecZero
+	cmhi v13.16b, v13.16b, \vecZero
+	cmhi v14.16b, v14.16b, \vecZero
+	cmhi v15.16b, v15.16b, \vecZero
+	and v12.16b, v12.16b, \vecOne
+	and v13.16b, v13.16b, \vecOne
+	and v14.16b, v14.16b, \vecOne
+	and v15.16b, v15.16b, \vecOne
+	st1 { v12.16b }, [r8], eightTimesSixteen
+	st1 { v13.16b }, [r8], r9
+	st1 { v14.16b }, [r8], eightTimesSixteen
+	st1 { v15.16b }, [r8]
+	add v12.16b, v12.16b, v13.16b
+	add v14.16b, v14.16b, v15.16b
+	add \vecSum1, \vecSum1, v12.16b
+	add \vecSum1, \vecSum1, v14.16b
+.endm
+
+#########################################################################
+.macro _neon64_fast_init_diffbinarysum FastType vecSum1
+	add r8, sp, #(vecDiffBinary16 + 0*16)
+	ld1 {v12.16b}, [r8], sixteen
+	ld1 {v13.16b}, [r8], sixteen
+	ld1 {v14.16b}, [r8], sixteen
+	ld1 {v15.16b}, [r8], sixteen
+	add v12.16b, v12.16b, v13.16b
+	add v14.16b, v14.16b, v15.16b
+	add \vecSum1, v12.16b, v14.16b // setting vecSum1 for the first time
+	ld1 {v12.16b}, [r8], sixteen
+	ld1 {v13.16b}, [r8], sixteen
+	ld1 {v14.16b}, [r8], sixteen
+	ld1 {v15.16b}, [r8], sixteen
+	add v12.16b, v12.16b, v13.16b
+	add v14.16b, v14.16b, v15.16b
+	add \vecSum1, \vecSum1, v12.16b
+	add \vecSum1, \vecSum1, v14.16b
+	.if \FastType == 12
+		ld1 {v12.16b}, [r8], sixteen
+		ld1 {v13.16b}, [r8], sixteen
+		ld1 {v14.16b}, [r8], sixteen
+		add v12.16b, v12.16b, v13.16b
+		add \vecSum1, \vecSum1, v14.16b
+		add \vecSum1, \vecSum1, v12.16b
+	.endif
+.endm
+
+#########################################################################
+.macro _neon64_fast_strength ii FastType vecSum1 vecStrengths vecN
+	.if \FastType == 12
+		add r11, sp, #(vecDiffBinary16 + (((11 + \ii)&15)*16)) // 11 = NminusOne
+	.else
+		add r11, sp, #(vecDiffBinary16 + (((8 + \ii)&15)*16)) // 8 = NminusOne
+	.endif
+	ld1 {v15.16b}, [r11]
+	add \vecSum1, \vecSum1, v15.16b // add tail
+	cmhs v11.16b, \vecSum1, \vecN
+    mov r10, v11.d[0]
+    mov r11, v11.d[1]
+    orr r10, r10, r11 // orrs not avail on Aarch64
+    tst r10, r10
+	beq FastStrength_AllZeros_CompVFastDataRow_Asm_NEON64\@
+	add r8, sp, #(vecDiff16 + (((0 + \ii)&15)*16))
+	add r9, sp, #(vecDiff16 + (((1 + \ii)&15)*16))
+	add r10, sp, #(vecDiff16 + (((2 + \ii)&15)*16))
+	add r11, sp, #(vecDiff16 + (((3 + \ii)&15)*16))
+	ld1 {v11.16b}, [r8] // v11 = vecTemp
+	ld1 {v13.16b}, [r9]
+	ld1 {v14.16b}, [r10]
+	ld1 {v15.16b}, [r11]
+	umin v11.16b, v11.16b, v13.16b
+	umin v14.16b, v14.16b, v15.16b
+	add r8, sp, #(vecDiff16 + (((4 + \ii)&15)*16))
+	add r9, sp, #(vecDiff16 + (((5 + \ii)&15)*16))
+	add r10, sp, #(vecDiff16 + (((6 + \ii)&15)*16))
+	add r11, sp, #(vecDiff16 + (((7 + \ii)&15)*16))
+	ld1 {v12.16b}, [r8]
+	umin v11.16b, v11.16b, v14.16b
+	ld1 {v13.16b}, [r9]
+	ld1 {v14.16b}, [r10]
+	ld1 {v15.16b}, [r11]
+	umin v12.16b, v12.16b, v13.16b
+	add r8, sp, #(vecDiff16 + (((8 + \ii)&15)*16))
+	ld1 {v13.16b}, [r8]
+	umin v14.16b, v14.16b, v15.16b
+	umin v12.16b, v12.16b, v13.16b
+	umin v11.16b, v11.16b, v14.16b
+	umin v11.16b, v11.16b, v12.16b
+	.if \FastType == 12
+		add r8, sp, #(vecDiff16 + (((9 + \ii)&15)*16))
+		add r9, sp, #(vecDiff16 + (((10 + \ii)&15)*16))
+		add r10, sp, #(vecDiff16 + (((11 + \ii)&15)*16))
+		ld1 {v12.16b}, [r8]
+		ld1 {v13.16b}, [r9]
+		ld1 {v14.16b}, [r10]
+		umin v12.16b, v12.16b, v13.16b
+		umin v11.16b, v11.16b, v14.16b
+		umin v11.16b, v11.16b, v12.16b
+	.endif
+	umax \vecStrengths, \vecStrengths, v11.16b
+	FastStrength_AllZeros_CompVFastDataRow_Asm_NEON64\@:
+	add r8, sp, #(vecDiffBinary16 + ((\ii&15)*16))
+	ld1 {v15.16b}, [r8]
+	sub \vecSum1, \vecSum1, v15.16b // sub head
+.endm
+
+
+
+
+
+
+
+
+
+
+#########################################################################
 .macro _neon32_fast_check a b FastType
 	ldr r10, [sp, #(circle + \a*COMPV_GAS_REG_SZ_BYTES)]
 	ldr r11, [sp, #(circle + \b*COMPV_GAS_REG_SZ_BYTES)]

@@ -194,10 +194,11 @@
 	COMPV_GAS_FUNCTION_RETURN
 .endm
 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 COMPV_GAS_FUNCTION_DECLARE CompVFast9DataRow_Asm_NEON32
 	CompVFastDataRow_Macro_NEON32 9
 
-
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 COMPV_GAS_FUNCTION_DECLARE CompVFast12DataRow_Asm_NEON32
 	CompVFastDataRow_Macro_NEON32 12
 
