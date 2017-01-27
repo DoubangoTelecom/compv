@@ -252,41 +252,34 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON64
             uzp1 vecNeighb2.16b, v28.16b, v29.16b // 2,2,2,2,2,2,2,2
             uzp2 vecNeighb3.16b, v28.16b, v29.16b // 3,3,3,3,3,3,3,3
 
-            ## compute x0 and x1 (first #8) and convert from epi32 and epi16 ##
+            ## Compute other values ##
 
             and v21.16b, vecX0.16b, vec0xff_epi32.16b
             and v22.16b, vecX1.16b, vec0xff_epi32.16b
+            and v27.16b, vecX2.16b, vec0xff_epi32.16b
+            and v28.16b, vecX3.16b, vec0xff_epi32.16b
             xtn v21.4h, v21.4s
-            xtn2 v21.8h, v22.4s
-            bic v22.16b, vec0xff_epi16.16b, v21.16b
-
-            // compute vec4 = (neighb0 * x1) + (neighb1 * x0) -> #8 epi16
+            xtn v27.4h, v27.4s
             uxtl v23.8h, vecNeighb0.8b
+            xtn2 v21.8h, v22.4s
+            xtn2 v27.8h, v28.4s
             uxtl v24.8h, vecNeighb1.8b
-            mul vec4.8h, v23.8h, v22.8h
-            mla vec4.8h, v24.8h, v21.8h
-            // compute vec5 = (neighb2 * x1) + (neighb3 * x0) -> #8 epi16
-            uxtl v23.8h, vecNeighb2.8b
-            uxtl v24.8h, vecNeighb3.8b
-            mul vec5.8h, v23.8h, v22.8h
-            mla vec5.8h, v24.8h, v21.8h
-
-            ## compute x0 and x1 (second #8) and convert from epi32 and epi16 ##
-            and v21.16b, vecX2.16b, vec0xff_epi32.16b
-            and v22.16b, vecX3.16b, vec0xff_epi32.16b
-            xtn v21.4h, v21.4s
-            xtn2 v21.8h, v22.4s // vec0 = v21
-            bic v22.16b, vec0xff_epi16.16b, v21.16b // vec1 = v22 
-            // compute vec6 = (neighb0 * x1) + (neighb1 * x0) -> #8 epi16
-            uxtl2 v23.8h, vecNeighb0.16b
-            uxtl2 v24.8h, vecNeighb1.16b
-            mul vec6.8h, v23.8h, v22.8h
-            mla vec6.8h, v24.8h, v21.8h
-            // compute vec7 = (neighb2 * x1) + (neighb3 * x0) -> #8 epi16
-            uxtl2 v23.8h, vecNeighb2.16b
-            uxtl2 v24.8h, vecNeighb3.16b
-            mul vec7.8h, v23.8h, v22.8h
-            mla vec7.8h, v24.8h, v21.8h
+            uxtl v26.8h, vecNeighb3.8b
+            mul vec4.8h, v24.8h, v21.8h
+            mul vec5.8h, v26.8h, v21.8h
+            bic v28.16b, vec0xff_epi16.16b, v27.16b
+            uxtl2 v29.8h, vecNeighb0.16b
+            uxtl2 v30.8h, vecNeighb2.16b
+            mul vec6.8h, v29.8h, v28.8h
+            mul vec7.8h, v30.8h, v28.8h
+            bic v22.16b, vec0xff_epi16.16b, v21.16b
+            uxtl v25.8h, vecNeighb2.8b
+            uxtl2 vecNeighb0.8h, vecNeighb1.16b
+            uxtl2 vecNeighb1.8h, vecNeighb3.16b
+            mla vec4.8h, v23.8h, v22.8h
+            mla vec5.8h, v25.8h, v22.8h
+            mla vec6.8h, vecNeighb0.8h, v27.8h    
+            mla vec7.8h, vecNeighb1.8h, v27.8h
 
             // Let's say:
 			//		A = ((neighb0 * x1) + (neighb1 * x0))
