@@ -10,6 +10,91 @@
 .include "compv_core_feature_fast_dete_macros_neon.S"
 
 #########################################################################
+# arg(0) -> COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap
+# arg(1) -> COMPV_ALIGNED(NEON) uint8_t* pNMS
+# arg(2) -> compv_uscalar_t width
+# arg(3) -> compv_uscalar_t heigth
+# arg(4) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+COMPV_GAS_FUNCTION_DECLARE CompVFastNmsApply_Asm_NEON64
+	COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 5
+	COMPV_GAS_SAVE_NEON_REGS
+	
+	ldp_arg 0, r0, r1
+    ldp_arg 2, r2, r3
+    ldr_arg 4, r4
+	pcStrengthsMap .req r0
+	pNMS .req r1
+	width .req r2
+	heigth .req r3
+	stride .req r4
+
+	nms .req r5
+	i .req r6
+	#define vec0 v0	
+	#define vecZero v1
+
+	lsl r28, stride, #1
+	mov r27, #0
+	add r28, r28, stride // r28 = stride * 3
+	dup vecZero.16b, r27w
+	sub heigth, heigth, #6 // [j starts at #3 and end at heigth - #3] -> loop executed (heigth - #6) times
+	add pcStrengthsMap, pcStrengthsMap, r28
+	add pNMS, pNMS, r28
+
+	#######################################
+	# for (j = 3; j < heigth - 3; ++j)
+	#######################################
+	LoopHeight_CompVFastNmsApply_Asm_NEON64:
+		#######################################
+		# for (i = 0; i < width; i += 16)
+		#######################################
+		mov i, #0
+		mov nms, pNMS
+		LoopWidth_CompVFastNmsApply_Asm_NEON64:
+			prfm pldl1keep, [nms, #(CACHE_LINE_SIZE*3)]
+			ld1 { vec0.16b }, [nms], #16
+			cmhi vec0.16b, vec0.16b, vecZero.16b
+			mov r27, vec0.d[0]
+            mov r28, vec0.d[1]
+			orr r27, r27, r28 // orrs not avail on Aarch64
+            tst r27, r27
+			beq AllZeros_CompVFastNmsApply_Asm_NEON64
+			add r11, pcStrengthsMap, i
+			add r10, pNMS, i
+			ld1 { v15.16b }, [r11]
+			st1 { vecZero.16b }, [r10]
+			bic v15.16b, v15.16b, vec0.16b
+			st1 { v15.16b }, [r11]
+			AllZeros_CompVFastNmsApply_Asm_NEON64:
+
+			add i, i, #16
+			cmp i, width
+			blt LoopWidth_CompVFastNmsApply_Asm_NEON64
+			#End_of_LoopWidth#
+
+		add pcStrengthsMap, pcStrengthsMap, stride
+		add pNMS, pNMS, stride
+		subs heigth, heigth, #1
+		bne LoopHeight_CompVFastNmsApply_Asm_NEON64
+		#End_of_LoopHeight#
+
+	.unreq pcStrengthsMap
+	.unreq pNMS
+	.unreq width
+	.unreq heigth
+	.unreq stride
+	.unreq nms
+	.unreq i
+	#undef vec0
+	#undef vecZero
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+#########################################################################
 # arg(0) -> const uint8_t* pcStrengthsMap
 # arg(1) -> uint8_t* pNMS
 # arg(2) -> const compv_uscalar_t width

@@ -68,7 +68,7 @@ COMPV_NAMESPACE_BEGIN()
     //COMPV_EXTERNC void CompVFast9DataRow_Asm_NEON64(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
     //COMPV_EXTERNC void CompVFast12DataRow_Asm_NEON64(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
     COMPV_EXTERNC void CompVFastNmsGather_Asm_NEON64(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
-    //COMPV_EXTERNC void CompVFastNmsApply_Asm_NEON64(COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap, COMPV_ALIGNED(NEON) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+    COMPV_EXTERNC void CompVFastNmsApply_Asm_NEON64(COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap, COMPV_ALIGNED(NEON) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_ARM32 */
 #endif /* COMPV_ASM */
 
@@ -634,6 +634,7 @@ void CompVFastNmsApplyRangeAndBuildInterestPoints(RangeFAST* range, std::vector<
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(range->stride) && COMPV_IS_ALIGNED_NEON(range->strengths) && COMPV_IS_ALIGNED_NEON(range->nms)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVFastNmsApply = CompVFastNmsApply_Intrin_NEON));
 		COMPV_EXEC_IFDEF_ASM_ARM32((CompVFastNmsApply = CompVFastNmsApply_Asm_NEON32));
+        COMPV_EXEC_IFDEF_ASM_ARM64((CompVFastNmsApply = CompVFastNmsApply_Asm_NEON64));
 	}
 #endif
 	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
