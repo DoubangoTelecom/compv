@@ -75,12 +75,39 @@
 	mov sixteen, #16
 
 	## Load circle ##
-	add r10, sp, #circle
-	.rept 16
-		ldr r11, [pixels16], #COMPV_GAS_REG_SZ_BYTES
-		add r11, Iptr, r11
-		str r11, [r10], #COMPV_GAS_REG_SZ_BYTES
-	.endr
+    add r25, sp, #circle
+    ldp r7, r8, [pixels16], #(2*COMPV_GAS_REG_SZ_BYTES)
+    ldp r9, r10, [pixels16], #(2*COMPV_GAS_REG_SZ_BYTES)
+    ldp r11, r12, [pixels16], #(2*COMPV_GAS_REG_SZ_BYTES)
+    ldp r13, r14, [pixels16], #(2*COMPV_GAS_REG_SZ_BYTES)
+    ldp r15, r16, [pixels16], #(2*COMPV_GAS_REG_SZ_BYTES)
+    ldp r19, r20, [pixels16], #(2*COMPV_GAS_REG_SZ_BYTES)
+    ldp r21, r22, [pixels16], #(2*COMPV_GAS_REG_SZ_BYTES)
+    ldp r23, r24, [pixels16], #(2*COMPV_GAS_REG_SZ_BYTES)
+    add r7, Iptr, r7
+    add r8, Iptr, r8
+    add r9, Iptr, r9
+    add r10, Iptr, r10
+    add r11, Iptr, r11
+    add r12, Iptr, r12
+    add r13, Iptr, r13
+    add r14, Iptr, r14
+    add r15, Iptr, r15
+    add r16, Iptr, r16
+    add r19, Iptr, r19
+    add r20, Iptr, r20
+    add r21, Iptr, r21
+    add r22, Iptr, r22
+    add r23, Iptr, r23
+    add r24, Iptr, r24
+    stp r7, r8, [r25], #(2*COMPV_GAS_REG_SZ_BYTES)
+    stp r9, r10, [r25], #(2*COMPV_GAS_REG_SZ_BYTES)
+    stp r11, r12, [r25], #(2*COMPV_GAS_REG_SZ_BYTES)
+    stp r13, r14, [r25], #(2*COMPV_GAS_REG_SZ_BYTES)
+    stp r15, r16, [r25], #(2*COMPV_GAS_REG_SZ_BYTES)
+    stp r19, r20, [r25], #(2*COMPV_GAS_REG_SZ_BYTES)
+    stp r21, r22, [r25], #(2*COMPV_GAS_REG_SZ_BYTES)
+    stp r23, r24, [r25], #(2*COMPV_GAS_REG_SZ_BYTES)
 	# pixels16(r2) no longer needed -> use it as i counter
 	i .req pixels16
     .unreq pixels16
@@ -98,15 +125,201 @@
 		#######################################
 		# Check
 		#######################################
-		_neon64_fast_check 0, 8, \FastType, vecDarker1.16b, vecBrighter1.16b
-		_neon64_fast_check 4, 12, \FastType, vecDarker1.16b, vecBrighter1.16b
-		_neon64_fast_check 1, 9, \FastType, vecDarker1.16b, vecBrighter1.16b
-		_neon64_fast_check 5, 13, \FastType, vecDarker1.16b, vecBrighter1.16b
-		_neon64_fast_check 2, 10, \FastType, vecDarker1.16b, vecBrighter1.16b
-		_neon64_fast_check 6, 14, \FastType, vecDarker1.16b, vecBrighter1.16b
-		_neon64_fast_check 3, 11, \FastType, vecDarker1.16b, vecBrighter1.16b
-		_neon64_fast_check 7, 15, \FastType, vecDarker1.16b, vecBrighter1.16b
+        ldr r10, [sp, #(circle + 0*COMPV_GAS_REG_SZ_BYTES)]
+        ldr r11, [sp, #(circle + 8*COMPV_GAS_REG_SZ_BYTES)]
+        #if 1
+            add r10, r10, i
+            add r11, r11, i
+            ld1 {v14.16b}, [r10]
+            ld1 {v15.16b}, [r11]
+        #else
+            ldr q14, [r10, i]
+            ldr q15, [r11, i]
+        #endif        
+        cmlo v26.16b, v14.16b, vecDarker1.16b
+        cmlo v27.16b, v15.16b, vecDarker1.16b
+        cmhi v28.16b, v14.16b, vecBrighter1.16b
+        cmhi v29.16b, v15.16b, vecBrighter1.16b
+        orr v26.16b, v26.16b, v27.16b
+        orr v27.16b, v28.16b, v29.16b
+        orr v28.16b, v26.16b, v27.16b
+        mov r10, v28.d[0]
+        mov r11, v28.d[1]
+        orr r10, r10, r11 // orrs not avail on Aarch64
+        cbz r10, Next_CompVFastDataRow_Asm_NEON64\FastType        
+        ldr r10, [sp, #(circle + 4*COMPV_GAS_REG_SZ_BYTES)]
+        ldr r11, [sp, #(circle + 12*COMPV_GAS_REG_SZ_BYTES)]
+        #if 1
+            add r10, r10, i
+            add r11, r11, i
+            ld1 {v16.16b}, [r10]
+            ld1 {v17.16b}, [r11]
+        #else
+            ldr q16, [r10, i]
+            ldr q17, [r11, i]
+        #endif
+        cmlo v26.16b, v16.16b, vecDarker1.16b
+        cmlo v27.16b, v17.16b, vecDarker1.16b
+        cmhi v28.16b, v16.16b, vecBrighter1.16b
+        cmhi v29.16b, v17.16b, vecBrighter1.16b
+        orr v26.16b, v26.16b, v27.16b
+        orr v27.16b, v28.16b, v29.16b
+        orr v28.16b, v26.16b, v27.16b
+        mov r10, v28.d[0]
+        mov r11, v28.d[1]
+        orr r10, r10, r11 // orrs not avail on Aarch64
+        cbz r10, Next_CompVFastDataRow_Asm_NEON64\FastType        
+        ldr r10, [sp, #(circle + 1*COMPV_GAS_REG_SZ_BYTES)]
+        ldr r11, [sp, #(circle + 9*COMPV_GAS_REG_SZ_BYTES)]
+        #if 1
+            add r10, r10, i
+            add r11, r11, i
+            ld1 {v18.16b}, [r10]
+            ld1 {v19.16b}, [r11]
+        #else
+            ldr q18, [r10, i]
+            ldr q19, [r11, i]
+        #endif
+        cmlo v26.16b, v18.16b, vecDarker1.16b
+        cmlo v27.16b, v19.16b, vecDarker1.16b
+        cmhi v28.16b, v18.16b, vecBrighter1.16b
+        cmhi v29.16b, v19.16b, vecBrighter1.16b
+        orr v26.16b, v26.16b, v27.16b
+        orr v27.16b, v28.16b, v29.16b
+        orr v28.16b, v26.16b, v27.16b
+        mov r10, v28.d[0]
+        mov r11, v28.d[1]
+        orr r10, r10, r11 // orrs not avail on Aarch64
+        cbz r10, Next_CompVFastDataRow_Asm_NEON64\FastType        
+        ldr r10, [sp, #(circle + 5*COMPV_GAS_REG_SZ_BYTES)]
+        ldr r11, [sp, #(circle + 13*COMPV_GAS_REG_SZ_BYTES)]
+        #if 1
+            add r10, r10, i
+            add r11, r11, i
+            ld1 {v20.16b}, [r10]
+            ld1 {v21.16b}, [r11]
+        #else
+            ldr q20, [r10, i]
+            ldr q21, [r11, i]
+        #endif
+        cmlo v26.16b, v20.16b, vecDarker1.16b
+        cmlo v27.16b, v21.16b, vecDarker1.16b
+        cmhi v28.16b, v20.16b, vecBrighter1.16b
+        cmhi v29.16b, v21.16b, vecBrighter1.16b
+        orr v26.16b, v26.16b, v27.16b
+        orr v27.16b, v28.16b, v29.16b
+        orr v28.16b, v26.16b, v27.16b
+        mov r10, v28.d[0]
+        mov r11, v28.d[1]
+        orr r10, r10, r11 // orrs not avail on Aarch64
+        cbz r10, Next_CompVFastDataRow_Asm_NEON64\FastType
+        ldr r10, [sp, #(circle + 2*COMPV_GAS_REG_SZ_BYTES)]
+        ldr r11, [sp, #(circle + 10*COMPV_GAS_REG_SZ_BYTES)]
+        #if 1
+            add r10, r10, i
+            add r11, r11, i
+            ld1 {v12.16b}, [r10]
+            ld1 {v13.16b}, [r11]
+        #else
+            ldr q12, [r10, i]
+            ldr q13, [r11, i]
+        #endif
+        cmlo v26.16b, v12.16b, vecDarker1.16b
+        cmlo v27.16b, v13.16b, vecDarker1.16b
+        cmhi v28.16b, v12.16b, vecBrighter1.16b
+        cmhi v29.16b, v13.16b, vecBrighter1.16b
+        orr v26.16b, v26.16b, v27.16b
+        orr v27.16b, v28.16b, v29.16b
+        orr v28.16b, v26.16b, v27.16b
+        mov r10, v28.d[0]
+        mov r11, v28.d[1]
+        orr r10, r10, r11 // orrs not avail on Aarch64
+        cbz r10, Next_CompVFastDataRow_Asm_NEON64\FastType   
+        ldr r10, [sp, #(circle + 6*COMPV_GAS_REG_SZ_BYTES)]
+        ldr r11, [sp, #(circle + 14*COMPV_GAS_REG_SZ_BYTES)]
+        #if 1
+            add r10, r10, i
+            add r11, r11, i
+            ld1 {v22.16b}, [r10]
+            ld1 {v23.16b}, [r11]
+        #else
+            ldr q22, [r10, i]
+            ldr q23, [r11, i]
+        #endif
+        cmlo v26.16b, v22.16b, vecDarker1.16b
+        cmlo v27.16b, v23.16b, vecDarker1.16b
+        cmhi v28.16b, v22.16b, vecBrighter1.16b
+        cmhi v29.16b, v23.16b, vecBrighter1.16b
+        orr v26.16b, v26.16b, v27.16b
+        orr v27.16b, v28.16b, v29.16b
+        orr v28.16b, v26.16b, v27.16b
+        mov r10, v28.d[0]
+        mov r11, v28.d[1]
+        orr r10, r10, r11 // orrs not avail on Aarch64
+        cbz r10, Next_CompVFastDataRow_Asm_NEON64\FastType  
+        ldr r10, [sp, #(circle + 3*COMPV_GAS_REG_SZ_BYTES)]
+        ldr r11, [sp, #(circle + 11*COMPV_GAS_REG_SZ_BYTES)]
+        #if 1
+            add r10, r10, i
+            add r11, r11, i
+            ld1 {v24.16b}, [r10]
+            ld1 {v25.16b}, [r11]
+        #else
+            ldr q24, [r10, i]
+            ldr q25, [r11, i]
+        #endif
+        cmlo v26.16b, v24.16b, vecDarker1.16b
+        cmlo v27.16b, v25.16b, vecDarker1.16b
+        cmhi v28.16b, v24.16b, vecBrighter1.16b
+        cmhi v29.16b, v25.16b, vecBrighter1.16b
+        orr v26.16b, v26.16b, v27.16b
+        orr v27.16b, v28.16b, v29.16b
+        orr v28.16b, v26.16b, v27.16b
+        mov r10, v28.d[0]
+        mov r11, v28.d[1]
+        orr r10, r10, r11 // orrs not avail on Aarch64
+        cbz r10, Next_CompVFastDataRow_Asm_NEON64\FastType  
+        ldr r10, [sp, #(circle + 7*COMPV_GAS_REG_SZ_BYTES)]
+        ldr r11, [sp, #(circle + 15*COMPV_GAS_REG_SZ_BYTES)]
+        #if 1
+            add r10, r10, i
+            add r11, r11, i
+            ld1 {v26.16b}, [r10]
+            ld1 {v27.16b}, [r11]
+        #else
+            ldr q26, [r10, i]
+            ldr q27, [r11, i]
+        #endif
+        cmlo v28.16b, v26.16b, vecDarker1.16b
+        cmlo v29.16b, v27.16b, vecDarker1.16b
+        orr v28.16b, v28.16b, v29.16b
+        cmhi v29.16b, v26.16b, vecBrighter1.16b
+        orr v28.16b, v28.16b, v29.16b
+        cmhi v29.16b, v27.16b, vecBrighter1.16b
+        orr v28.16b, v28.16b, v29.16b
+        mov r10, v28.d[0]
+        mov r11, v28.d[1]
+        orr r10, r10, r11 // orrs not avail on Aarch64
+        cbz r10, Next_CompVFastDataRow_Asm_NEON64\FastType  
+        add r10, sp, #(vecCircle16 + 0*16)
+        st1 { v14.16b }, [r10], sixteen
+        st1 { v18.16b }, [r10], sixteen
+        st1 { v12.16b }, [r10], sixteen
+        st1 { v24.16b }, [r10], sixteen
+        st1 { v16.16b }, [r10], sixteen
+        st1 { v20.16b }, [r10], sixteen
+        st1 { v22.16b }, [r10], sixteen
+        st1 { v26.16b }, [r10], sixteen
+        st1 { v15.16b }, [r10], sixteen
+        st1 { v19.16b }, [r10], sixteen
+        st1 { v13.16b }, [r10], sixteen
+        st1 { v25.16b }, [r10], sixteen
+        st1 { v17.16b }, [r10], sixteen
+        st1 { v21.16b }, [r10], sixteen
+        st1 { v23.16b }, [r10], sixteen
+        st1 { v27.16b }, [r10], sixteen
 
+#if 1
 		#######################################
 		# Darkers
 		#######################################
@@ -117,15 +330,105 @@
             mov r11, v14.d[1]
             orr r10, r10, r11 // orrs not avail on Aarch64
 			cbz r10, EndOfDarkers_CompVFastDataRow_Asm_NEON64\@
-			_neon64_fast_load 1, 9, 5, 13, darkers, vecDarker1.16b, vecZero.16b, vecOne.16b,  vecSum1.16b
-			_neon64_fast_load 2, 10, 6, 14, darkers, vecDarker1.16b, vecZero.16b, vecOne.16b,  vecSum1.16b
-			_neon64_fast_load 3, 11, 7, 15, darkers, vecDarker1.16b, vecZero.16b, vecOne.16b,  vecSum1.16b
-			cmhs v14.16b, vecSum1.16b, vecN.16b
-            mov r10, v14.d[0]
-            mov r11, v14.d[1]
-            orr r10, r10, r11 // orrs not avail on Aarch64
-			cbz r10, EndOfDarkers_CompVFastDataRow_Asm_NEON64\@
-
+            mov r28, #(-4)*16            
+            add r8, sp, #(vecCircle16 + 1*16)
+            add r9, sp, #(vecDiff16 + 1*16)
+            add r10, sp, #(vecDiffBinary16 + 1*16)
+            add r11, sp, #(vecCircle16 + 2*16)
+            add r12, sp, #(vecDiff16 + 2*16)
+            add r13, sp, #(vecDiffBinary16 + 2*16)
+            add r14, sp, #(vecCircle16 + 3*16)
+            add r15, sp, #(vecDiff16 + 3*16)
+            add r16, sp, #(vecDiffBinary16 + 3*16)
+            ld1 {v12.16b}, [r8], eightTimesSixteen
+            ld1 {v13.16b}, [r8], r28
+            ld1 {v14.16b}, [r8], eightTimesSixteen
+            ld1 {v15.16b}, [r8]
+            ld1 {v16.16b}, [r11], eightTimesSixteen
+            ld1 {v17.16b}, [r11], r28
+            ld1 {v18.16b}, [r11], eightTimesSixteen
+            ld1 {v19.16b}, [r11]
+            ld1 {v20.16b}, [r14], eightTimesSixteen
+            ld1 {v21.16b}, [r14], r28
+            ld1 {v22.16b}, [r14], eightTimesSixteen
+            ld1 {v23.16b}, [r14]
+            uqsub v12.16b, vecDarker1.16b, v12.16b
+            uqsub v13.16b, vecDarker1.16b, v13.16b
+            uqsub v14.16b, vecDarker1.16b, v14.16b
+            uqsub v15.16b, vecDarker1.16b, v15.16b
+            uqsub v16.16b, vecDarker1.16b, v16.16b
+            uqsub v17.16b, vecDarker1.16b, v17.16b
+            uqsub v18.16b, vecDarker1.16b, v18.16b
+            uqsub v19.16b, vecDarker1.16b, v19.16b
+            uqsub v20.16b, vecDarker1.16b, v20.16b
+            uqsub v21.16b, vecDarker1.16b, v21.16b
+            uqsub v22.16b, vecDarker1.16b, v22.16b
+            uqsub v23.16b, vecDarker1.16b, v23.16b
+            st1 { v12.16b }, [r9], eightTimesSixteen
+            st1 { v13.16b }, [r9], r28
+            st1 { v14.16b }, [r9], eightTimesSixteen
+            st1 { v15.16b }, [r9]
+            st1 { v16.16b }, [r12], eightTimesSixteen
+            st1 { v17.16b }, [r12], r28
+            st1 { v18.16b }, [r12], eightTimesSixteen
+            st1 { v19.16b }, [r12]
+            st1 { v20.16b }, [r15], eightTimesSixteen
+            st1 { v21.16b }, [r15], r28
+            st1 { v22.16b }, [r15], eightTimesSixteen
+            st1 { v23.16b }, [r15]
+            cmhi v12.16b, v12.16b, vecZero.16b
+            cmhi v13.16b, v13.16b, vecZero.16b
+            cmhi v14.16b, v14.16b, vecZero.16b
+            cmhi v15.16b, v15.16b, vecZero.16b
+            cmhi v16.16b, v16.16b, vecZero.16b
+            cmhi v17.16b, v17.16b, vecZero.16b
+            cmhi v18.16b, v18.16b, vecZero.16b
+            cmhi v19.16b, v19.16b, vecZero.16b
+            cmhi v20.16b, v20.16b, vecZero.16b
+            cmhi v21.16b, v21.16b, vecZero.16b
+            cmhi v22.16b, v22.16b, vecZero.16b
+            cmhi v23.16b, v23.16b, vecZero.16b
+            and v12.16b, v12.16b, vecOne.16b
+            and v13.16b, v13.16b, vecOne.16b
+            and v14.16b, v14.16b, vecOne.16b
+            and v15.16b, v15.16b, vecOne.16b
+            and v16.16b, v16.16b, vecOne.16b
+            and v17.16b, v17.16b, vecOne.16b
+            and v18.16b, v18.16b, vecOne.16b
+            and v19.16b, v19.16b, vecOne.16b
+            and v20.16b, v20.16b, vecOne.16b
+            and v21.16b, v21.16b, vecOne.16b
+            and v22.16b, v22.16b, vecOne.16b
+            and v23.16b, v23.16b, vecOne.16b
+            add v24.16b, v12.16b, v13.16b
+            add v25.16b, v14.16b, v15.16b
+            add v26.16b, v16.16b, v17.16b
+            add v27.16b, v18.16b, v19.16b
+            add v28.16b, v20.16b, v21.16b
+            add v29.16b, v22.16b, v23.16b
+            add v24.16b, v24.16b, v25.16b
+            add v25.16b, v26.16b, v27.16b
+            add v26.16b, v28.16b, v29.16b
+            add v27.16b, v24.16b, v25.16b
+            add vecSum1.16b, vecSum1.16b, v26.16b
+            add vecSum1.16b, vecSum1.16b, v27.16b
+			cmhs v24.16b, vecSum1.16b, vecN.16b
+            mov r20, v24.d[0]
+            mov r21, v24.d[1]
+            orr r20, r20, r21 // orrs not avail on Aarch64
+			cbz r20, EndOfDarkers_CompVFastDataRow_Asm_NEON64\@
+            st1 { v12.16b }, [r10], eightTimesSixteen
+            st1 { v13.16b }, [r10], r28
+            st1 { v14.16b }, [r10], eightTimesSixteen
+            st1 { v15.16b }, [r10]
+            st1 { v16.16b }, [r13], eightTimesSixteen
+            st1 { v17.16b }, [r13], r28
+            st1 { v18.16b }, [r13], eightTimesSixteen
+            st1 { v19.16b }, [r13]
+            st1 { v20.16b }, [r16], eightTimesSixteen
+            st1 { v21.16b }, [r16], r28
+            st1 { v22.16b }, [r16], eightTimesSixteen
+            st1 { v23.16b }, [r16]
 			_neon64_fast_init_diffbinarysum \FastType, vecSum1.16b
 			.irp ii, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 				_neon64_fast_strength \ii, \FastType,  vecSum1.16b, vecStrengths.16b, vecN.16b
@@ -142,22 +445,111 @@
             mov r11, v14.d[1]
             orr r10, r10, r11 // orrs not avail on Aarch64
 			cbz r10, EndOfBrighters_CompVFastDataRow_Asm_NEON64\@
-			_neon64_fast_load 1, 9, 5, 13, brighters, vecBrighter1.16b, vecZero.16b, vecOne.16b,  vecSum1.16b
-			_neon64_fast_load 2, 10, 6, 14, brighters, vecBrighter1.16b, vecZero.16b, vecOne.16b,  vecSum1.16b
-			_neon64_fast_load 3, 11, 7, 15, brighters, vecBrighter1.16b, vecZero.16b, vecOne.16b,  vecSum1.16b
-			cmhs v14.16b, vecSum1.16b, vecN.16b
-            mov r10, v14.d[0]
-            mov r11, v14.d[1]
-            orr r10, r10, r11 // orrs not avail on Aarch64
-			cbz r10, EndOfBrighters_CompVFastDataRow_Asm_NEON64\@
-
+			mov r28, #(-4)*16            
+            add r8, sp, #(vecCircle16 + 1*16)
+            add r9, sp, #(vecDiff16 + 1*16)
+            add r10, sp, #(vecDiffBinary16 + 1*16)
+            add r11, sp, #(vecCircle16 + 2*16)
+            add r12, sp, #(vecDiff16 + 2*16)
+            add r13, sp, #(vecDiffBinary16 + 2*16)
+            add r14, sp, #(vecCircle16 + 3*16)
+            add r15, sp, #(vecDiff16 + 3*16)
+            add r16, sp, #(vecDiffBinary16 + 3*16)
+            ld1 {v12.16b}, [r8], eightTimesSixteen
+            ld1 {v13.16b}, [r8], r28
+            ld1 {v14.16b}, [r8], eightTimesSixteen
+            ld1 {v15.16b}, [r8]
+            ld1 {v16.16b}, [r11], eightTimesSixteen
+            ld1 {v17.16b}, [r11], r28
+            ld1 {v18.16b}, [r11], eightTimesSixteen
+            ld1 {v19.16b}, [r11]
+            ld1 {v20.16b}, [r14], eightTimesSixteen
+            ld1 {v21.16b}, [r14], r28
+            ld1 {v22.16b}, [r14], eightTimesSixteen
+            ld1 {v23.16b}, [r14]
+            uqsub v12.16b, v12.16b, vecBrighter1.16b
+            uqsub v13.16b, v13.16b, vecBrighter1.16b
+            uqsub v14.16b, v14.16b, vecBrighter1.16b
+            uqsub v15.16b, v15.16b, vecBrighter1.16b
+            uqsub v16.16b, v16.16b, vecBrighter1.16b
+            uqsub v17.16b, v17.16b, vecBrighter1.16b
+            uqsub v18.16b, v18.16b, vecBrighter1.16b
+            uqsub v19.16b, v19.16b, vecBrighter1.16b
+            uqsub v20.16b, v20.16b, vecBrighter1.16b
+            uqsub v21.16b, v21.16b, vecBrighter1.16b
+            uqsub v22.16b, v22.16b, vecBrighter1.16b
+            uqsub v23.16b, v23.16b, vecBrighter1.16b
+            st1 { v12.16b }, [r9], eightTimesSixteen
+            st1 { v13.16b }, [r9], r28
+            st1 { v14.16b }, [r9], eightTimesSixteen
+            st1 { v15.16b }, [r9]
+            st1 { v16.16b }, [r12], eightTimesSixteen
+            st1 { v17.16b }, [r12], r28
+            st1 { v18.16b }, [r12], eightTimesSixteen
+            st1 { v19.16b }, [r12]
+            st1 { v20.16b }, [r15], eightTimesSixteen
+            st1 { v21.16b }, [r15], r28
+            st1 { v22.16b }, [r15], eightTimesSixteen
+            st1 { v23.16b }, [r15]
+            cmhi v12.16b, v12.16b, vecZero.16b
+            cmhi v13.16b, v13.16b, vecZero.16b
+            cmhi v14.16b, v14.16b, vecZero.16b
+            cmhi v15.16b, v15.16b, vecZero.16b
+            cmhi v16.16b, v16.16b, vecZero.16b
+            cmhi v17.16b, v17.16b, vecZero.16b
+            cmhi v18.16b, v18.16b, vecZero.16b
+            cmhi v19.16b, v19.16b, vecZero.16b
+            cmhi v20.16b, v20.16b, vecZero.16b
+            cmhi v21.16b, v21.16b, vecZero.16b
+            cmhi v22.16b, v22.16b, vecZero.16b
+            cmhi v23.16b, v23.16b, vecZero.16b
+            and v12.16b, v12.16b, vecOne.16b
+            and v13.16b, v13.16b, vecOne.16b
+            and v14.16b, v14.16b, vecOne.16b
+            and v15.16b, v15.16b, vecOne.16b
+            and v16.16b, v16.16b, vecOne.16b
+            and v17.16b, v17.16b, vecOne.16b
+            and v18.16b, v18.16b, vecOne.16b
+            and v19.16b, v19.16b, vecOne.16b
+            and v20.16b, v20.16b, vecOne.16b
+            and v21.16b, v21.16b, vecOne.16b
+            and v22.16b, v22.16b, vecOne.16b
+            and v23.16b, v23.16b, vecOne.16b
+            add v24.16b, v12.16b, v13.16b
+            add v25.16b, v14.16b, v15.16b
+            add v26.16b, v16.16b, v17.16b
+            add v27.16b, v18.16b, v19.16b
+            add v28.16b, v20.16b, v21.16b
+            add v29.16b, v22.16b, v23.16b
+            add v24.16b, v24.16b, v25.16b
+            add v25.16b, v26.16b, v27.16b
+            add v26.16b, v28.16b, v29.16b
+            add v27.16b, v24.16b, v25.16b
+            add vecSum1.16b, vecSum1.16b, v26.16b
+            add vecSum1.16b, vecSum1.16b, v27.16b
+			cmhs v24.16b, vecSum1.16b, vecN.16b
+            mov r20, v24.d[0]
+            mov r21, v24.d[1]
+            orr r20, r20, r21 // orrs not avail on Aarch64
+			cbz r20, EndOfBrighters_CompVFastDataRow_Asm_NEON64\@
+            st1 { v12.16b }, [r10], eightTimesSixteen
+            st1 { v13.16b }, [r10], r28
+            st1 { v14.16b }, [r10], eightTimesSixteen
+            st1 { v15.16b }, [r10]
+            st1 { v16.16b }, [r13], eightTimesSixteen
+            st1 { v17.16b }, [r13], r28
+            st1 { v18.16b }, [r13], eightTimesSixteen
+            st1 { v19.16b }, [r13]
+            st1 { v20.16b }, [r16], eightTimesSixteen
+            st1 { v21.16b }, [r16], r28
+            st1 { v22.16b }, [r16], eightTimesSixteen
+            st1 { v23.16b }, [r16]
 			_neon64_fast_init_diffbinarysum \FastType, vecSum1.16b
 			.irp ii, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 				_neon64_fast_strength \ii, \FastType,  vecSum1.16b, vecStrengths.16b, vecN.16b
 			.endr
 			EndOfBrighters_CompVFastDataRow_Asm_NEON64\@:
-
-
+#endif
 		Next_CompVFastDataRow_Asm_NEON64\FastType:
 		st1 {vecStrengths.16b}, [strengths], #16
 

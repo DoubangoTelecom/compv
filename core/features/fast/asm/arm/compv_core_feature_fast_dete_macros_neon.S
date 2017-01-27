@@ -19,11 +19,11 @@
 	cmlo v11.16b, v15.16b, \vecDarker1
 	cmhi v12.16b, v14.16b, \vecBrighter1
 	cmhi v13.16b, v15.16b, \vecBrighter1
-	orr v10.16b, v10.16b, v11.16b
-	orr v12.16b, v12.16b, v13.16b
-	orr v10.16b, v10.16b, v12.16b
-	mov r10, v10.d[0]
-    mov r11, v10.d[1]
+	orr v16.16b, v10.16b, v11.16b
+	orr v17.16b, v12.16b, v13.16b
+	orr v18.16b, v16.16b, v17.16b
+	mov r10, v18.d[0]
+    mov r11, v18.d[1]
 	orr r10, r10, r11 // orrs not avail on Aarch64
 	cbz r10, Next_CompVFastDataRow_Asm_NEON64\FastType
 	add r10, sp, #(vecCircle16 + \a*16)
@@ -127,7 +127,9 @@
 	.else
 		add r11, sp, #(vecDiffBinary16 + (((8 + \ii)&15)*16)) // 8 = NminusOne
 	.endif
+    add r20, sp, #(vecDiffBinary16 + ((\ii&15)*16))
 	ld1 {v15.16b}, [r11]
+    ld1 {v27.16b}, [r20]
 	add \vecSum1, \vecSum1, v15.16b // add tail
 	cmhs v11.16b, \vecSum1, \vecN
     mov r10, v11.d[0]
@@ -172,10 +174,8 @@
 		umin v26.16b, v26.16b, v12.16b
 	.endif
 	umax \vecStrengths, \vecStrengths, v26.16b
-	FastStrength_AllZeros_CompVFastDataRow_Asm_NEON64\FastType\@:
-	add r8, sp, #(vecDiffBinary16 + ((\ii&15)*16))
-	ld1 {v15.16b}, [r8]
-	sub \vecSum1, \vecSum1, v15.16b // sub head
+	FastStrength_AllZeros_CompVFastDataRow_Asm_NEON64\FastType\@:	
+	sub \vecSum1, \vecSum1, v27.16b // sub head
 .endm
 
 #########################################################################

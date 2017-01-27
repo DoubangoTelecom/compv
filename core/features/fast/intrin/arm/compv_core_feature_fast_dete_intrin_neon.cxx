@@ -116,7 +116,9 @@ void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_u
 			_neon_fast_check(2, 10); _neon_fast_check(6, 14);
 			_neon_fast_check(3, 11); _neon_fast_check(7, 15);
 		}
-
+        if (i > 10000)
+            printf("FIXME:%u\n", i);
+#if 0
 		/* Darkers */ {
 			vecSum1 = vdupq_n_u8(0);
 			_neon_fast_load(0, 8, 4, 12, Darker);
@@ -160,6 +162,7 @@ void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_u
 			_neon_fast_strength(12, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(13, vecSum1, vecDiff16, vecStrengths, vec0);
 			_neon_fast_strength(14, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(15, vecSum1, vecDiff16, vecStrengths, vec0);
 		} EndOfBrighters:
+#endif
 	
 	Next:
 		vst1q_u8(&strengths[i], vecStrengths);
