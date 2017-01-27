@@ -25,8 +25,7 @@
 	mov r10, v10.d[0]
     mov r11, v10.d[1]
 	orr r10, r10, r11 // orrs not avail on Aarch64
-    tst r10, r10
-	beq Next_CompVFastDataRow_Asm_NEON64\FastType
+	cbz r10, Next_CompVFastDataRow_Asm_NEON64\FastType
 	add r10, sp, #(vecCircle16 + \a*16)
 	st1 { v14.16b }, [r10], eightTimesSixteen
 	st1 { v15.16b }, [r10]
@@ -87,10 +86,10 @@
 	st1 { v13.16b }, [r8], r9
 	st1 { v14.16b }, [r8], eightTimesSixteen
 	st1 { v15.16b }, [r8]
-	add v12.16b, v12.16b, v13.16b
-	add v14.16b, v14.16b, v15.16b
-	add \vecSum1, \vecSum1, v12.16b
-	add \vecSum1, \vecSum1, v14.16b
+	add v16.16b, v12.16b, v13.16b
+	add v17.16b, v14.16b, v15.16b
+	add \vecSum1, \vecSum1, v16.16b
+	add \vecSum1, \vecSum1, v17.16b
 .endm
 
 #########################################################################
@@ -134,8 +133,7 @@
     mov r10, v11.d[0]
     mov r11, v11.d[1]
     orr r10, r10, r11 // orrs not avail on Aarch64
-    tst r10, r10
-	beq FastStrength_AllZeros_CompVFastDataRow_Asm_NEON64\@
+	cbz r10, FastStrength_AllZeros_CompVFastDataRow_Asm_NEON64\FastType\@
 	add r8, sp, #(vecDiff16 + (((0 + \ii)&15)*16))
 	add r9, sp, #(vecDiff16 + (((1 + \ii)&15)*16))
 	add r10, sp, #(vecDiff16 + (((2 + \ii)&15)*16))
@@ -174,7 +172,7 @@
 		umin v26.16b, v26.16b, v12.16b
 	.endif
 	umax \vecStrengths, \vecStrengths, v26.16b
-	FastStrength_AllZeros_CompVFastDataRow_Asm_NEON64\@:
+	FastStrength_AllZeros_CompVFastDataRow_Asm_NEON64\FastType\@:
 	add r8, sp, #(vecDiffBinary16 + ((\ii&15)*16))
 	ld1 {v15.16b}, [r8]
 	sub \vecSum1, \vecSum1, v15.16b // sub head
@@ -308,7 +306,7 @@
 	vmov.32	r10, q15x[0]
 	vmov.32	r11, q15x[1]
 	orrs r11, r11, r10
-	beq FastStrength_AllZeros_CompVFastDataRow_Asm_NEON32\@
+	beq FastStrength_AllZeros_CompVFastDataRow_Asm_NEON32\FastType\@
 	add r8, sp, #(vecDiff16 + (((0 + \ii)&15)*16))
 	add r9, sp, #(vecDiff16 + (((1 + \ii)&15)*16))
 	add r10, sp, #(vecDiff16 + (((2 + \ii)&15)*16))
@@ -347,7 +345,7 @@
 		vmin.u8 q11, q11, q12
 	.endif
 	vmax.u8 vecStrengths, vecStrengths, q11
-	FastStrength_AllZeros_CompVFastDataRow_Asm_NEON32\@:
+	FastStrength_AllZeros_CompVFastDataRow_Asm_NEON32\FastType\@:
 	add r8, sp, #(vecDiffBinary16 + ((\ii&15)*16))
 	vld1.u8 {q15}, [r8 :128]
 	vsub.u8 vecSum1, vecSum1, q15 @ sub head

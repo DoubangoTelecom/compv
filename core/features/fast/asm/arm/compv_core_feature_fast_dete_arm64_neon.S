@@ -53,7 +53,7 @@
 	mov eightTimesSixteen, #(8*16)
 
 	mov r11, #0
-	dup vecZero.16b, r11w
+	dup vecZero.16b, r11w // FIXME: use movi #0
 
 	.if  \FastType == 9
 		mov r10, #9
@@ -116,8 +116,7 @@
             mov r10, v14.d[0]
             mov r11, v14.d[1]
             orr r10, r10, r11 // orrs not avail on Aarch64
-            tst r10, r10
-			beq EndOfDarkers_CompVFastDataRow_Asm_NEON64\@
+			cbz r10, EndOfDarkers_CompVFastDataRow_Asm_NEON64\@
 			_neon64_fast_load 1, 9, 5, 13, darkers, vecDarker1.16b, vecZero.16b, vecOne.16b,  vecSum1.16b
 			_neon64_fast_load 2, 10, 6, 14, darkers, vecDarker1.16b, vecZero.16b, vecOne.16b,  vecSum1.16b
 			_neon64_fast_load 3, 11, 7, 15, darkers, vecDarker1.16b, vecZero.16b, vecOne.16b,  vecSum1.16b
@@ -125,8 +124,7 @@
             mov r10, v14.d[0]
             mov r11, v14.d[1]
             orr r10, r10, r11 // orrs not avail on Aarch64
-            tst r10, r10
-			beq EndOfDarkers_CompVFastDataRow_Asm_NEON64\@
+			cbz r10, EndOfDarkers_CompVFastDataRow_Asm_NEON64\@
 
 			_neon64_fast_init_diffbinarysum \FastType, vecSum1.16b
 			.irp ii, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
@@ -143,8 +141,7 @@
             mov r10, v14.d[0]
             mov r11, v14.d[1]
             orr r10, r10, r11 // orrs not avail on Aarch64
-            tst r10, r10
-			beq EndOfBrighters_CompVFastDataRow_Asm_NEON64\@
+			cbz r10, EndOfBrighters_CompVFastDataRow_Asm_NEON64\@
 			_neon64_fast_load 1, 9, 5, 13, brighters, vecBrighter1.16b, vecZero.16b, vecOne.16b,  vecSum1.16b
 			_neon64_fast_load 2, 10, 6, 14, brighters, vecBrighter1.16b, vecZero.16b, vecOne.16b,  vecSum1.16b
 			_neon64_fast_load 3, 11, 7, 15, brighters, vecBrighter1.16b, vecZero.16b, vecOne.16b,  vecSum1.16b
@@ -152,8 +149,7 @@
             mov r10, v14.d[0]
             mov r11, v14.d[1]
             orr r10, r10, r11 // orrs not avail on Aarch64
-            tst r10, r10
-			beq EndOfBrighters_CompVFastDataRow_Asm_NEON64\@
+			cbz r10, EndOfBrighters_CompVFastDataRow_Asm_NEON64\@
 
 			_neon64_fast_init_diffbinarysum \FastType, vecSum1.16b
 			.irp ii, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
@@ -255,8 +251,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsApply_Asm_NEON64
 			mov r27, vec0.d[0]
             mov r28, vec0.d[1]
 			orr r27, r27, r28 // orrs not avail on Aarch64
-            tst r27, r27
-			beq AllZeros_CompVFastNmsApply_Asm_NEON64
+			cbz r27, AllZeros_CompVFastNmsApply_Asm_NEON64
 			add r11, pcStrengthsMap, i
 			add r10, pNMS, i
 			ld1 { v15.16b }, [r11]
@@ -354,8 +349,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON64
             mov r27, vec1.d[0]
             mov r28, vec1.d[1]
 			orr r27, r27, r28 // orrs not avail on Aarch64
-            tst r27, r27
-			beq AllZeros_CompVFastNmsGather_Asm_NEON64
+			cbz r27, AllZeros_CompVFastNmsGather_Asm_NEON64
 			add r11, strengths, minusStrideMinusSeventeen             
             add r10, pNMS, i
 			ld1 { v9.16b }, [r11], one                              // r11 = i - stride - 1
