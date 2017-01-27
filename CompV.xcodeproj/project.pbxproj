@@ -1120,6 +1120,7 @@
 		15A3E7AE1E3599D800303F7C /* image */ = {
 			isa = PBXGroup;
 			children = (
+				15A3E7C81E3599D800303F7C /* intrin */,
 				15A3E7AF1E3599D800303F7C /* asm */,
 				15A3E7C01E3599D800303F7C /* compv_image.cxx */,
 				15A3E7C11E3599D800303F7C /* compv_image_conv_common.cxx */,
@@ -1129,7 +1130,6 @@
 				15A3E7C51E3599D800303F7C /* compv_image_decoder.cxx */,
 				15A3E7C61E3599D800303F7C /* compv_image_scale_bilinear.cxx */,
 				15A3E7C71E3599D800303F7C /* compv_image_utils.cxx */,
-				15A3E7C81E3599D800303F7C /* intrin */,
 			);
 			name = image;
 			path = base/image;

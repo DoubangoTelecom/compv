@@ -30,7 +30,10 @@ COMPV_NAMESPACE_BEGIN()
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
 	COMPV_EXTERNC void CompVImageScaleBilinear_Asm_NEON32(const uint8_t* inPtr, compv_uscalar_t inStride, COMPV_ALIGNED(NEON) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(NEON) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
-#	endif
+#	endif /* COMPV_ARCH_ARM32 */
+#	if COMPV_ARCH_ARM64
+    COMPV_EXTERNC void CompVImageScaleBilinear_Asm_NEON64(const uint8_t* inPtr, compv_uscalar_t inStride, COMPV_ALIGNED(NEON) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(NEON) compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y);
+#	endif /* COMPV_ARCH_ARM32 */
 #endif /* COMPV_ASM */
 
 static void scaleBilinear_C(const uint8_t* inPtr, compv_uscalar_t inStride, uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, compv_uscalar_t outStride, compv_uscalar_t sf_x, compv_uscalar_t sf_y)
@@ -105,6 +108,7 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(outPtr) && COMPV_IS_ALIGNED_NEON(outStride)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(scale = CompVImageScaleBilinear_Intrin_NEON);
 		COMPV_EXEC_IFDEF_ASM_ARM32(scale = CompVImageScaleBilinear_Asm_NEON32);
+        COMPV_EXEC_IFDEF_ASM_ARM64(scale = CompVImageScaleBilinear_Asm_NEON64);
 	}
 #endif
 

@@ -4,8 +4,8 @@ using namespace compv;
 
 #define TAG_TEST_IMAGE "TestImage"
 
-#define TEST_SCALE					0
-#define TEST_CHROMA_CONV			1
+#define TEST_SCALE					1
+#define TEST_CHROMA_CONV			0
 #define TEST_FEATURE_FAST			0
 #define TEST_DRAW_IMAGE				0
 #define TEST_DRAW_POINTS			0

@@ -12,6 +12,18 @@
 .equ COMPV_GAS_REG_SZ_BYTES, 8
 .equ prolog_bytes, (12 * COMPV_GAS_REG_SZ_BYTES)
 
+#X0-X7 - arguments and return value (volatile)
+#X8 = indirect result (struct) location (or temp reg)
+#X9-X15 = temporary (volatile)
+#X16-X17 - intro-call-use registers (PLT, Linker) or temp
+#X18 - platform specific use (TLS)
+#X19-X28 - callee saved registers (non-volatile)
+#X29 - frame pointer
+#X30 - link register (LR)
+#SP - stack pointer and zero (XZR)
+#V0-V7, V16-V31 - volatile NEON and FP registers
+#V8-V15 - callee saved registers (non-volatile, used for temp vars by compilers)
+
 # Stack Base Pointer register (defined when the function is declared)
 bp .req x30
 
@@ -33,9 +45,9 @@ r12 .req x12
 r13 .req x13
 r14 .req x14
 r15 .req x15
-r16 .req x16
-r17 .req x17
-r18 .req x18
+r16 .req x16   // Intra-Procedure-call scratch register (can be use)
+r17 .req x17   // Intra-Procedure-call scratch register (can be use)
+#r18 .req x18  // Intra-Procedure-call scratch register (iOS -> reserved, The platform register, *must* not use) -> https://developer.apple.com/library/content/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARM64FunctionCallingConventions.html
 r19 .req x19
 r20 .req x20
 r21 .req x21
@@ -46,8 +58,8 @@ r25 .req x25
 r26 .req x26
 r27 .req x27
 r28 .req x28
-r29 .req x29
-r30 .req x30
+#r29 .req x29  // Frame pointer (https://developer.apple.com/library/content/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARM64FunctionCallingConventions.html)
+#r30 .req x30  // base pointer
 
 #########################################################################
 r0w .req w0
@@ -66,9 +78,9 @@ r12w .req w12
 r13w .req w13
 r14w .req w14
 r15w .req w15
-r16w .req w16
-r17w .req w17
-r18w .req w18
+r16w .req w16   // Intra-Procedure-call scratch register (can be use)
+r17w .req w17   // Intra-Procedure-call scratch register (can be use)
+#r18w .req w18  // Intra-Procedure-call scratch register (iOS -> reserved, The platform register, *must* not use) -> https://developer.apple.com/library/content/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARM64FunctionCallingConventions.html
 r19w .req w19
 r20w .req w20
 r21w .req w21
@@ -79,8 +91,8 @@ r25w .req w25
 r26w .req w26
 r27w .req w27
 r28w .req w28
-r29w .req w29
-r30w .req w30
+#r29w .req w29 // Frame pointer (https://developer.apple.com/library/content/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARM64FunctionCallingConventions.html)
+#r30w .req w30 // base pointer
 
 #########################################################################
 # Macro to exit from the function (x86 'ret' equiv.)
