@@ -38,7 +38,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON64
 	minusStrideMinusSeventeen .req r7
 	one .req r8
 	minusTwo .req r9
-    pNMS_ .req r10
 	#define vec0 v0
 	#define vec1 v1
 	#define vecStrength v2
@@ -66,43 +65,42 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON64
 		#######################################
 		mov i, #3
 		add strengths, pcStrengthsMap, #3
-        add pNMS_, pNMS, #3
 		LoopWidth_CompVFastNmsGather_Asm_NEON64:
 			prfm pldl1keep, [strengths, #(CACHE_LINE_SIZE*3)]
 			ld1 { vecStrength.16b }, [strengths], #16                     // indexOf(strengths) = i + 16
 			cmhi vec1.16b, vecStrength.16b, vecZero.16b
-            mov r27, v21.d[0]
-            mov r28, v21.d[1]
+            mov r27, vec1.d[0]
+            mov r28, vec1.d[1]
 			orr r27, r27, r28 // orrs not avail on Aarch64
-            cmp r27, #0
+            tst r27, r27
 			beq AllZeros_CompVFastNmsGather_Asm_NEON64
 			add r11, strengths, minusStrideMinusSeventeen             
-			ld1 { vec0.16b }, [r11], one                              // r11 = i - stride - 1
-			ld1 { v15.16b }, [r11], one                               // r11 = i - stride
-			ld1 { v14.16b }, [r11], stride                            // r11 = i - stride + 1
-			ld1 { v13.16b }, [r11], minusTwo                          // r11 = i + 1
-			ld1 { v12.16b }, [r11], stride                            // r11 = i - 1
-			ld1 { v11.16b }, [r11], one                               // r11 = i + stride - 1
-			ld1 { v10.16b }, [r11], one                               // r11 = i + stride
-			ld1 { v9.16b }, [r11]                                     // r11 = i + stride + 1
-			cmhs vec0.16b, vec0.16b, vecStrength.16b
-			cmhs v15.16b, v15.16b, vecStrength.16b
-			cmhs v14.16b, v14.16b, vecStrength.16b
-			cmhs v13.16b, v13.16b, vecStrength.16b
-			cmhs v12.16b, v12.16b, vecStrength.16b
-			cmhs v11.16b, v11.16b, vecStrength.16b
-			cmhs v10.16b, v10.16b, vecStrength.16b
-			cmhs v9.16b, v9.16b, vecStrength.16b
-            
-			orr v15.16b, v15.16b, v14.16b
-			orr v13.16b, v13.16b, v12.16b
-			orr v11.16b, v11.16b, v10.16b
-			orr vec0.16b, vec0.16b, v9.16b
-			orr v15.16b, v13.16b, v15.16b
-			orr vec0.16b, vec0.16b, v11.16b
-			orr vec0.16b, vec0.16b, v15.16b
-			and vec0.16b, vec0.16b, vec1.16b
-            st1 { vec0.16b }, [pNMS_], #16
+            add r10, pNMS, i
+			ld1 { v9.16b }, [r11], one                              // r11 = i - stride - 1
+			ld1 { v10.16b }, [r11], one                               // r11 = i - stride
+			ld1 { v11.16b }, [r11], stride                            // r11 = i - stride + 1
+			ld1 { v12.16b }, [r11], minusTwo                          // r11 = i + 1
+			ld1 { v13.16b }, [r11], stride                            // r11 = i - 1
+			ld1 { v14.16b }, [r11], one                               // r11 = i + stride - 1
+			ld1 { v15.16b }, [r11], one                               // r11 = i + stride
+			ld1 { v16.16b }, [r11]                                     // r11 = i + stride + 1
+			cmhs v17.16b, v9.16b, vecStrength.16b
+			cmhs v18.16b, v10.16b, vecStrength.16b
+			cmhs v19.16b, v11.16b, vecStrength.16b
+			cmhs v20.16b, v12.16b, vecStrength.16b
+			cmhs v21.16b, v13.16b, vecStrength.16b
+			cmhs v22.16b, v14.16b, vecStrength.16b
+			cmhs v23.16b, v15.16b, vecStrength.16b
+			cmhs v24.16b, v16.16b, vecStrength.16b
+            orr v9.16b, v17.16b, v18.16b
+            orr v10.16b, v19.16b, v20.16b
+            orr v11.16b, v21.16b, v22.16b
+            orr v12.16b, v23.16b, v24.16b
+            orr v17.16b, v9.16b, v10.16b
+            orr v18.16b, v11.16b, v12.16b
+            orr v17.16b, v17.16b, v18.16b
+			and v17.16b, v17.16b, vec1.16b
+            st1 { v17.16b }, [r10]
 			AllZeros_CompVFastNmsGather_Asm_NEON64:
 
 			add i, i, #16
@@ -126,7 +124,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON64
 	.unreq minusStrideMinusSeventeen
 	.unreq one
 	.unreq minusTwo
-    .unreq pNMS_
 	#undef vec0
 	#undef vec1
 	#undef vecStrength
