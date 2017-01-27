@@ -145,6 +145,7 @@
 		15AA06DD1E3844790058D1F1 /* compv_common_arm32.S in Sources */ = {isa = PBXBuildFile; fileRef = 15AA06DC1E3844790058D1F1 /* compv_common_arm32.S */; };
 		15AA06DF1E3844840058D1F1 /* compv_common_arm64.S in Sources */ = {isa = PBXBuildFile; fileRef = 15AA06DE1E3844840058D1F1 /* compv_common_arm64.S */; };
 		15AA06E71E38D8100058D1F1 /* compv_image_conv_rgbfamily_arm64_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 15AA06E61E38D8100058D1F1 /* compv_image_conv_rgbfamily_arm64_neon.S */; };
+		15AA07011E3AE39E0058D1F1 /* compv_core_feature_fast_dete_arm64_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 15AA07001E3AE39E0058D1F1 /* compv_core_feature_fast_dete_arm64_neon.S */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -514,6 +515,7 @@
 		15AA06DC1E3844790058D1F1 /* compv_common_arm32.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_common_arm32.S; sourceTree = "<group>"; };
 		15AA06DE1E3844840058D1F1 /* compv_common_arm64.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_common_arm64.S; sourceTree = "<group>"; };
 		15AA06E61E38D8100058D1F1 /* compv_image_conv_rgbfamily_arm64_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_image_conv_rgbfamily_arm64_neon.S; sourceTree = "<group>"; };
+		15AA07001E3AE39E0058D1F1 /* compv_core_feature_fast_dete_arm64_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_core_feature_fast_dete_arm64_neon.S; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -678,9 +680,9 @@
 		1525C0141E3633AB00B00689 /* fast */ = {
 			isa = PBXGroup;
 			children = (
+				1525C0211E3633AB00B00689 /* intrin */,
 				1525C0151E3633AB00B00689 /* asm */,
 				1525C0201E3633AB00B00689 /* compv_core_feature_fast_dete.cxx */,
-				1525C0211E3633AB00B00689 /* intrin */,
 			);
 			path = fast;
 			sourceTree = "<group>";
@@ -698,6 +700,7 @@
 			children = (
 				1525C0171E3633AB00B00689 /* compv_core_feature_fast_dete_arm32_neon.S */,
 				1525C0181E3633AB00B00689 /* compv_core_feature_fast_dete_macros_neon.S */,
+				15AA07001E3AE39E0058D1F1 /* compv_core_feature_fast_dete_arm64_neon.S */,
 			);
 			path = arm;
 			sourceTree = "<group>";
@@ -802,8 +805,8 @@
 		1525C0431E3633AF00B00689 /* source */ = {
 			isa = PBXGroup;
 			children = (
-				1525C0121E3633AB00B00689 /* compv_core.cxx */,
 				1525C0131E3633AB00B00689 /* features */,
+				1525C0121E3633AB00B00689 /* compv_core.cxx */,
 			);
 			name = source;
 			sourceTree = "<group>";
@@ -1711,6 +1714,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				15AA07011E3AE39E0058D1F1 /* compv_core_feature_fast_dete_arm64_neon.S in Sources */,
 				1525C0361E3633AB00B00689 /* compv_core.cxx in Sources */,
 				1525C0421E3633AB00B00689 /* compv_core_feature_fast_dete_intrin_sse2.cxx in Sources */,
 				1525C0411E3633AB00B00689 /* compv_core_feature_fast_dete_intrin_avx2.cxx in Sources */,

@@ -63,7 +63,13 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVFast12DataRow_Asm_NEON32(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 	COMPV_EXTERNC void CompVFastNmsGather_Asm_NEON32(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVFastNmsApply_Asm_NEON32(COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap, COMPV_ALIGNED(NEON) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
-#	endif
+#	endif /* COMPV_ARCH_ARM32 */
+#	if COMPV_ARCH_ARM64
+    //COMPV_EXTERNC void CompVFast9DataRow_Asm_NEON64(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
+    //COMPV_EXTERNC void CompVFast12DataRow_Asm_NEON64(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
+    COMPV_EXTERNC void CompVFastNmsGather_Asm_NEON64(const uint8_t* pcStrengthsMap, uint8_t* pNMS, const compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+    //COMPV_EXTERNC void CompVFastNmsApply_Asm_NEON64(COMPV_ALIGNED(NEON) uint8_t* pcStrengthsMap, COMPV_ALIGNED(NEON) uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+#	endif /* COMPV_ARCH_ARM32 */
 #endif /* COMPV_ASM */
 
 // Default threshold (pixel intensity: [0-255])
@@ -596,6 +602,7 @@ void CompVFastNmsGatherRange(RangeFAST* range)
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(range->stride)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVFastNmsGather = CompVFastNmsGather_Intrin_NEON));
 		COMPV_EXEC_IFDEF_ASM_ARM32((CompVFastNmsGather = CompVFastNmsGather_Asm_NEON32));
+        COMPV_EXEC_IFDEF_ASM_ARM64((CompVFastNmsGather = CompVFastNmsGather_Asm_NEON64));
 	}
 #endif
 

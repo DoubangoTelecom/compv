@@ -18,9 +18,10 @@
 COMPV_NAMESPACE_BEGIN()
 
 #if COMPV_ARCH_ARM64
-// vmov r10, r10, q0x
-// vmov r11, r11, q0y
-// orrs r11, r11, r10
+//mov r27, v21.d[0]
+//mov r28, v21.d[1]
+//orr r27, r27, r28 // orrs not avail on Aarch64
+//cmp r27, #0
 // beq AllZeros
 #	define COMPV_ARM_NEON_NEQ_ZERO(vec)	(vgetq_lane_u64(vec, 0) || vgetq_lane_u64(vec, 1))
 #	define COMPV_ARM_NEON_EQ_ZERO(vec)	!COMPV_ARM_NEON_NEQ_ZERO(vec)
