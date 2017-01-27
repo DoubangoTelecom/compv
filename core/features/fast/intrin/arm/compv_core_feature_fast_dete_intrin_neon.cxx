@@ -99,8 +99,6 @@ void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_u
 		&IP[pixels16[12]], &IP[pixels16[13]], &IP[pixels16[14]], &IP[pixels16[15]]
 	};
 
-	// TODO(dmi): ASM code faster by far. Why?
-
 	for (i = 0; i < width; i += 16) {
 		vec0 = vld1q_u8(&IP[i]);
 		vecDarker1 = vqsubq_u8(vec0, vecThreshold); // IP < (Ix - t)
@@ -116,9 +114,6 @@ void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_u
 			_neon_fast_check(2, 10); _neon_fast_check(6, 14);
 			_neon_fast_check(3, 11); _neon_fast_check(7, 15);
 		}
-        if (i > 10000)
-            printf("FIXME:%u\n", i);
-#if 0
 		/* Darkers */ {
 			vecSum1 = vdupq_n_u8(0);
 			_neon_fast_load(0, 8, 4, 12, Darker);
@@ -162,7 +157,6 @@ void CompVFastDataRow_Intrin_NEON(const uint8_t* IP, COMPV_ALIGNED(NEON) compv_u
 			_neon_fast_strength(12, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(13, vecSum1, vecDiff16, vecStrengths, vec0);
 			_neon_fast_strength(14, vecSum1, vecDiff16, vecStrengths, vec0); _neon_fast_strength(15, vecSum1, vecDiff16, vecStrengths, vec0);
 		} EndOfBrighters:
-#endif
 	
 	Next:
 		vst1q_u8(&strengths[i], vecStrengths);

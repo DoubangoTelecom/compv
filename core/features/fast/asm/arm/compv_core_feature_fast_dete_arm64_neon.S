@@ -146,7 +146,7 @@
         mov r10, v28.d[0]
         mov r11, v28.d[1]
         orr r10, r10, r11 // orrs not avail on Aarch64
-        cbz r10, Next_CompVFastDataRow_Asm_NEON64\FastType        
+        cbz r10, Next_CompVFastDataRow_Asm_NEON64\FastType    
         ldr r10, [sp, #(circle + 4*COMPV_GAS_REG_SZ_BYTES)]
         ldr r11, [sp, #(circle + 12*COMPV_GAS_REG_SZ_BYTES)]
         #if 1
