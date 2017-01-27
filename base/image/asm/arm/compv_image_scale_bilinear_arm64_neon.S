@@ -253,7 +253,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON64
             uzp2 vecNeighb3.16b, v28.16b, v29.16b // 3,3,3,3,3,3,3,3
 
             ## Compute other values ##
-
             and v21.16b, vecX0.16b, vec0xff_epi32.16b
             and v22.16b, vecX1.16b, vec0xff_epi32.16b
             and v27.16b, vecX2.16b, vec0xff_epi32.16b
@@ -276,54 +275,35 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON64
             uxtl v25.8h, vecNeighb2.8b
             uxtl2 vecNeighb0.8h, vecNeighb1.16b
             uxtl2 vecNeighb1.8h, vecNeighb3.16b
+            add vecX2.4s, vecX2.4s, vecSfxTimes16.4s
+            add vecX3.4s, vecX3.4s, vecSfxTimes16.4s
             mla vec4.8h, v23.8h, v22.8h
             mla vec5.8h, v25.8h, v22.8h
             mla vec6.8h, vecNeighb0.8h, v27.8h    
             mla vec7.8h, vecNeighb1.8h, v27.8h
-
-            // Let's say:
-			//		A = ((neighb0 * x1) + (neighb1 * x0))
-			//		B = ((neighb2 * x1) + (neighb3 * x0))
-			// Then:
-			//		A = vec4, vec6
-			//		B = vec5, vec7
-			//
-			// We cannot use vshrq_n_s16(vqdmulhq_s16(a, b), 1) to compute C and D because it operates on epi16 while A and B contain epu16 values
-            
-            ## compute C = (y1 * A) >> 16 ##
             umull v21.4s, vecy1.4h, vec4.4h
             umull2 v22.4s, vecy1.8h, vec4.8h
             umull v23.4s, vecy1.4h, vec6.4h
             umull2 v24.4s, vecy1.8h, vec6.8h
+            umull v25.4s, vecy0.4h, vec5.4h
+            umull2 v26.4s, vecy0.8h, vec5.8h
+            umull v27.4s, vecy0.4h, vec7.4h
+            umull2 v28.4s, vecy0.8h, vec7.8h
             shrn vec4.4h, v21.4s, #16
-            shrn2 vec4.8h, v22.4s, #16
+            shrn vec5.4h, v25.4s, #16
             shrn vec6.4h, v23.4s, #16
+            shrn vec7.4h, v27.4s, #16
+            shrn2 vec4.8h, v22.4s, #16
+            shrn2 vec5.8h, v26.4s, #16
             shrn2 vec6.8h, v24.4s, #16
-
-            ## compute D = (y0 * B) >> 16 ##
-            umull v21.4s, vecy0.4h, vec5.4h
-            umull2 v22.4s, vecy0.8h, vec5.8h
-            umull v23.4s, vecy0.4h, vec7.4h
-            umull2 v24.4s, vecy0.8h, vec7.8h
-            shrn vec5.4h, v21.4s, #16
-            shrn2 vec5.8h, v22.4s, #16
-            shrn vec7.4h, v23.4s, #16
-            shrn2 vec7.8h, v24.4s, #16
-
-            ## Compute R = (C + D) ##
+            shrn2 vec7.8h, v28.4s, #16
             uqadd vec4.8h, vec4.8h, vec5.8h
             uqadd vec6.8h, vec6.8h, vec7.8h
-
-            ## Store the result ##
             xtn v21.8b, vec4.8h
-            xtn2 v21.16b, vec6.8h
-            st1 {v21.16b}, [outPtr_], #16
-
-            ## move to next indices ##
             add vecX0.4s, vecX0.4s, vecSfxTimes16.4s
+            xtn2 v21.16b, vec6.8h
             add vecX1.4s, vecX1.4s, vecSfxTimes16.4s
-            add vecX2.4s, vecX2.4s, vecSfxTimes16.4s
-            add vecX3.4s, vecX3.4s, vecSfxTimes16.4s
+            st1 {v21.16b}, [outPtr_], #16
 
 			##
 			add i, i, #16
