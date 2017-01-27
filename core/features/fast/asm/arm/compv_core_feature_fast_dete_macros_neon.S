@@ -100,24 +100,24 @@
 	ld1 {v13.16b}, [r8], sixteen
 	ld1 {v14.16b}, [r8], sixteen
 	ld1 {v15.16b}, [r8], sixteen
-	add v12.16b, v12.16b, v13.16b
-	add v14.16b, v14.16b, v15.16b
-	add \vecSum1, v12.16b, v14.16b // setting vecSum1 for the first time
-	ld1 {v12.16b}, [r8], sixteen
-	ld1 {v13.16b}, [r8], sixteen
-	ld1 {v14.16b}, [r8], sixteen
-	ld1 {v15.16b}, [r8], sixteen
-	add v12.16b, v12.16b, v13.16b
-	add v14.16b, v14.16b, v15.16b
-	add \vecSum1, \vecSum1, v12.16b
-	add \vecSum1, \vecSum1, v14.16b
+	ld1 {v16.16b}, [r8], sixteen
+	ld1 {v17.16b}, [r8], sixteen
+	ld1 {v18.16b}, [r8], sixteen
+	ld1 {v19.16b}, [r8], sixteen
+    add v20.16b, v12.16b, v13.16b
+    add v21.16b, v14.16b, v15.16b
+    add v22.16b, v16.16b, v17.16b
+    add v23.16b, v18.16b, v19.16b
+    add v24.16b, v20.16b, v21.16b
+    add \vecSum1, v22.16b, v23.16b // setting vecSum1 for the first time
+    add \vecSum1, \vecSum1, v24.16b
 	.if \FastType == 12
 		ld1 {v12.16b}, [r8], sixteen
 		ld1 {v13.16b}, [r8], sixteen
 		ld1 {v14.16b}, [r8], sixteen
-		add v12.16b, v12.16b, v13.16b
+		add v15.16b, v12.16b, v13.16b
 		add \vecSum1, \vecSum1, v14.16b
-		add \vecSum1, \vecSum1, v12.16b
+		add \vecSum1, \vecSum1, v15.16b
 	.endif
 .endm
 
