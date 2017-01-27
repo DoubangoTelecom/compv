@@ -170,7 +170,6 @@
 		blt LoopWidth_CompVFastDataRow_Asm_NEON64\@
 		#End_of_LoopWidth#
 	
-	
 	.unreq Iptr
 	.unreq width
 	.unreq pixels16

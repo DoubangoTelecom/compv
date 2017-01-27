@@ -140,28 +140,28 @@
 	add r9, sp, #(vecDiff16 + (((1 + \ii)&15)*16))
 	add r10, sp, #(vecDiff16 + (((2 + \ii)&15)*16))
 	add r11, sp, #(vecDiff16 + (((3 + \ii)&15)*16))
-	ld1 {v11.16b}, [r8] // v11 = vecTemp
-	ld1 {v13.16b}, [r9]
-	ld1 {v14.16b}, [r10]
-	ld1 {v15.16b}, [r11]
-	umin v11.16b, v11.16b, v13.16b
-	umin v14.16b, v14.16b, v15.16b
-	add r8, sp, #(vecDiff16 + (((4 + \ii)&15)*16))
-	add r9, sp, #(vecDiff16 + (((5 + \ii)&15)*16))
-	add r10, sp, #(vecDiff16 + (((6 + \ii)&15)*16))
-	add r11, sp, #(vecDiff16 + (((7 + \ii)&15)*16))
-	ld1 {v12.16b}, [r8]
-	umin v11.16b, v11.16b, v14.16b
-	ld1 {v13.16b}, [r9]
-	ld1 {v14.16b}, [r10]
-	ld1 {v15.16b}, [r11]
-	umin v12.16b, v12.16b, v13.16b
-	add r8, sp, #(vecDiff16 + (((8 + \ii)&15)*16))
-	ld1 {v13.16b}, [r8]
-	umin v14.16b, v14.16b, v15.16b
-	umin v12.16b, v12.16b, v13.16b
-	umin v11.16b, v11.16b, v14.16b
-	umin v11.16b, v11.16b, v12.16b
+    add r12, sp, #(vecDiff16 + (((4 + \ii)&15)*16))
+	add r13, sp, #(vecDiff16 + (((5 + \ii)&15)*16))
+	add r14, sp, #(vecDiff16 + (((6 + \ii)&15)*16))
+	add r15, sp, #(vecDiff16 + (((7 + \ii)&15)*16))
+    add r16, sp, #(vecDiff16 + (((8 + \ii)&15)*16))
+	ld1 {v11.16b}, [r8]
+	ld1 {v12.16b}, [r9]
+	ld1 {v13.16b}, [r10]
+	ld1 {v14.16b}, [r11]
+    ld1 {v15.16b}, [r12]
+    ld1 {v16.16b}, [r13]
+    ld1 {v17.16b}, [r14]
+    ld1 {v18.16b}, [r15]
+    ld1 {v19.16b}, [r16]
+    umin v20.16b, v11.16b, v12.16b
+    umin v21.16b, v13.16b, v14.16b
+    umin v22.16b, v15.16b, v16.16b
+    umin v23.16b, v17.16b, v18.16b
+    umin v24.16b, v19.16b, v20.16b
+    umin v25.16b, v21.16b, v22.16b
+    umin v26.16b, v23.16b, v24.16b
+    umin v26.16b, v25.16b, v26.16b
 	.if \FastType == 12
 		add r8, sp, #(vecDiff16 + (((9 + \ii)&15)*16))
 		add r9, sp, #(vecDiff16 + (((10 + \ii)&15)*16))
@@ -170,24 +170,15 @@
 		ld1 {v13.16b}, [r9]
 		ld1 {v14.16b}, [r10]
 		umin v12.16b, v12.16b, v13.16b
-		umin v11.16b, v11.16b, v14.16b
-		umin v11.16b, v11.16b, v12.16b
+		umin v26.16b, v26.16b, v14.16b
+		umin v26.16b, v26.16b, v12.16b
 	.endif
-	umax \vecStrengths, \vecStrengths, v11.16b
+	umax \vecStrengths, \vecStrengths, v26.16b
 	FastStrength_AllZeros_CompVFastDataRow_Asm_NEON64\@:
 	add r8, sp, #(vecDiffBinary16 + ((\ii&15)*16))
 	ld1 {v15.16b}, [r8]
 	sub \vecSum1, \vecSum1, v15.16b // sub head
 .endm
-
-
-
-
-
-
-
-
-
 
 #########################################################################
 .macro _neon32_fast_check a b FastType
