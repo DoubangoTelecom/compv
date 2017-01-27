@@ -166,7 +166,7 @@ COMPV_ERROR_CODE CompVAsyncTask11::waitOne(uint64_t tokenId, uint64_t u_timeout 
         m_SemExec->decrement();
     }
     if (token->bExecute) {
-        COMPV_DEBUG_WARN("Async token with id = %llu timedout", tokenId);
+        COMPV_DEBUG_WARN("Async token with id = %" PRIu64 " timedout", tokenId);
         return COMPV_ERROR_CODE_E_TIMEDOUT;
     }
     return COMPV_ERROR_CODE_S_OK;
@@ -213,22 +213,16 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
     CompVAsyncToken* pToken_;
     COMPV_ERROR_CODE err_;
     size_t size_;
-    compv_thread_id_t tid = CompVThread::getIdCurrent();
-#if COMPV_OS_WINDOWS
-	long threadId = static_cast<long>(tid);
-#else
-    
-    compv_thread_id_t* threadId = &tid;
-#endif
+    compv_thread_id_t threadId = CompVThread::getIdCurrent();
 
     // Make sure the affinity is defined. This function is called in start() but after thread creation which means we could miss it if this function is called very fast
 #if COMPV_PARALLEL_THREAD_SET_AFFINITY
     if (Self_->m_iCoreId >= 0) {
         COMPV_CHECK_CODE_BAIL(err_ = Self_->m_Thread->setAffinity(Self_->m_iCoreId));
     }
-    COMPV_DEBUG_INFO("%s(coreId:requested=%d,set=%d, threadId:%p, kThreadSetAffinity:true) - ENTER", __FUNCTION__, Self_->m_iCoreId, CompVThread::getCoreId(), threadId);
+    COMPV_DEBUG_INFO("%s(coreId:requested=%d,set=%d, threadId:%p, kThreadSetAffinity:true) - ENTER", __FUNCTION__, Self_->m_iCoreId, CompVThread::getCoreId(), (void*)threadId);
 #else
-    COMPV_DEBUG_INFO("%s(coreId:requested=%d,set=useless, threadId:%p, kThreadSetAffinity:false) - ENTER", __FUNCTION__, Self_->m_iCoreId, threadId);
+    COMPV_DEBUG_INFO("%s(coreId:requested=%d,set=useless, threadId:%p, kThreadSetAffinity:false) - ENTER", __FUNCTION__, Self_->m_iCoreId, (void*)threadId);
 #endif
 
     while (Self_->m_bStarted) {
@@ -247,7 +241,7 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
     }
 
 bail:
-    COMPV_DEBUG_INFO("%s(threadId:%p) - EXIT", __FUNCTION__, threadId);
+    COMPV_DEBUG_INFO("%s(threadId:%p) - EXIT", __FUNCTION__, (void*)threadId);
     return NULL;
 }
 

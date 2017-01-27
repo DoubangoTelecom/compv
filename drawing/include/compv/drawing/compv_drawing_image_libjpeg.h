@@ -8,7 +8,7 @@
 #define _COMPV_DRAWING_IMAGE_LIBJPEG_H_
 
 #include "compv/drawing/compv_drawing_config.h"
-#if (defined(HAVE_JPEGLIB_H) || defined(HAVE_SKIA))
+#if defined(HAVE_JPEGLIB_H)
 #include "compv/drawing/compv_drawing_common.h"
 #include "compv/base/compv_mat.h"
 
@@ -23,6 +23,6 @@ COMPV_ERROR_CODE libjpegDecodeInfo(const char* filePath, CompVImageInfo& info);
 
 COMPV_NAMESPACE_END()
 
-#endif /* (defined(HAVE_JPEGLIB_H) || defined(HAVE_SKIA)) */
+#endif /* defined(HAVE_JPEGLIB_H) */
 
 #endif /* _COMPV_DRAWING_IMAGE_LIBJPEG_H_ */

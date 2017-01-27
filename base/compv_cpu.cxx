@@ -223,7 +223,7 @@ COMPV_ERROR_CODE CompVCpu::init()
 			char cpuinfo_line[1024];
 			size_t count;
 			while ((count = fread(cpuinfo_line, 1, sizeof(cpuinfo_line), fcpuinfo)) > 0) {
-				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME "/proc/cpuinfo", "%.*s", count, cpuinfo_line);
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME "/proc/cpuinfo", "%.*s", static_cast<int>(count), cpuinfo_line);
 			}
 			fclose(fcpuinfo);
 		}
@@ -348,7 +348,10 @@ COMPV_ERROR_CODE CompVCpu::init()
 #   endif
     
 #	if COMPV_OS_ANDROID
-    uint64_t android_flags = android_getCpuFeatures();
+	if (android_getCpuFamily() == ANDROID_CPU_FAMILY_ARM64) {
+		CompVCpu::s_uFlags |= kCpuFlagARM64;
+	}
+	uint64_t android_flags = android_getCpuFeatures();
     if (android_flags & ANDROID_CPU_ARM_FEATURE_NEON) {
         CompVCpu::s_uFlags |= kCpuFlagARM_NEON;
     }

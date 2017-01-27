@@ -149,6 +149,11 @@ COMPV_NAMESPACE_BEGIN()
 #	endif
 #endif
 
+// Should be defined in <inttypes.h>, include in <compv_config.h>
+#if !defined(PRIu64)
+#	define	PRIu64 "llu"
+#endif
+
 /*******************************************************/
 /* MACRO for shuffle parameter for _mm_shuffle_ps().   */
 /* Argument fp3 is a digit[0123] that represents the fp*/

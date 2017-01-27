@@ -374,6 +374,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <stddef.h>
 #include <stdarg.h>
 #include <stdio.h>

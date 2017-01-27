@@ -105,13 +105,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON64
         add inPtr_, inPtr, r21 // inPtr_ = &inPtr[nearestY * inStride]
         mov i, #0
         dup vecy0.8h, r22w
-        // FIXME: use bic instead of usub
-        bic.16b vecy1, vec0xff_epi16, vecy0
-        //sub vecy1, vec0xff_epi16, vecy0
-        mov vecX0.4s, vecSFX0.4s
-        mov vecX1.4s, vecSFX1.4s
-        mov vecX2.4s, vecSFX2.4s
-        mov vecX3.4s, vecSFX3.4s
+        bic vecy1.16b, vec0xff_epi16.16b, vecy0.16b
+        mov vecX0.16b, vecSFX0.16b // 4s
+        mov vecX1.16b, vecSFX1.16b // 4s
+        mov vecX2.16b, vecSFX2.16b // 4s
+        mov vecX3.16b, vecSFX3.16b // 4s
         mov outPtr_, outPtr
 		#####################################
 		# for (i = 0; i < outWidth; i += 16)

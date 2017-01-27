@@ -116,7 +116,7 @@ CompVThread::CompVThread(void *(COMPV_STDCALL *start) (void *), void *arg_ /*= N
 CompVThread::~CompVThread()
 {
     join();
-    COMPV_DEBUG_INFO_EX(kModuleNameThread, "***Thread with id=%p destroyed***", m_Id);
+    COMPV_DEBUG_INFO_EX(kModuleNameThread, "***Thread with id=%p destroyed***", (void*)m_Id);
 }
 
 void CompVThread::sleep(uint64_t ms)
@@ -229,7 +229,7 @@ COMPV_ERROR_CODE CompVThread::join()
     if (!m_pHandle) {
         return COMPV_ERROR_CODE_S_OK;
     }
-    COMPV_DEBUG_INFO_EX(kModuleNameThread, "Thread with id=%p will join", m_Id); // debug message to track deadlocks
+    COMPV_DEBUG_INFO_EX(kModuleNameThread, "Thread with id=%p will join", (void*)m_Id); // debug message to track deadlocks
 
 #if COMPV_OS_WINDOWS
 #	if COMPV_OS_WINDOWS_RT
@@ -251,7 +251,7 @@ COMPV_ERROR_CODE CompVThread::join()
 #endif
 
 bail:
-    COMPV_DEBUG_INFO("Thread with id=%p will join", m_Id);
+    COMPV_DEBUG_INFO("Thread with id=%p will join", (void*)m_Id);
     return err;
 }
 

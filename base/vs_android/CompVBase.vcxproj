@@ -233,6 +233,18 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
     </GAS>
+    <GAS Include="..\asm\arm\compv_common_arm32.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+    </GAS>
+    <GAS Include="..\asm\arm\compv_common_arm64.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+    </GAS>
     <None Include="..\asm\x86\compv_bits_macros_x86.s" />
     <None Include="..\asm\x86\compv_bits_x86.s" />
     <None Include="..\asm\x86\compv_common_x86.s" />
@@ -273,8 +285,8 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ArmNeon>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</ArmNeon>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeon>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeon>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</ArmNeon>
@@ -292,8 +304,8 @@
     </GAS>
     <GAS Include="..\image\asm\arm\compv_image_conv_grayscale_arm32_neon.S">
       <FileType>Document</FileType>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ArmNeon>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</ArmNeon>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeon>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeon>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</ArmNeon>
@@ -311,9 +323,9 @@
     </GAS>
     <GAS Include="..\image\asm\arm\compv_image_scale_bilinear_arm32_neon.S">
       <FileType>Document</FileType>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</ArmNeon>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</ArmNeon>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeon>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
@@ -327,6 +339,27 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ArmNeon>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+    </GAS>
+    <GAS Include="..\image\asm\arm\compv_image_conv_grayscale_arm64_neon.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+    </GAS>
+    <GAS Include="..\image\asm\arm\compv_image_conv_rgbfamily_arm64_neon.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+    </GAS>
+    <GAS Include="..\image\asm\arm\compv_image_scale_bilinear_arm64_neon.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
     </GAS>
     <None Include="..\image\asm\x86\compv_image_conv_grayscale_x86_sse.s" />
     <None Include="..\image\asm\x86\compv_image_conv_macros.s" />
@@ -386,14 +419,14 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
     <UseOfStl>gnustl_static</UseOfStl>
-    <AndroidAPILevel>android-18</AndroidAPILevel>
+    <AndroidAPILevel>android-21</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
     <UseOfStl>gnustl_static</UseOfStl>
-    <AndroidAPILevel>android-18</AndroidAPILevel>
+    <AndroidAPILevel>android-21</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>

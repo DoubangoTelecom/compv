@@ -93,7 +93,7 @@ COMPV_ERROR_CODE chroma_conv()
 		COMPV_CHECK_CODE_BAIL(err = CompVImage::convert(srcImage, test->dstPixelFormat, &dstImage));
 	}
 	timeEnd = CompVTime::nowMillis();
-	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE_CHROMA_CONV, "Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
+	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE_CHROMA_CONV, "Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 #if COMPV_TEST_WRITE_OUTPUT
 	COMPV_CHECK_CODE_BAIL(err = compv_tests_write_to_file(dstImage, test->dstFilename));

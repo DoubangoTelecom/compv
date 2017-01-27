@@ -639,10 +639,25 @@
     <GAS Include="..\asm\arm\compv_common_arm.S">
       <Filter>source\asm\arm</Filter>
     </GAS>
+    <GAS Include="..\asm\arm\compv_common_arm32.S">
+      <Filter>source\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\image\asm\arm\compv_image_scale_bilinear_arm32_neon.S">
+      <Filter>source\image\asm\arm</Filter>
+    </GAS>
     <GAS Include="..\image\asm\arm\compv_image_conv_grayscale_arm32_neon.S">
       <Filter>source\image\asm\arm</Filter>
     </GAS>
-    <GAS Include="..\image\asm\arm\compv_image_scale_bilinear_arm32_neon.S">
+    <GAS Include="..\image\asm\arm\compv_image_conv_rgbfamily_arm64_neon.S">
+      <Filter>source\image\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\asm\arm\compv_common_arm64.S">
+      <Filter>source\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\image\asm\arm\compv_image_conv_grayscale_arm64_neon.S">
+      <Filter>source\image\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\image\asm\arm\compv_image_scale_bilinear_arm64_neon.S">
       <Filter>source\image\asm\arm</Filter>
     </GAS>
   </ItemGroup>

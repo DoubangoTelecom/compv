@@ -51,7 +51,7 @@
 # Macro to mangle function names
 .macro COMPV_GAS_FUNCTION_MANGLE funcname
     sym(\funcname)
-.endmacro
+.endm
 
 
 #########################################################################

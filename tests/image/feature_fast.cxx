@@ -112,7 +112,7 @@ COMPV_ERROR_CODE feature_fast()
 		COMPV_CHECK_CODE_RETURN(fast->process(image, interestPoints));
 	}
 	timeEnd = CompVTime::nowMillis();
-	COMPV_DEBUG_INFO("Elapsed time (TestFAST) = [[[ %llu millis ]]]", (timeEnd - timeStart));
+	COMPV_DEBUG_INFO("Elapsed time (TestFAST) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 	// Check result
 	sum_scores = 0.f;

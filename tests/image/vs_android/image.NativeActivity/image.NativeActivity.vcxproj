@@ -100,13 +100,13 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
-    <AndroidAPILevel>android-18</AndroidAPILevel>
+    <AndroidAPILevel>android-21</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
-    <AndroidAPILevel>android-18</AndroidAPILevel>
+    <AndroidAPILevel>android-21</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -169,6 +169,7 @@
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir);../../../../thirdparties/libraries/android/skia-m55-arm64-release</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -182,6 +183,7 @@
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir);../../../../thirdparties/libraries/android/skia-m55-arm64-release</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">

@@ -6,7 +6,7 @@
 */
 #include "compv/drawing/compv_drawing_image_libjpeg.h"
 
-#if (defined(HAVE_JPEGLIB_H) || defined(HAVE_SKIA))
+#if defined(HAVE_JPEGLIB_H)
 
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_buffer.h"
@@ -273,4 +273,4 @@ bail:
 
 COMPV_NAMESPACE_END()
 
-#endif /* defined(HAVE_JPEGLIB_H) || defined(HAVE_SKIA) */
+#endif /* defined(HAVE_JPEGLIB_H) */

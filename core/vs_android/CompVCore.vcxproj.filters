@@ -138,10 +138,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
+      <Filter>source\features\fast\asm\arm</Filter>
+    </GAS>
     <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_arm32_neon.S">
       <Filter>source\features\fast\asm\arm</Filter>
     </GAS>
-    <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
+    <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_arm64_neon.S">
       <Filter>source\features\fast\asm\arm</Filter>
     </GAS>
   </ItemGroup>

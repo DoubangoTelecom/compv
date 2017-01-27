@@ -75,8 +75,8 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ArmNeon>
-      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</ArmNeon>
+      <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</ArmNeon>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeon>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeon>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</ArmNeon>
@@ -94,6 +94,13 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x86'">$(ProjectDir)../features/fast/asm/arm</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../features/fast/asm/arm</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../features/fast/asm/arm</IncludePaths>
+    </GAS>
+    <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_arm64_neon.S">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
     </GAS>
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_avx.s" />
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_sse.s" />
@@ -139,13 +146,13 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
-    <AndroidAPILevel>android-18</AndroidAPILevel>
+    <AndroidAPILevel>android-21</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
-    <AndroidAPILevel>android-18</AndroidAPILevel>
+    <AndroidAPILevel>android-21</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>

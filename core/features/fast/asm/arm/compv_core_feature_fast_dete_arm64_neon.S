@@ -136,8 +136,8 @@
             ldr q14, [r10, i]
             ldr q15, [r11, i]
         #endif        
-        cmlo v26.16b, v14.16b, vecDarker1.16b
-        cmlo v27.16b, v15.16b, vecDarker1.16b
+        cmhi v26.16b, vecDarker1.16b, v14.16b
+        cmhi v27.16b, vecDarker1.16b, v15.16b
         cmhi v28.16b, v14.16b, vecBrighter1.16b
         cmhi v29.16b, v15.16b, vecBrighter1.16b
         orr v26.16b, v26.16b, v27.16b
@@ -158,8 +158,8 @@
             ldr q16, [r10, i]
             ldr q17, [r11, i]
         #endif
-        cmlo v26.16b, v16.16b, vecDarker1.16b
-        cmlo v27.16b, v17.16b, vecDarker1.16b
+        cmhi v26.16b, vecDarker1.16b, v16.16b
+        cmhi v27.16b, vecDarker1.16b, v17.16b
         cmhi v28.16b, v16.16b, vecBrighter1.16b
         cmhi v29.16b, v17.16b, vecBrighter1.16b
         orr v26.16b, v26.16b, v27.16b
@@ -180,8 +180,8 @@
             ldr q18, [r10, i]
             ldr q19, [r11, i]
         #endif
-        cmlo v26.16b, v18.16b, vecDarker1.16b
-        cmlo v27.16b, v19.16b, vecDarker1.16b
+        cmhi v26.16b, vecDarker1.16b, v18.16b
+        cmhi v27.16b, vecDarker1.16b, v19.16b
         cmhi v28.16b, v18.16b, vecBrighter1.16b
         cmhi v29.16b, v19.16b, vecBrighter1.16b
         orr v26.16b, v26.16b, v27.16b
@@ -202,8 +202,8 @@
             ldr q20, [r10, i]
             ldr q21, [r11, i]
         #endif
-        cmlo v26.16b, v20.16b, vecDarker1.16b
-        cmlo v27.16b, v21.16b, vecDarker1.16b
+        cmhi v26.16b, vecDarker1.16b, v20.16b
+        cmhi v27.16b, vecDarker1.16b, v21.16b
         cmhi v28.16b, v20.16b, vecBrighter1.16b
         cmhi v29.16b, v21.16b, vecBrighter1.16b
         orr v26.16b, v26.16b, v27.16b
@@ -224,8 +224,8 @@
             ldr q12, [r10, i]
             ldr q13, [r11, i]
         #endif
-        cmlo v26.16b, v12.16b, vecDarker1.16b
-        cmlo v27.16b, v13.16b, vecDarker1.16b
+        cmhi v26.16b, vecDarker1.16b, v12.16b
+        cmhi v27.16b, vecDarker1.16b, v13.16b
         cmhi v28.16b, v12.16b, vecBrighter1.16b
         cmhi v29.16b, v13.16b, vecBrighter1.16b
         orr v26.16b, v26.16b, v27.16b
@@ -246,8 +246,8 @@
             ldr q22, [r10, i]
             ldr q23, [r11, i]
         #endif
-        cmlo v26.16b, v22.16b, vecDarker1.16b
-        cmlo v27.16b, v23.16b, vecDarker1.16b
+        cmhi v26.16b, vecDarker1.16b, v22.16b
+        cmhi v27.16b, vecDarker1.16b, v23.16b
         cmhi v28.16b, v22.16b, vecBrighter1.16b
         cmhi v29.16b, v23.16b, vecBrighter1.16b
         orr v26.16b, v26.16b, v27.16b
@@ -268,8 +268,8 @@
             ldr q24, [r10, i]
             ldr q25, [r11, i]
         #endif
-        cmlo v26.16b, v24.16b, vecDarker1.16b
-        cmlo v27.16b, v25.16b, vecDarker1.16b
+        cmhi v26.16b, vecDarker1.16b, v24.16b
+        cmhi v27.16b, vecDarker1.16b, v25.16b
         cmhi v28.16b, v24.16b, vecBrighter1.16b
         cmhi v29.16b, v25.16b, vecBrighter1.16b
         orr v26.16b, v26.16b, v27.16b
@@ -290,8 +290,8 @@
             ldr q26, [r10, i]
             ldr q27, [r11, i]
         #endif
-        cmlo v28.16b, v26.16b, vecDarker1.16b
-        cmlo v29.16b, v27.16b, vecDarker1.16b
+        cmhi v28.16b, vecDarker1.16b, v26.16b
+        cmhi v29.16b, vecDarker1.16b, v27.16b
         orr v28.16b, v28.16b, v29.16b
         cmhi v29.16b, v26.16b, vecBrighter1.16b
         orr v28.16b, v28.16b, v29.16b
@@ -560,9 +560,7 @@
 	
 	.unreq Iptr
 	.unreq width
-	.unreq pixels16
 	.unreq N
-	.unreq threshold
 	.unreq strengths
 	.unreq i
 	.unreq sixteen

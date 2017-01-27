@@ -145,7 +145,7 @@ private:
 #else
 #	define COMPV_DEBUG_INFO_CHECK_SSE42()
 #endif
-#if !defined(__ARM_NEON__)
+#if !defined(__ARM_NEON__) && !COMPV_ARCH_ARM64 // Neon enabled by default on all Aarch64 devices
 #	define COMPV_DEBUG_INFO_CHECK_NEON() COMPV_DEBUG_INFO_CODE_ONCE("Not built with NEON support")
 #else
 #	define COMPV_DEBUG_INFO_CHECK_NEON()

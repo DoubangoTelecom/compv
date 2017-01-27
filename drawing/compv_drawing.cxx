@@ -148,7 +148,7 @@ COMPV_ERROR_CODE CompVDrawing::init()
     COMPV_CHECK_CODE_BAIL(err = CompVGL::glewInit());
 #endif /* SDL */
 
-#if (defined(HAVE_JPEGLIB_H) || defined(HAVE_SKIA))
+#if defined(HAVE_JPEGLIB_H)
     //extern COMPV_ERROR_CODE libjpegDecodeFile(const char* filePath, CompVMatPtrPtr mat);
     //extern COMPV_ERROR_CODE libjpegDecodeInfo(const char* filePath, CompVImageInfo& info);
     COMPV_CHECK_CODE_BAIL(err = CompVImageDecoder::setFuncPtrs(COMPV_IMAGE_FORMAT_JPEG, libjpegDecodeFile, libjpegDecodeInfo));

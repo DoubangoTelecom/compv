@@ -201,9 +201,17 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
 #	else
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Binary type: X86_32");
     if (CompVCpu::isSupported(kCpuFlagX64)) {
-		// TODO(dmi): show same message for ARM code running on ARM64 device
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Using X86_32 binaries on X86_64 machine, you're missing many optimizations. Sad!!");
     }
+#	endif
+#elif COMPV_ARCH_ARM
+#	if COMPV_ARCH_ARM64
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Binary type: Aarch64");
+#	else
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Binary type: Aarch32");
+	if (CompVCpu::isSupported(kCpuFlagARM64)) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Using Aarch32 binaries on Aarch64 machine, you're missing many optimizations. Sad!!");
+	}
 #	endif
 #endif
 #if COMPV_INTRINSIC

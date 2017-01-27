@@ -83,7 +83,7 @@ COMPV_ERROR_CODE scale()
 		COMPV_CHECK_CODE_BAIL(err = CompVImage::scale(srcImage, &dstImage, widthOut, heightOut, test->type));
 	}
 	timeEnd = CompVTime::nowMillis();
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time = [[[ %llu millis ]]]", (timeEnd - timeStart));
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 #if COMPV_OS_WINDOWS && 1
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");

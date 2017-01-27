@@ -72,7 +72,7 @@
 	dup v0.8h, r9w
 	#define vec2048 v0
 
-	ld4.8b {v12, v13, v14, v15}, [kRGBfamilyToYUV_YCoeffs8]
+	ld4 {v12.8b, v13.8b, v14.8b, v15.8b}, [kRGBfamilyToYUV_YCoeffs8]
     dup v12.2d, v12.d[0]
     dup v13.2d, v13.d[0]
     dup v14.2d, v14.d[0]
@@ -95,9 +95,9 @@
 			prfm pldl1keep, [rgbPtr, #(CACHE_LINE_SIZE*3)]
             prfm pstl1keep, [outYPtr, #(CACHE_LINE_SIZE*3)]
 			.if \family == familyRGB24
-				ld3.16b {v2, v3, v4}, [rgbPtr], #16*3
+				ld3 {v2.16b, v3.16b, v4.16b}, [rgbPtr], #16*3
 			.elseif \family == familyRGB32
-				ld4.16b {v2, v3, v4, v5}, [rgbPtr], #16*4
+				ld4 {v2.16b, v3.16b, v4.16b, v5.16b}, [rgbPtr], #16*4
 			.elseif
 				.error not implemented
 			.endif
@@ -194,19 +194,19 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON64
 	padRGB .req r8
 
 	mov r9, #2048
-	dup.8h v12, r9w
+	dup v12.8h, r9w
 	#define vec2048 v12
 	mov r9, #0xF800
-	dup.8h v11, r9w
+	dup v11.8h, r9w
 	#define vecMaskR v11
 	mov r9, #0x07E0
-	dup.8h v10, r9w
+	dup v10.8h, r9w
 	#define vecMaskG v10
 	mov r9, #0x001F
-	dup.8h v9, r9w
+	dup v9.8h, r9w
 	#define vecMaskB v9
 
-	ld4.8b {v0, v1, v2, v3}, [kRGBfamilyToYUV_YCoeffs8]
+	ld4 {v0.8b, v1.8b, v2.8b, v3.8b}, [kRGBfamilyToYUV_YCoeffs8]
 	uxtl v13.8h, v0.8b
 	uxtl v14.8h, v1.8b
 	uxtl v15.8h, v2.8b
@@ -348,7 +348,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 	.endif
 	padRGB .req r8
 	
-	ld4.8b {v10, v11, v12, v13}, [kRGBfamilyToYUV_UCoeffs8]
+	ld4 {v10.8b, v11.8b, v12.8b, v13.8b}, [kRGBfamilyToYUV_UCoeffs8]
     sxtl v0.8h, v10.8b
 	sxtl v1.8h, v11.8b
 	sxtl v2.8h, v12.8b
@@ -360,7 +360,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 	#define vecCoeffU2 v2
 	#define vecCoeffU3 v3
 	
-	ld4.8b {v10, v11, v12, v13}, [kRGBfamilyToYUV_VCoeffs8]
+	ld4 {v10.8b, v11.8b, v12.8b, v13.8b}, [kRGBfamilyToYUV_VCoeffs8]
 	sxtl v4.8h, v10.8b
 	sxtl v5.8h, v11.8b
 	sxtl v6.8h, v12.8b
@@ -373,7 +373,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 	#define vecCoeffV3 v7
 
     mov r10, #128
-	dup.8h v30, r10w
+	dup v30.8h, r10w
 	#define vec128 v30
 
 	########################################
@@ -390,9 +390,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
             prfm pstl1keep, [outUPtr, #(CACHE_LINE_SIZE*3)]
             prfm pstl1keep, [outVPtr, #(CACHE_LINE_SIZE*3)]
 			.if \family == familyRGB24
-				ld3.16b {v8, v9, v10}, [rgbPtr], #3*16
+				ld3 {v8.16b, v9.16b, v10.16b}, [rgbPtr], #3*16
 			.elseif \family == familyRGB32
-				ld4.16b {v8, v9, v10, v11}, [rgbPtr], #4*16
+				ld4 {v8.16b, v9.16b, v10.16b, v11.16b}, [rgbPtr], #4*16
 			.elseif
 				.error not implemented
 			.endif
@@ -532,7 +532,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON64
 	lsl r8, padUV, #1
 	padRGB .req r8
 	
-	ld4.8b {v10, v11, v12, v13}, [kRGBfamilyToYUV_UCoeffs8]
+	ld4 {v10.8b, v11.8b, v12.8b, v13.8b}, [kRGBfamilyToYUV_UCoeffs8]
 	sxtl v0.8h, v10.8b
 	sxtl v1.8h, v11.8b
 	sxtl v2.8h, v12.8b
@@ -540,7 +540,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON64
 	#define vecCoeffU1 v1
 	#define vecCoeffU2 v2
 	
-	ld4.8b {v10, v11, v12, v13}, [kRGBfamilyToYUV_VCoeffs8]
+	ld4 {v10.8b, v11.8b, v12.8b, v13.8b}, [kRGBfamilyToYUV_VCoeffs8]
 	sxtl v3.8h, v10.8b
 	sxtl v4.8h, v11.8b
 	sxtl v5.8h, v12.8b
@@ -549,7 +549,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON64
 	#define vecCoeffV2 v5
 
 	mov r10, #128
-	dup.8h v6, r10w
+	dup v6.8h, r10w
 	#define vec128 v6
 
 	########################################
@@ -565,7 +565,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON64
 			prfm pldl1keep, [rgbPtr, #(CACHE_LINE_SIZE*3)]
             prfm pstl1keep, [outUPtr, #(CACHE_LINE_SIZE*3)]
             prfm pstl1keep, [outVPtr, #(CACHE_LINE_SIZE*3)]
-			ld1.16b {v7, v8}, [rgbPtr], #2*16
+			ld1 {v7.16b, v8.16b}, [rgbPtr], #2*16
 			#define vec0 v7
 			#define vec1 v8
 			.if \endianness == endiannessBIG

@@ -78,6 +78,9 @@
     <Filter Include="Source Files\features\fast\asm\x86">
       <UniqueIdentifier>{0bd3ec7f-1018-48a0-be7c-d167fbdf0401}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\features\fast\asm\arm">
+      <UniqueIdentifier>{f0ab5bb6-957c-4ef6-a2ea-558652a2421e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -132,5 +135,16 @@
     <YASM Include="features\fast\asm\x86\compv_core_feature_fast_dete_x86_avx.s">
       <Filter>Source Files\features\fast\asm\x86</Filter>
     </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_arm32_neon.S">
+      <Filter>Source Files\features\fast\asm\arm</Filter>
+    </None>
+    <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_arm64_neon.S">
+      <Filter>Source Files\features\fast\asm\arm</Filter>
+    </None>
+    <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
+      <Filter>Source Files\features\fast\asm\arm</Filter>
+    </None>
   </ItemGroup>
 </Project>
