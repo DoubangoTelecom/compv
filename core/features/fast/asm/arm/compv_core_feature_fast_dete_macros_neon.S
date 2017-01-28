@@ -11,10 +11,8 @@
 .macro _neon64_fast_check a b FastType vecDarker1 vecBrighter1
 	ldr r10, [sp, #(circle + \a*COMPV_GAS_REG_SZ_BYTES)]
 	ldr r11, [sp, #(circle + \b*COMPV_GAS_REG_SZ_BYTES)]
-	add r10, r10, i
-	add r11, r11, i
-	ld1 {v14.16b}, [r10]
-	ld1 {v15.16b}, [r11]
+	ldr q14, [r10, i]
+	ld1 q15, [r11, i]
 	cmlo v10.16b, v14.16b, \vecDarker1
 	cmlo v11.16b, v15.16b, \vecDarker1
 	cmhi v12.16b, v14.16b, \vecBrighter1
@@ -136,24 +134,15 @@
     mov r11, v11.d[1]
     orr r10, r10, r11 // orrs not avail on Aarch64
 	cbz r10, FastStrength_AllZeros_CompVFastDataRow_Asm_NEON64\FastType\@
-	add r8, sp, #(vecDiff16 + (((0 + \ii)&15)*16))
-	add r9, sp, #(vecDiff16 + (((1 + \ii)&15)*16))
-	add r10, sp, #(vecDiff16 + (((2 + \ii)&15)*16))
-	add r11, sp, #(vecDiff16 + (((3 + \ii)&15)*16))
-    add r12, sp, #(vecDiff16 + (((4 + \ii)&15)*16))
-	add r13, sp, #(vecDiff16 + (((5 + \ii)&15)*16))
-	add r14, sp, #(vecDiff16 + (((6 + \ii)&15)*16))
-	add r15, sp, #(vecDiff16 + (((7 + \ii)&15)*16))
-    add r16, sp, #(vecDiff16 + (((8 + \ii)&15)*16))
-	ld1 {v11.16b}, [r8]
-	ld1 {v12.16b}, [r9]
-	ld1 {v13.16b}, [r10]
-	ld1 {v14.16b}, [r11]
-    ld1 {v15.16b}, [r12]
-    ld1 {v16.16b}, [r13]
-    ld1 {v17.16b}, [r14]
-    ld1 {v18.16b}, [r15]
-    ld1 {v19.16b}, [r16]
+	ldr q11, [sp, #(vecDiff16 + (((0 + \ii)&15)*16))]
+	ldr q12, [sp, #(vecDiff16 + (((1 + \ii)&15)*16))]
+	ldr q13, [sp, #(vecDiff16 + (((2 + \ii)&15)*16))]
+	ldr q14, [sp, #(vecDiff16 + (((3 + \ii)&15)*16))]
+    ldr q15, [sp, #(vecDiff16 + (((4 + \ii)&15)*16))]
+    ldr q16, [sp, #(vecDiff16 + (((5 + \ii)&15)*16))]
+    ldr q17, [sp, #(vecDiff16 + (((6 + \ii)&15)*16))]
+    ldr q18, [sp, #(vecDiff16 + (((7 + \ii)&15)*16))]
+    ldr q19, [sp, #(vecDiff16 + (((8 + \ii)&15)*16))]
     umin v20.16b, v11.16b, v12.16b
     umin v21.16b, v13.16b, v14.16b
     umin v22.16b, v15.16b, v16.16b
@@ -163,12 +152,9 @@
     umin v26.16b, v23.16b, v24.16b
     umin v26.16b, v25.16b, v26.16b
 	.if \FastType == 12
-		add r8, sp, #(vecDiff16 + (((9 + \ii)&15)*16))
-		add r9, sp, #(vecDiff16 + (((10 + \ii)&15)*16))
-		add r10, sp, #(vecDiff16 + (((11 + \ii)&15)*16))
-		ld1 {v12.16b}, [r8]
-		ld1 {v13.16b}, [r9]
-		ld1 {v14.16b}, [r10]
+		ldr q12, [sp, #(vecDiff16 + (((9 + \ii)&15)*16))]
+		ldr q13, [sp, #(vecDiff16 + (((10 + \ii)&15)*16))]
+		ldr q14, [sp, #(vecDiff16 + (((11 + \ii)&15)*16))]
 		umin v12.16b, v12.16b, v13.16b
 		umin v26.16b, v26.16b, v14.16b
 		umin v26.16b, v26.16b, v12.16b
