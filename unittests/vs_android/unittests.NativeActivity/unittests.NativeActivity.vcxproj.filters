@@ -5,5 +5,6 @@
     <ClCompile Include="..\..\feature_fast.cxx" />
     <ClCompile Include="..\..\main.cxx" />
     <ClCompile Include="..\..\scale.cxx" />
+    <ClCompile Include="..\..\pyramid.cxx" />
   </ItemGroup>
 </Project>

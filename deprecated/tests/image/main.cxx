@@ -18,8 +18,8 @@ using namespace compv;
 #define TEST_ORB				0
 #define TEST_CANNY				0
 #define TEST_HOUGHSTD			0
-#define TEST_SCALE				1
-#define TEST_PYRAMID			0
+#define TEST_SCALE				0
+#define TEST_PYRAMID			1
 
 
 #if COMPV_OS_WINDOWS

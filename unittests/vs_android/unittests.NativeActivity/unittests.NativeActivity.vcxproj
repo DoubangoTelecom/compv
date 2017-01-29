@@ -38,6 +38,7 @@
     <ClCompile Include="..\..\chroma_conv.cxx" />
     <ClCompile Include="..\..\feature_fast.cxx" />
     <ClCompile Include="..\..\main.cxx" />
+    <ClCompile Include="..\..\pyramid.cxx" />
     <ClCompile Include="..\..\scale.cxx" />
   </ItemGroup>
   <ItemGroup>
@@ -164,6 +165,7 @@
       <AdditionalIncludeDirectories>../../../api/include;../../../base/include;../../../camera/include;../../../gl/include;../../../drawing/include;../../../core/include;../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <PreprocessorDefinitions>;COMPV_TEST_LOCAL</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
@@ -179,6 +181,7 @@
       <AdditionalIncludeDirectories>../../../api/include;../../../base/include;../../../camera/include;../../../gl/include;../../../drawing/include;../../../core/include;../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);COMPV_TEST_LOCAL</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
@@ -192,7 +195,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>../../../api/include;../../../base/include;../../../camera/include;../../../gl/include;../../../drawing/include;../../../core/include;../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>COMPV_TEST_LOCAL</PreprocessorDefinitions>
+      <PreprocessorDefinitions>COMPV_TEST_LOCAL;COMPV_TEST_LOCAL</PreprocessorDefinitions>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -208,7 +211,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>../../../api/include;../../../base/include;../../../camera/include;../../../gl/include;../../../drawing/include;../../../core/include;../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>COMPV_TEST_LOCAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>COMPV_TEST_LOCAL;%(PreprocessorDefinitions);COMPV_TEST_LOCAL</PreprocessorDefinitions>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -226,6 +229,7 @@
       <AdditionalIncludeDirectories>../../../api/include;../../../base/include;../../../camera/include;../../../gl/include;../../../drawing/include;../../../core/include;../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <PreprocessorDefinitions>;COMPV_TEST_LOCAL</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
@@ -240,6 +244,7 @@
       <AdditionalIncludeDirectories>../../../api/include;../../../base/include;../../../camera/include;../../../gl/include;../../../drawing/include;../../../core/include;../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);COMPV_TEST_LOCAL</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
@@ -254,6 +259,7 @@
       <AdditionalIncludeDirectories>../../../api/include;../../../base/include;../../../camera/include;../../../gl/include;../../../drawing/include;../../../core/include;../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <PreprocessorDefinitions>;COMPV_TEST_LOCAL</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>
@@ -268,6 +274,7 @@
       <AdditionalIncludeDirectories>../../../api/include;../../../base/include;../../../camera/include;../../../gl/include;../../../drawing/include;../../../core/include;../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);COMPV_TEST_LOCAL</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVCore;CompVGPU;CompVBase</LibraryDependencies>

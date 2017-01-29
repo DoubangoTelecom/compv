@@ -40,6 +40,7 @@
     <ClCompile Include="..\..\draw_points.cxx" />
     <ClCompile Include="..\..\feature_fast.cxx" />
     <ClCompile Include="..\..\main.cxx" />
+    <ClCompile Include="..\..\pyramid.cxx" />
     <ClCompile Include="..\..\scale.cxx" />
   </ItemGroup>
   <ItemGroup>

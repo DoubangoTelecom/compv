@@ -22,15 +22,15 @@ typedef uint8_t compv_md5digest_t[COMPV_MD5_STRING_SIZE]; /**< MD5 digest bytes.
 
 COMPV_NAMESPACE_BEGIN()
 
+COMPV_OBJECT_DECLARE_PTRS(Md5)
+
 class COMPV_BASE_API CompVMd5 : public CompVObj
 {
 protected:
     CompVMd5();
 public:
     virtual ~CompVMd5();
-    virtual COMPV_INLINE const char* getObjectId() {
-        return "CompVMd5";
-    };
+	COMPV_OBJECT_GET_ID(CompVMd5);
 
     COMPV_ERROR_CODE update(uint8_t const *buf, size_t len);
     COMPV_ERROR_CODE final(compv_md5digest_t digest);
@@ -38,7 +38,7 @@ public:
     std::string compute(const void* input = NULL, size_t size = 0);
 
     static std::string compute2(const void* input, size_t size);
-    static COMPV_ERROR_CODE newObj(CompVPtr<CompVMd5*>* md5);
+    static COMPV_ERROR_CODE newObj(CompVMd5PtrPtr md5);
 
 private:
     void init();

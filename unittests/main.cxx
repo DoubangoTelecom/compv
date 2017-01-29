@@ -4,7 +4,8 @@ using namespace compv;
 
 #define TAG_UNITTESTS "UnitTests"
 
-#define UNITTEST_SCALE			1
+#define UNITTEST_SCALE			0
+#define UNITTEST_PYRAMID		1
 #define UNITTEST_FEATURE_FAST	0
 #define UNITTEST_CHROMA_CONV	0
 
@@ -60,6 +61,10 @@ compv_main()
 #if UNITTEST_SCALE || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_scale();
 								COMPV_CHECK_CODE_BAIL(err = unittest_scale(), "Image scale unittest failed");
+#endif
+#if UNITTEST_PYRAMID || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_pyramid();
+								COMPV_CHECK_CODE_BAIL(err = unittest_pyramid(), "Image pyramid unittest failed");
 #endif
 #if UNITTEST_FEATURE_FAST || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_feature_fast();

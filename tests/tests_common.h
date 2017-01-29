@@ -88,7 +88,7 @@ static COMPV_ERROR_CODE compv_tests_write_to_file(const CompVMatPtr& mat, const 
 static const std::string compv_tests_md5(const CompVMatPtr& mat)
 {
 	if (mat && !mat->isEmpty()) {
-		CompVPtr<CompVMd5*> md5;
+		CompVMd5Ptr md5;
 		COMPV_CHECK_CODE_ASSERT(CompVMd5::newObj(&md5), "Failed to create MD5 computer");
 		int32_t planes = static_cast<int32_t>(mat->planeCount());
 		for (int32_t plane = 0; plane < planes; ++plane) {

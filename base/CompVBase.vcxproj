@@ -62,6 +62,7 @@
     <ClInclude Include="include\compv\base\image\compv_image_conv_to_yuv444p.h" />
     <ClInclude Include="include\compv\base\image\compv_image_decoder.h" />
     <ClInclude Include="include\compv\base\image\compv_image_scale_bilinear.h" />
+    <ClInclude Include="include\compv\base\image\compv_image_scale_pyramid.h" />
     <ClInclude Include="include\compv\base\image\compv_image_utils.h" />
     <ClInclude Include="include\compv\base\image\intrin\arm\compv_image_conv_grayscale_intrin_neon.h" />
     <ClInclude Include="include\compv\base\image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.h" />
@@ -138,6 +139,7 @@
     <ClCompile Include="image\compv_image_conv_to_yuv444p.cxx" />
     <ClCompile Include="image\compv_image_decoder.cxx" />
     <ClCompile Include="image\compv_image_scale_bilinear.cxx" />
+    <ClCompile Include="image\compv_image_scale_pyramid.cxx" />
     <ClCompile Include="image\compv_image_utils.cxx" />
     <ClCompile Include="image\intrin\arm\compv_image_conv_rgbfamily_intrin_neon.cxx" />
     <ClCompile Include="image\intrin\arm\compv_image_scale_bilinear_intrin_neon.cxx" />

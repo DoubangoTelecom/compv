@@ -276,15 +276,12 @@ std::string CompVMd5::compute2(const void* input, size_t size)
     return "";
 }
 
-COMPV_ERROR_CODE CompVMd5::newObj(CompVPtr<CompVMd5*>* md5)
+COMPV_ERROR_CODE CompVMd5::newObj(CompVMd5PtrPtr md5)
 {
     COMPV_CHECK_EXP_RETURN(!md5, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    CompVPtr<CompVMd5*> md5_;
-
-    md5_ = new CompVMd5();
-    if (!md5_) {
-        COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
+	CompVMd5Ptr md5_ = new CompVMd5();
+    COMPV_CHECK_EXP_RETURN(!md5_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+    
     *md5 = md5_;
     return COMPV_ERROR_CODE_S_OK;
 }
