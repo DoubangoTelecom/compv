@@ -226,6 +226,9 @@ COMPV_ERROR_CODE CompVDrawing::runLoop(CompVRunLoopListenerPtr listener COMPV_DE
     COMPV_DEBUG_INFO("Running event loop on thread with id = %ld", (long)eventLoopThreadId);
 
 #if COMPV_OS_ANDROID
+	if (CompVDrawing::s_ptrListener) {
+		COMPV_CHECK_CODE_BAIL(err = CompVSemaphore::newObj(&CompVDrawing::s_WorkerSemaphore));
+	}
     COMPV_CHECK_CODE_BAIL(err = CompVDrawing::android_runLoop(AndroidApp_get()));
 #elif defined(HAVE_SDL_H)
     if (CompVDrawing::s_ptrListener) {
@@ -344,7 +347,6 @@ void CompVDrawing::android_engine_handle_cmd(struct android_app* app, int32_t cm
 			// The window is being shown, get it ready.
 			if (engine->app->window != NULL) {
 				if (CompVDrawing::s_ptrListener) {
-					COMPV_CHECK_CODE_NOP(CompVSemaphore::newObj(&CompVDrawing::s_WorkerSemaphore));
 					COMPV_CHECK_CODE_NOP(CompVThread::newObj(&CompVDrawing::s_WorkerThread, CompVDrawing::workerThread, app));
 				}
 			}

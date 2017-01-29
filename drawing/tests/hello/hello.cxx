@@ -122,7 +122,7 @@ static void *COMPV_STDCALL cameraRestart(void * arg)
 static void* WorkerThread(void* arg);
 COMPV_ERROR_CODE CompVMyRunLoopListener::onStateChanged(COMPV_RUNLOOP_STATE newState)
 {
-	if (newState == COMPV_RUNLOOP_STATE_LOOP_STARTED) {
+	if (newState == COMPV_RUNLOOP_STATE_ANIMATION_STARTED) {
 		WorkerThread(NULL);
 	}
 	return COMPV_ERROR_CODE_S_OK;
