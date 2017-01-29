@@ -9,6 +9,8 @@
 #include "compv/drawing/compv_drawing.h"
 #include "compv/gl/compv_gl_info.h"
 
+#define COMPV_THIS_CLASSNAME	"CompVGLContextEGL"
+
 COMPV_NAMESPACE_BEGIN()
 
 //
@@ -35,7 +37,7 @@ COMPV_ERROR_CODE CompVGLContextEGL::makeCurrent() /* Overrides(CompVGLContext) *
 
     //!\\ Order is important: call base class implementation to lock then set context then
     COMPV_CHECK_CODE_BAIL(err = CompVGLContext::makeCurrent()); // Base class implementation
-    COMPV_CHECK_EXP_RETURN(eglMakeCurrent(m_pEGLDisplay, m_pEGLSurface, m_pEGLSurface, m_pEGLContex) != EGL_TRUE, COMPV_ERROR_CODE_E_GL);
+    COMPV_CHECK_EXP_RETURN(eglMakeCurrent(m_pEGLDisplay, m_pEGLSurface, m_pEGLSurface, m_pEGLContex) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_GL), "Failed to make the context current");
 
 bail:
     if (COMPV_ERROR_CODE_IS_NOK(err)) {
@@ -57,7 +59,7 @@ COMPV_ERROR_CODE CompVGLContextEGL::unmakeCurrent() /* Overrides(CompVGLContext)
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
     //!\\ Order is important: unset context then call base class implementation to unlock
-    COMPV_CHECK_EXP_RETURN(eglMakeCurrent(m_pEGLDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE, COMPV_ERROR_CODE_E_GL, "Failed to make the GL-ES context current.");
+    COMPV_CHECK_EXP_RETURN(eglMakeCurrent(m_pEGLDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_GL), "Failed to unmake the GL-ES context current.");
     COMPV_CHECK_CODE_BAIL(err = CompVGLContext::unmakeCurrent()); // Base class implementation
 
 bail:
@@ -131,7 +133,7 @@ COMPV_ERROR_CODE CompVWindowEGL::init()
     m_pEGLDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     COMPV_CHECK_EXP_BAIL(m_pEGLDisplay == EGL_NO_DISPLAY, (err = COMPV_ERROR_CODE_E_EGL));
     COMPV_CHECK_EXP_BAIL(eglInitialize(m_pEGLDisplay, &major, &minor) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));
-    COMPV_DEBUG_INFO("Initializing EGL display with major=%d and minor=%d", major, minor);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Initializing EGL display with major=%d and minor=%d", major, minor);
 
     COMPV_CHECK_EXP_BAIL(eglChooseConfig(m_pEGLDisplay, CompVEGLAttribs, &config, 1, &numConfigs) != EGL_TRUE, (err = COMPV_ERROR_CODE_E_EGL));
 
@@ -159,7 +161,7 @@ COMPV_ERROR_CODE CompVWindowEGL::init()
     COMPV_CHECK_EXP_BAIL((eglQuerySurface(m_pEGLDisplay, m_pEGLSurface, EGL_WIDTH, &width) != EGL_TRUE), (err = COMPV_ERROR_CODE_E_EGL));
     COMPV_CHECK_EXP_BAIL((eglQuerySurface(m_pEGLDisplay, m_pEGLSurface, EGL_HEIGHT, &height) != EGL_TRUE), (err = COMPV_ERROR_CODE_E_EGL));
     if (width != CompVWindow::m_nWidth || height != CompVWindow::m_nHeight) {
-        COMPV_DEBUG_INFO("Android, setting size to fullscreen: (%zd,%zd)->(%zd,%zd)", CompVWindow::m_nWidth, CompVWindow::m_nHeight, width, height);
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Android, setting size to fullscreen: (%zd,%zd)->(%zd,%zd)", CompVWindow::m_nWidth, CompVWindow::m_nHeight, width, height);
         COMPV_CHECK_CODE_BAIL(err = priv_updateSize(static_cast<size_t>(width), static_cast<size_t>(height)));
     }
 

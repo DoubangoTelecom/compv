@@ -130,7 +130,8 @@ COMPV_ERROR_CODE CompVCameraAndroid::start(const std::string& deviceId COMPV_DEF
 		static_cast<jint>(m_CapsPref.width),
 		static_cast<jint>(m_CapsPref.height),
 		static_cast<jint>(m_CapsPref.fps),
-		static_cast<jint>(m_CapsPref.format));
+		static_cast<jint>(m_CapsPref.format),
+		static_cast<jboolean>(m_CapsPref.autofocus));
 	COMPV_jni_checkException(jEnv, &bExcOccured);
 	COMPV_CHECK_EXP_BAIL(bExcOccured, (err = COMPV_ERROR_CODE_E_JNI), "JNI: exception occured on camera 'setCaps' function");
 	m_eSubTypeNeg = COMPV_SUBTYPE_NONE; // means you need to query neg caps
@@ -195,6 +196,11 @@ COMPV_ERROR_CODE CompVCameraAndroid::set(int id, const void* valuePtr, size_t va
 	}
 	case COMPV_CAMERA_CAP_INT_SUBTYPE: {
 		COMPV_CHECK_CODE_RETURN(CompVCameraAndroid::convertFormat(static_cast<COMPV_SUBTYPE>(*reinterpret_cast<const int*>(valuePtr)), m_CapsPref.format), "Invalid pixel format");
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	case COMPV_CAMERA_CAP_BOOL_AUTOFOCUS: {
+		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(bool), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		m_CapsPref.autofocus = *reinterpret_cast<const bool*>(valuePtr);
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	default: {
@@ -350,7 +356,7 @@ COMPV_ERROR_CODE CompVCameraAndroid::initJNI(JNIEnv* jEnv)
 	COMPV_CHECK_EXP_BAIL(!methodGetNumberOfCameras, (err = COMPV_ERROR_CODE_E_JNI), "JNI: failed to get 'getNumberOfCameras' method from CompVCamera java class");
 	methodGetCameraInfo = jEnv->GetStaticMethodID(classCompVCamera, "getCameraInfo", "(I)Ljava/lang/String;"); //  static String getCameraInfo(int);
 	COMPV_CHECK_EXP_BAIL(!methodGetCameraInfo, (err = COMPV_ERROR_CODE_E_JNI), "JNI: failed to get 'getCameraInfo' method from CompVCamera java class");
-	methodSetCaps = jEnv->GetMethodID(classCompVCamera, "setCaps", "(IIII)V"); // void setCaps(int width, int height, int fps, int format);
+	methodSetCaps = jEnv->GetMethodID(classCompVCamera, "setCaps", "(IIIIZ)V"); // void setCaps(int width, int height, int fps, int format, bool autofocus);
 	COMPV_CHECK_EXP_BAIL(!methodSetCaps, (err = COMPV_ERROR_CODE_E_JNI), "JNI: failed to get 'setCaps' method from CompVCamera java class");
 
 	s_classCamera = classCompVCamera, classCompVCamera = NULL; // 'classCompVCamera' already global ref

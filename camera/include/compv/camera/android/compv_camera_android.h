@@ -39,17 +39,19 @@ struct CompVCameraAndroidCaps {
 	int height;
 	int fps;
 	int format;
+	bool autofocus;
 	// Important: update 'isEquals' and 'toString' functions if you add new field
 
-	CompVCameraAndroidCaps(int width_ = 640, int height_ = 480, int fps_ = 25, int format_ = COMPV_PixelFormat_YCbCr_420_SP) {
+	CompVCameraAndroidCaps(int width_ = 640, int height_ = 480, int fps_ = 25, int format_ = COMPV_PixelFormat_YCbCr_420_SP, bool autofocus_ = true) {
 		width = width_;
 		height = height_;
 		fps = fps_;
 		format = format_;
+		autofocus = autofocus_;
 	}
 
 	COMPV_INLINE bool isEquals(const CompVCameraAndroidCaps& caps)const {
-		return width == caps.width && height == caps.height && fps == caps.fps && format == caps.format;
+		return width == caps.width && height == caps.height && fps == caps.fps && format == caps.format && autofocus == caps.autofocus;
 	}
 
 	COMPV_INLINE const std::string toString()const {
@@ -57,7 +59,8 @@ struct CompVCameraAndroidCaps {
 			std::string("width=") + CompVBase::to_string(width) + std::string(", ")
 			+ std::string("height=") + CompVBase::to_string(height) + std::string(", ")
 			+ std::string("fps=") + CompVBase::to_string(fps) + std::string(", ")
-			+ std::string("format=") + COMPV_CompVCameraAndroid_formatName(format);
+			+ std::string("format=") + COMPV_CompVCameraAndroid_formatName(format)
+			+ std::string("autofocus=") + CompVBase::to_string(autofocus);
 	}
 };
 

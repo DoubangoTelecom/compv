@@ -303,9 +303,9 @@ CompVGLRenderer::CompVGLRenderer(COMPV_SUBTYPE ePixelFormat)
     memset(&m_uWidths, 0, sizeof(m_uWidths));
     memset(&m_uHeights, 0, sizeof(m_uHeights));
     memset(&m_uStrides, 0, sizeof(m_uStrides));
-	memset(&m_uWidthsTexture, 0, sizeof(m_uWidths));
-	memset(&m_uHeightsTexture, 0, sizeof(m_uHeights));
-	memset(&m_uStridesTexture, 0, sizeof(m_uStrides));
+	memset(&m_uWidthsTexture, 0, sizeof(m_uWidthsTexture));
+	memset(&m_uHeightsTexture, 0, sizeof(m_uHeightsTexture));
+	memset(&m_uStridesTexture, 0, sizeof(m_uStridesTexture));
 }
 
 CompVGLRenderer::~CompVGLRenderer()

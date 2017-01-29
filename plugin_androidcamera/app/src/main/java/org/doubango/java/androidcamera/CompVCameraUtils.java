@@ -30,7 +30,8 @@ public class CompVCameraUtils {
                 parameters.getPreviewSize().width,
                 parameters.getPreviewSize().height,
                 parameters.getPreviewFrameRate(),
-                parameters.getPreviewFormat());
+                parameters.getPreviewFormat(),
+                parameters.getFlashMode() == Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
     }
 
     public static boolean applyCaps(final Camera camera, final CompVCameraCaps capsPref) {
@@ -38,6 +39,10 @@ public class CompVCameraUtils {
         parameters.setPreviewFormat(capsPref.mFormat);
         parameters.setPreviewSize(capsPref.mWidth, capsPref.mHeight);
         parameters.setPreviewFrameRate(capsPref.mFps);
+        final String focusMode = capsPref.mAutoFocus ? Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO : Camera.Parameters.FOCUS_MODE_FIXED;
+        if (parameters.getSupportedFocusModes().contains(focusMode)) {
+            parameters.setFocusMode(focusMode);
+        }
         try {
             camera.setParameters(parameters);
         } catch (Exception e) {
@@ -91,7 +96,7 @@ public class CompVCameraUtils {
         final int[] fpsRange = fpss.get(formatIdx);
         final int fps = capsPref.mFps * 1000;
         final int fpsBest = (fps < fpsRange[0] ? fpsRange[0] : (fps > fpsRange[1] ? fpsRange[1] : fps)) / 1000;
-        return new CompVCameraCaps(sizeBest.width, sizeBest.height, fpsBest, formats.get(formatIdx));
+        return new CompVCameraCaps(sizeBest.width, sizeBest.height, fpsBest, formats.get(formatIdx), capsPref.mAutoFocus);
     }
 
     public static String getFormatName(final int format) {

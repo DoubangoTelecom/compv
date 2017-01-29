@@ -11,6 +11,8 @@ CompVCameraDeviceInfoList devices;
 #define CAMERA_FPS			25
 #define CAMERA_SUBTYPE		COMPV_SUBTYPE_PIXELS_YUY2
 
+static void* WorkerThread(void* arg);
+
 /* My runloop listener (optional) */
 COMPV_OBJECT_DECLARE_PTRS(MyRunLoopListener)
 class CompVMyRunLoopListener : public CompVRunLoopListener
@@ -119,10 +121,10 @@ static void *COMPV_STDCALL cameraRestart(void * arg)
 	return NULL;
 }
 
-static void* WorkerThread(void* arg);
+
 COMPV_ERROR_CODE CompVMyRunLoopListener::onStateChanged(COMPV_RUNLOOP_STATE newState)
 {
-	if (newState == COMPV_RUNLOOP_STATE_ANIMATION_STARTED) {
+	if (newState == COMPV_RUNLOOP_STATE_ANIMATION_RESUMED || newState == COMPV_RUNLOOP_STATE_ANIMATION_STARTED) {
 		WorkerThread(NULL);
 	}
 	return COMPV_ERROR_CODE_S_OK;

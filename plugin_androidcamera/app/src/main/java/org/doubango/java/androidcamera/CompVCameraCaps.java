@@ -11,20 +11,22 @@ public class CompVCameraCaps {
     public int mHeight;
     public int mFps;
     public int mFormat;
+    public boolean mAutoFocus;
 
     public CompVCameraCaps() {
-        this(640, 480, 25, CompVCamera.PIXEL_FORMAT_NV21);
+        this(640, 480, 25, CompVCamera.PIXEL_FORMAT_NV21, true);
     }
 
-    public CompVCameraCaps(int width, int height, int fps, int format) {
+    public CompVCameraCaps(int width, int height, int fps, int format, boolean autofocus) {
         mWidth = width;
         mHeight = height;
         mFps = fps;
         mFormat = format;
+        mAutoFocus = autofocus;
     }
 
     @Override
     public String toString() {
-        return String.format("width=%d, height=%d, fps=%d, format=%s", mWidth, mHeight, mFps, CompVCameraUtils.getFormatName(mFormat));
+        return String.format("width=%d, height=%d, fps=%d, format=%s, autofocus=%s", mWidth, mHeight, mFps, CompVCameraUtils.getFormatName(mFormat), mAutoFocus ? "true" : "false");
     }
 }

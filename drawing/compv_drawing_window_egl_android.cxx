@@ -11,6 +11,8 @@
 
 #include <android/native_window_jni.h>
 
+#define COMPV_THIS_CLASSNAME "CompVWindowEGLAndroid"
+
 COMPV_NAMESPACE_BEGIN()
 
 //
@@ -118,7 +120,7 @@ COMPV_ERROR_CODE CompVWindowEGLAndroid::newObj(CompVWindowEGLAndroidPtrPtr eglWi
         size_t newWidth = static_cast<size_t>(ANativeWindow_getWidth(app->window));
         size_t newheight = static_cast<size_t>(ANativeWindow_getHeight(app->window));
         if (width && height) {
-            COMPV_DEBUG_INFO("Android, setting size to fullscreen: (%zd,%zd)->(%zd,%zd)", width, height, newWidth, newheight);
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Android, setting size to fullscreen: (%zd,%zd)->(%zd,%zd)", width, height, newWidth, newheight);
             width = newWidth;
             height = newheight;
         }

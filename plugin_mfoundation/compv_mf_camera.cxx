@@ -178,6 +178,11 @@ COMPV_ERROR_CODE CompVMFCamera::set(int id, const void* valuePtr, size_t valueSi
 			COMPV_CHECK_CODE_RETURN(CompVMFUtils::convertSubType(static_cast<COMPV_SUBTYPE>(*reinterpret_cast<const int*>(valuePtr)), m_CapsPref.subType));
 			return COMPV_ERROR_CODE_S_OK;
 		}
+		case COMPV_CAMERA_CAP_BOOL_AUTOFOCUS: {
+			COMPV_CHECK_EXP_RETURN(valueSize != sizeof(bool), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+			m_CapsPref.autofocus = *reinterpret_cast<const bool*>(valuePtr) ? TRUE : FALSE;
+			return COMPV_ERROR_CODE_S_OK;
+		}
 		default: {
 			COMPV_DEBUG_ERROR("Media Foundation camera implementation doesn't support capability id %d", id);
 			return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;

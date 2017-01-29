@@ -7,6 +7,7 @@ using namespace compv;
 #define CAMERA_HEIGHT		720
 #define CAMERA_FPS			25
 #define CAMERA_SUBTYPE		COMPV_SUBTYPE_PIXELS_YUY2
+#define CAMERA_AUTOFOCUS	true
 
 #define WINDOW_WIDTH		1280
 #define WINDOW_HEIGHT		720
@@ -142,6 +143,7 @@ compv_main()
 		COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_HEIGHT, CAMERA_HEIGHT));
 		COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_FPS, CAMERA_FPS));
 		COMPV_CHECK_CODE_BAIL(err = camera->setInt(COMPV_CAMERA_CAP_INT_SUBTYPE, CAMERA_SUBTYPE));
+		COMPV_CHECK_CODE_BAIL(err = camera->setBool(COMPV_CAMERA_CAP_BOOL_AUTOFOCUS, CAMERA_AUTOFOCUS));
 		COMPV_CHECK_CODE_BAIL(err = camera->start(cameraId)); // use no parameter ('star()') to use default camera device
 
 		// Start ui runloop

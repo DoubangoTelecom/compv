@@ -126,17 +126,19 @@ struct CompVDSCameraCaps {
 	LONG height;
 	int fps;
 	GUID subType;
+	BOOL autofocus;
 	// Important: update 'isEquals' and 'toString' functions if you add new field
 
-	CompVDSCameraCaps(LONG width_ = 640, LONG height_ = 480, int fps_ = 25, GUID subType_ = MEDIASUBTYPE_YUY2) {
+	CompVDSCameraCaps(LONG width_ = 640, LONG height_ = 480, int fps_ = 25, GUID subType_ = MEDIASUBTYPE_YUY2, BOOL autofocus_ = TRUE) {
 		width = width_;
 		height = height_;
 		fps = fps_;
 		subType = subType_;
+		autofocus = autofocus_;
 	}
 
 	COMPV_INLINE bool isEquals(const CompVDSCameraCaps& caps)const {
-		return width == caps.width && height == caps.height && fps == caps.fps && InlineIsEqualGUID(subType, caps.subType);
+		return width == caps.width && height == caps.height && fps == caps.fps && InlineIsEqualGUID(subType, caps.subType) && autofocus == caps.autofocus;
 	}
 
 	COMPV_INLINE const std::string toString()const {
@@ -144,7 +146,8 @@ struct CompVDSCameraCaps {
 			std::string("width=") + std::to_string(width) + std::string(", ")
 			+ std::string("height=") + std::to_string(height) + std::string(", ")
 			+ std::string("fps=") + std::to_string(fps) + std::string(", ")
-			+ std::string("subType=") + std::string(CompVDSUtilsGuidName(subType));
+			+ std::string("subType=") + std::string(CompVDSUtilsGuidName(subType))
+			+ std::string("autofocus=") + std::to_string(autofocus);
 	}
 };
 

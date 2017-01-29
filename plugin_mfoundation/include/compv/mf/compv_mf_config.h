@@ -65,19 +65,21 @@ struct CompVMFCameraCaps {
 	UINT32 denFps;
 	COMPV_MF_SUBTYPE subType;
 	// Important: update 'isEquals' and 'toString' functions if you add new field
+	BOOL autofocus;
 
-	CompVMFCameraCaps(UINT32 width_ = 640, UINT32 height_ = 480, UINT32 numFps_ = 25000, UINT32 denFps_ = 1000, COMPV_MF_SUBTYPE subType_ = MFVideoFormat_YUY2) {
+	CompVMFCameraCaps(UINT32 width_ = 640, UINT32 height_ = 480, UINT32 numFps_ = 25000, UINT32 denFps_ = 1000, COMPV_MF_SUBTYPE subType_ = MFVideoFormat_YUY2, BOOL autofocus_ = TRUE) {
 		width = width_;
 		height = height_;
 		numFps = numFps_;
 		denFps = denFps_;
 		subType = subType_;
+		autofocus = autofocus_;
 	}
 	virtual ~CompVMFCameraCaps() {
 	}
 
 	COMPV_INLINE bool isEquals(const CompVMFCameraCaps& caps)const {
-		return width == caps.width && height == caps.height && numFps == caps.numFps && denFps == caps.denFps && InlineIsEqualGUID(subType, caps.subType);
+		return width == caps.width && height == caps.height && numFps == caps.numFps && denFps == caps.denFps && InlineIsEqualGUID(subType, caps.subType) && autofocus == caps.autofocus;
 	}
 
 	COMPV_INLINE const std::string toString()const {
@@ -85,7 +87,8 @@ struct CompVMFCameraCaps {
 			std::string("width=") + std::to_string(width) + std::string(", ")
 			+ std::string("height=") + std::to_string(height) + std::string(", ")
 			+ std::string("fps=") + std::to_string(numFps) + std::string("/") + std::to_string(denFps) + std::string(", ")
-			+ std::string("subType=") + std::string(CompVMFUtilsGuidName(subType));
+			+ std::string("subType=") + std::string(CompVMFUtilsGuidName(subType))
+			+ std::string("autofocus=") + std::to_string(autofocus);
 	}
 };
 
