@@ -67,6 +67,7 @@
 		LoopWidth\@:
 			add r9, r9, #16
 			prfm pldl1keep, [yuv422Ptr, #(CACHE_LINE_SIZE*3)]
+			prfm pstl1keep, [outYPtr, #(CACHE_LINE_SIZE*3)]
 			ld1 {v1.16b, v2.16b}, [yuv422Ptr], #32
 			
             .if \yuv422Family == yuyv422Family

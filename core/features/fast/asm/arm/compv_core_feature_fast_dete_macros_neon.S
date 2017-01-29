@@ -92,15 +92,14 @@
 
 #########################################################################
 .macro _neon64_fast_init_diffbinarysum FastType vecSum1
-	add r8, sp, #(vecDiffBinary16 + 0*16)
-	ld1 {v12.16b}, [r8], sixteen
-	ld1 {v13.16b}, [r8], sixteen
-	ld1 {v14.16b}, [r8], sixteen
-	ld1 {v15.16b}, [r8], sixteen
-	ld1 {v16.16b}, [r8], sixteen
-	ld1 {v17.16b}, [r8], sixteen
-	ld1 {v18.16b}, [r8], sixteen
-	ld1 {v19.16b}, [r8], sixteen
+	ldr q12, [sp, #(vecDiffBinary16 + 0*16)]
+	ldr q13, [sp, #(vecDiffBinary16 + 1*16)]
+	ldr q14, [sp, #(vecDiffBinary16 + 2*16)]
+	ldr q15, [sp, #(vecDiffBinary16 + 3*16)]
+	ldr q16, [sp, #(vecDiffBinary16 + 4*16)]
+	ldr q17, [sp, #(vecDiffBinary16 + 5*16)]
+	ldr q18, [sp, #(vecDiffBinary16 + 6*16)]
+	ldr q19, [sp, #(vecDiffBinary16 + 7*16)]
     add v20.16b, v12.16b, v13.16b
     add v21.16b, v14.16b, v15.16b
     add v22.16b, v16.16b, v17.16b
@@ -109,9 +108,9 @@
     add \vecSum1, v22.16b, v23.16b // setting vecSum1 for the first time
     add \vecSum1, \vecSum1, v24.16b
 	.if \FastType == 12
-		ld1 {v12.16b}, [r8], sixteen
-		ld1 {v13.16b}, [r8], sixteen
-		ld1 {v14.16b}, [r8], sixteen
+		ldr q12, [sp, #(vecDiffBinary16 + 8*16)]
+		ldr q13, [sp, #(vecDiffBinary16 + 9*16)]
+		ldr q14, [sp, #(vecDiffBinary16 + 10*16)]
 		add v15.16b, v12.16b, v13.16b
 		add \vecSum1, \vecSum1, v14.16b
 		add \vecSum1, \vecSum1, v15.16b
@@ -121,13 +120,11 @@
 #########################################################################
 .macro _neon64_fast_strength ii FastType vecSum1 vecStrengths vecN
 	.if \FastType == 12
-		add r11, sp, #(vecDiffBinary16 + (((11 + \ii)&15)*16)) // 11 = NminusOne
+		ldr q15, [sp, #(vecDiffBinary16 + (((11 + \ii)&15)*16))] // 11 = NminusOne
 	.else
-		add r11, sp, #(vecDiffBinary16 + (((8 + \ii)&15)*16)) // 8 = NminusOne
+		ldr q15, [sp, #(vecDiffBinary16 + (((8 + \ii)&15)*16))] // 8 = NminusOne
 	.endif
-    add r20, sp, #(vecDiffBinary16 + ((\ii&15)*16))
-	ld1 {v15.16b}, [r11]
-    ld1 {v27.16b}, [r20]
+    ldr q27, [sp, #(vecDiffBinary16 + ((\ii&15)*16))]
 	add \vecSum1, \vecSum1, v15.16b // add tail
 	cmhs v11.16b, \vecSum1, \vecN
     mov r10, v11.d[0]
