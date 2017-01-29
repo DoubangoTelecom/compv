@@ -11,6 +11,8 @@
 #include "compv/gl/compv_gl_func.h"
 #include "compv/gl/compv_gl_mvp.h"
 
+#define COMPV_THIS_CLASSNAME	"CompVGLBlitter"
+
 COMPV_NAMESPACE_BEGIN()
 
 CompVGLBlitter::CompVGLBlitter()

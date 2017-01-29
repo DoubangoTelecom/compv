@@ -467,7 +467,7 @@ COMPV_ERROR_CODE CompVAndroidDexClassLoader::moveDexFileFromAssetsToData(JNIEnv*
 		}
 		COMPV_jni_checkException(jEnv, &bExcOccured);
 		COMPV_CHECK_EXP_BAIL(bExcOccured, (err = COMPV_ERROR_CODE_E_JNI));
-		COMPV_CHECK_EXP_BAIL(!bNativeLibFound, (err = COMPV_ERROR_CODE_E_FILE_NOT_FOUND));
+		COMPV_CHECK_EXP_BAIL(!bNativeLibFound, (err = COMPV_ERROR_CODE_E_FILE_NOT_FOUND), "Native lib not found in dex file");
 	}
 
 	// jobjectBufferInputStream.close();

@@ -12,6 +12,7 @@
 #include "compv/base/android/compv_android_native_activity.h"
 #include "compv/base/compv_jni.h"
 #include "compv/base/image/compv_image.h"
+#include "compv/base/parallel/compv_thread.h"
 
 #define COMPV_THIS_CLASSNAME "CompVCameraAndroid"
 
@@ -136,7 +137,7 @@ COMPV_ERROR_CODE CompVCameraAndroid::start(const std::string& deviceId COMPV_DEF
 	
 	// Start the camera
 	bSucceed = jEnv->CallBooleanMethod(m_jobjectCamera, s_methodCameraStart, static_cast<jint>(cameraId));
-	COMPV_jni_checkException(jEnv, &bExcOccured); // Camera permission issues: 'java.lang.RuntimeException: Fail to connect to camera service'
+	COMPV_jni_checkException(jEnv, &bExcOccured); // Camera permission issues (or already in use): 'java.lang.RuntimeException: Fail to connect to camera service'
 	COMPV_CHECK_EXP_BAIL(bExcOccured, (err = COMPV_ERROR_CODE_E_JNI), "JNI: exception occured on camera 'start' function");
 	COMPV_CHECK_EXP_BAIL(!bSucceed, (err = COMPV_ERROR_CODE_E_SYSTEM), "JNI: failed to start the camera. Java function returned false.");
 	m_bStarted = true;
@@ -274,8 +275,17 @@ COMPV_ERROR_CODE CompVCameraAndroid::initJNI(JNIEnv* jEnv)
 	jmethodID methodSetCaps;
 	jfieldID fieldPixelFormat;
 	struct android_app* nativeApp = AndroidApp_get();
-	COMPV_DEBUG_INFO("%s called with  nativeAndroidApp = %p", __FUNCTION__, nativeApp); // Debug message used to check if we are running a native or managed application.
-	COMPV_CHECK_EXP_RETURN(!CompVAndroidDexClassLoader::isInitialized(), COMPV_ERROR_CODE_E_INVALID_STATE);
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME,  "%s called with  nativeAndroidApp = %p", __FUNCTION__, nativeApp); // Debug message used to check if we are running a native or managed application.
+	if (!CompVAndroidDexClassLoader::isInitialized()) {
+		// Dex class loader is initialized in Activity::onStart or Activity::onResume
+		// The user can try to create a camera object before 'onStart' of 'onResume'
+		// This is why we wait for 2 seconds
+		for (int i = 0; i < 10 && !CompVAndroidDexClassLoader::isInitialized(); ++i) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Dex class loader not initiliazed yet (%d)... ", i);
+			CompVThread::sleep(200);
+		}
+		COMPV_CHECK_EXP_RETURN(!CompVAndroidDexClassLoader::isInitialized(), COMPV_ERROR_CODE_E_INVALID_STATE, "Dex class loader not initialized");
+	}
 	jobject activity = nativeApp ? nativeApp->activity->clazz : NULL; // TODO(dmi): Allow using activity from Java code (retrieved using JNI_OnLoad)
 	COMPV_CHECK_EXP_RETURN(!activity, COMPV_ERROR_CODE_E_INVALID_STATE, "No activity associated to the native app");
 
@@ -459,7 +469,6 @@ bool CompVCameraAndroid::onPreviewFrame(const void* frameDataPtr, size_t frameDa
 		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(%p, %zu, %zu, %zu, %d, %s, %p): First time... initializing", __FUNCTION__, frameDataPtr, frameDataSize, frameWidth, frameHeight, frameFps, CompVCameraAndroid::formatName(framePixelFormat).c_str(), userData);
 		COMPV_CHECK_CODE_BAIL(err = CompVCameraAndroid::convertFormat(framePixelFormat, camera->m_eSubTypeNeg), "Query neg caps failed");
 	}
-
 	COMPV_CHECK_CODE_BAIL(err = CompVImage::wrap(camera->m_eSubTypeNeg, frameDataPtr, frameWidth, frameHeight, frameWidth, &camera->m_ptrImageCB));
 	COMPV_CHECK_CODE_BAIL(err = listener->onNewFrame(camera->m_ptrImageCB));
 

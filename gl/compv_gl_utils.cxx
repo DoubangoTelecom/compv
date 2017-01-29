@@ -12,7 +12,7 @@
 #include "compv/base/compv_fileutils.h"
 #include "compv/base/compv_mem.h"
 
-#define kModuleNameGLUtils "GLUtils"
+#define COMPV_THIS_CLASSNAME	"CompVGLUtils"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -28,7 +28,7 @@ void* CompVGLUtils::currentContext()
 #	if COMPV_OS_WINDOWS
     return static_cast<void*>(wglGetCurrentContext());
 #	elif COMPV_OS_IPHONE
-    COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "EAGL not implemented yet");
+    COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "EAGL not implemented yet");
     return NULL;
 #	elif COMPV_OS_APPLE
     return static_cast<void*>(eglGetCurrentContext());
@@ -72,7 +72,7 @@ COMPV_ERROR_CODE CompVGLUtils::checkLastError()
     std::string errString_;
     COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString_));
     if (!errString_.empty()) {
-        COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "OpenGL error: %s", errString_.c_str());
+        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "OpenGL error: %s", errString_.c_str());
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
     }
     return COMPV_ERROR_CODE_S_OK;
@@ -82,7 +82,7 @@ COMPV_ERROR_CODE CompVGLUtils::bufferGen(GLuint* uBuffer)
 {
     COMPV_CHECK_EXP_RETURN(!uBuffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_glGenBuffers(1, uBuffer);
-    COMPV_DEBUG_INFO_EX(kModuleNameGLUtils, "glGenBuffers returned %u", *uBuffer);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "glGenBuffers returned %u", *uBuffer);
     if (!CompVGLUtils::isBufferValid(*uBuffer)) {
         std::string errString;
         COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString));
@@ -114,7 +114,7 @@ COMPV_ERROR_CODE CompVGLUtils::renderBufferGen(GLuint* uRenderBuffer)
 {
     COMPV_CHECK_EXP_RETURN(!uRenderBuffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_glGenRenderbuffers(1, uRenderBuffer);
-    COMPV_DEBUG_INFO_EX(kModuleNameGLUtils, "glGenRenderbuffers returned %u", *uRenderBuffer);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "glGenRenderbuffers returned %u", *uRenderBuffer);
     if (!CompVGLUtils::isRenderBufferValid(*uRenderBuffer)) {
         std::string errString;
         COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString));
@@ -146,7 +146,7 @@ COMPV_ERROR_CODE CompVGLUtils::frameBufferGen(GLuint* uFrameBuffer)
 {
     COMPV_CHECK_EXP_RETURN(!uFrameBuffer, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_glGenFramebuffers(1, uFrameBuffer);
-    COMPV_DEBUG_INFO_EX(kModuleNameGLUtils, "glGenFramebuffers returned %u", *uFrameBuffer);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "glGenFramebuffers returned %u", *uFrameBuffer);
     if (!CompVGLUtils::isFrameBufferValid(*uFrameBuffer)) {
         std::string errString;
         COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString));
@@ -217,12 +217,12 @@ COMPV_ERROR_CODE CompVGLUtils::shaderGen(GLuint* uShader, GLenum shadType)
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     *uShader = kCompVGLNameInvalid;
     GLuint shader_ = COMPV_glCreateShader(shadType);
-    COMPV_DEBUG_INFO_EX(kModuleNameGLUtils, "glCreateShader returned %u", shader_);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "glCreateShader returned %u", shader_);
     if (!CompVGLUtils::isShaderValid(shader_)) {
         std::string errString_;
         COMPV_CHECK_CODE_BAIL(err_ = CompVGLUtils::lastError(&errString_));
         if (!errString_.empty()) {
-            COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "glCreateShader failed: %s", errString_.c_str());
+            COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "glCreateShader failed: %s", errString_.c_str());
         }
         COMPV_CHECK_CODE_BAIL(err_ = COMPV_ERROR_CODE_E_GL);
     }
@@ -293,7 +293,7 @@ COMPV_ERROR_CODE CompVGLUtils::shaderCompile(GLuint uShader)
     COMPV_glCompileShader(uShader);
     COMPV_CHECK_CODE_RETURN(CompVGLUtils::shaderCompileGetStatus(uShader, &errString_));
     if (!errString_.empty()) {
-        COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "glCompileShader failed: %s", errString_.c_str());
+        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "glCompileShader failed: %s", errString_.c_str());
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
     }
     return COMPV_ERROR_CODE_S_OK;
@@ -336,12 +336,12 @@ COMPV_ERROR_CODE CompVGLUtils::textureGen(GLuint* uTex)
     COMPV_CHECK_EXP_RETURN(!uTex, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     *uTex = kCompVGLNameInvalid;
     COMPV_glGenTextures(1, uTex); // returned value not texture yet until bind() is called
-    COMPV_DEBUG_INFO_EX(kModuleNameGLUtils, "glGenTextures returned %u", *uTex);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "glGenTextures returned %u", *uTex);
     if (!*uTex) {
         std::string errString_;
         COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString_));
         if (!errString_.empty()) {
-            COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "glGenTextures failed: %s", errString_.c_str());
+            COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "glGenTextures failed: %s", errString_.c_str());
         }
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
     }
@@ -385,7 +385,7 @@ COMPV_ERROR_CODE CompVGLUtils::texture2DSetCurrent(GLuint uTex, bool checkErr CO
         std::string errString_;
         COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString_));
         if (!errString_.empty()) {
-            COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "glBindTexture failed: %s", errString_.c_str());
+            COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "glBindTexture failed: %s", errString_.c_str());
             COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
         }
     }
@@ -396,12 +396,12 @@ COMPV_ERROR_CODE CompVGLUtils::programGen(GLuint* uPrg)
 {
     COMPV_CHECK_EXP_RETURN(!uPrg, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     *uPrg = glCreateProgram();
-    COMPV_DEBUG_INFO_EX(kModuleNameGLUtils, "glCreateProgram returned %u", *uPrg);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "glCreateProgram returned %u", *uPrg);
     if (!CompVGLUtils::isProgramValid(*uPrg)) {
         std::string errString_;
         COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString_));
         if (!errString_.empty()) {
-            COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "glCreateProgram failed: %s", errString_.c_str());
+            COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "glCreateProgram failed: %s", errString_.c_str());
         }
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
     }
@@ -441,7 +441,7 @@ COMPV_ERROR_CODE CompVGLUtils::programLink(GLuint uPrg)
     std::string errString_;
     COMPV_CHECK_CODE_RETURN(CompVGLUtils::programLinkGetStatus(uPrg, &errString_));
     if (!errString_.empty()) {
-        COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "Program link info log: %s", errString_.c_str());
+        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Program link info log: %s", errString_.c_str());
         COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
     }
     return COMPV_ERROR_CODE_S_OK;
@@ -479,7 +479,7 @@ COMPV_ERROR_CODE CompVGLUtils::programBind(GLuint uPrg, bool checkErr COMPV_DEFA
         std::string errString_;
         COMPV_CHECK_CODE_RETURN(CompVGLUtils::lastError(&errString_));
         if (!errString_.empty()) {
-            COMPV_DEBUG_ERROR_EX(kModuleNameGLUtils, "glUseProgram failed: %s", errString_.c_str());
+            COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "glUseProgram failed: %s", errString_.c_str());
             COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GL);
         }
     }
@@ -493,7 +493,7 @@ COMPV_ERROR_CODE CompVGLUtils::programUnbind(GLuint uPrg, bool checkErr COMPV_DE
         COMPV_glUseProgram(0);
     }
     else {
-        COMPV_DEBUG_WARN_EX(kModuleNameGLUtils, "Program (%u) not in use", uPrg);
+        COMPV_DEBUG_WARN_EX(COMPV_THIS_CLASSNAME, "Program (%u) not in use", uPrg);
     }
     return COMPV_ERROR_CODE_S_OK;
 }

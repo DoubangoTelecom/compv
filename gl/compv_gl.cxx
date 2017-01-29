@@ -13,6 +13,8 @@
 #include "compv/base/compv_debug.h"
 #include "compv/base/compv_base.h"
 
+#define COMPV_THIS_CLASSNAME	"CompVGL"
+
 COMPV_NAMESPACE_BEGIN()
 
 bool CompVGL::s_bInitialized = false;
@@ -25,7 +27,7 @@ COMPV_ERROR_CODE CompVGL::init()
 
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
-    COMPV_DEBUG_INFO("Initializing [gl] module (v %s)...", COMPV_VERSION_STRING);
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Initializing [gl] module (v %s)...", COMPV_VERSION_STRING);
 
 #if COMPV_GL_DEBUG
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("COMPV_GL_DEBUG enabled, OpenGL operations will be very slooooow. Sad!!");
@@ -35,7 +37,7 @@ COMPV_ERROR_CODE CompVGL::init()
 
     /* Print Android API version */
 #if COMPV_OS_ANDROID
-    COMPV_DEBUG_INFO("[GL] module: android API version: %d", __ANDROID_API__);
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "android API version: %d", __ANDROID_API__);
 #endif
 
 #if defined(HAVE_GL_GLEW_H)
@@ -43,16 +45,16 @@ COMPV_ERROR_CODE CompVGL::init()
 #endif /* HAVE_GL_GLEW_H */
 
 #if	defined(HAVE_OPENGLES)
-    COMPV_DEBUG_INFO("OpenGL-ES implementation enabled");
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "OpenGL-ES implementation enabled");
 #	if defined(GL_ES_VERSION_3_0) && GL_ES_VERSION_3_0
-    COMPV_DEBUG_INFO("OpenGL-ES 3.0 API");
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "OpenGL-ES 3.0 API");
 #	elif defined(GL_ES_VERSION_2_0) && GL_ES_VERSION_2_0
-    COMPV_DEBUG_INFO("OpenGL-ES 2.0 API");
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "OpenGL-ES 2.0 API");
 #	else
-    COMPV_DEBUG_INFO("OpenGL-ES 1.0 API");
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "OpenGL-ES 1.0 API");
 #	endif
 #elif defined(HAVE_OPENGL)
-    COMPV_DEBUG_INFO("OpenGL implementation enabled");
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "OpenGL implementation enabled");
 #endif
 
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
@@ -90,10 +92,10 @@ COMPV_ERROR_CODE CompVGL::glewInit()
         COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
         GLenum glewErr = ::glewInit();
         if (GLEW_OK != glewErr) {
-            COMPV_DEBUG_ERROR_EX("GLEW", "glewInit for [gl] module failed: %s", glewGetErrorString(glewErr));
+            COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "glewInit for [gl] module failed: %s", glewGetErrorString(glewErr));
             COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_GLEW);
         }
-        COMPV_DEBUG_INFO_EX("GLEW", "glewInit for [gl] module succeeded");
+        COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "glewInit for [gl] module succeeded");
         sbGlewInitialized = true;
     }
     return COMPV_ERROR_CODE_S_OK;

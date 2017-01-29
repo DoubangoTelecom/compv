@@ -35,7 +35,7 @@ public:
 private:
     static bool s_bInitialized;
 #if COMPV_OS_ANDROID && defined(GL_ES_VERSION_2_0) && !defined(GL_ES_VERSION_3_0)
-    static CompVSharedLibPtr s_ptrGLESv2;
+    static CompVSharedLibPtr s_ptrOpenGLES;
 #endif
 };
 
