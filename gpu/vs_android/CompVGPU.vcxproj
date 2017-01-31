@@ -35,12 +35,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\compv\gpu\base\math\compv_gpu_math_convlt.h" />
     <ClInclude Include="..\include\compv\gpu\compv_gpu.h" />
     <ClInclude Include="..\include\compv\gpu\compv_gpu_common.h" />
     <ClInclude Include="..\include\compv\gpu\compv_gpu_config.h" />
     <ClInclude Include="..\include\compv\gpu\core\features\fast\compv_gpu_feature_fast_dete.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\base\math\compv_gpu_math_convlt.cxx" />
     <ClCompile Include="..\compv_gpu.cxx" />
     <ClCompile Include="..\core\features\fast\compv_gpu_feature_fast_dete.cxx" />
   </ItemGroup>

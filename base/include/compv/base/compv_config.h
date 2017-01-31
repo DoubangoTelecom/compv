@@ -288,27 +288,30 @@
 
 #if defined(_MSC_VER)
 #	define _CRT_SECURE_NO_WARNINGS
-#	define COMPV_SHOULD_INLINE	__inline
-#	define COMPV_ALWAYS_INLINE	__forceinline
-#	define COMPV_ALIGN(x)		__declspec(align(x))
-#	define COMPV_NAKED			__declspec(naked)
-#	define COMPV_INLINE	_inline
+#	define COMPV_SHOULD_INLINE		__inline
+#	define COMPV_ALWAYS_INLINE		__forceinline
+#	define COMPV_ALIGN(x)			__declspec(align(x))
+#	define COMPV_NAKED				__declspec(naked)
+#	define COMPV_INLINE				_inline
+#	define COMPV_TEMPLATE_EXTERN	extern template
 #	pragma warning( disable : 4996 )
 #	if _MSC_VER >= 1700
 // Warning	3	warning C4752: found Intel(R) Advanced Vector Extensions; consider using /arch:AVX
 #		pragma warning(disable: 4752)
 #	endif
 #elif defined(__GNUC__)
-#	define COMPV_ALWAYS_INLINE	__inline __attribute__ ((__always_inline__))
-#	define COMPV_SHOULD_INLINE	inline
-#	define COMPV_ALIGN(x)		__attribute__((aligned(x)))
-#	define COMPV_NAKED			__attribute__((naked))
-#	define COMPV_INLINE			inline
+#	define COMPV_ALWAYS_INLINE		__inline __attribute__ ((__always_inline__))
+#	define COMPV_SHOULD_INLINE		inline
+#	define COMPV_ALIGN(x)			__attribute__((aligned(x)))
+#	define COMPV_NAKED				__attribute__((naked))
+#	define COMPV_INLINE				inline
+#	define COMPV_TEMPLATE_EXTERN	template< >
 #else
-#	define COMPV_ALWAYS_INLINE	inline
-#	define COMPV_SHOULD_INLINE	inline
-#	define COMPV_INLINE			inline
-#	define COMPV_ALIGN(x)		__attribute__((aligned(x)))
+#	define COMPV_ALWAYS_INLINE		inline
+#	define COMPV_SHOULD_INLINE		inline
+#	define COMPV_INLINE				inline
+#	define COMPV_ALIGN(x)			__attribute__((aligned(x)))
+#	define COMPV_TEMPLATE_EXTERN	template< >
 #endif
 
 // SIMD Alignment
