@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		156E96D01E40EF5900BC5329 /* convlt.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E96CF1E40EF5900BC5329 /* convlt.cxx */; };
 		157840911E36CC2E00955396 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 157840901E36CC2E00955396 /* main.m */; };
 		157840941E36CC2E00955396 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 157840931E36CC2E00955396 /* AppDelegate.mm */; };
 		157840971E36CC2E00955396 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 157840961E36CC2E00955396 /* ViewController.m */; };
@@ -89,6 +90,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		156E96CF1E40EF5900BC5329 /* convlt.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = convlt.cxx; path = ../../convlt.cxx; sourceTree = "<group>"; };
 		1578408C1E36CC2E00955396 /* image.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = image.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		157840901E36CC2E00955396 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		157840921E36CC2E00955396 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -218,6 +220,7 @@
 		157840D01E36CCDE00955396 /* source */ = {
 			isa = PBXGroup;
 			children = (
+				156E96CF1E40EF5900BC5329 /* convlt.cxx */,
 				15AA06CC1E36EE2E0058D1F1 /* tests_common.h */,
 				15AA06C81E36E29E0058D1F1 /* main.cxx */,
 				157840BD1E36CCD800955396 /* chroma_conv.cxx */,
@@ -370,6 +373,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				157840971E36CC2E00955396 /* ViewController.m in Sources */,
+				156E96D01E40EF5900BC5329 /* convlt.cxx in Sources */,
 				157840C81E36CCD800955396 /* scale.cxx in Sources */,
 				157840C61E36CCD800955396 /* feature_fast.cxx in Sources */,
 				157840941E36CC2E00955396 /* AppDelegate.mm in Sources */,
