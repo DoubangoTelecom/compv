@@ -162,12 +162,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="base\math\compv_cl_math_convlt.cxx" />
     <ClCompile Include="compv_cl.cxx" />
     <ClCompile Include="compv_cl_dllmain.cxx" />
     <ClCompile Include="compv_cl_utils.cxx" />
     <ClCompile Include="core\features\fast\compv_cl_feature_fast_dete.cxx" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\compv\cl\base\math\compv_cl_math_convlt.h" />
     <ClInclude Include="include\compv\cl\compv_cl.h" />
     <ClInclude Include="include\compv\cl\compv_cl_common.h" />
     <ClInclude Include="include\compv\cl\compv_cl_config.h" />
@@ -181,6 +183,31 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="core\features\fast\compv_cl_feature_fast_dete.cl">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">xcopy  %(FullPath) "$(TargetDir)" /i /d /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">xcopy  %(FullPath) "$(TargetDir)" /i /d /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">xcopy  %(FullPath) "$(TargetDir)" /i /d /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">xcopy  %(FullPath) "$(TargetDir)" /i /d /y</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename)%(Extension);%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="base\math\compv_cl_math_convlt.cl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>

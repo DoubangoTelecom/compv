@@ -21,40 +21,48 @@ class COMPV_BASE_API CompVMathConvlt
 public:
 	// Convolution using separable kernel
 	// sizeof(outPtr) should be computed using CompVMathConvlt::outputSizeInBytes()
+	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
 	static COMPV_ERROR_CODE convlt1(const InputType* dataPtr, size_t dataWidth, size_t dataHeight, size_t dataStride, const KernelType* vtKernPtr, const KernelType* hzKernPtr, size_t kernSize, OutputType*& outPtr, size_t dataBorder = 0) {
 		return CompVMathConvlt::convlt1_private<InputType, KernelType, OutputType>(dataPtr, dataWidth, dataHeight, dataStride, vtKernPtr, hzKernPtr, kernSize, outPtr, dataBorder, false);
 	}
 
+	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
 	static COMPV_ERROR_CODE convlt1FixedPoint(const uint8_t* dataPtr, size_t dataWidth, size_t dataHeight, size_t dataStride, const int16_t* vtKernPtr, const int16_t* hzKernPtr, size_t kernSize, uint8_t*& outPtr, size_t dataBorder = 0) {
 		return CompVMathConvlt::convlt1_private<uint8_t, int16_t, uint8_t>(dataPtr, dataWidth, dataHeight, dataStride, vtKernPtr, hzKernPtr, kernSize, outPtr, dataBorder, true);
 	}
 
+	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
 	static void convlt1Hz(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* hzKernPtr, size_t kernSize, bool resetBorders = true) {
 		CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, hzKernPtr, kernSize, resetBorders, false);
 	}
 
+	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
 	static void convlt1HzFixedPoint(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, const int16_t* hzKernPtr, size_t kernSize, bool resetBorders = true) {
 		CompVMathConvlt::convlt1Hz_private<uint8_t, int16_t, uint8_t>(inPtr, outPtr, width, height, stride, hzKernPtr, kernSize, resetBorders, true);
 	}
 
+	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
 	static void convlt1Vt(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, const KernelType* vtKernPtr, size_t kernSize, bool resetTopBorder = true, bool resetBottomBorder = true) {
 		CompVMathConvlt::convlt1Vt_private<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, vtKernPtr, kernSize, resetTopBorder, resetBottomBorder, false);
 	}
 
+	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
 	static void convlt1VtFixedPoint(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, const int16_t* vtKernPtr, size_t kernSize, bool resetTopBorder = true, bool resetBottomBorder = true) {
 		CompVMathConvlt::convlt1Vt_private<uint8_t, int16_t, uint8_t>(inPtr, outPtr, width, height, stride, vtKernPtr, kernSize, resetTopBorder, resetBottomBorder, false);
 	}
 
 	// Convolution using no separable kernel
 	// sizeof(outPtr) should be at least equal to (dataHeight * dataStride)
+	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
 	static COMPV_ERROR_CODE convlt2(const InputType* dataPtr, size_t dataWidth, size_t dataStride, size_t dataHeight, const KernelType* kernPtr, size_t kernSize, OutputType** outPtr, size_t dataBorder = 0) {
 		return CompVMathConvlt::convlt2_private<InputType, KernelType, OutputType>(dataPtr, dataWidth, dataStride, dataHeight, kernPtr, kernSize, outPtr, dataBorder, false);
 	}
 
+	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
 	static COMPV_ERROR_CODE convlt2FixedPoint(const uint8_t* dataPtr, size_t dataWidth, size_t dataStride, size_t dataHeight, const int16_t* kernPtr, size_t kernSize, uint8_t** outPtr, size_t dataBorder = 0) {
 		return CompVMathConvlt::convlt2_private<uint8_t, int16_t, uint8_t>(dataPtr, dataWidth, dataStride, dataHeight, kernPtr, kernSize, outPtr, dataBorder, false);
 	}
@@ -227,18 +235,25 @@ private:
 				COMPV_DEBUG_ERROR_EX("CompVMathConvlt", "Type mismatch for fixed point implementation");
 			}
 		}
-		CompVMathConvlt::convlt1VtHz_C<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, pad, vthzKernPtr, kernSize);
+		if ((std::is_same<KernelType, compv_float32_t>::value || std::is_same<KernelType, compv_float64_t>::value)
+			&& (std::is_same<InputType, int32_t>::value || std::is_same<InputType, uint32_t>::value || std::is_same<InputType, int16_t>::value || std::is_same<InputType, uint16_t>::value || std::is_same<InputType, int8_t>::value || std::is_same<InputType, uint8_t>::value)
+			&& (std::is_same<OutputType, int32_t>::value || std::is_same<OutputType, uint32_t>::value || std::is_same<OutputType, int16_t>::value || std::is_same<OutputType, uint16_t>::value || std::is_same<OutputType, int8_t>::value || std::is_same<OutputType, uint8_t>::value))
+		{
+			CompVMathConvlt::convlt1VtHzKernelFloat_C<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, pad, vthzKernPtr, kernSize);
+		}
+		else {
+			CompVMathConvlt::convlt1VtHzKernelInt_C<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, pad, vthzKernPtr, kernSize);
+		}
 	}
 
 	template <typename InputType, typename KernelType, typename OutputType>
-	static void convlt1VtHz_C(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
+	static void convlt1VtHzKernelInt_C(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 		size_t i, j, k, row;
 		OutputType sum;
-
 		for (j = 0; j < height; ++j) {
 			for (i = 0; i < width; ++i) {
-				sum = static_cast<OutputType>(*inPtr **vthzKernPtr);
+				sum = static_cast<OutputType>(inPtr[0] * vthzKernPtr[0]);
 				for (row = 1, k = stride; row < kernSize; ++row, k += stride) {
 					sum += static_cast<OutputType>(inPtr[k] * vthzKernPtr[row]);
 				}
@@ -249,6 +264,41 @@ private:
 			inPtr += pad;
 			outPtr += pad;
 		}
+	}
+
+	// inPtr = (u)int8_t / (u)int16_t / (u)int32_t
+	// outPtr = (u)int8_t / (u)int16_t / (u)int32_t
+	// KernelType = float / double
+	template <typename InputType, typename KernelType, typename OutputType>
+	static void convlt1VtHzKernelFloat_C(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
+		// KernelType is float32 or float64
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+		size_t i, j, k, row;
+		KernelType sum; // use (float / double) to accumulate
+#if KernelType == compv_float32_t || KernelType == compv_float64_t
+#	if OutputType == uint8_t || OutputType == uint16_t || OutputType == uint32_t
+#		define compv_convlt_round(ss) COMPV_MATH_ROUNDFU_2_INT(ss, OutputType)
+#	elif OutputType == int8_t || OutputType == int16_t || OutputType == int32_t
+#		define compv_convlt_round(ss) COMPV_MATH_ROUNDF_2_INT(ss, OutputType)
+#	endif
+#endif
+#if !defined(compv_convlt_round)
+#define compv_convlt_round(ss) static_cast<OutputType>(ss)
+#endif
+		for (j = 0; j < height; ++j) {
+			for (i = 0; i < width; ++i) {
+				sum = inPtr[0] * vthzKernPtr[0];
+				for (row = 1, k = stride; row < kernSize; ++row, k += stride) {
+					sum += inPtr[k] * vthzKernPtr[row];
+				}
+				*outPtr = compv_convlt_round(sum);
+				++inPtr;
+				++outPtr;
+			}
+			inPtr += pad;
+			outPtr += pad;
+		}
+#undef compv_convlt_round
 	}
 	
 	static void convlt1VtHzFixedPoint_C(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, size_t pad, const int16_t* vthzKernPtr, size_t kernSize) {

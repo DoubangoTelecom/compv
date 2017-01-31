@@ -9,6 +9,8 @@
 #include "compv/base/compv_base.h"
 #include "compv/base/compv_fileutils.h"
 
+#include "compv/gpu/base/math/compv_gpu_math_convlt.h"
+
 #include "compv/gpu/core/features/fast/compv_gpu_feature_fast_dete.h"
 
 #define COMPV_THIS_CLASSNAME "CompVGpu"
@@ -52,7 +54,13 @@ COMPV_ERROR_CODE CompVGpu::init()
 				COMPV_ERROR_CODE(*opencl_init)() = reinterpret_cast<COMPV_ERROR_CODE(*)()>(s_ptrImpl->sym("clInit"));
 				if (opencl_init) {
 					if (opencl_init() == COMPV_ERROR_CODE_S_OK) { // this makes sure we have gpu device with required memory
+						/*** CompVCore **/
 						CompVGpuCornerDeteFAST::s_ptrNewObj = reinterpret_cast<newObjGpuCornerDeteFAST>(s_ptrImpl->sym("clNewObjCornerDeteFAST"));
+
+						/*** CompVBase ***/
+						// Convolution
+						CompVGpuMathConvlt::convlt1VtHz_8u8u32f = reinterpret_cast<gpu_convlt1VtHz_8u8u32f>(s_ptrImpl->sym("cl_convlt1VtHz_8u8u32f"));
+
 						COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "OpenCL plugin('%s') functions: clNewObjCornerDeteFAST=%p", pluginPath.c_str(),
 							CompVGpuCornerDeteFAST::s_ptrNewObj);
 						openclIntialized = true;

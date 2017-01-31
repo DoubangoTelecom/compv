@@ -8,10 +8,6 @@
 #include "compv/base/intrin/x86/compv_intrin_avx.h"
 #include "compv/base/math/compv_math.h"
 
-// FIXME
-extern  "C" COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint8_t mamadou[] = { 5 };
-extern  "C" COMPV_BASE_API int diop() { return 0; }
-
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint8_t k_0_0_0_255_u8[] = {
     0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255,
     0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255,

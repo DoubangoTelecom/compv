@@ -31,6 +31,18 @@
     <Filter Include="Header Files\core\features\fast">
       <UniqueIdentifier>{73172ea7-2a87-466d-9f94-1a3ef93a9b0a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\base">
+      <UniqueIdentifier>{000778a3-e369-48bc-b2c7-fbe0b0ebecc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\base">
+      <UniqueIdentifier>{3771c5d7-23b1-403b-afa4-11b7aca68e29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\base\math">
+      <UniqueIdentifier>{d8d947ff-792d-4cd6-9427-62418a42095d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\base\math">
+      <UniqueIdentifier>{e5f3da76-f96c-422b-8299-e9b781fb6773}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_gpu.cxx">
@@ -38,6 +50,9 @@
     </ClCompile>
     <ClCompile Include="core\features\fast\compv_gpu_feature_fast_dete.cxx">
       <Filter>Source Files\core\features\fast</Filter>
+    </ClCompile>
+    <ClCompile Include="base\math\compv_gpu_math_convlt.cxx">
+      <Filter>Source Files\base\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -52,6 +67,9 @@
     </ClInclude>
     <ClInclude Include="include\compv\gpu\core\features\fast\compv_gpu_feature_fast_dete.h">
       <Filter>Header Files\core\features\fast</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\gpu\base\math\compv_gpu_math_convlt.h">
+      <Filter>Header Files\base\math</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

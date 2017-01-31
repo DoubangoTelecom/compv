@@ -31,6 +31,18 @@
     <Filter Include="Source Files\core\features\fast">
       <UniqueIdentifier>{9c3b531c-1751-4aa1-9738-015f62a5a3a0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\base">
+      <UniqueIdentifier>{aa63c9da-fd5a-40e1-aae7-3a6bb43a9a31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\base\math">
+      <UniqueIdentifier>{0eafa667-1f65-4f96-b051-488ba370ae09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\base">
+      <UniqueIdentifier>{da7ba96e-eba1-41da-9039-c933d0b8f199}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\base\math">
+      <UniqueIdentifier>{a82faf85-2347-48b3-9c73-be3bfc8f68a2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_cl.cxx">
@@ -44,6 +56,9 @@
     </ClCompile>
     <ClCompile Include="core\features\fast\compv_cl_feature_fast_dete.cxx">
       <Filter>Source Files\core\features\fast</Filter>
+    </ClCompile>
+    <ClCompile Include="base\math\compv_cl_math_convlt.cxx">
+      <Filter>Source Files\base\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -62,10 +77,18 @@
     <ClInclude Include="include\compv\cl\core\features\fast\compv_cl_feature_fast_dete.h">
       <Filter>Header Files\core\features\fast</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\cl\base\math\compv_cl_math_convlt.h">
+      <Filter>Header Files\base\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="core\features\fast\compv_cl_feature_fast_dete.cl">
       <Filter>Source Files\core\features\fast</Filter>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="base\math\compv_cl_math_convlt.cl">
+      <Filter>Source Files\base\math</Filter>
+    </None>
   </ItemGroup>
 </Project>
