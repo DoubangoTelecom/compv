@@ -24,7 +24,7 @@ CompVMat::CompVMat()
     , m_nDataCapacity(0)
     , m_bOweMem(true)
     , m_eType(COMPV_MAT_TYPE_RAW)
-    , m_eSubType(COMPV_SUBTYPE_RAW)
+    , m_eSubType(COMPV_SUBTYPE_RAW_OPAQUE)
 {
     for (size_t planeId = 0; planeId < COMPV_PLANE_MAX_COUNT; ++planeId) {
         m_nPlaneCols[planeId] = 0;

@@ -84,7 +84,6 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 		= scaleBilinear_C;
 
 	size_t threadsCount;
-	CompVAsyncTaskIds taskIds;
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
 
@@ -113,6 +112,7 @@ static COMPV_ERROR_CODE scaleBilinear(const uint8_t* inPtr, compv_uscalar_t inWi
 #endif
 
 	if (threadsCount > 1) {
+		CompVAsyncTaskIds taskIds;
 		size_t YStart = 0, YEnd;
 		taskIds.reserve(threadsCount);
 		auto funcPtr = [&](uint8_t* outStartPtr, size_t ystart, size_t yend) -> void {

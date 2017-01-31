@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_BASE_MATHUTILS_H_)
-#define _COMPV_BASE_MATHUTILS_H_
+#if !defined(_COMPV_BASE_MATH_UTILS_H_)
+#define _COMPV_BASE_MATH_UTILS_H_
 
 #include "compv/base/compv_config.h"
 #include "compv/base/math/compv_math.h"
@@ -289,4 +289,4 @@ extern template COMPV_ERROR_CODE CompVMathUtils::mean(const uint8_t* data, size_
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_BASE_MATHUTILS_H_ */
+#endif /* _COMPV_BASE_MATH_UTILS_H_ */

@@ -59,7 +59,7 @@ public:
         if (planeId >= 0 && planeId < m_nPlaneCount) {
             return (row > m_nPlaneRows[planeId] || col > m_nPlaneCols[planeId]) ? NULL : (ptrType*)(static_cast<const uint8_t*>(m_pCompPtr[planeId]) + (row * m_nPlaneStrideInBytes[planeId]) + (col * m_nElmtInBytes));
         }
-        COMPV_DEBUG_ERROR("Invalid parameter");
+        COMPV_DEBUG_ERROR_EX("CompVMat", "Invalid parameter");
         return NULL;
     }
 
@@ -70,7 +70,7 @@ public:
         else if (planeId < m_nPlaneCount) {
             return m_nPlaneRows[planeId];
         }
-        COMPV_DEBUG_ERROR("Invalid parameter");
+		COMPV_DEBUG_ERROR_EX("CompVMat", "Invalid parameter");
         return 0;
     }
 
@@ -81,7 +81,7 @@ public:
         else if (planeId < m_nPlaneCount) {
             return m_nPlaneCols[planeId];
         }
-        COMPV_DEBUG_ERROR("Invalid parameter");
+		COMPV_DEBUG_ERROR_EX("CompVMat", "Invalid parameter");
         return 0;
     }
 
@@ -96,7 +96,7 @@ public:
         else if (planeId < m_nPlaneCount) {
             return m_nPlaneCols[planeId] * m_nElmtInBytes;
         }
-        COMPV_DEBUG_ERROR("Invalid parameter");
+		COMPV_DEBUG_ERROR_EX("CompVMat", "Invalid parameter");
         return 0;
     }
 
@@ -107,7 +107,7 @@ public:
         else if (planeId < m_nPlaneCount) {
             return m_nPlaneStrideInBytes[planeId];
         }
-        COMPV_DEBUG_ERROR("Invalid parameter");
+		COMPV_DEBUG_ERROR_EX("CompVMat", "Invalid parameter");
         return 0;
     }
 
@@ -118,7 +118,7 @@ public:
         else if (planeId < m_nPlaneCount) {
             return m_nPlaneStrideInElts[planeId];
         }
-        COMPV_DEBUG_ERROR("Invalid parameter");
+		COMPV_DEBUG_ERROR_EX("CompVMat", "Invalid parameter");
         return 0;
     }
 
@@ -142,7 +142,7 @@ public:
 		return isAligned(COMPV_ALIGNV_SIMD_NEON);
 	};
 
-    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
+    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW_OPAQUE>
     static COMPV_ERROR_CODE newObj(CompVMatPtrPtr mat, size_t rows, size_t cols, size_t alignv, size_t stride = 0) {
         COMPV_CHECK_EXP_RETURN(!mat || !alignv, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         CompVMatPtr mat_ = *mat;
@@ -155,23 +155,23 @@ public:
         return COMPV_ERROR_CODE_S_OK;
     }
 
-    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
+    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW_OPAQUE>
     static COMPV_ERROR_CODE newObjStrideless(CompVMatPtrPtr mat, size_t rows, size_t cols) {
         return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, 1);
     }
 
-    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
+    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW_OPAQUE>
     static COMPV_ERROR_CODE newObjAligned(CompVMatPtrPtr mat, size_t rows, size_t cols) {
         return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, COMPV_ALIGNV_SIMD_DEFAULT);
     }
 
-	template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
+	template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW_OPAQUE>
 	static COMPV_ERROR_CODE newObjAligned(CompVMatPtrPtr mat, size_t rows, size_t cols, size_t stride) {
 		return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, COMPV_ALIGNV_SIMD_DEFAULT, stride);
 	}
 
 protected:
-    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW>
+    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType_ = COMPV_SUBTYPE_RAW_OPAQUE>
     COMPV_ERROR_CODE alloc(size_t rows, size_t cols, size_t alignv = 1, size_t stride = 0) {
         COMPV_CHECK_EXP_RETURN(!alignv || (stride && stride < cols), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
@@ -186,6 +186,31 @@ protected:
         size_t nPlaneRows[COMPV_PLANE_MAX_COUNT];
         size_t nPlaneSizeInBytes[COMPV_PLANE_MAX_COUNT];
         void* pMem = NULL;
+		COMPV_SUBTYPE dataSubType = dataSubType_;
+
+		// Patch SubType
+		// Opaque means user-undefined (weak-type), patch and set a strong-type
+		if (dataType == COMPV_MAT_TYPE_RAW && dataSubType == COMPV_SUBTYPE_RAW_OPAQUE) {
+			if (std::is_same<elmType, int>::value) {
+				dataSubType = COMPV_SUBTYPE_RAW_INT;
+			}
+			else if (std::is_same<elmType, int16_t>::value) {
+				dataSubType = COMPV_SUBTYPE_RAW_INT16;
+			}
+			else if (std::is_same<elmType, uint16_t>::value) {
+				dataSubType = COMPV_SUBTYPE_RAW_UINT16;
+			}
+			else if (std::is_same<elmType, compv_float32_t>::value) {
+				dataSubType = COMPV_SUBTYPE_RAW_FLOAT32;
+			}
+			else if (std::is_same<elmType, compv_float64_t>::value) {
+				dataSubType = COMPV_SUBTYPE_RAW_FLOAT64;
+			}
+			else {
+				COMPV_DEBUG_ERROR_EX("CompVMat", "Cannot patch unknown type");
+				return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+			}
+		}
 
         nElmtInBytes = sizeof(elmType);
 		if (stride >= cols) {
@@ -272,7 +297,7 @@ protected:
 
 bail:
         if (COMPV_ERROR_CODE_IS_NOK(err_)) {
-            CompVMem::free((void**)&pMem);
+            CompVMem::free(reinterpret_cast<void**>(&pMem));
         }
         return err_;
     }

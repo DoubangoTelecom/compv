@@ -348,6 +348,12 @@
     <ClInclude Include="include\compv\base\image\compv_image_scale_pyramid.h">
       <Filter>include\image</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_convlt.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_gauss.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -562,6 +568,12 @@
     </ClCompile>
     <ClCompile Include="image\compv_image_scale_pyramid.cxx">
       <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_convlt.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_gauss.cxx">
+      <Filter>source\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

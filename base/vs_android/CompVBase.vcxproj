@@ -95,6 +95,8 @@
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_mem_intrin_avx.h" />
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_mem_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_convlt.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_gauss.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_utils.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h" />
@@ -193,6 +195,8 @@
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_avx.cxx" />
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_sse2.cxx" />
     <ClCompile Include="..\math\compv_math.cxx" />
+    <ClCompile Include="..\math\compv_math_convlt.cxx" />
+    <ClCompile Include="..\math\compv_math_gauss.cxx" />
     <ClCompile Include="..\math\compv_math_utils.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_avx2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_sse2.cxx" />
