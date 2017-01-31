@@ -113,7 +113,7 @@ public:
         size_t ker_size_div2 = (kernSize >> 1);
         size_t imgpad = ((stride - width) + ker_size_div2 + ker_size_div2);
         // Set hz borders to zero
-        // We must not accept garbage in the border (coul be used by the calling function -e.g to find the max value for normalization)
+        // We must not accept garbage in the border (could be used by the calling function -e.g to find the max value for normalization)
         if (resetBorders) {
             OutputType *outPtr0 = outPtr, *outPtr1 = outPtr + (width - ker_size_div2);
             for (size_t row = 0; row < height; ++row) {

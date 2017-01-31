@@ -259,13 +259,34 @@
 		#######################################
 		# Darkers
 		#######################################
-			mov vecSum1.16b, vecZero.16b
-			_neon64_fast_load 0, 8, 4, 12, darkers, vecDarker1.16b, vecZero.16b, vecOne.16b,  vecSum1.16b
+			uqsub v18.16b, vecDarker1.16b, v16.16b
+			uqsub v16.16b, vecDarker1.16b, v12.16b
+			uqsub v17.16b, vecDarker1.16b, v20.16b
+			uqsub v19.16b, vecDarker1.16b, v24.16b
+			cmhi v12.16b, v16.16b, vecZero.16b
+			cmhi v13.16b, v17.16b, vecZero.16b
+			cmhi v14.16b, v18.16b, vecZero.16b
+			cmhi v15.16b, v19.16b, vecZero.16b
+			and v20.16b, v12.16b, vecOne.16b
+			and v21.16b, v13.16b, vecOne.16b
+			and v22.16b, v14.16b, vecOne.16b
+			and v23.16b, v15.16b, vecOne.16b
+			add v24.16b, v20.16b, v21.16b
+			add vecSum1.16b, v22.16b, v23.16b // setting vecSum1 for the first time
+			add vecSum1.16b, vecSum1.16b, v24.16b // updating vecSum1
             cmhs v14.16b, vecSum1.16b, vecMinSum.16b
             mov r10, v14.d[0]
             mov r11, v14.d[1]
             orr r10, r10, r11 // orrs not avail on Aarch64
 			cbz r10, EndOfDarkers_CompVFastDataRow_Asm_NEON64\@
+			str q16, [sp, #(vecDiff16 + 0*16)]
+			str q17, [sp, #(vecDiff16 + 8*16)]
+			str q18, [sp, #(vecDiff16 + 4*16)]
+			str q19, [sp, #(vecDiff16 + 12*16)]
+			str q20, [sp, #(vecDiffBinary16 + 0*16)]
+			str q21, [sp, #(vecDiffBinary16 + 8*16)]
+			str q22, [sp, #(vecDiffBinary16 + 4*16)]
+			str q23, [sp, #(vecDiffBinary16 + 12*16)]
             ldr q12, [sp, #(vecCircle16 + 1*16)]
             ldr q16, [sp, #(vecCircle16 + 2*16)]
             ldr q20, [sp, #(vecCircle16 + 3*16)]
@@ -364,13 +385,38 @@
 		#######################################
 		# Brighters
 		#######################################
-			mov vecSum1.16b, vecZero.16b
-			_neon64_fast_load 0, 8, 4, 12, brighters, vecBrighter1.16b, vecZero.16b, vecOne.16b,  vecSum1.16b
+			ldr q12, [sp, #(vecCircle16 + 0*16)]
+			ldr q13, [sp, #(vecCircle16 + 8*16)]
+			ldr q14, [sp, #(vecCircle16 + 4*16)]
+			ldr q15, [sp, #(vecCircle16 + 12*16)]
+			uqsub v16.16b, v12.16b, vecBrighter1.16b
+			uqsub v17.16b, v13.16b, vecBrighter1.16b
+			uqsub v18.16b, v14.16b, vecBrighter1.16b
+			uqsub v19.16b, v15.16b, vecBrighter1.16b
+			cmhi v12.16b, v16.16b, vecZero.16b
+			cmhi v13.16b, v17.16b, vecZero.16b
+			cmhi v14.16b, v18.16b, vecZero.16b
+			cmhi v15.16b, v19.16b, vecZero.16b
+			and v20.16b, v12.16b, vecOne.16b
+			and v21.16b, v13.16b, vecOne.16b
+			and v22.16b, v14.16b, vecOne.16b
+			and v23.16b, v15.16b, vecOne.16b
+			add v24.16b, v20.16b, v21.16b
+			add vecSum1.16b, v22.16b, v23.16b // setting vecSum1 for the first time
+			add vecSum1.16b, vecSum1.16b, v24.16b // updating vecSum1
 			cmhs v14.16b, vecSum1.16b, vecMinSum.16b
             mov r10, v14.d[0]
             mov r11, v14.d[1]
             orr r10, r10, r11 // orrs not avail on Aarch64
 			cbz r10, EndOfBrighters_CompVFastDataRow_Asm_NEON64\@
+			str q16, [sp, #(vecDiff16 + 0*16)]
+			str q17, [sp, #(vecDiff16 + 8*16)]
+			str q18, [sp, #(vecDiff16 + 4*16)]
+			str q19, [sp, #(vecDiff16 + 12*16)]
+			str q20, [sp, #(vecDiffBinary16 + 0*16)]
+			str q21, [sp, #(vecDiffBinary16 + 8*16)]
+			str q22, [sp, #(vecDiffBinary16 + 4*16)]
+			str q23, [sp, #(vecDiffBinary16 + 12*16)]
             ldr q12, [sp, #(vecCircle16 + 1*16)]
 			ldr q16, [sp, #(vecCircle16 + 2*16)]
 			ldr q20, [sp, #(vecCircle16 + 3*16)]

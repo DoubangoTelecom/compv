@@ -34,3 +34,7 @@ We're using #8 threads and with more threads (e.g. #16) we can go as high as 500
 CompV: 1474.ms(mt,avx2), 1866.ms(mt,sse41), 2645.ms(mt,c++), 5435.ms(st,avx2), 6708.ms(st,sse41), 9470.ms(st,c++)
 OpenCV: 4148.ms(full optiz)
 Remarque: OpenCV uses SSE2 and multithreading and we're faster even with plain c++ (without sse or avx).
+
+=== Gaussian Blur (1282, 720) (#10000 times) ===
+CompV: 2943.ms(fxp, mt, full optiz, deprecated code), 9005.ms(fxp, st, full optiz, deprecated code)
+OpenCV: 16186.ms(full optiz)

@@ -32,7 +32,7 @@ void MathConvlt1VertHz_8u16i16i_Intrin_SSE2(const uint8_t* inPtr, int16_t* outPt
             xmmI0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[0]));
             xmmS0 = _mm_mullo_epi16(_mm_unpacklo_epi8(xmmI0, xmmZero), xmmCoeff0);
             xmmS1 = _mm_mullo_epi16(_mm_unpackhi_epi8(xmmI0, xmmZero), xmmCoeff0);
-            for (k = 1, m = stride; k < kernSize; ++k, m += stride) {
+            for (k = 1, m = stride; k < kernSize; ++k, m += stride) { // FIXME: per two (kernSize must be odd)
                 xmmCoeff = _mm_set1_epi16(vhkernPtr[k]);
                 xmmI0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[m]));
                 xmmS0 = _mm_add_epi16(xmmS0, _mm_mullo_epi16(_mm_unpacklo_epi8(xmmI0, xmmZero), xmmCoeff));
