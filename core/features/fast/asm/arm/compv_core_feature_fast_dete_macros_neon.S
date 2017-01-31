@@ -92,14 +92,10 @@
 
 #########################################################################
 .macro _neon64_fast_init_diffbinarysum FastType vecSum1
-	ldr q12, [sp, #(vecDiffBinary16 + 0*16)]
-	ldr q13, [sp, #(vecDiffBinary16 + 1*16)]
-	ldr q14, [sp, #(vecDiffBinary16 + 2*16)]
-	ldr q15, [sp, #(vecDiffBinary16 + 3*16)]
-	ldr q16, [sp, #(vecDiffBinary16 + 4*16)]
-	ldr q17, [sp, #(vecDiffBinary16 + 5*16)]
-	ldr q18, [sp, #(vecDiffBinary16 + 6*16)]
-	ldr q19, [sp, #(vecDiffBinary16 + 7*16)]
+	ldp q12, q13, [sp, #(vecDiffBinary16 + 0*16)]
+	ldp q14, q15, [sp, #(vecDiffBinary16 + 2*16)]
+	ldp q16, q17, [sp, #(vecDiffBinary16 + 4*16)]
+	ldp q18, q19, [sp, #(vecDiffBinary16 + 6*16)]
     add v20.16b, v12.16b, v13.16b
     add v21.16b, v14.16b, v15.16b
     add v22.16b, v16.16b, v17.16b
@@ -108,8 +104,7 @@
     add \vecSum1, v22.16b, v23.16b // setting vecSum1 for the first time
     add \vecSum1, \vecSum1, v24.16b
 	.if \FastType == 12
-		ldr q12, [sp, #(vecDiffBinary16 + 8*16)]
-		ldr q13, [sp, #(vecDiffBinary16 + 9*16)]
+		ldp q12, q13, [sp, #(vecDiffBinary16 + 8*16)]
 		ldr q14, [sp, #(vecDiffBinary16 + 10*16)]
 		add v15.16b, v12.16b, v13.16b
 		add \vecSum1, \vecSum1, v14.16b

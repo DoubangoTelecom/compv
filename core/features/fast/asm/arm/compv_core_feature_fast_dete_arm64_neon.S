@@ -239,22 +239,15 @@
         mov r11, v28.d[1]
         orr r10, r10, r11 // orrs not avail on Aarch64
         cbz r10, Next_CompVFastDataRow_Asm_NEON64\FastType
-		str q12, [sp, #(vecCircle16 + 0*16)]
-		str q13, [sp, #(vecCircle16 + 1*16)]
-		str q14, [sp, #(vecCircle16 + 2*16)]
-		str q15, [sp, #(vecCircle16 + 3*16)]
-		str q16, [sp, #(vecCircle16 + 4*16)]
-		str q17, [sp, #(vecCircle16 + 5*16)]
-		str q18, [sp, #(vecCircle16 + 6*16)]
-		str q19, [sp, #(vecCircle16 + 7*16)]
-		str q20, [sp, #(vecCircle16 + 8*16)]
-		str q21, [sp, #(vecCircle16 + 9*16)]
-		str q22, [sp, #(vecCircle16 + 10*16)]
-		str q23, [sp, #(vecCircle16 + 11*16)]
-		str q24, [sp, #(vecCircle16 + 12*16)]
-		str q25, [sp, #(vecCircle16 + 13*16)]
-		str q26, [sp, #(vecCircle16 + 14*16)]
-		str q27, [sp, #(vecCircle16 + 15*16)]
+		stp q12, q13, [sp, #(vecCircle16 + 0*16)]
+		stp q14, q15, [sp, #(vecCircle16 + 2*16)]
+		stp q16, q17, [sp, #(vecCircle16 + 4*16)]
+		stp q18, q19, [sp, #(vecCircle16 + 6*16)]
+		stp q20, q21, [sp, #(vecCircle16 + 8*16)]
+		stp q22, q23, [sp, #(vecCircle16 + 10*16)]
+		stp q24, q25, [sp, #(vecCircle16 + 12*16)]
+		stp q26, q27, [sp, #(vecCircle16 + 14*16)]
+
 
 		#######################################
 		# Darkers
@@ -287,17 +280,13 @@
 			str q21, [sp, #(vecDiffBinary16 + 8*16)]
 			str q22, [sp, #(vecDiffBinary16 + 4*16)]
 			str q23, [sp, #(vecDiffBinary16 + 12*16)]
-            ldr q12, [sp, #(vecCircle16 + 1*16)]
-            ldr q16, [sp, #(vecCircle16 + 2*16)]
+            ldp q12, q16, [sp, #(vecCircle16 + 1*16)]
             ldr q20, [sp, #(vecCircle16 + 3*16)]
-            ldr q14, [sp, #(vecCircle16 + 5*16)]
-            ldr q18, [sp, #(vecCircle16 + 6*16)]
+            ldp q14, q18, [sp, #(vecCircle16 + 5*16)]
             ldr q22, [sp, #(vecCircle16 + 7*16)]
-            ldr q13, [sp, #(vecCircle16 + 9*16)]
-            ldr q17, [sp, #(vecCircle16 + 10*16)]
+            ldp q13, q17, [sp, #(vecCircle16 + 9*16)]
             ldr q21, [sp, #(vecCircle16 + 11*16)]
-            ldr q15, [sp, #(vecCircle16 + 13*16)]
-            ldr q19, [sp, #(vecCircle16 + 14*16)]
+            ldp q15, q19, [sp, #(vecCircle16 + 13*16)]
             ldr q23, [sp, #(vecCircle16 + 15*16)]
             uqsub v12.16b, vecDarker1.16b, v12.16b
 			uqsub v16.16b, vecDarker1.16b, v16.16b
@@ -311,17 +300,13 @@
             uqsub v15.16b, vecDarker1.16b, v15.16b
             uqsub v19.16b, vecDarker1.16b, v19.16b
             uqsub v23.16b, vecDarker1.16b, v23.16b
-            str q12, [sp, #(vecDiff16 + 1*16)]
-			str q16, [sp, #(vecDiff16 + 2*16)]
+            stp q12, q16, [sp, #(vecDiff16 + 1*16)]
 			str q20, [sp, #(vecDiff16 + 3*16)]
-            str q14, [sp, #(vecDiff16 + 5*16)]
-			str q18, [sp, #(vecDiff16 + 6*16)]
+            stp q14, q18, [sp, #(vecDiff16 + 5*16)]
 			str q22, [sp, #(vecDiff16 + 7*16)]
-			str q13, [sp, #(vecDiff16 + 9*16)]
-			str q17, [sp, #(vecDiff16 + 10*16)]
+			stp q13, q17, [sp, #(vecDiff16 + 9*16)]
 			str q21, [sp, #(vecDiff16 + 11*16)]
-            str q15, [sp, #(vecDiff16 + 13*16)]
-            str q19, [sp, #(vecDiff16 + 14*16)]
+            stp q15, q19, [sp, #(vecDiff16 + 13*16)]
             str q23, [sp, #(vecDiff16 + 15*16)]
             cmhi v12.16b, v12.16b, vecZero.16b
 			cmhi v16.16b, v16.16b, vecZero.16b
@@ -364,17 +349,13 @@
             mov r21, v24.d[1]
             orr r20, r20, r21 // orrs not avail on Aarch64
 			cbz r20, EndOfDarkers_CompVFastDataRow_Asm_NEON64\@
-            str q12, [sp, #(vecDiffBinary16 + 1*16)]
-			str q16, [sp, #(vecDiffBinary16 + 2*16)]
+            stp q12, q16, [sp, #(vecDiffBinary16 + 1*16)]
 			str q20, [sp, #(vecDiffBinary16 + 3*16)]
-            str q14, [sp, #(vecDiffBinary16 + 5*16)]
-			str q18, [sp, #(vecDiffBinary16 + 6*16)]
+            stp q14, q18, [sp, #(vecDiffBinary16 + 5*16)]
 			str q22, [sp, #(vecDiffBinary16 + 7*16)]
-			str q13, [sp, #(vecDiffBinary16 + 9*16)]
-			str q17, [sp, #(vecDiffBinary16 + 10*16)]
+			stp q13, q17, [sp, #(vecDiffBinary16 + 9*16)]
 			str q21, [sp, #(vecDiffBinary16 + 11*16)]
-            str q15, [sp, #(vecDiffBinary16 + 13*16)]
-            str q19, [sp, #(vecDiffBinary16 + 14*16)]
+            stp q15, q19, [sp, #(vecDiffBinary16 + 13*16)]
             str q23, [sp, #(vecDiffBinary16 + 15*16)]
 			_neon64_fast_init_diffbinarysum \FastType, vecSum1.16b
 			.irp ii, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
@@ -417,17 +398,13 @@
 			str q21, [sp, #(vecDiffBinary16 + 8*16)]
 			str q22, [sp, #(vecDiffBinary16 + 4*16)]
 			str q23, [sp, #(vecDiffBinary16 + 12*16)]
-            ldr q12, [sp, #(vecCircle16 + 1*16)]
-			ldr q16, [sp, #(vecCircle16 + 2*16)]
+            ldp q12, q16, [sp, #(vecCircle16 + 1*16)]
 			ldr q20, [sp, #(vecCircle16 + 3*16)]
-			ldr q14, [sp, #(vecCircle16 + 5*16)]
-			ldr q18, [sp, #(vecCircle16 + 6*16)]
+			ldp q14, q18, [sp, #(vecCircle16 + 5*16)]
 			ldr q22, [sp, #(vecCircle16 + 7*16)]
-            ldr q13, [sp, #(vecCircle16 + 9*16)]
-			ldr q17, [sp, #(vecCircle16 + 10*16)]
+            ldp q13, q17, [sp, #(vecCircle16 + 9*16)]
             ldr q21, [sp, #(vecCircle16 + 11*16)]
-            ldr q15, [sp, #(vecCircle16 + 13*16)]
-            ldr q19, [sp, #(vecCircle16 + 14*16)]
+            ldp q15, q19, [sp, #(vecCircle16 + 13*16)]
             ldr q23, [sp, #(vecCircle16 + 15*16)]
             uqsub v12.16b, v12.16b, vecBrighter1.16b
 			uqsub v16.16b, v16.16b, vecBrighter1.16b
@@ -441,17 +418,13 @@
             uqsub v15.16b, v15.16b, vecBrighter1.16b
             uqsub v19.16b, v19.16b, vecBrighter1.16b
             uqsub v23.16b, v23.16b, vecBrighter1.16b
-            str q12, [sp, #(vecDiff16 + 1*16)]
-			str q16, [sp, #(vecDiff16 + 2*16)]
+            stp q12, q16, [sp, #(vecDiff16 + 1*16)]
 			str q20, [sp, #(vecDiff16 + 3*16)]
-            str q14, [sp, #(vecDiff16 + 5*16)]
-			str q18, [sp, #(vecDiff16 + 6*16)]
+            stp q14, q18, [sp, #(vecDiff16 + 5*16)]
 			str q22, [sp, #(vecDiff16 + 7*16)]
-			str q13, [sp, #(vecDiff16 + 9*16)]
-			str q17, [sp, #(vecDiff16 + 10*16)]
+			stp q13, q17, [sp, #(vecDiff16 + 9*16)]
 			str q21, [sp, #(vecDiff16 + 11*16)]
-            str q15, [sp, #(vecDiff16 + 13*16)]
-            str q19, [sp, #(vecDiff16 + 14*16)]
+            stp q15, q19, [sp, #(vecDiff16 + 13*16)]
             str q23, [sp, #(vecDiff16 + 15*16)]
             cmhi v12.16b, v12.16b, vecZero.16b
 			cmhi v16.16b, v16.16b, vecZero.16b
@@ -494,17 +467,13 @@
             mov r21, v24.d[1]
             orr r20, r20, r21 // orrs not avail on Aarch64
 			cbz r20, EndOfBrighters_CompVFastDataRow_Asm_NEON64\@
-            str q12, [sp, #(vecDiffBinary16 + 1*16)]
-			str q16, [sp, #(vecDiffBinary16 + 2*16)]
+            stp q12, q16, [sp, #(vecDiffBinary16 + 1*16)]
 			str q20, [sp, #(vecDiffBinary16 + 3*16)]
-            str q14, [sp, #(vecDiffBinary16 + 5*16)]
-			str q18, [sp, #(vecDiffBinary16 + 6*16)]
+            stp q14, q18, [sp, #(vecDiffBinary16 + 5*16)]
 			str q22, [sp, #(vecDiffBinary16 + 7*16)]
-			str q13, [sp, #(vecDiffBinary16 + 9*16)]
-			str q17, [sp, #(vecDiffBinary16 + 10*16)]
+			stp q13, q17, [sp, #(vecDiffBinary16 + 9*16)]
 			str q21, [sp, #(vecDiffBinary16 + 11*16)]
-            str q15, [sp, #(vecDiffBinary16 + 13*16)]
-            str q19, [sp, #(vecDiffBinary16 + 14*16)]
+            stp q15, q19, [sp, #(vecDiffBinary16 + 13*16)]
             str q23, [sp, #(vecDiffBinary16 + 15*16)]
 			_neon64_fast_init_diffbinarysum \FastType, vecSum1.16b
 			.irp ii, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
