@@ -24,7 +24,7 @@ public:
     static COMPV_ERROR_CODE init(int32_t numThreads = -1);
     static COMPV_ERROR_CODE deInit();
     static COMPV_INLINE CompVThreadDispatcherPtr threadDispatcher() {
-#if defined(_COMPV_API_H_)
+#if defined(_COMPV_API_H_) && 0 // Disabled for now because of templates
 		// If you use this dispatcher to run internal tasks then, 'isMotherOfTheCurrentThread' will return true which
 		// means these tasks won't be multithreaded (because they are already multithreded). It'll be up to you
 		// to choose how to dispatch the tasks.

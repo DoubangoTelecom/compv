@@ -115,6 +115,12 @@
     <Filter Include="source\asm\arm">
       <UniqueIdentifier>{1cb01f57-9a3e-4e31-95a6-7d46cfd95d9e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\math\intrin\arm">
+      <UniqueIdentifier>{65ac0a94-020d-40db-b77c-ff3f7150c1b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\math\intrin\arm">
+      <UniqueIdentifier>{9aae60aa-6e48-40b8-945c-f17b665003d4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\base\compv_base.h">
@@ -357,6 +363,12 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_gauss.h">
       <Filter>include\math</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_convlt_intrin_sse2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon.h">
+      <Filter>include\math\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -568,6 +580,12 @@
     </ClCompile>
     <ClCompile Include="..\math\compv_math_gauss.cxx">
       <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_convlt_intrin_sse2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

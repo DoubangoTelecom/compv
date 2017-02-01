@@ -14,6 +14,8 @@
 #define FILE_NAME_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define FILE_NAME_GRIOTS				"mandekalou_480x640_gray.yuv"
 
+#define IMAGE_CONVLT_LOOP_COUNT		1
+
 static const struct compv_unittest_convlt {
 	size_t kernelSize;
 	float kernelSigma;
@@ -76,10 +78,8 @@ COMPV_UNITTEST_CONVLT_16s_16s_16s[] =
 };
 static const size_t COMPV_UNITTEST_CONVLT_COUNT = 12;
 
-#define IMAGE_CONVLT_LOOP_COUNT		1
-
 template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
-static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma)
+static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma, const char* filename)
 {
 	const compv_unittest_convlt* tests = NULL;
 	const compv_unittest_convlt* test = NULL;
@@ -150,7 +150,7 @@ static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma)
 
 	// Find test
 	for (size_t i = 0; i < COMPV_UNITTEST_CONVLT_COUNT; ++i) {
-		if (tests[i].kernelSize == kernelSize && tests[i].kernelSigma == kernelSigma) {
+		if (tests[i].kernelSize == kernelSize && tests[i].kernelSigma == kernelSigma && std::string(tests[i].filename).compare(filename) == 0) {
 			test = &tests[i];
 			break;
 		}
@@ -216,11 +216,12 @@ bail:
 #define IMAGE_CONVLT_INPUT_TYPE		uint8_t // int16_t, uint8_t
 #define IMAGE_CONVLT_KERNEL_TYPE	compv_float32_t // int16_t, float32
 #define IMAGE_CONVLT_OUTPUT_TYPE	uint8_t // int16_t, uint8_t
+#define IMAGE_CONVLT_FILE_NAME		FILE_NAME_EQUIRECTANGULAR
 #define IMAGE_CONVLT_KERNEL_SIZE	7
 #define IMAGE_CONVLT_KERNEL_SIGMA	2.0f
 
 COMPV_ERROR_CODE convlt()
 {
-	COMPV_CHECK_CODE_RETURN((convlt_ext<IMAGE_CONVLT_INPUT_TYPE, IMAGE_CONVLT_KERNEL_TYPE, IMAGE_CONVLT_OUTPUT_TYPE>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA)));
+	COMPV_CHECK_CODE_RETURN((convlt_ext<IMAGE_CONVLT_INPUT_TYPE, IMAGE_CONVLT_KERNEL_TYPE, IMAGE_CONVLT_OUTPUT_TYPE>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME)));
 	return COMPV_ERROR_CODE_S_OK;
 }
