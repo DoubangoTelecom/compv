@@ -64,6 +64,9 @@
 		1525C0DC1E36346500B00689 /* compv_drawing_window_glfw3.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 1525C0C71E36346500B00689 /* compv_drawing_window_glfw3.cxx */; };
 		1525C0DD1E36346500B00689 /* compv_drawing_window_sdl.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 1525C0C81E36346500B00689 /* compv_drawing_window_sdl.cxx */; };
 		1525C0DE1E36346500B00689 /* compv_drawing.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 1525C0C91E36346500B00689 /* compv_drawing.cxx */; };
+		156E96C81E40EEED00BC5329 /* compv_gpu_math_convlt.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E96C71E40EEED00BC5329 /* compv_gpu_math_convlt.cxx */; };
+		156E96CD1E40EF4900BC5329 /* compv_math_convlt.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E96CB1E40EF4900BC5329 /* compv_math_convlt.cxx */; };
+		156E96CE1E40EF4900BC5329 /* compv_math_gauss.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E96CC1E40EF4900BC5329 /* compv_math_gauss.cxx */; };
 		15A3E8711E3599D800303F7C /* compv_android_cpu-features.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15A3E7711E3599D800303F7C /* compv_android_cpu-features.cxx */; };
 		15A3E8721E3599D900303F7C /* compv_android_dexclassloader.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15A3E7721E3599D800303F7C /* compv_android_dexclassloader.cxx */; };
 		15A3E8731E3599D900303F7C /* compv_android_native_activity.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15A3E7731E3599D800303F7C /* compv_android_native_activity.cxx */; };
@@ -346,6 +349,12 @@
 		1525C0D41E36346500B00689 /* compv_drawing_window_egl_android.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_drawing_window_egl_android.h; sourceTree = "<group>"; };
 		1525C0D51E36346500B00689 /* compv_drawing_window_glfw3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_drawing_window_glfw3.h; sourceTree = "<group>"; };
 		1525C0D61E36346500B00689 /* compv_drawing_window_sdl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_drawing_window_sdl.h; sourceTree = "<group>"; };
+		156E96C41E40EEDE00BC5329 /* compv_gpu_math_convlt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_gpu_math_convlt.h; sourceTree = "<group>"; };
+		156E96C71E40EEED00BC5329 /* compv_gpu_math_convlt.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_gpu_math_convlt.cxx; sourceTree = "<group>"; };
+		156E96C91E40EF3800BC5329 /* compv_math_convlt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_convlt.h; sourceTree = "<group>"; };
+		156E96CA1E40EF3800BC5329 /* compv_math_gauss.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_gauss.h; sourceTree = "<group>"; };
+		156E96CB1E40EF4900BC5329 /* compv_math_convlt.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_math_convlt.cxx; sourceTree = "<group>"; };
+		156E96CC1E40EF4900BC5329 /* compv_math_gauss.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_math_gauss.cxx; sourceTree = "<group>"; };
 		15A3E7661E35994E00303F7C /* libCompVBase.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCompVBase.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		15A3E7711E3599D800303F7C /* compv_android_cpu-features.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "compv_android_cpu-features.cxx"; sourceTree = "<group>"; };
 		15A3E7721E3599D800303F7C /* compv_android_dexclassloader.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_android_dexclassloader.cxx; sourceTree = "<group>"; };
@@ -618,10 +627,11 @@
 		1525BFF91E36333400B00689 /* gpu */ = {
 			isa = PBXGroup;
 			children = (
+				156E96C21E40EEDE00BC5329 /* base */,
+				1525BFFD1E36333400B00689 /* core */,
 				1525BFFA1E36333400B00689 /* compv_gpu.h */,
 				1525BFFB1E36333400B00689 /* compv_gpu_common.h */,
 				1525BFFC1E36333400B00689 /* compv_gpu_config.h */,
-				1525BFFD1E36333400B00689 /* core */,
 			);
 			path = gpu;
 			sourceTree = "<group>";
@@ -653,8 +663,9 @@
 		1525C0021E36333B00B00689 /* source */ = {
 			isa = PBXGroup;
 			children = (
-				1525C0031E36334E00B00689 /* compv_gpu.cxx */,
+				156E96C51E40EEED00BC5329 /* base */,
 				1525BFF31E36333400B00689 /* core */,
+				1525C0031E36334E00B00689 /* compv_gpu.cxx */,
 			);
 			name = source;
 			sourceTree = "<group>";
@@ -1035,6 +1046,39 @@
 			name = source;
 			sourceTree = "<group>";
 		};
+		156E96C21E40EEDE00BC5329 /* base */ = {
+			isa = PBXGroup;
+			children = (
+				156E96C31E40EEDE00BC5329 /* math */,
+			);
+			path = base;
+			sourceTree = "<group>";
+		};
+		156E96C31E40EEDE00BC5329 /* math */ = {
+			isa = PBXGroup;
+			children = (
+				156E96C41E40EEDE00BC5329 /* compv_gpu_math_convlt.h */,
+			);
+			path = math;
+			sourceTree = "<group>";
+		};
+		156E96C51E40EEED00BC5329 /* base */ = {
+			isa = PBXGroup;
+			children = (
+				156E96C61E40EEED00BC5329 /* math */,
+			);
+			name = base;
+			path = gpu/base;
+			sourceTree = SOURCE_ROOT;
+		};
+		156E96C61E40EEED00BC5329 /* math */ = {
+			isa = PBXGroup;
+			children = (
+				156E96C71E40EEED00BC5329 /* compv_gpu_math_convlt.cxx */,
+			);
+			path = math;
+			sourceTree = "<group>";
+		};
 		15A3E75B1E35987600303F7C = {
 			isa = PBXGroup;
 			children = (
@@ -1351,6 +1395,8 @@
 		15A3E81A1E3599D800303F7C /* math */ = {
 			isa = PBXGroup;
 			children = (
+				156E96C91E40EF3800BC5329 /* compv_math_convlt.h */,
+				156E96CA1E40EF3800BC5329 /* compv_math_gauss.h */,
 				15A3E81B1E3599D800303F7C /* compv_math.h */,
 				15A3E81C1E3599D800303F7C /* compv_math_utils.h */,
 				15A3E81D1E3599D800303F7C /* intrin */,
@@ -1435,6 +1481,8 @@
 		15A3E8401E3599D800303F7C /* math */ = {
 			isa = PBXGroup;
 			children = (
+				156E96CB1E40EF4900BC5329 /* compv_math_convlt.cxx */,
+				156E96CC1E40EF4900BC5329 /* compv_math_gauss.cxx */,
 				15A3E8521E3599D800303F7C /* intrin */,
 				15A3E8411E3599D800303F7C /* asm */,
 				15A3E8501E3599D800303F7C /* compv_math.cxx */,
@@ -1785,6 +1833,7 @@
 				15A3E89D1E3599D900303F7C /* compv_sharedlib.cxx in Sources */,
 				15A3E8BE1E3599D900303F7C /* compv_image_scale_bilinear.cxx in Sources */,
 				15A3E8F31E3599D900303F7C /* compv_time.cxx in Sources */,
+				156E96C81E40EEED00BC5329 /* compv_gpu_math_convlt.cxx in Sources */,
 				15A3E8EC1E3599D900303F7C /* compv_runnable.cxx in Sources */,
 				15A3E89A1E3599D900303F7C /* compv_md5.cxx in Sources */,
 				15A3E88D1E3599D900303F7C /* compv_bind.cxx in Sources */,
@@ -1801,6 +1850,7 @@
 				15A3E8E81E3599D900303F7C /* compv_asynctask11.cxx in Sources */,
 				15A3E8BF1E3599D900303F7C /* compv_image_utils.cxx in Sources */,
 				15A3E8C01E3599D900303F7C /* compv_image_conv_grayscale_intrin_neon.cxx in Sources */,
+				156E96CD1E40EF4900BC5329 /* compv_math_convlt.cxx in Sources */,
 				15A3E8F01E3599D900303F7C /* compv_threaddisp10.cxx in Sources */,
 				15A3E8B91E3599D900303F7C /* compv_image_conv_common.cxx in Sources */,
 				15A3E8C61E3599D900303F7C /* compv_image_conv_rgbfamily_intrin_ssse3.cxx in Sources */,
@@ -1814,6 +1864,7 @@
 				15A3E88F1E3599D900303F7C /* compv_box.cxx in Sources */,
 				15A3E8A41E3599D900303F7C /* compv_surfacelayer_matching.cxx in Sources */,
 				15A3E8E51E3599D900303F7C /* compv_math_utils_intrin_sse2.cxx in Sources */,
+				156E96CE1E40EF4900BC5329 /* compv_math_gauss.cxx in Sources */,
 				15A3E8EB1E3599D900303F7C /* compv_parallel.cxx in Sources */,
 				15A3E8901E3599D900303F7C /* compv_buffer.cxx in Sources */,
 				15A3E8A01E3599D900303F7C /* compv_mvp.cxx in Sources */,
