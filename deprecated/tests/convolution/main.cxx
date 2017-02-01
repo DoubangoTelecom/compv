@@ -9,7 +9,7 @@ using namespace compv;
 #define enableIntrinsics	true
 #define enableAsm			true
 #define testingMode			true
-#define cpuDisable			kCpuFlagAll
+#define cpuDisable			kCpuFlagNone
 
 #define TEST_GAUSS_FILTER_DIM1		0
 #define TEST_GAUSS_FILTER_DIM2		0

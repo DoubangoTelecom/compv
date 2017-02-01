@@ -10,7 +10,7 @@ __kernel void clConvlt1VtHz_8u8u32f(
 	__global unsigned char* outPtr
 	unsigned int width
 	unsigned int height
-	unsigned int stride
+	unsigned int step
 	unsigned int pad
 	__global const float* vthzKernPtr // FIXME: make local
 	unsigned int kernSize

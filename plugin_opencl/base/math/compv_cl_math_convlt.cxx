@@ -15,7 +15,7 @@ COMPV_NAMESPACE_BEGIN()
 
 static cl_program __cl_convlt1VtHz_8u8u32f_program = NULL;
 static cl_kernel __cl_convlt1VtHz_8u8u32f_kernel = NULL;
-static COMPV_ERROR_CODE __cl_convlt1VtHz_8u8u32f(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, size_t pad, const compv_float32_t* vthzKernPtr, size_t kernSize)
+static COMPV_ERROR_CODE __cl_convlt1VtHz_8u8u32f(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const compv_float32_t* vthzKernPtr, size_t kernSize)
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	size_t trueStride = (width + pad); // stride passed in arg is the process step
@@ -23,7 +23,7 @@ static COMPV_ERROR_CODE __cl_convlt1VtHz_8u8u32f(const uint8_t* inPtr, uint8_t* 
 	cl_mem cl_inPtr = NULL, cl_outPtr = NULL, cl_vthzKernPtr = NULL;
 	unsigned int width_ = static_cast<unsigned int>(width)
 		, height_ = static_cast<unsigned int>(height)
-		, stride_ = static_cast<unsigned int>(stride)
+		, step_ = static_cast<unsigned int>(step)
 		, pad_ = static_cast<unsigned int>(pad)
 		, kernSize_ = static_cast<unsigned int>(kernSize);
 	void* mappedBuff = NULL;
@@ -58,7 +58,7 @@ static COMPV_ERROR_CODE __cl_convlt1VtHz_8u8u32f(const uint8_t* inPtr, uint8_t* 
 	COMPV_CHECK_EXP_BAIL((clerr = clSetKernelArg(__cl_convlt1VtHz_8u8u32f_kernel, 1, sizeof(cl_mem), &cl_outPtr)) != CL_SUCCESS, (err = COMPV_ERROR_CODE_E_OPENCL), "clSetKernelArg failed");
 	COMPV_CHECK_EXP_BAIL((clerr = clSetKernelArg(__cl_convlt1VtHz_8u8u32f_kernel, 2, sizeof(unsigned int), &width_)) != CL_SUCCESS, (err = COMPV_ERROR_CODE_E_OPENCL), "clSetKernelArg failed");
 	COMPV_CHECK_EXP_BAIL((clerr = clSetKernelArg(__cl_convlt1VtHz_8u8u32f_kernel, 3, sizeof(unsigned int), &height_)) != CL_SUCCESS, (err = COMPV_ERROR_CODE_E_OPENCL), "clSetKernelArg failed");
-	COMPV_CHECK_EXP_BAIL((clerr = clSetKernelArg(__cl_convlt1VtHz_8u8u32f_kernel, 4, sizeof(unsigned int), &stride_)) != CL_SUCCESS, (err = COMPV_ERROR_CODE_E_OPENCL), "clSetKernelArg failed");
+	COMPV_CHECK_EXP_BAIL((clerr = clSetKernelArg(__cl_convlt1VtHz_8u8u32f_kernel, 4, sizeof(unsigned int), &step_)) != CL_SUCCESS, (err = COMPV_ERROR_CODE_E_OPENCL), "clSetKernelArg failed");
 	COMPV_CHECK_EXP_BAIL((clerr = clSetKernelArg(__cl_convlt1VtHz_8u8u32f_kernel, 5, sizeof(unsigned int), &pad_)) != CL_SUCCESS, (err = COMPV_ERROR_CODE_E_OPENCL), "clSetKernelArg failed");
 	COMPV_CHECK_EXP_BAIL((clerr = clSetKernelArg(__cl_convlt1VtHz_8u8u32f_kernel, 6, sizeof(cl_mem), &cl_vthzKernPtr)) != CL_SUCCESS, (err = COMPV_ERROR_CODE_E_OPENCL), "clSetKernelArg failed");
 	COMPV_CHECK_EXP_BAIL((clerr = clSetKernelArg(__cl_convlt1VtHz_8u8u32f_kernel, 7, sizeof(unsigned int), &kernSize_)) != CL_SUCCESS, (err = COMPV_ERROR_CODE_E_OPENCL), "clSetKernelArg failed");

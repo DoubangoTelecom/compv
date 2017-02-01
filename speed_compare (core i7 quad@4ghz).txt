@@ -36,5 +36,5 @@ OpenCV: 4148.ms(full optiz)
 Remarque: OpenCV uses SSE2 and multithreading and we're faster even with plain c++ (without sse or avx).
 
 === Gaussian Blur (1282, 720) (#10000 times) ===
-CompV: 2943.ms(fxp, mt, full optiz, deprecated code), 9005.ms(fxp, st, full optiz, deprecated code)
+CompV: 5476.ms(flp,mt,sse2), 17759.ms (flp,st,sse2), 23004.ms(flp,mt,c++), 79309.ms(flp,st,c++)
 OpenCV: 16186.ms(full optiz)

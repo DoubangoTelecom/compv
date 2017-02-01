@@ -18,7 +18,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-typedef COMPV_ERROR_CODE(*gpu_convlt1VtHz_8u8u32f)(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, size_t pad, const compv_float32_t* vthzKernPtr, size_t kernSize);
+typedef COMPV_ERROR_CODE(*gpu_convlt1VtHz_8u8u32f)(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const compv_float32_t* vthzKernPtr, size_t kernSize);
 
 class COMPV_GPU_API CompVGpuMathConvlt
 {

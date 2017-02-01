@@ -225,43 +225,43 @@ private:
 
 
 	template <typename InputType, typename KernelType, typename OutputType>
-	static void convlt1VtHz_private(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, size_t pad, const KernelType* vthzKernPtr, size_t kernSize, bool fixedPoint = false) {
+	static void convlt1VtHz_private(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t step, size_t pad, const KernelType* vthzKernPtr, size_t kernSize, bool fixedPoint = false) {
 		if (fixedPoint) {
-			convlt1VtHz_private_fxp_true<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, pad, vthzKernPtr, kernSize);
+			convlt1VtHz_private_fxp_true<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, step, pad, vthzKernPtr, kernSize);
 		}
 		else {
-			convlt1VtHz_private_fxp_false<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, pad, vthzKernPtr, kernSize);
+			convlt1VtHz_private_fxp_false<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, step, pad, vthzKernPtr, kernSize);
 		}
 	}
 
 	template <typename InputType, typename KernelType, typename OutputType>
-	static void convlt1VtHz_private_fxp_true(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
+	static void convlt1VtHz_private_fxp_true(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t step, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
 		// No need to check InputType, KernelType and OutputType
-		CompVMathConvlt::convlt1VtHzFixedPoint_C(reinterpret_cast<const uint8_t*>(inPtr), reinterpret_cast<uint8_t*>(outPtr), width, height, stride, pad, reinterpret_cast<const int16_t*>(vthzKernPtr), kernSize);
+		CompVMathConvlt::convlt1VtHzFixedPoint_C(reinterpret_cast<const uint8_t*>(inPtr), reinterpret_cast<uint8_t*>(outPtr), width, height, step, pad, reinterpret_cast<const int16_t*>(vthzKernPtr), kernSize);
 	}	
 
 	template <typename InputType, typename KernelType, typename OutputType>
-	static void convlt1VtHz_private_fxp_false(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
+	static void convlt1VtHz_private_fxp_false(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t step, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
 		if ((std::is_same<KernelType, compv_float32_t>::value || std::is_same<KernelType, compv_float64_t>::value)
 			&& (std::is_same<InputType, int32_t>::value || std::is_same<InputType, uint32_t>::value || std::is_same<InputType, int16_t>::value || std::is_same<InputType, uint16_t>::value || std::is_same<InputType, int8_t>::value || std::is_same<InputType, uint8_t>::value)
 			&& (std::is_same<OutputType, int32_t>::value || std::is_same<OutputType, uint32_t>::value || std::is_same<OutputType, int16_t>::value || std::is_same<OutputType, uint16_t>::value || std::is_same<OutputType, int8_t>::value || std::is_same<OutputType, uint8_t>::value))
 		{
-			CompVMathConvlt::convlt1VtHzKernelFloat_C<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, pad, vthzKernPtr, kernSize);
+			CompVMathConvlt::convlt1VtHzKernelFloat_C<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, step, pad, vthzKernPtr, kernSize);
 		}
 		else {
-			CompVMathConvlt::convlt1VtHzKernelInt_C<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, pad, vthzKernPtr, kernSize);
+			CompVMathConvlt::convlt1VtHzKernelInt_C<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, step, pad, vthzKernPtr, kernSize);
 		}
 	}
 
 	template <typename InputType, typename KernelType, typename OutputType>
-	static void convlt1VtHzKernelInt_C(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
+	static void convlt1VtHzKernelInt_C(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t step, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 		size_t i, j, k, row;
 		OutputType sum;
 		for (j = 0; j < height; ++j) {
 			for (i = 0; i < width; ++i) {
 				sum = static_cast<OutputType>(inPtr[0] * vthzKernPtr[0]);
-				for (row = 1, k = stride; row < kernSize; ++row, k += stride) {
+				for (row = 1, k = step; row < kernSize; ++row, k += step) {
 					sum += static_cast<OutputType>(inPtr[k] * vthzKernPtr[row]);
 				}
 				*outPtr = static_cast<OutputType>(sum);
@@ -277,38 +277,31 @@ private:
 	// outPtr = (u)int8_t / (u)int16_t / (u)int32_t
 	// KernelType = float / double
 	template <typename InputType, typename KernelType, typename OutputType>
-	static void convlt1VtHzKernelFloat_C(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t stride, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
+	static void convlt1VtHzKernelFloat_C(const InputType* inPtr, OutputType* outPtr, size_t width, size_t height, size_t step, size_t pad, const KernelType* vthzKernPtr, size_t kernSize) {
 		// KernelType is float32 or float64
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 		size_t i, j, k, row;
 		KernelType sum; // use (float / double) to accumulate
-#if KernelType == compv_float32_t || KernelType == compv_float64_t
-#	if OutputType == uint8_t || OutputType == uint16_t || OutputType == uint32_t
-#		define compv_convlt_round(ss) COMPV_MATH_ROUNDFU_2_INT(ss, OutputType)
-#	elif OutputType == int8_t || OutputType == int16_t || OutputType == int32_t
-#		define compv_convlt_round(ss) COMPV_MATH_ROUNDF_2_INT(ss, OutputType)
-#	endif
-#endif
-#if !defined(compv_convlt_round)
-#define compv_convlt_round(ss) static_cast<OutputType>(ss)
-#endif
 		for (j = 0; j < height; ++j) {
 			for (i = 0; i < width; ++i) {
 				sum = inPtr[0] * vthzKernPtr[0];
-				for (row = 1, k = stride; row < kernSize; ++row, k += stride) {
+				for (row = 1, k = step; row < kernSize; ++row, k += step) {
 					sum += inPtr[k] * vthzKernPtr[row];
 				}
-				*outPtr = compv_convlt_round(sum);
+#if 0 // SIMD instruction -> out = cvtt(add(sum, 0.5f))
+				*outPtr = COMPV_MATH_ROUNDFU_2_INT(sum, OutputType);
+#else // SIMD instruction -> out = cvtt(sum)
+				*outPtr = static_cast<OutputType>(sum); // Truncation introduce very small error, not a big deal for convolution operation
+#endif
 				++inPtr;
 				++outPtr;
 			}
 			inPtr += pad;
 			outPtr += pad;
 		}
-#undef compv_convlt_round
 	}
 	
-	static void convlt1VtHzFixedPoint_C(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, size_t pad, const int16_t* vthzKernPtr, size_t kernSize) {
+	static void convlt1VtHzFixedPoint_C(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const int16_t* vthzKernPtr, size_t kernSize) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 		size_t i, j, k, row;
 		int sum;
@@ -316,7 +309,7 @@ private:
 		for (j = 0; j < height; ++j) {
 			for (i = 0; i < width; ++i) {
 				sum = static_cast<int>(*inPtr **vthzKernPtr) >> 16;
-				for (row = 1, k = stride; row < kernSize; ++row, k += stride) {
+				for (row = 1, k = step; row < kernSize; ++row, k += step) {
 					sum += static_cast<int>(inPtr[k] * vthzKernPtr[row]) >> 16;
 				}
 				*outPtr = static_cast<uint8_t>(sum);
@@ -330,10 +323,10 @@ private:
 };
 
 // InputType = uint8_t, KernelType = int16_t, OutputType = uint8_t, FixedPoint = true
-COMPV_TEMPLATE_EXTERN COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_true(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, size_t pad, const int16_t* vthzKernPtr, size_t kernSize);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_true(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const int16_t* vthzKernPtr, size_t kernSize);
 
 // InputType = uint8_t, KernelType = compv_float32_t, OutputType = uint8_t, FixedPoint = false
-COMPV_TEMPLATE_EXTERN COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, size_t pad, const compv_float32_t* vthzKernPtr, size_t kernSize);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const compv_float32_t* vthzKernPtr, size_t kernSize);
 
 COMPV_NAMESPACE_END()
 

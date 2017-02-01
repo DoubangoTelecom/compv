@@ -85,10 +85,8 @@
     <CustomBuild Include="core\features\fast\compv_cl_feature_fast_dete.cl">
       <Filter>Source Files\core\features\fast</Filter>
     </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="base\math\compv_cl_math_convlt.cl">
+    <CustomBuild Include="base\math\compv_cl_math_convlt.cl">
       <Filter>Source Files\base\math</Filter>
-    </None>
+    </CustomBuild>
   </ItemGroup>
 </Project>

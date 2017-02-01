@@ -25,20 +25,20 @@ static const struct compv_unittest_convlt {
 }
 COMPV_UNITTEST_CONVLT_8u_32f_8u[] =
 {
-	{ 7, 2.0f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "40f61176cbcc2313bdcfd737a64552db" },
-	{ 5, 0.83f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "302af16af81be40443ee0b94cf2b8828" },
-	{ 17, 1.2f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "a1c29386558e64e6736a64f2883ff916" },
-	{ 3, 3.f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "c16a110c81f4fad5a67a4b2ac9aa6a3e" },
+	{ 7, 2.0f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "6596d8f0c5f52272adff71a548a1cb9e" },
+	{ 5, 0.83f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "09c819ea91d3e11fbde3f36113901126" },
+	{ 17, 1.2f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "774271e8273922e69f5cd1d71bed3c72" },
+	{ 3, 3.f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "e775351bce89a3cfc3e284f3bbe52bad" },
 
-	{ 7, 2.0f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "8d7c03c5c4545b7cb676e6782b989b45" },
-	{ 5, 0.83f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "ae9cb5c283977f2c802bf3d167947e4c" },
-	{ 17, 1.2f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "8c153e8e7add1f79e0f437d147efa334" },
-	{ 3, 3.f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "4a1143484b07182f4cf8f75380e514a8" },
+	{ 7, 2.0f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "760e0946723fbb30a3dead816ede9749" },
+	{ 5, 0.83f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "714080ac9bbf1292f8800ad71facf724" },
+	{ 17, 1.2f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "1f36eab4c8e4b11169cfd8e758370b0d" },
+	{ 3, 3.f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "1ac545cd2496b4eff5ebf49a56d34026" },
 
-	{ 7, 2.0f, FILE_NAME_GRIOTS, 480, 640, 480, "6f1d888b6a8c24159f72a2717908fd52" },
-	{ 5, 0.83f, FILE_NAME_GRIOTS, 480, 640, 480, "f98da9c2d36547394d76a305c4457ff8" },
-	{ 17, 1.2f, FILE_NAME_GRIOTS, 480, 640, 480, "d19a8997d5e0d4d54f496180ac61e4b8" },
-	{ 3, 3.f, FILE_NAME_GRIOTS, 480, 640, 480, "8fa29bfa5b87b0d4a13d37793fc58c5a" },
+	{ 7, 2.0f, FILE_NAME_GRIOTS, 480, 640, 480, "77b312e6e2b1bbad3dd650c600bdfaf5" },
+	{ 5, 0.83f, FILE_NAME_GRIOTS, 480, 640, 480, "d11dbbfc5fc0476768d3d3e66d2561c7" },
+	{ 17, 1.2f, FILE_NAME_GRIOTS, 480, 640, 480, "59ec0d6aaa62b805de79ac986902ce0f" },
+	{ 3, 3.f, FILE_NAME_GRIOTS, 480, 640, 480, "61d26a8d9483942b939efbf02d77fe55" },
 },
 COMPV_UNITTEST_CONVLT_8u_16s_16s[] =
 {
@@ -200,13 +200,13 @@ static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma)
 	timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(TestImageConvolution) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-#if IMAGE_CONVLT_LOOP_COUNT == 1
-	COMPV_CHECK_EXP_BAIL(std::string(test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Image convolution MD5 mismatch");
-#endif
-
 #if COMPV_OS_WINDOWS && 1
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
 	COMPV_CHECK_CODE_BAIL(err = compv_tests_write_to_file(imageOut, "out.gray"));
+#endif
+
+#if IMAGE_CONVLT_LOOP_COUNT == 1
+	COMPV_CHECK_EXP_BAIL(std::string(test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Image convolution MD5 mismatch");
 #endif
 
 bail:

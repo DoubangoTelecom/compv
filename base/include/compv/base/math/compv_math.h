@@ -55,7 +55,7 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_MATH_ATAN								::atan
 #define COMPV_MATH_ATAN2F							::atan2f
 #define COMPV_MATH_ROUNDF_2_INT(f,inttype)			static_cast<inttype>((f) >= 0.0 ? ((f) + 0.5) : ((f) - 0.5)) //!\IMPORTANT: (f) is evaluated several times -> must be an 'immediate' value
-#define COMPV_MATH_ROUNDFU_2_INT(f,inttype)			static_cast<inttype>((f) + 0.5) // fast rounding: (f) must be > 0
+#define COMPV_MATH_ROUNDFU_2_INT(f,inttype)			static_cast<inttype>((f) + 0.5) // fast rounding: (f) must be > 0, 0.5 will be rounded to toward the closest even number (SIMD: add 0.5, then cvt with truncation)
 #define COMPV_MATH_HYPOT_NAIVE(x, y)				COMPV_MATH_SQRT((x)*(x) + (y)*(y))
 
 #if !defined(M_PI)
