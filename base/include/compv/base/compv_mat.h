@@ -194,6 +194,12 @@ protected:
 			if (std::is_same<elmType, int>::value) {
 				dataSubType = COMPV_SUBTYPE_RAW_INT;
 			}
+			else if (std::is_same<elmType, int8_t>::value) {
+				dataSubType = COMPV_SUBTYPE_RAW_INT8;
+			}
+			else if (std::is_same<elmType, uint8_t>::value) {
+				dataSubType = COMPV_SUBTYPE_RAW_UINT8;
+			}
 			else if (std::is_same<elmType, int16_t>::value) {
 				dataSubType = COMPV_SUBTYPE_RAW_INT16;
 			}

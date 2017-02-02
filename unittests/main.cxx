@@ -5,7 +5,8 @@ using namespace compv;
 #define TAG_UNITTESTS "UnitTests"
 
 #define UNITTEST_SCALE			0
-#define UNITTEST_PYRAMID		1
+#define UNITTEST_PYRAMID		0
+#define UNITTEST_CONVOLUTION	1
 #define UNITTEST_FEATURE_FAST	0
 #define UNITTEST_CHROMA_CONV	0
 
@@ -66,6 +67,11 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_pyramid();
 								COMPV_CHECK_CODE_BAIL(err = unittest_pyramid(), "Image pyramid unittest failed");
 #endif
+#if UNITTEST_CONVOLUTION || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_convlt();
+								COMPV_CHECK_CODE_BAIL(err = unittest_convlt(), "Image convolution unittest failed");
+#endif
+								
 #if UNITTEST_FEATURE_FAST || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_feature_fast();
 								COMPV_CHECK_CODE_BAIL(err = unittest_feature_fast(), "FAST detection unittest failed");

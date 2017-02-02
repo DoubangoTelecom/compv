@@ -19,7 +19,8 @@ COMPV_NAMESPACE_BEGIN()
 class COMPV_BASE_API CompVMathGauss
 { 
 public:
-	template <typename T = compv_float32_t>
+	template <typename T = compv_float32_t,
+		typename = std::enable_if<std::is_floating_point<T>::value>>
 	static COMPV_ERROR_CODE kernelDim2(CompVMatPtrPtr kernel, size_t size, float sigma)
 	{
 		COMPV_CHECK_EXP_RETURN(!kernel || !(size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -70,7 +71,8 @@ public:
 
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	template <typename T = compv_float32_t>
+	template <typename T = compv_float32_t,
+		typename = std::enable_if<std::is_floating_point<T>::value>>
 	static COMPV_ERROR_CODE kernelDim1(CompVMatPtrPtr kernel, size_t size, float sigma)
 	{
 		COMPV_CHECK_EXP_RETURN(!kernel || !(size & 1), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -104,8 +106,8 @@ public:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-	static COMPV_ERROR_CODE kernelFixedPointDim1(CompVMatPtrPtr fixedPointKernel, size_t size, float sigma);
-	static COMPV_ERROR_CODE kernelFixedPointDim2(CompVMatPtrPtr fixedPointKernel, size_t size, float sigma);
+	static COMPV_ERROR_CODE kernelDim1FixedPoint(CompVMatPtrPtr fixedPointKernel, size_t size, float sigma);
+	static COMPV_ERROR_CODE kernelDim2FixedPoint(CompVMatPtrPtr fixedPointKernel, size_t size, float sigma);
 };
 
 COMPV_NAMESPACE_END()

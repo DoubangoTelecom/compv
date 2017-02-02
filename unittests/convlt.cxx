@@ -1,6 +1,6 @@
-#include "../tests_common.h"
+#include "../tests/tests_common.h"
 
-#define TAG_TEST								"TestImageConvolution"
+#define TAG_TEST								"UnitTestConvolution"
 #if COMPV_OS_WINDOWS
 #	define COMPV_TEST_IMAGE_FOLDER				"C:/Projects/GitHub/data/test_images"
 #elif COMPV_OS_OSX
@@ -13,8 +13,6 @@
 #define FILE_NAME_EQUIRECTANGULAR		"equirectangular_1282x720_gray.yuv"
 #define FILE_NAME_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define FILE_NAME_GRIOTS				"mandekalou_480x640_gray.yuv"
-
-#define IMAGE_CONVLT_LOOP_COUNT		1
 
 static const struct compv_unittest_convlt {
 	size_t kernelSize;
@@ -95,13 +93,20 @@ COMPV_UNITTEST_CONVLT_16s_16s_16s[] =
 };
 static const size_t COMPV_UNITTEST_CONVLT_COUNT = 12;
 
+static const std::string compv_unittest_convlt_to_string(const compv_unittest_convlt* test, bool fixedPoint) {
+	return
+		std::string("fixedPoint:") + CompVBase::to_string(fixedPoint) + std::string(", ")
+		+std::string("kernelSize:") + CompVBase::to_string(test->kernelSize) + std::string(", ")
+		+ std::string("kernelSigma:") + CompVBase::to_string(test->kernelSigma) + std::string(", ")
+		+ std::string("filename:") + std::string(test->filename);
+}
+
 template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
-static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma, const char* filename, bool fixedPoint)
+static COMPV_ERROR_CODE convlt_ext(bool fixedPoint)
 {
 	const compv_unittest_convlt* tests = NULL;
 	const compv_unittest_convlt* test = NULL;
 	CompVMatPtr imageIn, imageOut;
-	uint64_t timeStart, timeEnd;
 	CompVMatPtr kernel;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	OutputType* outPtr = NULL;
@@ -122,12 +127,10 @@ static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma, const c
 		COMPV_DEBUG_ERROR_EX(TAG_TEST, "Not implemented");
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
-
-#if 1
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("To update MD5 values");
+	
 	for (size_t i = 0; i < COMPV_UNITTEST_CONVLT_COUNT; ++i) {
 		test = &tests[i];
-
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Image convlt -> %s ==", compv_unittest_convlt_to_string(test, fixedPoint).c_str());
 		// Read image and create output
 		if (std::is_same<InputType, uint8_t>::value) {
 			COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
@@ -142,6 +145,7 @@ static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma, const c
 			}
 		}
 		COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<OutputType>(&imageOut, imageIn->rows(), imageIn->cols(), imageIn->stride())));
+		outPtr = imageOut->ptr<OutputType>();
 
 		// Build kernel
 		if (std::is_same<KernelType, compv_float32_t>::value || std::is_same<KernelType, compv_float64_t>::value) {
@@ -150,7 +154,7 @@ static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma, const c
 		else if (std::is_same<KernelType, uint16_t>::value && fixedPoint) {
 			COMPV_CHECK_CODE_BAIL(err = CompVMathGauss::kernelDim1FixedPoint(&kernel, test->kernelSize, test->kernelSigma));
 		}
-		else if (std::is_same<KernelType, int16_t>::value) {			
+		else if (std::is_same<KernelType, int16_t>::value) {
 			CompVMatPtr kernelGauss;
 			COMPV_CHECK_CODE_BAIL(err = CompVMathGauss::kernelDim1(&kernelGauss, test->kernelSize, test->kernelSigma));
 			COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<int16_t>(&kernel, 1, test->kernelSize, static_cast<size_t>(CompVMem::alignForward(test->kernelSize)))));
@@ -159,8 +163,7 @@ static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma, const c
 			}
 		}
 
-		// Process
-		outPtr = imageOut->ptr<OutputType>();
+		// process
 		if (fixedPoint) {
 			COMPV_CHECK_CODE_BAIL(err = CompVMathConvlt::convlt1FixedPoint(imageIn->ptr<const uint8_t>(), imageIn->cols(), imageIn->rows(), imageIn->stride(),
 				kernel->ptr<uint16_t>(), kernel->ptr<uint16_t>(), test->kernelSize, reinterpret_cast<uint8_t*&>(outPtr)
@@ -171,105 +174,28 @@ static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma, const c
 				kernel->ptr<KernelType>(), kernel->ptr<KernelType>(), test->kernelSize, outPtr
 			));
 		}
-		COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5: %s", compv_tests_md5(imageOut).c_str());
+
+		COMPV_CHECK_EXP_BAIL(std::string(test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "[" TAG_TEST "]" " Image convolution MD5 mismatch");
+
 		kernel = NULL;
 		imageIn = NULL;
 		imageOut = NULL;
-	}
-#endif
 
-	// Find test
-	for (size_t i = 0; i < COMPV_UNITTEST_CONVLT_COUNT; ++i) {
-		if (tests[i].kernelSize == kernelSize && tests[i].kernelSigma == kernelSigma && std::string(tests[i].filename).compare(filename) == 0) {
-			test = &tests[i];
-			break;
-		}
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");
 	}
-	if (!test) {
-		COMPV_DEBUG_ERROR_EX(TAG_TEST, "Failed to find test");
-		return COMPV_ERROR_CODE_E_NOT_FOUND;
-	}
-
-	// Read image and create output
-	if (std::is_same<InputType, uint8_t>::value) {
-		COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
-	}
-	else {
-		COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<InputType>(&imageIn, test->height, test->width)));
-		for (size_t row = 0; row < test->height; ++row) {
-			InputType* rowPtr = imageIn->ptr<InputType>(row);
-			for (size_t col = 0; col < test->width; ++col) {
-				rowPtr[col] = static_cast<InputType>(col);
-			}
-		}
-	}
-	COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<OutputType>(&imageOut, imageIn->rows(), imageIn->cols(), imageIn->stride())));
-	outPtr = imageOut->ptr<OutputType>();
-
-	// Build kernel
-	if (std::is_same<KernelType, compv_float32_t>::value || std::is_same<KernelType, compv_float64_t>::value) {
-		COMPV_CHECK_CODE_BAIL(err = CompVMathGauss::kernelDim1(&kernel, test->kernelSize, test->kernelSigma));
-	}
-	else if (std::is_same<KernelType, uint16_t>::value && fixedPoint) {
-		COMPV_CHECK_CODE_BAIL(err = CompVMathGauss::kernelDim1FixedPoint(&kernel, test->kernelSize, test->kernelSigma));
-	}
-	else if (std::is_same<KernelType, int16_t>::value) {
-		CompVMatPtr kernelGauss;
-		COMPV_CHECK_CODE_BAIL(err = CompVMathGauss::kernelDim1(&kernelGauss, test->kernelSize, test->kernelSigma));
-		COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<int16_t>(&kernel, 1, test->kernelSize, static_cast<size_t>(CompVMem::alignForward(test->kernelSize)))));
-		for (size_t k = 0; k < test->kernelSize; ++k) {
-			*kernel->ptr<int16_t>(0, k) = static_cast<int16_t>(*kernelGauss->ptr<compv_float32_t>(0, k) * 0xff);
-		}
-	}
-
-	// process
-	if (fixedPoint) {
-		timeStart = CompVTime::nowMillis();
-		for (int i = 0; i < IMAGE_CONVLT_LOOP_COUNT; ++i) {
-			COMPV_CHECK_CODE_BAIL(err = CompVMathConvlt::convlt1FixedPoint(imageIn->ptr<const uint8_t>(), imageIn->cols(), imageIn->rows(), imageIn->stride(),
-				kernel->ptr<uint16_t>(), kernel->ptr<uint16_t>(), test->kernelSize, reinterpret_cast<uint8_t*&>(outPtr)
-			));
-		}
-		timeEnd = CompVTime::nowMillis();
-	}
-	else {
-		timeStart = CompVTime::nowMillis();
-		for (int i = 0; i < IMAGE_CONVLT_LOOP_COUNT; ++i) {
-			COMPV_CHECK_CODE_BAIL(err = CompVMathConvlt::convlt1(imageIn->ptr<const InputType>(), imageIn->cols(), imageIn->rows(), imageIn->stride(),
-				kernel->ptr<KernelType>(), kernel->ptr<KernelType>(), test->kernelSize, outPtr
-			));
-		}
-		timeEnd = CompVTime::nowMillis();
-	}
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(TestImageConvolution) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
-
-#if COMPV_OS_WINDOWS && 1
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
-	COMPV_CHECK_CODE_BAIL(err = compv_tests_write_to_file(imageOut, "out.gray"));
-#endif
-
-#if IMAGE_CONVLT_LOOP_COUNT == 1
-	COMPV_CHECK_EXP_BAIL(std::string(test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Image convolution MD5 mismatch");
-#endif
 
 bail:
 	return err;
 }
 
-
-#define IMAGE_CONVLT_FILE_NAME		FILE_NAME_EQUIRECTANGULAR
-#define IMAGE_CONVLT_KERNEL_SIZE	5
-#define IMAGE_CONVLT_KERNEL_SIGMA	0.83f
-
-COMPV_ERROR_CODE convlt()
+COMPV_ERROR_CODE unittest_convlt()
 {
 	/* General */
-	//COMPV_CHECK_CODE_RETURN((convlt_ext<uint8_t, compv_float32_t, uint8_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, false)));
-	//COMPV_CHECK_CODE_RETURN((convlt_ext<uint8_t, int16_t, int16_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, false)));
-	COMPV_CHECK_CODE_RETURN((convlt_ext<int16_t, int16_t, int16_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, false)));
-
+	COMPV_CHECK_CODE_RETURN((convlt_ext<uint8_t, compv_float32_t, uint8_t>(false)));
+	COMPV_CHECK_CODE_RETURN((convlt_ext<uint8_t, int16_t, int16_t>(false)));
+	COMPV_CHECK_CODE_RETURN((convlt_ext<int16_t, int16_t, int16_t>(false)));
 	/* FixedPoint */
-	//COMPV_CHECK_CODE_RETURN((convlt_ext<uint8_t, uint16_t, uint8_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, true)));
-	
+	COMPV_CHECK_CODE_RETURN((convlt_ext<uint8_t, uint16_t, uint8_t>(true)));
+
 	return COMPV_ERROR_CODE_S_OK;
 }

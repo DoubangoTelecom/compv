@@ -21,7 +21,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t*
 	uint8x16_t vecInPtr, vec0i, vec1i, vec2i, vec3i;
 	float32x4_t vecCoeff, vecSum0, vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
 	float32x2_t vecSum0n, vecCoeffn;
-	bool bOutptrIs4BytesAligned = COMPV_IS_ALIGNED(outPtr, 4); // to avoid bus error when casting as 'uint32_t'
+	const bool bOutptrIs4BytesAligned = COMPV_IS_ALIGNED(outPtr, 4); // to avoid bus error when casting as 'uint32_t'
 
 	for (j = 0; j < height; ++j) {
 		/* Per #16 bytes */
