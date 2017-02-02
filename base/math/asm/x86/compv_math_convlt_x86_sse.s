@@ -112,6 +112,22 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
 				jl .LoopKernelSize_Per16Bytes
 				; EndOf_LoopKernelSize_Per16Bytes ;
 
+			mov rcx, arg(argi_width)
+			mov rdx, arg(argi_outPtr)
+			lea rcx, [rcx - 15]
+			lea i, [i + 16]
+			cmp i, rcx
+			cvttps2dq xmm0, xmm0
+			cvttps2dq xmm1, xmm1
+			cvttps2dq xmm2, xmm2
+			cvttps2dq xmm3, xmm3
+			packssdw xmm0, xmm1
+			packssdw xmm2, xmm3
+			packuswb xmm0, xmm2
+			movdqu [rdx + i - 16], xmm0
+			jl .LoopWidth_Per16Bytes
+			; EndOf_LoopWidth_Per16Bytes ;
+
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (; i < width - 3; i += 4)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
