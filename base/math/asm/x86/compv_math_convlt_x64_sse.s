@@ -122,11 +122,11 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2):
 				mulps xmm1, xmm4
 				mulps xmm2, xmm4
 				mulps xmm3, xmm4
+				cmp rdx, kernSize
 				addps vecSum0, xmm0
 				addps vecSum1, xmm1
 				addps vecSum2, xmm2
 				addps vecSum3, xmm3
-				cmp rdx, kernSize
 				jl .LoopKernelSize_Per16Bytes
 				; EndOf_LoopKernelSize_Per16Bytes ;
 			
