@@ -35,6 +35,14 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
 	push rbx
 	;; end prolog ;;
 
+	; align stack and alloc memory
+	COMPV_YASM_ALIGN_STACK 16, rax
+	sub rsp, (1*16)
+
+	%define vecZero				rsp + 0
+	pxor xmm0, xmm0
+	movdqa [vecZero], xmm0
+
 	%define argi_inPtr			0
 	%define argi_outPtr			1
 	%define argi_width			2
@@ -79,36 +87,36 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
 			.LoopKernelSize_Per16Bytes:
 				movdqu xmm4, [rax + rcx] ; xmm4 = vecInPtr
 
-				pxor xmm5, xmm5 ; xmm5 = vecZero
+				
 				movdqa xmm6, xmm4
-				punpcklbw xmm6, xmm5 ; low(epi8 -> epi16)
+				punpcklbw xmm6, [vecZero] ; low(epi8 -> epi16)
 				movdqa xmm7, xmm6
-				punpcklwd xmm6, xmm5 ; epi16 -> epi32
-				punpckhwd xmm7, xmm5 ; epi16 -> epi32
+				punpcklwd xmm6, [vecZero] ; epi16 -> epi32
+				punpckhwd xmm7, [vecZero] ; epi16 -> epi32
 				movss xmm5, [rbx + rdx*COMPV_YASM_FLOAT32_SZ_BYTES]
 				cvtdq2ps xmm6, xmm6
-				shufps xmm5, xmm5, 0x0 ; xmm5 = vecCoeff
 				cvtdq2ps xmm7, xmm7
+				shufps xmm5, xmm5, 0x0 ; xmm5 = vecCoeff
 				mulps xmm6, xmm5
 				mulps xmm7, xmm5
-				addps xmm0, xmm6
+				
+				
+								
+				punpckhbw xmm4, [vecZero] ; high(epi8 -> epi16)
 				addps xmm1, xmm7
-
-				pxor xmm6, xmm6 ; xmm6 = vecZero
-				punpckhbw xmm4, xmm6 ; high(epi8 -> epi16)
 				movdqa xmm7, xmm4
-				punpcklwd xmm4, xmm6 ; epi16 -> epi32
-				punpckhwd xmm7, xmm6 ; epi16 -> epi32
+				punpcklwd xmm4, [vecZero] ; epi16 -> epi32
+				punpckhwd xmm7, [vecZero] ; epi16 -> epi32
 				cvtdq2ps xmm4, xmm4
 				cvtdq2ps xmm7, xmm7
 				mulps xmm4, xmm5
 				mulps xmm7, xmm5
-				addps xmm2, xmm4
-				addps xmm3, xmm7
-				 
+				addps xmm0, xmm6
 				inc rdx
 				add rcx, arg(argi_step)
 				cmp rdx, arg(argi_kernSize)
+				addps xmm2, xmm4
+				addps xmm3, xmm7				
 				jl .LoopKernelSize_Per16Bytes
 				; EndOf_LoopKernelSize_Per16Bytes ;
 
@@ -228,6 +236,8 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
 		jnz .LoopHeight
 		; EndOf_LoopHeight ;
 
+	%undef vecZero
+
 	%undef argi_inPtr
 	%undef argi_outPtr
 	%undef argi_width
@@ -240,6 +250,10 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
 
 	%undef j
 	%undef i
+
+	; free memory and unalign stack
+	add rsp, (1*16)
+	COMPV_YASM_UNALIGN_STACK
 
 	;; begin epilog ;;
 	pop rbx
