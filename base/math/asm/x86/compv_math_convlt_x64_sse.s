@@ -100,25 +100,22 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2):
 			lea rax, [inPtr + i] ; rax = &inPtr[i]
 			xor rdx, rdx ; rdx = row = 0
 			.LoopKernelSize_Per16Bytes:
-				movups xmm0, [rax] ; xmm0 = vecInPtr
+				movdqu xmm0, [rax] ; xmm0 = vecInPtr
+				add rax, step
 				movss xmm4, [vthzKernPtr + rdx*COMPV_YASM_FLOAT32_SZ_BYTES]
 				inc rdx
-				lea rax, [rax + step]
 				shufps xmm4, xmm4, 0x0 ; xmm4 = vecCoeff
-				cmp rdx, kernSize
-				movaps xmm3, xmm0
-				
+				movdqa xmm3, xmm0
 				punpcklbw xmm0, vecZero
 				punpckhbw xmm3, vecZero
-				movdqa xmm1, xmm0
-				movdqa xmm2, xmm3
-				
+				movdqa xmm1, xmm0				
 				punpcklwd xmm0, vecZero
 				punpckhwd xmm1, vecZero
-				cvtdq2ps xmm0, xmm0
-				cvtdq2ps xmm1, xmm1
+				movdqa xmm2, xmm3
 				punpcklwd xmm2, vecZero
 				punpckhwd xmm3, vecZero
+				cvtdq2ps xmm0, xmm0
+				cvtdq2ps xmm1, xmm1
 				cvtdq2ps xmm2, xmm2
 				cvtdq2ps xmm3, xmm3
 				mulps xmm0, xmm4
@@ -128,7 +125,8 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2):
 				addps vecSum0, xmm0
 				addps vecSum1, xmm1
 				addps vecSum2, xmm2
-				addps vecSum3, xmm3	
+				addps vecSum3, xmm3
+				cmp rdx, kernSize
 				jl .LoopKernelSize_Per16Bytes
 				; EndOf_LoopKernelSize_Per16Bytes ;
 			
@@ -137,11 +135,11 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2):
 			cvttps2dq vecSum2, vecSum2
 			cvttps2dq vecSum3, vecSum3
 			packssdw vecSum0, vecSum1
-			lea i, [i + 16]
 			packssdw vecSum2, vecSum3
 			packuswb vecSum0, vecSum2
+			movdqu [outPtr + i], vecSum0
+			lea i, [i + 16]
 			cmp i, widthMinus15
-			movdqu [outPtr + i - 16], vecSum0
 			jl .LoopWidth_Per16Bytes
 			; EndOf_LoopWidth_Per16Bytes ;
 
@@ -159,6 +157,7 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2):
 			xor rdx, rdx ; rdx = row = 0
 			.LoopKernelSize_Per4Bytes:
 				movss xmm2, [rax] ; xmm2 = vecInPtr
+				lea rax, [rax + step]
 				movss xmm3, [vthzKernPtr + rdx*COMPV_YASM_FLOAT32_SZ_BYTES]
 				inc rdx
 				punpcklbw xmm2, vecZero
@@ -167,14 +166,12 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2):
 				shufps xmm3, xmm3, 0x0 ; xmm3 = vecCoeff
 				mulps xmm2, xmm3
 				cmp rdx, kernSize
-				lea rax, [rax + step]
 				addps vecSum0, xmm2
 				jl .LoopKernelSize_Per4Bytes
 				; EndOf_LoopKernelSize_Per4Bytes ;
-
-
-			lea i, [i + 4]
+			
 			cvttps2dq vecSum0, vecSum0
+			lea i, [i + 4]
 			packssdw vecSum0, vecSum0
 			cmp i, widthMinus3
 			packuswb vecSum0, vecSum0
@@ -208,8 +205,7 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2):
 				jl .LoopKernelSize_Per1Bytes
 				; EndOf_LoopKernelSize_Per1Bytes ;
 
-
-			lea i, [i + 1]
+			inc i
 			cvttss2si rax, vecSum0
 			cmp i, width
 			mov [outPtr + i - 1], byte al
