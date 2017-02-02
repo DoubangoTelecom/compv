@@ -82,6 +82,7 @@
     <ClInclude Include="include\compv\base\math\compv_math_convlt.h" />
     <ClInclude Include="include\compv\base\math\compv_math_gauss.h" />
     <ClInclude Include="include\compv\base\math\compv_math_utils.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_convlt_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_convlt_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h" />
@@ -195,6 +196,12 @@
     <ClCompile Include="math\compv_math_convlt.cxx" />
     <ClCompile Include="math\compv_math_gauss.cxx" />
     <ClCompile Include="math\compv_math_utils.cxx" />
+    <ClCompile Include="math\intrin\x86\compv_math_convlt_intrin_avx2.cxx">
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="math\intrin\x86\compv_math_convlt_intrin_sse2.cxx" />
     <ClCompile Include="math\intrin\x86\compv_math_utils_intrin_avx2.cxx" />
     <ClCompile Include="math\intrin\x86\compv_math_utils_intrin_sse2.cxx" />

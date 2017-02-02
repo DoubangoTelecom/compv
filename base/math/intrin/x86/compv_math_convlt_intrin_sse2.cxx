@@ -7,7 +7,6 @@
 #include "compv/base/math/intrin/x86/compv_math_convlt_intrin_sse2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
-#include "compv/base/math/compv_math_utils.h"
 #include "compv/base/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -41,7 +40,6 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* 
 				vec1f = _mm_cvtepi32_ps(vec1i);
 				vec2f = _mm_cvtepi32_ps(vec2i);
 				vec3f = _mm_cvtepi32_ps(vec3i);
-				// TODO(dmi): AVX use FMA if available
 				vec0f = _mm_mul_ps(vec0f, vecCoeff);
 				vec1f = _mm_mul_ps(vec1f, vecCoeff);
 				vec2f = _mm_mul_ps(vec2f, vecCoeff);

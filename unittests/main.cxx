@@ -12,6 +12,7 @@ using namespace compv;
 
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
 #define disableAVX() (kCpuFlagAVX | kCpuFlagAVX2)
+#define disableFMA() (kCpuFlagFMA3 | kCpuFlagFMA4)
 #define disableNEON() (kCpuFlagARM_NEON | kCpuFlagARM_VFPv4)
 #define disableALL() kCpuFlagAll
 #define disableNONE() kCpuFlagNone
@@ -24,10 +25,11 @@ static const bool UNITTESTS_FIXEDPOINT[] = { true, false };
 static const int32_t UNITTESTS_MAXTHREADS[] = { COMPV_NUM_THREADS_MULTI, COMPV_NUM_THREADS_SINGLE };
 static const uint64_t UNITTESTS_CPUFLAGS[] = {
 	disableALL(), // cpp only
-	enableALL(), // neon, avx, sse
+	enableALL(), // neon, avx, sse, fma (normal case)
 #if COMPV_ARCH_X86
-	disableSSE(), // avx only
-	disableAVX(), // sse only
+	disableSSE(), // avx+fma
+	disableAVX(), // sse+fma
+	disableFMA(), // avx+sse
 #endif
 };
 

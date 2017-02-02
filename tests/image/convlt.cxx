@@ -24,23 +24,24 @@ static const struct compv_unittest_convlt {
 	size_t height;
 	size_t stride;
 	const char* md5;
+	const char* md5_avx2_fma3; // AVX2+FMA3
 }
 COMPV_UNITTEST_CONVLT_8u_32f_8u[] = // FloatingPoint(COMPV_UNITTEST_CONVLT_FXP_8u_16s_8u)
 {
-	{ 7, 2.0f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "6596d8f0c5f52272adff71a548a1cb9e" },
-	{ 5, 0.83f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "09c819ea91d3e11fbde3f36113901126" },
-	{ 17, 1.2f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "774271e8273922e69f5cd1d71bed3c72" },
-	{ 3, 3.f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "e775351bce89a3cfc3e284f3bbe52bad" },
+	{ 7, 2.0f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "6596d8f0c5f52272adff71a548a1cb9e", "808c50bc4b7f9666bb16ae7e20ae6700" },
+	{ 5, 0.83f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "09c819ea91d3e11fbde3f36113901126", "46e7e50309c419000ce033e02f584c8e" },
+	{ 17, 1.2f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "774271e8273922e69f5cd1d71bed3c72", "b609348ac4be56c35eebd0669c041cd0" },
+	{ 3, 3.f, FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "e775351bce89a3cfc3e284f3bbe52bad", "98c31980dc04190c3954670609263067" },
 
-	{ 7, 2.0f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "760e0946723fbb30a3dead816ede9749" },
-	{ 5, 0.83f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "714080ac9bbf1292f8800ad71facf724" },
-	{ 17, 1.2f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "1f36eab4c8e4b11169cfd8e758370b0d" },
-	{ 3, 3.f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "1ac545cd2496b4eff5ebf49a56d34026" },
+	{ 7, 2.0f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "760e0946723fbb30a3dead816ede9749", "72b0b88f96b71f71b4431c93c79a4d1f" },
+	{ 5, 0.83f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "714080ac9bbf1292f8800ad71facf724", "0e4ba4115cf94e037d5d6959db41819f" },
+	{ 17, 1.2f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "1f36eab4c8e4b11169cfd8e758370b0d", "34700eb25b01600f90b46658b51b92cb" },
+	{ 3, 3.f, FILE_NAME_OPENGLBOOK, 200, 258, 200, "1ac545cd2496b4eff5ebf49a56d34026", "7598a3695afd83865aab9e7e5bf29560" },
 
-	{ 7, 2.0f, FILE_NAME_GRIOTS, 480, 640, 480, "77b312e6e2b1bbad3dd650c600bdfaf5" },
-	{ 5, 0.83f, FILE_NAME_GRIOTS, 480, 640, 480, "d11dbbfc5fc0476768d3d3e66d2561c7" },
-	{ 17, 1.2f, FILE_NAME_GRIOTS, 480, 640, 480, "59ec0d6aaa62b805de79ac986902ce0f" },
-	{ 3, 3.f, FILE_NAME_GRIOTS, 480, 640, 480, "61d26a8d9483942b939efbf02d77fe55" },
+	{ 7, 2.0f, FILE_NAME_GRIOTS, 480, 640, 480, "77b312e6e2b1bbad3dd650c600bdfaf5", "1e0b83c25647cf8627121008e012b0ba" },
+	{ 5, 0.83f, FILE_NAME_GRIOTS, 480, 640, 480, "d11dbbfc5fc0476768d3d3e66d2561c7", "bca14ae9069184f6c114e30e3229c08c" },
+	{ 17, 1.2f, FILE_NAME_GRIOTS, 480, 640, 480, "59ec0d6aaa62b805de79ac986902ce0f", "b3c3b050b0c36d8e624ad8fe39026608" },
+	{ 3, 3.f, FILE_NAME_GRIOTS, 480, 640, 480, "61d26a8d9483942b939efbf02d77fe55", "75ae401953ea03e0f3ab8d1b0b8adea8" },
 },
 COMPV_UNITTEST_CONVLT_FXP_8u_16u_8u[] = // FixedPoint(COMPV_UNITTEST_CONVLT_8u_32f_8u)
 {
@@ -105,6 +106,10 @@ static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma, const c
 	CompVMatPtr kernel;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	OutputType* outPtr = NULL;
+	const bool avx2_fma3 = std::is_same<KernelType, compv_float32_t>::value
+		&& CompVCpu::isEnabled(kCpuFlagAVX2)
+		&& CompVCpu::isEnabled(kCpuFlagFMA3)
+		&& (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled());
 
 	if (std::is_same<InputType, uint8_t>::value && std::is_same<KernelType, compv_float32_t>::value && std::is_same<OutputType, uint8_t>::value) {
 		tests = COMPV_UNITTEST_CONVLT_8u_32f_8u;
@@ -123,7 +128,7 @@ static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma, const c
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
 
-#if 1
+#if 0
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("To update MD5 values");
 	for (size_t i = 0; i < COMPV_UNITTEST_CONVLT_COUNT; ++i) {
 		test = &tests[i];
@@ -249,7 +254,7 @@ static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma, const c
 #endif
 
 #if IMAGE_CONVLT_LOOP_COUNT == 1
-	COMPV_CHECK_EXP_BAIL(std::string(test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Image convolution MD5 mismatch");
+	COMPV_CHECK_EXP_BAIL(std::string(avx2_fma3 ? test->md5_avx2_fma3 : test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Image convolution MD5 mismatch");
 #endif
 
 bail:
@@ -258,15 +263,15 @@ bail:
 
 
 #define IMAGE_CONVLT_FILE_NAME		FILE_NAME_EQUIRECTANGULAR
-#define IMAGE_CONVLT_KERNEL_SIZE	5
-#define IMAGE_CONVLT_KERNEL_SIGMA	0.83f
+#define IMAGE_CONVLT_KERNEL_SIZE	7
+#define IMAGE_CONVLT_KERNEL_SIGMA	2.0f
 
 COMPV_ERROR_CODE convlt()
 {
 	/* General */
-	//COMPV_CHECK_CODE_RETURN((convlt_ext<uint8_t, compv_float32_t, uint8_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, false)));
+	COMPV_CHECK_CODE_RETURN((convlt_ext<uint8_t, compv_float32_t, uint8_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, false)));
 	//COMPV_CHECK_CODE_RETURN((convlt_ext<uint8_t, int16_t, int16_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, false)));
-	COMPV_CHECK_CODE_RETURN((convlt_ext<int16_t, int16_t, int16_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, false)));
+	//COMPV_CHECK_CODE_RETURN((convlt_ext<int16_t, int16_t, int16_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, false)));
 
 	/* FixedPoint */
 	//COMPV_CHECK_CODE_RETURN((convlt_ext<uint8_t, uint16_t, uint8_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, true)));

@@ -184,8 +184,16 @@ int32_t CompVCpu::s_iCores = 0;
 int32_t CompVCpu::s_iCache1LineSize = 0;
 int32_t CompVCpu::s_iCache1Size = 0;
 bool CompVCpu::s_bInitialized = false;
+#if COMPV_ASM
 bool CompVCpu::s_bAsmEnabled = true;
+#else
+bool CompVCpu::s_bAsmEnabled = false;
+#endif
+#if COMPV_INTRINSIC
 bool CompVCpu::s_bIntrinsicsEnabled = true;
+#else
+bool CompVCpu::s_bIntrinsicsEnabled = false;
+#endif
 bool CompVCpu::s_bMathTrigFast = true;
 bool CompVCpu::s_bMathFixedPoint = true;
 #if TARGET_RT_LITTLE_ENDIAN
@@ -622,12 +630,12 @@ COMPV_ERROR_CODE CompVCpu::flagsEnable(uint64_t flags)
 COMPV_ERROR_CODE CompVCpu::setAsmEnabled(bool bEnabled)
 {
     if (bEnabled) {
-#if !defined(COMPV_ASM)
-        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Code source was not build with ASM. You can't enable ASM at runtime");
-        return COMPV_ERROR_CODE_E_INVALID_CALL;
+#if COMPV_ASM
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabling asm code");
+		CompVCpu::s_bAsmEnabled = true;
 #else
-        COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabling asm code");
-        CompVCpu::s_bAsmEnabled = true;
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Code source was not build with ASM. You can't enable ASM at runtime");
+		return COMPV_ERROR_CODE_E_INVALID_CALL;
 #endif
     }
     else {
@@ -640,12 +648,12 @@ COMPV_ERROR_CODE CompVCpu::setAsmEnabled(bool bEnabled)
 COMPV_ERROR_CODE CompVCpu::setIntrinsicsEnabled(bool bEnabled)
 {
     if (bEnabled) {
-#if !defined(COMPV_INTRINSIC)
-        COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Code source was not build with intrinsics. You can't enable intrinsics at runtime");
-        return COMPV_ERROR_CODE_E_INVALID_CALL;
+#if COMPV_INTRINSIC
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabling intrinsic code");
+		CompVCpu::s_bIntrinsicsEnabled = true;
 #else
-        COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Enabling intrinsic code");
-        CompVCpu::s_bIntrinsicsEnabled = true;
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Code source was not build with intrinsics. You can't enable intrinsics at runtime");
+		return COMPV_ERROR_CODE_E_INVALID_CALL;
 #endif
     }
     else {

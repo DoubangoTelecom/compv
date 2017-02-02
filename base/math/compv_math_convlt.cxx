@@ -7,6 +7,7 @@
 #include "compv/base/math/compv_math_convlt.h"
 #include "compv/base/compv_cpu.h"
 
+#include "compv/base/math/intrin/x86/compv_math_convlt_intrin_avx2.h"
 #include "compv/base/math/intrin/x86/compv_math_convlt_intrin_sse2.h"
 #include "compv/base/math/intrin/arm/compv_math_convlt_intrin_neon.h"
 
@@ -28,6 +29,13 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(co
 	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(inPtr) && width > 15) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Intrin_SSE2);
 		//COMPV_EXEC_IFDEF_ASM_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_SSE2);
+	}
+	if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_SSE(inPtr) && width > 31) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Intrin_AVX2);
+		//COMPV_EXEC_IFDEF_ASM_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_AVX2);
+		if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Intrin_FMA3_AVX2);
+		}
 	}
 #elif COMPV_ARCH_ARM
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(inPtr) && width > 15) {
