@@ -159,7 +159,7 @@ private:
 			tmpPtr_ += countAny * dataStride;
 			outPtr_ += countAny * dataStride;
 			/* others */
-			for (int32_t threadIdx = 1; threadIdx < threadsCount - 1; ++threadIdx) {
+			for (size_t threadIdx = 1; threadIdx < threadsCount - 1; ++threadIdx) {
 				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtr_, tmpPtr_, countAny, false), taskIds));
 				inPtr_ += countAny * dataStride;
 				tmpPtr_ += countAny * dataStride;
