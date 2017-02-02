@@ -58,7 +58,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* 
 			vec0i = _mm_packus_epi16(vec0i, vec2i);
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vec0i);
 		}
-		
+
 		/* Per #4 bytes */
 		for (; i < width - 3; i += 4) {
 			vecSum0 = _mm_setzero_ps();
@@ -74,7 +74,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* 
 			vec0i = _mm_packus_epi16(vec0i, vec0i);
 			*reinterpret_cast<uint32_t*>(&outPtr[i]) = static_cast<uint32_t>(_mm_cvtsi128_si32(vec0i));
 		}
-		
+
 		/* Per #1 bytes */
 		for (; i < width; i += 1) {
 			vecSum0 = _mm_setzero_ps();

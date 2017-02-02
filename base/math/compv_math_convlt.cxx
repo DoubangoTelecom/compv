@@ -13,6 +13,12 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if COMPV_ASM
+#	if COMPV_ARCH_X86
+	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+#	endif /* COMPV_ARCH_X86 */
+#endif /* COMPV_ASM */
+
 // InputType = uint8_t, KernelType = int16_t, OutputType = uint8_t, FixedPoint = true
 template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_true(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const uint16_t* vthzKernPtr, size_t kernSize)
 {
@@ -28,13 +34,13 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(co
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(inPtr) && width > 15) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Intrin_SSE2);
-		//COMPV_EXEC_IFDEF_ASM_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2);
 	}
 	if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_SSE(inPtr) && width > 31) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Intrin_AVX2);
+		//--COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Intrin_AVX2);
 		//COMPV_EXEC_IFDEF_ASM_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_AVX2);
 		if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Intrin_FMA3_AVX2);
+			//--COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Intrin_FMA3_AVX2);
 		}
 	}
 #elif COMPV_ARCH_ARM
