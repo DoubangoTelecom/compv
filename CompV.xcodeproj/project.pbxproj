@@ -64,6 +64,7 @@
 		1525C0DC1E36346500B00689 /* compv_drawing_window_glfw3.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 1525C0C71E36346500B00689 /* compv_drawing_window_glfw3.cxx */; };
 		1525C0DD1E36346500B00689 /* compv_drawing_window_sdl.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 1525C0C81E36346500B00689 /* compv_drawing_window_sdl.cxx */; };
 		1525C0DE1E36346500B00689 /* compv_drawing.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 1525C0C91E36346500B00689 /* compv_drawing.cxx */; };
+		156AD8F01E4274960078FA95 /* compv_math_convlt_intrin_neon.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156AD8EF1E4274960078FA95 /* compv_math_convlt_intrin_neon.cxx */; };
 		156E96C81E40EEED00BC5329 /* compv_gpu_math_convlt.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E96C71E40EEED00BC5329 /* compv_gpu_math_convlt.cxx */; };
 		156E96CD1E40EF4900BC5329 /* compv_math_convlt.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E96CB1E40EF4900BC5329 /* compv_math_convlt.cxx */; };
 		156E96CE1E40EF4900BC5329 /* compv_math_gauss.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E96CC1E40EF4900BC5329 /* compv_math_gauss.cxx */; };
@@ -349,6 +350,8 @@
 		1525C0D41E36346500B00689 /* compv_drawing_window_egl_android.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_drawing_window_egl_android.h; sourceTree = "<group>"; };
 		1525C0D51E36346500B00689 /* compv_drawing_window_glfw3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_drawing_window_glfw3.h; sourceTree = "<group>"; };
 		1525C0D61E36346500B00689 /* compv_drawing_window_sdl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_drawing_window_sdl.h; sourceTree = "<group>"; };
+		156AD8ED1E4274710078FA95 /* compv_math_convlt_intrin_neon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_convlt_intrin_neon.h; sourceTree = "<group>"; };
+		156AD8EF1E4274960078FA95 /* compv_math_convlt_intrin_neon.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_math_convlt_intrin_neon.cxx; sourceTree = "<group>"; };
 		156E96C41E40EEDE00BC5329 /* compv_gpu_math_convlt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_gpu_math_convlt.h; sourceTree = "<group>"; };
 		156E96C71E40EEED00BC5329 /* compv_gpu_math_convlt.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_gpu_math_convlt.cxx; sourceTree = "<group>"; };
 		156E96C91E40EF3800BC5329 /* compv_math_convlt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_convlt.h; sourceTree = "<group>"; };
@@ -1046,6 +1049,22 @@
 			name = source;
 			sourceTree = "<group>";
 		};
+		156AD8EC1E4274710078FA95 /* arm */ = {
+			isa = PBXGroup;
+			children = (
+				156AD8ED1E4274710078FA95 /* compv_math_convlt_intrin_neon.h */,
+			);
+			path = arm;
+			sourceTree = "<group>";
+		};
+		156AD8EE1E4274960078FA95 /* arm */ = {
+			isa = PBXGroup;
+			children = (
+				156AD8EF1E4274960078FA95 /* compv_math_convlt_intrin_neon.cxx */,
+			);
+			path = arm;
+			sourceTree = "<group>";
+		};
 		156E96C21E40EEDE00BC5329 /* base */ = {
 			isa = PBXGroup;
 			children = (
@@ -1407,6 +1426,7 @@
 		15A3E81D1E3599D800303F7C /* intrin */ = {
 			isa = PBXGroup;
 			children = (
+				156AD8EC1E4274710078FA95 /* arm */,
 				15A3E81E1E3599D800303F7C /* x86 */,
 			);
 			path = intrin;
@@ -1502,6 +1522,7 @@
 		15A3E8521E3599D800303F7C /* intrin */ = {
 			isa = PBXGroup;
 			children = (
+				156AD8EE1E4274960078FA95 /* arm */,
 				15A3E8531E3599D800303F7C /* x86 */,
 			);
 			path = intrin;
@@ -1882,6 +1903,7 @@
 				15A3E8C21E3599D900303F7C /* compv_image_scale_bilinear_intrin_neon.cxx in Sources */,
 				15A3E8D81E3599D900303F7C /* compv_math.cxx in Sources */,
 				15AA06D71E3834320058D1F1 /* compv_image_scale_bilinear_arm64_neon.S in Sources */,
+				156AD8F01E4274960078FA95 /* compv_math_convlt_intrin_neon.cxx in Sources */,
 				15A3E8A31E3599D900303F7C /* compv_surfacelayer.cxx in Sources */,
 				15AA06E71E38D8100058D1F1 /* compv_image_conv_rgbfamily_arm64_neon.S in Sources */,
 				15A3E8F11E3599D900303F7C /* compv_threaddisp11.cxx in Sources */,
