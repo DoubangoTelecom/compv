@@ -196,7 +196,6 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2):
 				movzx octet, byte [rax]
 				movss xmm3, [vthzKernPtr + rdx*COMPV_YASM_FLOAT32_SZ_BYTES] ; xmm3 = vecCoeff
 				cvtsi2ss xmm2, octet
-				cvtdq2ps xmm2, xmm2
 				mulss xmm2, xmm3
 				inc rdx
 				lea rax, [rax + step]
