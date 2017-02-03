@@ -67,18 +67,16 @@ section .text
 	%define i				rdi
 	%define inPtr			r8
 	%define outPtr			r9
-	%define vthzKernPtr		r10
-	%define stride			r11
-	%define widthMinus31	r12
-	%define widthMinus7		r13
-	%define octet			r14
-	%define kernSize		r15
+	%define stride			r10
+	%define widthMinus31	r11
+	%define widthMinus7		r12
+	%define octet			r13
+	%define kernSize		r14
 	mov width, arg(argi_width)
 	mov step, arg(argi_step)
 	mov j, arg(argi_height)
 	mov inPtr, arg(argi_inPtr)
 	mov outPtr, arg(argi_outPtr)
-	mov vthzKernPtr, arg(argi_vthzKernPtr)
 	mov stride, arg(argi_pad)
 	lea stride, [width + stride] ; stride = width + pad
 	lea widthMinus31, [width - 31]
@@ -102,12 +100,14 @@ section .text
 			; for (row = 0, k = 0; row < kernSize; ++row, k += step)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			lea rax, [inPtr + i] ; rax = &inPtr[i]
-			xor rdx, rdx ; rdx = row = 0
+			mov r15, arg(argi_vthzKernPtr)
+			mov rdx, kernSize
 			.LoopKernelSize_Per32Bytes:
 				vmovups ymm0, [rax] ; ymm0 = vecInPtr
-				add rax, step
-				vmovss xmm4, [vthzKernPtr + rdx*COMPV_YASM_FLOAT32_SZ_BYTES]
-				inc rdx
+				vmovss xmm4, [r15]
+				dec rdx
+				lea rax, [rax + step]
+				lea r15, [r15 + COMPV_YASM_FLOAT32_SZ_BYTES]
 				vpunpcklbw ymm1, ymm0, vecZero
 				vpunpckhbw ymm3, ymm0, vecZero
 				vpunpcklwd ymm0, ymm1, vecZero
@@ -118,9 +118,8 @@ section .text
 				vcvtdq2ps ymm1, ymm1
 				vcvtdq2ps ymm2, ymm2
 				vcvtdq2ps ymm3, ymm3
-				vbroadcastss ymm4, xmm4 ; ymm4 = vecCoeff
+				vbroadcastss ymm4, xmm4 ; ymm4 = vecCoeff				
 				%if %1
-					cmp rdx, kernSize
 					vfmadd231ps vecSum0, ymm0, ymm4
 					vfmadd231ps vecSum1, ymm1, ymm4
 					vfmadd231ps vecSum2, ymm2, ymm4
@@ -130,13 +129,12 @@ section .text
 					vmulps ymm1, ymm1, ymm4
 					vmulps ymm2, ymm2, ymm4
 					vmulps ymm3, ymm3, ymm4
-					cmp rdx, kernSize
 					vaddps vecSum0, vecSum0, ymm0
 					vaddps vecSum1, vecSum1, ymm1
 					vaddps vecSum2, vecSum2, ymm2
 					vaddps vecSum3, vecSum3, ymm3
 				%endif
-				jl .LoopKernelSize_Per32Bytes
+				jnz .LoopKernelSize_Per32Bytes
 				; EndOf_LoopKernelSize_Per32Bytes ;
 			
 			vcvttps2dq vecSum0, vecSum0
@@ -163,24 +161,24 @@ section .text
 			; for (row = 0, k = 0; row < kernSize; ++row, k += step)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			lea rax, [inPtr + i] ; rax = &inPtr[i]
-			xor rdx, rdx ; rdx = row = 0
+			mov r15, arg(argi_vthzKernPtr)
+			mov rdx, kernSize
 			.LoopKernelSize_Per8Bytes:
-				vmovdqu xmm2, [rax] ; ymm2 = vecInPtr
+				vmovups xmm2, [rax] ; ymm2 = vecInPtr
+				vmovss xmm3, [r15]
 				lea rax, [rax + step]
-				vmovss xmm3, [vthzKernPtr + rdx*COMPV_YASM_FLOAT32_SZ_BYTES]
+				dec rdx
 				vpmovzxbd ymm2, xmm2 ; ymm2 = vecInPtr
-				inc rdx
 				vcvtdq2ps ymm2, ymm2
 				vbroadcastss ymm3, xmm3
+				lea r15, [r15 + COMPV_YASM_FLOAT32_SZ_BYTES]
 				%if %1
-					cmp rdx, kernSize
 					vfmadd231ps ymm0, ymm2, ymm3
 				%else
 					vmulps ymm2, ymm3
-					cmp rdx, kernSize
 					vaddps ymm0, ymm2
 				%endif
-				jl .LoopKernelSize_Per8Bytes
+				jnz .LoopKernelSize_Per8Bytes
 				; EndOf_LoopKernelSize_Per8Bytes ;
 			
 			vcvttps2dq ymm0, ymm0
@@ -205,24 +203,23 @@ section .text
 			; for (row = 0, k = 0; row < kernSize; ++row, k += step)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			lea rax, [inPtr + i] ; rax = &inPtr[i]
-			xor rdx, rdx ; rdx = row = 0
+			mov r15, arg(argi_vthzKernPtr)
+			mov rdx, kernSize
 			.LoopKernelSize_Per1Bytes:
 				movzx octet, byte [rax]
-				vmovss xmm3, [vthzKernPtr + rdx*COMPV_YASM_FLOAT32_SZ_BYTES] ; ymm3 = vecCoeff
+				vmovss xmm3, [r15] ; ymm3 = vecCoeff
+				dec rdx
 				vcvtsi2ss xmm2, octet
+				lea r15, [r15 + COMPV_YASM_FLOAT32_SZ_BYTES]
 				%if %1
-					inc rdx
 					lea rax, [rax + step]
 					vfmadd231ss xmm0, xmm2, xmm3
-					cmp rdx, kernSize
 				%else
 					vmulss xmm2, xmm3
-					inc rdx
 					lea rax, [rax + step]
-					cmp rdx, kernSize
 					vaddss xmm0, xmm2
 				%endif
-				jl .LoopKernelSize_Per1Bytes
+				jnz .LoopKernelSize_Per1Bytes
 				; EndOf_LoopKernelSize_Per1Bytes ;
 
 			inc i
@@ -260,7 +257,6 @@ section .text
 	%undef i
 	%undef inPtr
 	%undef outPtr
-	%undef vthzKernPtr
 	%undef widthMinus31
 	%undef widthMinus7
 	%undef octet
