@@ -93,27 +93,25 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2):
 				inc rdx
 				vbroadcastss ymm4, xmm4
 				add rax, arg(argi_step)
-				vpunpcklbw ymm0, ymm3, [vecZero]
+				vpunpcklbw ymm1, ymm3, [vecZero]
 				vpunpckhbw ymm3, ymm3, [vecZero]
 				cmp rdx, arg(argi_kernSize)
-				vmovdqa ymm1, ymm0
-				vmovdqa ymm2, ymm3
-				vpunpcklwd ymm0, [vecZero]
-				vpunpckhwd ymm1, [vecZero]
-				vpunpcklwd ymm2, [vecZero]
-				vpunpckhwd ymm3, [vecZero]
+				vpunpcklwd ymm0, ymm1, [vecZero]
+				vpunpckhwd ymm1, ymm1, [vecZero]
+				vpunpcklwd ymm2, ymm3, [vecZero]
+				vpunpckhwd ymm3, ymm3, [vecZero]
 				vcvtdq2ps ymm0, ymm0
 				vcvtdq2ps ymm1, ymm1
 				vcvtdq2ps ymm2, ymm2
 				vcvtdq2ps ymm3, ymm3
-				vmulps ymm0, ymm4
-				vmulps ymm1, ymm4
-				vmulps ymm2, ymm4
-				vmulps ymm3, ymm4
-				vaddps ymm0, [vecSum0]
-				vaddps ymm5, ymm1
-				vaddps ymm6, ymm2
-				vaddps ymm7, ymm3
+				vmulps ymm0, ymm0, ymm4
+				vmulps ymm1, ymm1, ymm4
+				vmulps ymm2, ymm2, ymm4
+				vmulps ymm3, ymm3, ymm4
+				vaddps ymm0, ymm0, [vecSum0]
+				vaddps ymm5, ymm5, ymm1
+				vaddps ymm6, ymm6, ymm2
+				vaddps ymm7, ymm7, ymm3
 				vmovdqa [vecSum0], ymm0
 				jl .LoopKernelSize_Per32Bytes
 				; EndOf_LoopKernelSize_Per32Bytes ;
@@ -140,8 +138,8 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2):
 		cmp i, rax
 		jge .EndOf_LoopWidth_Per8Bytes
 		.LoopWidth_Per8Bytes:
-			vxorps ymm0, ymm0 ; vecSum0
-			vpxor ymm1, ymm1 ; vecZero
+			vxorps ymm0, ymm0, ymm0 ; vecSum0
+			vpxor ymm1, ymm1, ymm1 ; vecZero
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (row = 0, k = 0; row < kernSize; ++row, k += step)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -196,12 +194,12 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2):
 				vmovss xmm2, [rax] ; TODO(dmi): use movzx for x64, here we cannot because we''re out of 32b registers
 				vmovss xmm3, [rbx + rdx*COMPV_YASM_FLOAT32_SZ_BYTES] ; ymm3 = vecCoeff
 				inc rdx
-				add rax, arg(argi_step)
-				cmp rdx, arg(argi_kernSize)
 				vpunpcklbw xmm2, xmm1
 				vpunpcklwd xmm2, xmm1
 				vcvtdq2ps xmm2, xmm2
+				add rax, arg(argi_step)
 				vmulss xmm2, xmm3
+				cmp rdx, arg(argi_kernSize)
 				vaddss xmm0, xmm2	
 				jl .LoopKernelSize_Per1Bytes
 				; EndOf_LoopKernelSize_Per1Bytes ;
