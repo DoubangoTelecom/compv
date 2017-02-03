@@ -117,8 +117,8 @@ section .text
 				vcvtdq2ps ymm0, ymm0
 				vcvtdq2ps ymm1, ymm1
 				vcvtdq2ps ymm2, ymm2
-				vbroadcastss ymm4, xmm4 ; ymm4 = vecCoeff
 				vcvtdq2ps ymm3, ymm3
+				vbroadcastss ymm4, xmm4 ; ymm4 = vecCoeff
 				%if %1
 					cmp rdx, kernSize
 					vfmadd231ps vecSum0, ymm0, ymm4
