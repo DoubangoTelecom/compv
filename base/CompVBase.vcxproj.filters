@@ -112,6 +112,12 @@
     <Filter Include="source\image\asm\arm">
       <UniqueIdentifier>{6c7e972b-debc-4d3d-91b5-df3df76bed3f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\math\intrin\arm">
+      <UniqueIdentifier>{f462a08e-adea-4858-b592-70a4636ec749}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\math\intrin\arm">
+      <UniqueIdentifier>{9ab36620-a3c1-4b54-b96c-0284bda4cbd4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -360,6 +366,9 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_convlt_intrin_avx2.h">
       <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon.h">
+      <Filter>include\math\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -587,6 +596,9 @@
     <ClCompile Include="math\intrin\x86\compv_math_convlt_intrin_avx2.cxx">
       <Filter>source\math\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_convlt_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="asm\x86\compv_bits_macros_x86.s">
@@ -661,6 +673,12 @@
     <YASM Include="image\asm\x86\compv_image_scale_bilinear_x86_avx.s">
       <Filter>source\image\asm\x86</Filter>
     </YASM>
+    <YASM Include="math\asm\x86\compv_math_convlt_x64_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="math\asm\x86\compv_math_convlt_x86_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
   </ItemGroup>
   <ItemGroup>
     <None Include="asm\arm\compv_common_arm.S">
@@ -696,10 +714,7 @@
     <None Include="image\asm\arm\compv_image_scale_bilinear_arm64_neon.S">
       <Filter>source\image\asm\arm</Filter>
     </None>
-    <None Include="math\asm\x86\compv_math_convlt_x86_sse.s">
-      <Filter>source\math\asm\x86</Filter>
-    </None>
-    <None Include="math\asm\x86\compv_math_convlt_x64_sse.s">
+    <None Include="math\asm\x86\compv_math_convlt_x86_avx.s">
       <Filter>source\math\asm\x86</Filter>
     </None>
   </ItemGroup>

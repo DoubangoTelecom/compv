@@ -10,7 +10,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2)
+global sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2)
 
 section .data
 
@@ -25,24 +25,25 @@ section .text
 ; arg(5) -> compv_uscalar_t pad
 ; arg(6) -> const compv_float32_t* vthzKernPtr
 ; arg(7) -> compv_uscalar_t kernSize
-sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
+sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2):
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
-	COMPV_YASM_SAVE_XMM 7
+	COMPV_YASM_SAVE_YMM 7
 	push rsi
 	push rdi
 	push rbx
 	;; end prolog ;;
 
 	; align stack and alloc memory
-	COMPV_YASM_ALIGN_STACK 16, rax
-	sub rsp, (2*16)
+	COMPV_YASM_ALIGN_STACK 32, rax
+	sub rsp, (2*32)
 
 	%define vecZero				rsp + 0
-	%define vecSum0				vecZero + 16
-	pxor xmm0, xmm0
-	movdqa [vecZero], xmm0
+	%define vecSum0				vecZero + 32
+	vpxor ymm0, ymm0
+	vmovdqa [vecZero], ymm0
 
 	%define argi_inPtr			0
 	%define argi_outPtr			1
@@ -71,14 +72,14 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.LoopHeight:
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (i = 0; i < width - 15; i += 16)
+		; for (i = 0; i < width - 31; i += 32)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor i, i
-		.LoopWidth_Per16Bytes:
-			xorps xmm5, xmm5 ; vecSum1
-			xorps xmm6, xmm6 ; vecSum2
-			xorps xmm7, xmm7 ; vecSum3
-			movaps [vecSum0], xmm5
+		.LoopWidth_Per32Bytes:
+			vxorps ymm5, ymm5 ; vecSum1
+			vxorps ymm6, ymm6 ; vecSum2
+			vxorps ymm7, ymm7 ; vecSum3
+			vmovaps [vecSum0], ymm5
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (row = 0, k = 0; row < kernSize; ++row, k += step)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -86,62 +87,61 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
 			lea rax, [rbx + i] ; rax = &inPtr[i]
 			mov rbx, arg(argi_vthzKernPtr) ; rbx = &vthzKernPtr[0]
 			xor rdx, rdx ; rdx = row = 0
-			.LoopKernelSize_Per16Bytes:
-				movdqu xmm0, [rax] ; xmm0 = vecInPtr
-				movss xmm4, [rbx + rdx*COMPV_YASM_FLOAT32_SZ_BYTES]
+			.LoopKernelSize_Per32Bytes:
+				vmovdqu ymm3, [rax] ; ymm3 = vecInPtr
+				vmovss xmm4, [rbx + rdx*COMPV_YASM_FLOAT32_SZ_BYTES]
 				inc rdx
-				shufps xmm4, xmm4, 0x0 ; xmm4 = vecCoeff
+				vbroadcastss ymm4, xmm4
 				add rax, arg(argi_step)
-				movdqa xmm3, xmm0
-				punpcklbw xmm0, [vecZero]
-				punpckhbw xmm3, [vecZero]
+				vpunpcklbw ymm0, ymm3, [vecZero]
+				vpunpckhbw ymm3, ymm3, [vecZero]
 				cmp rdx, arg(argi_kernSize)
-				movdqa xmm1, xmm0
-				movdqa xmm2, xmm3
-				punpcklwd xmm0, [vecZero]
-				punpckhwd xmm1, [vecZero]
-				punpcklwd xmm2, [vecZero]
-				punpckhwd xmm3, [vecZero]
-				cvtdq2ps xmm0, xmm0
-				cvtdq2ps xmm1, xmm1
-				cvtdq2ps xmm2, xmm2
-				cvtdq2ps xmm3, xmm3
-				mulps xmm0, xmm4
-				mulps xmm1, xmm4
-				mulps xmm2, xmm4
-				mulps xmm3, xmm4
-				addps xmm0, [vecSum0]
-				addps xmm5, xmm1
-				addps xmm6, xmm2
-				addps xmm7, xmm3
-				movdqa [vecSum0], xmm0		
-				jl .LoopKernelSize_Per16Bytes
-				; EndOf_LoopKernelSize_Per16Bytes ;
+				vmovdqa ymm1, ymm0
+				vmovdqa ymm2, ymm3
+				vpunpcklwd ymm0, [vecZero]
+				vpunpckhwd ymm1, [vecZero]
+				vpunpcklwd ymm2, [vecZero]
+				vpunpckhwd ymm3, [vecZero]
+				vcvtdq2ps ymm0, ymm0
+				vcvtdq2ps ymm1, ymm1
+				vcvtdq2ps ymm2, ymm2
+				vcvtdq2ps ymm3, ymm3
+				vmulps ymm0, ymm4
+				vmulps ymm1, ymm4
+				vmulps ymm2, ymm4
+				vmulps ymm3, ymm4
+				vaddps ymm0, [vecSum0]
+				vaddps ymm5, ymm1
+				vaddps ymm6, ymm2
+				vaddps ymm7, ymm3
+				vmovdqa [vecSum0], ymm0
+				jl .LoopKernelSize_Per32Bytes
+				; EndOf_LoopKernelSize_Per32Bytes ;
 			
-			cvttps2dq xmm0, [vecSum0]
-			cvttps2dq xmm5, xmm5
-			cvttps2dq xmm6, xmm6
-			cvttps2dq xmm7, xmm7
+			vcvttps2dq ymm0, [vecSum0]
+			vcvttps2dq ymm5, ymm5
+			vcvttps2dq ymm6, ymm6
+			vcvttps2dq ymm7, ymm7
 			mov rdx, arg(argi_outPtr)
-			lea rax, [width - 15]
-			lea i, [i + 16]
+			lea rax, [width - 31]
+			lea i, [i + 32]
 			cmp i, rax
-			packssdw xmm0, xmm5
-			packssdw xmm6, xmm7
-			packuswb xmm0, xmm6
-			movdqu [rdx + i - 16], xmm0
-			jl .LoopWidth_Per16Bytes
-			; EndOf_LoopWidth_Per16Bytes ;
+			vpackssdw ymm0, ymm5
+			vpackssdw ymm6, ymm7
+			vpackuswb ymm0, ymm6
+			vmovdqu [rdx + i - 32], ymm0
+			jl .LoopWidth_Per32Bytes
+			; EndOf_LoopWidth_Per32Bytes ;
 
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (; i < width - 3; i += 4)
+		; for for (; i < width - 7; i += 8)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		lea rax, [width - 3]
+		lea rax, [width - 7]
 		cmp i, rax
-		jge .EndOf_LoopWidth_Per4Bytes
-		.LoopWidth_Per4Bytes:
-			xorps xmm0, xmm0 ; vecSum0
-			pxor xmm1, xmm1 ; vecZero
+		jge .EndOf_LoopWidth_Per8Bytes
+		.LoopWidth_Per8Bytes:
+			vxorps ymm0, ymm0 ; vecSum0
+			vpxor ymm1, ymm1 ; vecZero
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (row = 0, k = 0; row < kernSize; ++row, k += step)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -149,33 +149,33 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
 			lea rax, [rbx + i] ; rax = &inPtr[i]
 			mov rbx, arg(argi_vthzKernPtr) ; rbx = &vthzKernPtr[0]
 			xor rdx, rdx ; rdx = row = 0
-			.LoopKernelSize_Per4Bytes:
-				movss xmm2, [rax] ; xmm2 = vecInPtr
-				movss xmm3, [rbx + rdx*COMPV_YASM_FLOAT32_SZ_BYTES]
+			.LoopKernelSize_Per8Bytes:
+				vmovdqu xmm2, [rax]
+				vpmovzxbd ymm2, xmm2 ; ymm2 = vecInPtr
+				vmovss xmm3, [rbx + rdx*COMPV_YASM_FLOAT32_SZ_BYTES]
 				inc rdx
 				add rax, arg(argi_step)
-				punpcklbw xmm2, xmm1
-				punpcklwd xmm2, xmm1
-				cvtdq2ps xmm2, xmm2
-				shufps xmm3, xmm3, 0x0 ; xmm3 = vecCoeff
-				mulps xmm2, xmm3
+				vcvtdq2ps ymm2, ymm2
+				vbroadcastss ymm3, xmm3
+				vmulps ymm2, ymm3
 				cmp rdx, arg(argi_kernSize)
-				addps xmm0, xmm2
-				jl .LoopKernelSize_Per4Bytes
-				; EndOf_LoopKernelSize_Per4Bytes ;
+				vaddps ymm0, ymm2
+				jl .LoopKernelSize_Per8Bytes
+				; EndOf_LoopKernelSize_Per8Bytes ;
 
 
 			mov rdx, arg(argi_outPtr)
-			lea rax, [width - 3]
-			lea i, [i + 4]
+			lea rax, [width - 7]
+			lea i, [i + 8]
 			cmp i, rax
-			cvttps2dq xmm0, xmm0
-			packssdw xmm0, xmm0
-			packuswb xmm0, xmm0
-			movd [rdx + i - 4], xmm0
-			jl .LoopWidth_Per4Bytes
-			.EndOf_LoopWidth_Per4Bytes
-			; EndOf_LoopWidth_Per4Bytes ;
+			vcvttps2dq ymm0, ymm0
+			vpackssdw ymm0, ymm0
+			vpermq ymm0, ymm0, 0xD8
+			vpackuswb ymm0, ymm0
+			vmovq [rdx + i - 8], xmm0
+			jl .LoopWidth_Per8Bytes
+			.EndOf_LoopWidth_Per8Bytes
+			; EndOf_LoopWidth_Per8Bytes ;
 
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (; i < width; i += 1)
@@ -183,8 +183,8 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
 		cmp i, width
 		jge .EndOf_LoopWidth_Per1Bytes
 		.LoopWidth_Per1Bytes:
-			xorps xmm0, xmm0 ; vecSum0
-			pxor xmm1, xmm1 ; xmm2 = vecZero
+			vxorps xmm0, xmm0 ; vecSum0
+			vpxor xmm1, xmm1 ; ymm2 = vecZero
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (row = 0, k = 0; row < kernSize; ++row, k += step)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -193,16 +193,16 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
 			mov rbx, arg(argi_vthzKernPtr) ; rbx = &vthzKernPtr[0]
 			xor rdx, rdx ; rdx = row = 0
 			.LoopKernelSize_Per1Bytes:
-				movss xmm2, [rax] ; TODO(dmi): use movzx for x64, here we cannot because we''re out of 32b registers
-				movss xmm3, [rbx + rdx*COMPV_YASM_FLOAT32_SZ_BYTES] ; xmm3 = vecCoeff
+				vmovss xmm2, [rax] ; TODO(dmi): use movzx for x64, here we cannot because we''re out of 32b registers
+				vmovss xmm3, [rbx + rdx*COMPV_YASM_FLOAT32_SZ_BYTES] ; ymm3 = vecCoeff
 				inc rdx
 				add rax, arg(argi_step)
 				cmp rdx, arg(argi_kernSize)
-				punpcklbw xmm2, xmm1
-				punpcklwd xmm2, xmm1
-				cvtdq2ps xmm2, xmm2
-				mulss xmm2, xmm3
-				addss xmm0, xmm2	
+				vpunpcklbw xmm2, xmm1
+				vpunpcklwd xmm2, xmm1
+				vcvtdq2ps xmm2, xmm2
+				vmulss xmm2, xmm3
+				vaddss xmm0, xmm2	
 				jl .LoopKernelSize_Per1Bytes
 				; EndOf_LoopKernelSize_Per1Bytes ;
 
@@ -210,7 +210,7 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
 			inc i
 			mov rdx, arg(argi_outPtr)
 			cmp i, width
-			cvttss2si rax, xmm0
+			vcvttss2si rax, xmm0
 			mov [rdx + i - 1], byte al
 			jl .LoopWidth_Per1Bytes
 			.EndOf_LoopWidth_Per1Bytes
@@ -245,15 +245,16 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
 	%undef i
 
 	; free memory and unalign stack
-	add rsp, (2*16)
+	add rsp, (2*32)
 	COMPV_YASM_UNALIGN_STACK
 
 	;; begin epilog ;;
 	pop rbx
 	pop rdi
 	pop rsi
-	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_RESTORE_YMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
