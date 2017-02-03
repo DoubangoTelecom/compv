@@ -717,5 +717,8 @@
     <None Include="math\asm\x86\compv_math_convlt_x86_avx.s">
       <Filter>source\math\asm\x86</Filter>
     </None>
+    <None Include="math\asm\x86\compv_math_convlt_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </None>
   </ItemGroup>
 </Project>

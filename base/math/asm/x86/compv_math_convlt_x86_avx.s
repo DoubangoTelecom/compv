@@ -11,6 +11,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2)
+global sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_FMA3_AVX2)
 
 section .data
 
@@ -25,7 +26,8 @@ section .text
 ; arg(5) -> compv_uscalar_t pad
 ; arg(6) -> const compv_float32_t* vthzKernPtr
 ; arg(7) -> compv_uscalar_t kernSize
-sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2):
+; %1 -> 0: FMA3 not supported, 1: FMA3 supported
+%macro CompVMathConvlt1VtHz_8u32f8u_Macro_X86_AVX2 1
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -104,14 +106,22 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2):
 				vcvtdq2ps ymm3, ymm3
 				vbroadcastss ymm4, xmm4
 				cmp rdx, arg(argi_kernSize)
-				vmulps ymm0, ymm0, ymm4
-				vmulps ymm1, ymm1, ymm4
-				vmulps ymm2, ymm2, ymm4
-				vmulps ymm3, ymm3, ymm4
-				vaddps ymm0, ymm0, [vecSum0]
-				vaddps ymm5, ymm5, ymm1
-				vaddps ymm6, ymm6, ymm2
-				vaddps ymm7, ymm7, ymm3
+				%if %1
+					vfmadd213ps ymm0, ymm4, [vecSum0]
+					vfmadd231ps ymm5, ymm1, ymm4
+					vfmadd231ps ymm6, ymm2, ymm4
+					vfmadd231ps ymm7, ymm3, ymm4
+				%else
+					vmulps ymm0, ymm0, ymm4
+					vmulps ymm1, ymm1, ymm4
+					vmulps ymm2, ymm2, ymm4
+					vmulps ymm3, ymm3, ymm4
+					vaddps ymm0, ymm0, [vecSum0]
+					vaddps ymm5, ymm5, ymm1
+					vaddps ymm6, ymm6, ymm2
+					vaddps ymm7, ymm7, ymm3
+				%else
+				%endif
 				vmovups [vecSum0], ymm0
 				jl .LoopKernelSize_Per32Bytes
 				; EndOf_LoopKernelSize_Per32Bytes ;
@@ -155,9 +165,14 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2):
 				add rax, arg(argi_step)
 				vcvtdq2ps ymm2, ymm2
 				vbroadcastss ymm3, xmm3
-				vmulps ymm2, ymm3
-				cmp rdx, arg(argi_kernSize)
-				vaddps ymm0, ymm2
+				%if %1
+					cmp rdx, arg(argi_kernSize)
+					vfmadd231ps ymm0, ymm2, ymm3
+				%else
+					vmulps ymm2, ymm3
+					cmp rdx, arg(argi_kernSize)
+					vaddps ymm0, ymm2
+				%endif
 				jl .LoopKernelSize_Per8Bytes
 				; EndOf_LoopKernelSize_Per8Bytes ;
 
@@ -198,9 +213,14 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2):
 				vpunpcklwd xmm2, xmm1
 				vcvtdq2ps xmm2, xmm2
 				add rax, arg(argi_step)
-				vmulss xmm2, xmm3
-				cmp rdx, arg(argi_kernSize)
-				vaddss xmm0, xmm2	
+				%if %1
+					cmp rdx, arg(argi_kernSize)
+					vfmadd231ss xmm0, xmm2, xmm3
+				%else
+					vmulss xmm2, xmm3
+					cmp rdx, arg(argi_kernSize)
+					vaddss xmm0, xmm2
+				%endif
 				jl .LoopKernelSize_Per1Bytes
 				; EndOf_LoopKernelSize_Per1Bytes ;
 
@@ -256,3 +276,12 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2):
 	pop rbp
 	vzeroupper
 	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2):
+	CompVMathConvlt1VtHz_8u32f8u_Macro_X86_AVX2 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_FMA3_AVX2):
+	CompVMathConvlt1VtHz_8u32f8u_Macro_X86_AVX2 1
