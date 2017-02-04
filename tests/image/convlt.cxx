@@ -252,7 +252,7 @@ static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma, const c
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
 	COMPV_CHECK_CODE_BAIL(err = compv_tests_write_to_file(imageOut, "out.gray"));
 #endif
-
+    
 #if IMAGE_CONVLT_LOOP_COUNT == 1
 	COMPV_CHECK_EXP_BAIL(std::string(avx2_fma3 ? test->md5_avx2_fma3 : test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Image convolution MD5 mismatch");
 #endif

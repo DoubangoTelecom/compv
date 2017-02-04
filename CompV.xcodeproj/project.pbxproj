@@ -68,6 +68,9 @@
 		156E96C81E40EEED00BC5329 /* compv_gpu_math_convlt.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E96C71E40EEED00BC5329 /* compv_gpu_math_convlt.cxx */; };
 		156E96CD1E40EF4900BC5329 /* compv_math_convlt.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E96CB1E40EF4900BC5329 /* compv_math_convlt.cxx */; };
 		156E96CE1E40EF4900BC5329 /* compv_math_gauss.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E96CC1E40EF4900BC5329 /* compv_math_gauss.cxx */; };
+		157F900C1E4510790005A4EA /* compv_math_convlt_arm32_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 157F900B1E4510790005A4EA /* compv_math_convlt_arm32_neon.S */; };
+		157F900F1E4510E60005A4EA /* compv_math_convlt_intrin_avx2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157F900D1E4510E60005A4EA /* compv_math_convlt_intrin_avx2.cxx */; };
+		157F90101E4510E60005A4EA /* compv_math_convlt_intrin_sse2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157F900E1E4510E60005A4EA /* compv_math_convlt_intrin_sse2.cxx */; };
 		15A3E8711E3599D800303F7C /* compv_android_cpu-features.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15A3E7711E3599D800303F7C /* compv_android_cpu-features.cxx */; };
 		15A3E8721E3599D900303F7C /* compv_android_dexclassloader.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15A3E7721E3599D800303F7C /* compv_android_dexclassloader.cxx */; };
 		15A3E8731E3599D900303F7C /* compv_android_native_activity.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15A3E7731E3599D800303F7C /* compv_android_native_activity.cxx */; };
@@ -358,6 +361,9 @@
 		156E96CA1E40EF3800BC5329 /* compv_math_gauss.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compv_math_gauss.h; sourceTree = "<group>"; };
 		156E96CB1E40EF4900BC5329 /* compv_math_convlt.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_math_convlt.cxx; sourceTree = "<group>"; };
 		156E96CC1E40EF4900BC5329 /* compv_math_gauss.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_math_gauss.cxx; sourceTree = "<group>"; };
+		157F900B1E4510790005A4EA /* compv_math_convlt_arm32_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_math_convlt_arm32_neon.S; sourceTree = "<group>"; };
+		157F900D1E4510E60005A4EA /* compv_math_convlt_intrin_avx2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_math_convlt_intrin_avx2.cxx; sourceTree = "<group>"; };
+		157F900E1E4510E60005A4EA /* compv_math_convlt_intrin_sse2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_math_convlt_intrin_sse2.cxx; sourceTree = "<group>"; };
 		15A3E7661E35994E00303F7C /* libCompVBase.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCompVBase.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		15A3E7711E3599D800303F7C /* compv_android_cpu-features.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "compv_android_cpu-features.cxx"; sourceTree = "<group>"; };
 		15A3E7721E3599D800303F7C /* compv_android_dexclassloader.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_android_dexclassloader.cxx; sourceTree = "<group>"; };
@@ -1098,6 +1104,14 @@
 			path = math;
 			sourceTree = "<group>";
 		};
+		157F900A1E45104A0005A4EA /* arm */ = {
+			isa = PBXGroup;
+			children = (
+				157F900B1E4510790005A4EA /* compv_math_convlt_arm32_neon.S */,
+			);
+			path = arm;
+			sourceTree = "<group>";
+		};
 		15A3E75B1E35987600303F7C = {
 			isa = PBXGroup;
 			children = (
@@ -1129,6 +1143,25 @@
 			children = (
 				15A3E7D41E3599D800303F7C /* include */,
 				15A3E8F61E35A0E600303F7C /* source */,
+				15A3E78F1E3599D800303F7C /* compv_base.cxx */,
+				15A3E7901E3599D800303F7C /* compv_bind.cxx */,
+				15A3E7911E3599D800303F7C /* compv_box_interestpoint.cxx */,
+				15A3E7921E3599D800303F7C /* compv_box.cxx */,
+				15A3E7931E3599D800303F7C /* compv_buffer.cxx */,
+				15A3E7941E3599D800303F7C /* compv_caps.cxx */,
+				15A3E7951E3599D800303F7C /* compv_common.cxx */,
+				15A3E7961E3599D800303F7C /* compv_cpu.cxx */,
+				15A3E7971E3599D800303F7C /* compv_debug.cxx */,
+				15A3E7981E3599D800303F7C /* compv_features.cxx */,
+				15A3E7991E3599D800303F7C /* compv_fileutils.cxx */,
+				15A3E79A1E3599D800303F7C /* compv_jni.cxx */,
+				15A3E79B1E3599D800303F7C /* compv_lock.cxx */,
+				15A3E79C1E3599D800303F7C /* compv_mat.cxx */,
+				15A3E79D1E3599D800303F7C /* compv_md5.cxx */,
+				15A3E79E1E3599D800303F7C /* compv_mem.cxx */,
+				15A3E79F1E3599D800303F7C /* compv_obj.cxx */,
+				15A3E7A01E3599D800303F7C /* compv_sharedlib.cxx */,
+				15A3E7A11E3599D800303F7C /* compv_simd_globals.cxx */,
 			);
 			path = CompVBase;
 			sourceTree = "<group>";
@@ -1501,10 +1534,10 @@
 		15A3E8401E3599D800303F7C /* math */ = {
 			isa = PBXGroup;
 			children = (
-				156E96CB1E40EF4900BC5329 /* compv_math_convlt.cxx */,
-				156E96CC1E40EF4900BC5329 /* compv_math_gauss.cxx */,
 				15A3E8521E3599D800303F7C /* intrin */,
 				15A3E8411E3599D800303F7C /* asm */,
+				156E96CB1E40EF4900BC5329 /* compv_math_convlt.cxx */,
+				156E96CC1E40EF4900BC5329 /* compv_math_gauss.cxx */,
 				15A3E8501E3599D800303F7C /* compv_math.cxx */,
 				15A3E8511E3599D800303F7C /* compv_math_utils.cxx */,
 			);
@@ -1515,6 +1548,7 @@
 		15A3E8411E3599D800303F7C /* asm */ = {
 			isa = PBXGroup;
 			children = (
+				157F900A1E45104A0005A4EA /* arm */,
 			);
 			path = asm;
 			sourceTree = "<group>";
@@ -1531,6 +1565,8 @@
 		15A3E8531E3599D800303F7C /* x86 */ = {
 			isa = PBXGroup;
 			children = (
+				157F900D1E4510E60005A4EA /* compv_math_convlt_intrin_avx2.cxx */,
+				157F900E1E4510E60005A4EA /* compv_math_convlt_intrin_sse2.cxx */,
 				15A3E85E1E3599D800303F7C /* compv_math_utils_intrin_avx2.cxx */,
 				15A3E85F1E3599D800303F7C /* compv_math_utils_intrin_sse2.cxx */,
 				15A3E8601E3599D800303F7C /* compv_math_utils_intrin_ssse3.cxx */,
@@ -1573,25 +1609,6 @@
 			children = (
 				15A3E7701E3599D800303F7C /* android */,
 				15A3E7741E3599D800303F7C /* asm */,
-				15A3E78F1E3599D800303F7C /* compv_base.cxx */,
-				15A3E7901E3599D800303F7C /* compv_bind.cxx */,
-				15A3E7911E3599D800303F7C /* compv_box_interestpoint.cxx */,
-				15A3E7921E3599D800303F7C /* compv_box.cxx */,
-				15A3E7931E3599D800303F7C /* compv_buffer.cxx */,
-				15A3E7941E3599D800303F7C /* compv_caps.cxx */,
-				15A3E7951E3599D800303F7C /* compv_common.cxx */,
-				15A3E7961E3599D800303F7C /* compv_cpu.cxx */,
-				15A3E7971E3599D800303F7C /* compv_debug.cxx */,
-				15A3E7981E3599D800303F7C /* compv_features.cxx */,
-				15A3E7991E3599D800303F7C /* compv_fileutils.cxx */,
-				15A3E79A1E3599D800303F7C /* compv_jni.cxx */,
-				15A3E79B1E3599D800303F7C /* compv_lock.cxx */,
-				15A3E79C1E3599D800303F7C /* compv_mat.cxx */,
-				15A3E79D1E3599D800303F7C /* compv_md5.cxx */,
-				15A3E79E1E3599D800303F7C /* compv_mem.cxx */,
-				15A3E79F1E3599D800303F7C /* compv_obj.cxx */,
-				15A3E7A01E3599D800303F7C /* compv_sharedlib.cxx */,
-				15A3E7A11E3599D800303F7C /* compv_simd_globals.cxx */,
 				15A3E83C1E3599D800303F7C /* intrin */,
 				15A3E7AE1E3599D800303F7C /* image */,
 				15A3E7A21E3599D800303F7C /* drawing */,
@@ -1884,6 +1901,7 @@
 				15A3E8E61E3599D900303F7C /* compv_math_utils_intrin_ssse3.cxx in Sources */,
 				15A3E88F1E3599D900303F7C /* compv_box.cxx in Sources */,
 				15A3E8A41E3599D900303F7C /* compv_surfacelayer_matching.cxx in Sources */,
+				157F900F1E4510E60005A4EA /* compv_math_convlt_intrin_avx2.cxx in Sources */,
 				15A3E8E51E3599D900303F7C /* compv_math_utils_intrin_sse2.cxx in Sources */,
 				156E96CE1E40EF4900BC5329 /* compv_math_gauss.cxx in Sources */,
 				15A3E8EB1E3599D900303F7C /* compv_parallel.cxx in Sources */,
@@ -1915,12 +1933,14 @@
 				15A3E89F1E3599D900303F7C /* compv_canvas.cxx in Sources */,
 				15A3E8A11E3599D900303F7C /* compv_renderer.cxx in Sources */,
 				15A3E8E71E3599D900303F7C /* compv_asynctask10.cxx in Sources */,
+				157F90101E4510E60005A4EA /* compv_math_convlt_intrin_sse2.cxx in Sources */,
 				15A3E89C1E3599D900303F7C /* compv_obj.cxx in Sources */,
 				15A3E8B81E3599D900303F7C /* compv_image.cxx in Sources */,
 				15A3E8A51E3599D900303F7C /* compv_surfacelayer_multi.cxx in Sources */,
 				15A3E8C11E3599D900303F7C /* compv_image_conv_rgbfamily_intrin_neon.cxx in Sources */,
 				15A3E8BC1E3599D900303F7C /* compv_image_conv_to_yuv444p.cxx in Sources */,
 				15A3E8C81E3599D900303F7C /* compv_image_scale_bilinear_intrin_sse41.cxx in Sources */,
+				157F900C1E4510790005A4EA /* compv_math_convlt_arm32_neon.S in Sources */,
 				15A3E8911E3599D900303F7C /* compv_caps.cxx in Sources */,
 				15A3E8AA1E3599D900303F7C /* compv_image_conv_grayscale_arm32_neon.S in Sources */,
 				15AA06DB1E38377E0058D1F1 /* compv_image_conv_grayscale_arm64_neon.S in Sources */,
