@@ -87,7 +87,6 @@
             LoopKernelPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
                 ld1 { v15.16b }, [inPtr_], step // v15 = vecInPtr
                 ld1.s {vecCoeff}[0], [coeffs], #SizeOfFloat32InBytes
-                
                 uxtl vec2.8h, v15.8b
                 uxtl2 vec3.8h, v15.16b
                 uxtl vec0.4s, vec2.4h

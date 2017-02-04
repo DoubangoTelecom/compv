@@ -39,7 +39,7 @@ COMPV_NAMESPACE_BEGIN()
 #	define COMPV_ARM_NEON_EQ_ZERO(vec)	!COMPV_ARM_NEON_NEQ_ZERO(vec)
 #endif
 
-#if COMPV_ARCH_ARM64 || !COMPV_OS_APPLE // Apple's Aarch32 intrinsics don't include 'vfmaq_n_f32'
+#if COMPV_ARCH_ARM64
 #   define COMPV_ARM_N_FMAQ(a, b, c) vfmaq_n_f32(a, b, c)
 #   define COMPV_ARM_N_FMA(a, b, c) vfma_n_f32(a, b, c)
 #else

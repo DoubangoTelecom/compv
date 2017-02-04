@@ -6,7 +6,7 @@
  */
 #include "compv/base/math/intrin/arm/compv_math_convlt_intrin_neon_fma.h"
 
-#if COMPV_ARCH_ARM && COMPV_INTRINSIC
+#if COMPV_ARCH_ARM && COMPV_INTRINSIC && 0
 #include "compv/base/intrin/arm/compv_intrin_neon.h"
 #include "compv/base/compv_simd_globals.h"
 #include "compv/base/math/compv_math.h"

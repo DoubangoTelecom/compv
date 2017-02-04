@@ -8,7 +8,7 @@
 #define _COMPV_BASE_MATH_CONVLT_INTRIN_NEON_FMA_H_
 
 #include "compv/base/compv_config.h"
-#if COMPV_ARCH_ARM && COMPV_INTRINSIC
+#if COMPV_ARCH_ARM && COMPV_INTRINSIC && 0
 #include "compv/base/compv_common.h"
 
 #if defined(_COMPV_API_H_)
