@@ -145,6 +145,13 @@ static uint64_t CompVArmCaps(const char* cpuinfo_name)
             p = strstr(cpuinfo_line, " asimd");
 			flags |= (p && (p[6] == ' ' || p[6] == '\n')) ? kCpuFlagARM_NEON : kCpuFlagNone;
 
+			if (flags & kCpuFlagARM64) {
+				flags |= kCpuFlagARM_NEON_FMA | kCpuFlagARM_VFPv4; // required on Aarch64
+			}
+			if ((flags & kCpuFlagARM_NEON) && (flags & kCpuFlagARM_VFPv4)) {
+				flags |= kCpuFlagARM_NEON_FMA;
+			}
+
 			fclose(f);
 			return flags;
         }
@@ -362,10 +369,16 @@ COMPV_ERROR_CODE CompVCpu::init()
 	uint64_t android_flags = android_getCpuFeatures();
     if (android_flags & ANDROID_CPU_ARM_FEATURE_NEON) {
         CompVCpu::s_uFlags |= kCpuFlagARM_NEON;
+		if (CompVCpu::s_uFlags & kCpuFlagARM64) {
+			CompVCpu::s_uFlags |= kCpuFlagARM_NEON_FMA | kCpuFlagARM_VFPv4; // required on Aarch64
+		}
     }
-    if (android_flags & ANDROID_CPU_ARM_FEATURE_NEON_FMA || android_flags & ANDROID_CPU_ARM_FEATURE_VFP_FMA) {
-        CompVCpu::s_uFlags |= kCpuFlagARM_VFPv4 | kCpuFlagARM_VFPv3;
+    if (android_flags & ANDROID_CPU_ARM_FEATURE_NEON_FMA) {
+        CompVCpu::s_uFlags |= kCpuFlagARM_NEON_FMA | kCpuFlagARM_VFPv4;
     }
+	if (android_flags & ANDROID_CPU_ARM_FEATURE_VFP_FMA) {
+		CompVCpu::s_uFlags |= kCpuFlagARM_VFPv4;
+	}
 	if (android_flags & ANDROID_CPU_ARM_FEATURE_VFPv3) {
 		CompVCpu::s_uFlags |= kCpuFlagARM_VFPv3;
 	}

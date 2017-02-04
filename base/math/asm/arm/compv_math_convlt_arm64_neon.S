@@ -86,7 +86,7 @@
             mov coeffs, vthzKernPtr
             LoopKernelPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
                 ld1 { v15.16b }, [inPtr_], step // v15 = vecInPtr
-                ld1.s {vecCoeff}[0], [coeffs], #SizeOfFloat32InBytes
+				ld1 {vecCoeff.s}[0], [coeffs], #SizeOfFloat32InBytes
                 uxtl vec2.8h, v15.8b
                 uxtl2 vec3.8h, v15.16b
                 uxtl vec0.4s, vec2.4h
@@ -112,8 +112,8 @@
                     fadd vecSum2.4s, vecSum2.4s, v22.4s
                     fadd vecSum3.4s, vecSum3.4s, v23.4s
                 .endif
-                subs row, row, #1
-                bne LoopKernelPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
+                sub row, row, #1
+                cbnz row, LoopKernelPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
                 ## EndOf_LoopKernelPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64 ##
             
             fcvtzu vec0.4s, vecSum0.4s
@@ -129,8 +129,8 @@
             xtn2 v15.16b, v14.8h            
             st1 {v15.16b}, [outPtr], #16
             add inPtr, inPtr, #16
-            subs i, i, #16
-            bne LoopWidthPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
+            sub i, i, #16
+            cbnz i, LoopWidthPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
             ## EndOf_LoopWidthPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64 ##
 
 
@@ -150,7 +150,7 @@
                 mov coeffs, vthzKernPtr
                 LoopKernelPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
                     ld1 { v15.8b }, [inPtr_], step // v15[0] = vecInPtrn
-                    ld1.s {vecCoeff}[0], [coeffs], #SizeOfFloat32InBytes
+                    ld1 {vecCoeff.s}[0], [coeffs], #SizeOfFloat32InBytes
                     uxtl vec0.8h, v15.8b
                     uxtl vec1.4s, vec0.4h
                     ucvtf vec2.4s, vec1.4s 
@@ -160,8 +160,8 @@
                         fmul vec3.4s, vec2.4s, vecCoeff.s[0]
                         fadd vecSum0.4s, vecSum0.4s, vec3.4s
                     .endif
-                    subs row, row, #1
-                    bne LoopKernelPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
+                    sub row, row, #1
+                    cbnz row, LoopKernelPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
                     ## EndOf_LoopKernelPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64 ##
 
                 fcvtzu vec0.4s, vecSum0.4s
@@ -169,14 +169,14 @@
                 xtn v14.8b, v13.8h
 
                 # do not use str (outPtr not #4 bytes aligned)
-                st1.b  { v14 }[0], [outPtr], #1
-                st1.b  { v14 }[1], [outPtr], #1
-                st1.b  { v14 }[2], [outPtr], #1
-                st1.b  { v14 }[3], [outPtr], #1
+                st1  { v14.b }[0], [outPtr], #1
+                st1  { v14.b }[1], [outPtr], #1
+                st1  { v14.b }[2], [outPtr], #1
+                st1  { v14.b }[3], [outPtr], #1
                 
                 add inPtr, inPtr, #4
-                subs i, i, #1
-                bne LoopWidthPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
+                sub i, i, #1
+                cbnz i, LoopWidthPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
                 EndOf_LoopWidthPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
                 ## EndOf_LoopWidthPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64 ##
 
@@ -196,7 +196,7 @@
                     mov coeffs, vthzKernPtr
                     LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
                         ld1 { v15.8b }, [inPtr_], step // v15[0] = vecInPtrn
-                        ld1.s {vecCoeff}[0], [coeffs], #SizeOfFloat32InBytes
+                        ld1 {vecCoeff.s}[0], [coeffs], #SizeOfFloat32InBytes
                         uxtl vec0.8h, v15.8b
                         uxtl vec1.4s, vec0.4h
                         ucvtf vec2.4s, vec1.4s
@@ -206,22 +206,22 @@
                             fmul vec3.2s, vec2.2s, vecCoeff.s[0]
                             fadd vecSum0.2s, vecSum0.2s, vec3.2s
                         .endif
-                        subs row, row, #1
-                        bne LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
+                        sub row, row, #1
+                        cbnz row, LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
                         ## EndOf_LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64 ##
 
                     fcvtzu vec0.2s, vecSum0.2s
-                    st1.b  { vec0 }[0], [outPtr], #1
+                    st1  { vec0.b }[0], [outPtr], #1
                     add inPtr, inPtr, #1
-                    subs i, i, #1
-                    bne LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
+                    sub i, i, #1
+                    cbnz i, LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
                     EndOf_LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
                     ## EndOf_LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64 ##
 
-        subs height, height, #1
+        sub height, height, #1
         add inPtr, inPtr, pad
         add outPtr, outPtr, pad
-		bne LoopHeight_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
+		cbnz height,  LoopHeight_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
         ## EndOf_LoopHeight_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64 ##
 
 
@@ -251,7 +251,7 @@
     #undef vec3       
 
 	COMPV_GAS_RESTORE_NEON_REGS
-	COMPV_GAS_UNSHADOW_ARGS 8
+	COMPV_GAS_UNSHADOW_ARGS
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 .endm

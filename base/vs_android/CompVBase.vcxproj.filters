@@ -121,6 +121,9 @@
     <Filter Include="include\math\intrin\arm">
       <UniqueIdentifier>{9aae60aa-6e48-40b8-945c-f17b665003d4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\math\asm\arm">
+      <UniqueIdentifier>{cfcfaad7-ee32-4b00-9d19-266a371a1130}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\base\compv_base.h">
@@ -369,6 +372,9 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon.h">
       <Filter>include\math\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon_fma.h">
+      <Filter>include\math\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -587,6 +593,9 @@
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon.cxx">
       <Filter>source\math\intrin\arm</Filter>
     </ClCompile>
+    <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon_fma.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\asm\x86\compv_bits_macros_x86.s">
@@ -695,6 +704,12 @@
     </GAS>
     <GAS Include="..\image\asm\arm\compv_image_scale_bilinear_arm64_neon.S">
       <Filter>source\image\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_convlt_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_convlt_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
     </GAS>
   </ItemGroup>
 </Project>

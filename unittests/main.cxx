@@ -12,8 +12,12 @@ using namespace compv;
 
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
 #define disableAVX() (kCpuFlagAVX | kCpuFlagAVX2)
+#if COMPV_ARCH_X86
 #define disableFMA() (kCpuFlagFMA3 | kCpuFlagFMA4)
-#define disableNEON() (kCpuFlagARM_NEON | kCpuFlagARM_VFPv4)
+#else
+#define disableFMA() (kCpuFlagARM_NEON_FMA)
+#endif
+#define disableNEON() (kCpuFlagARM_NEON)
 #define disableALL() kCpuFlagAll
 #define disableNONE() kCpuFlagNone
 #define enableALL() disableNONE()
@@ -29,8 +33,8 @@ static const uint64_t UNITTESTS_CPUFLAGS[] = {
 #if COMPV_ARCH_X86
 	disableSSE(), // avx+fma
 	disableAVX(), // sse+fma
-	disableFMA(), // avx+sse
 #endif
+	disableFMA(), // all without fma
 };
 
 compv_main()

@@ -22,7 +22,7 @@ static const struct compv_unittest_convlt {
 	size_t height;
 	size_t stride;
 	const char* md5;
-	const char* md5_avx2_fma3; // AVX2+FMA3
+	const char* md5_fma;
 }
 COMPV_UNITTEST_CONVLT_8u_32f_8u[] = // FloatingPoint(COMPV_UNITTEST_CONVLT_FXP_8u_16s_8u)
 {
@@ -96,7 +96,7 @@ static const size_t COMPV_UNITTEST_CONVLT_COUNT = 12;
 
 static const std::string compv_unittest_convlt_to_string(const compv_unittest_convlt* test, bool fixedPoint, bool avx2FMA3) {
 	return
-		std::string("avx2FMA3:") + CompVBase::to_string(avx2FMA3) + std::string(", ")
+		std::string("FMA:") + CompVBase::to_string(avx2FMA3) + std::string(", ")
 		+ std::string("fixedPoint:") + CompVBase::to_string(fixedPoint) + std::string(", ")
 		+std::string("kernelSize:") + CompVBase::to_string(test->kernelSize) + std::string(", ")
 		+ std::string("kernelSigma:") + CompVBase::to_string(test->kernelSigma) + std::string(", ")
@@ -112,10 +112,7 @@ static COMPV_ERROR_CODE convlt_ext(bool fixedPoint)
 	CompVMatPtr kernel;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	OutputType* outPtr = NULL;
-	const bool avx2_fma3 = std::is_same<KernelType, compv_float32_t>::value
-		&& CompVCpu::isEnabled(kCpuFlagAVX2)
-		&& CompVCpu::isEnabled(kCpuFlagFMA3)
-		&& (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled());
+	const bool fma = std::is_same<KernelType, compv_float32_t>::value && compv_tests_is_fma_enabled();
 
 	if (std::is_same<InputType, uint8_t>::value && std::is_same<KernelType, compv_float32_t>::value && std::is_same<OutputType, uint8_t>::value) {
 		tests = COMPV_UNITTEST_CONVLT_8u_32f_8u;
@@ -136,7 +133,7 @@ static COMPV_ERROR_CODE convlt_ext(bool fixedPoint)
 	
 	for (size_t i = 0; i < COMPV_UNITTEST_CONVLT_COUNT; ++i) {
 		test = &tests[i];
-		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Image convlt -> %s ==", compv_unittest_convlt_to_string(test, fixedPoint, avx2_fma3).c_str());
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Image convlt -> %s ==", compv_unittest_convlt_to_string(test, fixedPoint, fma).c_str());
 		// Read image and create output
 		if (std::is_same<InputType, uint8_t>::value) {
 			COMPV_CHECK_CODE_BAIL(err = CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &imageIn));
@@ -181,7 +178,7 @@ static COMPV_ERROR_CODE convlt_ext(bool fixedPoint)
 			));
 		}
 
-		COMPV_CHECK_EXP_BAIL(std::string(avx2_fma3 ? test->md5_avx2_fma3 : test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "[" TAG_TEST "]" " Image convolution MD5 mismatch");
+		COMPV_CHECK_EXP_BAIL(std::string(fma ? test->md5_fma : test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "[" TAG_TEST "]" " Image convolution MD5 mismatch");
 
 		kernel = NULL;
 		imageIn = NULL;

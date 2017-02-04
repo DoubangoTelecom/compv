@@ -139,7 +139,7 @@
             vmovn.u32 q14y, vec3
             vmovn.u16 q15x, q13
             vmovn.u16 q15y, q14
-            vst1.u8 q15, [outPtr]!
+            vst1.u8 {q15}, [outPtr]!
             subs i, i, #16
             add inPtr, inPtr, #16
             bne LoopWidthPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32\@
@@ -259,7 +259,6 @@
 	.unreq step
 	.unreq pad
 	.unreq vthzKernPtr
-	.unreq kernSize
 
     .unreq kernSizeInBytes
 
