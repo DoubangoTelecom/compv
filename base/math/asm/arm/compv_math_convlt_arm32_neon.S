@@ -53,7 +53,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
     i .req r8
     row .req r9
     inPtr_ .req r10
-    vthzKernPtr_ .req r11
+    coeff .req r11
 
     vecSum0 .req q0
     #define vecSum0x q0x
@@ -97,29 +97,24 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
             mov inPtr_, inPtr
             LoopKernelPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32:
                 vld1.u8 { q15 }, [inPtr_], step @ q15 = vecInPtr
-                ldr vthzKernPtr_, [vthzKernPtr, row]
+                ldr coeff, [vthzKernPtr, row]
                 add row, row, #SizeOfFloat32InBytes
                 cmp row, kernSizeInBytes
-                vmov.f32 vecCoeffx[0], vthzKernPtr_
-
+                vmov.f32 vecCoeffx[0], coeff
                 vmovl.u8 vec2, q15x
                 vmovl.u8 vec3, q15y
-
                 vmovl.u16 vec0, vec2x
 				vmovl.u16 vec1, vec2y
 				vmovl.u16 vec2, vec3x
 				vmovl.u16 vec3, vec3y
-
                 vcvt.f32.u32 vec0, vec0
                 vcvt.f32.u32 vec1, vec1
                 vcvt.f32.u32 vec2, vec2
                 vcvt.f32.u32 vec3, vec3
-
                 vmla.f32 vecSum0, vec0, vecCoeffx[0]
                 vmla.f32 vecSum1, vec1, vecCoeffx[0]
                 vmla.f32 vecSum2, vec2, vecCoeffx[0]
                 vmla.f32 vecSum3, vec3, vecCoeffx[0]
-                
                 blt LoopKernelPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
                 @@ EndOf_LoopKernelPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32 @@
 
@@ -127,7 +122,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
             vcvt.u32.f32 vec1, vecSum1
             vcvt.u32.f32 vec2, vecSum2
             vcvt.u32.f32 vec3, vecSum3
-
             vmovn.u32 q13x, vec0
             vmovn.u32 q13y, vec1
             vmovn.u32 q14x, vec2
@@ -135,9 +129,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
             vmovn.u16 q15x, q13
             vmovn.u16 q15y, q14
             vst1.u8 q15, [outPtr]!
-
-            add inPtr, inPtr, #16
             subs i, i, #16
+            add inPtr, inPtr, #16
             bne LoopWidthPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
             @@ EndOf_LoopWidthPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32 @@
 
@@ -157,16 +150,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
                 mov inPtr_, inPtr
                 LoopKernelPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32:
                     vld1.u8 { q15x }, [inPtr_], step @ q15x = vecInPtrn
-                    ldr vthzKernPtr_, [vthzKernPtr, row]
+                    ldr coeff, [vthzKernPtr, row]
                     add row, row, #SizeOfFloat32InBytes
                     cmp row, kernSizeInBytes
-                    vmov.f32 vecCoeffx[0], vthzKernPtr_
-
+                    vmov.f32 vecCoeffx[0], coeff
                     vmovl.u8 vec0, q15x
                     vmovl.u16 vec1, vec0x
                     vcvt.f32.u32 vec2, vec1
                     vmla.f32 vecSum0, vec2, vecCoeffx[0]
-                    
                     blt LoopKernelPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
                     @@ EndOf_LoopKernelPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32 @@
 
@@ -177,16 +168,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
                 @ do not use str (outPtr not #4 bytes aligned)
                 vmov.u8 row, q14x[0]
                 vmov.u8 inPtr_, q14x[1]
-                vmov.u8 vthzKernPtr_, q14x[2]
+                vmov.u8 coeff, q14x[2]
                 strb row, [outPtr, #0]
                 vmov.u8 row, q14x[3]
                 strb inPtr_, [outPtr, #1]
-                strb vthzKernPtr_, [outPtr, #2]
+                strb coeff, [outPtr, #2]
                 strb row, [outPtr, #3]
 
+                subs i, i, #1
                 add inPtr, inPtr, #4
                 add outPtr, outPtr, #4
-                subs i, i, #1
                 bne LoopWidthPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
                 EndOf_LoopWidthPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32:
                 @@ EndOf_LoopWidthPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32 @@
@@ -206,32 +197,29 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
                     mov inPtr_, inPtr
                     LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32:
                         vld1.u8 { q15x }, [inPtr_], step @ q15x = vecInPtrn
-                        ldr vthzKernPtr_, [vthzKernPtr, row]
-                        vmov.f32 vecCoeffx[0], vthzKernPtr_
-
-                        vmovl.u8 vec0, q15x
-                        vmovl.u16 vec1, vec0x
-                        vmla.f32 vecSum0x, vec1x, vecCoeffx[0]
-
+                        ldr coeff, [vthzKernPtr, row]
                         add row, row, #SizeOfFloat32InBytes
                         cmp row, kernSizeInBytes
+                        vmov.f32 vecCoeffx[0], coeff
+                        vmovl.u8 vec0, q15x
+                        vmovl.u16 vec1, vec0x
+                        vmla.f32 vecSum0x, vec1x, vecCoeffx[0]                        
                         blt LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
                         @@ EndOf_LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32 @@
 
                     vcvt.u32.f32 vec0, vecSum0
                     vmov.u8 row, vec0x[0]
-                    strb row, [outPtr, #0]
-
-                    add inPtr, inPtr, #1
-                    add outPtr, outPtr, #1
                     subs i, i, #1
+                    add inPtr, inPtr, #1
+                    strb row, [outPtr, #0]
+                    add outPtr, outPtr, #1
                     bne LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
                     EndOf_LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32:
                     @@ EndOf_LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32 @@
 
+        subs height, height, #1
         add inPtr, inPtr, pad
         add outPtr, outPtr, pad
-        subs height, height, #1
 		bne LoopHeight_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
         @@ EndOf_LoopHeight_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32 @@
 
@@ -251,7 +239,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32
     .unreq i
     .unreq row
     .unreq inPtr_
-    .unreq vthzKernPtr_
+    .unreq coeff
 
     .unreq vecSum0
     #undef vecSum0x
