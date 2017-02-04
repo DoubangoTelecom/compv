@@ -21,7 +21,7 @@ using namespace compv;
 #define COMPV_enableTestingMode		true
 #define COMPV_enableIntelIpp		false
 #define COMPV_enableIntelTbb		false
-#define COMPV_cpuDisable			kCpuFlagNone
+#define COMPV_cpuDisable			kCpuFlagARM_NEON_FMA
 
 COMPV_NAMESPACE_BEGIN()
 COMPV_GCC_DISABLE_WARNINGS_BEGIN("-Wunused-function")
@@ -105,6 +105,19 @@ static const std::string compv_tests_md5(const CompVMatPtr& mat)
 	}
 	return COMPV_MD5_EMPTY;
 }
+
+static COMPV_INLINE bool compv_tests_is_fma_enabled()
+{
+    // On X86 FMA requires AVX2 (both intrinsics and asm)
+    // On ARM FMA requires NEON (only asm) - When intrinsic code is built without "-mfpu=neon-vfpv4" then, the compiler generate very slooow code for vfma function.
+#if COMPV_ARCH_X86
+    return (CompVCpu::isEnabled(kCpuFlagAVX2) && CompVCpu::isEnabled(kCpuFlagFMA3)) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled());
+#elif COMPV_ARCH_ARM
+    return (CompVCpu::isEnabled(kCpuFlagARM_NEON) && CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) && CompVCpu::isAsmEnabled();
+#endif
+    return false;
+}
+
 
 COMPV_GCC_DISABLE_WARNINGS_END()
 COMPV_NAMESPACE_END()

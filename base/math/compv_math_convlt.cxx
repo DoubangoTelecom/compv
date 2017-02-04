@@ -11,6 +11,7 @@
 #include "compv/base/math/intrin/x86/compv_math_convlt_intrin_avx2.h"
 #include "compv/base/math/intrin/x86/compv_math_convlt_intrin_sse2.h"
 #include "compv/base/math/intrin/arm/compv_math_convlt_intrin_neon.h"
+#include "compv/base/math/intrin/arm/compv_math_convlt_intrin_neon_fma.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -27,6 +28,11 @@ COMPV_NAMESPACE_BEGIN()
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
     COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+    COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_FMA_NEON32(COMPV_ALIGNED(NEON) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+#   endif /* COMPV_ARCH_ARM32 */
+#	if COMPV_ARCH_ARM64
+    COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+    COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_FMA_NEON64(COMPV_ALIGNED(NEON) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
 #   endif /* COMPV_ARCH_ARM32 */
 #endif /* COMPV_ASM */
 
@@ -62,7 +68,11 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(co
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(inPtr) && width > 15) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Intrin_NEON);
 		COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32);
-		//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64);
+		COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64);
+        if (CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
+            COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_FMA_NEON32);
+            COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_FMA_NEON64);
+        }
 	}
 #endif
 
@@ -74,8 +84,9 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(co
 	}
     
     // FIXME: remove
+    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -16)).c_str());
+    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, width).c_str());
     //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width + pad) * height).c_str());
-    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, ((width + pad) * height)).c_str());
     
 }
 

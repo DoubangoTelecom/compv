@@ -24,7 +24,7 @@ static const struct compv_unittest_convlt {
 	size_t height;
 	size_t stride;
 	const char* md5;
-	const char* md5_avx2_fma3; // AVX2+FMA3
+	const char* md5_fma;
 }
 COMPV_UNITTEST_CONVLT_8u_32f_8u[] = // FloatingPoint(COMPV_UNITTEST_CONVLT_FXP_8u_16s_8u)
 {
@@ -106,10 +106,7 @@ static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma, const c
 	CompVMatPtr kernel;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	OutputType* outPtr = NULL;
-	const bool avx2_fma3 = std::is_same<KernelType, compv_float32_t>::value
-		&& CompVCpu::isEnabled(kCpuFlagAVX2)
-		&& CompVCpu::isEnabled(kCpuFlagFMA3)
-		&& (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled());
+    const bool fma = std::is_same<KernelType, compv_float32_t>::value && compv_tests_is_fma_enabled();
 
 	if (std::is_same<InputType, uint8_t>::value && std::is_same<KernelType, compv_float32_t>::value && std::is_same<OutputType, uint8_t>::value) {
 		tests = COMPV_UNITTEST_CONVLT_8u_32f_8u;
@@ -253,8 +250,11 @@ static COMPV_ERROR_CODE convlt_ext(size_t kernelSize, float kernelSigma, const c
 	COMPV_CHECK_CODE_BAIL(err = compv_tests_write_to_file(imageOut, "out.gray"));
 #endif
     
+    // FIXME:
+    COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5:%s", compv_tests_md5(imageOut).c_str());
+    
 #if IMAGE_CONVLT_LOOP_COUNT == 1
-	COMPV_CHECK_EXP_BAIL(std::string(avx2_fma3 ? test->md5_avx2_fma3 : test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Image convolution MD5 mismatch");
+	COMPV_CHECK_EXP_BAIL(std::string(fma ? test->md5_fma : test->md5).compare(compv_tests_md5(imageOut)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "Image convolution MD5 mismatch");
 #endif
 
 bail:

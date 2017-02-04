@@ -150,7 +150,11 @@ private:
 #else
 #	define COMPV_DEBUG_INFO_CHECK_NEON()
 #endif
-
+#if !defined(__VFPV4__) && !COMPV_ARCH_ARM64 // FMA enabled by default on all Aarch64 devices
+#	define COMPV_DEBUG_INFO_CHECK_FMA() COMPV_DEBUG_INFO_CODE_ONCE("Not built with FMA support")
+#else
+#	define COMPV_DEBUG_INFO_CHECK_FMA()
+#endif
 
 COMPV_NAMESPACE_END()
 

@@ -42,12 +42,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVTest_Asm_NEON64
 	COMPV_GAS_ALIGN_STACK 16, r9
 	COMPV_GAS_MEMALLOC 128
 
-    ldp_arg 0, x0, x1
-    ldp_arg 2, x2, x3
-    ldp_arg 4, x4, x5
-    ldp_arg 6, x6, x7
-    ldp_arg 8, x8, x9
-    ldr_arg 10, x10
+    ldp_arg 0, r0, r1
+    ldp_arg 2, r2, r3
+    ldp_arg 4, r4, r5
+    ldp_arg 6, r6, r7
+    ldp_arg 8, r8, r9
+    ldr_arg 10, r10
 	//name0 .req r0
 	//name1 .req r1
 	//name2 .req r2

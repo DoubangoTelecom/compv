@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "A2254D705041BD76A0849B07256AE2C0E48973D0",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "1122A4BD72F545D872B4FD3D90FD5F07E348D1B2" : 9223372036854775807,
+    "A2254D705041BD76A0849B07256AE2C0E48973D0" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "C05DC75E-7773-4A57-A8B1-5769671144C7",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "1122A4BD72F545D872B4FD3D90FD5F07E348D1B2" : "data\/",
+    "A2254D705041BD76A0849B07256AE2C0E48973D0" : "compv\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "+",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "tests\/image\/xcode_ios\/+.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/DoubangoTelecom\/data.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "1122A4BD72F545D872B4FD3D90FD5F07E348D1B2"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/DoubangoTelecom\/compv.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "A2254D705041BD76A0849B07256AE2C0E48973D0"
+    }
+  ]
+}

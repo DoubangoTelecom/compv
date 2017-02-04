@@ -374,13 +374,14 @@ COMPV_ERROR_CODE CompVCpu::init()
     size_t size;
     cpu_type_t type;
     cpu_subtype_t subtype;
+    
     size = sizeof(type);
     if ((aret = sysctlbyname("hw.cputype", &type, &size, NULL, 0)) == 0) {
         COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "sysctlbyname(hw.cpusubtype): %d", static_cast<int>(type));
         if ((type & CPU_TYPE_ARM64) == CPU_TYPE_ARM64) {
             // All ARM64 (v7, v8 and upcomming v9) devices support neon and vfpv4
             // Later we check the cpu subtype but it could mistach when apple adds when major version (e.g. CPU_SUBTYPE_ARM64_V9)
-            CompVCpu::s_uFlags |= kCpuFlagARM64 | kCpuFlagARM_NEON | kCpuFlagARM_VFPv4 | kCpuFlagARM_VFPv3;
+            CompVCpu::s_uFlags |= kCpuFlagARM64 | kCpuFlagARM_NEON | kCpuFlagARM_NEON_FMA | kCpuFlagARM_VFPv4 | kCpuFlagARM_VFPv3;
         }
         if ((type & CPU_TYPE_ARM) == CPU_TYPE_ARM) {
             CompVCpu::s_uFlags |= kCpuFlagARM;
@@ -393,12 +394,15 @@ COMPV_ERROR_CODE CompVCpu::init()
     if (sysctlbyname("hw.cpusubtype", &subtype, &size, NULL, 0) == 0) {
         COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "sysctlbyname(hw.cpusubtype): %d", static_cast<int>(subtype));
         if ((subtype & CPU_SUBTYPE_ARM_V7) == CPU_SUBTYPE_ARM_V7 || (subtype & CPU_SUBTYPE_ARM_V8) == CPU_SUBTYPE_ARM_V8 || (subtype & CPU_SUBTYPE_ARM64_V8) == CPU_SUBTYPE_ARM64_V8) {
-            CompVCpu::s_uFlags |= kCpuFlagARM_NEON | kCpuFlagARM_VFPv4 | kCpuFlagARM_VFPv3;
+            CompVCpu::s_uFlags |= kCpuFlagARM_NEON | kCpuFlagARM_NEON_FMA | kCpuFlagARM_VFPv4 | kCpuFlagARM_VFPv3;
         }
     }
     else {
         COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "sysctlbyname(hw.cpusubtype) failed: %d", aret);
     }
+    
+    
+    
 #	else
     CompVCpu::s_uFlags |= CompVArmCaps("/proc/cpuinfo");
 #endif
@@ -504,6 +508,7 @@ const char* CompVCpu::flagsAsString(uint64_t uFlags)
         { kCpuFlagARM, "[arm]" },
         { kCpuFlagARM64, "[arm64]" },
         { kCpuFlagARM_NEON, "neon" },
+        { kCpuFlagARM_NEON_FMA, "neon_fma"},
         { kCpuFlagARM_VFPv3, "vfpv3" },
 		{ kCpuFlagARM_VFPv4, "vfpv4" },
         // -- reserved for future ARM flag.

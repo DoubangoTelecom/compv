@@ -31,8 +31,9 @@ static const uint64_t kCpuFlagAMD = COMPV_CPU_FLAG_BIT(1);
 static const uint64_t kCpuFlagARM = COMPV_CPU_FLAG_BIT(5);
 static const uint64_t kCpuFlagARM64 = COMPV_CPU_FLAG_BIT(6);
 static const uint64_t kCpuFlagARM_NEON = COMPV_CPU_FLAG_BIT(7);
-static const uint64_t kCpuFlagARM_VFPv3 = COMPV_CPU_FLAG_BIT(8);
-static const uint64_t kCpuFlagARM_VFPv4 = COMPV_CPU_FLAG_BIT(9);
+static const uint64_t kCpuFlagARM_NEON_FMA = COMPV_CPU_FLAG_BIT(8); // NEON + VFP4 (see compv_android_cpu-features.cxx)
+static const uint64_t kCpuFlagARM_VFPv3 = COMPV_CPU_FLAG_BIT(9);
+static const uint64_t kCpuFlagARM_VFPv4 = COMPV_CPU_FLAG_BIT(10);
 // -- reserved for future ARM flag.
 
 // These flags are only valid on x86/x64 processors.

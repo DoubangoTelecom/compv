@@ -22,16 +22,16 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t*
 	uint8x16_t vecInPtr, vec0i, vec1i, vec2i, vec3i;
 	float32x4_t vecSum0, vecSum1, vecSum2, vecSum3, vec0f, vec1f, vec2f, vec3f;
     uint8x8_t vecInPtrn;
-	float32x2_t vecSum0n, vecCoeffn;
+	float32x2_t vecSum0n;
 	const bool bOutptrIs4BytesAligned = COMPV_IS_ALIGNED(outPtr, 4); // to avoid bus error when casting as 'uint32_t'
 
 	for (j = 0; j < height; ++j) {
 		/* Per #16 bytes */
 		for (i = 0; i < width - 15; i += 16) {
-            vecSum0 = veorq_u8(vec0f, vec0f);
-            vecSum1 = veorq_u8(vec0f, vec0f);
-            vecSum2 = veorq_u8(vec0f, vec0f);
-            vecSum3 = veorq_u8(vec0f, vec0f);
+            vecSum0 = vdupq_n_f32(0.f);
+            vecSum1 = vdupq_n_f32(0.f);
+            vecSum2 = vdupq_n_f32(0.f);
+            vecSum3 = vdupq_n_f32(0.f);
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtr = vld1q_u8(&inPtr[i + k]);
 				coeff = vthzKernPtr[row];
@@ -62,7 +62,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t*
 
 		/* Per #4 bytes */
 		for (; i < width - 3; i += 4) {
-			vecSum0 = veorq_u8(vec0f, vec0f);
+			vecSum0 = vdupq_n_f32(0.f);
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtrn = vld1_u8(&inPtr[i + k]);
                 coeff = vthzKernPtr[row];
@@ -85,7 +85,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t*
 
 		/* Per #1 bytes */
 		for (; i < width; i += 1) {
-			vecSum0n = veor_u8(vecSum0n, vecSum0n);
+			vecSum0n = vdup_n_f32(0.f);
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecSum0n = vmla_n_f32(vecSum0n, vdup_n_f32(vthzKernPtr[row]), static_cast<compv_float32_t>(inPtr[i + k]));
 			}
