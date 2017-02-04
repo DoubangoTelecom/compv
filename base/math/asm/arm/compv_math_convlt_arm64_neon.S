@@ -75,17 +75,10 @@
         ###########################################################
         and i, width, #-16 // Align backward (FIXME: use bic)
         LoopWidthPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
-            #if 0 // FIXME: try with movi
-            movi vecSum0, #0
-            movi vecSum1, #0
-            movi vecSum2, #0
-            movi vecSum3, #0
-            #else
-            eor vecSum0.16b, vecSum0.16b, vecSum0.16b
-            eor vecSum1.16b, vecSum1.16b, vecSum1.16b
-            eor vecSum2.16b, vecSum2.16b, vecSum2.16b
-            eor vecSum3.16b, vecSum3.16b, vecSum3.16b
-            #endif
+            movi vecSum0.4s, #0
+            movi vecSum1.4s, #0
+            movi vecSum2.4s, #0
+            movi vecSum3.4s, #0
             ###########################################################
             # for (row = 0, k = 0; row < kernSize; ++row, k += step)
             ###########################################################
@@ -95,32 +88,33 @@
             LoopKernelPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
                 ld1 { v15.16b }, [inPtr_], step // v15 = vecInPtr
                 ld1.s {vecCoeff}[0], [coeffs], #SizeOfFloat32InBytes
-                subs row, row, #1
+                
                 uxtl vec2.8h, v15.8b
                 uxtl2 vec3.8h, v15.16b
                 uxtl vec0.4s, vec2.4h
 				uxtl2 vec1.4s, vec2.8h
 				uxtl vec2.4s, vec3.4h
 				uxtl2 vec3.4s, vec3.8h
-                ucvtf vec0.4s, vec0.4s
-                ucvtf vec1.4s, vec1.4s
-                ucvtf vec2.4s, vec2.4s
-                ucvtf vec3.4s, vec3.4s
+                ucvtf v16.4s, vec0.4s
+                ucvtf v17.4s, vec1.4s
+                ucvtf v18.4s, vec2.4s
+                ucvtf v19.4s, vec3.4s
                 .if \fusedMultiplyAdd
-                    fmla vecSum0.4s, vec0.4s, vecCoeff.s[0]
-                    fmla vecSum1.4s, vec1.4s, vecCoeff.s[0]
-                    fmla vecSum2.4s, vec2.4s, vecCoeff.s[0]
-                    fmla vecSum3.4s, vec3.4s, vecCoeff.s[0]
+                    fmla vecSum0.4s, v16.4s, vecCoeff.s[0]
+                    fmla vecSum1.4s, v17.4s, vecCoeff.s[0]
+                    fmla vecSum2.4s, v18.4s, vecCoeff.s[0]
+                    fmla vecSum3.4s, v19.4s, vecCoeff.s[0]
                 .else
-                    fmul vec0.4s, vec0.4s, vecCoeff.s[0]
-                    fmul vec1.4s, vec1.4s, vecCoeff.s[0]
-                    fmul vec2.4s, vec2.4s, vecCoeff.s[0]
-                    fmul vec3.4s, vec3.4s, vecCoeff.s[0]
-                    fadd vecSum0.4s, vecSum0.4s, vec0.4s
-                    fadd vecSum1.4s, vecSum1.4s, vec1.4s
-                    fadd vecSum2.4s, vecSum2.4s, vec2.4s
-                    fadd vecSum3.4s, vecSum3.4s, vec3.4s
+                    fmul v20.4s, v16.4s, vecCoeff.s[0]
+                    fmul v21.4s, v17.4s, vecCoeff.s[0]
+                    fmul v22.4s, v18.4s, vecCoeff.s[0]
+                    fmul v23.4s, v19.4s, vecCoeff.s[0]
+                    fadd vecSum0.4s, vecSum0.4s, v20.4s
+                    fadd vecSum1.4s, vecSum1.4s, v21.4s
+                    fadd vecSum2.4s, vecSum2.4s, v22.4s
+                    fadd vecSum3.4s, vecSum3.4s, v23.4s
                 .endif
+                subs row, row, #1
                 bne LoopKernelPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
                 ## EndOf_LoopKernelPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64 ##
             
@@ -136,8 +130,8 @@
             xtn v15.8b, v13.8h
             xtn2 v15.16b, v14.8h            
             st1 {v15.16b}, [outPtr], #16
-            subs i, i, #16
             add inPtr, inPtr, #16
+            subs i, i, #16
             bne LoopWidthPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
             ## EndOf_LoopWidthPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64 ##
 
@@ -149,11 +143,7 @@
             lsr i, i, #2 // div 4
             cbz i, EndOf_LoopWidthPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
             LoopWidthPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
-                #if 0 // FIXME: try with movi
-                movi vecSum0, #0
-                #else
-                eor vecSum0.16b, vecSum0.16b, vecSum0.16b
-                #endif
+                movi vecSum0.4s, #0
                 ###########################################################
                 # for (row = 0, k = 0; row < kernSize; ++row, k += step)
                 ###########################################################
@@ -163,16 +153,16 @@
                 LoopKernelPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
                     ld1 { v15.8b }, [inPtr_], step // v15[0] = vecInPtrn
                     ld1.s {vecCoeff}[0], [coeffs], #SizeOfFloat32InBytes
-                    subs row, row, #1
                     uxtl vec0.8h, v15.8b
                     uxtl vec1.4s, vec0.4h
                     ucvtf vec2.4s, vec1.4s 
                     .if \fusedMultiplyAdd
                         fmla vecSum0.4s, vec2.4s, vecCoeff.s[0]
                     .else
-                        fmul vec2.4s, vec2.4s, vecCoeff.s[0]
-                        fadd vecSum0.4s, vecSum0.4s, vec2.4s
+                        fmul vec3.4s, vec2.4s, vecCoeff.s[0]
+                        fadd vecSum0.4s, vecSum0.4s, vec3.4s
                     .endif
+                    subs row, row, #1
                     bne LoopKernelPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
                     ## EndOf_LoopKernelPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64 ##
 
@@ -185,9 +175,9 @@
                 st1.b  { v14 }[1], [outPtr], #1
                 st1.b  { v14 }[2], [outPtr], #1
                 st1.b  { v14 }[3], [outPtr], #1
-
-                subs i, i, #1
+                
                 add inPtr, inPtr, #4
+                subs i, i, #1
                 bne LoopWidthPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
                 EndOf_LoopWidthPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
                 ## EndOf_LoopWidthPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64 ##
@@ -199,11 +189,7 @@
                 and i, width, #3 //  modulo 4
                 cbz i, EndOf_LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
                 LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
-                    #if 0 // FIXME: try with movi
                     movi vecSum0.8b, #0
-                    #else
-                    eor vecSum0.8b, vecSum0.8b, vecSum0.8b
-                    #endif
                     ###########################################################
                     # for (row = 0, k = 0; row < kernSize; ++row, k += step)
                     ###########################################################
@@ -213,23 +199,23 @@
                     LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
                         ld1 { v15.8b }, [inPtr_], step // v15[0] = vecInPtrn
                         ld1.s {vecCoeff}[0], [coeffs], #SizeOfFloat32InBytes
-                        subs row, row, #1
                         uxtl vec0.8h, v15.8b
                         uxtl vec1.4s, vec0.4h
                         ucvtf vec2.4s, vec1.4s
                         .if \fusedMultiplyAdd
                             fmla vecSum0.2s, vec2.2s, vecCoeff.s[0]
                         .else
-                            fmul vec2.2s, vec2.2s, vecCoeff.s[0]
-                            fadd vecSum0.2s, vecSum0.2s, vec2.2s
+                            fmul vec3.2s, vec2.2s, vecCoeff.s[0]
+                            fadd vecSum0.2s, vecSum0.2s, vec3.2s
                         .endif
+                        subs row, row, #1
                         bne LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
                         ## EndOf_LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64 ##
 
                     fcvtzu vec0.2s, vecSum0.2s
                     st1.b  { vec0 }[0], [outPtr], #1
-                    subs i, i, #1
                     add inPtr, inPtr, #1
+                    subs i, i, #1
                     bne LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
                     EndOf_LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
                     ## EndOf_LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64 ##
