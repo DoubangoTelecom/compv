@@ -52,7 +52,6 @@
     row .req r9
     inPtr_ .req r10
     coeffs .req r11
-    #define coeffsw r11w
 
     #define vecSum0     v0
     #define vecSum1     v1
@@ -124,8 +123,8 @@
             fcvtzu vec3.4s, vecSum3.4s
 
             xtn v13.4h, vec0.4s
-            xtn2 v13.8h, vec1.4s
             xtn v14.4h, vec2.4s
+            xtn2 v13.8h, vec1.4s
             xtn2 v14.8h, vec3.4s
             xtn v15.8b, v13.8h
             xtn2 v15.16b, v14.8h            
@@ -241,7 +240,6 @@
     .unreq row
     .unreq inPtr_
     .unreq coeffs
-    #undef coeffsw
 
     #undef vecSum0     
     #undef vecSum1     
