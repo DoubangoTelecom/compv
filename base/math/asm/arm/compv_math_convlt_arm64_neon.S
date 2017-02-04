@@ -86,7 +86,7 @@
             mov coeffs, vthzKernPtr
             LoopKernelPer16Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
                 ld1 { v15.16b }, [inPtr_], step // v15 = vecInPtr
-				ld1 {vecCoeff.s}[0], [coeffs], #SizeOfFloat32InBytes
+				ld1r {vecCoeff.4s}, [coeffs], #SizeOfFloat32InBytes
                 uxtl vec2.8h, v15.8b
                 uxtl2 vec3.8h, v15.16b
                 uxtl vec0.4s, vec2.4h
@@ -150,7 +150,7 @@
                 mov coeffs, vthzKernPtr
                 LoopKernelPer4Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
                     ld1 { v15.8b }, [inPtr_], step // v15[0] = vecInPtrn
-                    ld1 {vecCoeff.s}[0], [coeffs], #SizeOfFloat32InBytes
+					ld1r {vecCoeff.4s}, [coeffs], #SizeOfFloat32InBytes
                     uxtl vec0.8h, v15.8b
                     uxtl vec1.4s, vec0.4h
                     ucvtf vec2.4s, vec1.4s 
@@ -169,10 +169,14 @@
                 xtn v14.8b, v13.8h
 
                 # do not use str (outPtr not #4 bytes aligned)
-                st1  { v14.b }[0], [outPtr], #1
-                st1  { v14.b }[1], [outPtr], #1
-                st1  { v14.b }[2], [outPtr], #1
-                st1  { v14.b }[3], [outPtr], #1
+				#if 0
+					st1  { v14.s }[0], [outPtr], #1
+					st1  { v14.b }[1], [outPtr], #1
+					st1  { v14.b }[2], [outPtr], #1
+					st1  { v14.b }[3], [outPtr], #1
+				#else
+					st1  { v14.s }[0], [outPtr], #4
+				#endif
                 
                 add inPtr, inPtr, #4
                 sub i, i, #1
@@ -196,7 +200,7 @@
                     mov coeffs, vthzKernPtr
                     LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
                         ld1 { v15.8b }, [inPtr_], step // v15[0] = vecInPtrn
-                        ld1 {vecCoeff.s}[0], [coeffs], #SizeOfFloat32InBytes
+                        ld1r {vecCoeff.4s}, [coeffs], #SizeOfFloat32InBytes
                         uxtl vec0.8h, v15.8b
                         uxtl vec1.4s, vec0.4h
                         ucvtf vec2.4s, vec1.4s
