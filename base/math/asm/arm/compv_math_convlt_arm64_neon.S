@@ -199,7 +199,7 @@
 						add inPtr_, inPtr_, step
                         ucvtf s21, w21
                         .if \fusedMultiplyAdd
-							fmadd s19, s19, s21, s20
+							fmadd s19, s21, s20, s19 // s19 = (s21 * s20) + s19
                         .else
                             fmul s23, s21, s20
                             fadd s19, s19, s23

@@ -185,7 +185,13 @@
                 vmovn.u16 q14x, q13
 
                 @ do not use str (outPtr not #4 bytes aligned)
-                vmov.u8 row, q14x[0]
+				#if 0 // must be 2bytes aligned
+				vmov.u16 row, q14x[0]
+				vmov.u16 coeff, q14x[1]
+				strh row, [outPtr, #0]
+				strh coeff, [outPtr, #2]
+				#else // must be 1byte aligned (means always ok)
+				vmov.u8 row, q14x[0]
                 vmov.u8 inPtr_, q14x[1]
                 vmov.u8 coeff, q14x[2]
                 strb row, [outPtr, #0]
@@ -193,6 +199,7 @@
                 strb inPtr_, [outPtr, #1]
                 strb coeff, [outPtr, #2]
                 strb row, [outPtr, #3]
+				#endif
 
                 subs i, i, #1
                 add inPtr, inPtr, #4
@@ -220,7 +227,7 @@
                         add row, row, #SizeOfFloat32InBytes
                         cmp row, kernSizeInBytes
                         .if \fusedMultiplyAdd
-                            vdup.f32 vecCoeff, coeff
+                            vdup.f32 vecCoeffx, coeff
                         .else
                             vmov.f32 vecCoeffx[0], coeff
                         .endif
@@ -234,7 +241,7 @@
                         blt LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32\@
                         @@ EndOf_LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32 @@
 
-                    vcvt.u32.f32 vec0, vecSum0
+                    vcvt.u32.f32 vec0x, vecSum0x
                     vmov.u8 row, vec0x[0]
                     subs i, i, #1
                     add inPtr, inPtr, #1
