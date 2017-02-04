@@ -171,14 +171,7 @@
                 xtn v14.8b, v13.8h
 
                 # do not use str (outPtr not #4 bytes aligned)
-				#if 0
-					st1  { v14.s }[0], [outPtr], #1
-					st1  { v14.b }[1], [outPtr], #1
-					st1  { v14.b }[2], [outPtr], #1
-					st1  { v14.b }[3], [outPtr], #1
-				#else
-					st1  { v14.s }[0], [outPtr], #4
-				#endif
+				st1  { v14.s }[0], [outPtr], #4
                 
                 add inPtr, inPtr, #4
                 sub i, i, #1
@@ -193,7 +186,7 @@
                 and i, width, #3 //  modulo 4
                 cbz i, EndOf_LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
                 LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
-                    fmov s19, xzr
+                    fmov s19, wzr
                     ###########################################################
                     # for (row = 0, k = 0; row < kernSize; ++row, k += step)
                     ###########################################################
@@ -201,22 +194,22 @@
                     mov inPtr_, inPtr
                     mov coeffs, vthzKernPtr
                     LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@:
-                        ldr b21, [inPtr_]
+                        ldrb w21, [inPtr_]
                         ldr s20, [coeffs], #SizeOfFloat32InBytes
 						add inPtr_, inPtr_, step
-                        ucvtf s21, s21
+                        ucvtf s21, w21
                         .if \fusedMultiplyAdd
-							fmadd s19, s19, s20, s21
+							fmadd s19, s19, s21, s20
                         .else
-                            fmul s22, s20, s21
-                            fadd s19, s19, s22
+                            fmul s23, s21, s20
+                            fadd s19, s19, s23
                         .endif
                         sub row, row, #1
                         cbnz row, LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
                         ## EndOf_LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64 ##
 
-                    fcvtzu r20, s19
-                    str  b20, [outPtr], #1
+                    fcvtzu w23, s19
+                    strb  w23, [outPtr], #1
                     add inPtr, inPtr, #1
                     sub i, i, #1
                     cbnz i, LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64\@
