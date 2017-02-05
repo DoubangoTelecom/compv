@@ -215,7 +215,7 @@
                 ands i, width, #3 @  modulo 4
                 beq EndOf_LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32\@
                 LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32\@:
-                    veor.f32 vecSum0x, vecSum0x, vecSum0x
+                    veor.f32 vecSum0, vecSum0, vecSum0
                     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
                     @ for (row = 0, k = 0; row < kernSize; ++row, k += step)
                     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -223,31 +223,36 @@
                     mov inPtr_, inPtr
                     LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32\@:
                         vld1.u8 { q15x }, [inPtr_], step @ q15x = vecInPtrn
-                        ldr coeff, [vthzKernPtr, row]
-                        add row, row, #SizeOfFloat32InBytes
-                        cmp row, kernSizeInBytes
-                        .if \fusedMultiplyAdd
-                            vdup.f32 vecCoeffx, coeff
-                        .else
-                            vmov.f32 vecCoeffx[0], coeff
-                        .endif
-                        vmovl.u8 vec0, q15x
-                        vmovl.u16 vec1, vec0x
-                        .if \fusedMultiplyAdd
-                            vfma.f32 vecSum0x, vec1x, vecCoeffx
-                        .else
-                            vmla.f32 vecSum0x, vec1x, vecCoeffx[0]
-                        .endif                     
+						ldr coeff, [vthzKernPtr, row]
+						add row, row, #SizeOfFloat32InBytes
+						cmp row, kernSizeInBytes
+						.if \fusedMultiplyAdd
+							vdup.f32 vecCoeff, coeff
+						.else
+							vmov.f32 vecCoeffx[0], coeff
+						.endif
+						vmovl.u8 vec0, q15x
+						vmovl.u16 vec1, vec0x
+						vcvt.f32.u32 vec2, vec1
+						.if \fusedMultiplyAdd
+							vfma.f32 vecSum0, vec2, vecCoeff
+						.else
+							vmla.f32 vecSum0, vec2, vecCoeffx[0]
+						.endif                  
                         blt LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32\@
                         @@ EndOf_LoopKernelPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32 @@
-
-                    vcvt.u32.f32 vec0x, vecSum0x
-                    vmov.u8 row, vec0x[0]
-                    subs i, i, #1
-                    add inPtr, inPtr, #1
-                    strb row, [outPtr, #0]
-                    add outPtr, outPtr, #1
-                    bne LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32\@
+					vcvt.u32.f32 vec0, vecSum0
+					vmovn.u32 q13x, vec0
+					vmovn.u16 q14x, q13
+					add inPtr, inPtr, i
+					.set counter, 0
+					.rept 4
+						vmov.u8 row, q14x[counter]
+						.set counter, counter+1
+						strb row, [outPtr], #1
+						subs i, i, #1
+						beq EndOf_LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32\@
+					.endr
                     EndOf_LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32\@:
                     @@ EndOf_LoopWidthPer1Bytes_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32 @@
 
