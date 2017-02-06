@@ -20,6 +20,8 @@ COMPV_NAMESPACE_BEGIN()
 
 void CompVMathConvlt1VtHz_8u32f8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
 
+void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize);
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

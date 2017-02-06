@@ -11,6 +11,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2)
+global sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X86_SSE2)
 
 section .data
 
@@ -253,6 +254,258 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
 	pop rdi
 	pop rsi
 	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* inPtr
+; arg(1) -> uint8_t* outPtr
+; arg(2) -> compv_uscalar_t width
+; arg(3) -> compv_uscalar_t height
+; arg(4) -> compv_uscalar_t step
+; arg(5) -> compv_uscalar_t pad
+; arg(6) -> const uint16_t* vthzKernPtr
+; arg(7) -> compv_uscalar_t kernSize
+sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X86_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 8
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	%define vecZero				xmm0
+	%define vecSum0				xmm1
+	%define vecSum1				xmm2
+	%define vecCoeff			xmm3
+	%define vec0				xmm4
+	%define vec1				xmm5
+
+	pxor vecZero, vecZero
+
+	%define argi_inPtr			0
+	%define argi_outPtr			1
+	%define argi_width			2
+	%define argi_height			3
+	%define argi_step			4 
+	%define argi_pad			5
+	%define argi_vthzKernPtr	6
+	%define argi_kernSize		7
+
+	mov rax, arg(argi_width)
+	mov rbx, arg(argi_pad)
+	lea rax, [rax + rbx]
+	%define argi_stride 5 ; argi_pad
+	mov arg(argi_stride), rax ; stride = (pad + width)
+	%undef argi_pad
+
+	%define width	rcx
+	%define j		rsi
+	%define i		rdi
+	mov j, arg(argi_height)
+	mov width, arg(argi_width)
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < width - 15; i += 16)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		xor i, i
+		.LoopWidth_Per16Bytes:
+			pxor vecSum0, vecSum0
+			pxor vecSum1, vecSum1
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			; for (row = 0, k = 0; row < kernSize; ++row, k += step)
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			mov rbx, arg(argi_inPtr)
+			lea rax, [rbx + i] ; rax = &inPtr[i]
+			mov rbx, arg(argi_vthzKernPtr) ; rbx = &vthzKernPtr[0]
+			xor rdx, rdx ; rdx = row = 0
+			.LoopKernelSize_Per16Bytes:
+				movdqu vec0, [rax]
+				movd vecCoeff, [rbx + rdx*COMPV_YASM_UINT16_SZ_BYTES]  
+				punpcklwd vecCoeff, vecCoeff
+				pshufd vecCoeff, vecCoeff, 0
+				inc rdx
+				movdqa vec1, vec0
+				punpcklbw vec0, vecZero
+				pmulhuw vec0, vecCoeff
+				punpckhbw vec1, vecZero
+				pmulhuw vec1, vecCoeff
+				add rax, arg(argi_step)
+				cmp rdx, arg(argi_kernSize)
+				paddusw vecSum0, vec0
+				paddusw vecSum1, vec1		
+				jl .LoopKernelSize_Per16Bytes
+				; EndOf_LoopKernelSize_Per16Bytes ;
+			
+			mov rdx, arg(argi_outPtr)
+			lea rax, [width - 15]
+			lea i, [i + 16]
+			cmp i, rax
+			packuswb vecSum0, vecSum1
+			movdqu [rdx + i - 16], vecSum0
+			jl .LoopWidth_Per16Bytes
+			; EndOf_LoopWidth_Per16Bytes ;
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; if (i < width - 7)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		lea rax, [width - 7]
+		cmp i, rax
+		jge .EndOf_If_Per8Bytes
+		.If_Per8Bytes:
+			pxor vecSum0, vecSum0
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			; for (row = 0, k = 0; row < kernSize; ++row, k += step)
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			mov rbx, arg(argi_inPtr)
+			lea rax, [rbx + i] ; rax = &inPtr[i]
+			mov rbx, arg(argi_vthzKernPtr) ; rbx = &vthzKernPtr[0]
+			xor rdx, rdx ; rdx = row = 0
+			.LoopKernelSize_Per8Bytes:
+				movq vec0, [rax]
+				movd vecCoeff, [rbx + rdx*COMPV_YASM_UINT16_SZ_BYTES]  
+				punpcklwd vecCoeff, vecCoeff
+				pshufd vecCoeff, vecCoeff, 0
+				inc rdx
+				add rax, arg(argi_step)
+				punpcklbw vec0, vecZero
+				pmulhuw vec0, vecCoeff
+				cmp rdx, arg(argi_kernSize)
+				paddusw vecSum0, vec0
+				jl .LoopKernelSize_Per8Bytes
+				; EndOf_LoopKernelSize_Per8Bytes ;
+
+			mov rdx, arg(argi_outPtr)
+			packuswb vecSum0, vecSum0
+			movq [rdx + i], vecSum0
+			lea i, [i + 8]
+			.EndOf_If_Per8Bytes
+			; EndOf_If_Per8Bytes ;
+
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; if (i < width -3)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		lea rax, [width - 3]
+		cmp i, rax
+		jge .EndOf_If_Per4Bytes
+		.If_Per4Bytes:
+			pxor vecSum0, vecSum0
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			; for (row = 0, k = 0; row < kernSize; ++row, k += step)
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			mov rbx, arg(argi_inPtr)
+			lea rax, [rbx + i] ; rax = &inPtr[i]
+			mov rbx, arg(argi_vthzKernPtr) ; rbx = &vthzKernPtr[0]
+			xor rdx, rdx ; rdx = row = 0
+			.LoopKernelSize_Per4Bytes:
+				movd vec0, [rax]
+				movd vecCoeff, [rbx + rdx*COMPV_YASM_UINT16_SZ_BYTES]  
+				punpcklwd vecCoeff, vecCoeff
+				pshufd vecCoeff, vecCoeff, 0
+				inc rdx
+				add rax, arg(argi_step)
+				punpcklbw vec0, vecZero
+				pmulhuw vec0, vecCoeff
+				cmp rdx, arg(argi_kernSize)
+				paddusw vecSum0, vec0
+				jl .LoopKernelSize_Per4Bytes
+				; EndOf_LoopKernelSize_Per4Bytes ;
+
+			mov rdx, arg(argi_outPtr)
+			packuswb vecSum0, vecSum0
+			movd [rdx + i], vecSum0
+			lea i, [i + 4]
+			.EndOf_If_Per4Bytes
+			; EndOf_If_Per4Bytes ;
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; if (i < width)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		lea rax, [width]
+		cmp i, rax
+		jge .EndOf_If_Per1Bytes
+		.If_Per1Bytes:
+			pxor vecSum0, vecSum0
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			; for (row = 0, k = 0; row < kernSize; ++row, k += step)
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			mov rbx, arg(argi_inPtr)
+			lea rax, [rbx + i] ; rax = &inPtr[i]
+			mov rbx, arg(argi_vthzKernPtr) ; rbx = &vthzKernPtr[0]
+			xor rdx, rdx ; rdx = row = 0
+			.LoopKernelSize_Per1Bytes:
+				movd vec0, [rax]
+				movd vecCoeff, [rbx + rdx*COMPV_YASM_UINT16_SZ_BYTES]  
+				punpcklwd vecCoeff, vecCoeff
+				pshufd vecCoeff, vecCoeff, 0
+				inc rdx
+				add rax, arg(argi_step)
+				punpcklbw vec0, vec0
+				pmulhuw vec0, vecCoeff
+				cmp rdx, arg(argi_kernSize)
+				paddusw vecSum0, vec0
+				jl .LoopKernelSize_Per1Bytes
+				; EndOf_LoopKernelSize_Per1Bytes ;
+
+			packuswb vecSum0, vecSum0
+			mov rdx, arg(argi_outPtr)
+			movd rax, vecSum0
+			%assign index 0
+			%rep 4
+				mov [rdx + i], byte al
+				inc i
+				cmp i, width
+				jge .EndOf_If_Per1Bytes
+				shr rax, 8
+				%assign index index+1
+			%endrep			
+			.EndOf_If_Per1Bytes
+			; EndOf_If_Per1Bytes ;
+		
+		mov rax, arg(argi_inPtr)
+		mov rbx, arg(argi_outPtr)
+		mov rdx, arg(argi_stride)
+		dec j
+		lea rax, [rax + rdx]
+		lea rbx, [rbx + rdx]
+		mov arg(argi_inPtr), rax
+		mov arg(argi_outPtr), rbx
+		jnz .LoopHeight
+		; EndOf_LoopHeight ;
+
+	%undef vecZero
+	%undef vecSum0
+	%undef vecSum1
+	%undef vecCoeff
+	%undef vec0
+	%undef vec1
+
+	%undef argi_inPtr
+	%undef argi_outPtr
+	%undef argi_width
+	%undef argi_height
+	%undef argi_step
+	%undef argi_pad
+	%undef argi_vthzKernPtr
+	%undef argi_kernSize
+	%undef argi_stride
+
+	%undef width
+	%undef j
+	%undef i
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
