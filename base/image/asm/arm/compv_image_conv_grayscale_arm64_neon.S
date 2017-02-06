@@ -33,12 +33,8 @@
 # arg(4) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
 .macro CompVImageConvYuv422family_to_y_Macro_NEON64 yuv422Family
 	COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 5
 	COMPV_GAS_SAVE_NEON_REGS
 
-	ldp_arg 0, r0, r1
-    ldp_arg 2, r2, r3
-    ldr_arg 4, r4
 	yuv422Ptr .req r0
 	outYPtr .req r1
 	width .req r2
@@ -98,7 +94,6 @@
 	.unreq padYUV
 	
 	COMPV_GAS_RESTORE_NEON_REGS
-	COMPV_GAS_UNSHADOW_ARGS
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 .endm

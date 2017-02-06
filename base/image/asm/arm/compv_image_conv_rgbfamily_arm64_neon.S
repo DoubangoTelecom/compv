@@ -38,12 +38,8 @@
 # When alpha is at the last position then load first 3 coeffs only
 .macro CompVImageConvRgbfamily_to_y_Macro_NEON64 family, isAlphaLast
 	COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
 	COMPV_GAS_SAVE_NEON_REGS
 	
-	ldp_arg 0, r0, r1
-    ldp_arg 2, r2, r3
-    ldp_arg 4, r4, r5
 	rgbPtr .req r0
 	outYPtr .req r1
 	width .req r2
@@ -142,7 +138,6 @@
 	#undef vecCoeff3
 	
 	COMPV_GAS_RESTORE_NEON_REGS
-	COMPV_GAS_UNSHADOW_ARGS
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 .endm
@@ -169,12 +164,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON64
 # arg(5) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_YCoeffs8
 .macro CompVImageConvRgb565family_to_y_Macro_NEON64 endianness
 	COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
 	COMPV_GAS_SAVE_NEON_REGS
 	
-	ldp_arg 0, r0, r1
-    ldp_arg 2, r2, r3
-    ldp_arg 4, r4, r5
 	rgbPtr .req r0
 	outYPtr .req r1
 	width .req r2
@@ -291,7 +282,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_y_Asm_NEON64
 	#undef vecMaskB
 	
 	COMPV_GAS_RESTORE_NEON_REGS
-	COMPV_GAS_UNSHADOW_ARGS
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 .endm
@@ -315,13 +305,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 # arg(7) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8
 .macro CompVImageConvRgbfamily_to_uv_planar_11_Macro_NEON64 family, isAlphaLast
 	COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 8
 	COMPV_GAS_SAVE_NEON_REGS
 
-    ldp_arg 0, r0, r1
-    ldp_arg 2, r2, r3
-    ldp_arg 4, r4, r5
-    ldp_arg 6, r6, r7
 	rgbPtr .req r0
 	outUPtr .req r1
 	outVPtr .req r2
@@ -476,7 +461,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgb565befamily_to_y_Asm_NEON64
 	#undef vec128
 	
 	COMPV_GAS_RESTORE_NEON_REGS
-	COMPV_GAS_UNSHADOW_ARGS
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 .endm
@@ -505,13 +489,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON64
 # arg(7) -> COMPV_ALIGNED(DEFAULT) const int8_t* kRGBfamilyToYUV_VCoeffs8
 .macro CompVImageConvRgb565family_to_uv_planar_11_Macro_NEON64 endianness
 	COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 8
 	COMPV_GAS_SAVE_NEON_REGS
 
-	ldp_arg 0, r0, r1
-    ldp_arg 2, r2, r3
-    ldp_arg 4, r4, r5
-    ldp_arg 6, r6, r7
 	rgbPtr .req r0
 	outUPtr .req r1
 	outVPtr .req r2
@@ -651,7 +630,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageConvRgba32family_to_uv_planar_11_Asm_NEON64
 	#undef vec128
 	
 	COMPV_GAS_RESTORE_NEON_REGS
-	COMPV_GAS_UNSHADOW_ARGS
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 .endm

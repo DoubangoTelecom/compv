@@ -37,11 +37,12 @@
 // r10 -> arg10
 COMPV_GAS_FUNCTION_DECLARE CompVTest_Asm_NEON64
 	COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 11 // SP will be aligned on 16 bytes
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 11 // When there are less than 8 args (0-7) then, no need to shadow/unshadow args.
 	COMPV_GAS_SAVE_NEON_REGS
 	COMPV_GAS_ALIGN_STACK 16, r9
 	COMPV_GAS_MEMALLOC 128
 
+	// ldp_arg needed only if threre are less than 8 args (0-7)
     ldp_arg 0, r0, r1
     ldp_arg 2, r2, r3
     ldp_arg 4, r4, r5
@@ -81,10 +82,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVTest_Asm_NEON64
 @ r10 -> arg10
 COMPV_GAS_FUNCTION_DECLARE CompVTest_Asm_NEON32
 	COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 11
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 11 @ When there are less than 4 args (0-3) then, no need to shadow/unshadow args.
 	COMPV_GAS_SAVE_NEON_REGS
 	@COMPV_GAS_ALIGN_STACK 16, r11 @ num params must match COMPV_GAS_UNSHADOW_ARGS
 	@COMPV_GAS_MEMALLOC 128
+
+	@ ldm_args needed only if threre are less than 4 args (0-3)
 
 	@@ OPTION 1 @@
 	@ load all one by one: on demand

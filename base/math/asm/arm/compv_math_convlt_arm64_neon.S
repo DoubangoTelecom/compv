@@ -31,14 +31,9 @@
 # arg(7) -> compv_uscalar_t kernSize
 .macro CompVMathConvlt1VtHz_8u32f8u_Macro_NEON64 fusedMultiplyAdd
     COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 8
 	COMPV_GAS_SAVE_NEON_REGS
 
-	## Load arguments ##
-    ldp_arg 0, r0, r1
-    ldp_arg 2, r2, r3
-    ldp_arg 4, r4, r5
-    ldp_arg 6, r6, r7
+	## Set arguments ##
 	inPtr .req r0
 	outPtr .req r1
 	width .req r2
@@ -257,7 +252,6 @@
     #undef vec3       
 
 	COMPV_GAS_RESTORE_NEON_REGS
-	COMPV_GAS_UNSHADOW_ARGS
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 .endm
