@@ -12,7 +12,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 // no arithmetic overflow check
-void CompVMathConvlt1VtHz_8u32f8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize)
+void CompVMathConvlt1VtHz_8u32f8u_Intrin_SSE2(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_uscalar_t i, j, k, row, stride = width + pad;
@@ -92,7 +92,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* 
 	}
 }
 
-void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize)
+void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_SSE2(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	compv_uscalar_t i, j, k, row, stride = width + pad;
 	__m128i vecInPtr, vec0, vec1, vecSum0, vecSum1, vecCoeff;
@@ -153,25 +153,6 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_SSE2(COMPV_ALIGNED(SSE) const
 		inPtr += stride;
 		outPtr += stride;
 	}
-
-#if 0
-	size_t i, j, k, row;
-	unsigned int sum;
-
-	for (j = 0; j < height; ++j) {
-		for (i = 0; i < width; ++i) {
-			sum = static_cast<unsigned int>(inPtr[0] * vthzKernPtr[0]) >> 16;
-			for (row = 1, k = step; row < kernSize; ++row, k += step) {
-				sum += static_cast<unsigned int>(inPtr[k] * vthzKernPtr[row]) >> 16;
-			}
-			*outPtr = static_cast<uint8_t>(sum);
-			++inPtr;
-			++outPtr;
-		}
-		inPtr += pad;
-		outPtr += pad;
-	}
-#endif
 }
 
 COMPV_NAMESPACE_END()

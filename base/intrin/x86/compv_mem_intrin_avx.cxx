@@ -19,7 +19,7 @@ COMPV_NAMESPACE_BEGIN()
 // size must be > 32 and it's up to the caller to check it
 // size should be multiple of 32, if not the remaining will be ignored
 #if defined(__INTEL_COMPILER)
-#	pragma intel optimization_parameter target_arch=avx
+#	pragma intel optimization_parameter target_arch=avx2
 #endif
 void MemCopy_Intrin_Aligned_AVX(COMPV_ALIGNED(AVX) void* dataDstPtr, COMPV_ALIGNED(AVX) const void* dataSrcPtr, compv_uscalar_t size)
 {
@@ -63,7 +63,7 @@ void MemCopy_Intrin_Aligned_AVX(COMPV_ALIGNED(AVX) void* dataDstPtr, COMPV_ALIGN
 }
 
 #if defined(__INTEL_COMPILER)
-#	pragma intel optimization_parameter target_arch=avx
+#	pragma intel optimization_parameter target_arch=avx2
 #endif
 void MemCopyNTA_Intrin_Aligned_AVX(COMPV_ALIGNED(AVX) void* dataDstPtr, COMPV_ALIGNED(AVX) const void* dataSrcPtr, compv_uscalar_t size)
 {

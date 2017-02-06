@@ -38,7 +38,7 @@ public:
 		CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(inPtr, outPtr, width, height, stride, hzKernPtr, kernSize, resetBorders, false);
 	}
 
-	// no arithmetic overflow check (up to the caller to normalize the data or use any trick)
+	// *yes* arithmetic overflow check (up to the caller to normalize the data or use any trick)
 	static void convlt1HzFixedPoint(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t stride, const uint16_t* hzKernPtr, size_t kernSize, bool resetBorders = true) {
 		CompVMathConvlt::convlt1Hz_private<uint8_t, uint16_t, uint8_t>(inPtr, outPtr, width, height, stride, hzKernPtr, kernSize, resetBorders, true);
 	}

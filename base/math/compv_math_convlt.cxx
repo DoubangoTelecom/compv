@@ -17,24 +17,24 @@ COMPV_NAMESPACE_BEGIN()
 
 #if COMPV_ASM
 #	if COMPV_ARCH_X86
-	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
-	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
-	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X86_FMA3_AVX2(COMPV_ALIGNED(AVX) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
-	COMPV_EXTERNC void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize);
+	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X86_FMA3_AVX2(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+	COMPV_EXTERNC void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X86_SSE2(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
-	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
-	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
-	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X64_FMA3_AVX2(COMPV_ALIGNED(AVX) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
-	COMPV_EXTERNC void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize);
+	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X64_AVX2(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X64_FMA3_AVX2(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+	COMPV_EXTERNC void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_SSE2(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
-    COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
-    COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_FMA_NEON32(COMPV_ALIGNED(NEON) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+    COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+    COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_FMA_NEON32(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
 #   endif /* COMPV_ARCH_ARM32 */
 #	if COMPV_ARCH_ARM64
-    COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
-    COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_FMA_NEON64(COMPV_ALIGNED(NEON) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+    COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+    COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_FMA_NEON64(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
 #   endif /* COMPV_ARCH_ARM32 */
 #endif /* COMPV_ASM */
 
@@ -44,10 +44,13 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_true(con
 	void(*CompVMathConvlt1VtHzFixedPoint_8u16u8u)(COMPV_ALIGNED(SSE) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize)
 		= NULL;
 #if COMPV_ARCH_X86
-	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(inPtr) && width > 15) {
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && width > 15) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathConvlt1VtHzFixedPoint_8u16u8u = CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_SSE2);
 		COMPV_EXEC_IFDEF_ASM_X86(CompVMathConvlt1VtHzFixedPoint_8u16u8u = CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X86_SSE2);
 		COMPV_EXEC_IFDEF_ASM_X64(CompVMathConvlt1VtHzFixedPoint_8u16u8u = CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_SSE2);
+	}
+	if (CompVCpu::isEnabled(kCpuFlagAVX2) && width > 31) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathConvlt1VtHzFixedPoint_8u16u8u = CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2);
 	}
 #endif
 	if (CompVMathConvlt1VtHzFixedPoint_8u16u8u) {
@@ -58,6 +61,7 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_true(con
 	}
 
 	// FIXME: remove
+	//COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -32)).c_str());
 	//COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -16)).c_str());
 	//COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, width).c_str());
 	//COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width + pad) * height).c_str());
@@ -70,12 +74,12 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(co
 		= NULL;
 
 #if COMPV_ARCH_X86
-	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(inPtr) && width > 15) {
+	if (CompVCpu::isEnabled(kCpuFlagSSE2) && width > 15) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Intrin_SSE2);
 		COMPV_EXEC_IFDEF_ASM_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2);
 		COMPV_EXEC_IFDEF_ASM_X64(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2);
 	}
-	if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_SSE(inPtr) && width > 31) {
+	if (CompVCpu::isEnabled(kCpuFlagAVX2) && width > 31) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Intrin_AVX2);
 		COMPV_EXEC_IFDEF_ASM_X86(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_X86_AVX2);
 		COMPV_EXEC_IFDEF_ASM_X64(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_X64_AVX2);
@@ -86,7 +90,7 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(co
 		}
 	}
 #elif COMPV_ARCH_ARM
-	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(inPtr) && width > 15) {
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && width > 15) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Intrin_NEON);
 		COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32);
 		COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathConvlt1VtHz_8u32f8u = CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64);

@@ -18,7 +18,7 @@ section .data
 section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* inPtr
+; arg(0) -> const uint8_t* inPtr
 ; arg(1) -> uint8_t* outPtr
 ; arg(2) -> compv_uscalar_t width
 ; arg(3) -> compv_uscalar_t height
@@ -260,7 +260,7 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X86_SSE2):
 	ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* inPtr
+; arg(0) -> const uint8_t* inPtr
 ; arg(1) -> uint8_t* outPtr
 ; arg(2) -> compv_uscalar_t width
 ; arg(3) -> compv_uscalar_t height

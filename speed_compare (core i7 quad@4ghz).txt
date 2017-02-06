@@ -37,6 +37,6 @@ Remarque: OpenCV uses SSE2 and multithreading and we're faster even with plain c
 
 === Gaussian Blur (kernel size = 7, Sigma = 2.0) (1282, 720) (#10000 times) ===
 CompV(float): 2261.ms(mt,avx2,fma3), 2822.ms(mt,avx2), 5476.ms(mt,sse2), 7874.ms(st,avx2,fma3), 9980.ms(st,avx2), 17527.ms (st,sse2), 23004.ms(mt,c++), 79309.ms(st,c++)
-CompV(Fixed): 2815.ms(mt,sse2), 8824.ms(st,sse2), 19741.ms(mt,c++), 70983.ms(st,c++)
+CompV(Fixed): 1836.ms(mt,avx2), 2815.ms(mt,sse2), 6228.ms(st,avx2), 8824.ms(st,sse2), 19741.ms(mt,c++), 70983.ms(st,c++)
 OpenCV(float): 16186.ms(full optiz)
 Remarque: https://github.com/DoubangoTelecom/compv/issues/118

@@ -21,7 +21,7 @@ section .data
 section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; arg(0) -> COMPV_ALIGNED(AVX) const uint8_t* inPtr
+; arg(0) -> const uint8_t* inPtr
 ; arg(1) -> uint8_t* outPtr
 ; arg(2) -> compv_uscalar_t width
 ; arg(3) -> compv_uscalar_t height
