@@ -26,6 +26,7 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
 	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
 	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_X64_FMA3_AVX2(COMPV_ALIGNED(AVX) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
+	COMPV_EXTERNC void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
     COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
@@ -46,6 +47,7 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_true(con
 	if (CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(inPtr) && width > 15) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathConvlt1VtHzFixedPoint_8u16u8u = CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_SSE2);
 		COMPV_EXEC_IFDEF_ASM_X86(CompVMathConvlt1VtHzFixedPoint_8u16u8u = CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X86_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X64(CompVMathConvlt1VtHzFixedPoint_8u16u8u = CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_SSE2);
 	}
 #endif
 	if (CompVMathConvlt1VtHzFixedPoint_8u16u8u) {
