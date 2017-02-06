@@ -207,12 +207,12 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2(const uint8_t* inPtr, ui
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtr = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[i + k]));
 				vecCoeff = _mm256_set1_epi16(static_cast<short>(vthzKernPtr[row]));
-				vec0 = compv_avx2_unpacklo_epi8(vecInPtr, vecZero); // epi8 -> epi16
-				vec1 = compv_avx2_unpackhi_epi8(vecInPtr, vecZero); // epi8 -> epi16
+				vec0 = _mm256_unpacklo_epi8(vecInPtr, vecZero); // epi8 -> epi16
+				vec1 = _mm256_unpackhi_epi8(vecInPtr, vecZero); // epi8 -> epi16
 				vecSum0 = _mm256_adds_epu16(vecSum0, _mm256_mulhi_epu16(vec0, vecCoeff));
 				vecSum1 = _mm256_adds_epu16(vecSum1, _mm256_mulhi_epu16(vec1, vecCoeff));
 			}
-			vec0 = compv_avx2_packus_epi16(vecSum0, vecSum1);
+			vec0 = _mm256_packus_epi16(vecSum0, vecSum1);
 			_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i]), vec0);
 		}
 

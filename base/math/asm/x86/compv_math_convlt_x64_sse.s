@@ -268,7 +268,7 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2):
 ; arg(3) -> compv_uscalar_t height
 ; arg(4) -> compv_uscalar_t step
 ; arg(5) -> compv_uscalar_t pad
-; arg(6) -> const compv_float32_t* vthzKernPtr
+; arg(6) -> const uint16_t* vthzKernPtr
 ; arg(7) -> compv_uscalar_t kernSize
 sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_SSE2):
 	push rbp
