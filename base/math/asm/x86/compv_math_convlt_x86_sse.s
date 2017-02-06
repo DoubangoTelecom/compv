@@ -448,7 +448,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X86_SSE2):
 				pshufd vecCoeff, vecCoeff, 0
 				inc rdx
 				add rax, arg(argi_step)
-				punpcklbw vec0, vec0
+				punpcklbw vec0, vecZero
 				pmulhuw vec0, vecCoeff
 				cmp rdx, arg(argi_kernSize)
 				paddusw vecSum0, vec0
