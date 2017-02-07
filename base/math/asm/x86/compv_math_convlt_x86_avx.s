@@ -529,7 +529,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X86_AVX2):
 				; EndOf_LoopKernelSize_Per1Bytes ;
 
 			vpackuswb vecSum0n, vecSum0n, vecSum0n
-			vmovd rax, vecSum0n
+			vmovd eax, vecSum0n
 			mov rdx, arg(argi_outPtr)
 			%assign index 0
 			%rep 4
@@ -537,7 +537,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X86_AVX2):
 				inc i
 				cmp i, width
 				jge .EndOf_If_Per1Bytes
-				shr rax, 8
+				shr eax, 8
 				%assign index index+1
 			%endrep
 			.EndOf_If_Per1Bytes
