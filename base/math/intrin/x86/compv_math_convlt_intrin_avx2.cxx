@@ -212,8 +212,8 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_AVX2(const uint8_t* inPtr, int16_t* ou
 				vecSum0 = _mm256_add_epi16(vecSum0, _mm256_mullo_epi16(vec0, vecCoeff));
 				vecSum1 = _mm256_add_epi16(vecSum1, _mm256_mullo_epi16(vec1, vecCoeff));
 			}
-			_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i]), vecSum0);
-			_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i + 16]), vecSum1);
+			_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i]), _mm256_permute2x128_si256(vecSum0, vecSum1, 0x20));
+			_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i + 16]), _mm256_permute2x128_si256(vecSum0, vecSum1, 0x31));
 		}
 
 		/* Per #16 bytes */
