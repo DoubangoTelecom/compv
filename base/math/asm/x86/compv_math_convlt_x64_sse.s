@@ -260,6 +260,18 @@ sym(CompVMathConvlt1VtHz_8u32f8u_Asm_X64_SSE2):
 	pop rbp
 	ret
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> const uint8_t* inPtr
+; arg(1) -> int16_t* outPtr
+; arg(2) -> compv_uscalar_t width
+; arg(3) -> compv_uscalar_t height
+; arg(4) -> compv_uscalar_t step
+; arg(5) -> compv_uscalar_t pad
+; arg(6) -> const int16_t* vthzKernPtr
+; arg(7) -> compv_uscalar_t kernSize
+sym(CompVMathConvlt1VtHz_8u16s16s_Asm_X64_SSE2):
+	
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> const uint8_t* inPtr

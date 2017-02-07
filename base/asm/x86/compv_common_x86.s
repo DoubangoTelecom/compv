@@ -174,6 +174,8 @@
 %define COMPV_YASM_FLOAT64_SZ_BYTES				8
 %define COMPV_YASM_INT16_SZ_BYTES				2
 %define COMPV_YASM_UINT16_SZ_BYTES				COMPV_YASM_INT16_SZ_BYTES
+%define COMPV_YASM_INT8_SZ_BYTES				1
+%define COMPV_YASM_UINT8_SZ_BYTES				COMPV_YASM_INT8_SZ_BYTES
 
 ; COMPV_YASM_ALIGN_STACK <alignment> <register>
 ; This macro aligns the stack to the given alignment (in bytes). The stack

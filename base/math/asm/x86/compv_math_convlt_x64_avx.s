@@ -375,7 +375,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 			mov r15, arg(argi_vthzKernPtr)
 			mov rdx, kernSize
 			.LoopKernelSize_Per32Bytes:
-				vmovups vec0, [rax]
+				vmovdqu vec0, [rax]
 				vmovd vecCoeffn, [r15]
 				vpbroadcastw vecCoeff, vecCoeffn
 				vpunpckhbw vec1, vec0, vecZero
@@ -413,7 +413,7 @@ sym(CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_X64_AVX2):
 			mov r15, arg(argi_vthzKernPtr)
 			mov rdx, kernSize
 			.LoopKernelSize_Per16Bytes:
-				vmovups vec0n, [rax]
+				vmovdqu vec0n, [rax]
 				vmovd vecCoeffn, [r15]
 				vpunpcklwd vecCoeffn, vecCoeffn
 				vpshufd vecCoeffn, vecCoeffn, 0
