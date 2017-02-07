@@ -29,7 +29,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_AVX2(const uint8_t* inPtr, uint8_t* out
 	__m128 vecSum0n, vecCoeffn, vec0fn;
 
 	for (j = 0; j < height; ++j) {
-		/* Per #32 bytes */
+		/* Per #32 samples */
 		for (i = 0; i < width - 31; i += 32) {
 			vecSum0 = _mm256_setzero_ps();
 			vecSum1 = _mm256_setzero_ps();
@@ -67,7 +67,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_AVX2(const uint8_t* inPtr, uint8_t* out
 			_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i]), vec0i);
 		}
 		
-		/* Per #8 bytes */
+		/* Per #8 samples */
 		for (; i < width - 7; i += 8) {
 			vecSum0 = _mm256_setzero_ps();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -84,7 +84,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_AVX2(const uint8_t* inPtr, uint8_t* out
 			_mm256_maskstore_epi64(reinterpret_cast<int64_t*>(&outPtr[i]), vecMaskToExtractFirst64Bits, vec0i); // ASM code: movq [mem], xmm0
 		}
 
-		/* Per #1 bytes */
+		/* Per #1 samples */
 		for (; i < width; i += 1) {
 			vecSum0n = _mm_setzero_ps();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -117,7 +117,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_FMA3_AVX2(const uint8_t* inPtr, uint8_t
 	__m128 vecSum0n, vecCoeffn, vec0fn;
 
 	for (j = 0; j < height; ++j) {
-		/* Per #32 bytes */
+		/* Per #32 samples */
 		for (i = 0; i < width - 31; i += 32) {
 			vecSum0 = _mm256_setzero_ps();
 			vecSum1 = _mm256_setzero_ps();
@@ -151,7 +151,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_FMA3_AVX2(const uint8_t* inPtr, uint8_t
 			_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i]), vec0i);
 		}
 
-		/* Per #8 bytes */
+		/* Per #8 samples */
 		for (; i < width - 7; i += 8) {
 			vecSum0 = _mm256_setzero_ps();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -167,7 +167,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_FMA3_AVX2(const uint8_t* inPtr, uint8_t
 			_mm256_maskstore_epi64(reinterpret_cast<int64_t*>(&outPtr[i]), vecMaskToExtractFirst64Bits, vec0i); // ASM code: movq [mem], xmm0
 		}
 
-		/* Per #1 bytes */
+		/* Per #1 samples */
 		for (; i < width; i += 1) {
 			vecSum0n = _mm_setzero_ps();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -200,7 +200,7 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_AVX2(const uint8_t* inPtr, int16_t* ou
 
 	for (j = 0; j < height; ++j) {
 
-		/* Per #32 bytes */
+		/* Per #32 samples */
 		for (i = 0; i < width - 31; i += 32) {
 			vecSum0 = _mm256_setzero_si256();
 			vecSum1 = _mm256_setzero_si256();
@@ -216,7 +216,7 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_AVX2(const uint8_t* inPtr, int16_t* ou
 			_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i + 16]), _mm256_permute2x128_si256(vecSum0, vecSum1, 0x31));
 		}
 
-		/* Per #16 bytes */
+		/* Per #16 samples */
 		if (i < width - 15) {
 			vecSum0n = _mm_setzero_si128();
 			vecSum1n = _mm_setzero_si128();
@@ -233,7 +233,7 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_AVX2(const uint8_t* inPtr, int16_t* ou
 			i += 16;
 		}
 
-		/* Per #8 bytes */
+		/* Per #8 samples */
 		if (i < width - 7) {
 			vecSum0n = _mm_setzero_si128();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -246,7 +246,7 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_AVX2(const uint8_t* inPtr, int16_t* ou
 			i += 8;
 		}
 
-		/* Per #4 bytes */
+		/* Per #4 samples */
 		if (i < width - 3) {
 			vecSum0n = _mm_setzero_si128();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -259,7 +259,89 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_AVX2(const uint8_t* inPtr, int16_t* ou
 			i += 4;
 		}
 
-		/* Per #1 bytes */
+		/* Per #1 samples */
+		for (; i < width; ++i) {
+			sum = static_cast<int>(inPtr[i] * vthzKernPtr[0]);
+			for (row = 1, k = step; row < kernSize; ++row, k += step) {
+				sum += static_cast<int>(inPtr[i + k] * vthzKernPtr[row]);
+			}
+			outPtr[i] = static_cast<int16_t>(sum);
+		}
+
+		inPtr += stride;
+		outPtr += stride;
+	}
+	_mm256_zeroupper();
+}
+
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+// no arithmetic overflow check
+void CompVMathConvlt1VtHz_16s16s16s_Intrin_AVX2(const int16_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const int16_t* vthzKernPtr, compv_uscalar_t kernSize)
+{
+	COMPV_DEBUG_INFO_CHECK_AVX2(); // AVX/SSE transition issues
+	_mm256_zeroupper();
+	compv_uscalar_t i, j, k, row, stride = width + pad;
+	__m256i vec0, vec1, vecSum0, vecSum1, vecCoeff;
+	__m128i vec0n, vecSum0n, vecCoeffn;
+	const __m256i vecZero = _mm256_setzero_si256();
+	int sum;
+
+	for (j = 0; j < height; ++j) {
+
+		/* Per #32 samples */
+		for (i = 0; i < width - 31; i += 32) {
+			vecSum0 = _mm256_setzero_si256();
+			vecSum1 = _mm256_setzero_si256();
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vec0 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[i + k]));
+				vec1 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[i + k + 16]));
+				vecCoeff = _mm256_set1_epi16(static_cast<short>(vthzKernPtr[row]));
+				vecSum0 = _mm256_add_epi16(vecSum0, _mm256_mullo_epi16(vec0, vecCoeff));
+				vecSum1 = _mm256_add_epi16(vecSum1, _mm256_mullo_epi16(vec1, vecCoeff));
+			}
+			_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i]), vecSum0);
+			_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i + 16]), vecSum1);
+		}
+
+		/* Per #16 samples */
+		if (i < width - 15) {
+			vecSum0 = _mm256_setzero_si256();
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vec0 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&inPtr[i + k]));
+				vecCoeff = _mm256_set1_epi16(static_cast<short>(vthzKernPtr[row]));
+				vecSum0 = _mm256_add_epi16(vecSum0, _mm256_mullo_epi16(vec0, vecCoeff));
+			}
+			_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i]), vecSum0);
+			i += 16;
+		}
+
+		/* Per #8 samples */
+		if (i < width - 7) {
+			vecSum0n = _mm_setzero_si128();
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vec0n = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[i + k]));
+				vecCoeffn = _mm_set1_epi16(static_cast<short>(vthzKernPtr[row]));
+				vecSum0n = _mm_add_epi16(vecSum0n, _mm_mullo_epi16(vec0n, vecCoeffn));
+			}
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vecSum0n);
+			i += 8;
+		}
+
+		/* Per #4 samples */
+		if (i < width - 3) {
+			vecSum0n = _mm_setzero_si128();
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vec0n = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&inPtr[i + k]));
+				vecCoeffn = _mm_set1_epi16(static_cast<short>(vthzKernPtr[row]));
+				vecSum0n = _mm_add_epi16(vecSum0n, _mm_mullo_epi16(vec0n, vecCoeffn));
+			}
+			_mm_storel_epi64(reinterpret_cast<__m128i*>(&outPtr[i]), vecSum0n);
+			i += 4;
+		}
+
+		/* Per #1 samples */
 		for (; i < width; ++i) {
 			sum = static_cast<int>(inPtr[i] * vthzKernPtr[0]);
 			for (row = 1, k = step; row < kernSize; ++row, k += step) {
@@ -290,7 +372,7 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2(const uint8_t* inPtr, ui
 
 	for (j = 0; j < height; ++j) {
 
-		/* Per #32 bytes */
+		/* Per #32 samples */
 		for (i = 0; i < width - 31; i += 32) {
 			vecSum0 = _mm256_setzero_si256();
 			vecSum1 = _mm256_setzero_si256();
@@ -306,7 +388,7 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2(const uint8_t* inPtr, ui
 			_mm256_storeu_si256(reinterpret_cast<__m256i*>(&outPtr[i]), vec0);
 		}
 
-		/* Per #16 bytes */
+		/* Per #16 samples */
 		if (i < width - 15) {
 			vecSum0n = _mm_setzero_si128();
 			vecSum1n = _mm_setzero_si128();
@@ -323,7 +405,7 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2(const uint8_t* inPtr, ui
 			i += 16;
 		}
 
-		/* Per #8 bytes */
+		/* Per #8 samples */
 		if (i < width - 7) {
 			vecSum0n = _mm_setzero_si128();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -337,7 +419,7 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2(const uint8_t* inPtr, ui
 			i += 8;
 		}
 
-		/* Per #4 bytes */
+		/* Per #4 samples */
 		if (i < width - 3) {
 			vecSum0n = _mm_setzero_si128();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -351,7 +433,7 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_AVX2(const uint8_t* inPtr, ui
 			i += 4;
 		}
 
-		/* Per #1 bytes */
+		/* Per #1 samples */
 		for (; i < width; ++i) {
 			sum = static_cast<unsigned int>(inPtr[i] * vthzKernPtr[0]) >> 16;
 			for (row = 1, k = step; row < kernSize; ++row, k += step) {

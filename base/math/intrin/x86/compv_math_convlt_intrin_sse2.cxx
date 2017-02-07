@@ -21,7 +21,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_SSE2(const uint8_t* inPtr, uint8_t* out
 	const __m128i vecZero = _mm_setzero_si128();
 
 	for (j = 0; j < height; ++j) {
-		/* Per #16 bytes */
+		/* Per #16 samples */
 		for (i = 0; i < width - 15; i += 16) {
 			vecSum0 = _mm_setzero_ps();
 			vecSum1 = _mm_setzero_ps();
@@ -59,7 +59,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_SSE2(const uint8_t* inPtr, uint8_t* out
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vec0i);
 		}
 
-		/* Per #4 bytes */
+		/* Per #4 samples */
 		for (; i < width - 3; i += 4) {
 			vecSum0 = _mm_setzero_ps();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -75,7 +75,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_SSE2(const uint8_t* inPtr, uint8_t* out
 			*reinterpret_cast<uint32_t*>(&outPtr[i]) = static_cast<uint32_t>(_mm_cvtsi128_si32(vec0i));
 		}
 
-		/* Per #1 bytes */
+		/* Per #1 samples */
 		for (; i < width; i += 1) {
 			vecSum0 = _mm_setzero_ps();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -101,7 +101,7 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_SSE2(const uint8_t* inPtr, int16_t* ou
 	int sum;
 
 	for (j = 0; j < height; ++j) {
-		/* Per #16 bytes */
+		/* Per #16 samples */
 		for (i = 0; i < width - 15; i += 16) {
 			vecSum0 = _mm_setzero_si128();
 			vecSum1 = _mm_setzero_si128();
@@ -116,7 +116,7 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_SSE2(const uint8_t* inPtr, int16_t* ou
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vecSum0);
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i + 8]), vecSum1);
 		}
-		/* Per #8 bytes */
+		/* Per #8 samples */
 		if (i < width - 7) {
 			vecSum0 = _mm_setzero_si128();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -128,7 +128,7 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_SSE2(const uint8_t* inPtr, int16_t* ou
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vecSum0);
 			i += 8;
 		}
-		/* Per #4 bytes */
+		/* Per #4 samples */
 		if (i < width - 3) {
 			vecSum0 = _mm_setzero_si128();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -141,7 +141,67 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_SSE2(const uint8_t* inPtr, int16_t* ou
 			i += 4;
 		}
 		
-		/* Per #1 bytes */
+		/* Per #1 samples */
+		for (; i < width; ++i) {
+			sum = static_cast<int>(inPtr[i] * vthzKernPtr[0]);
+			for (row = 1, k = step; row < kernSize; ++row, k += step) {
+				sum += static_cast<int>(inPtr[i + k] * vthzKernPtr[row]);
+			}
+			outPtr[i] = static_cast<int16_t>(sum);
+		}
+
+		inPtr += stride;
+		outPtr += stride;
+	}
+}
+
+// no arithmetic overflow check
+void CompVMathConvlt1VtHz_16s16s16s_Intrin_SSE2(const int16_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const int16_t* vthzKernPtr, compv_uscalar_t kernSize)
+{
+	compv_uscalar_t i, j, k, row, stride = width + pad;
+	__m128i vec0, vec1, vecSum0, vecSum1, vecCoeff;
+	const __m128i vecZero = _mm_setzero_si128();
+	int sum;
+
+	for (j = 0; j < height; ++j) {
+		/* Per #16 samples */
+		for (i = 0; i < width - 15; i += 16) {
+			vecSum0 = _mm_setzero_si128();
+			vecSum1 = _mm_setzero_si128();
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[i + k]));
+				vec1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[i + k + 8]));
+				vecCoeff = _mm_set1_epi16(static_cast<short>(vthzKernPtr[row]));
+				vecSum0 = _mm_add_epi16(vecSum0, _mm_mullo_epi16(vec0, vecCoeff));
+				vecSum1 = _mm_add_epi16(vecSum1, _mm_mullo_epi16(vec1, vecCoeff));
+			}
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vecSum0);
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i + 8]), vecSum1);
+		}
+		/* Per #8 samples */
+		if (i < width - 7) {
+			vecSum0 = _mm_setzero_si128();
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vec0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&inPtr[i + k]));
+				vecCoeff = _mm_set1_epi16(static_cast<short>(vthzKernPtr[row]));
+				vecSum0 = _mm_add_epi16(vecSum0, _mm_mullo_epi16(vec0, vecCoeff));
+			}
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vecSum0);
+			i += 8;
+		}
+		/* Per #4 samples */
+		if (i < width - 3) {
+			vecSum0 = _mm_setzero_si128();
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vec0 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&inPtr[i + k]));
+				vecCoeff = _mm_set1_epi16(static_cast<short>(vthzKernPtr[row]));
+				vecSum0 = _mm_add_epi16(vecSum0, _mm_mullo_epi16(vec0, vecCoeff));
+			}
+			_mm_storel_epi64(reinterpret_cast<__m128i*>(&outPtr[i]), vecSum0);
+			i += 4;
+		}
+
+		/* Per #1 samples */
 		for (; i < width; ++i) {
 			sum = static_cast<int>(inPtr[i] * vthzKernPtr[0]);
 			for (row = 1, k = step; row < kernSize; ++row, k += step) {
@@ -164,7 +224,7 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_SSE2(const uint8_t* inPtr, ui
 	unsigned int sum;
 
 	for (j = 0; j < height; ++j) {
-		/* Per #16 bytes */
+		/* Per #16 samples */
 		for (i = 0; i < width - 15; i += 16) {
 			vecSum0 = _mm_setzero_si128();
 			vecSum1 = _mm_setzero_si128();
@@ -179,7 +239,7 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_SSE2(const uint8_t* inPtr, ui
 			vec0 = _mm_packus_epi16(vecSum0, vecSum1);
 			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vec0);
 		}
-		/* Per #8 bytes */
+		/* Per #8 samples */
 		if (i < width - 7) {
 			vecSum0 = _mm_setzero_si128();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -192,7 +252,7 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_SSE2(const uint8_t* inPtr, ui
 			_mm_storel_epi64(reinterpret_cast<__m128i*>(&outPtr[i]), vec0);
 			i += 8;
 		}
-		/* Per #4 bytes */
+		/* Per #4 samples */
 		if (i < width - 3) {
 			vecSum0 = _mm_setzero_si128();
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
@@ -205,7 +265,7 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_SSE2(const uint8_t* inPtr, ui
 			*reinterpret_cast<uint32_t*>(&outPtr[i]) = _mm_cvtsi128_si32(vec0);
 			i += 4;
 		}
-		/* Per #1 bytes */
+		/* Per #1 samples */
 		for (; i < width; ++i) {
 			sum = static_cast<unsigned int>(inPtr[i] * vthzKernPtr[0]) >> 16;
 			for (row = 1, k = step; row < kernSize; ++row, k += step) {
