@@ -261,9 +261,9 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_AVX2(const uint8_t* inPtr, int16_t* ou
 
 		/* Per #1 bytes */
 		for (; i < width; ++i) {
-			sum = static_cast<int>(inPtr[i] * vthzKernPtr[0]) >> 16;
+			sum = static_cast<int>(inPtr[i] * vthzKernPtr[0]);
 			for (row = 1, k = step; row < kernSize; ++row, k += step) {
-				sum += static_cast<int>(inPtr[i + k] * vthzKernPtr[row]) >> 16;
+				sum += static_cast<int>(inPtr[i + k] * vthzKernPtr[row]);
 			}
 			outPtr[i] = static_cast<int16_t>(sum);
 		}
