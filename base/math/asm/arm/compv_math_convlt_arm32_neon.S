@@ -927,10 +927,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
             LoopKernelPer16Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32:
                 vld1.s16 { vec0, vec1 }, [inPtr_], step
                 ldrh coeff, [vthzKernPtr], #SizeOfInt16InBytes
+                subs row, row, #SizeOfInt16InBytes
                 vdup.s16 vecCoeffx, coeff
                 vmla.s16 vecSum1, vec1, vecCoeffx[0]
                 vmla.s16 vecSum0, vec0, vecCoeffx[0]
-                subs row, row, #SizeOfInt16InBytes
                 bne LoopKernelPer16Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
                 @@ EndOf_LoopKernelPer16Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32 @@
             
@@ -959,9 +959,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
             LoopKernelPer8Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32:
                 vld1.s16 { vec0 }, [inPtr_], step
                 ldrh coeff, [vthzKernPtr], #SizeOfInt16InBytes
+                subs row, row, #SizeOfInt16InBytes
                 vdup.s16 vecCoeffx, coeff
                 vmla.s16 vecSum0, vec0, vecCoeffx[0]
-                subs row, row, #SizeOfInt16InBytes
                 bne LoopKernelPer8Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
                 @@ EndOf_LoopKernelPer8Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32 @@
             
@@ -1016,9 +1016,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
             LoopKernelPer1Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32:
                 vld1.u8 { vec0x }, [inPtr_], step
                 ldrh coeff, [vthzKernPtr], #SizeOfInt16InBytes
+                subs row, row, #SizeOfInt16InBytes
                 vdup.s16 vecCoeffx, coeff
                 vmla.s16 vecSum0x, vec0x, vecCoeffx[0]
-                subs row, row, #SizeOfInt16InBytes
                 bne LoopKernelPer1Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
                 @@ EndOf_LoopKernelPer1Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32 @@
             
