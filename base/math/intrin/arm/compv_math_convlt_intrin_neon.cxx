@@ -274,18 +274,16 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_NEON(const uint8_t* inPtr, ui
 
 		/* Per #8 samples */
 		if (i < width - 7) {
-			vecInPtr = vld1q_u8(&inPtr[i + 0]);
+			vecInPtrn = vld1_u8(&inPtr[i + 0]);
 			coeff = vthzKernPtr[0];
-			vec1 = vmovl_u8(vget_low_u8(vecInPtr));
-			vec0 = vmovl_u8(vget_high_u8(vecInPtr));
+			vec1 = vmovl_u8(vecInPtrn);
 			vec0 = vmull_n_u16(vget_low_u16(vec1), coeff);
 			vec1 = vmull_n_u16(vget_high_u16(vec1), coeff);
 			vecSum0 = vcombine_u16(vshrn_n_u32(vec0, 16), vshrn_n_u32(vec1, 16));
 			for (row = 1, k = step; row < kernSize; ++row, k += step) {
-				vecInPtr = vld1q_u8(&inPtr[i + k]);
+				vecInPtrn = vld1_u8(&inPtr[i + k]);
 				coeff = vthzKernPtr[row];
-				vec1 = vmovl_u8(vget_low_u8(vecInPtr));
-				vec0 = vmovl_u8(vget_high_u8(vecInPtr));
+				vec1 = vmovl_u8(vecInPtrn);
 				vec0 = vmull_n_u16(vget_low_u16(vec1), coeff);
 				vec1 = vmull_n_u16(vget_high_u16(vec1), coeff);
 				vecSum0 = vqaddq_u16(vecSum0, vcombine_u16(vshrn_n_u32(vec0, 16), vshrn_n_u32(vec1, 16)));
