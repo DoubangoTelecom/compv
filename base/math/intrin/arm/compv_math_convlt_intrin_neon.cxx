@@ -97,56 +97,120 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_NEON(const uint8_t* inPtr, uint8_t* out
 	}
 }
 
+// no arithmetic overflow check
 void CompVMathConvlt1VtHz_8u16s16s_Intrin_NEON(const uint8_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const int16_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
-#if 0
+	COMPV_DEBUG_INFO_CHECK_NEON();
 	compv_uscalar_t i, j, k, row, stride = width + pad;
 	uint8x16_t vecInPtr;
-	int16x8_t vec0, vec1, vecSum0, vecSum1;
-	int16_t coeff;
+	uint8x8_t vecInPtrn;
+	int16x8_t vec0, vec1, vecSum0, vecSum1, vecCoeff;
+	int16x4_t vecSum0n, vecCoeffn;
 	int sum;
 
 	for (j = 0; j < height; ++j) {
 		/* Per #16 samples */
 		for (i = 0; i < width - 15; i += 16) {
-			vecSum0 = vdupq_n_u16(0);
-			vecSum1 = vdupq_n_u16(0);
+			vecSum0 = vdupq_n_s16(0);
+			vecSum1 = vdupq_n_s16(0);
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtr = vld1q_u8(&inPtr[i + k]);
-				coeff = vthzKernPtr[row];
+				vecCoeff = vdupq_n_s16(vthzKernPtr[row]);
 				vec0 = vmovl_u8(vget_low_u8(vecInPtr)); // epi8 -> epi16
 				vec1 = vmovl_u8(vget_high_u8(vecInPtr)); // epi8 -> epi16
-
-				vecSum0 = vmlaq_n_s16(vecSum0, vec0, coeff); // cannot use long multiply because vecInPtr is unsigned why coeff is signed
-
-				vecSum0 = _mm_add_epi16(vecSum0, _mm_mullo_epi16(vec0, vecCoeff));
-				vecSum1 = _mm_add_epi16(vecSum1, _mm_mullo_epi16(vec1, vecCoeff));
+				vecSum0 = vmlaq_s16(vecSum0, vec0, vecCoeff);
+				vecSum1 = vmlaq_s16(vecSum1, vec1, vecCoeff);
 			}
-			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vecSum0);
-			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i + 8]), vecSum1);
+			vst1q_s16(&outPtr[i], vecSum0);
+			vst1q_s16(&outPtr[i + 8], vecSum1);
 		}
+		
 		/* Per #8 samples */
 		if (i < width - 7) {
-			vecSum0 = _mm_setzero_si128();
+			vecSum0 = vdupq_n_s16(0);
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
-				vecInPtr = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&inPtr[i + k]));
-				vecCoeff = _mm_set1_epi16(static_cast<short>(vthzKernPtr[row]));
-				vec0 = _mm_unpacklo_epi8(vecInPtr, vecZero); // epi8 -> epi16
-				vecSum0 = _mm_add_epi16(vecSum0, _mm_mullo_epi16(vec0, vecCoeff));
+				vecInPtr = vld1q_u8(&inPtr[i + k]);
+				vecCoeff = vdupq_n_s16(vthzKernPtr[row]);
+				vec0 = vmovl_u8(vget_low_u8(vecInPtr)); // epi8 -> epi16
+				vecSum0 = vmlaq_s16(vecSum0, vec0, vecCoeff);
 			}
-			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vecSum0);
+			vst1q_s16(&outPtr[i], vecSum0);
 			i += 8;
 		}
+		
 		/* Per #4 samples */
 		if (i < width - 3) {
-			vecSum0 = _mm_setzero_si128();
+			vecSum0n = vdup_n_s16(0);
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
-				vecInPtr = _mm_cvtsi32_si128(*reinterpret_cast<const uint32_t*>(&inPtr[i + k]));
-				vecCoeff = _mm_set1_epi16(static_cast<short>(vthzKernPtr[row]));
-				vec0 = _mm_unpacklo_epi8(vecInPtr, vecZero); // epi8 -> epi16
-				vecSum0 = _mm_add_epi16(vecSum0, _mm_mullo_epi16(vec0, vecCoeff));
+				vecInPtrn = vld1_u8(&inPtr[i + k]);
+				vecCoeffn = vdup_n_s16(vthzKernPtr[row]);
+				vec0 = vmovl_u8(vecInPtrn); // epi8 -> epi16
+				vecSum0n = vmla_s16(vecSum0n, vget_low_s16(vec0), vecCoeffn);
 			}
-			_mm_storel_epi64(reinterpret_cast<__m128i*>(&outPtr[i]), vecSum0);
+			vst1_s16(&outPtr[i], vecSum0n);
+			i += 4;
+		}
+		
+		/* Per #1 samples */
+		for (; i < width; ++i) {
+			sum = static_cast<int>(inPtr[i] * vthzKernPtr[0]);
+			for (row = 1, k = step; row < kernSize; ++row, k += step) {
+				sum += static_cast<int>(inPtr[i + k] * vthzKernPtr[row]);
+			}
+			outPtr[i] = static_cast<int16_t>(sum);
+		}
+
+		inPtr += stride;
+		outPtr += stride;
+	}
+}
+
+// no arithmetic overflow check
+void CompVMathConvlt1VtHz_16s16s16s_Intrin_NEON(const int16_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const int16_t* vthzKernPtr, compv_uscalar_t kernSize)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	compv_uscalar_t i, j, k, row, stride = width + pad;
+	int16x8_t vec0, vec1, vecSum0, vecSum1, vecCoeff;
+	int16x4_t vecSum0n, vec0n, vecCoeffn;
+	int sum;
+
+	for (j = 0; j < height; ++j) {
+		/* Per #16 samples */
+		for (i = 0; i < width - 15; i += 16) {
+			vecSum0 = vdupq_n_s16(0);
+			vecSum1 = vdupq_n_s16(0);
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vec0 = vld1q_s16(&inPtr[i + k]);
+				vec1 = vld1q_s16(&inPtr[i + k + 8]);
+				vecCoeff = vdupq_n_s16(vthzKernPtr[row]);
+				vecSum0 = vmlaq_s16(vecSum0, vec0, vecCoeff);
+				vecSum1 = vmlaq_s16(vecSum1, vec1, vecCoeff);
+			}
+			vst1q_s16(&outPtr[i], vecSum0);
+			vst1q_s16(&outPtr[i + 8], vecSum1);
+		}
+
+		/* Per #8 samples */
+		if (i < width - 7) {
+			vecSum0 = vdupq_n_s16(0);
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vec0 = vld1q_s16(&inPtr[i + k]);
+				vecCoeff = vdupq_n_s16(vthzKernPtr[row]);
+				vecSum0 = vmlaq_s16(vecSum0, vec0, vecCoeff);
+			}
+			vst1q_s16(&outPtr[i], vecSum0);
+			i += 8;
+		}
+
+		/* Per #4 samples */
+		if (i < width - 3) {
+			vecSum0n = vdup_n_s16(0);
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vec0n = vld1_s16(&inPtr[i + k]);
+				vecCoeffn = vdup_n_s16(vthzKernPtr[row]);
+				vecSum0n = vmla_s16(vecSum0n, vec0n, vecCoeffn);
+			}
+			vst1_s16(&outPtr[i], vecSum0n);
 			i += 4;
 		}
 
@@ -162,12 +226,12 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_NEON(const uint8_t* inPtr, int16_t* ou
 		inPtr += stride;
 		outPtr += stride;
 	}
-#endif
 }
 
 // yes arithmetic overflow check
 void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_NEON(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
+	COMPV_DEBUG_INFO_CHECK_NEON();
 	compv_uscalar_t i, j, k, row, stride = width + pad;
 	uint8x16_t vecInPtr;
 	uint8x8_t vecInPtrn, vec0n;
