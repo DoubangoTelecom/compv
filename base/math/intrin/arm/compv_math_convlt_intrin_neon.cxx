@@ -230,6 +230,7 @@ void CompVMathConvlt1VtHz_16s16s16s_Intrin_NEON(const int16_t* inPtr, int16_t* o
 }
 
 // yes arithmetic overflow check
+// TODO(dmi): Not optiz -> on iOS (iPad2 Air, ARM64, HD image, #1000 times), asm code: 3995.ms, intrin code: 4416.ms
 void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_NEON(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
