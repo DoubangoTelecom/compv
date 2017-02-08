@@ -14,7 +14,7 @@
 #define FILE_NAME_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define FILE_NAME_GRIOTS				"mandekalou_480x640_gray.yuv"
 
-#define IMAGE_CONVLT_LOOP_COUNT		1
+#define IMAGE_CONVLT_LOOP_COUNT		1000
 
 static const struct compv_unittest_convlt {
 	size_t kernelSize;
@@ -270,7 +270,7 @@ COMPV_ERROR_CODE convlt()
 	/* General */
 	//COMPV_CHECK_CODE_RETURN((convlt_ext<uint8_t, compv_float32_t, uint8_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, false))); // done!
 	//COMPV_CHECK_CODE_RETURN((convlt_ext<uint8_t, int16_t, int16_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, false)));
-	//COMPV_CHECK_CODE_RETURN((convlt_ext<int16_t, int16_t, int16_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, false)));
+	COMPV_CHECK_CODE_RETURN((convlt_ext<int16_t, int16_t, int16_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, false)));
 
 	/* FixedPoint */
 	//COMPV_CHECK_CODE_RETURN((convlt_ext<uint8_t, uint16_t, uint8_t>(IMAGE_CONVLT_KERNEL_SIZE, IMAGE_CONVLT_KERNEL_SIGMA, IMAGE_CONVLT_FILE_NAME, true)));
