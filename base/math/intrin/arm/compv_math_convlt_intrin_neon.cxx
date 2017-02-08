@@ -10,6 +10,7 @@
 #include "compv/base/intrin/arm/compv_intrin_neon.h"
 #include "compv/base/compv_simd_globals.h"
 #include "compv/base/math/compv_math.h"
+#include "compv/base/compv_cpu.h"
 #include "compv/base/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -244,9 +245,19 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_NEON(const uint8_t* inPtr, ui
 	for (j = 0; j < height; ++j) {
 		/* Per #16 samples */
 		for (i = 0; i < width - 15; i += 16) {
-			vecSum0 = vdupq_n_u16(0);
-			vecSum1 = vdupq_n_u16(0);
-			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+			__builtin_prefetch_read(&inPtr[i + COMPV_CACHE1_LINE_SIZE]);
+			__builtin_prefetch_write(&outPtr[i + COMPV_CACHE1_LINE_SIZE]);
+			vecInPtr = vld1q_u8(&inPtr[i + 0]);
+			coeff = vthzKernPtr[0];
+			vec2 = vmovl_u8(vget_low_u8(vecInPtr));
+			vec3 = vmovl_u8(vget_high_u8(vecInPtr));
+			vec0 = vmull_n_u16(vget_low_u16(vec2), coeff);
+			vec1 = vmull_n_u16(vget_high_u16(vec2), coeff);
+			vec2 = vmull_n_u16(vget_low_u16(vec3), coeff);
+			vec3 = vmull_n_u16(vget_high_u16(vec3), coeff);
+			vecSum0 = vcombine_u16(vshrn_n_u32(vec0, 16), vshrn_n_u32(vec1, 16));
+			vecSum1 = vcombine_u16(vshrn_n_u32(vec2, 16), vshrn_n_u32(vec3, 16));
+			for (row = 1, k = step; row < kernSize; ++row, k += step) {
 				vecInPtr = vld1q_u8(&inPtr[i + k]);
 				coeff = vthzKernPtr[row];
 				vec2 = vmovl_u8(vget_low_u8(vecInPtr)); // epi8 -> epi16
@@ -263,8 +274,14 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_NEON(const uint8_t* inPtr, ui
 
 		/* Per #8 samples */
 		if (i < width - 7) {
-			vecSum0 = vdupq_n_u16(0);
-			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+			vecInPtr = vld1q_u8(&inPtr[i + 0]);
+			coeff = vthzKernPtr[0];
+			vec1 = vmovl_u8(vget_low_u8(vecInPtr));
+			vec0 = vmovl_u8(vget_high_u8(vecInPtr));
+			vec0 = vmull_n_u16(vget_low_u16(vec1), coeff);
+			vec1 = vmull_n_u16(vget_high_u16(vec1), coeff);
+			vecSum0 = vcombine_u16(vshrn_n_u32(vec0, 16), vshrn_n_u32(vec1, 16));
+			for (row = 1, k = step; row < kernSize; ++row, k += step) {
 				vecInPtr = vld1q_u8(&inPtr[i + k]);
 				coeff = vthzKernPtr[row];
 				vec1 = vmovl_u8(vget_low_u8(vecInPtr));
@@ -279,8 +296,10 @@ void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_NEON(const uint8_t* inPtr, ui
 
 		/* Per #4 samples */
 		if (i < width - 3) {
-			vecSum0n = vdup_n_u16(0);
-			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+			vecInPtrn = vld1_u8(&inPtr[i + 0]);
+			vec0 = vmull_n_u16(vget_low_u16(vmovl_u8(vecInPtrn)), vthzKernPtr[0]);
+			vecSum0n = vshrn_n_u32(vec0, 16);
+			for (row = 1, k = step; row < kernSize; ++row, k += step) {
 				vecInPtrn = vld1_u8(&inPtr[i + k]);
 				vec0 = vmull_n_u16(vget_low_u16(vmovl_u8(vecInPtrn)), vthzKernPtr[row]);
 				vecSum0n = vqadd_u16(vecSum0n, vshrn_n_u32(vec0, 16));
