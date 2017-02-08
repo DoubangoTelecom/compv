@@ -596,6 +596,9 @@
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon_fma.cxx">
       <Filter>source\math\intrin\arm</Filter>
     </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_convlt_intrin_avx2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\asm\x86\compv_bits_macros_x86.s">

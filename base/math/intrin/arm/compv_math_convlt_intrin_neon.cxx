@@ -97,6 +97,157 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_NEON(const uint8_t* inPtr, uint8_t* out
 	}
 }
 
+void CompVMathConvlt1VtHz_8u16s16s_Intrin_NEON(const uint8_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const int16_t* vthzKernPtr, compv_uscalar_t kernSize)
+{
+#if 0
+	compv_uscalar_t i, j, k, row, stride = width + pad;
+	uint8x16_t vecInPtr;
+	int16x8_t vec0, vec1, vecSum0, vecSum1;
+	int16_t coeff;
+	int sum;
+
+	for (j = 0; j < height; ++j) {
+		/* Per #16 samples */
+		for (i = 0; i < width - 15; i += 16) {
+			vecSum0 = vdupq_n_u16(0);
+			vecSum1 = vdupq_n_u16(0);
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vecInPtr = vld1q_u8(&inPtr[i + k]);
+				coeff = vthzKernPtr[row];
+				vec0 = vmovl_u8(vget_low_u8(vecInPtr)); // epi8 -> epi16
+				vec1 = vmovl_u8(vget_high_u8(vecInPtr)); // epi8 -> epi16
+
+				vecSum0 = vmlaq_n_s16(vecSum0, vec0, coeff); // cannot use long multiply because vecInPtr is unsigned why coeff is signed
+
+				vecSum0 = _mm_add_epi16(vecSum0, _mm_mullo_epi16(vec0, vecCoeff));
+				vecSum1 = _mm_add_epi16(vecSum1, _mm_mullo_epi16(vec1, vecCoeff));
+			}
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vecSum0);
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i + 8]), vecSum1);
+		}
+		/* Per #8 samples */
+		if (i < width - 7) {
+			vecSum0 = _mm_setzero_si128();
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vecInPtr = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&inPtr[i + k]));
+				vecCoeff = _mm_set1_epi16(static_cast<short>(vthzKernPtr[row]));
+				vec0 = _mm_unpacklo_epi8(vecInPtr, vecZero); // epi8 -> epi16
+				vecSum0 = _mm_add_epi16(vecSum0, _mm_mullo_epi16(vec0, vecCoeff));
+			}
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&outPtr[i]), vecSum0);
+			i += 8;
+		}
+		/* Per #4 samples */
+		if (i < width - 3) {
+			vecSum0 = _mm_setzero_si128();
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vecInPtr = _mm_cvtsi32_si128(*reinterpret_cast<const uint32_t*>(&inPtr[i + k]));
+				vecCoeff = _mm_set1_epi16(static_cast<short>(vthzKernPtr[row]));
+				vec0 = _mm_unpacklo_epi8(vecInPtr, vecZero); // epi8 -> epi16
+				vecSum0 = _mm_add_epi16(vecSum0, _mm_mullo_epi16(vec0, vecCoeff));
+			}
+			_mm_storel_epi64(reinterpret_cast<__m128i*>(&outPtr[i]), vecSum0);
+			i += 4;
+		}
+
+		/* Per #1 samples */
+		for (; i < width; ++i) {
+			sum = static_cast<int>(inPtr[i] * vthzKernPtr[0]);
+			for (row = 1, k = step; row < kernSize; ++row, k += step) {
+				sum += static_cast<int>(inPtr[i + k] * vthzKernPtr[row]);
+			}
+			outPtr[i] = static_cast<int16_t>(sum);
+		}
+
+		inPtr += stride;
+		outPtr += stride;
+	}
+#endif
+}
+
+// yes arithmetic overflow check
+void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Intrin_NEON(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize)
+{
+	compv_uscalar_t i, j, k, row, stride = width + pad;
+	uint8x16_t vecInPtr;
+	uint8x8_t vecInPtrn, vec0n;
+	uint16x8_t vec0, vec1, vec2, vec3, vecSum0, vecSum1;
+	uint16x4_t vecSum0n;
+	uint16_t coeff;
+	unsigned int sum;
+	const bool bOutptrIs4BytesAligned = COMPV_IS_ALIGNED(outPtr, 4); // to avoid bus error when casting as 'uint32_t'
+
+	for (j = 0; j < height; ++j) {
+		/* Per #16 samples */
+		for (i = 0; i < width - 15; i += 16) {
+			vecSum0 = vdupq_n_u16(0);
+			vecSum1 = vdupq_n_u16(0);
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vecInPtr = vld1q_u8(&inPtr[i + k]);
+				coeff = vthzKernPtr[row];
+				vec2 = vmovl_u8(vget_low_u8(vecInPtr)); // epi8 -> epi16
+				vec3 = vmovl_u8(vget_high_u8(vecInPtr)); // epi8 -> epi16
+				vec0 = vmull_n_u16(vget_low_u16(vec2), coeff);
+				vec1 = vmull_n_u16(vget_high_u16(vec2), coeff);
+				vec2 = vmull_n_u16(vget_low_u16(vec3), coeff);
+				vec3 = vmull_n_u16(vget_high_u16(vec3), coeff);
+				vecSum0 = vqaddq_u16(vecSum0, vcombine_u16(vshrn_n_u32(vec0, 16), vshrn_n_u32(vec1, 16)));
+				vecSum1 = vqaddq_u16(vecSum1, vcombine_u16(vshrn_n_u32(vec2, 16), vshrn_n_u32(vec3, 16)));
+			}
+			vst1q_u8(&outPtr[i], vcombine_u8(vmovn_u16(vecSum0), vmovn_u16(vecSum1)));
+		}
+
+		/* Per #8 samples */
+		if (i < width - 7) {
+			vecSum0 = vdupq_n_u16(0);
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vecInPtr = vld1q_u8(&inPtr[i + k]);
+				coeff = vthzKernPtr[row];
+				vec1 = vmovl_u8(vget_low_u8(vecInPtr));
+				vec0 = vmovl_u8(vget_high_u8(vecInPtr));
+				vec0 = vmull_n_u16(vget_low_u16(vec1), coeff);
+				vec1 = vmull_n_u16(vget_high_u16(vec1), coeff);
+				vecSum0 = vqaddq_u16(vecSum0, vcombine_u16(vshrn_n_u32(vec0, 16), vshrn_n_u32(vec1, 16)));
+			}
+			vst1_u8(&outPtr[i], vmovn_u16(vecSum0));
+			i += 8;
+		}
+
+		/* Per #4 samples */
+		if (i < width - 3) {
+			vecSum0n = vdup_n_u16(0);
+			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
+				vecInPtrn = vld1_u8(&inPtr[i + k]);
+				vec0 = vmull_n_u16(vget_low_u16(vmovl_u8(vecInPtrn)), vthzKernPtr[row]);
+				vecSum0n = vqadd_u16(vecSum0n, vshrn_n_u32(vec0, 16));
+			}
+			vec0n = vmovn_u16(vcombine_u16(vecSum0n, vecSum0n)); // TODO(dmi): asm, combine not needed
+			if (bOutptrIs4BytesAligned) {
+				*reinterpret_cast<uint32_t*>(&outPtr[i]) = vget_lane_u32(vec0n, 0);
+			}
+			else {
+				outPtr[i + 0] = vget_lane_u8(vec0n, 0);
+				outPtr[i + 1] = vget_lane_u8(vec0n, 1);
+				outPtr[i + 2] = vget_lane_u8(vec0n, 2);
+				outPtr[i + 3] = vget_lane_u8(vec0n, 3);
+			}
+			i += 4;
+		}
+
+		/* Per #1 samples */
+		for (; i < width; ++i) {
+			sum = static_cast<unsigned int>(inPtr[i] * vthzKernPtr[0]) >> 16;
+			for (row = 1, k = step; row < kernSize; ++row, k += step) {
+				sum += static_cast<unsigned int>(inPtr[i + k] * vthzKernPtr[row]) >> 16;
+			}
+			outPtr[i] = static_cast<uint8_t>(sum);
+		}
+
+		inPtr += stride;
+		outPtr += stride;
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */
