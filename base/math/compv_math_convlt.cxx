@@ -49,6 +49,7 @@ COMPV_NAMESPACE_BEGIN()
     COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_NEON64(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
     COMPV_EXTERNC void CompVMathConvlt1VtHz_8u32f8u_Asm_FMA_NEON64(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize);
     COMPV_EXTERNC void CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON64(const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize);
+	COMPV_EXTERNC void CompVMathConvlt1VtHz_8u16s16s_Asm_NEON64(const uint8_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const int16_t* vthzKernPtr, compv_uscalar_t kernSize);
 #   endif /* COMPV_ARCH_ARM32 */
 #endif /* COMPV_ASM */
 
@@ -152,7 +153,7 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(co
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON) && width > 15) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathConvlt1VtHz_8u16s16s = CompVMathConvlt1VtHz_8u16s16s_Intrin_NEON);
 		COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathConvlt1VtHz_8u16s16s = CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32);
-		//COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathConvlt1VtHz_8u16s16s = CompVMathConvlt1VtHz_8u16s16s_Asm_NEON64);
+		COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathConvlt1VtHz_8u16s16s = CompVMathConvlt1VtHz_8u16s16s_Asm_NEON64);
 	}
 #endif
 
@@ -162,6 +163,12 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(co
 	else {
 		CompVMathConvlt::convlt1VtHzKernelInt_C<uint8_t, int16_t, int16_t>(inPtr, outPtr, width, height, step, pad, vthzKernPtr, kernSize);
 	}
+    
+    // FIXME: remove
+    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -32)*sizeof(int16_t)).c_str());
+    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -16)*sizeof(int16_t)).c_str());
+    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, width*sizeof(int16_t)).c_str());
+    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width + pad) * height*sizeof(int16_t)).c_str());
 }
 
 // InputType = int16_t, KernelType = int16_t, OutputType = int16_t, FixedPoint = false

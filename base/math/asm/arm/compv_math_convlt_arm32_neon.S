@@ -523,7 +523,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
 
 
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        @ if (i < width - 3)
+        @ if (i < width)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         ands i, width, #3 @  modulo 4
         beq EndOf_IfPer1Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
@@ -772,7 +772,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32
 
 
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        @ if (i < width - 3)
+        @ if (i < width)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         ands i, width, #3 @  modulo 4
         beq EndOf_IfPer1Samples_CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32
@@ -1005,7 +1005,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
 
 
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        @ if (i < width - 3)
+        @ if (i < width)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         ands i, width, #3 @  modulo 4
         beq EndOf_IfPer1Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
