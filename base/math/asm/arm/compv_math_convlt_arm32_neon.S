@@ -382,7 +382,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         and i, width, #-16 @ Align backward
         LoopWidthPer16Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-            @pld [inPtr, #CACHE_LINE_SIZE]
+            pld [inPtr, #CACHE_LINE_SIZE]
             @pst [outPtr, #CACHE_LINE_SIZE]
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             @ for (row = 0, k = 0; row < kernSize; ++row, k += step)
