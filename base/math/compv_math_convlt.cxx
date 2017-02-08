@@ -80,10 +80,10 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_true(con
 	}
 
 	// FIXME: remove
-	COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -32)).c_str());
-	COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -16)).c_str());
-	COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, width).c_str());
-	COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width + pad) * height).c_str());
+	//COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -32)).c_str());
+	//COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -16)).c_str());
+	//COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, width).c_str());
+	//COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width + pad) * height).c_str());
 }
 
 // InputType = uint8_t, KernelType = compv_float32_t, OutputType = uint8_t, FixedPoint = false
