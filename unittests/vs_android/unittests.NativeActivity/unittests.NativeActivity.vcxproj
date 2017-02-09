@@ -35,6 +35,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\tests\tests_common.cxx" />
     <ClCompile Include="..\..\chroma_conv.cxx" />
     <ClCompile Include="..\..\convlt.cxx" />
     <ClCompile Include="..\..\feature_fast.cxx" />

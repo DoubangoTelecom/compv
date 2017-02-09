@@ -6,7 +6,6 @@
 */
 #include "compv/base/math/compv_math_convlt.h"
 #include "compv/base/compv_cpu.h"
-#include "compv/base/compv_md5.h" // FIXME: remove
 
 #include "compv/base/math/intrin/x86/compv_math_convlt_intrin_avx2.h"
 #include "compv/base/math/intrin/x86/compv_math_convlt_intrin_sse2.h"
@@ -83,12 +82,6 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_true(con
 	else {
 		CompVMathConvlt::convlt1VtHzFixedPoint_C(inPtr, outPtr, width, height, step, pad, vthzKernPtr, kernSize);
 	}
-    
-    // FIXME: remove
-    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -32)).c_str());
-    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -16)).c_str());
-    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, width).c_str());
-    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width + pad) * height).c_str());
 }
 
 // InputType = uint8_t, KernelType = compv_float32_t, OutputType = uint8_t, FixedPoint = false
@@ -164,12 +157,6 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(co
 	else {
 		CompVMathConvlt::convlt1VtHzKernelInt_C<uint8_t, int16_t, int16_t>(inPtr, outPtr, width, height, step, pad, vthzKernPtr, kernSize);
 	}
-    
-    // FIXME: remove
-    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -32)*sizeof(int16_t)).c_str());
-    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -16)*sizeof(int16_t)).c_str());
-    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, width*sizeof(int16_t)).c_str());
-    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width + pad) * height*sizeof(int16_t)).c_str());
 }
 
 // InputType = int16_t, KernelType = int16_t, OutputType = int16_t, FixedPoint = false
@@ -203,12 +190,6 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(co
 	else {
 		CompVMathConvlt::convlt1VtHzKernelInt_C<int16_t, int16_t, int16_t>(inPtr, outPtr, width, height, step, pad, vthzKernPtr, kernSize);
 	}
-    
-    // FIXME: remove
-    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -32)).c_str());
-    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width & -16)).c_str());
-    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, width).c_str());
-    //COMPV_DEBUG_INFO("FIXME: %s", CompVMd5::compute2(outPtr, (width + pad) * height).c_str());
 }
 
 COMPV_NAMESPACE_END()

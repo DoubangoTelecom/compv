@@ -7,5 +7,6 @@
     <ClCompile Include="..\..\scale.cxx" />
     <ClCompile Include="..\..\pyramid.cxx" />
     <ClCompile Include="..\..\convlt.cxx" />
+    <ClCompile Include="..\..\..\tests\tests_common.cxx" />
   </ItemGroup>
 </Project>

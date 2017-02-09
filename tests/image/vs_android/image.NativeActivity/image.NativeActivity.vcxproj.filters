@@ -9,6 +9,7 @@
     <ClCompile Include="..\..\scale.cxx" />
     <ClCompile Include="..\..\pyramid.cxx" />
     <ClCompile Include="..\..\convlt.cxx" />
+    <ClCompile Include="..\..\..\tests_common.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />
