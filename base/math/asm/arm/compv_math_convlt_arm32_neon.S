@@ -438,7 +438,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
         @ if (i < width - 7)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         and i, width, #15 @  modulo 16
-        lsrs i, i, 3 @ div 8
+        lsrs i, i, #3 @ div 8
         beq EndOf_IfPer8Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
         IfPer8Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -480,7 +480,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
         @ if (i < width - 3)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         and i, width, #7 @  modulo 8
-        lsrs i, i, 2 @ div 4
+        lsrs i, i, #2 @ div 4
         beq EndOf_IfPer4Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
         IfPer4Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -715,7 +715,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32
         @ if (i < width - 7)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         and i, width, #15 @  modulo 16
-        lsrs i, i, 3 @ div 8
+        lsrs i, i, #3 @ div 8
         beq EndOf_IfPer8Samples_CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32
         IfPer8Samples_CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32:
             veor.u16 vecSum0, vecSum0, vecSum0
@@ -745,7 +745,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32
         @ if (i < width - 3)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         and i, width, #7 @  modulo 8
-        lsrs i, i, 2 @ div 4
+        lsrs i, i, #2 @ div 4
         beq EndOf_IfPer4Samples_CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32
         IfPer4Samples_CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32:
             veor.u16 vecSum0x, vecSum0x, vecSum0x
@@ -950,7 +950,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
         @ if (i < width - 7)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         and i, width, #15 @  modulo 16
-        lsrs i, i, 3 @ div 8
+        lsrs i, i, #3 @ div 8
         beq EndOf_IfPer8Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
         IfPer8Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32:
             veor.u16 vecSum0, vecSum0, vecSum0
@@ -979,7 +979,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
         @ if (i < width - 3)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         and i, width, #7 @  modulo 8
-        lsrs i, i, 2 @ div 4
+        lsrs i, i, #2 @ div 4
         beq EndOf_IfPer4Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
         IfPer4Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32:
             veor.u16 vecSum0x, vecSum0x, vecSum0x
