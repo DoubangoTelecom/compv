@@ -2,7 +2,8 @@
 
 #define TAG_TEST					"TestMath"
 
-#define TEST_MATRIX_OPS_TRANSPOSE	1
+#define TEST_MATRIX_OPS_TRANSPOSE	0
+#define TEST_MATRIX_OPS_MUL_AB		1
 #define TEST_SVD					0
 #define TEST_PSI					0
 
@@ -16,6 +17,10 @@ compv_main()
 #if TEST_MATRIX_OPS_TRANSPOSE
 		extern COMPV_ERROR_CODE matrix_ops_transpose();
 		COMPV_CHECK_CODE_BAIL(err = matrix_ops_transpose(), TAG_TEST "Math matrix transpose test failed");
+#endif
+#if TEST_MATRIX_OPS_MUL_AB
+		extern COMPV_ERROR_CODE matrix_ops_mulAB();
+		COMPV_CHECK_CODE_BAIL(err = matrix_ops_mulAB(), TAG_TEST "Math matrix mulAB test failed");
 #endif
 #if TEST_SVD
 		extern COMPV_ERROR_CODE scale();
