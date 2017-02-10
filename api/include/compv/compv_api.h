@@ -31,6 +31,7 @@
 #include <compv/base/math/compv_math.h>
 #include <compv/base/math/compv_math_convlt.h>
 #include <compv/base/math/compv_math_gauss.h>
+#include <compv/base/math/compv_math_matrix.h>
 #include <compv/base/math/compv_math_utils.h>
 
 #include <compv/base/parallel/compv_condvar.h>

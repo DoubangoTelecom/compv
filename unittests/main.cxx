@@ -4,11 +4,13 @@ using namespace compv;
 
 #define TAG_UNITTESTS "UnitTests"
 
-#define UNITTEST_SCALE			0
-#define UNITTEST_PYRAMID		0
-#define UNITTEST_CONVOLUTION	1
-#define UNITTEST_FEATURE_FAST	0
-#define UNITTEST_CHROMA_CONV	0
+#define UNITTEST_SCALE					0
+#define UNITTEST_PYRAMID				0
+#define UNITTEST_CONVOLUTION			0
+#define UNITTEST_FEATURE_FAST			0
+#define UNITTEST_CHROMA_CONV			0
+
+#define UNITTEST_MATH_MATRIX_OPS		1
 
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
 #define disableAVX() (kCpuFlagAVX | kCpuFlagAVX2)
@@ -85,6 +87,11 @@ compv_main()
 #if UNITTEST_CHROMA_CONV || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_chroma_conv();
 								COMPV_CHECK_CODE_BAIL(err = unittest_chroma_conv(), "Chroma conversion unittest failed");
+#endif
+
+#if UNITTEST_MATH_MATRIX_OPS || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_math_matrix_ops();
+								COMPV_CHECK_CODE_BAIL(err = unittest_math_matrix_ops(), "Math matrix ops unittest failed");
 #endif
 							}
 						}

@@ -111,6 +111,15 @@ public:
         return 0;
     }
 
+	COMPV_INLINE COMPV_ERROR_CODE strideInElts(size_t &strideInElts, int planeId = 0) {
+		COMPV_CHECK_EXP_RETURN(planeId >= m_nPlaneCount, COMPV_ERROR_CODE_E_OUT_OF_BOUND, "planeId out of bound index");
+		if (!m_bPlaneStrideInEltsIsIntegral[planeId]) {
+			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_CALL, "Stride in elements not integral value");
+		}
+		strideInElts = (planeId == 0) ? m_nStrideInElts : m_nPlaneStrideInElts[planeId];
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
     COMPV_INLINE size_t stride(int planeId = -1)const { // in samples
         if (planeId < 0) {
             return m_nStrideInElts;
@@ -191,10 +200,7 @@ protected:
 		// Patch SubType
 		// Opaque means user-undefined (weak-type), patch and set a strong-type
 		if (dataType == COMPV_MAT_TYPE_RAW && dataSubType == COMPV_SUBTYPE_RAW_OPAQUE) {
-			if (std::is_same<elmType, int>::value) {
-				dataSubType = COMPV_SUBTYPE_RAW_INT;
-			}
-			else if (std::is_same<elmType, int8_t>::value) {
+			if (std::is_same<elmType, int8_t>::value) {
 				dataSubType = COMPV_SUBTYPE_RAW_INT8;
 			}
 			else if (std::is_same<elmType, uint8_t>::value) {
@@ -205,6 +211,12 @@ protected:
 			}
 			else if (std::is_same<elmType, uint16_t>::value) {
 				dataSubType = COMPV_SUBTYPE_RAW_UINT16;
+			}
+			else if (std::is_same<elmType, int32_t>::value) {
+				dataSubType = COMPV_SUBTYPE_RAW_INT32;
+			}
+			else if (std::is_same<elmType, uint32_t>::value) {
+				dataSubType = COMPV_SUBTYPE_RAW_UINT32;
 			}
 			else if (std::is_same<elmType, compv_float32_t>::value) {
 				dataSubType = COMPV_SUBTYPE_RAW_FLOAT32;
