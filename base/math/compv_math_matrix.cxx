@@ -38,7 +38,7 @@ class CompVMatrixGeneric
 	// R = mul(A, B) = mulAB(A, B) = mulABt(A, B*)
 	static COMPV_ERROR_CODE mulAB(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R)
 	{
-		COMPV_CHECK_EXP_RETURN(!A || !B || !R || !A->rows() || !A->cols() || B->rows() != A->cols() || !B->cols() || (*R && (*R == A || *R == B)), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_EXP_RETURN(!A || !B || !R || !A->rows() || !A->cols() || B->rows() != A->cols() || !B->cols() || *R == A || *R == B, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		if (A->rows() == 3 && A->cols() == 3 && B->rows() == 3 && B->cols() == 3) {
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 			// TODO(dmi): add support for mulAB_3x3 -> no transpose
@@ -59,7 +59,7 @@ class CompVMatrixGeneric
 	static COMPV_ERROR_CODE mulABt(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R)
 	{
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
-		COMPV_CHECK_EXP_RETURN(!A || !B || !R || A->subType() != B->subType() || !A->rows() || !A->cols() || A->cols() != B->cols() || !B->cols() || (*R && (*R == A || *R == B)), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_EXP_RETURN(!A || !B || !R || A->subType() != B->subType() || !A->rows() || !A->cols() || A->cols() != B->cols() || !B->cols() || *R == A || *R == B, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 		size_t i, j, k, aRows = A->rows(), bRows = B->rows(), bCols = B->cols();
 
@@ -93,10 +93,32 @@ class CompVMatrixGeneric
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
+	// R must be <> A
+	// R = mul(A*, A)
+	static COMPV_ERROR_CODE mulAtA(const CompVMatPtr &A, CompVMatPtrPtr R)
+	{
+		COMPV_CHECK_EXP_RETURN(!A || !R || !A->rows() || !A->cols() || *R == A, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		
+		if (A->rows() == 3 && A->cols() == 3) {
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+			// TODO(dmi): add support for mulAtA_3x3 -> no transpose
+		}
+		else if (A->rows() == 4 && A->cols() == 4) {
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+			// TODO(dmi): add support for mulAtA_4x4 -> no transpose
+		}
+
+		// AtA = AtAtt = (At)(At)t = BBt, with B = At
+		CompVMatPtr B;
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric::transpose(A, &B));
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric::mulABt(B, B, R));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
 	static COMPV_ERROR_CODE transpose(const CompVMatPtr &A, CompVMatPtrPtr R)
 	{
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation and not multi-thread"); // TODO(dmi): do not print message for small matrices (e.g. (rows * cols) < 200)
-		COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols() || (!R || A == *R), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_EXP_RETURN(!A || !R || !A->rows() || !A->cols() || A == *R, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 		// Create A if not already done
 		if (!(*R) || (*R)->rows() != A->cols() || (*R)->cols() != A->rows() || (*R)->subType() != A->subType()) {
@@ -131,6 +153,50 @@ class CompVMatrixGeneric
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
+
+	static COMPV_ERROR_CODE isSymmetric(const CompVMatPtr &A, bool &symmetric)
+	{
+		COMPV_CHECK_EXP_RETURN(!A || !A->rows() || !A->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+		if (A->rows() != A->cols()) {
+			symmetric = false; // must be square
+			return COMPV_ERROR_CODE_S_OK;
+		}
+
+		CompVMatPtr At;
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric::transpose(A, &At)); // transpose to make it SIMD-friendly
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric::isEqual(A, At, symmetric));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	static COMPV_ERROR_CODE isEqual(const CompVMatPtr &A, const CompVMatPtr &B, bool &equal)
+	{
+		COMPV_CHECK_EXP_RETURN(!A || !B || !A->rows() || !A->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		
+		if (A->rows() != B->rows() || A->cols() != B->cols()) {
+			equal = false;
+			return COMPV_ERROR_CODE_S_OK;
+		}
+
+		const size_t acols = A->cols();
+		const size_t arows = A->rows();
+
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+		const T *aptr, *bptr;
+		size_t i, j;
+		for (j = 0; j < arows; ++j) {
+			aptr = A->ptr<const T>(j);
+			bptr = B->ptr<const T>(j);
+			for (i = 0; i < acols; ++i) {
+				if (aptr[i] != bptr[i]) {
+					equal = false;
+					return COMPV_ERROR_CODE_S_OK;
+				}
+			}
+		}
+		equal = true;
+		return COMPV_ERROR_CODE_S_OK;
+	}
 };
 
 //
@@ -152,9 +218,26 @@ COMPV_ERROR_CODE CompVMatrix::mulABt(const CompVMatPtr &A, const CompVMatPtr &B,
 }
 
 // R must be <> A
+// R = mul(A*, A)
+COMPV_ERROR_CODE CompVMatrix::mulAtA(const CompVMatPtr &A, CompVMatPtrPtr R)
+{
+	CompVMatrixGenericInvoke(A->subType(), mulAtA, A, R);
+}
+
+// R must be <> A
 COMPV_ERROR_CODE CompVMatrix::transpose(const CompVMatPtr &A, CompVMatPtrPtr R) 
 { 
 	CompVMatrixGenericInvoke(A->subType(), transpose, A, R); 
+}
+
+COMPV_ERROR_CODE CompVMatrix::isSymmetric(const CompVMatPtr &A, bool &symmetric)
+{
+	CompVMatrixGenericInvoke(A->subType(), isSymmetric, A, symmetric);
+}
+
+COMPV_ERROR_CODE CompVMatrix::isEqual(const CompVMatPtr &A, const CompVMatPtr &B, bool &equal)
+{
+	CompVMatrixGenericInvoke(A->subType(), isEqual, A, B, equal);
 }
 
 COMPV_NAMESPACE_END()

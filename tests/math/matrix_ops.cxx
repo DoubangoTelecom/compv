@@ -106,3 +106,42 @@ COMPV_ERROR_CODE matrix_ops_mulAB()
 
 	return COMPV_ERROR_CODE_S_OK;
 }
+
+COMPV_ERROR_CODE matrix_ops_isSymetric()
+{
+	static const size_t matrixSize = 215; // not SIMD friendly, no need for rows an cols as symetric matrix must be square
+	CompVMatPtr A, S;
+	TYP v, *aptr;
+
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<TYP>(&A, matrixSize, matrixSize));
+
+	// build random matrix
+	for (size_t j = 0; j < matrixSize; ++j) {
+		aptr = A->ptr<TYP>(j);
+		for (size_t i = 0; i < matrixSize; ++i) {
+			aptr[i] = static_cast<TYP>(rand());
+		}
+	}
+
+	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAtA(A, &S));
+	bool isSymmetric;
+
+	uint64_t timeStart = CompVTime::nowMillis();
+	for (size_t i = 0; i < LOOP_COUNT; ++i) {
+		COMPV_CHECK_CODE_RETURN(CompVMatrix::isSymmetric(A, isSymmetric));
+		COMPV_CHECK_EXP_RETURN(isSymmetric, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "A not symetric");
+		COMPV_CHECK_CODE_RETURN(CompVMatrix::isSymmetric(S, isSymmetric));
+		COMPV_CHECK_EXP_RETURN(!isSymmetric, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "AtA is symetric");
+		// change one element in the last row (become last column when transposed - useful to make sure SIMD code will read up to the last column)
+		v = *S->ptr<const TYP>((matrixSize - 1), ((matrixSize - 1) >> 1));
+		*S->ptr<TYP>((matrixSize - 1), ((matrixSize - 1) >> 1)) = static_cast<TYP>(rand()) + (v / 2) + 3;
+		COMPV_CHECK_CODE_RETURN(CompVMatrix::isSymmetric(S, isSymmetric));
+		COMPV_CHECK_EXP_RETURN(isSymmetric, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "S no longer symetric");
+		*S->ptr<TYP>((matrixSize - 1), ((matrixSize - 1) >> 1)) = v; // restore value for the next loop
+	}
+	uint64_t timeEnd = CompVTime::nowMillis();
+
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(isSymetric) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+
+	return COMPV_ERROR_CODE_S_OK;
+}

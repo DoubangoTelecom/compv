@@ -18,7 +18,10 @@ class COMPV_BASE_API CompVMatrix
 public:
 	static COMPV_ERROR_CODE mulAB(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R);
 	static COMPV_ERROR_CODE mulABt(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE mulAtA(const CompVMatPtr &A, CompVMatPtrPtr R);
 	static COMPV_ERROR_CODE transpose(const CompVMatPtr &A, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE isSymmetric(const CompVMatPtr &A, bool &symmetric);
+	static COMPV_ERROR_CODE isEqual(const CompVMatPtr &A, const CompVMatPtr &B, bool &equal);
 };
 
 COMPV_NAMESPACE_END()

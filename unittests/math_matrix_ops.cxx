@@ -10,7 +10,7 @@ static COMPV_ERROR_CODE __math_matrix_ops_transpose()
 	static const size_t sizes[5][2] = { { 231, 215 }, { 215, 231 } ,{ 3, 3 }, { 4, 4 },{ 16, 16 } };
 
 	for (size_t size = 0; size < sizeof(sizes) / sizeof(sizes[0]); ++size) {
-		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Matrix op transpose -> (%zu x %zu) ==", sizes[size][0], sizes[size][1]);
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Matrix op transpose -> %zu (%zu x %zu) ==", sizeof(T), sizes[size][0], sizes[size][1]);
 		CompVMatPtr A, R;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&A, sizes[size][0], sizes[size][1]));
 		T *aptr;
@@ -66,7 +66,7 @@ static COMPV_ERROR_CODE __math_matrix_ops_mulAB()
 
 	for (size_t i = 0; i < sizeof(COMPV_UNITTEST_MULAB_FLOAT64) / sizeof(COMPV_UNITTEST_MULAB_FLOAT64[i]); ++i) {
 		test = &tests[i];
-		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Matrix op mulAB -> (%zu x %zu) mul (%zu x%zu ) ==", test->arows, test->acols, test->brows, test->bcols);
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Matrix op mulAB -> %zu (%zu x %zu) mul (%zu x%zu ) ==", sizeof(T), test->arows, test->acols, test->brows, test->bcols);
 		CompVMatPtr A, B, R;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&A, test->arows, test->acols));
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&B, test->brows, test->bcols));
@@ -92,6 +92,43 @@ static COMPV_ERROR_CODE __math_matrix_ops_mulAB()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+template <typename T>
+static COMPV_ERROR_CODE __math_matrix_ops_isSymetric(size_t matrixSize)
+{
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Matrix op isSymetric -> %zu %zu ==", sizeof(T), matrixSize);
+
+	CompVMatPtr A, S;
+	T v, *aptr;
+
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&A, matrixSize, matrixSize));
+
+	// build random matrix
+	for (size_t j = 0; j < matrixSize; ++j) {
+		aptr = A->ptr<T>(j);
+		for (size_t i = 0; i < matrixSize; ++i) {
+			aptr[i] = static_cast<T>(rand());
+		}
+	}
+
+	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAtA(A, &S)); // build symetric matrix
+	bool isSymmetric;
+	
+	COMPV_CHECK_CODE_RETURN(CompVMatrix::isSymmetric(A, isSymmetric));
+	COMPV_CHECK_EXP_RETURN(isSymmetric, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "A not symetric");
+	COMPV_CHECK_CODE_RETURN(CompVMatrix::isSymmetric(S, isSymmetric));
+	COMPV_CHECK_EXP_RETURN(!isSymmetric, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "AtA is symetric");
+	// change one element in the last row (become last column when transposed - useful to make sure SIMD code will read up to the last column)
+	v = *S->ptr<const T>((matrixSize - 1), ((matrixSize - 1) >> 1));
+	*S->ptr<T>((matrixSize - 1), ((matrixSize - 1) >> 1)) = static_cast<T>(rand()) + (v / 2) + 3;
+	COMPV_CHECK_CODE_RETURN(CompVMatrix::isSymmetric(S, isSymmetric));
+	COMPV_CHECK_EXP_RETURN(isSymmetric, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "S no longer symetric");
+	*S->ptr<T>((matrixSize - 1), ((matrixSize - 1) >> 1)) = v; // restore value for the next loop
+
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 
 COMPV_ERROR_CODE unittest_math_matrix_ops()
 {
@@ -103,6 +140,10 @@ COMPV_ERROR_CODE unittest_math_matrix_ops()
 	/* == Matrix mulAB == */
 	COMPV_CHECK_CODE_RETURN((__math_matrix_ops_mulAB<compv_float32_t>()));
 	COMPV_CHECK_CODE_RETURN((__math_matrix_ops_mulAB<compv_float64_t>()));
+
+	/* == Matrix isSymetric == */
+	COMPV_CHECK_CODE_RETURN((__math_matrix_ops_isSymetric<compv_float64_t>(215)));
+	COMPV_CHECK_CODE_RETURN((__math_matrix_ops_isSymetric<compv_float32_t>(215)));
 
 	return COMPV_ERROR_CODE_S_OK;
 }

@@ -4,8 +4,8 @@
 
 using namespace compv;
 
-#define TYPE_DOUBLE			0
-#define TYPE_FLOAT			1
+#define TYPE_DOUBLE			1
+#define TYPE_FLOAT			0
 
 #define TYPE	TYPE_DOUBLE  // double or float
 #define LOOP_COUNT 1

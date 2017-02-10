@@ -2,10 +2,11 @@
 
 #define TAG_TEST					"TestMath"
 
-#define TEST_MATRIX_OPS_TRANSPOSE	0
-#define TEST_MATRIX_OPS_MUL_AB		1
-#define TEST_SVD					0
-#define TEST_PSI					0
+#define TEST_MATRIX_OPS_TRANSPOSE		0
+#define TEST_MATRIX_OPS_MUL_AB			0
+#define TEST_MATRIX_OPS_IS_SYMETRIC		1
+#define TEST_SVD						0
+#define TEST_PSI						0
 
 /* Entry point function */
 compv_main()
@@ -21,6 +22,10 @@ compv_main()
 #if TEST_MATRIX_OPS_MUL_AB
 		extern COMPV_ERROR_CODE matrix_ops_mulAB();
 		COMPV_CHECK_CODE_BAIL(err = matrix_ops_mulAB(), TAG_TEST "Math matrix mulAB test failed");
+#endif
+#if TEST_MATRIX_OPS_IS_SYMETRIC
+		extern COMPV_ERROR_CODE matrix_ops_isSymetric();
+		COMPV_CHECK_CODE_BAIL(err = matrix_ops_isSymetric(), TAG_TEST "Math matrix isSymetric test failed");
 #endif
 #if TEST_SVD
 		extern COMPV_ERROR_CODE scale();
