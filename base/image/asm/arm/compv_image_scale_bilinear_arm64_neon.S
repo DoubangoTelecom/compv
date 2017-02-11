@@ -123,9 +123,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON64
 
 			## write memNeighbs ##
             // v26 -> tmp(vecNeighb0)
-            // v27 -> tmp(vecNeighb1)
             // v28 -> tmp(vecNeighb2)
-            // v29 -> tmp(vecNeighb3)
             mov r10w, v21.s[0]
             mov r11w, v21.s[1]
             mov r12w, v21.s[2]
@@ -174,7 +172,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON64
             mov v28.s[1], r20w
             mov v28.s[2], r22w
             mov v28.s[3], r24w
-
+			// v27 -> tmp(vecNeighb1)
+            // v29 -> tmp(vecNeighb3)
             mov r10w, v23.s[0]
             mov r11w, v23.s[1]
             mov r12w, v23.s[2]

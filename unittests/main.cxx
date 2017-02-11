@@ -4,13 +4,13 @@ using namespace compv;
 
 #define TAG_UNITTESTS "UnitTests"
 
-#define UNITTEST_SCALE					0
+#define UNITTEST_SCALE					1
 #define UNITTEST_PYRAMID				0
 #define UNITTEST_CONVOLUTION			0
 #define UNITTEST_FEATURE_FAST			0
 #define UNITTEST_CHROMA_CONV			0
 
-#define UNITTEST_MATH_MATRIX_OPS		1
+#define UNITTEST_MATH_MATRIX_OPS		0
 
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
 #define disableAVX() (kCpuFlagAVX | kCpuFlagAVX2)
