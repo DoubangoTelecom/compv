@@ -158,22 +158,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON64
             ldrh r23w, [inPtr_, r23]
             ldrh r24w, [inPtr_, r24]
             ldrh r25w, [inPtr_, r25]
-            lsl r11, r11, #16
-            lsl r13, r13, #16
-            lsl r15, r15, #16
-            lsl r27, r27, #16
-            lsl r19, r19, #16
-            lsl r21, r21, #16
-            lsl r23, r23, #16
-            lsl r25, r25, #16
-            orr r10, r10, r11 // arm64 doesn't support 'orr r10, r11, LSL #16'
-            orr r12, r12, r13
-            orr r14, r14, r15
-            orr r26, r26, r27
-            orr r28, r28, r19
-            orr r20, r20, r21
-            orr r22, r22, r23
-            orr r24, r24, r25
+            
+            add r10, r10, r11, LSL #16
+            add r12, r12, r13, LSL #16
+            add r14, r14, r15, LSL #16
+            add r26, r26, r27, LSL #16
+            add r28, r28, r19, LSL #16
+            add r20, r20, r21, LSL #16
+            add r22, r22, r23, LSL #16
+            add r24, r24, r25, LSL #16
+
             mov v26.s[0], r10w
             mov v26.s[1], r12w
             mov v26.s[2], r14w
@@ -215,22 +209,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON64
             ldrh r23w, [inPtr_, r23]
             ldrh r24w, [inPtr_, r24]
             ldrh r25w, [inPtr_, r25]
-            lsl r11, r11, #16
-            lsl r13, r13, #16
-            lsl r15, r15, #16
-            lsl r27, r27, #16
-            lsl r19, r19, #16
-            lsl r21, r21, #16
-            lsl r23, r23, #16
-            lsl r25, r25, #16
-            orr r10, r10, r11 // arm64 doesn't support 'orr r10, r11, LSL #16'
-            orr r12, r12, r13
-            orr r14, r14, r15
-            orr r26, r26, r27
-            orr r28, r28, r19
-            orr r20, r20, r21
-            orr r22, r22, r23
-            orr r24, r24, r25
+            add r10, r10, r11, LSL #16 
+            add r12, r12, r13, LSL #16
+            add r14, r14, r15, LSL #16
+            add r26, r26, r27, LSL #16
+            add r28, r28, r19, LSL #16
+            add r20, r20, r21, LSL #16
+            add r22, r22, r23, LSL #16
+            add r24, r24, r25, LSL #16
             mov v27.s[0], r10w
             mov v27.s[1], r12w
             mov v27.s[2], r14w
