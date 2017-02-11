@@ -163,15 +163,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON64
             add r28, r28, r19, LSL #16
             add r20, r20, r21, LSL #16
             add r22, r22, r23, LSL #16
-            add r24, r24, r25, LSL #16
-            mov v26.s[0], r10w
-            mov v26.s[1], r12w
-            mov v26.s[2], r14w
-            mov v26.s[3], r26w
-            mov v28.s[0], r28w
-            mov v28.s[1], r20w
-            mov v28.s[2], r22w
-            mov v28.s[3], r24w
+            add r24, r24, r25, LSL #16			
+			add r10, r10, r12, LSL #32
+			add r14, r14, r26, LSL #32
+			add r28, r28, r20, LSL #32
+			add r22, r22, r24, LSL #32
+			mov v26.d[0], r10
+			mov v26.d[1], r14
+			mov v28.d[0], r28
+			mov v28.d[1], r22
 			// v27 -> tmp(vecNeighb1)
             // v29 -> tmp(vecNeighb3)
             mov r10w, v23.s[0]
@@ -214,14 +214,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON64
             add r20, r20, r21, LSL #16
             add r22, r22, r23, LSL #16
             add r24, r24, r25, LSL #16
-            mov v27.s[0], r10w
-            mov v27.s[1], r12w
-            mov v27.s[2], r14w
-            mov v27.s[3], r26w
-            mov v29.s[0], r28w
-            mov v29.s[1], r20w
-            mov v29.s[2], r22w
-            mov v29.s[3], r24w
+			add r10, r10, r12, LSL #32
+			add r14, r14, r26, LSL #32
+			add r28, r28, r20, LSL #32
+			add r22, r22, r24, LSL #32
+			mov v27.d[0], r10
+			mov v27.d[1], r14
+			mov v29.d[0], r28
+			mov v29.d[1], r22
 
 			## Deinterleave neighbs ##
             // v26[tmp(vecNeighb0)] = 0,1,0,1,0,1,0,1,0,1

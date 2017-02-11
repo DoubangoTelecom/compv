@@ -26,7 +26,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-// TODO(dmi): Not optiz -> on Android (Huawei MediaPad2, ARM64, HD image, single threaded, #1000 times), asm code: 3120.ms, intrin code: 4349.ms
+// TODO(dmi): Not optiz -> on Android (Huawei MediaPad2, ARM64, HD image, single threaded, #1000 times), asm code: 2862.ms, intrin code: 4349.ms
 void CompVImageScaleBilinear_Intrin_NEON(
 	const uint8_t* inPtr, compv_uscalar_t inStride,
 	COMPV_ALIGNED(NEON) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(NEON) compv_uscalar_t outStride,
