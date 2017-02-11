@@ -4,7 +4,8 @@
 
 #define TEST_MATRIX_OPS_TRANSPOSE		0
 #define TEST_MATRIX_OPS_MUL_AB			0
-#define TEST_MATRIX_OPS_IS_SYMETRIC		1
+#define TEST_MATRIX_OPS_MUL_GA			1
+#define TEST_MATRIX_OPS_IS_SYMETRIC		0
 #define TEST_SVD						0
 #define TEST_PSI						0
 
@@ -22,6 +23,10 @@ compv_main()
 #if TEST_MATRIX_OPS_MUL_AB
 		extern COMPV_ERROR_CODE matrix_ops_mulAB();
 		COMPV_CHECK_CODE_BAIL(err = matrix_ops_mulAB(), TAG_TEST "Math matrix mulAB test failed");
+#endif
+#if TEST_MATRIX_OPS_MUL_GA
+		extern COMPV_ERROR_CODE matrix_ops_mulGA();
+		COMPV_CHECK_CODE_BAIL(err = matrix_ops_mulGA(), TAG_TEST "Math matrix mulGA test failed");
 #endif
 #if TEST_MATRIX_OPS_IS_SYMETRIC
 		extern COMPV_ERROR_CODE matrix_ops_isSymetric();

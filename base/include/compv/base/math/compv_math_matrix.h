@@ -19,10 +19,19 @@ public:
 	static COMPV_ERROR_CODE mulAB(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R);
 	static COMPV_ERROR_CODE mulABt(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R);
 	static COMPV_ERROR_CODE mulAtA(const CompVMatPtr &A, CompVMatPtrPtr R);
+	template<typename FloatType>
+	static COMPV_ERROR_CODE mulAG(CompVMatPtr &A, size_t ith, size_t jth, FloatType c, FloatType s);
+	template<typename FloatType>
+	static COMPV_ERROR_CODE mulGA(CompVMatPtr &A, size_t ith, size_t jth, FloatType c, FloatType s);
 	static COMPV_ERROR_CODE transpose(const CompVMatPtr &A, CompVMatPtrPtr R);
 	static COMPV_ERROR_CODE isSymmetric(const CompVMatPtr &A, bool &symmetric);
 	static COMPV_ERROR_CODE isEqual(const CompVMatPtr &A, const CompVMatPtr &B, bool &equal);
 };
+
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulAG(CompVMatPtr &A, size_t ith, size_t jth, compv_float32_t c, compv_float32_t s);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulAG(CompVMatPtr &A, size_t ith, size_t jth, compv_float64_t c, compv_float64_t s);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulGA(CompVMatPtr &A, size_t ith, size_t jth, compv_float32_t c, compv_float32_t s);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulGA(CompVMatPtr &A, size_t ith, size_t jth, compv_float64_t c, compv_float64_t s);
 
 COMPV_NAMESPACE_END()
 

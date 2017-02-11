@@ -2,7 +2,7 @@
 
 #define TAG_TEST			"TestMatrixOps"
 #define LOOP_COUNT			1
-#define TYP					compv_float32_t
+#define TYP					compv_float64_t
 
 COMPV_ERROR_CODE matrix_ops_transpose()
 {
@@ -107,6 +107,70 @@ COMPV_ERROR_CODE matrix_ops_mulAB()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE matrix_ops_mulGA()
+{
+	static const size_t rows = 215; // not SIMD friendly
+	static const size_t cols = 215; // not SIMD friendly
+	CompVMatPtr A;
+
+	static const struct compv_unittest_mulGA {
+		size_t rows;
+		size_t cols;
+		const char* md5;
+		const char* md5_fma;
+	}
+	COMPV_UNITTEST_MULGA_FLOAT64[] = {
+		{ 215, 215, "1d28996c99db6fdb058a487ed8a57c45" },
+		{ 19, 21, "1d28996c99db6fdb058a487ed8a57c45" },
+		{ 701, 71, "1d28996c99db6fdb058a487ed8a57c45" },
+	},
+	COMPV_UNITTEST_MULGA_FLOAT32[] = {
+		{ 215, 215, "23406cd31825fdbcd022edd8f8e76f96" },
+		{ 19, 21, "23406cd31825fdbcd022edd8f8e76f96" },
+		{ 701, 71, "23406cd31825fdbcd022edd8f8e76f96" },
+	};
+
+	const compv_unittest_mulGA* test = NULL;
+	const compv_unittest_mulGA* tests = std::is_same<TYP, compv_float32_t>::value
+		? COMPV_UNITTEST_MULGA_FLOAT32
+		: COMPV_UNITTEST_MULGA_FLOAT64;
+
+	for (size_t i = 0; i < sizeof(COMPV_UNITTEST_MULGA_FLOAT64) / sizeof(COMPV_UNITTEST_MULGA_FLOAT64[i]); ++i) {
+		if (tests[i].rows == rows && tests[i].cols == cols) {
+			test = &tests[i];
+			break;
+		}
+	}
+
+	COMPV_CHECK_EXP_RETURN(!test, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Failed to find test");
+
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<TYP>(&A, tests->rows, tests->cols));
+
+	for (size_t i = 0; i < tests->rows; ++i) {
+		for (size_t j = 0; j < tests->cols; ++j) {
+			*A->ptr<TYP>(i, j) = static_cast<TYP>((i + j) * (i + 1) + 0.7 + (100 * ((i & 1) ? -1 : 1)));
+		}
+	}
+
+
+	uint64_t timeStart = CompVTime::nowMillis();
+	for (size_t i = 0; i < LOOP_COUNT; ++i) {
+		for (size_t ith = 0; ith < tests->rows; ++ith) {
+			for (size_t jth = 0; jth < ith; ++jth) {
+				COMPV_CHECK_CODE_RETURN(CompVMatrix::mulGA<TYP>(A, ith, jth, static_cast<TYP>(-0.9855), static_cast<TYP>(0.777774)));
+			}
+		}
+	}
+	uint64_t timeEnd = CompVTime::nowMillis();
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(isSymetric) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+
+#if LOOP_COUNT == 1
+	COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(A)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Matrix ops mulGA: MD5 mismatch");
+#endif
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE matrix_ops_isSymetric()
 {
 	static const size_t matrixSize = 215; // not SIMD friendly, no need for rows an cols as symetric matrix must be square
@@ -145,3 +209,4 @@ COMPV_ERROR_CODE matrix_ops_isSymetric()
 
 	return COMPV_ERROR_CODE_S_OK;
 }
+

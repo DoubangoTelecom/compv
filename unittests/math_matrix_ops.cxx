@@ -93,6 +93,54 @@ static COMPV_ERROR_CODE __math_matrix_ops_mulAB()
 }
 
 template <typename T>
+static COMPV_ERROR_CODE __math_matrix_ops_mulGA()
+{
+	CompVMatPtr A;
+	static const struct compv_unittest_mulGA {
+		size_t rows;
+		size_t cols;
+		const char* md5;
+		const char* md5_fma;
+	}
+	COMPV_UNITTEST_MULGA_FLOAT64[] = {
+		{ 215, 215, "1d28996c99db6fdb058a487ed8a57c45" },
+		{ 19, 21, "1d28996c99db6fdb058a487ed8a57c45" },
+		{ 701, 71, "1d28996c99db6fdb058a487ed8a57c45" },
+	},
+	COMPV_UNITTEST_MULGA_FLOAT32[] = {
+		{ 215, 215, "23406cd31825fdbcd022edd8f8e76f96" },
+		{ 19, 21, "23406cd31825fdbcd022edd8f8e76f96" },
+		{ 701, 71, "23406cd31825fdbcd022edd8f8e76f96" },
+	};
+
+	const compv_unittest_mulGA* test = NULL;
+	const compv_unittest_mulGA* tests = std::is_same<T, compv_float32_t>::value
+		? COMPV_UNITTEST_MULGA_FLOAT32
+		: COMPV_UNITTEST_MULGA_FLOAT64;
+
+	for (size_t i = 0; i < sizeof(COMPV_UNITTEST_MULGA_FLOAT64) / sizeof(COMPV_UNITTEST_MULGA_FLOAT64[i]); ++i) {
+		test = &tests[i];
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Matrix op mulGA -> %zu (%zu x %zu) ==", sizeof(T), test->rows, test->cols);
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&A, tests->rows, tests->cols));
+
+		for (size_t i = 0; i < tests->rows; ++i) {
+			for (size_t j = 0; j < tests->cols; ++j) {
+				*A->ptr<T>(i, j) = static_cast<T>((i + j) * (i + 1) + 0.7 + (100 * ((i & 1) ? -1 : 1)));
+			}
+		}
+		for (size_t ith = 0; ith < tests->rows; ++ith) {
+			for (size_t jth = 0; jth < ith; ++jth) {
+				COMPV_CHECK_CODE_RETURN(CompVMatrix::mulGA<T>(A, ith, jth, static_cast<T>(-0.9855), static_cast<T>(0.777774)));
+			}
+		}
+		COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(A)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Matrix ops mulGA: MD5 mismatch");
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");
+	}
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template <typename T>
 static COMPV_ERROR_CODE __math_matrix_ops_isSymetric(size_t matrixSize)
 {
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: Matrix op isSymetric -> %zu %zu ==", sizeof(T), matrixSize);
@@ -140,6 +188,10 @@ COMPV_ERROR_CODE unittest_math_matrix_ops()
 	/* == Matrix mulAB == */
 	COMPV_CHECK_CODE_RETURN((__math_matrix_ops_mulAB<compv_float32_t>()));
 	COMPV_CHECK_CODE_RETURN((__math_matrix_ops_mulAB<compv_float64_t>()));
+
+	/* == Matrix MulGA == */
+	COMPV_CHECK_CODE_RETURN((__math_matrix_ops_mulGA<compv_float32_t>()));
+	COMPV_CHECK_CODE_RETURN((__math_matrix_ops_mulGA<compv_float64_t>()));
 
 	/* == Matrix isSymetric == */
 	COMPV_CHECK_CODE_RETURN((__math_matrix_ops_isSymetric<compv_float64_t>(215)));

@@ -73,7 +73,7 @@
     <Filter Include="source\features\fast\asm\arm">
       <UniqueIdentifier>{15cbd72b-43b5-459d-b09c-247cad4a792c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="source\features\fast\asm\arm\x86">
+    <Filter Include="source\features\fast\asm\x86">
       <UniqueIdentifier>{c355eb18-ada0-4a51-b533-f8187ad174b0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -119,22 +119,22 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_avx.s">
-      <Filter>source\features\fast\asm\arm\x86</Filter>
+      <Filter>source\features\fast\asm\x86</Filter>
     </None>
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_sse.s">
-      <Filter>source\features\fast\asm\arm\x86</Filter>
+      <Filter>source\features\fast\asm\x86</Filter>
     </None>
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x64_avx.s">
-      <Filter>source\features\fast\asm\arm\x86</Filter>
+      <Filter>source\features\fast\asm\x86</Filter>
     </None>
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x64_sse.s">
-      <Filter>source\features\fast\asm\arm\x86</Filter>
+      <Filter>source\features\fast\asm\x86</Filter>
     </None>
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x86_avx.s">
-      <Filter>source\features\fast\asm\arm\x86</Filter>
+      <Filter>source\features\fast\asm\x86</Filter>
     </None>
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x86_sse.s">
-      <Filter>source\features\fast\asm\arm\x86</Filter>
+      <Filter>source\features\fast\asm\x86</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
