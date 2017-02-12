@@ -70,6 +70,8 @@ COMPV_ERROR_CODE svd()
 		}
 	}	
 
+	COMPV_CHECK_EXP_RETURN(!test, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Failed to find test");
+
 	CompVMatPtr A;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<TYP>(&A, test->rows, test->cols));
 

@@ -39,5 +39,11 @@
     <ClCompile Include="stats_normalize.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="stats_variance.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="transform.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

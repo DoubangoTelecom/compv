@@ -165,7 +165,9 @@
     <ClCompile Include="matrix_ops.cxx" />
     <ClCompile Include="stats_mse.cxx" />
     <ClCompile Include="stats_normalize.cxx" />
+    <ClCompile Include="stats_variance.cxx" />
     <ClCompile Include="svd.cxx" />
+    <ClCompile Include="transform.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\base\CompVBase.vcxproj">

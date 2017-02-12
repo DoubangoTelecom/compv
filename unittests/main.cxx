@@ -15,7 +15,9 @@ using namespace compv;
 #define UNITTEST_MATH_SVD						0
 #define UNITTEST_MATH_PSI						0 // Moore–Penrose pseudoinverse
 #define UNITTEST_MATH_MSE_2D_HOMOG				0
-#define UNITTEST_MATH_STATS_NORMALIZE_HARTLEY	1
+#define UNITTEST_MATH_STATS_NORMALIZE_HARTLEY	0
+#define UNITTEST_MATH_STATS_VARIANCE			0
+#define UNITTEST_MATH_TRF_HOMOG_TO_CART			1 // homogeneousToCartesian2D()
 
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
 #define disableAVX() (kCpuFlagAVX | kCpuFlagAVX2)
@@ -118,6 +120,15 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_math_stats_normalize2D_hartley();
 								COMPV_CHECK_CODE_BAIL(err = unittest_math_stats_normalize2D_hartley(), "Math stats norm 2D hartley unittest failed");
 #endif
+#if UNITTEST_MATH_STATS_VARIANCE || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_math_stats_variance();
+								COMPV_CHECK_CODE_BAIL(err = unittest_math_stats_variance(), "Math stats variance unittest failed");
+#endif
+#if UNITTEST_MATH_TRF_HOMOG_TO_CART || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_math_transform_homogeneousToCartesian2D();
+								COMPV_CHECK_CODE_BAIL(err = unittest_math_transform_homogeneousToCartesian2D(), "Math transform homogeneousToCartesian2D unittest failed");
+#endif
+								
 							}
 						}
 					}

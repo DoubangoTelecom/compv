@@ -384,6 +384,9 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_stats.h">
       <Filter>include\math</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math_transform.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -615,6 +618,9 @@
       <Filter>source\math</Filter>
     </ClCompile>
     <ClCompile Include="..\math\compv_math_stats.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math_transform.cxx">
       <Filter>source\math</Filter>
     </ClCompile>
   </ItemGroup>

@@ -10,7 +10,9 @@
 #define TEST_SVD						0
 #define TEST_PSI						0 // Moore–Penrose pseudoinverse
 #define TEST_STATS_MSE_2D_HOMOG			0
-#define TEST_STATS_NORMALIZE_HARTLEY	1
+#define TEST_STATS_NORMALIZE_HARTLEY	0
+#define TEST_STATS_VARIANCE				0
+#define TEST_TRF_HOMOG_TO_CART			1 // homogeneousToCartesian2D()
 
 /* Entry point function */
 compv_main()
@@ -55,6 +57,14 @@ compv_main()
 #if TEST_STATS_NORMALIZE_HARTLEY
 		extern COMPV_ERROR_CODE stats_normalize2D_hartley();
 		COMPV_CHECK_CODE_BAIL(err = stats_normalize2D_hartley(), TAG_TEST "Math stats norm 2D hartley test failed");
+#endif
+#if TEST_STATS_VARIANCE
+		extern COMPV_ERROR_CODE stats_variance();
+		COMPV_CHECK_CODE_BAIL(err = stats_variance(), TAG_TEST "Math stats variance test failed");
+#endif
+#if TEST_TRF_HOMOG_TO_CART
+		extern COMPV_ERROR_CODE homogeneousToCartesian2D();
+		COMPV_CHECK_CODE_BAIL(err = homogeneousToCartesian2D(), TAG_TEST "Math homogeneous 2 cartesian 2D test failed");
 #endif
 
 	bail:

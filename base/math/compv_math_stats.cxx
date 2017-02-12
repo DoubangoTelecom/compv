@@ -84,16 +84,16 @@ COMPV_ERROR_CODE CompVMathStats<T>::mse2D_homogeneous(CompVMatPtrPtr mse, const 
 
 // Computes the variance : https://en.wikipedia.org/wiki/Variance
 template <class T>
-COMPV_ERROR_CODE CompVMathStats<T>::variance(const T* data, size_t count, const T* mean1, T* var1)
+COMPV_ERROR_CODE CompVMathStats<T>::variance(const T* data, size_t count, T mean, T* var1)
 {
-	COMPV_CHECK_EXP_RETURN(!data || count < 2 || !mean1 || !var1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!data || count < 2 || !var1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found"); // TODO(dmi): SIMD use "T* mean1" to avoid mvzx
 	if (count > 100) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	}
 
-	T dev, var = 0, mean = *mean1;
+	T dev, var = 0;
 	for (size_t i = 0; i < count; ++i) {
 		dev = (data[i] - mean);
 		var += (dev * dev);
@@ -105,10 +105,10 @@ COMPV_ERROR_CODE CompVMathStats<T>::variance(const T* data, size_t count, const 
 // Compute the standard deviation(std) : https://en.wikipedia.org/wiki/Standard_deviation
 // std = sqrt(variance).For performance reasons we can use the varianc for comparison to save CPU cycles.
 template <class T>
-COMPV_ERROR_CODE CompVMathStats<T>::stdev(const T* data, size_t count, const T* mean1, T* std1)
+COMPV_ERROR_CODE CompVMathStats<T>::stdev(const T* data, size_t count, T mean, T* std1)
 {
 	T var;
-	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::variance(data, count, mean1, &var));
+	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::variance(data, count, mean, &var));
 	*std1 = static_cast<T>(COMPV_MATH_SQRT(var));
 	return COMPV_ERROR_CODE_S_OK;
 }
