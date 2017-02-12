@@ -11,13 +11,13 @@ using namespace compv;
 #define UNITTEST_CHROMA_CONV					0
 
 #define UNITTEST_MATH_MATRIX_OPS				0
-#define UNITTEST_MATH_EIGEN_S					0
+#define UNITTEST_MATH_EIGEN_S					1
 #define UNITTEST_MATH_SVD						0
 #define UNITTEST_MATH_PSI						0 // Moore–Penrose pseudoinverse
 #define UNITTEST_MATH_MSE_2D_HOMOG				0
 #define UNITTEST_MATH_STATS_NORMALIZE_HARTLEY	0
 #define UNITTEST_MATH_STATS_VARIANCE			0
-#define UNITTEST_MATH_TRF_HOMOG_TO_CART			1 // homogeneousToCartesian2D()
+#define UNITTEST_MATH_TRF_HOMOG_TO_CART			0 // homogeneousToCartesian2D()
 
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
 #define disableAVX() (kCpuFlagAVX | kCpuFlagAVX2)

@@ -3,53 +3,26 @@
 #define TAG_TEST			"TestEigen"
 #define LOOP_COUNT			1
 #define TYP					compv_float64_t
+#define ERR_MAX				4.7683715820312500e-07
 
 COMPV_ERROR_CODE eigenS()
 {
-	static const size_t numpoints = 11;
+	static const size_t numpoints = 209;
 
 	static const struct compv_unittest_eigen {
 		size_t numpoints;
-		const char* md5_d;
-		const char* md5_q;
-		const char* md5_d_fma;
-		const char* md5_q_fma;
+		TYP sum_d;
+		TYP sum_q;
 	}
 	COMPV_UNITTEST_EIGEN_FLOAT64[] = {
-#if COMPV_ARCH_X64
-		{ 209, "0c191d633cdf3f26b21c8badfd2ba3d4", "84722db880903f6a5fbfcfaf26e53998" },
-		{ 9, "cbadb9f8c6be8aa7abf7172423f7d5bd", "473597e9b6f33c6308893f68e715a674" }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
-		{ 11, "56383f623d7300595a680ca4318e5f0c", "a6091c9c38364e35d6c084beecce5508" },
-#elif COMPV_ARCH_X86
-		{ 209, "e643f74657501e838bacaeba7287ed0f", "5c23dd9118db5e3e72465d4791984fae" },
-		{ 9, "904d259aac76f1fa495f4fbcdc072a07", "b974abccdb70eb65f80d16c66d675919" }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
-		{ 11, "13261221fc03a0e7987e07f4c27b3f14", "c4ca65098418e3de9baa8fe55f324f9d" },
-#elif COMPV_ARCH_ARM
-		{ 9, "bc63855eea0f910f0931142f3752462e", "10347b2f2d812f7165ddd37abb8eec5c" }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
-		{ 11, "9855076776929b02ff67ee4383e058f5", "3ca7afa160faddde2c66c738daa5a694" },
-#else
-		{ 209, "0c191d633cdf3f26b21c8badfd2ba3d4", "84722db880903f6a5fbfcfaf26e53998" },
-		{ 9, "cbadb9f8c6be8aa7abf7172423f7d5bd", "473597e9b6f33c6308893f68e715a674" }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
-		{ 11, "", "" },
-#endif
+		{ 209, static_cast<TYP>(78812080780.899628), static_cast<TYP>(26.998671037488755) },
+		{ 9, static_cast<TYP>(9332.8999999999942), static_cast<TYP>(5.1300204064689812) }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
+		{ 11, static_cast<TYP>(26367.939999999995), static_cast<TYP>(5.9769114712622589) },
 	},
 	COMPV_UNITTEST_EIGEN_FLOAT32[] = {
-#if COMPV_ARCH_X64
-		{ 209, "3434888c193281e5985902003beaf481", "2631c71d337040e32ba2c1b91d33117d" },
-		{ 9, "3e1b312669b2c8806eb04ddc00578d4c", "476c0cc46432c9adeaa853b490440776" }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
-		{ 11, "c5e9094307ba0f80adb83dc3af7e9155", "63ce637f8e41130faf33d3be5d00c738" },
-#elif COMPV_ARCH_X86
-		{ 209, "3434888c193281e5985902003beaf481", "0d82444216886adc07b30eb980a43ae3" },
-		{ 9, "3e1b312669b2c8806eb04ddc00578d4c", "476c0cc46432c9adeaa853b490440776" }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
-		{ 11, "c5e9094307ba0f80adb83dc3af7e9155", "63ce637f8e41130faf33d3be5d00c738" },
-#elif COMPV_ARCH_ARM
-		{ 9, "3e1b312669b2c8806eb04ddc00578d4c", "476c0cc46432c9adeaa853b490440776" }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
-		{ 11, "c5e9094307ba0f80adb83dc3af7e9155", "63ce637f8e41130faf33d3be5d00c738" },
-#else
-		{ 209, "3434888c193281e5985902003beaf481", "2631c71d337040e32ba2c1b91d33117d" },
-		{ 9, "3e1b312669b2c8806eb04ddc00578d4c", "476c0cc46432c9adeaa853b490440776" }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
-		{ 11, "", "" },
-#endif
+		{ 209, static_cast<TYP>(129862.328), static_cast<TYP>(8.62506199) },
+		{ 9, static_cast<TYP>(36.5654907), static_cast<TYP>(2.92296124) }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
+		{ 11, static_cast<TYP>(54.4076004), static_cast<TYP>(3.56752634) },
 	};
 
 	const compv_unittest_eigen* test = NULL;
@@ -107,13 +80,20 @@ COMPV_ERROR_CODE eigenS()
 
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(eigenS) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	//COMPV_DEBUG_INFO("D: %s", compv_tests_md5(D).c_str());
-	//COMPV_DEBUG_INFO("Q: %s", compv_tests_md5(Q).c_str());
+	TYP d_sum = 0, q_sum = 0;
+	for (size_t row = 0; row < D->rows(); ++row) {
+		for (size_t col = 0; col < D->cols(); ++col) {
+			d_sum += *D->ptr<TYP>(row, col);
+		}
+	}
+	for (size_t row = 0; row < Q->rows(); ++row) {
+		for (size_t col = 0; col < Q->cols(); ++col) {
+			q_sum += *Q->ptr<TYP>(row, col);
+		}
+	}
 
-#if LOOP_COUNT == 1
-	COMPV_CHECK_EXP_RETURN(std::string(test->md5_d).compare(compv_tests_md5(D)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Eigen: MD5(D) mismatch");
-	COMPV_CHECK_EXP_RETURN(std::string(test->md5_q).compare(compv_tests_md5(Q)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Eigen: MD5(Q) mismatch");
-#endif
+	COMPV_CHECK_EXP_RETURN((COMPV_MATH_ABS(d_sum - test->sum_d) > ERR_MAX), COMPV_ERROR_CODE_E_UNITTEST_FAILED, "eigenS: d_sum error value too high");
+	COMPV_CHECK_EXP_RETURN((COMPV_MATH_ABS(q_sum - test->sum_q) > ERR_MAX), COMPV_ERROR_CODE_E_UNITTEST_FAILED, "eigenS: q_sum error value too high");
 
 	return COMPV_ERROR_CODE_S_OK;
 }
