@@ -163,6 +163,7 @@
     <ClCompile Include="inverse.cxx" />
     <ClCompile Include="main.cxx" />
     <ClCompile Include="matrix_ops.cxx" />
+    <ClCompile Include="svd.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\base\CompVBase.vcxproj">

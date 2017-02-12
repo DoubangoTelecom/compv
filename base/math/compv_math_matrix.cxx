@@ -6,6 +6,7 @@
 */
 #include "compv/base/math/compv_math_matrix.h"
 #include "compv/base/math/compv_math_eigen.h"
+#include "compv/base/math/compv_math_utils.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVMatrix"
 
@@ -22,9 +23,34 @@ COMPV_NAMESPACE_BEGIN()
 		case COMPV_SUBTYPE_RAW_FLOAT32: return CompVMatrixGeneric<compv_float32_t>::funame(__VA_ARGS__); \
 		case COMPV_SUBTYPE_RAW_FLOAT64: return CompVMatrixGeneric<compv_float64_t>::funame(__VA_ARGS__); \
 		default: \
-			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Invalid generic type: %d", static_cast<int>(subtype)); \
+			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Invalid generic type: %s", CompVGetSubtypeString(subtype)); \
 			return COMPV_ERROR_CODE_E_INVALID_SUBTYPE; \
 	}
+
+#define CompVMatrixGenericFloat64Invoke(subtype, funame, ...) \
+	if (subtype != COMPV_SUBTYPE_RAW_FLOAT64) { \
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Subtype mismatch. Expecting 'COMPV_SUBTYPE_RAW_FLOAT64' but found '%s'", CompVGetSubtypeString(subtype)); \
+		return COMPV_ERROR_CODE_E_INVALID_SUBTYPE; \
+	} \
+	return CompVMatrixGeneric<compv_float64_t>::funame(__VA_ARGS__)
+
+#define CompVMatrixGenericFloat32Invoke(subtype, funame, ...) \
+	if (subtype != COMPV_SUBTYPE_RAW_FLOAT32) { \
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Subtype mismatch. Expecting 'COMPV_SUBTYPE_RAW_FLOAT32' but found '%s'", CompVGetSubtypeString(subtype)); \
+		return COMPV_ERROR_CODE_E_INVALID_SUBTYPE; \
+	} \
+	return CompVMatrixGeneric<compv_float32_t>::funame(__VA_ARGS__)
+
+#define CompVMatrixGenericFloatInvoke(subtype, funame, ...) \
+	switch (subtype) { \
+	case COMPV_SUBTYPE_RAW_FLOAT32: return CompVMatrixGeneric<compv_float32_t>::funame(__VA_ARGS__); \
+	case COMPV_SUBTYPE_RAW_FLOAT64: return CompVMatrixGeneric<compv_float64_t>::funame(__VA_ARGS__); \
+	default: \
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Subtype mismatch. Expecting 'COMPV_SUBTYPE_RAW_FLOAT64' or 'COMPV_SUBTYPE_RAW_FLOAT32'  but found '%s'", CompVGetSubtypeString(subtype)); \
+		return COMPV_ERROR_CODE_E_INVALID_SUBTYPE; \
+	}
+
+
 
 //
 //	CompVMatrixGeneric
@@ -50,8 +76,8 @@ class CompVMatrixGeneric
 		}
 		// AB = ABtt = A(Bt)t = ACt, with C = Bt
 		CompVMatPtr C;
-		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric::transpose(B, &C));
-		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric::mulABt(A, C, R));
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::transpose(B, &C));
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulABt(A, C, R));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -111,8 +137,8 @@ class CompVMatrixGeneric
 
 		// AtA = AtAtt = (At)(At)t = BBt, with B = At
 		CompVMatPtr B;
-		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric::transpose(A, &B));
-		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric::mulABt(B, B, R));
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::transpose(A, &B));
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulABt(B, B, R));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	
@@ -217,6 +243,205 @@ class CompVMatrixGeneric
 	{
 		// Input parameters checked in the calling function
 		COMPV_CHECK_CODE_RETURN(CompVMathEigen<T>::findSymm(S, D, Q, sort, rowVectors, forceZerosInD));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	// sort -> sort D and V
+	static COMPV_ERROR_CODE svd(const CompVMatPtr &A, CompVMatPtrPtr U, CompVMatPtrPtr D, CompVMatPtrPtr V, bool sort)
+	{
+		// Input parameters checked in the calling function
+		CompVMatPtr S_, D_;
+		bool aIsSquare = (A->rows() == A->cols());
+		bool dIsSortedAndPositive = sort;
+
+		// D and V (columnspace)
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulAtA(A, &S_)); // AtA
+		COMPV_CHECK_CODE_RETURN(CompVMathEigen<T>::findSymm(S_, aIsSquare ? D : &D_, V, sort)); // output D is nxn matrix
+
+		if (aIsSquare) { // D is nxn and this is correct
+			if (dIsSortedAndPositive) {
+				T d_;
+				for (size_t j = 0; j < (*D)->rows(); ++j) {
+					d_ = *(*D)->ptr<T>(j, j);
+					if (!d_) {
+						break;
+					}
+					*(*D)->ptr<T>(j, j) = static_cast<T>(COMPV_MATH_SQRT(d_));
+				}
+			}
+			else {
+				for (size_t j = 0; j < (*D)->rows(); ++j) {
+					*(*D)->ptr<T>(j, j) = static_cast<T>(COMPV_MATH_SQRT(*(*D)->ptr<T>(j, j)));
+				}
+			}
+		}
+		else { // -> D must be mxn -> complete with zeros
+			size_t rows = COMPV_MATH_MIN(A->rows(), D_->rows());
+			COMPV_CHECK_CODE_RETURN(CompVMatrix::zero<T>(D, A->rows(), A->cols()));
+			if (dIsSortedAndPositive) {
+				T d_;
+				for (size_t j = 0; j < rows; ++j) {
+					d_ = *D_->ptr<T>(j, j);
+					if (!d_) {
+						break;
+					}
+					*(*D)->ptr<T>(j, j) = static_cast<T>(COMPV_MATH_SQRT(d_));
+				}
+			}
+			else {
+				for (size_t j = 0; j < rows; ++j) {
+					*(*D)->ptr<T>(j, j) = static_cast<T>(COMPV_MATH_SQRT(*D_->ptr<T>(j, j)));
+				}
+			}
+		}
+
+		// A = UDVt -> AV = UD -> AVDi = U
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::invD(*D, &D_, dIsSortedAndPositive));// D_ will contain inverse(D) = Di
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulABt(*V, D_, &S_)); // transpose inverseOf(D) -> nop for square matrix
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulAB(A, S_, U));
+
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	// Moore–Penrose: https://en.wikipedia.org/wiki/Moore%E2%80%93Penrose_pseudoinverse
+	static COMPV_ERROR_CODE pseudoinv(const CompVMatPtr &A, CompVMatPtrPtr R)
+	{
+		// Input parameters checked in the calling function
+
+		//!\\ Do not try to check size and call "invA3x3" -> undless loop when matrix is singular ("invA3x3" will call "pseudoinv")
+
+		CompVMatPtr U, D, V;
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::svd(A, &U, &D, &V, true));
+
+		// compute inverse (D), D already cleaned with zeros
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::invD(D, &D, true)); // will be transposed later
+
+		CompVMatPtr B;
+		// A^ = VDiUt
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulABt(V, D, &B));
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulABt(B, U, R));
+
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	// This function will return the pseudoinv if A is singular
+	static COMPV_ERROR_CODE invA3x3(const CompVMatPtr &A3x3, CompVMatPtrPtr R)
+	{
+		// Input parameters checked in the calling function
+
+		// Create R if not already done
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(R, 3, 3));
+		bool hasSIMD = false;
+		const char* nameSIMD = NULL;
+		const T* a0 = A3x3->ptr<const T>(0);
+		T* r0 = (*R)->ptr<T>(0);
+
+#if 0
+		if (std::is_same<T, compv_float64_t>::value) {
+			void(*MatrixInvA3x3_64f)(const COMPV_ALIGNED(X) compv_float64_t* A3x3, COMPV_ALIGNED(X) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1) = NULL;
+			if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && A3x3->isAlignedSSE() && R->isAlignedSSE() && A3x3->strideInBytes() == R->strideInBytes()) {
+				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixInvA3x3_64f = MatrixInvA3x3_64f_Intrin_SSE2, hasSIMD = true, nameSIMD = "MatrixInvA3x3_64f_Intrin_SSE2"));
+			}
+			if (MatrixInvA3x3_64f) {
+				compv_float64_t detA;
+				MatrixInvA3x3_64f((const compv_float64_t*)a0, (compv_float64_t*)r0, (compv_uscalar_t)A3x3->strideInBytes(), &detA);
+				if (detA != 0) {
+					return COMPV_ERROR_CODE_S_OK; // Matrix not singular -> break process
+				}
+			}
+		}
+#endif
+
+		if (hasSIMD) {
+			// Matrix is singular (detA == 0)
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "3x3 Matrix is singluar according to '%s'... computing pseudoinverse instead of the inverse", nameSIMD);
+			COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::pseudoinv(A3x3, R));
+		}
+		else {
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found.");
+			// http://mathworld.wolfram.com/MatrixInverse.html
+			const T* a1 = A3x3->ptr<const T>(1);
+			const T* a2 = A3x3->ptr<const T>(2);
+			// det(A)
+			T detA =
+				a0[0] * (a1[1] * a2[2] - a2[1] * a1[2])
+				- a1[0] * (a0[1] * a2[2] - a2[1] * a0[2])
+				+ a2[0] * (a0[1] * a1[2] - a1[1] * a0[2]);
+			if (detA == 0) {
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "3x3 Matrix is singluar... computing pseudoinverse instead of the inverse");
+				COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::pseudoinv(A3x3, R));
+			}
+			else {
+				detA = static_cast<T>(1 / detA);
+				T* r1 = (*R)->ptr<T>(1);
+				T* r2 = (*R)->ptr<T>(2);
+				r0[0] = ((a1[1] * a2[2]) - (a2[1] * a1[2])) * detA;
+				r0[1] = ((a0[2] * a2[1]) - (a2[2] * a0[1])) * detA;
+				r0[2] = ((a0[1] * a1[2]) - (a1[1] * a0[2])) * detA;
+
+				r1[0] = ((a1[2] * a2[0]) - (a2[2] * a1[0])) * detA;
+				r1[1] = ((a0[0] * a2[2]) - (a2[0] * a0[2])) * detA;
+				r1[2] = ((a0[2] * a1[0]) - (a1[2] * a0[0])) * detA;
+
+				r2[0] = ((a1[0] * a2[1]) - (a2[0] * a1[1])) * detA;
+				r2[1] = ((a0[1] * a2[0]) - (a2[1] * a0[0])) * detA;
+				r2[2] = ((a0[0] * a1[1]) - (a1[0] * a0[1])) * detA;
+			}
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	// D must be diagonal matrix and could be equal to R
+	static COMPV_ERROR_CODE invD(const CompVMatPtr &D, CompVMatPtrPtr R, bool dIsSortedAndPositive)
+	{
+		COMPV_CHECK_EXP_RETURN(!D || !R || !D->cols() || !D->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		if (*R != D) {
+			COMPV_CHECK_CODE_RETURN(CompVMatrix::zero<T>(R, D->rows(), D->cols()));
+		}
+		CompVMatPtr R_ = *R;
+		T v_;
+		size_t dcount_ = COMPV_MATH_MIN(D->rows(), D->cols()); // Diagonal matrix could be rectangular
+		if (dIsSortedAndPositive) {
+			for (size_t j = 0; j < dcount_; ++j) {
+				v_ = *D->ptr<T>(j, j);
+				if (!v_) {
+					break;
+				}
+				*R_->ptr<T>(j, j) = static_cast<T>(1 / v_);
+			}
+		}
+		else {
+			for (size_t j = 0; j < dcount_; ++j) {
+				v_ = *D->ptr<T>(j, j);
+				if (v_) {
+					*R_->ptr<T>(j, j) = static_cast<T>(1 / v_);
+				}
+			}
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	// Build Givens rotation matrix
+	// c: cos(theta)
+	// s: sin(theta)
+	static COMPV_ERROR_CODE givens(CompVMatPtrPtr G, size_t rows, size_t cols, size_t ith, size_t jth, T c, T s)
+	{
+		COMPV_CHECK_EXP_RETURN(!G || !rows || !cols || ith >= rows || jth >= cols, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+		// From https://en.wikipedia.org/wiki/Givens_rotation
+
+		// Identity matrix
+		COMPV_CHECK_CODE_RETURN(CompVMatrix::identity<T>(G, rows, cols));
+		
+		// Gii = c
+		*(*G)->ptr<T>(ith, ith) = c;
+		// Gij = s
+		*(*G)->ptr<T>(ith, jth) = s;
+		// Gjj = c
+		*(*G)->ptr<T>(jth, jth) = c;
+		// Gji = -s
+		*(*G)->ptr<T>(jth, ith) = -s;
+
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -339,11 +564,7 @@ COMPV_ERROR_CODE CompVMatrix::mulAtA(const CompVMatPtr &A, CompVMatPtrPtr R)
 template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulAG(CompVMatPtr &A, size_t ith, size_t jth, compv_float32_t c, compv_float32_t s)
 {
 	COMPV_CHECK_EXP_RETURN(!A || A->isEmpty() || ith <= jth || ith > A->cols() || jth > A->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	if (A->subType() != COMPV_SUBTYPE_RAW_FLOAT32) {
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Subtype mismatch. Expecting 'COMPV_SUBTYPE_RAW_FLOAT32' but found '%s'", CompVGetSubtypeString(A->subType()));
-		return COMPV_ERROR_CODE_E_INVALID_SUBTYPE;
-	}
-	return CompVMatrixGeneric<compv_float32_t>::mulAG(A, ith, jth, c, s);
+	CompVMatrixGenericFloat32Invoke(A->subType(), mulAG, A, ith, jth, c, s);
 }
 
 // A = mul(A, GivensRotMatrix)
@@ -356,13 +577,8 @@ template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulAG(CompVMatPtr &A, si
 template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulAG(CompVMatPtr &A, size_t ith, size_t jth, compv_float64_t c, compv_float64_t s)
 {
 	COMPV_CHECK_EXP_RETURN(!A || A->isEmpty() || ith <= jth || ith > A->cols() || jth > A->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	if (A->subType() != COMPV_SUBTYPE_RAW_FLOAT64) {
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Subtype mismatch. Expecting 'COMPV_SUBTYPE_RAW_FLOAT64' but found '%s'", CompVGetSubtypeString(A->subType()));
-		return COMPV_ERROR_CODE_E_INVALID_SUBTYPE;
-	}
-	return CompVMatrixGeneric<compv_float64_t>::mulAG(A, ith, jth, c, s);
+	CompVMatrixGenericFloat64Invoke(A->subType(), mulAG, A, ith, jth, c, s);
 }
-
 
 // A = mul(GivensRotMatrix * A)
 // c: cos(theta)
@@ -373,11 +589,7 @@ template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulAG(CompVMatPtr &A, si
 template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulGA(CompVMatPtr &A, size_t ith, size_t jth, compv_float32_t c, compv_float32_t s)
 {
 	COMPV_CHECK_EXP_RETURN(!A || A->isEmpty() /*|| ith <= jth*/ || ith >= A->rows() || jth >= A->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	if (A->subType() != COMPV_SUBTYPE_RAW_FLOAT32) {
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Subtype mismatch. Expecting 'COMPV_SUBTYPE_RAW_FLOAT32' but found '%s'", CompVGetSubtypeString(A->subType()));
-		return COMPV_ERROR_CODE_E_INVALID_SUBTYPE;
-	}
-	return CompVMatrixGeneric<compv_float32_t>::mulGA(A, ith, jth, c, s);
+	CompVMatrixGenericFloat32Invoke(A->subType(), mulGA, A, ith, jth, c, s);
 }
 
 // A = mul(GivensRotMatrix * A)
@@ -389,33 +601,21 @@ template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulGA(CompVMatPtr &A, si
 template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulGA(CompVMatPtr &A, size_t ith, size_t jth, compv_float64_t c, compv_float64_t s)
 {
 	COMPV_CHECK_EXP_RETURN(!A || A->isEmpty() /*|| ith <= jth*/ || ith >= A->rows() || jth >= A->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	if (A->subType() != COMPV_SUBTYPE_RAW_FLOAT64) {
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Subtype mismatch. Expecting 'COMPV_SUBTYPE_RAW_FLOAT64' but found '%s'", CompVGetSubtypeString(A->subType()));
-		return COMPV_ERROR_CODE_E_INVALID_SUBTYPE;
-	}
-	return CompVMatrixGeneric<compv_float64_t>::mulGA(A, ith, jth, c, s);
+	CompVMatrixGenericFloat64Invoke(A->subType(), mulGA, A, ith, jth, c, s);
 }
 
 // S must be symetric
 template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::maxAbsOffDiag_symm(const CompVMatPtr &S, size_t *row, size_t *col, compv_float32_t* max)
 {
 	COMPV_CHECK_EXP_RETURN(!S || S->rows() != S->cols() || !S->rows() || !row || !col || !max, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	if (S->subType() != COMPV_SUBTYPE_RAW_FLOAT32) {
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Subtype mismatch. Expecting 'COMPV_SUBTYPE_RAW_FLOAT32' but found '%s'", CompVGetSubtypeString(S->subType()));
-		return COMPV_ERROR_CODE_E_INVALID_SUBTYPE;
-	}
-	return CompVMatrixGeneric<compv_float32_t>::maxAbsOffDiag_symm(S, row, col, max);
+	CompVMatrixGenericFloat32Invoke(S->subType(), maxAbsOffDiag_symm, S, row, col, max);
 }
 
 // S must be symetric
 template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::maxAbsOffDiag_symm(const CompVMatPtr &S, size_t *row, size_t *col, compv_float64_t* max)
 {
 	COMPV_CHECK_EXP_RETURN(!S || S->rows() != S->cols() || !S->rows() || !row || !col || !max, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	if (S->subType() != COMPV_SUBTYPE_RAW_FLOAT64) {
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Subtype mismatch. Expecting 'COMPV_SUBTYPE_RAW_FLOAT64' but found '%s'", CompVGetSubtypeString(S->subType()));
-		return COMPV_ERROR_CODE_E_INVALID_SUBTYPE;
-	}
-	return CompVMatrixGeneric<compv_float64_t>::maxAbsOffDiag_symm(S, row, col, max);
+	CompVMatrixGenericFloat64Invoke(S->subType(), maxAbsOffDiag_symm, S, row, col, max);
 }
 
 // R must be <> A
@@ -428,16 +628,50 @@ COMPV_ERROR_CODE CompVMatrix::transpose(const CompVMatPtr &A, CompVMatPtrPtr R)
 COMPV_ERROR_CODE CompVMatrix::eigenS(const CompVMatPtr &S, CompVMatPtrPtr D, CompVMatPtrPtr Q, bool sort COMPV_DEFAULT(true), bool rowVectors COMPV_DEFAULT(false), bool forceZerosInD COMPV_DEFAULT(true))
 {
 	COMPV_CHECK_EXP_RETURN(!S, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	if (S->subType() == COMPV_SUBTYPE_RAW_FLOAT32) {
-		return CompVMatrixGeneric<compv_float32_t>::eigenS(S, D, Q, sort, rowVectors, forceZerosInD);
-	}
-	else if (S->subType() == COMPV_SUBTYPE_RAW_FLOAT64) {
-		return CompVMatrixGeneric<compv_float64_t>::eigenS(S, D, Q, sort, rowVectors, forceZerosInD);
-	}
-	else {
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Subtype mismatch. Expecting 'COMPV_SUBTYPE_RAW_FLOAT64' or 'COMPV_SUBTYPE_RAW_FLOAT32'  but found '%s'", CompVGetSubtypeString(S->subType()));
-		return COMPV_ERROR_CODE_E_INVALID_SUBTYPE;
-	}
+	CompVMatrixGenericFloatInvoke(S->subType(), eigenS, S, D, Q, sort, rowVectors, forceZerosInD);
+}
+
+// sort -> sort D and V
+COMPV_ERROR_CODE CompVMatrix::svd(const CompVMatPtr &A, CompVMatPtrPtr U, CompVMatPtrPtr D, CompVMatPtrPtr V, bool sort COMPV_DEFAULT(true))
+{
+	COMPV_CHECK_EXP_RETURN(!A || A->isEmpty() || !U || !D || !V, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMatrixGenericFloatInvoke(A->subType(), svd, A, U, D, V, sort);
+}
+
+// Moore–Penrose: https://en.wikipedia.org/wiki/Moore%E2%80%93Penrose_pseudoinverse
+COMPV_ERROR_CODE CompVMatrix::pseudoinv(const CompVMatPtr &A, CompVMatPtrPtr R)
+{
+	COMPV_CHECK_EXP_RETURN(!A || !A->cols() || !A->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMatrixGenericFloatInvoke(A->subType(), pseudoinv, A, R);
+}
+
+// This function will return the pseudoinv if A is singular
+COMPV_ERROR_CODE CompVMatrix::invA3x3(const CompVMatPtr &A3x3, CompVMatPtrPtr R)
+{
+	COMPV_CHECK_EXP_RETURN(!A3x3 || A3x3->cols() != 3 || A3x3->rows() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMatrixGenericFloatInvoke(A3x3->subType(), invA3x3, A3x3, R);
+}
+
+// D must be diagonal matrix and could be equal to R
+COMPV_ERROR_CODE CompVMatrix::invD(const CompVMatPtr &D, CompVMatPtrPtr R, bool dIsSortedAndPositive COMPV_DEFAULT(false))
+{
+	CompVMatrixGenericInvoke(D->subType(), invD, D, R, dIsSortedAndPositive);
+}
+
+// Build Givens rotation matrix
+// c: cos(theta)
+// s: sin(theta)
+template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::givens(CompVMatPtrPtr G, size_t rows, size_t cols, size_t ith, size_t jth, compv_float32_t c, compv_float32_t s)
+{
+	return CompVMatrixGeneric<compv_float32_t>::givens(G, rows, cols, ith, jth, c, s);
+}
+
+// Build Givens rotation matrix
+// c: cos(theta)
+// s: sin(theta)
+template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::givens(CompVMatPtrPtr G, size_t rows, size_t cols, size_t ith, size_t jth, compv_float64_t c, compv_float64_t s)
+{
+	return CompVMatrixGeneric<compv_float64_t>::givens(G, rows, cols, ith, jth, c, s);
 }
 
 COMPV_ERROR_CODE CompVMatrix::copy(CompVMatPtrPtr dst, const CompVMatPtr &src)

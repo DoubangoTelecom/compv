@@ -42,5 +42,11 @@
     <ClCompile Include="math_eigen.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="math_inverse.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="math_svd.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -41,6 +41,8 @@
     <ClCompile Include="..\..\feature_fast.cxx" />
     <ClCompile Include="..\..\main.cxx" />
     <ClCompile Include="..\..\math_eigen.cxx" />
+    <ClCompile Include="..\..\math_inverse.cxx" />
+    <ClCompile Include="..\..\math_svd.cxx" />
     <ClCompile Include="..\..\pyramid.cxx" />
     <ClCompile Include="..\..\scale.cxx" />
   </ItemGroup>

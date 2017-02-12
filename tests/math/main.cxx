@@ -6,9 +6,9 @@
 #define TEST_MATRIX_OPS_MUL_AB			0
 #define TEST_MATRIX_OPS_MUL_GA			0
 #define TEST_MATRIX_OPS_IS_SYMETRIC		0
-#define TEST_EIGEN_S					1
-#define TEST_SVD						0
-#define TEST_PSI						0
+#define TEST_EIGEN_S					0
+#define TEST_SVD						1
+#define TEST_PSI						0 // Moore–Penrose pseudoinverse
 
 /* Entry point function */
 compv_main()
@@ -42,8 +42,8 @@ compv_main()
 		COMPV_CHECK_CODE_BAIL(err = svd(), TAG_TEST "Math SVD test failed");
 #endif
 #if TEST_PSI
-		extern COMPV_ERROR_CODE psi();
-		COMPV_CHECK_CODE_BAIL(err = psi(), TAG_TEST "Math PSI test failed");
+		extern COMPV_ERROR_CODE pseudoinv();
+		COMPV_CHECK_CODE_BAIL(err = pseudoinv(), TAG_TEST "Math pseudoinv test failed");
 #endif
 
 	bail:

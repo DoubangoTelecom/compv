@@ -9,5 +9,7 @@
     <ClCompile Include="..\..\convlt.cxx" />
     <ClCompile Include="..\..\..\tests\tests_common.cxx" />
     <ClCompile Include="..\..\math_eigen.cxx" />
+    <ClCompile Include="..\..\math_inverse.cxx" />
+    <ClCompile Include="..\..\math_svd.cxx" />
   </ItemGroup>
 </Project>
