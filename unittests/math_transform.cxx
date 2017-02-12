@@ -6,41 +6,22 @@
 template <typename T>
 static COMPV_ERROR_CODE __math_transform_homogeneousToCartesian2D()
 {
-	static const struct compv_unittest_svd {
+	static const struct compv_unittest_trf {
 		size_t numpoints;
-		const char* md5;
+		T sum_x;
+		T sum_y;
 	}
-#if COMPV_ARCH_X86
 	COMPV_UNITTEST_TRF_FLOAT64[] = {
-		{ 215, "28aa351d8531f8f140e51059bf0c2428" },
-		{ 4, "3e7d29ad3635479a3763cc963d66c9a0" },
+		{ 215, static_cast<T>(2.5678054377560273), static_cast<T>(9.7235173598526146) },
+		{ 4, static_cast<T>(1.7749999999999999), static_cast<T>(3.3750000000000000) },
 	},
 	COMPV_UNITTEST_TRF_FLOAT32[] = {
-		{ 215, "a47746c56687d18df5fe64a9abcdf570" },
-		{ 4, "8bc15e9695f0e73d4b2a5cbb1ae6da3b" },
+		{ 215, static_cast<T>(2.56780767), static_cast<T>(9.72351551) },
+		{ 4, static_cast<T>(1.77499998), static_cast<T>(3.37500000) },
 	};
-#elif COMPV_ARCH_ARM
-	COMPV_UNITTEST_TRF_FLOAT64[] = {
-		{ 215, "b0ddd03c8ff65a55bc0ea5df38a58253" },
-		{ 4, "599b6cd76fd341efeb4a63feebfff116" },
-	},
-	COMPV_UNITTEST_TRF_FLOAT32[] = {
-		{ 215, "e37c3cf80c8d297b315ce9b42ce6877e" },
-		{ 4, "6374cc4abd785713cb1dcf06bba9dd57" },
-	};
-#else
-	COMPV_UNITTEST_TRF_FLOAT64[] = {
-		{ 215, "" },
-		{ 4, "" },
-	},
-	COMPV_UNITTEST_TRF_FLOAT32[] = {
-		{ 215, "" },
-		{ 4, "" },
-	};
-#endif
 
-	const compv_unittest_svd* test = NULL;
-	const compv_unittest_svd* tests = std::is_same<T, compv_float32_t>::value
+	const compv_unittest_trf* test = NULL;
+	const compv_unittest_trf* tests = std::is_same<T, compv_float32_t>::value
 		? COMPV_UNITTEST_TRF_FLOAT32
 		: COMPV_UNITTEST_TRF_FLOAT64;
 
@@ -61,8 +42,14 @@ static COMPV_ERROR_CODE __math_transform_homogeneousToCartesian2D()
 		CompVMatPtr dst;
 		COMPV_CHECK_CODE_RETURN(CompVMathTransform<T>::homogeneousToCartesian2D(src, &dst));
 
-		//COMPV_DEBUG_INFO("MD5: %s", compv_tests_md5(dst).c_str());
-		COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(dst)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "homogeneousToCartesian2D: MD5 mismatch"); // FIXME: not correct on ARM (change)
+		x = dst->ptr<T>(0);
+		y = dst->ptr<T>(1);
+		T sum_x = 0, sum_y = 0;
+		for (size_t i = 0; i < dst->cols(); ++i) sum_x += x[i];
+		for (size_t i = 0; i < dst->cols(); ++i) sum_y += y[i];
+
+		COMPV_CHECK_EXP_RETURN((COMPV_MATH_ABS(sum_x - test->sum_x) > ERR_MAX), COMPV_ERROR_CODE_E_UNITTEST_FAILED, "homogeneousToCartesian2D: x_sum error value too high");
+		COMPV_CHECK_EXP_RETURN((COMPV_MATH_ABS(sum_y - test->sum_y) > ERR_MAX), COMPV_ERROR_CODE_E_UNITTEST_FAILED, "homogeneousToCartesian2D: y_sum error value too high");
 
 		COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");
 	}	
