@@ -23,7 +23,38 @@ public:
 	static COMPV_ERROR_CODE mulAG(CompVMatPtr &A, size_t ith, size_t jth, FloatType c, FloatType s);
 	template<typename FloatType>
 	static COMPV_ERROR_CODE mulGA(CompVMatPtr &A, size_t ith, size_t jth, FloatType c, FloatType s);
+	template<typename FloatType>
+	static COMPV_ERROR_CODE maxAbsOffDiag_symm(const CompVMatPtr &S, size_t *row, size_t *col, FloatType* max);
 	static COMPV_ERROR_CODE transpose(const CompVMatPtr &A, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE eigenS(const CompVMatPtr &S, CompVMatPtrPtr D, CompVMatPtrPtr Q, bool sort = true, bool rowVectors = false, bool forceZerosInD = true);
+
+	template<typename T>
+	static COMPV_ERROR_CODE identity(CompVMatPtrPtr I, size_t rows, size_t cols) {
+		COMPV_CHECK_EXP_RETURN(!rows || !cols, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(I, rows, cols));
+		
+		COMPV_CHECK_CODE_RETURN((*I)->zero_rows());
+		uint8_t* i0_ = (*I)->ptr<uint8_t>();
+		static const T One = static_cast<T>(1);
+		const size_t strideInBytes_ = (*I)->strideInBytes() + (*I)->elmtInBytes();
+		const size_t maxRows_ = rows > cols ? cols : rows; /*COMPV_MATH_MIN(rows, cols)*/;
+		for (size_t row_ = 0; row_ < maxRows_; ++row_) {
+			*reinterpret_cast<T*>(i0_) = One;
+			i0_ += strideInBytes_;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	template<typename T>
+	static COMPV_ERROR_CODE zero(CompVMatPtrPtr Z, size_t rows, size_t cols)
+	{
+		COMPV_CHECK_EXP_RETURN(!rows || !cols, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(Z, rows, cols));
+		COMPV_CHECK_CODE_RETURN((*Z)->zero_rows());
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	static COMPV_ERROR_CODE copy(CompVMatPtrPtr dst, const CompVMatPtr &src);
 	static COMPV_ERROR_CODE isSymmetric(const CompVMatPtr &A, bool &symmetric);
 	static COMPV_ERROR_CODE isEqual(const CompVMatPtr &A, const CompVMatPtr &B, bool &equal);
 };
@@ -32,6 +63,8 @@ COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulAG(CompVMa
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulAG(CompVMatPtr &A, size_t ith, size_t jth, compv_float64_t c, compv_float64_t s);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulGA(CompVMatPtr &A, size_t ith, size_t jth, compv_float32_t c, compv_float32_t s);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulGA(CompVMatPtr &A, size_t ith, size_t jth, compv_float64_t c, compv_float64_t s);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::maxAbsOffDiag_symm(const CompVMatPtr &S, size_t *row, size_t *col, compv_float32_t* max);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::maxAbsOffDiag_symm(const CompVMatPtr &S, size_t *row, size_t *col, compv_float64_t* max);
 
 COMPV_NAMESPACE_END()
 

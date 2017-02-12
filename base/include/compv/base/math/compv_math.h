@@ -25,7 +25,7 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_MATH_MIN_INT(x, y)					((y) ^ (((x) ^ (y)) & -((x) < (y))))
 #define COMPV_MATH_MAX_INT(x, y)					((x) ^ (((x) ^ (y)) & -((x) < (y))))
 #define COMPV_MATH_MIN_POSITIVE(x, y)				(((x) >= 0 && (y)>=0) ? COMPV_MATH_MIN((x), (y)) : COMPV_MATH_MAX((x), (y)))	// (G-245)
-#define COMPV_MATH_ABS(x)							(::abs((x)))
+#define COMPV_MATH_ABS(x)							(std::abs((x))) // ::abs() accepts integers only, use std::abs
 #define COMPV_MATH_ABS_INT32(x)						COMPV_MATH_ABS((x))//FIXME:((x) ^ ((x) >> 31)) - ((x) >> 31)
 #define COMPV_MATH_MV_DIFF(mv1, mv2)				(COMPV_MATH_ABS((mv1)[0] - (mv2)[0]) + COMPV_MATH_ABS((mv1)[1] - (mv2)[1])) // mvDiff( mv1, mv2 ) = Abs( mv1[ 0 ] - mv2[ 0 ] ) + Abs( mv1[ 1 ] - mv2[ 1 ] ) (G-251)
 #define COMPV_MATH_CEIL(x)							(::ceil((x)))

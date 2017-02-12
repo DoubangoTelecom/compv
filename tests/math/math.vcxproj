@@ -159,6 +159,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\tests_common.cxx" />
+    <ClCompile Include="eigen.cxx" />
+    <ClCompile Include="inverse.cxx" />
     <ClCompile Include="main.cxx" />
     <ClCompile Include="matrix_ops.cxx" />
   </ItemGroup>

@@ -177,7 +177,6 @@ static COMPV_ERROR_CODE __math_matrix_ops_isSymetric(size_t matrixSize)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-
 COMPV_ERROR_CODE unittest_math_matrix_ops()
 {
 	/* == Matrix transpose == */

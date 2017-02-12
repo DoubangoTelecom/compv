@@ -8,5 +8,6 @@
     <ClCompile Include="..\..\pyramid.cxx" />
     <ClCompile Include="..\..\convlt.cxx" />
     <ClCompile Include="..\..\..\tests\tests_common.cxx" />
+    <ClCompile Include="..\..\math_eigen.cxx" />
   </ItemGroup>
 </Project>

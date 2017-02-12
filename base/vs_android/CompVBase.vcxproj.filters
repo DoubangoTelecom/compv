@@ -378,6 +378,9 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_matrix.h">
       <Filter>include\math</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\compv_math_eigen.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -603,6 +606,9 @@
       <Filter>source\math\intrin\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\math\compv_math_matrix.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\compv_math_eigen.cxx">
       <Filter>source\math</Filter>
     </ClCompile>
   </ItemGroup>

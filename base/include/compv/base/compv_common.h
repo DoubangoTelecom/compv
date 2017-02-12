@@ -128,11 +128,10 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_IS_POW2(x) (((x) != 0) && !((x) & ((x) - 1)))
 
 #define CompVPtrDef(T)			CompVPtr<T* >
-#define CompVPtrArray(T)		CompVPtrDef(CompVArray<T >)
+
 #define CompVPtrBox(T)			CompVPtrDef(CompVBox<T >)
 #define CompVPtrBoxPoint(T)		CompVPtrDef(CompVBox<CompVPoint<T > >)
 
-#define CompVPtrArrayNew(T)		CompVArray<T >::newObj
 #define CompVPtrBoxNew(T)		CompVBox<T >::newObj
 #define CompVPtrBoxPointNew(T)	CompVBox<CompVPoint<T > >::newObj
 
@@ -282,6 +281,7 @@ enum COMPV_SUBTYPE {
 	COMPV_SUBTYPE_RAW_UINT16,
 	COMPV_SUBTYPE_RAW_INT32,
 	COMPV_SUBTYPE_RAW_UINT32,
+	COMPV_SUBTYPE_RAW_SIZE,
 	COMPV_SUBTYPE_RAW_FLOAT32,
 	COMPV_SUBTYPE_RAW_FLOAT64,
 

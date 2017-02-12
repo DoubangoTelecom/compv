@@ -24,5 +24,11 @@
     <ClCompile Include="matrix_ops.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="inverse.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="eigen.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

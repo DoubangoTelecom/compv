@@ -4,8 +4,9 @@
 
 #define TEST_MATRIX_OPS_TRANSPOSE		0
 #define TEST_MATRIX_OPS_MUL_AB			0
-#define TEST_MATRIX_OPS_MUL_GA			1
+#define TEST_MATRIX_OPS_MUL_GA			0
 #define TEST_MATRIX_OPS_IS_SYMETRIC		0
+#define TEST_EIGEN_S					1
 #define TEST_SVD						0
 #define TEST_PSI						0
 
@@ -32,13 +33,17 @@ compv_main()
 		extern COMPV_ERROR_CODE matrix_ops_isSymetric();
 		COMPV_CHECK_CODE_BAIL(err = matrix_ops_isSymetric(), TAG_TEST "Math matrix isSymetric test failed");
 #endif
+#if TEST_EIGEN_S
+		extern COMPV_ERROR_CODE eigenS();
+		COMPV_CHECK_CODE_BAIL(err = eigenS(), TAG_TEST "Math eigenS test failed");
+#endif
 #if TEST_SVD
-		extern COMPV_ERROR_CODE scale();
-		COMPV_CHECK_CODE_BAIL(err = scale(), TAG_TEST "Math SVD test failed");
+		extern COMPV_ERROR_CODE svd();
+		COMPV_CHECK_CODE_BAIL(err = svd(), TAG_TEST "Math SVD test failed");
 #endif
 #if TEST_PSI
-		extern COMPV_ERROR_CODE pyramid();
-		COMPV_CHECK_CODE_BAIL(err = pyramid(), TAG_TEST "Math PSI test failed");
+		extern COMPV_ERROR_CODE psi();
+		COMPV_CHECK_CODE_BAIL(err = psi(), TAG_TEST "Math PSI test failed");
 #endif
 
 	bail:
