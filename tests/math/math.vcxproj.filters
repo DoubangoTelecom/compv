@@ -33,5 +33,11 @@
     <ClCompile Include="svd.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="stats_mse.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stats_normalize.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 #include "../tests/tests_common.h"
 
-#define TAG_TEST								"UnitTestSVD"
+#define TAG_TEST			"UnitTestSVD"
 
 template <typename T>
 static COMPV_ERROR_CODE __math_svd()

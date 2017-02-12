@@ -4,16 +4,18 @@ using namespace compv;
 
 #define TAG_UNITTESTS "UnitTests"
 
-#define UNITTEST_SCALE					0
-#define UNITTEST_PYRAMID				0
-#define UNITTEST_CONVOLUTION			0
-#define UNITTEST_FEATURE_FAST			0
-#define UNITTEST_CHROMA_CONV			0
+#define UNITTEST_SCALE							0
+#define UNITTEST_PYRAMID						0
+#define UNITTEST_CONVOLUTION					0
+#define UNITTEST_FEATURE_FAST					0
+#define UNITTEST_CHROMA_CONV					0
 
-#define UNITTEST_MATH_MATRIX_OPS		0
-#define UNITTEST_MATH_EIGEN_S			0
-#define UNITTEST_MATH_SVD				1
-#define UNITTEST_MATH_PSI				0 // Moore–Penrose pseudoinverse
+#define UNITTEST_MATH_MATRIX_OPS				0
+#define UNITTEST_MATH_EIGEN_S					0
+#define UNITTEST_MATH_SVD						0
+#define UNITTEST_MATH_PSI						0 // Moore–Penrose pseudoinverse
+#define UNITTEST_MATH_MSE_2D_HOMOG				0
+#define UNITTEST_MATH_STATS_NORMALIZE_HARTLEY	1
 
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
 #define disableAVX() (kCpuFlagAVX | kCpuFlagAVX2)
@@ -107,6 +109,14 @@ compv_main()
 #if UNITTEST_MATH_PSI || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_math_pseudoinv();
 								COMPV_CHECK_CODE_BAIL(err = unittest_math_pseudoinv(), "Math pseudoinv unittest failed");
+#endif
+#if UNITTEST_MATH_MSE_2D_HOMOG || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_math_stats_mse2D_homogeneous();
+								COMPV_CHECK_CODE_BAIL(err = unittest_math_stats_mse2D_homogeneous(), "Math stats MSE 2D homo unittest failed");
+#endif
+#if UNITTEST_MATH_STATS_NORMALIZE_HARTLEY || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_math_stats_normalize2D_hartley();
+								COMPV_CHECK_CODE_BAIL(err = unittest_math_stats_normalize2D_hartley(), "Math stats norm 2D hartley unittest failed");
 #endif
 							}
 						}

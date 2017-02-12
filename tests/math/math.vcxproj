@@ -163,6 +163,8 @@
     <ClCompile Include="inverse.cxx" />
     <ClCompile Include="main.cxx" />
     <ClCompile Include="matrix_ops.cxx" />
+    <ClCompile Include="stats_mse.cxx" />
+    <ClCompile Include="stats_normalize.cxx" />
     <ClCompile Include="svd.cxx" />
   </ItemGroup>
   <ItemGroup>

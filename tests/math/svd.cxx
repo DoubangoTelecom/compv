@@ -88,7 +88,6 @@ COMPV_ERROR_CODE svd()
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::svd(A, &U, &D, &V));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
-
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(svd) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 	//COMPV_DEBUG_INFO("MD5: %s, %s, %s", compv_tests_md5(U).c_str(), compv_tests_md5(D).c_str(), compv_tests_md5(V).c_str());

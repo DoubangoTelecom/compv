@@ -7,8 +7,10 @@
 #define TEST_MATRIX_OPS_MUL_GA			0
 #define TEST_MATRIX_OPS_IS_SYMETRIC		0
 #define TEST_EIGEN_S					0
-#define TEST_SVD						1
+#define TEST_SVD						0
 #define TEST_PSI						0 // Moore–Penrose pseudoinverse
+#define TEST_STATS_MSE_2D_HOMOG			0
+#define TEST_STATS_NORMALIZE_HARTLEY	1
 
 /* Entry point function */
 compv_main()
@@ -44,6 +46,15 @@ compv_main()
 #if TEST_PSI
 		extern COMPV_ERROR_CODE pseudoinv();
 		COMPV_CHECK_CODE_BAIL(err = pseudoinv(), TAG_TEST "Math pseudoinv test failed");
+#endif
+
+#if TEST_STATS_MSE_2D_HOMOG
+		extern COMPV_ERROR_CODE stats_mse2D_homogeneous();
+		COMPV_CHECK_CODE_BAIL(err = stats_mse2D_homogeneous(), TAG_TEST "Math stats mse 2D homogeneous test failed");
+#endif
+#if TEST_STATS_NORMALIZE_HARTLEY
+		extern COMPV_ERROR_CODE stats_normalize2D_hartley();
+		COMPV_CHECK_CODE_BAIL(err = stats_normalize2D_hartley(), TAG_TEST "Math stats norm 2D hartley test failed");
 #endif
 
 	bail:

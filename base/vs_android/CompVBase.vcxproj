@@ -99,6 +99,7 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_eigen.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_gauss.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_matrix.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_stats.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_utils.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon_fma.h" />
@@ -204,6 +205,7 @@
     <ClCompile Include="..\math\compv_math_eigen.cxx" />
     <ClCompile Include="..\math\compv_math_gauss.cxx" />
     <ClCompile Include="..\math\compv_math_matrix.cxx" />
+    <ClCompile Include="..\math\compv_math_stats.cxx" />
     <ClCompile Include="..\math\compv_math_utils.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon_fma.cxx" />

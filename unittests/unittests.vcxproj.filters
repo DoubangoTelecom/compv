@@ -48,5 +48,11 @@
     <ClCompile Include="math_svd.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="math_stats_mse.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="math_stats_normalize.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -21,7 +21,7 @@ using namespace compv;
 
 COMPV_ERROR_CODE TestMSE2D_homogeneous()
 {
-#define POINTS_COUNT 4 // #2015 (odd number) or #4 (is very common -Homography-)
+#define POINTS_COUNT 2015 // #2015 (odd number) or #4 (is very common -Homography-)
 #if POINTS_COUNT == 2015
 #	define MD5		"20b0ae121b9af0bb7bca94529a01fbf3"
 #	define MSE_SUM	3726586387.7721214
@@ -59,6 +59,8 @@ COMPV_ERROR_CODE TestMSE2D_homogeneous()
     COMPV_DEBUG_INFO_EX("TestMSE2D_homogeneous", "MSE_computed="TYP_SZ", MSE_expected="TYP_SZ, mse_sum, MSE_SUM);
 
     COMPV_DEBUG_INFO_EX("TestMSE2D_homogeneous", "Elapsed time (TestMSE2D_homogeneous) = [[[ %llu millis ]]]", (timeEnd - timeStart));
+
+	//TYP err =  std::abs(mse_sum - MSE_SUM);
 
     COMPV_CHECK_EXP_RETURN(mse_sum != MSE_SUM, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
 

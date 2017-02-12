@@ -11,5 +11,7 @@
     <ClCompile Include="..\..\math_eigen.cxx" />
     <ClCompile Include="..\..\math_inverse.cxx" />
     <ClCompile Include="..\..\math_svd.cxx" />
+    <ClCompile Include="..\..\math_stats_mse.cxx" />
+    <ClCompile Include="..\..\math_stats_normalize.cxx" />
   </ItemGroup>
 </Project>
