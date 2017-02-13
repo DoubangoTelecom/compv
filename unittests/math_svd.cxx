@@ -82,7 +82,7 @@ static COMPV_ERROR_CODE __math_svd()
 
 COMPV_ERROR_CODE unittest_math_svd()
 {
-	/* == eigenS == */
+	/* == SVD == */
 	COMPV_CHECK_CODE_RETURN((__math_svd<compv_float64_t>()));
 	COMPV_CHECK_CODE_RETURN((__math_svd<compv_float32_t>()));
 

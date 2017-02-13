@@ -95,6 +95,9 @@
     <ClCompile Include="features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.cxx">
       <Filter>Source Files\features\fast\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="calib\compv_core_calib_homography.cxx">
+      <Filter>Source Files\calib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -114,6 +117,9 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.h">
       <Filter>Header Files\features\fast\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\calib\compv_core_calib_homography.h">
+      <Filter>Header Files\calib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

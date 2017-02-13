@@ -184,7 +184,7 @@ COMPV_ERROR_CODE CompVThread::setAffinity(compv_core_id_t coreId)
     }
 #if COMPV_OS_WINDOWS
     {
-        const DWORD_PTR mask = (((DWORD_PTR)1) << coreId);
+        const DWORD_PTR mask = (static_cast<DWORD_PTR>(1) << coreId);
         if (!SetThreadAffinityMask(reinterpret_cast<HANDLE>(m_pHandle), mask)) {
             COMPV_DEBUG_ERROR_EX(kModuleNameThread, "SetThreadAffinityMask() failed");
             COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_E_SYSTEM, "SetThreadAffinityMask failed");

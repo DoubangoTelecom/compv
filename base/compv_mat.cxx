@@ -39,7 +39,7 @@ CompVMat::CompVMat()
 CompVMat::~CompVMat()
 {
     if (m_bOweMem) {
-        CompVMem::freeAligned((void**)&m_pDataPtr); // alloc'ed using mallocAligned(alignv)
+        CompVMem::freeAligned(reinterpret_cast<void**>(&m_pDataPtr)); // alloc'ed using mallocAligned(alignv)
     }
 }
 

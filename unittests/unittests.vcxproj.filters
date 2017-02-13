@@ -60,5 +60,8 @@
     <ClCompile Include="math_transform.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="math_calib_homography.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

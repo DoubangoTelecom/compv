@@ -484,6 +484,42 @@ class CompVMatrixGeneric
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
+	static COMPV_ERROR_CODE rank(const CompVMatPtr &A, int &r, bool rowspace, size_t maxRows, size_t maxCols)
+	{
+		COMPV_CHECK_EXP_RETURN(!A || A->isEmpty() || A->rows() < maxRows || A->cols() < maxCols, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		CompVMatPtr B_;
+		if (maxRows != A->rows() || maxRows != A->cols()) {
+			if (maxRows == 0) {
+				maxRows = A->rows();
+			}
+			if (maxCols == 0) {
+				maxCols = A->cols();
+			}
+			COMPV_CHECK_CODE_RETURN(A->shrink<T>(&B_, maxRows, maxCols));
+		}
+
+		CompVMatPtr S_;
+		if (rowspace) {
+			// Row-space: S = AtA
+			COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulAtA(B_ ? B_ : A, &S_));
+		}
+		else {
+			// Column-space: S = AAt
+			COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulABt(B_ ? B_ : A, B_ ? B_ : A, &S_));
+		}
+		CompVMatPtr D_;
+		CompVMatPtr Qt_;
+		COMPV_CHECK_CODE_RETURN(CompVMathEigen<T>::findSymm(S_, &D_, &Qt_, false, true, false)); // no-sort, no-rowvectors, no-zeropromotion
+		r = 0;
+		size_t rows_ = D_->rows();
+		for (size_t row_ = 0; row_ < rows_; ++row_) {
+			if (!CompVMathEigen<T>::isCloseToZero(*D_->ptr<T>(row_, row_))) {
+				++r;
+			}
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
 	static COMPV_ERROR_CODE isSymmetric(const CompVMatPtr &A, bool &symmetric)
 	{
 		COMPV_CHECK_EXP_RETURN(!A || A->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -494,8 +530,8 @@ class CompVMatrixGeneric
 		}
 
 		CompVMatPtr At;
-		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric::transpose(A, &At)); // transpose to make it SIMD-friendly
-		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric::isEqual(A, At, symmetric));
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::transpose(A, &At)); // transpose to make it SIMD-friendly
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::isEqual(A, At, symmetric));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
@@ -529,6 +565,41 @@ class CompVMatrixGeneric
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
+	static COMPV_ERROR_CODE isColinear(const CompVMatPtr &A, bool &colinear, bool rowspace, size_t maxRows, size_t maxCols)
+	{
+		COMPV_CHECK_EXP_RETURN(!A || A->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		if (rowspace) {
+			if (A->rows() < 3) {
+				colinear = true;
+				return COMPV_ERROR_CODE_S_OK;
+			}
+		}
+		else {
+			if (A->cols() < 3) {
+				colinear = true;
+				return COMPV_ERROR_CODE_S_OK;
+			}
+		}
+		int rank;
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::rank(A, rank, rowspace, maxRows, maxCols));
+		colinear = (rank == 1);
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	// A is an array of MxN elements, each row represent a dimension (x or y) and each column represent a point.
+	static COMPV_ERROR_CODE isColinear2D(const CompVMatPtr &A, bool &colinear)
+	{
+		COMPV_CHECK_EXP_RETURN(!A || A->isEmpty() || A->rows() < 2, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		// A could be 3xN array (if homogeneous) and this is why we force the number of rows to #2
+		return CompVMatrixGeneric<T>::isColinear(A, colinear, false/*column-space*/, 2, A->cols());
+	}
+
+	static COMPV_ERROR_CODE isColinear3D(const CompVMatPtr &A, bool &colinear)
+	{
+		COMPV_CHECK_EXP_RETURN(!A || A->isEmpty() || A->rows() < 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		// A could be 4xN array (if homogeneous) and this is why we force the number of rows to #2
+		return CompVMatrixGeneric<T>::isColinear(A, colinear, false/*column-space*/, 3, A->cols());
+	}
 
 	// Build matrix M = Ah used to solve Ah = 0 homogeneous equation. A is an Nx9 matrix, h an 9x1 matrix.
 	// This equation is used to compute H (3x3) such that "Ha = b", "a" = "src" points and "b" = destination points.
@@ -741,6 +812,12 @@ COMPV_ERROR_CODE CompVMatrix::copy(CompVMatPtrPtr dst, const CompVMatPtr &src)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVMatrix::rank(const CompVMatPtr &A, int &r, bool rowspace COMPV_DEFAULT(true), size_t maxRows COMPV_DEFAULT(0), size_t maxCols COMPV_DEFAULT(0))
+{
+	COMPV_CHECK_EXP_RETURN(!A || A->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMatrixGenericFloatInvoke(A->subType(), rank, A, r, rowspace, maxRows, maxCols);
+}
+
 COMPV_ERROR_CODE CompVMatrix::isSymmetric(const CompVMatPtr &A, bool &symmetric)
 {
 	CompVMatrixGenericInvoke(A->subType(), isSymmetric, A, symmetric);
@@ -749,6 +826,24 @@ COMPV_ERROR_CODE CompVMatrix::isSymmetric(const CompVMatPtr &A, bool &symmetric)
 COMPV_ERROR_CODE CompVMatrix::isEqual(const CompVMatPtr &A, const CompVMatPtr &B, bool &equal)
 {
 	CompVMatrixGenericInvoke(A->subType(), isEqual, A, B, equal);
+}
+
+COMPV_ERROR_CODE CompVMatrix::isColinear(const CompVMatPtr &A, bool &colinear, bool rowspace COMPV_DEFAULT(false), size_t maxRows COMPV_DEFAULT(0), size_t maxCols COMPV_DEFAULT(0))
+{
+	COMPV_CHECK_EXP_RETURN(!A || A->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMatrixGenericFloatInvoke(A->subType(), isColinear, A, colinear, rowspace, maxRows, maxCols);
+}
+
+COMPV_ERROR_CODE CompVMatrix::isColinear2D(const CompVMatPtr &A, bool &colinear)
+{
+	COMPV_CHECK_EXP_RETURN(!A || A->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMatrixGenericFloatInvoke(A->subType(), isColinear2D, A, colinear);
+}
+
+COMPV_ERROR_CODE CompVMatrix::isColinear3D(const CompVMatPtr &A, bool &colinear)
+{
+	COMPV_CHECK_EXP_RETURN(!A || A->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	CompVMatrixGenericFloatInvoke(A->subType(), isColinear3D, A, colinear);
 }
 
 // Build matrix M = Ah used to solve Ah = 0 homogeneous equation. A is an Nx9 matrix, h an 9x1 matrix.

@@ -173,7 +173,7 @@ public:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-	COMPV_ERROR_CODE copy(CompVMatPtrPtr& dst)const {
+	COMPV_ERROR_CODE copy(CompVMatPtrPtr dst)const {
 		COMPV_CHECK_CODE_RETURN(this->clone(dst));
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -205,6 +205,32 @@ public:
 					CompVMem::zero(this->ptr<void>(row_), rowInBytes_);
 				}
 			}
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	// returned object doesn't have ownership on the internal memory and depends on its creator
+	template<typename elmType>
+	COMPV_ERROR_CODE shrink(CompVMatPtrPtr mat, size_t newRows, size_t newCols) const {
+		COMPV_CHECK_EXP_RETURN(newCols > m_nCols || newRows > m_nRows || sizeof(elmType) != m_nElmtInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObj<elmType>(mat, 0, 0, m_nAlignV));
+		(*mat)->m_nCols = newCols;
+		(*mat)->m_nRows = newRows;
+		(*mat)->m_nElmtInBytes = m_nElmtInBytes;
+		(*mat)->m_nStrideInBytes = m_nStrideInBytes;
+		(*mat)->m_nStrideInElts = m_nStrideInElts;
+		(*mat)->m_nAlignV = m_nAlignV;
+		(*mat)->m_bOweMem = false;
+		(*mat)->m_pDataPtr = m_pDataPtr;
+		(*mat)->m_nPlaneCount = m_nPlaneCount;
+		for (int p = 0; p < m_nPlaneCount; ++p) {
+			(*mat)->m_nPlaneCols[p] = m_nPlaneCols[p];
+			(*mat)->m_nPlaneRows[p] = m_nPlaneRows[p];
+			(*mat)->m_pCompPtr[p] = m_pCompPtr[p];
+			(*mat)->m_nPlaneSizeInBytes[p] = m_nPlaneSizeInBytes[p];
+			(*mat)->m_nPlaneStrideInBytes[p] = m_nPlaneStrideInBytes[p];
+			(*mat)->m_nPlaneStrideInElts[p] = m_nPlaneStrideInElts[p];
+			(*mat)->m_bPlaneStrideInEltsIsIntegral[p] = m_bPlaneStrideInEltsIsIntegral[p];
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}

@@ -61,8 +61,12 @@ public:
 	}
 
 	static COMPV_ERROR_CODE copy(CompVMatPtrPtr dst, const CompVMatPtr &src);
+	static COMPV_ERROR_CODE rank(const CompVMatPtr &A, int &r, bool rowspace = true, size_t maxRows = 0, size_t maxCols = 0);
 	static COMPV_ERROR_CODE isSymmetric(const CompVMatPtr &A, bool &symmetric);
 	static COMPV_ERROR_CODE isEqual(const CompVMatPtr &A, const CompVMatPtr &B, bool &equal);
+	static COMPV_ERROR_CODE isColinear(const CompVMatPtr &A, bool &colinear, bool rowspace = false, size_t maxRows = 0, size_t maxCols = 0);
+	static COMPV_ERROR_CODE isColinear2D(const CompVMatPtr &A, bool &colinear);
+	static COMPV_ERROR_CODE isColinear3D(const CompVMatPtr &A, bool &colinear);
 
 	template<typename T>
 	static COMPV_ERROR_CODE buildHomographyEqMatrix(CompVMatPtrPtr M, const T* srcX, const T* srcY, const T* dstX, const T* dstY, size_t numPoints);
