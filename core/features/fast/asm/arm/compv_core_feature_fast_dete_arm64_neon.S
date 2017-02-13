@@ -634,16 +634,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON64
 	i .req r5
 	strengths .req r6
 	minusStrideMinusSeventeen .req r7
-	one .req r8
-	minusTwo .req r9
 	#define vec0 v0
 	#define vec1 v1
 	#define vecStrength v2
 	#define vecZero v3
 
 	mov minusStrideMinusSeventeen, #-17
-	mov one, #1
-	mov minusTwo, #-2
     lsl r28, stride, #1
 	mov r27, #0
 	add r28, r28, stride // r28 = stride * 3
@@ -673,14 +669,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON64
 			cbz r27, AllZeros_CompVFastNmsGather_Asm_NEON64
 			add r11, strengths, minusStrideMinusSeventeen             
             add r10, pNMS, i
-			ld1 { v9.16b }, [r11], one                              // r11 = i - stride - 1
-			ld1 { v10.16b }, [r11], one                               // r11 = i - stride
-			ld1 { v11.16b }, [r11], stride                            // r11 = i - stride + 1
-			ld1 { v12.16b }, [r11], minusTwo                          // r11 = i + 1
-			ld1 { v13.16b }, [r11], stride                            // r11 = i - 1
-			ld1 { v14.16b }, [r11], one                               // r11 = i + stride - 1
-			ld1 { v15.16b }, [r11], one                               // r11 = i + stride
-			ld1 { v16.16b }, [r11]                                     // r11 = i + stride + 1
+			ldr q9, [r11], #1                            // r11 = i - stride - 1
+			ldr q10, [r11], #1                           // r11 = i - stride
+			ld1 { v11.16b }, [r11], stride               // r11 = i - stride + 1
+			ldr q12, [r11], #-2                          // r11 = i + 1
+			ld1 { v13.16b }, [r11], stride               // r11 = i - 1
+			ldr q14, [r11], #1                           // r11 = i + stride - 1
+			ldr q15, [r11], #1                           // r11 = i + stride
+			ld1 {v16.16b}, [r11]						 // r11 = i + stride + 1
 			cmhs v17.16b, v9.16b, vecStrength.16b
 			cmhs v18.16b, v10.16b, vecStrength.16b
 			cmhs v19.16b, v11.16b, vecStrength.16b
@@ -719,8 +715,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVFastNmsGather_Asm_NEON64
 	.unreq i
 	.unreq strengths
 	.unreq minusStrideMinusSeventeen
-	.unreq one
-	.unreq minusTwo
 	#undef vec0
 	#undef vec1
 	#undef vecStrength

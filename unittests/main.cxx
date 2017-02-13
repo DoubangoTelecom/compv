@@ -11,9 +11,9 @@ using namespace compv;
 #define UNITTEST_CHROMA_CONV					0
 
 #define UNITTEST_MATH_MATRIX_OPS				0
-#define UNITTEST_MATH_EIGEN_S					1
+#define UNITTEST_MATH_EIGEN_S					0
 #define UNITTEST_MATH_SVD						0
-#define UNITTEST_MATH_PSI						0 // Moore–Penrose pseudoinverse
+#define UNITTEST_MATH_INVERSE					1 // Moore–Penrose pseudoinverse and Inverse3x3
 #define UNITTEST_MATH_MSE_2D_HOMOG				0
 #define UNITTEST_MATH_STATS_NORMALIZE_HARTLEY	0
 #define UNITTEST_MATH_STATS_VARIANCE			0
@@ -108,9 +108,9 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_math_svd();
 								COMPV_CHECK_CODE_BAIL(err = unittest_math_svd(), "Math svd unittest failed");
 #endif
-#if UNITTEST_MATH_PSI || !defined(COMPV_TEST_LOCAL)
-								extern COMPV_ERROR_CODE unittest_math_pseudoinv();
-								COMPV_CHECK_CODE_BAIL(err = unittest_math_pseudoinv(), "Math pseudoinv unittest failed");
+#if UNITTEST_MATH_INVERSE || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_math_inverse();
+								COMPV_CHECK_CODE_BAIL(err = unittest_math_inverse(), "Math inverse unittest failed");
 #endif
 #if UNITTEST_MATH_MSE_2D_HOMOG || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_math_stats_mse2D_homogeneous();

@@ -21,9 +21,9 @@ using namespace compv;
 #define TEST_EIGEN3x3				0
 #define TEST_SVD					0
 #define TEST_PSI					0 // Moore–Penrose pseudoinverse
-#define TEST_INV3x3					0 // Inverse 3x3
+#define TEST_INV3x3					1 // Inverse 3x3
 #define TEST_RAND					0
-#define TEST_NORMALIZE_HARTLEY		1
+#define TEST_NORMALIZE_HARTLEY		0
 #define TEST_VARIANCE				0
 #define TEST_MSE_2D_HOMOG			0
 #define TEST_MOPS_ISSYMMETRIC		0

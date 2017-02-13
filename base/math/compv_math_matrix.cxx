@@ -508,10 +508,11 @@ class CompVMatrixGeneric
 			return COMPV_ERROR_CODE_S_OK;
 		}
 
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+
 		const size_t acols = A->cols();
 		const size_t arows = A->rows();
 
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 		const T *aptr, *bptr;
 		size_t i, j;
 		for (j = 0; j < arows; ++j) {
@@ -525,6 +526,65 @@ class CompVMatrixGeneric
 			}
 		}
 		equal = true;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+
+	// Build matrix M = Ah used to solve Ah = 0 homogeneous equation. A is an Nx9 matrix, h an 9x1 matrix.
+	// This equation is used to compute H (3x3) such that "Ha = b", "a" = "src" points and "b" = destination points.
+	// "src" and "dst" should be normized first.
+	// "M" has numPointsTimes2 rows and 9 columns (each column is an value for h).
+	// We need at least 4 points
+	static COMPV_ERROR_CODE buildHomographyEqMatrix(CompVMatPtrPtr M, const T* srcX, const T* srcY, const T* dstX, const T* dstY, size_t numPoints)
+	{
+		COMPV_CHECK_EXP_RETURN(!M || !srcX || !srcY || !dstX || !dstY || numPoints < 4, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+
+		// Each point (x, y) contribute two rows in M which means has (2 x numPoints) rows
+		// "h" is a vector representing H (3x3) and is a 9x1 vector. This means M has 9 columns.
+		const size_t M_rows = 2 * numPoints;
+		const size_t M_cols = 9;
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(M, M_rows, M_cols));
+
+		size_t i;
+		const size_t M_strideInBytes = (*M)->strideInBytes();
+		T* M0_ptr = (*M)->ptr<T>();
+
+		// TODO(dmi): transpose M to make it more SIMD friendly
+		
+		T* M1_ptr = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(M0_ptr) + M_strideInBytes);
+		const size_t M_strideInBytesTimes2 = M_strideInBytes << 1;
+
+		for (i = 0; i < numPoints; ++i) {
+			// z' = 1
+
+			// First #9 contributions
+			M0_ptr[0] = -srcX[i]; // -x
+			M0_ptr[1] = -srcY[i]; // -y
+			M0_ptr[2] = -1; // -1
+			M0_ptr[3] = 0;
+			M0_ptr[4] = 0;
+			M0_ptr[5] = 0;
+			M0_ptr[6] = (dstX[i] * srcX[i]); // (x'x)/z'
+			M0_ptr[7] = (dstX[i] * srcY[i]); // (x'y)/z'
+			M0_ptr[8] = dstX[i]; // x'/z'
+
+								 // Second #9 contributions
+			M1_ptr[0] = 0;
+			M1_ptr[1] = 0;
+			M1_ptr[2] = 0;
+			M1_ptr[3] = M0_ptr[0]; // -x
+			M1_ptr[4] = M0_ptr[1]; // -y
+			M1_ptr[5] = -1; // -1
+			M1_ptr[6] = (dstY[i] * srcX[i]); // (y'x)/z'
+			M1_ptr[7] = (dstY[i] * srcY[i]); // (y'y)/z'
+			M1_ptr[8] = dstY[i]; // y'/z'
+
+			M0_ptr = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(M0_ptr) + M_strideInBytesTimes2);
+			M1_ptr = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(M1_ptr) + M_strideInBytesTimes2);
+		}
+
 		return COMPV_ERROR_CODE_S_OK;
 	}
 };
@@ -689,6 +749,26 @@ COMPV_ERROR_CODE CompVMatrix::isSymmetric(const CompVMatPtr &A, bool &symmetric)
 COMPV_ERROR_CODE CompVMatrix::isEqual(const CompVMatPtr &A, const CompVMatPtr &B, bool &equal)
 {
 	CompVMatrixGenericInvoke(A->subType(), isEqual, A, B, equal);
+}
+
+// Build matrix M = Ah used to solve Ah = 0 homogeneous equation. A is an Nx9 matrix, h an 9x1 matrix.
+// This equation is used to compute H (3x3) such that "Ha = b", "a" = "src" points and "b" = destination points.
+// "src" and "dst" should be normized first.
+// "M" has numPointsTimes2 rows and 9 columns (each column is an value for h).
+// We need at least 4 points
+template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::buildHomographyEqMatrix(CompVMatPtrPtr M, const compv_float32_t* srcX, const compv_float32_t* srcY, const compv_float32_t* dstX, const compv_float32_t* dstY, size_t numPoints)
+{
+	return CompVMatrixGeneric<compv_float32_t>::buildHomographyEqMatrix(M, srcX, srcY, dstX, dstY, numPoints);
+}
+
+// Build matrix M = Ah used to solve Ah = 0 homogeneous equation. A is an Nx9 matrix, h an 9x1 matrix.
+// This equation is used to compute H (3x3) such that "Ha = b", "a" = "src" points and "b" = destination points.
+// "src" and "dst" should be normized first.
+// "M" has numPointsTimes2 rows and 9 columns (each column is an value for h).
+// We need at least 4 points
+template<> COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::buildHomographyEqMatrix(CompVMatPtrPtr M, const compv_float64_t* srcX, const compv_float64_t* srcY, const compv_float64_t* dstX, const compv_float64_t* dstY, size_t numPoints)
+{
+	return CompVMatrixGeneric<compv_float64_t>::buildHomographyEqMatrix(M, srcX, srcY, dstX, dstY, numPoints);
 }
 
 COMPV_NAMESPACE_END()

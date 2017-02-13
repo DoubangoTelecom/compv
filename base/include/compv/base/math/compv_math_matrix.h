@@ -63,6 +63,9 @@ public:
 	static COMPV_ERROR_CODE copy(CompVMatPtrPtr dst, const CompVMatPtr &src);
 	static COMPV_ERROR_CODE isSymmetric(const CompVMatPtr &A, bool &symmetric);
 	static COMPV_ERROR_CODE isEqual(const CompVMatPtr &A, const CompVMatPtr &B, bool &equal);
+
+	template<typename T>
+	static COMPV_ERROR_CODE buildHomographyEqMatrix(CompVMatPtrPtr M, const T* srcX, const T* srcY, const T* dstX, const T* dstY, size_t numPoints);
 };
 
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::mulAG(CompVMatPtr &A, size_t ith, size_t jth, compv_float32_t c, compv_float32_t s);
@@ -73,6 +76,8 @@ COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::maxAbsOffDiag
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::maxAbsOffDiag_symm(const CompVMatPtr &S, size_t *row, size_t *col, compv_float64_t* max);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::givens(CompVMatPtrPtr G, size_t rows, size_t cols, size_t ith, size_t jth, compv_float32_t c, compv_float32_t s);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::givens(CompVMatPtrPtr G, size_t rows, size_t cols, size_t ith, size_t jth, compv_float64_t c, compv_float64_t s);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::buildHomographyEqMatrix(CompVMatPtrPtr M, const compv_float32_t* srcX, const compv_float32_t* srcY, const compv_float32_t* dstX, const compv_float32_t* dstY, size_t numPoints);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMatrix::buildHomographyEqMatrix(CompVMatPtrPtr M, const compv_float64_t* srcX, const compv_float64_t* srcY, const compv_float64_t* dstX, const compv_float64_t* dstY, size_t numPoints);
 
 COMPV_NAMESPACE_END()
 

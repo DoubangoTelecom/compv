@@ -45,5 +45,8 @@
     <ClCompile Include="transform.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="calib_homography.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

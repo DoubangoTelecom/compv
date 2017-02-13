@@ -159,6 +159,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\tests_common.cxx" />
+    <ClCompile Include="calib_homography.cxx" />
     <ClCompile Include="eigen.cxx" />
     <ClCompile Include="inverse.cxx" />
     <ClCompile Include="main.cxx" />
