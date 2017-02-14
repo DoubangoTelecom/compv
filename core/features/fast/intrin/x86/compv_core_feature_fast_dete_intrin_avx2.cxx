@@ -227,7 +227,7 @@ void CompVFastNmsApply_Intrin_AVX2(COMPV_ALIGNED(AVX) uint8_t* pcStrengthsMap, C
 	_mm256_zeroupper();
 }
 
-void CompVFastBuildInterestPoints_Intrin_AVX2(COMPV_ALIGNED(AVX) uint8_t* pcStrengthsMap, std::vector<CompVInterestPoint>& interestPoints, compv_uscalar_t thresholdMinus1, const compv_uscalar_t jstart, compv_uscalar_t jend, compv_uscalar_t width, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+void CompVFastBuildInterestPoints_Intrin_AVX2(COMPV_ALIGNED(AVX) uint8_t* pcStrengthsMap, CompVInterestPointVector& interestPoints, compv_uscalar_t thresholdMinus1, const compv_uscalar_t jstart, compv_uscalar_t jend, compv_uscalar_t width, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
 #define COMPV_PUSH_AVX2(ii) \
 	if (mask & (1 << ii)) { \

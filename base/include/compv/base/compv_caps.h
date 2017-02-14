@@ -21,7 +21,7 @@ public:
 
 	// Next two functions should be overrided
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize);
-	virtual COMPV_ERROR_CODE get(int id, const void*& valuePtr, size_t valueSize);
+	virtual COMPV_ERROR_CODE get(int id, const void** valuePtrPtr, size_t valueSize);
 
 	// Next functions are convenient implementation for the above two
 	COMPV_ERROR_CODE setBool(int id, bool value) { return set(id, &value, sizeof(bool)); }

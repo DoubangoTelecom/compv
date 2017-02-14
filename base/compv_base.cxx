@@ -263,8 +263,8 @@ COMPV_ERROR_CODE CompVBase::init(int32_t numThreads COMPV_DEFAULT(-1))
 
     /* Math functions: Must be after CPU initialization */
     COMPV_CHECK_CODE_BAIL(err_ = CompVMathUtils::init());
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Math Fast Trig.: %s", CompVCpu::isMathTrigFast() ? "true" : "fast");
-    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Math Fixed Point: %s", CompVCpu::isMathFixedPoint() ? "true" : "fast");
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Math Fast Trig.: %s", CompVCpu::isMathTrigFastEnabled() ? "true" : "fast");
+    COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Math Fixed Point: %s", CompVCpu::isMathFixedPointEnabled() ? "true" : "fast");
 
     /* Memory alignment */
     COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Default alignment: #%d", COMPV_ALIGNV_SIMD_DEFAULT);

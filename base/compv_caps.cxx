@@ -25,7 +25,7 @@ COMPV_ERROR_CODE CompVCaps::set(int id, const void* valuePtr, size_t valueSize)
 	return COMPV_ERROR_CODE_S_OK;
 }
 	
-COMPV_ERROR_CODE CompVCaps::get(int id, const void*& valuePtr, size_t valueSize)
+COMPV_ERROR_CODE CompVCaps::get(int id, const void** valuePtrPtr, size_t valueSize)
 {
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 	return COMPV_ERROR_CODE_S_OK;

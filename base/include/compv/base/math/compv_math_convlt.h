@@ -336,7 +336,6 @@ COMPV_TEMPLATE_EXTERN COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_f
 // InputType = int16_t, KernelType = int16_t, OutputType = int16_t, FixedPoint = false
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(const int16_t* inPtr, int16_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const int16_t* vthzKernPtr, size_t kernSize);
 
-
 COMPV_NAMESPACE_END()
 
 #endif /* _COMPV_BASE_MATH_CONVLT_H_ */

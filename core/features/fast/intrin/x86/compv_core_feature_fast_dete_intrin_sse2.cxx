@@ -221,7 +221,7 @@ void CompVFastNmsApply_Intrin_SSE2(COMPV_ALIGNED(SSE) uint8_t* pcStrengthsMap, C
 	}
 }
 
-void CompVFastBuildInterestPoints_Intrin_SSE2(COMPV_ALIGNED(SSE) uint8_t* pcStrengthsMap, std::vector<CompVInterestPoint>& interestPoints, compv_uscalar_t thresholdMinus1, const compv_uscalar_t jstart, compv_uscalar_t jend, compv_uscalar_t width, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+void CompVFastBuildInterestPoints_Intrin_SSE2(COMPV_ALIGNED(SSE) uint8_t* pcStrengthsMap, CompVInterestPointVector& interestPoints, compv_uscalar_t thresholdMinus1, const compv_uscalar_t jstart, compv_uscalar_t jend, compv_uscalar_t width, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
 #define COMPV_PUSH1_SSE2(ii) \
 	if (mask & (1 << ii)) { \

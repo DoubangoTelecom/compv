@@ -134,7 +134,7 @@ protected:
 	CompVCornerDete(int id);
 public:
 	virtual ~CompVCornerDete();
-	virtual COMPV_ERROR_CODE process(const CompVMatPtr& image, std::vector<CompVInterestPoint>& interestPoints) = 0;
+	virtual COMPV_ERROR_CODE process(const CompVMatPtr& image, CompVInterestPointVector& interestPoints) = 0;
 	static COMPV_ERROR_CODE newObj(CompVCornerDetePtrPtr dete, int deteId);
 };
 
@@ -154,8 +154,8 @@ public:
 		m_ptrAttachedDete = NULL;
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	virtual COMPV_ERROR_CODE process(const CompVMatPtr& image, const CompVBoxInterestPointPtr& interestPoints, CompVMatPtrPtr descriptions) = 0;
-	static COMPV_ERROR_CODE newObj(CompVCornerDescPtrPtr desc, int descId);
+	virtual COMPV_ERROR_CODE process(const CompVMatPtr& image, const CompVInterestPointVector& interestPoints, CompVMatPtrPtr descriptions) = 0;
+	static COMPV_ERROR_CODE newObj(CompVCornerDescPtrPtr desc, int descId, CompVCornerDetePtr dete = NULL);
 
 protected:
 	COMPV_INLINE CompVCornerDetePtr& attachedDete() {

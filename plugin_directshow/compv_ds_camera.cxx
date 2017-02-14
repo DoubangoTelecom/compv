@@ -91,7 +91,7 @@ COMPV_ERROR_CODE CompVDSCamera::set(int id, const void* valuePtr, size_t valueSi
 	}
 }
 
-COMPV_ERROR_CODE CompVDSCamera::get(int id, const void*& valuePtr, size_t valueSize) /* Overrides(CompVCaps) */
+COMPV_ERROR_CODE CompVDSCamera::get(int id, const void** valuePtrPtr, size_t valueSize) /* Overrides(CompVCaps) */
 {
 	CompVAutoLock<CompVDSCamera>(this);
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "CompVCaps::get not implemented for DirectShow camera implementation.");

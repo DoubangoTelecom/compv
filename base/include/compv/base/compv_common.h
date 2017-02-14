@@ -404,7 +404,7 @@ struct CompVInterestPoint {
 	compv_float32_t y; /**< Point.y */
 	compv_float32_t strength; /**< Corner/edge strength/response (e.g. FAST response or Harris response) */
 	compv_float32_t orient; /**< angle in degree ([0-360]) */
-	int32_t level; /**< pyramid level (when image is scaled, level0 is the first one) */
+	int level; /**< pyramid level (when image is scaled, level0 is the first one) */
 	compv_float32_t size; /**< patch size (e.g. BRIEF patch size-circle diameter-) */
 
 protected:
@@ -434,13 +434,22 @@ public:
 #endif
 		}
 	}
+	static void eraseTooCloseToBorder(std::vector<CompVInterestPoint>& interestPoints, size_t img_width, size_t img_height, int border_size) {
+		float w = static_cast<compv_float32_t>(img_width), h = static_cast<compv_float32_t>(img_height), b = static_cast<compv_float32_t>(border_size);
+		auto new_end = std::remove_if(interestPoints.begin(), interestPoints.end(), [&w, &h, &b](const CompVInterestPoint& p) { 
+			return ((p.x < b || (p.x + b) >= w || (p.y < b) || (p.y + b) >= h));
+		});
+		interestPoints.erase(new_end, interestPoints.end());
+	}
 };
 
+typedef std::vector<CompVInterestPoint> CompVInterestPointVector;
+
 struct CompVDMatch {
-	int32_t queryIdx;
-	int32_t trainIdx;
-	int32_t imageIdx;
-	int32_t distance;
+	int queryIdx;
+	int trainIdx;
+	int imageIdx;
+	int distance;
 protected:
 	COMPV_INLINE void init(int32_t queryIdx_, int32_t trainIdx_, int32_t distance_, int32_t imageIdx_ = 0) {
 		queryIdx = queryIdx_, trainIdx = trainIdx_, distance = distance_, imageIdx = imageIdx_;

@@ -36,7 +36,7 @@ public:
 	virtual COMPV_ERROR_CODE stop() override /* Overrides(CompVCamera) */;
 
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /* Overrides(CompVCaps) */;
-	virtual COMPV_ERROR_CODE get(int id, const void*& valuePtr, size_t valueSize) override /* Overrides(CompVCaps) */;
+	virtual COMPV_ERROR_CODE get(int id, const void** valuePtrPtr, size_t valueSize) override /* Overrides(CompVCaps) */;
 
 	static COMPV_ERROR_CODE newObj(CompVMFCameraPtrPtr camera);
 

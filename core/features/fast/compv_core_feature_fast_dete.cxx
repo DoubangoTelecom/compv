@@ -91,9 +91,9 @@ static int32_t COMPV_INLINE __continuousCount(int32_t fasType) {
 }
 
 static void CompVFastDataRange(RangeFAST* range);
-static void CompVFastBuildInterestPoints(RangeFAST* range, std::vector<CompVInterestPoint>& interestPoints);
+static void CompVFastBuildInterestPoints(RangeFAST* range, CompVInterestPointVector& interestPoints);
 static void CompVFastNmsGatherRange(RangeFAST* range);
-static void CompVFastNmsApplyRangeAndBuildInterestPoints(RangeFAST* range, std::vector<CompVInterestPoint>& interestPoints);
+static void CompVFastNmsApplyRangeAndBuildInterestPoints(RangeFAST* range, CompVInterestPointVector& interestPoints);
 static void CompVFastDataRow_C(const uint8_t* IP,  compv_uscalar_t width, const compv_scalar_t *pixels16, compv_uscalar_t N, compv_uscalar_t threshold, uint8_t* strengths);
 static void CompVFastNmsGather_C(const uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride);
 static void CompVFastNmsApply_C(uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride);
@@ -160,7 +160,7 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::set(int id, const void* valuePtr, size_t v
 }
 
 // overrides CompVCornerDete::process
-COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image_, std::vector<CompVInterestPoint>& interestPoints) /*Overrides(CompVCornerDete)*/
+COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image_, CompVInterestPointVector& interestPoints) /*Overrides(CompVCornerDete)*/
 {
     COMPV_CHECK_EXP_RETURN(!image_ || image_->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Image empty");
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
@@ -486,7 +486,7 @@ static void CompVFastDataRange(RangeFAST* range)
 	} // for (j)
 }
 
-static void CompVFastBuildInterestPoints(RangeFAST* range, std::vector<CompVInterestPoint>& interestPoints)
+static void CompVFastBuildInterestPoints(RangeFAST* range, CompVInterestPointVector& interestPoints)
 {
 	// TODO(dmi): Performance isssues! Not cache-friendly
 	size_t rowStart = range->rowStart > 3 ? range->rowStart - 3 : range->rowStart;
@@ -618,7 +618,7 @@ void CompVFastNmsGatherRange(RangeFAST* range)
 	);
 }
 
-void CompVFastNmsApplyRangeAndBuildInterestPoints(RangeFAST* range, std::vector<CompVInterestPoint>& interestPoints)
+void CompVFastNmsApplyRangeAndBuildInterestPoints(RangeFAST* range, CompVInterestPointVector& interestPoints)
 {
 	void(*CompVFastNmsApply)(uint8_t* pcStrengthsMap, uint8_t* pNMS, compv_uscalar_t width, compv_uscalar_t heigth, compv_uscalar_t stride)
 		= CompVFastNmsApply_C;

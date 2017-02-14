@@ -381,6 +381,18 @@
     <ClInclude Include="include\compv\base\math\compv_math_transform.h">
       <Filter>include\math</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\compv_patch.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_matchers.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\math\compv_math_distance.h">
+      <Filter>include\math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\compv_bits.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -622,6 +634,18 @@
     </ClCompile>
     <ClCompile Include="math\compv_math_transform.cxx">
       <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_patch.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_matchers.cxx">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="math\compv_math_distance.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="compv_bits.cxx">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

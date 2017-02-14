@@ -148,7 +148,7 @@ int roundFloat_Intrin_SSE2(float f)
 }
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
 
-template <>
+template <> COMPV_BASE_API
 COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint16_t*& r, size_t width, size_t height, size_t stride)
 {
     COMPV_CHECK_EXP_RETURN(!a || !b || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -181,7 +181,7 @@ COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint
     return COMPV_ERROR_CODE_S_OK;
 }
 
-template <>
+template <> COMPV_BASE_API
 COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t count, uint32_t &r)
 {
 #if COMPV_ARCH_X86
@@ -206,7 +206,7 @@ COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t count, uint32_t &r
     return COMPV_ERROR_CODE_S_OK;
 }
 
-template<>
+template<> COMPV_BASE_API
 COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_t* s, size_t width, size_t height, size_t stride)
 {
 #if COMPV_ARCH_X86
@@ -224,7 +224,7 @@ COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_
     return COMPV_ERROR_CODE_S_OK;
 }
 
-template <>
+template <> COMPV_BASE_API 
 COMPV_ERROR_CODE CompVMathUtils::mean(const uint8_t* data, size_t count, uint8_t &mean)
 {
     uint32_t r;
@@ -232,6 +232,5 @@ COMPV_ERROR_CODE CompVMathUtils::mean(const uint8_t* data, size_t count, uint8_t
     mean = (uint8_t)(r / count);
     return COMPV_ERROR_CODE_S_OK;
 }
-
 
 COMPV_NAMESPACE_END()

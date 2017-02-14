@@ -126,8 +126,8 @@ public:
 	static bool isLittleEndian() { return !isBigEndian(); }
     static bool isAsmEnabled() { return CompVCpu::s_bAsmEnabled; }
     static bool isIntrinsicsEnabled() { return CompVCpu::s_bIntrinsicsEnabled; }
-	static bool isMathTrigFast() { return s_bMathTrigFast; }
-	static bool isMathFixedPoint() { return s_bMathFixedPoint; }
+	static bool isMathTrigFastEnabled() { return s_bMathTrigFast; }
+	static bool isMathFixedPointEnabled() { return s_bMathFixedPoint; }
 	static bool isIntelIppEnabled() { return s_bIntelIpp; }
 
 private:

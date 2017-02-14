@@ -190,10 +190,10 @@ COMPV_ERROR_CODE CompVMFCamera::set(int id, const void* valuePtr, size_t valueSi
 	}
 }
 	
-COMPV_ERROR_CODE CompVMFCamera::get(int id, const void*& valuePtr, size_t valueSize) /* Overrides(CompVCaps) */
+COMPV_ERROR_CODE CompVMFCamera::get(int id, const void** valuePtrPtr, size_t valueSize) /* Overrides(CompVCaps) */
 {
 	CompVAutoLock<CompVMFCamera>(this);
-	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(%d, %p, %zu)", __FUNCTION__, id, valuePtr, valueSize);
+	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "%s(%d, %p, %zu)", __FUNCTION__, id, valuePtrPtr, valueSize);
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED);
 	return COMPV_ERROR_CODE_S_OK;
 }
