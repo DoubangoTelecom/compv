@@ -15,7 +15,8 @@
 #define TEST_STATS_VARIANCE					0
 #define TEST_TRF_HOMOG_TO_CART				0 // homogeneousToCartesian2D()
 #define TEST_CALIB_HOMOGRAPHY_BUILD_MATRIX	0
-#define TEST_CALIB_HOMOGRAPHY				1
+#define TEST_CALIB_HOMOGRAPHY				0
+#define TEST_DISTANCE_HAMMING				1
 
 
 /* Entry point function */
@@ -79,10 +80,14 @@ compv_main()
 		extern COMPV_ERROR_CODE buildHomographyMatrixEq();
 		COMPV_CHECK_CODE_BAIL(err = buildHomographyMatrixEq(), TAG_TEST "Math buildHomographyMatrixEq test failed");
 #endif
-
 #if TEST_CALIB_HOMOGRAPHY
 		extern COMPV_ERROR_CODE homography();
 		COMPV_CHECK_CODE_BAIL(err = homography(), TAG_TEST "Math homography test failed");
+#endif
+
+#if TEST_DISTANCE_HAMMING
+		extern COMPV_ERROR_CODE hamming();
+		COMPV_CHECK_CODE_BAIL(err = hamming(), TAG_TEST "Math hamming distance test failed");
 #endif
 
 	bail:

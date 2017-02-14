@@ -39,14 +39,14 @@ COMPV_ERROR_CODE CompVMathTransform<T>::homogeneousToCartesian2D(const CompVMatP
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found"); 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No fast SIMD x4 implementation found"); // SIMD, Special version with cols == 4 (see deprecated code)
 	
-	if (*dst != src) { // do not override dst when "src == dst"
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(dst, 2, src->cols()));
-	}
+	CompVMatPtr dst_ = (src == *dst) ? NULL: *dst;
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&dst_, 2, src->cols()));
+	
 	const T* srcX = src->ptr<const T>(0);
 	const T* srcY = src->ptr<const T>(1);
 	const T* srcZ = src->ptr<const T>(2);
-	T* dstX = (*dst)->ptr<T>(0);
-	T* dstY = (*dst)->ptr<T>(1);	
+	T* dstX = dst_->ptr<T>(0);
+	T* dstY = dst_->ptr<T>(1);
 	T scale;
 	const size_t cols = src->cols();
 	for (size_t i = 0; i < cols; ++i) {
@@ -54,6 +54,8 @@ COMPV_ERROR_CODE CompVMathTransform<T>::homogeneousToCartesian2D(const CompVMatP
 		dstX[i] = srcX[i] * scale;
 		dstY[i] = srcY[i] * scale;
 	}
+
+	*dst = dst_;
 
 	return COMPV_ERROR_CODE_S_OK;
 }

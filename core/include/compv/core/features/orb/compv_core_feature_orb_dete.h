@@ -37,28 +37,22 @@ public:
 
 private:
 	COMPV_ERROR_CODE createInterestPoints(size_t count = 0);
-	COMPV_ERROR_CODE freeInterestPoints(size_t count = 0);
-	COMPV_ERROR_CODE createPatches(size_t count = 0);
-	COMPV_ERROR_CODE freePatches(size_t count = 0);
-	COMPV_ERROR_CODE createDetectors(size_t count = 0);
 	COMPV_ERROR_CODE initDetector(CompVCornerDetePtr detector);
 	COMPV_ERROR_CODE initDetectors();
-	COMPV_ERROR_CODE freeDetectors(size_t count = 0);
 	COMPV_ERROR_CODE processLevelAt(const CompVMatPtr& image, CompVPatchPtr& patch, CompVCornerDetePtr& detector, int level);
 
 private:
 	CompVImageScalePyramidPtr m_pyramid;
-	CompVInterestPointVector* m_ppInterestPointsAtLevelN;
-	CompVPatchPtr* m_ppPatches;
-	size_t m_nPatches;
-	CompVCornerDetePtr* m_ppDetectors;
-	size_t m_nDetectors;
+	std::vector<CompVInterestPointVector > m_vecInterestPointsAtLevelN;
+	std::vector<CompVPatchPtr > m_vecPatches;
+	std::vector<CompVCornerDetePtr > m_vecDetectors;
 	int m_nMaxFeatures;
 	int m_nPyramidLevels;
 	int m_nThreshold;
 	int m_nFastType;
 	bool m_bNMS;
 	int m_nPatchDiameter;
+	CompVMatPtr m_ptrImageGray;
 };
 
 COMPV_NAMESPACE_END()

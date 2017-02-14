@@ -90,11 +90,11 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVMatPtr &queryDescrip
 
     size_t trainRows_ = trainDescriptions->rows();
     size_t queryRows_ = queryDescriptions->rows();
-    size_t matchesRows = COMPV_MATH_CLIP3(1, (int)trainRows_, m_nKNN);
+    size_t matchesRows = COMPV_MATH_CLIP3(1, trainRows_, static_cast<size_t>(m_nKNN));
     size_t matchesCols = queryRows_;
 
     // realloc() matchers
-    COMPV_CHECK_CODE_RETURN(err_ = CompVMat::newObj<CompVDMatch>(matches, matchesRows, matchesCols, 1));
+    COMPV_CHECK_CODE_RETURN((err_ = CompVMat::newObj<CompVDMatch, COMPV_MAT_TYPE_STRUCT>(matches, matchesRows, matchesCols, 1)));
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 

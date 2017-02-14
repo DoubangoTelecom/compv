@@ -7,8 +7,11 @@
 #include "compv/core/compv_core.h"
 #include "compv/core/compv_core_common.h"
 #include "compv/core/features/fast/compv_core_feature_fast_dete.h"
+#include "compv/core/features/orb/compv_core_feature_orb_dete.h"
+#include "compv/core/features/orb/compv_core_feature_orb_desc.h"
+#include "compv/core/matchers/compv_core_matcher_bruteforce.h"
 #include "compv/base/compv_features.h"
-#include "compv/base/compv_features.h"
+#include "compv/base/compv_matchers.h"
 #include "compv/base/compv_base.h"
 #include "compv/base/parallel/compv_mutex.h"
 #include "compv/base/compv_simd_globals.h"
@@ -30,14 +33,14 @@ static const CompVFeatureFactory fastFactory = {
 	NULL,
 	NULL,
 };
-//static const CompVFeatureFactory orbFactory = {
-//	COMPV_ORB_ID,
-//	"ORB (Oriented FAST and Rotated BRIEF)",
-//	CompVCornerDeteORB::newObj,
-//	CompVCornerDescORB::newObj,
-//	NULL,
-//	NULL,
-//};
+static const CompVFeatureFactory orbFactory = {
+	COMPV_ORB_ID,
+	"ORB (Oriented FAST and Rotated BRIEF)",
+	CompVCornerDeteORB::newObj,
+	CompVCornerDescORB::newObj,
+	NULL,
+	NULL,
+};
 //static const CompVFeatureFactory cannyFactory = {
 //	COMPV_CANNY_ID,
 //	"Canny edge detector",
@@ -79,6 +82,12 @@ static const CompVFeatureFactory fastFactory = {
 //	CompVHoughStd::newObj,
 //};
 
+static const CompVMatcherFactory bruteForceFactory = {
+	COMPV_BRUTEFORCE_ID,
+	"Brute force matcher",
+	CompVMatcherBruteForce::newObj
+};
+
 COMPV_ERROR_CODE CompVCore::init()
 {
 	if (s_bInitialized) {
@@ -91,7 +100,12 @@ COMPV_ERROR_CODE CompVCore::init()
 
 	COMPV_CHECK_CODE_BAIL(err = CompVBase::init());
 
+	// Features
 	COMPV_CHECK_CODE_BAIL(err = CompVFeature::addFactory(&fastFactory), "Failed to add FAST feature factory");
+	COMPV_CHECK_CODE_BAIL(err = CompVFeature::addFactory(&orbFactory), "Failed to add ORB feature factory");
+
+	// Matchers
+	COMPV_CHECK_CODE_BAIL(err = CompVMatcher::addFactory(&bruteForceFactory), "Failed to bruteforce matcher factory");
 
 	s_bInitialized = true;
 

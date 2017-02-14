@@ -26,6 +26,7 @@
 // Create your own detector + descriptor using "Hu's invariant moments" -> https://en.wikipedia.org/wiki/Image_moment#Rotation_invariant_moments
 
 #include "compv/core/features/orb/compv_core_feature_orb_dete.h"
+#include "compv/base/image/compv_image.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -46,23 +47,18 @@ CompVCornerDeteORB::CompVCornerDeteORB()
 	, m_nMaxFeatures(COMPV_FEATURE_DETE_ORB_FAST_MAX_FEATURES)
 	, m_nPyramidLevels(-1)
 	, m_nPatchDiameter(COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER)
-	, m_ppInterestPointsAtLevelN(NULL)
 	, m_bNMS(COMPV_FEATURE_DETE_ORB_FAST_NON_MAXIMA_SUPP)
 	, m_nThreshold(COMPV_FEATURE_DETE_ORB_FAST_THRESHOLD_DEFAULT)
 	, m_nFastType(COMPV_FAST_TYPE_9)
-	, m_ppDetectors(NULL)
-	, m_nDetectors(0)
-	, m_ppPatches(NULL)
-	, m_nPatches(0)
 {
 
 }
 
 CompVCornerDeteORB::~CompVCornerDeteORB()
 {
-	freeInterestPoints();
-	freePatches();
-	freeDetectors();
+	m_vecDetectors.clear();
+	m_vecInterestPointsAtLevelN.clear();
+	m_vecPatches.clear();
 }
 
 COMPV_ERROR_CODE CompVCornerDeteORB::set(int id, const void* valuePtr, size_t valueSize) /*Overrides(CompVCaps)*/
@@ -85,6 +81,11 @@ COMPV_ERROR_CODE CompVCornerDeteORB::set(int id, const void* valuePtr, size_t va
 		m_nMaxFeatures = *reinterpret_cast<const int*>(valuePtr);
 		return COMPV_ERROR_CODE_S_OK;
 	}
+	case COMPV_ORB_SET_INT_INTERNAL_DETE_ID: {
+		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		m_nFastType = *reinterpret_cast<const int*>(valuePtr);
+		return COMPV_ERROR_CODE_S_OK;
+	}
 	case COMPV_ORB_SET_INT_PYRAMID_LEVELS:
 	case COMPV_ORB_SET_INT_PYRAMID_SCALE_TYPE:
 	case COMPV_ORB_SET_FLT32_PYRAMID_SCALE_FACTOR: {
@@ -102,7 +103,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::set(int id, const void* valuePtr, size_t va
 				}
 				else {
 					m_pyramid = NULL;
-					freeInterestPoints();
+					m_vecInterestPointsAtLevelN.clear();
 					m_nPyramidLevels = 0;
 				}
 				return err_;
@@ -143,10 +144,18 @@ COMPV_ERROR_CODE CompVCornerDeteORB::get(int id, const void** valuePtrPtr, size_
 	}
 }
 	
-COMPV_ERROR_CODE CompVCornerDeteORB::process(const CompVMatPtr& image, CompVInterestPointVector& interestPoints) /*Overrides(CompVCornerDete)*/
+COMPV_ERROR_CODE CompVCornerDeteORB::process(const CompVMatPtr& image_, CompVInterestPointVector& interestPoints) /*Overrides(CompVCornerDete)*/
 {
-	COMPV_CHECK_EXP_RETURN(!image || image->isEmpty() || image->subType() != COMPV_SUBTYPE_PIXELS_Y,
+	COMPV_CHECK_EXP_RETURN(!image_ || image_->isEmpty(),
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	// Convert the image to grayscale if not already the case
+	CompVMatPtr image = image_;
+	if (image_->subType() != COMPV_SUBTYPE_PIXELS_Y) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should convert the image to grayscale once and reuse it in all functions");
+		COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image_, &m_ptrImageGray), "Failed to convert the image to grayscale");
+		image = m_ptrImageGray;
+	}
 
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	CompVInterestPointVector interestPointsAtLevelN;
@@ -165,14 +174,11 @@ COMPV_ERROR_CODE CompVCornerDeteORB::process(const CompVMatPtr& image, CompVInte
 	// Create and init detectors
 	// Number of detectors must be equal to the number of threads (not the case for interestpoints array which is equal to the number of levels)
 	size_t nDetectors = COMPV_MATH_CLIP3(1, threadsCount, levelsCount);
-	if (m_nDetectors < nDetectors) {
-		COMPV_CHECK_CODE_RETURN(createDetectors(nDetectors));
-		for (size_t d = 0; d < nDetectors; ++d) {
-			err_ = CompVCornerDete::newObj(&m_ppDetectors[d], COMPV_FAST_ID);
-			if (COMPV_ERROR_CODE_IS_NOK(err_)) {
-				freeDetectors();
-				COMPV_CHECK_CODE_RETURN(err_);
-			}
+	if (m_vecDetectors.size() < nDetectors) {
+		CompVCornerDetePtr dete;
+		for (size_t d = m_vecDetectors.size(); d < nDetectors; ++d) {
+			COMPV_CHECK_CODE_RETURN(err_ = CompVCornerDete::newObj(&dete, COMPV_FAST_ID));
+			m_vecDetectors.push_back(dete);
 		}
 		COMPV_CHECK_CODE_RETURN(initDetectors());
 	}
@@ -180,14 +186,11 @@ COMPV_ERROR_CODE CompVCornerDeteORB::process(const CompVMatPtr& image, CompVInte
 	// Create patches
 	// Number of patches must be equal to the number of threads (not the case for interestpoints array which is equal to the number of levels)
 	size_t nPatches = COMPV_MATH_CLIP3(1, threadsCount, levelsCount);
-	if (m_nPatches < nPatches) {
-		COMPV_CHECK_CODE_RETURN(createPatches(nPatches));
-		for (size_t p = 0; p < nPatches; ++p) {
-			err_ = CompVPatch::newObj(&m_ppPatches[p], m_nPatchDiameter);
-			if (COMPV_ERROR_CODE_IS_NOK(err_)) {
-				freePatches();
-				COMPV_CHECK_CODE_RETURN(err_);
-			}
+	if (m_vecPatches.size() < nPatches) {
+		CompVPatchPtr patch;
+		for (size_t p = m_vecPatches.size(); p < nPatches; ++p) {
+			COMPV_CHECK_CODE_RETURN(err_ = CompVPatch::newObj(&patch, m_nPatchDiameter));
+			m_vecPatches.push_back(patch);
 		}
 	}
 
@@ -217,8 +220,8 @@ COMPV_ERROR_CODE CompVCornerDeteORB::process(const CompVMatPtr& image, CompVInte
 	else {
 #endif
 		for (int level = 0; level < levelsCount; ++level) {
-			COMPV_CHECK_CODE_RETURN(processLevelAt(image, m_ppPatches[0], m_ppDetectors[0], level));
-			interestPoints.insert(interestPoints.end(), m_ppInterestPointsAtLevelN[level].begin(), m_ppInterestPointsAtLevelN[level].end());
+			COMPV_CHECK_CODE_RETURN(processLevelAt(image, m_vecPatches[0], m_vecDetectors[0], level));
+			interestPoints.insert(interestPoints.end(), m_vecInterestPointsAtLevelN[level].begin(), m_vecInterestPointsAtLevelN[level].end());
 		}
 #if 0
 	}
@@ -250,54 +253,9 @@ COMPV_ERROR_CODE CompVCornerDeteORB::newObj(CompVCornerDetePtrPtr orb)
 COMPV_ERROR_CODE CompVCornerDeteORB::createInterestPoints(size_t count COMPV_DEFAULT(0))
 {
 	size_t levelsCount = count > 0 ? count : m_nPyramidLevels;
-	freeInterestPoints();
-	m_ppInterestPointsAtLevelN = reinterpret_cast<CompVInterestPointVector*>(CompVMem::calloc(levelsCount, sizeof(CompVInterestPointVector)));
-	COMPV_CHECK_EXP_RETURN(!m_ppInterestPointsAtLevelN, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVCornerDeteORB::freeInterestPoints(size_t count COMPV_DEFAULT(0))
-{
-	if (m_ppInterestPointsAtLevelN) {
-		size_t levelsCount = count > 0 ? count : m_nPyramidLevels;
-		for (int i = 0; i < levelsCount; ++i) {
-			m_ppInterestPointsAtLevelN[i].clear();
-		}
-		CompVMem::free(reinterpret_cast<void**>(&m_ppInterestPointsAtLevelN));
+	for (size_t i = m_vecInterestPointsAtLevelN.size(); i < levelsCount; ++i) {
+		m_vecInterestPointsAtLevelN.push_back(CompVInterestPointVector());
 	}
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVCornerDeteORB::createPatches(size_t count COMPV_DEFAULT(0))
-{
-	size_t patchesCount = count > 0 ? count : m_nPatches;
-	freePatches();
-	m_ppPatches = reinterpret_cast<CompVPatchPtr*>(CompVMem::calloc(patchesCount, sizeof(CompVPatchPtr)));
-	COMPV_CHECK_EXP_RETURN(!m_ppPatches, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	m_nPatches = patchesCount;
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVCornerDeteORB::freePatches(size_t count COMPV_DEFAULT(0))
-{
-	if (m_ppPatches) {
-		size_t patchesCount = count > 0 ? count : m_nPatches;
-		for (int i = 0; i < patchesCount; ++i) {
-			m_ppPatches[i] = NULL;
-		}
-		CompVMem::free(reinterpret_cast<void**>(&m_ppPatches));
-	}
-	m_nPatches = 0;
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVCornerDeteORB::createDetectors(size_t count COMPV_DEFAULT(0))
-{
-	size_t detectorsCount = count > 0 ? count : m_nDetectors;
-	freeDetectors();
-	m_ppDetectors = reinterpret_cast<CompVCornerDetePtr*>(CompVMem::calloc(detectorsCount, sizeof(CompVCornerDetePtr)));
-	COMPV_CHECK_EXP_RETURN(!m_ppDetectors, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-	m_nDetectors = detectorsCount;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -314,24 +272,9 @@ COMPV_ERROR_CODE CompVCornerDeteORB::initDetector(CompVCornerDetePtr detector)
 
 COMPV_ERROR_CODE CompVCornerDeteORB::initDetectors()
 {
-	if (m_ppDetectors) {
-		for (size_t i = 0; i < m_nDetectors; ++i) {
-			COMPV_CHECK_CODE_RETURN(initDetector(m_ppDetectors[i]));
-		}
+	for (size_t d = 0; d < m_vecDetectors.size(); ++d) {
+		COMPV_CHECK_CODE_RETURN(initDetector(m_vecDetectors[d]));
 	}
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVCornerDeteORB::freeDetectors(size_t count COMPV_DEFAULT(0))
-{
-	if (m_ppDetectors) {
-		size_t detectorsCount = count > 0 ? count : m_nDetectors;
-		for (size_t i = 0; i < detectorsCount; ++i) {
-			m_ppDetectors[i] = NULL;
-		}
-		CompVMem::free(reinterpret_cast<void**>(&m_ppDetectors));
-	}
-	m_nDetectors = 0;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -367,7 +310,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 	// will work for buggy detectors
 
 	// Create or reset interest points for the current level then perform feature detection
-	CompVInterestPointVector& interestPointsAtLevelN = m_ppInterestPointsAtLevelN[level];
+	CompVInterestPointVector& interestPointsAtLevelN = m_vecInterestPointsAtLevelN[level];
 	interestPointsAtLevelN.clear();
 	
 	// Detect features for level N (multi-threaded)

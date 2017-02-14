@@ -273,6 +273,7 @@ enum COMPV_SCALE_TYPE {
 
 enum COMPV_MAT_TYPE {
     COMPV_MAT_TYPE_RAW,
+	COMPV_MAT_TYPE_STRUCT,
     COMPV_MAT_TYPE_PIXELS
 };
 
@@ -451,14 +452,14 @@ struct CompVDMatch {
 	int imageIdx;
 	int distance;
 protected:
-	COMPV_INLINE void init(int32_t queryIdx_, int32_t trainIdx_, int32_t distance_, int32_t imageIdx_ = 0) {
+	COMPV_INLINE void init(int queryIdx_, int trainIdx_, int distance_, int imageIdx_ = 0) {
 		queryIdx = queryIdx_, trainIdx = trainIdx_, distance = distance_, imageIdx = imageIdx_;
 	}
 public:
 	CompVDMatch() {
 		init(0, 0, 0, 0);
 	}
-	CompVDMatch(int32_t queryIdx_, int32_t trainIdx_, int32_t distance_, int32_t imageIdx_ = 0) {
+	CompVDMatch(int queryIdx_, int trainIdx_, int distance_, int imageIdx_ = 0) {
 		init(queryIdx_, trainIdx_, distance_, imageIdx_);
 	}
 };

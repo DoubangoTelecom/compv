@@ -168,6 +168,7 @@ COMPV_ERROR_CODE CompVCornerDeteFAST::process(const CompVMatPtr& image_, CompVIn
 	// Convert the image to grayscale if not already the case
 	CompVMatPtr image = image_;
 	if (image->subType() != COMPV_SUBTYPE_PIXELS_Y) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should convert the image to grayscale once and reuse it in all functions");
 		COMPV_CHECK_CODE_RETURN(err_ = CompVImage::convertGrayscale(image_, &m_ptrImageGray), "Failed to convert the image to grayscale");
 		image = m_ptrImageGray;
 	}

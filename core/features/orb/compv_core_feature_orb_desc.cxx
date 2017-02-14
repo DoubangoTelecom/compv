@@ -19,6 +19,7 @@
 #include "compv/base/math/compv_math_convlt.h"
 #include "compv/base/math/compv_math_gauss.h"
 #include "compv/base/parallel/compv_parallel.h"
+#include "compv/base/image/compv_image.h"
 #include "compv/base/compv_mem.h"
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_debug.h"
@@ -179,7 +180,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::convlt(CompVImageScalePyramidPtr pPyramid, 
 COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid, CompVInterestPointVector::const_iterator begin, CompVInterestPointVector::const_iterator end, uint8_t* desc)
 {
 	float fx, fy, angleInRad, sf, fcos, fsin;
-	int32_t xi, yi;
+	int xi, yi;
 	CompVInterestPointVector::const_iterator point;
 	CompVMatPtr imageAtLevelN;
 	const int nFeaturesBytes = (m_nPatchBits >> 3);
@@ -206,8 +207,8 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 		fcos = ::cos(angleInRad);
 		fsin = ::sin(angleInRad);
 		// Round the point
-		xi = COMPV_MATH_ROUNDFU_2_INT(fx, int32_t);
-		yi = COMPV_MATH_ROUNDFU_2_INT(fy, int32_t);
+		xi = COMPV_MATH_ROUNDFU_2_INT(fx, int);
+		yi = COMPV_MATH_ROUNDFU_2_INT(fy, int);
 		// Compute description
 		{
 			// Check if the keypoint is too close to the border
@@ -217,7 +218,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 				memset(desc, 0, nFeaturesBytes);
 			}
 			else {
-				img_center = imageAtLevelN->ptr<const uint8_t>() + ((yi * stride) + xi); // Translate the image to have the keypoint at the center. This is required before applying the rotated patch.
+				img_center = imageAtLevelN->ptr<const uint8_t>(yi, xi); // Translate the image to have the keypoint at the center. This is required before applying the rotated patch.
 #if COMPV_FEATURE_DESC_ORB_FXP_DESC
 				if (CompVEngine::isMathFixedPointEnabled()) {
 					// cosT and sinT are within [-1, 1] which means we can just mulb 0x7fff
@@ -238,13 +239,21 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 }
 
 // override CompVCornerDesc::process
-COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVMatPtr& image, const CompVInterestPointVector& interestPoints, CompVMatPtrPtr descriptions)
+COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVMatPtr& image_, const CompVInterestPointVector& interestPoints, CompVMatPtrPtr descriptions)
 {
-	COMPV_CHECK_EXP_RETURN(image || image->isEmpty() || image->subType() != COMPV_SUBTYPE_PIXELS_Y || !descriptions,
+	COMPV_CHECK_EXP_RETURN(!image_ || image_->isEmpty() || !descriptions,
 		COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
+	// Convert the image to grayscale if not already the case
+	CompVMatPtr image = image_;
+	if (image_->subType() != COMPV_SUBTYPE_PIXELS_Y) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("You should convert the image to grayscale once and reuse it in all functions");
+		COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image_, &m_ptrImageGray), "Failed to convert the image to grayscale");
+		image = m_ptrImageGray;
+	}
+
 	// For now only Brief256_31 is supported
-	COMPV_CHECK_EXP_RETURN(m_nPatchBits != 256 || m_nPatchDiameter != 31, COMPV_ERROR_CODE_E_INVALID_CALL);
+	COMPV_CHECK_EXP_RETURN(m_nPatchBits != 256 || m_nPatchDiameter != 31, COMPV_ERROR_CODE_E_INVALID_CALL, "Requires Brief256_31");
 
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	CompVMatPtr _descriptions;
@@ -413,7 +422,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVMatPtr& image, const Com
 	return err_;
 }
 
-COMPV_ERROR_CODE CompVCornerDescORB::newObj(CompVCornerDescORBPtrPtr orb)
+COMPV_ERROR_CODE CompVCornerDescORB::newObj(CompVCornerDescPtrPtr orb)
 {
 	COMPV_CHECK_EXP_RETURN(orb == NULL, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVPtr<CompVImageScalePyramid * > pyramid_;

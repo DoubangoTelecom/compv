@@ -40,7 +40,7 @@ public:
 	virtual COMPV_ERROR_CODE get(int id, const void** valuePtrPtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
 	virtual COMPV_ERROR_CODE process(const CompVMatPtr& image, const CompVInterestPointVector& interestPoints, CompVMatPtrPtr descriptions) override /*Overrides(CompVCornerDesc)*/;
 
-	static COMPV_ERROR_CODE newObj(CompVCornerDescORBPtrPtr orb);
+	static COMPV_ERROR_CODE newObj(CompVCornerDescPtrPtr orb);
 
 private:
 	COMPV_ERROR_CODE convlt(CompVImageScalePyramidPtr pPyramid, int level);
@@ -55,6 +55,7 @@ private:
 	bool m_bMediaTypeVideo;
 	int m_nPatchDiameter;
 	int m_nPatchBits;
+	CompVMatPtr m_ptrImageGray;
 	void(*m_funBrief256_31_Float32)(const uint8_t* img_center, compv_uscalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out);
 #if COMPV_FEATURE_DESC_ORB_FXP_DESC
 	void(*m_funBrief256_31_Fxp)(const uint8_t* img_center, compv_scalar_t img_stride, const int16_t* cos1, const int16_t* sin1, COMPV_ALIGNED(x) void* out);

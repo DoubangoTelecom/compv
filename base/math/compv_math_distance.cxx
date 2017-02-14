@@ -7,6 +7,7 @@
 #include "compv/base/math/compv_math_distance.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/compv_bits.h"
+#include "compv/base/compv_cpu.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -31,9 +32,9 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 	void(*HammingDistance)(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr) = CompVHammingDistance_C;
 	void(*Hamming256Distance)(const uint8_t* dataPtr, compv_uscalar_t height, const uint8_t* patch1xnPtr, int32_t* distPtr) = NULL;
 
-#if 0
 	if (CompVCpu::isEnabled(kCpuFlagPOPCNT)) {
 		HammingDistance = CompVHammingDistance_POPCNT_C;
+#if 0
 		if (CompVCpu::isEnabled(kCpuFlagSSE42) && COMPV_IS_ALIGNED_SSE(dataPtr) && COMPV_IS_ALIGNED_SSE(patch1xnPtr)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86((HammingDistance = CompVHammingDistance_Intrin_POPCNT_SSE42));
 			COMPV_EXEC_IFDEF_ASM_X86((HammingDistance = CompVHammingDistance_Asm_POPCNT_X86_SSE42));
@@ -45,6 +46,7 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 				COMPV_EXEC_IFDEF_ASM_X64((Hamming256Distance = CompVHammingDistance256_Asm_POPCNT_X64_SSE42));
 			}
 		}
+#endif
 		// There is no math operations (except the xor) in hamming function but a lot of loads and this is why SSE42 version is
 		// slightly faster than AVX
 #if 0
@@ -54,18 +56,18 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 		}
 #endif
 	}
-#endif
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Fast hamming, do not require stride to be 32");
 
-	if (Hamming256Distance) {
+	if (Hamming256Distance) { // TODO(dmi): Why it's named hamming256?
 		Hamming256Distance(dataPtr, height, patch1xnPtr, distPtr);
 	}
 	else {
 		if (stride == 32 && width == 32) {
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found for fast hamming distance (32 x 32)");
 		}
-		HammingDistance(dataPtr, width, stride, height, patch1xnPtr, distPtr);
+		HammingDistance(dataPtr, width, height, stride, patch1xnPtr, distPtr);
 	}
 
 	return COMPV_ERROR_CODE_S_OK;

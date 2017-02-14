@@ -70,7 +70,7 @@ public:
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(image));
 			COMPV_CHECK_CODE_BAIL(err = m_ptrFAST->process(image, m_vecInterestPoints));
-			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->renderer()->canvas()->drawInterestPoints(m_vecInterestPoints)); // FIXME: canvas should be at surface()
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->renderer()->canvas()->drawInterestPoints(m_vecInterestPoints)); // TOD(dmi): canvas should be at surface()
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->blit());
 		bail:
 			COMPV_CHECK_CODE_NOP(err = m_ptrWindow->endDraw()); // Make sure 'endDraw()' will be called regardless the result
@@ -100,7 +100,7 @@ private:
 	CompVWindowPtr m_ptrWindow;
 	CompVSingleSurfaceLayerPtr m_ptrSingleSurfaceLayer;
 	CompVCornerDetePtr m_ptrFAST;
-	std::vector<CompVInterestPoint> m_vecInterestPoints;
+	CompVInterestPointVector m_vecInterestPoints;
 };
 
 /* Entry point function */

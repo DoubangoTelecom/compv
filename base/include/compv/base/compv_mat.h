@@ -194,6 +194,16 @@ public:
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
+	template<typename elmType>
+	COMPV_ERROR_CODE one_row(size_t row) {
+		COMPV_CHECK_EXP_RETURN(isEmpty() || row >= m_nRows || sizeof(elmType) != m_nElmtInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		elmType* ptr_ = this->ptr<elmType>(row);
+		for (size_t col = 0; col < m_nCols; ++col) {
+			ptr_[col] = static_cast<elmType>(1);
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
 	COMPV_ERROR_CODE zero_rows() {
 		if (this->ptr() && this->rows() && this->cols()) {
 			if (this->rowInBytes() == this->strideInBytes()) {
@@ -332,7 +342,7 @@ private:
 			}
 			COMPV_CHECK_EXP_BAIL(!COMPV_IS_ALIGNED(nBestStrideInBytes, alignv), (err_ = COMPV_ERROR_CODE_E_MEMORY_NOT_ALIGNED), "Stride not aligned with request alignment value");
 
-			if (dataType == COMPV_MAT_TYPE_RAW) {
+			if (dataType == COMPV_MAT_TYPE_RAW || dataType == COMPV_MAT_TYPE_STRUCT) {
 				nPlaneCount = 1;
 				bPlanePacked = false;
 				nNewDataSize = nBestStrideInBytes * rows;

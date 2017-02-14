@@ -18,6 +18,7 @@
 #include <compv/base/compv_features.h>
 #include <compv/base/compv_fileutils.h>
 #include <compv/base/compv_mat.h>
+#include <compv/base/compv_matchers.h>
 #include <compv/base/compv_md5.h>
 #include <compv/base/compv_mem.h>
 #include <compv/base/compv_obj.h>
@@ -30,6 +31,7 @@
 
 #include <compv/base/math/compv_math.h>
 #include <compv/base/math/compv_math_convlt.h>
+#include <compv/base/math/compv_math_distance.h>
 #include <compv/base/math/compv_math_gauss.h>
 #include <compv/base/math/compv_math_matrix.h>
 #include <compv/base/math/compv_math_transform.h>

@@ -18,7 +18,8 @@ using namespace compv;
 #define UNITTEST_MATH_STATS_NORMALIZE_HARTLEY	0
 #define UNITTEST_MATH_STATS_VARIANCE			0
 #define UNITTEST_MATH_TRF_HOMOG_TO_CART			0 // homogeneousToCartesian2D()
-#define UNITTEST_MATH_CALIB_HOMOGRAPHY			1
+#define UNITTEST_MATH_CALIB_HOMOGRAPHY			0
+#define UNITTEST_MATH_DISTANCE_HAMMING			1
 
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
 #define disableAVX() (kCpuFlagAVX | kCpuFlagAVX2)
@@ -134,6 +135,10 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_math_calib_homography();
 								COMPV_CHECK_CODE_BAIL(err = unittest_math_calib_homography(), "Math calib homography unittest failed");
 #endif	
+#if UNITTEST_MATH_DISTANCE_HAMMING || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_math_distance_hamming();
+								COMPV_CHECK_CODE_BAIL(err = unittest_math_distance_hamming(), "Math hamming distance unittest failed");
+#endif
 								
 							}
 						}

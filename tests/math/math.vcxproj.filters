@@ -48,5 +48,8 @@
     <ClCompile Include="calib_homography.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="distance.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
