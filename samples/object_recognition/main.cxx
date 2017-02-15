@@ -101,7 +101,7 @@ public:
 			/* Drawing */
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
 			// Matched points
-			COMPV_CHECK_CODE_BAIL(err = m_ptrMatchingSurfaceLayer->drawMatches(m_ptrImageTrain, m_ptrGoodMatchesTrain, image, m_ptrGoodMatchesQuery));
+			COMPV_CHECK_CODE_BAIL(err = m_ptrMatchingSurfaceLayer->drawMatches(m_ptrImageTrain, m_ptrGoodMatchesTrain, image, m_ptrGoodMatchesQuery, &m_DrawingOptionsMatches));
 					
 			// Bounding box arround the recognized object
 			if (recognized) {
@@ -114,7 +114,7 @@ public:
 				compv_float32_t y0[4] = { static_cast<compv_float32_t>(y[0]), static_cast<compv_float32_t>(y[1]), static_cast<compv_float32_t>(y[2]), static_cast<compv_float32_t>(y[3]) };
 				compv_float32_t x1[4] = { static_cast<compv_float32_t>(x[1] + xoffset), static_cast<compv_float32_t>(x[2] + xoffset), static_cast<compv_float32_t>(x[3] + xoffset), static_cast<compv_float32_t>(x[0] + xoffset) };
 				compv_float32_t y1[4] = { static_cast<compv_float32_t>(y[1]), static_cast<compv_float32_t>(y[2]), static_cast<compv_float32_t>(y[3]), static_cast<compv_float32_t>(y[0]) };
-				COMPV_CHECK_CODE_BAIL(err = m_ptrMatchingSurfaceLayer->surface()->canvas()->drawLines(x0, y0, x1, y1, 4));
+				COMPV_CHECK_CODE_BAIL(err = m_ptrMatchingSurfaceLayer->surface()->canvas()->drawLines(x0, y0, x1, y1, 4, &m_DrawingOptionsRectMatched));
 
 				COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Object Recognized (%zu)!", num++);
 			}
@@ -156,6 +156,15 @@ public:
 
 		// Init train
 		COMPV_CHECK_CODE_RETURN(listener_->initTrain());
+
+		// Set drawing options
+		listener_->m_DrawingOptionsMatches.colorType = COMPV_DRAWING_COLOR_TYPE_RANDOM;
+		listener_->m_DrawingOptionsRectMatched.colorType = COMPV_DRAWING_COLOR_TYPE_STATIC;
+		listener_->m_DrawingOptionsRectMatched.color[0] = 1.f;
+		listener_->m_DrawingOptionsRectMatched.color[1] = 1.f;
+		listener_->m_DrawingOptionsRectMatched.color[2] = 0.f;
+		listener_->m_DrawingOptionsRectMatched.color[3] = 1.f;
+		listener_->m_DrawingOptionsRectMatched.lineWidth = 4.f;
 
 		// Set output
 		*listener = listener_;
@@ -270,6 +279,8 @@ private:
 	std::vector<CompVDMatch> m_vecGoodMatches;
 	CompVInterestPointVector m_vecInterestPointsQuery;
 	CompVInterestPointVector m_vecInterestPointsTrain;
+	CompVDrawingOptions m_DrawingOptionsMatches;
+	CompVDrawingOptions m_DrawingOptionsRectMatched;
 };
 
 /* Entry point function */

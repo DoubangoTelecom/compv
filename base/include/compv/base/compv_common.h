@@ -345,6 +345,11 @@ enum COMPV_DRAWING_COLOR_TYPE {
 	COMPV_DRAWING_COLOR_TYPE_RANDOM
 };
 
+enum COMPV_DRAWING_LINE_TYPE {
+	COMPV_DRAWING_LINE_TYPE_SIMPLE,
+	COMPV_DRAWING_LINE_TYPE_MATCH,
+};
+
 struct CompVImageInfo {
     COMPV_IMAGE_FORMAT format;
     COMPV_SUBTYPE pixelFormat; // COMPV_SUBTYPE_PIXELS_XXX
@@ -479,12 +484,17 @@ struct CompVDrawingOptions {
 	compv_float32x4_t color;
 	compv_float32_t pointSize;
 	compv_float32_t lineWidth;
+	COMPV_DRAWING_LINE_TYPE lineType;
 public:
 	CompVDrawingOptions() {
 		colorType = COMPV_DRAWING_COLOR_TYPE_RANDOM;
 		color[0] = color[1] = color[2] = 0.f, color[3] = 1.f;
 		pointSize = 7.f;
 		lineWidth = 2.f;
+		lineType = COMPV_DRAWING_LINE_TYPE_SIMPLE;
+	}
+	static CompVDrawingOptions clone(const CompVDrawingOptions* options) {
+		return options ? *options : CompVDrawingOptions();
 	}
 };
 

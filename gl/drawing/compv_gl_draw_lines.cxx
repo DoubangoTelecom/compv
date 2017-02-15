@@ -18,8 +18,9 @@ static const std::string& kProgramVertexData =
 "	attribute vec3 color;"
 "	varying vec4 colorVarying;"
 "	uniform mat4 MVP;"
+"	uniform float pointSize;"
 "	void main() {"
-"		gl_PointSize = 7.0;"
+"		gl_PointSize = pointSize;"
 "		gl_Position = MVP * vec4(position, 1.0, 1.0);"
 "		colorVarying = vec4(color, 1.0);"
 "	}";
@@ -51,24 +52,14 @@ CompVGLDrawLines::~CompVGLDrawLines()
 
 }
 
-COMPV_ERROR_CODE CompVGLDrawLines::lines(const CompVGLPoint2D* lines, GLsizei count)
-{
-	COMPV_CHECK_CODE_RETURN(draw(lines, count));
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVGLDrawLines::matches(const CompVGLPoint2D* lines, GLsizei count)
-{
-	static const GLsizei trainOffsetx = 0;
-	COMPV_CHECK_CODE_RETURN(draw(lines, count, COMPV_GL_LINE_TYPE_MATCH));
-	return COMPV_ERROR_CODE_S_OK;
-}
-
-COMPV_ERROR_CODE CompVGLDrawLines::draw(const CompVGLPoint2D* lines, GLsizei count, COMPV_GL_LINE_TYPE type COMPV_DEFAULT(COMPV_GL_LINE_TYPE_SIMPLE))
+COMPV_ERROR_CODE CompVGLDrawLines::lines(const CompVGLPoint2D* lines, GLsizei count, const CompVDrawingOptions* options COMPV_DEFAULT(NULL))
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	GLint fboWidth = 0, fboHeight = 0;
+	GLfloat linewidth = options ? static_cast<GLfloat>(options->lineWidth) : 2.f;
+	GLfloat pointSize = options ? static_cast<GLfloat>(options->pointSize) : 7.f;
 	bool bFirstTimeOrChanged;
+	GLuint uName;
 
 	// Bind to VAO, VBO, Program
 	COMPV_CHECK_CODE_BAIL(err = CompVGLDraw::bind());
@@ -84,24 +75,28 @@ COMPV_ERROR_CODE CompVGLDrawLines::draw(const CompVGLPoint2D* lines, GLsizei cou
 
 	if (!CompVGLInfo::extensions::vertex_array_object() || bFirstTimeOrChanged) {
 		// Set position attribute
-		GLuint uNamePosition = COMPV_glGetAttribLocation(program()->name(), "position");
-		COMPV_glEnableVertexAttribArray(uNamePosition);
-		COMPV_glVertexAttribPointer(uNamePosition, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoint2D), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoint2D, position)));
+		uName = COMPV_glGetAttribLocation(program()->name(), "position");
+		COMPV_glEnableVertexAttribArray(uName);
+		COMPV_glVertexAttribPointer(uName, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoint2D), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoint2D, position)));
 
 		// Set color attribute
-		GLuint uNameColor = COMPV_glGetAttribLocation(program()->name(), "color");
-		COMPV_glEnableVertexAttribArray(uNameColor);
-		COMPV_glVertexAttribPointer(uNameColor, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoint2D), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoint2D, color)));
+		uName = COMPV_glGetAttribLocation(program()->name(), "color");
+		COMPV_glEnableVertexAttribArray(uName);
+		COMPV_glVertexAttribPointer(uName, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoint2D), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoint2D, color)));
 
 		// Set projection
 		COMPV_CHECK_CODE_BAIL(err = CompVGLDraw::setOrtho(0, static_cast<GLfloat>(fboWidth), static_cast<GLfloat>(fboHeight), 0, -1, 1));
 	}
 
+	// Set PointSize
+	uName = COMPV_glGetUniformLocation(program()->name(), "pointSize");
+	COMPV_glUniform1f(uName, pointSize);
+
 	// Draw points
-	COMPV_glLineWidth(2.f);
+	COMPV_glLineWidth(linewidth);
 	COMPV_glViewport(0, 0, static_cast<GLsizei>(fboWidth), static_cast<GLsizei>(fboHeight));
 	COMPV_glDrawArrays(GL_LINES, 0, count);
-	if (type == COMPV_GL_LINE_TYPE_MATCH) {
+	if (options && options->lineType == COMPV_DRAWING_LINE_TYPE_MATCH) {
 		COMPV_glDrawArrays(GL_POINTS, 0, count);
 	}
 

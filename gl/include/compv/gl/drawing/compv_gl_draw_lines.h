@@ -10,6 +10,7 @@
 #include "compv/gl/compv_gl_config.h"
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
+#include "compv/gl/compv_gl_common.h"
 #include "compv/gl/drawing/compv_gl_draw.h"
 
 #if defined(_COMPV_API_H_)
@@ -17,11 +18,6 @@
 #endif
 
 COMPV_NAMESPACE_BEGIN()
-
-enum COMPV_GL_LINE_TYPE {
-	COMPV_GL_LINE_TYPE_SIMPLE,
-	COMPV_GL_LINE_TYPE_MATCH,
-};
 
 COMPV_OBJECT_DECLARE_PTRS(GLDrawLines)
 
@@ -33,9 +29,7 @@ public:
 	virtual ~CompVGLDrawLines();
 	COMPV_OBJECT_GET_ID(CompVGLDrawLines);
 
-	COMPV_ERROR_CODE lines(const CompVGLPoint2D* lines, GLsizei count);
-	COMPV_ERROR_CODE matches(const CompVGLPoint2D* lines, GLsizei count);
-	COMPV_ERROR_CODE draw(const CompVGLPoint2D* lines, GLsizei count, COMPV_GL_LINE_TYPE type = COMPV_GL_LINE_TYPE_SIMPLE);
+	COMPV_ERROR_CODE lines(const CompVGLPoint2D* lines, GLsizei count, const CompVDrawingOptions* options = NULL);
 
 	static COMPV_ERROR_CODE newObj(CompVGLDrawLinesPtrPtr drawLines);
 

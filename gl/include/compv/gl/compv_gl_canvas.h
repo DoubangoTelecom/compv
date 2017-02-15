@@ -38,7 +38,6 @@ public:
 	virtual COMPV_ERROR_CODE drawLines(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count, const CompVDrawingOptions* options = NULL) override /*Overrides(CompVCanvas)*/;
 	virtual COMPV_ERROR_CODE drawInterestPoints(const std::vector<CompVInterestPoint >& interestPoints, const CompVDrawingOptions* options = NULL) override /*Overrides(CompVCanvas)*/;
 
-	COMPV_ERROR_CODE drawMatches(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count) /*Internal*/;
 	COMPV_ERROR_CODE close();
 
     static COMPV_ERROR_CODE newObj(CompVGLCanvasPtrPtr canvas, CompVGLFboPtr ptrFBO);
@@ -51,7 +50,6 @@ private:
         m_bEmpty = false;
     }
 
-	COMPV_ERROR_CODE drawLines2(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count, COMPV_GL_LINE_TYPE type = COMPV_GL_LINE_TYPE_SIMPLE) /*Private*/;
 
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

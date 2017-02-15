@@ -8,7 +8,6 @@
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/gl/compv_gl_func.h"
 #include "compv/base/math/compv_math.h"
-#include "compv/base/time/compv_time.h" // FIXME: remove
 
 #define COMPV_THIS_CLASSNAME	"CompVGLMatchingSurfaceLayer"
 
@@ -24,7 +23,7 @@ CompVGLMatchingSurfaceLayer::~CompVGLMatchingSurfaceLayer()
 
 }
 
-COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const CompVMatPtr& trainImage, const CompVMatPtr& trainGoodMatches, const CompVMatPtr& queryImage, const CompVMatPtr& queryGoodMatches) /*Overrides(CompVMatchingSurfaceLayer)*/
+COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const CompVMatPtr& trainImage, const CompVMatPtr& trainGoodMatches, const CompVMatPtr& queryImage, const CompVMatPtr& queryGoodMatches, const CompVDrawingOptions* options COMPV_DEFAULT(NULL)) /*Overrides(CompVMatchingSurfaceLayer)*/
 {
 	COMPV_CHECK_EXP_RETURN(!trainImage || trainImage->isEmpty() || !queryImage || queryImage->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -39,8 +38,6 @@ COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const CompVMatPtr& tra
 		fboCover = m_ptrCoverSurfaceGL->blitter()->fbo();
 		const int queryOffsetX = static_cast<int>(COMPV_DRAWING_MATCHES_TRAIN_QUERY_XOFFSET + trainImage->cols());
 		const int trainTop = static_cast<int>(CompVViewport::yFromBottomLeftToTopLeft(static_cast<int>(fboCover->height()), static_cast<int>(trainImage->rows()), 0));
-
-		//uint64_t timeStart = CompVTime::nowMillis();
 
 		// Clear the FBO (this is a slave fbo and will not be cleared in surface begin)
 		if (COMPV_ERROR_CODE_IS_OK(fboCover->bind())) {
@@ -66,10 +63,10 @@ COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const CompVMatPtr& tra
 				|| trainGoodMatches->subType() != trainGoodMatches->subType(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Query and Train matches must have same type and size");
 			switch (trainGoodMatches->subType()) {
 			case COMPV_SUBTYPE_RAW_FLOAT32:
-				COMPV_CHECK_CODE_RETURN(drawMatches(trainGoodMatches->ptr<compv_float32_t>(0), trainGoodMatches->ptr<compv_float32_t>(1), queryGoodMatches->ptr<compv_float32_t>(0), queryGoodMatches->ptr<compv_float32_t>(1), queryGoodMatches->cols(), static_cast<size_t>(queryOffsetX)));
+				COMPV_CHECK_CODE_RETURN(drawMatches(trainGoodMatches->ptr<compv_float32_t>(0), trainGoodMatches->ptr<compv_float32_t>(1), queryGoodMatches->ptr<compv_float32_t>(0), queryGoodMatches->ptr<compv_float32_t>(1), queryGoodMatches->cols(), static_cast<size_t>(queryOffsetX), options));
 				break;
 			case COMPV_SUBTYPE_RAW_FLOAT64:
-				COMPV_CHECK_CODE_RETURN(drawMatches(trainGoodMatches->ptr<compv_float64_t>(0), trainGoodMatches->ptr<compv_float64_t>(1), queryGoodMatches->ptr<compv_float64_t>(0), queryGoodMatches->ptr<compv_float64_t>(1), queryGoodMatches->cols(), static_cast<size_t>(queryOffsetX)));
+				COMPV_CHECK_CODE_RETURN(drawMatches(trainGoodMatches->ptr<compv_float64_t>(0), trainGoodMatches->ptr<compv_float64_t>(1), queryGoodMatches->ptr<compv_float64_t>(0), queryGoodMatches->ptr<compv_float64_t>(1), queryGoodMatches->cols(), static_cast<size_t>(queryOffsetX), options));
 				break;
 			default:
 				COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Expected COMPV_SUBTYPE_RAW_FLOAT32 or COMPV_SUBTYPE_RAW_FLOAT64 as subtype but found %s", CompVGetSubtypeString(trainGoodMatches->subType()));
@@ -105,12 +102,13 @@ CompVSurfacePtr CompVGLMatchingSurfaceLayer::surfaceQuery() /*Overrides(CompVMat
 	return NULL;
 }
 
-COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const compv_float32_t* trainX, const compv_float32_t* trainY, const compv_float32_t* queryX, const compv_float32_t* queryY, size_t count, size_t queryOffsetx) /* Private */
+COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const compv_float32_t* trainX, const compv_float32_t* trainY, const compv_float32_t* queryX, const compv_float32_t* queryY, size_t count, size_t queryOffsetx, const CompVDrawingOptions* options COMPV_DEFAULT(NULL)) /* Private */
 {
 	COMPV_CHECK_EXP_RETURN(!trainX || !trainY || !queryX || !queryY || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	compv_float32_t *queryX_ = NULL;
+	CompVDrawingOptions matchOptions = CompVDrawingOptions::clone(options);
 	if (queryOffsetx) {
 		compv_float32_t offset = static_cast<compv_float32_t>(queryOffsetx);
 		queryX_ = reinterpret_cast<compv_float32_t*>(CompVMem::malloc(sizeof(compv_float32_t) * count));
@@ -120,14 +118,15 @@ COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const compv_float32_t*
 		}
 	}
 	
-	COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->canvasGL()->drawMatches(trainX, trainY, queryX_ ? queryX_ : queryX, queryY, count));
+	matchOptions.lineType = COMPV_DRAWING_LINE_TYPE_MATCH;
+	COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->canvasGL()->drawLines(trainX, trainY, queryX_ ? queryX_ : queryX, queryY, count, &matchOptions));
 	
 bail:
 	CompVMem::free(reinterpret_cast<void**>(&queryX_));
 	return err;
 }
 
-COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const compv_float64_t* trainX, const compv_float64_t* trainY, const compv_float64_t* queryX, const compv_float64_t* queryY, size_t count, size_t queryOffsetx) /* Private */
+COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const compv_float64_t* trainX, const compv_float64_t* trainY, const compv_float64_t* queryX, const compv_float64_t* queryY, size_t count, size_t queryOffsetx, const CompVDrawingOptions* options COMPV_DEFAULT(NULL)) /* Private */
 {
 	COMPV_CHECK_EXP_RETURN(!trainX || !trainY || !queryX || !queryY || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -155,7 +154,7 @@ COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const compv_float64_t*
 		queryY_[i] = static_cast<compv_float32_t>(queryY[i]);
 	}
 
-	COMPV_CHECK_CODE_BAIL(err = drawMatches(trainX_, trainY_, queryX_, queryY_, count, 0)); // set offset to zero to avoid adding again in the float32 implementation
+	COMPV_CHECK_CODE_BAIL(err = drawMatches(trainX_, trainY_, queryX_, queryY_, count, 0, options)); // set offset to zero to avoid adding again in the float32 implementation
 
 bail:
 	CompVMem::free(reinterpret_cast<void**>(&trainX_));
