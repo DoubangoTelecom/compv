@@ -18,10 +18,9 @@ static const std::string& kProgramVertexData =
 "	attribute vec3 color;"
 "	varying vec4 colorVarying;"
 "	uniform mat4 MVP;"
-"   uniform vec2 xoffsets;"
 "	void main() {"
 "		gl_PointSize = 7.0;"
-"		gl_Position = MVP * vec4(position.x + xoffsets.r, position.y + xoffsets.g, 1.0, 1.0);"
+"		gl_Position = MVP * vec4(position, 1.0, 1.0);"
 "		colorVarying = vec4(color, 1.0);"
 "	}";
 
@@ -58,14 +57,14 @@ COMPV_ERROR_CODE CompVGLDrawLines::lines(const CompVGLPoint2D* lines, GLsizei co
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLDrawLines::matches(const CompVGLPoint2D* lines, GLsizei count, GLsizei queryOffsetx)
+COMPV_ERROR_CODE CompVGLDrawLines::matches(const CompVGLPoint2D* lines, GLsizei count)
 {
 	static const GLsizei trainOffsetx = 0;
-	COMPV_CHECK_CODE_RETURN(draw(lines, count, COMPV_GL_LINE_TYPE_MATCH, trainOffsetx, queryOffsetx));
+	COMPV_CHECK_CODE_RETURN(draw(lines, count, COMPV_GL_LINE_TYPE_MATCH));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLDrawLines::draw(const CompVGLPoint2D* lines, GLsizei count, COMPV_GL_LINE_TYPE type COMPV_DEFAULT(COMPV_GL_LINE_TYPE_SIMPLE), GLsizei offset1x COMPV_DEFAULT(0), GLsizei offset2x COMPV_DEFAULT(0))
+COMPV_ERROR_CODE CompVGLDrawLines::draw(const CompVGLPoint2D* lines, GLsizei count, COMPV_GL_LINE_TYPE type COMPV_DEFAULT(COMPV_GL_LINE_TYPE_SIMPLE))
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	GLint fboWidth = 0, fboHeight = 0;
@@ -93,11 +92,6 @@ COMPV_ERROR_CODE CompVGLDrawLines::draw(const CompVGLPoint2D* lines, GLsizei cou
 		GLuint uNameColor = COMPV_glGetAttribLocation(program()->name(), "color");
 		COMPV_glEnableVertexAttribArray(uNameColor);
 		COMPV_glVertexAttribPointer(uNameColor, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoint2D), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoint2D, color)));
-
-		// Set xoffsets uniforms
-		const GLfloat xoffsets[2] = { static_cast<GLfloat>(offset1x), static_cast<GLfloat>(offset2x) };
-		GLuint uNameOffsets = COMPV_glGetUniformLocation(program()->name(), "xoffsets");
-		COMPV_glUniform2fv(uNameOffsets, 1, xoffsets);
 
 		// Set projection
 		COMPV_CHECK_CODE_BAIL(err = CompVGLDraw::setOrtho(0, static_cast<GLfloat>(fboWidth), static_cast<GLfloat>(fboHeight), 0, -1, 1));

@@ -17,41 +17,20 @@
 COMPV_NAMESPACE_BEGIN()
 
 //
-//	CompVCanvasInterface
-//
-class COMPV_BASE_API CompVCanvasInterface
-{
-public:
-    virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) = 0;
-    virtual COMPV_ERROR_CODE drawLines(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count) = 0;
-	virtual COMPV_ERROR_CODE drawInterestPoints(const CompVInterestPointVector& interestPoints) = 0;
-};
-
-//
-//	CompVCanvasImpl
-//
-COMPV_OBJECT_DECLARE_PTRS(CanvasImpl)
-
-class COMPV_BASE_API CompVCanvasImpl : public CompVObj, public CompVCanvasInterface
-{
-protected:
-    CompVCanvasImpl();
-public:
-    virtual ~CompVCanvasImpl();
-	virtual COMPV_ERROR_CODE close() = 0;
-};
-
-//
 //	CompVCanvas
 //
 COMPV_OBJECT_DECLARE_PTRS(Canvas)
 
-class COMPV_BASE_API CompVCanvas : public CompVObj, public CompVCanvasInterface
+class COMPV_BASE_API CompVCanvas : public CompVObj
 {
 protected:
     CompVCanvas();
 public:
     virtual ~CompVCanvas();
+
+	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) = 0;
+	virtual COMPV_ERROR_CODE drawLines(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count) = 0;
+	virtual COMPV_ERROR_CODE drawInterestPoints(const CompVInterestPointVector& interestPoints) = 0;
 };
 
 //
@@ -60,17 +39,17 @@ public:
 struct COMPV_BASE_API CompVCanvasFactory {
 public:
     const char* name;
-    COMPV_ERROR_CODE(*newObjFuncPtr)(CompVCanvasImplPtrPtr canvasImpl);
+    COMPV_ERROR_CODE(*newObjFuncPtr)(CompVCanvasPtrPtr canvas);
     static COMPV_ERROR_CODE set(const CompVCanvasFactory* inst) {
         COMPV_CHECK_EXP_RETURN(!inst, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         COMPV_DEBUG_INFO("Setting canvas factory: %s", inst->name);
         instance = inst;
         return COMPV_ERROR_CODE_S_OK;
     }
-    static COMPV_ERROR_CODE newObj(CompVCanvasImplPtrPtr canvasImpl) {
-        COMPV_CHECK_EXP_RETURN(!canvasImpl, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    static COMPV_ERROR_CODE newObj(CompVCanvasPtrPtr canvas) {
+        COMPV_CHECK_EXP_RETURN(!canvas, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         COMPV_CHECK_EXP_RETURN(!instance, COMPV_ERROR_CODE_E_NOT_INITIALIZED);
-        COMPV_CHECK_CODE_RETURN(instance->newObjFuncPtr(canvasImpl));
+        COMPV_CHECK_CODE_RETURN(instance->newObjFuncPtr(canvas));
         return COMPV_ERROR_CODE_S_OK;
     }
 private:

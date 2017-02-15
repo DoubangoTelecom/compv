@@ -50,12 +50,10 @@ CompVGLSurface::~CompVGLSurface()
 CompVGLCanvasPtr CompVGLSurface::canvasGL()
 {
     if (!m_ptrCanvas) {
-        CompVCanvasImplPtr canvasImpl;
         COMPV_CHECK_EXP_BAIL(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
         COMPV_CHECK_CODE_BAIL(init());
         COMPV_CHECK_EXP_BAIL(!m_ptrBlitter->isInitialized(), COMPV_ERROR_CODE_E_INVALID_STATE);
-        COMPV_CHECK_CODE_BAIL(CompVCanvasFactory::newObj(&canvasImpl));
-        COMPV_CHECK_CODE_BAIL(CompVGLCanvas::newObj(&m_ptrCanvas, m_ptrBlitter->fbo(), canvasImpl));
+        COMPV_CHECK_CODE_BAIL(CompVGLCanvas::newObj(&m_ptrCanvas, m_ptrBlitter->fbo()));
     }
 bail:
     return m_ptrCanvas;

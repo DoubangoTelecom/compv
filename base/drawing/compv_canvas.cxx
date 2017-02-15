@@ -9,18 +9,6 @@
 COMPV_NAMESPACE_BEGIN()
 
 //
-//	CompVCanvasImpl
-//
-
-CompVCanvasImpl::CompVCanvasImpl()
-{
-}
-
-CompVCanvasImpl::~CompVCanvasImpl()
-{
-}
-
-//
 //	CompVCanvas
 //
 

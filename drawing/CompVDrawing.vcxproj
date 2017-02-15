@@ -116,7 +116,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;COMPV_DRAWING_EXPORTS;HAVE_JPEGLIB_H;HAVE_SKIA;HAVE_GL_GLEW_H;GLEW_STATIC;HAVE_SDL_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;COMPV_DRAWING_EXPORTS;HAVE_GL_GLEW_H;GLEW_STATIC;HAVE_SDL_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../gl/include;../thirdparties/include/common/sdl-2.0.5;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/skia-m55/libjpeg-turbo;../thirdparties/include/common/skia-m55/skia/core;../thirdparties/include/common/skia-m55/skia/config;../thirdparties/include/common/skia-m55/skia/gpu;../thirdparties/include/common/skia-m55/skia/utils;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -124,7 +124,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGL.lib;skia_core.lib;skia_effects.lib;skia_images.lib;skia_opts.lib;skia_opts_hsw.lib;skia_opts_sse41.lib;skia_opts_sse42.lib;skia_opts_ssse3.lib;skia_opts_avx.lib;skia_ports.lib;skia_sfnt.lib;skia_utils.lib;skia_skgpu.lib;skia_codec.lib;libjpeg-turbo.lib;libpng_static.lib;libwebp_dec.lib;libwebp_dsp.lib;libwebp_demux.lib;libwebp_utils.lib;raw_codec.lib;dng_sdk.lib;piex.lib;giflib.lib;zlib.lib;libSkKTX.lib;libetc1.lib;glew32s.lib;OpenGL32.lib;Glu32.lib;SDL2.lib;Winmm.lib;imm32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGL.lib;glew32s.lib;OpenGL32.lib;Glu32.lib;SDL2.lib;Winmm.lib;imm32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../thirdparties/libraries/windows/skia-m55-win32-debug;../thirdparties/libraries/windows/glew-2.3.4-win32;../thirdparties/libraries/windows/sdl-2.0.5-win32-debug</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -134,7 +134,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;COMPV_DRAWING_EXPORTS;HAVE_JPEGLIB_H;HAVE_SKIA;HAVE_GL_GLEW_H;GLEW_STATIC;HAVE_SDL_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;COMPV_DRAWING_EXPORTS;HAVE_GL_GLEW_H;GLEW_STATIC;HAVE_SDL_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../gl/include;../thirdparties/include/common/sdl-2.0.5;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/skia-m55/libjpeg-turbo;../thirdparties/include/common/skia-m55/skia/core;../thirdparties/include/common/skia-m55/skia/config;../thirdparties/include/common/skia-m55/skia/gpu;../thirdparties/include/common/skia-m55/skia/utils;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -142,7 +142,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGL.lib;skia_core.lib;skia_effects.lib;skia_images.lib;skia_opts.lib;skia_opts_hsw.lib;skia_opts_sse41.lib;skia_opts_sse42.lib;skia_opts_ssse3.lib;skia_opts_avx.lib;skia_ports.lib;skia_sfnt.lib;skia_utils.lib;skia_skgpu.lib;skia_codec.lib;libjpeg-turbo.lib;libpng_static.lib;libwebp_dec.lib;libwebp_dsp.lib;libwebp_demux.lib;libwebp_utils.lib;raw_codec.lib;dng_sdk.lib;piex.lib;giflib.lib;zlib.lib;libSkKTX.lib;libetc1.lib;glew32s.lib;OpenGL32.lib;Glu32.lib;SDL2.lib;Winmm.lib;imm32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGL.lib;glew32s.lib;OpenGL32.lib;Glu32.lib;SDL2.lib;Winmm.lib;imm32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../thirdparties/libraries/windows/skia-m55-win64-debug;../thirdparties/libraries/windows/glew-2.3.4-win64;../thirdparties/libraries/windows/sdl-2.0.5-win64-debug</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -154,7 +154,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;COMPV_DRAWING_EXPORTS;HAVE_JPEGLIB_H;HAVE_SKIA;HAVE_GL_GLEW_H;GLEW_STATIC;HAVE_SDL_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;COMPV_DRAWING_EXPORTS;HAVE_GL_GLEW_H;GLEW_STATIC;HAVE_SDL_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../gl/include;../thirdparties/include/common/sdl-2.0.5;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/skia-m55/libjpeg-turbo;../thirdparties/include/common/skia-m55/skia/core;../thirdparties/include/common/skia-m55/skia/config;../thirdparties/include/common/skia-m55/skia/gpu;../thirdparties/include/common/skia-m55/skia/utils;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -164,7 +164,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGL.lib;skia_core.lib;skia_effects.lib;skia_images.lib;skia_opts.lib;skia_opts_hsw.lib;skia_opts_sse41.lib;skia_opts_sse42.lib;skia_opts_ssse3.lib;skia_opts_avx.lib;skia_ports.lib;skia_sfnt.lib;skia_utils.lib;skia_skgpu.lib;skia_codec.lib;libjpeg-turbo.lib;libpng_static.lib;libwebp_dec.lib;libwebp_dsp.lib;libwebp_demux.lib;libwebp_utils.lib;raw_codec.lib;dng_sdk.lib;piex.lib;giflib.lib;zlib.lib;libSkKTX.lib;libetc1.lib;glew32s.lib;OpenGL32.lib;Glu32.lib;SDL2.lib;Winmm.lib;imm32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGL.lib;glew32s.lib;OpenGL32.lib;Glu32.lib;SDL2.lib;Winmm.lib;imm32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../thirdparties/libraries/windows/skia-m55-win32-release;../thirdparties/libraries/windows/glew-2.3.4-win32;../thirdparties/libraries/windows/sdl-2.0.5-win32-release</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -176,7 +176,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;COMPV_DRAWING_EXPORTS;HAVE_JPEGLIB_H;HAVE_SKIA;HAVE_GL_GLEW_H;GLEW_STATIC;HAVE_SDL_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;COMPV_DRAWING_EXPORTS;HAVE_GL_GLEW_H;GLEW_STATIC;HAVE_SDL_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;../base/include;../gl/include;../thirdparties/include/common/sdl-2.0.5;../thirdparties/include/common/glew-2.3.4;../thirdparties/include/common/skia-m55/libjpeg-turbo;../thirdparties/include/common/skia-m55/skia/core;../thirdparties/include/common/skia-m55/skia/config;../thirdparties/include/common/skia-m55/skia/gpu;../thirdparties/include/common/skia-m55/skia/utils;../thirdparties/include/common/glm-0.9.8.2</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -186,7 +186,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGL.lib;skia_core.lib;skia_effects.lib;skia_images.lib;skia_opts.lib;skia_opts_hsw.lib;skia_opts_sse41.lib;skia_opts_sse42.lib;skia_opts_ssse3.lib;skia_opts_avx.lib;skia_ports.lib;skia_sfnt.lib;skia_utils.lib;skia_skgpu.lib;skia_codec.lib;libjpeg-turbo.lib;libpng_static.lib;libwebp_dec.lib;libwebp_dsp.lib;libwebp_demux.lib;libwebp_utils.lib;raw_codec.lib;dng_sdk.lib;piex.lib;giflib.lib;zlib.lib;libSkKTX.lib;libetc1.lib;glew32s.lib;OpenGL32.lib;Glu32.lib;SDL2.lib;Winmm.lib;imm32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGL.lib;glew32s.lib;OpenGL32.lib;Glu32.lib;SDL2.lib;Winmm.lib;imm32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../thirdparties/libraries/windows/skia-m55-win64-release;../thirdparties/libraries/windows/glew-2.3.4-win64;../thirdparties/libraries/windows/sdl-2.0.5-win64-release</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>

@@ -39,7 +39,6 @@
     <ClInclude Include="include\compv\gl\compv_gl_utils.h" />
     <ClInclude Include="include\compv\gl\compv_gl_vao.h" />
     <ClInclude Include="include\compv\gl\compv_gl_window.h" />
-    <ClInclude Include="include\compv\gl\drawing\compv_gl_canvas_impl.h" />
     <ClInclude Include="include\compv\gl\drawing\compv_gl_draw.h" />
     <ClInclude Include="include\compv\gl\drawing\compv_gl_draw_lines.h" />
     <ClInclude Include="include\compv\gl\drawing\compv_gl_draw_points.h" />
@@ -61,7 +60,6 @@
     <ClCompile Include="compv_gl_utils.cxx" />
     <ClCompile Include="compv_gl_vao.cxx" />
     <ClCompile Include="compv_gl_window.cxx" />
-    <ClCompile Include="drawing\compv_gl_canvas_impl.cxx" />
     <ClCompile Include="drawing\compv_gl_draw.cxx" />
     <ClCompile Include="drawing\compv_gl_draw_lines.cxx" />
     <ClCompile Include="drawing\compv_gl_draw_points.cxx" />

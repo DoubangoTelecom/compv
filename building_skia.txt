@@ -1,5 +1,7 @@
 Visual Studio Community 2015: https://www.visualstudio.com/vs/community/
 
+Skia link libraries: $(OutDir)CompVBase.lib;$(OutDir)CompVGL.lib;skia_core.lib;skia_effects.lib;skia_images.lib;skia_opts.lib;skia_opts_hsw.lib;skia_opts_sse41.lib;skia_opts_sse42.lib;skia_opts_ssse3.lib;skia_opts_avx.lib;skia_ports.lib;skia_sfnt.lib;skia_utils.lib;skia_skgpu.lib;skia_codec.lib;libjpeg-turbo.lib;libpng_static.lib;libwebp_dec.lib;libwebp_dsp.lib;libwebp_demux.lib;libwebp_utils.lib;raw_codec.lib;dng_sdk.lib;piex.lib;giflib.lib;zlib.lib;libSkKTX.lib;libetc1.lib;glew32s.lib;OpenGL32.lib;Glu32.lib;SDL2.lib;Winmm.lib;imm32.lib;version.lib;%(AdditionalDependencies)
+
 mkdir base_skia
 cd base_skia
 set GYP_MSVS_VERSION=2015

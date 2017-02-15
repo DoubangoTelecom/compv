@@ -75,9 +75,6 @@
     <ClInclude Include="include\compv\gl\compv_gl_window.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\gl\drawing\compv_gl_canvas_impl.h">
-      <Filter>include\drawing</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\gl\drawing\compv_gl_draw.h">
       <Filter>include\drawing</Filter>
     </ClInclude>
@@ -136,9 +133,6 @@
     </ClCompile>
     <ClCompile Include="compv_gl_window.cxx">
       <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="drawing\compv_gl_canvas_impl.cxx">
-      <Filter>source\drawing</Filter>
     </ClCompile>
     <ClCompile Include="drawing\compv_gl_draw.cxx">
       <Filter>source\drawing</Filter>

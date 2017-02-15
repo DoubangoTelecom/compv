@@ -39,8 +39,8 @@ public:
     static COMPV_ERROR_CODE newObj(CompVGLMatchingSurfaceLayerPtrPtr layer, size_t width, size_t height);
 
 private:
-	virtual COMPV_ERROR_CODE drawMatches(const compv_float64_t* trainX, const compv_float64_t* trainY, const compv_float64_t* queryX, const compv_float64_t* queryY, size_t count);
-	virtual COMPV_ERROR_CODE drawMatches(const compv_float32_t* trainX, const compv_float32_t* trainY, const compv_float32_t* queryX, const compv_float32_t* queryY, size_t count);
+	virtual COMPV_ERROR_CODE drawMatches(const compv_float64_t* trainX, const compv_float64_t* trainY, const compv_float64_t* queryX, const compv_float64_t* queryY, size_t count, size_t queryOffsetx);
+	virtual COMPV_ERROR_CODE drawMatches(const compv_float32_t* trainX, const compv_float32_t* trainY, const compv_float32_t* queryX, const compv_float32_t* queryY, size_t count, size_t queryOffsetx);
 
 private:
     CompVGLSurfacePtr m_ptrCoverSurfaceGL;

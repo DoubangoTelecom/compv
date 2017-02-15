@@ -19,7 +19,6 @@
 #include "compv/drawing/compv_drawing_window_sdl.h"
 #include "compv/drawing/compv_drawing_window_egl_android.h"
 #include "compv/drawing/compv_drawing_canvas_skia.h"
-#include "compv/gl/drawing/compv_gl_canvas_impl.h"
 
 #define COMPV_THIS_CLASSNAME "CompVDrawing"
 
@@ -75,13 +74,6 @@ COMPV_ERROR_CODE CompVDrawing::init()
 #if COMPV_OS_ANDROID
     COMPV_DEBUG_INFO("[Drawing] module: android API version: %d", __ANDROID_API__);
     COMPV_CHECK_CODE_BAIL(err = CompVWindowFactory::set(&CompVWindowFactoryEGLAndroid));
-#endif
-
-    /* Canvas */
-#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
-	COMPV_CHECK_CODE_BAIL(err = CompVCanvasFactory::set(&CompVCanvasFactoryGL));
-#elif HAVE_SKIA
-    COMPV_CHECK_CODE_BAIL(err = CompVCanvasFactory::set(&CompVCanvasFactorySkia));
 #endif
 
     /* SDL */

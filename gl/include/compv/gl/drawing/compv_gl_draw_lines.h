@@ -34,12 +34,10 @@ public:
 	COMPV_OBJECT_GET_ID(CompVGLDrawLines);
 
 	COMPV_ERROR_CODE lines(const CompVGLPoint2D* lines, GLsizei count);
-	COMPV_ERROR_CODE matches(const CompVGLPoint2D* lines, GLsizei count, GLsizei queryOffsetx);
+	COMPV_ERROR_CODE matches(const CompVGLPoint2D* lines, GLsizei count);
+	COMPV_ERROR_CODE draw(const CompVGLPoint2D* lines, GLsizei count, COMPV_GL_LINE_TYPE type = COMPV_GL_LINE_TYPE_SIMPLE);
 
 	static COMPV_ERROR_CODE newObj(CompVGLDrawLinesPtrPtr drawLines);
-
-private:
-	COMPV_ERROR_CODE draw(const CompVGLPoint2D* lines, GLsizei count, COMPV_GL_LINE_TYPE type = COMPV_GL_LINE_TYPE_SIMPLE, GLsizei offset1x = 0, GLsizei offset2x = 0);
 
 private:
 	GLint m_fboWidth;
