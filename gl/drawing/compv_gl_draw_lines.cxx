@@ -15,14 +15,14 @@ static const std::string& kProgramVertexData =
 "	precision mediump float;"
 #	endif
 "	attribute vec2 position;"
-"	attribute vec3 color;"
+"	attribute vec4 color;"
 "	varying vec4 colorVarying;"
 "	uniform mat4 MVP;"
 "	uniform float pointSize;"
 "	void main() {"
 "		gl_PointSize = pointSize;"
 "		gl_Position = MVP * vec4(position, 1.0, 1.0);"
-"		colorVarying = vec4(color, 1.0);"
+"		colorVarying = vec4(color);"
 "	}";
 
 static const std::string& kProgramFragmentData =
@@ -70,9 +70,6 @@ COMPV_ERROR_CODE CompVGLDrawLines::lines(const CompVGLPoint2D* lines, GLsizei co
 	COMPV_CHECK_EXP_BAIL(!fboWidth || !fboHeight, (err = COMPV_ERROR_CODE_E_GL), "fboWidth or fboHeight is equal to zero");
 	bFirstTimeOrChanged = (m_fboWidth != fboWidth || m_fboHeight != fboHeight);
 
-	// Submit vertices data
-	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLPoint2D) * count, lines, GL_STATIC_DRAW);
-
 	if (!CompVGLInfo::extensions::vertex_array_object() || bFirstTimeOrChanged) {
 		// Set position attribute
 		uName = COMPV_glGetAttribLocation(program()->name(), "position");
@@ -82,7 +79,7 @@ COMPV_ERROR_CODE CompVGLDrawLines::lines(const CompVGLPoint2D* lines, GLsizei co
 		// Set color attribute
 		uName = COMPV_glGetAttribLocation(program()->name(), "color");
 		COMPV_glEnableVertexAttribArray(uName);
-		COMPV_glVertexAttribPointer(uName, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoint2D), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoint2D, color)));
+		COMPV_glVertexAttribPointer(uName, 4, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoint2D), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoint2D, color)));
 
 		// Set projection
 		COMPV_CHECK_CODE_BAIL(err = CompVGLDraw::setOrtho(0, static_cast<GLfloat>(fboWidth), static_cast<GLfloat>(fboHeight), 0, -1, 1));
@@ -91,6 +88,9 @@ COMPV_ERROR_CODE CompVGLDrawLines::lines(const CompVGLPoint2D* lines, GLsizei co
 	// Set PointSize
 	uName = COMPV_glGetUniformLocation(program()->name(), "pointSize");
 	COMPV_glUniform1f(uName, pointSize);
+
+	// Submit vertices data
+	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLPoint2D) * count, lines, GL_STATIC_DRAW);
 
 	// Draw points
 	COMPV_glLineWidth(linewidth);

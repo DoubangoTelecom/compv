@@ -64,6 +64,7 @@ COMPV_ERROR_CODE CompVGLCanvas::drawLines(const compv_float32_t* x0, const compv
 			(glMemLine_ + 1)->color[0] = glMemLine_->color[0] = (*color)[0];
 			(glMemLine_ + 1)->color[1] = glMemLine_->color[1] = (*color)[1];
 			(glMemLine_ + 1)->color[2] = glMemLine_->color[2] = (*color)[2];
+			(glMemLine_ + 1)->color[3] = glMemLine_->color[3] = 1.f; // alpha
 		}
 	}
 	else {
@@ -71,6 +72,7 @@ COMPV_ERROR_CODE CompVGLCanvas::drawLines(const compv_float32_t* x0, const compv
 			(glMemLine_ + 1)->color[0] = glMemLine_->color[0] = options->color[0];
 			(glMemLine_ + 1)->color[1] = glMemLine_->color[1] = options->color[1];
 			(glMemLine_ + 1)->color[2] = glMemLine_->color[2] = options->color[2];
+			(glMemLine_ + 1)->color[3] = glMemLine_->color[3] = options->color[3];
 		}
 	}
 
@@ -109,6 +111,7 @@ COMPV_ERROR_CODE CompVGLCanvas::drawInterestPoints(const std::vector<CompVIntere
 		glMemPoint_->color[0] = (*color)[0];
 		glMemPoint_->color[1] = (*color)[1];
 		glMemPoint_->color[2] = (*color)[2];
+		glMemPoint_->color[3] = 1.f; // alpha
 	}
 
 	COMPV_CHECK_CODE_BAIL(err = m_ptrFBO->bind());

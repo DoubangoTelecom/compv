@@ -25,7 +25,7 @@ typedef struct {
 
 typedef struct {
 	GLfloat position[2]; // x, y
-	GLfloat color[3]; // r, g, b
+	GLfloat color[4]; // r, g, b, a
 } CompVGLPoint2D;
 
 static const GLint kCompVGLNameInvalid = 0;

@@ -15,13 +15,13 @@ static const std::string& kProgramVertexData =
 "	precision mediump float;"
 #	endif
 "	attribute vec2 position;"
-"	attribute vec3 color;"
+"	attribute vec4 color;"
 "	varying vec4 colorVarying;"
 "	uniform mat4 MVP;"
 "	void main() {"
 "		gl_PointSize = 7.0;"
 "		gl_Position = MVP * vec4(position, 1.0, 1.0);"
-"		colorVarying = vec4(color, 1.0);"
+"		colorVarying = color;"
 "	}";
 
 static const std::string& kProgramFragmentData =
@@ -65,9 +65,6 @@ COMPV_ERROR_CODE CompVGLDrawPoints::points(const CompVGLPoint2D* points, GLsizei
 	COMPV_glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &fboHeight);
 	COMPV_CHECK_EXP_BAIL(!fboWidth || !fboHeight, (err = COMPV_ERROR_CODE_E_GL), "fboWidth or fboHeight is equal to zero");
 	bFirstTimeOrChanged = (m_fboWidth != fboWidth || m_fboHeight != fboHeight);
-
-	// Submit vertices data
-	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLPoint2D) * count, points, GL_STATIC_DRAW);
 	
 	if (!CompVGLInfo::extensions::vertex_array_object() || bFirstTimeOrChanged) {
 		// Set position attribute
@@ -78,11 +75,14 @@ COMPV_ERROR_CODE CompVGLDrawPoints::points(const CompVGLPoint2D* points, GLsizei
 		// Set color attribute
 		GLuint uNameColor = COMPV_glGetAttribLocation(program()->name(), "color");
 		COMPV_glEnableVertexAttribArray(uNameColor);
-		COMPV_glVertexAttribPointer(uNameColor, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoint2D), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoint2D, color)));
+		COMPV_glVertexAttribPointer(uNameColor, 4, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoint2D), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoint2D, color)));
 
 		// Set projection
 		COMPV_CHECK_CODE_BAIL(err = CompVGLDraw::setOrtho(0, static_cast<GLfloat>(fboWidth), static_cast<GLfloat>(fboHeight), 0, -1, 1));
 	}
+
+	// Submit vertices data
+	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLPoint2D) * count, points, GL_STATIC_DRAW);
 
 	// Draw points
 	COMPV_glViewport(0, 0, static_cast<GLsizei>(fboWidth), static_cast<GLsizei>(fboHeight));

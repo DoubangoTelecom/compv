@@ -130,9 +130,7 @@ COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const compv_float64_t*
 {
 	COMPV_CHECK_EXP_RETURN(!trainX || !trainY || !queryX || !queryY || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-#if 0 // TODO(dmi)
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED_GPU("No SIMD or GPU implementation found"); // Add SIMD for "Float64 -> FLoat32 convertion" in CompVBase::MathCvt
-#endif
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED_GPU("No SIMD or GPU implementation found"); // Add SIMD for "Float64 -> FLoat32 convertion" in CompVMathUtils::static_cast
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	compv_float32_t *trainX_ = NULL, *trainY_ = NULL, *queryX_ = NULL, *queryY_ = NULL;

@@ -13,7 +13,7 @@ using namespace compv;
 #define CAMERA_IDX				0
 #define CAMERA_WIDTH			1280
 #define CAMERA_HEIGHT			720
-#define CAMERA_FPS				25
+#define CAMERA_FPS				30
 #define CAMERA_SUBTYPE			COMPV_SUBTYPE_PIXELS_YUY2
 #define CAMERA_AUTOFOCUS		true
 

@@ -5,7 +5,7 @@ using namespace compv;
 #define CAMERA_IDX			0
 #define CAMERA_WIDTH		1280
 #define CAMERA_HEIGHT		720
-#define CAMERA_FPS			25
+#define CAMERA_FPS			30
 #define CAMERA_SUBTYPE		COMPV_SUBTYPE_PIXELS_YUY2
 #define CAMERA_AUTOFOCUS	true
 
@@ -70,7 +70,7 @@ public:
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(image));
 			COMPV_CHECK_CODE_BAIL(err = m_ptrFAST->process(image, m_vecInterestPoints));
-			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->renderer()->canvas()->drawInterestPoints(m_vecInterestPoints)); // TOD(dmi): canvas should be at surface()
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->renderer()->canvas()->drawInterestPoints(m_vecInterestPoints)); // TODO(dmi): canvas should be at surface()
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->blit());
 		bail:
 			COMPV_CHECK_CODE_NOP(err = m_ptrWindow->endDraw()); // Make sure 'endDraw()' will be called regardless the result
