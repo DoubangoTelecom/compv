@@ -106,10 +106,16 @@ public:
 			// Bounding box arround the recognized object
 			if (recognized) {
 				// TODO(dmi): DrawText("Object Recognized!");
-				static size_t num = 0;
-				COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Object Recognized (%zu)!", num++);
+				static size_t num = 0;								
+				const compv_float64_t* x = m_ptrRectMatched->ptr<compv_float64_t>(0);
+				const compv_float64_t* y = m_ptrRectMatched->ptr<compv_float64_t>(1);
+				compv_float32_t x0[4] = { static_cast<compv_float32_t>(x[0]), static_cast<compv_float32_t>(x[1]), static_cast<compv_float32_t>(x[2]), static_cast<compv_float32_t>(x[3]) };
+				compv_float32_t y0[4] = { static_cast<compv_float32_t>(y[0]), static_cast<compv_float32_t>(y[1]), static_cast<compv_float32_t>(y[2]), static_cast<compv_float32_t>(y[3]) };
+				compv_float32_t x1[4] = { static_cast<compv_float32_t>(x[1]), static_cast<compv_float32_t>(x[2]), static_cast<compv_float32_t>(x[3]), static_cast<compv_float32_t>(x[0]) };
+				compv_float32_t y1[4] = { static_cast<compv_float32_t>(y[1]), static_cast<compv_float32_t>(y[2]), static_cast<compv_float32_t>(y[3]), static_cast<compv_float32_t>(y[0]) };
+				COMPV_CHECK_CODE_BAIL(err = m_ptrMatchingSurfaceLayer->surface()->canvas()->drawLines(x0, y0, x1, y1, 4));
 
-				// TODO(dmi): DrawMatched rectangle
+				COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Object Recognized (%zu)!", num++);
 			}
 
 			COMPV_CHECK_CODE_BAIL(err = m_ptrMatchingSurfaceLayer->blit());
@@ -238,7 +244,7 @@ private:
 		// Find homography
 		COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(&m_ptrHomography, m_ptrGoodMatchesQuery, m_ptrGoodMatchesTrain));
 		// Perspecive transform using homography matrix
-		COMPV_CHECK_CODE_RETURN(CompVMathTransform<compv_float64_t>::perspective2D(m_ptrRectTrain, m_ptrHomography, &m_ptrRectMatched));
+		COMPV_CHECK_CODE_RETURN(CompVMathTransform<compv_float64_t>::perspective2D(&m_ptrRectMatched, m_ptrRectTrain, m_ptrHomography));
 		
 		return COMPV_ERROR_CODE_S_OK;
 	}

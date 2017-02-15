@@ -83,7 +83,15 @@ COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const CompVMatPtr& tra
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const compv_float32_t* trainX, const compv_float32_t* trainY, const compv_float32_t* queryX, const compv_float32_t* queryY, size_t count, size_t queryOffsetx)
+CompVSurfacePtr CompVGLMatchingSurfaceLayer::surface() /*Overrides(CompVMatchingSurfaceLayer)*/
+{
+	if (m_ptrCoverSurfaceGL) {
+		return *m_ptrCoverSurfaceGL;
+	}
+	return NULL;
+}
+
+COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const compv_float32_t* trainX, const compv_float32_t* trainY, const compv_float32_t* queryX, const compv_float32_t* queryY, size_t count, size_t queryOffsetx) /* Private */
 {
 	COMPV_CHECK_EXP_RETURN(!trainX || !trainY || !queryX || !queryY || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
@@ -105,7 +113,7 @@ bail:
 	return err;
 }
 
-COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const compv_float64_t* trainX, const compv_float64_t* trainY, const compv_float64_t* queryX, const compv_float64_t* queryY, size_t count, size_t queryOffsetx)
+COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const compv_float64_t* trainX, const compv_float64_t* trainY, const compv_float64_t* queryX, const compv_float64_t* queryY, size_t count, size_t queryOffsetx) /* Private */
 {
 	COMPV_CHECK_EXP_RETURN(!trainX || !trainY || !queryX || !queryY || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 

@@ -30,7 +30,7 @@ public:
     COMPV_OBJECT_GET_ID(CompVGLMatchingSurfaceLayer);
 
 	virtual COMPV_ERROR_CODE drawMatches(const CompVMatPtr& trainImage, const CompVMatPtr& trainGoodMatches, const CompVMatPtr& queryImage, const CompVMatPtr& queryGoodMatches) override /*Overrides(CompVMatchingSurfaceLayer)*/;
-
+	virtual CompVSurfacePtr surface() override /*Overrides(CompVMatchingSurfaceLayer)*/;
 	virtual COMPV_ERROR_CODE blit() override /*Overries(CompVSurfaceLayer)*/;
 
     COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
