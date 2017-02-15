@@ -330,13 +330,18 @@ bail:
 
 COMPV_ERROR_CODE CompVGLRenderer::drawImage(const CompVMatPtr mat) /*Overrides(CompVGLRenderer)*/
 {
-    COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	return drawImage(mat, NULL);
+}
 
-    // Get pixel format and make sure it's supported
-    COMPV_CHECK_EXP_RETURN(CompVRenderer::pixelFormat() != mat->subType(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+COMPV_ERROR_CODE CompVGLRenderer::drawImage(const CompVMatPtr mat, CompVViewportPtr viewport) // internal function
+{
+	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
 
-    // Check if format changed
+	// Get pixel format and make sure it's supported
+	COMPV_CHECK_EXP_RETURN(CompVRenderer::pixelFormat() != mat->subType(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	// Check if format changed
 	bool bFormatChanged = m_uTexturesCount != mat->planeCount();
 	if (!bFormatChanged) {
 		for (int32_t i = 0; i < static_cast<int32_t>(mat->planeCount()); ++i) {
@@ -346,13 +351,13 @@ COMPV_ERROR_CODE CompVGLRenderer::drawImage(const CompVMatPtr mat) /*Overrides(C
 			}
 		}
 	}
-    if (bFormatChanged) {
-        COMPV_DEBUG_INFO("GL renderer format changed");
-        COMPV_CHECK_CODE_RETURN(deInit());
-    }
+	if (bFormatChanged) {
+		COMPV_DEBUG_INFO("GL renderer format changed");
+		COMPV_CHECK_CODE_RETURN(deInit());
+	}
 
-    // Init if not already done
-    COMPV_CHECK_CODE_RETURN(init(mat));
+	// Init if not already done
+	COMPV_CHECK_CODE_RETURN(init(mat));
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
@@ -363,22 +368,33 @@ COMPV_ERROR_CODE CompVGLRenderer::drawImage(const CompVMatPtr mat) /*Overrides(C
 	COMPV_glBindTexture(GL_TEXTURE_2D, m_ptrBlitter->fbo()->nameTexture());
 
 	// Texture 1+: YUV data format from the renderer, this is the [source]
-    for (size_t t = 0; t < m_uTexturesCount; ++t) {
-        COMPV_glActiveTexture(GLenum(GL_TEXTURE1 + t));
-        COMPV_glBindTexture(GL_TEXTURE_2D, m_uNameTextures[t]);
-        COMPV_glTexSubImage2D(
-            GL_TEXTURE_2D,
-            0,
-            0,
-            0,
-            static_cast<GLsizei>(m_uStridesTexture[t]),
-            static_cast<GLsizei>(m_uHeightsTexture[t]),
+	for (size_t t = 0; t < m_uTexturesCount; ++t) {
+		COMPV_glActiveTexture(GLenum(GL_TEXTURE1 + t));
+		COMPV_glBindTexture(GL_TEXTURE_2D, m_uNameTextures[t]);
+		COMPV_glTexSubImage2D(
+			GL_TEXTURE_2D,
+			0,
+			0,
+			0,
+			static_cast<GLsizei>(m_uStridesTexture[t]),
+			static_cast<GLsizei>(m_uHeightsTexture[t]),
 			m_eFormats[t],
 			m_ePixelDataType,
-            mat->ptr(0, 0, static_cast<int32_t>(t)));
-    }
+			mat->ptr(0, 0, static_cast<int32_t>(t)));
+	}
 
-	COMPV_glViewport(0, 0, static_cast<GLsizei>(m_ptrBlitter->width()), static_cast<GLsizei>(m_ptrBlitter->height()));
+	// Set viewport
+	if (viewport) {
+		// Map viewport to screen rectangle
+		CompVRect viewportRect;
+		COMPV_CHECK_CODE_BAIL(err = CompVViewport::toRect(viewport, &viewportRect));
+		COMPV_glViewport(static_cast<GLsizei>(viewportRect.left), static_cast<GLsizei>(viewportRect.top), static_cast<GLsizei>(viewportRect.right), static_cast<GLsizei>(viewportRect.bottom));
+	}
+	else {
+		COMPV_glViewport(0, 0, static_cast<GLsizei>(m_ptrBlitter->width()), static_cast<GLsizei>(m_ptrBlitter->height()));
+	}
+
+	// Draw elements
 	COMPV_glDrawElements(GL_TRIANGLES, m_ptrBlitter->indicesCount(), GL_UNSIGNED_BYTE, 0);
 
 bail:
@@ -389,7 +405,7 @@ bail:
 		COMPV_glBindTexture(GL_TEXTURE_2D, kCompVGLNameInvalid);
 	}
 	COMPV_CHECK_CODE_NOP(m_ptrBlitter->unbind());
-    return err;
+	return err;
 }
 
 COMPV_ERROR_CODE CompVGLRenderer::close()

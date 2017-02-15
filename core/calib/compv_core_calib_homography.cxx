@@ -59,6 +59,14 @@ COMPV_ERROR_CODE CompVHomography<T>::find(CompVMatPtrPtr H, const CompVMatPtr &s
 	COMPV_CHECK_EXP_RETURN(!H || !src || !dst || src->rows() != 3 || dst->rows() != 3 || src->cols() < 4 || src->cols() != dst->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("This code is very odd. Rewrite and make ransac independent. Sad!!");
+	
+	// Check generic type
+	COMPV_CHECK_EXP_RETURN(src->subType() != dst->subType() || (src->subType() != COMPV_SUBTYPE_RAW_FLOAT32 && src->subType() != COMPV_SUBTYPE_RAW_FLOAT64) && !src->isRawTypeMatch<T>(),
+		COMPV_ERROR_CODE_E_INVALID_SUBTYPE, "Invalid generic type");
+	if (src->subType() == COMPV_SUBTYPE_RAW_FLOAT32) {
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Generic type mismatch");
+		return COMPV_ERROR_CODE_E_INVALID_SUBTYPE;
+	}
 
 	// Make sure coordinates are homogeneous 2D
 	size_t numPoints_ = src->cols();

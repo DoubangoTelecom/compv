@@ -33,10 +33,10 @@ COMPV_ERROR_CODE CompVGLCanvas::drawText(const void* textPtr, size_t textLengthI
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLCanvas::drawLine(int x0, int y0, int x1, int y1) /*Overrides(CompVCanvasInterface)*/
+COMPV_ERROR_CODE CompVGLCanvas::drawLines(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count) /*Overrides(CompVCanvasInterface)*/
 {
     COMPV_GL_FBO_AUTOBIND(*m_ptrFBO);
-    COMPV_CHECK_CODE_RETURN(m_ptrImpl->drawLine(x0, y0, x1, y1));
+    COMPV_CHECK_CODE_RETURN(m_ptrImpl->drawLines(x0, y0, x1, y1, count));
     unMakeEmpty();
     return COMPV_ERROR_CODE_S_OK;
 }

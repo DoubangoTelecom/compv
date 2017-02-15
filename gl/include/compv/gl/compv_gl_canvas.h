@@ -33,7 +33,7 @@ public:
     }
 
     virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) override /*Overrides(CompVCanvasInterface)*/;
-	virtual COMPV_ERROR_CODE drawLine(int x0, int y0, int x1, int y1) override /*Overrides(CompVCanvasInterface)*/;
+	virtual COMPV_ERROR_CODE drawLines(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count) override /*Overrides(CompVCanvasInterface)*/;
 	virtual COMPV_ERROR_CODE drawInterestPoints(const std::vector<CompVInterestPoint >& interestPoints) override /*Overrides(CompVCanvasInterface)*/;
 
     COMPV_ERROR_CODE close();

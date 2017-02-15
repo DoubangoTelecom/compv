@@ -86,17 +86,22 @@ CompVCanvasPtr CompVGLSurface::canvas() /*Overrides(CompVSurface)*/
 
 COMPV_ERROR_CODE CompVGLSurface::drawImage(const CompVMatPtr mat) /*Overrides(CompVSurface)*/
 {
-    COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
-    COMPV_CHECK_CODE_RETURN(init());
+	return drawImage(mat, NULL);
+}
 
-    const COMPV_SUBTYPE pixelFormat = static_cast<COMPV_SUBTYPE>(mat->subType());
-    if (!m_ptrRenderer || m_ptrRenderer->pixelFormat() != pixelFormat) {
-        COMPV_CHECK_CODE_RETURN(CompVGLRenderer::newObj(&m_ptrRenderer, pixelFormat));
-    }
-    COMPV_CHECK_CODE_RETURN(m_ptrRenderer->drawImage(mat));
+COMPV_ERROR_CODE CompVGLSurface::drawImage(const CompVMatPtr mat, CompVViewportPtr viewport) // internal function
+{
+	COMPV_CHECK_EXP_RETURN(!mat || mat->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
+	COMPV_CHECK_CODE_RETURN(init());
 
-    return COMPV_ERROR_CODE_S_OK;
+	const COMPV_SUBTYPE pixelFormat = static_cast<COMPV_SUBTYPE>(mat->subType());
+	if (!m_ptrRenderer || m_ptrRenderer->pixelFormat() != pixelFormat) {
+		COMPV_CHECK_CODE_RETURN(CompVGLRenderer::newObj(&m_ptrRenderer, pixelFormat));
+	}
+	COMPV_CHECK_CODE_RETURN(m_ptrRenderer->drawImage(mat, viewport));
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVGLSurface::blit(const CompVGLFboPtr ptrFboSrc, const CompVGLFboPtr ptrFboDst)
@@ -104,6 +109,7 @@ COMPV_ERROR_CODE CompVGLSurface::blit(const CompVGLFboPtr ptrFboSrc, const CompV
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
     COMPV_CHECK_EXP_RETURN(!ptrFboSrc || (!ptrFboDst && ptrFboDst != kCompVGLPtrSystemFrameBuffer), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	CompVRect src, dst, view;
     COMPV_CHECK_CODE_BAIL(err = init());
 
     COMPV_CHECK_CODE_BAIL(err = m_ptrBlitter->bind()); // bind to VAO and activate the program
@@ -117,25 +123,17 @@ COMPV_ERROR_CODE CompVGLSurface::blit(const CompVGLFboPtr ptrFboSrc, const CompV
 
     COMPV_glActiveTexture(GL_TEXTURE0);
     COMPV_glBindTexture(GL_TEXTURE_2D, ptrFboSrc->nameTexture());
-    // FIXME: compute once
 
-    {
-        COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // FIXME: compute once
-        CompVRect rcViewport;
-        const size_t dstWidth = ptrFboDst ? ptrFboDst->width() : width();
-        const size_t dstHeight = ptrFboDst ? ptrFboDst->height() : height();
-        COMPV_CHECK_CODE_BAIL(err = CompVViewport::viewport(
-                                        CompVRect::makeFromWidthHeight(0, 0, static_cast<int>(ptrFboSrc->width()), static_cast<int>(ptrFboSrc->height())),
-                                        CompVRect::makeFromWidthHeight(0, 0, static_cast<int>(dstWidth), static_cast<int>(dstHeight)),
-                                        m_ptrViewport, &rcViewport));
-        const GLsizei viewportW = static_cast<GLsizei>(rcViewport.right - rcViewport.left);
-        const GLsizei viewportH = static_cast<GLsizei>(rcViewport.bottom - rcViewport.top);
-        const GLsizei viewportX = static_cast<GLsizei>(rcViewport.left);
-        const GLsizei viewportY = (ptrFboDst == kCompVGLPtrSystemFrameBuffer) ? rcViewport.top : static_cast<GLsizei>(CompVViewport::yFromBottomLeftToTopLeft(static_cast<int>(dstHeight), static_cast<int>(ptrFboSrc->height()), rcViewport.top));
-        COMPV_glViewport(viewportX, viewportY, viewportW, viewportH);
-    }
+	// Set viewport
+	src.left = src.top = dst.left = dst.top = 0;
+	src.right = static_cast<int>(ptrFboSrc ? ptrFboSrc->width() : width());
+	src.bottom = static_cast<int>(ptrFboSrc ? ptrFboSrc->height() : height());
+	dst.right = static_cast<int>(ptrFboDst ? ptrFboDst->width() : width());
+	dst.bottom = static_cast<int>(ptrFboDst ? ptrFboDst->height() : height());
+	COMPV_CHECK_CODE_BAIL(err = CompVViewport::viewport(src, dst, viewport(), &view));
+	COMPV_glViewport(static_cast<GLsizei>(view.left), static_cast<GLsizei>(view.top), static_cast<GLsizei>(view.right - view.left), static_cast<GLsizei>(view.bottom - view.top));
 
-    //glViewport(0, 0, static_cast<GLsizei>(dstWidth), static_cast<GLsizei>(dstHeight));
+	// Draw elements
     COMPV_glDrawElements(GL_TRIANGLES, m_ptrBlitter->indicesCount(), GL_UNSIGNED_BYTE, 0);
 
 bail:
@@ -156,7 +154,7 @@ COMPV_ERROR_CODE CompVGLSurface::blitRenderer(const CompVGLFboPtr ptrFboDst)
 }
 
 // This update the destination size for blitting not the texture size
-// FIXME: rename to something more evident
+// FIXME: rename to something more obvious
 COMPV_ERROR_CODE CompVGLSurface::updateSize(size_t newWidth, size_t newHeight)
 {
     if (CompVSurface::m_nWidth != newWidth || CompVSurface::m_nHeight != newHeight) {
@@ -214,7 +212,7 @@ COMPV_ERROR_CODE CompVGLSurface::newObj(CompVGLSurfacePtrPtr glSurface, size_t w
     CompVGLSurfacePtr glSurface_ = new CompVGLSurface(width, height);
     COMPV_CHECK_EXP_RETURN(!glSurface_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     COMPV_CHECK_CODE_RETURN(CompVGLBlitter::newObj(&glSurface_->m_ptrBlitter));
-    COMPV_CHECK_CODE_RETURN(CompVViewport::newObj(&glSurface_->m_ptrViewport, CompViewportSizeFlags::makeDynamicAspectRatio()));
+    COMPV_CHECK_CODE_RETURN(CompVViewport::newObj(&glSurface_->m_ptrViewport, CompViewportSizeFlags::makeDynamicAspectRatio(), static_cast<int>(0), static_cast<int>(0), static_cast<int>(width), static_cast<int>(height)));
 
     *glSurface = glSurface_;
     return COMPV_ERROR_CODE_S_OK;

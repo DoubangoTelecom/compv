@@ -23,6 +23,11 @@ typedef struct {
     GLfloat TexCoord[2];
 } CompVGLVertex;
 
+typedef struct {
+	GLfloat position[2]; // x, y
+	GLfloat color[3]; // r, g, b
+} CompVGLPoint2D;
+
 static const GLint kCompVGLNameInvalid = 0;
 static const GLint kCompVGLNameSystemFrameBuffer = 0;
 static const GLint kCompVGLNameSystemRenderBuffer = 0;

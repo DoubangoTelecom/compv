@@ -6,7 +6,11 @@
 */
 #include "compv/gl/compv_gl_surfacelayer_matching.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
+#include "compv/gl/compv_gl_func.h"
 #include "compv/base/math/compv_math.h"
+#include "compv/base/time/compv_time.h" // FIXME: remove
+
+#define COMPV_THIS_CLASSNAME	"CompVGLMatchingSurfaceLayer"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -22,54 +26,154 @@ CompVGLMatchingSurfaceLayer::~CompVGLMatchingSurfaceLayer()
 
 }
 
-COMPV_OVERRIDE_IMPL0("CompVMatchingSurfaceLayer", CompVGLMatchingSurfaceLayer::drawMatches)(CompVMatPtr trainImage, CompVMatPtr queryImage)
+COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const CompVMatPtr& trainImage, const CompVMatPtr& trainGoodMatches, const CompVMatPtr& queryImage, const CompVMatPtr& queryGoodMatches) /*Overrides(CompVMatchingSurfaceLayer)*/
 {
-    COMPV_CHECK_EXP_RETURN(!trainImage || !queryImage || trainImage->isEmpty() || queryImage->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!trainImage || trainImage->isEmpty() || !queryImage || queryImage->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-    size_t coverWidth = trainImage->cols() + kTrainQuerySeparatorWidth + queryImage->cols();
-    size_t coverHeight = COMPV_MATH_MAX(trainImage->rows(), queryImage->rows());
+	size_t coverWidth = trainImage->cols() + kTrainQuerySeparatorWidth + queryImage->cols();
+	size_t coverHeight = COMPV_MATH_MAX(trainImage->rows(), queryImage->rows());
 
-    // Create/FBO used in the cover surface
-    COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blitter()->requestFBO(coverWidth, coverHeight));
+	// Create/FBO used in the cover surface
+	COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blitter()->requestFBO(coverWidth, coverHeight));
 
-    if (m_ptrTrainSurfaceGL->isActive() && m_ptrQuerySurfaceGL->isActive() && m_ptrCoverSurfaceGL->isActive()) {
-        CompVGLFboPtr fboCover = m_ptrCoverSurfaceGL->blitter()->fbo();
-        // FIXME
-        static const int trainPoint[] = { 463, 86 };
-        static const int queryPoint[] = { 463, 86 };
-        static int count = 0;
-        char buff_[33] = { 0 };
-        snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(count++));
-        std::string text = "Hello doubango telecom [" + std::string(buff_) + "]";
+	if (m_ptrTrainSurfaceGL->isActive() && m_ptrQuerySurfaceGL->isActive() && m_ptrCoverSurfaceGL->isActive()) {
+		CompVGLFboPtr fboCover = m_ptrCoverSurfaceGL->blitter()->fbo();
+		// FIXME
+		static const int trainPoint[] = { 463, 86 };
+		static const int queryPoint[] = { 463, 86 };
+		static int count = 0;
+		char buff_[33] = { 0 };
+		snprintf(buff_, sizeof(buff_), "%d", static_cast<int>(count++));
+		std::string text = "Hello doubango telecom [" + std::string(buff_) + "]";
 
-        const int offsetx = static_cast<int>(kTrainQuerySeparatorWidth + trainImage->cols());
+		const compv_float32_t x0[] = { 0, 50, 200, 300 };
+		const compv_float32_t y0[] = { 0, 50, 200, 300 };
+		const compv_float32_t x1[] = { 50, 500, 600, 700 };
+		const compv_float32_t y1[] = { 50, 500, 600, 700 };
 
-        // TODO(dmi): This is too slow, maybe use two textures and program a shader
+		const int queryOffsetX = static_cast<int>(kTrainQuerySeparatorWidth + trainImage->cols());
 
-        // Draw Train points
-        COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->drawImage(trainImage));
-        COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->renderer()->canvas()->drawText(text.c_str(), text.length(), trainPoint[0], trainPoint[1]));
-        COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->viewport()->reset(CompViewportSizeFlags::makeStatic(), 0, 0, static_cast<int>(trainImage->cols()), static_cast<int>(trainImage->rows())));
-        COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->blitRenderer(fboCover));
+		const int trainTop = static_cast<int>(CompVViewport::yFromBottomLeftToTopLeft(static_cast<int>(fboCover->height()), static_cast<int>(trainImage->rows()), 0));
+#if 0
+		CompVViewportPtr viewport;
+		COMPV_CHECK_CODE_RETURN(CompVViewport::newObj(&viewport, CompViewportSizeFlags::makeStatic(), 0, 0, static_cast<int>(trainImage->cols()), static_cast<int>(trainImage->rows())));
+		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->drawImage(trainImage, viewport));
+		//COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->renderer()->canvas()->drawInterestPoints(trainInterestPoints));
+		//COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blitRenderer(fboCover));
 
-        // Draw Query points
-        COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->drawImage(queryImage));
-        COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->renderer()->canvas()->drawText(text.c_str(), text.length(), queryPoint[0], queryPoint[1]));
-        COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->viewport()->reset(CompViewportSizeFlags::makeStatic(), offsetx, 0, static_cast<int>(queryImage->cols()), static_cast<int>(queryImage->rows())));
-        COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->blitRenderer(fboCover));
+		//COMPV_CHECK_CODE_RETURN(viewport->reset(CompViewportSizeFlags::makeStatic(), queryOffsetX, 0, static_cast<int>(queryImage->cols()), static_cast<int>(queryImage->rows())));
+		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->drawImage(queryImage, viewport));
+		//COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->renderer()->canvas()->drawInterestPoints(queryInterestPoints));
+		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blitRenderer(fboCover));
 
-        // Draw lines
-        COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->canvas()->drawLine(trainPoint[0], trainPoint[1], queryPoint[0] + offsetx, queryPoint[1]));
-    }
+		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->viewport()->reset(CompViewportSizeFlags::makeDynamicAspectRatio(), 0, 0, static_cast<int>(coverWidth), static_cast<int>(coverHeight)));
+		COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->canvas()->drawLines(x0, y0, x1, y1, sizeof(x0) / sizeof(x0[1])));
 
-    return COMPV_ERROR_CODE_S_OK;
+		//COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blitRenderer(fboCover));
+#else
+
+		//uint64_t timeStart = CompVTime::nowMillis();
+
+		// TODO(dmi): This is too slow, maybe use two textures and program a shader
+
+		// Draw Train points
+		COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->viewport()->reset(CompViewportSizeFlags::makeStatic(), 0, trainTop, static_cast<int>(trainImage->cols()), static_cast<int>(trainImage->rows())));
+		COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->drawImage(trainImage));
+		//COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->renderer()->canvas()->drawText(text.c_str(), text.length(), trainPoint[0], trainPoint[1]));
+		//COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->renderer()->canvas()->drawInterestPoints(trainInterestPoints));
+		COMPV_CHECK_CODE_RETURN(m_ptrTrainSurfaceGL->blitRenderer(fboCover));
+
+
+		// Draw Query points
+		COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->viewport()->reset(CompViewportSizeFlags::makeStatic(), queryOffsetX, 0, static_cast<int>(queryImage->cols()), static_cast<int>(queryImage->rows())));
+		COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->drawImage(queryImage));
+		//COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->renderer()->canvas()->drawText(text.c_str(), text.length(), queryPoint[0], queryPoint[1]));
+		//COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->renderer()->canvas()->drawInterestPoints(queryInterestPoints));
+		COMPV_CHECK_CODE_RETURN(m_ptrQuerySurfaceGL->blitRenderer(fboCover));
+
+		if (trainGoodMatches && !trainGoodMatches->isEmpty() && queryGoodMatches && !queryGoodMatches->isEmpty()) {
+			COMPV_CHECK_EXP_RETURN(trainGoodMatches->cols() != trainGoodMatches->cols()
+				|| trainGoodMatches->rows() != trainGoodMatches->rows()
+				|| trainGoodMatches->subType() != trainGoodMatches->subType(), COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Query and Train matches must have same type and size");
+			switch (trainGoodMatches->subType()) {
+			case COMPV_SUBTYPE_RAW_FLOAT32:
+				COMPV_CHECK_CODE_RETURN(drawMatches(trainGoodMatches->ptr<compv_float32_t>(0), trainGoodMatches->ptr<compv_float32_t>(1), queryGoodMatches->ptr<compv_float32_t>(0), queryGoodMatches->ptr<compv_float32_t>(1), queryGoodMatches->cols()));
+				break;
+			case COMPV_SUBTYPE_RAW_FLOAT64:
+				COMPV_CHECK_CODE_RETURN(drawMatches(trainGoodMatches->ptr<compv_float64_t>(0), trainGoodMatches->ptr<compv_float64_t>(1), queryGoodMatches->ptr<compv_float64_t>(0), queryGoodMatches->ptr<compv_float64_t>(1), queryGoodMatches->cols()));
+				break;
+			default:
+				COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Expected COMPV_SUBTYPE_RAW_FLOAT32 or COMPV_SUBTYPE_RAW_FLOAT64 as subtype but found %s", CompVGetSubtypeString(trainGoodMatches->subType()));
+				return COMPV_ERROR_CODE_E_INVALID_SUBTYPE;
+			}
+		}
+
+		// Draw lines
+		//COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->canvas()->drawLine(trainPoint[0], trainPoint[1], queryPoint[0] + queryOffsetX, queryPoint[1]));
+		//COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->canvas()->drawLines(x0, y0, x1, y1, sizeof(x0) / sizeof(x0[1])));
+		//COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->viewport()->reset(CompViewportSizeFlags::makeStatic(), 0, 0, static_cast<int>(coverWidth), static_cast<int>(coverHeight)));
+		//COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blitRenderer(fboCover));
+
+		//uint64_t timeEnd = CompVTime::nowMillis();
+		//COMPV_DEBUG_INFO("Elapsed time(DrawMatches) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+#endif
+	}
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_OVERRIDE_IMPL0("CompSurfaceLayer", CompVGLMatchingSurfaceLayer::blit)()
+COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const compv_float32_t* trainX, const compv_float32_t* trainY, const compv_float32_t* queryX, const compv_float32_t* queryY, size_t count)
+{
+	COMPV_CHECK_EXP_RETURN(!trainX || !trainY || !queryX || !queryY || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->canvas()->drawLines(trainX, trainY, queryX, queryY, count));
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const compv_float64_t* trainX, const compv_float64_t* trainY, const compv_float64_t* queryX, const compv_float64_t* queryY, size_t count)
+{
+	COMPV_CHECK_EXP_RETURN(!trainX || !trainY || !queryX || !queryY || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED_GPU("No SIMD or GPU implementation found"); // Add SIMD for "Float64 -> FLoat32 convertion" in CompVBase::MathCvt
+
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	compv_float32_t *trainX_ = NULL, *trainY_ = NULL, *queryX_ = NULL, *queryY_ = NULL;
+
+	trainX_ = reinterpret_cast<compv_float32_t*>(CompVMem::malloc(sizeof(compv_float32_t) * count));
+	COMPV_CHECK_EXP_BAIL(!trainX_, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
+	trainY_ = reinterpret_cast<compv_float32_t*>(CompVMem::malloc(sizeof(compv_float32_t) * count));
+	COMPV_CHECK_EXP_BAIL(!trainY_, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
+	queryX_ = reinterpret_cast<compv_float32_t*>(CompVMem::malloc(sizeof(compv_float32_t) * count));
+	COMPV_CHECK_EXP_BAIL(!queryX_, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
+	queryY_ = reinterpret_cast<compv_float32_t*>(CompVMem::malloc(sizeof(compv_float32_t) * count));
+	COMPV_CHECK_EXP_BAIL(!queryY_, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
+
+	for (size_t i = 0; i < count; ++i) {
+		trainX_[i] = static_cast<compv_float32_t>(trainX[i]);
+		trainY_[i] = static_cast<compv_float32_t>(trainY[i]);
+		queryX_[i] = static_cast<compv_float32_t>(queryX[i]);
+		queryY_[i] = static_cast<compv_float32_t>(queryY[i]);
+	}
+
+	COMPV_CHECK_CODE_BAIL(err = drawMatches(trainX_, trainY_, queryX_, queryY_, count));
+
+bail:
+	CompVMem::free(reinterpret_cast<void**>(&trainX_));
+	CompVMem::free(reinterpret_cast<void**>(&trainY_));
+	CompVMem::free(reinterpret_cast<void**>(&queryX_));
+	CompVMem::free(reinterpret_cast<void**>(&queryY_));
+	return err;
+}
+
+
+COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::blit() /*Overries(CompVSurfaceLayer)*/
 {
     if (m_ptrCoverSurfaceGL && m_ptrCoverSurfaceGL->isActive()) {
         CompVGLFboPtr fboCover = m_ptrCoverSurfaceGL->blitter()->fbo();
-        COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blit(fboCover, kCompVGLPtrSystemFrameBuffer));
+		if (fboCover) {
+			COMPV_CHECK_CODE_RETURN(m_ptrCoverSurfaceGL->blit(fboCover, kCompVGLPtrSystemFrameBuffer));
+		}
     }
     return COMPV_ERROR_CODE_S_OK;
 }

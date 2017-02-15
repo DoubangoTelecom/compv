@@ -11,6 +11,7 @@
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/base/drawing/compv_renderer.h"
+#include "compv/base/drawing/compv_viewport.h"
 #include "compv/gl/compv_gl_canvas.h"
 #include "compv/gl/compv_gl_blitter.h"
 
@@ -40,6 +41,7 @@ public:
 	virtual CompVCanvasPtr canvas() override /*Overrides(CompVGLRenderer)*/;
     virtual COMPV_ERROR_CODE drawImage(const CompVMatPtr mat) override /*Overrides(CompVGLRenderer)*/;
 
+	COMPV_ERROR_CODE drawImage(const CompVMatPtr mat, CompVViewportPtr viewport); // internal function
 	COMPV_ERROR_CODE close();
 
     static COMPV_ERROR_CODE newObj(CompVGLRendererPtrPtr glRenderer, COMPV_SUBTYPE ePixelFormat);

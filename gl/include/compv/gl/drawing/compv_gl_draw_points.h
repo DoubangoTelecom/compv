@@ -18,11 +18,6 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-typedef struct {
-	GLfloat position[2]; // x, y
-	GLfloat color[3];
-} CompVGLPoints;
-
 COMPV_OBJECT_DECLARE_PTRS(GLDrawPoints)
 
 class CompVGLDrawPoints : public CompVGLDraw
@@ -33,7 +28,7 @@ public:
 	virtual ~CompVGLDrawPoints();
 	COMPV_OBJECT_GET_ID(CompVGLDrawPoints);
 
-	COMPV_ERROR_CODE process(const CompVGLPoints* points, GLsizei count);
+	COMPV_ERROR_CODE points(const CompVGLPoint2D* points, GLsizei count);
 
 	static COMPV_ERROR_CODE newObj(CompVGLDrawPointsPtrPtr drawPoints);
 

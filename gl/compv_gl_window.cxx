@@ -83,20 +83,28 @@ COMPV_ERROR_CODE CompVGLWindow::beginDraw() /*Overrides(CompVWindow)*/
 
     COMPV_glBindFramebuffer(GL_FRAMEBUFFER, kCompVGLNameSystemFrameBuffer);
     COMPV_glBindRenderbuffer(GL_RENDERBUFFER, kCompVGLNameSystemRenderBuffer);
-    // TODO(dmi): 'GL_DEPTH_TEST' not working with skia:  we need to use 'glPushAttrib(GL_ALL_ATTRIB_BITS); glPopAttrib();' before/after canvas drawing
-    // 'GL_DEPTH_TEST' is needed for 3D projection
-    COMPV_glDisable(GL_DEPTH_TEST);
-    COMPV_glDisable(GL_BLEND);
+	
+	// TODO(dmi): 'GL_DEPTH_TEST' not working with skia:  we need to use 'glPushAttrib(GL_ALL_ATTRIB_BITS); glPopAttrib();' before/after canvas drawing
+	// 'GL_DEPTH_TEST' is needed for 3D projection
+
+	COMPV_glDisable(GL_DEPTH_TEST);
+    COMPV_glEnable(GL_BLEND);
+	COMPV_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #if defined(GL_PROGRAM_POINT_SIZE)
 	COMPV_glEnable(GL_PROGRAM_POINT_SIZE);
 #endif
 #if defined(GL_POINT_SMOOTH)
 	COMPV_glEnable(GL_POINT_SMOOTH); // Circular points
 #endif
+#if defined(GL_LINE_SMOOTH)
+	COMPV_glEnable(GL_LINE_SMOOTH); // Smooth lines
+#endif
 #if defined(GL_POINT_SMOOTH_HINT)
 	COMPV_glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
 #endif
-    COMPV_glViewport(0, 0, static_cast<GLsizei>(CompVWindow::width()), static_cast<GLsizei>(CompVWindow::height())); // FIXME: width and height must be dynamic
+#if defined(GL_LINE_SMOOTH_HINT)
+	COMPV_glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+#endif
     COMPV_glClearColor(0.f, 0.f, 0.f, 1.f);
     COMPV_glClearStencil(0);
     COMPV_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -124,6 +132,19 @@ COMPV_ERROR_CODE CompVGLWindow::endDraw() /*Overrides(CompVWindow)*/
 
     // Swap (aka 'present' the final redering to the window, means switch front/back buffers)
     COMPV_CHECK_CODE_BAIL(err = context()->swapBuffers());
+
+	COMPV_glDisable(GL_DEPTH_TEST);
+	COMPV_glDisable(GL_BLEND);
+
+#if defined(GL_PROGRAM_POINT_SIZE)
+	COMPV_glDisable(GL_PROGRAM_POINT_SIZE);
+#endif
+#if defined(GL_POINT_SMOOTH)
+	COMPV_glDisable(GL_POINT_SMOOTH);
+#endif
+#if defined(GL_LINE_SMOOTH)
+	COMPV_glDisable(GL_LINE_SMOOTH);
+#endif
 
 bail:
     m_bDrawing = false;

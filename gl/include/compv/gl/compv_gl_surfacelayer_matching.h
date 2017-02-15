@@ -29,8 +29,9 @@ public:
     virtual ~CompVGLMatchingSurfaceLayer();
     COMPV_OBJECT_GET_ID(CompVGLMatchingSurfaceLayer);
 
-    COMPV_OVERRIDE_DECL0("CompVMatchingSurfaceLayer", drawMatches)(CompVMatPtr trainImage, CompVMatPtr queryImage) override;
-    COMPV_OVERRIDE_DECL0("CompSurfaceLayer", blit)() override;
+	virtual COMPV_ERROR_CODE drawMatches(const CompVMatPtr& trainImage, const CompVMatPtr& trainGoodMatches, const CompVMatPtr& queryImage, const CompVMatPtr& queryGoodMatches) override /*Overrides(CompVMatchingSurfaceLayer)*/;
+
+	virtual COMPV_ERROR_CODE blit() override /*Overries(CompVSurfaceLayer)*/;
 
     COMPV_ERROR_CODE updateSize(size_t newWidth, size_t newHeight);
     COMPV_ERROR_CODE close();
@@ -38,10 +39,15 @@ public:
     static COMPV_ERROR_CODE newObj(CompVGLMatchingSurfaceLayerPtrPtr layer, size_t width, size_t height);
 
 private:
+	virtual COMPV_ERROR_CODE drawMatches(const compv_float64_t* trainX, const compv_float64_t* trainY, const compv_float64_t* queryX, const compv_float64_t* queryY, size_t count);
+	virtual COMPV_ERROR_CODE drawMatches(const compv_float32_t* trainX, const compv_float32_t* trainY, const compv_float32_t* queryX, const compv_float32_t* queryY, size_t count);
+
+private:
     CompVGLSurfacePtr m_ptrCoverSurfaceGL;
     CompVGLSurfacePtr m_ptrTrainSurfaceGL;
     CompVGLSurfacePtr m_ptrQuerySurfaceGL;
 };
+
 
 COMPV_NAMESPACE_END()
 

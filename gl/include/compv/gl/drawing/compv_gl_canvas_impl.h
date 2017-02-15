@@ -11,6 +11,7 @@
 #include "compv/gl/compv_gl_headers.h"
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES)
 #include "compv/gl/drawing/compv_gl_draw_points.h"
+#include "compv/gl/drawing/compv_gl_draw_lines.h"
 #include "compv/base/drawing/compv_canvas.h"
 
 #if defined(_COMPV_API_H_)
@@ -32,8 +33,8 @@ public:
 	COMPV_OBJECT_GET_ID(CompVGLCanvasImpl);
 
 	virtual COMPV_ERROR_CODE drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) override /*Overrides(CompVCanvasInterface)*/;
-	virtual COMPV_ERROR_CODE drawLine(int x0, int y0, int x1, int y1) override /*Overrides(CompVCanvasInterface)*/;
-	virtual COMPV_ERROR_CODE drawInterestPoints(const std::vector<CompVInterestPoint >& interestPoints) override /*Overrides(CompVCanvasInterface)*/;
+	virtual COMPV_ERROR_CODE drawLines(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count) override /*Overrides(CompVCanvasInterface)*/;
+	virtual COMPV_ERROR_CODE drawInterestPoints(const CompVInterestPointVector & interestPoints) override /*Overrides(CompVCanvasInterface)*/;
 
 	virtual COMPV_ERROR_CODE close() override /*Overrides(CompVCanvasImpl)*/;
 
@@ -43,6 +44,7 @@ private:
 
 private:
 	CompVGLDrawPointsPtr m_ptrDrawPoints;
+	CompVGLDrawLinesPtr m_ptrDrawLines;
 };
 
 COMPV_NAMESPACE_END()

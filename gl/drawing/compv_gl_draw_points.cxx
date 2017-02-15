@@ -51,7 +51,7 @@ CompVGLDrawPoints::~CompVGLDrawPoints()
 
 }
 
-COMPV_ERROR_CODE CompVGLDrawPoints::process(const CompVGLPoints* points, GLsizei count)
+COMPV_ERROR_CODE CompVGLDrawPoints::points(const CompVGLPoint2D* points, GLsizei count)
 {
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	GLint fboWidth = 0, fboHeight = 0;
@@ -67,24 +67,25 @@ COMPV_ERROR_CODE CompVGLDrawPoints::process(const CompVGLPoints* points, GLsizei
 	bFirstTimeOrChanged = (m_fboWidth != fboWidth || m_fboHeight != fboHeight);
 
 	// Submit vertices data
-	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLPoints) * count, points, GL_STATIC_DRAW);
+	COMPV_glBufferData(GL_ARRAY_BUFFER, sizeof(CompVGLPoint2D) * count, points, GL_STATIC_DRAW);
 	
 	if (!CompVGLInfo::extensions::vertex_array_object() || bFirstTimeOrChanged) {
 		// Set position attribute
 		GLuint uNamePosition = COMPV_glGetAttribLocation(program()->name(), "position");
 		COMPV_glEnableVertexAttribArray(uNamePosition);
-		COMPV_glVertexAttribPointer(uNamePosition, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoints), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoints, position)));
+		COMPV_glVertexAttribPointer(uNamePosition, 2, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoint2D), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoint2D, position)));
 
 		// Set color attribute
 		GLuint uNameColor = COMPV_glGetAttribLocation(program()->name(), "color");
 		COMPV_glEnableVertexAttribArray(uNameColor);
-		COMPV_glVertexAttribPointer(uNameColor, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoints), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoints, color)));
+		COMPV_glVertexAttribPointer(uNameColor, 3, GL_FLOAT, GL_FALSE, sizeof(CompVGLPoint2D), reinterpret_cast<const GLvoid *>(offsetof(CompVGLPoint2D, color)));
 
 		// Set projection
 		COMPV_CHECK_CODE_BAIL(err = CompVGLDraw::setOrtho(0, static_cast<GLfloat>(fboWidth), static_cast<GLfloat>(fboHeight), 0, -1, 1));
 	}
 
 	// Draw points
+	COMPV_glViewport(0, 0, static_cast<GLsizei>(fboWidth), static_cast<GLsizei>(fboHeight));
 	COMPV_glDrawArrays(GL_POINTS, 0, count);
 
 	// Update size

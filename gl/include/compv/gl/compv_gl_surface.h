@@ -45,6 +45,8 @@ public:
 	virtual CompVCanvasPtr canvas() override /*Overrides(CompVSurface)*/;
 	virtual COMPV_ERROR_CODE drawImage(const CompVMatPtr mat) override /*Overrides(CompVSurface)*/;
 
+
+	COMPV_ERROR_CODE drawImage(const CompVMatPtr mat, CompVViewportPtr viewport); // internal function
     COMPV_ERROR_CODE blit(const CompVGLFboPtr ptrFboSrc, const CompVGLFboPtr ptrFboDst);
     COMPV_ERROR_CODE blitRenderer(const CompVGLFboPtr ptrFboDst);
 

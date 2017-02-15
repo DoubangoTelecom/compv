@@ -151,6 +151,25 @@ public:
 		return isAligned(COMPV_ALIGNV_SIMD_NEON);
 	};
 
+	template <typename RawType>
+	COMPV_INLINE bool isRawTypeMatch() const {
+		if (m_eType == COMPV_MAT_TYPE_RAW) {
+			switch (m_eSubType) {
+			case COMPV_SUBTYPE_RAW_INT8: return std::is_same<RawType, int8_t>::value;
+			case COMPV_SUBTYPE_RAW_UINT8: return std::is_same<RawType, uint8_t>::value;
+			case COMPV_SUBTYPE_RAW_INT16: return std::is_same<RawType, int16_t>::value;
+			case COMPV_SUBTYPE_RAW_UINT16: return std::is_same<RawType, uint16_t>::value;
+			case COMPV_SUBTYPE_RAW_INT32: return std::is_same<RawType, int32_t>::value;
+			case COMPV_SUBTYPE_RAW_UINT32: return std::is_same<RawType, uint32_t>::value;
+			case COMPV_SUBTYPE_RAW_SIZE: return std::is_same<RawType, size_t>::value;
+			case COMPV_SUBTYPE_RAW_FLOAT32: return std::is_same<RawType, compv_float32_t>::value;
+			case COMPV_SUBTYPE_RAW_FLOAT64: return std::is_same<RawType, compv_float64_t>::value;
+			default: return false;
+			}
+		}
+		return false;
+	}
+
 	COMPV_ERROR_CODE clone(CompVMatPtrPtr clone)const {
 		COMPV_CHECK_EXP_RETURN(!clone, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		CompVMatPtr clone_ = *clone;

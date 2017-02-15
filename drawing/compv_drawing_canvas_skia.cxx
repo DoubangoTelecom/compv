@@ -290,8 +290,9 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawText(const void* textPtr, size_t textL
 #endif
 }
 
-COMPV_ERROR_CODE CompVCanvasImplSkia::drawLine(int x0, int y0, int x1, int y1) /*Overrides(CompVCanvasInterface)*/
+COMPV_ERROR_CODE CompVCanvasImplSkia::drawLines(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count) /*Overrides(CompVCanvasInterface)*/
 {
+#if 0
     COMPV_DEBUG_INFO_CODE_FOR_TESTING();
     GLint bufferWidth = 0, bufferHeight = 0;
     SkSurface *sSurface = NULL;
@@ -367,7 +368,7 @@ COMPV_ERROR_CODE CompVCanvasImplSkia::drawLine(int x0, int y0, int x1, int y1) /
         delete sSurface;
         sSurface = NULL;
     }
-
+#endif
     return COMPV_ERROR_CODE_S_OK;
 }
 

@@ -21,8 +21,8 @@ protected:
     CompVMatchingSurfaceLayer();
 public:
     virtual ~CompVMatchingSurfaceLayer();
-
-    virtual COMPV_ERROR_CODE drawMatches(CompVMatPtr trainImage, CompVMatPtr queryImage) = 0;
+	
+    virtual COMPV_ERROR_CODE drawMatches(const CompVMatPtr& trainImage, const CompVMatPtr& trainGoodMatches, const CompVMatPtr& queryImage, const CompVMatPtr& queryGoodMatches) = 0;
 
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

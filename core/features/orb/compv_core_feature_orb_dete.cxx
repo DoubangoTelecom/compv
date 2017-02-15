@@ -328,7 +328,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 	}
 
 	// Erase points too close to the border
-	CompVInterestPoint::eraseTooCloseToBorder(interestPointsAtLevelN, static_cast<size_t>(imgWidth), static_cast<size_t>(imgHeight), patch_radius);
+	CompVInterestPoint::eraseTooCloseToBorder(interestPointsAtLevelN, static_cast<size_t>(imgWidth), static_cast<size_t>(imgHeight), ((patch_diameter + 5) >> 1));
 
 	// For each point, set level and patch size, compute the orientation, scale (X,Y) coords...
 	for (point_ = interestPointsAtLevelN.begin(); point_ < interestPointsAtLevelN.end(); ++point_) {
