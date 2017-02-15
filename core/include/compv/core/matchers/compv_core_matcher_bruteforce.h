@@ -28,9 +28,9 @@ public:
 	COMPV_OBJECT_GET_ID(CompVMatcherBruteForce);
 
     virtual ~CompVMatcherBruteForce();
-    virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) /*Overrides(CompVCaps)*/;
-    virtual COMPV_ERROR_CODE get(int id, const void** valuePtrPtr, size_t valueSize) /*Overrides(CompVCaps)*/;
-    virtual COMPV_ERROR_CODE process(const CompVMatPtr &queryDescriptions, const CompVMatPtr &trainDescriptions, CompVMatPtrPtr matches) /* Overrides(CompVMatcher) */;
+    virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
+    virtual COMPV_ERROR_CODE get(int id, const void** valuePtrPtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
+    virtual COMPV_ERROR_CODE process(const CompVMatPtr &queryDescriptions, const CompVMatPtr &trainDescriptions, CompVMatPtrPtr matches) override /* Overrides(CompVMatcher) */;
     static COMPV_ERROR_CODE newObj(CompVMatcherPtrPtr matcher);
 
 private:

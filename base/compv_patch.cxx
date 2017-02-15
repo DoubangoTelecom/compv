@@ -10,7 +10,9 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if 0
 static void Moments0110_C(COMPV_ALIGNED(DEFAULT) const uint8_t* top, COMPV_ALIGNED(DEFAULT)const uint8_t* bottom, COMPV_ALIGNED(DEFAULT)const int16_t* x, COMPV_ALIGNED(DEFAULT) const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
+#endif
 
 CompVPatch::CompVPatch()
 	: m_pMaxAbscissas(NULL)
@@ -231,6 +233,7 @@ bail:
 	return err_;
 }
 
+#if 0
 // top, bottom, x, y are allocated with padding which means you can read up to align_fwd(count, alignv)
 static void Moments0110_C(COMPV_ALIGNED(DEFAULT) const uint8_t* top, COMPV_ALIGNED(DEFAULT)const uint8_t* bottom, COMPV_ALIGNED(DEFAULT)const int16_t* x, COMPV_ALIGNED(DEFAULT) const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10)
 {
@@ -247,5 +250,6 @@ static void Moments0110_C(COMPV_ALIGNED(DEFAULT) const uint8_t* top, COMPV_ALIGN
 	*s10 = s10_;
 	*s01 = s01_;
 }
+#endif
 
 COMPV_NAMESPACE_END()

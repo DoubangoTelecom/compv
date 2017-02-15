@@ -139,7 +139,6 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_math_distance_hamming();
 								COMPV_CHECK_CODE_BAIL(err = unittest_math_distance_hamming(), "Math hamming distance unittest failed");
 #endif
-								
 							}
 						}
 					}

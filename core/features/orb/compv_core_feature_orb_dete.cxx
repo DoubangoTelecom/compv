@@ -46,10 +46,10 @@ CompVCornerDeteORB::CompVCornerDeteORB()
 	: CompVCornerDete(COMPV_ORB_ID)
 	, m_nMaxFeatures(COMPV_FEATURE_DETE_ORB_FAST_MAX_FEATURES)
 	, m_nPyramidLevels(-1)
-	, m_nPatchDiameter(COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER)
-	, m_bNMS(COMPV_FEATURE_DETE_ORB_FAST_NON_MAXIMA_SUPP)
 	, m_nThreshold(COMPV_FEATURE_DETE_ORB_FAST_THRESHOLD_DEFAULT)
 	, m_nFastType(COMPV_FAST_TYPE_9)
+	, m_bNMS(COMPV_FEATURE_DETE_ORB_FAST_NON_MAXIMA_SUPP)
+	, m_nPatchDiameter(COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER)
 {
 
 }
@@ -288,7 +288,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 	float sf, sfs, patchSize, nf, orientRad;
 	int m10, m01;
 	CompVInterestPointVector::iterator point_;
-	int patch_diameter = m_nPatchDiameter, patch_radius = (patch_diameter >> 1);
+	int patch_diameter = m_nPatchDiameter;
 	const uint8_t* imgPtr;
 	int imgWidth, imgHeight, imgStride;
 

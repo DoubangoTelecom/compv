@@ -162,8 +162,8 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir);../../../../thirdparties/libraries/android/skia-m55-arm64-release</AdditionalLibraryDirectories>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -175,8 +175,8 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir);../../../../thirdparties/libraries/android/skia-m55-arm64-release</AdditionalLibraryDirectories>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -188,8 +188,8 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir);../../../../thirdparties/libraries/android/skia-m55-armv7a-neon-release</AdditionalLibraryDirectories>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -201,8 +201,8 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir);../../../../thirdparties/libraries/android/skia-m55-armv7a-neon-release</AdditionalLibraryDirectories>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -214,7 +214,8 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -226,7 +227,8 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
@@ -238,7 +240,8 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -250,7 +253,8 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;skia;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(ToolchainPrebuiltPath)\lib\gcc\$(ToolchainName)\$(ToolchainVersion);$(StlLibraryPath);$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

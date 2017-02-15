@@ -16,5 +16,6 @@
     <ClCompile Include="..\..\math_stats_variance.cxx" />
     <ClCompile Include="..\..\math_transform.cxx" />
     <ClCompile Include="..\..\math_calib_homography.cxx" />
+    <ClCompile Include="..\..\math_distance.cxx" />
   </ItemGroup>
 </Project>

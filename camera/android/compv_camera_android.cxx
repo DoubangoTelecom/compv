@@ -210,7 +210,7 @@ COMPV_ERROR_CODE CompVCameraAndroid::set(int id, const void* valuePtr, size_t va
 	}
 }
 
-COMPV_ERROR_CODE CompVCameraAndroid::get(int id, const void*& valuePtr, size_t valueSize) /* Overrides(CompVCaps) */
+COMPV_ERROR_CODE CompVCameraAndroid::get(int id, const void** valuePtrPtr, size_t valueSize) /* Overrides(CompVCaps) */
 {
 	CompVAutoLock<CompVCameraAndroid>(this);
 	COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_NOT_IMPLEMENTED, "CompVCaps::get not implemented for Android camera implementation.");

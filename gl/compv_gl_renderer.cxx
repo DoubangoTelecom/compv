@@ -45,6 +45,9 @@ Y, U, Y, R, G, B are within [0-255] but shaders require [0.0 - 1.0] for color in
 */
 
 static const std::string& kProgramVertexData =
+#if defined(HAVE_OPENGLES)
+"	precision mediump float;"
+#endif
 "	attribute vec4 position;"
 "	attribute vec2 texCoord;"
 "	varying vec2 texCoordVarying;"
@@ -178,6 +181,9 @@ static const std::string& kProgramFragmentDataYUV422P = kProgramFragmentDataYUVP
 static const std::string& kProgramFragmentDataYUV444P = kProgramFragmentDataYUVPlanar;
 
 static const std::string& kProgramFragmentDataRGB24 =
+#if defined(HAVE_OPENGLES)
+"	precision mediump float;"
+#endif
 "	varying vec2 texCoordVarying;"
 "	uniform sampler2D SamplerRGB;"
 "	void main() {"
@@ -185,6 +191,9 @@ static const std::string& kProgramFragmentDataRGB24 =
 "	}";
 
 static const std::string& kProgramFragmentDataBGR24 =
+#if defined(HAVE_OPENGLES)
+"	precision mediump float;"
+#endif
 "	varying vec2 texCoordVarying;"
 "	uniform sampler2D SamplerRGB;"
 "	void main() {"
@@ -192,6 +201,9 @@ static const std::string& kProgramFragmentDataBGR24 =
 "	}";
 
 static const std::string& kProgramFragmentDataBGRA32 =
+#if defined(HAVE_OPENGLES)
+"	precision mediump float;"
+#endif
 "	varying vec2 texCoordVarying;"
 "	uniform sampler2D SamplerRGBA;"
 "	void main() {"
@@ -199,6 +211,9 @@ static const std::string& kProgramFragmentDataBGRA32 =
 "	}";
 
 static const std::string& kProgramFragmentDataABGR32 =
+#if defined(HAVE_OPENGLES)
+"	precision mediump float;"
+#endif
 "	varying vec2 texCoordVarying;"
 "	uniform sampler2D SamplerRGBA;"
 "	void main() {"
@@ -206,6 +221,9 @@ static const std::string& kProgramFragmentDataABGR32 =
 "	}";
 
 static const std::string& kProgramFragmentDataRGBA32 =
+#if defined(HAVE_OPENGLES)
+"	precision mediump float;"
+#endif
 "	varying vec2 texCoordVarying;"
 "	uniform sampler2D SamplerRGBA;"
 "	void main() {"
@@ -213,6 +231,9 @@ static const std::string& kProgramFragmentDataRGBA32 =
 "	}";
 
 static const std::string& kProgramFragmentDataARGB32 =
+#if defined(HAVE_OPENGLES)
+"	precision mediump float;"
+#endif
 "	varying vec2 texCoordVarying;"
 "	uniform sampler2D SamplerRGBA;"
 "	void main() {"
@@ -220,6 +241,9 @@ static const std::string& kProgramFragmentDataARGB32 =
 "	}";
 
 static const std::string& kProgramFragmentDataRGB565Native =
+#if defined(HAVE_OPENGLES)
+"	precision mediump float;"
+#endif
 "	varying vec2 texCoordVarying;"
 "	uniform sampler2D SamplerRG565;"
 "	void main() {"
@@ -258,6 +282,9 @@ static const std::string& kProgramFragmentDataRGB565BE = /* Not optimized, calle
 
 
 static const std::string& kProgramFragmentDataBGR565Native =
+#if defined(HAVE_OPENGLES)
+"	precision mediump float;"
+#endif
 "	varying vec2 texCoordVarying;"
 "	uniform sampler2D SamplerRG565;"
 "	void main() {"

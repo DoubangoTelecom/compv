@@ -102,6 +102,18 @@
     <ClInclude Include="..\include\compv\core\calib\compv_core_calib_homography.h">
       <Filter>include\calib</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\core\matchers\compv_core_matcher_bruteforce.h">
+      <Filter>include\matchers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\matchers\compv_core_matcher_flann.h">
+      <Filter>include\matchers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\orb\compv_core_feature_orb_desc.h">
+      <Filter>include\features\orb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\orb\compv_core_feature_orb_dete.h">
+      <Filter>include\features\orb</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
@@ -121,6 +133,18 @@
     </ClCompile>
     <ClCompile Include="..\calib\compv_core_calib_homography.cxx">
       <Filter>source\calib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\matchers\compv_core_core_matcher_flann.cxx">
+      <Filter>source\matchers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\matchers\compv_matcher_bruteforce.cxx">
+      <Filter>source\matchers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\orb\compv_core_feature_orb_desc.cxx">
+      <Filter>source\features\orb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\orb\compv_core_feature_orb_dete.cxx">
+      <Filter>source\features\orb</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -41,6 +41,7 @@
     <ClInclude Include="..\include\compv\base\android\compv_android_native_activity.h" />
     <ClInclude Include="..\include\compv\base\compv_base.h" />
     <ClInclude Include="..\include\compv\base\compv_bind.h" />
+    <ClInclude Include="..\include\compv\base\compv_bits.h" />
     <ClInclude Include="..\include\compv\base\compv_box.h" />
     <ClInclude Include="..\include\compv\base\compv_box_interestpoint.h" />
     <ClInclude Include="..\include\compv\base\compv_buffer.h" />
@@ -55,9 +56,11 @@
     <ClInclude Include="..\include\compv\base\compv_jni.h" />
     <ClInclude Include="..\include\compv\base\compv_lock.h" />
     <ClInclude Include="..\include\compv\base\compv_mat.h" />
+    <ClInclude Include="..\include\compv\base\compv_matchers.h" />
     <ClInclude Include="..\include\compv\base\compv_md5.h" />
     <ClInclude Include="..\include\compv\base\compv_mem.h" />
     <ClInclude Include="..\include\compv\base\compv_obj.h" />
+    <ClInclude Include="..\include\compv\base\compv_patch.h" />
     <ClInclude Include="..\include\compv\base\compv_sharedlib.h" />
     <ClInclude Include="..\include\compv\base\compv_simd_globals.h" />
     <ClInclude Include="..\include\compv\base\drawing\compv_canvas.h" />
@@ -96,6 +99,7 @@
     <ClInclude Include="..\include\compv\base\intrin\x86\compv_mem_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_convlt.h" />
+    <ClInclude Include="..\include\compv\base\math\compv_math_distance.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_eigen.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_gauss.h" />
     <ClInclude Include="..\include\compv\base\math\compv_math_matrix.h" />
@@ -129,6 +133,7 @@
     <ClCompile Include="..\android\compv_android_native_activity.cxx" />
     <ClCompile Include="..\compv_base.cxx" />
     <ClCompile Include="..\compv_bind.cxx" />
+    <ClCompile Include="..\compv_bits.cxx" />
     <ClCompile Include="..\compv_box.cxx" />
     <ClCompile Include="..\compv_box_interestpoint.cxx" />
     <ClCompile Include="..\compv_buffer.cxx" />
@@ -141,9 +146,11 @@
     <ClCompile Include="..\compv_jni.cxx" />
     <ClCompile Include="..\compv_lock.cxx" />
     <ClCompile Include="..\compv_mat.cxx" />
+    <ClCompile Include="..\compv_matchers.cxx" />
     <ClCompile Include="..\compv_md5.cxx" />
     <ClCompile Include="..\compv_mem.cxx" />
     <ClCompile Include="..\compv_obj.cxx" />
+    <ClCompile Include="..\compv_patch.cxx" />
     <ClCompile Include="..\compv_sharedlib.cxx" />
     <ClCompile Include="..\compv_simd_globals.cxx" />
     <ClCompile Include="..\drawing\compv_canvas.cxx" />
@@ -203,6 +210,7 @@
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_sse2.cxx" />
     <ClCompile Include="..\math\compv_math.cxx" />
     <ClCompile Include="..\math\compv_math_convlt.cxx" />
+    <ClCompile Include="..\math\compv_math_distance.cxx" />
     <ClCompile Include="..\math\compv_math_eigen.cxx" />
     <ClCompile Include="..\math\compv_math_gauss.cxx" />
     <ClCompile Include="..\math\compv_math_matrix.cxx" />

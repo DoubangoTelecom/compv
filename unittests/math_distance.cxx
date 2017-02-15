@@ -11,9 +11,9 @@ COMPV_ERROR_CODE unittest_math_distance_hamming()
 		const char* md5;
 	}
 	COMPV_UNITTEST_HAMMING[] = {
-		2005, 101, "d30eae4b27538e501fe19b66c7d55476",
-		1280, 720, "506d638180bed20c7337b3ff00ca0458",
-		32, 720, "f01a3e4bb7aa79fa602b6fdb14316219", // hamming256
+		{ 2005, 101, "47005cd9900cac52d530e0a3e0f746be" },
+		{ 1280, 720, "2416808864658a997a39007fc1a548c4" },
+		{ 32, 720, "f97c1bfb83b8f9d92e0f2c63b06b8bc8" }, // hamming256
 	};
 
 	const compv_unittest_hamming* test;
@@ -36,7 +36,7 @@ COMPV_ERROR_CODE unittest_math_distance_hamming()
 		}
 
 		CompVMatPtr dist;
-		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int32_t>(&dist, test->height, test->width));
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int32_t>(&dist, 1, test->height)); // each row produce #1 hamming distance -> distance size = (1 x height)
 
 		COMPV_CHECK_CODE_RETURN(CompVMathDistance::hamming(data->ptr<const uint8_t>(), data->cols(), data->rows(), data->stride(), patch1xn->ptr<const uint8_t>(), dist->ptr<int32_t>()));
 

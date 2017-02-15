@@ -39,7 +39,7 @@ COMPV_ERROR_CODE CompVMathTransform<T>::homogeneousToCartesian2D(CompVMatPtrPtr 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found"); 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No fast SIMD x4 implementation found"); // SIMD, Special version with cols == 4 (see deprecated code)
 	
-	CompVMatPtr dst_ = (src == *dst) ? NULL: *dst;
+	CompVMatPtr dst_ = (src == *dst) ? (CompVMatPtr)NULL: *dst;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&dst_, 2, src->cols()));
 	
 	const T* srcX = src->ptr<const T>(0);

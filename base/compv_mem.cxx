@@ -23,6 +23,10 @@ COMPV_NAMESPACE_BEGIN()
 #	define COMPV_MEMALIGN_ALWAYS 1
 #endif
 
+#if !defined(COMPV_MEMALIGN_MINSIZE)
+#	define COMPV_MEMALIGN_MINSIZE 8
+#endif
+
 #if ((defined(_DEBUG) && _DEBUG != 0) || (defined(DEBUG) && DEBUG != 0)) && !defined(COMPV_MEM_CHECK)
 #	define COMPV_MEM_CHECK 1
 #endif
@@ -341,14 +345,15 @@ void CompVMem::free(void** ptr)
     }
 }
 
-void* CompVMem::mallocAligned(size_t size, int alignment/*= CompVMem::bestAlignment()*/)
+void* CompVMem::mallocAligned(size_t size, int alignment_/*= CompVMem::bestAlignment()*/)
 {
     void* pMem;
+	const int alignment = COMPV_MATH_MAX(alignment_, COMPV_MEMALIGN_MINSIZE); // For example, posix_memalign(&pMem, 1, ...) return null on Android
 #if COMPV_OS_WINDOWS && !COMPV_UNDER_OS_CE && !COMPV_OS_WINDOWS_RT
     pMem = _aligned_malloc(size, alignment);
 #elif HAVE_POSIX_MEMALIGN || _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
     pMem = NULL;
-    posix_memalign(&pMem, (size_t)alignment, size); // TODO(dmi): available starting 'android-18'
+    posix_memalign(&pMem, static_cast<size_t>(alignment), size); // TODO(dmi): available starting 'android-18'
 #elif _ISOC11_SOURCE
     pMem = aligned_alloc(alignment, size);
 #else

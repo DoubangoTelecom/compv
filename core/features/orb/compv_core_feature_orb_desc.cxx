@@ -123,7 +123,6 @@ CompVCornerDescORB::CompVCornerDescORB()
 	: CompVCornerDesc(COMPV_ORB_ID)
 	, m_nPatchDiameter(COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER)
 	, m_nPatchBits(COMPV_FEATURE_DETE_ORB_PATCH_BITS)
-	, m_bMediaTypeVideo(false)
 	, m_funBrief256_31_Float32(Brief256_31_Float32_C)
 #if COMPV_FEATURE_DESC_ORB_FXP_DESC
 	, m_funBrief256_31_Fxp(Brief256_31_Fxp_C)
@@ -261,7 +260,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVMatPtr& image_, const Co
 	CompVMatPtr imageAtLevelN;
 	CompVCornerDetePtr& _attachedDete = attachedDete();
 	uint8_t* _descriptionsPtr = NULL;
-	size_t threadsCount = 1, levelsCount, threadStartIdx = 0;
+	size_t levelsCount;
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	CompVCornerDescORBPtr This = this;
 	bool bLevelZeroBlurred = false;

@@ -40,7 +40,7 @@ static COMPV_ERROR_CODE __math_transform_homogeneousToCartesian2D()
 		}
 
 		CompVMatPtr dst;
-		COMPV_CHECK_CODE_RETURN(CompVMathTransform<T>::homogeneousToCartesian2D(src, &dst));
+		COMPV_CHECK_CODE_RETURN(CompVMathTransform<T>::homogeneousToCartesian2D(&dst, src));
 
 		x = dst->ptr<T>(0);
 		y = dst->ptr<T>(1);

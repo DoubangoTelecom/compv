@@ -52,7 +52,6 @@ private:
 	CompVMatPtr m_kern_float;
 	CompVMatPtr m_kern_fxp;
 	CompVMatPtr m_image_blurred_prev;
-	bool m_bMediaTypeVideo;
 	int m_nPatchDiameter;
 	int m_nPatchBits;
 	CompVMatPtr m_ptrImageGray;
