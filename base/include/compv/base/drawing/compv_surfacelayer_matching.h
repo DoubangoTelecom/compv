@@ -24,6 +24,8 @@ public:
 	
     virtual COMPV_ERROR_CODE drawMatches(const CompVMatPtr& trainImage, const CompVMatPtr& trainGoodMatches, const CompVMatPtr& queryImage, const CompVMatPtr& queryGoodMatches) = 0;
 	virtual CompVSurfacePtr surface() = 0;
+	virtual CompVSurfacePtr surfaceTrain() = 0;
+	virtual CompVSurfacePtr surfaceQuery() = 0;
 
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

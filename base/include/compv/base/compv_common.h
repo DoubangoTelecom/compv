@@ -90,6 +90,10 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_NUM_THREADS_SINGLE	1
 #define COMPV_NUM_THREADS_MULTI		-1
 
+#if !defined(COMPV_DRAWING_MATCHES_TRAIN_QUERY_XOFFSET)
+#	define COMPV_DRAWING_MATCHES_TRAIN_QUERY_XOFFSET 32
+#endif
+
 #if !defined(COMPV_PLANE_MAX_COUNT)
 #	define COMPV_PLANE_MAX_COUNT		4
 #endif /* COMPV_PLANE_MAX_COUNT */
@@ -177,6 +181,7 @@ typedef uintptr_t compv_uscalar_t;  /* This type *must* have the width of a gene
 typedef float compv_float32_t;
 typedef double compv_float64_t;
 typedef compv_float32_t compv_float32x2_t[2];
+typedef compv_float32_t compv_float32x4_t[4];
 
 enum COMPV_DEBUG_LEVEL {
     COMPV_DEBUG_LEVEL_INFO = 4,
@@ -335,6 +340,11 @@ enum COMPV_IMAGE_FORMAT {
     COMPV_IMAGE_FORMAT_PNG
 };
 
+enum COMPV_DRAWING_COLOR_TYPE {
+	COMPV_DRAWING_COLOR_TYPE_STATIC,
+	COMPV_DRAWING_COLOR_TYPE_RANDOM
+};
+
 struct CompVImageInfo {
     COMPV_IMAGE_FORMAT format;
     COMPV_SUBTYPE pixelFormat; // COMPV_SUBTYPE_PIXELS_XXX
@@ -461,6 +471,20 @@ public:
 	}
 	CompVDMatch(int queryIdx_, int trainIdx_, int distance_, int imageIdx_ = 0) {
 		init(queryIdx_, trainIdx_, distance_, imageIdx_);
+	}
+};
+
+struct CompVDrawingOptions {
+	COMPV_DRAWING_COLOR_TYPE colorType;
+	compv_float32x4_t color;
+	compv_float32_t pointSize;
+	compv_float32_t lineWidth;
+public:
+	CompVDrawingOptions() {
+		colorType = COMPV_DRAWING_COLOR_TYPE_RANDOM;
+		color[0] = color[1] = color[2] = 0.f, color[3] = 1.f;
+		pointSize = 7.f;
+		lineWidth = 2.f;
 	}
 };
 

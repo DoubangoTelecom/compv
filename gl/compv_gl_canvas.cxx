@@ -23,7 +23,7 @@ CompVGLCanvas::~CompVGLCanvas()
 
 }
 
-COMPV_ERROR_CODE CompVGLCanvas::drawText(const void* textPtr, size_t textLengthInBytes, int x, int y) /*Overrides(CompVCanvasInterface)*/
+COMPV_ERROR_CODE CompVGLCanvas::drawText(const void* textPtr, size_t textLengthInBytes, int x, int y, const CompVDrawingOptions* options COMPV_DEFAULT(NULL)) /*Overrides(CompVCanvasInterface)*/
 {
     COMPV_CHECK_EXP_RETURN(!textPtr || !textLengthInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_GL_FBO_AUTOBIND(*m_ptrFBO);
@@ -32,13 +32,13 @@ COMPV_ERROR_CODE CompVGLCanvas::drawText(const void* textPtr, size_t textLengthI
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLCanvas::drawLines(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count) /*Overrides(CompVCanvasInterface)*/
+COMPV_ERROR_CODE CompVGLCanvas::drawLines(const compv_float32_t* x0, const compv_float32_t* y0, const compv_float32_t* x1, const compv_float32_t* y1, size_t count, const CompVDrawingOptions* options COMPV_DEFAULT(NULL)) /*Overrides(CompVCanvasInterface)*/
 {   
 	COMPV_CHECK_CODE_RETURN(drawLines2(x0, y0, x1, y1, count));
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVGLCanvas::drawInterestPoints(const std::vector<CompVInterestPoint >& interestPoints) /*Overrides(CompVCanvasInterface)*/
+COMPV_ERROR_CODE CompVGLCanvas::drawInterestPoints(const std::vector<CompVInterestPoint >& interestPoints, const CompVDrawingOptions* options COMPV_DEFAULT(NULL)) /*Overrides(CompVCanvasInterface)*/
 {
 	if (interestPoints.empty()) {
 		return COMPV_ERROR_CODE_S_OK;

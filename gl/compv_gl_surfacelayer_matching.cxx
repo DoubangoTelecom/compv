@@ -14,8 +14,6 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-static const size_t kTrainQuerySeparatorWidth = 32;
-
 CompVGLMatchingSurfaceLayer::CompVGLMatchingSurfaceLayer()
 {
 
@@ -30,7 +28,7 @@ COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const CompVMatPtr& tra
 {
 	COMPV_CHECK_EXP_RETURN(!trainImage || trainImage->isEmpty() || !queryImage || queryImage->isEmpty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	size_t coverWidth = trainImage->cols() + kTrainQuerySeparatorWidth + queryImage->cols();
+	size_t coverWidth = trainImage->cols() + COMPV_DRAWING_MATCHES_TRAIN_QUERY_XOFFSET + queryImage->cols();
 	size_t coverHeight = COMPV_MATH_MAX(trainImage->rows(), queryImage->rows());
 	CompVGLFboPtr fboCover = NULL;
 
@@ -39,7 +37,7 @@ COMPV_ERROR_CODE CompVGLMatchingSurfaceLayer::drawMatches(const CompVMatPtr& tra
 
 	if (m_ptrTrainSurfaceGL->isActive() && m_ptrQuerySurfaceGL->isActive() && m_ptrCoverSurfaceGL->isActive()) {
 		fboCover = m_ptrCoverSurfaceGL->blitter()->fbo();
-		const int queryOffsetX = static_cast<int>(kTrainQuerySeparatorWidth + trainImage->cols());
+		const int queryOffsetX = static_cast<int>(COMPV_DRAWING_MATCHES_TRAIN_QUERY_XOFFSET + trainImage->cols());
 		const int trainTop = static_cast<int>(CompVViewport::yFromBottomLeftToTopLeft(static_cast<int>(fboCover->height()), static_cast<int>(trainImage->rows()), 0));
 
 		//uint64_t timeStart = CompVTime::nowMillis();
@@ -87,6 +85,22 @@ CompVSurfacePtr CompVGLMatchingSurfaceLayer::surface() /*Overrides(CompVMatching
 {
 	if (m_ptrCoverSurfaceGL) {
 		return *m_ptrCoverSurfaceGL;
+	}
+	return NULL;
+}
+
+CompVSurfacePtr CompVGLMatchingSurfaceLayer::surfaceTrain() /*Overrides(CompVMatchingSurfaceLayer)*/
+{
+	if (m_ptrTrainSurfaceGL) {
+		return *m_ptrTrainSurfaceGL;
+	}
+	return NULL;
+}
+
+CompVSurfacePtr CompVGLMatchingSurfaceLayer::surfaceQuery() /*Overrides(CompVMatchingSurfaceLayer)*/
+{
+	if (m_ptrQuerySurfaceGL) {
+		return *m_ptrQuerySurfaceGL;
 	}
 	return NULL;
 }

@@ -109,9 +109,10 @@ public:
 				static size_t num = 0;								
 				const compv_float64_t* x = m_ptrRectMatched->ptr<compv_float64_t>(0);
 				const compv_float64_t* y = m_ptrRectMatched->ptr<compv_float64_t>(1);
-				compv_float32_t x0[4] = { static_cast<compv_float32_t>(x[0]), static_cast<compv_float32_t>(x[1]), static_cast<compv_float32_t>(x[2]), static_cast<compv_float32_t>(x[3]) };
+				const compv_float64_t xoffset = static_cast<compv_float64_t>(m_ptrImageTrain->cols() + COMPV_DRAWING_MATCHES_TRAIN_QUERY_XOFFSET);
+				compv_float32_t x0[4] = { static_cast<compv_float32_t>(x[0] + xoffset), static_cast<compv_float32_t>(x[1] + xoffset), static_cast<compv_float32_t>(x[2] + xoffset), static_cast<compv_float32_t>(x[3] + xoffset) };
 				compv_float32_t y0[4] = { static_cast<compv_float32_t>(y[0]), static_cast<compv_float32_t>(y[1]), static_cast<compv_float32_t>(y[2]), static_cast<compv_float32_t>(y[3]) };
-				compv_float32_t x1[4] = { static_cast<compv_float32_t>(x[1]), static_cast<compv_float32_t>(x[2]), static_cast<compv_float32_t>(x[3]), static_cast<compv_float32_t>(x[0]) };
+				compv_float32_t x1[4] = { static_cast<compv_float32_t>(x[1] + xoffset), static_cast<compv_float32_t>(x[2] + xoffset), static_cast<compv_float32_t>(x[3] + xoffset), static_cast<compv_float32_t>(x[0] + xoffset) };
 				compv_float32_t y1[4] = { static_cast<compv_float32_t>(y[1]), static_cast<compv_float32_t>(y[2]), static_cast<compv_float32_t>(y[3]), static_cast<compv_float32_t>(y[0]) };
 				COMPV_CHECK_CODE_BAIL(err = m_ptrMatchingSurfaceLayer->surface()->canvas()->drawLines(x0, y0, x1, y1, 4));
 
@@ -242,7 +243,7 @@ private:
 		COMPV_CHECK_EXP_RETURN(m_vecGoodMatches.size() < THRESHOLD_GOOD_MATCHES, COMPV_ERROR_CODE_E_INVALID_CALL, "No enough points");
 		
 		// Find homography
-		COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(&m_ptrHomography, m_ptrGoodMatchesQuery, m_ptrGoodMatchesTrain));
+		COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(&m_ptrHomography, m_ptrGoodMatchesTrain, m_ptrGoodMatchesQuery));
 		// Perspecive transform using homography matrix
 		COMPV_CHECK_CODE_RETURN(CompVMathTransform<compv_float64_t>::perspective2D(&m_ptrRectMatched, m_ptrRectTrain, m_ptrHomography));
 		
