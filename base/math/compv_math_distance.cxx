@@ -21,6 +21,7 @@ COMPV_NAMESPACE_BEGIN()
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVMathDistanceHamming_Asm_X64_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
 	COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
+	COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_X64_POPCNT(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
 #	endif /* COMPV_ARCH_X64 */
 #endif /* COMPV_ASM */
 
@@ -61,6 +62,9 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 			// TODO(dmi):
 			// There is no math operations (except the xor) in hamming function but a lot of loads and this is why SSE42 version is
 			// slightly faster than AVX
+		}
+		if (width == 32) {
+			COMPV_EXEC_IFDEF_ASM_X64(HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT); // Pure asm code is Faster than the SSE (tested using core i7)
 		}
 	}
 #endif
