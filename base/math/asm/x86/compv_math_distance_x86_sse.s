@@ -70,14 +70,14 @@ sym(CompVMathDistanceHamming_Asm_X86_POPCNT_SSE42):
 			pxor xmm0, xmm1
 			movd eax, xmm0
 			popcnt eax, eax
-			lea i, [i + 16]
-			lea cnt, [cnt + eax]
+			add i, 16
+			add cnt, eax
 			pextrd eax, xmm0, 1
 			popcnt eax, eax
-			lea cnt, [cnt + eax]
+			add cnt, eax
 			pextrd eax, xmm0, 2
 			popcnt eax, eax
-			lea cnt, [cnt + eax]
+			add cnt, eax
 			pextrd eax, xmm0, 3
 			popcnt eax, eax
 			cmp i, [width_minus15]
@@ -95,8 +95,8 @@ sym(CompVMathDistanceHamming_Asm_X86_POPCNT_SSE42):
 				mov eax, dword [dataPtr + i]
 				xor eax, dword [patch1xnPtr + i]
 				popcnt eax, eax
-				lea i, [i + 4]
-				lea cnt, [cnt + eax]
+				add i, 4
+				add cnt, eax
 			%endrep
 			.EndOf_IfMoreThan4:
 			; EndOf_IfMoreThan4 ;
@@ -110,8 +110,8 @@ sym(CompVMathDistanceHamming_Asm_X86_POPCNT_SSE42):
 			mov ax, word [dataPtr + i]
 			xor ax, word [patch1xnPtr + i]
 			popcnt ax, ax
-			lea i, [i + 2]
-			lea cnt, [cnt + eax]
+			add i, 2
+			add cnt, eax
 			.EndOf_IfMoreThan2:
 			; EndOf_IfMoreThan2 ;
 
@@ -124,7 +124,7 @@ sym(CompVMathDistanceHamming_Asm_X86_POPCNT_SSE42):
 			mov al, byte [dataPtr + i]
 			xor al, byte [patch1xnPtr + i]
 			popcnt ax, ax
-			lea cnt, [cnt + eax]
+			add cnt, eax
 			.EndOf_IfMoreThan1:
 			; EndOf_IfMoreThan1 ;
 

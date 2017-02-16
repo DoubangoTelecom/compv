@@ -1,7 +1,7 @@
 #include "../tests_common.h"
 
 #define TAG_TEST			"TestBruteForce"
-#define LOOP_COUNT			1
+#define LOOP_COUNT			1000
 
 COMPV_ERROR_CODE bruteforce()
 {
