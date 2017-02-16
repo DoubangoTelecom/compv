@@ -209,7 +209,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::process(const CompVMatPtr& image_, CompVInt
 		};
 		for (levelStart = 0, levelMax = threadsCount; levelStart < m_pyramid->getLevels(); levelStart += threadsCount, levelMax += threadsCount) {
 			for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
-				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, image, m_pPatches[level % nPatches], m_pDetectors[level % nDetectors], level), taskIds));
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, image, m_pPatches[level % nPatches], m_pDetectors[level % nDetectors], static_cast<int>(level)), taskIds));
 			}
 			for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
 				COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[level]));
@@ -219,8 +219,8 @@ COMPV_ERROR_CODE CompVCornerDeteORB::process(const CompVMatPtr& image_, CompVInt
 	}
 	else {
 #endif
-		for (int level = 0; level < levelsCount; ++level) {
-			COMPV_CHECK_CODE_RETURN(processLevelAt(image, m_vecPatches[0], m_vecDetectors[0], level));
+		for (size_t level = 0; level < levelsCount; ++level) {
+			COMPV_CHECK_CODE_RETURN(processLevelAt(image, m_vecPatches[0], m_vecDetectors[0], static_cast<int>(level)));
 			interestPoints.insert(interestPoints.end(), m_vecInterestPointsAtLevelN[level].begin(), m_vecInterestPointsAtLevelN[level].end());
 		}
 #if 0

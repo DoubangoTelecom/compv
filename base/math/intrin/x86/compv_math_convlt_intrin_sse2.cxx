@@ -95,6 +95,7 @@ void CompVMathConvlt1VtHz_8u32f8u_Intrin_SSE2(const uint8_t* inPtr, uint8_t* out
 // no arithmetic overflow check
 void CompVMathConvlt1VtHz_8u16s16s_Intrin_SSE2(const uint8_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const int16_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_uscalar_t i, j, k, row, stride = width + pad;
 	__m128i vecInPtr, vec0, vec1, vecSum0, vecSum1, vecCoeff;
 	const __m128i vecZero = _mm_setzero_si128();
@@ -158,6 +159,7 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_SSE2(const uint8_t* inPtr, int16_t* ou
 // no arithmetic overflow check
 void CompVMathConvlt1VtHz_16s16s16s_Intrin_SSE2(const int16_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const int16_t* vthzKernPtr, compv_uscalar_t kernSize)
 {
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_uscalar_t i, j, k, row, stride = width + pad;
 	__m128i vec0, vec1, vecSum0, vecSum1, vecCoeff;
 	const __m128i vecZero = _mm_setzero_si128();

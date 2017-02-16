@@ -179,7 +179,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::convlt(CompVImageScalePyramidPtr pPyramid, 
 COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid, CompVInterestPointVector::const_iterator begin, CompVInterestPointVector::const_iterator end, uint8_t* desc)
 {
 	float fx, fy, angleInRad, sf, fcos, fsin;
-	int xi, yi;
+	int xi, yi, width, height;
 	CompVInterestPointVector::const_iterator point;
 	CompVMatPtr imageAtLevelN;
 	const int nFeaturesBytes = (m_nPatchBits >> 3);
@@ -196,6 +196,8 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 		// Get image at level N
 		COMPV_CHECK_CODE_RETURN(pPyramid->image(point->level, &imageAtLevelN));
 		stride = imageAtLevelN->stride();
+		width = static_cast<int>(imageAtLevelN->cols());
+		height = static_cast<int>(imageAtLevelN->rows());
 		// Scale
 		sf = pPyramid->scaleFactor(point->level);
 		fx = (point->x * sf);
@@ -211,7 +213,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 		// Compute description
 		{
 			// Check if the keypoint is too close to the border
-			if ((xi - nPatchRadius) < 0 || (xi + nPatchRadius) >= imageAtLevelN->cols() || (yi - nPatchRadius) < 0 || (yi + nPatchRadius) >= imageAtLevelN->rows()) {
+			if ((xi - nPatchRadius) < 0 || (xi + nPatchRadius) >= width || (yi - nPatchRadius) < 0 || (yi + nPatchRadius) >= height) {
 				// Must never happen....unless you are using keypoints from another implementation (e.g. OpenCV)
 				COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Keypoint too close to the border");
 				memset(desc, 0, nFeaturesBytes);
@@ -330,8 +332,8 @@ COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVMatPtr& image_, const Co
 	}
 	else {
 #endif
-		for (int level = bLevelZeroBlurred ? 1 : 0; level < levelsCount; ++level) {
-			COMPV_CHECK_CODE_RETURN(err_ = convlt(_pyramid, level));  // multi-threaded
+		for (size_t level = bLevelZeroBlurred ? 1 : 0; level < levelsCount; ++level) {
+			COMPV_CHECK_CODE_RETURN(err_ = convlt(_pyramid, static_cast<int>(level)));  // multi-threaded
 		}
 #if 0
 	}

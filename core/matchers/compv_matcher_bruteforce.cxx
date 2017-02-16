@@ -137,15 +137,15 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(int queryIdxStart, size_t cou
 {
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     CompVDMatch *match0_, *match1_;
-    size_t trainRows_ = trainDescriptions->rows();
+    int trainRows_ = static_cast<int>(trainDescriptions->rows());
     size_t trainStrideBytes_ = trainDescriptions->strideInBytes();
     size_t queryCols_ = queryDescriptions->cols();
 	int queryIdx_, trainIdx_, oldTrainIdx_, oldQueryIdx_, k_;
     int32_t oldDistance_;
-    size_t queryIdxEnd_ = queryIdxStart + count;
+    int queryIdxEnd_ =  static_cast<int>(queryIdxStart + count);
 
-    size_t matchesRows = matches->rows();
-    size_t matchesCols = matches->cols();
+	int matchesRows = static_cast<int>(matches->rows());
+	int matchesCols = static_cast<int>(matches->cols());
 
     // alloc() hamming distances
     CompVMatPtr hammingDistancesArray;
