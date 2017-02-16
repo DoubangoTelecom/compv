@@ -159,6 +159,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\tests_common.cxx" />
+    <ClCompile Include="bruteforce.cxx" />
     <ClCompile Include="chroma_conv.cxx" />
     <ClCompile Include="convlt.cxx" />
     <ClCompile Include="draw_image.cxx" />

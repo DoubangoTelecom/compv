@@ -18,11 +18,11 @@ Shared Memory: 3810 MB
 !!!
 
 
-=== RGB24 -> Grayscale (#1000 times, 720p) ===
+=== RGB24 -> Grayscale (#1k times, 720p) ===
 CompV: 169.ms(st), 54.ms(mt)
 OpenCV: 341.ms(full optiz)
 
-=== FAST9_16, Nonmax=true, threshold=20, maxfeatures=-1 (#10000 times, 720p) ===
+=== FAST9_16, Nonmax=true, threshold=20, maxfeatures=-1 (#10k times, 720p) ===
 CompV: 3358.ms(mt,avx2), 4730.ms(mt,sse2), 8447(st,avx2), 11261.ms(st,sse2)
 OpenCV: 10270.ms(full optiz)
 Remarque: The way we write to the shared strengths buffer is slow but required to have best support for multithreading.
@@ -30,13 +30,17 @@ This is why we are better than OpenCV by faaaaar.
 The above numbers means we can run feature detection on HD image at 2977fps while opencv runs at 973fps.
 We're using #8 threads and with more threads (e.g. #16) we can go as high as 5000fps
 
-=== Image scaling (Bilinear) from (1282, 720) to (1064, 597), (#10000 times) ===
+=== Image scaling (Bilinear) from (1282, 720) to (1064, 597), (#10k times) ===
 CompV: 1474.ms(mt,avx2), 1866.ms(mt,sse41), 2645.ms(mt,c++), 5435.ms(st,avx2), 6708.ms(st,sse41), 9470.ms(st,c++)
 OpenCV: 4148.ms(full optiz)
 Remarque: OpenCV uses SSE2 and multithreading and we're faster even with plain c++ (without sse or avx).
 
-=== Gaussian Blur (kernel size = 7, Sigma = 2.0) (1282, 720) (#10000 times) ===
+=== Gaussian Blur (kernel size = 7, Sigma = 2.0) (1282, 720) (#10k times) ===
 CompV(float): 2261.ms(mt,avx2,fma3), 2822.ms(mt,avx2), 5476.ms(mt,sse2), 7874.ms(st,avx2,fma3), 9980.ms(st,avx2), 17527.ms (st,sse2), 23004.ms(mt,c++), 79309.ms(st,c++)
 CompV(Fixed): 1449.ms(mt,avx2), 2815.ms(mt,sse2), 4736.ms(st,avx2), 8824.ms(st,sse2), 19741.ms(mt,c++), 70983.ms(st,c++)
 OpenCV(float): 16186.ms(full optiz)
 Remarque: https://github.com/DoubangoTelecom/compv/issues/118
+
+=== BruteForce matcher (KNN = 2, crosscheck = false, norm = hamming) (200, 258) (#1k times) ===
+CompV: 370.ms(mt,c++,sse42), 1108.ms(st,c++,sse42), 6060.ms (st,c++)
+OpenCV: 7384.ms (full optiz)

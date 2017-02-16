@@ -73,18 +73,22 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::get(int id, const void** valuePtrPtr, s
 }
 
 // override CompVMatcher::process
-// queryDescriptions and trainDescriptions must be strideless
+// queryDescriptions and trainDescriptions *should* be strideless
 COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVMatPtr &queryDescriptions, const CompVMatPtr &trainDescriptions, CompVMatPtrPtr matches) /* Overrides(CompVMatcher) */
 {
     COMPV_CHECK_EXP_RETURN(
         !matches
         || !queryDescriptions
         || queryDescriptions->isEmpty()
+		|| !queryDescriptions->isRawTypeMatch<uint8_t>()
         || !trainDescriptions
         || trainDescriptions->isEmpty()
+		|| !trainDescriptions->isRawTypeMatch<uint8_t>()
         || queryDescriptions->cols() != trainDescriptions->cols()
-        || queryDescriptions->strideInBytes() != queryDescriptions->rowInBytes()
-        || trainDescriptions->strideInBytes() != trainDescriptions->rowInBytes()
+		|| queryDescriptions->stride() != trainDescriptions->stride() // hamming distance requires same stride for the data in patch key
+		// no longer must, *should* be strideless
+        // || queryDescriptions->strideInBytes() != queryDescriptions->rowInBytes()
+        // || trainDescriptions->strideInBytes() != trainDescriptions->rowInBytes()
         , COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
@@ -97,41 +101,33 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVMatPtr &queryDescrip
     COMPV_CHECK_CODE_RETURN((err_ = CompVMat::newObj<CompVDMatch, COMPV_MAT_TYPE_STRUCT>(matches, matchesRows, matchesCols, 1)));
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
-
-#if 0
-    size_t threadsCount = 1;
-    CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
-    // Compute number of threads
-    if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
-        threadsCount = COMPV_MATH_CLIP3(1, threadDisp->getThreadsCount(), matchesCols / COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD);
-    }
+	
+	// Compute number of threads
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
+	size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, matchesCols / COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD);
 
     // process starting at queryIdxStart
     if (threadsCount > 1) {
-        size_t total = matchesCols;
-        size_t count = (size_t)(total / threadsCount); // must be "size_t"
+		size_t counts = static_cast<size_t>(matchesCols / threadsCount);
+		size_t lastCount = matchesCols - ((threadsCount - 1) * counts);
+
         size_t queryIdxStart = 0;
         CompVAsyncTaskIds taskIds;
         taskIds.reserve(threadsCount);
-        auto funcPtr = [&](size_t queryIdxStart, size_t count, const CompVArray<uint8_t>* queryDescriptions, const CompVArray<uint8_t>* trainDescriptions, CompVArray<CompVDMatch>* matches) -> COMPV_ERROR_CODE {
-            return CompVMatcherBruteForce::processAt(static_cast<int>(queryIdxStart), count, queryDescriptions, trainDescriptions, matches);
+        auto funcPtr = [&](size_t queryIdxStart_, size_t count_, const CompVMatPtr& queryDescriptions_, const CompVMatPtr& trainDescriptions_, CompVMatPtr& matches_) -> COMPV_ERROR_CODE {
+            return CompVMatcherBruteForce::processAt(static_cast<int>(queryIdxStart_), count_, queryDescriptions_, trainDescriptions_, matches_);
         };
-        for (int32_t i = 0; i < threadsCount; ++i) {
-            COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, queryIdxStart, count, *queryDescriptions, *trainDescriptions, **matches), taskIds));
-            queryIdxStart += count;
-            total -= count;
-            if (i == (threadsCount - 2)) {
-                count = (total); // the remaining
-            }
-        }
+		for (size_t i = 0; i < threadsCount - 1; ++i) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, queryIdxStart, counts, queryDescriptions, trainDescriptions, *matches), taskIds));
+			queryIdxStart += counts;
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, queryIdxStart, lastCount, queryDescriptions, trainDescriptions, *matches), taskIds));        
         COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
     }
     else {
-#endif
         COMPV_CHECK_CODE_RETURN(err_ = CompVMatcherBruteForce::processAt(0, matchesCols, queryDescriptions, trainDescriptions, *matches));
-#if 0
     }
-#endif
 
     return err_;
 }

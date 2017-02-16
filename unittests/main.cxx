@@ -9,6 +9,7 @@ using namespace compv;
 #define UNITTEST_CONVOLUTION					0
 #define UNITTEST_FEATURE_FAST					0
 #define UNITTEST_CHROMA_CONV					0
+#define UNITTEST_BRUTEFORCE						1
 
 #define UNITTEST_MATH_MATRIX_OPS				0
 #define UNITTEST_MATH_EIGEN_S					0
@@ -19,7 +20,7 @@ using namespace compv;
 #define UNITTEST_MATH_STATS_VARIANCE			0
 #define UNITTEST_MATH_TRF_HOMOG_TO_CART			0 // homogeneousToCartesian2D()
 #define UNITTEST_MATH_CALIB_HOMOGRAPHY			0
-#define UNITTEST_MATH_DISTANCE_HAMMING			1
+#define UNITTEST_MATH_DISTANCE_HAMMING			0
 
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
 #define disableAVX() (kCpuFlagAVX | kCpuFlagAVX2)
@@ -97,6 +98,11 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_chroma_conv();
 								COMPV_CHECK_CODE_BAIL(err = unittest_chroma_conv(), "Chroma conversion unittest failed");
 #endif
+#if UNITTEST_BRUTEFORCE || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_mathes_bruteforce();
+								COMPV_CHECK_CODE_BAIL(err = unittest_mathes_bruteforce(), "Bruteforce unittest failed");
+#endif
+			
 
 #if UNITTEST_MATH_MATRIX_OPS || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_math_matrix_ops();

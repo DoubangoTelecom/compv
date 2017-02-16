@@ -163,6 +163,7 @@
     <ClCompile Include="convlt.cxx" />
     <ClCompile Include="feature_fast.cxx" />
     <ClCompile Include="main.cxx" />
+    <ClCompile Include="matches_bruteforce.cxx" />
     <ClCompile Include="math_calib_homography.cxx" />
     <ClCompile Include="math_distance.cxx" />
     <ClCompile Include="math_eigen.cxx" />

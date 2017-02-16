@@ -201,7 +201,10 @@ private:
 		// Detect and describe the features
 		COMPV_CHECK_CODE_RETURN(m_ptrDeteORB->process(m_ptrImageGrayQuery, m_vecInterestPointsQuery));
 		COMPV_CHECK_CODE_RETURN(m_ptrDescORB->process(m_ptrImageGrayQuery, m_vecInterestPointsQuery, &m_ptrDescriptionsQuery));
+		uint64_t timeStart = CompVTime::nowMillis();
 		COMPV_CHECK_CODE_RETURN(m_ptrMatcher->process(m_ptrDescriptionsQuery, m_ptrDescriptionsTrain, &m_ptrMatches));
+		uint64_t timeEnd = CompVTime::nowMillis();
+		COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Elapsed time(BruteForce) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 		
 		// Filter the matches to get the good ones
 #if KNN == 2

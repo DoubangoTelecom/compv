@@ -66,5 +66,8 @@
     <ClCompile Include="math_distance.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="matches_bruteforce.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
