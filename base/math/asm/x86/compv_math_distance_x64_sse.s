@@ -34,117 +34,165 @@ sym(CompVMathDistanceHamming_Asm_X64_POPCNT_SSE42):
 	push r15
 	;; end prolog ;;
 
+	%define argi_width		1
+
 	%define j				rsi
-	%define cnt				edi
+	%define cnt				rdi
+	%define cntdword		edi
 	%define i				rcx
 	%define dataPtr			rbx
 	%define patch1xnPtr		rdx
-	%define width_minus0	r8
-	%define width_minus1	r9
-	%define width_minus3	r10
-	%define width_minus7	r11
-	%define width_minus15	r12
+	%define width			r8
+	%define widthmax		r9
+	%define distPtr			r10
+	%define stride			r11
+	%define width_minus31	r12
 
 	mov dataPtr, arg(0)
-	mov width_minus0, arg(1)
+	mov j, arg(2)
+	mov stride, arg(3)
+	mov width, arg(argi_width)
 	mov patch1xnPtr, arg(4)
-	lea width_minus1, [width_minus0 - 1]
-	lea width_minus3, [width_minus0 - 3]
-	lea width_minus7, [width_minus0 - 7]
-	lea width_minus15, [width_minus0 - 15]	
+	mov distPtr, arg(5)
+	lea width_minus31, [width - 31]
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	xor j, j
 	.LoopHeight:
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		; for (i = 0; i < width - 15; i += 16)
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor i, i
 		xor cnt, cnt
-		.LoopWidth16:
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < width - 31; i += 32)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		test width_minus31, width_minus31 ; width is required to be > 15 but not to be > 31
+		js .EndOf_LoopWidth32 ; jump to the end of the loop if (width_minus31 < 0)
+		.LoopWidth32:
+			movdqa xmm0, [dataPtr + i]
+			movdqa xmm2, [patch1xnPtr + i]
+			movdqa xmm1, [dataPtr + i + 16]
+			movdqa xmm3, [patch1xnPtr + i + 16]
+			pxor xmm0, xmm2
+			pxor xmm1, xmm3
+			movq rax, xmm0
+			pextrq r13, xmm0, 1
+			movq r14, xmm1
+			pextrq r15, xmm1, 1
+			popcnt rax, rax
+			popcnt r13, r13
+			popcnt r14, r14
+			popcnt r15, r15
+			add i, 32
+			add rax, r13
+			add r14, r15
+			add cnt, rax
+			add cnt, r14
+			cmp i, width_minus31
+			jl .LoopWidth32
+			.EndOf_LoopWidth32
+			; EndOf_LoopWidth32 ;
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; if (i < width - 15)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		lea widthmax, [width - 15]
+		cmp i, widthmax
+		jge .EndOf_IfMoreThan16
+		.IfMoreThan16:
 			movdqa xmm0, [dataPtr + i]
 			movdqa xmm1, [patch1xnPtr + i]
 			pxor xmm0, xmm1
-			movd eax, xmm0
-			popcnt eax, eax
+			movq rax, xmm0
+			pextrq r13, xmm0, 1
+			popcnt rax, rax
+			popcnt r13, r13
 			add i, 16
-			add cnt, eax
-			pextrd eax, xmm0, 1
-			popcnt eax, eax
-			add cnt, eax
-			pextrd eax, xmm0, 2
-			popcnt eax, eax
-			add cnt, eax
-			pextrd eax, xmm0, 3
-			popcnt eax, eax
-			cmp i, width_minus15
-			lea cnt, [cnt + eax]
-			jl .LoopWidth16
-			; EndOf_LoopWidth16 ;
+			add cnt, rax
+			add cnt, r13
+			.EndOf_IfMoreThan16
+			; EndOf_IfMoreThan16 ;
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; if (i < width - 7)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		lea widthmax, [width - 7]
+		cmp i, widthmax
+		jge .EndOf_IfMoreThan8
+		.IfMoreThan8:
+			movdqa xmm0, [dataPtr + i]
+			movdqa xmm1, [patch1xnPtr + i]
+			pxor xmm0, xmm1
+			movq rax, xmm0
+			popcnt rax, rax
+			add i, 8
+			add cnt, rax
+			.EndOf_IfMoreThan8
+			; EndOf_IfMoreThan8 ;
 
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; if (i < width - 3)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		lea widthmax, [width - 3]
+		cmp i, widthmax
+		jge .EndOf_IfMoreThan4
 		.IfMoreThan4:
-			%rep 3
-				cmp i, width_minus3
-				jge .EndOf_IfMoreThan4
-				mov eax, dword [dataPtr + i]
-				xor eax, dword [patch1xnPtr + i]
-				popcnt eax, eax
-				add i, 4
-				add cnt, eax
-			%endrep
+			mov eax, dword [dataPtr + i]
+			xor eax, dword [patch1xnPtr + i]
+			popcnt eax, eax
+			add i, 4
+			add cnt, rax
 			.EndOf_IfMoreThan4:
 			; EndOf_IfMoreThan4 ;
 
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; if (i < width - 1)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		cmp i, width_minus1
+		lea widthmax, [width - 1]
+		cmp i, widthmax
 		jge .EndOf_IfMoreThan2
 		.IfMoreThan2:
 			mov ax, word [dataPtr + i]
 			xor ax, word [patch1xnPtr + i]
 			popcnt ax, ax
 			add i, 2
-			add cnt, eax
+			add cnt, rax
 			.EndOf_IfMoreThan2:
 			; EndOf_IfMoreThan2 ;
 
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; if (i < width)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		cmp i, width_minus0
+		cmp i, arg(argi_width)
 		jge .EndOf_IfMoreThan1
 		.IfMoreThan1:
 			mov al, byte [dataPtr + i]
 			xor al, byte [patch1xnPtr + i]
 			popcnt ax, ax
-			add cnt, eax
+			add cnt, rax
 			.EndOf_IfMoreThan1:
 			; EndOf_IfMoreThan1 ;
 
-		mov rax, arg(5) ; distPtr
-		mov [rax + j * COMPV_YASM_INT32_SZ_BYTES], dword cnt
-		inc j
-		add dataPtr, arg(3) ; dataPtr += stride
-		cmp j, arg(2)
-		jl .LoopHeight
+		dec j
+		mov [distPtr], dword cntdword
+		lea dataPtr, [dataPtr + stride]
+		lea distPtr, [distPtr + COMPV_YASM_INT32_SZ_BYTES]
+		jnz .LoopHeight
 		; EndOf_LoopHeight ;
+
+	%undef argi_width
 
 	%undef j
 	%undef cnt
+	%undef cntdword
 	%undef i
 	%undef dataPtr
 	%undef patch1xnPtr
-	%undef width_minus0
-	%undef width_minus1
-	%undef width_minus3
-	%undef width_minus7
-	%undef width_minus15
+	%undef width
+	%undef widthmax
+	%undef distPtr
+	%undef stride
+	%undef width_minus31
 
 	;; begin epilog ;;
 	pop r15

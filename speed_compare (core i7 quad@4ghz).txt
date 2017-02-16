@@ -42,5 +42,5 @@ OpenCV(float): 16186.ms(full optiz)
 Remarque: https://github.com/DoubangoTelecom/compv/issues/118
 
 === BruteForce matcher (KNN = 2, crosscheck = false, norm = hamming) (200, 258) (#1k times) ===
-CompV: 370.ms(mt,c++,sse42), 1108.ms(st,c++,sse42), 6060.ms (st,c++)
-OpenCV: 7384.ms (full optiz)
+CompV: 260.ms(st,asm,sse42), 370.ms(mt,c++,sse42), 837.ms(st,asm,sse42), 1108.ms(st,c++,sse42), 6060.ms (st,c++)
+OpenCV: 7384.ms(full optiz)
