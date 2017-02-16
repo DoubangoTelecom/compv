@@ -49,7 +49,7 @@ sym(CompVMathDistanceHamming_Asm_X86_POPCNT_SSE42):
 	%define cnt			edi
 	%define i			rcx
 	%define dataPtr		rbx
-	%define patch1xnPtr	rdi
+	%define patch1xnPtr	rdx
 
 	mov j, arg(2) ; rsi = height
 	mov dataPtr, arg(0)
