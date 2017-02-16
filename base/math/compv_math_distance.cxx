@@ -8,8 +8,11 @@
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/compv_bits.h"
 #include "compv/base/compv_cpu.h"
+#include "compv/base/parallel/compv_parallel.h"
 
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_sse42.h"
+
+#define COMPV_HAMMING_MIN_SAMPLES_PER_THREAD	1 // very intensive op -> use max threads
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -24,8 +27,6 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_X64_POPCNT(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
 #	endif /* COMPV_ARCH_X64 */
 #endif /* COMPV_ASM */
-
-
 
 static void CompVHammingDistance_C(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr);
 static void CompVHammingDistance_POPCNT_C(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr);
@@ -48,6 +49,8 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 	void(*HammingDistance)(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr) = CompVHammingDistance_C;
 	void(*HammingDistance32)(const uint8_t* dataPtr, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr) = NULL;
 
+	// Width == 3 -> Very common (Brief256_31)
+
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagPOPCNT)) {
 		HammingDistance = CompVHammingDistance_POPCNT_C;
@@ -69,17 +72,38 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 	}
 #endif
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
+	if (width == 32 && !HammingDistance32) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found for fast hamming distance (32 x n)");
+	}
 
-	if (HammingDistance32) { // Very common (Brief256_31)
-		HammingDistance32(dataPtr, height, stride, patch1xnPtr, distPtr);
+#define COMPV_HAMMING_EXEC(dataPtr__, width__, height__, stride__, patch1xnPtr__, distPtr__) \
+	if (HammingDistance32) HammingDistance32(dataPtr__, height__, stride__, patch1xnPtr__, distPtr__); \
+	else  HammingDistance(dataPtr__, width__, height__, stride__, patch1xnPtr__, distPtr__)
+
+	// Compute number of threads
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+	size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, height / COMPV_HAMMING_MIN_SAMPLES_PER_THREAD);
+	
+	if (threadsCount > 1) {
+		CompVAsyncTaskIds taskIds;
+		taskIds.reserve(threadsCount);
+		size_t counts = static_cast<size_t>(height / threadsCount);
+		size_t lastCount = height - ((threadsCount - 1) * counts);
+		size_t countsTimesStride = (counts * stride);
+		auto funcPtr = [&](const uint8_t* dataPtr_, compv_uscalar_t width_, compv_uscalar_t height_, compv_uscalar_t stride_, const uint8_t* patch1xnPtr_, int32_t* distPtr_) -> void {
+			COMPV_HAMMING_EXEC(dataPtr_, width_, height_, stride_, patch1xnPtr_, distPtr_);
+		};
+		for (size_t i = 0; i < threadsCount; ++i) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, &dataPtr[countsTimesStride * i], width, (i == (threadsCount - 1)) ? lastCount : counts, stride, patch1xnPtr, &distPtr[counts * i]), taskIds));
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 	}
 	else {
-		if (width == 32) {
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found for fast hamming distance (32 x n)");
-		}
-		HammingDistance(dataPtr, width, height, stride, patch1xnPtr, distPtr);
+		COMPV_HAMMING_EXEC(dataPtr, width, height, stride, patch1xnPtr, distPtr);
 	}
+
+#undef COMPV_HAMMING_EXEC
 
 	return COMPV_ERROR_CODE_S_OK;
 }

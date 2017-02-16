@@ -9,7 +9,7 @@ using namespace compv;
 #define UNITTEST_CONVOLUTION					0
 #define UNITTEST_FEATURE_FAST					0
 #define UNITTEST_CHROMA_CONV					0
-#define UNITTEST_BRUTEFORCE						1
+#define UNITTEST_BRUTEFORCE						0
 
 #define UNITTEST_MATH_MATRIX_OPS				0
 #define UNITTEST_MATH_EIGEN_S					0
@@ -20,7 +20,7 @@ using namespace compv;
 #define UNITTEST_MATH_STATS_VARIANCE			0
 #define UNITTEST_MATH_TRF_HOMOG_TO_CART			0 // homogeneousToCartesian2D()
 #define UNITTEST_MATH_CALIB_HOMOGRAPHY			0
-#define UNITTEST_MATH_DISTANCE_HAMMING			0
+#define UNITTEST_MATH_DISTANCE_HAMMING			1
 
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
 #define disableAVX() (kCpuFlagAVX | kCpuFlagAVX2)

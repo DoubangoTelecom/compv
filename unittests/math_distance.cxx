@@ -19,7 +19,7 @@ COMPV_ERROR_CODE unittest_math_distance_hamming()
 	const compv_unittest_hamming* test;
 	for (size_t i = 0; i < sizeof(COMPV_UNITTEST_HAMMING) / sizeof(COMPV_UNITTEST_HAMMING[i]); ++i) {
 		test = &COMPV_UNITTEST_HAMMING[i];
-		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: haming distance -> %zu %zu ==", test->width, test->height);
+		COMPV_DEBUG_INFO_EX(TAG_TEST, "== Trying new test: hamming distance -> %zu %zu ==", test->width, test->height);
 
 		CompVMatPtr patch1xn;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&patch1xn, 1, test->width));

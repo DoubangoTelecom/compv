@@ -91,12 +91,12 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT):
 	%undef patch1xnPtr3
 
 	;; begin epilog ;;
-	COMPV_YASM_UNSHADOW_ARGS
 	pop r13
 	pop r12
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
 	ret

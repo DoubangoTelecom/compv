@@ -104,14 +104,13 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVMatPtr &queryDescrip
 	
 	// Compute number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
+	size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, matchesCols / COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD);
 
     // process starting at queryIdxStart
     if (threadsCount > 1) {
 		size_t counts = static_cast<size_t>(matchesCols / threadsCount);
 		size_t lastCount = matchesCols - ((threadsCount - 1) * counts);
-
         size_t queryIdxStart = 0;
         CompVAsyncTaskIds taskIds;
         taskIds.reserve(threadsCount);
