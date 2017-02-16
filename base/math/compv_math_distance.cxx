@@ -16,9 +16,11 @@ COMPV_NAMESPACE_BEGIN()
 #if COMPV_ASM
 #	if COMPV_ARCH_X86
 	COMPV_EXTERNC void CompVMathDistanceHamming_Asm_X86_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
+	COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_X86_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVMathDistanceHamming_Asm_X64_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
+	COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
 #	endif /* COMPV_ARCH_X64 */
 #endif /* COMPV_ASM */
 
@@ -43,7 +45,7 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 	COMPV_CHECK_EXP_RETURN(!dataPtr || !width || width > stride || !height || !patch1xnPtr || !distPtr, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 	void(*HammingDistance)(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr) = CompVHammingDistance_C;
-	void(*Hamming256Distance)(const uint8_t* dataPtr, compv_uscalar_t height, const uint8_t* patch1xnPtr, int32_t* distPtr) = NULL;
+	void(*HammingDistance32)(const uint8_t* dataPtr, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr) = NULL;
 
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagPOPCNT)) {
@@ -52,43 +54,25 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 			COMPV_EXEC_IFDEF_INTRIN_X86(HammingDistance = CompVMathDistanceHamming_Intrin_POPCNT_SSE42);
 			COMPV_EXEC_IFDEF_ASM_X86(HammingDistance = CompVMathDistanceHamming_Asm_X86_POPCNT_SSE42);
 			COMPV_EXEC_IFDEF_ASM_X64(HammingDistance = CompVMathDistanceHamming_Asm_X64_POPCNT_SSE42);
-		}
-	}
-#endif
-#if 0
-	if (CompVCpu::isEnabled(kCpuFlagPOPCNT)) {
-		HammingDistance = CompVHammingDistance_POPCNT_C;
-		if (CompVCpu::isEnabled(kCpuFlagSSE42) && COMPV_IS_ALIGNED_SSE(dataPtr) && COMPV_IS_ALIGNED_SSE(patch1xnPtr)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86((HammingDistance = CompVHammingDistance_Intrin_POPCNT_SSE42));
-			COMPV_EXEC_IFDEF_ASM_X86((HammingDistance = CompVHammingDistance_Asm_POPCNT_X86_SSE42));
-			COMPV_EXEC_IFDEF_ASM_X64((HammingDistance = CompVHammingDistance_Asm_POPCNT_X64_SSE42));
-			if (stride == 32 && width == 32) {
-				// Hamming distance is frequently used with Brief256, "Hamming256Distance" is a very fast function
-				COMPV_EXEC_IFDEF_INTRIN_X86((Hamming256Distance = HammingDistance256_Intrin_POPCNT_SSE42));
-				COMPV_EXEC_IFDEF_ASM_X86((Hamming256Distance = CompVHammingDistance256_Asm_POPCNT_X86_SSE42));
-				COMPV_EXEC_IFDEF_ASM_X64((Hamming256Distance = CompVHammingDistance256_Asm_POPCNT_X64_SSE42));
+			if (width == 32) {
+				COMPV_EXEC_IFDEF_ASM_X86(HammingDistance32 = CompVMathDistanceHamming32_Asm_X86_POPCNT_SSE42);
+				COMPV_EXEC_IFDEF_ASM_X64(HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42);
 			}
+			// TODO(dmi):
+			// There is no math operations (except the xor) in hamming function but a lot of loads and this is why SSE42 version is
+			// slightly faster than AVX
 		}
-		// There is no math operations (except the xor) in hamming function but a lot of loads and this is why SSE42 version is
-		// slightly faster than AVX
-#if 0
-		if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(dataPtr) && COMPV_IS_ALIGNED_AVX2(patch1xnPtr)) {
-			COMPV_EXEC_IFDEF_ASM_X86((HammingDistance = CompVHammingDistance_Asm_POPCNT_X86_AVX2));
-			COMPV_EXEC_IFDEF_ASM_X64((HammingDistance = CompVHammingDistance_Asm_POPCNT_X64_AVX2));
-		}
-#endif
 	}
 #endif
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Fast hamming, do not require stride to be 32");
 
-	if (Hamming256Distance) { // TODO(dmi): Why it's named hamming256?
-		Hamming256Distance(dataPtr, height, patch1xnPtr, distPtr);
+	if (HammingDistance32) { // Very common (Brief256_31)
+		HammingDistance32(dataPtr, height, stride, patch1xnPtr, distPtr);
 	}
 	else {
-		if (stride == 32 && width == 32) {
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found for fast hamming distance (32 x 32)");
+		if (width == 32) {
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found for fast hamming distance (32 x n)");
 		}
 		HammingDistance(dataPtr, width, height, stride, patch1xnPtr, distPtr);
 	}

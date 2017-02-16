@@ -11,6 +11,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVMathDistanceHamming_Asm_X86_POPCNT_SSE42)
+global sym(CompVMathDistanceHamming32_Asm_X86_POPCNT_SSE42)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* dataPtr
@@ -149,6 +150,85 @@ sym(CompVMathDistanceHamming_Asm_X86_POPCNT_SSE42):
 
 	; free memory
 	add rsp, (4 * COMPV_YASM_REG_SZ_BYTES)
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* dataPtr
+; arg(1) -> compv_uscalar_t height
+; arg(2) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
+; arg(3) -> COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr
+; arg(4) -> int32_t* distPtr
+sym(CompVMathDistanceHamming32_Asm_X86_POPCNT_SSE42):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	%define j			rsi
+	%define cnt			edi
+	%define distPtr		rcx
+	%define dataPtr		rbx
+	%define patch1xnPtr	rdx
+
+	mov j, arg(1)
+	mov dataPtr, arg(0)
+	mov patch1xnPtr, arg(3)
+	mov distPtr, arg(4)
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:		
+		movdqa xmm0, [dataPtr]
+		movdqa xmm2, [patch1xnPtr]
+		movdqa xmm1, [dataPtr + 16]
+		movdqa xmm3, [patch1xnPtr + 16]
+		pxor xmm0, xmm2
+		pxor xmm1, xmm3
+		movd cnt, xmm0
+		popcnt cnt, cnt
+		add dataPtr, arg(2) ; dataPtr += stride
+		%assign dwordIndex 1
+		%rep 3
+			pextrd eax, xmm0, dwordIndex
+			popcnt eax, eax
+			add cnt, eax
+			%assign dwordIndex dwordIndex+1
+		%endrep		
+		%assign dwordIndex 0
+		%rep 4
+			%if dwordIndex == 0
+				movd eax, xmm1
+			%else
+				pextrd eax, xmm1, dwordIndex
+			%endif
+			popcnt eax, eax
+			add cnt, eax
+			%assign dwordIndex dwordIndex+1
+		%endrep			
+		dec j
+		mov [distPtr], dword cnt
+		lea distPtr, [distPtr + COMPV_YASM_INT32_SZ_BYTES]
+		jnz .LoopHeight
+		; EndOf_LoopHeight ;
+
+	%undef j
+	%undef cnt
+	%undef distPtr
+	%undef dataPtr
+	%undef patch1xnPtr
 
 	;; begin epilog ;;
 	pop rbx

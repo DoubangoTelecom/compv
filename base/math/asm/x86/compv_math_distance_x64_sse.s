@@ -13,6 +13,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVMathDistanceHamming_Asm_X64_POPCNT_SSE42)
+global sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* dataPtr
@@ -202,6 +203,77 @@ sym(CompVMathDistanceHamming_Asm_X64_POPCNT_SSE42):
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* dataPtr
+; arg(1) -> compv_uscalar_t height
+; arg(2) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
+; arg(3) -> COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr
+; arg(4) -> int32_t* distPtr
+sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
+	;; end prolog ;;
+
+	%define j					r8
+	%define cnt					rax
+	%define cntdword			eax
+	%define dataPtr				r9
+	%define distPtr				rdx
+	%define stride				rcx
+	%define width_minus31		r10
+
+	%define vecpatch1xnPtr0		xmm2		
+	%define vecpatch1xnPtr1		xmm3			
+
+	mov rax, arg(3)
+	movdqa vecpatch1xnPtr0, [rax]
+	movdqa vecpatch1xnPtr1, [rax + 16]
+
+	mov dataPtr, arg(0)
+	mov j, arg(1)
+	mov stride, arg(2)
+	mov distPtr, arg(4)
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		movdqa xmm0, [dataPtr]
+		movdqa xmm1, [dataPtr + 16]
+		pxor xmm0, vecpatch1xnPtr0
+		pxor xmm1, vecpatch1xnPtr1
+		movq cnt, xmm0
+		pextrq r13, xmm0, 1
+		movq r14, xmm1
+		pextrq r15, xmm1, 1
+		popcnt cnt, cnt
+		popcnt r13, r13
+		popcnt r14, r14
+		popcnt r15, r15
+		lea dataPtr, [dataPtr + stride]
+		add cnt, r13
+		add r14, r15
+		add cnt, r14
+		dec j
+		mov [distPtr], dword cntdword
+		lea distPtr, [distPtr + COMPV_YASM_INT32_SZ_BYTES]
+		jnz .LoopHeight
+		; EndOf_LoopHeight ;
+
+	%undef j
+	%undef cnt
+	%undef cntdword
+	%undef dataPtr
+	%undef distPtr
+	%undef stride
+
+	;; begin epilog ;;
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
