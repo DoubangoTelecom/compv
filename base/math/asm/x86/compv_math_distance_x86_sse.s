@@ -51,13 +51,13 @@ sym(CompVMathDistanceHamming_Asm_X86_POPCNT_SSE42):
 	%define dataPtr		rbx
 	%define patch1xnPtr	rdx
 
-	mov j, arg(2) ; rsi = height
 	mov dataPtr, arg(0)
 	mov patch1xnPtr, arg(4)
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	xor j, j
 	.LoopHeight:
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (i = 0; i < width - 15; i += 16)
@@ -74,13 +74,13 @@ sym(CompVMathDistanceHamming_Asm_X86_POPCNT_SSE42):
 			lea cnt, [cnt + eax]
 			pextrd eax, xmm0, 1
 			popcnt eax, eax
-			cmp i, [width_minus15]
 			lea cnt, [cnt + eax]
 			pextrd eax, xmm0, 2
 			popcnt eax, eax
 			lea cnt, [cnt + eax]
 			pextrd eax, xmm0, 3
 			popcnt eax, eax
+			cmp i, [width_minus15]
 			lea cnt, [cnt + eax]
 			jl .LoopWidth16
 			; EndOf_LoopWidth16 ;
@@ -129,10 +129,11 @@ sym(CompVMathDistanceHamming_Asm_X86_POPCNT_SSE42):
 			; EndOf_IfMoreThan1 ;
 
 		mov rax, arg(5) ; distPtr
+		mov [rax + j * COMPV_YASM_INT32_SZ_BYTES], dword cnt
+		inc j
 		add dataPtr, arg(3) ; dataPtr += stride
-		mov [rax + j * COMPV_YASM_INT32_SZ_BYTES], cnt
-		dec j
-		jnz .LoopHeight
+		cmp j, arg(2)
+		jl .LoopHeight
 		; EndOf_LoopHeight ;
 
 	%undef j
