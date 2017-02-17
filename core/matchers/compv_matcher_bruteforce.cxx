@@ -8,8 +8,10 @@
 #include "compv/base/math/compv_math_distance.h"
 #include "compv/base/math/compv_math.h"
 #include "compv/base/parallel/compv_parallel.h"
+#include "compv/base/compv_cpu.h"
 
-#define COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD	1 // very intensive op -> use max threads
+#define COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD					1 // use max threads
+#define COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2		4200 // for hamming distance (Fast Popcnt using Mula's formula)
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -96,16 +98,18 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVMatPtr &queryDescrip
     size_t queryRows_ = queryDescriptions->rows();
     size_t matchesRows = COMPV_MATH_CLIP3(1, trainRows_, static_cast<size_t>(m_nKNN));
     size_t matchesCols = queryRows_;
+	const size_t weight = ((trainDescriptions->rows() * trainDescriptions->cols()) + (trainDescriptions->rows() * trainDescriptions->cols())) >> 1;
+	const size_t minSamplesPerThread = (CompVCpu::isEnabled(kCpuFlagPOPCNT) && CompVCpu::isEnabled(kCpuFlagAVX2) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled()))
+		? COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2
+		: COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD;
 
     // realloc() matchers
     COMPV_CHECK_CODE_RETURN((err_ = CompVMat::newObj<CompVDMatch, COMPV_MAT_TYPE_STRUCT>(matches, matchesRows, matchesCols, 1)));
-
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	
 	// Compute number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, matchesCols / COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD);
+	size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, weight / minSamplesPerThread);
 
     // process starting at queryIdxStart
     if (threadsCount > 1) {
@@ -139,6 +143,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(int queryIdxStart, size_t cou
     int trainRows_ = static_cast<int>(trainDescriptions->rows());
     size_t trainStrideBytes_ = trainDescriptions->strideInBytes();
     size_t queryCols_ = queryDescriptions->cols();
+	size_t queryStrideInBytes = queryDescriptions->strideInBytes();
 	int queryIdx_, trainIdx_, oldTrainIdx_, oldQueryIdx_, k_;
     int32_t oldDistance_;
     int queryIdxEnd_ =  static_cast<int>(queryIdxStart + count);
@@ -170,7 +175,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(int queryIdxStart, size_t cou
         }
         // round-trips
         for (trainIdx_ = 0; trainIdx_ < trainRows_; ++trainIdx_, trainDescriptions_ += trainStrideBytes_) {
-            COMPV_CHECK_CODE_RETURN(err_ = CompVMathDistance::hamming(queryDescriptions_, queryCols_, count, queryDescriptions->strideInBytes(),
+            COMPV_CHECK_CODE_RETURN(err_ = CompVMathDistance::hamming(queryDescriptions_, queryCols_, count, queryStrideInBytes,
                                            trainDescriptions_, hammingDistances_));
             for (queryIdx_ = queryIdxStart, hD = hammingDistances_, match0_ = matches_, match1_ = (matches_ + matchesCols); queryIdx_ < queryIdxEnd_; ++queryIdx_, ++hD, ++match0_, ++match1_) {
                 // "match0_ <= match1_" -> if (newDistance_ not< match1_) then, newDistance_ not < match0_
@@ -191,8 +196,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(int queryIdxStart, size_t cou
     }
     else {
         COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Should double check next code to optiz");
-        int newTrainIdx_, newQueryIdx_, hammingIdx_;
-        int32_t newDistance_;
+        int newTrainIdx_, newQueryIdx_, hammingIdx_, newDistance_;
         // initialization
         for (queryIdx_ = queryIdxStart, match0_ = matches_; queryIdx_ < queryIdxEnd_; ++queryIdx_, ++match0_) {
             match1_ = match0_;
@@ -204,7 +208,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(int queryIdxStart, size_t cou
         }
         // round-trips
         for (trainIdx_ = 0; trainIdx_ < trainRows_; ++trainIdx_, trainDescriptions_ += trainStrideBytes_) {
-            COMPV_CHECK_CODE_RETURN(err_ = CompVMathDistance::hamming(queryDescriptions_, queryCols_, count, queryDescriptions->strideInBytes(),
+            COMPV_CHECK_CODE_RETURN(err_ = CompVMathDistance::hamming(queryDescriptions_, queryCols_, count, queryStrideInBytes,
                                            trainDescriptions_, hammingDistances_));
             for (queryIdx_ = queryIdxStart, hammingIdx_ = 0, match0_ = matches_; queryIdx_ < queryIdxEnd_; ++queryIdx_, ++hammingIdx_, ++match0_) {
                 newDistance_ = hammingDistances_[hammingIdx_], newTrainIdx_ = trainIdx_, newQueryIdx_ = queryIdx_;

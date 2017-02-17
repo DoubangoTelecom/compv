@@ -439,7 +439,7 @@ public:
 #if 0
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING("Slow and worst matches");
 			std::sort(interestPoints.begin(), interestPoints.end(), InterestPointStrengthGreater());
-			interestPoints.resize(static_cast<size_t>(m_iMaxFeatures));
+			interestPoints.resize(static_cast<size_t>(max));
 #else
 			// This code gives better matches (tested with object recognition sample)
 			std::nth_element(interestPoints.begin(), interestPoints.begin() + max, interestPoints.end(),

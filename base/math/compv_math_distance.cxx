@@ -13,7 +13,8 @@
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_sse42.h"
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_avx2.h"
 
-#define COMPV_HAMMING_MIN_SAMPLES_PER_THREAD	1 // very intensive op -> use max threads
+#define COMPV_HAMMING_MIN_SAMPLES_PER_THREAD					1 // use max threads
+#define COMPV_HAMMING_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2		4200 // for hamming distance (Fast Popcnt using Mula's formula)
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -51,6 +52,8 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 	void(*HammingDistance)(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr) = CompVHammingDistance_C;
 	void(*HammingDistance32)(const uint8_t* dataPtr, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr) = NULL;
 
+	size_t minSamplesPerThread = COMPV_HAMMING_MIN_SAMPLES_PER_THREAD;
+
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagPOPCNT)) {
 		HammingDistance = CompVHammingDistance_POPCNT_C;
@@ -67,8 +70,8 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 				COMPV_EXEC_IFDEF_ASM_X64(HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42);
 			}
 			if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(dataPtr) && COMPV_IS_ALIGNED_AVX2(patch1xnPtr) && COMPV_IS_ALIGNED_AVX2(stride) && COMPV_IS_ALIGNED_AVX2(distPtr)) {
-				COMPV_EXEC_IFDEF_INTRIN_X86(HammingDistance32 = CompVMathDistanceHamming32_Intrin_POPCNT_AVX2); // Mula's algorithm
-				COMPV_EXEC_IFDEF_ASM_X64(HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2); // Mula's algorithm
+				COMPV_EXEC_IFDEF_INTRIN_X86((HammingDistance32 = CompVMathDistanceHamming32_Intrin_POPCNT_AVX2, minSamplesPerThread = COMPV_HAMMING_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2)); // Mula's algorithm
+				COMPV_EXEC_IFDEF_ASM_X64((HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2, minSamplesPerThread = COMPV_HAMMING_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2)); // Mula's algorithm
 				// TODO(dmi): add "CompVMathDistanceHamming32_Intrin_POPCNT_SSE42" using mula's algorithm
 			}
 		}
@@ -88,7 +91,7 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 	// Compute number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, height / COMPV_HAMMING_MIN_SAMPLES_PER_THREAD);
+	size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, (width * height) / minSamplesPerThread);
 	
 	if (threadsCount > 1) {
 		CompVAsyncTaskIds taskIds;
@@ -119,13 +122,26 @@ static void CompVHammingDistance_C(const uint8_t* dataPtr, compv_uscalar_t width
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 
 	compv_uscalar_t i, j, cnt;
+#if COMPV_ARCH_X64
+	uint64_t pop;
+#else
 	uint8_t pop;
+#endif
 
 	for (j = 0; j < height; ++j) {
 		cnt = 0;
 		for (i = 0; i < width; ++i) {
+#if COMPV_ARCH_X64
+			// http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
+			pop = dataPtr[i] ^ patch1xnPtr[i];
+			pop = pop - ((pop >> 0x1) & 0x5555555555555555);
+			pop = (pop & 0x3333333333333333) + ((pop >> 0x2) & 0x3333333333333333);
+			pop = (pop + (pop >> 0x4)) & 0xf0f0f0f0f0f0f0f;
+			cnt += (pop * 0x101010101010101) >> 0x38;
+#else
 			pop = dataPtr[i] ^ patch1xnPtr[i];
 			cnt += kPopcnt256[pop];
+#endif
 		}
 		dataPtr += stride;
 		distPtr[j] = static_cast<int32_t>(cnt);
@@ -147,26 +163,26 @@ static void CompVHammingDistance_POPCNT_C(const uint8_t* dataPtr, compv_uscalar_
 		i = 0;
 #if COMPV_ARCH_X64
 		for (; i <= width - 8; i += 8) {
-			pop = *((uint64_t*)&dataPtr[i]) ^ *((uint64_t*)&patch1xnPtr[i]);
+			pop = *reinterpret_cast<const uint64_t*>(&dataPtr[i]) ^ *reinterpret_cast<const uint64_t*>(&patch1xnPtr[i]);
 			cnt += compv_popcnt64(pop);
 		}
 #endif
 		for (; i <= width - 4; i += 4) {
-			pop = *((uint32_t*)&dataPtr[i]) ^ *((uint32_t*)&patch1xnPtr[i]);
-			cnt += compv_popcnt32((uint32_t)pop);
+			pop = *reinterpret_cast<const uint32_t*>(&dataPtr[i]) ^ *reinterpret_cast<const uint32_t*>(&patch1xnPtr[i]);
+			cnt += compv_popcnt32(static_cast<uint32_t>(pop));
 		}
 		if (i <= width - 2) {
-			pop = *((uint16_t*)&dataPtr[i]) ^ *((uint16_t*)&patch1xnPtr[i]);
-			cnt += compv_popcnt16((uint16_t)pop);
+			pop = *reinterpret_cast<const uint16_t*>(&dataPtr[i]) ^ *reinterpret_cast<const uint16_t*>(&patch1xnPtr[i]);
+			cnt += compv_popcnt16(static_cast<uint16_t>(pop));
 			i += 2;
 		}
 		if (i <= width - 1) {
-			pop = *((uint8_t*)&dataPtr[i]) ^ *((uint8_t*)&patch1xnPtr[i]);
-			cnt += compv_popcnt16((uint16_t)pop);
+			pop = *reinterpret_cast<const uint8_t*>(&dataPtr[i]) ^ *reinterpret_cast<const uint8_t*>(&patch1xnPtr[i]);
+			cnt += compv_popcnt16(static_cast<uint16_t>(pop));
 			++i;
 		}
 		dataPtr += stride;
-		distPtr[j] = (int32_t)(cnt);
+		distPtr[j] = static_cast<int32_t>(cnt);
 	}
 }
 
