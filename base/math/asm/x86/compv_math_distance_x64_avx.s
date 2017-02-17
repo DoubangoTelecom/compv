@@ -95,36 +95,43 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 		vpshufb ymm11, vecLookup, ymm7
 
 		; popcnt2 ;
-		vpsrld ymm0, ymm0, 4
-		vpsrld ymm1, ymm1, 4
-		vpsrld ymm2, ymm2, 4
-		vpsrld ymm3, ymm3, 4
-		vpand ymm0, ymm0, vecMaskLow
-		vpand ymm1, ymm1, vecMaskLow
-		vpand ymm2, ymm2, vecMaskLow
-		vpand ymm3, ymm3, vecMaskLow
+		vpsrld ymm4, ymm0, 4
+		vpsrld ymm5, ymm1, 4
+		vpsrld ymm6, ymm2, 4
+		vpsrld ymm7, ymm3, 4
+		vpand ymm0, ymm4, vecMaskLow
+		vpand ymm1, ymm5, vecMaskLow
+		vpand ymm2, ymm6, vecMaskLow
+		vpand ymm3, ymm7, vecMaskLow
 		vpshufb ymm0, vecLookup, ymm0
 		vpshufb ymm1, vecLookup, ymm1
 		vpshufb ymm2, vecLookup, ymm2
 		vpshufb ymm3, vecLookup, ymm3
 
-		; result ;
-		vpaddb ymm0, ymm0, ymm8
-		vpaddb ymm1, ymm1, ymm9
-		vpaddb ymm2, ymm2, ymm10
-		vpaddb ymm3, ymm3, ymm11
-		vpsadbw ymm0, ymm0, vecZero
-		vpsadbw ymm1, ymm1, vecZero
-		vpsadbw ymm2, ymm2, vecZero
-		vpsadbw ymm3, ymm3, vecZero
+		
+		vpaddb ymm4, ymm0, ymm8
+		vpaddb ymm5, ymm1, ymm9
+		vpaddb ymm6, ymm2, ymm10
+		vpaddb ymm7, ymm3, ymm11
+
+		vpsadbw ymm0, ymm4, vecZero
+
+		
+		vpsadbw ymm1, ymm5, vecZero
+
+		
+		vpsadbw ymm2, ymm6, vecZero
+
+			
+		vpsadbw ymm3, ymm7, vecZero
 
 		; huum ;
-		vpunpcklqdq ymm4, ymm0, ymm1
-		vpunpckhqdq ymm5, ymm0, ymm1
-		vpunpcklqdq ymm6, ymm2, ymm3
-		vpunpckhqdq ymm7, ymm2, ymm3
-		vpaddq ymm1, ymm4, ymm5
-		vpaddq ymm3, ymm6, ymm7
+		vpunpcklqdq ymm8, ymm0, ymm1
+		vpunpckhqdq ymm9, ymm0, ymm1
+		vpunpcklqdq ymm10, ymm2, ymm3
+		vpunpckhqdq ymm11, ymm2, ymm3
+		vpaddq ymm1, ymm8, ymm9
+		vpaddq ymm3, ymm10, ymm11
 		vperm2i128 ymm0, ymm1, ymm3, 0x20
 		vperm2i128 ymm2, ymm1, ymm3, 0x31
 		vpaddq ymm4, ymm0, ymm2
@@ -135,7 +142,7 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 		add dataPtr, stride_times4
 
 		vmovdqa [distPtr], xmm6
-		add distPtr, (4*COMPV_YASM_INT32_SZ_BYTES)
+		lea distPtr, [distPtr + (4*COMPV_YASM_INT32_SZ_BYTES)]
 		
 		dec j
 		jnz .LoopHeight4
