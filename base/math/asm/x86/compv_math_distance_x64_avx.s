@@ -49,6 +49,8 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 	%define distPtr				rcx
 	%define stride				r8
 	%define height_minus3		r9
+	%define dataPtr_plus_stride	r10
+	%define stride_times4		r11
 	
 	%define vecZero			ymm12
 	%define vecMaskLow		ymm13
@@ -66,34 +68,31 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 	mov stride, arg(2)
 	mov distPtr, arg(4)
 	lea height_minus3, [height - 3]
-
-	xor j, j
+	lea dataPtr_plus_stride, [dataPtr + stride]
+	lea stride_times4, [stride*4]
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height - 3; j += 4)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	test height_minus3, height_minus3
 	js .EndOf_LoopHeight4
+	mov j, height
+	shr j, 2 ; div 4
 	.LoopHeight4:
-		lea rax, [dataPtr + stride]
-		vmovdqa ymm0, [dataPtr]
-		vmovdqa ymm1, [rax]
-		vmovdqa ymm2, [rax + stride *1]
-		vmovdqa ymm3, [rax + stride *2]
-		vpxor ymm0, ymm0, vecPatch
-		vpxor ymm1, ymm1, vecPatch
-		vpxor ymm2, ymm2, vecPatch
-		vpxor ymm3, ymm3, vecPatch
+		vpxor ymm0, vecPatch, [dataPtr]
+		vpxor ymm1, vecPatch, [dataPtr_plus_stride]
+		vpxor ymm2, vecPatch, [dataPtr_plus_stride + stride *1]
+		vpxor ymm3, vecPatch, [dataPtr_plus_stride + stride *2]
 
 		; popcnt1 ;
 		vpand ymm4, ymm0, vecMaskLow
 		vpand ymm5, ymm1, vecMaskLow
 		vpand ymm6, ymm2, vecMaskLow
 		vpand ymm7, ymm3, vecMaskLow
-		vpshufb ymm4, vecLookup, ymm4
-		vpshufb ymm5, vecLookup, ymm5
-		vpshufb ymm6, vecLookup, ymm6
-		vpshufb ymm7, vecLookup, ymm7
+		vpshufb ymm8, vecLookup, ymm4
+		vpshufb ymm9, vecLookup, ymm5
+		vpshufb ymm10, vecLookup, ymm6
+		vpshufb ymm11, vecLookup, ymm7
 
 		; popcnt2 ;
 		vpsrld ymm0, ymm0, 4
@@ -110,10 +109,10 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 		vpshufb ymm3, vecLookup, ymm3
 
 		; result ;
-		vpaddb ymm0, ymm0, ymm4
-		vpaddb ymm1, ymm1, ymm5
-		vpaddb ymm2, ymm2, ymm6
-		vpaddb ymm3, ymm3, ymm7
+		vpaddb ymm0, ymm0, ymm8
+		vpaddb ymm1, ymm1, ymm9
+		vpaddb ymm2, ymm2, ymm10
+		vpaddb ymm3, ymm3, ymm11
 		vpsadbw ymm0, ymm0, vecZero
 		vpsadbw ymm1, ymm1, vecZero
 		vpsadbw ymm2, ymm2, vecZero
@@ -131,20 +130,23 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 		vpaddq ymm4, ymm0, ymm2
 		vpshufd ymm5, ymm4, 0x88
 		vpermq ymm6, ymm5, 0x08
-		vmovdqa [distPtr + j * COMPV_YASM_INT32_SZ_BYTES], xmm6
 
-		add j, 4
-		cmp j, height_minus3
-		lea dataPtr, [dataPtr + stride *4]
-		jl .LoopHeight4
+		add dataPtr_plus_stride, stride_times4
+		add dataPtr, stride_times4
+
+		vmovdqa [distPtr], xmm6
+		add distPtr, (4*COMPV_YASM_INT32_SZ_BYTES)
+		
+		dec j
+		jnz .LoopHeight4
 		.EndOf_LoopHeight4:
 		; EndOf_LoopHeight4 ;
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (; j < height; j += 1)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	cmp j, height
-	jge .EndOf_LoopHeight1
+	and height, 3 ; modulo 4
+	jz .EndOf_LoopHeight1
 	.LoopHeight1:
 		vpxor ymm0, vecPatch, [dataPtr]
 		vextracti128 xmm1, ymm0, 0x1
@@ -160,10 +162,10 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 		add r14, r15
 		add dataPtr, stride
 		add cnt, r14
-		mov [distPtr + j * COMPV_YASM_INT32_SZ_BYTES], dword cntdword
-		inc j
-		cmp j, height
-		jl .LoopHeight1
+		mov [distPtr], dword cntdword
+		add distPtr, (1*COMPV_YASM_INT32_SZ_BYTES)
+		dec height
+		jnz .LoopHeight1
 		.EndOf_LoopHeight1:
 		; EndOf_LoopHeight1 ;
 
@@ -175,6 +177,8 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 	%undef distPtr
 	%undef stride
 	%undef height_minus3
+	%undef dataPtr_plus_stride
+	%undef stride_times4
 
 	%undef vecZero
 	%undef vecMaskLow
