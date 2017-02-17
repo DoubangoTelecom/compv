@@ -15,6 +15,10 @@ COMPV_YASM_DEFAULT_REL
 global sym(CompVMathDistanceHamming_Asm_X64_POPCNT_SSE42)
 global sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42)
 
+section .data
+
+section .text
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* dataPtr
 ; arg(1) -> compv_uscalar_t width
@@ -218,6 +222,7 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
+	push r12
 	;; end prolog ;;
 
 	%define j					r8
@@ -226,7 +231,6 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42):
 	%define dataPtr				r9
 	%define distPtr				rdx
 	%define stride				rcx
-	%define width_minus31		r10
 
 	%define vecpatch1xnPtr0		xmm2		
 	%define vecpatch1xnPtr1		xmm3			
@@ -249,17 +253,17 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42):
 		pxor xmm0, vecpatch1xnPtr0
 		pxor xmm1, vecpatch1xnPtr1
 		movq cnt, xmm0
-		pextrq r13, xmm0, 1
-		movq r14, xmm1
-		pextrq r15, xmm1, 1
+		pextrq r10, xmm0, 1
+		movq r11, xmm1
+		pextrq r12, xmm1, 1
 		popcnt cnt, cnt
-		popcnt r13, r13
-		popcnt r14, r14
-		popcnt r15, r15
+		popcnt r10, r10
+		popcnt r11, r11
+		popcnt r12, r12
 		lea dataPtr, [dataPtr + stride]
-		add cnt, r13
-		add r14, r15
-		add cnt, r14
+		add cnt, r10
+		add r11, r12
+		add cnt, r11
 		dec j
 		mov [distPtr], dword cntdword
 		lea distPtr, [distPtr + COMPV_YASM_INT32_SZ_BYTES]
@@ -273,7 +277,11 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42):
 	%undef distPtr
 	%undef stride
 
+	%undef vecpatch1xnPtr0				
+	%undef vecpatch1xnPtr1			
+
 	;; begin epilog ;;
+	pop r12
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

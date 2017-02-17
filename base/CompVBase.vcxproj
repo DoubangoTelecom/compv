@@ -387,6 +387,13 @@
     <None Include="image\asm\arm\compv_image_scale_bilinear_arm32_neon.S" />
     <None Include="image\asm\arm\compv_image_scale_bilinear_arm64_neon.S" />
     <None Include="image\asm\x86\compv_image_scale_bilinear_macros.s" />
+    <YASM Include="math\asm\x86\compv_math_distance_x64_avx.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
     <YASM Include="math\asm\x86\compv_math_distance_x64.s">
       <FileType>Document</FileType>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>

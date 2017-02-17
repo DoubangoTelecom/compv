@@ -13,6 +13,10 @@ COMPV_YASM_DEFAULT_REL
 global sym(CompVMathDistanceHamming_Asm_X86_POPCNT_SSE42)
 global sym(CompVMathDistanceHamming32_Asm_X86_POPCNT_SSE42)
 
+section .data
+
+section .text
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* dataPtr
 ; arg(1) -> compv_uscalar_t width

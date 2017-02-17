@@ -18,7 +18,6 @@ global sym(compv_mathutils_rand_asm_x86_rdrand)
 
 section .data
 
-
 section .text
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
