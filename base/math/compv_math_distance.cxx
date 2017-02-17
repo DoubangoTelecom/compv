@@ -13,8 +13,8 @@
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_sse42.h"
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_avx2.h"
 
-#define COMPV_HAMMING_MIN_SAMPLES_PER_THREAD					1 // use max threads
-#define COMPV_HAMMING_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2		4200 // for hamming distance (Fast Popcnt using Mula's formula)
+#define COMPV_HAMMING32_MIN_SAMPLES_PER_THREAD					1 // use max threads
+#define COMPV_HAMMING32_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2		120 // for hamming distance (Fast Popcnt using Mula's formula)
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -32,7 +32,9 @@ COMPV_NAMESPACE_BEGIN()
 #endif /* COMPV_ASM */
 
 static void CompVHammingDistance_C(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr);
+#if COMPV_ARCH_X86
 static void CompVHammingDistance_POPCNT_C(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr);
+#endif
 
 /*
 dataPtr: The pointer to the data for which we want to compute the hamming distance. Hamming distance will be compute for each width-bytes.
@@ -52,7 +54,7 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 	void(*HammingDistance)(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr) = CompVHammingDistance_C;
 	void(*HammingDistance32)(const uint8_t* dataPtr, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr) = NULL;
 
-	size_t minSamplesPerThread = COMPV_HAMMING_MIN_SAMPLES_PER_THREAD;
+	size_t minSamplesPerThread = COMPV_HAMMING32_MIN_SAMPLES_PER_THREAD;
 
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagPOPCNT)) {
@@ -69,9 +71,9 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 				COMPV_EXEC_IFDEF_ASM_X86(HammingDistance32 = CompVMathDistanceHamming32_Asm_X86_POPCNT_SSE42);
 				COMPV_EXEC_IFDEF_ASM_X64(HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42);
 			}
-			if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(dataPtr) && COMPV_IS_ALIGNED_AVX2(patch1xnPtr) && COMPV_IS_ALIGNED_AVX2(stride) && COMPV_IS_ALIGNED_AVX2(distPtr)) {
-				COMPV_EXEC_IFDEF_INTRIN_X86((HammingDistance32 = CompVMathDistanceHamming32_Intrin_POPCNT_AVX2, minSamplesPerThread = COMPV_HAMMING_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2)); // Mula's algorithm
-				COMPV_EXEC_IFDEF_ASM_X64((HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2, minSamplesPerThread = COMPV_HAMMING_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2)); // Mula's algorithm
+			if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(dataPtr) && COMPV_IS_ALIGNED_AVX2(patch1xnPtr) && COMPV_IS_ALIGNED_AVX2(stride)) {
+				COMPV_EXEC_IFDEF_INTRIN_X86((HammingDistance32 = CompVMathDistanceHamming32_Intrin_POPCNT_AVX2, minSamplesPerThread = COMPV_HAMMING32_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2)); // Mula's algorithm
+				COMPV_EXEC_IFDEF_ASM_X64((HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2, minSamplesPerThread = COMPV_HAMMING32_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2)); // Mula's algorithm
 				// TODO(dmi): add "CompVMathDistanceHamming32_Intrin_POPCNT_SSE42" using mula's algorithm
 			}
 		}
@@ -91,7 +93,7 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 	// Compute number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, (width * height) / minSamplesPerThread);
+	size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, height / minSamplesPerThread);
 	
 	if (threadsCount > 1) {
 		CompVAsyncTaskIds taskIds;
@@ -148,6 +150,7 @@ static void CompVHammingDistance_C(const uint8_t* dataPtr, compv_uscalar_t width
 	}
 }
 
+#if COMPV_ARCH_X86
 // Private function, up to the caller to check input parameters
 static void CompVHammingDistance_POPCNT_C(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr)
 {
@@ -185,5 +188,6 @@ static void CompVHammingDistance_POPCNT_C(const uint8_t* dataPtr, compv_uscalar_
 		distPtr[j] = static_cast<int32_t>(cnt);
 	}
 }
+#endif
 
 COMPV_NAMESPACE_END()

@@ -200,50 +200,54 @@ private:
 
 		// Detect and describe the features
 		COMPV_CHECK_CODE_RETURN(m_ptrDeteORB->process(m_ptrImageGrayQuery, m_vecInterestPointsQuery));
-		COMPV_CHECK_CODE_RETURN(m_ptrDescORB->process(m_ptrImageGrayQuery, m_vecInterestPointsQuery, &m_ptrDescriptionsQuery));
-		uint64_t timeStart = CompVTime::nowMillis();
-		COMPV_CHECK_CODE_RETURN(m_ptrMatcher->process(m_ptrDescriptionsQuery, m_ptrDescriptionsTrain, &m_ptrMatches));
-		uint64_t timeEnd = CompVTime::nowMillis();
-		COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Elapsed time(BruteForce) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
-		
-		// Filter the matches to get the good ones
+		if (!m_vecInterestPointsQuery.empty()) {
+			COMPV_CHECK_CODE_RETURN(m_ptrDescORB->process(m_ptrImageGrayQuery, m_vecInterestPointsQuery, &m_ptrDescriptionsQuery));
+			if (!m_ptrDescriptionsQuery->isEmpty()) {
+				uint64_t timeStart = CompVTime::nowMillis();
+				COMPV_CHECK_CODE_RETURN(m_ptrMatcher->process(m_ptrDescriptionsQuery, m_ptrDescriptionsTrain, &m_ptrMatches));
+				uint64_t timeEnd = CompVTime::nowMillis();
+				COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Elapsed time(BruteForce) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+
+				// Filter the matches to get the good ones
 #if KNN == 2
-		const CompVDMatch *match1 = m_ptrMatches->ptr<const CompVDMatch>(0), *match2 = m_ptrMatches->ptr<const CompVDMatch>(1);
-		size_t count = COMPV_MATH_MIN(m_ptrDescriptionsQuery->rows() - 1, m_ptrMatches->cols());
-		for (size_t i = 0; i < count; i++) {
-			if (match1[i].distance < KNN_RATIO_TEST * match2[i].distance) {
-				m_vecGoodMatches.push_back(match1[i]);
-			}
-		}
+				const CompVDMatch *match1 = m_ptrMatches->ptr<const CompVDMatch>(0), *match2 = m_ptrMatches->ptr<const CompVDMatch>(1);
+				size_t count = COMPV_MATH_MIN(m_ptrDescriptionsQuery->rows() - 1, m_ptrMatches->cols());
+				for (size_t i = 0; i < count; i++) {
+					if (match1[i].distance < KNN_RATIO_TEST * match2[i].distance) {
+						m_vecGoodMatches.push_back(match1[i]);
+					}
+				}
 #else
-		COMPV_DEBUG_ERROR_EX(TAG_SAMPLE, "This code should not be called unless you know what you're doing");
-		const CompVDMatch* match = m_ptrMatches->ptr<const CompVDMatch>(0);
-		size_t count = COMPV_MATH_MIN(m_ptrDescriptionsQuery->rows() - 1, m_ptrMatches->cols());
-		for (size_t i = 0; i < count; i++) {
-			if (match[i].distance <= 35) {
-				m_vecGoodMatches.push_back(match[i]);
-			}
-		}
+				COMPV_DEBUG_ERROR_EX(TAG_SAMPLE, "This code should not be called unless you know what you're doing");
+				const CompVDMatch* match = m_ptrMatches->ptr<const CompVDMatch>(0);
+				size_t count = COMPV_MATH_MIN(m_ptrDescriptionsQuery->rows() - 1, m_ptrMatches->cols());
+				for (size_t i = 0; i < count; i++) {
+					if (match[i].distance <= 35) {
+						m_vecGoodMatches.push_back(match[i]);
+					}
+				}
 #endif
-		
-		// Build matche points
-		if (m_vecGoodMatches.size() > 0) {
-			COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&m_ptrGoodMatchesQuery, 3, m_vecGoodMatches.size()));
-			COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&m_ptrGoodMatchesTrain, 3, m_vecGoodMatches.size()));
-			COMPV_CHECK_CODE_RETURN(m_ptrGoodMatchesQuery->one_row<compv_float64_t>(2)); // homogeneous coord. with Z = 1
-			COMPV_CHECK_CODE_RETURN(m_ptrGoodMatchesTrain->one_row<compv_float64_t>(2)); // homogeneous coord. with Z = 1
-			compv_float64_t* queryX = m_ptrGoodMatchesQuery->ptr<compv_float64_t>(0);
-			compv_float64_t* queryY = m_ptrGoodMatchesQuery->ptr<compv_float64_t>(1);
-			compv_float64_t* trainX = m_ptrGoodMatchesTrain->ptr<compv_float64_t>(0);
-			compv_float64_t* trainY = m_ptrGoodMatchesTrain->ptr<compv_float64_t>(1);
-			CompVInterestPoint queryPoint, trainPoint;
-			for (size_t i = 0; i < m_vecGoodMatches.size(); i++) {
-				queryPoint = m_vecInterestPointsQuery[m_vecGoodMatches[i].queryIdx];
-				trainPoint = m_vecInterestPointsTrain[m_vecGoodMatches[i].trainIdx];
-				queryX[i] = queryPoint.x;
-				queryY[i] = queryPoint.y;
-				trainX[i] = trainPoint.x;
-				trainY[i] = trainPoint.y;
+
+				// Build matche points
+				if (m_vecGoodMatches.size() > 0) {
+					COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&m_ptrGoodMatchesQuery, 3, m_vecGoodMatches.size()));
+					COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&m_ptrGoodMatchesTrain, 3, m_vecGoodMatches.size()));
+					COMPV_CHECK_CODE_RETURN(m_ptrGoodMatchesQuery->one_row<compv_float64_t>(2)); // homogeneous coord. with Z = 1
+					COMPV_CHECK_CODE_RETURN(m_ptrGoodMatchesTrain->one_row<compv_float64_t>(2)); // homogeneous coord. with Z = 1
+					compv_float64_t* queryX = m_ptrGoodMatchesQuery->ptr<compv_float64_t>(0);
+					compv_float64_t* queryY = m_ptrGoodMatchesQuery->ptr<compv_float64_t>(1);
+					compv_float64_t* trainX = m_ptrGoodMatchesTrain->ptr<compv_float64_t>(0);
+					compv_float64_t* trainY = m_ptrGoodMatchesTrain->ptr<compv_float64_t>(1);
+					CompVInterestPoint queryPoint, trainPoint;
+					for (size_t i = 0; i < m_vecGoodMatches.size(); i++) {
+						queryPoint = m_vecInterestPointsQuery[m_vecGoodMatches[i].queryIdx];
+						trainPoint = m_vecInterestPointsTrain[m_vecGoodMatches[i].trainIdx];
+						queryX[i] = queryPoint.x;
+						queryY[i] = queryPoint.y;
+						trainX[i] = trainPoint.x;
+						trainY[i] = trainPoint.y;
+					}
+				}
 			}
 		}
 

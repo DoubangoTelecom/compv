@@ -11,7 +11,7 @@
 #include "compv/base/compv_cpu.h"
 
 #define COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD					1 // use max threads
-#define COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2		4200 // for hamming distance (Fast Popcnt using Mula's formula)
+#define COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2		120 // for hamming distance (Fast Popcnt using Mula's formula)
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -92,13 +92,13 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVMatPtr &queryDescrip
         // || queryDescriptions->strideInBytes() != queryDescriptions->rowInBytes()
         // || trainDescriptions->strideInBytes() != trainDescriptions->rowInBytes()
         , COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
     size_t trainRows_ = trainDescriptions->rows();
     size_t queryRows_ = queryDescriptions->rows();
     size_t matchesRows = COMPV_MATH_CLIP3(1, trainRows_, static_cast<size_t>(m_nKNN));
     size_t matchesCols = queryRows_;
-	const size_t weight = ((trainDescriptions->rows() * trainDescriptions->cols()) + (trainDescriptions->rows() * trainDescriptions->cols())) >> 1;
 	const size_t minSamplesPerThread = (CompVCpu::isEnabled(kCpuFlagPOPCNT) && CompVCpu::isEnabled(kCpuFlagAVX2) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled()))
 		? COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2
 		: COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD;
@@ -109,12 +109,12 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVMatPtr &queryDescrip
 	// Compute number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, weight / minSamplesPerThread);
+	size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, queryRows_ / minSamplesPerThread);
 
     // process starting at queryIdxStart
     if (threadsCount > 1) {
-		size_t counts = static_cast<size_t>(matchesCols / threadsCount);
-		size_t lastCount = matchesCols - ((threadsCount - 1) * counts);
+		size_t counts = static_cast<size_t>(queryRows_ / threadsCount);
+		size_t lastCount = queryRows_ - ((threadsCount - 1) * counts);
         size_t queryIdxStart = 0;
         CompVAsyncTaskIds taskIds;
         taskIds.reserve(threadsCount);
@@ -129,7 +129,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVMatPtr &queryDescrip
         COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
     }
     else {
-        COMPV_CHECK_CODE_RETURN(err_ = CompVMatcherBruteForce::processAt(0, matchesCols, queryDescriptions, trainDescriptions, *matches));
+        COMPV_CHECK_CODE_RETURN(err_ = CompVMatcherBruteForce::processAt(0, queryRows_, queryDescriptions, trainDescriptions, *matches));
     }
 
     return err_;

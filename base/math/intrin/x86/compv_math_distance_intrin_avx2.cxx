@@ -21,7 +21,7 @@ COMPV_NAMESPACE_BEGIN()
 
 // popcnt available starting SSE4.2 but up to the caller to check its availability using CPU features
 // Mula's algorithm
-void CompVMathDistanceHamming32_Intrin_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(AVX) const uint8_t* patch1xnPtr, COMPV_ALIGNED(AVX) int32_t* distPtr)
+void CompVMathDistanceHamming32_Intrin_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(AVX) const uint8_t* patch1xnPtr, int32_t* distPtr)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
 	_mm256_zeroupper();
@@ -59,7 +59,8 @@ void CompVMathDistanceHamming32_Intrin_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint
 		vec0 = _mm256_shuffle_epi32(_mm256_add_epi64(vec0, vec2), 0x88);
 		vec0 = _mm256_permute4x64_epi64(vec0, 0x08);
 
-		_mm_store_si128(reinterpret_cast<__m128i*>(&distPtr[j]), _mm256_castsi256_si128(vec0)); // SSE/AVX transition issue if code not built with AVX enabled
+		// "distPtr" cannot be aligned when multithreading is enabled ("&distPtr[counts * i]")
+		_mm_storeu_si128(reinterpret_cast<__m128i*>(&distPtr[j]), _mm256_castsi256_si128(vec0)); // SSE/AVX transition issue if code not built with AVX enabled
 
 		dataPtr += strideTimes4;
 	}

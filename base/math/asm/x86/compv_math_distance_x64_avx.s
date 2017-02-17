@@ -25,7 +25,7 @@ section .text
 ; arg(1) -> compv_uscalar_t height
 ; arg(2) -> COMPV_ALIGNED(AVX) compv_uscalar_t stride
 ; arg(3) -> COMPV_ALIGNED(AVX) const uint8_t* patch1xnPtr
-; arg(4) -> COMPV_ALIGNED(AVX) int32_t* distPtr
+; arg(4) -> int32_t* distPtr
 sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 	vzeroupper
 	push rbp
@@ -74,10 +74,9 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height - 3; j += 4)
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	test height_minus3, height_minus3
-	js .EndOf_LoopHeight4
 	mov j, height
 	shr j, 2 ; div 4
+	je .EndOf_LoopHeight4
 	.LoopHeight4:
 		vpxor ymm0, vecPatch, [dataPtr]
 		vpxor ymm1, vecPatch, [dataPtr_plus_stride]
@@ -125,7 +124,7 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 		add dataPtr_plus_stride, stride_times4
 		add dataPtr, stride_times4
 		dec j
-		vmovdqa [distPtr], xmm6
+		vmovdqu [distPtr], xmm6
 		lea distPtr, [distPtr + (4*COMPV_YASM_INT32_SZ_BYTES)]
 		jnz .LoopHeight4
 		.EndOf_LoopHeight4:

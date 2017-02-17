@@ -71,8 +71,8 @@ sym(CompVMathDistanceHamming_Asm_X64_POPCNT_SSE42):
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (i = 0; i < width - 31; i += 32)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		test width_minus31, width_minus31 ; width is required to be > 15 but not to be > 31
-		js .EndOf_LoopWidth32 ; jump to the end of the loop if (width_minus31 < 0)
+		cmp width_minus31, 0 ; width is required to be > 15 but not to be > 31
+		jle .EndOf_LoopWidth32 ; jump to the end of the loop if (width_minus31 <= 0), notice the "=", do not use "js" jump which tests the sign only (< 0)
 		.LoopWidth32:
 			movdqa xmm0, [dataPtr + i]
 			movdqa xmm2, [patch1xnPtr + i]
