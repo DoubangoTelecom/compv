@@ -7,19 +7,20 @@
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_avx2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
+#include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
 #include "compv/base/compv_bits.h"
 
 COMPV_NAMESPACE_BEGIN()
 
 #define __count(v) \
-	popcnt1 = _mm256_shuffle_epi8(lookup, _mm256_and_si256(v, low_mask)); \
-	popcnt2 = _mm256_shuffle_epi8(lookup, _mm256_and_si256(_mm256_srli_epi32(v, 4), low_mask)); \
+	popcnt1 = _mm256_shuffle_epi8(vecLookup, _mm256_and_si256(v, vecMaskLow)); \
+	popcnt2 = _mm256_shuffle_epi8(vecLookup, _mm256_and_si256(_mm256_srli_epi32(v, 4), vecMaskLow)); \
 	v = _mm256_sad_epu8(_mm256_add_epi8(popcnt1, popcnt2), _mm256_setzero_si256())
 
 
 // popcnt available starting SSE4.2 but up to the caller to check its availability using CPU features
-void CompVMathDistanceHamming32_Intrin_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(AVX) const uint8_t* patch1xnPtr, int32_t* distPtr)
+void CompVMathDistanceHamming32_Intrin_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(AVX) const uint8_t* patch1xnPtr, COMPV_ALIGNED(AVX) int32_t* distPtr)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
 	_mm256_zeroupper();
@@ -30,11 +31,8 @@ void CompVMathDistanceHamming32_Intrin_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint
 	__m128i vec0n, vec1n;
 	__m256i popcnt1, popcnt2;
 	const __m256i vecPatch = _mm256_load_si256(reinterpret_cast<const __m256i*>(patch1xnPtr));
-
-	static const __m256i lookup = _mm256_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3,
-		1, 2, 2, 3, 2, 3, 3, 4, 0, 1, 1, 2,
-		1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
-	static const  __m256i low_mask = _mm256_set1_epi8(0x0f);
+	const __m256i vecLookup = _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_Popcnt_i32));
+	const __m256i vecMaskLow = _mm256_set1_epi8(0x0f);
 
 	for (j = 0; j < height - 3; j += 4) {
 		vec0 = _mm256_load_si256(reinterpret_cast<const __m256i*>(&dataPtr[0]));
@@ -54,7 +52,9 @@ void CompVMathDistanceHamming32_Intrin_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint
 		vec0 = _mm256_permute2x128_si256(vec1, vec3, 0x20);
 		vec2 = _mm256_permute2x128_si256(vec1, vec3, 0x31);
 		vec0 = _mm256_shuffle_epi32(_mm256_add_epi64(vec0, vec2), 0x88);
-		_mm_store_si128(reinterpret_cast<__m128i*>(&distPtr[j]), _mm_unpacklo_epi64(_mm256_castsi256_si128(vec0), _mm256_extracti128_si256(vec0, 1))); // SSE/AVX transition issue if code not built with AVX enabled
+		vec0 = _mm256_permute4x64_epi64(vec0, 0x08);
+
+		_mm_store_si128(reinterpret_cast<__m128i*>(&distPtr[j]), _mm256_castsi256_si128(vec0)); // SSE/AVX transition issue if code not built with AVX enabled
 
 		dataPtr += strideTime4;
 	}

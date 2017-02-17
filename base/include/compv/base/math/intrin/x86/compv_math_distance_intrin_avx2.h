@@ -18,7 +18,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVMathDistanceHamming32_Intrin_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(AVX) const uint8_t* patch1xnPtr, int32_t* distPtr);
+void CompVMathDistanceHamming32_Intrin_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(AVX) const uint8_t* patch1xnPtr, COMPV_ALIGNED(AVX) int32_t* distPtr);
 
 COMPV_NAMESPACE_END()
 

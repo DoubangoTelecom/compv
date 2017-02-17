@@ -54,7 +54,6 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagPOPCNT)) {
-#if 1 // FIXME
 		HammingDistance = CompVHammingDistance_POPCNT_C;
 		if (width > 15 && CompVCpu::isEnabled(kCpuFlagSSE42) && COMPV_IS_ALIGNED_SSE(dataPtr) && COMPV_IS_ALIGNED_SSE(patch1xnPtr) && COMPV_IS_ALIGNED_SSE(stride)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(HammingDistance = CompVMathDistanceHamming_Intrin_POPCNT_SSE42);
@@ -70,11 +69,10 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 		}
 		if (width == 32) {
 			COMPV_EXEC_IFDEF_ASM_X64(HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT); // Pure asm code is Faster than the SSE (tested using core i7)
+			if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(dataPtr) && COMPV_IS_ALIGNED_AVX2(patch1xnPtr) && COMPV_IS_ALIGNED_AVX2(stride) && COMPV_IS_ALIGNED_AVX2(distPtr)) {
+				COMPV_EXEC_IFDEF_INTRIN_X86(HammingDistance32 = CompVMathDistanceHamming32_Intrin_POPCNT_AVX2);
+			}
 		}
-#endif
-		// FIXME:
-		//HammingDistance = CompVMathDistanceHamming_Intrin_POPCNT_SSE42;
-		HammingDistance32 = CompVMathDistanceHamming32_Intrin_POPCNT_AVX2;
 	}
 #endif
 
