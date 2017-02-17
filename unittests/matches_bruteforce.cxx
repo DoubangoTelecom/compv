@@ -10,9 +10,9 @@ COMPV_ERROR_CODE unittest_mathes_bruteforce()
 		const char* md5;
 	}
 	COMPV_UNITTEST_BF[] = {
-		{ 200, 258, "18b5284792c5e08836913505eadfc22f" },
-		{ 2005, 101, "22c9f8fa214cbea46160c93e6bfbab05" },
-		{ 32, 720, "d03e995b417c287e4e45fecc1b88a749" }, // hamming256
+		{ 200, 258, "442db0c57bd88bcf4ea3150abfca122b" }, // used for speed comparison against OpenCV
+		{ 32, 715, "8149035c24dbb95e59d248460aa5a03f" }, // hamming256
+		{ 2005, 101, "c01c1f8d044b1d79933ecd532052f0a4" },
 	};
 
 	const compv_unittest_bf* test = NULL;
@@ -24,7 +24,12 @@ COMPV_ERROR_CODE unittest_mathes_bruteforce()
 		CompVMatPtr trainDescriptions;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&queryDescriptions, test->height, test->width));
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&trainDescriptions, test->height, test->width));
-		COMPV_CHECK_CODE_RETURN(queryDescriptions->zero_rows());
+		for (size_t j = 0; j < queryDescriptions->rows(); ++j) {
+			uint8_t* dataPtr = queryDescriptions->ptr<uint8_t>(j);
+			for (size_t i = 0; i < queryDescriptions->cols(); ++i) {
+				dataPtr[i] = static_cast<uint8_t>((((i + j) << 1) + 1) & 0xff);
+			}
+		}
 		for (size_t j = 0; j < trainDescriptions->rows(); ++j) {
 			uint8_t* dataPtr = trainDescriptions->ptr<uint8_t>(j);
 			size_t row = (test->width * j);

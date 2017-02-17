@@ -23,7 +23,7 @@ using namespace compv;
 #define NONMAXIMA				true
 #define THRESHOLD				20
 #define FAST_TYPE				COMPV_FAST_TYPE_9
-#define MAXFEATURES				2000 // <= 0 means all points (do not retain best)
+#define MAXFEATURES				2000 // use negative value to retain all features and improve accuracy (more cpu usage!!)
 #define PYRAMID_LEVELS			8
 #define PYRAMID_SCALE_FACTOR	0.83f // (1 / 1.2)
 
@@ -34,7 +34,7 @@ using namespace compv;
 #define KNN_RATIO_TEST			0.67 // http://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf#page=20
 #define THRESHOLD_GOOD_MATCHES	8
 
-#define TRAIN_FILE_NAME			"opengl_programming_guide_8th_edition_200x258_rgb.rgb"
+#define TRAIN_FILE_NAME			"opengl_programming_guide_8th_edition_200x258_rgb.rgb" // Should not use large train image to avoid high CPU usage for nothing (not performance gain for matching rate)
 #define TRAIN_WIDTH				200
 #define TRAIN_HEIGHT			258
 #define TRAIN_STRIDE			200

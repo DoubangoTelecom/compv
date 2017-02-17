@@ -44,7 +44,7 @@ public:
 
 private:
 	COMPV_ERROR_CODE convlt(CompVImageScalePyramidPtr pPyramid, int level);
-	COMPV_ERROR_CODE describe(CompVImageScalePyramidPtr pPyramid, CompVInterestPointVector::const_iterator begin, CompVInterestPointVector::const_iterator end, uint8_t* desc);
+	COMPV_ERROR_CODE describe(CompVImageScalePyramidPtr pPyramid, CompVInterestPointVector::const_iterator begin, CompVInterestPointVector::const_iterator end, uint8_t* desc, size_t desc_stride);
 
 private:
 	// TODO(dmi): use internal detector: BRIEF (just like what is done for the detector and FAST internal dete)

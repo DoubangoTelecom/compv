@@ -11,6 +11,7 @@
 #include "compv/base/parallel/compv_parallel.h"
 
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_sse42.h"
+#include "compv/base/math/intrin/x86/compv_math_distance_intrin_avx2.h"
 
 #define COMPV_HAMMING_MIN_SAMPLES_PER_THREAD	1 // very intensive op -> use max threads
 
@@ -53,6 +54,7 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagPOPCNT)) {
+#if 1 // FIXME
 		HammingDistance = CompVHammingDistance_POPCNT_C;
 		if (width > 15 && CompVCpu::isEnabled(kCpuFlagSSE42) && COMPV_IS_ALIGNED_SSE(dataPtr) && COMPV_IS_ALIGNED_SSE(patch1xnPtr) && COMPV_IS_ALIGNED_SSE(stride)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(HammingDistance = CompVMathDistanceHamming_Intrin_POPCNT_SSE42);
@@ -69,8 +71,14 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 		if (width == 32) {
 			COMPV_EXEC_IFDEF_ASM_X64(HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT); // Pure asm code is Faster than the SSE (tested using core i7)
 		}
+#endif
+		// FIXME:
+		//HammingDistance = CompVMathDistanceHamming_Intrin_POPCNT_SSE42;
+		HammingDistance32 = CompVMathDistanceHamming32_Intrin_POPCNT_AVX2;
 	}
 #endif
+
+	// TODO(dmi): for large sizes (not 32 version) use Harley-Seal AVX2 implementation : https://arxiv.org/pdf/1611.07612.pdf
 
 	if (width == 32 && !HammingDistance32) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found for fast hamming distance (32 x n)");

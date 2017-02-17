@@ -85,7 +85,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVMatPtr &queryDescrip
         || trainDescriptions->isEmpty()
 		|| !trainDescriptions->isRawTypeMatch<uint8_t>()
         || queryDescriptions->cols() != trainDescriptions->cols()
-		|| queryDescriptions->stride() != trainDescriptions->stride() // hamming distance requires same stride for the data in patch key
+		|| queryDescriptions->stride() != trainDescriptions->stride() // hamming distance requires same stride for the data in patch key (train and query descriptions built using same descriptor which means they should have same stride)
 		// no longer must, *should* be strideless
         // || queryDescriptions->strideInBytes() != queryDescriptions->rowInBytes()
         // || trainDescriptions->strideInBytes() != trainDescriptions->rowInBytes()

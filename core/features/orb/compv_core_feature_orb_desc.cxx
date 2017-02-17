@@ -176,7 +176,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::convlt(CompVImageScalePyramidPtr pPyramid, 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid, CompVInterestPointVector::const_iterator begin, CompVInterestPointVector::const_iterator end, uint8_t* desc)
+COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid, CompVInterestPointVector::const_iterator begin, CompVInterestPointVector::const_iterator end, uint8_t* desc, size_t desc_stride)
 {
 	float fx, fy, angleInRad, sf, fcos, fsin;
 	int xi, yi, width, height;
@@ -185,7 +185,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 	const int nFeaturesBytes = (m_nPatchBits >> 3);
 	const int nPatchRadius = (m_nPatchDiameter >> 1);
 	const uint8_t* img_center;
-	size_t stride;
+	size_t img_stride;
 
 #if 0
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
@@ -195,7 +195,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 	for (point = begin; point < end; ++point) {
 		// Get image at level N
 		COMPV_CHECK_CODE_RETURN(pPyramid->image(point->level, &imageAtLevelN));
-		stride = imageAtLevelN->stride();
+		img_stride = imageAtLevelN->stride();
 		width = static_cast<int>(imageAtLevelN->cols());
 		height = static_cast<int>(imageAtLevelN->rows());
 		// Scale
@@ -230,9 +230,9 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 				else
 #endif
 				{
-					m_funBrief256_31_Float32(img_center, stride, &fcos, &fsin, desc);
+					m_funBrief256_31_Float32(img_center, img_stride, &fcos, &fsin, desc);
 				}
-				desc += nFeaturesBytes;
+				desc += desc_stride;
 			}
 		}
 	}
@@ -270,8 +270,9 @@ COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVMatPtr& image_, const Co
 	const size_t nFeatures = interestPoints.size();
 	const size_t nFeaturesBits = m_nPatchBits;
 	const size_t nFeaturesBytes = nFeaturesBits >> 3;
-	COMPV_CHECK_CODE_RETURN(err_ = CompVMat::newObjStrideless<uint8_t>(&_descriptions, nFeatures, nFeaturesBytes)); // do not align nFeaturesBytes(32) which is already good for AVX, SSE and NEON
+	COMPV_CHECK_CODE_RETURN(err_ = CompVMat::newObjAligned<uint8_t>(&_descriptions, nFeatures, nFeaturesBytes)); // do not align nFeaturesBytes(32) which is already good for AVX, SSE and NEON
 	_descriptionsPtr = _descriptions->ptr<uint8_t>();
+	size_t _descriptionsStride = _descriptions->stride();
 	if (nFeatures == 0) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -399,7 +400,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVMatPtr& image_, const Co
 	}
 	else {
 #endif
-		COMPV_CHECK_CODE_RETURN(err_ = describe(_pyramid, interestPoints.begin(), interestPoints.end(), _descriptionsPtr));
+		COMPV_CHECK_CODE_RETURN(err_ = describe(_pyramid, interestPoints.begin(), interestPoints.end(), _descriptionsPtr, _descriptionsStride));
 #if 0
 	}
 #endif

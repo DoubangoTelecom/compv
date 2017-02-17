@@ -69,9 +69,9 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT):
 		xor r13, patch1xnPtr3
 		popcnt r12, r12
 		popcnt r13, r13
-		lea dataPtr, [dataPtr + stride]
 		add cnt, r11
 		add r12, r13
+		add dataPtr, stride
 		add cnt, r12
 		dec j
 		mov [distPtr], dword cntdword
