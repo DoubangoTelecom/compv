@@ -51,8 +51,6 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 	void(*HammingDistance)(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr) = CompVHammingDistance_C;
 	void(*HammingDistance32)(const uint8_t* dataPtr, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr) = NULL;
 
-	// Width == 3 -> Very common (Brief256_31)
-
 #if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagPOPCNT)) {
 		HammingDistance = CompVHammingDistance_POPCNT_C;
@@ -60,11 +58,9 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 			COMPV_EXEC_IFDEF_INTRIN_X86(HammingDistance = CompVMathDistanceHamming_Intrin_POPCNT_SSE42);
 			COMPV_EXEC_IFDEF_ASM_X86(HammingDistance = CompVMathDistanceHamming_Asm_X86_POPCNT_SSE42);
 			COMPV_EXEC_IFDEF_ASM_X64(HammingDistance = CompVMathDistanceHamming_Asm_X64_POPCNT_SSE42);
-			// TODO(dmi):
-			// There is no math operations (except the xor) in hamming function but a lot of loads and this is why SSE42 version is
-			// slightly faster than AVX
 		}
-		if (width == 32) {
+		// Width == 32 -> Very common (Brief256_31)
+		if (width == 32) { 
 			COMPV_EXEC_IFDEF_ASM_X64(HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT); // Pure asm code is Faster than the SSE (tested using core i7)
 			if (CompVCpu::isEnabled(kCpuFlagSSE42) && COMPV_IS_ALIGNED_SSE(dataPtr) && COMPV_IS_ALIGNED_SSE(patch1xnPtr) && COMPV_IS_ALIGNED_SSE(stride)) {
 				COMPV_EXEC_IFDEF_ASM_X86(HammingDistance32 = CompVMathDistanceHamming32_Asm_X86_POPCNT_SSE42);
@@ -73,6 +69,7 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 			if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(dataPtr) && COMPV_IS_ALIGNED_AVX2(patch1xnPtr) && COMPV_IS_ALIGNED_AVX2(stride) && COMPV_IS_ALIGNED_AVX2(distPtr)) {
 				COMPV_EXEC_IFDEF_INTRIN_X86(HammingDistance32 = CompVMathDistanceHamming32_Intrin_POPCNT_AVX2); // Mula's algorithm
 				COMPV_EXEC_IFDEF_ASM_X64(HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2); // Mula's algorithm
+				// TODO(dmi): add "CompVMathDistanceHamming32_Intrin_POPCNT_SSE42" using mula's algorithm
 			}
 		}
 	}

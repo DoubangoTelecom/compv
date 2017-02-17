@@ -83,7 +83,6 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 		vpxor ymm1, vecPatch, [dataPtr_plus_stride]
 		vpxor ymm2, vecPatch, [dataPtr_plus_stride + stride *1]
 		vpxor ymm3, vecPatch, [dataPtr_plus_stride + stride *2]
-
 		vpand ymm4, ymm0, vecMaskLow
 		vpand ymm5, ymm1, vecMaskLow
 		vpand ymm6, ymm2, vecMaskLow
@@ -125,9 +124,9 @@ sym(CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2):
 		vpermq ymm6, ymm5, 0x08
 		add dataPtr_plus_stride, stride_times4
 		add dataPtr, stride_times4
-		vmovdqa [distPtr], xmm6
 		dec j
-		lea distPtr, [distPtr + (4*COMPV_YASM_INT32_SZ_BYTES)]		
+		vmovdqa [distPtr], xmm6
+		lea distPtr, [distPtr + (4*COMPV_YASM_INT32_SZ_BYTES)]
 		jnz .LoopHeight4
 		.EndOf_LoopHeight4:
 		; EndOf_LoopHeight4 ;

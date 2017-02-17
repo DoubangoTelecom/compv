@@ -754,6 +754,9 @@
     <YASM Include="math\asm\x86\compv_math_distance_x64.s">
       <Filter>source\math\asm\x86</Filter>
     </YASM>
+    <YASM Include="math\asm\x86\compv_math_distance_x64_avx.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
   </ItemGroup>
   <ItemGroup>
     <None Include="asm\arm\compv_common_arm.S">
@@ -788,9 +791,6 @@
     </None>
     <None Include="image\asm\arm\compv_image_scale_bilinear_arm64_neon.S">
       <Filter>source\image\asm\arm</Filter>
-    </None>
-    <None Include="math\asm\x86\compv_math_distance_x64_avx.s">
-      <Filter>source\math\asm\x86</Filter>
     </None>
   </ItemGroup>
 </Project>
