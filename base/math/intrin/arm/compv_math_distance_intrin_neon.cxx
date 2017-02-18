@@ -160,6 +160,8 @@ COMPV_NAMESPACE_BEGIN()
 // TODO(dmi): not optiz, iPhone5 (ARM32), the ASM code is by faaar faster
 void CompVMathDistanceHamming_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr)
 {
+    COMPV_DEBUG_INFO_CHECK_NEON();
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code is by faaar faster");
 	compv_uscalar_t i, j;
     compv_scalar_t orphans;
 #if COMPV_ARCH_ARM32
@@ -245,8 +247,11 @@ void CompVMathDistanceHamming_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dat
 }
 
 // width = 32 (common, e.g. very common (Brief256_31))
+// TODO(dmi): not optiz, iPhone5 (ARM32), the ASM code is almost two times faster
 void CompVMathDistanceHamming32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr)
 {
+    COMPV_DEBUG_INFO_CHECK_NEON();
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code is almost two times faster");
 	compv_uscalar_t j;
 	uint8x16_t vec0, vec1, vec2, vec3;
 	int16x4_t veccnt; // width = 32 which means popcnt is <= 256 (32 * 8) and can be stored in int16
