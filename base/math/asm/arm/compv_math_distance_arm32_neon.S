@@ -89,12 +89,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
         vcnt.u8 vec1, vec1
         vcnt.u8 vec2, vec2
         vcnt.u8 vec3, vec3
-        vadd.u8 q13x, vec0x, vec0y
-        vadd.u8 q14x, vec2x, vec2y
-        vadd.u8 q13y, vec1x, vec1y
-        vadd.u8 q14y, vec3x, vec3y
-        vadd.u8 q15x, q13x, q13y
-        vadd.u8 q15y, q14x, q14y
+        vpadd.u8 q13x, vec0x, vec0y
+        vpadd.u8 q14x, vec2x, vec2y
+        vpadd.u8 q13y, vec1x, vec1y
+        vpadd.u8 q14y, vec3x, vec3y
+        vpadd.u8 q15x, q13x, q13y
+        vpadd.u8 q15y, q14x, q14y
     .endm
 
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -116,12 +116,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
         vcnt.u8 vec1, vec1
         vcnt.u8 vec2, vec2
         vcnt.u8 vec3, vec3
-        vadd.u8 q13x, vec0x, vec0y
-        vadd.u8 q14x, vec2x, vec2y
-        vadd.u8 q13y, vec1x, vec1y
-        vadd.u8 q14y, vec3x, vec3y
-        vadd.u8 q15x, q13x, q13y
-        vadd.u8 q15y, q14x, q14y
+        vpadd.u8 q13x, vec0x, vec0y
+        vpadd.u8 q14x, vec2x, vec2y
+        vpadd.u8 q13y, vec1x, vec1y
+        vpadd.u8 q14y, vec3x, vec3y
+        vpadd.u8 q15x, q13x, q13y
+        vpadd.u8 q15y, q14x, q14y
     .endm
 
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -139,12 +139,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
         vcnt.u8 vec1, vec1
         vcnt.u8 vec2, vec2
         vcnt.u8 vec3, vec3
-        vadd.u8 q13x, vec0x, vec0y
-        vadd.u8 q14x, vec2x, vec2y
-        vadd.u8 q13y, vec1x, vec1y
-        vadd.u8 q14y, vec3x, vec3y
-        vadd.u8 q15x, q13x, q13y
-        vadd.u8 q15y, q14x, q14y
+        vpadd.u8 q13x, vec0x, vec0y
+        vpadd.u8 q14x, vec2x, vec2y
+        vpadd.u8 q13y, vec1x, vec1y
+        vpadd.u8 q14y, vec3x, vec3y
+        vpadd.u8 q15x, q13x, q13y
+        vpadd.u8 q15y, q14x, q14y
     .endm
 
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -173,9 +173,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
     lsrs j, height, #2 @ div 4
     beq EndOf_IfHeightGt2_CompVMathDistanceHamming_Asm_NEON32
     IfHeightGt2_CompVMathDistanceHamming_Asm_NEON32:
-        add t0, dataPtr, stride @ t0 = dataPtr[stride * 1]
-        add t1, dataPtr, stride, LSL #1 @ t1 = dataPtr[stride * 2]
-        add t2, t0, stride, LSL #1 @ t2 = dataPtr[stride * 3]
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         @ for (; j < height - 3; j += 4)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -183,13 +180,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
             veor.u8 veccnt, veccnt, veccnt
             ldr_arg argi_patch1xnPtr, patch1xnPtr
             lsr i, width, #4 @ div 16 (not need to test, width is always > 15)
+            add t0, dataPtr, stride @ t0 = dataPtr[stride * 1]
+            add t1, dataPtr, stride, LSL #1 @ t1 = dataPtr[stride * 2]
+            add t2, t0, stride, LSL #1 @ t2 = dataPtr[stride * 3]
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             @ for (; i < width - 15; i += 16)
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             LoopH4W16_CompVMathDistanceHamming_Asm_NEON32:
                 vld1.u8 { vecPatch }, [patch1xnPtr : 128]!
                 __hamming4x16
-                vadd.u8 q10x, q15x, q15y
+                vpadd.u8 q10x, q15x, q15y
                 vpaddl.u8 q11x, q10x
                 vaddw.s16 veccnt, veccnt, q11x
                 subs i, i, #1
@@ -200,19 +200,24 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
             @ if (orphans =  static_cast<compv_scalar_t>(width & 15))
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             ands t0, width, 15
-            bne EndOf_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON32
+            beq EndOf_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON32
             IfH4Orphans_CompVMathDistanceHamming_Asm_NEON32:
                 mov t1, #0
                 vld1.u8 { vecPatch }, [patch1xnPtr : 128]!
                 vceq.u8 vecMask, vec0, vec0
+                veor.u8 q15, q15, q15 @ TODO(dmi): for ARM64 no need to set zero and change next 'vmov.s32' to 'vmov.s64'
                 sub t0, t1, t0, LSL #3 @ t0 = ((0 - t0) << 3) = -t0 << 3
                 cmp t0, #-64
                 addlt t1, t0, #64 @ t1 = 0 if (t0 < -64) otherwise unchanged (#0)
-                vmov.s32 q15x[0], t0
-                vmov.s32 q15y[0], t1
+                vmov.s32 q15y[0], t0
+                vmov.s32 q15x[0], t1
                 vshl.u64 vecMask, vecMask, q15
+                @ restore t0, t1 and t2 @
+                add t0, dataPtr, stride @ t0 = dataPtr[stride * 1]
+                add t1, dataPtr, stride, LSL #1 @ t1 = dataPtr[stride * 2]
+                add t2, t0, stride, LSL #1 @ t2 = dataPtr[stride * 3]
                 __hamming4x16_orphans
-                vadd.u8 q10x, q15x, q15y
+                vpadd.u8 q10x, q15x, q15y
                 vpaddl.u8 q11x, q10x
                 vaddw.s16 veccnt, veccnt, q11x
                 EndOf_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON32:
@@ -243,7 +248,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         LoopH1W64_CompVMathDistanceHamming_Asm_NEON32:
             __hamming1x64
-            vadd.u8 q10x, q15x, q15y
+            vpadd.u8 q10x, q15x, q15y
             vpaddl.u8 q11x, q10x
             vaddw.s16 veccnt, veccnt, q11x
             subs i, i, #1
@@ -255,11 +260,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         @ for (; i < width - 15; i += 16)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        lsrs i, width, #4 @ div 16
+        and t0, width, #63 @ modulo 64 
+        lsrs i, t0, #4 @ div 16
         beq EndOf_LoopH1W16_CompVMathDistanceHamming_Asm_NEON32
         LoopH1W16_CompVMathDistanceHamming_Asm_NEON32:
             __hamming1x16
-            vadd.u8 q10x, q15x, q15y
+            vpadd.u8 q10x, q15x, q15y
             vpaddl.u8 q11x, q10x
             vaddw.s16 veccnt, veccnt, q11x
             subs i, i, #1
@@ -272,19 +278,19 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
         @ if (orphans =  static_cast<compv_scalar_t>(width & 15))
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         ands t0, width, 15
-        bne EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON32
+        beq EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON32
         IfH1Orphans_CompVMathDistanceHamming_Asm_NEON32:
             mov t1, #0
-            vld1.u8 { vecPatch }, [patch1xnPtr : 128]!
             vceq.u8 vecMask, vec0, vec0
+            veor.u8 q15, q15, q15 @ TODO(dmi): for ARM64 no need to set zero and change next 'vmov.s32' to 'vmov.s64'
             sub t0, t1, t0, LSL #3 @ t0 = ((0 - t0) << 3) = -t0 << 3
             cmp t0, #-64
             addlt t1, t0, #64 @ t1 = 0 if (t0 < -64) otherwise unchanged (#0)
-            vmov.s32 q15x[0], t0
-            vmov.s32 q15y[0], t1
+            vmov.s32 q15y[0], t0 
+            vmov.s32 q15x[0], t1
             vshl.u64 vecMask, vecMask, q15
             __hamming1x16_orphans
-            vadd.u8 q10x, q15x, q15y
+            vpadd.u8 q10x, q15x, q15y
             vpaddl.u8 q11x, q10x
             vaddw.s16 veccnt, veccnt, q11x
             EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON32:
@@ -294,7 +300,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
         @ TODO(dmi): not same code as ARM64
         vpadd.s32 q15x, veccntx, veccnty
         vmov.s32 t0, q15x[0]
-        vmov.s32 t1, q15y[0]
+        vmov.s32 t1, q15x[1]
         add t0, t0, t1
         str t0, [distPtr], COMPV_GAS_INT32_SZ_BYTES
 

@@ -227,7 +227,7 @@ void CompVMathDistanceHamming_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dat
             // Not an issue reading beyond width because the data is strided and aligned on NEON (#16 bytes)
             vecMask = vceqq_u8(vec0, vec0); // all bits to #1 (all bytes to #0xff)
             vecPatch = vld1q_u8(&patch1xnPtr[i]);
-            orphans = ((-orphans) << 3); // convert form bytes to bits and negate (negative means shift right), asm : sub r0, #0, orphans, LSL #3
+            orphans = -(orphans << 3); // convert form bytes to bits and negate (negative means shift right), asm : sub r0, #0, orphans, LSL #3
             vecMask = vshlq_u64(vecMask, (int64x2_t){ orphans < -64 ? (orphans + 64) : 0, orphans});
             __hamming1x16_orphans(vld1q_u8(&dataPtr[i]), vld1q_u8(&patch1xnPtr[i]));
             veccnt = vaddw_s16(veccnt, vpaddl_u8(vpadd_u8(vget_low_u8(vec0), vget_high_u8(vec0))));
