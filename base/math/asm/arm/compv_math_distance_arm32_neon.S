@@ -299,9 +299,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
 
         @ TODO(dmi): not same code as ARM64
         vpadd.s32 q15x, veccntx, veccnty
-        vmov.s32 t0, q15x[0]
-        vmov.s32 t1, q15x[1]
-        add t0, t0, t1
+        vpadd.s32 q14x, q15x, q15x
+        vmov.s32 t0, q14x[0]
         str t0, [distPtr], COMPV_GAS_INT32_SZ_BYTES
 
         add dataPtr, dataPtr, pad

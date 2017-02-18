@@ -237,7 +237,7 @@ void CompVMathDistanceHamming_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dat
         distPtr[j] = vget_lane_s32(vpaddl_s32(vpadd_s32(vget_low_s32(veccnt), vget_high_s32(veccnt))), 0);
 #else
         veccntn = vpadd_s32(vget_low_s32(veccnt), vget_high_s32(veccnt));
-        distPtr[j] = vget_lane_s32(veccntn, 0) + vget_lane_s32(veccntn, 1);
+        distPtr[j] = vget_lane_s32(vpadd_s32(veccntn, veccntn), 0);
 #endif
 		dataPtr += stride;
 	}
