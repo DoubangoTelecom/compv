@@ -403,14 +403,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
             add t0, dataPtr, stride @ t0 = dataPtr[stride * 1]
             add t1, dataPtr, stride, LSL #1 @ t1 = dataPtr[stride * 2]
             add t2, t0, stride, LSL #1 @ t2 = dataPtr[stride * 3]
-            vld1.u8 { q4 }, [dataPtr : 128]!
-            vld1.u8 { q6 }, [t0 : 128]! @ t0 = dataPtr[stride * 1]
-            vld1.u8 { q8 }, [t1 : 128]! @ t1 = dataPtr[stride * 2]
-            vld1.u8 { q10 }, [t2 : 128]! @ t2 = dataPtr[stride * 3]
-            vld1.u8 { q5 }, [dataPtr : 128]!
-            vld1.u8 { q7 }, [t0 : 128]! @ t0 = dataPtr[stride * 1]
-            vld1.u8 { q9 }, [t1 : 128]! @ t1 = dataPtr[stride * 2]
-            vld1.u8 { q11 }, [t2 : 128]! @ t2 = dataPtr[stride * 3]
+            vld1.u8 { q4x, q4y, q5x, q5y }, [dataPtr : 128]! @ TODO(dmi): ARM64, use ldp
+            vld1.u8 { q6x, q6y, q7x, q7y }, [t0 : 128]! @ t0 = dataPtr[stride * 1]
+            vld1.u8 { q8x, q8y, q9x, q9y }, [t1 : 128]! @ t1 = dataPtr[stride * 2]
+            vld1.u8 { q10x, q10y, q11x, q11y }, [t2 : 128]! @ t2 = dataPtr[stride * 3]
+
+
+
             veor.u8 q4, q4, vecPatch0
             veor.u8 q6, q6, vecPatch0
             veor.u8 q8, q8, vecPatch0
@@ -427,6 +426,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
             vcnt.u8 q7, q7
             vcnt.u8 q9, q9
             vcnt.u8 q11, q11
+            
             vpadd.u8 q12x, q4x, q4y
             vpadd.u8 q13x, q8x, q8y
             vpadd.u8 q14x, q5x, q5y
