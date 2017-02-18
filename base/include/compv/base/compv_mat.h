@@ -340,9 +340,9 @@ private:
 			COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
 			size_t nNewDataSize = 0;
-			bool bPlanePacked;
-			size_t nPlaneCount;
-			size_t nBestStrideInBytes;
+			bool bPlanePacked = true;
+			size_t nPlaneCount = 0;
+			size_t nBestStrideInBytes = 0;
 			size_t nPlaneStrideInBytes[COMPV_PLANE_MAX_COUNT];
 			size_t nPlaneCols[COMPV_PLANE_MAX_COUNT];
 			size_t nPlaneRows[COMPV_PLANE_MAX_COUNT];

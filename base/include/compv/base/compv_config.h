@@ -382,9 +382,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <assert.h>
-#include <math.h>
 
 #include <string>
+#include <cstdlib>
 
 // Must be at the bottom to make sure we can redefine all macros
 #if defined(HAVE_CONFIG_H)

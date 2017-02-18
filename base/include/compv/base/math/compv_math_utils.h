@@ -174,7 +174,7 @@ public:
     template <typename T>
     static COMPV_INLINE T hypot(T x, T y) {
 #if 1
-        return (T)::hypot(x, y);
+        return static_cast<T>(std::hypot(x, y));
 #elif 0
         // https://en.wikipedia.org/wiki/Hypot
         // Without overflow / underflow
@@ -196,7 +196,7 @@ private:
         size_t i, j;
         for (j = 0; j < height; ++j) {
             for (i = 0; i < width; ++i) {
-                r_[i] = (OutputType)(COMPV_MATH_ABS(a[i]) + COMPV_MATH_ABS(b[i]));
+                r_[i] = static_cast<OutputType>(COMPV_MATH_ABS(a[i]) + COMPV_MATH_ABS(b[i]));
             }
             r_ += stride;
             a += stride;

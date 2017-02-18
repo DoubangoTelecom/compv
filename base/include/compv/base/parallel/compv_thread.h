@@ -21,9 +21,11 @@ typedef uintptr_t compv_thread_id_t;
 #	define COMPV_THREAD_PRIORITY_HIGH					THREAD_PRIORITY_HIGHEST
 #	define COMPV_THREAD_PRIORITY_TIME_CRITICAL			THREAD_PRIORITY_TIME_CRITICAL
 #else
+extern "C" {
 #	include <pthread.h>
 #	include <sched.h>
 #	include <unistd.h>
+}
 typedef pthread_t compv_thread_id_t;
 #	define COMPV_THREAD_PRIORITY_LOW					sched_get_priority_min(SCHED_OTHER)
 #	define COMPV_THREAD_PRIORITY_TIME_CRITICAL			sched_get_priority_max(SCHED_OTHER)

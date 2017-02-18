@@ -9,22 +9,27 @@
 #include "compv/base/math/compv_math_matrix.h"
 #include "compv/base/math/compv_math_stats.h"
 #include "compv/base/math/compv_math_eigen.h"
-#include "compv/base/parallel/compv_thread.h"
 
-#define COMPV_THIS_CLASSNAME	"CompVHomography"
+#include <cfloat> /* FLT_MAX */
+
 
 #if !defined (COMPV_PRNG11)
 #	define COMPV_PRNG11 1
 #endif
+
+#if COMPV_PRNG11
+#	include <random>
+#endif
+
+#include "compv/base/parallel/compv_parallel.h" // TODO(dmi): Very strange, when targeting iOS and including this header before <random> cause build errors
+
 
 #if !defined (COMPV_HOMOGRAPHY_OUTLIER_THRESHOLD)
 #	define	COMPV_HOMOGRAPHY_OUTLIER_THRESHOLD 30
 #endif
 #define COMPV_PROMOTE_ZEROS(_h_, _i_) if (CompVMathEigen<T>::isCloseToZero((_h_)[(_i_)])) (_h_)[(_i_)] = 0;
 
-#if COMPV_PRNG11
-#	include <random>
-#endif
+#define COMPV_THIS_CLASSNAME	"CompVHomography"
 
 #define COMPV_RANSAC_HOMOGRAPHY_MIN_SAMPLES_PER_THREAD	(4*5) // number of samples per thread
 
@@ -208,7 +213,7 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 #	else
 	// CompVThread::getIdCurrent() must return different number for each thread otherwise we'll generate the same suite of numbers
 	// We're not using a random device number (std::random_device) in order to generate the same suite of numbers for each thread everytime
-	std::mt19937 prng_(static_cast<unsigned long>(CompVThread::getIdCurrent()));
+	std::mt19937 prng_((unsigned long)CompVThread::getIdCurrent());
 #	endif
 	std::uniform_int_distribution<> unifd_{ 0, static_cast<int>(k_ - 1) };
 #else

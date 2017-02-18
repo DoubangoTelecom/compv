@@ -9,7 +9,7 @@
 
 #include "compv/base/compv_config.h"
 
-#include <math.h>
+#include <cmath>
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -28,32 +28,32 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_MATH_ABS(x)							(std::abs((x))) // ::abs() accepts integers only, use std::abs
 #define COMPV_MATH_ABS_INT32(x)						COMPV_MATH_ABS((x))//FIXME:((x) ^ ((x) >> 31)) - ((x) >> 31)
 #define COMPV_MATH_MV_DIFF(mv1, mv2)				(COMPV_MATH_ABS((mv1)[0] - (mv2)[0]) + COMPV_MATH_ABS((mv1)[1] - (mv2)[1])) // mvDiff( mv1, mv2 ) = Abs( mv1[ 0 ] - mv2[ 0 ] ) + Abs( mv1[ 1 ] - mv2[ 1 ] ) (G-251)
-#define COMPV_MATH_CEIL(x)							(::ceil((x)))
+#define COMPV_MATH_CEIL(x)							(std::ceil((x)))
 #define COMPV_MATH_CLIP3(x,y,z)						((z)<(x) ? (x) : ((z)>(y) ? (y) : (z))) //!\ Do not transform to max(x, min(z, y)) as each macro (max and min) would be expanded several times
 #define COMPV_MATH_CLIP3_INT(x,y,z)					MUST_NOT_USE_WOULD_BE_SLOOOOOW
 #define COMPV_MATH_CLIP1Y(_x,BitDepthY)				COMPV_MATH_CLIP3(0, (1 << (BitDepthY)) - 1, (_x))
 #define COMPV_MATH_CLIP1C(_x,BitDepthC)				COMPV_MATH_CLIP3(0, (1 << (BitDepthC)) - 1, (_x))
 #define COMPV_MATH_CLIP2(y,z)						COMPV_MATH_CLIP3(0,(y),(z))// // Clip2(max, val) = Clip3(0, max, val)
 #define COMPV_MATH_TAP6FILTER(E, F, G, H, I, J)		((E) - 5*((F) + (I)) + 20*((G) + (H)) + (J))
-#define COMPV_MATH_FLOOR(x)							(::floor(x))
+#define COMPV_MATH_FLOOR(x)							(std::floor(x))
 #define COMPV_MATH_INVERSE_RASTER_SCAN(a,b,c,d,e)	((e)==0 ? ((a)%((d)/(b)))*(b) : ((a)/((d)/(b)))*(c))
-#define COMPV_MATH_LOG(x)							::log((x))
-#define COMPV_MATH_LOG2(x)							(1/::log(2.0)) * ::log((x))
-#define COMPV_MATH_LOGA0(x)							(::log10((x)))
+#define COMPV_MATH_LOG(x)							std::log((x))
+#define COMPV_MATH_LOG2(x)							(1/std::log(2.0)) * std::log((x))
+#define COMPV_MATH_LOGA0(x)							(std::log10((x)))
 #define COMPV_MATH_MEDIAN(x,y,z)					((x)+(y)+(z)-COMPV_MATH_MIN((x),COMPV_MATH_MIN((y),(z)))-COMPV_MATH_MAX((x),COMPV_MATH_MAX((y),(z))))
 #define COMPV_MATH_SIGN(x)							((x)>=0 ? 1 : -1)
 #define COMPV_MATH_ROUND(x)							(COMPV_MATH_SIGN((x))*COMPV_MATH_FLOOR(COMPV_MATH_ABS((x))+0.5))
-#define COMPV_MATH_SQRT(x)							::sqrt((x))
-#define COMPV_MATH_COS								::cos
-#define COMPV_MATH_SIN								::sin
-#define COMPV_MATH_TAN								::tan
-#define COMPV_MATH_ASIN								::asin
-#define COMPV_MATH_ACOS								::acos
-#define COMPV_MATH_EXP								::exp
-#define COMPV_MATH_POW								::pow
-#define COMPV_MATH_ATAN2							::atan2
-#define COMPV_MATH_ATAN								::atan
-#define COMPV_MATH_ATAN2F							::atan2f
+#define COMPV_MATH_SQRT(x)							std::sqrt((x))
+#define COMPV_MATH_COS								std::cos
+#define COMPV_MATH_SIN								std::sin
+#define COMPV_MATH_TAN								std::tan
+#define COMPV_MATH_ASIN								std::asin
+#define COMPV_MATH_ACOS								std::acos
+#define COMPV_MATH_EXP								std::exp
+#define COMPV_MATH_POW								std::pow
+#define COMPV_MATH_ATAN2							std::atan2
+#define COMPV_MATH_ATAN								std::atan
+#define COMPV_MATH_ATAN2F							std::atan2f
 #define COMPV_MATH_ROUNDF_2_INT(f,inttype)			static_cast<inttype>((f) >= 0.0 ? ((f) + 0.5) : ((f) - 0.5)) //!\IMPORTANT: (f) is evaluated several times -> must be an 'immediate' value
 #define COMPV_MATH_ROUNDFU_2_INT(f,inttype)			static_cast<inttype>((f) + 0.5) // fast rounding: (f) must be > 0, 0.5 will be rounded to toward the closest even number (SIMD: add 0.5, then cvt with truncation)
 #define COMPV_MATH_HYPOT_NAIVE(x, y)				COMPV_MATH_SQRT((x)*(x) + (y)*(y))
