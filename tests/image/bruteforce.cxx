@@ -5,7 +5,7 @@
 
 COMPV_ERROR_CODE bruteforce()
 {
-	static const  size_t width = 2007;
+	static const  size_t width = 32;
 	static const struct compv_unittest_bf {
 		size_t width;
 		size_t height;

@@ -201,11 +201,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
             ands t0, width, 15
             beq EndOf_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON32
             IfH4Orphans_CompVMathDistanceHamming_Asm_NEON32:
-                mov t1, #0
+                mov t1, #-(16<<3)
                 vld1.u8 { vecPatch }, [patch1xnPtr :128]!
                 vceq.u8 vecMask, vec0, vec0
-                veor.u8 q15, q15, q15 @ TODO(dmi): for ARM64 no need to set zero and change next 'vmov.s32' to 'vmov.s64'
-                sub t0, t1, t0, LSL #3 @ t0 = ((0 - t0) << 3) = -t0 << 3
+                veor.u8 q15, q15, q15
+                add t0, t1, t0, LSL #3 @ ((orphans - 16) << 3) = (-16<<3) + (orphans << 3)
+                mov t1, #0
                 cmp t0, #-64
                 addlt t1, t0, #64 @ t1 = 0 if (t0 < -64) otherwise unchanged (#0)
                 vmov.s32 q15y[0], t0
@@ -278,10 +279,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
         ands t0, width, 15
         beq EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON32
         IfH1Orphans_CompVMathDistanceHamming_Asm_NEON32:
-            mov t1, #0
+            mov t1, #-(16<<3)
             vceq.u8 vecMask, vec0, vec0
-            veor.u8 q15, q15, q15 @ TODO(dmi): for ARM64 no need to set zero and change next 'vmov.s32' to 'vmov.s64'
-            sub t0, t1, t0, LSL #3 @ t0 = ((0 - t0) << 3) = -t0 << 3
+            veor.u8 q15, q15, q15
+            add t0, t1, t0, LSL #3 @ ((orphans - 16) << 3) = (-16<<3) + (orphans << 3)
+            mov t1, #0
             cmp t0, #-64
             addlt t1, t0, #64 @ t1 = 0 if (t0 < -64) otherwise unchanged (#0)
             vmov.s32 q15y[0], t0 
@@ -295,7 +297,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
             @@ EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON32 @@
 
 
-        @ TODO(dmi): not same code as ARM64
         vpadd.s32 q15x, veccntx, veccnty
         vpadd.s32 q14x, q15x, q15x
         vmov.s32 t0, q14x[0]
