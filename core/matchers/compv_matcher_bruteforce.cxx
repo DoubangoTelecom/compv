@@ -11,7 +11,7 @@
 #include "compv/base/compv_cpu.h"
 
 #define COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD					1 // use max threads
-#define COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2		120 // for hamming distance (Fast Popcnt using Mula's formula)
+#define COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD_POPCNT_SIMD		160 // for hamming distance (Fast Popcnt using Mula's formula)
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -99,8 +99,8 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVMatPtr &queryDescrip
     size_t queryRows_ = queryDescriptions->rows();
     size_t matchesRows = COMPV_MATH_CLIP3(1, trainRows_, static_cast<size_t>(m_nKNN));
     size_t matchesCols = queryRows_;
-	const size_t minSamplesPerThread = (CompVCpu::isEnabled(kCpuFlagPOPCNT) && CompVCpu::isEnabled(kCpuFlagAVX2) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled()))
-		? COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2
+	const size_t minSamplesPerThread = (((CompVCpu::isEnabled(kCpuFlagPOPCNT) && CompVCpu::isEnabled(kCpuFlagAVX2)) || CompVCpu::isEnabled(kCpuFlagARM_NEON)) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled()))
+		? COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD_POPCNT_SIMD
 		: COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD;
 
     // realloc() matchers
