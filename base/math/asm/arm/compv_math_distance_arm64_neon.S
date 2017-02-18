@@ -68,43 +68,40 @@
 ###########################################################
 #  Overrides q9..q14 and returns the result in q15
 .macro __hamming1x64
-    vld1.u8 { vec0x, vec0y, vec1x, vec1y }, [dataPtr : 128]!
-    vld1.u8 { vec2x, vec2y, vec3x, vec3y }, [dataPtr : 128]!
-    vld1.u8 { q9x, q9y, q10x, q10y }, [patch1xnPtr : 128]!
-    vld1.u8 { q11x, q11y, q12x, q12y }, [patch1xnPtr : 128]!
-    veor.u8 vec0, vec0, q9
-    veor.u8 vec1, vec1, q10
-    veor.u8 vec2, vec2, q11
-    veor.u8 vec3, vec3, q12
-    vcnt.u8 vec0, vec0
-    vcnt.u8 vec1, vec1
-    vcnt.u8 vec2, vec2
-    vcnt.u8 vec3, vec3
-    vpadd.u8 q13x, vec0x, vec0y
-    vpadd.u8 q14x, vec2x, vec2y
-    vpadd.u8 q13y, vec1x, vec1y
-    vpadd.u8 q14y, vec3x, vec3y
-    vpadd.u8 q15x, q13x, q13y
-    vpadd.u8 q15y, q14x, q14y
+    ld1 { vec0.16b, vec1.16b }, [dataPtr], #32
+    ld1 { vec2.16b, vec3.16b }, [dataPtr], #32
+    ld1 { v9.16b, v10.16b }, [patch1xnPtr], #32
+    ld1 { v11.16b, v12.16b }, [patch1xnPtr], #32
+    eor vec0.16b, vec0.16b, v9.16b
+    eor vec1.16b, vec1.16b, v10.16b
+    eor vec2.16b, vec2.16b, v11.16b
+    eor vec3.16b, vec3.16b, v12.16b
+    cnt vec0.16b, vec0.16b
+    cnt vec1.16b, vec1.16b
+    cnt vec2.16b, vec2.16b
+    cnt vec3.16b, vec3.16b
+    addp v13.16b, vec0.16b, vec1.16b
+    addp v14.16b, vec2.16b, vec3.16b
+    addp v15.16b, v13.16b, v14.16b
 .endm
 
 ###########################################################
 # Overrides q13, q14 and returns the result in q15
 .macro __hamming1x16
-    vld1.u8 { vec0 }, [dataPtr : 128]!
-    vld1.u8 { q13 }, [patch1xnPtr : 128]!
-    veor.u8 q14, vec0, q13
-    vcnt.u8 q15, q14
+    ld1 { vec0.16b }, [dataPtr], #16
+    ld1 { v13.16b }, [patch1xnPtr], #16
+    eor v14.16b, vec0.16b, v13.16b
+    cnt v15.16b, v14.16b
 .endm
 
 ###########################################################
 # Overrides q12, q13, q14 and returns the result in q15
 .macro __hamming1x16_orphans
-    vld1.u8 { vec0 }, [dataPtr : 128]!
-    vld1.u8 { q12 }, [patch1xnPtr : 128]!
-    veor.u8 q13, vec0, q12
-    vand.u8 q14, q13, vecMask
-    vcnt.u8 q15, q14
+    ld1 { vec0.16b }, [dataPtr], #16
+    ld1 { v12.16b }, [patch1xnPtr], #16
+    eor v13.16b, vec0.16b, v12.16b
+    and v14.16b, v13.16b, vecMask.16b
+    cnt v15.16b, v14.16b
 .endm
 
 #########################################################################
@@ -191,9 +188,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
                 eor v15.16b, v15.16b, v15.16b // TODO(dmi): for ARM64 no need to set zero and change next 'vmov.s32' to 'vmov.s64'
                 sub t4, t3, t0, LSL #3 // t4 = ((0 - t0) << 3) = -t0 << 3
                 cmp t4, #-64
-                bge NotLtMinus64
+                bge NotLtMinus64_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON64
                     add t3, t4, #64 // t3 = 0 if (t4 < -64) otherwise unchanged (#0)
-                NotLtMinus64:
+                NotLtMinus64_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON64:
                 mov v15.d[0], t4
                 mov v15.d[1], t3
                 ushl vecMask.16b, vecMask.16b, v15.16b
@@ -224,14 +221,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
         movi veccnt.4s, #0
         mov patch1xnPtr, patch1xnPtr_
         lsr i, width, #6 // div 64
+        cbz i, EndOf_LoopH1W64_CompVMathDistanceHamming_Asm_NEON64
         ###########################################################
         # for (; i < width - 63; i += 64)
         ###########################################################
         LoopH1W64_CompVMathDistanceHamming_Asm_NEON64:
             __hamming1x64
-            vpadd.u8 q10x, q15x, q15y
-            vpaddl.u8 q11x, q10x
-            vaddw.s16 veccnt, veccnt, q11x
+            addp v10.16b, v15.16b, v15.16b
+            uaddlp v11.4h, v10.8b
+            uaddw veccnt.4s, veccnt.4s, v11.4h
             subs i, i, #1
             bne LoopH1W64_CompVMathDistanceHamming_Asm_NEON64
             EndOf_LoopH1W64_CompVMathDistanceHamming_Asm_NEON64:
@@ -241,14 +239,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
         ###########################################################
         # for (; i < width - 15; i += 16)
         ###########################################################
-        and t0, width, #63 # modulo 64 
-        lsrs i, t0, #4 # div 16
-        beq EndOf_LoopH1W16_CompVMathDistanceHamming_Asm_NEON64
+        and t0, width, #63 // modulo 64 
+        lsr i, t0, #4 // div 16
+        cbz i, EndOf_LoopH1W16_CompVMathDistanceHamming_Asm_NEON64
         LoopH1W16_CompVMathDistanceHamming_Asm_NEON64:
             __hamming1x16
-            vpadd.u8 q10x, q15x, q15y
-            vpaddl.u8 q11x, q10x
-            vaddw.s16 veccnt, veccnt, q11x
+            addp v10.16b, v15.16b, v15.16b
+            uaddlp v11.4h, v10.8b
+            uaddw veccnt.4s, veccnt.4s, v11.4h
             subs i, i, #1
             bne LoopH1W16_CompVMathDistanceHamming_Asm_NEON64
             EndOf_LoopH1W16_CompVMathDistanceHamming_Asm_NEON64:
@@ -261,28 +259,29 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
         ands t0, width, 15
         beq EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64
         IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64:
-            mov t1, #0
-            cmeq.u8 vecMask, vec0, vec0
-            veor.u8 q15, q15, q15 # TODO(dmi): for ARM64 no need to set zero and change next 'vmov.s32' to 'vmov.s64'
-            sub t0, t1, t0, LSL #3 # t0 = ((0 - t0) << 3) = -t0 << 3
-            cmp t0, #-64
-            addlt t1, t0, #64 # t1 = 0 if (t0 < -64) otherwise unchanged (#0)
-            vmov.s32 q15y[0], t0 
-            vmov.s32 q15x[0], t1
-            vshl.u64 vecMask, vecMask, q15
+            mov t3, #0
+            cmeq vecMask.16b, vec0.16b, vec0.16b
+            eor v15.16b, v15.16b, v15.16b // TODO(dmi): for ARM64 no need to set zero and change next 'vmov.s32' to 'vmov.s64'
+            sub t4, t3, t0, LSL #3 // t4 = ((0 - t0) << 3) = -t0 << 3
+            cmp t4, #-64
+            bge NotLtMinus64_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64
+                add t3, t4, #64 // t3 = 0 if (t4 < -64) otherwise unchanged (#0)
+            NotLtMinus64_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64:
+            mov v15.d[0], t4
+            mov v15.d[1], t3
+            ushl vecMask.16b, vecMask.16b, v15.16b
             __hamming1x16_orphans
-            vpadd.u8 q10x, q15x, q15y
-            vpaddl.u8 q11x, q10x
-            vaddw.s16 veccnt, veccnt, q11x
+            addp v10.16b, v15.16b, v15.16b
+            uaddlp v11.4h, v10.8b
+            uaddw veccnt.4s, veccnt.4s, v11.4h
             EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64:
             ## EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64 ##
 
 
         # TODO(dmi): not same code as ARM64
-        vpadd.s32 q15x, veccntx, veccnty
-        vpadd.s32 q14x, q15x, q15x
-        vmov.s32 t0, q14x[0]
-        str t0, [distPtr], COMPV_GAS_INT32_SZ_BYTES
+        addp v15.4s, veccnt.4s, veccnt.4s
+        addp v14.4s, v15.4s, v15.4s
+        st1 {v14.s}[0], [distPtr], #4
 
         add dataPtr, dataPtr, pad
         subs j, j, #1
@@ -303,6 +302,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
     .unreq j
     .unreq pad
     .unreq t0
+    .unreq t0w
     .unreq t1
     .unreq t2
     .unreq t3
