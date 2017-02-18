@@ -97,6 +97,7 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 		if (width == 32) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM(HammingDistance32 = CompVMathDistanceHamming32_Intrin_NEON);
             COMPV_EXEC_IFDEF_ASM_ARM32(HammingDistance32 = CompVMathDistanceHamming32_Asm_NEON32);
+            COMPV_EXEC_IFDEF_ASM_ARM64(HammingDistance32 = CompVMathDistanceHamming32_Asm_NEON64);
 		}
 	}
 #endif

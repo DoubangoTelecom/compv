@@ -296,7 +296,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
     .unreq j
     .unreq pad
     .unreq t0
-    .unreq t0w
     .unreq t1
     .unreq t2
     .unreq t3
@@ -312,6 +311,149 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
     .unreq veccnt
     .unreq vecPatch
     .unreq vecMask
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+
+
+#########################################################################
+# arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* dataPtr
+# arg(1) -> compv_uscalar_t height
+# arg(2) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+# arg(3) -> COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr
+# arg(4) -> int22_t* distPtr
+COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON64
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+	
+	## Load arguments ##
+	dataPtr .req r0
+	height .req r1
+	stride .req r2
+	patch1xnPtr .req r3
+	distPtr .req r4
+
+   j .req r5
+   pad .req r6
+   t0 .req r7
+   t1 .req r8
+   t2 .req r9
+
+   veccnt .req v0
+   vecPatch0 .req v1
+   vecPatch1 .req v2
+
+   ld1 { vecPatch0.16b, vecPatch1.16b }, [patch1xnPtr], #32
+   .unreq patch1xnPtr # patch1xnPtr no longer needed
+
+   # compute pad
+   sub pad, stride, 32    
+
+   ###########################################################
+   # .if (height > 3)
+   ###########################################################
+   lsr j, height, #2 // div 4
+   cbz j, EndOf_IfHeightGt4_CompVMathDistanceHamming32_Asm_NEON64
+   IfHeightGt4_CompVMathDistanceHamming32_Asm_NEON64:
+       ###########################################################
+       # for (; j < height - 3; j += 4)
+       ###########################################################
+       LoopH4_CompVMathDistanceHamming32_Asm_NEON64:
+           add t0, dataPtr, stride // t0 = dataPtr[stride * 1]
+           add t1, dataPtr, stride, LSL #1 // t1 = dataPtr[stride * 2]
+           add t2, t0, stride, LSL #1 // t2 = dataPtr[stride * 3]
+           ld1 { v4.16b, v5.16b }, [dataPtr], #32 // TODO(dmi): ARM64, use ldp
+           ld1 { v6.16b, v7.16b }, [t0], #32 // t0 = dataPtr[stride * 1]
+           ld1 { v8.16b, v9.16b }, [t1], #32 // t1 = dataPtr[stride * 2]
+           ld1 { v10.16b, v11.16b }, [t2], #32 // t2 = dataPtr[stride * 3]
+           eor v4.16b, v4.16b, vecPatch0.16b
+           eor v5.16b, v5.16b, vecPatch1.16b
+           eor v6.16b, v6.16b, vecPatch0.16b
+           eor v7.16b, v7.16b, vecPatch1.16b
+           eor v8.16b, v8.16b, vecPatch0.16b
+           eor v9.16b, v9.16b, vecPatch1.16b
+           eor v10.16b, v10.16b, vecPatch0.16b    
+           eor v11.16b, v11.16b, vecPatch1.16b
+           cnt v4.16b, v4.16b
+           cnt v5.16b, v5.16b
+           cnt v6.16b, v6.16b
+           cnt v7.16b, v7.16b
+           cnt v8.16b, v8.16b
+           cnt v9.16b, v9.16b
+           cnt v10.16b, v10.16b
+           cnt v11.16b, v11.16b
+
+           addp v12.16b, v4.16b, v6.16b
+           addp v14.16b, v5.16b, v7.16b
+           addp v13.16b, v8.16b, v10.16b
+           addp v15.16b, v9.16b, v11.16b
+
+           addp v4.16b, v12.16b, v13.16b
+           addp v5.16b, v14.16b, v15.16b
+           
+           addp v7.16b, v4.16b, v4.16b
+           addp v9.16b, v5.16b, v5.16b
+
+           uaddlp veccnt.4h, v7.8b
+           uadalp veccnt.4h, v9.8b
+
+           uxtl v14.4s, veccnt.4h
+
+           st1 {v14.4s}, [distPtr], #16
+           add dataPtr, t2, pad // t2 = dataPtr[stride * 3] 
+           subs j, j, #1
+           bne LoopH4_CompVMathDistanceHamming32_Asm_NEON64
+           ## EnofOf_LoopH4_CompVMathDistanceHamming32_Asm_NEON64 ##
+
+       EndOf_IfHeightGt4_CompVMathDistanceHamming32_Asm_NEON64:
+
+
+   ###########################################################
+   # for (; j < height; j += 1)
+   ###########################################################
+   ands j, height, #3 // modulo 4
+   beq EndOf_LoopH1_CompVMathDistanceHamming32_Asm_NEON64
+   LoopH1_CompVMathDistanceHamming32_Asm_NEON64:
+       ld1 { v4.16b, v5.16b }, [dataPtr], #32
+       eor v4.16b, v4.16b, vecPatch0.16b
+       eor v5.16b, v5.16b, vecPatch1.16b
+       cnt v4.16b, v4.16b
+       cnt v5.16b, v5.16b
+
+       addp v6.16b, v4.16b, v5.16b
+       addp v7.16b, v6.16b, v6.16b
+       uaddlp v8.4h, v7.8b
+
+       uaddlp v9.2s, v8.4h
+       uaddlp veccnt.1d, v9.2s
+       mov t0, veccnt.d[0]
+
+       add dataPtr, dataPtr, pad
+       str t0, [distPtr], #4
+       subs j, j, #1
+       bne LoopH1_CompVMathDistanceHamming32_Asm_NEON64
+       EndOf_LoopH1_CompVMathDistanceHamming32_Asm_NEON64:
+       ## EndOf_LoopH1_CompVMathDistanceHamming33_Asm_NEON64 ##
+
+	.unreq dataPtr
+	.unreq width
+	.unreq height
+	.unreq stride
+	.unreq distPtr
+
+   .unreq j
+   .unreq pad
+   .unreq t0
+   .unreq t1
+   .unreq t2
+
+   .unreq veccnt
+   .unreq veccntx
+   .unreq veccnty
+   .unreq vecPatch0
+   .unreq vecPatch1
 
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_FUNCTION_EPILOG
