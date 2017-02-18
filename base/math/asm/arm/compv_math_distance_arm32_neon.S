@@ -376,25 +376,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
     t0 .req r7
     t1 .req r8
     t2 .req r9
-
-    vec0 .req q0
-    vec0x .req q0x
-    vec0y .req q0y
-    vec1 .req q1
-    vec1x .req q1x
-    vec1y .req q1y
-    vec2 .req q2
-    vec2x .req q2x
-    vec2y .req q2y
-    vec3 .req q3
-    vec3x .req q3x
-    vec3y .req q3y
-    veccnt .req q4
-    veccntx .req q4x
-    veccnty .req q4y
-    vecPatch0 .req q5
-    vecPatch1 .req q6
-    vecMask .req q7
+    
+    veccnt .req q0
+    veccntx .req q0x
+    veccnty .req q0y
+    vecPatch0 .req q1
+    vecPatch1 .req q2
 
     vld1.u8 { vecPatch0 }, [patch1xnPtr : 128]!
     vld1.u8 { vecPatch1 }, [patch1xnPtr : 128]!
@@ -416,16 +403,47 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
             add t0, dataPtr, stride @ t0 = dataPtr[stride * 1]
             add t1, dataPtr, stride, LSL #1 @ t1 = dataPtr[stride * 2]
             add t2, t0, stride, LSL #1 @ t2 = dataPtr[stride * 3]
-            
-            __hamming4x16 vecPatch0
-            vpadd.u8 q8x, q15x, q15y
-            vpaddl.u8 veccntx, q8x
-
-            __hamming4x16 vecPatch1
-            vpadd.u8 q10x, q15x, q15y
-            vpadal.u8 veccntx, q10x
+            vld1.u8 { q4 }, [dataPtr : 128]!
+            vld1.u8 { q6 }, [t0 : 128]! @ t0 = dataPtr[stride * 1]
+            vld1.u8 { q8 }, [t1 : 128]! @ t1 = dataPtr[stride * 2]
+            vld1.u8 { q10 }, [t2 : 128]! @ t2 = dataPtr[stride * 3]
+            vld1.u8 { q5 }, [dataPtr : 128]!
+            vld1.u8 { q7 }, [t0 : 128]! @ t0 = dataPtr[stride * 1]
+            vld1.u8 { q9 }, [t1 : 128]! @ t1 = dataPtr[stride * 2]
+            vld1.u8 { q11 }, [t2 : 128]! @ t2 = dataPtr[stride * 3]
+            veor.u8 q4, q4, vecPatch0
+            veor.u8 q6, q6, vecPatch0
+            veor.u8 q8, q8, vecPatch0
+            veor.u8 q10, q10, vecPatch0
+            veor.u8 q5, q5, vecPatch1
+            veor.u8 q7, q7, vecPatch1
+            veor.u8 q9, q9, vecPatch1
+            veor.u8 q11, q11, vecPatch1
+            vcnt.u8 q4, q4
+            vcnt.u8 q6, q6
+            vcnt.u8 q8, q8
+            vcnt.u8 q10, q10
+            vcnt.u8 q5, q5
+            vcnt.u8 q7, q7
+            vcnt.u8 q9, q9
+            vcnt.u8 q11, q11
+            vpadd.u8 q12x, q4x, q4y
+            vpadd.u8 q13x, q8x, q8y
+            vpadd.u8 q14x, q5x, q5y
+            vpadd.u8 q15x, q9x, q9y
+            vpadd.u8 q12y, q6x, q6y
+            vpadd.u8 q13y, q10x, q10y
+            vpadd.u8 q14y, q7x, q7y
+            vpadd.u8 q15y, q11x, q11y
+            vpadd.u8 q4x, q12x, q12y
+            vpadd.u8 q5x, q14x, q14y
+            vpadd.u8 q4y, q13x, q13y
+            vpadd.u8 q5y, q15x, q15y            
+            vpadd.u8 q7x, q4x, q4y
+            vpadd.u8 q9x, q5x, q5y
+            vpaddl.u8 veccntx, q7x
+            vpadal.u8 veccntx, q9x
             vmovl.s16 veccnt, veccntx
-            
             vst1.s32 {veccnt}, [distPtr]!
             add dataPtr, t2, pad @ t2 = dataPtr[stride * 3] 
             subs j, j, #1
@@ -435,26 +453,25 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
         EndOf_IfHeightGt4_CompVMathDistanceHamming32_Asm_NEON32:
 
 
-
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (; j < height; j += 1)
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     ands j, height, #3 @ modulo 4
     beq EndOf_LoopH1_CompVMathDistanceHamming32_Asm_NEON32
     LoopH1_CompVMathDistanceHamming32_Asm_NEON32:
-        vld1.u8 { vec0x, vec0y, vec1x, vec1y }, [dataPtr : 128]!
-        veor.u8 vec0, vec0, vecPatch0
-        veor.u8 vec1, vec1, vecPatch1
-        vcnt.u8 vec0, vec0
-        vcnt.u8 vec1, vec1
+        vld1.u8 { q4x, q4y, q5x, q5y }, [dataPtr : 128]!
+        veor.u8 q4, q4, vecPatch0
+        veor.u8 q5, q5, vecPatch1
+        vcnt.u8 q4, q4
+        vcnt.u8 q5, q5
 
-        vpadd.u8 q13x, vec0x, vec0y
-        vpadd.u8 q13y, vec1x, vec1y
-        vpadd.u8 q14x, q13x, q13y
-        vpaddl.u8 q15x, q14x
+        vpadd.u8 q6x, q4x, q4y
+        vpadd.u8 q6y, q5x, q5y
+        vpadd.u8 q7x, q6x, q6y
+        vpaddl.u8 q8x, q7x
 
-        vpaddl.u16 q12x, q15x
-        vpaddl.u32 veccntx, q12x
+        vpaddl.u16 q9x, q8x
+        vpaddl.u32 veccntx, q9x
         vmov.s32 t0, veccntx[0]
         
         add dataPtr, dataPtr, pad
@@ -478,24 +495,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
     .unreq t1
     .unreq t2
 
-    .unreq vec0
-    .unreq vec0x
-    .unreq vec0y
-    .unreq vec1
-    .unreq vec1x
-    .unreq vec1y
-    .unreq vec2
-    .unreq vec2x
-    .unreq vec2y
-    .unreq vec3
-    .unreq vec3x
-    .unreq vec3y
     .unreq veccnt
     .unreq veccntx
     .unreq veccnty
     .unreq vecPatch0
     .unreq vecPatch1
-    .unreq vecMask
 
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS 6
