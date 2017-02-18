@@ -179,20 +179,20 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
             ###########################################################
             # .if (orphans =  static_cast<compv_scalar_t>(width & 15))
             ###########################################################
-            ands t0, width, 15
+            ands t4, width, 15
             beq EndOf_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON64
             IfH4Orphans_CompVMathDistanceHamming_Asm_NEON64:
                 mov t3, #0
                 ld1 { vecPatch.16b }, [patch1xnPtr], #16
                 cmeq vecMask.16b, vec0.16b, vec0.16b
                 eor v15.16b, v15.16b, v15.16b // TODO(dmi): for ARM64 no need to set zero and change next 'vmov.s32' to 'vmov.s64'
-                sub t4, t3, t0, LSL #3 // t4 = ((0 - t0) << 3) = -t0 << 3
+                sub t4, t3, t4, LSL #3 // t4 = ((0 - t0) << 3) = -t0 << 3
                 cmp t4, #-64
                 bge NotLtMinus64_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON64
                     add t3, t4, #64 // t3 = 0 if (t4 < -64) otherwise unchanged (#0)
                 NotLtMinus64_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON64:
-                mov v15.d[0], t4
-                mov v15.d[1], t3
+                mov v15.d[1], t4
+                mov v15.d[0], t3
                 ushl vecMask.16b, vecMask.16b, v15.16b
                 __hamming4x16_orphans vecPatch.16b
                 addp v10.16b, v15.16b, v15.16b
@@ -209,7 +209,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
             ## EnofOf_LoopH4_CompVMathDistanceHamming_Asm_NEON64 ##
 
         EndOf_IfHeightGt4_CompVMathDistanceHamming_Asm_NEON64:
-
 
 
     ###########################################################
@@ -256,19 +255,19 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
         ###########################################################
         # .if (orphans =  static_cast<compv_scalar_t>(width & 15))
         ###########################################################
-        ands t0, width, 15
+        ands t4, width, 15
         beq EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64
         IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64:
             mov t3, #0
             cmeq vecMask.16b, vec0.16b, vec0.16b
             eor v15.16b, v15.16b, v15.16b // TODO(dmi): for ARM64 no need to set zero and change next 'vmov.s32' to 'vmov.s64'
-            sub t4, t3, t0, LSL #3 // t4 = ((0 - t0) << 3) = -t0 << 3
+            sub t4, t3, t4, LSL #3 // t4 = ((0 - t0) << 3) = -t0 << 3
             cmp t4, #-64
             bge NotLtMinus64_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64
                 add t3, t4, #64 // t3 = 0 if (t4 < -64) otherwise unchanged (#0)
             NotLtMinus64_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64:
-            mov v15.d[0], t4
-            mov v15.d[1], t3
+            mov v15.d[1], t4
+            mov v15.d[0], t3
             ushl vecMask.16b, vecMask.16b, v15.16b
             __hamming1x16_orphans
             addp v10.16b, v15.16b, v15.16b
@@ -288,7 +287,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
         bne LoopH1_CompVMathDistanceHamming_Asm_NEON64
         EndOf_LoopH1_CompVMathDistanceHamming_Asm_NEON64:
         ## EndOf_LoopH1_CompVMathDistanceHamming_Asm_NEON64 ##
-
 
 
 	.unreq dataPtr

@@ -231,8 +231,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
 
         EndOf_IfHeightGt4_CompVMathDistanceHamming_Asm_NEON32:
 
-
-
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (; j < height; j += 1)
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -308,8 +306,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
         bne LoopH1_CompVMathDistanceHamming_Asm_NEON32
         EndOf_LoopH1_CompVMathDistanceHamming_Asm_NEON32:
         @@ EndOf_LoopH1_CompVMathDistanceHamming_Asm_NEON32 @@
-
-
 
 	.unreq dataPtr
 	.unreq width
@@ -436,7 +432,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
         EndOf_IfHeightGt4_CompVMathDistanceHamming32_Asm_NEON32:
 
 
-
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (; j < height; j += 1)
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -464,8 +459,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
         bne LoopH1_CompVMathDistanceHamming32_Asm_NEON32
         EndOf_LoopH1_CompVMathDistanceHamming32_Asm_NEON32:
         @@ EndOf_LoopH1_CompVMathDistanceHamming33_Asm_NEON32 @@
-
-
 
 	.unreq dataPtr
 	.unreq width
