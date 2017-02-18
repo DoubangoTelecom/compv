@@ -39,30 +39,34 @@ void CompVMathDistanceHamming32_Intrin_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint
 	const __m256i vecLookup = _mm256_load_si256(reinterpret_cast<const __m256i*>(kShuffleEpi8_Popcnt_i32));
 	const __m256i vecMaskLow = _mm256_load_si256(reinterpret_cast<const __m256i*>(k15_i8));
 
-	for (j = 0; j < height - 3; j += 4) {
-		vec0 = _mm256_load_si256(reinterpret_cast<const __m256i*>(&dataPtr[0]));
-		vec1 = _mm256_load_si256(reinterpret_cast<const __m256i*>(&dataPtr[stride]));
-		vec2 = _mm256_load_si256(reinterpret_cast<const __m256i*>(&dataPtr[stride << 1]));
-		vec3 = _mm256_load_si256(reinterpret_cast<const __m256i*>(&dataPtr[(stride << 1) + stride]));
-		vec0 = _mm256_xor_si256(vec0, vecPatch);
-		vec1 = _mm256_xor_si256(vec1, vecPatch);
-		vec2 = _mm256_xor_si256(vec2, vecPatch);
-		vec3 = _mm256_xor_si256(vec3, vecPatch);
-		__pop_count_mula_avx2(vec0);
-		__pop_count_mula_avx2(vec1);
-		__pop_count_mula_avx2(vec2);
-		__pop_count_mula_avx2(vec3);
-		vec1 = _mm256_add_epi64(_mm256_unpacklo_epi64(vec0, vec1), _mm256_unpackhi_epi64(vec0, vec1));
-		vec3 = _mm256_add_epi64(_mm256_unpacklo_epi64(vec2, vec3), _mm256_unpackhi_epi64(vec2, vec3));
-		vec0 = _mm256_permute2x128_si256(vec1, vec3, 0x20);
-		vec2 = _mm256_permute2x128_si256(vec1, vec3, 0x31);
-		vec0 = _mm256_shuffle_epi32(_mm256_add_epi64(vec0, vec2), 0x88);
-		vec0 = _mm256_permute4x64_epi64(vec0, 0x08);
+	j = 0;
 
-		// "distPtr" cannot be aligned when multithreading is enabled ("&distPtr[counts * i]")
-		_mm_storeu_si128(reinterpret_cast<__m128i*>(&distPtr[j]), _mm256_castsi256_si128(vec0)); // SSE/AVX transition issue if code not built with AVX enabled
+	if (height > 3) {
+		for (; j < height - 3; j += 4) {
+			vec0 = _mm256_load_si256(reinterpret_cast<const __m256i*>(&dataPtr[0]));
+			vec1 = _mm256_load_si256(reinterpret_cast<const __m256i*>(&dataPtr[stride]));
+			vec2 = _mm256_load_si256(reinterpret_cast<const __m256i*>(&dataPtr[stride << 1]));
+			vec3 = _mm256_load_si256(reinterpret_cast<const __m256i*>(&dataPtr[(stride << 1) + stride]));
+			vec0 = _mm256_xor_si256(vec0, vecPatch);
+			vec1 = _mm256_xor_si256(vec1, vecPatch);
+			vec2 = _mm256_xor_si256(vec2, vecPatch);
+			vec3 = _mm256_xor_si256(vec3, vecPatch);
+			__pop_count_mula_avx2(vec0);
+			__pop_count_mula_avx2(vec1);
+			__pop_count_mula_avx2(vec2);
+			__pop_count_mula_avx2(vec3);
+			vec1 = _mm256_add_epi64(_mm256_unpacklo_epi64(vec0, vec1), _mm256_unpackhi_epi64(vec0, vec1));
+			vec3 = _mm256_add_epi64(_mm256_unpacklo_epi64(vec2, vec3), _mm256_unpackhi_epi64(vec2, vec3));
+			vec0 = _mm256_permute2x128_si256(vec1, vec3, 0x20);
+			vec2 = _mm256_permute2x128_si256(vec1, vec3, 0x31);
+			vec0 = _mm256_shuffle_epi32(_mm256_add_epi64(vec0, vec2), 0x88);
+			vec0 = _mm256_permute4x64_epi64(vec0, 0x08);
 
-		dataPtr += strideTimes4;
+			// "distPtr" cannot be aligned when multithreading is enabled ("&distPtr[counts * i]")
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(&distPtr[j]), _mm256_castsi256_si128(vec0)); // SSE/AVX transition issue if code not built with AVX enabled
+
+			dataPtr += strideTimes4;
+		}
 	}
 
 	for (; j < height; j += 1) {

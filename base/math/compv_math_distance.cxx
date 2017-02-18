@@ -12,6 +12,7 @@
 
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_sse42.h"
 #include "compv/base/math/intrin/x86/compv_math_distance_intrin_avx2.h"
+#include "compv/base/math/intrin/arm/compv_math_distance_intrin_neon.h"
 
 #define COMPV_HAMMING32_MIN_SAMPLES_PER_THREAD					1 // use max threads
 #define COMPV_HAMMING32_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2		120 // for hamming distance (Fast Popcnt using Mula's formula)
@@ -78,6 +79,14 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 			}
 		}
 	}
+#elif COMPV_ARCH_ARM
+	if (width > 15 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(dataPtr) && COMPV_IS_ALIGNED_NEON(patch1xnPtr) && COMPV_IS_ALIGNED_NEON(stride)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(HammingDistance = CompVMathDistanceHamming_Intrin_NEON);
+		// Width == 32 -> Very common (Brief256_31)
+		if (width == 32) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(HammingDistance32 = CompVMathDistanceHamming32_Intrin_NEON);
+		}
+	}
 #endif
 
 	// TODO(dmi): for large sizes (not 32 version) use Harley-Seal or Mula AVX2 algorithm : https://arxiv.org/pdf/1611.07612.pdf
@@ -133,7 +142,7 @@ static void CompVHammingDistance_C(const uint8_t* dataPtr, compv_uscalar_t width
 	for (j = 0; j < height; ++j) {
 		cnt = 0;
 		for (i = 0; i < width; ++i) {
-#if COMPV_ARCH_X64
+#if COMPV_ARCH_X64  /*|| COMPV_ARCH_ARM64 */ // Next code is horribly slooow on ARM64
 			// http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
 			pop = dataPtr[i] ^ patch1xnPtr[i];
 			pop = pop - ((pop >> 0x1) & 0x5555555555555555);

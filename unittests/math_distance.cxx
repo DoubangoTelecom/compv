@@ -11,9 +11,9 @@ COMPV_ERROR_CODE unittest_math_distance_hamming()
 		const char* md5;
 	}
 	COMPV_UNITTEST_HAMMING[] = {
-		{ 2005, 101, "47005cd9900cac52d530e0a3e0f746be" },
+		{ 2005, 101, "58de498ac979c64c085f287b14d78241" },
 		{ 1280, 720, "2416808864658a997a39007fc1a548c4" },
-		{ 32, 720, "f97c1bfb83b8f9d92e0f2c63b06b8bc8" }, // hamming256
+		{ 32, 725, "a797d9d20176dbd97a801d9b8e2c1778" }, // hamming256
 	};
 
 	const compv_unittest_hamming* test;
@@ -23,12 +23,15 @@ COMPV_ERROR_CODE unittest_math_distance_hamming()
 
 		CompVMatPtr patch1xn;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&patch1xn, 1, test->width));
-		COMPV_CHECK_CODE_RETURN(patch1xn->zero_row(0));
+		uint8_t* dataPtr = patch1xn->ptr<uint8_t>();
+		for (size_t i = 0; i < patch1xn->cols(); ++i) {
+			dataPtr[i] = static_cast<uint8_t>(((i << 1) + 1) & 0xff);
+		}
 
 		CompVMatPtr data;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<uint8_t>(&data, test->height, test->width));
 		for (size_t j = 0; j < data->rows(); ++j) {
-			uint8_t* dataPtr = data->ptr<uint8_t>(j);
+			dataPtr = data->ptr<uint8_t>(j);
 			size_t row = (test->width * j);
 			for (size_t i = 0; i < data->cols(); ++i) {
 				dataPtr[i] = static_cast<uint8_t>((i + row) & 0xff);

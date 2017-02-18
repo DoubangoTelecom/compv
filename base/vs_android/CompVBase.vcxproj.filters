@@ -399,6 +399,18 @@
     <ClInclude Include="..\include\compv\base\compv_patch.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_convlt_intrin_avx2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_distance_intrin_avx2.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_distance_intrin_sse42.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_distance_intrin_neon.h">
+      <Filter>include\math\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -646,6 +658,15 @@
     </ClCompile>
     <ClCompile Include="..\compv_patch.cxx">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_distance_intrin_avx2.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\x86\compv_math_distance_intrin_sse42.cxx">
+      <Filter>source\math\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\arm\compv_math_distance_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

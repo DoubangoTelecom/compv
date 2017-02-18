@@ -108,7 +108,11 @@
     <ClInclude Include="..\include\compv\base\math\compv_math_utils.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon_fma.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_distance_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_convlt_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_convlt_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_distance_intrin_avx2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_distance_intrin_sse42.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_ssse3.h" />
@@ -219,8 +223,11 @@
     <ClCompile Include="..\math\compv_math_utils.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon_fma.cxx" />
+    <ClCompile Include="..\math\intrin\arm\compv_math_distance_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_convlt_intrin_avx2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_convlt_intrin_sse2.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_distance_intrin_avx2.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_distance_intrin_sse42.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_avx2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_ssse3.cxx" />
