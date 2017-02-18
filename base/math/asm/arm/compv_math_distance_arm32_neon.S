@@ -416,11 +416,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
             add t0, dataPtr, stride @ t0 = dataPtr[stride * 1]
             add t1, dataPtr, stride, LSL #1 @ t1 = dataPtr[stride * 2]
             add t2, t0, stride, LSL #1 @ t2 = dataPtr[stride * 3]
-                
-            __hamming4x16 vecPatch0
-            vpadd.u8 q10x, q15x, q15y
-            vpaddl.u8 veccntx, q10x
             
+            __hamming4x16 vecPatch0
+            vpadd.u8 q8x, q15x, q15y
+            vpaddl.u8 veccntx, q8x
+
             __hamming4x16 vecPatch1
             vpadd.u8 q10x, q15x, q15y
             vpadal.u8 veccntx, q10x
