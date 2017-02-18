@@ -157,6 +157,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 // requires width > 15 and both data and patch1xnPtr must be aligned because we're reading beyond width
+// TODO(dmi): not optiz, iPhone5 (ARM32), the ASM code is by faaar faster
 void CompVMathDistanceHamming_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr)
 {
 	compv_uscalar_t i, j;
