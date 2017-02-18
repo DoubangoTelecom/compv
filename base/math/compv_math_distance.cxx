@@ -30,7 +30,11 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_X64_POPCNT(COMPV_ALIGNED(SSE) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, COMPV_ALIGNED(SSE) const uint8_t* patch1xnPtr, int32_t* distPtr);
 	COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(AVX) const uint8_t* patch1xnPtr, COMPV_ALIGNED(AVX) int32_t* distPtr);
 #	endif /* COMPV_ARCH_X64 */
+#	if COMPV_ARCH_ARM32
+    COMPV_EXTERNC void CompVMathDistanceHamming_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr);
+#	endif /* COMPV_ARCH_ARM32 */
 #endif /* COMPV_ASM */
+
 
 static void CompVHammingDistance_C(const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr);
 #if COMPV_ARCH_X86
@@ -82,6 +86,7 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 #elif COMPV_ARCH_ARM
 	if (width > 15 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(dataPtr) && COMPV_IS_ALIGNED_NEON(patch1xnPtr) && COMPV_IS_ALIGNED_NEON(stride)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(HammingDistance = CompVMathDistanceHamming_Intrin_NEON);
+        COMPV_EXEC_IFDEF_ASM_ARM32(HammingDistance = CompVMathDistanceHamming_Asm_NEON32);
 		// Width == 32 -> Very common (Brief256_31)
 		if (width == 32) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM(HammingDistance32 = CompVMathDistanceHamming32_Intrin_NEON);

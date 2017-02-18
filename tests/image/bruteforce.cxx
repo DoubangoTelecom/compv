@@ -15,9 +15,8 @@ COMPV_ERROR_CODE bruteforce()
 		{ 200, 258, "442db0c57bd88bcf4ea3150abfca122b" }, // used for speed comparison against OpenCV
 		{ 32, 715, "8149035c24dbb95e59d248460aa5a03f" }, // hamming256
 		{ 2005, 101, "c01c1f8d044b1d79933ecd532052f0a4" },
-#if COMPV_ARCH_X86 // very intensive (for local tesing only, do not add to unittest)
+        // 2007: very intensive (for local tesing only, do not add to unittest)
 		{ 2007, 302, "98f3c40765e5d0d47f32278d5391832d" },
-#endif
 	};
 
 	const compv_unittest_bf* test = NULL;
