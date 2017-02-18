@@ -185,7 +185,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
                 mov t3, #0
                 ld1 { vecPatch.16b }, [patch1xnPtr], #16
                 cmeq vecMask.16b, vec0.16b, vec0.16b
-                eor v15.16b, v15.16b, v15.16b // TODO(dmi): for ARM64 no need to set zero and change next 'vmov.s32' to 'vmov.s64'
                 sub t4, t3, t4, LSL #3 // t4 = ((0 - t0) << 3) = -t0 << 3
                 cmp t4, #-64
                 bge NotLtMinus64_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON64
@@ -260,7 +259,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
         IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64:
             mov t3, #0
             cmeq vecMask.16b, vec0.16b, vec0.16b
-            eor v15.16b, v15.16b, v15.16b // TODO(dmi): for ARM64 no need to set zero and change next 'vmov.s32' to 'vmov.s64'
             sub t4, t3, t4, LSL #3 // t4 = ((0 - t0) << 3) = -t0 << 3
             cmp t4, #-64
             bge NotLtMinus64_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64
@@ -277,7 +275,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
             ## EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64 ##
 
 
-        # TODO(dmi): not same code as ARM64
         addp v15.4s, veccnt.4s, veccnt.4s
         addp v14.4s, v15.4s, v15.4s
         st1 {v14.s}[0], [distPtr], #4
