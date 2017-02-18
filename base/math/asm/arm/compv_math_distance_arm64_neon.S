@@ -28,16 +28,16 @@
     ld1 { vec1.16b }, [t0 ], #16 // t0 = dataPtr[stride * 1]
     ld1 { vec2.16b }, [t1], #16 // t1 = dataPtr[stride * 2]
     ld1 { vec3.16b }, [t2], #16 // t2 = dataPtr[stride * 3]
-    eor vec0.16b, vec0.16b, \vecPatch
-    eor vec1.16b, vec1.16b, \vecPatch
-    eor vec2.16b, vec2.16b, \vecPatch
-    eor vec3.16b, vec3.16b, \vecPatch
-    cnt vec0.16b, vec0.16b
-    cnt vec1.16b, vec1.16b
-    cnt vec2.16b, vec2.16b
-    cnt vec3.16b, vec3.16b
-    addp v13.16b, vec0.16b, vec1.16b
-    addp v14.16b, vec2.16b, vec3.16b
+    eor v16.16b, vec0.16b, \vecPatch
+    eor v17.16b, vec1.16b, \vecPatch
+    eor v18.16b, vec2.16b, \vecPatch
+    eor v19.16b, vec3.16b, \vecPatch
+    cnt v20.16b, v16.16b
+    cnt v21.16b, v17.16b
+    cnt v22.16b, v18.16b
+    cnt v23.16b, v19.16b
+    addp v13.16b, v20.16b, v21.16b
+    addp v14.16b, v22.16b, v23.16b
     addp v15.16b, v13.16b, v14.16b
 .endm
 
@@ -72,16 +72,16 @@
     ld1 { vec2.16b, vec3.16b }, [dataPtr], #32
     ld1 { v9.16b, v10.16b }, [patch1xnPtr], #32
     ld1 { v11.16b, v12.16b }, [patch1xnPtr], #32
-    eor vec0.16b, vec0.16b, v9.16b
-    eor vec1.16b, vec1.16b, v10.16b
-    eor vec2.16b, vec2.16b, v11.16b
-    eor vec3.16b, vec3.16b, v12.16b
-    cnt vec0.16b, vec0.16b
-    cnt vec1.16b, vec1.16b
-    cnt vec2.16b, vec2.16b
-    cnt vec3.16b, vec3.16b
-    addp v13.16b, vec0.16b, vec1.16b
-    addp v14.16b, vec2.16b, vec3.16b
+    eor v16.16b, vec0.16b, v9.16b
+    eor v17.16b, vec1.16b, v10.16b
+    eor v18.16b, vec2.16b, v11.16b
+    eor v19.16b, vec3.16b, v12.16b
+    cnt v20.16b, v16.16b
+    cnt v21.16b, v17.16b
+    cnt v22.16b, v18.16b
+    cnt v23.16b, v19.16b
+    addp v13.16b, v20.16b, v21.16b
+    addp v14.16b, v22.16b, v23.16b
     addp v15.16b, v13.16b, v14.16b
 .endm
 
@@ -132,6 +132,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
     patch1xnPtr .req r12
     t3 .req r13
     t4 .req r15
+    t5 .req r16
+    t6 .req r17
 
     vec0 .req v0
     vec1 .req v1
@@ -182,17 +184,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
             ands t4, width, 15
             beq EndOf_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON64
             IfH4Orphans_CompVMathDistanceHamming_Asm_NEON64:
-                mov t3, #0
                 ld1 { vecPatch.16b }, [patch1xnPtr], #16
-                cmeq vecMask.16b, vec0.16b, vec0.16b
-                sub t4, t3, t4, LSL #3 // t4 = ((0 - t0) << 3) = -t0 << 3
-                cmp t4, #-64
-                bge NotLtMinus64_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON64
-                    add t3, t4, #64 // t3 = 0 if (t4 < -64) otherwise unchanged (#0)
-                NotLtMinus64_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON64:
-                mov v15.d[1], t4
+                cmeq vecMask.16b, vecMask.16b, vecMask.16b
+                mov t3, #-(16*8)
+                mov t6, #0
+                add t4, t3, t4, LSL #3 // ((orphans - 16) << 3) = (-16<<3) + (orphans << 3) = (-16*8) + (orphans << 3)
+                adds t5, t4, #64
+                csel t3, t5, t6, mi
                 mov v15.d[0], t3
-                ushl vecMask.16b, vecMask.16b, v15.16b
+                mov v15.d[1], t4
+                ushl vecMask.2d, vecMask.2d, v15.2d
                 __hamming4x16_orphans vecPatch.16b
                 addp v10.16b, v15.16b, v15.16b
                 uaddlp v11.4h, v10.8b
@@ -257,23 +258,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
         ands t4, width, 15
         beq EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64
         IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64:
-            mov t3, #0
-            cmeq vecMask.16b, vec0.16b, vec0.16b
-            sub t4, t3, t4, LSL #3 // t4 = ((0 - t0) << 3) = -t0 << 3
-            cmp t4, #-64
-            bge NotLtMinus64_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64
-                add t3, t4, #64 // t3 = 0 if (t4 < -64) otherwise unchanged (#0)
-            NotLtMinus64_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64:
-            mov v15.d[1], t4
+            mov t3, #-(16*8)
+            mov t6, #0
+            add t4, t3, t4, LSL #3 // ((orphans - 16) << 3) = (-16<<3) + (orphans << 3) = (-16*8) + (orphans << 3)
+            adds t5, t4, #64
+            csel t3, t5, t6, mi
             mov v15.d[0], t3
-            ushl vecMask.16b, vecMask.16b, v15.16b
+            mov v15.d[1], t4
+            cmeq vecMask.16b, vecMask.16b, vecMask.16b
+            ushl vecMask.2d, vecMask.2d, v15.2d
             __hamming1x16_orphans
             addp v10.16b, v15.16b, v15.16b
             uaddlp v11.4h, v10.8b
             uaddw veccnt.4s, veccnt.4s, v11.4h
             EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64:
             ## EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64 ##
-
 
         addp v15.4s, veccnt.4s, veccnt.4s
         addp v14.4s, v15.4s, v15.4s
@@ -302,6 +301,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
     .unreq t2
     .unreq t3
     .unreq t4
+    .unreq t5
+    .unreq t6
     .unreq patch1xnPtr
 
     .unreq vec0
