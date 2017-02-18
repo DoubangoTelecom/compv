@@ -384,23 +384,17 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON64
            cnt v9.16b, v9.16b
            cnt v10.16b, v10.16b
            cnt v11.16b, v11.16b
-
            addp v12.16b, v4.16b, v6.16b
            addp v14.16b, v5.16b, v7.16b
            addp v13.16b, v8.16b, v10.16b
            addp v15.16b, v9.16b, v11.16b
-
            addp v4.16b, v12.16b, v13.16b
            addp v5.16b, v14.16b, v15.16b
-           
            addp v7.16b, v4.16b, v4.16b
            addp v9.16b, v5.16b, v5.16b
-
            uaddlp veccnt.4h, v7.8b
            uadalp veccnt.4h, v9.8b
-
            uxtl v14.4s, veccnt.4h
-
            st1 {v14.4s}, [distPtr], #16
            add dataPtr, t2, pad // t2 = dataPtr[stride * 3] 
            subs j, j, #1
@@ -421,17 +415,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON64
        eor v5.16b, v5.16b, vecPatch1.16b
        cnt v4.16b, v4.16b
        cnt v5.16b, v5.16b
-
        addp v6.16b, v4.16b, v5.16b
        addp v7.16b, v6.16b, v6.16b
        uaddlp v8.4h, v7.8b
-
        uaddlp v9.2s, v8.4h
        uaddlp veccnt.1d, v9.2s
-       mov t0, veccnt.d[0]
-
+       st1 {veccnt.s}[0], [distPtr], #4
        add dataPtr, dataPtr, pad
-       str t0, [distPtr], #4
        subs j, j, #1
        bne LoopH1_CompVMathDistanceHamming32_Asm_NEON64
        EndOf_LoopH1_CompVMathDistanceHamming32_Asm_NEON64:
