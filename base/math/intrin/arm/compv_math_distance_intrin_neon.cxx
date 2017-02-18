@@ -267,7 +267,7 @@ void CompVMathDistanceHamming32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* d
 			__hamming4x16(0, vecPatch0);
 			veccnt = vpaddl_u8(vpadd_u8(vget_low_u8(vec0), vget_high_u8(vec0))); // paiwise add long
 			__hamming4x16(16, vecPatch1);
-			veccnt = vpadal_u8(veccnt, vpadd_u8(vget_low_u8(vec0), vget_high_u8(vec0))); // paiwise add and accumulate long
+			veccnt = vpadal_u8(veccnt, vpadd_u8(vget_low_u8(vec0), vget_high_u8(vec0))); // paiwise add and **accumulate** long
 			vst1q_s32(&distPtr[j], vmovl_s16(veccnt)); // Remarque: asm, distPtr not aligned when multithreaded
 			dataPtr += strideTimes4;
 		}
@@ -286,7 +286,7 @@ void CompVMathDistanceHamming32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* d
 		distPtr[j] = vget_lane_s32(vpaddl_s32(vpaddl_u16(veccnt)), 0);
 #else
 		veccntn = vpaddl_u16(veccnt);
-		distPtr[j] = vget_lane_s32(veccntn, 0) + vget_lane_s32(veccntn, 1);
+        distPtr[j] = vget_lane_s32(vpadd_s32(veccntn, veccntn), 0);
 #endif
 		dataPtr += stride;
 	}

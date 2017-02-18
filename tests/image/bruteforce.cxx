@@ -1,11 +1,11 @@
 #include "../tests_common.h"
 
 #define TAG_TEST			"TestBruteForce"
-#define LOOP_COUNT			1000
+#define LOOP_COUNT			1
 
 COMPV_ERROR_CODE bruteforce()
 {
-	static const  size_t width = 200;
+	static const  size_t width = 32;
 	static const struct compv_unittest_bf {
 		size_t width;
 		size_t height;

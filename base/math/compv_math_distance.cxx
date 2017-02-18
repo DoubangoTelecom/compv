@@ -32,6 +32,7 @@ COMPV_NAMESPACE_BEGIN()
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
     COMPV_EXTERNC void CompVMathDistanceHamming_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr);
+    COMPV_EXTERNC void CompVMathDistanceHamming32_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr);
 #	endif /* COMPV_ARCH_ARM32 */
 #endif /* COMPV_ASM */
 
@@ -90,6 +91,7 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 		// Width == 32 -> Very common (Brief256_31)
 		if (width == 32) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM(HammingDistance32 = CompVMathDistanceHamming32_Intrin_NEON);
+            COMPV_EXEC_IFDEF_ASM_ARM32(HammingDistance32 = CompVMathDistanceHamming32_Asm_NEON32);
 		}
 	}
 #endif
