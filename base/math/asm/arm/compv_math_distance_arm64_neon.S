@@ -345,6 +345,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON64
    vecPatch0 .req v1
    vecPatch1 .req v2
 
+   prfm pldl1keep, [dataPtr, #(CACHE_LINE_SIZE*4)]
+   prfm pldl1keep, [dataPtr, #(CACHE_LINE_SIZE*5)]
+   prfm pldl1keep, [dataPtr, #(CACHE_LINE_SIZE*6)]
+   prfm pldl1keep, [dataPtr, #(CACHE_LINE_SIZE*7)]
+
    ld1 { vecPatch0.16b, vecPatch1.16b }, [patch1xnPtr], #32
    .unreq patch1xnPtr // patch1xnPtr no longer needed
 
@@ -364,26 +369,31 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON64
            add t0, dataPtr, stride // t0 = dataPtr[stride * 1]
            add t1, dataPtr, stride, LSL #1 // t1 = dataPtr[stride * 2]
            add t2, t0, stride, LSL #1 // t2 = dataPtr[stride * 3]
-		   // vcnt has high latency and throughput and this is why veors (low latency and throughput) are interleaved
+		   // vcnt has high latency and throughput and this is why they are interleaved with veors (low latency and throughput)
            ldp q4, q5, [dataPtr], #32
            ldp q6, q7, [t0], #32 // t0 = dataPtr[stride * 1]
            eor v4.16b, v4.16b, vecPatch0.16b
            eor v5.16b, v5.16b, vecPatch1.16b
 		   cnt v4.16b, v4.16b
            cnt v5.16b, v5.16b
+		   prfm pstl1keep, [distPtr, #(CACHE_LINE_SIZE*3)]
            eor v6.16b, v6.16b, vecPatch0.16b
            eor v7.16b, v7.16b, vecPatch1.16b
 		   cnt v6.16b, v6.16b
            cnt v7.16b, v7.16b
 		   ldp q8, q9, [t1], #32 // t1 = dataPtr[stride * 2]
            ldp q10, q11, [t2], #32 // t2 = dataPtr[stride * 3]
+		   prfm pldl1keep, [t2, #(CACHE_LINE_SIZE*3)]
            eor v8.16b, v8.16b, vecPatch0.16b
            eor v9.16b, v9.16b, vecPatch1.16b
 		   cnt v8.16b, v8.16b
+		   prfm pldl1keep, [t2, #(CACHE_LINE_SIZE*4)]
            cnt v9.16b, v9.16b
+		   prfm pldl1keep, [t2, #(CACHE_LINE_SIZE*5)]
            eor v10.16b, v10.16b, vecPatch0.16b    
            eor v11.16b, v11.16b, vecPatch1.16b
            cnt v10.16b, v10.16b
+		   prfm pldl1keep, [t2, #(CACHE_LINE_SIZE*6)]
            cnt v11.16b, v11.16b
            addp v12.16b, v4.16b, v6.16b
            addp v14.16b, v5.16b, v7.16b
