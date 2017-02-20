@@ -8,8 +8,9 @@ using namespace compv;
 #define TEST_PYRAMID				0
 #define TEST_CHROMA_CONV			0
 #define TEST_FEATURE_FAST			0
+#define TEST_FEATURE_ORB			1
 #define TEST_CONVLT					0
-#define TEST_BRUTEFORCE				1
+#define TEST_BRUTEFORCE				0
 #define TEST_DRAW_IMAGE				0
 #define TEST_DRAW_POINTS			0
 
@@ -35,6 +36,10 @@ compv_main()
 #if TEST_FEATURE_FAST
 		extern COMPV_ERROR_CODE feature_fast();
 		COMPV_CHECK_CODE_BAIL(err = feature_fast(), TAG_TEST_IMAGE "FAST feature detection test failed");
+#endif
+#if TEST_FEATURE_ORB
+		extern COMPV_ERROR_CODE feature_orb();
+		COMPV_CHECK_CODE_BAIL(err = feature_orb(), TAG_TEST_IMAGE "ORB feature detection and description test failed");
 #endif
 #if TEST_CONVLT
 		extern COMPV_ERROR_CODE convlt();

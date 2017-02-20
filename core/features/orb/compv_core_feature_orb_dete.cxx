@@ -27,6 +27,7 @@
 
 #include "compv/core/features/orb/compv_core_feature_orb_dete.h"
 #include "compv/base/image/compv_image.h"
+#include "compv/base/parallel/compv_parallel.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -160,20 +161,25 @@ COMPV_ERROR_CODE CompVCornerDeteORB::process(const CompVMatPtr& image_, CompVInt
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	CompVInterestPointVector interestPointsAtLevelN;
 	CompVMatPtr imageAtLevelN;
-	size_t threadsCount = 1, levelsCount;
 
+	// Clear old points
 	interestPoints.clear();
-
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation");
-	
 
 	// Image scaling then feature could be multi-threaded but this requires a detector for each level -> memory issue
 
-	levelsCount = m_pyramid->levels();
+	const size_t levelsCount = m_pyramid->levels();
+
+	// Compute number of threads
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+	// The multi-threading is done across the levels using function "processLevelAt" and the most consuming part
+	// is the internal FAST detector which is already multi-threaded.
+	// This means it worth multi-threading across levels only if we have enough levels compared to maxThreads.
+	const size_t threadsCount = (levelsCount > (maxThreads >> 2)) ? COMPV_MATH_MIN(maxThreads, levelsCount) : 1;
 
 	// Create and init detectors
 	// Number of detectors must be equal to the number of threads (not the case for interestpoints array which is equal to the number of levels)
-	size_t nDetectors = COMPV_MATH_CLIP3(1, threadsCount, levelsCount);
+	const size_t nDetectors = COMPV_MATH_CLIP3(1, threadsCount, levelsCount);
 	if (m_vecDetectors.size() < nDetectors) {
 		CompVCornerDetePtr dete;
 		for (size_t d = m_vecDetectors.size(); d < nDetectors; ++d) {
@@ -185,7 +191,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::process(const CompVMatPtr& image_, CompVInt
 
 	// Create patches
 	// Number of patches must be equal to the number of threads (not the case for interestpoints array which is equal to the number of levels)
-	size_t nPatches = COMPV_MATH_CLIP3(1, threadsCount, levelsCount);
+	const size_t nPatches = COMPV_MATH_CLIP3(1, threadsCount, levelsCount);
 	if (m_vecPatches.size() < nPatches) {
 		CompVPatchPtr patch;
 		for (size_t p = m_vecPatches.size(); p < nPatches; ++p) {
@@ -193,39 +199,32 @@ COMPV_ERROR_CODE CompVCornerDeteORB::process(const CompVMatPtr& image_, CompVInt
 			m_vecPatches.push_back(patch);
 		}
 	}
-
-	// Process feature detection for each level
-	// TODO(dmi): not optimized when levels > maxThreads, single-threaded when levels == 1
-	//			Not a high prio. issue because most of the time consuming function is FAST feature detector and it's multi-threaded
-#if 0
+	
 	if (threadsCount > 1) {
 		CompVPtr<CompVCornerDeteORB* >This = this;
 		// levelStart is used to make sure we won't schedule more than "threadsCount"
-		int levelStart, level, levelMax;
+		size_t levelStart, level, levelMax;
 		CompVAsyncTaskIds taskIds;
-		taskIds.reserve(m_pyramid->getLevels());
-		auto funcPtr = [&](const CompVPtr<CompVImage* >& image, CompVPtr<CompVPatch* >& patch, CompVPtr<CompVCornerDete* >& detector, int level) -> COMPV_ERROR_CODE {
-			return processLevelAt(*image, patch, detector, level);
+		taskIds.reserve(m_pyramid->levels());
+		auto funcPtr = [&](const CompVMatPtr& image_, CompVPatchPtr& patch_, CompVCornerDetePtr& detector_, int level_) -> COMPV_ERROR_CODE {
+			return processLevelAt(image_, patch_, detector_, level_);
 		};
-		for (levelStart = 0, levelMax = threadsCount; levelStart < m_pyramid->getLevels(); levelStart += threadsCount, levelMax += threadsCount) {
+		for (levelStart = 0, levelMax = threadsCount; levelStart < levelsCount; levelStart += threadsCount, levelMax += threadsCount) {
 			for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
-				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, image, m_pPatches[level % nPatches], m_pDetectors[level % nDetectors], static_cast<int>(level)), taskIds));
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, image, m_vecPatches[level % nPatches], m_vecDetectors[level % nDetectors], static_cast<int>(level)), taskIds));
 			}
 			for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
 				COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[level]));
-				COMPV_CHECK_CODE_RETURN(interestPoints->append(m_pInterestPointsAtLevelN[level]->begin(), m_pInterestPointsAtLevelN[level]->end()));
+				interestPoints.insert(interestPoints.end(), m_vecInterestPointsAtLevelN[level].begin(), m_vecInterestPointsAtLevelN[level].end());
 			}
 		}
 	}
 	else {
-#endif
 		for (size_t level = 0; level < levelsCount; ++level) {
 			COMPV_CHECK_CODE_RETURN(processLevelAt(image, m_vecPatches[0], m_vecDetectors[0], static_cast<int>(level)));
 			interestPoints.insert(interestPoints.end(), m_vecInterestPointsAtLevelN[level].begin(), m_vecInterestPointsAtLevelN[level].end());
 		}
-#if 0
 	}
-#endif
 
 	return err_;
 }
@@ -278,8 +277,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::initDetectors()
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-// Private function
-// Must be thread-safe
+// Private function (*must* be thread-safe)
 COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, CompVPatchPtr& patch, CompVCornerDetePtr& detector, int level)
 {
 	COMPV_CHECK_EXP_RETURN(level < 0 || level >= m_nPyramidLevels, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

@@ -41,6 +41,9 @@
     <ClCompile Include="bruteforce.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="feature_orb.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tests_common.h">
