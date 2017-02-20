@@ -15,7 +15,7 @@ using namespace compv;
 #define FAST_NONMAXIMA		true
 #define FAST_THRESHOLD		20
 #define FAST_TYPE			COMPV_FAST_TYPE_9
-#define FAST_MAXFEATURES	-1 // <= 0 means all points (do not retain best)
+#define FAST_MAXFEATURES	1000 // use negative value to retain all features (more cpu usage!!)
 
 #define TAG_SAMPLE			"Features Detection App"
 
