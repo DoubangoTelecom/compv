@@ -36,8 +36,6 @@ sym(MemCopyNTA_Asm_Aligned11_X64_AVX):
 	push rbx
 	; end prolog
 
-	%define cache_line_size 64
-
 	mov rax, arg(2) ; size
 	mov rdi, arg(0) ; dataDstPtr
 	mov rsi, arg(1) ; dataSrcPtr
@@ -58,10 +56,10 @@ sym(MemCopyNTA_Asm_Aligned11_X64_AVX):
 	; Begin Count32x16Loop
 	align 16
 	.Count32x16Loop
-		prefetchnta [rsi + cache_line_size*5]
-		prefetchnta [rsi + cache_line_size*6]
-		prefetchnta [rsi + cache_line_size*7]
-		prefetchnta [rsi + cache_line_size*8]
+		prefetchnta [rsi + COMPV_YASM_CACHE_LINE_SIZE*5]
+		prefetchnta [rsi + COMPV_YASM_CACHE_LINE_SIZE*6]
+		prefetchnta [rsi + COMPV_YASM_CACHE_LINE_SIZE*7]
+		prefetchnta [rsi + COMPV_YASM_CACHE_LINE_SIZE*8]
 
 		%assign j 0
 		%rep 16

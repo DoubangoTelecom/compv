@@ -200,7 +200,7 @@ private:
 
 		// Detect and describe the features
 		COMPV_CHECK_CODE_RETURN(m_ptrDeteORB->process(m_ptrImageGrayQuery, m_vecInterestPointsQuery));
-		if (!m_vecInterestPointsQuery.empty()) {
+		if (!m_vecInterestPointsQuery.empty()) { // this is a sample app and we want to display all matched points even is the object isn't in the scene, in final app make sure "m_vecInterestPointsQuery.size() > THRESHOLD_GOOD_MATCHES"
 			COMPV_CHECK_CODE_RETURN(m_ptrDescORB->process(m_ptrImageGrayQuery, m_vecInterestPointsQuery, &m_ptrDescriptionsQuery));
 			if (!m_ptrDescriptionsQuery->isEmpty()) {
 				uint64_t timeStart = CompVTime::nowMillis();
@@ -228,8 +228,8 @@ private:
 				}
 #endif
 
-				// Build matche points
-				if (m_vecGoodMatches.size() > 0) {
+				// Build match points
+				if (m_vecGoodMatches.size() > 0) { // this is a sample app and we want to display all matched points even is the object isn't in the scene, in final app make sure "m_vecGoodMatches.size() > THRESHOLD_GOOD_MATCHES"
 					COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&m_ptrGoodMatchesQuery, 3, m_vecGoodMatches.size()));
 					COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float64_t>(&m_ptrGoodMatchesTrain, 3, m_vecGoodMatches.size()));
 					COMPV_CHECK_CODE_RETURN(m_ptrGoodMatchesQuery->one_row<compv_float64_t>(2)); // homogeneous coord. with Z = 1

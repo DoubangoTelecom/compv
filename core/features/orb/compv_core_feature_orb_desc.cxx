@@ -270,7 +270,16 @@ COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVMatPtr& image_, const Co
 	const size_t nFeatures = interestPoints.size();
 	const size_t nFeaturesBits = m_nPatchBits;
 	const size_t nFeaturesBytes = nFeaturesBits >> 3;
-	COMPV_CHECK_CODE_RETURN(err_ = CompVMat::newObjAligned<uint8_t>(&_descriptions, nFeatures, nFeaturesBytes)); // do not align nFeaturesBytes(32) which is already good for AVX, SSE and NEON
+	// Using 'Brief256_31' the descriptor's rows is 256b (32B) width. This is less than the cache1 line size which
+	// is equal to 64B. Stridding the data we'll have 64B stride which means a cache lines will be loaded for each line.
+	// To make the data cache-friendly we'll use a 32B stride which means one cache line for two rows.
+	// Strideless data is also good for AVX512 as we'll be able to load two rows for each read.
+	if (nFeaturesBytes == 32 && CompVCpu::isEnabled(compv::kCpuFlagAVX512)) { // TODO(dmi): On core i7 strideless data doesn't provide better perfs, this is why we also test check AVX512 for now
+		COMPV_CHECK_CODE_RETURN(err_ = CompVMat::newObj<uint8_t>(&_descriptions, nFeatures, 32, CompVMem::bestAlignment(), 32));
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(err_ = CompVMat::newObjAligned<uint8_t>(&_descriptions, nFeatures, nFeaturesBytes));
+	}
 	_descriptionsPtr = _descriptions->ptr<uint8_t>();
 	size_t _descriptionsStride = _descriptions->stride();
 	if (nFeatures == 0) {
