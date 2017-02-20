@@ -76,11 +76,11 @@ COMPV_ERROR_CODE CompVMathDistance::hamming(const uint8_t* dataPtr, size_t width
 		}
 		// Width == 32 -> Very common (Brief256_31)
 		if (width == 32) { 
-			COMPV_EXEC_IFDEF_ASM_X64(HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT); // Pure asm code is Faster than the SSE (tested using core i7)
 			if (CompVCpu::isEnabled(kCpuFlagSSE42) && COMPV_IS_ALIGNED_SSE(dataPtr) && COMPV_IS_ALIGNED_SSE(patch1xnPtr) && COMPV_IS_ALIGNED_SSE(stride)) {
 				COMPV_EXEC_IFDEF_ASM_X86(HammingDistance32 = CompVMathDistanceHamming32_Asm_X86_POPCNT_SSE42);
 				COMPV_EXEC_IFDEF_ASM_X64(HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT_SSE42);
 			}
+			COMPV_EXEC_IFDEF_ASM_X64(HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT); // Pure asm code is Faster than the SSE (tested using core i7)
 			if (CompVCpu::isEnabled(kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(dataPtr) && COMPV_IS_ALIGNED_AVX2(patch1xnPtr) && COMPV_IS_ALIGNED_AVX2(stride)) {
 				COMPV_EXEC_IFDEF_INTRIN_X86((HammingDistance32 = CompVMathDistanceHamming32_Intrin_POPCNT_AVX2, minSamplesPerThread = COMPV_HAMMING32_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2)); // Mula's algorithm
 				COMPV_EXEC_IFDEF_ASM_X64((HammingDistance32 = CompVMathDistanceHamming32_Asm_X64_POPCNT_AVX2, minSamplesPerThread = COMPV_HAMMING32_MIN_SAMPLES_PER_THREAD_POPCNT_AVX2)); // Mula's algorithm
