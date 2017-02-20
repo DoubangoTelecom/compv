@@ -132,9 +132,8 @@ private:
 		if (bKernelSizeTooHighForMT) {
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Kernel size too high for MT");
 		}
-
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("MT disabled to test ORB");
-		if (threadsCount > 1 && !bKernelSizeTooHighForMT && 0) { // FIXME: MT disabled to test ORB
+		
+		if (threadsCount > 1 && !bKernelSizeTooHighForMT) {
 			CompVAsyncTaskIds taskIds;
 			const size_t rowsOverlapCount = ((kernSize >> 1) << 1); // (kernelRadius times 2)
 			const size_t rowsOverlapPad = rowsOverlapCount * dataStride;

@@ -187,6 +187,35 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 	const uint8_t* img_center;
 	size_t img_stride;
 
+	/* Init "m_funBrief256_31" using current CPU flags */
+#if COMPV_FEATURE_DESC_ORB_FXP_DESC
+	if (CompVEngine::isMathFixedPointEnabled()) {
+		// ARM = FXPQ15, X86 = FXPQ16
+		if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(m_funBrief256_31_Fxp = Brief256_31_Fxpq16_Intrin_SSE2);
+		}
+	}
+	else
+#endif
+#if 0
+	if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(m_funBrief256_31_Float32 = Brief256_31_Intrin_SSE2);
+	}
+	if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
+		COMPV_EXEC_IFDEF_ASM_X86(m_funBrief256_31_Float32 = Brief256_31_Asm_X86_SSE41);
+		COMPV_EXEC_IFDEF_ASM_X64(m_funBrief256_31_Float32 = Brief256_31_Asm_X64_SSE41);
+	}
+	if (compv::CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(m_funBrief256_31_Float32 = Brief256_31_Intrin_AVX2);
+		COMPV_EXEC_IFDEF_ASM_X86(m_funBrief256_31_Float32 = Brief256_31_Asm_X86_AVX2);
+		COMPV_EXEC_IFDEF_ASM_X64(m_funBrief256_31_Float32 = Brief256_31_Asm_X64_AVX2);
+		if (compv::CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
+			COMPV_EXEC_IFDEF_ASM_X86(m_funBrief256_31_Float32 = Brief256_31_Asm_X86_FMA3_AVX2);
+			COMPV_EXEC_IFDEF_ASM_X64(m_funBrief256_31_Float32 = Brief256_31_Asm_X64_FMA3_AVX2);
+		}
+	}
+#endif
+
 #if 0
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 #endif
@@ -262,10 +291,8 @@ COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVMatPtr& image_, const Co
 	CompVMatPtr imageAtLevelN;
 	CompVCornerDetePtr& _attachedDete = attachedDete();
 	uint8_t* _descriptionsPtr = NULL;
-	size_t levelsCount;
-	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	CompVCornerDescORBPtr This = this;
-	bool bLevelZeroBlurred = false;
+	const bool bLevelZeroBlurred = false;
 
 	const size_t nFeatures = interestPoints.size();
 	const size_t nFeaturesBits = m_nPatchBits;
@@ -305,127 +332,40 @@ COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVMatPtr& image_, const Co
 		_pyramid = m_pyramid;
 	}
 
-	levelsCount = _pyramid->levels();
+	const size_t levelsCount = _pyramid->levels();
 
-	// Check if we have the same image
-#if 0
-	if (m_bMediaTypeVideo && m_image_blurred_prev) {
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-		// apply gaussianblur filter on the image at level 0
-		COMPV_CHECK_CODE_RETURN(err_ = convlt(_pyramid, 0));
-		// get blurred image
-		COMPV_CHECK_CODE_RETURN(err_ = _pyramid->image(0, &imageAtLevelN));
-		bLevelZeroBlurred = true; // to avoid apply gaussian blur again
-		bool bSameImageAsPrev = false;
-		COMPV_CHECK_CODE_RETURN(err_ = m_image_blurred_prev->isEquals(imageAtLevelN, bSameImageAsPrev, 15, m_image_blurred_prev->getHeight() - 15, 15, m_image_blurred_prev->getWidth() - 15));
-		// TODO(dmi): Do not use equality but SAD with thredshold: "(abs(img1_ptr[x] - img2_ptr[x]) > t"
+	// apply gaussianblur filter on the pyramid (the convolution function is already multi-threaded)
+	for (size_t level = bLevelZeroBlurred ? 1 : 0; level < levelsCount; ++level) {
+		COMPV_CHECK_CODE_RETURN(err_ = convlt(_pyramid, static_cast<int>(level)));  //!\\ already multi-threaded
 	}
-#endif
 
-	// apply gaussianblur filter on the pyramid
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found"); // TODO(dmi): not need to multi-thread the convolution, already the case
-#if 0
-	if (threadsCount > 1) {
-		// levelStart is used to make sure we won't schedule more than "threadsCount"
-		int levelStart, level, levelMax;
-		CompVAsyncTaskIds taskIds;
-		taskIds.reserve(threadsCount);
-		auto funcPtr = [&](int level) -> COMPV_ERROR_CODE {
-			return convlt(_pyramid, level);
-		};
-		for (levelStart = bLevelZeroBlurred ? 1 : 0, levelMax = threadsCount; levelStart < levelsCount; levelStart += threadsCount, levelMax += threadsCount) {
-			for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
-				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, level), taskIds));
-			}
-			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
-		}
-	}
-	else {
-#endif
-		for (size_t level = bLevelZeroBlurred ? 1 : 0; level < levelsCount; ++level) {
-			COMPV_CHECK_CODE_RETURN(err_ = convlt(_pyramid, static_cast<int>(level)));  // multi-threaded
-		}
-#if 0
-	}
-#endif
-
-	/* Init "m_funBrief256_31" using current CPU flags */
-#if COMPV_FEATURE_DESC_ORB_FXP_DESC
-	if (CompVEngine::isMathFixedPointEnabled()) {
-		// ARM = FXPQ15, X86 = FXPQ16
-		if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(m_funBrief256_31_Fxp = Brief256_31_Fxpq16_Intrin_SSE2);
-		}
-	}
-	else
-#endif
-#if 0
-		if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(m_funBrief256_31_Float32 = Brief256_31_Intrin_SSE2);
-		}
-		if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
-			COMPV_EXEC_IFDEF_ASM_X86(m_funBrief256_31_Float32 = Brief256_31_Asm_X86_SSE41);
-			COMPV_EXEC_IFDEF_ASM_X64(m_funBrief256_31_Float32 = Brief256_31_Asm_X64_SSE41);
-		}
-		if (compv::CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(m_funBrief256_31_Float32 = Brief256_31_Intrin_AVX2);
-			COMPV_EXEC_IFDEF_ASM_X86(m_funBrief256_31_Float32 = Brief256_31_Asm_X86_AVX2);
-			COMPV_EXEC_IFDEF_ASM_X64(m_funBrief256_31_Float32 = Brief256_31_Asm_X64_AVX2);
-			if (compv::CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
-				COMPV_EXEC_IFDEF_ASM_X86(m_funBrief256_31_Float32 = Brief256_31_Asm_X86_FMA3_AVX2);
-				COMPV_EXEC_IFDEF_ASM_X64(m_funBrief256_31_Float32 = Brief256_31_Asm_X64_FMA3_AVX2);
-			}
-		}
-#endif
+	// Get number of threads for the describe process
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+	const size_t threadsCount = COMPV_MATH_MIN(maxThreads, (interestPoints.size() / COMPV_FEATURE_DESC_ORB_DESCRIBE_MIN_SAMPLES_PER_THREAD));
 
 	// Describe the points
-	CompVAsyncTaskIds describeTaskIds;
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
-#if 0
-	size_t threadsCountDescribe = 1;
 	if (threadsCount > 1) {
-		threadsCountDescribe = (interestPoints->size() / COMPV_FEATURE_DESC_ORB_DESCRIBE_MIN_SAMPLES_PER_THREAD);
-		threadsCountDescribe = COMPV_MATH_MIN(threadsCountDescribe, threadsCount);
-	}
-	if (threadsCountDescribe > 1) {
-		const CompVInterestPoint* begin = interestPoints->begin();
-		size_t total = interestPoints->size();
-		size_t count = total / threadsCountDescribe;
+		CompVAsyncTaskIds taskIds;
+		CompVInterestPointVector::const_iterator begin = interestPoints.begin();
+		const size_t counts = static_cast<size_t>(interestPoints.size() / threadsCount);
+		const size_t countsDescriptionsStride = (counts * _descriptionsStride);
+		const size_t lastCount = interestPoints.size() - ((threadsCount - 1) * counts);
 		uint8_t* desc = _descriptionsPtr;
-		describeTaskIds.reserve(threadsCountDescribe);
-		auto funcPtr = [&](const CompVInterestPoint* begin, const CompVInterestPoint* end, uint8_t* desc) -> COMPV_ERROR_CODE {
-			return describe(_pyramid, begin, end, desc);
+		taskIds.reserve(threadsCount);
+		auto funcPtr = [&](CompVInterestPointVector::const_iterator begin_, CompVInterestPointVector::const_iterator end_, uint8_t* desc_) -> COMPV_ERROR_CODE {
+			return describe(_pyramid, begin_, end_, desc_, _descriptionsStride);
 		};
-		for (size_t i = 0; count > 0 && i < threadsCountDescribe; ++i) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, begin, begin + count, desc), describeTaskIds));
-			begin += count;
-			desc += (count * nFeaturesBytes);
-			total -= count;
-			if (i == (threadsCountDescribe - 2)) {
-				count = (total); // the remaining
-			}
+		for (size_t i = 0; i < threadsCount - 1; ++i) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, begin, begin + counts, desc), taskIds));
+			begin += counts;
+			desc += countsDescriptionsStride;
 		}
-		// wait() for threads execution later
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, begin, begin + lastCount, desc), taskIds));
+		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 	}
 	else {
-#endif
 		COMPV_CHECK_CODE_RETURN(err_ = describe(_pyramid, interestPoints.begin(), interestPoints.end(), _descriptionsPtr, _descriptionsStride));
-#if 0
-	}
-#endif
-
-	// TODO(dmi): if MT, call wait() after image cloning
-#if 0
-	if (m_bMediaTypeVideo) {
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-		COMPV_CHECK_CODE_RETURN(err_ = _pyramid->getImage(0, &imageAtLevelN));
-		COMPV_CHECK_CODE_RETURN(err_ = imageAtLevelN->clone(&m_image_blurred_prev));
-	}
-#endif
-
-	// Wait for the threads to finish the work
-	if (!describeTaskIds.empty()) {
-		COMPV_CHECK_CODE_RETURN(threadDisp->wait(describeTaskIds));
 	}
 
 	*descriptions = _descriptions;

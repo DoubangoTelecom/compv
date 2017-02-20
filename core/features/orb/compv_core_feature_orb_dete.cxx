@@ -201,7 +201,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::process(const CompVMatPtr& image_, CompVInt
 	}
 	
 	if (threadsCount > 1) {
-		CompVPtr<CompVCornerDeteORB* >This = this;
+		CompVCornerDeteORBPtr This = this;
 		// levelStart is used to make sure we won't schedule more than "threadsCount"
 		size_t levelStart, level, levelMax;
 		CompVAsyncTaskIds taskIds;

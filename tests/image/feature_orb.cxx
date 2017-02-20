@@ -57,9 +57,9 @@ COMPV_ERROR_CODE feature_orb()
 	timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO("Elapsed time (TestORB) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	COMPV_DEBUG_INFO("MD5:%s", compv_tests_md5(descriptions).c_str());
+	//COMPV_DEBUG_INFO("MD5:%s", compv_tests_md5(descriptions).c_str());
 
-	// Check result
+	// Check result (Important: you have to disable MT in convolution to have same MD5, because in ORB the convoltion change the input image)
 	COMPV_CHECK_EXP_RETURN(std::string(EXPECTED_MD5).compare(compv_tests_md5(descriptions)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "ORB: MD5 mismatch");
 
 	return COMPV_ERROR_CODE_S_OK;

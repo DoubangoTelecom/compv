@@ -113,8 +113,8 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVMatPtr &queryDescrip
 
 	// process starting at queryIdxStart
 	if (threadsCount > 1) {
-		size_t counts = static_cast<size_t>(queryRows_ / threadsCount);
-		size_t lastCount = queryRows_ - ((threadsCount - 1) * counts);
+		const size_t counts = static_cast<size_t>(queryRows_ / threadsCount);
+		const size_t lastCount = queryRows_ - ((threadsCount - 1) * counts);
 		size_t queryIdxStart = 0;
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCount);
