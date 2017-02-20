@@ -247,7 +247,8 @@ void CompVMathDistanceHamming_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dat
 }
 
 // width = 32 (common, e.g. very common (Brief256_31))
-// TODO(dmi): not optiz, iPhone5 (ARM32), the ASM code is almost two times faster
+// TODO(dmi): not optiz, iPhone5 (ARM32), the ASM code is almost two times faster (not the case on Galaxy A6)
+// TODO(dmi): not optiz, MediaPad2 (ARM64), the ASM code is fasteeer
 void CompVMathDistanceHamming32_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, COMPV_ALIGNED(NEON) const uint8_t* patch1xnPtr, int32_t* distPtr)
 {
     COMPV_DEBUG_INFO_CHECK_NEON();

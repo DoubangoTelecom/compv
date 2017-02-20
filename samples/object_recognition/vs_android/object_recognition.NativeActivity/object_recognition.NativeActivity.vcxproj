@@ -169,6 +169,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
@@ -195,6 +196,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
@@ -221,6 +223,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
@@ -247,6 +250,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>

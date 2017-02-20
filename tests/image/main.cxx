@@ -8,9 +8,9 @@ using namespace compv;
 #define TEST_PYRAMID				0
 #define TEST_CHROMA_CONV			0
 #define TEST_FEATURE_FAST			0
-#define TEST_FEATURE_ORB			0
+#define TEST_FEATURE_ORB			1
 #define TEST_CONVLT					0
-#define TEST_BRUTEFORCE				1
+#define TEST_BRUTEFORCE				0
 #define TEST_DRAW_IMAGE				0
 #define TEST_DRAW_POINTS			0
 

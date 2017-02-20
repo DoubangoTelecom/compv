@@ -159,6 +159,9 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI>
+      </FloatABI>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -176,6 +179,9 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI>
+      </FloatABI>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -193,6 +199,9 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI>
+      </FloatABI>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -210,6 +219,9 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI>
+      </FloatABI>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -227,6 +239,9 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI>
+      </FloatABI>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -244,6 +259,9 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI>
+      </FloatABI>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -261,6 +279,8 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI />
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -278,6 +298,8 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI />
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>

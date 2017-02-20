@@ -81,6 +81,18 @@
     <Filter Include="Source Files\features\fast\asm\arm">
       <UniqueIdentifier>{f0ab5bb6-957c-4ef6-a2ea-558652a2421e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\features\orb\intrin">
+      <UniqueIdentifier>{a6813d75-f5d4-44f3-b11c-1169f2f7931d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\orb\intrin\x86">
+      <UniqueIdentifier>{5efed2b8-a387-4cec-bcda-ba2d65937241}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\features\orb\intrin">
+      <UniqueIdentifier>{6c958f4f-a86b-4083-a1cc-41f49c35798a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\features\orb\intrin\x86">
+      <UniqueIdentifier>{a5abdac8-d022-404e-b0a5-64e51bf2db0e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -109,6 +121,12 @@
     </ClCompile>
     <ClCompile Include="matchers\compv_matcher_bruteforce.cxx">
       <Filter>Source Files\matchers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse2.cxx">
+      <Filter>Source Files\features\orb\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse41.cxx">
+      <Filter>Source Files\features\orb\intrin\x86</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -144,6 +162,12 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\matchers\compv_core_matcher_flann.h">
       <Filter>Header Files\matchers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse2.h">
+      <Filter>Header Files\features\orb\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse41.h">
+      <Filter>Header Files\features\orb\intrin\x86</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

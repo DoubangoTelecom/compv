@@ -206,6 +206,9 @@
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI>
+      </FloatABI>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -215,6 +218,9 @@
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI>
+      </FloatABI>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
@@ -224,6 +230,9 @@
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI>
+      </FloatABI>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -233,6 +242,9 @@
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI>
+      </FloatABI>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -242,6 +254,9 @@
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI>
+      </FloatABI>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -251,6 +266,9 @@
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI>
+      </FloatABI>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -260,6 +278,8 @@
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI />
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -269,6 +289,8 @@
       <AdditionalIncludeDirectories>../include;../../base/include;../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI />
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

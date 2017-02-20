@@ -174,7 +174,7 @@ public:
     template <typename T>
     static COMPV_INLINE T hypot(T x, T y) {
 #if 1
-        return static_cast<T>(hypot(x, y));
+        return static_cast<T>(::hypot(x, y));
 #elif 0
         // https://en.wikipedia.org/wiki/Hypot
         // Without overflow / underflow

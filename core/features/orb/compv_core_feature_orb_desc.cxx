@@ -24,6 +24,9 @@
 #include "compv/base/compv_cpu.h"
 #include "compv/base/compv_debug.h"
 
+#include "compv/core/features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_sse2.h"
+#include "compv/core/features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_sse41.h"
+
 #include <algorithm>
 
 #define COMPV_THIS_CLASSNAME "CompVCornerDescORB"
@@ -82,19 +85,20 @@
 	9*(1<<(q)), 12*(1<<(q)), -5*(1<<(q)), 7*(1<<(q)), -8*(1<<(q)), -12*(1<<(q)), 5*(1<<(q)), 9*(1<<(q)), 5*(1<<(q)), 4*(1<<(q)), 3*(1<<(q)), 12*(1<<(q)), 11*(1<<(q)), -13*(1<<(q)), 12*(1<<(q)), 4*(1<<(q)), 6*(1<<(q)), 12*(1<<(q)), 1*(1<<(q)), 1*(1<<(q)), 1*(1<<(q)), -13*(1<<(q)), \
 	-13*(1<<(q)), 4*(1<<(q)), -2*(1<<(q)), -3*(1<<(q)), -2*(1<<(q)), 10*(1<<(q)), -9*(1<<(q)), -1*(1<<(q)), -2*(1<<(q)), -8*(1<<(q)), 5*(1<<(q)), 10*(1<<(q)), 5*(1<<(q)), 5*(1<<(q)), 11*(1<<(q)), -6*(1<<(q)), -12*(1<<(q)), 9*(1<<(q)), 4*(1<<(q)), -2*(1<<(q)), -2*(1<<(q)), -11*(1<<(q))
 
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31AX[256] = { _kBrief256Pattern31AX_(0) };
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31AY[256] = { _kBrief256Pattern31AY_(0) };
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31BX[256] = { _kBrief256Pattern31BX_(0) };
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() float kBrief256Pattern31BY[256] = { _kBrief256Pattern31BY_(0) };
+static const COMPV_ALIGN_DEFAULT() float kCompVBrief256Pattern31AX[256] = { _kBrief256Pattern31AX_(0) };
+static const COMPV_ALIGN_DEFAULT() float kCompVBrief256Pattern31AY[256] = { _kBrief256Pattern31AY_(0) };
+static const COMPV_ALIGN_DEFAULT() float kCompVBrief256Pattern31BX[256] = { _kBrief256Pattern31BX_(0) };
+static const COMPV_ALIGN_DEFAULT() float kCompVBrief256Pattern31BY[256] = { _kBrief256Pattern31BY_(0) };
+
 #if COMPV_FEATURE_DESC_ORB_FXP_DESC
 // The partten values are mulb cosT and sinT with fxpq(cosT) = fxpq(sinT) = 15 (maxv=0x7fff)
 // The equation is simple: [[ COMPV_FXPQ = (fxpq(cosT/sinT) + fxpq(pattern)) ]] => [[ fxpq(pattern) = COMPV_FXPQ - (fxpq(cosT/sinT)) ]]
 // With ARM NEON we have COMPV_FXPQ=15 which means we should have fxpq(pattern) = 0
 // With X86 we have COMPV_FXPQ=16 which means we should have fxpq(pattern) = 1
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() int16_t kBrief256Pattern31AXFxp[256] = { _kBrief256Pattern31AX_((COMPV_FXPQ - 15)) };
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() int16_t kBrief256Pattern31AYFxp[256] = { _kBrief256Pattern31AY_((COMPV_FXPQ - 15)) };
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() int16_t kBrief256Pattern31BXFxp[256] = { _kBrief256Pattern31BX_((COMPV_FXPQ - 15)) };
-COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() int16_t kBrief256Pattern31BYFxp[256] = { _kBrief256Pattern31BY_((COMPV_FXPQ - 15)) };
+COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() int16_t kCompVBrief256Pattern31AXFxp[256] = { _kBrief256Pattern31AX_((COMPV_FXPQ - 15)) };
+COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() int16_t kCompVBrief256Pattern31AYFxp[256] = { _kBrief256Pattern31AY_((COMPV_FXPQ - 15)) };
+COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() int16_t kCompVBrief256Pattern31BXFxp[256] = { _kBrief256Pattern31BX_((COMPV_FXPQ - 15)) };
+COMPV_EXTERNC COMPV_CORE_API const COMPV_ALIGN_DEFAULT() int16_t kCompVBrief256Pattern31BYFxp[256] = { _kBrief256Pattern31BY_((COMPV_FXPQ - 15)) };
 #endif
 
 COMPV_NAMESPACE_BEGIN()
@@ -114,7 +118,11 @@ static const float COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 1.52f;
 
 #define COMPV_FEATURE_DESC_ORB_DESCRIBE_MIN_SAMPLES_PER_THREAD	(500 >> 3) // number of interestPoints
 
-static void Brief256_31_Float32_C(const uint8_t* img_center, compv_uscalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out);
+static void CompVOrbBrief256_31_32f_C(const uint8_t* img_center, compv_uscalar_t img_stride,
+	const float* cos1, const float* sin1,
+	const float* kBrief256Pattern31AX, const float* kBrief256Pattern31AY,
+	const float* kBrief256Pattern31BX, const float* kBrief256Pattern31BY,
+	void* out);
 #if COMPV_FEATURE_DESC_ORB_FXP_DESC
 static void Brief256_31_Fxp_C(const uint8_t* img_center, compv_scalar_t img_stride, const int16_t* cos1, const int16_t* sin1, COMPV_ALIGNED(x) void* out);
 #endif
@@ -123,10 +131,6 @@ CompVCornerDescORB::CompVCornerDescORB()
 	: CompVCornerDesc(COMPV_ORB_ID)
 	, m_nPatchDiameter(COMPV_FEATURE_DETE_ORB_PATCH_DIAMETER)
 	, m_nPatchBits(COMPV_FEATURE_DETE_ORB_PATCH_BITS)
-	, m_funBrief256_31_Float32(Brief256_31_Float32_C)
-#if COMPV_FEATURE_DESC_ORB_FXP_DESC
-	, m_funBrief256_31_Fxp(Brief256_31_Fxp_C)
-#endif
 {
 
 }
@@ -186,6 +190,12 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 	const int nPatchRadius = (m_nPatchDiameter >> 1);
 	const uint8_t* img_center;
 	size_t img_stride;
+	void(*Brief256_31_32f)(
+		const uint8_t* img_center, compv_uscalar_t img_stride,
+		const float* cos1, const float* sin1,
+		const float* kBrief256Pattern31AX, const float* kBrief256Pattern31AY,
+		const float* kBrief256Pattern31BX, const float* kBrief256Pattern31BY,
+		COMPV_ALIGNED(x) void* out) = CompVOrbBrief256_31_32f_C;
 
 	/* Init "m_funBrief256_31" using current CPU flags */
 #if COMPV_FEATURE_DESC_ORB_FXP_DESC
@@ -197,24 +207,24 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 	}
 	else
 #endif
-#if 0
-	if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(m_funBrief256_31_Float32 = Brief256_31_Intrin_SSE2);
+
+	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Intrin_SSE2);
 	}
 	if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
-		COMPV_EXEC_IFDEF_ASM_X86(m_funBrief256_31_Float32 = Brief256_31_Asm_X86_SSE41);
-		COMPV_EXEC_IFDEF_ASM_X64(m_funBrief256_31_Float32 = Brief256_31_Asm_X64_SSE41);
+		COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Intrin_SSE41);
+		//COMPV_EXEC_IFDEF_ASM_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X86_SSE41);
+		//COMPV_EXEC_IFDEF_ASM_X64(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X64_SSE41);
 	}
-	if (compv::CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(m_funBrief256_31_Float32 = Brief256_31_Intrin_AVX2);
-		COMPV_EXEC_IFDEF_ASM_X86(m_funBrief256_31_Float32 = Brief256_31_Asm_X86_AVX2);
-		COMPV_EXEC_IFDEF_ASM_X64(m_funBrief256_31_Float32 = Brief256_31_Asm_X64_AVX2);
-		if (compv::CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
-			COMPV_EXEC_IFDEF_ASM_X86(m_funBrief256_31_Float32 = Brief256_31_Asm_X86_FMA3_AVX2);
-			COMPV_EXEC_IFDEF_ASM_X64(m_funBrief256_31_Float32 = Brief256_31_Asm_X64_FMA3_AVX2);
+	if (CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+		//COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Intrin_AVX2);
+		//COMPV_EXEC_IFDEF_ASM_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X86_AVX2);
+		//COMPV_EXEC_IFDEF_ASM_X64(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X64_AVX2);
+		if (CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
+			//COMPV_EXEC_IFDEF_ASM_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X86_FMA3_AVX2);
+			//COMPV_EXEC_IFDEF_ASM_X64(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X64_FMA3_AVX2);
 		}
 	}
-#endif
 
 #if 0
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
@@ -259,7 +269,10 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 				else
 #endif
 				{
-					m_funBrief256_31_Float32(img_center, img_stride, &fcos, &fsin, desc);
+					Brief256_31_32f(img_center, img_stride, &fcos, &fsin, 
+						kCompVBrief256Pattern31AX, kCompVBrief256Pattern31AY,
+						kCompVBrief256Pattern31BX, kCompVBrief256Pattern31BY, 
+						desc);
 				}
 				desc += desc_stride;
 			}
@@ -426,12 +439,18 @@ COMPV_ERROR_CODE CompVCornerDescORB::newObj(CompVCornerDescPtrPtr orb)
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static void Brief256_31_Float32_C(const uint8_t* img_center, compv_uscalar_t img_stride, const float* cos1, const float* sin1, COMPV_ALIGNED(x) void* out)
+static void CompVOrbBrief256_31_32f_C(
+	const uint8_t* img_center, compv_uscalar_t img_stride, 
+	const float* cos1, const float* sin1, 
+	const float* kBrief256Pattern31AX, const float* kBrief256Pattern31AY,
+	const float* kBrief256Pattern31BX, const float* kBrief256Pattern31BY,
+	void* out
+)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 
 	static const uint64_t u64_1 = 1;
-	uint64_t* _out = (uint64_t*)out;
+	uint64_t* _out = reinterpret_cast<uint64_t*>(out);
 	int i, j, x, y;
 	uint8_t a, b;
 	float xf, yf, cosT = *cos1, sinT = *sin1;

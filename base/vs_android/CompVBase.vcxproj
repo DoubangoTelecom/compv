@@ -561,6 +561,8 @@
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <Optimization>Disabled</Optimization>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -572,6 +574,7 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
@@ -584,6 +587,8 @@
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <Optimization>Disabled</Optimization>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -595,6 +600,7 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -607,6 +613,8 @@
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <Optimization>Disabled</Optimization>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -618,6 +626,7 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -629,8 +638,10 @@
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
-      <EnableNeonCodegen>false</EnableNeonCodegen>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <FloatABI />
+      <Optimization>Disabled</Optimization>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -642,6 +653,8 @@
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <ExceptionHandling>Disabled</ExceptionHandling>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <FloatABI />
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

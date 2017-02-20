@@ -15,7 +15,7 @@ using namespace compv;
 #define CAMERA_HEIGHT			720
 #define CAMERA_FPS				30
 #define CAMERA_SUBTYPE			COMPV_SUBTYPE_PIXELS_YUY2
-#define CAMERA_AUTOFOCUS		true
+#define CAMERA_AUTOFOCUS		true // autofocus should be disabled on final product
 
 #define WINDOW_WIDTH			1280
 #define WINDOW_HEIGHT			720
