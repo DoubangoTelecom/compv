@@ -398,22 +398,22 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
             add t0, dataPtr, stride @ t0 = dataPtr[stride * 1]
             add t1, dataPtr, stride, LSL #1 @ t1 = dataPtr[stride * 2]
             add t2, t0, stride, LSL #1 @ t2 = dataPtr[stride * 3]
-            vld1.u8 { q4x, q4y, q5x, q5y }, [dataPtr :128]! @ TODO(dmi): ARM64, use ldp
-            vld1.u8 { q6x, q6y, q7x, q7y }, [t0 :128]! @ t0 = dataPtr[stride * 1]
 			@ vcnt has high latency and throughput and this is why veors (low latency and throughput) are interleaved
+            vld1.u8 { q4x, q4y, q5x, q5y }, [dataPtr :128]!			
             veor.u8 q4, q4, vecPatch0
 			veor.u8 q5, q5, vecPatch1
             vcnt.u8 q4, q4
+			vld1.u8 { q6x, q6y, q7x, q7y }, [t0 :128]!
             vcnt.u8 q5, q5
 			veor.u8 q6, q6, vecPatch0
 			veor.u8 q7, q7, vecPatch1
             vcnt.u8 q6, q6
-			vld1.u8 { q8x, q8y, q9x, q9y }, [t1 :128]! @ t1 = dataPtr[stride * 2]
+			vld1.u8 { q8x, q8y, q9x, q9y }, [t1 :128]!
             vcnt.u8 q7, q7
-			vld1.u8 { q10x, q10y, q11x, q11y }, [t2 :128]! @ t2 = dataPtr[stride * 3]
 			veor.u8 q8, q8, vecPatch0
 			veor.u8 q9, q9, vecPatch1
             vcnt.u8 q8, q8
+			vld1.u8 { q10x, q10y, q11x, q11y }, [t2 :128]!
             vcnt.u8 q9, q9
 			veor.u8 q10, q10, vecPatch0
 			veor.u8 q11, q11, vecPatch1
