@@ -15,7 +15,7 @@
 #define TEST_TYPE_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define TEST_TYPE_GRIOTS				"mandekalou_480x640_gray.yuv"
 
-#define LOOP_COUNT		1000
+#define LOOP_COUNT		1
 #define TEST_TYPE		TEST_TYPE_EQUIRECTANGULAR
 #define NONMAXIMA		true
 #define THRESHOLD		20

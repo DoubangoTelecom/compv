@@ -35,9 +35,6 @@ void CompVOrbBrief256_31_32f_Intrin_SSE41(
 	const __m128 vecCosT = _mm_set1_ps(*cos1);
 	const __m128 vecSinT = _mm_set1_ps(*sin1);
 
-	// _mm_mullo_epi32 is SSE4.1
-	// use _mm_extract_epi32 and _mm_insert_epi32 in SSE4.1 instead of vecIndex[4]
-
 	for (size_t i = 0; i < 256; i += 16) {
 		// xf = (kBrief256Pattern31AX[i] * cosT - kBrief256Pattern31AY[i] * sinT);
 		vecXF[0] = _mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 0]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 0]), vecSinT));
@@ -126,7 +123,7 @@ void CompVOrbBrief256_31_32f_Intrin_SSE41(
 		// _out[0] |= (a < b) ? (u64_1 << j) : 0;
 		// _mm_cmplt_epu8 doesn't exist this is why we substract 128
 		vecR = _mm_cmplt_epi8(_mm_sub_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(vecA)), vec128), _mm_sub_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(vecB)), vec128));
-		*outPtr++ = _mm_movemask_epi8(vecR);
+		*outPtr++ = static_cast<uint16_t>(_mm_movemask_epi8(vecR));
 	}
 }
 
