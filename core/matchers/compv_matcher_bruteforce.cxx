@@ -95,69 +95,95 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVMatPtr &queryDescrip
 	
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
-    size_t trainRows_ = trainDescriptions->rows();
-    size_t queryRows_ = queryDescriptions->rows();
-    size_t matchesRows = COMPV_MATH_CLIP3(1, trainRows_, static_cast<size_t>(m_nKNN));
-    size_t matchesCols = queryRows_;
+	const size_t trainRowsCount_ = trainDescriptions->rows();
+	const size_t queryRowsCount_ = queryDescriptions->rows();
+	const size_t matchesRows_ = COMPV_MATH_CLIP3(1, trainRowsCount_, static_cast<size_t>(m_nKNN));
+	const size_t matchesCols_ = queryRowsCount_;
 	const size_t minSamplesPerThread = (((CompVCpu::isEnabled(kCpuFlagPOPCNT) && CompVCpu::isEnabled(kCpuFlagAVX2)) || CompVCpu::isEnabled(kCpuFlagARM_NEON)) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled()))
 		? COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD_POPCNT_SIMD
 		: COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD;
 
-    // realloc() matchers
-    COMPV_CHECK_CODE_RETURN((err_ = CompVMat::newObj<CompVDMatch, COMPV_MAT_TYPE_STRUCT>(matches, matchesRows, matchesCols, 1)));
+    // realloc() matchers and reset (reset not thread safe when mtBasedOnQueries_ is false and this why it's done here)
+    COMPV_CHECK_CODE_RETURN((err_ = CompVMat::newObj<CompVDMatch, COMPV_MAT_TYPE_STRUCT>(matches, matchesRows_, matchesCols_, 1)));
+	CompVDMatch* matchesPtr_ = (*matches)->ptr<CompVDMatch>();
+	const size_t matchesStride_ = (*matches)->stride();
+	for (size_t j = 0; j < matchesRows_; ++j) {
+		for (size_t i = 0; i < matchesCols_; ++i) {
+			matchesPtr_[i].distance = INT_MAX;
+			matchesPtr_[i].imageIdx = 0;
+		}
+		matchesPtr_ += matchesStride_;
+	}
 	
 	// Compute number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
-	size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, queryRows_ / minSamplesPerThread);
+	const size_t maxThreads_ = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;	
+#if 0 // TODO(dmi): not correct yet
+	const size_t maxRows_ = COMPV_MATH_MAX(queryRowsCount_, trainRowsCount_);
+	const bool mtBasedOnQueries_ = (queryRowsCount_ > trainRowsCount_); // use MT based on the discriptions more rows
+#else
+	const size_t maxRows_ = queryRowsCount_;
+	const bool mtBasedOnQueries_ = true;
+#endif
+	const size_t threadsCount_ = COMPV_MATH_CLIP3(1, maxThreads_, maxRows_ / minSamplesPerThread);
 
-    // process starting at queryIdxStart
-    if (threadsCount > 1) {
-		size_t counts = static_cast<size_t>(queryRows_ / threadsCount);
-		size_t lastCount = queryRows_ - ((threadsCount - 1) * counts);
-        size_t queryIdxStart = 0;
+    // process starting at queryRowsStart
+    if (threadsCount_ > 1) {
+		const size_t counts = static_cast<size_t>(maxRows_ / threadsCount_);
+		const size_t lastCount = maxRows_ - ((threadsCount_ - 1) * counts);
+		size_t mtQueryRowsStart = 0, mtTrainRowsStart = 0;
+		const size_t mtQueryRowsIncrement = mtBasedOnQueries_ ? counts : 0;
+		const size_t mtTrainRowsIncrement = mtBasedOnQueries_ ? 0 : counts;
+		const size_t mtQueryRowsCount = mtBasedOnQueries_ ? counts : queryRowsCount_;
+		const size_t mtTrainRowsCount = mtBasedOnQueries_ ? trainRowsCount_ : counts;
+		const size_t mtQueryRowsCountLast = mtBasedOnQueries_ ? lastCount : queryRowsCount_;
+		const size_t mtTrainRowsCountLast = mtBasedOnQueries_ ? trainRowsCount_ : lastCount;
         CompVAsyncTaskIds taskIds;
-        taskIds.reserve(threadsCount);
-        auto funcPtr = [&](size_t queryIdxStart_, size_t count_, const CompVMatPtr& queryDescriptions_, const CompVMatPtr& trainDescriptions_, CompVMatPtr& matches_) -> COMPV_ERROR_CODE {
-            return CompVMatcherBruteForce::processAt(static_cast<int>(queryIdxStart_), count_, queryDescriptions_, trainDescriptions_, matches_);
+        taskIds.reserve(threadsCount_);
+        auto funcPtr = [&](const CompVMatPtr& queryDescriptions_, size_t queryRowsStart_, size_t queryRowsCount_, const CompVMatPtr& trainDescriptions_, size_t trainRowsStart_, size_t trainRowsCount_, CompVMatPtr& matches_) -> COMPV_ERROR_CODE {
+            return CompVMatcherBruteForce::processAt(queryDescriptions_, queryRowsStart_, queryRowsCount_, trainDescriptions_, trainRowsStart_, trainRowsCount_, matches_);
         };
-		for (size_t i = 0; i < threadsCount - 1; ++i) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, queryIdxStart, counts, queryDescriptions, trainDescriptions, *matches), taskIds));
-			queryIdxStart += counts;
+		for (size_t i = 0; i < threadsCount_ - 1; ++i) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, queryDescriptions, mtQueryRowsStart, mtQueryRowsCount, trainDescriptions, mtTrainRowsStart, mtTrainRowsCount, *matches), taskIds));
+			mtQueryRowsStart += mtQueryRowsIncrement;
+			mtTrainRowsStart += mtTrainRowsIncrement;
+			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 		}
-		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, queryIdxStart, lastCount, queryDescriptions, trainDescriptions, *matches), taskIds));        
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, queryDescriptions, mtQueryRowsStart, mtQueryRowsCountLast, trainDescriptions, mtTrainRowsStart, mtTrainRowsCountLast, *matches), taskIds));        
         COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
     }
     else {
-        COMPV_CHECK_CODE_RETURN(err_ = CompVMatcherBruteForce::processAt(0, queryRows_, queryDescriptions, trainDescriptions, *matches));
+        COMPV_CHECK_CODE_RETURN(err_ = CompVMatcherBruteForce::processAt(queryDescriptions, 0, queryRowsCount_, trainDescriptions, 0, trainRowsCount_, *matches));
     }
 
     return err_;
 }
 
 // Private function, do not check imput parameters
-COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(int queryIdxStart, size_t count, const CompVMatPtr& queryDescriptions, const CompVMatPtr& trainDescriptions, CompVMatPtr& matches)
+COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(const CompVMatPtr& queryDescriptions, size_t queryRowsStart, size_t queryRowsCount, const CompVMatPtr& trainDescriptions, size_t trainRowsStart, size_t trainRowsCount, CompVMatPtr& matches)
 {
     COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     CompVDMatch *match0_, *match1_;
-    int trainRows_ = static_cast<int>(trainDescriptions->rows());
+    int trainRowsCount_ = static_cast<int>(trainRowsCount);
+	int queryIdxStart_ = static_cast<int>(queryRowsStart);
     size_t trainStrideBytes_ = trainDescriptions->strideInBytes();
-    size_t queryCols_ = queryDescriptions->cols();
+    size_t queryColsCount_ = queryDescriptions->cols();
 	size_t queryStrideInBytes = queryDescriptions->strideInBytes();
 	int queryIdx_, trainIdx_, oldTrainIdx_, oldQueryIdx_, k_;
     int32_t oldDistance_;
-    int queryIdxEnd_ =  static_cast<int>(queryIdxStart + count);
+    int queryRowsEnd_ =  static_cast<int>(queryRowsStart + queryRowsCount);
 
 	int matchesRows = static_cast<int>(matches->rows());
 	int matchesCols = static_cast<int>(matches->cols());
 
     // alloc() hamming distances
     CompVMatPtr hammingDistancesArray;
-    COMPV_CHECK_CODE_RETURN(err_ = CompVMat::newObjAligned<int32_t>(&hammingDistancesArray, 1, count));
+    COMPV_CHECK_CODE_RETURN(err_ = CompVMat::newObjAligned<int32_t>(&hammingDistancesArray, 1, queryRowsCount));
     int32_t *hammingDistances_ = hammingDistancesArray->ptr<int32_t>();
 
-    const uint8_t *queryDescriptions_ = queryDescriptions->ptr<const uint8_t>(queryIdxStart, 0), *trainDescriptions_ = trainDescriptions->ptr<uint8_t>(0, 0);
-    CompVDMatch* matches_ = matches->ptr<CompVDMatch>(0, queryIdxStart);
+	const uint8_t* queryDescriptions_ = queryDescriptions->ptr<const uint8_t>(queryRowsStart);
+	const uint8_t* trainDescriptions_ = trainDescriptions->ptr<uint8_t>(trainRowsStart);
+    CompVDMatch* matches_ = matches->ptr<CompVDMatch>(0, queryRowsStart);
 
     // Set default values for the first knn-th rows to INT_MAX to make sure we will sort correctly the first inserted values
     // We'll have knn sorted values for the first round-trip. As the sorting is done for knn elements only then, when a candidate is
@@ -166,18 +192,11 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(int queryIdxStart, size_t cou
 
     if (matchesRows == 2) { // Means KNN = 2, frequently used for ratio test
         const int32_t* hD;
-        // initialization
-        for (queryIdx_ = queryIdxStart, match0_ = matches_, match1_ = (matches_ + matchesCols); queryIdx_ < queryIdxEnd_; ++queryIdx_, ++match0_, ++match1_) {
-            match0_->distance = INT_MAX;
-            match0_->imageIdx = 0;
-            match1_->distance = INT_MAX;
-            match1_->imageIdx = 0;
-        }
         // round-trips
-        for (trainIdx_ = 0; trainIdx_ < trainRows_; ++trainIdx_, trainDescriptions_ += trainStrideBytes_) {
-            COMPV_CHECK_CODE_RETURN(err_ = CompVMathDistance::hamming(queryDescriptions_, queryCols_, count, queryStrideInBytes,
+        for (trainIdx_ = 0; trainIdx_ < trainRowsCount_; ++trainIdx_, trainDescriptions_ += trainStrideBytes_) {
+            COMPV_CHECK_CODE_RETURN(err_ = CompVMathDistance::hamming(queryDescriptions_, queryColsCount_, queryRowsCount, queryStrideInBytes,
                                            trainDescriptions_, hammingDistances_));
-            for (queryIdx_ = queryIdxStart, hD = hammingDistances_, match0_ = matches_, match1_ = (matches_ + matchesCols); queryIdx_ < queryIdxEnd_; ++queryIdx_, ++hD, ++match0_, ++match1_) {
+            for (queryIdx_ = queryIdxStart_, hD = hammingDistances_, match0_ = matches_, match1_ = (matches_ + matchesCols); queryIdx_ < queryRowsEnd_; ++queryIdx_, ++hD, ++match0_, ++match1_) {
                 // "match0_ <= match1_" -> if (newDistance_ not< match1_) then, newDistance_ not < match0_
                 if (*hD < match1_->distance) {
                     if (*hD < match0_->distance) {
@@ -197,20 +216,11 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::processAt(int queryIdxStart, size_t cou
     else {
         COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Should double check next code to optiz");
         int newTrainIdx_, newQueryIdx_, hammingIdx_, newDistance_;
-        // initialization
-        for (queryIdx_ = queryIdxStart, match0_ = matches_; queryIdx_ < queryIdxEnd_; ++queryIdx_, ++match0_) {
-            match1_ = match0_;
-            for (k_ = 0; k_ < matchesRows; ++k_) {
-                match1_->distance = INT_MAX;
-                match1_->imageIdx = 0;
-                match1_ += matchesCols;
-            }
-        }
         // round-trips
-        for (trainIdx_ = 0; trainIdx_ < trainRows_; ++trainIdx_, trainDescriptions_ += trainStrideBytes_) {
-            COMPV_CHECK_CODE_RETURN(err_ = CompVMathDistance::hamming(queryDescriptions_, queryCols_, count, queryStrideInBytes,
+        for (trainIdx_ = 0; trainIdx_ < trainRowsCount_; ++trainIdx_, trainDescriptions_ += trainStrideBytes_) {
+            COMPV_CHECK_CODE_RETURN(err_ = CompVMathDistance::hamming(queryDescriptions_, queryColsCount_, queryRowsCount, queryStrideInBytes,
                                            trainDescriptions_, hammingDistances_));
-            for (queryIdx_ = queryIdxStart, hammingIdx_ = 0, match0_ = matches_; queryIdx_ < queryIdxEnd_; ++queryIdx_, ++hammingIdx_, ++match0_) {
+            for (queryIdx_ = queryIdxStart_, hammingIdx_ = 0, match0_ = matches_; queryIdx_ < queryRowsEnd_; ++queryIdx_, ++hammingIdx_, ++match0_) {
                 newDistance_ = hammingDistances_[hammingIdx_], newTrainIdx_ = trainIdx_, newQueryIdx_ = queryIdx_;
                 match1_ = match0_;
                 for (k_ = 0; k_ < matchesRows; ++k_) {

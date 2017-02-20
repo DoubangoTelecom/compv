@@ -282,14 +282,9 @@ public:
         return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, 1);
     }
 
-    template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW_OPAQUE>
-    static COMPV_ERROR_CODE newObjAligned(CompVMatPtrPtr mat, size_t rows, size_t cols) {
-        return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, COMPV_ALIGNV_SIMD_DEFAULT);
-    }
-
 	template<class elmType = uint8_t, COMPV_MAT_TYPE dataType = COMPV_MAT_TYPE_RAW, COMPV_SUBTYPE dataSubType = COMPV_SUBTYPE_RAW_OPAQUE>
-	static COMPV_ERROR_CODE newObjAligned(CompVMatPtrPtr mat, size_t rows, size_t cols, size_t stride) {
-		return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, COMPV_ALIGNV_SIMD_DEFAULT, stride);
+	static COMPV_ERROR_CODE newObjAligned(CompVMatPtrPtr mat, size_t rows, size_t cols, size_t stride = 0) {
+		return CompVMat::newObj<elmType, dataType, dataSubType>(mat, rows, cols, CompVMem::bestAlignment(), stride);
 	}
 
 protected:
