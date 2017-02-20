@@ -23,6 +23,7 @@ using namespace compv;
 #define NONMAXIMA				true
 #define THRESHOLD				20
 #define FAST_TYPE				COMPV_FAST_TYPE_9
+// TODO(dmi): On ARM use 500 features to decrease CPU usage
 #define MAXFEATURES				1000 // use negative value to retain all features and improve accuracy (more cpu usage!!)
 #define PYRAMID_LEVELS			8
 #define PYRAMID_SCALE_FACTOR	0.83f // (1 / 1.2)
@@ -193,6 +194,8 @@ private:
 		y[0] = 0, y[1] = 0, y[2] = static_cast<compv_float64_t>(m_ptrImageGrayTrain->rows()), y[3] = static_cast<compv_float64_t>(m_ptrImageGrayTrain->rows());
 		return COMPV_ERROR_CODE_S_OK;
 	}
+
+	static bool myfunction(const CompVInterestPoint& i, const CompVInterestPoint& j) { return (i.strength > j.strength); }
 
 	COMPV_ERROR_CODE match()
 	{

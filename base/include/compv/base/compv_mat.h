@@ -354,7 +354,9 @@ private:
 					? static_cast<size_t>(CompVMem::alignForward(cols, static_cast<int>(alignv))) * elmtInBytes // make sure both stride and strideInBytes are aligned
 					: static_cast<size_t>(CompVMem::alignForward((cols * elmtInBytes), static_cast<int>(alignv))); // make sure strideInBytes is aligned
 			}
+#if 0 // User-defined stride doesn't match -> let him die if he makes mistake :)
 			COMPV_CHECK_EXP_BAIL(!COMPV_IS_ALIGNED(nBestStrideInBytes, alignv), (err_ = COMPV_ERROR_CODE_E_MEMORY_NOT_ALIGNED), "Stride not aligned with request alignment value");
+#endif
 
 			if (dataType == COMPV_MAT_TYPE_RAW || dataType == COMPV_MAT_TYPE_STRUCT) {
 				nPlaneCount = 1;

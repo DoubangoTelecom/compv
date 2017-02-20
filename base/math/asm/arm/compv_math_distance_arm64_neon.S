@@ -346,7 +346,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON64
    vecPatch1 .req v2
 
    ld1 { vecPatch0.16b, vecPatch1.16b }, [patch1xnPtr], #32
-   .unreq patch1xnPtr # patch1xnPtr no longer needed
+   .unreq patch1xnPtr // patch1xnPtr no longer needed
 
    # compute pad
    sub pad, stride, 32    
@@ -428,7 +428,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON64
        ## EndOf_LoopH1_CompVMathDistanceHamming33_Asm_NEON64 ##
 
 	.unreq dataPtr
-	.unreq width
 	.unreq height
 	.unreq stride
 	.unreq distPtr
@@ -440,8 +439,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON64
    .unreq t2
 
    .unreq veccnt
-   .unreq veccntx
-   .unreq veccnty
    .unreq vecPatch0
    .unreq vecPatch1
 

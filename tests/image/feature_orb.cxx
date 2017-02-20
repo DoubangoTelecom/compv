@@ -1,6 +1,6 @@
 #include "../tests_common.h"
 
-// This sample is for testing multithreading only, do not integrate in unittests
+// This sample is for testing multithreading only, do not integrate in unittests or test on ARM
 
 #if COMPV_OS_WINDOWS
 #	define COMPV_TEST_IMAGE_FOLDER			"C:/Projects/GitHub/data/test_images"
@@ -15,7 +15,7 @@
 #define TEST_TYPE_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define TEST_TYPE_GRIOTS				"mandekalou_480x640_gray.yuv"
 
-#define LOOP_COUNT		100
+#define LOOP_COUNT		1
 #define TEST_TYPE		TEST_TYPE_EQUIRECTANGULAR
 #define NONMAXIMA		true
 #define THRESHOLD		20

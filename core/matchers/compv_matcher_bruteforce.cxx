@@ -99,7 +99,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVMatPtr &queryDescrip
 	size_t queryRows_ = queryDescriptions->rows();
 	size_t matchesRows = COMPV_MATH_CLIP3(1, trainRows_, static_cast<size_t>(m_nKNN));
 	size_t matchesCols = queryRows_;
-	const size_t minSamplesPerThread = (((CompVCpu::isEnabled(kCpuFlagPOPCNT) && CompVCpu::isEnabled(kCpuFlagAVX2)) || CompVCpu::isEnabled(kCpuFlagARM_NEON)) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled()))
+	const size_t minSamplesPerThread = (((CompVCpu::isEnabled(kCpuFlagPOPCNT) && CompVCpu::isEnabled(kCpuFlagAVX2) && matchesCols == 32)) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled())) // must *not* add ARM Neon test here (checked and very sloow)
 		? COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD_POPCNT_SIMD
 		: COMPV_MATCHER_BRUTEFORCE_MIN_SAMPLES_PER_THREAD;
 

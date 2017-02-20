@@ -55,7 +55,7 @@ COMPV_ERROR_CODE CompVThreadDispatcher::newObj(CompVThreadDispatcherPtrPtr disp,
 	const int32_t maxCores = numCores; // Up to the system to dispatch the work and avoid overusing all cores
 #endif /* COMPV_PARALLEL_THREAD_SET_AFFINITY */
 
-#if COMPV_ARCH_ARM
+#if COMPV_ARCH_ARM && 0
 	// On ARM no hyperthreading and our tests showed that using #2 times the number of cores provides better performances.
 	const int32_t numThreadsBest = maxCores << 1;
 #else

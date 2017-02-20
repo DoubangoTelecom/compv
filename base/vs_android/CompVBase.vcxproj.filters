@@ -783,5 +783,11 @@
     <GAS Include="..\math\asm\arm\compv_math_convlt_arm32_neon.S">
       <Filter>source\math\asm\arm</Filter>
     </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_distance_arm32_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_distance_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </GAS>
   </ItemGroup>
 </Project>

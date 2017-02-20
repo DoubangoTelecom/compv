@@ -198,7 +198,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             @ if (orphans =  static_cast<compv_scalar_t>(width & 15))
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            ands t0, width, 15
+            ands t0, width, #15
             beq EndOf_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON32
             IfH4Orphans_CompVMathDistanceHamming_Asm_NEON32:
                 mov t1, #-(16<<3)
@@ -276,7 +276,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         @ if (orphans =  static_cast<compv_scalar_t>(width & 15))
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        ands t0, width, 15
+        ands t0, width, #15
         beq EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON32
         IfH1Orphans_CompVMathDistanceHamming_Asm_NEON32:
             mov t1, #-(16<<3)
@@ -300,7 +300,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
         vpadd.s32 q15x, veccntx, veccnty
         vpadd.s32 q14x, q15x, q15x
         vmov.s32 t0, q14x[0]
-        str t0, [distPtr], COMPV_GAS_INT32_SZ_BYTES
+        str t0, [distPtr], #COMPV_GAS_INT32_SZ_BYTES
 
         add dataPtr, dataPtr, pad
         subs j, j, #1
@@ -399,7 +399,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
     .unreq patch1xnPtr @ patch1xnPtr no longer needed
 
     @ compute pad
-    sub pad, stride, 32    
+    sub pad, stride, #32    
 
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ if (height > 3)
@@ -455,14 +455,13 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
         vmov.s32 t0, veccntx[0]
         
         add dataPtr, dataPtr, pad
-        str t0, [distPtr], COMPV_GAS_INT32_SZ_BYTES
+        str t0, [distPtr], #COMPV_GAS_INT32_SZ_BYTES
         subs j, j, #1
         bne LoopH1_CompVMathDistanceHamming32_Asm_NEON32
         EndOf_LoopH1_CompVMathDistanceHamming32_Asm_NEON32:
         @@ EndOf_LoopH1_CompVMathDistanceHamming33_Asm_NEON32 @@
 
 	.unreq dataPtr
-	.unreq width
 	.unreq height
 	.unreq stride
 	.unreq distPtr

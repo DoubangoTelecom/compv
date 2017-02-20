@@ -337,7 +337,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 		patch->moments0110(imgPtr, static_cast<int>(point_->x), static_cast<int>(point_->y), imgWidth, imgStride, imgHeight, &m01, &m10);
 
 		// compute orientation
-		orientRad = COMPV_MATH_ATAN2F(static_cast<float>(m01), static_cast<float>(m10));
+		orientRad = COMPV_MATH_ATAN2(static_cast<float>(m01), static_cast<float>(m10));
 		point_->orient = COMPV_MATH_RADIAN_TO_DEGREE_FLOAT(orientRad);
 		if (point_->orient < 0) { // clamp orient within [0-360], required by many internal functions
 			point_->orient += 360;    // ((point_->orient + 360) % 360)

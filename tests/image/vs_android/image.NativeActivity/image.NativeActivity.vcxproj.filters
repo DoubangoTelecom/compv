@@ -11,6 +11,7 @@
     <ClCompile Include="..\..\convlt.cxx" />
     <ClCompile Include="..\..\..\tests_common.cxx" />
     <ClCompile Include="..\..\bruteforce.cxx" />
+    <ClCompile Include="..\..\feature_orb.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />

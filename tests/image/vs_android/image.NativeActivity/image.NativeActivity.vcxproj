@@ -42,6 +42,7 @@
     <ClCompile Include="..\..\draw_image.cxx" />
     <ClCompile Include="..\..\draw_points.cxx" />
     <ClCompile Include="..\..\feature_fast.cxx" />
+    <ClCompile Include="..\..\feature_orb.cxx" />
     <ClCompile Include="..\..\main.cxx" />
     <ClCompile Include="..\..\pyramid.cxx" />
     <ClCompile Include="..\..\scale.cxx" />

@@ -301,7 +301,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVMatPtr& image_, const Co
 	// is equal to 64B. Stridding the data we'll have 64B stride which means a cache lines will be loaded for each line.
 	// To make the data cache-friendly we'll use a 32B stride which means one cache line for two rows.
 	// Strideless data is also good for AVX512 as we'll be able to load two rows for each read.
-	if (nFeaturesBytes == 32 && CompVCpu::isEnabled(compv::kCpuFlagAVX512)) { // TODO(dmi): On core i7 strideless data doesn't provide better perfs, this is why we also test check AVX512 for now
+	if (nFeaturesBytes == 32 && (CompVCpu::isEnabled(compv::kCpuFlagAVX512) || CompVCpu::isEnabled(compv::kCpuFlagARM_NEON))) { // TODO(dmi): On core i7 strideless data doesn't provide better perfs, this is why we also test check AVX512 for now
 		COMPV_CHECK_CODE_RETURN(err_ = CompVMat::newObj<uint8_t>(&_descriptions, nFeatures, 32, CompVMem::bestAlignment(), 32));
 	}
 	else {
