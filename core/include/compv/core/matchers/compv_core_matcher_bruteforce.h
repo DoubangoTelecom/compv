@@ -34,7 +34,7 @@ public:
     static COMPV_ERROR_CODE newObj(CompVMatcherPtrPtr matcher);
 
 private:
-    static COMPV_ERROR_CODE processAt(const CompVMatPtr& queryDescriptions, size_t queryRowsStart, size_t queryRowsCount, const CompVMatPtr& trainDescriptions, size_t trainRowsStart, size_t trainRowsCount, CompVMatPtr& matches);
+    static COMPV_ERROR_CODE processAt(int queryIdxStart, size_t count, const CompVMatPtr& queryDescriptions, const CompVMatPtr& trainDescriptions, CompVMatPtr& matches);
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
     bool m_bCrossCheck;
