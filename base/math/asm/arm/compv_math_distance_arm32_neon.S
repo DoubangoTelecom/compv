@@ -419,6 +419,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
 			veor.u8 q11, q11, vecPatch1
             vcnt.u8 q10, q10
             vcnt.u8 q11, q11
+			adds dataPtr, t2, pad @ t2 = dataPtr[stride * 3] 
+            subs j, j, #1
             vpadd.u8 q4x, q4x, q4y
             vpadd.u8 q5x, q5x, q5y
             vpadd.u8 q8x, q8x, q8y
@@ -437,8 +439,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
             vpadal.u8 q4x, q5x
             vmovl.s16 q4, q4x
             vst1.s32 {q4}, [distPtr]!
-            add dataPtr, t2, pad @ t2 = dataPtr[stride * 3] 
-            subs j, j, #1
             bne LoopH4_CompVMathDistanceHamming32_Asm_NEON32
             @@ EnofOf_LoopH4_CompVMathDistanceHamming32_Asm_NEON32 @@
 
