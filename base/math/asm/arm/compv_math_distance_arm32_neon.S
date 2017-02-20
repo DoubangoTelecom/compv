@@ -403,13 +403,17 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON32
             veor.u8 q4, q4, vecPatch0
 			veor.u8 q5, q5, vecPatch1
             vcnt.u8 q4, q4
+			pld [t2, #(CACHE_LINE_SIZE*1)]
 			vld1.u8 { q6x, q6y, q7x, q7y }, [t0 :128]!
             vcnt.u8 q5, q5
+			pld [t2, #(CACHE_LINE_SIZE*2)]
 			veor.u8 q6, q6, vecPatch0
 			veor.u8 q7, q7, vecPatch1
             vcnt.u8 q6, q6
+			pld [t2, #(CACHE_LINE_SIZE*3)]
 			vld1.u8 { q8x, q8y, q9x, q9y }, [t1 :128]!
             vcnt.u8 q7, q7
+			pld [t2, #(CACHE_LINE_SIZE*4)]
 			veor.u8 q8, q8, vecPatch0
 			veor.u8 q9, q9, vecPatch1
             vcnt.u8 q8, q8
