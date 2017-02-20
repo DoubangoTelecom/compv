@@ -334,29 +334,52 @@ COMPV_ERROR_CODE CompVCornerDescORB::process(const CompVMatPtr& image_, const Co
 
 	const size_t levelsCount = _pyramid->levels();
 
-	// apply gaussianblur filter on the pyramid (the convolution function is already multi-threaded)
-	for (size_t level = bLevelZeroBlurred ? 1 : 0; level < levelsCount; ++level) {
-		COMPV_CHECK_CODE_RETURN(err_ = convlt(_pyramid, static_cast<int>(level)));  //!\\ already multi-threaded
-	}
-
-	// Get number of threads for the describe process
+	// Get Max number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	const size_t threadsCount = COMPV_MATH_MIN(maxThreads, (interestPoints.size() / COMPV_FEATURE_DESC_ORB_DESCRIBE_MIN_SAMPLES_PER_THREAD));
+
+	// Get number of threads for the convolution process
+	const size_t threadsCountBlur = (levelsCount > (maxThreads >> 2)) ? COMPV_MATH_MIN(maxThreads, levelsCount) : 1;
+
+	// Gaussian blur on the pyramid
+	if (threadsCountBlur > 1) {
+		// levelStart is used to make sure we won't schedule more than "threadsCount"
+		size_t levelStart, level, levelMax;
+		CompVAsyncTaskIds taskIds;
+		taskIds.reserve(threadsCountBlur);
+		auto funcPtr = [&](size_t _level) -> COMPV_ERROR_CODE {
+			return convlt(_pyramid, static_cast<int>(_level));
+		};
+		for (levelStart = bLevelZeroBlurred ? 1 : 0, levelMax = threadsCountBlur; levelStart < levelsCount; levelStart += threadsCountBlur, levelMax += threadsCountBlur) {
+			for (level = levelStart; level < levelsCount && level < levelMax; ++level) {
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, level), taskIds));
+			}
+			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
+		}
+	}
+	else {
+		// apply gaussianblur filter on the pyramid (the convolution function is already multi-threaded)
+		for (size_t level = bLevelZeroBlurred ? 1 : 0; level < levelsCount; ++level) {
+			COMPV_CHECK_CODE_RETURN(err_ = convlt(_pyramid, static_cast<int>(level)));  //!\\ already multi-threaded
+		}
+	}	
+
+	// Get number of threads for the describe process
+	const size_t threadsCountDiscribe = COMPV_MATH_MIN(maxThreads, (interestPoints.size() / COMPV_FEATURE_DESC_ORB_DESCRIBE_MIN_SAMPLES_PER_THREAD));
 
 	// Describe the points
-	if (threadsCount > 1) {
+	if (threadsCountDiscribe > 1) {
 		CompVAsyncTaskIds taskIds;
 		CompVInterestPointVector::const_iterator begin = interestPoints.begin();
-		const size_t counts = static_cast<size_t>(interestPoints.size() / threadsCount);
+		const size_t counts = static_cast<size_t>(interestPoints.size() / threadsCountDiscribe);
 		const size_t countsDescriptionsStride = (counts * _descriptionsStride);
-		const size_t lastCount = interestPoints.size() - ((threadsCount - 1) * counts);
+		const size_t lastCount = interestPoints.size() - ((threadsCountDiscribe - 1) * counts);
 		uint8_t* desc = _descriptionsPtr;
-		taskIds.reserve(threadsCount);
+		taskIds.reserve(threadsCountDiscribe);
 		auto funcPtr = [&](CompVInterestPointVector::const_iterator begin_, CompVInterestPointVector::const_iterator end_, uint8_t* desc_) -> COMPV_ERROR_CODE {
 			return describe(_pyramid, begin_, end_, desc_, _descriptionsStride);
 		};
-		for (size_t i = 0; i < threadsCount - 1; ++i) {
+		for (size_t i = 0; i < threadsCountDiscribe - 1; ++i) {
 			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, begin, begin + counts, desc), taskIds));
 			begin += counts;
 			desc += countsDescriptionsStride;
