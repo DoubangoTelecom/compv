@@ -364,24 +364,25 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON64
            add t0, dataPtr, stride // t0 = dataPtr[stride * 1]
            add t1, dataPtr, stride, LSL #1 // t1 = dataPtr[stride * 2]
            add t2, t0, stride, LSL #1 // t2 = dataPtr[stride * 3]
+		   // vcnt has high latency and throughput and this is why veors (low latency and throughput) are interleaved
            ldp q4, q5, [dataPtr], #32
            ldp q6, q7, [t0], #32 // t0 = dataPtr[stride * 1]
-           ldp q8, q9, [t1], #32 // t1 = dataPtr[stride * 2]
-           ldp q10, q11, [t2], #32 // t2 = dataPtr[stride * 3]
            eor v4.16b, v4.16b, vecPatch0.16b
            eor v5.16b, v5.16b, vecPatch1.16b
+		   cnt v4.16b, v4.16b
+           cnt v5.16b, v5.16b
            eor v6.16b, v6.16b, vecPatch0.16b
            eor v7.16b, v7.16b, vecPatch1.16b
+		   cnt v6.16b, v6.16b
+           cnt v7.16b, v7.16b
+		   ldp q8, q9, [t1], #32 // t1 = dataPtr[stride * 2]
+           ldp q10, q11, [t2], #32 // t2 = dataPtr[stride * 3]
            eor v8.16b, v8.16b, vecPatch0.16b
            eor v9.16b, v9.16b, vecPatch1.16b
+		   cnt v8.16b, v8.16b
+           cnt v9.16b, v9.16b
            eor v10.16b, v10.16b, vecPatch0.16b    
            eor v11.16b, v11.16b, vecPatch1.16b
-           cnt v4.16b, v4.16b
-           cnt v5.16b, v5.16b
-           cnt v6.16b, v6.16b
-           cnt v7.16b, v7.16b
-           cnt v8.16b, v8.16b
-           cnt v9.16b, v9.16b
            cnt v10.16b, v10.16b
            cnt v11.16b, v11.16b
            addp v12.16b, v4.16b, v6.16b
@@ -390,9 +391,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON64
            addp v15.16b, v9.16b, v11.16b
            addp v4.16b, v12.16b, v13.16b
            addp v5.16b, v14.16b, v15.16b
-           addp v7.16b, v4.16b, v4.16b
+           addp veccnt.16b, v4.16b, v4.16b
            addp v9.16b, v5.16b, v5.16b
-           uaddlp veccnt.4h, v7.8b
+           uaddlp veccnt.4h, veccnt.8b
            uadalp veccnt.4h, v9.8b
            uxtl v14.4s, veccnt.4h
            st1 {v14.4s}, [distPtr], #16
@@ -412,8 +413,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON64
    LoopH1_CompVMathDistanceHamming32_Asm_NEON64:
        ldp q4, q5, [dataPtr], #32
        eor v4.16b, v4.16b, vecPatch0.16b
+	   cnt v4.16b, v4.16b
        eor v5.16b, v5.16b, vecPatch1.16b
-       cnt v4.16b, v4.16b
        cnt v5.16b, v5.16b
        addp v6.16b, v4.16b, v5.16b
        addp v7.16b, v6.16b, v6.16b
