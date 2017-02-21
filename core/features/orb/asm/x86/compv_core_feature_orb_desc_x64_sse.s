@@ -101,13 +101,14 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 				mov rdx, arg(argi_kBrief256Pattern31BY)
 			%endif
 			;; xf = (kBrief256Pattern31AX[i] * cosT - kBrief256Pattern31AY[i] * sinT) ;;
-
-			movaps xmm8, [vecSinT]
-			movaps xmm9, [vecSinT]
+			movaps xmm4, [vecSinT]
+			movaps xmm0, [vecCosT]
+			movaps xmm8, xmm4
+			movaps xmm9, xmm4
 			movaps xmm10, xmm8
 			movaps xmm11, xmm8
-			movaps xmm12, [vecCosT]
-			movaps xmm13, [vecCosT]
+			movaps xmm12, xmm0
+			movaps xmm13, xmm0
 			movaps xmm14, xmm12
 			movaps xmm15, xmm12
 			mulps xmm8, [rax + ((i + 0) * COMPV_YASM_FLOAT32_SZ_BYTES)]
@@ -118,12 +119,10 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 			mulps xmm13, [rdx + ((i + 4) * COMPV_YASM_FLOAT32_SZ_BYTES)]
 			mulps xmm14, [rdx + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
 			mulps xmm15, [rdx + ((i + 12) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			movaps xmm0, [vecCosT]
-			movaps xmm1, [vecCosT]
+			movaps xmm1, xmm0
 			movaps xmm2, xmm0
 			movaps xmm3, xmm0
-			movaps xmm4, [vecSinT]
-			movaps xmm5, [vecSinT]
+			movaps xmm5, xmm4
 			movaps xmm6, xmm4
 			movaps xmm7, xmm4
 			addps xmm8, xmm12
@@ -146,7 +145,6 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 			mulps xmm6, [rdx + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
 			mulps xmm3, [rax + ((i + 12) * COMPV_YASM_FLOAT32_SZ_BYTES)]
 			mulps xmm7, [rdx + ((i + 12) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-
 			subps xmm0, xmm4
 			subps xmm1, xmm5
 			subps xmm2, xmm6
@@ -155,30 +153,30 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 			cvtps2dq xmm1, xmm1
 			cvtps2dq xmm2, xmm2
 			cvtps2dq xmm3, xmm3
-
 			
-
-			paddd xmm8, xmm0
-			movdqa[vecIndex + (0*COMPV_YASM_INT32_SZ_BYTES)], xmm8
-			paddd xmm9, xmm1
-			
-			movdqa[vecIndex + (4*COMPV_YASM_INT32_SZ_BYTES)], xmm9
-			paddd xmm10, xmm2
-			movdqa[vecIndex + (8*COMPV_YASM_INT32_SZ_BYTES)], xmm10
-			paddd xmm11, xmm3
-			
-			movdqa[vecIndex + (12*COMPV_YASM_INT32_SZ_BYTES)], xmm11
-			movdqa xmm3, [vec128]
 			%assign index 0 ; 0.....15
 			%rep 2
+				%if index == 0
+					paddd xmm8, xmm0
+					movdqa xmm0, [vec128]
+					movdqa[vecIndex + (0*COMPV_YASM_INT32_SZ_BYTES)], xmm8
+				%endif
 				movsxd r8, dword [vecIndex + ((index+0)*COMPV_YASM_INT32_SZ_BYTES)]
 				movsxd r9, dword [vecIndex + ((index+1)*COMPV_YASM_INT32_SZ_BYTES)]
 				movsxd r10, dword [vecIndex + ((index+2)*COMPV_YASM_INT32_SZ_BYTES)]
 				movsxd r11, dword [vecIndex + ((index+3)*COMPV_YASM_INT32_SZ_BYTES)]
+				%if index == 0
+					paddd xmm9, xmm1
+					movdqa[vecIndex + (4*COMPV_YASM_INT32_SZ_BYTES)], xmm9
+				%endif
 				movsxd r12, dword [vecIndex + ((index+4)*COMPV_YASM_INT32_SZ_BYTES)]
 				movsxd r13, dword [vecIndex + ((index+5)*COMPV_YASM_INT32_SZ_BYTES)]
 				movsxd r14, dword [vecIndex + ((index+6)*COMPV_YASM_INT32_SZ_BYTES)]
 				movsxd r15, dword [vecIndex + ((index+7)*COMPV_YASM_INT32_SZ_BYTES)]
+				%if index == 0
+					paddd xmm10, xmm2
+					paddd xmm11, xmm3
+				%endif
 				movzx r8, byte [img_center + r8]
 				movzx r9, byte [img_center + r9]
 				movzx r10, byte [img_center + r10]
@@ -187,6 +185,10 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 				movzx r13, byte [img_center + r13]
 				movzx r14, byte [img_center + r14]
 				movzx r15, byte [img_center + r15]
+				%if index == 0
+					movdqa[vecIndex + (8*COMPV_YASM_INT32_SZ_BYTES)], xmm10
+					movdqa[vecIndex + (12*COMPV_YASM_INT32_SZ_BYTES)], xmm11
+				%endif
 				%if xy == 0
 					mov [vecA + ((index+0)*COMPV_YASM_UINT8_SZ_BYTES)], byte r8b
 					mov [vecA + ((index+1)*COMPV_YASM_UINT8_SZ_BYTES)], byte r9b
@@ -211,13 +213,14 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 		%assign xy xy+1
 		%endrep ; rep xy
 
-		movdqa xmm1, [vecA]
-		movdqa xmm0, [vecB] ; pcmpltb doesn''t exist -> inverse vecA/vecB
-		psubb xmm0, xmm3
-		psubb xmm1, xmm3
-		pcmpgtb xmm0, xmm1
-		pmovmskb rax, xmm0
 		add i, 16
+		movdqa xmm2, [vecA]
+		movdqa xmm1, [vecB] ; pcmpltb doesn''t exist -> inverse vecA/vecB
+		psubb xmm2, xmm0
+		psubb xmm1, xmm0
+		pcmpgtb xmm1, xmm2
+		pmovmskb rax, xmm1
+		
 		cmp i, 256
 		mov [outPtr], word ax
 		lea outPtr, [outPtr + COMPV_YASM_UINT16_SZ_BYTES]
