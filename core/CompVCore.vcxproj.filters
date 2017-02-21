@@ -93,6 +93,12 @@
     <Filter Include="Header Files\features\orb\intrin\x86">
       <UniqueIdentifier>{a5abdac8-d022-404e-b0a5-64e51bf2db0e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\features\orb\asm">
+      <UniqueIdentifier>{bd7a964b-a40f-4d74-b24f-4f1644b5ab09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\orb\asm\x86">
+      <UniqueIdentifier>{0bccaa24-759a-40b5-8636-850c2465cedc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -199,6 +205,9 @@
     </None>
     <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
       <Filter>Source Files\features\fast\asm\arm</Filter>
+    </None>
+    <None Include="features\orb\asm\x86\compv_core_feature_orb_desc_x86_sse.s">
+      <Filter>Source Files\features\orb\asm\x86</Filter>
     </None>
   </ItemGroup>
 </Project>

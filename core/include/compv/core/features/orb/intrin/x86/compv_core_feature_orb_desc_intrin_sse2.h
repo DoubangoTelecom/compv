@@ -19,9 +19,9 @@ COMPV_NAMESPACE_BEGIN()
 
 void CompVOrbBrief256_31_32f_Intrin_SSE2(
 	const uint8_t* img_center, compv_uscalar_t img_stride,
-	const float* cos1, const float* sin1,
-	const float* kBrief256Pattern31AX, const float* kBrief256Pattern31AY,
-	const float* kBrief256Pattern31BX, const float* kBrief256Pattern31BY,
+	const compv_float32_t* cos1, const compv_float32_t* sin1,
+	const compv_float32_t* kBrief256Pattern31AX, const compv_float32_t* kBrief256Pattern31AY,
+	const compv_float32_t* kBrief256Pattern31BX, const compv_float32_t* kBrief256Pattern31BY,
 	void* out
 );
 

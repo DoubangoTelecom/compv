@@ -316,6 +316,13 @@
     <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_arm32_neon.S" />
     <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_arm64_neon.S" />
     <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S" />
+    <YASM Include="features\orb\asm\x86\compv_core_feature_orb_desc_x86_sse.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

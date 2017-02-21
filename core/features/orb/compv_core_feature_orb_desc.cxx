@@ -85,10 +85,10 @@
 	9*(1<<(q)), 12*(1<<(q)), -5*(1<<(q)), 7*(1<<(q)), -8*(1<<(q)), -12*(1<<(q)), 5*(1<<(q)), 9*(1<<(q)), 5*(1<<(q)), 4*(1<<(q)), 3*(1<<(q)), 12*(1<<(q)), 11*(1<<(q)), -13*(1<<(q)), 12*(1<<(q)), 4*(1<<(q)), 6*(1<<(q)), 12*(1<<(q)), 1*(1<<(q)), 1*(1<<(q)), 1*(1<<(q)), -13*(1<<(q)), \
 	-13*(1<<(q)), 4*(1<<(q)), -2*(1<<(q)), -3*(1<<(q)), -2*(1<<(q)), 10*(1<<(q)), -9*(1<<(q)), -1*(1<<(q)), -2*(1<<(q)), -8*(1<<(q)), 5*(1<<(q)), 10*(1<<(q)), 5*(1<<(q)), 5*(1<<(q)), 11*(1<<(q)), -6*(1<<(q)), -12*(1<<(q)), 9*(1<<(q)), 4*(1<<(q)), -2*(1<<(q)), -2*(1<<(q)), -11*(1<<(q))
 
-static const COMPV_ALIGN_DEFAULT() float kCompVBrief256Pattern31AX[256] = { _kBrief256Pattern31AX_(0) };
-static const COMPV_ALIGN_DEFAULT() float kCompVBrief256Pattern31AY[256] = { _kBrief256Pattern31AY_(0) };
-static const COMPV_ALIGN_DEFAULT() float kCompVBrief256Pattern31BX[256] = { _kBrief256Pattern31BX_(0) };
-static const COMPV_ALIGN_DEFAULT() float kCompVBrief256Pattern31BY[256] = { _kBrief256Pattern31BY_(0) };
+static const COMPV_ALIGN_DEFAULT() COMPV_NAMESPACE::compv_float32_t kCompVBrief256Pattern31AX[256] = { _kBrief256Pattern31AX_(0) };
+static const COMPV_ALIGN_DEFAULT() COMPV_NAMESPACE::compv_float32_t kCompVBrief256Pattern31AY[256] = { _kBrief256Pattern31AY_(0) };
+static const COMPV_ALIGN_DEFAULT() COMPV_NAMESPACE::compv_float32_t kCompVBrief256Pattern31BX[256] = { _kBrief256Pattern31BX_(0) };
+static const COMPV_ALIGN_DEFAULT() COMPV_NAMESPACE::compv_float32_t kCompVBrief256Pattern31BY[256] = { _kBrief256Pattern31BY_(0) };
 
 #if COMPV_FEATURE_DESC_ORB_FXP_DESC
 // The partten values are mulb cosT and sinT with fxpq(cosT) = fxpq(sinT) = 15 (maxv=0x7fff)
@@ -117,6 +117,12 @@ static const int COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIZE = 7;
 static const float COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 1.52f;
 
 #define COMPV_FEATURE_DESC_ORB_DESCRIBE_MIN_SAMPLES_PER_THREAD	(500 >> 3) // number of interestPoints
+
+#if COMPV_ASM
+#	if COMPV_ARCH_X86
+	COMPV_EXTERNC void CompVOrbBrief256_31_32f_Asm_X86_SSE41(const uint8_t* img_center, compv_uscalar_t img_stride, const float* cos1, const float* sin1, const float* kBrief256Pattern31AX, const float* kBrief256Pattern31AY, const float* kBrief256Pattern31BX, const float* kBrief256Pattern31BY, void* out);
+#	endif /* COMPV_ARCH_X86 */
+#endif /* COMPV_ASM */
 
 static void CompVOrbBrief256_31_32f_C(const uint8_t* img_center, compv_uscalar_t img_stride,
 	const float* cos1, const float* sin1,
@@ -182,7 +188,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::convlt(CompVImageScalePyramidPtr pPyramid, 
 
 COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid, CompVInterestPointVector::const_iterator begin, CompVInterestPointVector::const_iterator end, uint8_t* desc, size_t desc_stride)
 {
-	float fx, fy, angleInRad, sf, fcos, fsin;
+	compv_float32_t fx, fy, angleInRad, sf, fcos, fsin;
 	int xi, yi, width, height;
 	CompVInterestPointVector::const_iterator point;
 	CompVMatPtr imageAtLevelN;
@@ -192,9 +198,9 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 	size_t img_stride;
 	void(*Brief256_31_32f)(
 		const uint8_t* img_center, compv_uscalar_t img_stride,
-		const float* cos1, const float* sin1,
-		const float* kBrief256Pattern31AX, const float* kBrief256Pattern31AY,
-		const float* kBrief256Pattern31BX, const float* kBrief256Pattern31BY,
+		const compv_float32_t* cos1, const compv_float32_t* sin1,
+		const compv_float32_t* kBrief256Pattern31AX, const compv_float32_t* kBrief256Pattern31AY,
+		const compv_float32_t* kBrief256Pattern31BX, const compv_float32_t* kBrief256Pattern31BY,
 		COMPV_ALIGNED(x) void* out) = CompVOrbBrief256_31_32f_C;
 
 	/* Init "m_funBrief256_31" using current CPU flags */
@@ -210,10 +216,11 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 
 	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Intrin_SSE2);
+		// TODO(dmi): not ASM version for the SSE2 implementation
 	}
 	if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Intrin_SSE41);
-		//COMPV_EXEC_IFDEF_ASM_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X86_SSE41);
+		COMPV_EXEC_IFDEF_ASM_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X86_SSE41);
 		//COMPV_EXEC_IFDEF_ASM_X64(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X64_SSE41);
 	}
 	if (CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
@@ -441,9 +448,9 @@ COMPV_ERROR_CODE CompVCornerDescORB::newObj(CompVCornerDescPtrPtr orb)
 
 static void CompVOrbBrief256_31_32f_C(
 	const uint8_t* img_center, compv_uscalar_t img_stride, 
-	const float* cos1, const float* sin1, 
-	const float* kBrief256Pattern31AX, const float* kBrief256Pattern31AY,
-	const float* kBrief256Pattern31BX, const float* kBrief256Pattern31BY,
+	const compv_float32_t* cos1, const compv_float32_t* sin1,
+	const compv_float32_t* kBrief256Pattern31AX, const compv_float32_t* kBrief256Pattern31AY,
+	const compv_float32_t* kBrief256Pattern31BX, const compv_float32_t* kBrief256Pattern31BY,
 	void* out
 )
 {
