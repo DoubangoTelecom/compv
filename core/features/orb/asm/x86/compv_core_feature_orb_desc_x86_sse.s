@@ -22,10 +22,10 @@ section .text
 ; arg(1) -> compv_uscalar_t img_stride
 ; arg(2) -> const compv_float32_t* cos1
 ; arg(3) -> const compv_float32_t* sin1
-; arg(4) -> const compv_float32_t* kBrief256Pattern31AX
-; arg(5) -> const compv_float32_t* kBrief256Pattern31AY
-; arg(6) -> const compv_float32_t* kBrief256Pattern31BX
-; arg(7) -> const compv_float32_t* kBrief256Pattern31BY
+; arg(4) -> COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31AX
+; arg(5) -> COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31AY
+; arg(6) -> COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31BX
+; arg(7) -> COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31BY
 ; arg(8) -> void* out
 sym(CompVOrbBrief256_31_32f_Asm_X86_SSE41):
 	push rbp

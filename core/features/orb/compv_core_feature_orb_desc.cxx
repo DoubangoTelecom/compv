@@ -26,6 +26,7 @@
 
 #include "compv/core/features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_sse2.h"
 #include "compv/core/features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_sse41.h"
+#include "compv/core/features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_avx2.h"
 
 #include <algorithm>
 
@@ -120,14 +121,17 @@ static const float COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 1.52f;
 
 #if COMPV_ASM
 #	if COMPV_ARCH_X86
-	COMPV_EXTERNC void CompVOrbBrief256_31_32f_Asm_X86_SSE41(const uint8_t* img_center, compv_uscalar_t img_stride, const float* cos1, const float* sin1, const float* kBrief256Pattern31AX, const float* kBrief256Pattern31AY, const float* kBrief256Pattern31BX, const float* kBrief256Pattern31BY, void* out);
+	COMPV_EXTERNC void CompVOrbBrief256_31_32f_Asm_X86_SSE41(const uint8_t* img_center, compv_uscalar_t img_stride, const compv_float32_t* cos1, const compv_float32_t* sin1, COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31AX, COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31AY, COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31BX, COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31BY, void* out);
+#	endif /* COMPV_ARCH_X86 */
+#	if COMPV_ARCH_X64
+	COMPV_EXTERNC void CompVOrbBrief256_31_32f_Asm_X64_SSE41(const uint8_t* img_center, compv_uscalar_t img_stride, const compv_float32_t* cos1, const compv_float32_t* sin1, COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31AX, COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31AY, COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31BX, COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31BY, void* out);
 #	endif /* COMPV_ARCH_X86 */
 #endif /* COMPV_ASM */
 
 static void CompVOrbBrief256_31_32f_C(const uint8_t* img_center, compv_uscalar_t img_stride,
-	const float* cos1, const float* sin1,
-	const float* kBrief256Pattern31AX, const float* kBrief256Pattern31AY,
-	const float* kBrief256Pattern31BX, const float* kBrief256Pattern31BY,
+	const compv_float32_t* cos1, const compv_float32_t* sin1,
+	const compv_float32_t* kBrief256Pattern31AX, const compv_float32_t* kBrief256Pattern31AY,
+	const compv_float32_t* kBrief256Pattern31BX, const compv_float32_t* kBrief256Pattern31BY,
 	void* out);
 #if COMPV_FEATURE_DESC_ORB_FXP_DESC
 static void Brief256_31_Fxp_C(const uint8_t* img_center, compv_scalar_t img_stride, const int16_t* cos1, const int16_t* sin1, COMPV_ALIGNED(x) void* out);
@@ -218,16 +222,16 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 		COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Intrin_SSE2);
 		// TODO(dmi): not ASM version for the SSE2 implementation
 	}
-	if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
+	if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Intrin_SSE41);
-		//COMPV_EXEC_IFDEF_ASM_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X86_SSE41);
-		//COMPV_EXEC_IFDEF_ASM_X64(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X64_SSE41);
+		COMPV_EXEC_IFDEF_ASM_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X86_SSE41);
+		COMPV_EXEC_IFDEF_ASM_X64(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X64_SSE41);
 	}
-	if (CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
-		//COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Intrin_AVX2);
+	if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Intrin_AVX2);
 		//COMPV_EXEC_IFDEF_ASM_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X86_AVX2);
 		//COMPV_EXEC_IFDEF_ASM_X64(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X64_AVX2);
-		if (CompVCpu::isEnabled(compv::kCpuFlagFMA3)) {
+		if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
 			//COMPV_EXEC_IFDEF_ASM_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X86_FMA3_AVX2);
 			//COMPV_EXEC_IFDEF_ASM_X64(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X64_FMA3_AVX2);
 		}
@@ -460,7 +464,7 @@ static void CompVOrbBrief256_31_32f_C(
 	uint64_t* _out = reinterpret_cast<uint64_t*>(out);
 	int i, j, x, y;
 	uint8_t a, b;
-	float xf, yf, cosT = *cos1, sinT = *sin1;
+	compv_float32_t xf, yf, cosT = *cos1, sinT = *sin1;
 
 	// 256bits = 32Bytes = 4 uint64
 	_out[0] = _out[1] = _out[2] = _out[3] = 0;

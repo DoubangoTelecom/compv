@@ -23,10 +23,10 @@ section .text
 ; arg(1) -> compv_uscalar_t img_stride
 ; arg(2) -> const compv_float32_t* cos1
 ; arg(3) -> const compv_float32_t* sin1
-; arg(4) -> const compv_float32_t* kBrief256Pattern31AX
-; arg(5) -> const compv_float32_t* kBrief256Pattern31AY
-; arg(6) -> const compv_float32_t* kBrief256Pattern31BX
-; arg(7) -> const compv_float32_t* kBrief256Pattern31BY
+; arg(4) -> COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31AX
+; arg(5) -> COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31AY
+; arg(6) -> COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31BX
+; arg(7) -> COMPV_ALIGNED(SSE) const compv_float32_t* kBrief256Pattern31BY
 ; arg(8) -> void* out
 sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 	push rbp
@@ -44,10 +44,10 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 
 	; align stack and alloc memory
 	COMPV_YASM_ALIGN_STACK 16, rax
-	sub rsp, (16*COMPV_YASM_INT32_SZ_BYTES) + (16*COMPV_YASM_UINT8_SZ_BYTES) + (16*COMPV_YASM_UINT8_SZ_BYTES) + (4*COMPV_YASM_XMM_SZ_BYTES)
+	sub rsp, (8*COMPV_YASM_INT32_SZ_BYTES) + (16*COMPV_YASM_UINT8_SZ_BYTES) + (16*COMPV_YASM_UINT8_SZ_BYTES) + (4*COMPV_YASM_XMM_SZ_BYTES)
 
 	%define vecIndex            rsp + 0
-	%define vecA				vecIndex + (16*COMPV_YASM_INT32_SZ_BYTES)
+	%define vecA				vecIndex + (8*COMPV_YASM_INT32_SZ_BYTES)
 	%define vecB				vecA + (16*COMPV_YASM_UINT8_SZ_BYTES)
 	%define vecCosT				vecB + (16*COMPV_YASM_UINT8_SZ_BYTES)
 	%define vecSinT				vecCosT + (1*COMPV_YASM_XMM_SZ_BYTES)
@@ -158,21 +158,26 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 			%rep 2
 				%if index == 0
 					paddd xmm8, xmm0
+					movd r8d, xmm8
+					movsxd r8, dword r8d
+					paddd xmm9, xmm1
+					movd r12, xmm9
+					movsxd r12, dword r12d
 					movdqa xmm0, [vec128]
 					movdqa[vecIndex + (0*COMPV_YASM_INT32_SZ_BYTES)], xmm8
+					movdqa[vecIndex + (4*COMPV_YASM_INT32_SZ_BYTES)], xmm9					
+				%else
+					movd r8d, xmm10
+					movsxd r8, dword r8d
+					movd r12, xmm11
+					movsxd r12, dword r12d
 				%endif
-				movsxd r8, dword [vecIndex + ((index+0)*COMPV_YASM_INT32_SZ_BYTES)]
-				movsxd r9, dword [vecIndex + ((index+1)*COMPV_YASM_INT32_SZ_BYTES)]
-				movsxd r10, dword [vecIndex + ((index+2)*COMPV_YASM_INT32_SZ_BYTES)]
-				movsxd r11, dword [vecIndex + ((index+3)*COMPV_YASM_INT32_SZ_BYTES)]
-				%if index == 0
-					paddd xmm9, xmm1
-					movdqa[vecIndex + (4*COMPV_YASM_INT32_SZ_BYTES)], xmm9
-				%endif
-				movsxd r12, dword [vecIndex + ((index+4)*COMPV_YASM_INT32_SZ_BYTES)]
-				movsxd r13, dword [vecIndex + ((index+5)*COMPV_YASM_INT32_SZ_BYTES)]
-				movsxd r14, dword [vecIndex + ((index+6)*COMPV_YASM_INT32_SZ_BYTES)]
-				movsxd r15, dword [vecIndex + ((index+7)*COMPV_YASM_INT32_SZ_BYTES)]
+				movsxd r9, dword [vecIndex + 1*COMPV_YASM_INT32_SZ_BYTES]
+				movsxd r10, dword [vecIndex + 2*COMPV_YASM_INT32_SZ_BYTES]
+				movsxd r11, dword [vecIndex + 3*COMPV_YASM_INT32_SZ_BYTES]				
+				movsxd r13, dword [vecIndex + 5*COMPV_YASM_INT32_SZ_BYTES]
+				movsxd r14, dword [vecIndex + 6*COMPV_YASM_INT32_SZ_BYTES]
+				movsxd r15, dword [vecIndex + 7*COMPV_YASM_INT32_SZ_BYTES]
 				%if index == 0
 					paddd xmm10, xmm2
 					paddd xmm11, xmm3
@@ -186,8 +191,8 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 				movzx r14, byte [img_center + r14]
 				movzx r15, byte [img_center + r15]
 				%if index == 0
-					movdqa[vecIndex + (8*COMPV_YASM_INT32_SZ_BYTES)], xmm10
-					movdqa[vecIndex + (12*COMPV_YASM_INT32_SZ_BYTES)], xmm11
+					movdqa[vecIndex + (0*COMPV_YASM_INT32_SZ_BYTES)], xmm10
+					movdqa[vecIndex + (4*COMPV_YASM_INT32_SZ_BYTES)], xmm11
 				%endif
 				%if xy == 0
 					mov [vecA + ((index+0)*COMPV_YASM_UINT8_SZ_BYTES)], byte r8b
@@ -245,7 +250,7 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 	%undef outPtr
 
 	; free memory and unalign stack
-	add rsp, (16*COMPV_YASM_INT32_SZ_BYTES) + (16*COMPV_YASM_UINT8_SZ_BYTES) + (16*COMPV_YASM_UINT8_SZ_BYTES) + (4*COMPV_YASM_XMM_SZ_BYTES)
+	add rsp, (8*COMPV_YASM_INT32_SZ_BYTES) + (16*COMPV_YASM_UINT8_SZ_BYTES) + (16*COMPV_YASM_UINT8_SZ_BYTES) + (4*COMPV_YASM_XMM_SZ_BYTES)
 	COMPV_YASM_UNALIGN_STACK
 
 	;; begin epilog ;;
