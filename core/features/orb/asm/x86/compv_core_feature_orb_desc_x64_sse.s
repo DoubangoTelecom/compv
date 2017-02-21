@@ -102,24 +102,6 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 			%endif
 			;; xf = (kBrief256Pattern31AX[i] * cosT - kBrief256Pattern31AY[i] * sinT) ;;
 
-			movaps xmm0, [vecCosT]
-			movaps xmm1, [vecCosT]
-			movaps xmm2, xmm0
-			movaps xmm3, xmm0
-			movaps xmm4, [vecSinT]
-			movaps xmm5, [vecSinT]
-			movaps xmm6, xmm4
-			movaps xmm7, xmm4
-			
-
-			mulps xmm0, [rax + ((i + 0) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			mulps xmm1, [rax + ((i + 4) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			mulps xmm2, [rax + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			mulps xmm3, [rax + ((i + 12) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			mulps xmm4, [rdx + ((i + 0) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			mulps xmm5, [rdx + ((i + 4) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			mulps xmm6, [rdx + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			mulps xmm7, [rdx + ((i + 12) * COMPV_YASM_FLOAT32_SZ_BYTES)]
 			movaps xmm8, [vecSinT]
 			movaps xmm9, [vecSinT]
 			movaps xmm10, xmm8
@@ -136,34 +118,55 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_SSE41):
 			mulps xmm13, [rdx + ((i + 4) * COMPV_YASM_FLOAT32_SZ_BYTES)]
 			mulps xmm14, [rdx + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
 			mulps xmm15, [rdx + ((i + 12) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-
-			subps xmm0, xmm4
-			subps xmm1, xmm5
-			subps xmm2, xmm6
-			subps xmm3, xmm7
+			movaps xmm0, [vecCosT]
+			movaps xmm1, [vecCosT]
+			movaps xmm2, xmm0
+			movaps xmm3, xmm0
+			movaps xmm4, [vecSinT]
+			movaps xmm5, [vecSinT]
+			movaps xmm6, xmm4
+			movaps xmm7, xmm4
 			addps xmm8, xmm12
 			addps xmm9, xmm13
 			addps xmm10, xmm14
 			addps xmm11, xmm15
-			cvtps2dq xmm0, xmm0
 			cvtps2dq xmm8, xmm8
-			cvtps2dq xmm1, xmm1
 			cvtps2dq xmm9, xmm9
-			cvtps2dq xmm2, xmm2
 			cvtps2dq xmm10, xmm10
-			cvtps2dq xmm3, xmm3
 			cvtps2dq xmm11, xmm11
 			pmulld xmm8, [vecStride]
 			pmulld xmm9, [vecStride]
 			pmulld xmm10, [vecStride]
 			pmulld xmm11, [vecStride]
+			mulps xmm0, [rax + ((i + 0) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+			mulps xmm4, [rdx + ((i + 0) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+			mulps xmm1, [rax + ((i + 4) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+			mulps xmm5, [rdx + ((i + 4) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+			mulps xmm2, [rax + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+			mulps xmm6, [rdx + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+			mulps xmm3, [rax + ((i + 12) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+			mulps xmm7, [rdx + ((i + 12) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+
+			subps xmm0, xmm4
+			subps xmm1, xmm5
+			subps xmm2, xmm6
+			subps xmm3, xmm7
+			cvtps2dq xmm0, xmm0
+			cvtps2dq xmm1, xmm1
+			cvtps2dq xmm2, xmm2
+			cvtps2dq xmm3, xmm3
+
+			
+
 			paddd xmm8, xmm0
-			paddd xmm9, xmm1
 			movdqa[vecIndex + (0*COMPV_YASM_INT32_SZ_BYTES)], xmm8
+			paddd xmm9, xmm1
+			
 			movdqa[vecIndex + (4*COMPV_YASM_INT32_SZ_BYTES)], xmm9
 			paddd xmm10, xmm2
-			paddd xmm11, xmm3
 			movdqa[vecIndex + (8*COMPV_YASM_INT32_SZ_BYTES)], xmm10
+			paddd xmm11, xmm3
+			
 			movdqa[vecIndex + (12*COMPV_YASM_INT32_SZ_BYTES)], xmm11
 			movdqa xmm3, [vec128]
 			%assign index 0 ; 0.....15
