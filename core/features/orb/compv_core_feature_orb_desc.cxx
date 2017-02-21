@@ -220,7 +220,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 	}
 	if (compv::CompVCpu::isEnabled(compv::kCpuFlagSSE41)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Intrin_SSE41);
-		COMPV_EXEC_IFDEF_ASM_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X86_SSE41);
+		//COMPV_EXEC_IFDEF_ASM_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X86_SSE41);
 		//COMPV_EXEC_IFDEF_ASM_X64(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X64_SSE41);
 	}
 	if (CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
