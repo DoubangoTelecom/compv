@@ -28,7 +28,6 @@ void CompVOrbBrief256_31_32f_Intrin_SSE2(
 	COMPV_ALIGN_SSE() uint8_t vecA[16];
 	COMPV_ALIGN_SSE() uint8_t vecB[16];
 	__m128i vecX[4], vecY[4], vecR;
-	__m128 vecXF[4], vecYF[4];
 
 	uint16_t* outPtr = reinterpret_cast<uint16_t*>(out); // uint32_t for AVX
 
@@ -42,25 +41,25 @@ void CompVOrbBrief256_31_32f_Intrin_SSE2(
 
 	for (size_t i = 0; i < 256; i += 16) {
 		// xf = (kBrief256Pattern31AX[i] * cosT - kBrief256Pattern31AY[i] * sinT);
-		vecXF[0] = _mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 0]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 0]), vecSinT));
-		vecXF[1] = _mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 4]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 4]), vecSinT));
-		vecXF[2] = _mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 8]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 8]), vecSinT));
-		vecXF[3] = _mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 12]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 12]), vecSinT));
+		vecX[0] = _mm_castps_si128(_mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 0]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 0]), vecSinT)));
+		vecX[1] = _mm_castps_si128(_mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 4]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 4]), vecSinT)));
+		vecX[2] = _mm_castps_si128(_mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 8]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 8]), vecSinT)));
+		vecX[3] = _mm_castps_si128(_mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 12]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 12]), vecSinT)));
 		// yf = (kBrief256Pattern31AX[i] * sinT + kBrief256Pattern31AY[i] * cosT);
-		vecYF[0] = _mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 0]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 0]), vecCosT));
-		vecYF[1] = _mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 4]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 4]), vecCosT));
-		vecYF[2] = _mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 8]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 8]), vecCosT));
-		vecYF[3] = _mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 12]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 12]), vecCosT));
+		vecY[0] = _mm_castps_si128(_mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 0]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 0]), vecCosT)));
+		vecY[1] = _mm_castps_si128(_mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 4]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 4]), vecCosT)));
+		vecY[2] = _mm_castps_si128(_mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 8]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 8]), vecCosT)));
+		vecY[3] = _mm_castps_si128(_mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AX[i + 12]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31AY[i + 12]), vecCosT)));
 		// x = COMPV_MATH_ROUNDF_2_INT(xf, int);
-		vecX[0] = _mm_cvtps_epi32(vecXF[0]);
-		vecX[1] = _mm_cvtps_epi32(vecXF[1]);
-		vecX[2] = _mm_cvtps_epi32(vecXF[2]);
-		vecX[3] = _mm_cvtps_epi32(vecXF[3]);
+		vecX[0] = _mm_cvtps_epi32(_mm_castsi128_ps(vecX[0]));
+		vecX[1] = _mm_cvtps_epi32(_mm_castsi128_ps(vecX[1]));
+		vecX[2] = _mm_cvtps_epi32(_mm_castsi128_ps(vecX[2]));
+		vecX[3] = _mm_cvtps_epi32(_mm_castsi128_ps(vecX[3]));
 		// y = COMPV_MATH_ROUNDF_2_INT(yf, int);
-		vecY[0] = _mm_cvtps_epi32(vecYF[0]);
-		vecY[1] = _mm_cvtps_epi32(vecYF[1]);
-		vecY[2] = _mm_cvtps_epi32(vecYF[2]);
-		vecY[3] = _mm_cvtps_epi32(vecYF[3]);
+		vecY[0] = _mm_cvtps_epi32(_mm_castsi128_ps(vecY[0]));
+		vecY[1] = _mm_cvtps_epi32(_mm_castsi128_ps(vecY[1]));
+		vecY[2] = _mm_cvtps_epi32(_mm_castsi128_ps(vecY[2]));
+		vecY[3] = _mm_cvtps_epi32(_mm_castsi128_ps(vecY[3]));
 		// a = img_center[(y * img_stride) + x];
 		_mm_store_si128(reinterpret_cast<__m128i*>(&vecIndex[0]), _mm_add_epi32(_mm_mullo_epi32_SSE2(vecY[0], vecStride), vecX[0]));
 		_mm_store_si128(reinterpret_cast<__m128i*>(&vecIndex[4]), _mm_add_epi32(_mm_mullo_epi32_SSE2(vecY[1], vecStride), vecX[1]));
@@ -84,25 +83,25 @@ void CompVOrbBrief256_31_32f_Intrin_SSE2(
 		vecA[15] = img_center[vecIndex[15]];
 
 		// xf = (kBrief256Pattern31BX[i] * cosT - kBrief256Pattern31BY[i] * sinT);
-		vecXF[0] = _mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 0]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 0]), vecSinT));
-		vecXF[1] = _mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 4]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 4]), vecSinT));
-		vecXF[2] = _mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 8]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 8]), vecSinT));
-		vecXF[3] = _mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 12]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 12]), vecSinT));
+		vecX[0] = _mm_castps_si128(_mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 0]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 0]), vecSinT)));
+		vecX[1] = _mm_castps_si128(_mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 4]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 4]), vecSinT)));
+		vecX[2] = _mm_castps_si128(_mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 8]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 8]), vecSinT)));
+		vecX[3] = _mm_castps_si128(_mm_sub_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 12]), vecCosT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 12]), vecSinT)));
 		// yf = (kBrief256Pattern31BX[i] * sinT + kBrief256Pattern31BY[i] * cosT);
-		vecYF[0] = _mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 0]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 0]), vecCosT));
-		vecYF[1] = _mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 4]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 4]), vecCosT));
-		vecYF[2] = _mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 8]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 8]), vecCosT));
-		vecYF[3] = _mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 12]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 12]), vecCosT));
+		vecY[0] = _mm_castps_si128(_mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 0]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 0]), vecCosT)));
+		vecY[1] = _mm_castps_si128(_mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 4]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 4]), vecCosT)));
+		vecY[2] = _mm_castps_si128(_mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 8]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 8]), vecCosT)));
+		vecY[3] = _mm_castps_si128(_mm_add_ps(_mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BX[i + 12]), vecSinT), _mm_mul_ps(_mm_load_ps(&kBrief256Pattern31BY[i + 12]), vecCosT)));
 		// x = COMPV_MATH_ROUNDF_2_INT(xf, int);
-		vecX[0] = _mm_cvtps_epi32(vecXF[0]);
-		vecX[1] = _mm_cvtps_epi32(vecXF[1]);
-		vecX[2] = _mm_cvtps_epi32(vecXF[2]);
-		vecX[3] = _mm_cvtps_epi32(vecXF[3]);
+		vecX[0] = _mm_cvtps_epi32(_mm_castsi128_ps(vecX[0]));
+		vecX[1] = _mm_cvtps_epi32(_mm_castsi128_ps(vecX[1]));
+		vecX[2] = _mm_cvtps_epi32(_mm_castsi128_ps(vecX[2]));
+		vecX[3] = _mm_cvtps_epi32(_mm_castsi128_ps(vecX[3]));
 		// y = COMPV_MATH_ROUNDF_2_INT(yf, int);
-		vecY[0] = _mm_cvtps_epi32(vecYF[0]);
-		vecY[1] = _mm_cvtps_epi32(vecYF[1]);
-		vecY[2] = _mm_cvtps_epi32(vecYF[2]);
-		vecY[3] = _mm_cvtps_epi32(vecYF[3]);
+		vecY[0] = _mm_cvtps_epi32(_mm_castsi128_ps(vecY[0]));
+		vecY[1] = _mm_cvtps_epi32(_mm_castsi128_ps(vecY[1]));
+		vecY[2] = _mm_cvtps_epi32(_mm_castsi128_ps(vecY[2]));
+		vecY[3] = _mm_cvtps_epi32(_mm_castsi128_ps(vecY[3]));
 		// b = img_center[(y * img_stride) + x];
 		_mm_store_si128(reinterpret_cast<__m128i*>(&vecIndex[0]), _mm_add_epi32(_mm_mullo_epi32_SSE2(vecY[0], vecStride), vecX[0]));
 		_mm_store_si128(reinterpret_cast<__m128i*>(&vecIndex[4]), _mm_add_epi32(_mm_mullo_epi32_SSE2(vecY[1], vecStride), vecX[1]));
