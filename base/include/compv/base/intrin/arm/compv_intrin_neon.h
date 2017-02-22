@@ -48,7 +48,7 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 
 // static_cast<inttype>((f) >= 0.0 ? ((f) + 0.5) : ((f) - 0.5))
-// const float32x4_t vecHalf = vdupq_n_f32(0.5f)
+// const float32x4_t vecHalf = vdupq_n_f32(0.5f) or (float32x4_t)vdupq_n_s32(0x3f000000)
 #if COMPV_ARCH_ARM64
 #	define COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vec) vcvtaq_s32_f32(vec) /* in two instruction: vcvtq_s32_f32(vrndaq_f32(v)) */
 #else

@@ -11,15 +11,6 @@
 #########################################################################
 .equ COMPV_GAS_REG_SZ_BYTES, 4
 
-.equ COMPV_GAS_FLOAT32_SZ_BYTES, 4
-.equ COMPV_GAS_FLOAT64_SZ_BYTES, 8
-.equ COMPV_GAS_INT32_SZ_BYTES, 4
-.equ COMPV_GAS_UINT32_SZ_BYTES, COMPV_GAS_INT32_SZ_BYTES
-.equ COMPV_GAS_INT16_SZ_BYTES, 2
-.equ COMPV_GAS_UINT16_SZ_BYTES, COMPV_GAS_INT16_SZ_BYTES
-.equ COMPV_GAS_INT8_SZ_BYTES, 1
-.equ COMPV_GAS_UINT8_SZ_BYTES, COMPV_GAS_INT8_SZ_BYTES
-
 .equ prolog_bytes, (10 * COMPV_GAS_REG_SZ_BYTES)   @ push {r4-r12, lr}
 
 # Stack Base Pointer register

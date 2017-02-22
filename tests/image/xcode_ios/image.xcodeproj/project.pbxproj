@@ -22,6 +22,7 @@
 		157F72781E580751000DE45F /* bruteforce.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157F72761E580751000DE45F /* bruteforce.cxx */; };
 		157F72791E580751000DE45F /* pyramid.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157F72771E580751000DE45F /* pyramid.cxx */; };
 		157F72C41E5811E8000DE45F /* tests_common.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 157F72C31E5811E8000DE45F /* tests_common.cxx */; };
+		159E15721E5DA5DF00D8CE75 /* feature_orb.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159E15711E5DA5DF00D8CE75 /* feature_orb.cxx */; };
 		15AA06C21E36CED50058D1F1 /* libCompVBase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 157840B11E36CC9A00955396 /* libCompVBase.a */; };
 		15AA06C31E36CED50058D1F1 /* libCompVCamera.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 157840B91E36CC9A00955396 /* libCompVCamera.a */; };
 		15AA06C41E36CED50058D1F1 /* libCompVCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 157840B51E36CC9A00955396 /* libCompVCore.a */; };
@@ -113,6 +114,7 @@
 		157F72761E580751000DE45F /* bruteforce.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bruteforce.cxx; path = ../../bruteforce.cxx; sourceTree = "<group>"; };
 		157F72771E580751000DE45F /* pyramid.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pyramid.cxx; path = ../../pyramid.cxx; sourceTree = "<group>"; };
 		157F72C31E5811E8000DE45F /* tests_common.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tests_common.cxx; path = ../../../tests_common.cxx; sourceTree = "<group>"; };
+		159E15711E5DA5DF00D8CE75 /* feature_orb.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = feature_orb.cxx; path = ../../feature_orb.cxx; sourceTree = "<group>"; };
 		15AA06C81E36E29E0058D1F1 /* main.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cxx; path = ../../main.cxx; sourceTree = "<group>"; };
 		15AA06CA1E36E8480058D1F1 /* equirectangular_1282x720_gray.yuv */ = {isa = PBXFileReference; lastKnownFileType = file; name = equirectangular_1282x720_gray.yuv; path = ../../../../../data/colorspace/equirectangular_1282x720_gray.yuv; sourceTree = "<group>"; };
 		15AA06CC1E36EE2E0058D1F1 /* tests_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tests_common.h; path = ../../../tests_common.h; sourceTree = "<group>"; };
@@ -226,6 +228,7 @@
 		157840D01E36CCDE00955396 /* source */ = {
 			isa = PBXGroup;
 			children = (
+				159E15711E5DA5DF00D8CE75 /* feature_orb.cxx */,
 				157F72C31E5811E8000DE45F /* tests_common.cxx */,
 				157F72761E580751000DE45F /* bruteforce.cxx */,
 				157F72771E580751000DE45F /* pyramid.cxx */,
@@ -390,6 +393,7 @@
 				157840C61E36CCD800955396 /* feature_fast.cxx in Sources */,
 				157840941E36CC2E00955396 /* AppDelegate.mm in Sources */,
 				157840911E36CC2E00955396 /* main.m in Sources */,
+				159E15721E5DA5DF00D8CE75 /* feature_orb.cxx in Sources */,
 				157840C41E36CCD800955396 /* draw_image.cxx in Sources */,
 				157840C51E36CCD800955396 /* draw_points.cxx in Sources */,
 				157840C31E36CCD800955396 /* chroma_conv.cxx in Sources */,

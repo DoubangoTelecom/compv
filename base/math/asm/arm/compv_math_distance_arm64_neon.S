@@ -276,7 +276,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
 
         addp v15.4s, veccnt.4s, veccnt.4s
         addp v14.4s, v15.4s, v15.4s
-        st1 {v14.s}[0], [distPtr], #4
+        st1 {v14.s}[0], [distPtr], #COMPV_GAS_INT32_SZ_BYTES
 
         add dataPtr, dataPtr, pad
         subs j, j, #1
@@ -431,7 +431,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming32_Asm_NEON64
        uaddlp v8.4h, v7.8b
        uaddlp v9.2s, v8.4h
        uaddlp veccnt.1d, v9.2s
-       st1 {veccnt.s}[0], [distPtr], #4
+       st1 {veccnt.s}[0], [distPtr], #COMPV_GAS_INT32_SZ_BYTES
        add dataPtr, dataPtr, pad
        subs j, j, #1
        bne LoopH1_CompVMathDistanceHamming32_Asm_NEON64

@@ -30,10 +30,10 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 
 	uint16_t* outPtr = reinterpret_cast<uint16_t*>(out); // uint32_t for AVX
 #if COMPV_ARCH_ARM32
-	static const float32x4_t vecHalf = vdupq_n_f32(0.5f);
-	static const uint8x8_t vecMask = (uint32x2_t) { 134480385, 2151686160 };
+	static const float32x4_t vecHalf = vdupq_n_f32(0.5f); // asm: vdupq_n_s32(0x3f000000)
+	static const uint8x16_t vecMask = (uint32x4_t) { 0x8040201, 0x80402010, 0x8040201, 0x80402010  };
 #else
-	static const uint8x8_t vecMask = vdup_n_u64(9241421688590303745ULL);
+	static const uint8x16_t vecMask = (uint64x2_t) { 9241421688590303745ULL, 9241421688590303745ULL  };
 #endif
 	const uint32x4_t vecStride = vdupq_n_s32(static_cast<int32_t>(img_stride));
 	const float32x4_t vecCosT = vdupq_n_f32(static_cast<float32_t>(*cos1));
@@ -130,12 +130,12 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 		vecB[15] = img_center[vecIndex[15]];
 
 		// _out[0] |= (a < b) ? (u64_1 << j) : 0;		
-		vecUnpacked = vcltq_u8(vld1q_u8(vecA), vld1q_u8(vecB));
+		vecUnpacked = vandq_u8(vcltq_u8(vld1q_u8(vecA), vld1q_u8(vecB)), vecMask);
 		// _mm_movemask_epi8 doesn't exist on ARM NEON
-		vecPacked = vpadd_u8(vand_u8(vecMask, vget_low_u8(vecUnpacked)), vand_u8(vecMask, vget_high_u8(vecUnpacked)));
-		vecPacked = vpadd_u8(vecPacked, vecPacked);
-		vecPacked = vpadd_u8(vecPacked, vecPacked);
-		*outPtr++ = vget_lane_u16(vecPacked, 0);
+        vecPacked = vpadd_u8(vget_low_u8(vecUnpacked), vget_high_u8(vecUnpacked));
+        vecPacked = vpadd_u8(vecPacked, vecPacked);
+        vecPacked = vpadd_u8(vecPacked, vecPacked);
+        *outPtr++ = vget_lane_u16(vecPacked, 0);
 	}
 }
 

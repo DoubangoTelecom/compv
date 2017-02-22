@@ -82,9 +82,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVTest_Asm_NEON64
 @ r10 -> arg10
 COMPV_GAS_FUNCTION_DECLARE CompVTest_Asm_NEON32
 	COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 11 @ When there are less than 4 args (0-3) then, no need to shadow/unshadow args.
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 11 @ When there are less than 4 args (0-3) then, no need to shadow/unshadow args. Num params must match COMPV_GAS_UNSHADOW_ARGS
 	COMPV_GAS_SAVE_NEON_REGS
-	@COMPV_GAS_ALIGN_STACK 16, r11 @ num params must match COMPV_GAS_UNSHADOW_ARGS
+	@COMPV_GAS_ALIGN_STACK 16, r11
 	@COMPV_GAS_MEMALLOC 128
 
 	@ ldm_args needed only if threre are less than 4 args (0-3)

@@ -267,8 +267,8 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 		// Convert the angle from degree to radian
 		angleInRad = COMPV_MATH_DEGREE_TO_RADIAN_FLOAT(point->orient);
 		// Get angle's cos and sin
-		fcos = ::cos(angleInRad);
-		fsin = ::sin(angleInRad);
+		fcos = COMPV_MATH_COS(angleInRad);
+		fsin = COMPV_MATH_SIN(angleInRad);
 		// Round the point
 		xi = COMPV_MATH_ROUNDFU_2_NEAREST_INT(fx, int);
 		yi = COMPV_MATH_ROUNDFU_2_NEAREST_INT(fy, int);
