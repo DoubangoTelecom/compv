@@ -43,7 +43,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON32
 
 	
 	@@ Load arguments @@
-	ldm_args r0-r5 @ load arguments in [r0-r8]
+	ldm_args r0-r8 @ load arguments in [r0-r8]
 	img_center .req r0
 	img_stride .req r1
 	cos1 .req r2
@@ -174,9 +174,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON32
                 ldrb t1, [t1]
                 ldrb t2, [t2]
                 ldrb t3, [t3]
-                add t0, t0, t1, LSL #(1*8)
-                add t0, t0, t2, LSL #(2*8)
-                add t0, t0, t3, LSL #(3*8)
+                orr t0, t0, t1, LSL #(1*8)
+                orr t0, t0, t2, LSL #(2*8)
+                orr t0, t0, t3, LSL #(3*8)
                 .if xy == 0
                     str t0, [sp, #(vecA + (index*COMPV_GAS_UINT8_SZ_BYTES))]
                 .else
@@ -187,13 +187,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON32
         .set xy, xy+1
         .endr @@ .rep xy @@
 
+        @ TODO(dmi): ARM64: ldp q10, q11, [sp, #vecA]
         add t4, sp, #vecA
         vld1.u8 { q10, q11 }, [t4 :128]
         vclt.u8 q10, q10, q11
         vand.u8 q10, q10, vecMask
-        vadd.u8 q10x, q10x, q10y
-        vadd.u8 q10x, q10x, q10x
-        vadd.u8 q10x, q10x, q10x
+        vpadd.u8 q10x, q10x, q10y
+        vpadd.u8 q10x, q10x, q10x
+        vpadd.u8 q10x, q10x, q10x
         vmov.u16 t3, q10x[0]
         strh t3, [out], #COMPV_GAS_UINT16_SZ_BYTES
 
