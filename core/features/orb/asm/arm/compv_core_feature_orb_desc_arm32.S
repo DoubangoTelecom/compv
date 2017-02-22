@@ -30,7 +30,7 @@
 @ arg(6) -> COMPV_ALIGNED(NEON) const compv_float32_t* kBrief256Pattern31BX
 @ arg(7) -> COMPV_ALIGNED(NEON) const compv_float32_t* kBrief256Pattern31BY
 @ arg(8) -> void* out
-COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON32
+.macro CompVOrbBrief256_31_32f_Macro_NEON32 fusedMultiplyAdd
     COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 9
 	COMPV_GAS_SAVE_NEON_REGS
@@ -96,7 +96,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON32
     @ for (size_t i = 0; i < 256; i += 16)
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     mov i, #256
-    Loop256_CompVOrbBrief256_31_32f_Asm_NEON32:
+    Loop256_CompVOrbBrief256_31_32f_Asm_NEON32\@:
         .set xy, 0
         .rept 2
             .if xy == 0
@@ -121,14 +121,26 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON32
                 vld1.f32 { q12, q13 }, [kBrief256Pattern31BY :128]!
                 vld1.f32 { q14, q15 }, [kBrief256Pattern31BY :128]!
             .endif
-            vmls.f32 q4, q12, vecSinT
-            vmls.f32 q5, q13, vecSinT
-            vmls.f32 q6, q14, vecSinT
-            vmls.f32 q7, q15, vecSinT
-            vmla.f32 q8, q12, vecCosT
-            vmla.f32 q9, q13, vecCosT
-            vmla.f32 q10, q14, vecCosT
-            vmla.f32 q11, q15, vecCosT
+            
+            .if \fusedMultiplyAdd
+                vfms.f32 q4, q12, vecSinT
+                vfms.f32 q5, q13, vecSinT
+                vfms.f32 q6, q14, vecSinT
+                vfms.f32 q7, q15, vecSinT
+                vfma.f32 q8, q12, vecCosT
+                vfma.f32 q9, q13, vecCosT
+                vfma.f32 q10, q14, vecCosT
+                vfma.f32 q11, q15, vecCosT
+            .else
+                vmls.f32 q4, q12, vecSinT
+                vmls.f32 q5, q13, vecSinT
+                vmls.f32 q6, q14, vecSinT
+                vmls.f32 q7, q15, vecSinT
+                vmla.f32 q8, q12, vecCosT
+                vmla.f32 q9, q13, vecCosT
+                vmla.f32 q10, q14, vecCosT
+                vmla.f32 q11, q15, vecCosT
+            .endif
             mov t4, #0x3f000000 @ 0.5f
             vdup.s32 q15, t4 @ q15 = vecHalf
             vdup.32 q15, r11
@@ -220,7 +232,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON32
         strh t3, [out], #COMPV_GAS_UINT16_SZ_BYTES
 
         subs i, i, #16
-        bne Loop256_CompVOrbBrief256_31_32f_Asm_NEON32
+        bne Loop256_CompVOrbBrief256_31_32f_Asm_NEON32\@
         @@ EndOf_Loop256_CompVOrbBrief256_31_32f_Asm_NEON32 @@
 
 	.unreq img_center
@@ -257,6 +269,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON32
 	COMPV_GAS_UNSHADOW_ARGS 9
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON32
+    CompVOrbBrief256_31_32f_Macro_NEON32 0
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_FMA_NEON32
+    CompVOrbBrief256_31_32f_Macro_NEON32 1
 
 
 #endif /* defined(__arm__) && !defined(__aarch64__) */

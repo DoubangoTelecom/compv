@@ -20,6 +20,7 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 	void* out
 )
 {
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Please use ASM version which supports FMA");
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	COMPV_ALIGN_NEON() int32_t vecIndex[16];
 	COMPV_ALIGN_NEON() uint8_t vecA[16];
