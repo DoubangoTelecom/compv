@@ -129,23 +129,53 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON32
             vmla.f32 q9, q13, vecCosT
             vmla.f32 q10, q14, vecCosT
             vmla.f32 q11, q15, vecCosT
-
             mov t4, #0x3f000000 @ 0.5f
             vdup.s32 q15, t4 @ q15 = vecHalf
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q4, q15, q12, q13
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q5, q15, q12, q13
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q6, q15, q12, q13
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q7, q15, q12, q13
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q8, q15, q12, q13
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q9, q15, q12, q13
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q10, q15, q12, q13
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q11, q15, q12, q13
-
+            vdup.32 q15, r11
+            vshr.u32 q14, q4, #0x1f
+            vcvt.f32.u32 q12, q14
+            vadd.f32 q13, q4, q15
+            vshr.u32 q14, q5, #0x1f
+            vsub.f32 q13, q13, q12
+            vcvt.f32.u32 q12, q14
+            vcvt.s32.f32 q4, q13
+            vadd.f32 q13, q5, q15
+            vshr.u32 q14, q6, #0x1f
+            vsub.f32 q13, q13, q12
+            vcvt.f32.u32 q12, q14
+            vcvt.s32.f32 q5, q13
+            vadd.f32 q13, q6, q15
+            vshr.u32 q14, q7, #0x1f
+            vsub.f32 q13, q13, q12
+            vcvt.f32.u32 q12, q14
+            vcvt.s32.f32 q6, q13
+            vadd.f32 q13, q7, q15
+            vshr.u32 q14, q8, #0x1f
+            vsub.f32 q13, q13, q12
+            vcvt.f32.u32 q12, q14
+            vcvt.s32.f32 q7, q13
+            vadd.f32 q13, q8, q15
+            vshr.u32 q14, q9, #0x1f
+            vsub.f32 q13, q13, q12
+            vcvt.f32.u32 q12, q14
+            vcvt.s32.f32 q8, q13
+            vadd.f32 q13, q9, q15
+            vshr.u32 q14, q10, #0x1f
+            vsub.f32 q13, q13, q12
+            vcvt.f32.u32 q12, q14
+            vcvt.s32.f32 q9, q13
+            vadd.f32 q13, q10, q15
+            vshr.u32 q14, q11, #0x1f
+            vsub.f32 q13, q13, q12
+            vcvt.f32.u32 q12, q14
+            vcvt.s32.f32 q10, q13
+            vadd.f32 q13, q11, q15
+            vsub.f32 q13, q13, q12
+            vcvt.s32.f32 q11, q13
             vmla.s32 q4, q8, vecStride
             vmla.s32 q5, q9, vecStride
             vmla.s32 q6, q10, vecStride
             vmla.s32 q7, q11, vecStride
-
             @ TODO(dmi): ARM64: stp q11, q5, [sp, #(vecIndex + 0*COMPV_GAS_INT32_SZ_BYTES)]
             @ TODO(dmi): Try with direct extract from q4...q7 instead of using vecIndex
             add t4, sp, #vecIndex
