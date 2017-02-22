@@ -30,7 +30,7 @@
 # arg(6) -> COMPV_ALIGNED(NEON) const compv_float32_t* kBrief256Pattern31BX
 # arg(7) -> COMPV_ALIGNED(NEON) const compv_float32_t* kBrief256Pattern31BY
 # arg(8) -> void* out
-COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
+.macro CompVOrbBrief256_31_32f_Macro_NEON64 fusedMultiplyAdd
    COMPV_GAS_FUNCTION_PROLOG
    COMPV_GAS_SAVE_NEON_REGS
    COMPV_GAS_ALIGN_STACK 16, r11
@@ -38,7 +38,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
 
    .equ vecIndex		, 0
 
-	
 	## Load arguments ##
    ldr r8, [bp, #(prolog_bytes + (0*COMPV_GAS_REG_SZ_BYTES))]
    img_center .req r0
@@ -94,7 +93,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
    # for (size_t i = 0; i < 256; i += 16)
    ###########################################################
    mov i, #256
-   Loop256_CompVOrbBrief256_31_32f_Asm_NEON64:
+   Loop256_CompVOrbBrief256_31_32f_Asm_NEON64\@:
        .set xy, 0
        .rept 2
            .if xy == 0
@@ -119,7 +118,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
                ldp q12, q13, [kBrief256Pattern31BY], #32
                ldp q14, q15, [kBrief256Pattern31BY], #32
            .endif
-           .if 0
+           .if \fusedMultiplyAdd
                 fmls v4.4s, v12.4s, vecSinT.4s
                 fmls v5.4s, v13.4s, vecSinT.4s
                 fmls v6.4s, v14.4s, vecSinT.4s
@@ -145,41 +144,29 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
                 fadd v9.4s, v9.4s, v21.4s
                 fadd v10.4s, v10.4s, v22.4s
                 fadd v11.4s, v11.4s, v23.4s 
-            .endif
-
-            fcvtas v4.4s, v4.4s
-            fcvtas v5.4s, v5.4s
-            fcvtas v6.4s, v6.4s
-            fcvtas v7.4s, v7.4s
-            fcvtas v8.4s, v8.4s
-            fcvtas v9.4s, v9.4s
-            fcvtas v10.4s, v10.4s
-            fcvtas v11.4s, v11.4s
-            mla v4.4s, v8.4s, vecStride.4s
-            mla v5.4s, v9.4s, vecStride.4s
-            mla v6.4s, v10.4s, vecStride.4s
-            mla v7.4s, v11.4s, vecStride.4s
-
-           # TODO(dmi): Try with direct extract from q4...q7 instead of using vecIndex
+           .endif
+           fcvtas v4.4s, v4.4s
+           fcvtas v8.4s, v8.4s
+           fcvtas v5.4s, v5.4s
+           fcvtas v9.4s, v9.4s
+           fcvtas v6.4s, v6.4s
+           fcvtas v10.4s, v10.4s
+           fcvtas v7.4s, v7.4s
+           fcvtas v11.4s, v11.4s
+           mla v4.4s, v8.4s, vecStride.4s
+           mla v5.4s, v9.4s, vecStride.4s
+           mla v6.4s, v10.4s, vecStride.4s
+           mla v7.4s, v11.4s, vecStride.4s
            stp q4, q5, [sp, #(vecIndex + (0*COMPV_GAS_INT32_SZ_BYTES))]
            stp q6, q7, [sp, #(vecIndex + (8*COMPV_GAS_INT32_SZ_BYTES))]
-           
-           ldr r9w, [sp, #(vecIndex + (0*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r10w, [sp, #(vecIndex + (1*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r11w, [sp, #(vecIndex + (2*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r12w, [sp, #(vecIndex + (3*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r13w, [sp, #(vecIndex + (4*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r14w, [sp, #(vecIndex + (5*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r15w, [sp, #(vecIndex + (6*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r16w, [sp, #(vecIndex + (7*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r17w, [sp, #(vecIndex + (8*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r19w, [sp, #(vecIndex + (9*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r20w, [sp, #(vecIndex + (10*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r21w, [sp, #(vecIndex + (11*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r22w, [sp, #(vecIndex + (12*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r23w, [sp, #(vecIndex + (13*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r24w, [sp, #(vecIndex + (14*COMPV_GAS_INT32_SZ_BYTES))]
-           ldr r25w, [sp, #(vecIndex + (15*COMPV_GAS_INT32_SZ_BYTES))]
+           ldp r9w, r10w, [sp, #(vecIndex + (0*COMPV_GAS_INT32_SZ_BYTES))]
+           ldp r11w, r12w, [sp, #(vecIndex + (2*COMPV_GAS_INT32_SZ_BYTES))]
+           ldp r13w, r14w, [sp, #(vecIndex + (4*COMPV_GAS_INT32_SZ_BYTES))]
+           ldp r15w, r16w, [sp, #(vecIndex + (6*COMPV_GAS_INT32_SZ_BYTES))]
+           ldp r19w, r20w, [sp, #(vecIndex + (8*COMPV_GAS_INT32_SZ_BYTES))]
+           ldp r21w, r22w, [sp, #(vecIndex + (10*COMPV_GAS_INT32_SZ_BYTES))]
+           ldp r23w, r24w, [sp, #(vecIndex + (12*COMPV_GAS_INT32_SZ_BYTES))]
+           ldp r25w, r26w, [sp, #(vecIndex + (14*COMPV_GAS_INT32_SZ_BYTES))]
            add r9, img_center, r9w, SXTW
            add r10, img_center, r10w, SXTW
            add r11, img_center, r11w, SXTW
@@ -188,7 +175,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
            add r14, img_center, r14w, SXTW
            add r15, img_center, r15w, SXTW
            add r16, img_center, r16w, SXTW
-           add r17, img_center, r17w, SXTW
            add r19, img_center, r19w, SXTW
            add r20, img_center, r20w, SXTW
            add r21, img_center, r21w, SXTW
@@ -196,6 +182,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
            add r23, img_center, r23w, SXTW
            add r24, img_center, r24w, SXTW
            add r25, img_center, r25w, SXTW
+           add r26, img_center, r26w, SXTW
            .if xy == 0
                 ld1 {vecA.b}[0], [r9]
                 ld1 {vecA.b}[1], [r10]
@@ -205,14 +192,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
                 ld1 {vecA.b}[5], [r14]
                 ld1 {vecA.b}[6], [r15]
                 ld1 {vecA.b}[7], [r16]
-                ld1 {vecA.b}[8], [r17]
-                ld1 {vecA.b}[9], [r19]
-                ld1 {vecA.b}[10], [r20]
-                ld1 {vecA.b}[11], [r21]
-                ld1 {vecA.b}[12], [r22]
-                ld1 {vecA.b}[13], [r23]
-                ld1 {vecA.b}[14], [r24]
-                ld1 {vecA.b}[15], [r25]
+                ld1 {vecA.b}[8], [r19]
+                ld1 {vecA.b}[9], [r20]
+                ld1 {vecA.b}[10], [r21]
+                ld1 {vecA.b}[11], [r22]
+                ld1 {vecA.b}[12], [r23]
+                ld1 {vecA.b}[13], [r24]
+                ld1 {vecA.b}[14], [r25]
+                ld1 {vecA.b}[15], [r26]
            .else
                 ld1 {vecB.b}[0], [r9]
                 ld1 {vecB.b}[1], [r10]
@@ -222,14 +209,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
                 ld1 {vecB.b}[5], [r14]
                 ld1 {vecB.b}[6], [r15]
                 ld1 {vecB.b}[7], [r16]
-                ld1 {vecB.b}[8], [r17]
-                ld1 {vecB.b}[9], [r19]
-                ld1 {vecB.b}[10], [r20]
-                ld1 {vecB.b}[11], [r21]
-                ld1 {vecB.b}[12], [r22]
-                ld1 {vecB.b}[13], [r23]
-                ld1 {vecB.b}[14], [r24]
-                ld1 {vecB.b}[15], [r25]
+                ld1 {vecB.b}[8], [r19]
+                ld1 {vecB.b}[9], [r20]
+                ld1 {vecB.b}[10], [r21]
+                ld1 {vecB.b}[11], [r22]
+                ld1 {vecB.b}[12], [r23]
+                ld1 {vecB.b}[13], [r24]
+                ld1 {vecB.b}[14], [r25]
+                ld1 {vecB.b}[15], [r26]
            .endif
        .set xy, xy+1
        .endr // .rep xy //
@@ -237,12 +224,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
        cmlo v10.16b, vecA.16b, vecB.16b
        and v10.16b, v10.16b, vecMask.16b
        addp v10.16b, v10.16b, v10.16b
-       addp v10.8b, v10.8b, v10.8b // FIXME: use .8b
-       addp v10.8b, v10.8b, v10.8b // FIXME: use .8b
+       addp v10.8b, v10.8b, v10.8b
+       addp v10.8b, v10.8b, v10.8b
        st1 {v10.h}[0], [out], #COMPV_GAS_UINT16_SZ_BYTES
        
        subs i, i, #16
-       bne Loop256_CompVOrbBrief256_31_32f_Asm_NEON64
+       bne Loop256_CompVOrbBrief256_31_32f_Asm_NEON64\@
        ## EndOf_Loop256_CompVOrbBrief256_31_32f_Asm_NEON64 ##
 
    .unreq img_center
@@ -278,9 +265,17 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
    COMPV_GAS_MEMFREE (16*COMPV_GAS_INT32_SZ_BYTES)
    COMPV_GAS_UNALIGN_STACK r9, r10 
    COMPV_GAS_RESTORE_NEON_REGS
-   COMPV_GAS_UNSHADOW_ARGS 9
    COMPV_GAS_FUNCTION_EPILOG
    COMPV_GAS_FUNCTION_RETURN
+.endm
 
+
+#########################################################################
+COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
+    CompVOrbBrief256_31_32f_Macro_NEON64 0
+
+#########################################################################
+COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_FMA_NEON64
+    CompVOrbBrief256_31_32f_Macro_NEON64 1
 
 #endif /* defined(__aarch64__) */

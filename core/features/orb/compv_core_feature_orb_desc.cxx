@@ -137,6 +137,7 @@ static const float COMPV_FEATURE_DESC_ORB_GAUSS_KERN_SIGMA = 1.52f;
 #   endif /* COMPV_ARCH_ARM32 */
 #	if COMPV_ARCH_ARM64
     COMPV_EXTERNC void CompVOrbBrief256_31_32f_Asm_NEON64(const uint8_t* img_center, compv_uscalar_t img_stride, const compv_float32_t* cos1, const compv_float32_t* sin1, COMPV_ALIGNED(NEON) const compv_float32_t* kBrief256Pattern31AX, COMPV_ALIGNED(NEON) const compv_float32_t* kBrief256Pattern31AY, COMPV_ALIGNED(NEON) const compv_float32_t* kBrief256Pattern31BX, COMPV_ALIGNED(NEON) const compv_float32_t* kBrief256Pattern31BY, void* out);
+    COMPV_EXTERNC void CompVOrbBrief256_31_32f_Asm_FMA_NEON64(const uint8_t* img_center, compv_uscalar_t img_stride, const compv_float32_t* cos1, const compv_float32_t* sin1, COMPV_ALIGNED(NEON) const compv_float32_t* kBrief256Pattern31AX, COMPV_ALIGNED(NEON) const compv_float32_t* kBrief256Pattern31AY, COMPV_ALIGNED(NEON) const compv_float32_t* kBrief256Pattern31BX, COMPV_ALIGNED(NEON) const compv_float32_t* kBrief256Pattern31BY, void* out);
 #   endif /* COMPV_ARCH_ARM64 */
 #endif /* COMPV_ASM */
 
@@ -258,6 +259,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 		}
         if (CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
             COMPV_EXEC_IFDEF_ASM_ARM32(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_FMA_NEON32);
+            COMPV_EXEC_IFDEF_ASM_ARM64(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_FMA_NEON64);
         }
 #endif
 
