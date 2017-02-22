@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/core/features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_avx2.h"
+#include "compv/core/features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_fma3_avx2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/intrin/x86/compv_intrin_avx.h"
@@ -16,7 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 #if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx2
 #endif
-void CompVOrbBrief256_31_32f_Intrin_AVX2(
+void CompVOrbBrief256_31_32f_Intrin_FMA3_AVX2(
 	const uint8_t* img_center, compv_uscalar_t img_stride,
 	const compv_float32_t* cos1, const compv_float32_t* sin1,
 	COMPV_ALIGNED(AVX) const compv_float32_t* kBrief256Pattern31AX, COMPV_ALIGNED(AVX) const compv_float32_t* kBrief256Pattern31AY,
@@ -25,6 +25,7 @@ void CompVOrbBrief256_31_32f_Intrin_AVX2(
 )
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
+	COMPV_DEBUG_INFO_CHECK_FMA3();
 	
 	_mm256_zeroupper();
 	COMPV_ALIGN_AVX2() int32_t vecIndex[32];
@@ -41,15 +42,15 @@ void CompVOrbBrief256_31_32f_Intrin_AVX2(
 
 	for (size_t i = 0; i < 256; i += 32) {
 		// xf = (kBrief256Pattern31AX[i] * cosT - kBrief256Pattern31AY[i] * sinT);
-		vecX[0] = _mm256_castps_si256(_mm256_sub_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 0]), vecCosT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 0]), vecSinT)));
-		vecX[1] = _mm256_castps_si256(_mm256_sub_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 8]), vecCosT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 8]), vecSinT)));
-		vecX[2] = _mm256_castps_si256(_mm256_sub_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 16]), vecCosT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 16]), vecSinT)));
-		vecX[3] = _mm256_castps_si256(_mm256_sub_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 24]), vecCosT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 24]), vecSinT)));
+		vecX[0] = _mm256_castps_si256(_mm256_fmsub_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 0]), vecCosT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 0]), vecSinT)));
+		vecX[1] = _mm256_castps_si256(_mm256_fmsub_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 8]), vecCosT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 8]), vecSinT)));
+		vecX[2] = _mm256_castps_si256(_mm256_fmsub_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 16]), vecCosT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 16]), vecSinT)));
+		vecX[3] = _mm256_castps_si256(_mm256_fmsub_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 24]), vecCosT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 24]), vecSinT)));
 		// yf = (kBrief256Pattern31AX[i] * sinT + kBrief256Pattern31AY[i] * cosT);
-		vecY[0] = _mm256_castps_si256(_mm256_add_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 0]), vecSinT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 0]), vecCosT)));
-		vecY[1] = _mm256_castps_si256(_mm256_add_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 8]), vecSinT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 8]), vecCosT)));
-		vecY[2] = _mm256_castps_si256(_mm256_add_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 16]), vecSinT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 16]), vecCosT)));
-		vecY[3] = _mm256_castps_si256(_mm256_add_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 24]), vecSinT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 24]), vecCosT)));
+		vecY[0] = _mm256_castps_si256(_mm256_fmadd_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 0]), vecSinT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 0]), vecCosT)));
+		vecY[1] = _mm256_castps_si256(_mm256_fmadd_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 8]), vecSinT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 8]), vecCosT)));
+		vecY[2] = _mm256_castps_si256(_mm256_fmadd_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 16]), vecSinT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 16]), vecCosT)));
+		vecY[3] = _mm256_castps_si256(_mm256_fmadd_ps(_mm256_load_ps(&kBrief256Pattern31AX[i + 24]), vecSinT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31AY[i + 24]), vecCosT)));
 		// x = COMPV_MATH_ROUNDF_2_INT(xf, int);
 		vecX[0] = _mm256_cvtps_epi32(_mm256_castsi256_ps(vecX[0]));
 		vecX[1] = _mm256_cvtps_epi32(_mm256_castsi256_ps(vecX[1]));
@@ -99,15 +100,15 @@ void CompVOrbBrief256_31_32f_Intrin_AVX2(
 		vecA[31] = img_center[vecIndex[31]];
 
 		// xf = (kBrief256Pattern31BX[i] * cosT - kBrief256Pattern31BY[i] * sinT);
-		vecX[0] = _mm256_castps_si256(_mm256_sub_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 0]), vecCosT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 0]), vecSinT)));
-		vecX[1] = _mm256_castps_si256(_mm256_sub_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 8]), vecCosT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 8]), vecSinT)));
-		vecX[2] = _mm256_castps_si256(_mm256_sub_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 16]), vecCosT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 16]), vecSinT)));
-		vecX[3] = _mm256_castps_si256(_mm256_sub_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 24]), vecCosT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 24]), vecSinT)));
+		vecX[0] = _mm256_castps_si256(_mm256_fmsub_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 0]), vecCosT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 0]), vecSinT)));
+		vecX[1] = _mm256_castps_si256(_mm256_fmsub_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 8]), vecCosT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 8]), vecSinT)));
+		vecX[2] = _mm256_castps_si256(_mm256_fmsub_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 16]), vecCosT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 16]), vecSinT)));
+		vecX[3] = _mm256_castps_si256(_mm256_fmsub_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 24]), vecCosT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 24]), vecSinT)));
 		// yf = (kBrief256Pattern31BX[i] * sinT + kBrief256Pattern31BY[i] * cosT);
-		vecY[0] = _mm256_castps_si256(_mm256_add_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 0]), vecSinT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 0]), vecCosT)));
-		vecY[1] = _mm256_castps_si256(_mm256_add_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 8]), vecSinT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 8]), vecCosT)));
-		vecY[2] = _mm256_castps_si256(_mm256_add_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 16]), vecSinT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 16]), vecCosT)));
-		vecY[3] = _mm256_castps_si256(_mm256_add_ps(_mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 24]), vecSinT), _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 24]), vecCosT)));
+		vecY[0] = _mm256_castps_si256(_mm256_fmadd_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 0]), vecSinT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 0]), vecCosT)));
+		vecY[1] = _mm256_castps_si256(_mm256_fmadd_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 8]), vecSinT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 8]), vecCosT)));
+		vecY[2] = _mm256_castps_si256(_mm256_fmadd_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 16]), vecSinT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 16]), vecCosT)));
+		vecY[3] = _mm256_castps_si256(_mm256_fmadd_ps(_mm256_load_ps(&kBrief256Pattern31BX[i + 24]), vecSinT, _mm256_mul_ps(_mm256_load_ps(&kBrief256Pattern31BY[i + 24]), vecCosT)));
 		// x = COMPV_MATH_ROUNDF_2_INT(xf, int);
 		vecX[0] = _mm256_cvtps_epi32(_mm256_castsi256_ps(vecX[0]));
 		vecX[1] = _mm256_cvtps_epi32(_mm256_castsi256_ps(vecX[1]));

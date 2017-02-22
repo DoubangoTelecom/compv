@@ -213,6 +213,7 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_fma3_avx2.cxx" />
     <ClCompile Include="features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -235,6 +236,7 @@
     <ClInclude Include="include\compv\core\features\orb\compv_core_feature_orb_desc.h" />
     <ClInclude Include="include\compv\core\features\orb\compv_core_feature_orb_dete.h" />
     <ClInclude Include="include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_avx2.h" />
+    <ClInclude Include="include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_fma3_avx2.h" />
     <ClInclude Include="include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse2.h" />
     <ClInclude Include="include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse41.h" />
     <ClInclude Include="include\compv\core\matchers\compv_core_matcher_bruteforce.h" />

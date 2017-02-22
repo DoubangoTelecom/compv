@@ -8,6 +8,7 @@
 #include "compv/base/compv_cpu.h"
 
 #include "compv/base/math/intrin/x86/compv_math_convlt_intrin_avx2.h"
+#include "compv/base/math/intrin/x86/compv_math_convlt_intrin_fma3_avx2.h"
 #include "compv/base/math/intrin/x86/compv_math_convlt_intrin_sse2.h"
 #include "compv/base/math/intrin/arm/compv_math_convlt_intrin_neon.h"
 #include "compv/base/math/intrin/arm/compv_math_convlt_intrin_neon_fma.h"

@@ -137,6 +137,9 @@
     <ClCompile Include="features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_avx2.cxx">
       <Filter>Source Files\features\orb\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_fma3_avx2.cxx">
+      <Filter>Source Files\features\orb\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -179,6 +182,9 @@
       <Filter>Header Files\features\orb\intrin\x86</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_avx2.h">
+      <Filter>Header Files\features\orb\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_fma3_avx2.h">
       <Filter>Header Files\features\orb\intrin\x86</Filter>
     </ClInclude>
   </ItemGroup>

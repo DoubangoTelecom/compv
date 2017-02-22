@@ -27,6 +27,7 @@
 #include "compv/core/features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_sse2.h"
 #include "compv/core/features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_sse41.h"
 #include "compv/core/features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_avx2.h"
+#include "compv/core/features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_fma3_avx2.h"
 
 #include <algorithm>
 
@@ -234,6 +235,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 		COMPV_EXEC_IFDEF_ASM_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X86_AVX2);
 		COMPV_EXEC_IFDEF_ASM_X64(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X64_AVX2);
 		if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Intrin_FMA3_AVX2);
 			//COMPV_EXEC_IFDEF_ASM_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X86_FMA3_AVX2);
 			//COMPV_EXEC_IFDEF_ASM_X64(Brief256_31_32f = CompVOrbBrief256_31_32f_Asm_X64_FMA3_AVX2);
 		}

@@ -110,10 +110,15 @@ private:
 #else
 #	define COMPV_DEBUG_INFO_CHECK_AVX2()
 #endif
-#if !defined(__FMA3__)
-#	define COMPV_DEBUG_INFO_CHECK_FMA3() COMPV_DEBUG_INFO_CODE_ONCE("May be slow because of AVX/SSE transition issues")
+#if !defined(__FMA3__) && !defined(__FMA3__)
+#	define COMPV_DEBUG_INFO_CHECK_FMA3() COMPV_DEBUG_INFO_CODE_ONCE("Not built with FMA3 support")
 #else
 #	define COMPV_DEBUG_INFO_CHECK_FMA3()
+#endif
+#if !defined(__FMA4__)
+#	define COMPV_DEBUG_INFO_CHECK_FMA4() COMPV_DEBUG_INFO_CODE_ONCE("Not built with FMA4 support")
+#else
+#	define COMPV_DEBUG_INFO_CHECK_FMA4()
 #endif
 #if !defined(__SSE__)
 #	define COMPV_DEBUG_INFO_CHECK_SSE() COMPV_DEBUG_INFO_CODE_ONCE("Not built with SSE support")
