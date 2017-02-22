@@ -12,6 +12,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVOrbBrief256_31_32f_Asm_X64_AVX2)
+global sym(CompVOrbBrief256_31_32f_Asm_X64_FMA3_AVX2)
 
 section .data
 	extern COMPV_YASM_DLLIMPORT_DECL(k128_u8)
@@ -28,7 +29,8 @@ section .text
 ; arg(6) -> COMPV_ALIGNED(AVX) const compv_float32_t* kBrief256Pattern31BX
 ; arg(7) -> COMPV_ALIGNED(AVX) const compv_float32_t* kBrief256Pattern31BY
 ; arg(8) -> void* out
-sym(CompVOrbBrief256_31_32f_Asm_X64_AVX2):
+; %1 -> 1: FMA3 enabled, 0: FMA3 disabled
+%macro CompVOrbBrief256_31_32f_Macro_X64_AVX2 1
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -71,8 +73,10 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_AVX2):
 	mov rax, arg(1) ; stride
 	vmovd xmm7, eax
 	vpbroadcastd ymm7, xmm7
+	%if %1 == 1
+		vcvtdq2ps ymm7, ymm7
+	%endif
 	vmovdqa [vecStride], ymm7
-
 
 	; Compute vecCosT and vecSinT
 	mov rax, arg(2) ; cos1
@@ -109,44 +113,80 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_AVX2):
 			vmulps ymm9, ymm11, [rax + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
 			vmulps ymm10, ymm11, [rax + ((i + 16) * COMPV_YASM_FLOAT32_SZ_BYTES)]
 			vmulps ymm11, ymm11, [rax + ((i + 24) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			vmulps ymm12, ymm15, [rdx + ((i + 0) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			vmulps ymm13, ymm15, [rdx + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			vmulps ymm14, ymm15, [rdx + ((i + 16) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			vmulps ymm15, ymm15, [rdx + ((i + 24) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+			%if %1 == 1
+				vfmadd231ps ymm8, ymm15, [rdx + ((i + 0) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vfmadd231ps ymm9, ymm15, [rdx + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vfmadd231ps ymm10, ymm15, [rdx + ((i + 16) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vfmadd231ps ymm11, ymm15, [rdx + ((i + 24) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+			%else
+				vmulps ymm12, ymm15, [rdx + ((i + 0) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vmulps ymm13, ymm15, [rdx + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vmulps ymm14, ymm15, [rdx + ((i + 16) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vmulps ymm15, ymm15, [rdx + ((i + 24) * COMPV_YASM_FLOAT32_SZ_BYTES)]			
+				vaddps ymm8, ymm8, ymm12
+				vaddps ymm9, ymm9, ymm13
+				vaddps ymm10, ymm10, ymm14
+				vaddps ymm11, ymm11, ymm15
+				vcvtps2dq ymm8, ymm8
+				vcvtps2dq ymm9, ymm9
+				vcvtps2dq ymm10, ymm10
+				vcvtps2dq ymm11, ymm11
+				vpmulld ymm8, ymm8, [vecStride]
+				vpmulld ymm9, ymm9, [vecStride]
+				vpmulld ymm10, ymm10, [vecStride]
+				vpmulld ymm11, ymm11, [vecStride]
+			%endif			
+
 			vmovaps ymm3, [vecCosT]
 			vmovaps ymm7, [vecSinT]
-			vaddps ymm8, ymm8, ymm12
-			vaddps ymm9, ymm9, ymm13
-			vaddps ymm10, ymm10, ymm14
-			vaddps ymm11, ymm11, ymm15
-			vcvtps2dq ymm8, ymm8
-			vcvtps2dq ymm9, ymm9
-			vcvtps2dq ymm10, ymm10
-			vcvtps2dq ymm11, ymm11
-			vpmulld ymm8, ymm8, [vecStride]
-			vpmulld ymm9, ymm9, [vecStride]
-			vpmulld ymm10, ymm10, [vecStride]
-			vpmulld ymm11, ymm11, [vecStride]
-			vmulps ymm0, ymm3, [rax + ((i + 0) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			vmulps ymm1, ymm3, [rax + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			vmulps ymm2, ymm3, [rax + ((i + 16) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			vmulps ymm3, ymm3, [rax + ((i + 24) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			vmulps ymm4, ymm7, [rdx + ((i + 0) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			vmulps ymm5, ymm7, [rdx + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			vmulps ymm6, ymm7, [rdx + ((i + 16) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			vmulps ymm7, ymm7, [rdx + ((i + 24) * COMPV_YASM_FLOAT32_SZ_BYTES)]
-			vsubps ymm0, ymm0, ymm4
-			vsubps ymm1, ymm1, ymm5
-			vsubps ymm2, ymm2, ymm6
-			vsubps ymm3, ymm3, ymm7
-			vcvtps2dq ymm0, ymm0
-			vcvtps2dq ymm1, ymm1
-			vcvtps2dq ymm2, ymm2
-			vcvtps2dq ymm3, ymm3
-			vpaddd ymm8, ymm8, ymm0
-			vpaddd ymm9, ymm9, ymm1
-			vpaddd ymm10, ymm10, ymm2
-			vpaddd ymm11, ymm11, ymm3
+			
+			%if %1 == 1
+				vmulps ymm4, ymm7, [rdx + ((i + 0) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vmulps ymm5, ymm7, [rdx + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vmulps ymm6, ymm7, [rdx + ((i + 16) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vmulps ymm7, ymm7, [rdx + ((i + 24) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vroundps ymm8, ymm8, 0x8
+				vroundps ymm9, ymm9, 0x8
+				vfmsub231ps ymm4, ymm3, [rax + ((i + 0) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vfmsub231ps ymm5, ymm3, [rax + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vfmsub231ps ymm6, ymm3, [rax + ((i + 16) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vfmsub231ps ymm7, ymm3, [rax + ((i + 24) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vroundps ymm10, ymm10, 0x8
+				vroundps ymm11, ymm11, 0x8
+				vroundps ymm0, ymm4, 0x8
+				vroundps ymm1, ymm5, 0x8
+				vroundps ymm2, ymm6, 0x8
+				vroundps ymm3, ymm7, 0x8
+				vfmadd132ps ymm8, ymm0, [vecStride]
+				vfmadd132ps ymm9, ymm1, [vecStride]
+				vfmadd132ps ymm10, ymm2, [vecStride]
+				vfmadd132ps ymm11, ymm3, [vecStride]
+				vcvtps2dq ymm8, ymm8
+				vcvtps2dq ymm9, ymm9
+				vcvtps2dq ymm10, ymm10
+				vcvtps2dq ymm11, ymm11
+			%else
+				vmulps ymm0, ymm3, [rax + ((i + 0) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vmulps ymm1, ymm3, [rax + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vmulps ymm2, ymm3, [rax + ((i + 16) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vmulps ymm3, ymm3, [rax + ((i + 24) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vmulps ymm4, ymm7, [rdx + ((i + 0) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vmulps ymm5, ymm7, [rdx + ((i + 8) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vmulps ymm6, ymm7, [rdx + ((i + 16) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vmulps ymm7, ymm7, [rdx + ((i + 24) * COMPV_YASM_FLOAT32_SZ_BYTES)]
+				vsubps ymm0, ymm0, ymm4
+				vsubps ymm1, ymm1, ymm5
+				vsubps ymm2, ymm2, ymm6
+				vsubps ymm3, ymm3, ymm7
+				vcvtps2dq ymm0, ymm0
+				vcvtps2dq ymm1, ymm1
+				vcvtps2dq ymm2, ymm2
+				vcvtps2dq ymm3, ymm3
+				vpaddd ymm8, ymm8, ymm0
+				vpaddd ymm9, ymm9, ymm1
+				vpaddd ymm10, ymm10, ymm2
+				vpaddd ymm11, ymm11, ymm3
+			%endif
 			vmovdqa[vecIndex + (0*COMPV_YASM_INT32_SZ_BYTES)], ymm8
 			vmovdqa[vecIndex + (8*COMPV_YASM_INT32_SZ_BYTES)], ymm9
 			vmovdqa[vecIndex + (16*COMPV_YASM_INT32_SZ_BYTES)], ymm10
@@ -242,5 +282,15 @@ sym(CompVOrbBrief256_31_32f_Asm_X64_AVX2):
 	pop rbp
 	vzeroupper
 	ret
+%endmacro
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVOrbBrief256_31_32f_Asm_X64_AVX2):
+	CompVOrbBrief256_31_32f_Macro_X64_AVX2 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVOrbBrief256_31_32f_Asm_X64_FMA3_AVX2):
+	CompVOrbBrief256_31_32f_Macro_X64_AVX2 1
 
 %endif ; COMPV_YASM_ABI_IS_64BIT
