@@ -34,11 +34,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
    COMPV_GAS_FUNCTION_PROLOG
    COMPV_GAS_SAVE_NEON_REGS
    COMPV_GAS_ALIGN_STACK 16, r11
-   COMPV_GAS_MEMALLOC ((16*COMPV_GAS_INT32_SZ_BYTES) + (16*COMPV_GAS_UINT8_SZ_BYTES) + (16*COMPV_GAS_UINT8_SZ_BYTES))
+   COMPV_GAS_MEMALLOC (16*COMPV_GAS_INT32_SZ_BYTES)
 
    .equ vecIndex		, 0
-   .equ vecA		    , (vecIndex + (16*COMPV_GAS_INT32_SZ_BYTES))
-   .equ vecB			, (vecA + (16*COMPV_GAS_UINT8_SZ_BYTES))
 
 	
 	## Load arguments ##
@@ -63,6 +61,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
    vecCosT .req v1
    vecSinT .req v2
    vecStride .req v3
+   vecA .req v26
+   vecB .req v27
 
    ldr r9w, [cos1]
    ldr r10w, [sin1]
@@ -196,47 +196,45 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
            add r23, img_center, r23w, SXTW
            add r24, img_center, r24w, SXTW
            add r25, img_center, r25w, SXTW
-           // TODO(dmi): use st1 {vecA.b}[?]
-           ldrb r9w, [r9]
-           ldrb r10w, [r10]
-           ldrb r11w, [r11]
-           ldrb r12w, [r12]
-           ldrb r13w, [r13]
-           ldrb r14w, [r14]
-           ldrb r15w, [r15]
-           ldrb r16w, [r16]
-           ldrb r17w, [r17]
-           ldrb r19w, [r19]
-           ldrb r20w, [r20]
-           ldrb r21w, [r21]
-           ldrb r22w, [r22]
-           ldrb r23w, [r23]
-           ldrb r24w, [r24]
-           ldrb r25w, [r25]
-           add r9, r9, r10, LSL #(1*8)
-           add r9, r9, r11, LSL #(2*8)
-           add r9, r9, r12, LSL #(3*8)
-           add r9, r9, r13, LSL #(4*8)
-           add r9, r9, r14, LSL #(5*8)
-           add r9, r9, r15, LSL #(6*8)
-           add r9, r9, r16, LSL #(7*8)
-           add r17, r17, r19, LSL #(1*8)
-           add r17, r17, r20, LSL #(2*8)
-           add r17, r17, r21, LSL #(3*8)
-           add r17, r17, r22, LSL #(4*8)
-           add r17, r17, r23, LSL #(5*8)
-           add r17, r17, r24, LSL #(6*8)
-           add r17, r17, r25, LSL #(7*8)
            .if xy == 0
-                stp r9, r17, [sp, #vecA]
+                ld1 {vecA.b}[0], [r9]
+                ld1 {vecA.b}[1], [r10]
+                ld1 {vecA.b}[2], [r11]
+                ld1 {vecA.b}[3], [r12]
+                ld1 {vecA.b}[4], [r13]
+                ld1 {vecA.b}[5], [r14]
+                ld1 {vecA.b}[6], [r15]
+                ld1 {vecA.b}[7], [r16]
+                ld1 {vecA.b}[8], [r17]
+                ld1 {vecA.b}[9], [r19]
+                ld1 {vecA.b}[10], [r20]
+                ld1 {vecA.b}[11], [r21]
+                ld1 {vecA.b}[12], [r22]
+                ld1 {vecA.b}[13], [r23]
+                ld1 {vecA.b}[14], [r24]
+                ld1 {vecA.b}[15], [r25]
            .else
-                stp r9, r17, [sp, #vecB]
+                ld1 {vecB.b}[0], [r9]
+                ld1 {vecB.b}[1], [r10]
+                ld1 {vecB.b}[2], [r11]
+                ld1 {vecB.b}[3], [r12]
+                ld1 {vecB.b}[4], [r13]
+                ld1 {vecB.b}[5], [r14]
+                ld1 {vecB.b}[6], [r15]
+                ld1 {vecB.b}[7], [r16]
+                ld1 {vecB.b}[8], [r17]
+                ld1 {vecB.b}[9], [r19]
+                ld1 {vecB.b}[10], [r20]
+                ld1 {vecB.b}[11], [r21]
+                ld1 {vecB.b}[12], [r22]
+                ld1 {vecB.b}[13], [r23]
+                ld1 {vecB.b}[14], [r24]
+                ld1 {vecB.b}[15], [r25]
            .endif
        .set xy, xy+1
        .endr // .rep xy //
        
-       ldp q10, q11, [sp, #vecA]
-       cmlo v10.16b, v10.16b, v11.16b
+       cmlo v10.16b, vecA.16b, vecB.16b
        and v10.16b, v10.16b, vecMask.16b
        addp v10.16b, v10.16b, v10.16b
        addp v10.8b, v10.8b, v10.8b // FIXME: use .8b
@@ -273,8 +271,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
    .unreq vecCosT
    .unreq vecSinT
    .unreq vecStride
+   .unreq vecA
+   .unreq vecB
 
-   COMPV_GAS_MEMFREE ((16*COMPV_GAS_INT32_SZ_BYTES) + (16*COMPV_GAS_UINT8_SZ_BYTES) + (16*COMPV_GAS_UINT8_SZ_BYTES))
+
+   COMPV_GAS_MEMFREE (16*COMPV_GAS_INT32_SZ_BYTES)
    COMPV_GAS_UNALIGN_STACK r9, r10 
    COMPV_GAS_RESTORE_NEON_REGS
    COMPV_GAS_UNSHADOW_ARGS 9
