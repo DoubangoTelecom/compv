@@ -12,25 +12,6 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-// static_cast<inttype>((f) >= 0.0 ? ((f) + 0.5) : ((f) - 0.5))
-static int32x4_t armv7_vrndmq_f32(float32x4_t v) {
-	//auto roundtrip = vcvtq_f32_s32(vcvtq_s32_f32(v));
-	//auto too_big = vcgtq_f32(roundtrip, v);
-	//return vcvtq_s32_f32(vsubq_f32(roundtrip, vandq_u32(too_big, vdupq_n_f32(1))));
-
-	auto mask = vcgeq_f32(v, vdupq_n_f32(0.f));
-	auto plus = vandq_u8(mask, vdupq_n_f32(0.5f));
-	auto minus = vandq_u8(vmvnq_u8(mask), vdupq_n_f32(0.5f));
-	return vcvtq_s32_f32(vsubq_f32(vaddq_f32(v, plus), minus));
-
-	//return vcvtaq_s32_f32(v) /* in two instruction: vcvtq_s32_f32(vrndaq_f32(v)) */; // round then cast toward zero
-}
-
-// static_cast<inttype>((f) >= 0.0 ? ((f) + 0.5) : ((f) - 0.5))
-//COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT
-
-
-
 void CompVOrbBrief256_31_32f_Intrin_NEON(
 	const uint8_t* img_center, compv_uscalar_t img_stride,
 	const compv_float32_t* cos1, const compv_float32_t* sin1,
@@ -39,8 +20,7 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 	void* out
 )
 {
-	COMPV_DEBUG_INFO_CHECK_SSE2();
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("in ASM add SSE4.1 version which supports '_mm_mullo_epi32'"); // SSE41, ASM
+	COMPV_DEBUG_INFO_CHECK_NEON();
 	COMPV_ALIGN_NEON() int32_t vecIndex[16];
 	COMPV_ALIGN_NEON() uint8_t vecA[16];
 	COMPV_ALIGN_NEON() uint8_t vecB[16];
@@ -49,14 +29,16 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 	uint8x8_t vecPacked;
 
 	uint16_t* outPtr = reinterpret_cast<uint16_t*>(out); // uint32_t for AVX
-
+#if COMPV_ARCH_ARM32
+	static const float32x4_t vecHalf = vdupq_n_f32(0.5f);
+	static const uint8x8_t vecMask = (uint32x2_t) { 134480385, 2151686160 };
+#else
+	static const uint8x8_t vecMask = vdup_n_u64(9241421688590303745ULL);
+#endif
 	const uint32x4_t vecStride = vdupq_n_s32(static_cast<int32_t>(img_stride));
 	const float32x4_t vecCosT = vdupq_n_f32(static_cast<float32_t>(*cos1));
 	const float32x4_t vecSinT = vdupq_n_f32(static_cast<float32_t>(*sin1));
-	static const uint8_t __mask[8] = { 1 << 0, 1 << 1, 1 << 2, 1 << 3, 1 << 4, 1 << 5, 1 << 6, 1 << 7 };
-	// FIXME(dmi): COMPV_DEBUG_INFO("mask = %llu", *reinterpret_cast<const uint64_t*>(__mask));
-	const uint8x8_t vecMask = vld1_u8(__mask);
-	
+
 	for (size_t i = 0; i < 256; i += 16) {
 		// xf = (kBrief256Pattern31AX[i] * cosT - kBrief256Pattern31AY[i] * sinT);
 		vecX[0] = vmlsq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31AX[i + 0]), vecCosT), vld1q_f32(&kBrief256Pattern31AY[i + 0]), vecSinT);
@@ -69,15 +51,15 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 		vecY[2] = vmlaq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31AX[i + 8]), vecSinT), vld1q_f32(&kBrief256Pattern31AY[i + 8]), vecCosT);
 		vecY[3] = vmlaq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31AX[i + 12]), vecSinT), vld1q_f32(&kBrief256Pattern31AY[i + 12]), vecCosT);
 		// x = COMPV_MATH_ROUNDF_2_NEAREST_INT(xf, int);
-		vecX[0] = armv7_vrndmq_f32(vecX[0]);
-		vecX[1] = armv7_vrndmq_f32(vecX[1]);
-		vecX[2] = armv7_vrndmq_f32(vecX[2]);
-		vecX[3] = armv7_vrndmq_f32(vecX[3]);
+		vecX[0] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[0]);
+		vecX[1] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[1]);
+		vecX[2] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[2]);
+		vecX[3] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[3]);
 		// y = COMPV_MATH_ROUNDF_2_NEAREST_INT(yf, int);
-		vecY[0] = armv7_vrndmq_f32(vecY[0]);
-		vecY[1] = armv7_vrndmq_f32(vecY[1]);
-		vecY[2] = armv7_vrndmq_f32(vecY[2]);
-		vecY[3] = armv7_vrndmq_f32(vecY[3]);
+		vecY[0] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecY[0]);
+		vecY[1] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecY[1]);
+		vecY[2] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecY[2]);
+		vecY[3] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecY[3]);
 		// a = img_center[(y * img_stride) + x];
 		vst1q_s32(&vecIndex[0], vmlaq_s32(vecX[0], vecY[0], vecStride));
 		vst1q_s32(&vecIndex[4], vmlaq_s32(vecX[1], vecY[1], vecStride));
@@ -111,15 +93,15 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 		vecY[2] = vmlaq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31BX[i + 8]), vecSinT), vld1q_f32(&kBrief256Pattern31BY[i + 8]), vecCosT);
 		vecY[3] = vmlaq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31BX[i + 12]), vecSinT), vld1q_f32(&kBrief256Pattern31BY[i + 12]), vecCosT);
 		// x = COMPV_MATH_ROUNDF_2_NEAREST_INT(xf, int);
-		vecX[0] = armv7_vrndmq_f32(vecX[0]);
-		vecX[1] = armv7_vrndmq_f32(vecX[1]);
-		vecX[2] = armv7_vrndmq_f32(vecX[2]);
-		vecX[3] = armv7_vrndmq_f32(vecX[3]);
+		vecX[0] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[0]);
+		vecX[1] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[1]);
+		vecX[2] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[2]);
+		vecX[3] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[3]);
 		// y = COMPV_MATH_ROUNDF_2_NEAREST_INT(yf, int);
-		vecY[0] = armv7_vrndmq_f32(vecY[0]);
-		vecY[1] = armv7_vrndmq_f32(vecY[1]);
-		vecY[2] = armv7_vrndmq_f32(vecY[2]);
-		vecY[3] = armv7_vrndmq_f32(vecY[3]);
+		vecY[0] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecY[0]);
+		vecY[1] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecY[1]);
+		vecY[2] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecY[2]);
+		vecY[3] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecY[3]);
 		// b = img_center[(y * img_stride) + x];
 		vst1q_s32(&vecIndex[0], vmlaq_s32(vecX[0], vecY[0], vecStride));
 		vst1q_s32(&vecIndex[4], vmlaq_s32(vecX[1], vecY[1], vecStride));

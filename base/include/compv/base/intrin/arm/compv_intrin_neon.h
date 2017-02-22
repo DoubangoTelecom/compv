@@ -47,6 +47,18 @@ COMPV_NAMESPACE_BEGIN()
 #   define COMPV_ARM_N_FMA(a, b, c) vfma_f32(a, b, (float32x2_t) {c, c})
 #endif
 
+// static_cast<inttype>((f) >= 0.0 ? ((f) + 0.5) : ((f) - 0.5))
+// const float32x4_t vecHalf = vdupq_n_f32(0.5f)
+#if COMPV_ARCH_ARM64
+#	define COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vec) vcvtaq_s32_f32(vec) /* in two instruction: vcvtq_s32_f32(vrndaq_f32(v)) */
+#else
+#	define COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vec)({ \
+		const float32x4_t vecSign = vcvtq_f32_u32((vshrq_n_u32(vec, 31))); \
+		int32x4_t __ret = vcvtq_s32_f32(vsubq_f32(vaddq_f32(vec, vecHalf), vecSign)); \
+		__ret; \
+	})
+#endif
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM && COMPV_INTRINSIC */
