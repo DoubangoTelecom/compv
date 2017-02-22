@@ -155,13 +155,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
             fcvtas v9.4s, v9.4s
             fcvtas v10.4s, v10.4s
             fcvtas v11.4s, v11.4s
-
             mla v4.4s, v8.4s, vecStride.4s
             mla v5.4s, v9.4s, vecStride.4s
             mla v6.4s, v10.4s, vecStride.4s
             mla v7.4s, v11.4s, vecStride.4s
 
-           # TODO(dmi): ARM64: stp q11, q5, [sp, #(vecIndex + 0*COMPV_GAS_INT32_SZ_BYTES)]
            # TODO(dmi): Try with direct extract from q4...q7 instead of using vecIndex
            stp q4, q5, [sp, #(vecIndex + (0*COMPV_GAS_INT32_SZ_BYTES))]
            stp q6, q7, [sp, #(vecIndex + (8*COMPV_GAS_INT32_SZ_BYTES))]
@@ -182,41 +180,22 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON64
            ldr r23w, [sp, #(vecIndex + (13*COMPV_GAS_INT32_SZ_BYTES))]
            ldr r24w, [sp, #(vecIndex + (14*COMPV_GAS_INT32_SZ_BYTES))]
            ldr r25w, [sp, #(vecIndex + (15*COMPV_GAS_INT32_SZ_BYTES))]
-
-            // FIXME(dmi): use SXTW in ldr (ldr r9w, [x11, w12, SXTW])
-            sxtw r9, r9w
-            sxtw r10, r10w
-            sxtw r11, r11w
-            sxtw r12, r12w
-            sxtw r13, r13w
-            sxtw r14, r14w
-            sxtw r15, r15w
-            sxtw r16, r16w
-            sxtw r17, r17w
-            sxtw r19, r19w
-            sxtw r20, r20w
-            sxtw r21, r21w
-            sxtw r22, r22w
-            sxtw r23, r23w
-            sxtw r24, r24w
-            sxtw r25, r25w
-
-           add r9, img_center, r9
-           add r10, img_center, r10
-           add r11, img_center, r11
-           add r12, img_center, r12
-           add r13, img_center, r13
-           add r14, img_center, r14
-           add r15, img_center, r15
-           add r16, img_center, r16
-           add r17, img_center, r17
-           add r19, img_center, r19
-           add r20, img_center, r20
-           add r21, img_center, r21
-           add r22, img_center, r22
-           add r23, img_center, r23
-           add r24, img_center, r24
-           add r25, img_center, r25
+           add r9, img_center, r9w, SXTW
+           add r10, img_center, r10w, SXTW
+           add r11, img_center, r11w, SXTW
+           add r12, img_center, r12w, SXTW
+           add r13, img_center, r13w, SXTW
+           add r14, img_center, r14w, SXTW
+           add r15, img_center, r15w, SXTW
+           add r16, img_center, r16w, SXTW
+           add r17, img_center, r17w, SXTW
+           add r19, img_center, r19w, SXTW
+           add r20, img_center, r20w, SXTW
+           add r21, img_center, r21w, SXTW
+           add r22, img_center, r22w, SXTW
+           add r23, img_center, r23w, SXTW
+           add r24, img_center, r24w, SXTW
+           add r25, img_center, r25w, SXTW
            // TODO(dmi): use st1 {vecA.b}[?]
            ldrb r9w, [r9]
            ldrb r10w, [r10]
