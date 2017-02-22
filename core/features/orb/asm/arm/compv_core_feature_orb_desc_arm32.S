@@ -85,9 +85,9 @@
     .unreq img_stride
     .unreq cos1
     .unreq sin1
-    i .req r1 @ img_stride
-    t0 .req r2 @ cos1
-    t1 .req r3 @ sin1
+    i .req r1 @ was img_stride
+    t0 .req r2 @ was cos1
+    t1 .req r3 @ was sin1
     t2 .req r9
     t3 .req r10
     t4 .req r11

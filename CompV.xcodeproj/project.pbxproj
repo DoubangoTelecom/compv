@@ -98,7 +98,7 @@
 		159E158B1E5DA60500D8CE75 /* compv_core_feature_orb_desc_intrin_sse41.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159E15811E5DA5EE00D8CE75 /* compv_core_feature_orb_desc_intrin_sse41.cxx */; };
 		159E15951E5DA63A00D8CE75 /* compv_math_convlt_intrin_fma_neon.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159E15941E5DA63A00D8CE75 /* compv_math_convlt_intrin_fma_neon.cxx */; };
 		159E15981E5DB40400D8CE75 /* compv_core_feature_orb_desc_arm32.S in Sources */ = {isa = PBXBuildFile; fileRef = 159E15971E5DB40400D8CE75 /* compv_core_feature_orb_desc_arm32.S */; settings = {COMPILER_FLAGS = "-mfpu=neon-vfpv4"; }; };
-		159E159A1E5DB41D00D8CE75 /* compv_core_feature_orb_desc_arm64.S in Sources */ = {isa = PBXBuildFile; fileRef = 159E15991E5DB41D00D8CE75 /* compv_core_feature_orb_desc_arm64.S */; settings = {COMPILER_FLAGS = "-mfpu=neon-vfpv4"; }; };
+		159E159A1E5DB41D00D8CE75 /* compv_core_feature_orb_desc_arm64.S in Sources */ = {isa = PBXBuildFile; fileRef = 159E15991E5DB41D00D8CE75 /* compv_core_feature_orb_desc_arm64.S */; };
 		15A3E8711E3599D800303F7C /* compv_android_cpu-features.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15A3E7711E3599D800303F7C /* compv_android_cpu-features.cxx */; };
 		15A3E8721E3599D900303F7C /* compv_android_dexclassloader.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15A3E7721E3599D800303F7C /* compv_android_dexclassloader.cxx */; };
 		15A3E8731E3599D900303F7C /* compv_android_native_activity.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15A3E7731E3599D800303F7C /* compv_android_native_activity.cxx */; };
