@@ -29,7 +29,7 @@ COMPV_ERROR_CODE CompVImageUtils::sizeForPixelFormat(COMPV_SUBTYPE ePixelFormat,
         }
         else {
             float f = ((float)bitsCount) / 8.f;
-            *size = COMPV_MATH_ROUNDFU_2_INT(((width * height) * f), int32_t);
+            *size = COMPV_MATH_ROUNDFU_2_NEAREST_INT(((width * height) * f), int32_t);
         }
     }
     else {

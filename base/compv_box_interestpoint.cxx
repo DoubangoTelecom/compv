@@ -151,8 +151,8 @@ static void scaleAndRoundAndGetAngleSinCos_C(COMPV_ALIGNED(x) const float* xf, C
 		cos[i] = ::cos(angleInRad);
 		sin[i] = ::sin(angleInRad);
 		// Round the point
-		xi[i] = COMPV_MATH_ROUNDFU_2_INT(fx, int32_t);
-		yi[i] = COMPV_MATH_ROUNDFU_2_INT(fy, int32_t);
+		xi[i] = COMPV_MATH_ROUNDFU_2_NEAREST_INT(fx, int32_t);
+		yi[i] = COMPV_MATH_ROUNDFU_2_NEAREST_INT(fy, int32_t);
 	}
 }
 

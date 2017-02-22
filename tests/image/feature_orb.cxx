@@ -23,7 +23,11 @@
 #define MAXFEATURES		-1
 #define PYRAMID_LEVELS			8
 #define PYRAMID_SCALE_FACTOR	0.83f // (1 / 1.2)
-#define EXPECTED_MD5			"a7a2b7c05ce17828a32c80be5c2f0473" // AVX2, FixedPoint, FMA... (this is really *my* local test to check multithreading)
+#if COMPV_ARCH_X86
+#	define EXPECTED_MD5			"a7a2b7c05ce17828a32c80be5c2f0473" // AVX2, FixedPoint, FMA... (this is really *my* local test to check multithreading)
+#elif COMPV_ARCH_ARM
+#	define EXPECTED_MD5			"dd35e1c1d92e3151d2ae35a5a2fb78d8"
+#endif
 
 COMPV_ERROR_CODE feature_orb()
 {

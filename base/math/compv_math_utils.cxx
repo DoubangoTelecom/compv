@@ -133,12 +133,12 @@ void rand_C(uint32_t* r, compv_scalar_t count)
 
 int roundFloatUnsigned_C(float f)
 {
-    return COMPV_MATH_ROUNDFU_2_INT(f, int);
+    return COMPV_MATH_ROUNDFU_2_NEAREST_INT(f, int);
 }
 
 int roundFloatSigned_C(float f)
 {
-    return COMPV_MATH_ROUNDF_2_INT(f, int);
+    return COMPV_MATH_ROUNDF_2_NEAREST_INT(f, int);
 }
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC

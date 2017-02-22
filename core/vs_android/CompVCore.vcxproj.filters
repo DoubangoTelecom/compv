@@ -76,6 +76,24 @@
     <Filter Include="source\features\fast\asm\x86">
       <UniqueIdentifier>{c355eb18-ada0-4a51-b533-f8187ad174b0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\features\orb\intrin">
+      <UniqueIdentifier>{595ad2aa-1d8d-4e92-bbe9-4f78705bf2ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\orb\intrin\x86">
+      <UniqueIdentifier>{03b64197-e866-4dcc-aeb1-ae85cc377c6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\features\orb\intrin">
+      <UniqueIdentifier>{9f270b80-6f1f-4f58-9d13-f403e1d580c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\features\orb\intrin\x86">
+      <UniqueIdentifier>{d9cf129a-f54c-4ca5-a57a-4224c339108c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\features\orb\intrin\arm">
+      <UniqueIdentifier>{17715349-b104-461b-92d9-9aa98a2e202d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\orb\intrin\arm">
+      <UniqueIdentifier>{a45a8447-390b-4f33-b409-dfdbff161afd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\core\compv_core.h">
@@ -114,6 +132,21 @@
     <ClInclude Include="..\include\compv\core\features\orb\compv_core_feature_orb_dete.h">
       <Filter>include\features\orb</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_avx2.h">
+      <Filter>include\features\orb\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_fma3_avx2.h">
+      <Filter>include\features\orb\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse2.h">
+      <Filter>include\features\orb\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse41.h">
+      <Filter>include\features\orb\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\orb\intrin\arm\compv_core_feature_orb_desc_intrin_neon.h">
+      <Filter>include\features\orb\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
@@ -145,6 +178,21 @@
     </ClCompile>
     <ClCompile Include="..\features\orb\compv_core_feature_orb_dete.cxx">
       <Filter>source\features\orb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_avx2.cxx">
+      <Filter>source\features\orb\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_fma3_avx2.cxx">
+      <Filter>source\features\orb\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse2.cxx">
+      <Filter>source\features\orb\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse41.cxx">
+      <Filter>source\features\orb\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\orb\intrin\arm\compv_core_feature_orb_desc_intrin_neon.cxx">
+      <Filter>source\features\orb\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

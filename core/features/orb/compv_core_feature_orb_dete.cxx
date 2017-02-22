@@ -318,7 +318,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 	// Retain best features only
 	if (m_nMaxFeatures > 0 && interestPointsAtLevelN.size() > 0) {
 		nf = ((m_nMaxFeatures / sfs) * sf);
-		int32_t maxFeatures = COMPV_MATH_ROUNDFU_2_INT(nf, int32_t);
+		int32_t maxFeatures = COMPV_MATH_ROUNDFU_2_NEAREST_INT(nf, int32_t);
 		maxFeatures = COMPV_MATH_MAX(COMPV_FEATURE_DETE_ORB_MIN_FEATUES_PER_LEVEL, maxFeatures);
 		if (interestPointsAtLevelN.size() > static_cast<size_t>(maxFeatures)) {
 			CompVInterestPoint::selectBest(interestPointsAtLevelN, static_cast<size_t>(maxFeatures));
@@ -333,7 +333,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 		point_->level = level;
 		point_->size = patchSize;
 
-		// computes moments (TODO(dmi): use COMPV_MATH_ROUNDF_2_INT to cast x and y)
+		// computes moments (TODO(dmi): use COMPV_MATH_ROUNDF_2_NEAREST_INT to cast x and y)
 		patch->moments0110(imgPtr, static_cast<int>(point_->x), static_cast<int>(point_->y), imgWidth, imgStride, imgHeight, &m01, &m10);
 
 		// compute orientation

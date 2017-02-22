@@ -291,7 +291,7 @@ private:
 					sum += inPtr[k] * vthzKernPtr[row];
 				}
 #if 0 // SIMD instruction -> out = cvtt(add(sum, 0.5f))
-				*outPtr = COMPV_MATH_ROUNDFU_2_INT(sum, OutputType);
+				*outPtr = COMPV_MATH_ROUNDFU_2_NEAREST_INT(sum, OutputType);
 #else // SIMD instruction -> out = cvtt(sum)
 				*outPtr = static_cast<OutputType>(sum); // Truncation introduce very small error, not a big deal for convolution operation
 #endif

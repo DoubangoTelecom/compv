@@ -28,6 +28,7 @@
 #include "compv/core/features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_sse41.h"
 #include "compv/core/features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_avx2.h"
 #include "compv/core/features/orb/intrin/x86/compv_core_feature_orb_desc_intrin_fma3_avx2.h"
+#include "compv/core/features/orb/intrin/arm/compv_core_feature_orb_desc_intrin_neon.h"
 
 #include <algorithm>
 
@@ -221,7 +222,7 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 	}
 	else
 #endif
-
+#if COMPV_ARCH_X86
 	if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(Brief256_31_32f = CompVOrbBrief256_31_32f_Intrin_SSE2);
 		// TODO(dmi): not ASM version for the SSE2 implementation
@@ -242,6 +243,11 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 		}
 #endif
 	}
+#elif COMPV_ARCH_ARM
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(Brief256_31_32f = CompVOrbBrief256_31_32f_Intrin_NEON);
+		}
+#endif
 
 #if 0
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
@@ -264,8 +270,8 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 		fcos = ::cos(angleInRad);
 		fsin = ::sin(angleInRad);
 		// Round the point
-		xi = COMPV_MATH_ROUNDFU_2_INT(fx, int);
-		yi = COMPV_MATH_ROUNDFU_2_INT(fy, int);
+		xi = COMPV_MATH_ROUNDFU_2_NEAREST_INT(fx, int);
+		yi = COMPV_MATH_ROUNDFU_2_NEAREST_INT(fy, int);
 		// Compute description
 		{
 			// Check if the keypoint is too close to the border
@@ -279,8 +285,8 @@ COMPV_ERROR_CODE CompVCornerDescORB::describe(CompVImageScalePyramidPtr pPyramid
 #if COMPV_FEATURE_DESC_ORB_FXP_DESC
 				if (CompVEngine::isMathFixedPointEnabled()) {
 					// cosT and sinT are within [-1, 1] which means we can just mulb 0x7fff
-					int16_t cosTQ15 = COMPV_MATH_ROUNDF_2_INT((fcos * 0x7fff), int16_t);
-					int16_t sinTQ15 = COMPV_MATH_ROUNDF_2_INT((fsin * 0x7fff), int16_t);
+					int16_t cosTQ15 = COMPV_MATH_ROUNDF_2_NEAREST_INT((fcos * 0x7fff), int16_t);
+					int16_t sinTQ15 = COMPV_MATH_ROUNDF_2_NEAREST_INT((fsin * 0x7fff), int16_t);
 					m_funBrief256_31_Fxp(img_center, imageAtLevelN->getStride(), &cosTQ15, &sinTQ15, desc);
 				}
 				else
@@ -480,14 +486,14 @@ static void CompVOrbBrief256_31_32f_C(
 	for (i = 0, j = 0; i < 256; ++i) {
 		xf = (kBrief256Pattern31AX[i] * cosT - kBrief256Pattern31AY[i] * sinT);
 		yf = (kBrief256Pattern31AX[i] * sinT + kBrief256Pattern31AY[i] * cosT);
-		x = COMPV_MATH_ROUNDF_2_INT(xf, int);
-		y = COMPV_MATH_ROUNDF_2_INT(yf, int);
+		x = COMPV_MATH_ROUNDF_2_NEAREST_INT(xf, int);
+		y = COMPV_MATH_ROUNDF_2_NEAREST_INT(yf, int);
 		a = img_center[(y * img_stride) + x];
 
 		xf = (kBrief256Pattern31BX[i] * cosT - kBrief256Pattern31BY[i] * sinT);
 		yf = (kBrief256Pattern31BX[i] * sinT + kBrief256Pattern31BY[i] * cosT);
-		x = COMPV_MATH_ROUNDF_2_INT(xf, int);
-		y = COMPV_MATH_ROUNDF_2_INT(yf, int);
+		x = COMPV_MATH_ROUNDF_2_NEAREST_INT(xf, int);
+		y = COMPV_MATH_ROUNDF_2_NEAREST_INT(yf, int);
 		b = img_center[(y * img_stride) + x];
 
 		_out[0] |= (a < b) ? (u64_1 << j) : 0;

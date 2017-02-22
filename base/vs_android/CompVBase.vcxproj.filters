@@ -372,9 +372,6 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon.h">
       <Filter>include\math\intrin\arm</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon_fma.h">
-      <Filter>include\math\intrin\arm</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\base\math\compv_math_matrix.h">
       <Filter>include\math</Filter>
     </ClInclude>
@@ -409,6 +406,9 @@
       <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_distance_intrin_neon.h">
+      <Filter>include\math\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_fma_neon.h">
       <Filter>include\math\intrin\arm</Filter>
     </ClInclude>
   </ItemGroup>
@@ -629,9 +629,6 @@
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon.cxx">
       <Filter>source\math\intrin\arm</Filter>
     </ClCompile>
-    <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon_fma.cxx">
-      <Filter>source\math\intrin\arm</Filter>
-    </ClCompile>
     <ClCompile Include="..\math\intrin\x86\compv_math_convlt_intrin_avx2.cxx">
       <Filter>source\math\intrin\x86</Filter>
     </ClCompile>
@@ -666,6 +663,9 @@
       <Filter>source\math\intrin\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\math\intrin\arm\compv_math_distance_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_fma_neon.cxx">
       <Filter>source\math\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>
