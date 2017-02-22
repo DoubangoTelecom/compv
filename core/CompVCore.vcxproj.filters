@@ -218,5 +218,8 @@
     <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
       <Filter>Source Files\features\fast\asm\arm</Filter>
     </None>
+    <None Include="features\orb\asm\x86\compv_core_feature_orb_desc_x86_avx.s">
+      <Filter>Source Files\features\orb\asm\x86</Filter>
+    </None>
   </ItemGroup>
 </Project>
