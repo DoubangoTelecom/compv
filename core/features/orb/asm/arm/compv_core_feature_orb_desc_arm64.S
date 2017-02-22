@@ -65,9 +65,9 @@
 
    ldr r9w, [cos1]
    ldr r10w, [sin1]
-   dup.4s vecStride, img_stridew
-   dup.4s vecCosT, r9w
-   dup.4s vecSinT, r10w
+   dup vecStride.4s, img_stridew
+   dup vecCosT.4s, r9w
+   dup vecSinT.4s, r10w
 
    .equ mask0, 0x8040
    .equ mask1, 0x2010
@@ -77,7 +77,7 @@
    movk r9, #mask1, lsl #32
    movk r9, #mask2, lsl #16
    movk r9, #mask3
-   dup.2d vecMask, r9
+   dup vecMask.2d, r9
 
    .unreq img_stride
    .unreq cos1
@@ -221,7 +221,7 @@
        .set xy, xy+1
        .endr // .rep xy //
        
-       cmlo v10.16b, vecA.16b, vecB.16b
+       cmhi v10.16b, vecB.16b, vecA.16b
        and v10.16b, v10.16b, vecMask.16b
        addp v10.16b, v10.16b, v10.16b
        addp v10.8b, v10.8b, v10.8b
@@ -233,9 +233,6 @@
        ## EndOf_Loop256_CompVOrbBrief256_31_32f_Asm_NEON64 ##
 
    .unreq img_center
-   .unreq img_stride
-   .unreq cos1
-   .unreq sin1
    .unreq kBrief256Pattern31AX
    .unreq kBrief256Pattern31AY
    .unreq kBrief256Pattern31BX

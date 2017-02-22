@@ -94,6 +94,12 @@
     <Filter Include="source\features\orb\intrin\arm">
       <UniqueIdentifier>{a45a8447-390b-4f33-b409-dfdbff161afd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\features\orb\asm">
+      <UniqueIdentifier>{847921f8-667e-41d0-9b33-0c14faeb3a80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\orb\asm\arm">
+      <UniqueIdentifier>{b3127b75-668d-48a6-adf5-643902fc7a0e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\core\compv_core.h">
@@ -213,6 +219,12 @@
     </None>
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x86_sse.s">
       <Filter>source\features\fast\asm\x86</Filter>
+    </None>
+    <None Include="..\features\orb\asm\arm\compv_core_feature_orb_desc_arm32.S">
+      <Filter>source\features\orb\asm\arm</Filter>
+    </None>
+    <None Include="..\features\orb\asm\arm\compv_core_feature_orb_desc_arm64.S">
+      <Filter>source\features\orb\asm\arm</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

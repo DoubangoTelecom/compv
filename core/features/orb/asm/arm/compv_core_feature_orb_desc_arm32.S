@@ -16,6 +16,9 @@
 
 .data
 
+.align 4
+mask: .word 0x8040201, 0x80402010, 0x8040201, 0x80402010
+
 .extern
  
 .text
@@ -72,7 +75,7 @@
     vdup.f32 vecCosT, r9
     vdup.f32 vecSinT, r10
 
-    @ TODO(dmi): ARM64 use movi #
+#if 0 // movw and movt are ARMv7 instructions
     .equ mask0, 0x8040201
     .equ mask1, 0x80402010
     movw r9, #:lower16:mask0
@@ -81,6 +84,10 @@
     movt r10, #:upper16:mask1
     vmov vecMaskx, r9, r10
     vmov vecMasky, r9, r10
+#else
+	ldr r9, =mask
+	vld1.u32 {vecMask}, [r9]
+#endif
 
     .unreq img_stride
     .unreq cos1
@@ -187,9 +194,7 @@
             vmla.s32 q4, q8, vecStride
             vmla.s32 q5, q9, vecStride
             vmla.s32 q6, q10, vecStride
-            vmla.s32 q7, q11, vecStride
-            @ TODO(dmi): ARM64: stp q11, q5, [sp, #(vecIndex + 0*COMPV_GAS_INT32_SZ_BYTES)]
-            @ TODO(dmi): Try with direct extract from q4...q7 instead of using vecIndex
+			vmla.s32 q7, q11, vecStride
             add t4, sp, #vecIndex
             vst1.s32 {q4, q5}, [t4]!
             vst1.s32 {q6, q7}, [t4]!
@@ -220,7 +225,6 @@
         .set xy, xy+1
         .endr @@ .rep xy @@
 
-        @ TODO(dmi): ARM64: ldp q10, q11, [sp, #vecA]
         add t4, sp, #vecA
         vld1.u8 { q10, q11 }, [t4 :128]
         vclt.u8 q10, q10, q11
@@ -236,9 +240,6 @@
         @@ EndOf_Loop256_CompVOrbBrief256_31_32f_Asm_NEON32 @@
 
 	.unreq img_center
-	.unreq img_stride
-	.unreq cos1
-	.unreq sin1
 	.unreq kBrief256Pattern31AX
 	.unreq kBrief256Pattern31AY
     .unreq kBrief256Pattern31BX
