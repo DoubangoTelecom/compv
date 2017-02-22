@@ -65,6 +65,11 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 		vst1q_s32(&vecIndex[4], vmlaq_s32(vecX[1], vecY[1], vecStride));
 		vst1q_s32(&vecIndex[8], vmlaq_s32(vecX[2], vecY[2], vecStride));
 		vst1q_s32(&vecIndex[12], vmlaq_s32(vecX[3], vecY[3], vecStride));
+		// TODO(dmi): ASM code ->
+		// mov r0, img_center[]
+		// add r0, r0, img_center[], LSL #8
+		// ...
+		// mov vecA[i], r0
 		vecA[0] = img_center[vecIndex[0]];
 		vecA[1] = img_center[vecIndex[1]];
 		vecA[2] = img_center[vecIndex[2]];
