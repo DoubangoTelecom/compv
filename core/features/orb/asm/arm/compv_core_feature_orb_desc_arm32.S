@@ -91,15 +91,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON32
     t2 .req r9
     t3 .req r10
     t4 .req r11
-
-    @ this macro overrides q12 and q13
-    .macro COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT vec, vecHalf
-        vshr.u32 q12, \vec, #31
-        vcvt.f32.u32 q12, q12 @ q12 = vecSign
-        vadd.f32 q13, \vec, \vecHalf
-        vsubq.f32 q13, q13, q12
-        vcvtq.s32.f32 \vec, q13
-    .endm
     
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (size_t i = 0; i < 256; i += 16)
@@ -141,14 +132,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVOrbBrief256_31_32f_Asm_NEON32
 
             mov t4, #0x3f000000 @ 0.5f
             vdup.s32 q15, t4 @ q15 = vecHalf
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q4, q15
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q5, q15
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q6, q15
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q7, q15
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q8, q15
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q9, q15
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q10, q15
-            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q11, q15
+            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q4, q15, q12, q13
+            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q5, q15, q12, q13
+            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q6, q15, q12, q13
+            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q7, q15, q12, q13
+            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q8, q15, q12, q13
+            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q9, q15, q12, q13
+            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q10, q15, q12, q13
+            COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT q11, q15, q12, q13
 
             vmla.s32 q4, q8, vecStride
             vmla.s32 q5, q9, vecStride
