@@ -281,9 +281,8 @@ COMPV_ERROR_CODE CompVCornerDeteORB::initDetectors()
 COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, CompVPatchPtr& patch, CompVCornerDetePtr& detector, int level)
 {
 	COMPV_CHECK_EXP_RETURN(level < 0 || level >= m_nPyramidLevels, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 	CompVMatPtr imageAtLevelN;
-	float sf, sfs, patchSize, nf, orientRad;
+	float orientRad;
 	int m10, m01;
 	CompVInterestPointVector::iterator point_;
 	int patch_diameter = m_nPatchDiameter;
@@ -291,7 +290,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 	int imgWidth, imgHeight, imgStride;
 
 	// Scale the image for the current level, multi-threaded and thread safe
-	COMPV_CHECK_CODE_RETURN(err_ = m_pyramid->process(image, level));
+	COMPV_CHECK_CODE_RETURN(m_pyramid->process(image, level));
 
 	// Get image at level N
 	COMPV_CHECK_CODE_RETURN(m_pyramid->image(level, &imageAtLevelN));
@@ -300,10 +299,11 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 	imgStride = static_cast<int>(imageAtLevelN->stride());
 	imgHeight = static_cast<int>(imageAtLevelN->rows());
 
-	sfs = m_pyramid->scaleFactorsSum();
-	sf = m_pyramid->scaleFactor(level);
+	const float sfs = m_pyramid->scaleFactorsSum();
+	const float sf = m_pyramid->scaleFactor(level);
+	const float sfi = 1.f / sf; // inverse sf to avoid dividing by sf
 
-	patchSize = m_nPatchDiameter / sf; // TODO(dmi): in OpenCV the patch size increase (instead of decreasing) with the level. Doesn't look correct.
+	const float patchSize = m_nPatchDiameter / sf;
 	// Clear previous points, will be done by the internal detector but we prefer do to it here to make sure it
 	// will work for buggy detectors
 
@@ -317,7 +317,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 
 	// Retain best features only
 	if (m_nMaxFeatures > 0 && interestPointsAtLevelN.size() > 0) {
-		nf = ((m_nMaxFeatures / sfs) * sf);
+		const float nf = ((m_nMaxFeatures / sfs) * sf);
 		int32_t maxFeatures = COMPV_MATH_ROUNDFU_2_NEAREST_INT(nf, int32_t);
 		maxFeatures = COMPV_MATH_MAX(COMPV_FEATURE_DETE_ORB_MIN_FEATUES_PER_LEVEL, maxFeatures);
 		if (interestPointsAtLevelN.size() > static_cast<size_t>(maxFeatures)) {
@@ -333,8 +333,8 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 		point_->level = level;
 		point_->size = patchSize;
 
-		// computes moments (TODO(dmi): use COMPV_MATH_ROUNDF_2_NEAREST_INT to cast x and y)
-		patch->moments0110(imgPtr, static_cast<int>(point_->x), static_cast<int>(point_->y), imgWidth, imgStride, imgHeight, &m01, &m10);
+		// computes moments
+		patch->moments0110(imgPtr, COMPV_MATH_ROUNDF_2_NEAREST_INT(point_->x, int), COMPV_MATH_ROUNDF_2_NEAREST_INT(point_->y, int), imgWidth, imgStride, imgHeight, &m01, &m10);
 
 		// compute orientation
 		orientRad = COMPV_MATH_ATAN2(static_cast<float>(m01), static_cast<float>(m10));
@@ -350,12 +350,12 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 		//	- Once the orientation is computed, scaleup (x, y) which means (x/0.5, y/0.5) to have a representation in (100, 100) instead of (50, 50)
 		//  - All points, regardless the scale factor will have their coords represented (scaledup) in the original size
 		if (level != 0) {
-			point_->x /= sf;
-			point_->y /= sf;
+			point_->x *= sfi;
+			point_->y *= sfi;
 		}
 	}
 
-	return err_;
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_NAMESPACE_END()

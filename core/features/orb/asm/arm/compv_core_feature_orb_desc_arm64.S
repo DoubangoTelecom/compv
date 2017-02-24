@@ -103,14 +103,14 @@
                ldp q12, q13, [kBrief256Pattern31BX], #32
                ldp q14, q15, [kBrief256Pattern31BX], #32
            .endif
-           fmul v4.4s, v12.4s, vecCosT.4s
-           fmul v5.4s, v13.4s, vecCosT.4s
-           fmul v6.4s, v14.4s, vecCosT.4s
-           fmul v7.4s, v15.4s, vecCosT.4s
-           fmul v8.4s, v12.4s, vecSinT.4s
-           fmul v9.4s, v13.4s, vecSinT.4s
-           fmul v10.4s, v14.4s, vecSinT.4s
-           fmul v11.4s, v15.4s, vecSinT.4s
+           fmul v4.4s, v12.4s, vecCosT.s[0]
+           fmul v5.4s, v13.4s, vecCosT.s[0]
+           fmul v6.4s, v14.4s, vecCosT.s[0]
+           fmul v7.4s, v15.4s, vecCosT.s[0]
+           fmul v8.4s, v12.4s, vecSinT.s[0]
+           fmul v9.4s, v13.4s, vecSinT.s[0]
+           fmul v10.4s, v14.4s, vecSinT.s[0]
+           fmul v11.4s, v15.4s, vecSinT.s[0]
            .if xy == 0
                ldp q12, q13, [kBrief256Pattern31AY], #32
                ldp q14, q15, [kBrief256Pattern31AY], #32
@@ -119,23 +119,23 @@
                ldp q14, q15, [kBrief256Pattern31BY], #32
            .endif
            .if \fusedMultiplyAdd
-                fmls v4.4s, v12.4s, vecSinT.4s
-                fmls v5.4s, v13.4s, vecSinT.4s
-                fmls v6.4s, v14.4s, vecSinT.4s
-                fmls v7.4s, v15.4s, vecSinT.4s
-                fmla v8.4s, v12.4s, vecCosT.4s
-                fmla v9.4s, v13.4s, vecCosT.4s
-                fmla v10.4s, v14.4s, vecCosT.4s
-                fmla v11.4s, v15.4s, vecCosT.4s
+                fmls v4.4s, v12.4s, vecSinT.s[0]
+                fmls v5.4s, v13.4s, vecSinT.s[0]
+                fmls v6.4s, v14.4s, vecSinT.s[0]
+                fmls v7.4s, v15.4s, vecSinT.s[0]
+                fmla v8.4s, v12.4s, vecCosT.s[0]
+                fmla v9.4s, v13.4s, vecCosT.s[0]
+                fmla v10.4s, v14.4s, vecCosT.s[0]
+                fmla v11.4s, v15.4s, vecCosT.s[0]
             .else
-                fmul v16.4s, v12.4s, vecSinT.4s
-                fmul v17.4s, v13.4s, vecSinT.4s
-                fmul v18.4s, v14.4s, vecSinT.4s
-                fmul v19.4s, v15.4s, vecSinT.4s
-                fmul v20.4s, v12.4s, vecCosT.4s
-                fmul v21.4s, v13.4s, vecCosT.4s
-                fmul v22.4s, v14.4s, vecCosT.4s
-                fmul v23.4s, v15.4s, vecCosT.4s
+                fmul v16.4s, v12.4s, vecSinT.s[0]
+                fmul v17.4s, v13.4s, vecSinT.s[0]
+                fmul v18.4s, v14.4s, vecSinT.s[0]
+                fmul v19.4s, v15.4s, vecSinT.s[0]
+                fmul v20.4s, v12.4s, vecCosT.s[0]
+                fmul v21.4s, v13.4s, vecCosT.s[0]
+                fmul v22.4s, v14.4s, vecCosT.s[0]
+                fmul v23.4s, v15.4s, vecCosT.s[0]
                 fsub v4.4s, v4.4s, v16.4s
                 fsub v5.4s, v5.4s, v17.4s
                 fsub v6.4s, v6.4s, v18.4s
@@ -153,10 +153,10 @@
            fcvtas v10.4s, v10.4s
            fcvtas v7.4s, v7.4s
            fcvtas v11.4s, v11.4s
-           mla v4.4s, v8.4s, vecStride.4s
-           mla v5.4s, v9.4s, vecStride.4s
-           mla v6.4s, v10.4s, vecStride.4s
-           mla v7.4s, v11.4s, vecStride.4s
+           mla v4.4s, v8.4s, vecStride.s[0]
+           mla v5.4s, v9.4s, vecStride.s[0]
+           mla v6.4s, v10.4s, vecStride.s[0]
+           mla v7.4s, v11.4s, vecStride.s[0]
            stp q4, q5, [sp, #(vecIndex + (0*COMPV_GAS_INT32_SZ_BYTES))]
            stp q6, q7, [sp, #(vecIndex + (8*COMPV_GAS_INT32_SZ_BYTES))]
            ldp r9w, r10w, [sp, #(vecIndex + (0*COMPV_GAS_INT32_SZ_BYTES))]

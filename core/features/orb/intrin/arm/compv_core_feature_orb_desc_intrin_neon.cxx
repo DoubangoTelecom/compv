@@ -25,6 +25,8 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 	COMPV_ALIGN_NEON() int32_t vecIndex[16];
 	COMPV_ALIGN_NEON() uint8_t vecA[16];
 	COMPV_ALIGN_NEON() uint8_t vecB[16];
+	const float32_t cosT = static_cast<float32_t>(*cos1), sinT = static_cast<float32_t>(*sin1);
+	const int32_t stride = static_cast<int32_t>(img_stride);
 	int32x4_t vecX[4], vecY[4];
 	uint8x16_t vecUnpacked;
 	uint8x8_t vecPacked;
@@ -36,21 +38,18 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 #else
 	static const uint8x16_t vecMask = (uint64x2_t) { 9241421688590303745ULL, 9241421688590303745ULL  };
 #endif
-	const uint32x4_t vecStride = vdupq_n_s32(static_cast<int32_t>(img_stride));
-	const float32x4_t vecCosT = vdupq_n_f32(static_cast<float32_t>(*cos1));
-	const float32x4_t vecSinT = vdupq_n_f32(static_cast<float32_t>(*sin1));
 
 	for (size_t i = 0; i < 256; i += 16) {
 		// xf = (kBrief256Pattern31AX[i] * cosT - kBrief256Pattern31AY[i] * sinT);
-		vecX[0] = vmlsq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31AX[i + 0]), vecCosT), vld1q_f32(&kBrief256Pattern31AY[i + 0]), vecSinT);
-		vecX[1] = vmlsq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31AX[i + 4]), vecCosT), vld1q_f32(&kBrief256Pattern31AY[i + 4]), vecSinT);
-		vecX[2] = vmlsq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31AX[i + 8]), vecCosT), vld1q_f32(&kBrief256Pattern31AY[i + 8]), vecSinT);
-		vecX[3] = vmlsq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31AX[i + 12]), vecCosT), vld1q_f32(&kBrief256Pattern31AY[i + 12]), vecSinT);
+		vecX[0] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 0]), cosT), vld1q_f32(&kBrief256Pattern31AY[i + 0]), sinT);
+		vecX[1] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 4]), cosT), vld1q_f32(&kBrief256Pattern31AY[i + 4]), sinT);
+		vecX[2] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 8]), cosT), vld1q_f32(&kBrief256Pattern31AY[i + 8]), sinT);
+		vecX[3] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 12]), cosT), vld1q_f32(&kBrief256Pattern31AY[i + 12]), sinT);
 		// yf = (kBrief256Pattern31AX[i] * sinT + kBrief256Pattern31AY[i] * cosT);
-		vecY[0] = vmlaq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31AX[i + 0]), vecSinT), vld1q_f32(&kBrief256Pattern31AY[i + 0]), vecCosT);
-		vecY[1] = vmlaq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31AX[i + 4]), vecSinT), vld1q_f32(&kBrief256Pattern31AY[i + 4]), vecCosT);
-		vecY[2] = vmlaq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31AX[i + 8]), vecSinT), vld1q_f32(&kBrief256Pattern31AY[i + 8]), vecCosT);
-		vecY[3] = vmlaq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31AX[i + 12]), vecSinT), vld1q_f32(&kBrief256Pattern31AY[i + 12]), vecCosT);
+		vecY[0] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 0]), sinT), vld1q_f32(&kBrief256Pattern31AY[i + 0]), cosT);
+		vecY[1] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 4]), sinT), vld1q_f32(&kBrief256Pattern31AY[i + 4]), cosT);
+		vecY[2] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 8]), sinT), vld1q_f32(&kBrief256Pattern31AY[i + 8]), cosT);
+		vecY[3] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31AX[i + 12]), sinT), vld1q_f32(&kBrief256Pattern31AY[i + 12]), cosT);
 		// x = COMPV_MATH_ROUNDF_2_NEAREST_INT(xf, int);
 		vecX[0] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[0]);
 		vecX[1] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[1]);
@@ -62,15 +61,10 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 		vecY[2] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecY[2]);
 		vecY[3] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecY[3]);
 		// a = img_center[(y * img_stride) + x];
-		vst1q_s32(&vecIndex[0], vmlaq_s32(vecX[0], vecY[0], vecStride));
-		vst1q_s32(&vecIndex[4], vmlaq_s32(vecX[1], vecY[1], vecStride));
-		vst1q_s32(&vecIndex[8], vmlaq_s32(vecX[2], vecY[2], vecStride));
-		vst1q_s32(&vecIndex[12], vmlaq_s32(vecX[3], vecY[3], vecStride));
-		// TODO(dmi): ASM code ->
-		// mov r0, img_center[]
-		// add r0, r0, img_center[], LSL #8
-		// ...
-		// mov vecA[i], r0
+		vst1q_s32(&vecIndex[0], vmlaq_n_s32(vecX[0], vecY[0], stride));
+		vst1q_s32(&vecIndex[4], vmlaq_n_s32(vecX[1], vecY[1], stride));
+		vst1q_s32(&vecIndex[8], vmlaq_n_s32(vecX[2], vecY[2], stride));
+		vst1q_s32(&vecIndex[12], vmlaq_n_s32(vecX[3], vecY[3], stride));
 		vecA[0] = img_center[vecIndex[0]];
 		vecA[1] = img_center[vecIndex[1]];
 		vecA[2] = img_center[vecIndex[2]];
@@ -89,15 +83,15 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 		vecA[15] = img_center[vecIndex[15]];
 
 		// xf = (kBrief256Pattern31BX[i] * cosT - kBrief256Pattern31BY[i] * sinT);
-		vecX[0] = vmlsq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31BX[i + 0]), vecCosT), vld1q_f32(&kBrief256Pattern31BY[i + 0]), vecSinT);
-		vecX[1] = vmlsq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31BX[i + 4]), vecCosT), vld1q_f32(&kBrief256Pattern31BY[i + 4]), vecSinT);
-		vecX[2] = vmlsq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31BX[i + 8]), vecCosT), vld1q_f32(&kBrief256Pattern31BY[i + 8]), vecSinT);
-		vecX[3] = vmlsq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31BX[i + 12]), vecCosT), vld1q_f32(&kBrief256Pattern31BY[i + 12]), vecSinT);
+		vecX[0] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 0]), cosT), vld1q_f32(&kBrief256Pattern31BY[i + 0]), sinT);
+		vecX[1] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 4]), cosT), vld1q_f32(&kBrief256Pattern31BY[i + 4]), sinT);
+		vecX[2] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 8]), cosT), vld1q_f32(&kBrief256Pattern31BY[i + 8]), sinT);
+		vecX[3] = vmlsq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 12]), cosT), vld1q_f32(&kBrief256Pattern31BY[i + 12]), sinT);
 		// yf = (kBrief256Pattern31BX[i] * sinT + kBrief256Pattern31BY[i] * cosT);
-		vecY[0] = vmlaq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31BX[i + 0]), vecSinT), vld1q_f32(&kBrief256Pattern31BY[i + 0]), vecCosT);
-		vecY[1] = vmlaq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31BX[i + 4]), vecSinT), vld1q_f32(&kBrief256Pattern31BY[i + 4]), vecCosT);
-		vecY[2] = vmlaq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31BX[i + 8]), vecSinT), vld1q_f32(&kBrief256Pattern31BY[i + 8]), vecCosT);
-		vecY[3] = vmlaq_f32(vmulq_f32(vld1q_f32(&kBrief256Pattern31BX[i + 12]), vecSinT), vld1q_f32(&kBrief256Pattern31BY[i + 12]), vecCosT);
+		vecY[0] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 0]), sinT), vld1q_f32(&kBrief256Pattern31BY[i + 0]), cosT);
+		vecY[1] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 4]), sinT), vld1q_f32(&kBrief256Pattern31BY[i + 4]), cosT);
+		vecY[2] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 8]), sinT), vld1q_f32(&kBrief256Pattern31BY[i + 8]), cosT);
+		vecY[3] = vmlaq_n_f32(vmulq_n_f32(vld1q_f32(&kBrief256Pattern31BX[i + 12]), sinT), vld1q_f32(&kBrief256Pattern31BY[i + 12]), cosT);
 		// x = COMPV_MATH_ROUNDF_2_NEAREST_INT(xf, int);
 		vecX[0] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[0]);
 		vecX[1] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecX[1]);
@@ -109,10 +103,10 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 		vecY[2] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecY[2]);
 		vecY[3] = COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT(vecY[3]);
 		// b = img_center[(y * img_stride) + x];
-		vst1q_s32(&vecIndex[0], vmlaq_s32(vecX[0], vecY[0], vecStride));
-		vst1q_s32(&vecIndex[4], vmlaq_s32(vecX[1], vecY[1], vecStride));
-		vst1q_s32(&vecIndex[8], vmlaq_s32(vecX[2], vecY[2], vecStride));
-		vst1q_s32(&vecIndex[12], vmlaq_s32(vecX[3], vecY[3], vecStride));
+		vst1q_s32(&vecIndex[0], vmlaq_n_s32(vecX[0], vecY[0], stride));
+		vst1q_s32(&vecIndex[4], vmlaq_n_s32(vecX[1], vecY[1], stride));
+		vst1q_s32(&vecIndex[8], vmlaq_n_s32(vecX[2], vecY[2], stride));
+		vst1q_s32(&vecIndex[12], vmlaq_n_s32(vecX[3], vecY[3], stride));
 		vecB[0] = img_center[vecIndex[0]];
 		vecB[1] = img_center[vecIndex[1]];
 		vecB[2] = img_center[vecIndex[2]];

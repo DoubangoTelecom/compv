@@ -66,8 +66,11 @@ mask: .word 0x8040201, 0x80402010, 0x8040201, 0x80402010
     vecMaskx .req q0x
     vecMasky .req q0y
     vecCosT .req q1
+	vecCosTx .req q1x
     vecSinT .req q2
+	vecSinTx .req q2x
     vecStride .req q3
+	vecStridex .req q3x
 
     ldr r9, [cos1]
     ldr r10, [sin1]
@@ -113,14 +116,14 @@ mask: .word 0x8040201, 0x80402010, 0x8040201, 0x80402010
                 vld1.f32 { q12, q13 }, [kBrief256Pattern31BX :128]!
                 vld1.f32 { q14, q15 }, [kBrief256Pattern31BX :128]!
             .endif
-            vmul.f32 q4, q12, vecCosT
-            vmul.f32 q5, q13, vecCosT
-            vmul.f32 q6, q14, vecCosT
-            vmul.f32 q7, q15, vecCosT
-            vmul.f32 q8, q12, vecSinT
-            vmul.f32 q9, q13, vecSinT
-            vmul.f32 q10, q14, vecSinT
-            vmul.f32 q11, q15, vecSinT
+            vmul.f32 q4, q12, vecCosTx[0]
+            vmul.f32 q5, q13, vecCosTx[0]
+            vmul.f32 q6, q14, vecCosTx[0]
+            vmul.f32 q7, q15, vecCosTx[0]
+            vmul.f32 q8, q12, vecSinTx[0]
+            vmul.f32 q9, q13, vecSinTx[0]
+            vmul.f32 q10, q14, vecSinTx[0]
+            vmul.f32 q11, q15, vecSinTx[0]
             .if xy == 0
                 vld1.f32 { q12, q13 }, [kBrief256Pattern31AY :128]!
                 vld1.f32 { q14, q15 }, [kBrief256Pattern31AY :128]!
@@ -139,14 +142,14 @@ mask: .word 0x8040201, 0x80402010, 0x8040201, 0x80402010
                 vfma.f32 q10, q14, vecCosT
                 vfma.f32 q11, q15, vecCosT
             .else
-                vmls.f32 q4, q12, vecSinT
-                vmls.f32 q5, q13, vecSinT
-                vmls.f32 q6, q14, vecSinT
-                vmls.f32 q7, q15, vecSinT
-                vmla.f32 q8, q12, vecCosT
-                vmla.f32 q9, q13, vecCosT
-                vmla.f32 q10, q14, vecCosT
-                vmla.f32 q11, q15, vecCosT
+                vmls.f32 q4, q12, vecSinTx[0]
+                vmls.f32 q5, q13, vecSinTx[0]
+                vmls.f32 q6, q14, vecSinTx[0]
+                vmls.f32 q7, q15, vecSinTx[0]
+                vmla.f32 q8, q12, vecCosTx[0]
+                vmla.f32 q9, q13, vecCosTx[0]
+                vmla.f32 q10, q14, vecCosTx[0]
+                vmla.f32 q11, q15, vecCosTx[0]
             .endif
             mov t4, #0x3f000000 @ 0.5f
             vdup.s32 q15, t4 @ q15 = vecHalf
@@ -191,10 +194,10 @@ mask: .word 0x8040201, 0x80402010, 0x8040201, 0x80402010
             vadd.f32 q13, q11, q15
             vsub.f32 q13, q13, q12
             vcvt.s32.f32 q11, q13
-            vmla.s32 q4, q8, vecStride
-            vmla.s32 q5, q9, vecStride
-            vmla.s32 q6, q10, vecStride
-			vmla.s32 q7, q11, vecStride
+            vmla.s32 q4, q8, vecStridex[0]
+            vmla.s32 q5, q9, vecStridex[0]
+            vmla.s32 q6, q10, vecStridex[0]
+			vmla.s32 q7, q11, vecStridex[0]
             add t4, sp, #vecIndex
             vst1.s32 {q4, q5}, [t4]!
             vst1.s32 {q6, q7}, [t4]!
@@ -261,8 +264,11 @@ mask: .word 0x8040201, 0x80402010, 0x8040201, 0x80402010
     .unreq vecMaskx
     .unreq vecMasky
     .unreq vecCosT
+	.unreq vecCosTx
     .unreq vecSinT
+	.unreq vecSinTx
     .unreq vecStride
+	.unreq vecStridex
 
     COMPV_GAS_MEMFREE ((16*COMPV_GAS_INT32_SZ_BYTES) + (16*COMPV_GAS_UINT8_SZ_BYTES) + (16*COMPV_GAS_UINT8_SZ_BYTES))
 	COMPV_GAS_UNALIGN_STACK r11

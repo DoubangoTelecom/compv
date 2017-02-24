@@ -25,7 +25,7 @@
 #define PYRAMID_SCALE_FACTOR	0.83f // (1 / 1.2)
 #if COMPV_ARCH_X86
 #	define EXPECTED_MD5			"a7a2b7c05ce17828a32c80be5c2f0473" // AVX2, FixedPoint, FMA, ::sin, ::cos... (this is really *my* local test to check multithreading)
-#elif COMPV_ARCH_ARM
+#elif COMPV_ARCH_ARM // ::sin, ::cos results on Android and iOS are different
 #   if COMPV_OS_IPHONE
 #       define EXPECTED_MD5         "39a6a9127c2c5b22b8b4e9450dc2f598"
 #   else
