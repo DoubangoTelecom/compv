@@ -167,6 +167,7 @@
     <ClCompile Include="feature_fast.cxx" />
     <ClCompile Include="feature_orb.cxx" />
     <ClCompile Include="main.cxx" />
+    <ClCompile Include="patch.cxx" />
     <ClCompile Include="pyramid.cxx" />
     <ClCompile Include="scale.cxx" />
   </ItemGroup>

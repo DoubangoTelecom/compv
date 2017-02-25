@@ -287,7 +287,6 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 	CompVInterestPointVector::iterator point_;
 	int patch_diameter = m_nPatchDiameter;
 	const uint8_t* imgPtr;
-	int imgWidth, imgHeight, imgStride;
 
 	// Scale the image for the current level, multi-threaded and thread safe
 	COMPV_CHECK_CODE_RETURN(m_pyramid->process(image, level));
@@ -295,9 +294,9 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 	// Get image at level N
 	COMPV_CHECK_CODE_RETURN(m_pyramid->image(level, &imageAtLevelN));
 	imgPtr = imageAtLevelN->ptr<const uint8_t>();
-	imgWidth = static_cast<int>(imageAtLevelN->cols());
-	imgStride = static_cast<int>(imageAtLevelN->stride());
-	imgHeight = static_cast<int>(imageAtLevelN->rows());
+	size_t imgWidth = static_cast<int>(imageAtLevelN->cols());
+	size_t imgStride = static_cast<int>(imageAtLevelN->stride());
+	size_t imgHeight = static_cast<int>(imageAtLevelN->rows());
 
 	const float sfs = m_pyramid->scaleFactorsSum();
 	const float sf = m_pyramid->scaleFactor(level);
@@ -326,7 +325,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 	}
 
 	// Erase points too close to the border
-	CompVInterestPoint::eraseTooCloseToBorder(interestPointsAtLevelN, static_cast<size_t>(imgWidth), static_cast<size_t>(imgHeight), ((patch_diameter + 5) >> 1));
+	CompVInterestPoint::eraseTooCloseToBorder(interestPointsAtLevelN, imgWidth, imgHeight, ((patch_diameter + 5) >> 1));
 
 	// For each point, set level and patch size, compute the orientation, scale (X,Y) coords...
 	for (point_ = interestPointsAtLevelN.begin(); point_ < interestPointsAtLevelN.end(); ++point_) {
@@ -334,7 +333,7 @@ COMPV_ERROR_CODE CompVCornerDeteORB::processLevelAt(const CompVMatPtr& image, Co
 		point_->size = patchSize;
 
 		// computes moments
-		patch->moments0110(imgPtr, COMPV_MATH_ROUNDF_2_NEAREST_INT(point_->x, int), COMPV_MATH_ROUNDF_2_NEAREST_INT(point_->y, int), imgWidth, imgStride, imgHeight, &m01, &m10);
+		COMPV_CHECK_CODE_RETURN(patch->moments0110(imgPtr, COMPV_MATH_ROUNDF_2_NEAREST_INT(point_->x, int), COMPV_MATH_ROUNDF_2_NEAREST_INT(point_->y, int), imgWidth, imgHeight, imgStride, &m01, &m10));
 
 		// compute orientation
 		orientRad = COMPV_MATH_ATAN2(static_cast<float>(m01), static_cast<float>(m10));

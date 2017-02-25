@@ -22,6 +22,7 @@
 #include <compv/base/compv_md5.h>
 #include <compv/base/compv_mem.h>
 #include <compv/base/compv_obj.h>
+#include <compv/base/compv_patch.h>
 
 #include <compv/base/android/compv_android_native_activity.h>
 

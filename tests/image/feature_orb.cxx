@@ -24,7 +24,7 @@
 #define PYRAMID_LEVELS			8
 #define PYRAMID_SCALE_FACTOR	0.83f // (1 / 1.2)
 #if COMPV_ARCH_X86
-#	define EXPECTED_MD5			"a7a2b7c05ce17828a32c80be5c2f0473" // AVX2, FixedPoint, FMA, ::sin, ::cos... (this is really *my* local test to check multithreading)
+#	define EXPECTED_MD5			"966fcd4061e9deeb42259dd2b119af09" // AVX2, FixedPoint, FMA, ::sin, ::cos... (this is really *my* local test to check multithreading)
 #elif COMPV_ARCH_ARM // ::sin, ::cos results on Android and iOS are different
 #   if COMPV_OS_IPHONE
 #       define EXPECTED_MD5         "39a6a9127c2c5b22b8b4e9450dc2f598"
@@ -55,15 +55,16 @@ COMPV_ERROR_CODE feature_orb()
 
 	// ORB descriptor
 	COMPV_CHECK_CODE_RETURN(CompVCornerDesc::newObj(&dec, COMPV_ORB_ID, dete));
-
-	COMPV_CHECK_CODE_RETURN(dete->process(image, interestPoints)); // detect
-
+	
 	timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(dec->process(image, interestPoints, &descriptions)); // describe
+		COMPV_CHECK_CODE_RETURN(dete->process(image, interestPoints)); // detect
 	}
 	timeEnd = CompVTime::nowMillis();
+	
 	COMPV_DEBUG_INFO("Elapsed time (TestORB) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+
+	COMPV_CHECK_CODE_RETURN(dec->process(image, interestPoints, &descriptions)); // describe
 
 	//COMPV_DEBUG_INFO("MD5:%s", compv_tests_md5(descriptions).c_str());
 

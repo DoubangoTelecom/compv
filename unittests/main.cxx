@@ -9,7 +9,9 @@ using namespace compv;
 #define UNITTEST_CONVOLUTION					0
 #define UNITTEST_FEATURE_FAST					0
 #define UNITTEST_CHROMA_CONV					0
-#define UNITTEST_BRUTEFORCE						1
+#define UNITTEST_BRUTEFORCE						0
+
+#define UNITTEST_PATCH_MOMENTS					1
 
 #define UNITTEST_MATH_MATRIX_OPS				0
 #define UNITTEST_MATH_EIGEN_S					0
@@ -102,7 +104,11 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_mathes_bruteforce();
 								COMPV_CHECK_CODE_BAIL(err = unittest_mathes_bruteforce(), "Bruteforce unittest failed");
 #endif
-			
+
+#if UNITTEST_PATCH_MOMENTS || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE compv_unittest_patch_moments0110();
+								COMPV_CHECK_CODE_BAIL(err = compv_unittest_patch_moments0110(), "Patch moments unittest failed");
+#endif
 
 #if UNITTEST_MATH_MATRIX_OPS || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_math_matrix_ops();

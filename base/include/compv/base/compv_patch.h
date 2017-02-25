@@ -23,7 +23,7 @@ protected:
 public:
 	virtual ~CompVPatch();
 	COMPV_OBJECT_GET_ID(CompVPatch);
-	void moments0110(const uint8_t* ptr, int center_x, int center_y, int img_width, int img_stride, int img_height, int* m01, int* m10);
+	COMPV_ERROR_CODE moments0110(const uint8_t* ptr, int center_x, int center_y, size_t img_width, size_t img_height, size_t img_stride, int* m01, int* m10);
 	static COMPV_ERROR_CODE newObj(CompVPatchPtrPtr patch, int diameter);
 
 private:
@@ -38,7 +38,7 @@ private:
 	uint8_t* m_pBottom;
 	size_t m_nCount;
 	size_t m_nStride;
-	void(*m_Moments0110)(const uint8_t* top, const uint8_t* bottom, const int16_t* x, const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
+	void(*m_Moments0110)(const uint8_t* top, const uint8_t* bottom, const int16_t* x, const int16_t* y, compv_uscalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
 };
 
 COMPV_NAMESPACE_END()

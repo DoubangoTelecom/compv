@@ -8,7 +8,8 @@ using namespace compv;
 #define TEST_PYRAMID				0
 #define TEST_CHROMA_CONV			0
 #define TEST_FEATURE_FAST			0
-#define TEST_FEATURE_ORB			1
+#define TEST_FEATURE_ORB			0
+#define TEST_PATCH_MOMENTS			1
 #define TEST_CONVLT					0
 #define TEST_BRUTEFORCE				0
 #define TEST_DRAW_IMAGE				0
@@ -41,6 +42,11 @@ compv_main()
 		extern COMPV_ERROR_CODE feature_orb();
 		COMPV_CHECK_CODE_BAIL(err = feature_orb(), TAG_TEST_IMAGE "ORB feature detection and description test failed");
 #endif
+#if TEST_PATCH_MOMENTS
+		extern COMPV_ERROR_CODE patch_moments0110();
+		COMPV_CHECK_CODE_BAIL(err = patch_moments0110(), TAG_TEST_IMAGE "Image moments test failed");
+#endif
+		
 #if TEST_CONVLT
 		extern COMPV_ERROR_CODE convlt();
 		COMPV_CHECK_CODE_BAIL(err = convlt(), TAG_TEST_IMAGE "Image convolution test failed");

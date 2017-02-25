@@ -8,10 +8,13 @@
 #include "compv/base/compv_mem.h"
 #include "compv/base/math/compv_math_utils.h"
 
+#include "compv/base/intrin/x86/compv_patch_intrin_sse2.h"
+#include "compv/base/intrin/x86/compv_patch_intrin_avx2.h"
+
 COMPV_NAMESPACE_BEGIN()
 
 #if 0
-static void Moments0110_C(COMPV_ALIGNED(DEFAULT) const uint8_t* top, COMPV_ALIGNED(DEFAULT)const uint8_t* bottom, COMPV_ALIGNED(DEFAULT)const int16_t* x, COMPV_ALIGNED(DEFAULT) const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
+static void Moments0110_C(COMPV_ALIGNED(DEFAULT) const uint8_t* top, COMPV_ALIGNED(DEFAULT)const uint8_t* bottom, COMPV_ALIGNED(DEFAULT)const int16_t* x, COMPV_ALIGNED(DEFAULT) const int16_t* y, compv_uscalar_t count, compv_uscalar_t* s01, compv_uscalar_t* s10);
 #endif
 
 CompVPatch::CompVPatch()
@@ -34,9 +37,9 @@ CompVPatch::~CompVPatch()
 	CompVMem::free(reinterpret_cast<void**>(&m_pBottom));
 }
 
-void CompVPatch::moments0110(const uint8_t* ptr, int center_x, int center_y, int img_width, int img_stride, int img_height, int* m01, int* m10)
+COMPV_ERROR_CODE CompVPatch::moments0110(const uint8_t* ptr, int center_x, int center_y, size_t img_width_, size_t img_height_, size_t img_stride_, int* m01, int* m10)
 {
-	int i, j;
+	int i, j, img_width = static_cast<int>(img_width_), img_stride = static_cast<int>(img_stride_), img_height = static_cast<int>(img_height_);
 	bool closeToBorder = (center_x < m_nRadius || (center_x + m_nRadius) >= img_width || (center_y < m_nRadius) || (center_y + m_nRadius) >= img_height);
 
 	if (closeToBorder) {
@@ -109,11 +112,12 @@ void CompVPatch::moments0110(const uint8_t* ptr, int center_x, int center_y, int
 		if (m_Moments0110) {
 			uint8_t *t_ = m_pTop, *b_ = m_pBottom;
 			for (j = 1, dX = &m_pMaxAbscissas[j]; j < m_nRadius; ++j, ++dX) {
+				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Use memcpy");
 				for (i = -*dX, t = &img_top[i], b = &img_bottom[i]; i <= *dX - 8; i += 8, t += 8, b += 8, t_ += 8, b_ += 8) {
-					*((uint64_t*)t_) = *((uint64_t*)t), *((uint64_t*)b_) = *((uint64_t*)b);
+					*reinterpret_cast<uint64_t*>(t_) = *reinterpret_cast<const uint64_t*>(t), *reinterpret_cast<uint64_t*>(b_) = *reinterpret_cast<const uint64_t*>(b);
 				}
 				for (; i <= *dX - 4; i += 4, t += 4, b += 4, t_ += 4, b_ += 4) {
-					*((uint32_t*)t_) = *((uint32_t*)t), *((uint32_t*)b_) = *((uint32_t*)b);
+					*reinterpret_cast<uint32_t*>(t_) = *reinterpret_cast<const uint32_t*>(t), *reinterpret_cast<uint32_t*>(b_) = *reinterpret_cast<const uint32_t*>(b);
 				}
 				for (; i <= *dX; ++i, ++t, ++b, ++t_, ++b_) {
 					*t_ = *t, *b_ = *b;
@@ -138,9 +142,11 @@ void CompVPatch::moments0110(const uint8_t* ptr, int center_x, int center_y, int
 				img_bottom -= img_stride;
 			}
 		}
-		*m01 = (int)s01;
-		*m10 = (int)s10;
+		*m01 = static_cast<int>(s01);
+		*m10 = static_cast<int>(s10);
 	}
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVPatch::newObj(CompVPatchPtrPtr patch, int diameter)
@@ -154,23 +160,23 @@ COMPV_ERROR_CODE CompVPatch::newObj(CompVPatchPtrPtr patch, int diameter)
 	uint8_t *pTop_ = NULL, *p_Bottom_ = NULL;
 	size_t count_ = 0, stride_ = 0;
 	CompVPatchPtr patch_;
-	void(*Moments0110_)(const uint8_t* top, const uint8_t* bottom, const int16_t* x, const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10) = NULL; // must not be C version which is slooow
+	void(*Moments0110_)(const uint8_t* top, const uint8_t* bottom, const int16_t* x, const int16_t* y, compv_uscalar_t count, compv_scalar_t* s01, compv_scalar_t* s10) 
+		= NULL; // must not be C version which is slooow and used model for SIMD implementations
 	// radius_ <= 64 is required to make sure (radius * (top +- bottom)) is € [-0x7fff, +0x7fff]
 	// this is a condition to allow epi16 mullo without overflow
-#if 0
+	
 	if (radius_ <= 64) {
-		if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(Moments0110_ = Moments0110_Intrin_SSE41);
-			COMPV_EXEC_IFDEF_ASM_X86(Moments0110_ = Moments0110_Asm_X86_SSE41);
-			COMPV_EXEC_IFDEF_ASM_X64(Moments0110_ = Moments0110_Asm_X64_SSE41);
+		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(Moments0110_ = CompVPatchRadiusLte64Moments0110_Intrin_SSE2);
+			//COMPV_EXEC_IFDEF_ASM_X86(Moments0110_ = CompVPatchRadiusLte64Moments0110_Asm_X86_SSE41);
+			//COMPV_EXEC_IFDEF_ASM_X64(Moments0110_ = CompVPatchRadiusLte64Moments0110_Asm_X64_SSE41);
 		}
 		if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(Moments0110_ = Moments0110_Intrin_AVX2);
-			COMPV_EXEC_IFDEF_ASM_X86(Moments0110_ = Moments0110_Asm_X86_AVX2);
-			COMPV_EXEC_IFDEF_ASM_X64(Moments0110_ = Moments0110_Asm_X64_AVX2);
+			COMPV_EXEC_IFDEF_INTRIN_X86(Moments0110_ = CompVPatchRadiusLte64Moments0110_Intrin_AVX2);
+			//COMPV_EXEC_IFDEF_ASM_X86(Moments0110_ = CompVPatchRadiusLte64Moments0110_Asm_X86_AVX2);
+			//COMPV_EXEC_IFDEF_ASM_X64(Moments0110_ = CompVPatchRadiusLte64Moments0110_Asm_X64_AVX2);
 		}
 	}
-#endif
 
 	pMaxAbscissas_ = reinterpret_cast<int16_t*>(CompVMem::malloc((radius_ + 1) * sizeof(int16_t)));
 	COMPV_CHECK_EXP_BAIL(!pMaxAbscissas_, (err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
@@ -235,7 +241,7 @@ bail:
 
 #if 0
 // top, bottom, x, y are allocated with padding which means you can read up to align_fwd(count, alignv)
-static void Moments0110_C(COMPV_ALIGNED(DEFAULT) const uint8_t* top, COMPV_ALIGNED(DEFAULT)const uint8_t* bottom, COMPV_ALIGNED(DEFAULT)const int16_t* x, COMPV_ALIGNED(DEFAULT) const int16_t* y, compv_scalar_t count, compv_scalar_t* s01, compv_scalar_t* s10)
+static void Moments0110_C(COMPV_ALIGNED(DEFAULT) const uint8_t* top, COMPV_ALIGNED(DEFAULT)const uint8_t* bottom, COMPV_ALIGNED(DEFAULT)const int16_t* x, COMPV_ALIGNED(DEFAULT) const int16_t* y, compv_uscalar_t count, compv_uscalar_t* s01, compv_uscalar_t* s10)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // For testing only

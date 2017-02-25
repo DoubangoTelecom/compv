@@ -20,9 +20,6 @@
 #if !defined(COMPV_FEATURE_DESC_ORB_FXP_DESC)
 #	define COMPV_FEATURE_DESC_ORB_FXP_DESC					0 // Disable/Enable 'describe()' fixed point implementation. /!\ Must be disabled as it's buggy.
 #endif
-#if !defined(COMPV_FEATURE_DESC_ORB_FXP_CONVLT)
-#	define COMPV_FEATURE_DESC_ORB_FXP_CONVLT				1 // Disable/Enable 'convlt()' fixed point implementation
-#endif
 
 COMPV_NAMESPACE_BEGIN()
 
