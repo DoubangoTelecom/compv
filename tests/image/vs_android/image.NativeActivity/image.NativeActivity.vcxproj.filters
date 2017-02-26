@@ -12,6 +12,7 @@
     <ClCompile Include="..\..\..\tests_common.cxx" />
     <ClCompile Include="..\..\bruteforce.cxx" />
     <ClCompile Include="..\..\feature_orb.cxx" />
+    <ClCompile Include="..\..\patch.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />

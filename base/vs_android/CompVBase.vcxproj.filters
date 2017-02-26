@@ -411,6 +411,15 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_fma_neon.h">
       <Filter>include\math\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\intrin\x86\compv_patch_intrin_avx2.h">
+      <Filter>include\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\intrin\x86\compv_patch_intrin_sse2.h">
+      <Filter>include\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\intrin\arm\compv_patch_intrin_neon.h">
+      <Filter>include\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -667,6 +676,15 @@
     </ClCompile>
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_fma_neon.cxx">
       <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\intrin\x86\compv_patch_intrin_avx2.cxx">
+      <Filter>source\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\intrin\x86\compv_patch_intrin_sse2.cxx">
+      <Filter>source\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\intrin\arm\compv_patch_intrin_neon.cxx">
+      <Filter>source\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

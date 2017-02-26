@@ -10,6 +10,7 @@
 
 #include "compv/base/intrin/x86/compv_patch_intrin_sse2.h"
 #include "compv/base/intrin/x86/compv_patch_intrin_avx2.h"
+#include "compv/base/intrin/arm/compv_patch_intrin_neon.h"
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -176,6 +177,7 @@ COMPV_ERROR_CODE CompVPatch::newObj(CompVPatchPtrPtr patch, int diameter)
 	// radius_ <= 64 is required to make sure (radius * (top +- bottom)) is € [-0x7fff, +0x7fff]
 	// this is a condition to allow epi16 mullo without overflow
 	
+#if COMPV_ARCH_X86
 	if (radius_ <= 64) {
 		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(Moments0110_ = CompVPatchRadiusLte64Moments0110_Intrin_SSE2);
@@ -188,6 +190,12 @@ COMPV_ERROR_CODE CompVPatch::newObj(CompVPatchPtrPtr patch, int diameter)
 			COMPV_EXEC_IFDEF_ASM_X64(Moments0110_ = CompVPatchRadiusLte64Moments0110_Asm_X64_AVX2);
 		}
 	}
+#elif COMPV_ARCH_ARM
+	// No restriction on radius for ARM archs
+	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(Moments0110_ = CompVPatchMoments0110_Intrin_NEON);
+	}
+#endif
 
 	pMaxAbscissas_ = reinterpret_cast<int16_t*>(CompVMem::malloc((radius_ + 1) * sizeof(int16_t)));
 	COMPV_CHECK_EXP_BAIL(!pMaxAbscissas_, (err_ = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
