@@ -105,6 +105,7 @@ sym(MemCopyNTA_Asm_Aligned11_X64_AVX):
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 
 %endif ; COMPV_YASM_ABI_IS_64BIT

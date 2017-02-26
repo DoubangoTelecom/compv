@@ -206,11 +206,7 @@ private:
 		if (!m_vecInterestPointsQuery.empty()) { // this is a sample app and we want to display all matched points even is the object isn't in the scene, in final app make sure "m_vecInterestPointsQuery.size() > THRESHOLD_GOOD_MATCHES"
 			COMPV_CHECK_CODE_RETURN(m_ptrDescORB->process(m_ptrImageGrayQuery, m_vecInterestPointsQuery, &m_ptrDescriptionsQuery));
 			if (!m_ptrDescriptionsQuery->isEmpty()) {
-				uint64_t timeStart = CompVTime::nowMillis();
 				COMPV_CHECK_CODE_RETURN(m_ptrMatcher->process(m_ptrDescriptionsQuery, m_ptrDescriptionsTrain, &m_ptrMatches));
-				uint64_t timeEnd = CompVTime::nowMillis();
-				COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Elapsed time(BruteForce) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
-
 				// Filter the matches to get the good ones
 #if KNN == 2
 				const CompVDMatch *match1 = m_ptrMatches->ptr<const CompVDMatch>(0), *match2 = m_ptrMatches->ptr<const CompVDMatch>(1);

@@ -17,6 +17,17 @@ COMPV_NAMESPACE_BEGIN()
 static void Moments0110_C(COMPV_ALIGNED(DEFAULT) const uint8_t* top, COMPV_ALIGNED(DEFAULT)const uint8_t* bottom, COMPV_ALIGNED(DEFAULT)const int16_t* x, COMPV_ALIGNED(DEFAULT) const int16_t* y, compv_uscalar_t count, compv_uscalar_t* s01, compv_uscalar_t* s10);
 #endif
 
+#if COMPV_ASM
+#	if COMPV_ARCH_X86
+	COMPV_EXTERNC void CompVPatchRadiusLte64Moments0110_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const uint8_t* top, COMPV_ALIGNED(SSE) const uint8_t* bottom, COMPV_ALIGNED(SSE) const int16_t* x, COMPV_ALIGNED(SSE) const int16_t* y, compv_uscalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
+	COMPV_EXTERNC void CompVPatchRadiusLte64Moments0110_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* top, COMPV_ALIGNED(AVX) const uint8_t* bottom, COMPV_ALIGNED(AVX) const int16_t* x, COMPV_ALIGNED(AVX) const int16_t* y, compv_uscalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
+#	endif /* COMPV_ARCH_X86 */
+#	if COMPV_ARCH_X64
+	COMPV_EXTERNC void CompVPatchRadiusLte64Moments0110_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* top, COMPV_ALIGNED(SSE) const uint8_t* bottom, COMPV_ALIGNED(SSE) const int16_t* x, COMPV_ALIGNED(SSE) const int16_t* y, compv_uscalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
+	COMPV_EXTERNC void CompVPatchRadiusLte64Moments0110_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* top, COMPV_ALIGNED(AVX) const uint8_t* bottom, COMPV_ALIGNED(AVX) const int16_t* x, COMPV_ALIGNED(AVX) const int16_t* y, compv_uscalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
+#	endif /* COMPV_ARCH_X64 */
+#endif /* COMPV_ASM */
+
 CompVPatch::CompVPatch()
 	: m_pMaxAbscissas(NULL)
 	, m_pX(NULL)
@@ -112,7 +123,7 @@ COMPV_ERROR_CODE CompVPatch::moments0110(const uint8_t* ptr, int center_x, int c
 		if (m_Moments0110) {
 			uint8_t *t_ = m_pTop, *b_ = m_pBottom;
 			for (j = 1, dX = &m_pMaxAbscissas[j]; j < m_nRadius; ++j, ++dX) {
-				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Use memcpy");
+				// TODO(dmi): next code not optimized
 				for (i = -*dX, t = &img_top[i], b = &img_bottom[i]; i <= *dX - 8; i += 8, t += 8, b += 8, t_ += 8, b_ += 8) {
 					*reinterpret_cast<uint64_t*>(t_) = *reinterpret_cast<const uint64_t*>(t), *reinterpret_cast<uint64_t*>(b_) = *reinterpret_cast<const uint64_t*>(b);
 				}
@@ -168,13 +179,13 @@ COMPV_ERROR_CODE CompVPatch::newObj(CompVPatchPtrPtr patch, int diameter)
 	if (radius_ <= 64) {
 		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(Moments0110_ = CompVPatchRadiusLte64Moments0110_Intrin_SSE2);
-			//COMPV_EXEC_IFDEF_ASM_X86(Moments0110_ = CompVPatchRadiusLte64Moments0110_Asm_X86_SSE41);
-			//COMPV_EXEC_IFDEF_ASM_X64(Moments0110_ = CompVPatchRadiusLte64Moments0110_Asm_X64_SSE41);
+			COMPV_EXEC_IFDEF_ASM_X86(Moments0110_ = CompVPatchRadiusLte64Moments0110_Asm_X86_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X64(Moments0110_ = CompVPatchRadiusLte64Moments0110_Asm_X64_SSE2);
 		}
 		if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(Moments0110_ = CompVPatchRadiusLte64Moments0110_Intrin_AVX2);
-			//COMPV_EXEC_IFDEF_ASM_X86(Moments0110_ = CompVPatchRadiusLte64Moments0110_Asm_X86_AVX2);
-			//COMPV_EXEC_IFDEF_ASM_X64(Moments0110_ = CompVPatchRadiusLte64Moments0110_Asm_X64_AVX2);
+			COMPV_EXEC_IFDEF_ASM_X86(Moments0110_ = CompVPatchRadiusLte64Moments0110_Asm_X86_AVX2);
+			COMPV_EXEC_IFDEF_ASM_X64(Moments0110_ = CompVPatchRadiusLte64Moments0110_Asm_X64_AVX2);
 		}
 	}
 
