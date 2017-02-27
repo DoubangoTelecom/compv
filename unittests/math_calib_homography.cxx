@@ -138,7 +138,7 @@ static COMPV_ERROR_CODE __math_calib_homography(COMPV_MODELEST_TYPE estType)
 		*h->ptr<T>(1, 0), *h->ptr<T>(1, 1), *h->ptr<T>(1, 2),
 		*h->ptr<T>(2, 0), *h->ptr<T>(2, 1), *h->ptr<T>(2, 2));
 
-	COMPV_CHECK_EXP_RETURN(COMPV_MATH_ABS(mse - expected_mse) > expected_err, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "homography: mse value too high");
+	COMPV_CHECK_EXP_RETURN(COMPV_MATH_ABS(mse) > expected_err, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "homography: mse value too high");
 
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "** Test OK **");
 	

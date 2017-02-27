@@ -258,7 +258,10 @@ private:
 		COMPV_CHECK_EXP_RETURN(m_vecGoodMatches.size() < THRESHOLD_GOOD_MATCHES, COMPV_ERROR_CODE_E_INVALID_CALL, "No enough points");
 		
 		// Find homography
+		uint64_t timeStart = CompVTime::nowMillis();
 		COMPV_CHECK_CODE_RETURN(CompVHomography<compv_float64_t>::find(&m_ptrHomography, m_ptrGoodMatchesTrain, m_ptrGoodMatchesQuery));
+		uint64_t timeEnd = CompVTime::nowMillis();
+		COMPV_DEBUG_INFO_EX(TAG_SAMPLE, "Elapsed time(Homography) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 		// Perspecive transform using homography matrix
 		COMPV_CHECK_CODE_RETURN(CompVMathTransform<compv_float64_t>::perspective2D(&m_ptrRectMatched, m_ptrRectTrain, m_ptrHomography));
 		

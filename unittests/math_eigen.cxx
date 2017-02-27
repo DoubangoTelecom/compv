@@ -13,13 +13,13 @@ static COMPV_ERROR_CODE __math_eigenS()
 	}
 	COMPV_UNITTEST_EIGEN_FLOAT64[] = {
 		//{ 209, static_cast<T>(78812080780.899628), static_cast<T>(26.998671037488755) },
-		{ 9, static_cast<T>(9332.8999999999942), static_cast<T>(5.1300204064689812) }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
-		{ 11, static_cast<T>(26367.939999999995), static_cast<T>(5.9769114712622589) },
+		{ 9, static_cast<T>(9332.8999999999942), static_cast<T>(3.6319384624951985) }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
+		{ 11, static_cast<T>(26367.939999999995), static_cast<T>(4.3785011161705851) },
 	},
 	COMPV_UNITTEST_EIGEN_FLOAT32[] = {
 		//{ 209, static_cast<T>(129862.328), static_cast<T>(8.62506199) },
-		{ 9, static_cast<T>(36.5654907), static_cast<T>(2.92296124) }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
-		{ 11, static_cast<T>(54.4076004), static_cast<T>(3.56752634) },
+		{ 9, static_cast<T>(36.5654907), static_cast<T>(2.73758173) }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
+		{ 11, static_cast<T>(54.4076004), static_cast<T>(2.98505616) },
 	};
 
 	const compv_unittest_eigen* test = NULL;

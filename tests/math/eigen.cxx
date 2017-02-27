@@ -7,7 +7,7 @@
 
 COMPV_ERROR_CODE eigenS()
 {
-	static const size_t numpoints = 209;
+	static const size_t numpoints = 31;
 
 	static const struct compv_unittest_eigen {
 		size_t numpoints;
@@ -15,14 +15,14 @@ COMPV_ERROR_CODE eigenS()
 		TYP sum_q;
 	}
 	COMPV_UNITTEST_EIGEN_FLOAT64[] = {
-		{ 209, static_cast<TYP>(78812080780.899628), static_cast<TYP>(26.998671037488755) },
-		{ 9, static_cast<TYP>(9332.8999999999942), static_cast<TYP>(5.1300204064689812) }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
-		{ 11, static_cast<TYP>(26367.939999999995), static_cast<TYP>(5.9769114712622589) },
+		{ 31, static_cast<TYP>(5297858.3400000036), static_cast<TYP>(12.034372491407161) },
+		{ 9, static_cast<TYP>(9332.8999999999942), static_cast<TYP>(3.6319384624951985) }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
+		{ 11, static_cast<TYP>(26367.939999999995), static_cast<TYP>(4.3785011161705851) },
 	},
 	COMPV_UNITTEST_EIGEN_FLOAT32[] = {
-		{ 209, static_cast<TYP>(129862.328), static_cast<TYP>(8.62506199) },
-		{ 9, static_cast<TYP>(36.5654907), static_cast<TYP>(2.92296124) }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
-		{ 11, static_cast<TYP>(54.4076004), static_cast<TYP>(3.56752634) },
+		{ 31, static_cast<TYP>(611.246460), static_cast<TYP>(8.62506199) },
+		{ 9, static_cast<TYP>(36.5654907), static_cast<TYP>(2.73758173) }, // 9 = fast eigen = homography (3x3) and fundamental matrix (3x3)
+		{ 11, static_cast<TYP>(54.4076004), static_cast<TYP>(2.98505616) },
 	};
 
 	const compv_unittest_eigen* test = NULL;
@@ -47,7 +47,7 @@ COMPV_ERROR_CODE eigenS()
 	if (std::is_same<TYP, compv_float64_t>::value) {
 		for (signed i = 0; i < static_cast<signed>(test->numpoints); ++i) {
 			// Dense matrix
-			x[i] = static_cast<TYP>(((i & 1) ? i : -i) + 0.5); // use "(TYP)((i & 1) ? i : (-i * 0.7)) + 0.5" instead. Otherwise i sign alterns with same values -> cancel when added
+			x[i] = static_cast<TYP>(((i & 1) ? i : -i) + 0.5); // use "(T)((i & 1) ? i : (-i * 0.7)) + 0.5" instead. Otherwise i sign alterns with same values -> cancel when added
 			y[i] = static_cast<TYP>(((i * 0.2)) + i + 0.7);
 			z[i] = static_cast<TYP>(i*i);
 		}
@@ -92,8 +92,8 @@ COMPV_ERROR_CODE eigenS()
 		}
 	}
 
-	COMPV_CHECK_EXP_RETURN((COMPV_MATH_ABS(d_sum - test->sum_d) > ERR_MAX), COMPV_ERROR_CODE_E_UNITTEST_FAILED, "eigenS: d_sum error value too high");
-	COMPV_CHECK_EXP_RETURN((COMPV_MATH_ABS(q_sum - test->sum_q) > ERR_MAX), COMPV_ERROR_CODE_E_UNITTEST_FAILED, "eigenS: q_sum error value too high");
+	COMPV_CHECK_EXP_RETURN((COMPV_MATH_ABS(d_sum - test->sum_d) > std::numeric_limits<TYP>::epsilon()), COMPV_ERROR_CODE_E_UNITTEST_FAILED, "eigenS: d_sum error value too high");
+	COMPV_CHECK_EXP_RETURN((COMPV_MATH_ABS(q_sum - test->sum_q) > std::numeric_limits<TYP>::epsilon()), COMPV_ERROR_CODE_E_UNITTEST_FAILED, "eigenS: q_sum error value too high");
 
 	return COMPV_ERROR_CODE_S_OK;
 }

@@ -11,9 +11,9 @@ using namespace compv;
 #define UNITTEST_CHROMA_CONV					0
 #define UNITTEST_BRUTEFORCE						0
 
-#define UNITTEST_PATCH_MOMENTS					1
+#define UNITTEST_PATCH_MOMENTS					0
 
-#define UNITTEST_MATH_MATRIX_OPS				0
+#define UNITTEST_MATH_MATRIX_OPS				1
 #define UNITTEST_MATH_EIGEN_S					0
 #define UNITTEST_MATH_SVD						0
 #define UNITTEST_MATH_INVERSE					0 // Moore–Penrose pseudoinverse and Inverse3x3

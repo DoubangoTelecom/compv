@@ -15,7 +15,7 @@
 #define ERR_MAX_F64			8.5209617139980764e-17
 #define ERR_MAX_F32			6.80796802e-09
 #define ANGLE				COMPV_MATH_PI / 4
-#define MODE_EST			COMPV_MODELEST_TYPE_RANSAC
+#define MODE_EST			COMPV_MODELEST_TYPE_NONE
 
 COMPV_ERROR_CODE buildHomographyMatrixEq()
 {
@@ -146,7 +146,7 @@ COMPV_ERROR_CODE homography()
 		*h->ptr<TYP>(1, 0), *h->ptr<TYP>(1, 1), *h->ptr<TYP>(1, 2),
 		*h->ptr<TYP>(2, 0), *h->ptr<TYP>(2, 1), *h->ptr<TYP>(2, 2));
 			
-	COMPV_CHECK_EXP_RETURN(COMPV_MATH_ABS(mse - expected_mse) > expected_err, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "homography: mse value too high");
+	COMPV_CHECK_EXP_RETURN(COMPV_MATH_ABS(mse) > expected_err, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "homography: mse value too high");
 
 	// Check MD5: This not accurate as it could change depending on the SIMD type (NEON, FMA, AVX, SSE, MMX...) and CPU (X64, X86, ARM...)
 	// We're using it now for regression test for asm porting

@@ -8,9 +8,18 @@
 #include "compv/base/math/compv_math_eigen.h"
 #include "compv/base/math/compv_math_utils.h"
 
+#include "compv/base/math/intrin/x86/compv_math_matrix_intrin_sse2.h"
+#include "compv/base/math/intrin/x86/compv_math_matrix_intrin_sse41.h"
+
 #define COMPV_THIS_CLASSNAME	"CompVMatrix"
 
 COMPV_NAMESPACE_BEGIN()
+
+#if COMPV_ASM
+#	if COMPV_ARCH_X86
+	COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(SSE) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(SSE) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, COMPV_ALIGNED(SSE) compv_uscalar_t rStrideInBytes);
+#	endif /* COMPV_ARCH_X86 */
+#endif /* COMPV_ASM */
 
 #define CompVMatrixGenericInvoke(subtype, funame, ...) \
 	switch (subtype) { \
@@ -85,7 +94,6 @@ class CompVMatrixGeneric
 	// R = mul(A, Bt)
 	static COMPV_ERROR_CODE mulABt(const CompVMatPtr &A, const CompVMatPtr &B, CompVMatPtrPtr R)
 	{
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 		COMPV_CHECK_EXP_RETURN(!A || !B || !R || A->subType() != B->subType() || A->isEmpty() || A->cols() != B->cols() || !B->cols() || *R == A || *R == B, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 		size_t i, j, k, aRows = A->rows(), bRows = B->rows(), bCols = B->cols();
@@ -101,7 +109,34 @@ class CompVMatrixGeneric
 		size_t aStrideInBytes = A->strideInBytes();
 		size_t bStrideInBytes = B->strideInBytes();
 		size_t rStrideInBytes = (*R)->strideInBytes();
-			
+
+		if (std::is_same<T, compv_float64_t>::value) {
+			void (*CompVMathMatrixMulABt_64f)(const COMPV_ALIGNED(X) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(X) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(X) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(X) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(X) compv_float64_t* R, COMPV_ALIGNED(X) compv_uscalar_t rStrideInBytes)
+				= NULL;
+#if COMPV_ARCH_X86
+			if (A->isAlignedSSE() && B->isAlignedSSE() && (*R)->isAlignedSSE()) {
+				if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathMatrixMulABt_64f = CompVMathMatrixMulABt_64f_Intrin_SSE2);
+					COMPV_EXEC_IFDEF_ASM_X86(CompVMathMatrixMulABt_64f = CompVMathMatrixMulABt_64f_Asm_X86_SSE2);
+				}
+				if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
+#if 0 // Not faster than SSE2 (TODO(dmi): what about asm?)
+					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathMatrixMulABt_64f = CompVMathMatrixMulABt_64f_Intrin_SSE41);
+#endif
+				}
+			}
+#elif COMPV_ARCH_ARM
+#endif
+
+			if (CompVMathMatrixMulABt_64f) {
+				CompVMathMatrixMulABt_64f(reinterpret_cast<const compv_float64_t*>(aPtr), static_cast<compv_uscalar_t>(aRows), static_cast<compv_uscalar_t>(aStrideInBytes),
+					reinterpret_cast<const compv_float64_t*>(bPtr), static_cast<compv_uscalar_t>(bRows), static_cast<compv_uscalar_t>(bCols), static_cast<compv_uscalar_t>(bStrideInBytes),
+					reinterpret_cast<compv_float64_t*>(rPtr), static_cast<compv_uscalar_t>(rStrideInBytes));
+				return COMPV_ERROR_CODE_S_OK;
+			}
+		}
+		
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 		T sum;
 		const T* b0Ptr;
 		for (i = 0; i < aRows; ++i) {
@@ -212,17 +247,15 @@ class CompVMatrixGeneric
 
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found.");
 
-		size_t rowStart = 1;
-		size_t rowEnd = S->rows();
-		*row = *col = 0;
+		const size_t rowEnd = S->rows();
 		*max = 0;
 
 		T r0_ = 0, r1_;
 		size_t i, j;
 		size_t strideInBytes = S->strideInBytes();
 		const T* S1_;
-		const uint8_t* S0_ = S->ptr<const uint8_t>(rowStart);
-		for (j = rowStart; j < rowEnd; ++j) {
+		const uint8_t* S0_ = S->ptr<const uint8_t>(1);
+		for (j = 1; j < rowEnd; ++j) {
 			S1_ = reinterpret_cast<const T*>(S0_);
 			for (i = 0; i < j; ++i) { // i stops at j because the matrix is symmetric, for asm unroll the loop
 				if ((r1_ = std::abs(S1_[i])) > r0_) {

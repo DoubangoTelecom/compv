@@ -275,12 +275,16 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 
 		// Reject colinear points
 		// TODO(dmi): doesn't worth it -> colinear points will compute a wrong homography with too much outliers -> not an issue
+#if 0
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::isColinear2D(srcsubset_, colinear));
 		if (colinear) {
 			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "ignore colinear points ...");
 			++t_; // to avoid endless loops
 			continue;
 		}
+#else
+		colinear = false;
+#endif
 		// Set the #4 random points (dst)
 		dstsubsetx_[0] = dstx1_[idx0], dstsubsetx_[1] = dstx1_[idx1], dstsubsetx_[2] = dstx1_[idx2], dstsubsetx_[3] = dstx1_[idx3];
 		dstsubsety_[0] = dsty1_[idx0], dstsubsety_[1] = dsty1_[idx1], dstsubsety_[2] = dsty1_[idx2], dstsubsety_[3] = dsty1_[idx3];
@@ -372,7 +376,7 @@ static COMPV_ERROR_CODE computeH(CompVMatPtrPtr H, const CompVMatPtr &src, const
 	CompVMatPtr M_;
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::buildHomographyEqMatrix<T>(&M_, srcn_->ptr<T>(0), srcn_->ptr<T>(1), dstn_->ptr<T>(0), dstn_->ptr<T>(1), numPoints_));
 
-	// Build symmetric matrix S = M*M
+	// Build symmetric matrix S = MtM
 	CompVMatPtr S_; // temp symmetric array
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAtA(M_, &S_));
 

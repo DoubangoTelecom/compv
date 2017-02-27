@@ -98,6 +98,8 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_convlt_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_distance_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_distance_intrin_sse42.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse2.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse41.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_ssse3.h" />
@@ -256,6 +258,8 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_matrix_intrin_sse2.cxx" />
+    <ClCompile Include="math\intrin\x86\compv_math_matrix_intrin_sse41.cxx" />
     <ClCompile Include="math\intrin\x86\compv_math_utils_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -396,6 +400,13 @@
     <None Include="asm\arm\compv_common_arm32.S" />
     <None Include="asm\arm\compv_common_arm64.S" />
     <None Include="asm\arm\compv_test_arm.S" />
+    <YASM Include="math\asm\x86\compv_math_matrix_x86_sse.s">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)asm/x86;%(IncludePaths)</IncludePaths>
+    </YASM>
     <YASM Include="asm\x86\compv_patch_x86_sse.s">
       <FileType>Document</FileType>
     </YASM>
