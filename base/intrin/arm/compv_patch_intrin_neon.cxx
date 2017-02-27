@@ -13,6 +13,7 @@ COMPV_NAMESPACE_BEGIN()
 
 // No restriction on radius like what we've with SSE and AVX code
 // TODO(dmi): iPhone 5 (arm32), ASM code is by far faster than intrin code
+// TODO(dmi): Galaxy Tab A6 (arm32), ASM code is by far faster than intrin code
 void CompVPatchMoments0110_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* top, COMPV_ALIGNED(NEON) const uint8_t* bottom, COMPV_ALIGNED(NEON) const int16_t* x, COMPV_ALIGNED(NEON) const int16_t* y, compv_uscalar_t count, compv_scalar_t* s01, compv_scalar_t* s10)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();

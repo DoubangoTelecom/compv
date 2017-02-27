@@ -19,7 +19,7 @@ Shared Memory: 3810 MB
 
 
 === RGB24 -> Grayscale (#1k times, 720p) ===
-CompV: 169.ms(st), 54.ms(mt)
+CompV: 54.ms(mt), 169.ms(st)
 OpenCV: 341.ms(full optiz)
 
 === FAST9_16, Nonmax=true, threshold=20, maxfeatures=-1 (#10k times, 720p) ===

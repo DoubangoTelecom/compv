@@ -763,6 +763,12 @@
     <None Include="..\image\asm\x86\compv_image_scale_bilinear_x86_sse.s">
       <Filter>source\image\asm\x86</Filter>
     </None>
+    <None Include="..\asm\arm\compv_patch_arm32_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
+    <None Include="..\asm\arm\compv_patch_arm64_neon.S">
+      <Filter>source\asm\arm</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <GAS Include="..\image\asm\arm\compv_image_conv_rgbfamily_arm32_neon.S">

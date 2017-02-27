@@ -105,8 +105,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVPatchMoments0110_Asm_NEON32
 	.unreq x
 	.unreq y
 	.unreq count
-	.unreq s01
-	.unreq s10
+	.unreq sum01
+	.unreq sum10
 
     .unreq i
 
