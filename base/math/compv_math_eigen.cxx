@@ -10,11 +10,6 @@
 
 #define COMPV_THIS_CLASSNAME	"CompVMathEigen"
 
-#if !defined(COMPV_MATH_EIGEN_EPSILON)
-#	define COMPV_MATH_EIGEN_DOUBLE_EPSILON		1.192092896e-07 // FLT_EPSILON TODO(dmi): set to DBL_EPSILON
-#	define COMPV_MATH_EIGEN_FLOAT_EPSILON		1.192092896e-04 // TODO(dmi): set to FLT_EPSILON
-#endif /* COMPV_MATH_EIGEN_EPSILON */
-
 #if !defined(COMPV_MATH_EIGEN_MAX_ROUNDS)
 #	define COMPV_MATH_EIGEN_MAX_ROUNDS 30 // should be 30
 #endif
@@ -32,9 +27,13 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 	COMPV_CHECK_EXP_RETURN(!S || !D || !Q || !S->rows() || S->rows() != S->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation");
-
 #if defined(_DEBUG) || defined(DEBUG)
+	// For homography and Fundamental matrices S is 9x9 matrix
+	if (S->rows() > 9 || S->cols() > 9) {
+		// TODO(dmi): For multithreading, change 'maxAbsOffDiag_symm' to add max rows and use it as guard
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation");
+	}
+	// Eigen values and vectors can be easily computed for 3x3 without using jacobi
 	if (S->cols() == 3 && S->rows() == 3) {
 		// https://github.com/DoubangoTelecom/compv/issues/85
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No fast implementation for 3x3 matrix");
@@ -68,40 +67,32 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 		goto done;
 	}
 
-	// If matrix A is symmetric then, mulAG(c, s) = mulGA(c, -s)
-
-	// TODO(dmi): For multithreading, change 'maxAbsOffDiag_symm' to add max rows and use it as guard
-
-	// TODO(dmi): Add JacobiAngles_Left() function to be used in mulGA() only
+	// If matrix A is symmetric then, mulAG(c, s) = mulGA(c, -s), 'mulGA' is thread-safe which is not the case for 'mulAG'
 
 	// Change D = GtDG :
 	// D = GtDG = Gt(GtDt)t
 
 	// TODO(dmi): add mulGA9x9, transposeA9x9
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("mulGA9x9 (Homography and Fundamental matrices)");
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("transposeA9x9 (Homography and Fundamental matrices)");
 	// Homography and Fundamental matrices are 3x3 which means we will be frequently working with 9x9 eigenvectors/eigenvalues matrices (Qt and D)
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Homography and Fundamental matrices are 3x3 which means we will be frequently working with 9x9 eigenvectors/eigenvalues matrices (Qt and D)");
-
-	// TODO(dmi): Moments, replace vpextrd r32, xmm, 0 with vmod r32, xmm
 
 	// Instead of returning Q = QG, return Qt, Qt = GtQt
 
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&GD_2rows, 2, D_->rows()));
 	do {
-		CompVMathEigen<T>::jacobiAngles(D_, row, col, &gcos_, &gsin_);
-		// COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "A(%d) = %d, %d, %f, %f", ops, row, col, gcos_, gsin_);
+		CompVMathEigen<T>::jacobiAngles(D_, row, col, &gcos_, &gsin_); // Thread-safe
 		// Qt = G*Qt
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulGA<T>(Qt, row, col, gcos_, -gsin_)); // Thread-safe
 		// GtDt
 		CompVMathEigen<T>::extract2Cols(D_, row, col, GD_2rows); // GD_2rows = Dt
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulGA<T>(GD_2rows, 0, 1, gcos_, -gsin_)); // Thread-safe
-		// COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "B0(%d) = %f, %f, %f", ops, *GD_2rows->ptr(0, 0), *GD_2rows->ptr(0, 1), *GD_2rows->ptr(0, 2));
-		// COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "B1(%d) = %f, %f, %f", ops, *GD_2rows->ptr(1, 0), *GD_2rows->ptr(1, 1), *GD_2rows->ptr(1, 2));
 		// Gt(GtDt)t
 		CompVMathEigen<T>::insert2Cols(GD_2rows, D_, row, col); // GD_2rows = (GtDt)t
 		COMPV_CHECK_CODE_RETURN(CompVMatrix::mulGA<T>(D_, row, col, gcos_, -gsin_)); // Thread-safe
-		// COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "C0(%d) = %f, %f, %f", ops, *GD_2rows->ptr(0, 0), *GD_2rows->ptr(0, 1), *GD_2rows->ptr(0, 2));
-		// COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "C1(%d) = %f, %f, %f", ops, *GD_2rows->ptr(1, 0), *GD_2rows->ptr(1, 1), *GD_2rows->ptr(1, 2));
-	} while (++ops < maxops &&  COMPV_ERROR_CODE_IS_OK(err_ = CompVMatrix::maxAbsOffDiag_symm<T>(D_, &row, &col, &maxOffDiag)) && maxOffDiag > epsilon_); // TODO(dmi): for MT, see above comment
+	} 
+	while (++ops < maxops &&  COMPV_ERROR_CODE_IS_OK(err_ = CompVMatrix::maxAbsOffDiag_symm<T>(D_, &row, &col, &maxOffDiag)) && maxOffDiag > epsilon_);
 
 	// Sort Qt (eigenvectors are rows)
 	if (sort) {
@@ -182,7 +173,7 @@ done:
 template <class T>
 T CompVMathEigen<T>::epsilon()
 {
-	return (T)(std::is_same<T, compv_float64_t>::value ? COMPV_MATH_EIGEN_DOUBLE_EPSILON : COMPV_MATH_EIGEN_FLOAT_EPSILON);
+	return std::numeric_limits<T>::epsilon();
 }
 
 template <class T>
@@ -236,11 +227,12 @@ void CompVMathEigen<T>::jacobiAngles_Left(const CompVMatPtr &S, size_t ith, size
 {
 	COMPV_DEBUG_INFO_CODE_NOT_TESTED("Not tested and not used yet!!");
 	// From https://en.wikipedia.org/wiki/Givens_rotation#Stable_calculation
-	T a = *S->ptr<T>(ith);
-	T b = *S->ptr<T>(jth);
-	T r = CompVMathUtils::hypot<T>(a, b);
-	*c = a / r;
-	*s = -b / r;
+	const T a = *S->ptr<T>(ith);
+	const T b = *S->ptr<T>(jth);
+	const T r = CompVMathUtils::hypot<T>(a, b);
+	const T ri = static_cast<T>(1) / r;
+	*c = a * ri;
+	*s = -b * ri;
 }
 
 // Extract 2 cols from A and insert as rows to R
@@ -351,14 +343,6 @@ void CompVMathEigen<T>::insert2Cols(const CompVMatPtr &A, CompVMatPtr &R, size_t
 	}
 }
 
-#if 0
-template class CompVMathEigen<int8_t>;
-template class CompVMathEigen<uint8_t>;
-template class CompVMathEigen<int16_t>;
-template class CompVMathEigen<uint16_t>;
-template class CompVMathEigen<int32_t>;
-template class CompVMathEigen<uint32_t>;
-#endif
 template class CompVMathEigen<compv_float32_t>;
 template class CompVMathEigen<compv_float64_t>;
 
