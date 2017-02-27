@@ -19,6 +19,9 @@ COMPV_NAMESPACE_BEGIN()
 #	if COMPV_ARCH_X86
 	COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(SSE) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(SSE) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, COMPV_ALIGNED(SSE) compv_uscalar_t rStrideInBytes);
 #	endif /* COMPV_ARCH_X86 */
+#	if COMPV_ARCH_X64
+	COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(SSE) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(SSE) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, COMPV_ALIGNED(SSE) compv_uscalar_t rStrideInBytes);
+#	endif /* COMPV_ARCH_X64 */
 #endif /* COMPV_ASM */
 
 #define CompVMatrixGenericInvoke(subtype, funame, ...) \
@@ -118,6 +121,7 @@ class CompVMatrixGeneric
 				if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathMatrixMulABt_64f = CompVMathMatrixMulABt_64f_Intrin_SSE2);
 					COMPV_EXEC_IFDEF_ASM_X86(CompVMathMatrixMulABt_64f = CompVMathMatrixMulABt_64f_Asm_X86_SSE2);
+					COMPV_EXEC_IFDEF_ASM_X64(CompVMathMatrixMulABt_64f = CompVMathMatrixMulABt_64f_Asm_X64_SSE2);
 				}
 				if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
 #if 0 // Not faster than SSE2 (TODO(dmi): what about asm?)
