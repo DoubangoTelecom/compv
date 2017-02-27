@@ -6,6 +6,8 @@
 */
 #include "compv/base/math/intrin/x86/compv_math_matrix_intrin_sse41.h"
 
+#if COMPV_ARCH_X86 && COMPV_INTRINSIC
+
 COMPV_NAMESPACE_BEGIN()
 
 void CompVMathMatrixMulABt_64f_Intrin_SSE41(const COMPV_ALIGNED(SSE) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(SSE) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(SSE) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, COMPV_ALIGNED(SSE) compv_uscalar_t rStrideInBytes)
@@ -54,3 +56,6 @@ void CompVMathMatrixMulABt_64f_Intrin_SSE41(const COMPV_ALIGNED(SSE) compv_float
 }
 
 COMPV_NAMESPACE_END()
+
+#endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
+

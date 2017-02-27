@@ -47,9 +47,9 @@ sym(CompVMathMatrixMulABt_64f_Asm_X64_SSE2):
 	%define bColsSignedMinus1		r11
 
 	mov bCols, arg(5)
-	lea r8, [bCols - 7]
-	lea r9, [bCols - 3]
-	lea r10, [bCols - 1]
+	lea bColsSignedMinus7, [bCols - 7]
+	lea bColsSignedMinus3, [bCols - 3]
+	lea bColsSignedMinus1, [bCols - 1]
 
 	%define B0				rbx
 	%define i				rsi

@@ -21,6 +21,9 @@ COMPV_NAMESPACE_BEGIN()
 
 // popcnt available starting SSE4.2 but up to the caller to check its availability using CPU features
 // Mula's algorithm
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
 void CompVMathDistanceHamming32_Intrin_POPCNT_AVX2(COMPV_ALIGNED(AVX) const uint8_t* dataPtr, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, COMPV_ALIGNED(AVX) const uint8_t* patch1xnPtr, int32_t* distPtr)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
