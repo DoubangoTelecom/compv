@@ -29,7 +29,10 @@ static void Moments0110_C(COMPV_ALIGNED(DEFAULT) const uint8_t* top, COMPV_ALIGN
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
     COMPV_EXTERNC void CompVPatchMoments0110_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* top, COMPV_ALIGNED(NEON) const uint8_t* bottom, COMPV_ALIGNED(NEON) const int16_t* x, COMPV_ALIGNED(NEON) const int16_t* y, compv_uscalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
-#	endif /* COMPV_ARCH_X64 */
+#	endif /* COMPV_ARCH_ARM32 */
+#	if COMPV_ARCH_ARM64
+    COMPV_EXTERNC void CompVPatchMoments0110_Asm_NEON64(COMPV_ALIGNED(NEON) const uint8_t* top, COMPV_ALIGNED(NEON) const uint8_t* bottom, COMPV_ALIGNED(NEON) const int16_t* x, COMPV_ALIGNED(NEON) const int16_t* y, compv_uscalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
+#	endif /* COMPV_ARCH_ARM64 */
 #endif /* COMPV_ASM */
 
 CompVPatch::CompVPatch()
@@ -198,6 +201,7 @@ COMPV_ERROR_CODE CompVPatch::newObj(CompVPatchPtrPtr patch, int diameter)
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(Moments0110_ = CompVPatchMoments0110_Intrin_NEON);
         COMPV_EXEC_IFDEF_ASM_ARM32(Moments0110_ = CompVPatchMoments0110_Asm_NEON32);
+        COMPV_EXEC_IFDEF_ASM_ARM64(Moments0110_ = CompVPatchMoments0110_Asm_NEON64);
 	}
 #endif
 

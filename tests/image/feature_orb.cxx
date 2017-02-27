@@ -27,7 +27,7 @@
 #	define EXPECTED_MD5			"966fcd4061e9deeb42259dd2b119af09" // AVX2, FixedPoint, FMA, ::sin, ::cos... (this is really *my* local test to check multithreading)
 #elif COMPV_ARCH_ARM // ::sin, ::cos results on Android and iOS are different
 #   if COMPV_OS_IPHONE
-#       define EXPECTED_MD5         "39a6a9127c2c5b22b8b4e9450dc2f598"
+#       define EXPECTED_MD5         "1cc349eecf2aa8b7b682c922854b4daa"
 #   else
 #       define EXPECTED_MD5			"dd35e1c1d92e3151d2ae35a5a2fb78d8"
 #   endif
@@ -66,7 +66,7 @@ COMPV_ERROR_CODE feature_orb()
 
 	COMPV_CHECK_CODE_RETURN(dec->process(image, interestPoints, &descriptions)); // describe
 
-	//COMPV_DEBUG_INFO("MD5:%s", compv_tests_md5(descriptions).c_str());
+	COMPV_DEBUG_INFO("MD5:%s", compv_tests_md5(descriptions).c_str());
 
 #if LOOP_COUNT == 1
 	// Check result (Important: you have to disable MT in convolution to have same MD5, because in ORB the convoltion change the input image)

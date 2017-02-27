@@ -62,41 +62,33 @@ COMPV_GAS_FUNCTION_DECLARE CompVPatchMoments0110_Asm_NEON32
     LoopCount_CompVPatchMoments0110_Asm_NEON32:
         vld1.u8 { q0 }, [top :128]!
         vld1.u8 { q1 }, [bottom :128]!
-
         vaddl.u8 q2, q0x, q1x
         vaddl.u8 q3, q0y, q1y
         vsubl.u8 q4, q0x, q1x
         vsubl.u8 q5, q0y, q1y
-
-        vld1.u8 { q0, q1 }, [x :128]!
         vld1.u8 { q6, q7 }, [y :128]!
-
+        vld1.u8 { q0, q1 }, [x :128]!
+        subs i, i, #16
         vmlal.s16 q8, q2x, q0x
         vmlal.s16 q9, q2y, q0y
         vmlal.s16 q10, q3x, q1x
         vmlal.s16 q11, q3y, q1y
-
         vmlal.s16 q12, q4x, q6x
         vmlal.s16 q13, q4y, q6y
         vmlal.s16 q14, q5x, q7x
         vmlal.s16 q15, q5y, q7y
-
-        subs i, i, #16
         bne LoopCount_CompVPatchMoments0110_Asm_NEON32
         @@ EndOf_LoopCount_CompVPatchMoments0110_Asm_NEON32 @@
-
 
     vadd.s32 q8, q8, q9
     vadd.s32 q10, q10, q11
     vadd.s32 q12, q12, q13
     vadd.s32 q14, q14, q15
-
     vadd.s32 q8, q8, q10
     vadd.s32 q12, q12, q14
 
     vpadd.s32 q0x, q8x, q8y
     vpadd.s32 q1x, q12x, q12y
-
     vpadd.s32 q2x, q0x, q1x
 
     vmov.s32 r8, q2x[0]

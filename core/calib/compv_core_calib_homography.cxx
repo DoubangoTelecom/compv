@@ -142,7 +142,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(CompVMatPtrPtr H, const CompVMatPtr &s
 
 	if (bestInliersCount_ == numPoints_) {
 #if defined(DEBUG_) || defined(DEBUG)
-		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "All %llu points are inliers", numPoints_);
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "All %zu points are inliers", numPoints_);
 #endif
 		// Copy H
 		COMPV_CHECK_CODE_RETURN(computeH<T>(H, src, dst, true));
