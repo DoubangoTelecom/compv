@@ -27,6 +27,9 @@ static void Moments0110_C(COMPV_ALIGNED(DEFAULT) const uint8_t* top, COMPV_ALIGN
 	COMPV_EXTERNC void CompVPatchRadiusLte64Moments0110_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* top, COMPV_ALIGNED(SSE) const uint8_t* bottom, COMPV_ALIGNED(SSE) const int16_t* x, COMPV_ALIGNED(SSE) const int16_t* y, compv_uscalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
 	COMPV_EXTERNC void CompVPatchRadiusLte64Moments0110_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* top, COMPV_ALIGNED(AVX) const uint8_t* bottom, COMPV_ALIGNED(AVX) const int16_t* x, COMPV_ALIGNED(AVX) const int16_t* y, compv_uscalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
 #	endif /* COMPV_ARCH_X64 */
+#	if COMPV_ARCH_ARM32
+    COMPV_EXTERNC void CompVPatchMoments0110_Asm_NEON32(COMPV_ALIGNED(NEON) const uint8_t* top, COMPV_ALIGNED(NEON) const uint8_t* bottom, COMPV_ALIGNED(NEON) const int16_t* x, COMPV_ALIGNED(NEON) const int16_t* y, compv_uscalar_t count, compv_scalar_t* s01, compv_scalar_t* s10);
+#	endif /* COMPV_ARCH_X64 */
 #endif /* COMPV_ASM */
 
 CompVPatch::CompVPatch()
@@ -194,6 +197,7 @@ COMPV_ERROR_CODE CompVPatch::newObj(CompVPatchPtrPtr patch, int diameter)
 	// No restriction on radius for ARM archs
 	if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(Moments0110_ = CompVPatchMoments0110_Intrin_NEON);
+        COMPV_EXEC_IFDEF_ASM_ARM32(Moments0110_ = CompVPatchMoments0110_Asm_NEON32);
 	}
 #endif
 

@@ -46,6 +46,7 @@
 		15AA06FD1E38F0ED0058D1F1 /* equirectangular_1282x720_rgba.rgb in Resources */ = {isa = PBXBuildFile; fileRef = 15AA06F11E38F0ED0058D1F1 /* equirectangular_1282x720_rgba.rgb */; };
 		15AA06FE1E38F0ED0058D1F1 /* equirectangular_1282x720_yuv420p.yuv in Resources */ = {isa = PBXBuildFile; fileRef = 15AA06F21E38F0ED0058D1F1 /* equirectangular_1282x720_yuv420p.yuv */; };
 		15AA06FF1E38F0ED0058D1F1 /* equirectangular_1282x720_yuv444p.yuv in Resources */ = {isa = PBXBuildFile; fileRef = 15AA06F31E38F0ED0058D1F1 /* equirectangular_1282x720_yuv444p.yuv */; };
+		15AE9FFB1E644FC40030D908 /* patch.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 15AE9FFA1E644FC40030D908 /* patch.cxx */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -134,6 +135,7 @@
 		15AA06F11E38F0ED0058D1F1 /* equirectangular_1282x720_rgba.rgb */ = {isa = PBXFileReference; lastKnownFileType = file; name = equirectangular_1282x720_rgba.rgb; path = ../../../../../data/colorspace/equirectangular_1282x720_rgba.rgb; sourceTree = "<group>"; };
 		15AA06F21E38F0ED0058D1F1 /* equirectangular_1282x720_yuv420p.yuv */ = {isa = PBXFileReference; lastKnownFileType = file; name = equirectangular_1282x720_yuv420p.yuv; path = ../../../../../data/colorspace/equirectangular_1282x720_yuv420p.yuv; sourceTree = "<group>"; };
 		15AA06F31E38F0ED0058D1F1 /* equirectangular_1282x720_yuv444p.yuv */ = {isa = PBXFileReference; lastKnownFileType = file; name = equirectangular_1282x720_yuv444p.yuv; path = ../../../../../data/colorspace/equirectangular_1282x720_yuv444p.yuv; sourceTree = "<group>"; };
+		15AE9FFA1E644FC40030D908 /* patch.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = patch.cxx; path = ../../patch.cxx; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -228,6 +230,7 @@
 		157840D01E36CCDE00955396 /* source */ = {
 			isa = PBXGroup;
 			children = (
+				15AE9FFA1E644FC40030D908 /* patch.cxx */,
 				159E15711E5DA5DF00D8CE75 /* feature_orb.cxx */,
 				157F72C31E5811E8000DE45F /* tests_common.cxx */,
 				157F72761E580751000DE45F /* bruteforce.cxx */,
@@ -394,6 +397,7 @@
 				157840941E36CC2E00955396 /* AppDelegate.mm in Sources */,
 				157840911E36CC2E00955396 /* main.m in Sources */,
 				159E15721E5DA5DF00D8CE75 /* feature_orb.cxx in Sources */,
+				15AE9FFB1E644FC40030D908 /* patch.cxx in Sources */,
 				157840C41E36CCD800955396 /* draw_image.cxx in Sources */,
 				157840C51E36CCD800955396 /* draw_points.cxx in Sources */,
 				157840C31E36CCD800955396 /* chroma_conv.cxx in Sources */,
