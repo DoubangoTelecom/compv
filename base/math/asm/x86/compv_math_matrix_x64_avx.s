@@ -8,10 +8,12 @@
 
 %include "compv_common_x86.s"
 
+%if COMPV_YASM_ABI_IS_64BIT
+
 COMPV_YASM_DEFAULT_REL
 
-global sym(CompVMathMatrixMulABt_64f_Asm_X86_AVX)
-global sym(CompVMathMatrixMulABt_64f_Asm_X86_FMA3_AVX)
+global sym(CompVMathMatrixMulABt_64f_Asm_X64_AVX)
+global sym(CompVMathMatrixMulABt_64f_Asm_X64_FMA3_AVX)
 
 section .data
 
@@ -28,43 +30,47 @@ section .text
 ; arg(7) -> COMPV_ALIGNED(AVX) compv_float64_t* R
 ; arg(8) -> COMPV_ALIGNED(AVX) compv_uscalar_t rStrideInBytes
 ; %1 : 1: FMA3 enabled, 0: FMA3 disabled
-%macro CompVMathMatrixMulABt_64f_Macro_X86_AVX 1
+%macro CompVMathMatrixMulABt_64f_Macro_X64_AVX 1
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 9
 	push rsi
 	push rdi
 	push rbx
+	push r12
+	push r13
+	push r14
+	push r15
 	;; end prolog ;;
 
-	; alloc memory
-	sub rsp, (4*COMPV_YASM_REG_SZ_BYTES)
+	%define bCols					r8
+	%define bColsSignedMinus15      r9
+	%define bColsSignedMinus7       r10
+	%define bColsSignedMinus3		r11
+	%define bColsSignedMinus1		r12
 
-	%define bColsSignedMinus15      rsp + 0
-	%define bColsSignedMinus7       bColsSignedMinus15 + (1*COMPV_YASM_REG_SZ_BYTES)
-	%define bColsSignedMinus3		bColsSignedMinus7 + (1*COMPV_YASM_REG_SZ_BYTES)
-	%define bColsSignedMinus1		bColsSignedMinus3 + (1*COMPV_YASM_REG_SZ_BYTES)
+	mov bCols, arg(5)
+	lea bColsSignedMinus15, [bCols - 15]
+	lea bColsSignedMinus7, [bCols - 7]
+	lea bColsSignedMinus3, [bCols - 3]
+	lea bColsSignedMinus1, [bCols - 1]
 
-	mov rax, arg(5) ; bCols
-	lea rsi, [rax - 15]
-	lea rcx, [rax - 7]
-	lea rdx, [rax - 3]
-	lea rbx, [rax - 1]
-	mov [bColsSignedMinus15], rsi
-	mov [bColsSignedMinus7], rcx
-	mov [bColsSignedMinus3], rdx
-	mov [bColsSignedMinus1], rbx
-
-	%define B0		rbx
-	%define i		rsi
-	%define j		rdi
-	%define k		rcx
-	%define A		rdx
-	%define R		rax
+	%define B0				rbx
+	%define i				rsi
+	%define j				rdi
+	%define k				rcx
+	%define A				rdx
+	%define R				rax
+	%define	bStrideInBytes	r13
+	%define aStrideInBytes	r14
+	%define rStrideInBytes	r15
 
 	mov A, arg(0)
 	mov R, arg(7)
 	mov i, arg(1) ; aRows
+	mov bStrideInBytes, arg(6)
+	mov aStrideInBytes, arg(2)
+	mov rStrideInBytes, arg(8)
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (i = 0; i < aRows; ++i)
@@ -81,7 +87,7 @@ section .text
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; for (k = 0; k < bColsSigned - 15; k += 16)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			cmp k, [bColsSignedMinus15]
+			cmp k, bColsSignedMinus15
 			jge .EndOf_LoopBCols16
 			.LoopBCols16:
 				vmovapd ymm0, [A + (k + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
@@ -95,7 +101,7 @@ section .text
 					vfmadd231pd ymm1, ymm3, [B0 + (k + 12)*COMPV_YASM_FLOAT64_SZ_BYTES]
 					add k, 16
 					vaddpd ymm0, ymm0, ymm1
-					cmp k, [bColsSignedMinus15]
+					cmp k, bColsSignedMinus15
 					vaddpd ymm4, ymm4, ymm0
 				%else
 					vmulpd ymm2, ymm2, [B0 + (k + 8)*COMPV_YASM_FLOAT64_SZ_BYTES]
@@ -104,7 +110,7 @@ section .text
 					vaddpd ymm0, ymm0, ymm1
 					vaddpd ymm2, ymm2, ymm3
 					vaddpd ymm4, ymm4, ymm0
-					cmp k, [bColsSignedMinus15]
+					cmp k, bColsSignedMinus15
 					vaddpd ymm4, ymm4, ymm2
 				%endif
 				jl .LoopBCols16
@@ -114,7 +120,7 @@ section .text
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; if (k < bColsSigned - 7)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			cmp k, [bColsSignedMinus7]
+			cmp k, bColsSignedMinus7
 			jge .EndOf_LoopBCols8
 			.LoopBCols8:
 				vmovapd ymm0, [A + (k + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
@@ -135,7 +141,7 @@ section .text
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; if (k < bColsSigned - 3)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			cmp k, [bColsSignedMinus3]
+			cmp k, bColsSignedMinus3
 			jge .EndOf_LoopBCols4
 			.LoopBCols4:
 				vmovapd ymm0, [A + (k + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
@@ -153,7 +159,7 @@ section .text
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; if (k < bColsSigned - 1)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			cmp k, [bColsSignedMinus1]
+			cmp k, bColsSignedMinus1
 			jge .EndOf_LoopBCols2
 			.LoopBCols2:
 				vmovapd xmm0, [A + (k + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
@@ -173,7 +179,7 @@ section .text
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			; if (bColsSigned & 1)
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			cmp k, arg(5)
+			cmp k, bCols
 			jge .EndOf_LoopBCols1
 			.LoopBCols1:
 				vmovsd xmm0, [A + (k + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
@@ -189,25 +195,23 @@ section .text
 				;; EndOf_LoopBCols1 ;;
 
 			vperm2f128 ymm5, ymm4, ymm4, 0x11
+			inc j
 			vaddpd ymm4, ymm4, ymm5
+			cmp j, arg(4)
 			vshufpd xmm0, xmm4, xmm4, 0x1
 			vaddpd xmm4, xmm4, xmm0
-			vmovsd [R + j*COMPV_YASM_FLOAT64_SZ_BYTES], xmm4
-			inc j
-			add B0, arg(6) ; B0 += bStrideInBytes
-			cmp j, arg(4)
+			lea B0, [B0 + bStrideInBytes]
+			vmovsd [R + (j - 1)*COMPV_YASM_FLOAT64_SZ_BYTES], xmm4			
 			jl .LoopBRows
 			;; EndOf_LoopBRows ;;
 		
-		add A, arg(2) ; A += aStrideInBytes
-		add R, arg(8) ; R += rStrideInBytes
 		dec i
+		lea A, [A + aStrideInBytes]
+		lea R, [R + rStrideInBytes]
 		jnz .LoopARows
 		;; EndOf_LoopARows;;
 
-	; free memory
-	add rsp, (4*COMPV_YASM_REG_SZ_BYTES)
-
+	%undef bCols
 	%undef bColsSignedMinus15
 	%undef bColsSignedMinus7
 	%undef bColsSignedMinus3
@@ -219,8 +223,15 @@ section .text
 	%undef k
 	%undef A
 	%undef R
+	%undef	bStrideInBytes	
+	%undef aStrideInBytes	
+	%undef rStrideInBytes	
 
 	;; begin epilog ;;
+	pop r15
+	pop r14
+	pop r13
+	pop r12
 	pop rbx
 	pop rdi
 	pop rsi
@@ -231,9 +242,11 @@ section .text
 %endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(CompVMathMatrixMulABt_64f_Asm_X86_AVX):
-	CompVMathMatrixMulABt_64f_Macro_X86_AVX 0
+sym(CompVMathMatrixMulABt_64f_Asm_X64_AVX):
+	CompVMathMatrixMulABt_64f_Macro_X64_AVX 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-sym(CompVMathMatrixMulABt_64f_Asm_X86_FMA3_AVX):
-	CompVMathMatrixMulABt_64f_Macro_X86_AVX 1
+sym(CompVMathMatrixMulABt_64f_Asm_X64_FMA3_AVX):
+	CompVMathMatrixMulABt_64f_Macro_X64_AVX 1
+
+%endif ; COMPV_YASM_ABI_IS_64BIT

@@ -134,7 +134,6 @@ sym(CompVMathMatrixMulABt_64f_Asm_X86_SSE2):
 			.LoopBCols1:
 				movsd xmm0, [A + (k + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
 				mulsd xmm0, [B0 + (k + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
-				add k, 2
 				addsd xmm4, xmm0
 				.EndOf_LoopBCols1:
 				;; EndOf_LoopBCols1 ;;
