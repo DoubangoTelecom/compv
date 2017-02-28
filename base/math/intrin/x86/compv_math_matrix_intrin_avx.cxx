@@ -41,7 +41,7 @@ void CompVMathMatrixMulABt_64f_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64
 				vecSum = _mm256_add_pd(vecSum, vec0);
 				vecSum = _mm256_add_pd(vecSum, vec2);
 			}
-			if (k < bColsSigned - 8) {
+			if (k < bColsSigned - 7) {
 				vec0 = _mm256_mul_pd(_mm256_load_pd(&A[k + 0]), _mm256_load_pd(&B0[k + 0]));
 				vec1 = _mm256_mul_pd(_mm256_load_pd(&A[k + 4]), _mm256_load_pd(&B0[k + 4]));
 				vec0 = _mm256_add_pd(vec0, vec1);

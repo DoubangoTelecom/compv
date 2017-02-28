@@ -52,11 +52,13 @@ static COMPV_ERROR_CODE __math_matrix_ops_mulAB()
 		{ 215, 115, 115, 75, "5e1883dfd24448b64e1b6ae007b91758" },
 		{ 3, 3, 3, 3, "de628e91457c329220badfb524016b99" },
 		{ 4, 4, 4, 4, "5b2f3f02883ef6f944d90373be188104" },
+		{ 31, 31, 31, 31, "a8b3305da722f83834f3d04045466969" }, // 31 = (16 + 8 + 4 + 2 + 1) -> test all bCols cases
 	},
 	COMPV_UNITTEST_MULAB_FLOAT32[] = {
 		{ 215, 115, 115, 75, "7a7967e10f80ab6c7a68feb5d8deb8da" },
 		{ 3, 3, 3, 3, "db5d1d779c11164e72964f6f69289c77" },
 		{ 4, 4, 4, 4, "fccbc6a3eea330fd07b9325a13f462f2" },
+		{ 31, 31, 31, 31, "7918ffba8fb8566120f23dadaace4ae8" }, // 31 = (16 + 8 + 4 + 2 + 1) -> test all bCols cases
 	};
 
 	const compv_unittest_mulAB* test = NULL;
