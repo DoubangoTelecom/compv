@@ -1,7 +1,7 @@
 #include "../tests_common.h"
 
 #define TAG_TEST			"TestMatrixOps"
-#define LOOP_COUNT			1
+#define LOOP_COUNT			10000
 #define TYP					compv_float64_t
 
 COMPV_ERROR_CODE matrix_ops_transpose()
