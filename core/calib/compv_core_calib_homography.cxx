@@ -79,7 +79,7 @@ COMPV_ERROR_CODE CompVHomography<T>::find(CompVMatPtrPtr H, const CompVMatPtr &s
 	const T* dstz_ = dst->ptr<const T>(2);
 	for (size_t i = 0; i < numPoints_; ++i) {
 		if (srcz_[i] != 1 || dstz_[i] != 1) {
-			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PARAMETER, "src and dst must be 2D homogeneous coords.");
 		}
 	}
 
@@ -192,12 +192,15 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 	dstx1_ = dst->ptr<const T>(0);
 	dsty1_ = dst->ptr<const T>(1);
 
-	size_t k_ = src->cols(); // total number of elements (must be > 4)
-	float p_ = 0.99f; // probability for inlier (TODO(dmi): try with 0.95f which is more realistic)
-	size_t d_ = (size_t)(p_ * k_); // minimum number of inliers to stop the tries
-	size_t subset_ = 4; // subset size: 2 for line, 3 for plane, 4 for homography, 8 for essential / essential matrix
-	float e_ = 0.70f; // outliers ratio (70% is a worst case, will be updated) = 1 - (inliersCount/total)
-	size_t n_; // maximum number of tries
+	const size_t k_ = src->cols(); // total number of elements (must be > 4)
+	const T kf_ = static_cast<T>(k_);
+	static const T p_ = static_cast<T>(0.995); // probability for inlier (TODO(dmi): try with 0.95f which is more realistic)
+	static const size_t maxTries = 2000;
+	const size_t d_ = static_cast<size_t>(p_ * k_); // minimum number of inliers to stop the tries
+	static const size_t subset_ = 4; // subset size: 2 for line, 3 for plane, 4 for homography, 8 for essential / essential matrix
+	static const T subsetf_ = static_cast<T>(subset_);
+	T e_ = static_cast<T>(0.70); // outliers ratio (70% is a worst case, will be updated) = 1 - (inliersCount/total)
+	size_t n_, nnew_; // maximum number of tries
 	size_t t_; // number of tries
 
 	size_t inliersCount_, bestInlinersCount_ = 0;
@@ -205,7 +208,7 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 	bool colinear;
 	CompVMatPtr Hsubset_;
 
-	size_t idx0, idx1, idx2, idx3;
+	int idx0, idx1, idx2, idx3;
 #if COMPV_PRNG11
 #	if 0
 	std::random_device rd_;
@@ -217,11 +220,10 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 #	endif
 	std::uniform_int_distribution<> unifd_{ 0, static_cast<int>(k_ - 1) };
 #else
-	srand(CompVThread::getIdCurrent());
-	uint32_t rand4[4];
+	srand(static_cast<unsigned int>(CompVThread::getIdCurrent()));
 #endif
 
-	n_ = ((static_cast<size_t>(std::log(1 - p_) / std::log(1 - std::pow(1 - e_, static_cast<float>(subset_))))) / threadsCount) + 1;
+	n_ = maxTries;
 	t_ = 0;
 
 	CompVMatPtr inliersubset_; // inliers indexes (CompVMatPtr<size_t>)
@@ -245,27 +247,28 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 
 	while (t_ < n_ && bestInlinersCount_ < d_) {
 		// Generate the random points
+		// TODO(dmi): add max attempts for random number generation to avoid endless loop
 #if COMPV_PRNG11
-		idx0 = static_cast<uint32_t>(unifd_(prng_));
+		idx0 = unifd_(prng_);
 		do {
-			idx1 = static_cast<uint32_t>(unifd_(prng_));
+			idx1 = unifd_(prng_);
 		} while (idx1 == idx0);
 		do {
-			idx2 = static_cast<uint32_t>(unifd_(prng_));
+			idx2 = unifd_(prng_);
 		} while (idx2 == idx0 || idx2 == idx1);
 		do {
-			idx3 = static_cast<uint32_t>(unifd_(prng_));
+			idx3 = unifd_(prng_);
 		} while (idx3 == idx0 || idx3 == idx1 || idx3 == idx2);
 #else
-		idx0 = static_cast<uint32_t>(rand()) % k_;
+		idx0 = (rand()) % k_;
 		do {
-			idx1 = static_cast<uint32_t>(rand()) % k_;
+			idx1 = (rand()) % k_;
 		} while (idx1 == idx0);
 		do {
-			idx2 = static_cast<uint32_t>(rand()) % k_;
+			idx2 = (rand()) % k_;
 		} while (idx2 == idx0 || idx2 == idx1);
 		do {
-			idx3 = static_cast<uint32_t>(rand()) % k_;
+			idx3 = (rand()) % k_;
 		} while (idx3 == idx0 || idx3 == idx1 || idx3 == idx2);
 #endif
 
@@ -304,9 +307,11 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 		}
 
 		// update outliers ratio
-		e_ = (1 - (COMPV_MATH_MAX(1, inliersCount_) / static_cast<float>(k_))); // "inliersCount_" == 0 lead to NaN for "n_"
-																				// update total tries
-		n_ = (static_cast<size_t>(std::log(1 - p_) / std::log(1 - std::pow(1 - e_, static_cast<float>(subset_)))) / threadsCount) + 1;
+		e_ = (static_cast<T>(1.) - (COMPV_MATH_MAX(1, inliersCount_) / kf_)); // "inliersCount_" == 0 lead to NaN for "n_"
+
+		// update total tries
+		nnew_ = (static_cast<size_t>(std::log(static_cast<T>(1.) - p_) / std::log(static_cast<T>(1.) - std::pow(static_cast<T>(1.) - e_, subsetf_))) / threadsCount) + 1;
+		n_ = COMPV_MATH_MIN(n_, nnew_);
 
 		++t_;
 	}

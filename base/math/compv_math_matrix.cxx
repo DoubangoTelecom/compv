@@ -21,6 +21,7 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(SSE) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(SSE) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, COMPV_ALIGNED(SSE) compv_uscalar_t rStrideInBytes);
 	COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(AVX) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(AVX) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, COMPV_ALIGNED(AVX) compv_uscalar_t rStrideInBytes);
 	COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_X86_FMA3_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(AVX) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(AVX) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, COMPV_ALIGNED(AVX) compv_uscalar_t rStrideInBytes);
+	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(SSE) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(SSE) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, COMPV_ALIGNED(SSE) compv_uscalar_t rStrideInBytes);
@@ -242,22 +243,55 @@ class CompVMatrixGeneric
 	{
 		// Input parameters checked in the calling function
 
+		// TODO(dmi):
 		// When Givens matrix is multiplied to the left of a matrix then, only ith and jth rows change
 		// -> this function could be multi-threaded
 
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found.");
-
 		T* ri_ = A->ptr<T>(ith);
 		T* rj_ = A->ptr<T>(jth);
+		size_t col_, cols_ = A->cols(); // cols_ is equal to #9 for homography and fundmat
+
+		if (std::is_same<T, compv_float64_t>::value) {
+			void(*CompVMathMatrixMulGA_64f)(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
+				= NULL;
+#if COMPV_ARCH_X86
+			if (A->isAlignedSSE()) {
+				if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Intrin_SSE2);
+					COMPV_EXEC_IFDEF_ASM_X86(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X86_SSE2);
+					//COMPV_EXEC_IFDEF_ASM_X64(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X64_SSE2);
+				}
+			}
+			if (cols_ >= 8 && A->isAlignedAVX()) { // cols_ < 8 is useless for AVX and SSE is better
+				if (CompVCpu::isEnabled(kCpuFlagAVX)) {
+					//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Intrin_AVX);
+					//COMPV_EXEC_IFDEF_ASM_X86(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X86_AVX);
+					//COMPV_EXEC_IFDEF_ASM_X64(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X64_AVX);
+					if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
+						//COMPV_EXEC_IFDEF_ASM_X86(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X86_FMA3_AVX);
+						//COMPV_EXEC_IFDEF_ASM_X64(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X64_FMA3_AVX);
+					}
+				}
+			}
+#elif COMPV_ARCH_ARM
+#endif
+			if (CompVMathMatrixMulGA_64f) {
+				CompVMathMatrixMulGA_64f(reinterpret_cast<compv_float64_t*>(ri_), reinterpret_cast<compv_float64_t*>(rj_), 
+					reinterpret_cast<compv_float64_t*>(&c), reinterpret_cast<compv_float64_t*>(&s), 
+					static_cast<compv_uscalar_t>(cols_));
+				return COMPV_ERROR_CODE_S_OK;
+			}
+
+		}
+
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found.");
 		T ai, aj;
-		size_t col_, cols_ = A->cols();
 		for (col_ = 0; col_ < cols_; ++col_) {
 			ai = ri_[col_] * c + s* rj_[col_];
 			aj = ri_[col_] * -s + c* rj_[col_];
 			ri_[col_] = ai;
 			rj_[col_] = aj;
 		}
-
 		return COMPV_ERROR_CODE_S_OK;
 	}
 

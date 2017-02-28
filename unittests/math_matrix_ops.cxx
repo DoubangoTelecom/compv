@@ -108,11 +108,15 @@ static COMPV_ERROR_CODE __math_matrix_ops_mulGA()
 		{ 215, 215, "1d28996c99db6fdb058a487ed8a57c45" },
 		{ 19, 21, "1d28996c99db6fdb058a487ed8a57c45" },
 		{ 701, 71, "1d28996c99db6fdb058a487ed8a57c45" },
+		{ 31, 31, "1d28996c99db6fdb058a487ed8a57c45" }, // 31 = (16 + 8 + 4 + 2 + 1) -> test all cases
+		{ 9, 9, "1d28996c99db6fdb058a487ed8a57c45" }, // Homography
 	},
 	COMPV_UNITTEST_MULGA_FLOAT32[] = {
 		{ 215, 215, "23406cd31825fdbcd022edd8f8e76f96" },
 		{ 19, 21, "23406cd31825fdbcd022edd8f8e76f96" },
 		{ 701, 71, "23406cd31825fdbcd022edd8f8e76f96" },
+		{ 31, 31, "23406cd31825fdbcd022edd8f8e76f96" }, // 31 = (16 + 8 + 4 + 2 + 1) -> test all cases
+		{ 9, 9, "23406cd31825fdbcd022edd8f8e76f96" }, // Homography
 	};
 
 	const compv_unittest_mulGA* test = NULL;

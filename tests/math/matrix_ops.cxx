@@ -125,11 +125,15 @@ COMPV_ERROR_CODE matrix_ops_mulGA()
 		{ 215, 215, "1d28996c99db6fdb058a487ed8a57c45" },
 		{ 19, 21, "1d28996c99db6fdb058a487ed8a57c45" },
 		{ 701, 71, "1d28996c99db6fdb058a487ed8a57c45" },
+		{ 31, 31, "1d28996c99db6fdb058a487ed8a57c45" }, // 31 = (16 + 8 + 4 + 2 + 1) -> test all cases
+		{ 9, 9, "1d28996c99db6fdb058a487ed8a57c45"}, // Homography
 	},
 	COMPV_UNITTEST_MULGA_FLOAT32[] = {
 		{ 215, 215, "23406cd31825fdbcd022edd8f8e76f96" },
 		{ 19, 21, "23406cd31825fdbcd022edd8f8e76f96" },
 		{ 701, 71, "23406cd31825fdbcd022edd8f8e76f96" },
+		{ 31, 31, "23406cd31825fdbcd022edd8f8e76f96" }, // 31 = (16 + 8 + 4 + 2 + 1) -> test all cases
+		{ 9, 9, "23406cd31825fdbcd022edd8f8e76f96" }, // Homography
 	};
 
 	const compv_unittest_mulGA* test = NULL;
@@ -154,7 +158,6 @@ COMPV_ERROR_CODE matrix_ops_mulGA()
 		}
 	}
 
-
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		for (size_t ith = 0; ith < tests->rows; ++ith) {
@@ -165,6 +168,8 @@ COMPV_ERROR_CODE matrix_ops_mulGA()
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(isSymetric) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+
+	printf("MD5:%s", compv_tests_md5(A).c_str());
 
 #if LOOP_COUNT == 1
 	COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(A)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Matrix ops mulGA: MD5 mismatch");

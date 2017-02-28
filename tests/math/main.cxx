@@ -3,8 +3,8 @@
 #define TAG_TEST					"TestMath"
 
 #define TEST_MATRIX_OPS_TRANSPOSE			0
-#define TEST_MATRIX_OPS_MUL_AB				1
-#define TEST_MATRIX_OPS_MUL_GA				0
+#define TEST_MATRIX_OPS_MUL_AB				0
+#define TEST_MATRIX_OPS_MUL_GA				1
 #define TEST_MATRIX_OPS_IS_SYMETRIC			0
 #define TEST_EIGEN_S						0
 #define TEST_SVD							0
