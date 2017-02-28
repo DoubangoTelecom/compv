@@ -76,6 +76,61 @@ void CompVMathMatrixMulABt_64f_Intrin_AVX(const COMPV_ALIGNED(AVX) compv_float64
 	_mm256_zeroupper();
 }
 
+void CompVMathMatrixMulGA_64f_Intrin_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count)
+{
+	COMPV_DEBUG_INFO_CHECK_AVX(); // AVX/SSE transition issues
+	_mm256_zeroupper();
+
+	__m256d vecRI0, vecRI1, vecRI2, vecRI3, vecRJ0, vecRJ1, vecRJ2, vecRJ3;
+	compv_scalar_t i, countSigned = static_cast<compv_scalar_t>(count);
+
+	const __m256d vecC = _mm256_broadcast_sd(c1); // From Intel intrinsic guide _mm_load1_pd = 'movapd xmm, m128' which is not correct, should be 'shufpd movsd, movsd, 0x0'
+	const __m256d vecS = _mm256_broadcast_sd(s1);
+
+	// Case #16
+	for (i = 0; i < countSigned - 15; i += 16) {
+		vecRI0 = _mm256_load_pd(&ri[i + 0]);
+		vecRI1 = _mm256_load_pd(&ri[i + 4]);
+		vecRI2 = _mm256_load_pd(&ri[i + 8]);
+		vecRI3 = _mm256_load_pd(&ri[i + 12]);
+		vecRJ0 = _mm256_load_pd(&rj[i + 0]);
+		vecRJ1 = _mm256_load_pd(&rj[i + 4]);
+		vecRJ2 = _mm256_load_pd(&rj[i + 8]);
+		vecRJ3 = _mm256_load_pd(&rj[i + 12]);
+		_mm256_store_pd(&ri[i + 0], _mm256_add_pd(_mm256_mul_pd(vecRI0, vecC), _mm256_mul_pd(vecRJ0, vecS)));
+		_mm256_store_pd(&ri[i + 4], _mm256_add_pd(_mm256_mul_pd(vecRI1, vecC), _mm256_mul_pd(vecRJ1, vecS)));
+		_mm256_store_pd(&ri[i + 8], _mm256_add_pd(_mm256_mul_pd(vecRI2, vecC), _mm256_mul_pd(vecRJ2, vecS)));
+		_mm256_store_pd(&ri[i + 12], _mm256_add_pd(_mm256_mul_pd(vecRI3, vecC), _mm256_mul_pd(vecRJ3, vecS)));
+		_mm256_store_pd(&rj[i + 0], _mm256_sub_pd(_mm256_mul_pd(vecRJ0, vecC), _mm256_mul_pd(vecRI0, vecS)));
+		_mm256_store_pd(&rj[i + 4], _mm256_sub_pd(_mm256_mul_pd(vecRJ1, vecC), _mm256_mul_pd(vecRI1, vecS)));
+		_mm256_store_pd(&rj[i + 8], _mm256_sub_pd(_mm256_mul_pd(vecRJ2, vecC), _mm256_mul_pd(vecRI2, vecS)));
+		_mm256_store_pd(&rj[i + 12], _mm256_sub_pd(_mm256_mul_pd(vecRJ3, vecC), _mm256_mul_pd(vecRI3, vecS)));
+	}
+
+	// Case #8
+	if (i < countSigned - 7) {
+		vecRI0 = _mm256_load_pd(&ri[i + 0]);
+		vecRI1 = _mm256_load_pd(&ri[i + 4]);
+		vecRJ0 = _mm256_load_pd(&rj[i + 0]);
+		vecRJ1 = _mm256_load_pd(&rj[i + 4]);
+		_mm256_store_pd(&ri[i + 0], _mm256_add_pd(_mm256_mul_pd(vecRI0, vecC), _mm256_mul_pd(vecRJ0, vecS)));
+		_mm256_store_pd(&ri[i + 4], _mm256_add_pd(_mm256_mul_pd(vecRI1, vecC), _mm256_mul_pd(vecRJ1, vecS)));
+		_mm256_store_pd(&rj[i + 0], _mm256_sub_pd(_mm256_mul_pd(vecRJ0, vecC), _mm256_mul_pd(vecRI0, vecS)));
+		_mm256_store_pd(&rj[i + 4], _mm256_sub_pd(_mm256_mul_pd(vecRJ1, vecC), _mm256_mul_pd(vecRI1, vecS)));
+		i += 8;
+	}
+
+	// All other cases (7, 6... 1)
+	for (; i < countSigned; i += 4) { // event if only #1 sample remains we can read beyond count (up to stride)
+		vecRI0 = _mm256_load_pd(&ri[i + 0]);
+		vecRJ0 = _mm256_load_pd(&rj[i + 0]);
+		_mm256_store_pd(&ri[i + 0], _mm256_add_pd(_mm256_mul_pd(vecRI0, vecC), _mm256_mul_pd(vecRJ0, vecS)));
+		_mm256_store_pd(&rj[i + 0], _mm256_sub_pd(_mm256_mul_pd(vecRJ0, vecC), _mm256_mul_pd(vecRI0, vecS)));
+	}
+
+	_mm256_zeroupper();
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

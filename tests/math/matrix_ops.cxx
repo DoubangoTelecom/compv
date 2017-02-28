@@ -122,18 +122,18 @@ COMPV_ERROR_CODE matrix_ops_mulGA()
 		const char* md5_fma;
 	}
 	COMPV_UNITTEST_MULGA_FLOAT64[] = {
-		{ 215, 215, "1d28996c99db6fdb058a487ed8a57c45" },
-		{ 19, 21, "1d28996c99db6fdb058a487ed8a57c45" },
-		{ 701, 71, "1d28996c99db6fdb058a487ed8a57c45" },
-		{ 31, 31, "1d28996c99db6fdb058a487ed8a57c45" }, // 31 = (16 + 8 + 4 + 2 + 1) -> test all cases
-		{ 9, 9, "1d28996c99db6fdb058a487ed8a57c45"}, // Homography
+		{ 215, 215, "1d28996c99db6fdb058a487ed8a57c45", "32436ce316ff4b10a0becf87da478755" },
+		{ 19, 21, "1d28996c99db6fdb058a487ed8a57c45", "32436ce316ff4b10a0becf87da478755" },
+		{ 701, 71, "1d28996c99db6fdb058a487ed8a57c45", "32436ce316ff4b10a0becf87da478755" },
+		{ 31, 31, "1d28996c99db6fdb058a487ed8a57c45", "32436ce316ff4b10a0becf87da478755" }, // 31 = (16 + 8 + 4 + 2 + 1) -> test all cases
+		{ 9, 9, "1d28996c99db6fdb058a487ed8a57c45", "32436ce316ff4b10a0becf87da478755" }, // Homography
 	},
 	COMPV_UNITTEST_MULGA_FLOAT32[] = {
-		{ 215, 215, "23406cd31825fdbcd022edd8f8e76f96" },
-		{ 19, 21, "23406cd31825fdbcd022edd8f8e76f96" },
-		{ 701, 71, "23406cd31825fdbcd022edd8f8e76f96" },
-		{ 31, 31, "23406cd31825fdbcd022edd8f8e76f96" }, // 31 = (16 + 8 + 4 + 2 + 1) -> test all cases
-		{ 9, 9, "23406cd31825fdbcd022edd8f8e76f96" }, // Homography
+		{ 215, 215, "23406cd31825fdbcd022edd8f8e76f96", "23406cd31825fdbcd022edd8f8e76f96" },
+		{ 19, 21, "23406cd31825fdbcd022edd8f8e76f96", "23406cd31825fdbcd022edd8f8e76f96" },
+		{ 701, 71, "23406cd31825fdbcd022edd8f8e76f96", "23406cd31825fdbcd022edd8f8e76f96" },
+		{ 31, 31, "23406cd31825fdbcd022edd8f8e76f96", "23406cd31825fdbcd022edd8f8e76f96" }, // 31 = (16 + 8 + 4 + 2 + 1) -> test all cases
+		{ 9, 9, "23406cd31825fdbcd022edd8f8e76f96", "23406cd31825fdbcd022edd8f8e76f96" }, // Homography
 	};
 
 	const compv_unittest_mulGA* test = NULL;
@@ -169,10 +169,22 @@ COMPV_ERROR_CODE matrix_ops_mulGA()
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(isSymetric) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	printf("MD5:%s", compv_tests_md5(A).c_str());
+#if 0
+	TYP sum = 0; // should be 2.6090482639325790e+42 for 215 and float64
+	for (size_t j = 0; j < A->rows(); ++j) {
+		for (size_t i = 0; i < A->rows(); ++i) {
+			sum += *A->ptr<const TYP>(j, i);
+		}
+	}
+#endif
 
 #if LOOP_COUNT == 1
-	COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(A)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Matrix ops mulGA: MD5 mismatch");
+#	if COMPV_ARCH_X86
+	const bool fma = compv_tests_is_fma_enabled() && CompVCpu::isAsmEnabled(); // no FMA3 intrin impl.
+#	else
+	const bool fma = false; // FMA not enabled for ARM yet
+#	endif
+	COMPV_CHECK_EXP_RETURN(std::string(fma ? test->md5_fma: test->md5).compare(compv_tests_md5(A)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Matrix ops mulGA: MD5 mismatch");
 #endif
 
 	return COMPV_ERROR_CODE_S_OK;

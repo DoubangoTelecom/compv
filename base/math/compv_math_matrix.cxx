@@ -22,11 +22,16 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(AVX) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(AVX) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, COMPV_ALIGNED(AVX) compv_uscalar_t rStrideInBytes);
 	COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_X86_FMA3_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(AVX) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(AVX) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, COMPV_ALIGNED(AVX) compv_uscalar_t rStrideInBytes);
 	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
+	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
+	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X86_FMA3_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(SSE) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(SSE) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, COMPV_ALIGNED(SSE) compv_uscalar_t rStrideInBytes);
 	COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_X64_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(AVX) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(AVX) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, COMPV_ALIGNED(AVX) compv_uscalar_t rStrideInBytes);
 	COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_X64_FMA3_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(AVX) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(AVX) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(AVX) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(AVX) compv_float64_t* R, COMPV_ALIGNED(AVX) compv_uscalar_t rStrideInBytes);
+	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
+	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X64_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
+	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X64_FMA3_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
 #	endif /* COMPV_ARCH_X64 */
 #endif /* COMPV_ASM */
 
@@ -259,17 +264,17 @@ class CompVMatrixGeneric
 				if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Intrin_SSE2);
 					COMPV_EXEC_IFDEF_ASM_X86(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X86_SSE2);
-					//COMPV_EXEC_IFDEF_ASM_X64(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X64_SSE2);
+					COMPV_EXEC_IFDEF_ASM_X64(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X64_SSE2);
 				}
 			}
 			if (cols_ >= 8 && A->isAlignedAVX()) { // cols_ < 8 is useless for AVX and SSE is better
 				if (CompVCpu::isEnabled(kCpuFlagAVX)) {
-					//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Intrin_AVX);
-					//COMPV_EXEC_IFDEF_ASM_X86(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X86_AVX);
-					//COMPV_EXEC_IFDEF_ASM_X64(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X64_AVX);
+					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Intrin_AVX);
+					COMPV_EXEC_IFDEF_ASM_X86(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X86_AVX);
+					COMPV_EXEC_IFDEF_ASM_X64(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X64_AVX);
 					if (CompVCpu::isEnabled(kCpuFlagFMA3)) {
-						//COMPV_EXEC_IFDEF_ASM_X86(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X86_FMA3_AVX);
-						//COMPV_EXEC_IFDEF_ASM_X64(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X64_FMA3_AVX);
+						COMPV_EXEC_IFDEF_ASM_X86(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X86_FMA3_AVX);
+						COMPV_EXEC_IFDEF_ASM_X64(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Asm_X64_FMA3_AVX);
 					}
 				}
 			}

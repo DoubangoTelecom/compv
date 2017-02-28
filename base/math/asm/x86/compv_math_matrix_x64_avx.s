@@ -14,6 +14,8 @@ COMPV_YASM_DEFAULT_REL
 
 global sym(CompVMathMatrixMulABt_64f_Asm_X64_AVX)
 global sym(CompVMathMatrixMulABt_64f_Asm_X64_FMA3_AVX)
+global sym(CompVMathMatrixMulGA_64f_Asm_X64_AVX)
+global sym(CompVMathMatrixMulGA_64f_Asm_X64_FMA3_AVX)
 
 section .data
 
@@ -31,6 +33,7 @@ section .text
 ; arg(8) -> COMPV_ALIGNED(AVX) compv_uscalar_t rStrideInBytes
 ; %1 : 1: FMA3 enabled, 0: FMA3 disabled
 %macro CompVMathMatrixMulABt_64f_Macro_X64_AVX 1
+	vzeroupper
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 9
@@ -238,6 +241,7 @@ section .text
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
+	vzeroupper
 	ret
 %endmacro
 
@@ -248,5 +252,232 @@ sym(CompVMathMatrixMulABt_64f_Asm_X64_AVX):
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 sym(CompVMathMatrixMulABt_64f_Asm_X64_FMA3_AVX):
 	CompVMathMatrixMulABt_64f_Macro_X64_AVX 1
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(AVX) compv_float64_t* ri
+; arg(1) -> COMPV_ALIGNED(AVX) compv_float64_t* rj
+; arg(2) -> const compv_float64_t* c1
+; arg(3) -> const compv_float64_t* s1
+; arg(4) -> compv_uscalar_t count
+; %1 : 1: FMA3 enabled, 0: FMA3 disabled
+%macro CompVMathMatrixMulGA_64f_Macro_X64_AVX 1
+	vzeroupper
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
+	COMPV_YASM_SAVE_YMM 15
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	; align stack and alloc memory
+	COMPV_YASM_ALIGN_STACK 32, rax
+	sub rsp, (2*COMPV_YASM_YMM_SZ_BYTES)
+
+	%define vecC		rsp + 0
+	%define vecS		vecC + (1*COMPV_YASM_YMM_SZ_BYTES)
+
+	%define i			rsi
+	%define ri			rdi
+	%define rj			rbx
+	%define count		rcx
+	%define countMinus15	rdx
+	%define countMinus7	rax
+
+	mov rax, arg(2)
+	mov rdx, arg(3)
+	vbroadcastsd ymm0, [rax]
+	vbroadcastsd ymm1, [rdx]
+	vmovapd [vecC], ymm0
+	vmovapd [vecS], ymm1
+
+	mov ri, arg(0)
+	mov rj, arg(1)
+	mov count, arg(4)
+	lea countMinus15, [count - 15]
+	lea countMinus7, [count - 7]
+	xor i, i
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (i = 0; i < countSigned - 15; i += 16)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	cmp i, countMinus15
+	jge .EndOf_LoopCount16
+	mov r8, count
+	shr r8, 4
+	.LoopCount16:
+		vmovapd ymm0, [ri + (i + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
+		vmovapd ymm1, [ri + (i + 4)*COMPV_YASM_FLOAT64_SZ_BYTES]
+		vmovapd ymm8, [ri + (i + 8)*COMPV_YASM_FLOAT64_SZ_BYTES]
+		vmovapd ymm9, [ri + (i + 12)*COMPV_YASM_FLOAT64_SZ_BYTES]
+		vmovapd ymm2, [rj + (i + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
+		vmovapd ymm3, [rj + (i + 4)*COMPV_YASM_FLOAT64_SZ_BYTES]
+		vmovapd ymm10, [rj + (i + 8)*COMPV_YASM_FLOAT64_SZ_BYTES]
+		vmovapd ymm11, [rj + (i + 12)*COMPV_YASM_FLOAT64_SZ_BYTES]
+		%if %1
+			vmulpd ymm4, ymm0, [vecC]
+			vmulpd ymm5, ymm1, [vecC]
+			vmulpd ymm6, ymm0, [vecS]
+			vmulpd ymm7, ymm1, [vecS]
+			vmulpd ymm12, ymm8, [vecC]
+			vmulpd ymm13, ymm9, [vecC]
+			vmulpd ymm14, ymm8, [vecS]
+			vmulpd ymm15, ymm9, [vecS]
+			vfmadd231pd ymm4, ymm2, [vecS]
+			vfmadd231pd ymm5, ymm3, [vecS]
+			vfmsub231pd ymm6, ymm2, [vecC]
+			vfmsub231pd ymm7, ymm3, [vecC]
+			vfmadd231pd ymm12, ymm10, [vecS]
+			vfmadd231pd ymm13, ymm11, [vecS]
+			vfmsub231pd ymm14, ymm10, [vecC]
+			vfmsub231pd ymm15, ymm11, [vecC]
+		%else
+			vmulpd ymm4, ymm0, [vecC]
+			vmulpd ymm5, ymm1, [vecC]
+			vmulpd ymm6, ymm2, [vecC]
+			vmulpd ymm7, ymm3, [vecC]
+			vmulpd ymm2, ymm2, [vecS]
+			vmulpd ymm3, ymm3, [vecS]
+			vmulpd ymm0, ymm0, [vecS]
+			vmulpd ymm1, ymm1, [vecS]
+			vmulpd ymm12, ymm8, [vecC]
+			vmulpd ymm13, ymm9, [vecC]
+			vmulpd ymm14, ymm10, [vecC]
+			vmulpd ymm15, ymm11, [vecC]
+			vmulpd ymm10, ymm10, [vecS]
+			vmulpd ymm11, ymm11, [vecS]
+			vmulpd ymm8, ymm8, [vecS]
+			vmulpd ymm9, ymm9, [vecS]
+			vaddpd ymm4, ymm4, ymm2
+			vaddpd ymm5, ymm5, ymm3
+			vsubpd ymm6, ymm6, ymm0
+			vsubpd ymm7, ymm7, ymm1
+			vaddpd ymm12, ymm12, ymm10
+			vaddpd ymm13, ymm13, ymm11
+			vsubpd ymm14, ymm14, ymm8
+			vsubpd ymm15, ymm15, ymm9
+		%endif
+		dec r8
+		vmovapd [ri + (i + 0)*COMPV_YASM_FLOAT64_SZ_BYTES], ymm4
+		vmovapd [ri + (i + 4)*COMPV_YASM_FLOAT64_SZ_BYTES], ymm5
+		vmovapd [ri + (i + 8)*COMPV_YASM_FLOAT64_SZ_BYTES], ymm12
+		vmovapd [ri + (i + 12)*COMPV_YASM_FLOAT64_SZ_BYTES], ymm13
+		vmovapd [rj + (i + 0)*COMPV_YASM_FLOAT64_SZ_BYTES], ymm6
+		vmovapd [rj + (i + 4)*COMPV_YASM_FLOAT64_SZ_BYTES], ymm7
+		vmovapd [rj + (i + 8)*COMPV_YASM_FLOAT64_SZ_BYTES], ymm14
+		vmovapd [rj + (i + 12)*COMPV_YASM_FLOAT64_SZ_BYTES], ymm15
+
+		lea i, [i + 16]
+		jnz .LoopCount16
+		.EndOf_LoopCount16
+		;; EndOf_LoopCount16 ;;
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; if (i < countSigned - 7)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	cmp i, countMinus7
+	jge .EndOf_LoopCount8
+	.LoopCount8:
+		vmovapd ymm0, [ri + (i + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
+		vmovapd ymm1, [ri + (i + 4)*COMPV_YASM_FLOAT64_SZ_BYTES]
+		vmovapd ymm2, [rj + (i + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
+		vmovapd ymm3, [rj + (i + 4)*COMPV_YASM_FLOAT64_SZ_BYTES]
+		%if %1
+			vmulpd ymm4, ymm0, [vecC]
+			vmulpd ymm5, ymm1, [vecC]
+			vmulpd ymm6, ymm0, [vecS]
+			vmulpd ymm7, ymm1, [vecS]
+			vfmadd231pd ymm4, ymm2, [vecS]
+			vfmadd231pd ymm5, ymm3, [vecS]
+			vfmsub231pd ymm6, ymm2, [vecC]
+			vfmsub231pd ymm7, ymm3, [vecC]
+		%else
+			vmulpd ymm4, ymm0, [vecC]
+			vmulpd ymm5, ymm1, [vecC]
+			vmulpd ymm6, ymm2, [vecC]
+			vmulpd ymm7, ymm3, [vecC]
+			vmulpd ymm2, ymm2, [vecS]
+			vmulpd ymm3, ymm3, [vecS]
+			vmulpd ymm0, ymm0, [vecS]
+			vmulpd ymm1, ymm1, [vecS]
+			vaddpd ymm4, ymm4, ymm2
+			vaddpd ymm5, ymm5, ymm3
+			vsubpd ymm6, ymm6, ymm0
+			vsubpd ymm7, ymm7, ymm1
+		%endif
+		vmovapd [ri + (i + 0)*COMPV_YASM_FLOAT64_SZ_BYTES], ymm4
+		vmovapd [ri + (i + 4)*COMPV_YASM_FLOAT64_SZ_BYTES], ymm5
+		vmovapd [rj + (i + 0)*COMPV_YASM_FLOAT64_SZ_BYTES], ymm6
+		vmovapd [rj + (i + 4)*COMPV_YASM_FLOAT64_SZ_BYTES], ymm7
+
+		add i, 8
+		.EndOf_LoopCount8
+		;; EndOf_LoopCount8 ;;
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (; i < countSigned; i += 4)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	cmp i, count
+	jge .EndOf_LoopCountOthers
+	.LoopCountOthers:
+		vmovapd ymm0, [ri + (i + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
+		vmovapd ymm2, [rj + (i + 0)*COMPV_YASM_FLOAT64_SZ_BYTES]
+		%if %1
+			vmulpd ymm4, ymm0, [vecC]
+			vmulpd ymm6, ymm0, [vecS]
+			vfmadd231pd ymm4, ymm2, [vecS]
+			vfmsub231pd ymm6, ymm2, [vecC]
+		%else
+			vmulpd ymm4, ymm0, [vecC]
+			vmulpd ymm6, ymm2, [vecC]
+			vmulpd ymm2, ymm2, [vecS]
+			vmulpd ymm0, ymm0, [vecS]
+			vaddpd ymm4, ymm4, ymm2
+			vsubpd ymm6, ymm6, ymm0
+		%endif
+		vmovapd [ri + (i + 0)*COMPV_YASM_FLOAT64_SZ_BYTES], ymm4
+		vmovapd [rj + (i + 0)*COMPV_YASM_FLOAT64_SZ_BYTES], ymm6
+
+		add i, 4
+		cmp i, count
+		jl .LoopCountOthers
+		.EndOf_LoopCountOthers
+		;; EndOf_LoopCountOthers ;;
+
+	%undef vecC
+	%undef vecS
+
+	%undef i
+	%undef ri
+	%undef rj
+	%undef count
+	%undef countMinus15
+	%undef countMinus7
+
+	; free memory and unalign stack
+	add rsp, (2*COMPV_YASM_YMM_SZ_BYTES)
+	COMPV_YASM_UNALIGN_STACK
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_RESTORE_YMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	vzeroupper
+	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathMatrixMulGA_64f_Asm_X64_AVX):
+	CompVMathMatrixMulGA_64f_Macro_X64_AVX 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+sym(CompVMathMatrixMulGA_64f_Asm_X64_FMA3_AVX):
+	CompVMathMatrixMulGA_64f_Macro_X64_AVX 1
 
 %endif ; COMPV_YASM_ABI_IS_64BIT
