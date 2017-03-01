@@ -76,6 +76,7 @@ void CompVMathMatrixMulGA_64f_Intrin_NEON64(COMPV_ALIGNED(NEON) compv_float64_t*
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	compv_scalar_t i, countSigned = static_cast<compv_scalar_t>(count);
 	float64x2_t vecRI0, vecRI1, vecRI2, vecRI3, vecRJ0, vecRJ1, vecRJ2, vecRJ3;
+	float64x2_t vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7;
 	const float64x2_t vecC = vdupq_n_f64(*c1); // From Intel intrinsic guide _mm_load1_pd = 'movapd xmm, m128' which is not correct, should be 'shufpd movsd, movsd, 0x0'
 	const float64x2_t vecS = vdupq_n_f64(*s1);
 
@@ -89,14 +90,22 @@ void CompVMathMatrixMulGA_64f_Intrin_NEON64(COMPV_ALIGNED(NEON) compv_float64_t*
 		vecRJ1 = vld1q_f64(&rj[i + 2]);
 		vecRJ2 = vld1q_f64(&rj[i + 4]);
 		vecRJ3 = vld1q_f64(&rj[i + 6]);
-		vst1q_f64(&ri[i + 0], vmlaq_f64(vmulq_f64(vecRI0, vecC), vecRJ0, vecS));
-		vst1q_f64(&ri[i + 2], vmlaq_f64(vmulq_f64(vecRI1, vecC), vecRJ1, vecS));
-		vst1q_f64(&ri[i + 4], vmlaq_f64(vmulq_f64(vecRI2, vecC), vecRJ2, vecS));
-		vst1q_f64(&ri[i + 6], vmlaq_f64(vmulq_f64(vecRI3, vecC), vecRJ3, vecS));
-		vst1q_f64(&rj[i + 0], vmlsq_f64(vmulq_f64(vecRJ0, vecC), vecRI0, vecS));
-		vst1q_f64(&rj[i + 2], vmlsq_f64(vmulq_f64(vecRJ1, vecC), vecRI1, vecS));
-		vst1q_f64(&rj[i + 4], vmlsq_f64(vmulq_f64(vecRJ2, vecC), vecRI2, vecS));
-		vst1q_f64(&rj[i + 6], vmlsq_f64(vmulq_f64(vecRJ3, vecC), vecRI3, vecS));
+		vec0 = vmlaq_f64(vmulq_f64(vecRI0, vecC), vecRJ0, vecS);
+		vec1 = vmlaq_f64(vmulq_f64(vecRI1, vecC), vecRJ1, vecS);
+		vec2 = vmlaq_f64(vmulq_f64(vecRI2, vecC), vecRJ2, vecS);
+		vec3 = vmlaq_f64(vmulq_f64(vecRI3, vecC), vecRJ3, vecS);
+		vec4 = vmlsq_f64(vmulq_f64(vecRJ0, vecC), vecRI0, vecS);
+		vec5 = vmlsq_f64(vmulq_f64(vecRJ1, vecC), vecRI1, vecS);
+		vec6 = vmlsq_f64(vmulq_f64(vecRJ2, vecC), vecRI2, vecS);
+		vec7 = vmlsq_f64(vmulq_f64(vecRJ3, vecC), vecRI3, vecS);
+		vst1q_f64(&ri[i + 0], vec0);
+		vst1q_f64(&ri[i + 2], vec1);
+		vst1q_f64(&ri[i + 4], vec2);
+		vst1q_f64(&ri[i + 6], vec3);
+		vst1q_f64(&rj[i + 0], vec4);
+		vst1q_f64(&rj[i + 2], vec5);
+		vst1q_f64(&rj[i + 4], vec6);
+		vst1q_f64(&rj[i + 6], vec7);
 	}
 
 	// Case #4
@@ -105,10 +114,14 @@ void CompVMathMatrixMulGA_64f_Intrin_NEON64(COMPV_ALIGNED(NEON) compv_float64_t*
 		vecRI1 = vld1q_f64(&ri[i + 2]);
 		vecRJ0 = vld1q_f64(&rj[i + 0]);
 		vecRJ1 = vld1q_f64(&rj[i + 2]);
-		vst1q_f64(&ri[i + 0], vmlaq_f64(vmulq_f64(vecRI0, vecC), vecRJ0, vecS));
-		vst1q_f64(&ri[i + 2], vmlaq_f64(vmulq_f64(vecRI1, vecC), vecRJ1, vecS));
-		vst1q_f64(&rj[i + 0], vmlsq_f64(vmulq_f64(vecRJ0, vecC), vecRI0, vecS));
-		vst1q_f64(&rj[i + 2], vmlsq_f64(vmulq_f64(vecRJ1, vecC), vecRI1, vecS));
+		vec0 = vmlaq_f64(vmulq_f64(vecRI0, vecC), vecRJ0, vecS);
+		vec1 = vmlaq_f64(vmulq_f64(vecRI1, vecC), vecRJ1, vecS);
+		vec2 = vmlsq_f64(vmulq_f64(vecRJ0, vecC), vecRI0, vecS);
+		vec3 = vmlsq_f64(vmulq_f64(vecRJ1, vecC), vecRI1, vecS);
+		vst1q_f64(&ri[i + 0], vec0);
+		vst1q_f64(&ri[i + 2], vec1);
+		vst1q_f64(&rj[i + 0], vec2);
+		vst1q_f64(&rj[i + 2], vec3);
 		i += 4;
 	}
 
@@ -116,8 +129,10 @@ void CompVMathMatrixMulGA_64f_Intrin_NEON64(COMPV_ALIGNED(NEON) compv_float64_t*
 	for (; i < countSigned; i += 2) { // event if only #1 sample remains we can read beyond count (up to stride)
 		vecRI0 = vld1q_f64(&ri[i + 0]);
 		vecRJ0 = vld1q_f64(&rj[i + 0]);
-		vst1q_f64(&ri[i + 0], vmlaq_f64(vmulq_f64(vecRI0, vecC), vecRJ0, vecS));
-		vst1q_f64(&rj[i + 0], vmlsq_f64(vmulq_f64(vecRJ0, vecC), vecRI0, vecS));
+		vec0 = vmlaq_f64(vmulq_f64(vecRI0, vecC), vecRJ0, vecS);
+		vec1 = vmlsq_f64(vmulq_f64(vecRJ0, vecC), vecRI0, vecS);
+		vst1q_f64(&ri[i + 0], vec0);
+		vst1q_f64(&rj[i + 0], vec1);
 	}
 }
 
