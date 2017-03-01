@@ -18,5 +18,7 @@
     <ClCompile Include="..\..\math_calib_homography.cxx" />
     <ClCompile Include="..\..\math_distance.cxx" />
     <ClCompile Include="..\..\matches_bruteforce.cxx" />
+    <ClCompile Include="..\..\math_matrix_ops.cxx" />
+    <ClCompile Include="..\..\patch.cxx" />
   </ItemGroup>
 </Project>

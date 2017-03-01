@@ -45,11 +45,13 @@
     <ClCompile Include="..\..\math_distance.cxx" />
     <ClCompile Include="..\..\math_eigen.cxx" />
     <ClCompile Include="..\..\math_inverse.cxx" />
+    <ClCompile Include="..\..\math_matrix_ops.cxx" />
     <ClCompile Include="..\..\math_stats_mse.cxx" />
     <ClCompile Include="..\..\math_stats_normalize.cxx" />
     <ClCompile Include="..\..\math_stats_variance.cxx" />
     <ClCompile Include="..\..\math_svd.cxx" />
     <ClCompile Include="..\..\math_transform.cxx" />
+    <ClCompile Include="..\..\patch.cxx" />
     <ClCompile Include="..\..\pyramid.cxx" />
     <ClCompile Include="..\..\scale.cxx" />
   </ItemGroup>

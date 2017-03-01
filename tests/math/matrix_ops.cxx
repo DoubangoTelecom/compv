@@ -129,11 +129,19 @@ COMPV_ERROR_CODE matrix_ops_mulGA()
 		{ 9, 9, "1d28996c99db6fdb058a487ed8a57c45", "32436ce316ff4b10a0becf87da478755" }, // Homography
 	},
 	COMPV_UNITTEST_MULGA_FLOAT32[] = {
+#if COMPV_ARCH_X86
 		{ 215, 215, "23406cd31825fdbcd022edd8f8e76f96", "23406cd31825fdbcd022edd8f8e76f96" },
 		{ 19, 21, "23406cd31825fdbcd022edd8f8e76f96", "23406cd31825fdbcd022edd8f8e76f96" },
 		{ 701, 71, "23406cd31825fdbcd022edd8f8e76f96", "23406cd31825fdbcd022edd8f8e76f96" },
 		{ 31, 31, "23406cd31825fdbcd022edd8f8e76f96", "23406cd31825fdbcd022edd8f8e76f96" }, // 31 = (16 + 8 + 4 + 2 + 1) -> test all cases
 		{ 9, 9, "23406cd31825fdbcd022edd8f8e76f96", "23406cd31825fdbcd022edd8f8e76f96" }, // Homography
+#elif COMPV_ARCH_ARM
+		{ 215, 215, "bbb0549857340991a13b4d8680fa8943", "bbb0549857340991a13b4d8680fa8943" },
+		{ 19, 21, "bbb0549857340991a13b4d8680fa8943", "bbb0549857340991a13b4d8680fa8943" },
+		{ 701, 71, "bbb0549857340991a13b4d8680fa8943", "bbb0549857340991a13b4d8680fa8943" },
+		{ 31, 31, "bbb0549857340991a13b4d8680fa8943", "bbb0549857340991a13b4d8680fa8943" }, // 31 = (16 + 8 + 4 + 2 + 1) -> test all cases
+		{ 9, 9, "bbb0549857340991a13b4d8680fa8943", "bbb0549857340991a13b4d8680fa8943" }, // Homography
+#endif
 	};
 
 	const compv_unittest_mulGA* test = NULL;
