@@ -122,11 +122,19 @@ COMPV_ERROR_CODE matrix_ops_mulGA()
 		const char* md5_fma;
 	}
 	COMPV_UNITTEST_MULGA_FLOAT64[] = {
+#if COMPV_ARCH_X86
 		{ 215, 215, "1d28996c99db6fdb058a487ed8a57c45", "32436ce316ff4b10a0becf87da478755" },
 		{ 19, 21, "1d28996c99db6fdb058a487ed8a57c45", "32436ce316ff4b10a0becf87da478755" },
 		{ 701, 71, "1d28996c99db6fdb058a487ed8a57c45", "32436ce316ff4b10a0becf87da478755" },
 		{ 31, 31, "1d28996c99db6fdb058a487ed8a57c45", "32436ce316ff4b10a0becf87da478755" }, // 31 = (16 + 8 + 4 + 2 + 1) -> test all cases
 		{ 9, 9, "1d28996c99db6fdb058a487ed8a57c45", "32436ce316ff4b10a0becf87da478755" }, // Homography
+#elif COMPV_ARCH_ARM
+        { 215, 215, "1d28996c99db6fdb058a487ed8a57c45", "1ec77d8622cfe7837e56baeb0ef08a0c" },
+        { 19, 21, "1d28996c99db6fdb058a487ed8a57c45", "1ec77d8622cfe7837e56baeb0ef08a0c" },
+        { 701, 71, "1d28996c99db6fdb058a487ed8a57c45", "1ec77d8622cfe7837e56baeb0ef08a0c" },
+        { 31, 31, "1d28996c99db6fdb058a487ed8a57c45", "1ec77d8622cfe7837e56baeb0ef08a0c" }, // 31 = (16 + 8 + 4 + 2 + 1) -> test all cases
+        { 9, 9, "1d28996c99db6fdb058a487ed8a57c45", "1ec77d8622cfe7837e56baeb0ef08a0c" }, // Homography
+#endif
 	},
 	COMPV_UNITTEST_MULGA_FLOAT32[] = {
 #if COMPV_ARCH_X86
@@ -175,7 +183,7 @@ COMPV_ERROR_CODE matrix_ops_mulGA()
 		}
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(isSymetric) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(mulGA) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
 #if 0
 	TYP sum = 0; // should be 2.6090482639325790e+42 for 215 and float64
@@ -187,11 +195,7 @@ COMPV_ERROR_CODE matrix_ops_mulGA()
 #endif
 
 #if LOOP_COUNT == 1
-#	if COMPV_ARCH_X86
 	const bool fma = compv_tests_is_fma_enabled() && CompVCpu::isAsmEnabled(); // no FMA3 intrin impl.
-#	else
-	const bool fma = false; // FMA not enabled for ARM yet
-#	endif
 	COMPV_CHECK_EXP_RETURN(std::string(fma ? test->md5_fma: test->md5).compare(compv_tests_md5(A)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Matrix ops mulGA: MD5 mismatch");
 #endif
 

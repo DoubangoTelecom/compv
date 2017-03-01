@@ -77,7 +77,7 @@ void CompVMathMatrixMulGA_64f_Intrin_NEON64(COMPV_ALIGNED(NEON) compv_float64_t*
 	compv_scalar_t i, countSigned = static_cast<compv_scalar_t>(count);
 	float64x2_t vecRI0, vecRI1, vecRI2, vecRI3, vecRJ0, vecRJ1, vecRJ2, vecRJ3;
 	float64x2_t vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7;
-	const float64x2_t vecC = vdupq_n_f64(*c1); // From Intel intrinsic guide _mm_load1_pd = 'movapd xmm, m128' which is not correct, should be 'shufpd movsd, movsd, 0x0'
+	const float64x2_t vecC = vdupq_n_f64(*c1);
 	const float64x2_t vecS = vdupq_n_f64(*s1);
 
 	// Case #8

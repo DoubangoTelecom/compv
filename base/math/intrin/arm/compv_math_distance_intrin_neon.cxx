@@ -192,7 +192,7 @@ void CompVMathDistanceHamming_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dat
 			if ((orphans = static_cast<compv_scalar_t>(width & 15))) {
                 // When the width isn't multiple of #16 then we set the padding bytes to #0 using a mask
                 // Not an issue reading beyond width because the data is strided and aligned on NEON (#16 bytes)
-                vecMask = vceqq_u8(vec0, vec0); // all bits to #1 (all bytes to #0xff)
+                vecMask = vceqq_u8(veccnt, veccnt); // all bits to #1 (all bytes to #0xff)
                 vecPatch = vld1q_u8(&patch1xnPtr[i]);
                 orphans = ((orphans - 16) << 3); // convert form bytes to bits and negate (negative means shift right), asm
                 vecMask = vshlq_u64(vecMask, (int64x2_t){ orphans < -64 ? (orphans + 64) : 0, orphans});
@@ -228,7 +228,7 @@ void CompVMathDistanceHamming_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dat
         if ((orphans = static_cast<compv_scalar_t>(width & 15))) {
             // When the width isn't multiple of #16 then we set the padding bytes to #0 using a mask
             // Not an issue reading beyond width because the data is strided and aligned on NEON (#16 bytes)
-            vecMask = vceqq_u8(vec0, vec0); // all bits to #1 (all bytes to #0xff)
+            vecMask = vceqq_u8(veccnt, veccnt); // all bits to #1 (all bytes to #0xff)
             vecPatch = vld1q_u8(&patch1xnPtr[i]);
             orphans = ((orphans - 16) << 3); // convert form bytes to bits and negate (negative means shift right)
             vecMask = vshlq_u64(vecMask, (int64x2_t){ orphans < -64 ? (orphans + 64) : 0, orphans});

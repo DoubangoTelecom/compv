@@ -46,7 +46,7 @@ COMPV_ERROR_CODE stats_normalize2D_hartley()
 	}
 
 	uint64_t timeStart = CompVTime::nowMillis();
-	TYP tx, ty, scale;
+	TYP tx = 0, ty = 0, scale = 0;
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(CompVMathStats<TYP>::normalize2D_hartley(px, py, test->numpoints, &tx, &ty, &scale));
 	}

@@ -42,7 +42,7 @@ COMPV_ERROR_CODE stats_variance()
 		pdata[i] = static_cast<TYP>(((i & 1) ? i : (-i * 0.7)) + 0.5);
 	}
 
-	TYP var;
+	TYP var = 0;
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
 		COMPV_CHECK_CODE_RETURN(CompVMathStats<TYP>::variance(pdata, test->numpoints, mean, &var));
