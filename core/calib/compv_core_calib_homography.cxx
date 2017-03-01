@@ -11,6 +11,7 @@
 #include "compv/base/math/compv_math_eigen.h"
 
 #include <cfloat> /* FLT_MAX */
+#include <numeric> /* std::itoa */
 
 
 #if !defined (COMPV_PRNG11)
@@ -220,7 +221,8 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 #	endif
 	std::uniform_int_distribution<> unifd_{ 0, static_cast<int>(k_ - 1) };
 #else
-	srand(static_cast<unsigned int>(CompVThread::getIdCurrent()));
+	std::vector<int> vk_(k_);
+	std::iota(vk_.begin(), vk_.end(), 0);
 #endif
 
 	n_ = maxTries;
@@ -260,16 +262,11 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 			idx3 = unifd_(prng_);
 		} while (idx3 == idx0 || idx3 == idx1 || idx3 == idx2);
 #else
-		idx0 = (rand()) % k_;
-		do {
-			idx1 = (rand()) % k_;
-		} while (idx1 == idx0);
-		do {
-			idx2 = (rand()) % k_;
-		} while (idx2 == idx0 || idx2 == idx1);
-		do {
-			idx3 = (rand()) % k_;
-		} while (idx3 == idx0 || idx3 == idx1 || idx3 == idx2);
+		std::random_shuffle(vk_.begin(), vk_.end());
+		idx0 = vk_[0];
+		idx1 = vk_[1];
+		idx2 = vk_[2];
+		idx3 = vk_[3];
 #endif
 
 		// Set the #4 random points (src)

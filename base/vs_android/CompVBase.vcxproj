@@ -112,10 +112,15 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_fma_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_distance_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_matrix_intrin_neon64.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_convlt_intrin_avx2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_convlt_intrin_fma3_avx2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_convlt_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_distance_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_distance_intrin_sse42.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_matrix_intrin_avx.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse41.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_utils_intrin_ssse3.h" />
@@ -230,10 +235,15 @@
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_fma_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_distance_intrin_neon.cxx" />
+    <ClCompile Include="..\math\intrin\arm\compv_math_matrix_intrin_neon64.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_convlt_intrin_avx2.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_convlt_intrin_fma3_avx2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_convlt_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_distance_intrin_avx2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_distance_intrin_sse42.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_matrix_intrin_avx.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_matrix_intrin_sse2.cxx" />
+    <ClCompile Include="..\math\intrin\x86\compv_math_matrix_intrin_sse41.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_avx2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_sse2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_utils_intrin_ssse3.cxx" />
@@ -484,6 +494,8 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../asm/arm;%(IncludePaths)</IncludePaths>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ArmNeon>
       <ArmNeon Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ArmNeon>
+      <ArmNeonFma Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">false</ArmNeonFma>
+      <ArmNeonFma Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">false</ArmNeonFma>
     </GAS>
     <GAS Include="..\math\asm\arm\compv_math_distance_arm64_neon.S">
       <FileType>Document</FileType>

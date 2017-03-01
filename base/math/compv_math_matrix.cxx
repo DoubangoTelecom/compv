@@ -11,6 +11,7 @@
 #include "compv/base/math/intrin/x86/compv_math_matrix_intrin_sse2.h"
 #include "compv/base/math/intrin/x86/compv_math_matrix_intrin_sse41.h"
 #include "compv/base/math/intrin/x86/compv_math_matrix_intrin_avx.h"
+#include "compv/base/math/intrin/arm/compv_math_matrix_intrin_neon64.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVMatrix"
 
@@ -152,6 +153,11 @@ class CompVMatrixGeneric
 				}
 			}
 #elif COMPV_ARCH_ARM
+			if (A->isAlignedNEON() && B->isAlignedNEON() && (*R)->isAlignedNEON()) {
+				if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+					COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathMatrixMulABt_64f = CompVMathMatrixMulABt_64f_Intrin_NEON64);
+				}
+			}
 #endif
 
 			if (CompVMathMatrixMulABt_64f) {
@@ -279,7 +285,13 @@ class CompVMatrixGeneric
 				}
 			}
 #elif COMPV_ARCH_ARM
+			if (A->isAlignedNEON()) {
+				if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+					COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathMatrixMulGA_64f = CompVMathMatrixMulGA_64f_Intrin_NEON64);
+				}
+			}
 #endif
+
 			if (CompVMathMatrixMulGA_64f) {
 				CompVMathMatrixMulGA_64f(reinterpret_cast<compv_float64_t*>(ri_), reinterpret_cast<compv_float64_t*>(rj_), 
 					reinterpret_cast<compv_float64_t*>(&c), reinterpret_cast<compv_float64_t*>(&s), 
