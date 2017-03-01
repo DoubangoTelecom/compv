@@ -30,7 +30,7 @@
 @ arg(6) -> COMPV_ALIGNED(NEON) compv_uscalar_t bStrideInBytes
 @ arg(7) -> COMPV_ALIGNED(NEON) compv_float64_t* R
 @ arg(8) -> COMPV_ALIGNED(NEON) compv_uscalar_t rStrideInBytes
-COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON32
+.macro CompVMathMatrixMulABt_64f_Macro_NEON32 fusedMultiplyAdd
     COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 9
 	COMPV_GAS_SAVE_NEON_REGS
@@ -60,22 +60,22 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON32
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (i = 0; i < aRows; ++i)
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    LoopARows_CompVMathMatrixMulABt_64f_Asm_NEON32:
+    LoopARows_CompVMathMatrixMulABt_64f_Asm_NEON32\@:
         ldr_arg argi_B, B
         ldr_arg argi_bRows, bRows
         mov r11, R
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         @ for (j = 0; j < bRows; ++j)
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        LoopBRows_CompVMathMatrixMulABt_64f_Asm_NEON32:
+        LoopBRows_CompVMathMatrixMulABt_64f_Asm_NEON32\@:
             veor.64 vecSum, vecSum, vecSum
             mov r10, A
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             @ for (k = 0; k < bColsSigned - 7; k += 8)
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             lsrs r9, bCols, #3
-            beq EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON32
-            LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON32:
+            beq EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON32\@
+            LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON32\@:
                 subs r9, r9, #1
                 vld1.64 {q1x, q1y, q2x, q2y}, [r10 :128]!
                 vld1.64 {q3x, q3y, q4x, q4y}, [B :128]!
@@ -85,16 +85,23 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON32
                 vmul.f64 q6y, q2y, q4y
                 vld1.64 {q1x, q1y, q2x, q2y}, [r10 :128]!
                 vld1.64 {q3x, q3y, q4x, q4y}, [B :128]!
-                vmla.f64 q5x, q1x, q3x
-                vmla.f64 q5y, q1y, q3y
-                vmla.f64 q6x, q2x, q4x
-                vmla.f64 q6y, q2y, q4y
+                .if \fusedMultiplyAdd
+                    vfma.f64 q5x, q1x, q3x
+                    vfma.f64 q5y, q1y, q3y
+                    vfma.f64 q6x, q2x, q4x
+                    vfma.f64 q6y, q2y, q4y
+                .else
+                    vmla.f64 q5x, q1x, q3x
+                    vmla.f64 q5y, q1y, q3y
+                    vmla.f64 q6x, q2x, q4x
+                    vmla.f64 q6y, q2y, q4y
+                .endif
                 vadd.f64 q5x, q5x, q5y
                 vadd.f64 q6x, q6x, q6y
                 vadd.f64 vecSumx, vecSumx, q5x
                 vadd.f64 vecSumy, vecSumy, q6x
-                bne LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON32
-                EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON32:
+                bne LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON32\@
+                EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON32\@:
                 @@ EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON32 @@
 
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -102,45 +109,54 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON32
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             and r9, bCols, #7 @ modulo 8
             lsrs r9, r9, #2
-            beq EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON32
-            LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON32:
+            beq EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON32\@
+            LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON32\@:
                 vld1.64 {q1x, q1y, q2x, q2y}, [r10 :128]!
                 vld1.64 {q3x, q3y, q4x, q4y}, [B :128]!
                 vmul.f64 q5x, q1x, q3x
                 vmul.f64 q5y, q1y, q3y
-                vmla.f64 q5x, q2x, q4x
-                vmla.f64 q5y, q2y, q4y
+                .if \fusedMultiplyAdd
+                    vfma.f64 q5x, q2x, q4x
+                    vfma.f64 q5y, q2y, q4y
+                .else
+                    vmla.f64 q5x, q2x, q4x
+                    vmla.f64 q5y, q2y, q4y
+                .endif
                 vadd.f64 vecSumx, vecSumx, q5x
                 vadd.f64 vecSumy, vecSumy, q5y
-                EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON32:
+                EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON32\@:
                 @@ EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON32 @@
 
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             @ for (; k < bColsSigned; k += 1)
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             ands r9, bCols, #3 @ modulo 4
-            beq EndOf_LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON32
-            LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON32:
+            beq EndOf_LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON32\@
+            LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON32\@:
                 subs r9, r9, #1
                 vld1.64 {q1x}, [r10 :64]!
                 vld1.64 {q3x}, [B :64]!
-                vmla.f64 vecSumx, q1x, q3x
-                bne LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON32
-                EndOf_LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON32:
+                .if \fusedMultiplyAdd
+                    vfma.f64 vecSumx, q1x, q3x
+                .else
+                    vmla.f64 vecSumx, q1x, q3x
+                .endif
+                bne LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON32\@
+                EndOf_LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON32\@:
                 @@ EndOf_LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON32 @@
 
             vadd.f64 vecSumx, vecSumx, vecSumy
             vst1.64 {vecSumx}, [r11 :64]!
             subs bRows, bRows, #1
             add B, B, bStrideInBytes @ bStrideInBytes holds padInBytes
-            bne LoopBRows_CompVMathMatrixMulABt_64f_Asm_NEON32
+            bne LoopBRows_CompVMathMatrixMulABt_64f_Asm_NEON32\@
             @@ EndOf_LoopBRows_CompVMathMatrixMulABt_64f_Asm_NEON32 @@
 
 
         subs aRows, aRows, #1
         add A, A, aStrideInBytes
         add R, R, rStrideInBytes
-        bne LoopARows_CompVMathMatrixMulABt_64f_Asm_NEON32
+        bne LoopARows_CompVMathMatrixMulABt_64f_Asm_NEON32\@
         @@ EndOf_LoopARows_CompVMathMatrixMulABt_64f_Asm_NEON32 @@
 
     .unreq A
@@ -161,7 +177,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON32
 	COMPV_GAS_UNSHADOW_ARGS 9
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON32
+    CompVMathMatrixMulABt_64f_Macro_NEON32 0
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_FMA_NEON32
+    CompVMathMatrixMulABt_64f_Macro_NEON32 1
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> COMPV_ALIGNED(NEON) compv_float64_t* ri
