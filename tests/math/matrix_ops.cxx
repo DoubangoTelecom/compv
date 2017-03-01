@@ -195,7 +195,7 @@ COMPV_ERROR_CODE matrix_ops_mulGA()
 #endif
 
 #if LOOP_COUNT == 1
-	const bool fma = compv_tests_is_fma_enabled() && CompVCpu::isAsmEnabled(); // no FMA3 intrin impl.
+    const bool fma = false; //compv_tests_is_fma_enabled() && CompVCpu::isAsmEnabled(); // no FMA3 intrin impl.
 	COMPV_CHECK_EXP_RETURN(std::string(fma ? test->md5_fma: test->md5).compare(compv_tests_md5(A)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Matrix ops mulGA: MD5 mismatch");
 #endif
 
