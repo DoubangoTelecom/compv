@@ -59,9 +59,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulGA_64f_Asm_NEON64
     Loop8_CompVMathMatrixMulGA_64f_Asm_NEON64:
         subs r5, r5, #1
         ldp q0, q1, [ri]
-        ldp q2, q3, [ri]
+        ldp q2, q3, [ri, #32]
         ldp q4, q5, [rj]
-        ldp q6, q7, [rj]
+        ldp q6, q7, [rj, #32]
         fmul v9.2d, vecRI0.2d, vecC
         fmul v17.2d, vecRJ0.2d, vecS
         fmul v10.2d, vecRI1.2d, vecC
