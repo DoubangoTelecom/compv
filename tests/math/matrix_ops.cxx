@@ -185,7 +185,7 @@ COMPV_ERROR_CODE matrix_ops_mulGA()
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(mulGA) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-#if 0
+#if 1
 	TYP sum = 0; // should be 2.6090482639325790e+42 for 215 and float64
 	for (size_t j = 0; j < A->rows(); ++j) {
 		for (size_t i = 0; i < A->rows(); ++i) {
