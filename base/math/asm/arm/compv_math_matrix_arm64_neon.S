@@ -39,6 +39,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulGA_64f_Asm_NEON64
     #define vecC v31.d[0]
     #define vecS v31.d[1]
 
+    vecRI0 .req v0
+    vecRI1 .req v1
+    vecRI2 .req v2
+    vecRI3 .req v3
+    vecRJ0 .req v4
+    vecRJ1 .req v5
+    vecRJ2 .req v6
+    vecRJ3 .req v7
+
     ld1 { v31.d }[0], [cos1]
     ld1 { v31.d }[1], [sin1]
     
@@ -53,22 +62,22 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulGA_64f_Asm_NEON64
         ldp q2, q3, [ri]
         ldp q4, q5, [rj]
         ldp q6, q7, [rj]
-        fmul v9.2d, v0.2d, vecC
-        fmul v17.2d, v4.2d, vecS
-        fmul v10.2d, v1.2d, vecC
-        fmul v18.2d, v5.2d, vecS
-        fmul v11.2d, v2.2d, vecC
-        fmul v19.2d, v6.2d, vecS
-        fmul v12.2d, v3.2d, vecC
-        fmul v20.2d, v7.2d, vecS
-        fmul v13.2d, v4.2d, vecC
-        fmul v21.2d, v0.2d, vecS
-        fmul v14.2d, v5.2d, vecC
-        fmul v22.2d, v1.2d, vecS
-        fmul v15.2d, v6.2d, vecC
-        fmul v23.2d, v2.2d, vecS
-        fmul v16.2d, v7.2d, vecC
-        fmul v24.2d, v3.2d, vecS
+        fmul v9.2d, vecRI0.2d, vecC
+        fmul v17.2d, vecRJ0.2d, vecS
+        fmul v10.2d, vecRI1.2d, vecC
+        fmul v18.2d, vecRJ1.2d, vecS
+        fmul v11.2d, vecRI2.2d, vecC
+        fmul v19.2d, vecRJ2.2d, vecS
+        fmul v12.2d, vecRI3.2d, vecC
+        fmul v20.2d, vecRJ3.2d, vecS
+        fmul v13.2d, vecRJ0.2d, vecC
+        fmul v21.2d, vecRI0.2d, vecS
+        fmul v14.2d, vecRJ1.2d, vecC
+        fmul v22.2d, vecRI1.2d, vecS
+        fmul v15.2d, vecRJ2.2d, vecC
+        fmul v23.2d, vecRI2.2d, vecS
+        fmul v16.2d, vecRJ3.2d, vecC
+        fmul v24.2d, vecRI3.2d, vecS
         fadd v9.2d, v9.2d, v17.2d
         fadd v10.2d, v10.2d, v18.2d
         fadd v11.2d, v11.2d, v19.2d
@@ -92,17 +101,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulGA_64f_Asm_NEON64
     lsr r5, r5, #2 // div 4
     cbz r5, EndOf_Loop4_CompVMathMatrixMulGA_64f_Asm_NEON64
     Loop4_CompVMathMatrixMulGA_64f_Asm_NEON64:
-        subs r5, r5, #1
         ldp q0, q1, [ri]
         ldp q4, q5, [rj]
-        fmul v9.2d, v0.2d, vecC
-        fmul v17.2d, v4.2d, vecS
-        fmul v10.2d, v1.2d, vecC
-        fmul v18.2d, v5.2d, vecS
-        fmul v13.2d, v4.2d, vecC
-        fmul v21.2d, v0.2d, vecS
-        fmul v14.2d, v5.2d, vecC
-        fmul v22.2d, v1.2d, vecS
+        fmul v9.2d, vecRI0.2d, vecC
+        fmul v17.2d, vecRJ0.2d, vecS
+        fmul v10.2d, vecRI1.2d, vecC
+        fmul v18.2d, vecRJ1.2d, vecS
+        fmul v13.2d, vecRJ0.2d, vecC
+        fmul v21.2d, vecRI0.2d, vecS
+        fmul v14.2d, vecRJ1.2d, vecC
+        fmul v22.2d, vecRI1.2d, vecS
         fadd v9.2d, v9.2d, v17.2d
         fadd v10.2d, v10.2d, v18.2d
         fsub v13.2d, v13.2d, v21.2d
@@ -124,10 +132,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulGA_64f_Asm_NEON64
         subs r5, r5, #1
         ldr q0, [ri]
         ldr q4, [rj]
-        fmul v9.2d, v0.2d, vecC
-        fmul v17.2d, v4.2d, vecS
-        fmul v13.2d, v4.2d, vecC
-        fmul v21.2d, v0.2d, vecS
+        fmul v9.2d, vecRI0.2d, vecC
+        fmul v17.2d, vecRJ0.2d, vecS
+        fmul v13.2d, vecRJ0.2d, vecC
+        fmul v21.2d, vecRI0.2d, vecS
         fadd v9.2d, v9.2d, v17.2d
         fsub v13.2d, v13.2d, v21.2d
         str q9, [ri], #16
@@ -141,6 +149,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulGA_64f_Asm_NEON64
 	.unreq cos1
 	.unreq sin1
 	.unreq count
+
+    .unreq vecRI0
+    .unreq vecRI1
+    .unreq vecRI2
+    .unreq vecRI3
+    .unreq vecRJ0
+    .unreq vecRJ1
+    .unreq vecRJ2
+    .unreq vecRJ3
 
     #undef vecC
     #undef vecS

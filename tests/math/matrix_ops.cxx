@@ -111,8 +111,8 @@ COMPV_ERROR_CODE matrix_ops_mulAB()
 
 COMPV_ERROR_CODE matrix_ops_mulGA()
 {
-	static const size_t rows = 215; // not SIMD friendly
-	static const size_t cols = 215; // not SIMD friendly
+	static const size_t rows = 9; // not SIMD friendly
+	static const size_t cols = 9; // not SIMD friendly
 	CompVMatPtr A;
 
 	static const struct compv_unittest_mulGA {
