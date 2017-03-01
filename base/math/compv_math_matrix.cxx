@@ -35,6 +35,7 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X64_FMA3_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
+    COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_NEON32(const COMPV_ALIGNED(NEON) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(SSE) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(NEON) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(NEON) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(NEON) compv_float64_t* R, COMPV_ALIGNED(NEON) compv_uscalar_t rStrideInBytes);
     COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_NEON32(COMPV_ALIGNED(NEON) compv_float64_t* ri, COMPV_ALIGNED(NEON) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
     COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_FMA_NEON32(COMPV_ALIGNED(NEON) compv_float64_t* ri, COMPV_ALIGNED(NEON) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
 #   endif /* COMPV_ARCH_ARM32 */
@@ -160,6 +161,7 @@ class CompVMatrixGeneric
 			if (A->isAlignedNEON() && B->isAlignedNEON() && (*R)->isAlignedNEON()) {
 				if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
 					COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathMatrixMulABt_64f = CompVMathMatrixMulABt_64f_Intrin_NEON64);
+                    COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathMatrixMulABt_64f = CompVMathMatrixMulABt_64f_Asm_NEON32);
 				}
 			}
 #endif
