@@ -40,7 +40,7 @@
     A .req r0
 	aRows .req r1
 	aStrideInBytes .req r2
-	B .req r3
+	B_ .req r3
     bRows .req r4
     bCols .req r5
     bStrideInBytes .req r6
@@ -61,7 +61,7 @@
     @ for (i = 0; i < aRows; ++i)
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     LoopARows_CompVMathMatrixMulABt_64f_Asm_NEON32\@:
-        ldr_arg argi_B, B
+        ldr_arg argi_B, B_
         ldr_arg argi_bRows, bRows
         mov r11, R
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -78,13 +78,13 @@
             LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON32\@:
                 subs r9, r9, #1
                 vld1.64 {q1x, q1y, q2x, q2y}, [r10 :128]!
-                vld1.64 {q3x, q3y, q4x, q4y}, [B :128]!
+                vld1.64 {q3x, q3y, q4x, q4y}, [B_ :128]!
                 vmul.f64 q5x, q1x, q3x
                 vmul.f64 q5y, q1y, q3y
                 vmul.f64 q6x, q2x, q4x
                 vmul.f64 q6y, q2y, q4y
                 vld1.64 {q1x, q1y, q2x, q2y}, [r10 :128]!
-                vld1.64 {q3x, q3y, q4x, q4y}, [B :128]!
+                vld1.64 {q3x, q3y, q4x, q4y}, [B_ :128]!
                 .if \fusedMultiplyAdd
                     vfma.f64 q5x, q1x, q3x
                     vfma.f64 q5y, q1y, q3y
@@ -112,7 +112,7 @@
             beq EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON32\@
             LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON32\@:
                 vld1.64 {q1x, q1y, q2x, q2y}, [r10 :128]!
-                vld1.64 {q3x, q3y, q4x, q4y}, [B :128]!
+                vld1.64 {q3x, q3y, q4x, q4y}, [B_ :128]!
                 vmul.f64 q5x, q1x, q3x
                 vmul.f64 q5y, q1y, q3y
                 .if \fusedMultiplyAdd
@@ -135,7 +135,7 @@
             LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON32\@:
                 subs r9, r9, #1
                 vld1.64 {q1x}, [r10 :64]!
-                vld1.64 {q3x}, [B :64]!
+                vld1.64 {q3x}, [B_ :64]!
                 .if \fusedMultiplyAdd
                     vfma.f64 vecSumx, q1x, q3x
                 .else
@@ -148,7 +148,7 @@
             vadd.f64 vecSumx, vecSumx, vecSumy
             vst1.64 {vecSumx}, [r11 :64]!
             subs bRows, bRows, #1
-            add B, B, bStrideInBytes @ bStrideInBytes holds padInBytes
+            add B_, B_, bStrideInBytes @ bStrideInBytes holds padInBytes
             bne LoopBRows_CompVMathMatrixMulABt_64f_Asm_NEON32\@
             @@ EndOf_LoopBRows_CompVMathMatrixMulABt_64f_Asm_NEON32 @@
 
@@ -162,7 +162,7 @@
     .unreq A
 	.unreq aRows
 	.unreq aStrideInBytes
-	.unreq B
+	.unreq B_
     .unreq bRows
     .unreq bCols
     .unreq bStrideInBytes
