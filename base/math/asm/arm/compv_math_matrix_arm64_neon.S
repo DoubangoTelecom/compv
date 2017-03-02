@@ -39,7 +39,7 @@
     A .req r0
 	aRows .req r1
 	aStrideInBytes .req r2
-	B .req r3
+	B_ .req r3 // B is reserved name
     bRows .req r4
     bCols .req r5
     bStrideInBytes .req r6
@@ -67,7 +67,7 @@
     # for (i = 0; i < aRows; ++i)
     #########################################################################
     LoopARows_CompVMathMatrixMulABt_64f_Asm_NEON64\@:
-        mov BZero, B
+        mov BZero, B_
         mov j, bRows
         mov r11, R
         #########################################################################
@@ -232,7 +232,7 @@
     .unreq A
 	.unreq aRows
 	.unreq aStrideInBytes
-	.unreq B
+	.unreq B_
     .unreq bRows
     .unreq bCols
     .unreq bStrideInBytes

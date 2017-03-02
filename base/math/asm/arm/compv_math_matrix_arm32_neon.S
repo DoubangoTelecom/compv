@@ -40,7 +40,7 @@
     A .req r0
 	aRows .req r1
 	aStrideInBytes .req r2
-	B_ .req r3
+	B_ .req r3 @ B is reserved name
     bRows .req r4
     bCols .req r5
     bStrideInBytes .req r6
