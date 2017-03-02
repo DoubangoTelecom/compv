@@ -30,7 +30,7 @@
 # arg(6) -> COMPV_ALIGNED(NEON) compv_uscalar_t bStrideInBytes
 # arg(7) -> COMPV_ALIGNED(NEON) compv_float64_t* R
 # arg(8) -> COMPV_ALIGNED(NEON) compv_uscalar_t rStrideInBytes
-COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON64
+.macro CompVMathMatrixMulABt_64f_Macro_NEON64 fusedMultiplyAdd
     COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SAVE_NEON_REGS
 
@@ -66,14 +66,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON64
     #########################################################################
     # for (i = 0; i < aRows; ++i)
     #########################################################################
-    LoopARows_CompVMathMatrixMulABt_64f_Asm_NEON64:
+    LoopARows_CompVMathMatrixMulABt_64f_Asm_NEON64\@:
         mov BZero, B
         mov j, bRows
         mov r11, R
         #########################################################################
         # for (j = 0; j < bRows; ++j)
         #########################################################################
-        LoopBRows_CompVMathMatrixMulABt_64f_Asm_NEON64:
+        LoopBRows_CompVMathMatrixMulABt_64f_Asm_NEON64\@:
             movi vecSum.2d, #0
             mov r10, A
             #########################################################################
@@ -81,91 +81,108 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON64
             #########################################################################
             mov k, #0
             cmp bColsMinus15, #0
-            ble EndOf_LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64
-            LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64:
+            ble EndOf_LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64\@
+            LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64\@:
                 add k, k, #16
-                ldp q1, q2, [r10], #32
-                ldp q3, q4, [r10], #32
-                ldp q5, q6, [BZero], #32
-                ldp q7, q8, [BZero], #32
-                fmul v1.2d, v1.2d, v5.2d
-                fmul v2.2d, v2.2d, v6.2d
-                fmul v3.2d, v3.2d, v7.2d
-                fmul v4.2d, v4.2d, v8.2d
-                
-                ldp q5, q6, [r10], #32
-                ldp q7, q8, [r10], #32
-                ldp q9, q10, [BZero], #32
-                ldp q11, q12, [BZero], #32
-                fmul v5.2d, v5.2d, v9.2d
-                fmul v6.2d, v6.2d, v10.2d
-                fmul v7.2d, v7.2d, v11.2d
-                fmul v8.2d, v8.2d, v12.2d
+                .if \fusedMultiplyAdd
+                    ldp q1, q2, [r10], #32
+                    ldp q5, q6, [BZero], #32
+                    fmul v1.2d, v1.2d, v5.2d
+                    fmul v2.2d, v2.2d, v6.2d
+                    ldp q3, q4, [r10], #32
+                    ldp q7, q8, [BZero], #32
+                    fmul v3.2d, v3.2d, v7.2d
+                    fmul v4.2d, v4.2d, v8.2d
+                    ldp q5, q6, [r10], #32
+                    ldp q9, q10, [BZero], #32
+                    fmla v1.2d, v5.2d, v9.2d
+                    fmla v2.2d, v6.2d, v10.2d
+                    ldp q7, q8, [r10], #32
+                    ldp q11, q12, [BZero], #32
+                    fmla v3.2d, v7.2d, v11.2d
+                    fmla v4.2d, v8.2d, v12.2d
 
-                fadd v1.2d, v1.2d, v2.2d
-                fadd v3.2d, v3.2d, v4.2d
-                fadd v5.2d, v5.2d, v6.2d
-                fadd v7.2d, v7.2d, v8.2d
 
-                fadd v1.2d, v1.2d, v3.2d
-                fadd v5.2d, v5.2d, v7.2d
-
-                fadd vecSum.2d, vecSum.2d, v1.2d
-                fadd vecSum.2d, vecSum.2d, v5.2d
-                
+                    fadd v1.2d, v1.2d, v2.2d
+                    fadd v3.2d, v3.2d, v4.2d
+                    fadd vecSum.2d, vecSum.2d, v1.2d
+                    fadd vecSum.2d, vecSum.2d, v3.2d
+                .else                
+                    ldp q1, q2, [r10], #32
+                    ldp q5, q6, [BZero], #32
+                    fmul v1.2d, v1.2d, v5.2d
+                    fmul v2.2d, v2.2d, v6.2d
+                    ldp q3, q4, [r10], #32
+                    ldp q7, q8, [BZero], #32
+                    fmul v3.2d, v3.2d, v7.2d
+                    fmul v4.2d, v4.2d, v8.2d
+                    ldp q5, q6, [r10], #32
+                    ldp q9, q10, [BZero], #32
+                    fmul v5.2d, v5.2d, v9.2d
+                    fmul v6.2d, v6.2d, v10.2d
+                    ldp q7, q8, [r10], #32
+                    ldp q11, q12, [BZero], #32
+                    fmul v7.2d, v7.2d, v11.2d
+                    fmul v8.2d, v8.2d, v12.2d
+                    fadd v1.2d, v1.2d, v2.2d
+                    fadd v3.2d, v3.2d, v4.2d
+                    fadd v5.2d, v5.2d, v6.2d
+                    fadd v7.2d, v7.2d, v8.2d
+                    fadd v1.2d, v1.2d, v3.2d
+                    fadd v5.2d, v5.2d, v7.2d
+                    fadd vecSum.2d, vecSum.2d, v1.2d
+                    fadd vecSum.2d, vecSum.2d, v5.2d
+                .endif
                 cmp k, bColsMinus15
-                blt LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64
-                EndOf_LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64:
+                blt LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64\@
+                EndOf_LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64\@:
                 ## EndOf_LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64 ##
 
             #########################################################################
             # .if (k < bColsSigned - 7)
             #########################################################################
             cmp k, bColsMinus7
-            bge EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON64
-            LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON64:
+            bge EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON64\@
+            LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON64\@:
                 add k, k, #8
                 ldp q1, q2, [r10], #32
-                ldp q3, q4, [r10], #32
                 ldp q5, q6, [BZero], #32
-                ldp q7, q8, [BZero], #32
                 fmul v1.2d, v1.2d, v5.2d
                 fmul v2.2d, v2.2d, v6.2d
+                ldp q3, q4, [r10], #32
+                ldp q7, q8, [BZero], #32
                 fmul v3.2d, v3.2d, v7.2d
                 fmul v4.2d, v4.2d, v8.2d
-                fadd v1.2d, v1.2d, v3.2d
-                fadd v2.2d, v2.2d, v4.2d
-
+                fadd v1.2d, v1.2d, v2.2d
+                fadd v3.2d, v3.2d, v4.2d
                 fadd vecSum.2d, vecSum.2d, v1.2d
-                fadd vecSum.2d, vecSum.2d, v2.2d
-                EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON64:
+                fadd vecSum.2d, vecSum.2d, v3.2d
+                EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON64\@:
                 ## EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON64 ##
 
             #########################################################################
             # .if (k < bColsSigned - 3)
             #########################################################################
             cmp k, bColsMinus3
-            bge EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON64
-            LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON64:
+            bge EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON64\@
+            LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON64\@:
                 add k, k, #4
                 ldp q1, q2, [r10], #32
                 ldp q3, q4, [BZero], #32
                 fmul v1.2d, v1.2d, v3.2d
                 fmul v2.2d, v2.2d, v4.2d
-                
-                fadd v1.2d, v1.2d, v2.2d
-
                 fadd vecSum.2d, vecSum.2d, v1.2d
-                EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON64:
+                fadd vecSum.2d, vecSum.2d, v2.2d
+                EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON64\@:
                 ## EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON64 ##
 
             #########################################################################
             # for (; k < bColsSigned; k += 1)
             #########################################################################
             cmp k, bCols
-            bge EndOf_LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64
+            bge EndOf_LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64\@
             mov d17, vecSum.d[0] // intermediate sum
-            LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64:
+            LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64\@:
                 add k, k, #1
                 ldr d15, [r10], #8
                 ldr d16, [BZero], #8
@@ -173,24 +190,24 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON64
                 fadd d17, d17, d15
 
                 cmp k, bCols
-                blt LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64
+                blt LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64\@
                 // insert intermediate sum
                 ins vecSum.d[0], v17.d[0]
-                EndOf_LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64:
+                EndOf_LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64\@:
                 ## EndOf_LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64 ##
 
             faddp vecSum.2d, vecSum.2d, vecSum.2d
             st1 {vecSum.d}[0], [r11], #COMPV_GAS_FLOAT64_SZ_BYTES
             subs j, j, #1
             add BZero, BZero, bStrideInBytes // bStrideInBytes holds padInBytes
-            bne LoopBRows_CompVMathMatrixMulABt_64f_Asm_NEON64
+            bne LoopBRows_CompVMathMatrixMulABt_64f_Asm_NEON64\@
             ## EndOf_LoopBRows_CompVMathMatrixMulABt_64f_Asm_NEON64 ##
 
 
         subs aRows, aRows, #1
         add A, A, aStrideInBytes
         add R, R, rStrideInBytes
-        bne LoopARows_CompVMathMatrixMulABt_64f_Asm_NEON64
+        bne LoopARows_CompVMathMatrixMulABt_64f_Asm_NEON64\@
         ## EndOf_LoopARows_CompVMathMatrixMulABt_64f_Asm_NEON64 ##
 
     .unreq A
@@ -216,6 +233,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON64
     COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
+.endm
+
+#########################################################################
+COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON64
+    CompVMathMatrixMulABt_64f_Macro_NEON64 0
+
+#########################################################################
+COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_FMA_NEON64
+    CompVMathMatrixMulABt_64f_Macro_NEON64 1
 
 #########################################################################
 # arg(0) -> COMPV_ALIGNED(NEON) compv_float64_t* ri

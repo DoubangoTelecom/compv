@@ -172,6 +172,7 @@ class CompVMatrixGeneric
                     COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathMatrixMulABt_64f = CompVMathMatrixMulABt_64f_Asm_NEON64);
                     if (CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) {
                         COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathMatrixMulABt_64f = CompVMathMatrixMulABt_64f_Asm_FMA_NEON32);
+                        COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathMatrixMulABt_64f = CompVMathMatrixMulABt_64f_Asm_FMA_NEON64);
                     }
 				}
 			}
