@@ -48,9 +48,17 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON64
 
     BZero .req r12 // B0 is reserved name
     j .req r13
+    k .req r14
+    bColsMinus15 .req r15
+    bColsMinus7 .req r16
+    bColsMinus3 .req r17
 
     vecSum .req v0
     vecSumx .req d0
+
+    sub bColsMinus15, bCols, #15
+    sub bColsMinus7, bCols, #7
+    sub bColsMinus3, bCols, #3
 
     lsl r9, bCols, #3 // bColsInBytes
     sub bStrideInBytes, bStrideInBytes, r9 // Now bStrideInBytes holds padInBytes
@@ -71,10 +79,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON64
             #########################################################################
             # for (k = 0; k < bColsSigned - 15; k += 16)
             #########################################################################
-            lsr r9, bCols, #4
-            cbz r9, EndOf_LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64
+            mov k, #0
+            cmp bColsMinus15, #0
+            ble EndOf_LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64
             LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64:
-                subs r9, r9, #1
+                add k, k, #16
                 ldp q1, q2, [r10], #32
                 ldp q3, q4, [r10], #32
                 ldp q5, q6, [BZero], #32
@@ -93,28 +102,29 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON64
                 fmul v7.2d, v7.2d, v11.2d
                 fmul v8.2d, v8.2d, v12.2d
 
-                fadd v1.2d, v1.2d, v5.2d
-                fadd v2.2d, v2.2d, v6.2d
-                fadd v3.2d, v3.2d, v7.2d
-                fadd v4.2d, v4.2d, v8.2d
-
                 fadd v1.2d, v1.2d, v2.2d
                 fadd v3.2d, v3.2d, v4.2d
+                fadd v5.2d, v5.2d, v6.2d
+                fadd v7.2d, v7.2d, v8.2d
+
+                fadd v1.2d, v1.2d, v3.2d
+                fadd v5.2d, v5.2d, v7.2d
 
                 fadd vecSum.2d, vecSum.2d, v1.2d
-                fadd vecSum.2d, vecSum.2d, v3.2d
+                fadd vecSum.2d, vecSum.2d, v5.2d
                 
-                bne LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64
+                cmp k, bColsMinus15
+                blt LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64
                 EndOf_LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64:
                 ## EndOf_LoopBCols16_CompVMathMatrixMulABt_64f_Asm_NEON64 ##
 
             #########################################################################
             # .if (k < bColsSigned - 7)
             #########################################################################
-            and r9, bCols, #15 // modulo 16
-            lsr r9, r9, #3
-            cbz r9, EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON64
+            cmp k, bColsMinus7
+            bge EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON64
             LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON64:
+                add k, k, #8
                 ldp q1, q2, [r10], #32
                 ldp q3, q4, [r10], #32
                 ldp q5, q6, [BZero], #32
@@ -134,10 +144,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON64
             #########################################################################
             # .if (k < bColsSigned - 3)
             #########################################################################
-            and r9, bCols, #7 // modulo 8
-            lsr r9, r9, #2
-            cbz r9, EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON64
+            cmp k, bColsMinus3
+            bge EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON64
             LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON64:
+                add k, k, #4
                 ldp q1, q2, [r10], #32
                 ldp q3, q4, [BZero], #32
                 fmul v1.2d, v1.2d, v3.2d
@@ -152,17 +162,18 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON64
             #########################################################################
             # for (; k < bColsSigned; k += 1)
             #########################################################################
-            and r9, bCols, #3 // modulo 4
-            cbz r9, EndOf_LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64
+            cmp k, bCols
+            bge EndOf_LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64
             mov d17, vecSum.d[0] // intermediate sum
             LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64:
-                subs r9, r9, #1
+                add k, k, #1
                 ldr d15, [r10], #8
                 ldr d16, [BZero], #8
                 fmul d15, d15, d16
                 fadd d17, d17, d15
 
-                bne LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64
+                cmp k, bCols
+                blt LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64
                 // insert intermediate sum
                 ins vecSum.d[0], v17.d[0]
                 EndOf_LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64:
@@ -194,6 +205,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulABt_64f_Asm_NEON64
 
     .unreq BZero
     .unreq j
+    .unreq k
+    .unreq bColsMinus15
+    .unreq bColsMinus7
+    .unreq bColsMinus3
 
     .unreq vecSum
     .unreq vecSumx
