@@ -101,8 +101,6 @@
                     ldp q11, q12, [BZero], #32
                     fmla v3.2d, v7.2d, v11.2d
                     fmla v4.2d, v8.2d, v12.2d
-
-
                     fadd v1.2d, v1.2d, v2.2d
                     fadd v3.2d, v3.2d, v4.2d
                     fadd vecSum.2d, vecSum.2d, v1.2d
@@ -145,18 +143,31 @@
             bge EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON64\@
             LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON64\@:
                 add k, k, #8
-                ldp q1, q2, [r10], #32
-                ldp q5, q6, [BZero], #32
-                fmul v1.2d, v1.2d, v5.2d
-                fmul v2.2d, v2.2d, v6.2d
-                ldp q3, q4, [r10], #32
-                ldp q7, q8, [BZero], #32
-                fmul v3.2d, v3.2d, v7.2d
-                fmul v4.2d, v4.2d, v8.2d
-                fadd v1.2d, v1.2d, v2.2d
-                fadd v3.2d, v3.2d, v4.2d
-                fadd vecSum.2d, vecSum.2d, v1.2d
-                fadd vecSum.2d, vecSum.2d, v3.2d
+                .if \fusedMultiplyAdd
+                    ldp q1, q2, [r10], #32
+                    ldp q5, q6, [BZero], #32
+                    fmul v1.2d, v1.2d, v5.2d
+                    fmul v2.2d, v2.2d, v6.2d
+                    ldp q3, q4, [r10], #32
+                    ldp q7, q8, [BZero], #32
+                    fmla v1.2d, v3.2d, v7.2d
+                    fmla v2.2d, v4.2d, v8.2d
+                    fadd vecSum.2d, vecSum.2d, v1.2d
+                    fadd vecSum.2d, vecSum.2d, v2.2d
+                .else
+                    ldp q1, q2, [r10], #32
+                    ldp q5, q6, [BZero], #32
+                    fmul v1.2d, v1.2d, v5.2d
+                    fmul v2.2d, v2.2d, v6.2d
+                    ldp q3, q4, [r10], #32
+                    ldp q7, q8, [BZero], #32
+                    fmul v3.2d, v3.2d, v7.2d
+                    fmul v4.2d, v4.2d, v8.2d
+                    fadd v1.2d, v1.2d, v2.2d
+                    fadd v3.2d, v3.2d, v4.2d
+                    fadd vecSum.2d, vecSum.2d, v1.2d
+                    fadd vecSum.2d, vecSum.2d, v3.2d
+                .endif
                 EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON64\@:
                 ## EndOf_LoopBCols8_CompVMathMatrixMulABt_64f_Asm_NEON64 ##
 
@@ -169,10 +180,15 @@
                 add k, k, #4
                 ldp q1, q2, [r10], #32
                 ldp q3, q4, [BZero], #32
-                fmul v1.2d, v1.2d, v3.2d
-                fmul v2.2d, v2.2d, v4.2d
-                fadd vecSum.2d, vecSum.2d, v1.2d
-                fadd vecSum.2d, vecSum.2d, v2.2d
+                .if \fusedMultiplyAdd
+                    fmla vecSum.2d, v1.2d, v3.2d
+                    fmla vecSum.2d, v2.2d, v4.2d
+                .else
+                    fmul v1.2d, v1.2d, v3.2d
+                    fmul v2.2d, v2.2d, v4.2d
+                    fadd vecSum.2d, vecSum.2d, v1.2d
+                    fadd vecSum.2d, vecSum.2d, v2.2d
+                .endif
                 EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON64\@:
                 ## EndOf_LoopBCols4_CompVMathMatrixMulABt_64f_Asm_NEON64 ##
 
@@ -186,9 +202,12 @@
                 add k, k, #1
                 ldr d15, [r10], #8
                 ldr d16, [BZero], #8
-                fmul d15, d15, d16
-                fadd d17, d17, d15
-
+                .if \fusedMultiplyAdd
+                    fmla d17, d15, v16.d[0]
+                .else
+                    fmul d15, d15, d16
+                    fadd d17, d17, d15
+                .endif
                 cmp k, bCols
                 blt LoopBCols1_CompVMathMatrixMulABt_64f_Asm_NEON64\@
                 // insert intermediate sum
