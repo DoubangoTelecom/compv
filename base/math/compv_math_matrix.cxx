@@ -25,6 +25,7 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X86_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
 	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
 	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X86_FMA3_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
+	COMPV_EXTERNC void CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE) compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(SSE) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(SSE) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, COMPV_ALIGNED(SSE) compv_uscalar_t rStrideInBytes);
@@ -33,6 +34,7 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X64_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri, COMPV_ALIGNED(SSE) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
 	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X64_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
 	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X64_FMA3_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
+	COMPV_EXTERNC void CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE) compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
     COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_NEON32(const COMPV_ALIGNED(NEON) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(SSE) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(NEON) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(NEON) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(NEON) compv_float64_t* R, COMPV_ALIGNED(NEON) compv_uscalar_t rStrideInBytes);
@@ -339,11 +341,11 @@ class CompVMatrixGeneric
 	static COMPV_ERROR_CODE maxAbsOffDiag_symm(const CompVMatPtr &S, size_t *row, size_t *col, T* max)
 	{
 		// Input parameters checked in the calling function
+		// S = 9x9 for homography and fundamental matrix
 
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found.");
 
 		const size_t rowEnd = S->rows();
-		*max = 0;
 
 		T r0_ = 0, r1_;
 		size_t i, j;
@@ -738,21 +740,36 @@ class CompVMatrixGeneric
 	{
 		COMPV_CHECK_EXP_RETURN(!M || !srcX || !srcY || !dstX || !dstY || numPoints < 4, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
-
 		// Each point (x, y) contribute two rows in M which means has (2 x numPoints) rows
 		// "h" is a vector representing H (3x3) and is a 9x1 vector. This means M has 9 columns.
 		const size_t M_rows = 2 * numPoints;
 		const size_t M_cols = 9;
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(M, M_rows, M_cols));
-
-		size_t i;
 		const size_t M_strideInBytes = (*M)->strideInBytes();
-		T* M0_ptr = (*M)->ptr<T>();
 
-		// TODO(dmi): transpose M to make it more SIMD friendly
-		
-		T* M1_ptr = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(M0_ptr) + M_strideInBytes);
+		if (std::is_same<T, compv_float64_t>::value) {
+			void (*CompVMathMatrixBuildHomographyEqMatrix_64f)(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE) compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints)
+				= NULL;
+#if COMPV_ARCH_X86
+			if ((*M)->isAlignedSSE()) {
+				if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Intrin_SSE2);
+					COMPV_EXEC_IFDEF_ASM_X86(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X86_SSE2);
+					COMPV_EXEC_IFDEF_ASM_X64(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X64_SSE2);
+				}
+			}
+#endif
+
+			if (CompVMathMatrixBuildHomographyEqMatrix_64f) {
+				CompVMathMatrixBuildHomographyEqMatrix_64f(reinterpret_cast<const compv_float64_t*>(srcX), reinterpret_cast<const compv_float64_t*>(srcY), reinterpret_cast<const compv_float64_t*>(dstX), reinterpret_cast<const compv_float64_t*>(dstY), (*M)->ptr<compv_float64_t>(), static_cast<compv_uscalar_t>(M_strideInBytes), static_cast<compv_uscalar_t>(numPoints));
+				return COMPV_ERROR_CODE_S_OK;
+			}
+		}
+
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+		size_t i;
+		T* M0_ptr = (*M)->ptr<T>(0);
+		T* M1_ptr = (*M)->ptr<T>(1);
 		const size_t M_strideInBytesTimes2 = M_strideInBytes << 1;
 
 		for (i = 0; i < numPoints; ++i) {
@@ -769,7 +786,7 @@ class CompVMatrixGeneric
 			M0_ptr[7] = (dstX[i] * srcY[i]); // (x'y)/z'
 			M0_ptr[8] = dstX[i]; // x'/z'
 
-								 // Second #9 contributions
+			// Second #9 contributions
 			M1_ptr[0] = 0;
 			M1_ptr[1] = 0;
 			M1_ptr[2] = 0;

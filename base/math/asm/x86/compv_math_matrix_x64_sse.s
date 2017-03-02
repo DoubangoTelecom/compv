@@ -14,8 +14,14 @@ COMPV_YASM_DEFAULT_REL
 
 global sym(CompVMathMatrixMulABt_64f_Asm_X64_SSE2)
 global sym(CompVMathMatrixMulGA_64f_Asm_X64_SSE2)
+global sym(CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X64_SSE2)
 
 section .data
+	extern sym(kAVXFloat64MaskAbs)
+	extern sym(km1_f64)
+	extern sym(km1_0_f64)
+	extern sym(kAVXFloat64MaskNegate)
+	
 
 section .text
 
@@ -374,6 +380,88 @@ sym(CompVMathMatrixMulGA_64f_Asm_X64_SSE2):
 	; free memory and unalign stack
 	add rsp, (2*COMPV_YASM_XMM_SZ_BYTES)
 	COMPV_YASM_UNALIGN_STACK
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const compv_float64_t* srcX
+; arg(1) -> COMPV_ALIGNED(SSE) const compv_float64_t* srcY
+; arg(2) -> COMPV_ALIGNED(SSE) const compv_float64_t* dstX
+; arg(3) -> COMPV_ALIGNED(SSE) const compv_float64_t* dstY
+; arg(4) -> COMPV_ALIGNED(SSE) compv_float64_t* M
+; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t M_strideInBytes
+; arg(6) -> compv_uscalar_t numPoints
+sym(CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X64_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
+	COMPV_YASM_SAVE_XMM 12
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	xor rcx, rcx ; rcx = i = 0
+	mov rax, arg(5)
+	mov rsi, arg(4) ; rsi = M0_ptr
+	lea rdi, [rsi + rax] ; rdi = M1_ptr
+	shl rax, 1 ; rax = M_strideInBytesTimes2
+	mov rbx, arg(0) ; rbx = srcX
+	mov rdx, arg(1) ; rdx = srcY
+	mov r8, arg(2) ; r8 = dstX		
+	mov r9, arg(3) ; r9 = dstY
+	mov r10, arg(6) ; r10 = numPoints
+
+	xorpd xmm9, xmm9 ; xmm7 = vecZero
+	movapd xmm10, [sym(km1_0_f64)] ; xmm10 = vecMinusOneZero
+	movapd xmm11, [sym(kAVXFloat64MaskNegate)] ; xmm11 = vecMaskNegate
+	movapd xmm12, [sym(km1_f64)]
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (size_t i = 0; i < numPoints; ++i)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopPoints:
+		movsd xmm0, [rbx + rcx*COMPV_YASM_FLOAT64_SZ_BYTES]
+		movsd xmm1, [rdx + rcx*COMPV_YASM_FLOAT64_SZ_BYTES]
+		movsd xmm2, [r8 + rcx*COMPV_YASM_FLOAT64_SZ_BYTES]
+		movsd xmm3, [r9 + rcx*COMPV_YASM_FLOAT64_SZ_BYTES]
+		inc rcx
+		unpcklpd xmm0, xmm1
+		unpcklpd xmm2, xmm2
+		unpcklpd xmm3, xmm3
+		movapd xmm5, xmm2
+		mulpd xmm5, xmm0
+		movapd xmm7, xmm3
+		mulpd xmm7, xmm0
+		movapd xmm4, xmm0
+		xorpd xmm4, xmm11
+		xorpd xmm6, xmm6
+		movapd xmm8, xmm4
+		unpcklpd xmm6, xmm4
+		unpckhpd xmm8, xmm12
+		cmp rcx, r10
+		;/!\ do not revert store instructions: will be slower (because of cache issues)
+		movapd [rsi + 0*COMPV_YASM_FLOAT64_SZ_BYTES], xmm4
+		movapd [rsi + 2*COMPV_YASM_FLOAT64_SZ_BYTES], xmm10
+		movapd [rsi + 4*COMPV_YASM_FLOAT64_SZ_BYTES], xmm9
+		movapd [rsi + 6*COMPV_YASM_FLOAT64_SZ_BYTES], xmm5
+		movsd [rsi + 8*COMPV_YASM_FLOAT64_SZ_BYTES], xmm2
+		lea rsi, [rsi + rax]
+		movapd [rdi + 0*COMPV_YASM_FLOAT64_SZ_BYTES], xmm9
+		movapd [rdi + 2*COMPV_YASM_FLOAT64_SZ_BYTES], xmm6
+		movapd [rdi + 4*COMPV_YASM_FLOAT64_SZ_BYTES], xmm8
+		movapd [rdi + 6*COMPV_YASM_FLOAT64_SZ_BYTES], xmm7
+		movsd [rdi + 8*COMPV_YASM_FLOAT64_SZ_BYTES], xmm3
+		lea rdi, [rdi + rax]
+		jl .LoopPoints
 
 	;; begin epilog ;;
 	pop rbx

@@ -7,6 +7,7 @@
 #include "compv/base/math/intrin/x86/compv_math_matrix_intrin_sse2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
+#include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
@@ -109,6 +110,44 @@ void CompVMathMatrixMulGA_64f_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri
 		vecRJ0 = _mm_load_pd(&rj[i + 0]);
 		_mm_store_pd(&ri[i + 0], _mm_add_pd(_mm_mul_pd(vecRI0, vecC), _mm_mul_pd(vecRJ0, vecS)));
 		_mm_store_pd(&rj[i + 0], _mm_sub_pd(_mm_mul_pd(vecRJ0, vecC), _mm_mul_pd(vecRI0, vecS)));
+	}
+}
+
+void CompVMathMatrixBuildHomographyEqMatrix_64f_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE) compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	compv_float64_t* M0_ptr = const_cast<compv_float64_t*>(M);
+	compv_float64_t* M1_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M0_ptr) + M_strideInBytes);
+	const size_t M_strideInBytesTimes2 = M_strideInBytes << 1;
+	const __m128d vecZero = _mm_setzero_pd();
+	const __m128d vecMinusOne = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(km1_f64));
+	const __m128d vecMinusOneZero = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(km1_0_f64));
+	const __m128d vecMaskNegate = _mm_load_pd(reinterpret_cast<const compv_float64_t*>(kAVXFloat64MaskNegate));
+	__m128d vecSrcXY, vecDstX, vecDstY;
+	__m128d vecMinusXMinusY;
+
+	for (compv_uscalar_t i = 0; i < numPoints; ++i) {
+		vecSrcXY = _mm_unpacklo_pd(_mm_load_sd(&srcX[i]), _mm_load_sd(&srcY[i]));
+		vecDstX = _mm_load_sd(&dstX[i]);
+		vecDstY = _mm_load_sd(&dstY[i]);
+		vecMinusXMinusY = _mm_xor_pd(vecSrcXY, vecMaskNegate); // -x, -y
+		vecDstX = _mm_unpacklo_pd(vecDstX, vecDstX);
+		vecDstY = _mm_unpacklo_pd(vecDstY, vecDstY);
+		// First #9 contributions
+		_mm_store_pd(&M0_ptr[0], vecMinusXMinusY); // -x, -y
+		_mm_store_pd(&M0_ptr[2], vecMinusOneZero); // -1, 0
+		_mm_store_pd(&M0_ptr[4], vecZero); // 0, 0
+		_mm_store_pd(&M0_ptr[6], _mm_mul_pd(vecDstX, vecSrcXY)); // (dstX * srcX), (dstX * srcY)
+		_mm_store_sd(&M0_ptr[8], vecDstX);
+		// Second #9 contributions
+		_mm_store_pd(&M1_ptr[0], vecZero); // 0, 0
+		_mm_store_pd(&M1_ptr[2], _mm_unpacklo_pd(vecZero, vecMinusXMinusY)); // 0, -x
+		_mm_store_pd(&M1_ptr[4], _mm_unpackhi_pd(vecMinusXMinusY, vecMinusOne)); // -y, -1
+		_mm_store_pd(&M1_ptr[6], _mm_mul_pd(vecDstY, vecSrcXY)); // (dstY * srcX), (dstY * srcY)
+		_mm_store_sd(&M1_ptr[8], vecDstY);
+		// Move to the next point
+		M0_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M0_ptr) + M_strideInBytesTimes2);
+		M1_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M1_ptr) + M_strideInBytesTimes2);
 	}
 }
 
