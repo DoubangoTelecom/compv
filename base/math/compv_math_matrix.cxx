@@ -342,8 +342,9 @@ class CompVMatrixGeneric
 	{
 		// Input parameters checked in the calling function
 		// S = 9x9 for homography and fundamental matrix
-
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found.");
+		if (S->rows() * S->cols() > 81) { // 9x9 (low diag. only) is too small for SIMD or GPU acceleration
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found.");
+		}
 
 		const size_t rowEnd = S->rows();
 
@@ -577,7 +578,6 @@ class CompVMatrixGeneric
 
 	static COMPV_ERROR_CODE transpose(const CompVMatPtr &A, CompVMatPtrPtr R)
 	{
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation and not multi-thread"); // TODO(dmi): do not print message for small matrices (e.g. (rows * cols) < 200)
 		COMPV_CHECK_EXP_RETURN(!A || !R || A->isEmpty() || A == *R, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
 		// Create A if not already done

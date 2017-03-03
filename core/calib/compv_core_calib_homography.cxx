@@ -308,7 +308,7 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 
 		// update total tries
 		nnew_ = (static_cast<size_t>(std::log(static_cast<T>(1.) - p_) / std::log(static_cast<T>(1.) - std::pow(static_cast<T>(1.) - e_, subsetf_))) / threadsCount) + 1;
-		n_ = COMPV_MATH_MIN(n_, nnew_);
+		n_ = COMPV_MATH_MIN(maxTries, nnew_);
 
 		++t_;
 	}

@@ -104,6 +104,8 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_avx.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_matrix_intrin_sse41.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_stats_intrin_avx.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_stats_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_ssse3.h" />
@@ -273,6 +275,8 @@
     </ClCompile>
     <ClCompile Include="math\intrin\x86\compv_math_matrix_intrin_sse2.cxx" />
     <ClCompile Include="math\intrin\x86\compv_math_matrix_intrin_sse41.cxx" />
+    <ClCompile Include="math\intrin\x86\compv_math_stats_intrin_avx.cxx" />
+    <ClCompile Include="math\intrin\x86\compv_math_stats_intrin_sse2.cxx" />
     <ClCompile Include="math\intrin\x86\compv_math_utils_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>

@@ -108,7 +108,7 @@ void CompVMathMatrixMulGA_64f_Intrin_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri,
 	}
 
 	// Case #8
-	if (i < countSigned - 7) {
+	if (i < countSigned - 7) { // countSigned is equal to #9 for homography
 		vecRI0 = _mm256_load_pd(&ri[i + 0]);
 		vecRI1 = _mm256_load_pd(&ri[i + 4]);
 		vecRJ0 = _mm256_load_pd(&rj[i + 0]);

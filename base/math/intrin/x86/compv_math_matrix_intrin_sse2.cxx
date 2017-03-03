@@ -72,7 +72,7 @@ void CompVMathMatrixMulGA_64f_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri
 	const __m128d vecS = _mm_load1_pd(s1);
 
 	// Case #8
-	for (i = 0; i < countSigned - 7; i += 8) {
+	for (i = 0; i < countSigned - 7; i += 8) { // countSigned is equal to #9 for homography
 		vecRI0 = _mm_load_pd(&ri[i + 0]);
 		vecRI1 = _mm_load_pd(&ri[i + 2]);
 		vecRI2 = _mm_load_pd(&ri[i + 4]);

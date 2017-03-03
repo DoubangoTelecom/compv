@@ -7,6 +7,8 @@
 #include "compv/base/math/compv_math_stats.h"
 #include "compv/base/math/compv_math_utils.h"
 
+#include "compv/base/math/intrin/x86/compv_math_stats_intrin_sse2.h"
+
 #define COMPV_THIS_CLASSNAME	"CompVMathStats"
 
 COMPV_NAMESPACE_BEGIN()
@@ -21,11 +23,39 @@ template <class T>
 COMPV_ERROR_CODE CompVMathStats<T>::normalize2D_hartley(const T* x, const T* y, size_t numPoints, T* tx1, T* ty1, T* s1)
 {
 	COMPV_CHECK_EXP_RETURN(!x || !y || !numPoints || !tx1 || !ty1 || !s1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+	
 	if (numPoints > 100) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	}
+
+	if (std::is_same<T, compv_float64_t>::value) {
+		void(*CompVMathStatsNormalize2DHartley_64f)(const COMPV_ALIGNED(V) compv_float64_t* x, const COMPV_ALIGNED(V) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1) = NULL;
+		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && numPoints > 1 && COMPV_IS_ALIGNED_SSE(x) && COMPV_IS_ALIGNED_SSE(y)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Intrin_SSE2);
+			//COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Asm_X86_SSE2);
+			if (numPoints == 4) { // Homography -> very common
+				COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_4_64f_Intrin_SSE2);
+				//COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_4_64f_Asm_X86_SSE2);
+			}
+		}
+#if 0 // TODO(dmi): AVX code not faster than SSE
+		if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && numPoints > 3 && COMPV_IS_ALIGNED_AVX(x) && COMPV_IS_ALIGNED_AVX(y)) {
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // AVX code not faster than SSE
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Intrin_AVX);
+			COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Asm_X86_AVX);
+			if (numPoints == 4) { // Homography -> very common
+				COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsNormalize2DHartley_64f = MathStatsNormalize2DHartley_4_64f_Intrin_AVX);
+				COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsNormalize2DHartley_64f = MathStatsNormalize2DHartley_4_64f_Asm_X86_AVX);
+			}
+		}
+#endif
+		if (CompVMathStatsNormalize2DHartley_64f) {
+			CompVMathStatsNormalize2DHartley_64f(reinterpret_cast<const compv_float64_t*>(x), reinterpret_cast<const compv_float64_t*>(y), static_cast<compv_uscalar_t>(numPoints), reinterpret_cast<compv_float64_t*>(tx1), reinterpret_cast<compv_float64_t*>(ty1), reinterpret_cast<compv_float64_t*>(s1));
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	size_t i;
 	T tx = 0, ty = 0, magnitude = 0, OneOverNumPoints = static_cast<T>(static_cast<T>(1) / numPoints), a, b;
 
@@ -61,16 +91,39 @@ template <class T>
 COMPV_ERROR_CODE CompVMathStats<T>::mse2D_homogeneous(CompVMatPtrPtr mse, const T* aX_h, const T* aY_h, const T* aZ_h, const T* bX, const T* bY, size_t numPoints)
 {
 	COMPV_CHECK_EXP_RETURN(!aX_h || !aY_h || !aZ_h || !bX || !bY || !numPoints, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+	
 	if (numPoints > 100) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	}
 	
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(mse, 1, numPoints));
 	T* msePtr = (*mse)->ptr<T>();
-	T ex, ey, scale;
 
+	if (std::is_same<T, compv_float64_t>::value) {
+		void(*CompVMathStatsMSE2DHomogeneous_64f)(const COMPV_ALIGNED(X) compv_float64_t* aX_h, const COMPV_ALIGNED(X) compv_float64_t* aY_h, const COMPV_ALIGNED(X) compv_float64_t* aZ_h, const COMPV_ALIGNED(X) compv_float64_t* bX, const COMPV_ALIGNED(X) compv_float64_t* bY, COMPV_ALIGNED(X) compv_float64_t* mse, compv_uscalar_t numPoints) = NULL;
+		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && numPoints > 1 && COMPV_IS_ALIGNED_SSE(aX_h) && COMPV_IS_ALIGNED_SSE(aY_h) && COMPV_IS_ALIGNED_SSE(aZ_h) && COMPV_IS_ALIGNED_SSE(bX) && COMPV_IS_ALIGNED_SSE(bY) && COMPV_IS_ALIGNED_SSE(msePtr)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Intrin_SSE2);
+			//COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Asm_X86_SSE2);
+			//COMPV_EXEC_IFDEF_ASM_X64(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Asm_X64_SSE2);
+			if (numPoints == 4) { // Homography -> very common (not true!!)
+				COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_4_64f_Intrin_SSE2);
+				//COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_4_64f_Asm_X86_SSE2);
+			}
+		}
+#if 0
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // AVX code not faster than SSE
+		if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && numPoints > 1 && COMPV_IS_ALIGNED_AVX(aX_h) && COMPV_IS_ALIGNED_AVX(aY_h) && COMPV_IS_ALIGNED_AVX(aZ_h) && COMPV_IS_ALIGNED_AVX(bX) && COMPV_IS_ALIGNED_AVX(bY) && COMPV_IS_ALIGNED_AVX(msePtr)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Intrin_AVX);
+		}
+#endif
+		if (CompVMathStatsMSE2DHomogeneous_64f) {
+			CompVMathStatsMSE2DHomogeneous_64f(reinterpret_cast<const compv_float64_t*>(aX_h), reinterpret_cast<const compv_float64_t*>(aY_h), reinterpret_cast<const compv_float64_t*>(aZ_h), reinterpret_cast<const compv_float64_t*>(bX), reinterpret_cast<const compv_float64_t*>(bY), reinterpret_cast<compv_float64_t*>(msePtr), static_cast<compv_uscalar_t>(numPoints));
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+	T ex, ey, scale;
 	for (size_t i = 0; i < numPoints; ++i) {
 		// scale used to convert A from homogeneous to cartesian coordsys
 		// z = 0 -> point a infinity (no division error is T is floating point number)
@@ -88,11 +141,27 @@ COMPV_ERROR_CODE CompVMathStats<T>::variance(const T* data, size_t count, T mean
 {
 	COMPV_CHECK_EXP_RETURN(!data || count < 2 || !var1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found"); // TODO(dmi): SIMD use "T* mean1" to avoid mvzx
 	if (count > 100) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	}
 
+	if (std::is_same<T, compv_float64_t>::value) {
+		void(*CompVMathStatsVariance_64f)(const COMPV_ALIGNED(X) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1) = NULL;
+		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && count > 1 && COMPV_IS_ALIGNED_SSE(data)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Intrin_SSE2);
+			//COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Asm_X86_SSE2);
+		}
+		if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && count > 3 && COMPV_IS_ALIGNED_AVX(data)) {
+			//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Intrin_AVX);
+			//COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Asm_X86_AVX);
+		}
+		if (CompVMathStatsVariance_64f) {
+			CompVMathStatsVariance_64f(reinterpret_cast<const compv_float64_t*>(data), (compv_uscalar_t)count, reinterpret_cast<const compv_float64_t*>(&mean), reinterpret_cast<compv_float64_t*>(var1));
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	T dev, var = 0;
 	for (size_t i = 0; i < count; ++i) {
 		dev = (data[i] - mean);

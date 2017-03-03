@@ -72,13 +72,6 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 	// Change D = GtDG :
 	// D = GtDG = Gt(GtDt)t
 
-	// TODO(dmi): add mulGA9x9, transposeA9x9
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("mulGA9x9 (Homography and Fundamental matrices)");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("transposeA9x9 (Homography and Fundamental matrices)");
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("maxAbsOffDiag_symm9x9 (Homography and Fundamental matrices)");
-	// Homography and Fundamental matrices are 3x3 which means we will be frequently working with 9x9 eigenvectors/eigenvalues matrices (Qt and D)
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Homography and Fundamental matrices are 3x3 which means we will be frequently working with 9x9 eigenvectors/eigenvalues matrices (Qt and D)");
-
 	// Instead of returning Q = QG, return Qt, Qt = GtQt
 
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&GD_2rows, 2, D_->rows()));
