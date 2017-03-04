@@ -8,9 +8,18 @@
 #include "compv/base/math/compv_math_matrix.h"
 #include "compv/base/math/compv_math_utils.h"
 
+#include "compv/base/math/intrin/x86/compv_math_transform_intrin_avx.h"
+#include "compv/base/math/intrin/x86/compv_math_transform_intrin_sse2.h"
+
 #define COMPV_THIS_CLASSNAME	"CompVMathTransform"
 
 COMPV_NAMESPACE_BEGIN()
+#if COMPV_ASM
+#	if COMPV_ARCH_X86
+	COMPV_EXTERNC void CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* srcZ, COMPV_ALIGNED(SSE) compv_float64_t* dstX, COMPV_ALIGNED(SSE) compv_float64_t* dstY, compv_uscalar_t numPoints);
+	COMPV_EXTERNC void CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* srcX, const COMPV_ALIGNED(AVX) compv_float64_t* srcY, const COMPV_ALIGNED(AVX) compv_float64_t* srcZ, COMPV_ALIGNED(AVX) compv_float64_t* dstX, COMPV_ALIGNED(AVX) compv_float64_t* dstY, compv_uscalar_t numPoints);
+#	endif /* COMPV_ARCH_X86 */
+#endif /* COMPV_ASM */
 
 // src = homogeneous 2D coordinate (X, Y, 1)
 // dst = cartesian 2D coordinate (x, y)
@@ -35,26 +44,45 @@ template<class T>
 COMPV_ERROR_CODE CompVMathTransform<T>::homogeneousToCartesian2D(CompVMatPtrPtr dst, const CompVMatPtr &src)
 {
 	COMPV_CHECK_EXP_RETURN(!src || !dst || src->rows() != 3 || !src->cols(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found"); 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No fast SIMD x4 implementation found"); // SIMD, Special version with cols == 4 (see deprecated code)
 	
 	CompVMatPtr dst_ = (src == *dst) ? (CompVMatPtr)NULL: *dst;
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&dst_, 2, src->cols()));
-	
 	const T* srcX = src->ptr<const T>(0);
 	const T* srcY = src->ptr<const T>(1);
 	const T* srcZ = src->ptr<const T>(2);
 	T* dstX = dst_->ptr<T>(0);
 	T* dstY = dst_->ptr<T>(1);
-	T scale;
 	const size_t cols = src->cols();
+
+	// #4 points is too common (rectangle)
+
+	if (std::is_same<T, compv_float64_t>::value) {
+		void(*CompVMathTransformHomogeneousToCartesian2D_64f)(const COMPV_ALIGNED(X) compv_float64_t* srcX, const COMPV_ALIGNED(X) compv_float64_t* srcY, const COMPV_ALIGNED(X) compv_float64_t* srcZ, COMPV_ALIGNED(X) compv_float64_t* dstX, COMPV_ALIGNED(X) compv_float64_t* dstY, compv_uscalar_t numPoints) = NULL;
+		if (cols > 1 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && src->isAlignedSSE() && dst_->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_64f_Intrin_SSE2);
+			if (cols == 4) {
+				COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Intrin_SSE2);
+				COMPV_EXEC_IFDEF_ASM_X86(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_X86_SSE2);
+			}
+		}
+		if (cols == 4 && CompVCpu::isEnabled(compv::kCpuFlagAVX) && src->isAlignedAVX() && dst_->isAlignedAVX()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Intrin_AVX);
+			COMPV_EXEC_IFDEF_ASM_X86(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_X86_AVX);
+		}
+		if (CompVMathTransformHomogeneousToCartesian2D_64f) {
+			CompVMathTransformHomogeneousToCartesian2D_64f(reinterpret_cast<const compv_float64_t*>(srcX), reinterpret_cast<const compv_float64_t*>(srcY), reinterpret_cast<const compv_float64_t*>(srcZ), reinterpret_cast<compv_float64_t*>(dstX), reinterpret_cast<compv_float64_t*>(dstY), static_cast<compv_uscalar_t>(cols));
+			*dst = dst_;
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
+	
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+	T scale;
 	for (size_t i = 0; i < cols; ++i) {
 		scale = static_cast<T>(1) / srcZ[i]; // z = 0 -> point at infinity (no division error is T is floating point numer)
 		dstX[i] = srcX[i] * scale;
 		dstY[i] = srcY[i] * scale;
 	}
-
 	*dst = dst_;
 
 	return COMPV_ERROR_CODE_S_OK;

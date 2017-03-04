@@ -16,11 +16,11 @@ COMPV_ERROR_CODE homogeneousToCartesian2D()
 	}
 	COMPV_UNITTEST_TRF_FLOAT64[] = {
 		{ 215, static_cast<TYP>(2.5678054377560273), static_cast<TYP>(9.7235173598526146) },
-		{ 4, static_cast<TYP>(1.7749999999999999), static_cast<TYP>(3.3750000000000000) },
+		{ 4, static_cast<TYP>(1.7749999999999999), static_cast<TYP>(3.3750000000000000) }, // rectangle
 	},
 	COMPV_UNITTEST_TRF_FLOAT32[] = {
 		{ 215, static_cast<TYP>(2.56780767), static_cast<TYP>(9.72351551) },
-		{ 4, static_cast<TYP>(1.77499998), static_cast<TYP>(3.37500000) },
+		{ 4, static_cast<TYP>(1.77499998), static_cast<TYP>(3.37500000) }, // rectangle
 	};
 
 	const compv_unittest_trf* test = NULL;
