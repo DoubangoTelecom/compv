@@ -10,6 +10,7 @@
 
 #include "compv/base/math/intrin/x86/compv_math_transform_intrin_avx.h"
 #include "compv/base/math/intrin/x86/compv_math_transform_intrin_sse2.h"
+#include "compv/base/math/intrin/arm/compv_math_transform_intrin_neon64.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVMathTransform"
 
@@ -58,6 +59,7 @@ COMPV_ERROR_CODE CompVMathTransform<T>::homogeneousToCartesian2D(CompVMatPtrPtr 
 
 	if (std::is_same<T, compv_float64_t>::value) {
 		void(*CompVMathTransformHomogeneousToCartesian2D_64f)(const COMPV_ALIGNED(X) compv_float64_t* srcX, const COMPV_ALIGNED(X) compv_float64_t* srcY, const COMPV_ALIGNED(X) compv_float64_t* srcZ, COMPV_ALIGNED(X) compv_float64_t* dstX, COMPV_ALIGNED(X) compv_float64_t* dstY, compv_uscalar_t numPoints) = NULL;
+#if COMPV_ARCH_X86
 		if (cols > 1 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && src->isAlignedSSE() && dst_->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_64f_Intrin_SSE2);
 			if (cols == 4) {
@@ -69,6 +71,14 @@ COMPV_ERROR_CODE CompVMathTransform<T>::homogeneousToCartesian2D(CompVMatPtrPtr 
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Intrin_AVX);
 			COMPV_EXEC_IFDEF_ASM_X86(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_X86_AVX);
 		}
+#else
+		if (cols > 1 && CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && src->isAlignedNEON() && dst_->isAlignedNEON()) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_64f_Intrin_NEON64);
+			if (cols == 4) {
+				COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Intrin_NEON64);
+			}
+		}
+#endif
 		if (CompVMathTransformHomogeneousToCartesian2D_64f) {
 			CompVMathTransformHomogeneousToCartesian2D_64f(reinterpret_cast<const compv_float64_t*>(srcX), reinterpret_cast<const compv_float64_t*>(srcY), reinterpret_cast<const compv_float64_t*>(srcZ), reinterpret_cast<compv_float64_t*>(dstX), reinterpret_cast<compv_float64_t*>(dstY), static_cast<compv_uscalar_t>(cols));
 			*dst = dst_;

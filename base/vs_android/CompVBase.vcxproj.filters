@@ -450,6 +450,9 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_stats_intrin_neon64.h">
       <Filter>include\math\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_transform_intrin_neon64.h">
+      <Filter>include\math\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -744,6 +747,9 @@
       <Filter>source\math\intrin\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\math\intrin\arm\compv_math_stats_intrin_neon64.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\intrin\arm\compv_math_transform_intrin_neon64.cxx">
       <Filter>source\math\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>

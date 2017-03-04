@@ -9,6 +9,7 @@
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/compv_simd_globals.h"
 #include "compv/base/compv_debug.h"
+
 COMPV_NAMESPACE_BEGIN()
 
 // "src" and "dst" must have the same stride and "strideInBytes" must be SSE-aligned
@@ -54,7 +55,7 @@ void CompVMathTransformHomogeneousToCartesian2D_64f_Intrin_SSE2(const COMPV_ALIG
 	if (numPoints_ & 1) {
 		vec0 = _mm_div_sd(vecOne, _mm_load_sd(&srcZ[i]));
 		_mm_store_sd(&dstX[i], _mm_mul_sd(_mm_load_sd(&srcX[i]), vec0));
-		_mm_store_sd(&dstY[i], _mm_mul_pd(_mm_load_sd(&srcY[i]), vec0));
+		_mm_store_sd(&dstY[i], _mm_mul_sd(_mm_load_sd(&srcY[i]), vec0));
 	}
 }
 
