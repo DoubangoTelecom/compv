@@ -113,6 +113,7 @@
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_convlt_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_distance_intrin_neon.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_matrix_intrin_neon64.h" />
+    <ClInclude Include="..\include\compv\base\math\intrin\arm\compv_math_stats_intrin_neon64.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_convlt_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_convlt_intrin_fma3_avx2.h" />
     <ClInclude Include="..\include\compv\base\math\intrin\x86\compv_math_convlt_intrin_sse2.h" />
@@ -240,6 +241,7 @@
     <ClCompile Include="..\math\intrin\arm\compv_math_convlt_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_distance_intrin_neon.cxx" />
     <ClCompile Include="..\math\intrin\arm\compv_math_matrix_intrin_neon64.cxx" />
+    <ClCompile Include="..\math\intrin\arm\compv_math_stats_intrin_neon64.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_convlt_intrin_avx2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_convlt_intrin_fma3_avx2.cxx" />
     <ClCompile Include="..\math\intrin\x86\compv_math_convlt_intrin_sse2.cxx" />

@@ -193,32 +193,32 @@ void CompVMathMatrixInvA3x3_64f_Intrin_NEON64(const COMPV_ALIGNED(NEON) compv_fl
 		COMPV_DEBUG_INFO_EX("CompVMathMatrixInvA3x3_64f_Intrin_NEON64", "3x3 Matrix is singluar... computing pseudoinverse instead of the inverse");
 	}
 	else {
-		float64x2_t vecDetA = vdupq_n_f64(static_cast<compv_float64_t>(1.) / detA);
+		const float64x2_t vecInvDetA = vdupq_n_f64(static_cast<compv_float64_t>(1.) / detA);
 		compv_float64_t* r0 = R;
 		compv_float64_t* r1 = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(r0) + strideInBytes);
 		compv_float64_t* r2 = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(r1) + strideInBytes);
 
 		vec0 = vmulq_f64(vcombine_f64(vld1_f64(&a1[1]), vld1_f64(&a0[2])), vcombine_f64(vld1_f64(&a2[2]), vld1_f64(&a2[1])));
 		vec1 = vmulq_f64(vcombine_f64(vld1_f64(&a2[1]), vld1_f64(&a2[2])), vcombine_f64(vld1_f64(&a1[2]), vld1_f64(&a0[1])));
-		vst1q_f64(&r0[0], vmulq_f64(vsubq_f64(vec0, vec1), vecDetA));
+		vst1q_f64(&r0[0], vmulq_f64(vsubq_f64(vec0, vec1), vecInvDetA));
 
 		vec0 = vmulq_f64(vcombine_f64(vld1_f64(&a0[1]), vld1_f64(&a1[2])), vcombine_f64(vld1_f64(&a1[2]), vld1_f64(&a2[0])));
 		vec1 = vmulq_f64(vcombine_f64(vld1_f64(&a1[1]), vld1_f64(&a2[2])), vcombine_f64(vld1_f64(&a0[2]), vld1_f64(&a1[0])));
-		vec2 = vmulq_f64(vsubq_f64(vec0, vec1), vecDetA);
+		vec2 = vmulq_f64(vsubq_f64(vec0, vec1), vecInvDetA);
 		vst1_f64(&r0[2], vget_low_f64(vec2));
 		vst1_f64(&r1[0], vget_high_f64(vec2));
 
 		vec0 = vmulq_f64(vcombine_f64(vld1_f64(&a0[0]), vld1_f64(&a0[2])), vcombine_f64(vld1_f64(&a2[2]), vld1_f64(&a1[0])));
 		vec1 = vmulq_f64(vcombine_f64(vld1_f64(&a2[0]), vld1_f64(&a1[2])), vcombine_f64(vld1_f64(&a0[2]), vld1_f64(&a0[0])));
-		vst1q_f64(&r1[1], vmulq_f64(vsubq_f64(vec0, vec1), vecDetA)); // asm: unaligned store
+		vst1q_f64(&r1[1], vmulq_f64(vsubq_f64(vec0, vec1), vecInvDetA)); // asm: unaligned store
 
 		vec0 = vmulq_f64(vcombine_f64(vld1_f64(&a1[0]), vld1_f64(&a0[1])), vcombine_f64(vld1_f64(&a2[1]), vld1_f64(&a2[0])));
 		vec1 = vmulq_f64(vcombine_f64(vld1_f64(&a2[0]), vld1_f64(&a2[1])), vcombine_f64(vld1_f64(&a1[1]), vld1_f64(&a0[0])));
-		vst1q_f64(&r2[0], vmulq_f64(vsubq_f64(vec0, vec1), vecDetA));
+		vst1q_f64(&r2[0], vmulq_f64(vsubq_f64(vec0, vec1), vecInvDetA));
 
 		vec0 = vmulq_f64(vcombine_f64(vld1_f64(&a0[0]), vld1_f64(&a1[0])), vcombine_f64(vld1_f64(&a1[1]), vld1_f64(&a0[1])));
 		vec0n = vsub_f64(vget_low_f64(vec0), vget_high_f64(vec0));
-		vst1_f64(&r2[2], vmul_f64(vec0n, vget_low_f64(vecDetA)));
+		vst1_f64(&r2[2], vmul_f64(vec0n, vget_low_f64(vecInvDetA)));
 	}
 	*det1 = detA;
 }

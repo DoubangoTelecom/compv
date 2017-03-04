@@ -1,7 +1,7 @@
 #include "../tests_common.h"
 
 #define TAG_TEST			"TestInverse"
-#define LOOP_COUNT			1000
+#define LOOP_COUNT			1
 #define TYP					compv_float64_t
 #define ERR_MAX_F64			3.8163916471489756e-16
 #define ERR_MAX_F32			6.80796802e-09
