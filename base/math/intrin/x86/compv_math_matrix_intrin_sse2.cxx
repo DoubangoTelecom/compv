@@ -170,7 +170,7 @@ void CompVMathMatrixInvA3x3_64f_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float
 	vec0 = _mm_mul_sd(vec0, _mm_load_sd(&a2[0]));
 	compv_float64_t detA = _mm_cvtsd_f64(_mm_add_sd(vec0, vec3));
 	if (detA == 0) {
-		COMPV_DEBUG_INFO_EX("IntrinSSE2", "3x3 Matrix is singluar... computing pseudoinverse instead of the inverse");
+		COMPV_DEBUG_INFO_EX("CompVMathMatrixInvA3x3_64f_Intrin_SSE2", "3x3 Matrix is singluar... computing pseudoinverse instead of the inverse");
 	}
 	else {
 		__m128d vecDetA = _mm_set1_pd(1. / detA);

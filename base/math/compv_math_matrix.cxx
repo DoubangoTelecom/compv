@@ -476,6 +476,10 @@ class CompVMatrixGeneric
 				COMPV_EXEC_IFDEF_INTRIN_X86((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Intrin_SSE2, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Intrin_SSE2"));
 				COMPV_EXEC_IFDEF_ASM_X86((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2"));
 			}
+#elif COMPV_ARCH_ARM
+			if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && A3x3->isAlignedNEON() && (*R)->isAlignedNEON() && A3x3->strideInBytes() == (*R)->strideInBytes()) {
+				COMPV_EXEC_IFDEF_INTRIN_ARM64((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Intrin_NEON64, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Intrin_NEON64"));
+			}
 #endif
 			if (CompVMathMatrixInvA3x3_64f) {
 				compv_float64_t detA;
