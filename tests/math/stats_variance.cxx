@@ -3,7 +3,7 @@
 #define TAG_TEST			"TestStatsVariance"
 #define LOOP_COUNT			1
 #define TYP					compv_float64_t
-#define ERR_MAX				0.0029296875000000000
+#define ERR_MAX				0.0061035156250000000
 
 COMPV_ERROR_CODE stats_variance()
 {

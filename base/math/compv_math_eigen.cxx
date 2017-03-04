@@ -36,7 +36,7 @@ COMPV_ERROR_CODE CompVMathEigen<T>::findSymm(const CompVMatPtr &S, CompVMatPtrPt
 	// Eigen values and vectors can be easily computed for 3x3 without using jacobi
 	if (S->cols() == 3 && S->rows() == 3) {
 		// https://github.com/DoubangoTelecom/compv/issues/85
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No fast implementation for 3x3 matrix");
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Eigen values/vectors: No fast implementation for 3x3 matrix");
 	}
 #endif
 

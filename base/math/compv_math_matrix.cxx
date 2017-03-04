@@ -26,6 +26,7 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X86_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
 	COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_X86_FMA3_AVX(COMPV_ALIGNED(AVX) compv_float64_t* ri, COMPV_ALIGNED(AVX) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
 	COMPV_EXTERNC void CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE) compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints);
+	COMPV_EXTERNC void CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(SSE) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(SSE) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(SSE) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(SSE) compv_float64_t* R, COMPV_ALIGNED(SSE) compv_uscalar_t rStrideInBytes);
@@ -467,21 +468,23 @@ class CompVMatrixGeneric
 		const T* a0 = A3x3->ptr<const T>(0);
 		T* r0 = (*R)->ptr<T>(0);
 
-#if 0
 		if (std::is_same<T, compv_float64_t>::value) {
-			void(*MatrixInvA3x3_64f)(const COMPV_ALIGNED(X) compv_float64_t* A3x3, COMPV_ALIGNED(X) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1) = NULL;
-			if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && A3x3->isAlignedSSE() && R->isAlignedSSE() && A3x3->strideInBytes() == R->strideInBytes()) {
-				COMPV_EXEC_IFDEF_INTRIN_X86((MatrixInvA3x3_64f = MatrixInvA3x3_64f_Intrin_SSE2, hasSIMD = true, nameSIMD = "MatrixInvA3x3_64f_Intrin_SSE2"));
+			void(*CompVMathMatrixInvA3x3_64f)(const COMPV_ALIGNED(X) compv_float64_t* A3x3, COMPV_ALIGNED(X) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1) = NULL;
+#if COMPV_ARCH_X86
+			if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && A3x3->isAlignedSSE() && (*R)->isAlignedSSE() && A3x3->strideInBytes() == (*R)->strideInBytes()) {
+				COMPV_EXEC_IFDEF_INTRIN_X86((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Intrin_SSE2, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Intrin_SSE2"));
+				COMPV_EXEC_IFDEF_ASM_X86((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2"));
 			}
-			if (MatrixInvA3x3_64f) {
+#endif
+			if (CompVMathMatrixInvA3x3_64f) {
 				compv_float64_t detA;
-				MatrixInvA3x3_64f((const compv_float64_t*)a0, (compv_float64_t*)r0, (compv_uscalar_t)A3x3->strideInBytes(), &detA);
+				CompVMathMatrixInvA3x3_64f(reinterpret_cast<const compv_float64_t*>(a0), reinterpret_cast<compv_float64_t*>(r0), static_cast<compv_uscalar_t>(A3x3->strideInBytes()), &detA);
 				if (detA != 0) {
 					return COMPV_ERROR_CODE_S_OK; // Matrix not singular -> break process
 				}
+				
 			}
 		}
-#endif
 
 		if (hasSIMD) {
 			// Matrix is singular (detA == 0)

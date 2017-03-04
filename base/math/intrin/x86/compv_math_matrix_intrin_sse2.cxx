@@ -68,7 +68,7 @@ void CompVMathMatrixMulGA_64f_Intrin_SSE2(COMPV_ALIGNED(SSE) compv_float64_t* ri
 	__m128d vecRI0, vecRI1, vecRI2, vecRI3, vecRJ0, vecRJ1, vecRJ2, vecRJ3;
 	compv_scalar_t i, countSigned = static_cast<compv_scalar_t>(count);
 
-	const __m128d vecC = _mm_load1_pd(c1); // From Intel intrinsic guide _mm_load1_pd = 'movapd xmm, m128' which is not correct, should be 'shufpd movsd, movsd, 0x0'
+	const __m128d vecC = _mm_load1_pd(c1); // From Intel intrinsic guide _mm_load1_pd = 'movapd vec, m128' which is not correct, should be 'shufpd movsd, movsd, 0x0'
 	const __m128d vecS = _mm_load1_pd(s1);
 
 	// Case #8
@@ -149,6 +149,58 @@ void CompVMathMatrixBuildHomographyEqMatrix_64f_Intrin_SSE2(const COMPV_ALIGNED(
 		M0_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M0_ptr) + M_strideInBytesTimes2);
 		M1_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M1_ptr) + M_strideInBytesTimes2);
 	}
+}
+
+// A and R must have same stride
+// This function returns det(A). If det(A) = 0 then, A is singluar and no inverse is computed.
+void CompVMathMatrixInvA3x3_64f_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* A, COMPV_ALIGNED(SSE) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	const compv_float64_t* a0 = A;
+	const compv_float64_t* a1 = reinterpret_cast<const compv_float64_t*>(reinterpret_cast<const uint8_t*>(a0) + strideInBytes);
+	const compv_float64_t* a2 = reinterpret_cast<const compv_float64_t*>(reinterpret_cast<const uint8_t*>(a1) + strideInBytes);
+	// det(A)
+	__m128d vec0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a0[1])), _mm_unpacklo_pd(_mm_load_sd(&a2[2]), _mm_load_sd(&a2[2])));
+	__m128d vec1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a2[1]), _mm_load_sd(&a2[1])), _mm_unpacklo_pd(_mm_load_sd(&a1[2]), _mm_load_sd(&a0[2])));
+	__m128d vec2 = _mm_unpacklo_pd(_mm_load_sd(&a0[0]), _mm_load_sd(&a1[0]));
+	__m128d vec3 = _mm_mul_pd(vec2, _mm_sub_pd(vec0, vec1));
+	vec3 = _mm_sub_sd(vec3, _mm_shuffle_pd(vec3, vec3, 0x01));
+	vec0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a0[1]), _mm_load_sd(&a1[1])), _mm_unpacklo_pd(_mm_load_sd(&a1[2]), _mm_load_sd(&a0[2])));
+	vec0 = _mm_sub_sd(vec0, _mm_shuffle_pd(vec0, vec0, 0x01));
+	vec0 = _mm_mul_sd(vec0, _mm_load_sd(&a2[0]));
+	compv_float64_t detA = _mm_cvtsd_f64(_mm_add_sd(vec0, vec3));
+	if (detA == 0) {
+		COMPV_DEBUG_INFO_EX("IntrinSSE2", "3x3 Matrix is singluar... computing pseudoinverse instead of the inverse");
+	}
+	else {
+		__m128d vecDetA = _mm_set1_pd(1. / detA);
+		compv_float64_t* r0 = R;
+		compv_float64_t* r1 = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(r0) + strideInBytes);
+		compv_float64_t* r2 = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(r1) + strideInBytes);
+
+		vec0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a0[2])), _mm_unpacklo_pd(_mm_load_sd(&a2[2]), _mm_load_sd(&a2[1])));
+		vec1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a2[1]), _mm_load_sd(&a2[2])), _mm_unpacklo_pd(_mm_load_sd(&a1[2]), _mm_load_sd(&a0[1])));
+		_mm_store_pd(&r0[0], _mm_mul_pd(_mm_sub_pd(vec0, vec1), vecDetA));
+
+		vec0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a0[1]), _mm_load_sd(&a1[2])), _mm_unpacklo_pd(_mm_load_sd(&a1[2]), _mm_load_sd(&a2[0])));
+		vec1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a2[2])), _mm_unpacklo_pd(_mm_load_sd(&a0[2]), _mm_load_sd(&a1[0])));
+		vec3 = _mm_mul_pd(_mm_sub_pd(vec0, vec1), vecDetA);
+		_mm_store_sd(&r0[2], vec3);
+		_mm_store_sd(&r1[0], _mm_shuffle_pd(vec3, vec3, 0x1));
+
+		vec0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a0[0]), _mm_load_sd(&a0[2])), _mm_unpacklo_pd(_mm_load_sd(&a2[2]), _mm_load_sd(&a1[0])));
+		vec1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a2[0]), _mm_load_sd(&a1[2])), _mm_unpacklo_pd(_mm_load_sd(&a0[2]), _mm_load_sd(&a0[0])));
+		_mm_storeu_pd(&r1[1], _mm_mul_pd(_mm_sub_pd(vec0, vec1), vecDetA));
+
+		vec0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a1[0]), _mm_load_sd(&a0[1])), _mm_unpacklo_pd(_mm_load_sd(&a2[1]), _mm_load_sd(&a2[0])));
+		vec1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a2[0]), _mm_load_sd(&a2[1])), _mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a0[0])));
+		_mm_store_pd(&r2[0], _mm_mul_pd(_mm_sub_pd(vec0, vec1), vecDetA));
+
+		vec0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a0[0]), _mm_load_sd(&a1[0])), _mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a0[1])));
+		vec0 = _mm_sub_sd(vec0, _mm_shuffle_pd(vec0, vec0, 0x01));
+		_mm_store_sd(&r2[2], _mm_mul_sd(vec0, vecDetA));
+	}
+	*det1 = detA;
 }
 
 COMPV_NAMESPACE_END()

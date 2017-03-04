@@ -13,9 +13,11 @@ COMPV_YASM_DEFAULT_REL
 global sym(CompVMathMatrixMulABt_64f_Asm_X86_SSE2)
 global sym(CompVMathMatrixMulGA_64f_Asm_X86_SSE2)
 global sym(CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X86_SSE2)
+global sym(CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2)
 
 section .data
 	extern sym(kAVXFloat64MaskAbs)
+	extern sym(k1_f64)
 	extern sym(km1_f64)
 	extern sym(km1_0_f64)
 	extern sym(kAVXFloat64MaskNegate)
@@ -454,6 +456,193 @@ sym(CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X86_SSE2):
 	pop rdi
 	pop rsi
 	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const compv_float64_t* A
+; arg(1) -> COMPV_ALIGNED(SSE) compv_float64_t* R
+; arg(2) -> compv_uscalar_t strideInBytes
+; arg(3) -> compv_float64_t* det1
+sym(CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 4
+	COMPV_YASM_SAVE_XMM 7
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	; align stack and alloc memory
+	COMPV_YASM_ALIGN_STACK 16, rax
+	sub rsp, COMPV_YASM_XMM_SZ_BYTES
+
+	%define a0				rsi
+	%define a1				rdi
+	%define a2				rbx
+	%define strideInBytes	rdx
+	%define det1			rcx
+	%define R				rax
+
+	mov a0, arg(0)
+	mov strideInBytes, arg(2)
+	mov R, arg(1)
+	mov det1, arg(3)
+	lea a1, [a0 + strideInBytes]
+	lea a2, [a1 + strideInBytes]
+
+	movsd xmm0, [a1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm1, [a2 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm4, [a2 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm5, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm2, [a0 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm6, [a0 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm7, [a2 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm3, [a2 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	unpcklpd xmm0, xmm6
+	unpcklpd xmm1, xmm7
+	movsd xmm6, [a0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm7, [a1 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	unpcklpd xmm4, xmm3
+	unpcklpd xmm5, xmm6
+	mulpd xmm0, xmm4
+	mulpd xmm1, xmm5
+	unpcklpd xmm2, xmm7
+	movsd xmm4, [a0 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm5, [a1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm6, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm7, [a0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	unpcklpd xmm4, xmm5
+	unpcklpd xmm6, xmm7
+	mulpd xmm4, xmm6
+	movapd xmm3, xmm0
+	subpd xmm3, xmm1
+	mulpd xmm3, xmm2
+	movapd xmm0, xmm4
+	shufpd xmm4, xmm4, 0x01
+	subsd xmm0, xmm4
+	mulsd xmm0, [a2 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	xorpd xmm7, xmm7
+	movapd xmm4, xmm3
+	shufpd xmm4, xmm4, 0x01
+	subsd xmm3, xmm4
+	addsd xmm0, xmm3
+	comisd xmm0, xmm7
+	movsd [det1], xmm0
+	jz EndOfTheFunction
+
+	;; detA not zero ;;
+
+	movsd xmm7, [sym(k1_f64)]
+	divsd xmm7, xmm0
+	movsd xmm0, [a1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm1, [a2 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm2, [a0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm3, [a2 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm4, [a2 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm5, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm6, [a2 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	unpcklpd xmm0, xmm2
+	unpcklpd xmm1, xmm3
+	movsd xmm3, [a0 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	unpcklpd xmm4, xmm6
+	unpcklpd xmm5, xmm3
+	mulpd xmm0, xmm4
+	mulpd xmm1, xmm5
+	movsd xmm2, [a0 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm3, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm4, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm5, [a2 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	unpcklpd xmm2, xmm3
+	unpcklpd xmm4, xmm5
+	mulpd xmm2, xmm4
+	movsd xmm3, [a1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm4, [a2 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm5, [a0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm6, [a1 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	unpcklpd xmm3, xmm4
+	unpcklpd xmm5, xmm6
+	mulpd xmm3, xmm5
+	shufpd xmm7, xmm7, 0x0
+	subpd xmm0, xmm1
+	movapd[rsp + 0], xmm7
+	mulpd xmm0, xmm7
+	subpd xmm2, xmm3
+	mulpd xmm2, xmm7
+	movapd [R + strideInBytes*0 + 0*COMPV_YASM_FLOAT64_SZ_BYTES], xmm0 ; r0[0]
+	movsd [R + strideInBytes*0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES], xmm2 ; r0[2]
+	shufpd xmm2, xmm2, 0x1
+	movsd [R + strideInBytes*1 + 0*COMPV_YASM_FLOAT64_SZ_BYTES], xmm2 ; r1[0]
+	movsd xmm0, [a0 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm1, [a2 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm2, [a0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm3, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm4, [a2 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm5, [a1 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm6, [a0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm7, [a0 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	unpcklpd xmm0, xmm2
+	unpcklpd xmm1, xmm3
+	unpcklpd xmm4, xmm5
+	unpcklpd xmm6, xmm7
+	mulpd xmm0, xmm4
+	mulpd xmm1, xmm6
+	movsd xmm2, [a1 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm3, [a2 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm4, [a2 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm5, [a2 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm6, [a1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm7, [a0 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	unpcklpd xmm4, xmm5
+	unpcklpd xmm6, xmm7
+	subpd xmm0, xmm1
+	movsd xmm5, [a0 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm7, [a2 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	unpcklpd xmm2, xmm5
+	mulpd xmm2, xmm4
+	mulpd xmm0, [rsp + 0]
+	unpcklpd xmm3, xmm7
+	mulpd xmm3, xmm6
+	movsd xmm1, [a0 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm4, [a1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm5, [a1 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm6, [a0 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	subpd xmm2, xmm3
+	unpcklpd xmm1, xmm5
+	mulpd xmm2, [rsp + 0]
+	unpcklpd xmm4, xmm6
+	mulpd xmm1, xmm4
+	movupd [R + strideInBytes*1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES], xmm0 ; r1[1]
+	movapd [R + strideInBytes*2 + 0*COMPV_YASM_FLOAT64_SZ_BYTES], xmm2 ; r2[0]
+	movapd xmm3, xmm1
+	shufpd xmm3, xmm3, 0x01
+	subsd xmm1, xmm3
+	mulsd xmm1, [rsp + 0]
+	movsd [R + strideInBytes*2 + 2*COMPV_YASM_FLOAT64_SZ_BYTES], xmm1 ; r2[2]
+
+	;; EndOfTheFunction ;;
+	EndOfTheFunction:
+
+	%undef a0
+	%undef a1
+	%undef a2
+	%undef strideInBytes
+	%undef det1
+	%undef R
+
+	; free memory and unalign stack
+	add rsp, COMPV_YASM_XMM_SZ_BYTES
+	COMPV_YASM_UNALIGN_STACK
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_RESTORE_XMM 
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

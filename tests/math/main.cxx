@@ -9,8 +9,8 @@
 #define TEST_EIGEN_S						0
 #define TEST_SVD							0
 #define TEST_PSI							0 // Moore–Penrose pseudoinverse
-#define TEST_INV3x3							0 // Fast 3x3 inverse
-#define TEST_STATS_MSE_2D_HOMOG				1
+#define TEST_INV3x3							1 // Fast 3x3 inverse
+#define TEST_STATS_MSE_2D_HOMOG				0
 #define TEST_STATS_NORMALIZE_HARTLEY		0
 #define TEST_STATS_VARIANCE					0
 #define TEST_TRF_HOMOG_TO_CART				0 // homogeneousToCartesian2D()

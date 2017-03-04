@@ -8,6 +8,7 @@
 #include "compv/base/math/compv_math_utils.h"
 
 #include "compv/base/math/intrin/x86/compv_math_stats_intrin_sse2.h"
+#include "compv/base/math/intrin/x86/compv_math_stats_intrin_avx.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVMathStats"
 
@@ -20,6 +21,7 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathStatsMSE2DHomogeneous_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints);
 	COMPV_EXTERNC void CompVMathStatsMSE2DHomogeneous_4_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints);
 	COMPV_EXTERNC void CompVMathStatsVariance_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1);
+	COMPV_EXTERNC void CompVMathStatsVariance_64f_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVMathStatsMSE2DHomogeneous_64f_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints);
@@ -37,9 +39,11 @@ COMPV_ERROR_CODE CompVMathStats<T>::normalize2D_hartley(const T* x, const T* y, 
 {
 	COMPV_CHECK_EXP_RETURN(!x || !y || !numPoints || !tx1 || !ty1 || !s1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
+#if 0 // TODO(dmi): add MT implementation
 	if (numPoints > 100) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	}
+#endif
 
 	if (std::is_same<T, compv_float64_t>::value) {
 		void(*CompVMathStatsNormalize2DHartley_64f)(const COMPV_ALIGNED(V) compv_float64_t* x, const COMPV_ALIGNED(V) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1) = NULL;
@@ -51,7 +55,7 @@ COMPV_ERROR_CODE CompVMathStats<T>::normalize2D_hartley(const T* x, const T* y, 
 				COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_4_64f_Asm_X86_SSE2);
 			}
 		}
-#if 0 // TODO(dmi): AVX code not faster than SSE
+#if 0 // TODO(dmi): AVX code not faster than SSE (not a surprise because it's deprecated code not fully optimized)
 		if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && numPoints > 3 && COMPV_IS_ALIGNED_AVX(x) && COMPV_IS_ALIGNED_AVX(y)) {
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // AVX code not faster than SSE
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Intrin_AVX);
@@ -105,9 +109,11 @@ COMPV_ERROR_CODE CompVMathStats<T>::mse2D_homogeneous(CompVMatPtrPtr mse, const 
 {
 	COMPV_CHECK_EXP_RETURN(!aX_h || !aY_h || !aZ_h || !bX || !bY || !numPoints, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
+#if 0 // TODO(dmi): add MT implementation
 	if (numPoints > 100) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	}
+#endif
 	
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(mse, 1, numPoints));
 	T* msePtr = (*mse)->ptr<T>();
@@ -124,7 +130,7 @@ COMPV_ERROR_CODE CompVMathStats<T>::mse2D_homogeneous(CompVMatPtrPtr mse, const 
 			}
 		}
 #if 0
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // AVX code not faster than SSE
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // AVX code not faster than SSE  (not a surprise because it's deprecated code not fully optimized)
 		if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && numPoints > 1 && COMPV_IS_ALIGNED_AVX(aX_h) && COMPV_IS_ALIGNED_AVX(aY_h) && COMPV_IS_ALIGNED_AVX(aZ_h) && COMPV_IS_ALIGNED_AVX(bX) && COMPV_IS_ALIGNED_AVX(bY) && COMPV_IS_ALIGNED_AVX(msePtr)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Intrin_AVX);
 		}
@@ -154,9 +160,11 @@ COMPV_ERROR_CODE CompVMathStats<T>::variance(const T* data, size_t count, T mean
 {
 	COMPV_CHECK_EXP_RETURN(!data || count < 2 || !var1, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 
+#if 0 // TODO(dmi): add MT implementation
 	if (count > 100) {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	}
+#endif
 
 	if (std::is_same<T, compv_float64_t>::value) {
 		void(*CompVMathStatsVariance_64f)(const COMPV_ALIGNED(X) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1) = NULL;
@@ -165,8 +173,8 @@ COMPV_ERROR_CODE CompVMathStats<T>::variance(const T* data, size_t count, T mean
 			COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Asm_X86_SSE2);
 		}
 		if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && count > 3 && COMPV_IS_ALIGNED_AVX(data)) {
-			//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Intrin_AVX);
-			//COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Asm_X86_AVX);
+			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Intrin_AVX);
+			COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Asm_X86_AVX);
 		}
 		if (CompVMathStatsVariance_64f) {
 			CompVMathStatsVariance_64f(reinterpret_cast<const compv_float64_t*>(data), (compv_uscalar_t)count, reinterpret_cast<const compv_float64_t*>(&mean), reinterpret_cast<compv_float64_t*>(var1));

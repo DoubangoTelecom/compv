@@ -1,7 +1,7 @@
 #include "../tests/tests_common.h"
 
 #define TAG_TEST			"UnitTestStatsVariance"
-#define ERR_MAX				0.0029296875000000000
+#define ERR_MAX				0.0061035156250000000
 
 template <typename T>
 static COMPV_ERROR_CODE __math_stats_variance()
