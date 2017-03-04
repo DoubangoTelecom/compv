@@ -43,8 +43,6 @@ COMPV_ERROR_CODE buildHomographyMatrixEq()
 
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Elapsed time(buildHomographyMatrixEq) = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	//COMPV_DEBUG_INFO("MD5: %s", compv_tests_md5(M).c_str());
-
 	COMPV_CHECK_EXP_RETURN(expectedMD5.compare(compv_tests_md5(M)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "buildHomographyMatrixEq: MD5 mismatch");
 
 	return COMPV_ERROR_CODE_S_OK;

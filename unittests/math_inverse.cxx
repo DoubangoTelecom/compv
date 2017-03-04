@@ -117,22 +117,28 @@ static COMPV_ERROR_CODE __math_inv3x3()
 		{ 7, 8, 9 }
 	};
 	static const T SingularInverseFloat64[3][3] = { // Expected resul: http://comnuan.com/cmnn0100f/
-		{ static_cast<T>(-0.63888888888959938), static_cast<T>(-0.16666666666838975), static_cast<T>(0.30555555555281949) },
-		{ static_cast<T>(-0.055555555554076631), static_cast<T>(3.5945586784880135e-12), static_cast<T>(0.055555555561265714) },
-		{ static_cast<T>(0.52777777777700252), static_cast<T>(0.16666666666481170), static_cast<T>(-0.19444444444737888) }
+		{ static_cast<T>(-0.63888888888888351), static_cast<T>(-0.16666666666666527), static_cast<T>(0.30555555555555336) },
+		{ static_cast<T>(-0.055555555555554977), static_cast<T>(1.5612511283791264e-16), static_cast<T>(0.055555555555555323) },
+		{ static_cast<T>(0.52777777777777357), static_cast<T>(0.16666666666666552), static_cast<T>(-0.19444444444444264) }
+	};
+	static const T SingularInverseFloat64_NEON_FMA[3][3] = {
+		{ static_cast<T>(0.016780410445101677), static_cast<T>(0.081424419567815404), static_cast<T>(0.075185261194962272) },
+		{ static_cast<T>(-1.366894154223544), static_cast<T>(-0.4961821724689689), static_cast<T>(0.51629614427674031) },
+		{ static_cast<T>(1.1834470771117749), static_cast<T>(0.41475775290115291), static_cast<T>(-0.42481473880503628) }
 	};
 	static const T SingularInverseFloat32[3][3] = { // Expected resul: http://comnuan.com/cmnn0100f/
-		{ static_cast<T>(-0.638862669), static_cast<T>(-0.166659355), static_cast<T>(0.305543572) },
-		{ static_cast<T>(-0.0556129105), static_cast<T>(1.61416829e-05), static_cast<T>(0.0555805862) },
-		{ static_cast<T>(0.527808249), static_cast<T>(0.166675299), static_cast<T>(-0.194457352) }
+		{ static_cast<T>(-0.638891041), static_cast<T>(-0.166667357), static_cast<T>(0.305556685) },
+		{ static_cast<T>(-0.0555560775), static_cast<T>(-1.52736902e-07), static_cast<T>(0.0555558056) },
+		{ static_cast<T>(0.527779818), static_cast<T>(0.166667312), static_cast<T>(-0.194445491) }
 	};
 	const T(*inverse)[3][3] = std::is_same<T, compv_float32_t>::value
 		? &SingularInverseFloat32
-		: &SingularInverseFloat64;
+		: (compv_tests_is_fma_enabled() && CompVCpu::isEnabled(kCpuFlagARM)) ? &SingularInverseFloat64_NEON_FMA : &SingularInverseFloat64;
 	T err_max_singular = std::is_same<T, compv_float32_t>::value
 		? static_cast<T>(3.22833657e-05)
-		: static_cast<T>(8.5209617139980764e-17);
+		: static_cast<T>(3.8163916471489756e-16);
 
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<T>(&A, 3, 3));
 	for (size_t j = 0; j < 3; ++j) {
 		for (size_t i = 0; i < 3; ++i) {
 			*A->ptr<T>(j, i) = Singular[j][i];
@@ -142,7 +148,6 @@ static COMPV_ERROR_CODE __math_inv3x3()
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::invA3x3(A, &Ai));
 
 	// Compute error
-	CompVMatrix::mulAB(A, Ai, &I);
 	sum = 0;
 	for (size_t j = 0; j < 3; ++j) {
 		for (size_t i = 0; i < 3; ++i) {

@@ -482,9 +482,6 @@
     <ClCompile Include="compv_obj.cxx">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="compv_sharedlib.cxx">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="compv_simd_globals.cxx">
       <Filter>source</Filter>
     </ClCompile>
@@ -737,6 +734,9 @@
     <ClCompile Include="math\intrin\x86\compv_math_transform_intrin_sse2.cxx">
       <Filter>source\math\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="compv_sharedlib.cxx">
+      <Filter>source\math\asm\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="asm\x86\compv_bits_macros_x86.s">
@@ -868,8 +868,10 @@
     <YASM Include="math\asm\x86\compv_math_stats_x86_avx.s">
       <Filter>source\math\asm\x86</Filter>
     </YASM>
-    <YASM Include="math\asm\x86\compv_math_transform_x86_avx.s" />
     <YASM Include="math\asm\x86\compv_math_transform_x86_sse.s">
+      <Filter>source\math\asm\x86</Filter>
+    </YASM>
+    <YASM Include="math\asm\x86\compv_math_transform_x86_avx.s">
       <Filter>source\math\asm\x86</Filter>
     </YASM>
   </ItemGroup>

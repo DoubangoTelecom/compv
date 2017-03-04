@@ -136,6 +136,94 @@ void CompVMathMatrixMulGA_64f_Intrin_NEON64(COMPV_ALIGNED(NEON) compv_float64_t*
 	}
 }
 
+void CompVMathMatrixBuildHomographyEqMatrix_64f_Intrin_NEON64(const COMPV_ALIGNED(NEON) compv_float64_t* srcX, const COMPV_ALIGNED(NEON) compv_float64_t* srcY, const COMPV_ALIGNED(NEON) compv_float64_t* dstX, const COMPV_ALIGNED(NEON) compv_float64_t* dstY, COMPV_ALIGNED(NEON) compv_float64_t* M, COMPV_ALIGNED(NEON) compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	compv_float64_t* M0_ptr = const_cast<compv_float64_t*>(M);
+	compv_float64_t* M1_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M0_ptr) + M_strideInBytes);
+	const size_t M_strideInBytesTimes2 = M_strideInBytes << 1;
+	const float64x2_t vecZero = vdupq_n_f64(0.);
+	const float64x2_t vecMinusOne = vdupq_n_f64(-1.);
+	const float64x2_t vecMinusOneZero = (float64x2_t) {-1., 0.};
+	float64x2_t vecSrcXY, vecMinusXMinusY, vecDstX, vecDstY;
+
+	for (compv_uscalar_t i = 0; i < numPoints; ++i) {
+		vecSrcXY = vcombine_f64(vld1_f64(&srcX[i]), vld1_f64(&srcY[i]));
+		vecDstX = vdupq_n_f64(dstX[i]);
+		vecDstY = vdupq_n_f64(dstY[i]);
+		vecMinusXMinusY = vnegq_f64(vecSrcXY); // -x, -y
+		// First #9 contributions
+		vst1q_f64(&M0_ptr[0], vecMinusXMinusY); // -x, -y
+		vst1q_f64(&M0_ptr[2], vecMinusOneZero); // -1, 0
+		vst1q_f64(&M0_ptr[4], vecZero); // 0, 0
+		vst1q_f64(&M0_ptr[6], vmulq_f64(vecDstX, vecSrcXY)); // (dstX * srcX), (dstX * srcY)
+		vst1_f64(&M0_ptr[8], vget_low_f64(vecDstX));
+		// Second #9 contributions
+		vst1q_f64(&M1_ptr[0], vecZero); // 0, 0
+		vst1q_f64(&M1_ptr[2], vcombine_f64(vget_low_f64(vecZero), vget_low_f64(vecMinusXMinusY))); // 0, -x
+		vst1q_f64(&M1_ptr[4], vcombine_f64(vget_high_f64(vecMinusXMinusY), vget_high_f64(vecMinusOne))); // -y, -1
+		vst1q_f64(&M1_ptr[6], vmulq_f64(vecDstY, vecSrcXY)); // (dstY * srcX), (dstY * srcY)
+		vst1_f64(&M1_ptr[8], vget_low_f64(vecDstY));
+		// Move to the next point
+		M0_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M0_ptr) + M_strideInBytesTimes2);
+		M1_ptr = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(M1_ptr) + M_strideInBytesTimes2);
+	}
+}
+
+// A and R must have same stride
+// This function returns det(A). If det(A) = 0 then, A is singluar and no inverse is computed.
+void CompVMathMatrixInvA3x3_64f_Intrin_NEON64(const COMPV_ALIGNED(NEON) compv_float64_t* A, COMPV_ALIGNED(NEON) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+#if 0
+	const compv_float64_t* a0 = A;
+	const compv_float64_t* a1 = reinterpret_cast<const compv_float64_t*>(reinterpret_cast<const uint8_t*>(a0) + strideInBytes);
+	const compv_float64_t* a2 = reinterpret_cast<const compv_float64_t*>(reinterpret_cast<const uint8_t*>(a1) + strideInBytes);
+	// det(A)
+	__m128d vec0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a0[1])), _mm_unpacklo_pd(_mm_load_sd(&a2[2]), _mm_load_sd(&a2[2])));
+	__m128d vec1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a2[1]), _mm_load_sd(&a2[1])), _mm_unpacklo_pd(_mm_load_sd(&a1[2]), _mm_load_sd(&a0[2])));
+	__m128d vec2 = _mm_unpacklo_pd(_mm_load_sd(&a0[0]), _mm_load_sd(&a1[0]));
+	__m128d vec3 = _mm_mul_pd(vec2, _mm_sub_pd(vec0, vec1));
+	vec3 = _mm_sub_sd(vec3, _mm_shuffle_pd(vec3, vec3, 0x01));
+	vec0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a0[1]), _mm_load_sd(&a1[1])), _mm_unpacklo_pd(_mm_load_sd(&a1[2]), _mm_load_sd(&a0[2])));
+	vec0 = _mm_sub_sd(vec0, _mm_shuffle_pd(vec0, vec0, 0x01));
+	vec0 = _mm_mul_sd(vec0, _mm_load_sd(&a2[0]));
+	compv_float64_t detA = _mm_cvtsd_f64(_mm_add_sd(vec0, vec3));
+	if (detA == 0) {
+		COMPV_DEBUG_INFO_EX("IntrinNEON2", "3x3 Matrix is singluar... computing pseudoinverse instead of the inverse");
+	}
+	else {
+		__m128d vecDetA = _mm_set1_pd(1. / detA);
+		compv_float64_t* r0 = R;
+		compv_float64_t* r1 = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(r0) + strideInBytes);
+		compv_float64_t* r2 = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(r1) + strideInBytes);
+
+		vec0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a0[2])), _mm_unpacklo_pd(_mm_load_sd(&a2[2]), _mm_load_sd(&a2[1])));
+		vec1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a2[1]), _mm_load_sd(&a2[2])), _mm_unpacklo_pd(_mm_load_sd(&a1[2]), _mm_load_sd(&a0[1])));
+		vst1q_f64(&r0[0], _mm_mul_pd(_mm_sub_pd(vec0, vec1), vecDetA));
+
+		vec0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a0[1]), _mm_load_sd(&a1[2])), _mm_unpacklo_pd(_mm_load_sd(&a1[2]), _mm_load_sd(&a2[0])));
+		vec1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a2[2])), _mm_unpacklo_pd(_mm_load_sd(&a0[2]), _mm_load_sd(&a1[0])));
+		vec3 = _mm_mul_pd(_mm_sub_pd(vec0, vec1), vecDetA);
+		_mm_store_sd(&r0[2], vec3);
+		_mm_store_sd(&r1[0], _mm_shuffle_pd(vec3, vec3, 0x1));
+
+		vec0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a0[0]), _mm_load_sd(&a0[2])), _mm_unpacklo_pd(_mm_load_sd(&a2[2]), _mm_load_sd(&a1[0])));
+		vec1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a2[0]), _mm_load_sd(&a1[2])), _mm_unpacklo_pd(_mm_load_sd(&a0[2]), _mm_load_sd(&a0[0])));
+		_mm_storeu_pd(&r1[1], _mm_mul_pd(_mm_sub_pd(vec0, vec1), vecDetA));
+
+		vec0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a1[0]), _mm_load_sd(&a0[1])), _mm_unpacklo_pd(_mm_load_sd(&a2[1]), _mm_load_sd(&a2[0])));
+		vec1 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a2[0]), _mm_load_sd(&a2[1])), _mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a0[0])));
+		vst1q_f64(&r2[0], _mm_mul_pd(_mm_sub_pd(vec0, vec1), vecDetA));
+
+		vec0 = _mm_mul_pd(_mm_unpacklo_pd(_mm_load_sd(&a0[0]), _mm_load_sd(&a1[0])), _mm_unpacklo_pd(_mm_load_sd(&a1[1]), _mm_load_sd(&a0[1])));
+		vec0 = _mm_sub_sd(vec0, _mm_shuffle_pd(vec0, vec0, 0x01));
+		_mm_store_sd(&r2[2], _mm_mul_sd(vec0, vecDetA));
+	}
+	*det1 = detA;
+#endif
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_ARM64 && COMPV_INTRINSIC */

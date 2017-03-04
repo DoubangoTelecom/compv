@@ -15,6 +15,7 @@ COMPV_NAMESPACE_BEGIN()
 // AVX version not faster
 void CompVMathTransformHomogeneousToCartesian2D_64f_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* srcZ, COMPV_ALIGNED(SSE) compv_float64_t* dstX, COMPV_ALIGNED(SSE) compv_float64_t* dstY, compv_uscalar_t numPoints)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementaion found"); // no ASM implementation: for now the function isn't used
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_scalar_t i, numPoints_ = static_cast<compv_scalar_t>(numPoints);
 

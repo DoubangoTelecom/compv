@@ -383,52 +383,53 @@ class CompVMatrixGeneric
 	{
 		// Input parameters checked in the calling function
 		CompVMatPtr S_, D_;
-		bool aIsSquare = (A->rows() == A->cols());
-		bool dIsSortedAndPositive = sort;
+		T d_;
+		const bool aIsSquare = (A->rows() == A->cols());
+		const bool dIsSorted = sort;
 
 		// D and V (columnspace)
 		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulAtA(A, &S_)); // AtA
 		COMPV_CHECK_CODE_RETURN(CompVMathEigen<T>::findSymm(S_, aIsSquare ? D : &D_, V, sort)); // output D is nxn matrix
 
 		if (aIsSquare) { // D is nxn and this is correct
-			if (dIsSortedAndPositive) {
-				T d_;
+			if (dIsSorted) {
 				for (size_t j = 0; j < (*D)->rows(); ++j) {
 					d_ = *(*D)->ptr<T>(j, j);
 					if (!d_) {
 						break;
 					}
-					*(*D)->ptr<T>(j, j) = static_cast<T>(COMPV_MATH_SQRT(d_));
+					*(*D)->ptr<T>(j, j) = d_ > 0 ? static_cast<T>(COMPV_MATH_SQRT(d_)) : 0;
 				}
 			}
 			else {
 				for (size_t j = 0; j < (*D)->rows(); ++j) {
-					*(*D)->ptr<T>(j, j) = static_cast<T>(COMPV_MATH_SQRT(*(*D)->ptr<T>(j, j)));
+					d_ = *(*D)->ptr<T>(j, j);
+					*(*D)->ptr<T>(j, j) = d_ > 0 ? static_cast<T>(COMPV_MATH_SQRT(d_)) : 0;
 				}
 			}
 		}
 		else { // -> D must be mxn -> complete with zeros
 			size_t rows = COMPV_MATH_MIN(A->rows(), D_->rows());
 			COMPV_CHECK_CODE_RETURN(CompVMatrix::zero<T>(D, A->rows(), A->cols()));
-			if (dIsSortedAndPositive) {
-				T d_;
+			if (dIsSorted) {
 				for (size_t j = 0; j < rows; ++j) {
 					d_ = *D_->ptr<T>(j, j);
 					if (!d_) {
 						break;
 					}
-					*(*D)->ptr<T>(j, j) = static_cast<T>(COMPV_MATH_SQRT(d_));
+					*(*D)->ptr<T>(j, j) = d_ > 0 ? static_cast<T>(COMPV_MATH_SQRT(d_)) : 0;
 				}
 			}
 			else {
 				for (size_t j = 0; j < rows; ++j) {
-					*(*D)->ptr<T>(j, j) = static_cast<T>(COMPV_MATH_SQRT(*D_->ptr<T>(j, j)));
+					d_ = *D_->ptr<T>(j, j);
+					*(*D)->ptr<T>(j, j) = d_ > 0 ? static_cast<T>(COMPV_MATH_SQRT(d_)) : 0;
 				}
 			}
 		}
 
 		// A = UDVt -> AV = UD -> AVDi = U
-		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::invD(*D, &D_, dIsSortedAndPositive));// D_ will contain inverse(D) = Di
+		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::invD(*D, &D_, dIsSorted));// D_ will contain inverse(D) = Di
 		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulABt(*V, D_, &S_)); // transpose inverseOf(D) -> nop for square matrix
 		COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::mulAB(A, S_, U));
 
@@ -759,6 +760,12 @@ class CompVMatrixGeneric
 					COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Intrin_SSE2);
 					COMPV_EXEC_IFDEF_ASM_X86(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X86_SSE2);
 					COMPV_EXEC_IFDEF_ASM_X64(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_X64_SSE2);
+				}
+			}
+#elif COMPV_ARCH_ARM
+			if ((*M)->isAlignedSSE()) {
+				if (CompVCpu::isEnabled(kCpuFlagNone)) {
+					COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Intrin_NEON64);
 				}
 			}
 #endif
