@@ -16,7 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 void CompVMathStatsNormalize2DHartley_64f_Intrin_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* x, const COMPV_ALIGNED(SSE) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
-	compv_scalar_t i, numPoints_ = static_cast<compv_uscalar_t>(numPoints);
+	compv_scalar_t i, numPoints_ = static_cast<compv_scalar_t>(numPoints);
 
 	__m128d vec0, vec1, vec2, vec3;
 	__m128d vecTx = _mm_setzero_pd();

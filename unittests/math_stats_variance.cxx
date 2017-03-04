@@ -1,12 +1,16 @@
 #include "../tests/tests_common.h"
 
 #define TAG_TEST			"UnitTestStatsVariance"
-#define ERR_MAX				4.7683715820312500e-07
+#define ERR_MAX				0.0029296875000000000
 
 template <typename T>
 static COMPV_ERROR_CODE __math_stats_variance()
 {
 	static const T mean = static_cast<T>(1234569.156325);
+	// For 2015 points
+#	define VARIANCE		1524545458375.9475
+#	define VARIANCE_SSE	1524545458375.9446
+#	define VARIANCE_AVX	1524545458375.9414
 
 	static const struct compv_unittest_var {
 		size_t numpoints;

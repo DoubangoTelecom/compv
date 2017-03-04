@@ -13,6 +13,19 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if COMPV_ASM
+#	if COMPV_ARCH_X86
+	COMPV_EXTERNC void CompVMathStatsNormalize2DHartley_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* x, const COMPV_ALIGNED(SSE) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1);
+	COMPV_EXTERNC void CompVMathStatsNormalize2DHartley_4_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* x, const COMPV_ALIGNED(SSE) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1);
+	COMPV_EXTERNC void CompVMathStatsMSE2DHomogeneous_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints);
+	COMPV_EXTERNC void CompVMathStatsMSE2DHomogeneous_4_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints);
+	COMPV_EXTERNC void CompVMathStatsVariance_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1);
+#	endif /* COMPV_ARCH_X86 */
+#	if COMPV_ARCH_X64
+	COMPV_EXTERNC void CompVMathStatsMSE2DHomogeneous_64f_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints);
+#	endif /* COMPV_ARCH_X64 */
+#endif /* COMPV_ASM */
+
 /*
 2D Points normalization as described by Hartley. Used before computing Homography or Fundamental matrix.
 More info: https://en.wikipedia.org/wiki/Eight-point_algorithm#How_it_can_be_solved
@@ -32,10 +45,10 @@ COMPV_ERROR_CODE CompVMathStats<T>::normalize2D_hartley(const T* x, const T* y, 
 		void(*CompVMathStatsNormalize2DHartley_64f)(const COMPV_ALIGNED(V) compv_float64_t* x, const COMPV_ALIGNED(V) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1) = NULL;
 		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && numPoints > 1 && COMPV_IS_ALIGNED_SSE(x) && COMPV_IS_ALIGNED_SSE(y)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Intrin_SSE2);
-			//COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Asm_X86_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Asm_X86_SSE2);
 			if (numPoints == 4) { // Homography -> very common
 				COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_4_64f_Intrin_SSE2);
-				//COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_4_64f_Asm_X86_SSE2);
+				COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_4_64f_Asm_X86_SSE2);
 			}
 		}
 #if 0 // TODO(dmi): AVX code not faster than SSE
@@ -103,11 +116,11 @@ COMPV_ERROR_CODE CompVMathStats<T>::mse2D_homogeneous(CompVMatPtrPtr mse, const 
 		void(*CompVMathStatsMSE2DHomogeneous_64f)(const COMPV_ALIGNED(X) compv_float64_t* aX_h, const COMPV_ALIGNED(X) compv_float64_t* aY_h, const COMPV_ALIGNED(X) compv_float64_t* aZ_h, const COMPV_ALIGNED(X) compv_float64_t* bX, const COMPV_ALIGNED(X) compv_float64_t* bY, COMPV_ALIGNED(X) compv_float64_t* mse, compv_uscalar_t numPoints) = NULL;
 		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && numPoints > 1 && COMPV_IS_ALIGNED_SSE(aX_h) && COMPV_IS_ALIGNED_SSE(aY_h) && COMPV_IS_ALIGNED_SSE(aZ_h) && COMPV_IS_ALIGNED_SSE(bX) && COMPV_IS_ALIGNED_SSE(bY) && COMPV_IS_ALIGNED_SSE(msePtr)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Intrin_SSE2);
-			//COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Asm_X86_SSE2);
-			//COMPV_EXEC_IFDEF_ASM_X64(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Asm_X64_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Asm_X86_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Asm_X64_SSE2);
 			if (numPoints == 4) { // Homography -> very common (not true!!)
 				COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_4_64f_Intrin_SSE2);
-				//COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_4_64f_Asm_X86_SSE2);
+				COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_4_64f_Asm_X86_SSE2);
 			}
 		}
 #if 0
@@ -149,7 +162,7 @@ COMPV_ERROR_CODE CompVMathStats<T>::variance(const T* data, size_t count, T mean
 		void(*CompVMathStatsVariance_64f)(const COMPV_ALIGNED(X) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1) = NULL;
 		if (CompVCpu::isEnabled(compv::kCpuFlagSSE2) && count > 1 && COMPV_IS_ALIGNED_SSE(data)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Intrin_SSE2);
-			//COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Asm_X86_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Asm_X86_SSE2);
 		}
 		if (CompVCpu::isEnabled(compv::kCpuFlagAVX) && count > 3 && COMPV_IS_ALIGNED_AVX(data)) {
 			//COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Intrin_AVX);

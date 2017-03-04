@@ -13,13 +13,13 @@ using namespace compv;
 
 #define UNITTEST_PATCH_MOMENTS					0
 
-#define UNITTEST_MATH_MATRIX_OPS				1
+#define UNITTEST_MATH_MATRIX_OPS				0
 #define UNITTEST_MATH_EIGEN_S					0
 #define UNITTEST_MATH_SVD						0
 #define UNITTEST_MATH_INVERSE					0 // Moore–Penrose pseudoinverse and Inverse3x3
-#define UNITTEST_MATH_MSE_2D_HOMOG				0
-#define UNITTEST_MATH_STATS_NORMALIZE_HARTLEY	0
-#define UNITTEST_MATH_STATS_VARIANCE			0
+#define UNITTEST_MATH_STATS_MSE_2D_HOMOG		1
+#define UNITTEST_MATH_STATS_NORMALIZE_HARTLEY	1
+#define UNITTEST_MATH_STATS_VARIANCE			1
 #define UNITTEST_MATH_TRF_HOMOG_TO_CART			0 // homogeneousToCartesian2D()
 #define UNITTEST_MATH_CALIB_HOMOGRAPHY			0
 #define UNITTEST_MATH_DISTANCE_HAMMING			0
@@ -126,7 +126,7 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_math_inverse();
 								COMPV_CHECK_CODE_BAIL(err = unittest_math_inverse(), "Math inverse unittest failed");
 #endif
-#if UNITTEST_MATH_MSE_2D_HOMOG || !defined(COMPV_TEST_LOCAL)
+#if UNITTEST_MATH_STATS_MSE_2D_HOMOG || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_math_stats_mse2D_homogeneous();
 								COMPV_CHECK_CODE_BAIL(err = unittest_math_stats_mse2D_homogeneous(), "Math stats MSE 2D homo unittest failed");
 #endif

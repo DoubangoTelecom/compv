@@ -34,7 +34,7 @@ COMPV_NAMESPACE_BEGIN()
 // These default values are also used in the descriptor (extern...)
 int COMPV_FEATURE_DETE_ORB_FAST_THRESHOLD_DEFAULT = 20; // T: Default threshold (pixel intensity: [0-255])
 int COMPV_FEATURE_DETE_ORB_FAST_N_DEFAULT = 9; // N: Number of positive continuous pixel to have before declaring a candidate as an interest point
-int COMPV_FEATURE_DETE_ORB_FAST_MAX_FEATURES = 1000; // #2000 is known to provide to provide good result but #1000 is also acceptable
+int COMPV_FEATURE_DETE_ORB_FAST_MAX_FEATURES = 2000; // #2000 is known to provide to provide good result but #1000 is also acceptable
 bool COMPV_FEATURE_DETE_ORB_FAST_NON_MAXIMA_SUPP = true; // NMS:
 int COMPV_FEATURE_DETE_ORB_PYRAMID_LEVELS = 8; // number of levels
 float COMPV_FEATURE_DETE_ORB_PYRAMID_SF = 0.83f; // scale factor

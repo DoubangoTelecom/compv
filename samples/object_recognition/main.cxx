@@ -24,7 +24,7 @@ using namespace compv;
 #define THRESHOLD				20
 #define FAST_TYPE				COMPV_FAST_TYPE_9
 // TODO(dmi): On ARM use 500 features to decrease CPU usage
-#define MAXFEATURES				1000 // use negative value to retain all features and improve accuracy (more cpu usage!!)
+#define MAXFEATURES				2000 // use negative value to retain all features and improve accuracy (more cpu usage!!)
 #define PYRAMID_LEVELS			8
 #define PYRAMID_SCALE_FACTOR	0.83f // (1 / 1.2)
 

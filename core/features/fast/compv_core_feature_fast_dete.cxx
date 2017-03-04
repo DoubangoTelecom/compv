@@ -76,7 +76,7 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_FEATURE_DETE_FAST_THRESHOLD_DEFAULT			20
 // Number of positive continuous pixel to have before declaring a candidate as an interest point
 #define COMPV_FEATURE_DETE_FAST_NON_MAXIMA_SUPP				true
-#define COMPV_FEATURE_DETE_FAST_MAX_FEATURTES				1000 // #2000 is known to provide to provide good result but #1000 is also acceptable
+#define COMPV_FEATURE_DETE_FAST_MAX_FEATURTES				2000 // #2000 is known to provide to provide good result but #1000 is also acceptable
 #define COMPV_FEATURE_DETE_FAST_MIN_SAMPLES_PER_THREAD		(200*250) // number of pixels
 #define COMPV_FEATURE_DETE_FAST_NMS_MIN_SAMPLES_PER_THREAD	(80*80) // number of interestPoints
 

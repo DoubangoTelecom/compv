@@ -3,12 +3,15 @@
 #define TAG_TEST			"TestStatsVariance"
 #define LOOP_COUNT			1
 #define TYP					compv_float64_t
-#define ERR_MAX				4.7683715820312500e-07
+#define ERR_MAX				0.0029296875000000000
 
 COMPV_ERROR_CODE stats_variance()
 {
 	static const size_t numpoints = 2015;
 	static const TYP mean = static_cast<TYP>(1234569.156325);
+#	define VARIANCE		1524545458375.9475
+#	define VARIANCE_SSE	1524545458375.9446
+#	define VARIANCE_AVX	1524545458375.9414
 
 	static const struct compv_unittest_var {
 		size_t numpoints;
