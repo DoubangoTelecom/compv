@@ -496,13 +496,13 @@ sym(CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2):
 	lea a2, [a1 + strideInBytes]
 
 	movsd xmm0, [a1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm5, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm1, [a2 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm4, [a2 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm5, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm2, [a0 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm6, [a0 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm7, [a2 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm3, [a2 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm7, xmm1
+	movsd xmm3, xmm4
 	unpcklpd xmm0, xmm6
 	unpcklpd xmm1, xmm7
 	movsd xmm6, [a0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
@@ -513,9 +513,9 @@ sym(CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2):
 	mulpd xmm1, xmm5
 	unpcklpd xmm2, xmm7
 	movsd xmm4, [a0 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm7, [a0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm5, [a1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm6, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm7, [a0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
 	unpcklpd xmm4, xmm5
 	unpcklpd xmm6, xmm7
 	mulpd xmm4, xmm6
@@ -540,12 +540,12 @@ sym(CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2):
 	movsd xmm7, [sym(k1_f64)]
 	divsd xmm7, xmm0
 	movsd xmm0, [a1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm1, [a2 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm2, [a0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm3, [a2 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm4, [a2 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm5, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm6, [a2 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm2, [a0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm1, [a2 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm3, [a2 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm6, xmm1
+	movsd xmm4, xmm3
 	unpcklpd xmm0, xmm2
 	unpcklpd xmm1, xmm3
 	movsd xmm3, [a0 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
@@ -553,17 +553,17 @@ sym(CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2):
 	unpcklpd xmm5, xmm3
 	mulpd xmm0, xmm4
 	mulpd xmm1, xmm5
-	movsd xmm2, [a0 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm2, xmm3
 	movsd xmm3, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm4, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm5, [a2 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm4, xmm3
 	unpcklpd xmm2, xmm3
 	unpcklpd xmm4, xmm5
 	mulpd xmm2, xmm4
+	movsd xmm6, [a1 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm3, [a1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm4, [a2 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm5, [a0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm6, [a1 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
 	unpcklpd xmm3, xmm4
 	unpcklpd xmm5, xmm6
 	mulpd xmm3, xmm5
@@ -578,13 +578,13 @@ sym(CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2):
 	shufpd xmm2, xmm2, 0x1
 	movsd [R + strideInBytes*1 + 0*COMPV_YASM_FLOAT64_SZ_BYTES], xmm2 ; r1[0]
 	movsd xmm0, [a0 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm1, [a2 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm2, [a0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm3, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm1, [a2 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm4, [a2 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm5, [a1 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm6, [a0 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm7, [a0 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm3, [a1 + 2*COMPV_YASM_FLOAT64_SZ_BYTES]	
+	movsd xmm6, xmm2
+	movsd xmm7, xmm0
 	unpcklpd xmm0, xmm2
 	unpcklpd xmm1, xmm3
 	unpcklpd xmm4, xmm5
@@ -592,10 +592,10 @@ sym(CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2):
 	mulpd xmm0, xmm4
 	mulpd xmm1, xmm6
 	movsd xmm2, [a1 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm6, [a1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm3, [a2 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm4, [a2 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm5, [a2 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm6, [a1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm5, xmm3
 	movsd xmm7, [a0 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
 	unpcklpd xmm4, xmm5
 	unpcklpd xmm6, xmm7
@@ -608,9 +608,9 @@ sym(CompVMathMatrixInvA3x3_64f_Asm_X86_SSE2):
 	unpcklpd xmm3, xmm7
 	mulpd xmm3, xmm6
 	movsd xmm1, [a0 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
+	movsd xmm6, xmm5
 	movsd xmm4, [a1 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
 	movsd xmm5, [a1 + 0*COMPV_YASM_FLOAT64_SZ_BYTES]
-	movsd xmm6, [a0 + 1*COMPV_YASM_FLOAT64_SZ_BYTES]
 	subpd xmm2, xmm3
 	unpcklpd xmm1, xmm5
 	mulpd xmm2, [rsp + 0]
