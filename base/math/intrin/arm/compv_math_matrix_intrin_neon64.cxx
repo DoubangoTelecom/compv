@@ -175,6 +175,7 @@ void CompVMathMatrixBuildHomographyEqMatrix_64f_Intrin_NEON64(const COMPV_ALIGNE
 void CompVMathMatrixInvA3x3_64f_Intrin_NEON64(const COMPV_ALIGNED(NEON) compv_float64_t* A, COMPV_ALIGNED(NEON) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
+    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Load axy onces (see ASM code)");
 	const compv_float64_t* a0 = A;
 	const compv_float64_t* a1 = reinterpret_cast<const compv_float64_t*>(reinterpret_cast<const uint8_t*>(a0) + strideInBytes);
 	const compv_float64_t* a2 = reinterpret_cast<const compv_float64_t*>(reinterpret_cast<const uint8_t*>(a1) + strideInBytes);

@@ -139,11 +139,19 @@ COMPV_ERROR_CODE inv3x3()
 		{ static_cast<TYP>(-0.055555555555554977), static_cast<TYP>(1.5612511283791264e-16), static_cast<TYP>(0.055555555555555323) },
 		{ static_cast<TYP>(0.52777777777777357), static_cast<TYP>(0.16666666666666552), static_cast<TYP>(-0.19444444444444264) }
 	};
+#if COMPV_OS_IPHONE
+    static const TYP SingularInverseFloat64_NEON_FMA[3][3] = { // Expected resul: http://comnuan.com/cmnn0100f/
+        { static_cast<TYP>(0.05222288547868309), static_cast<TYP>(0.081424739516563427), static_cast<TYP>(0.11062659355444356) },
+        { static_cast<TYP>(-1.4377791042907073), static_cast<TYP>(-0.49618281236646494), static_cast<TYP>(0.44541347955777733) },
+        { static_cast<TYP>(1.2188895521453567), static_cast<TYP>(0.41475807284990096), static_cast<TYP>(-0.38937340644555463) }
+    };
+#else
 	static const TYP SingularInverseFloat64_NEON_FMA[3][3] = { // Expected resul: http://comnuan.com/cmnn0100f/
 		{ static_cast<TYP>(0.016780410445101677), static_cast<TYP>(0.081424419567815404), static_cast<TYP>(0.075185261194962272) },
 		{ static_cast<TYP>(-1.366894154223544), static_cast<TYP>(-0.4961821724689689), static_cast<TYP>(0.51629614427674031) },
 		{ static_cast<TYP>(1.1834470771117749), static_cast<TYP>(0.41475775290115291), static_cast<TYP>(-0.42481473880503628) }
 	};
+#endif
 	static const TYP SingularInverseFloat32[3][3] = {
 		{ static_cast<TYP>(-0.638891041), static_cast<TYP>(-0.166667357), static_cast<TYP>(0.305556685) },
 		{ static_cast<TYP>(-0.0555560775), static_cast<TYP>(-1.52736902e-07), static_cast<TYP>(0.0555558056) },

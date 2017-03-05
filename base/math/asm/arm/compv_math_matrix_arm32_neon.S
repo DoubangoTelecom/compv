@@ -412,4 +412,141 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON32
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> const COMPV_ALIGNED(NEON) compv_float64_t* A
+@ arg(1) -> COMPV_ALIGNED(NEON) compv_float64_t* R
+@ arg(2) -> compv_uscalar_t strideInBytes
+@ arg(3) -> compv_float64_t* det1
+COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixInvA3x3_64f_Asm_NEON32
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+	@@ Set arguments @@
+	A .req r0
+	R .req r1
+	strideInBytes .req r2
+	det1 .req r3
+
+    #define a0_ A
+    a1_ .req r4
+    a2_ .req r5
+    #define r0_ R
+    r1_ .req r6
+    r2_ .req r7
+
+    a00 .req q0x
+    a01 .req q0y
+    a02 .req q1x
+    a10 .req q1y
+    a11 .req q2x
+    a12 .req q2y
+    a20 .req q3x
+    a21 .req q3y
+    a22 .req q4x
+
+    @@ load axy @@
+    add a1_, a0_, strideInBytes
+    add a2_, a0_, strideInBytes, LSL #1
+    vld1.64 { a00, a01, a02 }, [a0_ :64]
+    vld1.64 { a10, a11, a12 }, [a1_ :64]
+    vld1.64 { a20, a21, a22 }, [a2_ :64]
+
+    @@ det(A) @@
+    vmul.f64 q5x, a11, a22
+    vmul.f64 q5y, a01, a22
+    vmul.f64 q6x, a21, a12
+    vmul.f64 q6y, a21, a02
+    vsub.f64 q7x, q5x, q6x
+    vsub.f64 q7y, q5y, q6y
+    vmul.f64 q8x, a00, q7x
+    vmul.f64 q8y, a10, q7y
+    vsub.f64 q9x, q8x, q8y
+    vmul.f64 q10x, a01, a12
+    vmul.f64 q10y, a11, a02
+    vsub.f64 q11x, q10x, q10y
+    vmul.f64 q11x, q11x, a20
+    vadd.f64 q11x, q11x, q9x
+    vst1.64 { q11x }, [det1 :64]
+    vmov.32	r10, q11x[0]
+    vmov.32	r11, q11x[1]
+    orrs r11, r11, r10
+    beq EndOfTheFunction_CompVMathMatrixInvA3x3_64f_Asm_NEON32
+
+    @@ det(A) not zero @@
+    vmov.f64 q15x, #1.000000e+00
+    vdiv.f64 q15x, q15x, q11x
+    add r1_, r0_, strideInBytes
+    add r2_, r0_, strideInBytes, LSL #1
+    vmul.f64 q5x, a11, a22
+    vmul.f64 q5y, a02, a21
+    vmul.f64 q6x, a21, a12
+    vmul.f64 q6y, a22, a01
+    vmul.f64 q7x, a01, a12
+    vmul.f64 q7y, a12, a20
+    vmul.f64 q8x, a11, a02
+    vmul.f64 q8y, a22, a10
+    vmul.f64 q9x, a00, a22
+    vmul.f64 q9y, a02, a10
+    vmul.f64 q10x, a20, a02
+    vmul.f64 q10y, a12, a00
+    vmul.f64 q11x, a10, a21
+    vmul.f64 q11y, a01, a20
+    vmul.f64 q12x, a20, a11
+    vmul.f64 q12y, a21, a00
+    vmul.f64 q13x, a00, a11
+    vmul.f64 q13y, a10, a01
+    vsub.f64 q5x, q5x, q6x
+    vsub.f64 q5y, q5y, q6y
+    vsub.f64 q7x, q7x, q8x
+    vsub.f64 q7y, q7y, q8y
+    vsub.f64 q9x, q9x, q10x
+    vsub.f64 q9y, q9y, q10y
+    vsub.f64 q11x, q11x, q12x
+    vsub.f64 q11y, q11y, q12y
+    vsub.f64 q13x, q13x, q13y
+    vmul.f64 q5x, q5x, q15x
+    vmul.f64 q5y, q5y, q15x
+    vmul.f64 q7x, q7x, q15x
+    vmul.f64 q7y, q7y, q15x
+    vmul.f64 q9x, q9x, q15x
+    vmul.f64 q9y, q9y, q15x
+    vmul.f64 q11x, q11x, q15x
+    vmul.f64 q11y, q11y, q15x
+    vmul.f64 q13x, q13x, q15x
+    vst1.64 { q5 }, [r0_ :128]!
+    vst1.64 { q7x }, [r0_ :64]
+    vst1.64 { q7y }, [r1_ :64]!
+    vst1.64 { q9 }, [r1_ :64] @ not 128-bits aligned
+    vst1.64 { q11 }, [r2_ :128]!
+    vst1.64 { q13x }, [r2_ :64]
+
+    EndOfTheFunction_CompVMathMatrixInvA3x3_64f_Asm_NEON32:
+
+    .unreq A
+    .unreq R
+    .unreq strideInBytes
+    .unreq det1
+
+    #undef a0_
+    .unreq a1_
+    .unreq a2_
+    #undef r0_
+    .unreq r1_
+    .unreq r2_
+
+    .unreq a00
+    .unreq a01
+    .unreq a02
+    .unreq a10
+    .unreq a11
+    .unreq a12
+    .unreq a20
+    .unreq a21
+    .unreq a22
+
+    COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
 #endif /* defined(__arm__) && !defined(__aarch64__) */
