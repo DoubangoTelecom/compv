@@ -7,7 +7,7 @@
 
 COMPV_ERROR_CODE homogeneousToCartesian2D()
 {
-	static const size_t numpoints = 215;
+	static const size_t numpoints = 4;
 
 	static const struct compv_unittest_trf {
 		size_t numpoints;
