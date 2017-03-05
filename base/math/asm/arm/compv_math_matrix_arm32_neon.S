@@ -326,4 +326,90 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulGA_64f_Asm_NEON32
 COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulGA_64f_Asm_FMA_NEON32
     CompVMathMatrixMulGA_64f_Macro_NEON32 1
 
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) const compv_float64_t* srcX
+@ arg(1) -> COMPV_ALIGNED(NEON) const compv_float64_t* srcY
+@ arg(2) -> COMPV_ALIGNED(NEON) const compv_float64_t* dstX
+@ arg(3) -> COMPV_ALIGNED(NEON) const compv_float64_t* dstY
+@ arg(4) -> COMPV_ALIGNED(NEON) compv_float64_t* M
+@ arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t M_strideInBytes
+@ arg(6) -> compv_uscalar_t numPoints
+COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON32
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 7
+	COMPV_GAS_SAVE_NEON_REGS
+
+	@@ Load arguments @@
+	ldm_args r0-r6
+	srcX .req r0
+	srcY .req r1
+	dstX .req r2
+	dstY .req r3
+	M .req r4
+	M_strideInBytes .req r5
+	numPoints .req r6
+
+    M1_ptr .req r7
+    padding .req r8
+
+    mov r11, #9 @ number of points per loop (in samples)
+    sub padding, M_strideInBytes, r11, LSL #3
+    add padding, padding, M_strideInBytes @ skip next line, because we are using 'M_strideInBytesTimes2' in c++ code
+
+    mov r11, #0
+    vmov.f64 q14x, #-1.000000e+00
+    vdup.s32 q14y, r11
+    vdup.s32 q15, r11
+
+    add M1_ptr, M, M_strideInBytes
+
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @ for (compv_uscalar_t i = 0; i < numPoints; ++i)
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    LoopPoints_CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON32:
+        vld1.64 { q0x }, [srcX :64]!
+        vld1.64 { q0y }, [srcY :64]!
+        vld1.64 { q1x }, [dstX :64]!
+        vld1.64 { q1y }, [dstY :64]!
+        vmul.f64 q3x, q1x, q0x
+        vmul.f64 q3y, q1x, q0y
+        vmul.f64 q4x, q1y, q0x
+        vmul.f64 q4y, q1y, q0y
+        vneg.f64 q2x, q0x
+        vneg.f64 q2y, q0y
+        subs numPoints, numPoints, #1
+        vst1.64 { q2 }, [M :128]!
+        vst1.64 { q14 }, [M :128]!
+        vst1.64 { q15 }, [M :128]!
+        vst1.64 { q15 }, [M1_ptr :128]!
+        vst1.64 { q15x }, [M1_ptr :64]!
+        vst1.64 { q2x }, [M1_ptr :64]!
+        vst1.64 { q2y }, [M1_ptr :64]!
+        vst1.64 { q14x }, [M1_ptr :64]!
+        vst1.64 { q3 }, [M :128]!
+        vst1.64 { q1x }, [M :64]!
+        vst1.64 { q4 }, [M1_ptr :128]!
+        vst1.64 { q1y }, [M1_ptr :64]!
+        add M, M, padding
+        add M1_ptr, M1_ptr, padding
+        bne LoopPoints_CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON32
+        @@ EndOf_LoopPoints_CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON32 @@	
+    
+    .unreq srcX
+	.unreq srcY
+	.unreq dstX
+	.unreq dstY
+	.unreq M
+	.unreq M_strideInBytes
+	.unreq numPoints
+
+    .unreq M1_ptr
+    .unreq padding
+	
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS 7
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
 #endif /* defined(__arm__) && !defined(__aarch64__) */
