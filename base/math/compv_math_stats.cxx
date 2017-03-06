@@ -30,6 +30,7 @@ COMPV_NAMESPACE_BEGIN()
 #	if COMPV_ARCH_ARM
 	COMPV_EXTERNC void CompVMathStatsNormalize2DHartley_64f_Asm_NEON32(const COMPV_ALIGNED(NEON) compv_float64_t* x, const COMPV_ALIGNED(NEON) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1);
     COMPV_EXTERNC void CompVMathStatsNormalize2DHartley_4_64f_Asm_NEON32(const COMPV_ALIGNED(NEON) compv_float64_t* x, const COMPV_ALIGNED(NEON) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1);
+	COMPV_EXTERNC void CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32(const COMPV_ALIGNED(NEON) compv_float64_t* aX_h, const COMPV_ALIGNED(NEON) compv_float64_t* aY_h, const COMPV_ALIGNED(NEON) compv_float64_t* aZ_h, const COMPV_ALIGNED(NEON) compv_float64_t* bX, const COMPV_ALIGNED(NEON) compv_float64_t* bY, COMPV_ALIGNED(NEON) compv_float64_t* mse, compv_uscalar_t numPoints);
 #   endif /* COMPV_ARCH_ARM */
 #endif /* COMPV_ASM */
 
@@ -156,6 +157,7 @@ COMPV_ERROR_CODE CompVMathStats<T>::mse2D_homogeneous(CompVMatPtrPtr mse, const 
 #elif COMPV_ARCH_ARM
 		if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && numPoints > 1 && COMPV_IS_ALIGNED_NEON(aX_h) && COMPV_IS_ALIGNED_NEON(aY_h) && COMPV_IS_ALIGNED_NEON(aZ_h) && COMPV_IS_ALIGNED_NEON(bX) && COMPV_IS_ALIGNED_NEON(bY) && COMPV_IS_ALIGNED_NEON(msePtr)) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Intrin_NEON64);
+            COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32);
 			if (numPoints == 4) {
 				COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_4_64f_Intrin_NEON64);
 			}
