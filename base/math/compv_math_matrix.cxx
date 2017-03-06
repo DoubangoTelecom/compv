@@ -50,6 +50,7 @@ COMPV_NAMESPACE_BEGIN()
     COMPV_EXTERNC void CompVMathMatrixMulABt_64f_Asm_FMA_NEON64(const COMPV_ALIGNED(NEON) compv_float64_t* A, compv_uscalar_t aRows, COMPV_ALIGNED(SSE) compv_uscalar_t aStrideInBytes, const COMPV_ALIGNED(NEON) compv_float64_t* B, compv_uscalar_t bRows, compv_uscalar_t bCols, COMPV_ALIGNED(NEON) compv_uscalar_t bStrideInBytes, COMPV_ALIGNED(NEON) compv_float64_t* R, COMPV_ALIGNED(NEON) compv_uscalar_t rStrideInBytes);
     COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_NEON64(COMPV_ALIGNED(NEON) compv_float64_t* ri, COMPV_ALIGNED(NEON) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
     COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_FMA_NEON64(COMPV_ALIGNED(NEON) compv_float64_t* ri, COMPV_ALIGNED(NEON) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
+    COMPV_EXTERNC void CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON64(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE) compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints);
 #   endif /* COMPV_ARCH_ARM64 */
 #endif /* COMPV_ASM */
 
@@ -771,14 +772,15 @@ class CompVMatrixGeneric
 #elif COMPV_ARCH_ARM
 			if ((*M)->isAlignedSSE()) {
 				if (CompVCpu::isEnabled(kCpuFlagNone)) {
-					COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Intrin_NEON64);
                     COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON32);
+					COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Intrin_NEON64);
+                    COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathMatrixBuildHomographyEqMatrix_64f = CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON64);
 				}
 			}
 #endif
 
 			if (CompVMathMatrixBuildHomographyEqMatrix_64f) {
-				CompVMathMatrixBuildHomographyEqMatrix_64f(reinterpret_cast<const compv_float64_t*>(srcX), reinterpret_cast<const compv_float64_t*>(srcY), reinterpret_cast<const compv_float64_t*>(dstX), reinterpret_cast<const compv_float64_t*>(dstY), (*M)->ptr<compv_float64_t>(), static_cast<compv_uscalar_t>(M_strideInBytes), static_cast<compv_uscalar_t>(numPoints));
+				CompVMathMatrixBuildHomographyEqMatrix_64f(reinterpret_cast<const compv_float64_t*>(srcX), reinterpret_cast<const compv_float64_t*>(srcY), reinterpret_cast<const compv_float64_t*>(dstX), reinterpret_cast<const compv_float64_t*>(dstY), (*M)->ptr<compv_float64_t>(), static_cast<compv_uscalar_t>(M_strideInBytes), static_cast<compv_uscalar_t>(numPoints));                
 				return COMPV_ERROR_CODE_S_OK;
 			}
 		}

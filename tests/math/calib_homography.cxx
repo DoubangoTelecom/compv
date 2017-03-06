@@ -2,7 +2,7 @@
 
 #define TAG_TEST			"TestCalibHomography"
 #define NUM_POINTS			(5000 + 15) // +15 to make it SIMD-unfriendly for testing
-#define LOOP_COUNT			1
+#define LOOP_COUNT			10000
 #define TYP					compv_float64_t
 #define SCALEX				5.0
 #define SCALEY				5.0

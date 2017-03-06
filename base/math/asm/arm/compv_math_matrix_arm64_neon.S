@@ -455,4 +455,83 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulGA_64f_Asm_NEON64
 COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixMulGA_64f_Asm_FMA_NEON64
     CompVMathMatrixMulGA_64f_Macro_NEON64 1
 
+
+#########################################################################
+# arg(0) -> COMPV_ALIGNED(NEON) const compv_float64_t* srcX
+# arg(1) -> COMPV_ALIGNED(NEON) const compv_float64_t* srcY
+# arg(2) -> COMPV_ALIGNED(NEON) const compv_float64_t* dstX
+# arg(3) -> COMPV_ALIGNED(NEON) const compv_float64_t* dstY
+# arg(4) -> COMPV_ALIGNED(NEON) compv_float64_t* M
+# arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t M_strideInBytes
+# arg(6) -> compv_uscalar_t numPoints
+COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON64
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+	## Set arguments ##
+	srcX .req r0
+	srcY .req r1
+	dstX .req r2
+	dstY .req r3
+	M .req r4
+	M_strideInBytes .req r5
+	numPoints .req r6
+
+    M1_ptr .req r7
+    M_strideInBytesTimes2 .req r8
+
+    lsl M_strideInBytesTimes2, M_strideInBytes, #1
+    
+    movi v13.2d, #0
+    fmov v14.2d, #-1.00000000
+    ins v15.d[0], v14.d[0]
+    ins v15.d[1], v13.d[0]
+
+    add M1_ptr, M, M_strideInBytes
+
+    #########################################################################
+    # for (compv_uscalar_t i = 0; i < numPoints; ++i)
+    #########################################################################
+    LoopPoints_CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON64:
+        add r11, M1_ptr, #(3 * COMPV_GAS_FLOAT64_SZ_BYTES)
+        subs numPoints, numPoints, #1
+        ld1 { v0.d }[0], [srcX], #8
+        ld1 { v0.d }[1], [srcY], #8
+        ldr d18, [dstX], #8
+        ldr d19, [dstY], #8
+        fneg v2.2d, v0.2d
+        dup v3.2d, v18.d[0]
+        dup v4.2d, v19.d[0]
+        fmul v5.2d, v3.2d, v0.2d
+        fmul v6.2d, v4.2d, v0.2d
+        str q2, [M, #(0 * COMPV_GAS_FLOAT64_SZ_BYTES)]
+        str q15, [M, #(2 * COMPV_GAS_FLOAT64_SZ_BYTES)]
+        str q13, [M, #(4 * COMPV_GAS_FLOAT64_SZ_BYTES)]
+        str d18, [M, #(8 * COMPV_GAS_FLOAT64_SZ_BYTES)]
+        stp q13, q13, [M1_ptr, #(0 * COMPV_GAS_FLOAT64_SZ_BYTES)]
+        st1 { v2.2d }, [r11]
+        str d14, [M1_ptr, #(5 * COMPV_GAS_FLOAT64_SZ_BYTES)]
+        str d19, [M1_ptr, #(8 * COMPV_GAS_FLOAT64_SZ_BYTES)]
+        str q5, [M, #(6 * COMPV_GAS_FLOAT64_SZ_BYTES)]
+        str q6, [M1_ptr, #(6 * COMPV_GAS_FLOAT64_SZ_BYTES)]
+        add M, M, M_strideInBytesTimes2
+        add M1_ptr, M1_ptr, M_strideInBytesTimes2
+        bne LoopPoints_CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON64
+        ## EndOf_LoopPoints_CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON64 ##
+    
+    .unreq srcX
+	.unreq srcY
+	.unreq dstX
+	.unreq dstY
+	.unreq M
+	.unreq M_strideInBytes
+	.unreq numPoints
+
+    .unreq M1_ptr
+    .unreq M_strideInBytesTimes2
+	
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
 #endif /* defined(__aarch64__) */
