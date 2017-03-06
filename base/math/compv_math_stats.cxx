@@ -88,8 +88,9 @@ COMPV_ERROR_CODE CompVMathStats<T>::normalize2D_hartley(const T* x, const T* y, 
             COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Intrin_NEON64);
             COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Asm_NEON64);
 			if (numPoints == 4) { // Homography -> very common
-				COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_4_64f_Intrin_NEON64);
                 COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_4_64f_Asm_NEON32);
+				COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_4_64f_Intrin_NEON64);
+                COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_4_64f_Asm_NEON64);
 			}
 		}
 #endif

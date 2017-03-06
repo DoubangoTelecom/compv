@@ -21,7 +21,7 @@
 .text
 
 #########################################################################
-#@ arg(0) -> COMPV_ALIGNED(NEON) const compv_float64_t* x
+# arg(0) -> COMPV_ALIGNED(NEON) const compv_float64_t* x
 # arg(1) -> COMPV_ALIGNED(NEON) const compv_float64_t* y
 # arg(2) -> compv_uscalar_t numPoints
 # arg(3) -> compv_float64_t* tx1
@@ -46,12 +46,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
     vecTy .req v28
     vecMagnitude .req v29
     vecOneOverNumPoints .req v30
-    vecZero .req v31
 
     movi vecTx.2d, #0
     movi vecTy.2d, #0
     movi vecMagnitude.2d, #0
-    movi vecZero.2d, #0
 
     mov r11, #2
     ucvtf d20, numPoints
@@ -237,7 +235,96 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
     .unreq vecTy
     .unreq vecMagnitude
     .unreq vecOneOverNumPoints
-    .unreq vecZero
+
+    COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+
+
+#########################################################################
+# arg(0) -> COMPV_ALIGNED(NEON) const compv_float64_t* x
+# arg(1) -> COMPV_ALIGNED(NEON) const compv_float64_t* y
+# arg(2) -> compv_uscalar_t numPoints
+# arg(3) -> compv_float64_t* tx1
+# arg(4) -> compv_float64_t* ty1
+# arg(5) -> compv_float64_t* sf1
+COMPV_GAS_FUNCTION_DECLARE CompVMathStatsNormalize2DHartley_4_64f_Asm_NEON64
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+	## Load arguments ##
+	x .req r0
+	y .req r1
+	numPoints .req r2
+	tx1 .req r3
+    ty1 .req r4
+    sf1 .req r5
+
+    i .req r6
+
+    vecSqrt2 .req v26
+    vecTx .req v27
+    vecTy .req v28
+    vecMagnitude .req v29
+    vecOneOverNumPoints .req v30
+    mov r11, #2
+    ucvtf d20, numPoints
+    ucvtf d21, r11
+    fmov vecOneOverNumPoints.2d, #1.00000000
+    dup vecSqrt2.2d, v21.d[0]
+    dup v20.2d, v20.d[0]
+    fdiv vecOneOverNumPoints.2d, vecOneOverNumPoints.2d, v20.2d
+    fsqrt vecSqrt2.2d, vecSqrt2.2d
+    ldp q0, q1, [x]
+    fadd vecTx.2d, v0.2d, v1.2d
+    ldp q4, q5, [y]
+    fadd vecTy.2d, v4.2d, v5.2d
+    mov d23, vecTx.d[1]
+    mov d24, vecTy.d[1]
+    fadd d27, d27, d23 // v27 = vecTx
+    fadd d28, d28, d24 // v28 = vecTy
+    fmul d27, d27, d30 // v30 = vecOneOverNumPoints
+    fmul d28, d28, d30 // v30 = vecOneOverNumPoints
+    dup vecTx.2d, v27.d[0]
+    dup vecTy.2d, v28.d[0]
+    ldp q0, q1, [x]
+    ldp q4, q5, [y]
+    fsub v0.2d, v0.2d, vecTx.2d
+    fsub v4.2d, v4.2d, vecTy.2d
+    fsub v1.2d, v1.2d, vecTx.2d
+    fsub v5.2d, v5.2d, vecTy.2d
+    fmul v0.2d, v0.2d, v0.2d
+    fmul v4.2d, v4.2d, v4.2d
+    fmul v1.2d, v1.2d, v1.2d
+    fmul v5.2d, v5.2d, v5.2d
+    fadd v0.2d, v0.2d, v4.2d
+    fadd v1.2d, v1.2d, v5.2d
+    fsqrt vecMagnitude.2d, v0.2d
+    fsqrt v1.2d, v1.2d
+    fadd vecMagnitude.2d, vecMagnitude.2d, v1.2d
+    mov d23, vecMagnitude.d[1]
+    fadd d29, d29, d23 // v29 = vecMagnitude
+    fmul d29, d29, d30 // v30 = vecOneOverNumPoints
+    fdiv d29, d26, d29  // v26 = vecSqrt2
+    st1 { vecTx.d }[0], [tx1]
+    st1 { vecTy.d }[0], [ty1]
+    st1 { vecMagnitude.d }[0], [sf1]
+    
+    .unreq x
+	.unreq y
+	.unreq numPoints
+	.unreq tx1
+    .unreq ty1
+    .unreq sf1
+
+    .unreq i
+
+    .unreq vecSqrt2
+    .unreq vecTx
+    .unreq vecTy
+    .unreq vecMagnitude
+    .unreq vecOneOverNumPoints
 
     COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_FUNCTION_EPILOG
