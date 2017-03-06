@@ -167,8 +167,9 @@ COMPV_ERROR_CODE CompVMathStats<T>::mse2D_homogeneous(CompVMatPtrPtr mse, const 
 #	endif
 #elif COMPV_ARCH_ARM
 		if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && numPoints > 1 && COMPV_IS_ALIGNED_NEON(aX_h) && COMPV_IS_ALIGNED_NEON(aY_h) && COMPV_IS_ALIGNED_NEON(aZ_h) && COMPV_IS_ALIGNED_NEON(bX) && COMPV_IS_ALIGNED_NEON(bY) && COMPV_IS_ALIGNED_NEON(msePtr)) {
-			COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Intrin_NEON64);
-            COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32);
+			COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32);
+            COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Intrin_NEON64);
+            COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64);
 			if (numPoints == 4) {
 				COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_4_64f_Intrin_NEON64);
                 COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathStatsMSE2DHomogeneous_64f = CompVMathStatsMSE2DHomogeneous_4_64f_Asm_NEON32);

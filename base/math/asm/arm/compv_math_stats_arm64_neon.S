@@ -331,4 +331,185 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsNormalize2DHartley_4_64f_Asm_NEON64
 	COMPV_GAS_FUNCTION_RETURN
 
 
+
+#########################################################################
+# arg(0) -> COMPV_ALIGNED(NEON) const compv_float64_t* aX_h
+# arg(1) -> COMPV_ALIGNED(NEON) const compv_float64_t* aY_h
+# arg(2) -> COMPV_ALIGNED(NEON) const compv_float64_t* aZ_h
+# arg(3) -> COMPV_ALIGNED(NEON) const compv_float64_t* bX
+# arg(4) -> COMPV_ALIGNED(NEON) const compv_float64_t* bY
+# arg(5) -> COMPV_ALIGNED(NEON) compv_float64_t* mse
+# arg(6) -> compv_uscalar_t numPoints
+COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+    ## Load arguments ##
+	aX_h .req r0
+	aY_h .req r1
+	aZ_h .req r2
+	bX .req r3
+    bY .req r4
+    mse .req r5
+    numPoints .req r6
+
+    i .req r7
+
+    vecOne .req v30
+    fmov vecOne.2d, #1.00000000
+
+    #########################################################################
+    # for (i = 0; i < numPoints_ - 7; i += 8)
+    #########################################################################
+    lsr i, numPoints, #3
+    cbz i, EndOf_LoopNumPoints8_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64
+    LoopNumPoints8_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64:
+        subs i, i, #1
+        ldp q0, q1, [aZ_h], #32
+        fdiv v0.2d, vecOne.2d, v0.2d
+        fdiv v1.2d, vecOne.2d, v1.2d
+        ldp q2, q3, [aZ_h], #32
+        fdiv v2.2d, vecOne.2d, v2.2d
+        fdiv v3.2d, vecOne.2d, v3.2d
+        ldp q4, q5, [aX_h], #32
+        ldp q6, q7, [aY_h], #32
+        fmul v4.2d, v4.2d, v0.2d
+        fmul v5.2d, v5.2d, v1.2d
+        fmul v6.2d, v6.2d, v0.2d
+        fmul v7.2d, v7.2d, v1.2d
+        ldp q8, q9, [aX_h], #32
+        ldp q10, q11, [aY_h], #32
+        fmul v8.2d, v8.2d, v2.2d
+        fmul v9.2d, v9.2d, v3.2d
+        fmul v10.2d, v10.2d, v2.2d
+        fmul v11.2d, v11.2d, v3.2d
+        ldp q0, q1, [bX], #32
+        ldp q2, q3, [bY], #32
+        fsub v4.2d, v4.2d, v0.2d
+        fsub v5.2d, v5.2d, v1.2d
+        fsub v6.2d, v6.2d, v2.2d
+        fsub v7.2d, v7.2d, v3.2d
+        ldp q0, q1, [bX], #32
+        ldp q2, q3, [bY], #32
+        fsub v8.2d, v8.2d, v0.2d
+        fsub v9.2d, v9.2d, v1.2d
+        fsub v10.2d, v10.2d, v2.2d
+        fsub v11.2d, v11.2d, v3.2d
+        fmul v4.2d, v4.2d, v4.2d
+        fmul v6.2d, v6.2d, v6.2d
+        fmul v5.2d, v5.2d, v5.2d
+        fmul v7.2d, v7.2d, v7.2d
+        fmul v8.2d, v8.2d, v8.2d
+        fmul v10.2d, v10.2d, v10.2d
+        fmul v9.2d, v9.2d, v9.2d
+        fmul v11.2d, v11.2d, v11.2d
+        fadd v4.2d, v4.2d, v6.2d
+        fadd v5.2d, v5.2d, v7.2d
+        fadd v8.2d, v8.2d, v10.2d
+        fadd v9.2d, v9.2d, v11.2d
+        stp q4, q5, [mse], #32
+        stp q8, q9, [mse], #32
+        bne LoopNumPoints8_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64
+        EndOf_LoopNumPoints8_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64:
+        ## EndOf_LoopNumPoints8_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64 ##
+
+    and r8, numPoints, #7 // modulo 8
+    and r9, numPoints, #3 // modulo 4
+
+
+    #########################################################################
+    # .if (i < numPoints_ - 3)
+    #########################################################################
+    lsr i, r8, #2
+    cbz i, EndOf_LoopNumPoints4_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64
+    LoopNumPoints4_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64:
+        ldp q0, q1, [aZ_h], #32
+        fdiv v0.2d, vecOne.2d, v0.2d
+        fdiv v1.2d, vecOne.2d, v1.2d
+        ldp q4, q5, [aX_h], #32
+        ldp q6, q7, [aY_h], #32
+        fmul v4.2d, v4.2d, v0.2d
+        fmul v5.2d, v5.2d, v1.2d
+        fmul v6.2d, v6.2d, v0.2d
+        fmul v7.2d, v7.2d, v1.2d
+        ldp q0, q1, [bX], #32
+        ldp q2, q3, [bY], #32
+        fsub v4.2d, v4.2d, v0.2d
+        fsub v5.2d, v5.2d, v1.2d
+        fsub v6.2d, v6.2d, v2.2d
+        fsub v7.2d, v7.2d, v3.2d
+        fmul v4.2d, v4.2d, v4.2d
+        fmul v6.2d, v6.2d, v6.2d
+        fmul v5.2d, v5.2d, v5.2d
+        fmul v7.2d, v7.2d, v7.2d
+        fadd v4.2d, v4.2d, v6.2d
+        fadd v5.2d, v5.2d, v7.2d
+        stp q4, q5, [mse], #32
+        EndOf_LoopNumPoints4_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64:
+        ## EndOf_LoopNumPoints4_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64 ##
+
+
+    #########################################################################
+    # .if (i < numPoints_ - 1)
+    #########################################################################
+    lsr i, r9, #1
+    cbz i, EndOf_LoopNumPoints2_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64
+    LoopNumPoints2_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64:
+        ldr q0, [aZ_h], #16
+        fdiv v0.2d, vecOne.2d, v0.2d        
+        ldr q4, [aX_h], #16
+        ldr q6, [aY_h], #16
+        fmul v4.2d, v4.2d, v0.2d
+        fmul v6.2d, v6.2d, v0.2d
+        ldr q0, [bX], #16
+        ldr q2, [bY], #16
+        fsub v4.2d, v4.2d, v0.2d
+        fsub v6.2d, v6.2d, v2.2d
+        fmul v4.2d, v4.2d, v4.2d
+        fmul v6.2d, v6.2d, v6.2d
+        fadd v4.2d, v4.2d, v6.2d
+        str q4, [mse], #16
+        EndOf_LoopNumPoints2_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64:
+        ## EndOf_LoopNumPoints2_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64 ##
+
+    #########################################################################
+    # .if (numPoints_ & 1)
+    #########################################################################
+    ands i, numPoints, #1
+    beq EndOf_LoopNumPoints1_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64
+    LoopNumPoints1_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64:
+        ld1 {v0.d}[0], [aZ_h]
+        fdiv d0, d30, d0 // v30 = vecOne
+        ld1 {v4.d}[0], [aX_h]
+        ld1 {v6.d}[0], [aY_h]
+        fmul d4, d4, d0
+        fmul d6, d6, d0
+        ld1 {v0.d}[0], [bX]
+        ld1 {v2.d}[0], [bY]
+        fsub d4, d4, d0
+        fsub d6, d6, d2
+        fmul d4, d4, d4
+        fmul d6, d6, d6
+        fadd d4, d4, d6
+        st1 {v4.d}[0], [mse]
+        EndOf_LoopNumPoints1_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64:
+        ## EndOf_LoopNumPoints1_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64 ##
+
+    .unreq aX_h
+	.unreq aY_h
+	.unreq aZ_h
+	.unreq bX
+    .unreq bY
+    .unreq mse
+    .unreq numPoints
+
+    .unreq i
+
+    .unreq vecOne
+
+    COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+
 #endif /* defined(__aarch64__) */
