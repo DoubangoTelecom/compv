@@ -1,0 +1,247 @@
+#########################################################################
+# Copyright (C) 2016-2017 Doubango Telecom <https://www.doubango.org>   #
+# File author: Mamadou DIOP (Doubango Telecom, France).                 #
+# License: GPLv3. For commercial license please contact us.             #
+# Source code: https://github.com/DoubangoTelecom/compv                 #
+# WebSite: http://compv.org                                             #
+#########################################################################
+#if defined(__aarch64__)
+.include "compv_common_arm64.S"
+
+#if defined(__APPLE__)
+#   define sym(funcname) _##funcname
+#else
+#   define sym(funcname) funcname
+#endif
+
+.data
+
+.extern
+
+.text
+
+#########################################################################
+#@ arg(0) -> COMPV_ALIGNED(NEON) const compv_float64_t* x
+# arg(1) -> COMPV_ALIGNED(NEON) const compv_float64_t* y
+# arg(2) -> compv_uscalar_t numPoints
+# arg(3) -> compv_float64_t* tx1
+# arg(4) -> compv_float64_t* ty1
+# arg(5) -> compv_float64_t* sf1
+COMPV_GAS_FUNCTION_DECLARE CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+	## Load arguments ##
+	x .req r0
+	y .req r1
+	numPoints .req r2
+	tx1 .req r3
+    ty1 .req r4
+    sf1 .req r5
+
+    i .req r6
+
+    vecSqrt2 .req v26
+    vecTx .req v27
+    vecTy .req v28
+    vecMagnitude .req v29
+    vecOneOverNumPoints .req v30
+    vecZero .req v31
+
+    movi vecTx.2d, #0
+    movi vecTy.2d, #0
+    movi vecMagnitude.2d, #0
+    movi vecZero.2d, #0
+
+    mov r11, #2
+    ucvtf d20, numPoints
+    ucvtf d21, r11
+    fmov vecOneOverNumPoints.2d, #1.00000000
+    dup vecSqrt2.2d, v21.d[0]
+    dup v20.2d, v20.d[0]
+    fdiv vecOneOverNumPoints.2d, vecOneOverNumPoints.2d, v20.2d
+    fsqrt vecSqrt2.2d, vecSqrt2.2d
+
+    mov r14, x
+    mov r15, y
+    
+
+    #########################################################################
+    // for (i = 0; i < numPoints_ - 7; i += 8)
+    #########################################################################
+    lsr i, numPoints, #3
+    cbz i, EndOf_LoopTxTy8_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
+    LoopTxTy8_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
+        subs i, i, #1
+        ldp q0, q1, [r14], #32
+        ldp q2, q3, [r14], #32
+        fadd v0.2d, v0.2d, v1.2d
+        fadd v2.2d, v2.2d, v3.2d
+        ldp q4, q5, [r15], #32
+        ldp q6, q7, [r15], #32
+        fadd v4.2d, v4.2d, v5.2d
+        fadd v6.2d, v6.2d, v7.2d
+        fadd v0.2d, v0.2d, v2.2d
+        fadd v4.2d, v4.2d, v6.2d
+        fadd vecTx.2d, vecTx.2d, v0.2d
+        fadd vecTy.2d, vecTy.2d, v4.2d
+        bne LoopTxTy8_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
+        EndOf_LoopTxTy8_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
+        ## EndOf_LoopTxTy8_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64 ##
+
+    and r8, numPoints, #7 // modulo 8
+    and r9, numPoints, #3 // modulo 4
+
+
+    #########################################################################
+    # .if (i < numPoints_ - 3)
+    #########################################################################
+    lsr i, r8, #2
+    cbz i, EndOf_LoopTxTy4_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
+    LoopTxTy4_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
+        ldp q0, q1, [r14], #32
+        fadd v0.2d, v0.2d, v1.2d
+        ldp q4, q5, [r15], #32
+        fadd v4.2d, v4.2d, v5.2d
+        fadd vecTx.2d, vecTx.2d, v0.2d
+        fadd vecTy.2d, vecTy.2d, v4.2d
+        EndOf_LoopTxTy4_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
+        ## EndOf_LoopTxTy4_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64 ##
+
+
+    #########################################################################
+    # .if (i < numPoints_ - 1)
+    #########################################################################
+    lsr i, r9, #1
+    cbz i, EndOf_LoopTxTy2_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
+    LoopTxTy2_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
+        ldr q0, [r14], #16
+        ldr q4, [r15], #16
+        fadd vecTx.2d, vecTx.2d, v0.2d
+        fadd vecTy.2d, vecTy.2d, v4.2d
+        EndOf_LoopTxTy2_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
+        ## EndOf_LoopTxTy2_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64 ##
+
+    mov d23, vecTx.d[1]
+    mov d24, vecTy.d[1]
+    fadd d27, d27, d23 // v27 = vecTx
+    fadd d28, d28, d24 // v28 = vecTy
+
+    #########################################################################
+    # .if (numPoints_ & 1)
+    #########################################################################
+    ands i, numPoints, #1
+    beq EndOf_LoopTxTy1_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
+    LoopTxTy1_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
+        ld1 {v0.d}[0], [r14]
+        ld1 {v4.d}[0], [r15]
+        fadd d27, d27, d0
+        fadd d28, d28, d4
+        EndOf_LoopTxTy1_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
+        ## EndOf_LoopTxTy1_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64 ##
+
+    dup vecTx.2d, v27.d[0]
+    dup vecTy.2d, v28.d[0]
+
+    fmul vecTx.2d, vecTx.2d, vecOneOverNumPoints.2d
+    fmul vecTy.2d, vecTy.2d, vecOneOverNumPoints.2d
+
+
+    #########################################################################
+    # for (i = 0; i < numPoints_ - 3; i += 4)
+    #########################################################################
+    lsr i, numPoints, #2
+    cbz i, EndOf_LoopMagnitude4_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
+    LoopMagnitude4_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
+        subs i, i, #1
+        ldp q0, q1, [x], #32
+        ldp q4, q5, [y], #32
+        fsub v0.2d, v0.2d, vecTx.2d
+        fsub v4.2d, v4.2d, vecTy.2d
+        fsub v1.2d, v1.2d, vecTx.2d
+        fsub v5.2d, v5.2d, vecTy.2d
+        fmul v0.2d, v0.2d, v0.2d
+        fmul v4.2d, v4.2d, v4.2d
+        fmul v1.2d, v1.2d, v1.2d
+        fmul v5.2d, v5.2d, v5.2d
+        fadd v0.2d, v0.2d, v4.2d
+        fadd v1.2d, v1.2d, v5.2d
+        fsqrt v0.2d, v0.2d
+        fsqrt v1.2d, v1.2d
+        fadd vecMagnitude.2d, vecMagnitude.2d, v0.2d
+        fadd vecMagnitude.2d, vecMagnitude.2d, v1.2d
+        bne LoopMagnitude4_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
+        EndOf_LoopMagnitude4_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
+        ## EndOf_LoopMagnitude4_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64 ##
+
+
+    #########################################################################
+    # .if (i < numPoints_ - 1)
+    #########################################################################
+    lsr i, r9, #1
+    cbz i, EndOf_LoopMagnitude2_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
+    LoopMagnitude2_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
+        ldr q0, [x], #16
+        ldr q4, [y], #16
+        fsub v0.2d, v0.2d, vecTx.2d
+        fsub v4.2d, v4.2d, vecTy.2d
+        fmul v0.2d, v0.2d, v0.2d
+        fmul v4.2d, v4.2d, v4.2d
+        fadd v0.2d, v0.2d, v4.2d
+        fsqrt v0.2d, v0.2d
+        fadd vecMagnitude.2d, vecMagnitude.2d, v0.2d
+        EndOf_LoopMagnitude2_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
+        ## EndOf_LoopMagnitude2_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64 ##
+
+    mov d23, vecMagnitude.d[1]
+    fadd d29, d29, d23 // v29 = vecMagnitude
+
+    #########################################################################
+    # .if (numPoints_ & 1)
+    #########################################################################
+    ands i, numPoints, #1
+    beq EndOf_LoopMagnitude1_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
+    LoopMagnitude1_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
+        ld1 {v0.d}[0], [x]
+        ld1 {v4.d}[0], [y]
+        fsub d0, d0, d27  // v27 = vecTx
+        fsub d4, d4, d28 // v28 = vecTy
+        fmul d0, d0, d0
+        fmul d4, d4, d4
+        fadd d0, d0, d4
+        fsqrt d0, d0
+        fadd d29, d29, d0
+        EndOf_LoopMagnitude1_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
+        ## EndOf_LoopMagnitude1_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64 ##
+
+
+    dup vecMagnitude.2d, v29.d[0]
+    fmul vecMagnitude.2d, vecMagnitude.2d, vecOneOverNumPoints.2d
+    fdiv vecMagnitude.2d, vecSqrt2.2d, vecMagnitude.2d
+    
+    st1 { vecTx.d }[0], [tx1]
+    st1 { vecTy.d }[0], [ty1]
+    st1 { vecMagnitude.d }[0], [sf1]
+    
+    .unreq x
+	.unreq y
+	.unreq numPoints
+	.unreq tx1
+    .unreq ty1
+    .unreq sf1
+
+    .unreq i
+
+    .unreq vecSqrt2
+    .unreq vecTx
+    .unreq vecTy
+    .unreq vecMagnitude
+    .unreq vecOneOverNumPoints
+    .unreq vecZero
+
+    COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+
+#endif /* defined(__aarch64__) */

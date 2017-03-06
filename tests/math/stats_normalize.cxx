@@ -1,13 +1,13 @@
 #include "../tests_common.h"
 
 #define TAG_TEST			"TestStatsNormalize"
-#define LOOP_COUNT			1
+#define LOOP_COUNT			10000
 #define TYP					compv_float64_t
 #define ERR_MAX				4.7683715820312500e-07
 
 COMPV_ERROR_CODE stats_normalize2D_hartley()
 {
-	static const size_t numpoints = 4;
+	static const size_t numpoints = 2015;
 
 	static const struct compv_unittest_norm {
 		size_t numpoints;
