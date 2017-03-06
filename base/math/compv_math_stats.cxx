@@ -27,6 +27,9 @@ COMPV_NAMESPACE_BEGIN()
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVMathStatsMSE2DHomogeneous_64f_Asm_X64_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* aX_h, const COMPV_ALIGNED(SSE) compv_float64_t* aY_h, const COMPV_ALIGNED(SSE) compv_float64_t* aZ_h, const COMPV_ALIGNED(SSE) compv_float64_t* bX, const COMPV_ALIGNED(SSE) compv_float64_t* bY, COMPV_ALIGNED(SSE) compv_float64_t* mse, compv_uscalar_t numPoints);
 #	endif /* COMPV_ARCH_X64 */
+#	if COMPV_ARCH_ARM
+	COMPV_EXTERNC void CompVMathStatsNormalize2DHartley_64f_Asm_NEON32(const COMPV_ALIGNED(NEON) compv_float64_t* x, const COMPV_ALIGNED(NEON) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1);
+#   endif /* COMPV_ARCH_ARM */
 #endif /* COMPV_ASM */
 
 /*
@@ -71,6 +74,7 @@ COMPV_ERROR_CODE CompVMathStats<T>::normalize2D_hartley(const T* x, const T* y, 
 #elif COMPV_ARCH_ARM
 		if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && numPoints > 1 && COMPV_IS_ALIGNED_NEON(x) && COMPV_IS_ALIGNED_NEON(y)) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Intrin_NEON64);
+            COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_64f_Asm_NEON32);
 			if (numPoints == 4) { // Homography -> very common
 				COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsNormalize2DHartley_64f = CompVMathStatsNormalize2DHartley_4_64f_Intrin_NEON64);
 			}
@@ -106,6 +110,7 @@ COMPV_ERROR_CODE CompVMathStats<T>::normalize2D_hartley(const T* x, const T* y, 
 	}
 	magnitude *= OneOverNumPoints;
 
+    // TODO(dmi): magnitude cannot be equal to zero (sum of positive values)
 	*s1 = magnitude ? static_cast<T>(COMPV_MATH_SQRT_2 / magnitude) : static_cast<T>(COMPV_MATH_SQRT_2); // (sqrt(2) / magnitude)
 	*tx1 = tx;
 	*ty1 = ty;

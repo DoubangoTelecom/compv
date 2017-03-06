@@ -7,7 +7,7 @@
 
 COMPV_ERROR_CODE stats_normalize2D_hartley()
 {
-	static const size_t numpoints = 4;
+	static const size_t numpoints = 2015;
 
 	static const struct compv_unittest_norm {
 		size_t numpoints;
