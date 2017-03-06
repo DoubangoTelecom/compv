@@ -7,7 +7,7 @@
 
 COMPV_ERROR_CODE stats_mse2D_homogeneous()
 {
-	static const size_t numpoints = 2015;
+	static const size_t numpoints = 4;
 
 	static const struct compv_unittest_mse {
 		size_t numpoints;

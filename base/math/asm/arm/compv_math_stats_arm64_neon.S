@@ -512,4 +512,70 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64
 	COMPV_GAS_FUNCTION_RETURN
 
 
+#########################################################################
+# arg(0) -> COMPV_ALIGNED(NEON) const compv_float64_t* aX_h
+# arg(1) -> COMPV_ALIGNED(NEON) const compv_float64_t* aY_h
+# arg(2) -> COMPV_ALIGNED(NEON) const compv_float64_t* aZ_h
+# arg(3) -> COMPV_ALIGNED(NEON) const compv_float64_t* bX
+# arg(4) -> COMPV_ALIGNED(NEON) const compv_float64_t* bY
+# arg(5) -> COMPV_ALIGNED(NEON) compv_float64_t* mse
+# arg(6) -> compv_uscalar_t numPoints
+COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_4_64f_Asm_NEON64
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+    ## Load arguments ##
+	aX_h .req r0
+	aY_h .req r1
+	aZ_h .req r2
+	bX .req r3
+    bY .req r4
+    mse .req r5
+    numPoints .req r6
+
+    i .req r7
+
+    vecOne .req v30
+
+    fmov vecOne.2d, #1.00000000
+    ldp q0, q1, [aZ_h]
+    fdiv v0.2d, vecOne.2d, v0.2d
+    fdiv v1.2d, vecOne.2d, v1.2d
+    ldp q4, q5, [aX_h]
+    ldp q6, q7, [aY_h]
+    fmul v4.2d, v4.2d, v0.2d
+    fmul v5.2d, v5.2d, v1.2d
+    fmul v6.2d, v6.2d, v0.2d
+    fmul v7.2d, v7.2d, v1.2d
+    ldp q0, q1, [bX]
+    ldp q2, q3, [bY]
+    fsub v4.2d, v4.2d, v0.2d
+    fsub v5.2d, v5.2d, v1.2d
+    fsub v6.2d, v6.2d, v2.2d
+    fsub v7.2d, v7.2d, v3.2d
+    fmul v4.2d, v4.2d, v4.2d
+    fmul v6.2d, v6.2d, v6.2d
+    fmul v5.2d, v5.2d, v5.2d
+    fmul v7.2d, v7.2d, v7.2d
+    fadd v4.2d, v4.2d, v6.2d
+    fadd v5.2d, v5.2d, v7.2d
+    stp q4, q5, [mse]
+
+    .unreq aX_h
+	.unreq aY_h
+	.unreq aZ_h
+	.unreq bX
+    .unreq bY
+    .unreq mse
+    .unreq numPoints
+
+    .unreq i
+
+    .unreq vecOne
+
+    COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+
 #endif /* defined(__aarch64__) */
