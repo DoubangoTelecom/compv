@@ -32,6 +32,7 @@ COMPV_NAMESPACE_BEGIN()
     COMPV_EXTERNC void CompVMathStatsNormalize2DHartley_4_64f_Asm_NEON32(const COMPV_ALIGNED(NEON) compv_float64_t* x, const COMPV_ALIGNED(NEON) compv_float64_t* y, compv_uscalar_t numPoints, compv_float64_t* tx1, compv_float64_t* ty1, compv_float64_t* s1);
 	COMPV_EXTERNC void CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32(const COMPV_ALIGNED(NEON) compv_float64_t* aX_h, const COMPV_ALIGNED(NEON) compv_float64_t* aY_h, const COMPV_ALIGNED(NEON) compv_float64_t* aZ_h, const COMPV_ALIGNED(NEON) compv_float64_t* bX, const COMPV_ALIGNED(NEON) compv_float64_t* bY, COMPV_ALIGNED(NEON) compv_float64_t* mse, compv_uscalar_t numPoints);
 	COMPV_EXTERNC void CompVMathStatsMSE2DHomogeneous_4_64f_Asm_NEON32(const COMPV_ALIGNED(NEON) compv_float64_t* aX_h, const COMPV_ALIGNED(NEON) compv_float64_t* aY_h, const COMPV_ALIGNED(NEON) compv_float64_t* aZ_h, const COMPV_ALIGNED(NEON) compv_float64_t* bX, const COMPV_ALIGNED(NEON) compv_float64_t* bY, COMPV_ALIGNED(NEON) compv_float64_t* mse, compv_uscalar_t numPoints);
+	COMPV_EXTERNC void CompVMathStatsVariance_64f_Asm_NEON32(const COMPV_ALIGNED(NEON) compv_float64_t* data, compv_uscalar_t count, const compv_float64_t* mean1, compv_float64_t* var1);
 #   endif /* COMPV_ARCH_ARM */
 #endif /* COMPV_ASM */
 
@@ -210,6 +211,7 @@ COMPV_ERROR_CODE CompVMathStats<T>::variance(const T* data, size_t count, T mean
 #elif COMPV_ARCH_ARM
 		if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && count > 1 && COMPV_IS_ALIGNED_NEON(data)) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Intrin_NEON64);
+            COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Asm_NEON32);
 		}
 #endif
 		if (CompVMathStatsVariance_64f) {

@@ -538,8 +538,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ .if (i < numPoints_ - 1)
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    and r8, numPoints, #3 @ modulo 4
-    lsrs i, r8, #1
+    lsrs i, r9, #1
     beq EndOf_LoopNumPoints2_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32
     LoopNumPoints2_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32:
         vld1.64 { q0 }, [aZ_h :128]!
@@ -693,6 +692,145 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_4_64f_Asm_NEON32
 
     COMPV_GAS_RESTORE_NEON_REGS
     COMPV_GAS_UNSHADOW_ARGS 7
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) const compv_float64_t* data
+@ arg(1) -> compv_uscalar_t count
+@ arg(2) -> const compv_float64_t* mean1
+@ arg(3) -> compv_float64_t* var1
+COMPV_GAS_FUNCTION_DECLARE CompVMathStatsVariance_64f_Asm_NEON32
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+    @@ Load arguments @@
+	data .req r0
+	count .req r1
+	mean1 .req r2
+	var1 .req r3
+
+    i .req r4
+
+    vecMean .req q14y
+    vecVar .req q15x
+    vecCountMinus1 .req q15y
+
+    veor vecVar, vecVar, vecVar
+    sub r10, count, #1
+    vmov s11, r10
+    vcvt.f64.u32 vecCountMinus1, s11
+    vld1.64 { vecMean }, [mean1]
+
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @ for (i = 0; i < count - 7; i += 8)
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    lsrs i, count, #3
+    beq EndOf_LoopNumPoints8_CompVMathStatsVariance_64f_Asm_NEON32
+    LoopNumPoints8_CompVMathStatsVariance_64f_Asm_NEON32:
+        subs i, i, #1
+        vld1.64 { q0, q1 }, [data :128]!
+        vld1.64 { q2, q3 }, [data :128]!
+        vsub.f64 q0x, q0x, vecMean
+        vsub.f64 q0y, q0y, vecMean
+        vsub.f64 q1x, q1x, vecMean
+        vsub.f64 q1y, q1y, vecMean
+        vsub.f64 q2x, q2x, vecMean
+        vsub.f64 q2y, q2y, vecMean
+        vsub.f64 q3x, q3x, vecMean
+        vsub.f64 q3y, q3y, vecMean
+        vmul.f64 q0x, q0x, q0x
+        vmul.f64 q0y, q0y, q0y
+        vmul.f64 q1x, q1x, q1x
+        vmul.f64 q1y, q1y, q1y
+        vmul.f64 q2x, q2x, q2x
+        vmul.f64 q2y, q2y, q2y
+        vmul.f64 q3x, q3x, q3x
+        vmul.f64 q3y, q3y, q3y
+        vadd.f64 q0x, q0x, q0y
+        vadd.f64 q1x, q1x, q1y
+        vadd.f64 q2x, q2x, q2y
+        vadd.f64 q3x, q3x, q3y
+        vadd.f64 q0x, q0x, q1x
+        vadd.f64 q2x, q2x, q3x
+        vadd.f64 vecVar, vecVar, q0x
+        vadd.f64 vecVar, vecVar, q2x
+        bne LoopNumPoints8_CompVMathStatsVariance_64f_Asm_NEON32
+        EndOf_LoopNumPoints8_CompVMathStatsVariance_64f_Asm_NEON32:
+        @@ EndOf_LoopNumPoints8_CompVMathStatsVariance_64f_Asm_NEON32 @@
+
+    and r8, count, #7 @ modulo 8
+    and r9, count, #3 @ modulo 4
+
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @ .if (i < count - 3)
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    lsrs i, r8, #2
+    beq EndOf_LoopNumPoints4_CompVMathStatsVariance_64f_Asm_NEON32
+    LoopNumPoints4_CompVMathStatsVariance_64f_Asm_NEON32:
+        vld1.64 { q0, q1 }, [data :128]!
+        vsub.f64 q0x, q0x, vecMean
+        vsub.f64 q0y, q0y, vecMean
+        vsub.f64 q1x, q1x, vecMean
+        vsub.f64 q1y, q1y, vecMean
+        vmul.f64 q0x, q0x, q0x
+        vmul.f64 q0y, q0y, q0y
+        vmul.f64 q1x, q1x, q1x
+        vmul.f64 q1y, q1y, q1y
+        vadd.f64 q0x, q0x, q0y
+        vadd.f64 q1x, q1x, q1y
+        vadd.f64 vecVar, vecVar, q0x
+        vadd.f64 vecVar, vecVar, q1x
+        EndOf_LoopNumPoints4_CompVMathStatsVariance_64f_Asm_NEON32:
+        @@ EndOf_LoopNumPoints4_CompVMathStatsVariance_64f_Asm_NEON32 @@
+
+
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @ .if (i < count - 1)
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    lsrs i, r9, #1
+    beq EndOf_LoopNumPoints2_CompVMathStatsVariance_64f_Asm_NEON32
+    LoopNumPoints2_CompVMathStatsVariance_64f_Asm_NEON32:
+        vld1.64 { q0 }, [data :128]!
+        vsub.f64 q0x, q0x, vecMean
+        vsub.f64 q0y, q0y, vecMean
+        vmul.f64 q0x, q0x, q0x
+        vmul.f64 q0y, q0y, q0y
+        vadd.f64 vecVar, vecVar, q0x
+        vadd.f64 vecVar, vecVar, q0y
+        EndOf_LoopNumPoints2_CompVMathStatsVariance_64f_Asm_NEON32:
+        @@ EndOf_LoopNumPoints2_CompVMathStatsVariance_64f_Asm_NEON32 @@
+
+
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @ .if (count & 1)
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    ands i, count, #1
+    beq EndOf_LoopNumPoints1_CompVMathStatsVariance_64f_Asm_NEON32
+    LoopNumPoints1_CompVMathStatsVariance_64f_Asm_NEON32:
+        vld1.64 { q0x }, [data :64]
+        vsub.f64 q0x, q0x, vecMean
+        vmul.f64 q0x, q0x, q0x
+        vadd.f64 vecVar, vecVar, q0x
+        EndOf_LoopNumPoints1_CompVMathStatsVariance_64f_Asm_NEON32:
+        @@ EndOf_LoopNumPoints1_CompVMathStatsVariance_64f_Asm_NEON32 @@
+
+    vdiv.f64 vecVar, vecVar, vecCountMinus1
+    vst1.64 { vecVar }, [var1]
+
+    .unreq data
+	.unreq count
+	.unreq mean1
+	.unreq var1
+
+    .unreq i
+
+    .unreq vecMean
+    .unreq vecVar
+    .unreq vecCountMinus1
+
+    COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
