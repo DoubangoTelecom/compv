@@ -488,34 +488,34 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON64
     ins v15.d[1], v13.d[0]
 
     add M1_ptr, M, M_strideInBytes
+    add r11, M1_ptr, #(3 * COMPV_GAS_FLOAT64_SZ_BYTES)
 
     #########################################################################
     # for (compv_uscalar_t i = 0; i < numPoints; ++i)
     #########################################################################
     LoopPoints_CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON64:
-        add r11, M1_ptr, #(3 * COMPV_GAS_FLOAT64_SZ_BYTES)
-        subs numPoints, numPoints, #1
         ld1 { v0.d }[0], [srcX], #8
         ld1 { v0.d }[1], [srcY], #8
         ldr d18, [dstX], #8
         ldr d19, [dstY], #8
+        fmul v5.2d, v0.2d, v18.d[0]
         fneg v2.2d, v0.2d
-        dup v3.2d, v18.d[0]
-        dup v4.2d, v19.d[0]
-        fmul v5.2d, v3.2d, v0.2d
-        fmul v6.2d, v4.2d, v0.2d
-        str q2, [M, #(0 * COMPV_GAS_FLOAT64_SZ_BYTES)]
-        str q15, [M, #(2 * COMPV_GAS_FLOAT64_SZ_BYTES)]
-        str q13, [M, #(4 * COMPV_GAS_FLOAT64_SZ_BYTES)]
+        fmul v6.2d, v0.2d, v19.d[0]
+        // should write cache-friendly
+        stp q2, q15, [M, #(0 * COMPV_GAS_FLOAT64_SZ_BYTES)]
+        stp q13, q5, [M, #(4 * COMPV_GAS_FLOAT64_SZ_BYTES)]
         str d18, [M, #(8 * COMPV_GAS_FLOAT64_SZ_BYTES)]
         stp q13, q13, [M1_ptr, #(0 * COMPV_GAS_FLOAT64_SZ_BYTES)]
-        st1 { v2.2d }, [r11]
+        st1 { v2.2d }, [r11] // not 16-bytes aligned
         str d14, [M1_ptr, #(5 * COMPV_GAS_FLOAT64_SZ_BYTES)]
-        str d19, [M1_ptr, #(8 * COMPV_GAS_FLOAT64_SZ_BYTES)]
-        str q5, [M, #(6 * COMPV_GAS_FLOAT64_SZ_BYTES)]
         str q6, [M1_ptr, #(6 * COMPV_GAS_FLOAT64_SZ_BYTES)]
+        str d19, [M1_ptr, #(8 * COMPV_GAS_FLOAT64_SZ_BYTES)]
+        
+        subs numPoints, numPoints, #1
         add M, M, M_strideInBytesTimes2
         add M1_ptr, M1_ptr, M_strideInBytesTimes2
+        add r11, r11, M_strideInBytesTimes2
+        
         bne LoopPoints_CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON64
         ## EndOf_LoopPoints_CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON64 ##
     
