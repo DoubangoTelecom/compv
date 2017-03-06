@@ -175,19 +175,23 @@ void CompVMathMatrixBuildHomographyEqMatrix_64f_Intrin_NEON64(const COMPV_ALIGNE
 void CompVMathMatrixInvA3x3_64f_Intrin_NEON64(const COMPV_ALIGNED(NEON) compv_float64_t* A, COMPV_ALIGNED(NEON) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Load axy onces (see ASM code)");
 	const compv_float64_t* a0 = A;
 	const compv_float64_t* a1 = reinterpret_cast<const compv_float64_t*>(reinterpret_cast<const uint8_t*>(a0) + strideInBytes);
 	const compv_float64_t* a2 = reinterpret_cast<const compv_float64_t*>(reinterpret_cast<const uint8_t*>(a1) + strideInBytes);
+    
+    const float64x1_t a00 = vld1_f64(&a0[0]), a01 = vld1_f64(&a0[1]), a02 = vld1_f64(&a0[2]);
+    const float64x1_t a10 = vld1_f64(&a1[0]), a11 = vld1_f64(&a1[1]), a12 = vld1_f64(&a1[2]);
+    const float64x1_t a20 = vld1_f64(&a2[0]), a21 = vld1_f64(&a2[1]), a22 = vld1_f64(&a2[2]);
+    
 	// det(A)
-	float64x2_t vec0 = vmulq_f64(vcombine_f64(vld1_f64(&a1[1]), vld1_f64(&a0[1])), vcombine_f64(vld1_f64(&a2[2]), vld1_f64(&a2[2])));
-	float64x2_t vec1 = vmulq_f64(vcombine_f64(vld1_f64(&a2[1]), vld1_f64(&a2[1])), vcombine_f64(vld1_f64(&a1[2]), vld1_f64(&a0[2])));
-	float64x2_t vec2 = vcombine_f64(vld1_f64(&a0[0]), vld1_f64(&a1[0]));
+	float64x2_t vec0 = vmulq_f64(vcombine_f64(a11, a01), vcombine_f64(a22, a22));
+	float64x2_t vec1 = vmulq_f64(vcombine_f64(a21, a21), vcombine_f64(a12, a02));
+	float64x2_t vec2 = vcombine_f64(a00, a10);
 	const float64x2_t vec3 = vmulq_f64(vec2, vsubq_f64(vec0, vec1));
 	const float64x1_t vec3n = vsub_f64(vget_low_f64(vec3), vget_high_f64(vec3));
-	vec0 = vmulq_f64(vcombine_f64(vld1_f64(&a0[1]), vld1_f64(&a1[1])), vcombine_f64(vld1_f64(&a1[2]), vld1_f64(&a0[2])));
+	vec0 = vmulq_f64(vcombine_f64(a01, a11), vcombine_f64(a12, a02));
 	float64x1_t vec0n = vsub_f64(vget_low_f64(vec0), vget_high_f64(vec0));
-	vec0n = vmul_f64(vec0n, vld1_f64(&a2[0]));
+	vec0n = vmul_f64(vec0n, a20);
 	vec0n = vadd_f64(vec0n, vec3n);
 	compv_float64_t detA = vget_lane_f64(vec0n, 0);
 	if (detA == 0) {
@@ -199,25 +203,25 @@ void CompVMathMatrixInvA3x3_64f_Intrin_NEON64(const COMPV_ALIGNED(NEON) compv_fl
 		compv_float64_t* r1 = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(r0) + strideInBytes);
 		compv_float64_t* r2 = reinterpret_cast<compv_float64_t*>(reinterpret_cast<uint8_t*>(r1) + strideInBytes);
 
-		vec0 = vmulq_f64(vcombine_f64(vld1_f64(&a1[1]), vld1_f64(&a0[2])), vcombine_f64(vld1_f64(&a2[2]), vld1_f64(&a2[1])));
-		vec1 = vmulq_f64(vcombine_f64(vld1_f64(&a2[1]), vld1_f64(&a2[2])), vcombine_f64(vld1_f64(&a1[2]), vld1_f64(&a0[1])));
+		vec0 = vmulq_f64(vcombine_f64(a11, a02), vcombine_f64(a22, a21));
+		vec1 = vmulq_f64(vcombine_f64(a21, a22), vcombine_f64(a12, a01));
 		vst1q_f64(&r0[0], vmulq_f64(vsubq_f64(vec0, vec1), vecInvDetA));
 
-		vec0 = vmulq_f64(vcombine_f64(vld1_f64(&a0[1]), vld1_f64(&a1[2])), vcombine_f64(vld1_f64(&a1[2]), vld1_f64(&a2[0])));
-		vec1 = vmulq_f64(vcombine_f64(vld1_f64(&a1[1]), vld1_f64(&a2[2])), vcombine_f64(vld1_f64(&a0[2]), vld1_f64(&a1[0])));
+		vec0 = vmulq_f64(vcombine_f64(a01, a12), vcombine_f64(a12, a20));
+		vec1 = vmulq_f64(vcombine_f64(a11, a22), vcombine_f64(a02, a10));
 		vec2 = vmulq_f64(vsubq_f64(vec0, vec1), vecInvDetA);
 		vst1_f64(&r0[2], vget_low_f64(vec2));
 		vst1_f64(&r1[0], vget_high_f64(vec2));
 
-		vec0 = vmulq_f64(vcombine_f64(vld1_f64(&a0[0]), vld1_f64(&a0[2])), vcombine_f64(vld1_f64(&a2[2]), vld1_f64(&a1[0])));
-		vec1 = vmulq_f64(vcombine_f64(vld1_f64(&a2[0]), vld1_f64(&a1[2])), vcombine_f64(vld1_f64(&a0[2]), vld1_f64(&a0[0])));
+		vec0 = vmulq_f64(vcombine_f64(a00, a02), vcombine_f64(a22, a10));
+		vec1 = vmulq_f64(vcombine_f64(a20, a12), vcombine_f64(a02, a00));
 		vst1q_f64(&r1[1], vmulq_f64(vsubq_f64(vec0, vec1), vecInvDetA)); // asm: unaligned store
 
-		vec0 = vmulq_f64(vcombine_f64(vld1_f64(&a1[0]), vld1_f64(&a0[1])), vcombine_f64(vld1_f64(&a2[1]), vld1_f64(&a2[0])));
-		vec1 = vmulq_f64(vcombine_f64(vld1_f64(&a2[0]), vld1_f64(&a2[1])), vcombine_f64(vld1_f64(&a1[1]), vld1_f64(&a0[0])));
+		vec0 = vmulq_f64(vcombine_f64(a10, a01), vcombine_f64(a21, a20));
+		vec1 = vmulq_f64(vcombine_f64(a20, a21), vcombine_f64(a11, a00));
 		vst1q_f64(&r2[0], vmulq_f64(vsubq_f64(vec0, vec1), vecInvDetA));
 
-		vec0 = vmulq_f64(vcombine_f64(vld1_f64(&a0[0]), vld1_f64(&a1[0])), vcombine_f64(vld1_f64(&a1[1]), vld1_f64(&a0[1])));
+		vec0 = vmulq_f64(vcombine_f64(a00, a10), vcombine_f64(a11, a01));
 		vec0n = vsub_f64(vget_low_f64(vec0), vget_high_f64(vec0));
 		vst1_f64(&r2[2], vmul_f64(vec0n, vget_low_f64(vecInvDetA)));
 	}

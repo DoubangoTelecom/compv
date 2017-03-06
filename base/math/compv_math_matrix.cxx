@@ -51,6 +51,7 @@ COMPV_NAMESPACE_BEGIN()
     COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_NEON64(COMPV_ALIGNED(NEON) compv_float64_t* ri, COMPV_ALIGNED(NEON) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
     COMPV_EXTERNC void CompVMathMatrixMulGA_64f_Asm_FMA_NEON64(COMPV_ALIGNED(NEON) compv_float64_t* ri, COMPV_ALIGNED(NEON) compv_float64_t* rj, const compv_float64_t* c1, const compv_float64_t* s1, compv_uscalar_t count);
     COMPV_EXTERNC void CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON64(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* dstX, const COMPV_ALIGNED(SSE) compv_float64_t* dstY, COMPV_ALIGNED(SSE) compv_float64_t* M, COMPV_ALIGNED(SSE) compv_uscalar_t M_strideInBytes, compv_uscalar_t numPoints);
+    COMPV_EXTERNC void CompVMathMatrixInvA3x3_64f_Asm_NEON64(const COMPV_ALIGNED(NEON) compv_float64_t* A, COMPV_ALIGNED(NEON) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1);
 #   endif /* COMPV_ARCH_ARM64 */
 #endif /* COMPV_ASM */
 
@@ -481,8 +482,10 @@ class CompVMatrixGeneric
 			}
 #elif COMPV_ARCH_ARM
 			if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && A3x3->isAlignedNEON() && (*R)->isAlignedNEON() && A3x3->strideInBytes() == (*R)->strideInBytes()) {
-				COMPV_EXEC_IFDEF_INTRIN_ARM64((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Intrin_NEON64, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Intrin_NEON64"));
                 COMPV_EXEC_IFDEF_ASM_ARM32((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Asm_NEON32, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Asm_NEON32"));
+				COMPV_EXEC_IFDEF_INTRIN_ARM64((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Intrin_NEON64, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Intrin_NEON64"));
+                COMPV_EXEC_IFDEF_ASM_ARM64((CompVMathMatrixInvA3x3_64f = CompVMathMatrixInvA3x3_64f_Asm_NEON64, hasSIMD = true, nameSIMD = "CompVMathMatrixInvA3x3_64f_Asm_NEON64"));
+                
 			}
 #endif
 			if (CompVMathMatrixInvA3x3_64f) {

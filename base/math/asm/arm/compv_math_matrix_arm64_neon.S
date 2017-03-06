@@ -534,4 +534,146 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixBuildHomographyEqMatrix_64f_Asm_NEON64
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
+
+#########################################################################
+# arg(0) -> const COMPV_ALIGNED(NEON) compv_float64_t* A
+# arg(1) -> COMPV_ALIGNED(NEON) compv_float64_t* R
+# arg(2) -> compv_uscalar_t strideInBytes
+# arg(3) -> compv_float64_t* det1
+COMPV_GAS_FUNCTION_DECLARE CompVMathMatrixInvA3x3_64f_Asm_NEON64
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+	## Set arguments ##
+	A .req r0
+	R .req r1
+	strideInBytes .req r2
+	det1 .req r3
+
+    #define a0_ A
+    a1_ .req r4
+    a2_ .req r5
+    #define r0_ R
+    r1_ .req r6
+    r2_ .req r7
+
+    a00 .req v0
+    a01 .req v1
+    a02 .req v2
+    a10 .req v3
+    a11 .req v4
+    a12 .req v5
+    a20 .req v6
+    a21 .req v7
+    a22 .req v8
+
+    ## load axy ##
+    add a1_, a0_, strideInBytes
+    add a2_, a0_, strideInBytes, LSL #1
+    ld1 { a00.8b, a01.8b, a02.8b }, [a0_]
+    ld1 { a10.8b, a11.8b, a12.8b }, [a1_]
+    ld1 { a20.8b, a21.8b, a22.8b }, [a2_]
+
+    ## det(A) ##
+    zip1 v10.2d, a11.2d, a01.2d
+    dup v11.2d, a22.d[0]
+    dup v12.2d, a21.d[0]
+    zip1 v13.2d, a12.2d, a02.2d
+    zip1 v14.2d, a00.2d, a10.2d
+    zip1 v15.2d, a01.2d, a11.2d
+    zip1 v16.2d, a12.2d, a02.2d
+    fmul v10.2d, v10.2d, v11.2d
+    fmul v12.2d, v12.2d, v13.2d
+    fmul v15.2d, v15.2d, v16.2d
+    fsub v10.2d, v10.2d, v12.2d
+    fmul v14.2d, v14.2d, v10.2d
+    mov d17, v15.d[1]
+    fsub d15, d15, d17
+    mov d18, v14.d[1]
+    fmul d15, d15, d6
+    fsub d14, d14, d18
+    fadd d15, d15, d14
+    st1 { v15.d }[0], [det1]
+    mov r27, v15.d[0]
+    cbz r27, EndOfTheFunction_CompVMathMatrixInvA3x3_64f_Asm_NEON64
+
+    ## det(A) not zero ##
+    fmov v29.2d, #1.00000000
+    dup v15.2d, v15.d[0]
+    fdiv v29.2d, v29.2d, v15.2d
+    add r1_, r0_, strideInBytes
+    add r2_, r0_, strideInBytes, LSL #1
+    zip1 v10.2d, a11.2d, a02.2d
+    zip1 v11.2d, a22.2d, a21.2d
+    fmul v10.2d, v10.2d, v11.2d
+    zip1 v12.2d, a21.2d, a22.2d
+    zip1 v13.2d, a12.2d, a01.2d
+    fmul v12.2d, v12.2d, v13.2d
+    zip1 v14.2d, a01.2d, a12.2d
+    zip1 v15.2d, a12.2d, a20.2d
+    fmul v14.2d, v14.2d, v15.2d
+    zip1 v16.2d, a11.2d, a22.2d
+    zip1 v17.2d, a02.2d, a10.2d
+    fmul v16.2d, v16.2d, v17.2d
+    zip1 v18.2d, a00.2d, a02.2d
+    zip1 v19.2d, a22.2d, a10.2d
+    fmul v18.2d, v18.2d, v19.2d
+    zip1 v20.2d, a20.2d, a12.2d
+    zip1 v21.2d, a02.2d, a00.2d
+    fmul v20.2d, v20.2d, v21.2d
+    zip1 v22.2d, a10.2d, a01.2d
+    zip1 v23.2d, a21.2d, a20.2d
+    fmul v22.2d, v22.2d, v23.2d
+    zip1 v24.2d, a20.2d, a21.2d
+    zip1 v25.2d, a11.2d, a00.2d
+    fmul v24.2d, v24.2d, v25.2d
+    zip1 v26.2d, a00.2d, a10.2d
+    zip1 v27.2d, a11.2d, a01.2d
+    fmul v26.2d, v26.2d, v27.2d
+    fsub v10.2d, v10.2d, v12.2d
+    fsub v14.2d, v14.2d, v16.2d
+    fsub v18.2d, v18.2d, v20.2d
+    fsub v22.2d, v22.2d, v24.2d
+    mov d27, v26.d[1]
+    fsub d26, d26, d27
+    fmul v10.2d, v10.2d, v29.2d
+    fmul v14.2d, v14.2d, v29.2d
+    fmul v18.2d, v18.2d, v29.2d
+    fmul v22.2d, v22.2d, v29.2d
+    fmul d26, d26, d29
+    st1 { v10.2d }, [r0_], #16
+    st1 { v14.d }[0], [r0_]
+    st1 { v14.d }[1], [r1_], #8
+    st1 { v18.2d }, [r1_] // not 128-bits aligned
+    st1 { v22.2d }, [r2_], #16
+    st1 { v26.d }[0], [r2_]
+
+    EndOfTheFunction_CompVMathMatrixInvA3x3_64f_Asm_NEON64:
+
+    .unreq A
+    .unreq R
+    .unreq strideInBytes
+    .unreq det1
+
+    #undef a0_
+    .unreq a1_
+    .unreq a2_
+    #undef r0_
+    .unreq r1_
+    .unreq r2_
+
+    .unreq a00
+    .unreq a01
+    .unreq a02
+    .unreq a10
+    .unreq a11
+    .unreq a12
+    .unreq a20
+    .unreq a21
+    .unreq a22
+
+    COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
 #endif /* defined(__aarch64__) */

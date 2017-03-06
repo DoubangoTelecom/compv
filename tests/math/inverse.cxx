@@ -139,7 +139,7 @@ COMPV_ERROR_CODE inv3x3()
 		{ static_cast<TYP>(-0.055555555555554977), static_cast<TYP>(1.5612511283791264e-16), static_cast<TYP>(0.055555555555555323) },
 		{ static_cast<TYP>(0.52777777777777357), static_cast<TYP>(0.16666666666666552), static_cast<TYP>(-0.19444444444444264) }
 	};
-#if COMPV_OS_IPHONE
+#if COMPV_OS_IPHONE && COMPV_ARCH_ARM32 // TODO(dmi): strange why iOS32 produce different result when FMA is used (compared to Android or iOS64)
     static const TYP SingularInverseFloat64_NEON_FMA[3][3] = { // Expected resul: http://comnuan.com/cmnn0100f/
         { static_cast<TYP>(0.05222288547868309), static_cast<TYP>(0.081424739516563427), static_cast<TYP>(0.11062659355444356) },
         { static_cast<TYP>(-1.4377791042907073), static_cast<TYP>(-0.49618281236646494), static_cast<TYP>(0.44541347955777733) },
