@@ -221,8 +221,9 @@ COMPV_ERROR_CODE CompVMathStats<T>::variance(const T* data, size_t count, T mean
 		}
 #elif COMPV_ARCH_ARM
 		if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && count > 1 && COMPV_IS_ALIGNED_NEON(data)) {
-			COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Intrin_NEON64);
             COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Asm_NEON32);
+			COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Intrin_NEON64);
+            COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathStatsVariance_64f = CompVMathStatsVariance_64f_Asm_NEON64);
 		}
 #endif
 		if (CompVMathStatsVariance_64f) {

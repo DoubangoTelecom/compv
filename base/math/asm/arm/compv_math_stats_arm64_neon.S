@@ -144,7 +144,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
     fmul vecTx.2d, vecTx.2d, vecOneOverNumPoints.2d
     fmul vecTy.2d, vecTy.2d, vecOneOverNumPoints.2d
 
-
     #########################################################################
     # for (i = 0; i < numPoints_ - 3; i += 4)
     #########################################################################
@@ -171,7 +170,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
         bne LoopMagnitude4_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64
         EndOf_LoopMagnitude4_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64:
         ## EndOf_LoopMagnitude4_CompVMathStatsNormalize2DHartley_64f_Asm_NEON64 ##
-
 
     #########################################################################
     # .if (i < numPoints_ - 1)
@@ -448,7 +446,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64
         EndOf_LoopNumPoints4_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64:
         ## EndOf_LoopNumPoints4_CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON64 ##
 
-
     #########################################################################
     # .if (i < numPoints_ - 1)
     #########################################################################
@@ -572,6 +569,125 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_4_64f_Asm_NEON64
     .unreq i
 
     .unreq vecOne
+
+    COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+
+#########################################################################
+# arg(0) -> COMPV_ALIGNED(NEON) const compv_float64_t* data
+# arg(1) -> compv_uscalar_t count
+# arg(2) -> const compv_float64_t* mean1
+# arg(3) -> compv_float64_t* var1
+COMPV_GAS_FUNCTION_DECLARE CompVMathStatsVariance_64f_Asm_NEON64
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+    ## Set arguments ##
+	data .req r0
+	count .req r1
+	mean1 .req r2
+	var1 .req r3
+
+    i .req r4
+
+    vecMean .req v28
+    vecVar .req v29
+    #define vecCountMinus1 d30
+
+    movi vecVar.2d, #0
+    sub r10, count, #1
+    ucvtf vecCountMinus1, r10
+    ld1 { vecMean.8b }, [mean1]
+    dup vecMean.2d, vecMean.d[0]
+
+    #########################################################################
+    # for (i = 0; i < count - 7; i += 8)
+    #########################################################################
+    lsr i, count, #3
+    cbz i, EndOf_LoopNumPoints8_CompVMathStatsVariance_64f_Asm_NEON64
+    LoopNumPoints8_CompVMathStatsVariance_64f_Asm_NEON64:
+        subs i, i, #1
+        ldp q0, q1, [data], #32
+        ldp q2, q3, [data], #32
+        fsub v0.2d, v0.2d, vecMean.2d
+        fsub v1.2d, v1.2d, vecMean.2d
+        fsub v2.2d, v2.2d, vecMean.2d
+        fsub v3.2d, v3.2d, vecMean.2d
+        fmul v0.2d, v0.2d, v0.2d
+        fmul v1.2d, v1.2d, v1.2d
+        fmul v2.2d, v2.2d, v2.2d
+        fmul v3.2d, v3.2d, v3.2d
+        fadd v0.2d, v0.2d, v1.2d
+        fadd v2.2d, v2.2d, v3.2d
+        fadd vecVar.2d, vecVar.2d, v0.2d
+        fadd vecVar.2d, vecVar.2d, v2.2d
+        bne LoopNumPoints8_CompVMathStatsVariance_64f_Asm_NEON64
+        EndOf_LoopNumPoints8_CompVMathStatsVariance_64f_Asm_NEON64:
+        ## EndOf_LoopNumPoints8_CompVMathStatsVariance_64f_Asm_NEON64 ##
+
+    and r8, count, #7 // modulo 8
+    and r9, count, #3 // modulo 4
+
+    #########################################################################
+    # .if (i < count - 3)
+    #########################################################################
+    lsr i, r8, #2
+    cbz i, EndOf_LoopNumPoints4_CompVMathStatsVariance_64f_Asm_NEON64
+    LoopNumPoints4_CompVMathStatsVariance_64f_Asm_NEON64:
+        ldp q0, q1, [data], #32
+        fsub v0.2d, v0.2d, vecMean.2d
+        fsub v1.2d, v1.2d, vecMean.2d
+        fmul v0.2d, v0.2d, v0.2d
+        fmul v1.2d, v1.2d, v1.2d
+        fadd v0.2d, v0.2d, v1.2d
+        fadd vecVar.2d, vecVar.2d, v0.2d
+        EndOf_LoopNumPoints4_CompVMathStatsVariance_64f_Asm_NEON64:
+        ## EndOf_LoopNumPoints4_CompVMathStatsVariance_64f_Asm_NEON64 ##
+
+    #########################################################################
+    # .if (i < count - 1)
+    #########################################################################
+    lsr i, r9, #1
+    cbz i, EndOf_LoopNumPoints2_CompVMathStatsVariance_64f_Asm_NEON64
+    LoopNumPoints2_CompVMathStatsVariance_64f_Asm_NEON64:
+        ldr q0, [data], #16
+        fsub v0.2d, v0.2d, vecMean.2d
+        fmul v0.2d, v0.2d, v0.2d
+        fadd vecVar.2d, vecVar.2d, v0.2d
+        EndOf_LoopNumPoints2_CompVMathStatsVariance_64f_Asm_NEON64:
+        ## EndOf_LoopNumPoints2_CompVMathStatsVariance_64f_Asm_NEON64 ##
+
+    mov d23, vecVar.d[1]
+    fadd d29, d29, d23 // v29 = vecVar
+
+    #########################################################################
+    # .if (count & 1)
+    #########################################################################
+    ands i, count, #1
+    beq EndOf_LoopNumPoints1_CompVMathStatsVariance_64f_Asm_NEON64
+    LoopNumPoints1_CompVMathStatsVariance_64f_Asm_NEON64:
+        ld1 {v0.d}[0], [data]
+        fsub d0, d0, d28 // v28 = vecMean
+        fmul d0, d0, d0
+        fadd d29, d29, d0
+        EndOf_LoopNumPoints1_CompVMathStatsVariance_64f_Asm_NEON64:
+        ## EndOf_LoopNumPoints1_CompVMathStatsVariance_64f_Asm_NEON64 ##
+
+    fdiv d29, d29, vecCountMinus1
+    st1 { v29.d }[0], [var1]
+
+    .unreq data
+	.unreq count
+	.unreq mean1
+	.unreq var1
+
+    .unreq i
+
+    .unreq vecMean
+    .unreq vecVar
+    #undef vecCountMinus1
 
     COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_FUNCTION_EPILOG
