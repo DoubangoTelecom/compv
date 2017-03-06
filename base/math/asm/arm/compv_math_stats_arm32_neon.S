@@ -611,4 +611,91 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32
 
 
 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) const compv_float64_t* aX_h
+@ arg(1) -> COMPV_ALIGNED(NEON) const compv_float64_t* aY_h
+@ arg(2) -> COMPV_ALIGNED(NEON) const compv_float64_t* aZ_h
+@ arg(3) -> COMPV_ALIGNED(NEON) const compv_float64_t* bX
+@ arg(4) -> COMPV_ALIGNED(NEON) const compv_float64_t* bY
+@ arg(5) -> COMPV_ALIGNED(NEON) compv_float64_t* mse
+@ arg(6) -> compv_uscalar_t numPoints
+COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_4_64f_Asm_NEON32
+    COMPV_GAS_FUNCTION_PROLOG
+    COMPV_GAS_SHADOW_ARGS_TO_STACK 7
+	COMPV_GAS_SAVE_NEON_REGS
+
+    @@ Load arguments @@
+    ldm_args r0-r6
+	aX_h .req r0
+	aY_h .req r1
+	aZ_h .req r2
+	bX .req r3
+    bY .req r4
+    mse .req r5
+    numPoints .req r6
+
+    i .req r7
+
+    vecOne .req q15y
+
+    vmov.f64 vecOne, #1.000000e+00
+    
+    vld1.64 { q0, q1 }, [aZ_h :128]
+    vdiv.f64 q0x, vecOne, q0x
+    vdiv.f64 q0y, vecOne, q0y
+    vdiv.f64 q1x, vecOne, q1x
+    vdiv.f64 q1y, vecOne, q1y
+    vld1.64 { q4, q5 }, [aX_h :128]
+    vld1.64 { q6, q7 }, [aY_h :128]
+    vmul.f64 q4x, q4x, q0x
+    vmul.f64 q4y, q4y, q0y
+    vmul.f64 q5x, q5x, q1x
+    vmul.f64 q5y, q5y, q1y
+    vmul.f64 q6x, q6x, q0x
+    vmul.f64 q6y, q6y, q0y
+    vmul.f64 q7x, q7x, q1x
+    vmul.f64 q7y, q7y, q1y
+    vld1.64 { q0, q1 }, [bX :128]
+    vld1.64 { q2, q3 }, [bY :128]
+    vsub.f64 q4x, q4x, q0x
+    vsub.f64 q4y, q4y, q0y
+    vsub.f64 q5x, q5x, q1x
+    vsub.f64 q5y, q5y, q1y
+    vsub.f64 q6x, q6x, q2x
+    vsub.f64 q6y, q6y, q2y
+    vsub.f64 q7x, q7x, q3x
+    vsub.f64 q7y, q7y, q3y
+    vmul.f64 q4x, q4x, q4x
+    vmul.f64 q6x, q6x, q6x
+    vmul.f64 q4y, q4y, q4y
+    vmul.f64 q6y, q6y, q6y
+    vmul.f64 q5x, q5x, q5x
+    vmul.f64 q7x, q7x, q7x
+    vmul.f64 q5y, q5y, q5y
+    vmul.f64 q7y, q7y, q7y
+    vadd.f64 q4x, q4x, q6x
+    vadd.f64 q4y, q4y, q6y
+    vadd.f64 q5x, q5x, q7x
+    vadd.f64 q5y, q5y, q7y
+    vst1.64 { q4, q5 }, [mse :128]
+
+    .unreq aX_h
+	.unreq aY_h
+	.unreq aZ_h
+	.unreq bX
+    .unreq bY
+    .unreq mse
+    .unreq numPoints
+
+    .unreq i
+
+    .unreq vecOne
+
+    COMPV_GAS_RESTORE_NEON_REGS
+    COMPV_GAS_UNSHADOW_ARGS 7
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+
+
 #endif /* defined(__arm__) && !defined(__aarch64__) */
