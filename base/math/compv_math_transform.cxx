@@ -17,12 +17,15 @@
 COMPV_NAMESPACE_BEGIN()
 #if COMPV_ASM
 #	if COMPV_ARCH_X86
-	COMPV_EXTERNC void CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* srcZ, COMPV_ALIGNED(SSE) compv_float64_t* dstX, COMPV_ALIGNED(SSE) compv_float64_t* dstY, compv_uscalar_t numPoints);
-	COMPV_EXTERNC void CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* srcX, const COMPV_ALIGNED(AVX) compv_float64_t* srcY, const COMPV_ALIGNED(AVX) compv_float64_t* srcZ, COMPV_ALIGNED(AVX) compv_float64_t* dstX, COMPV_ALIGNED(AVX) compv_float64_t* dstY, compv_uscalar_t numPoints);
+		COMPV_EXTERNC void CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_X86_SSE2(const COMPV_ALIGNED(SSE) compv_float64_t* srcX, const COMPV_ALIGNED(SSE) compv_float64_t* srcY, const COMPV_ALIGNED(SSE) compv_float64_t* srcZ, COMPV_ALIGNED(SSE) compv_float64_t* dstX, COMPV_ALIGNED(SSE) compv_float64_t* dstY, compv_uscalar_t numPoints);
+		COMPV_EXTERNC void CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_X86_AVX(const COMPV_ALIGNED(AVX) compv_float64_t* srcX, const COMPV_ALIGNED(AVX) compv_float64_t* srcY, const COMPV_ALIGNED(AVX) compv_float64_t* srcZ, COMPV_ALIGNED(AVX) compv_float64_t* dstX, COMPV_ALIGNED(AVX) compv_float64_t* dstY, compv_uscalar_t numPoints);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_ARM32
-	COMPV_EXTERNC void CompVMathTransformHomogeneousToCartesian2D_4_64f_Intrin_Asm_NEON32(const COMPV_ALIGNED(NEON) compv_float64_t* srcX, const COMPV_ALIGNED(NEON) compv_float64_t* srcY, const COMPV_ALIGNED(NEON) compv_float64_t* srcZ, COMPV_ALIGNED(NEON) compv_float64_t* dstX, COMPV_ALIGNED(NEON) compv_float64_t* dstY, compv_uscalar_t numPoints);
+		COMPV_EXTERNC void CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_NEON32(const COMPV_ALIGNED(NEON) compv_float64_t* srcX, const COMPV_ALIGNED(NEON) compv_float64_t* srcY, const COMPV_ALIGNED(NEON) compv_float64_t* srcZ, COMPV_ALIGNED(NEON) compv_float64_t* dstX, COMPV_ALIGNED(NEON) compv_float64_t* dstY, compv_uscalar_t numPoints);
 #   endif /* COMPV_ARCH_ARM32 */
+#	if COMPV_ARCH_ARM64
+		COMPV_EXTERNC void CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_NEON64(const COMPV_ALIGNED(NEON) compv_float64_t* srcX, const COMPV_ALIGNED(NEON) compv_float64_t* srcY, const COMPV_ALIGNED(NEON) compv_float64_t* srcZ, COMPV_ALIGNED(NEON) compv_float64_t* dstX, COMPV_ALIGNED(NEON) compv_float64_t* dstY, compv_uscalar_t numPoints);
+#   endif /* COMPV_ARCH_ARM64 */
 #endif /* COMPV_ASM */
 
 // src = homogeneous 2D coordinate (X, Y, 1)
@@ -78,8 +81,9 @@ COMPV_ERROR_CODE CompVMathTransform<T>::homogeneousToCartesian2D(CompVMatPtrPtr 
 		if (cols > 1 && CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && src->isAlignedNEON() && dst_->isAlignedNEON()) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_64f_Intrin_NEON64);
 			if (cols == 4) {
+				COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_NEON32);
 				COMPV_EXEC_IFDEF_INTRIN_ARM64(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Intrin_NEON64);
-                COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Intrin_Asm_NEON32);
+				COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathTransformHomogeneousToCartesian2D_64f = CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_NEON64);
 			}
 		}
 #endif

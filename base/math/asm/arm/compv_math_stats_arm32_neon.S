@@ -386,7 +386,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32
 	aX_h .req r0
 	aY_h .req r1
 	aZ_h .req r2
-	bX .req r3
+	bX_ .req r3 @ bX is reserved name
     bY .req r4
     mse .req r5
     numPoints .req r6
@@ -434,7 +434,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32
         vmul.f64 q10y, q10y, q2y
         vmul.f64 q11x, q11x, q3x
         vmul.f64 q11y, q11y, q3y
-        vld1.64 { q0, q1 }, [bX :128]!
+        vld1.64 { q0, q1 }, [bX_ :128]!
         vld1.64 { q2, q3 }, [bY :128]!
         vsub.f64 q4x, q4x, q0x
         vsub.f64 q4y, q4y, q0y
@@ -444,7 +444,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32
         vsub.f64 q6y, q6y, q2y
         vsub.f64 q7x, q7x, q3x
         vsub.f64 q7y, q7y, q3y
-        vld1.64 { q0, q1 }, [bX :128]!
+        vld1.64 { q0, q1 }, [bX_ :128]!
         vld1.64 { q2, q3 }, [bY :128]!
         vsub.f64 q8x, q8x, q0x
         vsub.f64 q8y, q8y, q0y
@@ -508,7 +508,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32
         vmul.f64 q6y, q6y, q0y
         vmul.f64 q7x, q7x, q1x
         vmul.f64 q7y, q7y, q1y
-        vld1.64 { q0, q1 }, [bX :128]!
+        vld1.64 { q0, q1 }, [bX_ :128]!
         vld1.64 { q2, q3 }, [bY :128]!
         vsub.f64 q4x, q4x, q0x
         vsub.f64 q4y, q4y, q0y
@@ -550,7 +550,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32
         vmul.f64 q4y, q4y, q0y
         vmul.f64 q6x, q6x, q0x
         vmul.f64 q6y, q6y, q0y
-        vld1.64 { q0 }, [bX :128]!
+        vld1.64 { q0 }, [bX_ :128]!
         vld1.64 { q2 }, [bY :128]!
         vsub.f64 q4x, q4x, q0x
         vsub.f64 q4y, q4y, q0y
@@ -579,7 +579,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32
         vld1.64 { q6x }, [aY_h :64]
         vmul.f64 q4x, q4x, q0x
         vmul.f64 q6x, q6x, q0x
-        vld1.64 { q0x }, [bX :64]
+        vld1.64 { q0x }, [bX_ :64]
         vld1.64 { q2x }, [bY :64]
         vsub.f64 q4x, q4x, q0x
         vsub.f64 q6x, q6x, q2x
@@ -594,7 +594,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_64f_Asm_NEON32
     .unreq aX_h
 	.unreq aY_h
 	.unreq aZ_h
-	.unreq bX
+	.unreq bX_
     .unreq bY
     .unreq mse
     .unreq numPoints
@@ -628,7 +628,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_4_64f_Asm_NEON32
 	aX_h .req r0
 	aY_h .req r1
 	aZ_h .req r2
-	bX .req r3
+	bX_ .req r3 @ bX is reserved name
     bY .req r4
     mse .req r5
     numPoints .req r6
@@ -654,7 +654,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_4_64f_Asm_NEON32
     vmul.f64 q6y, q6y, q0y
     vmul.f64 q7x, q7x, q1x
     vmul.f64 q7y, q7y, q1y
-    vld1.64 { q0, q1 }, [bX :128]
+    vld1.64 { q0, q1 }, [bX_ :128]
     vld1.64 { q2, q3 }, [bY :128]
     vsub.f64 q4x, q4x, q0x
     vsub.f64 q4y, q4y, q0y
@@ -681,7 +681,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathStatsMSE2DHomogeneous_4_64f_Asm_NEON32
     .unreq aX_h
 	.unreq aY_h
 	.unreq aZ_h
-	.unreq bX
+	.unreq bX_
     .unreq bY
     .unreq mse
     .unreq numPoints

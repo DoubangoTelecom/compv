@@ -28,7 +28,7 @@
 @ arg(3) -> COMPV_ALIGNED(SSE) compv_float64_t* dstX
 @ arg(4) -> COMPV_ALIGNED(SSE) compv_float64_t* dstY
 @ arg(5) -> compv_uscalar_t numPoints
-COMPV_GAS_FUNCTION_DECLARE CompVMathTransformHomogeneousToCartesian2D_4_64f_Intrin_Asm_NEON32
+COMPV_GAS_FUNCTION_DECLARE CompVMathTransformHomogeneousToCartesian2D_4_64f_Asm_NEON32
     COMPV_GAS_FUNCTION_PROLOG
     COMPV_GAS_SHADOW_ARGS_TO_STACK 6
 	COMPV_GAS_SAVE_NEON_REGS

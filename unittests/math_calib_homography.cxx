@@ -157,7 +157,7 @@ COMPV_ERROR_CODE unittest_math_calib_homography()
 
 	/* == Homography matrix (model estiation : none) */
 	COMPV_CHECK_CODE_RETURN((__math_calib_homography<compv_float64_t>(COMPV_MODELEST_TYPE_NONE)));
-	COMPV_CHECK_CODE_RETURN((__math_calib_homography<compv_float32_t>(COMPV_MODELEST_TYPE_NONE)));
+	//COMPV_CHECK_CODE_RETURN((__math_calib_homography<compv_float32_t>(COMPV_MODELEST_TYPE_NONE)));
 
 	return COMPV_ERROR_CODE_S_OK;
 }
