@@ -9,6 +9,7 @@
 #include "compv/base/math/compv_math_matrix.h"
 #include "compv/base/math/compv_math_stats.h"
 #include "compv/base/math/compv_math_eigen.h"
+#include "compv/base/parallel/compv_parallel.h"
 
 #include <cfloat> /* FLT_MAX */
 #include <numeric> /* std::itoa */
@@ -92,30 +93,29 @@ COMPV_ERROR_CODE CompVHomography<T>::find(CompVMatPtrPtr H, const CompVMatPtr &s
 
 	CompVMatPtr bestInliers_; // CompVMatPtr<size_t>
 	size_t bestInliersCount_ = 0;
-	size_t threadsCount_ = 1;
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
-#if 0
-	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
-	if (threadDisp && threadDisp->getThreadsCount() > 1 && !threadDisp->isMotherOfTheCurrentThread()) {
-		threadsCount_ = COMPV_MATH_MIN(numPoints_ / COMPV_RANSAC_HOMOGRAPHY_MIN_SAMPLES_PER_THREAD, size_t(threadDisp->getThreadsCount()));
-	}
+	
+	// Compute number of threads
+	CompVThreadDispatcherPtr threadDisp_ = CompVParallel::threadDispatcher();
+	const size_t maxThreads_ = (threadDisp_ && !threadDisp_->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp_->threadsCount()) : 1;
+	const size_t threadsCount_ = COMPV_MATH_CLIP3(1, maxThreads_, numPoints_ / COMPV_RANSAC_HOMOGRAPHY_MIN_SAMPLES_PER_THREAD);
+
 	if (threadsCount_ > 1) {
 		std::vector<T> variances_(threadsCount_); // variance used when number of inliers are equal
-		std::vector<CompVPtrArray(size_t)> inliers_(threadsCount_);
+		std::vector<CompVMatPtr> inliers_(threadsCount_);
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCount_);
 		auto funcPtr = [&](const CompVMatPtr &src, const CompVMatPtr &dst, size_t threadIdx_) -> COMPV_ERROR_CODE {
-			return ransac<T>(src, dst, inliers_[threadIdx_], variances_[threadIdx_], threadsCount_);
+			return ransac<T>(&inliers_[threadIdx_], variances_[threadIdx_], src, dst, threadsCount_);
 		};
 		// Run threads
 		for (size_t threadIdx_ = 0; threadIdx_ < threadsCount_; ++threadIdx_) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, src, dst, threadIdx_), taskIds));
+			COMPV_CHECK_CODE_RETURN(threadDisp_->invoke(std::bind(funcPtr, src, dst, threadIdx_), taskIds));
 		}
 		// Find best homography index for the threads
 		size_t bestHomographyIndex_ = 0;
 		T bestVariance_ = T(FLT_MAX);
 		for (size_t threadIdx_ = 0; threadIdx_ < threadsCount_; ++threadIdx_) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx_]));
+			COMPV_CHECK_CODE_RETURN(threadDisp_->waitOne(taskIds[threadIdx_]));
 			if (inliers_[threadIdx_] && (inliers_[threadIdx_]->cols() > bestInliersCount_ || (inliers_[threadIdx_]->cols() == bestInliersCount_ && variances_[threadIdx_] < bestVariance_))) {
 				bestVariance_ = variances_[threadIdx_];
 				bestInliersCount_ = inliers_[threadIdx_]->cols();
@@ -125,13 +125,10 @@ COMPV_ERROR_CODE CompVHomography<T>::find(CompVMatPtrPtr H, const CompVMatPtr &s
 		bestInliers_ = inliers_[bestHomographyIndex_];
 	}
 	else {
-#endif
 		T variance_;
 		COMPV_CHECK_CODE_RETURN(ransac<T>(&bestInliers_, variance_, src, dst, 1));
 		bestInliersCount_ = bestInliers_ ? bestInliers_->cols() : 0;
-#if 0
 	}
-#endif
 
 	// RANSAC failed to find more than #4 inliers (must never happen)
 	// -> compute homography using all points
@@ -211,7 +208,7 @@ static COMPV_ERROR_CODE ransac(CompVMatPtrPtr inliers, T& variance, const CompVM
 
 	int idx0, idx1, idx2, idx3;
 #if COMPV_PRNG11
-#	if 0
+#	if 1
 	std::random_device rd_;
 	std::mt19937 prng_{ rd_() };
 #	else
@@ -475,13 +472,20 @@ static COMPV_ERROR_CODE countInliers(CompVTempArraysCountInliers& tempArrays, si
 	variance = T(FLT_MAX);
 
 	size_t* indexes_ = inliers->ptr<size_t>();
+	static const bool pseudoInverseIfSingular = false;
+	bool isSingular = false;
 
 	// Apply H to the source and compute mse: Ha = b, mse(Ha, b)
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(H, src, &tempArrays.b_));
 	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::mse2D_homogeneous(&tempArrays.mseb_, tempArrays.b_->ptr<T>(0), tempArrays.b_->ptr<T>(1), tempArrays.b_->ptr<T>(2), dst->ptr<T>(0), dst->ptr<T>(1), numPoints_));
 
 	// Apply H* to the destination and compute mse: a = H*b, mse(a, H*b)
-	COMPV_CHECK_CODE_RETURN(CompVMatrix::invA3x3(H, &tempArrays.Hinv_));
+	COMPV_CHECK_CODE_RETURN(CompVMatrix::invA3x3(H, &tempArrays.Hinv_, pseudoInverseIfSingular, &isSingular));
+	if (isSingular) {
+		COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Singlular matrix");
+		inliersCount = 0;
+		return COMPV_ERROR_CODE_S_OK;
+	}
 	COMPV_CHECK_CODE_RETURN(CompVMatrix::mulAB(tempArrays.Hinv_, dst, &tempArrays.a_));
 	COMPV_CHECK_CODE_RETURN(CompVMathStats<T>::mse2D_homogeneous(&tempArrays.msea_, tempArrays.a_->ptr<T>(0), tempArrays.a_->ptr<T>(1), tempArrays.a_->ptr<T>(2), src->ptr<T>(0), src->ptr<T>(1), numPoints_));
 

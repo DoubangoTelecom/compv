@@ -462,7 +462,7 @@ class CompVMatrixGeneric
 	}
 
 	// This function will return the pseudoinv if A is singular
-	static COMPV_ERROR_CODE invA3x3(const CompVMatPtr &A3x3, CompVMatPtrPtr R)
+	static COMPV_ERROR_CODE invA3x3(const CompVMatPtr &A3x3, CompVMatPtrPtr R, bool pseudoInverseIfSingular = true, bool* isSingular = NULL)
 	{
 		// Input parameters checked in the calling function
 
@@ -472,6 +472,7 @@ class CompVMatrixGeneric
 		const char* nameSIMD = NULL;
 		const T* a0 = A3x3->ptr<const T>(0);
 		T* r0 = (*R)->ptr<T>(0);
+		T detA = 0;
 
 		if (std::is_same<T, compv_float64_t>::value) {
 			void(*CompVMathMatrixInvA3x3_64f)(const COMPV_ALIGNED(X) compv_float64_t* A3x3, COMPV_ALIGNED(X) compv_float64_t* R, compv_uscalar_t strideInBytes, compv_float64_t* det1) = NULL;
@@ -489,18 +490,19 @@ class CompVMatrixGeneric
 			}
 #endif
 			if (CompVMathMatrixInvA3x3_64f) {
-				compv_float64_t detA;
-				CompVMathMatrixInvA3x3_64f(reinterpret_cast<const compv_float64_t*>(a0), reinterpret_cast<compv_float64_t*>(r0), static_cast<compv_uscalar_t>(A3x3->strideInBytes()), &detA);
+				CompVMathMatrixInvA3x3_64f(reinterpret_cast<const compv_float64_t*>(a0), reinterpret_cast<compv_float64_t*>(r0), static_cast<compv_uscalar_t>(A3x3->strideInBytes()), reinterpret_cast<compv_float64_t*>(&detA));
 				if (detA != 0) {
 					return COMPV_ERROR_CODE_S_OK; // Matrix not singular -> break process
 				}
 			}
-		}
+		}	
 
 		if (hasSIMD) {
 			// Matrix is singular (detA == 0)
-			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "3x3 Matrix is singluar according to '%s'... computing pseudoinverse instead of the inverse", nameSIMD);
-			COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::pseudoinv(A3x3, R));
+			if (pseudoInverseIfSingular) {
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "3x3 Matrix is singluar according to '%s'... computing pseudoinverse instead of the inverse", nameSIMD);
+				COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::pseudoinv(A3x3, R));
+			}
 		}
 		else {
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found.");
@@ -508,13 +510,15 @@ class CompVMatrixGeneric
 			const T* a1 = A3x3->ptr<const T>(1);
 			const T* a2 = A3x3->ptr<const T>(2);
 			// det(A)
-			T detA =
+			detA =
 				a0[0] * (a1[1] * a2[2] - a2[1] * a1[2])
 				- a1[0] * (a0[1] * a2[2] - a2[1] * a0[2])
 				+ a2[0] * (a0[1] * a1[2] - a1[1] * a0[2]);
 			if (detA == 0) {
-				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "3x3 Matrix is singluar... computing pseudoinverse instead of the inverse");
-				COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::pseudoinv(A3x3, R));
+				if (pseudoInverseIfSingular) {
+					COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "3x3 Matrix is singluar... computing pseudoinverse instead of the inverse");
+					COMPV_CHECK_CODE_RETURN(CompVMatrixGeneric<T>::pseudoinv(A3x3, R));
+				}
 			}
 			else {
 				detA = static_cast<T>(1 / detA);
@@ -532,6 +536,12 @@ class CompVMatrixGeneric
 				r2[1] = ((a0[1] * a2[0]) - (a2[1] * a0[0])) * detA;
 				r2[2] = ((a0[0] * a1[1]) - (a1[0] * a0[1])) * detA;
 			}
+		}
+		if (isSingular) {
+			*isSingular = (detA == 0);
+		}
+		if (detA == 0 && !pseudoInverseIfSingular) {
+			COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "3x3 Matrix is singluar... not computing pseudoinverse because pseudoInverseIfSingular is equal to false");
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -944,10 +954,10 @@ COMPV_ERROR_CODE CompVMatrix::pseudoinv(const CompVMatPtr &A, CompVMatPtrPtr R)
 }
 
 // This function will return the pseudoinv if A is singular
-COMPV_ERROR_CODE CompVMatrix::invA3x3(const CompVMatPtr &A3x3, CompVMatPtrPtr R)
+COMPV_ERROR_CODE CompVMatrix::invA3x3(const CompVMatPtr &A3x3, CompVMatPtrPtr R, bool pseudoInverseIfSingular COMPV_DEFAULT(true), bool* isSingular COMPV_DEFAULT(NULL))
 {
 	COMPV_CHECK_EXP_RETURN(!A3x3 || A3x3->cols() != 3 || A3x3->rows() != 3, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVMatrixGenericFloatInvoke(A3x3->subType(), invA3x3, A3x3, R);
+	CompVMatrixGenericFloatInvoke(A3x3->subType(), invA3x3, A3x3, R, pseudoInverseIfSingular, isSingular);
 }
 
 // D must be diagonal matrix and could be equal to R

@@ -29,7 +29,7 @@ public:
 	static COMPV_ERROR_CODE eigenS(const CompVMatPtr &S, CompVMatPtrPtr D, CompVMatPtrPtr Q, bool sort = true, bool rowVectors = false, bool forceZerosInD = true);
 	static COMPV_ERROR_CODE svd(const CompVMatPtr &A, CompVMatPtrPtr U, CompVMatPtrPtr D, CompVMatPtrPtr V, bool sort = true);
 	static COMPV_ERROR_CODE pseudoinv(const CompVMatPtr &A, CompVMatPtrPtr R);
-	static COMPV_ERROR_CODE invA3x3(const CompVMatPtr &A3x3, CompVMatPtrPtr R);
+	static COMPV_ERROR_CODE invA3x3(const CompVMatPtr &A3x3, CompVMatPtrPtr R, bool pseudoInverseIfSingular = true, bool* isSingular = NULL);
 	static COMPV_ERROR_CODE invD(const CompVMatPtr &D, CompVMatPtrPtr R, bool dIsSortedAndPositive = false);
 	template<typename FloatType>
 	static COMPV_ERROR_CODE givens(CompVMatPtrPtr G, size_t rows, size_t cols, size_t ith, size_t jth, FloatType c, FloatType s);
