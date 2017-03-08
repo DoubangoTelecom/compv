@@ -140,6 +140,12 @@
     <ClCompile Include="features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_fma3_avx2.cxx">
       <Filter>Source Files\features\orb\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="features\edges\compv_core_feature_canny_dete.cxx">
+      <Filter>Source Files\features\edges</Filter>
+    </ClCompile>
+    <ClCompile Include="features\edges\compv_core_feature_edge_dete.cxx">
+      <Filter>Source Files\features\edges</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -186,6 +192,12 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_fma3_avx2.h">
       <Filter>Header Files\features\orb\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\edges\compv_core_feature_canny_dete.h">
+      <Filter>Header Files\features\edges</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\edges\compv_core_feature_edge_dete.h">
+      <Filter>Header Files\features\edges</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

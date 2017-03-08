@@ -9,8 +9,9 @@ using namespace compv;
 #define TEST_CHROMA_CONV			0
 #define TEST_FEATURE_FAST			0
 #define TEST_FEATURE_ORB			0
-#define TEST_PATCH_MOMENTS			1
+#define TEST_PATCH_MOMENTS			0
 #define TEST_CONVLT					0
+#define TEST_SOBEL					1
 #define TEST_BRUTEFORCE				0
 #define TEST_DRAW_IMAGE				0
 #define TEST_DRAW_POINTS			0
@@ -51,6 +52,12 @@ compv_main()
 		extern COMPV_ERROR_CODE convlt();
 		COMPV_CHECK_CODE_BAIL(err = convlt(), TAG_TEST_IMAGE "Image convolution test failed");
 #endif
+
+#if TEST_SOBEL
+		extern COMPV_ERROR_CODE sobel();
+		COMPV_CHECK_CODE_BAIL(err = sobel(), TAG_TEST_IMAGE "Sobel Edge dete test failed");
+#endif
+
 #if TEST_BRUTEFORCE
 		extern COMPV_ERROR_CODE bruteforce();
 		COMPV_CHECK_CODE_BAIL(err = bruteforce(), TAG_TEST_IMAGE "Bruteforce test failed");

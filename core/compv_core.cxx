@@ -6,6 +6,7 @@
 */
 #include "compv/core/compv_core.h"
 #include "compv/core/compv_core_common.h"
+#include "compv/core/features/edges/compv_core_feature_edge_dete.h"
 #include "compv/core/features/fast/compv_core_feature_fast_dete.h"
 #include "compv/core/features/orb/compv_core_feature_orb_dete.h"
 #include "compv/core/features/orb/compv_core_feature_orb_desc.h"
@@ -49,30 +50,30 @@ static const CompVFeatureFactory orbFactory = {
 //	CompVEdgeDeteCanny::newObj,
 //	NULL,
 //};
-//static const CompVFeatureFactory sobelFactory = {
-//	COMPV_SOBEL_ID,
-//	"Sobel edge detector",
-//	NULL,
-//	NULL,
-//	CompVEdgeDeteBASE::newObjSobel,
-//	NULL,
-//};
-//static const CompVFeatureFactory scharrFactory = {
-//	COMPV_SCHARR_ID,
-//	"Scharr edge detector",
-//	NULL,
-//	NULL,
-//	CompVEdgeDeteBASE::newObjScharr,
-//	NULL,
-//};
-//static const CompVFeatureFactory prewittFactory = {
-//	COMPV_PREWITT_ID,
-//	"Prewitt edge detector",
-//	NULL,
-//	NULL,
-//	CompVEdgeDeteBASE::newObjPrewitt,
-//	NULL,
-//};
+static const CompVFeatureFactory sobelFactory = {
+	COMPV_SOBEL_ID,
+	"Sobel edge detector",
+	NULL,
+	NULL,
+	CompVCornerDeteEdgeBase::newObjSobel,
+	NULL,
+};
+static const CompVFeatureFactory scharrFactory = {
+	COMPV_SCHARR_ID,
+	"Scharr edge detector",
+	NULL,
+	NULL,
+	CompVCornerDeteEdgeBase::newObjScharr,
+	NULL,
+};
+static const CompVFeatureFactory prewittFactory = {
+	COMPV_PREWITT_ID,
+	"Prewitt edge detector",
+	NULL,
+	NULL,
+	CompVCornerDeteEdgeBase::newObjPrewitt,
+	NULL,
+};
 //static const CompVFeatureFactory houghStdFactory = {
 //	COMPV_HOUGH_STANDARD_ID,
 //	"Hough standard",
@@ -103,6 +104,9 @@ COMPV_ERROR_CODE CompVCore::init()
 	// Features
 	COMPV_CHECK_CODE_BAIL(err = CompVFeature::addFactory(&fastFactory), "Failed to add FAST feature factory");
 	COMPV_CHECK_CODE_BAIL(err = CompVFeature::addFactory(&orbFactory), "Failed to add ORB feature factory");
+	COMPV_CHECK_CODE_RETURN(err = CompVFeature::addFactory(&sobelFactory), "Failed to add Sobel edge detector factory");
+	COMPV_CHECK_CODE_RETURN(err = CompVFeature::addFactory(&scharrFactory), "Failed to add Scharr edge detector factory");
+	COMPV_CHECK_CODE_RETURN(err = CompVFeature::addFactory(&prewittFactory), "Failed to add Prewitt edge detector factory");
 
 	// Matchers
 	COMPV_CHECK_CODE_BAIL(err = CompVMatcher::addFactory(&bruteForceFactory), "Failed to bruteforce matcher factory");

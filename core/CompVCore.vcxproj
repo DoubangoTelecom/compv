@@ -197,6 +197,8 @@
   <ItemGroup>
     <ClCompile Include="calib\compv_core_calib_homography.cxx" />
     <ClCompile Include="compv_core.cxx" />
+    <ClCompile Include="features\edges\compv_core_feature_canny_dete.cxx" />
+    <ClCompile Include="features\edges\compv_core_feature_edge_dete.cxx" />
     <ClCompile Include="features\fast\compv_core_feature_fast_dete.cxx" />
     <ClCompile Include="features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -230,6 +232,8 @@
     <ClInclude Include="include\compv\core\compv_core.h" />
     <ClInclude Include="include\compv\core\compv_core_common.h" />
     <ClInclude Include="include\compv\core\compv_core_config.h" />
+    <ClInclude Include="include\compv\core\features\edges\compv_core_feature_canny_dete.h" />
+    <ClInclude Include="include\compv\core\features\edges\compv_core_feature_edge_dete.h" />
     <ClInclude Include="include\compv\core\features\fast\compv_core_feature_fast_dete.h" />
     <ClInclude Include="include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.h" />
     <ClInclude Include="include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.h" />

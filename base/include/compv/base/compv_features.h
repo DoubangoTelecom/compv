@@ -30,8 +30,8 @@ struct CompVFeatureFactory {
 	const char* name;
 	COMPV_ERROR_CODE(*newObjCornerDete)(CompVCornerDetePtrPtr dete);
 	COMPV_ERROR_CODE(*newObjCornerDesc)(CompVCornerDescPtrPtr desc);
-	COMPV_ERROR_CODE(*newObjEdgeDete)(CompVEdgeDetePtrPtr dete, float tLow /*= 0.68f*/, float tHigh /*= 0.68f*2.f*/, int32_t kernSize /*= 3*/);
-	COMPV_ERROR_CODE(*newObjHough)(CompVHoughPtrPtr hough, float rho /*= 1.f*/, float theta /*= kfMathTrigPiOver180*/, int32_t threshold /*= 1*/);
+	COMPV_ERROR_CODE(*newObjEdgeDete)(CompVEdgeDetePtrPtr dete, float tLow /*= 0.68f*/, float tHigh /*= 0.68f*2.f*/, size_t kernSize /*= 3*/);
+	COMPV_ERROR_CODE(*newObjHough)(CompVHoughPtrPtr hough, float rho /*= 1.f*/, float theta /*= kfMathTrigPiOver180*/, size_t threshold /*= 1*/);
 };
 
 /* Feature detectors and descriptors setters and getters */

@@ -47,6 +47,9 @@
     <ClCompile Include="patch.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sobel.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tests_common.h">

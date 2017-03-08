@@ -170,6 +170,7 @@
     <ClCompile Include="patch.cxx" />
     <ClCompile Include="pyramid.cxx" />
     <ClCompile Include="scale.cxx" />
+    <ClCompile Include="sobel.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\base\CompVBase.vcxproj">
