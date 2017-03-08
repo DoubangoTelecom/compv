@@ -10,8 +10,8 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MathUtilsSumAbs_16s16u_Asm_X86_AVX2)
-global sym(MathUtilsSum_8u32u_Asm_X86_AVX2)
+global sym(CompVMathUtilsSumAbs_16s16u_Asm_X86_AVX2)
+global sym(CompVMathUtilsSum_8u32u_Asm_X86_AVX2)
 
 section .data
 
@@ -24,7 +24,7 @@ section .text
 ; arg(3) -> compv_uscalar_t width
 ; arg(4) -> compv_uscalar_t height
 ; arg(5) -> COMPV_ALIGNED(AVX) compv_uscalar_t stride
-sym(MathUtilsSumAbs_16s16u_Asm_X86_AVX2):
+sym(CompVMathUtilsSumAbs_16s16u_Asm_X86_AVX2):
 	vzeroupper
 	push rbp
 	mov rbp, rsp
@@ -34,18 +34,16 @@ sym(MathUtilsSumAbs_16s16u_Asm_X86_AVX2):
 	push rdi
 	push rbx
 	;; end prolog ;;
-	
-	; alloc memory
-	sub rsp, 8
 
 	mov rcx, arg(5)
 	mov rax, arg(0) ; rax = a
 	mov rdx, arg(1) ; rdx = b
-	shl rcx, 1
+	lea rcx, [rcx * COMPV_YASM_INT16_SZ_BYTES]
 	mov rbx, arg(2) ; rbx = r
-	mov rdi, arg(3) ; rdi = width
+	mov rdi, arg(3)
 	mov rsi, arg(4) ; rsi = height
-	mov [rsp + 0], rcx ; [rsp + 0] = strideInBytes
+	lea rdi, [rdi - 63] ; rdi = width - 63
+	mov arg(5), rcx ; strideInBytes
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	; for (j = 0; j < height; ++j)
@@ -55,31 +53,31 @@ sym(MathUtilsSumAbs_16s16u_Asm_X86_AVX2):
 		; for (i = 0; i < width - 63; i += 64)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor rcx, rcx ; rcx = i = 0
-		cmp rdi, 0
-		jl .EndOfLoopCols64
+		test rdi, rdi
+		js .EndOfLoopCols64
 		.LoopCols64
-			vpabsw ymm0, [rax + rcx*2]
-			vpabsw ymm1, [rax + rcx*2 + 32]
-			vpabsw ymm2, [rax + rcx*2 + 64]
-			vpabsw ymm3, [rax + rcx*2 + 96]
-			vpabsw ymm4, [rdx + rcx*2]
-			vpabsw ymm5, [rdx + rcx*2 + 32]
-			vpabsw ymm6, [rdx + rcx*2 + 64]
-			vpabsw ymm7, [rdx + rcx*2 + 96]
-			lea rcx, [rcx + 64]
+			vpabsw ymm0, [rax + (rcx + 0)*COMPV_YASM_INT16_SZ_BYTES]
+			vpabsw ymm1, [rax + (rcx + 16)*COMPV_YASM_INT16_SZ_BYTES]
+			vpabsw ymm2, [rax + (rcx + 32)*COMPV_YASM_INT16_SZ_BYTES]
+			vpabsw ymm3, [rax + (rcx + 48)*COMPV_YASM_INT16_SZ_BYTES]
+			vpabsw ymm4, [rdx + (rcx + 0)*COMPV_YASM_INT16_SZ_BYTES]
+			vpabsw ymm5, [rdx + (rcx + 16)*COMPV_YASM_INT16_SZ_BYTES]
+			vpabsw ymm6, [rdx + (rcx + 32)*COMPV_YASM_INT16_SZ_BYTES]
+			vpabsw ymm7, [rdx + (rcx + 48)*COMPV_YASM_INT16_SZ_BYTES]
+			add rcx, 64
 			vpaddusw ymm0, ymm4
 			vpaddusw ymm1, ymm5
 			vpaddusw ymm2, ymm6
 			vpaddusw ymm3, ymm7
 			cmp rcx, rdi
-			vmovdqa [rbx + rcx*2 - 128], ymm0
-			vmovdqa [rbx + rcx*2 - 128 + 32], ymm1
-			vmovdqa [rbx + rcx*2 - 128 + 64], ymm2
-			vmovdqa [rbx + rcx*2 - 128 + 96], ymm3
+			vmovdqa [rbx + (rcx - 64)*COMPV_YASM_INT16_SZ_BYTES], ymm0
+			vmovdqa [rbx + (rcx - 48)*COMPV_YASM_INT16_SZ_BYTES], ymm1
+			vmovdqa [rbx + (rcx - 32)*COMPV_YASM_INT16_SZ_BYTES], ymm2
+			vmovdqa [rbx + (rcx - 16)*COMPV_YASM_INT16_SZ_BYTES], ymm3
 			jl .LoopCols64
 		.EndOfLoopCols64
 
-		lea rdi, [rdi + 63]
+		add rdi, 63
 
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (i = 0; i < width; i += 16)
@@ -87,25 +85,22 @@ sym(MathUtilsSumAbs_16s16u_Asm_X86_AVX2):
 		cmp rcx, rdi
 		jge .EndOfLoopCols16
 		.LoopCols16
-			vpabsw ymm0, [rax + rcx*2]
-			vpabsw ymm1, [rdx + rcx*2]
-			lea rcx, [rcx + 16]
+			vpabsw ymm0, [rax + (rcx + 0)*COMPV_YASM_INT16_SZ_BYTES]
+			vpabsw ymm1, [rdx + (rcx + 0)*COMPV_YASM_INT16_SZ_BYTES]
+			add rcx, 16
 			vpaddusw ymm0, ymm0, ymm1
 			cmp rcx, rdi
-			vmovdqa [rbx + rcx*2 - 32], ymm0
+			vmovdqa [rbx + (rcx - 16)*COMPV_YASM_INT16_SZ_BYTES], ymm0
 			jl .LoopCols16
 		.EndOfLoopCols16
 
-		lea rdi, [rdi - 63]
+		sub rdi, 63
 
-		add rax, [rsp + 0]
-		add rdx, [rsp + 0]
-		add rbx, [rsp + 0]
+		add rax, arg(5)
+		add rdx, arg(5)
+		add rbx, arg(5)
 		dec rsi
 		jnz .LoopRows
-
-	; free memory
-	add rsp, 8
 
 	;; begin epilog ;;
 	pop rbx
@@ -122,7 +117,7 @@ sym(MathUtilsSumAbs_16s16u_Asm_X86_AVX2):
 ; arg(0) -> COMPV_ALIGNED(SSE) const uint8_t* data
 ; arg(1) -> compv_uscalar_t count
 ; arg(2) -> uint8_t *mean1
-sym(MathUtilsSum_8u32u_Asm_X86_AVX2):
+sym(CompVMathUtilsSum_8u32u_Asm_X86_AVX2):
 	vzeroupper
 	push rbp
 	mov rbp, rsp

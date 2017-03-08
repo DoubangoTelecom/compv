@@ -19,11 +19,11 @@ COMPV_NAMESPACE_BEGIN()
 #if COMPV_ASM
 #	if COMPV_ARCH_X86
 	COMPV_EXTERNC void CompVMathUtilsMax_16u_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const uint16_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, uint16_t *max);
-	COMPV_EXTERNC void MathUtilsSumAbs_16s16u_Asm_X86_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, const COMPV_ALIGNED(SSE) int16_t* b, COMPV_ALIGNED(SSE) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
-	COMPV_EXTERNC void MathUtilsSumAbs_16s16u_Asm_X86_AVX2(const COMPV_ALIGNED(AVX) int16_t* a, const COMPV_ALIGNED(AVX) int16_t* b, COMPV_ALIGNED(AVX) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
-	COMPV_EXTERNC void MathUtilsSum_8u32u_Asm_X86_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* data, compv_uscalar_t count, uint32_t *sum1);
-	COMPV_EXTERNC void MathUtilsSum_8u32u_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* data, compv_uscalar_t count, uint32_t *sum1);
-	COMPV_EXTERNC void MathUtilsSum2_32s32s_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, COMPV_ALIGNED(SSE) const int32_t* b, COMPV_ALIGNED(SSE) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVMathUtilsSumAbs_16s16u_Asm_X86_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, const COMPV_ALIGNED(SSE) int16_t* b, COMPV_ALIGNED(SSE) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVMathUtilsSumAbs_16s16u_Asm_X86_AVX2(const COMPV_ALIGNED(AVX) int16_t* a, const COMPV_ALIGNED(AVX) int16_t* b, COMPV_ALIGNED(AVX) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVMathUtilsSum_8u32u_Asm_X86_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* data, compv_uscalar_t count, uint32_t *sum1);
+	COMPV_EXTERNC void CompVMathUtilsSum_8u32u_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* data, compv_uscalar_t count, uint32_t *sum1);
+	COMPV_EXTERNC void CompVMathUtilsSum2_32s32s_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, COMPV_ALIGNED(SSE) const int32_t* b, COMPV_ALIGNED(SSE) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X86 */
 #endif /* COMPV_ASM */
 
@@ -186,25 +186,25 @@ COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint
         r = reinterpret_cast<uint16_t*>(CompVMem::malloc(height * stride * sizeof(uint16_t)));
         COMPV_CHECK_EXP_RETURN(!r, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
     }
-	void(*MathUtilsSumAbs_16s16u)(const COMPV_ALIGNED(X) int16_t* a, const COMPV_ALIGNED(X) int16_t* b, COMPV_ALIGNED(X) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride) 
+	void(*CompVMathUtilsSumAbs_16s16u)(const COMPV_ALIGNED(X) int16_t* a, const COMPV_ALIGNED(X) int16_t* b, COMPV_ALIGNED(X) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride) 
 		= NULL;
-#if COMPV_ARCH_X86 && 0
+#if COMPV_ARCH_X86
     const size_t strideInBytes = stride * sizeof(int16_t);
-    if (width >= 8 && COMPV_IS_ALIGNED_SSE(strideInBytes) && COMPV_IS_ALIGNED_SSE(a) && COMPV_IS_ALIGNED_SSE(b) && COMPV_IS_ALIGNED_SSE(r)) {
+    if (COMPV_IS_ALIGNED_SSE(strideInBytes) && COMPV_IS_ALIGNED_SSE(a) && COMPV_IS_ALIGNED_SSE(b) && COMPV_IS_ALIGNED_SSE(r)) {
         if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
-            COMPV_EXEC_IFDEF_INTRIN_X86(MathUtilsSumAbs_16s16u = MathUtilsSumAbs_16s16u_Intrin_SSSE3);
-            COMPV_EXEC_IFDEF_ASM_X86(MathUtilsSumAbs_16s16u = MathUtilsSumAbs_16s16u_Asm_X86_SSSE3);
+            COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathUtilsSumAbs_16s16u = CompVMathUtilsSumAbs_16s16u_Intrin_SSSE3);
+            COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtilsSumAbs_16s16u = CompVMathUtilsSumAbs_16s16u_Asm_X86_SSSE3);
         }
     }
-    if (width >= 16 && COMPV_IS_ALIGNED_AVX(strideInBytes) && COMPV_IS_ALIGNED_AVX(a) && COMPV_IS_ALIGNED_AVX(b) && COMPV_IS_ALIGNED_AVX(r)) {
+    if (width >= 64 && COMPV_IS_ALIGNED_AVX(strideInBytes) && COMPV_IS_ALIGNED_AVX(a) && COMPV_IS_ALIGNED_AVX(b) && COMPV_IS_ALIGNED_AVX(r)) {
         if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
-            COMPV_EXEC_IFDEF_INTRIN_X86(MathUtilsSumAbs_16s16u = MathUtilsSumAbs_16s16u_Intrin_AVX2);
-            COMPV_EXEC_IFDEF_ASM_X86(MathUtilsSumAbs_16s16u = MathUtilsSumAbs_16s16u_Asm_X86_AVX2);
+            COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathUtilsSumAbs_16s16u = CompVMathUtilsSumAbs_16s16u_Intrin_AVX2);
+            COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtilsSumAbs_16s16u = CompVMathUtilsSumAbs_16s16u_Asm_X86_AVX2);
         }
     }
 #endif
-	if (MathUtilsSumAbs_16s16u) {
-		MathUtilsSumAbs_16s16u((const int16_t*)a, (const int16_t*)b, (uint16_t*)r, (compv_uscalar_t)width, (compv_uscalar_t)height, (compv_uscalar_t)stride);
+	if (CompVMathUtilsSumAbs_16s16u) {
+		CompVMathUtilsSumAbs_16s16u((const int16_t*)a, (const int16_t*)b, (uint16_t*)r, (compv_uscalar_t)width, (compv_uscalar_t)height, (compv_uscalar_t)stride);
 		return COMPV_ERROR_CODE_S_OK;
 	}
     COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs_C<int16_t, uint16_t>(a, b, r, width, height, stride)));

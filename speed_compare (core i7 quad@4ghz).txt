@@ -46,5 +46,5 @@ CompV: 260.ms(mt,asm,sse42), 370.ms(mt,c++,sse42), 837.ms(st,asm,sse42), 1108.ms
 OpenCV: 7384.ms(full optiz)
 
 === Sobel3x3 (gradx, grady, scaling, adding) (#1k times 720p) ===
-CompV: 2499.ms(full optiz), 11853.ms(st,c++)
+CompV: 2461.ms(full optiz), 11853.ms(st,c++)
 OpenCV: 4474.ms(full optiz)

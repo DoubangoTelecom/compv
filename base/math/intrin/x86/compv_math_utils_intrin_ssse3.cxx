@@ -15,26 +15,25 @@
 COMPV_NAMESPACE_BEGIN()
 
 // "strideInBytes" must be SSE-aligned
-void MathUtilsSumAbs_16s16u_Intrin_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, const COMPV_ALIGNED(SSE) int16_t* b, COMPV_ALIGNED(SSE) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+void CompVMathUtilsSumAbs_16s16u_Intrin_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, const COMPV_ALIGNED(SSE) int16_t* b, COMPV_ALIGNED(SSE) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): add ASM SSSE3 version (use "pabsw")
     COMPV_DEBUG_INFO_CHECK_SSSE3();
     compv_uscalar_t j;
-    __m128i xmm0, xmm1, xmm2, xmm3;
-    compv_scalar_t i, width_ = static_cast<compv_scalar_t>(width);
+    __m128i vec0, vec1, vec2, vec3;
+    compv_scalar_t i, widthSigned = static_cast<compv_scalar_t>(width);
 
     for (j = 0; j < height; ++j) {
-        for (i = 0; i < width_ - 31; i += 32) {
-            xmm0 = _mm_adds_epu16(_mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(a + i))), _mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(b + i))));
-            xmm1 = _mm_adds_epu16(_mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(a + i + 8))), _mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(b + i + 8))));
-            xmm2 = _mm_adds_epu16(_mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(a + i + 16))), _mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(b + i + 16))));
-            xmm3 = _mm_adds_epu16(_mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(a + i + 24))), _mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(b + i + 24))));
-            _mm_store_si128(reinterpret_cast<__m128i*>(r + i), xmm0);
-            _mm_store_si128(reinterpret_cast<__m128i*>(r + i + 8), xmm1);
-            _mm_store_si128(reinterpret_cast<__m128i*>(r + i + 16), xmm2);
-            _mm_store_si128(reinterpret_cast<__m128i*>(r + i + 24), xmm3);
+        for (i = 0; i < widthSigned - 31; i += 32) {
+            vec0 = _mm_adds_epu16(_mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(a + i))), _mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(b + i))));
+            vec1 = _mm_adds_epu16(_mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(a + i + 8))), _mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(b + i + 8))));
+            vec2 = _mm_adds_epu16(_mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(a + i + 16))), _mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(b + i + 16))));
+            vec3 = _mm_adds_epu16(_mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(a + i + 24))), _mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(b + i + 24))));
+            _mm_store_si128(reinterpret_cast<__m128i*>(r + i), vec0);
+            _mm_store_si128(reinterpret_cast<__m128i*>(r + i + 8), vec1);
+            _mm_store_si128(reinterpret_cast<__m128i*>(r + i + 16), vec2);
+            _mm_store_si128(reinterpret_cast<__m128i*>(r + i + 24), vec3);
         }
-        for (; i < width_; i += 8) {
+        for (; i < widthSigned; i += 8) { // can read beyond width as data is strided
             _mm_store_si128(reinterpret_cast<__m128i*>(r + i), _mm_adds_epu16(_mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(a + i))), _mm_abs_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(b + i)))));
         }
 
@@ -45,37 +44,37 @@ void MathUtilsSumAbs_16s16u_Intrin_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, co
 }
 
 // Doesn't work with "signed int8"
-void MathUtilsSum_8u32u_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* data, compv_uscalar_t count, uint32_t *sum1)
+void CompVMathUtilsSum_8u32u_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* data, compv_uscalar_t count, uint32_t *sum1)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM
     COMPV_DEBUG_INFO_CHECK_SSE2();
-    __m128i xmmSum = _mm_setzero_si128(), xmm0;
-    const __m128i xmmZero = _mm_setzero_si128();
+    __m128i vecSum = _mm_setzero_si128(), vec0;
+    const __m128i vecZero = _mm_setzero_si128();
     compv_scalar_t count_ = static_cast<compv_scalar_t>(count), i;
     for (i = 0; i < count_ - 15; i += 16) {
-        xmm0 = _mm_load_si128(reinterpret_cast<const __m128i*>(data + i));
+        vec0 = _mm_load_si128(reinterpret_cast<const __m128i*>(data + i));
         // conversion from "uint8" to "uint16" using unpack will lose sign -> doesn't work with "signed int8"
         // SSE4.1 "_mm_cvtepi8_epi16" would work
         // Same remark apply to conversion from epi16 to epi32
-        xmm0 = _mm_add_epi16(_mm_unpacklo_epi8(xmm0, xmmZero), _mm_unpackhi_epi8(xmm0, xmmZero));
-        xmm0 = _mm_add_epi32(_mm_unpacklo_epi16(xmm0, xmmZero), _mm_unpackhi_epi16(xmm0, xmmZero));
-        xmmSum = _mm_add_epi32(xmmSum, xmm0);
+        vec0 = _mm_add_epi16(_mm_unpacklo_epi8(vec0, vecZero), _mm_unpackhi_epi8(vec0, vecZero));
+        vec0 = _mm_add_epi32(_mm_unpacklo_epi16(vec0, vecZero), _mm_unpackhi_epi16(vec0, vecZero));
+        vecSum = _mm_add_epi32(vecSum, vec0);
     }
     if (i < count_ - 7) {
-        xmm0 = _mm_unpacklo_epi8(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(data + i)), xmmZero);
-        xmm0 = _mm_add_epi32(_mm_unpacklo_epi16(xmm0, xmmZero), _mm_unpackhi_epi16(xmm0, xmmZero));
-        xmmSum = _mm_add_epi32(xmmSum, xmm0);
+        vec0 = _mm_unpacklo_epi8(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(data + i)), vecZero);
+        vec0 = _mm_add_epi32(_mm_unpacklo_epi16(vec0, vecZero), _mm_unpackhi_epi16(vec0, vecZero));
+        vecSum = _mm_add_epi32(vecSum, vec0);
         i += 8;
     }
     if (i < count_ - 3) {
-        xmm0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(data + i)), xmmZero);
-        xmmSum = _mm_add_epi32(xmmSum, _mm_unpacklo_epi16(xmm0, xmmZero));
+        vec0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(data + i)), vecZero);
+        vecSum = _mm_add_epi32(vecSum, _mm_unpacklo_epi16(vec0, vecZero));
         i += 4;
     }
 
-    xmmSum = _mm_hadd_epi32(xmmSum, xmmSum);
-    xmmSum = _mm_hadd_epi32(xmmSum, xmmSum);
-    uint32_t sum = (uint32_t)_mm_cvtsi128_si32(xmmSum);
+    vecSum = _mm_hadd_epi32(vecSum, vecSum);
+    vecSum = _mm_hadd_epi32(vecSum, vecSum);
+    uint32_t sum = (uint32_t)_mm_cvtsi128_si32(vecSum);
 
     if (i < count_ - 1) {
         sum += data[i] + data[i + 1];

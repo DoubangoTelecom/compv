@@ -18,28 +18,27 @@ COMPV_NAMESPACE_BEGIN()
 #if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx2
 #endif
-void MathUtilsSumAbs_16s16u_Intrin_AVX2(const COMPV_ALIGNED(AVX) int16_t* a, const COMPV_ALIGNED(AVX) int16_t* b, COMPV_ALIGNED(AVX) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
+void CompVMathUtilsSumAbs_16s16u_Intrin_AVX2(const COMPV_ALIGNED(AVX) int16_t* a, const COMPV_ALIGNED(AVX) int16_t* b, COMPV_ALIGNED(AVX) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride)
 {
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // Use ASM
 	COMPV_DEBUG_INFO_CHECK_AVX2();
 
     _mm256_zeroupper();
     compv_uscalar_t j;
-    __m256i ymm0, ymm1, ymm2, ymm3;
-    compv_scalar_t i, width_ = static_cast<compv_scalar_t>(width);
+    __m256i vec0, vec1, vec2, vec3;
+    compv_scalar_t i, widthSigned = static_cast<compv_scalar_t>(width);
 
     for (j = 0; j < height; ++j) {
-        for (i = 0; i < width_ - 63; i += 64) {
-            ymm0 = _mm256_adds_epu16(_mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(a + i))), _mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(b + i))));
-            ymm1 = _mm256_adds_epu16(_mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(a + i + 16))), _mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(b + i + 16))));
-            ymm2 = _mm256_adds_epu16(_mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(a + i + 32))), _mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(b + i + 32))));
-            ymm3 = _mm256_adds_epu16(_mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(a + i + 48))), _mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(b + i + 48))));
-            _mm256_store_si256(reinterpret_cast<__m256i*>(r + i), ymm0);
-            _mm256_store_si256(reinterpret_cast<__m256i*>(r + i + 16), ymm1);
-            _mm256_store_si256(reinterpret_cast<__m256i*>(r + i + 32), ymm2);
-            _mm256_store_si256(reinterpret_cast<__m256i*>(r + i + 48), ymm3);
+        for (i = 0; i < widthSigned - 63; i += 64) {
+            vec0 = _mm256_adds_epu16(_mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(a + i))), _mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(b + i))));
+            vec1 = _mm256_adds_epu16(_mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(a + i + 16))), _mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(b + i + 16))));
+            vec2 = _mm256_adds_epu16(_mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(a + i + 32))), _mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(b + i + 32))));
+            vec3 = _mm256_adds_epu16(_mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(a + i + 48))), _mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(b + i + 48))));
+            _mm256_store_si256(reinterpret_cast<__m256i*>(r + i), vec0);
+            _mm256_store_si256(reinterpret_cast<__m256i*>(r + i + 16), vec1);
+            _mm256_store_si256(reinterpret_cast<__m256i*>(r + i + 32), vec2);
+            _mm256_store_si256(reinterpret_cast<__m256i*>(r + i + 48), vec3);
         }
-        for (; i < width_; i += 16) {
+        for (; i < widthSigned; i += 16) {
             _mm256_store_si256(reinterpret_cast<__m256i*>(r + i), _mm256_adds_epu16(_mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(a + i))), _mm256_abs_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(b + i)))));
         }
         r += stride;
