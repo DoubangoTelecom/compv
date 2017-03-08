@@ -10,9 +10,9 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MathUtilsSumAbs_16i16u_Asm_X86_SSSE3)
+global sym(MathUtilsSumAbs_16s16u_Asm_X86_SSSE3)
 global sym(MathUtilsSum_8u32u_Asm_X86_SSSE3)
-global sym(MathUtilsSum2_32i32i_Asm_X86_SSE2)
+global sym(MathUtilsSum2_32s32s_Asm_X86_SSE2)
 
 section .data
 
@@ -25,7 +25,7 @@ section .text
 ; arg(3) -> compv_uscalar_t width
 ; arg(4) -> compv_uscalar_t height
 ; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
-sym(MathUtilsSumAbs_16i16u_Asm_X86_SSSE3):
+sym(MathUtilsSumAbs_16s16u_Asm_X86_SSSE3):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -233,7 +233,7 @@ sym(MathUtilsSum_8u32u_Asm_X86_SSSE3):
 ; arg(3) -> compv_uscalar_t width
 ; arg(4) -> compv_uscalar_t height
 ; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
-sym(MathUtilsSum2_32i32i_Asm_X86_SSE2):
+sym(MathUtilsSum2_32s32s_Asm_X86_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6

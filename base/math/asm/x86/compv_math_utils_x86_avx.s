@@ -10,7 +10,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(MathUtilsSumAbs_16i16u_Asm_X86_AVX2)
+global sym(MathUtilsSumAbs_16s16u_Asm_X86_AVX2)
 global sym(MathUtilsSum_8u32u_Asm_X86_AVX2)
 
 section .data
@@ -24,7 +24,7 @@ section .text
 ; arg(3) -> compv_uscalar_t width
 ; arg(4) -> compv_uscalar_t height
 ; arg(5) -> COMPV_ALIGNED(AVX) compv_uscalar_t stride
-sym(MathUtilsSumAbs_16i16u_Asm_X86_AVX2):
+sym(MathUtilsSumAbs_16s16u_Asm_X86_AVX2):
 	vzeroupper
 	push rbp
 	mov rbp, rsp

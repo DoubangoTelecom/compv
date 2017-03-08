@@ -59,17 +59,7 @@ public:
     template <typename InputType>
     static COMPV_ERROR_CODE max(const InputType* data, size_t width, size_t height, size_t stride, InputType &max) {
         COMPV_CHECK_EXP_RETURN(!data || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
-        max = data[0];
-        for (size_t j = 0; j < height; ++j) {
-            for (size_t i = 0; i < width; ++i) {
-                if (data[i] > max) {
-                    max = data[i];
-                }
-            }
-            data += stride;
-        }
-        return COMPV_ERROR_CODE_S_OK;
+		return max<InputType>(data, width, height, stride, max);
     }
 
     template <typename InputType>
@@ -98,7 +88,7 @@ public:
     static COMPV_ERROR_CODE sumAbs(const InputType* a, const InputType* b, OutputType*& r, size_t width, size_t height, size_t stride) {
         COMPV_CHECK_EXP_RETURN(!a || !b || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         if (!r) {
-            r = (OutputType*)CompVMem::malloc(height * stride * sizeof(OutputType));
+            r = reinterpret_cast<OutputType*>(CompVMem::malloc(height * stride * sizeof(OutputType)));
             COMPV_CHECK_EXP_RETURN(!r, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
         }
         COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs_C<InputType, OutputType>(a, b, r, width, height, stride)));
@@ -158,7 +148,7 @@ public:
             COMPV_CHECK_EXP_RETURN(!out, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
         }
 
-        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
         OutputType* out_ = out;
         size_t i, j;
         for (j = 0; j < height; ++j) {
@@ -189,9 +179,24 @@ public:
     }
 
 private:
+	template <typename InputType>
+	static COMPV_ERROR_CODE max_C(const InputType* data, size_t width, size_t height, size_t stride, InputType &max) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+		max = data[0];
+		for (size_t j = 0; j < height; ++j) {
+			for (size_t i = 0; i < width; ++i) {
+				if (data[i] > max) {
+					max = data[i];
+				}
+			}
+			data += stride;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
     template <typename InputType, typename OutputType>
     static COMPV_ERROR_CODE sumAbs_C(const InputType* a, const InputType* b, OutputType*& r, size_t width, size_t height, size_t stride) {
-        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
         OutputType* r_ = r;
         size_t i, j;
         for (j = 0; j < height; ++j) {
@@ -207,7 +212,7 @@ private:
 
     template <typename InputType, typename OutputType>
     static COMPV_ERROR_CODE sum_C(const InputType* a, size_t count, OutputType &r) {
-        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
         r = 0;
         for (size_t i = 0; i < count; ++i) {
             r += a[i];
@@ -217,7 +222,7 @@ private:
 
     template <typename InputType, typename OutputType>
     static COMPV_ERROR_CODE sum2_C(const InputType* a, const InputType* b, OutputType* s, size_t width, size_t height, size_t stride) {
-        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
         size_t i, j;
         for (j = 0; j < height; ++j) {
             for (i = 0; i < width; ++i) {
@@ -232,7 +237,7 @@ private:
 
     template <typename InputType>
     static COMPV_ERROR_CODE mean_C(const InputType* data, size_t count, InputType &mean) {
-        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
         double sum;
         COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<InputType, double>(data, count, sum)));
         mean = (InputType)(sum / count);
@@ -242,7 +247,7 @@ private:
     template <typename InputType, typename OutputType>
     static COMPV_ERROR_CODE gradient(const InputType* gx, const InputType* gy, OutputType*& g, size_t width, size_t height, size_t stride, OutputType* max = NULL, bool L1 = true) {
         if (!g) {
-            g = (OutputType*)CompVMem::malloc(height * stride * sizeof(OutputType));
+            g = reinterpret_cast<OutputType*>(CompVMem::malloc(height * stride * sizeof(OutputType)));
             COMPV_CHECK_EXP_RETURN(!g, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
         }
 
@@ -252,7 +257,7 @@ private:
             COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs<InputType, OutputType>(gx, gy, g, width, height, stride)));
         }
         else {
-            COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED();
+            COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
             for (j = 0; j < height; ++j) {
                 for (i = 0; i < width; ++i) {
                     g_[i] = (OutputType)hypot(gx[i], gy[i]);
@@ -280,7 +285,7 @@ private:
     static int(*roundFloatSignedFunc)(float f);
 };
 
-
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::max(const uint16_t* data, size_t width, size_t height, size_t stride, uint16_t &max);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint16_t*& r, size_t width, size_t height, size_t stride);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t count, uint32_t &r);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_t* s, size_t width, size_t height, size_t stride);

@@ -17,10 +17,30 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+// zero must be equal to _mm_setzero_si128()
+#define _mm_cmple_epu16_SSE2(a, b, zero) _mm_cmpeq_epi16(_mm_subs_epu16(a, b), _mm_setzero_si128())
+
+// zero must be equal to _mm_setzero_si128()
+#define _mm_cmpge_epu16_SSE(a, b, zero) _mm_cmple_epu16_SSE(b, a, zero)
+
 // -0: Sign bit (bit-63) to 1 (https://en.wikipedia.org/wiki/Double-precision_floating-point_format) and all other bites to 0
 // not(-0.) = 0x7fffffffffffffff. r=0x7fffffffffffffff doesn't fill in 32bit register and this is why we use not(-0) instead of the result.
 // we can also use: _mm_and_pd(a, _mm_load_pd(reinterpret_cast<const double*>(kAVXFloat64MaskAbs)))) which doesn't override the mask in asm and is faster
 #define _mm_abs_pd_SSE2(a) _mm_andnot_pd(_mm_set1_pd(-0.), a)
+
+// mask must be equal to _mm_set1_epi16(0x8000)
+#define _mm_max_epu16_SS2(a, b, mask) _mm_xor_si128(_mm_max_epi16(_mm_xor_si128(a, mask), _mm_xor_si128(b, mask)), mask)
+
+// zero must be equal to _mm_setzero_si128()
+#define _mm_blendv_epi8_SS2(a, b, mask, zero) _mm_blendv_si128(a, b, _mm_cmplt_epi8(mask, zero))
+
+// zero must be equal to _mm_setzero_si128()
+#define _mm_min_epu16_SSE2(a, b, zero) _mm_blendv_si128(b, a, _mm_cmple_epu16_SSE2(a, b, zero))
+
+#if 0
+// zero must be equal to _mm_setzero_si128()
+#define _mm_max_epu16_SSE2(a, b, zero) _mm_blendv_si128(a, b, _mm_cmple_epu16_SSE2(a, b, zero))
+#endif
 
 static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i &b)
 {

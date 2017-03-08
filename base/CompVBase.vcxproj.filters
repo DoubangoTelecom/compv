@@ -438,6 +438,9 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_transform_intrin_sse2.h">
       <Filter>include\math\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse41.h">
+      <Filter>include\math\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -736,6 +739,9 @@
     </ClCompile>
     <ClCompile Include="compv_sharedlib.cxx">
       <Filter>source\math\asm\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_utils_intrin_sse41.cxx">
+      <Filter>source\math\intrin\x86</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -55,7 +55,8 @@ COMPV_NAMESPACE_BEGIN()
 #endif /* COMPV_ASM */
 
 // InputType = uint8_t, KernelType = int16_t, OutputType = uint8_t, FixedPoint = true
-template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_true(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const uint16_t* vthzKernPtr, size_t kernSize)
+template<> COMPV_BASE_API 
+void CompVMathConvlt::convlt1VtHz_private_fxp_true(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const uint16_t* vthzKernPtr, size_t kernSize)
 {
 	void(*CompVMathConvlt1VtHzFixedPoint_8u16u8u)(COMPV_ALIGNED(SSE) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const uint16_t* vthzKernPtr, compv_uscalar_t kernSize)
 		= NULL;
@@ -86,7 +87,8 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_true(con
 }
 
 // InputType = uint8_t, KernelType = compv_float32_t, OutputType = uint8_t, FixedPoint = false
-template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const compv_float32_t* vthzKernPtr, size_t kernSize)
+template<> COMPV_BASE_API 
+void CompVMathConvlt::convlt1VtHz_private_fxp_false(const uint8_t* inPtr, uint8_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const compv_float32_t* vthzKernPtr, size_t kernSize)
 {
 	void(*CompVMathConvlt1VtHz_8u32f8u)(COMPV_ALIGNED(X) const uint8_t* inPtr, uint8_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const compv_float32_t* vthzKernPtr, compv_uscalar_t kernSize)
 		= NULL;
@@ -128,7 +130,8 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(co
 }
 
 // InputType = uint8_t, KernelType = int16_t, OutputType = int16_t, FixedPoint = false
-template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(const uint8_t* inPtr, int16_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const int16_t* vthzKernPtr, size_t kernSize)
+template<> COMPV_BASE_API 
+void CompVMathConvlt::convlt1VtHz_private_fxp_false(const uint8_t* inPtr, int16_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const int16_t* vthzKernPtr, size_t kernSize)
 {
 	void(*CompVMathConvlt1VtHz_8u16s16s)(COMPV_ALIGNED(X) const uint8_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const int16_t* vthzKernPtr, compv_uscalar_t kernSize)
 		= NULL;
@@ -161,7 +164,8 @@ template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(co
 }
 
 // InputType = int16_t, KernelType = int16_t, OutputType = int16_t, FixedPoint = false
-template<> COMPV_BASE_API void CompVMathConvlt::convlt1VtHz_private_fxp_false(const int16_t* inPtr, int16_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const int16_t* vthzKernPtr, size_t kernSize)
+template<> COMPV_BASE_API 
+void CompVMathConvlt::convlt1VtHz_private_fxp_false(const int16_t* inPtr, int16_t* outPtr, size_t width, size_t height, size_t step, size_t pad, const int16_t* vthzKernPtr, size_t kernSize)
 {
 	void(*CompVMathConvlt1VtHz_16s16s16s)(COMPV_ALIGNED(X) const int16_t* inPtr, int16_t* outPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t step, compv_uscalar_t pad, const int16_t* vthzKernPtr, compv_uscalar_t kernSize)
 		= NULL;

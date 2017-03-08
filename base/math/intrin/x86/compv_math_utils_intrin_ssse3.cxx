@@ -15,7 +15,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 // "strideInBytes" must be SSE-aligned
-void MathUtilsSumAbs_16i16u_Intrin_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, const COMPV_ALIGNED(SSE) int16_t* b, COMPV_ALIGNED(SSE) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+void MathUtilsSumAbs_16s16u_Intrin_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, const COMPV_ALIGNED(SSE) int16_t* b, COMPV_ALIGNED(SSE) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // TODO(dmi): add ASM SSSE3 version (use "pabsw")
     COMPV_DEBUG_INFO_CHECK_SSSE3();

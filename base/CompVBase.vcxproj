@@ -110,6 +110,7 @@
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_transform_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse2.h" />
+    <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_sse41.h" />
     <ClInclude Include="include\compv\base\math\intrin\x86\compv_math_utils_intrin_ssse3.h" />
     <ClInclude Include="include\compv\base\parallel\compv_asynctask10.h" />
     <ClInclude Include="include\compv\base\parallel\compv_asynctask11.h" />
@@ -298,6 +299,7 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="math\intrin\x86\compv_math_utils_intrin_sse41.cxx" />
     <ClCompile Include="math\intrin\x86\compv_math_utils_intrin_ssse3.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
