@@ -184,9 +184,9 @@ bail:
 	// Testing info: for "opengl_programming_guide_8th_edition_200x258_gray" gmax should be equal to 1464
 
 	// scale (normalization)
-	float scale = 255.f / float(gmax);
+	compv_float32_t scale = 255.f / compv_float32_t(gmax);
 	uint8_t* edgesPtr = (*edges)->ptr<uint8_t>();
-	COMPV_CHECK_CODE_RETURN((CompVMathUtils::scaleAndClip<uint16_t, float, uint8_t>(m_pG, scale, edgesPtr, 0, 255, m_nImageWidth, m_nImageHeight, m_nImageStride)));
+	COMPV_CHECK_CODE_RETURN((CompVMathUtils::scaleAndClipPixel8<uint16_t, compv_float32_t>(m_pG, scale, edgesPtr, m_nImageWidth, m_nImageHeight, m_nImageStride)));
 
 	return err;
 }

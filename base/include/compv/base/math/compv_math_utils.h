@@ -112,7 +112,7 @@ public:
             a += stride;
         }
         CompVMathUtils::sum<OutputType, OutputType>(sums, height, r);
-        CompVMem::free((void**)&sums);
+        CompVMem::free(reinterpret_cast<void**>(&sums));
         return COMPV_ERROR_CODE_S_OK;
     }
 
@@ -144,22 +144,19 @@ public:
     static COMPV_ERROR_CODE scaleAndClip(const InputType* in, const ScaleType scale, OutputType*& out, OutputType min, OutputType max, size_t width, size_t height, size_t stride) {
         COMPV_CHECK_EXP_RETURN(!in || !width || !height || stride < width || max < min, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         if (!out) {
-            out = (OutputType*)CompVMem::malloc(height * stride * sizeof(OutputType));
+            out = reinterpret_cast<OutputType*>(CompVMem::malloc(height * stride * sizeof(OutputType)));
             COMPV_CHECK_EXP_RETURN(!out, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
         }
-
-        COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
-        OutputType* out_ = out;
-        size_t i, j;
-        for (j = 0; j < height; ++j) {
-            for (i = 0; i < width; ++i) {
-                out_[i] = (OutputType)COMPV_MATH_CLIP3(min, max, (in[i] * scale));
-            }
-            out_ += stride;
-            in += stride;
-        }
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::scaleAndClip_C<InputType, ScaleType, OutputType>(in, scale, out, min, max, width, height, stride)));
         return COMPV_ERROR_CODE_S_OK;
     }
+
+	// ret = clip(0, 255, v*scale)
+	template <typename InputType, typename ScaleType>
+	static COMPV_ERROR_CODE scaleAndClipPixel8(const InputType* in, const ScaleType scale, uint8_t*& out, size_t width, size_t height, size_t stride) {
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::scaleAndClip<InputType, ScaleType, uint8_t>(in, scale, out, 0, 255, width, height, stride)));
+		return COMPV_ERROR_CODE_S_OK;
+	}
 
     template <typename T>
     static COMPV_INLINE T hypot(T x, T y) {
@@ -273,6 +270,23 @@ private:
         return COMPV_ERROR_CODE_S_OK;
     }
 
+	// ret = clip(min, max, v*scale)
+	template <typename InputType, typename ScaleType, typename OutputType>
+	static COMPV_ERROR_CODE scaleAndClip_C(const InputType* in, const ScaleType scale, OutputType* out, OutputType min, OutputType max, size_t width, size_t height, size_t stride) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+		OutputType inScaled;
+		size_t i, j;
+		for (j = 0; j < height; ++j) {
+			for (i = 0; i < width; ++i) {
+				inScaled = static_cast<OutputType>(in[i] * scale);
+				out[i] = static_cast<OutputType>(COMPV_MATH_CLIP3(min, max, inScaled)); // SIMD: saturation
+			}
+			out += stride;
+			in += stride;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
 private:
     static bool s_Initialized;
     static compv_scalar_t(*maxValFunc)(compv_scalar_t a, compv_scalar_t b);
@@ -290,6 +304,7 @@ COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::sumAbs(con
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t count, uint32_t &r);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_t* s, size_t width, size_t height, size_t stride);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::mean(const uint8_t* data, size_t count, uint8_t &mean);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::scaleAndClip(const uint16_t* in, const compv_float32_t scale, uint8_t*& out, uint8_t min, uint8_t max, size_t width, size_t height, size_t stride);
 
 COMPV_NAMESPACE_END()
 

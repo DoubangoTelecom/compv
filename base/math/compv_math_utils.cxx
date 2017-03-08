@@ -265,4 +265,28 @@ COMPV_ERROR_CODE CompVMathUtils::mean(const uint8_t* data, size_t count, uint8_t
     return COMPV_ERROR_CODE_S_OK;
 }
 
+template <> COMPV_BASE_API
+COMPV_ERROR_CODE CompVMathUtils::scaleAndClip(const uint16_t* in, const compv_float32_t scale, uint8_t*& out, uint8_t min, uint8_t max, size_t width, size_t height, size_t stride)
+{
+	COMPV_CHECK_EXP_RETURN(!in || !width || !height || stride < width || max < min, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	if (!out) {
+		out = reinterpret_cast<uint8_t*>(CompVMem::malloc(height * stride * sizeof(uint8_t)));
+		COMPV_CHECK_EXP_RETURN(!out, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+	}
+	void (*CompVMathUtilsScaleAndClipPixel8_16u32f)(COMPV_ALIGNED(X) const uint16_t* in, const compv_float32_t* scale1, COMPV_ALIGNED(X) uint8_t* out, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride)
+		= NULL; // requires min = 0 and max = 255
+#if COMPV_ARCH_X86
+	if (min == 0 && max == 255 && CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(in) && COMPV_IS_ALIGNED_SSE(out) && COMPV_IS_ALIGNED_SSE(stride * sizeof(uint16_t)) && COMPV_IS_ALIGNED_SSE(stride * sizeof(uint8_t))) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathUtilsScaleAndClipPixel8_16u32f = CompVMathUtilsScaleAndClipPixel8_16u32f_Intrin_SSE2);
+	}
+#endif
+	if (CompVMathUtilsScaleAndClipPixel8_16u32f) {
+		CompVMathUtilsScaleAndClipPixel8_16u32f(in, &scale, out, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
+	COMPV_CHECK_CODE_RETURN((CompVMathUtils::scaleAndClip_C<uint16_t, compv_float32_t, uint8_t>(in, scale, out, min, max, width, height, stride)));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_NAMESPACE_END()

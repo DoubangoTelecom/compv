@@ -89,6 +89,61 @@ void CompVMathUtilsSum2_32s32s_Intrin_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, 
     }
 }
 
+void CompVMathUtilsScaleAndClipPixel8_16u32f_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint16_t* in, const compv_float32_t* scale1, COMPV_ALIGNED(SSE) uint8_t* out, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	compv_scalar_t i, widthSigned = static_cast<compv_scalar_t>(width);
+	__m128i vec0, vec1, vec2, vec3;
+	__m128 vec0f, vec1f, vec2f, vec3f, vec4f, vec5f, vec6f, vec7f;
+	const __m128 vecScale = _mm_load1_ps(scale1);
+	const __m128i vecZero = _mm_setzero_si128();
+
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (i = 0; i < widthSigned - 31; i += 32) {
+			vec0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&in[i + 0]));
+			vec1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&in[i + 8]));
+			vec2 = _mm_load_si128(reinterpret_cast<const __m128i*>(&in[i + 16]));
+			vec3 = _mm_load_si128(reinterpret_cast<const __m128i*>(&in[i + 24]));
+			vec0f = _mm_cvtepi32_ps(_mm_unpacklo_epi16(vec0, vecZero));
+			vec1f = _mm_cvtepi32_ps(_mm_unpackhi_epi16(vec0, vecZero));
+			vec2f = _mm_cvtepi32_ps(_mm_unpacklo_epi16(vec1, vecZero));
+			vec3f = _mm_cvtepi32_ps(_mm_unpackhi_epi16(vec1, vecZero));
+			vec4f = _mm_cvtepi32_ps(_mm_unpacklo_epi16(vec2, vecZero));
+			vec5f = _mm_cvtepi32_ps(_mm_unpackhi_epi16(vec2, vecZero));
+			vec6f = _mm_cvtepi32_ps(_mm_unpacklo_epi16(vec3, vecZero));
+			vec7f = _mm_cvtepi32_ps(_mm_unpackhi_epi16(vec3, vecZero));
+			vec0f = _mm_mul_ps(vec0f, vecScale);
+			vec1f = _mm_mul_ps(vec1f, vecScale);
+			vec2f = _mm_mul_ps(vec2f, vecScale);
+			vec3f = _mm_mul_ps(vec3f, vecScale);
+			vec4f = _mm_mul_ps(vec4f, vecScale);
+			vec5f = _mm_mul_ps(vec5f, vecScale);
+			vec6f = _mm_mul_ps(vec6f, vecScale);
+			vec7f = _mm_mul_ps(vec7f, vecScale);
+			vec0 = _mm_packs_epi32(_mm_cvttps_epi32(vec0f), _mm_cvttps_epi32(vec1f));
+			vec1 = _mm_packs_epi32(_mm_cvttps_epi32(vec2f), _mm_cvttps_epi32(vec3f));
+			vec2 = _mm_packs_epi32(_mm_cvttps_epi32(vec4f), _mm_cvttps_epi32(vec5f));
+			vec3 = _mm_packs_epi32(_mm_cvttps_epi32(vec6f), _mm_cvttps_epi32(vec7f));
+			vec0 = _mm_packus_epi16(vec0, vec1);
+			vec1 = _mm_packus_epi16(vec2, vec3);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&out[i + 0]), vec0);
+			_mm_store_si128(reinterpret_cast<__m128i*>(&out[i + 16]), vec1);
+		}
+		for (; i < widthSigned; i += 8) { // reading beyond width which means in and out must be strided
+			vec0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&in[i + 0]));
+			vec0f = _mm_cvtepi32_ps(_mm_unpacklo_epi16(vec0, vecZero));
+			vec1f = _mm_cvtepi32_ps(_mm_unpackhi_epi16(vec0, vecZero));
+			vec0f = _mm_mul_ps(vec0f, vecScale);
+			vec1f = _mm_mul_ps(vec1f, vecScale);
+			vec0 = _mm_packs_epi32(_mm_cvttps_epi32(vec0f), _mm_cvttps_epi32(vec1f));
+			vec0 = _mm_packus_epi16(vec0, vec0);
+			_mm_storel_epi64(reinterpret_cast<__m128i*>(&out[i + 0]), vec0);
+		}
+		out += stride;
+		in += stride;
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

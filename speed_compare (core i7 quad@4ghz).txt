@@ -22,7 +22,7 @@ Shared Memory: 3810 MB
 CompV: 54.ms(mt), 169.ms(st)
 OpenCV: 341.ms(full optiz)
 
-=== FAST9_16, Nonmax=true, threshold=20, maxfeatures=-1 (#10k times, 720p) ===
+=== FAST9_16, Nonmax=true, threshold=20, maxfeatures=-1 (1282, 720) (#10k times) ===
 CompV: 3358.ms(mt,avx2), 4730.ms(mt,sse2), 8447(st,avx2), 11261.ms(st,sse2)
 OpenCV: 10270.ms(full optiz)
 Remarque: The way we write to the shared strengths buffer is slow but required to have best support for multithreading.
@@ -45,6 +45,6 @@ Remarque: https://github.com/DoubangoTelecom/compv/issues/118
 CompV: 260.ms(mt,asm,sse42), 370.ms(mt,c++,sse42), 837.ms(st,asm,sse42), 1108.ms(st,c++,sse42), 6060.ms (st,c++)
 OpenCV: 7384.ms(full optiz)
 
-=== Sobel3x3 (gradx, grady, scaling, adding) (#1k times 720p) ===
-CompV: 2461.ms(full optiz), 11853.ms(st,c++)
+=== Sobel3x3 (gradx, grady, scaling, adding) (1282, 720) (#1k times) ===
+CompV: 1695.ms(full optiz), 11853.ms(st,c++)
 OpenCV: 4474.ms(full optiz)
