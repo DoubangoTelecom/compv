@@ -14,6 +14,7 @@ global sym(CompVMathUtilsMax_16u_Asm_X86_SSE41)
 global sym(CompVMathUtilsSumAbs_16s16u_Asm_X86_SSSE3)
 global sym(CompVMathUtilsSum_8u32u_Asm_X86_SSSE3)
 global sym(CompVMathUtilsSum2_32s32s_Asm_X86_SSE2)
+global sym(CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_X86_SSE2)
 
 section .data
 
@@ -464,6 +465,175 @@ sym(CompVMathUtilsSum2_32s32s_Asm_X86_SSE2):
 	pop rbx
 	pop rdi
 	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const uint16_t* in
+; arg(1) -> const compv_float32_t* scale1
+; arg(2) -> COMPV_ALIGNED(SSE) uint8_t* out
+; arg(3) -> compv_uscalar_t width
+; arg(4) -> compv_uscalar_t height
+; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
+sym(CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_X86_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+	COMPV_YASM_SAVE_XMM 7
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	; align stack and alloc memory
+	COMPV_YASM_ALIGN_STACK 16, rax
+	sub rsp, (1*COMPV_YASM_REG_SZ_BYTES) + (2*COMPV_YASM_XMM_SZ_BYTES)
+
+	%define widthMinus31	rsp + 0
+	%define vecZero			widthMinus31 + (1*COMPV_YASM_REG_SZ_BYTES)
+	%define vecScale		vecZero + (1*COMPV_YASM_XMM_SZ_BYTES)
+
+	%define i		rcx
+	%define in		rbx
+	%define out		rdx
+	%define width	rsi
+	%define height	rdi
+	%define stride	rax
+
+	mov width, arg(3)
+
+	mov rax, arg(1) ; scale1
+	movss xmm0, [rax]
+	lea rax, [width - 31]
+	shufps xmm0, xmm0, 0x0
+	pxor xmm1, xmm1
+	movdqa [vecScale], xmm0
+	movdqa [vecZero], xmm1
+	mov [widthMinus31], rax
+
+	mov in, arg(0)
+	mov out, arg(2)
+	mov height, arg(4)
+	mov stride, arg(5)
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (compv_uscalar_t j = 0; j < height; ++j) 
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		xor i, i
+		cmp i, [widthMinus31]
+		jge .EndOf_LoopWidth32
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < widthSigned - 31; i += 32)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		.LoopWidth32
+			movdqa xmm0, [in + (i + 0)*COMPV_YASM_UINT16_SZ_BYTES]
+			movdqa xmm2, [in + (i + 8)*COMPV_YASM_UINT16_SZ_BYTES]
+			movdqa xmm4, [in + (i + 16)*COMPV_YASM_UINT16_SZ_BYTES]
+			movdqa xmm6, [in + (i + 24)*COMPV_YASM_UINT16_SZ_BYTES]
+			movdqa xmm1, xmm0
+			movdqa xmm3, xmm2
+			movdqa xmm5, xmm4
+			movdqa xmm7, xmm6
+			punpcklwd xmm0, [vecZero]
+			punpckhwd xmm1, [vecZero]
+			punpcklwd xmm2, [vecZero]
+			punpckhwd xmm3, [vecZero]
+			punpcklwd xmm4, [vecZero]
+			punpckhwd xmm5, [vecZero]
+			punpcklwd xmm6, [vecZero]
+			punpckhwd xmm7, [vecZero]
+			cvtdq2ps xmm0, xmm0
+			cvtdq2ps xmm1, xmm1
+			cvtdq2ps xmm2, xmm2
+			cvtdq2ps xmm3, xmm3
+			cvtdq2ps xmm4, xmm4
+			cvtdq2ps xmm5, xmm5
+			cvtdq2ps xmm6, xmm6
+			cvtdq2ps xmm7, xmm7
+			mulps xmm0, [vecScale]
+			mulps xmm1, [vecScale]
+			mulps xmm2, [vecScale]
+			mulps xmm3, [vecScale]
+			mulps xmm4, [vecScale]
+			mulps xmm5, [vecScale]
+			mulps xmm6, [vecScale]
+			mulps xmm7, [vecScale]
+			add i, 32
+			cvttps2dq xmm0, xmm0
+			cvttps2dq xmm1, xmm1
+			cvttps2dq xmm2, xmm2
+			cvttps2dq xmm3, xmm3
+			cvttps2dq xmm4, xmm4
+			cvttps2dq xmm5, xmm5
+			cvttps2dq xmm6, xmm6
+			cvttps2dq xmm7, xmm7
+			cmp i, [widthMinus31]
+			packssdw xmm0, xmm1
+			packssdw xmm2, xmm3
+			packssdw xmm4, xmm5
+			packssdw xmm6, xmm7
+			packuswb xmm0, xmm2
+			packuswb xmm4, xmm6
+			movdqa [out + (i - 32)*COMPV_YASM_UINT8_SZ_BYTES], xmm0
+			movdqa [out + (i - 16)*COMPV_YASM_UINT8_SZ_BYTES], xmm4			
+			jl .LoopWidth32
+			.EndOf_LoopWidth32:
+			;; EndOf_LoopWidth32 ;;
+		
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (; i < widthSigned; i += 8)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		cmp i, width
+		jge .EndOf_LoopWidth8
+		.LoopWidth8:
+			movdqa xmm0, [in + (i + 0)*COMPV_YASM_UINT16_SZ_BYTES]
+			movdqa xmm1, xmm0
+			punpcklwd xmm0, [vecZero]
+			punpckhwd xmm1, [vecZero]
+			cvtdq2ps xmm0, xmm0
+			cvtdq2ps xmm1, xmm1
+			mulps xmm0, [vecScale]
+			mulps xmm1, [vecScale]
+			add i, 8
+			cvttps2dq xmm0, xmm0
+			cvttps2dq xmm1, xmm1
+			cmp i, width
+			packssdw xmm0, xmm1
+			packuswb xmm0, xmm0
+			movq [out + (i - 8)*COMPV_YASM_UINT8_SZ_BYTES], xmm0
+			jl .LoopWidth8
+			.EndOf_LoopWidth8:
+			;; EndOf_LoopWidth8 ;;
+
+		dec height
+		lea out, [out + stride*COMPV_YASM_UINT8_SZ_BYTES]
+		lea in, [in + stride*COMPV_YASM_UINT16_SZ_BYTES]
+		jnz .LoopHeight
+		;; EndOf_LoopHeight ;;
+
+	%undef vecZero
+	%undef vecScale
+
+	%undef widthMinus31
+	%undef i		
+	%undef in		
+	%undef out		
+	%undef width
+	%undef height
+	%undef stride
+
+	; free memory and unalign stack
+	add rsp, (1*COMPV_YASM_REG_SZ_BYTES) + (2*COMPV_YASM_XMM_SZ_BYTES)
+	COMPV_YASM_UNALIGN_STACK
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_RESTORE_XMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
