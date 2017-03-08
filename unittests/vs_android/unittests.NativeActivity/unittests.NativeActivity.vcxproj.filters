@@ -20,5 +20,6 @@
     <ClCompile Include="..\..\matches_bruteforce.cxx" />
     <ClCompile Include="..\..\math_matrix_ops.cxx" />
     <ClCompile Include="..\..\patch.cxx" />
+    <ClCompile Include="..\..\sobel.cxx" />
   </ItemGroup>
 </Project>

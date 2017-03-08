@@ -7,6 +7,8 @@ using namespace compv;
 #define UNITTEST_SCALE							0
 #define UNITTEST_PYRAMID						0
 #define UNITTEST_CONVOLUTION					0
+#define UNITTEST_SOBEL							1
+
 #define UNITTEST_FEATURE_FAST					0
 #define UNITTEST_CHROMA_CONV					0
 #define UNITTEST_BRUTEFORCE						0
@@ -16,12 +18,12 @@ using namespace compv;
 #define UNITTEST_MATH_MATRIX_OPS				0
 #define UNITTEST_MATH_EIGEN_S					0
 #define UNITTEST_MATH_SVD						0
-#define UNITTEST_MATH_INVERSE					0 // Moore–Penrose pseudoinverse and Inverse3x3
-#define UNITTEST_MATH_STATS_MSE_2D_HOMOG		1
-#define UNITTEST_MATH_STATS_NORMALIZE_HARTLEY	1
-#define UNITTEST_MATH_STATS_VARIANCE			1
-#define UNITTEST_MATH_TRF_HOMOG_TO_CART			1 // homogeneousToCartesian2D()
-#define UNITTEST_MATH_CALIB_HOMOGRAPHY			1
+#define UNITTEST_MATH_INVERSE					0 // Moore–Penrose pseudoinverse and Inverse3x3 (remove from the unittest, not stable and already part of homography)
+#define UNITTEST_MATH_STATS_MSE_2D_HOMOG		0
+#define UNITTEST_MATH_STATS_NORMALIZE_HARTLEY	0
+#define UNITTEST_MATH_STATS_VARIANCE			0
+#define UNITTEST_MATH_TRF_HOMOG_TO_CART			0 // homogeneousToCartesian2D()
+#define UNITTEST_MATH_CALIB_HOMOGRAPHY			0
 #define UNITTEST_MATH_DISTANCE_HAMMING			0
 
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
@@ -91,6 +93,11 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_convlt();
 								COMPV_CHECK_CODE_BAIL(err = unittest_convlt(), "Image convolution unittest failed");
 #endif
+#if UNITTEST_SOBEL || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_sobel();
+								COMPV_CHECK_CODE_BAIL(err = unittest_sobel(), "Sobel unittest failed");
+#endif
+								
 								
 #if UNITTEST_FEATURE_FAST || !defined(COMPV_TEST_LOCAL)
 								extern COMPV_ERROR_CODE unittest_feature_fast();
