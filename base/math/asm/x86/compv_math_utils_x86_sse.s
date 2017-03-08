@@ -10,6 +10,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
+global sym(CompVMathUtilsMax_16u_Asm_X86_SSE41)
 global sym(MathUtilsSumAbs_16s16u_Asm_X86_SSSE3)
 global sym(MathUtilsSum_8u32u_Asm_X86_SSSE3)
 global sym(MathUtilsSum2_32s32s_Asm_X86_SSE2)
@@ -17,6 +18,161 @@ global sym(MathUtilsSum2_32s32s_Asm_X86_SSE2)
 section .data
 
 section .text
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const uint16_t* data
+; arg(1) -> compv_uscalar_t width
+; arg(2) -> compv_uscalar_t height
+; arg(3) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
+; arg(4) -> uint16_t *max
+sym(CompVMathUtilsMax_16u_Asm_X86_SSE41):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	; align stack and alloc memory
+	COMPV_YASM_ALIGN_STACK 16, rax
+	sub rsp, (4*COMPV_YASM_UINT32_SZ_BYTES)
+
+	%define data				rbx
+	%define width				rdx
+	%define height				rsi
+	%define i					rcx
+	%define widthMinus7			rdi
+	%define widthMinus31		rax
+	%define vecMax				xmm4
+	%define vecOrphansSuppress	xmm5
+	
+	mov rax, arg(1) ; width
+	and rax, 7
+	jz .OrphansIsZero
+		pcmpeqw xmm0, xmm0
+		movdqa [rsp + 0], xmm0
+		shl rax, 4
+		mov rcx, 8*16
+		sub rcx, rax
+		xor rdi, rdi
+		%assign index 0
+		%rep 4
+			test rcx, rcx
+			js .OrphansCopied
+			mov rax, 0xffffffff
+			shr rax, cl
+			cmp rcx, 31
+			cmovg rax, rdi ; rdi = 0
+			mov [rsp + (3-index)*COMPV_YASM_UINT32_SZ_BYTES], dword eax
+			sub rcx, 32
+			%assign index index+1
+		%endrep
+		.OrphansCopied:
+			movdqa vecOrphansSuppress, [rsp + 0]
+		.OrphansIsZero:
+
+	; convert stride from shorts to bytes
+	mov rax, arg(3) ; stride
+	lea rax, [rax * COMPV_YASM_INT16_SZ_BYTES]
+	mov arg(3), rax
+
+	mov data, arg(0)
+	mov width, arg(1)
+	mov height, arg(2)
+	lea widthMinus31, [width - 31]
+	lea widthMinus7, [width - 7]
+	
+	pxor vecMax, vecMax
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (compv_uscalar_t j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		xor i, i
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < widthSigned - 31; i += 32)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		test widthMinus31, widthMinus31
+		js .EndOf_LoopWidth32
+		.LoopWidth32:
+			movdqa xmm0, [data + (i + 0)*COMPV_YASM_UINT16_SZ_BYTES]
+			movdqa xmm1, [data + (i + 8)*COMPV_YASM_UINT16_SZ_BYTES]
+			movdqa xmm2, [data + (i + 16)*COMPV_YASM_UINT16_SZ_BYTES]
+			movdqa xmm3, [data + (i + 24)*COMPV_YASM_UINT16_SZ_BYTES]
+			add i, 32
+			pmaxuw xmm0, xmm1
+			pmaxuw xmm2, xmm3
+			cmp i, widthMinus31
+			pmaxuw vecMax, xmm0
+			pmaxuw vecMax, xmm2
+			jl .LoopWidth32
+			.EndOf_LoopWidth32
+			;; EndOf_LoopWidth32 ;;
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (; i < widthSigned - 7; i += 8)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		cmp i, widthMinus7
+		jge .EndOf_LoopWidth7
+		.LoopWidth7:
+			pmaxuw vecMax, [data + (i + 0)*COMPV_YASM_UINT16_SZ_BYTES]
+			add i, 8
+			cmp i, widthMinus7
+			jl .LoopWidth7
+			.EndOf_LoopWidth7
+			;; EndOf_LoopWidth7 ;;
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; if (orphans)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		test width, 7
+		jz .NoOrphans
+			movdqa xmm0, [data + (i + 0)*COMPV_YASM_UINT16_SZ_BYTES]
+			pand xmm0, vecOrphansSuppress
+			pmaxuw vecMax, xmm0
+			.NoOrphans
+
+		add data, arg(3)
+		dec height
+		jnz .LoopHeight
+		;; EndOf_LoopHeight ;;
+
+	movdqa xmm0, vecMax
+	movdqa xmm1, vecMax
+	movdqa xmm2, vecMax
+	psrldq xmm0, 8
+	psrldq xmm1, 4
+	psrldq xmm2, 2
+	pmaxuw xmm0, xmm1
+	pmaxuw vecMax, xmm2
+	pmaxuw vecMax, xmm0
+
+	pextrw eax, vecMax, 0
+	mov rdx, arg(4)
+	mov [rdx], word ax
+
+	; free memory and unalign stack
+	add rsp, (4*COMPV_YASM_UINT32_SZ_BYTES)
+	COMPV_YASM_UNALIGN_STACK
+
+	%undef data
+	%undef width
+	%undef height
+	%undef i
+	%undef widthMinus7
+	%undef widthMinus31
+	%undef vecMax
+	%undef vecOrphansSuppress
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; arg(0) -> const COMPV_ALIGNED(SSE) int16_t* a

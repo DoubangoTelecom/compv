@@ -18,6 +18,7 @@ COMPV_NAMESPACE_BEGIN()
 
 #if COMPV_ASM
 #	if COMPV_ARCH_X86
+	COMPV_EXTERNC void CompVMathUtilsMax_16u_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const uint16_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, uint16_t *max);
 	COMPV_EXTERNC void MathUtilsSumAbs_16s16u_Asm_X86_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, const COMPV_ALIGNED(SSE) int16_t* b, COMPV_ALIGNED(SSE) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void MathUtilsSumAbs_16s16u_Asm_X86_AVX2(const COMPV_ALIGNED(AVX) int16_t* a, const COMPV_ALIGNED(AVX) int16_t* b, COMPV_ALIGNED(AVX) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
 	COMPV_EXTERNC void MathUtilsSum_8u32u_Asm_X86_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* data, compv_uscalar_t count, uint32_t *sum1);
@@ -165,6 +166,7 @@ COMPV_ERROR_CODE CompVMathUtils::max(const uint16_t* data, size_t width, size_t 
 		}
 		if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathUtilsMax_16u = CompVMathUtilsMax_16u_Intrin_SSE41);
+			COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtilsMax_16u = CompVMathUtilsMax_16u_Asm_X86_SSE41);
 		}
 	}
 #endif

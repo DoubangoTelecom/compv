@@ -24,7 +24,8 @@ void CompVMathUtilsMax_16u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint16_t* data, 
 	const __m128i vecMask = _mm_set1_epi16((int16_t)0x8000);
 	if (orphans) {
 		compv_scalar_t orphansInBits = ((8 - orphans) << 4); // convert to bits
-		COMPV_ALIGN_SSE() uint32_t memOrphans[4] = { 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff };
+		COMPV_ALIGN_SSE() uint32_t memOrphans[4];
+		_mm_store_si128(reinterpret_cast<__m128i*>(memOrphans), _mm_cmpeq_epi16(vecMax, vecMax)); // 0xffff...fff
 		uint32_t* memOrphansPtr = &memOrphans[3];
 		while (orphansInBits >= 0) *memOrphansPtr-- = (orphansInBits > 31 ? 0 : (0xffffffff >> orphansInBits)), orphansInBits -= 32;
 		vecOrphansSuppress = _mm_load_si128(reinterpret_cast<const __m128i*>(memOrphans));
@@ -40,10 +41,9 @@ void CompVMathUtilsMax_16u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint16_t* data, 
 			vecMax = _mm_max_epu16_SS2(vecMax, vec0, vecMask);
 			vecMax = _mm_max_epu16_SS2(vecMax, vec2, vecMask);
 		}
-		if (i < widthSigned - 7) {
+		for (; i < widthSigned - 7; i += 8) {
 			vec0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&data[i + 0]));
 			vecMax = _mm_max_epu16_SS2(vecMax, vec0, vecMask);
-			i += 8;
 		}
 		if (orphans) {
 			vec0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&data[i + 0]));
