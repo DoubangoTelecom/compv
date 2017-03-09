@@ -180,7 +180,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSumAbs_16s16u_Asm_NEON32
     lsl pad, pad, #1 @ convert from shorts to bytes
 
     and widthModulo32Div8, width, #31 @ modulo 32
-    add widthModulo32Div8, widthModulo32Div8, #7 @ reading beyond the width (data must be strided)
+    add widthModulo32Div8, widthModulo32Div8, #7 @ reading beyond the width (data must be strided) - no orphans
     lsr widthModulo32Div8, widthModulo32Div8, #3 @ div 8
 
     lsr widthDiv32, width, #5
@@ -262,5 +262,150 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSumAbs_16s16u_Asm_NEON32
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) const uint16_t* in
+@ arg(1) -> const compv_float32_t* scale1
+@ arg(2) -> COMPV_ALIGNED(NEON) uint8_t* out
+@ arg(3) -> compv_uscalar_t width
+@ arg(4) -> compv_uscalar_t height
+@ arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
+	COMPV_GAS_SAVE_NEON_REGS
+
+	@@ Load arguments @@
+	ldm_args r0-r5
+	in .req r0
+	scale1 .req r1
+	out .req r2
+	width .req r3
+	height .req r4
+	stride .req r5
+
+    pad .req r6
+    i .req r7
+    widthModulo32Div8 .req r8
+
+    add pad, width, #7
+    and pad, pad, #-8
+    sub pad, stride, pad
+
+    and widthModulo32Div8, width, #31 @ modulo 32
+    add widthModulo32Div8, widthModulo32Div8, #7 @ reading beyond the width (data must be strided) - no orphans
+    lsr widthModulo32Div8, widthModulo32Div8, #3 @ div 8
+
+    ldr r11, [scale1]
+    vdup.f32 q0, r11
+
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @ for (compv_uscalar_t j = 0; j < height; ++j)
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    LoopHeight_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32:
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        @ for (i = 0; i < widthSigned - 31; i += 32)
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        lsrs i, width, #5
+        beq EndOf_LoopWidth32_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32
+        LoopWidth32_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32:
+            subs i, i, #1
+            vld1.s16 { q1, q2 }, [in :128]!
+            vmovl.u16 q5, q1x
+            vmovl.u16 q6, q1y
+            vmovl.u16 q7, q2x
+            vmovl.u16 q8, q2y
+            vcvtq.f32.u32 q5, q5
+            vcvtq.f32.u32 q6, q6
+            vcvtq.f32.u32 q7, q7
+            vcvtq.f32.u32 q8, q8
+            vld1.s16 { q3, q4 }, [in :128]!
+            vmovl.u16 q9, q3x
+            vmovl.u16 q10, q3y
+            vmovl.u16 q11, q4x
+            vmovl.u16 q12, q4y
+            vcvtq.f32.u32 q9, q9
+            vcvtq.f32.u32 q10, q10
+            vcvtq.f32.u32 q11, q11
+            vcvtq.f32.u32 q12, q12
+            vmul.f32 q5, q5, q0x[0]
+            vmul.f32 q6, q6, q0x[0]
+            vmul.f32 q7, q7, q0x[0]
+            vmul.f32 q8, q8, q0x[0]
+            vmul.f32 q9, q9, q0x[0]
+            vmul.f32 q10, q10, q0x[0]
+            vmul.f32 q11, q11, q0x[0]
+            vmul.f32 q12, q12, q0x[0]
+            vcvtq.u32.f32 q5, q5
+            vcvtq.u32.f32 q6, q6
+            vcvtq.u32.f32 q7, q7
+            vcvtq.u32.f32 q8, q8
+            vcvtq.u32.f32 q9, q9
+            vcvtq.u32.f32 q10, q10
+            vcvtq.u32.f32 q11, q11
+            vcvtq.u32.f32 q12, q12
+            vqmovn.u32 q1x, q5
+            vqmovn.u32 q1y, q6
+            vqmovn.u32 q2x, q7
+            vqmovn.u32 q2y, q8
+            vqmovn.u32 q3x, q9
+            vqmovn.u32 q3y, q10
+            vqmovn.u32 q4x, q11
+            vqmovn.u32 q4y, q12
+            vqmovn.u16 q13x, q1
+            vqmovn.u16 q13y, q2
+            vqmovn.u16 q14x, q3
+            vqmovn.u16 q14y, q4            
+            vst1.u16 { q13, q14 }, [out :128]!
+            bne LoopWidth32_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32
+            EndOf_LoopWidth32_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32:
+            @@ EndOf_LoopWidth32_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32 @@
+
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        @ for (; i < widthSigned; i += 8)
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        movs i, widthModulo32Div8
+        beq EndOf_LoopWidth8_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32
+        LoopWidth8_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32:
+            subs i, i, #1
+            vld1.s16 { q1 }, [in :128]!
+            vmovl.u16 q5, q1x
+            vmovl.u16 q6, q1y
+            vcvtq.f32.u32 q5, q5
+            vcvtq.f32.u32 q6, q6
+            vmul.f32 q5, q5, q0x[0]
+            vmul.f32 q6, q6, q0x[0]
+            vcvtq.u32.f32 q5, q5
+            vcvtq.u32.f32 q6, q6
+            vqmovn.u32 q1x, q5
+            vqmovn.u32 q1y, q6
+            vqmovn.u16 q13x, q1
+            vst1.u16 { q13x }, [out :64]!
+            bne LoopWidth8_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32
+            EndOf_LoopWidth8_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32:
+            @@ EndOf_LoopWidth8_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32 @@
+
+        subs height, height, #1
+        add in, in, pad, LSL #1 @ uint16_t
+        add out, out, pad @ uint8_t
+        bne LoopHeight_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32
+        EndOf_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32:
+        @@ EndOf_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32 @@
+
+    .unreq in
+	.unreq scale1
+	.unreq out
+	.unreq width
+	.unreq height
+	.unreq stride
+
+    .unreq pad
+    .unreq i
+    .unreq widthModulo32Div8
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS 6
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
 
 #endif /* defined(__arm__) && !defined(__aarch64__) */
