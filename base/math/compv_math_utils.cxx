@@ -227,6 +227,7 @@ COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint
 		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathUtilsSumAbs_16s16u = CompVMathUtilsSumAbs_16s16u_Intrin_NEON);
             COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathUtilsSumAbs_16s16u = CompVMathUtilsSumAbs_16s16u_Asm_NEON32);
+            COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathUtilsSumAbs_16s16u = CompVMathUtilsSumAbs_16s16u_Asm_NEON64);
 		}
 	}
 #endif
@@ -311,6 +312,7 @@ COMPV_ERROR_CODE CompVMathUtils::scaleAndClip(const uint16_t* in, const compv_fl
 	if (min == 0 && max == 255 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(in) && COMPV_IS_ALIGNED_NEON(out) && COMPV_IS_ALIGNED_NEON(stride * sizeof(uint16_t)) && COMPV_IS_ALIGNED_NEON(stride * sizeof(uint8_t))) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathUtilsScaleAndClipPixel8_16u32f = CompVMathUtilsScaleAndClipPixel8_16u32f_Intrin_NEON);
         COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathUtilsScaleAndClipPixel8_16u32f = CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32);
+        COMPV_EXEC_IFDEF_ASM_ARM64(CompVMathUtilsScaleAndClipPixel8_16u32f = CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON64);
 	}
 #endif
 	if (CompVMathUtilsScaleAndClipPixel8_16u32f) {

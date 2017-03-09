@@ -14,7 +14,7 @@
 #define FILE_NAME_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define FILE_NAME_GRIOTS				"mandekalou_480x640_gray.yuv"
 
-#define LOOP_COUNT		100
+#define LOOP_COUNT		1
 #define MD5				"30e4701c1e5a28e2ee4d2d6b66e5a97c"
 
 COMPV_ERROR_CODE sobel()
