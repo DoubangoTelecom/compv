@@ -53,9 +53,11 @@ void CompVMathUtilsMax_16u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint16_t* data,
 		data += stride;
 	}
 
+    
 	// Paiwise / hz max
 	uint16x4_t vecMaxn = vpmax_u16(vget_low_u16(vecMax), vget_high_u16(vecMax));
 	vecMaxn = vpmax_u16(vecMaxn, vecMaxn);
+    vecMaxn = vpmax_u16(vecMaxn, vecMaxn);
 	*max = vget_lane_u16(vecMaxn, 0);
 }
 

@@ -125,8 +125,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsMax_16u_Asm_NEON32
         bne LoopHeight_CompVMathUtilsMax_16u_Asm_NEON32
         @@ EndOf_LoopHeight_CompVMathUtilsMax_16u_Asm_NEON32 @@
 
-    vpmax.u16 vecMaxx, vecMaxx, vecMaxy
-    vpmax.u16 vecMaxx, vecMaxx, vecMaxx
+    vpmax.u16 vecMaxx, vecMaxx, vecMaxy @ 8 -> 4
+    vpmax.u16 vecMaxx, vecMaxx, vecMaxx @ 4 -> 2
+    vpmax.u16 vecMaxx, vecMaxx, vecMaxx @ 2 -> 1
     vmov.u16 r11, vecMaxx[0]
     str r11, [max]
     
