@@ -59,13 +59,13 @@ public:
     template <typename InputType>
     static COMPV_ERROR_CODE max(const InputType* data, size_t width, size_t height, size_t stride, InputType &max) {
         COMPV_CHECK_EXP_RETURN(!data || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		return max<InputType>(data, width, height, stride, max);
+		return CompVMathUtils::max_C<InputType>(data, width, height, stride, max);
     }
 
     template <typename InputType>
     static COMPV_ERROR_CODE mean(const InputType* data, size_t count, InputType &mean) {
         COMPV_CHECK_EXP_RETURN(!data || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-        return mean_C<InputType>(data, count, mean);
+        return CompVMathUtils::mean_C<InputType>(data, count, mean);
     }
 
     template <typename InputType>

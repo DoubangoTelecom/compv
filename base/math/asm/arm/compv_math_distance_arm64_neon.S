@@ -147,7 +147,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
     # maxI = ((width + 15) & -16), pad = (stride - maxI)
     add pad, width, #15
     and pad, pad, #-16
-    sub pad, stride, pad    
+    sub pad, stride, pad
+
+	# compute vecMask for orphans
+	ands t4, width, 15
+    beq NoOrphans_CompVMathDistanceHamming_Asm_NEON64
+		cmeq vecMask.16b, vecMask.16b, vecMask.16b
+		mov t3, #-(16<<3)
+		mov t6, #0
+		add t4, t3, t4, LSL #3 // ((orphans - 16) << 3) = (-16<<3) + (orphans << 3)
+		adds t5, t4, #64
+		csel t3, t5, t6, mi
+		mov v15.d[0], t3
+		mov v15.d[1], t4
+		ushl vecMask.2d, vecMask.2d, v15.2d
+		NoOrphans_CompVMathDistanceHamming_Asm_NEON64:
 
     ###########################################################
     # .if (height > 3)
@@ -181,19 +195,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
             ###########################################################
             # .if (orphans =  static_cast<compv_scalar_t>(width & 15))
             ###########################################################
-            ands t4, width, 15
+            tst width, 15
             beq EndOf_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON64
             IfH4Orphans_CompVMathDistanceHamming_Asm_NEON64:
                 ld1 { vecPatch.16b }, [patch1xnPtr], #16
-                cmeq vecMask.16b, vecMask.16b, vecMask.16b
-                mov t3, #-(16<<3)
-                mov t6, #0
-                add t4, t3, t4, LSL #3 // ((orphans - 16) << 3) = (-16<<3) + (orphans << 3)
-                adds t5, t4, #64
-                csel t3, t5, t6, mi
-                mov v15.d[0], t3
-                mov v15.d[1], t4
-                ushl vecMask.2d, vecMask.2d, v15.2d
                 __hamming4x16_orphans vecPatch.16b
                 addp v10.16b, v15.16b, v15.16b
                 uaddlp v11.4h, v10.8b
@@ -255,18 +260,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON64
         ###########################################################
         # .if (orphans =  static_cast<compv_scalar_t>(width & 15))
         ###########################################################
-        ands t4, width, 15
+        tst width, 15
         beq EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64
         IfH1Orphans_CompVMathDistanceHamming_Asm_NEON64:
-            mov t3, #-(16<<3)
-            mov t6, #0
-            add t4, t3, t4, LSL #3 // ((orphans - 16) << 3) = (-16<<3) + (orphans << 3)
-            adds t5, t4, #64
-            csel t3, t5, t6, mi
-            mov v15.d[0], t3
-            mov v15.d[1], t4
-            cmeq vecMask.16b, vecMask.16b, vecMask.16b
-            ushl vecMask.2d, vecMask.2d, v15.2d
             __hamming1x16_orphans
             addp v10.16b, v15.16b, v15.16b
             uaddlp v11.4h, v10.8b

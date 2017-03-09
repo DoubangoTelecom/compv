@@ -170,6 +170,9 @@ COMPV_ERROR_CODE CompVMathUtils::max(const uint16_t* data, size_t width, size_t 
 			COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtilsMax_16u = CompVMathUtilsMax_16u_Asm_X86_SSE41);
 		}
 	}
+#elif COMPV_ARCH_ARM
+	if (COMPV_IS_ALIGNED_NEON(strideInBytes) && COMPV_IS_ALIGNED_NEON(data)) {
+	}
 #endif
 	if (CompVMathUtilsMax_16u) {
 		CompVMathUtilsMax_16u(data, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride), &max);

@@ -163,15 +163,23 @@ void CompVMathDistanceHamming_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dat
     COMPV_DEBUG_INFO_CHECK_NEON();
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("ASM code is by faaar faster");
 	compv_uscalar_t i, j;
-    compv_scalar_t orphans;
+    compv_scalar_t orphans = static_cast<compv_scalar_t>(width & 15); // orphans in bytes
 #if COMPV_ARCH_ARM32
 	int32x2_t veccntn;
 #endif
-	uint8x16_t vec0, vec1, vec2, vec3, vecPatch, vecMask;
+	uint8x16_t vec0, vec1, vec2, vec3, vecPatch, vecMask = vdupq_n_s32(0);
 	int32x4_t veccnt;
 	compv_uscalar_t strideTimes2 = (stride << 1);
 	compv_uscalar_t strideTimes3 = strideTimes2 + stride;
 	compv_uscalar_t strideTimes4 = strideTimes2 << 1;
+
+	if (orphans) {
+		// When the width isn't multiple of #16 then we set the padding bytes to #0 using a mask
+		// Not an issue reading beyond width because the data is strided and aligned on NEON (#16 bytes)
+		vecMask = vceqq_u8(vecMask, vecMask); // all bits to #1 (all bytes to #0xff)
+		orphans = ((orphans - 16) << 3); // convert form bytes to bits and negate (negative means shift right)
+		vecMask = vshlq_u64(vecMask, (int64x2_t) { orphans < -64 ? (orphans + 64) : 0, orphans });
+	}
 	
 	j = 0;
 
@@ -189,13 +197,8 @@ void CompVMathDistanceHamming_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dat
 			}
 			
 			/* Loop_H4_Orphans */
-			if ((orphans = static_cast<compv_scalar_t>(width & 15))) {
-                // When the width isn't multiple of #16 then we set the padding bytes to #0 using a mask
-                // Not an issue reading beyond width because the data is strided and aligned on NEON (#16 bytes)
-                vecMask = vceqq_u8(veccnt, veccnt); // all bits to #1 (all bytes to #0xff)
+			if (orphans) {
                 vecPatch = vld1q_u8(&patch1xnPtr[i]);
-                orphans = ((orphans - 16) << 3); // convert form bytes to bits and negate (negative means shift right), asm
-                vecMask = vshlq_u64(vecMask, (int64x2_t){ orphans < -64 ? (orphans + 64) : 0, orphans});
                 __hamming4x16_orphans(i, vecPatch);
                 veccnt = vaddw_s16(veccnt, vpaddl_u8(vpadd_u8(vget_low_u8(vec0), vget_high_u8(vec0))));
 			}
@@ -225,13 +228,8 @@ void CompVMathDistanceHamming_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* dat
 		}
 
 		/* Loop_H1_Orphans */
-        if ((orphans = static_cast<compv_scalar_t>(width & 15))) {
-            // When the width isn't multiple of #16 then we set the padding bytes to #0 using a mask
-            // Not an issue reading beyond width because the data is strided and aligned on NEON (#16 bytes)
-            vecMask = vceqq_u8(veccnt, veccnt); // all bits to #1 (all bytes to #0xff)
+        if (orphans) {
             vecPatch = vld1q_u8(&patch1xnPtr[i]);
-            orphans = ((orphans - 16) << 3); // convert form bytes to bits and negate (negative means shift right)
-            vecMask = vshlq_u64(vecMask, (int64x2_t){ orphans < -64 ? (orphans + 64) : 0, orphans});
             __hamming1x16_orphans(vld1q_u8(&dataPtr[i]), vld1q_u8(&patch1xnPtr[i]));
             veccnt = vaddw_s16(veccnt, vpaddl_u8(vpadd_u8(vget_low_u8(vec0), vget_high_u8(vec0))));
 		}

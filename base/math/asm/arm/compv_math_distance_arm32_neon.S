@@ -164,7 +164,22 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
     @ maxI = ((width + 15) & -16), pad = (stride - maxI)
     add pad, width, #15
     and pad, pad, #-16
-    sub pad, stride, pad    
+    sub pad, stride, pad 
+	
+	@ compute vecMask for orphans
+	ands t0, width, #15
+    beq NoOrphans_CompVMathDistanceHamming_Asm_NEON32
+		mov t1, #-(16<<3)
+		vceq.u8 vecMask, vec0, vec0
+		veor.u8 q15, q15, q15
+		add t0, t1, t0, LSL #3 @ ((orphans - 16) << 3) = (-16<<3) + (orphans << 3)
+		mov t1, #0
+		cmp t0, #-64
+		addlt t1, t0, #64 @ t1 = 0 if (t0 < -64) otherwise unchanged (#0)
+		vmov.s32 q15y[0], t0
+		vmov.s32 q15x[0], t1
+		vshl.u64 vecMask, vecMask, q15
+		NoOrphans_CompVMathDistanceHamming_Asm_NEON32:
 
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ if (height > 3)
@@ -198,24 +213,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             @ if (orphans =  static_cast<compv_scalar_t>(width & 15))
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            ands t0, width, #15
+            tst width, #15
             beq EndOf_IfH4Orphans_CompVMathDistanceHamming_Asm_NEON32
             IfH4Orphans_CompVMathDistanceHamming_Asm_NEON32:
-                mov t1, #-(16<<3)
                 vld1.u8 { vecPatch }, [patch1xnPtr :128]!
-                vceq.u8 vecMask, vec0, vec0
-                veor.u8 q15, q15, q15
-                add t0, t1, t0, LSL #3 @ ((orphans - 16) << 3) = (-16<<3) + (orphans << 3)
-                mov t1, #0
-                cmp t0, #-64
-                addlt t1, t0, #64 @ t1 = 0 if (t0 < -64) otherwise unchanged (#0)
-                vmov.s32 q15y[0], t0
-                vmov.s32 q15x[0], t1
-                vshl.u64 vecMask, vecMask, q15
-                @ restore t0, t1 and t2 @
-                add t0, dataPtr, stride @ t0 = dataPtr[stride * 1]
-                add t1, dataPtr, stride, LSL #1 @ t1 = dataPtr[stride * 2]
-                add t2, t0, stride, LSL #1 @ t2 = dataPtr[stride * 3]
                 __hamming4x16_orphans vecPatch
                 vpadd.u8 q10x, q15x, q15y
                 vpaddl.u8 q11x, q10x
@@ -276,19 +277,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathDistanceHamming_Asm_NEON32
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         @ if (orphans =  static_cast<compv_scalar_t>(width & 15))
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        ands t0, width, #15
+        tst width, #15
         beq EndOf_IfH1Orphans_CompVMathDistanceHamming_Asm_NEON32
         IfH1Orphans_CompVMathDistanceHamming_Asm_NEON32:
-            mov t1, #-(16<<3)
-            vceq.u8 vecMask, vec0, vec0
-            veor.u8 q15, q15, q15
-            add t0, t1, t0, LSL #3 @ ((orphans - 16) << 3) = (-16<<3) + (orphans << 3)
-            mov t1, #0
-            cmp t0, #-64
-            addlt t1, t0, #64 @ t1 = 0 if (t0 < -64) otherwise unchanged (#0)
-            vmov.s32 q15y[0], t0 
-            vmov.s32 q15x[0], t1
-            vshl.u64 vecMask, vecMask, q15
             __hamming1x16_orphans
             vpadd.u8 q10x, q15x, q15y
             vpaddl.u8 q11x, q10x

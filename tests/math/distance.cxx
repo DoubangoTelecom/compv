@@ -6,7 +6,7 @@
 
 COMPV_ERROR_CODE hamming()
 {
-	static const  size_t width = 32;
+	static const  size_t width = 2005;
 	static const struct compv_unittest_hamming {
 		size_t width;
 		size_t height;
