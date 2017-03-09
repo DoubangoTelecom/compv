@@ -16,6 +16,8 @@ COMPV_NAMESPACE_BEGIN()
 
 void CompVMathUtilsMax_16u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint16_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, uint16_t *max)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Use SSE41 version in ASM code");
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 	compv_scalar_t widthSigned = static_cast<compv_scalar_t>(width);
 	compv_scalar_t i, orphans = (widthSigned & 7); // in short
 	__m128i vec0, vec1, vec2, vec3;

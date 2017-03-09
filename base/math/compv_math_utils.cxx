@@ -11,6 +11,7 @@
 #include "compv/base/math/intrin/x86/compv_math_utils_intrin_ssse3.h"
 #include "compv/base/math/intrin/x86/compv_math_utils_intrin_sse41.h"
 #include "compv/base/math/intrin/x86/compv_math_utils_intrin_avx2.h"
+#include "compv/base/math/intrin/arm/compv_math_utils_intrin_neon.h"
 
 #include <algorithm>
 
@@ -172,6 +173,9 @@ COMPV_ERROR_CODE CompVMathUtils::max(const uint16_t* data, size_t width, size_t 
 	}
 #elif COMPV_ARCH_ARM
 	if (COMPV_IS_ALIGNED_NEON(strideInBytes) && COMPV_IS_ALIGNED_NEON(data)) {
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathUtilsMax_16u = CompVMathUtilsMax_16u_Intrin_NEON);
+		}
 	}
 #endif
 	if (CompVMathUtilsMax_16u) {
@@ -192,8 +196,8 @@ COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint
     }
 	void(*CompVMathUtilsSumAbs_16s16u)(const COMPV_ALIGNED(X) int16_t* a, const COMPV_ALIGNED(X) int16_t* b, COMPV_ALIGNED(X) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride) 
 		= NULL;
+	const size_t strideInBytes = stride * sizeof(int16_t);
 #if COMPV_ARCH_X86
-    const size_t strideInBytes = stride * sizeof(int16_t);
     if (COMPV_IS_ALIGNED_SSE(strideInBytes) && COMPV_IS_ALIGNED_SSE(a) && COMPV_IS_ALIGNED_SSE(b) && COMPV_IS_ALIGNED_SSE(r)) {
         if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
             COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathUtilsSumAbs_16s16u = CompVMathUtilsSumAbs_16s16u_Intrin_SSSE3);
@@ -206,6 +210,12 @@ COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint
             COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtilsSumAbs_16s16u = CompVMathUtilsSumAbs_16s16u_Asm_X86_AVX2);
         }
     }
+#elif COMPV_ARCH_ARM
+	if (COMPV_IS_ALIGNED_NEON(strideInBytes) && COMPV_IS_ALIGNED_NEON(a) && COMPV_IS_ALIGNED_NEON(b) && COMPV_IS_ALIGNED_NEON(r)) {
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathUtilsSumAbs_16s16u = CompVMathUtilsSumAbs_16s16u_Intrin_NEON);
+		}
+	}
 #endif
 	if (CompVMathUtilsSumAbs_16s16u) {
 		CompVMathUtilsSumAbs_16s16u((const int16_t*)a, (const int16_t*)b, (uint16_t*)r, (compv_uscalar_t)width, (compv_uscalar_t)height, (compv_uscalar_t)stride);
@@ -283,6 +293,10 @@ COMPV_ERROR_CODE CompVMathUtils::scaleAndClip(const uint16_t* in, const compv_fl
 	if (min == 0 && max == 255 && CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(in) && COMPV_IS_ALIGNED_SSE(out) && COMPV_IS_ALIGNED_SSE(stride * sizeof(uint16_t)) && COMPV_IS_ALIGNED_SSE(stride * sizeof(uint8_t))) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathUtilsScaleAndClipPixel8_16u32f = CompVMathUtilsScaleAndClipPixel8_16u32f_Intrin_SSE2);
 		COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtilsScaleAndClipPixel8_16u32f = CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_X86_SSE2);
+	}
+#elif COMPV_ARCH_ARM
+	if (min == 0 && max == 255 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(in) && COMPV_IS_ALIGNED_NEON(out) && COMPV_IS_ALIGNED_NEON(stride * sizeof(uint16_t)) && COMPV_IS_ALIGNED_NEON(stride * sizeof(uint8_t))) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathUtilsScaleAndClipPixel8_16u32f = CompVMathUtilsScaleAndClipPixel8_16u32f_Intrin_NEON);
 	}
 #endif
 	if (CompVMathUtilsScaleAndClipPixel8_16u32f) {

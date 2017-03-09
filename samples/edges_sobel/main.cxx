@@ -12,7 +12,6 @@ using namespace compv;
 #define WINDOW_WIDTH		1280
 #define WINDOW_HEIGHT		720
 
-
 #define TAG_SAMPLE	"Sobel edge detector"
 
 /* My runloop listener (optional) */

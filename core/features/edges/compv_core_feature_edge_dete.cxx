@@ -11,6 +11,8 @@
 #include "compv/base/image/compv_image.h"
 #include "compv/base/parallel/compv_parallel.h"
 
+// Sobel implementation not optiz: https://github.com/DoubangoTelecom/compv/issues/127
+
 #define COMPV_FEATURE_DETE_EDGES_GRAD_MIN_SAMPLES_PER_THREAD	3 // must be >= 3 because of the convolution ("rowsOverlapCount")
 
 #define COMPV_THIS_CLASSNAME	"CompVCornerDeteEdgeBase"
@@ -193,6 +195,7 @@ bail:
 
 COMPV_ERROR_CODE CompVCornerDeteEdgeBase::newObjSobel(CompVEdgeDetePtrPtr dete, float tLow COMPV_DEFAULT(0.68f), float tHigh COMPV_DEFAULT(0.68f*2.f), size_t kernSize COMPV_DEFAULT(3))
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Sobel implementation not fully optiz: https://github.com/DoubangoTelecom/compv/issues/127");
 	return CompVCornerDeteEdgeBase::newObj(dete, COMPV_SOBEL_ID);
 }
 
