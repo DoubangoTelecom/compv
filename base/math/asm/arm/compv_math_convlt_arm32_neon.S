@@ -683,8 +683,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32
         LoopWidthPer16Samples_CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32:
             veor.u16 vecSum0, vecSum0, vecSum0
             veor.u16 vecSum1, vecSum1, vecSum1
-            pld [inPtr, #CACHE_LINE_SIZE]
-            @pst [outPtr, #CACHE_LINE_SIZE]
+            @pld [inPtr, #(CACHE_LINE_SIZE*3)]
+            @pst [outPtr, #(CACHE_LINE_SIZE*3)]
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             @ for (row = 0, k = 0; row < kernSize; ++row, k += step)
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -920,8 +920,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
         LoopWidthPer16Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32:
             veor.u16 vecSum0, vecSum0, vecSum0
             veor.u16 vecSum1, vecSum1, vecSum1
-            pld [inPtr, #CACHE_LINE_SIZE]
-            @pst [outPtr, #CACHE_LINE_SIZE]
+            @pld [inPtr, #(CACHE_LINE_SIZE*3)]
+            @pst [outPtr, #(CACHE_LINE_SIZE*3)]
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             @ for (row = 0, k = 0; row < kernSize; ++row, k += step)
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

@@ -84,6 +84,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsMax_16u_Asm_NEON32
         lsrs i, width, #5
         beq EndOf_LoopWidth32_CompVMathUtilsMax_16u_Asm_NEON32
         LoopWidth32_CompVMathUtilsMax_16u_Asm_NEON32:
+            pld [data, #(CACHE_LINE_SIZE*3)]
             subs i, i, #1
             vld1.u16 { q0, q1 }, [data :128]!
             vld1.u16 { q2, q3 }, [data :128]!
@@ -101,6 +102,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsMax_16u_Asm_NEON32
         movs i, widthModulo32Div8
         beq EndOf_LoopWidth8_CompVMathUtilsMax_16u_Asm_NEON32
         LoopWidth8_CompVMathUtilsMax_16u_Asm_NEON32:
+            pld [data, #(CACHE_LINE_SIZE*3)]
             subs i, i, #1
             vld1.u16 { q0 }, [data :128]!
             vmax.u16 vecMax, vecMax, q0
@@ -195,6 +197,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSumAbs_16s16u_Asm_NEON32
         lsrs i, width, #5
         beq EndOf_LoopWidth32_CompVMathUtilsSumAbs_16s16u_Asm_NEON32
         LoopWidth32_CompVMathUtilsSumAbs_16s16u_Asm_NEON32:
+            pld [aPtr, #(CACHE_LINE_SIZE*3)]
+            pld [bPtr, #(CACHE_LINE_SIZE*3)]
             subs i, i, #1
             vld1.s16 { q0, q1 }, [aPtr :128]!
             vld1.s16 { q2, q3 }, [bPtr :128]!
@@ -224,6 +228,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSumAbs_16s16u_Asm_NEON32
         movs i, widthModulo32Div8
         beq EndOf_LoopWidth8_CompVMathUtilsSumAbs_16s16u_Asm_NEON32
         LoopWidth8_CompVMathUtilsSumAbs_16s16u_Asm_NEON32:
+            pld [aPtr, #(CACHE_LINE_SIZE*3)]
+            pld [bPtr, #(CACHE_LINE_SIZE*3)]
             subs i, i, #1
             vld1.s16 { q0 }, [aPtr :128]!
             vld1.s16 { q2 }, [bPtr :128]!
@@ -309,21 +315,22 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32
         lsrs i, width, #5
         beq EndOf_LoopWidth32_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32
         LoopWidth32_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32:
+            pld [in, #(CACHE_LINE_SIZE*3)]
             subs i, i, #1
             vld1.s16 { q1, q2 }, [in :128]!
+            vld1.s16 { q3, q4 }, [in :128]!
             vmovl.u16 q5, q1x
             vmovl.u16 q6, q1y
             vmovl.u16 q7, q2x
             vmovl.u16 q8, q2y
-            vcvtq.f32.u32 q5, q5
-            vcvtq.f32.u32 q6, q6
-            vcvtq.f32.u32 q7, q7
-            vcvtq.f32.u32 q8, q8
-            vld1.s16 { q3, q4 }, [in :128]!
             vmovl.u16 q9, q3x
             vmovl.u16 q10, q3y
             vmovl.u16 q11, q4x
             vmovl.u16 q12, q4y
+            vcvtq.f32.u32 q5, q5
+            vcvtq.f32.u32 q6, q6
+            vcvtq.f32.u32 q7, q7
+            vcvtq.f32.u32 q8, q8
             vcvtq.f32.u32 q9, q9
             vcvtq.f32.u32 q10, q10
             vcvtq.f32.u32 q11, q11
@@ -367,6 +374,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32
         movs i, widthModulo32Div8
         beq EndOf_LoopWidth8_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32
         LoopWidth8_CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32:
+            pld [in, #(CACHE_LINE_SIZE*3)]
             subs i, i, #1
             vld1.s16 { q1 }, [in :128]!
             vmovl.u16 q5, q1x
