@@ -50,8 +50,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsMax_16u_Asm_NEON32
 
     veor.u8 vecMax, vecMax, vecMax
 
-    add pad, width, #15
-    and pad, pad, #-16
+    add pad, width, #7
+    and pad, pad, #-8
     sub pad, stride, pad
     lsl pad, pad, #1 @ convert from shorts to bytes
 
@@ -145,6 +145,116 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsMax_16u_Asm_NEON32
 
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS 5
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) const int16_t* a
+@ arg(1) -> COMPV_ALIGNED(NEON) const int16_t* b
+@ arg(2) -> COMPV_ALIGNED(NEON) uint16_t* r
+@ arg(3) -> compv_uscalar_t width
+@ arg(4) -> compv_uscalar_t height
+@ arg(5) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSumAbs_16s16u_Asm_NEON32
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
+	COMPV_GAS_SAVE_NEON_REGS
+
+	@@ Load arguments @@
+	ldm_args r0-r5
+	aPtr .req r0
+	bPtr .req r1
+	rPtr .req r2
+	width .req r3
+	height .req r4
+	stride .req r5
+
+    i .req r6
+    pad .req r7
+    widthModulo32Div8 .req r8
+	
+    add pad, width, #7
+    and pad, pad, #-8
+    sub pad, stride, pad
+    lsl pad, pad, #1 @ convert from shorts to bytes
+
+    and widthModulo32Div8, width, #31 @ modulo 32
+    add widthModulo32Div8, widthModulo32Div8, #7 @ reading beyond the width (data must be strided)
+    lsr widthModulo32Div8, widthModulo32Div8, #3 @ div 8
+
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @ for (j = 0; j < height; ++j)
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    LoopHeight_CompVMathUtilsSumAbs_16s16u_Asm_NEON32:
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        @ for (i = 0; i < widthSigned - 31; i += 32)
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        lsrs i, width, #5
+        beq EndOf_LoopWidth32_CompVMathUtilsSumAbs_16s16u_Asm_NEON32
+        LoopWidth32_CompVMathUtilsSumAbs_16s16u_Asm_NEON32:
+            subs i, i, #1
+            vld1.s16 { q0, q1 }, [aPtr :128]!
+            vld1.s16 { q2, q3 }, [bPtr :128]!
+            vabs.s16 q0, q0
+            vabs.s16 q2, q2
+            vabs.s16 q1, q1
+            vabs.s16 q3, q3
+            vld1.s16 { q4, q5 }, [aPtr :128]!
+            vld1.s16 { q6, q7 }, [bPtr :128]!
+            vabs.s16 q4, q4
+            vabs.s16 q6, q6
+            vabs.s16 q5, q5
+            vabs.s16 q7, q7
+            vqadd.u16 q0, q0, q2
+            vqadd.u16 q1, q1, q3
+            vqadd.u16 q4, q4, q6
+            vqadd.u16 q5, q5, q7
+            vst1.u16 { q0, q1 }, [rPtr :128]!
+            vst1.u16 { q4, q5 }, [rPtr :128]!
+            bne LoopWidth32_CompVMathUtilsSumAbs_16s16u_Asm_NEON32
+            EndOf_LoopWidth32_CompVMathUtilsSumAbs_16s16u_Asm_NEON32:
+            @@ EndOf_LoopWidth32_CompVMathUtilsSumAbs_16s16u_Asm_NEON32 @@
+
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        @ for (; i < widthSigned; i += 8)
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        movs i, widthModulo32Div8
+        beq EndOf_LoopWidth8_CompVMathUtilsSumAbs_16s16u_Asm_NEON32
+        LoopWidth8_CompVMathUtilsSumAbs_16s16u_Asm_NEON32:
+            subs i, i, #1
+            vld1.s16 { q0 }, [aPtr :128]!
+            vld1.s16 { q2 }, [bPtr :128]!
+            vabs.s16 q0, q0
+            vabs.s16 q2, q2
+            vqadd.u16 q0, q0, q2
+            vst1.u16 { q0 }, [rPtr :128]!
+            bne LoopWidth8_CompVMathUtilsSumAbs_16s16u_Asm_NEON32
+            EndOf_LoopWidth8_CompVMathUtilsSumAbs_16s16u_Asm_NEON32:
+            @@ EndOf_LoopWidth8_CompVMathUtilsSumAbs_16s16u_Asm_NEON32 @@
+
+        subs height, height, #1
+        add rPtr, rPtr, pad
+        add aPtr, aPtr, pad
+        add bPtr, bPtr, pad
+        bne LoopHeight_CompVMathUtilsSumAbs_16s16u_Asm_NEON32
+        EndOf_LoopHeight_CompVMathUtilsSumAbs_16s16u_Asm_NEON32:
+        @@ EndOf_LoopHeight_CompVMathUtilsSumAbs_16s16u_Asm_NEON32 @@
+
+
+
+	.unreq aPtr
+    .unreq bPtr
+    .unreq rPtr
+    .unreq width
+    .unreq height
+    .unreq stride
+
+    .unreq i
+    .unreq pad
+    .unreq widthModulo32Div8
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS 6
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
