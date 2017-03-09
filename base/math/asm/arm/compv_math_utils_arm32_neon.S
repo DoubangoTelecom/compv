@@ -172,6 +172,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSumAbs_16s16u_Asm_NEON32
     i .req r6
     pad .req r7
     widthModulo32Div8 .req r8
+    widthDiv32 .req r9
 	
     add pad, width, #7
     and pad, pad, #-8
@@ -181,6 +182,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSumAbs_16s16u_Asm_NEON32
     and widthModulo32Div8, width, #31 @ modulo 32
     add widthModulo32Div8, widthModulo32Div8, #7 @ reading beyond the width (data must be strided)
     lsr widthModulo32Div8, widthModulo32Div8, #3 @ div 8
+
+    lsr widthDiv32, width, #5
 
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (j = 0; j < height; ++j)
@@ -196,14 +199,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSumAbs_16s16u_Asm_NEON32
             vld1.s16 { q0, q1 }, [aPtr :128]!
             vld1.s16 { q2, q3 }, [bPtr :128]!
             vabs.s16 q0, q0
-            vabs.s16 q2, q2
             vabs.s16 q1, q1
+            vabs.s16 q2, q2
             vabs.s16 q3, q3
             vld1.s16 { q4, q5 }, [aPtr :128]!
             vld1.s16 { q6, q7 }, [bPtr :128]!
             vabs.s16 q4, q4
-            vabs.s16 q6, q6
             vabs.s16 q5, q5
+            vabs.s16 q6, q6
             vabs.s16 q7, q7
             vqadd.u16 q0, q0, q2
             vqadd.u16 q1, q1, q3
@@ -252,6 +255,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSumAbs_16s16u_Asm_NEON32
     .unreq i
     .unreq pad
     .unreq widthModulo32Div8
+    .unreq widthDiv32
 
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS 6
