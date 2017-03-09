@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		156E41B51E7118F900DF9950 /* sobel.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E41B41E7118F900DF9950 /* sobel.cxx */; };
 		156E96D01E40EF5900BC5329 /* convlt.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 156E96CF1E40EF5900BC5329 /* convlt.cxx */; };
 		157840911E36CC2E00955396 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 157840901E36CC2E00955396 /* main.m */; };
 		157840941E36CC2E00955396 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 157840931E36CC2E00955396 /* AppDelegate.mm */; };
@@ -95,6 +96,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		156E41B41E7118F900DF9950 /* sobel.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sobel.cxx; path = ../../sobel.cxx; sourceTree = "<group>"; };
 		156E96CF1E40EF5900BC5329 /* convlt.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = convlt.cxx; path = ../../convlt.cxx; sourceTree = "<group>"; };
 		1578408C1E36CC2E00955396 /* image.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = image.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		157840901E36CC2E00955396 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -230,6 +232,7 @@
 		157840D01E36CCDE00955396 /* source */ = {
 			isa = PBXGroup;
 			children = (
+				156E41B41E7118F900DF9950 /* sobel.cxx */,
 				15AE9FFA1E644FC40030D908 /* patch.cxx */,
 				159E15711E5DA5DF00D8CE75 /* feature_orb.cxx */,
 				157F72C31E5811E8000DE45F /* tests_common.cxx */,
@@ -400,6 +403,7 @@
 				15AE9FFB1E644FC40030D908 /* patch.cxx in Sources */,
 				157840C41E36CCD800955396 /* draw_image.cxx in Sources */,
 				157840C51E36CCD800955396 /* draw_points.cxx in Sources */,
+				156E41B51E7118F900DF9950 /* sobel.cxx in Sources */,
 				157840C31E36CCD800955396 /* chroma_conv.cxx in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

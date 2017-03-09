@@ -27,6 +27,16 @@ COMPV_NAMESPACE_BEGIN()
 	COMPV_EXTERNC void CompVMathUtilsSum2_32s32s_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, COMPV_ALIGNED(SSE) const int32_t* b, COMPV_ALIGNED(SSE) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const uint16_t* in, const compv_float32_t* scale1, COMPV_ALIGNED(SSE) uint8_t* out, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X86 */
+#	if COMPV_ARCH_ARM32
+	COMPV_EXTERNC void CompVMathUtilsMax_16u_Asm_NEON32(COMPV_ALIGNED(NEON) const uint16_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, uint16_t *max);
+	COMPV_EXTERNC void CompVMathUtilsSumAbs_16s16u_Asm_NEON32(const COMPV_ALIGNED(NEON) int16_t* a, const COMPV_ALIGNED(NEON) int16_t* b, COMPV_ALIGNED(NEON) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON32(COMPV_ALIGNED(NEON) const uint16_t* in, const compv_float32_t* scale1, COMPV_ALIGNED(NEON) uint8_t* out, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+#   endif /* COMPV_ARCH_ARM32 */
+#	if COMPV_ARCH_ARM64
+    COMPV_EXTERNC void CompVMathUtilsMax_16u_Asm_NEON64(COMPV_ALIGNED(NEON) const uint16_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, uint16_t *max);
+    COMPV_EXTERNC void CompVMathUtilsSumAbs_16s16u_Asm_NEON64(const COMPV_ALIGNED(NEON) int16_t* a, const COMPV_ALIGNED(NEON) int16_t* b, COMPV_ALIGNED(NEON) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+    COMPV_EXTERNC void CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_NEON64(COMPV_ALIGNED(NEON) const uint16_t* in, const compv_float32_t* scale1, COMPV_ALIGNED(NEON) uint8_t* out, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+#   endif /* COMPV_ARCH_ARM64 */
 #endif /* COMPV_ASM */
 
 bool CompVMathUtils::s_Initialized = false;
@@ -175,6 +185,7 @@ COMPV_ERROR_CODE CompVMathUtils::max(const uint16_t* data, size_t width, size_t 
 	if (COMPV_IS_ALIGNED_NEON(strideInBytes) && COMPV_IS_ALIGNED_NEON(data)) {
 		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
 			COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathUtilsMax_16u = CompVMathUtilsMax_16u_Intrin_NEON);
+            COMPV_EXEC_IFDEF_ASM_ARM32(CompVMathUtilsMax_16u = CompVMathUtilsMax_16u_Asm_NEON32);
 		}
 	}
 #endif

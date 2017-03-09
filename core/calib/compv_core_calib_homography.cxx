@@ -9,11 +9,9 @@
 #include "compv/base/math/compv_math_matrix.h"
 #include "compv/base/math/compv_math_stats.h"
 #include "compv/base/math/compv_math_eigen.h"
-#include "compv/base/parallel/compv_parallel.h"
 
 #include <cfloat> /* FLT_MAX */
 #include <numeric> /* std::itoa */
-
 
 #if !defined (COMPV_PRNG11)
 #	define COMPV_PRNG11 1
