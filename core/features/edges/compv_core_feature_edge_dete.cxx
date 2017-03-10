@@ -7,7 +7,6 @@
 #include "compv/core/features/edges/compv_core_feature_edge_dete.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/math/compv_math_convlt.h"
-#include "compv/base/math/compv_math_gauss.h"
 #include "compv/base/image/compv_image.h"
 #include "compv/base/parallel/compv_parallel.h"
 
@@ -48,8 +47,8 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::set(int id, const void* valuePtr, size
 	switch (id) {
 	case 0:
 	default:
-		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Set with id %d not implemented", id);
-		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+		COMPV_CHECK_CODE_RETURN(CompVCaps::set(id, valuePtr, valueSize));
+		return COMPV_ERROR_CODE_S_OK;
 	}
 }
 

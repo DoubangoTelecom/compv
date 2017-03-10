@@ -143,7 +143,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVPtr<CompVImage*>& image,
         COMPV_CHECK_EXP_RETURN(!imgTmpGy, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
         uint8_t* means = (uint8_t*)CompVMem::malloc(threadsCount * sizeof(uint8_t));
 		COMPV_CHECK_EXP_RETURN(!means, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Memory to freed when something went wrong");
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // "Memory to freed when something went wrong"
         int16_t* tmpPtrGx_ = imgTmpGx;
         int16_t* tmpPtrGy_ = imgTmpGy;
         int16_t* outPtrGx_ = m_pGx;

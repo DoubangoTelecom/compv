@@ -11,7 +11,8 @@ using namespace compv;
 #define TEST_FEATURE_ORB			0
 #define TEST_PATCH_MOMENTS			0
 #define TEST_CONVLT					0
-#define TEST_SOBEL					1
+#define TEST_SOBEL					0
+#define TEST_CANNY					1
 #define TEST_BRUTEFORCE				0
 #define TEST_DRAW_IMAGE				0
 #define TEST_DRAW_POINTS			0
@@ -56,6 +57,10 @@ compv_main()
 #if TEST_SOBEL
 		extern COMPV_ERROR_CODE sobel();
 		COMPV_CHECK_CODE_BAIL(err = sobel(), TAG_TEST_IMAGE "Sobel Edge dete test failed");
+#endif
+#if TEST_CANNY
+		extern COMPV_ERROR_CODE canny();
+		COMPV_CHECK_CODE_BAIL(err = canny(), TAG_TEST_IMAGE "Canny Edge dete test failed");
 #endif
 
 #if TEST_BRUTEFORCE

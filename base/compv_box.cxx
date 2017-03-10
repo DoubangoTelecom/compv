@@ -10,5 +10,6 @@ COMPV_NAMESPACE_BEGIN()
 
 template class CompVBox<CompVInterestPoint >;
 template class CompVBox<CompVDMatch >;
+template class CompVBox<CompVMatIndex >;
 
 COMPV_NAMESPACE_END()

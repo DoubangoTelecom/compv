@@ -294,6 +294,10 @@ protected:
 	COMPV_VS_DISABLE_WARNINGS_END()
 };
 
+typedef CompVBox<CompVMatIndex > CompVBoxMatIndex;
+typedef CompVPtr<CompVBoxMatIndex* > CompVBoxMatIndexPtr;
+typedef CompVBoxMatIndexPtr* CompVBoxMatIndexPtrPtr;
+
 typedef CompVBox<CompVDMatch > CompVBoxDMatch;
 typedef CompVPtr<CompVBoxDMatch *> CompVBoxDMatchPtr;
 typedef CompVBoxDMatchPtr* CompVBoxDMatchPtrPtr;
