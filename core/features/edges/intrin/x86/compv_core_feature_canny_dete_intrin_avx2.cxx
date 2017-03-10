@@ -67,6 +67,7 @@ void CompVCannyNMSGatherRow_16mpw_Intrin_AVX2(uint8_t* nms, const uint16_t* g, c
 	for (col = 1; col < width - 15; col += 16) { // up to the caller to check that width is >= 16
 		vecG = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&g[col]));
 		vec0 = _mm256_cmpgt_epi16(vecG, vecTLow);
+		//const __m256i vecFIXME = _mm256_permute4x64_epi64(vec0, 0xD8);
 		if (_mm256_movemask_epi8(vec0)) {
 			vecNMS = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&nms[col]));
 			vecGX = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&gx[col]));
@@ -74,20 +75,21 @@ void CompVCannyNMSGatherRow_16mpw_Intrin_AVX2(uint8_t* nms, const uint16_t* g, c
 
 			vec1 = _mm256_abs_epi16(vecGY);
 			vec2 = _mm256_abs_epi16(vecGX);
+			vec1 = _mm256_permute4x64_epi64(vec1, 0xD8);
 
-			// FIXME(dmi): change
-			vecAbsGY0 = compv_avx2_unpacklo_epi16(vecZero, vec1);
-			vecAbsGX0 = compv_avx2_unpacklo_epi16(vec2, vecZero);
-			vecAbsGY1 = compv_avx2_unpackhi_epi16(vecZero, vec1);
-			vecAbsGX1 = compv_avx2_unpackhi_epi16(vec2, vecZero);
+			vecAbsGY0 = _mm256_unpacklo_epi16(vecZero, vec1);
+			vecAbsGX0 = _mm256_cvtepu16_epi32(_mm256_castsi256_si128(vec2));
+			vecAbsGY1 = _mm256_unpackhi_epi16(vecZero, vec1);
+			vecAbsGX1 = _mm256_cvtepu16_epi32(_mm256_extractf128_si256(vec2, 1));
 
-			// _mm256_permute4x64_epi64(vec0, 0xD8)
+			// _mm256_permute4x64_epi64(vec1, 0xD8)
 
 			// angle = "0° / 180°"
 			vec1 = _mm256_cmpgt_epi32(_mm256_mullo_epi32(vecTangentPiOver8Int, vecAbsGX0), vecAbsGY0);
 			vec2 = _mm256_cmpgt_epi32(_mm256_mullo_epi32(vecTangentPiOver8Int, vecAbsGX1), vecAbsGY1);
-			vec3 = _mm256_and_si256(vec0, compv_avx2_packs_epi32(vec1, vec2));
+			vec3 = _mm256_and_si256(_mm256_permute4x64_epi64(vec0, 0xD8), _mm256_packs_epi32(vec1, vec2));
 			if (_mm256_movemask_epi8(vec3)) {
+				vec3 = _mm256_permute4x64_epi64(vec3, 0xD8);
 				vec1 = _mm256_cmpgt_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(&g[col - 1])), vecG);
 				vec2 = _mm256_cmpgt_epi16(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(&g[col + 1])), vecG);
 				vec1 = _mm256_and_si256(vec3, _mm256_or_si256(vec1, vec2));
@@ -100,8 +102,9 @@ void CompVCannyNMSGatherRow_16mpw_Intrin_AVX2(uint8_t* nms, const uint16_t* g, c
 			if (_mm256_movemask_epi8(vec4)) {
 				vec1 = _mm256_cmpgt_epi32(_mm256_mullo_epi32(vecTangentPiTimes3Over8Int, vecAbsGX0), vecAbsGY0);
 				vec2 = _mm256_cmpgt_epi32(_mm256_mullo_epi32(vecTangentPiTimes3Over8Int, vecAbsGX1), vecAbsGY1);
-				vec4 = _mm256_and_si256(vec4, compv_avx2_packs_epi32(vec1, vec2));
+				vec4 = _mm256_and_si256(_mm256_permute4x64_epi64(vec4, 0xD8), _mm256_packs_epi32(vec1, vec2));
 				if (_mm256_movemask_epi8(vec4)) {
+					vec4 = _mm256_permute4x64_epi64(vec4, 0xD8);
 					vec1 = _mm256_cmpgt_epi16(vecZero, _mm256_xor_si256(vecGX, vecGY));
 					vec1 = _mm256_and_si256(vec4, vec1);
 					vec2 = _mm256_andnot_si256(vec1, vec4);
