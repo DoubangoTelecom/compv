@@ -129,7 +129,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsMax_16u_Asm_NEON32
     vpmax.u16 vecMaxx, vecMaxx, vecMaxx @ 4 -> 2
     vpmax.u16 vecMaxx, vecMaxx, vecMaxx @ 2 -> 1
     vmov.u16 r11, vecMaxx[0]
-    str r11, [max]
+    strh r11, [max]
     
     .unreq data
 	.unreq width

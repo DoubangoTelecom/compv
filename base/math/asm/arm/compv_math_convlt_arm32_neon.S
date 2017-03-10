@@ -74,8 +74,6 @@
     #define vec3 q8
     #define vec3x q8x
     #define vec3y q8y
-
-    .equ SizeOfFloat32InBytes, 4
 	
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (j = 0; j < height; ++j)
@@ -98,7 +96,7 @@
             LoopKernelPer16Samples_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32\@:
                 vld1.u8 { q15 }, [inPtr_], step @ q15 = vecInPtr
                 ldr coeff, [vthzKernPtr, row]
-                add row, row, #SizeOfFloat32InBytes
+                add row, row, #COMPV_GAS_FLOAT32_SZ_BYTES
                 cmp row, kernSizeInBytes
                 .if \fusedMultiplyAdd
                     vdup.f32 vecCoeff, coeff
@@ -162,7 +160,7 @@
             LoopKernelPer4Samples_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32\@:
                 vld1.u8 { q15x }, [inPtr_], step @ q15x = vecInPtrn
                 ldr coeff, [vthzKernPtr, row]
-                add row, row, #SizeOfFloat32InBytes
+                add row, row, #COMPV_GAS_FLOAT32_SZ_BYTES
                 cmp row, kernSizeInBytes
                 .if \fusedMultiplyAdd
                     vdup.f32 vecCoeff, coeff
@@ -224,7 +222,7 @@
         LoopKernelPer1Samples_CompVMathConvlt1VtHz_8u32f8u_Asm_NEON32\@:
             vld1.u8 { q15x }, [inPtr_], step @ q15x = vecInPtrn
             ldr coeff, [vthzKernPtr, row]
-            add row, row, #SizeOfFloat32InBytes
+            add row, row, #COMPV_GAS_FLOAT32_SZ_BYTES
             cmp row, kernSizeInBytes
             .if \fusedMultiplyAdd
                 vdup.f32 vecCoeff, coeff
@@ -371,9 +369,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
     #define vec3 q6
     #define vec3x q6x
     #define vec3y q6y
-
-    .equ SizeOfUint16InBytes, 2
-    .equ SizeOfUint8InBytes, 1
 	
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (j = 0; j < height; ++j)
@@ -389,11 +384,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             @ for (row = 0, k = 0; row < kernSize; ++row, k += step)
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            sub row, kernSizeInBytes, #SizeOfUint16InBytes
+            sub row, kernSizeInBytes, #COMPV_GAS_UINT16_SZ_BYTES
             mov inPtr_, inPtr
             ldr_arg argi_vthzKernPtr, vthzKernPtr
             vld1.u8 { q15 }, [inPtr_], step @ q15 = vecInPtr
-            ldrh coeff, [vthzKernPtr], #SizeOfUint16InBytes
+            ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
             vmovl.u8 vec2, q15x
             vmovl.u8 vec3, q15y
             vdup.u16 vecCoeffx, coeff
@@ -406,7 +401,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
             vshrn.u32 vecSum1x, vec2, #16
             vshrn.u32 vecSum1y, vec3, #16
             LoopKernelPer16Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-                ldrh coeff, [vthzKernPtr], #SizeOfUint16InBytes
+                ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
                 vld1.u8 { q15 }, [inPtr_], step @ q15 = vecInPtr                
                 vdup.u16 vecCoeffx, coeff
                 vmovl.u8 vec2, q15x
@@ -421,7 +416,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
                 vshrn.u32 q14y, vec3, #16
                 vqadd.u16 vecSum0, vecSum0, q13
                 vqadd.u16 vecSum1, vecSum1, q14 
-                subs row, row, #SizeOfInt16InBytes    
+                subs row, row, #COMPV_GAS_INT16_SZ_BYTES    
                 bne LoopKernelPer16Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
                 @@ EndOf_LoopKernelPer16Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32 @@
             
@@ -444,11 +439,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             @ for (row = 0, k = 0; row < kernSize; ++row, k += step)
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            sub row, kernSizeInBytes, #SizeOfUint16InBytes
+            sub row, kernSizeInBytes, #COMPV_GAS_UINT16_SZ_BYTES
             mov inPtr_, inPtr
             ldr_arg argi_vthzKernPtr, vthzKernPtr
             vld1.u8 { q15x }, [inPtr_], step @ q15 = vecInPtr
-            ldrh coeff, [vthzKernPtr], #SizeOfUint16InBytes
+            ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
             vdup.u16 vecCoeffx, coeff
             vmovl.u8 vec1, q15x
             vmull.u16 q12, vec1x, vecCoeffx[0]
@@ -456,7 +451,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
             vshrn.u32 vecSum0x, q12, #16
             vshrn.u32 vecSum0y, q13, #16    
             LoopKernelPer8Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-                ldrh coeff, [vthzKernPtr], #SizeOfUint16InBytes
+                ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
                 vld1.u8 { q15x }, [inPtr_], step @ q15x = vecInPtr
                 vdup.u16 vecCoeffx, coeff
                 vmovl.u8 vec1, q15x
@@ -465,7 +460,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
                 vshrn.u32 q14x, q12, #16
                 vshrn.u32 q14y, q13, #16
                 vqadd.u16 vecSum0, vecSum0, q14
-                subs row, row, #SizeOfInt16InBytes
+                subs row, row, #COMPV_GAS_INT16_SZ_BYTES
                 bne LoopKernelPer8Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
                 @@ EndOf_LoopKernelPer8Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32 @@
             
@@ -486,24 +481,24 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             @ for (row = 0, k = 0; row < kernSize; ++row, k += step)
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            sub row, kernSizeInBytes, #SizeOfUint16InBytes
+            sub row, kernSizeInBytes, #COMPV_GAS_UINT16_SZ_BYTES
             mov inPtr_, inPtr
             ldr_arg argi_vthzKernPtr, vthzKernPtr
             vld1.u8 { q15x }, [inPtr_], step @ q15 = vecInPtr
-            ldrh coeff, [vthzKernPtr], #SizeOfUint16InBytes
+            ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
             vdup.u16 vecCoeffx, coeff
             vmovl.u8 vec1, q15x
             vmull.u16 q12, vec1x, vecCoeffx[0]                
             vshrn.u32 vecSum0x, q12, #16
             LoopKernelPer4Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-                ldrh coeff, [vthzKernPtr], #SizeOfUint16InBytes
+                ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
                 vld1.u8 { q15x }, [inPtr_], step @ q15x = vecInPtr
                 vdup.u16 vecCoeffx, coeff
                 vmovl.u8 vec1, q15x
                 vmull.u16 q12, vec1x, vecCoeffx[0]                
                 vshrn.u32 q13x, q12, #16
                 vqadd.u16 vecSum0x, vecSum0x, q13x
-                subs row, row, #SizeOfInt16InBytes
+                subs row, row, #COMPV_GAS_INT16_SZ_BYTES
                 bne LoopKernelPer4Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
                 @@ EndOf_LoopKernelPer4Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32 @@
             
@@ -531,24 +526,24 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             @ for (row = 0, k = 0; row < kernSize; ++row, k += step)
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            sub row, kernSizeInBytes, #SizeOfUint16InBytes
+            sub row, kernSizeInBytes, #COMPV_GAS_UINT16_SZ_BYTES
             mov inPtr_, inPtr
             ldr_arg argi_vthzKernPtr, vthzKernPtr
             vld1.u8 { q15x }, [inPtr_], step @ q15 = vecInPtr
-            ldrh coeff, [vthzKernPtr], #SizeOfUint16InBytes
+            ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
             vdup.u16 vecCoeffx, coeff
             vmovl.u8 vec1, q15x
             vmull.u16 q12, vec1x, vecCoeffx[0]     
             vshrn.u32 vecSum0x, q12, #16
             LoopKernelPer1Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32:
-                ldrh coeff, [vthzKernPtr], #SizeOfUint16InBytes
+                ldrh coeff, [vthzKernPtr], #COMPV_GAS_UINT16_SZ_BYTES
                 vld1.u8 { q15x }, [inPtr_], step @ q15x = vecInPtr                
                 vdup.u16 vecCoeffx, coeff
                 vmovl.u8 vec1, q15x
                 vmull.u16 q12, vec1x, vecCoeffx[0]                
                 vshrn.u32 q13x, q12, #16
                 vqadd.u16 vecSum0x, vecSum0x, q13x
-                subs row, row, #SizeOfInt16InBytes
+                subs row, row, #COMPV_GAS_INT16_SZ_BYTES
                 bne LoopKernelPer1Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32
                 @@ EndOf_LoopKernelPer1Samples_CompVMathConvlt1VtHzFixedPoint_8u16u8u_Asm_NEON32 @@
             
@@ -667,10 +662,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32
     #define vec1 q4
     #define vec1x q4x
     #define vec1y q4y
-
-
-    .equ SizeOfInt16InBytes, 2
-    .equ SizeOfUint8InBytes, 1
 	
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (j = 0; j < height; ++j)
@@ -693,7 +684,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32
             LoopKernelPer16Samples_CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32:
                 vld1.u8 { q15 }, [inPtr_], step @ q15 = vecInPtr
                 ldrh coeff, [vthzKernPtr, row]
-                add row, row, #SizeOfInt16InBytes
+                add row, row, #COMPV_GAS_INT16_SZ_BYTES
                 cmp row, kernSizeInBytes
                 vmovl.u8 vec0, q15x
                 vdup.s16 vecCoeffx, coeff
@@ -727,7 +718,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32
             LoopKernelPer8Samples_CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32:
                 vld1.u8 { q15x }, [inPtr_], step @ q15x = vecInPtr
                 ldrh coeff, [vthzKernPtr, row]
-                add row, row, #SizeOfInt16InBytes
+                add row, row, #COMPV_GAS_INT16_SZ_BYTES
                 vdup.s16 vecCoeffx, coeff
                 vmovl.u8 vec0, q15x
                 cmp row, kernSizeInBytes
@@ -757,7 +748,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32
             LoopKernelPer4Samples_CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32:
                 vld1.u8 { q15x }, [inPtr_], step @ q15x = vecInPtr
                 ldrh coeff, [vthzKernPtr, row]
-                add row, row, #SizeOfInt16InBytes
+                add row, row, #COMPV_GAS_INT16_SZ_BYTES
                 cmp row, kernSizeInBytes
                 vmovl.u8 vec0, q15x
                 vdup.s16 vecCoeffx, coeff
@@ -786,7 +777,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32
             LoopKernelPer1Samples_CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32:
                 vld1.u8 { q15x }, [inPtr_], step @ q15x = vecInPtr
                 ldrh coeff, [vthzKernPtr, row]
-                add row, row, #SizeOfInt16InBytes
+                add row, row, #COMPV_GAS_INT16_SZ_BYTES
                 cmp row, kernSizeInBytes
                 vmovl.u8 vec0, q15x
                 vdup.s16 vecCoeffx, coeff
@@ -799,7 +790,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32
             .rept 4
                 vmov.s16 row, vecSum0x[counter]
                 .set counter, counter+1
-                strh row, [outPtr], #SizeOfInt16InBytes
+                strh row, [outPtr], #COMPV_GAS_INT16_SZ_BYTES
                 subs i, i, #1
                 beq EndOf_IfPer1Samples_CompVMathConvlt1VtHz_8u16s16s_Asm_NEON32
             .endr
@@ -906,8 +897,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
     #define vec1y q4y
 
 
-    .equ SizeOfInt16InBytes, 2
-    .equ SizeOfUint8InBytes, 1
+    .equ COMPV_GAS_INT16_SZ_BYTES, 2
+    .equ COMPV_GAS_UINT8_SZ_BYTES, 1
 	
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (j = 0; j < height; ++j)
@@ -930,8 +921,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
             ldr_arg argi_vthzKernPtr, vthzKernPtr
             LoopKernelPer16Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32:
                 vld1.s16 { vec0, vec1 }, [inPtr_], step
-                ldrh coeff, [vthzKernPtr], #SizeOfInt16InBytes
-                subs row, row, #SizeOfInt16InBytes
+                ldrh coeff, [vthzKernPtr], #COMPV_GAS_INT16_SZ_BYTES
+                subs row, row, #COMPV_GAS_INT16_SZ_BYTES
                 vdup.s16 vecCoeffx, coeff
                 vmla.s16 vecSum1, vec1, vecCoeffx[0]
                 vmla.s16 vecSum0, vec0, vecCoeffx[0]
@@ -941,7 +932,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
             vst1.s16 {vecSum0}, [outPtr]!
             vst1.s16 {vecSum1}, [outPtr]!
             subs i, i, #16
-            add inPtr, inPtr, #(16 * SizeOfInt16InBytes)
+            add inPtr, inPtr, #(16 * COMPV_GAS_INT16_SZ_BYTES)
             bne LoopWidthPer16Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
             @@ EndOf_LoopWidthPer16Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32 @@        
 
@@ -962,15 +953,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
             ldr_arg argi_vthzKernPtr, vthzKernPtr
             LoopKernelPer8Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32:
                 vld1.s16 { vec0 }, [inPtr_], step
-                ldrh coeff, [vthzKernPtr], #SizeOfInt16InBytes
-                subs row, row, #SizeOfInt16InBytes
+                ldrh coeff, [vthzKernPtr], #COMPV_GAS_INT16_SZ_BYTES
+                subs row, row, #COMPV_GAS_INT16_SZ_BYTES
                 vdup.s16 vecCoeffx, coeff
                 vmla.s16 vecSum0, vec0, vecCoeffx[0]
                 bne LoopKernelPer8Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
                 @@ EndOf_LoopKernelPer8Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32 @@
             
             vst1.s16 {vecSum0}, [outPtr]!
-            add inPtr, inPtr, #(8 * SizeOfInt16InBytes)
+            add inPtr, inPtr, #(8 * COMPV_GAS_INT16_SZ_BYTES)
             EndOf_IfPer8Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32:
             @@ EndOf_IfPer8Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32 @@
 
@@ -991,15 +982,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
             ldr_arg argi_vthzKernPtr, vthzKernPtr
             LoopKernelPer4Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32:
                 vld1.u8 { vec0x }, [inPtr_], step
-                ldrh coeff, [vthzKernPtr], #SizeOfInt16InBytes
+                ldrh coeff, [vthzKernPtr], #COMPV_GAS_INT16_SZ_BYTES
                 vdup.s16 vecCoeffx, coeff
                 vmla.s16 vecSum0x, vec0x, vecCoeffx[0]
-                subs row, row, #SizeOfInt16InBytes
+                subs row, row, #COMPV_GAS_INT16_SZ_BYTES
                 bne LoopKernelPer4Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
                 @@ EndOf_LoopKernelPer4Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32 @@
             
             vst1.s16 {vecSum0x}, [outPtr]!
-            add inPtr, inPtr, #(4 * SizeOfInt16InBytes)
+            add inPtr, inPtr, #(4 * COMPV_GAS_INT16_SZ_BYTES)
             EndOf_IfPer4Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32:
             @@ EndOf_IfPer4Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32 @@
 
@@ -1019,8 +1010,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
             ldr_arg argi_vthzKernPtr, vthzKernPtr
             LoopKernelPer1Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32:
                 vld1.u8 { vec0x }, [inPtr_], step
-                ldrh coeff, [vthzKernPtr], #SizeOfInt16InBytes
-                subs row, row, #SizeOfInt16InBytes
+                ldrh coeff, [vthzKernPtr], #COMPV_GAS_INT16_SZ_BYTES
+                subs row, row, #COMPV_GAS_INT16_SZ_BYTES
                 vdup.s16 vecCoeffx, coeff
                 vmla.s16 vecSum0x, vec0x, vecCoeffx[0]
                 bne LoopKernelPer1Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
@@ -1031,7 +1022,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
             .rept 4
                 vmov.s16 row, vecSum0x[counter]
                 .set counter, counter+1
-                strh row, [outPtr], #SizeOfInt16InBytes
+                strh row, [outPtr], #COMPV_GAS_INT16_SZ_BYTES
                 subs i, i, #1
                 beq EndOf_IfPer1Samples_CompVMathConvlt1VtHz_16s16s16s_Asm_NEON32
             .endr

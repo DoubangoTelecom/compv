@@ -545,9 +545,6 @@
     <ClCompile Include="..\intrin\x86\compv_mem_intrin_sse2.cxx">
       <Filter>source\intrin\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\math\compv_math.cxx">
-      <Filter>source\math</Filter>
-    </ClCompile>
     <ClCompile Include="..\math\compv_math_utils.cxx">
       <Filter>source\math</Filter>
     </ClCompile>
@@ -758,6 +755,9 @@
     <ClCompile Include="..\math\intrin\arm\compv_math_utils_intrin_neon.cxx">
       <Filter>source\math\intrin\arm</Filter>
     </ClCompile>
+    <ClCompile Include="..\math\compv_math.cxx">
+      <Filter>source\math</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\asm\x86\compv_bits_macros_x86.s">
@@ -897,10 +897,16 @@
     <GAS Include="..\math\asm\arm\compv_math_stats_arm32_neon.S">
       <Filter>source\math\asm\arm</Filter>
     </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_transform_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </GAS>
+    <GAS Include="..\math\asm\arm\compv_math_utils_arm64_neon.S">
+      <Filter>source\math\asm\arm</Filter>
+    </GAS>
     <GAS Include="..\math\asm\arm\compv_math_stats_arm64_neon.S">
       <Filter>source\math\asm\arm</Filter>
     </GAS>
-    <GAS Include="..\math\asm\arm\compv_math_transform_arm64_neon.S">
+    <GAS Include="..\math\asm\arm\compv_math_utils_arm32_neon.S">
       <Filter>source\math\asm\arm</Filter>
     </GAS>
   </ItemGroup>

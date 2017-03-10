@@ -211,7 +211,7 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
     // we're running the below code because the destructor() calls stop() and wait the exit
     CompVAsyncTask11* Self_ = static_cast<CompVAsyncTask11*>(pcArg);
     CompVAsyncToken* pToken_;
-    COMPV_ERROR_CODE err_;
+    COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
     size_t size_;
     compv_thread_id_t threadId = CompVThread::getIdCurrent();
 
@@ -226,7 +226,7 @@ void* COMPV_STDCALL CompVAsyncTask11::run(void *pcArg)
 #endif
 
     while (Self_->m_bStarted) {
-        COMPV_CHECK_CODE_BAIL(err_ = Self_->m_SemRun->decrement());
+        COMPV_CHECK_CODE_BAIL(err_ = Self_->m_SemRun->decrement(), "Semaphore decrement failed");
         if (!Self_->m_bStarted) {
             break;
         }
