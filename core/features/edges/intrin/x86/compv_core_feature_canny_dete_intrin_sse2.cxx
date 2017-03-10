@@ -55,12 +55,17 @@ void CompVCannyHysteresisRow_8mpw_Intrin_SSE2(size_t row, size_t colStart, size_
 							pt = p - stride;
 							gb = g + stride;
 							gt = g - stride;
+#if 0
+							vecG = _mm_setr_epi16(g[-1], g[1], gt[-1], gt[0], gt[1], gb[-1], gb[0], gb[1]);
+							vecP = _mm_setr_epi16(p[-1], p[1], pt[-1], pt[0], pt[1], pb[-1], pb[0], pb[1]);
+#else
 							vecG = _mm_or_si128(_mm_or_si128(_mm_and_si128(_mm_shufflelo_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&g[-1])), 0x8), vecMaskFF),
 								_mm_slli_si128(_mm_and_si128(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&gt[-1])), vecMaskFFF), 4)),
 								_mm_slli_si128(_mm_and_si128(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&gb[-1])), vecMaskFFF), 10));
 							vecP = _mm_or_si128(_mm_or_si128(_mm_and_si128(_mm_shufflelo_epi16(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(&p[-1])), vecZero), 0x8), vecMaskFF),
 								_mm_slli_si128(_mm_and_si128(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(&pt[-1])), vecZero), vecMaskFFF), 4)),
 								_mm_slli_si128(_mm_and_si128(_mm_unpacklo_epi8(_mm_cvtsi32_si128(*reinterpret_cast<const int32_t*>(&pb[-1])), vecZero), vecMaskFFF), 10));
+#endif
 							m1 = _mm_movemask_epi8(_mm_and_si128(_mm_cmpeq_epi16(vecP, vecZero), _mm_cmpgt_epi16(vecG, vecTLow)));
 							if (m1) {
 								if (m1 & 0x00ff) {
@@ -108,6 +113,26 @@ void CompVCannyHysteresisRow_8mpw_Intrin_SSE2(size_t row, size_t colStart, size_
 			}
 			while (m0);
 		}
+	}
+}
+
+void CompVCannyNMSApply_Intrin_SSE2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALIGNED(SSE) uint8_t* nms, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	__m128i vec0;
+	compv_uscalar_t col_, row_;
+	static const __m128i vecZero = _mm_setzero_si128();
+	for (row_ = 1; row_ < height; ++row_) { // row starts to #1 and ends at (heigth = imageHeigth - 1)
+		for (col_ = 0; col_ < width; col_ += 8) { // SIMD, starts at 0 (instead of 1) to have memory aligned, reading beyong width which means data must be strided
+			vec0 = _mm_cmpeq_epi8(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&nms[col_])), vecZero);
+			if (_mm_movemask_epi8(vec0) ^ 0xffff) { // ARM NEON: no need for movemask
+				vec0 = _mm_and_si128(_mm_unpacklo_epi8(vec0, vec0), _mm_load_si128(reinterpret_cast<const __m128i*>(&grad[col_])));
+				_mm_store_si128(reinterpret_cast<__m128i*>(&grad[col_]), vec0);
+				_mm_storel_epi64(reinterpret_cast<__m128i*>(&nms[col_]), vecZero);
+			}
+		}
+		nms += stride;
+		grad += stride;
 	}
 }
 

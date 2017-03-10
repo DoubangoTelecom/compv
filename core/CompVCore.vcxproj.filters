@@ -161,6 +161,9 @@
     <ClCompile Include="features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_sse2.cxx">
       <Filter>Source Files\features\edges\intrin\x86</Filter>
     </ClCompile>
+    <ClCompile Include="features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_ssse3.cxx">
+      <Filter>Source Files\features\edges\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -215,6 +218,9 @@
       <Filter>Header Files\features\edges</Filter>
     </ClInclude>
     <ClInclude Include="include\compv\core\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_sse2.h">
+      <Filter>Header Files\features\edges\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_ssse3.h">
       <Filter>Header Files\features\edges\intrin\x86</Filter>
     </ClInclude>
   </ItemGroup>

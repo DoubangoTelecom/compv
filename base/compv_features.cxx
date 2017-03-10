@@ -143,7 +143,7 @@ CompVEdgeDete::~CompVEdgeDete()
 
 }
 
-COMPV_ERROR_CODE CompVEdgeDete::newObj(CompVEdgeDetePtrPtr dete, int deteId, float tLow COMPV_DEFAULT(0.68f), float tHigh COMPV_DEFAULT(0.68f*2.f), int32_t kernSize COMPV_DEFAULT(3))
+COMPV_ERROR_CODE CompVEdgeDete::newObj(CompVEdgeDetePtrPtr dete, int deteId, float tLow COMPV_DEFAULT(COMPV_FEATURE_DETE_EDGE_THRESHOLD_LOW), float tHigh COMPV_DEFAULT(COMPV_FEATURE_DETE_EDGE_THRESHOLD_HIGH), int32_t kernSize COMPV_DEFAULT(3))
 {
 	COMPV_CHECK_CODE_RETURN(CompVBase::init());
 	COMPV_CHECK_EXP_RETURN(!dete, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

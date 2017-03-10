@@ -11,6 +11,7 @@
 #include "compv/base/parallel/compv_parallel.h"
 
 #include "compv/core/features/edges/intrin/x86/compv_core_feature_canny_dete_intrin_sse2.h"
+#include "compv/core/features/edges/intrin/x86/compv_core_feature_canny_dete_intrin_ssse3.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVEdgeDeteCanny"
 
@@ -22,7 +23,7 @@ COMPV_NAMESPACE_BEGIN()
 static void CompVCannyNmsGatherRow_C(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, uint16_t tLow, size_t colStart, size_t width, size_t stride);
 static void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0);
 
-CompVEdgeDeteCanny::CompVEdgeDeteCanny(float tLow COMPV_DEFAULT(COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW), float tHigh COMPV_DEFAULT(COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH), size_t kernSize COMPV_DEFAULT(3))
+CompVEdgeDeteCanny::CompVEdgeDeteCanny(float tLow, float tHigh, size_t kernSize)
 	: CompVEdgeDete(COMPV_CANNY_ID)
 	, m_nImageWidth(0)
 	, m_nImageHeight(0)
@@ -87,7 +88,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::set(int id, const void* valuePtr, size_t va
 COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatPtrPtr edges) /*Overrides(CompVEdgeDete)*/
 {
 	COMPV_CHECK_EXP_RETURN(!image || image->subType() != COMPV_SUBTYPE_PIXELS_Y || !edges, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input image is null or not in grayscale format");
-	COMPV_CHECK_EXP_RETURN(m_fThresholdLow >= m_fThresholdHigh, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Invalid condition: m_fThresholdLow >= m_fThresholdHigh");
+	COMPV_CHECK_EXP_RETURN(m_fThresholdLow >= m_fThresholdHigh, COMPV_ERROR_CODE_E_INVALID_STATE, "Invalid state: m_fThresholdLow >= m_fThresholdHigh");
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 
@@ -271,6 +272,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVMatPtr& edges, uint16_t tLo
 	rowStart = COMPV_MATH_MAX(1, rowStart);
 	size_t rowStartTimesStride = rowStart * m_nImageStride;
 
+	size_t colStart = 1;
 	size_t row;
 	const size_t maxCols = edges->cols() - 1;
 	const int16_t *gx = m_pGx + rowStartTimesStride, *gy = m_pGy + rowStartTimesStride;
@@ -284,26 +286,38 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVMatPtr& edges, uint16_t tLo
 		COMPV_CHECK_CODE_RETURN(edges->zero_row(m_nImageHeight - 1)); // zero last line
 	}
 
-#if COMPV_ARCH_X86 && 0
-	void(*CannyNMSGatherRow)(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride) = NULL;
+	// 8mpw -> minpack 8 for words (int16)
+	void(*CompVCannyNMSGatherRow_8mpw)(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride)
+		= NULL;
+
+#if COMPV_ARCH_X86
 	if (maxCols >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSSE3)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(CannyNMSGatherRow = CannyNMSGatherRow_Intrin_SSSE3);
-	}
-	if (CannyNMSGatherRow) {
-		for (row = rowStart; row < maxRows; ++row) {
-			CompVMem::zero(e, m_nImageWidth);
-			CannyNMSGatherRow(nms, g, gx, gy, &tLow, maxCols, m_nImageStride);
-			gx += m_nImageStride, gy += m_nImageStride, g += m_nImageStride, e += m_nImageStride, nms += m_nImageStride;
-		}
-		return COMPV_ERROR_CODE_S_OK;
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVCannyNMSGatherRow_8mpw = CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3);
 	}
 #endif /* COMPV_ARCH_X86 */
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD of GPU implementation found");
-	for (row = rowStart; row < maxRows; ++row) {
-		CompVMem::zero(e, m_nImageWidth);
-		CompVCannyNmsGatherRow_C(nms, g, gx, gy, tLow, 1, maxCols, m_nImageStride);
-		gx += m_nImageStride, gy += m_nImageStride, g += m_nImageStride, e += m_nImageStride, nms += m_nImageStride;
+	if (CompVCannyNMSGatherRow_8mpw) {
+		const int16_t *gx_8mpw = gx, *gy_8mpw = gy;
+		const uint16_t *g_8mpw = g;
+		uint8_t *nms_8mpw = nms, *e_8mpw = e;
+		for (row = rowStart; row < maxRows; ++row) {
+			CompVMem::zero(e_8mpw, m_nImageWidth);
+			CompVCannyNMSGatherRow_8mpw(nms_8mpw, g_8mpw, gx_8mpw, gy_8mpw, &tLow, maxCols, m_nImageStride);
+			gx_8mpw += m_nImageStride, gy_8mpw += m_nImageStride, g_8mpw += m_nImageStride, e_8mpw += m_nImageStride, nms_8mpw += m_nImageStride;
+		}
+		colStart = (maxCols & -7);
+	}
+	else {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+	}
+	if (colStart < maxCols) { // samples missing after SIMD function execution
+		for (row = rowStart; row < maxRows; ++row) {
+			if (!CompVCannyNMSGatherRow_8mpw) { // "e" zero'ed in "CompVCannyNMSGatherRow_8mpw"
+				CompVMem::zero(e, m_nImageWidth);
+			}
+			CompVCannyNmsGatherRow_C(nms, g, gx, gy, tLow, colStart, maxCols, m_nImageStride);
+			gx += m_nImageStride, gy += m_nImageStride, g += m_nImageStride, e += m_nImageStride, nms += m_nImageStride;
+		}
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
@@ -318,32 +332,35 @@ void CompVEdgeDeteCanny::nms_apply()
 	size_t imageWidthMinus1_ = m_nImageWidth - 1;
 	size_t imageHeightMinus1_ = m_nImageHeight - 1;
 
-#if COMPV_ARCH_X86 && 0
+	void(*CompVCannyNMSApply)(COMPV_ALIGNED(X) uint16_t* grad, COMPV_ALIGNED(X) uint8_t* nms, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride)
+		= NULL;
+
+#if COMPV_ARCH_X86
 	const size_t gStrideInBytes = m_nImageStride * sizeof(uint16_t);
-	void(*CannyNMSApply)(COMPV_ALIGNED(X) uint16_t* grad, COMPV_ALIGNED(X) uint8_t* nms, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride) = NULL;
 	if (imageWidthMinus1_ >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(nms_) && COMPV_IS_ALIGNED_SSE(g_) && COMPV_IS_ALIGNED_SSE(m_nImageStride) && COMPV_IS_ALIGNED_SSE(gStrideInBytes)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(CannyNMSApply = CannyNMSApply_Intrin_SSE2);
-		COMPV_EXEC_IFDEF_ASM_X86(CannyNMSApply = CannyNMSApply_Asm_X86_SSE2);
-		COMPV_EXEC_IFDEF_ASM_X64(CannyNMSApply = CannyNMSApply_Asm_X64_SSE2);
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVCannyNMSApply = CompVCannyNMSApply_Intrin_SSE2);
+		//COMPV_EXEC_IFDEF_ASM_X86(CompVCannyNMSApply = CannyNMSApply_Asm_X86_SSE2);
+		//COMPV_EXEC_IFDEF_ASM_X64(CompVCannyNMSApply = CannyNMSApply_Asm_X64_SSE2);
 	}
-	if (imageWidthMinus1_ >= 16 && CompVCpu::isEnabled(compv::kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(nms_) && COMPV_IS_ALIGNED_AVX2(g_) && COMPV_IS_ALIGNED_AVX2(m_nImageStride) && COMPV_IS_ALIGNED_AVX2(gStrideInBytes)) {
-		COMPV_EXEC_IFDEF_ASM_X64(CannyNMSApply = CannyNMSApply_Asm_X64_AVX2);
-	}
-	if (CannyNMSApply) {
-		CannyNMSApply(g_, nms_, (compv_uscalar_t)imageWidthMinus1_, (compv_uscalar_t)imageHeightMinus1_, (compv_uscalar_t)m_nImageStride);
-		return;
-	}
+	//if (imageWidthMinus1_ >= 16 && CompVCpu::isEnabled(compv::kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(nms_) && COMPV_IS_ALIGNED_AVX2(g_) && COMPV_IS_ALIGNED_AVX2(m_nImageStride) && COMPV_IS_ALIGNED_AVX2(gStrideInBytes)) {
+		//COMPV_EXEC_IFDEF_ASM_X64(CompVCannyNMSApply = CannyNMSApply_Asm_X64_AVX2);
+	//}
 #endif /* COMPV_ARCH_X86 */
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD of GPU implementation found");
-	for (size_t row_ = 1; row_ < imageHeightMinus1_; ++row_) {
-		for (size_t col_ = 1; col_ < imageWidthMinus1_; ++col_) { // SIMD, starts at 0 to have memory aligned
-			if (nms_[col_]) {
-				g_[col_] = 0, nms_[col_] = 0;
+	if (CompVCannyNMSApply) {
+		CompVCannyNMSApply(g_, nms_, static_cast<compv_uscalar_t>(imageWidthMinus1_), static_cast<compv_uscalar_t>(imageHeightMinus1_), static_cast<compv_uscalar_t>(m_nImageStride));
+	}
+	else {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+		for (size_t row_ = 1; row_ < imageHeightMinus1_; ++row_) {
+			for (size_t col_ = 1; col_ < imageWidthMinus1_; ++col_) { // SIMD, starts at 0 to have memory aligned
+				if (nms_[col_]) {
+					g_[col_] = 0, nms_[col_] = 0;
+				}
 			}
+			nms_ += m_nImageStride;
+			g_ += m_nImageStride;
 		}
-		nms_ += m_nImageStride;
-		g_ += m_nImageStride;
 	}
 }
 
@@ -362,10 +379,10 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr& edges, uint16_t tLo
 	uint8_t *e = edges->ptr<uint8_t>(rowStart), *e0 = edges->ptr<uint8_t>(0);
 
 	// 8mpw -> minpack 8 for words (int16)
-
-#if COMPV_ARCH_X86
 	void(*CompVCannyHysteresis_8mpw)(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
 		= NULL;
+
+#if COMPV_ARCH_X86
 	if (imageWidthMinus1 >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVCannyHysteresis_8mpw = CompVCannyHysteresisRow_8mpw_Intrin_SSE2);
 	}
@@ -382,7 +399,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr& edges, uint16_t tLo
 		colStart = (imageWidthMinus1 & -7);
 	}
 	else {
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD of GPU implementation found");
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	}
 
 	// Serial execution
@@ -395,7 +412,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr& edges, uint16_t tLo
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVEdgeDeteCanny::newObj(CompVEdgeDetePtrPtr dete, float tLow COMPV_DEFAULT(COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW), float tHigh COMPV_DEFAULT(COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH), size_t kernSize COMPV_DEFAULT(3))
+COMPV_ERROR_CODE CompVEdgeDeteCanny::newObj(CompVEdgeDetePtrPtr dete, float tLow, float tHigh, size_t kernSize)
 {
 	COMPV_CHECK_EXP_RETURN(!dete, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVEdgeDeteCannyPtr dete_ = new CompVEdgeDeteCanny(tLow, tHigh, kernSize);
@@ -407,7 +424,9 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::newObj(CompVEdgeDetePtrPtr dete, float tLow
 
 static void CompVCannyNmsGatherRow_C(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, uint16_t tLow, size_t colStart, size_t maxCols, size_t stride)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD of GPU implementation found");
+#if 0 // already printed in the caller function
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+#endif
 	int32_t gxInt, gyInt, absgyInt, absgxInt;
 	const int s = static_cast<const int>(stride);
 	const int c0 = 1 - s, c1 = 1 + s;
@@ -441,7 +460,7 @@ static void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width,
 {
 #if 0 // Printed in the calling function
 	if (width > 15) {
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD of GPU implementation found");
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	}
 #endif
 	CompVMatIndex edge;

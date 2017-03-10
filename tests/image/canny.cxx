@@ -19,6 +19,8 @@
 
 #define LOOP_COUNT		1
 #define FILE_NAME		FILE_NAME_EQUIRECTANGULAR
+#define THRESHOLD_LOW	0.8f
+#define THRESHOLD_HIGH	THRESHOLD_LOW*2.f	
 
 static const struct compv_unittest_canny {
 	const char* filename;
@@ -29,9 +31,9 @@ static const struct compv_unittest_canny {
 }
 COMPV_UNITTEST_CANNY[] =
 {
-	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "4112ddcdd4cb42c70954efb28dfeb860" },
-	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, "0c4daa4af84aeca0adf07394ee887346" },
-	{ FILE_NAME_GRIOTS, 480, 640, 480, "b2944944925dd9ddc47fdeaddacad024" },
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "01eb57ba85d4fc76dbd4527b8e8c4e14" },
+	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, "03686b150106d5caf5158a6bacf9f2ff" },
+	{ FILE_NAME_GRIOTS, 480, 640, 480, "7a9b1399dcbaedd91f582a8e4b90eaec" },
 };
 static const size_t COMPV_UNITTEST_CANNY_COUNT = sizeof(COMPV_UNITTEST_CANNY) / sizeof(COMPV_UNITTEST_CANNY[0]);
 
@@ -40,8 +42,6 @@ COMPV_ERROR_CODE canny()
 	CompVEdgeDetePtr dete;
 	CompVMatPtr image, edges;
 	const compv_unittest_canny* test = NULL;
-
-	COMPV_CHECK_CODE_RETURN(CompVEdgeDete::newObj(&dete, COMPV_CANNY_ID));
 
 	// Find test
 	for (size_t i = 0; i < COMPV_UNITTEST_CANNY_COUNT; ++i) {
@@ -55,6 +55,8 @@ COMPV_ERROR_CODE canny()
 		return COMPV_ERROR_CODE_E_NOT_FOUND;
 	}
 
+	COMPV_CHECK_CODE_RETURN(CompVEdgeDete::newObj(&dete, COMPV_CANNY_ID, THRESHOLD_LOW, THRESHOLD_HIGH));
+
 	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
 
 	uint64_t timeStart = CompVTime::nowMillis();
@@ -64,7 +66,7 @@ COMPV_ERROR_CODE canny()
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Canny Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	//COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5: %s", compv_tests_md5(edges).c_str());
+	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5: %s", compv_tests_md5(edges).c_str());
 
 #if COMPV_OS_WINDOWS
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");

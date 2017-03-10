@@ -15,9 +15,6 @@
 #error("This is a private file and must not be part of the API")
 #endif
 
-#define COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW	(0.68f)
-#define COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH	(COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW * 2.f)
-
 COMPV_NAMESPACE_BEGIN()
 
 COMPV_OBJECT_DECLARE_PTRS(EdgeDeteCanny);
@@ -25,7 +22,7 @@ COMPV_OBJECT_DECLARE_PTRS(EdgeDeteCanny);
 class CompVEdgeDeteCanny : public CompVEdgeDete
 {
 protected:
-	CompVEdgeDeteCanny(float tLow = COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW, float tHigh = COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH, size_t kernSize = 3);
+	CompVEdgeDeteCanny(float tLow, float tHigh, size_t kernSize = 3);
 public:
 	virtual ~CompVEdgeDeteCanny();
 	COMPV_OBJECT_GET_ID(CompVEdgeDeteCanny);
@@ -33,7 +30,7 @@ public:
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
 	virtual COMPV_ERROR_CODE process(const CompVMatPtr& image, CompVMatPtrPtr edges) override /*Overrides(CompVEdgeDete)*/;
 
-	static COMPV_ERROR_CODE newObj(CompVEdgeDetePtrPtr dete, float tLow = COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW, float tHigh = COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH, size_t kernSize = 3);
+	static COMPV_ERROR_CODE newObj(CompVEdgeDetePtrPtr dete, float tLow, float tHigh, size_t kernSize = 3);
 
 private:
 	COMPV_ERROR_CODE nms_gather(CompVMatPtr& edges, uint16_t tLow, size_t rowStart, size_t rowCount);

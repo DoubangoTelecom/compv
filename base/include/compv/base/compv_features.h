@@ -17,6 +17,13 @@
 #include <map>
 #include <vector>
 
+#if !defined(COMPV_FEATURE_DETE_EDGE_THRESHOLD_LOW)
+#	define COMPV_FEATURE_DETE_EDGE_THRESHOLD_LOW	(0.80f) // low threshold -> low speed (more data to process)
+#endif
+#if !defined(COMPV_FEATURE_DETE_EDGE_THRESHOLD_HIGH)
+#	define COMPV_FEATURE_DETE_EDGE_THRESHOLD_HIGH	(COMPV_FEATURE_DETE_EDGE_THRESHOLD_LOW * 2.f)
+#endif
+
 
 COMPV_NAMESPACE_BEGIN()
 
@@ -30,7 +37,7 @@ struct CompVFeatureFactory {
 	const char* name;
 	COMPV_ERROR_CODE(*newObjCornerDete)(CompVCornerDetePtrPtr dete);
 	COMPV_ERROR_CODE(*newObjCornerDesc)(CompVCornerDescPtrPtr desc);
-	COMPV_ERROR_CODE(*newObjEdgeDete)(CompVEdgeDetePtrPtr dete, float tLow /*= 0.68f*/, float tHigh /*= 0.68f*2.f*/, size_t kernSize /*= 3*/);
+	COMPV_ERROR_CODE(*newObjEdgeDete)(CompVEdgeDetePtrPtr dete, float tLow /*= COMPV_FEATURE_DETE_EDGE_THRESHOLD_LOW */, float tHigh /*= COMPV_FEATURE_DETE_EDGE_THRESHOLD_HIGH*/, size_t kernSize /*= 3*/);
 	COMPV_ERROR_CODE(*newObjHough)(CompVHoughPtrPtr hough, float rho /*= 1.f*/, float theta /*= kfMathTrigPiOver180*/, size_t threshold /*= 1*/);
 };
 
@@ -176,7 +183,7 @@ protected:
 public:
 	virtual ~CompVEdgeDete();
 	virtual COMPV_ERROR_CODE process(const CompVMatPtr& image, CompVMatPtrPtr edges) = 0;
-	static COMPV_ERROR_CODE newObj(CompVEdgeDetePtrPtr dete, int deteId, float tLow = 0.68f, float tHigh = 0.68f*2.f, int32_t kernSize = 3);
+	static COMPV_ERROR_CODE newObj(CompVEdgeDetePtrPtr dete, int deteId, float tLow = COMPV_FEATURE_DETE_EDGE_THRESHOLD_LOW, float tHigh = COMPV_FEATURE_DETE_EDGE_THRESHOLD_HIGH, int32_t kernSize = 3);
 };
 
 // Class: CompVHough
