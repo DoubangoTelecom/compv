@@ -10,12 +10,17 @@
 #include "compv/base/image/compv_image.h"
 #include "compv/base/parallel/compv_parallel.h"
 
+#include "compv/core/features/edges/intrin/x86/compv_core_feature_canny_dete_intrin_sse2.h"
+
 #define COMPV_THIS_CLASSNAME	"CompVEdgeDeteCanny"
 
 #define COMPV_FEATURE_DETE_CANNY_GRAD_MIN_SAMPLES_PER_THREAD	3 // must be >= 3 because of the convolution ("rowsOverlapCount")
 #define COMPV_FEATURE_DETE_CANNY_NMS_MIN_SAMPLES_PER_THREAD	(20*20)
 
 COMPV_NAMESPACE_BEGIN()
+
+static void CompVCannyNmsGatherRow_C(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, uint16_t tLow, size_t colStart, size_t width, size_t stride);
+static void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0);
 
 CompVEdgeDeteCanny::CompVEdgeDeteCanny(float tLow COMPV_DEFAULT(COMPV_FEATURE_DETE_CANNY_THRESHOLD_LOW), float tHigh COMPV_DEFAULT(COMPV_FEATURE_DETE_CANNY_THRESHOLD_HIGH), size_t kernSize COMPV_DEFAULT(3))
 	: CompVEdgeDete(COMPV_CANNY_ID)
@@ -214,7 +219,7 @@ bail:
 
 	/* NMS + Hysteresis */
 	if (!m_pNms) {
-		m_pNms = (uint8_t*)CompVMem::calloc(m_nImageStride * m_nImageHeight, sizeof(uint8_t));
+		m_pNms = reinterpret_cast<uint8_t*>(CompVMem::calloc(m_nImageStride * m_nImageHeight, sizeof(uint8_t)));
 		COMPV_CHECK_EXP_RETURN(!m_pNms, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
 	threadsCount = COMPV_MATH_MIN(maxThreads, (m_nImageHeight / COMPV_FEATURE_DETE_CANNY_NMS_MIN_SAMPLES_PER_THREAD));
@@ -349,33 +354,43 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr& edges, uint16_t tLo
 	const size_t imageHeightMinus1 = m_nImageHeight - 1;
 	rowEnd = COMPV_MATH_MIN(rowEnd, imageHeightMinus1);
 	rowStart = COMPV_MATH_MAX(1, rowStart);
-
-	CompVBoxMatIndexPtr candidates;
-	CompVBoxMatIndex::newObj(&candidates);
-
+	
+	size_t colStart = 1;
 	size_t row;
-	const size_t imageWidthMinus1 = m_nImageWidth - 1;
+	size_t imageWidthMinus1 = m_nImageWidth - 1;
 	const uint16_t *grad = m_pG + (rowStart * m_nImageStride), *g0 = m_pG;
 	uint8_t *e = edges->ptr<uint8_t>(rowStart), *e0 = edges->ptr<uint8_t>(0);
 
-#if COMPV_ARCH_X86 && 0
-	void(*CannyHysteresis)(compv_uscalar_t row, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0, CompVPtr<CompVBox<CompVMatIndex>* >& candidates) = NULL;
+	// 8mpw -> minpack 8 for words (int16)
+
+#if COMPV_ARCH_X86
+	void(*CompVCannyHysteresis_8mpw)(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
+		= NULL;
 	if (imageWidthMinus1 >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(CannyHysteresis = CannyHysteresis_Intrin_SSE2);
-	}
-	if (CannyHysteresis) {
-		for (row = rowStart; row < rowEnd; ++row) {
-			CannyHysteresis((compv_uscalar_t)row, (compv_uscalar_t)imageWidthMinus1, (compv_uscalar_t)imageHeightMinus1, (compv_uscalar_t)m_nImageStride, tLow, tHigh, grad, g0, e, e0, candidates);
-			grad += m_nImageStride, e += m_nImageStride;
-		}
-		return COMPV_ERROR_CODE_S_OK;
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVCannyHysteresis_8mpw = CompVCannyHysteresisRow_8mpw_Intrin_SSE2);
 	}
 #endif /* COMPV_ARCH_X86 */
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD of GPU implementation found");
-	for (row = rowStart; row < rowEnd; ++row) {
-		CompVCannyHysteresisRow_C(row, 1, imageWidthMinus1, imageHeightMinus1, m_nImageStride, tLow, tHigh, grad, g0, e, e0, candidates);
-		grad += m_nImageStride, e += m_nImageStride;
+	// SIMD execution
+	if (CompVCannyHysteresis_8mpw) {
+		const uint16_t *grad_8mpw = grad;
+		uint8_t *e_8mpw = e;
+		for (row = rowStart; row < rowEnd; ++row) {
+			CompVCannyHysteresis_8mpw(row, colStart, imageWidthMinus1, imageHeightMinus1, m_nImageStride, tLow, tHigh, grad_8mpw, g0, e_8mpw, e0);
+			grad_8mpw += m_nImageStride, e_8mpw += m_nImageStride;
+		}
+		colStart = (imageWidthMinus1 & -7);
+	}
+	else {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD of GPU implementation found");
+	}
+
+	// Serial execution
+	if (colStart < imageWidthMinus1) { // samples missing after SIMD function execution
+		for (row = rowStart; row < rowEnd; ++row) {
+			CompVCannyHysteresisRow_C(row, colStart, imageWidthMinus1, imageHeightMinus1, m_nImageStride, tLow, tHigh, grad, g0, e, e0);
+			grad += m_nImageStride, e += m_nImageStride;
+		}
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -390,7 +405,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::newObj(CompVEdgeDetePtrPtr dete, float tLow
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-void CompVCannyNmsGatherRow_C(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, uint16_t tLow, size_t colStart, size_t maxCols, size_t stride)
+static void CompVCannyNmsGatherRow_C(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, uint16_t tLow, size_t colStart, size_t maxCols, size_t stride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD of GPU implementation found");
 	int32_t gxInt, gyInt, absgyInt, absgxInt;
@@ -422,24 +437,30 @@ void CompVCannyNmsGatherRow_C(uint8_t* nms, const uint16_t* g, const int16_t* gx
 	}
 }
 
-void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0, CompVBoxMatIndexPtr& candidates)
+static void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD of GPU implementation found");
-	const CompVMatIndex* edge;
+#if 0 // Printed in the calling function
+	if (width > 15) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD of GPU implementation found");
+	}
+#endif
+	CompVMatIndex edge;
 	uint8_t* p;
 	const uint16_t *g, *gb, *gt;
 	size_t c, r, s;
 	uint8_t *pb, *pt;
-	CompVMatIndex* ne;
 	uint32_t cmp32;
+	std::vector<CompVMatIndex> edges;
 
 	for (size_t col = colStart; col < width; ++col) {
 		if (grad[col] > tHigh && !e[col]) { // strong edge and not connected yet
 			e[col] = 0xff;
-			COMPV_CANNY_PUSH_CANDIDATE(candidates, row, col);
-			while ((edge = candidates->pop_back())) {
-				c = edge->col;
-				r = edge->row;
+			edges.push_back(CompVMatIndex(row, col));
+			while (!edges.empty()) {
+				edge = edges.back();
+				edges.pop_back();
+				c = edge.col;
+				r = edge.row;
 				if (r && c && r < height && c < width) {
 					s = (r * stride) + c;
 					p = e0 + s;
@@ -450,26 +471,26 @@ void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width, size_t
 					gt = g - stride;
 					if (g[-1] > tLow && !p[-1]) { // left
 						p[-1] = 0xff;
-						COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c - 1);
+						edges.push_back(CompVMatIndex(r, c - 1));
 					}
 					if (g[1] > tLow && !p[1]) { // right
 						p[1] = 0xff;
-						COMPV_CANNY_PUSH_CANDIDATE(candidates, r, c + 1);
+						edges.push_back(CompVMatIndex(r, c + 1));
 					}
 					/* TOP */
 					cmp32 = *reinterpret_cast<const uint32_t*>(&pt[-1]) ^ 0xffffff;
 					if (cmp32) {
 						if (cmp32 & 0xff && gt[-1] > tLow) { // left
 							pt[-1] = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c - 1);
+							edges.push_back(CompVMatIndex(r - 1, c - 1));
 						}
-						if (cmp32 & 0xff00 && *gt > tLow) { // center
+						if (cmp32 & 0xff00 && gt[0] > tLow) { // center
 							*pt = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c);
+							edges.push_back(CompVMatIndex(r - 1, c));
 						}
 						if (cmp32 & 0xff0000 && gt[1] > tLow && !pt[1]) { // right
 							pt[1] = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r - 1, c + 1);
+							edges.push_back(CompVMatIndex(r - 1, c + 1));
 						}
 					}
 					/* BOTTOM */
@@ -477,15 +498,15 @@ void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width, size_t
 					if (cmp32) {
 						if (cmp32 & 0xff && gb[-1] > tLow) { // left
 							pb[-1] = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c - 1);
+							edges.push_back(CompVMatIndex(r + 1, c - 1));
 						}
-						if (cmp32 & 0xff00 && *gb > tLow) { // center
+						if (cmp32 & 0xff00 && gb[0] > tLow) { // center
 							*pb = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c);
+							edges.push_back(CompVMatIndex(r + 1, c));
 						}
 						if (cmp32 & 0xff0000 && gb[1] > tLow) { // right
 							pb[1] = 0xff;
-							COMPV_CANNY_PUSH_CANDIDATE(candidates, r + 1, c + 1);
+							edges.push_back(CompVMatIndex(r + 1, c + 1));
 						}
 					}
 				}

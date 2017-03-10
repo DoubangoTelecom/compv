@@ -99,6 +99,18 @@
     <Filter Include="Source Files\features\orb\asm\x86">
       <UniqueIdentifier>{0bccaa24-759a-40b5-8636-850c2465cedc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\features\edges\intrin">
+      <UniqueIdentifier>{cfa49467-a147-4b9c-8357-27c4d03e0186}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\features\edges\intrin\x86">
+      <UniqueIdentifier>{0cb1a414-2b39-40eb-b6b6-8b3a62670ac8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\edges\intrin">
+      <UniqueIdentifier>{60e82ff6-9ae2-4454-84b5-d924b0d28cf8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\features\edges\intrin\x86">
+      <UniqueIdentifier>{36453385-fb9f-48ea-b9e0-35eba387e4f7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -145,6 +157,9 @@
     </ClCompile>
     <ClCompile Include="features\edges\compv_core_feature_edge_dete.cxx">
       <Filter>Source Files\features\edges</Filter>
+    </ClCompile>
+    <ClCompile Include="features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_sse2.cxx">
+      <Filter>Source Files\features\edges\intrin\x86</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -198,6 +213,9 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\features\edges\compv_core_feature_edge_dete.h">
       <Filter>Header Files\features\edges</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_sse2.h">
+      <Filter>Header Files\features\edges\intrin\x86</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

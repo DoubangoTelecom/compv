@@ -52,5 +52,5 @@ Remarque: Sobel kernels are pre-defined (0, 1 and 2 values) which means we can c
 For now sobel convolution not used in commercial products which means not urgent to change the implementaion.
 
 === Canny edge detector (Kernel size = 3) (1282, 720) (#1k times) ===
-CompV: 15858.ms(st,c++)
+CompV: 7545.ms(full optiz), 15858.ms(st,c++)
 OpenCV: 6535.ms (full optiz)

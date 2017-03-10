@@ -464,6 +464,9 @@ typedef std::vector<CompVInterestPoint> CompVInterestPointVector;
 struct CompVMatIndex {
 	size_t row;
 	size_t col;
+public:
+	CompVMatIndex() : row(0), col(0) {}
+	CompVMatIndex(size_t row_, size_t col_): row(row_), col(col_) {}
 };
 
 struct CompVDMatch {
