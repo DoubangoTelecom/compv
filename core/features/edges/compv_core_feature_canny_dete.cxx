@@ -274,6 +274,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVMatPtr& edges, uint16_t tLo
 	size_t rowStartTimesStride = rowStart * m_nImageStride;
 
 	size_t colStart = 1;
+	int xmpw = 1;
 	size_t row;
 	const size_t maxCols = edges->cols() - 1;
 	const int16_t *gx = m_pGx + rowStartTimesStride, *gy = m_pGy + rowStartTimesStride;
@@ -287,33 +288,37 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVMatPtr& edges, uint16_t tLo
 		COMPV_CHECK_CODE_RETURN(edges->zero_row(m_nImageHeight - 1)); // zero last line
 	}
 
-	// 8mpw -> minpack 8 for words (int16)
-	void(*CompVCannyNMSGatherRow_8mpw)(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride)
+	// 8mpw -> minpack 8 for words (int16) -> SSE or ARM NEON
+	// 16mpw -> minpack 16 for words (int16) -> AVX
+	void(*CompVCannyNMSGatherRow_xmpw)(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride)
 		= NULL;
 
 #if COMPV_ARCH_X86
 	if (maxCols >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSSE3)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(CompVCannyNMSGatherRow_8mpw = CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3);
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3, xmpw = 8));
+	}
+	if (maxCols >= 16 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_16mpw_Intrin_AVX2, xmpw = 16));
 	}
 #endif /* COMPV_ARCH_X86 */
 
-	if (CompVCannyNMSGatherRow_8mpw) {
-		const int16_t *gx_8mpw = gx, *gy_8mpw = gy;
-		const uint16_t *g_8mpw = g;
-		uint8_t *nms_8mpw = nms, *e_8mpw = e;
+	if (CompVCannyNMSGatherRow_xmpw) {
+		const int16_t *gx_xmpw = gx, *gy_xmpw = gy;
+		const uint16_t *g_xmpw = g;
+		uint8_t *nms_xmpw = nms, *e_xmpw = e;
 		for (row = rowStart; row < maxRows; ++row) {
-			CompVMem::zero(e_8mpw, m_nImageWidth);
-			CompVCannyNMSGatherRow_8mpw(nms_8mpw, g_8mpw, gx_8mpw, gy_8mpw, &tLow, maxCols, m_nImageStride);
-			gx_8mpw += m_nImageStride, gy_8mpw += m_nImageStride, g_8mpw += m_nImageStride, e_8mpw += m_nImageStride, nms_8mpw += m_nImageStride;
+			CompVMem::zero(e_xmpw, m_nImageWidth);
+			CompVCannyNMSGatherRow_xmpw(nms_xmpw, g_xmpw, gx_xmpw, gy_xmpw, &tLow, maxCols, m_nImageStride);
+			gx_xmpw += m_nImageStride, gy_xmpw += m_nImageStride, g_xmpw += m_nImageStride, e_xmpw += m_nImageStride, nms_xmpw += m_nImageStride;
 		}
-		colStart = (maxCols & -7);
+		colStart = (maxCols & -(xmpw - 1)); // modulo xmpw
 	}
 	else {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 	}
 	if (colStart < maxCols) { // samples missing after SIMD function execution
 		for (row = rowStart; row < maxRows; ++row) {
-			if (!CompVCannyNMSGatherRow_8mpw) { // "e" zero'ed in "CompVCannyNMSGatherRow_8mpw"
+			if (!CompVCannyNMSGatherRow_xmpw) { // "e" zero'ed in "CompVCannyNMSGatherRow_xmpw"
 				CompVMem::zero(e, m_nImageWidth);
 			}
 			CompVCannyNmsGatherRow_C(nms, g, gx, gy, tLow, colStart, maxCols, m_nImageStride);
