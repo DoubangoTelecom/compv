@@ -12,6 +12,7 @@
 
 #include "compv/core/features/edges/intrin/x86/compv_core_feature_canny_dete_intrin_sse2.h"
 #include "compv/core/features/edges/intrin/x86/compv_core_feature_canny_dete_intrin_ssse3.h"
+#include "compv/core/features/edges/intrin/x86/compv_core_feature_canny_dete_intrin_avx2.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVEdgeDeteCanny"
 
@@ -339,12 +340,13 @@ void CompVEdgeDeteCanny::nms_apply()
 	const size_t gStrideInBytes = m_nImageStride * sizeof(uint16_t);
 	if (imageWidthMinus1_ >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(nms_) && COMPV_IS_ALIGNED_SSE(g_) && COMPV_IS_ALIGNED_SSE(m_nImageStride) && COMPV_IS_ALIGNED_SSE(gStrideInBytes)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVCannyNMSApply = CompVCannyNMSApply_Intrin_SSE2);
-		//COMPV_EXEC_IFDEF_ASM_X86(CompVCannyNMSApply = CannyNMSApply_Asm_X86_SSE2);
-		//COMPV_EXEC_IFDEF_ASM_X64(CompVCannyNMSApply = CannyNMSApply_Asm_X64_SSE2);
+		//COMPV_EXEC_IFDEF_ASM_X86(CompVCannyNMSApply = CompVCannyNMSApply_Asm_X86_SSE2);
+		//COMPV_EXEC_IFDEF_ASM_X64(CompVCannyNMSApply = CompVCannyNMSApply_Asm_X64_SSE2);
 	}
-	//if (imageWidthMinus1_ >= 16 && CompVCpu::isEnabled(compv::kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(nms_) && COMPV_IS_ALIGNED_AVX2(g_) && COMPV_IS_ALIGNED_AVX2(m_nImageStride) && COMPV_IS_ALIGNED_AVX2(gStrideInBytes)) {
-		//COMPV_EXEC_IFDEF_ASM_X64(CompVCannyNMSApply = CannyNMSApply_Asm_X64_AVX2);
-	//}
+	if (imageWidthMinus1_ >= 16 && CompVCpu::isEnabled(compv::kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(nms_) && COMPV_IS_ALIGNED_AVX2(g_) && COMPV_IS_ALIGNED_AVX2(m_nImageStride) && COMPV_IS_ALIGNED_AVX2(gStrideInBytes)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVCannyNMSApply = CompVCannyNMSApply_Intrin_AVX2);
+		//COMPV_EXEC_IFDEF_ASM_X64(CompVCannyNMSApply = CompVCannyNMSApply_Asm_X64_AVX2);
+	}
 #endif /* COMPV_ARCH_X86 */
 
 	if (CompVCannyNMSApply) {
