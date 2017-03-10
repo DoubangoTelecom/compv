@@ -242,23 +242,23 @@ COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint
 template <> COMPV_BASE_API
 COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t count, uint32_t &r)
 {
-	void(*MathUtilsSum_8u32u)(COMPV_ALIGNED(X) const uint8_t* a, compv_uscalar_t count, uint32_t *sum1) 
+	void(*CompVMathUtilsSum_8u32u)(COMPV_ALIGNED(X) const uint8_t* a, compv_uscalar_t count, uint32_t *sum1) 
 		= NULL;
-#if COMPV_ARCH_X86 && 0
+#if COMPV_ARCH_X86
     if (count >= 16 && COMPV_IS_ALIGNED_SSE(a)) {
-        if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
-            COMPV_EXEC_IFDEF_INTRIN_X86(MathUtilsSum_8u32u = MathUtilsSum_8u32u_Intrin_SSSE3);
-            COMPV_EXEC_IFDEF_ASM_X86(MathUtilsSum_8u32u = MathUtilsSum_8u32u_Asm_X86_SSSE3);
+        if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+            COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathUtilsSum_8u32u = CompVMathUtilsSum_8u32u_Intrin_SSE2);
+            //COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtilsSum_8u32u = CompVMathUtilsSum_8u32u_Asm_X86_SSE2);
         }
     }
     if (count >= 32 && COMPV_IS_ALIGNED_AVX(a)) {
         if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
-            COMPV_EXEC_IFDEF_ASM_X86(MathUtilsSum_8u32u = MathUtilsSum_8u32u_Asm_X86_AVX2);
+            //COMPV_EXEC_IFDEF_ASM_X86(MathUtilsSum_8u32u = CompVMathUtilsSum_8u32u_Asm_X86_AVX2);
         }
     }
 #endif
-	if (MathUtilsSum_8u32u) {
-		MathUtilsSum_8u32u(a, (compv_uscalar_t)count, &r);
+	if (CompVMathUtilsSum_8u32u) {
+		CompVMathUtilsSum_8u32u(a, static_cast<compv_uscalar_t>(count), &r);
 		return COMPV_ERROR_CODE_S_OK;
 	}
     COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum_C<uint8_t>(a, count, r)));

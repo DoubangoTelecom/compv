@@ -66,6 +66,64 @@ void CompVMathUtilsMax_16u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint16_t* data, 
 	*max = static_cast<uint16_t>(_mm_extract_epi16(vecMax, 0));
 }
 
+void CompVMathUtilsSum_8u32u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* data, compv_uscalar_t count, uint32_t *sum1)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("FIXME(dmi): add ASM");
+	COMPV_DEBUG_INFO_CHECK_SSE2();
+	__m128i vecSuml = _mm_setzero_si128(), vecSumh = _mm_setzero_si128(), vec0, vec1, vec2, vec3, vecOrphansSuppress;
+	const __m128i vecZero = _mm_setzero_si128();
+	compv_scalar_t countSigned = static_cast<compv_scalar_t>(count), i;
+	compv_scalar_t orphans = (countSigned & 15); // in bytes
+	if (orphans) {
+		compv_scalar_t orphansInBits = ((16 - orphans) << 3); // convert to bits
+		COMPV_ALIGN_SSE() uint32_t memOrphans[4];
+		_mm_store_si128(reinterpret_cast<__m128i*>(memOrphans), _mm_cmpeq_epi16(vecZero, vecZero)); // 0xffff...fff
+		uint32_t* memOrphansPtr = &memOrphans[3];
+		while (orphansInBits >= 0) *memOrphansPtr-- = (orphansInBits > 31 ? 0 : (0xffffffff >> orphansInBits)), orphansInBits -= 32;
+		vecOrphansSuppress = _mm_load_si128(reinterpret_cast<const __m128i*>(memOrphans));
+	}
+	// conversion from "uint8" to "uint16" using unpack will lose sign -> doesn't work with "signed int8"
+	// SSE4.1 "_mm_cvtepi8_epi16" would work
+	// Same remark apply to conversion from epi16 to epi32
+	for (i = 0; i < countSigned - 63; i += 64) {
+		vec0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&data[i]));
+		vec1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&data[i + 16]));
+		vec2 = _mm_load_si128(reinterpret_cast<const __m128i*>(&data[i + 32]));
+		vec3 = _mm_load_si128(reinterpret_cast<const __m128i*>(&data[i + 48]));
+		vec0 = _mm_add_epi16(_mm_unpacklo_epi8(vec0, vecZero), _mm_unpackhi_epi8(vec0, vecZero));
+		vec1 = _mm_add_epi16(_mm_unpacklo_epi8(vec1, vecZero), _mm_unpackhi_epi8(vec1, vecZero));
+		vec2 = _mm_add_epi16(_mm_unpacklo_epi8(vec2, vecZero), _mm_unpackhi_epi8(vec2, vecZero));
+		vec3 = _mm_add_epi16(_mm_unpacklo_epi8(vec3, vecZero), _mm_unpackhi_epi8(vec3, vecZero));
+		vec0 = _mm_add_epi16(vec0, vec1);
+		vec2 = _mm_add_epi16(vec2, vec3);
+		vec0 = _mm_add_epi16(vec0, vec2);
+		// use vecSuml and vecSumh to break dependency
+		vecSuml = _mm_add_epi32(vecSuml, _mm_unpacklo_epi16(vec0, vecZero));
+		vecSumh = _mm_add_epi32(vecSumh, _mm_unpackhi_epi16(vec0, vecZero));
+	}
+	for (; i < countSigned - 15; i += 16) {
+		vec0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&data[i]));
+		vec0 = _mm_add_epi16(_mm_unpacklo_epi8(vec0, vecZero), _mm_unpackhi_epi8(vec0, vecZero));
+		vecSuml = _mm_add_epi32(vecSuml, _mm_unpacklo_epi16(vec0, vecZero));
+		vecSumh = _mm_add_epi32(vecSumh, _mm_unpackhi_epi16(vec0, vecZero));
+	}
+	if (orphans) {
+		vec0 = _mm_load_si128(reinterpret_cast<const __m128i*>(&data[i]));
+		vec0 = _mm_and_si128(vec0, vecOrphansSuppress);
+		vec0 = _mm_add_epi16(_mm_unpacklo_epi8(vec0, vecZero), _mm_unpackhi_epi8(vec0, vecZero));
+		vecSuml = _mm_add_epi32(vecSuml, _mm_unpacklo_epi16(vec0, vecZero));
+		vecSumh = _mm_add_epi32(vecSumh, _mm_unpackhi_epi16(vec0, vecZero));
+	}
+
+	vecSuml = _mm_add_epi32(vecSuml, vecSumh);
+
+	// Paiwise / hz add
+	vecSuml = _mm_add_epi32(_mm_srli_si128(vecSuml, 8), vecSuml);
+	vecSuml = _mm_add_epi32(_mm_srli_si128(vecSuml, 4), vecSuml);
+
+	*sum1 = static_cast<uint32_t>(_mm_cvtsi128_si32(vecSuml));
+}
+
 void CompVMathUtilsSum2_32s32s_Intrin_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, COMPV_ALIGNED(SSE) const int32_t* b, COMPV_ALIGNED(SSE) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation"); // TODO(dmi): add ASM

@@ -16,7 +16,7 @@
 
 #define COMPV_THIS_CLASSNAME	"CompVEdgeDeteCanny"
 
-#define COMPV_FEATURE_DETE_CANNY_GRAD_MIN_SAMPLES_PER_THREAD	3 // must be >= 3 because of the convolution ("rowsOverlapCount")
+#define COMPV_FEATURE_DETE_CANNY_GRAD_MIN_SAMPLES_PER_THREAD	3 // must be >= KernelSize because of the convolution ("rowsOverlapCount")
 #define COMPV_FEATURE_DETE_CANNY_NMS_MIN_SAMPLES_PER_THREAD	(20*20)
 
 COMPV_NAMESPACE_BEGIN()
@@ -124,7 +124,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 	// Get Max number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	size_t threadsCount = COMPV_MATH_MIN(maxThreads, (m_nImageHeight / COMPV_FEATURE_DETE_CANNY_GRAD_MIN_SAMPLES_PER_THREAD));
+	size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_nImageStride, m_nImageHeight, maxThreads, COMPV_MATH_MAX(m_nKernelSize, COMPV_FEATURE_DETE_CANNY_GRAD_MIN_SAMPLES_PER_THREAD));
 
 	//!\\ Computing mean per thread provides different result on MT and ST, this is why we compute sum then mean.
 
@@ -144,7 +144,6 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 		int16_t* outPtrGy_ = m_pGy;
 		uint16_t* outPtrG_ = m_pG;
 		CompVAsyncTaskIds taskIds;
-		taskIds.reserve(threadsCount);
 		auto funcPtrFirst = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrTmpGx, int16_t* ptrOutGy, int16_t* ptrTmpGy, uint16_t* ptrOutG, uint32_t* ptrSum, size_t h) -> COMPV_ERROR_CODE {
 			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, ptrTmpGx, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
 			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, ptrTmpGy, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
@@ -224,10 +223,9 @@ bail:
 		m_pNms = reinterpret_cast<uint8_t*>(CompVMem::calloc(m_nImageStride * m_nImageHeight, sizeof(uint8_t)));
 		COMPV_CHECK_EXP_RETURN(!m_pNms, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
-	threadsCount = COMPV_MATH_MIN(maxThreads, (m_nImageHeight / COMPV_FEATURE_DETE_CANNY_NMS_MIN_SAMPLES_PER_THREAD));
+	threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_nImageStride, m_nImageHeight, maxThreads, COMPV_FEATURE_DETE_CANNY_NMS_MIN_SAMPLES_PER_THREAD);
 	if (threadsCount > 1) {
 		CompVAsyncTaskIds taskIds;
-		taskIds.reserve(threadsCount);
 		const size_t countAny = (m_nImageHeight / threadsCount);
 		const size_t countLast = countAny + (m_nImageHeight % threadsCount);
 		auto funcPtrNMS = [&](size_t rowStart, size_t rowCount) -> COMPV_ERROR_CODE {
@@ -240,6 +238,7 @@ bail:
 		};
 		size_t rowStart, threadIdx;
 		// NMS gathering
+		taskIds.reserve(threadsCount);
 		for (threadIdx = 0, rowStart = 0; threadIdx < threadsCount - 1; ++threadIdx, rowStart += countAny) {
 			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNMS, rowStart, countAny), taskIds));
 		}

@@ -109,7 +109,7 @@ COMPV_ERROR_CODE CompVMatcherBruteForce::process(const CompVMatPtr &queryDescrip
 	// Compute number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	const size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, queryRows_ / minSamplesPerThread);
+	const size_t threadsCount = COMPV_MATH_CLIP3(1, maxThreads, (queryRows_ * 1) / minSamplesPerThread);
 
 	// process starting at queryIdxStart
 	if (threadsCount > 1) {

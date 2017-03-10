@@ -71,15 +71,17 @@ public:
     template <typename InputType>
     static COMPV_ERROR_CODE mean(const InputType* data, size_t width, size_t height, size_t stride, InputType &mean) {
         COMPV_CHECK_EXP_RETURN(!data || !width || !height || !stride, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-        InputType* means = (InputType*)CompVMem::malloc(height * sizeof(InputType));
-        COMPV_CHECK_EXP_RETURN(!means, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+        InputType* means = reinterpret_cast<InputType*>(CompVMem::malloc(height * sizeof(InputType)));
+        COMPV_CHECK_EXP_BAIL(!means, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
         for (size_t j = 0; j < height; ++j) {
             CompVMathUtils::mean<InputType>(data, width, means[j]);
             data += stride;
         }
         CompVMathUtils::mean<InputType>(means, height, mean);
+	bail:
         CompVMem::free((void**)&means);
-        return COMPV_ERROR_CODE_S_OK;
+        return err;
     }
 
     // Function used to compute L1 distance
@@ -105,15 +107,18 @@ public:
     template <typename InputType, typename OutputType>
     static COMPV_ERROR_CODE sum(const InputType* a, size_t width, size_t height, size_t stride, OutputType &r) {
         COMPV_CHECK_EXP_RETURN(!a || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-        OutputType* sums = (OutputType*)CompVMem::malloc(height * sizeof(OutputType));
-        COMPV_CHECK_EXP_RETURN(!sums, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
+		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+        OutputType* sums = reinterpret_cast<OutputType*>(CompVMem::malloc(height * sizeof(OutputType)));
+        COMPV_CHECK_EXP_BAIL(!sums, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
+		// breaking sums to avoid overflow
         for (size_t j = 0; j < height; ++j) {
             CompVMathUtils::sum<InputType, OutputType>(a, width, sums[j]);
             a += stride;
         }
         CompVMathUtils::sum<OutputType, OutputType>(sums, height, r);
+	bail:
         CompVMem::free(reinterpret_cast<void**>(&sums));
-        return COMPV_ERROR_CODE_S_OK;
+        return err;
     }
 
     template <typename InputType, typename OutputType>

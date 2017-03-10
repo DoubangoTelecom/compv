@@ -12,7 +12,7 @@
 
 // Sobel implementation not optiz: https://github.com/DoubangoTelecom/compv/issues/127
 
-#define COMPV_FEATURE_DETE_EDGES_GRAD_MIN_SAMPLES_PER_THREAD	3 // must be >= 3 because of the convolution ("rowsOverlapCount")
+#define COMPV_FEATURE_DETE_EDGES_GRAD_MIN_SAMPLES_PER_THREAD	3 // must be >= kernelSize because of the convolution ("rowsOverlapCount")
 
 #define COMPV_THIS_CLASSNAME	"CompVCornerDeteEdgeBase"
 
@@ -80,7 +80,7 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 	// Get Max number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	const size_t threadsCount = COMPV_MATH_MIN(maxThreads, (m_nImageHeight / COMPV_FEATURE_DETE_EDGES_GRAD_MIN_SAMPLES_PER_THREAD));
+	const size_t threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_nImageStride, m_nImageHeight, maxThreads, COMPV_MATH_MAX(m_nKernelSize, COMPV_FEATURE_DETE_EDGES_GRAD_MIN_SAMPLES_PER_THREAD));
 
 	// Convolution + Gradient
 	if (threadsCount > 1) {

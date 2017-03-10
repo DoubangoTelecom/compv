@@ -16,6 +16,7 @@ COMPV_NAMESPACE_BEGIN()
 // 8mpw -> minpack 8 for words (int16)
 void CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("FIXME(dmi): add ASM");
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
 
 	__m128i vecNMS, vecG, vecGX, vecAbsGX0, vecAbsGX1, vecGY, vecAbsGY0, vecAbsGY1, vec0, vec1, vec2, vec3, vec4, vec5, vec6;
@@ -38,10 +39,10 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, c
 			vec1 = _mm_abs_epi16(vecGY);
 			vec2 = _mm_abs_epi16(vecGX);
 
-			vecAbsGY0 = _mm_unpacklo_epi16(vecZero, vec1);
-			vecAbsGX0 = _mm_unpacklo_epi16(vec2, vecZero);
-			vecAbsGY1 = _mm_unpackhi_epi16(vecZero, vec1);
-			vecAbsGX1 = _mm_unpackhi_epi16(vec2, vecZero);
+			vecAbsGY0 = _mm_unpacklo_epi16(vecZero, vec1); //!\\ not convert
+			vecAbsGX0 = _mm_unpacklo_epi16(vec2, vecZero); // convert from epi16 to epi32
+			vecAbsGY1 = _mm_unpackhi_epi16(vecZero, vec1); //!\\ not convert
+			vecAbsGX1 = _mm_unpackhi_epi16(vec2, vecZero); // convert from epi16 to epi32
 
 			// angle = "0° / 180°"
 			vec1 = _mm_cmplt_epi32(vecAbsGY0, _mm_mullo_epi32(vecTangentPiOver8Int, vecAbsGX0));
