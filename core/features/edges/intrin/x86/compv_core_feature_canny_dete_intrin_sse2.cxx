@@ -34,7 +34,7 @@ void CompVCannyHysteresisRow_8mpw_Intrin_SSE2(size_t row, size_t colStart, size_
 
 	for (col = colStart; col < width - 7; col += 8) { // width is alredy >=8 (checked by the caller)
 		vecGrad = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&grad[col]));
-		vecE = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&e[col]));
+		vecE = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&e[col])); // high 64bits set to zero
 		m0 = _mm_movemask_epi8(_mm_and_si128(_mm_cmpeq_epi16(_mm_unpacklo_epi8(vecE, vecE), vecZero), _mm_cmpgt_epi16(vecGrad, vecTHigh)));
 		if (m0) {
 			mi = 0, mf = 3;
@@ -109,77 +109,6 @@ void CompVCannyHysteresisRow_8mpw_Intrin_SSE2(size_t row, size_t colStart, size_
 			while (m0);
 		}
 	}
-#if 0
-	CompVMatIndex edge;
-	uint8_t* p;
-	const uint16_t *g, *gb, *gt;
-	size_t c, r, s;
-	uint8_t *pb, *pt;
-	uint32_t cmp32;
-	std::vector<CompVMatIndex> edges;
-
-	for (size_t col = colStart; col < width; ++col) {
-		if (grad[col] > tHigh && !e[col]) { // strong edge and not connected yet
-			e[col] = 0xff;
-			edges.push_back(CompVMatIndex(row, col));
-			while (!edges.empty()) {
-				edge = edges.back();
-				edges.pop_back();
-				c = edge.col;
-				r = edge.row;
-				if (r && c && r < height && c < width) {
-					s = (r * stride) + c;
-					p = e0 + s;
-					g = g0 + s;
-					pb = p + stride;
-					pt = p - stride;
-					gb = g + stride;
-					gt = g - stride;
-					if (g[-1] > tLow && !p[-1]) { // left
-						p[-1] = 0xff;
-						edges.push_back(CompVMatIndex(r, c - 1));
-					}
-					if (g[1] > tLow && !p[1]) { // right
-						p[1] = 0xff;
-						edges.push_back(CompVMatIndex(r, c + 1));
-					}
-					/* TOP */
-					cmp32 = *reinterpret_cast<const uint32_t*>(&pt[-1]) ^ 0xffffff;
-					if (cmp32) {
-						if (cmp32 & 0xff && gt[-1] > tLow) { // left
-							pt[-1] = 0xff;
-							edges.push_back(CompVMatIndex(r - 1, c - 1));
-						}
-						if (cmp32 & 0xff00 && gt[0] > tLow) { // center
-							*pt = 0xff;
-							edges.push_back(CompVMatIndex(r - 1, c));
-						}
-						if (cmp32 & 0xff0000 && gt[1] > tLow && !pt[1]) { // right
-							pt[1] = 0xff;
-							edges.push_back(CompVMatIndex(r - 1, c + 1));
-						}
-					}
-					/* BOTTOM */
-					cmp32 = *reinterpret_cast<const uint32_t*>(&pb[-1]) ^ 0xffffff;
-					if (cmp32) {
-						if (cmp32 & 0xff && gb[-1] > tLow) { // left
-							pb[-1] = 0xff;
-							edges.push_back(CompVMatIndex(r + 1, c - 1));
-						}
-						if (cmp32 & 0xff00 && gb[0] > tLow) { // center
-							*pb = 0xff;
-							edges.push_back(CompVMatIndex(r + 1, c));
-						}
-						if (cmp32 & 0xff0000 && gb[1] > tLow) { // right
-							pb[1] = 0xff;
-							edges.push_back(CompVMatIndex(r + 1, c + 1));
-						}
-					}
-				}
-			}
-		}
-	}
-#endif
 }
 
 COMPV_NAMESPACE_END()
