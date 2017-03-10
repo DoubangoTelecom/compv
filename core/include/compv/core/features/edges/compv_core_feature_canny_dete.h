@@ -47,12 +47,13 @@ private:
 	int16_t* m_pGx;
 	int16_t* m_pGy;
 	uint16_t* m_pG;
+	uint8_t* m_pNms;
 	const int16_t* m_pcKernelVt;
 	const int16_t* m_pcKernelHz;
 	size_t m_nKernelSize;
 	float m_fThresholdLow;
 	float m_fThresholdHigh;
-	uint8_t* m_pNms;
+	
 };
 
 #define COMPV_CANNY_PUSH_CANDIDATE(box, r, c) (box)->new_item(&ne), ne->row = (r), ne->col = (c)

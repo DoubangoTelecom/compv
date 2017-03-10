@@ -75,5 +75,8 @@
     <ClCompile Include="sobel.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="canny.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -18,15 +18,44 @@
 #define FILE_NAME_GRIOTS				"mandekalou_480x640_gray.yuv"
 
 #define LOOP_COUNT		1
-#define MD5				"30e4701c1e5a28e2ee4d2d6b66e5a97c"
+#define FILE_NAME		FILE_NAME_EQUIRECTANGULAR
+
+static const struct compv_unittest_canny {
+	const char* filename;
+	size_t width;
+	size_t height;
+	size_t stride;
+	const char* md5;
+}
+COMPV_UNITTEST_CANNY[] =
+{
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "4112ddcdd4cb42c70954efb28dfeb860" },
+	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, "0c4daa4af84aeca0adf07394ee887346" },
+	{ FILE_NAME_GRIOTS, 480, 640, 480, "b2944944925dd9ddc47fdeaddacad024" },
+};
+static const size_t COMPV_UNITTEST_CANNY_COUNT = sizeof(COMPV_UNITTEST_CANNY) / sizeof(COMPV_UNITTEST_CANNY[0]);
 
 COMPV_ERROR_CODE canny()
 {
 	CompVEdgeDetePtr dete;
 	CompVMatPtr image, edges;
+	const compv_unittest_canny* test = NULL;
 
 	COMPV_CHECK_CODE_RETURN(CompVEdgeDete::newObj(&dete, COMPV_CANNY_ID));
-	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1282, 720, 1282, COMPV_TEST_PATH_TO_FILE(FILE_NAME_EQUIRECTANGULAR).c_str(), &image));
+
+	// Find test
+	for (size_t i = 0; i < COMPV_UNITTEST_CANNY_COUNT; ++i) {
+		if (std::string(COMPV_UNITTEST_CANNY[i].filename).compare(FILE_NAME) == 0) {
+			test = &COMPV_UNITTEST_CANNY[i];
+			break;
+		}
+	}
+	if (!test) {
+		COMPV_DEBUG_ERROR_EX(TAG_TEST, "Failed to find test");
+		return COMPV_ERROR_CODE_E_NOT_FOUND;
+	}
+
+	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
@@ -35,14 +64,14 @@ COMPV_ERROR_CODE canny()
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Canny Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5: %s", compv_tests_md5(edges).c_str());
+	//COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5: %s", compv_tests_md5(edges).c_str());
 
 #if COMPV_OS_WINDOWS
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
 	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(edges, "canny.gray"));
 #endif
 
-	COMPV_CHECK_EXP_RETURN(std::string(MD5).compare(compv_tests_md5(edges)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Sobel MD5 mismatch");
+	COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(compv_tests_md5(edges)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Canny MD5 mismatch");
 
 	return COMPV_ERROR_CODE_S_OK;
 }

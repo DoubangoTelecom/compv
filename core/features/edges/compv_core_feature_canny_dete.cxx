@@ -22,15 +22,15 @@ CompVEdgeDeteCanny::CompVEdgeDeteCanny(float tLow COMPV_DEFAULT(COMPV_FEATURE_DE
 	, m_nImageWidth(0)
 	, m_nImageHeight(0)
 	, m_nImageStride(0)
-	, m_fThresholdLow(tLow)
-	, m_fThresholdHigh(tHigh)
 	, m_pGx(NULL)
 	, m_pGy(NULL)
 	, m_pG(NULL)
-	, m_pNms(NULL)
+	, m_pNms(NULL)	
 	, m_pcKernelVt(kernSize == 3 ? CompVSobel3x3Gx_vt : CompVSobel5x5Gx_vt)
 	, m_pcKernelHz(kernSize == 3 ? CompVSobel3x3Gx_hz : CompVSobel5x5Gx_hz)
 	, m_nKernelSize(kernSize == 3 ? 3 : 5)
+	, m_fThresholdLow(tLow)
+	, m_fThresholdHigh(tHigh)
 {
 
 }
@@ -109,7 +109,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 
 	// Compute mean and get tLow and tMin
 	// TODO(dmi): add support for otsu and median
-	uint8_t mean = 1;
+	uint32_t sum = 0; // sum used to compute mean
 
 	// When multithreading is enabled the mean value could be "+-1" compared to the single threaded value.
 
@@ -118,6 +118,8 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	size_t threadsCount = COMPV_MATH_MIN(maxThreads, (m_nImageHeight / COMPV_FEATURE_DETE_CANNY_GRAD_MIN_SAMPLES_PER_THREAD));
+
+	//!\\ Computing mean per thread provides different result on MT and ST, this is why we compute sum then mean.
 
 	if (threadsCount > 1) {
 		const size_t rowsOverlapCount = ((m_nKernelSize >> 1) << 1); // (kernelRadius times 2)
@@ -128,7 +130,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 		const uint8_t* inPtr_ = image->ptr<const uint8_t>();
 		int16_t* imgTmpGx = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, m_nImageHeight)));
 		int16_t* imgTmpGy = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, m_nImageHeight)));
-		uint8_t* means = reinterpret_cast<uint8_t*>(CompVMem::malloc(threadsCount * sizeof(uint8_t)));
+		uint32_t* sums = reinterpret_cast<uint32_t*>(CompVMem::malloc(threadsCount * sizeof(uint32_t)));
 		int16_t* tmpPtrGx_ = imgTmpGx;
 		int16_t* tmpPtrGy_ = imgTmpGy;
 		int16_t* outPtrGx_ = m_pGx;
@@ -136,37 +138,37 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 		uint16_t* outPtrG_ = m_pG;
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCount);
-		auto funcPtrFirst = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrTmpGx, int16_t* ptrOutGy, int16_t* ptrTmpGy, uint16_t* ptrOutG, uint8_t* ptrMean, size_t h) -> COMPV_ERROR_CODE {
+		auto funcPtrFirst = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrTmpGx, int16_t* ptrOutGy, int16_t* ptrTmpGy, uint16_t* ptrOutG, uint32_t* ptrSum, size_t h) -> COMPV_ERROR_CODE {
 			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, ptrTmpGx, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
 			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, ptrTmpGy, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
 			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(ptrTmpGx, ptrOutGx, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, true, false);
 			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(ptrTmpGy, ptrOutGy, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, true, false);
 			COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx, ptrOutGy, ptrOutG, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
-			uint8_t mean_ = 1;
-			COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t>(ptrIn, m_nImageWidth, h, m_nImageStride, mean_)));
-			*ptrMean = mean_;
+			uint32_t sum_ = 0;
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(ptrIn, m_nImageWidth, h, m_nImageStride, sum_)));
+			*ptrSum = sum_;
 			return COMPV_ERROR_CODE_S_OK;
 		};
-		auto funcPtrOthers = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrTmpGx, int16_t* ptrOutGy, int16_t* ptrTmpGy, uint16_t* ptrOutG, uint8_t* ptrMean, size_t h, bool last) -> COMPV_ERROR_CODE {
+		auto funcPtrOthers = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrTmpGx, int16_t* ptrOutGy, int16_t* ptrTmpGy, uint16_t* ptrOutG, uint32_t* ptrSum, size_t h, bool last) -> COMPV_ERROR_CODE {
 			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - rowsOverlapPad, ptrTmpGx - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
 			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - rowsOverlapPad, ptrTmpGy - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
 			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(ptrTmpGx - rowsOverlapPad, ptrOutGx - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, false, last);
 			uint16_t* g_ = ptrOutG - rowsOverlapPad;
 			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(ptrTmpGy - rowsOverlapPad, ptrOutGy - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, false, last);
 			COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx - rowsOverlapPad, ptrOutGy - rowsOverlapPad, g_, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
-			uint8_t mean_ = 1;
-			COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t>(ptrIn, m_nImageWidth, h, m_nImageStride, mean_)));
-			*ptrMean = mean_;
+			uint32_t sum_ = 0;
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(ptrIn, m_nImageWidth, h, m_nImageStride, sum_)));
+			*ptrSum = sum_;
 			return COMPV_ERROR_CODE_S_OK;
 		};
 
 		COMPV_CHECK_EXP_BAIL(!imgTmpGx, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc imgTmpGx memory");
 		COMPV_CHECK_EXP_BAIL(!imgTmpGy, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc imgTmpGy memory");
-		COMPV_CHECK_EXP_BAIL(!means, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc means memory");
+		COMPV_CHECK_EXP_BAIL(!sums, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc sums memory");
 		taskIds.reserve(threadsCount);
 
 		// first
-		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrFirst, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &means[0], countAny), taskIds));
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrFirst, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &sums[0], countAny), taskIds));
 		inPtr_ += countAny * m_nImageStride;
 		tmpPtrGx_ += countAnyTimesStride;
 		outPtrGx_ += countAnyTimesStride;
@@ -175,7 +177,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 		outPtrG_ += countAnyTimesStride;
 		// others
 		for (size_t threadIdx = 1; threadIdx < threadsCount - 1; ++threadIdx) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &means[threadIdx], countAny, false), taskIds));
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &sums[threadIdx], countAny, false), taskIds));
 			inPtr_ += countAnyTimesStride;
 			tmpPtrGx_ += countAnyTimesStride;
 			outPtrGx_ += countAnyTimesStride;
@@ -184,27 +186,27 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 			outPtrG_ += countAnyTimesStride;
 		}
 		// last
-		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &means[threadsCount - 1], countLast, true), taskIds));
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &sums[threadsCount - 1], countLast, true), taskIds));
 		// mean
-		uint32_t sum = 0;
+		sum = 0;
 		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
 			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
-			sum += means[threadIdx];
+			sum += sums[threadIdx];
 		}
-		mean = sum / static_cast<uint32_t>(threadsCount);
 bail:
 		CompVMem::free(reinterpret_cast<void**>(&imgTmpGx));
 		CompVMem::free(reinterpret_cast<void**>(&imgTmpGy));
-		CompVMem::free(reinterpret_cast<void**>(&means));
+		CompVMem::free(reinterpret_cast<void**>(&sums));
 	}
 	else {
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, m_pcKernelVt, m_pcKernelHz, m_nKernelSize, m_pGx)));
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, m_pcKernelHz, m_pcKernelVt, m_nKernelSize, m_pGy)));
 		COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride)));
-		COMPV_CHECK_CODE_RETURN((CompVMathUtils::mean<uint8_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, mean)));
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, sum)));
 	}
 
-	mean = COMPV_MATH_MAX(1, mean);
+	uint8_t mean = sum / static_cast<uint32_t>(m_nImageWidth * m_nImageHeight);
+	mean = COMPV_MATH_CLIP3(1, 255, mean);
 	uint16_t tLow = static_cast<uint16_t>(mean * m_fThresholdLow);
 	uint16_t tHigh = static_cast<uint16_t>(mean * m_fThresholdHigh);
 	tLow = COMPV_MATH_MAX(1, tLow);
@@ -355,7 +357,6 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr& edges, uint16_t tLo
 	const size_t imageWidthMinus1 = m_nImageWidth - 1;
 	const uint16_t *grad = m_pG + (rowStart * m_nImageStride), *g0 = m_pG;
 	uint8_t *e = edges->ptr<uint8_t>(rowStart), *e0 = edges->ptr<uint8_t>(0);
-	const int stride = static_cast<const int>(m_nImageStride);
 
 #if COMPV_ARCH_X86 && 0
 	void(*CannyHysteresis)(compv_uscalar_t row, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0, CompVPtr<CompVBox<CompVMatIndex>* >& candidates) = NULL;

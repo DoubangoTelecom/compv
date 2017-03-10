@@ -21,5 +21,6 @@
     <ClCompile Include="..\..\math_matrix_ops.cxx" />
     <ClCompile Include="..\..\patch.cxx" />
     <ClCompile Include="..\..\sobel.cxx" />
+    <ClCompile Include="..\..\canny.cxx" />
   </ItemGroup>
 </Project>

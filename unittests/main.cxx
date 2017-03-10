@@ -8,6 +8,7 @@ using namespace compv;
 #define UNITTEST_PYRAMID						0
 #define UNITTEST_CONVOLUTION					0
 #define UNITTEST_SOBEL							0
+#define UNITTEST_CANNY							1
 
 #define UNITTEST_FEATURE_FAST					0
 #define UNITTEST_CHROMA_CONV					0
@@ -24,7 +25,7 @@ using namespace compv;
 #define UNITTEST_MATH_STATS_VARIANCE			0
 #define UNITTEST_MATH_TRF_HOMOG_TO_CART			0 // homogeneousToCartesian2D()
 #define UNITTEST_MATH_CALIB_HOMOGRAPHY			0
-#define UNITTEST_MATH_DISTANCE_HAMMING			1
+#define UNITTEST_MATH_DISTANCE_HAMMING			0
 
 #define disableSSE() (kCpuFlagSSE | kCpuFlagSSE2 | kCpuFlagSSE3 | kCpuFlagSSSE3 | kCpuFlagSSE41 | kCpuFlagSSE42 | kCpuFlagSSE4a)
 #define disableAVX() (kCpuFlagAVX | kCpuFlagAVX2)
@@ -97,6 +98,11 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_sobel();
 								COMPV_CHECK_CODE_BAIL(err = unittest_sobel(), "Sobel unittest failed");
 #endif
+#if UNITTEST_CANNY || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_canny();
+								COMPV_CHECK_CODE_BAIL(err = unittest_canny(), "Canny unittest failed");
+#endif
+								
 								
 								
 #if UNITTEST_FEATURE_FAST || !defined(COMPV_TEST_LOCAL)
