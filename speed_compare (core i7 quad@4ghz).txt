@@ -52,7 +52,7 @@ Remarque: Sobel kernels are pre-defined (0, 1 and 2 values) which means we can c
 For now sobel convolution not used in commercial products which means not urgent to change the implementaion.
 
 === Canny edge detector (Kernel size = 3, tLow=0.80f, tHigh=tLow*2) (1282, 720) (#10k times) ===
-CompV: 19201.ms(full optiz), .ms(st,c++)
+CompV: 19201.ms(full optiz), 168137.ms(st,c++)
 OpenCV: 69368.ms (full optiz)
 Remarque: tLow and tHight values are very important for speed comparison(high values -> less time spent in hysterisis and nms)
 The test images contains many edges and this is why it's unusually slow. Canny on HD image should last ~1.ms
