@@ -6,8 +6,8 @@ using namespace compv;
 
 #define UNITTEST_SCALE							0
 #define UNITTEST_PYRAMID						0
-#define UNITTEST_CONVOLUTION					1
-#define UNITTEST_SOBEL							0
+#define UNITTEST_CONVOLUTION					0
+#define UNITTEST_SOBEL							1
 #define UNITTEST_CANNY							0
 
 #define UNITTEST_FEATURE_FAST					0

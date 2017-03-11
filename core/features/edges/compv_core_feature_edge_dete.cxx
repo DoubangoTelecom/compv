@@ -80,7 +80,7 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 
 	// Testing info: for "equirectangular_1282x720_gray" gmax should be equal to 1464
 	uint16_t gmax = 1;
-	
+
 	// Get Max number of threads
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
@@ -94,35 +94,40 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		const size_t countLast = countAny + (m_nImageHeight % threadsCount);
 		const size_t countAnyTimesStride = countAny * m_nImageStride;
 		const uint8_t* inPtr_ = image->ptr<const uint8_t>();
-		int16_t* imgTmpGx = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, m_nImageHeight)));
-		int16_t* imgTmpGy = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, m_nImageHeight)));
 		uint16_t* gmaxTmp = reinterpret_cast<uint16_t*>(CompVMem::malloc(threadsCount * sizeof(uint16_t)));
-		int16_t* tmpPtrGx_ = imgTmpGx;
-		int16_t* tmpPtrGy_ = imgTmpGy;
 		int16_t* outPtrGx_ = m_pGx;
 		int16_t* outPtrGy_ = m_pGy;
 		uint16_t* outPtrG_ = m_pG;
 		CompVAsyncTaskIds taskIds;
 		compv_float32_t scale;
 		size_t index;
-		auto funcPtrFirst = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrTmpGx, int16_t* ptrOutGy, int16_t* ptrTmpGy, uint16_t* ptrOutG, size_t h) -> COMPV_ERROR_CODE {
+		//!\\ Important: Our tests showe (both x86 and arm)d that it's faster to alloc temp memory for each thread rather than sharing global one -> false sharing issue.
+		// This is an issue for the convolution only because there is no way to make the writing cache-friendly.
+		// https://en.wikipedia.org/wiki/False_sharing
+		auto funcPtrFirst = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrOutGy, uint16_t* ptrOutG, size_t h) -> COMPV_ERROR_CODE {
 			// Convolution
-			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, ptrTmpGx, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
-			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, ptrTmpGy, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
-			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(ptrTmpGx, ptrOutGx, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, true, false);
-			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(ptrTmpGy, ptrOutGy, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, true, false);
+			int16_t* imgTmp = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, h + rowsOverlapCount))); // local alloc to avoid false sharing
+			COMPV_CHECK_EXP_RETURN(!imgTmp, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc imgTmp");
+			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
+			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGx, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, true, false);
+			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
+			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGy, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, true, false);
+			CompVMem::free((void**)&imgTmp);
 			// Gradient without computing gmax(computing gmax not thread - safe because of overlappings)
 			COMPV_CHECK_CODE_RETURN(err = (CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx, ptrOutGy, ptrOutG, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
 			return COMPV_ERROR_CODE_S_OK;
 		};
-		auto funcPtrOthers = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrTmpGx, int16_t* ptrOutGy, int16_t* ptrTmpGy, uint16_t* ptrOutG, size_t h, bool last) -> COMPV_ERROR_CODE {
+		auto funcPtrOthers = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrOutGy, uint16_t* ptrOutG, size_t h, bool last) -> COMPV_ERROR_CODE {
 			// Convolution
-			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - rowsOverlapPad, ptrTmpGx - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
-			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - rowsOverlapPad, ptrTmpGy - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
-			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(ptrTmpGx - rowsOverlapPad, ptrOutGx - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, false, last);
-			uint16_t* mt_g = ptrOutG - rowsOverlapPad;
-			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(ptrTmpGy - rowsOverlapPad, ptrOutGy - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, false, last);
+			int16_t* imgTmp = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, h + rowsOverlapCount))); // local alloc to avoid false sharing
+			COMPV_CHECK_EXP_RETURN(!imgTmp, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc imgTmp");
+			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - rowsOverlapPad, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
+			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGx - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, false, last);
+			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - rowsOverlapPad, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
+			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGy - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, false, last);
+			CompVMem::free((void**)&imgTmp);
 			// Gradient without computing gmax (computing gmax not thread-safe because of overlappings)
+			uint16_t* mt_g = ptrOutG - rowsOverlapPad;
 			COMPV_CHECK_CODE_RETURN(err = (CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx - rowsOverlapPad, ptrOutGy - rowsOverlapPad, mt_g, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
 			return COMPV_ERROR_CODE_S_OK;
 		};
@@ -137,21 +142,20 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 			return COMPV_ERROR_CODE_S_OK;
 		};
 
-		COMPV_CHECK_EXP_BAIL(!imgTmpGx, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc imgTmpGx memory");
-		COMPV_CHECK_EXP_BAIL(!imgTmpGy, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc imgTmpGy memory");
+		COMPV_CHECK_EXP_BAIL(!gmaxTmp, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc gmaxTmp memory");
 		taskIds.reserve(threadsCount);
 
 		// first
-		COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtrFirst, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, countAny), taskIds));
+		COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtrFirst, inPtr_, outPtrGx_, outPtrGy_, outPtrG_, countAny), taskIds));
 		// others
 		index = countAnyTimesStride;
 		for (size_t threadIdx = 1; threadIdx < threadsCount - 1; ++threadIdx) {
-			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtrOthers, &inPtr_[index], &outPtrGx_[index], &tmpPtrGx_[index], &outPtrGy_[index], &tmpPtrGy_[index], &outPtrG_[index], countAny, false), taskIds));
+			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtrOthers, &inPtr_[index], &outPtrGx_[index], &outPtrGy_[index], &outPtrG_[index], countAny, false), taskIds));
 			index += countAnyTimesStride;
 		}
 		// last
-		COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtrOthers, &inPtr_[index], &outPtrGx_[index], &tmpPtrGx_[index], &outPtrGy_[index], &tmpPtrGy_[index], &outPtrG_[index], countLast, true), taskIds));
-		
+		COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtrOthers, &inPtr_[index], &outPtrGx_[index], &outPtrGy_[index], &outPtrG_[index], countLast, true), taskIds));
+
 		// wait
 		COMPV_CHECK_CODE_BAIL(err = threadDisp->wait(taskIds));
 
@@ -176,9 +180,7 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 			index += countAnyTimesStride;
 		}
 		// wait for the execution after memory free
-bail:
-		CompVMem::free(reinterpret_cast<void**>(&imgTmpGx));
-		CompVMem::free(reinterpret_cast<void**>(&imgTmpGy));
+	bail:
 		CompVMem::free(reinterpret_cast<void**>(&gmaxTmp));
 
 		COMPV_CHECK_CODE_NOP(threadDisp->wait(taskIds));

@@ -14,7 +14,7 @@
 #define FILE_NAME_OPENGLBOOK			"opengl_programming_guide_8th_edition_200x258_gray.yuv"
 #define FILE_NAME_GRIOTS				"mandekalou_480x640_gray.yuv"
 
-#define IMAGE_CONVLT_LOOP_COUNT		1
+#define IMAGE_CONVLT_LOOP_COUNT		10000
 
 static const struct compv_unittest_convlt {
 	size_t kernelSize;
