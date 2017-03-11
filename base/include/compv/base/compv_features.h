@@ -183,7 +183,7 @@ protected:
 public:
 	virtual ~CompVEdgeDete();
 	virtual COMPV_ERROR_CODE process(const CompVMatPtr& image, CompVMatPtrPtr edges) = 0;
-	static COMPV_ERROR_CODE newObj(CompVEdgeDetePtrPtr dete, int deteId, float tLow = COMPV_FEATURE_DETE_EDGE_THRESHOLD_LOW, float tHigh = COMPV_FEATURE_DETE_EDGE_THRESHOLD_HIGH, int32_t kernSize = 3);
+	static COMPV_ERROR_CODE newObj(CompVEdgeDetePtrPtr dete, int deteId, float tLow = COMPV_FEATURE_DETE_EDGE_THRESHOLD_LOW, float tHigh = COMPV_FEATURE_DETE_EDGE_THRESHOLD_HIGH, size_t kernSize = 3);
 };
 
 // Class: CompVHough
