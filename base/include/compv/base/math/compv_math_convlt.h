@@ -139,9 +139,11 @@ private:
 			const size_t rowsOverlapPad = rowsOverlapCount * dataStride;
 			const size_t countAny = dataHeight / threadsCount;
 			const size_t countLast = dataHeight - ((threadsCount - 1) * countAny);
+			const size_t countAnyTimesStride = countAny * dataStride;
 			const InputType* inPtr_ = dataPtr;
 			OutputType* tmpPtr_ = imgTmp;
 			OutputType* outPtr_ = outPtr;
+			size_t index;
 			taskIds.reserve(threadsCount);
 			auto funcPtrFirst = [&](const InputType* ptrIn, OutputType* ptrOut, OutputType* ptrTmp, size_t h) -> COMPV_ERROR_CODE {
 				CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(ptrIn, ptrTmp, dataWidth, h + rowsOverlapCount, dataStride, hzKernPtr, kernSize, true, fixedPoint);
@@ -155,18 +157,14 @@ private:
 			};
 			/* first */
 			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrFirst, inPtr_, outPtr_, tmpPtr_, countAny), taskIds));
-			inPtr_ += countAny * dataStride;
-			tmpPtr_ += countAny * dataStride;
-			outPtr_ += countAny * dataStride;
 			/* others */
+			index = countAnyTimesStride;
 			for (size_t threadIdx = 1; threadIdx < threadsCount - 1; ++threadIdx) {
-				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtr_, tmpPtr_, countAny, false), taskIds));
-				inPtr_ += countAny * dataStride;
-				tmpPtr_ += countAny * dataStride;
-				outPtr_ += countAny * dataStride;
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, &inPtr_[index], &outPtr_[index], &tmpPtr_[index], countAny, false), taskIds));
+				index += countAnyTimesStride;
 			}
 			/* last */
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtr_, tmpPtr_, countLast, true), taskIds));
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, &inPtr_[index], &outPtr_[index], &tmpPtr_[index], countLast, true), taskIds));
 			/* wait */
 			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 		}

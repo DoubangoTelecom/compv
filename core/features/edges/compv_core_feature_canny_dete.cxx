@@ -50,7 +50,6 @@ CompVEdgeDeteCanny::~CompVEdgeDeteCanny()
 	CompVMem::free(reinterpret_cast<void**>(&m_pNms));
 }
 
-// overrides CompVSettable::set
 COMPV_ERROR_CODE CompVEdgeDeteCanny::set(int id, const void* valuePtr, size_t valueSize) /*Overrides(CompVCaps)*/
 {
 	COMPV_CHECK_EXP_RETURN(!valuePtr || !valueSize, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -76,7 +75,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::set(int id, const void* valuePtr, size_t va
 			m_pcKernelVt = CompVSobel5x5Gx_vt, m_pcKernelHz = CompVSobel5x5Gx_hz;
 			return COMPV_ERROR_CODE_S_OK;
 		default:
-			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_INVALID_PARAMETER, "In the current beta version only canny edge detector supports only kernel sizes 3x3 and 5x5");
 			return COMPV_ERROR_CODE_E_INVALID_PARAMETER;
 		}
 	}
@@ -440,8 +439,8 @@ static void CompVCannyNmsGatherRow_C(uint8_t* nms, const uint16_t* g, const int1
 		if (g[col] > tLow) {
 			gxInt = static_cast<int32_t>(gx[col]);
 			gyInt = static_cast<int32_t>(gy[col]);
-			absgyInt = ((gyInt ^ (gyInt >> 31)) - (gyInt >> 31)) << 16;
-			absgxInt = ((gxInt ^ (gxInt >> 31)) - (gxInt >> 31));
+			absgyInt = COMPV_MATH_ABS_INT32(gyInt) << 16;
+			absgxInt = COMPV_MATH_ABS_INT32(gxInt);
 			if (absgyInt < (kCannyTangentPiOver8Int * absgxInt)) { // angle = "0° / 180°"
 				if (g[col - 1] > g[col] || g[col + 1] > g[col]) {
 					nms[col] = 0xff;

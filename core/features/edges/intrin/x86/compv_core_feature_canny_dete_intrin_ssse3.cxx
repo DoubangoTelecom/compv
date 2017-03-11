@@ -8,12 +8,14 @@
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/core/features/edges/compv_core_feature_canny_dete.h" /* kCannyTangentPiOver8Int and kCannyTangentPiTimes3Over8Int */
+#include "compv/base/intrin/x86/compv_intrin_sse.h"
 #include "compv/base/compv_debug.h"
 
 COMPV_NAMESPACE_BEGIN()
 
 // "g" and "tLow" are unsigned but we're using "epi16" instead of "epu16" because "g" is always < 0xFFFF (from u8 convolution operation)
 // 8mpw -> minpack 8 for words (int16)
+// TODO(dmi): add SSE2 version (_mm_abs_epi16 is SSSE3)
 void CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("FIXME(dmi): add ASM");
@@ -24,6 +26,7 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, c
 	static const __m128i vecZero = _mm_setzero_si128();
 	static const __m128i vecTangentPiOver8Int = _mm_set1_epi32(kCannyTangentPiOver8Int);
 	static const __m128i vecTangentPiTimes3Over8Int = _mm_set1_epi32(kCannyTangentPiTimes3Over8Int);
+	static const __m128i vecMaskAbs = _mm_set1_epi16(0x7fff); // _mm_abs_epi16 is SSSE3
 	compv_uscalar_t col;
 	const int stride_ = static_cast<const int>(stride);
 	const int c0 = 1 - stride_, c1 = 1 + stride_;
@@ -39,9 +42,9 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, c
 			vec1 = _mm_abs_epi16(vecGY);
 			vec2 = _mm_abs_epi16(vecGX);
 
-			vecAbsGY0 = _mm_unpacklo_epi16(vecZero, vec1); //!\\ not convert
+			vecAbsGY0 = _mm_unpacklo_epi16(vecZero, vec1); // convert from epi16 to epi32 the  "<< 16"
 			vecAbsGX0 = _mm_unpacklo_epi16(vec2, vecZero); // convert from epi16 to epi32
-			vecAbsGY1 = _mm_unpackhi_epi16(vecZero, vec1); //!\\ not convert
+			vecAbsGY1 = _mm_unpackhi_epi16(vecZero, vec1); // convert from epi16 to epi32 the  "<< 16"
 			vecAbsGX1 = _mm_unpackhi_epi16(vec2, vecZero); // convert from epi16 to epi32
 
 			// angle = "0° / 180°"

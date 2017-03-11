@@ -78,9 +78,9 @@ void CompVCannyNMSGatherRow_16mpw_Intrin_AVX2(uint8_t* nms, const uint16_t* g, c
 			vec2 = _mm256_abs_epi16(vecGX);
 			vec1 = _mm256_permute4x64_epi64(vec1, 0xD8);
 
-			vecAbsGY0 = _mm256_unpacklo_epi16(vecZero, vec1); //!\\ not convert
+			vecAbsGY0 = _mm256_unpacklo_epi16(vecZero, vec1); // convert from epi16 to epi32 the  "<< 16"
 			vecAbsGX0 = _mm256_cvtepu16_epi32(_mm256_castsi256_si128(vec2)); // convert from epi16 to epi32
-			vecAbsGY1 = _mm256_unpackhi_epi16(vecZero, vec1); //!\\ not convert
+			vecAbsGY1 = _mm256_unpackhi_epi16(vecZero, vec1); // convert from epi16 to epi32 the  "<< 16"
 			vecAbsGX1 = _mm256_cvtepu16_epi32(_mm256_extractf128_si256(vec2, 1)); // convert from epi16 to epi32
 
 			// angle = "0° / 180°"
