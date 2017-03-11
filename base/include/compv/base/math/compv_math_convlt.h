@@ -110,6 +110,7 @@ private:
 			outPtrAllocated = true;
 		}
 		// Allocate tmp memory
+		// Keep using global memory, no false-sharing issues (perf. tests done)
 		OutputType* imgTmp = NULL;
 		imgTmp = reinterpret_cast<OutputType*>(CompVMem::malloc(neededSize));
 		if (!imgTmp) {

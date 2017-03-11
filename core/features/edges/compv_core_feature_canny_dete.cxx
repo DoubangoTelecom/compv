@@ -134,32 +134,38 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 		const size_t countLast = (size_t)countAny + (m_nImageHeight % threadsCount);
 		const size_t countAnyTimesStride = countAny * m_nImageStride;
 		const uint8_t* inPtr_ = image->ptr<const uint8_t>();
-		int16_t* imgTmpGx = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, m_nImageHeight)));
-		int16_t* imgTmpGy = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, m_nImageHeight)));
 		uint32_t* sums = reinterpret_cast<uint32_t*>(CompVMem::malloc(threadsCount * sizeof(uint32_t)));
-		int16_t* tmpPtrGx_ = imgTmpGx;
-		int16_t* tmpPtrGy_ = imgTmpGy;
 		int16_t* outPtrGx_ = m_pGx;
 		int16_t* outPtrGy_ = m_pGy;
 		uint16_t* outPtrG_ = m_pG;
 		CompVAsyncTaskIds taskIds;
-		auto funcPtrFirst = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrTmpGx, int16_t* ptrOutGy, int16_t* ptrTmpGy, uint16_t* ptrOutG, uint32_t* ptrSum, size_t h) -> COMPV_ERROR_CODE {
-			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, ptrTmpGx, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
-			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, ptrTmpGy, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
-			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(ptrTmpGx, ptrOutGx, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, true, false);
-			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(ptrTmpGy, ptrOutGy, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, true, false);
+		size_t index;
+		//!\\ Important: Our tests showe (both x86 and arm)d that it's faster to alloc temp memory for each thread rather than sharing global one -> false sharing issue.
+		// This is an issue for the convolution only because there is no way to make the writing cache-friendly.
+		// No such issue when multithreading 'CompVMathConvlt::convlt1' (perf tests done), so don't try to change the function.
+		auto funcPtrFirst = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrOutGy, uint16_t* ptrOutG, uint32_t* ptrSum, size_t h) -> COMPV_ERROR_CODE {
+			int16_t* imgTmp = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, h + rowsOverlapCount))); // local alloc to avoid false sharing
+			COMPV_CHECK_EXP_RETURN(!imgTmp, COMPV_ERROR_CODE_E_OUT_OF_MEMORY, "Failed to alloc imgTmp");
+			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
+			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGx, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, true, false);
+			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
+			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGy, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, true, false);
+			CompVMem::free((void**)&imgTmp);
 			COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx, ptrOutGy, ptrOutG, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
 			uint32_t sum_ = 0;
 			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(ptrIn, m_nImageWidth, h, m_nImageStride, sum_)));
 			*ptrSum = sum_;
 			return COMPV_ERROR_CODE_S_OK;
 		};
-		auto funcPtrOthers = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrTmpGx, int16_t* ptrOutGy, int16_t* ptrTmpGy, uint16_t* ptrOutG, uint32_t* ptrSum, size_t h, bool last) -> COMPV_ERROR_CODE {
-			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - rowsOverlapPad, ptrTmpGx - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
-			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - rowsOverlapPad, ptrTmpGy - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
-			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(ptrTmpGx - rowsOverlapPad, ptrOutGx - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, false, last);
+		auto funcPtrOthers = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrOutGy, uint16_t* ptrOutG, uint32_t* ptrSum, size_t h, bool last) -> COMPV_ERROR_CODE {
+			int16_t* imgTmp = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, h + rowsOverlapCount))); // local alloc to avoid false sharing
+			COMPV_CHECK_EXP_RETURN(!imgTmp, COMPV_ERROR_CODE_E_OUT_OF_MEMORY, "Failed to alloc imgTmp");
+			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - rowsOverlapPad, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
+			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGx - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, false, last);
+			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - rowsOverlapPad, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
+			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGy - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, false, last);
+			CompVMem::free((void**)&imgTmp);
 			uint16_t* g_ = ptrOutG - rowsOverlapPad;
-			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(ptrTmpGy - rowsOverlapPad, ptrOutGy - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, false, last);
 			COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx - rowsOverlapPad, ptrOutGy - rowsOverlapPad, g_, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
 			uint32_t sum_ = 0;
 			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(ptrIn, m_nImageWidth, h, m_nImageStride, sum_)));
@@ -167,31 +173,19 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 			return COMPV_ERROR_CODE_S_OK;
 		};
 
-		COMPV_CHECK_EXP_BAIL(!imgTmpGx, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc imgTmpGx memory");
-		COMPV_CHECK_EXP_BAIL(!imgTmpGy, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc imgTmpGy memory");
 		COMPV_CHECK_EXP_BAIL(!sums, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc sums memory");
 		taskIds.reserve(threadsCount);
 
 		// first
-		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrFirst, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &sums[0], countAny), taskIds));
-		inPtr_ += countAny * m_nImageStride;
-		tmpPtrGx_ += countAnyTimesStride;
-		outPtrGx_ += countAnyTimesStride;
-		tmpPtrGy_ += countAnyTimesStride;
-		outPtrGy_ += countAnyTimesStride;
-		outPtrG_ += countAnyTimesStride;
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrFirst, inPtr_, outPtrGx_, outPtrGy_, outPtrG_, &sums[0], countAny), taskIds));
 		// others
+		index = countAnyTimesStride;
 		for (size_t threadIdx = 1; threadIdx < threadsCount - 1; ++threadIdx) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &sums[threadIdx], countAny, false), taskIds));
-			inPtr_ += countAnyTimesStride;
-			tmpPtrGx_ += countAnyTimesStride;
-			outPtrGx_ += countAnyTimesStride;
-			tmpPtrGy_ += countAnyTimesStride;
-			outPtrGy_ += countAnyTimesStride;
-			outPtrG_ += countAnyTimesStride;
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, &inPtr_[index], &outPtrGx_[index], &outPtrGy_[index], &outPtrG_[index], &sums[threadIdx], countAny, false), taskIds));
+			index += countAnyTimesStride;
 		}
 		// last
-		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, inPtr_, outPtrGx_, tmpPtrGx_, outPtrGy_, tmpPtrGy_, outPtrG_, &sums[threadsCount - 1], countLast, true), taskIds));
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, &inPtr_[index], &outPtrGx_[index], &outPtrGy_[index], &outPtrG_[index], &sums[threadsCount - 1], countLast, true), taskIds));
 		// mean
 		sum = 0;
 		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
@@ -199,8 +193,6 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 			sum += sums[threadIdx];
 		}
 bail:
-		CompVMem::free(reinterpret_cast<void**>(&imgTmpGx));
-		CompVMem::free(reinterpret_cast<void**>(&imgTmpGy));
 		CompVMem::free(reinterpret_cast<void**>(&sums));
 	}
 	else {

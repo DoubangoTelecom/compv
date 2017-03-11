@@ -103,6 +103,7 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		size_t index;
 		//!\\ Important: Our tests showe (both x86 and arm)d that it's faster to alloc temp memory for each thread rather than sharing global one -> false sharing issue.
 		// This is an issue for the convolution only because there is no way to make the writing cache-friendly.
+		// No such issue when multithreading 'CompVMathConvlt::convlt1' (perf tests done), so don't try to change the function.
 		// https://en.wikipedia.org/wiki/False_sharing
 		auto funcPtrFirst = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrOutGy, uint16_t* ptrOutG, size_t h) -> COMPV_ERROR_CODE {
 			// Convolution
