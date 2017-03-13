@@ -20,13 +20,15 @@ COMPV_NAMESPACE_BEGIN()
 #if COMPV_ASM
 #	if COMPV_ARCH_X86
 	COMPV_EXTERNC void CompVMathUtilsMax_16u_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const uint16_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, uint16_t *max);
+	COMPV_EXTERNC void CompVMathUtilsSum_8u32u_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const uint8_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, uint32_t *sum1);
 	COMPV_EXTERNC void CompVMathUtilsSumAbs_16s16u_Asm_X86_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, const COMPV_ALIGNED(SSE) int16_t* b, COMPV_ALIGNED(SSE) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVMathUtilsSumAbs_16s16u_Asm_X86_AVX2(const COMPV_ALIGNED(AVX) int16_t* a, const COMPV_ALIGNED(AVX) int16_t* b, COMPV_ALIGNED(AVX) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride);
-	COMPV_EXTERNC void CompVMathUtilsSum_8u32u_Asm_X86_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* data, compv_uscalar_t count, uint32_t *sum1);
-	COMPV_EXTERNC void CompVMathUtilsSum_8u32u_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const uint8_t* data, compv_uscalar_t count, uint32_t *sum1);
 	COMPV_EXTERNC void CompVMathUtilsSum2_32s32s_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, COMPV_ALIGNED(SSE) const int32_t* b, COMPV_ALIGNED(SSE) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVMathUtilsScaleAndClipPixel8_16u32f_Asm_X86_SSE2(COMPV_ALIGNED(SSE) const uint16_t* in, const compv_float32_t* scale1, COMPV_ALIGNED(SSE) uint8_t* out, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X86 */
+#	if COMPV_ARCH_X64
+	COMPV_EXTERNC void CompVMathUtilsSum_8u32u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, uint32_t *sum1);
+#	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
 	COMPV_EXTERNC void CompVMathUtilsMax_16u_Asm_NEON32(COMPV_ALIGNED(NEON) const uint16_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, uint16_t *max);
 	COMPV_EXTERNC void CompVMathUtilsSumAbs_16s16u_Asm_NEON32(const COMPV_ALIGNED(NEON) int16_t* a, const COMPV_ALIGNED(NEON) int16_t* b, COMPV_ALIGNED(NEON) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
@@ -241,15 +243,12 @@ COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t width, size_t heig
 	void(*CompVMathUtilsSum_8u32u)(COMPV_ALIGNED(X) const uint8_t* a, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride, uint32_t *sum1)
 		= NULL;
 #if COMPV_ARCH_X86
+	// TODO(dmi): add AVX implementation (not urgent, SSE2 version is already insanely fast)
     if (width >= 16 && COMPV_IS_ALIGNED_SSE(a) && COMPV_IS_ALIGNED_SSE(stride)) {
         if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
             COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathUtilsSum_8u32u = CompVMathUtilsSum_8u32u_Intrin_SSE2);
-            //COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtilsSum_8u32u = CompVMathUtilsSum_8u32u_Asm_X86_SSE2);
-        }
-    }
-    if (width >= 32 && COMPV_IS_ALIGNED_AVX(a) && COMPV_IS_ALIGNED_AVX(stride)) {
-        if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
-            //COMPV_EXEC_IFDEF_ASM_X86(MathUtilsSum_8u32u = CompVMathUtilsSum_8u32u_Asm_X86_AVX2);
+            COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtilsSum_8u32u = CompVMathUtilsSum_8u32u_Asm_X86_SSE2);
+			COMPV_EXEC_IFDEF_ASM_X64(CompVMathUtilsSum_8u32u = CompVMathUtilsSum_8u32u_Asm_X64_SSE2);
         }
     }
 #endif

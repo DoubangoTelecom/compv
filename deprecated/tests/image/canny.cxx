@@ -12,7 +12,7 @@
 
 #define TEST_TYPE				TEST_TYPE_EQUIRECT
 
-#define CANNY_LOOP_COUNT		1
+#define CANNY_LOOP_COUNT		10000
 
 #if TEST_TYPE == TEST_TYPE_GIRL
 #	define CANNY_JPEG_IMG			"C:/Projects/GitHub/compv/deprecated/tests/girl.jpg"
@@ -54,6 +54,8 @@ COMPV_ERROR_CODE TestCanny()
     // Check MD5
     const std::string md5 = arrayMD5(edges);
     COMPV_CHECK_EXP_RETURN(md5 != CANNY_MD5, COMPV_ERROR_CODE_E_UNITTEST_FAILED);
+
+	getchar();
 
     return COMPV_ERROR_CODE_S_OK;
 }

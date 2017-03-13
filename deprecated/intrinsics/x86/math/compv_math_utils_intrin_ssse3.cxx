@@ -45,6 +45,7 @@ void MathUtilsSumAbs_16i16u_Intrin_SSSE3(const COMPV_ALIGNED(SSE) int16_t* a, co
 }
 
 // Doesn't work with "signed int8"
+// FIXME: this is SSE2 function
 void MathUtilsSum_8u32u_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* data, compv_uscalar_t count, uint32_t *sum1)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED(); // ASM

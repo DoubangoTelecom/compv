@@ -189,7 +189,7 @@ bail:
 		COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, sum)));
 	}
 
-	uint8_t mean = sum / static_cast<uint32_t>(m_nImageWidth * m_nImageHeight);
+	uint8_t mean = static_cast<uint8_t>(sum / static_cast<uint32_t>(m_nImageWidth * m_nImageHeight));
 	mean = COMPV_MATH_CLIP3(1, 255, mean);
 	uint16_t tLow = static_cast<uint16_t>(mean * m_fThresholdLow);
 	uint16_t tHigh = static_cast<uint16_t>(mean * m_fThresholdHigh);
