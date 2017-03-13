@@ -7,6 +7,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 %include "compv_common_x86.s"
+
 %if COMPV_YASM_ABI_IS_64BIT
 %include "compv_core_feature_fast_dete_macros_x86_avx.s"
 
