@@ -100,36 +100,25 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		uint16_t* outPtrG_ = m_pG;
 		CompVAsyncTaskIds taskIds;
 		compv_float32_t scale;
-		size_t index;
-		//!\\ Important: Our tests showe (both x86 and arm)d that it's faster to alloc temp memory for each thread rather than sharing global one -> false sharing issue.
+		//!\\ Important: Our tests showed (both x86 and arm)d that it's faster to alloc temp memory for each thread rather than sharing global one -> false sharing issue.
 		// This is an issue for the convolution only because there is no way to make the writing cache-friendly.
 		// No such issue when multithreading 'CompVMathConvlt::convlt1' (perf tests done), so don't try to change the function.
 		// https://en.wikipedia.org/wiki/False_sharing
-		auto funcPtrFirst = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrOutGy, uint16_t* ptrOutG, size_t h) -> COMPV_ERROR_CODE {
+		auto funcConvolutionAndGradient = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrOutGy, uint16_t* ptrOutG, size_t h, size_t threadIdx) -> COMPV_ERROR_CODE {
 			// Convolution
 			int16_t* imgTmp = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, h + rowsOverlapCount))); // local alloc to avoid false sharing
 			COMPV_CHECK_EXP_RETURN(!imgTmp, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc imgTmp");
-			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
-			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGx, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, true, false);
-			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
-			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGy, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, true, false);
-			CompVMem::free((void**)&imgTmp);
-			// Gradient without computing gmax(computing gmax not thread - safe because of overlappings)
-			COMPV_CHECK_CODE_RETURN(err = (CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx, ptrOutGy, ptrOutG, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
-			return COMPV_ERROR_CODE_S_OK;
-		};
-		auto funcPtrOthers = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrOutGy, uint16_t* ptrOutG, size_t h, bool last) -> COMPV_ERROR_CODE {
-			// Convolution
-			int16_t* imgTmp = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, h + rowsOverlapCount))); // local alloc to avoid false sharing
-			COMPV_CHECK_EXP_RETURN(!imgTmp, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc imgTmp");
-			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - rowsOverlapPad, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize);
-			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGx - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, false, last);
-			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - rowsOverlapPad, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize);
-			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGy - rowsOverlapPad, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, false, last);
+			const bool first = (threadIdx == 0);
+			const bool last = (threadIdx == (threadsCount - 1));
+			const size_t padding = first ? 0 : rowsOverlapPad;
+			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - padding, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, true);
+			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGx - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, first, last);
+			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - padding, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, true);
+			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGy - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, first, last);
 			CompVMem::free((void**)&imgTmp);
 			// Gradient without computing gmax (computing gmax not thread-safe because of overlappings)
-			uint16_t* mt_g = ptrOutG - rowsOverlapPad;
-			COMPV_CHECK_CODE_RETURN(err = (CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx - rowsOverlapPad, ptrOutGy - rowsOverlapPad, mt_g, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
+			uint16_t* mt_g = ptrOutG - padding;
+			COMPV_CHECK_CODE_RETURN(err = (CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx - padding, ptrOutGy - padding, mt_g, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		auto funcGmax = [&](const uint16_t* ptrG, size_t h, uint16_t *max) -> COMPV_ERROR_CODE {
@@ -146,26 +135,18 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		COMPV_CHECK_EXP_BAIL(!gmaxTmp, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc gmaxTmp memory");
 		taskIds.reserve(threadsCount);
 
-		// first
-		COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtrFirst, inPtr_, outPtrGx_, outPtrGy_, outPtrG_, countAny), taskIds));
-		// others
-		index = countAnyTimesStride;
-		for (size_t threadIdx = 1; threadIdx < threadsCount - 1; ++threadIdx) {
-			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtrOthers, &inPtr_[index], &outPtrGx_[index], &outPtrGy_[index], &outPtrG_[index], countAny, false), taskIds));
-			index += countAnyTimesStride;
+		// convolution + gradient
+		for (size_t threadIdx = 0, index = 0; threadIdx < threadsCount; ++threadIdx, index += countAnyTimesStride) {
+			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcConvolutionAndGradient, &inPtr_[index], &outPtrGx_[index], &outPtrGy_[index], &outPtrG_[index], 
+				(threadIdx == (threadsCount - 1)) ? countLast : countAny, threadIdx),
+				taskIds));
 		}
-		// last
-		COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtrOthers, &inPtr_[index], &outPtrGx_[index], &outPtrGy_[index], &outPtrG_[index], countLast, true), taskIds));
-
-		// wait
 		COMPV_CHECK_CODE_BAIL(err = threadDisp->wait(taskIds));
 
 		// Gmax (cannot be packed in convolution+gradient threads)
 		taskIds.clear();
-		index = 0;
-		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+		for (size_t threadIdx = 0, index = 0; threadIdx < threadsCount; ++threadIdx, index += countAnyTimesStride) {
 			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcGmax, &m_pG[index], (threadIdx == (threadsCount - 1)) ? countAny : countLast, &gmaxTmp[threadIdx]), taskIds));
-			index += countAnyTimesStride;
 		}
 		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
 			COMPV_CHECK_CODE_BAIL(err = threadDisp->waitOne(taskIds[threadIdx]));
@@ -175,10 +156,8 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		// scale (normalization)
 		scale = 255.f / compv_float32_t(gmax);
 		taskIds.clear();
-		index = 0;
-		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+		for (size_t threadIdx = 0, index = 0; threadIdx < threadsCount; ++threadIdx, index += countAnyTimesStride) {
 			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcScaleAndClipPixel8, &m_pG[index], &edgesPtr[index], scale, (threadIdx == (threadsCount - 1)) ? countAny : countLast), taskIds));
-			index += countAnyTimesStride;
 		}
 		// wait for the execution after memory free
 	bail:

@@ -97,28 +97,12 @@ public:
         return COMPV_ERROR_CODE_S_OK;
     }
 
-    template <typename InputType, typename OutputType>
-    static COMPV_ERROR_CODE sum(const InputType* a, size_t count, OutputType &r) {
-        COMPV_CHECK_EXP_RETURN(!a || !count, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-        COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum_C<InputType, OutputType>(a, count, r)));
-        return COMPV_ERROR_CODE_S_OK;
-    }
-
+	// sum<uint8_t, uint32_t> would work without overflow upto ~160Mo data. For other kind of sums you should use 'sum2'
     template <typename InputType, typename OutputType>
     static COMPV_ERROR_CODE sum(const InputType* a, size_t width, size_t height, size_t stride, OutputType &r) {
         COMPV_CHECK_EXP_RETURN(!a || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-        OutputType* sums = reinterpret_cast<OutputType*>(CompVMem::malloc(height * sizeof(OutputType)));
-        COMPV_CHECK_EXP_BAIL(!sums, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY));
-		// breaking sums to avoid overflow
-        for (size_t j = 0; j < height; ++j) {
-            CompVMathUtils::sum<InputType, OutputType>(a, width, sums[j]);
-            a += stride;
-        }
-        CompVMathUtils::sum<OutputType, OutputType>(sums, height, r);
-	bail:
-        CompVMem::free(reinterpret_cast<void**>(&sums));
-        return err;
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum_C<InputType, OutputType>(a, width, height, stride, r)));
+        return COMPV_ERROR_CODE_S_OK;
     }
 
     template <typename InputType, typename OutputType>
@@ -213,12 +197,15 @@ private:
     }
 
     template <typename InputType, typename OutputType>
-    static COMPV_ERROR_CODE sum_C(const InputType* a, size_t count, OutputType &r) {
+    static COMPV_ERROR_CODE sum_C(const InputType* a, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, OutputType &r) {
         COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
         r = 0;
-        for (size_t i = 0; i < count; ++i) {
-            r += a[i];
-        }
+		for (size_t j = 0; j < height; ++j) {
+			for (size_t i = 0; i < width; ++i) {
+				r += a[i];
+			}
+			a += stride;
+		}
         return COMPV_ERROR_CODE_S_OK;
     }
 
@@ -306,7 +293,7 @@ private:
 
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::max(const uint16_t* data, size_t width, size_t height, size_t stride, uint16_t &max);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint16_t*& r, size_t width, size_t height, size_t stride);
-COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t count, uint32_t &r);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t width, size_t height, size_t stride, uint32_t &r);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_t* s, size_t width, size_t height, size_t stride);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::mean(const uint8_t* data, size_t count, uint8_t &mean);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::scaleAndClip(const uint16_t* in, const compv_float32_t scale, uint8_t*& out, uint8_t min, uint8_t max, size_t width, size_t height, size_t stride);

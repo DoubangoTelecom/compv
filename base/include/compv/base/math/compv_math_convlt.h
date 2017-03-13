@@ -144,29 +144,21 @@ private:
 			const InputType* inPtr_ = dataPtr;
 			OutputType* tmpPtr_ = imgTmp;
 			OutputType* outPtr_ = outPtr;
-			size_t index;
 			taskIds.reserve(threadsCount);
-			auto funcPtrFirst = [&](const InputType* ptrIn, OutputType* ptrOut, OutputType* ptrTmp, size_t h) -> COMPV_ERROR_CODE {
-				CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(ptrIn, ptrTmp, dataWidth, h + rowsOverlapCount, dataStride, hzKernPtr, kernSize, true, fixedPoint);
-				CompVMathConvlt::convlt1Vt_private<OutputType, KernelType, OutputType>(ptrTmp, ptrOut, dataWidth, h + rowsOverlapCount, dataStride, vtKernPtr, kernSize, true, false, fixedPoint);
+			auto funcPtr = [&](const InputType* ptrIn, OutputType* ptrOut, OutputType* ptrTmp, size_t h, size_t threadIdx) -> COMPV_ERROR_CODE {
+				const bool first = (threadIdx == 0);
+				const bool last = (threadIdx == (threadsCount - 1));
+				const size_t padding = first ? 0 : rowsOverlapPad;
+				CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(ptrIn - padding, ptrTmp - padding, dataWidth, h + rowsOverlapCount, dataStride, hzKernPtr, kernSize, true, fixedPoint);
+				CompVMathConvlt::convlt1Vt_private<OutputType, KernelType, OutputType>(ptrTmp - padding, ptrOut - padding, dataWidth, h + rowsOverlapCount, dataStride, vtKernPtr, kernSize, first, last, fixedPoint);
 				return COMPV_ERROR_CODE_S_OK;
 			};
-			auto funcPtrOthers = [&](const InputType* ptrIn, OutputType* ptrOut, OutputType* ptrTmp, size_t h, bool last) -> COMPV_ERROR_CODE {
-				CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(ptrIn - rowsOverlapPad, ptrTmp - rowsOverlapPad, dataWidth, h + rowsOverlapCount, dataStride, hzKernPtr, kernSize, true, fixedPoint);
-				CompVMathConvlt::convlt1Vt_private<OutputType, KernelType, OutputType>(ptrTmp - rowsOverlapPad, ptrOut - rowsOverlapPad, dataWidth, h + rowsOverlapCount, dataStride, vtKernPtr, kernSize, false, last, fixedPoint);
-				return COMPV_ERROR_CODE_S_OK;
-			};
-			/* first */
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrFirst, inPtr_, outPtr_, tmpPtr_, countAny), taskIds));
-			/* others */
-			index = countAnyTimesStride;
-			for (size_t threadIdx = 1; threadIdx < threadsCount - 1; ++threadIdx) {
-				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, &inPtr_[index], &outPtr_[index], &tmpPtr_[index], countAny, false), taskIds));
-				index += countAnyTimesStride;
+			// execute
+			for (size_t threadIdx = 0, index = 0; threadIdx < threadsCount; ++threadIdx, index += countAnyTimesStride) {
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, &inPtr_[index], &outPtr_[index], &tmpPtr_[index],
+					(threadIdx == (threadsCount - 1)) ? countLast : countAny, threadIdx),
+					taskIds));
 			}
-			/* last */
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrOthers, &inPtr_[index], &outPtr_[index], &tmpPtr_[index], countLast, true), taskIds));
-			/* wait */
 			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 		}
 		else {

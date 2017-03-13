@@ -240,28 +240,28 @@ COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint
 }
 
 template <> COMPV_BASE_API
-COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t count, uint32_t &r)
+COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t width, size_t height, size_t stride, uint32_t &r)
 {
-	void(*CompVMathUtilsSum_8u32u)(COMPV_ALIGNED(X) const uint8_t* a, compv_uscalar_t count, uint32_t *sum1) 
+	void(*CompVMathUtilsSum_8u32u)(COMPV_ALIGNED(X) const uint8_t* a, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride, uint32_t *sum1)
 		= NULL;
 #if COMPV_ARCH_X86
-    if (count >= 16 && COMPV_IS_ALIGNED_SSE(a)) {
+    if (width >= 16 && COMPV_IS_ALIGNED_SSE(a) && COMPV_IS_ALIGNED_SSE(stride)) {
         if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
             COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathUtilsSum_8u32u = CompVMathUtilsSum_8u32u_Intrin_SSE2);
             //COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtilsSum_8u32u = CompVMathUtilsSum_8u32u_Asm_X86_SSE2);
         }
     }
-    if (count >= 32 && COMPV_IS_ALIGNED_AVX(a)) {
+    if (width >= 32 && COMPV_IS_ALIGNED_AVX(a) && COMPV_IS_ALIGNED_AVX(stride)) {
         if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
             //COMPV_EXEC_IFDEF_ASM_X86(MathUtilsSum_8u32u = CompVMathUtilsSum_8u32u_Asm_X86_AVX2);
         }
     }
 #endif
 	if (CompVMathUtilsSum_8u32u) {
-		CompVMathUtilsSum_8u32u(a, static_cast<compv_uscalar_t>(count), &r);
+		CompVMathUtilsSum_8u32u(a, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride), &r);
 		return COMPV_ERROR_CODE_S_OK;
 	}
-    COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum_C<uint8_t>(a, count, r)));
+    COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum_C<uint8_t>(a, width, height, stride, r)));
     return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -288,7 +288,7 @@ template <> COMPV_BASE_API
 COMPV_ERROR_CODE CompVMathUtils::mean(const uint8_t* data, size_t count, uint8_t &mean)
 {
     uint32_t r;
-    COMPV_CHECK_CODE_RETURN(CompVMathUtils::sum(data, count, r));
+	COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(data, count, 1, static_cast<size_t>(CompVMem::alignForward(count)), r))); // aligning stride (read-only data)
     mean = (uint8_t)(r / count);
     return COMPV_ERROR_CODE_S_OK;
 }
