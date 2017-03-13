@@ -97,8 +97,8 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	mov col, 1
 	.LoopWidth:
-		movdqu xmm1, [g + (col * COMPV_YASM_UINT16_SZ_BYTES)] ; xmm1 = vecG
-		movdqa xmm0, xmm1
+		movdqu xmm0, [g + (col * COMPV_YASM_UINT16_SZ_BYTES)]
+		movdqa xmm2, xmm0 ; xmm2 = vecG
 		pcmpgtw xmm0, [vecTLow] ; xmm0 = vec0
 		pmovmskb rax, xmm0
 		test rax, rax
@@ -107,35 +107,35 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		jz .EndOf_Ifvec00
 		.Ifvec00:
-			movdqa [vecG], xmm1 ; save vecG
+			movdqa [vecG], xmm2 ; save vecG
 			
 			movdqu xmm5, [gy + (col * COMPV_YASM_INT16_SZ_BYTES)] ; vecGY
 			movdqu xmm6, [gx + (col * COMPV_YASM_INT16_SZ_BYTES)] ; vecGX
 			movq xmm7, [nms + (col * COMPV_YASM_UINT8_SZ_BYTES)] ; vecNMS
 
-			pabsw xmm1, xmm5
-			pabsw xmm2, xmm6
+			pabsw xmm2, xmm5
+			pabsw xmm1, xmm6
 			pxor xmm3, xmm3
 			pxor xmm4, xmm4
-			punpcklwd xmm3, xmm1 ; vecAbsGY0
-			punpckhwd xmm4, xmm1 ; vecAbsGY1
-			movdqa xmm1, xmm2
-			punpcklwd xmm2, [vecZero] ; vecAbsGX0
-			punpckhwd xmm1, [vecZero] ; vecAbsGX1
+			punpcklwd xmm3, xmm2 ; vecAbsGY0
+			punpckhwd xmm4, xmm2 ; vecAbsGY1
+			movdqa xmm2, xmm1
+			punpcklwd xmm1, [vecZero] ; vecAbsGX0
+			punpckhwd xmm2, [vecZero] ; vecAbsGX1
 
 			movdqa [vecGY], xmm5
 			movdqa [vecGX], xmm6
 			movdqa [vecNMS], xmm7
 			movdqa [vecAbsGY0], xmm3
 			movdqa [vecAbsGY1], xmm4
-			movdqa [vecAbsGX0], xmm2
-			movdqa [vecAbsGX1], xmm1
+			movdqa [vecAbsGX0], xmm1
+			movdqa [vecAbsGX1], xmm2
 
 			;; angle = "0° / 180°" ;;
-			pmulld xmm2, [vecTangentPiOver8Int]
 			pmulld xmm1, [vecTangentPiOver8Int]
-			pcmpgtd xmm2, xmm3
-			pcmpgtd xmm1, xmm4
+			pmulld xmm2, [vecTangentPiOver8Int]
+			pcmpgtd xmm1, xmm3
+			pcmpgtd xmm2, xmm4
 			packssdw xmm1, xmm2
 			pand xmm1, xmm0 ; xmm1 = vec3
 			pmovmskb rax, xmm1
@@ -238,7 +238,7 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 
 				.EndOf_Ifvec40:
 				;; EndOf_Ifvec40 ;;
-
+			
 			;; angle = "90° / 270°" ;;
 			pandn xmm2, xmm0 ; xmm2 was vec4 and xmm0 is vec0
 			pandn xmm1, xmm2 ; xmm1 was vec3, now vec5 is xmm1
