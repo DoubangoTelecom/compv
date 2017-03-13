@@ -28,6 +28,7 @@ static void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width,
 #if COMPV_ASM
 #	if COMPV_ARCH_X86
 	COMPV_EXTERNC void CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVCannyNMSGatherRow_16mpw_Asm_X86_AVX2(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVCannyNMSGatherRow_8mpw_Asm_X64_SSE41(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
@@ -291,6 +292,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVMatPtr& edges, uint16_t tLo
 	}
 	if (maxCols >= 16 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_16mpw_Intrin_AVX2, xmpw = 16));
+		COMPV_EXEC_IFDEF_ASM_X86((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_16mpw_Asm_X86_AVX2, xmpw = 16));
 	}
 #endif /* COMPV_ARCH_X86 */
 
