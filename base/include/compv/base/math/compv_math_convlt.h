@@ -109,16 +109,7 @@ private:
 			COMPV_CHECK_EXP_RETURN(!outPtr, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 			outPtrAllocated = true;
 		}
-		// Allocate tmp memory
-		// Keep using global memory, no false-sharing issues (perf. tests done)
 		OutputType* imgTmp = NULL;
-		imgTmp = reinterpret_cast<OutputType*>(CompVMem::malloc(neededSize));
-		if (!imgTmp) {
-			if (outPtrAllocated) {
-				CompVMem::free(reinterpret_cast<void**>(&outPtr));
-			}
-			COMPV_CHECK_CODE_RETURN(COMPV_ERROR_CODE_E_OUT_OF_MEMORY, "Failed to allocate temporary memory");
-		}
 		size_t threadsCount;
 		CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 		size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
@@ -133,6 +124,8 @@ private:
 		if (bKernelSizeTooHighForMT) {
 			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Kernel size too high for MT");
 		}
+
+		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 		
 		if (threadsCount > 1 && !bKernelSizeTooHighForMT) {
 			CompVAsyncTaskIds taskIds;
@@ -142,33 +135,40 @@ private:
 			const size_t countLast = dataHeight - ((threadsCount - 1) * countAny);
 			const size_t countAnyTimesStride = countAny * dataStride;
 			const InputType* inPtr_ = dataPtr;
-			OutputType* tmpPtr_ = imgTmp;
 			OutputType* outPtr_ = outPtr;
 			taskIds.reserve(threadsCount);
-			auto funcPtr = [&](const InputType* ptrIn, OutputType* ptrOut, OutputType* ptrTmp, size_t h, size_t threadIdx) -> COMPV_ERROR_CODE {
+			auto funcPtr = [&](const InputType* ptrIn, OutputType* ptrOut, size_t h, size_t threadIdx) -> COMPV_ERROR_CODE {
+				OutputType* imgTmp = reinterpret_cast<OutputType*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<OutputType>(dataStride, h + rowsOverlapCount)));
+				COMPV_CHECK_EXP_RETURN(!imgTmp, COMPV_ERROR_CODE_E_OUT_OF_MEMORY, "Failed to alloc imgTmp");
 				const bool first = (threadIdx == 0);
 				const bool last = (threadIdx == (threadsCount - 1));
 				const size_t padding = first ? 0 : rowsOverlapPad;
-				CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(ptrIn - padding, ptrTmp - padding, dataWidth, h + rowsOverlapCount, dataStride, hzKernPtr, kernSize, true, fixedPoint);
-				CompVMathConvlt::convlt1Vt_private<OutputType, KernelType, OutputType>(ptrTmp - padding, ptrOut - padding, dataWidth, h + rowsOverlapCount, dataStride, vtKernPtr, kernSize, first, last, fixedPoint);
+				CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(ptrIn - padding, imgTmp, dataWidth, h + rowsOverlapCount, dataStride, hzKernPtr, kernSize, true, fixedPoint);
+				CompVMathConvlt::convlt1Vt_private<OutputType, KernelType, OutputType>(imgTmp, ptrOut - padding, dataWidth, h + rowsOverlapCount, dataStride, vtKernPtr, kernSize, first, last, fixedPoint);
+				CompVMem::free((void**)&imgTmp);
 				return COMPV_ERROR_CODE_S_OK;
 			};
 			// execute
 			for (size_t threadIdx = 0, index = 0; threadIdx < threadsCount; ++threadIdx, index += countAnyTimesStride) {
-				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, &inPtr_[index], &outPtr_[index], &tmpPtr_[index],
+				COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtr, &inPtr_[index], &outPtr_[index],
 					(threadIdx == (threadsCount - 1)) ? countLast : countAny, threadIdx),
 					taskIds));
 			}
-			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+			COMPV_CHECK_CODE_BAIL(err = threadDisp->wait(taskIds));
 		}
 		else {
+			OutputType* imgTmp = reinterpret_cast<OutputType*>(CompVMem::malloc(neededSize));
+			COMPV_CHECK_EXP_BAIL(!imgTmp, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to allocate temporary memory");
 			CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(dataPtr, imgTmp, dataWidth, dataHeight, dataStride, hzKernPtr, kernSize, true, fixedPoint);
 			CompVMathConvlt::convlt1Vt_private<OutputType, KernelType, OutputType>(imgTmp, outPtr, dataWidth, dataHeight, dataStride, vtKernPtr, kernSize, true, true, fixedPoint);
 		}
 
+	bail:
 		CompVMem::free(reinterpret_cast<void**>(&imgTmp));
-
-		return COMPV_ERROR_CODE_S_OK;
+		if (outPtrAllocated && COMPV_ERROR_CODE_IS_NOK(err)) {
+			CompVMem::free(reinterpret_cast<void**>(&outPtr));
+		}
+		return err;
 	}
 
 	template <typename InputType = uint8_t, typename KernelType = compv_float32_t, typename OutputType = uint8_t>
