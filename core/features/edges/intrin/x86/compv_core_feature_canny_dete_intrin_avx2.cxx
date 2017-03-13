@@ -53,7 +53,6 @@ void CompVCannyNMSApply_Intrin_AVX2(COMPV_ALIGNED(AVX) uint16_t* grad, COMPV_ALI
 // 16mpw -> minpack 16 for words (int16)
 void CompVCannyNMSGatherRow_16mpw_Intrin_AVX2(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("FIXME(dmi): add ASM");
 	COMPV_DEBUG_INFO_CHECK_AVX2(); // AVX/SSE transition issues
 	_mm256_zeroupper();
 	__m256i vecG, vecGX, vecAbsGX0, vecAbsGX1, vecGY, vecAbsGY0, vecAbsGY1, vec0, vec1, vec2, vec3, vec4, vec5, vec6;
@@ -70,7 +69,7 @@ void CompVCannyNMSGatherRow_16mpw_Intrin_AVX2(uint8_t* nms, const uint16_t* g, c
 		vecG = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&g[col]));
 		vec0 = _mm256_cmpgt_epi16(vecG, vecTLow);
 		if (!_mm256_testz_si256(vec0, vec0)) {
-			vecNMS = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&nms[col]));
+			vecNMS = _mm_setzero_si128();
 			vecGX = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&gx[col]));
 			vecGY = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&gy[col]));
 
@@ -79,8 +78,8 @@ void CompVCannyNMSGatherRow_16mpw_Intrin_AVX2(uint8_t* nms, const uint16_t* g, c
 			vec1 = _mm256_permute4x64_epi64(vec1, 0xD8);
 
 			vecAbsGY0 = _mm256_unpacklo_epi16(vecZero, vec1); // convert from epi16 to epi32 the  "<< 16"
-			vecAbsGX0 = _mm256_cvtepu16_epi32(_mm256_castsi256_si128(vec2)); // convert from epi16 to epi32
 			vecAbsGY1 = _mm256_unpackhi_epi16(vecZero, vec1); // convert from epi16 to epi32 the  "<< 16"
+			vecAbsGX0 = _mm256_cvtepu16_epi32(_mm256_castsi256_si128(vec2)); // convert from epi16 to epi32
 			vecAbsGX1 = _mm256_cvtepu16_epi32(_mm256_extractf128_si256(vec2, 1)); // convert from epi16 to epi32
 
 			// angle = "0° / 180°"

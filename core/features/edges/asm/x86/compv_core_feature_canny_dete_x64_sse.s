@@ -122,11 +122,10 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X64_SSE41):
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		jz .EndOf_Ifvec00
 		.Ifvec00:
-				
 			movdqu vecGY, [gy + (col * COMPV_YASM_INT16_SZ_BYTES)]
 			movdqu vecGX, [gx + (col * COMPV_YASM_INT16_SZ_BYTES)]
 			movdqa xmm1, [vecTangentPiOver8Int]
-			movq vecNMS, [nms + (col * COMPV_YASM_UINT8_SZ_BYTES)]
+			pxor vecNMS, vecNMS
 			movdqa xmm2, xmm1
 
 			pabsw xmm3, vecGY

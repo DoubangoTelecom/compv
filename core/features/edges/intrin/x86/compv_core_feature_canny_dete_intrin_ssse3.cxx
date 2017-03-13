@@ -18,7 +18,6 @@ COMPV_NAMESPACE_BEGIN()
 // TODO(dmi): add SSE2 version (_mm_abs_epi16 is SSSE3) and (_mm_mullo_epi32 is SSE41)
 void CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("FIXME(dmi): add ASM");
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
 
 	__m128i vecNMS, vecG, vecGX, vecAbsGX0, vecAbsGX1, vecGY, vecAbsGY0, vecAbsGY1, vec0, vec1, vec2, vec3, vec4, vec5, vec6;
@@ -34,7 +33,7 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, c
 		vecG = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&g[col]));
 		vec0 = _mm_cmpgt_epi16(vecG, vecTLow);
 		if (_mm_movemask_epi8(vec0)) {
-			vecNMS = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&nms[col]));
+			vecNMS = _mm_setzero_si128();
 			vecGX = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&gx[col]));
 			vecGY = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&gy[col]));
 
