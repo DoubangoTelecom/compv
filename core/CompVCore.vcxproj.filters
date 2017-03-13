@@ -111,6 +111,9 @@
     <Filter Include="Source Files\features\edges\intrin\x86">
       <UniqueIdentifier>{36453385-fb9f-48ea-b9e0-35eba387e4f7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\features\edges\asm">
+      <UniqueIdentifier>{01402d95-5876-4bfb-a9b3-a4078058f225}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -271,6 +274,18 @@
     </None>
     <None Include="features\fast\asm\arm\compv_core_feature_fast_dete_macros_neon.S">
       <Filter>Source Files\features\fast\asm\arm</Filter>
+    </None>
+    <None Include="features\edges\asm\x86\compv_core_feature_canny_dete_x64_avx.s">
+      <Filter>Source Files\features\edges\asm</Filter>
+    </None>
+    <None Include="features\edges\asm\x86\compv_core_feature_canny_dete_x64_sse.s">
+      <Filter>Source Files\features\edges\asm</Filter>
+    </None>
+    <None Include="features\edges\asm\x86\compv_core_feature_canny_dete_x86_avx.s">
+      <Filter>Source Files\features\edges\asm</Filter>
+    </None>
+    <None Include="features\edges\asm\x86\compv_core_feature_canny_dete_x86_sse.s">
+      <Filter>Source Files\features\edges\asm</Filter>
     </None>
   </ItemGroup>
 </Project>

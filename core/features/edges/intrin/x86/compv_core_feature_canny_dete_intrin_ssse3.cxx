@@ -15,7 +15,7 @@ COMPV_NAMESPACE_BEGIN()
 
 // "g" and "tLow" are unsigned but we're using "epi16" instead of "epu16" because "g" is always < 0xFFFF (from u8 convolution operation)
 // 8mpw -> minpack 8 for words (int16)
-// TODO(dmi): add SSE2 version (_mm_abs_epi16 is SSSE3)
+// TODO(dmi): add SSE2 version (_mm_abs_epi16 is SSSE3) and (_mm_mullo_epi32 is SSE41)
 void CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("FIXME(dmi): add ASM");
@@ -26,7 +26,6 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, c
 	static const __m128i vecZero = _mm_setzero_si128();
 	static const __m128i vecTangentPiOver8Int = _mm_set1_epi32(kCannyTangentPiOver8Int);
 	static const __m128i vecTangentPiTimes3Over8Int = _mm_set1_epi32(kCannyTangentPiTimes3Over8Int);
-	static const __m128i vecMaskAbs = _mm_set1_epi16(0x7fff); // _mm_abs_epi16 is SSSE3
 	compv_uscalar_t col;
 	const int stride_ = static_cast<const int>(stride);
 	const int c0 = 1 - stride_, c1 = 1 + stride_;
@@ -48,8 +47,8 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, c
 			vecAbsGX1 = _mm_unpackhi_epi16(vec2, vecZero); // convert from epi16 to epi32
 
 			// angle = "0° / 180°"
-			vec1 = _mm_cmplt_epi32(vecAbsGY0, _mm_mullo_epi32(vecTangentPiOver8Int, vecAbsGX0));
-			vec2 = _mm_cmplt_epi32(vecAbsGY1, _mm_mullo_epi32(vecTangentPiOver8Int, vecAbsGX1));
+			vec1 = _mm_cmpgt_epi32(_mm_mullo_epi32_SSE2(vecTangentPiOver8Int, vecAbsGX0), vecAbsGY0);
+			vec2 = _mm_cmpgt_epi32(_mm_mullo_epi32_SSE2(vecTangentPiOver8Int, vecAbsGX1), vecAbsGY1);
 			vec3 = _mm_and_si128(vec0, _mm_packs_epi32(vec1, vec2));
 			if (_mm_movemask_epi8(vec3)) {
 				vec1 = _mm_cmpgt_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(&g[col - 1])), vecG);
@@ -61,12 +60,12 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, c
 			// angle = "45° / 225°" or "135 / 315"
 			vec4 = _mm_andnot_si128(vec3, vec0);
 			if (_mm_movemask_epi8(vec4)) {
-				vec1 = _mm_cmplt_epi32(vecAbsGY0, _mm_mullo_epi32(vecTangentPiTimes3Over8Int, vecAbsGX0));
-				vec2 = _mm_cmplt_epi32(vecAbsGY1, _mm_mullo_epi32(vecTangentPiTimes3Over8Int, vecAbsGX1));
+				vec1 = _mm_cmpgt_epi32(_mm_mullo_epi32_SSE2(vecTangentPiTimes3Over8Int, vecAbsGX0), vecAbsGY0);
+				vec2 = _mm_cmpgt_epi32(_mm_mullo_epi32_SSE2(vecTangentPiTimes3Over8Int, vecAbsGX1), vecAbsGY1);
 				vec4 = _mm_and_si128(vec4, _mm_packs_epi32(vec1, vec2));
 				if (_mm_movemask_epi8(vec4)) {
 					vec1 = _mm_cmplt_epi16(_mm_xor_si128(vecGX, vecGY), vecZero);
-					vec1 = _mm_and_si128(vec4, vec1);
+					vec1 = _mm_and_si128(vec1, vec4);
 					vec2 = _mm_andnot_si128(vec1, vec4);
 					if (_mm_movemask_epi8(vec1)) {
 						vec5 = _mm_cmpgt_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(&g[col - c0])), vecG);
@@ -80,8 +79,8 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, c
 					}
 					vec1 = _mm_or_si128(vec1, vec2);
 					vecNMS = _mm_or_si128(vecNMS, _mm_packs_epi16(vec1, vec1));
-				}
-			}
+				} // if (_mm_movemask_epi8(vec4)) - 0
+			} // if (_mm_movemask_epi8(vec4)) - 1
 
 			// angle = "90° / 270°"
 			vec5 = _mm_andnot_si128(vec3, _mm_andnot_si128(vec4, vec0));
@@ -93,8 +92,8 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, c
 			}
 
 			_mm_storel_epi64(reinterpret_cast<__m128i*>(&nms[col]), vecNMS);
-		}
-	}
+		} // if (_mm_movemask_epi8(vec0))
+	} // for (col = 1...
 }
 
 COMPV_NAMESPACE_END()

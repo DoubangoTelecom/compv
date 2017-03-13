@@ -48,6 +48,8 @@ void CannyNMSGatherRow_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, const int16
             xmmAbsGY1 = _mm_unpackhi_epi16(xmmZero, xmm1);
             xmmAbsGX1 = _mm_unpackhi_epi16(xmm2, xmmZero);
 
+			COMPV_DEBUG_INFO_CODE_FOR_TESTING(); // "_mm_mullo_epi32" is SSE41
+
             // angle = "0° / 180°"
             xmm1 = _mm_cmplt_epi32(xmmAbsGY0, _mm_mullo_epi32(xmmTangentPiOver8Int, xmmAbsGX0));
             xmm2 = _mm_cmplt_epi32(xmmAbsGY1, _mm_mullo_epi32(xmmTangentPiOver8Int, xmmAbsGX1));
