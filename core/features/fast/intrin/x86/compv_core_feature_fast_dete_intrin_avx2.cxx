@@ -215,6 +215,7 @@ void CompVFastNmsApply_Intrin_AVX2(COMPV_ALIGNED(AVX) uint8_t* pcStrengthsMap, C
 	static const __m256i vec0xFF = _mm256_cmpeq_epi8(vecZero, vecZero); // 0xFF
 	for (j = 3; j < heigth - 3; ++j) {
 		for (i = 0; i < width; i += 32) { // SIMD: start at #zero index to have aligned memory
+			// TODO(dmi): _mm256_cmpnot_epu8_AVX2 is two instruction, change to have something like Canny NMS
 			vec0 = _mm256_cmpnot_epu8_AVX2(_mm256_load_si256(reinterpret_cast<const __m256i*>(&pNMS[i])), vecZero, vec0xFF);
 			if (_mm256_movemask_epi8(vec0)) {
 				_mm256_store_si256(reinterpret_cast<__m256i*>(&pNMS[i]), vecZero); // must, for next frame

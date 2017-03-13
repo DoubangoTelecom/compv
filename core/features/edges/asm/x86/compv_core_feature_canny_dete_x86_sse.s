@@ -174,21 +174,22 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 				pcmpgtd xmm3, [vecAbsGY0]
 				pcmpgtd xmm4, [vecAbsGY1]
 				packssdw xmm3, xmm4
-				pand xmm3, xmm2 ; xmm2 = old vec4, now vec4 is xmm3
-				pmovmskb rax, xmm3
+				pand xmm2, xmm3 ; xmm2 = old vec4, override
+				pmovmskb rax, xmm2
 				test rax, rax
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 				; if (_mm_movemask_epi8(vec4)) - 1
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 				jz .EndOf_Ifvec41
 				.Ifvec41:
-					movdqa xmm4, [vecGX]
-					pxor xmm4, [vecGY]
-					pcmpgtw xmm4, [vecZero]
-					pand xmm4, xmm3 ; xmm3 is vec4, xmm4 = vec1
+					movdqa xmm6, [vecGX]
+					pxor xmm4, xmm4 ; vecZero
+					pxor xmm6, [vecGY]
+					pcmpgtw xmm4, xmm6
+					pand xmm4, xmm2 ; xmm2 is vec4, xmm4 = vec1
 					movdqa xmm5, xmm4
 					pmovmskb rax, xmm4
-					pandn xmm5, xmm3 ; xmm3 is vec4, xmm5 = vec2
+					pandn xmm5, xmm2 ; xmm2 is vec4, xmm5 = vec2
 					test rax, rax
 					;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 					; if (_mm_movemask_epi8(vec1))
@@ -239,8 +240,8 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 				;; EndOf_Ifvec40 ;;
 
 			;; angle = "90° / 270°" ;;
-			pandn xmm3, xmm0 ; xmm3 was vec4 and xmm0 is vec0
-			pandn xmm1, xmm3 ; xmm1 was vec3, now vec5 is xmm1
+			pandn xmm2, xmm0 ; xmm2 was vec4 and xmm0 is vec0
+			pandn xmm1, xmm2 ; xmm1 was vec3, now vec5 is xmm1
 			pmovmskb rax, xmm1
 			test rax, rax
 			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

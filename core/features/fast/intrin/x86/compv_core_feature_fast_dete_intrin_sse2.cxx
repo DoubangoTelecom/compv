@@ -210,6 +210,7 @@ void CompVFastNmsApply_Intrin_SSE2(COMPV_ALIGNED(SSE) uint8_t* pcStrengthsMap, C
 	static const __m128i vec0xFF = _mm_cmpeq_epi8(vecZero, vecZero); // 0xFF
 	for (j = 3; j < heigth - 3; ++j) {
 		for (i = 0; i < width; i += 16) { // SIMD: start at #zero index to have aligned memory
+			// TODO(dmi): _mm_cmpnot_epu8_SSE2 is two instruction, change to have something like Canny NMS
 			vec0 = _mm_cmpnot_epu8_SSE2(_mm_load_si128(reinterpret_cast<const __m128i*>(&pNMS[i])), vecZero, vec0xFF);
 			if (_mm_movemask_epi8(vec0)) {
 				_mm_store_si128(reinterpret_cast<__m128i*>(&pNMS[i]), vecZero); // must, for next frame

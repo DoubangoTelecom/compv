@@ -28,7 +28,7 @@ void CompVCannyNMSApply_Intrin_AVX2(COMPV_ALIGNED(AVX) uint16_t* grad, COMPV_ALI
 	for (row_ = 1; row_ < height; ++row_) { // row starts to #1 and ends at (heigth = imageHeigth - 1)
 		for (col_ = 0; col_ < width; col_ += 16) { // SIMD, starts at 0 (instead of 1) to have memory aligned, reading beyong width which means data must be strided
 			vec0n = _mm_cmpeq_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(&nms[col_])), _mm256_castsi256_si128(vecZero));
-			if (_mm_movemask_epi8(vec0n) ^ 0xffff) {
+			if (_mm_movemask_epi8(vec0n) ^ 0xffff) { // arm neon -> _mm_cmpgt_epu8(nms, zero)
 				// TODO(dmi): assembler -> (with xmm1 = vec0n and ymm1 = vec0)
 				// vpunpckhbw xmm2, xmm1, xmm1
 				// vpunpcklbw xmm1, xmm1, xmm1

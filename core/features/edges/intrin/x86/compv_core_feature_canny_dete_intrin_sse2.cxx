@@ -128,7 +128,7 @@ void CompVCannyNMSApply_Intrin_SSE2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALI
 	for (row_ = 1; row_ < height; ++row_) { // row starts to #1 and ends at (heigth = imageHeigth - 1)
 		for (col_ = 0; col_ < width; col_ += 8) { // SIMD, starts at 0 (instead of 1) to have memory aligned, reading beyong width which means data must be strided
 			vec0 = _mm_cmpeq_epi8(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&nms[col_])), vecZero);
-			if (_mm_movemask_epi8(vec0) ^ 0xffff) { // ARM NEON: no need for movemask
+			if (_mm_movemask_epi8(vec0) ^ 0xffff) { // arm neon -> NotAllZeros(_mm_cmpgt_epu8(nms, zero))
 				vec0 = _mm_and_si128(_mm_unpacklo_epi8(vec0, vec0), _mm_load_si128(reinterpret_cast<const __m128i*>(&grad[col_])));
 				_mm_store_si128(reinterpret_cast<__m128i*>(&grad[col_]), vec0);
 				_mm_storel_epi64(reinterpret_cast<__m128i*>(&nms[col_]), vecZero);
