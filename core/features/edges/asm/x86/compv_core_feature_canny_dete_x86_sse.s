@@ -250,7 +250,7 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 			.Ifvec50:
 				mov rax, col
 				sub rax, arg(6) ; sub stride
-				movdqa xmm6, [g + rax*COMPV_YASM_UINT16_SZ_BYTES]
+				movdqu xmm6, [g + rax*COMPV_YASM_UINT16_SZ_BYTES]
 				mov rax, col
 				add rax, arg(6) ; add stride
 				movdqu xmm7, [g + rax*COMPV_YASM_UINT16_SZ_BYTES]
