@@ -109,7 +109,7 @@ private:
 			COMPV_CHECK_EXP_RETURN(!outPtr, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 			outPtrAllocated = true;
 		}
-		OutputType* imgTmp = NULL;
+		OutputType* tmpPtr = NULL;
 		size_t threadsCount;
 		CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 		size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
@@ -157,14 +157,14 @@ private:
 			COMPV_CHECK_CODE_BAIL(err = threadDisp->wait(taskIds));
 		}
 		else {
-			OutputType* imgTmp = reinterpret_cast<OutputType*>(CompVMem::malloc(neededSize));
-			COMPV_CHECK_EXP_BAIL(!imgTmp, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to allocate temporary memory");
-			CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(dataPtr, imgTmp, dataWidth, dataHeight, dataStride, hzKernPtr, kernSize, true, fixedPoint);
-			CompVMathConvlt::convlt1Vt_private<OutputType, KernelType, OutputType>(imgTmp, outPtr, dataWidth, dataHeight, dataStride, vtKernPtr, kernSize, true, true, fixedPoint);
+			tmpPtr = reinterpret_cast<OutputType*>(CompVMem::malloc(neededSize));
+			COMPV_CHECK_EXP_BAIL(!tmpPtr, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to allocate temporary memory");
+			CompVMathConvlt::convlt1Hz_private<InputType, KernelType, OutputType>(dataPtr, tmpPtr, dataWidth, dataHeight, dataStride, hzKernPtr, kernSize, true, fixedPoint);
+			CompVMathConvlt::convlt1Vt_private<OutputType, KernelType, OutputType>(tmpPtr, outPtr, dataWidth, dataHeight, dataStride, vtKernPtr, kernSize, true, true, fixedPoint);
 		}
 
 	bail:
-		CompVMem::free(reinterpret_cast<void**>(&imgTmp));
+		CompVMem::free(reinterpret_cast<void**>(&tmpPtr));
 		if (outPtrAllocated && COMPV_ERROR_CODE_IS_NOK(err)) {
 			CompVMem::free(reinterpret_cast<void**>(&outPtr));
 		}

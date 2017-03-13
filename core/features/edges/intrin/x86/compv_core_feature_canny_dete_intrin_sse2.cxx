@@ -30,6 +30,8 @@ void CompVCannyHysteresisRow_8mpw_Intrin_SSE2(size_t row, size_t colStart, size_
 	size_t c, r, s;
 	uint8_t *pb, *pt;
 	CompVMatIndex edge;
+	// std::vector is faster than std::list, std::dequeue and std::stack (perf. done using Intel VTune on core i7)
+	// also, check https://baptiste-wicht.com/posts/2012/11/cpp-benchmark-vector-vs-list.html
 	std::vector<CompVMatIndex> edges;
 
 	for (col = colStart; col < width - 7; col += 8) { // width is alredy >=8 (checked by the caller)
