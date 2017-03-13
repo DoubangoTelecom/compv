@@ -119,7 +119,7 @@ sym(CompVCannyNMSGatherRow_16mpw_Asm_X86_AVX2):
 			vpunpcklwd ymm3, ymm1 ; vecAbsGY0
 			vpunpckhwd ymm4, ymm1 ; vecAbsGY1	
 			vpmovzxwd ymm1, xmm2 ; vecAbsGX0
-			vextractf128 xmm2, ymm2, 0x1	; FIXME(dmi): hide xmm2 latency	
+			vextractf128 xmm2, ymm2, 0x1
 			vpmovzxwd ymm2, xmm2 ; vecAbsGX1
 
 			vmovdqa [vecGY], ymm5
