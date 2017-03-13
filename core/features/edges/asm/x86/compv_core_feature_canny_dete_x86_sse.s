@@ -36,13 +36,12 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 
 	; align stack and alloc memory
 	COMPV_YASM_ALIGN_STACK 16, rax
-	sub rsp, (3*COMPV_YASM_REG_SZ_BYTES) + (12*COMPV_YASM_XMM_SZ_BYTES)
+	sub rsp, (3*COMPV_YASM_REG_SZ_BYTES) + (11*COMPV_YASM_XMM_SZ_BYTES)
 
 	%define c0							rsp + 0
 	%define c1							c0 + COMPV_YASM_REG_SZ_BYTES
 	%define widthMinus7					c1 + COMPV_YASM_REG_SZ_BYTES
-	%define vecNMS						widthMinus7 + COMPV_YASM_REG_SZ_BYTES
-	%define vecG						vecNMS + COMPV_YASM_XMM_SZ_BYTES
+	%define vecG						widthMinus7 + COMPV_YASM_REG_SZ_BYTES
 	%define vecGX						vecG + COMPV_YASM_XMM_SZ_BYTES
 	%define vecAbsGX0					vecGX + COMPV_YASM_XMM_SZ_BYTES
 	%define vecAbsGX1					vecAbsGX0 + COMPV_YASM_XMM_SZ_BYTES
@@ -59,6 +58,7 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 	%define g							rbx
 	%define gx							rsi
 	%define gy							rdi
+	%define vecNMS						xmm7
 	
 	mov rax, arg(4) ; tLow1
 	mov rcx, 27145 ; kCannyTangentPiOver8Int
@@ -111,7 +111,7 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 			
 			movdqu xmm5, [gy + (col * COMPV_YASM_INT16_SZ_BYTES)] ; vecGY
 			movdqu xmm6, [gx + (col * COMPV_YASM_INT16_SZ_BYTES)] ; vecGX
-			movq xmm7, [nms + (col * COMPV_YASM_UINT8_SZ_BYTES)] ; vecNMS
+			movq vecNMS, [nms + (col * COMPV_YASM_UINT8_SZ_BYTES)]
 
 			pabsw xmm2, xmm5
 			pabsw xmm1, xmm6
@@ -125,7 +125,6 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 
 			movdqa [vecGY], xmm5
 			movdqa [vecGX], xmm6
-			movdqa [vecNMS], xmm7
 			movdqa [vecAbsGY0], xmm3
 			movdqa [vecAbsGY1], xmm4
 			movdqa [vecAbsGX0], xmm1
@@ -152,8 +151,7 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 				por xmm2, xmm3
 				pand xmm2, xmm1 ; xmm1 is vec3
 				packsswb xmm2, xmm2
-				por xmm2, [vecNMS]
-				movdqa [vecNMS], xmm2
+				por vecNMS, xmm2
 				.EndOf_Ifvec30:
 				;; EndOf_Ifvec30 ;;
 
@@ -201,10 +199,10 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 						movdqa xmm6, [g + rax*COMPV_YASM_UINT16_SZ_BYTES]
 						mov rax, col
 						add rax, [c0]
-						movdqu xmm7, [g + rax*COMPV_YASM_UINT16_SZ_BYTES]
+						movdqu xmm3, [g + rax*COMPV_YASM_UINT16_SZ_BYTES]
 						pcmpgtw xmm6, [vecG]
-						pcmpgtw xmm7, [vecG]
-						por xmm6, xmm7
+						pcmpgtw xmm3, [vecG]
+						por xmm6, xmm3
 						pand xmm4, xmm6 ; xmm4 is old vec1
 						.EndOf_Ifvec10:
 						;; EndOf_Ifvec10 ;;
@@ -221,18 +219,17 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 						movdqa xmm6, [g + rax*COMPV_YASM_UINT16_SZ_BYTES]
 						mov rax, col
 						add rax, [c1]
-						movdqu xmm7, [g + rax*COMPV_YASM_UINT16_SZ_BYTES]
+						movdqu xmm3, [g + rax*COMPV_YASM_UINT16_SZ_BYTES]
 						pcmpgtw xmm6, [vecG]
-						pcmpgtw xmm7, [vecG]
-						por xmm6, xmm7
+						pcmpgtw xmm3, [vecG]
+						por xmm6, xmm3
 						pand xmm5, xmm6 ; xmm5 is old vec2
 						.EndOfIfvec20:
 						;; EndOfIfvec20 ;;
 
 					por xmm4, xmm5 ; xmm4 is vec1 and xmm5 is vec2
 					packsswb xmm4, xmm4
-					por xmm4, [vecNMS]
-					movdqa [vecNMS], xmm4
+					por vecNMS, xmm4
 					.EndOf_Ifvec41:
 					;; EndOf_Ifvec41 ;;
 
@@ -254,19 +251,17 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 				movdqu xmm6, [g + rax*COMPV_YASM_UINT16_SZ_BYTES]
 				mov rax, col
 				add rax, arg(6) ; add stride
-				movdqu xmm7, [g + rax*COMPV_YASM_UINT16_SZ_BYTES]
+				movdqu xmm3, [g + rax*COMPV_YASM_UINT16_SZ_BYTES]
 				pcmpgtw xmm6, [vecG]
-				pcmpgtw xmm7, [vecG]
-				por xmm6, xmm7
+				pcmpgtw xmm3, [vecG]
+				por xmm6, xmm3
 				pand xmm1, xmm6 ; xmm1 is old vec5
 				packsswb xmm1, xmm1
-				por xmm1, [vecNMS]
-				movdqa [vecNMS], xmm1
+				por vecNMS, xmm1
 				.EndOf_Ifvec50:
 				;; EndOf_Ifvec50 ;;
-
-			movq xmm7, [vecNMS]
-			movq [nms + col*COMPV_YASM_UINT8_SZ_BYTES], xmm7
+			
+			movq [nms + col*COMPV_YASM_UINT8_SZ_BYTES], vecNMS
 
 			.EndOf_Ifvec00:
 			;; EndOf_Ifvec00 ;;
@@ -279,8 +274,7 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 
 	%undef c0						
 	%undef c1
-	%undef widthMinus7					
-	%undef vecNMS						
+	%undef widthMinus7											
 	%undef vecG						
 	%undef vecGX						
 	%undef vecAbsGX0					
@@ -298,9 +292,10 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 	%undef g
 	%undef gx
 	%undef gy
+	%undef vecNMS
 
 	; free memory and unalign stack
-	add rsp, (3*COMPV_YASM_REG_SZ_BYTES) + (12*COMPV_YASM_XMM_SZ_BYTES)
+	add rsp, (3*COMPV_YASM_REG_SZ_BYTES) + (11*COMPV_YASM_XMM_SZ_BYTES)
 	COMPV_YASM_UNALIGN_STACK
 
 	;; begin epilog ;;
