@@ -120,7 +120,6 @@ void CompVCannyHysteresisRow_8mpw_Intrin_SSE2(size_t row, size_t colStart, size_
 
 void CompVCannyNMSApply_Intrin_SSE2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALIGNED(SSE) uint8_t* nms, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("FIXME(dmi): add ASM");
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	__m128i vec0;
 	compv_uscalar_t col_, row_;
@@ -130,8 +129,8 @@ void CompVCannyNMSApply_Intrin_SSE2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALI
 			vec0 = _mm_cmpeq_epi8(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&nms[col_])), vecZero);
 			if (_mm_movemask_epi8(vec0) ^ 0xffff) { // arm neon -> NotAllZeros(_mm_cmpgt_epu8(nms, zero))
 				vec0 = _mm_and_si128(_mm_unpacklo_epi8(vec0, vec0), _mm_load_si128(reinterpret_cast<const __m128i*>(&grad[col_])));
-				_mm_store_si128(reinterpret_cast<__m128i*>(&grad[col_]), vec0);
 				_mm_storel_epi64(reinterpret_cast<__m128i*>(&nms[col_]), vecZero);
+				_mm_store_si128(reinterpret_cast<__m128i*>(&grad[col_]), vec0);
 			}
 		}
 		nms += stride;

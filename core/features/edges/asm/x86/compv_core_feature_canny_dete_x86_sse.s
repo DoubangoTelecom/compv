@@ -346,24 +346,24 @@ sym(CompVCannyNMSApply_Asm_X86_SSE2):
 			pcmpeqb xmm1, xmm0
 			pmovmskb eax, xmm1
 			xor eax, 0xffff
-			;jz .NothingToSupress
+			jz .NothingToSupress
 				punpcklbw xmm1, xmm1
 				pand xmm1, [rbx + rcx*COMPV_YASM_UINT16_SZ_BYTES]
 				movq [rdx + rcx*COMPV_YASM_UINT8_SZ_BYTES], xmm0
 				movdqa [rbx + rcx*COMPV_YASM_UINT16_SZ_BYTES], xmm1
-				;.NothingToSupress:
+				.NothingToSupress:
 
 			add rcx, 8
 			cmp rcx, rdi
 			jl .LoopWidth
 			;; EndOf_LoopWidth ;;
 
-		add rdx, arg(4) 
-		add rbx, arg(4)
+		mov rax, arg(4) ; stride
 		dec rsi
+		lea rdx, [rdx + rax*COMPV_YASM_UINT8_SZ_BYTES] ; nms += stride
+		lea rbx, [rbx + rax*COMPV_YASM_UINT16_SZ_BYTES] ; grad += stride
 		jnz .LoopHeight
 		; EndOf_LoopHeight ;;
-
 
 	;; begin epilog ;;
 	pop rbx

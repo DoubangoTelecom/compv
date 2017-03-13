@@ -11,6 +11,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVCannyNMSGatherRow_16mpw_Asm_X86_AVX2)
+global sym(CompVCannyNMSApply_Asm_X86_AVX2)
 
 section .data
 
@@ -300,6 +301,76 @@ sym(CompVCannyNMSGatherRow_16mpw_Asm_X86_AVX2):
 	pop rdi
 	pop rsi
 	COMPV_YASM_RESTORE_YMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	vzeroupper
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(AVX) uint16_t* grad
+; arg(1) -> COMPV_ALIGNED(AVX) uint8_t* nms
+; arg(2) -> compv_uscalar_t width
+; arg(3) -> compv_uscalar_t height
+; arg(4) -> COMPV_ALIGNED(AVX) compv_uscalar_t stride
+sym(CompVCannyNMSApply_Asm_X86_AVX2):
+	vzeroupper
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	vpxor xmm0, xmm0 ; xmm0 = vecZero
+	mov rbx, arg(0) ; rbx = grad
+	mov rdx, arg(1) ; rdx = nms
+	mov rdi, arg(2) ; rdi = width
+	mov rsi, arg(3) ; rsi = height
+	; rcx = i
+	; rax = local variable
+
+	; row starts to #1
+	dec rsi
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (row_ = 1; row_ < height; ++row_)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (col_ = 0; col_ < width; col_ += 16)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		xor rcx, rcx ; i = 0
+		.LoopWidth:
+			vmovdqa xmm1, [rdx + rcx*COMPV_YASM_UINT8_SZ_BYTES]
+			vpcmpeqb xmm1, xmm0
+			vpmovmskb eax, xmm1
+			xor eax, 0xffff
+			jz .NothingToSupress
+				vpunpckhbw xmm2, xmm1, xmm1
+				vpunpcklbw xmm1, xmm1, xmm1
+				vinsertf128 ymm1, ymm1, xmm2, 1
+				vmovdqa [rdx + rcx*COMPV_YASM_UINT8_SZ_BYTES], xmm0
+				vpand ymm1, [rbx + rcx*COMPV_YASM_UINT16_SZ_BYTES]
+				vmovdqa [rbx + rcx*COMPV_YASM_UINT16_SZ_BYTES], ymm1
+				.NothingToSupress:
+
+			add rcx, 16
+			cmp rcx, rdi
+			jl .LoopWidth
+			;; EndOf_LoopWidth ;;
+
+		mov rax, arg(4) ; stride
+		dec rsi
+		lea rdx, [rdx + rax*COMPV_YASM_UINT8_SZ_BYTES] ; nms += stride
+		lea rbx, [rbx + rax*COMPV_YASM_UINT16_SZ_BYTES] ; grad += stride
+		jnz .LoopHeight
+		; EndOf_LoopHeight ;;
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

@@ -29,6 +29,8 @@ static void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width,
 #	if COMPV_ARCH_X86
 	COMPV_EXTERNC void CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVCannyNMSGatherRow_16mpw_Asm_X86_AVX2(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVCannyNMSApply_Asm_X86_SSE2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALIGNED(SSE) uint8_t* nms, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+	COMPV_EXTERNC void CompVCannyNMSApply_Asm_X86_AVX2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALIGNED(SSE) uint8_t* nms, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVCannyNMSGatherRow_8mpw_Asm_X64_SSE41(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
@@ -341,12 +343,11 @@ void CompVEdgeDeteCanny::nms_apply()
 	const size_t gStrideInBytes = m_nImageStride * sizeof(uint16_t);
 	if (imageWidthMinus1_ >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(nms_) && COMPV_IS_ALIGNED_SSE(g_) && COMPV_IS_ALIGNED_SSE(m_nImageStride) && COMPV_IS_ALIGNED_SSE(gStrideInBytes)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVCannyNMSApply = CompVCannyNMSApply_Intrin_SSE2);
-		//COMPV_EXEC_IFDEF_ASM_X86(CompVCannyNMSApply = CompVCannyNMSApply_Asm_X86_SSE2);
-		//COMPV_EXEC_IFDEF_ASM_X64(CompVCannyNMSApply = CompVCannyNMSApply_Asm_X64_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X86(CompVCannyNMSApply = CompVCannyNMSApply_Asm_X86_SSE2);
 	}
 	if (imageWidthMinus1_ >= 16 && CompVCpu::isEnabled(compv::kCpuFlagAVX2) && COMPV_IS_ALIGNED_AVX2(nms_) && COMPV_IS_ALIGNED_AVX2(g_) && COMPV_IS_ALIGNED_AVX2(m_nImageStride) && COMPV_IS_ALIGNED_AVX2(gStrideInBytes)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVCannyNMSApply = CompVCannyNMSApply_Intrin_AVX2);
-		//COMPV_EXEC_IFDEF_ASM_X64(CompVCannyNMSApply = CompVCannyNMSApply_Asm_X64_AVX2);
+		COMPV_EXEC_IFDEF_ASM_X86(CompVCannyNMSApply = CompVCannyNMSApply_Asm_X86_AVX2);
 	}
 #endif /* COMPV_ARCH_X86 */
 
