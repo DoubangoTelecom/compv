@@ -11,6 +11,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41)
+global sym(CompVCannyNMSApply_Asm_X86_SSE2)
 
 section .data
 
@@ -302,6 +303,72 @@ sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 	pop rdi
 	pop rsi
 	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) uint16_t* grad
+; arg(1) -> COMPV_ALIGNED(SSE) uint8_t* nms
+; arg(2) -> compv_uscalar_t width
+; arg(3) -> compv_uscalar_t height
+; arg(4) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
+sym(CompVCannyNMSApply_Asm_X86_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 5
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	pxor xmm0, xmm0 ; xmm0 = vecZero
+	mov rbx, arg(0) ; rbx = grad
+	mov rdx, arg(1) ; rdx = nms
+	mov rdi, arg(2) ; rdi = width
+	mov rsi, arg(3) ; rsi = height
+	; rcx = i
+	; rax = local variable
+
+	; row starts to #1
+	dec rsi
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (row_ = 1; row_ < height; ++row_)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopHeight:
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (col_ = 0; col_ < width; col_ += 8)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		xor rcx, rcx ; i = 0
+		.LoopWidth:
+			movq xmm1, [rdx + rcx*COMPV_YASM_UINT8_SZ_BYTES]
+			pcmpeqb xmm1, xmm0
+			pmovmskb eax, xmm1
+			xor eax, 0xffff
+			;jz .NothingToSupress
+				punpcklbw xmm1, xmm1
+				pand xmm1, [rbx + rcx*COMPV_YASM_UINT16_SZ_BYTES]
+				movq [rdx + rcx*COMPV_YASM_UINT8_SZ_BYTES], xmm0
+				movdqa [rbx + rcx*COMPV_YASM_UINT16_SZ_BYTES], xmm1
+				;.NothingToSupress:
+
+			add rcx, 8
+			cmp rcx, rdi
+			jl .LoopWidth
+			;; EndOf_LoopWidth ;;
+
+		add rdx, arg(4) 
+		add rbx, arg(4)
+		dec rsi
+		jnz .LoopHeight
+		; EndOf_LoopHeight ;;
+
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
