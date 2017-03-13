@@ -87,12 +87,8 @@ public:
     // Function used to compute L1 distance
     // r = abs(a) + abs(b)
     template <typename InputType, typename OutputType>
-    static COMPV_ERROR_CODE sumAbs(const InputType* a, const InputType* b, OutputType*& r, size_t width, size_t height, size_t stride) {
-        COMPV_CHECK_EXP_RETURN(!a || !b || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-        if (!r) {
-            r = reinterpret_cast<OutputType*>(CompVMem::malloc(height * stride * sizeof(OutputType)));
-            COMPV_CHECK_EXP_RETURN(!r, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-        }
+    static COMPV_ERROR_CODE sumAbs(const InputType* a, const InputType* b, OutputType* r, size_t width, size_t height, size_t stride) {
+        COMPV_CHECK_EXP_RETURN(!a || !b || !r || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs_C<InputType, OutputType>(a, b, r, width, height, stride)));
         return COMPV_ERROR_CODE_S_OK;
     }
@@ -109,22 +105,6 @@ public:
     static COMPV_ERROR_CODE sum2(const InputType* a, const InputType* b, OutputType* s, size_t width, size_t height, size_t stride) {
         COMPV_CHECK_EXP_RETURN(!a || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
         COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum2_C<InputType, OutputType>(a, b, s, width, height, stride)));
-        return COMPV_ERROR_CODE_S_OK;
-    }
-
-    // compute gradient using L1 distance (g = abs(gx) + abs(gy)) and the maximum value
-    template <typename InputType, typename OutputType>
-    static COMPV_ERROR_CODE gradientL1(const InputType* gx, const InputType* gy, OutputType*& g, size_t width, size_t height, size_t stride, OutputType* max = NULL) {
-        COMPV_CHECK_EXP_RETURN(!gx || !gy || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-        COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradient<InputType, OutputType>(gx, gy, g, width, height, stride, max, true)));
-        return COMPV_ERROR_CODE_S_OK;
-    }
-
-    // compute gradient using L2 distance (g = hypot(gx, gy) and the maximum value
-    template <typename InputType, typename OutputType>
-    static COMPV_ERROR_CODE gradientL2(const InputType* gx, const InputType* gy, OutputType*& g, size_t width, size_t height, size_t stride, OutputType* max = NULL) {
-        COMPV_CHECK_EXP_RETURN(!gx || !gy || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-        COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradient<InputType, OutputType>(gx, gy, g, width, height, stride, max, true)));
         return COMPV_ERROR_CODE_S_OK;
     }
 
@@ -233,35 +213,6 @@ private:
         return COMPV_ERROR_CODE_S_OK;
     }
 
-    template <typename InputType, typename OutputType>
-    static COMPV_ERROR_CODE gradient(const InputType* gx, const InputType* gy, OutputType*& g, size_t width, size_t height, size_t stride, OutputType* max = NULL, bool L1 = true) {
-        if (!g) {
-            g = reinterpret_cast<OutputType*>(CompVMem::malloc(height * stride * sizeof(OutputType)));
-            COMPV_CHECK_EXP_RETURN(!g, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-        }
-
-        size_t i, j;
-        OutputType* g_ = g;
-        if (L1) {
-            COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs<InputType, OutputType>(gx, gy, g, width, height, stride)));
-        }
-        else {
-            COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
-            for (j = 0; j < height; ++j) {
-                for (i = 0; i < width; ++i) {
-                    g_[i] = (OutputType)hypot(gx[i], gy[i]);
-                }
-                g_ += stride;
-                gx += stride;
-                gy += stride;
-            }
-        }
-        if (max) {
-            COMPV_CHECK_CODE_RETURN(CompVMathUtils::max<OutputType>(g, width, height, stride, *max));
-        }
-        return COMPV_ERROR_CODE_S_OK;
-    }
-
 	// ret = clip(min, max, v*scale)
 	template <typename InputType, typename ScaleType, typename OutputType>
 	static COMPV_ERROR_CODE scaleAndClip_C(const InputType* in, const ScaleType scale, OutputType* out, OutputType min, OutputType max, size_t width, size_t height, size_t stride) {
@@ -292,7 +243,7 @@ private:
 };
 
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::max(const uint16_t* data, size_t width, size_t height, size_t stride, uint16_t &max);
-COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint16_t*& r, size_t width, size_t height, size_t stride);
+COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint16_t* r, size_t width, size_t height, size_t stride);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t width, size_t height, size_t stride, uint32_t &r);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_t* s, size_t width, size_t height, size_t stride);
 COMPV_TEMPLATE_EXTERN COMPV_BASE_API COMPV_ERROR_CODE CompVMathUtils::mean(const uint8_t* data, size_t count, uint8_t &mean);

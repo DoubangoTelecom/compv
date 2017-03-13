@@ -36,8 +36,8 @@ OpenCV: 4148.ms(full optiz)
 Remarque: OpenCV uses SSE2 and multithreading and we're faster even with plain c++ (without sse or avx).
 
 === Gaussian Blur (kernel size = 7, Sigma = 2.0) (1282, 720) (#10k times) ===
-CompV(float): 2261.ms(mt,avx2,fma3), 2822.ms(mt,avx2), 5476.ms(mt,sse2), 7874.ms(st,avx2,fma3), 9980.ms(st,avx2), 17527.ms (st,sse2), 23004.ms(mt,c++), 79309.ms(st,c++)
-CompV(Fixed): 1449.ms(mt,avx2), 2815.ms(mt,sse2), 4736.ms(st,avx2), 8824.ms(st,sse2), 19741.ms(mt,c++), 70983.ms(st,c++)
+CompV(float): 2519.ms(mt,avx2,fma3), 2822.ms(mt,avx2), 5476.ms(mt,sse2), 7874.ms(st,avx2,fma3), 9980.ms(st,avx2), 17527.ms (st,sse2), 23004.ms(mt,c++), 79309.ms(st,c++)
+CompV(Fixed): 1382.ms(mt,avx2), 2815.ms(mt,sse2), 4736.ms(st,avx2), 8824.ms(st,sse2), 19741.ms(mt,c++), 70983.ms(st,c++)
 OpenCV(float): 16186.ms(full optiz)
 Remarque: https://github.com/DoubangoTelecom/compv/issues/118
 
@@ -52,7 +52,7 @@ Remarque: Sobel kernels are pre-defined (0, 1 and 2 values) which means we can c
 For now sobel convolution not used in commercial products which means not urgent to change the implementaion.
 
 === Canny edge detector (Kernel size = 3, tLow=0.80f, tHigh=tLow*2) (1282, 720) (#10k times) ===
-CompV: 18210.ms(full optiz), 168137.ms(st,c++)
+CompV: 17366.ms(full optiz), 168137.ms(st,c++)
 OpenCV: 69368.ms (full optiz)
 Remarque: tLow and tHight values are very important for speed comparison(high values -> less time spent in hysterisis and nms)
 The test images contains many edges and this is why it's unusually slow. Canny on HD image should last ~1.ms (which means ~1k fps)

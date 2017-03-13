@@ -199,13 +199,9 @@ COMPV_ERROR_CODE CompVMathUtils::max(const uint16_t* data, size_t width, size_t 
 }
 
 template <> COMPV_BASE_API
-COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint16_t*& r, size_t width, size_t height, size_t stride)
+COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint16_t* r, size_t width, size_t height, size_t stride)
 {
-    COMPV_CHECK_EXP_RETURN(!a || !b || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-    if (!r) {
-        r = reinterpret_cast<uint16_t*>(CompVMem::malloc(height * stride * sizeof(uint16_t)));
-        COMPV_CHECK_EXP_RETURN(!r, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
-    }
+    COMPV_CHECK_EXP_RETURN(!a || !b || !r || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	void(*CompVMathUtilsSumAbs_16s16u)(const COMPV_ALIGNED(X) int16_t* a, const COMPV_ALIGNED(X) int16_t* b, COMPV_ALIGNED(X) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride) 
 		= NULL;
 	const size_t strideInBytes = stride * sizeof(int16_t);

@@ -7,6 +7,7 @@
 #include "compv/core/features/edges/compv_core_feature_edge_dete.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/math/compv_math_convlt.h"
+#include "compv/base/math/compv_math_distance.h"
 #include "compv/base/image/compv_image.h"
 #include "compv/base/parallel/compv_parallel.h"
 
@@ -116,9 +117,9 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - padding, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, true);
 			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGy - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, first, last);
 			CompVMem::free((void**)&imgTmp);
-			// Gradient without computing gmax (computing gmax not thread-safe because of overlappings)
+			// Gradient using L1 distance (abs(gx) + abs(gy))
 			uint16_t* mt_g = ptrOutG - padding;
-			COMPV_CHECK_CODE_RETURN(err = (CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx - padding, ptrOutGy - padding, mt_g, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
+			COMPV_CHECK_CODE_RETURN(err = (CompVMathDistance::l1<int16_t, uint16_t>(ptrOutGx - padding, ptrOutGy - padding, mt_g, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		auto funcGmax = [&](const uint16_t* ptrG, size_t h, uint16_t *max) -> COMPV_ERROR_CODE {
@@ -172,8 +173,9 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, m_pcKernelVt, m_pcKernelHz, m_nKernelSize, m_pGx)));
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, m_pcKernelHz, m_pcKernelVt, m_nKernelSize, m_pGy)));
 
-		// Compute gradiant using L1 distance
-		COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride, &gmax)));
+		// Gradient using L1 distance (abs(gx) + abs(gy)) then gmax
+		COMPV_CHECK_CODE_RETURN((CompVMathDistance::l1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride)));
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::max<uint16_t>(m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride, gmax)));
 
 		// scale (normalization)
 		compv_float32_t scale = 255.f / compv_float32_t(gmax);

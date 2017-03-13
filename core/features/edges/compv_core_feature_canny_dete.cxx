@@ -7,6 +7,7 @@
 #include "compv/core/features/edges/compv_core_feature_canny_dete.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/math/compv_math_convlt.h"
+#include "compv/base/math/compv_math_distance.h"
 #include "compv/base/image/compv_image.h"
 #include "compv/base/parallel/compv_parallel.h"
 
@@ -153,8 +154,8 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - padding, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, true);
 			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGy - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, first, last);
 			CompVMem::free((void**)&imgTmp);
-			uint16_t* g_ = ptrOutG - padding;
-			COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(ptrOutGx - padding, ptrOutGy - padding, g_, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
+			// Gradient using L1 distance (abs(gx) + abs(gy))
+			COMPV_CHECK_CODE_RETURN((CompVMathDistance::l1<int16_t, uint16_t>(ptrOutGx - padding, ptrOutGy - padding, ptrOutG - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
 			uint32_t sum_ = 0;
 			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(ptrIn, m_nImageWidth, h, m_nImageStride, sum_)));
 			*ptrSum = sum_;
@@ -180,9 +181,11 @@ bail:
 		CompVMem::free(reinterpret_cast<void**>(&sums));
 	}
 	else {
+		// Convolution (gx and gy)
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, m_pcKernelVt, m_pcKernelHz, m_nKernelSize, m_pGx)));
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, m_pcKernelHz, m_pcKernelVt, m_nKernelSize, m_pGy)));
-		COMPV_CHECK_CODE_RETURN((CompVMathUtils::gradientL1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride)));
+		// Gradient using L1 distance (abs(gx) + abs(gy))
+		COMPV_CHECK_CODE_RETURN((CompVMathDistance::l1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride)));
 		COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, sum)));
 	}
 
