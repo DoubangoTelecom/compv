@@ -24,7 +24,7 @@ void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_
 	const uint16x8_t vecZero = vdupq_n_u8(0);
 	const uint16x8_t vecTLow = vdupq_n_u16(tLow);
 	const uint16x8_t vecTHigh = vdupq_n_u16(tHigh);
-	uint16_t m0, m1, mf;
+	uint16_t m0, mf;
 	uint8_t* p;
 	const uint16_t *g, *gb, *gt;
 	size_t c, r, s;
@@ -77,48 +77,37 @@ void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_
 						vec0 = vceqq_u16(vecP, vecZero);
 						vec0 = vandq_u16(vec0, vcgtq_u16(vecG, vecTLow));
 						if (COMPV_ARM_NEON_NEQ_ZERO(vec0)) {
-							// _mm_movemask_epi8
-							vec0 = vandq_u8(vec0, vecMask);
-							vec0n = vpadd_u8(vget_low_u8(vec0), vget_high_u8(vec0));
-							vec0n = vpadd_u8(vec0n, vec0n);
-							vec0n = vpadd_u8(vec0n, vec0n);
-							m1 = vget_lane_u16(vec0n, 0);
-
-							if (m1 & 0x00ff) {
-								if (m1 & 0x0003) { // left
-									p[-1] = 0xff;
-									edges.push_back(CompVMatIndex(r, c - 1));
-								}
-								if (m1 & 0x000c) { // right
-									p[1] = 0xff;
-									edges.push_back(CompVMatIndex(r, c + 1));
-								}
-								if (m1 & 0x0030) { // top-left
-									pt[-1] = 0xff;
-									edges.push_back(CompVMatIndex(r - 1, c - 1));
-								}
-								if (m1 & 0x00c0) { // top-center
-									*pt = 0xff;
-									edges.push_back(CompVMatIndex(r - 1, c));
-								}
+							if (vgetq_lane_u16(vec0, 0)) { // left
+								p[-1] = 0xff;
+								edges.push_back(CompVMatIndex(r, c - 1));
 							}
-							if (m1 & 0xff00) {
-								if (m1 & 0x0300) { // top-right
-									pt[1] = 0xff;
-									edges.push_back(CompVMatIndex(r - 1, c + 1));
-								}
-								if (m1 & 0x0c00) { // bottom-left
-									pb[-1] = 0xff;
-									edges.push_back(CompVMatIndex(r + 1, c - 1));
-								}
-								if (m1 & 0x3000) { // bottom-center
-									*pb = 0xff;
-									edges.push_back(CompVMatIndex(r + 1, c));
-								}
-								if (m1 & 0xc000) { // bottom-right
-									pb[1] = 0xff;
-									edges.push_back(CompVMatIndex(r + 1, c + 1));
-								}
+							if (vgetq_lane_u16(vec0, 1)) { // right
+								p[1] = 0xff;
+								edges.push_back(CompVMatIndex(r, c + 1));
+							}
+							if (vgetq_lane_u16(vec0, 2)) { // top-left
+								pt[-1] = 0xff;
+								edges.push_back(CompVMatIndex(r - 1, c - 1));
+							}
+							if (vgetq_lane_u16(vec0, 3)) { // top-center
+								*pt = 0xff;
+								edges.push_back(CompVMatIndex(r - 1, c));
+							}
+							if (vgetq_lane_u16(vec0, 4)) { // top-right
+								pt[1] = 0xff;
+								edges.push_back(CompVMatIndex(r - 1, c + 1));
+							}
+							if (vgetq_lane_u16(vec0, 5)) { // bottom-left
+								pb[-1] = 0xff;
+								edges.push_back(CompVMatIndex(r + 1, c - 1));
+							}
+							if (vgetq_lane_u16(vec0, 6)) { // bottom-center
+								*pb = 0xff;
+								edges.push_back(CompVMatIndex(r + 1, c));
+							}
+							if (vgetq_lane_u16(vec0, 7)) { // bottom-right
+								pb[1] = 0xff;
+								edges.push_back(CompVMatIndex(r + 1, c + 1));
 							}
 						}
 					}
