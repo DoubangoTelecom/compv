@@ -134,7 +134,7 @@ void CompVCannyNMSApply_Intrin_NEON(COMPV_ALIGNED(NEON) uint16_t* grad, COMPV_AL
 #else
 			if (vget_lane_u32(vec0n, 0) || vget_lane_u32(vec0n, 1)) {
 #endif
-				vec0 = vmovl_u8(vec0n); // FIXME: hyst use this instead of vmovl_u8 abov
+				vec0 = vmovl_u8(vec0n);
 				vec0 = vsliq_n_u16(vec0, vec0, 8);
 				vst1_u8(&nms[col_], vecZero);
 				vst1q_u16(&grad[col_], vbicq_u16(vld1q_u16(&grad[col_]), vec0)); // suppress
