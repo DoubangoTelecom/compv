@@ -122,23 +122,27 @@ void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_
 void CompVCannyNMSApply_Intrin_NEON(COMPV_ALIGNED(NEON) uint16_t* grad, COMPV_ALIGNED(NEON) uint8_t* nms, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
-#if 0
-	__m128i vec0;
+	uint16x8_t vec0;
+	uint8x8_t vec0n;
 	compv_uscalar_t col_, row_;
-	static const __m128i vecZero = _mm_setzero_si128();
+	static const uint8x8_t vecZero = vdup_n_u8(0);
 	for (row_ = 1; row_ < height; ++row_) { // row starts to #1 and ends at (heigth = imageHeigth - 1)
 		for (col_ = 0; col_ < width; col_ += 8) { // SIMD, starts at 0 (instead of 1) to have memory aligned, reading beyong width which means data must be strided
-			vec0 = _mm_cmpeq_epi8(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(&nms[col_])), vecZero);
-			if (_mm_movemask_epi8(vec0) ^ 0xffff) { // arm neon -> NotAllZeros(_mm_cmpgt_epu8(nms, zero))
-				vec0 = _mm_and_si128(_mm_unpacklo_epi8(vec0, vec0), _mm_load_si128(reinterpret_cast<const __m128i*>(&grad[col_])));
-				_mm_storel_epi64(reinterpret_cast<__m128i*>(&nms[col_]), vecZero);
-				_mm_store_si128(reinterpret_cast<__m128i*>(&grad[col_]), vec0);
+			vec0n = vcgt_u8(vld1_u8(&nms[col_]), vecZero);
+#if COMPV_ARCH_ARM64
+			if (vgetq_lane_u64(vec0n, 0)) {
+#else
+			if (vget_lane_u32(vec0n, 0) || vget_lane_u32(vec0n, 1)) {
+#endif
+				vec0 = vmovl_u8(vec0n); // FIXME: hyst use this instead of vmovl_u8 abov
+				vec0 = vsliq_n_u16(vec0, vec0, 8);
+				vst1_u8(&nms[col_], vecZero);
+				vst1q_u16(&grad[col_], vbicq_u16(vld1q_u16(&grad[col_]), vec0)); // suppress
+			}
 		}
-	}
 		nms += stride;
 		grad += stride;
-}
-#endif
+	}
 }
 
 COMPV_NAMESPACE_END()
