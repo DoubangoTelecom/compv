@@ -33,7 +33,7 @@ void CompVOrbBrief256_31_32f_Intrin_NEON(
 
 	uint16_t* outPtr = reinterpret_cast<uint16_t*>(out); // uint32_t for AVX
 #if COMPV_ARCH_ARM32
-	static const float32x4_t vecHalf = vdupq_n_f32(0.5f); // asm: vdupq_n_s32(0x3f000000)
+	static const float32x4_t vecHalf = vdupq_n_f32(0.5f); // asm: vdupq_n_s32(0x3f000000) - used by 'COMPV_ARM_NEON_MATH_ROUNDF_2_NEAREST_INT'
 	static const uint8x16_t vecMask = (uint32x4_t) { 0x8040201, 0x80402010, 0x8040201, 0x80402010  };
 #else
 	static const uint8x16_t vecMask = (uint64x2_t) { 9241421688590303745ULL, 9241421688590303745ULL  };

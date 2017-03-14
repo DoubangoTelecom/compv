@@ -14,6 +14,7 @@
 #include "compv/core/features/edges/intrin/x86/compv_core_feature_canny_dete_intrin_sse2.h"
 #include "compv/core/features/edges/intrin/x86/compv_core_feature_canny_dete_intrin_ssse3.h"
 #include "compv/core/features/edges/intrin/x86/compv_core_feature_canny_dete_intrin_avx2.h"
+#include "compv/core/features/edges/intrin/arm/compv_core_feature_canny_dete_intrin_neon.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVEdgeDeteCanny"
 
@@ -298,7 +299,13 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVMatPtr& edges, uint16_t tLo
 		COMPV_EXEC_IFDEF_ASM_X86((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_16mpw_Asm_X86_AVX2, xmpw = 16));
 		COMPV_EXEC_IFDEF_ASM_X64((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_16mpw_Asm_X64_AVX2, xmpw = 16));
 	}
-#endif /* COMPV_ARCH_X86 */
+#elif COMPV_ARCH_ARM
+	if (maxCols >= 8) {
+		if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_8mpw_Intrin_SSE, xmpw = 8));
+		}
+	}
+#endif
 
 	if (CompVCannyNMSGatherRow_xmpw) {
 		const int16_t *gx_xmpw = gx, *gy_xmpw = gy;
@@ -349,7 +356,12 @@ void CompVEdgeDeteCanny::nms_apply()
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVCannyNMSApply = CompVCannyNMSApply_Intrin_AVX2);
 		COMPV_EXEC_IFDEF_ASM_X86(CompVCannyNMSApply = CompVCannyNMSApply_Asm_X86_AVX2);
 	}
-#endif /* COMPV_ARCH_X86 */
+#elif COMPV_ARCH_ARM
+	const size_t gStrideInBytes = m_nImageStride * sizeof(uint16_t);
+	if (imageWidthMinus1_ >= 8 && CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(nms_) && COMPV_IS_ALIGNED_NEON(g_) && COMPV_IS_ALIGNED_NEON(m_nImageStride) && COMPV_IS_ALIGNED_NEON(gStrideInBytes)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVCannyNMSApply = CompVCannyNMSApply_Intrin_NEON);
+	}
+#endif
 
 	if (CompVCannyNMSApply) {
 		CompVCannyNMSApply(g_, nms_, static_cast<compv_uscalar_t>(imageWidthMinus1_), static_cast<compv_uscalar_t>(imageHeightMinus1_), static_cast<compv_uscalar_t>(m_nImageStride));
@@ -390,7 +402,11 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr& edges, uint16_t tLo
 	if (imageWidthMinus1 >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVCannyHysteresis_8mpw = CompVCannyHysteresisRow_8mpw_Intrin_SSE2);
 	}
-#endif /* COMPV_ARCH_X86 */
+#elif COMPV_ARCH_ARM
+	if (imageWidthMinus1 >= 8 && CompVCpu::isEnabled(compv::kCpuFlagARM_NEON)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVCannyHysteresis_8mpw = CompVCannyHysteresisRow_8mpw_Intrin_NEON);
+	}
+#endif
 
 	// SIMD execution
 	if (CompVCannyHysteresis_8mpw) {

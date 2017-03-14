@@ -66,7 +66,7 @@ COMPV_ERROR_CODE canny()
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Canny Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5: %s", compv_tests_md5(edges).c_str());
+	//COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5: %s", compv_tests_md5(edges).c_str());
 
 #if COMPV_OS_WINDOWS
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");

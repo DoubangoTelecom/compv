@@ -105,9 +105,10 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_NEON(const uint8_t* inPtr, int16_t* ou
 	compv_uscalar_t i, j, k, row, stride = width + pad;
 	uint8x16_t vecInPtr;
 	uint8x8_t vecInPtrn;
-	int16x8_t vec0, vec1, vecSum0, vecSum1, vecCoeff;
-	int16x4_t vecSum0n, vecCoeffn;
+	int16x8_t vec0, vec1, vecSum0, vecSum1;
+	int16x4_t vecSum0n;
 	int sum;
+	int16_t coeff;
 
 	for (j = 0; j < height; ++j) {
 		/* Per #16 samples */
@@ -116,11 +117,11 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_NEON(const uint8_t* inPtr, int16_t* ou
 			vecSum1 = vdupq_n_s16(0);
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtr = vld1q_u8(&inPtr[i + k]);
-				vecCoeff = vdupq_n_s16(vthzKernPtr[row]);
+				coeff = vthzKernPtr[row];
 				vec0 = vmovl_u8(vget_low_u8(vecInPtr)); // epi8 -> epi16
 				vec1 = vmovl_u8(vget_high_u8(vecInPtr)); // epi8 -> epi16
-				vecSum0 = vmlaq_s16(vecSum0, vec0, vecCoeff);
-				vecSum1 = vmlaq_s16(vecSum1, vec1, vecCoeff);
+				vecSum0 = vmlaq_n_s16(vecSum0, vec0, coeff);
+				vecSum1 = vmlaq_n_s16(vecSum1, vec1, coeff);
 			}
 			vst1q_s16(&outPtr[i], vecSum0);
 			vst1q_s16(&outPtr[i + 8], vecSum1);
@@ -131,9 +132,9 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_NEON(const uint8_t* inPtr, int16_t* ou
 			vecSum0 = vdupq_n_s16(0);
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtr = vld1q_u8(&inPtr[i + k]);
-				vecCoeff = vdupq_n_s16(vthzKernPtr[row]);
+				coeff = vthzKernPtr[row];
 				vec0 = vmovl_u8(vget_low_u8(vecInPtr)); // epi8 -> epi16
-				vecSum0 = vmlaq_s16(vecSum0, vec0, vecCoeff);
+				vecSum0 = vmlaq_n_s16(vecSum0, vec0, coeff);
 			}
 			vst1q_s16(&outPtr[i], vecSum0);
 			i += 8;
@@ -144,9 +145,9 @@ void CompVMathConvlt1VtHz_8u16s16s_Intrin_NEON(const uint8_t* inPtr, int16_t* ou
 			vecSum0n = vdup_n_s16(0);
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vecInPtrn = vld1_u8(&inPtr[i + k]);
-				vecCoeffn = vdup_n_s16(vthzKernPtr[row]);
+				coeff = vthzKernPtr[row];
 				vec0 = vmovl_u8(vecInPtrn); // epi8 -> epi16
-				vecSum0n = vmla_s16(vecSum0n, vget_low_s16(vec0), vecCoeffn);
+				vecSum0n = vmla_n_s16(vecSum0n, vget_low_s16(vec0), coeff);
 			}
 			vst1_s16(&outPtr[i], vecSum0n);
 			i += 4;
@@ -171,9 +172,10 @@ void CompVMathConvlt1VtHz_16s16s16s_Intrin_NEON(const int16_t* inPtr, int16_t* o
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	compv_uscalar_t i, j, k, row, stride = width + pad;
-	int16x8_t vec0, vec1, vecSum0, vecSum1, vecCoeff;
-	int16x4_t vecSum0n, vec0n, vecCoeffn;
+	int16x8_t vec0, vec1, vecSum0, vecSum1;
+	int16x4_t vecSum0n, vec0n;
 	int sum;
+	int16_t coeff;
 
 	for (j = 0; j < height; ++j) {
 		/* Per #16 samples */
@@ -183,9 +185,9 @@ void CompVMathConvlt1VtHz_16s16s16s_Intrin_NEON(const int16_t* inPtr, int16_t* o
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vec0 = vld1q_s16(&inPtr[i + k]);
 				vec1 = vld1q_s16(&inPtr[i + k + 8]);
-				vecCoeff = vdupq_n_s16(vthzKernPtr[row]);
-				vecSum0 = vmlaq_s16(vecSum0, vec0, vecCoeff);
-				vecSum1 = vmlaq_s16(vecSum1, vec1, vecCoeff);
+				coeff = vthzKernPtr[row];
+				vecSum0 = vmlaq_n_s16(vecSum0, vec0, coeff);
+				vecSum1 = vmlaq_n_s16(vecSum1, vec1, coeff);
 			}
 			vst1q_s16(&outPtr[i], vecSum0);
 			vst1q_s16(&outPtr[i + 8], vecSum1);
@@ -196,8 +198,8 @@ void CompVMathConvlt1VtHz_16s16s16s_Intrin_NEON(const int16_t* inPtr, int16_t* o
 			vecSum0 = vdupq_n_s16(0);
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vec0 = vld1q_s16(&inPtr[i + k]);
-				vecCoeff = vdupq_n_s16(vthzKernPtr[row]);
-				vecSum0 = vmlaq_s16(vecSum0, vec0, vecCoeff);
+				coeff = vthzKernPtr[row];
+				vecSum0 = vmlaq_n_s16(vecSum0, vec0, coeff);
 			}
 			vst1q_s16(&outPtr[i], vecSum0);
 			i += 8;
@@ -208,8 +210,8 @@ void CompVMathConvlt1VtHz_16s16s16s_Intrin_NEON(const int16_t* inPtr, int16_t* o
 			vecSum0n = vdup_n_s16(0);
 			for (row = 0, k = 0; row < kernSize; ++row, k += step) {
 				vec0n = vld1_s16(&inPtr[i + k]);
-				vecCoeffn = vdup_n_s16(vthzKernPtr[row]);
-				vecSum0n = vmla_s16(vecSum0n, vec0n, vecCoeffn);
+				coeff = vthzKernPtr[row];
+				vecSum0n = vmla_n_s16(vecSum0n, vec0n, coeff);
 			}
 			vst1_s16(&outPtr[i], vecSum0n);
 			i += 4;

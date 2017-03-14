@@ -152,8 +152,8 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSE(uint8_t* nms, const uint16_t* g, con
 			vecAbsGY1 = vshll_n_u16(vget_high_u16(vec1), 16); // convert from epi16 to epi32 then  "<< 16"
 
 			// angle = "0° / 180°"
-			vec1 = vcgtq_u32(vmull_u16(vecTangentPiOver8Int, vget_low_u16(vecAbsGX)), vecAbsGY0);
-			vec2 = vcgtq_u32(vmull_u16(vecTangentPiOver8Int, vget_high_u16(vecAbsGX)), vecAbsGY1);
+			vec1 = vcgtq_u32(vmull_u16(vecTangentPiOver8Int, vget_low_u16(vecAbsGX)), vecAbsGY0); // convert from epi16 to epi32 then multiply
+			vec2 = vcgtq_u32(vmull_u16(vecTangentPiOver8Int, vget_high_u16(vecAbsGX)), vecAbsGY1); // convert from epi16 to epi32 then multiply
 			vec3 = vandq_u16(vec0, vcombine_u16(vqmovn_u32(vec1), vqmovn_u32(vec2)));
 			if (COMPV_ARM_NEON_NEQ_ZERO(vec3)) {
 				vec1 = vcgtq_u16(vld1q_u16(&g[col - 1]), vecG); // aligned load
@@ -165,8 +165,8 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSE(uint8_t* nms, const uint16_t* g, con
 			// angle = "45° / 225°" or "135 / 315"
 			vec4 = vbicq_s16(vec0, vec3);
 			if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) {
-				vec1 = vcgtq_u32(vmulq_u32(vecTangentPiTimes3Over8Int, vmovl_u16(vget_low_u16(vecAbsGX))), vecAbsGY0);
-				vec2 = vcgtq_u32(vmulq_u32(vecTangentPiTimes3Over8Int, vmovl_u16(vget_high_u16(vecAbsGX))), vecAbsGY1);
+				vec1 = vcgtq_u32(vmulq_u32(vecTangentPiTimes3Over8Int, vmovl_u16(vget_low_u16(vecAbsGX))), vecAbsGY0); // multiply without pre-conversion
+				vec2 = vcgtq_u32(vmulq_u32(vecTangentPiTimes3Over8Int, vmovl_u16(vget_high_u16(vecAbsGX))), vecAbsGY1); // multiply without pre-conversion
 				vec4 = vandq_u16(vec4, vcombine_u16(vqmovn_u32(vec1), vqmovn_u32(vec2)));
 				if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) {
 					vec1 = vcgtq_s16(vecZero, veorq_s16(vecGX, vecGY)); // todo(asm): compare on signed numbers (different than other compare in this function)
