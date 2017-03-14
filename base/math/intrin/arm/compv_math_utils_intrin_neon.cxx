@@ -61,6 +61,56 @@ void CompVMathUtilsMax_16u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint16_t* data,
 	*max = vget_lane_u16(vecMaxn, 0);
 }
 
+void CompVMathUtilsSum_8u32u_Intrin_NEON(COMPV_ALIGNED(NEON) const uint8_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, uint32_t *sum1)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	uint8x16_t vecSuml = vdupq_n_u32(0), vecSumh = vdupq_n_u32(0), vec0, vec1, vec2, vec3, vecOrphansSuppress = vdupq_n_u32(0);
+	compv_scalar_t widthSigned = static_cast<compv_scalar_t>(width), i;
+	compv_scalar_t orphans = (widthSigned & 15); // in bytes
+	if (orphans) {
+		compv_scalar_t orphansInBytes = orphans << 0;
+		vecOrphansSuppress = vceqq_u8(vecOrphansSuppress, vecOrphansSuppress);
+		orphansInBytes = ((orphansInBytes - 16) << 3);
+		vecOrphansSuppress = vshlq_u64(vecOrphansSuppress, (int64x2_t) { orphansInBytes < -64 ? (orphansInBytes + 64) : 0, orphansInBytes });
+	}
+
+	for (compv_uscalar_t j = 0; j < height; ++j) {
+		for (i = 0; i < widthSigned - 63; i += 64) {
+			vec0 = vld1q_u8(&data[i]);
+			vec1 = vld1q_u8(&data[i + 16]);
+			vec2 = vld1q_u8(&data[i + 32]);
+			vec3 = vld1q_u8(&data[i + 48]);
+			vec0 = vaddl_u8(vget_low_u8(vec0), vget_high_u8(vec0));
+			vec1 = vaddl_u8(vget_low_u8(vec1), vget_high_u8(vec1));
+			vec2 = vaddl_u8(vget_low_u8(vec2), vget_high_u8(vec2));
+			vec3 = vaddl_u8(vget_low_u8(vec3), vget_high_u8(vec3));
+			vec0 = vaddq_u16(vec0, vec1);
+			vec2 = vaddq_u16(vec2, vec3);
+			// use vecSuml and vecSumh to break dependency
+			vecSuml = vaddq_u32(vecSuml, vaddl_u16(vget_low_u16(vec0), vget_high_u16(vec0)));
+			vecSumh = vaddq_u32(vecSumh, vaddl_u16(vget_low_u16(vec2), vget_high_u16(vec2)));
+		}
+		for (; i < widthSigned - 15; i += 16) {
+			vec0 = vld1q_u8(&data[i]);
+			vec0 = vaddl_u8(vget_low_u8(vec0), vget_high_u8(vec0));
+			vecSuml = vaddq_u32(vecSuml, vaddl_u16(vget_low_u16(vec0), vget_high_u16(vec0)));
+		}
+		if (orphans) {
+			vec0 = vld1q_u8(&data[i]);
+			vec0 = vandq_u16(vec0, vecOrphansSuppress);
+			vec0 = vaddl_u8(vget_low_u8(vec0), vget_high_u8(vec0));
+			vecSuml = vaddq_u32(vecSuml, vaddl_u16(vget_low_u16(vec0), vget_high_u16(vec0)));
+		}
+		data += stride;
+	}
+
+	vecSuml = vaddq_u32(vecSuml, vecSumh);
+	uint32x2_t vecSumln = vadd_u32(vget_low_u32(vecSuml), vget_high_u32(vecSuml));
+	vecSumln = vpadd_u32(vecSumln, vecSumln);
+
+	*sum1 = vget_lane_u32(vecSumln, 0);
+}
+
 // "strideInBytes" must be NEON-aligned
 void CompVMathUtilsSumAbs_16s16u_Intrin_NEON(const COMPV_ALIGNED(NEON) int16_t* a, const COMPV_ALIGNED(NEON) int16_t* b, COMPV_ALIGNED(NEON) uint16_t* r, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {

@@ -100,6 +100,33 @@
     <Filter Include="source\features\orb\asm\arm">
       <UniqueIdentifier>{b3127b75-668d-48a6-adf5-643902fc7a0e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\features\edges\intrin">
+      <UniqueIdentifier>{79284a8b-dee1-446f-b111-c61c4c8bd3a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\edges\intrin\x86">
+      <UniqueIdentifier>{bd8fad7a-93eb-480b-a2b4-cbea5def6168}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\edges\intrin\arm">
+      <UniqueIdentifier>{6faabdaa-0502-4399-b414-1617a7bbac8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\edges\asm">
+      <UniqueIdentifier>{0214d024-d5cc-43ef-95b9-13168ba4e5cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\edges\asm\x86">
+      <UniqueIdentifier>{0c8957b7-8bf9-4175-9175-02449d0bbe5b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\features\edges\asm\arm">
+      <UniqueIdentifier>{a49d815c-d0e1-4820-a48a-43271a96eaea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\features\edges\intrin">
+      <UniqueIdentifier>{5502bb66-0c98-4831-8d0d-81d9449029da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\features\edges\intrin\x86">
+      <UniqueIdentifier>{7c7bf715-bac8-44bb-b44c-436cfbe47683}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\features\edges\intrin\arm">
+      <UniqueIdentifier>{2bfeb28d-068f-436d-8357-d5d0a988448f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\compv\core\compv_core.h">
@@ -159,6 +186,18 @@
     <ClInclude Include="..\include\compv\core\features\edges\compv_core_feature_edge_dete.h">
       <Filter>include\features\edges</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_avx2.h">
+      <Filter>include\features\edges\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_sse2.h">
+      <Filter>include\features\edges\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_ssse3.h">
+      <Filter>include\features\edges\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.h">
+      <Filter>include\features\edges\intrin\arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
@@ -212,6 +251,18 @@
     <ClCompile Include="..\features\edges\compv_core_feature_edge_dete.cxx">
       <Filter>source\features\edges</Filter>
     </ClCompile>
+    <ClCompile Include="..\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_avx2.cxx">
+      <Filter>source\features\edges\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_sse2.cxx">
+      <Filter>source\features\edges\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_ssse3.cxx">
+      <Filter>source\features\edges\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.cxx">
+      <Filter>source\features\edges\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_avx.s">
@@ -231,6 +282,18 @@
     </None>
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x86_sse.s">
       <Filter>source\features\fast\asm\x86</Filter>
+    </None>
+    <None Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x64_avx.s">
+      <Filter>source\features\edges\asm\x86</Filter>
+    </None>
+    <None Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x64_sse.s">
+      <Filter>source\features\edges\asm\x86</Filter>
+    </None>
+    <None Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x86_avx.s">
+      <Filter>source\features\edges\asm\x86</Filter>
+    </None>
+    <None Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x86_sse.s">
+      <Filter>source\features\edges\asm\x86</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

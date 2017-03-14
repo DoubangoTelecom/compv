@@ -41,9 +41,9 @@ private:
 			for (size_t i = 0; i < width; ++i) {
 				r[i] = static_cast<OutputType>(CompVMathUtils::hypot(a[i], b[i]));
 			}
-			g_ += stride;
-			gx += stride;
-			gy += stride;
+			a += stride;
+			b += stride;
+			r += stride;
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}

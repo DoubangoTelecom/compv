@@ -251,6 +251,12 @@ COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t width, size_t heig
 			COMPV_EXEC_IFDEF_ASM_X64(CompVMathUtilsSum_8u32u = CompVMathUtilsSum_8u32u_Asm_X64_SSE2);
         }
     }
+#elif COMPV_ARCH_ARM
+	if (width >= 16 && COMPV_IS_ALIGNED_NEON(a) && COMPV_IS_ALIGNED_NEON(stride)) {
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM(CompVMathUtilsSum_8u32u = CompVMathUtilsSum_8u32u_Intrin_NEON);
+		}
+	}
 #endif
 	if (CompVMathUtilsSum_8u32u) {
 		CompVMathUtilsSum_8u32u(a, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride), &r);

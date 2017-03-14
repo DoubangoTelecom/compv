@@ -46,6 +46,10 @@
     <ClInclude Include="..\include\compv\core\compv_core_config.h" />
     <ClInclude Include="..\include\compv\core\features\edges\compv_core_feature_canny_dete.h" />
     <ClInclude Include="..\include\compv\core\features\edges\compv_core_feature_edge_dete.h" />
+    <ClInclude Include="..\include\compv\core\features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\core\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_avx2.h" />
+    <ClInclude Include="..\include\compv\core\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\core\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_ssse3.h" />
     <ClInclude Include="..\include\compv\core\features\fast\compv_core_feature_fast_dete.h" />
     <ClInclude Include="..\include\compv\core\features\fast\intrin\arm\compv_core_feature_fast_dete_intrin_neon.h" />
     <ClInclude Include="..\include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.h" />
@@ -65,6 +69,10 @@
     <ClCompile Include="..\compv_core.cxx" />
     <ClCompile Include="..\features\edges\compv_core_feature_canny_dete.cxx" />
     <ClCompile Include="..\features\edges\compv_core_feature_edge_dete.cxx" />
+    <ClCompile Include="..\features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.cxx" />
+    <ClCompile Include="..\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_avx2.cxx" />
+    <ClCompile Include="..\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_sse2.cxx" />
+    <ClCompile Include="..\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_ssse3.cxx" />
     <ClCompile Include="..\features\fast\compv_core_feature_fast_dete.cxx" />
     <ClCompile Include="..\features\fast\intrin\arm\compv_core_feature_fast_dete_intrin_neon.cxx">
       <EnableNeonCodegen Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</EnableNeonCodegen>
@@ -143,6 +151,10 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir)../../base/asm/arm;$(ProjectDir)../features/fast/asm/arm;%(IncludePaths)</IncludePaths>
     </GAS>
+    <None Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x64_avx.s" />
+    <None Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x64_sse.s" />
+    <None Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x86_avx.s" />
+    <None Include="..\features\edges\asm\x86\compv_core_feature_canny_dete_x86_sse.s" />
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_avx.s" />
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_macros_x86_sse.s" />
     <None Include="..\features\fast\asm\x86\compv_core_feature_fast_dete_x64_avx.s" />
