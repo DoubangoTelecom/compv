@@ -213,7 +213,7 @@ void CompVCannyNMSApply_Intrin_NEON(COMPV_ALIGNED(NEON) uint16_t* grad, COMPV_AL
 		for (col_ = 0; col_ < width; col_ += 8) { // SIMD, starts at 0 (instead of 1) to have memory aligned, reading beyong width which means data must be strided
 			vec0n = vcgt_u8(vld1_u8(&nms[col_]), vecZero);
 #if COMPV_ARCH_ARM64
-			if (vgetq_lane_u64(vec0n, 0)) {
+			if (vget_lane_u64(vec0n, 0)) {
 #else
 			if (vget_lane_u32(vec0n, 0) || vget_lane_u32(vec0n, 1)) {
 #endif

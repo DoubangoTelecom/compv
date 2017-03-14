@@ -117,6 +117,9 @@
     <Filter Include="Source Files\features\edges\asm\x86">
       <UniqueIdentifier>{e10ef4b8-62fd-4466-93d5-5d5d04774ce7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\features\edges\intrin\arm">
+      <UniqueIdentifier>{0f4f5657-418a-4162-af3a-583ad45488b7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -172,6 +175,9 @@
     </ClCompile>
     <ClCompile Include="features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_avx2.cxx">
       <Filter>Source Files\features\edges\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.cxx">
+      <Filter>Source Files\features\edges\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
