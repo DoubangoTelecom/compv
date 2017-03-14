@@ -7,6 +7,7 @@
 #include "compv/core/features/edges/intrin/arm/compv_core_feature_canny_dete_intrin_neon.h"
 
 #if COMPV_ARCH_ARM && COMPV_INTRINSIC
+#include "compv/core/features/edges/compv_core_feature_canny_dete.h" /* kCannyTangentPiOver8Int and kCannyTangentPiTimes3Over8Int */
 #include "compv/base/compv_debug.h"
 #include "compv/base/intrin/arm/compv_intrin_neon.h"
 
@@ -119,6 +120,89 @@ void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_
 	}
 }
 
+void CompVCannyNMSGatherRow_8mpw_Intrin_SSE(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	uint8x16_t vec0, vec1, vec2, vec3, vec4, vec5, vec6;
+	int16x8_t vecGX, vecGY;
+	uint16x8_t vecG;
+	uint8x8_t vecNMS;
+	uint32x4_t vecAbsGX0, vecAbsGX1, vecAbsGY0, vecAbsGY1;
+	const int16x8_t vecZero = vdupq_n_s16(0);
+	const uint16x8_t vecTLow = vdupq_n_u16(*tLow1);
+	static const int32x4_t vecTangentPiOver8Int = vdupq_n_s32(kCannyTangentPiOver8Int);
+	static const int32x4_t vecTangentPiTimes3Over8Int = vdupq_n_s32(kCannyTangentPiTimes3Over8Int);
+	compv_uscalar_t col;
+	const int stride_ = static_cast<const int>(stride);
+	const int c0 = 1 - stride_, c1 = 1 + stride_;
+
+	for (col = 1; col < width - 7; col += 8) { // up to the caller to check that width is >= 8
+		vecG = vld1q_u16(&g[col]);
+		vec0 = vcgtq_u16(vecG, vecTLow);
+		if (COMPV_ARM_NEON_NEQ_ZERO(vec0)) {
+			vecNMS = vdup_n_u8(0);
+			vecGX = vld1q_s16(&gx[col]);
+			vecGY = vld1q_s16(&gy[col]);
+
+			vec1 = vabsq_s16(vecGY);
+			vec2 = vabsq_s16(vecGX);
+
+			vecAbsGY0 = vshll_n_u16(vget_low_u16(vec1), 16); // convert from epi16 to epi32 then  "<< 16"
+			vecAbsGY1 = vshll_n_u16(vget_high_u16(vec1), 16); // convert from epi16 to epi32 then  "<< 16"
+			vecAbsGX0 = vmovl_u16(vget_low_u16(vec2)); // convert from epi16 to epi32
+			vecAbsGX1 = vmovl_u16(vget_high_u16(vec2)); // convert from epi16 to epi32
+
+			// angle = "0° / 180°"
+			vec1 = vcgtq_u32(vmulq_u32(vecTangentPiOver8Int, vecAbsGX0), vecAbsGY0);
+			vec2 = vcgtq_u32(vmulq_u32(vecTangentPiOver8Int, vecAbsGX1), vecAbsGY1);
+			vec3 = vandq_u16(vec0, vcombine_u16(vqmovn_u32(vec1), vqmovn_u32(vec2)));
+			if (COMPV_ARM_NEON_NEQ_ZERO(vec3)) {
+				vec1 = vcgtq_u16(vld1q_u16(&g[col - 1]), vecG); // aligned load
+				vec2 = vcgtq_u16(vld1q_u16(&g[col + 1]), vecG); // unaligned load
+				vec1 = vandq_s16(vec3, vorrq_s16(vec1, vec2));
+				vecNMS = vorr_u8(vqmovn_u16(vec1), vecNMS);
+			}
+
+			// angle = "45° / 225°" or "135 / 315"
+			vec4 = vbicq_s16(vec0, vec3);
+			if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) {
+				vec1 = vcgtq_u32(vmulq_u32(vecTangentPiTimes3Over8Int, vecAbsGX0), vecAbsGY0);
+				vec2 = vcgtq_u32(vmulq_u32(vecTangentPiTimes3Over8Int, vecAbsGX1), vecAbsGY1);
+				vec4 = vandq_u16(vec4, vcombine_u16(vqmovn_u32(vec1), vqmovn_u32(vec2)));
+				if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) {
+					vec1 = vcgtq_s16(vecZero, veorq_s16(vecGX, vecGY)); // todo(asm): compare on signed numbers (different than other compare in this function)
+					vec1 = vandq_u16(vec1, vec4);
+					vec2 = vbicq_u16(vec4, vec1);
+					if (COMPV_ARM_NEON_NEQ_ZERO(vec1)) {
+						vec5 = vcgtq_u16(vld1q_u16(&g[col - c0]), vecG); // aligned load
+						vec6 = vcgtq_u16(vld1q_u16(&g[col + c0]), vecG); // unaligned load
+						vec1 = vandq_s16(vec1, vorrq_s16(vec5, vec6));
+					}
+					if (COMPV_ARM_NEON_NEQ_ZERO(vec2)) {
+						vec5 = vcgtq_u16(vld1q_u16(&g[col - c1]), vecG); // aligned load
+						vec6 = vcgtq_u16(vld1q_u16(&g[col + c1]), vecG); // unaligned load
+						vec2 = vandq_u16(vec2, vorrq_s16(vec5, vec6));
+					}
+					vec1 = vorrq_u16(vec1, vec2);
+					vecNMS = vorr_u8(vecNMS, vqmovn_u16(vec1));
+				} // if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) - 1
+			} // if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) - 0
+
+			// angle = "90° / 270°"
+			vec5 = vbicq_s16(vbicq_s16(vec0, vec4), vec3);
+			if (COMPV_ARM_NEON_NEQ_ZERO(vec5)) {
+				vec1 = vcgtq_u16(vld1q_u16(&g[col - stride]), vecG); // unaligned load
+				vec2 = vcgtq_u16(vld1q_u16(&g[col + stride]), vecG); // unaligned load
+				vec5 = vandq_u16(vec5, vorrq_u16(vec1, vec2));
+				vecNMS = vorr_u8(vqmovn_u16(vec5), vecNMS);
+			}
+
+			// update NMS
+			vst1_u8(&nms[col], vecNMS);
+		} // if (COMPV_ARM_NEON_NEQ_ZERO(vec0))
+	} // for (col = 1...
+}
+
 void CompVCannyNMSApply_Intrin_NEON(COMPV_ALIGNED(NEON) uint16_t* grad, COMPV_ALIGNED(NEON) uint8_t* nms, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
@@ -139,11 +223,11 @@ void CompVCannyNMSApply_Intrin_NEON(COMPV_ALIGNED(NEON) uint16_t* grad, COMPV_AL
 				vst1_u8(&nms[col_], vecZero);
 				vst1q_u16(&grad[col_], vbicq_u16(vld1q_u16(&grad[col_]), vec0)); // suppress
 			}
-		}
+			}
 		nms += stride;
 		grad += stride;
+		}
 	}
-}
 
 COMPV_NAMESPACE_END()
 
