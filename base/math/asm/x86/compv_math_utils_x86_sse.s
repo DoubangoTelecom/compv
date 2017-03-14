@@ -96,7 +96,7 @@ sym(CompVMathUtilsMax_16u_Asm_X86_SSE41):
 		; for (i = 0; i < widthSigned - 31; i += 32)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		test widthMinus31, widthMinus31
-		js .EndOf_LoopWidth32
+		jle .EndOf_LoopWidth32
 		.LoopWidth32:
 			movdqa xmm0, [data + (i + 0)*COMPV_YASM_UINT16_SZ_BYTES]
 			movdqa xmm1, [data + (i + 8)*COMPV_YASM_UINT16_SZ_BYTES]
@@ -411,7 +411,7 @@ sym(CompVMathUtilsSumAbs_16s16u_Asm_X86_SSSE3):
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor rcx, rcx ; rcx = i = 0
 		test rdi, rdi
-		js .EndOfLoopCols32
+		jle .EndOfLoopCols32
 		.LoopCols32:
 			pabsw xmm0, [rax + (rcx + 0)*COMPV_YASM_INT16_SZ_BYTES]
 			pabsw xmm1, [rax + (rcx + 8)*COMPV_YASM_INT16_SZ_BYTES]

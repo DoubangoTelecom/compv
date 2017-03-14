@@ -230,7 +230,7 @@ COMPV_ERROR_CODE CompVMathUtils::sumAbs(const int16_t* a, const int16_t* b, uint
 	}
 #endif
 	if (CompVMathUtilsSumAbs_16s16u) {
-		CompVMathUtilsSumAbs_16s16u((const int16_t*)a, (const int16_t*)b, (uint16_t*)r, (compv_uscalar_t)width, (compv_uscalar_t)height, (compv_uscalar_t)stride);
+		CompVMathUtilsSumAbs_16s16u(reinterpret_cast<const int16_t*>(a), reinterpret_cast<const int16_t*>(b), reinterpret_cast<uint16_t*>(r), static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride));
 		return COMPV_ERROR_CODE_S_OK;
 	}
     COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs_C<int16_t, uint16_t>(a, b, r, width, height, stride)));

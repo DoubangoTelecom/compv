@@ -12,7 +12,7 @@ using namespace compv;
 #define WINDOW_WIDTH		1280
 #define WINDOW_HEIGHT		720
 
-#define CANNY_LOW			0.8f
+#define CANNY_LOW			0.80f
 #define CANNY_HIGH			CANNY_LOW*2.f
 #define CANNY_KERNEL_SIZE	3
 

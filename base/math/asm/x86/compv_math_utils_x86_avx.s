@@ -54,7 +54,7 @@ sym(CompVMathUtilsSumAbs_16s16u_Asm_X86_AVX2):
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		xor rcx, rcx ; rcx = i = 0
 		test rdi, rdi
-		js .EndOfLoopCols64
+		jle .EndOfLoopCols64
 		.LoopCols64
 			vpabsw ymm0, [rax + (rcx + 0)*COMPV_YASM_INT16_SZ_BYTES]
 			vpabsw ymm1, [rax + (rcx + 16)*COMPV_YASM_INT16_SZ_BYTES]
