@@ -127,11 +127,12 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSE(uint8_t* nms, const uint16_t* g, con
 	int16x8_t vecGX, vecGY;
 	uint16x8_t vecG;
 	uint8x8_t vecNMS;
-	uint32x4_t vecAbsGX0, vecAbsGX1, vecAbsGY0, vecAbsGY1;
+	uint32x4_t vecAbsGY0, vecAbsGY1;
+	uint16x8_t vecAbsGX;
 	const int16x8_t vecZero = vdupq_n_s16(0);
 	const uint16x8_t vecTLow = vdupq_n_u16(*tLow1);
-	static const int32x4_t vecTangentPiOver8Int = vdupq_n_s32(kCannyTangentPiOver8Int);
-	static const int32x4_t vecTangentPiTimes3Over8Int = vdupq_n_s32(kCannyTangentPiTimes3Over8Int);
+	static const uint16x4_t vecTangentPiOver8Int = vdup_n_u16(static_cast<uint16_t>(kCannyTangentPiOver8Int)); // 27145 -> can be stored in uint16_t then using long multiply
+	static const int32x4_t vecTangentPiTimes3Over8Int = vdupq_n_s32(kCannyTangentPiTimes3Over8Int); // 158217 -> *cannot* be stored in uint16_t
 	compv_uscalar_t col;
 	const int stride_ = static_cast<const int>(stride);
 	const int c0 = 1 - stride_, c1 = 1 + stride_;
@@ -145,16 +146,14 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSE(uint8_t* nms, const uint16_t* g, con
 			vecGY = vld1q_s16(&gy[col]);
 
 			vec1 = vabsq_s16(vecGY);
-			vec2 = vabsq_s16(vecGX);
+			vecAbsGX = vabsq_s16(vecGX);
 
 			vecAbsGY0 = vshll_n_u16(vget_low_u16(vec1), 16); // convert from epi16 to epi32 then  "<< 16"
 			vecAbsGY1 = vshll_n_u16(vget_high_u16(vec1), 16); // convert from epi16 to epi32 then  "<< 16"
-			vecAbsGX0 = vmovl_u16(vget_low_u16(vec2)); // convert from epi16 to epi32
-			vecAbsGX1 = vmovl_u16(vget_high_u16(vec2)); // convert from epi16 to epi32
 
 			// angle = "0° / 180°"
-			vec1 = vcgtq_u32(vmulq_u32(vecTangentPiOver8Int, vecAbsGX0), vecAbsGY0);
-			vec2 = vcgtq_u32(vmulq_u32(vecTangentPiOver8Int, vecAbsGX1), vecAbsGY1);
+			vec1 = vcgtq_u32(vmull_u16(vecTangentPiOver8Int, vget_low_u16(vecAbsGX)), vecAbsGY0);
+			vec2 = vcgtq_u32(vmull_u16(vecTangentPiOver8Int, vget_high_u16(vecAbsGX)), vecAbsGY1);
 			vec3 = vandq_u16(vec0, vcombine_u16(vqmovn_u32(vec1), vqmovn_u32(vec2)));
 			if (COMPV_ARM_NEON_NEQ_ZERO(vec3)) {
 				vec1 = vcgtq_u16(vld1q_u16(&g[col - 1]), vecG); // aligned load
@@ -166,8 +165,8 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSE(uint8_t* nms, const uint16_t* g, con
 			// angle = "45° / 225°" or "135 / 315"
 			vec4 = vbicq_s16(vec0, vec3);
 			if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) {
-				vec1 = vcgtq_u32(vmulq_u32(vecTangentPiTimes3Over8Int, vecAbsGX0), vecAbsGY0);
-				vec2 = vcgtq_u32(vmulq_u32(vecTangentPiTimes3Over8Int, vecAbsGX1), vecAbsGY1);
+				vec1 = vcgtq_u32(vmulq_u32(vecTangentPiTimes3Over8Int, vmovl_u16(vget_low_u16(vecAbsGX))), vecAbsGY0);
+				vec2 = vcgtq_u32(vmulq_u32(vecTangentPiTimes3Over8Int, vmovl_u16(vget_high_u16(vecAbsGX))), vecAbsGY1);
 				vec4 = vandq_u16(vec4, vcombine_u16(vqmovn_u32(vec1), vqmovn_u32(vec2)));
 				if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) {
 					vec1 = vcgtq_s16(vecZero, veorq_s16(vecGX, vecGY)); // todo(asm): compare on signed numbers (different than other compare in this function)
