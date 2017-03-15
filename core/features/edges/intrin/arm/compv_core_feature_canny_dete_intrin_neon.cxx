@@ -37,22 +37,90 @@ COMPV_NAMESPACE_BEGIN()
 		CompVCannyHysteresisRowMask_8mpw_Intrin_NEON(mask, (pp), (rr), (cc), 0xff000000, 7); \
 	}
 
-
-	// TODO(dmi): no ASM implementation
-	// "g" and "tLow" are unsigned but we're using "epi16" instead of "epu16" because "g" is always < 0xFFFF (from u8 convolution operation)
-	// 8mpw -> minpack 8 for words (int16)
-	void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
+// TODO(dmi): no ASM implementation
+// "g" and "tLow" are unsigned but we're using "epi16" instead of "epu16" because "g" is always < 0xFFFF (from u8 convolution operation)
+// 8mpw -> minpack 8 for words (int16)
+void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
-#if 1
-	compv_uscalar_t col;
-	size_t i, j;
-	uint16x8_t vecG, vecGrad;
-	uint8x8_t vec0n, vecPn;
-	const uint8x8_t vecZeron = vdup_n_u8(0);
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("CompVCannyHysteresisRow_16mpw_Intrin_NEON is faster");
+	uint16x8_t vecGrad, vecgg;
+	uint8x8_t vecpn, vecppn, vecStrongn, vecWeakn;
 	const uint16x8_t vecTLow = vdupq_n_u16(tLow);
 	const uint16x8_t vecTHigh = vdupq_n_u16(tHigh);
-	uint32_t mask = 0, mask0, mask1;
+	const uint8x8_t vecZeron = vdup_n_u16(0);
+	uint8_t* p;
+	const uint16_t *g, *gb, *gt;
+	size_t c, r, s;
+	uint8_t *pb, *pt;
+	uint32_t mask;
+	CompVMatIndex edge;
+	bool lookingForStringEdges;
+	// std::vector is faster than std::list, std::dequeue and std::stack (perf. done using Intel VTune on core i7)
+	// also, check https://baptiste-wicht.com/posts/2012/11/cpp-benchmark-vector-vs-list.html
+	std::vector<CompVMatIndex> edges;
+	while (colStart < width - 7 || !edges.empty()) { // width is already >=8 (checked by the caller)
+		if ((lookingForStringEdges = edges.empty())) { // looking for string edges if there is no pending edge in the vector
+			c = colStart;
+			r = row;
+			p = &e[colStart];
+			g = &grad[colStart];
+			colStart += 8; // move to next samples
+		}
+		else {
+			edge = edges.back(); // use saved edges
+			edges.pop_back();
+			c = edge.col;
+			r = edge.row;
+			s = (r * stride) + c;
+			p = e0 + s;
+			g = g0 + s;
+		}
+		if (r && c && r < height && c < width) {
+			vecpn = vld1_u8(p); // high 64bits set to zero
+			if (lookingForStringEdges) {
+				vecGrad = vld1q_u16(g);
+				vecStrongn = vand_u8(vceq_u8(vecpn, vecZeron), vqmovn_u16(vcgtq_u16(vecGrad, vecTHigh)));
+				if (vget_lane_u32(vecStrongn, 0) || vget_lane_u32(vecStrongn, 1)) {
+					// write strong edges and update vecp
+					vecpn = vorr_u8(vecpn, vecStrongn);
+					vst1_u8(p, vecpn);
+				}
+				else {
+					continue;
+				}
+			}
+			pb = p + stride;
+			pt = p - stride;
+			gb = g + stride;
+			gt = g - stride;
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&g[-1], &p[-1], r, c - 1); // left
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&g[1], &p[1], r, c + 1); // right
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&gt[-1], &pt[-1], r - 1, c - 1); // top-left
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&gt[0], &pt[0], r - 1, c); // top-center
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&gt[1], &pt[1], r - 1, c + 1); // top-right
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&gb[-1], &pb[-1], r + 1, c - 1); // bottom-left
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&gb[0], &pb[0], r + 1, c); // bottom-center
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&gb[1], &pb[1], r + 1, c + 1); // bottom-right
+		}
+	}
+}
+
+// TODO(dmi): no ASM implementation
+// "g" and "tLow" are unsigned but we're using "epi16" instead of "epu16" because "g" is always < 0xFFFF (from u8 convolution operation)
+// 16mpw -> minpack 16 for words (int16)
+void CompVCannyHysteresisRow_16mpw_Intrin_NEON(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
+{
+	COMPV_DEBUG_INFO_CHECK_NEON();
+	compv_uscalar_t col;
+	size_t i, j;
+	uint16x8_t vecG, vec0;
+	uint8x8_t vec0n, vecPn;
+	const uint8x8_t vecZeron = vdup_n_u8(0);
+	const uint16x8_t vecZero = vdupq_n_u8(0);
+	const uint16x8_t vecTLow = vdupq_n_u16(tLow);
+	const uint16x8_t vecTHigh = vdupq_n_u16(tHigh);
+	uint32_t mask = 0, mask0;
 	uint8_t* p;
 	const uint16_t *g, *gb, *gt;
 	size_t c, r, s;
@@ -62,22 +130,25 @@ COMPV_NAMESPACE_BEGIN()
 	// also, check https://baptiste-wicht.com/posts/2012/11/cpp-benchmark-vector-vs-list.html
 	std::vector<CompVMatIndex> edges;
 
-	for (col = colStart; col < width - 7; col += 8) { // width is alredy >=8 (checked by the caller)
-		vecGrad = vld1q_u16(&grad[col]); // unaligned load
-		vec0n = vceq_u8(vld1_u8(&e[col]), vecZeron); // high 64bits then extend to 128bits (unaligned load)
-		vec0n = vand_u8(vec0n, vqmovn_u16(vcgtq_u16(vecGrad, vecTHigh)));
-		mask0 = vget_lane_u32(vec0n, 0);
-		mask1 = vget_lane_u32(vec0n, 1);
-		if (!mask0 && !mask1) {
+	for (col = colStart; col < width - 15; col += 16) { // width is alredy >=8 (checked by the caller)
+		vec0 = vceqq_u8(vld1q_u8(&e[col]), vecZero); // high 64bits then extend to 128bits (unaligned load)
+		vec0 = vandq_u8(
+			vec0, 
+			vcombine_u8(
+				vqmovn_u16(vcgtq_u16(vld1q_u16(&grad[col]), vecTHigh)), 
+				vqmovn_u16(vcgtq_u16(vld1q_u16(&grad[col + 8]), vecTHigh))
+			)
+		);
+		if (COMPV_ARM_NEON_EQ_ZERO(vec0)) {
 			continue;
 		}
-		for (i = 0, j = 0; i < 8; ++i, j += 8) {
-			if (i == 0 || i == 4) {
-				if (!(mask = i ? mask1 : mask0)) {
-					i += 3;
-					continue;
-				}
-				j = 0;
+		for (i = 0, j = 0; i < 16; ++i, j += 8) {
+			switch (i) {
+				case 0:	if (!(mask = vgetq_lane_u32(vec0, 0))) { i += 3; continue; } j = 0; break;
+				case 4: if (!(mask = vgetq_lane_u32(vec0, 1))) { i += 3; continue; } j = 0; break;
+				case 8: if (!(mask = vgetq_lane_u32(vec0, 2))) { i += 3; continue; } j = 0;  break;
+				case 12: if (!(mask = vgetq_lane_u32(vec0, 3))) { i += 3; continue; } j = 0; break;
+				default: break;
 			}
 			if (!(mask & (0xff << j))) {
 				continue;
@@ -143,69 +214,6 @@ COMPV_NAMESPACE_BEGIN()
 			}
 		}
 	}
-#else
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Slower than above code");
-	uint16x8_t vecGrad, vecgg;
-	uint8x8_t vecpn, vecppn, vecStrongn, vecWeakn;
-	const uint16x8_t vecTLow = vdupq_n_u16(tLow);
-	const uint16x8_t vecTHigh = vdupq_n_u16(tHigh);
-	const uint8x8_t vecZeron = vdup_n_u16(0);
-	uint8_t* p;
-	const uint16_t *g, *gb, *gt;
-	size_t c, r, s;
-	uint8_t *pb, *pt;
-	uint32_t mask;
-	CompVMatIndex edge;
-	bool lookingForStringEdges;
-	// std::vector is faster than std::list, std::dequeue and std::stack (perf. done using Intel VTune on core i7)
-	// also, check https://baptiste-wicht.com/posts/2012/11/cpp-benchmark-vector-vs-list.html
-	std::vector<CompVMatIndex> edges;
-	while (colStart < width - 7 || !edges.empty()) { // width is already >=8 (checked by the caller)
-		if ((lookingForStringEdges = edges.empty())) { // looking for string edges if there is no pending edge in the vector
-			c = colStart;
-			r = row;
-			p = &e[colStart];
-			g = &grad[colStart];
-			colStart += 8; // move to next samples
-		}
-		else {
-			edge = edges.back(); // use saved edges
-			edges.pop_back();
-			c = edge.col;
-			r = edge.row;
-			s = (r * stride) + c;
-			p = e0 + s;
-			g = g0 + s;
-		}
-		if (r && c && r < height && c < width) {
-			vecpn = vld1_u8(p); // high 64bits set to zero
-			if (lookingForStringEdges) {
-				vecGrad = vld1q_u16(g);
-				vecStrongn = vand_u8(vceq_u8(vecpn, vecZeron), vqmovn_u16(vcgtq_u16(vecGrad, vecTHigh)));
-				if (vget_lane_u32(vecStrongn, 0) || vget_lane_u32(vecStrongn, 1)) {
-					// write strong edges and update vecp
-					vecpn = vorr_u8(vecpn, vecStrongn);
-					vst1_u8(p, vecpn);
-				}
-				else {
-					continue;
-				}
-			}
-			pb = p + stride;
-			pt = p - stride;
-			gb = g + stride;
-			gt = g - stride;
-			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&g[-1], &p[-1], r, c - 1); // left
-			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&g[1], &p[1], r, c + 1); // right
-			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&gt[-1], &pt[-1], r - 1, c - 1); // top-left
-			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&gt[0], &pt[0], r - 1, c); // top-center
-			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&gt[1], &pt[1], r - 1, c + 1); // top-right
-			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&gb[-1], &pb[-1], r + 1, c - 1); // bottom-left
-			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&gb[0], &pb[0], r + 1, c); // bottom-center
-			CompVCannyHysteresisRowWeak_8mpw_Intrin_NEON(&gb[1], &pb[1], r + 1, c + 1); // bottom-right
-		}
-	}
-#endif
 }
 
 void CompVCannyNMSGatherRow_8mpw_Intrin_SSE(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride)

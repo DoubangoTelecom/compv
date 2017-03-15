@@ -412,6 +412,9 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr& edges, uint16_t tLo
 	if (imageWidthMinus1 >= 8 && CompVCpu::isEnabled(compv::kCpuFlagARM_NEON)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_8mpw_Intrin_NEON, mpw = 8));
 	}
+	if (imageWidthMinus1 >= 16 && CompVCpu::isEnabled(compv::kCpuFlagARM_NEON)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_16mpw_Intrin_NEON, mpw = 16));
+	}
 #endif
 
 	// SIMD execution
