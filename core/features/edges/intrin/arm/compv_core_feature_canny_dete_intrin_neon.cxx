@@ -38,18 +38,18 @@ COMPV_NAMESPACE_BEGIN()
 	}
 
 
-// TODO(dmi): no ASM implementation
-// "g" and "tLow" are unsigned but we're using "epi16" instead of "epu16" because "g" is always < 0xFFFF (from u8 convolution operation)
-// 8mpw -> minpack 8 for words (int16)
-void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
+	// TODO(dmi): no ASM implementation
+	// "g" and "tLow" are unsigned but we're using "epi16" instead of "epu16" because "g" is always < 0xFFFF (from u8 convolution operation)
+	// 8mpw -> minpack 8 for words (int16)
+	void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
 #if 1
 	compv_uscalar_t col;
-	uint16x8_t vecG, vecP, vecGrad, vec0;
-	uint8x8_t vec0n;
+	size_t i, j;
+	uint16x8_t vecG, vecGrad;
+	uint8x8_t vec0n, vecPn;
 	const uint8x8_t vecZeron = vdup_n_u8(0);
-	const uint8x16_t vecZero = vdupq_n_u8(0); // FIXME: remove
 	const uint16x8_t vecTLow = vdupq_n_u16(tLow);
 	const uint16x8_t vecTHigh = vdupq_n_u16(tHigh);
 	uint32_t mask = 0, mask0, mask1;
@@ -62,9 +62,6 @@ void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_
 	// also, check https://baptiste-wicht.com/posts/2012/11/cpp-benchmark-vector-vs-list.html
 	std::vector<CompVMatIndex> edges;
 
-	//COMPV_DEBUG_ERROR("no need for vmovl_u8");
-	//COMPV_DEBUG_ERROR("no need for vgetq_lane_u16");
-
 	for (col = colStart; col < width - 7; col += 8) { // width is alredy >=8 (checked by the caller)
 		vecGrad = vld1q_u16(&grad[col]); // unaligned load
 		vec0n = vceq_u8(vld1_u8(&e[col]), vecZeron); // high 64bits then extend to 128bits (unaligned load)
@@ -74,7 +71,7 @@ void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_
 		if (!mask0 && !mask1) {
 			continue;
 		}
-		for (size_t i = 0, j = 0; i < 8; ++i, j += 8) {
+		for (i = 0, j = 0; i < 8; ++i, j += 8) {
 			if (i == 0 || i == 4) {
 				if (!(mask = i ? mask1 : mask0)) {
 					i += 3;
@@ -82,7 +79,9 @@ void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_
 				}
 				j = 0;
 			}
-			if (!(mask & (0xff << j))) continue;
+			if (!(mask & (0xff << j))) {
+				continue;
+			}
 			e[col + i] = 0xff;
 			edges.push_back(CompVMatIndex(row, col + i));
 			while (!edges.empty()) {
@@ -99,39 +98,43 @@ void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_
 					gb = g + stride;
 					gt = g - stride;
 					vecG = (uint16x8_t) { g[-1], g[1], gt[-1], gt[0], gt[1], gb[-1], gb[0], gb[1] };
-					vecP = (uint16x8_t) { p[-1], p[1], pt[-1], pt[0], pt[1], pb[-1], pb[0], pb[1] };
-					vec0 = vceqq_u16(vecP, vecZero);
-					vec0 = vandq_u16(vec0, vcgtq_u16(vecG, vecTLow));
-					if (COMPV_ARM_NEON_NEQ_ZERO(vec0)) {
-						if (vgetq_lane_u16(vec0, 0)) { // left
+					vecPn = (uint8x8_t) { p[-1], p[1], pt[-1], pt[0], pt[1], pb[-1], pb[0], pb[1] };
+					vec0n = vceq_u8(vecPn, vecZeron);
+					vec0n = vand_u8(vec0n, vqmovn_u16(vcgtq_u16(vecG, vecTLow)));
+					mask0 = vget_lane_u32(vec0n, 0);
+					if (mask0) {
+						if (mask0 & 0x000000ff) { // left
 							p[-1] = 0xff;
 							edges.push_back(CompVMatIndex(r, c - 1));
 						}
-						if (vgetq_lane_u16(vec0, 1)) { // right
+						if (mask0 & 0x0000ff00) { // right
 							p[1] = 0xff;
 							edges.push_back(CompVMatIndex(r, c + 1));
 						}
-						if (vgetq_lane_u16(vec0, 2)) { // top-left
+						if (mask0 & 0x00ff0000) { // top-left
 							pt[-1] = 0xff;
 							edges.push_back(CompVMatIndex(r - 1, c - 1));
 						}
-						if (vgetq_lane_u16(vec0, 3)) { // top-center
+						if (mask0 & 0xff000000) { // top-center
 							*pt = 0xff;
 							edges.push_back(CompVMatIndex(r - 1, c));
 						}
-						if (vgetq_lane_u16(vec0, 4)) { // top-right
+					}
+					mask0 = vget_lane_u32(vec0n, 1);
+					if (mask0) {
+						if (mask0 & 0x000000ff) { // top-right
 							pt[1] = 0xff;
 							edges.push_back(CompVMatIndex(r - 1, c + 1));
 						}
-						if (vgetq_lane_u16(vec0, 5)) { // bottom-left
+						if (mask0 & 0x0000ff00) { // bottom-left
 							pb[-1] = 0xff;
 							edges.push_back(CompVMatIndex(r + 1, c - 1));
 						}
-						if (vgetq_lane_u16(vec0, 6)) { // bottom-center
+						if (mask0 & 0x00ff0000) { // bottom-center
 							*pb = 0xff;
 							edges.push_back(CompVMatIndex(r + 1, c));
 						}
-						if (vgetq_lane_u16(vec0, 7)) { // bottom-right
+						if (mask0 & 0xff000000) { // bottom-right
 							pb[1] = 0xff;
 							edges.push_back(CompVMatIndex(r + 1, c + 1));
 						}
@@ -139,109 +142,6 @@ void CompVCannyHysteresisRow_8mpw_Intrin_NEON(size_t row, size_t colStart, size_
 				}
 			}
 		}
-	}
-#elif 1
-	compv_uscalar_t col, mi;
-	uint16x8_t vecG, vecP, vecGrad, vec0;
-	uint8x8_t vec0n;
-	const uint16x8_t vecZero = vdupq_n_u8(0);
-	const uint16x8_t vecTLow = vdupq_n_u16(tLow);
-	const uint16x8_t vecTHigh = vdupq_n_u16(tHigh);
-	uint16_t m0, mf;
-	uint8_t* p;
-	const uint16_t *g, *gb, *gt;
-	size_t c, r, s;
-	uint8_t *pb, *pt;
-	CompVMatIndex edge;
-	// std::vector is faster than std::list, std::dequeue and std::stack (perf. done using Intel VTune on core i7)
-	// also, check https://baptiste-wicht.com/posts/2012/11/cpp-benchmark-vector-vs-list.html
-	std::vector<CompVMatIndex> edges;
-
-	// mask for _mm_movemask_epi8
-#if COMPV_ARCH_ARM32
-	static const uint8x16_t vecMask = (uint32x4_t) { 0x8040201, 0x80402010, 0x8040201, 0x80402010 };
-#else
-	static const uint8x16_t vecMask = (uint64x2_t) { 9241421688590303745ULL, 9241421688590303745ULL };
-#endif
-
-	//COMPV_DEBUG_ERROR("no need for vmovl_u8");
-	//COMPV_DEBUG_ERROR("no need for vgetq_lane_u16");
-
-	for (col = colStart; col < width - 7; col += 8) { // width is alredy >=8 (checked by the caller)
-		vecGrad = vld1q_u16(&grad[col]); // unaligned load
-		vec0 = vceqq_u16(vmovl_u8(vld1_u8(&e[col])), vecZero); // high 64bits then extend to 128bits (unaligned load)
-		vec0 = vandq_u16(vec0, vcgtq_u16(vecGrad, vecTHigh));
-		if (COMPV_ARM_NEON_EQ_ZERO(vec0)) {
-			continue;
-		}
-		// _mm_movemask_epi8
-		vec0 = vandq_u8(vec0, vecMask);
-		vec0n = vpadd_u8(vget_low_u8(vec0), vget_high_u8(vec0));
-		vec0n = vpadd_u8(vec0n, vec0n);
-		vec0n = vpadd_u8(vec0n, vec0n);
-		m0 = vget_lane_u16(vec0n, 0);
-		mi = 0, mf = 3;
-		do {
-			if (m0 & mf) {
-				e[col + mi] = 0xff;
-				edges.push_back(CompVMatIndex(row, col + mi));
-				while (!edges.empty()) {
-					edge = edges.back();
-					edges.pop_back();
-					c = edge.col;
-					r = edge.row;
-					if (r && c && r < height && c < width) {
-						s = (r * stride) + c;
-						p = e0 + s;
-						g = g0 + s;
-						pb = p + stride;
-						pt = p - stride;
-						gb = g + stride;
-						gt = g - stride;
-						vecG = (uint16x8_t) { g[-1], g[1], gt[-1], gt[0], gt[1], gb[-1], gb[0], gb[1] };
-						vecP = (uint16x8_t) { p[-1], p[1], pt[-1], pt[0], pt[1], pb[-1], pb[0], pb[1] };
-						vec0 = vceqq_u16(vecP, vecZero);
-						vec0 = vandq_u16(vec0, vcgtq_u16(vecG, vecTLow));
-						if (COMPV_ARM_NEON_NEQ_ZERO(vec0)) {
-							if (vgetq_lane_u16(vec0, 0)) { // left
-								p[-1] = 0xff;
-								edges.push_back(CompVMatIndex(r, c - 1));
-							}
-							if (vgetq_lane_u16(vec0, 1)) { // right
-								p[1] = 0xff;
-								edges.push_back(CompVMatIndex(r, c + 1));
-							}
-							if (vgetq_lane_u16(vec0, 2)) { // top-left
-								pt[-1] = 0xff;
-								edges.push_back(CompVMatIndex(r - 1, c - 1));
-							}
-							if (vgetq_lane_u16(vec0, 3)) { // top-center
-								*pt = 0xff;
-								edges.push_back(CompVMatIndex(r - 1, c));
-							}
-							if (vgetq_lane_u16(vec0, 4)) { // top-right
-								pt[1] = 0xff;
-								edges.push_back(CompVMatIndex(r - 1, c + 1));
-							}
-							if (vgetq_lane_u16(vec0, 5)) { // bottom-left
-								pb[-1] = 0xff;
-								edges.push_back(CompVMatIndex(r + 1, c - 1));
-							}
-							if (vgetq_lane_u16(vec0, 6)) { // bottom-center
-								*pb = 0xff;
-								edges.push_back(CompVMatIndex(r + 1, c));
-							}
-							if (vgetq_lane_u16(vec0, 7)) { // bottom-right
-								pb[1] = 0xff;
-								edges.push_back(CompVMatIndex(r + 1, c + 1));
-							}
-						}
-					}
-				}
-				m0 ^= mf;
-			}
-			mf <<= 2, ++mi;
-		} while (m0);
 	}
 #else
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Slower than above code");
@@ -339,7 +239,7 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSE(uint8_t* nms, const uint16_t* g, con
 			vecAbsGY0 = vshll_n_u16(vget_low_u16(vec1), 16); // convert from epi16 to epi32 then  "<< 16"
 			vecAbsGY1 = vshll_n_u16(vget_high_u16(vec1), 16); // convert from epi16 to epi32 then  "<< 16"
 
-			// angle = "0° / 180°"
+															  // angle = "0° / 180°"
 			vec1 = vcgtq_u32(vmull_u16(vecTangentPiOver8Int, vget_low_u16(vecAbsGX)), vecAbsGY0); // convert from epi16 to epi32 then multiply
 			vec2 = vcgtq_u32(vmull_u16(vecTangentPiOver8Int, vget_high_u16(vecAbsGX)), vecAbsGY1); // convert from epi16 to epi32 then multiply
 			vec3 = vandq_u16(vec0, vcombine_u16(vqmovn_u32(vec1), vqmovn_u32(vec2)));
@@ -375,7 +275,7 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSE(uint8_t* nms, const uint16_t* g, con
 				} // if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) - 1
 			} // if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) - 0
 
-			// angle = "90° / 270°"
+			  // angle = "90° / 270°"
 			vec5 = vbicq_s16(vbicq_s16(vec0, vec4), vec3);
 			if (COMPV_ARM_NEON_NEQ_ZERO(vec5)) {
 				vec1 = vcgtq_u16(vld1q_u16(&g[col - stride]), vecG); // unaligned load
@@ -410,11 +310,11 @@ void CompVCannyNMSApply_Intrin_NEON(COMPV_ALIGNED(NEON) uint16_t* grad, COMPV_AL
 				vst1_u8(&nms[col_], vecZero);
 				vst1q_u16(&grad[col_], vbicq_u16(vld1q_u16(&grad[col_]), vec0)); // suppress
 			}
-		}
+			}
 		nms += stride;
 		grad += stride;
+		}
 	}
-}
 
 COMPV_NAMESPACE_END()
 

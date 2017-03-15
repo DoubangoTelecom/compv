@@ -10,7 +10,6 @@
 #include "compv/base/math/compv_math_distance.h"
 #include "compv/base/image/compv_image.h"
 #include "compv/base/parallel/compv_parallel.h"
-#include "compv/base/time/compv_time.h" // FIXME(dmi): remove
 
 #include "compv/core/features/edges/intrin/x86/compv_core_feature_canny_dete_intrin_sse2.h"
 #include "compv/core/features/edges/intrin/x86/compv_core_feature_canny_dete_intrin_ssse3.h"
@@ -250,10 +249,7 @@ bail:
 	else {
 		COMPV_CHECK_CODE_RETURN(nms_gather(*edges, tLow, 0, m_nImageHeight));
 		nms_apply();
-		uint64_t timeStart = CompVTime::nowMillis();
 		COMPV_CHECK_CODE_RETURN(hysteresis(*edges, tLow, tHigh, 0, m_nImageHeight));
-		uint64_t timeEnd = CompVTime::nowMillis();
-		COMPV_DEBUG_INFO("hysteresis Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 	}
 
 	return err;
