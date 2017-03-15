@@ -13,6 +13,114 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#define CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, pp, rr, cc, mm, ii) \
+	if (mask & mm && ((cc) + ii) < width) { \
+		(pp)[ii] = 0xff; \
+		edges.push_back(CompVMatIndex(rr, (cc) + ii)); \
+	}
+
+#define CompVCannyHysteresisRowWeak_8mpw_Intrin_AVX2(gg, pp, rr, cc) \
+	vecgg = _mm256_loadu_si256(reinterpret_cast<const __m256i*>((gg))); \
+	vecppn = _mm_loadu_si128(reinterpret_cast<const __m128i*>((pp))); \
+	vecpp = _mm256_broadcastsi128_si256(vecppn); \
+	vecpp = _mm256_permute4x64_epi64(vecpp, 0xD8); \
+	vecWeak = _mm256_and_si256(_mm256_cmpeq_epi16(_mm256_unpacklo_epi8(vecpp, vecpp), vecZero), _mm256_cmpgt_epi16(vecgg, vecTLow)); \
+	vecWeak = _mm256_and_si256(vecWeak, vecp); \
+	mask = _mm256_movemask_epi8(vecWeak); \
+	if (mask) { \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x1, 0); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x4, 1); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x10, 2); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x40, 3); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x100, 4); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x400, 5); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x1000, 6); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x4000, 7); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x10000, 8); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x40000, 9); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x100000, 10); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x400000, 11); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x1000000, 12); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x4000000, 13); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x10000000, 14); \
+		CompVCannyHysteresisRowMask_8mpw_Intrin_AVX2(mask, (pp), (rr), (cc), 0x40000000, 15); \
+	}
+
+
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
+void CompVCannyHysteresisRow_16mpw_Intrin_AVX2(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
+{
+	COMPV_DEBUG_INFO_CHECK_AVX2(); // AVX/SSE transition issues
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("SSE implementation is faster");
+	__m256i vecGrad, vecStrong, vecWeak, vecgg, vecpp, vecp;
+	__m128i vecpn, vecppn;
+	const __m256i vecTLow = _mm256_set1_epi16(tLow);
+	const __m256i vecTHigh = _mm256_set1_epi16(tHigh);
+	const __m256i vecZero = _mm256_setzero_si256();
+	int mask;
+	uint8_t* p;
+	const uint16_t *g, *gb, *gt;
+	size_t c, r, s;
+	uint8_t *pb, *pt;
+	CompVMatIndex edge;
+	bool lookingForStringEdges;
+	// std::vector is faster than std::list, std::dequeue and std::stack (perf. done using Intel VTune on core i7)
+	// also, check https://baptiste-wicht.com/posts/2012/11/cpp-benchmark-vector-vs-list.html
+	std::vector<CompVMatIndex> edges;
+	while (colStart < width - 7 || !edges.empty()) { // width is already >=8 (checked by the caller)
+		if ((lookingForStringEdges = edges.empty())) { // looking for string edges if there is no pending edge in the vector
+			c = colStart;
+			r = row;
+			p = &e[colStart];
+			g = &grad[colStart];
+			colStart += 8; // move to next samples
+		}
+		else {
+			edge = edges.back(); // use saved edges
+			edges.pop_back();
+			c = edge.col;
+			r = edge.row;
+			s = (r * stride) + c;
+			p = e0 + s;
+			g = g0 + s;
+		}
+		if (r && c && r < height && c < width) {
+			vecpn = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p)); // high 128bits set to zero
+			if (lookingForStringEdges) {
+				vecGrad = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(g));
+				vecp = _mm256_broadcastsi128_si256(vecpn);
+				vecp = _mm256_permute4x64_epi64(vecp, 0xD8);
+				vecStrong = _mm256_and_si256(_mm256_cmpeq_epi16(_mm256_unpacklo_epi8(vecp, vecp), vecZero), _mm256_cmpgt_epi16(vecGrad, vecTHigh));
+				if (_mm256_movemask_epi8(vecStrong)) {
+					// write strong edges and update vecp
+					vecpn = _mm_or_si128(vecpn, _mm256_castsi256_si128(compv_avx2_packs_epi16(vecStrong, vecStrong)));
+					_mm_storeu_si128(reinterpret_cast<__m128i*>(p), vecpn);
+				}
+				else {
+					continue;
+				}
+			}
+			pb = p + stride;
+			pt = p - stride;
+			gb = g + stride;
+			gt = g - stride;
+			vecp = _mm256_broadcastsi128_si256(vecpn);
+			vecp = _mm256_permute4x64_epi64(vecp, 0xD8);
+			vecp = _mm256_unpacklo_epi8(vecp, vecp); // 64bits -> 128bits
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_AVX2(&g[-1], &p[-1], r, c - 1); // left
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_AVX2(&g[1], &p[1], r, c + 1); // right
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_AVX2(&gt[-1], &pt[-1], r - 1, c - 1); // top-left
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_AVX2(&gt[0], &pt[0], r - 1, c); // top-center
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_AVX2(&gt[1], &pt[1], r - 1, c + 1); // top-right
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_AVX2(&gb[-1], &pb[-1], r + 1, c - 1); // bottom-left
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_AVX2(&gb[0], &pb[0], r + 1, c); // bottom-center
+			CompVCannyHysteresisRowWeak_8mpw_Intrin_AVX2(&gb[1], &pb[1], r + 1, c + 1); // bottom-right
+		}
+	}
+}
+
 #if defined(__INTEL_COMPILER)
 #	pragma intel optimization_parameter target_arch=avx2
 #endif

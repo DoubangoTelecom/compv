@@ -10,6 +10,7 @@
 #include "compv/base/math/compv_math_distance.h"
 #include "compv/base/image/compv_image.h"
 #include "compv/base/parallel/compv_parallel.h"
+#include "compv/base/time/compv_time.h" // FIXME(dmi): remove
 
 #include "compv/core/features/edges/intrin/x86/compv_core_feature_canny_dete_intrin_sse2.h"
 #include "compv/core/features/edges/intrin/x86/compv_core_feature_canny_dete_intrin_ssse3.h"
@@ -249,7 +250,10 @@ bail:
 	else {
 		COMPV_CHECK_CODE_RETURN(nms_gather(*edges, tLow, 0, m_nImageHeight));
 		nms_apply();
+		uint64_t timeStart = CompVTime::nowMillis();
 		COMPV_CHECK_CODE_RETURN(hysteresis(*edges, tLow, tHigh, 0, m_nImageHeight));
+		uint64_t timeEnd = CompVTime::nowMillis();
+		COMPV_DEBUG_INFO("hysteresis Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 	}
 
 	return err;
@@ -388,6 +392,7 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr& edges, uint16_t tLo
 	rowEnd = COMPV_MATH_MIN(rowEnd, imageHeightMinus1);
 	rowStart = COMPV_MATH_MAX(1, rowStart);
 	
+	int mpw = 1;
 	size_t colStart = 1;
 	size_t row;
 	size_t imageWidthMinus1 = m_nImageWidth - 1;
@@ -395,28 +400,33 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr& edges, uint16_t tLo
 	uint8_t *e = edges->ptr<uint8_t>(rowStart), *e0 = edges->ptr<uint8_t>(0);
 
 	// 8mpw -> minpack 8 for words (int16)
-	void(*CompVCannyHysteresis_8mpw)(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
+	void(*CompVCannyHysteresis_xmpw)(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
 		= NULL;
 
 #if COMPV_ARCH_X86
 	if (imageWidthMinus1 >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(CompVCannyHysteresis_8mpw = CompVCannyHysteresisRow_8mpw_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_8mpw_Intrin_SSE2, mpw = 8));
 	}
+#	if 0 // SSE implementation is faster
+	if (imageWidthMinus1 >= 16 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_16mpw_Intrin_AVX2, mpw = 16));
+	}
+#	endif
 #elif COMPV_ARCH_ARM
 	if (imageWidthMinus1 >= 8 && CompVCpu::isEnabled(compv::kCpuFlagARM_NEON)) {
-		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVCannyHysteresis_8mpw = CompVCannyHysteresisRow_8mpw_Intrin_NEON);
+		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_8mpw_Intrin_NEON, mpw = 8));
 	}
 #endif
 
 	// SIMD execution
-	if (CompVCannyHysteresis_8mpw) {
-		const uint16_t *grad_8mpw = grad;
-		uint8_t *e_8mpw = e;
+	if (CompVCannyHysteresis_xmpw) {
+		const uint16_t *grad_xmpw = grad;
+		uint8_t *e_xmpw = e;
 		for (row = rowStart; row < rowEnd; ++row) {
-			CompVCannyHysteresis_8mpw(row, colStart, imageWidthMinus1, imageHeightMinus1, m_nImageStride, tLow, tHigh, grad_8mpw, g0, e_8mpw, e0);
-			grad_8mpw += m_nImageStride, e_8mpw += m_nImageStride;
+			CompVCannyHysteresis_xmpw(row, colStart, imageWidthMinus1, imageHeightMinus1, m_nImageStride, tLow, tHigh, grad_xmpw, g0, e_xmpw, e0);
+			grad_xmpw += m_nImageStride, e_xmpw += m_nImageStride;
 		}
-		colStart = (imageWidthMinus1 & -7);
+		colStart = (imageWidthMinus1 & -(mpw - 1));
 	}
 	else {
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
