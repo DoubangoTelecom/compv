@@ -33,7 +33,7 @@ kCannyTangentPiTimes3Over8Int: .word 158217
 @ arg(6) -> compv_uscalar_t stride
 COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
     COMPV_GAS_FUNCTION_PROLOG
-	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 7
 	COMPV_GAS_SAVE_NEON_REGS
     COMPV_GAS_ALIGN_STACK 16, r11
 	COMPV_GAS_MEMALLOC (2*COMPV_GAS_Q_SZ_BYTES)
@@ -54,7 +54,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 
     col .req r7
     c0 .req r8
-    widthMinus7 .req r9
+    gTmp .req r9
 
     vecNMS .req q7
     vecNMSx .req q7x
@@ -90,22 +90,20 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 
     .unreq tLow1 @ tLow no longer needed
     c1 .req r4
-    add c1, stride, #(1 - 16) @ -16 to cancel g increment
+    add c1, stride, #1
     neg c0, stride
-    add c0, c0, #(1 - 16) @ -16 to cancel g increment
+    add c0, c0, #1
 
-    sub stride, stride, #16 @ -16 to cancel g increment
-
-    sub widthMinus7, width, #7
+    sub width, width, #7
 
     mov col, #1
-    add g, g, #(1*COMPV_GAS_UINT16_SZ_BYTES) @ col starts at 1
+    add gTmp, g, #(1*COMPV_GAS_UINT16_SZ_BYTES) @ col starts at 1
 
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @ for (col = 1; col < width - 7; col += 8)
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     LoopWidth_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
-        vld1.u16 {vecG}, [g]!
+        vld1.u16 {vecG}, [gTmp]!
         vcgt.u16 q0, vecG, vecTLow
         vorr.u16 q1x, q0x, q0y
         vmov.u32 r10, q1x[0]
@@ -148,8 +146,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			beq EndOf_Ifvec30_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 			Ifvec30_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
-                add r10, col, #(-1 -16) @ g[col - 1] -> g was incremented by 16
-                add r10, col, #(+1 -16) @ g[col + 1] -> g was incremented by 16
+                sub r10, col, #1 @ g[col - 1]
+                add r11, col, #1 @ g[col + 1]
                 add r10, g, r10, LSL #1
                 add r11, g, r11, LSL #1
                 vld1.u16 {q2}, [r10 :128]
@@ -207,8 +205,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 					@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 					beq EndOf_Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 					Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
-                        sub r10, col, c0 @ c0 alread decremented by 16 to cancel g increment
-                        add r11, col, c0 @ c0 alread decremented by 16 to cancel g increment
+                        sub r10, col, c0
+                        add r11, col, c0
                         add r10, g, r10, LSL #1
                         add r11, g, r11, LSL #1
                         vld1.u16 {q6}, [r10 :128]
@@ -230,8 +228,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 					@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 					beq EndOfIfvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 					Ifvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
-                        sub r10, col, c1 @ c1 alread decremented by 16 to cancel g increment
-                        add r11, col, c1 @ c1 alread decremented by 16 to cancel g increment
+                        sub r10, col, c1
+                        add r11, col, c1
                         add r10, g, r10, LSL #1
                         add r11, g, r11, LSL #1
                         vld1.u16 {q6}, [r10 :128]
@@ -265,11 +263,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			beq EndOf_Ifvec50_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 			Ifvec50_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
-                sub r10, col, stride @ stride alread decremented by 16 to cancel g increment
-                add r11, col, stride @ stride alread decremented by 16 to cancel g increment
+                sub r10, col, stride
+                add r11, col, stride
                 add r10, g, r10, LSL #1
                 add r11, g, r11, LSL #1
-                vld1.u16 {q6}, [r10 :128]
+                vld1.u16 {q6}, [r10]
                 vld1.u16 {q3}, [r11]
                 vcgt.s16 q6, q6, vecG
                 vcgt.s16 q3, q3, vecG
@@ -288,7 +286,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 			@ EndOf_Ifvec00_CompVCannyNMSGatherRow_8mpw_Asm_NEON32 @@
 
 		add col, col, #8
-		cmp col, widthMinus7
+		cmp col, width @ width contains (width - 7)
 		blt LoopWidth_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
         @@EndOf_LoopWidth_CompVCannyNMSGatherRow_8mpw_Asm_NEON32@@
     
@@ -303,7 +301,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
     .unreq col
     .unreq c1
     .unreq c0
-    .unreq widthMinus7
+    .unreq gTmp
 
     .unreq vecNMS
     .unreq vecNMSx
@@ -322,7 +320,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
     COMPV_GAS_MEMFREE (2*COMPV_GAS_Q_SZ_BYTES)
 	COMPV_GAS_UNALIGN_STACK r11
 	COMPV_GAS_RESTORE_NEON_REGS
-	COMPV_GAS_UNSHADOW_ARGS 6
+	COMPV_GAS_UNSHADOW_ARGS 7
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
