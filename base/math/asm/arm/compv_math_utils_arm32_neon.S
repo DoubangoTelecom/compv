@@ -152,6 +152,149 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsMax_16u_Asm_NEON32
 	COMPV_GAS_FUNCTION_RETURN
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* data
+@ arg(1) -> compv_uscalar_t width
+@ arg(2) -> compv_uscalar_t height
+@ arg(3) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+@ arg(4) -> uint32_t *sum1
+COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum_8u32u_Asm_NEON32
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SHADOW_ARGS_TO_STACK 5
+	COMPV_GAS_SAVE_NEON_REGS
+
+	@@ Load arguments @@
+	ldm_args r0-r4
+	data .req r0
+	width .req r1
+	height .req r2
+	stride .req r3
+	sum1 .req r4
+
+    i .req r5
+    widthModulo64Div16 .req r6
+    pad .req r7
+
+    vecOrphansSuppress .req q13
+    vecSuml .req q14
+    vecSumlx .req q14x
+    vecSumly .req q14y
+    vecSumh .req q15
+
+    @@ compute vecOrphansSuppress for orphans @@
+	ands r8, width, #15
+    beq NoOrphans_CompVMathUtilsSum_8u32u_Asm_NEON32
+		mov r9, #-(16<<3)
+		vceq.u8 vecOrphansSuppress, vecOrphansSuppress, vecOrphansSuppress
+		veor.u8 q15, q15, q15
+		add r8, r9, r8, LSL #3 @ ((orphans - 16) << 3) = (-16<<3) + (orphans << 3)
+		mov r9, #0
+		cmp r8, #-64
+		addlt r9, r8, #64 @ r9 = 0 if (t0 < -64) otherwise unchanged (#0)
+		vmov.s32 q15y[0], r8
+		vmov.s32 q15x[0], r9
+		vshl.u64 vecOrphansSuppress, vecOrphansSuppress, q15
+		NoOrphans_CompVMathUtilsSum_8u32u_Asm_NEON32:
+
+
+    and widthModulo64Div16, width, #63
+    lsr widthModulo64Div16, widthModulo64Div16, #4
+
+    add pad, width, #15
+    and pad, pad, #-16
+    sub pad, stride, pad
+
+    veor.u8 vecSuml, vecSuml, vecSuml
+    veor.u8 vecSumh, vecSumh, vecSumh
+	
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @ for (compv_uscalar_t j = 0; j < height; ++j)
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    LoopHeight_CompVMathUtilsSum_8u32u_Asm_NEON32:
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        @ for (i = 0; i < widthSigned - 63; i += 64)
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        lsrs i, width, #6 @ div 64
+        beq EndOf_LoopWidth64_CompVMathUtilsSum_8u32u_Asm_NEON32
+        LoopWidth64_CompVMathUtilsSum_8u32u_Asm_NEON32:
+            pld [data, #(CACHE_LINE_SIZE*3)]
+            subs i, i, #1
+            vld1.u8 { q0, q1 }, [data :128]!
+            vld1.u8 { q2, q3 }, [data :128]!
+            vaddl.u8 q0, q0x, q0y
+            vaddl.u8 q1, q1x, q1y
+            vaddl.u8 q2, q2x, q2y
+            vaddl.u8 q3, q3x, q3y
+            vadd.u16 q0, q0, q1
+            vadd.u16 q2, q2, q3
+            vaddl.u16 q0, q0x, q0y
+            vaddl.u16 q2, q2x, q2y
+            vadd.u32 vecSuml, vecSuml, q0
+            vadd.u32 vecSumh, vecSumh, q2
+            bne LoopWidth64_CompVMathUtilsSum_8u32u_Asm_NEON32
+            EndOf_LoopWidth64_CompVMathUtilsSum_8u32u_Asm_NEON32:
+            @@ EndOf_LoopWidth64_CompVMathUtilsSum_8u32u_Asm_NEON32 @@
+
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        @ for (; i < widthSigned - 15; i += 16)
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        movs i, widthModulo64Div16
+        beq EndOf_LoopWidth16_CompVMathUtilsSum_8u32u_Asm_NEON32
+        LoopWidth16_CompVMathUtilsSum_8u32u_Asm_NEON32:
+            subs i, i, #1
+            vld1.u8 { q0 }, [data :128]!
+            vaddl.u8 q0, q0x, q0y
+            vaddl.u16 q0, q0x, q0y
+            vadd.u32 vecSuml, vecSuml, q0
+            bne LoopWidth16_CompVMathUtilsSum_8u32u_Asm_NEON32
+            EndOf_LoopWidth16_CompVMathUtilsSum_8u32u_Asm_NEON32:
+            @@ EndOf_LoopWidth16_CompVMathUtilsSum_8u32u_Asm_NEON32 @@
+
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        @ if (orphans)
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        tst width, #15
+        beq EndOf_IfOrphansCompVMathUtilsSum_8u32u_Asm_NEON32
+            vld1.u8 { q0 }, [data :128]!
+            vand.u8 q0, q0, vecOrphansSuppress
+            vaddl.u8 q0, q0x, q0y
+            vaddl.u16 q0, q0x, q0y
+            vadd.u32 vecSuml, vecSuml, q0
+            EndOf_IfOrphansCompVMathUtilsSum_8u32u_Asm_NEON32:
+
+        subs height, height, #1
+        add data, data, pad
+        bne LoopHeight_CompVMathUtilsSum_8u32u_Asm_NEON32
+        @@ EndOf_LoopHeight_CompVMathUtilsSum_8u32u_Asm_NEON32 @@
+
+    vadd.u32 vecSuml, vecSuml, vecSumh
+    vadd.u32 vecSumlx, vecSumlx, vecSumly
+    vpadd.u32 vecSumlx, vecSumlx, vecSumlx
+    vmov.u32 r11, vecSumlx[0]
+    str r11, [sum1]
+
+	.unreq data
+    .unreq width
+    .unreq height
+    .unreq stride
+    .unreq sum1
+
+    .unreq i
+    .unreq widthModulo64Div16
+    .unreq pad
+
+    .unreq vecOrphansSuppress
+    .unreq vecSuml
+    .unreq vecSumlx
+    .unreq vecSumly
+    .unreq vecSumh
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_UNSHADOW_ARGS 5
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ arg(0) -> COMPV_ALIGNED(NEON) const int16_t* a
 @ arg(1) -> COMPV_ALIGNED(NEON) const int16_t* b
 @ arg(2) -> COMPV_ALIGNED(NEON) uint16_t* r
