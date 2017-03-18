@@ -21,7 +21,7 @@
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 6
 	COMPV_GAS_SAVE_NEON_REGS
 	COMPV_GAS_ALIGN_STACK 16, r9
-	COMPV_GAS_MEMALLOC (COMPV_GAS_REG_SZ_BYTES*16) + (16*16) + (16*16) + (16*16)
+	COMPV_GAS_MEMALLOC (COMPV_GAS_REG_SZ_BYTES*16) + (COMPV_GAS_V_SZ_BYTES*16) + (COMPV_GAS_V_SZ_BYTES*16) + (COMPV_GAS_V_SZ_BYTES*16)
 	
     ldp_arg 0, r0, r1
     ldp_arg 2, r2, r3
@@ -37,8 +37,8 @@
 
 	.equ circle					, 0
 	.equ vecDiffBinary16		, (circle + (COMPV_GAS_REG_SZ_BYTES*16))
-	.equ vecDiff16				, (vecDiffBinary16 + (16*16))
-	.equ vecCircle16			, (vecDiff16 + (16*16))
+	.equ vecDiff16				, (vecDiffBinary16 + (COMPV_GAS_V_SZ_BYTES*16))
+	.equ vecCircle16			, (vecDiff16 + (COMPV_GAS_V_SZ_BYTES*16))
 
 	#define vecDarker1 v0
 	#define vecBrighter1 v1
@@ -507,7 +507,7 @@
 	#undef vecN
 	#undef vecOne
 
-	COMPV_GAS_MEMFREE (COMPV_GAS_REG_SZ_BYTES*16) + (16*16) + (16*16) + (16*16)
+	COMPV_GAS_MEMFREE (COMPV_GAS_REG_SZ_BYTES*16) + (COMPV_GAS_V_SZ_BYTES*16) + (COMPV_GAS_V_SZ_BYTES*16) + (COMPV_GAS_V_SZ_BYTES*16)
 	COMPV_GAS_UNALIGN_STACK r9, r10
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS

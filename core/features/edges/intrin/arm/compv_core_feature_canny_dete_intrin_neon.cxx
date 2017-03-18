@@ -216,7 +216,7 @@ void CompVCannyHysteresisRow_16mpw_Intrin_NEON(size_t row, size_t colStart, size
 	}
 }
 
-void CompVCannyNMSGatherRow_8mpw_Intrin_SSE(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride)
+void CompVCannyNMSGatherRow_8mpw_Intrin_NEON(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_NEON();
 	uint8x16_t vec0, vec1, vec2, vec3, vec4, vec5, vec6;
@@ -247,7 +247,7 @@ void CompVCannyNMSGatherRow_8mpw_Intrin_SSE(uint8_t* nms, const uint16_t* g, con
 			vecAbsGY0 = vshll_n_u16(vget_low_u16(vec1), 16); // convert from epi16 to epi32 then  "<< 16"
 			vecAbsGY1 = vshll_n_u16(vget_high_u16(vec1), 16); // convert from epi16 to epi32 then  "<< 16"
 
-															  // angle = "0° / 180°"
+            // angle = "0° / 180°"
 			vec1 = vcgtq_u32(vmull_u16(vecTangentPiOver8Int, vget_low_u16(vecAbsGX)), vecAbsGY0); // convert from epi16 to epi32 then multiply
 			vec2 = vcgtq_u32(vmull_u16(vecTangentPiOver8Int, vget_high_u16(vecAbsGX)), vecAbsGY1); // convert from epi16 to epi32 then multiply
 			vec3 = vandq_u16(vec0, vcombine_u16(vqmovn_u32(vec1), vqmovn_u32(vec2)));

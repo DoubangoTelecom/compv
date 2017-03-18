@@ -27,16 +27,16 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 9
 	COMPV_GAS_SAVE_NEON_REGS
 	COMPV_GAS_ALIGN_STACK 16, r11
-	COMPV_GAS_MEMALLOC (7*16)
+	COMPV_GAS_MEMALLOC (7*COMPV_GAS_Q_SZ_BYTES)
 	
 	@@ Declare allocated stack memory @@
 	.equ vecy0                   , 0
-	.equ vecy1                   , vecy0 + 16
-	.equ vecSfxTimes16           , vecy1 + 16
-	.equ vecSFX0                 , vecSfxTimes16 + 16
-	.equ vecSFX1                 , vecSFX0 + 16
-	.equ vecSFX2                 , vecSFX1 + 16
-	.equ vecSFX3                 , vecSFX2 + 16
+	.equ vecy1                   , vecy0 + COMPV_GAS_Q_SZ_BYTES
+	.equ vecSfxTimes16           , vecy1 + COMPV_GAS_Q_SZ_BYTES
+	.equ vecSFX0                 , vecSfxTimes16 + COMPV_GAS_Q_SZ_BYTES
+	.equ vecSFX1                 , vecSFX0 + COMPV_GAS_Q_SZ_BYTES
+	.equ vecSFX2                 , vecSFX1 + COMPV_GAS_Q_SZ_BYTES
+	.equ vecSFX3                 , vecSFX2 + COMPV_GAS_Q_SZ_BYTES
 
 	@@ Declare input arguments @@
 	ldm_args r0-r8
@@ -434,7 +434,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVImageScaleBilinear_Asm_NEON32
 	.unreq t1
 	.unreq t2
 
-	COMPV_GAS_MEMFREE (7*16)
+	COMPV_GAS_MEMFREE (7*COMPV_GAS_Q_SZ_BYTES)
 	COMPV_GAS_UNALIGN_STACK r11
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS 9

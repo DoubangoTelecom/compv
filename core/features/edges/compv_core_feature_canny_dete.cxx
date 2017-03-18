@@ -313,7 +313,8 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::nms_gather(CompVMatPtr& edges, uint16_t tLo
 #elif COMPV_ARCH_ARM
 	if (maxCols >= 8) {
 		if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON)) {
-			COMPV_EXEC_IFDEF_INTRIN_ARM((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_8mpw_Intrin_SSE, xmpw = 8));
+			COMPV_EXEC_IFDEF_INTRIN_ARM((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_8mpw_Intrin_NEON, xmpw = 8));
+            COMPV_EXEC_IFDEF_ASM_ARM32((CompVCannyNMSGatherRow_xmpw = CompVCannyNMSGatherRow_8mpw_Asm_NEON32, xmpw = 8));
 		}
 	}
 #endif
