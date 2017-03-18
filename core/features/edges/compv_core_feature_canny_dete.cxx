@@ -100,6 +100,9 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::set(int id, const void* valuePtr, size_t va
 	}
 }
 
+// TODO(dmi): combine with mean instead of gaussian blur to remove noise
+// https://github.com/DoubangoTelecom/compv/issues/130
+
 COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatPtrPtr edges) /*Overrides(CompVEdgeDete)*/
 {
 	COMPV_CHECK_EXP_RETURN(!image || image->subType() != COMPV_SUBTYPE_PIXELS_Y || !edges, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input image is null or not in grayscale format");
@@ -400,8 +403,13 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr& edges, uint16_t tLo
 		= NULL;
 
 #if COMPV_ARCH_X86
-	if (imageWidthMinus1 >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_8mpw_Intrin_SSE2, mpw = 8));
+	if (CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+		if (imageWidthMinus1 >= 8) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_8mpw_Intrin_SSE2, mpw = 8));
+		}
+		if (imageWidthMinus1 >= 16) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_16mpw_Intrin_SSE2, mpw = 16));
+		}
 	}
 #	if 0 // SSE implementation is faster
 	if (imageWidthMinus1 >= 16 && CompVCpu::isEnabled(compv::kCpuFlagAVX2)) {
@@ -409,11 +417,13 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr& edges, uint16_t tLo
 	}
 #	endif
 #elif COMPV_ARCH_ARM
-	if (imageWidthMinus1 >= 8 && CompVCpu::isEnabled(compv::kCpuFlagARM_NEON)) {
-		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_8mpw_Intrin_NEON, mpw = 8));
-	}
-	if (imageWidthMinus1 >= 16 && CompVCpu::isEnabled(compv::kCpuFlagARM_NEON)) {
-		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_16mpw_Intrin_NEON, mpw = 16));
+	if (CompVCpu::isEnabled(compv::kCpuFlagARM_NEON)) {
+		if (imageWidthMinus1 >= 8) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_8mpw_Intrin_NEON, mpw = 8));
+		}
+		if (imageWidthMinus1 >= 16) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM((CompVCannyHysteresis_xmpw = CompVCannyHysteresisRow_16mpw_Intrin_NEON, mpw = 16));
+		}
 	}
 #endif
 
