@@ -91,8 +91,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
     .unreq tLow1 @ tLow no longer needed
     c1 .req r4
     add c1, stride, #1
-    neg c0, stride
-    add c0, c0, #1
+    mov c0, #1
+    sub c0, c0, stride
 
     sub width, width, #7
 
@@ -108,7 +108,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
         vorr.u16 q1x, q0x, q0y
         vmov.u32 r10, q1x[0]
         vmov.u32 r11, q1x[1]
-        orrs r11, r10
+        orrs r11, r11, r10
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         @ if (COMPV_ARM_NEON_NEQ_ZERO(vec0))
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -124,14 +124,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
             vabs.s16 vecAbsGX, vecGX
 
             add r10, sp, #vecTangentPiOver8Int
-            vld1.s16 {q1}, [r10]
+            vld1.s16 {q1x}, [r10 :64]
 
             vshll.u16 vecAbsGY0, q3x, #16
             vshll.u16 vecAbsGY1, q3y, #16
 
 			@@ angle = "0° / 180°" @@
             vmull.u16 q2, q1x, vecAbsGXx
-            vmull.u16 q3, q1y, vecAbsGXy
+            vmull.u16 q3, q1x, vecAbsGXy
             vcgt.u32 q2, q2, vecAbsGY0
             vcgt.u32 q3, q3, vecAbsGY1
             vqmovn.u32 q4x, q2
@@ -140,7 +140,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
             vorr.u16 q2x, q1x, q1y
 			vmov.u32 r10, q2x[0]
             vmov.u32 r11, q2x[1]
-            orrs r11, r10
+            orrs r11, r11, r10
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			@ if (COMPV_ARM_NEON_NEQ_ZERO(vec3))
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -166,7 +166,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 			vorr.u16 q3x, q2x, q2y
 			vmov.u32 r10, q3x[0]
             vmov.u32 r11, q3x[1]
-            orrs r11, r10
+            orrs r11, r11, r10
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			@ if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) - 0
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -175,18 +175,18 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
                 add r10, sp, #vecTangentPiTimes3Over8Int
                 vld1.s16 {q3}, [r10]
                 vmovl.u16 q6, vecAbsGXx
-                vmovl.u16 q7, vecAbsGXy
+                vmovl.u16 q4, vecAbsGXy
                 vmul.u32 q6, q6, q3
-                vmul.u32 q7, q7, q3
+                vmul.u32 q4, q4, q3
                 vcgt.u32 q6, q6, vecAbsGY0
-                vcgt.u32 q7, q7, vecAbsGY1
+                vcgt.u32 q4, q4, vecAbsGY1
                 vqmovn.u32 q6x, q6
-                vqmovn.u32 q6y, q7
+                vqmovn.u32 q6y, q4
                 vand.u16 q2, q2, q6 @ q2 = old vec4, override
                 vorr.u16 q6x, q2x, q2y
                 vmov.u32 r10, q6x[0]
                 vmov.u32 r11, q6x[1]
-                orrs r11, r10
+                orrs r11, r11, r10
 				@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 				@ if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) - 1
 				@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -222,7 +222,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
                     vorr.u16 q6x, q5x, q5y @ q5 is vec2
                     vmov.u32 r10, q6x[0]
                     vmov.u32 r11, q6x[1]
-                    orrs r11, r10
+                    orrs r11, r11, r10
 					@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 					@ if (COMPV_ARM_NEON_NEQ_ZERO(vec2))
 					@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -257,7 +257,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
             vorr.u16 q6x, q1x, q1y
             vmov.u32 r10, q6x[0]
             vmov.u32 r11, q6x[1]
-            orrs r11, r10
+            orrs r11, r11, r10
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			@ if (COMPV_ARM_NEON_NEQ_ZERO(vec5))
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
