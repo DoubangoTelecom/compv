@@ -317,12 +317,12 @@ void CompVCannyNMSApply_Intrin_NEON(COMPV_ALIGNED(NEON) uint16_t* grad, COMPV_AL
 				vec0 = vsliq_n_u16(vec0, vec0, 8);
 				vst1_u8(&nms[col_], vecZero);
 				vst1q_u16(&grad[col_], vbicq_u16(vld1q_u16(&grad[col_]), vec0)); // suppress
-			}
-			}
+            }
+        }
 		nms += stride;
 		grad += stride;
-		}
 	}
+}
 
 COMPV_NAMESPACE_END()
 

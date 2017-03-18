@@ -112,6 +112,8 @@
 		159A2D491E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_avx2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A2D451E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_avx2.cxx */; };
 		159A2D4A1E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_sse2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A2D461E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_sse2.cxx */; };
 		159A2D4B1E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_ssse3.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159A2D471E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_ssse3.cxx */; };
+		159A2D611E7DB5DB000FEBE5 /* compv_core_feature_canny_dete_arm32_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 159A2D601E7DB5DB000FEBE5 /* compv_core_feature_canny_dete_arm32_neon.S */; };
+		159A2D631E7DB5EC000FEBE5 /* compv_core_feature_canny_dete_arm64_neon.S in Sources */ = {isa = PBXBuildFile; fileRef = 159A2D621E7DB5EC000FEBE5 /* compv_core_feature_canny_dete_arm64_neon.S */; };
 		159E15871E5DA5FD00D8CE75 /* compv_core_feature_orb_desc_intrin_neon.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159E157C1E5DA5EE00D8CE75 /* compv_core_feature_orb_desc_intrin_neon.cxx */; settings = {COMPILER_FLAGS = "-mfpu=neon"; }; };
 		159E15881E5DA60500D8CE75 /* compv_core_feature_orb_desc_intrin_avx2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159E157E1E5DA5EE00D8CE75 /* compv_core_feature_orb_desc_intrin_avx2.cxx */; };
 		159E15891E5DA60500D8CE75 /* compv_core_feature_orb_desc_intrin_fma3_avx2.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 159E157F1E5DA5EE00D8CE75 /* compv_core_feature_orb_desc_intrin_fma3_avx2.cxx */; };
@@ -476,6 +478,8 @@
 		159A2D451E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_avx2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_feature_canny_dete_intrin_avx2.cxx; sourceTree = "<group>"; };
 		159A2D461E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_sse2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_feature_canny_dete_intrin_sse2.cxx; sourceTree = "<group>"; };
 		159A2D471E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_ssse3.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_feature_canny_dete_intrin_ssse3.cxx; sourceTree = "<group>"; };
+		159A2D601E7DB5DB000FEBE5 /* compv_core_feature_canny_dete_arm32_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_core_feature_canny_dete_arm32_neon.S; sourceTree = "<group>"; };
+		159A2D621E7DB5EC000FEBE5 /* compv_core_feature_canny_dete_arm64_neon.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = compv_core_feature_canny_dete_arm64_neon.S; sourceTree = "<group>"; };
 		159E157C1E5DA5EE00D8CE75 /* compv_core_feature_orb_desc_intrin_neon.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_feature_orb_desc_intrin_neon.cxx; sourceTree = "<group>"; };
 		159E157E1E5DA5EE00D8CE75 /* compv_core_feature_orb_desc_intrin_avx2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_feature_orb_desc_intrin_avx2.cxx; sourceTree = "<group>"; };
 		159E157F1E5DA5EE00D8CE75 /* compv_core_feature_orb_desc_intrin_fma3_avx2.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compv_core_feature_orb_desc_intrin_fma3_avx2.cxx; sourceTree = "<group>"; };
@@ -1169,6 +1173,7 @@
 		156E41C11E7119F700DF9950 /* edges */ = {
 			isa = PBXGroup;
 			children = (
+				159A2D551E7DB56C000FEBE5 /* asm */,
 				159A2D411E7DAC0C000FEBE5 /* intrin */,
 				156E41C21E7119F700DF9950 /* compv_core_feature_canny_dete.cxx */,
 				156E41C31E7119F700DF9950 /* compv_core_feature_edge_dete.cxx */,
@@ -1363,6 +1368,23 @@
 				159A2D471E7DAC0C000FEBE5 /* compv_core_feature_canny_dete_intrin_ssse3.cxx */,
 			);
 			path = x86;
+			sourceTree = "<group>";
+		};
+		159A2D551E7DB56C000FEBE5 /* asm */ = {
+			isa = PBXGroup;
+			children = (
+				159A2D5F1E7DB5A0000FEBE5 /* arm */,
+			);
+			path = asm;
+			sourceTree = "<group>";
+		};
+		159A2D5F1E7DB5A0000FEBE5 /* arm */ = {
+			isa = PBXGroup;
+			children = (
+				159A2D601E7DB5DB000FEBE5 /* compv_core_feature_canny_dete_arm32_neon.S */,
+				159A2D621E7DB5EC000FEBE5 /* compv_core_feature_canny_dete_arm64_neon.S */,
+			);
+			path = arm;
 			sourceTree = "<group>";
 		};
 		159E157A1E5DA5EE00D8CE75 /* intrin */ = {
@@ -2153,9 +2175,11 @@
 				1525C0421E3633AB00B00689 /* compv_core_feature_fast_dete_intrin_sse2.cxx in Sources */,
 				157F72B61E581133000DE45F /* compv_core_feature_orb_dete.cxx in Sources */,
 				1525C0411E3633AB00B00689 /* compv_core_feature_fast_dete_intrin_avx2.cxx in Sources */,
+				159A2D611E7DB5DB000FEBE5 /* compv_core_feature_canny_dete_arm32_neon.S in Sources */,
 				1525C0401E3633AB00B00689 /* compv_core_feature_fast_dete_intrin_neon.cxx in Sources */,
 				1525C0381E3633AB00B00689 /* compv_core_feature_fast_dete_macros_neon.S in Sources */,
 				159E158A1E5DA60500D8CE75 /* compv_core_feature_orb_desc_intrin_sse2.cxx in Sources */,
+				159A2D631E7DB5EC000FEBE5 /* compv_core_feature_canny_dete_arm64_neon.S in Sources */,
 				1525C0371E3633AB00B00689 /* compv_core_feature_fast_dete_arm32_neon.S in Sources */,
 				1525C03F1E3633AB00B00689 /* compv_core_feature_fast_dete.cxx in Sources */,
 				157F72B51E581133000DE45F /* compv_core_feature_orb_desc.cxx in Sources */,

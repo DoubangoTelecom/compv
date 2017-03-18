@@ -27,16 +27,24 @@ static void CompVCannyNmsGatherRow_C(uint8_t* nms, const uint16_t* g, const int1
 static void CompVCannyHysteresisRow_C(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0);
 
 #if COMPV_ASM
+#	if COMPV_ARCH_X64
+    COMPV_EXTERNC void CompVCannyNMSGatherRow_8mpw_Asm_X64_SSE41(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
+    COMPV_EXTERNC void CompVCannyNMSGatherRow_16mpw_Asm_X64_AVX2(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
+#	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_X86
 	COMPV_EXTERNC void CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVCannyNMSGatherRow_16mpw_Asm_X86_AVX2(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVCannyNMSApply_Asm_X86_SSE2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALIGNED(SSE) uint8_t* nms, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 	COMPV_EXTERNC void CompVCannyNMSApply_Asm_X86_AVX2(COMPV_ALIGNED(SSE) uint16_t* grad, COMPV_ALIGNED(SSE) uint8_t* nms, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X86 */
-#	if COMPV_ARCH_X64
-	COMPV_EXTERNC void CompVCannyNMSGatherRow_8mpw_Asm_X64_SSE41(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
-	COMPV_EXTERNC void CompVCannyNMSGatherRow_16mpw_Asm_X64_AVX2(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
-#	endif /* COMPV_ARCH_X64 */
+#	if COMPV_ARCH_ARM32
+    COMPV_EXTERNC void CompVCannyNMSGatherRow_8mpw_Asm_NEON32(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
+    COMPV_EXTERNC void CompVCannyNMSApply_Asm_NEON32(COMPV_ALIGNED(NEON) uint16_t* grad, COMPV_ALIGNED(NEON) uint8_t* nms, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+#	endif /* COMPV_ARCH_ARM32 */
+#	if COMPV_ARCH_ARM64
+    COMPV_EXTERNC void CompVCannyNMSGatherRow_8mpw_Asm_NEON64(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
+    COMPV_EXTERNC void CompVCannyNMSApply_Asm_NEON64(COMPV_ALIGNED(NEON) uint16_t* grad, COMPV_ALIGNED(NEON) uint8_t* nms, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride);
+#	endif /* COMPV_ARCH_ARM64 */
 #endif /* COMPV_ASM */
 
 CompVEdgeDeteCanny::CompVEdgeDeteCanny(float tLow, float tHigh, size_t kernSize)
@@ -363,6 +371,7 @@ void CompVEdgeDeteCanny::nms_apply()
 	const size_t gStrideInBytes = m_nImageStride * sizeof(uint16_t);
 	if (imageWidthMinus1_ >= 8 && CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(nms_) && COMPV_IS_ALIGNED_NEON(g_) && COMPV_IS_ALIGNED_NEON(m_nImageStride) && COMPV_IS_ALIGNED_NEON(gStrideInBytes)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVCannyNMSApply = CompVCannyNMSApply_Intrin_NEON);
+        COMPV_EXEC_IFDEF_ASM_ARM32(CompVCannyNMSApply = CompVCannyNMSApply_Asm_NEON32);
 	}
 #endif
 
