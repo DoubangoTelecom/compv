@@ -83,7 +83,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
     # for (col = 1; col < width - 7; col += 8)
     #########################################################################
     LoopWidth_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-        prfm pldl1keep, [gTmp, #(CACHE_LINE_SIZE*3)]
         ld1 {vecG.8h}, [gTmp], #(1*COMPV_GAS_Q_SZ_BYTES)
         cmhi v0.8h, vecG.8h, vecTLow.8h
         mov r10, v0.d[0]
@@ -99,10 +98,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
             movi vecNMS.8b, #0
 			ld1 {vecGY.8h}, [r10]
 			ld1 {vecGX.8h}, [r11]
-			
 			abs v3.8h, vecGY.8h
             abs vecAbsGX.8h, vecGX.8h
-
             shll vecAbsGY0.4s, v3.4h, #16
             shll2 vecAbsGY1.4s, v3.8h, #16
 
@@ -291,5 +288,75 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 	COMPV_GAS_FUNCTION_EPILOG
 	COMPV_GAS_FUNCTION_RETURN
 
+
+#########################################################################
+# arg(0) -> COMPV_ALIGNED(NEON) uint16_t* grad
+# arg(1) -> COMPV_ALIGNED(NEON) uint8_t* nms
+# arg(2) -> compv_uscalar_t width
+# arg(3) -> compv_uscalar_t height
+# arg(4) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSApply_Asm_NEON64
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+	## Set arguments ##
+	grad .req r0
+	nms .req r1
+	width .req r2
+	height .req r3
+	stride .req r4
+
+    # nmsTmp = r5
+    # col = r6
+    # vecZero = v15
+
+    sub height, height, #1 // row start at 1
+
+    movi v15.16b, #0
+
+    #########################################################################
+    # for (row_ = 1; row_ < height; ++row_)
+    #########################################################################
+    LoopHeight_CompVCannyNMSApply_Asm_NEON64:
+        #########################################################################
+        # for (col_ = 0; col_ < width; col_ += 8)
+        #########################################################################
+        mov r6, #0
+        mov r5, nms
+        LoopWidth8_CompVCannyNMSApply_Asm_NEON64:
+            ld1 { v0.8b }, [r5], #(8*COMPV_GAS_UINT8_SZ_BYTES)
+            cmhi v0.8b, v0.8b, v15.8b
+            mov r10, v0.d[0]
+            cbz r10, NothingToSupress_CompVCannyNMSApply_Asm_NEON64
+                uxtl v0.8h, v0.8b
+                add r10, nms, r6
+                add r11, grad, r6, LSL #1
+                ld1 { v1.8h }, [r11]
+                sli v0.8h, v0.8h, #8
+                st1 {v15.8b}, [r10]
+                bic v1.16b, v1.16b, v0.16b // supress
+                st1 {v1.8h}, [r11]
+                NothingToSupress_CompVCannyNMSApply_Asm_NEON64:
+
+            add r6, r6, #8
+            cmp r6, width
+            blt LoopWidth8_CompVCannyNMSApply_Asm_NEON64
+            ## EndOf_CompVCannyNMSApply_Asm_NEON64 ##
+
+        subs height, height, #1
+        add grad, grad, stride, LSL #1
+        add nms, nms, stride
+        bne LoopHeight_CompVCannyNMSApply_Asm_NEON64
+        ## EndOf_CompVCannyNMSApply_Asm_NEON64 ##
+
+	.unreq grad
+    .unreq nms
+    .unreq width
+    .unreq height
+    .unreq stride
+	
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
 
 #endif /* defined(__aarch64__) */

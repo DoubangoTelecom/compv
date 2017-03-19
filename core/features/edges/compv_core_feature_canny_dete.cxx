@@ -374,6 +374,7 @@ void CompVEdgeDeteCanny::nms_apply()
 	if (imageWidthMinus1_ >= 8 && CompVCpu::isEnabled(compv::kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(nms_) && COMPV_IS_ALIGNED_NEON(g_) && COMPV_IS_ALIGNED_NEON(m_nImageStride) && COMPV_IS_ALIGNED_NEON(gStrideInBytes)) {
 		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVCannyNMSApply = CompVCannyNMSApply_Intrin_NEON);
         COMPV_EXEC_IFDEF_ASM_ARM32(CompVCannyNMSApply = CompVCannyNMSApply_Asm_NEON32);
+        COMPV_EXEC_IFDEF_ASM_ARM64(CompVCannyNMSApply = CompVCannyNMSApply_Asm_NEON64);
 	}
 #endif
 
