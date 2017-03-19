@@ -80,8 +80,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsMax_16u_Asm_NEON64
         cbz i, EndOf_LoopWidth32_CompVMathUtilsMax_16u_Asm_NEON64
         LoopWidth32_CompVMathUtilsMax_16u_Asm_NEON64:
             subs i, i, #1
-            ld1 {v0.8h, v1.8h}, [data], #32
-            ld1 {v2.8h, v3.8h}, [data], #32
+            ld1 {v0.8h, v1.8h}, [data], #(2*COMPV_GAS_Q_SZ_BYTES)
+            ld1 {v2.8h, v3.8h}, [data], #(2*COMPV_GAS_Q_SZ_BYTES)
             umax v0.8h, v0.8h, v1.8h
             umax v2.8h, v2.8h, v3.8h
             umax vecMax.8h, vecMax.8h, v0.8h
@@ -97,7 +97,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsMax_16u_Asm_NEON64
         mov i, widthModulo32Div8
         LoopWidth8_CompVMathUtilsMax_16u_Asm_NEON64:
             subs i, i, #1
-            ld1 {v0.8h}, [data], #16
+            ld1 {v0.8h}, [data], #(1*COMPV_GAS_Q_SZ_BYTES)
             umax vecMax.8h, vecMax.8h, v0.8h
             bne LoopWidth8_CompVMathUtilsMax_16u_Asm_NEON64
             EndOf_LoopWidth8_CompVMathUtilsMax_16u_Asm_NEON64:
@@ -108,7 +108,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsMax_16u_Asm_NEON64
         #########################################################################
         tst width, #7
         beq EndOf_IfOrphansCompVMathUtilsMax_16u_Asm_NEON64
-            ldr q0, [data], #16
+            ldr q0, [data], #(1*COMPV_GAS_Q_SZ_BYTES)
             and v0.16b, v0.16b, vecOrphansSuppress.16b
             umax vecMax.8h, vecMax.8h, v0.8h
             EndOf_IfOrphansCompVMathUtilsMax_16u_Asm_NEON64:
@@ -135,6 +135,145 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsMax_16u_Asm_NEON64
 
     .unreq vecMax
     .unreq vecOrphansSuppress
+
+	COMPV_GAS_RESTORE_NEON_REGS
+	COMPV_GAS_FUNCTION_EPILOG
+	COMPV_GAS_FUNCTION_RETURN
+
+
+#########################################################################
+# arg(0) -> COMPV_ALIGNED(NEON) const uint8_t* data
+# arg(1) -> compv_uscalar_t width
+# arg(2) -> compv_uscalar_t height
+# arg(3) -> COMPV_ALIGNED(NEON) compv_uscalar_t stride
+# arg(4) -> uint32_t *sum1
+COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum_8u32u_Asm_NEON64
+    COMPV_GAS_FUNCTION_PROLOG
+	COMPV_GAS_SAVE_NEON_REGS
+
+	## Set arguments ##
+	data .req r0
+	width .req r1
+	height .req r2
+	stride .req r3
+	sum1 .req r4
+
+    i .req r5
+    widthModulo64Div16 .req r6
+    pad .req r7
+
+    vecOrphansSuppress .req v13
+    vecSuml .req v14
+    vecSumh .req v15
+
+    ## compute vecOrphansSuppress for orphans ##
+    ands r8, width, #15
+    beq NoOrphans_CompVMathUtilsSum_8u32u_Asm_NEON64
+		cmeq vecOrphansSuppress.16b, vecOrphansSuppress.16b, vecOrphansSuppress.16b
+		mov r9, #-(16<<3)
+		mov r10, #0
+		add r8, r9, r8, LSL #3 // ((orphans - 16) << 3) = (-16<<3) + (orphans << 3)
+		adds r11, r8, #64
+		csel r9, r11, r10, mi
+		mov v30.d[0], r9
+		mov v30.d[1], r8
+		ushl vecOrphansSuppress.2d, vecOrphansSuppress.2d, v30.2d
+		NoOrphans_CompVMathUtilsSum_8u32u_Asm_NEON64:
+
+    and widthModulo64Div16, width, #63
+    lsr widthModulo64Div16, widthModulo64Div16, #4
+
+    add pad, width, #15
+    and pad, pad, #-16
+    sub pad, stride, pad
+
+    eor vecSuml.16b, vecSuml.16b, vecSuml.16b
+    eor vecSumh.16b, vecSumh.16b, vecSumh.16b
+	
+    #########################################################################
+    # for (compv_uscalar_t j = 0; j < height; ++j)
+    #########################################################################
+    LoopHeight_CompVMathUtilsSum_8u32u_Asm_NEON64:
+        #########################################################################
+        # for (i = 0; i < widthSigned - 63; i += 64)
+        #########################################################################
+        lsr i, width, #6 // div 64
+        cbz i, EndOf_LoopWidth64_CompVMathUtilsSum_8u32u_Asm_NEON64
+        LoopWidth64_CompVMathUtilsSum_8u32u_Asm_NEON64:
+            prfm pldl1keep, [data, #(CACHE_LINE_SIZE*3)]
+            subs i, i, #1
+            ldp q0, q1, [data], #(2*COMPV_GAS_Q_SZ_BYTES)
+            ldp q2, q3, [data], #(2*COMPV_GAS_Q_SZ_BYTES)
+            uaddl v4.8h, v0.8b, v1.8b
+            uaddl2 v5.8h, v0.16b, v1.16b
+            uaddl v6.8h, v2.8b, v3.8b
+            uaddl2 v7.8h, v2.16b, v3.16b
+            add v4.8h, v4.8h, v5.8h
+            add v6.8h, v6.8h, v7.8h
+            uaddl v8.4s, v4.4h, v6.4h
+            uaddl2 v9.4s, v4.8h, v6.8h            
+            add vecSuml.4s, vecSuml.4s, v8.4s
+            add vecSumh.4s, vecSumh.4s, v9.4s
+            bne LoopWidth64_CompVMathUtilsSum_8u32u_Asm_NEON64
+            EndOf_LoopWidth64_CompVMathUtilsSum_8u32u_Asm_NEON64:
+            ## EndOf_LoopWidth64_CompVMathUtilsSum_8u32u_Asm_NEON64 ##
+
+        #########################################################################
+        # for (; i < widthSigned - 15; i += 16)
+        #########################################################################
+        mov i, widthModulo64Div16
+        cbz i, EndOf_LoopWidth16_CompVMathUtilsSum_8u32u_Asm_NEON64
+        LoopWidth16_CompVMathUtilsSum_8u32u_Asm_NEON64:
+            subs i, i, #1
+            ldr q0, [data], #(1*COMPV_GAS_Q_SZ_BYTES)
+            uxtl v1.8h, v0.8b
+            uxtl2 v2.8h, v0.16b
+            add v1.8h, v1.8h, v2.8h
+            uaddw vecSuml.4s, vecSuml.4s, v1.4h
+            uaddw2 vecSumh.4s, vecSumh.4s, v1.8h
+            bne LoopWidth16_CompVMathUtilsSum_8u32u_Asm_NEON64
+            EndOf_LoopWidth16_CompVMathUtilsSum_8u32u_Asm_NEON64:
+            ## EndOf_LoopWidth16_CompVMathUtilsSum_8u32u_Asm_NEON64 ##
+
+        #########################################################################
+        # .if (orphans)
+        #########################################################################
+        tst width, #15
+        beq EndOf_IfOrphansCompVMathUtilsSum_8u32u_Asm_NEON64
+            ldr q0, [data], #(1*COMPV_GAS_Q_SZ_BYTES)
+            and v0.16b, v0.16b, vecOrphansSuppress.16b
+            uxtl v1.8h, v0.8b
+            uxtl2 v2.8h, v0.16b
+            add v1.8h, v1.8h, v2.8h
+            uaddw vecSuml.4s, vecSuml.4s, v1.4h
+            uaddw2 vecSumh.4s, vecSumh.4s, v1.8h
+            EndOf_IfOrphansCompVMathUtilsSum_8u32u_Asm_NEON64:
+
+        subs height, height, #1
+        add data, data, pad
+        bne LoopHeight_CompVMathUtilsSum_8u32u_Asm_NEON64
+        ## EndOf_LoopHeight_CompVMathUtilsSum_8u32u_Asm_NEON64 ##
+
+    add vecSuml.4s, vecSuml.4s, vecSumh.4s
+    addp vecSuml.4s, vecSuml.4s, vecSuml.4s
+    addp vecSuml.4s, vecSuml.4s, vecSuml.4s
+    st1 {vecSuml.s}[0], [sum1]
+
+	.unreq data
+    .unreq width
+    .unreq height
+    .unreq stride
+    .unreq sum1
+
+    .unreq i
+    .unreq widthModulo64Div16
+    .unreq pad
+
+    .unreq vecOrphansSuppress
+    .unreq vecSuml
+    .unreq vecSumlx
+    .unreq vecSumly
+    .unreq vecSumh
 
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_FUNCTION_EPILOG

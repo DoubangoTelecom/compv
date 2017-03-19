@@ -103,6 +103,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
     @ for (col = 1; col < width - 7; col += 8)
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     LoopWidth_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
+        pld [gTmp, #(CACHE_LINE_SIZE*3)]
         vld1.u16 {vecG}, [gTmp]!
         vcgt.u16 q0, vecG, vecTLow
         vorr.u16 q1x, q0x, q0y
@@ -362,7 +363,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSApply_Asm_NEON32
         mov r6, #0
         mov r5, nms
         LoopWidth8_CompVCannyNMSApply_Asm_NEON32:
-            @pld [r5, #(CACHE_LINE_SIZE*3)]
+            pld [r5, #(CACHE_LINE_SIZE*3)]
             vld1.u8 { q0x }, [r5 :64]!
             vcgt.u8 q0x, q0x, q15x
             vmov.u32 r10, q0x[0]
