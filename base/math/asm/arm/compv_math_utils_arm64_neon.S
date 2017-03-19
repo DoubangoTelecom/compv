@@ -187,8 +187,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum_8u32u_Asm_NEON64
     and pad, pad, #-16
     sub pad, stride, pad
 
-    eor vecSuml.16b, vecSuml.16b, vecSuml.16b
-    eor vecSumh.16b, vecSumh.16b, vecSumh.16b
+    movi vecSuml.4s, #0
+    movi vecSumh.4s, #0
 	
     #########################################################################
     # for (compv_uscalar_t j = 0; j < height; ++j)

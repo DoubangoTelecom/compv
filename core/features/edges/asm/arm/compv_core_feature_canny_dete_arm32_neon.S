@@ -212,8 +212,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
                         add r11, g, r11, LSL #1
                         vld1.u16 {q6}, [r10 :128]
                         vld1.u16 {q3}, [r11]
-                        vcgt.s16 q6, q6, vecG
-                        vcgt.s16 q3, q3, vecG
+                        vcgt.u16 q6, q6, vecG
+                        vcgt.u16 q3, q3, vecG
                         vorr.u16 q6, q6, q3
                         vand.s16 q4, q4, q6 @ q4 is old vec1
 						EndOf_Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
@@ -235,8 +235,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
                         add r11, g, r11, LSL #1
                         vld1.u16 {q6}, [r10 :128]
                         vld1.u16 {q3}, [r11]
-                        vcgt.s16 q6, q6, vecG
-                        vcgt.s16 q3, q3, vecG
+                        vcgt.u16 q6, q6, vecG
+                        vcgt.u16 q3, q3, vecG
                         vorr.u16 q6, q6, q3
                         vand.s16 q5, q5, q6 @ q5 is old vec2
 						EndOfIfvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
@@ -270,8 +270,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
                 add r11, g, r11, LSL #1
                 vld1.u16 {q6}, [r10]
                 vld1.u16 {q3}, [r11]
-                vcgt.s16 q6, q6, vecG
-                vcgt.s16 q3, q3, vecG
+                vcgt.u16 q6, q6, vecG
+                vcgt.u16 q3, q3, vecG
                 vorr.u16 q6, q6, q3
                 vand.s16 q1, q1, q6 @ q1 is old vec5
                 vqmovn.u16 q1x, q1
