@@ -42,7 +42,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 	stride .req r6
 
     col .req r7
-    c0 .req r8
+    cZero .req r8
     gTmp .req r9
 
     vecNMS .req v7
@@ -69,11 +69,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
     movi vecZero.16b, #0
 
     .unreq tLow1 // tLow no longer needed
-    c1 .req r4
+    cOne .req r4
     lsl stride, stride, #1 // from bytes to shorts
-    add c1, stride, #(1*COMPV_GAS_UINT16_SZ_BYTES)
-    mov c0, #(1*COMPV_GAS_UINT16_SZ_BYTES)
-    sub c0, c0, stride
+    add cOne, stride, #(1*COMPV_GAS_UINT16_SZ_BYTES)
+    mov cZero, #(1*COMPV_GAS_UINT16_SZ_BYTES)
+    sub cZero, cZero, stride
 
     lsl width, width, #1 // from bytes to shorts
     sub width, width, #(7*COMPV_GAS_UINT16_SZ_BYTES)
@@ -91,10 +91,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
         mov r11, v0.d[1]
         orr r10, r10, r11
         #########################################################################
-        # .if (COMPV_ARM_NEON_NEQ_ZERO(vec0))
+        # .if (COMPV_ARM_NEON_NEQ_ZERO(vecZero))
         #########################################################################
-        cbz r10, EndOf_Ifvec00_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
-		Ifvec00_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
+        cbz r10, EndOf_IfvecZero0_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
+		IfvecZero0_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
             ldr q10, [gx, col] // vecGX = v10			
             abs vecAbsGX.8h, vecGX.8h
             umull v18.4s, vecTangentPiOver8Int.4h, vecAbsGX.4h
@@ -117,11 +117,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 			#########################################################################
 			cbz r10, EndOf_Ifvec30_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 			Ifvec30_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-                sub r10, col, #(1*COMPV_GAS_UINT16_SZ_BYTES) // g[col - 1]
-                add r11, col, #(1*COMPV_GAS_UINT16_SZ_BYTES) // g[col + 1]
-                ldr q2, [g, r10]
-                cmhi v2.8h, v2.8h, vecG.8h
-			    ldr q3, [g, r11]
+                add r10, g, col
+                ldr q2, [r10, #-(1*COMPV_GAS_UINT16_SZ_BYTES)]
+			    ldr q3, [r10, #(1*COMPV_GAS_UINT16_SZ_BYTES)]
+				cmhi v2.8h, v2.8h, vecG.8h
                 cmhi v3.8h, v3.8h, vecG.8h
                 orr v2.16b, v2.16b, v3.16b
                 and v2.16b, v2.16b, v1.16b // q1 is vec3
@@ -159,26 +158,26 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 				Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
                     eor v4.16b, vecGX.16b, vecGY.16b
                     cmgt v4.8h, vecZero.8h, v4.8h
-                    and v4.16b, v4.16b, v2.16b // q2 is vec4, q4 = vec1
+                    and v4.16b, v4.16b, v2.16b // q2 is vec4, q4 = vecOne
                     bic v5.16b, v2.16b, v4.16b // q2 is vec4, q5 = vec2
                     mov r10, v4.d[0]
                     mov r11, v4.d[1]
                     orr r10, r10, r11
 					#########################################################################
-					# .if (COMPV_ARM_NEON_NEQ_ZERO(vec1))
+					# .if (COMPV_ARM_NEON_NEQ_ZERO(vecOne))
 					#########################################################################
-					cbz r10, EndOf_Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
-					Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-                        sub r10, col, c0
-                        add r11, col, c0
+					cbz r10, EndOf_IfvecOne0_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
+					IfvecOne0_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
+                        sub r10, col, cZero
+                        add r11, col, cZero
                         ldr q6, [g, r10]
+						ldr q3, [g, r11]
                         cmhi v6.8h, v6.8h, vecG.8h
-                        ldr q3, [g, r11]
                         cmhi v3.8h, v3.8h, vecG.8h
                         orr v6.16b, v6.16b, v3.16b
-                        and v4.16b, v4.16b, v6.16b // q4 is old vec1
-						EndOf_Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-						## EndOf_Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 ##
+                        and v4.16b, v4.16b, v6.16b // q4 is old vecOne
+						EndOf_IfvecOne0_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
+						## EndOf_IfvecOne0_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 ##
 
 
                     // q5 is vec2
@@ -190,11 +189,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 					#########################################################################
 					cbz r10, EndOfIfvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 					Ifvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-                        sub r10, col, c1
-                        add r11, col, c1
+                        sub r10, col, cOne
+                        add r11, col, cOne
                         ldr q6, [g, r10]
+						ldr q3, [g, r11]
                         cmhi v6.8h, v6.8h, vecG.8h
-                        ldr q3, [g, r11]
                         cmhi v3.8h, v3.8h, vecG.8h
                         orr v6.16b, v6.16b, v3.16b
                         and v5.16b, v5.16b, v6.16b // q5 is old vec2
@@ -202,7 +201,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 						## EndOfIfvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 ##
 
 
-                    orr v4.16b, v4.16b, v5.16b // q4 is vec1 and q5 is vec2
+                    orr v4.16b, v4.16b, v5.16b // q4 is vecOne and q5 is vec2
                     uqxtn v4.8b, v4.8h
                     orr vecNMS.8b, vecNMS.8b, v4.8b
 					EndOf_Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
@@ -212,7 +211,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 				## EndOf_Ifvec40_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 ##
 			
 			## angle = "90° / 270°" ##
-            bic v2.16b, v0.16b, v2.16b // q2 was vec4 and q0 is vec0
+            bic v2.16b, v0.16b, v2.16b // q2 was vec4 and q0 is vecZero
             bic v1.16b, v2.16b, v1.16b // q1 was vec3, now vec5 is q1
             mov r10, v1.d[0]
             mov r11, v1.d[1]
@@ -225,8 +224,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
                 sub r10, col, stride
                 add r11, col, stride
                 ldr q6, [g, r10]
+				ldr q3, [g, r11]
                 cmhi v6.8h, v6.8h, vecG.8h
-                ldr q3, [g, r11]
                 cmhi v3.8h, v3.8h, vecG.8h
                 orr v6.16b, v6.16b, v3.16b
                 and v1.16b, v1.16b, v6.16b // q1 is old vec5
@@ -239,8 +238,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
             add r10, nms, col, LSR #1
             st1 {vecNMS.8b}, [r10]
 
-			EndOf_Ifvec00_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-			## EndOf_Ifvec00_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 ##
+			EndOf_IfvecZero0_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
+			## EndOf_IfvecZero0_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 ##
 
 		add col, col, #(8*COMPV_GAS_UINT16_SZ_BYTES)
 		cmp col, width // width contains (width - 7)
@@ -251,13 +250,12 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
     .unreq g
     .unreq gx
     .unreq gy
-    .unreq tLow1
     .unreq width
     .unreq stride
 
     .unreq col
-    .unreq c1
-    .unreq c0
+    .unreq cOne
+    .unreq cZero
     .unreq gTmp
 
     .unreq vecNMS
@@ -265,8 +263,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 	.unreq vecZero
 	.unreq vecGX
 	.unreq vecAbsGX
-    .unreq vecAbsGXx
-    .unreq vecAbsGXy
 	.unreq vecTLow
 	.unreq vecGY
 	.unreq vecAbsGY0

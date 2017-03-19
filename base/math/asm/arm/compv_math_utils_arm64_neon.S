@@ -271,8 +271,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVMathUtilsSum_8u32u_Asm_NEON64
 
     .unreq vecOrphansSuppress
     .unreq vecSuml
-    .unreq vecSumlx
-    .unreq vecSumly
     .unreq vecSumh
 
 	COMPV_GAS_RESTORE_NEON_REGS
