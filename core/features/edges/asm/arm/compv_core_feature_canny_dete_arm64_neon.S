@@ -250,7 +250,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 			
             ## Update NMS ##
             add r10, nms, col
-            st1 {vecNMS.8b}, [nms]
+            st1 {vecNMS.8b}, [r10]
 
 			EndOf_Ifvec00_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
 			## EndOf_Ifvec00_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 ##
