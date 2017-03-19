@@ -103,7 +103,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
     @ for (col = 1; col < width - 7; col += 8)
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     LoopWidth_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
-        @pld [gTmp, #(CACHE_LINE_SIZE*3)]
+        pld [gTmp, #(CACHE_LINE_SIZE*3)]
         vld1.u16 {vecG}, [gTmp]!
         vcgt.u16 q0, vecG, vecTLow
         vorr.u16 q1x, q0x, q0y
@@ -115,29 +115,27 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         beq EndOf_Ifvec00_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 		Ifvec00_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
-            add r10, gy, col, LSL #1
             add r11, gx, col, LSL #1
-            vmov.u8 vecNMS, vecZero
-			vld1.s16 {vecGY}, [r10]
+            add r10, sp, #vecTangentPiOver8Int		
 			vld1.s16 {vecGX}, [r11]
-			vabs.s16 q3, vecGY
             vabs.s16 vecAbsGX, vecGX
-            add r10, sp, #vecTangentPiOver8Int
             vld1.s16 {q1x}, [r10 :64]
+            vmull.u16 q4, q1x, vecAbsGXx
+            vmull.u16 q5, q1x, vecAbsGXy
+            add r10, gy, col, LSL #1
+            vld1.s16 {vecGY}, [r10]
+			vabs.s16 q3, vecGY
             vshll.u16 vecAbsGY0, q3x, #16
             vshll.u16 vecAbsGY1, q3y, #16
-
-			@@ angle = "0° / 180°" @@
-            vmull.u16 q2, q1x, vecAbsGXx
-            vmull.u16 q3, q1x, vecAbsGXy
-            vcgt.u32 q2, q2, vecAbsGY0
-            vcgt.u32 q3, q3, vecAbsGY1
-            vqmovn.u32 q4x, q2
-            vqmovn.u32 q4y, q3
+			vmov.u8 vecNMS, vecZero
+            vcgt.u32 q4, q4, vecAbsGY0
+            vcgt.u32 q5, q5, vecAbsGY1
+            vqmovn.u32 q4x, q4
+            vqmovn.u32 q4y, q5
             vand.u16 q1, q0, q4 @ q1 = vec3
-            vorr.u16 q2x, q1x, q1y
-			vmov.u32 r10, q2x[0]
-            vmov.u32 r11, q2x[1]
+            vorr.u16 q4x, q1x, q1y
+			vmov.u32 r10, q4x[0]
+            vmov.u32 r11, q4x[1]
             orrs r11, r11, r10
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			@ if (COMPV_ARM_NEON_NEQ_ZERO(vec3))
@@ -149,8 +147,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
                 add r10, g, r10, LSL #1
                 add r11, g, r11, LSL #1
                 vld1.u16 {q2}, [r10 :128]
-			    vld1.u16 {q3}, [r11]
                 vcgt.u16 q2, q2, vecG
+			    vld1.u16 {q3}, [r11]
                 vcgt.u16 q3, q3, vecG
                 vorr.s16 q2, q2, q3
                 vand.s16 q2, q2, q1 @ q1 is vec3
@@ -231,8 +229,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
                         add r10, g, r10, LSL #1
                         add r11, g, r11, LSL #1
                         vld1.u16 {q6}, [r10 :128]
-                        vld1.u16 {q3}, [r11]
                         vcgt.u16 q6, q6, vecG
+                        vld1.u16 {q3}, [r11]
                         vcgt.u16 q3, q3, vecG
                         vorr.u16 q6, q6, q3
                         vand.s16 q5, q5, q6 @ q5 is old vec2
@@ -266,8 +264,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
                 add r10, g, r10, LSL #1
                 add r11, g, r11, LSL #1
                 vld1.u16 {q6}, [r10]
-                vld1.u16 {q3}, [r11]
                 vcgt.u16 q6, q6, vecG
+                vld1.u16 {q3}, [r11]
                 vcgt.u16 q3, q3, vecG
                 vorr.u16 q6, q6, q3
                 vand.s16 q1, q1, q6 @ q1 is old vec5
@@ -360,7 +358,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSApply_Asm_NEON32
         mov r6, #0
         mov r5, nms
         LoopWidth8_CompVCannyNMSApply_Asm_NEON32:
-            @pld [r5, #(CACHE_LINE_SIZE*3)]
+            pld [r5, #(CACHE_LINE_SIZE*3)]
             vld1.u8 { q0x }, [r5 :64]!
             vcgt.u8 q0x, q0x, q15x
             vmov.u32 r10, q0x[0]
