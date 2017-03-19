@@ -15,9 +15,6 @@
 #endif
 
 .data
-.align 2
-kCannyTangentPiOver8Int: .word 27145
-kCannyTangentPiTimes3Over8Int: .word 158217
 
 .extern
 
@@ -60,10 +57,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
     vecTangentPiOver8Int .req v16
     vecTangentPiTimes3Over8Int .req v17
 	
-    ldr r8, =kCannyTangentPiOver8Int
-    ldr r9, =kCannyTangentPiTimes3Over8Int
-    ldrh r8w, [r8]
-    ldr r9w, [r9]
+    movz r8w, #0x6a09
+    movz r9w, #0x2, lsl #16
+    movk r9w, #0x6a09
     ldrh r10w, [tLow1]
 
     dup vecTangentPiOver8Int.8h, r8w
@@ -107,17 +103,17 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 			abs v3.8h, vecGY.8h
             abs vecAbsGX.8h, vecGX.8h
 
-            ushll vecAbsGY0.4s, v3.4h, #16
-            ushll2 vecAbsGY1.4s, v3.8h, #16
+            shll vecAbsGY0.4s, v3.4h, #16
+            shll2 vecAbsGY1.4s, v3.8h, #16
 
 			## angle = "0° / 180°" ##
             umull v2.4s, vecTangentPiOver8Int.4h, vecAbsGX.4h
             umull2 v3.4s, vecTangentPiOver8Int.8h, vecAbsGX.8h
             cmhi v2.4s, v2.4s, vecAbsGY0.4s
             cmhi v3.4s, v3.4s, vecAbsGY1.4s
-            vqmovn.u32 q4x, q2
-            vqmovn.u32 q4y, q3
-            vand.u16 q1, q0, q4 @ q1 = vec3
+            uqxtn v4.4h, v2.4s
+            uqxtn2 v4.8h, v3.4s
+            and v1.16b, v0.16b, v4.16b // q1 = vec3
             mov r10, v1.d[0]
             mov r11, v1.d[1]
             orr r10, r10, r11
@@ -126,23 +122,23 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 			#########################################################################
 			cbz r10, EndOf_Ifvec30_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 			Ifvec30_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-                sub r10, col, #1 @ g[col - 1]
-                add r11, col, #1 @ g[col + 1]
+                sub r10, col, #1 // g[col - 1]
+                add r11, col, #1 // g[col + 1]
                 add r10, g, r10, LSL #1
                 add r11, g, r11, LSL #1
-                vld1.u16 {q2}, [r10 :128]
-			    vld1.u16 {q3}, [r11]
-                cmhi.u16 q2, q2, vecG
-                cmhi.u16 q3, q3, vecG
-                vorr.s16 q2, q2, q3
-                vand.s16 q2, q2, q1 @ q1 is vec3
-                vqmovn.u16 q2x, q2
-                vorr.u8 vecNMSx, vecNMSx, q2x
+                ldr q2, [r10]
+			    ld1 {v3.8h}, [r11]
+                cmhi v2.8h, v2.8h, vecG.8h
+                cmhi v3.8h, v3.8h, vecG.8h
+                orr v2.16b, v2.16b, v3.16b
+                and v2.16b, v2.16b, v1.16b // q1 is vec3
+                uqxtn v2.8b, v2.8h
+                orr vecNMS.8b, vecNMS.8b, v2.8b
 				EndOf_Ifvec30_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-				@@ EndOf_Ifvec30_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 @@
+				## EndOf_Ifvec30_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 ##
 
-			@@ angle = "45° / 225°" or "135 / 315" @@
-            vbic.s16 q2, q0, q1 @ q1 is vec3, now q2 = vec4
+			## angle = "45° / 225°" or "135 / 315" ##
+            bic v2.16b, v0.16b, v1.16b // q1 is vec3, now q2 = vec4
             mov r10, v2.d[0]
             mov r11, v2.d[1]
             orr r10, r10, r11
@@ -151,17 +147,15 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 			#########################################################################
 			cbz r10, EndOf_Ifvec40_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 			Ifvec40_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-                add r10, sp, #vecTangentPiTimes3Over8Int
-                vld1.s16 {q3}, [r10]
-                vmovl.u16 q6, vecAbsGXx
-                vmovl.u16 q4, vecAbsGXy
-                vmul.u32 q6, q6, q3
-                vmul.u32 q4, q4, q3
-                cmhi.u32 q6, q6, vecAbsGY0
-                cmhi.u32 q4, q4, vecAbsGY1
-                vqmovn.u32 q6x, q6
-                vqmovn.u32 q6y, q4
-                vand.u16 q2, q2, q6 @ q2 = old vec4, override
+                uxtl v6.4s, vecAbsGX.4h
+                uxtl2 v4.4s, vecAbsGX.8h
+                mul v6.4s, v6.4s, vecTangentPiTimes3Over8Int.4s
+                mul v4.4s, v4.4s, vecTangentPiTimes3Over8Int.4s
+                cmhi v6.4s, v6.4s, vecAbsGY0.4s
+                cmhi v4.4s, v4.4s, vecAbsGY1.4s
+                uqxtn v6.4h, v6.4s
+                uqxtn2 v6.8h, v4.4s
+                and v2.16b, v2.16b, v6.16b // q2 = old vec4, override
                 mov r10, v2.d[0]
                 mov r11, v2.d[1]
                 orr r10, r10, r11
@@ -170,10 +164,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 				#########################################################################
 				cbz r10, EndOf_Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
 				Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-                    veor.s16 q4, vecGX, vecGY
-                    cmgt.s16 q4, vecZero, q4
-                    vand.u16 q4, q4, q2 @ q2 is vec4, q4 = vec1
-                    vbic.u16 q5, q2, q4 @ q2 is vec4, q5 = vec2
+                    eor v4.16b, vecGX.16b, vecGY.16b
+                    cmgt v4.8h, vecZero.8h, v4.8h
+                    and v4.16b, v4.16b, v2.16b // q2 is vec4, q4 = vec1
+                    bic v5.16b, v2.16b, v4.16b // q2 is vec4, q5 = vec2
                     mov r10, v4.d[0]
                     mov r11, v4.d[1]
                     orr r10, r10, r11
@@ -186,14 +180,14 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
                         add r11, col, c0
                         add r10, g, r10, LSL #1
                         add r11, g, r11, LSL #1
-                        vld1.u16 {q6}, [r10 :128]
-                        vld1.u16 {q3}, [r11]
-                        cmhi.s16 q6, q6, vecG
-                        cmhi.s16 q3, q3, vecG
-                        vorr.u16 q6, q6, q3
-                        vand.s16 q4, q4, q6 @ q4 is old vec1
+                        ldr q6, [r10]
+                        ld1 {v3.8h}, [r11]
+                        cmhi v6.8h, v6.8h, vecG.8h
+                        cmhi v3.8h, v3.8h, vecG.8h
+                        orr v6.16b, v6.16b, v3.16b
+                        and v4.16b, v4.16b, v6.16b // q4 is old vec1
 						EndOf_Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-						@@ EndOf_Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 @@
+						## EndOf_Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 ##
 
 
                     // q5 is vec2
@@ -209,28 +203,28 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
                         add r11, col, c1
                         add r10, g, r10, LSL #1
                         add r11, g, r11, LSL #1
-                        vld1.u16 {q6}, [r10 :128]
-                        vld1.u16 {q3}, [r11]
-                        cmhi.s16 q6, q6, vecG
-                        cmhi.s16 q3, q3, vecG
-                        vorr.u16 q6, q6, q3
-                        vand.s16 q5, q5, q6 @ q5 is old vec2
+                        ldr q6, [r10]
+                        ld1 {v3.8h}, [r11]
+                        cmhi v6.8h, v6.8h, vecG.8h
+                        cmhi v3.8h, v3.8h, vecG.8h
+                        orr v6.16b, v6.16b, v3.16b
+                        and v5.16b, v5.16b, v6.16b // q5 is old vec2
 						EndOfIfvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-						@@ EndOfIfvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 @@
+						## EndOfIfvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 ##
 
 
-                    vorr.u16 q4, q4, q5 @ q4 is vec1 and q5 is vec2
-                    vqmovn.u16 q4x, q4
-                    vorr.u8 vecNMSx, vecNMSx, q4x
+                    orr v4.16b, v4.16b, v5.16b // q4 is vec1 and q5 is vec2
+                    uqxtn v4.8b, v4.8h
+                    orr vecNMS.8b, vecNMS.8b, v4.8b
 					EndOf_Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-					@@ EndOf_Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 @@
+					## EndOf_Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 ##
 
 				EndOf_Ifvec40_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-				@@ EndOf_Ifvec40_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 @@
+				## EndOf_Ifvec40_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 ##
 			
-			@@ angle = "90° / 270°" @@
-            vbic.s16 q2, q0, q2 @ q2 was vec4 and q0 is vec0
-            vbic.s16 q1, q2, q1 @ q1 was vec3, now vec5 is q1
+			## angle = "90° / 270°" ##
+            bic v2.16b, v0.16b, v2.16b // q2 was vec4 and q0 is vec0
+            bic v1.16b, v2.16b, v1.16b // q1 was vec3, now vec5 is q1
             mov r10, v1.d[0]
             mov r11, v1.d[1]
             orr r10, r10, r11
@@ -243,28 +237,28 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON64
                 add r11, col, stride
                 add r10, g, r10, LSL #1
                 add r11, g, r11, LSL #1
-                vld1.u16 {q6}, [r10]
-                vld1.u16 {q3}, [r11]
-                cmhi.s16 q6, q6, vecG
-                cmhi.s16 q3, q3, vecG
-                vorr.u16 q6, q6, q3
-                vand.s16 q1, q1, q6 @ q1 is old vec5
-                vqmovn.u16 q1x, q1
-                vorr.u8 vecNMSx, vecNMSx, q1x
+                ld1 {v6.8h}, [r10]
+                ld1 {v3.8h}, [r11]
+                cmhi v6.8h, v6.8h, vecG.8h
+                cmhi v3.8h, v3.8h, vecG.8h
+                orr v6.16b, v6.16b, v3.16b
+                and v1.16b, v1.16b, v6.16b // q1 is old vec5
+                uqxtn v1.8b, v1.8h
+                orr vecNMS.8b, vecNMS.8b, v1.8b
 				EndOf_Ifvec50_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-				@@ EndOf_Ifvec50_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 @@
+				## EndOf_Ifvec50_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 ##
 			
-            @@ Update NMS @@
+            ## Update NMS ##
             add r10, nms, col
-            vst1.u8 {vecNMSx}, [r10]
+            st1 {vecNMS.8b}, [nms]
 
 			EndOf_Ifvec00_CompVCannyNMSGatherRow_8mpw_Asm_NEON64:
-			@ EndOf_Ifvec00_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 @@
+			## EndOf_Ifvec00_CompVCannyNMSGatherRow_8mpw_Asm_NEON64 ##
 
 		add col, col, #8
-		cmp col, width @ width contains (width - 7)
+		cmp col, width // width contains (width - 7)
 		blt LoopWidth_CompVCannyNMSGatherRow_8mpw_Asm_NEON64
-        @@EndOf_LoopWidth_CompVCannyNMSGatherRow_8mpw_Asm_NEON64@@
+        ##EndOf_LoopWidth_CompVCannyNMSGatherRow_8mpw_Asm_NEON64##
     
 	.unreq nms
     .unreq g
