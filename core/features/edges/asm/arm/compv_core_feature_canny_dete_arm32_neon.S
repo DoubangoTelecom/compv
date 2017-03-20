@@ -169,8 +169,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 				beq EndOf_Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 				Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
                     veor.s16 q4, vecGX, vecGY
-					veor.s16 q6, q6, q6 @ q6 = vecZero
-                    vcgt.s16 q4, q6, q4
+                    vclt.s16 q4, q4, #0
                     vand.u16 q4, q4, q2 @ q2 is vec4, q4 = vec1
                     vbic.u16 q5, q2, q4 @ q2 is vec4, q5 = vec2
                     vorr.u16 q3x, q4x, q4y
