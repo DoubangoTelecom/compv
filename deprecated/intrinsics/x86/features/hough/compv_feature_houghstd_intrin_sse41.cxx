@@ -18,8 +18,8 @@ void HoughStdAccGatherRow_Intrin_SSE41(int32_t* pACC, int32_t accStride, COMPV_A
 {
     COMPV_DEBUG_INFO_CHECK_SSE41();
     int32_t col, theta, rhoInt32;
-    const int32_t maxThetaCountSSE = maxThetaCount - 3;
-    const int32_t maxColsSSE = maxCols - 15;
+    const int32_t maxThetaCountSSE = maxThetaCount - 3; // FIXME: (maxThetaCount & -4)
+	const int32_t maxColsSSE = maxCols - 15; // FIXME: (maxCols & -16)
     __m128i xmmCol, xmmRho, xmmTheta, xmm0;
 #if COMPV_ARCH_X64
     __m128i xmm1;

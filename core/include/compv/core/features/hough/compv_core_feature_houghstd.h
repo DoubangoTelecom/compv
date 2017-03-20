@@ -9,6 +9,7 @@
 
 #include "compv/core/compv_core_config.h"
 #include "compv/core/compv_core_common.h"
+#include "compv/base/compv_memz.h"
 #include "compv/base/compv_features.h"
 
 #if defined(_COMPV_API_H_)
@@ -19,7 +20,7 @@ COMPV_NAMESPACE_BEGIN()
 
 struct CompVHoughAccThreadsCtx {
 	CompVMutexPtr mutex;
-	CompVMatPtr acc; // CompVMatPtr<int32_t>
+	CompVPtr<CompVMemZero<int32_t> *> acc;
 	size_t threadsCount;
 };
 
@@ -39,8 +40,8 @@ public:
 private:
 	COMPV_ERROR_CODE initCoords(float fRho, float fTheta, size_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
 	COMPV_ERROR_CODE acc_gather(size_t rowStart, size_t rowCount, const CompVMatPtr& edges, CompVHoughAccThreadsCtx* threadsCtx);
-	COMPV_ERROR_CODE nms_gather(size_t rowStart, size_t rowCount, CompVMatPtr& acc);
-	COMPV_ERROR_CODE nms_apply(size_t rowStart, size_t rowCount, CompVMatPtr& acc, CompVHoughLineVector& lines);
+	COMPV_ERROR_CODE nms_gather(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc);
+	COMPV_ERROR_CODE nms_apply(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc, CompVHoughLineVector& lines);
 
 private:
 	float m_fRho;

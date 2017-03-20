@@ -75,8 +75,6 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLine
 	// Init coords (sine and cosine tables)
 	COMPV_CHECK_CODE_RETURN(initCoords(m_fRho, m_fTheta, m_nThreshold, edges->cols(), edges->rows()));
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation");
-
 	lines.clear();
 	
 	// Compute number of threads
@@ -210,11 +208,10 @@ COMPV_ERROR_CODE CompVHoughStd::initCoords(float fRho, float fTheta, size_t nThr
 
 COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, const CompVMatPtr& edges, CompVHoughAccThreadsCtx* threadsCtx)
 {
-	CompVMatPtr acc; // CompVMatPtr<int32_t>
+	CompVPtr<CompVMemZero<int32_t> *> acc; // CompVMatPtr<int32_t>
 	size_t nmsStride, accStride;
 	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));
-	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int32_t>(&acc, m_NMS->rows(), m_NMS->cols()));
-	COMPV_CHECK_CODE_RETURN(acc->zero_rows());
+	COMPV_CHECK_CODE_RETURN(CompVMemZero<int32_t>::newObj(&acc, m_NMS->rows(), m_NMS->cols()));
 	accStride = acc->stride();
 	//const int32_t accStrideInt32 = static_cast<int32_t>(accStride);
 	int rEnd = static_cast<int>(COMPV_MATH_MIN((rowStart + rowCount), edges->rows()));
@@ -225,7 +222,7 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, con
 	const int32_t maxThetaCount = static_cast<int32_t>(acc->cols());
 	const int32_t* pSinRho = m_SinRho->ptr<const int32_t>();
 	const int32_t* pCosRho = m_CosRho->ptr<const int32_t>();
-	int32_t *pACC = acc->ptr<int32_t>(m_nBarrier);
+	int32_t *pACC = acc->ptr(m_nBarrier);
 	int32_t theta, rhoInt32;
 	int maxCol = -1;
 	int maxRow = -1;
@@ -279,9 +276,9 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, con
 			const size_t sumStart = m_nBarrier - (maxCol + maxRow); // "cos=1, sin=1"
 			const size_t sumEnd = m_nBarrier - (-maxCol); //"cos=-1, sin=0"
 			COMPV_CHECK_CODE_ASSERT(CompVMathUtils::sum2<int32_t>(
-				threadsCtx->acc->ptr<const int32_t>(sumStart), 
-				acc->ptr<const int32_t>(sumStart), 
-				threadsCtx->acc->ptr<int32_t>(sumStart),
+				threadsCtx->acc->ptr(sumStart), 
+				acc->ptr(sumStart), 
+				threadsCtx->acc->ptr(sumStart),
 				acc->cols(), 
 				(sumEnd - sumStart), 
 				acc->stride())
@@ -297,14 +294,14 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, con
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount, CompVMatPtr& acc)
+COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc)
 {
 	size_t rows = m_NMS->rows();
 	size_t maxCols = m_NMS->cols() - 1;
 	size_t rowEnd = COMPV_MATH_MIN((rowStart + rowCount), (rows - 1));
 	rowStart = COMPV_MATH_MAX(1, rowStart);
 
-	const int32_t *pACC = acc->ptr<const int32_t>(rowStart);
+	const int32_t *pACC = acc->ptr(rowStart);
 	uint8_t* pNMS = m_NMS->ptr<uint8_t>(rowStart);
 	size_t nmsStride, accStride, row;
 	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));
@@ -332,13 +329,13 @@ COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount, Com
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::nms_apply(size_t rowStart, size_t rowCount, CompVMatPtr& acc, CompVHoughLineVector& lines)
+COMPV_ERROR_CODE CompVHoughStd::nms_apply(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc, CompVHoughLineVector& lines)
 {
 	size_t cols = m_NMS->cols();
 	int32_t rEnd = static_cast<int32_t>(COMPV_MATH_MIN((rowStart + rowCount), m_NMS->rows()));
 	int32_t rStart = static_cast<int32_t>(COMPV_MATH_MAX(0, rowStart));
 	uint8_t* pNMS = m_NMS->ptr<uint8_t>(rStart);
-	int32_t* pACC = acc->ptr<int32_t>(rStart);
+	int32_t* pACC = acc->ptr(rStart);
 	size_t nmsStride, accStride;
 	int32_t nBarrier = static_cast<int32_t>(m_nBarrier);
 	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));

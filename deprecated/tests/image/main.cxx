@@ -16,8 +16,8 @@ using namespace compv;
 #define TEST_CONV				0
 #define TEST_FAST				0
 #define TEST_ORB				0
-#define TEST_CANNY				1
-#define TEST_HOUGHSTD			0
+#define TEST_CANNY				0
+#define TEST_HOUGHSTD			1
 #define TEST_SCALE				0
 #define TEST_PYRAMID			0
 

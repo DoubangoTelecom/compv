@@ -43,6 +43,7 @@
     <ClInclude Include="include\compv\base\compv_matchers.h" />
     <ClInclude Include="include\compv\base\compv_md5.h" />
     <ClInclude Include="include\compv\base\compv_mem.h" />
+    <ClInclude Include="include\compv\base\compv_memz.h" />
     <ClInclude Include="include\compv\base\compv_obj.h" />
     <ClInclude Include="include\compv\base\compv_patch.h" />
     <ClInclude Include="include\compv\base\compv_sharedlib.h" />
