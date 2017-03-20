@@ -6,6 +6,7 @@
 */
 #include "compv/core/compv_core.h"
 #include "compv/core/compv_core_common.h"
+#include "compv/core/features/hough/compv_core_feature_houghstd.h"
 #include "compv/core/features/edges/compv_core_feature_canny_dete.h"
 #include "compv/core/features/edges/compv_core_feature_edge_dete.h"
 #include "compv/core/features/fast/compv_core_feature_fast_dete.h"
@@ -75,14 +76,14 @@ static const CompVFeatureFactory prewittFactory = {
 	CompVCornerDeteEdgeBase::newObjPrewitt,
 	NULL,
 };
-//static const CompVFeatureFactory houghStdFactory = {
-//	COMPV_HOUGH_STANDARD_ID,
-//	"Hough standard",
-//	NULL,
-//	NULL,
-//	NULL,
-//	CompVHoughStd::newObj,
-//};
+static const CompVFeatureFactory houghStdFactory = {
+	COMPV_HOUGH_STANDARD_ID,
+	"Hough standard",
+	NULL,
+	NULL,
+	NULL,
+	CompVHoughStd::newObj,
+};
 
 static const CompVMatcherFactory bruteForceFactory = {
 	COMPV_BRUTEFORCE_ID,
@@ -109,6 +110,7 @@ COMPV_ERROR_CODE CompVCore::init()
 	COMPV_CHECK_CODE_RETURN(err = CompVFeature::addFactory(&scharrFactory), "Failed to add Scharr edge detector factory");
 	COMPV_CHECK_CODE_RETURN(err = CompVFeature::addFactory(&prewittFactory), "Failed to add Prewitt edge detector factory");
 	COMPV_CHECK_CODE_RETURN(err = CompVFeature::addFactory(&cannyFactory), "Failed to add Canny edge detector factory");
+	COMPV_CHECK_CODE_RETURN(err = CompVFeature::addFactory(&houghStdFactory), "Failed to add Hough standard line detector factory");
 
 	// Matchers
 	COMPV_CHECK_CODE_BAIL(err = CompVMatcher::addFactory(&bruteForceFactory), "Failed to bruteforce matcher factory");

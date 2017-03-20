@@ -487,6 +487,16 @@ public:
 	}
 };
 
+struct CompVHoughLine {
+	compv_float32_t theta;
+	compv_float32_t rho;
+	size_t strength;
+public:
+	CompVHoughLine(compv_float32_t rho_, compv_float32_t theta_, size_t strength_): rho(rho_), theta(theta_), strength(strength_) { }
+	CompVHoughLine(): rho(0), theta(0), strength(0) {}
+};
+typedef std::vector<CompVHoughLine> CompVHoughLineVector;
+
 struct CompVDrawingOptions {
 	COMPV_DRAWING_COLOR_TYPE colorType;
 	compv_float32x4_t color;

@@ -743,6 +743,15 @@
     <ClCompile Include="compv_sharedlib.cxx">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_stats_intrin_neon64.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_transform_intrin_neon64.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="math\intrin\arm\compv_math_utils_intrin_neon.cxx">
+      <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <YASM Include="asm\x86\compv_bits_macros_x86.s">

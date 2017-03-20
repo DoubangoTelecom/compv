@@ -69,9 +69,6 @@
     <Filter Include="Source Files\features\fast\intrin\x86">
       <UniqueIdentifier>{b9f1e436-9d2d-4999-9ba9-61799aabf780}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\features\fast\asm">
-      <UniqueIdentifier>{8a8b01eb-cd36-431d-9d22-a6b0fc7e3a61}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\features\fast\asm">
       <UniqueIdentifier>{e7cb783d-aee6-4281-abf1-2ff52040d2d7}</UniqueIdentifier>
     </Filter>
@@ -179,6 +176,9 @@
     <ClCompile Include="features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.cxx">
       <Filter>Source Files\features\edges\intrin\arm</Filter>
     </ClCompile>
+    <ClCompile Include="features\hough\compv_core_feature_houghstd.cxx">
+      <Filter>Source Files\features\hough</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -240,6 +240,9 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_avx2.h">
       <Filter>Header Files\features\edges\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\hough\compv_core_feature_houghstd.h">
+      <Filter>Header Files\features\hough</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

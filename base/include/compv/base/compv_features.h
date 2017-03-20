@@ -193,8 +193,8 @@ protected:
 	CompVHough(int id);
 public:
 	virtual ~CompVHough();
-	virtual COMPV_ERROR_CODE process(const CompVMatPtr& edges, CompVMatPtrPtr coords) = 0;
-	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, int id, float rho = 1.f, float theta = kfMathTrigPiOver180, int32_t threshold = 1);
+	virtual COMPV_ERROR_CODE process(const CompVMatPtr& edges, CompVHoughLineVector& lines) = 0;
+	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, int id, float rho = 1.f, float theta = kfMathTrigPiOver180, size_t threshold = 1);
 };
 
 
