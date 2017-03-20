@@ -80,63 +80,55 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLine
 	lines.clear();
 	
 	// Compute number of threads
-	size_t /*threadsCountNMS = 1,*/ threadsCountACC = 1;
-#if 0
-	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
-	if (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) {
-		threadsCountNMS = (m_NMS->rows() * m_NMS->cols()) / COMPV_FEATURE_HOUGHSTD_NMS_MIN_SAMPLES_PER_THREAD;
-		threadsCountNMS = COMPV_MATH_MIN_3(threadsCountNMS, m_NMS->rows(), (size_t)threadDisp->getThreadsCount());
-		threadsCountACC = (edges->rows() * edges->cols()) / COMPV_FEATURE_HOUGHSTD_ACC_MIN_SAMPLES_PER_THREAD;
-		threadsCountACC = COMPV_MATH_MIN_3(threadsCountACC, edges->rows(), (size_t)threadDisp->getThreadsCount());
+	size_t threadsCountNMS = 1, threadsCountACC = 1;
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+	if (maxThreads > 1) {
+		threadsCountNMS = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_NMS->cols(), m_NMS->rows(), maxThreads, COMPV_FEATURE_HOUGHSTD_NMS_MIN_SAMPLES_PER_THREAD);
+		threadsCountACC = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(edges->cols(), edges->rows(), maxThreads, COMPV_FEATURE_HOUGHSTD_ACC_MIN_SAMPLES_PER_THREAD);
 	}
-#endif
 
 	// Accumulator gathering
 	CompVHoughAccThreadsCtx accThreadsCtx = { 0 };
 	accThreadsCtx.threadsCount = threadsCountACC;
-#if 0
 	if (threadsCountACC > 1) {
 		COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&accThreadsCtx.mutex));
-		const size_t countAny = (size_t)(edges->rows() / threadsCountACC);
-		const size_t countLast = (size_t)countAny + (edges->rows() % threadsCountACC);
-		auto funcPtrAccGather = [&](size_t rowStart, size_t rowCount, size_t threadIdx) -> COMPV_ERROR_CODE {
+		const size_t countAny = (edges->rows() / threadsCountACC);
+		const size_t countLast = countAny + (edges->rows() % threadsCountACC);
+		auto funcPtrAccGather = [&](size_t rowStart, size_t rowCount) -> COMPV_ERROR_CODE {
 			COMPV_CHECK_CODE_RETURN(acc_gather(rowStart, rowCount, edges, &accThreadsCtx));
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		size_t rowStart, threadIdx;
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCountACC);
-		for (threadIdx = 0, rowStart = 0; threadIdx < threadsCountACC - 1; ++threadIdx, rowStart += countAny) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrAccGather, rowStart, countAny, threadIdx), taskIds));
+		for (threadIdx = 0, rowStart = 0; threadIdx < threadsCountACC; ++threadIdx, rowStart += countAny) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrAccGather, rowStart, (threadIdx == (threadsCountACC - 1)) ? countLast : countAny), taskIds));
 		}
-		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrAccGather, rowStart, countLast, threadIdx), taskIds));
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 	}
-	else 
-#endif
-	{
+	else {
 		COMPV_CHECK_CODE_RETURN(acc_gather(0, edges->rows(), edges, &accThreadsCtx));
 	}
 
 	// Non-maxima suppression (NMS)
-#if 0
-	if (threadsCountNMS > 1)
-	{
-		std::vector<CompVPtrBox(CompVCoordPolar2f) > coords(threadsCountNMS);
-		const size_t countAny = (size_t)(m_NMS->rows() / threadsCountNMS);
-		const size_t countLast = (size_t)countAny + (m_NMS->rows() % threadsCountNMS);
+	if (threadsCountNMS > 1) {
+		std::vector<CompVHoughLineVector > mt_lines;
+		const size_t countAny = (m_NMS->rows() / threadsCountNMS);
+		const size_t countLast = countAny + (m_NMS->rows() % threadsCountNMS);
 		auto funcPtrNmsGather = [&](size_t rowStart, size_t rowCount) -> COMPV_ERROR_CODE {
 			COMPV_CHECK_CODE_RETURN(nms_gather(rowStart, rowCount, accThreadsCtx.acc));
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		auto funcPtrNmsApply = [&](size_t rowStart, size_t rowCount, size_t threadIdx) -> COMPV_ERROR_CODE {
-			COMPV_CHECK_CODE_RETURN(nms_apply(rowStart, rowCount, accThreadsCtx.acc, coords[threadIdx]));
+			COMPV_CHECK_CODE_RETURN(nms_apply(rowStart, rowCount, accThreadsCtx.acc, mt_lines[threadIdx]));
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		size_t rowStart, threadIdx;
 		// NMS gathering
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCountNMS);
+		mt_lines.resize(threadsCountNMS);
 		for (threadIdx = 0, rowStart = 0; threadIdx < threadsCountNMS - 1; ++threadIdx, rowStart += countAny) {
 			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNmsGather, rowStart, countAny), taskIds));
 		}
@@ -148,16 +140,16 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLine
 			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNmsApply, rowStart, countAny, threadIdx), taskIds));
 		}
 		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrNmsApply, rowStart, countLast, threadIdx), taskIds));
-		for (threadIdx = 0; threadIdx < threadsCountNMS; ++threadIdx) {
+		COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[0]));
+		lines = mt_lines[0];
+		for (threadIdx = 1; threadIdx < threadsCountNMS; ++threadIdx) {
 			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
-			if (coords[threadIdx] && !coords[threadIdx]->empty()) {
-				COMPV_CHECK_CODE_RETURN(m_Coords->append(coords[threadIdx]->begin(), coords[threadIdx]->end()));
+			if (!mt_lines[threadIdx].empty()) {
+				lines.insert(lines.end(), mt_lines[threadIdx].begin(), mt_lines[threadIdx].end());
 			}
 		}
 	}
-	else 
-#endif
-	{
+	else {
 		COMPV_CHECK_CODE_RETURN(nms_gather(0, m_NMS->rows(), accThreadsCtx.acc));
 		COMPV_CHECK_CODE_RETURN(nms_apply(0, m_NMS->rows(), accThreadsCtx.acc, lines));
 	}
@@ -280,7 +272,7 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, con
 	if (multiThreaded) {
 		// multi-threaded
 		COMPV_CHECK_CODE_RETURN(threadsCtx->mutex->lock());
-		if (!threadsCtx->acc) {
+		if (!threadsCtx->acc) { // First thread ?
 			threadsCtx->acc = acc;
 		}
 		else if (maxCol != -1) { // sum only if there is at least #1 non-null pixel
