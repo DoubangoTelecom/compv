@@ -35,9 +35,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\main.cxx" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\..\..\base\vs_android\CompVBase.vcxproj">
       <Project>{9320e994-aa59-49ba-ab64-f82aedec49a3}</Project>
     </ProjectReference>
@@ -57,10 +54,13 @@
       <Project>{766db7bd-6b40-44bc-be41-bf78111a8ac5}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\main.cxx" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{f64bfede-6b2c-4bbf-a519-e67c1b3aa2bb}</ProjectGuid>
+    <ProjectGuid>{8bfc82f2-bc9f-426c-beed-0d9c48a3d03c}</ProjectGuid>
     <Keyword>Android</Keyword>
-    <RootNamespace>object_recognition</RootNamespace>
+    <RootNamespace>hough_lines</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <ApplicationType>Android</ApplicationType>
@@ -81,13 +81,11 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
-    <AndroidAPILevel>android-21</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
-    <AndroidAPILevel>android-21</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -103,13 +101,11 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
-    <AndroidAPILevel>android-21</AndroidAPILevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>Clang_3_8</PlatformToolset>
-    <AndroidAPILevel>android-21</AndroidAPILevel>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -155,8 +151,8 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
@@ -169,9 +165,8 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
-      <EnableNeonCodegen>true</EnableNeonCodegen>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
@@ -184,8 +179,8 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
@@ -198,9 +193,8 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
-      <EnableNeonCodegen>true</EnableNeonCodegen>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
@@ -213,8 +207,8 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
@@ -227,9 +221,8 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
-      <EnableNeonCodegen>true</EnableNeonCodegen>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
@@ -242,8 +235,8 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>
@@ -256,9 +249,8 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>../../../../api/include;../../../../base/include;../../../../camera/include;../../../../gl/include;../../../../drawing/include;../../../../core/include;../../../../gpu/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CppLanguageStandard>gnu++11</CppLanguageStandard>
-      <EnableNeonCodegen>true</EnableNeonCodegen>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);EGL;GLESv2;m;stdc++;CompVDrawing;CompVGL;CompVCamera;CompVGPU;CompVCore;CompVBase</LibraryDependencies>

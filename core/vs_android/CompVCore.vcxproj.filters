@@ -198,6 +198,9 @@
     <ClInclude Include="..\include\compv\core\features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.h">
       <Filter>include\features\edges\intrin\arm</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hough\compv_core_feature_houghstd.h">
+      <Filter>include\features\hough</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
@@ -262,6 +265,9 @@
     </ClCompile>
     <ClCompile Include="..\features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.cxx">
       <Filter>source\features\edges\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\hough\compv_core_feature_houghstd.cxx">
+      <Filter>source\features\hough</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

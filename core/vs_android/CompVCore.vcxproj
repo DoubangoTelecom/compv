@@ -54,6 +54,7 @@
     <ClInclude Include="..\include\compv\core\features\fast\intrin\arm\compv_core_feature_fast_dete_intrin_neon.h" />
     <ClInclude Include="..\include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.h" />
+    <ClInclude Include="..\include\compv\core\features\hough\compv_core_feature_houghstd.h" />
     <ClInclude Include="..\include\compv\core\features\orb\compv_core_feature_orb_desc.h" />
     <ClInclude Include="..\include\compv\core\features\orb\compv_core_feature_orb_dete.h" />
     <ClInclude Include="..\include\compv\core\features\orb\intrin\arm\compv_core_feature_orb_desc_intrin_neon.h" />
@@ -86,6 +87,7 @@
     </ClCompile>
     <ClCompile Include="..\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.cxx" />
     <ClCompile Include="..\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.cxx" />
+    <ClCompile Include="..\features\hough\compv_core_feature_houghstd.cxx" />
     <ClCompile Include="..\features\orb\compv_core_feature_orb_desc.cxx" />
     <ClCompile Include="..\features\orb\compv_core_feature_orb_dete.cxx" />
     <ClCompile Include="..\features\orb\intrin\arm\compv_core_feature_orb_desc_intrin_neon.cxx">

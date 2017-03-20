@@ -32,7 +32,7 @@ public:
 	COMPV_OBJECT_GET_ID(CompVHoughStd);
 
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
-	virtual COMPV_ERROR_CODE process(const CompVMatPtr& edges, CompVHoughLineVector& lines) /*Overrides(CompVHough)*/;
+	virtual COMPV_ERROR_CODE process(const CompVMatPtr& edges, CompVHoughLineVector& lines) override /*Overrides(CompVHough)*/;
 
 	static COMPV_ERROR_CODE newObj(CompVPtr<CompVHough* >* hough, float rho = 1.f, float theta = kfMathTrigPiOver180, size_t threshold = 1);
 
@@ -46,9 +46,9 @@ private:
 	float m_fRho;
 	float m_fTheta;
 	size_t m_nThreshold;
-	size_t m_nMaxLines;
 	size_t m_nWidth;
 	size_t m_nHeight;
+	size_t m_nMaxLines;
 	size_t m_nBarrier;
 	CompVMatPtr m_SinRho; // CompVMatPtr<int32_t>
 	CompVMatPtr m_CosRho; // CompVMatPtr<int32_t>

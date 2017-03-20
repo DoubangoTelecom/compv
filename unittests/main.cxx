@@ -8,7 +8,8 @@ using namespace compv;
 #define UNITTEST_PYRAMID						0
 #define UNITTEST_CONVOLUTION					0
 #define UNITTEST_SOBEL							0
-#define UNITTEST_CANNY							1
+#define UNITTEST_CANNY							0
+#define UNITTEST_HOUGH							1
 
 #define UNITTEST_FEATURE_FAST					0
 #define UNITTEST_CHROMA_CONV					0
@@ -102,7 +103,11 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_canny();
 								COMPV_CHECK_CODE_BAIL(err = unittest_canny(), "Canny unittest failed");
 #endif
-								
+#if UNITTEST_HOUGH || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_hough();
+								COMPV_CHECK_CODE_BAIL(err = unittest_hough(), "Hough unittest failed");
+#endif
+							
 								
 								
 #if UNITTEST_FEATURE_FAST || !defined(COMPV_TEST_LOCAL)

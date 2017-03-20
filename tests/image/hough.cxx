@@ -31,29 +31,17 @@ static const struct compv_unittest_houghstd {
 	size_t width;
 	size_t height;
 	size_t stride;
-	const char* md5;
+	compv_float32_t sum_rho;
+	compv_float32_t sum_theta;
+	size_t sum_strength;
 }
-COMPV_UNITTEST_HOUGHSTD[] =
+COMPV_UNITTEST_HOUGHSTD[] = 
 {
-	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, "db04608c566f9a7837b467d6e06254ed" },
-	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, "5aac2c4794613d4c20a1b158927db80f" },
-	{ FILE_NAME_GRIOTS, 480, 640, 480, "fb95536e46704238f1ebf76cb52cebe8" },
+	{ FILE_NAME_EQUIRECTANGULAR, 1282, 720, 1282, 1628983.f, 6085.76318f, 574468 },
+	{ FILE_NAME_OPENGLBOOK, 200, 258, 200, 1065.f, 9.42477798f, 882 },
+	{ FILE_NAME_GRIOTS, 480, 640, 480, 35058.f, 1190.68298f, 95597 },
 };
 static const size_t COMPV_UNITTEST_HOUGHSTD_COUNT = sizeof(COMPV_UNITTEST_HOUGHSTD) / sizeof(COMPV_UNITTEST_HOUGHSTD[0]);
-
-static const std::string houghstd_md5(const CompVHoughLineVector& lines) {
-	if (lines.empty()) {
-		return std::string(COMPV_MD5_EMPTY);
-	}
-	CompVMatPtr entries;
-	const size_t count = lines.size();
-	COMPV_CHECK_CODE_ASSERT((CompVMat::newObjAligned<CompVHoughLine, COMPV_MAT_TYPE_STRUCT>(&entries, 1, count)));
-	CompVHoughLine* entriesPtr = entries->ptr<CompVHoughLine>();
-	for (size_t i = 0; i < count; ++i) {
-		entriesPtr[i] = lines[i];
-	}
-	return compv_tests_md5(entries);
-}
 
 COMPV_ERROR_CODE houghstd()
 {
@@ -87,14 +75,18 @@ COMPV_ERROR_CODE houghstd()
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Houghstd Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));
 
-	//COMPV_DEBUG_INFO_EX(TAG_TEST, "MD5: %s", houghstd_md5(lines).c_str());
+	compv_float32_t sum_rho = 0.f;
+	compv_float32_t sum_theta = 0.f;
+	size_t sum_strength = 0;
+	for (CompVHoughLineVector::const_iterator i = lines.begin(); i < lines.end(); ++i) {
+		sum_rho += i->rho;
+		sum_theta += i->theta;
+		sum_strength += i->strength;
+	}
 
-#if COMPV_OS_WINDOWS
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Do not write the file to the hd");
-	COMPV_CHECK_CODE_RETURN(compv_tests_write_to_file(edges, "houghstd.gray"));
-#endif
-
-	COMPV_CHECK_EXP_RETURN(std::string(test->md5).compare(houghstd_md5(lines)) != 0, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Houghstd MD5 mismatch");
+	COMPV_CHECK_EXP_RETURN(sum_rho != test->sum_rho, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Houghstd sum_rho mismatch");
+	COMPV_CHECK_EXP_RETURN(COMPV_MATH_ABS(sum_theta - test->sum_theta) > 0.0009765625, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Houghstd sum_theta mismatch");
+	COMPV_CHECK_EXP_RETURN(sum_strength != test->sum_strength, COMPV_ERROR_CODE_E_UNITTEST_FAILED, "Houghstd sum_strength mismatch");
 
 	return COMPV_ERROR_CODE_S_OK;
 }

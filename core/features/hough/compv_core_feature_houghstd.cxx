@@ -16,7 +16,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 // threshold used for NMS
-CompVHoughStd::CompVHoughStd(float rho /*= 1.f*/, float theta /*= kfMathTrigPiOver180*/, size_t threshold /*= 1*/)
+CompVHoughStd::CompVHoughStd(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
 	:CompVHough(COMPV_HOUGH_STANDARD_ID)
 	, m_fRho(rho)
 	, m_fTheta(theta)
@@ -36,10 +36,10 @@ CompVHoughStd:: ~CompVHoughStd()
 // override CompVSettable::set
 COMPV_ERROR_CODE CompVHoughStd::set(int id, const void* valuePtr, size_t valueSize) /*Overrides(CompVCaps)*/
 {
-	COMPV_CHECK_EXP_RETURN(valuePtr == NULL || valueSize == 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!valuePtr || !valueSize, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	switch (id) {
 	case COMPV_HOUGH_SET_FLT32_RHO: {
-		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(compv_float32_t) || *reinterpret_cast<const compv_float32_t*>(valuePtr) <= 0.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(compv_float32_t) || *reinterpret_cast<const compv_float32_t*>(valuePtr) <= 0.f || *reinterpret_cast<const compv_float32_t*>(valuePtr) > 1.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		const compv_float32_t fRho = *reinterpret_cast<const compv_float32_t*>(valuePtr);
 		COMPV_CHECK_CODE_RETURN(initCoords(fRho, m_fTheta, m_nThreshold, m_nWidth, m_nHeight));
 		return COMPV_ERROR_CODE_S_OK;
@@ -57,8 +57,8 @@ COMPV_ERROR_CODE CompVHoughStd::set(int id, const void* valuePtr, size_t valueSi
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	case COMPV_HOUGH_SET_INT_MAXLINES: {
-		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int) || *reinterpret_cast<const int*>(valuePtr) <= 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		m_nMaxLines = static_cast<size_t>(*reinterpret_cast<const int*>(valuePtr));
+		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(int), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		m_nMaxLines = static_cast<size_t>(reinterpret_cast<const int*>(valuePtr) <= 0  ? INT_MAX : *reinterpret_cast<const int*>(valuePtr));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 	default: {
@@ -80,7 +80,7 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLine
 	lines.clear();
 	
 	// Compute number of threads
-	size_t threadsCountNMS = 1, threadsCountACC = 1;
+	size_t /*threadsCountNMS = 1,*/ threadsCountACC = 1;
 #if 0
 	CompVPtr<CompVThreadDispatcher11* >threadDisp = CompVEngine::getThreadDispatcher11();
 	if (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) {
@@ -176,7 +176,7 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLine
 
 COMPV_ERROR_CODE CompVHoughStd::newObj(CompVHoughPtrPtr hough, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
 {
-	COMPV_CHECK_EXP_RETURN(!hough, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_CHECK_EXP_RETURN(!hough || rho <=0 || rho > 1.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVHoughPtr hough_ = new CompVHoughStd(rho, theta, threshold);
 	COMPV_CHECK_EXP_RETURN(!hough_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
@@ -224,7 +224,7 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, con
 	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int32_t>(&acc, m_NMS->rows(), m_NMS->cols()));
 	COMPV_CHECK_CODE_RETURN(acc->zero_rows());
 	accStride = acc->stride();
-	const int32_t accStrideInt32 = static_cast<int32_t>(accStride);
+	//const int32_t accStrideInt32 = static_cast<int32_t>(accStride);
 	int rEnd = static_cast<int>(COMPV_MATH_MIN((rowStart + rowCount), edges->rows()));
 	int rStart = static_cast<int>(COMPV_MATH_MAX(0, rowStart));
 	int colsInt = static_cast<int>(edges->cols());
