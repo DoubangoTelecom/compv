@@ -35,12 +35,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
     COMPV_GAS_FUNCTION_PROLOG
 	COMPV_GAS_SHADOW_ARGS_TO_STACK 7
 	COMPV_GAS_SAVE_NEON_REGS
-    COMPV_GAS_ALIGN_STACK 16, r11
-	COMPV_GAS_MEMALLOC (2*COMPV_GAS_Q_SZ_BYTES)
-
-    @@ Declare allocated stack memory @@
-    .equ vecTangentPiOver8Int                 , 0
-	.equ vecTangentPiTimes3Over8Int           , vecTangentPiOver8Int + COMPV_GAS_Q_SZ_BYTES
 
 	@@ Load arguments @@
 	ldm_args r0-r6
@@ -55,12 +49,11 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
     col .req r7
     cZero .req r8
     gTmp .req r9
-
-    vecNMS .req q7
+    
     vecNMSx .req q7x
-    vecNMSy .req q7y
+    vecTangentPiOver8Intx .req q7y
 	vecG .req q8
-	vecZero .req q9
+	vecTangentPiTimes3Over8Int .req q9
 	vecGX .req q10
 	vecAbsGX .req q11
     vecAbsGXx .req q11x
@@ -76,17 +69,9 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
     ldr r9, [r9]
     ldrh r10, [tLow1]
 
-    vdup.u16 q0, r8
-    vdup.u32 q1, r9
+    vdup.u16 vecTangentPiOver8Intx, r8
+    vdup.u32 vecTangentPiTimes3Over8Int, r9
     vdup.u16 vecTLow, r10
-
-    add r8, sp, #vecTangentPiOver8Int
-    add r9, sp, #vecTangentPiTimes3Over8Int
-    
-    vst1.u8 {q0}, [r8 :128]
-    vst1.u8 {q1}, [r9 :128]
-
-    veor vecZero, vecZero, vecZero
 
     .unreq tLow1 @ tLow no longer needed
     cOne .req r4
@@ -111,23 +96,21 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
         vmov.u32 r11, q1x[1]
         orrs r11, r11, r10
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        @ if (COMPV_ARM_NEON_NEQ_ZERO(vecZero))
+        @ if (COMPV_ARM_NEON_NEQ_ZERO(vec0))
         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        beq EndOf_IfvecZero0_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
-		IfvecZero0_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
+        beq EndOf_Ifvec0_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
+		Ifvec0_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
             add r11, gx, col, LSL #1
-            add r10, sp, #vecTangentPiOver8Int		
+            add r10, gy, col, LSL #1
 			vld1.s16 {vecGX}, [r11]
             vabs.s16 vecAbsGX, vecGX
-            vld1.s16 {q1x}, [r10 :64]
-            vmull.u16 q4, q1x, vecAbsGXx
-            vmull.u16 q5, q1x, vecAbsGXy
-            add r10, gy, col, LSL #1
+            vmull.u16 q4, vecTangentPiOver8Intx, vecAbsGXx
+            vmull.u16 q5, vecTangentPiOver8Intx, vecAbsGXy
             vld1.s16 {vecGY}, [r10]
 			vabs.s16 q3, vecGY
             vshll.u16 vecAbsGY0, q3x, #16
             vshll.u16 vecAbsGY1, q3y, #16
-			vmov.u8 vecNMS, vecZero
+			veor.u8 vecNMSx, vecNMSx, vecNMSx
             vcgt.u32 q4, q4, vecAbsGY0
             vcgt.u32 q5, q5, vecAbsGY1
             vqmovn.u32 q4x, q4
@@ -167,20 +150,18 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 			beq EndOf_Ifvec40_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 			Ifvec40_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
-                add r10, sp, #vecTangentPiTimes3Over8Int
-                vld1.s16 {q3}, [r10]
-                vmovl.u16 q6, vecAbsGXx
-                vmovl.u16 q4, vecAbsGXy
-                vmul.u32 q6, q6, q3
-                vmul.u32 q4, q4, q3
-                vcgt.u32 q6, q6, vecAbsGY0
+                vmovl.u16 q5, vecAbsGXx
+                vmul.u32 q5, q5, vecTangentPiTimes3Over8Int
+				vmovl.u16 q4, vecAbsGXy
+                vmul.u32 q4, q4, vecTangentPiTimes3Over8Int
+                vcgt.u32 q5, q5, vecAbsGY0
                 vcgt.u32 q4, q4, vecAbsGY1
-                vqmovn.u32 q6x, q6
-                vqmovn.u32 q6y, q4
-                vand.u16 q2, q2, q6 @ q2 = old vec4, override
-                vorr.u16 q6x, q2x, q2y
-                vmov.u32 r10, q6x[0]
-                vmov.u32 r11, q6x[1]
+                vqmovn.u32 q5x, q5
+                vqmovn.u32 q5y, q4
+                vand.u16 q2, q2, q5 @ q2 = old vec4, override
+                vorr.u16 q5x, q2x, q2y
+                vmov.u32 r10, q5x[0]
+                vmov.u32 r11, q5x[1]
                 orrs r11, r11, r10
 				@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 				@ if (COMPV_ARM_NEON_NEQ_ZERO(vec4)) - 1
@@ -188,29 +169,30 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 				beq EndOf_Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 				Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
                     veor.s16 q4, vecGX, vecGY
-                    vcgt.s16 q4, vecZero, q4
-                    vand.u16 q4, q4, q2 @ q2 is vec4, q4 = vecOne
+					veor.s16 q6, q6, q6 @ q6 = vecZero
+                    vcgt.s16 q4, q6, q4
+                    vand.u16 q4, q4, q2 @ q2 is vec4, q4 = vec1
                     vbic.u16 q5, q2, q4 @ q2 is vec4, q5 = vec2
-                    vorr.u16 q6x, q4x, q4y
-                    vmov.u32 r10, q6x[0]
-                    vmov.u32 r11, q6x[1]
+                    vorr.u16 q3x, q4x, q4y
+                    vmov.u32 r10, q3x[0]
+                    vmov.u32 r11, q3x[1]
                     orrs r11, r10
 					@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-					@ if (COMPV_ARM_NEON_NEQ_ZERO(vecOne))
+					@ if (COMPV_ARM_NEON_NEQ_ZERO(vec1))
 					@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-					beq EndOf_IfvecOne0_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
-					IfvecOne0_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
+					beq EndOf_Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
+					Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
                         sub r10, col, cZero
+						lsl r11, cZero, #(1+1) @ r11 = g[col + c0] LSL #1 for 2*c0 and #1 for conversion for bytes to shorts    
 						add r10, g, r10, LSL #1 @ r10 = g[col - c0]
-                        lsl r11, cZero, #(1+1) @ r11 = g[col + c0] LSL #1 for 2*c0 and #1 for conversion for bytes to shorts                      
                         vld1.u16 {q6}, [r10 :128], r11
                         vld1.u16 {q3}, [r10]
                         vcgt.u16 q6, q6, vecG
                         vcgt.u16 q3, q3, vecG
                         vorr.u16 q6, q6, q3
-                        vand.s16 q4, q4, q6 @ q4 is old vecOne
-						EndOf_IfvecOne0_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
-						@@ EndOf_IfvecOne0_CompVCannyNMSGatherRow_8mpw_Asm_NEON32 @@
+                        vand.s16 q4, q4, q6 @ q4 is old vec1
+						EndOf_Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
+						@@ EndOf_Ifvec10_CompVCannyNMSGatherRow_8mpw_Asm_NEON32 @@
 
                     vorr.u16 q6x, q5x, q5y @ q5 is vec2
                     vmov.u32 r10, q6x[0]
@@ -222,8 +204,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 					beq EndOfIfvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 					Ifvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
                         sub r10, col, cOne
-                        add r10, g, r10, LSL #1
 						lsl r11, cOne, #(1+1) @ r11 = g[col + c1] LSL #1 for 2*c1 and #1 for conversion for bytes to shorts  
+                        add r10, g, r10, LSL #1
                         vld1.u16 {q6}, [r10 :128], r11
                         vcgt.u16 q6, q6, vecG
                         vld1.u16 {q3}, [r10]
@@ -234,7 +216,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 						@@ EndOfIfvec20_CompVCannyNMSGatherRow_8mpw_Asm_NEON32 @@
 
 
-                    vorr.u16 q4, q4, q5 @ q4 is vecOne and q5 is vec2
+                    vorr.u16 q4, q4, q5 @ q4 is vec1 and q5 is vec2
                     vqmovn.u16 q4x, q4
                     vorr.u8 vecNMSx, vecNMSx, q4x
 					EndOf_Ifvec41_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
@@ -244,7 +226,7 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 				@@ EndOf_Ifvec40_CompVCannyNMSGatherRow_8mpw_Asm_NEON32 @@
 			
 			@@ angle = "90° / 270°" @@
-            vbic.s16 q2, q0, q2 @ q2 was vec4 and q0 is vecZero
+            vbic.s16 q2, q0, q2 @ q2 was vec4 and q0 is vec0
             vbic.s16 q1, q2, q1 @ q1 was vec3, now vec5 is q1
             vorr.u16 q6x, q1x, q1y
             vmov.u32 r10, q6x[0]
@@ -256,8 +238,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 			beq EndOf_Ifvec50_CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 			Ifvec50_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
                 sub r10, col, stride
-				add r10, g, r10, LSL #1
 				lsl r11, stride, #(1+1) @ r11 = g[col + stride] LSL #1 for 2*stride and #1 for conversion for bytes to shorts 
+				add r10, g, r10, LSL #1
                 vld1.u16 {q6}, [r10], r11
                 vcgt.u16 q6, q6, vecG
                 vld1.u16 {q3}, [r10]
@@ -273,8 +255,8 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
             add r10, nms, col
             vst1.u8 {vecNMSx}, [r10]
 
-			EndOf_IfvecZero0_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
-			@ EndOf_IfvecZero0_CompVCannyNMSGatherRow_8mpw_Asm_NEON32 @@
+			EndOf_Ifvec0_CompVCannyNMSGatherRow_8mpw_Asm_NEON32:
+			@ EndOf_Ifvec0_CompVCannyNMSGatherRow_8mpw_Asm_NEON32 @@
 
 		add col, col, #8
 		cmp col, width @ width contains (width - 7)
@@ -293,11 +275,10 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
     .unreq cZero
     .unreq gTmp
 
-    .unreq vecNMS
     .unreq vecNMSx
-    .unreq vecNMSy
+    .unreq vecTangentPiOver8Intx
 	.unreq vecG
-	.unreq vecZero
+	.unreq vecTangentPiTimes3Over8Int
 	.unreq vecGX
 	.unreq vecAbsGX
     .unreq vecAbsGXx
@@ -307,8 +288,6 @@ COMPV_GAS_FUNCTION_DECLARE CompVCannyNMSGatherRow_8mpw_Asm_NEON32
 	.unreq vecAbsGY0
 	.unreq vecAbsGY1
 
-    COMPV_GAS_MEMFREE (2*COMPV_GAS_Q_SZ_BYTES)
-	COMPV_GAS_UNALIGN_STACK r11
 	COMPV_GAS_RESTORE_NEON_REGS
 	COMPV_GAS_UNSHADOW_ARGS 7
 	COMPV_GAS_FUNCTION_EPILOG
