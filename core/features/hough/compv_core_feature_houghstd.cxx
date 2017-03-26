@@ -8,6 +8,7 @@
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/parallel/compv_parallel.h"
 
+#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghstd_intrin_sse2.h"
 #include "compv/core/features/hough/intrin/x86/compv_core_feature_houghstd_intrin_sse41.h"
 #include "compv/core/features/hough/intrin/x86/compv_core_feature_houghstd_intrin_avx2.h"
 
@@ -369,9 +370,9 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::cons
 
 COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc)
 {
-	size_t rows = m_NMS->rows();
-	size_t maxCols = m_NMS->cols() - 1;
-	size_t rowEnd = COMPV_MATH_MIN((rowStart + rowCount), (rows - 1));
+	const size_t rows = m_NMS->rows();
+	const size_t maxCols = m_NMS->cols() - 1;
+	const size_t rowEnd = COMPV_MATH_MIN((rowStart + rowCount), (rows - 1));
 	rowStart = COMPV_MATH_MAX(1, rowStart);
 
 	const int32_t *pACC = acc->ptr(rowStart);
@@ -379,24 +380,37 @@ COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount, Com
 	size_t nmsStride, accStride, row;
 	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));
 	accStride = acc->stride();
+	const compv_uscalar_t accStrideScalar = static_cast<compv_uscalar_t>(accStride);
+	const compv_uscalar_t maxColsScalar = static_cast<compv_uscalar_t>(maxCols);
+	int xmpd = 1;
+	void(*CompVHoughStdNmsGatherRow)(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, compv_uscalar_t nThreshold, compv_uscalar_t colStart, compv_uscalar_t maxCols) 
+		= NULL;
 
-#if COMPV_ARCH_X86 && 0 
-	void(*HoughStdNmsGatherRow)(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, int32_t nThreshold, compv_uscalar_t width) = NULL;
+#if COMPV_ARCH_X86
 	if (maxCols >= 4 && CompVCpu::isEnabled(kCpuFlagSSE2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(HoughStdNmsGatherRow = HoughStdNmsGatherRow_Intrin_SSE2);
-	}
-	if (HoughStdNmsGatherRow) {
-		for (row = rowStart; row < rowEnd; ++row) {
-			HoughStdNmsGatherRow(pACC, (compv_uscalar_t)accStride, pNMS, m_nThreshold, (compv_uscalar_t)maxCols);
-			pACC += accStride, pNMS += nmsStride;
-		}
-		return COMPV_ERROR_CODE_S_OK;
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughStdNmsGatherRow = CompVHoughStdNmsGatherRow_4mpd_Intrin_SSE2, xmpd = 4));
 	}
 #endif /* COMPV_ARCH_X86 */
+
+	if (CompVHoughStdNmsGatherRow) {
+		const int32_t* xmpd_pACC = pACC;
+		uint8_t* xmpd_pNMS = pNMS;
+		for (row = rowStart; row < rowEnd; ++row) {
+			CompVHoughStdNmsGatherRow(xmpd_pACC, accStrideScalar, xmpd_pNMS, m_nThreshold, 1, maxColsScalar);
+			xmpd_pACC += accStride, xmpd_pNMS += nmsStride;
+		}
+	}
+	else {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for GPU implementation found");
+	}
 	
-	for (row = rowStart; row < rowEnd; ++row) {
-		CompVHoughStdNmsGatherRow_C(pACC, accStride, pNMS, m_nThreshold, 1, maxCols);
-		pACC += accStride, pNMS += nmsStride;
+	size_t consumed = maxColsScalar & (-xmpd);
+	size_t remains = (maxCols - consumed);
+	if (remains) {
+		for (row = rowStart; row < rowEnd; ++row) {
+			CompVHoughStdNmsGatherRow_C(&pACC[consumed], accStride, &pNMS[consumed], m_nThreshold, consumed, remains);
+			pACC += accStride, pNMS += nmsStride;
+		}
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -458,7 +472,9 @@ static void CompVHoughStdAccGatherRow_C(const int32_t* pCosRho, const int32_t* p
 
 static void CompVHoughStdNmsGatherRow_C(const int32_t * pAcc, size_t nAccStride, uint8_t* pNms, size_t nThreshold, size_t colStart, size_t maxCols)
 {
+#if 0 // See calling function
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for GPU implementation found");
+#endif
 	int32_t t;
 	const int32_t *curr, *top, *bottom;
 	int stride = static_cast<int>(nAccStride);
