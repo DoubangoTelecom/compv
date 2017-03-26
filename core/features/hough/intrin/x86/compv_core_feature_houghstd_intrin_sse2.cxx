@@ -26,6 +26,7 @@ void CompVHoughStdNmsGatherRow_4mpd_Intrin_SSE2(const int32_t * pAcc, compv_usca
 		vecAcc = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&pAcc[colStart]));
 		vec0 = _mm_cmpgt_epi32(vecAcc, vecThreshold);
 		if (_mm_movemask_epi8(vec0)) {
+			// TODO(dmi): ARM neon no need for curr, top and bottom -> use post-increment
 			curr = &pAcc[colStart];
 			top = &pAcc[colStart - stride];
 			bottom = &pAcc[colStart + stride];

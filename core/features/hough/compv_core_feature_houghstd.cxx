@@ -23,6 +23,7 @@ COMPV_NAMESPACE_BEGIN()
 #if COMPV_ASM
 #	if COMPV_ARCH_X86
 	COMPV_EXTERNC void CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const int32_t* pCosRho, COMPV_ALIGNED(AVX) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta);
+	COMPV_EXTERNC void CompVHoughStdNmsGatherRow_4mpd_Asm_X86_SSE2(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, compv_uscalar_t nThreshold, compv_uscalar_t colStart, compv_uscalar_t maxCols);
 #	endif /* COMPV_ARCH_X86 */
 #endif /* COMPV_ASM */
 
@@ -389,6 +390,7 @@ COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount, Com
 #if COMPV_ARCH_X86
 	if (maxCols >= 4 && CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughStdNmsGatherRow = CompVHoughStdNmsGatherRow_4mpd_Intrin_SSE2, xmpd = 4));
+		COMPV_EXEC_IFDEF_ASM_X86((CompVHoughStdNmsGatherRow = CompVHoughStdNmsGatherRow_4mpd_Asm_X86_SSE2, xmpd = 4));
 	}
 #endif /* COMPV_ARCH_X86 */
 
