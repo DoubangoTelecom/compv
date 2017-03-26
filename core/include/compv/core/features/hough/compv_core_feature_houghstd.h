@@ -24,6 +24,27 @@ struct CompVHoughAccThreadsCtx {
 	size_t threadsCount;
 };
 
+// ARM NEON: use vld2_s32 to load the edges
+#if defined(_MSC_VER)
+#	pragma pack( push )
+#	pragma pack( 1 )
+#endif
+#if defined (__GNUC__)
+struct __attribute__((__packed__)) CompVHoughStdEdge
+#else
+struct CompVHoughStdEdge
+#endif
+{
+	int32_t row;
+	int32_t col;
+public:
+	CompVHoughStdEdge() : row(0), col(0) { }
+	CompVHoughStdEdge(int32_t row_, int32_t col_) : row(row_), col(col_) { }
+};
+#if defined(_MSC_VER)
+#	pragma pack( pop )
+#endif
+
 class CompVHoughStd : public CompVHough
 {
 protected:
@@ -39,7 +60,7 @@ public:
 
 private:
 	COMPV_ERROR_CODE initCoords(float fRho, float fTheta, size_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
-	COMPV_ERROR_CODE acc_gather(size_t rowStart, size_t rowCount, const CompVMatPtr& edges, CompVHoughAccThreadsCtx* threadsCtx);
+	COMPV_ERROR_CODE acc_gather(std::vector<CompVHoughStdEdge >::const_iterator& start, std::vector<CompVHoughStdEdge >::const_iterator& end, CompVHoughAccThreadsCtx* threadsCtx);
 	COMPV_ERROR_CODE nms_gather(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc);
 	COMPV_ERROR_CODE nms_apply(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc, CompVHoughLineVector& lines);
 
@@ -55,9 +76,6 @@ private:
 	CompVMatPtr m_CosRho; // CompVMatPtr<int32_t>
 	CompVMatPtr m_NMS; // CompVMatPtr<uint8_t>
 };
-
-void HoughStdNmsGatherRow_C(const int32_t * pAcc, size_t nAccStride, uint8_t* pNms, size_t nThreshold, size_t colStart, size_t maxCols);
-void HoughStdNmsApplyRow_C(int32_t* pACC, uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines);
 
 COMPV_NAMESPACE_END()
 

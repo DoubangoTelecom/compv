@@ -53,10 +53,10 @@ For now sobel convolution not used in commercial products which means not urgent
 
 === Canny edge detector (Kernel size = 3, tLow=0.80f, tHigh=tLow*2) (1282, 720) (#10k times) ===
 CompV: 17225.ms(full optiz), 168137.ms(st,c++)
-OpenCV: 69368.ms (full optiz)
+OpenCV: 69368.ms(full optiz)
 Remarque: tLow and tHight values are very important for speed comparison(high values -> less time spent in hysterisis and nms)
 The test images contains many edges and this is why it's unusually slow. Canny on HD image should last ~1.ms (which means ~1k fps)
 
 === HoughLines (Canny: Kernel size = 3, tLow=0.80f, tHigh=tLow*2, HoughStd: rho = 1.f, theta = Pi/180, threshold = 100) (1282, 720) (#1k times) ===
 CompV: 13301.ms(full optiz)
-OpenCV: 25219.ms (full optiz)
+OpenCV: 25219.ms(full optiz)

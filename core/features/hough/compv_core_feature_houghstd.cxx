@@ -8,12 +8,27 @@
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/parallel/compv_parallel.h"
 
+#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghstd_intrin_sse41.h"
+#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghstd_intrin_avx2.h"
+
 #define COMPV_THIS_CLASSNAME	"CompVHoughStd"
 
 #define COMPV_FEATURE_HOUGHSTD_NMS_MIN_SAMPLES_PER_THREAD	(40*40)
-#define COMPV_FEATURE_HOUGHSTD_ACC_MIN_SAMPLES_PER_THREAD	(20*20)
+#define COMPV_FEATURE_HOUGHSTD_EDGES_MIN_SAMPLES_PER_THREAD	(40*40)
+#define COMPV_FEATURE_HOUGHSTD_ACC_MIN_SAMPLES_PER_THREAD	(1*30)
 
 COMPV_NAMESPACE_BEGIN()
+
+#if COMPV_ASM
+#	if COMPV_ARCH_X86
+	COMPV_EXTERNC void CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const int32_t* pCosRho, COMPV_ALIGNED(AVX) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta);
+#	endif /* COMPV_ARCH_X86 */
+#endif /* COMPV_ASM */
+
+static void CompVHoughStdRowTimesSinRho_C(const int32_t* pSinRho, compv_uscalar_t row, int32_t* rowTimesSinRhoPtr, compv_uscalar_t count);
+static void CompVHoughStdAccGatherRow_C(const int32_t* pCosRho, const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta);
+static void CompVHoughStdNmsGatherRow_C(const int32_t * pAcc, size_t nAccStride, uint8_t* pNms, size_t nThreshold, size_t colStart, size_t maxCols);
+static void CompVHoughStdNmsApplyRow_C(int32_t* pACC, uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines);
 
 // threshold used for NMS
 CompVHoughStd::CompVHoughStd(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
@@ -76,14 +91,70 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLine
 	COMPV_CHECK_CODE_RETURN(initCoords(m_fRho, m_fTheta, m_nThreshold, edges->cols(), edges->rows()));
 
 	lines.clear();
-	
-	// Compute number of threads
-	size_t threadsCountNMS = 1, threadsCountACC = 1;
+
+	size_t threadsCountNMS = 1, threadsCountACC = 1, threadsCountEdges = 1;
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	if (maxThreads > 1) {
+		threadsCountEdges = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(edges->cols(), edges->rows(), maxThreads, COMPV_FEATURE_HOUGHSTD_EDGES_MIN_SAMPLES_PER_THREAD);
+	}
+
+	// Edges gathering: the edges are always unequally distributed (some regions have almost no edge) which
+	// means some threads will almost execute no code. This is why we collect the edges to make sure
+	// all threads will have enough work to do.
+	std::vector<CompVHoughStdEdge >vecEdges;
+	if (threadsCountEdges > 1) {
+		const size_t countAny = (edges->rows() / threadsCountEdges);
+		const size_t countLast = countAny + (edges->rows() % threadsCountEdges);
+		std::vector<std::vector<CompVHoughStdEdge > > vecVecEdges;
+		vecVecEdges.resize(threadsCountEdges);
+		auto funcPtrEdgesGather = [&](size_t rowStart, size_t rowCount, size_t threadIdx) -> COMPV_ERROR_CODE {
+			const int32_t rowStartInt32 = static_cast<int32_t>(rowStart);
+			const int32_t rowEndInt32 = static_cast<int32_t>(rowStart + rowCount);
+			const int32_t colsInt32 = static_cast<int32_t>(edges->cols());
+			const uint8_t* edgesPtr = edges->ptr<const uint8_t>(rowStart);
+			std::vector<CompVHoughStdEdge >& mtVecEdges = vecVecEdges[threadIdx];
+			for (int32_t j = rowStartInt32; j < rowEndInt32; ++j) {
+				for (int32_t i = 0; i < colsInt32; ++i) {
+					if (edgesPtr[i]) {
+						mtVecEdges.push_back(CompVHoughStdEdge(j, i));
+					}
+				}
+				edgesPtr += edges->strideInBytes();
+			}
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		CompVAsyncTaskIds taskIds;
+		for (size_t threadIdx = 0, rowStart = 0; threadIdx < threadsCountEdges; ++threadIdx, rowStart += countAny) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrEdgesGather, rowStart, (threadIdx == (threadsCountEdges - 1)) ? countLast : countAny, threadIdx), taskIds));
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[0]));
+		vecEdges = vecVecEdges[0];
+		for (size_t threadIdx = 1; threadIdx < threadsCountEdges; ++threadIdx) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
+			if (!vecVecEdges[threadIdx].empty()) {
+				vecEdges.insert(vecEdges.end(), vecVecEdges[threadIdx].begin(), vecVecEdges[threadIdx].end());
+			}
+		}
+	}
+	else {
+		const int32_t edges_rows = static_cast<int32_t>(edges->rows());
+		const int32_t edges_cols = static_cast<int32_t>(edges->cols());
+		const uint8_t* edges_ptr = edges->ptr<const uint8_t>();
+		for (int32_t j = 0; j < edges_rows; ++j) {
+			for (int32_t i = 0; i < edges_cols; ++i) {
+				if (edges_ptr[i]) {
+					vecEdges.push_back(CompVHoughStdEdge(j, i));
+				}
+			}
+			edges_ptr += edges->strideInBytes();
+		}
+	}
+	
+	// Compute number of threads
+	if (maxThreads > 1) {
 		threadsCountNMS = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_NMS->cols(), m_NMS->rows(), maxThreads, COMPV_FEATURE_HOUGHSTD_NMS_MIN_SAMPLES_PER_THREAD);
-		threadsCountACC = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(edges->cols(), edges->rows(), maxThreads, COMPV_FEATURE_HOUGHSTD_ACC_MIN_SAMPLES_PER_THREAD);
+		threadsCountACC = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, vecEdges.size(), maxThreads, COMPV_FEATURE_HOUGHSTD_ACC_MIN_SAMPLES_PER_THREAD);
 	}
 
 	// Accumulator gathering
@@ -91,22 +162,22 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLine
 	accThreadsCtx.threadsCount = threadsCountACC;
 	if (threadsCountACC > 1) {
 		COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&accThreadsCtx.mutex));
-		const size_t countAny = (edges->rows() / threadsCountACC);
-		const size_t countLast = countAny + (edges->rows() % threadsCountACC);
-		auto funcPtrAccGather = [&](size_t rowStart, size_t rowCount) -> COMPV_ERROR_CODE {
-			COMPV_CHECK_CODE_RETURN(acc_gather(rowStart, rowCount, edges, &accThreadsCtx));
+		const size_t countAny = (vecEdges.size() / threadsCountACC);
+		const size_t countLast = countAny + (vecEdges.size() % threadsCountACC);
+		auto funcPtrAccGather = [&](std::vector<CompVHoughStdEdge >::const_iterator &begin, std::vector<CompVHoughStdEdge >::const_iterator &end) -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN(acc_gather(begin, end, &accThreadsCtx));
 			return COMPV_ERROR_CODE_S_OK;
 		};
-		size_t rowStart, threadIdx;
+		size_t threadIdx;
+		std::vector<CompVHoughStdEdge >::const_iterator begin;
 		CompVAsyncTaskIds taskIds;
-		taskIds.reserve(threadsCountACC);
-		for (threadIdx = 0, rowStart = 0; threadIdx < threadsCountACC; ++threadIdx, rowStart += countAny) {
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrAccGather, rowStart, (threadIdx == (threadsCountACC - 1)) ? countLast : countAny), taskIds));
+		for (threadIdx = 0, begin = vecEdges.begin(); threadIdx < threadsCountACC; ++threadIdx, begin += countAny) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrAccGather, begin, (threadIdx == (threadsCountACC - 1)) ? vecEdges.end() : (begin + countAny)), taskIds));
 		}
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 	}
 	else {
-		COMPV_CHECK_CODE_RETURN(acc_gather(0, edges->rows(), edges, &accThreadsCtx));
+		COMPV_CHECK_CODE_RETURN(acc_gather(vecEdges.begin(), vecEdges.end(), &accThreadsCtx));
 	}
 
 	// Non-maxima suppression (NMS)
@@ -206,66 +277,67 @@ COMPV_ERROR_CODE CompVHoughStd::initCoords(float fRho, float fTheta, size_t nThr
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, const CompVMatPtr& edges, CompVHoughAccThreadsCtx* threadsCtx)
+COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::const_iterator& start, std::vector<CompVHoughStdEdge >::const_iterator& end, CompVHoughAccThreadsCtx* threadsCtx)
 {
-	CompVPtr<CompVMemZero<int32_t> *> acc; // CompVMatPtr<int32_t>
+	CompVPtr<CompVMemZero<int32_t> *> acc;
+	CompVMatPtr rowTimesSinRho; // row * pSinRho[theta]
 	size_t nmsStride, accStride;
 	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));
 	COMPV_CHECK_CODE_RETURN(CompVMemZero<int32_t>::newObj(&acc, m_NMS->rows(), m_NMS->cols()));
 	accStride = acc->stride();
-	//const int32_t accStrideInt32 = static_cast<int32_t>(accStride);
-	int rEnd = static_cast<int>(COMPV_MATH_MIN((rowStart + rowCount), edges->rows()));
-	int rStart = static_cast<int>(COMPV_MATH_MAX(0, rowStart));
-	int colsInt = static_cast<int>(edges->cols());
-	const size_t edgeStride = edges->strideInBytes();
-	const uint8_t* pixels = edges->ptr<const uint8_t>(rStart);
-	const int32_t maxThetaCount = static_cast<int32_t>(acc->cols());
+	const compv_uscalar_t accStrideScalar = static_cast<compv_uscalar_t>(accStride);
+	const int32_t accStrideInt32 = static_cast<int32_t>(accStride);
+	const compv_uscalar_t maxThetaCountScalar = static_cast<compv_uscalar_t>(acc->cols());
+	COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<int32_t>(&rowTimesSinRho, 1, acc->cols())); // maxTheta's int32_t values
+	int32_t* rowTimesSinRhoPtr = rowTimesSinRho->ptr<int32_t>();
 	const int32_t* pSinRho = m_SinRho->ptr<const int32_t>();
 	const int32_t* pCosRho = m_CosRho->ptr<const int32_t>();
 	int32_t *pACC = acc->ptr(m_nBarrier);
-	int32_t theta, rhoInt32;
-	int maxCol = -1;
-	int maxRow = -1;
-	bool haveFastImpl = false;
-	bool multiThreaded = (threadsCtx->threadsCount > 1);
+	int32_t row, col, rho, maxCol = -1, lastRow = -1;
+	const bool multiThreaded = (threadsCtx->threadsCount > 1);
+	int xmpd = 1;
 
-#if COMPV_ARCH_X86 && 0
-	void(*HoughStdAccGatherRow)(int32_t* pACC, int32_t accStride, const uint8_t* pixels, int32_t maxCols, int32_t maxThetaCount, int32_t row, COMPV_ALIGNED(X) const int32_t* pCosRho, COMPV_ALIGNED(X) const int32_t* pSinRho, int32_t* maxCol) = NULL;
-	if (maxThetaCount >= 4 && CompVCpu::isEnabled(compv::kCpuFlagSSE41) && COMPV_IS_ALIGNED_SSE(pixels) && COMPV_IS_ALIGNED_SSE(edgeStride) && COMPV_IS_ALIGNED_SSE(pCosRho) && COMPV_IS_ALIGNED_SSE(pSinRho)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86((HoughStdAccGatherRow = HoughStdAccGatherRow_Intrin_SSE41, haveFastImpl = true));
+	void (*CompVHoughStdAccGatherRow_xmpd)(COMPV_ALIGNED(X) const int32_t* pCosRho, COMPV_ALIGNED(X) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta)
+		= CompVHoughStdAccGatherRow_C;
+
+#if COMPV_ARCH_X86
+	if (maxThetaCountScalar >= 16 && COMPV_IS_ALIGNED_SSE(pCosRho) && COMPV_IS_ALIGNED_SSE(rowTimesSinRhoPtr) && COMPV_IS_ALIGNED_SSE(pSinRho)) {
+		if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughStdAccGatherRow_xmpd = CompVHoughStdAccGatherRow_4mpd_Intrin_SSE41, xmpd = 4));
+		}
 	}
-	if (HoughStdAccGatherRow) {
-		int32_t mCol = -1;
-		for (int32_t row = rStart; row < rEnd; ++row) {
-			HoughStdAccGatherRow(pACC, accStrideInt32, pixels, colsInt32, maxThetaCount, row, pCosRho, pSinRho, &mCol);
-			if (multiThreaded && mCol != -1) {
-				maxCol = COMPV_MATH_MAX(maxCol, mCol);
-				maxRow = row;
-			}
-			pixels += edgeStride;
+	if (maxThetaCountScalar >= 32 && COMPV_IS_ALIGNED_AVX2(pCosRho) && COMPV_IS_ALIGNED_AVX2(rowTimesSinRhoPtr) && COMPV_IS_ALIGNED_AVX2(pSinRho)) {
+		if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughStdAccGatherRow_xmpd = CompVHoughStdAccGatherRow_8mpd_Intrin_AVX2, xmpd = 8));
+			COMPV_EXEC_IFDEF_ASM_X86((CompVHoughStdAccGatherRow_xmpd = CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2, xmpd = 8));	
 		}
 	}
 #endif /* COMPV_ARCH_X86 */
-
-	if (!haveFastImpl) {
-		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for GPU implementation found");
-		int col;
-		for (int row = rStart; row < rEnd; ++row) {
-			for (col = 0; col < colsInt; ++col) {
-				if (pixels[col]) {
-					if (multiThreaded) {
-						maxRow = row;
-						maxCol = COMPV_MATH_MAX(maxCol, col);
-					}
-					for (theta = 0; theta < maxThetaCount; ++theta) {
-						rhoInt32 = (col * pCosRho[theta] + row * pSinRho[theta]) >> 16;
-						pACC[theta - (rhoInt32 * accStride)]++; //!\\ Not thread-safe
-					}
-				}
+	
+	const compv_uscalar_t xmpd_consumed = (maxThetaCountScalar & -xmpd);
+	const compv_uscalar_t xmpd_trailling = (maxThetaCountScalar - xmpd_consumed);
+	for (std::vector<CompVHoughStdEdge >::const_iterator it = start; it < end; ++it) {
+		row = it->row;
+		col = it->col;
+		// update maxCol 
+		/*if (multiThreaded)*/ { // it's faster to remove the conditional branch (also, we're almost always in MT case)
+			maxCol = std::max(maxCol, col);
+		}
+		// update lastRow
+		if (lastRow != row) {
+			lastRow = row;
+			CompVHoughStdRowTimesSinRho_C(pSinRho, static_cast<compv_uscalar_t>(row), rowTimesSinRhoPtr, maxThetaCountScalar);
+		}
+		// gather
+		CompVHoughStdAccGatherRow_xmpd(pCosRho, rowTimesSinRhoPtr, static_cast<compv_uscalar_t>(col), pACC, accStrideScalar, xmpd_consumed);
+		if (xmpd_trailling) {
+			for (compv_uscalar_t theta = xmpd_consumed; theta < maxThetaCountScalar; ++theta) {
+				rho = (col * pCosRho[theta] + rowTimesSinRhoPtr[theta]) >> 16;
+				pACC[theta - (rho * accStrideInt32)]++; //!\\ Not thread-safe
 			}
-			pixels += edgeStride;
 		}
 	}
+	
 	if (multiThreaded) {
 		// multi-threaded
 		COMPV_CHECK_CODE_RETURN(threadsCtx->mutex->lock());
@@ -273,6 +345,7 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(size_t rowStart, size_t rowCount, con
 			threadsCtx->acc = acc;
 		}
 		else if (maxCol != -1) { // sum only if there is at least #1 non-null pixel
+			const int32_t maxRow = (end - 1)->row;
 			const size_t sumStart = m_nBarrier - (maxCol + maxRow); // "cos=1, sin=1"
 			const size_t sumEnd = m_nBarrier - (-maxCol); //"cos=-1, sin=0"
 			COMPV_CHECK_CODE_ASSERT(CompVMathUtils::sum2<int32_t>(
@@ -309,7 +382,7 @@ COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount, Com
 
 #if COMPV_ARCH_X86 && 0 
 	void(*HoughStdNmsGatherRow)(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, int32_t nThreshold, compv_uscalar_t width) = NULL;
-	if (maxCols >= 4 && CompVCpu::isEnabled(compv::kCpuFlagSSE2)) {
+	if (maxCols >= 4 && CompVCpu::isEnabled(kCpuFlagSSE2)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(HoughStdNmsGatherRow = HoughStdNmsGatherRow_Intrin_SSE2);
 	}
 	if (HoughStdNmsGatherRow) {
@@ -320,10 +393,9 @@ COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount, Com
 		return COMPV_ERROR_CODE_S_OK;
 	}
 #endif /* COMPV_ARCH_X86 */
-
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+	
 	for (row = rowStart; row < rowEnd; ++row) {
-		HoughStdNmsGatherRow_C(pACC, accStride, pNMS, m_nThreshold, 1, maxCols);
+		CompVHoughStdNmsGatherRow_C(pACC, accStride, pNMS, m_nThreshold, 1, maxCols);
 		pACC += accStride, pNMS += nmsStride;
 	}
 	return COMPV_ERROR_CODE_S_OK;
@@ -343,7 +415,7 @@ COMPV_ERROR_CODE CompVHoughStd::nms_apply(size_t rowStart, size_t rowCount, Comp
 
 #if COMPV_ARCH_X86 && 0
 	void(*HoughStdNmsApplyRow)(COMPV_ALIGNED(X) int32_t* pACC, COMPV_ALIGNED(X) uint8_t* pNMS, int32_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t maxCols, CompVPtrBox(CompVCoordPolar2f)& coords) = NULL;
-	if (cols >= 8 && CompVCpu::isEnabled(compv::kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(pACC) && COMPV_IS_ALIGNED_SSE(pNMS)) {
+	if (cols >= 8 && CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(pACC) && COMPV_IS_ALIGNED_SSE(pNMS)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(HoughStdNmsApplyRow = HoughStdNmsApplyRow_Intrin_SSE2);
 	}
 	if (HoughStdNmsApplyRow) {
@@ -354,18 +426,39 @@ COMPV_ERROR_CODE CompVHoughStd::nms_apply(size_t rowStart, size_t rowCount, Comp
 		return COMPV_ERROR_CODE_S_OK;
 	}
 #endif /* COMPV_ARCH_X86 */
-
-
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+	
 	for (int32_t row = rStart; row < rEnd; ++row) {
-		HoughStdNmsApplyRow_C(pACC, pNMS, m_nThreshold, m_fTheta, nBarrier, row, 0, cols, lines);
+		CompVHoughStdNmsApplyRow_C(pACC, pNMS, m_nThreshold, m_fTheta, nBarrier, row, 0, cols, lines);
 		pACC += accStride, pNMS += nmsStride;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-void HoughStdNmsGatherRow_C(const int32_t * pAcc, size_t nAccStride, uint8_t* pNms, size_t nThreshold, size_t colStart, size_t maxCols)
+static void CompVHoughStdRowTimesSinRho_C(const int32_t* pSinRho, compv_uscalar_t row, int32_t* rowTimesSinRhoPtr, compv_uscalar_t count)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for GPU implementation found");
+	const int32_t rowInt32 = static_cast<int32_t>(row);
+	for (compv_uscalar_t i = 0; i < count; ++i) {
+		rowTimesSinRhoPtr[i] = pSinRho[i] * rowInt32;
+	}
+}
+
+// Not thread-safe
+static void CompVHoughStdAccGatherRow_C(const int32_t* pCosRho, const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for GPU implementation found");
+	int32_t rhoInt32;
+	const int32_t colInt32 = static_cast<int32_t>(col);
+	const int32_t accStrideInt32 = static_cast<int32_t>(accStride);
+	for (compv_uscalar_t theta = 0; theta < maxTheta; ++theta) {
+		rhoInt32 = (colInt32 * pCosRho[theta] + pRowTimesSinRho[theta]) >> 16;
+		pACC[theta - (rhoInt32 * accStrideInt32)]++; //!\\ Not thread-safe
+	}
+}
+
+static void CompVHoughStdNmsGatherRow_C(const int32_t * pAcc, size_t nAccStride, uint8_t* pNms, size_t nThreshold, size_t colStart, size_t maxCols)
+{
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for GPU implementation found");
 	int32_t t;
 	const int32_t *curr, *top, *bottom;
 	int stride = static_cast<int>(nAccStride);
@@ -383,8 +476,9 @@ void HoughStdNmsGatherRow_C(const int32_t * pAcc, size_t nAccStride, uint8_t* pN
 	}
 }
 
-void HoughStdNmsApplyRow_C(int32_t* pACC, uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines)
+static void CompVHoughStdNmsApplyRow_C(int32_t* pACC, uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines)
 {
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for GPU implementation found");
 	const int32_t thresholdInt32 = static_cast<int32_t>(threshold);
 	for (size_t col = colStart; col < maxCols; ++col) {
 		if (pNMS[col]) {

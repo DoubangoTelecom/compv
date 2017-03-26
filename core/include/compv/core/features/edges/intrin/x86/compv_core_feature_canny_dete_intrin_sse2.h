@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_CORE_FETAURE_CANNY_DETE_INTRIN_SSE2_H_)
-#define _COMPV_CORE_FETAURE_CANNY_DETE_INTRIN_SSE2_H_
+#if !defined(_COMPV_CORE_FEATURE_CANNY_DETE_INTRIN_SSE2_H_)
+#define _COMPV_CORE_FEATURE_CANNY_DETE_INTRIN_SSE2_H_
 
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_common.h"
@@ -28,4 +28,4 @@ COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
 
-#endif /* _COMPV_CORE_FETAURE_CANNY_DETE_INTRIN_SSE2_H_ */
+#endif /* _COMPV_CORE_FEATURE_CANNY_DETE_INTRIN_SSE2_H_ */

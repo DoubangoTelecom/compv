@@ -54,6 +54,7 @@ void CompVCannyHysteresisRow_16mpw_Intrin_AVX2(size_t row, size_t colStart, size
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2(); // AVX/SSE transition issues
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("SSE implementation is faster");
+	_mm256_zeroupper();
 	__m256i vecGrad, vecStrong, vecWeak, vecgg, vecpp, vecp;
 	__m128i vecpn, vecppn;
 	const __m256i vecTLow = _mm256_set1_epi16(tLow);
@@ -119,6 +120,7 @@ void CompVCannyHysteresisRow_16mpw_Intrin_AVX2(size_t row, size_t colStart, size
 			CompVCannyHysteresisRowWeak_8mpw_Intrin_AVX2(&gb[1], &pb[1], r + 1, c + 1); // bottom-right
 		}
 	}
+	_mm256_zeroupper();
 }
 
 #if defined(__INTEL_COMPILER)

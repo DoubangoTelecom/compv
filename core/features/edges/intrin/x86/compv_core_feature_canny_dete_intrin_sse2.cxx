@@ -34,10 +34,10 @@ COMPV_NAMESPACE_BEGIN()
 		CompVCannyHysteresisRowMask_8mpw_Intrin_SSE2(mask, (pp), (rr), (cc), 0x4000, 7); \
 	}
 
-	// TODO(dmi): no ASM implementation
-	// "g" and "tLow" are unsigned but we're using "epi16" instead of "epu16" because "g" is always < 0xFFFF (from u8 convolution operation)
-	// 8mpw -> minpack 8 for words (int16)
-	void CompVCannyHysteresisRow_8mpw_Intrin_SSE2(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
+// TODO(dmi): no ASM implementation
+// "g" and "tLow" are unsigned but we're using "epi16" instead of "epu16" because "g" is always < 0xFFFF (from u8 convolution operation)
+// 8mpw -> minpack 8 for words (int16)
+void CompVCannyHysteresisRow_8mpw_Intrin_SSE2(size_t row, size_t colStart, size_t width, size_t height, size_t stride, uint16_t tLow, uint16_t tHigh, const uint16_t* grad, const uint16_t* g0, uint8_t* e, uint8_t* e0)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("CompVCannyHysteresisRow_16mpw_Intrin_SSE2 is faster");

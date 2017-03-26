@@ -24,7 +24,7 @@ section .text
 ; arg(3) -> const int16_t* gy
 ; arg(4) -> const uint16_t* tLow1
 ; arg(5) -> compv_uscalar_t width
-; arg(6) ->  compv_uscalar_t stride
+; arg(6) -> compv_uscalar_t stride
 sym(CompVCannyNMSGatherRow_8mpw_Asm_X86_SSE41):
 	push rbp
 	mov rbp, rsp

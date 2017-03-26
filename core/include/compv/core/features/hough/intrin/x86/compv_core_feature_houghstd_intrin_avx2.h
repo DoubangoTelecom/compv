@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_CORE_FEATURE_CANNY_DETE_INTRIN_SSSE3_H_)
-#define _COMPV_CORE_FEATURE_CANNY_DETE_INTRIN_SSSE3_H_
+#if !defined(_COMPV_CORE_FEATURE_HOUGHSTD_INTRIN_AVX2_H_)
+#define _COMPV_CORE_FEATURE_HOUGHSTD_INTRIN_AVX2_H_
 
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_common.h"
@@ -18,10 +18,10 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVCannyNMSGatherRow_8mpw_Intrin_SSSE3(uint8_t* nms, const uint16_t* g, const int16_t* gx, const int16_t* gy, const uint16_t* tLow1, compv_uscalar_t width, compv_uscalar_t stride);
+void CompVHoughStdAccGatherRow_8mpd_Intrin_AVX2(COMPV_ALIGNED(AVX) const int32_t* pCosRho, COMPV_ALIGNED(AVX) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta);
 
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
 
-#endif /* _COMPV_CORE_FEATURE_CANNY_DETE_INTRIN_SSSE3_H_ */
+#endif /* _COMPV_CORE_FEATURE_HOUGHSTD_INTRIN_AVX2_H_ */
