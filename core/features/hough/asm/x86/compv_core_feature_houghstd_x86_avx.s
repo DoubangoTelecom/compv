@@ -89,7 +89,7 @@ sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2):
 		vpaddd ymm0, ymm0, [rdx + (theta + 0)*COMPV_YASM_INT32_SZ_BYTES]
 		vpaddd ymm1, ymm1, [rdx + (theta + 8)*COMPV_YASM_INT32_SZ_BYTES]
 		vpaddd ymm2, ymm2, [rdx + (theta + 16)*COMPV_YASM_INT32_SZ_BYTES]
-		vpaddd ymm3, ymm3, [rdx + (theta + 14)*COMPV_YASM_INT32_SZ_BYTES]
+		vpaddd ymm3, ymm3, [rdx + (theta + 24)*COMPV_YASM_INT32_SZ_BYTES]
 		
 		vpsrad ymm0, ymm0, 16
 		vpsrad ymm1, ymm1, 16
