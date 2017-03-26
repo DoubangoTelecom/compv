@@ -13,6 +13,7 @@
 COMPV_YASM_DEFAULT_REL
 
 global sym(CompVMathUtilsSum_8u32u_Asm_X64_SSE2)
+global sym(CompVMathUtilsSum2_32s32s_Asm_X64_SSE2)
 
 section .data
 	
@@ -208,6 +209,90 @@ sym(CompVMathUtilsSum_8u32u_Asm_X64_SSE2)
 
 	;; begin epilog ;;
 	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const int32_t* a
+; arg(1) -> COMPV_ALIGNED(SSE) const int32_t* b
+; arg(2) -> COMPV_ALIGNED(SSE) int32_t* s
+; arg(3) -> compv_uscalar_t width
+; arg(4) -> compv_uscalar_t height
+; arg(5) -> COMPV_ALIGNED(SSE) compv_uscalar_t stride
+sym(CompVMathUtilsSum2_32s32s_Asm_X64_SSE2):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	mov r8, arg(5)
+	shl r8, 2
+
+	mov rsi, arg(0) ; rsi = a
+	mov rdi, arg(1) ; rdi = b
+	mov rbx, arg(2) ; rbx = s
+	mov rdx, arg(4) ; rdx = height
+	mov rax, arg(3) ; rax = width
+	lea r9, [rax - 15] ; r9 = width - 15
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (j = 0; j < height; ++j)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.LoopRows
+		xor rcx, rcx ; rcx = i = 0
+		test r9, r9
+		jle .EndOfLoopCols16
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (i = 0; i < width_ - 15; i += 16) 
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		.LoopCols16
+			add rcx, 16
+			movdqa xmm0, [rsi + rcx*COMPV_YASM_INT32_SZ_BYTES - 64]
+			movdqa xmm1, [rsi + rcx*COMPV_YASM_INT32_SZ_BYTES - 48]
+			movdqa xmm2, [rsi + rcx*COMPV_YASM_INT32_SZ_BYTES - 32]
+			movdqa xmm3, [rsi + rcx*COMPV_YASM_INT32_SZ_BYTES - 16]
+			paddd xmm0, [rdi + rcx*COMPV_YASM_INT32_SZ_BYTES - 64]
+			paddd xmm1, [rdi + rcx*COMPV_YASM_INT32_SZ_BYTES - 48]
+			cmp rcx, r9
+			paddd xmm2, [rdi + rcx*COMPV_YASM_INT32_SZ_BYTES - 32]
+			paddd xmm3, [rdi + rcx*COMPV_YASM_INT32_SZ_BYTES - 16]
+			movdqa [rbx + rcx*COMPV_YASM_INT32_SZ_BYTES - 64], xmm0
+			movdqa [rbx + rcx*COMPV_YASM_INT32_SZ_BYTES - 48], xmm1
+			movdqa [rbx + rcx*COMPV_YASM_INT32_SZ_BYTES - 32], xmm2
+			movdqa [rbx + rcx*COMPV_YASM_INT32_SZ_BYTES - 16], xmm3			
+			jl .LoopCols16
+		.EndOfLoopCols16:
+		
+		cmp rcx, rax
+		jge .EndOfLoopCols4
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; for (; i < width_; i += 4)
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		.LoopCols4:
+			add rcx, 4
+			movdqa xmm0, [rsi + rcx*COMPV_YASM_INT32_SZ_BYTES - 16]
+			cmp rcx, rax
+			paddd xmm0, [rdi + rcx*COMPV_YASM_INT32_SZ_BYTES - 16]
+			movdqa [rbx + rcx*COMPV_YASM_INT32_SZ_BYTES - 16], xmm0			
+			jl .LoopCols4
+		.EndOfLoopCols4
+		
+		dec rdx
+		lea rsi, [rsi + r8]
+		lea rdi, [rdi + r8]
+		lea rbx, [rbx + r8]
+		jnz .LoopRows
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp

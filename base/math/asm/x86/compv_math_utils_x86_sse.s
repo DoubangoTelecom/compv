@@ -486,7 +486,7 @@ sym(CompVMathUtilsSum2_32s32s_Asm_X86_SSE2):
 	;; end prolog ;;
 
 	; alloc memory
-	sub rsp, 8
+	sub rsp, COMPV_YASM_REG_SZ_BYTES
 	; [rsp + 0] = strideInBytes
 
 	mov rax, arg(5)
@@ -511,22 +511,22 @@ sym(CompVMathUtilsSum2_32s32s_Asm_X86_SSE2):
 		; for (i = 0; i < width_ - 15; i += 16) 
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		.LoopCols16
-			lea rcx, [rcx + 16]
-			movdqa xmm0, [rsi + rcx*4 - 64]
-			movdqa xmm1, [rsi + rcx*4 - 48]
-			movdqa xmm2, [rsi + rcx*4 - 32]
-			movdqa xmm3, [rsi + rcx*4 - 16]
-			paddd xmm0, [rdi + rcx*4 - 64]
-			paddd xmm1, [rdi + rcx*4 - 48]
+			add rcx, 16
+			movdqa xmm0, [rsi + rcx*COMPV_YASM_INT32_SZ_BYTES - 64]
+			movdqa xmm1, [rsi + rcx*COMPV_YASM_INT32_SZ_BYTES - 48]
+			movdqa xmm2, [rsi + rcx*COMPV_YASM_INT32_SZ_BYTES - 32]
+			movdqa xmm3, [rsi + rcx*COMPV_YASM_INT32_SZ_BYTES - 16]
+			paddd xmm0, [rdi + rcx*COMPV_YASM_INT32_SZ_BYTES - 64]
+			paddd xmm1, [rdi + rcx*COMPV_YASM_INT32_SZ_BYTES - 48]
 			cmp rcx, rax
-			paddd xmm2, [rdi + rcx*4 - 32]
-			paddd xmm3, [rdi + rcx*4 - 16]
-			movdqa [rbx + rcx*4 - 64], xmm0
-			movdqa [rbx + rcx*4 - 48], xmm1
-			movdqa [rbx + rcx*4 - 32], xmm2
-			movdqa [rbx + rcx*4 - 16], xmm3			
+			paddd xmm2, [rdi + rcx*COMPV_YASM_INT32_SZ_BYTES - 32]
+			paddd xmm3, [rdi + rcx*COMPV_YASM_INT32_SZ_BYTES - 16]
+			movdqa [rbx + rcx*COMPV_YASM_INT32_SZ_BYTES - 64], xmm0
+			movdqa [rbx + rcx*COMPV_YASM_INT32_SZ_BYTES - 48], xmm1
+			movdqa [rbx + rcx*COMPV_YASM_INT32_SZ_BYTES - 32], xmm2
+			movdqa [rbx + rcx*COMPV_YASM_INT32_SZ_BYTES - 16], xmm3			
 			jl .LoopCols16
-		.EndOfLoopCols16
+		.EndOfLoopCols16:
 
 		lea rax, [rax + 15] ; rax = width
 		cmp rcx, rax
@@ -534,12 +534,12 @@ sym(CompVMathUtilsSum2_32s32s_Asm_X86_SSE2):
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		; for (; i < width_; i += 4)
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		.LoopCols4
-			lea rcx, [rcx + 4]
-			movdqa xmm0, [rsi + rcx*4 - 16]
+		.LoopCols4:
+			add rcx, 4
+			movdqa xmm0, [rsi + rcx*COMPV_YASM_INT32_SZ_BYTES - 16]
 			cmp rcx, rax
-			paddd xmm0, [rdi + rcx*4 - 16]
-			movdqa [rbx + rcx*4 - 16], xmm0			
+			paddd xmm0, [rdi + rcx*COMPV_YASM_INT32_SZ_BYTES - 16]
+			movdqa [rbx + rcx*COMPV_YASM_INT32_SZ_BYTES - 16], xmm0			
 			jl .LoopCols4
 		.EndOfLoopCols4
 		
@@ -551,7 +551,7 @@ sym(CompVMathUtilsSum2_32s32s_Asm_X86_SSE2):
 		jnz .LoopRows
 
 	; free memory
-	add rsp, 8
+	add rsp, COMPV_YASM_REG_SZ_BYTES
 
 	;; begin epilog ;;
 	pop rbx

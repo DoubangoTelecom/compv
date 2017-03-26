@@ -28,6 +28,7 @@ COMPV_NAMESPACE_BEGIN()
 #	endif /* COMPV_ARCH_X86 */
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVMathUtilsSum_8u32u_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const uint8_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, uint32_t *sum1);
+	COMPV_EXTERNC void CompVMathUtilsSum2_32s32s_Asm_X64_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, COMPV_ALIGNED(SSE) const int32_t* b, COMPV_ALIGNED(SSE) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 #	endif /* COMPV_ARCH_X64 */
 #	if COMPV_ARCH_ARM32
 	COMPV_EXTERNC void CompVMathUtilsMax_16u_Asm_NEON32(COMPV_ALIGNED(NEON) const uint16_t* data, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(NEON) compv_uscalar_t stride, uint16_t *max);
@@ -273,16 +274,17 @@ COMPV_ERROR_CODE CompVMathUtils::sum(const uint8_t* a, size_t width, size_t heig
 template<> COMPV_BASE_API
 COMPV_ERROR_CODE CompVMathUtils::sum2(const int32_t* a, const int32_t* b, int32_t* s, size_t width, size_t height, size_t stride)
 {
-	void(*MathUtilsSum2_32s32s)(COMPV_ALIGNED(X) const int32_t* a, COMPV_ALIGNED(X) const int32_t* b, COMPV_ALIGNED(X) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride) 
+	void(*CompVMathUtilsSum2_32s32s)(COMPV_ALIGNED(X) const int32_t* a, COMPV_ALIGNED(X) const int32_t* b, COMPV_ALIGNED(X) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(X) compv_uscalar_t stride) 
 		= NULL;
-#if COMPV_ARCH_X86 && 0
+#if COMPV_ARCH_X86
     if (width >= 4 && CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(a) && COMPV_IS_ALIGNED_SSE(b) && COMPV_IS_ALIGNED_SSE(stride*sizeof(int32_t))) {
-        COMPV_EXEC_IFDEF_INTRIN_X86(MathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_Intrin_SSE2);
-        COMPV_EXEC_IFDEF_ASM_X86(MathUtilsSum2_32s32s = MathUtilsSum2_32s32s_Asm_X86_SSE2);
+        COMPV_EXEC_IFDEF_INTRIN_X86(CompVMathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_Intrin_SSE2);
+        COMPV_EXEC_IFDEF_ASM_X86(CompVMathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_Asm_X86_SSE2);
+		COMPV_EXEC_IFDEF_ASM_X64(CompVMathUtilsSum2_32s32s = CompVMathUtilsSum2_32s32s_Asm_X64_SSE2);
     }
 #endif
-	if (MathUtilsSum2_32s32s) {
-		MathUtilsSum2_32s32s(a, b, s, (compv_uscalar_t)width, (compv_uscalar_t)height, (compv_uscalar_t)stride);
+	if (CompVMathUtilsSum2_32s32s) {
+		CompVMathUtilsSum2_32s32s(a, b, s, static_cast<compv_uscalar_t>(width), static_cast<compv_uscalar_t>(height), static_cast<compv_uscalar_t>(stride));
 		return COMPV_ERROR_CODE_S_OK;
 	}
     COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum2_C<int32_t, int32_t>(a, b, s, width, height, stride)));

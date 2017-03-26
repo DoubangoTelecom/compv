@@ -128,9 +128,7 @@ void CompVMathUtilsSum_8u32u_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* data,
 
 void CompVMathUtilsSum2_32s32s_Intrin_SSE2(COMPV_ALIGNED(SSE) const int32_t* a, COMPV_ALIGNED(SSE) const int32_t* b, COMPV_ALIGNED(SSE) int32_t* s, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
-    COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No ASM implementation"); // TODO(dmi): add ASM
     COMPV_DEBUG_INFO_CHECK_SSE2();
-
     compv_uscalar_t j;
     compv_scalar_t i;
     compv_scalar_t width_ = static_cast<compv_scalar_t>(width);
