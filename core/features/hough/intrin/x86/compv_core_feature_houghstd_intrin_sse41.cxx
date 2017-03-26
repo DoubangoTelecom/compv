@@ -85,6 +85,28 @@ void CompVHoughStdAccGatherRow_4mpd_Intrin_SSE41(COMPV_ALIGNED(SSE) const int32_
 	}
 }
 
+// pSinRho and rowTimesSinRhoPtr must be strided and SSE-aligned -> reading beyond count
+// count must be >= 16
+void CompVHoughStdRowTimesSinRho_Intrin_SSE41(COMPV_ALIGNED(SSE) const int32_t* pSinRho, COMPV_ALIGNED(SSE) compv_uscalar_t row, COMPV_ALIGNED(SSE) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count)
+{
+	const __m128i vecRowInt32 = _mm_set1_epi32(static_cast<int32_t>(row));
+	compv_uscalar_t i;
+	for (i = 0; i < count - 15; i += 16) {
+		_mm_store_si128(reinterpret_cast<__m128i*>(&rowTimesSinRhoPtr[i]),
+			_mm_mullo_epi32(vecRowInt32, _mm_load_si128(reinterpret_cast<const __m128i*>(&pSinRho[i]))));
+		_mm_store_si128(reinterpret_cast<__m128i*>(&rowTimesSinRhoPtr[i + 4]),
+			_mm_mullo_epi32(vecRowInt32, _mm_load_si128(reinterpret_cast<const __m128i*>(&pSinRho[i + 4]))));
+		_mm_store_si128(reinterpret_cast<__m128i*>(&rowTimesSinRhoPtr[i + 8]),
+			_mm_mullo_epi32(vecRowInt32, _mm_load_si128(reinterpret_cast<const __m128i*>(&pSinRho[i + 8]))));
+		_mm_store_si128(reinterpret_cast<__m128i*>(&rowTimesSinRhoPtr[i + 12]),
+			_mm_mullo_epi32(vecRowInt32, _mm_load_si128(reinterpret_cast<const __m128i*>(&pSinRho[i + 12]))));
+	}
+	for (; i < count; i += 4) {
+		_mm_store_si128(reinterpret_cast<__m128i*>(&rowTimesSinRhoPtr[i]),
+			_mm_mullo_epi32(vecRowInt32, _mm_load_si128(reinterpret_cast<const __m128i*>(&pSinRho[i]))));
+	}
+}
+
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */

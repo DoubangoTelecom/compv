@@ -24,6 +24,7 @@ COMPV_NAMESPACE_BEGIN()
 #	if COMPV_ARCH_X86
 	COMPV_EXTERNC void CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const int32_t* pCosRho, COMPV_ALIGNED(AVX) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta);
 	COMPV_EXTERNC void CompVHoughStdNmsGatherRow_4mpd_Asm_X86_SSE2(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, compv_uscalar_t nThreshold, compv_uscalar_t colStart, compv_uscalar_t maxCols);
+	COMPV_EXTERNC void CompVHoughStdRowTimesSinRho_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const int32_t* pSinRho, COMPV_ALIGNED(SSE) compv_uscalar_t row, COMPV_ALIGNED(SSE) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count);
 #	endif /* COMPV_ARCH_X86 */
 #endif /* COMPV_ASM */
 
@@ -301,11 +302,22 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::cons
 
 	void (*CompVHoughStdAccGatherRow_xmpd)(COMPV_ALIGNED(X) const int32_t* pCosRho, COMPV_ALIGNED(X) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta)
 		= CompVHoughStdAccGatherRow_C;
+	void(*CompVHoughStdRowTimesSinRho)(COMPV_ALIGNED(x) const int32_t* pSinRho, COMPV_ALIGNED(x) compv_uscalar_t row, COMPV_ALIGNED(SSE) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count)
+		= CompVHoughStdRowTimesSinRho_C;
 
 #if COMPV_ARCH_X86
 	if (maxThetaCountScalar >= 16 && COMPV_IS_ALIGNED_SSE(pCosRho) && COMPV_IS_ALIGNED_SSE(rowTimesSinRhoPtr) && COMPV_IS_ALIGNED_SSE(pSinRho)) {
+		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+			if (COMPV_IS_ALIGNED_SSE(m_SinRho->strideInBytes()) && COMPV_IS_ALIGNED_SSE(rowTimesSinRho->strideInBytes())) { // reading beyond
+				COMPV_EXEC_IFDEF_INTRIN_X86(CompVHoughStdRowTimesSinRho = CompVHoughStdRowTimesSinRho_Intrin_SSE2);
+			}
+		}
 		if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughStdAccGatherRow_xmpd = CompVHoughStdAccGatherRow_4mpd_Intrin_SSE41, xmpd = 4));
+			if (COMPV_IS_ALIGNED_SSE(m_SinRho->strideInBytes()) && COMPV_IS_ALIGNED_SSE(rowTimesSinRho->strideInBytes())) { // reading beyond
+				COMPV_EXEC_IFDEF_INTRIN_X86(CompVHoughStdRowTimesSinRho = CompVHoughStdRowTimesSinRho_Intrin_SSE41);
+				COMPV_EXEC_IFDEF_ASM_X86(CompVHoughStdRowTimesSinRho = CompVHoughStdRowTimesSinRho_Asm_X86_SSE41);
+			}
 		}
 	}
 	if (maxThetaCountScalar >= 32 && COMPV_IS_ALIGNED_AVX2(pCosRho) && COMPV_IS_ALIGNED_AVX2(rowTimesSinRhoPtr) && COMPV_IS_ALIGNED_AVX2(pSinRho)) {
@@ -328,7 +340,7 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::cons
 		// update lastRow
 		if (lastRow != row) {
 			lastRow = row;
-			CompVHoughStdRowTimesSinRho_C(pSinRho, static_cast<compv_uscalar_t>(row), rowTimesSinRhoPtr, maxThetaCountScalar);
+			CompVHoughStdRowTimesSinRho(pSinRho, static_cast<compv_uscalar_t>(row), rowTimesSinRhoPtr, maxThetaCountScalar);
 		}
 		// gather
 		CompVHoughStdAccGatherRow_xmpd(pCosRho, rowTimesSinRhoPtr, static_cast<compv_uscalar_t>(col), pACC, accStrideScalar, xmpd_consumed);
@@ -428,23 +440,17 @@ COMPV_ERROR_CODE CompVHoughStd::nms_apply(size_t rowStart, size_t rowCount, Comp
 	int32_t nBarrier = static_cast<int32_t>(m_nBarrier);
 	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));
 	accStride = acc->stride();
+	void(*CompVHoughStdNmsApplyRow)(COMPV_ALIGNED(X) int32_t* pACC, COMPV_ALIGNED(X) uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines)
+		= CompVHoughStdNmsApplyRow_C;
 
-#if COMPV_ARCH_X86 && 0
-	void(*HoughStdNmsApplyRow)(COMPV_ALIGNED(X) int32_t* pACC, COMPV_ALIGNED(X) uint8_t* pNMS, int32_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t maxCols, CompVPtrBox(CompVCoordPolar2f)& coords) = NULL;
-	if (cols >= 8 && CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(pACC) && COMPV_IS_ALIGNED_SSE(pNMS)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(HoughStdNmsApplyRow = HoughStdNmsApplyRow_Intrin_SSE2);
-	}
-	if (HoughStdNmsApplyRow) {
-		for (int32_t row = rStart; row < rEnd; ++row) {
-			HoughStdNmsApplyRow(pACC, pNMS, m_nThreshold, m_fTheta, nBarrier, row, cols, coords);
-			pACC += accStride, pNMS += nmsStride;
-		}
-		return COMPV_ERROR_CODE_S_OK;
+#if COMPV_ARCH_X86
+	if (cols >= 16 && CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(pACC) && COMPV_IS_ALIGNED_SSE(pNMS)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVHoughStdNmsApplyRow = CompVHoughStdNmsApplyRow_Intrin_SSE2);
 	}
 #endif /* COMPV_ARCH_X86 */
 	
 	for (int32_t row = rStart; row < rEnd; ++row) {
-		CompVHoughStdNmsApplyRow_C(pACC, pNMS, m_nThreshold, m_fTheta, nBarrier, row, 0, cols, lines);
+		CompVHoughStdNmsApplyRow(pACC, pNMS, m_nThreshold, m_fTheta, nBarrier, row, 0, cols, lines); // use colStart at 0 to have SIMD aligned
 		pACC += accStride, pNMS += nmsStride;
 	}
 	return COMPV_ERROR_CODE_S_OK;

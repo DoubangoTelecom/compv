@@ -12,6 +12,7 @@ COMPV_YASM_DEFAULT_REL
 
 global sym(CompVHoughStdAccGatherRow_4mpd_Asm_X86_SSE41)
 global sym(CompVHoughStdNmsGatherRow_4mpd_Asm_X86_SSE2)
+global sym(CompVHoughStdRowTimesSinRho_Asm_X86_SSE41)
 
 section .data
 
@@ -196,6 +197,75 @@ sym(CompVHoughStdNmsGatherRow_4mpd_Asm_X86_SSE2):
 	pop rdi
 	pop rsi
 	COMPV_YASM_RESTORE_XMM
+	COMPV_YASM_UNSHADOW_ARGS
+	mov rsp, rbp
+	pop rbp
+	ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; arg(0) -> COMPV_ALIGNED(SSE) const int32_t* pSinRho
+; arg(1) -> COMPV_ALIGNED(SSE) compv_uscalar_t row
+; arg(2) -> COMPV_ALIGNED(SSE) int32_t* rowTimesSinRhoPtr
+; arg(3) -> compv_uscalar_t count
+sym(CompVHoughStdRowTimesSinRho_Asm_X86_SSE41):
+	push rbp
+	mov rbp, rsp
+	COMPV_YASM_SHADOW_ARGS_TO_STACK 4
+	push rsi
+	push rdi
+	push rbx
+	;; end prolog ;;
+
+	mov rax, arg(1) ; row
+	movd xmm5, eax
+	pshufd xmm5, xmm5, 0x0
+
+	mov rdx, arg(0) ; pSinRho
+	mov rbx, arg(2) ; rowTimesSinRhoPtr
+	mov rsi, arg(3) ; count
+	lea rdi, [rsi - 15] ; count - 15
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (i = 0; i < count - 15; i += 16)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	xor rcx, rcx
+	.Loop16:
+		movdqa xmm0, [rdx + (rcx+0)*COMPV_YASM_INT32_SZ_BYTES]
+		pmulld xmm0, xmm5
+		movdqa xmm1, [rdx + (rcx+4)*COMPV_YASM_INT32_SZ_BYTES]
+		pmulld xmm1, xmm5
+		movdqa xmm2, [rdx + (rcx+8)*COMPV_YASM_INT32_SZ_BYTES]
+		pmulld xmm2, xmm5
+		movdqa xmm3, [rdx + (rcx+12)*COMPV_YASM_INT32_SZ_BYTES]
+		add rcx, 16
+		pmulld xmm3, xmm5
+		cmp rcx, rdi
+		movdqa [rbx + (rcx-16)*COMPV_YASM_INT32_SZ_BYTES], xmm0
+		movdqa [rbx + (rcx-12)*COMPV_YASM_INT32_SZ_BYTES], xmm1
+		movdqa [rbx + (rcx-8)*COMPV_YASM_INT32_SZ_BYTES], xmm2
+		movdqa [rbx + (rcx-4)*COMPV_YASM_INT32_SZ_BYTES], xmm3
+		jl .Loop16
+		;; EndOf_Loop16 ;;
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	; for (; i < count; i += 4)
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	cmp rcx, rsi
+	jge .EndOf_Loop4
+	.Loop4:
+		movdqa xmm0, [rdx + (rcx+0)*COMPV_YASM_INT32_SZ_BYTES]
+		pmulld xmm0, xmm5
+		add rcx, 4
+		cmp rcx, rsi
+		movdqa [rbx + (rcx-4)*COMPV_YASM_INT32_SZ_BYTES], xmm0
+		jl .Loop4
+		.EndOf_Loop4:
+		;; EndOf_Loop4 ;;
+
+	;; begin epilog ;;
+	pop rbx
+	pop rdi
+	pop rsi
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
 	pop rbp
