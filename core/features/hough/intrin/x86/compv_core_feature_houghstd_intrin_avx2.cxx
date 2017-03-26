@@ -84,7 +84,7 @@ void CompVHoughStdAccGatherRow_8mpd_Intrin_AVX2(COMPV_ALIGNED(AVX) const int32_t
 		AccInc_Intrin_AVX2(vec2);
 		AccInc_Intrin_AVX2(vec3);
 	}
-	
+
 	for (; theta < maxTheta; theta += 8) { // maxTheta is already 8d-aligned
 		vec0 = _mm256_mullo_epi32(vecColInt32, _mm256_load_si256(reinterpret_cast<const __m256i*>(&pCosRho[theta])));
 		vec0 = _mm256_add_epi32(vec0, _mm256_load_si256(reinterpret_cast<const __m256i*>(&pRowTimesSinRho[theta])));
@@ -94,6 +94,7 @@ void CompVHoughStdAccGatherRow_8mpd_Intrin_AVX2(COMPV_ALIGNED(AVX) const int32_t
 		vecTheta = _mm256_add_epi32(vecTheta, vec8);
 		AccInc_Intrin_AVX2(vec0);
 	}
+
 	_mm256_zeroupper();
 }
 

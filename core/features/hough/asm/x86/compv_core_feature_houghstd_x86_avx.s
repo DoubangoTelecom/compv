@@ -28,10 +28,20 @@ sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
-	COMPV_YASM_SAVE_YMM 7
+	%if COMPV_YASM_ABI_IS_64BIT
+		COMPV_YASM_SAVE_YMM 11
+	%else
+		COMPV_YASM_SAVE_YMM 7
+	%endif
 	push rsi
 	push rdi
 	push rbx
+	%if COMPV_YASM_ABI_IS_64BIT
+		push r12
+		push r13
+		push r14
+		push r15
+	%endif
 	;; end prolog ;;
 
 	; alloc memory
@@ -115,15 +125,96 @@ sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2):
 		mov rax, arg(3) ; pACC
 		
 		%if COMPV_YASM_ABI_IS_64BIT
+			vextracti128 xmm8, ymm0, 1
+			vextracti128 xmm9, ymm1, 1
+			vextracti128 xmm10, ymm2, 1
+			vextracti128 xmm11, ymm3, 1
+			vpmovsxdq ymm0, xmm0
+			vpmovsxdq ymm1, xmm1
+			vpmovsxdq ymm2, xmm2
+			vpmovsxdq ymm3, xmm3
+			vpmovsxdq ymm8, xmm8
+			vpmovsxdq ymm9, xmm9
+			vpmovsxdq ymm10, xmm10
+			vpmovsxdq ymm11, xmm11
+			vmovq qword rbx, xmm0
+			vpextrq rsi, xmm0, 1
+			vmovq qword rdi, xmm1
+			vpextrq rdx, xmm1, 1
+			vmovq qword r8, xmm2
+			vpextrq r9, xmm2, 1
+			vmovq qword r10, xmm3
+			vpextrq r11, xmm3, 1
+			vmovq qword r12, xmm8
+			vpextrq r13, xmm8, 1
+			vmovq qword r14, xmm9
+			vpextrq r15, xmm9, 1
+			inc dword ptr [rax+rbx*COMPV_YASM_INT32_SZ_BYTES]
+			vmovq qword rbx, xmm10
+			inc dword ptr [rax+rsi*COMPV_YASM_INT32_SZ_BYTES]
+			vpextrq rsi, xmm10, 1
+			inc dword ptr [rax+rdi*COMPV_YASM_INT32_SZ_BYTES]
+			vmovq qword rdi, xmm11
+			inc dword ptr [rax+rdx*COMPV_YASM_INT32_SZ_BYTES]
+			vpextrq rdx, xmm11, 1
+			inc dword ptr [rax+r8*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r9*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r10*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r11*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r12*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r13*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r14*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r15*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+rbx*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+rsi*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+rdi*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+rdx*COMPV_YASM_INT32_SZ_BYTES]
+			vextracti128 xmm0, ymm0, 1
+			vextracti128 xmm1, ymm1, 1
+			vextracti128 xmm2, ymm2, 1
+			vextracti128 xmm3, ymm3, 1
+			vextracti128 xmm8, ymm8, 1
+			vextracti128 xmm9, ymm9, 1
+			vextracti128 xmm10, ymm10, 1
+			vextracti128 xmm11, ymm11, 1
+			vmovq qword rbx, xmm0
+			vpextrq rsi, xmm0, 1
+			vmovq qword rdi, xmm1
+			vpextrq rdx, xmm1, 1
+			vmovq qword r8, xmm2
+			vpextrq r9, xmm2, 1
+			vmovq qword r10, xmm3
+			vpextrq r11, xmm3, 1
+			vmovq qword r12, xmm8
+			vpextrq r13, xmm8, 1
+			vmovq qword r14, xmm9
+			vpextrq r15, xmm9, 1
+			inc dword ptr [rax+rbx*COMPV_YASM_INT32_SZ_BYTES]
+			vmovq qword rbx, xmm10
+			inc dword ptr [rax+rsi*COMPV_YASM_INT32_SZ_BYTES]
+			vpextrq rsi, xmm10, 1
+			inc dword ptr [rax+rdi*COMPV_YASM_INT32_SZ_BYTES]
+			vmovq qword rdi, xmm11
+			inc dword ptr [rax+rdx*COMPV_YASM_INT32_SZ_BYTES]
+			vpextrq rdx, xmm11, 1
+			inc dword ptr [rax+r8*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r9*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r10*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r11*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r12*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r13*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r14*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r15*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+rbx*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+rsi*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+rdi*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+rdx*COMPV_YASM_INT32_SZ_BYTES]
 		%else
-			; low(ymm0)
 			vmovd ebx, xmm0
 			vpextrd esi, xmm0, 1
 			vpextrd edi, xmm0, 2
 			vpextrd edx, xmm0, 3
 			vextracti128 xmm0, ymm0, 1
-
-			; high(ymm0)
 			inc dword ptr [eax+ebx*COMPV_YASM_INT32_SZ_BYTES]
 			vmovd ebx, xmm0
 			inc dword ptr [eax+esi*COMPV_YASM_INT32_SZ_BYTES]
@@ -133,8 +224,6 @@ sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2):
 			inc dword ptr [eax+edx*COMPV_YASM_INT32_SZ_BYTES]
 			vpextrd edx, xmm0, 3
 			vextracti128 xmm0, ymm1, 1
-
-			; low(ymm1)
 			inc dword ptr [eax+ebx*COMPV_YASM_INT32_SZ_BYTES]
 			vmovd ebx, xmm1
 			inc dword ptr [eax+esi*COMPV_YASM_INT32_SZ_BYTES]
@@ -144,8 +233,6 @@ sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2):
 			inc dword ptr [eax+edx*COMPV_YASM_INT32_SZ_BYTES]
 			vpextrd edx, xmm1, 3
 			vextracti128 xmm1, ymm2, 1
-
-			; high(ymm1)
 			inc dword ptr [eax+ebx*COMPV_YASM_INT32_SZ_BYTES]
 			vmovd ebx, xmm0
 			inc dword ptr [eax+esi*COMPV_YASM_INT32_SZ_BYTES]
@@ -154,8 +241,6 @@ sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2):
 			vpextrd edi, xmm0, 2
 			inc dword ptr [eax+edx*COMPV_YASM_INT32_SZ_BYTES]
 			vpextrd edx, xmm0, 3
-
-			; low(ymm2)
 			inc dword ptr [eax+ebx*COMPV_YASM_INT32_SZ_BYTES]
 			vmovd ebx, xmm2
 			inc dword ptr [eax+esi*COMPV_YASM_INT32_SZ_BYTES]
@@ -165,8 +250,6 @@ sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2):
 			inc dword ptr [eax+edx*COMPV_YASM_INT32_SZ_BYTES]
 			vpextrd edx, xmm2, 3
 			vextracti128 xmm2, ymm3, 1
-
-			; high(ymm2)
 			inc dword ptr [eax+ebx*COMPV_YASM_INT32_SZ_BYTES]
 			vmovd ebx, xmm1
 			inc dword ptr [eax+esi*COMPV_YASM_INT32_SZ_BYTES]
@@ -175,8 +258,6 @@ sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2):
 			vpextrd edi, xmm1, 2
 			inc dword ptr [eax+edx*COMPV_YASM_INT32_SZ_BYTES]
 			vpextrd edx, xmm1, 3
-
-			; low(ymm3)
 			inc dword ptr [eax+ebx*COMPV_YASM_INT32_SZ_BYTES]
 			vmovd ebx, xmm3
 			inc dword ptr [eax+esi*COMPV_YASM_INT32_SZ_BYTES]
@@ -185,8 +266,6 @@ sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2):
 			vpextrd edi, xmm3, 2
 			inc dword ptr [eax+edx*COMPV_YASM_INT32_SZ_BYTES]
 			vpextrd edx, xmm3, 3
-
-			; high(ymm3)
 			inc dword ptr [eax+ebx*COMPV_YASM_INT32_SZ_BYTES]
 			vmovd ebx, xmm2
 			inc dword ptr [eax+esi*COMPV_YASM_INT32_SZ_BYTES]
@@ -195,15 +274,11 @@ sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2):
 			vpextrd edi, xmm2, 2
 			inc dword ptr [eax+edx*COMPV_YASM_INT32_SZ_BYTES]
 			vpextrd edx, xmm2, 3
-
-			; final
 			inc dword ptr [eax+ebx*COMPV_YASM_INT32_SZ_BYTES]
 			inc dword ptr [eax+esi*COMPV_YASM_INT32_SZ_BYTES]
 			inc dword ptr [eax+edi*COMPV_YASM_INT32_SZ_BYTES]
 			inc dword ptr [eax+edx*COMPV_YASM_INT32_SZ_BYTES]
-
 		%endif
-
 		cmp theta, [maxThetaMinus31]
 		jl .LoopTheta32
 		;; EndOf_LoopTheta32 ;;
@@ -227,15 +302,33 @@ sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2):
 		mov rax, arg(3) ; pACC
 
 		%if COMPV_YASM_ABI_IS_64BIT
+			vextracti128 xmm1, ymm0, 1
+			vpmovsxdq ymm0, xmm0
+			vpmovsxdq ymm1, xmm1
+			vextracti128 xmm2, ymm0, 1
+			vextracti128 xmm3, ymm1, 1
+			vmovq qword rbx, xmm0
+			vpextrq rsi, xmm0, 1
+			vmovq qword rdi, xmm1
+			vpextrq rdx, xmm1, 1
+			vmovq qword r8, xmm2
+			vpextrq r9, xmm2, 1
+			vmovq qword r10, xmm3
+			vpextrq r11, xmm3, 1
+			inc dword ptr [rax+rbx*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+rsi*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+rdi*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+rdx*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r8*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r9*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r10*COMPV_YASM_INT32_SZ_BYTES]
+			inc dword ptr [rax+r11*COMPV_YASM_INT32_SZ_BYTES]
 		%else
-			; low(ymm0)
 			vmovd ebx, xmm0
 			vpextrd esi, xmm0, 1
 			vpextrd edi, xmm0, 2
 			vpextrd edx, xmm0, 3
 			vextracti128 xmm1, ymm0, 1
-
-			; high(ymm0)
 			inc dword ptr [eax+ebx*COMPV_YASM_INT32_SZ_BYTES]
 			vmovd ebx, xmm1
 			inc dword ptr [eax+esi*COMPV_YASM_INT32_SZ_BYTES]
@@ -244,19 +337,15 @@ sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2):
 			vpextrd edi, xmm1, 2
 			inc dword ptr [eax+edx*COMPV_YASM_INT32_SZ_BYTES]
 			vpextrd edx, xmm1, 3
-		
-			; final
 			inc dword ptr [eax+ebx*COMPV_YASM_INT32_SZ_BYTES]
 			inc dword ptr [eax+esi*COMPV_YASM_INT32_SZ_BYTES]
 			inc dword ptr [eax+edi*COMPV_YASM_INT32_SZ_BYTES]
 			inc dword ptr [eax+edx*COMPV_YASM_INT32_SZ_BYTES]
 		%endif
-
 		cmp theta, arg(5)
 		jl .LoopTheta8
 		.EndOf_LoopTheta8:
 		;; EndOf_LoopTheta8 ;;
-
 
 	%undef maxThetaMinus31
 	%undef vecThetaMem
@@ -270,6 +359,12 @@ sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2):
 	add rsp, (1*COMPV_YASM_REG_SZ_BYTES) + (8*COMPV_YASM_INT32_SZ_BYTES)
 
 	;; begin epilog ;;
+	%if COMPV_YASM_ABI_IS_64BIT
+		pop r15
+		pop r14
+		pop r13
+		pop r12
+	%endif
 	pop rbx
 	pop rdi
 	pop rsi
