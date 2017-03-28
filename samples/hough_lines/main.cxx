@@ -77,7 +77,7 @@ public:
 			COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(imageGray, &edges));
 			COMPV_CHECK_CODE_RETURN(m_ptrHough->process(edges, lines));
 			if (!lines.empty()) {
-				COMPV_CHECK_CODE_RETURN(buildLines(lines, points));
+				COMPV_CHECK_CODE_RETURN(buildLines(edges->cols(), lines, points));
 			}
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(edges));
@@ -119,22 +119,22 @@ public:
 	}
 
 private:
-	static COMPV_ERROR_CODE buildLines(const CompVHoughLineVector& lines, CompVMatPtr& points) {
+	static COMPV_ERROR_CODE buildLines(size_t imageWidth, const CompVHoughLineVector& lines, CompVMatPtr& points) {
 		COMPV_CHECK_EXP_RETURN(lines.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<compv_float32_t>(&points, 4, lines.size())));
 		compv_float32_t *px0 = points->ptr<compv_float32_t>(0);
 		compv_float32_t *py0 = points->ptr<compv_float32_t>(1);
 		compv_float32_t *px1 = points->ptr<compv_float32_t>(2);
 		compv_float32_t *py1 = points->ptr<compv_float32_t>(3);
+		const compv_float32_t imageWidthF = static_cast<compv_float32_t>(imageWidth);
 		for (size_t i = 0; i < lines.size(); i++) {
 			const compv_float32_t rho = lines[i].rho;
 			const compv_float32_t theta = lines[i].theta;
-			double a = std::cos(theta), b = std::sin(theta);
-			double px = a*rho, py = b*rho;
-			px0[i] = static_cast<compv_float32_t>(round(px + 1000 * (-b)));
-			py0[i] = static_cast<compv_float32_t>(round(py + 1000 * (a)));
-			px1[i] = static_cast<compv_float32_t>(round(px - 1000 * (-b)));
-			py1[i] = static_cast<compv_float32_t>(round(py - 1000 * (a)));
+			const compv_float32_t a = std::cos(theta), b = std::sin(theta);
+			px0[i] = 0;
+			py0[i] = rho / b; // (rho - (px0[i] *a)) / b
+			px1[i] = imageWidthF;
+			py1[i] = (rho - (px1[i] * a)) / b;
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
