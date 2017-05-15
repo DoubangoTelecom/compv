@@ -337,7 +337,7 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::cons
 	}
 #endif /* COMPV_ARCH_X86 */
 	
-	const compv_uscalar_t xmpd_consumed = (maxThetaCountScalar & -xmpd);
+	const compv_uscalar_t xmpd_consumed = xmpd == 1 ? 0 : (maxThetaCountScalar & -xmpd); // "1" not multuple of "2" and cannot used for backward align
 	const compv_uscalar_t xmpd_trailling = (maxThetaCountScalar - xmpd_consumed);
 	for (std::vector<CompVHoughStdEdge >::const_iterator it = start; it < end; ++it) {
 		row = it->row;
@@ -447,7 +447,7 @@ COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount, Com
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for GPU implementation found");
 	}
 	
-	size_t consumed = maxColsScalar & (-xmpd);
+	size_t consumed = (xmpd == 1) ? 0 : maxColsScalar & (-xmpd); // "1" not multuple of "2" and cannot used for backward align
 	size_t remains = (maxCols - consumed);
 	if (remains) {
 		for (row = rowStart; row < rowEnd; ++row) {
