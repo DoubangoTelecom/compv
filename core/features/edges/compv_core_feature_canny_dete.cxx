@@ -111,12 +111,13 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::set(int id, const void* valuePtr, size_t va
 // TODO(dmi): combine with mean instead of gaussian blur to remove noise
 // https://github.com/DoubangoTelecom/compv/issues/130
 
-COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatPtrPtr edges) /*Overrides(CompVEdgeDete)*/
+COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatPtrPtr edges, CompVMatPtrPtr directions COMPV_DEFAULT(NULL)) /*Overrides(CompVEdgeDete)*/
 {
 	COMPV_CHECK_EXP_RETURN(!image || image->subType() != COMPV_SUBTYPE_PIXELS_Y || !edges, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input image is null or not in grayscale format");
 	COMPV_CHECK_EXP_RETURN(m_fThresholdLow >= m_fThresholdHigh, COMPV_ERROR_CODE_E_INVALID_STATE, "Invalid state: m_fThresholdLow >= m_fThresholdHigh");
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	CompVMatPtr gradDir = NULL;
 
 	// Force memory realloc if image size changes
 	if (!m_pGx || !m_pGy || !m_pG || !m_pNms || image->cols() != m_nImageWidth || image->rows() != m_nImageHeight || image->stride() != m_nImageStride) {
@@ -134,6 +135,14 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 		m_pG = reinterpret_cast<uint16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<uint16_t>(m_nImageStride, m_nImageHeight)));
 		COMPV_CHECK_EXP_RETURN(!m_pG, COMPV_ERROR_CODE_E_OUT_OF_MEMORY, "Failed to allocate m_pG");
 	}
+
+	// Create direction buffer
+#if 0 // Result is correct but functions using it (e.g. hough-lines) not finished yet
+	if (directions) {
+		gradDir = *directions;
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&gradDir, m_nImageHeight, m_nImageWidth, m_nImageStride));
+	}
+#endif
 
 	// Create edges buffer
 	// edges must have same stride than m_pG (required by scaleAndClip) and image (required by gaussian blur)
@@ -179,8 +188,9 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::process(const CompVMatPtr& image, CompVMatP
 			CompVMathConvlt::convlt1Hz<uint8_t, int16_t, int16_t>(ptrIn - padding, imgTmp, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelVt, m_nKernelSize, true);
 			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGy - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, first, last);
 			CompVMem::free((void**)&imgTmp);
-			// Gradient using L1 distance (abs(gx) + abs(gy))
-			COMPV_CHECK_CODE_RETURN((CompVMathDistance::l1<int16_t, uint16_t>(ptrOutGx - padding, ptrOutGy - padding, ptrOutG - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
+			// Gradient magnitude = (abs(gx) + abs(gy))
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs<int16_t, uint16_t>(ptrOutGx - padding, ptrOutGy - padding, ptrOutG - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
+			// Sum of G, use to compute mean
 			uint32_t sum_ = 0;
 			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(ptrIn, m_nImageWidth, h, m_nImageStride, sum_)));
 			*ptrSum = sum_;
@@ -209,8 +219,9 @@ bail:
 		// Convolution (gx and gy)
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, m_pcKernelVt, m_pcKernelHz, m_nKernelSize, m_pGx)));
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, m_pcKernelHz, m_pcKernelVt, m_nKernelSize, m_pGy)));
-		// Gradient using L1 distance (abs(gx) + abs(gy))
-		COMPV_CHECK_CODE_RETURN((CompVMathDistance::l1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride)));
+		// Gradient mag using (g = abs(gx) + abs(gy))
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride)));
+		// Sum of gradients used to compute mean
 		COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum<uint8_t, uint32_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, sum)));
 	}
 
@@ -239,6 +250,10 @@ bail:
 			COMPV_CHECK_CODE_RETURN(hysteresis(*edges, tLow, tHigh, rowStart, rowCount));
 			return COMPV_ERROR_CODE_S_OK;
 		};
+		auto funcPtrDirection = [&](size_t rowStart, size_t rowCount) -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN(direction(*edges, gradDir, rowStart, rowCount));
+			return COMPV_ERROR_CODE_S_OK;
+		};
 		size_t rowStart, threadIdx;
 		// NMS gathering
 		taskIds.reserve(threadsCount);
@@ -256,11 +271,27 @@ bail:
 		}
 		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrHysteresis, rowStart, countLast), taskIds));
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+		// Direction
+		if (gradDir) {
+			taskIds.clear();
+			for (threadIdx = 0, rowStart = 0; threadIdx < threadsCount - 1; ++threadIdx, rowStart += countAny) {
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrDirection, rowStart, countAny), taskIds));
+			}
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrDirection, rowStart, countLast), taskIds));
+			COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+		}
 	}
 	else {
 		COMPV_CHECK_CODE_RETURN(nms_gather(*edges, tLow, 0, m_nImageHeight));
 		nms_apply();
 		COMPV_CHECK_CODE_RETURN(hysteresis(*edges, tLow, tHigh, 0, m_nImageHeight));
+		if (gradDir) {
+			COMPV_CHECK_CODE_RETURN(direction(*edges, gradDir, 0, m_nImageHeight));
+		}
+	}
+
+	if (directions) {
+		*directions = gradDir;
 	}
 
 	return err;
@@ -459,6 +490,32 @@ COMPV_ERROR_CODE CompVEdgeDeteCanny::hysteresis(CompVMatPtr& edges, uint16_t tLo
 			CompVCannyHysteresisRow_C(row, colStart, imageWidthMinus1, imageHeightMinus1, m_nImageStride, tLow, tHigh, grad, g0, e, e0);
 			grad += m_nImageStride, e += m_nImageStride;
 		}
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Must be executed after full hysteresis
+COMPV_ERROR_CODE CompVEdgeDeteCanny::direction(const CompVMatPtr& edges, CompVMatPtr& dirs, size_t rowStart, size_t rowCount)
+{
+	const uint8_t* edgesPtr = edges->ptr<const uint8_t>(rowStart);
+	const int16_t *gradx = m_pGx + (rowStart * m_nImageStride);
+	const int16_t *grady = m_pGy + (rowStart * m_nImageStride);
+	compv_float32_t* dirsPtr = dirs->ptr<compv_float32_t>(rowStart);
+	size_t cols = COMPV_MATH_MIN(edges->cols(), dirs->cols()); // should be same
+
+	while (rowCount--) {
+		for (size_t i = 0; i < cols; ++i) {
+			if (edgesPtr[i]) {
+				dirsPtr[i] = COMPV_MATH_ATAN2(static_cast<compv_float32_t>(grady[i]), static_cast<compv_float32_t>(gradx[i]));
+			}
+			else {
+				dirsPtr[i] = 0.f;
+			}
+		}
+		edgesPtr += m_nImageStride;
+		gradx += m_nImageStride;
+		grady += m_nImageStride;
+		dirsPtr += m_nImageStride;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

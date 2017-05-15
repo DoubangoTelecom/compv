@@ -21,6 +21,7 @@ COMPV_NAMESPACE_BEGIN()
 struct CompVHoughAccThreadsCtx {
 	CompVMutexPtr mutex;
 	CompVPtr<CompVMemZero<int32_t> *> acc;
+	CompVMatPtr directions;
 	size_t threadsCount;
 };
 
@@ -54,13 +55,13 @@ public:
 	COMPV_OBJECT_GET_ID(CompVHoughStd);
 
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
-	virtual COMPV_ERROR_CODE process(const CompVMatPtr& edges, CompVHoughLineVector& lines) override /*Overrides(CompVHough)*/;
+	virtual COMPV_ERROR_CODE process(const CompVMatPtr& edges, CompVHoughLineVector& lines, const CompVMatPtr& directions = NULL) override /*Overrides(CompVHough)*/;
 
 	static COMPV_ERROR_CODE newObj(CompVPtr<CompVHough* >* hough, float rho = 1.f, float theta = kfMathTrigPiOver180, size_t threshold = 1);
 
 private:
 	COMPV_ERROR_CODE initCoords(float fRho, float fTheta, size_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
-	COMPV_ERROR_CODE acc_gather(std::vector<CompVHoughStdEdge >::const_iterator& start, std::vector<CompVHoughStdEdge >::const_iterator& end, CompVHoughAccThreadsCtx* threadsCtx);
+	COMPV_ERROR_CODE acc_gather(std::vector<CompVHoughStdEdge >::const_iterator start, std::vector<CompVHoughStdEdge >::const_iterator end, CompVHoughAccThreadsCtx* threadsCtx);
 	COMPV_ERROR_CODE nms_gather(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc);
 	COMPV_ERROR_CODE nms_apply(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc, CompVHoughLineVector& lines);
 

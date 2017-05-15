@@ -47,7 +47,7 @@ COMPV_ERROR_CODE houghstd()
 {
 	CompVEdgeDetePtr canny;
 	CompVHoughPtr houghstd;
-	CompVMatPtr image, edges;
+	CompVMatPtr image, edges, directions;
 	CompVHoughLineVector lines;
 	const compv_unittest_houghstd* test = NULL;
 
@@ -66,11 +66,11 @@ COMPV_ERROR_CODE houghstd()
 	COMPV_CHECK_CODE_RETURN(CompVEdgeDete::newObj(&canny, COMPV_CANNY_ID, CANNY_THRESHOLD_LOW, CANNY_THRESHOLD_HIGH));
 	COMPV_CHECK_CODE_RETURN(CompVHough::newObj(&houghstd, COMPV_HOUGH_STANDARD_ID, HOUGHSTD_RHO, HOUGHSTD_THETA, HOUGHSTD_THRESHOLD));
 	COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, test->width, test->height, test->stride, COMPV_TEST_PATH_TO_FILE(test->filename).c_str(), &image));
-	COMPV_CHECK_CODE_RETURN(canny->process(image, &edges));
+	COMPV_CHECK_CODE_RETURN(canny->process(image, &edges, &directions));
 
 	uint64_t timeStart = CompVTime::nowMillis();
 	for (size_t i = 0; i < LOOP_COUNT; ++i) {
-		COMPV_CHECK_CODE_RETURN(houghstd->process(edges, lines));
+		COMPV_CHECK_CODE_RETURN(houghstd->process(edges, lines, directions));
 	}
 	uint64_t timeEnd = CompVTime::nowMillis();
 	COMPV_DEBUG_INFO_EX(TAG_TEST, "Houghstd Elapsed time = [[[ %" PRIu64 " millis ]]]", (timeEnd - timeStart));

@@ -52,11 +52,12 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::set(int id, const void* valuePtr, size
 	}
 }
 
-COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, CompVMatPtrPtr edges) /*Overrides(CompVEdgeDete)*/
+COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, CompVMatPtrPtr edges, CompVMatPtrPtr directions COMPV_DEFAULT(NULL)) /*Overrides(CompVEdgeDete)*/
 {
 	COMPV_CHECK_EXP_RETURN(!image || image->subType() != COMPV_SUBTYPE_PIXELS_Y || !edges, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Input image is null or not in grayscale format");
 
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	CompVMatPtr gradDir = NULL;
 
 	// Realloc pGx and pGy if image size changes
 	if (!m_pGx || !m_pGy || !m_pG || image->cols() != m_nImageWidth || image->rows() != m_nImageHeight || image->stride() != m_nImageStride) {
@@ -73,6 +74,14 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		m_pG = reinterpret_cast<uint16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<uint16_t>(m_nImageStride, m_nImageHeight)));
 		COMPV_CHECK_EXP_RETURN(!m_pG, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 	}
+
+	// Create direction buffer
+#if 0 // Result is correct but functions using it (e.g. hough-lines) not finished yet
+	if (directions) {
+		gradDir = *directions;
+		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<compv_float32_t>(&gradDir, m_nImageHeight, m_nImageWidth, m_nImageStride));
+	}
+#endif
 
 	// Create edges buffer
 	// edges must have same stride than m_pG (required by scaleAndClip)
@@ -95,6 +104,7 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		const size_t countLast = countAny + (m_nImageHeight % threadsCount);
 		const size_t countAnyTimesStride = countAny * m_nImageStride;
 		const uint8_t* inPtr_ = image->ptr<const uint8_t>();
+		compv_float32_t* gradDirPtr = gradDir ? gradDir->ptr<compv_float32_t>() : NULL;
 		uint16_t* gmaxTmp = reinterpret_cast<uint16_t*>(CompVMem::malloc(threadsCount * sizeof(uint16_t)));
 		int16_t* outPtrGx_ = m_pGx;
 		int16_t* outPtrGy_ = m_pGy;
@@ -105,7 +115,7 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		// This is an issue for the convolution only because there is no way to make the writing cache-friendly.
 		// No such issue when multithreading 'CompVMathConvlt::convlt1' (perf tests done), so don't try to change the function.
 		// https://en.wikipedia.org/wiki/False_sharing
-		auto funcConvolutionAndGradient = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrOutGy, uint16_t* ptrOutG, size_t h, size_t threadIdx) -> COMPV_ERROR_CODE {
+		auto funcConvolutionAndGradient = [&](const uint8_t* ptrIn, int16_t* ptrOutGx, int16_t* ptrOutGy, uint16_t* ptrOutG, compv_float32_t* ptrGradDir, size_t h, size_t threadIdx) -> COMPV_ERROR_CODE {
 			// Convolution
 			int16_t* imgTmp = reinterpret_cast<int16_t*>(CompVMem::malloc(CompVMathConvlt::outputSizeInBytes<int16_t>(m_nImageStride, h + rowsOverlapCount))); // local alloc to avoid false sharing
 			COMPV_CHECK_EXP_RETURN(!imgTmp, (err = COMPV_ERROR_CODE_E_OUT_OF_MEMORY), "Failed to alloc imgTmp");
@@ -118,8 +128,11 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 			CompVMathConvlt::convlt1Vt<int16_t, int16_t, int16_t>(imgTmp, ptrOutGy - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride, m_pcKernelHz, m_nKernelSize, first, last);
 			CompVMem::free((void**)&imgTmp);
 			// Gradient using L1 distance (abs(gx) + abs(gy))
-			uint16_t* mt_g = ptrOutG - padding;
-			COMPV_CHECK_CODE_RETURN(err = (CompVMathDistance::l1<int16_t, uint16_t>(ptrOutGx - padding, ptrOutGy - padding, mt_g, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
+			COMPV_CHECK_CODE_RETURN(err = (CompVMathUtils::sumAbs<int16_t, uint16_t>(ptrOutGx - padding, ptrOutGy - padding, ptrOutG - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
+			// Gradient directions
+			if (ptrGradDir) {
+				COMPV_CHECK_CODE_RETURN((CompVMathUtils::atan2<int16_t, compv_float32_t>(ptrOutGx - padding, ptrOutGy - padding, ptrGradDir - padding, m_nImageWidth, h + rowsOverlapCount, m_nImageStride)));
+			}
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		auto funcGmax = [&](const uint16_t* ptrG, size_t h, uint16_t *max) -> COMPV_ERROR_CODE {
@@ -138,7 +151,7 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 
 		// convolution + gradient
 		for (size_t threadIdx = 0, index = 0; threadIdx < threadsCount; ++threadIdx, index += countAnyTimesStride) {
-			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcConvolutionAndGradient, &inPtr_[index], &outPtrGx_[index], &outPtrGy_[index], &outPtrG_[index], 
+			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcConvolutionAndGradient, &inPtr_[index], &outPtrGx_[index], &outPtrGy_[index], &outPtrG_[index], (gradDirPtr ? &gradDirPtr[index] : NULL),
 				(threadIdx == (threadsCount - 1)) ? countLast : countAny, threadIdx),
 				taskIds));
 		}
@@ -172,11 +185,14 @@ COMPV_ERROR_CODE CompVCornerDeteEdgeBase::process(const CompVMatPtr& image, Comp
 		// Convolution
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, m_pcKernelVt, m_pcKernelHz, m_nKernelSize, m_pGx)));
 		COMPV_CHECK_CODE_RETURN((CompVMathConvlt::convlt1<uint8_t, int16_t, int16_t>(image->ptr<const uint8_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride, m_pcKernelHz, m_pcKernelVt, m_nKernelSize, m_pGy)));
-
-		// Gradient using L1 distance (abs(gx) + abs(gy)) then gmax
-		COMPV_CHECK_CODE_RETURN((CompVMathDistance::l1<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride)));
+		// Gradient mag (abs(gx) + abs(gy))
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs<int16_t, uint16_t>(m_pGx, m_pGy, m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride)));
+		// Gradient directions
+		if (gradDir) {
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::atan2<int16_t, compv_float32_t>(m_pGx, m_pGy, gradDir->ptr<compv_float32_t>(), m_nImageWidth, m_nImageHeight, m_nImageStride)));
+		}
+		// gmax
 		COMPV_CHECK_CODE_RETURN((CompVMathUtils::max<uint16_t>(m_pG, m_nImageWidth, m_nImageHeight, m_nImageStride, gmax)));
-
 		// scale (normalization)
 		compv_float32_t scale = 255.f / compv_float32_t(gmax);
 		COMPV_CHECK_CODE_RETURN((CompVMathUtils::scaleAndClipPixel8<uint16_t, compv_float32_t>(m_pG, scale, edgesPtr, m_nImageWidth, m_nImageHeight, m_nImageStride)));

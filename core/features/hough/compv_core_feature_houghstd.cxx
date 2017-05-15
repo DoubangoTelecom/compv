@@ -86,7 +86,7 @@ COMPV_ERROR_CODE CompVHoughStd::set(int id, const void* valuePtr, size_t valueSi
 	}
 }
 
-COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLineVector& lines) /*Overrides(CompVHough)*/
+COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLineVector& lines, const CompVMatPtr& directions COMPV_DEFAULT(NULL)) /*Overrides(CompVHough)*/
 {
 	COMPV_CHECK_EXP_RETURN(!edges || edges->isEmpty() || edges->subType() != COMPV_SUBTYPE_PIXELS_Y, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Edges null or not grayscale");
 
@@ -94,6 +94,12 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLine
 	COMPV_CHECK_CODE_RETURN(initCoords(m_fRho, m_fTheta, m_nThreshold, edges->cols(), edges->rows()));
 
 	lines.clear();
+
+#if 0 // Algorithms using the directions are not correct yet!
+	if (!directions) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("Hough process cannot be booted because not gradient direction info provided: https://en.wikipedia.org/wiki/Hough_transform#Using_the_gradient_direction_to_reduce_the_number_of_votes");
+	}
+#endif
 
 	size_t threadsCountNMS = 1, threadsCountACC = 1, threadsCountEdges = 1;
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
@@ -163,10 +169,10 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLine
 	// Accumulator gathering
 	CompVHoughAccThreadsCtx accThreadsCtx = { 0 };
 	accThreadsCtx.threadsCount = threadsCountACC;
+	accThreadsCtx.directions = *directions;
 	if (threadsCountACC > 1) {
 		COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&accThreadsCtx.mutex));
 		const size_t countAny = (vecEdges.size() / threadsCountACC);
-		const size_t countLast = countAny + (vecEdges.size() % threadsCountACC);
 		auto funcPtrAccGather = [&](std::vector<CompVHoughStdEdge >::const_iterator &begin, std::vector<CompVHoughStdEdge >::const_iterator &end) -> COMPV_ERROR_CODE {
 			COMPV_CHECK_CODE_RETURN(acc_gather(begin, end, &accThreadsCtx));
 			return COMPV_ERROR_CODE_S_OK;
@@ -280,7 +286,7 @@ COMPV_ERROR_CODE CompVHoughStd::initCoords(float fRho, float fTheta, size_t nThr
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::const_iterator& start, std::vector<CompVHoughStdEdge >::const_iterator& end, CompVHoughAccThreadsCtx* threadsCtx)
+COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::const_iterator start, std::vector<CompVHoughStdEdge >::const_iterator end, CompVHoughAccThreadsCtx* threadsCtx)
 {
 	CompVPtr<CompVMemZero<int32_t> *> acc;
 	CompVMatPtr rowTimesSinRho; // row * pSinRho[theta]
@@ -298,6 +304,9 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::cons
 	int32_t *pACC = acc->ptr(m_nBarrier);
 	int32_t row, col, rho, maxCol = -1, lastRow = -1;
 	const bool multiThreaded = (threadsCtx->threadsCount > 1);
+	const CompVMatPtr& directions = threadsCtx->directions;
+	const compv_float32_t* directionsPtr = NULL;
+	compv_float32_t directionInDegree;
 	int xmpd = 1;
 
 	void (*CompVHoughStdAccGatherRow_xmpd)(COMPV_ALIGNED(X) const int32_t* pCosRho, COMPV_ALIGNED(X) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta)
@@ -337,17 +346,37 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::cons
 		/*if (multiThreaded)*/ { // it's faster to remove the conditional branch (also, we're almost always in MT case)
 			maxCol = std::max(maxCol, col);
 		}
-		// update lastRow
+		// update lastRow and directionsPtr
 		if (lastRow != row) {
 			lastRow = row;
+			if (directions) {
+				directionsPtr = directions->ptr<compv_float32_t>(row);
+			}
 			CompVHoughStdRowTimesSinRho(pSinRho, static_cast<compv_uscalar_t>(row), rowTimesSinRhoPtr, maxThetaCountScalar);
 		}
-		// gather
-		CompVHoughStdAccGatherRow_xmpd(pCosRho, rowTimesSinRhoPtr, static_cast<compv_uscalar_t>(col), pACC, accStrideScalar, xmpd_consumed);
-		if (xmpd_trailling) {
-			for (compv_uscalar_t theta = xmpd_consumed; theta < maxThetaCountScalar; ++theta) {
+		
+		if (directionsPtr) {
+			// ftp://91.193.237.1/pub/docs/linux-support/computer%20science/computer%20vision/Computer%20Vision%20-%20Linda%20Shapiro.pdf
+			// Gradient direction vector is orthogonal to the local edge, no need to add 90deg
+			directionInDegree = COMPV_MATH_RADIAN_TO_DEGREE_FLOAT(directionsPtr[col]);
+			if (directionInDegree < 0) {
+				directionInDegree += 360;
+			}
+			compv_uscalar_t theta = static_cast<compv_uscalar_t>((maxThetaCountScalar * (directionInDegree / 360.f))); // quantize_angle
+			compv_uscalar_t thetaStart = theta < 20 ? 0 : (theta - 20);
+			compv_uscalar_t thetaEnd = COMPV_MATH_MIN((theta + 21), maxThetaCountScalar);
+			for (theta = thetaStart; theta < thetaEnd; ++theta) {
 				rho = (col * pCosRho[theta] + rowTimesSinRhoPtr[theta]) >> 16;
 				pACC[theta - (rho * accStrideInt32)]++; //!\\ Not thread-safe
+			}
+		}
+		else {
+			CompVHoughStdAccGatherRow_xmpd(pCosRho, rowTimesSinRhoPtr, static_cast<compv_uscalar_t>(col), pACC, accStrideScalar, xmpd_consumed);
+			if (xmpd_trailling) {
+				for (compv_uscalar_t theta = xmpd_consumed; theta < maxThetaCountScalar; ++theta) {
+					rho = (col * pCosRho[theta] + rowTimesSinRhoPtr[theta]) >> 16;
+					pACC[theta - (rho * accStrideInt32)]++; //!\\ Not thread-safe
+				}
 			}
 		}
 	}

@@ -28,7 +28,7 @@ public:
 	COMPV_OBJECT_GET_ID(CompVCornerDeteEdgeBase);
 
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
-	virtual COMPV_ERROR_CODE process(const CompVMatPtr& image, CompVMatPtrPtr edges) override /*Overrides(CompVEdgeDete)*/;
+	virtual COMPV_ERROR_CODE process(const CompVMatPtr& image, CompVMatPtrPtr edges, CompVMatPtrPtr directions = NULL) override /*Overrides(CompVEdgeDete)*/;
 
 	static COMPV_ERROR_CODE newObjSobel(CompVEdgeDetePtrPtr dete, float tLow = 0.68f, float tHigh = 0.68f*2.f, size_t kernSize = 3);
 	static COMPV_ERROR_CODE newObjScharr(CompVEdgeDetePtrPtr dete, float tLow = 0.68f, float tHigh = 0.68f*2.f, size_t kernSize = 3);

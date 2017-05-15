@@ -19,13 +19,6 @@ class COMPV_BASE_API CompVMathDistance
 public:
 	static COMPV_ERROR_CODE hamming(const uint8_t* dataPtr, size_t width, size_t height, size_t stride, const uint8_t* patch1xnPtr, int32_t* distPtr);
 
-	// r = abs(a) + abs(b)
-	template <typename InputType, typename OutputType>
-	static COMPV_ERROR_CODE l1(const InputType* a, const InputType* b, OutputType* r, size_t width, size_t height, size_t stride) {
-		COMPV_CHECK_CODE_RETURN((CompVMathUtils::sumAbs<InputType, OutputType>(a, b, r, width, height, stride)));
-		return COMPV_ERROR_CODE_S_OK;
-	}
-
 	// r = sqrt((a^2) + (b^2)) = hypot(a, b)
 	template <typename InputType, typename OutputType>
 	static COMPV_ERROR_CODE l2(const InputType* a, const InputType* b, OutputType* r, size_t width, size_t height, size_t stride) {

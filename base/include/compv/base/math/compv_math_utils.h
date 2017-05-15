@@ -108,6 +108,13 @@ public:
         return COMPV_ERROR_CODE_S_OK;
     }
 
+	template <typename InputType, typename OutputType>
+	static COMPV_ERROR_CODE atan2(const InputType* y, const InputType* x, OutputType* r, size_t width, size_t height, size_t stride) {
+		COMPV_CHECK_EXP_RETURN(!y || !x || !r || !width || !height || stride < width, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_CODE_RETURN((CompVMathUtils::atan2_C<InputType, OutputType>(y, x, r, width, height, stride)));
+		return COMPV_ERROR_CODE_S_OK;
+	}
+
     // ret = clip(min, max, v*scale)
     template <typename InputType, typename ScaleType, typename OutputType>
     static COMPV_ERROR_CODE scaleAndClip(const InputType* in, const ScaleType scale, OutputType*& out, OutputType min, OutputType max, size_t width, size_t height, size_t stride) {
@@ -212,6 +219,21 @@ private:
         mean = (InputType)(sum / count);
         return COMPV_ERROR_CODE_S_OK;
     }
+
+	template <typename InputType, typename OutputType>
+	static COMPV_ERROR_CODE atan2_C(const InputType* y, const InputType* x, OutputType* r, size_t width, size_t height, size_t stride) {
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+		size_t i, j;
+		for (j = 0; j < height; ++j) {
+			for (i = 0; i < width; ++i) {
+				r[i] = static_cast<OutputType>(COMPV_MATH_ATAN2(static_cast<OutputType>(y[i]), static_cast<OutputType>(x[i])));
+			}
+			y += stride;
+			x += stride;
+			r += stride;
+		}
+		return COMPV_ERROR_CODE_S_OK;
+	}
 
 	// ret = clip(min, max, v*scale)
 	template <typename InputType, typename ScaleType, typename OutputType>
