@@ -130,14 +130,17 @@ void CompVHoughStdNmsApplyRow_Intrin_NEON(COMPV_ALIGNED(NEON) int32_t* pACC, COM
 	const int32_t thresholdInt32 = static_cast<int32_t>(threshold);
 	static const uint8x16_t vecZero = vdupq_n_s32(0);
 	int32x4_t vec0, vec1, vec2, vec3, vec4;
+
+#define CompVHoughStdNmsApplyRowUseMask_Intrin_NEON 0
+#if CompVHoughStdNmsApplyRowUseMask_Intrin_NEON
 	uint8x8_t vec0n;
 	int mask;
-#if COMPV_ARCH_ARM32
+#	if COMPV_ARCH_ARM32
 	static const uint8x16_t vecMask = (uint32x4_t) { 0x8040201, 0x80402010, 0x8040201, 0x80402010 };
-#else
+#	else
 	static const uint8x16_t vecMask = (uint64x2_t) { 9241421688590303745ULL, 9241421688590303745ULL };
+#	endif
 #endif
-#define CompVHoughStdNmsApplyRowPush_Intrin_NEON(mask, index) if (mask & (1<<index)) lines.push_back(CompVHoughLine(static_cast<compv_float32_t>(barrier - row), (colStart + index) * theta, static_cast<size_t>(pACC[(colStart + index)])))
 
 	for (; colStart < maxCols - 15; colStart += 16) {
 		vec0 = vceqq_u8(vld1q_u8(&pNMS[colStart]), vecZero);
@@ -150,7 +153,8 @@ void CompVHoughStdNmsApplyRow_Intrin_NEON(COMPV_ALIGNED(NEON) int32_t* pACC, COM
 				vmovn_s16(vcombine_s16(vmovn_s32(vec1), vmovn_s32(vec2))),
 				vmovn_s16(vcombine_s16(vmovn_s32(vec3), vmovn_s32(vec4))));
 			vec0 = vandq_u8(vec0, vec1);
-
+#if CompVHoughStdNmsApplyRowUseMask_Intrin_NEON
+#define CompVHoughStdNmsApplyRowPush_Intrin_NEON(mask, index) if (mask & (1<<index)) lines.push_back(CompVHoughLine(static_cast<compv_float32_t>(barrier - row), (colStart + index) * theta, static_cast<size_t>(pACC[(colStart + index)])))
 			// mask = _mm_movemask_epi8(vec0);
 			vec0 = vandq_u8(vec0, vecMask);
 			vec0n = vpadd_u8(vget_low_u8(vec0), vget_high_u8(vec0));
@@ -167,6 +171,19 @@ void CompVHoughStdNmsApplyRow_Intrin_NEON(COMPV_ALIGNED(NEON) int32_t* pACC, COM
 				CompVHoughStdNmsApplyRowPush_Intrin_NEON(mask, 12); CompVHoughStdNmsApplyRowPush_Intrin_NEON(mask, 13);
 				CompVHoughStdNmsApplyRowPush_Intrin_NEON(mask, 14); CompVHoughStdNmsApplyRowPush_Intrin_NEON(mask, 15);
 			}
+#else
+#define CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec, index) if (vgetq_lane_u8(vec, index)) lines.push_back(CompVHoughLine(static_cast<compv_float32_t>(barrier - row), (colStart + index) * theta, static_cast<size_t>(pACC[(colStart + index)])))
+			if (COMPV_ARM_NEON_NEQ_ZERO(vec0)) {
+				CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 0); CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 1);
+				CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 2); CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 3);
+				CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 4); CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 5);
+				CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 6); CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 7);
+				CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 8); CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 9);
+				CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 10); CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 11);
+				CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 12); CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 13);
+				CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 14); CompVHoughStdNmsApplyRowPush_Intrin_NEON(vec0, 15);
+			}
+#endif /* CompVHoughStdNmsApplyRowUseMask_Intrin_NEON */
 		}
 		vst1q_u8(&pNMS[colStart], vecZero);
 	}
@@ -184,6 +201,9 @@ void CompVHoughStdNmsApplyRow_Intrin_NEON(COMPV_ALIGNED(NEON) int32_t* pACC, COM
 			));
 		}
 	}
+
+#undef CompVHoughStdNmsApplyRowUseMask_Intrin_NEON
+#undef CompVHoughStdNmsApplyRowPush_Intrin_NEON
 }
 
 // pSinRho and rowTimesSinRhoPtr must be strided and NEON-aligned -> reading beyond count
