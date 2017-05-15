@@ -8,6 +8,7 @@
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/parallel/compv_parallel.h"
 
+#include "compv/core/features/hough/intrin/arm/compv_core_feature_houghstd_intrin_neon.h"
 #include "compv/core/features/hough/intrin/x86/compv_core_feature_houghstd_intrin_sse2.h"
 #include "compv/core/features/hough/intrin/x86/compv_core_feature_houghstd_intrin_sse41.h"
 #include "compv/core/features/hough/intrin/x86/compv_core_feature_houghstd_intrin_avx2.h"
@@ -317,13 +318,13 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::cons
 #if COMPV_ARCH_X86
 	if (maxThetaCountScalar >= 16 && COMPV_IS_ALIGNED_SSE(pCosRho) && COMPV_IS_ALIGNED_SSE(rowTimesSinRhoPtr) && COMPV_IS_ALIGNED_SSE(pSinRho)) {
 		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
-			if (COMPV_IS_ALIGNED_SSE(m_SinRho->strideInBytes()) && COMPV_IS_ALIGNED_SSE(rowTimesSinRho->strideInBytes())) { // reading beyond
+			if (m_SinRho->isAlignedSSE() && rowTimesSinRho->isAlignedSSE()) { // reading beyond
 				COMPV_EXEC_IFDEF_INTRIN_X86(CompVHoughStdRowTimesSinRho = CompVHoughStdRowTimesSinRho_Intrin_SSE2);
 			}
 		}
 		if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughStdAccGatherRow_xmpd = CompVHoughStdAccGatherRow_4mpd_Intrin_SSE41, xmpd = 4));
-			if (COMPV_IS_ALIGNED_SSE(m_SinRho->strideInBytes()) && COMPV_IS_ALIGNED_SSE(rowTimesSinRho->strideInBytes())) { // reading beyond
+			if (m_SinRho->isAlignedSSE() && rowTimesSinRho->isAlignedSSE()) { // reading beyond
 				COMPV_EXEC_IFDEF_INTRIN_X86(CompVHoughStdRowTimesSinRho = CompVHoughStdRowTimesSinRho_Intrin_SSE41);
 				COMPV_EXEC_IFDEF_ASM_X86(CompVHoughStdRowTimesSinRho = CompVHoughStdRowTimesSinRho_Asm_X86_SSE41);
 			}
@@ -333,6 +334,15 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::cons
 		if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughStdAccGatherRow_xmpd = CompVHoughStdAccGatherRow_8mpd_Intrin_AVX2, xmpd = 8));
 			COMPV_EXEC_IFDEF_ASM_X86((CompVHoughStdAccGatherRow_xmpd = CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2, xmpd = 8));	
+		}
+	}
+#elif COMPV_ARCH_ARM
+	if (maxThetaCountScalar >= 16 && COMPV_IS_ALIGNED_NEON(pCosRho) && COMPV_IS_ALIGNED_NEON(rowTimesSinRhoPtr) && COMPV_IS_ALIGNED_NEON(pSinRho)) {
+		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+			COMPV_EXEC_IFDEF_INTRIN_ARM((CompVHoughStdAccGatherRow_xmpd = CompVHoughStdAccGatherRow_4mpd_Intrin_NEON, xmpd = 4));
+			if (m_SinRho->isAlignedNEON() && rowTimesSinRho->isAlignedNEON()) { // reading beyond
+				COMPV_EXEC_IFDEF_INTRIN_ARM(CompVHoughStdRowTimesSinRho = CompVHoughStdRowTimesSinRho_Intrin_NEON);
+			}
 		}
 	}
 #endif /* COMPV_ARCH_X86 */
@@ -433,6 +443,10 @@ COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount, Com
 		COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughStdNmsGatherRow = CompVHoughStdNmsGatherRow_4mpd_Intrin_SSE2, xmpd = 4));
 		COMPV_EXEC_IFDEF_ASM_X86((CompVHoughStdNmsGatherRow = CompVHoughStdNmsGatherRow_4mpd_Asm_X86_SSE2, xmpd = 4));
 	}
+#elif COMPV_ARCH_ARM
+	if (maxCols >= 8 && CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVHoughStdNmsGatherRow = CompVHoughStdNmsGatherRow_8mpd_Intrin_NEON, xmpd = 8));
+	}
 #endif /* COMPV_ARCH_X86 */
 
 	if (CompVHoughStdNmsGatherRow) {
@@ -475,6 +489,10 @@ COMPV_ERROR_CODE CompVHoughStd::nms_apply(size_t rowStart, size_t rowCount, Comp
 #if COMPV_ARCH_X86
 	if (cols >= 16 && CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(pACC) && COMPV_IS_ALIGNED_SSE(pNMS)) {
 		COMPV_EXEC_IFDEF_INTRIN_X86(CompVHoughStdNmsApplyRow = CompVHoughStdNmsApplyRow_Intrin_SSE2);
+	}
+#elif COMPV_ARCH_ARM
+	if (cols >= 16 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(pACC) && COMPV_IS_ALIGNED_NEON(pNMS)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVHoughStdNmsApplyRow = CompVHoughStdNmsApplyRow_Intrin_NEON);
 	}
 #endif /* COMPV_ARCH_X86 */
 	
