@@ -20,6 +20,7 @@ public:
 	static COMPV_ERROR_CODE newObj16s(CompVMatPtrPtr image, COMPV_SUBTYPE pixelFormat, size_t width, size_t height, size_t stride = 0);
 	static COMPV_ERROR_CODE readPixels(COMPV_SUBTYPE ePixelFormat, size_t width, size_t height, size_t stride, const char* filePath, CompVMatPtrPtr image);
 	static COMPV_ERROR_CODE wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPtr, size_t width, size_t height, size_t stride, CompVMatPtrPtr image);
+	static COMPV_ERROR_CODE clone(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut);
 
 	static COMPV_ERROR_CODE convert(const CompVMatPtr& imageIn, COMPV_SUBTYPE pixelFormatOut, CompVMatPtrPtr imageOut);
 	static COMPV_ERROR_CODE convertGrayscale(const CompVMatPtr& imageIn, CompVMatPtrPtr imageGray);

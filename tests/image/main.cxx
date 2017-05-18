@@ -13,7 +13,8 @@ using namespace compv;
 #define TEST_CONVLT					0
 #define TEST_SOBEL					0
 #define TEST_CANNY					0
-#define TEST_HOUGHSTD				1
+#define TEST_HOUGHSTD				0
+#define TEST_HOUGHKHT				1
 #define TEST_BRUTEFORCE				0
 #define TEST_DRAW_IMAGE				0
 #define TEST_DRAW_POINTS			0
@@ -65,8 +66,14 @@ compv_main()
 #endif
 #if TEST_HOUGHSTD
 		extern COMPV_ERROR_CODE houghstd();
-		COMPV_CHECK_CODE_BAIL(err = houghstd(), TAG_TEST_IMAGE "Houghstd line dete test failed");
+		COMPV_CHECK_CODE_BAIL(err = houghstd(), TAG_TEST_IMAGE "HoughStd line dete test failed");
 #endif
+#if TEST_HOUGHKHT
+		extern COMPV_ERROR_CODE houghkht();
+		COMPV_CHECK_CODE_BAIL(err = houghkht(), TAG_TEST_IMAGE "HoughKht line dete test failed");
+#endif
+
+		
 		
 #if TEST_BRUTEFORCE
 		extern COMPV_ERROR_CODE bruteforce();

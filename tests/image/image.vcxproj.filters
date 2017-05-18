@@ -53,7 +53,7 @@
     <ClCompile Include="canny.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hough.cxx">
+    <ClCompile Include="houghstd.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

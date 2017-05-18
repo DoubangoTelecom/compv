@@ -36,7 +36,7 @@ static void CompVHoughStdNmsApplyRow_C(int32_t* pACC, uint8_t* pNMS, size_t thre
 
 // threshold used for NMS
 CompVHoughStd::CompVHoughStd(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
-	:CompVHough(COMPV_HOUGH_STANDARD_ID)
+	:CompVHough(COMPV_HOUGHSTD_ID)
 	, m_fRho(rho)
 	, m_fTheta(theta)
 	, m_nThreshold(threshold)
@@ -255,7 +255,7 @@ COMPV_ERROR_CODE CompVHoughStd::newObj(CompVHoughPtrPtr hough, float rho COMPV_D
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::initCoords(float fRho, float fTheta, size_t nThreshold, size_t nWidth/*=0*/, size_t nHeight/*=0*/)
+COMPV_ERROR_CODE CompVHoughStd::initCoords(float fRho, float fTheta, size_t nThreshold, size_t nWidth COMPV_DEFAULT(0), size_t nHeight COMPV_DEFAULT(0))
 {
 	nWidth = !nWidth ? m_nWidth : nWidth;
 	nHeight = !nHeight ? m_nHeight : nHeight;
