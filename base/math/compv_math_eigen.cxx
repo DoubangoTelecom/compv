@@ -165,6 +165,58 @@ done:
 }
 
 template <class T>
+COMPV_ERROR_CODE  CompVMathEigen<T>::find2x2(const T(&A)[4], T(&D)[4], T(&Q)[4], bool sort COMPV_DEFAULT(true), bool norm COMPV_DEFAULT(true))
+{
+	// https://en.wikipedia.org/wiki/Eigenvalue_algorithm#2.C3.972_matrices
+	// http://www.math.harvard.edu/archive/21b_fall_04/exhibits/2dmatrices/index.html
+
+	// Eigenvalues
+	const T trace = A[0] + A[3];
+	const T trace_div2 = trace / static_cast<T>(2.0);
+	const T det = (A[0] * A[3]) - (A[1] * A[2]);
+	const T sqrt_trace_square_div4_minus_det = COMPV_MATH_SQRT(((trace * trace) / static_cast<T>(4.0)) - det);
+	D[1] = D[2] = 0.0;
+	D[0] = trace_div2 + sqrt_trace_square_div4_minus_det;
+	D[3] = trace_div2 - sqrt_trace_square_div4_minus_det;
+
+	// Eigenvectors
+	if (!CompVMathEigen<T>::isCloseToZero(A[2])) {
+		Q[0] = D[0] - A[3], Q[2] = A[2];
+		Q[1] = D[3] - A[3], Q[3] = A[2];
+	}
+	else if (!CompVMathEigen<T>::isCloseToZero(A[1])) {
+		Q[0] = A[1], Q[2] = D[0] - A[0];
+		Q[1] = A[1], Q[3] = D[3] - A[0];
+	}
+	else {
+		norm = false;
+		Q[0] = 1.0, Q[2] = 0.0;
+		Q[1] = 0.0, Q[3] = 1.0;
+	}
+
+	// Normalisation
+	if (norm) {
+		const T mag02 = static_cast<T>(1) / COMPV_MATH_SQRT(Q[0] * Q[0] + Q[2] * Q[2]);
+		const T mag13 = static_cast<T>(1) / COMPV_MATH_SQRT(Q[1] * Q[1] + Q[3] * Q[3]);
+		Q[0] *= mag02, Q[2] *= mag02;
+		Q[1] *= mag13, Q[3] *= mag13;
+	}
+
+	// sort: highest to lowest
+	if (sort && D[0] < D[3]) {
+		// sort vectors
+		T a = Q[0], b = Q[2];
+		Q[0] = Q[1], Q[2] = Q[3];
+		Q[1] = a, Q[3] = b;
+		// sort values
+		a = D[0];
+		D[0] = D[3], D[3] = a;
+	}
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+template <class T>
 T CompVMathEigen<T>::epsilon()
 {
 	return std::numeric_limits<T>::epsilon();

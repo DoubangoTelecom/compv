@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghstd_intrin_sse2.h"
+#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghsht_intrin_sse2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/intrin/x86/compv_intrin_sse.h"
@@ -13,7 +13,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 // 4mpd -> minpack 4 for dwords (int32) - for maxCols
-void CompVHoughStdNmsGatherRow_4mpd_Intrin_SSE2(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, compv_uscalar_t nThreshold, compv_uscalar_t colStart, compv_uscalar_t maxCols)
+void CompVHoughShtNmsGatherRow_4mpd_Intrin_SSE2(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, compv_uscalar_t nThreshold, compv_uscalar_t colStart, compv_uscalar_t maxCols)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	const __m128i vecThreshold = _mm_set1_epi32(static_cast<int32_t>(nThreshold));
@@ -49,7 +49,7 @@ void CompVHoughStdNmsGatherRow_4mpd_Intrin_SSE2(const int32_t * pAcc, compv_usca
 	}
 }
 
-void CompVHoughStdNmsApplyRow_Intrin_SSE2(COMPV_ALIGNED(SSE) int32_t* pACC, COMPV_ALIGNED(SSE) uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines)
+void CompVHoughShtNmsApplyRow_Intrin_SSE2(COMPV_ALIGNED(SSE) int32_t* pACC, COMPV_ALIGNED(SSE) uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 	const __m128i vecThreshold = _mm_set1_epi32(static_cast<int32_t>(threshold));
@@ -57,7 +57,7 @@ void CompVHoughStdNmsApplyRow_Intrin_SSE2(COMPV_ALIGNED(SSE) int32_t* pACC, COMP
 	static const __m128i vecZero = _mm_setzero_si128();
 	__m128i vec0, vec1, vec2, vec3, vec4;
 	int mask;
-#define CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, index) if (mask & (1<<index)) lines.push_back(CompVHoughLine(static_cast<compv_float32_t>(barrier - row), (colStart + index) * theta, static_cast<size_t>(pACC[(colStart + index)])))
+#define CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, index) if (mask & (1<<index)) lines.push_back(CompVHoughLine(static_cast<compv_float32_t>(barrier - row), (colStart + index) * theta, static_cast<size_t>(pACC[(colStart + index)])))
 
 	for (; colStart < maxCols - 15; colStart += 16) {
 		vec0 = _mm_cmpeq_epi8(_mm_load_si128(reinterpret_cast<const __m128i*>(&pNMS[colStart])), vecZero);
@@ -72,14 +72,14 @@ void CompVHoughStdNmsApplyRow_Intrin_SSE2(COMPV_ALIGNED(SSE) int32_t* pACC, COMP
 			vec0 = _mm_and_si128(vec0, vec1);
 			mask = _mm_movemask_epi8(vec0);
 			if (mask) {
-				CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 0); CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 1);
-				CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 2); CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 3);
-				CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 4); CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 5);
-				CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 6); CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 7);
-				CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 8); CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 9);
-				CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 10); CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 11);
-				CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 12); CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 13);
-				CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 14); CompVHoughStdNmsApplyRowPush_Intrin_SSE2(mask, 15);
+				CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 0); CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 1);
+				CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 2); CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 3);
+				CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 4); CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 5);
+				CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 6); CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 7);
+				CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 8); CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 9);
+				CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 10); CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 11);
+				CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 12); CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 13);
+				CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 14); CompVHoughShtNmsApplyRowPush_Intrin_SSE2(mask, 15);
 			}
 		}
 		_mm_store_si128(reinterpret_cast<__m128i*>(&pNMS[colStart]), vecZero);
@@ -103,7 +103,7 @@ void CompVHoughStdNmsApplyRow_Intrin_SSE2(COMPV_ALIGNED(SSE) int32_t* pACC, COMP
 // pSinRho and rowTimesSinRhoPtr must be strided and SSE-aligned -> reading beyond count
 // count must be >= 16
 // Not optimized, see SSE41 version
-void CompVHoughStdRowTimesSinRho_Intrin_SSE2(COMPV_ALIGNED(SSE) const int32_t* pSinRho, COMPV_ALIGNED(SSE) compv_uscalar_t row, COMPV_ALIGNED(SSE) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count)
+void CompVHoughShtRowTimesSinRho_Intrin_SSE2(COMPV_ALIGNED(SSE) const int32_t* pSinRho, COMPV_ALIGNED(SSE) compv_uscalar_t row, COMPV_ALIGNED(SSE) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count)
 {
 	const __m128i vecRowInt32 = _mm_set1_epi32(static_cast<int32_t>(row));
 	compv_uscalar_t i;

@@ -4,39 +4,39 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/core/features/hough/compv_core_feature_houghstd.h"
+#include "compv/core/features/hough/compv_core_feature_houghsht.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/parallel/compv_parallel.h"
 
-#include "compv/core/features/hough/intrin/arm/compv_core_feature_houghstd_intrin_neon.h"
-#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghstd_intrin_sse2.h"
-#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghstd_intrin_sse41.h"
-#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghstd_intrin_avx2.h"
+#include "compv/core/features/hough/intrin/arm/compv_core_feature_houghsht_intrin_neon.h"
+#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghsht_intrin_sse2.h"
+#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghsht_intrin_sse41.h"
+#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghsht_intrin_avx2.h"
 
-#define COMPV_THIS_CLASSNAME	"CompVHoughStd"
+#define COMPV_THIS_CLASSNAME	"CompVHoughSht"
 
-#define COMPV_FEATURE_HOUGHSTD_NMS_MIN_SAMPLES_PER_THREAD	(40*40)
-#define COMPV_FEATURE_HOUGHSTD_EDGES_MIN_SAMPLES_PER_THREAD	(40*40)
-#define COMPV_FEATURE_HOUGHSTD_ACC_MIN_SAMPLES_PER_THREAD	(1*30)
+#define COMPV_FEATURE_HOUGHSHT_NMS_MIN_SAMPLES_PER_THREAD	(40*40)
+#define COMPV_FEATURE_HOUGHSHT_EDGES_MIN_SAMPLES_PER_THREAD	(40*40)
+#define COMPV_FEATURE_HOUGHSHT_ACC_MIN_SAMPLES_PER_THREAD	(1*30)
 
 COMPV_NAMESPACE_BEGIN()
 
 #if COMPV_ASM
 #	if COMPV_ARCH_X86
-	COMPV_EXTERNC void CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const int32_t* pCosRho, COMPV_ALIGNED(AVX) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta);
-	COMPV_EXTERNC void CompVHoughStdNmsGatherRow_4mpd_Asm_X86_SSE2(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, compv_uscalar_t nThreshold, compv_uscalar_t colStart, compv_uscalar_t maxCols);
-	COMPV_EXTERNC void CompVHoughStdRowTimesSinRho_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const int32_t* pSinRho, COMPV_ALIGNED(SSE) compv_uscalar_t row, COMPV_ALIGNED(SSE) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count);
+	COMPV_EXTERNC void CompVHoughShtAccGatherRow_8mpd_Asm_X86_AVX2(COMPV_ALIGNED(AVX) const int32_t* pCosRho, COMPV_ALIGNED(AVX) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta);
+	COMPV_EXTERNC void CompVHoughShtNmsGatherRow_4mpd_Asm_X86_SSE2(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, compv_uscalar_t nThreshold, compv_uscalar_t colStart, compv_uscalar_t maxCols);
+	COMPV_EXTERNC void CompVHoughShtRowTimesSinRho_Asm_X86_SSE41(COMPV_ALIGNED(SSE) const int32_t* pSinRho, COMPV_ALIGNED(SSE) compv_uscalar_t row, COMPV_ALIGNED(SSE) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count);
 #	endif /* COMPV_ARCH_X86 */
 #endif /* COMPV_ASM */
 
-static void CompVHoughStdRowTimesSinRho_C(const int32_t* pSinRho, compv_uscalar_t row, int32_t* rowTimesSinRhoPtr, compv_uscalar_t count);
-static void CompVHoughStdAccGatherRow_C(const int32_t* pCosRho, const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta);
-static void CompVHoughStdNmsGatherRow_C(const int32_t * pAcc, size_t nAccStride, uint8_t* pNms, size_t nThreshold, size_t colStart, size_t maxCols);
-static void CompVHoughStdNmsApplyRow_C(int32_t* pACC, uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines);
+static void CompVHoughShtRowTimesSinRho_C(const int32_t* pSinRho, compv_uscalar_t row, int32_t* rowTimesSinRhoPtr, compv_uscalar_t count);
+static void CompVHoughShtAccGatherRow_C(const int32_t* pCosRho, const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta);
+static void CompVHoughShtNmsGatherRow_C(const int32_t * pAcc, size_t nAccStride, uint8_t* pNms, size_t nThreshold, size_t colStart, size_t maxCols);
+static void CompVHoughShtNmsApplyRow_C(int32_t* pACC, uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines);
 
 // threshold used for NMS
-CompVHoughStd::CompVHoughStd(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
-	:CompVHough(COMPV_HOUGHSTD_ID)
+CompVHoughSht::CompVHoughSht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrig1Rad), size_t threshold COMPV_DEFAULT(1))
+	:CompVHough(COMPV_HOUGHSHT_ID)
 	, m_fRho(rho)
 	, m_fTheta(theta)
 	, m_nThreshold(threshold)
@@ -47,19 +47,21 @@ CompVHoughStd::CompVHoughStd(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEF
 
 }
 
-CompVHoughStd:: ~CompVHoughStd()
+CompVHoughSht:: ~CompVHoughSht()
 {
 
 }
 
 // override CompVSettable::set
-COMPV_ERROR_CODE CompVHoughStd::set(int id, const void* valuePtr, size_t valueSize) /*Overrides(CompVCaps)*/
+COMPV_ERROR_CODE CompVHoughSht::set(int id, const void* valuePtr, size_t valueSize) /*Overrides(CompVCaps)*/
 {
 	COMPV_CHECK_EXP_RETURN(!valuePtr || !valueSize, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	switch (id) {
 	case COMPV_HOUGH_SET_FLT32_RHO: {
 		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(compv_float32_t) || *reinterpret_cast<const compv_float32_t*>(valuePtr) <= 0.f || *reinterpret_cast<const compv_float32_t*>(valuePtr) > 1.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		const compv_float32_t fRho = *reinterpret_cast<const compv_float32_t*>(valuePtr);
+		// TODO(dmi): add support for fractional rho
+		COMPV_CHECK_EXP_RETURN(fRho != 1.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "SHT implementation requires rho equal to 1f. Please use KHT implementation for fractional rho values");
 		COMPV_CHECK_CODE_RETURN(initCoords(fRho, m_fTheta, m_nThreshold, m_nWidth, m_nHeight));
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -87,7 +89,7 @@ COMPV_ERROR_CODE CompVHoughStd::set(int id, const void* valuePtr, size_t valueSi
 	}
 }
 
-COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLineVector& lines, const CompVMatPtr& directions COMPV_DEFAULT(NULL)) /*Overrides(CompVHough)*/
+COMPV_ERROR_CODE CompVHoughSht::process(const CompVMatPtr& edges, CompVHoughLineVector& lines, const CompVMatPtr& directions COMPV_DEFAULT(NULL)) /*Overrides(CompVHough)*/
 {
 	COMPV_CHECK_EXP_RETURN(!edges || edges->isEmpty() || edges->subType() != COMPV_SUBTYPE_PIXELS_Y, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Edges null or not grayscale");
 
@@ -106,28 +108,28 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLine
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	if (maxThreads > 1) {
-		threadsCountEdges = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(edges->cols(), edges->rows(), maxThreads, COMPV_FEATURE_HOUGHSTD_EDGES_MIN_SAMPLES_PER_THREAD);
+		threadsCountEdges = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(edges->cols(), edges->rows(), maxThreads, COMPV_FEATURE_HOUGHSHT_EDGES_MIN_SAMPLES_PER_THREAD);
 	}
 
 	// Edges gathering: the edges are always unequally distributed (some regions have almost no edge) which
 	// means some threads will almost execute no code. This is why we collect the edges to make sure
 	// all threads will have enough work to do.
-	std::vector<CompVHoughStdEdge >vecEdges;
+	std::vector<CompVHoughShtEdge >vecEdges;
 	if (threadsCountEdges > 1) {
 		const size_t countAny = (edges->rows() / threadsCountEdges);
 		const size_t countLast = countAny + (edges->rows() % threadsCountEdges);
-		std::vector<std::vector<CompVHoughStdEdge > > vecVecEdges;
+		std::vector<std::vector<CompVHoughShtEdge > > vecVecEdges;
 		vecVecEdges.resize(threadsCountEdges);
 		auto funcPtrEdgesGather = [&](size_t rowStart, size_t rowCount, size_t threadIdx) -> COMPV_ERROR_CODE {
 			const int32_t rowStartInt32 = static_cast<int32_t>(rowStart);
 			const int32_t rowEndInt32 = static_cast<int32_t>(rowStart + rowCount);
 			const int32_t colsInt32 = static_cast<int32_t>(edges->cols());
 			const uint8_t* edgesPtr = edges->ptr<const uint8_t>(rowStart);
-			std::vector<CompVHoughStdEdge >& mtVecEdges = vecVecEdges[threadIdx];
+			std::vector<CompVHoughShtEdge >& mtVecEdges = vecVecEdges[threadIdx];
 			for (int32_t j = rowStartInt32; j < rowEndInt32; ++j) {
 				for (int32_t i = 0; i < colsInt32; ++i) {
 					if (edgesPtr[i]) {
-						mtVecEdges.push_back(CompVHoughStdEdge(j, i));
+						mtVecEdges.push_back(CompVHoughShtEdge(j, i));
 					}
 				}
 				edgesPtr += edges->strideInBytes();
@@ -154,7 +156,7 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLine
 		for (int32_t j = 0; j < edges_rows; ++j) {
 			for (int32_t i = 0; i < edges_cols; ++i) {
 				if (edges_ptr[i]) {
-					vecEdges.push_back(CompVHoughStdEdge(j, i));
+					vecEdges.push_back(CompVHoughShtEdge(j, i));
 				}
 			}
 			edges_ptr += edges->strideInBytes();
@@ -163,8 +165,8 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLine
 	
 	// Compute number of threads
 	if (maxThreads > 1) {
-		threadsCountNMS = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_NMS->cols(), m_NMS->rows(), maxThreads, COMPV_FEATURE_HOUGHSTD_NMS_MIN_SAMPLES_PER_THREAD);
-		threadsCountACC = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, vecEdges.size(), maxThreads, COMPV_FEATURE_HOUGHSTD_ACC_MIN_SAMPLES_PER_THREAD);
+		threadsCountNMS = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_NMS->cols(), m_NMS->rows(), maxThreads, COMPV_FEATURE_HOUGHSHT_NMS_MIN_SAMPLES_PER_THREAD);
+		threadsCountACC = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, vecEdges.size(), maxThreads, COMPV_FEATURE_HOUGHSHT_ACC_MIN_SAMPLES_PER_THREAD);
 	}
 
 	// Accumulator gathering
@@ -174,12 +176,12 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLine
 	if (threadsCountACC > 1) {
 		COMPV_CHECK_CODE_RETURN(CompVMutex::newObj(&accThreadsCtx.mutex));
 		const size_t countAny = (vecEdges.size() / threadsCountACC);
-		auto funcPtrAccGather = [&](std::vector<CompVHoughStdEdge >::const_iterator &begin, std::vector<CompVHoughStdEdge >::const_iterator &end) -> COMPV_ERROR_CODE {
+		auto funcPtrAccGather = [&](std::vector<CompVHoughShtEdge >::const_iterator &begin, std::vector<CompVHoughShtEdge >::const_iterator &end) -> COMPV_ERROR_CODE {
 			COMPV_CHECK_CODE_RETURN(acc_gather(begin, end, &accThreadsCtx));
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		size_t threadIdx;
-		std::vector<CompVHoughStdEdge >::const_iterator begin;
+		std::vector<CompVHoughShtEdge >::const_iterator begin;
 		CompVAsyncTaskIds taskIds;
 		for (threadIdx = 0, begin = vecEdges.begin(); threadIdx < threadsCountACC; ++threadIdx, begin += countAny) {
 			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrAccGather, begin, (threadIdx == (threadsCountACC - 1)) ? vecEdges.end() : (begin + countAny)), taskIds));
@@ -242,20 +244,32 @@ COMPV_ERROR_CODE CompVHoughStd::process(const CompVMatPtr& edges, CompVHoughLine
 		lines.resize(maxLines);
 	}
 
+#if 0
+	// Scale rho
+	if (m_fRho != 1.f) {
+		const float rho_scale = 1.0f / m_fRho;
+		for (CompVHoughLineVector::iterator i = lines.begin(); i < lines.end(); ++i) {
+			i->rho *= rho_scale;
+		}
+	}
+#endif
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::newObj(CompVHoughPtrPtr hough, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
+COMPV_ERROR_CODE CompVHoughSht::newObj(CompVHoughPtrPtr hough, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrig1Rad), size_t threshold COMPV_DEFAULT(1))
 {
 	COMPV_CHECK_EXP_RETURN(!hough || rho <=0 || rho > 1.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	CompVHoughPtr hough_ = new CompVHoughStd(rho, theta, threshold);
+	// TODO(dmi): add support for fractional rho
+	COMPV_CHECK_EXP_RETURN(rho != 1.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "SHT implementation requires rho equal to 1f. Please use KHT implementation for fractional rho values");
+	CompVHoughPtr hough_ = new CompVHoughSht(rho, theta, threshold);
 	COMPV_CHECK_EXP_RETURN(!hough_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 
 	*hough = *hough_;
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::initCoords(float fRho, float fTheta, size_t nThreshold, size_t nWidth COMPV_DEFAULT(0), size_t nHeight COMPV_DEFAULT(0))
+COMPV_ERROR_CODE CompVHoughSht::initCoords(float fRho, float fTheta, size_t nThreshold, size_t nWidth COMPV_DEFAULT(0), size_t nHeight COMPV_DEFAULT(0))
 {
 	nWidth = !nWidth ? m_nWidth : nWidth;
 	nHeight = !nHeight ? m_nHeight : nHeight;
@@ -287,7 +301,7 @@ COMPV_ERROR_CODE CompVHoughStd::initCoords(float fRho, float fTheta, size_t nThr
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::const_iterator start, std::vector<CompVHoughStdEdge >::const_iterator end, CompVHoughAccThreadsCtx* threadsCtx)
+COMPV_ERROR_CODE CompVHoughSht::acc_gather(std::vector<CompVHoughShtEdge >::const_iterator start, std::vector<CompVHoughShtEdge >::const_iterator end, CompVHoughAccThreadsCtx* threadsCtx)
 {
 	CompVPtr<CompVMemZero<int32_t> *> acc;
 	CompVMatPtr rowTimesSinRho; // row * pSinRho[theta]
@@ -310,38 +324,38 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::cons
 	compv_float32_t directionInDegree;
 	int xmpd = 1;
 
-	void (*CompVHoughStdAccGatherRow_xmpd)(COMPV_ALIGNED(X) const int32_t* pCosRho, COMPV_ALIGNED(X) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta)
-		= CompVHoughStdAccGatherRow_C;
-	void(*CompVHoughStdRowTimesSinRho)(COMPV_ALIGNED(x) const int32_t* pSinRho, COMPV_ALIGNED(x) compv_uscalar_t row, COMPV_ALIGNED(SSE) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count)
-		= CompVHoughStdRowTimesSinRho_C;
+	void (*CompVHoughShtAccGatherRow_xmpd)(COMPV_ALIGNED(X) const int32_t* pCosRho, COMPV_ALIGNED(X) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta)
+		= CompVHoughShtAccGatherRow_C;
+	void(*CompVHoughShtRowTimesSinRho)(COMPV_ALIGNED(x) const int32_t* pSinRho, COMPV_ALIGNED(x) compv_uscalar_t row, COMPV_ALIGNED(SSE) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count)
+		= CompVHoughShtRowTimesSinRho_C;
 
 #if COMPV_ARCH_X86
 	if (maxThetaCountScalar >= 16 && COMPV_IS_ALIGNED_SSE(pCosRho) && COMPV_IS_ALIGNED_SSE(rowTimesSinRhoPtr) && COMPV_IS_ALIGNED_SSE(pSinRho)) {
 		if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
 			if (m_SinRho->isAlignedSSE() && rowTimesSinRho->isAlignedSSE()) { // reading beyond
-				COMPV_EXEC_IFDEF_INTRIN_X86(CompVHoughStdRowTimesSinRho = CompVHoughStdRowTimesSinRho_Intrin_SSE2);
+				COMPV_EXEC_IFDEF_INTRIN_X86(CompVHoughShtRowTimesSinRho = CompVHoughShtRowTimesSinRho_Intrin_SSE2);
 			}
 		}
 		if (CompVCpu::isEnabled(kCpuFlagSSE41)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughStdAccGatherRow_xmpd = CompVHoughStdAccGatherRow_4mpd_Intrin_SSE41, xmpd = 4));
+			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughShtAccGatherRow_xmpd = CompVHoughShtAccGatherRow_4mpd_Intrin_SSE41, xmpd = 4));
 			if (m_SinRho->isAlignedSSE() && rowTimesSinRho->isAlignedSSE()) { // reading beyond
-				COMPV_EXEC_IFDEF_INTRIN_X86(CompVHoughStdRowTimesSinRho = CompVHoughStdRowTimesSinRho_Intrin_SSE41);
-				COMPV_EXEC_IFDEF_ASM_X86(CompVHoughStdRowTimesSinRho = CompVHoughStdRowTimesSinRho_Asm_X86_SSE41);
+				COMPV_EXEC_IFDEF_INTRIN_X86(CompVHoughShtRowTimesSinRho = CompVHoughShtRowTimesSinRho_Intrin_SSE41);
+				COMPV_EXEC_IFDEF_ASM_X86(CompVHoughShtRowTimesSinRho = CompVHoughShtRowTimesSinRho_Asm_X86_SSE41);
 			}
 		}
 	}
 	if (maxThetaCountScalar >= 32 && COMPV_IS_ALIGNED_AVX2(pCosRho) && COMPV_IS_ALIGNED_AVX2(rowTimesSinRhoPtr) && COMPV_IS_ALIGNED_AVX2(pSinRho)) {
 		if (CompVCpu::isEnabled(kCpuFlagAVX2)) {
-			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughStdAccGatherRow_xmpd = CompVHoughStdAccGatherRow_8mpd_Intrin_AVX2, xmpd = 8));
-			COMPV_EXEC_IFDEF_ASM_X86((CompVHoughStdAccGatherRow_xmpd = CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2, xmpd = 8));	
+			COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughShtAccGatherRow_xmpd = CompVHoughShtAccGatherRow_8mpd_Intrin_AVX2, xmpd = 8));
+			COMPV_EXEC_IFDEF_ASM_X86((CompVHoughShtAccGatherRow_xmpd = CompVHoughShtAccGatherRow_8mpd_Asm_X86_AVX2, xmpd = 8));	
 		}
 	}
 #elif COMPV_ARCH_ARM
 	if (maxThetaCountScalar >= 16 && COMPV_IS_ALIGNED_NEON(pCosRho) && COMPV_IS_ALIGNED_NEON(rowTimesSinRhoPtr) && COMPV_IS_ALIGNED_NEON(pSinRho)) {
 		if (CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
-			COMPV_EXEC_IFDEF_INTRIN_ARM((CompVHoughStdAccGatherRow_xmpd = CompVHoughStdAccGatherRow_4mpd_Intrin_NEON, xmpd = 4));
+			COMPV_EXEC_IFDEF_INTRIN_ARM((CompVHoughShtAccGatherRow_xmpd = CompVHoughShtAccGatherRow_4mpd_Intrin_NEON, xmpd = 4));
 			if (m_SinRho->isAlignedNEON() && rowTimesSinRho->isAlignedNEON()) { // reading beyond
-				COMPV_EXEC_IFDEF_INTRIN_ARM(CompVHoughStdRowTimesSinRho = CompVHoughStdRowTimesSinRho_Intrin_NEON);
+				COMPV_EXEC_IFDEF_INTRIN_ARM(CompVHoughShtRowTimesSinRho = CompVHoughShtRowTimesSinRho_Intrin_NEON);
 			}
 		}
 	}
@@ -349,7 +363,7 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::cons
 	
 	const compv_uscalar_t xmpd_consumed = xmpd == 1 ? 0 : (maxThetaCountScalar & -xmpd); // "1" not multuple of "2" and cannot used for backward align
 	const compv_uscalar_t xmpd_trailling = (maxThetaCountScalar - xmpd_consumed);
-	for (std::vector<CompVHoughStdEdge >::const_iterator it = start; it < end; ++it) {
+	for (std::vector<CompVHoughShtEdge >::const_iterator it = start; it < end; ++it) {
 		row = it->row;
 		col = it->col;
 		// update maxCol 
@@ -362,7 +376,7 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::cons
 			if (directions) {
 				directionsPtr = directions->ptr<compv_float32_t>(row);
 			}
-			CompVHoughStdRowTimesSinRho(pSinRho, static_cast<compv_uscalar_t>(row), rowTimesSinRhoPtr, maxThetaCountScalar);
+			CompVHoughShtRowTimesSinRho(pSinRho, static_cast<compv_uscalar_t>(row), rowTimesSinRhoPtr, maxThetaCountScalar);
 		}
 		
 		if (directionsPtr) {
@@ -381,7 +395,7 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::cons
 			}
 		}
 		else {
-			CompVHoughStdAccGatherRow_xmpd(pCosRho, rowTimesSinRhoPtr, static_cast<compv_uscalar_t>(col), pACC, accStrideScalar, xmpd_consumed);
+			CompVHoughShtAccGatherRow_xmpd(pCosRho, rowTimesSinRhoPtr, static_cast<compv_uscalar_t>(col), pACC, accStrideScalar, xmpd_consumed);
 			if (xmpd_trailling) {
 				for (compv_uscalar_t theta = xmpd_consumed; theta < maxThetaCountScalar; ++theta) {
 					rho = (col * pCosRho[theta] + rowTimesSinRhoPtr[theta]) >> 16;
@@ -420,7 +434,7 @@ COMPV_ERROR_CODE CompVHoughStd::acc_gather(std::vector<CompVHoughStdEdge >::cons
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc)
+COMPV_ERROR_CODE CompVHoughSht::nms_gather(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc)
 {
 	const size_t rows = m_NMS->rows();
 	const size_t maxCols = m_NMS->cols() - 1;
@@ -435,25 +449,25 @@ COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount, Com
 	const compv_uscalar_t accStrideScalar = static_cast<compv_uscalar_t>(accStride);
 	const compv_uscalar_t maxColsScalar = static_cast<compv_uscalar_t>(maxCols);
 	int xmpd = 1;
-	void(*CompVHoughStdNmsGatherRow)(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, compv_uscalar_t nThreshold, compv_uscalar_t colStart, compv_uscalar_t maxCols) 
+	void(*CompVHoughShtNmsGatherRow)(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, compv_uscalar_t nThreshold, compv_uscalar_t colStart, compv_uscalar_t maxCols) 
 		= NULL;
 
 #if COMPV_ARCH_X86
 	if (maxCols >= 4 && CompVCpu::isEnabled(kCpuFlagSSE2)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughStdNmsGatherRow = CompVHoughStdNmsGatherRow_4mpd_Intrin_SSE2, xmpd = 4));
-		COMPV_EXEC_IFDEF_ASM_X86((CompVHoughStdNmsGatherRow = CompVHoughStdNmsGatherRow_4mpd_Asm_X86_SSE2, xmpd = 4));
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughShtNmsGatherRow = CompVHoughShtNmsGatherRow_4mpd_Intrin_SSE2, xmpd = 4));
+		COMPV_EXEC_IFDEF_ASM_X86((CompVHoughShtNmsGatherRow = CompVHoughShtNmsGatherRow_4mpd_Asm_X86_SSE2, xmpd = 4));
 	}
 #elif COMPV_ARCH_ARM
 	if (maxCols >= 8 && CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
-		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVHoughStdNmsGatherRow = CompVHoughStdNmsGatherRow_8mpd_Intrin_NEON, xmpd = 8));
+		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVHoughShtNmsGatherRow = CompVHoughShtNmsGatherRow_8mpd_Intrin_NEON, xmpd = 8));
 	}
 #endif /* COMPV_ARCH_X86 */
 
-	if (CompVHoughStdNmsGatherRow) {
+	if (CompVHoughShtNmsGatherRow) {
 		const int32_t* xmpd_pACC = pACC;
 		uint8_t* xmpd_pNMS = pNMS;
 		for (row = rowStart; row < rowEnd; ++row) {
-			CompVHoughStdNmsGatherRow(xmpd_pACC, accStrideScalar, xmpd_pNMS, m_nThreshold, 1, maxColsScalar);
+			CompVHoughShtNmsGatherRow(xmpd_pACC, accStrideScalar, xmpd_pNMS, m_nThreshold, 1, maxColsScalar);
 			xmpd_pACC += accStride, xmpd_pNMS += nmsStride;
 		}
 	}
@@ -465,14 +479,14 @@ COMPV_ERROR_CODE CompVHoughStd::nms_gather(size_t rowStart, size_t rowCount, Com
 	size_t remains = (maxCols - consumed);
 	if (remains) {
 		for (row = rowStart; row < rowEnd; ++row) {
-			CompVHoughStdNmsGatherRow_C(&pACC[consumed], accStride, &pNMS[consumed], m_nThreshold, consumed, remains);
+			CompVHoughShtNmsGatherRow_C(&pACC[consumed], accStride, &pNMS[consumed], m_nThreshold, consumed, remains);
 			pACC += accStride, pNMS += nmsStride;
 		}
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughStd::nms_apply(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc, CompVHoughLineVector& lines)
+COMPV_ERROR_CODE CompVHoughSht::nms_apply(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc, CompVHoughLineVector& lines)
 {
 	size_t cols = m_NMS->cols();
 	int32_t rEnd = static_cast<int32_t>(COMPV_MATH_MIN((rowStart + rowCount), m_NMS->rows()));
@@ -483,27 +497,27 @@ COMPV_ERROR_CODE CompVHoughStd::nms_apply(size_t rowStart, size_t rowCount, Comp
 	int32_t nBarrier = static_cast<int32_t>(m_nBarrier);
 	COMPV_CHECK_CODE_RETURN(m_NMS->strideInElts(nmsStride));
 	accStride = acc->stride();
-	void(*CompVHoughStdNmsApplyRow)(COMPV_ALIGNED(X) int32_t* pACC, COMPV_ALIGNED(X) uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines)
-		= CompVHoughStdNmsApplyRow_C;
+	void(*CompVHoughShtNmsApplyRow)(COMPV_ALIGNED(X) int32_t* pACC, COMPV_ALIGNED(X) uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines)
+		= CompVHoughShtNmsApplyRow_C;
 
 #if COMPV_ARCH_X86
 	if (cols >= 16 && CompVCpu::isEnabled(kCpuFlagSSE2) && COMPV_IS_ALIGNED_SSE(pACC) && COMPV_IS_ALIGNED_SSE(pNMS)) {
-		COMPV_EXEC_IFDEF_INTRIN_X86(CompVHoughStdNmsApplyRow = CompVHoughStdNmsApplyRow_Intrin_SSE2);
+		COMPV_EXEC_IFDEF_INTRIN_X86(CompVHoughShtNmsApplyRow = CompVHoughShtNmsApplyRow_Intrin_SSE2);
 	}
 #elif COMPV_ARCH_ARM
 	if (cols >= 16 && CompVCpu::isEnabled(kCpuFlagARM_NEON) && COMPV_IS_ALIGNED_NEON(pACC) && COMPV_IS_ALIGNED_NEON(pNMS)) {
-		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVHoughStdNmsApplyRow = CompVHoughStdNmsApplyRow_Intrin_NEON);
+		COMPV_EXEC_IFDEF_INTRIN_ARM(CompVHoughShtNmsApplyRow = CompVHoughShtNmsApplyRow_Intrin_NEON);
 	}
 #endif /* COMPV_ARCH_X86 */
 	
 	for (int32_t row = rStart; row < rEnd; ++row) {
-		CompVHoughStdNmsApplyRow(pACC, pNMS, m_nThreshold, m_fTheta, nBarrier, row, 0, cols, lines); // use colStart at 0 to have SIMD aligned
+		CompVHoughShtNmsApplyRow(pACC, pNMS, m_nThreshold, m_fTheta, nBarrier, row, 0, cols, lines); // use colStart at 0 to have SIMD aligned
 		pACC += accStride, pNMS += nmsStride;
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-static void CompVHoughStdRowTimesSinRho_C(const int32_t* pSinRho, compv_uscalar_t row, int32_t* rowTimesSinRhoPtr, compv_uscalar_t count)
+static void CompVHoughShtRowTimesSinRho_C(const int32_t* pSinRho, compv_uscalar_t row, int32_t* rowTimesSinRhoPtr, compv_uscalar_t count)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for GPU implementation found");
 	const int32_t rowInt32 = static_cast<int32_t>(row);
@@ -513,7 +527,7 @@ static void CompVHoughStdRowTimesSinRho_C(const int32_t* pSinRho, compv_uscalar_
 }
 
 // Not thread-safe
-static void CompVHoughStdAccGatherRow_C(const int32_t* pCosRho, const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta)
+static void CompVHoughShtAccGatherRow_C(const int32_t* pCosRho, const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for GPU implementation found");
 	int32_t rhoInt32;
@@ -525,7 +539,7 @@ static void CompVHoughStdAccGatherRow_C(const int32_t* pCosRho, const int32_t* p
 	}
 }
 
-static void CompVHoughStdNmsGatherRow_C(const int32_t * pAcc, size_t nAccStride, uint8_t* pNms, size_t nThreshold, size_t colStart, size_t maxCols)
+static void CompVHoughShtNmsGatherRow_C(const int32_t * pAcc, size_t nAccStride, uint8_t* pNms, size_t nThreshold, size_t colStart, size_t maxCols)
 {
 #if 0 // See calling function
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for GPU implementation found");
@@ -547,7 +561,7 @@ static void CompVHoughStdNmsGatherRow_C(const int32_t * pAcc, size_t nAccStride,
 	}
 }
 
-static void CompVHoughStdNmsApplyRow_C(int32_t* pACC, uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines)
+static void CompVHoughShtNmsApplyRow_C(int32_t* pACC, uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines)
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for GPU implementation found");
 	const int32_t thresholdInt32 = static_cast<int32_t>(threshold);

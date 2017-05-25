@@ -10,9 +10,9 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(CompVHoughStdAccGatherRow_4mpd_Asm_X86_SSE41)
-global sym(CompVHoughStdNmsGatherRow_4mpd_Asm_X86_SSE2)
-global sym(CompVHoughStdRowTimesSinRho_Asm_X86_SSE41)
+global sym(CompVHoughShtAccGatherRow_4mpd_Asm_X86_SSE41)
+global sym(CompVHoughShtNmsGatherRow_4mpd_Asm_X86_SSE2)
+global sym(CompVHoughShtRowTimesSinRho_Asm_X86_SSE41)
 
 section .data
 
@@ -25,7 +25,7 @@ section .text
 ; arg(3) -> int32_t* pACC
 ; arg(4) -> compv_uscalar_t accStride
 ; arg(5) -> compv_uscalar_t maxTheta
-sym(CompVHoughStdAccGatherRow_4mpd_Asm_X86_SSE41): ; !!Not used!!
+sym(CompVHoughShtAccGatherRow_4mpd_Asm_X86_SSE41): ; !!Not used!!
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -109,7 +109,7 @@ sym(CompVHoughStdAccGatherRow_4mpd_Asm_X86_SSE41): ; !!Not used!!
 ; arg(3) -> compv_uscalar_t nThreshold
 ; arg(4) -> compv_uscalar_t colStart
 ; arg(5) -> compv_uscalar_t maxCols
-sym(CompVHoughStdNmsGatherRow_4mpd_Asm_X86_SSE2):
+sym(CompVHoughShtNmsGatherRow_4mpd_Asm_X86_SSE2):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 6
@@ -207,7 +207,7 @@ sym(CompVHoughStdNmsGatherRow_4mpd_Asm_X86_SSE2):
 ; arg(1) -> COMPV_ALIGNED(SSE) compv_uscalar_t row
 ; arg(2) -> COMPV_ALIGNED(SSE) int32_t* rowTimesSinRhoPtr
 ; arg(3) -> compv_uscalar_t count
-sym(CompVHoughStdRowTimesSinRho_Asm_X86_SSE41):
+sym(CompVHoughShtRowTimesSinRho_Asm_X86_SSE41):
 	push rbp
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 4

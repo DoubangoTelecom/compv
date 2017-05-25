@@ -16,10 +16,16 @@ using namespace compv;
 #define CANNY_HIGH			CANNY_LOW*2.f
 #define CANNY_KERNEL_SIZE	3
 
-#define HOUGH_RHO			1.f // rho step, must be within ]0, 1]
-#define HOUGH_THETA			kfMathTrigPiOver180 // radian(1d)
-#define HOUGH_THRESHOLD		150 // minumum number of aligned points to form a line (also used in NMS)
-#define HOUGH_MAXLINES		20 // maximum number of lines to retains (best) - use value <=0 to retain all
+#define HOUGH_ID							COMPV_HOUGHKHT_ID
+#define HOUGH_RHO							(1.0f * 0.5f) // "rho-delta" (half-pixel)
+#define HOUGH_THETA							(kfMathTrig1Rad * 0.5f) // "theta-delta" (half-radian)
+#define HOUGH_THRESHOLD						150 // minumum number of aligned points to form a line (also used in NMS)
+#define HOUGH_MAXLINES						20 // maximum number of lines to retains (best) - use value <=0 to retain all
+#define HOUGHKHT_THRESHOLD					1 // keep all votes and filter later using MAXLINES
+#define HOUGHKHT_CLUSTER_MIN_DEVIATION		2.0f
+#define HOUGHKHT_CLUSTER_MIN_SIZE			10
+#define HOUGHKHT_KERNEL_MIN_HEIGTH			0.002f
+
 
 #define TAG_SAMPLE			"Hough lines detector"
 
@@ -74,10 +80,12 @@ public:
 			CompVHoughLineVector lines;
 			CompVMatPtr points;
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
-			COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(imageGray, &edges));
+			//COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(imageGray, &edges));
+			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1020, 960, 1020, "C:/Projects/GitHub/data/hough/road_binary1020x960_gray.yuv", &edges));
 			COMPV_CHECK_CODE_RETURN(m_ptrHough->process(edges, lines));
+			
 			if (!lines.empty()) {
-				COMPV_CHECK_CODE_RETURN(buildLines(edges->cols(), lines, points));
+				COMPV_CHECK_CODE_RETURN(buildLines(edges->cols(), edges->rows(), lines, points));
 			}
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(edges));
@@ -105,8 +113,16 @@ public:
 		CompVMyCameraListenerPtr listener_ = new CompVMyCameraListener(ptrWindow, ptrSingleSurfaceLayer);
 		COMPV_CHECK_EXP_RETURN(!listener_, COMPV_ERROR_CODE_E_OUT_OF_MEMORY);
 		COMPV_CHECK_CODE_RETURN(CompVEdgeDete::newObj(&listener_->m_ptrCanny, COMPV_CANNY_ID, CANNY_LOW, CANNY_HIGH, CANNY_KERNEL_SIZE));
-		COMPV_CHECK_CODE_RETURN(CompVHough::newObj(&listener_->m_ptrHough, COMPV_HOUGH_STANDARD_ID, HOUGH_RHO, HOUGH_THETA, HOUGH_THRESHOLD));
+		COMPV_CHECK_CODE_RETURN(CompVHough::newObj(&listener_->m_ptrHough, HOUGH_ID, 
+			(HOUGH_ID == COMPV_HOUGHKHT_ID) ? HOUGH_RHO : 1.f, // SHT doesn't support fractional rho values (only 1.f is supported)
+			HOUGH_THETA, 
+			(HOUGH_ID == COMPV_HOUGHKHT_ID) ? HOUGHKHT_THRESHOLD : HOUGH_THRESHOLD));
 		COMPV_CHECK_CODE_RETURN(listener_->m_ptrHough->setInt(COMPV_HOUGH_SET_INT_MAXLINES, HOUGH_MAXLINES));
+		if (HOUGH_ID == COMPV_HOUGHKHT_ID) {
+			COMPV_CHECK_CODE_RETURN(listener_->m_ptrHough->setFloat32(COMPV_HOUGHKHT_SET_FLT32_CLUSTER_MIN_DEVIATION, HOUGHKHT_CLUSTER_MIN_DEVIATION));
+			COMPV_CHECK_CODE_RETURN(listener_->m_ptrHough->setInt(COMPV_HOUGHKHT_SET_INT_CLUSTER_MIN_SIZE, HOUGHKHT_CLUSTER_MIN_SIZE));
+			COMPV_CHECK_CODE_RETURN(listener_->m_ptrHough->setFloat32(COMPV_HOUGHKHT_SET_FLT32_KERNEL_MIN_HEIGTH, HOUGHKHT_KERNEL_MIN_HEIGTH));
+		}
 		listener_->m_DrawingOptions.colorType = COMPV_DRAWING_COLOR_TYPE_STATIC;
 		listener_->m_DrawingOptions.color[0] = 1.f;
 		listener_->m_DrawingOptions.color[1] = 1.f;
@@ -119,7 +135,7 @@ public:
 	}
 
 private:
-	static COMPV_ERROR_CODE buildLines(size_t imageWidth, const CompVHoughLineVector& lines, CompVMatPtr& points) {
+	static COMPV_ERROR_CODE buildLines(size_t imageWidth, size_t imageHeight, const CompVHoughLineVector& lines, CompVMatPtr& points) {
 		COMPV_CHECK_EXP_RETURN(lines.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<compv_float32_t>(&points, 4, lines.size())));
 		compv_float32_t *px0 = points->ptr<compv_float32_t>(0);
@@ -127,14 +143,28 @@ private:
 		compv_float32_t *px1 = points->ptr<compv_float32_t>(2);
 		compv_float32_t *py1 = points->ptr<compv_float32_t>(3);
 		const compv_float32_t imageWidthF = static_cast<compv_float32_t>(imageWidth);
+		const compv_float32_t imageHeightF = static_cast<compv_float32_t>(imageHeight);
+		const compv_float32_t half_imageWidthF = imageWidthF / 2.f;
+		const compv_float32_t half_imageHeightF = imageHeightF / 2.f;
 		for (size_t i = 0; i < lines.size(); i++) {
 			const compv_float32_t rho = lines[i].rho;
 			const compv_float32_t theta = lines[i].theta;
-			const compv_float32_t a = std::cos(theta), b = std::sin(theta);
-			px0[i] = 0;
-			py0[i] = rho / b; // (rho - (px0[i] *a)) / b
-			px1[i] = imageWidthF;
-			py1[i] = (rho - (px1[i] * a)) / b;
+			const compv_float32_t a = std::cos(theta), b = 1.f/std::sin(theta);
+			if (HOUGH_ID == COMPV_HOUGHSHT_ID) {
+				px0[i] = 0;
+				py0[i] = ((rho + (px0[i] * a)) * b);
+				px1[i] = imageWidthF;
+				py1[i] = ((rho - (px1[i] * a)) * b);
+			}
+			else if (HOUGH_ID == COMPV_HOUGHKHT_ID) {
+				px0[i] = 0;
+				py0[i] = ((rho + (half_imageWidthF * a)) * b) + half_imageHeightF;
+				px1[i] = imageWidthF;
+				py1[i] = ((rho - (half_imageWidthF * a)) * b) + half_imageHeightF;
+			}
+			else {
+				COMPV_ASSERT(false);
+			}
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}

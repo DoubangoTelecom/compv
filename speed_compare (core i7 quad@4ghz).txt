@@ -58,5 +58,6 @@ Remarque: tLow and tHight values are very important for speed comparison(high va
 The test images contains many edges and this is why it's unusually slow. Canny on HD image should last ~1.ms (which means ~1k fps)
 
 === HoughLines (Canny: Kernel size = 3, tLow=0.80f, tHigh=tLow*2, HoughStd: rho = 1.f, theta = Pi/180, threshold = 100) (1282, 720) (#1k times) ===
-CompV: 11222.ms(full optiz)
+CompV(SHT): 11222.ms(full optiz)
+CompV(KHT): 6174.ms(full optiz)
 OpenCV: 25219.ms(full optiz)

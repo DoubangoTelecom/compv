@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_CORE_FEATURES_HOUGHSTD_H_)
-#define _COMPV_CORE_FEATURES_HOUGHSTD_H_
+#if !defined(_COMPV_CORE_FEATURES_HOUGHSHT_H_)
+#define _COMPV_CORE_FEATURES_HOUGHSHT_H_
 
 #include "compv/core/compv_core_config.h"
 #include "compv/core/compv_core_common.h"
@@ -31,37 +31,37 @@ struct CompVHoughAccThreadsCtx {
 #	pragma pack( 1 )
 #endif
 #if defined (__GNUC__)
-struct __attribute__((__packed__)) CompVHoughStdEdge
+struct __attribute__((__packed__)) CompVHoughShtEdge
 #else
-struct CompVHoughStdEdge
+struct CompVHoughShtEdge
 #endif
 {
 	int32_t row;
 	int32_t col;
 public:
-	CompVHoughStdEdge() : row(0), col(0) { }
-	CompVHoughStdEdge(int32_t row_, int32_t col_) : row(row_), col(col_) { }
+	CompVHoughShtEdge() : row(0), col(0) { }
+	CompVHoughShtEdge(int32_t row_, int32_t col_) : row(row_), col(col_) { }
 };
 #if defined(_MSC_VER)
 #	pragma pack( pop )
 #endif
 
-class CompVHoughStd : public CompVHough
+class CompVHoughSht : public CompVHough
 {
 protected:
-	CompVHoughStd(float rho = 1.f, float theta = kfMathTrigPiOver180, size_t threshold = 1);
+	CompVHoughSht(float rho = 1.f, float theta = kfMathTrigPiOver180, size_t threshold = 1);
 public:
-	virtual ~CompVHoughStd();
-	COMPV_OBJECT_GET_ID(CompVHoughStd);
+	virtual ~CompVHoughSht();
+	COMPV_OBJECT_GET_ID(CompVHoughSht);
 
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
 	virtual COMPV_ERROR_CODE process(const CompVMatPtr& edges, CompVHoughLineVector& lines, const CompVMatPtr& directions = NULL) override /*Overrides(CompVHough)*/;
 
-	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, float rho = 1.f, float theta = kfMathTrigPiOver180, size_t threshold = 1);
+	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, float rho = 1.f, float theta = kfMathTrig1Rad, size_t threshold = 1);
 
 private:
 	COMPV_ERROR_CODE initCoords(float fRho, float fTheta, size_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
-	COMPV_ERROR_CODE acc_gather(std::vector<CompVHoughStdEdge >::const_iterator start, std::vector<CompVHoughStdEdge >::const_iterator end, CompVHoughAccThreadsCtx* threadsCtx);
+	COMPV_ERROR_CODE acc_gather(std::vector<CompVHoughShtEdge >::const_iterator start, std::vector<CompVHoughShtEdge >::const_iterator end, CompVHoughAccThreadsCtx* threadsCtx);
 	COMPV_ERROR_CODE nms_gather(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc);
 	COMPV_ERROR_CODE nms_apply(size_t rowStart, size_t rowCount, CompVPtr<CompVMemZero<int32_t> *>& acc, CompVHoughLineVector& lines);
 
@@ -80,4 +80,4 @@ private:
 
 COMPV_NAMESPACE_END()
 
-#endif /* _COMPV_CORE_FEATURES_HOUGHSTD_H_ */
+#endif /* _COMPV_CORE_FEATURES_HOUGHSHT_H_ */

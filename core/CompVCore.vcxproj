@@ -228,16 +228,11 @@
     </ClCompile>
     <ClCompile Include="features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.cxx" />
     <ClCompile Include="features\hough\compv_core_feature_houghkht.cxx" />
-    <ClCompile Include="features\hough\compv_core_feature_houghstd.cxx" />
-    <ClCompile Include="features\hough\intrin\arm\compv_core_feature_houghstd_intrin_neon.cxx" />
-    <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghstd_intrin_avx2.cxx">
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghstd_intrin_sse2.cxx" />
-    <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghstd_intrin_sse41.cxx" />
+    <ClCompile Include="features\hough\compv_core_feature_houghsht.cxx" />
+    <ClCompile Include="features\hough\intrin\arm\compv_core_feature_houghsht_intrin_neon.cxx" />
+    <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghsht_intrin_avx2.cxx" />
+    <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse2.cxx" />
+    <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse41.cxx" />
     <ClCompile Include="features\orb\compv_core_feature_orb_desc.cxx" />
     <ClCompile Include="features\orb\compv_core_feature_orb_dete.cxx" />
     <ClCompile Include="features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_avx2.cxx">
@@ -272,10 +267,11 @@
     <ClInclude Include="include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_avx2.h" />
     <ClInclude Include="include\compv\core\features\fast\intrin\x86\compv_core_feature_fast_dete_intrin_sse2.h" />
     <ClInclude Include="include\compv\core\features\hough\compv_core_feature_houghkht.h" />
-    <ClInclude Include="include\compv\core\features\hough\compv_core_feature_houghstd.h" />
-    <ClInclude Include="include\compv\core\features\hough\intrin\x86\compv_core_feature_houghstd_intrin_avx2.h" />
-    <ClInclude Include="include\compv\core\features\hough\intrin\x86\compv_core_feature_houghstd_intrin_sse2.h" />
-    <ClInclude Include="include\compv\core\features\hough\intrin\x86\compv_core_feature_houghstd_intrin_sse41.h" />
+    <ClInclude Include="include\compv\core\features\hough\compv_core_feature_houghsht.h" />
+    <ClInclude Include="include\compv\core\features\hough\intrin\arm\compv_core_feature_houghsht_intrin_neon.h" />
+    <ClInclude Include="include\compv\core\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_avx2.h" />
+    <ClInclude Include="include\compv\core\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse2.h" />
+    <ClInclude Include="include\compv\core\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse41.h" />
     <ClInclude Include="include\compv\core\features\orb\compv_core_feature_orb_desc.h" />
     <ClInclude Include="include\compv\core\features\orb\compv_core_feature_orb_dete.h" />
     <ClInclude Include="include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_avx2.h" />
@@ -373,14 +369,14 @@
     </YASM>
   </ItemGroup>
   <ItemGroup>
-    <YASM Include="features\hough\asm\x86\compv_core_feature_houghstd_x86_avx.s">
+    <YASM Include="features\hough\asm\x86\compv_core_feature_houghsht_x86_avx.s">
       <FileType>Document</FileType>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
     </YASM>
-    <YASM Include="features\hough\asm\x86\compv_core_feature_houghstd_x86_sse.s">
+    <YASM Include="features\hough\asm\x86\compv_core_feature_houghsht_x86_sse.s">
       <FileType>Document</FileType>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)../base/asm/x86;%(IncludePaths)</IncludePaths>

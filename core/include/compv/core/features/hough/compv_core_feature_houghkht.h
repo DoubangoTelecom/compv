@@ -18,13 +18,49 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-typedef std::vector<CompVMatIndex> CompVHoughKhtString;
+struct CompVHoughKhtVote {
+	size_t rho_index; size_t theta_index;
+	int32_t count;
+	CompVHoughKhtVote() : rho_index(0), theta_index(0), count(0) {}
+	CompVHoughKhtVote(size_t _rho_index, size_t _theta_index, int32_t _count) : rho_index(_rho_index), theta_index(_theta_index), count(_count) {}
+};
+typedef std::vector<CompVHoughKhtVote> CompVHoughKhtVotes;
+
+struct CompVHoughKhtPos {
+	int y; int x;
+	double cy; double cx;
+	CompVHoughKhtPos() : y(0), x(0){}
+	CompVHoughKhtPos(int _y, int _x) : y(_y), x(_x) {}
+};
+typedef std::vector<CompVHoughKhtPos> CompVHoughKhtString;
 typedef std::vector<CompVHoughKhtString> CompVHoughKhtStrings;
+
+struct CompVHoughKhtCluster {
+	CompVHoughKhtCluster(CompVHoughKhtString::const_iterator _begin, CompVHoughKhtString::const_iterator _end) :
+		begin (_begin), end(_end) { }
+	CompVHoughKhtCluster() { }
+	CompVHoughKhtString::const_iterator begin;
+	CompVHoughKhtString::const_iterator end;
+};
+typedef std::vector<CompVHoughKhtCluster> CompVHoughKhtClusters;
+
+struct CompVHoughKhtKernel {
+	double rho; // computed using Eq3
+	double theta; // computed using Eq3
+	double h; // height
+#define kCompVHoughKhtKernelIndex_SigmaRhoSquare			0
+#define kCompVHoughKhtKernelIndex_SigmaRhoTimesTheta		1
+#define kCompVHoughKhtKernelIndex_2							2
+#define kCompVHoughKhtKernelIndex_SigmaThetaSquare			3
+
+	double M[4]; // Matrix 'M' computed in Algorithm 2 and holding sigma values
+};
+typedef std::vector<CompVHoughKhtKernel> CompVHoughKhtKernels;
 
 class CompVHoughKht : public CompVHough
 {
 protected:
-	CompVHoughKht(float rho = 1.f, float theta = kfMathTrigPiOver180, size_t threshold = 1);
+	CompVHoughKht(float rho = 1.f, float theta = kfMathTrig1Rad, size_t threshold = 1);
 public:
 	virtual ~CompVHoughKht();
 	COMPV_OBJECT_GET_ID(CompVHoughKht);
@@ -32,23 +68,37 @@ public:
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
 	virtual COMPV_ERROR_CODE process(const CompVMatPtr& edges, CompVHoughLineVector& lines, const CompVMatPtr& directions = NULL) override /*Overrides(CompVHough)*/;
 
-	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, float rho = 1.f, float theta = kfMathTrigPiOver180, size_t threshold = 1);
+	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, float rho = 1.f, float theta = kfMathTrig1Rad, size_t threshold = 1);
 
 private:
-	COMPV_ERROR_CODE initCoords(float fRho, float fTheta, size_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
+	COMPV_ERROR_CODE initCoords(double dRho, double dTheta, size_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
 	COMPV_ERROR_CODE linking_AppendixA(CompVMatPtr& edges, CompVHoughKhtStrings& strings);
-	void linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtString& string, const size_t x_ref, const size_t y_ref);
-	uint8_t* linking_next_Algorithm6(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, size_t &x_seed, size_t &y_seed);
+	void linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtString& string, const int x_ref, const int y_ref);
+	uint8_t* linking_next_Algorithm6(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, int &x_seed, int &y_seed);
+	COMPV_ERROR_CODE clusters_find(CompVHoughKhtClusters& clusters, const CompVHoughKhtStrings& strings);
+	double clusters_subdivision(CompVHoughKhtClusters& clusters, const CompVHoughKhtString& string, const size_t start_index, const size_t end_index, bool sub_cluster = false);
+	COMPV_ERROR_CODE voting_Algorithm2(const CompVHoughKhtClusters& clusters);
+	void vote_Algorithm4(size_t rho_start_index, const size_t theta_start_index, const double rho_start, const double theta_start, int inc_rho_index, const int inc_theta_index, const double scale, const CompVHoughKhtKernel& kernel);
+	COMPV_ERROR_CODE peaks_Section3_4(CompVHoughLineVector& lines);
 
 private:
-	float m_fRho;
-	float m_fTheta;
+	double m_dRho;
+	double m_dTheta_rad;
+	double m_dTheta_deg;
+	double m_cluster_min_deviation;
+	size_t m_cluster_min_size;
+	double m_kernel_min_heigth;
 	size_t m_nThreshold;
 	size_t m_nWidth;
 	size_t m_nHeight;
 	size_t m_nMaxLines;
 	CompVMatPtr m_edges;
+	CompVMatPtr m_rho; // CompVMatPtr<double>
+	CompVMatPtr m_theta; // CompVMatPtr<double>
+	CompVMatPtr m_count; // CompVMatPtr<int32_t>
+	CompVMatPtr m_visited; // CompVMatPtr<uint8_t>
 	CompVHoughKhtStrings m_strings;
+	CompVHoughKhtClusters m_clusters;
 };
 
 COMPV_NAMESPACE_END()

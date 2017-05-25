@@ -13,7 +13,7 @@ using namespace compv;
 #define TEST_CONVLT					0
 #define TEST_SOBEL					0
 #define TEST_CANNY					0
-#define TEST_HOUGHSTD				0
+#define TEST_HOUGHSHT				0
 #define TEST_HOUGHKHT				1
 #define TEST_BRUTEFORCE				0
 #define TEST_DRAW_IMAGE				0
@@ -64,9 +64,9 @@ compv_main()
 		extern COMPV_ERROR_CODE canny();
 		COMPV_CHECK_CODE_BAIL(err = canny(), TAG_TEST_IMAGE "Canny Edge dete test failed");
 #endif
-#if TEST_HOUGHSTD
-		extern COMPV_ERROR_CODE houghstd();
-		COMPV_CHECK_CODE_BAIL(err = houghstd(), TAG_TEST_IMAGE "HoughStd line dete test failed");
+#if TEST_HOUGHSHT
+		extern COMPV_ERROR_CODE houghsht();
+		COMPV_CHECK_CODE_BAIL(err = houghsht(), TAG_TEST_IMAGE "HoughSht line dete test failed");
 #endif
 #if TEST_HOUGHKHT
 		extern COMPV_ERROR_CODE houghkht();

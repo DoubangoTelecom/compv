@@ -72,6 +72,7 @@ extern COMPV_BASE_API const float kfMathTrigPiTimes2; // PI*2
 extern COMPV_BASE_API const float kfMathTrigPiOver2; // PI/2
 extern COMPV_BASE_API const float kfMathTrigPiOver180; // PI/180 (used to convert from degree to radian)
 extern COMPV_BASE_API const float kfMathTrig180OverPi; // 180/PI (used to convert from radian to degree)
+extern COMPV_BASE_API const float kfMathTrig1Rad; // 1rad
 extern COMPV_BASE_API const float kMathTrigC1;
 extern COMPV_BASE_API const float kMathTrigC2;
 extern COMPV_BASE_API const float kMathTrigC3;

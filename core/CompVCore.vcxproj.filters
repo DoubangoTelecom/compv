@@ -138,6 +138,9 @@
     <Filter Include="Source Files\features\hough\intrin\arm">
       <UniqueIdentifier>{8949ce78-e1be-4e03-ab6b-e22d0ca67445}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\features\hough\intrin\arm">
+      <UniqueIdentifier>{713abf9c-30a9-42f2-82c0-383d25c878d8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -197,26 +200,26 @@
     <ClCompile Include="features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.cxx">
       <Filter>Source Files\features\edges\intrin\arm</Filter>
     </ClCompile>
-    <ClCompile Include="features\hough\compv_core_feature_houghstd.cxx">
-      <Filter>Source Files\features\hough</Filter>
-    </ClCompile>
-    <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghstd_intrin_sse41.cxx">
-      <Filter>Source Files\features\hough\intrin\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghstd_intrin_avx2.cxx">
-      <Filter>Source Files\features\hough\intrin\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghstd_intrin_sse2.cxx">
-      <Filter>Source Files\features\hough\intrin\x86</Filter>
-    </ClCompile>
     <ClCompile Include="features\fast\intrin\arm\compv_core_feature_fast_dete_intrin_neon.cxx">
       <Filter>Source Files\features\fast\intrin\arm</Filter>
     </ClCompile>
-    <ClCompile Include="features\hough\intrin\arm\compv_core_feature_houghstd_intrin_neon.cxx">
-      <Filter>Source Files\features\hough\intrin\arm</Filter>
-    </ClCompile>
     <ClCompile Include="features\hough\compv_core_feature_houghkht.cxx">
       <Filter>Source Files\features\hough</Filter>
+    </ClCompile>
+    <ClCompile Include="features\hough\compv_core_feature_houghsht.cxx">
+      <Filter>Source Files\features\hough</Filter>
+    </ClCompile>
+    <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghsht_intrin_avx2.cxx">
+      <Filter>Source Files\features\hough\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse2.cxx">
+      <Filter>Source Files\features\hough\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse41.cxx">
+      <Filter>Source Files\features\hough\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="features\hough\intrin\arm\compv_core_feature_houghsht_intrin_neon.cxx">
+      <Filter>Source Files\features\hough\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -280,20 +283,23 @@
     <ClInclude Include="include\compv\core\features\edges\intrin\x86\compv_core_feature_canny_dete_intrin_avx2.h">
       <Filter>Header Files\features\edges\intrin\x86</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\core\features\hough\compv_core_feature_houghstd.h">
-      <Filter>Header Files\features\hough</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\core\features\hough\intrin\x86\compv_core_feature_houghstd_intrin_sse41.h">
-      <Filter>Header Files\features\hough\intrin\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\core\features\hough\intrin\x86\compv_core_feature_houghstd_intrin_avx2.h">
-      <Filter>Header Files\features\hough\intrin\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\core\features\hough\intrin\x86\compv_core_feature_houghstd_intrin_sse2.h">
-      <Filter>Header Files\features\hough\intrin\x86</Filter>
-    </ClInclude>
     <ClInclude Include="include\compv\core\features\hough\compv_core_feature_houghkht.h">
       <Filter>Header Files\features\hough</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\hough\compv_core_feature_houghsht.h">
+      <Filter>Header Files\features\hough</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_avx2.h">
+      <Filter>Header Files\features\hough\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse2.h">
+      <Filter>Header Files\features\hough\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse41.h">
+      <Filter>Header Files\features\hough\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\hough\intrin\arm\compv_core_feature_houghsht_intrin_neon.h">
+      <Filter>Header Files\features\hough\intrin\arm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -339,10 +345,10 @@
     <YASM Include="features\edges\asm\x86\compv_core_feature_canny_dete_x86_sse.s">
       <Filter>Source Files\features\edges\asm\x86</Filter>
     </YASM>
-    <YASM Include="features\hough\asm\x86\compv_core_feature_houghstd_x86_sse.s">
+    <YASM Include="features\hough\asm\x86\compv_core_feature_houghsht_x86_avx.s">
       <Filter>Source Files\features\hough\asm\x86</Filter>
     </YASM>
-    <YASM Include="features\hough\asm\x86\compv_core_feature_houghstd_x86_avx.s">
+    <YASM Include="features\hough\asm\x86\compv_core_feature_houghsht_x86_sse.s">
       <Filter>Source Files\features\hough\asm\x86</Filter>
     </YASM>
   </ItemGroup>

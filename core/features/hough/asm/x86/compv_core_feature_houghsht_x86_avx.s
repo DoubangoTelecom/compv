@@ -10,7 +10,7 @@
 
 COMPV_YASM_DEFAULT_REL
 
-global sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2)
+global sym(CompVHoughShtAccGatherRow_8mpd_Asm_X86_AVX2)
 
 section .data
 
@@ -23,7 +23,7 @@ section .text
 ; arg(3) -> int32_t* pACC
 ; arg(4) -> compv_uscalar_t accStride
 ; arg(5) -> compv_uscalar_t maxTheta
-sym(CompVHoughStdAccGatherRow_8mpd_Asm_X86_AVX2):
+sym(CompVHoughShtAccGatherRow_8mpd_Asm_X86_AVX2):
 	vzeroupper
 	push rbp
 	mov rbp, rsp

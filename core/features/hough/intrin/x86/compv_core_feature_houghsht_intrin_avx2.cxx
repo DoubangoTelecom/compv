@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghstd_intrin_avx2.h"
+#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghsht_intrin_avx2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/compv_debug.h"
@@ -38,7 +38,7 @@ COMPV_NAMESPACE_BEGIN()
 #	pragma intel optimization_parameter target_arch=avx2
 #endif
 // 8mpd -> minpack 8 for dwords (int32) - for maxTheta
-void CompVHoughStdAccGatherRow_8mpd_Intrin_AVX2(COMPV_ALIGNED(AVX) const int32_t* pCosRho, COMPV_ALIGNED(AVX) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta)
+void CompVHoughShtAccGatherRow_8mpd_Intrin_AVX2(COMPV_ALIGNED(AVX) const int32_t* pCosRho, COMPV_ALIGNED(AVX) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
 	_mm256_zeroupper();

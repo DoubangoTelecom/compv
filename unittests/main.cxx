@@ -9,7 +9,8 @@ using namespace compv;
 #define UNITTEST_CONVOLUTION					0
 #define UNITTEST_SOBEL							0
 #define UNITTEST_CANNY							0
-#define UNITTEST_HOUGHSTD						1
+#define UNITTEST_HOUGHSHT						0
+#define UNITTEST_HOUGHKHT						1
 
 #define UNITTEST_FEATURE_FAST					0
 #define UNITTEST_CHROMA_CONV					0
@@ -103,11 +104,14 @@ compv_main()
 								extern COMPV_ERROR_CODE unittest_canny();
 								COMPV_CHECK_CODE_BAIL(err = unittest_canny(), "Canny unittest failed");
 #endif
-#if UNITTEST_HOUGHSTD || !defined(COMPV_TEST_LOCAL)
-								extern COMPV_ERROR_CODE unittest_houghstd();
-								COMPV_CHECK_CODE_BAIL(err = unittest_houghstd(), "Houghstd unittest failed");
+#if UNITTEST_HOUGHSHT || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_houghsht();
+								COMPV_CHECK_CODE_BAIL(err = unittest_houghsht(), "Houghsht unittest failed");
 #endif
-							
+#if UNITTEST_HOUGHKHT || !defined(COMPV_TEST_LOCAL)
+								extern COMPV_ERROR_CODE unittest_houghkht();
+								COMPV_CHECK_CODE_BAIL(err = unittest_houghkht(), "Houghkht unittest failed");
+#endif						
 								
 								
 #if UNITTEST_FEATURE_FAST || !defined(COMPV_TEST_LOCAL)

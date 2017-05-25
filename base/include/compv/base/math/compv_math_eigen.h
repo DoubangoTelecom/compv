@@ -18,6 +18,7 @@ class COMPV_BASE_API CompVMathEigen
 {
 public:
 	static COMPV_ERROR_CODE findSymm(const CompVMatPtr &S, CompVMatPtrPtr D, CompVMatPtrPtr Q, bool sort = true, bool rowVectors = false, bool forceZerosInD = true);
+	static COMPV_ERROR_CODE find2x2(const T(&A)[4], T(&D)[4], T(&Q)[4], bool sort = true, bool norm = true);
 	static T epsilon();
 	static bool isCloseToZero(T a);
 

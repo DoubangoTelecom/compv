@@ -6,7 +6,7 @@
 */
 #include "compv/core/compv_core.h"
 #include "compv/core/compv_core_common.h"
-#include "compv/core/features/hough/compv_core_feature_houghstd.h"
+#include "compv/core/features/hough/compv_core_feature_houghsht.h"
 #include "compv/core/features/hough/compv_core_feature_houghkht.h"
 #include "compv/core/features/edges/compv_core_feature_canny_dete.h"
 #include "compv/core/features/edges/compv_core_feature_edge_dete.h"
@@ -78,12 +78,12 @@ static const CompVFeatureFactory prewittFactory = {
 	NULL,
 };
 static const CompVFeatureFactory houghStdFactory = {
-	COMPV_HOUGHSTD_ID,
+	COMPV_HOUGHSHT_ID,
 	"Hough standard (STD)",
 	NULL,
 	NULL,
 	NULL,
-	CompVHoughStd::newObj,
+	CompVHoughSht::newObj,
 };
 static const CompVFeatureFactory houghKhtFactory = {
 	COMPV_HOUGHKHT_ID,

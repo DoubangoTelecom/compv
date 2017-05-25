@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghstd_intrin_sse41.h"
+#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghsht_intrin_sse41.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/compv_debug.h"
@@ -29,7 +29,7 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 
 // 4mpd -> minpack 4 for dwords (int32) - for maxTheta
-void CompVHoughStdAccGatherRow_4mpd_Intrin_SSE41(COMPV_ALIGNED(SSE) const int32_t* pCosRho, COMPV_ALIGNED(SSE) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta)
+void CompVHoughShtAccGatherRow_4mpd_Intrin_SSE41(COMPV_ALIGNED(SSE) const int32_t* pCosRho, COMPV_ALIGNED(SSE) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE41();
 	const __m128i vecColInt32 = _mm_set1_epi32(static_cast<int32_t>(col));
@@ -87,7 +87,7 @@ void CompVHoughStdAccGatherRow_4mpd_Intrin_SSE41(COMPV_ALIGNED(SSE) const int32_
 
 // pSinRho and rowTimesSinRhoPtr must be strided and SSE-aligned -> reading beyond count
 // count must be >= 16
-void CompVHoughStdRowTimesSinRho_Intrin_SSE41(COMPV_ALIGNED(SSE) const int32_t* pSinRho, COMPV_ALIGNED(SSE) compv_uscalar_t row, COMPV_ALIGNED(SSE) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count)
+void CompVHoughShtRowTimesSinRho_Intrin_SSE41(COMPV_ALIGNED(SSE) const int32_t* pSinRho, COMPV_ALIGNED(SSE) compv_uscalar_t row, COMPV_ALIGNED(SSE) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count)
 {
 	const __m128i vecRowInt32 = _mm_set1_epi32(static_cast<int32_t>(row));
 	compv_uscalar_t i;

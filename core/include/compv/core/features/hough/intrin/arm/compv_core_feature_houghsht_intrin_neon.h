@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_CORE_FEATURE_HOUGHSTD_INTRIN_NEON_H_)
-#define _COMPV_CORE_FEATURE_HOUGHSTD_INTRIN_NEON_H_
+#if !defined(_COMPV_CORE_FEATURE_HOUGHSHT_INTRIN_NEON_H_)
+#define _COMPV_CORE_FEATURE_HOUGHSHT_INTRIN_NEON_H_
 
 #include "compv/base/compv_config.h"
 #include "compv/base/compv_common.h"
@@ -30,4 +30,4 @@ COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_NEON && COMPV_INTRINSIC */
 
-#endif /* _COMPV_CORE_FEATURE_HOUGHSTD_INTRIN_NEON_H_ */
+#endif /* _COMPV_CORE_FEATURE_HOUGHSHT_INTRIN_NEON_H_ */
