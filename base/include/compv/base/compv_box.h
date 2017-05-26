@@ -24,7 +24,7 @@ COMPV_NAMESPACE_BEGIN()
 #endif
 
 template<class T>
-class COMPV_BASE_API CompVBox : public CompVObj
+class CompVBox : public CompVObj
 {
 protected:
 	CompVBox(size_t nCapacity = 0, bool bLockable = false)

@@ -11,6 +11,7 @@
 #include "compv/core/compv_core_common.h"
 #include "compv/base/compv_memz.h"
 #include "compv/base/compv_features.h"
+#include "compv/base/compv_box.h"
 
 #if defined(_COMPV_API_H_)
 #error("This is a private file and must not be part of the API")
@@ -34,6 +35,9 @@ struct CompVHoughKhtPos {
 };
 typedef std::vector<CompVHoughKhtPos> CompVHoughKhtString;
 typedef std::vector<CompVHoughKhtString> CompVHoughKhtStrings;
+
+typedef CompVBox<CompVHoughKhtPos> CompVHoughKhtPosBox;
+typedef CompVPtr<CompVHoughKhtPosBox* > CompVHoughKhtPosBoxPtr;
 
 struct CompVHoughKhtCluster {
 	CompVHoughKhtCluster(CompVHoughKhtString::const_iterator _begin, CompVHoughKhtString::const_iterator _end) :
@@ -73,10 +77,10 @@ public:
 private:
 	COMPV_ERROR_CODE initCoords(double dRho, double dTheta, size_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);
 	COMPV_ERROR_CODE linking_AppendixA(CompVMatPtr& edges, CompVHoughKhtStrings& strings);
-	void linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtString& string, const int x_ref, const int y_ref);
+	void linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtPosBoxPtr& tmp_box, CompVHoughKhtStrings& strings, const int x_ref, const int y_ref);
 	uint8_t* linking_next_Algorithm6(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, int &x_seed, int &y_seed);
 	COMPV_ERROR_CODE clusters_find(CompVHoughKhtClusters& clusters, const CompVHoughKhtStrings& strings);
-	double clusters_subdivision(CompVHoughKhtClusters& clusters, const CompVHoughKhtString& string, const size_t start_index, const size_t end_index, bool sub_cluster = false);
+	double clusters_subdivision(CompVHoughKhtClusters& clusters, const CompVHoughKhtString& string, const size_t start_index, const size_t end_index);
 	COMPV_ERROR_CODE voting_Algorithm2(const CompVHoughKhtClusters& clusters);
 	void vote_Algorithm4(size_t rho_start_index, const size_t theta_start_index, const double rho_start, const double theta_start, int inc_rho_index, const int inc_theta_index, const double scale, const CompVHoughKhtKernel& kernel);
 	COMPV_ERROR_CODE peaks_Section3_4(CompVHoughLineVector& lines);

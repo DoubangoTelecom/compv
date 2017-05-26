@@ -14,6 +14,8 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)
+
 COMPV_OBJECT_DECLARE_PTRS(BoxInterestPoint)
 
 class COMPV_BASE_API CompVBoxInterestPoint : public CompVBox<CompVInterestPoint >
@@ -30,6 +32,8 @@ public:
 };
 
 void CompVInterestPointScaleAndRoundAndGetAngleSinCos(COMPV_ALIGNED(x) const float* xf, COMPV_ALIGNED(x) const float *yf, COMPV_ALIGNED(x) const float *sf, COMPV_ALIGNED(x) const float* angleInDegree, COMPV_ALIGNED(x) int32_t* xi, COMPV_ALIGNED(x) int32_t* yi, COMPV_ALIGNED(x) float* cos, COMPV_ALIGNED(x) float* sin, compv_scalar_t count);
+
+COMPV_VS_DISABLE_WARNINGS_END()
 
 COMPV_NAMESPACE_END()
 

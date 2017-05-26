@@ -190,24 +190,16 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 	const size_t edgesStride = edges->strideInBytes();
 	const int maxi = static_cast<int>(edges->cols() - 1);
 	const int maxj = static_cast<int>(edges->rows() - 1);
-	const double edgesWidthDiv2 = static_cast<double>(edgesWidth) / 2.0;
-	const double edgesHeightDiv2 = static_cast<double>(edgesHeight) / 2.0;
+
+	CompVHoughKhtPosBoxPtr tmp_box; // box used as temporary container
+	COMPV_CHECK_CODE_ASSERT(CompVHoughKhtPosBox::newObj(&tmp_box, 1000));
 
 	strings.clear();
 
 	for (int y_ref = 1; y_ref < maxj; ++y_ref) {
 		for (int x_ref = 1; x_ref < maxi; ++x_ref) {
 			if (edgesPtr[x_ref]) {
-				CompVHoughKhtString string;
-				linking_link_Algorithm5(&edgesPtr[x_ref], edgesWidth, edgesHeight, edgesStride, string, x_ref, y_ref);
-				if (string.size() >= m_cluster_min_size) {
-					// compute 'cx' and cy
-					for (CompVHoughKhtString::iterator i = string.begin(); i < string.end(); ++i) {
-						i->cx = i->x - edgesWidthDiv2;
-						i->cy = i->y - edgesHeightDiv2;
-					}
-					strings.push_back(string);
-				}
+				linking_link_Algorithm5(&edgesPtr[x_ref], edgesWidth, edgesHeight, edgesStride, tmp_box, strings, x_ref, y_ref);
 			}
 		}
 		edgesPtr += edges->strideInBytes();
@@ -217,18 +209,24 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 }
 
 // Algorithm 5 - Linking of neighboring edge pixels into strings
-void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtString& string, const int x_ref, const int y_ref)
+void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtPosBoxPtr& tmp_box, CompVHoughKhtStrings& strings, const int x_ref, const int y_ref)
 {	
+	CompVHoughKhtPos *new_pos;
+	size_t reverse_size;
+
+	tmp_box->reset();
+
 	// {Find and add feature pixels to the end of the string}
 	int x_seed = x_ref;
 	int y_seed = y_ref;
 	uint8_t* next_seed = edgesPtr;
 	do {
-		string.push_back(CompVHoughKhtPos(y_seed, x_seed));
+		tmp_box->new_item(&new_pos);
+		new_pos->x = x_seed, new_pos->y = y_seed;
 		*next_seed = 0x00; // !! edges are modified here (not thread-safe) !!
 	} while((next_seed = linking_next_Algorithm6(next_seed, edgesWidth, edgesHeight, edgesStride, x_seed, y_seed)));
 
-	std::reverse(string.begin(), string.end());
+	reverse_size = tmp_box->size();
 
 	// {Find and add feature pixels to the begin of the string}
 	x_seed = x_ref;
@@ -236,9 +234,25 @@ void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edge
 	next_seed = edgesPtr;
 	if ((next_seed = linking_next_Algorithm6(next_seed, edgesWidth, edgesHeight, edgesStride, x_seed, y_seed))) {
 		do {
-			string.push_back(CompVHoughKhtPos(y_seed, x_seed));
+			tmp_box->new_item(&new_pos);
+			new_pos->x = x_seed, new_pos->y = y_seed;
 			*next_seed = 0x00; // !! edges are modified here (not thread-safe) !!
 		} while ((next_seed = linking_next_Algorithm6(next_seed, edgesWidth, edgesHeight, edgesStride, x_seed, y_seed)));
+	}
+
+	if (tmp_box->size() >= m_cluster_min_size) {
+		const double edgesWidthDiv2 = static_cast<double>(edgesWidth) * 0.5;
+		const double edgesHeightDiv2 = static_cast<double>(edgesHeight) * 0.5;
+		CompVHoughKhtString string;
+		string.assign(tmp_box->begin(), tmp_box->end());
+		if (reverse_size) {
+			std::reverse(string.begin(), string.begin() + reverse_size);
+		}
+		std::for_each(string.begin(), string.end(), [edgesWidthDiv2, edgesHeightDiv2](CompVHoughKhtPos& pos) {
+			pos.cx = (pos.x - edgesWidthDiv2);
+			pos.cy = (pos.y - edgesHeightDiv2);
+		});
+		strings.push_back(string);
 	}
 }
 
@@ -296,7 +310,7 @@ COMPV_ERROR_CODE CompVHoughKht::clusters_find(CompVHoughKhtClusters& clusters, c
 }
 
 // (i) cluster approximately collinear feature pixels
-double CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, const CompVHoughKhtString& string, const size_t start_index, const size_t end_index, bool sub_cluster COMPV_DEFAULT(false))
+double CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, const CompVHoughKhtString& string, const size_t start_index, const size_t end_index)
 {
 	// http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.145.5388&rep=rep1&type=pdf
 	//  Three-Dimensional Object Recognition from Single Two - Dimensional Images
