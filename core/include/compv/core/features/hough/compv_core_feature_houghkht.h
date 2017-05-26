@@ -79,7 +79,7 @@ private:
 	COMPV_ERROR_CODE linking_AppendixA(CompVMatPtr& edges, CompVHoughKhtStrings& strings);
 	void linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtPosBoxPtr& tmp_box, CompVHoughKhtStrings& strings, const int x_ref, const int y_ref);
 	uint8_t* linking_next_Algorithm6(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, int &x_seed, int &y_seed);
-	COMPV_ERROR_CODE clusters_find(CompVHoughKhtClusters& clusters, const CompVHoughKhtStrings& strings);
+	COMPV_ERROR_CODE clusters_find(CompVHoughKhtClusters& clusters, CompVHoughKhtStrings::const_iterator strings_begin, CompVHoughKhtStrings::const_iterator strings_end);
 	double clusters_subdivision(CompVHoughKhtClusters& clusters, const CompVHoughKhtString& string, const size_t start_index, const size_t end_index);
 	COMPV_ERROR_CODE voting_Algorithm2(const CompVHoughKhtClusters& clusters);
 	void vote_Algorithm4(size_t rho_start_index, const size_t theta_start_index, const double rho_start, const double theta_start, int inc_rho_index, const int inc_theta_index, const double scale, const CompVHoughKhtKernel& kernel);
@@ -102,7 +102,6 @@ private:
 	CompVMatPtr m_count; // CompVMatPtr<int32_t>
 	CompVMatPtr m_visited; // CompVMatPtr<uint8_t>
 	CompVHoughKhtStrings m_strings;
-	CompVHoughKhtClusters m_clusters;
 };
 
 COMPV_NAMESPACE_END()

@@ -14,6 +14,9 @@
 
 #define COMPV_THIS_CLASSNAME	"CompVHoughKht"
 
+#define COMPV_FEATURE_HOUGHKHT_VOTES_COUNT_MIN_SAMPLES_PER_THREAD (40)
+#define COMPV_FEATURE_HOUGHKHT_CLUSTERS_FIND_MIN_SAMPLES_PER_THREAD (40 * 1)
+
 // Documentation:
 //	- http://www2.ic.uff.br/~laffernandes/projects/kht/
 //	- https://www.academia.edu/11637890/Real-time_line_detection_through_an_improved_Hough_transform_voting_scheme
@@ -100,36 +103,111 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 {
 	COMPV_CHECK_EXP_RETURN(!edges || edges->isEmpty() || edges->subType() != COMPV_SUBTYPE_PIXELS_Y, COMPV_ERROR_CODE_E_INVALID_PARAMETER, "Edges null or not grayscale");
 
+	lines.clear();
+	m_strings.clear();
+
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
+	CompVHoughKhtClusters clusters_all;
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 
-	// Clone the edges (the linking procedure modifify the data)
-	COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
+	if (maxThreads > 1) {
+		CompVAsyncTaskIds taskIds;
+		size_t threadIdx, threadsCount, countAny, countLast;
+		std::vector<CompVHoughKhtClusters > clusters_mt;
+		auto funcPtrClone = [&]() -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		auto funcPtrInitCoords = [&]() -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN(initCoords(m_dRho, m_dTheta_rad, m_nThreshold, edges->cols(), edges->rows()));
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		auto funcPtrClusters = [&](size_t clusters_index, CompVHoughKhtStrings::const_iterator strings_begin, CompVHoughKhtStrings::const_iterator strings_end) -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN(clusters_find(clusters_mt[clusters_index], strings_begin, strings_end));
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		
+		// Clone the edges (the linking procedure modifify the data)
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrClone), taskIds));
+		// Init coords (sine and cosine tables)
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrInitCoords), taskIds));
+		// Wait for the tasks
+		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 
-	// Init coords (sine and cosine tables)
-	COMPV_CHECK_CODE_RETURN(initCoords(m_dRho, m_dTheta_rad, m_nThreshold, edges->cols(), edges->rows()));
+		// Appendix A. Linking procedure ( not thread-safe)
+		COMPV_CHECK_CODE_RETURN(linking_AppendixA(m_edges, m_strings));
+		if (m_strings.empty()) {
+			return COMPV_ERROR_CODE_S_OK;
+		}
 
-	// Appendix A. Linking procedure
-	COMPV_CHECK_CODE_RETURN(linking_AppendixA(m_edges, m_strings));
+		// Clusters
+		threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, m_strings.size(), maxThreads, COMPV_FEATURE_HOUGHKHT_CLUSTERS_FIND_MIN_SAMPLES_PER_THREAD);
+		if (threadsCount > 1) {
+			countAny = (m_strings.size() / threadsCount);
+			countLast = countAny + (m_strings.size() % threadsCount);
+			taskIds.clear();
+			clusters_mt.resize(threadsCount);
+			CompVHoughKhtStrings::const_iterator strings_begin = m_strings.begin();
+			for (threadIdx = 0; threadIdx < threadsCount - 1; ++threadIdx, strings_begin += countAny) {
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrClusters, threadIdx, strings_begin, (strings_begin + countAny)), taskIds));
+			}
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrClusters, (threadsCount - 1), strings_begin, (strings_begin + countLast)), taskIds));
+			for (threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+				COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
+				if (!clusters_mt[threadIdx].empty()) {
+					clusters_all.insert(clusters_all.end(), clusters_mt[threadIdx].begin(), clusters_mt[threadIdx].end());
+				}
+			}
+		}
+		else {
+			COMPV_CHECK_CODE_RETURN(clusters_find(clusters_all, m_strings.begin(), m_strings.end()));
+		}
+		if (clusters_all.empty()) {
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
+	else {
+		// Clone the edges (the linking procedure modifify the data)
+		COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
 
-	// Clusters
-	COMPV_CHECK_CODE_RETURN(clusters_find(m_clusters, m_strings));
+		// Init coords (sine and cosine tables)
+		COMPV_CHECK_CODE_RETURN(initCoords(m_dRho, m_dTheta_rad, m_nThreshold, edges->cols(), edges->rows()));
+
+		// Appendix A. Linking procedure
+		COMPV_CHECK_CODE_RETURN(linking_AppendixA(m_edges, m_strings));
+		if (m_strings.empty()) {
+			return COMPV_ERROR_CODE_S_OK;
+		}
+
+		// Clusters
+		COMPV_CHECK_CODE_RETURN(clusters_find(clusters_all, m_strings.begin(), m_strings.end()));
+		if (clusters_all.empty()) {
+			return COMPV_ERROR_CODE_S_OK;
+		}
+	}
 
 	// Voting
-	COMPV_CHECK_CODE_RETURN(m_count->zero_all()); // reset (TODO(dmi): hide latency using MT and packing in previous functions)
-	COMPV_CHECK_CODE_RETURN(voting_Algorithm2(m_clusters));
+	COMPV_CHECK_CODE_BAIL(err = voting_Algorithm2(clusters_all));
 
 	// Peaks detection
-	COMPV_CHECK_CODE_RETURN(m_visited->zero_all()); // reset (TODO(dmi): hide latency using MT and packing in previous functions)
-	COMPV_CHECK_CODE_RETURN(peaks_Section3_4(lines));
+	COMPV_CHECK_CODE_BAIL(err = m_visited->zero_all()); // reset (TODO(dmi): hide latency using MT and packing in previous functions)
+	COMPV_CHECK_CODE_BAIL(err = peaks_Section3_4(lines));
 
 	// Retain best lines
 	const size_t maxLines = COMPV_MATH_MIN(lines.size(), m_nMaxLines);
 	lines.resize(maxLines); // already sorted in 'peaks_Section3_4'
 
-	return COMPV_ERROR_CODE_S_OK;
+bail:
+	if (COMPV_ERROR_CODE_IS_NOK(err)) {
+		// When something went wrong this means we probably haven't managed to cleanup the count buffer, do it now
+		if (m_count) {
+			COMPV_CHECK_CODE_NOP(m_count->zero_all());
+		}
+	}
+	return err;
 }
 
 COMPV_ERROR_CODE CompVHoughKht::newObj(CompVHoughPtrPtr hough, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
@@ -170,6 +248,9 @@ COMPV_ERROR_CODE CompVHoughKht::initCoords(double dRho, double dTheta, size_t nT
 		for (size_t i = 1; i < maxThetaCount; ++i, r0 += dTheta_deg) {
 			ptr0[i] = r0;
 		}
+
+		// counts filling
+		COMPV_CHECK_CODE_RETURN(m_count->zero_all());
 
 		m_dRho = dRho;
 		m_dTheta_rad = dTheta;
@@ -299,10 +380,10 @@ uint8_t* CompVHoughKht::linking_next_Algorithm6(uint8_t* edgesPtr, const size_t 
 	return NULL;
 }
 
-COMPV_ERROR_CODE CompVHoughKht::clusters_find(CompVHoughKhtClusters& clusters, const CompVHoughKhtStrings& strings)
+COMPV_ERROR_CODE CompVHoughKht::clusters_find(CompVHoughKhtClusters& clusters, CompVHoughKhtStrings::const_iterator strings_begin, CompVHoughKhtStrings::const_iterator strings_end)
 {
 	clusters.clear();
-	for (CompVHoughKhtStrings::const_iterator it = strings.begin(); it < strings.end(); ++it) {
+	for (CompVHoughKhtStrings::const_iterator it = strings_begin; it < strings_end; ++it) {
 		clusters_subdivision(clusters, *it, 0, it->size() - 1);
 	}
 	return COMPV_ERROR_CODE_S_OK;
@@ -587,7 +668,8 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4(CompVHoughLineVector& lines)
 	const uint8_t *pvisited_top, *pvisited_bottom;
 	const size_t pvisited_stride = m_visited->strideInBytes();
 	const size_t pcount_stride = m_count->stride();
-	const int32_t *pcount = m_count->ptr<const int32_t>(1), *pcount_top, *pcount_bottom, *pcount_center;
+	int32_t *pcount = m_count->ptr<int32_t>(1);
+	const int32_t *pcount_top, *pcount_bottom, *pcount_center;
 	const double *rho = m_rho->ptr<const double>();
 	const double *theta = m_theta->ptr<const double>();
 	const size_t theta_count = m_theta->cols();
@@ -613,6 +695,7 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4(CompVHoughLineVector& lines)
 				if (vote_count >= m_nThreshold) { // do not add votes with less than threshold's values in count
 					votes.push_back(CompVHoughKhtVote(rho_index, theta_index, vote_count));
 				}
+				*pcount = 0x00; // cleanup for next call
 			}
 		}
 		pcount += pcount_stride;
