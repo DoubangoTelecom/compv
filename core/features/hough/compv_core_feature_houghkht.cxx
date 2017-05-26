@@ -378,11 +378,12 @@ static double __gauss_Eq15(const double rho, const double theta, const CompVHoug
 	const double sigma_rho_square = kernel.M[kCompVHoughKhtKernelIndex_SigmaRhoSquare];
 	const double sigma_rho_times_theta = kernel.M[kCompVHoughKhtKernelIndex_SigmaRhoTimesTheta];
 	const double sigma_rho_times_sigma_theta = std::sqrt(sigma_rho_square) * std::sqrt(sigma_theta_square);
-	const double r = (sigma_rho_times_theta / sigma_rho_times_sigma_theta);
-	const double r_square = r * r;
-	const double x = 1.0 / (2.0 * COMPV_MATH_PI * sigma_rho_times_sigma_theta * std::sqrt(1.0 - r_square));
-	const double y = 1.0 / (2.0 * (1.0 - r_square));
-	const double z = ((rho * rho) / sigma_rho_square) - (((r * 2.0) * rho * theta) / sigma_rho_times_sigma_theta) + ((theta * theta) / sigma_theta_square);
+	const double sigma_rho_times_sigma_theta_scale = 1.0 / sigma_rho_times_sigma_theta;
+	const double r = (sigma_rho_times_theta * sigma_rho_times_sigma_theta_scale);
+	const double one_minus_r_square = 1.0 - (r * r);
+	const double x = 1.0 / (2.0 * COMPV_MATH_PI * sigma_rho_times_sigma_theta * std::sqrt(one_minus_r_square));
+	const double y = 1.0 / (2.0 * (one_minus_r_square));
+	const double z = ((rho * rho) / sigma_rho_square) - (((r * 2.0) * rho * theta) * sigma_rho_times_sigma_theta_scale) + ((theta * theta) / sigma_theta_square);
 	return x * std::exp(-z * y);
 }
 
@@ -528,13 +529,17 @@ void CompVHoughKht::vote_Algorithm4(size_t rho_start_index, const size_t theta_s
 	const double inc_rho = m_dRho * inc_rho_index;
 	const double inc_theta = m_dTheta_deg * inc_theta_index;
 	const double sigma_rho_square = kernel.M[kCompVHoughKhtKernelIndex_SigmaRhoSquare];
+	const double sigma_rho_square_scale = 1.0 / sigma_rho_square;
 	const double sigma_theta_square = kernel.M[kCompVHoughKhtKernelIndex_SigmaThetaSquare];
+	const double sigma_theta_square_scale = 1.0 / sigma_theta_square;
 	const double sigma_rho_times_theta = kernel.M[kCompVHoughKhtKernelIndex_SigmaRhoTimesTheta];
 	const double sigma_rho_times_sigma_theta = std::sqrt(sigma_rho_square) * std::sqrt(sigma_theta_square);
-	const double r = (sigma_rho_times_theta / sigma_rho_times_sigma_theta);
+	const double sigma_rho_times_sigma_theta_scale = 1.0 / sigma_rho_times_sigma_theta;
+	const double r = (sigma_rho_times_theta * sigma_rho_times_sigma_theta_scale);
+	const double one_minus_r_square = 1.0 - (r * r);
 	const double r_times_2 = r * 2.0;
-	const double x = 1.0 / (2.0 * COMPV_MATH_PI * sigma_rho_times_sigma_theta * std::sqrt(1.0 - (r * r)));
-	const double y = 1.0 / (2.0 * (1.0 - (r * r)));
+	const double x = 1.0 / (2.0 * COMPV_MATH_PI * sigma_rho_times_sigma_theta * std::sqrt(one_minus_r_square));
+	const double y = 1.0 / (2.0 * one_minus_r_square);
 
 	double rho, theta;
 	double z, w;
@@ -558,13 +563,13 @@ void CompVHoughKht::vote_Algorithm4(size_t rho_start_index, const size_t theta_s
 			pcount = m_count->ptr<int32_t>(theta_index);
 			rho_index = rho_start_index;
 			rho = rho_start;
-			w = ((theta * theta) / sigma_theta_square);
-			z = ((rho * rho) / sigma_rho_square) - ((r_times_2 * rho * theta) / sigma_rho_times_sigma_theta) + w;
+			w = ((theta * theta) * sigma_theta_square_scale);
+			z = ((rho * rho) * sigma_rho_square_scale) - ((r_times_2 * rho * theta) * sigma_rho_times_sigma_theta_scale) + w;
 			while (((rho_index <= rho_size) && (votes = COMPV_MATH_ROUNDFU_2_NEAREST_INT(((x * std::exp(-z * y)) * scale), int)) > 0)) {
 				pcount[rho_index] += votes;
 				rho_index += inc_rho_index;
 				rho += inc_rho;
-				z = ((rho * rho) / sigma_rho_square) - ((r_times_2 * rho * theta) / sigma_rho_times_sigma_theta) + w;
+				z = ((rho * rho) * sigma_rho_square_scale) - ((r_times_2 * rho * theta) * sigma_rho_times_sigma_theta_scale) + w;
 			}
 			theta_index += inc_theta_index;
 			theta += inc_theta;
@@ -585,36 +590,32 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4(CompVHoughLineVector& lines)
 	const int32_t *pcount = m_count->ptr<const int32_t>(1), *pcount_top, *pcount_bottom;
 	const double *rho = m_rho->ptr<const double>();
 	const double *theta = m_theta->ptr<const double>();
-	const size_t theta_end = m_theta->cols();
-	const size_t rho_end = m_rho->cols();
+	const size_t theta_count = m_theta->cols();
+	const size_t rho_count = m_rho->cols();
 	size_t theta_index, rho_index;
 
 	CompVHoughKhtVotes votes;
+	int32_t vote_count;
 
 	// Given a voting map, first we create a list with all cells that
 	//	receive at least one vote.
 
-	for (theta_index = 1; theta_index < theta_end; ++theta_index) {
-		for (rho_index = 1; rho_index < rho_end; ++rho_index) {
+	for (theta_index = 1; theta_index < theta_count; ++theta_index) {
+		for (rho_index = 1; rho_index < rho_count; ++rho_index) {
 			if (pcount[rho_index]) {
 				pcount_top = (pcount - pcount_stride);
 				pcount_bottom = (pcount + pcount_stride);
-				votes.push_back(CompVHoughKhtVote(rho_index,
-					theta_index,
-					// convolution of the cells with a 3 × 3 Gaussian kernel.
+				vote_count = /* convolution of the cells with a 3 × 3 Gaussian kernel */
 					pcount_top[rho_index - 1] + pcount_top[rho_index + 1] + pcount_top[rho_index] + pcount_top[rho_index]
 					+ pcount_bottom[rho_index - 1] + pcount_bottom[rho_index + 1] + pcount_bottom[rho_index] + pcount_bottom[rho_index]
-					+ pcount[rho_index - 1] + pcount[rho_index - 1] + pcount[rho_index + 1] + pcount[rho_index + 1] + pcount[rho_index] + pcount[rho_index] + pcount[rho_index] + pcount[rho_index]));
+					+ pcount[rho_index - 1] + pcount[rho_index - 1] + pcount[rho_index + 1] + pcount[rho_index + 1] + pcount[rho_index] + pcount[rho_index] + pcount[rho_index] + pcount[rho_index];
+				if (vote_count >= m_nThreshold) { // do not add votes with less than threshold's values in count
+					votes.push_back(CompVHoughKhtVote(rho_index, theta_index, vote_count));
+				}
 			}
 		}
 		pcount += pcount_stride;
 	}
-
-	// Remove all votes with less than threshold's values in count
-	auto fncShortVotes = std::remove_if(votes.begin(), votes.end(), [this](const CompVHoughKhtVote& v) {
-		return v.count < m_nThreshold;
-	});
-	votes.erase(fncShortVotes, votes.end());
 
 	// Then, this list is sorted in descending
 	//	order according to the result of the convolution of the cells with
