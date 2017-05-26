@@ -79,10 +79,10 @@ public:
 			CompVMatPtr imageGray, edges;
 			CompVHoughLineVector lines;
 			CompVMatPtr points;
-#if 0
+#if 1
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 			COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(imageGray, &edges));
-#elif 1
+#elif 0
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1020, 960, 1020, "C:/Projects/GitHub/data/hough/road_binary1020x960_gray.yuv", &edges));
 #elif 0
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1280, 738, 1280, "C:/Projects/GitHub/data/adas/vlcsnap-2016-07-13-22h51m40s373_1280x738_gray.yuv", &imageGray));

@@ -212,7 +212,6 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtPosBoxPtr& tmp_box, CompVHoughKhtStrings& strings, const int x_ref, const int y_ref)
 {	
 	CompVHoughKhtPos *new_pos;
-	size_t reverse_size;
 
 	tmp_box->reset();
 
@@ -226,7 +225,7 @@ void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edge
 		*next_seed = 0x00; // !! edges are modified here (not thread-safe) !!
 	} while((next_seed = linking_next_Algorithm6(next_seed, edgesWidth, edgesHeight, edgesStride, x_seed, y_seed)));
 
-	reverse_size = tmp_box->size();
+	const size_t reverse_size = tmp_box->size();
 
 	// {Find and add feature pixels to the begin of the string}
 	x_seed = x_ref;
