@@ -587,7 +587,7 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4(CompVHoughLineVector& lines)
 	const uint8_t *pvisited_top, *pvisited_bottom;
 	const size_t pvisited_stride = m_visited->strideInBytes();
 	const size_t pcount_stride = m_count->stride();
-	const int32_t *pcount = m_count->ptr<const int32_t>(1), *pcount_top, *pcount_bottom;
+	const int32_t *pcount = m_count->ptr<const int32_t>(1), *pcount_top, *pcount_bottom, *pcount_center;
 	const double *rho = m_rho->ptr<const double>();
 	const double *theta = m_theta->ptr<const double>();
 	const size_t theta_count = m_theta->cols();
@@ -603,12 +603,13 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4(CompVHoughLineVector& lines)
 	for (theta_index = 1; theta_index < theta_count; ++theta_index) {
 		for (rho_index = 1; rho_index < rho_count; ++rho_index) {
 			if (pcount[rho_index]) {
-				pcount_top = (pcount - pcount_stride);
-				pcount_bottom = (pcount + pcount_stride);
+				pcount_center = &pcount[rho_index];
+				pcount_top = (pcount_center - pcount_stride);
+				pcount_bottom = (pcount_center + pcount_stride);
 				vote_count = /* convolution of the cells with a 3 × 3 Gaussian kernel */
-					pcount_top[rho_index - 1] + pcount_top[rho_index + 1] + pcount_top[rho_index] + pcount_top[rho_index]
-					+ pcount_bottom[rho_index - 1] + pcount_bottom[rho_index + 1] + pcount_bottom[rho_index] + pcount_bottom[rho_index]
-					+ pcount[rho_index - 1] + pcount[rho_index - 1] + pcount[rho_index + 1] + pcount[rho_index + 1] + pcount[rho_index] + pcount[rho_index] + pcount[rho_index] + pcount[rho_index];
+					pcount_top[-1] + pcount_top[1] + (*pcount_top << 1)
+					+ pcount_bottom[-1] + pcount_bottom[1] + (*pcount_bottom << 1)
+					+ (pcount_center[-1] << 1) + (pcount_center[1] << 1) + (*pcount_center << 2);
 				if (vote_count >= m_nThreshold) { // do not add votes with less than threshold's values in count
 					votes.push_back(CompVHoughKhtVote(rho_index, theta_index, vote_count));
 				}
