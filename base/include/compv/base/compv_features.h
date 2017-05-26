@@ -38,7 +38,7 @@ struct CompVFeatureFactory {
 	COMPV_ERROR_CODE(*newObjCornerDete)(CompVCornerDetePtrPtr dete);
 	COMPV_ERROR_CODE(*newObjCornerDesc)(CompVCornerDescPtrPtr desc);
 	COMPV_ERROR_CODE(*newObjEdgeDete)(CompVEdgeDetePtrPtr dete, float tLow /*= COMPV_FEATURE_DETE_EDGE_THRESHOLD_LOW */, float tHigh /*= COMPV_FEATURE_DETE_EDGE_THRESHOLD_HIGH*/, size_t kernSize /*= 3*/);
-	COMPV_ERROR_CODE(*newObjHough)(CompVHoughPtrPtr hough, float rho /*= 1.f*/, float theta /*= kfMathTrig1Rad*/, size_t threshold /*= 1*/);
+	COMPV_ERROR_CODE(*newObjHough)(CompVHoughPtrPtr hough, float rho /*= 1.f*/, float theta /*= kfMathTrigPiOver180*/, size_t threshold /*= 1*/);
 };
 
 /* Feature detectors and descriptors setters and getters */
@@ -198,7 +198,7 @@ protected:
 public:
 	virtual ~CompVHough();
 	virtual COMPV_ERROR_CODE process(const CompVMatPtr& edges, CompVHoughLineVector& lines, const CompVMatPtr& directions = NULL) = 0;
-	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, int id, float rho = 1.f, float theta = kfMathTrig1Rad, size_t threshold = 1);
+	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, int id, float rho = 1.f, float theta = kfMathTrigPiOver180, size_t threshold = 1);
 };
 
 

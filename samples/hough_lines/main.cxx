@@ -18,7 +18,7 @@ using namespace compv;
 
 #define HOUGH_ID							COMPV_HOUGHKHT_ID
 #define HOUGH_RHO							(1.0f * 0.5f) // "rho-delta" (half-pixel)
-#define HOUGH_THETA							(kfMathTrig1Rad * 0.5f) // "theta-delta" (half-radian)
+#define HOUGH_THETA							(kfMathTrigPiOver180 * 0.5f) // "theta-delta" (half-radian)
 #define HOUGH_THRESHOLD						150 // minumum number of aligned points to form a line (also used in NMS)
 #define HOUGH_MAXLINES						20 // maximum number of lines to retains (best) - use value <=0 to retain all
 #define HOUGHKHT_THRESHOLD					1 // keep all votes and filter later using MAXLINES
@@ -79,9 +79,17 @@ public:
 			CompVMatPtr imageGray, edges;
 			CompVHoughLineVector lines;
 			CompVMatPtr points;
+#if 1
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
-			//COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(imageGray, &edges));
+			COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(imageGray, &edges));
+#elif 0
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1020, 960, 1020, "C:/Projects/GitHub/data/hough/road_binary1020x960_gray.yuv", &edges));
+#elif 0
+			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 1280, 738, 1280, "C:/Projects/GitHub/data/adas/vlcsnap-2016-07-13-22h51m40s373_1280x738_gray.yuv", &imageGray));
+			COMPV_CHECK_CODE_RETURN(m_ptrCanny->process(imageGray, &edges));
+#else
+#			error "Not implemented"
+#endif			
 			COMPV_CHECK_CODE_RETURN(m_ptrHough->process(edges, lines));
 			
 			if (!lines.empty()) {

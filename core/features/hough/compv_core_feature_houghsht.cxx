@@ -35,7 +35,7 @@ static void CompVHoughShtNmsGatherRow_C(const int32_t * pAcc, size_t nAccStride,
 static void CompVHoughShtNmsApplyRow_C(int32_t* pACC, uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines);
 
 // threshold used for NMS
-CompVHoughSht::CompVHoughSht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrig1Rad), size_t threshold COMPV_DEFAULT(1))
+CompVHoughSht::CompVHoughSht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
 	:CompVHough(COMPV_HOUGHSHT_ID)
 	, m_fRho(rho)
 	, m_fTheta(theta)
@@ -257,7 +257,7 @@ COMPV_ERROR_CODE CompVHoughSht::process(const CompVMatPtr& edges, CompVHoughLine
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughSht::newObj(CompVHoughPtrPtr hough, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrig1Rad), size_t threshold COMPV_DEFAULT(1))
+COMPV_ERROR_CODE CompVHoughSht::newObj(CompVHoughPtrPtr hough, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
 {
 	COMPV_CHECK_EXP_RETURN(!hough || rho <=0 || rho > 1.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	// TODO(dmi): add support for fractional rho

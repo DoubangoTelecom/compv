@@ -60,7 +60,7 @@ typedef std::vector<CompVHoughKhtKernel> CompVHoughKhtKernels;
 class CompVHoughKht : public CompVHough
 {
 protected:
-	CompVHoughKht(float rho = 1.f, float theta = kfMathTrig1Rad, size_t threshold = 1);
+	CompVHoughKht(float rho = 1.f, float theta = kfMathTrigPiOver180, size_t threshold = 1);
 public:
 	virtual ~CompVHoughKht();
 	COMPV_OBJECT_GET_ID(CompVHoughKht);
@@ -68,7 +68,7 @@ public:
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
 	virtual COMPV_ERROR_CODE process(const CompVMatPtr& edges, CompVHoughLineVector& lines, const CompVMatPtr& directions = NULL) override /*Overrides(CompVHough)*/;
 
-	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, float rho = 1.f, float theta = kfMathTrig1Rad, size_t threshold = 1);
+	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, float rho = 1.f, float theta = kfMathTrigPiOver180, size_t threshold = 1);
 
 private:
 	COMPV_ERROR_CODE initCoords(double dRho, double dTheta, size_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);

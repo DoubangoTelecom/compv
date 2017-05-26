@@ -26,7 +26,7 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_HOUGHKHT_CLUSTER_MIN_SIZE				10
 #define COMPV_HOUGHKHT_KERNEL_MIN_HEIGTH			0.002
 
-CompVHoughKht::CompVHoughKht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrig1Rad), size_t threshold COMPV_DEFAULT(1))
+CompVHoughKht::CompVHoughKht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
 	:CompVHough(COMPV_HOUGHKHT_ID)
 	, m_dRho(static_cast<double>(rho))
 	, m_dTheta_rad(static_cast<double>(theta))
@@ -132,7 +132,7 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVHoughKht::newObj(CompVHoughPtrPtr hough, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrig1Rad), size_t threshold COMPV_DEFAULT(1))
+COMPV_ERROR_CODE CompVHoughKht::newObj(CompVHoughPtrPtr hough, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
 {
 	COMPV_CHECK_EXP_RETURN(!hough || rho <= 0 || rho > 1.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	CompVHoughPtr hough_ = new CompVHoughKht(rho, theta, threshold);
@@ -219,15 +219,13 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 // Algorithm 5 - Linking of neighboring edge pixels into strings
 void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edgesWidth, const size_t edgesHeight, const size_t edgesStride, CompVHoughKhtString& string, const int x_ref, const int y_ref)
 {	
-	m_strings.reserve(m_cluster_min_size);
-
 	// {Find and add feature pixels to the end of the string}
 	int x_seed = x_ref;
 	int y_seed = y_ref;
 	uint8_t* next_seed = edgesPtr;
 	do {
 		string.push_back(CompVHoughKhtPos(y_seed, x_seed));
-		*next_seed = 0x00; // !! edges are modified here !!
+		*next_seed = 0x00; // !! edges are modified here (not thread-safe) !!
 	} while((next_seed = linking_next_Algorithm6(next_seed, edgesWidth, edgesHeight, edgesStride, x_seed, y_seed)));
 
 	std::reverse(string.begin(), string.end());
@@ -239,7 +237,7 @@ void CompVHoughKht::linking_link_Algorithm5(uint8_t* edgesPtr, const size_t edge
 	if ((next_seed = linking_next_Algorithm6(next_seed, edgesWidth, edgesHeight, edgesStride, x_seed, y_seed))) {
 		do {
 			string.push_back(CompVHoughKhtPos(y_seed, x_seed));
-			*next_seed = 0x00; // !! edges are modified here !!
+			*next_seed = 0x00; // !! edges are modified here (not thread-safe) !!
 		} while ((next_seed = linking_next_Algorithm6(next_seed, edgesWidth, edgesHeight, edgesStride, x_seed, y_seed)));
 	}
 }
@@ -368,10 +366,11 @@ static double __gauss_Eq15(const double rho, const double theta, const CompVHoug
 	const double sigma_rho_times_theta = kernel.M[kCompVHoughKhtKernelIndex_SigmaRhoTimesTheta];
 	const double sigma_rho_times_sigma_theta = std::sqrt(sigma_rho_square) * std::sqrt(sigma_theta_square);
 	const double r = (sigma_rho_times_theta / sigma_rho_times_sigma_theta);
-	const double x = 1.0 / (2.0 * COMPV_MATH_PI * sigma_rho_times_sigma_theta * std::sqrt(1.0 - (r * r)));
-	const double y = 1.0 / (2.0 * (1.0 - (r * r)));
+	const double r_square = r * r;
+	const double x = 1.0 / (2.0 * COMPV_MATH_PI * sigma_rho_times_sigma_theta * std::sqrt(1.0 - r_square));
+	const double y = 1.0 / (2.0 * (1.0 - r_square));
 	const double z = ((rho * rho) / sigma_rho_square) - (((r * 2.0) * rho * theta) / sigma_rho_times_sigma_theta) + ((theta * theta) / sigma_theta_square);
-	return x * exp(-z * y);
+	return x * std::exp(-z * y);
 }
 
 // Algorithm 2: Computation of the Gaussian kernel parameters
