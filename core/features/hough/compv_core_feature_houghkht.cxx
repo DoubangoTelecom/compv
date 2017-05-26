@@ -110,6 +110,8 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	CompVHoughKhtClusters clusters_all;
+	CompVHoughKhtKernels kernels_all;
+	double hmax, Gmin;
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 
@@ -130,20 +132,20 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		
-		// Clone the edges (the linking procedure modifify the data)
+		/* Clone the edges (the linking procedure modifify the data) */
 		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrClone), taskIds));
-		// Init coords (sine and cosine tables)
+		/* Init coords (sine and cosine tables) */
 		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrInitCoords), taskIds));
-		// Wait for the tasks
+		// Wait for the tasks to complete
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 
-		// Appendix A. Linking procedure ( not thread-safe)
+		/* Appendix A. Linking procedure ( not thread-safe) */
 		COMPV_CHECK_CODE_RETURN(linking_AppendixA(m_edges, m_strings));
 		if (m_strings.empty()) {
 			return COMPV_ERROR_CODE_S_OK;
 		}
 
-		// Clusters
+		/* Clusters */
 		threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, m_strings.size(), maxThreads, COMPV_FEATURE_HOUGHKHT_CLUSTERS_FIND_MIN_SAMPLES_PER_THREAD);
 		if (threadsCount > 1) {
 			countAny = (m_strings.size() / threadsCount);
@@ -170,33 +172,40 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 		}
 	}
 	else {
-		// Clone the edges (the linking procedure modifify the data)
+		/* Clone the edges (the linking procedure modifify the data) */
 		COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
 
-		// Init coords (sine and cosine tables)
+		/* Init coords (sine and cosine tables) */
 		COMPV_CHECK_CODE_RETURN(initCoords(m_dRho, m_dTheta_rad, m_nThreshold, edges->cols(), edges->rows()));
 
-		// Appendix A. Linking procedure
+		/* Appendix A. Linking procedure */
 		COMPV_CHECK_CODE_RETURN(linking_AppendixA(m_edges, m_strings));
 		if (m_strings.empty()) {
 			return COMPV_ERROR_CODE_S_OK;
 		}
 
-		// Clusters
+		/* Clusters */
 		COMPV_CHECK_CODE_RETURN(clusters_find(clusters_all, m_strings.begin(), m_strings.end()));
 		if (clusters_all.empty()) {
 			return COMPV_ERROR_CODE_S_OK;
 		}
+
 	}
 
-	// Voting
-	COMPV_CHECK_CODE_BAIL(err = voting_Algorithm2(clusters_all));
+	/* Voting */
+	COMPV_CHECK_CODE_BAIL(err = voting_Algorithm2_Kernels(clusters_all, kernels_all, hmax)); // IS thread-safe
+	COMPV_CHECK_CODE_BAIL(err = voting_Algorithm2_DiscardShortKernels(kernels_all, hmax)); // IS thread-safe
+	if (clusters_all.empty()) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	COMPV_CHECK_CODE_BAIL(err = voting_Algorithm2_Gmin(kernels_all, Gmin)); // IS thread-safe
+	COMPV_CHECK_CODE_BAIL(err = voting_Algorithm2_Count(kernels_all, Gmin)); // NOT thread-safe
 
-	// Peaks detection
+	/* Peaks detection */
 	COMPV_CHECK_CODE_BAIL(err = m_visited->zero_all()); // reset (TODO(dmi): hide latency using MT and packing in previous functions)
 	COMPV_CHECK_CODE_BAIL(err = peaks_Section3_4(lines));
 
-	// Retain best lines
+	/* Retain best lines */
 	const size_t maxLines = COMPV_MATH_MIN(lines.size(), m_nMaxLines);
 	lines.resize(maxLines); // already sorted in 'peaks_Section3_4'
 
@@ -274,8 +283,6 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 
 	CompVHoughKhtPosBoxPtr tmp_box; // box used as temporary container
 	COMPV_CHECK_CODE_ASSERT(CompVHoughKhtPosBox::newObj(&tmp_box, 1000));
-
-	strings.clear();
 
 	for (int y_ref = 1; y_ref < maxj; ++y_ref) {
 		for (int x_ref = 1; x_ref < maxi; ++x_ref) {
@@ -469,7 +476,8 @@ static double __gauss_Eq15(const double rho, const double theta, const CompVHoug
 }
 
 // Algorithm 2: Computation of the Gaussian kernel parameters
-COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2(const CompVHoughKhtClusters& clusters)
+// Is thread-safe
+COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClusters& clusters, CompVHoughKhtKernels& kernels, double& hmax)
 {
 	if (!clusters.empty()) {
 		double mean_cx, mean_cy, cx, cy, cxx, cyy, cxy;
@@ -480,13 +488,8 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2(const CompVHoughKhtClusters& c
 		double matrix[2 * 2];
 		double eigenVectors[2 * 2], eigenValues[2 * 2], M_Eq14[2 * 2] = {0.0, 1.0, 0.0, 0.0};
 		double r0, r1, r2;
-		size_t rho_index, theta_index;
 		static const double rad_to_deg_scale = (180.0 / COMPV_MATH_PI);
-		const double rho_scale = 1.0 / m_dRho;
-		const double theta_scale = 1.0 / m_dTheta_deg;
-		const double rho_max_neg = *m_rho->ptr<const double>(0, 1);
 
-		CompVHoughKhtKernels kernels;
 		kernels.resize(clusters.size());
 		CompVHoughKhtKernels::iterator kernel = kernels.begin();
 
@@ -555,51 +558,74 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2(const CompVHoughKhtClusters& c
 			kernel->h = __gauss_Eq15(0.0, 0.0, *kernel);
 		} // end-of-for (CompVHoughKhtClusters::const_iterator cluster
 
-		// TODO(dmi): Algorithm3 not thread-safe (because of hmax computing), split it in new function
-
 		/* Algorithm 3. Proposed voting process.The Vote() procedure is in Algorithm 4. */
 
 		/* {Discard groups with very short kernels} */
-		r0 = kernels.begin()->h; // r0 = hmax
+		hmax = kernels.begin()->h;
 		for (CompVHoughKhtKernels::const_iterator k = (kernels.begin() + 1); k < kernels.end(); ++k) {
-			if (k->h > r0) {
-				r0 = k->h;
-			}
-		}
-		r1 = 1.0 / r0; // r1 = (1/hmax) to avoid dividing by hmax in the loop		
-		auto fncShortKernels = std::remove_if(kernels.begin(), kernels.end(), [this, r1](const CompVHoughKhtKernel& k) {
-			return (k.h * r1) < m_kernel_min_heigth;
-		});
-		kernels.erase(fncShortKernels, kernels.end());
-
-		if (!kernels.empty()) {
-			/* {Find the gmin threshold. Gk function in Eq15} */
-			r0 = DBL_MAX; // r0 = Gmin // http://www2.ic.uff.br/~laffernandes/projects/kht/ -> Errata - 01/14/2008
-			for (CompVHoughKhtKernels::const_iterator k = kernels.begin(); k < kernels.end(); ++k) {
-				COMPV_CHECK_CODE_RETURN(CompVMathEigen<double>::find2x2(k->M, eigenValues, eigenVectors));
-				// Compute Gk (gauss function)
-				r1 = std::sqrt(eigenValues[3]); // sqrt(smallest eigenvalue -> lambda_w)
-				r2 = __gauss_Eq15(eigenVectors[1] * r1, eigenVectors[3] * r1, *k);
-				if (r2 < r0) {
-					r0 = r2;
-				}
-			}
-
-			/* {Scale factor for integer votes} */
-			r1 = r0 == 0.0 ? 1.0 : std::max((1.0 / r0), 1.0); // r1 = gs
-			
-			/* {Vote for each selected kernel} */
-			for (CompVHoughKhtKernels::const_iterator k = kernels.begin(); k < kernels.end(); ++k) {
-				rho_index = static_cast<size_t>(std::abs((k->rho - rho_max_neg) * rho_scale)) + 1;
-				theta_index = static_cast<size_t>(std::abs(k->theta * theta_scale)) + 1;
-				vote_Algorithm4(rho_index, theta_index, 0.0, 0.0, 1, 1, r1, *k);
-				vote_Algorithm4(rho_index, theta_index - 1, 0.0, -m_dTheta_deg, 1, -1, r1, *k);
-				vote_Algorithm4(rho_index - 1, theta_index, -m_dRho, 0.0, -1, 1, r1, *k);
-				vote_Algorithm4(rho_index - 1, theta_index - 1, -m_dRho, -m_dTheta_deg, -1, -1, r1, *k);
+			if (k->h > hmax) {
+				hmax = k->h;
 			}
 		}
 	}
 
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Is thread-safe
+COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_DiscardShortKernels(CompVHoughKhtKernels& kernels, const double hmax)
+{
+	/* {Discard groups with very short kernels} */
+	if (!kernels.empty()) {
+		const double hmax_scale = 1.0 / hmax;	
+		auto fncShortKernels = std::remove_if(kernels.begin(), kernels.end(), [this, hmax_scale](const CompVHoughKhtKernel& k) {
+			return (k.h * hmax_scale) < m_kernel_min_heigth;
+		});
+		kernels.erase(fncShortKernels, kernels.end());
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Is thread-safe
+COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Gmin(const CompVHoughKhtKernels& kernels, double &Gmin)
+{
+	if (!kernels.empty()) {
+		double r1, r2, eigenVectors[2 * 2], eigenValues[2 * 2];
+		/* {Find the gmin threshold. Gk function in Eq15} */
+		Gmin = DBL_MAX; // r0 = Gmin // http://www2.ic.uff.br/~laffernandes/projects/kht/ -> Errata - 01/14/2008
+		for (CompVHoughKhtKernels::const_iterator k = kernels.begin(); k < kernels.end(); ++k) {
+			COMPV_CHECK_CODE_RETURN(CompVMathEigen<double>::find2x2(k->M, eigenValues, eigenVectors));
+			// Compute Gk (gauss function)
+			r1 = std::sqrt(eigenValues[3]); // sqrt(smallest eigenvalue -> lambda_w)
+			r2 = __gauss_Eq15(eigenVectors[1] * r1, eigenVectors[3] * r1, *k);
+			if (r2 < Gmin) {
+				Gmin = r2;
+			}
+		}
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// Not thread-safe
+COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Count(const CompVHoughKhtKernels& kernels, const double Gmin)
+{
+	if (!kernels.empty()) {
+		const double rho_scale = 1.0 / m_dRho;
+		const double theta_scale = 1.0 / m_dTheta_deg;
+		size_t rho_index, theta_index;
+		const double rho_max_neg = *m_rho->ptr<const double>(0, 1);
+		/* {Scale factor for integer votes} */
+		const double gs = Gmin == 0.0 ? 1.0 : std::max((1.0 / Gmin), 1.0);
+		/* {Vote for each selected kernel} */
+		for (CompVHoughKhtKernels::const_iterator k = kernels.begin(); k < kernels.end(); ++k) {
+			rho_index = static_cast<size_t>(std::abs((k->rho - rho_max_neg) * rho_scale)) + 1;
+			theta_index = static_cast<size_t>(std::abs(k->theta * theta_scale)) + 1;
+			vote_Algorithm4(rho_index, theta_index, 0.0, 0.0, 1, 1, gs, *k);
+			vote_Algorithm4(rho_index, theta_index - 1, 0.0, -m_dTheta_deg, 1, -1, gs, *k);
+			vote_Algorithm4(rho_index - 1, theta_index, -m_dRho, 0.0, -1, 1, gs, *k);
+			vote_Algorithm4(rho_index - 1, theta_index - 1, -m_dRho, -m_dTheta_deg, -1, -1, gs, *k);
+		}
+	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
