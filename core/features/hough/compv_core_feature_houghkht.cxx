@@ -16,6 +16,7 @@
 
 #define COMPV_FEATURE_HOUGHKHT_VOTES_COUNT_MIN_SAMPLES_PER_THREAD (40)
 #define COMPV_FEATURE_HOUGHKHT_CLUSTERS_FIND_MIN_SAMPLES_PER_THREAD (40 * 1)
+#define COMPV_FEATURE_HOUGHKHT_PEAKS_VOTES_MIN_SAMPLES_PER_THREAD (40 * 1)
 
 // Documentation:
 //	- http://www2.ic.uff.br/~laffernandes/projects/kht/
@@ -108,34 +109,50 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
+	size_t threadsCountClusters = 1, threadsCountPeaks = 1;
+	CompVAsyncTaskIds taskIds;
+	size_t threadIdx, countAny, countLast;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 	CompVHoughKhtClusters clusters_all;
 	CompVHoughKhtKernels kernels_all;
-	double hmax, Gmin;
+	CompVHoughKhtVotes votes_all;
+	double hmax = 0.0, Gmin = DBL_MAX;
 
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 
 	if (maxThreads > 1) {
-		CompVAsyncTaskIds taskIds;
-		size_t threadIdx, threadsCount, countAny, countLast;
-		std::vector<CompVHoughKhtClusters > clusters_mt;
+		std::vector<double > hmax_mt;
+		std::vector<double > Gmin_mt;
+		std::vector<CompVHoughKhtKernels > kernels_mt;
 		auto funcPtrClone = [&]() -> COMPV_ERROR_CODE {
 			COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
 			return COMPV_ERROR_CODE_S_OK;
 		};
-		auto funcPtrInitCoords = [&]() -> COMPV_ERROR_CODE {
-			COMPV_CHECK_CODE_RETURN(initCoords(m_dRho, m_dTheta_rad, m_nThreshold, edges->cols(), edges->rows()));
+		auto funcPtrInitCoordsAndClearMaps = [&]() -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN(initCoords(m_dRho, m_dTheta_rad, m_nThreshold, edges->cols(), edges->rows())); // Should be
+			COMPV_CHECK_CODE_RETURN(m_count->zero_rows()); // required before calling 'voting_Algorithm2_Count'
 			return COMPV_ERROR_CODE_S_OK;
 		};
-		auto funcPtrClusters = [&](size_t clusters_index, CompVHoughKhtStrings::const_iterator strings_begin, CompVHoughKhtStrings::const_iterator strings_end) -> COMPV_ERROR_CODE {
-			COMPV_CHECK_CODE_RETURN(clusters_find(clusters_mt[clusters_index], strings_begin, strings_end));
+		auto funcPtrVotingHmax = [&](size_t index, CompVHoughKhtStrings::const_iterator strings_begin, CompVHoughKhtStrings::const_iterator strings_end) -> COMPV_ERROR_CODE {
+			CompVHoughKhtClusters clusters_mt;
+			/* Clusters */
+			COMPV_CHECK_CODE_RETURN(clusters_find(clusters_mt, strings_begin, strings_end));
+			/* Voting (build kernels and compute hmax) */
+			COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Kernels(clusters_mt, kernels_mt[index], hmax_mt[index]));
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		auto funcPtrDiscardShortKernelsAndGmin = [&](size_t index)  -> COMPV_ERROR_CODE {
+			/* Voting (Erase short kernels) */
+			COMPV_CHECK_CODE_RETURN(voting_Algorithm2_DiscardShortKernels(kernels_mt[index], hmax));
+			/* Voting (Compute Gmin) */
+			COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Gmin(kernels_mt[index], Gmin_mt[index]));
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		
 		/* Clone the edges (the linking procedure modifify the data) */
 		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrClone), taskIds));
 		/* Init coords (sine and cosine tables) */
-		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrInitCoords), taskIds));
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrInitCoordsAndClearMaps), taskIds));
 		// Wait for the tasks to complete
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
 
@@ -145,31 +162,42 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 			return COMPV_ERROR_CODE_S_OK;
 		}
 
-		/* Clusters */
-		threadsCount = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, m_strings.size(), maxThreads, COMPV_FEATURE_HOUGHKHT_CLUSTERS_FIND_MIN_SAMPLES_PER_THREAD);
-		if (threadsCount > 1) {
-			countAny = (m_strings.size() / threadsCount);
-			countLast = countAny + (m_strings.size() % threadsCount);
+		/* MT (Clusters and Voting for hmax and kernels) */
+		threadsCountClusters = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, m_strings.size(), maxThreads, COMPV_FEATURE_HOUGHKHT_CLUSTERS_FIND_MIN_SAMPLES_PER_THREAD);
+		if (threadsCountClusters > 1) {
+			countAny = (m_strings.size() / threadsCountClusters);
+			countLast = countAny + (m_strings.size() % threadsCountClusters);
 			taskIds.clear();
-			clusters_mt.resize(threadsCount);
+			hmax_mt.resize(threadsCountClusters);
+			Gmin_mt.resize(threadsCountClusters);
+			kernels_mt.resize(threadsCountClusters);
 			CompVHoughKhtStrings::const_iterator strings_begin = m_strings.begin();
-			for (threadIdx = 0; threadIdx < threadsCount - 1; ++threadIdx, strings_begin += countAny) {
-				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrClusters, threadIdx, strings_begin, (strings_begin + countAny)), taskIds));
+			for (threadIdx = 0; threadIdx < threadsCountClusters - 1; ++threadIdx, strings_begin += countAny) {
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrVotingHmax, threadIdx, strings_begin, (strings_begin + countAny)), taskIds));
 			}
-			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrClusters, (threadsCount - 1), strings_begin, (strings_begin + countLast)), taskIds));
-			for (threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrVotingHmax, (threadsCountClusters - 1), strings_begin, (strings_begin + countLast)), taskIds));
+			for (threadIdx = 0; threadIdx < threadsCountClusters; ++threadIdx) {
 				COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
-				if (!clusters_mt[threadIdx].empty()) {
-					clusters_all.insert(clusters_all.end(), clusters_mt[threadIdx].begin(), clusters_mt[threadIdx].end());
+				if (hmax < hmax_mt[threadIdx]) {
+					hmax = hmax_mt[threadIdx];
 				}
 			}
-		}
-		else {
-			COMPV_CHECK_CODE_RETURN(clusters_find(clusters_all, m_strings.begin(), m_strings.end()));
-		}
-		if (clusters_all.empty()) {
-			return COMPV_ERROR_CODE_S_OK;
-		}
+
+			/* Voting (Erase short kernels) + (Compute Gmin) */
+			taskIds.clear();
+			for (threadIdx = 0; threadIdx < threadsCountClusters; ++threadIdx) {
+				COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrDiscardShortKernelsAndGmin, threadIdx), taskIds));
+			}
+			for (threadIdx = 0; threadIdx < threadsCountClusters; ++threadIdx) {
+				COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
+				if (!kernels_mt[threadIdx].empty()) {
+					if (Gmin_mt[threadIdx] < Gmin) {
+						Gmin = Gmin_mt[threadIdx];
+					}
+					kernels_all.insert(kernels_all.end(), kernels_mt[threadIdx].begin(), kernels_mt[threadIdx].end());
+				}
+			}
+		}		
 	}
 	else {
 		/* Clone the edges (the linking procedure modifify the data) */
@@ -183,39 +211,71 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 		if (m_strings.empty()) {
 			return COMPV_ERROR_CODE_S_OK;
 		}
-
+	}
+	
+	if (threadsCountClusters <= 1) {
 		/* Clusters */
 		COMPV_CHECK_CODE_RETURN(clusters_find(clusters_all, m_strings.begin(), m_strings.end()));
 		if (clusters_all.empty()) {
 			return COMPV_ERROR_CODE_S_OK;
 		}
 
+		/* Voting (build kernels and compute hmax) */
+		COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Kernels(clusters_all, kernels_all, hmax)); // IS thread-safe
+
+		/* Voting (Erase short kernels) */
+		COMPV_CHECK_CODE_RETURN(voting_Algorithm2_DiscardShortKernels(kernels_all, hmax)); // IS thread-safe
+		if (clusters_all.empty()) {
+			return COMPV_ERROR_CODE_S_OK;
+		}
+
+		/* Voting (Compute Gmin) */
+		COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Gmin(kernels_all, Gmin)); // IS thread-safe
 	}
 
-	/* Voting */
-	COMPV_CHECK_CODE_BAIL(err = voting_Algorithm2_Kernels(clusters_all, kernels_all, hmax)); // IS thread-safe
-	COMPV_CHECK_CODE_BAIL(err = voting_Algorithm2_DiscardShortKernels(kernels_all, hmax)); // IS thread-safe
-	if (clusters_all.empty()) {
+	/* Voting (Count votes) */
+	if (kernels_all.empty()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
-	COMPV_CHECK_CODE_BAIL(err = voting_Algorithm2_Gmin(kernels_all, Gmin)); // IS thread-safe
-	COMPV_CHECK_CODE_BAIL(err = voting_Algorithm2_Count(kernels_all, Gmin)); // NOT thread-safe
+	if (maxThreads <= 1) { // If MT enabled then, zeroing is calling asynchronously (see funcPtrInitCoordsAndClearMaps)
+		COMPV_CHECK_CODE_NOP(m_count->zero_all()); // required before calling 'voting_Algorithm2_Count'
+	}
+	COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Count(kernels_all, Gmin)); // NOT thread-safe
 
 	/* Peaks detection */
-	COMPV_CHECK_CODE_BAIL(err = m_visited->zero_all()); // reset (TODO(dmi): hide latency using MT and packing in previous functions)
-	COMPV_CHECK_CODE_BAIL(err = peaks_Section3_4(lines));
+	threadsCountPeaks = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_rho->cols(), (m_theta->cols() - 1), maxThreads, COMPV_FEATURE_HOUGHKHT_PEAKS_VOTES_MIN_SAMPLES_PER_THREAD);
+	if (threadsCountPeaks > 1) {
+		size_t index_start;
+		std::vector<CompVHoughKhtVotes > votes_mt;
+		countAny = ((m_theta->cols() - 1) / threadsCountPeaks);
+		countLast = countAny + ((m_theta->cols() - 1) % threadsCountPeaks);
+		taskIds.clear();
+		votes_mt.resize(threadsCountPeaks);
+		auto funcPtrVotesCountAndClearVisitedMap = [&](size_t index, size_t theta_index_start, size_t theta_index_end)  -> COMPV_ERROR_CODE {
+			COMPV_CHECK_CODE_RETURN(peaks_Section3_4_VotesCountAndClearVisitedMap(votes_mt[index], theta_index_start, theta_index_end)); // IS thread-safe
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		for (threadIdx = 0, index_start = 1; threadIdx < threadsCountPeaks - 1; ++threadIdx, index_start += countAny) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrVotesCountAndClearVisitedMap, threadIdx, index_start, (index_start + countAny)), taskIds));
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrVotesCountAndClearVisitedMap, (threadsCountPeaks - 1), index_start, (index_start + countLast)), taskIds));
+		for (threadIdx = 0; threadIdx < threadsCountPeaks; ++threadIdx) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
+			if (!votes_mt[threadIdx].empty()) {
+				votes_all.insert(votes_all.end(), votes_mt[threadIdx].begin(), votes_mt[threadIdx].end());
+			}
+		}
+	}
+	else {
+		COMPV_CHECK_CODE_RETURN(peaks_Section3_4_VotesCountAndClearVisitedMap(votes_all, 1, m_theta->cols())); // IS thread-safe
+	}
+	COMPV_CHECK_CODE_RETURN(peaks_Section3_4_VotesSort(votes_all)); // NOT thread-safe
+	COMPV_CHECK_CODE_RETURN(peaks_Section3_4_Lines(lines, votes_all)); // NOT thread-safe
 
 	/* Retain best lines */
 	const size_t maxLines = COMPV_MATH_MIN(lines.size(), m_nMaxLines);
 	lines.resize(maxLines); // already sorted in 'peaks_Section3_4'
-
-bail:
-	if (COMPV_ERROR_CODE_IS_NOK(err)) {
-		// When something went wrong this means we probably haven't managed to cleanup the count buffer, do it now
-		if (m_count) {
-			COMPV_CHECK_CODE_NOP(m_count->zero_all());
-		}
-	}
+	
 	return err;
 }
 
@@ -258,8 +318,8 @@ COMPV_ERROR_CODE CompVHoughKht::initCoords(double dRho, double dTheta, size_t nT
 			ptr0[i] = r0;
 		}
 
-		// counts filling
 		COMPV_CHECK_CODE_RETURN(m_count->zero_all());
+		COMPV_CHECK_CODE_RETURN(m_visited->zero_all());
 
 		m_dRho = dRho;
 		m_dTheta_rad = dTheta;
@@ -479,6 +539,7 @@ static double __gauss_Eq15(const double rho, const double theta, const CompVHoug
 // Is thread-safe
 COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Kernels(const CompVHoughKhtClusters& clusters, CompVHoughKhtKernels& kernels, double& hmax)
 {
+	hmax = 0.0;
 	if (!clusters.empty()) {
 		double mean_cx, mean_cy, cx, cy, cxx, cyy, cxy;
 		double n; // number of pixels in Sk
@@ -589,10 +650,10 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_DiscardShortKernels(CompVHough
 // Is thread-safe
 COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Gmin(const CompVHoughKhtKernels& kernels, double &Gmin)
 {
+	Gmin = DBL_MAX; // r0 = Gmin // http://www2.ic.uff.br/~laffernandes/projects/kht/ -> Errata - 01/14/2008
 	if (!kernels.empty()) {
 		double r1, r2, eigenVectors[2 * 2], eigenValues[2 * 2];
 		/* {Find the gmin threshold. Gk function in Eq15} */
-		Gmin = DBL_MAX; // r0 = Gmin // http://www2.ic.uff.br/~laffernandes/projects/kht/ -> Errata - 01/14/2008
 		for (CompVHoughKhtKernels::const_iterator k = kernels.begin(); k < kernels.end(); ++k) {
 			COMPV_CHECK_CODE_RETURN(CompVMathEigen<double>::find2x2(k->M, eigenValues, eigenVectors));
 			// Compute Gk (gauss function)
@@ -685,30 +746,20 @@ void CompVHoughKht::vote_Algorithm4(size_t rho_start_index, const size_t theta_s
 	} while ((rho != rho_start) && (++theta_count < theta_size));
 }
 
-COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4(CompVHoughLineVector& lines)
+// IS thread-safe
+COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4_VotesCountAndClearVisitedMap(CompVHoughKhtVotes& votes, const size_t theta_index_start, const size_t theta_index_end)
 {
-	lines.clear();
-
-	bool bvisited;
-	uint8_t* pvisited;
-	const uint8_t *pvisited_top, *pvisited_bottom;
-	const size_t pvisited_stride = m_visited->strideInBytes();
 	const size_t pcount_stride = m_count->stride();
-	int32_t *pcount = m_count->ptr<int32_t>(1);
-	const int32_t *pcount_top, *pcount_bottom, *pcount_center;
-	const double *rho = m_rho->ptr<const double>();
-	const double *theta = m_theta->ptr<const double>();
-	const size_t theta_count = m_theta->cols();
+	const int32_t *pcount = m_count->ptr<const int32_t>(theta_index_start), *pcount_top, *pcount_bottom, *pcount_center;
 	const size_t rho_count = m_rho->cols();
 	size_t theta_index, rho_index;
 
-	CompVHoughKhtVotes votes;
 	int32_t vote_count;
 
 	// Given a voting map, first we create a list with all cells that
 	//	receive at least one vote.
 
-	for (theta_index = 1; theta_index < theta_count; ++theta_index) {
+	for (theta_index = theta_index_start; theta_index < theta_index_end; ++theta_index) {
 		for (rho_index = 1; rho_index < rho_count; ++rho_index) {
 			if (pcount[rho_index]) {
 				pcount_center = &pcount[rho_index];
@@ -716,27 +767,45 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4(CompVHoughLineVector& lines)
 				pcount_bottom = (pcount_center + pcount_stride);
 				vote_count = /* convolution of the cells with a 3 × 3 Gaussian kernel */
 					pcount_top[-1] + pcount_top[1] + (*pcount_top << 1)
-					+ pcount_bottom[-1] + pcount_bottom[1] + (*pcount_bottom << 1)
-					+ (pcount_center[-1] << 1) + (pcount_center[1] << 1) + (*pcount_center << 2);
+					+ pcount_bottom[-1] + pcount_bottom[1] + ((*pcount_bottom) << 1)
+					+ (pcount_center[-1] << 1) + (pcount_center[1] << 1) + ((*pcount_center) << 2);
 				if (vote_count >= m_nThreshold) { // do not add votes with less than threshold's values in count
 					votes.push_back(CompVHoughKhtVote(rho_index, theta_index, vote_count));
 				}
-				*pcount = 0x00; // cleanup for next call
 			}
 		}
+		COMPV_CHECK_CODE_RETURN(m_visited->zero_row(theta_index));
 		pcount += pcount_stride;
 	}
+	return COMPV_ERROR_CODE_S_OK;
+}
 
+// NOT thread-safe
+COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4_VotesSort(CompVHoughKhtVotes& votes)
+{
 	// Then, this list is sorted in descending
 	//	order according to the result of the convolution of the cells with
 	//	a 3 × 3 Gaussian kernel.
 	std::sort(votes.begin(), votes.end(), [](const CompVHoughKhtVote &vote1, const CompVHoughKhtVote &vote2) {
 		return (vote1.count > vote2.count);
 	});
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// NOT thread-safe
+COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4_Lines(CompVHoughLineVector& lines, const CompVHoughKhtVotes& votes)
+{
+	bool bvisited;
+	uint8_t* pvisited;
+	const uint8_t *pvisited_top, *pvisited_bottom;
+	const size_t pvisited_stride = m_visited->strideInBytes();
+	const double *rho = m_rho->ptr<const double>();
+	const double *theta = m_theta->ptr<const double>();
+	CompVHoughKhtVotes::const_iterator votes_begin = votes.begin(), votes_end = votes.end();
 
 	// After the sorting step, we use a sweep plane that visits each
 	// cell of the list.
-	for (CompVHoughKhtVotes::const_iterator i = votes.begin(); i < votes.end(); ++i) {
+	for (CompVHoughKhtVotes::const_iterator i = votes_begin; i < votes_end; ++i) {
 		pvisited = m_visited->ptr<uint8_t>(i->theta_index, i->rho_index);
 		pvisited_top = (pvisited - pvisited_stride);
 		pvisited_bottom = (pvisited + pvisited_stride);
