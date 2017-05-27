@@ -15,7 +15,8 @@
     <ClCompile Include="..\..\patch.cxx" />
     <ClCompile Include="..\..\sobel.cxx" />
     <ClCompile Include="..\..\canny.cxx" />
-    <ClCompile Include="..\..\hough.cxx" />
+    <ClCompile Include="..\..\houghkht.cxx" />
+    <ClCompile Include="..\..\houghsht.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\tests_common.h" />

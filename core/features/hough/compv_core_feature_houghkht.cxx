@@ -118,8 +118,6 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 	CompVHoughKhtVotes votes_all;
 	double hmax = 0.0, Gmin = DBL_MAX;
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
-
 	if (maxThreads > 1) {
 		std::vector<double > hmax_mt;
 		std::vector<double > Gmin_mt;
@@ -470,7 +468,6 @@ double CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, cons
 	const int diffx = start.x - end.x;
 	const int diffy = start.y - end.y;
 	const double length = std::sqrt(static_cast<double>((diffx * diffx) + (diffy * diffy)));
-	const size_t count = string.size();
 
 	// The significance of a straight line fit to a list of points can be estimated by calculating
 	// 	the ratio of the length of the line segment divided by the maximum deviation of

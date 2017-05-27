@@ -18,13 +18,13 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVHoughStdAccGatherRow_4mpd_Intrin_NEON(COMPV_ALIGNED(NEON) const int32_t* pCosRho, COMPV_ALIGNED(NEON) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta);
+void CompVHoughShtAccGatherRow_4mpd_Intrin_NEON(COMPV_ALIGNED(NEON) const int32_t* pCosRho, COMPV_ALIGNED(NEON) const int32_t* pRowTimesSinRho, compv_uscalar_t col, int32_t* pACC, compv_uscalar_t accStride, compv_uscalar_t maxTheta);
 
-void CompVHoughStdNmsGatherRow_8mpd_Intrin_NEON(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, compv_uscalar_t nThreshold, compv_uscalar_t colStart, compv_uscalar_t maxCols);
+void CompVHoughShtNmsGatherRow_8mpd_Intrin_NEON(const int32_t * pAcc, compv_uscalar_t nAccStride, uint8_t* pNms, compv_uscalar_t nThreshold, compv_uscalar_t colStart, compv_uscalar_t maxCols);
 
-void CompVHoughStdNmsApplyRow_Intrin_NEON(COMPV_ALIGNED(NEON) int32_t* pACC, COMPV_ALIGNED(NEON) uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines);
+void CompVHoughShtNmsApplyRow_Intrin_NEON(COMPV_ALIGNED(NEON) int32_t* pACC, COMPV_ALIGNED(NEON) uint8_t* pNMS, size_t threshold, compv_float32_t theta, int32_t barrier, int32_t row, size_t colStart, size_t maxCols, CompVHoughLineVector& lines);
 
-void CompVHoughStdRowTimesSinRho_Intrin_NEON(COMPV_ALIGNED(NEON) const int32_t* pSinRho, COMPV_ALIGNED(NEON) compv_uscalar_t row, COMPV_ALIGNED(NEON) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count);
+void CompVHoughShtRowTimesSinRho_Intrin_NEON(COMPV_ALIGNED(NEON) const int32_t* pSinRho, COMPV_ALIGNED(NEON) compv_uscalar_t row, COMPV_ALIGNED(NEON) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count);
 
 COMPV_NAMESPACE_END()
 

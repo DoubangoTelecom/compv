@@ -216,20 +216,23 @@
     <ClInclude Include="..\include\compv\core\features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.h">
       <Filter>include\features\edges\intrin\arm</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\core\features\hough\compv_core_feature_houghstd.h">
+    <ClInclude Include="..\include\compv\core\features\hough\intrin\arm\compv_core_feature_houghsht_intrin_neon.h">
+      <Filter>include\features\hough\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_avx2.h">
+      <Filter>include\features\hough\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse2.h">
+      <Filter>include\features\hough\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse41.h">
+      <Filter>include\features\hough\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hough\compv_core_feature_houghkht.h">
       <Filter>include\features\hough</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghstd_intrin_avx2.h">
-      <Filter>include\features\hough\intrin\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghstd_intrin_sse2.h">
-      <Filter>include\features\hough\intrin\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghstd_intrin_sse41.h">
-      <Filter>include\features\hough\intrin\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\compv\core\features\hough\intrin\arm\compv_core_feature_houghstd_intrin_neon.h">
-      <Filter>include\features\hough\intrin\arm</Filter>
+    <ClInclude Include="..\include\compv\core\features\hough\compv_core_feature_houghsht.h">
+      <Filter>include\features\hough</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -296,20 +299,23 @@
     <ClCompile Include="..\features\edges\intrin\arm\compv_core_feature_canny_dete_intrin_neon.cxx">
       <Filter>source\features\edges\intrin\arm</Filter>
     </ClCompile>
-    <ClCompile Include="..\features\hough\compv_core_feature_houghstd.cxx">
+    <ClCompile Include="..\features\hough\intrin\arm\compv_core_feature_houghsht_intrin_neon.cxx">
+      <Filter>source\features\hough\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_avx2.cxx">
+      <Filter>source\features\hough\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse2.cxx">
+      <Filter>source\features\hough\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse41.cxx">
+      <Filter>source\features\hough\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\hough\compv_core_feature_houghkht.cxx">
       <Filter>source\features\hough</Filter>
     </ClCompile>
-    <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghstd_intrin_avx2.cxx">
-      <Filter>source\features\hough\intrin\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghstd_intrin_sse2.cxx">
-      <Filter>source\features\hough\intrin\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghstd_intrin_sse41.cxx">
-      <Filter>source\features\hough\intrin\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\features\hough\intrin\arm\compv_core_feature_houghstd_intrin_neon.cxx">
-      <Filter>source\features\hough\intrin\arm</Filter>
+    <ClCompile Include="..\features\hough\compv_core_feature_houghsht.cxx">
+      <Filter>source\features\hough</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
