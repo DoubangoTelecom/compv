@@ -52,6 +52,7 @@
 /* Module: Core */
 #include <compv/core/compv_core.h>
 #include <compv/core/calib/compv_core_calib_homography.h>
+#include <compv/core/calib/compv_core_calib_camera.h>
 
 /* Module: GPU */
 #include <compv/gpu/compv_gpu.h>

@@ -221,6 +221,12 @@
     <ClCompile Include="features\hough\intrin\arm\compv_core_feature_houghsht_intrin_neon.cxx">
       <Filter>Source Files\features\hough\intrin\arm</Filter>
     </ClCompile>
+    <ClCompile Include="calib\compv_core_calib_camera.cxx">
+      <Filter>Source Files\calib</Filter>
+    </ClCompile>
+    <ClCompile Include="calib\compv_core_calib_utils.cxx">
+      <Filter>Source Files\calib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -300,6 +306,12 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\features\hough\intrin\arm\compv_core_feature_houghsht_intrin_neon.h">
       <Filter>Header Files\features\hough\intrin\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\calib\compv_core_calib_camera.h">
+      <Filter>Header Files\calib</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\calib\compv_core_calib_utils.h">
+      <Filter>Header Files\calib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

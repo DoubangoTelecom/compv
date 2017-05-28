@@ -195,7 +195,9 @@
     </YASM>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="calib\compv_core_calib_camera.cxx" />
     <ClCompile Include="calib\compv_core_calib_homography.cxx" />
+    <ClCompile Include="calib\compv_core_calib_utils.cxx" />
     <ClCompile Include="compv_core.cxx" />
     <ClCompile Include="features\edges\compv_core_feature_canny_dete.cxx" />
     <ClCompile Include="features\edges\compv_core_feature_edge_dete.cxx" />
@@ -254,7 +256,9 @@
     <ClCompile Include="matchers\compv_matcher_bruteforce.cxx" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\compv\core\calib\compv_core_calib_camera.h" />
     <ClInclude Include="include\compv\core\calib\compv_core_calib_homography.h" />
+    <ClInclude Include="include\compv\core\calib\compv_core_calib_utils.h" />
     <ClInclude Include="include\compv\core\compv_core.h" />
     <ClInclude Include="include\compv\core\compv_core_common.h" />
     <ClInclude Include="include\compv\core\compv_core_config.h" />

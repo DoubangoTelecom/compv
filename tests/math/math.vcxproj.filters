@@ -51,5 +51,8 @@
     <ClCompile Include="distance.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="calib_camera.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

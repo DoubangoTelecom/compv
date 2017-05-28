@@ -338,12 +338,13 @@ COMPV_ERROR_CODE CompVHoughKht::linking_AppendixA(CompVMatPtr& edges, CompVHough
 	const size_t edgesStride = edges->strideInBytes();
 	const int maxi = static_cast<int>(edges->cols() - 1);
 	const int maxj = static_cast<int>(edges->rows() - 1);
+	int x_ref, y_ref;
 
 	CompVHoughKhtPosBoxPtr tmp_box; // box used as temporary container
 	COMPV_CHECK_CODE_ASSERT(CompVHoughKhtPosBox::newObj(&tmp_box, 1000));
 
-	for (int y_ref = 1; y_ref < maxj; ++y_ref) {
-		for (int x_ref = 1; x_ref < maxi; ++x_ref) {
+	for (y_ref = 1; y_ref < maxj; ++y_ref) {
+		for (x_ref = 1; x_ref < maxi; ++x_ref) {
 			if (edgesPtr[x_ref]) {
 				linking_link_Algorithm5(&edgesPtr[x_ref], edgesWidth, edgesHeight, edgesStride, tmp_box, strings, x_ref, y_ref);
 			}
@@ -636,8 +637,9 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_DiscardShortKernels(CompVHough
 	/* {Discard groups with very short kernels} */
 	if (!kernels.empty()) {
 		const double hmax_scale = 1.0 / hmax;	
-		auto fncShortKernels = std::remove_if(kernels.begin(), kernels.end(), [this, hmax_scale](const CompVHoughKhtKernel& k) {
-			return (k.h * hmax_scale) < m_kernel_min_heigth;
+		const double kernel_min_heigth = m_kernel_min_heigth;
+		auto fncShortKernels = std::remove_if(kernels.begin(), kernels.end(), [kernel_min_heigth, hmax_scale](const CompVHoughKhtKernel& k) {
+			return (k.h * hmax_scale) < kernel_min_heigth;
 		});
 		kernels.erase(fncShortKernels, kernels.end());
 	}

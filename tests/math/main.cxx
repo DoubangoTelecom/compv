@@ -16,7 +16,8 @@
 #define TEST_TRF_HOMOG_TO_CART				0 // homogeneousToCartesian2D()
 #define TEST_CALIB_HOMOGRAPHY_BUILD_MATRIX	0
 #define TEST_CALIB_HOMOGRAPHY				0
-#define TEST_DISTANCE_HAMMING				1
+#define TEST_CALIB_CAMERA					1
+#define TEST_DISTANCE_HAMMING				0
 
 
 /* Entry point function */
@@ -83,6 +84,10 @@ compv_main()
 #if TEST_CALIB_HOMOGRAPHY
 		extern COMPV_ERROR_CODE homography();
 		COMPV_CHECK_CODE_BAIL(err = homography(), TAG_TEST "Math homography test failed");
+#endif
+#if TEST_CALIB_CAMERA
+		extern COMPV_ERROR_CODE calib_camera();
+		COMPV_CHECK_CODE_BAIL(err = calib_camera(), TAG_TEST "Math camera calibration test failed");
 #endif
 
 #if TEST_DISTANCE_HAMMING
