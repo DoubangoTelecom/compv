@@ -62,27 +62,28 @@ public:
 		COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
 		if (CompVDrawing::isLoopRunning()) {
 			CompVMatPtr imageGray;
-			CompVMatPtr points;
+			CompVMatPtr raw_lines_points;
+			CompVMatPtr grouped_lines_points;
 #if 0
 			COMPV_CHECK_CODE_RETURN(CompVImage::convertGrayscale(image, &imageGray));
 #else
-			size_t file_index = 55; // 47 + (rand() % 20); //47 + (rand() % 20);
+			size_t file_index = 60; // 47 + (rand() % 20); //47 + (rand() % 20);
 			std::string file_path = std::string("C:/Projects/GitHub/data/calib/P10100")+ CompVBase::to_string(file_index) +std::string("s_640x480_gray.yuv");
 			COMPV_CHECK_CODE_RETURN(CompVImage::readPixels(COMPV_SUBTYPE_PIXELS_Y, 640, 480, 640, file_path.c_str(), &imageGray));
 			CompVThread::sleep(1000);
 #endif
 			COMPV_CHECK_CODE_RETURN(m_ptrCalib->process(imageGray, m_CalibResult));
 
-			if (!m_CalibResult.hough_lines.empty()) {
-				COMPV_CHECK_CODE_RETURN(buildLines(m_CalibResult.edges->cols(), m_CalibResult.edges->rows(), m_CalibResult.hough_lines, points));
+			if (!m_CalibResult.grouped_lines.empty()) {
+				COMPV_CHECK_CODE_RETURN(buildLines(m_CalibResult.grouped_lines, raw_lines_points));
 			}
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
-			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(m_CalibResult.edges));
-			if (points) {
+			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(/*imageGray*/m_CalibResult.edges));
+			if (raw_lines_points) {
 				COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->renderer()->canvas()->drawLines(
-					points->ptr<const compv_float32_t>(0), points->ptr<const compv_float32_t>(1),
-					points->ptr<const compv_float32_t>(2), points->ptr<const compv_float32_t>(3),
-					m_CalibResult.hough_lines.size(), &m_DrawingOptions
+					raw_lines_points->ptr<const compv_float32_t>(0), raw_lines_points->ptr<const compv_float32_t>(1),
+					raw_lines_points->ptr<const compv_float32_t>(2), raw_lines_points->ptr<const compv_float32_t>(3),
+					m_CalibResult.grouped_lines.size(), &m_DrawingOptions
 				));
 			}
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->blit());
@@ -114,25 +115,19 @@ public:
 	}
 
 private:
-	static COMPV_ERROR_CODE buildLines(size_t imageWidth, size_t imageHeight, const CompVHoughLineVector& lines, CompVMatPtr& points) {
+	static COMPV_ERROR_CODE buildLines(const CompVLineFloat32Vector& lines, CompVMatPtr& points) {
 		COMPV_CHECK_EXP_RETURN(lines.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<compv_float32_t>(&points, 4, lines.size())));
 		compv_float32_t *px0 = points->ptr<compv_float32_t>(0);
 		compv_float32_t *py0 = points->ptr<compv_float32_t>(1);
 		compv_float32_t *px1 = points->ptr<compv_float32_t>(2);
 		compv_float32_t *py1 = points->ptr<compv_float32_t>(3);
-		const compv_float32_t imageWidthF = static_cast<compv_float32_t>(imageWidth);
-		const compv_float32_t imageHeightF = static_cast<compv_float32_t>(imageHeight);
-		const compv_float32_t half_imageWidthF = imageWidthF / 2.f;
-		const compv_float32_t half_imageHeightF = imageHeightF / 2.f;
 		for (size_t i = 0; i < lines.size(); i++) {
-			const compv_float32_t rho = lines[i].rho;
-			const compv_float32_t theta = lines[i].theta;
-			const compv_float32_t a = std::cos(theta), b = 1.f / std::sin(theta);
-			px0[i] = 0;
-			py0[i] = ((rho + (half_imageWidthF * a)) * b) + half_imageHeightF;
-			px1[i] = imageWidthF;
-			py1[i] = ((rho - (half_imageWidthF * a)) * b) + half_imageHeightF;
+			const CompVLineFloat32& line = lines[i];
+			px0[i] = line.a.x;
+			py0[i] = line.a.y;
+			px1[i] = line.b.x;
+			py1[i] = line.b.y;
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}

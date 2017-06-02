@@ -376,17 +376,23 @@ public:
     CompVVec3f(compv_float32_t x_, compv_float32_t y_, compv_float32_t z_) : x(x_), y(y_), z(z_) { }
 };
 
+template <typename T>
 struct CompVRect {
 public:
-    int left;
-    int top;
-    int right;
-    int bottom;
-    CompVRect(int left_ = 0, int top_ = 0, int right_ = 0, int bottom_ = 0) : left(left_), top(top_), right(right_), bottom(bottom_) {  }
-    static CompVRect makeFromWidthHeight(int x, int y, int width, int height) {
+	T left;
+	T top;
+	T right;
+	T bottom;
+    CompVRect(T left_ = 0, T top_ = 0, T right_ = 0, T bottom_ = 0) : left(left_), top(top_), right(right_), bottom(bottom_) {  }
+    static CompVRect makeFromWidthHeight(T x, T y, T width, T height) {
         return CompVRect(x, y, x + width, y + height);
     }
+	COMPV_INLINE bool isEmpty()const { return (left == right) && (top == bottom); }
 };
+typedef CompVRect<compv_float32_t> CompVRectFloat32;
+typedef CompVRect<compv_float64_t> CompVRectFloat64;
+typedef CompVRect<int32_t> CompVRectInt32;
+typedef CompVRect<int> CompVRectInt;
 
 struct CompVRatio {
 public:
@@ -413,7 +419,24 @@ typedef CompVPoint<compv_float32_t> CompVPointFloat32;
 typedef CompVPoint<compv_float64_t> CompVPointFloat64;
 typedef CompVPoint<int32_t> CompVPointInt32;
 typedef CompVPoint<int> CompVPointInt;
+typedef std::vector<CompVPointFloat32> CompVPointFloat32Vector;
+typedef std::vector<CompVPointFloat64> CompVPointFloat64Vector;
+typedef std::vector<CompVPointInt32> CompVPointInt32Vector;
+typedef std::vector<CompVPointInt> CompVPointIntVector;
 
+
+template <typename T>
+struct CompVLine {
+	CompVPoint<T> a, b;
+};
+typedef CompVLine<compv_float32_t> CompVLineFloat32;
+typedef CompVLine<compv_float64_t> CompVLineFloat64;
+typedef CompVLine<int32_t> CompVLineInt32;
+typedef CompVLine<int> CompVLineInt;
+typedef std::vector<CompVLineFloat32> CompVLineFloat32Vector;
+typedef std::vector<CompVLineFloat64> CompVLineFloat64Vector;
+typedef std::vector<CompVLineInt32> CompVLineInt32Vector;
+typedef std::vector<CompVLineInt> CompVLineIntVector;
 
 struct CompVInterestPoint {
 	compv_float32_t x; /**< Point.x */
@@ -458,7 +481,6 @@ public:
 		interestPoints.erase(new_end, interestPoints.end());
 	}
 };
-
 typedef std::vector<CompVInterestPoint> CompVInterestPointVector;
 
 struct CompVMatIndex {
@@ -468,6 +490,7 @@ public:
 	CompVMatIndex() : row(0), col(0) {}
 	CompVMatIndex(size_t row_, size_t col_): row(row_), col(col_) {}
 };
+typedef std::vector<CompVMatIndex> CompVMatIndexVector;
 
 struct CompVDMatch {
 	int queryIdx;
@@ -486,6 +509,7 @@ public:
 		init(queryIdx_, trainIdx_, distance_, imageIdx_);
 	}
 };
+typedef std::vector<CompVDMatch> CompVDMatchVector;
 
 struct CompVHoughLine {
 	compv_float32_t rho;

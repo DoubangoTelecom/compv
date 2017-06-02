@@ -277,6 +277,31 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 	return err;
 }
 
+COMPV_ERROR_CODE CompVHoughKht::toCartesian(const size_t imageWidth, const size_t imageHeight, const CompVHoughLineVector& polar, CompVLineFloat32Vector& cartesian)
+{
+	COMPV_CHECK_EXP_RETURN(!imageWidth || !imageHeight, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	cartesian.clear();
+	if (polar.empty()) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	const compv_float32_t widthF = static_cast<compv_float32_t>(imageWidth);
+	const compv_float32_t heightF = static_cast<compv_float32_t>(imageHeight);
+	const compv_float32_t half_widthF = widthF * 0.5f;
+	const compv_float32_t half_heightF = heightF * 0.5f;
+	for (CompVHoughLineVector::const_iterator i = polar.begin(); i < polar.end(); ++i) {
+		const compv_float32_t rho = i->rho;
+		const compv_float32_t theta = i->theta;
+		const compv_float32_t a = std::cos(theta), b = 1.f / std::sin(theta);
+		CompVLineFloat32 cline;
+		cline.a.x = 0;
+		cline.a.y = ((rho + (half_widthF * a)) * b) + half_heightF;
+		cline.b.x = widthF;
+		cline.b.y = ((rho - (half_widthF * a)) * b) + half_heightF;
+		cartesian.push_back(cline);
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVHoughKht::newObj(CompVHoughPtrPtr hough, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
 {
 	COMPV_CHECK_EXP_RETURN(!hough || rho <= 0 || rho > 1.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
@@ -294,7 +319,7 @@ COMPV_ERROR_CODE CompVHoughKht::initCoords(double dRho, double dTheta, size_t nT
 	if (m_dRho != dRho || m_dTheta_rad != dTheta || m_nWidth != nWidth || m_nHeight != nHeight) {
 		double r0, *ptr0;
 		const double dTheta_deg = COMPV_MATH_RADIAN_TO_DEGREE(m_dTheta_rad);
-		double r = std::sqrt(static_cast<double>((nWidth * nWidth) + (nHeight * nHeight)));
+		const double r = std::sqrt(static_cast<double>((nWidth * nWidth) + (nHeight * nHeight)));
 		const size_t maxRhoCount = static_cast<size_t>(((r + 1.0) / dRho));
 		const size_t maxThetaCount = static_cast<size_t>(180.0 / dTheta_deg);
 		COMPV_CHECK_CODE_RETURN(CompVMat::newObjAligned<double>(&m_rho, 1, maxRhoCount));

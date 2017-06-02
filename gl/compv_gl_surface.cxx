@@ -107,7 +107,7 @@ COMPV_ERROR_CODE CompVGLSurface::blit(const CompVGLFboPtr ptrFboSrc, const CompV
     COMPV_CHECK_EXP_RETURN(!CompVGLUtils::isGLContextSet(), COMPV_ERROR_CODE_E_GL_NO_CONTEXT);
     COMPV_CHECK_EXP_RETURN(!ptrFboSrc || (!ptrFboDst && ptrFboDst != kCompVGLPtrSystemFrameBuffer), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
-	CompVRect src, dst, view;
+	CompVRectInt src, dst, view;
     COMPV_CHECK_CODE_BAIL(err = init());
 
     COMPV_CHECK_CODE_BAIL(err = m_ptrBlitter->bind()); // bind to VAO and activate the program

@@ -411,7 +411,7 @@ COMPV_ERROR_CODE CompVGLRenderer::drawImage(const CompVMatPtr mat, CompVViewport
 	// Set viewport
 	if (viewport) {
 		// Map viewport to screen rectangle
-		CompVRect viewportRect;
+		CompVRectInt viewportRect;
 		COMPV_CHECK_CODE_BAIL(err = CompVViewport::toRect(viewport, &viewportRect));
 		COMPV_glViewport(static_cast<GLsizei>(viewportRect.left), static_cast<GLsizei>(viewportRect.top), static_cast<GLsizei>(viewportRect.right), static_cast<GLsizei>(viewportRect.bottom));
 	}

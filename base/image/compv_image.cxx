@@ -137,6 +137,28 @@ COMPV_ERROR_CODE CompVImage::clone(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVImage::crop(const CompVMatPtr& imageIn, const CompVRectFloat32& roi, CompVMatPtrPtr imageOut)
+{
+	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty() || roi.isEmpty() || !imageOut || imageIn->type() != COMPV_MAT_TYPE_PIXELS, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	// wrap() supports all subtypes while crop() supports packed only (because of ptr())
+	COMPV_CHECK_EXP_RETURN(imageIn->subType() != COMPV_SUBTYPE_PIXELS_Y && !imageIn->isPacked(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	
+	const size_t colStart = static_cast<size_t>(roi.left);
+	COMPV_CHECK_EXP_RETURN(colStart > imageIn->cols(), COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+	const size_t colEnd = static_cast<size_t>(roi.right);
+	COMPV_CHECK_EXP_RETURN(colEnd > imageIn->cols() || colStart >= colEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+	const size_t colCount = (colEnd - colStart) & ~1;
+	
+	const size_t rowStart = static_cast<size_t>(roi.top);
+	COMPV_CHECK_EXP_RETURN(rowStart > imageIn->rows(), COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+	const size_t rowEnd = static_cast<size_t>(roi.bottom);
+	COMPV_CHECK_EXP_RETURN(rowEnd > imageIn->rows() || rowStart >= rowEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
+	const size_t rowCount = (rowEnd - rowStart) & ~1;
+	
+	COMPV_CHECK_CODE_RETURN(CompVImage::wrap(imageIn->subType(), imageIn->ptr(rowStart, colStart), colCount, rowCount, imageIn->stride(), imageOut));
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVImage::convert(const CompVMatPtr& imageIn, COMPV_SUBTYPE pixelFormatOut, CompVMatPtrPtr imageOut)
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty() || !imageOut || imageIn->type() != COMPV_MAT_TYPE_PIXELS, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

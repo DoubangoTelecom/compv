@@ -24,12 +24,14 @@ enum COMPV_CALIB_CAMERA_RESULT_CODE {
 
 struct CompVCalibCameraResult {
 	COMPV_CALIB_CAMERA_RESULT_CODE code;
-	CompVHoughLineVector hough_lines;
+	CompVHoughLineVector hough_lines; // polar coords.
+	CompVLineFloat32Vector grouped_lines; // cartesian coords.
 	CompVMatPtr edges;
 public:
 	void reset() {
 		code = COMPV_CALIB_CAMERA_RESULT_NONE;
 		hough_lines.clear();
+		grouped_lines.clear();
 		edges = nullptr;
 	}
 };
@@ -49,6 +51,10 @@ public:
 	COMPV_INLINE CompVHoughPtr houghTransform() { return m_ptrHough; }
 	
 	static COMPV_ERROR_CODE newObj(CompVCalibCameraPtrPtr calib);
+
+private:
+	
+	
 
 private:
 	COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

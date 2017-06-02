@@ -84,15 +84,15 @@ public:
         return (viewportHeight - objHeight - y);
     }
 
-    static COMPV_ERROR_CODE toRect(const CompVViewportPtr& viewport, CompVRect* rect);
+    static COMPV_ERROR_CODE toRect(const CompVViewportPtr& viewport, CompVRectInt* rect);
 
-    static COMPV_ERROR_CODE viewport(const CompVRect& rcSource, const CompVRect& rcDest, const CompVViewportPtr& currViewport, CompVRect* rcViewport);
+    static COMPV_ERROR_CODE viewport(const CompVRectInt& rcSource, const CompVRectInt& rcDest, const CompVViewportPtr& currViewport, CompVRectInt* rcViewport);
 
     static COMPV_ERROR_CODE newObj(CompVViewportPtrPtr viewport, const CompViewportSizeFlags& sizeFlags, int x = 0, int y = 0, int width = 0, int height = 0);
 
 private:
-    static COMPV_ERROR_CODE letterBoxRect(const CompVRect& rcSrc, const CompVRect& rcDst, CompVRect& rcResult);
-    static COMPV_ERROR_CODE correctAspectRatio(const CompVRect& rcSrc, const CompVRatio& srcPAR, CompVRect& rcResult);
+    static COMPV_ERROR_CODE letterBoxRect(const CompVRectInt& rcSrc, const CompVRectInt& rcDst, CompVRectInt& rcResult);
+    static COMPV_ERROR_CODE correctAspectRatio(const CompVRectInt& rcSrc, const CompVRatio& srcPAR, CompVRectInt& rcResult);
 
 private:
     COMPV_VS_DISABLE_WARNINGS_BEGIN(4251 4267)

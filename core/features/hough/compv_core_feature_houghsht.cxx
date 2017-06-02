@@ -257,6 +257,29 @@ COMPV_ERROR_CODE CompVHoughSht::process(const CompVMatPtr& edges, CompVHoughLine
 	return COMPV_ERROR_CODE_S_OK;
 }
 
+COMPV_ERROR_CODE CompVHoughSht::toCartesian(const size_t imageWidth, const size_t imageHeight, const CompVHoughLineVector& polar, CompVLineFloat32Vector& cartesian)
+{
+	COMPV_CHECK_EXP_RETURN(!imageWidth || !imageHeight, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	cartesian.clear();
+	if (polar.empty()) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	const compv_float32_t widthF = static_cast<compv_float32_t>(imageWidth);
+	const compv_float32_t heightF = static_cast<compv_float32_t>(imageHeight);
+	for (CompVHoughLineVector::const_iterator i = polar.begin(); i < polar.end(); ++i) {
+		const compv_float32_t rho = i->rho;
+		const compv_float32_t theta = i->theta;
+		const compv_float32_t a = std::cos(theta), b = 1.f / std::sin(theta);
+		CompVLineFloat32 cline;
+		cline.a.x = 0;
+		cline.a.y = ((rho + (cline.a.x * a)) * b);
+		cline.b.x = widthF;
+		cline.b.y = ((rho - (cline.b.x * a)) * b);
+		cartesian.push_back(cline);
+	}
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 COMPV_ERROR_CODE CompVHoughSht::newObj(CompVHoughPtrPtr hough, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
 {
 	COMPV_CHECK_EXP_RETURN(!hough || rho <=0 || rho > 1.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);

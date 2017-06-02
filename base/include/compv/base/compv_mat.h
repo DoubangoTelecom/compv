@@ -55,9 +55,10 @@ public:
 	}
 
     template<class ptrType = const void>
-    COMPV_INLINE ptrType* ptr(size_t row = 0, size_t col = 0, int planeId = 0)const {
-        if (planeId >= 0 && planeId < m_nPlaneCount) {
-            return (row > m_nPlaneRows[planeId] || col > m_nPlaneCols[planeId]) ? NULL : (ptrType*)(static_cast<const uint8_t*>(m_pCompPtr[planeId]) + (row * m_nPlaneStrideInBytes[planeId]) + (col * m_nElmtInBytes));
+    COMPV_INLINE ptrType* ptr(size_t row = 0, size_t col = 0, int planeId = -1)const {
+		const int planeId_ = planeId < 0 ? 0 : planeId;
+        if (planeId_ >= 0 && planeId_ < m_nPlaneCount) {
+            return (row > m_nPlaneRows[planeId_] || col > m_nPlaneCols[planeId_]) ? NULL : (ptrType*)(static_cast<const uint8_t*>(m_pCompPtr[planeId_]) + (row * m_nPlaneStrideInBytes[planeId_]) + (col * m_nElmtInBytes));
         }
         COMPV_DEBUG_ERROR_EX("CompVMat", "Invalid parameter");
         return NULL;
@@ -201,38 +202,36 @@ public:
 	COMPV_ERROR_CODE zero_all() {
 		void* ptr_ = this->ptr<void>();
 		if (ptr_ && this->rows() && this->cols()) {
-			CompVMem::zero(ptr_, this->strideInBytes() * this->rows());
+			CompVMem::zero(m_pDataPtr, m_nDataSize);
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-	COMPV_ERROR_CODE zero_row(size_t row) {
-		void* ptr_ = this->ptr<void>(row);
-		COMPV_CHECK_EXP_RETURN(!ptr_ || row >= this->rows(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		COMPV_CHECK_CODE_RETURN(CompVMem::zero(ptr_, this->rowInBytes()));
+	COMPV_ERROR_CODE zero_row(size_t row, int planeId = -1) {
+		void* ptr_ = this->ptr<void>(row, 0, planeId);
+		COMPV_CHECK_EXP_RETURN(!ptr_ || row >= this->rows(planeId), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		COMPV_CHECK_CODE_RETURN(CompVMem::zero(ptr_, this->rowInBytes(planeId)));
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
 	template<typename elmType>
-	COMPV_ERROR_CODE one_row(size_t row) {
-		COMPV_CHECK_EXP_RETURN(isEmpty() || row >= m_nRows || sizeof(elmType) != m_nElmtInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		elmType* ptr_ = this->ptr<elmType>(row);
-		for (size_t col = 0; col < m_nCols; ++col) {
+	COMPV_ERROR_CODE one_row(size_t row, int planeId = -1) {
+		COMPV_CHECK_EXP_RETURN(isEmpty() || row >= this->rows(planeId) || sizeof(elmType) != m_nElmtInBytes, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		elmType* ptr_ = this->ptr<elmType>(row, 0, planeId);
+		const size_t cols = this->cols(planeId);
+		for (size_t col = 0; col < cols; ++col) {
 			ptr_[col] = static_cast<elmType>(1);
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
 
-	COMPV_ERROR_CODE zero_rows() {
-		if (this->ptr() && this->rows() && this->cols()) {
-			if (this->rowInBytes() == this->strideInBytes()) {
-				CompVMem::zero(this->ptr<void>(), this->strideInBytes() * this->rows());
-			}
-			else {
-				size_t row_, rows_ = this->rows(), rowInBytes_ = this->rowInBytes();
-				for (row_ = 0; row_ < rows_; ++row_) {
-					CompVMem::zero(this->ptr<void>(row_), rowInBytes_);
-				}
+	COMPV_ERROR_CODE zero_rows(int planeId = -1) {
+		const int planeIdStart = planeId < 0 ? 0 : planeId;
+		const int planeIdEnd = planeId < 0 ? m_nPlaneCount : (planeIdStart + 1);
+		for (int pId = planeIdStart; pId < planeIdEnd; ++pId) {
+			size_t row_, rows_ = this->rows(pId), rowInBytes_ = this->rowInBytes(pId);
+			for (row_ = 0; row_ < rows_; ++row_) {
+				CompVMem::zero(this->ptr<void>(row_, 0, pId), rowInBytes_);
 			}
 		}
 		return COMPV_ERROR_CODE_S_OK;

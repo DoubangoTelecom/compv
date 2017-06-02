@@ -97,7 +97,7 @@ public:
 			COMPV_CHECK_CODE_RETURN(m_ptrHough->process(edges, lines));
 			
 			if (!lines.empty()) {
-				COMPV_CHECK_CODE_RETURN(buildLines(edges->cols(), edges->rows(), lines, points));
+				COMPV_CHECK_CODE_RETURN(buildLines(m_ptrHough, edges->cols(), edges->rows(), lines, points));
 			}
 			COMPV_CHECK_CODE_BAIL(err = m_ptrWindow->beginDraw());
 			COMPV_CHECK_CODE_BAIL(err = m_ptrSingleSurfaceLayer->surface()->drawImage(edges));
@@ -147,36 +147,21 @@ public:
 	}
 
 private:
-	static COMPV_ERROR_CODE buildLines(size_t imageWidth, size_t imageHeight, const CompVHoughLineVector& lines, CompVMatPtr& points) {
+	static COMPV_ERROR_CODE buildLines(CompVHoughPtr ptrHough, size_t imageWidth, size_t imageHeight, const CompVHoughLineVector& lines, CompVMatPtr& points) {
 		COMPV_CHECK_EXP_RETURN(lines.empty(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 		COMPV_CHECK_CODE_RETURN((CompVMat::newObjAligned<compv_float32_t>(&points, 4, lines.size())));
+		CompVLineFloat32Vector cartesian;
 		compv_float32_t *px0 = points->ptr<compv_float32_t>(0);
 		compv_float32_t *py0 = points->ptr<compv_float32_t>(1);
 		compv_float32_t *px1 = points->ptr<compv_float32_t>(2);
 		compv_float32_t *py1 = points->ptr<compv_float32_t>(3);
-		const compv_float32_t imageWidthF = static_cast<compv_float32_t>(imageWidth);
-		const compv_float32_t imageHeightF = static_cast<compv_float32_t>(imageHeight);
-		const compv_float32_t half_imageWidthF = imageWidthF / 2.f;
-		const compv_float32_t half_imageHeightF = imageHeightF / 2.f;
-		for (size_t i = 0; i < lines.size(); i++) {
-			const compv_float32_t rho = lines[i].rho;
-			const compv_float32_t theta = lines[i].theta;
-			const compv_float32_t a = std::cos(theta), b = 1.f/std::sin(theta);
-			if (HOUGH_ID == COMPV_HOUGHSHT_ID) {
-				px0[i] = 0;
-				py0[i] = ((rho + (px0[i] * a)) * b);
-				px1[i] = imageWidthF;
-				py1[i] = ((rho - (px1[i] * a)) * b);
-			}
-			else if (HOUGH_ID == COMPV_HOUGHKHT_ID) {
-				px0[i] = 0;
-				py0[i] = ((rho + (half_imageWidthF * a)) * b) + half_imageHeightF;
-				px1[i] = imageWidthF;
-				py1[i] = ((rho - (half_imageWidthF * a)) * b) + half_imageHeightF;
-			}
-			else {
-				COMPV_ASSERT(false);
-			}
+		COMPV_CHECK_CODE_RETURN(ptrHough->toCartesian(imageWidth, imageHeight, lines, cartesian));
+		for (size_t i = 0; i < cartesian.size(); i++) {
+			const CompVLineFloat32& cart = cartesian[i];
+			px0[i] = cart.a.x;
+			py0[i] = cart.a.y;
+			px1[i] = cart.b.x;
+			py1[i] = cart.b.y;
 		}
 		return COMPV_ERROR_CODE_S_OK;
 	}
