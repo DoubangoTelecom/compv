@@ -14,6 +14,8 @@
 #include "compv/core/features/orb/compv_core_feature_orb_dete.h"
 #include "compv/core/features/orb/compv_core_feature_orb_desc.h"
 #include "compv/core/matchers/compv_core_matcher_bruteforce.h"
+#include "compv/core/video/compv_core_video_reader_ffmpeg.h"
+#include "compv/core/video/compv_core_video_writer_ffmpeg.h"
 #include "compv/base/compv_features.h"
 #include "compv/base/compv_matchers.h"
 #include "compv/base/compv_base.h"
@@ -124,6 +126,9 @@ COMPV_ERROR_CODE CompVCore::init()
 
 	// Matchers
 	COMPV_CHECK_CODE_BAIL(err = CompVMatcher::addFactory(&bruteForceFactory), "Failed to bruteforce matcher factory");
+
+	// Video Readers and Writers
+	COMPV_CHECK_CODE_BAIL(err = CompVVideoReaderFactory::set(&CompVVideoReaderFactoryFFmpeg));
 
 	s_bInitialized = true;
 

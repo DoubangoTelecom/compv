@@ -260,6 +260,7 @@ COMPV_ERROR_CODE CompVHoughSht::process(const CompVMatPtr& edges, CompVHoughLine
 COMPV_ERROR_CODE CompVHoughSht::toCartesian(const size_t imageWidth, const size_t imageHeight, const CompVHoughLineVector& polar, CompVLineFloat32Vector& cartesian)
 {
 	COMPV_CHECK_EXP_RETURN(!imageWidth || !imageHeight, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
 	cartesian.clear();
 	if (polar.empty()) {
 		return COMPV_ERROR_CODE_S_OK;

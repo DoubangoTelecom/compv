@@ -253,7 +253,9 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <ClCompile Include="matchers\compv_core_core_matcher_flann.cxx" />
-    <ClCompile Include="matchers\compv_matcher_bruteforce.cxx" />
+    <ClCompile Include="matchers\compv_core_matcher_bruteforce.cxx" />
+    <ClCompile Include="video\compv_core_video_reader_ffmpeg.cxx" />
+    <ClCompile Include="video\compv_core_video_writer_ffmpeg.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\calib\compv_core_calib_camera.h" />
@@ -284,6 +286,8 @@
     <ClInclude Include="include\compv\core\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse41.h" />
     <ClInclude Include="include\compv\core\matchers\compv_core_matcher_bruteforce.h" />
     <ClInclude Include="include\compv\core\matchers\compv_core_matcher_flann.h" />
+    <ClInclude Include="include\compv\core\video\compv_core_video_reader_ffmpeg.h" />
+    <ClInclude Include="include\compv\core\video\compv_core_video_writer_ffmpeg.h" />
   </ItemGroup>
   <ItemGroup>
     <YASM Include="features\fast\asm\x86\compv_core_feature_fast_dete_x86_sse.s">

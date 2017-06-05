@@ -118,6 +118,12 @@
     <Filter Include="include\math\intrin\arm">
       <UniqueIdentifier>{9ab36620-a3c1-4b54-b96c-0284bda4cbd4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\video">
+      <UniqueIdentifier>{7431eaba-56af-41d5-a5e5-a1d60eddc77b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\video">
+      <UniqueIdentifier>{2fdaefe5-2d04-44ad-9f10-52d6033a2252}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\base\compv_base.h">
@@ -444,6 +450,12 @@
     <ClInclude Include="include\compv\base\compv_memz.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\video\compv_video_reader.h">
+      <Filter>include\video</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\video\compv_video_writer.h">
+      <Filter>include\video</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -754,6 +766,12 @@
     </ClCompile>
     <ClCompile Include="math\intrin\arm\compv_math_utils_intrin_neon.cxx">
       <Filter>source\math\intrin\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="video\compv_video_reader.cxx">
+      <Filter>source\video</Filter>
+    </ClCompile>
+    <ClCompile Include="video\compv_video_writer.cxx">
+      <Filter>source\video</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

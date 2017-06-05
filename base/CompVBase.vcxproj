@@ -127,6 +127,8 @@
     <ClInclude Include="include\compv\base\parallel\compv_threaddisptbb.h" />
     <ClInclude Include="include\compv\base\time\compv_time.h" />
     <ClInclude Include="include\compv\base\time\compv_timer.h" />
+    <ClInclude Include="include\compv\base\video\compv_video_reader.h" />
+    <ClInclude Include="include\compv\base\video\compv_video_writer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="android\compv_android_cpu-features.cxx" />
@@ -324,6 +326,8 @@
     <ClCompile Include="parallel\compv_threaddisptbb.cxx" />
     <ClCompile Include="time\compv_time.cxx" />
     <ClCompile Include="time\compv_timer.cxx" />
+    <ClCompile Include="video\compv_video_reader.cxx" />
+    <ClCompile Include="video\compv_video_writer.cxx" />
   </ItemGroup>
   <ItemGroup>
     <YASM Include="asm\x86\compv_bits_macros_x86.s">

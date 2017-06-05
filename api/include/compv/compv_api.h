@@ -49,6 +49,9 @@
 
 #include <compv/base/time/compv_time.h>
 
+#include <compv/base/video/compv_video_reader.h>
+#include <compv/base/video/compv_video_writer.h>
+
 /* Module: Core */
 #include <compv/core/compv_core.h>
 #include <compv/core/calib/compv_core_calib_homography.h>

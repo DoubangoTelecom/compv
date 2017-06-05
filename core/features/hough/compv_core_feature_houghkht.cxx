@@ -37,6 +37,7 @@ CompVHoughKht::CompVHoughKht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEF
 	, m_cluster_min_deviation(COMPV_HOUGHKHT_CLUSTER_MIN_DEVIATION)
 	, m_cluster_min_size(COMPV_HOUGHKHT_CLUSTER_MIN_SIZE)
 	, m_kernel_min_heigth(COMPV_HOUGHKHT_KERNEL_MIN_HEIGTH)
+	, m_dGS(1.0)
 	, m_nThreshold(threshold)
 	, m_nWidth(0)
 	, m_nHeight(0)
@@ -97,6 +98,20 @@ COMPV_ERROR_CODE CompVHoughKht::set(int id, const void* valuePtr, size_t valueSi
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Set with id %d not implemented", id);
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
+	}
+}
+
+COMPV_ERROR_CODE CompVHoughKht::get(int id, const void** valuePtrPtr, size_t valueSize) /*Overrides(CompVCaps)*/
+{
+	COMPV_CHECK_EXP_RETURN(!valuePtrPtr || valueSize == 0, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	switch (id) {
+	case COMPV_HOUGHKHT_GET_FLT64_GS: {
+		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(compv_float64_t), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		**((compv_float64_t**)valuePtrPtr) = m_dGS;
+		return COMPV_ERROR_CODE_S_OK;
+	}
+	default:
+		return CompVCaps::get(id, valuePtrPtr, valueSize);
 	}
 }
 
@@ -231,6 +246,9 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 		COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Gmin(kernels_all, Gmin)); // IS thread-safe
 	}
 
+	/* {Scale factor for integer votes} */
+	m_dGS = (Gmin == 0.0) ? 1.0 : std::max((1.0 / Gmin), 1.0);
+
 	/* Voting (Count votes) */
 	if (kernels_all.empty()) {
 		return COMPV_ERROR_CODE_S_OK;
@@ -238,7 +256,7 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 	if (maxThreads <= 1) { // If MT enabled then, zeroing is calling asynchronously (see funcPtrInitCoordsAndClearMaps)
 		COMPV_CHECK_CODE_NOP(m_count->zero_all()); // required before calling 'voting_Algorithm2_Count'
 	}
-	COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Count(kernels_all, Gmin)); // NOT thread-safe
+	COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Count(kernels_all, m_dGS)); // NOT thread-safe
 
 	/* Peaks detection */
 	threadsCountPeaks = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_rho->cols(), (m_theta->cols() - 1), maxThreads, COMPV_FEATURE_HOUGHKHT_PEAKS_VOTES_MIN_SAMPLES_PER_THREAD);
@@ -280,6 +298,7 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 COMPV_ERROR_CODE CompVHoughKht::toCartesian(const size_t imageWidth, const size_t imageHeight, const CompVHoughLineVector& polar, CompVLineFloat32Vector& cartesian)
 {
 	COMPV_CHECK_EXP_RETURN(!imageWidth || !imageHeight, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation could be found");
 	cartesian.clear();
 	if (polar.empty()) {
 		return COMPV_ERROR_CODE_S_OK;
@@ -530,7 +549,7 @@ double CompVHoughKht::clusters_subdivision(CompVHoughKhtClusters& clusters, cons
 			const double ratio_left = clusters_subdivision(clusters, string, start_index, max_index);
 			const double ratio_right = clusters_subdivision(clusters, string, max_index, end_index);
 			if ((ratio_left > ratio) || (ratio_right > ratio)) {
-				return std::max(ratio_left, ratio_right);
+				return (ratio_left > ratio_right) ? ratio_left : ratio_right;
 			}
 		}
 	}
@@ -692,23 +711,23 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Gmin(const CompVHoughKhtKernel
 }
 
 // Not thread-safe
-COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Count(const CompVHoughKhtKernels& kernels, const double Gmin)
+COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Count(const CompVHoughKhtKernels& kernels, const double Gs)
 {
 	if (!kernels.empty()) {
 		const double rho_scale = 1.0 / m_dRho;
 		const double theta_scale = 1.0 / m_dTheta_deg;
 		size_t rho_index, theta_index;
 		const double rho_max_neg = *m_rho->ptr<const double>(0, 1);
-		/* {Scale factor for integer votes} */
-		const double gs = Gmin == 0.0 ? 1.0 : std::max((1.0 / Gmin), 1.0);
 		/* {Vote for each selected kernel} */
 		for (CompVHoughKhtKernels::const_iterator k = kernels.begin(); k < kernels.end(); ++k) {
+			// 3.2. Voting using a Gaussian distribution
 			rho_index = static_cast<size_t>(std::abs((k->rho - rho_max_neg) * rho_scale)) + 1;
 			theta_index = static_cast<size_t>(std::abs(k->theta * theta_scale)) + 1;
-			vote_Algorithm4(rho_index, theta_index, 0.0, 0.0, 1, 1, gs, *k);
-			vote_Algorithm4(rho_index, theta_index - 1, 0.0, -m_dTheta_deg, 1, -1, gs, *k);
-			vote_Algorithm4(rho_index - 1, theta_index, -m_dRho, 0.0, -1, 1, gs, *k);
-			vote_Algorithm4(rho_index - 1, theta_index - 1, -m_dRho, -m_dTheta_deg, -1, -1, gs, *k);
+			// The four quadrants
+			vote_Algorithm4(rho_index, theta_index, 0.0, 0.0, 1, 1, Gs, *k);
+			vote_Algorithm4(rho_index, theta_index - 1, 0.0, -m_dTheta_deg, 1, -1, Gs, *k);
+			vote_Algorithm4(rho_index - 1, theta_index, -m_dRho, 0.0, -1, 1, Gs, *k);
+			vote_Algorithm4(rho_index - 1, theta_index - 1, -m_dRho, -m_dTheta_deg, -1, -1, Gs, *k);
 		}
 	}
 	return COMPV_ERROR_CODE_S_OK;
@@ -790,9 +809,9 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4_VotesCountAndClearVisitedMap(Co
 				pcount_top = (pcount_center - pcount_stride);
 				pcount_bottom = (pcount_center + pcount_stride);
 				vote_count = /* convolution of the cells with a 3 × 3 Gaussian kernel */
-					pcount_top[-1] + pcount_top[1] + (*pcount_top << 1)
-					+ pcount_bottom[-1] + pcount_bottom[1] + ((*pcount_bottom) << 1)
-					+ (pcount_center[-1] << 1) + (pcount_center[1] << 1) + ((*pcount_center) << 2);
+					pcount_top[-1] + (*pcount_top << 1) + pcount_top[1]
+					+ pcount_bottom[-1] + ((*pcount_bottom) << 1) + pcount_bottom[1]
+					+ (pcount_center[-1] << 1) + ((*pcount_center) << 2) + (pcount_center[1] << 1);
 				if (vote_count >= m_nThreshold) { // do not add votes with less than threshold's values in count
 					votes.push_back(CompVHoughKhtVote(rho_index, theta_index, vote_count));
 				}
@@ -828,7 +847,19 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4_Lines(CompVHoughLineVector& lin
 	CompVHoughKhtVotes::const_iterator votes_begin = votes.begin(), votes_end = votes.end();
 
 	// After the sorting step, we use a sweep plane that visits each
-	// cell of the list.
+	// cell of the list.By treating the parameter space as a heightfield
+	// image, the sweeping plane gradually moves from each
+	// peak toward the zero height.For each visited cell, we check if
+	// any of its eight neighbors has already been visited.If so, the
+	// current cell should be a smaller peak next to a taller one.In
+	// such a case, we mark the current cell as visited and move the
+	// sweeping plane to the next cell in the list.
+	// Otherwise, we add
+	// the current cell to the list of detected peaks, mark it as visited,
+	// and then proceed with the sweeping plane scan to the next cell
+	// in the list.The resulting group of detected peaks contains the
+	// most significant lines identified in the image, already sorted by
+	// number of votes.
 	for (CompVHoughKhtVotes::const_iterator i = votes_begin; i < votes_end; ++i) {
 		pvisited = m_visited->ptr<uint8_t>(i->theta_index, i->rho_index);
 		pvisited_top = (pvisited - pvisited_stride);

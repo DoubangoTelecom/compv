@@ -141,6 +141,12 @@
     <Filter Include="Header Files\features\hough\intrin\arm">
       <UniqueIdentifier>{713abf9c-30a9-42f2-82c0-383d25c878d8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\video">
+      <UniqueIdentifier>{7dd0b1bc-4065-4312-aca1-7b8e25c49770}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\video">
+      <UniqueIdentifier>{8fc2096d-4214-40af-8b80-e8de5f8da87e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -165,9 +171,6 @@
       <Filter>Source Files\features\orb</Filter>
     </ClCompile>
     <ClCompile Include="matchers\compv_core_core_matcher_flann.cxx">
-      <Filter>Source Files\matchers</Filter>
-    </ClCompile>
-    <ClCompile Include="matchers\compv_matcher_bruteforce.cxx">
       <Filter>Source Files\matchers</Filter>
     </ClCompile>
     <ClCompile Include="features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse2.cxx">
@@ -226,6 +229,15 @@
     </ClCompile>
     <ClCompile Include="calib\compv_core_calib_utils.cxx">
       <Filter>Source Files\calib</Filter>
+    </ClCompile>
+    <ClCompile Include="matchers\compv_core_matcher_bruteforce.cxx">
+      <Filter>Source Files\matchers</Filter>
+    </ClCompile>
+    <ClCompile Include="video\compv_core_video_reader_ffmpeg.cxx">
+      <Filter>Source Files\video</Filter>
+    </ClCompile>
+    <ClCompile Include="video\compv_core_video_writer_ffmpeg.cxx">
+      <Filter>Source Files\video</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -312,6 +324,12 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\calib\compv_core_calib_utils.h">
       <Filter>Header Files\calib</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\video\compv_core_video_reader_ffmpeg.h">
+      <Filter>Header Files\video</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\video\compv_core_video_writer_ffmpeg.h">
+      <Filter>Header Files\video</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

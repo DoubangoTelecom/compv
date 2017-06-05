@@ -70,6 +70,7 @@ public:
 	COMPV_OBJECT_GET_ID(CompVHoughKht);
 
 	virtual COMPV_ERROR_CODE set(int id, const void* valuePtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
+	virtual COMPV_ERROR_CODE get(int id, const void** valuePtrPtr, size_t valueSize) override /*Overrides(CompVCaps)*/;
 	virtual COMPV_ERROR_CODE process(const CompVMatPtr& edges, CompVHoughLineVector& lines, const CompVMatPtr& directions = NULL) override /*Overrides(CompVHough)*/;
 	virtual COMPV_ERROR_CODE toCartesian(const size_t imageWidth, const size_t imageHeight, const CompVHoughLineVector& polar, CompVLineFloat32Vector& cartesian) override /*Overrides(CompVHough)*/;
 
@@ -85,7 +86,7 @@ private:
 	COMPV_ERROR_CODE voting_Algorithm2_Kernels(const CompVHoughKhtClusters& clusters, CompVHoughKhtKernels& kernels, double& hmax);
 	COMPV_ERROR_CODE voting_Algorithm2_DiscardShortKernels(CompVHoughKhtKernels& kernels, const double hmax);
 	COMPV_ERROR_CODE voting_Algorithm2_Gmin(const CompVHoughKhtKernels& kernels, double &Gmin);
-	COMPV_ERROR_CODE voting_Algorithm2_Count(const CompVHoughKhtKernels& kernels, const double Gmin);
+	COMPV_ERROR_CODE voting_Algorithm2_Count(const CompVHoughKhtKernels& kernels, const double Gs);
 	void vote_Algorithm4(size_t rho_start_index, const size_t theta_start_index, const double rho_start, const double theta_start, int inc_rho_index, const int inc_theta_index, const double scale, const CompVHoughKhtKernel& kernel);
 	COMPV_ERROR_CODE peaks_Section3_4_VotesCountAndClearVisitedMap(CompVHoughKhtVotes& votes, const size_t theta_index_start, const size_t theta_index_end);
 	COMPV_ERROR_CODE peaks_Section3_4_VotesSort(CompVHoughKhtVotes& votes);
@@ -98,6 +99,7 @@ private:
 	double m_cluster_min_deviation;
 	size_t m_cluster_min_size;
 	double m_kernel_min_heigth;
+	double m_dGS;
 	size_t m_nThreshold;
 	size_t m_nWidth;
 	size_t m_nHeight;
