@@ -22,7 +22,7 @@ protected:
 public:
 	virtual ~CompVVideoReader();
 
-	virtual COMPV_ERROR_CODE open(const std::string& path) = 0;
+	virtual COMPV_ERROR_CODE open(const char* path) = 0;
 	virtual bool isOpen()const = 0;
 	virtual COMPV_ERROR_CODE close() = 0;
 	virtual COMPV_ERROR_CODE read(CompVMatPtrPtr frame) = 0;

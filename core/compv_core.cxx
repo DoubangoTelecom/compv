@@ -22,7 +22,11 @@
 #include "compv/base/parallel/compv_mutex.h"
 #include "compv/base/compv_simd_globals.h"
 
-
+#if defined(HAVE_FFMPEG)
+COMPV_EXTERNC_BEGIN()
+#	include <libavformat/avformat.h>
+COMPV_EXTERNC_END()
+#endif
 
 #define COMPV_THIS_CLASSNAME "CompVCore"
 
@@ -112,6 +116,10 @@ COMPV_ERROR_CODE CompVCore::init()
 
 	COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "Initializing [core] module (v %s)...", COMPV_VERSION_STRING);
 
+#if defined(HAVE_FFMPEG)
+	av_register_all();
+#endif /* HAVE_FFMPEG */
+
 	COMPV_CHECK_CODE_BAIL(err = CompVBase::init());
 
 	// Features
@@ -128,7 +136,9 @@ COMPV_ERROR_CODE CompVCore::init()
 	COMPV_CHECK_CODE_BAIL(err = CompVMatcher::addFactory(&bruteForceFactory), "Failed to bruteforce matcher factory");
 
 	// Video Readers and Writers
+#if defined(HAVE_FFMPEG)
 	COMPV_CHECK_CODE_BAIL(err = CompVVideoReaderFactory::set(&CompVVideoReaderFactoryFFmpeg));
+#endif /* HAVE_FFMPEG */
 
 	s_bInitialized = true;
 

@@ -797,7 +797,7 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4_VotesCountAndClearVisitedMap(Co
 	const size_t rho_count = m_rho->cols();
 	size_t theta_index, rho_index;
 
-	int32_t vote_count;
+	int32_t vote_count, nThreshold = static_cast<int32_t>(m_nThreshold);
 
 	// Given a voting map, first we create a list with all cells that
 	//	receive at least one vote.
@@ -812,7 +812,7 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4_VotesCountAndClearVisitedMap(Co
 					pcount_top[-1] + (*pcount_top << 1) + pcount_top[1]
 					+ pcount_bottom[-1] + ((*pcount_bottom) << 1) + pcount_bottom[1]
 					+ (pcount_center[-1] << 1) + ((*pcount_center) << 2) + (pcount_center[1] << 1);
-				if (vote_count >= m_nThreshold) { // do not add votes with less than threshold's values in count
+				if (vote_count >= nThreshold) { // do not add votes with less than threshold's values in count
 					votes.push_back(CompVHoughKhtVote(rho_index, theta_index, vote_count));
 				}
 			}

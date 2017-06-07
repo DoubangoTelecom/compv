@@ -88,19 +88,20 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;COMPV_CORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;COMPV_CORE_EXPORTS;HAVE_FFMPEG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../gpu/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../gpu/include;../thirdparties/include/common/ffmpeg-3.3.1</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGPU.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGPU.lib;ws2_32.lib;Secur32.lib;libavformat.a;libavcodec.a;libavutil.a;libswresample.a;libswscale.a;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
       <ForceSymbolReferences>
       </ForceSymbolReferences>
+      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/ffmpeg-3.3.1-lgpl-win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <YASM>
       <AdditionalDependencies>$(OutDir)CompVBase.lib</AdditionalDependencies>
@@ -114,19 +115,20 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;COMPV_CORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;COMPV_CORE_EXPORTS;HAVE_FFMPEG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../gpu/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../gpu/include;../thirdparties/include/common/ffmpeg-3.3.1</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGPU.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGPU.lib;ws2_32.lib;Secur32.lib;libavformat.a;libavcodec.a;libavutil.a;libswresample.a;libswscale.a;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
       <ForceSymbolReferences>
       </ForceSymbolReferences>
+      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/ffmpeg-3.3.1-lgpl-win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <YASM>
       <AdditionalDependencies>$(OutDir)CompVBase.lib</AdditionalDependencies>
@@ -142,9 +144,9 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;COMPV_CORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;COMPV_CORE_EXPORTS;HAVE_FFMPEG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../gpu/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../gpu/include;../thirdparties/include/common/ffmpeg-3.3.1</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -152,11 +154,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGPU.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGPU.lib;ws2_32.lib;Secur32.lib;libavformat.a;libavcodec.a;libavutil.a;libswresample.a;libswscale.a;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
       <ForceSymbolReferences>
       </ForceSymbolReferences>
+      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/ffmpeg-3.3.1-lgpl-win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <YASM>
       <AdditionalDependencies>$(OutDir)CompVBase.lib</AdditionalDependencies>
@@ -172,9 +175,9 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;COMPV_CORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;COMPV_CORE_EXPORTS;HAVE_FFMPEG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;../base/include;../gpu/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../base/include;../gpu/include;../thirdparties/include/common/ffmpeg-3.3.1</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -182,11 +185,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGPU.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)CompVBase.lib;$(OutDir)CompVGPU.lib;ws2_32.lib;Secur32.lib;libavformat.a;libavcodec.a;libavutil.a;libswresample.a;libswscale.a;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
       <ForceSymbolReferences>
       </ForceSymbolReferences>
+      <AdditionalLibraryDirectories>../thirdparties/libraries/windows/ffmpeg-3.3.1-lgpl-win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <YASM>
       <AdditionalDependencies>$(OutDir)CompVBase.lib</AdditionalDependencies>
