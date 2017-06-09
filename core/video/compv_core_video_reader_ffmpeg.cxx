@@ -140,6 +140,10 @@ COMPV_ERROR_CODE CompVVideoReaderFFmpeg::read(CompVMatPtrPtr frame)
 	pkt.stream_index = m_nStreamIdx;
 	do {
 		if ((avret = av_read_frame(m_pFmtCtx, &pkt)) < 0) {
+			if (avret == AVERROR_EOF) {
+				COMPV_DEBUG_INFO_EX(COMPV_THIS_CLASSNAME, "AVERROR_EOF");
+				return COMPV_ERROR_CODE_E_END_OF_FILE;
+			}
 			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "av_read_frame returned %d", avret);
 			return COMPV_ERROR_CODE_E_FFMPEG;
 		}

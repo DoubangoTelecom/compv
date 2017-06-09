@@ -466,10 +466,10 @@ COMPV_ERROR_CODE CompVGLRenderer::init(const CompVMatPtr mat)
 	COMPV_CHECK_CODE_BAIL(err = m_ptrBlitter->bind());
     m_uTexturesCount = mat->planeCount();
     for (size_t planeId = 0; planeId < mat->planeCount(); ++planeId) {
-        const int32_t planeIdInt32 = static_cast<int32_t>(planeId);
-        m_uHeights[planeId] = mat->rows(planeIdInt32);
-        m_uWidths[planeId] = mat->cols(planeIdInt32);
-        m_uStrides[planeId] = mat->stride(planeIdInt32);
+        const int planeIdInt = static_cast<int>(planeId);
+        m_uHeights[planeId] = mat->rows(planeIdInt);
+        m_uWidths[planeId] = mat->cols(planeIdInt);
+        m_uStrides[planeId] = mat->stride(planeIdInt);
 		switch (pixelFormat) {
 		case COMPV_SUBTYPE_PIXELS_YUYV422: // YUY2: https://www.fourcc.org/pixel-format/yuv-yuy2/
 		case COMPV_SUBTYPE_PIXELS_UYVY422: // UYVY: https://www.fourcc.org/pixel-format/yuv-uyvy/

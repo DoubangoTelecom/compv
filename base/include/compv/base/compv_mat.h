@@ -367,15 +367,22 @@ private:
 				nPlaneSizeInBytes[0] = nNewDataSize;
 			}
 			else if (dataType == COMPV_MAT_TYPE_PIXELS) {
+				const size_t nBestStrideInSamples = nBestStrideInBytes; // For images re-compute 'nBestStrideInBytes' if packed (e.g. RGB)
 				COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeCount(dataSubType, &nPlaneCount)); // get number of comps
 				COMPV_CHECK_EXP_RETURN(!nPlaneCount || nPlaneCount > COMPV_PLANE_MAX_COUNT, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT); // check the number of comps
 				COMPV_CHECK_CODE_RETURN(CompVImageUtils::isPlanePacked(dataSubType, &bPlanePacked)); // check whether the comps are packed
-				COMPV_CHECK_CODE_RETURN(CompVImageUtils::sizeForPixelFormat(dataSubType, nBestStrideInBytes, rows, &nNewDataSize)); // get overal size in bytes
+				if (bPlanePacked) {
+					size_t elmtInBits;
+					COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeBitsCountForPixelFormat(dataSubType, 0, &elmtInBits));
+					COMPV_CHECK_CODE_RETURN(CompVImageUtils::sizeForPixelFormat(dataSubType, nBestStrideInSamples, 1, &nBestStrideInBytes)); // get stride in bytes (nBestStrideInBytes)
+					elmtInBytes = (elmtInBits >> 3);
+				}
+				COMPV_CHECK_CODE_RETURN(CompVImageUtils::sizeForPixelFormat(dataSubType, nBestStrideInSamples, rows, &nNewDataSize)); // get overal size in bytes
 				size_t nSumPlaneSizeInBytes = 0;
 				for (size_t planeId = 0; planeId < nPlaneCount; ++planeId) {
 					COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(dataSubType, planeId, cols, rows, &nPlaneCols[planeId], &nPlaneRows[planeId])); // get 'cols' and 'rows' for the comp
 					COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(dataSubType, planeId, nBestStrideInBytes, rows, &nPlaneStrideInBytes[planeId], &nPlaneRows[planeId])); // get 'stride' and 'rows' for the comp
-					COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(dataSubType, planeId, nBestStrideInBytes, rows, &nPlaneSizeInBytes[planeId])); // get comp size in bytes
+					COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(dataSubType, planeId, nBestStrideInSamples, rows, &nPlaneSizeInBytes[planeId])); // get comp size in bytes
 					nSumPlaneSizeInBytes += nPlaneSizeInBytes[planeId];
 				}
 				// Make sure that sum(comp sizes) = data size
