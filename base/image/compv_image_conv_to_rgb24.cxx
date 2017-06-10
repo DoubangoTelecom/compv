@@ -6,89 +6,173 @@
 */
 #include "compv/base/image/compv_image_conv_to_rgb24.h"
 #include "compv/base/image/compv_image.h"
+#include "compv/base/image/compv_image_conv_common.h"
 #include "compv/base/math/compv_math_utils.h"
+#include "compv/base/parallel/compv_parallel.h"
 
 COMPV_NAMESPACE_BEGIN()
 
-static void yuv420p_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
-static void nvx_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uvPtr, uint8_t* outRgbaPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
-static void yuyv422_to_rgb24_C(const uint8_t* yuyvPtr, uint8_t* outRgbaPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+static void yuv420p_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+static void yuv422p_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+static void yuv444p_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+static void nv12_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uvPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+static void nv21_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uvPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+static void yuyv422_to_rgb24_C(const uint8_t* yuyvPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+static void uyvy422_to_rgb24_C(const uint8_t* yuyvPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 
 COMPV_ERROR_CODE CompVImageConvToRGB24::process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageRGB24)
 {
+	// Internal function, do not check input parameters (already done)
+
 	CompVMatPtr imageOut = (*imageRGB24 == imageIn) ? nullptr : *imageRGB24;
 	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut, COMPV_SUBTYPE_PIXELS_RGB24, imageIn->cols(), imageIn->rows(), imageIn->stride()));
-	
-	// Internal function, do not check input parameters (already done)
-	switch (imageIn->subType()) {
-		/*case COMPV_SUBTYPE_PIXELS_Y:*/
-		case COMPV_SUBTYPE_PIXELS_NV12:
-		/*case COMPV_SUBTYPE_PIXELS_NV21:*/
-		case COMPV_SUBTYPE_PIXELS_YUV420P:
-		/*case COMPV_SUBTYPE_PIXELS_YVU420P:*/
-		/*case COMPV_SUBTYPE_PIXELS_YUV422P:*/
-		/*case COMPV_SUBTYPE_PIXELS_YUV444P:*/ 
-		case COMPV_SUBTYPE_PIXELS_YUYV422:
-		/*case COMPV_SUBTYPE_PIXELS_UYVY422:*/ {
-			// Planar Y -> RGB24
-			if (imageIn->subType() == COMPV_SUBTYPE_PIXELS_YUV420P) {
-				yuv420p_to_rgb24_C(
-					imageIn->ptr<const uint8_t>(0, 0, COMPV_PLANE_Y),
-					imageIn->ptr<const uint8_t>(0, 0, COMPV_PLANE_U),
-					imageIn->ptr<const uint8_t>(0, 0, COMPV_PLANE_V),
-					imageOut->ptr<uint8_t>(),
-					imageOut->cols(),
-					imageOut->rows(),
-					imageOut->stride());
-			}
-			else if (imageIn->subType() == COMPV_SUBTYPE_PIXELS_NV12) {
-				nvx_to_rgb24_C(
-					imageIn->ptr<const uint8_t>(0, 0, COMPV_PLANE_Y),
-					imageIn->ptr<const uint8_t>(0, 0, COMPV_PLANE_UV),
-					imageOut->ptr<uint8_t>(),
-					imageOut->cols(),
-					imageOut->rows(),
-					imageOut->stride());
-			}
-			else if (imageIn->subType() == COMPV_SUBTYPE_PIXELS_YUYV422) {
-				yuyv422_to_rgb24_C(
-					imageIn->ptr<const uint8_t>(),
-					imageOut->ptr<uint8_t>(),
-					imageOut->cols(),
-					imageOut->rows(),
-					imageOut->stride());
-			}
-			else {
-				COMPV_ASSERT(false);
-			}
-	#if 0
-			// This is very fast as we'll just reshape the data or make a copy. This is why we recommend using planar YUV for camera output.
-			if (imageIn == *imageGray) {
-				if (imageIn->subType() != COMPV_SUBTYPE_PIXELS_Y) { // When input already equal to gray then, do nothing
-																	// 'newObj8u' will not realloc the data when the requested size is less than the original one.
-																	// sizeof(Gray) is always less than input format which means 'newObj8u' will just reshape the input data.
-					COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(imageGray, COMPV_SUBTYPE_PIXELS_Y, imageIn->cols(COMPV_PLANE_Y), imageIn->rows(COMPV_PLANE_Y), imageIn->stride(COMPV_PLANE_Y)));
-				}
-			}
-			else {
-				COMPV_CHECK_CODE_RETURN(CompVImage::wrap(COMPV_SUBTYPE_PIXELS_Y,
-					imageIn->ptr<uint8_t>(0, 0, COMPV_PLANE_Y), imageIn->cols(COMPV_PLANE_Y), imageIn->rows(COMPV_PLANE_Y), imageIn->stride(COMPV_PLANE_Y),
-					imageGray));
-			}
-	#endif
-			break;
-		}
-		default: {
-			COMPV_DEBUG_ERROR("%s -> RGB24 not supported", CompVGetSubtypeString(imageIn->subType()));
-			return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
-		}
-	}
 
+	switch (imageIn->subType()) {
+		case COMPV_SUBTYPE_PIXELS_YUV420P:
+		case COMPV_SUBTYPE_PIXELS_YUV422P:
+		case COMPV_SUBTYPE_PIXELS_YUV444P:
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGB24::yuvPlanar(imageIn, imageOut));
+		break;
+
+		case COMPV_SUBTYPE_PIXELS_NV12:
+		case COMPV_SUBTYPE_PIXELS_NV21:
+			COMPV_CHECK_CODE_RETURN(CompVImageConvToRGB24::yuvSemiPlanar(imageIn, imageOut));
+			break;
+
+		case COMPV_SUBTYPE_PIXELS_YUYV422:
+		case COMPV_SUBTYPE_PIXELS_UYVY422:
+			COMPV_CHECK_CODE_RETURN(CompVImageConvToRGB24::yuvPacked(imageIn, imageOut));
+			break;
+
+		COMPV_DEBUG_ERROR("%s -> RGB24 not supported", CompVGetSubtypeString(imageIn->subType()));
+		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+	}
 
 	*imageRGB24 = imageOut;
 
 	return COMPV_ERROR_CODE_S_OK;
 }
+
+// YUV420P, YVU420P, YUV422P, YUV444P
+COMPV_ERROR_CODE CompVImageConvToRGB24::yuvPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGB24)
+{
+	// Internal function, do not check input parameters (already done)
+	void(*planar_to_rgb24)(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+		= nullptr;
+	switch (imageIn->subType()) {
+	case COMPV_SUBTYPE_PIXELS_YUV420P:
+		planar_to_rgb24 = yuv420p_to_rgb24_C;
+		break;
+	case COMPV_SUBTYPE_PIXELS_YUV422P:
+		planar_to_rgb24 = yuv422p_to_rgb24_C;
+		break;
+	case COMPV_SUBTYPE_PIXELS_YUV444P:
+		planar_to_rgb24 = yuv444p_to_rgb24_C;
+		break;
+	default:
+		COMPV_DEBUG_ERROR("%s -> RGB24 not supported", CompVGetSubtypeString(imageIn->subType()));
+		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+	}
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
+
+	const size_t widthInSamples = imageRGB24->cols();
+	const size_t heightInSamples = imageRGB24->rows();
+	const size_t strideInSamples = imageRGB24->stride();
+
+	const uint8_t* yPtr = imageIn->ptr<const uint8_t>(0, 0, COMPV_PLANE_Y);
+	const uint8_t* uPtr = imageIn->ptr<const uint8_t>(0, 0, COMPV_PLANE_U);
+	const uint8_t* vPtr = imageIn->ptr<const uint8_t>(0, 0, COMPV_PLANE_V);
+	uint8_t* rgbPtr = imageRGB24->ptr<uint8_t>();
+
+	planar_to_rgb24(
+		yPtr,
+		uPtr,
+		vPtr,
+		rgbPtr,
+		widthInSamples,
+		heightInSamples,
+		strideInSamples);
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// NV12, NV21
+COMPV_ERROR_CODE CompVImageConvToRGB24::yuvSemiPlanar(const CompVMatPtr& imageIn, CompVMatPtr& imageRGB24)
+{
+	// Internal function, do not check input parameters (already done)
+	void(*semiplanar_to_rgb24)(const uint8_t* yPtr, const uint8_t* uvPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+		= nullptr;
+	switch (imageIn->subType()) {
+	case COMPV_SUBTYPE_PIXELS_NV12:
+		semiplanar_to_rgb24 = nv12_to_rgb24_C;
+		break;
+	case COMPV_SUBTYPE_PIXELS_NV21:
+		semiplanar_to_rgb24 = nv21_to_rgb24_C;
+		break;
+	default:
+		COMPV_DEBUG_ERROR("%s -> RGB24 not supported", CompVGetSubtypeString(imageIn->subType()));
+		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+	}
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
+
+	const size_t widthInSamples = imageRGB24->cols();
+	const size_t heightInSamples = imageRGB24->rows();
+	const size_t strideInSamples = imageRGB24->stride();
+
+	const uint8_t* yPtr = imageIn->ptr<const uint8_t>(0, 0, COMPV_PLANE_Y);
+	const uint8_t* uvPtr = imageIn->ptr<const uint8_t>(0, 0, COMPV_PLANE_UV);
+	uint8_t* rgbPtr = imageRGB24->ptr<uint8_t>();
+
+	semiplanar_to_rgb24(
+		yPtr,
+		uvPtr,
+		rgbPtr,
+		widthInSamples,
+		heightInSamples,
+		strideInSamples);
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
+// YUYV422, UYVY422
+COMPV_ERROR_CODE CompVImageConvToRGB24::yuvPacked(const CompVMatPtr& imageIn, CompVMatPtr& imageRGB24)
+{
+	// Internal function, do not check input parameters (already done)
+	void(*packed_to_rgb24)(const uint8_t* yuyvPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+		= nullptr;
+	switch (imageIn->subType()) {
+	case COMPV_SUBTYPE_PIXELS_YUYV422:
+		packed_to_rgb24 = yuyv422_to_rgb24_C;
+		break;
+	case COMPV_SUBTYPE_PIXELS_UYVY422:
+		packed_to_rgb24 = uyvy422_to_rgb24_C;
+		break;
+	default:
+		COMPV_DEBUG_ERROR("%s -> RGB24 not supported", CompVGetSubtypeString(imageIn->subType()));
+		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
+	}
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
+
+	const size_t widthInSamples = imageRGB24->cols();
+	const size_t heightInSamples = imageRGB24->rows();
+	const size_t strideInSamples = imageRGB24->stride();
+
+	const uint8_t* yuvPtr = imageIn->ptr<const uint8_t>();
+	uint8_t* rgbPtr = imageRGB24->ptr<uint8_t>();
+
+	packed_to_rgb24(
+		yuvPtr,
+		rgbPtr,
+		widthInSamples,
+		heightInSamples,
+		strideInSamples);
+
+	return COMPV_ERROR_CODE_S_OK;
+}
+
 
 // R = (37Y' + 0U' + 51V') >> 5
 // G = (37Y' - 13U' - 26V') >> 5
@@ -103,69 +187,128 @@ COMPV_ERROR_CODE CompVImageConvToRGB24::process(const CompVMatPtr& imageIn, Comp
 	g = CompVMathUtils::clampPixel8((37 * yp - 13 * up - 26 * vp) >> 5); \
 	b = CompVMathUtils::clampPixel8((37 * yp + 65 * up) >> 5)
 
-static void yuv420p_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* outRgbaPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
-{
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
-	const compv_uscalar_t strideRGB = stride * 3;
-	const compv_uscalar_t strideY = stride;
-	const compv_uscalar_t strideUV = ((stride + 1) >> 1);
-	int16_t Yp, Up, Vp;
-	for (compv_uscalar_t j = 0; j < height; ++j) {
-		for (compv_uscalar_t i = 0, k = 0; i < width; ++i, k+=3) {
-			Yp = (yPtr[i] - 16);
-			Up = (uPtr[i >> 1] - 127);
-			Vp = (vPtr[i >> 1] - 127);
-			COMPV_YUV_TO_RGB(Yp, Up, Vp, outRgbaPtr[k + 0], outRgbaPtr[k + 1], outRgbaPtr[k + 2]);
-		}
-		outRgbaPtr += strideRGB;
-		yPtr += strideY;
-		if (j & 1) {
-			uPtr += strideUV;
-			vPtr += strideUV;
-		}
+#define yuv420p_to_rgb24_strideUV() const compv_uscalar_t strideUV = ((stride + 1) >> 1);
+#define yuv422p_to_rgb24_strideUV() const compv_uscalar_t strideUV = ((stride + 1) >> 1);
+#define yuv444p_to_rgb24_strideUV() const compv_uscalar_t strideUV = stride;
+
+#define yuv420p_to_rgb24_indexUV() (i >> 1)
+#define yuv422p_to_rgb24_indexUV() (i >> 1)
+#define yuv444p_to_rgb24_indexUV() (i)
+
+#define yuv420p_to_rgb24_checkAddStrideUV() if (j & 1)
+#define yuv422p_to_rgb24_checkAddStrideUV() 
+#define yuv444p_to_rgb24_checkAddStrideUV() 
+
+#define planar_to_rgb24(name, yPtr, uPtr, vPtr, rgbPtr, width, height, stride) { \
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found"); \
+		const compv_uscalar_t strideRGB = stride * 3; \
+		const compv_uscalar_t strideY = stride; \
+		name##_to_rgb24_strideUV(); \
+		int16_t Yp, Up, Vp; \
+		compv_uscalar_t i, j, k; \
+		for (j = 0; j < height; ++j) { \
+			for (i = 0, k = 0; i < width; ++i, k += 3) { \
+				Yp = (yPtr[i] - 16); \
+				Up = (uPtr[name##_to_rgb24_indexUV()] - 127); \
+				Vp = (vPtr[name##_to_rgb24_indexUV()] - 127); \
+				COMPV_YUV_TO_RGB(Yp, Up, Vp, rgbPtr[k + 0], rgbPtr[k + 1], rgbPtr[k + 2]); \
+			} \
+			rgbPtr += strideRGB; \
+			yPtr += strideY; \
+			name##_to_rgb24_checkAddStrideUV() { \
+				uPtr += strideUV; \
+				vPtr += strideUV; \
+			} \
+		} \
 	}
+
+static void yuv420p_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+{
+	planar_to_rgb24(yuv420p, yPtr, uPtr, vPtr, rgbPtr, width, height, stride);
 }
 
-// NV12 or NV21
-static void nvx_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uvPtr, uint8_t* outRgbaPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+static void yuv422p_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
-	const compv_uscalar_t strideRGB = stride * 3;
-	int16_t Yp, Up, Vp;
-	for (compv_uscalar_t j = 0; j < height; ++j) {
-		for (compv_uscalar_t i = 0, k = 0; i < width; ++i, k += 3) {
-			Yp = (yPtr[i] - 16);
-			Up = (uvPtr[(i & -2) + 0] - 127);
-			Vp = (uvPtr[(i & -2) + 1] - 127);
-			COMPV_YUV_TO_RGB(Yp, Up, Vp, outRgbaPtr[k + 0], outRgbaPtr[k + 1], outRgbaPtr[k + 2]);
-		}
-		outRgbaPtr += strideRGB;
-		yPtr += stride;
-		if (j & 1) {
-			uvPtr += stride;
-		}
-	}
+	planar_to_rgb24(yuv422p, yPtr, uPtr, vPtr, rgbPtr, width, height, stride);
 }
 
-static void yuyv422_to_rgb24_C(const uint8_t* yuyvPtr, uint8_t* outRgbaPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+static void yuv444p_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
-	const compv_uscalar_t padSample = (stride - width);
-	const compv_uscalar_t strideRGB = stride * 3;
-	const compv_uscalar_t maxWidth = (width << 1);
-	int16_t Yp, Up, Vp;
-	for (compv_uscalar_t j = 0; j < height; ++j) {
-		for (compv_uscalar_t i = 0, k = 0; i < maxWidth; i += 2, k += 3) {
-			Yp = (yuyvPtr[i] - 16);
-			Up = (yuyvPtr[((i >> 2) << 2) + 1] - 127);
-			Vp = (yuyvPtr[((i >> 2) << 2) + 3] - 127);
-			COMPV_YUV_TO_RGB(Yp, Up, Vp, outRgbaPtr[k + 0], outRgbaPtr[k + 1], outRgbaPtr[k + 2]);
-		}
-		outRgbaPtr += strideRGB;
-		if (j & 1) {
-			yuyvPtr += (stride << 2);
-		}
+	planar_to_rgb24(yuv444p, yPtr, uPtr, vPtr, rgbPtr, width, height, stride);
+}
+
+#define nv12_to_rgb24_indexU() 0
+#define nv12_to_rgb24_indexV() 1
+
+#define nv21_to_rgb24_indexU() 1
+#define nv21_to_rgb24_indexV() 0
+
+#define semiplanar_to_rgb24(name, yPtr, uvPtr, rgbPtr, width, height, stride) { \
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found"); \
+		const compv_uscalar_t strideRGB = stride * 3; \
+		int16_t Yp, Up, Vp; \
+		for (compv_uscalar_t j = 0; j < height; ++j) { \
+			for (compv_uscalar_t i = 0, k = 0; i < width; ++i, k += 3) { \
+				Yp = (yPtr[i] - 16); \
+				Up = (uvPtr[(i & -2) + name##_to_rgb24_indexU()] - 127); \
+				Vp = (uvPtr[(i & -2) + name##_to_rgb24_indexV()] - 127); \
+				COMPV_YUV_TO_RGB(Yp, Up, Vp, rgbPtr[k + 0], rgbPtr[k + 1], rgbPtr[k + 2]); \
+			} \
+			rgbPtr += strideRGB; \
+			yPtr += stride; \
+			if (j & 1) { \
+				uvPtr += stride; \
+			} \
+		} \
 	}
+
+static void nv12_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uvPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+{
+	semiplanar_to_rgb24(nv12, yPtr, uvPtr, rgbPtr, width, height, stride);
+}
+
+static void nv21_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uvPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+{
+	semiplanar_to_rgb24(nv21, yPtr, uvPtr, rgbPtr, width, height, stride);
+}
+
+
+#define yuyv422_to_rgb24_indexY() 0
+#define yuyv422_to_rgb24_indexU() 1
+#define yuyv422_to_rgb24_indexV() 3
+
+#define uyvy422_to_rgb24_indexY() 1
+#define uyvy422_to_rgb24_indexU() 0
+#define uyvy422_to_rgb24_indexV() 2
+
+#define packed_to_rgb24(name, yuyvPtr, rgbPtr, width, height, stride) { \
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found"); \
+		const compv_uscalar_t padSample = (stride - width); \
+		const compv_uscalar_t strideRGB = stride * 3; \
+		const compv_uscalar_t maxWidth = (width << 1); \
+		int16_t Yp, Up, Vp; \
+		for (compv_uscalar_t j = 0; j < height; ++j) { \
+			for (compv_uscalar_t i = 0, k = 0; i < maxWidth; i += 2, k += 3) { \
+				Yp = (yuyvPtr[i + name##_to_rgb24_indexY()] - 16); \
+				Up = (yuyvPtr[((i >> 2) << 2) + name##_to_rgb24_indexU()] - 127); \
+				Vp = (yuyvPtr[((i >> 2) << 2) + name##_to_rgb24_indexV()] - 127); \
+				COMPV_YUV_TO_RGB(Yp, Up, Vp, rgbPtr[k + 0], rgbPtr[k + 1], rgbPtr[k + 2]); \
+			} \
+			rgbPtr += strideRGB; \
+			if (j & 1) { \
+				yuyvPtr += (stride << 2); \
+			} \
+		} \
+	}
+
+static void yuyv422_to_rgb24_C(const uint8_t* yuyvPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+{
+	packed_to_rgb24(yuyv422, yuyvPtr, rgbPtr, width, height, stride);
+}
+
+static void uyvy422_to_rgb24_C(const uint8_t* yuyvPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
+{
+	packed_to_rgb24(uyvy422, yuyvPtr, rgbPtr, width, height, stride);
 }
 
 COMPV_NAMESPACE_END()

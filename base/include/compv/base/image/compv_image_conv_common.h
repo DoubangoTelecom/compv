@@ -15,7 +15,7 @@
 #include "compv/base/compv_common.h"
 
 #if !defined(COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD)
-#define COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD		(200 * 200) // minimum number of samples to consider per thread when multi-threading
+#define COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD		(200 * 50) // minimum number of samples to consider per thread when multi-threading
 #endif
 
 

@@ -22,6 +22,10 @@ Shared Memory: 3810 MB
 CompV: 54.ms(mt), 169.ms(st)
 OpenCV: 341.ms(full optiz)
 
+=== YUV420P -> RGB24 (1282, 720) (#10k times) ===
+CompV: 29985.ms(full optiz)
+OpenCV: 5269.ms(full optiz)
+
 === FAST9_16, Nonmax=true, threshold=20, maxfeatures=-1 (1282, 720) (#10k times) ===
 CompV: 3358.ms(mt,avx2), 4730.ms(mt,sse2), 8447(st,avx2), 11261.ms(st,sse2)
 OpenCV: 10270.ms(full optiz)

@@ -136,20 +136,22 @@ public:
 		return m_nAlignV;
 	}
 
-	COMPV_INLINE bool isAligned(int alignv)const {
-		return COMPV_IS_ALIGNED(m_pDataPtr, alignv) && COMPV_IS_ALIGNED(m_nStrideInBytes, alignv);
+	COMPV_INLINE bool isAligned(int alignv, int planeId = -1)const {
+		const void* dataPtr = ptr<const void*>(0, 0, planeId);
+		const size_t dataStrideInBytes = strideInBytes(planeId);
+		return COMPV_IS_ALIGNED(dataPtr, alignv) && COMPV_IS_ALIGNED(dataStrideInBytes, alignv);
 	}
-	COMPV_INLINE bool isAlignedSSE()const {
-		return isAligned(COMPV_ALIGNV_SIMD_SSE);
+	COMPV_INLINE bool isAlignedSSE(int planeId = -1)const {
+		return isAligned(COMPV_ALIGNV_SIMD_SSE, planeId);
 	};
-	COMPV_INLINE bool isAlignedAVX()const {
-		return isAligned(COMPV_ALIGNV_SIMD_AVX);
+	COMPV_INLINE bool isAlignedAVX(int planeId = -1)const {
+		return isAligned(COMPV_ALIGNV_SIMD_AVX, planeId);
 	};
-	COMPV_INLINE bool isAlignedAVX512()const {
-		return isAligned(COMPV_ALIGNV_SIMD_AVX512);
+	COMPV_INLINE bool isAlignedAVX512(int planeId = -1)const {
+		return isAligned(COMPV_ALIGNV_SIMD_AVX512, planeId);
 	};
-	COMPV_INLINE bool isAlignedNEON()const {
-		return isAligned(COMPV_ALIGNV_SIMD_NEON);
+	COMPV_INLINE bool isAlignedNEON(int planeId = -1)const {
+		return isAligned(COMPV_ALIGNV_SIMD_NEON, planeId);
 	};
 
 	template <typename RawType>
