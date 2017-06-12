@@ -23,10 +23,12 @@ public:
         // Important: Do not use CLIP3_INT here: very slow on Windows (tested on Win8 core i7 using VS2013)
         return COMPV_MATH_CLIP3(min, max, val);
     }
-    static COMPV_INLINE uint8_t clampPixel8(int16_t val) {
+
+	template <typename InputType = int16_t>
+    static COMPV_INLINE uint8_t clampPixel8(InputType val) {
         // Important: Do not use CLIP3_INT here: very slow on Windows (tested on Win8 core i7 using VS2013)
         // Also, asm_cmov_clip2() is sloow -> To be checked
-        return (uint8_t)COMPV_MATH_CLIP3(0, 255, val);
+        return static_cast<uint8_t>(COMPV_MATH_CLIP3(0, 255, val));
     }
     static COMPV_INLINE compv_scalar_t maxVal(compv_scalar_t x, compv_scalar_t y) {
         return maxValFunc(x, y);

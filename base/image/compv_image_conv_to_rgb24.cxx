@@ -160,8 +160,6 @@ COMPV_ERROR_CODE CompVImageConvToRGB24::yuvSemiPlanar(const CompVMatPtr& imageIn
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
-
 	const size_t widthInSamples = imageRGB24->cols();
 	const size_t heightInSamples = imageRGB24->rows();
 	const size_t strideInSamples = imageRGB24->stride();
