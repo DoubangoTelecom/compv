@@ -182,6 +182,7 @@ typedef float compv_float32_t;
 typedef double compv_float64_t;
 typedef compv_float32_t compv_float32x2_t[2];
 typedef compv_float32_t compv_float32x4_t[4];
+typedef uint8_t compv_uint8x3_t[3];
 
 enum COMPV_DEBUG_LEVEL {
     COMPV_DEBUG_LEVEL_INFO = 4,
@@ -308,6 +309,7 @@ enum COMPV_SUBTYPE {
 	COMPV_SUBTYPE_PIXELS_RGB565BE,		// RGB565BE
 	COMPV_SUBTYPE_PIXELS_BGR565LE,		// BGR565LE
 	COMPV_SUBTYPE_PIXELS_BGR565BE,		// BGR565BE
+	COMPV_SUBTYPE_PIXELS_HSV,			// HSV aka HSL: Hue Saturation Value/Lightness/Brightness
     COMPV_SUBTYPE_PIXELS_Y,				// Y-only: Grayscale
 	COMPV_SUBTYPE_PIXELS_NV12,			// Microsoft: NV12, iOS camera, Android camera, Semi-Planar, Info: https://www.fourcc.org/pixel-format/yuv-nv12/
 	COMPV_SUBTYPE_PIXELS_NV21,			// Microsoft: NV21, Android camera, Semi-Planar, Info: https://www.fourcc.org/pixel-format/yuv-nv21/
@@ -329,6 +331,8 @@ enum COMPV_SUBTYPE {
 	COMPV_SUBTYPE_PIXELS_UYVY = COMPV_SUBTYPE_PIXELS_UYVY422,
 	COMPV_SUBTYPE_PIXELS_Y422 = COMPV_SUBTYPE_PIXELS_UYVY,
 	COMPV_SUBTYPE_PIXELS_Y420SP = COMPV_SUBTYPE_PIXELS_NV21,
+	COMPV_SUBTYPE_PIXELS_GRAY = COMPV_SUBTYPE_PIXELS_Y,
+	COMPV_SUBTYPE_PIXELS_HSL = COMPV_SUBTYPE_PIXELS_HSV,
 };
 extern COMPV_BASE_API const char* CompVGetSubtypeString(COMPV_NAMESPACE::COMPV_SUBTYPE subtype);
 

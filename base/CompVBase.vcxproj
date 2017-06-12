@@ -61,6 +61,7 @@
     <ClInclude Include="include\compv\base\drawing\compv_window_registry.h" />
     <ClInclude Include="include\compv\base\image\compv_image.h" />
     <ClInclude Include="include\compv\base\image\compv_image_conv_common.h" />
+    <ClInclude Include="include\compv\base\image\compv_image_conv_hsv.h" />
     <ClInclude Include="include\compv\base\image\compv_image_conv_rgbfamily.h" />
     <ClInclude Include="include\compv\base\image\compv_image_conv_to_grayscale.h" />
     <ClInclude Include="include\compv\base\image\compv_image_conv_to_rgb24.h" />
@@ -170,6 +171,7 @@
     <ClCompile Include="drawing\compv_window_registry.cxx" />
     <ClCompile Include="image\compv_image.cxx" />
     <ClCompile Include="image\compv_image_conv_common.cxx" />
+    <ClCompile Include="image\compv_image_conv_hsv.cxx" />
     <ClCompile Include="image\compv_image_conv_rgbfamily.cxx" />
     <ClCompile Include="image\compv_image_conv_to_grayscale.cxx" />
     <ClCompile Include="image\compv_image_conv_to_rgb24.cxx" />

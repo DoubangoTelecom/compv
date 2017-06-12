@@ -9,6 +9,7 @@
 #include "compv/base/image/compv_image_conv_to_yuv444p.h"
 #include "compv/base/image/compv_image_conv_to_grayscale.h"
 #include "compv/base/image/compv_image_conv_to_rgb24.h"
+#include "compv/base/image/compv_image_conv_hsv.h"
 #include "compv/base/image/compv_image_scale_bilinear.h"
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/compv_base.h"
@@ -33,6 +34,7 @@
 		COMPV_IMAGE_NEWOBJ_CASE(elmType, RGB565BE); \
 		COMPV_IMAGE_NEWOBJ_CASE(elmType, BGR565LE); \
 		COMPV_IMAGE_NEWOBJ_CASE(elmType, BGR565BE); \
+		COMPV_IMAGE_NEWOBJ_CASE(elmType, HSV); \
 		COMPV_IMAGE_NEWOBJ_CASE(elmType, Y); \
 		COMPV_IMAGE_NEWOBJ_CASE(elmType, NV12); \
 		COMPV_IMAGE_NEWOBJ_CASE(elmType, NV21); \
@@ -172,6 +174,9 @@ COMPV_ERROR_CODE CompVImage::convert(const CompVMatPtr& imageIn, COMPV_SUBTYPE p
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_RGB24:
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGB24::process(imageIn, imageOut));
+		return COMPV_ERROR_CODE_S_OK;
+	case COMPV_SUBTYPE_PIXELS_HSV:
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToHSV::process(imageIn, imageOut));
 		return COMPV_ERROR_CODE_S_OK;
 	default:
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Chroma conversion not supported: %s -> %s", CompVGetSubtypeString(imageIn->subType()), CompVGetSubtypeString(pixelFormatOut));

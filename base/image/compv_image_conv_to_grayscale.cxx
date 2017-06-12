@@ -153,8 +153,8 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::yuv422family(const CompVMatPtr& imag
 		auto funcPtr = [&](const uint8_t* yuv422Ptr, uint8_t* outYPtr, compv_uscalar_t height) -> void {
 			yuv422family_to_y(yuv422Ptr, outYPtr, width, height, stride);
 		};
-		size_t heights = (height / threadsCount);
-		size_t lastHeight = height - ((threadsCount - 1) * heights);
+		const size_t heights = (height / threadsCount);
+		const size_t lastHeight = height - ((threadsCount - 1) * heights);
 		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
 			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtr, (yuv422Ptr + yuv422Idx), (yPtr + YIdx), static_cast<compv_uscalar_t>((threadIdx == (threadsCount - 1) ? lastHeight : heights))), taskIds), "Dispatching task failed");
 			yuv422Idx += (heights * stride) * bytesPerPixel;
@@ -212,8 +212,6 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::rgbfamily(const CompVMatPtr& imageRG
 	size_t strideY;
 	const uint8_t* rgbPtr = imageRGBfamily->ptr<const uint8_t>();
 	uint8_t *yPtr;
-	size_t threadsCount;
-	CompVAsyncTaskIds taskIds;
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
 	COMPV_ERROR_CODE err;
@@ -224,11 +222,12 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::rgbfamily(const CompVMatPtr& imageRG
 	strideY = (*imageGray)->stride(COMPV_PLANE_Y); // same as value 'stride'
 
 	// Compute number of threads
-	threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(stride, height, maxThreads, COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD)
 		: 1;
 
 	if (threadsCount > 1) {
+		CompVAsyncTaskIds taskIds;
 		size_t bytesPerPixel;
 		COMPV_CHECK_CODE_RETURN(CompVImageUtils::bitsCountForPixelFormat(imageRGBfamily->subType(), &bytesPerPixel));
 		bytesPerPixel >>= 3;
@@ -237,8 +236,8 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::rgbfamily(const CompVMatPtr& imageRG
 		auto funcPtr = [&](const uint8_t* rgbPtr, uint8_t* outYPtr, compv_uscalar_t height) -> void {
 			rgbfamily_to_y(rgbPtr, outYPtr, width, height, strideY);
 		};
-		size_t heights = (height / threadsCount);
-		size_t lastHeight = height - ((threadsCount - 1) * heights);
+		const size_t heights = (height / threadsCount);
+		const size_t lastHeight = height - ((threadsCount - 1) * heights);
 		for (size_t threadIdx = 0; threadIdx < threadsCount; ++threadIdx) {
 			COMPV_CHECK_CODE_BAIL(err = threadDisp->invoke(std::bind(funcPtr, (rgbPtr + rgbIdx), (yPtr + YIdx), static_cast<compv_uscalar_t>((threadIdx == (threadsCount - 1) ? lastHeight : heights))), taskIds), "Dispatching task failed");
 			rgbIdx += (heights * stride) * bytesPerPixel;
