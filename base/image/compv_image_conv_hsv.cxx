@@ -46,14 +46,43 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgb24ToHsv(const uint8_t* rgb24Ptr, uint8_
 	void(*rgb24_to_hsv)(const uint8_t* rgb24Ptr, uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 		= rgb24_to_hsv_C;
 
-	rgb24_to_hsv(rgb24Ptr, hsvPtr, width, height, stride);
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
+
+	// Compute number of threads
+	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(width, height, maxThreads, COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD)
+		: 1;
+
+	if (threadsCount > 1) {
+		const size_t heights = (height / threadsCount);
+		const size_t lastHeight = height - ((threadsCount - 1) * heights);
+		const size_t paddingInBytes = (stride * sizeof(compv_uint8x3_t) * heights);
+		CompVAsyncTaskIds taskIds;
+		taskIds.reserve(threadsCount);
+		auto funcPtr = [&](const uint8_t* rgb24Ptr_, uint8_t* hsvPtr_, compv_uscalar_t height_) -> void {
+			rgb24_to_hsv(rgb24Ptr_, hsvPtr_, width, height_, stride);
+		};
+
+		for (size_t threadIdx = 0; threadIdx < threadsCount - 1; ++threadIdx) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, rgb24Ptr, hsvPtr, heights), taskIds), "Dispatching task failed");
+			rgb24Ptr += paddingInBytes;
+			hsvPtr += paddingInBytes;
+		}
+		if (lastHeight > 0) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, rgb24Ptr, hsvPtr, lastHeight), taskIds), "Dispatching task failed");
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
+	}
+	else {
+		rgb24_to_hsv(rgb24Ptr, hsvPtr, width, height, stride);
+	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 static void rgb24_to_hsv_C(const uint8_t* rgb24Ptr, uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No MT implementation found");
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 
 	size_t i, j;

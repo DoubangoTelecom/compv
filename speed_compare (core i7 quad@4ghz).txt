@@ -18,11 +18,11 @@ Shared Memory: 3810 MB
 !!!
 
 === YUV420P -> RGB24 (1282, 720) (#10k times) ===
-CompV: 29985.ms(full optiz)
+CompV:  29985.ms -> 7526.ms   (full optiz)
 OpenCV: 5269.ms(full optiz)
 
 === YUV420P -> HSV (1282, 720) (#10k times) ===
-CompV: 107889.ms
+CompV: 26611.ms -> 107889.ms
 OpenCV: 20920.ms(full optiz)
 Remarque: For OpenCV you need to convert to BGR then HSV (#2 steps: COLOR_YUV2BGR_I420 then CV_BGR2HSV)
 
@@ -33,10 +33,6 @@ OpenCV: 14745.ms
 === RGB24 -> Grayscale (1282, 720) (#10k times) ===
 CompV: 420.ms(mt, full optiz), 1217.ms(st, full optiz)
 OpenCV: 2632.ms(full optiz)
-
-=== RGB24 -> HSV (1282, 720) (#10k times) ===
-CompV: 
-OpenCV: 14745.ms
 
 
 === FAST9_16, Nonmax=true, threshold=20, maxfeatures=-1 (1282, 720) (#10k times) ===
