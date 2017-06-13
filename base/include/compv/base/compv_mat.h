@@ -352,7 +352,7 @@ private:
 			else {
 				// stride not valid or not provided
 				nBestStrideInBytes = (dataType == COMPV_MAT_TYPE_PIXELS)
-					? static_cast<size_t>(CompVMem::alignForward(cols, static_cast<int>(alignv))) * elmtInBytes // make sure both stride and strideInBytes are aligned
+					? static_cast<size_t>(CompVMem::alignForward(((cols + 1) >> 1), static_cast<int>(alignv))) * (elmtInBytes << 1) // make sure both stride and strideInBytes are aligned, also that (stride/2) is aligned
 					: static_cast<size_t>(CompVMem::alignForward((cols * elmtInBytes), static_cast<int>(alignv))); // make sure strideInBytes is aligned
 			}
 #if 0 // User-defined stride doesn't match -> let him die if he makes mistake :)
