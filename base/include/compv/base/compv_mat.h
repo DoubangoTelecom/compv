@@ -391,6 +391,7 @@ private:
 			}
 			else if (dataType == COMPV_MAT_TYPE_PIXELS) {
 				size_t elmtInBits;
+				size_t nPlaneStrideInSamples[COMPV_PLANE_MAX_COUNT];
 				const size_t nBestStrideInSamples = nBestStrideInBytes; // For images re-compute 'nBestStrideInBytes' if packed (e.g. RGB)
 				COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeCount(dataSubType, &nPlaneCount)); // get number of comps
 				COMPV_CHECK_EXP_RETURN(!nPlaneCount || nPlaneCount > COMPV_PLANE_MAX_COUNT, COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT); // check the number of comps
@@ -400,10 +401,11 @@ private:
 				size_t nSumPlaneSizeInBytes = 0;
 				for (size_t planeId = 0; planeId < nPlaneCount; ++planeId) {
 					COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(dataSubType, planeId, cols, rows, &nPlaneCols[planeId], &nPlaneRows[planeId])); // get 'cols' and 'rows' for the comp
-					COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(dataSubType, planeId, nBestStrideInBytes, rows, &nPlaneStrideInBytes[planeId], &nPlaneRows[planeId])); // get 'stride' and 'rows' for the comp
+					COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(dataSubType, planeId, nBestStrideInSamples, rows, &nPlaneStrideInSamples[planeId], &nPlaneRows[planeId])); // get 'stride' and 'rows' for the comp
 					COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(dataSubType, planeId, nBestStrideInSamples, rows, &nPlaneSizeInBytes[planeId])); // get comp size in bytes
 					COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeBitsCountForPixelFormat(dataSubType, planeId, &elmtInBits));
 					nPlaneElmtInBytes[planeId] = (elmtInBits >> 3);
+					nPlaneStrideInBytes[planeId] = nPlaneStrideInSamples[planeId] * nPlaneElmtInBytes[planeId];
 					nSumPlaneSizeInBytes += nPlaneSizeInBytes[planeId];
 				}
 				// Make sure that sum(comp sizes) = data size

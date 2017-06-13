@@ -101,7 +101,7 @@ COMPV_ERROR_CODE CompVImageUtils::planeSizeForPixelFormat(COMPV_SUBTYPE ePixelFo
 
 COMPV_ERROR_CODE CompVImageUtils::planeSizeForPixelFormat(COMPV_SUBTYPE ePixelFormat, size_t planeId, size_t imgWidth, size_t imgHeight, size_t *compWidth, size_t *compHeight)
 {
-    COMPV_CHECK_EXP_RETURN(!imgWidth || !imgHeight || !compWidth || !compHeight || planeId >= COMPV_PLANE_MAX_COUNT, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+    COMPV_CHECK_EXP_RETURN(!compWidth || !compHeight || planeId >= COMPV_PLANE_MAX_COUNT, COMPV_ERROR_CODE_E_INVALID_PARAMETER); // imgWidth and imgHeight can be null (e.g. when inputs are indexes)
     switch (ePixelFormat) {
     case COMPV_SUBTYPE_PIXELS_RGB24:
     case COMPV_SUBTYPE_PIXELS_BGR24:

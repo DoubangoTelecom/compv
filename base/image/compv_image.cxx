@@ -86,6 +86,8 @@ COMPV_ERROR_CODE CompVImage::readPixels(COMPV_SUBTYPE ePixelFormat, size_t width
 			COMPV_CHECK_EXP_RETURN(expectedFileSize != buffer->size(), COMPV_ERROR_CODE_E_INVALID_PIXEL_FORMAT, "Size mismatch");
 		}
 	}
+	// The input stride from the file is probably miss-aligned:
+	//	-> use wrap() to make sure the ouput image will be created with the stride possible (aligned on SIMD and GPU pages)
 	COMPV_CHECK_CODE_RETURN(CompVImage::wrap(ePixelFormat, buffer->ptr(), width, height, stride, image));
 	return COMPV_ERROR_CODE_S_OK;
 }
@@ -93,44 +95,20 @@ COMPV_ERROR_CODE CompVImage::readPixels(COMPV_SUBTYPE ePixelFormat, size_t width
 COMPV_ERROR_CODE CompVImage::wrap(COMPV_SUBTYPE ePixelFormat, const void* dataPtr, size_t width, size_t height, size_t stride, CompVMatPtrPtr image)
 {
 	COMPV_CHECK_EXP_RETURN(!dataPtr || !width || !height || stride < width || !image, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	COMPV_ERROR_CODE err_ = COMPV_ERROR_CODE_S_OK;
 
 	// Compute best stride
 	size_t bestStride = width;
 	COMPV_CHECK_CODE_RETURN(CompVImageUtils::bestStride(width, &bestStride));
-
-#if 1
-	bool bAllocNewImage = !(*image) ||
-		(*image)->type() != COMPV_MAT_TYPE_PIXELS ||
-		(*image)->subType() != ePixelFormat ||
-		(*image)->cols() != width ||
-		(*image)->rows() != height ||
-		(*image)->stride() != bestStride;
-#else // to test copy and alloc
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-	bool bAllocNewImage = true;
-#endif
-
-	CompVMatPtr image_;
-
-	if (bAllocNewImage) {
-		COMPV_CHECK_CODE_BAIL(err_ = CompVImage::newObj8u(&image_, ePixelFormat, width, height, bestStride)
-			, "Failed to allocate new image");
-	}
-	else {
-		image_ = *image;
-	}
+	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(image, ePixelFormat, width, height, bestStride)
+		, "Failed to allocate new image");
 
 	if (dataPtr) {
-		COMPV_CHECK_CODE_BAIL(err_ = CompVImageUtils::copy(ePixelFormat,
+		COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(ePixelFormat,
 			dataPtr, width, height, stride,
-			(void*)image_->ptr(), image_->cols(), image_->rows(), image_->stride()), "Failed to copy image"); // copy data
+			(void*)(*image)->ptr(), (*image)->cols(), (*image)->rows(), (*image)->stride()), "Failed to copy image"); // copy data
 	}
-bail:
-	if (COMPV_ERROR_CODE_IS_OK(err_)) {
-		*image = image_;
-	}
-	return err_;
+
+	return COMPV_ERROR_CODE_S_OK;
 }
 
 COMPV_ERROR_CODE CompVImage::clone(const CompVMatPtr& imageIn, CompVMatPtrPtr imageOut)
@@ -143,8 +121,6 @@ COMPV_ERROR_CODE CompVImage::clone(const CompVMatPtr& imageIn, CompVMatPtrPtr im
 COMPV_ERROR_CODE CompVImage::crop(const CompVMatPtr& imageIn, const CompVRectFloat32& roi, CompVMatPtrPtr imageOut)
 {
 	COMPV_CHECK_EXP_RETURN(!imageIn || imageIn->isEmpty() || roi.isEmpty() || !imageOut || imageIn->type() != COMPV_MAT_TYPE_PIXELS, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-	// wrap() supports all subtypes while crop() supports packed only (because of ptr())
-	COMPV_CHECK_EXP_RETURN(imageIn->subType() != COMPV_SUBTYPE_PIXELS_Y && !imageIn->isPacked(), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
 	
 	const size_t colStart = static_cast<size_t>(roi.left);
 	COMPV_CHECK_EXP_RETURN(colStart > imageIn->cols(), COMPV_ERROR_CODE_E_OUT_OF_BOUND);
@@ -152,13 +128,40 @@ COMPV_ERROR_CODE CompVImage::crop(const CompVMatPtr& imageIn, const CompVRectFlo
 	COMPV_CHECK_EXP_RETURN(colEnd > imageIn->cols() || colStart >= colEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
 	const size_t colCount = (colEnd - colStart) & ~1;
 	
-	const size_t rowStart = static_cast<size_t>(roi.top);
+	const size_t rowStart = static_cast<size_t>(roi.top) & ~1;
 	COMPV_CHECK_EXP_RETURN(rowStart > imageIn->rows(), COMPV_ERROR_CODE_E_OUT_OF_BOUND);
 	const size_t rowEnd = static_cast<size_t>(roi.bottom);
 	COMPV_CHECK_EXP_RETURN(rowEnd > imageIn->rows() || rowStart >= rowEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
 	const size_t rowCount = (rowEnd - rowStart) & ~1;
 	
-	COMPV_CHECK_CODE_RETURN(CompVImage::wrap(imageIn->subType(), imageIn->ptr(rowStart, colStart), colCount, rowCount, imageIn->stride(), imageOut));
+	CompVMatPtr imageOut_ = (*imageOut == imageIn) ? nullptr : *imageOut;
+	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut_, imageIn->subType(), colCount, rowCount, imageIn->stride())); //!\\ must use same stride because we're using memcpy instead of row by row copy
+
+#if 0
+	COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
+		imageIn->subType(),
+		imageIn->ptr<const void>(rowStart, colStart), colCount, rowCount, imageIn->stride(),
+		imageOut_->ptr<void>(), colCount, rowCount, imageOut_->stride()
+	));
+
+#else
+	const int numPlanes = static_cast<int>(imageIn->planeCount());
+	const COMPV_SUBTYPE pixelFormat = imageIn->subType();
+	size_t rowStartInPlane, colStartInPlane;
+	for (int planeId = 0;  planeId < numPlanes; ++planeId) {
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Not correct");
+		COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(pixelFormat, planeId, colStart, rowStart, &colStartInPlane, &rowStartInPlane));
+		if (planeId == 1) rowStartInPlane <<= 1;
+		COMPV_CHECK_CODE_RETURN(CompVMem::copy(
+			imageOut_->ptr<void>(0, 0, planeId),
+			imageIn->ptr<const void>(rowStartInPlane, colStartInPlane, planeId),
+			imageOut_->planeSizeInBytes(planeId)
+		));
+	}
+#endif
+
+	*imageOut = imageOut_;
+
 	return COMPV_ERROR_CODE_S_OK;
 }
 
