@@ -126,39 +126,28 @@ COMPV_ERROR_CODE CompVImage::crop(const CompVMatPtr& imageIn, const CompVRectFlo
 	COMPV_CHECK_EXP_RETURN(colStart > imageIn->cols(), COMPV_ERROR_CODE_E_OUT_OF_BOUND);
 	const size_t colEnd = static_cast<size_t>(roi.right);
 	COMPV_CHECK_EXP_RETURN(colEnd > imageIn->cols() || colStart >= colEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
-	const size_t colCount = (colEnd - colStart) & ~1;
+	const size_t colCount = (colEnd - colStart);
 	
-	const size_t rowStart = static_cast<size_t>(roi.top) & ~1;
+	const size_t rowStart = static_cast<size_t>(roi.top);
 	COMPV_CHECK_EXP_RETURN(rowStart > imageIn->rows(), COMPV_ERROR_CODE_E_OUT_OF_BOUND);
 	const size_t rowEnd = static_cast<size_t>(roi.bottom);
 	COMPV_CHECK_EXP_RETURN(rowEnd > imageIn->rows() || rowStart >= rowEnd, COMPV_ERROR_CODE_E_OUT_OF_BOUND);
-	const size_t rowCount = (rowEnd - rowStart) & ~1;
+	const size_t rowCount = (rowEnd - rowStart);
 	
 	CompVMatPtr imageOut_ = (*imageOut == imageIn) ? nullptr : *imageOut;
 	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut_, imageIn->subType(), colCount, rowCount, imageIn->stride())); //!\\ must use same stride because we're using memcpy instead of row by row copy
 
-#if 0
-	COMPV_CHECK_CODE_RETURN(CompVImageUtils::copy(
-		imageIn->subType(),
-		imageIn->ptr<const void>(rowStart, colStart), colCount, rowCount, imageIn->stride(),
-		imageOut_->ptr<void>(), colCount, rowCount, imageOut_->stride()
-	));
-
-#else
 	const int numPlanes = static_cast<int>(imageIn->planeCount());
 	const COMPV_SUBTYPE pixelFormat = imageIn->subType();
 	size_t rowStartInPlane, colStartInPlane;
 	for (int planeId = 0;  planeId < numPlanes; ++planeId) {
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Not correct");
 		COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(pixelFormat, planeId, colStart, rowStart, &colStartInPlane, &rowStartInPlane));
-		if (planeId == 1) rowStartInPlane <<= 1;
 		COMPV_CHECK_CODE_RETURN(CompVMem::copy(
 			imageOut_->ptr<void>(0, 0, planeId),
 			imageIn->ptr<const void>(rowStartInPlane, colStartInPlane, planeId),
-			imageOut_->planeSizeInBytes(planeId)
+			imageOut_->planeSizeInBytes(planeId) - (colStartInPlane * imageOut_->elmtInBytes())
 		));
 	}
-#endif
 
 	*imageOut = imageOut_;
 

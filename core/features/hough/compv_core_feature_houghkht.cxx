@@ -754,7 +754,7 @@ void CompVHoughKht::vote_Algorithm4(size_t rho_start_index, const size_t theta_s
 
 	double rho, theta;
 	double z, w;
-	int votes;
+	int32_t votes;
 	size_t rho_index, theta_index, theta_count;
 
 	/* {Loop for the  coordinates of the parameter space} */
@@ -776,7 +776,7 @@ void CompVHoughKht::vote_Algorithm4(size_t rho_start_index, const size_t theta_s
 			rho = rho_start;
 			w = ((theta * theta) * sigma_theta_square_scale);
 			z = ((rho * rho) * sigma_rho_square_scale) - ((r_times_2 * rho * theta) * sigma_rho_times_sigma_theta_scale) + w;
-			while (((rho_index <= rho_size) && (votes = COMPV_MATH_ROUNDFU_2_NEAREST_INT(((x * std::exp(-z * y)) * scale), int)) > 0)) {
+			while (((rho_index <= rho_size) && (votes = COMPV_MATH_ROUNDFU_2_NEAREST_INT(((x * std::exp(-z * y)) * scale), int32_t)) > 0)) {
 				pcount[rho_index] += votes;
 				rho_index += inc_rho_index;
 				rho += inc_rho;
@@ -798,6 +798,8 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4_VotesCountAndClearVisitedMap(Co
 	size_t theta_index, rho_index;
 
 	int32_t vote_count, nThreshold = static_cast<int32_t>(m_nThreshold);
+
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 
 	// Given a voting map, first we create a list with all cells that
 	//	receive at least one vote.

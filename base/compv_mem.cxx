@@ -10,6 +10,7 @@
 #include "compv/base/math/compv_math_utils.h"
 
 #include "compv/base/parallel/compv_mutex.h"
+#include "compv/base/parallel/compv_parallel.h"
 
 #include "compv/base/intrin/x86/compv_mem_intrin_sse2.h"
 #include "compv/base/intrin/x86/compv_mem_intrin_avx.h"
@@ -35,8 +36,10 @@ COMPV_NAMESPACE_BEGIN()
 #   define HAVE_POSIX_MEMALIGN 1
 #endif
 
-// COMPV_MEM_SIZE_MIN_SIMD must be > 32 (default alignment)
-#define COMPV_MEM_SIZE_MIN_SIMD 32*16 // no real gain on small sizes
+// COMPV_MEM_CPY_SIZE_MIN_SIMD must be > 32 (default alignment)
+#define COMPV_MEM_CPY_SIZE_MIN_SIMD 32*16 // no real gain on small sizes
+
+#define COMPV_MEM_CPY_COUNT_MIN_SAMPLES_PER_THREAD (4096 * 100) // Must be multiple on 4096 (cache friendly)
 
 // X86
 #if COMPV_ARCH_X86 && COMPV_ASM
@@ -65,7 +68,7 @@ typedef void(*CompVMemCopy)(void* dstPtr, const void*srcPtr, compv_uscalar_t siz
 static void CompVMemCopy_C(void* dstPtr, const void*srcPtr, compv_uscalar_t size)
 {
     COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD implementation found. On ARM consider http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka13544.html");
-    memcpy(dstPtr, srcPtr, (size_t)size);
+    memcpy(dstPtr, srcPtr, static_cast<size_t>(size));
 }
 
 COMPV_ERROR_CODE CompVMem::init()
@@ -93,11 +96,37 @@ COMPV_ERROR_CODE CompVMem::deInit()
     return COMPV_ERROR_CODE_S_OK;
 }
 
-COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void*srcPtr, size_t size)
+COMPV_ERROR_CODE CompVMem::copy(void* dstPtr, const void* srcPtr, size_t size)
 {
     COMPV_CHECK_EXP_RETURN(!dstPtr || !srcPtr || !size, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
     CompVMemCopy cpy = CompVMemCopy_C;
-    cpy(dstPtr, srcPtr, size);
+
+	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
+	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
+		? std::min((size / COMPV_MEM_CPY_COUNT_MIN_SAMPLES_PER_THREAD), static_cast<size_t>(threadDisp->threadsCount()))
+		: 1;
+	if (threadsCount > 1) {
+		size_t threadIdx, index;
+		const size_t countAny = (size / threadsCount);
+		const size_t countLast = countAny + (size % threadsCount);
+		auto funcPtr = [&](uint8_t* mt_dstPtr, const uint8_t* mt_srcPtr, size_t mt_size) -> COMPV_ERROR_CODE {
+			cpy(reinterpret_cast<void*>(mt_dstPtr), reinterpret_cast<const void*>(mt_srcPtr), mt_size);
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		uint8_t* mt_dstPtr = reinterpret_cast<uint8_t*>(dstPtr);
+		const uint8_t* mt_srcPtr = reinterpret_cast<const uint8_t*>(srcPtr);
+		CompVAsyncTaskIds taskIds;
+		for (threadIdx = 0, index = 0; threadIdx < (threadsCount - 1); ++threadIdx, index += countAny) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, &mt_dstPtr[index], &mt_srcPtr[index], countAny), taskIds));
+		}
+		if (countLast) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtr, &mt_dstPtr[index], &mt_srcPtr[index], countLast), taskIds));
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds));
+	}
+	else {
+		cpy(dstPtr, srcPtr, size);
+	}
     return COMPV_ERROR_CODE_S_OK;
 }
 
@@ -107,7 +136,7 @@ COMPV_ERROR_CODE CompVMem::copyNTA(void* dstPtr, const void*srcPtr, size_t size)
     size_t align = 1;
     CompVMemCopy cpy = CompVMemCopy_C;
 
-    if (size > COMPV_MEM_SIZE_MIN_SIMD) {
+    if (size > COMPV_MEM_CPY_SIZE_MIN_SIMD) {
         if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
             if (COMPV_IS_ALIGNED_SSE(dstPtr) && COMPV_IS_ALIGNED_SSE(srcPtr)) {
                 COMPV_EXEC_IFDEF_INTRIN_X86((cpy = MemCopyNTA_Intrin_Aligned_SSE2, align = COMPV_ALIGNV_SIMD_SSE));
@@ -206,7 +235,7 @@ COMPV_ERROR_CODE CompVMem::zeroNTA(void* dstPtr, size_t size)
     CompVMemZero setz = CompVMemZero_C;
     size_t align = 1;
 
-    if (size > COMPV_MEM_SIZE_MIN_SIMD) {
+    if (size > COMPV_MEM_CPY_SIZE_MIN_SIMD) {
         if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
             if (COMPV_IS_ALIGNED_SSE(dstPtr)) {
                 COMPV_EXEC_IFDEF_INTRIN_X86((setz = MemZeroNTA_Intrin_Aligned_SSE2, align = COMPV_ALIGNV_SIMD_SSE));
