@@ -239,6 +239,12 @@
     <ClCompile Include="video\compv_core_video_writer_ffmpeg.cxx">
       <Filter>Source Files\video</Filter>
     </ClCompile>
+    <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghkht_intrin_sse2.cxx">
+      <Filter>Source Files\features\hough\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghkht_intrin_avx2.cxx">
+      <Filter>Source Files\features\hough\intrin\x86</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\compv\core\compv_core.h">
@@ -330,6 +336,12 @@
     </ClInclude>
     <ClInclude Include="include\compv\core\video\compv_core_video_writer_ffmpeg.h">
       <Filter>Header Files\video</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_sse2.h">
+      <Filter>Header Files\features\hough\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\core\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_avx2.h">
+      <Filter>Header Files\features\hough\intrin\x86</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -105,6 +105,7 @@ void CompVHoughShtNmsApplyRow_Intrin_SSE2(COMPV_ALIGNED(SSE) int32_t* pACC, COMP
 // Not optimized, see SSE41 version
 void CompVHoughShtRowTimesSinRho_Intrin_SSE2(COMPV_ALIGNED(SSE) const int32_t* pSinRho, COMPV_ALIGNED(SSE) compv_uscalar_t row, COMPV_ALIGNED(SSE) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count)
 {
+	COMPV_DEBUG_INFO_CHECK_SSE2();
 	const __m128i vecRowInt32 = _mm_set1_epi32(static_cast<int32_t>(row));
 	compv_uscalar_t i;
 	for (i = 0; i < count - 15; i += 16) {

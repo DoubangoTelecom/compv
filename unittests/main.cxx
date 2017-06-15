@@ -10,10 +10,10 @@ using namespace compv;
 #define UNITTEST_SOBEL							0
 #define UNITTEST_CANNY							0
 #define UNITTEST_HOUGHSHT						0
-#define UNITTEST_HOUGHKHT						0
+#define UNITTEST_HOUGHKHT						1
 
 #define UNITTEST_FEATURE_FAST					0
-#define UNITTEST_CHROMA_CONV					1
+#define UNITTEST_CHROMA_CONV					0
 #define UNITTEST_BRUTEFORCE						0
 
 #define UNITTEST_PATCH_MOMENTS					0

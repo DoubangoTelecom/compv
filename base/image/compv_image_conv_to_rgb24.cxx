@@ -193,7 +193,7 @@ COMPV_ERROR_CODE CompVImageConvToRGB24::yuvSemiPlanar(const CompVMatPtr& imageIn
 		COMPV_CHECK_CODE_RETURN(CompVImageUtils::planeSizeForPixelFormat(inPixelFormat, COMPV_PLANE_UV, 1, heights, &tmpWidth, &uvPtrHeights));
 
 		yPtrPaddingInBytes = imageIn->strideInBytes(COMPV_PLANE_Y) * heights;
-		uvPtrPaddingInBytes = imageIn->strideInBytes(COMPV_PLANE_UV) * (uvPtrHeights << 1); //!\\ mul height by 2 because we U and V planes are packed with the same size
+		uvPtrPaddingInBytes = imageIn->strideInBytes(COMPV_PLANE_UV) * uvPtrHeights;
 		rgbPtrPaddingInBytes = imageRGB24->strideInBytes() * heights;
 
 		for (size_t threadIdx = 0; threadIdx < threadsCount - 1; ++threadIdx) {

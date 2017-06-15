@@ -10,6 +10,9 @@
 #include "compv/base/math/compv_math_eigen.h"
 #include "compv/base/parallel/compv_parallel.h"
 
+#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghkht_intrin_sse2.h"
+#include "compv/core/features/hough/intrin/x86/compv_core_feature_houghkht_intrin_avx2.h"
+
 #include <algorithm> /* std::reverse */
 
 #define COMPV_THIS_CLASSNAME	"CompVHoughKht"
@@ -29,6 +32,8 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_HOUGHKHT_CLUSTER_MIN_DEVIATION		2.0
 #define COMPV_HOUGHKHT_CLUSTER_MIN_SIZE				10
 #define COMPV_HOUGHKHT_KERNEL_MIN_HEIGTH			0.002
+
+static void CompVHoughKhtPeaks_Section3_4_VotesCount_C(const int32_t *pcount, const size_t pcount_stride, const size_t theta_index, const size_t rho_count, const int32_t nThreshold, CompVHoughKhtVotes& votes);
 
 CompVHoughKht::CompVHoughKht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
 	:CompVHough(COMPV_HOUGHKHT_ID)
@@ -793,31 +798,36 @@ void CompVHoughKht::vote_Algorithm4(size_t rho_start_index, const size_t theta_s
 COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4_VotesCountAndClearVisitedMap(CompVHoughKhtVotes& votes, const size_t theta_index_start, const size_t theta_index_end)
 {
 	const size_t pcount_stride = m_count->stride();
-	const int32_t *pcount = m_count->ptr<const int32_t>(theta_index_start), *pcount_top, *pcount_bottom, *pcount_center;
+	const int32_t *pcount = m_count->ptr<const int32_t>(theta_index_start);
 	const size_t rho_count = m_rho->cols();
-	size_t theta_index, rho_index;
+	size_t theta_index;
+	int xmpd = 1;
 
-	int32_t vote_count, nThreshold = static_cast<int32_t>(m_nThreshold);
+	int32_t nThreshold = static_cast<int32_t>(m_nThreshold);
 
-	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+	void(*CompVHoughKhtPeaks_Section3_4_VotesCount)(const int32_t *pcount, const size_t pcount_stride, const size_t theta_index, const size_t rho_count, const int32_t nThreshold, CompVHoughKhtVotes& votes)
+		= CompVHoughKhtPeaks_Section3_4_VotesCount_C;
 
-	// Given a voting map, first we create a list with all cells that
-	//	receive at least one vote.
+#if COMPV_ARCH_X86
+	if (rho_count > 4 && CompVCpu::isEnabled(kCpuFlagSSE2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughKhtPeaks_Section3_4_VotesCount = CompVHoughKhtPeaks_Section3_4_VotesCount_4mpd_Intrin_SSE2, xmpd = 4));
+	}
+#	if 0 // TODO(dmi): SSE faster than AVX (too much memory read and few math)
+	if (rho_count > 8 && CompVCpu::isEnabled(kCpuFlagAVX2)) {
+		COMPV_EXEC_IFDEF_INTRIN_X86((CompVHoughKhtPeaks_Section3_4_VotesCount = CompVHoughKhtPeaks_Section3_4_VotesCount_8mpd_Intrin_AVX2, xmpd = 8));
+	}
+#	endif
+#elif COMPV_ARCH_ARM
+#endif
+
+	// "1" not multiple of "2" and cannot used for backward align
+	const size_t xmpd_consumed = ((xmpd == 1) ? rho_count : rho_count & (-xmpd)) + 1; // +1 because 'rho_index' starts at 1
+	const size_t xmpd_remains = (rho_count > xmpd_consumed) ? (rho_count - xmpd_consumed) : 0;
 
 	for (theta_index = theta_index_start; theta_index < theta_index_end; ++theta_index) {
-		for (rho_index = 1; rho_index < rho_count; ++rho_index) {
-			if (pcount[rho_index]) {
-				pcount_center = &pcount[rho_index];
-				pcount_top = (pcount_center - pcount_stride);
-				pcount_bottom = (pcount_center + pcount_stride);
-				vote_count = /* convolution of the cells with a 3 × 3 Gaussian kernel */
-					pcount_top[-1] + (*pcount_top << 1) + pcount_top[1]
-					+ pcount_bottom[-1] + ((*pcount_bottom) << 1) + pcount_bottom[1]
-					+ (pcount_center[-1] << 1) + ((*pcount_center) << 2) + (pcount_center[1] << 1);
-				if (vote_count >= nThreshold) { // do not add votes with less than threshold's values in count
-					votes.push_back(CompVHoughKhtVote(rho_index, theta_index, vote_count));
-				}
-			}
+		CompVHoughKhtPeaks_Section3_4_VotesCount(pcount, pcount_stride, theta_index, rho_count, nThreshold, votes);
+		if (xmpd_remains) {
+			CompVHoughKhtPeaks_Section3_4_VotesCount_C(&pcount[xmpd_consumed], pcount_stride, theta_index, xmpd_remains, nThreshold, votes);
 		}
 		COMPV_CHECK_CODE_RETURN(m_visited->zero_row(theta_index));
 		pcount += pcount_stride;
@@ -879,6 +889,34 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4_Lines(CompVHoughLineVector& lin
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
+}
+
+static void CompVHoughKhtPeaks_Section3_4_VotesCount_C(const int32_t *pcount, const size_t pcount_stride, const size_t theta_index, const size_t rho_count, const int32_t nThreshold, CompVHoughKhtVotes& votes)
+{
+	// Given a voting map, first we create a list with all cells that
+	//	receive at least one vote.
+
+	if (rho_count > 7) { // Otherwise, it's just minpack can't handle all data
+		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+	}
+	compv_uscalar_t rho_index;
+	const int32_t *pcount_top, *pcount_bottom, *pcount_center;
+	int32_t vote_count;
+	// pcount.cols() have #2 more samples than rho_count which means no OutOfIndex issue for 'pcount_center[rho_index + 1]' (aka 'right') even for the last rho_index
+	for (rho_index = 1; rho_index < rho_count; ++rho_index) {
+		if (pcount[rho_index]) {
+			pcount_center = &pcount[rho_index];
+			pcount_top = (pcount_center - pcount_stride);
+			pcount_bottom = (pcount_center + pcount_stride);
+			vote_count = /* convolution of the cells with a 3 × 3 Gaussian kernel */
+				pcount_top[-1] + (*pcount_top << 1) + pcount_top[1]
+				+ pcount_bottom[-1] + ((*pcount_bottom) << 1) + pcount_bottom[1]
+				+ (pcount_center[-1] << 1) + ((*pcount_center) << 2) + (pcount_center[1] << 1);
+			if (vote_count >= nThreshold) { // do not add votes with less than threshold's values in count
+				votes.push_back(CompVHoughKhtVote(rho_index, theta_index, vote_count));
+			}
+		}
+	}
 }
 
 COMPV_NAMESPACE_END()

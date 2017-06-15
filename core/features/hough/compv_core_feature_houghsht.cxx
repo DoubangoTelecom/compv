@@ -499,7 +499,7 @@ COMPV_ERROR_CODE CompVHoughSht::nms_gather(size_t rowStart, size_t rowCount, Com
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD for GPU implementation found");
 	}
 	
-	size_t consumed = (xmpd == 1) ? 0 : maxColsScalar & (-xmpd); // "1" not multuple of "2" and cannot used for backward align
+	size_t consumed = (xmpd == 1) ? 0 : maxColsScalar & (-xmpd); // "1" not multiple of "2" and cannot used for backward align
 	size_t remains = (maxCols - consumed);
 	if (remains) {
 		for (row = rowStart; row < rowEnd; ++row) {

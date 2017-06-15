@@ -42,15 +42,6 @@ COMPV_NAMESPACE_BEGIN()
 #define _mm_max_epu16_SSE2(a, b, zero) _mm_blendv_si128(a, b, _mm_cmple_epu16_SSE2(a, b, zero))
 #endif
 
-static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i &b)
-{
-    const __m128i x = _mm_mul_epu32(a, b);
-	const __m128i y = _mm_mul_epu32(_mm_srli_si128(a, 4), _mm_srli_si128(b, 4));
-    return _mm_unpacklo_epi32(_mm_shuffle_epi32(x, 0x8), _mm_shuffle_epi32(y, 0x8));
-}
-
-#define _mm_cvtepi16_epi32_low_SSE2(a) _mm_srai_epi32(_mm_unpacklo_epi16(a, a), 16) // Convert from I16 to I32 while shifting in sign bits, ASM: use '_mm_cvtepi16_epi32' which is SSE4.1
-#define _mm_cvtepi16_epi32_hi_SSE2(a) _mm_srai_epi32(_mm_unpackhi_epi16(a, a), 16) // Convert from I16 to I32 while shifting in sign bits, ASM: use '_mm_cvtepi16_epi32' which is SSE4.1
 
 // algorithm: return (vecX[i] != vecY[i]) ? vecPlaceholder[i] : 0x00; 
 // e.g. to test vec not zero: _mm_cmpnot_epu8_SSE2(vec, 0x00, 0xff) - mask is used to set value
@@ -69,6 +60,14 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 	vec = _mm_min_epu8(vec, _mm_srli_si128(vec, 2)); /* >> 16b */ \
 	vec = _mm_min_epu8(vec, _mm_srli_si128(vec, 1)) /* >> 1b */
 
+#define _mm_cvtepi16_epi32_low_SSE2(a) _mm_srai_epi32(_mm_unpacklo_epi16(a, a), 16) // Convert from I16 to I32 while shifting in sign bits, ASM: use '_mm_cvtepi16_epi32' which is SSE4.1
+#define _mm_cvtepi16_epi32_hi_SSE2(a) _mm_srai_epi32(_mm_unpackhi_epi16(a, a), 16) // Convert from I16 to I32 while shifting in sign bits, ASM: use '_mm_cvtepi16_epi32' which is SSE4.1
+
+static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i &b) {
+	const __m128i x = _mm_mul_epu32(a, b);
+	const __m128i y = _mm_mul_epu32(_mm_srli_si128(a, 4), _mm_srli_si128(b, 4));
+	return _mm_unpacklo_epi32(_mm_shuffle_epi32(x, 0x8), _mm_shuffle_epi32(y, 0x8));
+}
 /*
 Interleaves two 128bits vectors.
 From:
