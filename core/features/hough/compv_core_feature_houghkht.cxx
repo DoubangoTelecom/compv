@@ -241,6 +241,9 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 					kernels_all.insert(kernels_all.end(), kernels_mt[threadIdx].begin(), kernels_mt[threadIdx].end());
 				}
 			}
+			if (kernels_all.empty()) {
+				return COMPV_ERROR_CODE_S_OK;
+			}
 		}		
 	}
 	else {
@@ -262,10 +265,6 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
-
-	if (kernels_all.empty()) {
-		return COMPV_ERROR_CODE_S_OK;
-	}
 	
 	if (threadsCountClusters <= 1) {
 		/* Clusters */
@@ -276,10 +275,13 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 
 		/* Voting (build kernels and compute hmax) */
 		COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Kernels(clusters_all, kernels_all, hmax)); // IS thread-safe
+		if (kernels_all.empty()) {
+			return COMPV_ERROR_CODE_S_OK;
+		}
 
 		/* Voting (Erase short kernels) */
 		COMPV_CHECK_CODE_RETURN(voting_Algorithm2_DiscardShortKernels(kernels_all, hmax)); // IS thread-safe
-		if (clusters_all.empty()) {
+		if (kernels_all.empty()) {
 			return COMPV_ERROR_CODE_S_OK;
 		}
 
