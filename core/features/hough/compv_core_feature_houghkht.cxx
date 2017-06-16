@@ -33,6 +33,19 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_HOUGHKHT_CLUSTER_MIN_SIZE				10
 #define COMPV_HOUGHKHT_KERNEL_MIN_HEIGTH			0.002
 
+// Fast exp function for small numbers (in our case the numbers are even always negative)
+// HUGE boost on ARM
+COMPV_ALWAYS_INLINE double __compv_math_exp_fast_small(double x) {
+#if 1
+	static const double scale = 1.0 / 1024.0;
+	x = 1.0 + (x * scale);
+	x *= x; x *= x; x *= x; x *= x; x *= x; x *= x; x *= x; x *= x; x *= x; x *= x;
+	return x;
+#else
+	return std::exp(x);
+#endif
+}
+
 static void CompVHoughKhtPeaks_Section3_4_VotesCount_C(const int32_t *pcount, const size_t pcount_stride, const size_t theta_index, const size_t rho_count, const int32_t nThreshold, CompVHoughKhtVotes& votes);
 
 CompVHoughKht::CompVHoughKht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
@@ -580,7 +593,7 @@ static double __gauss_Eq15(const double rho, const double theta, const CompVHoug
 	const double x = 1.0 / (2.0 * COMPV_MATH_PI * sigma_rho_times_sigma_theta * std::sqrt(one_minus_r_square));
 	const double y = 1.0 / (2.0 * (one_minus_r_square));
 	const double z = ((rho * rho) / sigma_rho_square) - (((r * 2.0) * rho * theta) * sigma_rho_times_sigma_theta_scale) + ((theta * theta) / sigma_theta_square);
-	return x * std::exp(-z * y);
+	return x * __compv_math_exp_fast_small(-z * y);
 }
 
 // Algorithm 2: Computation of the Gaussian kernel parameters
@@ -782,7 +795,7 @@ void CompVHoughKht::vote_Algorithm4(size_t rho_start_index, const size_t theta_s
 			rho = rho_start;
 			w = ((theta * theta) * sigma_theta_square_scale);
 			z = ((rho * rho) * sigma_rho_square_scale) - ((r_times_2 * rho * theta) * sigma_rho_times_sigma_theta_scale) + w;
-			while (((rho_index <= rho_size) && (votes = COMPV_MATH_ROUNDFU_2_NEAREST_INT(((x * std::exp(-z * y)) * scale), int32_t)) > 0)) {
+			while (((rho_index <= rho_size) && (votes = COMPV_MATH_ROUNDFU_2_NEAREST_INT(((x * __compv_math_exp_fast_small(-z * y)) * scale), int32_t)) > 0)) {
 				pcount[rho_index] += votes;
 				rho_index += inc_rho_index;
 				rho += inc_rho;
