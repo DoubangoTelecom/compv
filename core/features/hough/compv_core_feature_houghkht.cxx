@@ -830,7 +830,7 @@ void CompVHoughKht::vote_Algorithm4(int32_t* countsPtr, const size_t countsStrid
 	const double y = 1.0 / (2.0 * one_minus_r_square);
 
 	double rho, theta;
-	double z, w;
+	double k, z, w;
 	int32_t votes;
 	size_t rho_index, theta_index, theta_count;
 
@@ -852,12 +852,13 @@ void CompVHoughKht::vote_Algorithm4(int32_t* countsPtr, const size_t countsStrid
 			rho_index = rho_start_index;
 			rho = rho_start;
 			w = ((theta * theta) * sigma_theta_square_scale);
-			z = ((rho * rho) * sigma_rho_square_scale) - ((r_times_2 * rho * theta) * sigma_rho_times_sigma_theta_scale) + w;
+			k = (r_times_2 * theta * sigma_rho_times_sigma_theta_scale);
+			z = ((rho * rho) * sigma_rho_square_scale) - (k * rho) + w;
 			while (((rho_index <= rho_size) && (votes = COMPV_MATH_ROUNDFU_2_NEAREST_INT(((x * __compv_math_exp_fast_small(-z * y)) * scale), int32_t)) > 0)) {
 				pcount[rho_index] += votes;
 				rho_index += inc_rho_index;
 				rho += inc_rho;
-				z = ((rho * rho) * sigma_rho_square_scale) - ((r_times_2 * rho * theta) * sigma_rho_times_sigma_theta_scale) + w;
+				z = ((rho * rho) * sigma_rho_square_scale) - (k * rho) + w;
 			}
 			theta_index += inc_theta_index;
 			theta += inc_theta;
