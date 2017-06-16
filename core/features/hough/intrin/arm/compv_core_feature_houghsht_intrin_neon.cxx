@@ -210,6 +210,7 @@ void CompVHoughShtNmsApplyRow_Intrin_NEON(COMPV_ALIGNED(NEON) int32_t* pACC, COM
 // count must be >= 16
 void CompVHoughShtRowTimesSinRho_Intrin_NEON(COMPV_ALIGNED(NEON) const int32_t* pSinRho, COMPV_ALIGNED(NEON) compv_uscalar_t row, COMPV_ALIGNED(NEON) int32_t* rowTimesSinRhoPtr, compv_uscalar_t count)
 {
+	COMPV_DEBUG_INFO_CHECK_NEON();
 	const int32x4_t vecRowInt32 = vdupq_n_s32(static_cast<int32_t>(row));
 	compv_uscalar_t i;
 	for (i = 0; i < count - 15; i += 16) {

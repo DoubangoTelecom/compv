@@ -104,6 +104,7 @@ private:
 	size_t m_nWidth;
 	size_t m_nHeight;
 	size_t m_nMaxLines;
+	bool m_bOverrideInputEdges;
 	CompVMatPtr m_edges;
 	CompVMatPtr m_rho; // CompVMatPtr<double>
 	CompVMatPtr m_theta; // CompVMatPtr<double>

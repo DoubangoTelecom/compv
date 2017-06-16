@@ -12,6 +12,7 @@
 
 #include "compv/core/features/hough/intrin/x86/compv_core_feature_houghkht_intrin_sse2.h"
 #include "compv/core/features/hough/intrin/x86/compv_core_feature_houghkht_intrin_avx2.h"
+#include "compv/core/features/hough/intrin/arm/compv_core_feature_houghkht_intrin_neon.h"
 
 #include <algorithm> /* std::reverse */
 
@@ -60,6 +61,7 @@ CompVHoughKht::CompVHoughKht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEF
 	, m_nWidth(0)
 	, m_nHeight(0)
 	, m_nMaxLines(INT_MAX)
+	, m_bOverrideInputEdges(false)
 {
 
 }
@@ -112,6 +114,11 @@ COMPV_ERROR_CODE CompVHoughKht::set(int id, const void* valuePtr, size_t valueSi
 		m_kernel_min_heigth = static_cast<double>(*reinterpret_cast<const compv_float32_t*>(valuePtr));
 		return COMPV_ERROR_CODE_S_OK;
 	}
+	case COMPV_HOUGHKHT_SET_BOOL_OVERRIDE_INPUT_EDGES: {
+		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(bool), COMPV_ERROR_CODE_E_INVALID_PARAMETER);
+		m_bOverrideInputEdges = *reinterpret_cast<const bool*>(valuePtr);
+		return COMPV_ERROR_CODE_S_OK;
+	}
 	default: {
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "Set with id %d not implemented", id);
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
@@ -156,7 +163,13 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 		std::vector<double > Gmin_mt;
 		std::vector<CompVHoughKhtKernels > kernels_mt;
 		auto funcPtrClone = [&]() -> COMPV_ERROR_CODE {
-			COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
+			if (m_bOverrideInputEdges) {
+				m_edges = edges;
+			}
+			else {
+				COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("If you're not reusing the edges you should let us know");
+				COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
+			}
 			return COMPV_ERROR_CODE_S_OK;
 		};
 		auto funcPtrInitCoordsAndClearMaps = [&]() -> COMPV_ERROR_CODE {
@@ -232,7 +245,13 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 	}
 	else {
 		/* Clone the edges (the linking procedure modifify the data) */
-		COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
+		if (m_bOverrideInputEdges) {
+			m_edges = edges;
+		}
+		else {
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("If you're not reusing the edges you should let us know");
+			COMPV_CHECK_CODE_RETURN(edges->clone(&m_edges));
+		}
 
 		/* Init coords (sine and cosine tables) */
 		COMPV_CHECK_CODE_RETURN(initCoords(m_dRho, m_dTheta_rad, m_nThreshold, edges->cols(), edges->rows()));
@@ -869,6 +888,9 @@ COMPV_ERROR_CODE CompVHoughKht::peaks_Section3_4_VotesCountAndClearVisitedMap(Co
 	}
 #	endif
 #elif COMPV_ARCH_ARM
+	if (rho_count > 4 && CompVCpu::isEnabled(kCpuFlagARM_NEON)) {
+		COMPV_EXEC_IFDEF_INTRIN_ARM((CompVHoughKhtPeaks_Section3_4_VotesCount = CompVHoughKhtPeaks_Section3_4_VotesCount_4mpd_Intrin_NEON, xmpd = 4));
+	}
 #endif
 
 	// "1" not multiple of "2" and cannot used for backward align
