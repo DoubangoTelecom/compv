@@ -171,9 +171,6 @@
     <ClInclude Include="..\include\compv\core\calib\compv_core_calib_homography.h">
       <Filter>include\calib</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compv\core\matchers\compv_core_matcher_bruteforce.h">
-      <Filter>include\matchers</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\compv\core\matchers\compv_core_matcher_flann.h">
       <Filter>include\matchers</Filter>
     </ClInclude>
@@ -234,6 +231,15 @@
     <ClInclude Include="..\include\compv\core\features\hough\compv_core_feature_houghsht.h">
       <Filter>include\features\hough</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_avx2.h">
+      <Filter>include\features\hough\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_sse2.h">
+      <Filter>include\features\hough\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\core\matchers\compv_core_matcher_bruteforce.h">
+      <Filter>include\matchers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_core.cxx">
@@ -255,9 +261,6 @@
       <Filter>source\calib</Filter>
     </ClCompile>
     <ClCompile Include="..\matchers\compv_core_core_matcher_flann.cxx">
-      <Filter>source\matchers</Filter>
-    </ClCompile>
-    <ClCompile Include="..\matchers\compv_matcher_bruteforce.cxx">
       <Filter>source\matchers</Filter>
     </ClCompile>
     <ClCompile Include="..\features\orb\compv_core_feature_orb_desc.cxx">
@@ -316,6 +319,15 @@
     </ClCompile>
     <ClCompile Include="..\features\hough\compv_core_feature_houghsht.cxx">
       <Filter>source\features\hough</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_avx2.cxx">
+      <Filter>source\features\hough\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_sse2.cxx">
+      <Filter>source\features\hough\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\matchers\compv_core_matcher_bruteforce.cxx">
+      <Filter>source\matchers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

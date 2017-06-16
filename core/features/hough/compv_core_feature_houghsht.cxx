@@ -265,18 +265,18 @@ COMPV_ERROR_CODE CompVHoughSht::toCartesian(const size_t imageWidth, const size_
 	if (polar.empty()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
+	cartesian.resize(polar.size());
 	const compv_float32_t widthF = static_cast<compv_float32_t>(imageWidth);
-	const compv_float32_t heightF = static_cast<compv_float32_t>(imageHeight);
+	size_t k = 0;
 	for (CompVHoughLineVector::const_iterator i = polar.begin(); i < polar.end(); ++i) {
 		const compv_float32_t rho = i->rho;
 		const compv_float32_t theta = i->theta;
 		const compv_float32_t a = std::cos(theta), b = 1.f / std::sin(theta);
-		CompVLineFloat32 cline;
+		CompVLineFloat32& cline = cartesian[k++];
 		cline.a.x = 0;
 		cline.a.y = ((rho + (cline.a.x * a)) * b);
 		cline.b.x = widthF;
 		cline.b.y = ((rho - (cline.b.x * a)) * b);
-		cartesian.push_back(cline);
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

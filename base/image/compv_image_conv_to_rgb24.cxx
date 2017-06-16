@@ -400,7 +400,6 @@ static void nv21_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uvPtr, uint8_t* 
 
 #define packed_to_rgb24(name, yuyvPtr, rgbPtr, width, height, stride) { \
 		COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found"); \
-		const compv_uscalar_t padSample = (stride - width); \
 		const compv_uscalar_t strideRGB = stride * 3; \
 		const compv_uscalar_t maxWidth = (width << 1); \
 		int16_t Yp, Up, Vp; \

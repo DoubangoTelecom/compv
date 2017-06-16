@@ -308,6 +308,8 @@ COMPV_ERROR_CODE CompVHoughKht::toCartesian(const size_t imageWidth, const size_
 	if (polar.empty()) {
 		return COMPV_ERROR_CODE_S_OK;
 	}
+	cartesian.resize(polar.size());
+	size_t k = 0;
 	const compv_float32_t widthF = static_cast<compv_float32_t>(imageWidth);
 	const compv_float32_t heightF = static_cast<compv_float32_t>(imageHeight);
 	const compv_float32_t half_widthF = widthF * 0.5f;
@@ -316,12 +318,11 @@ COMPV_ERROR_CODE CompVHoughKht::toCartesian(const size_t imageWidth, const size_
 		const compv_float32_t rho = i->rho;
 		const compv_float32_t theta = i->theta;
 		const compv_float32_t a = std::cos(theta), b = 1.f / std::sin(theta);
-		CompVLineFloat32 cline;
+		CompVLineFloat32& cline = cartesian[k++];
 		cline.a.x = 0;
 		cline.a.y = ((rho + (half_widthF * a)) * b) + half_heightF;
 		cline.b.x = widthF;
 		cline.b.y = ((rho - (half_widthF * a)) * b) + half_heightF;
-		cartesian.push_back(cline);
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }

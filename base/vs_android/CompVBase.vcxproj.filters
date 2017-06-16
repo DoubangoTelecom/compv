@@ -459,6 +459,12 @@
     <ClInclude Include="..\include\compv\base\compv_memz.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\compv_image_conv_hsv.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compv\base\image\compv_image_conv_to_rgb24.h">
+      <Filter>include\image</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\compv_base.cxx">
@@ -760,6 +766,12 @@
     </ClCompile>
     <ClCompile Include="..\math\compv_math.cxx">
       <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\compv_image_conv_hsv.cxx">
+      <Filter>source\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\image\compv_image_conv_to_rgb24.cxx">
+      <Filter>source\image</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

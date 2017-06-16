@@ -216,15 +216,15 @@ COMPV_ERROR_CODE CompVImageConvToGrayscale::rgbfamily(const CompVMatPtr& imageRG
 	size_t maxThreads = threadDisp ? static_cast<size_t>(threadDisp->threadsCount()) : 0;
 	COMPV_ERROR_CODE err;
 
-	// Create the output YUV444P image (nop operation if image already allocated)
-	COMPV_CHECK_CODE_BAIL(err = CompVImage::newObj8u(imageGray, COMPV_SUBTYPE_PIXELS_Y, width, height, stride));
-	yPtr = (*imageGray)->ptr<uint8_t>(0, 0, COMPV_PLANE_Y);
-	strideY = (*imageGray)->stride(COMPV_PLANE_Y); // same as value 'stride'
-
 	// Compute number of threads
 	const size_t threadsCount = (threadDisp && !threadDisp->isMotherOfTheCurrentThread())
 		? CompVThreadDispatcher::guessNumThreadsDividingAcrossY(stride, height, maxThreads, COMPV_IMAGE_CONV_MIN_SAMPLES_PER_THREAD)
 		: 1;
+
+	// Create the output YUV444P image (nop operation if image already allocated)
+	COMPV_CHECK_CODE_BAIL(err = CompVImage::newObj8u(imageGray, COMPV_SUBTYPE_PIXELS_Y, width, height, stride));
+	yPtr = (*imageGray)->ptr<uint8_t>(0, 0, COMPV_PLANE_Y);
+	strideY = (*imageGray)->stride(COMPV_PLANE_Y); // same as value 'stride'
 
 	if (threadsCount > 1) {
 		CompVAsyncTaskIds taskIds;

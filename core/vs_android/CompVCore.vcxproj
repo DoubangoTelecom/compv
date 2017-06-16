@@ -57,6 +57,8 @@
     <ClInclude Include="..\include\compv\core\features\hough\compv_core_feature_houghkht.h" />
     <ClInclude Include="..\include\compv\core\features\hough\compv_core_feature_houghsht.h" />
     <ClInclude Include="..\include\compv\core\features\hough\intrin\arm\compv_core_feature_houghsht_intrin_neon.h" />
+    <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_avx2.h" />
+    <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_avx2.h" />
     <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse2.h" />
     <ClInclude Include="..\include\compv\core\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse41.h" />
@@ -95,6 +97,8 @@
     <ClCompile Include="..\features\hough\compv_core_feature_houghkht.cxx" />
     <ClCompile Include="..\features\hough\compv_core_feature_houghsht.cxx" />
     <ClCompile Include="..\features\hough\intrin\arm\compv_core_feature_houghsht_intrin_neon.cxx" />
+    <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_avx2.cxx" />
+    <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghkht_intrin_sse2.cxx" />
     <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_avx2.cxx" />
     <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse2.cxx" />
     <ClCompile Include="..\features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse41.cxx" />
@@ -123,7 +127,7 @@
     <ClCompile Include="..\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse2.cxx" />
     <ClCompile Include="..\features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_sse41.cxx" />
     <ClCompile Include="..\matchers\compv_core_core_matcher_flann.cxx" />
-    <ClCompile Include="..\matchers\compv_matcher_bruteforce.cxx" />
+    <ClCompile Include="..\matchers\compv_core_matcher_bruteforce.cxx" />
   </ItemGroup>
   <ItemGroup>
     <GAS Include="..\features\fast\asm\arm\compv_core_feature_fast_dete_arm32_neon.S">
