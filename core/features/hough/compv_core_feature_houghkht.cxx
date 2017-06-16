@@ -61,7 +61,7 @@ CompVHoughKht::CompVHoughKht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEF
 	, m_nWidth(0)
 	, m_nHeight(0)
 	, m_nMaxLines(INT_MAX)
-	, m_bOverrideInputEdges(true)
+	, m_bOverrideInputEdges(false)
 {
 
 }
