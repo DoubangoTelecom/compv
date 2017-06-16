@@ -142,7 +142,7 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 
 	CompVThreadDispatcherPtr threadDisp = CompVParallel::threadDispatcher();
 	const size_t maxThreads = (threadDisp && !threadDisp->isMotherOfTheCurrentThread()) ? static_cast<size_t>(threadDisp->threadsCount()) : 1;
-	size_t threadsCountClusters = 1, threadsCountPeaks = 1;
+	size_t threadsCountClusters = 1, threadsCountPeaks = 1, threadsCountVotes = 1;
 	CompVAsyncTaskIds taskIds;
 	size_t threadIdx, countAny, countLast;
 	COMPV_ERROR_CODE err = COMPV_ERROR_CODE_S_OK;
@@ -243,6 +243,10 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 			return COMPV_ERROR_CODE_S_OK;
 		}
 	}
+
+	if (kernels_all.empty()) {
+		return COMPV_ERROR_CODE_S_OK;
+	}
 	
 	if (threadsCountClusters <= 1) {
 		/* Clusters */
@@ -266,19 +270,52 @@ COMPV_ERROR_CODE CompVHoughKht::process(const CompVMatPtr& edges, CompVHoughLine
 
 	/* {Scale factor for integer votes} */
 	m_dGS = (Gmin == 0.0) ? 1.0 : std::max((1.0 / Gmin), 1.0);
-
+	
 	/* Voting (Count votes) */
-	if (kernels_all.empty()) {
-		return COMPV_ERROR_CODE_S_OK;
-	}
 	if (maxThreads <= 1) { // If MT enabled then, zeroing is calling asynchronously (see funcPtrInitCoordsAndClearMaps)
 		COMPV_CHECK_CODE_NOP(m_count->zero_all()); // required before calling 'voting_Algorithm2_Count'
 	}
-	COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Count(kernels_all, m_dGS)); // NOT thread-safe
+	
+#if 0 // Doesn't make sense and is slooo
+	threadsCountVotes = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(1, kernels_all.size(), maxThreads, 1); // voting_Algorithm2_Count calls Algorithm4 which is very CPU intensive -> use all available threads
+	if (threadsCountVotes > 1) {
+		countAny = (kernels_all.size() / threadsCountVotes);
+		countLast = countAny + (kernels_all.size() % threadsCountVotes);
+		std::vector<CompVMemZeroInt32Ptr > voting_counts_mt;
+		voting_counts_mt.resize(threadsCountVotes - 1);
+		taskIds.clear();
+		auto funcPtrVotingCount = [&](size_t index, CompVHoughKhtKernels::const_iterator kernels_begin, CompVHoughKhtKernels::const_iterator kernels_end, const double Gs) -> COMPV_ERROR_CODE {
+			if (index) {
+				CompVMemZeroInt32Ptr& counts = voting_counts_mt[index - 1];
+				COMPV_CHECK_CODE_RETURN(CompVMemZeroInt32::newObj(&counts, m_count->rows(), m_count->cols(), m_count->stride()));
+				COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Count(counts->ptr(), counts->stride(), kernels_begin, kernels_end, m_dGS));
+			}
+			else {
+				COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Count(m_count->ptr<int32_t>(), m_count->stride(), kernels_begin, kernels_end, m_dGS));
+			}
+			return COMPV_ERROR_CODE_S_OK;
+		};
+		CompVHoughKhtKernels::const_iterator kernels_begin = kernels_all.begin();
+		for (threadIdx = 0; threadIdx < threadsCountVotes - 1; ++threadIdx, kernels_begin += countAny) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrVotingCount, threadIdx, kernels_begin, (kernels_begin + countAny), m_dGS), taskIds));
+		}
+		COMPV_CHECK_CODE_RETURN(threadDisp->invoke(std::bind(funcPtrVotingCount, (threadsCountVotes - 1), kernels_begin, (kernels_begin + countLast), m_dGS), taskIds));
+		COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[0])); // wait for m_count
+		for (threadIdx = 1; threadIdx < threadsCountVotes; ++threadIdx) {
+			COMPV_CHECK_CODE_RETURN(threadDisp->waitOne(taskIds[threadIdx]));
+			COMPV_CHECK_CODE_RETURN((CompVMathUtils::sum2<int32_t, int32_t>(m_count->ptr<const int32_t>(), voting_counts_mt[threadIdx - 1]->ptr(), m_count->ptr<int32_t>(),
+				m_count->cols(), m_count->rows(), m_count->stride())));
+		}
+	}
+	else
+#endif
+	{
+		COMPV_CHECK_CODE_RETURN(voting_Algorithm2_Count(m_count->ptr<int32_t>(), m_count->stride(), kernels_all.begin(), kernels_all.end(), m_dGS));
+	}
 
 	/* Peaks detection */
 	threadsCountPeaks = CompVThreadDispatcher::guessNumThreadsDividingAcrossY(m_rho->cols(), (m_theta->cols() - 1), maxThreads, COMPV_FEATURE_HOUGHKHT_PEAKS_VOTES_MIN_SAMPLES_PER_THREAD);
-	if (threadsCountPeaks > 1) {
+	if (threadsCountVotes > 1) {
 		size_t index_start;
 		std::vector<CompVHoughKhtVotes > votes_mt;
 		countAny = ((m_theta->cols() - 1) / threadsCountPeaks);
@@ -730,29 +767,29 @@ COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Gmin(const CompVHoughKhtKernel
 }
 
 // Not thread-safe
-COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Count(const CompVHoughKhtKernels& kernels, const double Gs)
+COMPV_ERROR_CODE CompVHoughKht::voting_Algorithm2_Count(int32_t* countsPtr, const size_t countsStride, CompVHoughKhtKernels::const_iterator kernels_begin, CompVHoughKhtKernels::const_iterator kernels_end, const double Gs)
 {
-	if (!kernels.empty()) {
+	if (kernels_begin < kernels_end) {
 		const double rho_scale = 1.0 / m_dRho;
 		const double theta_scale = 1.0 / m_dTheta_deg;
 		size_t rho_index, theta_index;
 		const double rho_max_neg = *m_rho->ptr<const double>(0, 1);
 		/* {Vote for each selected kernel} */
-		for (CompVHoughKhtKernels::const_iterator k = kernels.begin(); k < kernels.end(); ++k) {
+		for (CompVHoughKhtKernels::const_iterator k = kernels_begin; k < kernels_end; ++k) {
 			// 3.2. Voting using a Gaussian distribution
 			rho_index = static_cast<size_t>(std::abs((k->rho - rho_max_neg) * rho_scale)) + 1;
 			theta_index = static_cast<size_t>(std::abs(k->theta * theta_scale)) + 1;
 			// The four quadrants
-			vote_Algorithm4(rho_index, theta_index, 0.0, 0.0, 1, 1, Gs, *k);
-			vote_Algorithm4(rho_index, theta_index - 1, 0.0, -m_dTheta_deg, 1, -1, Gs, *k);
-			vote_Algorithm4(rho_index - 1, theta_index, -m_dRho, 0.0, -1, 1, Gs, *k);
-			vote_Algorithm4(rho_index - 1, theta_index - 1, -m_dRho, -m_dTheta_deg, -1, -1, Gs, *k);
+			vote_Algorithm4(countsPtr, countsStride, rho_index, theta_index, 0.0, 0.0, 1, 1, Gs, *k);
+			vote_Algorithm4(countsPtr, countsStride, rho_index, theta_index - 1, 0.0, -m_dTheta_deg, 1, -1, Gs, *k);
+			vote_Algorithm4(countsPtr, countsStride, rho_index - 1, theta_index, -m_dRho, 0.0, -1, 1, Gs, *k);
+			vote_Algorithm4(countsPtr, countsStride, rho_index - 1, theta_index - 1, -m_dRho, -m_dTheta_deg, -1, -1, Gs, *k);
 		}
 	}
 	return COMPV_ERROR_CODE_S_OK;
 }
 
-void CompVHoughKht::vote_Algorithm4(size_t rho_start_index, const size_t theta_start_index, const double rho_start, const double theta_start, int inc_rho_index, const int inc_theta_index, const double scale, const CompVHoughKhtKernel& kernel)
+void CompVHoughKht::vote_Algorithm4(int32_t* countsPtr, const size_t countsStride, size_t rho_start_index, const size_t theta_start_index, const double rho_start, const double theta_start, int inc_rho_index, const int inc_theta_index, const double scale, const CompVHoughKhtKernel& kernel)
 {
 	int32_t* pcount;
 	const size_t rho_size = m_rho->cols(), theta_size = m_theta->cols();
@@ -790,7 +827,7 @@ void CompVHoughKht::vote_Algorithm4(size_t rho_start_index, const size_t theta_s
 
 		if (rho_start_index >= 1) {
 			/* {Loop for the  coordinates of the parameter space} */
-			pcount = m_count->ptr<int32_t>(theta_index);
+			pcount = countsPtr + (theta_index * countsStride);
 			rho_index = rho_start_index;
 			rho = rho_start;
 			w = ((theta * theta) * sigma_theta_square_scale);

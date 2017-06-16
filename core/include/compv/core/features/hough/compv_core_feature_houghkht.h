@@ -86,8 +86,8 @@ private:
 	COMPV_ERROR_CODE voting_Algorithm2_Kernels(const CompVHoughKhtClusters& clusters, CompVHoughKhtKernels& kernels, double& hmax);
 	COMPV_ERROR_CODE voting_Algorithm2_DiscardShortKernels(CompVHoughKhtKernels& kernels, const double hmax);
 	COMPV_ERROR_CODE voting_Algorithm2_Gmin(const CompVHoughKhtKernels& kernels, double &Gmin);
-	COMPV_ERROR_CODE voting_Algorithm2_Count(const CompVHoughKhtKernels& kernels, const double Gs);
-	void vote_Algorithm4(size_t rho_start_index, const size_t theta_start_index, const double rho_start, const double theta_start, int inc_rho_index, const int inc_theta_index, const double scale, const CompVHoughKhtKernel& kernel);
+	COMPV_ERROR_CODE voting_Algorithm2_Count(int32_t* countsPtr, const size_t countsStride, CompVHoughKhtKernels::const_iterator kernels_begin, CompVHoughKhtKernels::const_iterator kernels_end, const double Gs);
+	void vote_Algorithm4(int32_t* countsPtr, const size_t countsStride, size_t rho_start_index, const size_t theta_start_index, const double rho_start, const double theta_start, int inc_rho_index, const int inc_theta_index, const double scale, const CompVHoughKhtKernel& kernel);
 	COMPV_ERROR_CODE peaks_Section3_4_VotesCountAndClearVisitedMap(CompVHoughKhtVotes& votes, const size_t theta_index_start, const size_t theta_index_end);
 	COMPV_ERROR_CODE peaks_Section3_4_VotesSort(CompVHoughKhtVotes& votes);
 	COMPV_ERROR_CODE peaks_Section3_4_Lines(CompVHoughLineVector& lines, const CompVHoughKhtVotes& votes);

@@ -27,14 +27,14 @@ COMPV_ERROR_CODE CompVImageConvToHSV::process(const CompVMatPtr& imageIn, CompVM
 	COMPV_CHECK_CODE_RETURN(CompVImageConvToRGB24::process(imageIn, &imageRGB24));
 
 	CompVMatPtr imageOut = (*imageHSV == imageIn) ? nullptr : *imageHSV;
-	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut, COMPV_SUBTYPE_PIXELS_HSV, imageIn->cols(), imageIn->rows(), imageIn->stride()));
+	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut, COMPV_SUBTYPE_PIXELS_HSV, imageRGB24->cols(), imageRGB24->rows(), imageRGB24->stride()));
 
 	COMPV_CHECK_CODE_RETURN(CompVImageConvToHSV::rgb24ToHsv(
 		imageRGB24->ptr<const uint8_t>(),
 		imageOut->ptr<uint8_t>(),
-		imageIn->cols(),
-		imageIn->rows(),
-		imageIn->stride()
+		imageOut->cols(),
+		imageOut->rows(),
+		imageOut->stride()
 	));
 
 	*imageHSV = imageOut;
@@ -56,7 +56,7 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgb24ToHsv(const uint8_t* rgb24Ptr, uint8_
 
 	if (threadsCount > 1) {
 		const size_t heights = (height / threadsCount);
-		const size_t lastHeight = height - ((threadsCount - 1) * heights);
+		const size_t lastHeight = heights + (height % threadsCount);
 		const size_t paddingInBytes = (stride * sizeof(compv_uint8x3_t) * heights);
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCount);
