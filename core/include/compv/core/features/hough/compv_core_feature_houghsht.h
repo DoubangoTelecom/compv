@@ -49,7 +49,7 @@ public:
 class CompVHoughSht : public CompVHough
 {
 protected:
-	CompVHoughSht(float rho = 1.f, float theta = kfMathTrigPiOver180, size_t threshold = 1);
+	CompVHoughSht(float rho = 1.f, float theta = 1.f, size_t threshold = 1);
 public:
 	virtual ~CompVHoughSht();
 	COMPV_OBJECT_GET_ID(CompVHoughSht);

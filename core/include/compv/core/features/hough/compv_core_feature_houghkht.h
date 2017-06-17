@@ -74,7 +74,7 @@ public:
 	virtual COMPV_ERROR_CODE process(const CompVMatPtr& edges, CompVHoughLineVector& lines, const CompVMatPtr& directions = NULL) override /*Overrides(CompVHough)*/;
 	virtual COMPV_ERROR_CODE toCartesian(const size_t imageWidth, const size_t imageHeight, const CompVHoughLineVector& polar, CompVLineFloat32Vector& cartesian) override /*Overrides(CompVHough)*/;
 
-	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, float rho = 1.f, float theta = kfMathTrigPiOver180, size_t threshold = 1);
+	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, float rho = 1.f, float theta = 1.f, size_t threshold = 1);
 
 private:
 	COMPV_ERROR_CODE initCoords(double dRho, double dTheta, size_t nThreshold, size_t nWidth = 0, size_t nHeight = 0);

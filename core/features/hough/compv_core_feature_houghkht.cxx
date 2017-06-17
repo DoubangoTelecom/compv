@@ -34,8 +34,9 @@ COMPV_NAMESPACE_BEGIN()
 #define COMPV_HOUGHKHT_CLUSTER_MIN_SIZE				10
 #define COMPV_HOUGHKHT_KERNEL_MIN_HEIGTH			0.002
 
-// Fast exp function for small numbers (in our case the numbers are even always negative)
+// Fast exp function for small numbers
 // HUGE boost on ARM
+// https://en.wikipedia.org/wiki/Taylor_series#Exponential_function
 COMPV_ALWAYS_INLINE double __compv_math_exp_fast_small(double x) {
 #if 1
 	static const double scale = 1.0 / 1024.0;
@@ -49,10 +50,10 @@ COMPV_ALWAYS_INLINE double __compv_math_exp_fast_small(double x) {
 
 static void CompVHoughKhtPeaks_Section3_4_VotesCount_C(const int32_t *pcount, const size_t pcount_stride, const size_t theta_index, const size_t rho_count, const int32_t nThreshold, CompVHoughKhtVotes& votes);
 
-CompVHoughKht::CompVHoughKht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(kfMathTrigPiOver180), size_t threshold COMPV_DEFAULT(1))
+CompVHoughKht::CompVHoughKht(float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(1.f), size_t threshold COMPV_DEFAULT(1))
 	:CompVHough(COMPV_HOUGHKHT_ID)
-	, m_dRho(static_cast<double>(rho))
-	, m_dTheta_rad(static_cast<double>(theta))
+	, m_dRho(static_cast<double>(rho * 1.f))
+	, m_dTheta_rad(static_cast<double>(theta * kfMathTrigPiOver180))
 	, m_cluster_min_deviation(COMPV_HOUGHKHT_CLUSTER_MIN_DEVIATION)
 	, m_cluster_min_size(COMPV_HOUGHKHT_CLUSTER_MIN_SIZE)
 	, m_kernel_min_heigth(COMPV_HOUGHKHT_KERNEL_MIN_HEIGTH)
@@ -84,7 +85,7 @@ COMPV_ERROR_CODE CompVHoughKht::set(int id, const void* valuePtr, size_t valueSi
 	}
 	case COMPV_HOUGH_SET_FLT32_THETA: {
 		COMPV_CHECK_EXP_RETURN(valueSize != sizeof(compv_float32_t) || *reinterpret_cast<const compv_float32_t*>(valuePtr) <= 0.f, COMPV_ERROR_CODE_E_INVALID_PARAMETER);
-		const compv_float32_t fTheta = *reinterpret_cast<const compv_float32_t*>(valuePtr);
+		const compv_float32_t fTheta = *reinterpret_cast<const compv_float32_t*>(valuePtr) * kfMathTrigPiOver180;
 		COMPV_CHECK_CODE_RETURN(initCoords(m_dRho, static_cast<double>(fTheta), m_nThreshold, m_nWidth, m_nHeight));
 		return COMPV_ERROR_CODE_S_OK;
 	}
@@ -830,7 +831,7 @@ void CompVHoughKht::vote_Algorithm4(int32_t* countsPtr, const size_t countsStrid
 	const double y = 1.0 / (2.0 * one_minus_r_square);
 
 	double rho, theta;
-	double k, z, w;
+	double k, krho, ki, z, w;
 	int32_t votes;
 	size_t rho_index, theta_index, theta_count;
 
@@ -853,12 +854,15 @@ void CompVHoughKht::vote_Algorithm4(int32_t* countsPtr, const size_t countsStrid
 			rho = rho_start;
 			w = ((theta * theta) * sigma_theta_square_scale);
 			k = (r_times_2 * theta * sigma_rho_times_sigma_theta_scale);
-			z = ((rho * rho) * sigma_rho_square_scale) - (k * rho) + w;
+			krho = (k * rho);
+			ki = (k * inc_rho);
+			z = ((rho * rho) * sigma_rho_square_scale) - (krho) + w;
 			while (((rho_index <= rho_size) && (votes = COMPV_MATH_ROUNDFU_2_NEAREST_INT(((x * __compv_math_exp_fast_small(-z * y)) * scale), int32_t)) > 0)) {
 				pcount[rho_index] += votes;
 				rho_index += inc_rho_index;
 				rho += inc_rho;
-				z = ((rho * rho) * sigma_rho_square_scale) - (k * rho) + w;
+				krho += ki;
+				z = ((rho * rho) * sigma_rho_square_scale) - (krho) + w;
 			}
 			theta_index += inc_theta_index;
 			theta += inc_theta;

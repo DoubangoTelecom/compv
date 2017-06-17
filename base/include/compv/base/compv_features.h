@@ -37,8 +37,8 @@ struct CompVFeatureFactory {
 	const char* name;
 	COMPV_ERROR_CODE(*newObjCornerDete)(CompVCornerDetePtrPtr dete);
 	COMPV_ERROR_CODE(*newObjCornerDesc)(CompVCornerDescPtrPtr desc);
-	COMPV_ERROR_CODE(*newObjEdgeDete)(CompVEdgeDetePtrPtr dete, float tLow /*= COMPV_FEATURE_DETE_EDGE_THRESHOLD_LOW */, float tHigh /*= COMPV_FEATURE_DETE_EDGE_THRESHOLD_HIGH*/, size_t kernSize /*= 3*/);
-	COMPV_ERROR_CODE(*newObjHough)(CompVHoughPtrPtr hough, float rho /*= 1.f*/, float theta /*= kfMathTrigPiOver180*/, size_t threshold /*= 1*/);
+	COMPV_ERROR_CODE(*newObjEdgeDete)(CompVEdgeDetePtrPtr dete, float tLow COMPV_DEFAULT(COMPV_FEATURE_DETE_EDGE_THRESHOLD_LOW), float tHigh COMPV_DEFAULT(COMPV_FEATURE_DETE_EDGE_THRESHOLD_HIGH), size_t kernSize COMPV_DEFAULT(3));
+	COMPV_ERROR_CODE(*newObjHough)(CompVHoughPtrPtr hough, float rho COMPV_DEFAULT(1.f), float theta COMPV_DEFAULT(1.f), size_t threshold COMPV_DEFAULT(1));
 };
 
 /* Feature detectors and descriptors setters and getters */
@@ -201,7 +201,7 @@ public:
 	virtual ~CompVHough();
 	virtual COMPV_ERROR_CODE process(const CompVMatPtr& edges, CompVHoughLineVector& lines, const CompVMatPtr& directions = NULL) = 0;
 	virtual COMPV_ERROR_CODE toCartesian(const size_t imageWidth, const size_t imageHeight, const CompVHoughLineVector& polar, CompVLineFloat32Vector& cartesian) = 0;
-	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, int id, float rho = 1.f, float theta = kfMathTrigPiOver180, size_t threshold = 1);
+	static COMPV_ERROR_CODE newObj(CompVHoughPtrPtr hough, int id, float rho = 1.f, float theta = 1.f, size_t threshold = 1);
 };
 
 

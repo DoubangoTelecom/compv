@@ -27,7 +27,7 @@ OpenCV: 20920.ms(full optiz)
 Remarque: For OpenCV you need to convert to BGR then HSV (#2 steps: COLOR_YUV2BGR_I420 then CV_BGR2HSV)
 
 === RGB24 -> HSV (1282, 720) (#10k times) ===
-CompV: 94755.ms
+CompV: 22875.ms -> 94755.ms
 OpenCV: 14745.ms
 
 === RGB24 -> Grayscale (1282, 720) (#10k times) ===
@@ -72,5 +72,5 @@ The test images contains many edges and this is why it's unusually slow. Canny o
 
 === HoughLines (Canny: Kernel size = 3, tLow=0.80f, tHigh=tLow*2, HoughStd: rho = 1.f, theta = Pi/180, threshold = 100) (1282, 720) (#1k times) ===
 CompV(SHT): 11222.ms(full optiz)
-CompV(KHT): 3805.ms(full optiz)
+CompV(KHT): 2738.ms(full optiz)
 OpenCV: 25219.ms(full optiz)

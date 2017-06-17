@@ -23,7 +23,7 @@
 #define CANNY_THRESHOLD_HIGH	CANNY_THRESHOLD_LOW*2.f	
 
 #define HOUGHSHT_RHO			1.f
-#define HOUGHSHT_THETA			kfMathTrigPiOver180 // radian(1d)
+#define HOUGHSHT_THETA			1.f
 #define HOUGHSHT_THRESHOLD		100
 
 static const struct compv_unittest_houghsht {

@@ -17,8 +17,8 @@ using namespace compv;
 #define CANNY_KERNEL_SIZE	3
 
 #define HOUGH_ID							COMPV_HOUGHKHT_ID
-#define HOUGH_RHO							(1.0f * 0.5f) // "rho-delta" (half-pixel)
-#define HOUGH_THETA							(kfMathTrigPiOver180 * 0.5f) // "theta-delta" (half-radian)
+#define HOUGH_RHO							1.0f // "rho-delta" (half-pixel)
+#define HOUGH_THETA							1.0f // "theta-delta" (half-radian)
 #define HOUGH_THRESHOLD						150 // minumum number of aligned points to form a line (also used in NMS)
 #define HOUGH_MAXLINES						20 // maximum number of lines to retains (best) - use value <=0 to retain all
 #define HOUGHKHT_THRESHOLD					1 // keep all votes and filter later using MAXLINES
