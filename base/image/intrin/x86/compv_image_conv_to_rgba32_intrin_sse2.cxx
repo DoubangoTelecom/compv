@@ -19,11 +19,6 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 
-	// (RGB)(RGB)(RGB)(RGB)(RGB)(RGB) = [(RG)(BR)(GB)] [(RG)(BR)(GB)] [(RG)(BR)(GB)]
-	// (RG) -> R-even, G-even, #8 samples(#16 bytes)
-	// (BR) -> B-odd, R-odd, #8 samples(#16 bytes)
-	// (GB) -> G-odd, B-even, #8 samples(#16 bytes)
-
 	compv_uscalar_t i, j, k, l;
 	const compv_uscalar_t strideUV = ((stride + 1) >> 1);
 	const compv_uscalar_t strideRGBA = (stride << 2);
@@ -48,8 +43,6 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t
 			vecV = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&vPtr[l])); // #8 V samples, low mem
 
 			/* == Staring this line we're just converting from Y,U,V to R,G,B == */
-
-			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("use _mm_madd_epi16 everywhere and remove pre-computing 37Y");
 
 			/* Convert to I16 */
 			vecYhigh = _mm_unpackhi_epi8(vecYlow, vecZero);

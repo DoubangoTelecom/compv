@@ -57,8 +57,8 @@ COMPV_ERROR_CODE CompVImageConvToRGBA32::process(const CompVMatPtr& imageIn, Com
 			return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
 
-	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 #if 0
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 	const uint8_t *r = imageOut->ptr<const uint8_t>();
 	for (size_t i = 0; i < 100; i+=4) {
 		printf("%u, ", r[i]);
@@ -81,7 +81,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBA32::yuvPlanar(const CompVMatPtr& imageIn, C
 	case COMPV_SUBTYPE_PIXELS_YUV420P:
 		planar_to_rgba32 = yuv420p_to_rgba32_C;
 #if COMPV_ARCH_X86
-		if (CompVCpu::isEnabled(kCpuFlagSSE2) && imageRGBA32->isAlignedSSE(0) && imageIn->isAlignedSSE(0) && imageIn->isAlignedSSE(1) && imageIn->isAlignedSSE(3)) {
+		if (CompVCpu::isEnabled(kCpuFlagSSE2) && imageRGBA32->isAlignedSSE(0) && imageIn->isAlignedSSE(0) && imageIn->isAlignedSSE(1) && imageIn->isAlignedSSE(2)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(planar_to_rgba32 = CompVImageConvYuv420_to_Rgba32_Intrin_SSE2);
 		}
 #elif COMPV_ARCH_ARM

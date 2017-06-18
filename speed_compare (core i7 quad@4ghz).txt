@@ -18,7 +18,7 @@ Shared Memory: 3810 MB
 !!!
 
 === YUV420P -> RGBA32 (1282, 720) (#10k times) ===
-CompV: .ms(full optiz)
+CompV: 1029.ms(full optiz)
 OpenCV: 14444.ms(full optiz)
 Remarque: For openCV we're using CV_YUV2BGRA_I420
 
