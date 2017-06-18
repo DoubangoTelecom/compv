@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/base/image/intrin/x86/compv_image_conv_to_rgb24_intrin_sse2.h"
+#include "compv/base/image/intrin/x86/compv_image_conv_to_rgb32_intrin_sse2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/intrin/x86/compv_intrin_sse.h"
@@ -15,7 +15,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVImageConvYuv420_to_Rgb24_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+void CompVImageConvYuv420_to_Rgb32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbaPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 
@@ -26,8 +26,8 @@ void CompVImageConvYuv420_to_Rgb24_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t*
 
 	compv_uscalar_t i, j;
 	const compv_uscalar_t strideUV = ((stride + 1) >> 1);
-	const compv_uscalar_t strideRGB = (stride * 3);
-	__m128i vecYlow, vecYhigh, vecU, vecV, vecR, vecG, vecB;
+	const compv_uscalar_t strideRGB = (stride << 2);
+	__m128i vecYlow, vecYhigh, vecU, vecV, vecR, vecG, vecB, vecRG, vecBR, vecGB;
 	__m128i vec0, vec1;
 	static const __m128i vecZero = _mm_setzero_si128();
 	static const __m128i vec16 = _mm_set1_epi16(16);
@@ -47,6 +47,8 @@ void CompVImageConvYuv420_to_Rgb24_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t*
 			vecV = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&vPtr[i >> 1])); // #8 V samples, low mem
 
 			/* == Staring this line we're just converting from Y,U,V to R,G,B == */
+
+			COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("use _mm_madd_epi16 everywhere and remove pre-computing 37Y");
 
 			/* Convert to I16 */
 			vecYhigh = _mm_unpackhi_epi8(vecYlow, vecZero);
@@ -87,19 +89,15 @@ void CompVImageConvYuv420_to_Rgb24_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t*
 				_mm_srai_epi16(_mm_sub_epi16(vecYhigh, _mm_unpackhi_epi16(vec0, vec0)), 5)
 			);
 
-			/* (RG) -> R-even, G-even, #8 samples(#16 bytes) */
-			vec0 = _mm_and_si128(vecR, vecMaskEven);
-			vec1 = _mm_slli_epi16(vecG, 8);
-
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 			for (size_t a = 0; a < 16; ++a) {
-				rgbPtr[(i * 3) + (a * 3) + 0] = vecR.m128i_u8[a];
-				rgbPtr[(i * 3) + (a * 3) + 1] = vecG.m128i_u8[a];
-				rgbPtr[(i * 3) + (a * 3) + 2] = vecB.m128i_u8[a];
+				rgbaPtr[(i * 3) + (a * 3) + 0] = vecR.m128i_u8[a];
+				rgbaPtr[(i * 3) + (a * 3) + 1] = vecG.m128i_u8[a];
+				rgbaPtr[(i * 3) + (a * 3) + 2] = vecB.m128i_u8[a];
 			}
 		} // End_Of for (i = 0; i < width; i += 16)
 		yPtr += stride;
-		rgbPtr += strideRGB;
+		rgbaPtr += strideRGB;
 		if (j & 1) {
 			uPtr += strideUV;
 			vPtr += strideUV;

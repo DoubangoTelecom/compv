@@ -165,7 +165,7 @@ COMPV_ERROR_CODE CompVImage::convert(const CompVMatPtr& imageIn, COMPV_SUBTYPE p
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToGrayscale::process(imageIn, imageOut));
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_RGB24:
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGB24::process(imageIn, imageOut));
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGB32::process(imageIn, imageOut));
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_HSV:
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToHSV::process(imageIn, imageOut));

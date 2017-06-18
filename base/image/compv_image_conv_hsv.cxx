@@ -24,7 +24,7 @@ COMPV_ERROR_CODE CompVImageConvToHSV::process(const CompVMatPtr& imageIn, CompVM
 	// Internal function, do not check input parameters (already done)
 
 	CompVMatPtr imageRGB24;
-	COMPV_CHECK_CODE_RETURN(CompVImageConvToRGB24::process(imageIn, &imageRGB24));
+	COMPV_CHECK_CODE_RETURN(CompVImageConvToRGB32::process(imageIn, &imageRGB24));
 
 	CompVMatPtr imageOut = (*imageHSV == imageIn) ? nullptr : *imageHSV;
 	COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut, COMPV_SUBTYPE_PIXELS_HSV, imageRGB24->cols(), imageRGB24->rows(), imageRGB24->stride()));
