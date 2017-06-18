@@ -4,8 +4,8 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#if !defined(_COMPV_BASE_IMAGE_CONV_TO_RGB24_INTRIN_SSE2_H_)
-#define _COMPV_BASE_IMAGE_CONV_TO_RGB24_INTRIN_SSE2_H_
+#if !defined(_COMPV_BASE_IMAGE_CONV_TO_RGBA32_INTRIN_SSE2_H_)
+#define _COMPV_BASE_IMAGE_CONV_TO_RGBA32_INTRIN_SSE2_H_
 
 #include "compv/base/compv_config.h"
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
@@ -17,10 +17,10 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVImageConvYuv420_to_Rgb32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbaPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+void CompVImageConvYuv420_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbaPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
 
 COMPV_NAMESPACE_END()
 
 #endif /* COMPV_ARCH_X86 && COMPV_INTRINSIC */
 
-#endif /* _COMPV_BASE_IMAGE_CONV_TO_RGB24_INTRIN_SSE2_H_ */
+#endif /* _COMPV_BASE_IMAGE_CONV_TO_RGBA32_INTRIN_SSE2_H_ */

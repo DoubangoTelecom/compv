@@ -26,7 +26,7 @@ public:
 	static COMPV_ERROR_CODE process(const CompVMatPtr& imageIn, CompVMatPtrPtr imageHSV);
 
 private:
-	static COMPV_ERROR_CODE rgb24ToHsv(const uint8_t* rgb24Ptr, uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
+	static COMPV_ERROR_CODE rgbxToHsv(const CompVMatPtr& imageRGBx, CompVMatPtr& imageHSV);
 };
 
 //

@@ -459,11 +459,11 @@
     <ClInclude Include="include\compv\base\image\compv_image_conv_hsv.h">
       <Filter>include\image</Filter>
     </ClInclude>
-    <ClInclude Include="include\compv\base\image\compv_image_conv_to_rgb32.h">
-      <Filter>include\image</Filter>
-    </ClInclude>
-    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_to_rgb32_intrin_sse2.h">
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_to_rgba32_intrin_sse2.h">
       <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="include\compv\base\image\compv_image_conv_to_rgba32.h">
+      <Filter>include\image</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -788,10 +788,10 @@
     <ClCompile Include="image\compv_image_conv_hsv.cxx">
       <Filter>source\image</Filter>
     </ClCompile>
-    <ClCompile Include="image\intrin\x86\compv_image_conv_to_rgb32_intrin_sse2.cxx">
+    <ClCompile Include="image\intrin\x86\compv_image_conv_to_rgba32_intrin_sse2.cxx">
       <Filter>source\image\intrin\x86</Filter>
     </ClCompile>
-    <ClCompile Include="image\compv_image_conv_to_rgb32.cxx">
+    <ClCompile Include="image\compv_image_conv_to_rgba32.cxx">
       <Filter>source\image</Filter>
     </ClCompile>
   </ItemGroup>

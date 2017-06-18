@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/base/image/intrin/x86/compv_image_conv_to_rgb32_intrin_sse2.h"
+#include "compv/base/image/intrin/x86/compv_image_conv_to_rgba32_intrin_sse2.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/intrin/x86/compv_intrin_sse.h"
@@ -15,7 +15,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVImageConvYuv420_to_Rgb32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbaPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+void CompVImageConvYuv420_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbaPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_SSE2();
 
@@ -26,8 +26,8 @@ void CompVImageConvYuv420_to_Rgb32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t*
 
 	compv_uscalar_t i, j;
 	const compv_uscalar_t strideUV = ((stride + 1) >> 1);
-	const compv_uscalar_t strideRGB = (stride << 2);
-	__m128i vecYlow, vecYhigh, vecU, vecV, vecR, vecG, vecB, vecRG, vecBR, vecGB;
+	const compv_uscalar_t strideRGBA = (stride << 2);
+	__m128i vecYlow, vecYhigh, vecU, vecV, vecR, vecG, vecB;
 	__m128i vec0, vec1;
 	static const __m128i vecZero = _mm_setzero_si128();
 	static const __m128i vec16 = _mm_set1_epi16(16);
@@ -91,13 +91,14 @@ void CompVImageConvYuv420_to_Rgb32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t*
 
 			COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 			for (size_t a = 0; a < 16; ++a) {
-				rgbaPtr[(i * 3) + (a * 3) + 0] = vecR.m128i_u8[a];
-				rgbaPtr[(i * 3) + (a * 3) + 1] = vecG.m128i_u8[a];
-				rgbaPtr[(i * 3) + (a * 3) + 2] = vecB.m128i_u8[a];
+				rgbaPtr[(i * 4) + (a * 4) + 0] = vecR.m128i_u8[a];
+				rgbaPtr[(i * 4) + (a * 4) + 1] = vecG.m128i_u8[a];
+				rgbaPtr[(i * 4) + (a * 4) + 2] = vecB.m128i_u8[a];
+				rgbaPtr[(i * 4) + (a * 4) + 3] = 0xff;
 			}
 		} // End_Of for (i = 0; i < width; i += 16)
 		yPtr += stride;
-		rgbaPtr += strideRGB;
+		rgbaPtr += strideRGBA;
 		if (j & 1) {
 			uPtr += strideUV;
 			vPtr += strideUV;
