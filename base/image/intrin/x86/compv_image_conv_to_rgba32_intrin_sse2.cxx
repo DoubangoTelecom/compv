@@ -24,7 +24,7 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t
 	// (BR) -> B-odd, R-odd, #8 samples(#16 bytes)
 	// (GB) -> G-odd, B-even, #8 samples(#16 bytes)
 
-	compv_uscalar_t i, j;
+	compv_uscalar_t i, j, k, l;
 	const compv_uscalar_t strideUV = ((stride + 1) >> 1);
 	const compv_uscalar_t strideRGBA = (stride << 2);
 	__m128i vecYlow, vecYhigh, vecU, vecV, vecR, vecG, vecB;
@@ -36,15 +36,16 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t
 	static const __m128i vec65 = _mm_set1_epi16(65);
 	static const __m128i vec127 = _mm_set1_epi16(127);
 	static const __m128i vec13_26 = _mm_set1_epi32(0x001a000d); // 13, 26, 13, 26 ...
-	static const __m128i vecMaskEven = _mm_set1_epi16(0x00ff);
-	static const __m128i vecMaskOdd = _mm_set1_epi16((int16_t)0xff00);
+	static const __m128i vecA = _mm_cmpeq_epi8(vec127, vec127); // 255, 255, 255, 255
+
+	// ASM code do not create variables for k and l: k = [(i<<2)] and l = [i>>1]
 
 	for (j = 0; j < height; ++j) {
-		for (i = 0; i < width; i += 16) {
+		for (i = 0, k = 0, l = 0; i < width; i += 16, k += 64, l += 8) {
 			/* Load samples */
 			vecYlow = _mm_load_si128(reinterpret_cast<const __m128i*>(&yPtr[i])); // #16 Y samples
-			vecU = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&uPtr[i >> 1])); // #8 U samples, low mem
-			vecV = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&vPtr[i >> 1])); // #8 V samples, low mem
+			vecU = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&uPtr[l])); // #8 U samples, low mem
+			vecV = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&vPtr[l])); // #8 V samples, low mem
 
 			/* == Staring this line we're just converting from Y,U,V to R,G,B == */
 
@@ -88,14 +89,28 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t
 				_mm_srai_epi16(_mm_sub_epi16(vecYlow, _mm_unpacklo_epi16(vec0, vec0)), 5),
 				_mm_srai_epi16(_mm_sub_epi16(vecYhigh, _mm_unpackhi_epi16(vec0, vec0)), 5)
 			);
-
-			COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-			for (size_t a = 0; a < 16; ++a) {
-				rgbaPtr[(i * 4) + (a * 4) + 0] = vecR.m128i_u8[a];
-				rgbaPtr[(i * 4) + (a * 4) + 1] = vecG.m128i_u8[a];
-				rgbaPtr[(i * 4) + (a * 4) + 2] = vecB.m128i_u8[a];
-				rgbaPtr[(i * 4) + (a * 4) + 3] = 0xff;
-			}
+			
+			/* Store result */
+			vec0 = _mm_unpacklo_epi8(vecR, vecG);
+			vec1 = _mm_unpacklo_epi8(vecB, vecA);
+			_mm_store_si128(
+				reinterpret_cast<__m128i*>(&rgbaPtr[k + 0]),
+				_mm_unpacklo_epi16(vec0, vec1)
+			);
+			_mm_store_si128(
+				reinterpret_cast<__m128i*>(&rgbaPtr[k + 16]),
+				_mm_unpackhi_epi16(vec0, vec1)
+			);
+			vec0 = _mm_unpackhi_epi8(vecR, vecG);
+			vec1 = _mm_unpackhi_epi8(vecB, vecA);
+			_mm_store_si128(
+				reinterpret_cast<__m128i*>(&rgbaPtr[k + 32]),
+				_mm_unpacklo_epi16(vec0, vec1)
+			);
+			_mm_store_si128(
+				reinterpret_cast<__m128i*>(&rgbaPtr[k + 48]),
+				_mm_unpackhi_epi16(vec0, vec1)
+			);
 		} // End_Of for (i = 0; i < width; i += 16)
 		yPtr += stride;
 		rgbaPtr += strideRGBA;
