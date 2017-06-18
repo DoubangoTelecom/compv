@@ -10,6 +10,10 @@
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/parallel/compv_parallel.h"
 
+#include "compv/base/image/intrin/x86/compv_image_conv_to_rgb24_intrin_sse2.h"
+
+#define COMPV_THIS_CLASSNAME	"CompVImageConvToRGB24"
+
 COMPV_NAMESPACE_BEGIN()
 
 static void yuv420p_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
@@ -49,9 +53,17 @@ COMPV_ERROR_CODE CompVImageConvToRGB24::process(const CompVMatPtr& imageIn, Comp
 			break;
 
 		default:
-			COMPV_DEBUG_ERROR("%s -> RGB24 not supported", CompVGetSubtypeString(imageIn->subType()));
+			COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> RGB24 not supported", CompVGetSubtypeString(imageIn->subType()));
 			return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
+
+	COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+#if 0
+	const uint8_t *r = imageOut->ptr<const uint8_t>();
+	for (size_t i = 0; i < 100; i+=3) {
+		printf("%u, ", r[i]);
+	}
+#endif
 
 	*imageRGB24 = imageOut;
 
@@ -68,6 +80,12 @@ COMPV_ERROR_CODE CompVImageConvToRGB24::yuvPlanar(const CompVMatPtr& imageIn, Co
 	switch (inPixelFormat) {
 	case COMPV_SUBTYPE_PIXELS_YUV420P:
 		planar_to_rgb24 = yuv420p_to_rgb24_C;
+#if COMPV_ARCH_X86
+		if (CompVCpu::isEnabled(kCpuFlagSSE2) && imageRGB24->isAlignedSSE(0) && imageIn->isAlignedSSE(0) && imageIn->isAlignedSSE(1) && imageIn->isAlignedSSE(3)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(planar_to_rgb24 = CompVImageConvYuv420_to_Rgb24_Intrin_SSE2);
+		}
+#elif COMPV_ARCH_ARM
+#endif
 		break;
 	case COMPV_SUBTYPE_PIXELS_YUV422P:
 		planar_to_rgb24 = yuv422p_to_rgb24_C;
@@ -76,7 +94,7 @@ COMPV_ERROR_CODE CompVImageConvToRGB24::yuvPlanar(const CompVMatPtr& imageIn, Co
 		planar_to_rgb24 = yuv444p_to_rgb24_C;
 		break;
 	default:
-		COMPV_DEBUG_ERROR("%s -> RGB24 not supported", CompVGetSubtypeString(imageIn->subType()));
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> RGB24 not supported", CompVGetSubtypeString(imageIn->subType()));
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
 
@@ -156,7 +174,7 @@ COMPV_ERROR_CODE CompVImageConvToRGB24::yuvSemiPlanar(const CompVMatPtr& imageIn
 		semiplanar_to_rgb24 = nv21_to_rgb24_C;
 		break;
 	default:
-		COMPV_DEBUG_ERROR("%s -> RGB24 not supported", CompVGetSubtypeString(imageIn->subType()));
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> RGB24 not supported", CompVGetSubtypeString(imageIn->subType()));
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
 
@@ -232,7 +250,7 @@ COMPV_ERROR_CODE CompVImageConvToRGB24::yuvPacked(const CompVMatPtr& imageIn, Co
 		packed_to_rgb24 = uyvy422_to_rgb24_C;
 		break;
 	default:
-		COMPV_DEBUG_ERROR("%s -> RGB24 not supported", CompVGetSubtypeString(imageIn->subType()));
+		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> RGB24 not supported", CompVGetSubtypeString(imageIn->subType()));
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
 

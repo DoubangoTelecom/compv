@@ -18,7 +18,7 @@ Shared Memory: 3810 MB
 !!!
 
 === YUV420P -> RGB24 (1282, 720) (#10k times) ===
-CompV:  29985.ms -> 7526.ms   (full optiz)
+CompV: 7526.ms(full optiz)
 OpenCV: 5269.ms(full optiz)
 
 === YUV420P -> HSV (1282, 720) (#10k times) ===
