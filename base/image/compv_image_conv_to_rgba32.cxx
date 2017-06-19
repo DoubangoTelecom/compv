@@ -11,6 +11,7 @@
 #include "compv/base/parallel/compv_parallel.h"
 
 #include "compv/base/image/intrin/x86/compv_image_conv_to_rgba32_intrin_sse2.h"
+#include "compv/base/image/intrin/x86/compv_image_conv_to_rgba32_intrin_avx2.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVImageConvToRGBA32"
 
@@ -83,6 +84,9 @@ COMPV_ERROR_CODE CompVImageConvToRGBA32::yuvPlanar(const CompVMatPtr& imageIn, C
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagSSE2) && imageRGBA32->isAlignedSSE(0) && imageIn->isAlignedSSE(0) && imageIn->isAlignedSSE(1) && imageIn->isAlignedSSE(2)) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(planar_to_rgba32 = CompVImageConvYuv420_to_Rgba32_Intrin_SSE2);
+		}
+		if (CompVCpu::isEnabled(kCpuFlagAVX2) && imageRGBA32->isAlignedAVX(0) && imageIn->isAlignedAVX(0) && imageIn->isAlignedAVX(1) && imageIn->isAlignedAVX(2)) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(planar_to_rgba32 = CompVImageConvYuv420_to_Rgba32_Intrin_AVX2);
 		}
 #elif COMPV_ARCH_ARM
 #endif

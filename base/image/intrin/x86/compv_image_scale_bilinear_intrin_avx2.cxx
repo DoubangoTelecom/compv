@@ -28,12 +28,16 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if defined(__INTEL_COMPILER)
+#	pragma intel optimization_parameter target_arch=avx2
+#endif
 void CompVImageScaleBilinear_Intrin_AVX2(
 	const uint8_t* inPtr, compv_uscalar_t inStride,
 	COMPV_ALIGNED(AVX) uint8_t* outPtr, compv_uscalar_t outWidth, compv_uscalar_t outYStart, compv_uscalar_t outYEnd, COMPV_ALIGNED(AVX) compv_uscalar_t outStride,
 	compv_uscalar_t sf_x, compv_uscalar_t sf_y)
 {
 	COMPV_DEBUG_INFO_CHECK_AVX2();
+	_mm256_zeroupper();
 #if !defined(__AVX2__)
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("AVX <-> SSE transition issues. This code use SSE ops which must be vex encoded. You must build this file with AVX enabled or use ASM version");
 #endif
@@ -165,6 +169,7 @@ void CompVImageScaleBilinear_Intrin_AVX2(
 		outPtr += outStride;
 		outYStart += sf_y;
 	} while (outYStart < outYEnd);
+	_mm256_zeroupper();
 }
 
 COMPV_NAMESPACE_END()
