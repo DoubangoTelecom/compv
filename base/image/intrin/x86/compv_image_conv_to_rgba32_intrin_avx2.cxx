@@ -68,13 +68,13 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 			vec1 = _mm256_mullo_epi16(vec65, vecU);
 
 			/* Compute R = (37Y' + 0U' + 51V') >> 5 */
-			vecR = _mm256_packus_epi16(
+			vecR = compv_avx2_packus_epi16(
 				_mm256_srai_epi16(_mm256_add_epi16(vecYlow, _mm256_unpacklo_epi16(vec0, vec0)), 5),
 				_mm256_srai_epi16(_mm256_add_epi16(vecYhigh, _mm256_unpackhi_epi16(vec0, vec0)), 5)
 			);
 
 			/* B = (37Y' + 65U' + 0V') >> 5 */
-			vecB = _mm256_packus_epi16(
+			vecB = compv_avx2_packus_epi16(
 				_mm256_srai_epi16(_mm256_add_epi16(vecYlow, _mm256_unpacklo_epi16(vec1, vec1)), 5),
 				_mm256_srai_epi16(_mm256_add_epi16(vecYhigh, _mm256_unpackhi_epi16(vec1, vec1)), 5)
 			);
@@ -83,14 +83,14 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 			vec0 = _mm256_madd_epi16(vec13_26, _mm256_unpacklo_epi16(vecU, vecV)); // (13U' + 26V').low - I32
 			vec1 = _mm256_madd_epi16(vec13_26, _mm256_unpackhi_epi16(vecU, vecV)); // (13U' + 26V').high - I32
 			vec0 = _mm256_packs_epi32(vec0, vec1);
-			vecG = _mm256_packus_epi16(
+			vecG = compv_avx2_packus_epi16(
 				_mm256_srai_epi16(_mm256_sub_epi16(vecYlow, _mm256_unpacklo_epi16(vec0, vec0)), 5),
 				_mm256_srai_epi16(_mm256_sub_epi16(vecYhigh, _mm256_unpackhi_epi16(vec0, vec0)), 5)
 			);
 			
 			/* Store result */
-			vec0 = compv_avx2_unpacklo_epi8(vecR, vecG);
-			vec1 = compv_avx2_unpacklo_epi8(vecB, vecA);
+			vec0 = _mm256_unpacklo_epi8(vecR, vecG);
+			vec1 = _mm256_unpacklo_epi8(vecB, vecA);
 			_mm256_store_si256(
 				reinterpret_cast<__m256i*>(&rgbaPtr[k + 0]),
 				compv_avx2_unpacklo_epi16(vec0, vec1)
@@ -99,8 +99,8 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 				reinterpret_cast<__m256i*>(&rgbaPtr[k + 32]),
 				compv_avx2_unpackhi_epi16(vec0, vec1)
 			);
-			vec0 = compv_avx2_unpackhi_epi8(vecR, vecG);
-			vec1 = compv_avx2_unpackhi_epi8(vecB, vecA);
+			vec0 = _mm256_unpackhi_epi8(vecR, vecG);
+			vec1 = _mm256_unpackhi_epi8(vecB, vecA);
 			_mm256_store_si256(
 				reinterpret_cast<__m256i*>(&rgbaPtr[k + 64]),
 				compv_avx2_unpacklo_epi16(vec0, vec1)
