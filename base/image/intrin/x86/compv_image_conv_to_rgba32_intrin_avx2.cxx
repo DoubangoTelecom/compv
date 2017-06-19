@@ -94,25 +94,27 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 			vecG = _mm256_permute4x64_epi64(vecG, 0xD8);
 			
 			/* Store result */
-			vec0 = _mm256_unpacklo_epi8(vecR, vecG);
-			vec1 = _mm256_unpacklo_epi8(vecB, vecA);
+			vec0 = _mm256_permute4x64_epi64(_mm256_unpacklo_epi8(vecR, vecG), 0xD8);
+			vec1 = _mm256_permute4x64_epi64(_mm256_unpacklo_epi8(vecB, vecA), 0xD8);
 			_mm256_store_si256(
 				reinterpret_cast<__m256i*>(&rgbaPtr[k + 0]),
-				compv_avx2_unpacklo_epi16(vec0, vec1)
+				_mm256_unpacklo_epi16(vec0, vec1)
 			);
 			_mm256_store_si256(
 				reinterpret_cast<__m256i*>(&rgbaPtr[k + 32]),
-				compv_avx2_unpackhi_epi16(vec0, vec1)
+				_mm256_unpackhi_epi16(vec0, vec1)
 			);
-			vec0 = _mm256_unpackhi_epi8(vecR, vecG);
-			vec1 = _mm256_unpackhi_epi8(vecB, vecA);
+
+
+			vec0 = _mm256_permute4x64_epi64(_mm256_unpackhi_epi8(vecR, vecG), 0xD8);
+			vec1 = _mm256_permute4x64_epi64(_mm256_unpackhi_epi8(vecB, vecA), 0xD8);
 			_mm256_store_si256(
 				reinterpret_cast<__m256i*>(&rgbaPtr[k + 64]),
-				compv_avx2_unpacklo_epi16(vec0, vec1)
+				_mm256_unpacklo_epi16(vec0, vec1)
 			);
 			_mm256_store_si256(
 				reinterpret_cast<__m256i*>(&rgbaPtr[k + 96]),
-				compv_avx2_unpackhi_epi16(vec0, vec1)
+				_mm256_unpackhi_epi16(vec0, vec1)
 			);
 		} // End_Of for (i = 0; i < width; i += 32)
 		yPtr += stride;
