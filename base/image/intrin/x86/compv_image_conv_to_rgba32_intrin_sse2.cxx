@@ -83,7 +83,7 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t
 				_mm_srai_epi16(_mm_sub_epi16(vecYhigh, _mm_unpackhi_epi16(vec0, vec0)), 5)
 			);
 			
-			/* Store result */
+			/* Store result (TODO(dmi): for ARM neon use vst4.u8) */
 			vec0 = _mm_unpacklo_epi8(vecR, vecG);
 			vec1 = _mm_unpacklo_epi8(vecB, vecA);
 			_mm_store_si128(

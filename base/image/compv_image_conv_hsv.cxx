@@ -11,6 +11,8 @@
 #include "compv/base/math/compv_math_utils.h"
 #include "compv/base/parallel/compv_parallel.h"
 
+#include "compv/base/image/intrin/x86/compv_image_conv_hsv_intrin_sse2.h"
+
 #define COMPV_THIS_CLASSNAME	"CompVImageConvToHSV"
 
 COMPV_NAMESPACE_BEGIN()
@@ -59,9 +61,21 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 	switch (imageRGBx->subType()) {
 	case COMPV_SUBTYPE_PIXELS_RGB24:
 		rgbx_to_hsv = rgbx_to_hsv_C<compv_uint8x3_t>;
+#if COMPV_ARCH_X86
+		if (CompVCpu::isEnabled(kCpuFlagSSE2) && imageRGBx->isAlignedSSE() && imageHSV->isAlignedSSE()) {
+			//COMPV_EXEC_IFDEF_INTRIN_X86(rgbx_to_hsv = CompVImageConvYuv420_to_Rgba32_Intrin_SSE2);
+		}
+#elif COMPV_ARCH_ARM
+#endif
 		break;
 	case COMPV_SUBTYPE_PIXELS_RGBA32:
 		rgbx_to_hsv = rgbx_to_hsv_C<compv_uint8x4_t>;
+#if COMPV_ARCH_X86
+		if (CompVCpu::isEnabled(kCpuFlagSSE2) && imageRGBx->isAlignedSSE() && imageHSV->isAlignedSSE()) {
+			//COMPV_EXEC_IFDEF_INTRIN_X86(rgbx_to_hsv = CompVImageConvRgba32ToHsv_Intrin_SSE2);
+		}
+#elif COMPV_ARCH_ARM
+#endif
 		break;
 	default:
 		COMPV_DEBUG_ERROR_EX(COMPV_THIS_CLASSNAME, "%s -> HSV not supported", CompVGetSubtypeString(imageRGBx->subType()));
@@ -125,18 +139,19 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 			const xType& rgbx = rgbxPtr_[i];
 			compv_uint8x3_t& hsv = hsvPtr_[i];
 			r = rgbx[0], g = rgbx[1], b = rgbx[2];
-			minVal = r < g ? (r < b ? r : b) : (g < b ? g : b);
-			maxVal = r > g ? (r > b ? r : b) : (g > b ? g : b);
+			minVal = r < g ? (r < b ? r : b) : (g < b ? g : b); // TODO(dmi) for SIMD -> std::min(r, std::min(g, b))
+			maxVal = r > g ? (r > b ? r : b) : (g > b ? g : b); // TODO(dmi): for SIMD -> std::max(r, std::max(g, b))
 			
 			if (!(hsv[2] = maxVal)) {
 				hsv[0] = hsv[1] = 0;
 			}
 			else {
 				minus = maxVal - minVal;
-				if (!(hsv[1] = (255 * minus) / hsv[2])) {
-					hsv[0] = 0;
+				if (!minus) {
+					hsv[1] = hsv[0] = 0;
 				}
 				else {
+					hsv[1] = ((minus << 8) - minus) / maxVal;
 					if (maxVal == r) {
 						hsv[0] = 0 + ((43 * (g - b)) / minus);
 					}

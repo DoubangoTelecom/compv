@@ -468,6 +468,9 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_to_rgba32_intrin_avx2.h">
       <Filter>include\image\intrin\x86</Filter>
     </ClInclude>
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_hsv_intrin_sse2.h">
+      <Filter>include\image\intrin\x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_base.cxx">
@@ -798,6 +801,9 @@
       <Filter>source\image</Filter>
     </ClCompile>
     <ClCompile Include="image\intrin\x86\compv_image_conv_to_rgba32_intrin_avx2.cxx">
+      <Filter>source\image\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="image\intrin\x86\compv_image_conv_hsv_intrin_sse2.cxx">
       <Filter>source\image\intrin\x86</Filter>
     </ClCompile>
   </ItemGroup>

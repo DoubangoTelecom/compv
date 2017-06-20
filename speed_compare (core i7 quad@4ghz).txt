@@ -18,12 +18,12 @@ Shared Memory: 3810 MB
 !!!
 
 === YUV420P -> RGBA32 (1282, 720) (#10k times) ===
-CompV: 1029.ms(full optiz)
+CompV: 761.ms(full optiz)
 OpenCV: 14444.ms(full optiz)
 Remarque: For openCV we're using CV_YUV2BGRA_I420
 
 === YUV420P -> HSV (1282, 720) (#10k times) ===
-CompV: 26611.ms -> 107889.ms
+CompV: 23987.ms
 OpenCV: 20920.ms(full optiz)
 Remarque: For OpenCV you need to convert to BGR then HSV (#2 steps: COLOR_YUV2BGR_I420 then CV_BGR2HSV)
 
