@@ -134,6 +134,7 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 	const xType* rgbxPtr_ = reinterpret_cast<const xType*>(rgbxPtr);
 	compv_uint8x3_t* hsvPtr_ = reinterpret_cast<compv_uint8x3_t*>(hsvPtr);
 	uint8_t minVal, maxVal, minus, r, g, b;
+	compv_float32_t minusScale, maxScale;
 	for (j = 0; j <height; ++j) {
 		for (i = 0; i < width; ++i) {
 			const xType& rgbx = rgbxPtr_[i];
@@ -151,15 +152,17 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 					hsv[1] = hsv[0] = 0;
 				}
 				else {
-					hsv[1] = ((minus << 8) - minus) / maxVal;
+					maxScale = 1.f / static_cast<compv_float32_t>(maxVal);
+					minusScale = 1.f / static_cast<compv_float32_t>(minus);
+					hsv[1] = static_cast<uint8_t>(((minus << 8) - minus) * maxScale);
 					if (maxVal == r) {
-						hsv[0] = 0 + ((43 * (g - b)) / minus);
+						hsv[0] = 0 + static_cast<uint8_t>((43 * (g - b)) * minusScale);
 					}
 					else if (maxVal == g) {
-						hsv[0] = 85 + ((43 * (b - r)) / minus);
+						hsv[0] = 85 + static_cast<uint8_t>((43 * (b - r)) * minusScale);
 					}
 					else {
-						hsv[0] = 171 + ((43 * (r - g)) / minus);
+						hsv[0] = 171 + static_cast<uint8_t>((43 * (r - g)) * minusScale);
 					}
 				}
 			}

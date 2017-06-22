@@ -248,6 +248,7 @@
     <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghsht_intrin_sse41.cxx" />
     <ClCompile Include="features\orb\compv_core_feature_orb_desc.cxx" />
     <ClCompile Include="features\orb\compv_core_feature_orb_dete.cxx" />
+    <ClCompile Include="features\orb\intrin\arm\compv_core_feature_orb_desc_intrin_neon.cxx" />
     <ClCompile Include="features\orb\intrin\x86\compv_core_feature_orb_desc_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>

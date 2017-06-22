@@ -147,6 +147,9 @@
     <Filter Include="Source Files\video">
       <UniqueIdentifier>{8fc2096d-4214-40af-8b80-e8de5f8da87e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\features\orb\intrin\arm">
+      <UniqueIdentifier>{11c353a8-cf64-42b6-955f-c247666755fa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compv_core.cxx">
@@ -244,6 +247,9 @@
     </ClCompile>
     <ClCompile Include="features\hough\intrin\x86\compv_core_feature_houghkht_intrin_avx2.cxx">
       <Filter>Source Files\features\hough\intrin\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="features\orb\intrin\arm\compv_core_feature_orb_desc_intrin_neon.cxx">
+      <Filter>Source Files\features\orb\intrin\arm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
