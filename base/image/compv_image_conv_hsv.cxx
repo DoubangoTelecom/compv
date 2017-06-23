@@ -18,7 +18,7 @@
 COMPV_NAMESPACE_BEGIN()
 
 template <typename xType>
-static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const compv_float32_t (*scales)[256]);
+static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const int(*scales43)[256], const int(*scales255)[256]);
 
 //
 // CompVImageConvToHSV
@@ -55,7 +55,7 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 {
 	// Internal function, do not check input parameters (already done)
 
-	void(*rgbx_to_hsv)(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const compv_float32_t(*scales)[256])
+	void(*rgbx_to_hsv)(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const int(*scales43)[256], const int(*scales255)[256])
 		= nullptr;
 
 	switch (imageRGBx->subType()) {
@@ -82,7 +82,8 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 		return COMPV_ERROR_CODE_E_NOT_IMPLEMENTED;
 	}
 
-	COMPV_ALIGN_DEFAULT() static compv_float32_t __hsv_scales[256];
+	COMPV_ALIGN_DEFAULT() static int __hsv_scales43[256];
+	COMPV_ALIGN_DEFAULT() static int __hsv_scales255[256];
 	static bool __hsv_init = false;
 
 	const size_t widthInSamples = imageRGBx->cols();
@@ -97,9 +98,13 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 
 	// Initialize tables
 	if (!__hsv_init) {
-		__hsv_scales[0] = 0.f;
+		__hsv_scales43[0] = 0;
+		__hsv_scales255[0] = 0;
+		int scale;
 		for (int b = 1; b < 256; ++b) {
-			__hsv_scales[b] = 1.f / static_cast<compv_float32_t>(b);
+			scale = COMPV_MATH_ROUNDFU_2_NEAREST_INT((65535.f / static_cast<compv_float32_t>(b)), int); // 65535 = 0xFFFF (16 bits)
+			__hsv_scales43[b] = 43 * scale;
+			__hsv_scales255[b] = 255 * scale;
 		}
 		__hsv_init = true;
 	}
@@ -119,7 +124,7 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 		CompVAsyncTaskIds taskIds;
 		taskIds.reserve(threadsCount);
 		auto funcPtr = [&](const uint8_t* rgbxPtr_, uint8_t* hsvPtr_, compv_uscalar_t height_) -> void {
-			rgbx_to_hsv(rgbxPtr_, hsvPtr_, widthInSamples, height_, strideInSamples, &__hsv_scales);
+			rgbx_to_hsv(rgbxPtr_, hsvPtr_, widthInSamples, height_, strideInSamples, &__hsv_scales43, &__hsv_scales255);
 		};
 
 		for (size_t threadIdx = 0; threadIdx < threadsCount - 1; ++threadIdx) {
@@ -133,14 +138,14 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 		COMPV_CHECK_CODE_RETURN(threadDisp->wait(taskIds), "Failed to wait for tasks execution");
 	}
 	else {
-		rgbx_to_hsv(rgbxPtr, hsvPtr, widthInSamples, heightInSamples, strideInSamples, &__hsv_scales);
+		rgbx_to_hsv(rgbxPtr, hsvPtr, widthInSamples, heightInSamples, strideInSamples, &__hsv_scales43, &__hsv_scales255);
 	}
 
 	return COMPV_ERROR_CODE_S_OK;
 }
 
 template <typename xType>
-static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const compv_float32_t(*scales)[256])
+static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const int(*scales43)[256], const int(*scales255)[256])
 {
 	// Optimization: use SSE and CMOV to suppress branches
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
@@ -148,7 +153,8 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 	size_t i, j;
 	const xType* rgbxPtr_ = reinterpret_cast<const xType*>(rgbxPtr);
 	compv_uint8x3_t* hsvPtr_ = reinterpret_cast<compv_uint8x3_t*>(hsvPtr);
-	uint8_t minVal, maxVal, minus, r, g, b;
+
+	int minVal, maxVal, minus, r, g, b;
 	int diff;
 	for (j = 0; j <height; ++j) {
 		for (i = 0; i < width; ++i) {
@@ -156,26 +162,22 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 			compv_uint8x3_t& hsv = hsvPtr_[i];
 			r = rgbx[0], g = rgbx[1], b = rgbx[2];
 
-			minVal = std::min(r, std::min(g, b)); // ASM: SSE / NEON
-			maxVal = std::max(r, std::max(g, b)); // ASM: SSE / NEON
+			minVal = COMPV_MATH_MIN_INT(g, b);
+			minVal = COMPV_MATH_MIN_INT(r, minVal);
+			maxVal = COMPV_MATH_MAX_INT(g, b);
+			maxVal = COMPV_MATH_MAX_INT(r, maxVal); // ASM: SSE / NEON
 
 			// TODO(dmi): ASM use macro on the #16 values from SIMD result
 
-			if (!(hsv[2] = maxVal)) {
-				hsv[0] = hsv[1] = 0;
-			}
-			else {
-				minus = maxVal - minVal;
-				if (!minus) {
-					hsv[1] = hsv[0] = 0;
-				}
-				else {
-					hsv[1] = static_cast<uint8_t>(((minus << 8) - minus) * (*scales)[maxVal]);
-					diff = (maxVal == r) ? (g - b) : ((maxVal == g) ? (b - r) : (r - g)); // ASM: CMOV
-					hsv[0] = static_cast<uint8_t>((43 * diff) * (*scales)[minus]) +
-						((maxVal == r) ? 0 : ((maxVal == g) ? 85 : 171)); // ASM: CMOV
-				}
-			}
+			diff = (maxVal == r) ? (g - b) : ((maxVal == g) ? (b - r) : (r - g)); // ASM: CMOV
+			minus = maxVal - minVal;
+
+			hsv[0] = ((diff * (*scales43)[minus]) >> 16) +
+				((maxVal == r) ? 0 : ((maxVal == g) ? 85 : 171)); // ASM: CMOV
+			
+			hsv[1] = ((minus * (*scales255)[maxVal]) >> 16);
+			
+			hsv[2] = (maxVal);
 		}
 		rgbxPtr_ += stride;
 		hsvPtr_ += stride;
