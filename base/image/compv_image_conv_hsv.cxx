@@ -147,6 +147,43 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 template <typename xType>
 static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const int(*scales43)[256], const int(*scales255)[256])
 {
+#if 1
+	// Optimization: use SSE and CMOV to suppress branches
+	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
+
+	size_t i, j;
+	const xType* rgbxPtr_ = reinterpret_cast<const xType*>(rgbxPtr);
+	compv_uint8x3_t* hsvPtr_ = reinterpret_cast<compv_uint8x3_t*>(hsvPtr);
+
+	int minVal, maxVal, minus, r, g, b;
+	int diff;
+	for (j = 0; j <height; ++j) {
+		for (i = 0; i < width; ++i) {
+			const xType& rgbx = rgbxPtr_[i];
+			compv_uint8x3_t& hsv = hsvPtr_[i];
+			r = rgbx[0], g = rgbx[1], b = rgbx[2];
+
+			minVal = COMPV_MATH_MIN_INT(g, b);
+			minVal = COMPV_MATH_MIN_INT(r, minVal);
+			maxVal = COMPV_MATH_MAX_INT(g, b);
+			maxVal = COMPV_MATH_MAX_INT(r, maxVal); // ASM: SSE / NEON
+
+			// TODO(dmi): ASM use macro on the #16 values from SIMD result
+
+			diff = (maxVal == r) ? (g - b) : ((maxVal == g) ? (b - r) : (r - g)); // ASM: CMOV
+			minus = maxVal - minVal;
+
+			hsv[0] = ((diff * (*scales43)[minus]) >> 16) +
+				((maxVal == r) ? 0 : ((maxVal == g) ? 85 : 171)); // ASM: CMOV
+
+			hsv[1] = ((minus * (*scales255)[maxVal]) >> 16);
+
+			hsv[2] = (maxVal);
+		}
+		rgbxPtr_ += stride;
+		hsvPtr_ += stride;
+}
+#else
 	// Optimization: use SSE and CMOV to suppress branches
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
 
@@ -179,6 +216,7 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 		rgbxPtr_ += stride;
 		hsvPtr_ += stride;
 	}
+#endif
 }
 
 COMPV_NAMESPACE_END()
