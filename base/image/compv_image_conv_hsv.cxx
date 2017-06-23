@@ -155,7 +155,7 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 	compv_uint8x3_t* hsvPtr_ = reinterpret_cast<compv_uint8x3_t*>(hsvPtr);
 
 	int minVal, maxVal, minus, r, g, b;
-	int diff;
+	int diff, m0, m1, m2;
 	for (j = 0; j <height; ++j) {
 		for (i = 0; i < width; ++i) {
 			const xType& rgbx = rgbxPtr_[i];
@@ -167,16 +167,13 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 			maxVal = COMPV_MATH_MAX_INT(g, b);
 			maxVal = COMPV_MATH_MAX_INT(r, maxVal); // ASM: SSE / NEON
 
-			// TODO(dmi): ASM use macro on the #16 values from SIMD result
-
-			diff = (maxVal == r) ? (g - b) : ((maxVal == g) ? (b - r) : (r - g)); // ASM: CMOV
+			m0 = -(maxVal == r);
+			m1 = -(maxVal == g) & ~m0;
+			m2 = ~(m0 | m1);
+			diff = ((g - b) & m0) | ((b - r) & m1) | ((r - g) & m2);
 			minus = maxVal - minVal;
-
-			hsv[0] = ((diff * (*scales43)[minus]) >> 16) +
-				((maxVal == r) ? 0 : ((maxVal == g) ? 85 : 171)); // ASM: CMOV
-			
+			hsv[0] = ((diff * (*scales43)[minus]) >> 16) + ((85 & m1) | (171 & m2));
 			hsv[1] = ((minus * (*scales255)[maxVal]) >> 16);
-			
 			hsv[2] = (maxVal);
 		}
 		rgbxPtr_ += stride;
