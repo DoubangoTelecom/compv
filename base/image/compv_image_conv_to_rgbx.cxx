@@ -11,6 +11,7 @@
 #include "compv/base/parallel/compv_parallel.h"
 
 #include "compv/base/image/intrin/x86/compv_image_conv_to_rgbx_intrin_sse2.h"
+#include "compv/base/image/intrin/x86/compv_image_conv_to_rgbx_intrin_ssse3.h"
 #include "compv/base/image/intrin/x86/compv_image_conv_to_rgbx_intrin_avx2.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVImageConvToRGBx"
@@ -99,9 +100,16 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 	case COMPV_SUBTYPE_PIXELS_YUV420P:
 		planar_to_rgbx = (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) ? yuv420p_to_rgba32_C : yuv420p_to_rgb24_C;
 #if COMPV_ARCH_X86
-		if (CompVCpu::isEnabled(kCpuFlagSSE2) && imageRGBx->isAlignedSSE(0) && imageIn->isAlignedSSE(0) && imageIn->isAlignedSSE(1) && imageIn->isAlignedSSE(2)) {
-			if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) {
-				COMPV_EXEC_IFDEF_INTRIN_X86(planar_to_rgbx = CompVImageConvYuv420_to_Rgba32_Intrin_SSE2);
+		if (imageRGBx->isAlignedSSE(0) && imageIn->isAlignedSSE(0) && imageIn->isAlignedSSE(1) && imageIn->isAlignedSSE(2)) {
+			if (CompVCpu::isEnabled(kCpuFlagSSE2)) {
+				if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGBA32) {
+					COMPV_EXEC_IFDEF_INTRIN_X86(planar_to_rgbx = CompVImageConvYuv420_to_Rgba32_Intrin_SSE2);
+				}
+			}
+			if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
+				if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
+					COMPV_EXEC_IFDEF_INTRIN_X86(planar_to_rgbx = CompVImageConvYuv420_to_Rgb24_Intrin_SSSE3);
+				}
 			}
 		}
 		if (CompVCpu::isEnabled(kCpuFlagAVX2) && imageRGBx->isAlignedAVX(0) && imageIn->isAlignedAVX(0) && imageIn->isAlignedAVX(1) && imageIn->isAlignedAVX(2)) {

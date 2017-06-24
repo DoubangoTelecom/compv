@@ -4,7 +4,7 @@
 * Source code: https://github.com/DoubangoTelecom/compv
 * WebSite: http://compv.org
 */
-#include "compv/base/image/intrin/x86/compv_image_conv_to_rgbx_intrin_sse2.h"
+#include "compv/base/image/intrin/x86/compv_image_conv_to_rgbx_intrin_ssse3.h"
 
 #if COMPV_ARCH_X86 && COMPV_INTRINSIC
 #include "compv/base/intrin/x86/compv_intrin_sse.h"
@@ -15,28 +15,28 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVImageConvYuv420_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbaPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+void CompVImageConvYuv420_to_Rgb24_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbaPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
-	COMPV_DEBUG_INFO_CHECK_SSE2();
-
+	COMPV_DEBUG_INFO_CHECK_SSSE3();
+	
 	compv_uscalar_t i, j, k, l;
 	const compv_uscalar_t strideUV = ((stride + 1) >> 1);
-	const compv_uscalar_t strideRGBA = (stride << 2);
+	const compv_uscalar_t strideRGB = (stride << 1) + stride;
 	__m128i vecYlow, vecYhigh, vecU, vecV, vecR, vecG, vecB;
 	__m128i vec0, vec1;
-	const __m128i vecZero = _mm_setzero_si128();
-	const __m128i vec16 = _mm_set1_epi16(16);
-	const __m128i vec37 = _mm_set1_epi16(37);
-	const __m128i vec51 = _mm_set1_epi16(51);
-	const __m128i vec65 = _mm_set1_epi16(65);
-	const __m128i vec127 = _mm_set1_epi16(127);
-	const __m128i vec13_26 = _mm_set1_epi32(0x001a000d); // 13, 26, 13, 26 ...
-	const __m128i vecA = _mm_cmpeq_epi8(vec127, vec127); // 255, 255, 255, 255
+	static const __m128i vecZero = _mm_setzero_si128();
+	static const __m128i vec16 = _mm_set1_epi16(16);
+	static const __m128i vec37 = _mm_set1_epi16(37);
+	static const __m128i vec51 = _mm_set1_epi16(51);
+	static const __m128i vec65 = _mm_set1_epi16(65);
+	static const __m128i vec127 = _mm_set1_epi16(127);
+	static const __m128i vec13_26 = _mm_set1_epi32(0x001a000d); // 13, 26, 13, 26 ...
+	static const __m128i vecA = _mm_cmpeq_epi8(vec127, vec127); // 255, 255, 255, 255
 
-	// ASM code do not create variables for k and l: k = [(i<<2)] and l = [i>>1]
+	// ASM code do not create variables for k and l: k = [(i * 3)] and l = [i>>1]
 
 	for (j = 0; j < height; ++j) {
-		for (i = 0, k = 0, l = 0; i < width; i += 16, k += 64, l += 8) {
+		for (i = 0, k = 0, l = 0; i < width; i += 16, k += 48, l += 8) {
 			/* Load samples */
 			vecYlow = _mm_load_si128(reinterpret_cast<const __m128i*>(&yPtr[i])); // #16 Y samples
 			vecU = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&uPtr[l])); // #8 U samples, low mem
@@ -84,11 +84,11 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t
 			);
 			
 			/* Store result */
-			COMPV_VST4_I8_SSSE3(&rgbaPtr[k], vecR, vecG, vecB, vecA, vec0, vec1);
+			COMPV_VST3_I8_SSSE3(&rgbaPtr[k], vecR, vecG, vecB, vec0, vec1);
 
 		} // End_Of for (i = 0; i < width; i += 16)
 		yPtr += stride;
-		rgbaPtr += strideRGBA;
+		rgbaPtr += strideRGB;
 		if (j & 1) {
 			uPtr += strideUV;
 			vPtr += strideUV;

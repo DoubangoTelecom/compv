@@ -68,6 +68,69 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 	const __m128i y = _mm_mul_epu32(_mm_srli_si128(a, 4), _mm_srli_si128(b, 4));
 	return _mm_unpacklo_epi32(_mm_shuffle_epi32(x, 0x8), _mm_shuffle_epi32(y, 0x8));
 }
+
+// De-Interleave "ptr" into  "vecLane0", "vecLane1" and "vecLane2"
+// e.g. RGBRGBRGB -> [RRRR], [GGGG], [BBBB]
+//!\\ You should not need to use this function -> FASTER: convert to RGBX then process (more info: see RGB24 -> YUV)
+#define COMPV_VLD3_I8_SSSE3(ptr, vecLane0, vecLane1, vecLane2, vectmp0, vectmp1) \
+	static const __m128i vecMask = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_DeinterleaveRGB24_i32)); \
+	vecLane0 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr))); \
+	vecLane1 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr)) + 1); \
+	vecLane2 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr)) + 2); \
+	\
+	vectmp0 = _mm_shuffle_epi8(vecLane0, vecMask); \
+	vectmp1 = _mm_shuffle_epi8(vecLane1, vecMask); \
+	vecLane2 = _mm_shuffle_epi8(vecLane2, vecMask); \
+	/* e.g. R = vecLane0 */ \
+	vecLane0 = _mm_alignr_epi8(_mm_srli_si128(vecLane2, 6), vectmp1, 11); \
+	vecLane0 = _mm_alignr_epi8(vecLane0, _mm_slli_si128(vectmp0, 10), 10); \
+	/* e.g. G = vecLane1 */ \
+	vecLane1 = _mm_alignr_epi8(_mm_srli_si128(vecLane2, 11), _mm_slli_si128(vectmp1, 10), 10); \
+	vecLane1 = _mm_alignr_epi8(vecLane1, _mm_slli_si128(vectmp0, 5), 11); \
+	/* e.g. B = vecLane2 */ \
+	vectmp1 = _mm_srli_si128(vectmp1, 6); \
+	vectmp1 = _mm_alignr_epi8(vectmp1, vectmp0, 11); \
+	vecLane2 = _mm_alignr_epi8(vecLane2, _mm_slli_si128(vectmp1, 6), 6)
+
+// Interleave "vecLane0", "vecLane1" and "vecLane3" then store into "ptr"
+// !!! "vecLane0", "vecLane1" and "vecLane3" ARE modified !!!
+// e.g. [RRRR], [GGGG], [BBBB] -> RGBRGBRGB
+#define COMPV_VST3_I8_SSSE3(ptr, vecLane0, vecLane1, vecLane2, vectmp0, vectmp1) \
+	static const __m128i vecMask0 = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_InterleaveRGB24_Step0_i32)); \
+	static const __m128i vecMask1 = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_InterleaveRGB24_Step1_i32)); \
+	static const __m128i vecMask2 = _mm_load_si128(reinterpret_cast<const __m128i*>(kShuffleEpi8_InterleaveRGB24_Step2_i32)); \
+	vectmp0 = _mm_unpacklo_epi8(vecLane0, vecLane1); /* RG RG RG...*/ \
+	vectmp1 = _mm_unpackhi_epi8(vecLane0, vecLane1); /* RG RG RG... */ \
+	/* First = vecLane0 */ \
+	vecLane0 = _mm_alignr_epi8(vecLane2, _mm_slli_si128(vectmp0, 5), 5); /* RG RG RG ...BBBBB */ \
+	vecLane0 = _mm_shuffle_epi8(vecLane0, vecMask0); /* RGB RGB...R */ \
+	/* Second = vecLane1 */ \
+	vecLane1 = _mm_alignr_epi8(vectmp1, vectmp0, 11); /* GR GR GR ... */ \
+	vecLane2 = _mm_srli_si128(vecLane2, 5); \
+	vecLane1 = _mm_alignr_epi8(vecLane2, _mm_slli_si128(vecLane1, 5), 5); /* GR GR GR ...BBBBB */ \
+	vecLane1 = _mm_shuffle_epi8(vecLane1, vecMask1); /* RGB RGB...G */ \
+	/* Third = vecLane2 */ \
+	vecLane2 = _mm_srli_si128(vecLane2, 5); \
+	vecLane2 = _mm_alignr_epi8(vecLane2, vectmp1, 6); /* BR BR BR ...BBBBB */ \
+	vecLane2 = _mm_shuffle_epi8(vecLane2, vecMask2); /* RGB RGB...B */ \
+	/* Store */ \
+	_mm_store_si128(reinterpret_cast<__m128i*>((ptr)), vecLane0); \
+	_mm_store_si128(reinterpret_cast<__m128i*>((ptr)) + 1, vecLane1); \
+	_mm_store_si128(reinterpret_cast<__m128i*>((ptr)) + 2, vecLane2)
+
+// Interleave "vecLane0", "vecLane1", "vecLane3" and "vecLane4" then store into "ptr"
+// !!! "vecLane0", "vecLane1", "vecLane3" and "vecLane4" NOT modified !!!
+// e.g. [RRRR], [GGGG], [BBBB], [AAAA] -> RGBARGBARGBA
+#define COMPV_VST4_I8_SSSE3(ptr, vecLane0, vecLane1, vecLane2, vecLane3, vectmp0, vectmp1) \
+	vectmp0 = _mm_unpacklo_epi8(vecLane0, vecLane1); \
+	vectmp1 = _mm_unpacklo_epi8(vecLane2, vecLane3); \
+	_mm_store_si128(reinterpret_cast<__m128i*>((ptr)), _mm_unpacklo_epi16(vectmp0, vectmp1)); \
+	_mm_store_si128(reinterpret_cast<__m128i*>((ptr)) + 1, _mm_unpackhi_epi16(vectmp0, vectmp1)); \
+	vectmp0 = _mm_unpackhi_epi8(vecLane0, vecLane1); \
+	vectmp1 = _mm_unpackhi_epi8(vecLane2, vecLane3); \
+	_mm_store_si128(reinterpret_cast<__m128i*>((ptr)) + 2, _mm_unpacklo_epi16(vectmp0, vectmp1)); \
+	_mm_store_si128(reinterpret_cast<__m128i*>((ptr)) + 3, _mm_unpackhi_epi16(vectmp0, vectmp1))
+
 /*
 Interleaves two 128bits vectors.
 From:

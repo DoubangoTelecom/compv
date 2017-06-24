@@ -40,8 +40,13 @@ COMPV_ERROR_CODE CompVImageConvToHSV::process(const CompVMatPtr& imageIn, CompVM
 		imageRGBx = imageIn;
 		break;
 	default:
-		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Convert to RGB24 instead of RGBA32");
+		// On X86: "RGBA32 -> HSV" is faster than "RGB24 -> HSV" because of (de-)interleaving RGB24 which is slow
+		// On ARM: "RGB24 -> HSV" is faster than "RGBA32 -> HSV" because less data and more cache-friendly. No (de-)interleaving issues, thanks to vld3.u8 and vst3.u8.
+#if COMPV_ARCH_ARM
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGB24, &imageRGBx));
+#else
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGBA32, &imageRGBx));
+#endif
 		break;
 	}
 

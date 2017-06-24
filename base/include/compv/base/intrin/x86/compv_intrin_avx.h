@@ -60,6 +60,24 @@ Index for the 64bit packed values
 #define COMPV_AVX_G64 6
 #define COMPV_AVX_H64 7
 
+// Interleave "vecLane0", "vecLane1", "vecLane3" and "vecLane4" then store into "ptr"
+// !!! "vecLane0", "vecLane1", "vecLane3" and "vecLane4" NOT modified !!!
+// e.g. [RRRR], [GGGG], [BBBB], [AAAA] -> RGBARGBARGBA
+#define COMPV_VST4_I8_AVX2(ptr, vecLane0, vecLane1, vecLane2, vecLane3, vectmp0, vectmp1) \
+	vectmp0 = _mm256_unpacklo_epi8(vecLane0, vecLane1); \
+	vectmp1 = _mm256_unpacklo_epi8(vecLane2, vecLane3); \
+	vectmp0 = _mm256_permute4x64_epi64(vectmp0, 0xD8); \
+	vectmp1 = _mm256_permute4x64_epi64(vectmp1, 0xD8); \
+	_mm256_store_si256(reinterpret_cast<__m256i*>((ptr)), _mm256_unpacklo_epi16(vectmp0, vectmp1)); \
+	_mm256_store_si256(reinterpret_cast<__m256i*>((ptr)) + 1, _mm256_unpackhi_epi16(vectmp0, vectmp1)); \
+	vectmp0 = _mm256_unpackhi_epi8(vecLane0, vecLane1); \
+	vectmp1 = _mm256_unpackhi_epi8(vecLane2, vecLane3); \
+	vectmp0 = _mm256_permute4x64_epi64(vectmp0, 0xD8); \
+	vectmp1 = _mm256_permute4x64_epi64(vectmp1, 0xD8); \
+	_mm256_store_si256(reinterpret_cast<__m256i*>((ptr)) + 2, _mm256_unpacklo_epi16(vectmp0, vectmp1)); \
+	_mm256_store_si256(reinterpret_cast<__m256i*>((ptr)) + 3, _mm256_unpackhi_epi16(vectmp0, vectmp1))
+
+
 /*
 Interleaves two 256bits vectors without crossing the 128-lane.
 From:
