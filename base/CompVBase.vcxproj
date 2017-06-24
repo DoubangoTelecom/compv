@@ -64,7 +64,7 @@
     <ClInclude Include="include\compv\base\image\compv_image_conv_hsv.h" />
     <ClInclude Include="include\compv\base\image\compv_image_conv_rgbfamily.h" />
     <ClInclude Include="include\compv\base\image\compv_image_conv_to_grayscale.h" />
-    <ClInclude Include="include\compv\base\image\compv_image_conv_to_rgba32.h" />
+    <ClInclude Include="include\compv\base\image\compv_image_conv_to_rgbx.h" />
     <ClInclude Include="include\compv\base\image\compv_image_conv_to_yuv444p.h" />
     <ClInclude Include="include\compv\base\image\compv_image_decoder.h" />
     <ClInclude Include="include\compv\base\image\compv_image_scale_bilinear.h" />
@@ -78,8 +78,8 @@
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_rgbfamily_intrin_ssse3.h" />
-    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_to_rgba32_intrin_avx2.h" />
-    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_to_rgba32_intrin_sse2.h" />
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_avx2.h" />
+    <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_conv_to_rgbx_intrin_sse2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_avx2.h" />
     <ClInclude Include="include\compv\base\image\intrin\x86\compv_image_scale_bilinear_intrin_sse41.h" />
     <ClInclude Include="include\compv\base\intrin\arm\compv_intrin_neon.h" />
@@ -177,7 +177,7 @@
     <ClCompile Include="image\compv_image_conv_hsv.cxx" />
     <ClCompile Include="image\compv_image_conv_rgbfamily.cxx" />
     <ClCompile Include="image\compv_image_conv_to_grayscale.cxx" />
-    <ClCompile Include="image\compv_image_conv_to_rgba32.cxx" />
+    <ClCompile Include="image\compv_image_conv_to_rgbx.cxx" />
     <ClCompile Include="image\compv_image_conv_to_yuv444p.cxx" />
     <ClCompile Include="image\compv_image_decoder.cxx" />
     <ClCompile Include="image\compv_image_scale_bilinear.cxx" />
@@ -219,13 +219,13 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WIN32;__SSSE3__;_DEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;COMPV_BASE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WIN32;__SSSE3__;NDEBUG;_WINDOWS;_WIN32_WINNT=0x0501;_USRDLL;COMPV_BASE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="image\intrin\x86\compv_image_conv_to_rgba32_intrin_avx2.cxx">
+    <ClCompile Include="image\intrin\x86\compv_image_conv_to_rgbx_intrin_avx2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="image\intrin\x86\compv_image_conv_to_rgba32_intrin_sse2.cxx">
+    <ClCompile Include="image\intrin\x86\compv_image_conv_to_rgbx_intrin_sse2.cxx">
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>

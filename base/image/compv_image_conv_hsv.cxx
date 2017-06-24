@@ -5,7 +5,7 @@
 * WebSite: http://compv.org
 */
 #include "compv/base/image/compv_image_conv_hsv.h"
-#include "compv/base/image/compv_image_conv_to_rgba32.h"
+#include "compv/base/image/compv_image_conv_to_rgbx.h"
 #include "compv/base/image/compv_image.h"
 #include "compv/base/image/compv_image_conv_common.h"
 #include "compv/base/math/compv_math_utils.h"
@@ -40,7 +40,8 @@ COMPV_ERROR_CODE CompVImageConvToHSV::process(const CompVMatPtr& imageIn, CompVM
 		imageRGBx = imageIn;
 		break;
 	default:
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBA32::process(imageIn, &imageRGBx));
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Convert to RGB24 instead of RGBA32");
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGBA32, &imageRGBx));
 		break;
 	}
 

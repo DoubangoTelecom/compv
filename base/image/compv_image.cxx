@@ -8,7 +8,7 @@
 #include "compv/base/image/compv_image_utils.h"
 #include "compv/base/image/compv_image_conv_to_yuv444p.h"
 #include "compv/base/image/compv_image_conv_to_grayscale.h"
-#include "compv/base/image/compv_image_conv_to_rgba32.h"
+#include "compv/base/image/compv_image_conv_to_rgbx.h"
 #include "compv/base/image/compv_image_conv_hsv.h"
 #include "compv/base/image/compv_image_scale_bilinear.h"
 #include "compv/base/math/compv_math_utils.h"
@@ -165,7 +165,8 @@ COMPV_ERROR_CODE CompVImage::convert(const CompVMatPtr& imageIn, COMPV_SUBTYPE p
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToGrayscale::process(imageIn, imageOut));
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_RGBA32:
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBA32::process(imageIn, imageOut));
+	case COMPV_SUBTYPE_PIXELS_RGB24:
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, pixelFormatOut, imageOut));
 		return COMPV_ERROR_CODE_S_OK;
 	case COMPV_SUBTYPE_PIXELS_HSV:
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToHSV::process(imageIn, imageOut));
