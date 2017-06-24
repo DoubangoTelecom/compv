@@ -121,7 +121,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBA32::yuvPlanar(const CompVMatPtr& imageIn, C
 
 	if (threadsCount > 1) {
 		const size_t heights = (heightInSamples / threadsCount) & -2; //!\\ must be even number
-		const size_t lastHeight = heightInSamples - ((threadsCount - 1) * heights);
+		const size_t lastHeight = heights + (heightInSamples % heights);
 		size_t yPtrPaddingInBytes, uPtrPaddingInBytes, vPtrPaddingInBytes, rgbaPtrPaddingInBytes;
 		size_t uPtrHeights, vPtrHeights, tmpWidth;
 		CompVAsyncTaskIds taskIds;
@@ -200,7 +200,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBA32::yuvSemiPlanar(const CompVMatPtr& imageI
 
 	if (threadsCount > 1) {
 		const size_t heights = (heightInSamples / threadsCount) & -2; //!\\ must be even number
-		const size_t lastHeight = heightInSamples - ((threadsCount - 1) * heights);
+		const size_t lastHeight = heights + (heightInSamples % heights);
 		size_t yPtrPaddingInBytes, uvPtrPaddingInBytes, rgbaPtrPaddingInBytes;
 		size_t uvPtrHeights, tmpWidth;
 		CompVAsyncTaskIds taskIds;
@@ -275,7 +275,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBA32::yuvPacked(const CompVMatPtr& imageIn, C
 
 	if (threadsCount > 1) {
 		const size_t heights = (heightInSamples / threadsCount) & -2; //!\\ must be even number
-		const size_t lastHeight = heightInSamples - ((threadsCount - 1) * heights);
+		const size_t lastHeight = heights + (heightInSamples % heights);
 		size_t yuvPtrPaddingInBytes, rgbaPtrPaddingInBytes;
 		size_t yuvPtrHeights, tmpWidth;
 		CompVAsyncTaskIds taskIds;
@@ -311,7 +311,6 @@ COMPV_ERROR_CODE CompVImageConvToRGBA32::yuvPacked(const CompVMatPtr& imageIn, C
 
 	return COMPV_ERROR_CODE_S_OK;
 }
-
 
 // R = (37Y' + 0U' + 51V') >> 5
 // G = (37Y' - 13U' - 26V') >> 5
