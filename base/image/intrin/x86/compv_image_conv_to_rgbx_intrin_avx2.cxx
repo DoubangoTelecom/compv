@@ -92,7 +92,7 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 			vecG = _mm256_permute4x64_epi64(vecG, 0xD8);
 			
 			/* Store result */
-			COMPV_VST4_I8_AVX2(&rgbaPtr[k], vecR, vecG, vecB, vecA, vec0, vec1);
+			COMPV_VST4_U8_AVX2(&rgbaPtr[k], vecR, vecG, vecB, vecA, vec0, vec1);
 
 		} // End_Of for (i = 0; i < width; i += 32)
 		yPtr += stride;

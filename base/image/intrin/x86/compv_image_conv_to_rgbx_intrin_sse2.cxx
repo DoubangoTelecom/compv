@@ -84,7 +84,7 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_SSE2(COMPV_ALIGNED(SSE) const uint8_t
 			);
 			
 			/* Store result */
-			COMPV_VST4_I8_SSSE3(&rgbaPtr[k], vecR, vecG, vecB, vecA, vec0, vec1);
+			COMPV_VST4_U8_SSE2(&rgbaPtr[k], vecR, vecG, vecB, vecA, vec0, vec1);
 
 		} // End_Of for (i = 0; i < width; i += 16)
 		yPtr += stride;

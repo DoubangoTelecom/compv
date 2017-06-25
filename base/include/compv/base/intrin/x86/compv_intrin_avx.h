@@ -77,6 +77,7 @@ Index for the 64bit packed values
 	_mm256_store_si256(reinterpret_cast<__m256i*>((ptr)) + 2, _mm256_unpacklo_epi16(vectmp0, vectmp1)); \
 	_mm256_store_si256(reinterpret_cast<__m256i*>((ptr)) + 3, _mm256_unpackhi_epi16(vectmp0, vectmp1))
 
+#define COMPV_VST4_U8_AVX2 COMPV_VST4_I8_AVX2
 
 /*
 Interleaves two 256bits vectors without crossing the 128-lane.
