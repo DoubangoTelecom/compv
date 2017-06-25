@@ -22,20 +22,20 @@ CompV: 1250.ms(full optiz)
 OpenCV: 5919.ms(full optiz)
 Remarque: For openCV we're using CV_YUV2RGB_I420
 
-=== YUV420P -> HSV (1282, 720) (#10k times) ===
-CompV: 18790.ms
-OpenCV: 32920.ms(full optiz)
-Remarque: For OpenCV you need to convert to BGR then HSV (#2 steps: COLOR_YUV2BGR_I420 then CV_BGR2HSV)
-
-=== RGB24 -> HSV (1282, 720) (#10k times) ===
-CompV: 9704.ms
-OpenCV: 15709.ms
-Remarque: For openCV we're using CV_RGB2HSV
-
 === RGB24 -> Grayscale (1282, 720) (#10k times) ===
 CompV: 449.ms(mt, full optiz), 1152.ms(st, full optiz)
 OpenCV: 3086.ms(full optiz)
 Remarque: For openCV we're using CV_RGB2GRAY
+
+=== RGB24 -> HSV (1282, 720) (#10k times) ===
+CompV: 3375.ms
+OpenCV: 15709.ms
+Remarque: For openCV we're using CV_RGB2HSV
+
+=== YUV420P -> HSV (1282, 720) (#10k times) ===
+CompV: 9790.ms
+OpenCV: 32920.ms(full optiz)
+Remarque: For OpenCV you need to convert to BGR then HSV (#2 steps: COLOR_YUV2BGR_I420 then CV_BGR2HSV)
 
 
 === FAST9_16, Nonmax=true, threshold=20, maxfeatures=-1 (1282, 720) (#10k times) ===
