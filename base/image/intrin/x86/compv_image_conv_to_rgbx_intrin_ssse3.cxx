@@ -15,7 +15,7 @@
 
 COMPV_NAMESPACE_BEGIN()
 
-void CompVImageConvYuv420_to_Rgb24_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbaPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
+void CompVImageConvYuv420_to_Rgb24_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride)
 {
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
 	
@@ -31,7 +31,6 @@ void CompVImageConvYuv420_to_Rgb24_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t
 	static const __m128i vec65 = _mm_set1_epi16(65);
 	static const __m128i vec127 = _mm_set1_epi16(127);
 	static const __m128i vec13_26 = _mm_set1_epi32(0x001a000d); // 13, 26, 13, 26 ...
-	static const __m128i vecA = _mm_cmpeq_epi8(vec127, vec127); // 255, 255, 255, 255
 
 	// ASM code do not create variables for k and l: k = [(i * 3)] and l = [i>>1]
 
@@ -84,11 +83,11 @@ void CompVImageConvYuv420_to_Rgb24_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t
 			);
 			
 			/* Store result */
-			COMPV_VST3_U8_SSSE3(&rgbaPtr[k], vecR, vecG, vecB, vec0, vec1);
+			COMPV_VST3_U8_SSSE3(&rgbPtr[k], vecR, vecG, vecB, vec0, vec1);
 
 		} // End_Of for (i = 0; i < width; i += 16)
 		yPtr += stride;
-		rgbaPtr += strideRGB;
+		rgbPtr += strideRGB;
 		if (j & 1) {
 			uPtr += strideUV;
 			vPtr += strideUV;

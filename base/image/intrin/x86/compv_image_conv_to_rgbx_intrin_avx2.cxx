@@ -29,6 +29,7 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 	__m256i vecYlow, vecYhigh, vecU, vecV, vecR, vecG, vecB;
 	__m256i vec0, vec1;
 	__m128i vecUn, vecVn;
+	// To avoid AVX transition issues keep the next static variables local
 	static const __m256i vecZero = _mm256_setzero_si256();
 	static const __m256i vec16 = _mm256_set1_epi16(16);
 	static const __m256i vec37 = _mm256_set1_epi16(37);
@@ -72,14 +73,12 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 				_mm256_srai_epi16(_mm256_add_epi16(vecYlow, _mm256_unpacklo_epi16(vec0, vec0)), 5),
 				_mm256_srai_epi16(_mm256_add_epi16(vecYhigh, _mm256_unpackhi_epi16(vec0, vec0)), 5)
 			);
-			vecR = _mm256_permute4x64_epi64(vecR, 0xD8);
 
 			/* B = (37Y' + 65U' + 0V') >> 5 */
 			vecB = _mm256_packus_epi16(
 				_mm256_srai_epi16(_mm256_add_epi16(vecYlow, _mm256_unpacklo_epi16(vec1, vec1)), 5),
 				_mm256_srai_epi16(_mm256_add_epi16(vecYhigh, _mm256_unpackhi_epi16(vec1, vec1)), 5)
 			);
-			vecB = _mm256_permute4x64_epi64(vecB, 0xD8);
 
 			/* Compute G = (37Y' - 13U' - 26V') >> 5 = (37Y' - (13U' + 26V')) >> 5 */
 			vec0 = _mm256_madd_epi16(vec13_26, _mm256_unpacklo_epi16(vecU, vecV)); // (13U' + 26V').low - I32
@@ -89,7 +88,6 @@ void CompVImageConvYuv420_to_Rgba32_Intrin_AVX2(COMPV_ALIGNED(AVX) const uint8_t
 				_mm256_srai_epi16(_mm256_sub_epi16(vecYlow, _mm256_unpacklo_epi16(vec0, vec0)), 5),
 				_mm256_srai_epi16(_mm256_sub_epi16(vecYhigh, _mm256_unpackhi_epi16(vec0, vec0)), 5)
 			);
-			vecG = _mm256_permute4x64_epi64(vecG, 0xD8);
 			
 			/* Store result */
 			COMPV_VST4_U8_AVX2(&rgbaPtr[k], vecR, vecG, vecB, vecA, vec0, vec1);
