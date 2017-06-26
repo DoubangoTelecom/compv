@@ -28,12 +28,12 @@ OpenCV: 3086.ms(full optiz)
 Remarque: For openCV we're using CV_RGB2GRAY
 
 === RGB24 -> HSV (1282, 720) (#10k times) ===
-CompV: 3375.ms
+CompV: 3975.ms
 OpenCV: 15709.ms
 Remarque: For openCV we're using CV_RGB2HSV
 
 === YUV420P -> HSV (1282, 720) (#10k times) ===
-CompV: 9790.ms
+CompV: 5766.ms
 OpenCV: 32920.ms(full optiz)
 Remarque: For OpenCV you need to convert to BGR then HSV (#2 steps: COLOR_YUV2BGR_I420 then CV_BGR2HSV)
 

@@ -42,14 +42,23 @@ COMPV_ERROR_CODE CompVImageConvToHSV::process(const CompVMatPtr& imageIn, CompVM
 	default:
 		// On X86: "RGBA32 -> HSV" is faster than "RGB24 -> HSV" because of (de-)interleaving RGB24 which is slow
 		// On ARM: "RGB24 -> HSV" is faster than "RGBA32 -> HSV" because less data and more cache-friendly. No (de-)interleaving issues, thanks to vld3.u8 and vst3.u8.
-#if COMPV_ARCH_ARM
-		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGB24, &imageRGBx));
+		// Another good reason to use RGB24: "input === output" -> Cache-friendly
+		// Another good reason to use RGB24: there is very faaast ASM code for NEON, SSSE3 and AVX2
+#if COMPV_ARCH_ARM || 1
+		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGB24, &imageOut));
+		// Call 'newObj8u' to change the subtype, no memory will be allocated as HSV and RGB24 have the same size.
+		const void* oldPtr = imageOut->ptr<const void*>();
+		COMPV_CHECK_CODE_RETURN(CompVImage::newObj8u(&imageOut, COMPV_SUBTYPE_PIXELS_HSV, imageIn->cols(), imageIn->rows(), imageIn->stride()));
+		COMPV_CHECK_EXP_RETURN(oldPtr != imageOut->ptr<const void*>(), COMPV_ERROR_CODE_E_INVALID_CALL, "Data reallocation not expected to change the pointer address");
+		imageRGBx = imageOut;
 #else
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGBA32, &imageRGBx));
 #endif
 		break;
 	}
 
+	//!\\ Important: 'imageRGBx' and 'imageOut' are the same data when intermediate format is RGB24. No data
+	// override at conversion because RGB24 and HSV have the same size. Not the case for RGBA32.
 	COMPV_CHECK_CODE_RETURN(CompVImageConvToHSV::rgbxToHsv(imageRGBx, imageOut));
 
 	*imageHSV = imageOut;
@@ -66,10 +75,11 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 
 	switch (imageRGBx->subType()) {
 	case COMPV_SUBTYPE_PIXELS_RGB24:
+	case COMPV_SUBTYPE_PIXELS_HSV: // See above, this is a hack use to overwrite the memory (input == output)
 		rgbx_to_hsv = rgbx_to_hsv_C<compv_uint8x3_t>;
 #if COMPV_ARCH_X86
-		if (CompVCpu::isEnabled(kCpuFlagSSE2) && imageRGBx->isAlignedSSE() && imageHSV->isAlignedSSE()) {
-			//COMPV_EXEC_IFDEF_INTRIN_X86(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Intrin_SSE2);
+		if (CompVCpu::isEnabled(kCpuFlagSSSE3) && imageRGBx->isAlignedSSE() && imageHSV->isAlignedSSE()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Intrin_SSSE3);
 		}
 #elif COMPV_ARCH_ARM
 #endif
@@ -109,8 +119,8 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 		compv_float32_t scale;
 		for (int b = 1; b < 256; ++b) {
 			scale = 1.f / static_cast<compv_float32_t>(b);
-			__hsv_scales43[b] = 43 * scale;
-			__hsv_scales255[b] = 255 * scale;
+			__hsv_scales43[b] = 43.f * scale;
+			__hsv_scales255[b] = 255.f * scale;
 		}
 		__hsv_init = true;
 	}
@@ -122,7 +132,6 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 
 	// Process
 	if (threadsCount > 1) {
-		
 		const size_t heights = (heightInSamples / threadsCount);
 		const size_t lastHeight = heights + (heightInSamples % threadsCount);
 		const size_t rgbxPaddingInBytes = (imageRGBx->strideInBytes() * heights);
@@ -154,7 +163,7 @@ template <typename xType>
 static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const compv_float32_t(*scales43)[256], const compv_float32_t(*scales255)[256])
 {
 	COMPV_DEBUG_INFO_CODE_NOT_OPTIMIZED("No SIMD or GPU implementation found");
-#if 0
+#if 1
 	size_t i, j;
 	const xType* rgbxPtr_ = reinterpret_cast<const xType*>(rgbxPtr);
 	compv_uint8x3_t* hsvPtr_ = reinterpret_cast<compv_uint8x3_t*>(hsvPtr);
