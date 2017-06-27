@@ -20,31 +20,29 @@ COMPV_NAMESPACE_BEGIN()
 void CompVImageConvRgba32ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgba32Ptr, COMPV_ALIGNED(SSE) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride
 	, const compv_float32_t(*scales43)[256], const compv_float32_t(*scales255)[256])
 {
-	assert(0);
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Code not clean, see RGB24 impl");
 
-	compv_uscalar_t i, j, k;
-	const compv_uscalar_t strideInBytesHSV = (stride << 1) + stride;
+	compv_uscalar_t i, j, k, strideRGBA;
 	__m128i vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8, vec9;
 	__m128 vec0f, vec1f, vec2f, vec3f;
-	//__m128 vechsv0, vechsv1, vechsv2; // FIXME(dmi): remove
+	__m128 vechsv0, vechsv1, vechsv2; // FIXME(dmi): remove
 	static const __m128i vecZero = _mm_setzero_si128();
 	static const __m128i vec85 = _mm_set1_epi8(85);
 	static const __m128i vec171 = _mm_set1_epi8((uint8_t)171);
 	static const __m128i vecFF = _mm_cmpeq_epi8(vec85, vec85);
 	static const __m128 vec43f = _mm_set1_ps(43.f);
 	static const __m128 vec255f = _mm_set1_ps(255.f);
-	static const __m128 vec01f = _mm_set1_ps(1.f);  // FIXME(dmi): remove when _mm_rcp_ps is used
 
-	width <<= 2; // from samples to bytes
-	stride <<= 2; // from samples to bytes
+	width = (width << 2); // from samples to bytes (width * 4)
+	strideRGBA = (stride << 2); // from samples to bytes
+	stride += (stride << 1); // from samples to bytes (stride * 3)
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("reciprocal neon ok? -> http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka14282.html");
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("use _mm_rcp_ps instead of myrecip");
-#define myrecip(x) _mm_div_ps(vec01f, x) /*_mm_rcp_ps(x)*/
+#define myrecip(x) _mm_rcp_ps(x)
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0, k = 0; i < width; i += 64, k += 48) { // 64 = (16 * 4), 48 = (16 * 3)
@@ -56,9 +54,9 @@ void CompVImageConvRgba32ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rg
 
 			vec3 = _mm_subs_epu8(vec4, vec3); // vec3 = minus
 
-#if 0
+#if 1
 			for (size_t y = 0; y < 16; ++y) {
-				if (j == 402 && i == 1792 && y == 8) {
+				if (j == 0 && i == 624 && y == 8) {
 					COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 				}
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING();
@@ -71,9 +69,11 @@ void CompVImageConvRgba32ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rg
 				int m2 = ~(m0 | m1);
 				int diff = ((g - b) & m0) | ((b - r) & m1) | ((r - g) & m2);
 				int minus = vec3.m128i_u8[y];
-				vechsv0.m128_u8[y] = static_cast<uint8_t>(diff * (*scales43)[minus])
+				compv_float32_t s43 = (diff * (*scales43)[minus]);
+				compv_float32_t s255 = (minus * (*scales255)[maxVal]);
+				vechsv0.m128_u8[y] = COMPV_MATH_ROUNDF_2_NEAREST_INT(s43, uint8_t) // Important round "SIGNED"
 					+ ((85 & m1) | (171 & m2));
-				vechsv1.m128_u8[y] = static_cast<uint8_t>(minus * (*scales255)[maxVal]);
+				vechsv1.m128_u8[y] = COMPV_MATH_ROUNDF_2_NEAREST_INT(s255, uint8_t);
 				vechsv2.m128_u8[y] = static_cast<uint8_t>(maxVal);
 			}
 #endif
@@ -124,15 +124,16 @@ void CompVImageConvRgba32ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rg
 			vec2f = _mm_mul_ps(vec2f, vec255f);
 			vec3f = _mm_mul_ps(vec3f, vec255f);
 
-			// hsv[1].float = static_cast<uint8_t>(scales255 * minus)
+			// hsv[1].float = static_cast<uint8_t>(round(scales255 * minus))
+			// FIXME(dmi): AVX/NEON: FMA
 			vec0f = _mm_mul_ps(vec0f, _mm_castsi128_ps(vec0));
 			vec1f = _mm_mul_ps(vec1f, _mm_castsi128_ps(vec1));
 			vec2f = _mm_mul_ps(vec2f, _mm_castsi128_ps(vec2));
 			vec3f = _mm_mul_ps(vec3f, _mm_castsi128_ps(vec3));
-			vec0f = _mm_castsi128_ps(_mm_cvttps_epi32(vec0f));
-			vec1f = _mm_castsi128_ps(_mm_cvttps_epi32(vec1f));
-			vec2f = _mm_castsi128_ps(_mm_cvttps_epi32(vec2f));
-			vec3f = _mm_castsi128_ps(_mm_cvttps_epi32(vec3f));
+			vec0f = _mm_castsi128_ps(_mm_cvtps_epi32(vec0f));
+			vec1f = _mm_castsi128_ps(_mm_cvtps_epi32(vec1f));
+			vec2f = _mm_castsi128_ps(_mm_cvtps_epi32(vec2f));
+			vec3f = _mm_castsi128_ps(_mm_cvtps_epi32(vec3f));
 			vec0f = _mm_castsi128_ps(_mm_packs_epi32(_mm_castps_si128(vec0f), _mm_castps_si128(vec1f)));
 			vec2f = _mm_castsi128_ps(_mm_packs_epi32(_mm_castps_si128(vec2f), _mm_castps_si128(vec3f)));
 			vec8 = _mm_packus_epi16(_mm_castps_si128(vec0f), _mm_castps_si128(vec2f)); // vec8 = hsv[1].u8
@@ -140,12 +141,12 @@ void CompVImageConvRgba32ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rg
 #if 0
 			for (size_t y = 0; y < 16; ++y) {
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-				if ((i + (y<<2)) < width && std::abs(vec8.m128i_u8[y] - vechsv1.m128_u8[y]) > 0) {
+				if ((i + (y << 2)) < width && std::abs(vec8.m128i_u8[y] - vechsv1.m128_u8[y]) > 0) {
 					int kaka = 0;
 				}
 			}
 #endif
-			
+
 			// compute scale = minus ? (1.f / minus) : 0.f
 			vec0 = _mm_andnot_si128(_mm_cmpeq_epi32(vec0, vecZero), _mm_castps_si128(myrecip(_mm_castsi128_ps(vec0))));
 			vec1 = _mm_andnot_si128(_mm_cmpeq_epi32(vec1, vecZero), _mm_castps_si128(myrecip(_mm_castsi128_ps(vec1))));
@@ -196,15 +197,16 @@ void CompVImageConvRgba32ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rg
 			vec2f = _mm_cvtepi32_ps(_mm_castps_si128(vec2f));
 			vec3f = _mm_cvtepi32_ps(_mm_castps_si128(vec3f));
 
-			// compute static_cast<uint8_t>(diff * scales43) + ((85 & m1) | (171 & m2))
+			// compute static_cast<uint8_t>(round(diff * scales43)) + ((85 & m1) | (171 & m2))
+			// FIXME(dmi): AVX/NEON -> FMA
 			vec0f = _mm_mul_ps(vec0f, _mm_castsi128_ps(vec0));
 			vec1f = _mm_mul_ps(vec1f, _mm_castsi128_ps(vec1));
 			vec2f = _mm_mul_ps(vec2f, _mm_castsi128_ps(vec2));
 			vec3f = _mm_mul_ps(vec3f, _mm_castsi128_ps(vec3));
-			vec0f = _mm_castsi128_ps(_mm_cvttps_epi32(vec0f));
-			vec1f = _mm_castsi128_ps(_mm_cvttps_epi32(vec1f));
-			vec2f = _mm_castsi128_ps(_mm_cvttps_epi32(vec2f));
-			vec3f = _mm_castsi128_ps(_mm_cvttps_epi32(vec3f));
+			vec0f = _mm_castsi128_ps(_mm_cvtps_epi32(vec0f));
+			vec1f = _mm_castsi128_ps(_mm_cvtps_epi32(vec1f));
+			vec2f = _mm_castsi128_ps(_mm_cvtps_epi32(vec2f));
+			vec3f = _mm_castsi128_ps(_mm_cvtps_epi32(vec3f));
 			vec0f = _mm_castsi128_ps(_mm_packs_epi32(_mm_castps_si128(vec0f), _mm_castps_si128(vec1f)));
 			vec2f = _mm_castsi128_ps(_mm_packs_epi32(_mm_castps_si128(vec2f), _mm_castps_si128(vec3f)));
 			vec9 = _mm_packs_epi16(_mm_castps_si128(vec0f), _mm_castps_si128(vec2f));
@@ -213,38 +215,42 @@ void CompVImageConvRgba32ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rg
 			vec6 = _mm_or_si128(vec6, vec7); // (85 & m1) | (171 & m2)
 			vec9 = _mm_adds_epi8(vec9, vec6); // // vec9 = hsv[0].u8
 
-#if 0
+#if 1
 			for (size_t y = 0; y < 16; ++y) {
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-				if ((i + (y<<2)) < width && std::abs(vec9.m128i_u8[y] - vechsv0.m128_u8[y]) > 1) {
-					int kaka = 0;
+				if ((i + (y * 4)) < width && std::abs(vec9.m128i_u8[y] - vechsv0.m128_u8[y]) > 1) {
+					assert(0);
 				}
 			}
 
 			for (size_t y = 0; y < 16; ++y) {
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-				if (vec9.m128i_u8[y] == 255) {
-					int kaka = 0;
+				if ((i + (y * 4)) < width && std::abs(vec8.m128i_u8[y] - vechsv1.m128_u8[y]) > 1) {
+					assert(0);
 				}
-				//printf("%u, ", vec9.m128i_u8[y]);
 			}
 
 			for (size_t y = 0; y < 16; ++y) {
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-				if ((i + (y << 2)) < width && std::abs(vec4.m128i_u8[y] - vechsv2.m128_u8[y]) > 1) {
-					int kaka = 0;
+				if ((i + (y * 4)) < width && std::abs(vec4.m128i_u8[y] - vechsv2.m128_u8[y]) > 1) {
+					assert(0);
 				}
 			}
 #endif
 
+			for (size_t y = 0; y < 16; ++y) {
+				COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+				//printf("%u, ", vec9.m128i_u8[y]);
+			}
+
 			COMPV_VST3_U8_SSSE3(&hsvPtr[k], vec9, vec8, vec4, vec0, vec1);
 
-			
+
 
 			// _mm_castps_si128 , _mm_castsi128_ps
 
 			//_mm_rcp_ps()
-			
+
 			//compv_float32_t scale;
 			//for (int b = 1; b < 256; ++b) {
 			//	scale = 1.f / static_cast<compv_float32_t>(b);
@@ -262,11 +268,11 @@ void CompVImageConvRgba32ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rg
 			//hsv[1] = static_cast<uint8_t>(minus * (*scales255)[maxVal]);
 			//hsv[2] = static_cast<uint8_t>(maxVal);
 
-			
-			
+
+
 		} // End_Of for (i = 0; i < width; i += 64)
-		rgba32Ptr += stride;
-		hsvPtr += strideInBytesHSV;
+		rgba32Ptr += strideRGBA;
+		hsvPtr += stride;
 	}
 #undef myrecip
 }
@@ -290,8 +296,8 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 	static const __m128 vec255f = _mm_set1_ps(255.f);
 	static const __m128 vec01f = _mm_set1_ps(1.f);
 
-	width += (width << 1); // from samples to bytes
-	stride += (stride << 1); // from samples to bytes
+	width += (width << 1); // from samples to bytes (width * 3)
+	stride += (stride << 1); // from samples to bytes (stride * 3)
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("reciprocal neon ok? -> http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka14282.html");
 

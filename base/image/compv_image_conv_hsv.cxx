@@ -89,7 +89,7 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 		rgbx_to_hsv = rgbx_to_hsv_C<compv_uint8x4_t>;
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagSSSE3) && imageRGBx->isAlignedSSE() && imageHSV->isAlignedSSE()) {
-			//COMPV_EXEC_IFDEF_INTRIN_X86(rgbx_to_hsv = CompVImageConvRgba32ToHsv_Intrin_SSSE3);
+			COMPV_EXEC_IFDEF_INTRIN_X86(rgbx_to_hsv = CompVImageConvRgba32ToHsv_Intrin_SSSE3);
 		}
 #elif COMPV_ARCH_ARM
 #endif
