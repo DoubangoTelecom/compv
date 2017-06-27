@@ -60,6 +60,8 @@ COMPV_NAMESPACE_BEGIN()
 	vec = _mm_min_epu8(vec, _mm_srli_si128(vec, 2)); /* >> 16b */ \
 	vec = _mm_min_epu8(vec, _mm_srli_si128(vec, 1)) /* >> 1b */
 
+#define _mm_cvtepi8_epi16_low_SSE2(a) _mm_srai_epi16(_mm_unpacklo_epi8(a, a), 8) // Convert from I8 to I16 while shifting in sign bits, ASM: use '_mm_cvtepi8_epi16' which is SSE4.1
+#define _mm_cvtepi8_epi16_hi_SSE2(a) _mm_srai_epi16(_mm_unpackhi_epi8(a, a), 8) // Convert from I8 to I16 while shifting in sign bits, ASM: use '_mm_cvtepi8_epi16' which is SSE4.1
 #define _mm_cvtepi16_epi32_low_SSE2(a) _mm_srai_epi32(_mm_unpacklo_epi16(a, a), 16) // Convert from I16 to I32 while shifting in sign bits, ASM: use '_mm_cvtepi16_epi32' which is SSE4.1
 #define _mm_cvtepi16_epi32_hi_SSE2(a) _mm_srai_epi32(_mm_unpackhi_epi16(a, a), 16) // Convert from I16 to I32 while shifting in sign bits, ASM: use '_mm_cvtepi16_epi32' which is SSE4.1
 

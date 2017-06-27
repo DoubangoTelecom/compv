@@ -117,9 +117,9 @@ bool compv_tests_is_fma_enabled()
 bool compv_tests_is_rcp()
 {
 #if COMPV_ARCH_X86
-	return (CompVCpu::isEnabled(kCpuFlagSSSE3) && CompVCpu::isEnabled(kCpuFlagSSSE3)) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled());
+	return (CompVCpu::isEnabled(kCpuFlagSSSE3) && CompVCpu::isEnabled(kCpuFlagSSSE3)) && (/*CompVCpu::isAsmEnabled() ||*/ CompVCpu::isIntrinsicsEnabled());
 #elif COMPV_ARCH_ARM
-	return (0) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled());
+	return (0) && (/*CompVCpu::isAsmEnabled() ||*/ CompVCpu::isIntrinsicsEnabled());
 #endif
 	return false;
 }
