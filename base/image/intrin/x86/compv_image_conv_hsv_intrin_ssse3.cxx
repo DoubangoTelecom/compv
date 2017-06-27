@@ -280,7 +280,7 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 	compv_uscalar_t i, j;
 	__m128i vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8, vec9;
 	__m128 vec0f, vec1f, vec2f, vec3f;
-	//__m128 vechsv0, vechsv1, vechsv2; // FIXME(dmi): remove
+	__m128 vechsv0, vechsv1, vechsv2; // FIXME(dmi): remove
 	static const __m128i vecZero = _mm_setzero_si128();
 	static const __m128i vec85 = _mm_set1_epi8(85);
 	static const __m128i vec171 = _mm_set1_epi8((uint8_t)171);
@@ -295,7 +295,7 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("reciprocal neon ok? -> http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka14282.html");
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("use _mm_rcp_ps instead of myrecip");
-#define myrecip(x) _mm_div_ps(vec01f, x) /*_mm_rcp_ps(x)*/
+#define myrecip(x) _mm_rcp_ps(x)/*_mm_div_ps(vec01f, x)*/ /*_mm_rcp_ps(x)*/
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; i += 48) { // 64 = (16 * 4), 48 = (16 * 3)
@@ -307,7 +307,7 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 
 			vec3 = _mm_subs_epu8(vec4, vec3); // vec3 = minus
 
-#if 0
+#if 1
 			for (size_t y = 0; y < 16; ++y) {
 				if (j == 402 && i == 1792 && y == 8) {
 					COMPV_DEBUG_INFO_CODE_FOR_TESTING();
@@ -322,9 +322,11 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 				int m2 = ~(m0 | m1);
 				int diff = ((g - b) & m0) | ((b - r) & m1) | ((r - g) & m2);
 				int minus = vec3.m128i_u8[y];
-				vechsv0.m128_u8[y] = static_cast<uint8_t>(diff * (*scales43)[minus])
+				compv_float32_t s43 = (diff * (*scales43)[minus]);
+				compv_float32_t s255 = (minus * (*scales255)[maxVal]);
+				vechsv0.m128_u8[y] = COMPV_MATH_ROUNDF_2_NEAREST_INT(s43, uint8_t) // Important round "SIGNED"
 					+ ((85 & m1) | (171 & m2));
-				vechsv1.m128_u8[y] = static_cast<uint8_t>(minus * (*scales255)[maxVal]);
+				vechsv1.m128_u8[y] = COMPV_MATH_ROUNDF_2_NEAREST_INT(s255, uint8_t);
 				vechsv2.m128_u8[y] = static_cast<uint8_t>(maxVal);
 			}
 #endif
@@ -375,15 +377,15 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 			vec2f = _mm_mul_ps(vec2f, vec255f);
 			vec3f = _mm_mul_ps(vec3f, vec255f);
 
-			// hsv[1].float = static_cast<uint8_t>(scales255 * minus)
+			// hsv[1].float = static_cast<uint8_t>(round(scales255 * minus))
 			vec0f = _mm_mul_ps(vec0f, _mm_castsi128_ps(vec0));
 			vec1f = _mm_mul_ps(vec1f, _mm_castsi128_ps(vec1));
 			vec2f = _mm_mul_ps(vec2f, _mm_castsi128_ps(vec2));
 			vec3f = _mm_mul_ps(vec3f, _mm_castsi128_ps(vec3));
-			vec0f = _mm_castsi128_ps(_mm_cvttps_epi32(vec0f));
-			vec1f = _mm_castsi128_ps(_mm_cvttps_epi32(vec1f));
-			vec2f = _mm_castsi128_ps(_mm_cvttps_epi32(vec2f));
-			vec3f = _mm_castsi128_ps(_mm_cvttps_epi32(vec3f));
+			vec0f = _mm_castsi128_ps(_mm_cvtps_epi32(vec0f));
+			vec1f = _mm_castsi128_ps(_mm_cvtps_epi32(vec1f));
+			vec2f = _mm_castsi128_ps(_mm_cvtps_epi32(vec2f));
+			vec3f = _mm_castsi128_ps(_mm_cvtps_epi32(vec3f));
 			vec0f = _mm_castsi128_ps(_mm_packs_epi32(_mm_castps_si128(vec0f), _mm_castps_si128(vec1f)));
 			vec2f = _mm_castsi128_ps(_mm_packs_epi32(_mm_castps_si128(vec2f), _mm_castps_si128(vec3f)));
 			vec8 = _mm_packus_epi16(_mm_castps_si128(vec0f), _mm_castps_si128(vec2f)); // vec8 = hsv[1].u8
@@ -447,15 +449,15 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 			vec2f = _mm_cvtepi32_ps(_mm_castps_si128(vec2f));
 			vec3f = _mm_cvtepi32_ps(_mm_castps_si128(vec3f));
 
-			// compute static_cast<uint8_t>(diff * scales43) + ((85 & m1) | (171 & m2))
+			// compute static_cast<uint8_t>(round(diff * scales43)) + ((85 & m1) | (171 & m2))
 			vec0f = _mm_mul_ps(vec0f, _mm_castsi128_ps(vec0));
 			vec1f = _mm_mul_ps(vec1f, _mm_castsi128_ps(vec1));
 			vec2f = _mm_mul_ps(vec2f, _mm_castsi128_ps(vec2));
 			vec3f = _mm_mul_ps(vec3f, _mm_castsi128_ps(vec3));
-			vec0f = _mm_castsi128_ps(_mm_cvttps_epi32(vec0f));
-			vec1f = _mm_castsi128_ps(_mm_cvttps_epi32(vec1f));
-			vec2f = _mm_castsi128_ps(_mm_cvttps_epi32(vec2f));
-			vec3f = _mm_castsi128_ps(_mm_cvttps_epi32(vec3f));
+			vec0f = _mm_castsi128_ps(_mm_cvtps_epi32(vec0f));
+			vec1f = _mm_castsi128_ps(_mm_cvtps_epi32(vec1f));
+			vec2f = _mm_castsi128_ps(_mm_cvtps_epi32(vec2f));
+			vec3f = _mm_castsi128_ps(_mm_cvtps_epi32(vec3f));
 			vec0f = _mm_castsi128_ps(_mm_packs_epi32(_mm_castps_si128(vec0f), _mm_castps_si128(vec1f)));
 			vec2f = _mm_castsi128_ps(_mm_packs_epi32(_mm_castps_si128(vec2f), _mm_castps_si128(vec3f)));
 			vec9 = _mm_packs_epi16(_mm_castps_si128(vec0f), _mm_castps_si128(vec2f));
@@ -464,29 +466,33 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 			vec6 = _mm_or_si128(vec6, vec7); // (85 & m1) | (171 & m2)
 			vec9 = _mm_adds_epi8(vec9, vec6); // // vec9 = hsv[0].u8
 
-#if 0
+#if 1
 			for (size_t y = 0; y < 16; ++y) {
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-				if ((i + (y << 2)) < width && std::abs(vec9.m128i_u8[y] - vechsv0.m128_u8[y]) > 1) {
-					int kaka = 0;
+				if ((i + (y * 3)) < width && std::abs(vec9.m128i_u8[y] - vechsv0.m128_u8[y]) > 1) {
+					assert(0);
 				}
 			}
 
 			for (size_t y = 0; y < 16; ++y) {
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-				if (vec9.m128i_u8[y] == 255) {
-					int kaka = 0;
+				if ((i + (y * 3)) < width && std::abs(vec8.m128i_u8[y] - vechsv1.m128_u8[y]) > 1) {
+					assert(0);
 				}
-				//printf("%u, ", vec9.m128i_u8[y]);
 			}
 
 			for (size_t y = 0; y < 16; ++y) {
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-				if ((i + (y << 2)) < width && std::abs(vec4.m128i_u8[y] - vechsv2.m128_u8[y]) > 1) {
-					int kaka = 0;
+				if ((i + (y * 3)) < width && std::abs(vec4.m128i_u8[y] - vechsv2.m128_u8[y]) > 1) {
+					assert(0);
 				}
 			}
 #endif
+
+			for (size_t y = 0; y < 16; ++y) {
+				COMPV_DEBUG_INFO_CODE_FOR_TESTING();
+				//printf("%u, ", vec9.m128i_u8[y]);
+			}
 
 			COMPV_VST3_U8_SSSE3(&hsvPtr[i], vec9, vec8, vec4, vec0, vec1);
 
