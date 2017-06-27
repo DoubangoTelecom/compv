@@ -100,6 +100,7 @@ const std::string compv_tests_md5(const CompVMatPtr& mat)
 	return COMPV_MD5_EMPTY;
 }
 
+// Fused-Multiply-Add
 bool compv_tests_is_fma_enabled()
 {
 	// On X86 FMA requires AVX2 (both intrinsics and asm)
@@ -108,6 +109,17 @@ bool compv_tests_is_fma_enabled()
 	return (CompVCpu::isEnabled(kCpuFlagAVX2) && CompVCpu::isEnabled(kCpuFlagFMA3)) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled());
 #elif COMPV_ARCH_ARM
 	return (CompVCpu::isEnabled(kCpuFlagARM_NEON) && CompVCpu::isEnabled(kCpuFlagARM_NEON_FMA)) && CompVCpu::isAsmEnabled();
+#endif
+	return false;
+}
+
+// Reciprocal
+bool compv_tests_is_rcp()
+{
+#if COMPV_ARCH_X86
+	return (CompVCpu::isEnabled(kCpuFlagSSSE3) && CompVCpu::isEnabled(kCpuFlagSSSE3)) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled());
+#elif COMPV_ARCH_ARM
+	return (0) && (CompVCpu::isAsmEnabled() || CompVCpu::isIntrinsicsEnabled());
 #endif
 	return false;
 }

@@ -23,4 +23,6 @@ const std::string compv_tests_md5(const CompVMatPtr& mat);
 
 bool compv_tests_is_fma_enabled();
 
+bool compv_tests_is_rcp();
+
 #endif /* _COMPV_TESTS_COMMON_H_ */

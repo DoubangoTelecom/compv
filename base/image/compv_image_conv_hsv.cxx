@@ -52,6 +52,7 @@ COMPV_ERROR_CODE CompVImageConvToHSV::process(const CompVMatPtr& imageIn, CompVM
 		COMPV_CHECK_EXP_RETURN(oldPtr != imageOut->ptr<const void*>(), COMPV_ERROR_CODE_E_INVALID_CALL, "Data reallocation not expected to change the pointer address");
 		imageRGBx = imageOut;
 #else
+		COMPV_DEBUG_INFO_CODE_FOR_TESTING("Using RGB32 as pivot to convert to HSV should not be called on final code");
 		COMPV_CHECK_CODE_RETURN(CompVImageConvToRGBx::process(imageIn, COMPV_SUBTYPE_PIXELS_RGBA32, &imageRGBx));
 #endif
 		break;

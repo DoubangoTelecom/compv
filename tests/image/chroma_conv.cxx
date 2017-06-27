@@ -24,6 +24,7 @@ static const struct compv_test_image_chroma_conv_test {
 	COMPV_SUBTYPE dstPixelFormat;
 	const char* dstFilename;
 	const char* dstMD5;
+	const char* dstMD5_rcp; // Using approximate reciprocal (SSSE3), to HSV only
 }
 COMPV_TEST_IMAGE_CHROMA_CONV_TESTS[] =
 {
@@ -77,15 +78,15 @@ COMPV_TEST_IMAGE_CHROMA_CONV_TESTS[] =
 	{ COMPV_SUBTYPE_PIXELS_UYVY422, "equirectangular_1282x720_uyvy422.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_RGBA32, "rgba32.rbg", "afb8ed0445fd9d6e52a1e0c33c3ff2b3" }, // not planar YUV
 
 	/* to HSV */
-	{ COMPV_SUBTYPE_PIXELS_RGBA32, "equirectangular_1282x720_rgba.rgb", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "fc2deefcc66be219b1a0239c45418ce0" },
-	{ COMPV_SUBTYPE_PIXELS_RGB24, "equirectangular_1282x720_rgb.rgb", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "fc2deefcc66be219b1a0239c45418ce0" },
-	{ COMPV_SUBTYPE_PIXELS_NV12, "equirectangular_1282x720_nv12.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "cd682d6d7f94845f1500bc9acb7b9ecd" },
-	{ COMPV_SUBTYPE_PIXELS_NV21, "equirectangular_1282x720_nv21.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "cd682d6d7f94845f1500bc9acb7b9ecd" },
-	{ COMPV_SUBTYPE_PIXELS_YUV420P, "equirectangular_1282x720_yuv420p.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "cd682d6d7f94845f1500bc9acb7b9ecd" },
-	{ COMPV_SUBTYPE_PIXELS_YUV422P, "equirectangular_1282x720_yuv422p.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "6ccc0d8f104323d2f57257d7ff251124" },
-	{ COMPV_SUBTYPE_PIXELS_YUV444P, "equirectangular_1282x720_yuv444p.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "bc82ff037edc5a6c816f54852d35692a" },
-	{ COMPV_SUBTYPE_PIXELS_YUYV422, "equirectangular_1282x720_yuyv422.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "" }, // not planar YUV
-	{ COMPV_SUBTYPE_PIXELS_UYVY422, "equirectangular_1282x720_uyvy422.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "" }, // not planar YUV
+	{ COMPV_SUBTYPE_PIXELS_RGBA32, "equirectangular_1282x720_rgba.rgb", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "fc2deefcc66be219b1a0239c45418ce0", "de27c312745692cde497a31fa0e8ff58" },
+	{ COMPV_SUBTYPE_PIXELS_RGB24, "equirectangular_1282x720_rgb.rgb", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "fc2deefcc66be219b1a0239c45418ce0", "de27c312745692cde497a31fa0e8ff58" },
+	{ COMPV_SUBTYPE_PIXELS_NV12, "equirectangular_1282x720_nv12.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "cd682d6d7f94845f1500bc9acb7b9ecd", "21173b1ff6b24b58ae505a61ef426882" },
+	{ COMPV_SUBTYPE_PIXELS_NV21, "equirectangular_1282x720_nv21.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "cd682d6d7f94845f1500bc9acb7b9ecd", "21173b1ff6b24b58ae505a61ef426882" },
+	{ COMPV_SUBTYPE_PIXELS_YUV420P, "equirectangular_1282x720_yuv420p.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "cd682d6d7f94845f1500bc9acb7b9ecd", "21173b1ff6b24b58ae505a61ef426882" },
+	{ COMPV_SUBTYPE_PIXELS_YUV422P, "equirectangular_1282x720_yuv422p.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "6ccc0d8f104323d2f57257d7ff251124", "aeef11484965ae5c73d85f446fec8c03" },
+	{ COMPV_SUBTYPE_PIXELS_YUV444P, "equirectangular_1282x720_yuv444p.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "bc82ff037edc5a6c816f54852d35692a", "5065846171fce74a7817164c4752edbd" },
+	{ COMPV_SUBTYPE_PIXELS_YUYV422, "equirectangular_1282x720_yuyv422.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "a02e42c2079cc16c16f5a18efd50bfdf", "58ffe1f82d94a75ee767250846f6f542" }, // not planar YUV
+	{ COMPV_SUBTYPE_PIXELS_UYVY422, "equirectangular_1282x720_uyvy422.yuv", 1282, 720, 1282, COMPV_SUBTYPE_PIXELS_HSV, "hsv.rbg", "b6d7b878cdbeb800e004b9c6b40d1360", "b38781fa9c086b35281399b23a1809cd" }, // not planar YUV
 };
 static size_t COMPV_TEST_IMAGE_CHROMA_CONV_TESTS_COUNT = sizeof(COMPV_TEST_IMAGE_CHROMA_CONV_TESTS) / sizeof(COMPV_TEST_IMAGE_CHROMA_CONV_TESTS[0]);
 
@@ -98,6 +99,9 @@ COMPV_ERROR_CODE chroma_conv()
 	uint64_t timeStart, timeEnd;
 	CompVMatPtr srcImage, dstImage;
 	const compv_test_image_chroma_conv_test* test = NULL;
+#if COMPV_TEST_CHECK_MD5
+	std::string xmd5;
+#endif
 
 	COMPV_CHECK_CODE_BAIL(err = COMPV_ERROR_CODE_S_OK, "Just to avoid 'bail not referenced warning'");
 
@@ -130,7 +134,8 @@ COMPV_ERROR_CODE chroma_conv()
 
 #if COMPV_TEST_CHECK_MD5
 	COMPV_DEBUG_INFO_EX(TAG_TEST_IMAGE_CHROMA_CONV, "MD5:%s", compv_tests_md5(dstImage).c_str());
-	COMPV_CHECK_EXP_BAIL(std::string(test->dstMD5).compare(compv_tests_md5(dstImage)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "MD5 mismatch");
+	xmd5 = (test->dstPixelFormat == COMPV_SUBTYPE_PIXELS_HSV && compv_tests_is_rcp()) ? test->dstMD5_rcp : test->dstMD5;
+	COMPV_CHECK_EXP_BAIL(std::string(xmd5).compare(compv_tests_md5(dstImage)) != 0, (err = COMPV_ERROR_CODE_E_UNITTEST_FAILED), "MD5 mismatch");
 #endif
 
 bail:
