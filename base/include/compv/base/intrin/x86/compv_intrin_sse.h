@@ -109,7 +109,8 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 	/* Second = vecLane1 */ \
 	vecLane1 = _mm_alignr_epi8(vectmp1, vectmp0, 11); /* GR GR GR ... */ \
 	vecLane2 = _mm_srli_si128(vecLane2, 5); \
-	vecLane1 = _mm_alignr_epi8(vecLane2, _mm_slli_si128(vecLane1, 5), 5); /* GR GR GR ...BBBBB */ \
+	vecLane1 = _mm_slli_si128(vecLane1, 5); \
+	vecLane1 = _mm_alignr_epi8(vecLane2, vecLane1, 5); /* GR GR GR ...BBBBB */ \
 	vecLane1 = _mm_shuffle_epi8(vecLane1, vecMask1); /* RGB RGB...G */ \
 	/* Third = vecLane2 */ \
 	vecLane2 = _mm_srli_si128(vecLane2, 5); \

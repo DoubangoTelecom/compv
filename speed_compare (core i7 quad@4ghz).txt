@@ -17,15 +17,15 @@ Shared Memory: 3810 MB
 !!! IMPORTANT: All the results from CompV use assembler code (no intrinsics).
 !!!
 
-=== YUV420P -> RGB24 (1282, 720) (#10k times) ===
-CompV: 1250.ms(full optiz)
-OpenCV: 5919.ms(full optiz)
-Remarque: For openCV we're using CV_YUV2RGB_I420
-
 === RGB24 -> Grayscale (1282, 720) (#10k times) ===
 CompV: 449.ms(mt, full optiz), 1152.ms(st, full optiz)
 OpenCV: 3086.ms(full optiz)
 Remarque: For openCV we're using CV_RGB2GRAY
+
+=== YUV420P -> RGB24 (1282, 720) (#10k times) ===
+CompV: 1195.ms(full optiz)
+OpenCV: 5919.ms(full optiz)
+Remarque: For openCV we're using CV_YUV2RGB_I420
 
 === RGB24 -> HSV (1282, 720) (#10k times) ===
 CompV: 3975.ms

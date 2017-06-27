@@ -18,6 +18,12 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if COMPV_ASM
+#	if COMPV_ARCH_X64
+	COMPV_EXTERNC void CompVImageConvYuv420_to_Rgb24_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* yPtr, COMPV_ALIGNED(SSE) const uint8_t* uPtr, COMPV_ALIGNED(SSE) const uint8_t* vPtr, COMPV_ALIGNED(SSE) uint8_t* rgbPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride);
+#	endif /* COMPV_ARCH_X86 */
+#endif /* COMPV_ASM */
+
 static void yuv420p_to_rgba32_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 static void yuv420p_to_rgb24_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
 static void yuv422p_to_rgba32_C(const uint8_t* yPtr, const uint8_t* uPtr, const uint8_t* vPtr, uint8_t* rgbxPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride);
@@ -109,6 +115,7 @@ COMPV_ERROR_CODE CompVImageConvToRGBx::yuvPlanar(const CompVMatPtr& imageIn, Com
 			if (CompVCpu::isEnabled(kCpuFlagSSSE3)) {
 				if (outPixelFormat == COMPV_SUBTYPE_PIXELS_RGB24) {
 					COMPV_EXEC_IFDEF_INTRIN_X86(planar_to_rgbx = CompVImageConvYuv420_to_Rgb24_Intrin_SSSE3);
+					COMPV_EXEC_IFDEF_ASM_X86(planar_to_rgbx = CompVImageConvYuv420_to_Rgb24_Asm_X64_SSSE3);
 				}
 			}
 		}

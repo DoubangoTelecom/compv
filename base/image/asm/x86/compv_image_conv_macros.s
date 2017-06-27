@@ -56,3 +56,52 @@
 	vpshufb %4, %4, %7
 	vpshufb %5, %5, %7
 %endmacro
+
+; Interleave "vecLane0", "vecLane1" and "vecLane3" then store into "ptr"
+; !!! "vecLane0", "vecLane1" and "vecLane3" ARE modified !!!
+; e.g. [RRRR], [GGGG], [BBBB] -> RGBRGBRGB
+; Signatue: COMPV_VST3_I8_SSSE3(ptr, vecLane0, vecLane1, vecLane2, vectmp0, vectmp1, vectmp2)
+; Example: COMPV_VST3_I8_SSSE3(rax + rcx, xmm0, xmm1, xmm2, xmm3, xmm4, xmm5)
+%macro COMPV_VST3_I8_SSSE3 7
+	%define ptr			%1
+	%define vecLane0	%2
+	%define vecLane1	%3
+	%define vecLane2	%4
+	%define vectmp0		%5
+	%define vectmp1		%6
+	%define vectmp2		%7
+	movdqa vectmp1, vecLane0
+	movdqa vectmp2, vecLane0
+	punpcklbw vectmp1, vecLane1
+	punpckhbw vectmp2, vecLane1
+	movdqa vectmp0, vectmp1
+	movdqa vecLane0, vecLane2
+	pslldq vectmp0, 5
+	movdqa vecLane1, vectmp2
+	palignr vecLane1, vectmp1, 11
+	palignr vecLane0, vectmp0, 5
+	movdqa vectmp0, [sym(kShuffleEpi8_InterleaveRGB24_Step0_i32)]
+	psrldq vecLane2, 5
+	pslldq vecLane1, 5
+	movdqa vectmp1, vecLane2
+	palignr vectmp1, vecLane1, 5
+	pshufb vecLane0, vectmp0
+	movdqa vectmp0, [sym(kShuffleEpi8_InterleaveRGB24_Step1_i32)]
+	psrldq vecLane2, 5
+	palignr vecLane2, vectmp2, 6
+	movdqa vecLane1, vectmp1
+	pshufb vecLane1, vectmp0
+	pshufb vecLane2, [sym(kShuffleEpi8_InterleaveRGB24_Step2_i32)]		
+	movdqa [ptr + (0*COMPV_YASM_XMM_SZ_BYTES)], vecLane0
+	movdqa [ptr + (1*COMPV_YASM_XMM_SZ_BYTES)], vecLane1
+	movdqa [ptr + (2*COMPV_YASM_XMM_SZ_BYTES)], vecLane2
+	%undef ptr
+	%undef vecLane0
+	%undef vecLane1
+	%undef vecLane2
+	%undef vectmp0
+	%undef vectmp1
+	%undef vectmp2
+%endmacro
+
+%define COMPV_VST3_U8_SSSE3 COMPV_VST3_I8_SSSE3

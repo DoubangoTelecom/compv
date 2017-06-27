@@ -8,6 +8,11 @@
 #include "compv/base/intrin/x86/compv_intrin_avx.h"
 #include "compv/base/math/compv_math.h"
 
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint8_t k0_u8[] = { //!\\ You should use 'pxor' instruction which is faster than movdqa to load zeros in xmm register 
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+};
+
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint8_t k_0_0_0_255_u8[] = {
     0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255,
     0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255,
@@ -78,12 +83,40 @@ COMPV_BASE_API COMPV_ALIGN_DEFAULT() uint8_t k255_u8[] = {
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 };
 
-COMPV_BASE_API COMPV_ALIGN_DEFAULT() int16_t k16_i16[] = {
-    16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int16_t k13_26_i16[] = {
+	13, 26, 13, 26, 13, 26, 13, 26,
+	13, 26, 13, 26, 13, 26, 13, 26,
 };
 
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int16_t k16_i16[] = {
+    16, 16, 16, 16, 16, 16, 16, 16, 
+	16, 16, 16, 16, 16, 16, 16, 16,
+};
+
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int16_t k37_i16[] = {
+	37, 37, 37, 37, 37, 37, 37, 37,
+	37, 37, 37, 37, 37, 37, 37, 37,
+};
+
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int16_t k51_i16[] = {
+	51, 51, 51, 51, 51, 51, 51, 51,
+	51, 51, 51, 51, 51, 51, 51, 51,
+};
+
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int16_t k65_i16[] = {
+	65, 65, 65, 65, 65, 65, 65, 65,
+	65, 65, 65, 65, 65, 65, 65, 65,
+};
+
+COMPV_BASE_API COMPV_ALIGN_DEFAULT() int16_t k127_i16[] = {
+	127, 127, 127, 127, 127, 127, 127, 127,
+	127, 127, 127, 127, 127, 127, 127, 127,
+};
+
+
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() int16_t k128_i16[] = {
-    128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128,
+    128, 128, 128, 128, 128, 128, 128, 128, 
+	128, 128, 128, 128, 128, 128, 128, 128,
 };
 
 COMPV_BASE_API COMPV_ALIGN_DEFAULT() int16_t k255_i16[] = {

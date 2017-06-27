@@ -25,14 +25,14 @@ void CompVImageConvYuv420_to_Rgb24_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t
 	__m128i vecYlow, vecYhigh, vecU, vecV, vecR, vecG, vecB;
 	__m128i vec0, vec1;
 	static const __m128i vecZero = _mm_setzero_si128();
-	static const __m128i vec16 = _mm_set1_epi16(16);
-	static const __m128i vec37 = _mm_set1_epi16(37);
-	static const __m128i vec51 = _mm_set1_epi16(51);
-	static const __m128i vec65 = _mm_set1_epi16(65);
-	static const __m128i vec127 = _mm_set1_epi16(127);
-	static const __m128i vec13_26 = _mm_set1_epi32(0x001a000d); // 13, 26, 13, 26 ...
+	static const __m128i vec16 = _mm_load_si128(reinterpret_cast<const __m128i*>(k16_i16));
+	static const __m128i vec37 = _mm_load_si128(reinterpret_cast<const __m128i*>(k37_i16));
+	static const __m128i vec51 = _mm_load_si128(reinterpret_cast<const __m128i*>(k51_i16));
+	static const __m128i vec65 = _mm_load_si128(reinterpret_cast<const __m128i*>(k65_i16));
+	static const __m128i vec127 = _mm_load_si128(reinterpret_cast<const __m128i*>(k127_i16));
+	static const __m128i vec13_26 = _mm_load_si128(reinterpret_cast<const __m128i*>(k13_26_i16)); // 13, 26, 13, 26 ...
 
-	// ASM code do not create variables for k and l: k = [(i * 3)] and l = [i>>1]
+	// NEON code do not create variables for k and l: k = [(i * 3)] = (i + (i << 1)) and l = [i>>1]
 
 	for (j = 0; j < height; ++j) {
 		for (i = 0, k = 0, l = 0; i < width; i += 16, k += 48, l += 8) {
@@ -56,10 +56,10 @@ void CompVImageConvYuv420_to_Rgb24_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t
 			vecV = _mm_sub_epi16(vecV, vec127);
 
 			/* Compute (37Y'), (51V') and (65U') */
-			vecYlow = _mm_mullo_epi16(vec37, vecYlow);
-			vecYhigh = _mm_mullo_epi16(vec37, vecYhigh);
-			vec0 = _mm_mullo_epi16(vec51, vecV);
-			vec1 = _mm_mullo_epi16(vec65, vecU);
+			vecYlow = _mm_mullo_epi16(vecYlow, vec37);
+			vecYhigh = _mm_mullo_epi16(vecYhigh, vec37);
+			vec0 = _mm_mullo_epi16(vecV, vec51);
+			vec1 = _mm_mullo_epi16(vecU, vec65);
 
 			/* Compute R = (37Y' + 0U' + 51V') >> 5 */
 			vecR = _mm_packus_epi16(
@@ -74,8 +74,8 @@ void CompVImageConvYuv420_to_Rgb24_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t
 			);
 
 			/* Compute G = (37Y' - 13U' - 26V') >> 5 = (37Y' - (13U' + 26V')) >> 5 */
-			vec0 = _mm_madd_epi16(vec13_26, _mm_unpacklo_epi16(vecU, vecV)); // (13U' + 26V').low - I32
-			vec1 = _mm_madd_epi16(vec13_26, _mm_unpackhi_epi16(vecU, vecV)); // (13U' + 26V').high - I32
+			vec0 = _mm_madd_epi16(_mm_unpacklo_epi16(vecU, vecV), vec13_26); // (13U' + 26V').low - I32
+			vec1 = _mm_madd_epi16(_mm_unpackhi_epi16(vecU, vecV), vec13_26); // (13U' + 26V').high - I32
 			vec0 = _mm_packs_epi32(vec0, vec1);
 			vecG = _mm_packus_epi16(
 				_mm_srai_epi16(_mm_sub_epi16(vecYlow, _mm_unpacklo_epi16(vec0, vec0)), 5),
