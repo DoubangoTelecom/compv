@@ -23,7 +23,7 @@ OpenCV: 3086.ms(full optiz)
 Remarque: For openCV we're using CV_RGB2GRAY
 
 === YUV420P -> RGB24 (1282, 720) (#10k times) ===
-CompV: 1195.ms(full optiz)
+CompV: 968.ms(full optiz)
 OpenCV: 5919.ms(full optiz)
 Remarque: For openCV we're using CV_YUV2RGB_I420
 

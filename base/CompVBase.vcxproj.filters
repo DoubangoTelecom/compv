@@ -955,6 +955,12 @@
     <YASM Include="math\asm\x86\compv_math_utils_x64_avx.s">
       <Filter>source\math\asm\x86</Filter>
     </YASM>
+    <YASM Include="image\asm\x86\compv_image_conv_to_rgbx_x64_sse.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
+    <YASM Include="image\asm\x86\compv_image_conv_to_rgbx_x64_avx.s">
+      <Filter>source\image\asm\x86</Filter>
+    </YASM>
   </ItemGroup>
   <ItemGroup>
     <None Include="asm\arm\compv_common_arm.S">
@@ -989,9 +995,6 @@
     </None>
     <None Include="image\asm\arm\compv_image_scale_bilinear_arm64_neon.S">
       <Filter>source\image\asm\arm</Filter>
-    </None>
-    <None Include="image\asm\x86\compv_image_conv_to_rgbx_x64_sse.s">
-      <Filter>source\image\asm\x86</Filter>
     </None>
   </ItemGroup>
 </Project>

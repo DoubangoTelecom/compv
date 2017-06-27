@@ -63,19 +63,20 @@ Index for the 64bit packed values
 // Interleave "vecLane0", "vecLane1", "vecLane3" and "vecLane4" then store into "ptr"
 // !!! "vecLane0", "vecLane1" and "vecLane2" ARE modified and filled with garbage !!!
 // e.g. [RRRR], [GGGG], [BBBB], [AAAA] -> RGBARGBARGBA
-#define COMPV_VST4_I8_AVX2(ptr, vecLane0, vecLane1, vecLane2, vecLane3, vectmp0, vectmp1) \
-	vectmp0 = _mm256_unpacklo_epi8(vecLane0, vecLane1); \
-	vecLane0 = _mm256_unpackhi_epi8(vecLane0, vecLane1); \
-	vectmp1 = _mm256_unpacklo_epi8(vecLane2, vecLane3); \
-	vecLane1 = _mm256_unpackhi_epi8(vecLane2, vecLane3); \
-	vecLane2 = _mm256_unpacklo_epi16(vectmp0, vectmp1); \
-	vectmp0 = _mm256_unpackhi_epi16(vectmp0, vectmp1); \
-	vectmp1 = _mm256_unpacklo_epi16(vecLane0, vecLane1); \
-	vecLane0 = _mm256_unpackhi_epi16(vecLane0, vecLane1); \
-	_mm256_store_si256(reinterpret_cast<__m256i*>((ptr)), _mm256_permute2f128_si256(vecLane2, vectmp0, 0x20)); \
-	_mm256_store_si256(reinterpret_cast<__m256i*>((ptr)) + 1, _mm256_permute2f128_si256(vectmp1, vecLane0, 0x20)); \
-	_mm256_store_si256(reinterpret_cast<__m256i*>((ptr)) + 2, _mm256_permute2f128_si256(vecLane2, vectmp0, 0x31)); \
-	_mm256_store_si256(reinterpret_cast<__m256i*>((ptr)) + 3, _mm256_permute2f128_si256(vectmp1, vecLane0, 0x31))
+#define COMPV_VST4_I8_AVX2(ptr, vecLane0, vecLane1, vecLane2, vecLane3, vectmp0, vectmp1) { \
+		vectmp0 = _mm256_unpacklo_epi8(vecLane0, vecLane1); \
+		vecLane0 = _mm256_unpackhi_epi8(vecLane0, vecLane1); \
+		vectmp1 = _mm256_unpacklo_epi8(vecLane2, vecLane3); \
+		vecLane1 = _mm256_unpackhi_epi8(vecLane2, vecLane3); \
+		vecLane2 = _mm256_unpacklo_epi16(vectmp0, vectmp1); \
+		vectmp0 = _mm256_unpackhi_epi16(vectmp0, vectmp1); \
+		vectmp1 = _mm256_unpacklo_epi16(vecLane0, vecLane1); \
+		vecLane0 = _mm256_unpackhi_epi16(vecLane0, vecLane1); \
+		_mm256_store_si256(reinterpret_cast<__m256i*>((ptr)), _mm256_permute2f128_si256(vecLane2, vectmp0, 0x20)); \
+		_mm256_store_si256(reinterpret_cast<__m256i*>((ptr)) + 1, _mm256_permute2f128_si256(vectmp1, vecLane0, 0x20)); \
+		_mm256_store_si256(reinterpret_cast<__m256i*>((ptr)) + 2, _mm256_permute2f128_si256(vecLane2, vectmp0, 0x31)); \
+		_mm256_store_si256(reinterpret_cast<__m256i*>((ptr)) + 3, _mm256_permute2f128_si256(vectmp1, vecLane0, 0x31)); \
+	}
 
 #define COMPV_VST4_U8_AVX2 COMPV_VST4_I8_AVX2
 
