@@ -310,7 +310,7 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 
 #if 1
 			for (size_t y = 0; y < 16; ++y) {
-				if (j == 0 && i == 144 && y == 1) {
+				if (j == 0 && i == 624 && y == 8) {
 					COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 				}
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING();
