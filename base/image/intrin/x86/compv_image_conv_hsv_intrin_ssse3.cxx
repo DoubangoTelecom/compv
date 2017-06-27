@@ -20,6 +20,7 @@ COMPV_NAMESPACE_BEGIN()
 void CompVImageConvRgba32ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgba32Ptr, COMPV_ALIGNED(SSE) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride
 	, const compv_float32_t(*scales43)[256], const compv_float32_t(*scales255)[256])
 {
+	assert(0);
 	COMPV_DEBUG_INFO_CHECK_SSSE3();
 
 	COMPV_DEBUG_INFO_CODE_FOR_TESTING("Code not clean, see RGB24 impl");
@@ -287,7 +288,7 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 	static const __m128i vecFF = _mm_cmpeq_epi8(vec85, vec85);
 	static const __m128 vec43f = _mm_set1_ps(43.f);
 	static const __m128 vec255f = _mm_set1_ps(255.f);
-	static const __m128 vec01f = _mm_set1_ps(1.f);  // FIXME(dmi): remove when _mm_rcp_ps is used
+	static const __m128 vec01f = _mm_set1_ps(1.f);
 
 	width += (width << 1); // from samples to bytes
 	stride += (stride << 1); // from samples to bytes
@@ -309,7 +310,7 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 
 #if 1
 			for (size_t y = 0; y < 16; ++y) {
-				if (j == 402 && i == 1792 && y == 8) {
+				if (j == 0 && i == 144 && y == 1) {
 					COMPV_DEBUG_INFO_CODE_FOR_TESTING();
 				}
 				COMPV_DEBUG_INFO_CODE_FOR_TESTING();
@@ -378,6 +379,7 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 			vec3f = _mm_mul_ps(vec3f, vec255f);
 
 			// hsv[1].float = static_cast<uint8_t>(round(scales255 * minus))
+			// FIXME(dmi): AVX/NEON: FMA
 			vec0f = _mm_mul_ps(vec0f, _mm_castsi128_ps(vec0));
 			vec1f = _mm_mul_ps(vec1f, _mm_castsi128_ps(vec1));
 			vec2f = _mm_mul_ps(vec2f, _mm_castsi128_ps(vec2));
@@ -450,6 +452,7 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 			vec3f = _mm_cvtepi32_ps(_mm_castps_si128(vec3f));
 
 			// compute static_cast<uint8_t>(round(diff * scales43)) + ((85 & m1) | (171 & m2))
+			// FIXME(dmi): AVX/NEON -> FMA
 			vec0f = _mm_mul_ps(vec0f, _mm_castsi128_ps(vec0));
 			vec1f = _mm_mul_ps(vec1f, _mm_castsi128_ps(vec1));
 			vec2f = _mm_mul_ps(vec2f, _mm_castsi128_ps(vec2));

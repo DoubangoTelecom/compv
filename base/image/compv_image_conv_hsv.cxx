@@ -88,7 +88,7 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 		rgbx_to_hsv = rgbx_to_hsv_C<compv_uint8x4_t>;
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagSSSE3) && imageRGBx->isAlignedSSE() && imageHSV->isAlignedSSE()) {
-			COMPV_EXEC_IFDEF_INTRIN_X86(rgbx_to_hsv = CompVImageConvRgba32ToHsv_Intrin_SSSE3);
+			//COMPV_EXEC_IFDEF_INTRIN_X86(rgbx_to_hsv = CompVImageConvRgba32ToHsv_Intrin_SSSE3);
 		}
 #elif COMPV_ARCH_ARM
 #endif
@@ -167,9 +167,9 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 	size_t i, j;
 	const xType* rgbxPtr_ = reinterpret_cast<const xType*>(rgbxPtr);
 	compv_uint8x3_t* hsvPtr_ = reinterpret_cast<compv_uint8x3_t*>(hsvPtr);
-
 	int minVal, maxVal, minus, r, g, b;
 	int diff;
+	compv_float32_t s255, s43;
 	for (j = 0; j <height; ++j) {
 		for (i = 0; i < width; ++i) {
 			const xType& rgbx = rgbxPtr_[i];
@@ -179,17 +179,17 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 			minVal = COMPV_MATH_MIN_INT(g, b);
 			minVal = COMPV_MATH_MIN_INT(r, minVal);
 			maxVal = COMPV_MATH_MAX_INT(g, b);
-			maxVal = COMPV_MATH_MAX_INT(r, maxVal); // ASM: SSE / NEON
-
-			// TODO(dmi): ASM use macro on the #16 values from SIMD result
+			maxVal = COMPV_MATH_MAX_INT(r, maxVal);
 
 			diff = (maxVal == r) ? (g - b) : ((maxVal == g) ? (b - r) : (r - g)); // ASM: CMOV
 			minus = maxVal - minVal;
+			s43 = diff * (*scales43)[minus];
+			s255 = minus * (*scales255)[maxVal];
 
-			hsv[0] = static_cast<uint8_t>(diff * (*scales43)[minus]) +
+			hsv[0] = COMPV_MATH_ROUNDF_2_NEAREST_INT(s43, uint8_t) +
 				((maxVal == r) ? 0 : ((maxVal == g) ? 85 : 171)); // ASM: CMOV
 
-			hsv[1] = static_cast<uint8_t>(minus * (*scales255)[maxVal]);
+			hsv[1] = COMPV_MATH_ROUNDF_2_NEAREST_INT(s255, uint8_t);
 
 			hsv[2] = static_cast<uint8_t>(maxVal);
 		}
@@ -202,14 +202,11 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 	size_t i, j;
 	const xType* rgbxPtr_ = reinterpret_cast<const xType*>(rgbxPtr);
 	compv_uint8x3_t* hsvPtr_ = reinterpret_cast<compv_uint8x3_t*>(hsvPtr);
-
 	int minVal, maxVal, minus, r, g, b;
 	int diff, m0, m1, m2;
+	compv_float32_t s255, s43;
 	for (j = 0; j <height; ++j) {
 		for (i = 0; i < width; ++i) {
-			if (i == 72) {
-				COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-			}
 			const xType& rgbx = rgbxPtr_[i];
 			compv_uint8x3_t& hsv = hsvPtr_[i];
 			r = rgbx[0], g = rgbx[1], b = rgbx[2];
@@ -217,21 +214,19 @@ static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar
 			minVal = COMPV_MATH_MIN_INT(g, b);
 			minVal = COMPV_MATH_MIN_INT(r, minVal);
 			maxVal = COMPV_MATH_MAX_INT(g, b);
-			maxVal = COMPV_MATH_MAX_INT(r, maxVal); // ASM: SSE / NEON
+			maxVal = COMPV_MATH_MAX_INT(r, maxVal);
 
 			m0 = -(maxVal == r); // (maxVal == r) ? 0xff : 0x00;
 			m1 = -(maxVal == g) & ~m0; // ((maxVal == r) ? 0xff : 0x00) & ~m0
 			m2 = ~(m0 | m1);
 			diff = ((g - b) & m0) | ((b - r) & m1) | ((r - g) & m2);
 			minus = maxVal - minVal;
-			hsv[0] = static_cast<uint8_t>(diff * (*scales43)[minus]) 
+			s43 = diff * (*scales43)[minus];
+			s255 = minus * (*scales255)[maxVal];
+			hsv[0] = COMPV_MATH_ROUNDF_2_NEAREST_INT(s43, uint8_t)
 				+ ((85 & m1) | (171 & m2));
-			hsv[1] = static_cast<uint8_t>(minus * (*scales255)[maxVal]);
+			hsv[1] = COMPV_MATH_ROUNDF_2_NEAREST_INT(s255, uint8_t);
 			hsv[2] = static_cast<uint8_t>(maxVal);
-
-			if (hsv[0] == 213) {
-				COMPV_DEBUG_INFO_CODE_FOR_TESTING();
-			}
 		}
 		rgbxPtr_ += stride;
 		hsvPtr_ += stride;
