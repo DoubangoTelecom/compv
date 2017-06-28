@@ -40,20 +40,13 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 	mov rbp, rsp
 	COMPV_YASM_SHADOW_ARGS_TO_STACK 7
 	COMPV_YASM_SAVE_XMM 15
-	push rsi
-	push rdi
-	push rbx
-	;push r12
-	;push r13
-	;push r14
-	;push r15
 	;; end prolog ;;
 
 	%define rgb24Ptr	rax
 	%define hsvPtr		rdx
-	%define width		rbx
-	%define height		rsi
-	%define stride		rdi
+	%define width		r10
+	%define height		r8
+	%define stride		r9
 	%define i			rcx
 
 	%define vecZero		xmm0
@@ -109,7 +102,6 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 			movdqa vec5, vec4
 			movdqa vec8, vec4
 			psubusb vec3, vec6 ; vec3 = minus
-
 			pcmpeqb vec5, vec0 ; m0 = (maxVal == r)
 			movdqa vec6, vec5
 			movdqa vec7, vec5
@@ -137,11 +129,6 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 			punpckhwd vec1, vecZero
 			punpcklwd vec2, vecZero
 			punpckhwd vec3, vecZero
-			
-			
-			
-
-			
 			movdqa vec1f, vec4
 			movdqa vec3f, vec4
 			punpcklbw vec1f, vecZero
@@ -156,8 +143,6 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 			cvtdq2ps vec1f, vec1f
 			cvtdq2ps vec2f, vec2f
 			cvtdq2ps vec3f, vec3f
-
-			
 			rcpps vec8, vec0f
 			rcpps vec9, vec1f
 			cvtdq2ps vec0, vec0
@@ -178,8 +163,6 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 			mulps vec2f, vec255f
 			pandn vec3f, vec9
 			mulps vec3f, vec255f
-
-			; hsv[1].float = static_cast<uint8_t>(round(scales255 * minus))
 			mulps vec0f, vec0
 			mulps vec1f, vec1
 			mulps vec2f, vec2
@@ -192,8 +175,6 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 			packssdw vec2f, vec3f
 			packuswb vec0f, vec2f
 			movdqa vec8, vec0f ; vec8 = hsv[1].u8 - FIXME(dmi): replace next vec0f with vec8 and keep hsv[1].u8 in vec0f
-
-			; compute scale = minus ? (1.f / minus) : 0.f ;
 			rcpps vec0f, vec0
 			rcpps vec1f, vec1
 			rcpps vec2f, vec2
@@ -206,14 +187,11 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 			pandn vec1, vec1f
 			pandn vec2, vec2f
 			pandn vec3, vec3f
-
-			; compute scales43 = (43 * scale) ;
 			movaps vec0f, [sym(k43_f32)]
 			mulps vec0, vec0f
 			mulps vec1, vec0f
 			mulps vec2, vec0f
 			mulps vec3, vec0f
-			; convert diff to epi32 then to float32 (signed values -> cannot unpack/zero) ;
 			movdqa vec0f, vec5
 			punpcklbw vec0f, vec0f
 			punpckhbw vec5, vec5
@@ -231,9 +209,6 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 			cvtdq2ps vec1f, vec1f
 			cvtdq2ps vec2f, vec5
 			cvtdq2ps vec3f, vec3f
-			pand vec6, [sym(k85_i8)] ; (85 & m1)
-			pand vec7, [sym(k171_u8)] ; (171 & m2)
-			por vec6, vec7 ; (85 & m1) | (171 & m2)
 			mulps vec0f, vec0
 			mulps vec1f, vec1
 			mulps vec2f, vec2
@@ -242,20 +217,19 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 			cvtps2dq vec1f, vec1f
 			cvtps2dq vec2f, vec2f
 			cvtps2dq vec3f, vec3f
+			pand vec6, [sym(k85_i8)] ; (85 & m1)
+			pand vec7, [sym(k171_u8)] ; (171 & m2)
+			por vec6, vec7 ; (85 & m1) | (171 & m2)
 			packssdw vec0f, vec1f
 			packssdw vec2f, vec3f
 			packsswb vec0f, vec2f		
-			
 			paddsb vec0f, vec6
-
-			; Store the result ;
+			
 			COMPV_VST3_U8_SSSE3 hsvPtr + i, vec0f, vec8, vec4, vec0, vec1, vec2
-			;pxor vec8, vec8
-			;pxor vec4, vec4
-			;COMPV_VST3_U8_SSSE3 hsvPtr + i, vec5, vec8, vec4, vec1, vec2, vec3
 			
 			add i, 48
 			cmp i, width
+			
 			;; end-of-LoopWidth ;;
 			jl .LoopWidth
 
@@ -291,13 +265,6 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 	%undef vec255f		
 
 	;; begin epilog ;;
-	;pop r15
-	;pop r14
-	;pop r13
-	;pop r12
-	pop rbx
-	pop rdi
-	pop rsi
 	COMPV_YASM_RESTORE_XMM
 	COMPV_YASM_UNSHADOW_ARGS
 	mov rsp, rbp
