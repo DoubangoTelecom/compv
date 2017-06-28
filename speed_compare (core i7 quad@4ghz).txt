@@ -28,7 +28,7 @@ OpenCV: 5919.ms(full optiz)
 Remarque: For openCV we're using CV_YUV2RGB_I420
 
 === RGB24 -> HSV (1282, 720) (#10k times) ===
-CompV: 2733.ms
+CompV: 2653.ms
 OpenCV: 15709.ms
 Remarque: For openCV we're using CV_RGB2HSV
 

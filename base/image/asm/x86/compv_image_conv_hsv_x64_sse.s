@@ -174,8 +174,7 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 			packssdw vec0f, vec1f
 			packssdw vec2f, vec3f
 			packuswb vec0f, vec2f
-			movdqa vec8, vec0f ; vec8 = hsv[1].u8 - FIXME(dmi): replace next vec0f with vec8 and keep hsv[1].u8 in vec0f
-			rcpps vec0f, vec0
+			rcpps vec8, vec0
 			rcpps vec1f, vec1
 			rcpps vec2f, vec2
 			rcpps vec3f, vec3
@@ -183,49 +182,49 @@ sym(CompVImageConvRgb24ToHsv_Asm_X64_SSSE3):
 			pcmpeqd vec1, vecZero			
 			pcmpeqd vec2, vecZero
 			pcmpeqd vec3, vecZero
-			pandn vec0, vec0f
+			pandn vec0, vec8
 			pandn vec1, vec1f
 			pandn vec2, vec2f
 			pandn vec3, vec3f
-			movaps vec0f, [sym(k43_f32)]
-			mulps vec0, vec0f
-			mulps vec1, vec0f
-			mulps vec2, vec0f
-			mulps vec3, vec0f
-			movdqa vec0f, vec5
-			punpcklbw vec0f, vec0f
+			movaps vec8, [sym(k43_f32)]
+			mulps vec0, vec8
+			mulps vec1, vec8
+			mulps vec2, vec8
+			mulps vec3, vec8
+			movdqa vec8, vec5
+			punpcklbw vec8, vec8
 			punpckhbw vec5, vec5
-			movdqa vec1f, vec0f
+			movdqa vec1f, vec8
 			movdqa vec3f, vec5
-			punpcklwd vec0f, vec0f
+			punpcklwd vec8, vec8
 			punpckhwd vec1f, vec1f
 			punpcklwd vec5, vec5
 			punpckhwd vec3f, vec3f
-			psrad vec0f, 24
+			psrad vec8, 24
 			psrad vec1f, 24
 			psrad vec5, 24
 			psrad vec3f, 24
-			cvtdq2ps vec0f, vec0f
+			cvtdq2ps vec8, vec8
 			cvtdq2ps vec1f, vec1f
 			cvtdq2ps vec2f, vec5
 			cvtdq2ps vec3f, vec3f
-			mulps vec0f, vec0
+			mulps vec8, vec0
 			mulps vec1f, vec1
 			mulps vec2f, vec2
 			mulps vec3f, vec3
-			cvtps2dq vec0f, vec0f
+			cvtps2dq vec8, vec8
 			cvtps2dq vec1f, vec1f
 			cvtps2dq vec2f, vec2f
 			cvtps2dq vec3f, vec3f
 			pand vec6, [sym(k85_i8)] ; (85 & m1)
 			pand vec7, [sym(k171_u8)] ; (171 & m2)
 			por vec6, vec7 ; (85 & m1) | (171 & m2)
-			packssdw vec0f, vec1f
+			packssdw vec8, vec1f
 			packssdw vec2f, vec3f
-			packsswb vec0f, vec2f		
-			paddsb vec0f, vec6
+			packsswb vec8, vec2f		
+			paddsb vec8, vec6
 			
-			COMPV_VST3_U8_SSSE3 hsvPtr + i, vec0f, vec8, vec4, vec0, vec1, vec2
+			COMPV_VST3_U8_SSSE3 hsvPtr + i, vec8, vec0f, vec4, vec0, vec1, vec2
 			
 			add i, 48
 			cmp i, width

@@ -79,20 +79,20 @@ static COMPV_INLINE __m128i _mm_mullo_epi32_SSE2(const __m128i &a, const __m128i
 		vecLane0 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr))); \
 		vecLane1 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr)) + 1); \
 		vecLane2 = _mm_load_si128(reinterpret_cast<const __m128i*>((ptr)) + 2); \
-		\
 		vectmp0 = _mm_shuffle_epi8(vecLane0, vecMask); \
 		vectmp1 = _mm_shuffle_epi8(vecLane1, vecMask); \
 		vecLane2 = _mm_shuffle_epi8(vecLane2, vecMask); \
-		/* e.g. R = vecLane0 */ \
 		vecLane0 = _mm_alignr_epi8(_mm_srli_si128(vecLane2, 6), vectmp1, 11); \
-		vecLane0 = _mm_alignr_epi8(vecLane0, _mm_slli_si128(vectmp0, 10), 10); \
-		/* e.g. G = vecLane1 */ \
-		vecLane1 = _mm_alignr_epi8(_mm_srli_si128(vecLane2, 11), _mm_slli_si128(vectmp1, 10), 10); \
-		vecLane1 = _mm_alignr_epi8(vecLane1, _mm_slli_si128(vectmp0, 5), 11); \
-		/* e.g. B = vecLane2 */ \
+		vecLane1 = _mm_slli_si128(vectmp1, 10); \
 		vectmp1 = _mm_srli_si128(vectmp1, 6); \
 		vectmp1 = _mm_alignr_epi8(vectmp1, vectmp0, 11); \
-		vecLane2 = _mm_alignr_epi8(vecLane2, _mm_slli_si128(vectmp1, 6), 6); \
+		vecLane1 = _mm_alignr_epi8(_mm_srli_si128(vecLane2, 11), vecLane1, 10); \
+		vectmp0 = _mm_slli_si128(vectmp0, 5); \
+		vecLane1 = _mm_alignr_epi8(vecLane1, vectmp0, 11); \
+		vectmp0 = _mm_slli_si128(vectmp0, 5); \
+		vecLane0 = _mm_alignr_epi8(vecLane0, vectmp0, 10); \
+		vectmp1 = _mm_slli_si128(vectmp1, 6); \
+		vecLane2 = _mm_alignr_epi8(vecLane2, vectmp1, 6); \
 	}
 
 #define COMPV_VLD3_U8_SSSE3 COMPV_VLD3_I8_SSSE3

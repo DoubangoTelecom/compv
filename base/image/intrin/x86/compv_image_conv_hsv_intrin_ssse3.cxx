@@ -286,11 +286,11 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 	__m128i vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8, vec9;
 	__m128 vec0f, vec1f, vec2f, vec3f;
 	static const __m128i vecZero = _mm_setzero_si128();
-	static const __m128i vec85 = _mm_set1_epi8(85);
-	static const __m128i vec171 = _mm_set1_epi8((uint8_t)171);
+	static const __m128i vec85 = _mm_load_si128(reinterpret_cast<const __m128i*>(k85_i8));
+	static const __m128i vec171 = _mm_load_si128(reinterpret_cast<const __m128i*>(k171_u8));
 	static const __m128i vecFF = _mm_cmpeq_epi8(vec85, vec85);
-	static const __m128 vec43f = _mm_set1_ps(43.f);
-	static const __m128 vec255f = _mm_set1_ps(255.f);
+	static const __m128 vec43f = _mm_load_ps(k43_f32);
+	static const __m128 vec255f = _mm_load_ps(k255_f32);
 
 	width += (width << 1); // from samples to bytes (width * 3)
 	stride += (stride << 1); // from samples to bytes (stride * 3)
@@ -302,16 +302,16 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 
 			vec3 = _mm_min_epu8(vec2, _mm_min_epu8(vec0, vec1)); // vec3 = minVal
 			vec4 = _mm_max_epu8(vec2, _mm_max_epu8(vec0, vec1)); // vec4 = maxVal = hsv[2].u8
-
 			vec3 = _mm_subs_epu8(vec4, vec3); // vec3 = minus
 
 			vec5 = _mm_cmpeq_epi8(vec4, vec0); // m0 = (maxVal == r)
-			vec6 = _mm_andnot_si128(vec5, _mm_cmpeq_epi8(vec4, vec1)); // m1 = (maxVal == g) & ~m0
-			vec7 = _mm_andnot_si128(_mm_or_si128(vec5, vec6), vecFF); // m2 = ~(m0 | m1)
+			vec6 = _mm_andnot_si128(vec5, _mm_cmpeq_epi8(vec4, vec1)); // vec6 = m1 = (maxVal == g) & ~m0
+			vec7 = _mm_andnot_si128(_mm_or_si128(vec5, vec6), vecFF); // vec7 = m2 = ~(m0 | m1)
 
+			vec9 = _mm_and_si128(vec7, _mm_sub_epi8(vec0, vec1));
 			vec5 = _mm_and_si128(vec5, _mm_sub_epi8(vec1, vec2));
 			vec8 = _mm_and_si128(vec6, _mm_sub_epi8(vec2, vec0));
-			vec9 = _mm_and_si128(vec7, _mm_sub_epi8(vec0, vec1));
+			
 			vec5 = _mm_or_si128(vec5, vec8);
 			vec5 = _mm_or_si128(vec5, vec9); // vec5 = diff
 
@@ -328,12 +328,12 @@ void CompVImageConvRgb24ToHsv_Intrin_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb
 			vec3 = _mm_castps_si128(_mm_cvtepi32_ps(vec3));
 
 			// convert maxVal to epi32 then to float32 (unsigned values -> unpack/lo/hi)
-			vec8 = _mm_unpacklo_epi8(vec4, vecZero);
-			vec9 = _mm_unpackhi_epi8(vec4, vecZero);
-			vec0f = _mm_castsi128_ps(_mm_unpacklo_epi16(vec8, vecZero));
-			vec1f = _mm_castsi128_ps(_mm_unpackhi_epi16(vec8, vecZero));
-			vec2f = _mm_castsi128_ps(_mm_unpacklo_epi16(vec9, vecZero));
-			vec3f = _mm_castsi128_ps(_mm_unpackhi_epi16(vec9, vecZero));
+			vec1f = _mm_castsi128_ps(_mm_unpacklo_epi8(vec4, vecZero));
+			vec3f = _mm_castsi128_ps(_mm_unpackhi_epi8(vec4, vecZero));
+			vec0f = _mm_castsi128_ps(_mm_unpacklo_epi16(_mm_castps_si128(vec1f), vecZero));
+			vec1f = _mm_castsi128_ps(_mm_unpackhi_epi16(_mm_castps_si128(vec1f), vecZero));
+			vec2f = _mm_castsi128_ps(_mm_unpacklo_epi16(_mm_castps_si128(vec3f), vecZero));
+			vec3f = _mm_castsi128_ps(_mm_unpackhi_epi16(_mm_castps_si128(vec3f), vecZero));
 			vec0f = _mm_cvtepi32_ps(_mm_castps_si128(vec0f));
 			vec1f = _mm_cvtepi32_ps(_mm_castps_si128(vec1f));
 			vec2f = _mm_cvtepi32_ps(_mm_castps_si128(vec2f));

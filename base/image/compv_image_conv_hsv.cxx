@@ -17,6 +17,12 @@
 
 COMPV_NAMESPACE_BEGIN()
 
+#if COMPV_ASM
+#	if COMPV_ARCH_X64
+	COMPV_EXTERNC void CompVImageConvRgb24ToHsv_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, const compv_float32_t(*scales43)[256], const compv_float32_t(*scales255)[256]);
+#	endif /* COMPV_ARCH_X86 */
+#endif /* COMPV_ASM */
+
 template <typename xType>
 static void rgbx_to_hsv_C(const uint8_t* rgbxPtr, uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, compv_uscalar_t stride, const compv_float32_t(*scales43)[256], const compv_float32_t(*scales255)[256]);
 
@@ -81,6 +87,7 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 #if COMPV_ARCH_X86
 		if (CompVCpu::isEnabled(kCpuFlagSSSE3) && imageRGBx->isAlignedSSE() && imageHSV->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Intrin_SSSE3);
+			COMPV_EXEC_IFDEF_ASM_X64(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Asm_X64_SSSE3);
 		}
 #elif COMPV_ARCH_ARM
 #endif
