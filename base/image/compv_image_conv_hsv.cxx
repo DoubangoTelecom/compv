@@ -12,6 +12,7 @@
 #include "compv/base/parallel/compv_parallel.h"
 
 #include "compv/base/image/intrin/x86/compv_image_conv_hsv_intrin_ssse3.h"
+#include "compv/base/image/intrin/x86/compv_image_conv_hsv_intrin_avx2.h"
 
 #define COMPV_THIS_CLASSNAME	"CompVImageConvToHSV"
 
@@ -20,7 +21,8 @@ COMPV_NAMESPACE_BEGIN()
 #if COMPV_ASM
 #	if COMPV_ARCH_X64
 	COMPV_EXTERNC void CompVImageConvRgb24ToHsv_Asm_X64_SSSE3(COMPV_ALIGNED(SSE) const uint8_t* rgb24Ptr, COMPV_ALIGNED(SSE) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(SSE) compv_uscalar_t stride, const compv_float32_t(*scales43)[256], const compv_float32_t(*scales255)[256]);
-#	endif /* COMPV_ARCH_X86 */
+	COMPV_EXTERNC void CompVImageConvRgb24ToHsv_Asm_X64_AVX2(COMPV_ALIGNED(AVX) const uint8_t* rgb24Ptr, COMPV_ALIGNED(AVX) uint8_t* hsvPtr, compv_uscalar_t width, compv_uscalar_t height, COMPV_ALIGNED(AVX) compv_uscalar_t stride, const compv_float32_t(*scales43)[256], const compv_float32_t(*scales255)[256]);
+#	endif /* COMPV_ARCH_X64 */
 #endif /* COMPV_ASM */
 
 template <typename xType>
@@ -88,6 +90,10 @@ COMPV_ERROR_CODE CompVImageConvToHSV::rgbxToHsv(const CompVMatPtr& imageRGBx, Co
 		if (CompVCpu::isEnabled(kCpuFlagSSSE3) && imageRGBx->isAlignedSSE() && imageHSV->isAlignedSSE()) {
 			COMPV_EXEC_IFDEF_INTRIN_X86(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Intrin_SSSE3);
 			COMPV_EXEC_IFDEF_ASM_X64(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Asm_X64_SSSE3);
+		}
+		if (CompVCpu::isEnabled(kCpuFlagAVX2) && imageRGBx->isAlignedAVX() && imageHSV->isAlignedAVX()) {
+			COMPV_EXEC_IFDEF_INTRIN_X86(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Intrin_AVX2);
+			COMPV_EXEC_IFDEF_ASM_X64(rgbx_to_hsv = CompVImageConvRgb24ToHsv_Asm_X64_AVX2);
 		}
 #elif COMPV_ARCH_ARM
 #endif
