@@ -103,7 +103,6 @@
 	%undef vectmp1
 	%undef vectmp2
 %endmacro
-
 %define COMPV_VST3_U8_SSSE3 COMPV_VST3_I8_SSSE3
 
 
@@ -147,5 +146,51 @@
 	%undef vectmp1
 	%undef vectmp2
 %endmacro
-
 %define COMPV_VST3_U8_SSSE3_VEX COMPV_VST3_I8_SSSE3_VEX
+
+;// De-Interleave "ptr" into  "vecLane0", "vecLane1" and "vecLane2"
+;// e.g. RGBRGBRGB -> [RRRR], [GGGG], [BBBB]
+;//!\\ You should not need to use this function -> FASTER: convert to RGBX then process (more info: see RGB24 -> YUV)
+; Example: COMPV_VLD3_I8_SSSE3(rax + rcx, vecLane0, vecLane1, vecLane2, vectmp0, vectmp1, vectmp2)
+%macro COMPV_VLD3_I8_SSSE3 7
+	%define ptr			%1
+	%define vecLane0	%2
+	%define	vecLane1	%3
+	%define	vecLane2	%4
+	%define vectmp0		%5
+	%define vectmp1		%6
+	%define vectmp2		%7
+	movdqa vecLane0, [ptr + (0*COMPV_YASM_XMM_SZ_BYTES)]
+	movdqa vecLane1, [ptr + (1*COMPV_YASM_XMM_SZ_BYTES)]
+	movdqa vecLane2, [ptr + (2*COMPV_YASM_XMM_SZ_BYTES)]
+	movdqa vectmp2, [sym(kShuffleEpi8_DeinterleaveRGB24_i32)]
+	movdqa vectmp0, vecLane0
+	movdqa vectmp1, vecLane1
+	pshufb vecLane2, vectmp2
+	pshufb vectmp0, vectmp2
+	pshufb vectmp1, vectmp2
+	movdqa vecLane0, vecLane2
+	movdqa vecLane1, vecLane2
+	movdqa vectmp2, vectmp1
+	psrldq vecLane0, 6
+	pslldq vectmp2, 10
+	psrldq vecLane1, 11
+	palignr vecLane0, vectmp1, 11
+	psrldq vectmp1, 6
+	palignr vecLane1, vectmp2, 10
+	palignr vectmp1, vectmp0, 11
+	pslldq vectmp0, 5
+	palignr vecLane1, vectmp0, 11
+	pslldq vectmp0, 5
+	palignr vecLane0, vectmp0, 10
+	pslldq vectmp1, 6
+	palignr vecLane2, vectmp1, 6
+	%undef ptr
+	%undef vecLane0
+	%undef	vecLane1
+	%undef	vecLane2
+	%undef vectmp0
+	%undef vectmp1
+	%undef vectmp2
+%endmacro
+%define COMPV_VLD3_U8_SSSE3 COMPV_VLD3_I8_SSSE3
